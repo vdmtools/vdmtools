@@ -12,7 +12,7 @@
 !define PACKAGE "The ${LONGNAME}"
 !define APPDIR "./distdir"
 !define KYUSHU_UNIVERSITY "Kyushu University"
-!define VDM_URL "http://www.vdmtools.jp/"
+!define VDM_URL "http://fmvdm.org/"
 !define GROUPNAME "VDMTools"
 
 !define UNINSTALL_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall"
