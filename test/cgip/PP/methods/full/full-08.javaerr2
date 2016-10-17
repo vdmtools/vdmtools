@@ -1,0 +1,6 @@
+Expected:Type error in test suite
+
+m4tmp1, l. 45, c. 10:
+  Error : else-part is not of correct type
+  act : ()
+  exp : real

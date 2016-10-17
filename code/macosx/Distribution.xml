@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<installer-gui-script minSpecVersion="1">
+    <title>%%TITLE%%</title>
+    <pkg-ref id="%%PKGREF%%"/>
+    <options customize="never" require-scripts="false"/>
+    <!--license file="gplv3.rtf"/-->
+    <choices-outline>
+        <line choice="default">
+            <line choice="%%PKGREF%%"/>
+        </line>
+    </choices-outline>
+    <choice id="default"/>
+    <choice id="%%PKGREF%%" visible="false">
+        <pkg-ref id="%%PKGREF%%"/>
+    </choice>
+    <pkg-ref id="%%PKGREF%%" version="%%VERSION%%" onConclusion="none">%%PKGNAME%%</pkg-ref>
+</installer-gui-script>

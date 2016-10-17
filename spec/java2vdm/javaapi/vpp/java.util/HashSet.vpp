@@ -1,0 +1,60 @@
+class JavaUtilHashSet is subclass of JavaUtilAbstractSet, JavaUtilSet, JavaLangCloneable, JavaIoSerializable
+operations 
+public  size : () ==> int 
+size() == 
+is not yet specified ;
+
+public  clear : () ==> ()
+clear() == 
+is not yet specified ;
+
+public  clone : () ==> JavaLangObject
+clone() == 
+is not yet specified ;
+
+public  JavaUtilHashSet : () ==> JavaUtilHashSet
+JavaUtilHashSet() == 
+( skip 
+) ;
+
+public  isEmpty : () ==> bool 
+isEmpty() == 
+is not yet specified ;
+
+public  JavaUtilHashSet : int  ==> JavaUtilHashSet
+JavaUtilHashSet(initialCapacity) == 
+( skip 
+) ;
+
+public  iterator : () ==> JavaUtilIterator
+iterator() == 
+is not yet specified ;
+
+public  JavaUtilHashSet : int  * real  ==> JavaUtilHashSet
+JavaUtilHashSet(initialCapacity, loadFactor) == 
+( skip 
+) ;
+
+public  add : JavaLangObject ==> bool 
+add(o) == 
+is not yet specified ;
+
+public  JavaUtilHashSet : <NIL> ==> JavaUtilHashSet
+JavaUtilHashSet(-) == 
+isNil := true  ;
+
+public  remove : JavaLangObject ==> bool 
+remove(o) == 
+is not yet specified ;
+
+public  contains : JavaLangObject ==> bool 
+contains(o) == 
+is not yet specified ;
+
+public  JavaUtilHashSet : JavaUtilCollection ==> JavaUtilHashSet
+JavaUtilHashSet(c) == 
+( skip 
+) ;
+
+
+end  JavaUtilHashSet

@@ -1,0 +1,18 @@
+module OPTIONS
+
+imports
+  from CGMAIN all,
+  from AS all
+ 
+exports all
+  
+   
+definitions
+    
+operations
+     
+SetOptions : () ==> ()
+SetOptions() ==
+  CGMAIN`set_interfaces({mk_AS`Name(["C"],-1),mk_AS`Name(["D"],-1)})
+        
+end OPTIONS 

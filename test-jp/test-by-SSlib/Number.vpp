@@ -1,0 +1,35 @@
+class Number
+/*
+作成者 = 佐原伸
+作成日 = 2004年 1月 9日 
+責任
+	数共通の振る舞いを表す。
+
+概要
+	すべての数に共通な機能を定義する。
+*/
+
+values
+	Rcsid = "$Id: Number.vpp,v 1.2 2006/01/10 06:00:44 vdmtools Exp $";
+	
+functions 
+
+--計算に関する関数群
+
+--計算可能か否かを返す。
+--isComputable[int](3) = true
+static public isComputable[@e]: @e -> bool
+isComputable(n) ==
+	is_(n,int) or is_(n,nat) or is_(n,nat1) or is_(n,real) or is_(n,rat);
+
+--最小値を返す。
+--min[int](lambda x:int, y:int & x > y)(2)(3) = 2
+static public min[@e] :( @e * @e -> bool) -> @e -> @e -> @e
+min(f)(n1)(n2) == if f(n1,n2) then n1 else n2;
+	
+--最大値を返す。
+--max[int](lambda x:int, y:int & x > y)(2)(3) = 3
+static public max[@e] : ( @e * @e -> bool) -> @e -> @e -> @e
+max(f)(n1)(n2) == if f(n1,n2) then n2 else n1;
+			
+end Number

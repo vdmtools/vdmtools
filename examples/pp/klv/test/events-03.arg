@@ -1,0 +1,1 @@
+new Test().runTests([new HeadMeetBeaconEvent().setBeacon(new TIV_D().create(60)), new HeadMeetBeaconEvent().setBeacon(new TIV_D().create(40)), new HeadMeetBeaconEvent().setBeacon(new TIV_A())])

@@ -1,0 +1,15 @@
+class B
+instance variables -- skal slettes
+  a1 : A;
+  a2 : A;
+
+operations
+
+  public Test : () ==> real
+  Test() ==
+  ( dcl res: real;
+    res := new A().Inc().Inc().Inc().Get();
+    return res
+  )
+
+end B

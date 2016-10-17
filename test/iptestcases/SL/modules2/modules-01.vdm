@@ -1,0 +1,32 @@
+module m1
+exports all
+definitions
+functions
+
+f0: () -> int
+f0 () == 10;
+
+f2: int -> int
+f2 (a) == a - 10
+end m1
+
+
+module A
+imports
+  from m1
+    functions
+      f0: () -> int renamed f0;
+      f2: int -> int renamed f2
+exports all
+definitions
+functions
+
+f1 : () -> int
+f1() == 1;
+
+Test: () -> seq1 of int
+Test() ==
+	let h = f0 in
+	[f1(),h(),f1(),f2(20)]
+end A
+	

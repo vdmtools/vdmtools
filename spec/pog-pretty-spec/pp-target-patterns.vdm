@@ -1,0 +1,184 @@
+\section{Pretty print patterns}
+
+\begin{vdm_al}
+module PP_TAR_PAT
+
+imports  
+
+  from PP_TRA_TYPE all,
+
+  from PP_TAR_EXPR all, 
+  from PP_TAR_TYPE all,
+
+  from AS all,
+  from CI all,
+  from REP all
+
+exports all
+
+definitions
+
+types
+
+  String = seq of char;
+
+  Pattern = PatternName | MatchVal | SetPattern | SeqPattern | MapPattern |
+            TuplePattern | RecordPattern
+#ifdef VDMPP
+            | ObjectPattern
+#endif VDMPP
+            ;
+
+
+  PatternName     = PATTERN; 
+  MatchVal        = PATTERN; 
+  SetPattern      = SetEnumPattern | SetUnionPattern;
+  SetEnumPattern  = PATTERN; 
+  SetUnionPattern = PATTERN; 
+  SeqPattern      = SeqEnumPattern | SeqConcPattern;
+  SeqEnumPattern  = PATTERN;  
+  SeqConcPattern  = PATTERN;
+  MapPattern      = MapEnumPattern | MapMergePattern;
+  MapEnumPattern  = PATTERN;  
+  MapMergePattern = PATTERN;
+  TuplePattern    = PATTERN; 
+  RecordPattern   = PATTERN;
+  MapletPattern   = PATTERN;
+#ifdef VDMPP
+  ObjectPattern   = PATTERN;
+  FieldPattern    = PATTERN;
+#endif VDMPP
+
+  PatternBind = Pattern | Bind;
+
+  Bind = SetBind | TypeBind;
+
+  SetBind         = BIND;
+  TypeBind        = BIND;
+  SeqBind         = BIND;
+  
+  BindList = seq of MultBind;
+
+  MultBind = MultSetBind | MultTypeBind;
+
+  MultSetBind     =  String;
+  MultTypeBind    =  String;
+ 
+  PATTERN = String;
+
+  BIND    = String;
+\end{vdm_al}
+
+\section{Patterns and Bindings}
+
+\begin{vdm_al}
+
+functions
+  tar_PatternName: [PP_TAR_EXPR`NameExpr] * CI`ContextId -> PatternName
+  tar_PatternName (nm,-) ==
+    if nm = nil then "-" else nm;
+ 
+  tar_MatchVal: PP_TAR_EXPR`Expr * CI`ContextId -> MatchVal
+  tar_MatchVal (val,-) ==
+    "(" ^ val ^ ")";
+
+  tar_SetEnumPattern: seq1 of Pattern * CI`ContextId  -> SetEnumPattern
+  tar_SetEnumPattern (els,-) ==
+    "{" ^ List2SeparatorList(",",els) ^ "}";
+
+  tar_SetUnionPattern: PATTERN * Pattern * CI`ContextId ->SetUnionPattern 
+  tar_SetUnionPattern (lp, rp, -) ==
+    lp ^ " union " ^ rp;
+
+  tar_SeqEnumPattern: seq1 of Pattern * CI`ContextId -> SeqEnumPattern
+  tar_SeqEnumPattern (els,-) ==
+    "[" ^ List2SeparatorList(",",els) ^ "]";
+
+  tar_SeqConcPattern: Pattern * Pattern * CI`ContextId -> SeqConcPattern
+  tar_SeqConcPattern (lp, rp, -) ==
+    lp ^ " ^ " ^ rp;
+
+  tar_MapEnumPattern: seq1 of Pattern * CI`ContextId -> MapEnumPattern
+  tar_MapEnumPattern (mls,-) ==
+    "{" ^ List2SeparatorList(",",mls) ^ "}";
+
+  tar_MapMergePattern: Pattern * Pattern * CI`ContextId -> MapMergePattern
+  tar_MapMergePattern (lp, rp, -) ==
+    lp ^ " munion " ^ rp;
+
+  tar_MapletPattern: Pattern * Pattern * CI`ContextId -> MapletPattern
+  tar_MapletPattern (dp, rp, -) ==
+    dp ^ " |-> " ^ rp;
+
+  tar_RecordPattern: PP_TAR_EXPR`NameName * seq of Pattern * CI`ContextId -> RecordPattern 
+  tar_RecordPattern (nm, flds, -) ==
+    "mk_" ^ nm ^ "(" ^ List2SeparatorList(",",flds) ^ ")";
+ 
+  tar_TuplePattern: seq of Pattern * CI`ContextId -> TuplePattern
+  tar_TuplePattern (flds,-) ==
+    "mk_(" ^ List2SeparatorList(",",flds) ^ ")";
+
+#ifdef VDMPP
+  tar_ObjectPattern: PP_TAR_EXPR`NameExpr * seq of Pattern * CI`ContextId -> ObjectPattern 
+  tar_ObjectPattern (cls, flds, -) ==
+    "obj_" ^ cls ^ "(" ^ List2SeparatorList(",",flds) ^ ")";
+ 
+  tar_FieldPattern: PP_TAR_EXPR`NameExpr * Pattern * CI`ContextId -> FieldPattern
+  tar_FieldPattern (nm, pat, -) ==
+    nm ^ " |-> " ^ pat;
+#endif VDMPP
+\end{vdm_al}
+
+\subsection{Bindings}
+
+\begin{vdm_al}
+  tar_SetBind : Pattern * PP_TAR_EXPR`Expr * CI`ContextId -> SetBind
+  tar_SetBind(pat,expr,-) ==
+    pat ^ " in set " ^ expr;
+
+  tar_TypeBind : Pattern * AS`Type * PP_TAR_TYPE`Type * CI`ContextId -> TypeBind
+  tar_TypeBind(pat,-,type,-) ==
+    pat ^ " : " ^ type;
+
+  tar_SeqBind : Pattern * PP_TAR_EXPR`Expr * CI`ContextId -> SeqBind
+  tar_SeqBind(pat,expr,-) ==
+    pat ^ " in seq " ^ expr;
+
+  tar_BindList : seq of MultBind -> BindList
+  tar_BindList(binds) == binds;    
+
+  tar_MultSetBind : seq of Pattern * PP_TAR_EXPR`Expr * CI`ContextId -> MultSetBind
+  tar_MultSetBind (pats,expr,-) ==
+    List2SeparatorList(",",pats) ^ " in set " ^ expr;
+
+  tar_MultTypeBind : seq of Pattern * AS`Type * PP_TAR_TYPE`Type * CI`ContextId -> MultTypeBind
+  tar_MultTypeBind (pats,-,tp,-) ==
+    List2SeparatorList(",",pats) ^ " : " ^ tp;
+
+\end{vdm_al}
+
+\subsection{Auxiliary functions}
+
+\begin{vdm_al}
+
+  List2SeparatorList : String * seq of String -> String
+  List2SeparatorList (separator,ss) == 
+    if ss = [] then 
+      ""
+    else
+      let head = hd ss,
+          tail = if tl ss = [] then
+                   ""
+                 else 
+                   separator^List2SeparatorList(separator,tl ss)
+      in 
+          head^tail;  
+end PP_TAR_PAT
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[MotGeneralNumericType]
+{rtinfo.ast}[PP_TAR_PAT]
+\end{rtinfo}
+

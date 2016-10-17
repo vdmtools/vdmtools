@@ -1,0 +1,48 @@
+class A
+
+instance variables
+
+a: nat := 0;
+
+operations
+public Test: () ==> int | set of seq of int 
+Test() ==
+  trap <ERR3> with return a
+  in
+    (a := 10;
+     Example());
+
+DoCommand: () ==> set of seq of int
+DoCommand() ==
+( dcl l : seq of nat := [];
+  trap <ERR2> with exit <ERR3> in
+    (a := 9;
+     if false
+     then (dcl b : seq of int := TestSeq([1]);
+           skip);
+     return {TestSeq(l(1,...,i)) | i in set {1,...,9}} )
+);
+
+SetToSeq: set of nat ==> seq of int
+SetToSeq(s) ==
+  if s = {} then
+    exit <ERR>
+  else
+    let e in set s in 
+      return [e] ^ SetToSeq(s \ {e});
+
+TestSeq: seq of int ==> seq of int
+TestSeq(l) ==
+  if l = [] then
+    exit <ERR2>
+  else
+    return l;
+
+Example: () ==> set of seq of int
+Example() ==
+  tixe { 
+    <ERR> |-> exit 7
+  } in if false then exit <ERR>
+       else DoCommand()
+
+end A

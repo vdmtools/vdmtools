@@ -1,0 +1,597 @@
+dlclass JavaIoFile is subclass of JavaIoSerializable, JavaLangComparable, JavaLangObject
+uselib "j2vdll.so"
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaIoFile" , <CLASS> , false  )
+instance variables 
+  private  static fs : JavaIoFileSystem := J2VFileSystem`getFileSystem();
+  private  path : JavaLangString;
+  private  prefixLength : int ;
+  public  static separatorChar : char  := fs.getSeparator();
+  public  static separator : JavaLangString := new JavaLangString([fs.getSeparator()]);
+  public  static pathSeparatorChar : char  := fs.getPathSeparator();
+  public  static pathSeparator : JavaLangString := new JavaLangString([fs.getPathSeparator()]);
+  private  static tmpFileLock : JavaLangObject := new  JavaLangObject();
+  private  static counter : int  := -1;
+  private  static tmpdir : JavaLangString := new JavaLangString(<NIL>);
+  private  static serialVersionUID : int  := 0
+operations 
+public  list : () ==> map  int  to  JavaLangString
+list() == 
+( --dcl   security : SecurityManager := JavaLangSystem`getSecurityManager();
+  --if  not  security.IsNil()
+  --then  
+  --  ( security.checkRead(path)
+  --  ) ;
+  --return  fs.list(self  )
+  return {|->}
+) ;
+
+public  mkdir : () ==> bool
+mkdir() == 
+( --dcl   security : SecurityManager := JavaLangSystem`getSecurityManager();
+  --if  not  security.IsNil()
+  --then  
+  --  ( security.checkWrite(path)
+  --  ) ;
+  --return  fs.createDirectory(self  )
+  return false;
+) ;
+
+public  toURL : () ==> JavaNetURL
+toURL() == 
+( --dcl   path : JavaLangString := getAbsolutePath();
+  --if  JavaIoFile`separatorChar <> '/'
+  --then  
+  --  ( path := path.replace(JavaIoFile`separatorChar , '/')
+  --  ) ;
+  --if  not  path.startsWith(new  JavaLangString("/"))
+  --then  
+  --  ( path := J2VUTIL`ConcatStr(new  JavaLangString("/") , path)
+  --  ) ;
+  --if  not  path.endsWith(new  JavaLangString("/")) and  isDirectory()
+  --then  
+  --  ( path := J2VUTIL`ConcatStr(path , new  JavaLangString("/"))
+  --  ) ;
+  --return  new  JavaNetURL(new  JavaLangString("file") , new  JavaLangString([  ]) , path)
+  return  new  JavaNetURL(<NIL>)
+) ;
+
+public  delete : () ==> bool 
+delete() == 
+( --dcl   security : SecurityManager := JavaLangSystem`getSecurityManager();
+  --if  not  security.IsNil()
+  --then  
+  --  ( security.checkDelete(path)
+  --  ) ;
+  --return  fs.delete(self  )
+  return false
+) ;
+
+public  isFile : () ==> bool 
+isFile() == 
+( --dcl   security : SecurityManager := JavaLangSystem`getSecurityManager();
+  --if  not  security.IsNil()
+  --then  
+  --  ( security.checkRead(path)
+  --  ) ;
+  --return  ((J2VUTIL`BitOp(fs.getBooleanAttributes(self  ) , <AND> , JavaIoFileSystem`BA_REGULAR)) <> 0)
+  return false
+) ;
+
+public  length : () ==> int 
+length() == 
+( --dcl   security : SecurityManager := JavaLangSystem`getSecurityManager();
+  --if  not  security.IsNil()
+  --then  
+  --  ( security.checkRead(path)
+  --  ) ;
+  --return  fs.getLength(self  )
+  return 0
+) ;
+
+public  mkdirs : () ==> bool 
+mkdirs() == 
+( --if  exists__()
+  --then  
+  --  ( return  false  
+  --  ) ;
+  --if  mkdir()
+  --then  
+  --  ( return  true  
+  --  ) ;
+  --( dcl   parent : JavaLangString := getParent();
+  --  return  (not  parent.IsNil()) and  (new  JavaIoFile(parent).mkdirs() and  mkdir())
+  --) 
+  return false
+) ;
+
+public  canRead : () ==> bool 
+canRead() == 
+( --dcl   security : SecurityManager := JavaLangSystem`getSecurityManager();
+  --if  not  security.IsNil()
+  --then  
+  --  ( security.checkRead(path)
+  --  ) ;
+  --return  fs.checkAccess(self   , false  )
+  return false
+) ;
+
+public  getName : () ==> JavaLangString
+getName() == 
+( dcl   index : int  := path.lastIndexOf(J2VUTIL`toInt(separatorChar));
+  if  index < prefixLength
+  then  
+    return  path.substring(prefixLength);
+  return  path.substring(index+1)
+) ;
+
+public  getPath : () ==> JavaLangString
+getPath() == 
+( return  path
+) ;
+
+public  canWrite : () ==> bool 
+canWrite() == 
+( --dcl   security : SecurityManager := JavaLangSystem`getSecurityManager();
+  --if  not  security.IsNil()
+  --then  
+  --  ( security.checkWrite(path)
+  --  ) ;
+  --return  fs.checkAccess(self   , true  )
+  return false
+) ;
+
+public  exists__ : () ==> bool 
+exists__() == 
+is not yet specified;
+--( dcl   security : SecurityManager := JavaLangSystem`getSecurityManager();
+--  if  not  security.IsNil()
+--  then  
+--    ( security.checkRead(path)
+--    ) ;
+--  return  ((J2VUTIL`BitOp(fs.getBooleanAttributes(self  ) , <AND> , JavaIoFileSystem`BA_EXISTS)) <> 0)
+--) ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  hashCode : () ==> int 
+hashCode() == 
+( --return  fs.hashCode(self  )
+  return 0
+) ;
+
+public  isHidden : () ==> bool 
+isHidden() == 
+( --dcl   security : SecurityManager := JavaLangSystem`getSecurityManager();
+  --if  not  security.IsNil()
+  --then  
+  --  ( security.checkRead(path)
+  --  ) ;
+  --return  ((J2VUTIL`BitOp(fs.getBooleanAttributes(self  ) , <AND> , JavaIoFileSystem`BA_HIDDEN)) <> 0)
+  return false
+) ;
+
+public  toString : () ==> JavaLangString
+toString() == 
+( return  getPath()
+) ;
+
+public  JavaIoFile : <NIL> ==> JavaIoFile
+JavaIoFile(-) == 
+isNil := true  ;
+
+public  getParent : () ==> JavaLangString
+getParent() == 
+( dcl   index : int  := path.lastIndexOf(J2VUTIL`toInt(separatorChar));
+  if  index < prefixLength
+  then  
+    ( if  (prefixLength > 0) and  (path.length() > prefixLength)
+      then  
+        return  path.substring(0 , prefixLength);
+      return  new  JavaLangString(<NIL>)
+    ) ;
+  return  path.substring(0 , index)
+) ;
+
+public  listFiles : () ==> map  int  to  JavaIoFile
+listFiles() == 
+( --dcl   ss : map  int  to  JavaLangString := list();
+  --if  ss = {|->}
+  --then  
+  --  return  {|->};
+  --( dcl   n : int  := (card  dom  ss),
+  --        fs : map  int  to  JavaIoFile := {l_7 |-> new  JavaIoFile(<NIL>)|l_7 in set  {0,...,n-1}};
+  --  ( dcl   i : int  := 0;
+  --    while  i < n do  
+  --   ( fs := fs ++ {i |-> new  JavaIoFile(File`path , ss(i))};
+  --      i := i+1
+  --    ) 
+  --  ) ;
+  -- return  fs
+  --) 
+  return {|->}
+) ;
+
+public  static listRoots : () ==> map  int  to  JavaIoFile
+listRoots() == 
+( --return  fs.listRoots()
+  return {|->}
+) ;
+
+private  static getTempDir : () ==> JavaLangString
+getTempDir() == 
+( --if  tmpdir.IsNil()
+  --then  
+  --  ( dcl   a : GetPropertyAction := new  GetPropertyAction(new  JavaLangString("java.io.tmpdir"));
+  --    tmpdir := (AccessController`doPrivileged(a))
+  --  ) ;
+  --return  tmpdir
+  return new JavaLangString(<NIL>)
+) ;
+
+public  isAbsolute : () ==> bool 
+isAbsolute() == 
+( --return  fs.isAbsolute(self  )
+  return false
+) ;
+
+public  isDirectory : () ==> bool 
+isDirectory() == 
+is not yet specified;
+--( dcl   security : SecurityManager := JavaLangSystem`getSecurityManager();
+--  if  not  security.IsNil()
+--  then  
+--    ( security.checkRead(path)
+--    ) ;
+--  return  ((J2VUTIL`BitOp(fs.getBooleanAttributes(self  ) , <AND> , JavaIoFileSystem`BA_DIRECTORY)) <> 0)
+--) ;
+
+public  setReadOnly : () ==> bool 
+setReadOnly() == 
+is not yet specified;
+--( dcl   security : SecurityManager := JavaLangSystem`getSecurityManager();
+--  if  not  security.IsNil()
+--  then  
+--    ( security.checkWrite(path)
+--    ) ;
+--  return  fs.setReadOnly(self  )
+--) ;
+
+public  JavaIoFile : JavaLangString ==> JavaIoFile
+JavaIoFile(pathname) == 
+( if  pathname.IsNil()
+  then  
+    ( exit  new  JavaLangNullPointerException()
+    ) ;
+  JavaIoFile`path := fs.normalize(pathname);
+  JavaIoFile`prefixLength := fs.prefixLength(JavaIoFile`path);
+  JavaIoFile''(JavaIoFile`path.toSeqOfChar());
+) ;
+
+private JavaIoFile'':  seq of char ==> ()
+JavaIoFile''(child) == is not yet specified;
+
+public  deleteOnExit : () ==> ()
+deleteOnExit() == 
+is not yet specified;
+--( dcl   security : SecurityManager := JavaLangSystem`getSecurityManager();
+--  if  not  security.IsNil()
+--  then  
+--    ( security.checkDelete(path)
+--    ) ;
+--  let - = fs.deleteOnExit(self  )
+--  in 
+--    skip ;
+--) ;
+
+public  lastModified : () ==> int 
+lastModified() == 
+is not yet specified;
+--( dcl   security : SecurityManager := JavaLangSystem`getSecurityManager();
+--  if  not  security.IsNil()
+--  then  
+--    ( security.checkRead(path)
+--    ) ;
+--  return  fs.getLastModifiedTime(self  )
+--) ;
+
+public  createNewFile : () ==> bool 
+createNewFile() == 
+is not yet specified;
+--( dcl   security : SecurityManager := JavaLangSystem`getSecurityManager();
+--  if  not  security.IsNil()
+--  then  
+--    security.checkWrite(path);
+--  return  fs.createFileExclusively(path)
+--) ;
+
+public  getParentFile : () ==> JavaIoFile
+getParentFile() == 
+( dcl   p : JavaLangString := JavaIoFile`getParent();
+  if  p.IsNil()
+  then  
+    return  new  JavaIoFile(<NIL>);
+  return  new  JavaIoFile(p , JavaIoFile`prefixLength)
+) ;
+
+public  JavaIoFile : JavaLangString * int  ==> JavaIoFile
+JavaIoFile(pathname, prefixLength) == 
+( JavaIoFile`path := pathname;
+  JavaIoFile`prefixLength := prefixLength;
+  JavaIoFile''(pathname.toSeqOfChar());
+) ;
+
+public  JavaIoFile : JavaIoFile * JavaLangString ==> JavaIoFile
+JavaIoFile(parent, child) == 
+( if  child.IsNil()
+  then  
+    ( exit  new  JavaLangNullPointerException()
+    ) ;
+  if  not  parent.IsNil()
+  then  
+    ( if  parent.path.equals(new  JavaLangString([  ]))
+      then  
+        ( JavaIoFile`path := fs.resolve(fs.getDefaultParent() , fs.normalize(child))
+        ) 
+      else  
+        ( JavaIoFile`path := fs.resolve(parent.path , fs.normalize(child))
+        ) 
+    ) 
+  else  
+    ( JavaIoFile`path := fs.normalize(child)
+    ) ;
+  JavaIoFile`prefixLength := fs.prefixLength(JavaIoFile`path);
+  JavaIoFile''(JavaIoFile`path.toSeqOfChar())
+) ;
+
+public  equals : JavaLangObject ==> bool 
+equals(obj) == 
+( if  (not  obj.IsNil()) and  (isofclass  (JavaIoFile,obj))
+  then  
+    ( return  compareTo(obj) = 0
+    ) ;
+  return  false  
+) ;
+
+public  renameTo : JavaIoFile ==> bool 
+renameTo(dest) == 
+is not yet specified;
+--( dcl   security : SecurityManager := JavaLangSystem`getSecurityManager();
+--  if  not  security.IsNil()
+--  then  
+--    ( security.checkWrite(path);
+--      security.checkWrite(dest.path)
+--    ) ;
+--  return  fs.rename(self   , dest)
+--) ;
+
+public  getAbsoluteFile : () ==> JavaIoFile
+getAbsoluteFile() == 
+( return  new  JavaIoFile(getAbsolutePath())
+) ;
+
+public  getAbsolutePath : () ==> JavaLangString
+getAbsolutePath() == 
+( return  fs.resolve(self  )
+) ;
+
+getPrefixLength : () ==> int 
+getPrefixLength() == 
+( return  prefixLength
+) ;
+
+public  getCanonicalFile : () ==> JavaIoFile
+getCanonicalFile() == 
+( return  new  JavaIoFile(getCanonicalPath())
+) ;
+
+public  getCanonicalPath : () ==> JavaLangString
+getCanonicalPath() == 
+( return  fs.canonicalize(fs.resolve(self  ))
+) ;
+
+public  setLastModified : int  ==> bool 
+setLastModified(time) == 
+is not yet specified;
+--( if  time < 0
+--  then  
+--    exit  new  JavaLangIllegalArgumentException(new  JavaLangString("Negative time"));
+--  ( dcl   security : SecurityManager := JavaLangSystem`getSecurityManager();
+--    if  not  security.IsNil()
+--    then  
+--      ( security.checkWrite(path)
+--      ) ;
+--    return  fs.setLastModifiedTime(self   , time)
+--  ) 
+--) ;
+
+public  compareTo : JavaLangObject ==> int 
+compareTo(pathname) == 
+( if isofclass(JavaIoFile,pathname)
+  then fs.compare(self, pathname)
+  else compareTo(pathname)
+) ;
+
+--public  list : FilenameFilter ==> map  int  to  JavaLangString
+--list(filter) == 
+--is not yet specified;
+--( dcl   names : map  int  to  JavaLangString := list();
+--  if  (names = {|->}) or  (filter.IsNil())
+--  then  
+--    ( return  names
+--    ) ;
+--  ( dcl   v : ArrayList := new  ArrayList();
+--    ( dcl   i : int  := 0;
+--      while  i < (card  dom  names) do  
+--      ( if  filter.accept(self   , names(i))
+--        then  
+--          ( let - = v.add(names(i))
+--            in 
+--              skip 
+--          ) ;
+--        i := i+1
+--      ) 
+--    ) ;
+--    return  (v.toArray({l_12 |-> new  JavaLangString(<NIL>)|l_12 in set  {0,...,0-1}}))
+--  ) 
+--) ;
+
+public  JavaIoFile : JavaLangString * JavaLangString ==> JavaIoFile
+JavaIoFile(parent, child) == 
+( if  child.IsNil()
+  then  
+    ( exit  new  JavaLangNullPointerException()
+    ) ;
+  if  not  parent.IsNil()
+  then  
+    ( if  parent.equals(new  JavaLangString([  ]))
+      then  
+        ( JavaIoFile`path := fs.resolve(fs.getDefaultParent() , fs.normalize(child))
+        ) 
+      else  
+        ( JavaIoFile`path := fs.resolve(fs.normalize(parent) , fs.normalize(child))
+        ) 
+    ) 
+  else  
+    ( JavaIoFile`path := fs.normalize(child)
+    ) ;
+  JavaIoFile`prefixLength := fs.prefixLength(JavaIoFile`path);
+  JavaIoFile''(JavaIoFile`path.toSeqOfChar())
+) ;
+
+--public  listFiles : FileFilter ==> map  int  to  JavaIoFile
+--listFiles(filter) == 
+--is not yet specified;
+--( dcl   ss : map  int  to  JavaLangString := list();
+--  if  ss = {|->}
+--  then  
+--    return  {|->};
+--  ( dcl   v : ArrayList := new  ArrayList();
+--    ( dcl   i : int  := 0;
+--      while  i < (card  dom  ss) do  
+--      ( dcl   f : JavaIoFile := new  JavaIoFile(File`path , ss(i));
+--        if  (filter.IsNil()) or  filter.accept(f)
+--        then  
+--          ( let - = v.add(f)
+--            in 
+--              skip 
+--          ) ;
+--        i := i+1
+--      ) 
+--    ) ;
+--    return  (v.toArray({l_12 |-> new  JavaIoFile(<NIL>)|l_12 in set  {0,...,0-1}}))
+--  ) 
+--) ;
+
+--public  listFiles : FileFilter | FilenameFilter ==> map  int  to  JavaIoFile
+--listFiles(filter) == 
+--is not yet specified;
+--( dcl   ss : map  int  to  JavaLangString := list();
+--  if  ss = {|->}
+--  then  
+--    return  {|->};
+--  ( dcl   v : ArrayList := new  ArrayList();
+--    ( dcl   i : int  := 0;
+--      while  i < (card  dom  ss) do  
+--      ( if  (filter.IsNil()) or  filter.accept(self   , ss(i))
+--        then  
+--          ( let - = v.add(new  JavaIoFile(File`path , ss(i)))
+--            in 
+--              skip 
+--          ) ;
+--        i := i+1
+--      ) 
+--    ) ;
+--    return  (v.toArray({l_12 |-> new  JavaIoFile(<NIL>)|l_12 in set  {0,...,0-1}}))
+--  ) 
+--) ;
+
+--private  readObject : ObjectInputStream ==> ()
+--readObject(s) == 
+--( s.defaultReadObject();
+--  ( dcl   sep : char  := s.readChar();
+--    if  sep <> separatorChar
+--    then  
+--      JavaIoFile`path := JavaIoFile`path.replace(sep , separatorChar);
+--    JavaIoFile`path := fs.normalize(JavaIoFile`path);
+--    JavaIoFile`prefixLength := fs.prefixLength(JavaIoFile`path)
+--  ) ;
+--) ;
+
+public  static createTempFile : JavaLangString * JavaLangString ==> JavaIoFile
+createTempFile(prefix, suffix) == 
+( return  new JavaIoFile(<NIL>).createTempFile(prefix , suffix , new  JavaIoFile(<NIL>))
+) ;
+
+--private  writeObject : ObjectOutputStream ==> ()
+--writeObject(s) == 
+--( s.defaultWriteObject();
+--  let - = s.writeChar(JavaIoFile`separatorChar)
+--  in 
+--    skip ;
+--  skip 
+--) ;
+
+private  static generateFile : JavaLangString * JavaLangString * JavaIoFile ==> JavaIoFile
+generateFile(prefix, suffix, dir) == 
+is not yet specified;
+--( if  counter = -1
+--  then  
+--    ( counter := J2VUTIL`BitOp(new  Random().nextInt() , <AND> , 0)
+--    ) ;
+--  counter := counter+1;
+--  return  new  JavaIoFile(dir , J2VUTIL`ConcatStr(J2VUTIL`Convert("JavaLangString" , J2VUTIL`ConcatStr(prefix , JavaLangInteger`toString(counter))) , suffix))
+--) ;
+
+public  static createTempFile : JavaLangString * JavaLangString * JavaIoFile ==> JavaIoFile
+createTempFile(prefix, suffix, directory) == 
+is not yet specified;
+--( if  prefix.IsNil()
+--  then  
+--    exit  new  JavaLangNullPointerException();
+--  if  prefix.length() < 3
+--  then  
+--    exit  new  JavaLangIllegalArgumentException(new  JavaLangString("Prefix string too short"));
+--  ( dcl   s : JavaLangString := if  (suffix.IsNil()) then  new  JavaLangString(".tmp") else  suffix;
+--    ( if  directory.IsNil()
+--      then  
+--        ( directory := new  JavaIoFile(getTempDir())
+--        ) ;
+--      ( dcl   sm : SecurityManager := JavaLangSystem`getSecurityManager(),
+--              f : JavaIoFile;
+--        ( ( f := generateFile(prefix , s , directory)
+--          ) 
+--        ) ;
+--        while  not  checkAndCreate(f.getPath() , sm) do  
+--        ( f := generateFile(prefix , s , directory)
+--        ) ;
+--        return  f
+--      ) 
+--    ) 
+--  ) 
+--) ;
+
+--private  static checkAndCreate : JavaLangString * SecurityManager ==> bool 
+--checkAndCreate(filename, sm) == 
+--( if  not  sm.IsNil()
+--  then  
+--    ( trap  j2v_exception with  
+--        cases  true  : 
+--          (isofclass  (AccessControlException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+--            ( dcl   x : AccessControlException := j2v_exception;
+--              exit  new  SecurityException(new  JavaLangString("Unable to create temporary file"))
+--            ) ,
+--          others  -> 
+--            exit  j2v_exception
+--        end  
+--      in  
+--        ( sm.checkWrite(filename)
+--        ) 
+--    ) ;
+--  return  fs.createFileExclusively(filename)
+--) ;
+
+
+end  JavaIoFile

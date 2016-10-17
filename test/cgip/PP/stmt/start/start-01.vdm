@@ -1,0 +1,42 @@
+class A
+
+instance variables
+  r1    : real := 1;
+  r2    : real := 2.2;
+
+operations
+
+
+public  Get: () ==> seq of real
+  Get() ==
+    return [r1,r2];
+
+
+  Set: real * real ==> ()
+  Set(v1,v2) ==
+  ( r1 := v1;
+    r2 := v2 )
+
+thread
+  skip  
+
+
+end A
+class B
+
+instance variables
+  a: A;
+
+operations
+
+public Test : () ==> seq of real
+  Test()  ==
+  ( dcl res: seq of real;
+    a := new A();
+    start (a);
+    return a.Get();
+  )
+
+end B
+
+    

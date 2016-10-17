@@ -1,0 +1,16 @@
+end A
+
+class B is subclass of A
+
+operations
+
+  m1: T1 ==> [(T11)] | (T20 * T18)
+  m1(a)  ==
+    let s = { i | i in set {1,2,3,4,5,6,7,8} & i > a } in
+      return { { a |-> 'a' | a in set s } };
+
+public  Test: () ==> [T10 | (T22 | ([[[[[[[[(T11)]]]]]]]])) ]
+  Test()  ==
+  ( dcl t: set of (((((map T1 to char))))) := self.m1(1);
+    return t )
+

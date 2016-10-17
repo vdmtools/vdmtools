@@ -1,0 +1,505 @@
+class GraphLayout is subclass of Vector
+operations 
+public  sortPins : () ==> <VOID>
+sortPins() == 
+( ( dcl   idx : int  := 0;
+    while  idx < size() do  
+    ( dcl   myNode : [RefDesNode] := (def l_7 :  GraphNode = (elementAt(idx))
+            in l_7).getNode();
+      let - = myNode.sortPinsByHeight()
+      in 
+        skip ;
+      let - = myNode.sortPinsByOrientation()
+      in 
+        skip ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  
+) ;
+
+public  plotNodes : () ==> <VOID>
+plotNodes() == 
+( dcl   myLocation : [Point] := new  Point(0 , 0),
+        cellSize : map  int  to  [Dimension] := getCellSizes(),
+        cellLocation : map  int  to  [Point] := getCellLocations();
+  ( dcl   idx : int  := 0;
+    while  idx < size() do  
+    ( dcl   graphNode : [GraphNode] := elementAt(idx),
+            myNode : [RefDesNode] := graphNode.getNode(),
+            nodeX : int  := graphNode.getCoordinates().x,
+            nodeY : int  := graphNode.getCoordinates().y;
+      myLocation.x := cellLocation(nodeX).x+(cellSize(nodeX).width-myNode.getSize().width)/2;
+      myLocation.y := cellLocation(nodeY).y+((cellLocation(nodeY+1).y-cellLocation(nodeY).y-myNode.getSize().height)/2);
+      let - = myNode.setLocation(myLocation.x , myLocation.y)
+      in 
+        skip ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  
+) ;
+
+public  getPlotMap : () ==> [PlotMap]
+getPlotMap() == 
+( return  plotMap
+) ;
+
+private  GraphLayout : () ==> GraphLayout
+GraphLayout() == 
+( plotMap := new  PlotMap();
+  nodePlotCount := 0;
+  return  
+) ;
+
+public  clearVisits : () ==> <VOID>
+clearVisits() == 
+( ( dcl   idx : int  := 0;
+    while  idx < GraphLayout`size() do  
+    ( dcl   graphNode : [GraphNode] := GraphLayout`elementAt(idx);
+      let - = graphNode.setVisited(false  )
+      in 
+        skip ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  
+) ;
+
+public  getMaximumX : () ==> int 
+getMaximumX() == 
+( dcl   maximumX : int  := Integer.MIN_VALUE;
+  ( dcl   idx : int  := 0;
+    while  idx < GraphLayout`size() do  
+    ( dcl   graphNode : [GraphNode] := GraphLayout`elementAt(idx);
+      if  graphNode.getCoordinates().x > maximumX
+      then  
+        ( maximumX := graphNode.getCoordinates().x
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  maximumX
+) ;
+
+public  getMaximumY : () ==> int 
+getMaximumY() == 
+( dcl   maximumY : int  := Integer.MIN_VALUE;
+  ( dcl   idx : int  := 0;
+    while  idx < GraphLayout`size() do  
+    ( dcl   graphNode : [GraphNode] := GraphLayout`elementAt(idx);
+      if  graphNode.getCoordinates().y > maximumY
+      then  
+        ( maximumY := graphNode.getCoordinates().y
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  maximumY
+) ;
+
+public  getMinimumX : () ==> int 
+getMinimumX() == 
+( dcl   minimumX : int  := Integer.MAX_VALUE;
+  ( dcl   idx : int  := 0;
+    while  idx < GraphLayout`size() do  
+    ( dcl   graphNode : [GraphNode] := GraphLayout`elementAt(idx);
+      if  graphNode.getCoordinates().x < minimumX
+      then  
+        ( minimumX := graphNode.getCoordinates().x
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  minimumX
+) ;
+
+public  getMinimumY : () ==> int 
+getMinimumY() == 
+( dcl   minimumY : int  := Integer.MAX_VALUE;
+  ( dcl   idx : int  := 0;
+    while  idx < GraphLayout`size() do  
+    ( dcl   graphNode : [GraphNode] := GraphLayout`elementAt(idx);
+      if  graphNode.getCoordinates().y < minimumY
+      then  
+        ( minimumY := graphNode.getCoordinates().y
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  minimumY
+) ;
+
+public  mergeToRow : int  ==> bool 
+mergeToRow(row) == 
+( dcl   mergeRow : bool  := true  ,
+        maximumX : int  := getMaximumX();
+  ( dcl   column : int  := 0;
+    while  column <= maximumX and  mergeRow do  
+    ( mergeRow := not  (plotMap.plotted(column)(row) and  plotMap.plotted(column)(row+1));
+      column := column+1
+    ) 
+  ) ;
+  return  mergeRow
+) ;
+
+private  getCellSizes : () ==> map  int  to  [Dimension]
+getCellSizes() == 
+( dcl   pointCount : int  := Math.max(plotMap.getColumns() , plotMap.getRows())+1,
+        cellSize : map  int  to  [Dimension] := {l_11 |-> nil  |l_11 in set  {0,...,pointCount-1}};
+  ( dcl   idx : int  := 0;
+    while  idx < pointCount do  
+    ( cellSize := cellSize ++ {idx |-> new  Dimension(0 , 0)};
+      idx := idx+1
+    ) 
+  ) ;
+  ( dcl   idx : int  := 0;
+    while  idx < size() do  
+    ( dcl   myNode : [GraphNode] := elementAt(idx),
+            nodeSize : [Dimension] := myNode.getNode().getSize(),
+            leftWireCount : int  := myNode.getNode().getEdgeCount(Position.LEFT),
+            rightWireCount : int  := myNode.getNode().getEdgeCount(Position.RIGHT),
+            wireCount : int  := leftWireCount+rightWireCount,
+            nodeLocation : [Point] := myNode.getCoordinates(),
+            wireHeight : int  := (Math.max(leftWireCount , rightWireCount)*WireGraphic.SPREAD)+WireGraphic.SPREAD_OFFSET,
+            nodeHeight : int  := nodeSize.height+WireGraphic.SPREAD_OFFSET+12,
+            cellWidth : int  := nodeSize.width+WireGraphic.SPREAD_OFFSET+(wireCount*WireGraphic.SPREAD)+36;
+      if  cellWidth > cellSize(nodeLocation.x).width
+      then  
+        ( cellSize(nodeLocation.x).width := cellWidth
+        ) ;
+      if  nodeHeight > cellSize(nodeLocation.y).height
+      then  
+        ( cellSize(nodeLocation.y).height := nodeHeight
+        ) ;
+      if  wireHeight > cellSize(nodeLocation.y).height
+      then  
+        ( cellSize(nodeLocation.y).height := wireHeight
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  cellSize
+) ;
+
+public  getLayoutSize : () ==> [Dimension]
+getLayoutSize() == 
+( dcl   layoutSize : [Dimension] := new  Dimension(0 , 0),
+        myHeight : int ,
+        myWidth : int ,
+        myNode : [RefDesNode];
+  ( dcl   idx : int  := 0;
+    while  idx < size() do  
+    ( myNode := (def l_7 :  GraphNode = (elementAt(idx))
+      in l_7).getNode();
+      myHeight := myNode.getLocation().y+myNode.getSize().height+MARGIN;
+      if  myHeight > layoutSize.height
+      then  
+        ( layoutSize.height := myHeight
+        ) ;
+      myHeight := myNode.getLocation().y+(WireGraphic.SPREAD*myNode.getEdgeCount())+MARGIN;
+      if  myHeight > layoutSize.height
+      then  
+        ( layoutSize.height := myHeight
+        ) ;
+      myWidth := myNode.getLocation().x+myNode.getSize().width+MARGIN;
+      if  myWidth > layoutSize.width
+      then  
+        ( layoutSize.width := myWidth
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  layoutSize
+) ;
+
+public  positionNodes : () ==> <VOID>
+positionNodes() == 
+( dcl   nodePlacement : [NodePlacement],
+        useBranchPlacement : bool  := true  ;
+  if  useBranchPlacement
+  then  
+    ( nodePlacement := new  BranchPlacement()
+    ) 
+  else  
+    ( dcl   mapSize : int  := Math.max(2 , 2*(size()-1));
+      let - = plotMap.createPlotMap(mapSize , mapSize)
+      in 
+        skip ;
+      nodePlacement := new  ScorePlacement()
+    ) ;
+  let - = nodePlacement.plotNodes()
+  in 
+    skip ;
+  ( dcl   mapColumns : int  := Math.max(getMaximumX() , getMaximumX()-getMinimumX())+1,
+          mapRows : int  := Math.max(getMaximumY() , getMaximumY()-getMinimumY())+1;
+    let - = plotMap.createPlotMap(mapColumns , mapRows)
+    in 
+      skip ;
+    let - = nodePlacement.packNodes()
+    in 
+      skip ;
+    let - = updatePlotMap()
+    in 
+      skip ;
+    return  
+  ) ;
+  return  <VOID>
+) ;
+
+public  positionWires : () ==> <VOID>
+positionWires() == 
+( dcl   cellLocation : map  int  to  [Point] := getCellLocations();
+  ( dcl   idx : int  := 0;
+    while  idx < size() do  
+    ( dcl   myNode : [GraphNode] := elementAt(idx),
+            wires : [Enumeration] := myNode.getNode().getEdges();
+      trap  j2v_break with  
+        cases  true  : 
+          (isofclass  (J2V_Break,j2v_break)) -> 
+            skip 
+          
+        end  
+      in  
+        while  wires.hasMoreElements() do  
+        ( dcl   nextWire : [DiagramEdge] := wires.nextElement(),
+                originatingPoint : [ConnectionPoint] := nextWire.getOriginatingPoint(),
+                terminatingPoint : [ConnectionPoint] := nextWire.getTerminatingPoint();
+          if  originatingPoint.getOrientation() = Orientation.UNDEFINED or  terminatingPoint.getOrientation() = Orientation.UNDEFINED
+          then  
+            ( dcl   originatingNode : [RefDesNode] := originatingPoint.getNode(),
+                    terminatingNode : [RefDesNode] := terminatingPoint.getNode(),
+                    startNode : [GraphNode] := findGraphNode(originatingNode),
+                    endNode : [GraphNode] := findGraphNode(terminatingNode),
+                    startCoordinates : [Point] := startNode.getCoordinates(),
+                    endCoordinates : [Point] := endNode.getCoordinates();
+              if  pathBlocked(startCoordinates , endCoordinates)
+              then  
+                ( dcl   routeHeight : int  := getRouteHeight(startCoordinates , endCoordinates);
+                  let - = nextWire.setDetour(cellLocation(routeHeight).y)
+                  in 
+                    skip 
+                ) ;
+              if  startCoordinates.x = endCoordinates.x
+              then  
+                ( dcl   myPosition : [Position] := Position.RIGHT;
+                  if  originatingNode.hasAMate() or  terminatingNode.hasAMate()
+                  then  
+                    ( if  nodesConnected(originatingNode.getDominantMate() , startNode.getNode().getPinList() , terminatingNode.getDominantMate() , endNode.getNode().getPinList())
+                      then  
+                        ( myPosition := Position.LEFT
+                        ) 
+                    ) ;
+                  let - = originatingPoint.setOrientation(myPosition)
+                  in 
+                    skip ;
+                  let - = terminatingPoint.setOrientation(myPosition)
+                  in 
+                    skip ;
+                  let - = originatingNode.addEdgeAtPosition(myPosition , originatingPoint.getConnectionId() , nextWire)
+                  in 
+                    skip ;
+                  let - = terminatingNode.addEdgeAtPosition(myPosition , terminatingPoint.getConnectionId() , nextWire)
+                  in 
+                    skip 
+                ) 
+              else  
+                if  startCoordinates.x < endCoordinates.x
+                then  
+                  ( let - = originatingPoint.setOrientation(Position.RIGHT)
+                    in 
+                      skip ;
+                    let - = terminatingPoint.setOrientation(Position.LEFT)
+                    in 
+                      skip ;
+                    let - = originatingNode.addEdgeAtPosition(Position.RIGHT , originatingPoint.getConnectionId() , nextWire)
+                    in 
+                      skip ;
+                    let - = terminatingNode.addEdgeAtPosition(Position.LEFT , terminatingPoint.getConnectionId() , nextWire)
+                    in 
+                      skip 
+                  ) 
+                else  
+                  if  startCoordinates.x > endCoordinates.x
+                  then  
+                    ( let - = originatingPoint.setOrientation(Position.LEFT)
+                      in 
+                        skip ;
+                      let - = terminatingPoint.setOrientation(Position.RIGHT)
+                      in 
+                        skip ;
+                      let - = originatingNode.addEdgeAtPosition(Position.LEFT , originatingPoint.getConnectionId() , nextWire)
+                      in 
+                        skip ;
+                      let - = terminatingNode.addEdgeAtPosition(Position.RIGHT , terminatingPoint.getConnectionId() , nextWire)
+                      in 
+                        skip 
+                    ) 
+            ) 
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  
+) ;
+
+public  updatePlotMap : () ==> <VOID>
+updatePlotMap() == 
+( let - = plotMap.clearPlotMap()
+  in 
+    skip ;
+  ( dcl   idx : int  := 0;
+    while  idx < GraphLayout`size() do  
+    ( dcl   graphNode : [GraphNode] := GraphLayout`elementAt(idx),
+            coordinates : [Point] := graphNode.getCoordinates();
+      plotMap.plotted(coordinates.x) := plotMap.plotted(coordinates.x) ++ {coordinates.y |-> true  };
+      idx := idx+1
+    ) 
+  ) ;
+  return  
+) ;
+
+public  static getGraphLayout : () ==> [GraphLayout]
+getGraphLayout() == 
+( return  GRAPH_LAYOUT
+) ;
+
+private  getCellLocations : () ==> map  int  to  [Point]
+getCellLocations() == 
+( dcl   pointCount : int  := Math.max(plotMap.getColumns() , plotMap.getRows())+1,
+        cellLocation : map  int  to  [Point] := {l_11 |-> nil  |l_11 in set  {0,...,pointCount-1}};
+  ( dcl   idx : int  := 0;
+    while  idx < pointCount do  
+    ( cellLocation := cellLocation ++ {idx |-> new  Point(0 , 0)};
+      idx := idx+1
+    ) 
+  ) ;
+  ( dcl   cellSize : map  int  to  [Dimension] := getCellSizes();
+    cellLocation(0).x := MARGIN;
+    ( dcl   idx : int  := 1;
+      while  idx < pointCount do  
+      ( cellLocation(idx).x := cellLocation(idx-1).x+cellSize(idx-1).width;
+        idx := idx+1
+      ) 
+    ) ;
+    cellLocation(0).y := MARGIN;
+    ( dcl   idx : int  := 1;
+      while  idx < pointCount do  
+      ( cellLocation(idx).y := cellLocation(idx-1).y+cellSize(idx-1).height;
+        idx := idx+1
+      ) 
+    ) ;
+    return  cellLocation
+  ) 
+) ;
+
+public  setPlotMap : [PlotMap] ==> <VOID>
+setPlotMap(myPlotMap) == 
+( plotMap := myPlotMap;
+  return  
+) ;
+
+private  getNodeIndex : [String] ==> int 
+getNodeIndex(myNodeName) == 
+( dcl   nodeIndex : int ;
+  nodeIndex := 0;
+  while  nodeIndex < size() and  myNodeName.compareTo((def l_16 :  GraphNode = (elementAt(nodeIndex))
+  in l_16).getNode().getId()) > 0 do  
+  ( skip ;
+    nodeIndex := nodeIndex+1
+  ) ;
+  return  nodeIndex
+) ;
+
+public  findGraphNode : [RefDesNode] ==> [GraphNode]
+findGraphNode(myRefDes) == 
+( dcl   graphNode : [GraphNode] := nil  ;
+  ( dcl   idx : int  := 0;
+    while  idx < size() and  graphNode = nil   do  
+    ( if  (def l_8 :  GraphNode = (elementAt(idx))
+      in l_8).getNode() = myRefDes
+      then  
+        ( graphNode := elementAt(idx)
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  graphNode
+) ;
+
+public  createLayout : [DiagramCanvas] ==> <VOID>
+createLayout(diagramCanvas) == 
+( nodePlotCount := 0;
+  let - = GraphLayout`removeAllElements()
+  in 
+    skip ;
+  ( dcl   nodeList : [Enumeration] := diagramCanvas.getNodeList();
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip 
+        
+      end  
+    in  
+      while  nodeList.hasMoreElements() do  
+      ( dcl   nextNode : [RefDesNode] := nodeList.nextElement(),
+              nodeIndex : int  := getNodeIndex(nextNode.getId());
+        let - = insertElementAt(new  GraphNode(nextNode) , nodeIndex)
+        in 
+          skip 
+      ) ;
+    return  
+  ) ;
+  return  <VOID>
+) ;
+
+private  pathBlocked : [Point] * [Point] ==> bool 
+pathBlocked(startCoordinates, endCoordinates) == 
+( dcl   blocked : bool  := false  ,
+        lowX : int  := Math.min(startCoordinates.x , endCoordinates.x)+1,
+        highX : int  := Math.max(startCoordinates.x , endCoordinates.x),
+        lowY : int  := Math.min(startCoordinates.y , endCoordinates.y),
+        highY : int  := Math.max(startCoordinates.y , endCoordinates.y)+1;
+  ( dcl   myX : int  := lowX;
+    while  not  blocked and  myX < highX do  
+    ( ( dcl   myY : int  := lowY;
+        while  not  blocked and  myY < highY do  
+        ( blocked := plotMap.plotted(myX)(myY);
+          myY := myY+1
+        ) 
+      ) ;
+      myX := myX+1
+    ) 
+  ) ;
+  return  blocked
+) ;
+
+private  getRouteHeight : [Point] * [Point] ==> int 
+getRouteHeight(startCoordinates, endCoordinates) == 
+( return  Math.min(startCoordinates.y , endCoordinates.y)+1
+) ;
+
+public  nodesConnected : [RefDes] * [Vector] * [RefDes] * [Vector] ==> bool 
+nodesConnected(refDes1, pinList1, refDes2, pinList2) == 
+( dcl   connected : bool  := false  ;
+  if  refDes1 <> nil   and  refDes2 <> nil  
+  then  
+    ( dcl   wireList1 : [Vector] := refDes1.getDiagramWires(pinList1),
+            wireList2 : [Vector] := refDes2.getDiagramWires(pinList2);
+      ( dcl   idx : int  := 0;
+        while  idx < wireList1.size() and  not  connected do  
+        ( connected := wireList2.contains(wireList1.elementAt(idx));
+          idx := idx+1
+        ) 
+      ) 
+    ) ;
+  return  connected
+) ;
+
+instance variables 
+  private  static GRAPH_LAYOUT : [GraphLayout] := new  GraphLayout();
+  private  static MARGIN : int  := 60;
+  private  plotMap : [PlotMap];
+  private  nodePlotCount : int 
+  
+end  GraphLayout

@@ -1,0 +1,31 @@
+class FA18ParserTokenTypes
+instance variables 
+  public  static EOF : int  := 1;
+  public  static NULL_TREE_LOOKAHEAD : int  := 3;
+  public  static NOTE_ID : int  := 4;
+  public  static EOL : int  := 5;
+  public  static SEMICOLON : int  := 6;
+  public  static LITERAL_ALSO : int  := 7;
+  public  static COMMA : int  := 8;
+  public  static LITERAL_AND : int  := 9;
+  public  static EQUIP_ID : int  := 10;
+  public  static LITERAL_THRU : int  := 11;
+  public  static LITERAL_UP : int  := 12;
+  public  static LITERAL_BUT : int  := 13;
+  public  static LITERAL_OR : int  := 14;
+  public  static LITERAL_AFTER : int  := 15;
+  public  static LITERAL_BEFORE : int  := 16;
+  public  static RETROFIT : int  := 17;
+  public  static WS : int  := 18;
+  public  static SLASH : int  := 19;
+  public  static DASH : int  := 20;
+  public  static UNDERSCORE : int  := 21;
+  public  static LANGLE : int  := 22;
+  public  static RANGLE : int  := 23;
+  public  static KEYWORD : int  := 24;
+  public  static UNKNOWN : int  := 25;
+  public  static UNKNOWN_CHAR : int  := 26;
+  public  static DIGIT : int  := 27;
+  public  static ALPHA : int  := 28
+  
+end  FA18ParserTokenTypes

@@ -1,0 +1,558 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Version Control Management for the Static Semantics of Java
+% $Id: jssvcm1.vdm,v 1.26 2001/10/03 08:21:53 john Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\section{The JSSVCM1 Module}
+This section presents the Java Version Control Manager module
+which is responsible for illustrating the functionality which
+the static semantics needs from the JSSVCM tool. Thus, this is not
+a part of the static semantics, but it indicates the interface
+which is needed from the static semantics.
+
+JSSVCM1 is only used in the JSSENV module and it
+only imports the AS and the JSSREP modules.
+
+\begin{vdm_al}
+
+module JSSVCM1
+
+imports
+from AS all,
+from CI all,
+from REP all,
+from CPP all,
+from JAVAERR all,
+from JSSERR all,
+from JSSREP all,
+from JSSAUX all,
+from JSSENV
+types
+  ParseTypeInfo ::
+    package : [AS`Name]
+    nesting : [AS`Name]
+    name : [AS`Name]
+    type : [JSSREP`ClassTypeRep | JSSREP`IntrfcTypeRep]
+    extends    : seq of AS`Name
+    implements : seq of AS`Name
+    fields  : map AS`Name to JSSREP`FieldTypeRep
+    methods : map AS`Name to set of JSSREP`MethodTypeRep
+operations
+  ClearTypeInfo: () ==> ();
+  SetPackage: [AS`Name] ==> ();
+  GetPackage: () ==> [AS`Name];
+  PushTypeInfo: () ==> bool;
+  PopTypeInfo: () ==> ();
+  SetParseType: [JSSREP`ClassTypeRep | JSSREP`IntrfcTypeRep] ==> ();
+  SetExtends: seq of AS`Name ==> ();
+  SetImplements: seq of AS`Name ==> ();
+  SetTypeParameters: seq of AS`Name ==> ();
+  InitParseInfo: AS`Name ==> ();
+  GetParseType: () ==> JSSREP`ClassTypeRep | JSSREP`IntrfcTypeRep;
+  AddTypeInfoMethod: AS`Name * JSSREP`MethodTypeRep ==> ();
+  AddTypeInfoField: AS`Name * JSSREP`TypeRep ==> ();
+exports
+operations
+  UpdateParseEnvWithModuleBool: CPP`Module ==> bool;
+  UpdateParseEnvWithModule: CPP`Module ==> ();
+  GetParseEnvDom: () ==> set of AS`Name;
+  IsInParseEnv: AS`Name ==> bool;
+  UpdateParseEnv: AS`Name * JSSENV`ParseTypeInfo ==> ();
+  AddParseEnv: AS`Name * JSSENV`ParseTypeInfo ==> bool;
+  GetParseInfo: AS`Name ==> [JSSENV`ParseTypeInfo];
+GetJSSTypeInfo: AS`Name ==> [JSSENV`ParseTypeInfo];
+  CollectModifier: CPP`Modifier ==> CPP`ModifierAccess;
+  CheckTypeName: AS`Name ==> [JSSREP`TypeRep];
+  RemoveClassesFromParseEnv: set of AS`Name ==> ();
+  GetPackageName: AS`Name ==> [AS`Name]
+
+definitions
+types
+  ParseTypeEnv = map AS`Name to JSSENV`ParseTypeInfo
+
+values
+  state JSSVCMSt of
+    ParseEnv : ParseTypeEnv
+    init s == s = mk_JSSVCMSt(
+      {|->}   -- ParseEnv
+    )
+  end
+
+operations
+
+GetParseEnvDom: () ==> set of AS`Name
+GetParseEnvDom() ==
+  return dom ParseEnv;
+
+-- JR
+UpdateParseEnvWithModuleBool: CPP`Module ==> bool
+UpdateParseEnvWithModuleBool(p_module) ==
+  (JSSENV`ClearTypeInfo();
+   if p_module.header <> nil
+   then CollectHeader(p_module.header);
+   return CollectDeclaration(p_module.ast)
+  );
+-- JR
+
+UpdateParseEnvWithModule: CPP`Module ==> ()
+UpdateParseEnvWithModule(p_module) ==
+  (JSSENV`ClearTypeInfo();
+   if p_module.header <> nil
+   then CollectHeader(p_module.header);
+   def - = CollectDeclaration(p_module.ast) in skip
+  );
+\end{vdm_al}
+
+Remove a set of classes/interfaces from the project
+\begin{vdm_al}
+RemoveClassesFromParseEnv: set of AS`Name ==> ()
+RemoveClassesFromParseEnv(p_classes) ==
+  ParseEnv := p_classes <-: ParseEnv
+pre p_classes subset dom ParseEnv;
+\end{vdm_al}
+
+\begin{vdm_al}
+CollectHeader: CPP`Header ==> ()
+CollectHeader(p_header) == 
+  (CollectPackage(p_header.pd);
+   CollectImports(p_header.ims)
+  );
+\end{vdm_al}
+
+\begin{vdm_al}
+CollectPackage: [CPP`PackageDeclaration] ==> ()
+CollectPackage(p_pd) ==
+  if p_pd <> nil
+  then JSSENV`SetPackage(JSSAUX`PackageName2Name(p_pd.name))
+pre JSSENV`GetPackage() = nil;
+\end{vdm_al}
+
+\begin{vdm_al}
+CollectImports: [CPP`ImportDeclarations] ==> ()
+CollectImports(p_idL) ==
+  if p_idL <> nil
+  then 
+    for l_id in p_idL 
+    do cases true:
+        (is_CPP`SingleTypeImportDeclaration(l_id)) ->
+          CollectSingleTypeImportDeclaration(l_id),
+        (is_CPP`TypeImportOnDemandDeclaration(l_id)) ->
+          CollectTypeImportOnDemandDeclaration(l_id)
+       end;
+
+CollectSingleTypeImportDeclaration: CPP`SingleTypeImportDeclaration ==> ()
+CollectSingleTypeImportDeclaration(-) ==
+  skip;
+   
+CollectTypeImportOnDemandDeclaration: CPP`TypeImportOnDemandDeclaration ==> ()
+CollectTypeImportOnDemandDeclaration(-) ==
+  skip;
+
+\end{vdm_al}
+
+\begin{formalparameters}
+\verb+p_declL: seq of CPP`Declaration+ & The list of declarations from
+the given file.\\
+\hline
+\end{formalparameters}
+
+\subsection{Declarations}
+
+\begin{formalparameters}
+\verb+p_decl: CPP`Declaration+ & The abstract syntax tree
+representation for a Java declaration.\\
+\hline
+\end{formalparameters}
+
+\begin{vdm_al}
+CollectDeclaration: CPP`Declaration ==> bool
+CollectDeclaration(p_decl) ==
+  if is_CPP`IdentDeclaration(p_decl)
+  then CollectIdentDeclaration(p_decl)
+  else CollectFunctionDefinition(p_decl);
+\end{vdm_al}
+
+\subsection{Declaration Specifiers}
+
+\begin{vdm_al}
+CollectMemberDeclarationList: seq of CPP`MemberDeclaration ==> bool
+CollectMemberDeclarationList(p_mdL) ==
+  (dcl l_wf : bool := true;
+    for l_md in p_mdL do 
+      l_wf := CollectMemberDeclaration(l_md) and l_wf;
+   return l_wf
+  );
+\end{vdm_al}
+
+\begin{vdm_al}
+  CollectMemberDeclaration: CPP`MemberDeclaration ==> bool
+  CollectMemberDeclaration(p_md) ==
+    cases true:
+      (is_CPP`IdentDeclaration(p_md))   -> CollectIdentDeclaration(p_md),
+      (is_CPP`FunctionDefinition(p_md)) -> CollectFunctionDefinition(p_md),
+      (is_CPP`StaticInitializer(p_md))  -> return true
+    end;
+\end{vdm_al}
+
+\begin{vdm_al}
+CollectIdentDeclaration: CPP`IdentDeclaration ==> bool
+CollectIdentDeclaration(p_id) ==
+  def mk_(l_tr,l_wf) = CollectDeclSpecifiers(p_id.ds)
+  in
+    (CollectDeclaratorList(l_tr,p_id.dl);
+     return l_wf
+    );
+\end{vdm_al}
+
+\begin{formalparameters}
+\verb+p_declL: CPP`DeclSpecifiers+ & A list of declaration specifiers.\\
+\hline
+\end{formalparameters}
+
+
+PROBLEM: elseif is CPP`ArraySpecifier(l\_ds)
+
+\begin{vdm_al}
+CollectDeclSpecifiers: CPP`DeclSpecifiers ==> JSSREP`TypeRep * bool
+CollectDeclSpecifiers(p_dsl) ==
+  (dcl l_reswf : bool := true,
+       l_restr : JSSREP`TypeRep := mk_JSSREP`AllTypeRep(),
+       l_array : nat := 0;
+   for l_ds in p_dsl do
+     if is_CPP`TypeSpecifier(l_ds)
+     then 
+       def mk_(l_tr,l_wf) = CollectTypeSpecifier(l_ds)
+       in
+         (l_restr := l_tr;
+-- only one time
+          l_reswf := l_wf and l_reswf
+         )
+     elseif is_CPP`ArraySpecifier(l_ds)
+     then l_array := l_array + 1;
+-- Modifiers are ignorred
+   return if l_array = 0
+          then mk_(l_restr,l_reswf)
+          else mk_(mk_JSSREP`FieldTypeRep(l_restr,l_array),l_reswf)
+  );
+--  pre exists ts in set elems p_dsl & is_CPP`TypeSpecifier(ts);
+\end{vdm_al}
+
+check for CPP`Modifier(..) moved to CollectDeclSpecifiers(..)
+
+\begin{vdm_al}
+CollectTypeSpecifier: CPP`TypeSpecifier ==> JSSREP`TypeRep * bool
+CollectTypeSpecifier(p_ts) ==
+  cases true:
+    (is_CPP`ClassSpecifier(p_ts.tp))     -> CollectClassSpecifier(p_ts.tp),
+    (is_CPP`InterfaceSpecifier(p_ts.tp)) -> CollectInterfaceSpecifier(p_ts.tp),
+    others -> CollectSimpleTypeName(p_ts.tp)
+  end;
+\end{vdm_al}
+
+\begin{vdm_al}
+CollectSimpleTypeName: CPP`SimpleTypeName ==> JSSREP`TypeRep * bool
+CollectSimpleTypeName(p_stn) ==
+  cases true:
+    (is_CPP`QualifiedPackageName(p_stn)) -> def l_name = JSSAUX`PackageName2Name(p_stn)
+                                            in return mk_(mk_JSSREP`ClassTypeRep(l_name),true),
+    (is_CPP`SimplePackageName(p_stn))    -> def l_name = JSSAUX`PackageName2Name(p_stn)
+                                            in return mk_(mk_JSSREP`ClassTypeRep(l_name),true),
+--(is_CPP`QualifiedName(p_stn))        -> return mk_JSSREP`AllTypeRep(),
+    (is_CPP`Bool(p_stn))   -> return mk_(mk_JSSREP`BoolTypeRep(),true),
+    (is_CPP`Char(p_stn))   -> return mk_(mk_JSSREP`CharTypeRep(),true),
+    (is_CPP`Byte(p_stn))   -> return mk_(mk_JSSREP`ByteTypeRep(),true),
+    (is_CPP`Short(p_stn))  -> return mk_(mk_JSSREP`ShortTypeRep(),true),
+    (is_CPP`Int(p_stn))    -> return mk_(mk_JSSREP`IntTypeRep(),true),
+    (is_CPP`Long(p_stn))   -> return mk_(mk_JSSREP`LongTypeRep(),true),
+    (is_CPP`Float(p_stn))  -> return mk_(mk_JSSREP`FloatTypeRep(),true),
+    (is_CPP`Double(p_stn)) -> return mk_(mk_JSSREP`DoubleTypeRep(),true),
+    (is_CPP`Void(p_stn))   -> return mk_(mk_JSSREP`VoidTypeRep(),true),
+    others -> return mk_(mk_JSSREP`AllTypeRep(),false)
+  end;
+\end{vdm_al}
+
+\begin{vdm_al}
+CollectClassSpecifier: CPP`ClassSpecifier ==> JSSREP`TypeRep * bool
+CollectClassSpecifier(p_clsspec) == 
+  def l_innerwf = JSSENV`PushTypeInfo();
+      l_restr   = CollectClassHead(p_clsspec.ch);
+      l_listwf  = CollectMemberDeclarationList(p_clsspec.ml)
+  in
+    (JSSENV`PopTypeInfo();
+     return mk_(l_restr,l_innerwf and l_listwf)
+    );
+\end{vdm_al}
+
+JR THERE IS A HACK IN THIS OPERATION:
+The HACK in this operation is that the extends class name is extracted 
+from a possible package name
+ 
+\begin{vdm_al}
+CollectClassHead: CPP`ClassHead ==> JSSREP`ClassTypeRep
+CollectClassHead(p_clshead) == 
+  (dcl l_wcc : AS`Name := JSSAUX`Identifier2Name(p_clshead.name);
+   JSSENV`SetParseType(mk_JSSREP`ClassTypeRep(l_wcc));
+   def l_bs = CollectBaseSpec(p_clshead.bs)
+   in
+     if len l_bs = 0 
+     then JSSENV`SetExtends(l_bs)
+     else let l_ids = l_bs(1).ids,  -- len = 1
+              l_cid = l_bs(1).cid,
+              l_len = len l_ids,
+              l_id  = l_ids(l_len)
+          in 
+--JR
+              JSSENV`SetExtends([mk_AS`Name([l_id],l_cid)]);
+   JSSENV`SetImplements(CollectInterSpec(p_clshead.ispec));
+   JSSENV`SetTypeParameters(CollectTypeparameters(p_clshead.tpspec));
+   JSSENV`InitParseInfo(l_wcc);
+   return mk_JSSREP`ClassTypeRep(l_wcc)
+  ) 
+pre len p_clshead.bs <= 1;
+\end{vdm_al}
+
+\begin{vdm_al}
+
+CollectBaseSpec: seq of CPP`BaseSpecifier ==> seq of AS`Name
+CollectBaseSpec(p_bs) ==
+  if len p_bs = 1
+  then return [JSSAUX`PackageName2Name(p_bs(1))]
+  else return []
+pre len p_bs <= 1;
+
+\end{vdm_al}
+
+\begin{vdm_al}
+CollectInterSpec: [CPP`InterSpec] ==> seq of AS`Name
+CollectInterSpec(p_ispec) ==
+( dcl l_is : seq of AS`Name := [];
+  if p_ispec <> nil
+  then 
+    for l_pn in p_ispec do 
+      l_is := l_is ^ [JSSAUX`PackageName2Name(l_pn)];
+  return l_is
+);
+\end{vdm_al}
+
+\begin{vdm_al}
+CollectTypeparameters: [seq of CPP`Identifier] ==> seq of AS`Name
+CollectTypeparameters(tp_l) ==
+( dcl l_is : seq of AS`Name := [];
+  if tp_l <> nil
+  then 
+    for l_pn in tp_l do 
+      l_is := l_is ^ [JSSAUX`Identifier2Name(l_pn)];
+  return l_is
+);
+\end{vdm_al}
+
+\begin{vdm_al}
+CollectInterfaceSpecifier: CPP`InterfaceSpecifier ==> JSSREP`TypeRep * bool
+CollectInterfaceSpecifier(p_inter) ==
+  def l_innerwf = JSSENV`PushTypeInfo();
+      l_restr = CollectInterfaceHead(p_inter.ih);
+      l_listwf = CollectMemberDeclarationList(p_inter.ml)
+  in
+    (JSSENV`PopTypeInfo();
+     return mk_(l_restr,l_innerwf and l_listwf)
+    );
+\end{vdm_al}
+
+\begin{vdm_al}
+CollectInterfaceHead: CPP`InterfaceHead ==> JSSREP`TypeRep
+CollectInterfaceHead(p_ih) == 
+( dcl l_wcc : AS`Name := JSSAUX`Identifier2Name(p_ih.name);
+  JSSENV`SetParseType(mk_JSSREP`IntrfcTypeRep(l_wcc));
+  JSSENV`SetExtends(CollectInterSpec(p_ih.bs));
+  JSSENV`SetTypeParameters(CollectTypeparameters(p_ih.tpspec));
+  JSSENV`InitParseInfo(l_wcc);
+  return mk_JSSREP`IntrfcTypeRep(l_wcc);
+);
+\end{vdm_al}
+
+\begin{vdm_al}
+--  CollectArraySpecifier: CPP`ArraySpecifier ==> JSSREP`TypeRep
+--  CollectArraySpecifier(p_as) ==
+---- JR
+--    return mk_JSSREP`AllTypeRep();
+
+  CollectDeclaratorList: JSSREP`TypeRep * [CPP`DeclaratorList] ==> ()
+  CollectDeclaratorList(p_tr,p_declL) ==
+    if p_declL <> nil
+    then for l_id in p_declL do CollectInitDeclarator(p_tr,l_id);
+\end{vdm_al}
+
+\subsection{Field Definitions}
+
+\begin{vdm_al}
+  CollectInitDeclarator: JSSREP`TypeRep * [CPP`InitDeclarator] ==> ()
+  CollectInitDeclarator(p_tr,p_id) == (
+    dcl l_decl : CPP`Declarator := p_id.decl,
+        l_array : nat := 0;
+    if p_id <> nil
+    then
+    ( while not is_CPP`Identifier(l_decl) do
+      ( l_decl := l_decl.decl;
+        l_array := l_array+1
+      );
+      ExportField(l_decl,mk_JSSREP`FieldTypeRep(p_tr,l_array))
+    )
+  );
+\end{vdm_al}
+
+ Declarator = Name | FctDecl | ArrayDecl
+ Name = Identifier | PackageName |  QualifiedName (| Destructor ??)
+ PackageName = SimplePackageName | QualifiedPackageName
+
+\subsection{Function Definitions}
+\begin{vdm_al}
+CollectFunctionDefinition: CPP`FunctionDefinition ==> bool
+CollectFunctionDefinition(p_fd) == 
+ (dcl l_decl : CPP`Declarator := p_fd.decl,
+      l_array : nat := 0,
+      l_range : JSSREP`TypeRep := CollectDeclSpecifiers(p_fd.ds).#1,
+      l_restr : JSSREP`TypeRep := mk_JSSREP`AllTypeRep(),
+      l_name  : AS`Name;
+  while not is_CPP`FctDecl(l_decl) 
+  do  -- JR is CPP`ArrayDecl(l_decl) ?
+   (l_decl := l_decl.decl;
+    l_array := l_array+1);
+  def mk_CPP`FctDecl(l_id,l_arg,-,-) = l_decl;
+      mk_(l_domTypes,l_domNames) = CollectArgumentDeclarationList(l_arg)
+  in
+   (if is_JSSREP`FieldTypeRep(l_range)
+    then
+     (l_array := l_array + l_range.array;
+      l_range := l_range.type);
+    if is_CPP`SimplePackageName(l_id) -- constructor
+    then 
+     (l_restr := JSSENV`GetParseType();
+      l_name := JSSAUX`PackageName2Name(l_id)
+     )
+    else 
+     (l_restr := mk_JSSREP`FieldTypeRep(l_range,l_array);
+-- JR PGL: what should happen if it is NOT an identifier????
+      l_name := JSSAUX`Identifier2Name(l_id));
+    let l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_restr)
+    in JSSENV`AddTypeInfoMethod(l_name,l_mtr)
+   );
+   return true
+ );
+\end{vdm_al}
+
+\begin{vdm_al}
+CollectArgumentDeclarationList: [CPP`ArgumentDeclarationList] ==> (seq of JSSREP`FieldTypeRep) * (seq of AS`Name)
+CollectArgumentDeclarationList(p_adL) == 
+ (dcl l_ns : seq of AS`Name := [],
+      l_trs : seq of JSSREP`FieldTypeRep := [];
+  if p_adL <> nil
+  then
+   (for l_ad in p_adL.arg 
+    do def mk_(l_n,l_tr) = CollectArgumentDeclaration(l_ad)
+       in
+        (l_trs := l_trs ^ [l_tr];
+         l_ns := l_ns ^ [l_n])
+   );
+  return mk_(l_trs,l_ns)
+ );
+\end{vdm_al}
+
+\begin{vdm_al}
+CollectArgumentDeclaration: CPP`ArgumentDeclaration ==> AS`Name * JSSREP`FieldTypeRep
+CollectArgumentDeclaration(p_ad) ==
+  cases true:
+    (is_CPP`ArgDecl(p_ad)) -> CollectArgDecl(p_ad)
+  end;
+\end{vdm_al}
+
+\begin{vdm_al}
+CollectArgDecl: CPP`ArgDecl ==> AS`Name * JSSREP`FieldTypeRep
+CollectArgDecl(p_ad) == 
+ (dcl l_decl : CPP`Declarator := p_ad.decl,
+      l_array : nat := 0;
+  def l_tr : JSSREP`TypeRep = CollectDeclSpecifiers(p_ad.ds).#1
+  in
+   (while not is_CPP`Identifier(l_decl) -- JR is CPP`?(l_decl)
+    do
+     (l_decl := l_decl.decl;
+      l_array := l_array+1);
+    return mk_(JSSAUX`Identifier2Name(l_decl),
+               mk_JSSREP`FieldTypeRep(l_tr,l_array))
+   )
+ );
+\end{vdm_al}
+
+\begin{vdm_al}
+CollectModifier: CPP`Modifier ==> CPP`ModifierAccess
+CollectModifier(p_mod) ==
+  return p_mod.ma;
+\end{vdm_al}
+
+----------------------------------------------------------------------
+
+\begin{vdm_al}
+operations
+
+ExportField: CPP`Identifier * JSSREP`TypeRep ==> ()
+ExportField(p_i,p_tr) ==
+  def l_n = JSSAUX`Identifier2Name(p_i)
+  in JSSENV`AddTypeInfoField(l_n,p_tr);
+
+CheckTypeName: AS`Name ==> [JSSREP`TypeRep]
+CheckTypeName(p_name) ==
+  if p_name in set dom ParseEnv
+  then return ParseEnv(p_name).type
+  else return nil;
+
+IsInParseEnv: AS`Name ==> bool
+IsInParseEnv(p_name) ==
+  return p_name in set dom ParseEnv;
+
+GetParseInfo: AS`Name ==> [JSSENV`ParseTypeInfo]
+GetParseInfo(p_name) ==
+  if p_name in set dom ParseEnv
+  then return ParseEnv(p_name)
+  else return nil;
+
+GetJSSTypeInfo: AS`Name ==> [JSSENV`ParseTypeInfo]
+GetJSSTypeInfo(p_name) ==
+  if p_name in set dom ParseEnv
+  then return ParseEnv(p_name)
+  else return nil;
+
+GetPackageName: AS`Name ==> [AS`Name]
+GetPackageName(p_name) ==
+  if p_name in set dom ParseEnv
+  then return ParseEnv(p_name).package
+  else return nil;
+
+UpdateParseEnv: AS`Name * JSSENV`ParseTypeInfo ==> ()
+UpdateParseEnv(p_name,p_parse) ==
+  ParseEnv := ParseEnv ++ {p_name |-> p_parse};
+
+AddParseEnv: AS`Name * JSSENV`ParseTypeInfo ==> bool
+AddParseEnv(p_name,p_parse) ==
+  if p_name in set dom ParseEnv
+  then 
+    ------------------------------------------
+    -- Error message #11
+    -- The class %1 is included multiple times
+    ------------------------------------------
+   (JSSERR`GenErr(p_name.cid,<ERROR>,8,[JSSAUX`PrintName(p_name)]);
+    return false)
+  else 
+   (ParseEnv := ParseEnv ++ {p_name |-> p_parse};
+    return true);
+\end{vdm_al}
+
+\begin{vdm_al}
+end JSSVCM1
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[MotGeneralNumericType]
+{rtinfo.ast}[JSSVCM1]
+\end{rtinfo}

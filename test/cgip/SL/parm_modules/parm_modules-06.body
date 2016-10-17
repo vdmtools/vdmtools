@@ -1,0 +1,69 @@
+module A
+
+imports 
+
+from MAIN all
+
+exports all
+
+definitions
+
+operations
+
+
+Test: () ==> seq of  nat 
+Test() ==
+return
+          MAIN`Value()
+
+values
+
+Nat1Number : nat = 3;
+Nat2Number : nat = 4
+
+end A
+
+
+module VALUES
+
+parameters
+
+types  ELEM
+
+values VAL1,VAL2 : ELEM
+
+
+definitions
+
+functions
+
+GetValue: () -> seq of ELEM
+GetValue() ==
+        [VAL1,VAL2]
+
+
+end VALUES
+
+module MAIN
+
+imports 
+  from A all
+
+instantiations
+
+NatValue as VALUES( ELEM -> nat, VAL1 -> A`Nat1Number, VAL2 -> A`Nat2Number) all
+
+exports all
+
+definitions
+
+functions
+
+Value : () +>  seq of nat 
+Value() ==
+
+         NatValue`GetValue()
+
+end MAIN
+
+

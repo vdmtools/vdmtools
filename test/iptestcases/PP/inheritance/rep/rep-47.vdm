@@ -1,0 +1,62 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+class VALUE1
+
+values
+
+public  
+v1 : VALUE2`B = mk_VALUE2`B([mk_VALUE1`A(3, mk_VALUE2`B([]))])
+
+types
+
+public
+  A ::
+   n : nat
+   b : VALUE2`B;
+
+
+public
+  T2 = seq of A
+
+end VALUE1
+
+
+class VALUE2
+
+values
+
+v2 : nat = 35
+
+types 
+  
+public
+  B :: 
+    a : VALUE1`T2
+
+end VALUE2
+
+
+class B 
+
+operations 
+  public Test : () ==> nat
+  Test () ==
+    return VALUE1`v1.a(1).n
+   
+
+end B
+
+
+
+
+
+
+
+
+
+
+
+
+
+

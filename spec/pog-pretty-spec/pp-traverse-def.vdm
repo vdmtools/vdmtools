@@ -1,0 +1,276 @@
+\section{Traversal of definitions}
+
+\begin{vdm_al}
+module PP_TRA_DEF
+
+imports
+  from PP_TAR_DEF all,
+  from PP_TAR_TYPE all,
+  from PP_TAR_EXPR all,
+  from PP_TAR_PAT all,
+
+  from PP_TRA_TYPE all,
+  from PP_TRA_EXPR all,
+  from PP_TRA_PAT all,
+
+  from AS all,
+  from CI all,
+  from REP all
+
+exports
+  functions
+    trv_AstCI: AS`AstCI -> PP_TAR_DEF`AstCI;
+#ifdef VDMSL
+    trv_Module: AS`Module -> PP_TAR_DEF`Module;
+#endif VDMSL
+#ifdef VDMPP
+    trv_Class: AS`Class -> PP_TAR_DEF`Module;
+#endif VDMPP
+    trv_Definitions : AS`Definitions -> PP_TAR_DEF`Definitions;
+    trv_TypeDef : AS`TypeDef -> PP_TAR_DEF`TypeDef;
+    trv_FnDef : AS`FnDef -> PP_TAR_DEF`FnDef;
+    trv_LocalDef : AS`LocalDef -> PP_TAR_DEF`LocalDef;
+    trv_GlobalValueDef : seq of AS`ValueDef -> seq of PP_TAR_DEF`GlobalValueDef;
+
+definitions
+
+\end{vdm_al}
+
+\section{Traversing abstract syntax trees with context info}
+
+\begin{vdm_al}
+functions
+
+    trv_AstCI : AS`AstCI -> PP_TAR_DEF`AstCI
+    trv_AstCI (mk_AS`AstCI(ast,tllci,fidm)) ==
+      let trv_ast =
+            cases ast:
+              -^-  -> trv_Document(ast),
+              others -> PP_TRA_EXPR`trv_Expr(ast)
+            end
+      in
+          PP_TAR_DEF`tar_AstCI(trv_ast,tllci,fidm);
+
+\end{vdm_al}
+
+\section{Traversing documents}
+
+\begin{vdm_al}
+    trv_Document : AS`Document -> PP_TAR_DEF`Document
+    trv_Document (doc) ==
+#ifdef VDMSL
+      let trv_doc = [cases doc(i):
+                       mk_AS`Definitions(-,-,-,-,-,-,-) -> trv_Definitions(doc(i)) ,
+                       mk_AS`Module(-,-,-,-)            -> trv_Module(doc(i)),
+                       mk_AS`DLModule(-,-,-,-)          -> trv_DLModule(doc(i))
+                     end | i in set inds doc]
+#endif VDMSL
+#ifdef VDMPP
+      let trv_doc = [trv_Class(doc(i)) | i in set inds doc]
+#endif VDMPP
+      in
+         PP_TAR_DEF`tar_Document(trv_doc);
+
+\end{vdm_al}
+
+\section{Traversing modules}
+
+\begin{vdm_al}
+#ifdef VDMSL
+    trv_Module : AS`Module -> PP_TAR_DEF`Module
+    trv_Module (mk_AS`Module(nm,intf,defs,cid)) ==
+      PP_TAR_DEF`tar_Module(PP_TRA_EXPR`trv_NameName(nm),
+                            trv_Interface(intf),
+                            if defs = nil then nil else trv_Definitions(defs),
+                            cid);
+
+    trv_DLModule : AS`DLModule -> PP_TAR_DEF`ImplModule
+    trv_DLModule (-) ==
+      undefined;
+
+    trv_Interface : AS`Interface -> PP_TAR_DEF`Interface
+    trv_Interface (intf) == intf;
+#endif VDMSL
+
+#ifdef VDMPP
+    trv_Class : AS`Class -> PP_TAR_DEF`Module
+    trv_Class (mk_AS`Class(nm,-,-,defs,-,cid)) ==
+      PP_TAR_DEF`tar_Class(PP_TRA_EXPR`trv_NameName(nm),
+                           if defs = nil then nil else trv_Definitions(defs),
+                           cid);
+#endif VDMPP
+\end{vdm_al}
+
+\section{Traversing definitions}
+
+\begin{vdm_al}
+
+  trv_Definitions : AS`Definitions -> PP_TAR_DEF`Definitions
+#ifdef VDMSL
+  --trv_Definitions(mk_AS`Definitions(typem,valuem,fnm,opm,stt,-,cid)) ==
+  trv_Definitions(mk_AS`Definitions(typem,valuem,fnm,-,stt,-,cid)) ==
+#endif VDMSL
+#ifdef VDMPP
+  --trv_Definitions(mk_AS`Definitions(typem,valuem,fnm,opm,instvars,-,-,-,cid)) ==
+  trv_Definitions(mk_AS`Definitions(typem,valuem,fnm,-,-,-,-,-,cid)) ==
+#endif VDMPP
+    let trv_typem  = {nm |-> trv_TypeDef(typem(nm)) | nm in set dom typem},
+        trv_fnm    = {nm |-> trv_FnDef(fnm(nm)) | nm in set dom fnm},
+#ifdef VDMSL
+        trv_opm    = {|->}, -- TODO: {nm |-> trv_OpDef(fnm(nm)) | nm in set dom opm},
+#endif VDMSL
+        trv_valuem = trv_GlobalValueDef(valuem)
+    in
+#ifdef VDMSL
+        PP_TAR_DEF`tar_Definitions (trv_typem,trv_valuem,trv_fnm,trv_opm,stt,cid);
+#endif VDMSL
+#ifdef VDMPP
+        PP_TAR_DEF`tar_Definitions (trv_typem,trv_valuem,trv_fnm,{|->},[],cid);
+#endif VDMPP
+
+\end{vdm_al}
+
+\section{Traversing type definitions}
+
+\begin{vdm_al}
+
+  trv_TypeDef : AS`TypeDef -> PP_TAR_DEF`TypeDef
+  trv_TypeDef (mk_AS`TypeDef(nm,tp,fninv,access,cid)) ==
+    PP_TAR_DEF`tar_TypeDef(PP_TRA_EXPR`trv_NameName(nm),
+                           tp,
+                           PP_TRA_TYPE`trv_Type(tp),
+                           if fninv = nil then nil else trv_Invariant(fninv),
+                           access,
+                           cid);
+
+  trv_Invariant :  AS`Invariant -> PP_TAR_DEF`Invariant
+  trv_Invariant (mk_AS`Invariant(pat,expr,cid)) ==
+    PP_TAR_DEF`tar_Invariant(PP_TRA_PAT`trv_Pattern(pat),
+                             PP_TRA_EXPR`trv_Expr(expr),
+                             cid);
+
+\end{vdm_al}
+
+\subsection{Traversing function definitions}
+
+\begin{vdm_al}
+
+  trv_FnDef : AS`FnDef -> PP_TAR_DEF`FnDef
+  trv_FnDef(fndef) ==
+    cases fndef:
+      mk_AS`ExplFnDef(-,-,-,-,-,-,-,-,-,-,-)    -> trv_ExplFunction(fndef),
+      mk_AS`ImplFnDef(-,-,-,-,-,-,-,-,-)        -> trv_ImplFunction(fndef),
+      mk_AS`ExtExplFnDef(-,-,-,-,-,-,-,-,-,-,-) -> trv_ExtExplFunction(fndef)
+    end;
+
+  trv_ExplFunction : AS`ExplFnDef -> PP_TAR_DEF`ExplFnDef
+  trv_ExplFunction (mk_AS`ExplFnDef(nm,tv_l,tp,parms,fnbody,fnpre,fnpost,access,-,-,cid)) ==
+    PP_TAR_DEF`tar_ExplFunction(PP_TRA_EXPR`trv_NameName(nm),
+                                trv_TypeVarList(tv_l),
+                                PP_TRA_TYPE`trv_FnType(tp),
+                                trv_ParametersList(parms),
+                                trv_FnBody(fnbody),
+                                if fnpre = nil then nil else PP_TRA_EXPR`trv_Expr(fnpre),
+                                if fnpost = nil then nil else PP_TRA_EXPR`trv_Expr(fnpost),
+                                access,
+                                cid);
+
+  trv_ImplFunction : AS`ImplFnDef -> PP_TAR_DEF`ImplFnDef
+  trv_ImplFunction (mk_AS`ImplFnDef(nm,tv_l,partps,resnmtps,fnpre,fnpost,access,-,cid)) ==
+    PP_TAR_DEF`tar_ImplFunction(PP_TRA_EXPR`trv_NameName(nm),
+                                trv_TypeVarList(tv_l),
+                                trv_ParameterTypes(partps),
+                                [trv_NameType(resnmtps(i)) | i in set inds resnmtps],
+                                if fnpre = nil then nil else PP_TRA_EXPR`trv_Expr(fnpre),
+                                PP_TRA_EXPR`trv_Expr(fnpost),
+                                access,
+                                cid);
+
+  trv_ExtExplFunction : AS`ExtExplFnDef -> PP_TAR_DEF`ExtExplFnDef
+  trv_ExtExplFunction (mk_AS`ExtExplFnDef(nm,tv_l,partps,resnmtps,fnbody,fnpre,fnpost,access,-,-,cid)) ==
+    PP_TAR_DEF`tar_ExtExplFunction(PP_TRA_EXPR`trv_NameName(nm),
+                                   trv_TypeVarList(tv_l),
+                                   trv_ParameterTypes(partps),
+                                   [trv_NameType(resnmtps(i)) | i in set inds resnmtps],
+                                   trv_FnBody(fnbody),
+                                   if fnpre = nil then nil else PP_TRA_EXPR`trv_Expr(fnpre),
+                                   if fnpost = nil then nil else PP_TRA_EXPR`trv_Expr(fnpost),
+                                   access,
+                                   cid);
+
+  trv_TypeVarList: AS`TypeVarList -> PP_TAR_DEF`TypeVarList
+  trv_TypeVarList(tv_lst) ==
+    [PP_TRA_TYPE`trv_TypeVar(tv_lst(i)) | i in set inds tv_lst];
+
+  trv_ParametersList: AS`ParametersList -> PP_TAR_DEF`ParametersList
+  trv_ParametersList(parms) ==
+    [trv_Parameters(parms(i)) | i in set inds parms];
+
+  trv_Parameters : AS`Parameters ->  PP_TAR_DEF`Parameters
+  trv_Parameters(parms) ==
+    [PP_TRA_PAT`trv_Pattern(parms(i)) | i in set inds parms];
+
+  trv_ParameterTypes : AS`ParameterTypes -> PP_TAR_DEF`ParameterTypes
+  trv_ParameterTypes(parmtps) ==
+    [trv_PatTypePair(parmtps(i)) | i in set inds parmtps];
+
+  trv_NameType : AS`NameType -> PP_TAR_DEF`NameType
+  trv_NameType(mk_AS`NameType(nm,tp,cid)) ==
+    PP_TAR_DEF`tar_NameType(PP_TRA_EXPR`trv_NameName(nm),
+                            PP_TRA_TYPE`trv_Type(tp),
+                            cid);
+
+  trv_PatTypePair: AS`PatTypePair -> PP_TAR_DEF`PatTypePair
+  trv_PatTypePair(mk_AS`PatTypePair(pats,tp,cid)) ==
+    PP_TAR_DEF`tar_PatTypePair([PP_TRA_PAT`trv_Pattern(pats(i)) | i in set inds pats] ,
+                               PP_TRA_TYPE`trv_Type(tp),
+                               cid);
+
+  trv_FnBody: AS`FnBody -> PP_TAR_DEF`FnBody
+  trv_FnBody(mk_AS`FnBody(body,cid)) ==
+    PP_TAR_DEF`tar_FnBody(if body = <NOTYETSPEC>
+                          then <NOTYETSPEC>
+                          else PP_TRA_EXPR`trv_Expr(body),
+                          cid);
+
+\end{vdm_al}
+
+\subsection{Traversing value definitions}
+
+\begin{vdm_al}
+
+  trv_GlobalValueDef : seq of AS`ValueDef -> seq of PP_TAR_DEF`GlobalValueDef
+  trv_GlobalValueDef(vals) ==
+    PP_TAR_DEF`tar_GlobalValueDef([trv_ValueDef(vals(i)) | i in set inds vals]);
+
+  trv_ValueDef : AS`ValueDef -> PP_TAR_DEF`ValueDef
+  trv_ValueDef(mk_AS`ValueDef(pat,tp,val,access,-,cid)) ==
+    let pat1 = PP_TRA_PAT`trv_Pattern(pat),
+        tp1  = if tp = nil
+               then nil
+               else PP_TRA_TYPE`trv_Type(tp),
+        val1 = PP_TRA_EXPR`trv_Expr(val)
+    in
+        PP_TAR_DEF`tar_ValueDef(pat1,tp1,val1,access,cid);
+
+\end{vdm_al}
+
+\subsection{Traversing local value definitions}
+
+\begin{vdm_al}
+  trv_LocalDef : AS`LocalDef -> PP_TAR_DEF`LocalDef
+  trv_LocalDef(val) ==
+    cases val:
+      mk_AS`ValueDef(-,-,-,-,-,-) -> trv_ValueDef(val),
+      others                      -> trv_FnDef(val)
+    end;
+
+end PP_TRA_DEF
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[MotGeneralNumericType]
+{rtinfo.ast}[PP_TRA_DEF]
+\end{rtinfo}
+

@@ -1,0 +1,11 @@
+\begin{vdm_al}
+  Think: () ==> ()
+  Think () ==
+    duration (200)
+      skip;
+
+  Eat: () ==> ()
+  Eat () ==
+    duration (200)
+      turns := turns - 1;
+\end{vdm_al}

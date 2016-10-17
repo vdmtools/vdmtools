@@ -1,0 +1,59 @@
+class IfExprTest
+functions
+
+  f : () -> inmap rat to nat
+  f() ==
+    {2 |-> 5}
+  pre true
+--  post true
+
+types
+
+  A :: a: int
+       b: bool
+
+values
+
+  v1 : A = mk_A(1,true);
+  n : real = 88
+    
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let t = true,
+      nn = nil,
+      - = let m:char|bool =
+        if n=1
+	then t
+	elseif n=63
+	then v1.a
+	elseif n=60
+	then v1.b
+	elseif n=64
+	then [1,8,9,true](9)
+	elseif n=65
+	then {8 |-> mk_(8,nil), true |-> 4.4, 2.2 |-> 6}(7)
+	elseif n=66
+	then f()
+	elseif n=67 
+	then f(5)
+	elseif n=68
+	then [2,true,7.8]++{1 |-> "test"}
+	elseif n=69
+	then {1 |-> true, 7 |-> false}++{4 |-> 6}
+	elseif n=70
+	then {8 |-> mk_(8,nil), true |-> 4.4, 2.2 |-> 6}
+	elseif n=71
+	then { i|->i*2 | i: nat }
+	elseif n=72
+	then mk_(1,true,mk_A(1,true),f())
+	else nn
+        in m 
+  in skip;
+
+------------------------------------------------------------------------------
+end IfExprTest

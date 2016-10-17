@@ -1,0 +1,55 @@
+f2() res:nat ==
+  10
+post res = 10;
+
+f(s:(set of nat) | <ERROR>) res: seq of nat ==
+  if s = {} then
+    []
+  else
+    let e in set s be st forall e1 in set s \ {e} & e < e1 in
+      [e] ^ f(s \ {e});
+
+g(mk_(n1, n2): (nat * nat), -: set of nat) res: nat ==
+  n1 + n2
+post res = n1 + n2;
+
+
+h([a,b]: seq of nat) res: nat * nat ==
+  mk_(a,b)
+pre let q = a + b in q > 10
+post let q =  mk_(a,b) in q <> res or q = res;
+
+h1([a,b]: seq of nat) r: nat, s: nat ==
+  mk_(a,b)
+pre let q = a + b in q > 10
+post r <> a or s <> b or s = b;
+
+h2({a,b}: set of nat) res: seq of nat ==
+  let s = f({a,b}) in s
+post if a + b < 10 then true else true
+
+
+operations
+
+public  Test() r: seq of (real | bool | (seq of nat) ) ==
+    return 
+    [
+      f2(),
+      post_f2(10),
+      f({3,56,1,4,4,1,22}),
+      g(mk_(3,2), {1,2}),
+      post_g(mk_(3,3), {}, 6),
+      post_g(mk_(0,0), {}, 0),
+      let mk_(a,b) = h([45,46]) in [a,b],
+      pre_h([3,4]),
+      post_h([3,4], mk_(3,4)),
+      let mk_(a,b) = h1([45,46]) in [a,b],
+      pre_h1([3,4]),
+      post_h1([3,4],mk_(3,4)),
+      h2({23,99}),
+      post_h2({23,99}, []),
+      post_h2({3,2}, [])
+    ]
+
+end A
+

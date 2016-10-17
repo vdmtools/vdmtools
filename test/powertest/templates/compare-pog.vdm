@@ -1,0 +1,151 @@
+module POGTEST
+
+imports from AS all,
+        from POGTP all,
+        from TEST all,
+        from ERR all
+exports all
+definitions
+values
+  expectedResult = <<EXPECTED_RESULT>>;
+  actualResult = <<ACTUAL_RESULT>>;
+
+functions
+  Compare: () -> <OK>
+  Compare() ==
+    cases true:
+      (actualResult = expectedResult) -> <OK>,
+      (is_(actualResult, seq of ERR`ErrMsg) and
+       is_(expectedResult, seq of ERR`ErrMsg) and
+       elems actualResult = elems expectedResult) -> <OK>,
+      others -> undefined
+    end;
+
+end POGTEST
+
+module AS
+imports from AS all
+exports all
+definitions
+types
+Name :: ids : Ids
+        cid :- int;
+end AS
+
+module POGTP
+exports all
+definitions
+types
+Classification =
+     -- Numeric Operations
+       <Division>
+     | <IntDivision>
+     | <Remainder>
+     | <Modulus>
+     -- Set Operators
+     | <DInter>
+     -- Sequence Operators
+     | <SeqHead>
+     | <SeqTail>
+     | <SeqModification>
+     | <SeqApplication>
+     -- Map Operators
+     | <MapMerge>
+     | <MapDistributedMerge>
+     | <MapApplication>
+     | <MapComposition>
+     | <MapIteration>
+     | <MapInverse>
+     | <MapCompatible>
+     -- Tuple Operators
+     | <TupleSelect>
+     | <OperationApplication>
+     -- Function Operators
+     | <FunctionApplication>
+     | <FuncComp>
+     | <FuncIteration>
+     -- Set Constructors
+     | <SetComprehension>
+     -- Sequence Constructors
+     | <SeqComprehension>
+     -- Map Constructors
+     | <MapComprehension>
+     | <MapEnumeration>
+     | <MapCompatible>
+     | <MapSetOfCompatible>
+     | <MapSeqOfCompatible>
+     -- Expressions
+     | <LetBeStExpr>
+     | <CasesExpr>
+     | <ExistsUnique>
+     -- Types
+     | <Subtype>
+     | <Invariants>
+     | <FlatType>
+     -- Patterns Binding
+     | <ValueBinding>
+     | <PatternBinding>
+     -- Functions
+     | <FunctionPatterns>
+     | <Satisfiability>
+     | <PostCondition>
+     -- Operations
+     | <OperationSat>
+     | <OpPostCondition>
+     -----------------
+     | <FiniteSet>
+     | <FiniteMap>
+     | <NonEndoIteration>
+     | <NonZero>
+     | <NonEmptySet>
+     | <NonEmptySeq>
+     ---Statements--------------
+     | <LetBeStStmt>
+     | <CasesStmt>
+     | <WhileLoopStmt>
+     | <StateInvariants>;
+
+LocClassification = <types>       |
+                    <functions>   |
+                    <operations>  |
+                    <state>       |
+                    <instanceVariables>  |
+                    <instanceInvariant>  |
+                    <values>      |
+                    <conjectures> |
+                    <expression>;
+
+LocContext :: class : LocClassification
+              modName: [AS`Name]
+              name  :  [AS`Name];
+end POGTP
+
+module TEST
+imports from AS all,
+        from POGTP all
+exports all
+definitions
+types
+ProofObligationPP :: po      : seq of char
+                     kind    : POGTP`Classification
+                     source  : seq of AS`Name
+                     loc     : POGTP`LocContext;
+
+Name :: ids : Ids
+        cid :- int;
+end TEST
+
+module ERR
+
+exports all
+definitions
+types
+  SeverityType   = <MESSAGE> | <WARNING> | <PROOFOBL> | <ERROR> | <TEST>;
+
+  ErrMsg :: fid       : int
+            line      : int
+            col       : int
+            err       : seq of char
+            severity  : SeverityType;
+end ERR
+

@@ -1,0 +1,30 @@
+class B
+
+instance variables
+  s : set of A
+
+operations
+
+  public Test : () ==> seq of real 
+  Test () ==
+  ( dcl a : A := new A(),
+    sq    : seq of A,
+    res   : seq of real := [],
+    tmp   : seq of real;
+    s := { a };
+    while card s < 4 do
+    ( a := new A ();
+      s := s union  { a }
+    );
+    let {a, b, c, d} = s in 
+     sq := [a, b, c, d];
+    while sq <> [] do
+    ( a := hd sq;
+      tmp := a.Get();
+      res := res ^ tmp;
+      sq := tl sq
+    );
+    return res
+  )
+
+end B

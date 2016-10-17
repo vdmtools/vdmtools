@@ -1,0 +1,41 @@
+/*
+ *$Id: UniqueSequence.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $
+ *　『発番者』
+ *　責任：　唯一の番号を発番する。
+*/
+class 『発番者』 is subclass of 『共通定義』
+
+values
+初期値 = 1;
+
+instance variables
+protected 番号  : int := 初期値		-- 次に発行する番号
+
+functions
+public 唯一の番号を得る : int * nat1 -> int
+唯一の番号を得る(数候補, 桁数) == 
+	if 数候補 >= 10 ** 桁数 then 
+		番号を初期化する() 
+	else
+		数候補;
+
+operations
+-- 与えられた桁数内の唯一の番号を発番する。
+public 発番する : int ==> 「文字列」
+発番する(桁数) ==
+	-- 呼び出し時の番号の値で発番し、自身の番号の値に 1 を加える。
+	let	数 = 唯一の番号を得る(番号, 桁数)
+	in
+	(
+	番号 := 番号 + 1;
+	return Integer`asString(数)
+	);
+	
+public 番号を初期化する : () ==> int
+番号を初期化する() == 
+	(
+	番号 := 初期値;
+	return 番号
+	);
+
+end  『発番者』

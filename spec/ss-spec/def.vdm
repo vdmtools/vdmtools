@@ -1,0 +1,2692 @@
+%-------------------------------------------------------------------------------
+% WHAT
+%    Top level definitions for the Static Semantics of VDM++
+% $Id: def.vdm,v 1.100 2006/03/15 07:53:32 vdmtools Exp $
+% Implemented in: def.cc
+%--------------------------------------------------------------------------------
+
+\section{Definitions}
+
+#ifdef VDMPP
+This section contains all the well-formedness formulae which
+is responsible for checking the well-formedness of definitions
+which can appear at top-level (i.e.\ in the definition of a
+class).
+The top-level operation $wf-Class$ make use of a number of other
+operations from this module which check value definitions, function
+definitions, type definitions, operation definitions and instance
+variables etc. 
+The interface of the DEF module can be seen from figure~\ref{def}.
+
+The DEF module simply exports some of its constructs for test purposes
+ and its operation $wf-Type$ is also used by the STMT
+module and the PAT module (a minor dependency) to check the
+well-formedness of locally used types.
+
+DEF mainly imports
+constructs from the modules at the second level of the hierarchy:
+From STMT only $wf-Stmt$ is imported; from EXPR only $wf-Expr$ is
+imported while three operations are imported from PAT.
+DEF also uses a few constructs from the
+TYPE module and a large number of constructs from the ENV module.
+
+%\insertfig{def.ps}{13cm}{Interface for the DEF module}{\label{def}} 
+#endif VDMPP
+#ifdef VDMSL
+This section contains all the well-formedness formulae which
+is responsible for checking the well-formedness of definitions
+which can appear at top-level (i.e.\ the definitions of a
+module).
+The top-level operation $wf-Module$ make use of a number of other
+operations from this module which check value definitions, function
+definitions, type definitions, operation definitions and the state
+definition.  
+The interface of the DEF module can be seen from figure~\ref{def}.
+
+The DEF module simply exports some of its constructs for test purposes
+and its operation $wf-Type$, $wf-ExplFunction$, $wf-ImplFunction$ and
+$wf-Pred$  are also used by the STMT
+module and the PAT module (a minor dependency) to check the
+well-formedness of locally used types.
+
+DEF mainly imports
+constructs from the modules at the second level of the hierarchy:
+From STMT only $wf-Stmt$ is imported; from EXPR only $wf-Expr$ is
+imported while three operations are imported from PAT.
+DEF also uses a few constructs from the
+TYPE module and a large number of constructs from the ENV module.
+
+%\insertfig{def.ps}{13cm}{Interface for the DEF module}{\label{def}} 
+#endif VDMSL
+
+\begin{vdm_al}
+module DEF
+
+imports
+  from ERR all,
+  from AS all,
+  from CHECK all,
+  from CI all,
+  from UTIL all,
+  from REP all,
+
+  from TYPE operations
+    IsCompatible: TYPE`Ind * REP`TypeRep * REP`TypeRep ==> bool;
+    IsEquivalent: TYPE`Ind * REP`TypeRep * REP`TypeRep ==> bool;
+    IsUnionRecursive: REP`TypeRep ==> bool;
+    MeasureCheckOn: () ==> ();
+    MeasureCheckOff: () ==> ()
+    types Ind = <POS> | <DEF>,
+   
+
+   from VCM operations
+#ifdef VDMPP
+     IsClassName: AS`Name ==> bool;
+#endif VDMPP
+#ifdef VICE
+     IsSysClass : AS`Name ==> bool;
+#endif VICE
+
+    GetFuncDefWOCtxt : AS`Name ==> [AS`FnDef]
+#ifdef VDMPP
+   functions
+    ExportImplicitFunction : [AS`Name] * AS`ImplFnDef -> REP`FnTypeRep;
+    ExportExplicitFunction : [AS`Name] * AS`ExplFnDef -> REP`FnTypeRep;
+    ExportExtExplicitFunction : [AS`Name] * AS`ExtExplFnDef -> REP`FnTypeRep;
+    ExportImplicitOperation : [AS`Name] * AS`ImplOpDef -> REP`OpTypeRep;
+    ExportExplicitOperation : [AS`Name] * AS`ExplOpDef -> REP`OpTypeRep;
+    ExportExtExplicitOperation : [AS`Name] * AS`ExtExplOpDef -> REP`OpTypeRep;
+    MakeFnRng : REP`FnTypeRep * AS`Access * bool +> ENV`AccessFnTypeRep;
+    MakePolyRng : REP`PolyTypeRep * AS`Access * bool +> ENV`AccessPolyTypeRep;
+    MakeOpRng : REP`OpTypeRep * AS`Access * bool * bool +> ENV`AccessOpTypeRep
+#endif VDMPP
+  ,
+  from REC all,
+ 
+  from ENV 
+   operations
+    EnterScope : map AS`Name to (REP`TypeRep * nat1) ==> ();
+    --UpdateScope : map AS`Name to REP`TypeRep ==> ();
+    LeaveScope : () ==> ();
+#ifdef VDMSL
+    LookUpTypeName : AS`Name ==> [REP`TypeRep];
+#endif VDMSL
+#ifdef VDMPP
+    CheckThreadInherit: AS`Name ==> bool;
+--    LookUpDefClass : () ==> [AS`Name];
+    SetDefClass: [AS`Name] ==> ();
+    LookUpTypeName : AS`Name * bool ==> [REP`TypeRep|ENV`AccessType];
+    LookUpInObject: AS`Name * AS`Name * bool * bool
+                  ==> [ENV`AccessType | set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep)];
+#endif VDMPP
+#ifdef VDMSL
+    LookUp: AS`Name * bool ==> [REP`TypeRep];
+#endif VDMSL
+#ifdef VDMPP
+    LookUp: AS`Name * bool ==> [REP`TypeRep|ENV`AccessType  |
+                                set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep) |
+                                set of REP`TypeRep];
+#endif VDMPP
+  ExtractPatterns: TYPE`Ind * seq of (AS`ValueDef | AS`FnDef) ==> bool * map AS`Name to (REP`TypeRep * bool);
+  wf_ValueDef : TYPE`Ind * AS`ValueDef ==> bool * map AS`Name to (REP`TypeRep * nat1);
+#ifdef VDMSL
+    GetCurMod: () ==> AS`Name;
+#endif VDMSL
+#ifdef VDMPP
+    GetCurClass : () ==> AS`Name;
+    LookUpOperationName : [AS`Name] * AS`Name * [AS`Expr] ==> set of ENV`AccessType;
+    IsLocalSuperSuper : AS`Name ==> bool;
+    CheckTypeAccess: AS`Name * AS`Type ==> bool;
+    CheckTypeListAccess: AS`Name * seq of AS`Type ==> bool;
+    CheckInstAccess: AS`Access * AS`Name ==> bool;
+    CheckDefAccess: ENV`AccessType * AS`Name ==> bool;
+    CheckTypeDefAccess: AS`Access * AS`Name ==> bool;
+    SetStatic : bool ==> ();
+    UnsetStatic : () ==> ();
+#endif VDMPP
+    --AUGUSTO
+    setRecMap : map AS`Name to ENV`FunctionInfo ==> ();
+    getRecMap : () ==> map AS`Name to ENV`FunctionInfo;
+    
+    CheckTypeVar: REP`TypeVarRep ==> bool;
+    UsedStateIds: set of AS`Name ==> set of AS`Name;
+#ifdef VDMSL
+    ExpandModule: TYPE`Ind * (AS`Module|AS`DLModule) ==> bool;
+    ExpandDLModule: TYPE`Ind * AS`DLModule ==> bool;
+    SetCurMod: AS`Name ==> ();
+    LeaveCurModule: AS`Name * [AS`ExportSig] ==> ();
+#endif VDMSL
+#ifdef VDMPP
+    ExpandClass: TYPE`Ind * AS`Class ==> bool;
+    CheckClassName: AS`Name ==> bool;
+#endif VDMPP
+    CheckTag: AS`Name ==> bool;
+    CheckTypeName: AS`Name ==> bool;
+    InitEnv: () ==> ();
+    TransType: [AS`Name] * AS`Type ==> REP`TypeRep;
+    TransTypeList: [AS`Name] * seq of AS`Type ==> seq of REP`TypeRep;
+    PushTypeVarContext: seq of REP`TypeVarRep ==> ();
+    PopTypeVarContext: () ==> ();
+#ifdef VDMSL      
+    PushContext: <PURE>|<ALL>|<PRE>|<POST>|<PUREOP>|<VALUE>|<IMPL> ==> ();
+#endif VDMSL
+#ifdef VDMPP
+    PushContext: <PURE>|<ALL>|<PRE>|<POST>|<PUREOP>|<VALUE>|<IMPL>|<PERM>|<PTHREAD> ==> ();
+    CheckParmsInHierarchy: AS`Name * seq of REP`TypeRep * AS`Access * bool ==> bool;
+    CheckAccessCurClass: [ENV`AccessType |
+                          REP`TypeRep    | 
+                          ENV`TagRepElem |
+                          set of REP`TypeRep| set of (ENV`AccessOpTypeRep | 
+                                                      ENV`AccessFnTypeRep | 
+                                                      ENV`AccessPolyTypeRep)]
+               ==> [REP`TypeRep|ENV`TagRepElem  | 
+                  set of (REP`FnTypeRep | REP`OpTypeRep | REP`PolyTypeRep) ];
+#endif VDMPP
+    PopContext: () ==> ();
+    SetExt: seq of AS`ExtInf * set of AS`Name ==> bool;
+    SetExtAll: set of AS`Name ==> bool;
+    ExtractValueBindings : seq of AS`NameType ==> map AS`Name to (REP`TypeRep * nat1)
+
+    functions
+    PrintName : AS`Name -> seq of char;
+    ConstructImplDomType : AS`ParameterTypes -> seq of AS`Type;
+    ConstructImplRngType : seq of AS`NameType -> AS`Type;
+    ConstructImplParms : AS`ParameterTypes -> seq of AS`Pattern
+
+    types
+    --AUGUSTO
+    FunctionInfo :: 
+    rec   : set of AS`Name
+    meas  : [AS`Name] 
+    printPO: bool; 
+   
+#ifdef VDMPP
+    AccessType = ENV`AccessTypeRep | ENV`AccessFnTypeRep  | ENV`AccessPolyTypeRep |
+                 ENV`AccessOpTypeRep | ENV`AccessFieldRep;
+
+    AccessTypeRep :: tp : REP`TypeRep
+                     a  : AS`Access
+                     stat : bool;
+    
+    AccessFnTypeRep :: tp : REP`FnTypeRep
+                       a  : AS`Access
+                       stat : bool;
+
+    AccessPolyTypeRep :: tp : REP`PolyTypeRep
+                         a  : AS`Access
+                         stat : bool;
+
+    AccessOpTypeRep :: tp : REP`OpTypeRep
+                       a  : AS`Access
+                       stat : bool
+                       oppure : bool;
+
+    AccessFieldRep :: tp : seq of REP`FieldRep
+                      a  : AS`Access;
+    TagRepElem = seq of REP`FieldRep;
+#endif VDMPP
+,
+--  from AUX
+--  functions
+--    MergeTypes : [REP`TypeRep | set of REP`TypeRep] * [REP`TypeRep | set of REP`TypeRep] -> REP`TypeRep,
+
+  from PAT
+  functions
+    ExtractBindings: AS`Pattern -> map AS`Name to (REP`TypeRep * nat1);
+    ExtractPatternName: AS`Pattern -> map AS`Name to nat1
+  operations
+    wf_PatternList: TYPE`Ind * seq of AS`Pattern * seq of REP`TypeRep * AS`Name ==>
+                    bool * map AS`Name to (REP`TypeRep * nat1);
+    wf_MultiBindList: TYPE`Ind * seq of AS`MultBind * bool ==> [bool] * map AS`Name to (REP`TypeRep * nat1);
+    wf_Pattern: TYPE`Ind * AS`Pattern * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1),
+
+  from EXPR operations
+#ifdef VICE
+    CpuOrBusOutSideSys: AS`Name ==> bool;
+#endif VICE
+    wf_Name : TYPE`Ind * AS`Name ==> bool * REP`TypeRep;
+    wf_Expr : TYPE`Ind * AS`Expr * REP`TypeRep ==> bool * REP`TypeRep,
+
+  from STMT operations
+    SetOpContext: AS`Name ==> ();
+    AnyTraps: () ==> bool;
+    FullOpTest: bool ==> ();
+    wf_ImplOpBody: TYPE`Ind *  seq of AS`ExtInf * [AS`Expr] * AS`Expr *
+                     seq of AS`Error  * map AS`Name to (REP`TypeRep * nat1)
+                     ==> bool;
+    wf_Stmt : TYPE`Ind * AS`Stmt * REP`TypeRep ==> bool * REP`TypeRep,
+
+  from AUX
+  
+  functions 
+  ExtName : AS`Name * AS`Name -> AS`Name
+
+exports operations
+#ifdef VDMSL
+  wf_Module : TYPE`Ind * (AS`Module | AS`DLModule) ==> bool;
+#endif VDMSL
+#ifdef VDMPP
+  wf_Class : TYPE`Ind * AS`Class ==> bool;
+  wf_InstanceVars: TYPE`Ind * seq of AS`InstanceVarDef ==> bool;
+#endif VDMPP
+  wf_Operations : TYPE`Ind * map AS`Name to AS`OpDef ==> bool; 
+  wf_TypeDefs : TYPE`Ind * map AS`Name to AS`TypeDef ==> bool;
+  wf_Type : TYPE`Ind * AS`Type ==> bool;
+  wf_TypeList: TYPE`Ind * seq of AS`Type ==> bool;
+  wf_ImplFunction : TYPE`Ind * AS`ImplFnDef ==> bool;
+  wf_ExplFunction : TYPE`Ind * AS`ExplFnDef ==> bool;
+  wf_ExtExplFunction : TYPE`Ind * AS`ExtExplFnDef ==> bool;
+  wf_ImplOperation : TYPE`Ind * AS`ImplOpDef ==> bool;
+  wf_ExplOperation : TYPE`Ind * AS`ExplOpDef ==> bool;
+  wf_ExtExplOperation : TYPE`Ind * AS`ExtExplOpDef ==> bool;
+  wf_Pred : TYPE`Ind * [AS`Expr] * (<PRE>|<POST>|<INV>|<INIT>|<EXCEP>) ==> bool * REP`TypeRep
+
+  functions
+#ifdef VDMPP
+  extractDomRng : [REP`TypeRep | ENV`AccessType | 
+            set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep) | 
+            set of REP`TypeRep] -> (seq of REP`TypeRep) * REP`TypeRep
+#endif VDMPP
+#ifdef VDMSL
+  extractDomRng : [REP`TypeRep ] -> (seq of REP`TypeRep) * REP`TypeRep
+#endif VDMSL
+
+definitions
+\end{vdm_al}
+#ifdef VDMSL
+The well-formedness of a module is checked by first expanding the
+module such that the scope of all the definitions are available (also
+for the imported and instantiated constructs). Because value
+definitions does not need to be typed the well-formedness of these is
+also taken care of in the expansion of the module. With this scope the
+well-formedness of operation definitions, function definitions, type
+definitions and the state definition (if any is present) is checked.
+Finally warnings are given for constructs which have not directly been
+used in the body of the module and also have not been exported.
+#endif VDMSL
+
+\begin{vdm_al}
+
+  operations
+
+#ifdef VDMPP
+  wf_Class : TYPE`Ind * AS`Class ==> bool
+  wf_Class (i, class) ==
+  ( dcl reswf : bool := ENV`ExpandClass(i, class);
+
+    -- check that super classes exists
+    for cls in class.supercls do
+     (if not ENV`CheckClassName(cls) then 
+        ------------------------------------------
+        -- Error message #1
+        -- The class "%1" has not been pre-checked
+        ------------------------------------------
+      ( ERR`GenErr(cls,<ERROR>, 1, [ENV`PrintName(cls)]);
+        reswf := false
+      );
+#ifdef VICE
+      if cls.ids = ["CPU"]
+      then 
+        ------------------------------------------
+        -- Error message #405
+        -- No inheritance from CPU is allowed
+        ------------------------------------------
+      ( ERR`GenErr(cls,<ERROR>, 405, []);
+        reswf := false
+      )
+     elseif cls.ids = ["BUS"]
+      then 
+        ------------------------------------------
+        -- Error message #406
+        -- No inheritance from CPU is allowed
+        ------------------------------------------
+      ( ERR`GenErr(cls,<ERROR>, 406, []);
+        reswf := false
+      )
+     elseif VCM`IsSysClass(cls)
+     then
+       ------------------------------------------
+        -- Error message #407
+        -- No inheritance from system "%1" is allowed
+        ------------------------------------------
+      ( ERR`GenErr(cls,<ERROR>, 407, [ENV`PrintName(cls)]);
+        reswf := false
+      )
+#endif VICE
+     );
+    if ENV`IsLocalSuperSuper(class.nm) then
+        ------------------------------------------
+        -- Error message #2
+        -- Circular inheritance dependecy detected
+        ------------------------------------------
+      ( ERR`GenErr(class.nm, <ERROR>, 2, []);
+        reswf := false
+      );
+     
+    if class.defs <> nil
+    then 
+      let mk_AS`Definitions(typem,-,fnm,opm,instvars,syncs,threaddef,tracem,-) = class.defs,
+          clsnm = class.nm
+      in
+      ( ENV`SetDefClass(clsnm);
+        def recMap = REC`BuildRecMap(clsnm,fnm);
+        in ENV`setRecMap(ENV`getRecMap() ++ recMap);
+        reswf := wf_TypeDefs (i, typem) and reswf;  --OK
+        reswf := wf_InstanceVars(i, instvars) and reswf;
+        reswf := wf_Functions (i, fnm) and reswf;  --OK
+        reswf := wf_Operations(i, opm) and reswf;         
+        reswf := wf_Sync (i, class.nm, syncs) and reswf;
+        reswf := wf_Thread (i, threaddef, clsnm) and reswf;
+        reswf := wf_Traces(i, tracem) and reswf;
+        reswf := ENV`CheckThreadInherit(class.nm) and reswf; 
+      );
+    ENV`InitEnv(); 
+    return reswf
+  );
+#endif VDMPP
+
+#ifdef VDMSL
+  wf_Module : TYPE`Ind * (AS`Module | AS`DLModule) ==> bool
+  wf_Module(i,modu) ==
+    cases modu:
+      mk_AS`Module(modid,
+                   mk_AS`Interface(-,exp,-),
+                   mk_AS`Definitions(tm,-,fnm,opm,State,tracem,-),-) ->
+       (dcl reswf: bool := false;
+        ENV`SetCurMod(modid);
+        reswf := ENV`ExpandModule(i,modu);
+
+       (def recMap = REC`BuildRecMap(modid,fnm);
+        in ENV`setRecMap(ENV`getRecMap() ++ recMap);
+
+        reswf := wf_Operations (i, opm) and reswf;  -- typecheck operations
+        reswf := wf_Functions (i, fnm) and reswf;   -- typecheck functions
+        reswf := wf_TypeDefs (i, tm) and reswf;     -- crosscheck types and invariants on types
+        if State <> nil
+        then reswf := wf_State(i, State) and reswf; -- typecheck state init and state inv
+        reswf := wf_Traces(i, tracem) and reswf;    -- typecheck traces
+
+        if exp <> nil
+        then ENV`LeaveCurModule(modid,exp);
+
+         ENV`InitEnv();
+        );
+        return reswf;
+       ),
+      mk_AS`Module(-,-,-,-) -> return ENV`ExpandDLModule(i,modu),
+      others -> error
+    end;
+#endif VDMSL
+\end{vdm_al}
+
+\subsection{Well-formedness of Types}
+
+\begin{vdm_al}
+
+  wf_TypeDefs : TYPE`Ind * map AS`Name to AS`TypeDef ==> bool  
+  wf_TypeDefs (i, tp_m) ==
+      (dcl reswf : bool := true;
+       ENV`PushContext(<PURE>);
+#ifdef VDMSL
+        for all mk_AS`TypeDef(nm, Tp, Invar, -,-) in set rng tp_m do
+#endif VDMSL
+#ifdef VDMPP
+        for all mk_AS`TypeDef(nm, Tp, Invar, acc,-) in set rng tp_m do
+#endif VDMPP
+          def tprep = ENV`TransType (nil,Tp) in
+            ( reswf := 
+#ifdef VDMPP
+                       ENV`CheckTypeDefAccess(acc,nm) and ENV`CheckTypeAccess(nm,Tp) and
+#endif VDMPP
+                       wf_Type(i, Tp) and reswf;
+              if TYPE`IsUnionRecursive(tprep) then
+                -----------------------------
+                -- Error message #3
+                -- Type name "%1" is infinite
+                -----------------------------
+              ( ERR`GenErr(nm, <ERROR>,3,[ENV`PrintName(nm)]);
+                reswf := false );
+              reswf := wf_TypeInv(i, tprep, Invar,nm) and reswf);
+       ENV`PopContext();
+       return reswf);
+
+  wf_Type : TYPE`Ind * AS`Type ==> bool 
+  wf_Type (i, type) ==
+    (dcl reswf : bool := true;
+    
+    cases type:
+      mk_AS`BooleanType(-),
+      mk_AS`NumericType(-,-),
+      mk_AS`TokenType(-),
+      mk_AS`CharType(-),
+      mk_AS`VoidType(-),
+      mk_AS`QuoteType(-,-) -> return true,
+      mk_AS`ProductType(tp_l,-),
+      mk_AS`UnionType(tp_l,-) -> (for tp in tp_l do
+                                    reswf := wf_Type(i, tp) and reswf;
+                                  return reswf),
+      mk_AS`CompositeType(tag,flds,-) ->
+        (dcl UsedSelectors : set of AS`Name := {};
+         for mk_AS`Field (sel, ftp,-,-) in flds do
+           ( reswf := wf_Type (i, ftp) and reswf;
+             if sel in set UsedSelectors then
+                 ------------------------------------
+                 -- Error message #4
+                 -- Selector "%1" is multiple defined
+                 ------------------------------------
+               ( ERR`GenErr(sel, <ERROR>,4,[ENV`PrintName(sel)]);
+                 reswf := false
+               )
+             else
+               UsedSelectors := UsedSelectors union if sel = nil
+                                                    then {}
+                                                    else {sel}
+           );
+         def tag_ok = ENV`CheckTag(tag)
+         in
+           (if not tag_ok
+                 ----------------------
+                 -- Error message #5
+                 -- Unknown tag "%1"
+                 ----------------------
+            then ERR`GenErr(tag, <ERROR>,5,[ENV`PrintName(tag)]);
+            return tag_ok and reswf)),
+      mk_AS`OptionalType(tp,-), 
+      mk_AS`Seq0Type(tp,-),
+      mk_AS`Seq1Type(tp,-),
+      mk_AS`BracketedType(tp,-) -> return wf_Type(i, tp),
+      mk_AS`Set0Type(tp,-),
+      mk_AS`Set1Type(tp,-) -> (reswf := wf_Type(i,tp);
+                               reswf := IsFlat(ENV`TransType(nil,tp),{}) and reswf;
+                               return reswf),
+      mk_AS`GeneralMap0Type(dtp, rtp, -),
+      mk_AS`GeneralMap1Type(dtp, rtp, -),
+      mk_AS`InjectiveMap0Type(dtp, rtp, -),
+      mk_AS`InjectiveMap1Type(dtp,rtp, -) -> (reswf := wf_Type(i,dtp);
+                                             reswf := IsFlat(ENV`TransType(nil,dtp),{}) and reswf;
+                                             reswf := wf_Type(i,rtp) and reswf;
+                                             return reswf),
+      mk_AS`OpType(dtp_l,rtp,-) -> (for dtp in dtp_l do
+                                      reswf := wf_Type(i,dtp) and reswf;
+                                    reswf := wf_Type(i,rtp) and reswf;
+                                    return reswf),
+      mk_AS`PartialFnType(dtp_l,rtp,-), 
+      mk_AS`TotalFnType(dtp_l,rtp,-) -> (for dtp in dtp_l do
+                                           reswf := wf_Type(i,dtp) and reswf;
+                                         reswf := wf_Type(i,rtp) and reswf;
+                                         return reswf),
+      mk_AS`TypeName(nm,-) ->
+        if not ENV`CheckTypeName(nm) then
+            --------------------------------
+            -- Error message #6
+            -- Type name "%1" is not defined
+            --------------------------------
+          ( ERR`GenErr (nm, <ERROR>,6,[ENV`PrintName(nm)]);
+            return false)
+        else
+#ifdef VICE
+        if EXPR`CpuOrBusOutSideSys(nm)
+        then 
+        if nm.ids = ["CPU"]
+        then 
+          ------------------------------------------
+          -- Error message #408
+          -- Instances of CPU can only be made in a system class
+          ------------------------------------------
+        ( ERR`GenErr(nm,<ERROR>, 408, []);
+          return false
+        )
+        elseif nm.ids = ["BUS"]
+        then 
+          ------------------------------------------
+          -- Error message #409
+          -- Instances of BUS can only be made in a system class
+          ------------------------------------------
+        ( ERR`GenErr(nm,<ERROR>, 409, []);
+          return false
+        )
+        elseif VCM`IsSysClass(nm)
+        then 
+          --------------------------------------------
+          -- Error message #410
+          -- Instances of system classes cannot be made: "%1"
+          --------------------------------------------
+          ( ERR`GenErr(nm,<ERROR>,410,[ENV`PrintName(nm)]);
+            return false
+          ) 
+        else return true
+       else
+#endif VICE
+          return true,
+      mk_AS`TypeVar(nm,-) -> -- only in VDM-SL
+        if ENV`CheckTypeVar(ENV`TransType(nil,type))
+        then return true
+              -----------------------------------------
+              -- Error message #7
+              -- Type variable "%1" is not allowed here
+              -----------------------------------------
+        else (ERR`GenErr (nm, <ERROR>,7,[ENV`PrintName(nm)]);
+              return false ),
+      others -> error
+    end);
+
+  wf_TypeInv : TYPE`Ind * REP`TypeRep * [AS`Invariant] * AS`Name ==> bool
+  wf_TypeInv (i, Type, Invar,nm) ==
+    if Invar = nil then
+      return true
+    else
+      let mk_AS`Invariant(pat, exp, -) = Invar in
+      (dcl reswf : bool := true;
+
+       if nm in set dom PAT`ExtractPatternName(pat)
+             ------------------------------------------------------
+             -- Error message #8
+             -- Pattern in invariant must not be the type name "%1"
+             ------------------------------------------------------
+       then (ERR`GenErr(nm, <ERROR>,8,[ENV`PrintName(nm)]);
+             reswf := false);
+      def mk_(wf_pat,bd) = PAT`wf_Pattern(i, pat,Type) in
+        (if not wf_pat
+              ------------------------------------------------------
+              -- Error message #352
+              -- Invariant pattern is different from type definition
+              ------------------------------------------------------
+         then ERR`GenErr(nm, <ERROR>,352,[]);
+         ENV`EnterScope(bd);
+         def mk_(wf_body,-) = wf_Pred(i, exp, <INV>)
+         in
+           (ENV`LeaveScope();
+            return (wf_pat = true) and wf_body and reswf)));
+
+  wf_TypeList: TYPE`Ind * seq of AS`Type ==> bool
+  wf_TypeList(i,tp_l) ==
+    (dcl reswf : bool := true;
+
+     for tp in tp_l do
+       reswf := wf_Type(i,tp) and reswf;
+     return reswf);
+
+\end{vdm_al}
+
+The operation {\em IsFlat} checks if Sets and Maps contains operations
+or functions. It is not legal to have operations/functions in Sets and
+Maps in VDM. However, the IsFlat operation is VERY expensive to use,
+and thus in principle we should check this, however, currently it is
+known "feature" that we do not!!!!
+
+\begin{vdm_al}
+  IsFlat: [REP`TypeRep] * set of AS`Name ==> bool
+  IsFlat(-,-) ==
+     return true;
+--
+--    (dcl reswf: bool := true;
+--
+--     cases tp:
+--       mk_REP`ProductTypeRep(t_l) ->
+--         (for t in t_l do
+--           reswf := IsFlat(t,checked) and reswf;
+--          return reswf),
+--       mk_REP`UnionTypeRep(t_s) ->
+--         (for all t in set t_s do
+--           reswf := IsFlat(t,checked) and reswf;
+--          return reswf),
+--       mk_REP`CompositeTypeRep(-,flds) ->
+--         (for mk_REP`FieldRep(-,t,-) in flds do
+--            reswf := IsFlat(t,checked) and reswf;
+--          return reswf),
+--       mk_REP`InvTypeRep(t,-),
+--       mk_REP`GeneralMapTypeRep(-,t),
+--       mk_REP`InjectiveMapTypeRep(-,t) ->
+--         IsFlat(t,checked),
+--       mk_REP`OpTypeRep(-,-),
+--       mk_REP`PolyTypeRep(-,-),
+--       mk_REP`PartialFnTypeRep(-,-),
+--       mk_REP`TotalFnTypeRep(-,-) ->
+--         (GenOLDErr(<ERROR>,"A non-flat type cannot be used here");
+--          return false),
+--       mk_REP`TypeNameRep(nm) ->
+--         if nm not in set checked and
+--            ENV`CheckTypeName(nm) and
+--            not TYPE`IsUnionRecursive(tp)
+--         then IsFlat(ENV`LookUpTypeName(nm),checked union {nm})
+--         else return true,
+--       others ->
+--         return true
+--     end);
+\end{vdm_al}
+
+\subsection{Well-formedness of Functions}
+
+\begin{vdm_al}
+
+  wf_Functions : TYPE`Ind * map AS`Name to AS`FnDef ==> bool
+  wf_Functions (i, fn_m) ==
+      (dcl reswf : bool := true;
+       ENV`PushContext(<PURE>);
+        for all fn in set rng fn_m do
+         (if is_AS`ImplFnDef(fn) then
+            (reswf := wf_ImplFunction (i, fn) and reswf;
+#ifdef VDMPP
+             def fntp = VCM`ExportImplicitFunction(ENV`GetCurClass(), fn)
+             in if fn.params = []
+                then
+                  reswf := ENV`CheckDefAccess(VCM`MakeFnRng(fntp, fn.access, fn.stat), fn.nm) and reswf
+                else
+                  def r_l = ENV`TransTypeList(ENV`GetCurClass(), fn.params)
+                  in reswf := ENV`CheckDefAccess(VCM`MakePolyRng(mk_REP`PolyTypeRep(r_l,fntp),
+                                                                 fn.access, fn.stat), fn.nm) and reswf;
+#endif VDMPP
+            )
+          elseif is_AS`ExplFnDef(fn) then
+            (reswf := wf_ExplFunction (i, fn) and reswf;
+#ifdef VDMPP
+             def fntp = VCM`ExportExplicitFunction(ENV`GetCurClass(), fn)
+             in if fn.tpparms = []
+                then
+                  reswf := ENV`CheckDefAccess(VCM`MakeFnRng(fntp, fn.access, fn.stat), fn.nm) and reswf
+                else
+                  def r_l = ENV`TransTypeList(ENV`GetCurClass(), fn.tpparms)
+                  in reswf := ENV`CheckDefAccess(VCM`MakePolyRng(mk_REP`PolyTypeRep(r_l,fntp),
+                                                                 fn.access, fn.stat), fn.nm) and reswf;
+#endif VDMPP
+            )
+          else
+            (reswf := wf_ExtExplFunction (i, fn) and reswf;
+#ifdef VDMPP
+             def fntp = VCM`ExportExtExplicitFunction(ENV`GetCurClass(), fn)
+             in if fn.params = []
+                then
+                  reswf := ENV`CheckDefAccess(VCM`MakeFnRng(fntp, fn.access, fn.stat), fn.nm) and reswf
+                else
+                  def r_l = ENV`TransTypeList(ENV`GetCurClass(), fn.params)
+                  in reswf := ENV`CheckDefAccess(VCM`MakePolyRng(mk_REP`PolyTypeRep(r_l,fntp),
+                                                                 fn.access, fn.stat), fn.nm) and reswf;
+#endif VDMPP
+            );
+--#ifdef VDMPP
+--          reswf := ENV`CheckDefAccess(fn.access,fn.nm) and reswf
+--#endif VDMPP
+         );
+       ENV`PopContext();
+       return reswf);
+
+  wf_ImplFunction : TYPE`Ind * AS`ImplFnDef ==> bool
+#ifdef VDMSL
+  wf_ImplFunction(i,mk_AS`ImplFnDef(nm,tv_l,partps,resnmtps,fnpre,fnpost, -, -, -)) ==
+#endif VDMSL
+#ifdef VDMPP
+  wf_ImplFunction(i,mk_AS`ImplFnDef(nm,tv_l,partps,resnmtps,fnpre,fnpost, access, stat, -)) ==
+#endif VDMPP
+    def fndom = ENV`ConstructImplDomType(partps);
+        parms = ENV`ConstructImplParms(partps);
+        fnrng = ENV`ConstructImplRngType(resnmtps);
+        valtp_bd = ENV`ExtractValueBindings(resnmtps)
+    in
+   (
+    ENV`PushTypeVarContext(ENV`TransTypeList(nil,tv_l));
+    def 
+#ifdef VDMPP
+        dom_l = ENV`TransTypeList(nil,fndom);
+        ok_fntps = ENV`CheckParmsInHierarchy(nm, dom_l, access, false);
+#endif VDMPP
+        mk_(ok_in, bind) = PAT`wf_PatternList(i, parms, ENV`TransTypeList(nil,fndom),nm);
+        wf_dom = 
+#ifdef VDMPP
+                 ENV`CheckTypeListAccess (nm,fndom) and
+#endif VDMPP
+                 wf_TypeList(i,fndom);
+        wf_rng = 
+#ifdef VDMPP
+                 ENV`CheckTypeAccess (nm,fnrng) and
+#endif VDMPP
+                 wf_Type(i,fnrng)
+    in
+    let ok_bd = (dom bind inter dom valtp_bd) = {}
+    in
+      (if not ok_bd then
+          ----------------------------------------------------------------
+          -- Error message #9
+          -- Parameter identifiers overlap the result identifiers for "%1"
+          ----------------------------------------------------------------
+          ERR`GenErr (nm, <ERROR>,9,[ENV`PrintName(nm)]); 
+        ENV`EnterScope (bind);
+#ifdef VDMPP
+        -- Set the static flag so that non-static expressions can't be used in a 
+        -- static env. etc
+        ENV`SetStatic(stat);
+#endif VDMPP
+        def mk_(wf_pre,-)  = wf_Pred(i, fnpre, <PRE>)
+        in 
+            ( ENV`EnterScope (valtp_bd); --result parameter are in scope
+              def mk_(wf_post,-) = wf_Pred(i, fnpost, <POST>)
+              in
+                ( 
+#ifdef VDMPP
+                  -- Having checked the pre and post conds, we can unset the static flag
+                  ENV`UnsetStatic();
+#endif VDMPP
+                  ENV`LeaveScope(); -- resnm + redundant input pars
+                  ENV`LeaveScope(); -- inputpars
+                  ENV`PopTypeVarContext(); -- Type variables may not be
+                                         -- used any longer
+                  return ok_in and 
+#ifdef VDMPP
+                         ok_fntps and 
+#endif VDMPP
+                         wf_dom and wf_rng and
+                         ok_bd and wf_pre and wf_post))));
+          
+          -------- AUGUSTO ----------
+          
+  wf_ExplFunction : TYPE`Ind * AS`ExplFnDef ==> bool
+#ifdef VDMSL
+  wf_ExplFunction(i,mk_AS`ExplFnDef(nm,tv_l,tp,parms,fnbody,fnpre,fnpost, -, -, measu, -)) ==
+#endif VDMSL
+#ifdef VDMPP
+  wf_ExplFunction(i,mk_AS`ExplFnDef(nm,tv_l,tp,parms,fnbody,fnpre,fnpost, access, stat, measu, -)) ==
+#endif VDMPP
+   (dcl fndom : seq of seq of REP`TypeRep := [];
+    --dcl bindings : map AS`Name to REP`TypeRep := {|->};
+    dcl bindings : map AS`Name to (REP`TypeRep * nat1) := {|->};
+    dcl ok_in : bool := true;
+    dcl fnrng : REP`TypeRep := ENV`TransType(nil,tp);
+#ifdef VDMPP
+    dcl ok_subresp : bool := true;
+#endif VDMPP
+
+    ENV`PushTypeVarContext(ENV`TransTypeList(nil,tv_l));
+    while (is_REP`TotalFnTypeRep(fnrng) or is_REP`PartialFnTypeRep(fnrng)) and (len fndom < len parms) do
+      ( fndom := fndom ^ [fnrng.fndom];
+        fnrng := fnrng.fnrng
+      );
+
+    while (len parms > len fndom) and
+         ((is_REP`TypeNameRep(fnrng) and
+#ifdef VDMSL
+          def tprep = ENV`LookUpTypeName(fnrng.nm)
+#endif VDMSL
+#ifdef VDMPP
+          def tprep' = ENV`LookUpTypeName(fnrng.nm,true);
+              tprep = ENV`CheckAccessCurClass (tprep')
+#endif VDMPP
+          in
+           (is_REP`PartialFnTypeRep(tprep) or is_REP`TotalFnTypeRep(tprep))) or
+           is_REP`PartialFnTypeRep(fnrng))
+    do
+      if is_REP`TypeNameRep(fnrng)
+#ifdef VDMSL
+      then def tprep = ENV`LookUpTypeName(fnrng.nm)
+#endif VDMSL
+#ifdef VDMPP
+      then def tprep' = ENV`LookUpTypeName(fnrng.nm,true);
+               tprep = ENV`CheckAccessCurClass (tprep') 
+#endif VDMPP
+           in
+             (fndom := fndom ^ [tprep.fndom];
+              fnrng := tprep.fnrng)
+      else (fndom := fndom ^ [fnrng.fndom];
+            fnrng := fnrng.fnrng );
+         
+    if len fndom <> len parms then
+        ------------------------------------------------------------
+        -- Error message #10
+        -- There is too many Curried parameters in the function "%1"
+        ------------------------------------------------------------
+      ( ERR`GenErr(nm,<ERROR>,10,[ENV`PrintName(nm)]);
+        ok_in := false;
+        bindings := merge {merge{PAT`ExtractBindings(pat) | pat in set elems parm} | parm in set elems parms}
+      )
+    else 
+     (dcl ccount : nat := 0,
+          tp' : AS`Type := tp;
+      while is_AS`PartialFnType(tp') or is_AS`TotalFnType(tp') do
+       (ccount := ccount + 1;
+        cases tp':
+          mk_AS`PartialFnType(-,r,-),
+          mk_AS`TotalFnType(-,r,-)    -> tp' := r
+        end);
+      if ccount < len parms
+      then
+        ------------------------------------------------------------
+        -- Error message #10
+        -- There is too many Curried parameters in the function "%1"
+        ------------------------------------------------------------
+       (ERR`GenErr(nm,<ERROR>,10,[ENV`PrintName(nm)]);
+        ok_in := false);
+
+      for index = 1 to len parms do
+        def mk_(ok, bind) = PAT`wf_PatternList(i, parms(index),fndom(index),nm)
+        in
+          let overlap = dom bindings inter dom bind
+          in
+            (for all id in set overlap do
+               ---------------------------------------------------------------------------------
+               -- Error message #11
+               -- "%1" is used multiple times in the Curried argument list for the function "%2"
+               ---------------------------------------------------------------------------------
+               ERR`GenErr(id, <WARNING>,11,[ENV`PrintName(id),ENV`PrintName(nm)]);
+             bindings := bindings ++ bind;
+             ok_in := ok_in and ok);
+     );
+#ifdef VDMPP
+    if fnbody.body = <SUBRESP> and access <> <PUBLIC_AS> and access <> <PROTECTED_AS>
+    then
+      --------------------------------------------------------------------------
+      -- Error message #438
+      -- Abstract function/operation "%1" must be defined as public or protected
+      --------------------------------------------------------------------------
+      ( ERR`GenErr (nm, <ERROR>,438,[ENV`PrintName(nm)]);
+        ok_subresp := false
+      );
+#endif VDMPP
+
+    def 
+#ifdef VDMPP
+        dom_l = ENV`TransTypeList(nil, tp.fndom);
+        ok_fntps = ENV`CheckParmsInHierarchy(nm, dom_l, access, false);
+#endif VDMPP
+        wf_tp = 
+#ifdef VDMPP
+                ENV`CheckTypeAccess (nm,tp) and
+#endif VDMPP
+                wf_Type(i,tp)
+    in
+    ( ENV`EnterScope (bindings);
+#ifdef VDMPP
+      -- Set the static flag so that non-static expressions can't be used in a 
+      -- static env. etc
+      ENV`SetStatic(stat);
+#endif VDMPP
+---- AUGUSTO ----   
+      def mk_(wf_body, tpe) = wf_Body(i,fnbody,fnrng, dom bindings) in
+        def ok_measu = wf_Measure(i,nm,measu,fndom(1),tp) --TODO: ATTENTION !! PATCH !!
+        in 
+
+        def ok_out = TYPE`IsCompatible (i, tpe, fnrng) in
+          (if not ok_out then
+            ---------------------------------------------------------------
+            -- Error message #12
+            -- Return type of function for "%1" is different from signature
+            ---------------------------------------------------------------
+            ERR`GenErr (nm, <ERROR>,12,[ENV`PrintName(nm)]);
+
+           def mk_(wf_pre,-) = wf_Pred (i, fnpre, <PRE>)
+           in
+             (if (len fndom > 1) and (fnpost <> nil)
+                    --------------------------------------------------
+                    -- Error message #13
+                    -- A Curried function cannot have a post-condition
+                    --------------------------------------------------
+              then (ERR`GenErr(nm,<ERROR>,13,[]);
+                    ENV`LeaveScope(); -- inputpars
+#ifdef VDMPP
+                    -- Having checked the pre and post conds, we can unset the static flag
+                    ENV`UnsetStatic();
+#endif VDMPP
+                    return false);
+              if fnpost <> nil
+              then ENV`EnterScope({mk_AS`Name(["RESULT"],CI`NilContextId) |->
+                -- Should the contextid of fnpost be used ????
+                               mk_(ENV`TransType(nil,tp.fnrng),1)});
+              def mk_(wf_post,-) = wf_Pred(i,fnpost,<POST>)
+              in
+                (ENV`PopTypeVarContext(); -- Type variable may not be used any longer
+#ifdef VDMPP
+                 -- Having checked the pre and post conds, we can unset the static flag
+                 ENV`UnsetStatic();
+#endif VDMPP
+                 if fnpost <> nil
+                 then ENV`LeaveScope(); -- RESULT
+                 ENV`LeaveScope(); -- inputpars
+                 return  ok_in and wf_body and 
+#ifdef VDMPP
+                         ok_fntps and ok_subresp and
+#endif VDMPP
+                         ok_measu and
+                         ok_out and wf_pre and wf_tp and wf_post)))));
+
+--- AUGUSTO
+functions
+
+#ifdef VDMPP
+extractDomRng : [REP`TypeRep | ENV`AccessType | 
+            set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep) | 
+            set of REP`TypeRep] -> (seq of REP`TypeRep) * REP`TypeRep 
+#endif VDMPP
+#ifdef VDMSL
+extractDomRng : [REP`TypeRep ] -> (seq of REP`TypeRep) * REP`TypeRep 
+#endif VDMSL
+extractDomRng(x) ==
+  cases x:
+    mk_REP`PartialFnTypeRep(d,r) -> mk_(d,r),
+    mk_REP`TotalFnTypeRep(d,r) -> mk_(d,r),
+#ifdef VDMPP
+    mk_ENV`AccessFnTypeRep(t,-,-) -> extractDomRng(t),
+    mk_ENV`AccessPolyTypeRep(mk_REP`PolyTypeRep(-,t),-,-) -> extractDomRng(t),
+#endif VDMPP
+    others -> undefined  
+  end;
+
+VerifyRng : REP`TypeRep -> bool
+VerifyRng(tp) == 
+  cases tp:
+    mk_REP`ProductTypeRep(tps)   -> forall i in set inds tps & tps(i) = mk_REP`NumericTypeRep(<NAT>), 
+    mk_REP`NumericTypeRep(<NAT>) -> true,
+    mk_REP`PartialFnTypeRep(-,r) -> VerifyRng(r),
+    mk_REP`TotalFnTypeRep(-,r)   -> VerifyRng(r),
+    others                       -> false
+  end;
+
+operations 
+VerifyMutRec : set of AS`Name * AS`FnDef * AS`Name ==> bool 
+VerifyMutRec(mutRec,measdef,nm') ==
+-- find all measures if they exist
+  ( dcl res : bool := true,
+        mutRecL : seq of AS`Name := UTIL`set2seq[AS`Name](mutRec);
+     
+    for h in mutRecL do
+    ( 
+      def fndef = VCM`GetFuncDefWOCtxt(h)
+      in 
+        if fndef <> nil
+        then
+        ( let fnmeasu = fndef.measu
+          in 
+            if fnmeasu = nil 
+            then 
+            ( ------------------------------------------------------------------------
+              -- Error message #415
+              -- "%1" is mutual recursive with %2 and %2 does not have measure defined
+              ------------------------------------------------------------------------
+              ERR`GenErr (nm', <WARNING>, 415, [ENV`PrintName (nm'),ENV`PrintName(h)]); 
+              res := false;
+            )
+          else 
+            ( def measunmwcl = if len fnmeasu.ids = 2 
+                               then fnmeasu 
+                               else mk_AS`Name([hd h.ids]^fnmeasu.ids,0);
+                  othmeasdef = VCM`GetFuncDefWOCtxt(measunmwcl) --fnmeasu needs the class added
+               in 
+                 if othmeasdef <> nil
+                 then
+                   ( if othmeasdef.tp.fnrng <> measdef.tp.fnrng
+                     then 
+                       ( ----------------------------------------------------------------
+                         -- Error message #416
+                         -- The measures of "%1" and "%2" must to have the same range
+                         ----------------------------------------------------------------
+                         ERR`GenErr (nm', <WARNING>, 416, [ENV`PrintName (nm'),ENV`PrintName(h)]);
+                         res := false;
+                       )
+                   )
+                 else res := false;
+                -- this happens if the measure is unexisting identifier so it is reported there.
+             );
+        )
+        else res := false;                  
+    );
+    return res;
+  );
+                 
+functions
+  
+  NameInSet : AS`Name * set of AS`Name -> bool
+  NameInSet(n,sn) == 
+    exists x in set sn & n = x;
+
+operations 
+
+  wf_Measure : TYPE`Ind * AS`Name * [AS`Name] * seq of REP`TypeRep * AS`FnType ==> bool
+  --wf_Measure(i,nm',measu,fndom,tp) == 
+  wf_Measure(i,nm',measu,-,tp) == 
+    ( dcl ok_out : bool := true;
+--#ifdef VDMPP
+--          tpset : set of (REP`TypeRep | ENV`AccessType  | 
+--            set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep) | 
+--            set of REP`TypeRep),
+--#endif VDMPP
+--#ifdef VDMSL
+--          tpset : set of REP`TypeRep,
+--#endif VDMSL
+--          tpdomrng : seq of REP`TypeRep * REP`TypeRep;
+
+      def recMap = ENV`getRecMap();
+#ifdef VDMPP
+          clnm   = ENV`GetCurClass();
+#endif VDMPP
+#ifdef VDMSL
+          clnm   = ENV`GetCurMod();
+#endif VDMSL
+          nm     = AUX`ExtName(clnm,nm')
+      in 
+      
+      if NameInSet(nm,dom recMap)
+      then 
+      (
+        if measu = nil 
+        then 
+          (
+            ----------------------------------------------------------------
+            -- Error message #412
+            -- "%1" is recursive but does not have a measure defined
+            ----------------------------------------------------------------
+            ERR`GenErr (nm, <WARNING>,412,[ENV`PrintName (nm)]);
+            ok_out := false; -- it is not fatal
+          )
+        else   
+          ( -- 1st is the measure identifier defined?
+            def ok_id = EXPR`wf_Name(i,measu).#1
+            in 
+              if not ok_id 
+              then 
+              (
+                ok_out := ok_out and ok_id;
+                return ok_out;
+              )
+              else    
+                def 
+                  measu' = if len measu.ids = 1 then mk_AS`Name(clnm.ids^measu.ids,0) else measu;
+                  measdef = VCM`GetFuncDefWOCtxt(measu') 
+                  -- LookUp might create problems when measure is on other class (because ENV has not been created)
+                  -- Switch to find in FnDef table
+                in  
+                  if measdef <> nil
+                  then
+                    def rfndt = ENV`TransTypeList(nil, tp.fndom);
+                        rfnrt = ENV`TransType(nil, tp.fnrng);
+                        mfndt = ENV`TransTypeList(nil, measdef.tp.fndom);
+                        mfnrt = ENV`TransType(nil, measdef.tp.fnrng)
+                    in
+                     (
+                       --After get type compare with functions dom
+                       if not EquivDomFn(i, mfndt, rfndt, mfnrt, rfnrt)
+                       then 
+                        (
+                         ----------------------------------------------------------------
+                         -- Error message #413
+                         -- "%1" and its measure do not have the same domain
+                         ----------------------------------------------------------------
+                         ERR`GenErr (nm, <WARNING>,413,[ENV`PrintName (nm)]);
+                         ok_out := ok_out and false 
+                        );
+
+                       if is_REP`PartialFnTypeRep(mfnrt) or is_REP`TotalFnTypeRep(mfnrt) 
+                       then 
+                        (
+                         ----------------------------------------------------------------
+                         -- Error message #449
+                         -- measure "%1" must not be curry function1
+                         ----------------------------------------------------------------
+                         ERR`GenErr (measu, <ERROR>,449,[ENV`PrintName (measu)]);
+                         ok_out := ok_out and false 
+                        );
+
+                       --After compare range of measure with nat
+                       if not VerifyRng(mfnrt)
+                       then 
+                        (
+                          ----------------------------------------------------------------
+                          -- Error message #414
+                          -- "%1" measure range is not nat or a tuple of nat
+                          ----------------------------------------------------------------
+                          ERR`GenErr (nm, <WARNING>,414,[ENV`PrintName (nm)]);
+                          ok_out := false;
+                        );
+
+                      -- for mutual recursion check other functions measure presence and range  
+                      let mutRec = recMap(nm).rec \ {nm}
+                      in 
+                        if mutRec <> {}
+                        then ok_out := VerifyMutRec(mutRec,measdef,nm') and ok_out;
+                     )
+                  else ok_out := ok_out and false;
+          
+          );
+        if ok_out 
+          then
+          ( 
+            let newrecMap = recMap ++ { mk_AS`Name(nm.ids,0) |-> mk_ENV`FunctionInfo(recMap(nm).rec,recMap(nm).meas,true)}
+            in ENV`setRecMap(newrecMap)
+          )
+      )
+      else if measu <> nil 
+           then 
+           (
+             ----------------------------------------------------------------
+             -- Error message #417
+             -- "%1" has a measure but it is not recursive
+             ----------------------------------------------------------------
+             ERR`GenErr (nm', <WARNING>,417,[ENV`PrintName (nm')]);      
+           );
+        -- could also check if fn has measure and doesn't need it
+
+      return ok_out
+    );
+
+EquivDomFn: TYPE`Ind * seq of REP`TypeRep * seq of REP`TypeRep * REP`TypeRep * REP`TypeRep ==> bool
+--EquivDomFn(i, mfndom, rfndom, mfnrng, rfnrng) ==
+EquivDomFn(i, mfndom, rfndom, -, rfnrng) ==
+--  (dcl res : bool := false;
+--   if mfndom = rfndom
+--   then res := true
+--   else
+--     (TYPE`MeasureCheckOn();
+--      res := (len mfndom = len rfndom) and forall j in set inds mfndom & TYPE`IsEquivalent(i, mfndom(j), rfndom(j));
+--      TYPE`MeasureCheckOff());
+--   if res
+--   then
+--     cases mfnrng:
+--       mk_REP`PartialFnTypeRep(d1,r1),
+--       mk_REP`TotalFnTypeRep(d1,r1)    -> res := cases rfnrgn:
+--                                                   mk_REP`PartialFnTypeRep(d2,r2),
+--                                                   mk_REP`TotalFnTypeRep(d2,r2)    -> EquivDomFn(i, d1, d2, r1, r2),
+--                                                   others -> false
+--                                                 end, 
+--       others                          -> res := cases rfnrgn:
+--                                                   mk_REP`PartialFnTypeRep(-,-),
+--                                                   mk_REP`TotalFnTypeRep(-,-)    -> false,
+--                                                   others -> true
+--                                                 end
+--     end;
+--   return res);
+
+  if mfndom = rfndom
+  then return true
+  else
+   (dcl mdom : seq of REP`TypeRep := mfndom,
+        --mrng : REP`TypeRep := mfnrng,
+        rdom : seq of REP`TypeRep := rfndom,
+        rrng : REP`TypeRep := rfnrng,
+        res : bool := false;
+
+    --while is_REP`PartialFnTypeRep(mrng) or is_REP`TotalFnTypeRep(mrng) do
+    -- (mdom := mdom ^ mrng.fndom;
+    --  mrng := mrng.fnrng;);
+    while is_REP`PartialFnTypeRep(rrng) or is_REP`TotalFnTypeRep(rrng) do
+     (rdom := rdom ^ rrng.fndom;
+      rrng := rrng.fnrng;);
+    TYPE`MeasureCheckOn();
+    res := (len mdom <= len rdom) and forall j in set inds mdom & TYPE`IsEquivalent(i, mdom(j), rdom(j));
+    TYPE`MeasureCheckOff();
+    return res;
+   );
+
+  wf_ExtExplFunction : TYPE`Ind * AS`ExtExplFnDef ==> bool
+#ifdef VDMSL
+  wf_ExtExplFunction(i,mk_AS`ExtExplFnDef(nm,tv_l,partps,resnmtps,fnbody,fnpre,fnpost,-,-,-,-)) ==
+#endif VDMSL
+#ifdef VDMPP
+  wf_ExtExplFunction(i,mk_AS`ExtExplFnDef(nm,tv_l,partps,resnmtps,fnbody,fnpre,fnpost,access,stat,-,-)) ==
+#endif VDMPP
+    def fndom = ENV`ConstructImplDomType(partps);
+        parms = ENV`ConstructImplParms(partps);
+        tprng = ENV`ConstructImplRngType(resnmtps);
+        valtp_bd = ENV`ExtractValueBindings(resnmtps);
+        parmsNames = dunion {dom PAT`ExtractPatternName(p)|p in set elems parms};
+        resNames = dom valtp_bd;
+        fnrng = ENV`TransType(nil, tprng)
+    in
+   (
+    ENV`PushTypeVarContext(ENV`TransTypeList(nil,tv_l));
+    def
+#ifdef VDMPP
+        dom_l = ENV`TransTypeList(nil,fndom);
+        ok_fntps = ENV`CheckParmsInHierarchy(nm, dom_l, access, false);
+#endif VDMPP
+        mk_(ok_in, bind) = PAT`wf_PatternList(i, parms, ENV`TransTypeList(nil,fndom),nm);
+        wf_dom = 
+#ifdef VDMPP
+        ENV`CheckTypeListAccess( nm,fndom) and
+#endif VDMPP
+           wf_TypeList(i,fndom);
+        wf_rng = 
+#ifdef VDMPP
+        ENV`CheckTypeAccess (nm,tprng) and
+#endif VDMPP
+          wf_Type(i,tprng)
+    in
+    let ok_bd = (dom bind inter dom valtp_bd) = {}
+    in
+      (
+#ifdef VDMPP
+       dcl ok_subresp : bool := true;
+#endif VDMPP
+       if not ok_bd then
+          ----------------------------------------------------------------
+          -- Error message #9
+          -- Parameter identifiers overlap the result identifiers for "%1"
+          ----------------------------------------------------------------
+          ERR`GenErr (nm,<ERROR>,9,[ENV`PrintName(nm)]);
+#ifdef VDMPP
+       if fnbody.body = <SUBRESP> and access <> <PUBLIC_AS> and access <> <PROTECTED_AS>
+       then
+           ------------------------------------------------------------
+           -- Error message #438
+           -- Abstract function/operation "%1" must be defined as public or protected
+           ------------------------------------------------------------
+           ( ERR`GenErr (nm, <ERROR>,438,[ENV`PrintName(nm)]);
+            ok_subresp := false
+           );
+#endif VDMPP
+
+        ENV`EnterScope (bind);
+#ifdef VDMPP
+        -- Set the static flag so that non-static expressions can't be used in a 
+        -- static env. etc
+        ENV`SetStatic(stat);
+#endif VDMPP
+        def mk_(wf_pre,-) = wf_Pred(i, fnpre, <PRE>)
+        in 
+         (ENV`EnterScope (valtp_bd); --result parameter are in scope
+          def mk_(wf_body, tpe) = wf_Body(i,fnbody,fnrng,parmsNames union resNames);
+              ok_out = TYPE`IsCompatible(i,tpe,fnrng)
+          in
+           (if not ok_out then
+              --------------------------------------------------------------
+              -- Error message #12
+              -- Return type of function for "%1" is different from
+              -- signature
+              --------------------------------------------------------------
+              ERR`GenErr (nm,<ERROR>,12,[ENV`PrintName(nm)]);
+              def mk_(wf_post,-) = wf_Pred(i, fnpost, <POST>) in
+                ( ENV`LeaveScope(); -- resnm + redundant input pars
+                ENV`LeaveScope(); -- inputpars
+#ifdef VDMPP
+                -- Having checked the pre and post conds, we can unset the static flag
+                ENV`UnsetStatic();
+#endif VDMPP
+                ENV`PopTypeVarContext(); -- Type variables may not be
+                                       -- used any longer
+                return ok_in and wf_dom and wf_rng and wf_body and 
+                       ok_out and
+#ifdef VDMPP
+                       ok_fntps and ok_subresp and
+#endif VDMPP
+                       ok_bd and wf_pre and wf_post)))));
+                         
+          
+  wf_Pred : TYPE`Ind * [AS`Expr] * (<PRE>|<POST>|<INV>|<INIT>|<EXCEP>) ==> bool * REP`TypeRep 
+  wf_Pred (i, Pred, kind) ==
+    if Pred <> nil then
+      def btp = mk_REP`BooleanTypeRep();
+          mk_(wf_pred, tp) = EXPR`wf_Expr (i, Pred,btp);
+          com = TYPE`IsCompatible (i, tp, btp)
+      in
+        ( if not com then
+            cases kind :
+                           -------------------------------------------
+                           -- Error message #22
+                           -- Pre condition must be boolean expression
+                           -------------------------------------------
+              (<PRE>) -> ERR`GenErr (Pred, <ERROR>,22,[]),
+                           --------------------------------------------
+                           -- Error message #14
+                           -- Post condition must be boolean expression
+                           --------------------------------------------
+              (<POST>)-> ERR`GenErr (Pred, <ERROR>,14,[]),
+                           -------------------------------------------------
+                           -- Error message #15
+                           -- Invariant condition must be boolean expression
+                           -------------------------------------------------
+              (<INV>)   -> ERR`GenErr (Pred, <ERROR>,15,[]),
+                           -----------------------------------------------------
+                           -- Error message #16
+                           -- Initialisation condition must be boolean
+                           -- expression
+                           -----------------------------------------------------
+              (<INIT>)  -> ERR`GenErr (Pred, <ERROR>,16,[]),
+                           -------------------------------------------------
+                           -- Error message #17
+                           -- Exception condition must be boolean expression
+                           -------------------------------------------------
+              (<EXCEP>) -> ERR`GenErr (Pred, <ERROR>,17,[]),
+              others    -> error
+            end;
+          return mk_(wf_pred and com, tp))
+    else
+      return mk_(true, mk_REP`BooleanTypeRep())
+
+\end{vdm_al}
+
+
+\subsection{Well-formedness of Operations}
+
+The introduction of exeption handling statements have introduced more
+complexity in the checking of operations. The state component trapops
+is used to gather operations which contain trap handlers. These
+operations must be processed twice, even though the implementation
+only need to carry out part of the checking in the second round, the
+specification here (because it does not contain the type information
+derived in the implementation) simply carry out the checking twice.
+
+\begin{vdm_al}
+
+  state DEFSt of
+    trapops : set of AS`OpDef
+  init s == s = mk_DEFSt({})
+  end
+
+operations
+  
+  wf_Operations : TYPE`Ind * map AS`Name to AS`OpDef ==> bool 
+  wf_Operations (i, opmap) ==
+   (dcl reswf : bool := true;
+    --ENV`PushContext(<ALL>);
+    STMT`FullOpTest(false);
+    trapops := {};
+    for all op in set rng opmap do
+      cases true:
+        (is_AS`ExplOpDef(op)) ->
+            (if op.oppure
+             then ENV`PushContext(<PUREOP>)
+             else ENV`PushContext(<ALL>);
+             reswf := wf_ExplOperation (i, op) and reswf;
+#ifdef VDMPP
+             def optp = VCM`ExportExplicitOperation(ENV`GetCurClass(), op)
+             in reswf := ENV`CheckDefAccess(VCM`MakeOpRng(optp, op.access, op.stat, op.oppure), op.nm) and reswf;
+#endif VDMPP
+             ENV`PopContext();
+            ),
+        (is_AS`ImplOpDef(op)) ->
+            (if op.oppure
+             then ENV`PushContext(<PUREOP>)
+             else ENV`PushContext(<ALL>);
+             reswf := wf_ImplOperation (i, op) and reswf;
+#ifdef VDMPP
+             def optp = VCM`ExportImplicitOperation(ENV`GetCurClass(), op)
+             in reswf := ENV`CheckDefAccess(VCM`MakeOpRng(optp, op.access, op.stat, op.oppure), op.nm) and reswf;
+#endif VDMPP
+             ENV`PopContext();
+            ),
+        (is_AS`ExtExplOpDef(op)) ->
+            (if op.oppure
+             then ENV`PushContext(<PUREOP>)
+             else ENV`PushContext(<ALL>);
+             reswf := wf_ExtExplOperation (i, op) and reswf;
+#ifdef VDMPP
+             def optp = VCM`ExportExtExplicitOperation(ENV`GetCurClass(), op)
+             in reswf := ENV`CheckDefAccess(VCM`MakeOpRng(optp, op.access, op.stat, op.oppure), op.nm) and reswf;
+#endif VDMPP
+             ENV`PopContext();
+            )
+      end;
+    ENV`PushContext(<ALL>);
+    STMT`FullOpTest(true);
+    for all defi in set trapops do
+      if is_AS`ExtExplOpDef(defi)
+      then reswf := wf_ExtExplOperation(i,defi) and reswf
+      else reswf := wf_ExplOperation(i,defi) and reswf;
+    ENV`PopContext();
+    return reswf
+   );
+
+  wf_ExplOperation : TYPE`Ind * AS`ExplOpDef ==> bool
+  wf_ExplOperation(i,defi) ==
+#ifdef VDMSL
+   let mk_AS`ExplOpDef(opnm,oppure,-,optp,parms,opbody,oppre,oppost,-,-,-,-) = defi
+#endif VDMSL
+#ifdef VDMPP
+   let mk_AS`ExplOpDef(opnm,oppure,opsync,optp,parms,opbody,oppre,oppost,acc,stat,constr,-) = defi
+#endif VDMPP
+   in
+   (dcl reswf : bool := true;
+   
+    def wf_tp = 
+#ifdef VDMPP
+        ENV`CheckTypeAccess (opnm,optp) and
+#endif VDMPP
+          wf_Type (i, optp);
+        mk_AS`OpType(opdom,oprng,-) = optp;
+        dom_l = ENV`TransTypeList(nil,opdom);
+#ifdef VDMPP
+        ok_optps = ENV`CheckParmsInHierarchy(opnm, dom_l, acc, true);
+#endif VDMPP
+        mk_(ok_in, bindings) = PAT`wf_PatternList(i, parms, dom_l, opnm)
+    in
+      (ENV`EnterScope (bindings);
+       STMT`SetOpContext(opnm);
+        for all stid in set ENV`UsedStateIds(dom bindings) 
+        do
+          ------------------------------------------------------
+          -- Error message #18
+          -- The scope of the state component "%1" is now hidden
+          ------------------------------------------------------
+          --ERR`GenErr(stid, <WARNING>,18,[ENV`PrintName(stid)]);
+          ERR`GenErr(stid, <ERROR>,18,[ENV`PrintName(stid)]);
+
+-- XXXX question: can rng_tp be used, or should it be REP`AllTypeRep when oprng = nil?
+#ifdef VDMPP
+        -- Set the static flag so that non-static expressions can't be used in a 
+        -- static env. etc
+        ENV`SetStatic(stat);
+#endif VDMPP
+        def pnms = dunion {dom PAT`ExtractPatternName(p)|p in set elems parms};
+        in
+         (dcl rng_tp : REP`TypeRep;
+#ifdef VDMSL
+          if is_AS`VoidType(oprng)
+          then rng_tp := mk_REP`UnionTypeRep({mk_REP`UnitTypeRep(),mk_REP`RetTypeRep()})
+          else rng_tp := ENV`TransType(nil,oprng);
+#endif VDMSL
+#ifdef VDMPP
+          if constr
+          then rng_tp := mk_REP`UnionTypeRep({mk_REP`UnitTypeRep(),
+                                               mk_REP`ObjRefTypeRep(ENV`GetCurClass()),
+                                               mk_REP`RetTypeRep()})
+          else if is_AS`VoidType(oprng)
+          then rng_tp := mk_REP`UnionTypeRep({mk_REP`UnitTypeRep(),mk_REP`RetTypeRep()})
+          else rng_tp := ENV`TransType(nil,oprng);
+#endif VDMPP
+        def mk_(wf_body, tp) = wf_Body(i,opbody,rng_tp,pnms)
+        in
+         (if STMT`AnyTraps()
+          then trapops := trapops union {defi};
+          if oppure and is_AS`VoidType(oprng)
+          then
+            ------------------------------------------------------------
+            -- Error message #454
+            -- Pure operation %1 must return a value
+            ------------------------------------------------------------
+           (ERR`GenErr (opnm, <ERROR>,454,[ENV`PrintName(opnm)]);
+            reswf := false);
+#ifdef VDMPP
+          if not opsync and not is_AS`VoidType(oprng)
+          then
+            ------------------------------------------------------------
+            -- Error message #436
+            -- Asynchronous operation %1 cannot return a value
+            ------------------------------------------------------------
+           (ERR`GenErr (opnm, <ERROR>,436,[ENV`PrintName(opnm)]);
+            reswf := false);
+          if constr
+          then
+           (if not opsync
+            then
+              ------------------------------------------------------------
+              -- Error message #432
+              -- Constructors like %1 cannot be be defined async
+              ------------------------------------------------------------
+             (ERR`GenErr (opnm, <ERROR>,432,[ENV`PrintName(ENV`GetCurClass())]);
+              reswf := false);
+            if oppure
+            then
+              ------------------------------------------------------------
+              -- Error message #455
+              -- Constructors like "%1" cannot be defined pure
+              ------------------------------------------------------------
+             (ERR`GenErr (opnm, <ERROR>,455,[ENV`PrintName(opnm)]);
+              reswf := false);
+            if stat
+            then
+              ------------------------------------------------------------
+              -- Error message #445
+              -- Constructor cannot be defined static
+              ------------------------------------------------------------
+             (ERR`GenErr (opnm, <ERROR>,445,[]);
+              reswf := false);
+            if is_AS`VoidType(oprng) or not (is_AS`TypeName(oprng) and oprng.name = ENV`GetCurClass())
+             -- A constructor for a class C must have return type C   
+            then
+              ------------------------------------------------------------
+              -- Error message #393
+              -- Constructor does not have correct return type: \"%1\"
+              ------------------------------------------------------------
+             (ERR`GenErr (opnm, <ERROR>,393,[ENV`PrintName(ENV`GetCurClass())]);
+              reswf := false);
+           );
+          if opbody.body = <SUBRESP> and acc <> <PUBLIC_AS> and acc <> <PROTECTED_AS>
+          then
+            ------------------------------------------------------------
+            -- Error message #438
+            -- Abstract function/operation "%1" must be defined as public or protected
+            ------------------------------------------------------------
+           (ERR`GenErr (opnm, <ERROR>,438,[ENV`PrintName(opnm)]);
+            reswf := false);
+#endif VDMPP
+          def ok_out = TYPE`IsCompatible (i, tp, rng_tp) in
+           (if not ok_out 
+#ifdef VDMPP
+               -- Note the special case here: the return type for a constructor may be 
+               -- either the unit type or the appropriate object reference type,
+               -- since the "return self" is optional.
+               and not (constr and tp = mk_REP`UnitTypeRep())
+#endif VDMPP
+            then
+#ifdef VDMPP
+              if constr
+              then
+                ------------------------------------------------------------
+                -- Error message #390
+                -- Constructor does not return a reference to class "%1"
+                ------------------------------------------------------------
+               (ERR`GenErr (opnm, <ERROR>,390,[ENV`PrintName(ENV`GetCurClass())]);
+                reswf := false
+               )
+              else
+#endif VDMPP
+                ------------------------------------------------------------
+                -- Error message #19
+                -- Return type of operation for "%1" is different from 
+                -- signature
+                ------------------------------------------------------------
+               (ERR`GenErr (opnm, <ERROR>,19,[ENV`PrintName(opnm)]);
+                reswf := false);
+
+            (reswf := ENV`SetExtAll(pnms) and reswf; -- ExplOperation dos't have ext definition
+             ENV`PushContext(<PRE>);
+             def mk_(wf_pre,-)  = wf_Pred (i, oppre, <PRE>)
+             in
+              (ENV`PopContext();
+               if oppost <> nil
+               then (ENV`PushContext(<POST>);
+               if tp <> mk_REP`UnitTypeRep()
+               then ENV`EnterScope({mk_AS`Name(["RESULT"],CI`NilContextId) |-> mk_(tp,1)});
+               -- Should the contextid of oppost be used ????
+               def mk_(wf_post,-) = wf_Pred (i, oppost, <POST>)
+               in
+                (ENV`PopContext();
+                 if tp <> mk_REP`UnitTypeRep()
+                 then ENV`LeaveScope();
+                 reswf := reswf and wf_post));
+               ENV`LeaveScope();
+#ifdef VDMPP
+               -- Having checked the pre and post conds, we can unset the static flag
+               ENV`UnsetStatic();
+#endif VDMPP
+               return ok_in and wf_tp and wf_body and ok_out and 
+#ifdef VDMPP
+                        ok_optps and 
+#endif VDMPP
+                        wf_pre and reswf)))))));
+
+  wf_ImplOperation : TYPE`Ind * AS`ImplOpDef ==> bool
+#ifdef VDMSL
+  wf_ImplOperation(i,mk_AS`ImplOpDef(opnm,oppure,-,partps,resnmtps,opext,oppre,oppost,excps,-,-,-,-)) ==
+#endif VDMSL
+#ifdef VDMPP
+  wf_ImplOperation(i,mk_AS`ImplOpDef(opnm,oppure,opsync,partps,resnmtps,opext,oppre,oppost,excps,access,stat,constr,-)) ==
+#endif VDMPP
+  (dcl reswf : bool := true;
+    def opdom = ENV`ConstructImplDomType(partps);
+        parms = ENV`ConstructImplParms(partps);
+        oprng = ENV`ConstructImplRngType(resnmtps);
+        valtp_bd = ENV`ExtractValueBindings(resnmtps);
+        dom_l = ENV`TransTypeList(nil,opdom);
+#ifdef VDMPP
+        ok_optps = ENV`CheckParmsInHierarchy(opnm, dom_l, access, true);
+#endif VDMPP
+        pnms = dunion {dom PAT`ExtractPatternName(p)| p in set elems parms};
+        mk_(ok_in, bind) = PAT`wf_PatternList(i, parms, dom_l,opnm);
+#ifdef VDMSL
+        wf_dom = wf_TypeList(i,opdom);
+#endif VDMSL
+#ifdef VDMPP
+        wf_dom = ENV`CheckTypeListAccess (opnm,opdom) and wf_TypeList(i,opdom);
+#endif VDMPP
+    in
+     (dcl wf_rng : bool := true;
+      if resnmtps <> []
+#ifdef VDMSL
+      then wf_rng := wf_Type(i,oprng);
+#endif VDMSL
+#ifdef VDMPP
+      then wf_rng := ENV`CheckTypeAccess (opnm,oprng) and wf_Type(i,oprng);
+#endif VDMPP
+
+      def wf_ext = ENV`SetExt(opext, pnms union if resnmtps = []
+                                            then {}
+                                            else dom valtp_bd);
+          ok_bd = (dom bind inter dom valtp_bd) = {}
+      in
+       (dcl wf_pred: bool;
+        if not ok_bd
+        then
+          ----------------------------------------------------------------
+          -- Error message #9
+          -- Parameter identifiers overlap the result identifiers for "%1"
+          ----------------------------------------------------------------
+          (ERR`GenErr (opnm, <ERROR>,9,[ENV`PrintName(opnm)]);
+           reswf := false);
+        if oppure and is_AS`VoidType(oprng)
+        then
+          ------------------------------------------------------------
+          -- Error message #454
+          -- Pure operation %1 must return a value
+          ------------------------------------------------------------
+         (ERR`GenErr (opnm, <ERROR>,454,[ENV`PrintName(opnm)]);
+          reswf := false);
+#ifdef VDMPP
+        if not opsync and  resnmtps <> []
+        then
+          ------------------------------------------------------------
+          -- Error message #436
+          -- Asynchronous operation %1 cannot return a value
+          ------------------------------------------------------------
+         (ERR`GenErr (opnm,<ERROR>,436,[ENV`PrintName(opnm)]);
+          reswf := false);
+        if constr
+        then
+         (if is_AS`VoidType(oprng) or is_AS`TypeName(oprng) and oprng.name <> ENV`GetCurClass()
+          then
+            ----------------------------------------------------------------
+            -- Error message #390
+            -- "Constructor does not return a reference to class \"%1\""
+            ----------------------------------------------------------------
+            (ERR`GenErr (opnm,<ERROR>,390,[ENV`PrintName(opnm)]);
+             reswf := false);
+            if not opsync
+            then
+              ------------------------------------------------------------
+              -- Error message #432
+              -- Constructors like %1 cannot be be defined async
+              ------------------------------------------------------------
+             (ERR`GenErr (opnm,<ERROR>,432,[ENV`PrintName(ENV`GetCurClass())]);
+              reswf := false);
+            if oppure
+            then
+              ------------------------------------------------------------
+              -- Error message #455
+              -- Constructors like "%1" cannot be defined pure
+              ------------------------------------------------------------
+             (ERR`GenErr (opnm,<ERROR>,455,[ENV`PrintName(opnm)]);
+              reswf := false);
+            if stat
+            then
+              ------------------------------------------------------------
+              -- Error message #445
+              -- Constructor cannot be defined static
+              ------------------------------------------------------------
+             (ERR`GenErr (opnm,<ERROR>,445,[]);
+              reswf := false);
+         );
+#endif VDMPP
+        ENV`EnterScope(bind); 
+#ifdef VDMPP
+        -- Set the static flag so that non-static expressions can't be used in a 
+        -- static env. etc
+        ENV`SetStatic(stat);
+#endif VDMPP
+        wf_pred := STMT`wf_ImplOpBody(i,opext,oppre,oppost,excps,valtp_bd);
+#ifdef VDMPP
+        -- Having checked the pre and post conds, we can unset the static flag
+        ENV`UnsetStatic();
+#endif VDMPP
+        ENV`LeaveScope();
+        return (ok_in = true) and 
+#ifdef VDMPP
+               ok_optps and 
+#endif VDMPP
+               wf_dom and wf_rng and wf_pred and wf_ext and reswf
+      )));
+
+  wf_ExtExplOperation : TYPE`Ind * AS`ExtExplOpDef ==> bool
+  wf_ExtExplOperation(i,defi) ==
+#ifdef VDMSL
+  let mk_AS`ExtExplOpDef(opnm,oppure,-,partps,resnmtps,opbody,opext,oppre,oppost,excps,-,-,-,-) = defi
+#endif VDMSL
+#ifdef VDMPP
+  let mk_AS`ExtExplOpDef(opnm,oppure,opsync,partps,resnmtps,opbody,opext,oppre,oppost,excps,access,stat,constr,-) = defi
+#endif VDMPP
+  in
+  ( dcl reswf : bool := true;
+    def opdom = ENV`ConstructImplDomType(partps);
+        parms = ENV`ConstructImplParms(partps);
+        oprng = ENV`ConstructImplRngType(resnmtps);
+        valtp_bd = ENV`ExtractValueBindings(resnmtps);
+        dom_l = ENV`TransTypeList(nil,opdom);
+    in
+     (dcl rng_tp : REP`TypeRep;
+      if is_AS`VoidType(oprng)
+      then rng_tp := mk_REP`UnionTypeRep({mk_REP`UnitTypeRep(), mk_REP`RetTypeRep()})
+      else rng_tp := ENV`TransType(nil,oprng);
+    def 
+#ifdef VDMPP
+        ok_optps = ENV`CheckParmsInHierarchy(opnm, dom_l, access, true);
+#endif VDMPP
+        pnms = dunion {dom PAT`ExtractPatternName(p)| p in set elems parms};
+        resnms = dom valtp_bd;
+        mk_(ok_in, bind) = PAT`wf_PatternList(i, parms, dom_l, opnm);
+#ifdef VDMSL
+        wf_dom = wf_TypeList(i,opdom);
+#endif VDMSL
+#ifdef VDMPP
+        wf_dom = ENV`CheckTypeListAccess (opnm,opdom) and wf_TypeList(i,opdom);
+#endif VDMPP
+    in
+     (dcl wf_rng : bool := true;
+      if resnmtps <> []
+#ifdef VDMSL
+      then wf_rng := wf_Type(i,oprng);
+#endif VDMSL
+#ifdef VDMPP
+      then wf_rng := ENV`CheckTypeAccess (opnm,oprng) and wf_Type(i,oprng);
+#endif VDMPP
+      def wf_ext = ENV`SetExt(opext, pnms union if resnmtps = []
+                                            then {}
+                                            else dom valtp_bd);
+          ok_bd = (dom bind inter dom valtp_bd) = {}
+      in
+
+       (if not ok_bd
+        then
+          ----------------------------------------------------------------
+          -- Error message #9
+          -- Parameter identifiers overlap the result identifiers for "%1"
+          ----------------------------------------------------------------
+          ERR`GenErr (opnm, <ERROR>,9,[ENV`PrintName(opnm)]);
+        if oppure and is_AS`VoidType(oprng)
+        then
+          ------------------------------------------------------------
+          -- Error message #454
+          -- Pure operation %1 must return a value
+          ------------------------------------------------------------
+         (ERR`GenErr (opnm, <ERROR>,454,[ENV`PrintName(opnm)]);
+          reswf := false);
+#ifdef VDMPP
+        if not opsync and  resnmtps <> []
+        then
+          ------------------------------------------------------------
+          -- Error message #436
+          -- Asynchronous operation %1 cannot return a value
+          ------------------------------------------------------------
+         (ERR`GenErr (opnm, <ERROR>,436,[ENV`PrintName(opnm)]);
+          reswf := false);
+        if constr
+        then
+         (if is_AS`VoidType(oprng) or is_AS`TypeName(oprng) and oprng.name <> ENV`GetCurClass()
+          then
+            ----------------------------------------------------------------
+            -- Error message #390
+            -- "Constructor does not return a reference to class \"%1\""
+            ----------------------------------------------------------------
+            (ERR`GenErr (opnm, <ERROR>,390,[ENV`PrintName(opnm)]);
+             reswf := false);
+          if not opsync
+          then
+            ------------------------------------------------------------
+            -- Error message #432
+            -- Constructors like %1 cannot be be defined async
+            ------------------------------------------------------------
+           (ERR`GenErr (opnm, <ERROR>,432,[ENV`PrintName(ENV`GetCurClass())]);
+            reswf := false);
+          if oppure
+          then
+            ------------------------------------------------------------
+            -- Error message #455
+            -- Constructors like "%1" cannot be defined pure
+            ------------------------------------------------------------
+           (ERR`GenErr (opnm, <ERROR>,455,[ENV`PrintName(opnm)]);
+            reswf := false);
+          if stat
+          then
+            ------------------------------------------------------------
+            -- Error message #445
+            -- Constructor cannot be defined static
+            ------------------------------------------------------------
+           (ERR`GenErr (opnm, <ERROR>,445,[]);
+            reswf := false);
+         );
+        if opbody.body = <SUBRESP> and access <> <PUBLIC_AS> and access <> <PROTECTED_AS>
+        then
+          ------------------------------------------------------------
+          -- Error message #438
+          -- Abstract function/operation "%1" must be defined as public or protected
+          ------------------------------------------------------------
+         (ERR`GenErr (opnm, <ERROR>,438,[ENV`PrintName(opnm)]);
+          reswf := false);
+#endif VDMPP
+        ENV`EnterScope (bind);
+        ENV`PushContext(<PRE>);
+        def wf_pre = ({def mk_(wf,-) = wf_Pred(i, (excps(j)).cond, <EXCEP>)
+                       in wf | j in set inds excps}
+                       union
+                      {def mk_(wf,-) = wf_Pred(i, oppre, <PRE>) in wf}) = {true}
+        in
+       (ENV`EnterScope(valtp_bd);
+        STMT`SetOpContext(opnm);
+        for all stid in set ENV`UsedStateIds(dom bind) 
+        do
+          ------------------------------------------------------
+          -- Error message #18
+          -- The scope of the state component "%1" is now hidden
+          ------------------------------------------------------
+          --ERR`GenErr(stid, <WARNING>,18,[ENV`PrintName(stid)]); 
+          ERR`GenErr(stid, <ERROR>,18,[ENV`PrintName(stid)]); 
+#ifdef VDMPP
+        -- Set the static flag so that non-static expressions can't be used in a 
+        -- static env. etc
+        ENV`SetStatic(stat);
+#endif VDMPP
+        ENV`PopContext();
+        def mk_(wf_body, tp) = wf_Body(i,opbody,rng_tp,pnms union resnms) in
+         (if STMT`AnyTraps()
+          then trapops := trapops union {defi};
+          def ok_out = TYPE`IsCompatible (i, tp, rng_tp) in
+           (if not ok_out then
+                ----------------------------------------------------------------
+                -- Error message #19
+                -- Return type of operation for "%1" is different from signature
+                ----------------------------------------------------------------
+              ( ERR`GenErr (opnm, <ERROR>,19,[ENV`PrintName(opnm)]);
+                reswf := false);
+                if oppost <> nil
+                then (ENV`PushContext(<POST>);
+--                       let pnms = dunion {dom PAT`ExtractPatternName(p)|p in set elems parms}
+--                       in
+--                         reswf := ENV`SetExtAll(pnms) and reswf;
+                       def wf_post = ({def mk_(wf,-) = wf_Pred(i, (excps(j)).action, <EXCEP>)
+                                       in wf | j in set inds excps} union
+                                      {def mk_(wf,-) = wf_Pred (i, oppost, <POST>)
+                                       in wf}) = {true}
+                       in
+                        ( ENV`PopContext();
+                          reswf := reswf and wf_post));
+#ifdef VDMPP
+                -- Having checked the pre and post conds, we can unset the static flag
+                ENV`UnsetStatic();
+#endif VDMPP
+                ENV`LeaveScope();
+                ENV`LeaveScope();
+                return ok_in and 
+#ifdef VDMPP
+                        ok_optps and 
+#endif VDMPP
+                        wf_dom and wf_rng and wf_body and
+                        wf_pre and wf_ext and reswf)))))));
+
+                      
+\end{vdm_al}
+
+
+
+\subsection{Well-formedness of Function or Operation Body}
+\begin{vdm_al}
+
+operations
+wf_Body: TYPE`Ind * (AS`FnBody | AS`OpBody) * REP`TypeRep * set of AS`Name ==> bool * (REP`TypeRep | set of REP`TypeRep)
+wf_Body(i,body,rng_tp,names) ==
+  if IsPrelim(body) 
+  then (
+     for all nm in set names do 
+       def - = ENV`LookUp(nm, true) in skip;
+     return mk_(true, rng_tp))
+  else if is_AS`FnBody(body)
+       then return EXPR`wf_Expr(i, body.body, rng_tp)
+       else return STMT`wf_Stmt(i, body.body, rng_tp);
+
+functions
+  IsPrelim: AS`FnBody | AS`OpBody -> bool
+  IsPrelim(fnbody) ==
+    cases fnbody.body:
+#ifdef VDMPP
+       <SUBRESP>,
+#endif VDMPP
+      <NOTYETSPEC> -> true,
+      others -> false
+    end;
+
+operations 
+\end{vdm_al}
+#ifdef VDMPP
+\subsection{Well-formedness of Instance Variables}
+
+The well-formedness of instance variables if checked by the
+$wf-InstanceVars$ operation. This operation checks that the instance
+initializations, the instance invariants and the instance types are
+well-formed. 
+
+\begin{vdm_al}
+-- only in VDM++
+  wf_InstanceVars: TYPE`Ind * seq of AS`InstanceVarDef ==> bool
+  wf_InstanceVars(i, instdef_l) ==
+  ( dcl reswf : bool := true;
+    ENV`PushContext(<ALL>);
+    for instvar in instdef_l do
+      cases instvar:
+        mk_AS`InstAssignDef(mk_AS`AssignDef (var,tp,ini,-),access,-,-) -> 
+        (
+          reswf := ENV`CheckTypeAccess (var,tp) and wf_Type(i,tp) and reswf;
+          reswf := ENV`CheckInstAccess(access, var) and reswf;
+          if ini <> nil then
+            def rtp = ENV`TransType(nil,tp);
+                mk_(wf,var_tp) = EXPR`wf_Expr(i,ini,rtp);
+                cmp = TYPE`IsCompatible (i, var_tp, rtp)
+                --cmp = TYPE`IsCompatible (<DEF>, var_tp, rtp)
+            in
+            ( reswf := wf and cmp and reswf;
+              if not cmp then
+                ----------------------------------------------------------------
+                -- Error message #307
+                -- Initialization expression is not compatible with defining
+                -- type of "%1"
+                ----------------------------------------------------------------
+                ERR`GenErr (var, <ERROR>,307,[ENV`PrintName(var)])
+              else
+                CI`SetTypeInfo(var.cid, var_tp)
+            )
+          else 
+            ---------------------------------------
+            -- Error message #25
+            -- The instance "%1" is not initialized
+            ---------------------------------------
+            ERR`GenErr(var, <WARNING>,25,[ENV`PrintName(var)])
+        ),
+        mk_AS`InstanceInv(expr,-,-) -> def mk_(wf,-) = wf_Pred(i, expr,<INV>)
+                                       in reswf := wf and reswf
+      end;
+     ENV`PopContext();
+     return reswf
+  );
+
+\end{vdm_al}
+
+\subsection{Well-formedness of Synchronisation Part}
+
+\begin{vdm_al}
+
+  wf_Sync : TYPE`Ind * AS`Name * seq of AS`SyncDef ==> bool
+  wf_Sync (i, clsnm, syncs) ==
+    if syncs = [] then
+      return true
+    else 
+      wf_DeclarativeSync (i, clsnm, syncs);
+
+  wf_DeclarativeSync : TYPE`Ind * AS`Name * seq1 of AS`DeclarativeSync ==> bool
+  wf_DeclarativeSync (i,clsnm,syncs) ==
+   (dcl reswf : bool := true;
+    dcl permis_nms : set of AS`Name := {};
+    let ExpectedGuardType = mk_REP`BooleanTypeRep()
+    in
+     (ENV`PushContext (<PERM>);
+      for decsync in syncs do
+        cases decsync:
+          mk_AS`Permission(mthd,guard,-) ->
+             def mk_(wf_guard, guardtp) = EXPR`wf_Expr (i, guard, ExpectedGuardType);
+                 mthtp  = ENV`LookUpOperationName (nil,mthd,nil)
+             in   
+              (if mthd = clsnm
+               then
+                  --------------------------------
+                  -- Error message #430
+                  -- Cannot put permission guard on constructor "%1"
+                  --------------------------------
+                 (ERR`GenErr (mthd, <ERROR>,430,[ENV`PrintName (mthd)]);
+                  reswf := false)
+               elseif mthd in set permis_nms
+               then
+                 --------------------------------
+                 -- Error message #426
+                 -- Multiple permission predicates are defined for "%1"
+                 --------------------------------
+                (ERR`GenErr (mthd, <ERROR>,426,[ENV`PrintName (mthd)]);
+                 reswf := false)
+               else permis_nms := permis_nms union {mthd};
+                 if not TYPE`IsCompatible (i, guardtp, ExpectedGuardType)
+                 then
+                   -------------------------------------
+                   -- Error message #27
+                   -- Guard must be a boolean expression
+                   -------------------------------------
+                  (ERR`GenErr (guard, <ERROR>,27,[]);
+                   reswf := false);
+
+               if mthtp = {}
+               then
+                 --------------------------------
+                 -- Error message #28
+                 -- Operation "%1" is not defined
+                 --------------------------------
+                (ERR`GenErr (mthd, <ERROR>,28,[ENV`PrintName (mthd)]);
+                 reswf := false)
+               else
+                (dcl forallFnOp : bool := true,
+                     forallFn : bool := true;
+                 for all tp in set mthtp do
+                   cases tp:
+                     mk_ENV`AccessFnTypeRep(-,-,-),
+                     mk_ENV`AccessOpTypeRep(-,-,-,true)  -> skip,
+                     mk_ENV`AccessOpTypeRep(-,-,-,false) -> forallFn := false,
+                     others -> (forallFnOp := false;
+                                forallFn := false)
+                   end;
+
+                 if forallFnOp and card mthtp > 1
+                 then
+                   --------------------------------
+                   -- Error message #424
+                   -- Permission guard for overloaded operation "%1"
+                   --------------------------------
+                  (ERR`GenErr (mthd, <WARNING>,424,[ENV`PrintName (mthd)]);
+                   reswf := false);
+                 if forallFn
+                 then
+                   --------------------------------
+                   -- Error message #428 
+                   -- Permission predicates can only be defined for impure operations
+                   --------------------------------
+                  (ERR`GenErr (mthd, <ERROR>,428,[]);
+                   reswf := false);
+                 def mk_(acc,-) = EXPR`wf_Expr (i,mthd,mk_REP`AllTypeRep ())
+                 in reswf := acc and reswf;
+                );
+                reswf := wf_guard and reswf;
+              ),
+           mk_AS`Mutex(nmlist,-) ->
+              if nmlist <> nil
+              then
+               (dcl prev_nm : set of AS`Name := {}; 
+                for nm in nmlist do 
+                 (def look = ENV`LookUpOperationName(nil,nm,nil)
+                  in
+                    if look = {}
+                    then
+                      --------------------------------
+                      -- Error message #28
+                      -- Operation "%1" is not defined
+                      --------------------------------
+                     (ERR`GenErr (nm, <ERROR>,28,[ENV`PrintName (nm)]);
+                      reswf := false)
+                    elseif is_(look,set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep)) and card look > 1
+                    then
+                       --------------------------------
+                      -- Error message #425
+                      -- Mutex includes overloaded operation "%1"
+                      --------------------------------
+                      ERR`GenErr (nm, <WARNING>,425,[ENV`PrintName (nm)]);
+                    if nm in set prev_nm
+                    then
+                      ------------------------------------
+                      -- Warning message #73
+                      -- "%1" multiple defined in namelist
+                      ------------------------------------
+                      ERR`GenErr (nm, <WARNING>,73,[ENV`PrintName (nm)])
+                    else
+                      prev_nm := prev_nm union {nm}
+                 )
+               )
+      end;
+      ENV`PopContext ();
+      return reswf
+     )
+   );
+
+
+\end{vdm_al}
+
+\subsection{Well-formedness of Thread Part}
+
+\begin{vdm_al}
+
+  wf_Thread : TYPE`Ind * [AS`ThreadDef] * AS`Name ==> bool
+  wf_Thread (i, thread,clsnm) ==
+    cases thread:
+      nil                        -> return true,
+      mk_AS`PerObl (-,-,-,-,-,-) -> return wf_PeriodicThread (i,thread,clsnm),
+      mk_AS`SpoObl (-,-,-,-,-)   -> return wf_SporadicThread (i,thread,clsnm),
+      others                     -> return wf_ProceduralThread (i,thread)
+    end;
+ 
+  wf_PeriodicThread : TYPE`Ind * AS`PerObl * AS`Name ==> bool
+  wf_PeriodicThread (i, mk_AS`PerObl (period,jitter,delay,offset,mthd,-),clsnm) ==
+   (dcl reswf : bool := true;
+    let ntp0 = mk_REP`NumericTypeRep(<NAT>),
+        ntp1 = mk_REP`NumericTypeRep(<NATONE>) in
+    def mk_(wf_period, periodtp) = EXPR`wf_Expr (i, period, ntp1);
+        mk_(wf_jitter, jittp) = EXPR`wf_Expr (i, jitter, ntp0);
+        mk_(wf_delay, disttp) = EXPR`wf_Expr (i, delay, ntp0);
+        mk_(wf_offset, offsettp) = EXPR`wf_Expr (i, offset, ntp0);
+        mthtp  = ENV`LookUpOperationName (nil,mthd,nil)
+    in   
+     (ENV`PushContext(<ALL>);
+      if period = mk_AS`RealLit(0,CI`NilContextId) or
+         period = mk_AS`NumLit(0,CI`NilContextId) or
+         not TYPE`IsCompatible (i, periodtp, ntp1)
+      then
+        ------------------------------------------------------
+        -- Error message #32
+        -- Duration must evaluate to a positive natural number
+        ------------------------------------------------------
+        (ERR`GenErr (period, <ERROR>,32,[]);
+         reswf := false;
+        );
+      -- guranteed by the parser
+      if not TYPE`IsCompatible (i, jittp, ntp0)
+      then
+        ------------------------------------------------------
+        -- Error message #399
+        -- Jitter must evaluate to a non-negative natural number
+        ------------------------------------------------------
+       (ERR`GenErr (jitter, <ERROR>,399,[]);
+        reswf := false;
+       );
+      -- guranteed by the parser
+      if not TYPE`IsCompatible (i, disttp, ntp0)
+      then
+        ------------------------------------------------------
+        -- Error message #400
+        -- Distance must evaluate to a non-negative natural number
+        ------------------------------------------------------
+       (ERR`GenErr (delay, <ERROR>,400,[]);
+        reswf := false;
+       );
+      -- guranteed by the parser
+      if not TYPE`IsCompatible (i, offsettp, ntp0)
+      then
+        ------------------------------------------------------
+        -- Error message #401
+        -- Offset must evaluate to a non-negative natural number
+        ------------------------------------------------------
+       (ERR`GenErr (offset, <ERROR>,401,[]);
+        reswf := false;
+       );
+      if delay.val >= period.val
+      then
+        ------------------------------------------------------
+        -- Error message #434
+        -- Delay argument must be less than the period in %1
+        ------------------------------------------------------
+       (ERR`GenErr (period, <ERROR>,434,[ENV`PrintName(clsnm)]);
+        reswf := false;
+       );
+      if mthtp = {}
+      then
+        --------------------------------
+        -- Error message #28
+        -- Operation "%1" is not defined
+        --------------------------------
+       (ERR`GenErr (mthd, <ERROR>,28,[ENV`PrintName(mthd)]);
+        reswf := false )
+      else
+       for all tp in set mthtp do
+         cases tp:
+           mk_ENV`AccessFnTypeRep(-,-,-),
+           mk_ENV`AccessOpTypeRep(-,-,-,true) ->
+              --------------------------------
+              -- Error message #458
+              -- Function or pure operation "%1" used in thread
+              --------------------------------
+             (ERR`GenErr (mthd, <ERROR>,458,[ENV`PrintName(mthd)]);
+              reswf := false ),
+           mk_ENV`AccessOpTypeRep(-,-,-,false) -> skip
+         end;
+      ENV`PopContext();
+      return reswf and wf_period and wf_jitter and wf_delay and wf_offset
+     );
+   );
+
+  wf_SporadicThread : TYPE`Ind * AS`SpoObl * AS`Name ==> bool
+  wf_SporadicThread (i, mk_AS`SpoObl (delay,bound,offset,mthd,-),-) ==
+   (dcl reswf : bool := true;
+    let ntp0 = mk_REP`NumericTypeRep(<NAT>),
+        ntp1 = mk_REP`NumericTypeRep(<NATONE>) in
+    def mk_(wf_delay, delaytp) = EXPR`wf_Expr (i, delay, ntp1);
+        mk_(wf_bound, -) = EXPR`wf_Expr (i, bound, ntp1);
+        mk_(wf_offset, -) = EXPR`wf_Expr (i, offset, ntp0);
+        mthtp = ENV`LookUpOperationName (nil,mthd,nil)
+    in   
+     (ENV`PushContext(<ALL>);
+      if not TYPE`IsCompatible (i, delaytp, ntp1)
+      then
+        ------------------------------------------------------
+        -- Error message #32
+        -- Duration must evaluate to a positive natural number
+        ------------------------------------------------------
+      --(ERR`GenErr (period, <ERROR>,32,[]);
+        --reswf := false;
+        skip;
+      if mthtp = {}
+      then
+        --------------------------------
+        -- Error message #28
+        -- Operation "%1" is not defined
+        --------------------------------
+       (ERR`GenErr (mthd, <ERROR>,28,[ENV`PrintName(mthd)]);
+        reswf := false)
+      else
+       for all tp in set mthtp do
+         cases tp:
+           mk_ENV`AccessFnTypeRep(-,-,-),
+           mk_ENV`AccessOpTypeRep(-,-,-,true) ->
+              --------------------------------
+              -- Error message #458
+              -- Function or pure operation "%1" used in thread
+              --------------------------------
+             (ERR`GenErr (mthd, <ERROR>,458,[ENV`PrintName(mthd)]);
+              reswf := false ),
+           mk_ENV`AccessOpTypeRep(-,-,-,false) -> skip
+         end;
+        ENV`PopContext();
+        return reswf and wf_delay and wf_bound and wf_offset;
+     );
+   );
+
+  wf_ProceduralThread : TYPE`Ind * AS`Stmt ==> bool
+  wf_ProceduralThread (i, thread) ==
+    ( dcl reswf : bool := true;
+      def mk_(stmtwf, stmttp) = (STMT`wf_Stmt (i,thread,mk_REP`AllTypeRep()))
+      in
+        if not TYPE`IsCompatible (i, stmttp, mk_REP`UnitTypeRep ()) then 
+            -----------------------------------------
+            -- Error message #337
+            -- Statement must not have a return value
+            -----------------------------------------
+          ( ERR`GenErr (thread, <ERROR>,337,[]);
+            reswf := false )
+        else
+           reswf := stmtwf;
+        ENV`PopContext ();
+        return reswf);
+\end{vdm_al}
+#endif VDMPP
+
+\subsection{well-formedness of Traces}
+
+\begin{vdm_al}
+
+wf_Traces: TYPE`Ind * map AS`NameList to AS`TraceDefList ==> bool
+wf_Traces(i,trace_m) ==
+( dcl reswf : bool := true;
+  ENV`PushContext(<ALL>);
+
+  for all nml in set dom trace_m do
+    reswf := wf_TraceDefList(i,trace_m(nml)) and reswf;
+
+  ENV`PopContext ();
+  return reswf 
+);
+
+wf_TraceDefList: TYPE`Ind * AS`TraceDefList ==> bool
+wf_TraceDefList(i,tdl) ==
+( dcl reswf : bool := true;
+  for index = 1 to len tdl do
+    reswf := wf_TraceDefTerm(i,tdl(index)) and reswf;
+
+  return reswf 
+);
+  
+wf_TraceDefTerm: TYPE`Ind * AS`TraceDefTerm ==> bool
+wf_TraceDefTerm(i,tdt) ==
+  cases tdt:
+#ifdef VDMSL
+    mk_AS`TraceApplyExpr(op,args,-) -> wf_TraceApplyExpr(i,op,args),
+#endif VDMSL
+#ifdef VDMPP
+    mk_AS`TraceApplyExpr(obj,op,args,-) -> wf_TraceApplyExpr(i,obj,op,args),
+#endif VDMPP
+    mk_AS`TraceBracketedExpr(tdl,-)     -> wf_TraceDefList(i,tdl),
+    mk_AS`TracePermuteExpr(tdl,-)       -> wf_TraceDefList(i,tdl),
+    mk_AS`QualifiedTrace(binds,tdef,-)  -> wf_QualifiedTrace(i,binds,tdef),
+    mk_AS`RepeatTrace(tdef,pat,-)       -> wf_RepeatTrace(i,tdef,pat),
+    mk_AS`QualifiedRepeatTrace(binds,tdef,pat,-) -> wf_QualifiedRepeatTrace(i,binds,tdef,pat),
+    mk_AS`TraceDefAltn(term,tdef,-)     -> wf_TraceDefAltn(i,term,tdef)
+  end;
+
+#ifdef VDMSL
+wf_TraceApplyExpr: TYPE`Ind * AS`Name * seq of AS`Expr ==> bool
+--wf_TraceApplyExpr(i,opnm,args) ==
+wf_TraceApplyExpr(-,opnm,args) ==
+  (dcl reswf : bool := true;
+  def oprep = ENV`LookUp(opnm,true)
+  in
+    if is_REP`OpTypeRep(oprep)
+    then let opdomtpl = oprep.Dom
+         in
+          (if len opdomtpl = len args
+           then (for i = 1 to len args do
+                  --def mk_(arg_ok, arg_tp) = EXPR`wf_Expr(<POS>,args(i),opdomtpl(i))
+                  def mk_(-, arg_tp) = EXPR`wf_Expr(<POS>,args(i),opdomtpl(i))
+                  in
+                    if not TYPE`IsCompatible(<POS>,arg_tp,opdomtpl(i))
+                    then ---------------------------------------------
+                         -- Error message #274
+                         -- Operation is not applied with parameters
+                         -- of the correct type
+                         ---------------------------------------------
+                        (ERR`GenErr(args(i),<ERROR>,274,[]);
+                         reswf := false);
+                )
+           else  -----------------------------------------------------
+                 -- Error message #275
+                 -- Operation applied with wrong number of arguments
+                 -----------------------------------------------------
+                (ERR`GenErr(opnm,<ERROR>,275,[]);
+                 reswf := false
+                 )
+          )
+    elseif is_REP`TotalFnTypeRep(oprep) or is_REP`PartialFnTypeRep(oprep)
+    then let fndomtpl = oprep.fndom
+         in
+          (if fndomtpl = mk_REP`AllTypeRep()
+           then return true
+           elseif len fndomtpl = len args
+           then (for i = 1 to len args do
+                   --def mk_(arg_ok, arg_tp) = EXPR`wf_Expr(<POS>,args(i),fndomtpl(i))
+                   def mk_(-, arg_tp) = EXPR`wf_Expr(<POS>,args(i),fndomtpl(i))
+                  in
+                    if not TYPE`IsCompatible(<POS>,arg_tp,fndomtpl(i))
+                    then ---------------------------------------------
+                         -- Error message #272
+                         -- Function is not applied with parameters
+                         -- of the correct type
+                         ---------------------------------------------
+                        (ERR`GenErr(args(i),<ERROR>,272,[]);
+                         reswf := false);
+                )
+           else  -----------------------------------------------------
+                 -- Error message #273
+                 -- Function applied with wrong number of arguments
+                 -----------------------------------------------------
+                (ERR`GenErr(opnm,<ERROR>,273,[]);
+                 reswf := false
+                 )
+          )
+    else  -----------------------------------------------------
+         -- Error message #28
+         -- Operation \"%1\" is not defined
+         -----------------------------------------------------
+         (ERR`GenErr(opnm,<ERROR>,28,[ENV`PrintName(opnm)]);
+          reswf := false);
+  return reswf
+);
+#endif VDMSL
+#ifdef VDMPP
+wf_TraceApplyExpr: TYPE`Ind * [AS`Name] * AS`Name * seq of AS`Expr ==> bool
+--wf_TraceApplyExpr(i,objnm,opnm,args) ==
+wf_TraceApplyExpr(-,objnm,opnm,args) ==
+  (dcl reswf : bool := true,
+       oprep : [ENV`AccessType] := nil;
+   if objnm = nil
+   then (oprep := ENV`LookUp(opnm, true);
+         if not is_ENV`AccessOpTypeRep(oprep) and not is_ENV`AccessFnTypeRep(oprep)
+         then return false)
+   else
+     def objtp = ENV`LookUp(objnm,true)
+     in
+     (reswf := is_REP`ObjRefTypeRep(objtp) or (is_REP`TypeNameRep(objtp) and VCM`IsClassName(objtp.nm));
+      if reswf
+      then oprep := ENV`LookUpInObject(objtp.nm,opnm,false,true)
+      else return false);
+   if is_ENV`AccessOpTypeRep(oprep) 
+   then let opdomtpl = oprep.tp.Dom
+        in
+          (if len opdomtpl = len args
+                   then (for i = 1 to len args do
+                          --def mk_(arg_ok, arg_tp) = EXPR`wf_Expr(<POS>,args(i),opdomtpl(i))
+                          def mk_(-, arg_tp) = EXPR`wf_Expr(<POS>,args(i),opdomtpl(i))
+                          in
+                            if not TYPE`IsCompatible(<POS>,arg_tp,opdomtpl(i))
+                            then ---------------------------------------------
+                                 -- Error message #274
+                                 -- Operation is not applied with parameters 
+                                 -- of the correct type
+                                 ---------------------------------------------
+                                (ERR`GenErr(args(i),<ERROR>,274,[]);
+                                 reswf := false);
+                        )
+                   else  -----------------------------------------------------
+                         -- Error message #275
+                         -- Operation applied with wrong number of arguments
+                         -----------------------------------------------------
+                        (ERR`GenErr(opnm,<ERROR>,275,[]);
+                         reswf := false
+                         )
+                  )
+            elseif is_ENV`AccessFnTypeRep(oprep) 
+            then let fndomtpl = oprep.tp.fndom
+                 in
+                  (if fndomtpl = mk_REP`AllTypeRep()
+                   then return true
+                   elseif len fndomtpl = len args
+                   then (for i = 1 to len args do
+                          --def mk_(arg_ok, arg_tp) = EXPR`wf_Expr(<POS>,args(i),fndomtpl(i))
+                          def mk_(-, arg_tp) = EXPR`wf_Expr(<POS>,args(i),fndomtpl(i))
+                          in
+                            if not TYPE`IsCompatible(<POS>,arg_tp,fndomtpl(i))
+                            then ---------------------------------------------
+                                 -- Error message #272
+                                 -- Function is not applied with parameters 
+                                 -- of the correct type
+                                 ---------------------------------------------
+                                (ERR`GenErr(args(i),<ERROR>,272,[]);
+                                 reswf := false);
+                        )
+                   else  -----------------------------------------------------
+                         -- Error message #273
+                         -- Function applied with wrong number of arguments
+                         -----------------------------------------------------
+                        (ERR`GenErr(opnm,<ERROR>,273,[]);
+                         reswf := false
+                         )
+                  )
+            else  -----------------------------------------------------
+                 -- Error message #28
+                 -- Operation \"%1\" is not defined
+                 -----------------------------------------------------
+                 (ERR`GenErr(opnm,<ERROR>,28,[ENV`PrintName(opnm)]);
+                  reswf := false);
+  return reswf
+);
+#endif VDMPP
+
+wf_QualifiedTrace: TYPE`Ind * seq of AS`TraceBind * AS`SimpleTrace ==> bool
+wf_QualifiedTrace(i,binds,tdef) ==
+  (dcl reswf : bool := true;
+
+   for bind in binds do
+     def mk_(wf_b,bd) = wf_TraceBind(i,bind)
+     in
+       (if wf_b = nil or not wf_b
+            --------------------------------------
+            -- Error message #420
+            -- Pattern in qualified repeat trace cannot match
+            --------------------------------------
+        then (reswf := false; 
+              --ERR`GenErr(bind, <ERROR>,420,[])
+             );
+        ENV`EnterScope(bd));
+
+   reswf := wf_TraceDefTerm(i,tdef) and reswf;
+
+   --for i = 1 to len binds do
+   for - in binds do
+     ENV`LeaveScope();
+   return reswf);
+
+wf_RepeatTrace: TYPE`Ind * AS`SimpleTrace * AS`TraceRepeatPattern ==> bool
+wf_RepeatTrace(i,tdef,pat) ==
+  (dcl reswf : bool := wf_TraceDefTerm(i,tdef);
+
+   reswf := wf_TraceRepeatPattern(i,pat) and reswf;
+   return reswf);
+
+wf_QualifiedRepeatTrace: TYPE`Ind * seq of AS`TraceBind * AS`SimpleTrace * AS`TraceRepeatPattern ==> bool
+wf_QualifiedRepeatTrace(i,binds,tdef,pat) ==
+  (dcl reswf : bool := true;
+
+   for bind in binds do
+     def mk_(wf_b,bd) = wf_TraceBind(i,bind)
+     in
+       (if wf_b = nil or not wf_b
+            --------------------------------------
+            -- Error message #420
+            -- Pattern in qualified repeat trace cannot match
+            --------------------------------------
+        then (reswf := false; 
+              --ERR`GenErr(bind, <ERROR>,420,[])
+             );
+        ENV`EnterScope(bd));
+       
+   reswf := wf_TraceDefTerm(i,tdef) and reswf;
+   reswf := wf_TraceRepeatPattern(i,pat) and reswf;
+
+   --for i = 1 to len binds do
+   for - in binds do
+     ENV`LeaveScope();
+   return reswf);
+
+wf_TraceDefAltn: TYPE`Ind * AS`TraceDefTerm * AS`TraceDef ==> bool
+wf_TraceDefAltn(i,term,tdef) ==
+  (dcl reswf : bool := wf_TraceDefTerm(i,term);
+
+   reswf := wf_TraceDefTerm(i,tdef) and reswf;
+   return reswf);
+
+wf_TraceRepeatPattern: TYPE`Ind * AS`TraceRepeatPattern ==> bool
+wf_TraceRepeatPattern(-,trp) ==
+  if is_AS`RepeatInterval(trp) and trp.low.val >= trp.high.val
+  then (-----------------------------------------------------
+        -- Error message #419
+        -- Higher repeat pattern should be larger than lower repeat pattern
+        -----------------------------------------------------
+        ERR`GenErr(trp,<ERROR>,419,[]);
+        return false)
+  else return true;
+
+wf_TraceBind: TYPE`Ind * AS`TraceBind ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+wf_TraceBind(i,bind) ==
+  cases bind:
+    mk_AS`LocalTraceBind(-,-)      -> wf_LocalTraceBind(i, bind),
+    mk_AS`LetTraceBind(-,-)        -> wf_LetTraceBind(i,bind),
+    mk_AS`LetBeTraceBind(-,-,-)    -> wf_LetBeTraceBind(i,bind)
+  end;
+
+wf_LocalTraceBind: TYPE`Ind * AS`LocalTraceBind ==> bool * map AS`Name to (REP`TypeRep * nat1)
+wf_LocalTraceBind(i, mk_AS`LocalTraceBind(defs,-)) ==
+   (dcl reswf : bool := true;
+
+    def mk_(wf,bd) = ENV`ExtractPatterns(i,defs)
+    in
+      (dcl nbd : map AS`Name to (REP`TypeRep * nat1) := { nm |-> mk_(bd(nm).#1, 1) | nm in set dom bd };
+       --ENV`UpdateScope(nbd);
+       for val in defs do
+         if is_AS`ValueDef(val)
+         then
+           def mk_(wf_def,realbd) = ENV`wf_ValueDef(i,val)
+           in
+             (reswf := reswf and wf_def and wf;
+              --ENV`UpdateScope (realbd);
+              nbd := nbd ++ realbd);
+       return mk_(reswf, nbd);
+     );
+   );
+
+
+wf_LetTraceBind: TYPE`Ind * AS`LetTraceBind ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+wf_LetTraceBind(i,vLetTraceBind) ==
+  def mk_AS`LetTraceBind(p,-) = vLetTraceBind;
+      mk_(wf_b,bd) = PAT`wf_MultiBindList(i,p,true)
+  in
+    if exists b in set elems p & is_AS`MultTypeBind(b)
+    then (-----------------------------------------------------
+          -- Error message #421
+          -- A type binding cannot be used in traces
+          -----------------------------------------------------
+          ERR`GenErr(vLetTraceBind,<ERROR>,421,[]);
+          return mk_(false,bd))
+    else
+      return mk_(wf_b,bd);
+
+wf_LetBeTraceBind: TYPE`Ind * AS`LetBeTraceBind ==> [bool] * map AS`Name to (REP`TypeRep * nat)
+wf_LetBeTraceBind(i, vLetBeTraceBind) ==
+  def mk_AS`LetBeTraceBind(p,e,-) = vLetBeTraceBind;
+      mk_(wf_b,bd) = PAT`wf_MultiBindList(i,p,true)
+  in
+    if exists b in set elems p & is_AS`MultTypeBind(b)
+    then (-----------------------------------------------------
+          -- Error message #421
+          -- A type binding cannot be used in traces
+          -----------------------------------------------------
+          ERR`GenErr(vLetBeTraceBind,<ERROR>,421,[]);
+          return mk_(false,bd))
+    else (if wf_b = nil or not wf_b
+          --------------------------------------
+          -- Error message #113
+          -- Pattern in Let-Be-Expr cannot match
+          --------------------------------------
+          then ERR`GenErr(vLetBeTraceBind, <ERROR>,113,[]);
+          if e <> nil
+          then
+            (ENV`EnterScope(bd);
+            def mk_(wf_st,sttp) = EXPR`wf_Expr(i,e,mk_REP`BooleanTypeRep());
+                stcomp = TYPE`IsCompatible(i, sttp, mk_REP`BooleanTypeRep())
+            in
+              (ENV`LeaveScope();
+               return mk_((wf_b = true) and wf_st and stcomp,bd)))
+           else
+             return mk_(wf_b,bd));
+
+#ifdef VDMSL
+\end{vdm_al}
+
+\subsection{Well-formedness of the State Definition}
+
+\begin{vdm_al}
+  wf_State: TYPE`Ind * AS`StateDef ==> bool
+  wf_State(i,mk_AS`StateDef(tp,Invar,Init,-)) ==
+   (dcl reswf : bool := wf_Type(i,tp);
+
+    if Invar <> nil
+    then let mk_AS`Invariant(pat,exp,-) = Invar
+         in
+          (if tp.name in set dom PAT`ExtractPatternName(pat)
+                 -------------------------------------------------------------
+                 -- Error message #345
+                 -- Pattern in state invariant must not be the state name "%1"
+                 -------------------------------------------------------------
+           then (ERR`GenErr(pat,<ERROR>,345,[ENV`PrintName(tp.name)]);
+                 reswf := false);
+           def mk_(wf_pat, bd) = PAT`wf_Pattern(i,pat,ENV`TransType(nil,tp))
+           in
+             (if wf_pat <> true
+                   ------------------------------------------
+                   -- Error message #346
+                   -- Pattern in state invariant cannot match
+                   ------------------------------------------
+              then ERR`GenErr(pat,<ERROR>,346,[]);
+              ENV`EnterScope(bd);
+              def mk_(wf_body,-) = wf_Pred(i,exp,<INV>)
+              in
+                (ENV`LeaveScope();
+                 reswf := reswf and wf_body and (wf_pat = true))));
+    if Init <> nil
+    then let mk_AS`StateInit(pat,exp,-) = Init
+         in
+          (if tp.name in set dom PAT`ExtractPatternName(pat)
+                 ---------------------------------------------------------------
+                 -- Error message #347
+                 -- Pattern in state initialisation must not be the state name
+                 -- "%1"
+                 ---------------------------------------------------------------
+           then (ERR`GenErr(pat, <ERROR>,347,[ENV`PrintName(tp.name)]);
+                 reswf := false);
+           def mk_(wf_pat, bd) = PAT`wf_Pattern(i,pat,ENV`TransType(nil,tp))
+           in
+             (if wf_pat <> true
+                   ------------------------------------------
+                   -- Error message #346
+                   -- Pattern in state invariant cannot match
+                   ------------------------------------------
+              then ERR`GenErr(pat, <ERROR>,346,[]);
+              ENV`EnterScope(bd);
+              def mk_(wf_body,-) = wf_Pred(i,exp,<INIT>)
+              in
+                (ENV`LeaveScope();
+                 reswf := reswf and wf_body and (wf_pat = true))));
+    return reswf)
+       
+#endif VDMSL
+
+--AUGUSTO --
+#ifdef VDMPP
+functions
+-- ExplFnDef | ImplFnDef | ExtExplFnDef
+#endif VDMPP
+
+end DEF
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[MostGeneralNumericType]
+{rtinfo.ast}[DEF]
+\end{rtinfo}

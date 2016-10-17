@@ -1,0 +1,271 @@
+class Pars1
+
+types 
+  public natType = nat;
+  public natType2 = nat
+
+values
+
+public
+  vFromPars: natType2 = 6
+
+operations
+
+public
+  Dummy : () ==> nat
+  Dummy() ==
+    return 5;
+
+end Pars1
+
+class Different
+
+values
+
+public
+mk_(-,vDifferent) : bool * nat = mk_(true,3 + 6)
+
+instance variables
+public
+  instDifferent: nat := 10
+
+operations
+
+public
+mDifferent() ==
+is not yet specified
+
+functions
+public
+  mDifferent2: () -> nat
+  mDifferent2() == 10
+
+end Different
+
+class A
+
+values
+
+public
+vA : nat = 3 + 6;
+public
+problematic = 9
+
+instance variables 
+public
+  instA: nat := 10
+
+operations
+
+public
+mA() ==
+is not yet specified
+
+end A
+
+class B
+
+operations
+
+public
+mB() ==
+is not yet specified
+
+end B
+
+class C
+
+functions
+public
+fC1: nat * nat -> nat
+fC1(a,b) ==
+  a + b;
+
+public
+fC2(a,b:nat)res :nat
+pre b < a
+post a + b = res
+
+operations
+
+public
+mC() ==
+is not yet specified
+
+end C
+
+class D
+
+operations 
+
+public
+mD() ==
+is not yet specified
+
+end D
+
+class E is subclass of A, B, C
+
+functions
+
+public
+fE1: nat * nat -> nat
+fE1(a,b) ==
+  fC1(a,b)
+
+operations
+
+public
+mE() ==
+is not yet specified
+
+end E
+
+class F is subclass of C, D
+
+values
+
+public
+problematic = true
+
+types
+
+  public F1 = [nat * nat];
+
+  public F2 = seq of TF1 
+
+operations
+
+public
+mF() ==
+is not yet specified
+
+end F
+
+class G is subclass of E, F
+
+functions
+
+  f: nat -> nat 
+  f(x) == x
+
+operations
+
+mG() ==
+is not yet specified;
+
+Test1 : () ==> nat
+Test1()  ==
+  let a = f(10) in return a;
+
+Test2 : () ==> nat
+Test2() ==
+  return fE1(5,8);
+
+Test3 : () ==> nat
+Test3()  ==
+  return problematic;
+
+Test4 : () ==> nat
+Test4() ==
+  return vA;
+
+Test5 : () ==> nat
+Test5() ==
+  return Different`vDifferent;
+
+Test6 : () ==> nat
+Test6()  ==
+  return vFromPars;
+
+Test7 : () ==> nat
+Test7() ==
+  return F`problematic => A`problematic > vA;
+
+Test8() ==
+( mA();
+  mB();
+  mC();
+  mD();
+  mE();
+  mF();
+  mG()
+);
+
+Test09 : () ==> Pars1`natType
+Test09()  ==
+  return Pars1`vFromPars;
+
+Test10 : () ==> nat
+Test10() ==
+  return Different`instDifferent;
+
+Test11() ==
+  return Different`mDifferent(); 
+
+Test12() ==
+  Different`mDifferent(); 
+
+Test13() ==
+  let d = new Different() in 
+    d.Different`mDifferent();
+
+Test14() ==
+  let d = new Different() in 
+    d.mDifferent();
+
+Test15 : () ==> nat
+Test15() ==
+  let d = new Different() in 
+    return d.instDifferent;
+
+Test16 : () ==> nat
+Test16() ==
+  let d = new Different() in 
+    return d.mDifferent2();
+
+Test17: () ==> nat
+Test17() ==
+  let p = new Pars1() in 
+    return p.vFromPars;
+
+Test18: () ==> ()
+Test18() ==
+  instA := 10;
+
+Test19: () ==> ()
+Test19() ==
+  G`instA := 10;
+
+Test20: () ==> ()
+Test20() ==
+  A`instA := 10;
+
+Test21: () ==> ()
+Test21() ==
+  Different`instDifferent := 10;
+
+end G
+
+class Project
+
+operations 
+
+public 
+bb:PT`myset ==> bool
+bb(a) ==
+let - in set a in return true;
+
+public 
+add : PT`WProfiles ==> bool
+add (ptypes) ==
+let - = hd ptypes in 
+  return true
+
+end Project
+
+class PT
+types
+  public WProfiles = seq of char;
+  public myset = set of int
+end PT

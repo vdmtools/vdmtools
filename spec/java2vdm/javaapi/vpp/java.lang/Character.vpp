@@ -1,0 +1,276 @@
+dlclass JavaLangCharacter is subclass of JavaLangObject
+uselib "j2vdll.so"
+
+values
+--  public CLASS : JavaLangClass=new JavaLangClass("JavaLangCharacter", <CLASS>, false);
+--  public  TYPE : JavaLangClass=new JavaLangClass("char", <CLASS>, true);
+
+instance variables
+
+	public static MIN_RADIX : int := 2;
+	public static MAX_RADIX : int := 36;
+	public static MIN_VALUE : char:= '0';
+	public static MAX_VALUE : char:= 'f';
+
+--  public  static TYPE : JavaLangClass;
+--  public  static UNASSIGNED : int ;
+--  public  static UPPERCASE_LETTER : int ;
+--  public  static LOWERCASE_LETTER : int ;
+--  public  static TITLECASE_LETTER : int ;
+--  public  static MODIFIER_LETTER : int ;
+--  public  static OTHER_LETTER : int ;
+--  public  static NON_SPACING_MARK : int ;
+--  public  static ENCLOSING_MARK : int ;
+--  public  static COMBINING_SPACING_MARK : int ;
+--  public  static DECIMAL_DIGIT_NUMBER : int ;
+--  public  static LETTER_NUMBER : int ;
+--  public  static OTHER_NUMBER : int ;
+--  public  static SPACE_SEPARATOR : int ;
+--  public  static LINE_SEPARATOR : int ;
+--  public  static PARAGRAPH_SEPARATOR : int ;
+--  public  static CONTROL : int ;
+--  public  static FORMAT : int ;
+--  public  static PRIVATE_USE : int ;
+-- public  static SURROGATE : int ;
+--  public  static DASH_PUNCTUATION : int ;
+--  public  static START_PUNCTUATION : int ;
+--  public  static END_PUNCTUATION : int ;
+--  public  static CONNECTOR_PUNCTUATION : int ;
+--  public  static OTHER_PUNCTUATION : int ;
+--  public  static MATH_SYMBOL : int ;
+--  public  static CURRENCY_SYMBOL : int ;
+--  public  static MODIFIER_SYMBOL : int ;
+--  public  static OTHER_SYMBOL : int 
+	
+operations 
+
+public
+JavaLangCharacter: char ==> JavaLangCharacter
+JavaLangCharacter(ch) ==
+	JavaLangCharacter'(ch);
+
+private
+JavaLangCharacter': char ==> ()
+JavaLangCharacter'(ch) ==
+	is not yet specified;
+
+public
+charValue: () ==> char
+charValue() ==
+	is not yet specified;
+
+public
+compareTo: JavaLangObject ==> int 
+compareTo(o) == 
+	if (o.IsNil()) then (
+		exit new JavaLangClassCastException();
+	) else (
+		if (isofclass(JavaLangCharacter,o)) then (
+			return compareTo'(o)
+		) else (
+			exit new JavaLangClassCastException();
+		)
+	);
+
+private
+compareTo': JavaLangCharacter ==> int
+compareTo'(ch) ==
+	is not yet specified;
+
+public
+equals: JavaLangObject ==> bool
+equals(o) == (
+	if (o.IsNil()) then (
+		return false
+	) else (
+		if (isofclass(JavaLangCharacter,o)) then (
+			return compareTo'(o) = 0
+		) else (
+			return false
+		)
+	)
+);
+
+public
+hashCode: () ==> int
+hashCode() ==
+	is not yet specified;
+
+public
+toString: () ==> JavaLangString
+toString() ==
+	return new JavaLangString(toSeqOfChar());
+
+public
+toSeqOfChar: () ==> seq of char
+toSeqOfChar() ==
+	is not yet specified;
+
+--public  getClass : () ==> JavaLangClass
+--getClass() == 
+--  return CLASS;
+
+public  static getType : char  ==> int 
+getType(ch) == 
+is not yet specified ;
+
+public  static isSpace : char  ==> bool 
+isSpace(ch) == 
+is not yet specified ;
+
+public  static isDefined : char  ==> bool 
+isDefined(ch) == 
+is not yet specified ;
+
+public  static forDigit : int  * int  ==> char 
+forDigit(digit, radix) == 
+is not yet specified ;
+
+public  static isLowerCase : char  ==> bool 
+isLowerCase(ch) == 
+is not yet specified ;
+
+public  static isTitleCase : char  ==> bool 
+isTitleCase(ch) == 
+is not yet specified ;
+
+public  static isUpperCase : char  ==> bool 
+isUpperCase(ch) == 
+is not yet specified ;
+
+public  static toLowerCase : char  ==> char 
+toLowerCase(ch) == 
+is not yet specified ;
+
+public  static toTitleCase : char  ==> char 
+toTitleCase(ch) == 
+is not yet specified ;
+
+public  static toUpperCase : char  ==> char 
+toUpperCase(ch) == 
+is not yet specified ;
+
+public  static isISOControl : char  ==> bool 
+isISOControl(ch) == 
+is not yet specified ;
+
+public  static isJavaLetter : char  ==> bool 
+isJavaLetter(ch) == 
+is not yet specified ;
+
+public  JavaLangCharacter : <NIL> ==> JavaLangCharacter
+JavaLangCharacter(-) == 
+isNil := true  ;
+
+public  static getNumericValue : char  ==> int 
+getNumericValue(ch) == 
+is not yet specified ;
+
+public  static isJavaLetterOrDigit : char  ==> bool 
+isJavaLetterOrDigit(ch) == 
+is not yet specified ;
+
+public  static isJavaIdentifierPart : char  ==> bool 
+isJavaIdentifierPart(ch) == 
+is not yet specified ;
+
+public  static isIdentifierIgnorable : char  ==> bool 
+isIdentifierIgnorable(ch) == 
+is not yet specified ;
+
+public  static isJavaIdentifierStart : char  ==> bool 
+isJavaIdentifierStart(ch) == 
+is not yet specified ;
+
+public  static isUnicodeIdentifierPart : char  ==> bool 
+isUnicodeIdentifierPart(ch) == 
+is not yet specified ;
+
+public  static isUnicodeIdentifierStart : char  ==> bool 
+isUnicodeIdentifierStart(ch) == 
+is not yet specified ;
+
+--static
+--public digit : char  * int  ==> int 
+--digit(ch, radix) == 
+--( if radix <> 10 
+--  then
+--    return -1
+--  else
+--    return
+--      cases ch:
+--        '0' -> 0,
+--        '1' -> 1,
+--        '2' -> 2,
+--        '3' -> 3,
+--        '4' -> 4,
+--        '5' -> 5,
+--        '6' -> 6,
+--        '7' -> 7,
+--        '8' -> 8,
+--        '9' -> 9,
+--      others -> -1
+--      end
+--);
+
+public static
+digit: char * int ==> int
+digit(ch,radix) == 
+	return new JavaLangCharacter().digit'(ch,radix);
+
+private
+digit': char * int ==> int
+digit'(ch,radix) ==
+	is not yet specified;
+
+public static
+isDigit: char ==> bool
+isDigit(ch) ==
+	return new JavaLangCharacter().isDigit'(ch);
+
+private
+isDigit': char ==> bool
+isDigit'(ch) ==
+	is not yet specified;
+
+public static
+isLetter: char ==> bool
+isLetter(ch) ==
+	return new JavaLangCharacter().isLetter'(ch);
+
+private
+isLetter': char ==> bool
+isLetter'(ch) ==
+	is not yet specified;
+
+public static
+isLetterOrDigit: char ==> bool
+isLetterOrDigit(ch) ==
+	return new JavaLangCharacter().isLetterOrDigit'(ch);
+
+private
+isLetterOrDigit': char ==> bool
+isLetterOrDigit'(ch) ==
+	is not yet specified;
+
+public static
+isSpaceChar: char ==> bool
+isSpaceChar(ch) ==
+	return new JavaLangCharacter().isSpaceChar'(ch);
+
+private
+isSpaceChar': char ==> bool
+isSpaceChar'(ch) ==
+	is not yet specified;
+
+public static
+isWhitespace: char ==> bool
+isWhitespace(ch) ==
+	return new JavaLangCharacter().isWhiteSpace'(ch);
+
+private
+isWhiteSpace': char ==> bool
+isWhiteSpace'(ch) ==
+	is not yet specified;
+
+end JavaLangCharacter

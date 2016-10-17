@@ -1,0 +1,19 @@
+class A
+end A
+class NewExprTest
+instance variables
+public a:int := 2;
+private b: seq of char := "";
+public c:bool
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = new B()
+  in skip;
+
+------------------------------------------------------------------------------
+end NewExprTest

@@ -1,0 +1,12 @@
+"class A
+
+operations
+public Test : () ==> nat	
+Test () ==
+	(dcl z : nat := 1;
+	z := def z = z in 
+        z + 5;
+	return z);
+   
+end A
+"

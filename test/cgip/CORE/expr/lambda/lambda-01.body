@@ -1,0 +1,24 @@
+public Test :() ==> seq of (nat | char)
+Test() ==
+  return [f(10), f(20), f(40)]
+
+functions
+f: nat -> nat | char
+f(n) ==
+  cases n:
+    10 -> 'a',
+    20 -> n,
+    others -> (lambda b : nat & b + 5)(n)
+  end
+
+end A
+
+
+
+
+
+
+
+
+
+

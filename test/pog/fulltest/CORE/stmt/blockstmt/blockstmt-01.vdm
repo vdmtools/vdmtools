@@ -1,0 +1,13 @@
+class BlockStmtTest
+
+operations
+
+  BlockStmt1: () ==> ()
+  BlockStmt1() ==
+    (dcl a: map nat to nat := {6 |-> 8};
+     dcl b: bool;
+
+     b := true;
+     a(6) := 1999);
+   
+end BlockStmtTest     

@@ -1,0 +1,82 @@
+-- test uniontypes composed of record types
+
+class superA 
+types
+protected
+ItemIdsuper::;
+
+end superA
+
+class A is subclass of superA
+
+types
+public ItemId = LocationId | PathId; 
+public LocationId::;
+public PathId::;
+
+operations
+public Test : () ==> int
+Test() == (
+let x = 1,
+    b = if (x=1) then mk_PathId()
+        else 5,
+    s = new subA() in
+    return s.genSetItemStateEvent(b,b);
+)
+end A
+
+class B
+types
+
+public Args = ArgList | ArgBindMap;
+public ArgList  :: ;
+public ArgBindMap  ::; 
+public AppExpr ::
+     args : Args;
+
+end B
+
+class subA is subclass of A
+
+instance variables
+protected id : [ItemId] := nil;
+
+types 
+
+protected recsubA::
+item1: LocationId
+item2: [ItemId]
+item3: ItemIdsuper
+item4: [ItemIdsuper]
+item5: ItemId;
+
+operations
+
+
+public genSetItemStateEvent : ItemId * A`ItemId ==> int
+genSetItemStateEvent(item, item2) ==
+(
+cases item:
+ mk_LocationId()->return 4,
+ others->return 5     
+end;  
+);
+
+
+testtest : B`AppExpr ==> int
+testtest(ae) ==
+(
+let mk_B`AppExpr(args)= ae
+in return 5
+);
+
+protected setId : ItemId ==> ()
+setId(i) ==id := i;
+
+end subA
+
+
+
+
+
+

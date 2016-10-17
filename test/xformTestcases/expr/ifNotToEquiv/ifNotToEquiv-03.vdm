@@ -1,0 +1,11 @@
+class A
+
+operations
+
+public Test : () ==> bool
+Test () ==
+( 
+	return (((not (let a = true in a) and (false)) or (((((let a = true in a) and not (false)))))))
+)
+   
+end A

@@ -1,0 +1,21 @@
+class DefExprTest
+types
+
+  A :: selid : nat
+       sel2 : bool
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = def a: bool = if n=6
+                      then true
+                      else 7
+                      in a
+  in skip;
+
+------------------------------------------------------------------------------
+end DefExprTest

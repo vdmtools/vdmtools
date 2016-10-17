@@ -1,0 +1,13 @@
+class CasesStmtTest
+
+operations
+
+  Cases: () ==> char | int
+  Cases() == let cas:(set of int)|seq of int = if 5 > 7 then {8,9} else [] in
+    cases cas:
+      a union - -> let n = 7 in return n,
+      l1 ^ l2 -> let n = 6 in return n,
+      a -> return 'a'
+    end;
+
+end CasesStmtTest

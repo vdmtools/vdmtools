@@ -1,0 +1,100 @@
+\begin{vdm_al}
+class UnitStatus is subclass of ProjectTypes
+
+instance variables
+  status : UnitStat := mk_UnitStat(<NONE>, <NONE>, <NONE>);
+
+  -- status in the objectstate is status for typechecking and 
+  -- code generation respectively.
+  
+
+\end{vdm_al}
+$status$ in the objectstate is status for typechecking and 
+code generation respectively.
+
+\begin{vdm_al}
+
+operations
+
+public GetStatus: () ==> UnitStat 
+  GetStatus ()  ==
+    return status;
+
+  ---
+  --- SetStatus updates the status of its associated VDMUnitElem.
+  --- The return value indicates whether the status of the module 
+  --- has changed:
+  ---   true -> the status has changed,
+  ---   false -> the status is unchanged.
+  ---   
+
+public SetStatus: UnitAction * (Status | <POS> | <DEF>) ==>  bool 
+  SetStatus (action, tp)  ==
+  def oldstat = status
+  in 
+    cases action:
+      <TYPECHECK> -> (status := mk_UnitStat (tp,<NONE>,<NONE>);
+                      return oldstat <> status ),
+      <CG>        -> def mk_UnitStat(curTC,-,curJCG) = status in
+                     let newCG = if not tcOk (curTC) then <NONE> else tp in
+                      (status := mk_UnitStat (curTC,newCG,curJCG);
+                       return oldstat <> status ), 
+      <JCG>       -> def mk_UnitStat(curTC,curCG,-) = status in
+                     let newJCG = if not tcOk (curTC) then <NONE> else tp in
+                      (status := mk_UnitStat (curTC,curCG,newJCG);
+                       return oldstat <> status ),
+      others      -> return false
+    end;
+\end{vdm_al}
+
+$SetStatus$ updates the status of its associated $VDMUnitElem$.
+The return value indicates whether the status of the module 
+has changed:
+\begin{description}
+\item[true:] the status has changed,
+\item[false:] the status is unchanged.
+\end{description}
+
+\begin{vdm_al}
+
+public Allowed: UnitAction ==> bool 
+  Allowed (kind)  ==
+    return 
+      cases kind:
+        <TYPECHECK> -> true, -- is allowed if unit is enabled
+        <CG>        -> status.type = <POS>,
+        <JCG>       -> status.type = <POS>,
+        others      -> false
+      end; 
+
+public Save: StateStore ==> bool 
+  Save(store)  ==
+    def ok1 = store.WriteStatus(status.type);
+        ok2 = store.WriteStatus(status.cg);
+        ok3 = store.WriteStatus(status.javaCg)
+    in
+      return ok1 and ok2 and ok3;
+
+public Load: StateStore ==> bool
+  Load(store)  ==
+    def type = store.ReadStatus ();
+        cg   = store.ReadStatus ();
+        jcg  = store.ReadStatus ()
+    in
+      if type <> nil and cg <> nil
+      then
+       (status := mk_UnitStat(type,cg,jcg);
+        return true)
+      else
+       (status := mk_UnitStat (<NONE>, <NONE>, <NONE>);
+        return false);
+
+functions
+
+  tcOk: Status | <POS> | <DEF> -> bool
+  tcOk (t) == 
+    t = <OK> or t = <POS> or t = <DEF>;
+
+end UnitStatus
+
+\end{vdm_al}

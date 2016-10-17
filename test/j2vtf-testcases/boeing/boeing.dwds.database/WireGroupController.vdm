@@ -1,0 +1,39 @@
+class WireGroupController is subclass of WiringDataController
+operations 
+public  initialize : () ==> <VOID>
+initialize() == 
+( return  <VOID>
+) ;
+
+public  getViaWire : [Wire] ==> [WireGroup]
+getViaWire(wireInGroup) == 
+( return  new  WireGroup(wireInGroup.getAcTypeId() , wireInGroup.getGroupName())
+) ;
+
+public  getCurrentContextObject : () ==> [Object]
+getCurrentContextObject() == 
+( return  nil  
+) ;
+
+public  updateToNewContext : [ContextSet] ==> <VOID>
+updateToNewContext(contextChanges) == 
+( return  <VOID>
+) ;
+
+public  getViaName : [Aircraft] * [String] ==> [WireGroup]
+getViaName(aircraft, wireGroupName) == 
+( return  new  WireGroup(aircraft.getAcType().getAcTypeId() , wireGroupName)
+) ;
+
+WireGroupController : [DataSourceToolkit] ==> WireGroupController
+WireGroupController(dsToolkit) == 
+( let - = WiringDataController(dsToolkit)
+  in 
+    skip 
+) ;
+
+instance variables 
+  private  aircraftCntl : [AircraftController] := nil  ;
+  private  effectivityCntl : [EffectivityController] := nil  
+  
+end  WireGroupController

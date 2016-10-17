@@ -1,0 +1,13 @@
+class SeqEnumerationExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = [1,true,"test"]
+  in skip;
+
+------------------------------------------------------------------------------
+end SeqEnumerationExprTest

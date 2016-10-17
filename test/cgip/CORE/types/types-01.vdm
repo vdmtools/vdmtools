@@ -1,0 +1,86 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+types
+
+
+  AAA = R3 | R4;
+
+  AAAA = R2 | R4;
+
+  AA = R1 | R2 | AAA;
+
+  R2 :: nat 
+        nat;
+
+  R3 :: nat 
+        nat;
+
+  R4 :: nat 
+        nat;
+
+  R1 :: nat 
+        nat;
+
+  B_ :: nat 
+        nat;
+
+  B' = bool | nat | char
+  inv b == if is_nat(b) then 
+             b > 10
+           else
+             true;
+
+  D2 = set of nat
+  inv s == s <> {};
+
+  Y = R1 | R2 | int;
+
+  A = B | C | D;
+
+  B = B' | B_;
+
+  C = real | <QUOTE>;
+
+  D = D1 | D1 | D3;
+  
+  D1 = seq of B';
+
+  D3 = D1 * D2;
+
+  Item = MenuItem | RemoveItem;
+  
+  MenuItem = Separator | Action;
+  
+  Action:: text: seq of char
+           s : <HELLO>;
+
+  Separator::;
+
+  RemoveItem::;
+
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of bool  
+Test () ==
+let a' = 10,
+    a  = 11,
+    a'' = 'a',
+    a__ = true,
+    a'_ = mk_B_(10,20),
+    a_' = mk_B_(30,20),
+    s = [20,30,40],
+    s' = {1,2,3},
+    t = mk_([], {2}) in
+( dcl res : seq of bool;
+  res := [ inv_B'(a'), inv_B'(a), inv_B'(a''), inv_B'(a__)];
+  res := res ^ [inv_D2(s')];
+  return res
+)
+
+end A

@@ -1,0 +1,112 @@
+class CacheEntry is subclass of Object
+operations 
+public  toString : () ==> [String]
+toString() == 
+( dcl   sb : [StringBuffer] := new  StringBuffer(new  String("["));
+  let - = sb.append(getCachedObject().getClass().getName())
+  in 
+    skip ;
+  let - = sb.append(new  String(" => "))
+  in 
+    skip ;
+  let - = sb.append(getCachedObject().toString())
+  in 
+    skip ;
+  let - = sb.append(new  String(", "))
+  in 
+    skip ;
+  ( dcl   formatter : [DateFormat] := new  SimpleDateFormat(new  String("HH:mm:ss.SSS"));
+    let - = sb.append(formatter.format(new  Date(getModTime())))
+    in 
+      skip ;
+    let - = sb.append(new  String(", Refs: "))
+    in 
+      skip ;
+    let - = sb.append(getReferenceCount())
+    in 
+      skip ;
+    let - = sb.append(new  String("]"))
+    in 
+      skip ;
+    return  sb.toString()
+  ) 
+) ;
+
+public  CacheEntry : () ==> CacheEntry
+CacheEntry() == 
+( let - = CacheEntry(nil  )
+  in 
+    skip 
+) ;
+
+public  getModTime : () ==> int 
+getModTime() == 
+( return  lastModifiedTime
+) ;
+
+public  setModTime : () ==> <VOID>
+setModTime() == 
+( let - = setModTime(System.currentTimeMillis())
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  setModTime : int  ==> <VOID>
+setModTime(modTimeMillis) == 
+( CacheEntry`lastModifiedTime := modTimeMillis;
+  return  <VOID>
+) ;
+
+public  getCachedObject : () ==> [Object]
+getCachedObject() == 
+( return  cachedObject
+) ;
+
+public  getReferenceCount : () ==> int 
+getReferenceCount() == 
+( return  referenceCount
+) ;
+
+public  resetReferenceCount : () ==> <VOID>
+resetReferenceCount() == 
+( referenceCount := 0;
+  return  <VOID>
+) ;
+
+public  CacheEntry : [Object] ==> CacheEntry
+CacheEntry(cachedObject) == 
+( CacheEntry`cachedObject := cachedObject;
+  CacheEntry`referenceCount := 0;
+  let - = CacheEntry`setModTime()
+  in 
+    skip 
+) ;
+
+public  decrementReferenceCount : () ==> <VOID>
+decrementReferenceCount() == 
+( if  referenceCount > 0
+  then  
+    ( referenceCount := referenceCount-1
+    ) ;
+  return  <VOID>
+) ;
+
+public  incrementReferenceCount : () ==> <VOID>
+incrementReferenceCount() == 
+( referenceCount := referenceCount+1;
+  return  <VOID>
+) ;
+
+public  setCachedObject : [Object] ==> <VOID>
+setCachedObject(cachedObject) == 
+( CacheEntry`cachedObject := cachedObject;
+  return  <VOID>
+) ;
+
+instance variables 
+  private  cachedObject : [Object];
+  private  lastModifiedTime : int ;
+  private  referenceCount : int 
+  
+end  CacheEntry

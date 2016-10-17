@@ -1,0 +1,116 @@
+\begin{vdm_al}
+class VDMUnitElem is subclass of ProjectTypes
+
+instance variables
+  ast   : AST := new AST();
+  status: UnitStatus := new UnitStatus();
+  enabled: bool := true;
+
+operations
+
+--  Enable and Disable return true if the enabling changes and the
+--  status is different from the disabled status
+--  (disabled status is mk_UnitStat(<NONE>,<NONE>,<NONE>)).
+
+public Enable: () ==> bool 
+  Enable ()  ==
+    def changedEnable = not enabled
+    in
+      (enabled := true;
+       if changedEnable
+       then def stat = status.GetStatus()
+            in
+              return stat <> mk_UnitStat(<NONE>, <NONE>, <NONE>)
+       else return false);
+    
+public Disable: () ==> bool 
+  Disable ()  ==
+    def changedEnable = enabled
+    in
+     (enabled := false;
+      if changedEnable
+      then def stat = status.GetStatus()
+           in
+             return stat <> mk_UnitStat(<NONE>, <NONE>, <NONE>)
+      else return false);
+\end{vdm_al}
+
+$Enable$ and $Disable$ return true if the enabling changes and the
+status is different from the disabled status
+(disabled status is $mk-UnitStat(<NONE>,<NONE>,<NONE>)$).
+
+\begin{vdm_al}
+
+public IsEnabled: () ==> bool 
+  IsEnabled()  ==
+    return enabled;
+  
+public GetStatus: () ==> UnitStat 
+  GetStatus ()  ==
+    if enabled
+    then status.GetStatus ()
+    else return mk_UnitStat(<NONE>, <NONE>, <NONE>);
+
+  --  SetStatus returns with true if the unit is enabled
+  --  and its status changes. 
+
+public SetStatus: UnitAction * Status ==> bool 
+  SetStatus (action, tp)  ==
+    def changed = status.SetStatus (action, tp)
+    in
+      return enabled and changed;
+
+public Allowed: UnitAction ==> bool
+  Allowed (kind)  ==
+    if enabled
+    then status.Allowed (kind)
+    else return false;
+
+public Get: () ==> AstVal
+  Get () ==
+    ast.Get ()
+    pre enabled;
+
+
+-- Set calls SetStatus when called with 
+  
+public Set: AstVal ==> bool
+  Set (ast')  ==
+    def changed = self.SetStatus(<TYPECHECK>,<NONE>)
+    in
+     (ast.Set(ast');
+      return changed);
+ 
+public Delete: () ==> ()
+  Delete () ==
+    ast.DeleteAST ();
+
+  -- Save and Load the Unit in StateStore
+
+public Save: StateStore ==> bool 
+  Save(store) ==
+    def ast_ok = ast.Save (store);
+        status_ok = status.Save(store);
+        ena_ok = store.WriteVal (enabled)
+    in 
+      return ast_ok and status_ok and ena_ok;
+
+public Load: StateStore ==> bool
+  Load(store) ==
+    def ast_ok    = ast.Load(store);
+        status_ok = status.Load(store);
+        ena       = store.ReadVal()
+    in
+      if ast_ok and status_ok and is_bool(ena)
+      then
+        (enabled := ena;
+         return true)
+      else
+        (ast := new AST();
+         status := new UnitStatus();
+         enabled := false;
+         return true);
+
+end VDMUnitElem
+
+\end{vdm_al}

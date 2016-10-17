@@ -1,0 +1,42 @@
+class C
+
+instance variables
+  static  mlib : [B] := nil
+
+operations
+  static public getInteger: nat ==> nat
+  getInteger (pval) ==
+    ( -- check for B library initialization
+      if mlib = nil
+      then ( mlib := new B(); mlib.SetX(pval + 42) );
+      -- get an integer random value from the [0..pval] interval
+      return mlib.GetX() )
+
+end C
+class B
+
+instance variables
+
+  private static x : nat := 1
+
+operations
+
+public GetX : () ==> nat
+GetX() ==
+  return x;
+
+public SetX : nat ==> ()
+SetX(n) ==
+  x := n;
+
+end B
+class A
+
+operations
+
+public
+  Test:() ==> nat
+  Test () == 
+   C`getInteger(8)
+
+end A

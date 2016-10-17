@@ -1,0 +1,10 @@
+public Test : () ==> seq of char
+Test () ==
+(dcl s : seq of char;
+ s := NoReturn();
+ return s
+);
+
+NoReturn : () ==> ()
+NoReturn() ==
+  skip;

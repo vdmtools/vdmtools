@@ -1,0 +1,56 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of map ( set of ( real | nat ) | real |
+			     seq of ( real | nat ) | nat  |
+			     bool ) to 
+			          ( set of ( real | nat ) | nat | bool |
+				    real )  
+Test () ==
+return 
+[ { ( let c = 3.6 in 
+     { c, a } ) |-> let d = 7.4
+		   in { d, b } | a in set { 3.62, 1.64},
+			         b in set { 3 } & let cond = 3
+							  in cond = 3 },
+  { ( if 4 > 35
+      then { b }
+      else [a] ) |-> if is_nat( if 1=1 then <NAT> else 1)
+		     then 36
+		     else b | mk_((3), a) in set { mk_(3, 4), mk_(false, 6)},
+			      [ b ] in set { [ 3 ] } & if is_int(if false then 1 else false)
+					               then let a in set {3,true} in a
+						       else a <> b },
+
+ {  [3, a] |-> {b, 1} | { a, -}, mk_(b,3) in set { {3, 6}, mk_(3,3 )} },
+
+ { [3,5,a](3) |-> is_int(b) | [ false, a] in set { 2, [], [3, -3.6], [false, 4.6] },
+			      mk_(true, b) in set { 35, mk_(true, false), mk_(false, 10) } &
+			      is_bool(a) or is_bool(if b=b then b else b) },
+
+ let a = { 3, 3}
+ in { a |-> b | mk_AD(b) in set { 3, mk_AD(3), mk_AD(true) } & is_bool(b) and b },
+
+ { a |-> b | [a], {b} in set { [3], {false}, {3} } & a <> b },
+
+ { {a,b} |-> c | a in set {3,6}, b in set {4}, c in set {1} & 
+		 a + b + c < 12 },
+
+ { i |-> i | i in set {1,2,3}}
+
+] 
+
+
+
+types
+
+ AD::
+  b : ( bool | nat )
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

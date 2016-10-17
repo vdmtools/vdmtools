@@ -1,0 +1,11 @@
+public Test : () ==> <OK> | nat
+Test() ==
+  (if true then trap <UPS> with return <OK>
+  in Test2();
+  return 1);
+
+Test2: () ==> nat
+Test2() ==  let a = 1 in
+            if a = 1 then exit <UPS> else return 1;
+
+end A

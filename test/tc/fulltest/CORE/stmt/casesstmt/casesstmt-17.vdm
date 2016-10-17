@@ -1,0 +1,21 @@
+class CasesStmtTest
+
+operations
+
+  DoAlways: int ==> bool
+  DoAlways(i) ==
+    return i = 0;
+
+  Cases: () ==> int | bool
+  Cases() ==
+    cases 2:
+    1 -> always DoAlways(1) in
+         let n = nil
+         in return n,
+    others -> trap pat with ErrorAction (pat) in
+         always DoAlways(1) in
+           let n = nil
+           in return n
+    end;
+
+end CasesStmtTest

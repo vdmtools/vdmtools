@@ -1,0 +1,27 @@
+ class A
+
+  functions
+
+    protected f : nat -> nat
+    f(n) == n + 1
+
+end A
+
+class B is subclass of C
+  operations
+
+  public Test : () ==> nat
+    Test() ==
+      return f(0)
+
+end B
+class C is subclass of A
+
+  functions
+
+    private f : nat -> nat
+    f(n) == n - 1
+
+end C
+
+

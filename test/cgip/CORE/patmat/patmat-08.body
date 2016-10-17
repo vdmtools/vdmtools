@@ -1,0 +1,18 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq  of set of nat  
+Test () ==
+return 
+[   { a + 1 | [a], a in set { [1], 1, [false], false} } ]
+
+
+
+
+  
+
+  
+
+
+
+
+
+

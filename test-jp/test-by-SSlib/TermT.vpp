@@ -1,0 +1,61 @@
+--$Heade$
+/*
+テストグループ
+	Termのテスト
+関連 UC
+	なし
+作成者
+	佐原伸
+*/
+class TermT is subclass of TestDriver
+functions
+public tests : () -> seq of TestCase
+tests() == 
+	[ 
+	new TermT01()
+	];
+end TermT
+----------------------------------------------------------
+/*
+シナリオID
+	構成子の検査
+親UseCase
+	なし
+内容
+	構成子の検査。
+*/
+class TermT01 is subclass of TestCase, CalendarDefinition
+operations 
+public test: () ==> bool
+test() == 
+	let	暦 = new JapaneseCalendar(),
+		a開始時間 = new Time(暦, 2003, 7, 30, 14, 29, 30, 20),
+		a終了時間 = new Time(暦, 2003, 7, 30, 14, 29, 30, 22),
+		t1        = new Time(暦, 2003, 7, 30, 14, 29, 30, 19),
+		t2        = new Time(暦, 2003, 7, 30, 14, 29, 30, 20),
+		t3        = new Time(暦, 2003, 7, 30, 14, 29, 30, 21),
+		t4        = new Time(暦, 2003, 7, 30, 14, 29, 30, 22),
+		t5        = new Time(暦, 2003, 7, 30, 14, 29, 30, 23),
+		t6        = new Time(暦, 2003, 7, 29, 14, 29, 30, 20),
+		t7        = new Time(暦, 2003, 7, 31, 14, 29, 30, 20),
+		t8        = new Time(暦, 2003, 7, 29, 14, 29, 29, 20),
+		t9        = new Time(暦, 2003, 7, 29, 14, 29, 31, 20),
+		term1 = new 『期間』(a開始時間, a終了時間)
+	in
+	return
+		not term1.期間内である(t1, term1) and
+		term1.期間内である(t2, term1) and
+		term1.期間内である(t3, term1) and
+		term1.期間内である(t4, term1) and
+		not term1.期間内である(t5, term1) and
+		not term1.期間内である(t6, term1) and
+		not term1.期間内である(t7, term1) and
+		not term1.期間内である(t8, term1) and
+		not term1.期間内である(t9, term1)
+	;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "TermT01:\t構成子の検査。期間内である()の検査";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end TermT01
+----------------------------------------------------------

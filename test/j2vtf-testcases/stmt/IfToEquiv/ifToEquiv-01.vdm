@@ -1,0 +1,15 @@
+class A
+
+operations
+
+public Test : () ==> nat  
+Test () ==
+( 
+	dcl x : nat := 5;
+	if x>2 then (if x<1 then return 1 else return 2)
+		 else (if x<1 then return 2 else return 1) 
+			
+	 
+)
+   
+end A

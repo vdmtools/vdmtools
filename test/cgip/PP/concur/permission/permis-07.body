@@ -1,0 +1,18 @@
+class Main
+
+operations
+
+  public Test : () ==> seq of char
+  Test() ==
+    let myo = new C()
+    in
+      let t1 = new T().Init(myo,<active>,<one>,"t1 "),
+          t2 = new T().Init(myo,<active>,<one>,"t2 ")
+      in
+        (start(t1);
+         start(t2);
+         myo.Dummy("Main ");
+         myo.Completed();
+         myo.ReadX());
+
+end Main

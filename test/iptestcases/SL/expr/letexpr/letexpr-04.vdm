@@ -1,0 +1,29 @@
+module A
+
+exports all
+definitions
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+---------------------------------------------------------------------
+----------------- LetExpr         -----------------------------------
+---------------------------------------------------------------------
+
+Test: () ==> seq of (bool | nat)   
+Test () ==
+return
+let 
+  Div(p, q: nat) r : real 
+  pre q <> 0
+  post p = r * q
+in
+  let a = Div(3,2) in
+      --b = pre_Div(3,2),
+      --c = post_Div(3,2,7) in
+    --[a, b, c]    
+    [a]
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

@@ -1,0 +1,33 @@
+class A
+
+operations
+
+  public Test :() ==> int 
+  Test ()==
+    return 7;
+
+
+public  next: () ==> int
+  next()  ==
+    return 3;
+
+public  prev : B ==> int
+  prev(b) ==
+    return b.prev() 
+
+end A
+
+class B
+
+operations
+
+
+public    next: A ==> int
+    next(a) ==
+      def an = a.next() in
+      return an;
+
+public   prev: () ==> int
+   prev() ==
+      return 5
+end B

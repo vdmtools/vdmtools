@@ -1,0 +1,15 @@
+class  MapComprehensionExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = {a |-> if a
+               then a * 4
+               else a and true | mk_(a,b) : ((bool | real) * nat) & a}
+  in skip;
+
+------------------------------------------------------------------------------
+end MapComprehensionExprTest

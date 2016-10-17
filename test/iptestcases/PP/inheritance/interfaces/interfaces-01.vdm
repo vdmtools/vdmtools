@@ -1,0 +1,33 @@
+class C
+
+operations
+
+public op1 : () ==> seq of char
+op1 () ==
+  is subclass responsibility
+
+end C
+
+class D
+
+end D
+
+class B is subclass of C, D
+
+operations
+
+public op1 : () ==> seq of char
+op1() ==
+  return "B`op1"
+
+end B
+
+class A
+
+operations
+
+public Test : () ==> seq of char
+Test() ==
+  return new B().op1()
+
+end A

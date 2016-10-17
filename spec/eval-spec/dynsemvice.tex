@@ -1,0 +1,160 @@
+%==========================================================================
+%  Document of commented dynamic semantic extended by index 
+%                                                            BF 05.07.1995
+%==========================================================================
+%==========================================================================
+\documentclass[a4paper,dvips]{article}
+\usepackage[dvips]{color}
+\usepackage{float}
+\usepackage{epsf}
+\usepackage{vdmsl-2e}
+\usepackage{longtable}
+\usepackage{alltt}
+\usepackage{makeidx}
+\usepackage{ifad}
+\usepackage{graphics}
+
+\definecolor{covered}{rgb}{0,0,0}
+%\definecolor{not_covered}{gray}{0.6}
+\definecolor{not_covered}{rgb}{1,0,0}
+
+
+\floatstyle{plain}
+\restylefloat{figure}
+
+\def\insertfig#1#2#3#4{ % Filename, epsfxsize, caption,  label
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\epsfxsize=#2
+\epsffile{#1}
+\end{center}
+\caption{#3} #4 
+\end{figure}
+}
+
+\newcommand{\evalstacktwo}[2]{%
+\begin{tabular}{|l|}%
+\mbox{} \\ \hline%
+\texttt{#1}\\ \hline%
+\texttt{#2}\\ \hline%
+\end{tabular}}
+
+\newcommand{\fctstacktwo}[4]{%
+\begin{tabular}{|l|l|}%
+\mbox{} & \mbox{} \\ \hline%
+\texttt{#1} & \texttt{#2}\\ \hline%
+\texttt{#3} & \texttt{#4}\\ \hline%
+\end{tabular}}
+
+\newcommand{\StateDef}[1]{{\bf #1}}
+\newcommand{\TypeDef}[1]{{\bf #1}}
+\newcommand{\TypeOcc}[1]{{\it #1}}
+\newcommand{\FuncDef}[1]{{\bf #1}}
+\newcommand{\FuncOcc}[1]{{#1}}
+\newcommand{\ModDef}[1]{{\tiny #1}}
+
+\newcommand{\LAM}{{\restoreLambda$\lambda$}}
+
+\newcommand{\id}[1]{\hbox{\it #1}}
+\newcommand{\keyw}[1]{\hbox{\sf #1}}
+\newcommand{\auth}[1]{{\sc #1}}
+
+
+\newcommand{\RM}[1]{{\bf Remark:} {\em #1}}
+
+
+\newcommand{\emptychapter}[1]{%
+ \chapter*{#1}
+ \markboth{#1}{#1}
+ \addcontentsline{toc}{chapter}{\protect\numberline{}{#1}}}
+
+\hyphenation{ex-cep-tion}
+\hyphenation{ex-cep-tions}
+\hyphenation{hand-ling}
+\hyphenation{hand-ler}
+\hyphenation{hand-lers}
+\hyphenation{mo-du-le}
+\hyphenation{mo-du-les}
+
+\makeindex
+
+\begin{document}
+\bibliographystyle{newalpha}
+
+\special{!userdict begin /bop-hook{gsave 220 30 translate
+0 rotate /Times-Roman findfont 21 scalefont setfont
+0 0 moveto (CONFIDENTIAL) show grestore}def end}
+
+\docdef{The Dynamic Semantics of VDM-++ VICE}
+{ VDMTools Group}
+{\today}
+{VDM++ VICE 6.8.7}
+{Report}
+{Under Development}
+{Confidential}
+{}
+{\copyright Kyushu University}
+{\item[\mbox{}] \mbox{}}
+{}
+
+
+\pagenumbering{roman}
+\addtocounter{tocdepth}{1}
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+
+\parskip12pt
+\parindent0pt
+
+\input{intro}                 % introduction
+
+\input{compile.vice.tex}
+\input{cexpr.vice.tex}
+\input{cstmt.vice.tex}
+\input{cpat.vice.tex}
+
+\input{schd.vice.tex}
+\input{schdtp.vice.tex}
+\input{stack-eval.vice.tex}
+\input{instructionsTP.vice.tex}
+\input{instructions.vice.tex}
+
+\input{eval_sem.vice.tex}
+\input{eval_global.vice.tex}
+\input{eval_state.vice.tex}
+\input{eval_class.vice.tex}
+\input{eval_def.vice.tex}
+\input{eval_expr.vice.tex}
+\input{eval_pat.vice.tex}
+\input{eval_aux.vice.tex}
+\input{eval_free.vice.tex}
+%\input{eval_old.vdm.tex}
+\input{rterr.vice.tex}
+\input{debug.vice.tex}
+\input{debugTP.vice.tex}
+\input{eval_settings.vice.tex}
+
+\input{timeparser.vdm.tex}
+\input{timemap.vdm.tex}
+\input{time.vdm.tex}
+\input{timetrace.vdm.tex}
+\input{mangle.vice.tex}
+\input{test.vice.tex}
+
+\appendix
+\input{common_as.vice.tex}
+\input{contextinfo.vice.tex}
+
+% end of evaluate.tex
+
+
+\typeout{Bibliography}
+\restoreLambda
+\bibliography{string,dynsem}
+\useLambda
+\printindex
+\addcontentsline{toc}{section}{Index}
+\end{document}
+

@@ -1,0 +1,46 @@
+--$Header: /home/vdmtools/cvsroot/toolbox/examples-jp/SSlib/test/ProductT.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $
+/*
+テストグループ
+	Prouctのテスト
+関連 UC
+	なし
+作成者
+	佐原伸
+*/
+class ProductT is subclass of TestDriver
+functions
+public tests : () -> seq of TestCase
+tests() == 
+	[ 
+	new ProductT01()
+	];
+end ProductT
+----------------------------------------------------------
+/*
+シナリオID
+	カリー化の検査
+親UseCase
+	なし
+内容
+	カリー化の検査。
+*/
+class ProductT01 is subclass of TestCase
+operations 
+public test: () ==> bool
+test() == 
+	let	lt = String`小さい,
+		lt2 = lambda x : int, y : int & x < y
+	in
+	return
+		Product`Curry[seq of char, seq of char, bool](lt)("abc")("abcd") and
+		Product`Curry[seq of char, seq of char, bool](lt)("abcde")("abcd") = false and
+		Product`Curry[int, int, bool](lt2)(3)(4) and
+		Product`Uncurry[seq of char, seq of char, bool](String`＜)("abc", "abcd") and
+		Product`Uncurry[seq of char, seq of char, bool](String`＜)("abcde", "abcd") = false and
+		Product`Uncurry[seq of char, seq of char, bool](String`≦)("3", "4")
+	;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "ProductT01:\t カリー化の検査。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end ProductT01

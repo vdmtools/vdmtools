@@ -1,0 +1,23 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+types
+
+  Even = nat
+  inv n == n mod 2 = 0
+
+operations
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+---------------------------------------------------------------------
+----------------- LetExpr         -----------------------------------
+---------------------------------------------------------------------
+public Test : () ==> nat   
+Test () ==
+let a = mk_(3, 7)
+in let mk_(a, b) = a
+   in return a
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

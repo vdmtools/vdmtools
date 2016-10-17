@@ -1,0 +1,301 @@
+\section{Traversal of definitions}
+
+\begin{vdm_al}
+module PP_TAR_DEF
+
+imports
+
+  from PP_TAR_TYPE all,
+  from PP_TAR_EXPR all,
+  from PP_TAR_PAT all,
+
+  from AS all,
+  from CI all,
+  from REP all
+
+exports all
+
+definitions
+
+types
+
+  String = seq of char;
+
+  AstCI = Definitions;
+
+  Document = Definitions;
+
+  Module =   Definitions;
+
+  ImplModule = token; --- not used
+#ifdef VDMSL
+  Interface = AS`Interface;
+#endif VDMSL
+--#ifdef VDMPP
+--  Interface = token;
+--#endif VDMPP
+  Definitions = String;
+
+  TypeDef = String;
+  Invariant = String;
+
+  FnDef = ExplFnDef | ImplFnDef | ExtExplFnDef;
+
+  ExplFnDef     = String;
+  ImplFnDef     = String;
+  ExtExplFnDef  = String;
+
+  ValueDef       = String;
+  GlobalValueDef = String;
+
+
+  LocalDef = FnDef | ValueDef;
+
+  TypeVarList    = seq of PP_TAR_TYPE`TypeVar;
+
+  ParametersList = seq of Parameters;
+  Parameters     = seq of PP_TAR_PAT`Pattern;
+  ParameterTypes = seq of PatTypePair;
+  NameType       = PP_TAR_EXPR`Expr;
+  PatTypePair    = String;
+  FnBody         = PP_TAR_EXPR`Expr;
+
+
+\end{vdm_al}
+
+\section{Abstract syntax trees with context info}
+
+\begin{vdm_al}
+functions
+
+  tar_AstCI : (Document | PP_TAR_EXPR`Expr) * seq of CI`TokenContextInfo * CI`FileIdMap -> AstCI
+  tar_AstCI (ast,-,-) ==
+    ast;
+
+\end{vdm_al}
+
+\section{Documents}
+
+\begin{vdm_al}
+    tar_Document : seq of (Module | ImplModule) | seq of Definitions -> Document
+    tar_Document (doc) ==
+      hd doc
+    pre len doc = 1;
+\end{vdm_al}
+
+\section{Modules}
+
+\begin{vdm_al}
+#ifdef VDMSL
+    tar_Module : PP_TAR_EXPR`NameName * Interface * Definitions * CI`ContextId -> Module
+    tar_Module (mod_nm,-,defs,-) ==
+       "module " ^ mod_nm ^ "\n\n" ^ "definitions\n\n" ^ defs ^ "\n\n" ^ "end " ^ mod_nm ^ "\n";
+#endif VDMSL
+#ifdef VDMPP
+    tar_Class : PP_TAR_EXPR`NameName * Definitions * CI`ContextId -> Module
+    tar_Class (cls_nm,defs,-) ==
+       "class " ^ cls_nm ^ "\n\n" ^ "definitions\n\n" ^ defs ^ "\n\n" ^ "end " ^ cls_nm ^ "\n";
+#endif VDMPP
+\end{vdm_al}
+
+\section{Definitions}
+
+\begin{vdm_al}
+functions
+
+
+  tar_Definitions : map AS`Name to TypeDef
+                  * seq of GlobalValueDef
+                  * map AS`Name to FnDef
+                  * map AS`Name to AS`OpDef
+#ifdef VDMSL
+                  * [AS`StateDef]
+#endif VDMSL
+#ifdef VDMPP
+                  * seq of AS`InstanceVarDef
+#endif VDMPP
+                  * CI`ContextId                  -> Definitions
+#ifdef VDMSL
+  --tar_Definitions (typem,vals,fnm,opm,stat,-) ==
+  tar_Definitions (typem,vals,fnm,-,-,-) ==
+#endif VDMSL
+#ifdef VDMPP
+  --tar_Definitions (typem,vals,fnm,opm,-,-) ==
+  tar_Definitions (typem,vals,fnm,-,-,-) ==
+#endif VDMPP
+    let tpdefs  = Map2String(typem),
+        fndefs  = Map2String(fnm),
+-- TODO:        opdefs  = Map2String(opm),
+        valdefs = List2SeparatorList(";\n\n",vals)
+    in
+        (if tpdefs  = "" then "" else "\n\ntypes\n\n" ^ tpdefs)
+       ^(if fndefs  = "" then "" else "\n\nfunctions\n\n" ^ fndefs)
+-- TODO:       ^(if opdefs  = "" then "" else "\n\noperations\n\n"^opdefs)
+       ^(if valdefs = "" then "" else "\n\nvalues\n\n" ^ valdefs);
+
+\end{vdm_al}
+
+\section{Type definitions}
+
+\begin{vdm_al}
+  tar_TypeDef : PP_TAR_EXPR`NameType * AS`Type * PP_TAR_TYPE`Type * [Invariant] * AS`Access * CI`ContextId -> TypeDef
+  --tar_TypeDef (nm,as_tp,type,fninv,-,-) ==
+  tar_TypeDef (nm,-,type,fninv,-,-) ==
+     nm ^ " = " ^ type ^ "\n" ^ (if fninv = nil then "" else fninv ^ "\n");
+
+  tar_Invariant : PP_TAR_PAT`Pattern * PP_TAR_EXPR`Expr * CI`ContextId -> Invariant
+  tar_Invariant(pat,expr,-) ==
+     "inv " ^ pat ^ " == " ^ expr ^ "\n";
+
+
+\end{vdm_al}
+
+\subsection{Traversing function definitions}
+
+\begin{vdm_al}
+
+  tar_ExplFunction :  PP_TAR_EXPR`NameName
+                   * TypeVarList
+                   * PP_TAR_TYPE`FnType
+                   * ParametersList
+                   * FnBody
+                   * [PP_TAR_EXPR`Expr]
+                   * [PP_TAR_EXPR`Expr]
+	           * AS`Access
+                   * CI`ContextId          -> ExplFnDef
+  tar_ExplFunction(name,tpvarlst,fntype,parms,fnbody,fnpre,fnpost,-,-) ==
+    let comma_tpvarlst = if tpvarlst = []
+                         then ""
+                         else "[" ^ List2CommaList(tpvarlst) ^ "]",
+        tar_parms     =  tar_ParametersList(parms)
+    in
+     name ^ comma_tpvarlst ^ " : " ^ fntype ^ "\n"
+    ^ name ^ tar_parms ^ " == " ^ fnbody ^ "\n"
+    ^ (if fnpre  = nil then "" else "pre " ^ fnpre ^ "\n")
+    ^ (if fnpost = nil then "" else "post " ^ fnpost ^ "\n");
+
+  tar_ImplFunction : PP_TAR_EXPR`NameName
+                   * TypeVarList
+                   * ParameterTypes
+                   * seq of NameType
+                   * [PP_TAR_EXPR`Expr]
+                   * PP_TAR_EXPR`Expr
+	           * AS`Access
+                   * CI`ContextId         -> ImplFnDef
+  tar_ImplFunction(name,tpvarlst,partps,restps,fnpre,fnpost,-,-) ==
+    let comma_tpvarlst = if tpvarlst = []
+                         then ""
+                         else "[" ^ List2CommaList(tpvarlst) ^ "]",
+        comma_partps   = List2CommaList(partps),
+        comma_restps   = List2CommaList(restps)
+    in
+    name ^ comma_tpvarlst ^ "(" ^ comma_partps ^ ")" ^ " " ^ comma_restps ^ "\n"
+    ^ (if fnpre  = nil then "" else "pre " ^ fnpre ^ "\n")
+    ^ "post " ^ fnpost ^ "\n";
+
+  tar_ExtExplFunction : PP_TAR_EXPR`NameName
+                      * TypeVarList
+                      * ParameterTypes
+                      * seq of NameType
+                      * FnBody
+                      * [PP_TAR_EXPR`Expr]
+                      * [PP_TAR_EXPR`Expr]
+	              * AS`Access
+                      * CI`ContextId     -> ExtExplFnDef
+  tar_ExtExplFunction(-,-,-,-,-,-,-,-,-) ==
+    undefined;
+
+
+  tar_NameType : PP_TAR_EXPR`NameName * PP_TAR_TYPE`Type * CI`ContextId -> NameType
+  tar_NameType(nm,type,-) ==
+    nm ^ ":" ^ type;
+
+  tar_PatTypePair: seq of PP_TAR_PAT`Pattern * PP_TAR_TYPE`Type * CI`ContextId -> PatTypePair
+  tar_PatTypePair(pats,type,-) ==
+    List2CommaList(pats) ^ ":" ^ type;
+
+
+  tar_FnBody:  (PP_TAR_EXPR`Expr | <NOTYETSPEC>) * CI`ContextId -> FnBody
+  tar_FnBody(body,-) ==
+    if body = <NOTYETSPEC>
+    then "is not yet specified"
+    else body;
+
+\end{vdm_al}
+
+\subsection{Value definitions}
+
+\begin{vdm_al}
+
+  tar_GlobalValueDef : seq of ValueDef -> seq of GlobalValueDef
+  tar_GlobalValueDef(vals) ==
+    vals;
+
+  tar_ValueDef : PP_TAR_PAT`Pattern * [PP_TAR_TYPE`Type] * PP_TAR_EXPR`Expr * AS`Access * CI`ContextId -> ValueDef
+  tar_ValueDef(pat,tp,expr,-,-) ==
+     pat ^ (if tp = nil then "" else ":" ^ tp) ^ " = " ^ expr;
+
+\end{vdm_al}
+
+\subsection{Auxiliary functions}
+
+\begin{vdm_al}
+
+  tar_ParametersList : ParametersList -> String
+  tar_ParametersList (parms) ==
+    if parms = []
+    then ""
+    else
+      let head = if hd parms = []
+                 then "()"
+                 else "(" ^ List2CommaList(hd parms) ^ ")",
+          tail = tar_ParametersList(tl parms)
+      in
+          head^tail;
+
+  List2SeparatorList : String * seq of String -> String
+  List2SeparatorList (separator,ss) ==
+    if ss = []
+    then ""
+    else
+      let head = hd ss,
+          tail = if tl ss = []
+                 then ""
+                 else separator ^ List2SeparatorList(separator,tl ss)
+      in
+          head ^ tail;
+
+
+  List2CommaList : seq of String -> String
+  List2CommaList (ss) ==
+    if ss = []
+    then ""
+    else
+      let head = hd ss,
+          tail = if tl ss = []
+                 then ""
+                 else "," ^ List2CommaList(tl ss)
+      in
+          head^tail;
+
+  Map2String : map AS`Name to String -> String
+  Map2String (m) ==
+    List2SeparatorList(";\n\n",SetToSeq[String](rng m));
+
+
+  SetToSeq[@Elem]: set of @Elem -> seq of @Elem
+  SetToSeq(s) ==
+    if s = {}
+    then []
+    else let x in set s in SetToSeq[@Elem](s\{x}) ^ [x];
+
+
+end PP_TAR_DEF
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[MotGeneralNumericType]
+{rtinfo.ast}[PP_TAR_DEF]
+\end{rtinfo}
+

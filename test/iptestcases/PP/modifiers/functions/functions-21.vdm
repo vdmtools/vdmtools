@@ -1,0 +1,21 @@
+ class A
+
+  functions
+
+    protected f : nat -> nat
+    f(n) == n + 1
+    post RESULT > 0
+
+end A
+
+class B is subclass of A
+
+  operations
+
+  public Test : () ==> nat
+    Test() ==
+      if post_f(1,2)
+      then return 0
+      else return 1
+
+end B

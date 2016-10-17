@@ -1,0 +1,69 @@
+class Philosopher
+
+   values
+      NoSuffication: real = 1/3;
+      NoStarvation: real = 1/6
+
+   instance variables
+      table: Table;
+      forks: set of Fork := {};
+      clock: Clock := new Clock();
+      status: DiningPhilosopherTypes`Status := <thinking>;
+      time_spent_thinking: DiningPhilosopherTypes`Time := 0;
+      time_spent_eating: DiningPhilosopherTypes`Time := 0;
+   inv ( card forks = 0 or card forks = 2) and
+         cases card forks:
+           0                        -> status = <thinking>,
+           NumberOfForksNeededToEat -> status = <eating>
+         end;
+
+   operations
+      public
+      SitDown: Table ==> ()
+      SitDown(t) ==
+      ( table := t;
+        start(clock)
+      );
+
+      public
+      StartEating: () ==> ()
+      StartEating() ==
+      ( dcl f: set of Fork := table.StartEating(self);
+        forks := forks union f;
+        time_spent_thinking := time_spent_thinking + clock.GetTime() 
+                               - time_spent_eating
+      );
+
+      StopEating: () ==> ()
+      StopEating() ==
+         let f: set of Fork be st f subset forks and card f = 2 in
+         (  table.StartThinking(self, f);
+            forks := forks\ f;
+            time_spent_eating := time_spent_eating + clock.GetTime() 
+                                 - time_spent_thinking
+         );
+
+      Status: () ==> DiningPhilosopherTypes`Status
+      Status() ==
+         return status;
+
+      Forks: () ==> set of Fork
+      Forks() ==
+         return forks;
+
+   EatThinkCycle: () ==> ()
+   EatThinkCycle() ==
+      [ ext wr time_spent_eating, time_spent_thinking
+        post let eat_think_ratio = time_spent_eating/time_spent_thinking in
+              eat_think_ratio < NoSuffication and
+              eat_think_ratio > NoStarvation ]
+
+   sync
+      per StartEating => status = <thinking>;
+      per StopEating => status = <eating>
+
+   thread
+     periodic (1)(EatThinkCycle)
+
+end Philosopher
+

@@ -1,0 +1,21 @@
+class LetExprTest
+types
+
+  A :: selid : nat
+       sel2 : bool;
+
+  B :: sel1 : rat
+  inv b == b < 6
+  
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = let [a,b,[c,-]] = [3,true,[8,"abe"]] in if b then a + c else true
+  in skip;
+
+------------------------------------------------------------------------------
+end LetExprTest

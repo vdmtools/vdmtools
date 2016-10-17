@@ -1,0 +1,186 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Module providing functions generating code of state definitions.
+% $Id: mod_statedef.vdm,v 1.17 2001/10/03 07:13:10 paulm Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+The module $SD$ provides one function, $GenStateDef$, which generates
+code corresponding to a state definition. 
+
+\begin{vdm_al}
+module SD
+
+imports 
+  from CPP all,
+  from AS all,
+  from REP all,
+  from CI all,
+  from CGMAIN all,
+  from BC
+    operations
+    Rename: AS`Name | AS`OldName ==> CPP`Name | CPP`ObjectMemberAccess;
+    functions
+    GenIdentDecl: CPP`AnnotationSpec * CPP`DeclSpecifiers * CPP`Declarator * [CPP`Initializer] -> CPP`IdentDeclaration;
+    GenBlock: seq of CPP`Stmt -> CPP`Stmt;
+    GenInclStmt: CPP`FileName -> CPP`IncludeStmt;
+    GenAsgnStmt: CPP`Expr * CPP`Expr -> CPP`Stmt;
+    GenFctCall: CPP`Expr * CPP`Exprs -> CPP`Expr;
+    GenLengthName: AS`Name -> CPP`Name;
+    GenIdentifier: AS`Id ->  CPP`Identifier;
+    GenStorageClassSpecifier: <AUTO> | <REGISTER> | <STATIC> | <EXTERN> -> CPP`StorageClassSpecifier,
+
+  from CGAUX
+    functions GenFileExt: CPP`FileName -> CPP`FileName
+
+    operations GiveCurCName: () ==> AS`Id;
+               FromAS2RepType: [AS`Type] ==> REP`TypeRep,
+
+  from DS
+    operations GenType:  REP`TypeRep  ==> CPP`TypeSpecifier,
+
+  from CGEXPR
+    operations CGExpr: AS`Expr * CGMAIN`VT ==> seq of CPP`Stmt
+
+exports 
+    operations 
+    GenStateDef: AS`StateDef ==> CPP`CPPAS * seq of CPP`Stmt
+
+definitions
+\end{vdm_al}
+
+The function $GenStateDef$ takes a state definition as parameter and
+returns a tuple. The tuple contains:
+
+\begin{enumerate}
+\item Static declarations of the state variables.
+\item A sequence of statements, initializing the state with respect to
+  the state initialization predicate.
+\end{enumerate}
+
+Notice, that the code generator ignores state invariants.
+
+\begin{vdm_al}
+
+operations
+  GenStateDef: AS`StateDef  ==> CPP`CPPAS * seq of CPP`Stmt
+  GenStateDef(mk_AS`StateDef(tp, -, Init,-)) ==
+  ( dcl cc_l : seq of CPP`IdentDeclaration := [],
+        init_l : seq of CPP`Stmt := [];
+    let mk_AS`CompositeType(-, field_l,-) = tp in
+    for mk_AS`Field(sel, type,-,-) in field_l do
+      def ti = CGAUX`FromAS2RepType(type);
+          id = BC`Rename(sel) in
+        def ds_l = [DS`GenType(ti)] in
+            cc_l := cc_l ^ [BC`GenIdentDecl([], [BC`GenStorageClassSpecifier(<STATIC>)] ^ ds_l, id, nil)];
+    if Init <> nil then
+      init_l := GenInitialization(tp, Init);
+    return mk_(cc_l, init_l)
+  );
+\end{vdm_al}
+
+The operation $GenInitialization$ is used to code generate the
+initialization predicate of the state of a module. In order to code
+generate an initialization predicate, the predicate must be at the
+form required by the interpreter (see \cite{Lassen94}). If this is
+not the case, the code generator generates an ``include statement'',
+including a user defined definition of the initialization. Consider
+following the state definition of module {\tt A}:
+
+\begin{quote}
+\begin{verbatim}
+state Sigma of
+  a : int
+  b : bool
+init s == s = mk_Sigma(10, false)
+end
+\end{verbatim}
+\end{quote}
+
+In this case, the initialization predicate is at the form required by
+the interpreter, and $GenInitialization$ will generate code at the
+following form:
+
+\begin{quote}
+\begin{verbatim}
+...EvalExpr("10", mk_CGMAIN`VT(vdm_A_a, "Int")
+...EvalExpr("false", mk_CGMAIN`VT(vdm_A_b, "Bool")
+\end{verbatim}
+\end{quote}
+
+If the initialization predicate was not on the former form, the code
+generator would generate the following code:
+
+
+\begin{quote}
+\begin{verbatim}
+{
+#include "A_init.cc"
+}
+\end{verbatim}
+\end{quote}
+
+\begin{vdm_al}
+  GenInitialization: AS`CompositeType * AS`StateInit ==> seq of CPP`Stmt
+  GenInitialization(mk_AS`CompositeType(nm, field_l,-), mk_AS`StateInit(pat,expr,-)) ==
+    cases true:
+      (is_AS`PatternName(pat) and is_AS`BinaryExpr(expr) )->
+        let mk_AS`BinaryExpr(lhs, opr, rhs, -) = expr in
+          (if is_AS`Name(lhs) and pat.nm = lhs 
+                             and opr = <EQ> 
+                             and is_AS`RecordConstructorExpr(rhs) then
+            let mk_AS`RecordConstructorExpr(tag, f_l, -) = rhs in
+            ( if tag = nm then
+               return conc [ InitStateVar(field_l(i), f_l(i)) | i in set inds f_l ] );
+         return [GenUserDefInit()]),  
+      others -> return [GenUserDefInit()]
+    end;
+\end{vdm_al}
+
+The function $InitStateVar$ generates a sequence of one or two
+statements, corresponding to the initialization of one state variable
+in the case where the initialization predicate is in the executable
+form. Please note that part of the specification concerning composite
+types (Records) cannot be covered at the specification level.
+
+\begin{vdm_al}
+operations
+  InitStateVar: AS`Field * AS`Expr ==> seq of CPP`Stmt
+  InitStateVar(mk_AS`Field(sel, type,-,-), expr) ==
+    def sel_v = BC`Rename(sel);
+        ti    = CGAUX`FromAS2RepType(type);
+        cgexpr = CGEXPR`CGExpr(expr, mk_CGMAIN`VT(sel_v, ti))
+    in
+    if is_REP`CompositeTypeRep(ti) then
+      def recCall = BC`GenIdentifier("Record");
+          args = [BC`Rename(type.name), BC`GenLengthName(type.name)] in
+      let asg = BC`GenAsgnStmt( sel_v, BC`GenFctCall(recCall,args) ) in
+      return [asg] ^ cgexpr
+    else
+      return cgexpr;
+\end{vdm_al}
+
+
+The function $GenUserDefInit$ generates an ``include statement'' which
+includes the user defined initialization of the state. Note, that it
+is the users responsibility to insure that the included file is
+defined.
+
+
+\begin{vdm_al}
+
+functions
+  GenUserDefInit: () -> CPP`Stmt
+  GenUserDefInit() ==
+    def id = CGAUX`GiveCurCName() in
+      BC`GenBlock( [BC`GenInclStmt(CGAUX`GenFileExt(id ^ "_init"))] )
+
+end SD
+
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[GenInitialization]
+{rtinfo.ast}[SD]
+\end{rtinfo}

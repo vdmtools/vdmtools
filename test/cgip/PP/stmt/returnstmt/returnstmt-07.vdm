@@ -1,0 +1,26 @@
+
+
+
+
+class A
+
+operations
+
+public Test: () ==> seq of int
+Test() ==
+  (Dummy();
+   return sta);
+
+Dummy: () ==> ()
+Dummy() ==
+  if len sta = 3
+  then return
+  else (sta := sta ^ [next];
+        next := next + 1;
+        Dummy());
+
+instance variables
+  sta: seq of int := [];
+  next : int := 0;
+
+end A

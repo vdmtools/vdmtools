@@ -1,0 +1,13 @@
+types
+
+Even = int
+inv e == e mod 2 = 0
+
+functions
+
+Next: Even -> Even
+Next(e) ==
+  e + 2
+
+--PO
+--(forall e : Even & inv_Even(e + 2))

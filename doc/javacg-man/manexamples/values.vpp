@@ -1,0 +1,10 @@
+class Values
+
+values
+
+  public mk_(a,b) = mk_(3,6);
+  private c : char = 'a';
+  protected d = a + 1;
+  e = 2 + 1
+
+end Values

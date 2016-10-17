@@ -1,0 +1,38 @@
+class A
+
+instance variables
+  b        : bool;
+  k        : nat;
+  j        : nat;
+  l        : nat;
+  m        : nat;
+  q        : <YES> | <NO>;
+
+end A
+
+
+class B
+
+instance variables
+
+  e : AA := mk_AA(1,'{');
+  d : nat;
+
+
+operations
+
+
+public Test : () ==> AA
+Test() ==
+(e.b := '<';
+ return e)
+
+types
+
+public  AA :: 
+    a : nat
+    b : char
+
+  
+
+end B

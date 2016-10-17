@@ -1,0 +1,15 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> nat  
+Test () ==
+  return iota x in set {1,2,3} & f(x)
+
+functions
+
+f: nat -> nat | (char | bool)
+f(n) ==
+  if n = 2 then 
+    true
+  else
+    n
+
+end A

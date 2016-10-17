@@ -1,0 +1,55 @@
+class DefStmtTest
+
+types
+
+  A :: selid : nat
+       sel2 : bool
+
+operations
+
+  Def1: nat ==> nat
+  Def1(arg)  ==
+  def a = 7 in return a + arg;
+
+  Def2: () ==> nat | bool
+  Def2() == 
+  def b = true;
+      n = Def1(7)
+  in 
+    if b
+    then return n
+    else return b;
+
+  Def3: () ==> nat | bool
+  Def3() == 
+  def mk_A(n,b) = mk_A(7,5) 
+  in 
+    if b
+    then return n
+    else return b;
+
+  Def4: () ==> nat
+  Def4() ==
+  def mk_(a,b) = mk_(8,9) in return a;
+
+  Def5: A * nat ==> nat | bool
+  Def5(arg1, arg2) ==
+  def mk_A(n,b) = arg1
+  in 
+    if b
+    then return n
+    else return b;
+
+  Def6: nat ==> ()
+  Def6(n) ==
+    def a = Def6(8)
+    in
+      skip;
+
+  Def7: nat ==> ()
+  Def7(n) ==
+    def mk_(a,(7* true)) = mk_(7,mk_token(8))
+    in
+      skip;
+
+end DefStmtTest

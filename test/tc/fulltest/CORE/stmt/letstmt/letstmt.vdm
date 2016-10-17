@@ -1,0 +1,87 @@
+class LetStmtTest
+
+types
+
+  A :: selid : nat
+       sel2 : bool
+
+operations
+
+  Let1: () ==> nat
+  Let1() ==
+  let a = 7 in return a + 8;
+
+  Let2: () ==> nat | bool
+  Let2() ==
+  let mk_A(n,b) = mk_A(7,true) 
+  in 
+    if b
+    then return n
+    else return b;
+
+  Let3: () ==> nat | bool
+  Let3() ==
+  let mk_A(n,b) = mk_A(7,5) 
+  in 
+    if b
+    then return n
+    else return b;
+
+  Let4: () ==> nat
+  Let4() ==
+  let mk_(a,b) = mk_(8,9) in return a;
+
+  Let5: A * nat ==> nat | bool
+  Let5(arg1, arg2) ==
+  let mk_A(n,b) = arg1
+  in 
+    if b
+    then return n
+    else return b;
+
+  Let6: () ==> nat 
+  Let6() ==
+    let a = 8,
+        f : nat -> nat
+        f(n) == n + 1,
+        g() r : nat
+        post 5 < r
+    in
+      return g() + f(a);
+
+  Let7: () ==> nat
+  Let7() ==
+    let a = b + 8,
+        f : nat -> nat
+        f(n) == n + 1,
+        g() r : nat
+        post 5 < r,
+        b = f(7)
+    in
+      return g() + f(a) + b;
+
+  Let8: () ==> nat1
+  Let8() ==
+    let a = b + 8,
+        f : nat -> nat1
+        f(n) == n + 1,
+        g() r : nat
+        post 5 < r,
+        b : nat = f(7)
+    in
+      return g() + f(a) + b;
+
+  Let9: nat * set of nat ==> nat1 * set of nat
+  Let9(a,s1 union s2) ==
+    let a = b + 8,
+        f [@A,@B]: map @A to @B * @A -> @B
+        f(m,a) == m(a),
+        g[@C,@A](a: @A,c:@C) r : nat
+        post a <> c and 5 < r,
+        b : nat = f[nat,nat]({|->},7) + a,
+        mk_(a,c) = mk_(6,true)
+    in
+      return mk_(g[nat,nat](2,3) + f[bool,nat]({true |-> 6},c) + b,
+                 s1 inter s2)
+
+end LetStmtTest

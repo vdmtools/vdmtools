@@ -1,0 +1,31 @@
+class A
+
+operations
+
+public Test : () ==> nat 
+Test () ==
+(dcl x : nat,
+     y : nat, 
+     z : nat, 
+     a : nat := 0,
+     d : nat := 0;
+
+ while d < 80 do
+   def mk_ (pmt, pa, pt) = Op() in
+     (a := a + pmt(1) + pa(1) + pt(1);
+      d := d + 1);
+ return a
+)
+
+types
+AA :: a1 : int
+
+functions
+Op: () -> (seq of nat) *(seq of nat) *(seq of nat) 
+Op () ==
+  mk_([10],[2],[3])
+
+end A
+
+
+

@@ -1,0 +1,71 @@
+class RecTrapStmtTest
+instance variables
+  a: nat1;
+  stid : bool;
+
+types
+  public A :: selid : nat
+       sel2 : bool
+
+
+operations
+
+  RecTrap1: () ==> nat
+  RecTrap1() ==
+  tixe {b ^ - |-> exit 6,
+        a |-> let a = 7 in return a + 8}
+  in return 0;
+
+  RecTrap2: () ==> ()
+  RecTrap2() ==
+  tixe {a ^ b |-> exit 7,
+        stid union s |-> exit stid,
+        -     |-> skip}
+  in
+    exit true;
+
+  RecTrap3: () ==> nat | bool
+  RecTrap3() ==
+  tixe {mk_(a,-) |->
+         let mk_A(n,b) = mk_A(7,5) 
+         in 
+           if b
+           then return n
+           else return b,
+	mk_A(zzz,yyy) |-> return zzz}
+  in
+    skip;
+
+  RecTrap4: () ==> nat
+  RecTrap4() ==
+  tixe {b union c |-> RecTrap3(),
+        a |-> exit a}
+  in
+    if true = false
+    then return 6
+    else exit 7;
+
+  RecTrap5: A * nat ==> nat | bool
+  RecTrap5(arg1, arg2) ==
+  tixe {mk_A(t,true) |-> exit 8,
+        true |-> skip,
+	4 |-> return arg2,
+	a |-> exit arg1}
+  in
+  let mk_A(-,b) = arg1
+  in 
+    if b
+    then RecTrap4()
+    else return b;
+
+  RecTrap6: () ==> ()
+  RecTrap6() ==
+  tixe {a |-> tixe {b union c |-> exit c inter b}
+              in
+	        stid := false,
+        t ^ u |-> return u ^ t}
+  in
+    RecTrap2()
+
+end RecTrapStmtTest
+

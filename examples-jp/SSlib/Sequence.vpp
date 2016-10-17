@@ -1,0 +1,371 @@
+\subsection{Sequence}
+\subsubsection{Ó”C}
+	—ñ‚ğ•\‚·B
+\subsubsection{ŠT—v}
+	SequenceŒ^‚Å’è‹`‚³‚ê‚½‹@”\ˆÈŠO‚Ì‹@”\‚ğ’è‹`‚·‚éB
+\subsubsection{’ˆÓ–€}
+	—ğj“IŒo‰ß‚Ì‚½‚ßA‚æ‚èŠÖ”Œ^ƒvƒƒOƒ‰ƒ~ƒ“ƒO‚É“K‚µ‚½ŠÖ”‚ÆA‚»‚¤‚Å‚È‚¢‚à‚Ì‚ª‚ ‚éB
+	ŠÖ”Œ^ƒvƒƒOƒ‰ƒ~ƒ“ƒO‚É“K‚µ‚½ŠÖ”‚ÍA‰pš–¼‚Ìê‡‘å•¶š‚Ån‚Ü‚éB
+	‘å•¶š‚Ån‚Ü‚é“¯ˆê–¼‚ÌŠÖ”‚ª‚ ‚éê‡A¬•¶š‚Ån‚Ü‚éŠÖ”E‘€ì‚ÍAŒÃ‚¢’è‹`‚ÅAŒİŠ·«‚Ì‚½‚ß‚É‘¶İ‚·‚éB
+	‘å•¶š‚Ån‚Ü‚é“¯ˆê–¼‚ÌŠÖ”‚ª–³‚¢ê‡‚ÍA¬•¶š‚Ån‚Ü‚éŠÖ”E‘€ì‚àŠÖ”Œ^ƒvƒƒOƒ‰ƒ~ƒ“ƒO‚É“K‚µ‚Ä‚¢‚éB
+\subsubsection{QÆ}
+	‘½‚­‚ÌŠÖ”‚ÍAŠÖ”Œ^ƒvƒƒOƒ‰ƒ~ƒ“ƒOŒ¾ŒêConcurrent Clean‚Ìƒ‰ƒCƒuƒ‰ƒŠ[‚©‚çˆÚA‚µ‚½B
+
+\begin{vdm_al}	
+class Sequence
+
+values
+
+	Rcsid = "$Id: Sequence.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $";
+	
+functions 
+
+--—ñs‚Ì—v‘f‚Ì‡Œv‚ğ•Ô‚·B
+static public ƒ°[@Œ^]: seq of @Œ^ ->  @Œ^
+ƒ°(—ñ) == ƒ°•â•ŠÖ”[@Œ^](—ñ)(0)
+pre
+	is_(—ñ, seq of int) or is_(—ñ, seq of nat) or is_(—ñ, seq of nat1) or
+ 	is_(—ñ, seq of real) or is_(—ñ, seq of rat);
+
+static ƒ°•â•ŠÖ”[@Œ^] : seq of @Œ^ -> @Œ^ -> @Œ^
+ƒ°•â•ŠÖ”(—ñ)(‡Œv) ==
+	if —ñ = [] then
+		‡Œv
+	else
+		ƒ°•â•ŠÖ”[@Œ^](tl —ñ)(‡Œv + hd —ñ);
+
+--—ñs‚Ì‘S—v‘f‚ÌÏ‚ğ•Ô‚·
+static public ƒ®[@Œ^]: seq of @Œ^ ->  @Œ^
+ƒ®(—ñ) == ƒ®•â•ŠÖ”[@Œ^](1)(—ñ)
+pre
+	is_(—ñ, seq of int) or is_(—ñ, seq of nat) or is_(—ñ, seq of nat1) or
+ 	is_(—ñ, seq of real) or is_(—ñ, seq of rat);
+ 	
+static ƒ®•â•ŠÖ”[@Œ^] : @Œ^ -> seq of @Œ^ -> @Œ^
+ƒ®•â•ŠÖ”(Ï)(—ñ) ==
+	cases —ñ :
+	[æ“ª] ^ Œã‘±—ñ	-> ƒ®•â•ŠÖ”[@Œ^](Ï * æ“ª)(Œã‘±—ñ),
+	[]			-> Ï
+	end;
+
+--—ñs‚Ì—v‘f‚Ì•½‹Ï‚ğ‹‚ß‚é
+static public •½‹Ï‚ğ“¾‚é[@Œ^]: seq of @Œ^ ->  [real]
+•½‹Ï‚ğ“¾‚é(—ñ) == if —ñ = [] then nil else •½‹Ï‚ğ“¾‚é•â•ŠÖ”[@Œ^](0)(0)(—ñ);
+
+static •½‹Ï‚ğ“¾‚é•â•ŠÖ”[@Œ^] : @Œ^ -> @Œ^ -> seq of @Œ^ -> real
+•½‹Ï‚ğ“¾‚é•â•ŠÖ”(‡Œv)(—v‘f”)(—ñ) ==
+	cases —ñ :
+	[æ“ª] ^ Œã‘±—ñ	-> •½‹Ï‚ğ“¾‚é•â•ŠÖ”[@Œ^](‡Œv + æ“ª)(—v‘f” + 1)(Œã‘±—ñ),
+	[]			-> ‡Œv / —v‘f”
+	end;
+
+--ŠÖ”f‚Å—^‚¦‚ç‚ê‚½‘S‡˜‚ÅA—ñs‚Ì—v‘f‚ª¸‡‚Å‚ ‚é‚©”Û‚©‚ğ•Ô‚·B
+static public ‘S‡˜¸‡‚©H [@Œ^]:
+	(@Œ^ * @Œ^ -> bool) -> seq of @Œ^ -> bool
+‘S‡˜¸‡‚©H (‡˜Œˆ’èŠÖ”)(—ñ) ==
+	forall i,j  in set inds —ñ & i < j  => ‡˜Œˆ’èŠÖ”(—ñ(i),—ñ(j)) or —ñ(i) = —ñ(j);
+
+--ŠÖ”f‚Å—^‚¦‚ç‚ê‚½‘S‡˜‚ÅA—ñs‚Ì—v‘f‚ª~‡‚Å‚ ‚é‚©”Û‚©‚ğ•Ô‚·B
+static public ‘S‡˜~‡‚©H [@Œ^]:
+	(@Œ^ * @Œ^ -> bool) -> seq of @Œ^ -> bool
+‘S‡˜~‡‚©H (‡˜Œˆ’èŠÖ”)(—ñ) ==
+	forall i,j  in set inds —ñ & i < j  => ‡˜Œˆ’èŠÖ”(—ñ(j),—ñ(i)) or —ñ(i) = —ñ(j);
+
+--‰‰Zqƒ‚Å—^‚¦‚ç‚ê‚½‘S‡˜‚ÅA—ñs‚Ì—v‘f‚ª¸‡‚Å‚ ‚é‚©”Û‚©‚ğ•Ô‚·B
+static public ¸‡‚©H [@Œ^]: seq of @Œ^ -> bool
+¸‡‚©H(—ñ) ==
+	‘S‡˜¸‡‚©H [@Œ^](lambda x : @Œ^, y : @Œ^ & x < y)(—ñ);
+
+--‰‰Zqƒ‚Å—^‚¦‚ç‚ê‚½‘S‡˜‚ÅA—ñs‚Ì—v‘f‚ª~‡‚Å‚ ‚é‚©”Û‚©‚ğ•Ô‚·B
+static public ~‡‚©H[@Œ^]: seq of @Œ^ -> bool
+~‡‚©H(—ñ) ==
+	‘S‡˜~‡‚©H [@Œ^](lambda x : @Œ^, y : @Œ^ & x < y)(—ñ);
+
+--ŠÖ”f‚Å—^‚¦‚ç‚ê‚½‡˜‚ÅA—ñs‚Ì—v‘f‚ğ¸‡‚Éƒ\[ƒg‚·‚éB
+/*
+static public slowsort[@Œ^] : (@Œ^ * @Œ^ -> bool) -> seq of @Œ^ -> seq of @Œ^
+slowsort(‡˜Œˆ’èŠÖ”)(—ñ) ==
+	cases —ñ:
+		[]	-> [],
+		[—v‘f]	-> [—v‘f],
+		[—v‘f]^-	-> 
+			let	¶ = sort[@Œ^](‡˜Œˆ’èŠÖ”)([—ñ(i) | i in set inds —ñ & ‡˜Œˆ’èŠÖ”(—ñ(i),—v‘f)]),
+				’† = [—ñ(i) | i in set inds —ñ & not ‡˜Œˆ’èŠÖ”(—ñ(i),—v‘f) and
+                                                                     not ‡˜Œˆ’èŠÖ”(—v‘f,—ñ(i))],
+				‰E = sort[@Œ^](‡˜Œˆ’èŠÖ”)([—ñ(i) | i in set inds —ñ & ‡˜Œˆ’èŠÖ”(—v‘f,—ñ(i))])
+			in
+				¶ ^ ’† ^ ‰E
+	end;
+*/
+	
+--ŠÖ”f‚Å—^‚¦‚ç‚ê‚½‡˜‚ÅA—ñs‚Ì—v‘f‚ğ¸‡‚ÉƒNƒCƒbƒNƒ\[ƒg‚·‚éB
+static public sort[@Œ^] : (@Œ^ * @Œ^ -> bool) -> seq of @Œ^ -> seq of @Œ^
+sort(‡˜Œˆ’èŠÖ”)(—ñ) ==
+	cases —ñ:
+		[]	-> [],
+		[—v‘f]^•”•ª—ñ	-> 
+			sort[@Œ^](‡˜Œˆ’èŠÖ”)([•”•ª—ñ(i) | i in set inds •”•ª—ñ & ‡˜Œˆ’èŠÖ”(•”•ª—ñ(i),—v‘f)]) ^
+			[—v‘f] ^
+			sort[@Œ^](‡˜Œˆ’èŠÖ”)([•”•ª—ñ(i) | i in set inds •”•ª—ñ & not ‡˜Œˆ’èŠÖ”(•”•ª—ñ(i),—v‘f)])
+	end;
+
+--‰‰Zqƒ‚Å—^‚¦‚ç‚ê‚½‡˜‚ÅA—ñs‚Ì—v‘f‚ğ¸‡‚Éƒ\[ƒg‚·‚éB
+static public ¸‡Sort[@Œ^] : seq of @Œ^ -> seq of @Œ^
+¸‡Sort(—ñ) == sort[@Œ^](lambda x : @Œ^, y : @Œ^ & x < y)(—ñ);
+
+--‰‰Zq„‚Å—^‚¦‚ç‚ê‚½‡˜‚ÅA—ñs‚Ì—v‘f‚ğ¸‡‚Éƒ\[ƒg‚·‚éB‰‰Zqƒ‚©‚çŒ©‚ê‚Î~‡B
+static public ~‡Sort[@Œ^] : seq of @Œ^ -> seq of @Œ^
+~‡Sort(—ñ) == sort[@Œ^](lambda x : @Œ^, y : @Œ^ & x > y)(—ñ);
+
+--‡˜Œˆ’èŠÖ”—ñ‚Å—^‚¦‚ç‚ê‚½‡˜‚Å‚ ‚ê‚ÎtrueA‚»‚¤‚Å‚È‚¯‚ê‚Îfalse‚ğ•Ô‚·B
+static public ‡˜’Ê‚è‚©H[@Œ^] : seq of (@Œ^ * @Œ^ -> bool) -> seq of @Œ^ -> seq of @Œ^ -> bool
+‡˜’Ê‚è‚©H(‡˜Œˆ’èŠÖ”—ñ)(—ñ1)(—ñ2) ==
+	cases mk_(—ñ1,—ñ2):
+		mk_([],[])		-> false,
+		mk_([],-)		-> true,
+		mk_(-,[])	-> false,
+		mk_([æ“ª1]^Œã‘±1,[æ“ª2]^Œã‘±2)	->
+			if (hd ‡˜Œˆ’èŠÖ”—ñ)(æ“ª1,æ“ª2) then
+				true
+			elseif (hd ‡˜Œˆ’èŠÖ”—ñ)(æ“ª2,æ“ª1) then
+				false
+			else
+				Sequence`‡˜’Ê‚è‚©H[@Œ^](tl ‡˜Œˆ’èŠÖ”—ñ)(Œã‘±1)(Œã‘±2)
+	end;
+
+--ŠÖ”f‚Å—^‚¦‚ç‚ê‚½‡˜‚ÅA—ñs1,s2‚Ì—v‘f‚ğƒ}[ƒW‚·‚éB
+static public ƒ}[ƒW‚·‚é[@Œ^] : (@Œ^ * @Œ^ -> bool) -> seq of @Œ^ -> seq of @Œ^ -> seq of @Œ^
+ƒ}[ƒW‚·‚é(‡˜Œˆ’èŠÖ”)(s1)(s2) == 
+	cases mk_(s1,s2):
+		mk_([], y)						-> y,
+		mk_(x, [])						-> x,
+		mk_([æ“ª1]^Œã‘±1,[æ“ª2]^Œã‘±2)		->
+			if ‡˜Œˆ’èŠÖ”(æ“ª1,æ“ª2) then
+				[æ“ª1] ^ Sequence`ƒ}[ƒW‚·‚é[@Œ^](‡˜Œˆ’èŠÖ”)(Œã‘±1)(s2)
+			else
+				[æ“ª2] ^ Sequence`ƒ}[ƒW‚·‚é[@Œ^](‡˜Œˆ’èŠÖ”)(s1)(Œã‘±2)
+	end;
+
+--—ñ‚Ìw’è‚³‚ê‚½ˆÊ’u‚É—v‘f‚ğ’Ç‰Á‚·‚éB
+static public InsertAt[@Œ^]: nat1 -> @Œ^ -> seq of @Œ^ -> seq of @Œ^
+InsertAt(ˆÊ’u)(—v‘f)(—ñ) ==
+	cases mk_(ˆÊ’u, —ñ) :
+	mk_(1, —ñ)				-> [—v‘f] ^ —ñ,
+	mk_(-, [])				-> [—v‘f],
+	mk_(ˆÊ’u, [æ“ª] ^ Œã‘±—ñ)	-> [æ“ª] ^ InsertAt[@Œ^](ˆÊ’u - 1)(—v‘f)(Œã‘±—ñ)
+	end;
+
+--—ñ‚Ìw’è‚³‚ê‚½ˆÊ’u‚Ì—v‘f‚ğíœ‚·‚éB
+static public RemoveAt[@Œ^]: nat1 -> seq of @Œ^ -> seq of @Œ^
+RemoveAt(ˆÊ’u)(—ñ) ==
+	cases mk_(ˆÊ’u, —ñ) :
+	mk_(1, [-] ^ Œã‘±—ñ)		-> Œã‘±—ñ,
+	mk_(ˆÊ’u, [æ“ª] ^ Œã‘±—ñ)	-> [æ“ª] ^ RemoveAt[@Œ^](ˆÊ’u - 1)(Œã‘±—ñ),
+	mk_(-, [])				-> []
+	end;
+
+--—ñ‚©‚çd•¡‚·‚é—v‘f‚ğíœ‚·‚éB
+static public RemoveDup[@Œ^] :  seq of @Œ^ ->  seq of @Œ^
+RemoveDup(—ñ) == 
+	cases —ñ :
+	[æ“ª]^Œã‘±		-> [æ“ª] ^ RemoveDup[@Œ^](filter[@Œ^](lambda x : @Œ^ & x <> æ“ª)(Œã‘±)) ,
+	[]			-> []
+	end;
+	
+--—ñ‚©‚ç—v‘f‚ğíœ‚·‚é
+static public RemoveMember[@Œ^] :  @Œ^ -> seq of @Œ^ -> seq of @Œ^
+RemoveMember(—v‘f)(—ñ) == 
+	cases —ñ :
+	[æ“ª]^Œã‘±		-> if —v‘f = æ“ª then Œã‘± else [æ“ª] ^ RemoveMember[@Œ^](—v‘f)(Œã‘±),
+	[]			-> []
+	end;
+	
+--—ñ‚©‚ç—v‘f‚ğíœ‚·‚é
+static public RemoveMembers[@Œ^] :  seq of @Œ^ -> seq of @Œ^ -> seq of @Œ^
+RemoveMembers(—v‘f—ñ)(—ñ) == 
+	cases —v‘f—ñ :
+	[]			-> —ñ,
+	[æ“ª]^Œã‘±		-> RemoveMembers[@Œ^](Œã‘±)(RemoveMember[@Œ^](æ“ª)(—ñ))
+	end;
+
+--—ñ‚Ìw’è‚³‚ê‚½ˆÊ’u‚Ì—v‘f‚ğw’è‚³‚ê‚½V—v‘f‚Å’u‚«Š·‚¦‚éB
+static public UpdateAt[@Œ^]: nat1 -> @Œ^ -> seq of @Œ^ -> seq of @Œ^
+UpdateAt(ˆÊ’u)(—v‘f)(—ñ) ==
+	cases mk_(ˆÊ’u, —ñ) :
+	mk_(-, [])				-> [],
+	mk_(1, [-] ^ Œã‘±—ñ)		-> [—v‘f] ^ Œã‘±—ñ,
+	mk_(ˆÊ’u,  [æ“ª] ^ Œã‘±—ñ)	-> [æ“ª] ^ UpdateAt[@Œ^](ˆÊ’u - 1)(—v‘f)(Œã‘±—ñ)
+	end;
+
+--—ñ‚Ìæ“ªiŒÂ‚©‚ç‚È‚é—ñ‚ğ•Ô‚·B
+static public take[@Œ^]: int -> seq of @Œ^ -> seq of @Œ^
+take(i)(—ñ) == —ñ(1,...,i);
+
+--—ñ‚Ìæ“ª‚©‚çAŠÖ”‚ğ–‚½‚µ‘±‚¯‚éŠÔ‚Ì•”•ª—ñ‚ğ•Ô‚·B
+static public TakeWhile[@Œ^] : (@Œ^ -> bool) -> seq of @Œ^ ->seq of @Œ^
+TakeWhile(ŠÖ”)(—ñ) ==
+	cases —ñ :
+	[æ“ª] ^ Œã‘±—ñ	-> 
+		if ŠÖ”(æ“ª) then
+			[æ“ª] ^ TakeWhile[@Œ^](ŠÖ”)(Œã‘±—ñ)
+		else
+			[],
+	[]	-> []
+	end;
+
+--—ñ‚Ìæ“ªiŒÂ‚ğœ‚­—ñ‚ğ•Ô‚·B
+static public drop[@Œ^]: int -> seq of @Œ^ -> seq of @Œ^
+drop(i)(—ñ) == —ñ(i+1,...,len —ñ);
+
+--—ñ‚Ìæ“ª‚©‚çAŠÖ”‚ğ–‚½‚³‚È‚¢ŠÔ‚Ì•”•ª—ñ‚ğ•Ô‚·B
+static public DropWhile[@Œ^] : (@Œ^ -> bool) -> seq of @Œ^ ->seq of @Œ^
+DropWhile(ŠÖ”)(—ñ) ==
+	cases —ñ :
+	[æ“ª] ^ Œã‘±—ñ	-> 
+		if ŠÖ”(æ“ª) then
+			DropWhile[@Œ^](ŠÖ”)(Œã‘±—ñ)
+		else
+			—ñ,
+	[]	-> []
+	end;
+
+--w’è‚³‚ê‚½—ñ‚ğAæ“ª‚©‚çŠÖ”‚ğ–‚½‚µ‘±‚¯‚éŠÔ‚Ì—ñ‚ÆAŠÖ”‚ğ–‚½‚³‚È‚­‚È‚Á‚ÄˆÈ~‚Ì—ñ‚Ì‘g‚É•ª‚¯‚éB
+static public Span[@Œ^] : (@Œ^ -> bool) -> seq of @Œ^ -> seq of @Œ^ * seq of @Œ^
+Span(ŠÖ”)(—ñ) ==
+	cases —ñ :
+	[æ“ª] ^ Œã‘±—ñ	-> 
+		if ŠÖ”(æ“ª) then
+			let	mk_(ğŒ‚ğ–‚½‚·—ñ, ğŒ‚ğ–‚½‚³‚È‚¢—ñ) = Span[@Œ^](ŠÖ”)(Œã‘±—ñ)
+			in
+			mk_([æ“ª] ^ ğŒ‚ğ–‚½‚·—ñ, ğŒ‚ğ–‚½‚³‚È‚¢—ñ)
+		else
+			mk_([], —ñ),
+	[]	-> mk_([], [])
+	end;
+
+--—ñ‚ÌŠJnˆÊ’u‚©‚ç—v‘f”•ªæ‚èo‚µ‚½•”•ª—ñ‚ğ•Ô‚·
+static public SubSeq[@Œ^]: nat -> nat -> seq1 of @Œ^ -> seq of @Œ^
+SubSeq(ŠJnˆÊ’u)(—v‘f”)(—ñ) == —ñ(ŠJnˆÊ’u,...,ŠJnˆÊ’u+—v‘f”-1);
+
+--—ñ‚ÌÅŒã‚Ì—v‘f‚ğ•Ô‚·B
+static public last[@Œ^]: seq of @Œ^ -> @Œ^
+last(—ñ) == —ñ(len —ñ);
+
+--ŠÖ”‚ğ—ñ‚É“K—p‚µ‚½Œ‹‰Ê‚Ì—ñ‚ğ•Ô‚·B
+static public fmap[@Œ^1,@Œ^2]: (@Œ^1 -> @Œ^2) -> seq of @Œ^1 -> seq of @Œ^2
+fmap(ŠÖ”)(—ñ) == [ŠÖ”(—ñ(i)) | i in set inds —ñ];
+
+--ŠÖ”‚É‚æ‚Á‚Ä—ñ‚ğàh‰ß‚·‚éB‚Â‚Ü‚èA—ñ‚Ì‚¤‚¿ŠÖ”‚ğ–‚½‚·‚à‚Ì‚Ì—ñ‚ğ•Ô‚·B
+static public filter[@Œ^]: (@Œ^ -> bool) -> seq of @Œ^ -> seq of @Œ^
+filter(ŠÖ”)(—ñ) == [—ñ(i) | i in set inds —ñ & ŠÖ”(—ñ(i))];
+
+--—ñ‚É‘Î‚·‚é‚½‚½‚İ‚İ‰‰Zi¶‘¤‚©‚ç“K—p)
+static public Foldl[@Œ^1, @Œ^2] : 
+	(@Œ^1 -> @Œ^2 -> @Œ^1) -> @Œ^1 -> seq of @Œ^2 -> @Œ^1
+Foldl(ŠÖ”)(ˆø”)(—ñ) == 
+	cases —ñ :
+	[]			-> ˆø”,
+	[æ“ª] ^ Œã‘±—ñ	-> Foldl[@Œ^1,@Œ^2](ŠÖ”)(ŠÖ”(ˆø”)(æ“ª))(Œã‘±—ñ)
+	end;
+
+--—ñ‚É‘Î‚·‚é‚½‚½‚İ‚İ‰‰Zi‰E‘¤‚©‚ç“K—pj
+static public Foldr[@Œ^1, @Œ^2] : 
+	(@Œ^1 -> @Œ^2 -> @Œ^2) -> @Œ^2 -> seq of @Œ^1 -> @Œ^2
+Foldr(ŠÖ”)(ˆø”)(—ñ) == 
+	cases —ñ :
+	[]			-> ˆø”,
+	[æ“ª] ^ Œã‘±—ñ	-> ŠÖ”(æ“ª)(Foldr[@Œ^1,@Œ^2](ŠÖ”)(ˆø”)(Œã‘±—ñ))
+	end;
+
+--—v‘f‚ª‚ ‚é‚©”Û‚©‚ğ•Ô‚·B
+static public isMember[@Œ^] : @Œ^ -> seq of @Œ^ -> bool
+isMember(—v‘f)(—ñ) == 
+	cases —ñ :
+	[æ“ª]^Œã‘±		-> —v‘f = æ“ª or isMember[@Œ^] (—v‘f)(Œã‘±),
+	[]			-> false
+	end;
+
+--—v‘f—ñ’†‚Ì—v‘f‚ªA—ñ‚É‚ ‚é‚©”Û‚©‚ğ•Ô‚·B
+static public isAnyMember[@Œ^]:  seq of @Œ^ -> seq of @Œ^ -> bool
+isAnyMember(—v‘f—ñ)(—ñ) == 
+	cases —v‘f—ñ :
+	[æ“ª]^Œã‘±		->  isMember[@Œ^] (æ“ª)(—ñ) or isAnyMember[@Œ^] (Œã‘±)(—ñ) ,
+	[]			-> false
+	end;
+
+--w’è‚³‚ê‚½—v‘f‚ªA—ñ‚Ì‰½”Ô–Ú‚É‚ ‚é‚©‚ğ•Ô‚·BÅ‰‚Ì—v‘f‚ÌˆÊ’u‚ğ•Ô‚·B
+static public Index[@Œ^]: @Œ^ -> seq of @Œ^ -> int
+Index(—v‘f)(—ñ) == 
+	let	i = 0
+	in	Index•â•ŠÖ”[@Œ^](—v‘f)(—ñ)(i);
+
+static Index•â•ŠÖ”[@Œ^]: @Œ^ -> seq of @Œ^ -> int -> int
+Index•â•ŠÖ”(—v‘f)(—ñ)(õˆø) ==
+	cases —ñ:
+		[]			-> 0,
+		[æ“ª]^Œã‘±	->
+			if æ“ª = —v‘f then 
+				õˆø + 1
+			else
+				Index•â•ŠÖ”[@Œ^](—v‘f)(Œã‘±)(õˆø+1)
+	end;
+	
+--w’è‚³‚ê‚½—v‘f‚ªA—ñ‚Ì‰½”Ô–Ú‚É‚ ‚é‚©‚ğ‚ÂW‡‚ğ•Ô‚·B
+static public IndexAll[@Œ^] : @Œ^ -> seq of @Œ^ -> set of int
+IndexAll(—v‘f)(—ñ) == {i | i in set inds —ñ & —ñ(i) = —v‘f};
+	
+--—ñ‚Ì—v‘f‚ª—ñ‚Ìê‡A‚»‚Ì—v‘f‚ğ—v‘f‚Æ‚µ‚Ä‚Â—ñ‚ğ•Ô‚·B
+static public flatten[@Œ^] : seq of seq of @Œ^ -> seq of @Œ^
+flatten(—ñ) == conc —ñ;
+
+--—ñ‚Ì—v‘f‚ªnil‚Ì‚à‚Ì‚ğíœ‚µ‚½—ñ‚ğ•Ô‚·
+static public compact[@Œ^] : seq of [@Œ^] -> seq of @Œ^
+compact(—ñ) == [—ñ(i) | i in set inds —ñ & —ñ(i) <> nil];
+
+--—ñ‚Ì‹t‡‚Ì—ñ‚ğ“¾‚éBreverse‚ª—\–ñŒê‚Ì‚½‚ßAfreverse‚Æ‚¢‚¤ŠÖ”–¼‚É‚µ‚½B
+static public freverse[@Œ^] : seq of @Œ^ -> seq of @Œ^
+freverse(—ñ) == [—ñ(len —ñ + 1 -  i) | i in set inds —ñ];
+
+--—ñ‚©‚ç‡—ñ‚ğ“¾‚é
+static public Permutations[@Œ^]: seq of @Œ^ -> set of seq of @Œ^
+Permutations(—ñ) == 
+cases —ñ:
+	[],[-] -> {—ñ},
+	others -> dunion {{[—ñ(i)]^j | j in set Permutations[@Œ^](RestSeq[@Œ^](—ñ,i))} | i in set inds —ñ}
+end;
+
+--—ñ‚Ìi”Ô–Ú‚Ì—v‘f‚ğœ‚¢‚½c‚è‚Ì—ñ‚ğ•Ô‚·
+static public RestSeq[@Œ^]: seq of @Œ^ * nat -> seq of @Œ^
+RestSeq(—ñ,i) == [—ñ(j) | j in set (inds —ñ \ {i})];
+
+--‘g‚Ì—ñ‚ğA—ñ‚Ì‘g‚É•ÏŠ·‚·‚é
+static public Unzip[@Œ^1, @Œ^2] : seq of (@Œ^1 * @Œ^2) -> seq of @Œ^1 * seq of @Œ^2
+Unzip(—ñ) ==
+	cases —ñ :
+	[]				-> mk_([], []),
+	[mk_(x, y)] ^ Œã‘±—ñ	->
+		let	mk_(xs, ys) = Unzip[@Œ^1, @Œ^2](Œã‘±—ñ)
+		in
+		mk_([x] ^ xs, [y] ^ ys)
+	end;
+
+--—ñ‚Ì‘g‚ğA‘g‚Ì—ñ‚É•ÏŠ·‚·‚é
+static public Zip[@Œ^1, @Œ^2] : seq of @Œ^1 * seq of @Œ^2 -> seq of (@Œ^1 * @Œ^2)
+Zip(—ñ1, —ñ2) == Zip2[@Œ^1, @Œ^2](—ñ1)(—ñ2);
+\end{vdm_al}
+
+—ñ‚Ì‘g‚ğA‘g‚Ì—ñ‚É•ÏŠ·‚·‚éi‚æ‚èŠÖ”Œ^ƒvƒƒOƒ‰ƒ~ƒ“ƒO‚É“K‚µ‚½Œ`®j
+\begin{vdm_al}	
+static public Zip2[@Œ^1, @Œ^2] : seq of @Œ^1 -> seq of @Œ^2 -> seq of (@Œ^1 * @Œ^2)
+Zip2(—ñ1)(—ñ2) == 
+	cases mk_(—ñ1, —ñ2) :
+	mk_([æ“ª1] ^ Œã‘±—ñ1, [æ“ª2] ^ Œã‘±—ñ2)		-> [mk_(æ“ª1, æ“ª2)] ^ Zip2[@Œ^1, @Œ^2](Œã‘±—ñ1)(Œã‘±—ñ2),
+	mk_(-, -)							-> []
+	end;
+
+end Sequence
+\end{vdm_al}
+
+\begin{rtinfo}
+[Sequence]{vdm.tc}[Sequence]
+\end{rtinfo}

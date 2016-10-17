@@ -1,0 +1,11 @@
+functions
+
+MIter: (map nat to nat) * nat -> map nat to nat
+MIter(m1,n) ==
+  m1 ** n
+pre rng m1 subset dom m1
+
+--PO1
+--(forall m1 : (map nat to nat), m2 : (map nat to nat) &
+--   rng (m2) subset dom (m1) =>
+--   rng (m2) subset dom (m1))

@@ -1,0 +1,57 @@
+class AlwaysStmtTest
+
+types
+
+  A :: selid : nat
+       sel2 : bool
+
+operations
+
+  Always1: () ==> nat
+  Always1() ==
+  always let a = 7 in return a + 8
+  in return 0;
+
+  Always2: () ==> ()
+  Always2() ==
+  always exit 7
+  in
+    exit true;
+
+  Always3: () ==> nat | bool
+  Always3() ==
+  always let mk_A(n,b) = mk_A(7,let n = 5 in n) 
+         in 
+           if b
+           then return n
+           else return b
+  in
+    skip;
+
+  Always4: () ==> nat
+  Always4() ==
+  always Always3()
+  in
+    if true = false
+    then return 6
+    else exit 7;
+
+  Always5: A * nat ==> nat | bool
+  Always5(arg1, arg2) ==
+  always exit "test"
+  in
+  let mk_A(n,b) = arg1
+  in 
+    if b
+    then return n
+    else return b;
+
+  Always6: () ==> nat | bool
+  Always6() ==
+  always return 7
+  in
+    if 5 > 9
+    then Always5(mk_A(7,true),8)
+    else Always4()
+
+end AlwaysStmtTest

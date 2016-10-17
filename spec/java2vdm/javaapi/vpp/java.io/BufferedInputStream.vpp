@@ -1,0 +1,260 @@
+class JavaIoBufferedInputStream is subclass of JavaIoFilterInputStream
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaIoBufferedInputStream" , <CLASS> , false  )
+instance variables 
+  private  static defaultBufferSize : int  := 80; -- 2048;
+  protected  buf : map  int  to  int ;
+  protected  count : int ;
+  protected  pos : int ;
+  protected  markpos : int  := -1;
+  protected  marklimit : int 
+operations 
+private  fill : () ==> ()
+fill() == 
+( if  markpos < 0
+  then  
+    pos := 0
+  else  
+    if  pos >= (card  dom  buf)
+    then  
+      if  markpos > 0
+      then  
+        ( dcl   sz : int  := pos-markpos;
+--          let - = JavaLangSystem`arraycopy(buf , markpos , buf , 0 , sz)
+--          in 
+--            skip ;
+          for i=0 to sz-1
+          do buf(i):=buf(i+markpos);
+          pos := sz;
+          markpos := 0
+        ) 
+      else  
+        if  (card  dom  buf) >= marklimit
+        then  
+          ( markpos := -1;
+            pos := 0
+          ) 
+        else  
+          ( dcl   nsz : int  := pos*2;
+            if  nsz > marklimit
+            then  
+              nsz := marklimit;
+            ( dcl   nbuf : map  int  to  int  := {l_7 |-> 0|l_7 in set  {0,...,nsz-1}};
+--              let - = JavaLangSystem`arraycopy(buf , 0 , nbuf , 0 , pos)
+--              in 
+--                skip ;
+              for i=0 to pos-1
+              do nbuf(i):=buf(i);
+              buf := nbuf
+            ) 
+          ) ;
+  count := pos;
+  ( dcl   n : int; --   := in__.read(buf , pos , (card  dom  buf)-pos);
+    let mk_(l_n,l_buf) = in__.readMIIIntInt'(buf , pos , (card  dom  buf)-pos)
+    in
+    ( n:=l_n; buf:=l_buf);
+    if  n > 0
+    then  
+      count := n+pos
+  ) ;
+  skip 
+) ;
+
+public  read : () ==> int 
+read() == 
+( ensureOpen();
+  if  pos >= count
+  then  
+    ( fill();
+      if  pos >= count
+      then  
+        return  -1
+    ) ;
+  def l_6 = pos;
+  l_5 = l_6
+  in ( pos := l_6+1;
+    def l_3 = buf(l_5);
+    l_2 = J2VUTIL`BitOp(l_3 , <AND> , 255)
+    in return  l_2
+  ) 
+) ;
+
+public  close : () ==> ()
+close() == 
+( if  in__.IsNil()
+  then  
+    return  ;
+  in__.close();
+  in__ := new  JavaIoInputStream(<NIL>);
+  buf := {|->};
+  skip 
+) ;
+
+public  mark : int  ==> ()
+mark(readlimit) == 
+( marklimit := readlimit;
+  markpos := pos;
+  skip 
+) ;
+
+public  reset : () ==> ()
+reset() == 
+( ensureOpen();
+  if  markpos < 0
+  then  
+    exit  new  JavaIoIOException(new  JavaLangString("Resetting to invalid mark"));
+  pos := markpos;
+  skip 
+) ;
+
+public  skip__ : int  ==> int 
+skip__(n) == 
+( ensureOpen();
+  if  n <= 0
+  then  
+    ( return  0
+    ) ;
+  ( dcl   avail : int  := count-pos;
+    if  avail <= 0
+    then  
+      ( if  markpos < 0
+        then  
+          return  in__.skip__(n);
+        fill();
+        avail := count-pos;
+        if  avail <= 0
+        then  
+          return  0
+      ) ;
+    ( dcl   skipped : int  := if  (avail < n) then  avail else  n;
+      def l_3 = pos
+      in pos := l_3+skipped;
+      return  skipped
+    ) 
+  ) 
+) ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  available : () ==> int 
+available() == 
+( ensureOpen();
+  return  (count-pos)+in__.available()
+) ;
+
+private  ensureOpen : () ==> ()
+ensureOpen() == 
+( if  in__.IsNil()
+  then  
+    exit  new  JavaIoIOException(new  JavaLangString("Stream closed"));
+  skip 
+) ;
+
+public  markSupported : () ==> bool 
+markSupported() == 
+( return  true  
+) ;
+
+public  read : map  int  to  int  * int  * int  ==> int 
+read(b_, off, len__) == 
+  return undefined;
+
+public  readMIIIntInt' : map  int  to  int  * int  * int  ==> int * map  int  to  int 
+readMIIIntInt'(b_, off, len__) == 
+( dcl b: map  int  to  int := b_;
+  ensureOpen();
+  if  (off < 0) or  (off > (card  dom  b)) or  (len__ < 0) or  ((off+len__) > (card  dom  b)) or  ((off+len__) < 0)
+  then  
+    ( exit  new  JavaLangIndexOutOfBoundsException()
+    ) 
+  else  
+    if  len__ = 0
+    then  
+      ( return  mk_(0,{|->})
+      ) ;
+  ( dcl   n : int;  -- := read1(b , off , len__);
+    let mk_(l_n,l_b)=read1(b , off , len__)
+    in (n:=l_n; b:=l_b);
+    if  n <= 0
+    then  
+      return  mk_(n,b);
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip ,
+        others  -> 
+          exit  j2v_break
+      end  
+    in  
+      while  (n < len__) and  (in__.available() > 0) do  
+      ( dcl   n1 : int; --  := read1(b , off+n , len__-n);
+        let mk_(l_n1,l_b) =  read1(b , off+n , len__-n)
+        in ( n1:=l_n1; b:=l_b);
+        if  n1 <= 0
+        then  
+          exit  new  J2V_Break();
+        def l_3 = n
+        in n := l_3+n1
+      ) ;
+    return  mk_(n,b)
+  ) 
+) ;
+
+private  read1 : map  int  to  int  * int  * int  ==> int * map  int  to  int
+read1(b_, off, len__) == 
+( dcl b: map  int  to  int :=b_,
+      avail : int  := count-pos;
+  if  avail <= 0
+  then  
+    ( if  len__ >= (card  dom  buf) and  markpos < 0
+      then  
+--        ( return  in__.read(b , off , len__)
+        ( return  in__.readMIIIntInt'(b , off , len__)
+        ) ;
+      fill();
+      avail := count-pos;
+      if  avail <= 0
+      then  
+        return  mk_(-1,{|->})
+    ) ;
+  ( dcl   cnt : int  := if  (avail < len__) then  avail else  len__;
+--    let - = JavaLangSystem`arraycopy(buf , pos , b , off , cnt)
+--    in 
+--      skip ;
+    for i=off to off+cnt-1
+    do b(i):=buf(pos+i-off);
+    def l_3 = pos
+    in pos := l_3+cnt;
+    return  mk_(cnt, b)
+  ) 
+) ;
+
+public  JavaIoBufferedInputStream : <NIL> ==> JavaIoBufferedInputStream
+JavaIoBufferedInputStream(-) == 
+isNil := true  ;
+
+public  JavaIoBufferedInputStream : JavaIoInputStream ==> JavaIoBufferedInputStream
+JavaIoBufferedInputStream(in__) == 
+( let - = JavaIoBufferedInputStream(in__ , defaultBufferSize)
+  in 
+    skip 
+) ;
+
+public  JavaIoBufferedInputStream : JavaIoInputStream * int  ==> JavaIoBufferedInputStream
+JavaIoBufferedInputStream(in__, size) == 
+( let - = JavaIoFilterInputStream(in__)
+  in 
+    skip ;
+  if  size <= 0
+  then  
+    ( exit  new  JavaLangIllegalArgumentException(new  JavaLangString("Buffer size <= 0"))
+    ) ;
+  buf := {l_3 |-> 0|l_3 in set  {0,...,size-1}};
+  count :=0;
+  pos :=0;
+) ;
+
+
+end  JavaIoBufferedInputStream

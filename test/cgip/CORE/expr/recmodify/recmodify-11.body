@@ -1,0 +1,24 @@
+
+public Test : () ==> Person | <OK>
+Test () ==
+  trap true with return <OK> in
+    let urecord = mu(get(), adress |-> OpExit(),name |-> "Peter")
+      in return urecord;
+   
+OpExit: () ==> nat
+OpExit() ==
+  exit true;
+
+types
+
+public Person ::
+  adress : nat
+  name :- seq of char
+
+
+functions
+get: () -> Person
+get() ==
+  mk_Person(3,"Soren")
+
+end A

@@ -1,0 +1,4 @@
+# Check that repeated entries are spotted
+AddEnv 10;
+AddEnv 20;
+AddEnv 30

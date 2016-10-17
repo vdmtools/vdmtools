@@ -1,0 +1,5 @@
+# Wrong type for time 
+
+AddEnv 3;
+Addset 4;
+*   : nat   'a';

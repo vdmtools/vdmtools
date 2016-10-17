@@ -1,0 +1,112 @@
+\section{The REP2TYPE Module}
+
+\begin{vdm_al}
+module REP2TYPE
+
+imports
+
+  from AS  all,
+  from CI  all,
+  from REP all
+
+exports all
+
+definitions
+
+types
+   Type = AS`Type; -- | EmptyKind;
+
+   EmptyKind  = <EMPTYSETTYPEREP> | <EMPTYSEQTYPEREP> | <EMPTYMAPTYPEREP>;
+functions
+
+TypeRepToType: REP`TypeRep * CI`ContextId -> Type
+TypeRepToType(tyrep,cid) ==
+  let bottom_nm = mk_AS`Name(["bottom"],CI`NilContextId),
+      bottom    = mk_AS`TypeName(bottom_nm,CI`NilContextId),
+      top_nm    = mk_AS`Name(["top"],CI`NilContextId),
+      top       = mk_AS`TypeName(top_nm,CI`NilContextId),
+      nil_nm    = mk_AS`Name(["nilType"],CI`NilContextId),
+      nilType   = mk_AS`TypeName(nil_nm,CI`NilContextId)
+  in
+    cases tyrep:
+      mk_REP`InvTypeRep(-,shape,-) -> -- undefined, -- USED FOR WHAT.....???? For States!
+                                      TypeRepToType(shape,cid),
+      mk_REP`BooleanTypeRep() -> mk_AS`BooleanType(cid),
+      mk_REP`NumericTypeRep(typ) -> mk_AS`NumericType(typ,cid),
+      mk_REP`TokenTypeRep() -> mk_AS`TokenType(cid),
+      mk_REP`CharTypeRep() -> mk_AS`CharType(cid),
+      mk_REP`UnitTypeRep() -> mk_AS`VoidType(cid),
+      mk_REP`QuoteTypeRep(lit) -> mk_AS`QuoteType(mk_AS`QuoteLit(hd lit.ids,cid),cid),
+      mk_REP`CompositeTypeRep(nm,fields) ->
+        mk_AS`CompositeType(nm,
+          [mk_AS`Field(fields(i).sel,TypeRepToType(fields(i).tp,cid),false,cid) |  --- false or true - who knows !?!?!?!?!?
+           i in set inds fields],cid),
+      mk_REP`UnionTypeRep(type_set) ->
+        let ---- Remove empty set, seq, and map type rep and nil type rep ------
+            tyset  =  type_set \ {mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()),
+                                  mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
+                                  mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(),mk_REP`AllTypeRep()),
+                                  mk_REP`NilTypeRep()},
+            ----------- Call recursively on elements ---------------------------
+            argset = if exists tp in set type_set & is_REP`EmptySeqTypeRep(tp)
+                     then {if is_REP`SeqTypeRep(ty)
+                           then mk_AS`Seq0Type(TypeRepToType(ty.elemtp,cid),cid)
+                           else TypeRepToType(ty,cid) | ty in set tyset}
+                     else {TypeRepToType(ty,cid) | ty in set tyset},
+            ----------- Turn into AS union type ------------------------------
+            tyseq  = SetToSeq[AS`Type](argset),
+            as_tp  = if len tyseq = 1
+                     then hd tyseq
+                     else mk_AS`UnionType(tyseq,cid),
+            ----------- Handle nil type ----------------------------------------
+            opt_tp = if not mk_REP`NilTypeRep() in set type_set
+                     then as_tp
+                     else mk_AS`OptionalType(as_tp,cid)
+        in opt_tp,
+      mk_REP`ProductTypeRep(tylist) -> mk_AS`ProductType([TypeRepToType(tylist(i),cid) | i in set inds tylist],cid),
+      mk_REP`SetTypeRep(typ) -> mk_AS`Set1Type(TypeRepToType(typ,cid),cid),
+      mk_REP`SeqTypeRep(typ) ->  mk_AS`Seq1Type(TypeRepToType(typ,cid),cid),
+      mk_REP`GeneralMapTypeRep(mdom,mrng) -> mk_AS`GeneralMap1Type(TypeRepToType(mdom,cid),
+                                                                  TypeRepToType(mrng,cid),cid),
+      mk_REP`InjectiveMapTypeRep(mdom,mrng) -> mk_AS`InjectiveMap1Type(TypeRepToType(mdom,cid),
+                                                                      TypeRepToType(mrng,cid),cid),
+      mk_REP`PartialFnTypeRep(fndom,fnrng) -> mk_AS`PartialFnType([TypeRepToType(fndom(i),cid) | i in set inds fndom],
+                                                                   TypeRepToType(fnrng,cid),
+                                                                   cid),
+      mk_REP`TotalFnTypeRep(fndom,fnrng)   -> mk_AS`TotalFnType([TypeRepToType(fndom(i),cid) | i in set inds fndom],
+                                                                TypeRepToType(fnrng,cid),
+                                                                cid),
+      mk_REP`OpTypeRep(opdom,oprng) -> mk_AS`OpType([TypeRepToType(opdom(i),cid) | i in set inds opdom],
+                                                    TypeRepToType(oprng,cid),
+                                                    cid),
+#ifdef VICE
+      mk_REP`AnyOpTypeRep(),
+#endif VICE
+      mk_REP`AllTypeRep()         -> top,
+      mk_REP`TypeNameRep(nm)      -> mk_AS`TypeName(nm,cid),
+      mk_REP`TypeParRep(nm)       -> mk_AS`TypeName(nm,cid),
+      mk_REP`NilTypeRep()         -> nilType,
+      mk_REP`EmptySetTypeRep(-)   -> mk_AS`Set0Type(bottom,cid),
+      mk_REP`EmptySeqTypeRep(-)   -> mk_AS`Seq0Type(bottom,cid),
+      mk_REP`EmptyMapTypeRep(-,-) -> mk_AS`GeneralMap0Type(bottom,bottom,cid),
+#ifdef VDMPP
+      mk_REP`ObjRefTypeRep(nm)    -> mk_AS`TypeName(nm,cid),
+#endif VDMPP
+      mk_REP`TypeVarRep(nm)       -> mk_AS`TypeVar(nm,cid),
+      others -> undefined   -- WARNING: Unsupported type.
+    end
+  pre not is_REP`InvTypeRep(tyrep);
+
+  SetToSeq[@Elem]: set of @Elem -> seq of @Elem
+  SetToSeq(s) ==
+    if s = {} then []
+    else let x in set s in SetToSeq[@Elem](s\{x})^[x]
+
+end REP2TYPE
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[REP2TYPE`TypeRepToType]
+{rtinfo.ast}[REP2TYPE]
+\end{rtinfo}

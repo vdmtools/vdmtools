@@ -1,0 +1,22 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> inmap nat to nat  
+Test () ==
+( dcl A : inmap nat to nat := { 1|-> 2, 4|->5 };
+  dcl B : inmap nat to nat := { 7 |-> 8, 9|->10};
+
+return 
+         merge { A, B}		 
+
+)
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

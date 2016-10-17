@@ -1,0 +1,63 @@
+class JavaLangObject is subclass of Nullable
+
+values
+
+public static NIL : JavaLangObject = new JavaLangObject(<NIL>);
+
+--dlclass JavaLangObject is subclass of Nullable
+--uselib "j2vdll.so"
+operations 
+public JavaLangObject: <NIL> ==> JavaLangObject
+JavaLangObject(p) == isNil:=true;
+
+public  JavaLangObject : () ==> JavaLangObject
+JavaLangObject() ==
+--let - = Nullable() in skip;
+skip;
+
+public  wait : () ==> ()
+wait() == 
+is not yet specified ;
+
+public  clone : () ==> JavaLangObject
+clone() == 
+is not yet specified;
+
+public  wait : int  ==> ()
+wait(timeout) == 
+is not yet specified ;
+
+public  notify : () ==> ()
+notify() == 
+is not yet specified ;
+
+public  wait : int  * int  ==> ()
+wait(timeout, nanos) == 
+is not yet specified ;
+
+protected  finalize : () ==> ()
+finalize() == 
+is not yet specified ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+  return new JavaLangClass(<NIL>);
+--is not yet specified;
+
+public  hashCode : () ==> int 
+hashCode() == 
+is not yet specified ;
+
+public  toString : () ==> JavaLangString
+toString() == 
+is not yet specified ;
+
+public  notifyAll : () ==> ()
+notifyAll() == 
+is not yet specified ;
+
+public  equals : JavaLangObject ==> bool 
+equals(obj) == 
+  return self = obj;
+
+end  JavaLangObject

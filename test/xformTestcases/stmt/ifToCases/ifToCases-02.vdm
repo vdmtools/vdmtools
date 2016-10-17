@@ -1,0 +1,25 @@
+class A
+
+operations
+
+public Oper: nat * nat ==> nat
+Oper(a,b) ==
+  is not yet specified;
+
+public Test : () ==> nat  
+Test () ==
+( 
+	cases true:
+	true -> ( dcl x : nat := 5;
+		if x = 1 
+		then 
+			return 1
+		elseif (x = 2) 
+			then return 2),
+	others -> return 0
+	end;	
+
+	return 1
+)
+   
+end A

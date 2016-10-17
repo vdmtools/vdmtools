@@ -1,0 +1,75 @@
+class A
+end A
+
+class B
+
+  instance variables
+    ba : nat;
+    bb : bool
+
+end B
+
+class InstVarTest1 is subclass of B
+
+  instance variables
+    a : nat := 10;
+    b : A := new A();
+    c : bool;
+    inv c => (a < 8);
+    inv (if 1=2 then b else true) <> c and a > 8;
+
+end InstVarTest1
+
+
+class InstVarTest2 is subclass of B
+
+  instance variables
+    a : nat := b;
+    b : A := let one = 1 in a+one;
+    c : bool;
+    inv c => (a < 8);
+    inv b <> c and a > 8;
+
+end InstVarTest2
+
+class InstVarTest3 is subclass of B
+
+  instance variables
+    a : nat := b;
+    b : A := let t = true in t;
+    c : bool;
+    inv let n = 8 in c => (a < 8) and n;
+    inv b <> c and a > 8;
+
+end InstVarTest3
+
+class InstVarTest4 is subclass of B
+
+  instance variables
+    a : nat;
+    b : A := let n = 10 in if 1=2 then new A() else n;
+    c : bool;
+
+end InstVarTest4
+
+class InstVarTest5 is subclass of B
+
+  instance variables
+    b : A := (new C()).m();
+
+end InstVarTest5
+
+class C is subclass of A
+
+operations
+public  m: () ==> C
+  m() == return self
+
+end C
+
+class InstVarTest6 is subclass of B
+
+  instance variables
+    b : A | B := self;
+
+end InstVarTest6

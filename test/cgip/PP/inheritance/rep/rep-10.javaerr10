@@ -1,0 +1,2 @@
+A qualified method call is code generated as this.SetVal or super.SetVal.
+It is not possible to call SetVal in class A.

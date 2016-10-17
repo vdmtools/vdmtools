@@ -1,0 +1,15 @@
+class A
+types
+
+  A = set of (nat -> nat);
+
+  B = map A to nat;
+
+  C = map (bool -> bool) to [bool];
+
+  D = nat * (bool -> bool) * token
+  inv mk_(a,b,c) == 
+    b(true) and a/a < 7;
+
+
+end A

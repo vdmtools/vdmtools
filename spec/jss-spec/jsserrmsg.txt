@@ -1,0 +1,53 @@
+######################################################################
+### This file describes the error messages of the Java static semantic
+### It is used to generate both the VDM-SL module and the 
+### C file.
+###
+### The syntax is very simple:
+### Lines starting with # and blank lines are ignored.
+### every second line is the number of the message, and every second line
+### is the message.
+######################################################################
+
+
+
+
+######################################################################
+###          Java statements
+######################################################################
+1
+Labels at end of switch statement are not supported
+2
+Each case alternative should break at the end
+3
+Break to a specific label is not supported
+4
+Continue to a specific label is not supported
+5
+Local function definitions are not supported
+6
+Nested class or interface declarations are not supported
+7
+The Identifier '%1' was not found
+8
+The Class/Interface '%1' is not part of this project
+9
+The Constructor '%1' was not found
+10
+The overloading for the method '%1' cannot be translated to VDM++
+11
+The class '%1' is included multiple times
+12
+'%1' is a reserved keyword in VDM++
+13
+The synchronized modifier is not supported
+14
+Synchonized statements are not supported
+15
+The Identifier '%1' has ambiguous definitions
+16
+The Identifier '%1' has ambiguous definitions with a super Class/Interface
+17
+The Method '%1' was not found in class '%2' or its supers
+18
+For each statement is not supported

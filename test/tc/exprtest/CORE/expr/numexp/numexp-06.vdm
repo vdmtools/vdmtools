@@ -1,0 +1,23 @@
+class NumExpTest 
+  functions
+
+  f : nat -> nat
+  f(n) ==
+    n + 1;
+
+  g: nat -> bool
+  g(n) ==
+   n = 9
+    
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = (if 6 = 9 then 7 elseif true = false then {3 |-> 3} else f)** 8
+  in skip;
+
+------------------------------------------------------------------------------
+end NumExpTest

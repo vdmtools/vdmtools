@@ -1,0 +1,86 @@
+class RetrofitEntry is subclass of Vector
+operations 
+public  getRetrofits : () ==> [Vector]
+getRetrofits() == 
+( return  self  
+) ;
+
+public  RetrofitEntry : () ==> RetrofitEntry
+RetrofitEntry() == 
+( let - = RetrofitEntry(nil  )
+  in 
+    skip ;
+  return  
+) ;
+
+public  getTailNumber : () ==> [String]
+getTailNumber() == 
+( return  aircraft.getTailNumber()
+) ;
+
+public  getAircraftType : () ==> [String]
+getAircraftType() == 
+( dcl   acTypeStr : [String] := new  String([  ]);
+  if  aircraft <> nil  
+  then  
+    ( acTypeStr := aircraft.getAcType().getMDS()
+    ) ;
+  return  acTypeStr
+) ;
+
+public  addRetrofit : [String] ==> <VOID>
+addRetrofit(myRetrofit) == 
+( dcl   addCompleted : bool  := false  ;
+  ( dcl   idx : int  := 0;
+    while  idx < RetrofitEntry`size() and  not  addCompleted do  
+    ( dcl   nextEntry : [String] := RetrofitEntry`elementAt(idx),
+            entryComparison : int  := myRetrofit.compareTo(nextEntry);
+      if  entryComparison < 0
+      then  
+        ( let - = RetrofitEntry`insertElementAt(myRetrofit , idx)
+          in 
+            skip 
+        ) ;
+      addCompleted := (entryComparison <= 0);
+      idx := idx+1
+    ) 
+  ) ;
+  if  not  addCompleted
+  then  
+    ( let - = RetrofitEntry`addElement(myRetrofit)
+      in 
+        skip 
+    ) ;
+  return  
+) ;
+
+public  setAircraft : [Aircraft] ==> <VOID>
+setAircraft(aircraft) == 
+( RetrofitEntry`aircraft := aircraft;
+  return  
+) ;
+
+public  RetrofitEntry : [Aircraft] ==> RetrofitEntry
+RetrofitEntry(aircraft) == 
+( let - = RetrofitEntry`setAircraft(aircraft)
+  in 
+    skip 
+) ;
+
+public  setRetrofits : map  int  to  [String] ==> <VOID>
+setRetrofits(retrofitList) == 
+( ( dcl   idx : int  := 0;
+    while  idx < retrofitList.length do  
+    ( let - = addRetrofit(retrofitList(idx))
+      in 
+        skip ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  
+) ;
+
+instance variables 
+  private  aircraft : [Aircraft] := nil  
+  
+end  RetrofitEntry

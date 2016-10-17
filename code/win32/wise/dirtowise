@@ -1,0 +1,138 @@
+#! /usr/bin/perl
+
+require 5.003;
+
+# 
+use File::Basename;
+
+sub WiseHeader
+{
+    print "Document Type: WSE\r\n";
+    print "item: Global\r\n  Version=5.0\r\nend\r\n"; 
+}
+
+sub WiseInstallFile
+{
+    my ($file, $d) = @_;
+    $file =~ s|/|\\|g; 
+    print "item: Install File\r\n";
+    print "  Source=$file\r\n";
+    print "  Destination=\%MAINDIR\%\\$d\r\n";
+    print "  Flags=0000000000000010\r\n";
+    print "end\r\n";
+}
+
+sub WiseShortcut
+{
+    my ($link_name, $dest) = @_; 
+    print LINKFILE "item: Check Configuration\r\n";
+    print LINKFILE "  Flags=10111011\r\n";
+    print LINKFILE "end\r\n";
+    print LINKFILE "item: Create Shortcut\r\n";
+    print LINKFILE "  Source=%MAINDIR%\\$dest\r\n";
+    print LINKFILE "  Destination=%CGROUPDIR%\\VDMTools\\$link_name.lnk\r\n";
+    print LINKFILE "  Working Directory=%MAINDIR_LONG%\\examples\r\n";
+    print LINKFILE "  Icon Number=0\r\n";
+    print LINKFILE "  Description=$link_name\r\n";
+    print LINKFILE "  Key Type=1536\r\n";
+    print LINKFILE "  Flags=00000001\r\n";
+    print LINKFILE "end\r\n";
+    print LINKFILE "item: Else Statement\r\n";
+    print LINKFILE "end\r\n";
+    print LINKFILE "item: Add ProgMan Icon\r\n";
+    print LINKFILE "Group=%GROUP%\r\n";
+    print LINKFILE "  Icon Name=$link_name\r\n";
+    print LINKFILE "  Command Line=%MAINDIR%\\$dest\r\n";
+    print LINKFILE "end\r\n";
+    print LINKFILE "item: End Block\r\n";
+    print LINKFILE "end\r\n";
+}
+
+
+WiseHeader;
+
+sub GetRecurseFiles
+{
+    my ($exc, $dir) = @_;
+    open FILES, "find $dir -type f -printf \"\%P\\r\n\" |" or die;
+    my @files = map { s/\r?\r\n//; $f=basename($_);
+                      grep($f eq $_, @$exc)==0 ? $_: ();
+                  } <FILES>;
+    @files; 
+}
+
+my ($source, $strip, $dest, $link_name, $link_file);
+
+while (@ARGV>0) {
+    # Arg:
+    # source_dir, strip_dirs, dest_dest
+    # print STDERR "argv=@ARGV\r\n"; 
+    if ($ARGV[0] eq '-L') {
+        shift; 
+        $link_file = shift; 
+    }
+    if ($ARGV[0] eq '-x') {
+        shift; 
+        push @exclude, shift;
+    }
+    if ($ARGV[0] eq '-r') {
+        shift;
+        $source = shift; 
+        die "Link name already given: $link_name\r\n" if $link_name ne ''; 
+        push @jobfiles,  [ $dest, $strip, $source, $link_name,
+                          GetRecurseFiles(\@exclude,$source) ];
+        @exclude = (); 
+    }
+    elsif ($ARGV[0] eq '-s') {
+        shift; 
+        $strip = shift;
+    } 
+    elsif ($ARGV[0] eq '-d') {
+        shift;
+        $dest = shift;
+    }
+    elsif ($ARGV[0] eq '-l') {
+        shift; 
+        die "Link name already given: $link_name\r\n" if $link_name ne ''; 
+        die "No link file given (-L)\r\n" if $link_file eq ''; 
+        $link_name = shift; 
+    } else {
+        $source = shift;
+        $file = basename($source);
+        $source = dirname($source);
+        die "Excluded [@exclude]\r\n" if @exclude >0; 
+        push @jobfiles , [ $dest, 0, $source, $link_name, $file ];
+        $link_name = ''; 
+        @exclude = (); 
+    }
+}
+if ($link_file ne '') {
+    open LINKFILE, ">$link_file" or die "open $link_file failed"; 
+    print LINKFILE "Document Type: WSE\r\n";
+    print LINKFILE "item: Global\r\n  Version=5.0\r\nend\r\n"; 
+}
+
+while (@jobfiles >0) {
+    $j = shift @jobfiles;
+    my ($dest, $strip, $source, $link_name, @files) = @$j; 
+    print STDERR "dest=$dest,strip=$strip,source=$source,link='$link_name',files=@files[0..5]\r\n";
+    $dest =~ s|/|\\|g; 
+    while (@files >0) {
+        $_ = shift @files; 
+        # print STDERR "\$_=:$_:\r\n"; 
+        @f = split /\/+/, $_;
+        if (@f < $strip) {
+            die "Path to short to strip $strip: $_\r\n";
+            next;
+        }
+        splice @f, 0, $strip;
+        @dest = ($dest ne '' ? ($dest) : ()); 
+        $f = join "\\", @dest, @f;
+        WiseInstallFile $source."/".$_, $f; 
+        if ($link_name ne '') {
+            WiseShortcut $link_name, $f; 
+        }
+        # print STDERR $_, " -> ", $f, "\r\n"; 
+    }
+}
+close LINKFILE if $link_file ne ''; 

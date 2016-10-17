@@ -1,0 +1,120 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Test interfaces for the test environment on the specificaiton level,
+%    and for the debugging on specification level.
+% $Id: test.vdm,v 1.2 2001/02/22 07:56:39 peter Exp $
+% Implemented in: No where! This is a backdoor for testing.
+%--------------------------------------------------------------------------------
+
+\chapter{The Test Back Door}
+
+The module Test is a back door used by the test environment and by the
+developer when debugging on specification level.
+
+\begin{vdm_al}
+
+module TEST
+
+imports
+  from AS all,
+  from REP all,  
+  from CI all,
+  from SETTINGS all,
+  from PAT all,
+  from DEBUG all,
+  from DEBUGTP all,
+  from CMPL all,
+  from STKM all,
+  from INSTR all,
+  from INSTRTP all,
+  from SEM all,
+  from GLOBAL all,
+#ifdef VDMPP
+  from SCHDTP all,
+#ifdef VICE
+  from SCHD all,
+  from TIMEMAP all,
+  from TIMEPARSER all,
+  from PRIORITY all,
+  from TESTSETTINGS all,
+  from VC all,
+  from OPTIONS
+    operations SetOptions: () ==> (),
+#endif VICE
+#endif VDMPP
+  from RTERR all
+
+exports all
+definitions 
+
+operations
+
+test: AS`AstCI * AS`AstCI * bool ==> SEM`VAL | SEM`VAL * SEM`VAL
+test(mk_AS`AstCI(arg, tllci_expr, fidm_expr), mk_AS`AstCI(ast, tllci, fidm), dtc) == 
+ (if dtc
+  then
+   (SETTINGS`DtcOn();
+    SETTINGS`PreOn();
+    SETTINGS`InvOn();
+    SETTINGS`PostOn();
+   )
+  else
+   (SETTINGS`DtcOff();
+    SETTINGS`PreOff();
+    SETTINGS`InvOff();
+    SETTINGS`PostOff();
+   );
+  --SETTINGS`CasesOn();
+  --SETTINGS`RTErrExceptionOn();
+#ifdef VICE
+  SETTINGS`PriorityBasedOn();
+  --SETTINGS`PriorityBasedOff();
+#endif VICE
+
+  CI`UpdateStateSigma(tllci, fidm);
+  CI`UpdateStateSigma(tllci_expr, fidm_expr);
+  
+#ifdef VICE
+  VC`AddInstVarLog(<ALL>);
+  SETTINGS`SetVirtualCPUCapacity(10E15);
+  CMPL`SetTM(TIMEMAP`defaultTimemap());
+--  SCHD`SetPriorityMap(SCHD`MakePriorityMap(PRIORITY`priorityFile));
+
+  OPTIONS`SetOptions();
+#endif VICE
+
+
+  STKM`User_Init(ast, true); 
+  
+  def mk_(eval_state, res) = DEBUG`EvalDebug(arg, "Dummy String")
+  in
+    if true
+    then
+      cases eval_state:
+        mk_STKM`Breakpoint(),
+        mk_STKM`Interrupt() -> error,
+        mk_STKM`Success() -> return res
+      end
+    else -- to check if User_Init works with 'false' argument
+     (STKM`User_Init(ast, false); 
+       
+      def mk_(eval_state2, res2) = DEBUG`EvalDebug(arg, "Dummy String")
+      in
+       (if (eval_state <> eval_state2 or eval_state2 <> mk_STKM`Success())
+        then RTERR`Error(RTERR`INTERNAL_ERROR,nil,nil,[]);
+        if res <> res2
+        then return mk_SEM`TUPLE([res,res2]);
+
+        cases eval_state2:
+          mk_STKM`Breakpoint(),
+          mk_STKM`Interrupt() -> error,
+          mk_STKM`Success() -> return res
+        end;
+       )
+     ); 
+);
+
+
+
+end TEST
+\end{vdm_al}

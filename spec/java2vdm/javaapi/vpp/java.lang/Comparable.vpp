@@ -1,0 +1,12 @@
+class JavaLangComparable is subclass of JavaLangObject
+operations 
+JavaLangComparable: <NIL> ==> JavaLangComparable
+JavaLangComparable(-) ==
+isNil:=true;
+
+public  compareTo : JavaLangObject ==> int 
+compareTo(o) == 
+is not yet specified;
+
+
+end  JavaLangComparable

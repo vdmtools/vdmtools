@@ -1,0 +1,54 @@
+module A
+
+exports all
+
+definitions
+
+types 
+
+R :: f1 : nat
+     f2 : bool
+     f3 : seq of char
+
+functions
+
+f : R -> bool
+f(mk_R(n, b, t)) == b <=> len t = n ;
+
+
+end A
+
+module B
+
+imports from A
+  types R :: f1 : nat
+     f2 : bool
+     f3 : seq of char
+  renamed W
+  
+  
+
+definitions
+
+functions
+
+g : W -> W
+g(w) == mu(w, f2 |-> false);
+
+end B
+
+module C
+
+imports
+  from A all,
+  from B all
+
+definitions
+
+operations
+
+Test : () ==> bool
+Test() ==
+  return A`f(B`g(mk_A`R(3, true, "hi")))
+
+end C

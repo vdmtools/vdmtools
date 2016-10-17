@@ -1,0 +1,15 @@
+import jp.vdmtools.VDM.*
+
+public class TMAIN
+{
+  public static void main(String args) 
+  {
+  
+      //--------------- Initialization ---------------------------------------
+      <<INIT>>
+      //----------------------------------------------------------------------
+
+      println(<<MOD>>_<<OP>>.toString());
+  }
+}
+

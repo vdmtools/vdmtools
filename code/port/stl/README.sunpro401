@@ -1,0 +1,71 @@
+Note for SUNPro C++ 4.0.1 users
+
+----------------------------------------------------------------------------
+
+Known problems
+
+Version problems
+
+If your CC 4.0.1 cannot compile testsuite, most likely you are using out-of
+date version. You should download patch for 4.0.1 from SunPro site :
+
+http://www.sun.com/smcc/solaris-migration/cmc.products.970709/XCM/101914-14.tar.Z
+(SunOS 4.1.x)
+
+Compiling
+
+C++ 4.0.1 have problems recognizing types nested in template classes when
+parsing declarations. For example , the following construct fails (suppose
+STL vector is a base type for derived_vector ):
+
+derived_vector<int> years;
+derived_vector<int>::iterator i;
+
+To work around this problem completely, you should repeat those typedefs
+from base class that you are going to use in any way:
+
+template <class T> class derived_vector : public vector<T> {
+typedef vector<T>::iterator iterator;
+...
+
+More severe problems arise when given template argument's typedefs are used
+as template arguments for base class. The example is function adaptors from
+function.h . Refer to workarounds for binders & composers to see how it can
+be hanled ( proposed by "Martin Abernethy" <gma@paston.co.uk> ).
+
+C++ 4.01 may also suffer from optimization bugs when using exception
+handling. If your application doesn't use exceptions, you'd better use -noex
+option along with __STL_NO_EXCEPTIONS flag.
+
+Linking
+
+You may still have to use explicit instantiations and/or specific template
+database controls for complex cases to avoid "unresolved symbol" linker
+errors.
+
+You may have troubles getting linker errors compiling multiple targets in
+one directory ( for example, running cygnus testsuite). That is a bug in
+handling Templates.DB dependencies. Known solutions are :
+
+a) for one-file tests, specify option -pto (one-file-mode) option to turn
+off database completely. Option -pts(single-file-mode) doesn't fix all
+problems.
+
+b) for complex projects, use separate Templates.DB directories for different
+targets.
+
+----------------------------------------------------------------------------
+
+Migration notes
+
+You should experience no other problems migrating from HP STL to SGI STL.
+
+----------------------------------------------------------------------------
+
+Versions prior to 4.1
+
+SUNPro C++ older than 4.0.1 won't compile STL. You had to upgrade.
+
+----------------------------------------------------------------------------
+
+Last updated : Sept 1, 1997.

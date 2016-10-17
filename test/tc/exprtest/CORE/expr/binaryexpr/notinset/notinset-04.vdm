@@ -1,0 +1,13 @@
+class BinaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = nil not in set {}
+  in skip;
+
+------------------------------------------------------------------------------
+end BinaryTest

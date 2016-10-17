@@ -1,0 +1,51 @@
+class JavaUtilZipZipConstants
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaUtilZipZipConstants" , <INTERFACE> , false  )
+instance variables 
+  public  static LOCSIG : int :=0;
+  public  static EXTSIG : int :=0;
+  public  static CENSIG : int :=0;
+  public  static ENDSIG : int :=0;
+  public  static LOCHDR : int :=0;
+  public  static EXTHDR : int :=0;
+  public  static CENHDR : int :=0;
+  public  static ENDHDR : int :=0;
+  public  static LOCVER : int :=0;
+  public  static LOCFLG : int :=0;
+  public  static LOCHOW : int :=0;
+  public  static LOCTIM : int :=0;
+  public  static LOCCRC : int :=0;
+  public  static LOCSIZ : int :=0;
+  public  static LOCLEN : int :=0;
+  public  static LOCNAM : int :=0;
+  public  static LOCEXT : int :=0;
+  public  static EXTCRC : int :=0;
+  public  static EXTSIZ : int :=0;
+  public  static EXTLEN : int :=0;
+  public  static CENVEM : int :=0;
+  public  static CENVER : int :=0;
+  public  static CENFLG : int :=0;
+  public  static CENHOW : int :=0;
+  public  static CENTIM : int :=0;
+  public  static CENCRC : int :=0;
+  public  static CENSIZ : int :=0;
+  public  static CENLEN : int :=0;
+  public  static CENNAM : int :=0;
+  public  static CENEXT : int :=0;
+  public  static CENCOM : int :=0;
+  public  static CENDSK : int :=0;
+  public  static CENATT : int :=0;
+  public  static CENATX : int :=0;
+  public  static CENOFF : int :=0;
+  public  static ENDSUB : int :=0;
+  public  static ENDTOT : int :=0;
+  public  static ENDSIZ : int :=0;
+  public  static ENDOFF : int :=0;
+  public  static ENDCOM : int :=0
+operations 
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+
+end  JavaUtilZipZipConstants

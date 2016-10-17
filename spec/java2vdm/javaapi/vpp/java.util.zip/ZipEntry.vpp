@@ -1,0 +1,31 @@
+class JavaUtilZipZipEntry is subclass of JavaLangObject
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaUtilZipZipEntry" , <CLASS> , false  )
+
+operations 
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  JavaUtilZipZipEntry : <NIL> ==> JavaUtilZipZipEntry
+JavaUtilZipZipEntry(-) == 
+isNil := true  ;
+
+public  JavaUtilZipZipEntry : JavaLangString ==> JavaUtilZipZipEntry
+JavaUtilZipZipEntry(-) == 
+skip  ;
+
+public  close : () ==> ()
+close() == 
+skip  ;
+
+public getName : () ==> JavaLangString
+getName() == 
+  is not yet specified;
+
+public getSize : () ==> int
+getSize() == 
+  is not yet specified;
+
+end JavaUtilZipZipEntry

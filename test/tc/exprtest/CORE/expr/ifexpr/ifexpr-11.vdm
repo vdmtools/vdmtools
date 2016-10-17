@@ -1,0 +1,47 @@
+class IfExprTest
+functions
+
+  f : () -> inmap rat to nat
+  f() ==
+    {2 |-> 5}
+  pre true
+--  post true
+
+types
+
+  A :: a: int
+       b: bool
+
+values
+
+  v1 : A = mk_A(1,true);
+  n : real = 88
+    
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let  t = true,
+      nn = nil,
+     - = let m:real =
+        if n=1
+	then t
+	elseif n=4
+        then if true
+             then t
+             else [8]
+        elseif n=5
+        then cases 8:
+               5.6 -> {1|->2},
+               [] ^ s -> nn,
+               others -> f
+             end
+	else nn
+        in m 
+  in skip;
+
+------------------------------------------------------------------------------
+end IfExprTest

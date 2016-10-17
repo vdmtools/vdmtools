@@ -1,0 +1,42 @@
+-- test of optional-type
+
+class A
+
+instance variables
+  x : [real] := nil;
+  i : [int];      
+  state1        : [B] := nil;
+  state        : [B] := new B();
+
+operations
+  public Test : () ==> set of int
+  Test() ==
+    (if state1 = nil then state:=nil;
+     i := nil;
+     state := new B();
+    return { a.getInfo() |
+             a in set state.getelements()});
+
+end A
+
+class B
+
+operations
+public getelements:() ==> set of C
+getelements()==return {new C()}
+
+end B
+
+class C
+operations
+
+public getInfo:() ==> int
+getInfo()==
+return 1;
+
+getInfo2:() ==> [B]
+getInfo2()==
+return nil
+
+end C
+

@@ -1,0 +1,5 @@
+# Check that syntax error is spotted - missing time
+
+AddEnv 3;
+Update 4;
+*   : nat   

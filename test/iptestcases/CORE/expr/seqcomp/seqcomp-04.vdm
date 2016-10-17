@@ -1,0 +1,13 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of int 
+Test () ==
+return 
+    [ a | mk_(a,-) in set {mk_(3,1),mk_(5,1)} ]
+
+end A

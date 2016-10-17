@@ -1,0 +1,131 @@
+\documentclass[a4paper,10pt]{jsarticle}
+%\documentclass[a4paper,10pt]{jsbook}
+
+\usepackage[dvipdfm]{graphicx, color}
+%\usepackage{folha}
+\graphicspath{{image/}}
+
+\usepackage{color}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{alltt}
+\usepackage{graphics}
+\usepackage{vpp-nms}
+%\usepackage{vpp}
+\usepackage{makeidx}
+\makeindex
+
+\usepackage{colortbl}
+
+\usepackage[dvipdfm,bookmarks=true,bookmarksnumbered=true,colorlinks,plainpages=true]{hyperref}
+
+%\AtBeginDvi{\special{pdf:tounicode 90ms-RKSJ-UCS2}}
+\AtBeginDvi{\special{pdf:tounicode EUC-UCS2}}
+
+
+\definecolor{covered}{rgb}{0,0,0}      %black
+\definecolor{not-covered}{rgb}{1,0,0}  %red
+
+\setcounter{secnumdepth}{6}
+\makeatletter
+\renewcommand{\paragraph}{\@startsection{paragraph}{4}{\z@}%
+  {1.5\Cvs \@plus.5\Cdp \@minus.2\Cdp}%
+  {.5\Cvs \@plus.3\Cdp}%
+  {\reset@font\normalsize\bfseries}}
+\makeatother
+
+\renewcommand{\sf}{\sffamily \color{blue}}
+
+\newcommand{\syou}{\texttt{<}}
+\newcommand{\dai}{\texttt{>}}
+
+%\include{Title}
+
+%\pagestyle{empty}
+\usepackage{fancyhdr}
+\usepackage{lastpage} 
+  \pagestyle{fancy} 
+   \let\origtitle\title 
+  \renewcommand{\title}[1]{\lfoot{#1}\origtitle{#1}}
+
+  \rfoot{\today}
+  \rhead{[\ \scshape\oldstylenums{\thepage}\ / %
+      \scshape\oldstylenums{\pageref{LastPage}}\ ]}
+  \cfoot{}
+
+
+\begin{document}
+
+% the title page
+\title{VDM++関数型ライブラリのドキュメント雛形}
+\author{佐原　伸\\\\
+(株)CSK\\
+}
+%\institute{\pgldk \and \chessnl}
+\date{\mbox{}}
+\maketitle
+
+%\TaoReport{ガードコマンド・モデル}{\today}{タオベアーズ}{佐原伸}
+%\setlength{\baselineskip}{12pt plus .1pt}
+%\tolerance 10000
+\tableofcontents
+%\thispagestyle{empty} 
+
+%\include{Abstract}
+\section {はじめに}
+本ドキュメントは、VDM++関数型ライブラリ・ドキュメントの雛形であり、
+まだ、すべてのVDMモジュールを記述しているわけではない。
+
+\section {関数型ライブラリのドキュメント}
+\include{AllT.vpp}
+\include{FBusinessTable.vpp}
+\include{FBusinessTableT.vpp}
+\include{FCalendar.vpp}	
+%\include{FCalendarT.vpp}
+\include{FCharacter.vpp}
+\include{FCharT.vpp	}
+\include{FFunction.vpp}	
+\include{FFunctionT.vpp}
+\include{FHashtable.vpp}
+\include{FHashtableT.vpp}	
+\include{FInteger.vpp}
+\include{FIntegerT.vpp}	
+\include{FJapaneseCalendar.vpp}
+\include{FJapaneseCalendarT.vpp}
+\include{FMap.vpp}
+\include{FMapT.vpp}	
+\include{FNumber.vpp}
+\include{FNumberT.vpp}	
+%\include{FQueue.vpp}
+\include{FQueueT.vpp}
+\include{FProduct.vpp}	
+\include{FProductT.vpp}	
+\include{FReal.vpp}
+\include{FRealT.vpp}
+\include{FSet.vpp}
+\include{FSetT.vpp}	
+\include{FString.vpp}
+\include{FStringT.vpp}	
+\include{FSequence.vpp}
+\include{FSequenceT.vpp}
+\include{FTestDriver.vpp}
+\include{FTestLogger.vpp}
+
+%\begin{thebibliography}{9}
+\section{参考文献等}
+VDM++\cite{CSK2007PP}は、
+1970年代中頃にIBMウィーン研究所で開発されたVDM-SL\cite{CSK2007SL}を拡張し、
+さらにオブジェクト指向拡張したオープンソース
+\footnote{使用に際しては、（株）CSKシステムズとの契約締結が必要になる。}の形式仕様記述言語である。
+\bibliographystyle{jplain}
+%\bibliography{/Users/sahara/svnw/sahara}
+\bibliography{/Users/sahara/bib/saharaUTF8}
+%\bibliography{/Users/ssahara/svnwork/sahara}
+
+%\end{thebibliography}
+
+%\newpage
+%\addcontentsline{toc}{section}{Index}
+\printindex
+
+\end{document}

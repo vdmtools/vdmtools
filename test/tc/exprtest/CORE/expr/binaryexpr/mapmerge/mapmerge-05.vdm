@@ -1,0 +1,16 @@
+class BinaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = {5|->true} munion
+         if false 
+         then [true,'a']
+         else {9|->"ABC"} 
+  in skip;
+
+------------------------------------------------------------------------------
+end BinaryTest

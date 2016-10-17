@@ -1,0 +1,426 @@
+class EffectivityPanel is subclass of JPanel, Observer, ActionListener, ListSelectionListener
+operations 
+public  updatePanel : () ==> <VOID>
+updatePanel() == 
+( dcl   newAcType : [AircraftType] := context.getCurrentContextFieldObject(ContextTypes`AIRCRAFT_TYPE),
+        newAircraft : [Aircraft] := context.getCurrentContextFieldObject(ContextTypes`TAIL_NUMBER);
+  if  newAcType <> nil   and  not  newAcType.equals(currentAcType)
+  then  
+    ( currentAcType := newAcType;
+      let - = deselectButton.setEnabled(false  )
+      in 
+        skip ;
+      let - = saveButton.setEnabled(false  )
+      in 
+        skip ;
+      let - = selectButton.setEnabled(false  )
+      in 
+        skip ;
+      let - = effectivityList.setEnabled(false  )
+      in 
+        skip ;
+      let - = effectivityList.removeAll()
+      in 
+        skip 
+    ) ;
+  if  newAircraft <> nil   and  not  newAircraft.equals(currentAircraft)
+  then  
+    ( currentAircraft := newAircraft;
+      let - = loadEffectivityList(newAcType)
+      in 
+        skip ;
+      let - = selectIncorporatedRetrofits()
+      in 
+        skip ;
+      let - = deselectButton.setEnabled(saveAvailable)
+      in 
+        skip ;
+      let - = saveButton.setEnabled(false  )
+      in 
+        skip ;
+      let - = selectButton.setEnabled(saveAvailable)
+      in 
+        skip ;
+      let - = effectivityList.setEnabled(saveAvailable)
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+private  isSaveAvailable : () ==> bool 
+isSaveAvailable() == 
+( dcl   retrofitDBType : [String] := retrofitController.getDbType();
+  return  retrofitDBType.equals(RetrofitController`DEFAULT_RETROFIT_TYPE)
+) ;
+
+public  EffectivityPanel : () ==> EffectivityPanel
+EffectivityPanel() == 
+( effectivitySelector := EffectivitySelector`getEffectivitySelector();
+  retrofitController := RetrofitController`getRetrofitController();
+  let - = retrofitController.readDatabase()
+  in 
+    skip ;
+  context := ContextState`getContextState();
+  let - = context.addObserver(self  )
+  in 
+    skip ;
+  effectivityLayout := new  GridBagLayout();
+  effectivityConstraints := new  GridBagConstraints();
+  let - = setLayout(effectivityLayout)
+  in 
+    skip ;
+  currentAcType := nil  ;
+  currentAircraft := nil  ;
+  effectivityLabel := new  JLabel(new  String("Selected Entries are Incorporated"));
+  let - = effectivityLabel.setForeground(NAVY_BLUE)
+  in 
+    skip ;
+  cancelButton := new  JButton(CANCEL_COMMAND);
+  let - = cancelButton.setEnabled(true  )
+  in 
+    skip ;
+  let - = cancelButton.setActionCommand(CANCEL_COMMAND)
+  in 
+    skip ;
+  let - = cancelButton.addActionListener(self  )
+  in 
+    skip ;
+  deselectButton := new  JButton(DESELECT_ALL_COMMAND);
+  let - = deselectButton.setEnabled(false  )
+  in 
+    skip ;
+  let - = deselectButton.setActionCommand(DESELECT_ALL_COMMAND)
+  in 
+    skip ;
+  let - = deselectButton.addActionListener(self  )
+  in 
+    skip ;
+  saveButton := new  JButton(SAVE_COMMAND);
+  let - = saveButton.setEnabled(false  )
+  in 
+    skip ;
+  let - = saveButton.setActionCommand(SAVE_COMMAND)
+  in 
+    skip ;
+  let - = saveButton.addActionListener(self  )
+  in 
+    skip ;
+  selectButton := new  JButton(SELECT_ALL_COMMAND);
+  let - = selectButton.setEnabled(false  )
+  in 
+    skip ;
+  let - = selectButton.setActionCommand(SELECT_ALL_COMMAND)
+  in 
+    skip ;
+  let - = selectButton.addActionListener(self  )
+  in 
+    skip ;
+  saveAvailable := isSaveAvailable();
+  effectivityList := new  JList();
+  let - = effectivityList.setSelectionMode(ListSelectionModel`MULTIPLE_INTERVAL_SELECTION)
+  in 
+    skip ;
+  let - = effectivityList.setEnabled(false  )
+  in 
+    skip ;
+  let - = effectivityList.addListSelectionListener(self  )
+  in 
+    skip ;
+  ( dcl   scrollPane : [JScrollPane] := new  JScrollPane(effectivityList);
+    let - = setEffectivityConstraints(0 , 0 , GridBagConstraints`NONE , 2 , 0 , 0)
+    in 
+      skip ;
+    let - = EffectivityPanel`add(effectivityLabel , effectivityConstraints)
+    in 
+      skip ;
+    let - = setEffectivityConstraints(0 , 2 , GridBagConstraints`BOTH , 2 , 1 , 1)
+    in 
+      skip ;
+    let - = EffectivityPanel`add(effectivityList , effectivityConstraints)
+    in 
+      skip ;
+    let - = setEffectivityConstraints(0 , 1 , GridBagConstraints`HORIZONTAL , 1 , 1 , 0)
+    in 
+      skip ;
+    let - = EffectivityPanel`add(selectButton , effectivityConstraints)
+    in 
+      skip ;
+    let - = setEffectivityConstraints(1 , 1 , GridBagConstraints`HORIZONTAL , 1 , 1 , 0)
+    in 
+      skip ;
+    let - = EffectivityPanel`add(deselectButton , effectivityConstraints)
+    in 
+      skip ;
+    let - = setEffectivityConstraints(0 , 3 , GridBagConstraints`HORIZONTAL , 1 , 1 , 0)
+    in 
+      skip ;
+    let - = EffectivityPanel`add(saveButton , effectivityConstraints)
+    in 
+      skip ;
+    let - = setEffectivityConstraints(1 , 3 , GridBagConstraints`HORIZONTAL , 1 , 1 , 0)
+    in 
+      skip ;
+    let - = EffectivityPanel`add(cancelButton , effectivityConstraints)
+    in 
+      skip ;
+    let - = setPreferredSize(new  Dimension(250 , 400))
+    in 
+      skip ;
+    return  
+  ) 
+) ;
+
+private  saveRetrofitData : () ==> <VOID>
+saveRetrofitData() == 
+( dcl   currentAcTypeStr : [String] := currentAcType.getMDS(),
+        filePath : [String] := retrofitController.getDbUrl(),
+        fileName : [String] := currentAcTypeStr.replace('/' , '&')+new  String(".")+currentAircraft.getTailNumber()+new  String(".")+RetrofitController`DEFAULT_RETROFIT_TYPE,
+        retrofitFile : [RetrofitFile] := new  RetrofitFile(filePath , fileName),
+        retrofitEntry : [RetrofitEntry] := new  RetrofitEntry(currentAircraft),
+        selected : map  int  to  [Object] := effectivityList.getSelectedValues();
+  if  selected.length > 0
+  then  
+    ( dcl   selectedStr : map  int  to  [String] := {l_3 |-> nil  |l_3 in set  {0,...,selected.length-1}};
+      let - = System.arraycopy(selected , 0 , selectedStr , 0 , selected.length)
+      in 
+        skip ;
+      let - = retrofitEntry.setRetrofits(selectedStr)
+      in 
+        skip 
+    ) ;
+  let - = retrofitFile.setRetrofitEntry(retrofitEntry)
+  in 
+    skip ;
+  let - = retrofitFile.writeData()
+  in 
+    skip ;
+  let - = retrofitController.deleteRetrofitEntry(currentAircraft)
+  in 
+    skip ;
+  let - = retrofitController.addRetrofitEntry(retrofitEntry)
+  in 
+    skip ;
+  let - = context.forceContextReload()
+  in 
+    skip ;
+  return  
+) ;
+
+private  selectAllRetrofits : () ==> <VOID>
+selectAllRetrofits() == 
+( dcl   selected : map  int  to  int  := {l_6 |-> 0|l_6 in set  {0,...,effectivityList.getModel().getSize()-1}};
+  ( dcl   idx : int  := 0;
+    while  idx < effectivityList.getModel().getSize() do  
+    ( selected := selected ++ {idx |-> idx};
+      idx := idx+1
+    ) 
+  ) ;
+  let - = effectivityList.setSelectedIndices(selected)
+  in 
+    skip ;
+  return  
+) ;
+
+private  deselectAllRetrofits : () ==> <VOID>
+deselectAllRetrofits() == 
+( let - = effectivityList.clearSelection()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+private  selectIncorporatedRetrofits : () ==> <VOID>
+selectIncorporatedRetrofits() == 
+( dcl   changeList : [Vector],
+        changeIndex : int  := 0,
+        listItemCount : int  := effectivityList.getModel().getSize(),
+        retrofitEntry : [RetrofitEntry] := retrofitController.findRetrofitEntry(currentAircraft);
+  if  retrofitEntry = nil  
+  then  
+    ( changeList := new  Vector()
+    ) 
+  else  
+    ( changeList := retrofitEntry.getRetrofits()
+    ) ;
+  let - = effectivityList.clearSelection()
+  in 
+    skip ;
+  ( dcl   changeListValues : [Enumeration] := changeList.elements(),
+          indicesList : [Vector] := new  Vector();
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip 
+        
+      end  
+    in  
+      while  changeListValues.hasMoreElements() do  
+      ( dcl   changeListValue : [String] := changeListValues.nextElement();
+        ( dcl   idx : int  := 0;
+          while  idx < listItemCount do  
+          ( if  changeListValue.equals(effectivityList.getModel().getElementAt(idx))
+            then  
+              ( let - = indicesList.addElement(new  Integer(idx))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ;
+            idx := idx+1
+          ) 
+        ) 
+      ) ;
+    ( dcl   indicesListSize : int  := indicesList.size(),
+            selectedIndices : map  int  to  int  := {l_19 |-> 0|l_19 in set  {0,...,indicesListSize-1}};
+      ( dcl   j : int  := 0;
+        while  j < indicesListSize do  
+        ( selectedIndices := selectedIndices ++ {j |-> (def l_9 :  Integer = (indicesList.elementAt(j))
+          in l_9).intValue()};
+          j := j+1
+        ) 
+      ) ;
+      let - = effectivityList.setSelectedIndices(selectedIndices)
+      in 
+        skip ;
+      return  
+    ) 
+  ) ;
+  return  <VOID>
+) ;
+
+public  actionPerformed : [ActionEvent] ==> <VOID>
+actionPerformed(actionEvent) == 
+( if  actionEvent.getActionCommand().equals(CANCEL_COMMAND)
+  then  
+    ( let - = selectIncorporatedRetrofits()
+      in 
+        skip ;
+      ( dcl   parent : [Container] := EffectivityPanel`getParent().getParent().getParent(),
+              newParent : [JFrame] := parent.getParent();
+        let - = newParent.dispose()
+        in 
+          skip ;
+        let - = saveButton.setEnabled(false  )
+        in 
+          skip 
+      ) 
+    ) 
+  else  
+    if  actionEvent.getActionCommand().equals(DESELECT_ALL_COMMAND)
+    then  
+      ( let - = deselectAllRetrofits()
+        in 
+          skip ;
+        let - = saveButton.setEnabled(true  )
+        in 
+          skip 
+      ) 
+    else  
+      if  actionEvent.getActionCommand().equals(SAVE_COMMAND)
+      then  
+        ( let - = saveRetrofitData()
+          in 
+            skip ;
+          ( dcl   parent : [Container] := EffectivityPanel`getParent().getParent().getParent(),
+                  newParent : [JFrame] := parent.getParent();
+            let - = newParent.dispose()
+            in 
+              skip ;
+            let - = saveButton.setEnabled(false  )
+            in 
+              skip 
+          ) 
+        ) 
+      else  
+        if  actionEvent.getActionCommand().equals(SELECT_ALL_COMMAND)
+        then  
+          ( let - = selectAllRetrofits()
+            in 
+              skip ;
+            let - = saveButton.setEnabled(true  )
+            in 
+              skip 
+          ) ;
+  return  
+) ;
+
+public  update : [Observable] * [Object] ==> <VOID>
+update(observable, contextChanges) == 
+( if  isShowing()
+  then  
+    ( let - = updatePanel()
+      in 
+        skip 
+    ) ;
+  return  
+) ;
+
+public  valueChanged : [ListSelectionEvent] ==> <VOID>
+valueChanged(listSelectionEvent) == 
+( let - = saveButton.setEnabled(true  )
+  in 
+    skip ;
+  return  
+) ;
+
+private  loadEffectivityList : [AircraftType] ==> <VOID>
+loadEffectivityList(acType) == 
+( dcl   listModel : [DefaultListModel] := new  DefaultListModel(),
+        fullRetrofitList : [Collection] := effectivitySelector.getAvailableRetrofits(),
+        sortedRetrofitList : [TreeSet] := new  TreeSet(fullRetrofitList),
+        listIterator : [Iterator] := sortedRetrofitList.iterator();
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  listIterator.hasNext() do  
+    ( let - = listModel.addElement(listIterator.next().toString())
+      in 
+        skip 
+    ) ;
+  let - = effectivityList.setModel(listModel)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+private  setEffectivityConstraints : int  * int  * int  * int  * int  * int  ==> <VOID>
+setEffectivityConstraints(gridX, gridY, gridFill, gridWidth, weightX, weightY) == 
+( effectivityConstraints.insets.bottom := 3;
+  effectivityConstraints.insets.left := 3;
+  effectivityConstraints.insets.right := 3;
+  effectivityConstraints.insets.top := 3;
+  effectivityConstraints.weightx := weightX;
+  effectivityConstraints.weighty := weightY;
+  effectivityConstraints.gridx := gridX;
+  effectivityConstraints.gridy := gridY;
+  effectivityConstraints.fill := gridFill;
+  effectivityConstraints.gridwidth := gridWidth;
+  return  
+) ;
+
+instance variables 
+  private  static CANCEL_COMMAND : [String] := new  String("Cancel");
+  private  static DESELECT_ALL_COMMAND : [String] := new  String("Deselect All");
+  private  static SAVE_COMMAND : [String] := new  String("Save");
+  private  static SELECT_ALL_COMMAND : [String] := new  String("Select All");
+  private  static NAVY_BLUE : [Color] := Color`blue.darker().darker();
+  protected  context : [ContextState];
+  private  currentAcType : [AircraftType];
+  private  currentAircraft : [Aircraft];
+  private  retrofitController : [RetrofitController];
+  private  effectivitySelector : [EffectivitySelector];
+  private  effectivityList : [JList];
+  private  cancelButton : [JButton];
+  private  deselectButton : [JButton];
+  private  saveButton : [JButton];
+  private  selectButton : [JButton];
+  private  effectivityLayout : [GridBagLayout];
+  private  effectivityConstraints : [GridBagConstraints];
+  private  effectivityLabel : [JLabel];
+  private  saveAvailable : bool 
+  
+end  EffectivityPanel

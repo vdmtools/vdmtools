@@ -1,0 +1,121 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{vdm}\index{WorkSpace|ClassDef}
+{\small\sf class} $WorkSpace$  \kISO $\index{MSAWTypes|ClassOcc}MSAWTypes$
+\begin{instvar}\index{pistes-radar|InstVarDef}
+\vardcl{pistes-radar}{ @PistesRadar}\index{bulletin-meteo|InstVarDef}
+\vardcl{bulletin-meteo}{ @BulletinMeteo}\index{terrain|InstVarDef}
+\vardcl{terrain}{ @Terrain}\index{obstacles|InstVarDef}
+\vardcl{obstacles}{\setof{ @Obstacle}}\index{detecteur|InstVarDef}
+\vardcl{detecteur}{ @Detecteur}
+\instinit{\kObjectstate }{\begin{blockstmt}
+\ass{obstacles}{\set{}} ; \\
+\ass{pistes-radar}{\new{PistesRadar}} ; \\
+\ass{bulletin-meteo}{\new{BulletinMeteo}} ; \\
+\ass{terrain}{\new{Terrain}} ; \\
+\ass{detecteur}{\new{Detecteur}}
+\end{blockstmt}
+}
+\end{instvar}
+\begin{methdef}\index{SetObstacle|MethodDef}
+\begin{method}{SetObstacle}
+\parms{obstacle :  @Obstacle} \Fdef\\ \ass{obstacles}{obstacles \Union \set{obstacle}}
+\end{method}\index{TraiterPistesRadar|MethodDef}
+\begin{method}{TraiterPistesRadar}
+\parms{} \Fdef\\ \begin{defstmt}
+\eqdef{modeAs}{\invoke{pistes-radar}{\index{GetModeAs|MethodOcc}
+\fnapply{GetModeAs}{}}}
+\end{defstmt} \\
+\begin{letstmt}
+\patdef{obstacles}{\fnapply{OrdreDeTraitement}{\set{terrain} \Union obstacles}}
+\end{letstmt} \\
+\begin{setfor}{modeA}{modeAs}
+\begin{defstmt}
+\eqdef{segment-de-prediction}{\new{SegmentDePrediction}}
+\eqdef{positions}{\invoke{pistes-radar}{\index{GetPositions|MethodOcc}
+\fnapply{GetPositions}{modeA}}}
+\end{defstmt} \\
+\If  \Card  \Dom positions \Ge 2
+\Then \\
+\begin{blockstmt}
+\invoke{segment-de-prediction}{\index{Set|MethodOcc}
+\fnapply{Set}{modeA, positions, bulletin-meteo}} ; \\
+\begin{setfor}{i}{ \Inds obstacles}
+\invoke{detecteur}{\index{CalculeRisque|MethodOcc}
+\fnapply{CalculeRisque}{segment-de-prediction, \fnapply{obstacles}{i}}}
+\end{setfor}
+\end{blockstmt}
+\Else \\
+\Skip 
+\Fi
+\end{setfor}
+\end{method}
+\end{methdef}
+\begin{threaddef}\index{TraiterPistesRadar|MethodOcc}
+\periodic{10}{TraiterPistesRadar}
+\end{threaddef}
+\begin{funcdef}\index{OrdreDeTraitement|FuncDef}
+\begin{fn}[e]{OrdreDeTraitement}
+\signature{\setof{\Lp  @Terrain |  @Obstacle \Rp } \To \seqof*{\Lp  @Terrain |  @Obstacle \Rp }}
+\parms{obstacles}
+\If obstacles = \set{}
+\Then \\
+\seq{}
+\Else \\
+\Letbe* obstacle \In obstacles \Lin \\
+\seq{obstacle} \Sconc \fnapply{OrdreDeTraitement}{obstacles \Setdiff \set{obstacle}}
+\Fi
+\end{fn}
+\end{funcdef}
+{\small\sf end} $WorkSpace$
+
+\end{vdm}

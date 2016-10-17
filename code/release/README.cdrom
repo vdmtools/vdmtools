@@ -1,0 +1,72 @@
+******************** The VDMTools CD-ROM ******************
+
+This CD contains the following:
+  1. VDMTools binaries, VDM-SL and VDM++, different platforms, 
+     compressed form.
+  2. Documentation, ready-to-use, for viewing and printing.
+
+The compressed files are mirrored from the ftp site, the VDM-SL
+part from ftp://ftp.ifad.dk/pub/toolbox and the VDM++ part
+from ftp://ftp.ifad.dk/pub/vdm++_toolbox.
+
+The content is organised as follows: Each language has its own
+directory.  These directories contain subdirectories for compressed
+files and for documentation.
+
+Installation:
+-------------
+
+Refer to the "VDM-SL Installation Guide" or "VDM++ Installation Guide" 
+available under the 'doc' subdirectories.
+
+Contents:
+---------
+
+vdm-sl: Directory for VDM-SL
+----------------------------
+
+vdm-sl/compressed
+  Binaries for different platforms in compressed form. 
+  README file for the VDM-SL release with detailed descriptions of
+  files in this directory and their contents.
+
+vdm-sl/doc
+  Directory for unpacked documentation online available
+
+vdm-sl/doc/*.pdf
+  Online documentation in PDF format, paper size US letter.
+
+vdm-sl/doc/known_bugs
+  The list of known bugs, in ASCII format.
+
+vdm-sl/doc/guihelp-sl.html
+  Gui help in html format.
+
+vdm-sl/doc/bitmaps
+  Bitmaps for Gui help.
+
+
+vdm++: Directory for VDM++
+--------------------------
+
+vdm++/compressed
+  Binaries in compressed form. Binaries for all
+  supported platforms under licence control. README file for the
+  VDM++ release with detailed descriptions of files in this directory
+  and their contents.
+
+vdm++/doc
+  Directory for unpacked documentation online available
+
+vdm++/doc/*.pdf
+  Online documentation in PDF format, paper size letter
+
+vdm++/doc/known_bugs
+  The list of known bugs, in ASCII format
+
+vdm++/doc/guihelp-pp.html
+  Gui help in html format.
+
+vdm++/doc/bitmaps
+  Bitmaps for Gui help. 
+

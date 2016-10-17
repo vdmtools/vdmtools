@@ -1,0 +1,359 @@
+****** The VDM-SL Toolbox Version 3.3 ******
+
+This directory (ftp://ftp.ifad.dk/pub/toolbox/) contains current release
+of the VDM-SL Toolbox.  The Toolbox runs on:
+    all Sun SPARC models, under SunOS 4.1.3 or greater
+    all Sun SPARC models, under Solaris 2.6 or greater
+    HP 700 models, running HPUX 10.x. 
+    PC/586, 686, running Windows 95 or Windows NT. 
+    PC/586, 686, running Linux (not available at ftp)
+
+The integrated tool set can be run from the command-line and with GNU
+Emacs using the Emacs interface for the Toolbox, but it is highly
+recommended to run it with the graphical user interface, vdmgde.
+
+The files ending in `.gz' are packed with the GNU gzip program. You
+will need the gunzip program to unpack them. You can get compiled
+versions for the above architectures in the directory /pub/gzip/. 
+
+The files ending in `.zip' are packed with the Info-ZIP program.
+Information about Info-ZIP can be found at
+http://www.cdrom.com/pub/infozip/ which also has source or
+executables.  You can get a compiled version for Windows 95/NT in the
+directory /pub/infozip/unzipnt.exe.
+
+If you are down-loading an evaluation copy you will
+need one of the following documentation files:
+  doc_letter.pdf.tar.gz
+  doc_letter.pdf.zip
+
+And one or more of these
+   bin.solaris2.6.vdmsl.tar.gz 
+   bin.SunOS4.vdmsl.tar.gz 
+   bin.hpux_10.vdmsl.tar.gz
+   setupsl-3.3.exe (for Windows 95 and NT)
+
+
+It might also be usefull to down load:
+   known_bugs.tar.gz
+or
+   known_bugs.zip
+
+The contents of bin.<arch>.vdmsl.tar.gz 
+   ./bin/vdmde                  -- executable ASCII interface
+   ./bin/vdmgde                 -- executable graphical interface
+   ./emacs/vdmde-18.el          -- emacs-18 interface
+   ./emacs/vdmde-19.el          -- emacs-19 interface
+   ./emacs/COPYING              -- GNU emacs general public license
+   ./latex/vdmsl.sty            -- old latex 209 style file
+   ./latex/vdmsl-2e.sty         -- latex(2e) style file
+   ./cg/include/*.h             -- C++ header files for VDM & CG libraries. 
+   ./cg/include/MATH_userimpl.cc -- Standard lib math implementations
+                                    for code generator.
+   ./cg/lib/lib*.a              -- VDM & CG libraries.
+   ./stdlib/{math.vdm,mathflat.vdm}
+                                -- Standard lib specification files. 
+   ./lib/{tcl,tk,tix,itk,itcl,iwidgets}
+                                -- Supporting tcl/tk/tix/itcl/itk lib. files. 
+   ./examples/*                 -- directory containing VDM-SL examples.  
+
+The contents of setupsl.exe (For Windows 95 or Windows NT) seen
+relative to the installation directory: 
+
+   ./bin/vdmgde.exe             -- executable graphical interface
+   ./bin/vdmde.exe              -- executable ASCII interface
+   ./cg/include/*.h             -- C++ header files for VDM & CG libraries. 
+   ./cg/include/MATH_userimpl.cc -- Standard lib math implementations
+                                    for code generator.
+   ./cg/lib/lib*.a              -- VDM & CG libraries.
+   ./stdlib/{math.vdm,mathflat.vdm}
+                                -- Standard lib specification files. 
+   ./lib/*                      -- Supporting tcl/tk/tix/itcl/itk lib. files.
+   ./examples/*                 -- directory containing VDM-SL examples.  
+   ./latex/vdmsl.sty            -- old latex 209 style file
+   ./latex/vdmsl-2e.sty         -- latex(2e) style file
+
+The contents of known_bugs.tar.gz and known_bugs.zip:
+   known_bugs/index                  -- Index 
+   known_bugs/reportXXX              -- Bug descriptions.
+
+The contents of doc_letter.{pdf,tar.gz}.zip (pdf documentation in letter format)
+   - installsl_letter.pdf  -- installation manual in letter (US) format
+   - usermansl_letter.pdf -- users manual in letter (US) format
+   - langmansl_letter.pdf -- language reference manual in letter (US) format
+   - cgmansl_letter.pdf    -- code generator manual in letter (US) format
+   - sort_letter.pdf       -- sorting example document in letter format
+   - guihelp-sl.html       -- GUI help pages in html format
+   - guihelp-sl.pdf         -- GUI help pages in postscript format
+   - doc_html_bitmaps.zip  -- bitmap files referenced in guihelp.html 
+
+
+The users manual describes how to install the Toolbox. 
+
+In order to run the evaluation copy you must mail toolbox@ifad.dk for
+a license file which will enable you to evaluate the Toolbox for a one
+month period of your choice. An evaluation license is free, and you
+must indicate in the mail for which one-month period the evaluation
+license must be valid.
+
+NPL's LaTeX and LaTeX2e macros for VDM-SL
+-----------------------------------------
+
+The vdmsl LaTeX and LaTeX2e macros distributed with the VDM-SL
+Toolbox have been written at the National Physical Laboratory where
+they are now being updated and maintained. Please note that you will
+need a large version of TeX to use the macros in any serious way.
+
+To obtain the macros and their documentation directly from NPL's ftp
+site:
+   ftp address: ftp.npl.co.uk
+   Name:        anonymous
+   Password:    complete e-mail address
+   Directory:   /pub/latex/macros/vdm-sl
+
+Initially we would recommend you to use the macros from this
+distribution because it contains a few bug fixes which have not yet
+been incorporated at the NPL site.
+
+
+VDM-SL Toolbox release notes:
+----------------------------------
+Changes from 3.3.1 to NEXT_RELEASE
+  - Pretty printing output files are now created in the current 
+    working directory. Previously they were created where their
+    corresponding input file was read. 
+  - The Modules window now contains a hierachical view of the modules
+    together with the containing files. The Files window was removed.
+  - In the configure dialog the "Files in the project" now sort the file
+    names. 
+  - It is now possible to do 'up' and 'down' in the debugger. That is going
+    to previous call stack levels and investigate the variables at that
+    level.
+  - It is now possible to set breakpoints on lines and columns.
+
+Changes from 3.3 to 3.3.1
+
+  - Testcoverage files can now contain specification file names with 
+    withspace characters. 
+  - FLEXlm support for Linux. 
+
+Changes from 3.2 to 3.3
+
+  - Speed of interpreter improved, especially with dynamic type check,
+  - History on command line for GUI, 
+  - 'Stop interpreter' button in GUI,
+  - Remove/Enable/Disable muliple breakpoints by mouse click in GUI,
+  - New -w option for RTF files: Write specification parts to text file, 
+  - Improved speed in GUI debugging by 
+    disabling auto-computing of argument list in function trace window, 
+  - Empty 'definitions' blocks are now syntax correct. 
+  - Standard math library available in interpreter,
+  - If a file is changed on the file system, the status symbol for
+    syntax checking is shown in reverse video,
+  - Alphabetic listing of modules in GUI, 
+  - Language support for import/export of polymorphic functions, 
+  - GUI upgraded to Tcl/Tk version 8,
+  - Visual C++ compiler on NT upgraded to version 6.0
+  - Compiler on HP UX-10 and SunOS4.1.3 upgraded to egcs-1.1.2
+  - Updated usage text (vdmde -h), 
+  - Bug fixes: #309, #310.
+  - Fixed bug with option -o <file> : sequence of results.
+
+Changes from 3.1.0 to 3.2.0
+  - The functions CGReadTagMap, DLReadNameMap, VDMSetTagMap and VDMTagDump
+    has been removed from cg_aux.h. They are no longer needed since
+    the Code Generator now generates the appropriate SetSymTag method
+    calls.
+  - VDM C++ Library: Trying to create Records with the same tag and
+    two different sizes results in an error. 
+  - The number of displayed syntax errors is limited to 100. 
+
+  - Following bugs have been corrected: #292, #296, #035
+
+  - The Toolbox has been ported to the DEC Alpha OSF1 v4.0d platform.
+    The code generator supports the Dec cxx 6.0-021 compiler.
+
+  - Memory leak in syntax checker fixed.
+
+  - The char type of VDM-SL has been extended with several signs,
+    e.g. line-feed. See the language manual.
+
+  - Code generator improved such that corresponding C++ types are generated 
+    for each type in the specification. Interfacing the generated code
+    has been improved, e.g. it is now possible to implement by hand selected
+    functions.
+
+  - NT: Toolbox can now parse and pretty print Word RTF files.
+
+  - The content of the project file has been changed. The configuration of 
+    of the project is now only saved, and not the status (that is, if it has
+    been type checked, code generated or pretty printed). The speed of reading
+    the project file has been improved.
+
+  - The dynamic link interface has been changed. See the user manual for 
+    dynamica link.
+
+  - The (pos) Type Checker has been improved to check all branches of 
+    if- and case- expression/statements to be well-formed instead of  
+    just one branch to be well-formed. 
+
+  - On the Windows platform the code generator will write file names with
+    a default .cpp suffix.
+    On all platforms the suffix can be changed by setting the VDMCGEXT
+    environment variable.
+
+  - Expansion of collapsed function arguments in the Function Trace window
+    has been moved from middle button to button 1 for better Windows
+    support.
+
+  - The Project handling has been improved. Save and Save As menus
+    have been added and the New menu changed to just create a new
+    empty project. 
+
+  - Syntax error messages has been tidied up.
+
+  - Messages from invoking the script command now appear in the
+    Dialog window instead of the Log window.
+
+  - Interpreter: When a run-time error occurs the function call stack
+    is shown in the function trace window.
+
+
+Changes from 3.1.0 to 3.1.1
+------------------------
+  - Release 3.1.1 is a Win32-only release that contains a working Code 
+    Generator for the win32 platform. 
+  - The (pos) Type Checker has been improved to check all branches of 
+    if- and case- expression/statements to be well-formed instead of  
+    just one branch to be well-formed. 
+  - On the Windows platform the code generator will write file names with
+    a default .cpp suffix.
+    On all platforms the suffix can be changed by setting the VDMCGEXT
+    environment variable.
+
+  - Expansion of collapsed function arguments in the Function Trace window
+    has been moved from middle button to button 1 for better Windows
+    support.
+
+  - The Project handling has been improved. Save and Save As menus
+    have been added and the New menu changed to just create a new
+    empty project. 
+
+  - Syntax error messages has been tidied up.
+
+  - The following bug reports have been resolved:
+        #292
+
+  - Messages from invoking the script command now appear in the
+    Dialog window instead of the Log window.
+
+  - Interpreter: When a run-time error occurs the function call stack
+    is shown in the function trace window.
+
+
+Changes from 3.0.1 to 3.1.0
+---------------------------
+  - The following bug reports have been resolved:
+        #285, #272, #274, #269, #271, #276, #288
+
+  - Improvement on the code generator:
+        - pattern match generation has been improved.
+        - less use of temporary variables.
+        - state designators are now fully supported.
+        - sequence modify is now supported.
+        - map inverse is now supported.
+        - improved strategy for generation of comprehension expressions.
+
+  - The User Manual for the VDM-SL Toolbox has been improved. 
+
+  - DOS files can now be parsed by the Unix versions of the Toolbox. 
+
+  - The interface to the VDM library (libvdm.a) was changed by to use
+    the class string (#include <string.h>) instead of class String 
+    (#include <String.h>). 
+
+  - The initialisation of values have been improved in the interpreter.
+
+  - The test coverage tool have been updated to compute a number in
+    percent identifying how big a part of functions, operations 
+    and the entire specification has been covered by a test suite file.
+
+  - The setting of the environment variables TCL_LIBRARY, TK_LIBRARY,
+    ITCL_LIBRARY, ITK_LIBRARY, TIX_LIBRARY and IWIDGETS_LIBRARY has been
+    replaced by the environment variabel VDMSLROOT which should be set to
+    the path of the installation directory. 
+
+Changes from 3.0.0 to 3.0.1
+---------------------------
+  - The following bug reports have been resolved:
+    #5, #57, #84, #85, #86, #87, #88, #89, #230, #236, #241, #248, #255, 
+    #259, #258,
+
+  - An index has been introduced in the User Manual for the VDM-SL 
+    Toolbox.
+
+  - Code Generator: The numbering system for the temporary variables have
+    been changed such that the numbering system is local for each generated 
+    function.
+
+  - GUI: An "Add to project" and "Remove from project" botton has been introduced
+    in the project configure menu.
+
+  - Bug 230 has been solved: Syntax errors on the command like were
+    not properly handled. Now any syntax errors on the command line
+    are output all at once without changing the errors from the last
+    parse or type check. 
+
+  - Bug 241 has been solved: The "quit" command didn't work in the 
+    Interpreter/Dialog window.  Now the "quit" command works without
+    confirmation (just like "cquit" which still exists for
+    compatibility).
+
+  - Now the setting of the TEX option is ignored and a file is parsed 
+    according to it contents. If it contains any \begin{vdm_al} 
+    sections it is assumed to be a file with mixed documentation 
+    and specification, otherwise the file is assumed to contain only 
+    specification. The syntax for \begin{vdm_al} ... \end{vdm_al} 
+    has been clarified by saying that the \begin{vdm_al} and 
+    \end{vdm_al} each must be preceeded by zero or more whitespace 
+    characters to be taken as specification delimiters.  
+    This allows one to comment out a specification section by putting, 
+    e.g., a '%' in the first column of the section.
+
+  - Now the parser allows a semicolon ';' after the last element of 
+    a sequence of definitions (e.g., after the last function definition). 
+    This applies to all syntactic constructs where semicolon is used as 
+    a separator. 
+
+  - Bug fixed: When selecting "Configure" twice in a row in the GUI a
+    TCL/TK error would occur the second time.
+
+  - Problem with parsing of \begin{rtinfo} section fixed.  
+
+  - When pretty printing with index of uses, function and type
+    names are put into the index with the unqualified names.
+    Also a bug in the index generation has been partly fixed, where
+    a name in an apply expression is assumed to be a function
+    name if it is qualified and is subsequently put in the index
+    (it could be a map value from another module). Previously only
+    uses of functions in the same module would have been indexed. 
+
+  - The GUI now updates the modules state indicators while
+    parsing/type check/code generation/pretty printing progresses on
+    multiple files/modules. 
+
+  - The VDM C++ library can output Records with symbolic tag names when a 
+    map from the numeric tags to symbolic tags has been installed with
+    the function VDMSetTagMap. 
+
+  - The Code Generator library libCG.a, has new functions that can read
+    a tag repository file and return a map suitable as parameter to
+    VDMSetTagMap (VDM C++ library) and NameMap (DL modules)
+
+  - A number of problems with the dynamic type checker have been
+    fixed. Further error messages have been improved when running the 
+    dynamic type checker.
+
+  - Field reference state designators (i.e. a.i := expr) is now
+    supported by the VDM-SLtoC++ Code Generator
+  

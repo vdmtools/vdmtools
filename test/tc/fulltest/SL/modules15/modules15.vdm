@@ -1,0 +1,34 @@
+module A
+
+exports all
+
+definitions
+types 
+  NA = nat
+
+end A
+
+module B
+
+imports from A all
+exports all
+
+definitions
+types 
+  N:: A`NA    -- Error : Unknown identifier A`NA
+
+values v = mk_N(10)
+
+end B
+
+module C
+
+imports from B all
+exports all
+definitions
+values v = let mk_B`N(v') = B`v in v' -- Here is the problem
+
+end C
+
+
+

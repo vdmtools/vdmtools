@@ -1,0 +1,2 @@
+At specification level expected result: mk_A`B(1,'<')
+At implementation level: mk_B(1,'<')

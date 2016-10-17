@@ -1,0 +1,33 @@
+
+class Test
+
+types
+ 
+  A = seq of nat;
+ 
+  B = seq1 of nat;
+ 
+  C = seq of seq1 of bool;
+ 
+  D = seq1 of seq of bool
+functions
+
+Af: A -> A
+Af(x) ==
+  x;
+
+Bf: B -> B
+Bf(x) ==
+  x;
+
+Cf: C -> C
+Cf(x) ==
+  x;
+
+Df: D -> D
+Df(x) ==
+  x;
+AC: A->C
+AC(x) ==
+	Cf(x);
+end Test

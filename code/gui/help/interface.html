@@ -1,0 +1,855 @@
+<html> <head>
+#ifdef VDMSL
+<title>On-line help for the graphical interface to the VDM-SL
+Toolbox</title>
+#endif //VDMSL
+#ifdef VDMPP
+<title>On-line help for the graphical interface to the VDM++
+Toolbox
+</title>
+#endif //VDMPP
+</head>
+
+<body>
+<h1><a name="helppage">The Help Page</a></h1>
+
+On the left hand side of the help page, there is a table of contents
+which points to all sections in the help text. On the right hand side
+the actual help text is located. The two frames can be resized in
+relation to each other simply by pulling the line between them.
+
+<h2>Hypertext</h2>
+
+In the text there are references that can take you to another part of
+the text. It is possible to go back and forth between the references you
+have browsed using the two arrows on the left-hand side
+at the bottom of the window
+(just like in any other hypertext browser).
+
+<h2><a name="help_search">Searching the Help Text</a></h2>
+
+At the bottom of the screen an entry exists which makes it possible to
+search in the help text. All matches found are shown in inversed
+video. The direction of the search can be controlled by pressing the
+two up and down arrows on the right-hand side of the window.  The
+search is an ordinary case insensitive search.
+
+<h1><a name="maintool">The Main Window</a></h1>
+
+#ifdef VDMSL
+This window contains two sub-windows: the "Modules" window, and
+#else
+This window contains two sub-windows: the "Classes" window, and
+#endif //VDMSL
+the "Log" window. Furthermore, it contains the tool
+menu. 
+
+#ifdef VDMSL
+<h2><a name="mainPage`modules">Modules</a></h2> In this
+frame you can see all the Modules of the project.
+#else
+<h2><a name="mainPage`modules">Classes</a></h2> In this
+frame you can see all the Classes of the project.
+#endif //VDMSL
+
+The
+#ifdef VDMSL
+classes
+#else
+modules
+#endif
+is per default shown in a hierachical view where the top-level
+hierarchy name is the last directory component of the full file name.
+The <a href="#icons`toggleHierarchy">button</a> will toggle between a
+flat and hierachical view of the modules.
+
+#ifdef VDMSL
+<h3><a name="mainPage`modules`status">Status of a module</a></h3>
+Each module has a status which is shown after the name. In the
+#else
+<h3><a name="mainPage`modules`status">Status of a class</a></h3>
+Each class has a status which is shown after the name. In the
+#endif //VDMSL
+first column the syntax check status is shown, in the second column
+the type check status is shown, in the third column the C++ code
+generation status is shown, 
+#ifdef VDMSL
+and in the fourth column the pretty
+print status is shown. In the fifth column the base name of the file
+is shown.
+#else
+in the fourth column the Java code
+generation status is shown, and in the fifth column the pretty
+print status is shown. In the sixth column the base name of the file
+is shown.
+#endif
+
+#ifdef VDMSL
+<dl>
+  <dt> <img src="bitmaps/none">
+  <dd> The module has not been syntax checked / type checked / code
+       generated or pretty printed, depending on which column this
+       icon is located in.
+  <dt> <img src="bitmaps/checkFailed">
+  <dd> The module has been syntax checked and syntax errors were found.
+  <dt> <img src="bitmaps/checkOk">
+  <dd> The module has been successfully syntax checked
+  <dt> <img src="bitmaps/typeFailed">
+  <dd> The module has been type checked and type errors were found in
+       the module.
+  <dt> <img src="bitmaps/typeOk">
+  <dd> The module has been successfully type checked
+  <dt> <img src="bitmaps/generatedWarn">
+  <dd> The module has been C++ code generated, but errors occurred
+  <dt> <img src="bitmaps/generatedOk">
+  <dd> The module has been successfully C++ code generated
+  <dt> <img src="bitmaps/printedOk">
+  <dd> The module has been pretty printed
+</dl>
+#else
+<dl>
+  <dt> <img src="bitmaps/none">
+  <dd> The class has not been syntax checked / type checked / code
+       generated or pretty printed, depending on which column this
+       icon is located in.
+  <dt> <img src="bitmaps/checkFailed">
+  <dd> The class has been syntax checked and syntax errors were found.
+  <dt> <img src="bitmaps/checkOk">
+  <dd> The class has been successfully syntax checked
+  <dt> <img src="bitmaps/typeFailed">
+  <dd> The class has been type checked and type errors were found in
+       the class.
+  <dt> <img src="bitmaps/typeOk">
+  <dd> The class has been successfully type checked
+  <dt> <img src="bitmaps/generatedWarn">
+  <dd> The class has been C++ code generated, but errors occurred
+  <dt> <img src="bitmaps/generatedOk">
+  <dd> The class has been successfully C++ code generated
+  <dt> <img src="bitmaps/generatedJavaWarn">
+  <dd> The class has been Java code generated, but errors occurred
+  <dt> <img src="bitmaps/generatedJavaOk">
+  <dd> The class has been successfully Java code generated
+  <dt> <img src="bitmaps/printedOk">
+  <dd> The class has been pretty printed
+</dl>
+#endif //VDMSL
+
+<h2><a name="mainPage`log">Log window</a></h2> This window is used for
+output of information or error messages from the Toolbox.
+
+<h1>The Menu</h1>
+
+This section describes all the facilities that are available in
+the menu.
+
+<h2><a name="menuline`project">Project</a></h2>
+This menu contains all the functions for handling a project. A project
+is a collection of specification files that belong together.
+
+<h3><a name="project`open">Open</a></h3>
+
+When you want to open an existing project file, a file-selection
+browser will appear. The browser has the following fields:
+
+<dl>
+  <dt> Filter
+  <dd> Here you can select a pattern that files should match in order to be
+       seen in the file listbox. When you press enter in this entry,
+       the <i>file listbox</i> will be updated, so that it matches
+       this pattern.
+       Alternatively, the <b>Filter</b> button can be pressed.
+       It is customary that project files have the
+       extension <i>.prj</i>
+  <dt> Directories
+  <dd> Here you can browse through your directories by
+       double clicking on a directory.
+  <dt> File List
+  <dd> This is the list of files that matches the pattern in the
+       <i>filter</i> entry. When you double click on a file, you will
+       add it to the files in the project.
+  <dt> Selection
+  <dd> This is your current selection (if any)
+</dl>
+To select a file, just double click on it with the left mouse
+button or press the <b>Ok</b> button. 
+To cancel the open command, select the <b>Cancel</b> button.
+
+<h3><a name="project`new">New</a></h3>
+
+This sets the current project to be a new one. If there were any
+unsaved changes to the configure of the previous one, you will be
+prompted to save them. 
+Select this item if you are currently working on a 
+#ifdef VDMSL
+VDM-SL 
+#endif  //VDMSL
+#ifdef VDMPP
+VDM++
+#endif  //VDMPP
+project and you would like to start working on a new one.
+
+<h3><a name="project`configure">Configure</a></h3>
+
+When you select <i>Configure</i> in the <i>project</i> menu, a window
+that lets you configure the current project will appear .<br>
+
+At the top of the window you can select the files you wish to be part
+of the project. This screen is divided into the following groups:
+
+<dl>
+  <dt> Filter
+  <dd> Here you can select a pattern that files should match in order to be
+       seen in the <i>file listbox</i>. When you press enter in this entry,
+       the <i>file listbox</i> will be updated, so that it matches
+       this pattern.
+  <dt> Directory List
+  <dd> Here you can browse through your directories by
+       double clicking on a directory.
+  <dt> File List
+  <dd> This is the list of files that matches the pattern in the
+       <i>filter</i> entry. When you double click on a file, you will
+       add it to the files in the project.
+  <dt> Files in the project
+  <dd> This is a list of files in the current project. When you double
+       click on a file, you will remove it from the project.
+</dl>
+
+<h3><a name="project`quit">Quit</a></h3>
+#ifdef VDMSL
+This will end the VDM-SL Toolbox session.
+#else
+This will end the VDM++ Toolbox session.
+#endif //VDMSL
+
+
+<h2><a name="menuline`tools">Tools</a></h2>
+#ifdef VDMSL
+This menu contains the main tools: the Interpreter tool and the Error
+tool. 
+#else
+This menu contains the main tools: the Interpreter tool, the Error
+tool, the Inheritance tool, the Association tool and the Rose-VDM++
+Link tool.
+#endif //VDSL
+
+## and the Test coverage tool. 
+
+<h3><a name="tools_menu_select`interpreter">Interpreter</a></h3>
+
+This menu entry invokes the <a href="#interptool">Interpreter
+tool</a>.
+
+<h3><a name="tools_menu_select`error">Error tool</a></h3>
+
+This menu entry invokes the <a href="#errortool">Error tool</a>.
+
+#ifdef VDMPP
+<h3><a name="tools_menu_select`dependency">Dependency tool</a></h3>
+
+This menu entry invokes the <a href="#assoctool">Dependency tool</a>
+
+<h3><a name="tools_menu_select`inheritance">Inheritance tool</a></h3>
+
+This menu entry invokes the <a href="#inhtreetool">Inheritance tool</a>
+
+<h3><a name="tools_menu_select`rose-vdm++Link">Rose-VDM++ Link tool</a></h3>
+
+This menu entry invokes the Rose-VDM++ Link tool.
+
+#endif //VDMPP
+
+## <h3><a name="tools_menu_select`testCoverage">Test coverage tool</a></h3>
+## 
+## This menu entry invokes the <a href="#covertool">Test coverage
+## tool</a>.
+## 
+
+<h2><a name="menuline`options">Options</a></h2>
+
+#ifdef VDMSL
+This menu contains VDM-SL options and options for the interface and
+external editors. <P>
+#else
+This menu contains VDM++ options and options for the interface and
+external editors. <P>
+#endif //VDMSL
+
+Modified options cannot be saved for the time being.
+
+<h3><a name="option_menu_select`vdm">Interpreter Options</a></h3>
+
+       The options here take effect whenever an expression is evaluated.
+       This includes options for dynamic type checking, invariant
+       checking and pre and post condition checking.
+       <P>
+       There is an option that enables pretty print format of values 
+       produced by interpreting expressions. All values will be displayed 
+       with line-breaks and indentation according to the structure of the 
+       value.
+       <P>
+       Finally, it is possible to initialise a random number
+       generator with the given integer (a seed). This causes a random order of
+       evaluation of sub-statements in
+       non-deterministic statement constructs. 
+       A negative number will disable
+       random evaluation of non-deterministic statements.
+
+<h3><a name="option_menu_select`vdm">Type Checker Options</a></h3>
+       Per default possible type checking will be used. Definite type checking 
+       can also be selected here. This is likely to give a large number of 
+       errors which should be considered as proof obligations. <P> It
+       is also possible to get additional errors and warnings reported
+       using the extended type checking option.
+
+<h3><a name="option_menu_select`vdm">Pretty Printer Options</a></h3>
+       The LaTeX and RTF pretty printers are able to produce an index 
+       of all definitions automatically. <P> There is also an option 
+       here which will produce a cross reference index of both defined
+       and used occurrences (LaTeX only). <P> Finally, there is an option to
+       incorporate test coverage information (LaTex and RTF). 
+
+<h3><a name="option_menu_select`vdm">C++ Code Generator Options</a></h3>
+       The C++ Code Generator has an option that enables the generation of
+       C++ code that maintains position information. This option will slow
+       down the speed of the C++ code, but it will be able to provide exact 
+       information about which part of the specification the code is 
+       generated from, in case a run-time error occurs.
+#ifdef VDMPP
+       <P>
+       In addition there is an option which generate run-time checks
+       of pre and post conditions for all functions and
+       operations. This naturally also slows down the generated code
+       but the advantage is that when a condition is violated the
+       execution will be stopped immediately.
+<h3><a name="option_menu_select`vdm">Java Code Generator Options</a></h3>
+       The Java Code Generator has a number of options that enables 
+       the generation of Java code satisfying the user's requirements.
+<dl>
+  <dt> Code generate only skeletons, except for types
+  <dd> Specify this option to
+  generate skeleton classes. A skeleton class is a 
+  class containing full type, value and instance variable definitions,
+  but empty function and operation definitions. 
+  <dt> Code generate only types
+  <dd> Specify this
+  option to only want to generate Java code for VDM++ type
+  definitions (i.e. functions, operations, instance variables and
+  values will not be generated). 
+  <dt> Code generate integers as Longs
+  <dd> Using this
+  option, it is possible to generate VDM++ integer values and
+  variables as Java <b>Longs</b> instead of
+  <b>Integers</b>.
+  <dt> Code generate code with concurrency constructs
+  <dd> This option is used to force the Code Generator to generate code
+  which includes support for concurrency. See "The VDM++ to Java
+  Code Generator" manual
+  for details of this. 
+  <dt> Code generate pre and post functions/operations
+  <dd> Specify this option
+  in order to code generate Java methods for pre and post conditions
+  and invariants them. 
+  <dt> Check pre and post conditions
+  <dd> Specify this option to generate inline checks of function pre and post
+  conditions, and operation pre conditions. Raise an exception if a
+  check fails. This implies the
+  previous option as pre and post conditions must be generated for
+  compilable code to be generated. 
+  <dt> Package
+  <dd> The default behaviour of the code
+  generator is to write the generated Java files in the directory,
+  where your project file lies, or if no project file exists, in the
+  directory, where the VDM++ Toolbox was started. The files are part
+  of an unnamed default package. Specify this
+  option in order to generate a specific package
+  which will contain the generated Java classes. The Code Generator
+  will make a new directory using the given package name containing the
+  created files and the generated files will include the appropriate
+  <b>package</b> statement.
+  <dt> Select Interfaces
+  <dd> Select classes to be generated as Java interfaces. See "The VDM++ to Java
+  Code Generator" manual for details.
+</dl>
+#endif // VDMPP
+
+<h3><a name="option_menu_select`interface">Interface Options</a></h3>
+
+The interface options are grouped into two different categories:
+
+<dl>
+  <dt> External Editor
+  <dd> The options here take effect whenever an external editor is invoked
+       from the user interface. If the environment variable EDITOR is defined
+       then the value of this variable is used as the default value of the 
+       external editor name. 
+  <dt> Miscellaneous
+  <dd> The options here are related to the way windows should be treated
+       in the interface and how to communicate with the printer.
+</dl>
+
+<h2><a name="menuline`help">Help</a></h2>
+In this menu you can find all the help available in the Toolbox.
+
+<h3><a name="help`about">About</a></h3>
+When this menu is selected a window will appear which tells you the
+version of the Toolbox.
+
+<h3><a name="help`helpOnHelp">Help On Help</a></h3>
+This menu will bring up this <a name="help_page">help page</a>.
+
+<h3><a name="unknown">Missing Help</a></h3>
+
+The help tool will jump to this section if it cannot find help on the
+item you requested help on. If you feel there should be help on the
+item, then you should report this as a bug (see in the User Manual for
+#ifdef VDMSL
+the VDM-SL Toolbox on how to report a bug).
+#else
+the VDM++ Toolbox on how to report a bug).
+#endif //VDMSL
+
+<h2><a name="main`buttons">Command Buttons</a></h2>
+
+#ifdef VDMSL
+These buttons activate the main operations which can be carried out on
+the files and/or modules that have been selected in the <b>modules</b> window.
+#else
+These buttons activate the main operations which can be carried out on
+the files and/or classes that have been selected in the <b>classes</b> windows.
+#endif //VDMSL
+
+<h3><a name="maintoolPage`syntaxCheck">Syntax Check</a></h3>
+
+This function will check the syntax of the selected files. If errors
+are discovered, they will be shown in the <a href="#errortool">error
+tool</a>. The other features of Toolbox (type checker, pretty printer,
+interpreter and code generator) can only be applied on syntax correct files.
+
+<h3><a name="maintoolPage`typeCheck">Type Check</a></h3>
+
+#ifdef VDMSL
+This button initiates a static type check of the selected modules. The
+modules can be checked with two different options which are set
+#else
+This button initiates a static type check of the selected classes. The
+classes can be checked with two different options which are set
+#endif //VDMSL
+globally for the Toolbox in the options. If type errors are discovered
+they will be shown in the <a href="#errortool">error tool</a>.
+
+<h3><a name="maintoolPage`generateC++">Generate C++</a></h3>
+
+#ifdef VDMSL
+This button initiates the VDM-SL to C++ Code Generator with the
+options specified in the Options menu on the selected modules.
+#else
+This button initiates the VDM++ to C++ Code Generator with the
+options specified in the Options menu on the selected modules.
+#endif //VDMSL
+
+#ifdef VDMPP
+<h3><a name="maintoolPage`generateJava">Generate Java</a></h3>
+
+This button initiates the VDM++ to Java Code Generator with the
+options specified in the Options menu on the selected classes.
+#endif //VDMPP
+
+<h3><a name="maintoolPage`prettyPrint">Pretty Print</a></h3>
+
+#ifdef VDMSL
+This button initiates the VDM-SL to LaTeX/RTF pretty printer generator with
+the options specified in the Options menu on the selected files.
+#else
+This button initiates the VDM++ to LaTeX/RTF pretty printer generator with
+the options specified in the Options menu on the selected files.
+#endif //VDMSL
+
+<h1><a name="errortool">Error Tool</a></h1>
+
+This tool will pop up when errors or warnings are produced during
+syntax check, type check, code generation or pretty printing. 
+
+<h2><a name="errorPage`error_lister">Browsing the Errors</a></h2>
+
+This window contains the errors produced by the last check. The
+current error message will have its first line underlined. 
+
+<dl>
+  <dt> <a name="errorPage`error`first"><img src="bitmaps/first"></a>
+  <dd> This will move the current error to be the first in the list
+       of errors and warnings.
+  <dt> <a name="errorPage`error`prev"><img src="bitmaps/prev"></a>
+  <dd> This will move the current error to be the previous in the list
+       of errors and warnings.
+  <dt> <a name="errorPage`error`next"><img src="bitmaps/next"></a>
+  <dd> This will move the current error to be the next in the list
+       of errors and warnings.
+  <dt> <a name="errorPage`error`last"><img src="bitmaps/last"></a>
+  <dd> This will move the current error to be the last in the list
+       of errors and warnings.
+</dl>
+
+<h2><a name="anyPage`error_editor">The Display Window</a></h2>
+
+This window will display the part of the specification referred to in
+the errors and warnings window. A small cursor is used to identify the
+exact position of the construct referred to.
+
+<h1><a name="interptool">Interpreter Tool</a></h1>
+
+This tool contains a dialog window for interacting with the Toolbox,
+and three windows used during debug sessions: a display window, a
+function trace window and a window showing breakpoints. Furthermore,
+the tool has a button bar which executes debug related functions.
+
+<h2><a name="interpPage`dialog">Dialog Window</a></h2>
+
+This window is for entering commands for e.g., evaluation of
+expressions or debugging of specifications.
+
+<h2><a name="anyPage`debug_editor">The Display Window</a></h2>
+
+This window will display part of the specification during debugging. A
+small cursor is used to identify the exact position of the construct
+referred to.
+
+<h2><a name="interpPage`debug_trace">Function Trace</a></h2>
+
+This window will show the function/operation call stack whenever
+debugging has stopped at a breakpoint. If the textual length of the
+parameters of a function/operation exceeds 70 they will be replaced by
+"..."; if you click on "..." with the middle button, "..." will be
+replaced by the actual parameters. Clicking on the parameters will
+replace them with "...".
+
+<h2><a name="interpPage`breakpoint">Break points</a></h2>
+
+This window will display the function and operations currently selected 
+as breakpoints whenever expressions are being debugged.
+
+<h2>The Interpreter tool Buttons</h2>
+
+<h3><a name="interptoolPage`init">Init</a></h3>
+
+This button will initialise the modules in the current project.  This
+includes initialising the
+#ifdef VDMSL
+state
+#else
+instance variables for the objects which has been created
+#endif VDMSL
+ and all values. For each 
+#ifdef VDMSL
+module
+#else
+class
+#endif VDMSL
+the values will be calculated in the order they appear in the source
+definitions. If a value is multiply defined it will be reported during
+this initialisation.
+
+<P> If random evaluation of non-deterministic statements is enabled
+(in the options menu), then the controlling random number generator is
+reinitialised with the given seed.
+
+<h3><a name="interptoolPage`step">Step</a></h3>
+
+Executes the next statement and then break. This command will not step
+into function and operation calls. The button can only be used after
+the specification has been initialised and the debugger has stopped at
+a breakpoint.
+
+<h3><a name="interptoolPage`stepIn">Step In</a></h3>
+
+Executes the next expression or statement and then break. This command
+will also step into function and operation calls. This command can
+only be called after the specification has been initialised and the
+debugger has stopped at a breakpoint.
+
+<h3><a name="interptoolPage`singleStep">Single Step</a></h3>
+
+Executes the next expression or statement and then break. This command
+can only be called after the specification has been initialised and
+the debugger has stopped at a breakpoint.
+
+<h3><a name="interptoolPage`continue">Continue</a></h3>
+
+Continues the execution after a breakpoint. This command can only be
+called after the specification has been initialised and the debugger
+has stopped at a breakpoint.
+
+
+
+<h3><a name="interptoolPage`finish">Finish</a></h3>
+
+Finishes the evaluation of the current function or operation and
+returns to the caller. The command is used together with 'stepin'.
+This command can only be called after the specification has been
+initialised and the debugger has stopped at a breakpoint.
+
+<h3><a name="interptoolPage`up">Up</a></h3>
+
+This command can only be called after the specification has been
+initialised and the debugger has stopped at a breakpoint. It has the
+effect that the current context is shifted one level up compared to
+the place currently shown in the display window. Thus, the context is
+changed to the place where the current function/operation was called
+from in the current function trace.
+
+<h3><a name="interptoolPage`down">Down</a></h3>
+
+This command can only be called after the specification has been
+initialised and the debugger has stopped at a breakpoint. It has the
+effect that the current context is shifted one level down compared to
+the place currently shown in the display window. Thus, the context is
+changed down to the place where the current function/operation called
+its sub-function/operation in the current function trace.
+
+<h3><a name="interptoolPage`stopInterpreter">Stop Interpreter</a></h3>
+
+Stop the evaluation of an expression. Access to local and global
+variables depends on whether the button has been pressed within a
+<b>print</b> or a <b>debug</b> command. These commands are
+described below including a description of access to variables. The
+command is traditionally used to break a possible infinite loop in
+one's specification.
+
+##<h1><a name="covertool">Test coverage tool</a></h1>
+##
+##This tool contains a display window for display of test coverage
+##information. Currently the test coverage information must be collected
+##using the command-line vdmde as described in the "User Manual for
+##VDM-SL Toolbox", and the specification file must contain the
+##\begin{rtinfo}{testsuitefile}... \end{rtinfo} section. 
+##
+##<h2><a name="anyPage`cover_editor">Display window</a></h2>
+##
+##When the button <a href="#covertoolPage`showCoverage">Show Coverage</a>
+##is pressed, the file selected in the "Files" window will be shown in
+##this display window with uncovered expression marked as follows: the
+##first character in each uncovered (sub)expression will be marked with
+##a red background (or underline on B&W displays). The optimal marking
+##would of course mark the expression from the start to the end, but
+##this is not currently possible.
+##
+##<h2><a name="covertoolPage`showCoverage">Show coverage button</a></h2> 
+##
+##Press this button when a file has been selected in the "Files" window
+##and the test coverage for this file will be shown in the <a
+##href="#anyPage`cover_editor">Display window</a>. If more than one file
+##is selected, this will happen to each one, but only the last will
+##remain in the window. 
+#ifdef VDMPP
+<h1><a name="dependencytool">Dependency Tool</a></h1>
+
+The dependency tool presents dependency information for a selected
+class:
+<dl>
+  <dt> <a name="dependencyPage`dependencynamemess"> Selected Class </a>
+  <dd> At top of the dependency tool the name of the selected class is
+       listed.
+  <dt> <a name="dependencyPage`super_classes"> Superclasses</a>
+  <dd> In this window all the superclasses are listed.
+  <dt> <a name="dependencyPage`sub_classes">Subclasses</a>
+  <dd> In this window all the subclasses are listed.
+  <dt> <a name="dependencyPage`uses">Uses</a>
+  <dd> In this window all the classes which uses the selected class
+       are listed. As an example a class uses another class if it
+       refer to the class through an object reference.
+  <dt> <a name="dependencyPage`used_by">Used by</a>
+  <dd> In this window all the classes which use the selected class is
+  listed.
+</dl>
+
+The information in the dependency tool are not always guaranteed to be
+complete, this is indicated by a star associated to the name of the
+selected class. The dependency information is complete when all
+the classes are type correct.
+
+
+
+<h1><a name="inhtreetool"><a name="inhtreePage`inhtree">Inheritance Tool</a></a></h1>
+
+
+The inheritance tool gives a graphical representation of the
+inheritance structure of your VDM++ specification.
+
+<h1><a name="uml_tool`main">Rose-Link Tool</a></h1>
+
+This window contains two sub-windows: the "Classes" window, and
+the "Log" window. Furthermore, it contains a number of buttons.
+
+
+<h2><a name="uml_tool`classes">The Classes Window</a></h2>
+
+On the left-hand-side of this window each of the classes in the model
+are listed with a small tick-box in front. At the right-hand-side of
+this window class designators are used to describe the status of each
+class. This status indicates the way in which the default mapping which is 
+expected to be performed when the user chooses to carry out the mapping
+between the textual VDM++ model and the graphical UML Rose
+model. Between the columns indicating the class designation status
+for VDM++ and UML there is a small button which is toggled when
+it is pressed.
+
+
+The different class designators have the following meaning:
+<dl>
+  <dt> A
+  <dd> Indicates that the class was added since the model was last
+       computed.
+  <dt> ?
+  <dd> Indicates that the class is not known in this model.
+  <dt> M 
+  <dd> Indicates that the class was modified.  
+  <dt> - 
+  <dd> Indicates that the class has not changed.  
+  <dt> D
+  <dd> Indicates that the class was deleted since the models were last
+       computed.
+</dl>
+
+The action buttons can be in four different states:
+
+<dl>
+  <dt> <a name="uml_tool`left2right"><img src="bitmaps/left2right"></a>
+       
+  <dd> VDM++ to UML: 
+       This action will map the definitions of the class defined in
+       VDM++ to a class of the same name in UML. If this class exists
+       in UML already it is updated. Otherwise a new class will be created.
+  <dt>  <a name="uml_tool`right2left"><img src="bitmaps/right2left"></a>
+       
+  <dd> UML to VDM++: 
+       This action will take the definitions of the class defined in   
+       UML and map them to a class of the same name in VDM++. 
+       Consequently this will create a new class or update the 
+       definitions of an already existing VDM++ class with the same name.
+  <dt>  <a name="uml_tool`both_ways"><img src="bitmaps/both_ways"></a>
+        
+  <dd> Merge:
+       Selecting this action for a class will take the definitions 
+       of the class defined in VDM++ and merge them with the 
+       definitions of the class defined in UML. This may not always be
+       possible. 
+  <dt>  <a name="uml_tool`no_action"><img src="bitmaps/no_action"></a>
+        
+  <dd> Exclude:
+       This will exclude the class from the new model being computed. As a   
+       consequence the class will be removed from both the UML and
+       VDM++ model.  
+</dl>
+
+<h2><a name="uml_tool`log">The Log Window</a></h2>
+
+This window is used for
+output of information or error messages from the Rose-VDM++ Link
+tool. In particular the information showing the difference between the
+information present about a class in the VDM++ and the UML model is
+shown here when the <b>Diff</b> botton is used.
+
+<h2><a name="uml_tool`buttons">The Rose-VDM++ Link Buttons</a></h2>
+
+The different buttons on the Rose-VDM++ Link tool can be divided into
+three categories as described below.
+
+<h3><a name="uml_tool`selButs">Selection Buttons</a></h3>
+
+<dl>
+  <dt> <a name="uml_tool`All">All</a>
+  <dd> This button selects all classes.
+  <dt> <a name="uml_tool`None">None</a>
+  <dd> This button deselects all classes.
+</dl>
+
+<h3><a name="uml_tool`dirButs">Direction Buttons</a></h3>
+
+<dl>
+  <dt> <a name="uml_tool`VPP2UML"><img src="bitmaps/all_right"></a>
+  <dd> This button maps all classes from the VDM++ model to the UML model.
+  <dt> <a name="uml_tool`UML2VPP"><img src="bitmaps/all_left"></a>
+  <dd> This button maps all classes from the UML model to the VDM++ model.
+  <dt> <a name="uml_tool`Default">Default</a>
+  <dd> If the state of the action buttons have been changed, the
+       default settings can be restored any time by clicking this button.
+</dl>
+
+<h3><a name="uml_tool`actionButs">Action Buttons</a></h3>
+
+<dl>
+  <dt> <a name="uml_tool`Diff">Diff</a>
+  <dd> This button shows the differences between the VDM++ model and
+       the UML model for all the selected classes.
+  <dt> <a name="uml_tool`Map">Map</a>
+  <dd> This button performs the actual mapping between the VDM++ and
+       UML models with the directives indicated by the different
+       direction buttons. 
+  <dt> <a name="uml_tool`Close">Close</a>
+  <dd> This button closes the Rose-VDM++ Link tool without mapping
+       between the UML and VDM++ models.
+</dl>
+#endif //VDMPP
+
+<h1><a name="interpPage`icons">The icons on top of each frame</a></h1>
+On top of each frame a series of icons are located. Here is a
+description of what they do:
+<dl>
+##  <dt> <a name="icons`close"><img src="bitmaps/closeBig"></a>
+##  <dd> This will close the frame, to reopen it, select it in the <a
+##       href="#windows`reopen">Windows-&gt;reopen menu</a>
+##  <dt> <a name="icons`moveUp"><img src="bitmaps/moveUpBig"></a>
+##  <dd> This will create a top-level window outside the frame. This gives you
+##       the possibility to configure the menu-page the way you want
+##       it. See the section <a href="#windows`saveLayout">Save
+##       layout</a> to see how to save the layout.
+##  <dt> <a name="icons`moveDown"><img src="bitmaps/moveDownBig"></a>
+##  <dd> This will insert a frame that has been <a
+##       href="#icons`moveUp">made to a top-level</a>, into the main window.
+##  <dt> <a name="icons`move"><img src="bitmaps/moveAroundBig"></a>
+##  <dd> This will bring up a window with four arrows which can
+##       <a href="???">rearrange the layout of the current page.
+##       The current window will be moved in the direction of the arrow
+##       pressed.</a>
+  <dt> <a name="icons`print"><img src="bitmaps/printBig"></a>
+  <dd> This will print the content of the frame to your printer. 
+  <dt> <a name="icons`pipe"><img src="bitmaps/pipe"></a>
+  <dd> This will pipe the content of the buffer. When you select this
+       function a window will appear that asks you for a program to
+       pipe to.
+  <dt> <a name="icons`clear"><img src="bitmaps/clearBig"></a>
+  <dd> In <a href="#interpPage`dialog">the dialog
+       window</a> and <a href="#mainPage`log">the log window</a>  this
+       erases the content of the window. In the <a href="#interpPage`breakpoint">breakpoint
+       window</a> this deletes the marked breakpoints.
+  <dt> <a name="icons`edit"><img src="bitmaps/editBig"></a>
+  <dd> This will start an external editor with all the selected files, if it
+       is invoked from the 
+#ifdef VDMSL
+modules
+#else
+classes
+#endif // VDMSL
+       window. From the display window, it
+       will start an external editor with the actual windows content.
+  <dt> <a name="icons`pm"><img src="bitmaps/plusminusBig"></a>
+  <dd> This will toggle the state of the breakpoints. That is enable
+  breakpoints which have been disabled and vice versa. Disabled breakpoints
+  will be indicated with [-] in front of them.
+  <dt> <a name="icons`toggleHierarchy"><img
+  src="bitmaps/hier_off"></a> <br>
+  <dt> <img src="bitmaps/hier_on">
+  <dd> This button will toggle between a hierachical and flat view of
+#ifdef VDMSL
+   modules.
+#else
+   classes.
+#endif
+</dl>
+
+<hr>
+<address><a href="http://www.ifad.dk/Products/vdmtools.htm">The 
+VDM-SL Toolbox Group</a> &lt;toolbox@ifad.dk&gt;</address>
+<!-- hhmts start -->
+Last modified: Thu Feb 11 13:31:51 CET 1999
+<!-- hhmts end -->
+</body> </html>

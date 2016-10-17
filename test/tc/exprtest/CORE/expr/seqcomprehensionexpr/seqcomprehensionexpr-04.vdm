@@ -1,0 +1,13 @@
+class SeqComprehensionExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = [a|a in set {true,6} & a]
+  in skip;
+
+------------------------------------------------------------------------------
+end SeqComprehensionExprTest

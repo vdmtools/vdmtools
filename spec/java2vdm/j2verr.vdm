@@ -1,0 +1,65 @@
+\section{The J2VERR Module}
+
+\begin{vdm_al}
+module J2VERR
+
+imports
+  from AS all,
+  from REP all,
+
+  from CPP all,
+  from CI all,
+  from UTIL all,
+  from JSSREP all,
+  from JAVAERR all,
+  from J2VERRMSG all
+
+exports
+  operations
+    GenErr : CI`ContextId * JAVAERR`SeverityType * nat * seq of seq of char ==> ();
+    PrintErrors : () ==> JAVAERR`ErrType;
+    ResetErrors: () ==> ();
+    HaveErrors: () ==> bool
+
+definitions
+
+state ERRState of
+  Errors: JAVAERR`ErrType
+init es == es = mk_ERRState([])
+end
+
+operations
+  GenErr : CI`ContextId * JAVAERR`SeverityType * nat * seq of seq of char ==> ()
+  GenErr(p_cid, p_SvTp,p_num,p_Txts) ==
+    def l_Txt = LookUpErrMsg(p_num,p_Txts);
+        l_msg = JAVAERR`GenErr(p_cid, p_SvTp,p_num,l_Txt)
+    in
+      if not exists i in set inds Errors & Errors(i) = l_msg
+      then Errors := Errors ^ [l_msg];
+
+  PrintErrors: () ==> JAVAERR`ErrType
+  PrintErrors() ==
+    return Errors;
+
+  ResetErrors: () ==> ()
+  ResetErrors() ==
+    Errors := [];
+
+  LookUpErrMsg: nat * seq of seq of char ==> seq of char
+  LookUpErrMsg(num,Txts) ==
+    let err = J2VERRMSG`ErrMsg(num)
+    in UTIL`ReplacePercent(err,Txts);
+
+  HaveErrors: () ==> bool
+  HaveErrors() ==
+    return len Errors > 0;
+
+end J2VERR
+\end{vdm_al}
+
+All user output from the static semantic checker is via the {\it GenErr} operation.
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}{rtinfo.ast}[J2VERR]
+\end{rtinfo}

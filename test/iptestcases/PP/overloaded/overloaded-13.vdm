@@ -1,0 +1,147 @@
+class Nullable
+instance variables
+  protected isNil: bool :=false
+operations
+  public IsNil: () ==> bool
+  IsNil() == return isNil
+end Nullable
+
+class Object is subclass of Nullable
+
+--uselib "j2vutil_dl.so"
+
+operations 
+public Object: <NIL> ==> Object
+Object(p) == is not yet specified;
+
+public  Object : () ==> Object
+Object() ==
+--is not yet specified ;
+  skip;
+
+public  wait : () ==> <VOID>
+wait() == 
+is not yet specified ;
+
+protected  clone : () ==> Object
+clone() == 
+is not yet specified ;
+
+--public  wait : int  ==> <VOID>
+--wait(timeout) == 
+--is not yet specified ;
+
+public  notify : () ==> <VOID>
+notify() == 
+is not yet specified ;
+
+--public  wait : int  * int  ==> <VOID>
+--wait(timeout, nanos) == 
+--is not yet specified ;
+
+protected  finalize : () ==> <VOID>
+finalize() == 
+is not yet specified ;
+
+--public  getClass : () ==> Class
+--getClass() == 
+--is not yet specified ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+is not yet specified ;
+
+--public  toString : () ==> String
+--toString() == 
+--is not yet specified ;
+
+public  notifyAll : () ==> <VOID>
+notifyAll() == 
+is not yet specified ;
+
+private  static registerNatives : () ==> <VOID>
+registerNatives() == 
+is not yet specified ;
+
+public  equals : Object ==> bool 
+equals(obj) == 
+is not yet specified ;
+
+--
+--  Just to test...
+--
+functions
+public Convert: (seq1 of char) * [int  | real | char | String]
+               -> int  | real | char | String
+Convert(p_type,p_val) ==
+  cases true:
+    (p_type="char") ->
+      cases true:
+        (is_(p_val, char)) -> p_val,
+        (is_(p_val, int)) -> ' ',
+        (is_(p_val, real)) -> ' ',
+        (is_(p_val, String)) -> undefined
+      end,
+    others ->
+      undefined
+  end
+pre
+  cases true:
+    (p_type="boolean"),
+--    (p_type="void"),
+    (p_type="char"),
+    (p_type="short"),
+    (p_type="int"),
+    (p_type="long"),
+    (p_type="float"),
+    (p_type="double"),
+    (p_type="byte"),
+    (p_type="String")
+      -> true,
+    others
+      -> false
+  end;
+
+
+end  Object
+
+class String is subclass of Object, Serializable, Comparable
+--uselib "j2vutil_dl.so"
+operations 
+--
+--  To be able to use 'new String("123")'
+--
+public  String : seq of  char  ==> String
+String(value_) == 
+--is not yet specified ;
+skip;
+
+public  String : String ==> String
+String(value_) == 
+is not yet specified ;
+
+end  String
+
+class Serializable
+
+end  Serializable
+
+class Comparable
+operations 
+public  compareTo : Object ==> int 
+compareTo(o) == 
+is subclass responsibility ;
+
+end  Comparable
+
+class A
+
+operations
+
+public Test : () ==> nat
+Test() ==
+  let s = new String("123") in
+  return 1;
+
+end A
+

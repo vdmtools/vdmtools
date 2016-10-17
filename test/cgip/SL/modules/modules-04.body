@@ -1,0 +1,46 @@
+imports 
+
+from MyModule all,
+from B all,
+from C all,
+from D all,
+from E all
+
+
+exports
+  operations 
+  Test: () ==> seq of char
+
+definitions
+operations
+Test: () ==> seq of char
+Test() ==
+( dcl my_rec : MyModule`rec;
+  let rec = mk_MyModule`rec(mk_MyModule`rec2("hello"), mk_MyModule`rec2("world"))
+  in my_rec := mu(rec, field2 |-> mk_MyModule`rec2("friend"));
+  return my_rec.field2.a
+);
+
+end A
+
+
+module MyModule
+
+exports all
+definitions
+
+types
+
+  Expr =
+   rec |
+   rec2;
+
+rec ::
+  field1 : Expr
+  field2 : Expr;
+
+rec2 ::
+  a : seq of char
+
+
+end MyModule

@@ -1,0 +1,54 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{vdm}\index{VisualDetecteur|ClassDef}
+{\small\sf class} $VisualDetecteur$  \kISO $\index{Detecteur|ClassOcc}Detecteur$
+\begin{instvar}\index{view|InstVarDef}
+\vardcl{view}{ @View}
+\end{instvar}
+\begin{methdef}\index{Init|MethodDef}
+\begin{method}{Init}
+\parms{radar-information :  @PistesRadar, view :  @View}\\
+\Inys 
+\end{method}\index{CalculeRisque|MethodDef}
+\begin{method}{CalculeRisque}
+\parms{segment-de-prediction :  @SegmentDePrediction, obstacle :  @Terrain |  @Obstacle} \Fdef\\ \begin{defstmt}
+\eqdef{modeA : ModeA\index{ModeA|TypeOcc}}{\invoke{segment-de-prediction}{\index{GetmodeA|MethodOcc}
+\fnapply{GetmodeA}{}}}
+\eqdef{risque-detecte : \Bool } \\
+{\invoke{obstacle}{\index{Intersection|MethodOcc}
+\fnapply{Intersection}{segment-de-prediction}}}
+\end{defstmt} \\
+\If risque-detecte
+\Then \\
+\begin{blockstmt}
+\invoke{pistes-radar}{\index{SetAlarm|MethodOcc}
+\fnapply{SetAlarm}{modeA, obstacle}} ; \\
+\invoke{view}{\index{ShowAlarm|MethodOcc}
+\fnapply{ShowAlarm}{modeA, obstacle}}
+\end{blockstmt}
+\Else \\
+\Skip 
+\Fi
+\end{method}
+\end{methdef}
+{\small\sf end} $VisualDetecteur$
+
+\end{vdm}

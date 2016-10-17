@@ -1,0 +1,236 @@
+class VDMHashtable is subclass of JavaUtilDictionary, JavaUtilMap, JavaLangCloneable, JavaIoSerializable
+
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("VDMHashtable", <CLASS>, false);
+
+instance variables 
+  private data : map JavaLangObject to JavaLangObject := {|->};
+  private hashedKeys : map int to int := {|->}
+
+operations 
+public  keys : () ==> JavaUtilEnumeration
+keys() == 
+( return  new VDMEnumeration(dom data);
+) ;
+
+public  size : () ==> int 
+size() == 
+( return card dom data
+) ;
+
+public  clear : () ==> ()
+clear() == 
+(
+  data := {|->};
+  hashedKeys := {|->}
+) ;
+
+public  clone : () ==> JavaLangObject
+clone() == 
+is not yet specified;
+
+public  keySet : () ==> JavaUtilSet
+keySet() == 
+is not yet specified;
+
+
+public  isEmpty : () ==> bool 
+isEmpty() == 
+( return data = {|->}
+) ;
+
+public  elements : () ==> JavaUtilEnumeration
+elements() == 
+( return  new VDMEnumeration(rng data); 
+) ;
+
+public  entrySet : () ==> JavaUtilSet
+entrySet() == 
+is not yet specified;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  hashCode : () ==> int 
+hashCode() == 
+( dcl   h : int  := 0;
+  return  h
+) ;
+
+public  toString : () ==> JavaLangString
+toString() == 
+( dcl   max : int  := size()-1,
+        buf : JavaLangStringBuffer := new  JavaLangStringBuffer();
+  let - = buf.append(new  JavaLangString("{"))
+  in 
+    skip ;
+  ( dcl   i : int  := 0;
+    while  i <= max do  
+    ( if  i < max
+      then  
+        let - = buf.append(new  JavaLangString(", "))
+        in 
+          skip ;
+      i := i+1
+    ) 
+  ) ;
+  let - = buf.append(new  JavaLangString("}"))
+  in 
+    skip ;
+  return  buf.toString()
+) ;
+
+public  values__ : () ==> JavaUtilCollection
+values__() == 
+is not yet specified;
+
+public  VDMHashtable : () ==> VDMHashtable
+VDMHashtable() == 
+  skip;
+
+public  VDMHashtable : int  ==> VDMHashtable
+VDMHashtable(initialCapacity) == 
+  skip;
+
+public  get : JavaLangObject ==> JavaLangObject
+get(key) == 
+( 
+  let matchingKey = getMatchingKey(key)
+  in
+  if matchingKey <> nil
+  then return data(matchingKey)
+  else return JavaLangObject`NIL
+) ;
+
+public  putAll : JavaUtilMap ==> ()
+putAll(t) == 
+  skip;
+
+public  VDMHashtable : int * real  ==> VDMHashtable
+VDMHashtable(initialCapacity_, loadFactor) == 
+  skip;
+
+--public  getIterator : int  ==> JavaUtilIterator
+--getIterator(type) == 
+--( dcl res: JavaUtilIterator;
+--  if  count = 0
+--  then  
+--    ( res := new  JavaUtilEmptyIterator()
+--    ) 
+--  else  
+--    ( res := new  JavaUtilEnumerator(type , true , self )
+--    );
+--  return res;
+--) ;
+
+
+public  VDMHashtable : <NIL> ==> VDMHashtable
+VDMHashtable(-) == 
+isNil := true  ;
+
+public  equals : JavaLangObject ==> bool 
+equals(o) == 
+( if  o = self  
+  then  
+    return  true  ;
+  if  not  (isofclass  (VDMHashtable,o))
+  then  
+    return  false  ;
+  ( dcl   t : VDMHashtable := o;
+    if  t.size() <> size()
+    then  
+      return  false  ;
+    return  true  
+  ) 
+) ;
+
+public  remove : JavaLangObject ==> JavaLangObject
+remove(key) == 
+(
+  let matchingKey = getMatchingKey(key)
+  in
+  if matchingKey <> nil
+  then 
+    let val = data(matchingKey) in
+    ( data := {matchingKey} <-: data;
+      decrementCount(matchingKey.hashCode());
+      return val
+    )
+  else 
+    return JavaLangObject`NIL
+);
+
+public  contains : JavaLangObject ==> bool 
+contains(value__) == 
+(
+  if  value__.IsNil()
+  then  
+    exit new JavaLangNullPointerException()
+  else
+    return exists val in set rng data & val.equals(value__)
+) ;
+
+public  containsKey : JavaLangObject ==> bool 
+containsKey(key) == 
+  return getMatchingKey(key) <> nil;
+
+public  put : JavaLangObject * JavaLangObject ==> JavaLangObject
+put(key, value__) == 
+( 
+--  if  value__.IsNil()
+--  then  
+--    exit  new  JavaLangNullPointerException()
+--  else
+    let matchingKey = getMatchingKey(key),
+        oldValue    = if matchingKey = nil
+                      then JavaLangObject`NIL
+                      else data(matchingKey),
+        newKey      = if matchingKey = nil
+                      then key
+                      else matchingKey
+    in
+    ( 
+      if oldValue.IsNil()
+      then incrementCount(key.hashCode());
+      data := data ++ { newKey |-> value__};
+      return oldValue
+    )
+) ;
+
+private incrementCount : int ==> ()
+incrementCount(hc) ==
+  if hc in set dom hashedKeys
+  then hashedKeys(hc) := hashedKeys(hc) + 1
+  else hashedKeys := hashedKeys ++ { hc |-> 1 };
+
+private decrementCount : int ==> ()
+decrementCount(hc) ==
+  if hashedKeys(hc) > 1
+  then hashedKeys(hc) := hashedKeys(hc) - 1
+  else hashedKeys := {hc} <-: hashedKeys;
+
+private getMatchingKey : JavaLangObject ==> [JavaLangObject]
+getMatchingKey(key) ==
+( if key.hashCode() not in set dom hashedKeys
+  then return nil;
+  for all k in set dom data do
+    if k.equals(key)
+    then return k;
+  return nil
+);
+
+public  containsValue : JavaLangObject ==> bool 
+containsValue(value__) == 
+( return  contains(value__)
+) ;
+
+-- for testing
+public getData : () ==> map JavaLangObject to JavaLangObject
+getData() ==
+  return data;
+
+end VDMHashtable
+
+
+  

@@ -1,0 +1,45 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{vdm}\index{Detecteur|ClassDef}
+{\small\sf class} $Detecteur$  \kISO $\index{MSAWTypes|ClassOcc}MSAWTypes$
+\begin{instvar}\index{pistes-radar|InstVarDef}
+\vardcl{pistes-radar}{ @PistesRadar}
+\end{instvar}
+\begin{methdef}\index{Init|MethodDef}
+\begin{method}{Init}
+\parms{radar-information :  @PistesRadar, view :  @View} \Fdef\\ \ass{pistes-radar}{radar-information}
+\end{method}\index{CalculeRisque|MethodDef}
+\begin{method}{CalculeRisque}
+\parms{segment-de-prediction :  @SegmentDePrediction, obstacle :  @Terrain |  @Obstacle} \Fdef\\ \begin{defstmt}
+\eqdef{modeA : ModeA\index{ModeA|TypeOcc}}{\invoke{segment-de-prediction}{\index{GetmodeA|MethodOcc}
+\fnapply{GetmodeA}{}}}
+\eqdef{risque-detecte : \Bool }{\invoke{obstacle}{\index{Intersection|MethodOcc}
+\fnapply{Intersection}{segment-de-prediction}}}
+\end{defstmt} \\
+\If risque-detecte
+\Then \\
+\invoke{pistes-radar}{\index{SetAlarm|MethodOcc}
+\fnapply{SetAlarm}{modeA, obstacle}}
+\Else \\
+\Skip 
+\Fi
+\end{method}
+\end{methdef}
+{\small\sf end} $Detecteur$
+
+\end{vdm}

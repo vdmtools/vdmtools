@@ -1,0 +1,18 @@
+class JavaUtilConcurrentModificationException is subclass of JavaLangRuntimeException
+operations 
+public  JavaUtilConcurrentModificationException : () ==> JavaUtilConcurrentModificationException
+JavaUtilConcurrentModificationException() == 
+( let - = JavaLangRuntimeException() in skip   
+) ;
+
+public  JavaUtilConcurrentModificationException : <NIL> ==> JavaUtilConcurrentModificationException
+JavaUtilConcurrentModificationException(-) == 
+isNil := true  ;
+
+public  JavaUtilConcurrentModificationException : JavaLangString ==> JavaUtilConcurrentModificationException
+JavaUtilConcurrentModificationException(message) == 
+( let - = JavaLangRuntimeException(message) in skip   
+) ;
+
+
+end  JavaUtilConcurrentModificationException

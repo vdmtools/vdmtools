@@ -1,0 +1,366 @@
+--------------------------------------------------------------------
+                      The VDM++ Toolbox
+--------------------------------------------------------------------
+
+This directory (ftp://ftp.ifad.dk/pub/vdm++_toolbox/) contains release
+6.2 of the VDM++ Toolbox.  The Toolbox runs on:
+    all Sun SPARC models, under SunOS 4.1.3 or greater
+    all Sun SPARC models, under Solaris 2.6 or greater
+    HP 700 models, running HPUX 10.x. 
+    PC/586, 686, running Windows 95 or Windows NT. 
+    PC/586, 686, running Linux (not available at ftp)
+
+
+The integrated tool set can be run from the:
+  * a graphical user interface, 
+  * command-line and 
+  * with GNU Emacs using the Emacs interface.
+
+
+The files ending in `.gz' are packed with the GNU gzip program. You
+will need the gunzip program to unpack them. You can get compiled
+versions for the above architectures in the directory /pub/gzip/. 
+
+The files ending in `.zip' are packed with the Info-ZIP program.
+Information about Info-ZIP can be found at
+http://www.cdrom.com/pub/infozip/ which also has source or
+executables.  You can get a compiled version for Windows 95/NT in the
+directory /pub/infozip/unzipnt.exe.
+
+
+If you are down-loading an evaluation copy you will
+need one of the following documentation files:
+  doc_letter.pdf.tar.gz
+  doc_letter.pdf.zip
+
+The executables can be down-loaded from one of these files:
+
+   bin.solaris2.6.vdmpp.tar.gz 
+   bin.SunOS4.vdmpp.tar.gz 
+   bin.hpux_10.vdmpp.tar.gz
+   setuppp-6.2.5.exe (for Windows 95 and NT)
+
+It might also be usefull to down load:
+   known_bugs.tar.gz
+or 
+   known_bugs.zip
+
+The contents of bin.<arch>.vdmpp.tar.gz
+   ./bin/vppde                  -- executable ASCII interface
+   ./bin/vppgde                 -- executable graphical interface
+   ./emacs/vppde-19.el          -- emacs-19 interface
+   ./emacs/COPYING              -- GNU emacs general public license
+   ./latex/vpp.sty            -- old latex 209 style file
+   ./latex/vdmsl-2e.sty         -- latex(2e) style file
+   ./cg/include/*.h             -- C++ header files for VDM & CG libraries. 
+   ./cg/include/MATH_userimpl.cc -- Standard lib math implementations
+   ./cg/lib/lib*.a              -- VDM & CG libraries. 
+                                    for code generator.
+   ./stdlib/{math.vdm,mathflat.vdm}
+                                -- Standard lib specification files. 
+   ./lib/{tcl,tk,tix,itk,itcl,iwidgets}
+                                -- Supporting tcl/tk/tix/itcl/itk lib. files. 
+   ./examples/*                 -- directory containing VDM++ examples.  
+
+The contents of setuppp.exe (For Windows 95 or Windows NT) seen
+relative to the installation directory: 
+
+    ./bin/vppgde.exe        -- executable graphical interface
+    ./bin/vppde.exe         -- executable ASCII interface
+    ./cg/include/*.h             -- C++ header files for VDM & CG libraries. 
+    ./cg/include/MATH_userimpl.cc -- Standard lib math implementations
+                                    for code generator.
+    ./cg/lib/lib*.a              -- VDM & CG libraries.
+    ./stdlib/{math.vdm,mathflat.vdm}
+                                 -- Standard lib specification files. 
+    ./lib/*                 -- Supporting tcl/tk/tix/itcl/itk lib. files.
+    ./examples/*            -- directory containing VDM++ examples.  
+    ./latex/vdmsl-2e.sty    -- Latex(2e) style file
+    ./latex/vpp.sty         -- LaTeX2e style file with VDM++ macro definitions
+
+In order to run the evaluation copy you must mail toolbox@ifad.dk for
+a license file which will enable you to evaluate the VDM++ Toolbox for
+a one month period of your choice. An evaluation license is free, and
+you must indicate in the mail for which one-month period the
+evaluation license must be valid.
+
+
+The contents of known_bugs.tar.gz and known_bugs.zip:
+   known_bugs/index                  -- Index 
+   known_bugs/reportXXX              -- Bug descriptions.
+
+- doc_letter.pdf.zip         -- pdf documentation in letter format 
+   - installpp_letter.pdf      -- installation manual in letter format
+   - usermanpp_letter.pdf      -- users manual in letter format
+   - langmanpp_letter.pdf      -- language reference manual in letter format
+   - cgmanpp_letter.pdf        -- code generator manual in letter format
+   - libmanpp_letter.pdf       -- VDM C++ library manual in letter format
+   - roselinkpp_letter.pdf     -- UML link manual in letter format
+   - sort_letter.pdf           -- sorting example document in letter format
+   - guihelp-pp.html            -- GUI help pages in html format
+   - guihelp-pp.pdf             -- GUI help pages in pdf format
+   - doc_html_bitmaps.zip    -- bitmap files referenced in guihelp.html 
+
+
+NPL's LaTeX and LaTeX2e macros for VDM-SL
+-----------------------------------------
+
+The vdmsl LaTeX2e macros distributed with the VDM++
+Toolbox have been written at the National Physical Laboratory where
+they are now being updated and maintained. Please note that you will
+need a large version of TeX to use the macros in any serious way.
+
+To obtain the macros and their documentation directly from NPL's ftp
+site:
+   ftp address: ftp.npl.co.uk
+   Name:        anonymous
+   Password:    complete e-mail address
+   Directory:   /pub/latex/macros/vdm-sl
+
+Initially we would recommend you to use the macros from this
+distribution because it contains a few bug fixes which have not yet
+been incorporated at the NPL site.
+
+
+VDM++ Toolbox release notes:
+
+Changes from 6.3.a to NEXT_RELEASE
+  - Pretty printing output files are now created in the current 
+    working directory. Previously they were created where their
+    corresponding input file was read. 
+  - The Classes window now contains a hierachical view of the classes
+    together with the containing files. The Files window was removed.
+  - In the configure dialog the "Files in the project" now sort the file
+    names. 
+  - It is now possible to do 'up' and 'down' in the debugger. That is going
+    to previous call stack levels and investigate the variables at that
+    level.
+  - It is now possible to set breakpoints on lines and columns.
+
+
+Changes from 6.2.5 to 6.3.a
+----------------------------
+  - Interpreter/Java CG now supports the concurrency parts of the 
+    VDM++-language.
+  - Toolbox supports access modifiers (private/public/proteced) 
+    according to the language manual
+
+
+Changes from 6.2 to 6.2.5
+-----------------------------------
+  - VDM library errors (metaiv) are now displayed in a message box. 
+  - Exception handling added to UML code. 
+  - Exception handling added to parser code. 
+  - Parser error wrt. self expression. 
+  - Un-initialised values in UML defaults to 'undefined' in VDM 
+  - Updated behaviour wrt. create/update RTF files: All classes/files
+    will now be created/updated even if some error occurs.
+  - Update in Rose-link wrt.  default stereotype.
+
+
+Changes from 6.1 to 6.2
+-------------------------
+  - Speed of interpreter improved,
+  - History on command line for GUI, 
+  - 'Stop interpreter' button in GUI,
+  - Remove/Enable/Disable muliple breakpoints by mouse click in GUI,
+  - New -w option for RTF files: Write specification parts to text file, 
+  - Restructured dependency calculation improves speed for
+    syntax checking and type checking,
+  - Improved speed in GUI debugging by 
+    disabling auto-computing of argument list in function trace window, 
+  - Empty 'definitions' blocks are now syntax correct. 
+  - Standard math library available in interpreter,
+  - If a file is changed on the file system, the status symbol for
+    syntax checking is shown in reverse video,
+  - Alphabetic listing of classes in GUI, 
+  - GUI upgraded to Tcl/Tk version 8,
+  - Visual C++ compiler on NT upgraded to version 6.0
+  - Compiler on HP UX-10 and SunOS4.1.3 upgraded to egcs-1.1.2
+  - Updated usage text (vppde -h), 
+  - Bug fixes: #310.
+  - Fixed bug with option -o <file> : sequence of results, 
+  - Fixed bug with cyclic object references for VDM++ interpreter. 
+
+
+Changes from 6.0.0 to 6.1.0
+---------------------------
+  - The functions CGReadTagMap, DLReadNameMap, VDMSetTagMap and VDMTagDump
+    has been removed from cg_aux.h. They are no longer needed since
+    the Code Generator now generates the appropriate SetSymTag method
+    calls.
+  - VDM C++ Library: Trying to create Records with the same tag and
+    two different sizes results in an error. 
+  - The number of displayed syntax errors is limited to 100. 
+
+  - Following bugs have been corrected: #292, #296, #035, #235, #219, #237, 
+    #238, #260
+
+  - The Toolbox has been ported to the DEC Alpha OSF1 v4.0d platform.
+    The code generator supports the Dec cxx 6.0-021 compiler.
+
+  - Memory leak in syntax checker fixed.
+
+  - The char type of VDM-SL has been extended with several signs,
+    e.g. line-feed. See the language manual.
+
+  - Code generator improved such that corresponding C++ types are generated 
+    for each type in the specification. Interfacing the generated code
+    has been improved, e.g. it is now possible to implement by hand selected
+    functions.
+
+  - NT: Toolbox can now parse and pretty print Word RTF files.
+
+  - The content of the project file has been changed. The configuration of 
+    of the project is now only saved, and not the status (that is, if it has
+    been type checked, code generated or pretty printed). The speed of reading
+    the project file has been improved.
+
+  - The (pos) Type Checker has been improved to check all branches of 
+    if- and case- expression/statements to be well-formed instead of  
+    just one branch to be well-formed. 
+
+  - On the Windows platform the code generator will write file names with
+    a default .cpp suffix.
+    On all platforms the suffix can be changed by setting the VDMCGEXT
+    environment variable.
+
+  - Expansion of collapsed function arguments in the Function Trace window
+    has been moved from middle button to button 1 for better Windows
+    support.
+
+  - The Project handling has been improved. Save and Save As menus
+    have been added and the New menu changed to just create a new
+    empty project. 
+
+  - Syntax error messages has been tidied up.
+
+  - Messages from invoking the script command now appear in the
+    Dialog window instead of the Log window.
+
+  - Interpreter: When a run-time error occurs the function call stack
+    is shown in the function trace window.
+
+Changes from 5.4 to 6.0
+-----------------------
+
+  - Following bugs have been fixed:
+        #285, #172, #203
+
+  - The coupling module between OMT and VDM++ is not supported in this version,
+    but is expected to supported in version 6.1
+
+  - The Toolbox now supports test coverage collection.
+
+  - The Toolbox provides now an interpreter and debugger for the object 
+    oriented parts of the language.
+
+  - A new graphical interface. 
+
+  - A specification manager is included. The specification manager gives
+    an overview of the status of the specifications that are spread out in
+    several files. 
+
+  - Improvement on the code generator:
+        - pattern match generation has been improved.
+        - less use of temporary variables.
+        - state designators are now fully supported.
+        - sequence modify is now supported.
+        - map inverse is now supported.
+        - improved strategy for generation of comprehension expressions.
+
+  - The interface to the VDM library (libvdm.a) was changed by to use
+    the class string (#include <string.h>) instead of class String 
+    (#include <String.h>). 
+
+
+  - DOS files can now be parsed by the Unix versions of the Toolbox. 
+
+  - The User Manual for the VDM++ Toolbox has been improved.
+ 
+  - The setting of the environment variables TCL_LIBRARY, TK_LIBRARY,
+    ITCL_LIBRARY, ITK_LIBRARY, TIX_LIBRARY and IWIDGETS_LIBRARY has been
+    replaced by the environment variabel VDMPPROOT which should be set to
+    the path of the installation directory. 
+
+Changes from 5.3 to 5.4
+-----------------------
+  - The type checker has been improved for a number of constructs and 
+    some bugs has been fixed.
+
+  - vdmsl.sty version 1.1.31 is replaced by vdmsl-2e.sty version 1.1.35 
+    for LaTeX2e. 
+
+  - vpp.sty and tex.lay are updated to support LaTeX2e and version 
+    1.1.35 of vdmsl-2e.sty. The new version of the pretty printer 
+    (tex.lay) is not compatible with vdmsl.sty version 1.1.31.
+
+  - A list of known bugs is now available as part of the distribution.
+
+  - Now the parser allows a semicolon ';' after the last element of 
+    a sequence of definitions (e.g., after the last function definition). 
+    This applies to all syntactic constructs where semicolon is used as 
+    a separator. 
+
+  - The VDM C++ library has been optimised and it has resulted
+    in speedup in most parts of the Toolbox. Additionally the type
+    checker and parser has also been optimised. The type checker is
+    roughly about 30 times faster and the parser is now roughly about
+    2 times faster. 
+
+  - The VDM C++ library can output Records with symbolic tag names when a 
+    map from the numeric tags to symbolic tags has been installed with
+    the function VDMSetTagMap. 
+
+  - The header of files generated by the VDM-SLtoC++ code generator
+    now includes a comment about the used tool version and the date
+    the file was generated.
+
+  - The VDM++toC++ Code Generator is updated to support GNU C++ 
+    version 2.7.2. Furthermore, it has been improved for a number of 
+    constructs and some bugs have been fixed. The most important bug
+    fixes are:
+      - A problem with memory leak is fixed.
+      - Constructors and some include directives are moved into the
+        .cc files. This implies that a problem with binary
+        associations between classes is solved.
+      - A problem with virtual method invocations in the generated
+        code is fixed. This has been done by removing the void
+        pointers entirely from the generated code. A new class
+        ObjectRef has been added to the VDM++ library and a dynamic
+        cast mechanism is now generated by the code generator.
+
+  - New examples are new evailable in the dirsctory Examples.
+
+Changes from 5.2.1 to 5.3
+-------------------------
+  - The error messages from the type checker has been improved.
+  - Error messages are no longer merged into the source files,
+    but shown in a seperate error window.
+  - The syntax checker has been dramatically improved with respect to 
+    error messages and recovery.
+  - The type checker has been improved for a number of constructs and 
+    some bugs has been fixed.
+  - The Toolbox in general has been updated with respect to the VDM++
+    Language Reference Manual version 11.
+
+Changes from 5.2 to 5.2.1
+-------------------------
+  - The pretty printer (ast2pp) can now handle multiple AST's in one go.
+  - The number of lines generated by the C++ code generator has been 
+    reduced with approximately 50% in average.
+
+
+Changes from 5.1 to 5.2
+-----------------------
+  - First official release.
+  - The OSF/Motif-oriented interface, zvpp, has been exchanged with a
+    Motif-alike interface, vppde.
+  - The VDM++ Toolbox no longer require Motif.  
+  - Now available for Sun SPARC running Solaris 2.3 or SunOS 4.1.x
+    and HP-700 running HPUX 9.0.x
+  - A number of bugs are fixed in the code generator.
+  - Warnings and errors form the code generator are now reported through
+    the user interface.
+
+

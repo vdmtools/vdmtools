@@ -1,0 +1,38 @@
+This appears to be due to changes in symbol export semantics. These are defined in src/3rdparty/phonon/phonon/objectdescriptionmodel.h:
+
+/* Required to ensure template class vtables are exported on both symbian
+and existing builds. */
+#if (defined(Q_OS_SYMBIAN) && defined(Q_CC_RVCT)) || defined(Q_CC_CLANG)
+// RVCT compiler (2.2.686) requires the export declaration to be on the class to export vtables
+// MWC compiler works both ways
+// GCCE compiler is unknown (it can't compile QtCore yet)
+// Clang also requires the export declaration to be on the class to export vtables
+#define PHONON_TEMPLATE_CLASS_EXPORT PHONON_EXPORT
+#define PHONON_TEMPLATE_CLASS_MEMBER_EXPORT
+#else
+// Windows builds (at least) do not support export declaration on templated class
+// But if you export a member function, the vtable is implicitly exported
+#define PHONON_TEMPLATE_CLASS_EXPORT
+#define PHONON_TEMPLATE_CLASS_MEMBER_EXPORT PHONON_EXPORT
+#endif
+
+This flaw can be fixed by changing the above code to this:
+
+/* Required to ensure template class vtables are exported on both symbian
+and existing builds. */
+#if defined(Q_OS_SYMBIAN) && defined(Q_CC_RVCT)
+// RVCT compiler (2.2.686) requires the export declaration to be on the class to export vtables
+// MWC compiler works both ways
+// GCCE compiler is unknown (it can't compile QtCore yet)
+// Clang also requires the export declaration to be on the class to export vtables
+#define PHONON_TEMPLATE_CLASS_EXPORT PHONON_EXPORT
+#define PHONON_TEMPLATE_CLASS_MEMBER_EXPORT
+#elif defined(Q_CC_CLANG)
+#define PHONON_TEMPLATE_CLASS_EXPORT
+#define PHONON_TEMPLATE_CLASS_MEMBER_EXPORT PHONON_EXPORT
+#else
+// Windows builds (at least) do not support export declaration on templated class
+// But if you export a member function, the vtable is implicitly exported
+#define PHONON_TEMPLATE_CLASS_EXPORT
+#define PHONON_TEMPLATE_CLASS_MEMBER_EXPORT PHONON_EXPORT
+#endif

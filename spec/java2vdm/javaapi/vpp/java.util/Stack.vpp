@@ -1,0 +1,65 @@
+class JavaUtilStack is subclass of JavaLangObject --is subclass of JavaUtilVector
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaUtilStack" , <CLASS> , false  )
+instance variables 
+  private data : seq of JavaLangObject := []
+
+operations 
+public  pop : () ==> JavaLangObject
+pop() == 
+  let obj = hd data
+  in 
+  ( data := tl data;
+    return obj
+  );
+
+public size : () ==> nat
+size() ==
+  return len data;
+
+public  peek : () ==> JavaLangObject
+peek() == 
+( if  size() = 0
+  then  
+    exit  new  JavaUtilEmptyStackException();
+  return  hd data
+) ;
+
+public  JavaUtilStack : () ==> JavaUtilStack
+JavaUtilStack() == 
+( skip 
+) ;
+
+public  empty : () ==> bool 
+empty() == 
+( return  size() = 0
+) ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  JavaUtilStack : <NIL> ==> JavaUtilStack
+JavaUtilStack(-) == 
+isNil := true  ;
+
+public  push : JavaLangObject ==> JavaLangObject
+push(item) == 
+( data := [item] ^ data ;
+  return  item
+) ;
+
+public  search : JavaLangObject ==> int 
+search(o) == 
+( for i = 1 to size() do
+    if data(i).equals(o)
+    then return i;
+  return  -1
+) ;
+
+public removeAllElements : () ==> ()
+removeAllElements() ==
+  data := [];
+
+
+end  JavaUtilStack

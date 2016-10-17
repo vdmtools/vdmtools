@@ -1,0 +1,34 @@
+class A
+
+types
+public
+T = char | nat * nat | nat * nat * nat | char * nat * <A>;
+
+operations
+public
+Test: () ==> seq of nat
+Test() ==
+  let x = if true
+          then mk_(10, 10)
+          else mk_(5, 5, 5)
+  in
+    return [f1(x), f2(x)];
+
+functions
+f1: T -> nat
+f1(t) ==
+  if is_(t, nat * nat)
+  then 1
+  elseif is_(t, nat * nat * nat)
+  then 2
+  else 0;
+
+f2: T -> nat
+f2(t) ==
+  cases true:
+   (is_(t, nat * nat))       -> 1,
+   (is_(t, nat * nat * nat)) -> 2,
+   others                    -> 0
+  end;
+
+end A

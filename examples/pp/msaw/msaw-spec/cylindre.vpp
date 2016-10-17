@@ -1,0 +1,14 @@
+class Cylindre
+
+   instance variables
+      centre: MSAWTypes`Coordonnees;
+      rayon: MSAWTypes`NM;
+      altitude_maximale: MSAWTypes`Pieds
+
+   functions
+      DansCylindre: MSAWTypes`Coordonnees * MSAWTypes`Pieds * MSAWTypes`Coordonnees * MSAWTypes`NM * MSAWTypes`Pieds -> bool
+      DansCylindre (mk_(x1, y1), z1, mk_(x2, y2), rayon, z2) ==
+         (abs(x1-x2)**2 + abs(y1-y2)**2)**0.5 <= rayon/MSAWTypes`NMperCoordonnee
+          and z1 <= z2
+
+end Cylindre

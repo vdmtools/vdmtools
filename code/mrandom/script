@@ -1,0 +1,70 @@
+#! /bin/csh -f
+# script 3.1 5/28/93
+#
+# Make, test, and show some features of the mrandom package.
+#
+echo "Making..."
+make mrtest
+echo " "
+echo "Exhibit a problem with the -f method of generating large integers."
+mrtest -e -f -S1,1 -m100663296 -q 100000
+echo " "
+echo "Exhibit a problem with the -p method of generating large integers."
+mrtest -e -p -m201326592 -q 100000
+echo " "
+make mrtestv
+echo " "
+echo "What is the 100,000th output from 4.3bsd random(), seed = 1?"
+mrtestv -e -S1,1,0,100000 -M31 1
+echo " "
+echo "How long does 4.3bsd random() take to generate 1e6 ints"
+echo "  in 0..99, using vectorized code?" 
+time mrtestv -e -t -q -m100 1000000
+echo " "
+echo "What is the 100,000th output from Jon Bentley's rng, seed 1?"
+echo "  Note that Bentley's rng has a range of 1e9."
+mrtestv -e -S2,1,0,100000 -m1000000000 1
+echo " "
+echo "How long does Bentley's RNG take to generate 1e6 ints?"
+time mrtestv -e -t -m100 1000000
+echo " "
+echo "What is the 100,000th output from the Portable Combined multiplicative"
+echo "  generator (pcrand), with seeds = (1,2)?"
+echo "  Note that this rng has a range of 2147483561." 
+mrtestv -e -S3,1,2,100000 -m2147483561 1
+echo " "
+echo "How long does pcrand() take to generate 1e6 ints?"
+time mrtestv -e -t -q -m100 1000000
+echo " "
+echo "What is the 100,000th output from nrand48 with 48-bit seed = (1<<16)+2?"
+mrtestv -e -S4,1,2,100000 -M31 1
+echo " "
+echo "Exhibit a problem with long-range correlation in nrand48."
+mrtestv -e -S4,1,2,200001 -M16 -d1023 -q 1000
+echo " "
+echo "How long does nrand48() take to generate 1e6 ints?"
+time mrtestv -e -t -q -m100 1000000
+echo " "
+echo "What is the 100,000th output from 4.3bsd rand, seed = 1?"
+mrtestv -e -S5,1,0,100000 -M31 1
+echo " "
+echo "Exhibit a problem with the low-order bits of rand."
+mrtestv -e -M31 -q 500
+echo " "
+echo "Try the weak equi-distribution test on the low-order bits of rand."
+mrtestv -e -M31 -q 240000
+echo " "
+echo "Exhibit a problem with the middle bits of rand."
+mrtestv -e -M16 -q 100000
+echo " "
+echo "Exhibit a problem with long-range correlation of the MSBs in rand."
+mrtestv -e -M3 -d1023 -q 500
+echo " "
+echo "How long does 4.3bsd rand() take to generate 1e6 ints?  (Who cares?)"
+time mrtestv -e -t -q -m100 1000000
+echo " "
+echo "Just for fun, observe the catastrophic failures of an additive RNG."
+mrtestv -e -S0,0,65536 -q -M16 2000
+echo " "
+echo "The mrandom exhibition script is complete."
+exit(0)

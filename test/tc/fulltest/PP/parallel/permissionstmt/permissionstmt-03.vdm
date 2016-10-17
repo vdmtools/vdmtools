@@ -1,0 +1,20 @@
+class T
+
+instance variables
+
+a : nat
+
+operations
+
+public Op: () ==> ()
+Op() ==
+  let - = mk_token(898888)
+  in skip;
+
+sync
+
+per Op => #fin(Op) > 7;
+
+per Op2 => true;
+
+end T

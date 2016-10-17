@@ -1,0 +1,42 @@
+ class A
+
+  instance variables
+
+    n : nat := 0;
+
+  operations
+
+public    Init : nat ==> A
+    Init(mn) ==
+      (n := mn;
+       return self);
+
+public    GetN : () ==> nat
+    GetN() ==
+      return n;
+
+end A
+
+class C is subclass of A
+
+  operations
+
+public    Init : nat ==> C
+    Init(mn) ==
+      let - = A`Init(mn)
+      in return self;
+
+end C
+
+
+class B
+
+operations
+
+  public Test : () ==> nat
+  Test() ==
+    return (let c = new C().Init(3)
+            in let n = c.GetN()
+               in n) + 7
+
+end B

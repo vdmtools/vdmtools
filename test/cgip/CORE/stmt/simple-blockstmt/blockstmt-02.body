@@ -1,0 +1,2 @@
+(dcl a: nat := 8;
+ return [1,a,3])

@@ -1,0 +1,17 @@
+class CasesStmtTest
+
+operations
+
+  Cases: () ==> int
+  Cases() ==
+    let t = true,
+        f = false
+    in
+    cases true:
+    true -> || ( return t,
+              return f ),
+    others -> || ( return ,
+              return 8 )
+    end;
+
+end CasesStmtTest

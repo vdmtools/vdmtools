@@ -1,0 +1,1 @@
+lambda m : ®” & lambda n : ®” & m mod n

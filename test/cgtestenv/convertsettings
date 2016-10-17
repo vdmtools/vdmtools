@@ -1,0 +1,71 @@
+#! /usr/bin/perl
+
+# WHAT
+#    This script is used to convert a file containing test settings
+#    into a command line string for the Toolbox
+# VERSION
+#    $Revision: 1.3 $
+# DATE
+#    $Date: 2005/01/19 05:01:30 $
+# AUTHOR
+#    $Author: vdmtools $
+
+
+%keywords = ("maxinstr", "-M",
+             "taskswitch", "-T",
+             "timeslice", "-M",
+             "primaryalgorithm", "-S",
+             "timefactor", "-X");
+
+%arguments = ("purecooperative", "pure_cooperative",
+              "timeslice",       "",
+              "instructionslice","");
+
+
+if ($#ARGV != 0)
+{
+        usage();
+        exit 1;
+}
+
+$input_file = $ARGV[0];
+$output_file = $ARGV[1];
+
+open(INPUT_FILE,$input_file) or die "Fatal Error: Unable to open $input_file";
+while($line=<INPUT_FILE>){
+    chop $line;
+    ($settingfield, $settingval) = ($line =~ /(\w+)\s+(\w+)/);
+    $settings{$settingfield} = $settingval;
+}
+close INPUT_FILE;
+
+output_settings();
+
+
+
+
+
+sub usage {
+
+    print "Usage: convertsettings <inputfile> \n";
+}
+
+sub output_settings {
+    $output="";
+    @settings_keys = keys %settings;
+    if ($#settings_keys != -1) {
+        foreach $key (keys %settings) {
+          $output .= "$keywords{$key}";
+          $val=$settings{$key};
+          $outputval="";
+          if ($arguments{$val}) {
+              $outputval=$arguments{$val};
+          }
+          else {
+              $outputval=$val;
+          }
+          $output .= " $outputval ";
+        }
+    }
+    print $output;
+}

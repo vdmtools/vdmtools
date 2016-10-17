@@ -1,0 +1,2 @@
+C.java:21: Method redefined with different return type: quotes.C f() was quotes.A f()
+  public quotes.C f () throws CGException{

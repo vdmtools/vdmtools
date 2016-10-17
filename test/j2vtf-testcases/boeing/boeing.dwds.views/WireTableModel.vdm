@@ -1,0 +1,350 @@
+class WireTableModel is subclass of AbstractTableModel
+operations 
+protected  getItems : () ==> map  int  to  map  int  to  [String]
+getItems() == 
+( dcl   currWire : [Wire] := nil  ;
+  if  columnTypes = nil  
+  then  
+    let - = getColumnInfo()
+    in 
+      skip ;
+  wires := getWiresToInclude();
+  let - = HeapSort`sort(wires , new  NumericAlphaCompare())
+  in 
+    skip ;
+  items := {l_4 |-> nil  |l_4 in set  {0,...,wires.size()-1}};
+  ( dcl   i : int  := 0;
+    while  i < wires.size() do  
+    ( items := items ++ {i |-> {l_5 |-> nil  |l_5 in set  {0,...,columnTypes.length-1}}};
+      currWire := wires.elementAt(i);
+      ( dcl   end1 : [WireEndpoint] := db.getWireEndpoint1(currWire),
+              end2 : [WireEndpoint] := db.getWireEndpoint2(currWire);
+        ( dcl   j : int  := 0;
+          while  j < columnTypes.length do  
+          ( trap  j2v_exception with  
+              cases  true  : 
+                (isofclass  (Throwable,j2v_exception)) -> 
+                  ( dcl   t : [Throwable] := j2v_exception;
+                    items(i) := items(i) ++ {j |-> new  String([  ])}
+                  ) ,
+                others  -> 
+                  exit  j2v_exception
+              end  
+            in  
+              ( items(i) := items(i) ++ {j |-> WireDataTypes`decodeValue(columnTypes(j) , currWire , end1 , end2)}
+              ) ;
+            j := j+1
+          ) 
+        ) 
+      ) ;
+      i := i+1
+    ) 
+  ) ;
+  return  items
+) ;
+
+public  getListName : () ==> [String]
+getListName() == 
+( return  new  String("Wire")
+) ;
+
+protected  getNumItems : () ==> int 
+getNumItems() == 
+( return  items.length
+) ;
+
+public  getRowCount : () ==> int 
+getRowCount() == 
+( if  items = nil   or  items.length = 0
+  then  
+    ( return  15
+    ) 
+  else  
+    ( return  items.length
+    ) 
+) ;
+
+protected  getNoteText : int  ==> map  int  to  [String]
+getNoteText(row) == 
+( dcl   rowWire : [Wire] := wires.elementAt(row);
+  if  rowWire.hasDrawingNotes()
+  then  
+    ( return  {1 |-> rowWire.getDrawingNotesText() , 0 |-> rowWire.getName()}
+    ) 
+  else  
+    ( return  nil  
+    ) 
+) ;
+
+protected  getColumnInfo : () ==> <VOID>
+getColumnInfo() == 
+( dcl   dataColumns : map  int  to  [DataColumn] := getColumnDefinitions();
+  headings := {l_3 |-> nil  |l_3 in set  {0,...,dataColumns.length-1}};
+  columnTypes := {l_3 |-> nil  |l_3 in set  {0,...,dataColumns.length-1}};
+  widthFractions := {l_3 |-> 0|l_3 in set  {0,...,dataColumns.length-1}};
+  ( dcl   i : int  := 0;
+    while  i < dataColumns.length do  
+    ( headings := headings ++ {i |-> dataColumns(i).getHeading()};
+      columnTypes := columnTypes ++ {i |-> dataColumns(i).getDataType()};
+      widthFractions := widthFractions ++ {i |-> dataColumns(i).getWidth()};
+      i := i+1
+    ) 
+  ) ;
+  return  <VOID>
+) ;
+
+public  getValueAt : int  * int  ==> [Object]
+getValueAt(row, col) == 
+( if  items = nil   or  items.length = 0
+  then  
+    ( return  new  String([  ])
+    ) 
+  else  
+    ( return  items(row)(col)
+    ) 
+) ;
+
+WireTableModel : () ==> WireTableModel
+WireTableModel() == 
+( let - = AbstractTableModel()
+  in 
+    skip ;
+  propertyKey := new  String(new  String("wire_list.column."));
+  context := ContextState`getContextState()
+) ;
+
+public  getColumnCount : () ==> int 
+getColumnCount() == 
+( if  headings = nil   or  headings.length = 0
+  then  
+    ( let - = getColumnInfo()
+      in 
+        skip 
+    ) ;
+  return  headings.length
+) ;
+
+public  getColumnName : int  ==> [String]
+getColumnName(col) == 
+( if  headings.length = 0
+  then  
+    ( let - = getColumnInfo()
+      in 
+        skip 
+    ) ;
+  return  headings(col)
+) ;
+
+public  getColumnTypes : () ==> map  int  to  [WireDataTypes]
+getColumnTypes() == 
+( let - = getColumnInfo()
+  in 
+    skip ;
+  return  columnTypes
+) ;
+
+public  setBundleParts : bool  ==> <VOID>
+setBundleParts(mode) == 
+( return  <VOID>
+) ;
+
+public  traverseCell : int  * int  ==> <VOID>
+traverseCell(row, col) == 
+( dcl   ac : [Aircraft] := context.getCurrentContextFieldObject(ContextTypes`TAIL_NUMBER);
+  if  row >= 0 and  col >= 0 and  col < columnTypes.length
+  then  
+    ( if  columnTypes(col) = WireDataTypes`WIRE_END1_REF_DES_PIN or  columnTypes(col) = WireDataTypes`WIRE_END2_REF_DES_PIN
+      then  
+        ( if  row < items.length
+          then  
+            ( dcl   fullRDName : [String] := items(row)(col),
+                    dashIndex : int  := fullRDName.indexOf(new  String(" - ")),
+                    refDesStr : [String] := items(row)(col).substring(0 , dashIndex),
+                    pin : [String] := items(row)(col).substring(dashIndex+3),
+                    refDes : [RefDes] := db.getRefDes(ac , refDesStr),
+                    contextUpdates : [ContextSet] := new  ContextSet();
+              let - = contextUpdates.put(ContextTypes`REFDES , refDesStr)
+              in 
+                skip ;
+              let - = contextUpdates.put(ContextTypes`PIN , pin)
+              in 
+                skip ;
+              let - = context.setCurrentContext(contextUpdates)
+              in 
+                skip 
+            ) 
+        ) 
+      else  
+        if  columnTypes(col) = WireDataTypes`WIRE_NAME
+        then  
+          ( if  row < items.length
+            then  
+              ( dcl   wireName : [String] := (def l_7 :  Wire = (wires.elementAt(row))
+                      in l_7).toString(),
+                      contextUpdates : [ContextSet] := new  ContextSet();
+                let - = contextUpdates.put(ContextTypes`WIRE , wireName)
+                in 
+                  skip ;
+                let - = context.setCurrentContext(contextUpdates)
+                in 
+                  skip 
+              ) 
+          ) 
+        else  
+          if  columnTypes(col) = WireDataTypes`DRAWING_NOTE
+          then  
+            ( dcl   drawingNoteInfo : map  int  to  [String] := getNoteText(row);
+              if  drawingNoteInfo <> nil  
+              then  
+                ( dcl   noteFrame : [NoteFrame] := NoteFrame`getNoteFrame(),
+                        title : [String] := new  String("Drawing Note for ")+drawingNoteInfo(0);
+                  let - = noteFrame.setTitleAndText(title , drawingNoteInfo(1))
+                  in 
+                    skip 
+                ) 
+            ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  update : [Object] ==> bool 
+update(contextChanges) == 
+( return  true  
+) ;
+
+protected  getWidthFractions : () ==> map  int  to  int 
+getWidthFractions() == 
+( if  widthFractions = nil  
+  then  
+    let - = getColumnInfo()
+    in 
+      skip ;
+  return  widthFractions
+) ;
+
+protected  getWiresToInclude : () ==> [Vector]
+getWiresToInclude() == 
+( return  nil  
+) ;
+
+private  getColumnDefinitions : () ==> map  int  to  [DataColumn]
+getColumnDefinitions() == 
+( dcl   colInfoList : [Vector] := new  Vector(),
+        colInfoArray : map  int  to  [DataColumn] := nil  ,
+        keyPrefix : [String] := propertyKey,
+        moreColumnInfo : bool  := true  ,
+        columnIdx : int  := 1;
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  moreColumnInfo do  
+    ( dcl   nameKey : [StringBuffer] := new  StringBuffer(keyPrefix),
+            typeKey : [StringBuffer] := new  StringBuffer(keyPrefix),
+            widthKey : [StringBuffer] := new  StringBuffer(keyPrefix);
+      let - = nameKey.append(Integer.toString(columnIdx))
+      in 
+        skip ;
+      let - = typeKey.append(Integer.toString(columnIdx))
+      in 
+        skip ;
+      let - = widthKey.append(Integer.toString(columnIdx))
+      in 
+        skip ;
+      let - = nameKey.append(new  String(".name"))
+      in 
+        skip ;
+      let - = typeKey.append(new  String(".type"))
+      in 
+        skip ;
+      let - = widthKey.append(new  String(".width"))
+      in 
+        skip ;
+      columnIdx := columnIdx+1;
+      ( dcl   colName : [String] := DWDSProperties`getProperty(nameKey.toString()),
+              colTypeName : [String] := DWDSProperties`getProperty(typeKey.toString()),
+              colWidthStr : [String] := DWDSProperties`getProperty(widthKey.toString());
+        if  colName = nil   or  colTypeName = nil   or  colWidthStr = nil  
+        then  
+          ( moreColumnInfo := false  
+          ) 
+        else  
+          ( dcl   colType : [WireDataTypes] := WireDataTypes`type(colTypeName),
+                  colInfo : [DataColumn] := new  DataColumn(colType , colName , Integer.parseInt(colWidthStr));
+            let - = colInfoList.addElement(colInfo)
+            in 
+              skip 
+          ) 
+      ) 
+    ) ;
+  colInfoArray := {l_4 |-> nil  |l_4 in set  {0,...,colInfoList.size()-1}};
+  let - = colInfoList.copyInto(colInfoArray)
+  in 
+    skip ;
+  return  colInfoArray
+) ;
+
+private  findCellWithWire : [String] ==> [Point]
+findCellWithWire(wireName) == 
+( if  wires <> nil  
+  then  
+    ( ( dcl   i : int  := 0;
+        while  i < wires.size() do  
+        ( ( dcl   j : int  := 0;
+            while  j < columnTypes.length do  
+            ( if  columnTypes(j) = WireDataTypes`WIRE_NAME
+              then  
+                ( if  items(i)(j).equals(wireName)
+                  then  
+                    ( return  new  Point(i , j)
+                    ) 
+                ) ;
+              j := j+1
+            ) 
+          ) ;
+          i := i+1
+        ) 
+      ) 
+    ) ;
+  return  nil  
+) ;
+
+public  findCellWithRefDesPin : [String] * [String] ==> [Point]
+findCellWithRefDesPin(refDesName, pin) == 
+( if  wires <> nil  
+  then  
+    ( ( dcl   i : int  := 0;
+        while  i < wires.size() do  
+        ( ( dcl   j : int  := 0;
+            while  j < columnTypes.length do  
+            ( if  columnTypes(j) = WireDataTypes`WIRE_END1_REF_DES_PIN or  columnTypes(j) = WireDataTypes`WIRE_END2_REF_DES_PIN
+              then  
+                ( if  items(i)(j).equals(refDesName+new  String(" - ")+pin)
+                  then  
+                    ( return  new  Point(i , j)
+                    ) 
+                ) ;
+              j := j+1
+            ) 
+          ) ;
+          i := i+1
+        ) 
+      ) 
+    ) ;
+  return  nil  
+) ;
+
+instance variables 
+  protected  context : [ContextState] := nil  ;
+  protected  wires : [Vector];
+  protected  columnTypes : map  int  to  [WireDataTypes];
+  protected  propertyKey : [String];
+  protected  items : map  int  to  map  int  to  [String];
+  private  headings : map  int  to  [String];
+  private  widthFractions : map  int  to  int ;
+  private  db : [Database] := Database`getDatabase()
+  
+end  WireTableModel

@@ -1,0 +1,136 @@
+\begin{vdm_al}
+class Dependency is subclass of ProjectTypes
+
+-- This class is a interface to the VDM-SL module DEP in the toolbox.
+
+instance variables
+  rep : Repository;
+
+operations
+\end{vdm_al}
+$Init$ must be called in order to init the $DEP$ module state,
+i.e when the program is launched and when the project is
+changed.
+
+\begin{vdm_al}
+
+
+
+  -- Init must be called in order to init the DEP module state,
+  -- i.e when the program is launched and when the project is
+  -- changed.
+
+
+public   Init: Repository ==> ()
+  Init (r) ==
+    is not yet specified;
+
+public   Depend: () ==> ()
+  Depend () ==
+    is not yet specified; 
+
+  -- Should be called when the dependency window is opened and when
+  -- the update button in dependency window is pressed. 
+
+  -- GetAllSubClasses and GetAllUsedBy are called from UpdateSC with a 
+  -- set of ModuleNames that are parsed and return with a set of
+  -- ModuleName. Note that all levels of sub/used classes are
+  -- returned and not only the first level. These methods are used to
+  -- update the status info in the interface.
+
+public   GetAllSubClasses: set of ModuleName ==> set of ModuleName 
+  GetAllSubClasses(nm_s) ==
+    is not yet specified;
+
+public   GetAllUsedBy: set of ModuleName ==>  set of ModuleName 
+  GetAllUsedBy(nm_s) ==
+    is not yet specified;
+\end{vdm_al}
+$GetAllSubClasses$ and $GetAllUsedBy$ are called from $UpdateSC$ with
+a set of $ModuleNames$ that are parsed and return with a set of
+$ModuleName$. Note that all levels of sub/used classes are returned
+and not only the first level. These methods are used to update the
+status info in the interface.
+
+\begin{vdm_al}
+
+  -- UpdateGraph is called from UpdateSC with a sequence of parsed
+  -- classes.
+
+public   UpdateGraph: seq of Module ==> ()
+  UpdateGraph (nm_l) ==
+    is not yet specified;
+\end{vdm_al}
+$UpdateGraph$ is called from $UpdateSC$ with a sequence of parsed
+classes.
+\begin{vdm_al}
+
+public   Remove: set of ModuleName ==> ()
+  Remove (cl_s ) ==
+    is not yet specified;
+\end{vdm_al}
+
+$Remove$ is called from $UpdateSC$ with a set of class names not
+longer in the parsed file.
+
+The next four methods are called with a $ModuleName$ and return
+with a set of $ModuleName$ and only in one level. This information can
+be used to update the corresponding list boxes in the interface.
+
+\begin{vdm_al}
+
+  -- The next four methods are called with a ModuleName and return
+  -- with a set of ModuleName and only in one level. This information can
+  -- be used to update the corresponding list boxes in the interface.
+
+
+public   GetSub : ModuleName ==>  set of ModuleName
+  GetSub (nm ) ==
+    is not yet specified;
+
+public   GetSuper: ModuleName ==> set of ModuleName
+  GetSuper (nm ) ==
+    is not yet specified;
+
+
+public   GetUsedBy: ModuleName ==> set of ModuleName
+  GetUsedBy(nm) ==
+    is not yet specified;
+
+public   GetUses: ModuleName ==> set of ModuleName
+  GetUses (nm ) ==
+    is not yet specified;
+
+\end{vdm_al}
+
+Methods for saving and loading of dependency graph.
+
+\begin{vdm_al}
+
+  -- Methods for saving and loading of dependency graph
+
+  
+public   Save : StateStore ==> bool
+  Save (store) ==
+    is not yet specified;
+
+public   Load: StateStore ==> bool
+  Load (store) ==
+    is not yet specified;
+\end{vdm_al}
+
+Methods for process information, i.e. order of type checking classes. 
+
+\begin{vdm_al}
+
+public   IsCyclic: ModuleName ==>  bool
+  IsCyclic (nm) ==
+    is not yet specified;
+
+public   OrderOfProcess: ModuleName ==> seq of set of ModuleName
+  OrderOfProcess (nm) ==
+    is not yet specified;
+
+end Dependency
+
+\end{vdm_al}

@@ -1,0 +1,29 @@
+class A0
+
+end A0
+class A is subclass of A0
+
+end A
+
+class B is subclass of A
+
+operations
+
+  public Op: () ==> A
+  Op() ==
+    is not yet specified;
+ 
+end B
+class C
+
+end C
+
+class D is subclass of B,C
+
+operations
+
+  public Op: () ==> A
+  Op() ==
+    is not yet specified;
+    
+end D

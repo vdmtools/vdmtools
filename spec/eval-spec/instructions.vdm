@@ -1,0 +1,2790 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Execution of stack instructions in stack machine
+% $Id: instructions.vdm,v 1.59 2005/10/21 07:09:05 vdmtools Exp $
+% Implemented in: instructions.cc
+%--------------------------------------------------------------------------------
+
+\chapter{Instruction Set Operations}\label{sec:instr}
+
+\begin{vdm_al}
+module INSTR
+
+imports
+  from AS all,
+  from CI all,
+  from REP all,
+  from EXPR all,
+  from SEM all,
+  from STKM all,
+  from PAT all,
+  from AUX all,
+  from DEBUG all,
+  from DEBUGTP all,
+  from GLOBAL all,
+  from FREE all,
+  from STATE all,
+  from INSTRTP all,
+  from SETTINGS all,
+#ifdef VDMPP
+  from SCHD all,
+  from SCHDTP all,
+  from MANGLE all,
+#ifdef VICE
+  from TIMEPARSER all,
+  from TIMEMAP all,
+#endif VICE
+#endif VDMPP
+  from RTERR all
+exports all
+
+definitions
+
+\end{vdm_al}
+
+\section{Auxiliary Instruction}
+
+\begin{vdm_al}
+operations
+ExeCBR: int ==> ()
+ExeCBR(n) ==
+  def [b] = STKM`Pop(1)
+  in
+    cases b:
+      mk_SEM`BOOL(true)  -> STKM`IncrPC(n),
+      mk_SEM`BOOL(false) -> skip,
+      others             -> RTERR`Error(RTERR`BOOL_EXPECTED, nil, nil, [])
+    end;
+
+ExeCNBR: int ==> ()
+ExeCNBR(n) ==
+  def [b] = STKM`Pop(1)
+  in
+    cases b:
+      mk_SEM`BOOL(true)  -> skip,
+      mk_SEM`BOOL(false) -> STKM`IncrPC(n),
+      others             -> RTERR`Error(RTERR`BOOL_EXPECTED, nil, nil, [])
+    end;
+
+ExeBR: int ==> ()
+ExeBR(n) ==
+  STKM`IncrPC(n);
+\end{vdm_al}
+
+\begin{vdm_al}
+ExeERRINST: RTERR`ERR ==> ()
+ExeERRINST(err) ==
+  RTERR`Error(err, nil, nil, []);
+
+ExePRE: () ==> ()
+ExePRE() ==
+  def b = SETTINGS`PreCheck()
+  in STKM`Push(mk_SEM`BOOL(b));
+
+ExePOST: () ==> ()
+ExePOST() ==
+  def b = SETTINGS`PostCheck()
+  in STKM`Push(mk_SEM`BOOL(b));
+
+ExeASSERT: () ==> ()
+ExeASSERT() ==
+  def b = SETTINGS`Assertion()
+  in STKM`Push(mk_SEM`BOOL(b));
+
+ExeCASES: () ==> ()
+ExeCASES() ==
+  def b = SETTINGS`CasesCheck()
+  in STKM`Push(mk_SEM`BOOL(b));
+
+ExeMEASURE: () ==> ()
+ExeMEASURE() ==
+  def b = SETTINGS`Measure()
+  in STKM`Push(mk_SEM`BOOL(b));
+
+ExeMEASURETPINST: seq of AS`TypeVar ==> ()
+ExeMEASURETPINST(tpparms) ==
+  def typeInst = STKM`HdTypeInst();
+  in
+    if elems tpparms \ dom typeInst = {}
+    then
+      def [val] = STKM`Pop(1);
+      in
+       (dcl val' : SEM`VAL := val;
+        if is_SEM`ExplPOLY(val)
+        then
+          let tp_l = [ typeInst(tpparms(i)) | i in set inds tpparms ]
+          in val' := EXPR`ConvertPolyToFn(val, tp_l);
+        STKM`Push(val');
+       );
+
+ExeMEASURECHECK: AS`Name ==> ()
+ExeMEASURECHECK(measu) ==
+  def [meas_fn,curr_mv] = STKM`Pop(2)
+  in
+    cases meas_fn:
+      mk_SEM`CompExplFN([mk_SEM`ExplFN(-,-,-,-,-,-,-,-,-,-)],-) ->
+               if is_SEM`NUM(curr_mv) or is_SEM`TUPLE(curr_mv)
+               then STKM`MeasureCheck(curr_mv, measu)
+               else skip,
+      others -> skip
+    end;
+
+ExePOSTENV: seq of AS`NameType * CI`ContextId ==> ()
+ExePOSTENV(resnmtps,ci) ==
+  def resval = STKM`Head()
+  in
+    cases resnmtps:
+      []     -> STKM`PushBlkEnv(AUX`MkBlkEnv(mk_AS`Name(["RESULT"],ci),resval,nil,<READ_ONLY>)),
+      [mk_AS`NameType(nm,tp,-)] -> STKM`PushBlkEnv(AUX`MkBlkEnv(nm,resval,tp,<READ_ONLY>)),
+      others -> if is_SEM`TUPLE(resval) and len resnmtps = len resval.v
+                then
+                  let id_m = { resnmtps(i).nm |-> mk_SEM`ValTp(resval.v(i),resnmtps(i).tp) | i in set inds resnmtps }
+                  in STKM`PushBlkEnv(mk_SEM`BlkEnv(id_m, <READ_ONLY>))
+                else RTERR`Error(RTERR`WRONG_NO_RES, nil, nil, [])
+    end;
+
+ExeNOBODY: RTERR`ERR * AS`Name * AS`Name * AS`Parameters ==> ()
+ExeNOBODY(err,modname,name,parms) ==
+  if forall parm in set elems parms & is_AS`PatternName(parm)
+  then
+   (dcl arg_lv : seq of SEM`VAL := [];
+    for mk_AS`PatternName(nm,-,-) in parms do
+      if nm = nil
+      then arg_lv := arg_lv ^ [mk_SEM`NIL()]
+      else arg_lv := arg_lv ^ [STATE`LookUp(nm)];
+    def mk_(ok, val) = IsVdmStdLib(modname,name,arg_lv)
+    in
+      if ok
+      then STKM`Push(val)
+      else RTERR`Error(err, nil, nil, []))
+  else RTERR`Error(err, nil, nil, []);
+
+-- This function needs to test if the given function is in the VDM-LIB.
+-- But this is not possible here, so we will just return false.
+-- This function is implemented in vdmstdlib.cc
+IsVdmStdLib: AS`Name * AS`Name * seq of SEM`VAL ==> bool * [SEM`VAL]
+IsVdmStdLib(-,-,-) ==
+  return mk_(false,nil) ;
+
+TypeToSet: AS`Type ==> set of SEM`VAL
+TypeToSet(tp) ==
+  cases tp:
+    mk_AS`BracketedType(tp,-)              -> return TypeToSet(tp),
+    mk_AS`BooleanType(-)                   -> return { mk_SEM`BOOL(true), mk_SEM`BOOL(false) },
+    mk_AS`QuoteType(mk_AS`QuoteLit(v,-),-) -> return { mk_SEM`QUOTE(v) },
+    mk_AS`UnionType(tps,-)                 -> return dunion { TypeToSet(e) | e in set elems tps },
+    mk_AS`ProductType(tps,-)               -> def seqOfSet = [ TypeToSet(tps(i)) | i in set inds tps ];
+                                                  varSet = AUX`SeqOfSetOf2SetOfSeqOf(seqOfSet);
+                                              in return { mk_SEM`TUPLE(e) | e in set varSet },
+    mk_AS`CompositeType(tag,fields,-)      -> def seqOfSet = [ TypeToSet(fields(i).type) | i in set inds fields ];
+                                                  varSet = AUX`SeqOfSetOf2SetOfSeqOf(seqOfSet);
+                                              in return { EXPR`EvalRecordConstructorExpr(tag, e) | e in set varSet },
+#ifdef VDMSL
+    mk_AS`TypeName(name_,-)                -> def mk_(-, name) = AUX`LookUpRename(name_)
+                                              in
+                                                cases AUX`IsTypeDef (name):
+                                                  mk_(true,tp,invariant,-) ->
+#endif VDMSL
+#ifdef VDMPP
+    mk_AS`TypeName(name,-)                 -> (cases AUX`IsTypeDef(name):
+                                                mk_(false,-,-,-,nil) -> RTERR`Error(RTERR`TYPE_UNKNOWN, nil, nil, []),
+                                                mk_(true,tp,invariant,-,-) ->
+#endif VDMPP
+                    --return TypeToSet(type),
+      if invariant = nil
+      then
+        return TypeToSet(tp)
+      else
+       (let mk_AS`Invariant(pat,expr,-) = invariant
+        in
+          if is_AS`PatternName(pat) and pat.nm <> nil and is_AS`NumericType(tp)
+          then
+            cases tp.qtp:
+              <NATONE>,
+              <NAT>,
+              <INTEGER> -> (dcl min : [int] := cases tp.qtp:
+                                                 <NATONE> -> 1,
+                                                 <NAT>    -> 0,
+                                                 others   -> nil
+                                               end,
+                                max : [int] := nil;
+                            def mk_(ok,min',max') = ExprToSet(pat.nm,expr,min,max)
+                            in
+                              if ok and min' <> nil and max' <> nil
+                              then return { mk_SEM`NUM(i) | i in set {min',...,max'} }
+                              else skip;
+                           )
+            end;
+        RTERR`Error(RTERR`TYPE_BIND_EVAL, nil, nil, []);
+        return {};
+       ),
+#ifdef VDMSL
+                                                  others -> (RTERR`Error(RTERR`TYPE_UNKNOWN, nil, nil, []);
+                                                             return {})
+                                                end,
+#endif VDMSL
+#ifdef VDMPP
+                                                others               -> RTERR`Error(RTERR`TYPE_NOT_IN_SCOPE, nil, nil, [])
+                                               end;
+                                               return {}),
+#endif VDMPP
+    others                                 -> (RTERR`Error(RTERR`TYPE_BIND_EVAL, nil, nil, []);
+                                               return {})
+  end; 
+
+IsIntNum : AS`Expr ==> bool
+IsIntNum(expr) ==
+ (dcl e : AS`Expr := expr;
+  while is_AS`BracketedExpr(e) do
+    e := e.expr;
+  cases e:
+    mk_AS`NumLit(-,-)           -> return true,
+    mk_AS`PrefixExpr(opr,arg,-) -> cases opr:
+                                     <NUMPLUS>,
+                                     <NUMMINUS> -> return IsIntNum(arg),
+                                     others     -> return false
+                                   end,
+    others                      -> return false
+  end;
+ );
+
+GetIntNum : AS`Expr ==> [int]
+GetIntNum(expr) ==
+ (dcl e : AS`Expr := expr;
+  while is_AS`BracketedExpr(e) do
+    e := e.expr;
+  cases e:
+    mk_AS`NumLit(val,-)         -> return val,
+    mk_AS`PrefixExpr(opr,arg,-) -> cases opr:
+                                     <NUMPLUS>  -> return GetIntNum(arg),
+                                     <NUMMINUS> -> def n = GetIntNum(arg)
+                                                   in
+                                                     if n = nil
+                                                     then return nil
+                                                     else return -n,
+                                     others     -> return nil
+                                   end,
+    others                      -> return nil
+  end;
+ );
+
+ExprToSet: AS`Name * AS`Expr * [int] * [int] ==> bool * [int] * [int]
+ExprToSet(name,expr,min,max) ==
+  cases expr:
+    mk_AS`BracketedExpr(e,-) -> return ExprToSet(name, e, min, max),
+    mk_AS`BinaryExpr(left,opr,right,-) ->
+        (dcl left' : AS`Expr := left,
+             right' : AS`Expr := right;
+         while is_AS`BracketedExpr(left') do
+           left' := left'.expr;
+         while is_AS`BracketedExpr(right') do
+           right' := right'.expr;
+         if opr = <AND>
+         then
+           def mk_(ok, min',max') = ExprToSet(name,left',min,max)
+           in
+             if ok
+             then return ExprToSet(name,right',min',max')
+             else return mk_(false,nil,nil);
+         if (left' = name and IsIntNum(right')) or (right' = name and IsIntNum(left'))
+         then
+           cases opr:
+             <NUMLT> -> if IsIntNum(right')
+                        then
+                          def n = GetIntNum(right') - 1
+                          in
+                            if max = nil
+                            then return mk_(true,min,n)
+                            elseif n < max
+                            then return mk_(true,min,n)
+                            else return mk_(true,min,max)
+                        else
+                          def n = GetIntNum(left') + 1
+                          in
+                            if min = nil
+                            then return mk_(true,n,max)
+                            elseif n > min
+                            then return mk_(true,n,max)
+                            else return mk_(true,min,max),
+             <NUMLE> -> if IsIntNum(right')
+                        then
+                          def n = GetIntNum(right')
+                          in
+                            if max = nil
+                            then return mk_(true,min,n)
+                            elseif n < max
+                            then return mk_(true,min,n)
+                            else return mk_(true,min,max)
+                        else
+                          def n = GetIntNum(left')
+                          in
+                            if min = nil
+                            then return mk_(true,n,max)
+                            elseif n > min
+                            then return mk_(true,n,max)
+                            else return mk_(true,min,max),
+             <NUMGT> -> if IsIntNum(right')
+                        then
+                          def n = GetIntNum(right') + 1
+                          in
+                            if min = nil
+                            then return mk_(true,n,max)
+                            elseif n > min
+                            then return mk_(true,n,max)
+                            else return mk_(true,min,max)
+                        else
+                          def n = GetIntNum(left') - 1
+                          in
+                            if max = nil
+                            then return mk_(true,min,n)
+                            elseif n < max
+                            then return mk_(true,min,n)
+                            else return mk_(true,min,max),
+             <NUMGE> -> if IsIntNum(right')
+                        then
+                          def n = GetIntNum(right')
+                          in
+                            if min = nil
+                            then return mk_(true,n,max)
+                            elseif n > min
+                            then return mk_(true,n,max)
+                            else return mk_(true,min,max)
+                        else
+                          def n = GetIntNum(left')
+                          in
+                            if max = nil
+                            then return mk_(true,min,n)
+                            elseif n < max
+                            then return mk_(true,min,n)
+                            else return mk_(true,min,max),
+             others  -> return mk_(false,nil,nil)
+           end
+         else
+           return mk_(false,nil,nil);
+        ),
+    others  -> return mk_(false,nil,nil)
+  end;
+
+ExeTPTOSET: AS`Type ==> ()
+ExeTPTOSET(tp) ==
+  def s = TypeToSet(tp)
+  in STKM`Push(mk_SEM`SET(s));
+\end{vdm_al}
+
+\section{Evaluation Stack Instructions}
+
+\subsection{PUSHLIST}
+
+The operation {\em ExePUSHLIST} pops length elements of the evaluation
+stack. The all elements is assumed to be a semantic value.
+The operation pushes the list of elements on the evaluation stack.
+
+\begin{vdm_al}
+operations
+ExePUSHLIST: nat ==> ()
+ExePUSHLIST(length) ==
+  if length > 0
+  then
+    def arg_l = STKM`Pop(length)
+    in STKM`Push(arg_l)
+  else STKM`Push([])
+pre STKM`LenES(length) and
+    def arg_l = STKM`GetES(length)
+    in SEM`IsSemValSeq(arg_l);
+\end{vdm_al}
+
+\section{Context Stack Instructions}
+
+The operation {\em ExeCONTEXT} pushes an item on the context stack and
+increments the coverage information for the AST node it represents.
+
+Furthermore it handles breakpoints by reading the debug flag of the
+stack evaluator and checks if the context id {\em cid} is in the set
+of active breakpoints. The {\em BREAK} state of the evaluator is set
+to signal whether the evaluation should be terminated.
+
+\begin{vdm_al}
+ExeCONTEXT: CI`ContextId * bool ==> ()
+ExeCONTEXT(cid, isStmt) ==
+ (STKM`SetCid(cid);
+  if cid <> CI`NilContextId
+  then
+   (CI`IncTestCoverageInfo(cid);
+    if DEBUG`ActiveBreakpoint(cid)
+    then STKM`SetBREAK(true)
+    else
+     (dcl setbrk : bool := false;
+      cases STKM`GetDebugFlag():
+        mk_STKM`Step(level)       -> setbrk := isStmt and STKM`CallStackLevel() <= level,
+        mk_STKM`StepIn()          -> setbrk := true,
+        mk_STKM`SingleStep(level) -> setbrk := STKM`CallStackLevel() <= level,
+        mk_STKM`Finish(level)     -> setbrk := STKM`CallStackLevel() <= level -1,
+        others                    -> setbrk := false
+      end;
+      if setbrk
+      then STKM`SetBREAK(true)));
+ );
+
+ExeISTART: seq of char * CI`ContextId ==> ()
+ExeISTART(txt, cid) ==
+  STKM`PushCF(mk_(txt, cid));
+
+ExeIEND: () ==> ()
+ExeIEND() ==
+  STKM`PopCF();
+\end{vdm_al}
+
+\section{Environment Instructions}
+
+\begin{vdm_al}
+ExeSELBLKENV: nat ==> ()
+ExeSELBLKENV(n) ==
+--  def [env_s] ^ elem_l = STKM`Pop(n)
+--  in
+--    let env in set env_s
+--    in
+--     (STKM`PushBlkEnv(env);
+--      STKM`Push(env_s \ {env});
+--      for elem in elem_l do
+--        STKM`Push(elem))
+--pre STKM`LenES(n);
+  def env_s = STKM`GetNth(n)
+  in
+    let env in set env_s
+    in
+     (STKM`PushBlkEnv(env);
+      STKM`SetNth(n, env_s \ {env}));
+
+ExeAPPENDBLKENV: AS`Name * [AS`Type] ==> ()
+ExeAPPENDBLKENV(id,tp) ==
+  def [val] = STKM`Pop(1)
+  in STKM`AppendToTopBlkEnv(id,val,tp)
+pre STKM`LenES(1) and
+    def [val] = STKM`GetES(1)
+    in
+      SEM`IsSemVal(val);
+
+ExeREMSTACKELEM: nat ==> ()
+ExeREMSTACKELEM(n) ==
+  def [-] ^ elem_l = STKM`Pop(n)
+  in
+    for elem in elem_l do
+      STKM`Push(elem)
+pre STKM`LenES(n);
+
+ExeSWAP: () ==> ()
+ExeSWAP() ==
+  STKM`Swap();
+
+ExeMULTBINDL: nat * PAT`PARTITION ==> ()
+ExeMULTBINDL(n,part) ==
+  def pat_lp = STKM`Pop(n);
+      seq_lv = STKM`Pop(n);
+      env_s = PAT`EvalMultBindSeq(pat_lp, seq_lv, part)
+  in STKM`Push(env_s);
+
+ExePOPBLKENV: () ==> ()
+ExePOPBLKENV() ==
+   STKM`PopBlkEnv()
+pre not STKM`IsEmptyEnvL();
+
+ExeADDTOBLKENV: () ==> ()
+ExeADDTOBLKENV() ==
+  def [found_s] = STKM`Pop(1);
+      env = STKM`TopBlkEnv();
+  in STKM`Push(found_s union {env});
+\end{vdm_al}
+
+\section{Statement Instructions}
+
+\begin{vdm_al}
+ExeMKEXIT: bool * CI`ContextId ==> ()
+ExeMKEXIT(isnil,cid) ==
+ (if isnil
+  then STKM`Push(mk_SEM`EXIT(nil))
+  else def [val] = STKM`Pop(1)
+       in STKM`Push(mk_SEM`EXIT(val));
+  STKM`SetLastExitCid(cid));
+
+ExeEXITVAL: () ==> ()
+ExeEXITVAL() ==
+  if STKM`HdContext() = <PUREOP>
+  then
+    RTERR`Error(RTERR`OP_RETURNED_CONT, nil, nil, [])
+  else
+    def [item] = STKM`Pop(1)
+    in STKM`GotoTrapHandler(item);
+
+ExeISCONT: () ==> ()
+ExeISCONT() ==
+  def [val] = STKM`GetES(1)
+  in STKM`Push(mk_SEM`BOOL(is_SEM`CONT(val)))
+pre STKM`LenES(1) and
+    def [val] = STKM`GetES(1)
+    in SEM`IsSemVal(val);
+
+ExeISEXIT: () ==> ()
+ExeISEXIT() ==
+  def [val] = STKM`GetES(1)
+  in STKM`Push(mk_SEM`BOOL(is_SEM`EXIT(val)))
+pre STKM`LenES(1) and
+    def [val] = STKM`GetES(1)
+    in SEM`IsSemVal(val);
+
+ExeISNEEXIT: () ==> ()
+ExeISNEEXIT() ==
+  def [val] = STKM`GetES(1)
+  in STKM`Push(mk_SEM`BOOL(is_SEM`EXIT(val) and val.v <> nil))
+pre STKM`LenES(1) and
+    def [val] = STKM`GetES(1)
+    in SEM`IsSemVal(val);
+
+ExeREMEXITVAL: () ==> ()
+ExeREMEXITVAL() ==
+  def [mk_SEM`EXIT(val)] = STKM`GetES(1)
+  in STKM`Push(val)
+pre STKM`LenES(1) and
+    def [val] = STKM`GetES(1)
+    in is_SEM`EXIT(val) and val.v <> nil;
+
+ExePUSHTH: int ==> ()
+ExePUSHTH(movePC) ==
+  STKM`PushTS(movePC);
+
+ExePOPTH: () ==> ()
+ExePOPTH() ==
+  STKM`PopTS()
+pre not STKM`EmptyTS();
+\end{vdm_al}
+
+\subsection{LookUp Instruction}
+
+The operation {\em ExeLOOKUP} looks up the name or oldname and pushes
+the result on the evaluation stack.
+
+\begin{vdm_al}
+ExeLOOKUP: AS`Name | AS`OldName ==> ()
+ExeLOOKUP(name) ==
+  cases true:
+    (is_AS`Name(name))    -> STKM`Push(STATE`LookUp(name)),
+    (is_AS`OldName(name)) -> STKM`Push(STKM`EvalOldName(name)),
+    others                -> error
+  end;
+
+#ifdef VDMPP
+ExeLOOKUPSTATIC: AS`Name ==> ()
+ExeLOOKUPSTATIC(name) ==
+  cases STATE`LookUpStatic(name):
+    mk_(true,val) -> STKM`Push(val),
+    mk_(false,-)  -> RTERR`Error(RTERR`STATIC_NOT_IN_SCOPE, nil, nil, [])
+  end;
+
+ExeLOOKUPOP: AS`Name ==> ()
+ExeLOOKUPOP(name) ==
+  def clnm = STKM`GetCurCl();
+      aop = STATE`GetAllOps(clnm)
+  in
+    if name in set dom aop
+    then
+      let op = aop(name)
+      in STKM`Push(op)
+    else
+      def localover = STATE`LookUpOverInClass(clnm,name)
+      in if localover <> nil
+         then STKM`Push(localover)
+         else
+           cases STATE`LookOpFctPoly(name): -- regacy specification
+             mk_(true,true,val) -> STKM`Push(val),
+             others             -> RTERR`Error(RTERR`OP_NOT_IN_SCOPE, nil, nil, [])
+           end;
+#endif VDMPP
+\end{vdm_al}
+
+\subsection{Apply Expression}\label{sec:APPLY}
+
+The instruction {\em APPLY} pops two elements from the evaluation
+stack: the semantic value of the "applicator" (a semantic value of an
+operation/function, map or sequence) and a sequence consisting
+of the semantic values corresponding to the application parameters.
+
+Consider the function application of {\em f} below, assume that {\em
+a} is bound to the value {\em true}.
+
+\begin{verbatim}
+   f( mk_(3,4), a)
+\end{verbatim}
+
+The evaluation stack would then look like:
+
+\evalstacktwo{ "mk\_SEM`Fn(...) | mk\_SEM`MAP(...) | mk\_SEM`SEQ(...)" }
+             {[mk\_SEM`TUPLE([mk\_SEM`NUM(3), mk\_SEM`NUM(4)]), mk\_SEM`Bool(true)]}
+
+\begin{vdm_al}
+ExeAPPLY: () ==> ()
+ExeAPPLY() ==
+  def [fct_v, arg_lv] = STKM`Pop(2)
+  in ApplyOpFnMapSeq(fct_v,arg_lv);
+
+ApplyOpFnMapSeq: SEM`VAL * (seq of SEM`VAL | SEM`VAL) ==> ()
+ApplyOpFnMapSeq(fct_v,arg_lv) ==
+  cases true:
+    (is_SEM`MAP(fct_v))        -> STKM`Push(EXPR`EvalMapApply(fct_v, arg_lv)),
+    (is_SEM`SEQ(fct_v))        -> STKM`Push(EXPR`EvalSeqApply(fct_v, arg_lv)),
+    (is_SEM`CompExplFN(fct_v)) -> EvalCompExplFnApply(fct_v, arg_lv),
+    (is_SEM`ExplOP(fct_v))     -> EvalExplOpApply(fct_v, arg_lv),
+#ifdef VDMSL
+    (is_SEM`DLFN(fct_v))       -> EvalDLFnApply(fct_v, arg_lv),
+    (is_SEM`DLOP(fct_v))       -> EvalDLOpApply(fct_v, arg_lv),
+#endif VDMSL
+#ifdef VDMPP
+    (is_SEM`OverOPFN(fct_v))   -> EvalOverOpFnApply(fct_v,arg_lv),
+#endif VDMPP
+    (is_SEM`ExplPOLY(fct_v))   -> RTERR`Error(RTERR`POLY_NOT_INST, nil, nil, []),
+    others                     -> RTERR`Error(RTERR`INTERNAL_ERROR, nil, nil, [])
+  end
+pre is_(arg_lv,SEM`VAL) => is_(fct_v,SEM`CompExplFN);
+\end{vdm_al}
+
+\subsection{Function Applications}
+
+Function application involves setting up the right block
+environment. If the function is a curried function the
+block-environment of the semantic value is updated with the now bound
+free variables. The block-environment of the function pushed again on
+the evaluation stack.
+
+\begin{vdm_al}
+EvalCompExplFnApply: SEM`CompExplFN * (SEM`VAL | seq of SEM`VAL) ==> ()
+EvalCompExplFnApply(mk_SEM`CompExplFN(fn_l,curobjref), arg) ==
+  def arg_lv = if SEM`IsSemVal(arg) -- at the code level one can test for a sequence here
+               then [arg]
+               else arg;
+  in
+   (if len fn_l > 1
+    then (STKM`Push(mk_SEM`CompExplFN(tl fn_l, curobjref)); -- curobjref always null in VDMSL
+          STKM`IncrPC(-1));
+
+    EvalExplFnApply(hd fn_l, arg_lv);
+   );
+
+EvalExplFnApply: SEM`ExplFN * seq of SEM`VAL ==> ()
+EvalExplFnApply(fct_v, arg_lv) ==
+  def arg_lv' = UpdateFunctionValue(arg_lv)
+  in
+    if fct_v.instr = nil
+    then
+      if len arg_lv' = 1
+      then STKM`Push(hd arg_lv')
+      else STKM`Push(mk_SEM`TUPLE(arg_lv'))
+    else
+     (if len fct_v.parms > 1
+      then skip -- A high order function. A new semantic value of a function
+                -- is now pushed on the stack.
+      else
+        let clmodName = fct_v.modName,
+            fnName    = fct_v.fnName,
+            newNm = if fnName = nil
+                    then mk_AS`Name(["lambda application"],CI`NilContextId)
+                    else AUX`ConstructDoubleName(clmodName,fnName)
+        in STKM`PushCS(fct_v, newNm, arg_lv', <FNOP>);
+
+      EnvSetUpExplFnApply(fct_v, arg_lv');
+     );
+
+UpdateFunctionValue: seq of SEM`VAL ==> seq of SEM`VAL
+UpdateFunctionValue(arg_lv) ==
+  def tm = STKM`HdTypeInst();
+  in
+    if tm = {|->}
+    then return arg_lv
+    else
+     (dcl arg_lv' : seq of SEM`VAL := arg_lv;
+      for i = 1 to len arg_lv do
+        if is_SEM`CompExplFN(arg_lv(i)) 
+        then 
+          def fl = arg_lv(i).fl;
+              new_fl = [ let efn = fl(j)
+                         in mu(efn, tp |-> STATE`ConvertTypeVarType(efn.tp, tm),
+                                    parms |-> [ let p_l = efn.parms(k)
+                                 in [ STATE`ConvertPattern(p_l(l), tm)
+                                         | l in set inds p_l ]
+                                 | k in set inds efn.parms ])
+                           | j in set inds fl ]
+          in arg_lv'(i) := mu(arg_lv(i), fl |-> new_fl);
+      return arg_lv';
+     );
+\end{vdm_al}
+
+The operation {\em EnvSetUpExplFnApply} sets up the block environment
+and for VDM++ the right object scope for a function application.
+
+For an external dlclass method, we push the argument parameters on the
+evaluation stack, because it is simpler for the external code to be
+passed a sequence of parameters than a blkenv.  The DLCALL instruction
+is supposed to pop the sequence of parameters and pass them on to the
+external C++ code.
+
+\begin{vdm_al}
+EnvSetUpExplFnApply: SEM`ExplFN * seq of SEM`VAL ==> ()
+EnvSetUpExplFnApply(fndef, arg_lv) ==
+#ifdef VDMSL
+  let mk_SEM`ExplFN(tp,parms,-,closenv,tm,fnName,clmodName,-,-,-) = fndef
+  in
+   (STKM`PushModule(clmodName);
+#endif VDMSL
+#ifdef VDMPP
+  let mk_SEM`ExplFN(tp,parms,-,closenv,tm,fnName,clmodName,-,objref,-) = fndef
+  in
+   (if objref <> nil
+    then STKM`PushCurObj(objref,clmodName,clmodName)
+    else STKM`PushClNmCurObj(clmodName,clmodName);
+#endif VDMPP
+    STKM`PushOS();
+
+    cases false:
+      (parms = [] or len arg_lv = len parms(1))     -> (RTERR`Error(RTERR`WRONG_NO_OF_ARGS, nil, nil, []);
+                                                        return),
+      (SETTINGS`DTC() => len arg_lv = len tp.fndom) -> (RTERR`Error(RTERR`WRONG_NO_OF_ARGS, nil, nil, []);
+                                                        return),
+      (SETTINGS`DTC() => forall i in set inds tp.fndom & STATE`SubType(arg_lv(i), tp.fndom(i))) ->
+                                     (RTERR`Error(RTERR`TYPE_INCOMP_IN_FNOP_APPLY, nil, nil, []);
+                                      return)
+    end;
+
+    def env_s = PAT`MatchLists(hd parms, arg_lv)
+    in
+      if env_s = {}
+      then RTERR`Error(RTERR`EMPTY_ENV_S, nil, nil, [])
+      else
+        let env in set env_s
+        in
+          if len parms > 1 -- higher order function
+          then
+            let newenv = AUX`CombineBlkEnv(closenv, env),
+                fn = mu(fndef, tp |-> tp.fnrng, parms |-> tl parms, env |-> newenv)
+            in
+             (STKM`Push(SEM`CompFN(fn));
+              STKM`PopOS();
+#ifdef VDMSL
+              STKM`PopModule();
+#endif VDMSL
+#ifdef VDMPP
+              if objref = nil
+              then STKM`PopClNmCurObj()
+              else STKM`PopCurObj();
+#endif VDMPP
+             )
+          else
+           (dcl closenv' : SEM`BlkEnv := closenv;
+            if fnName <> nil -- check local function
+            then
+              cases STKM`IsLocalVal(fnName):
+                mk_(true,res_v) -> closenv' := AUX`CombineBlkEnv(closenv, AUX`MkBlkEnv(fnName, res_v, nil, <READ_ONLY>)),
+                others          -> skip
+              end;
+            STKM`PushEnvL([env, closenv']);
+            STKM`PushTypeInst(tm);
+#ifdef VDMPP
+            if fnName <> nil
+            then
+              if STATE`IsDLOp(clmodName, fnName)
+              then STKM`Push(arg_lv);
+#endif VDMPP
+           );
+   );
+\end{vdm_al}
+
+Updating history counter should not be updated before the operation is
+actually called. At this point we don't know a run-time error will
+occur because of e.g. wrong number of arguments to the operation call.
+
+Secondly, the unpacking the module name and operation name are more or
+less done in the operation {\em EnvSetUpExplOpApply}. It seems
+therefore better to update the history counters in this function. This
+will make it easier to read and will work correctly.
+
+In the implementation of instructions.vdm, instruction.cc, version
+1.3, I have therefore it as it is in this version.
+
+\begin{vdm_al}
+EvalExplOpApply: SEM`ExplOP * seq of SEM`VAL ==> ()
+EvalExplOpApply(opsem, arg_lv) ==
+  if STKM`HdContext() = <PUREOP> and not opsem.oppure
+  then RTERR`Error(RTERR`PURE_OP_CALL, nil, nil, [])
+  else
+  let clmodName = opsem.modName,
+      opName = opsem.fnName,
+      newNm = AUX`ConstructDoubleName(clmodName,opName)
+  in
+   (
+#ifdef VDMPP
+#ifdef VICE
+    if not opsem.sync and not STKM`OnCurCPU(opsem.objref)
+    then (STKM`Push(mk_SEM`CONT());
+          return);
+#endif VICE
+    if not STATE`IsClassInit(clmodName)
+    then STATE`InitClassName(clmodName);
+#endif VDMPP
+    STKM`PushCS(opsem, newNm, arg_lv, <FNOP>);
+    EnvSetUpExplOpApply(opsem, arg_lv);
+   );
+\end{vdm_al}
+For an external dlclass method, we push the argument parameters on the
+evaluation stack, because it is simpler for the external code to be
+passed a sequence of parameters than a blkenv.  The DLCALL instruction
+is supposed to pop the sequence of parameters and pass them on to the
+external C++ code.
+
+\begin{vdm_al}
+EnvSetUpExplOpApply: SEM`ExplOP * seq of SEM`VAL ==> ()
+#ifdef VICE
+EnvSetUpExplOpApply(mk_SEM`ExplOP(mk_AS`OpType(opdom,-,-),-,sync,manglenm,parms,-,opName,clmodName,-,objref,-), arg_lv) ==
+#else
+#ifdef VDMSL
+EnvSetUpExplOpApply(mk_SEM`ExplOP(mk_AS`OpType(opdom,-,-),-,-,-,parms,-,-,clmodName,-,-,-), arg_lv) ==
+#endif VDMSL
+#ifdef VDMPP
+EnvSetUpExplOpApply(mk_SEM`ExplOP(mk_AS`OpType(opdom,-,-),-,-,manglenm,parms,-,opName,clmodName,-,objref,-), arg_lv) ==
+#endif VDMPP
+#endif VICE
+ (
+#ifdef VDMSL
+  STKM`PushModule(clmodName);
+#endif VDMSL
+#ifdef VDMPP
+  if objref <> nil
+  then STKM`PushCurObj(objref,clmodName,clmodName)
+  else STKM`PushClNmCurObj(clmodName,clmodName);
+#endif VDMPP
+  STKM`PushOS();
+
+  cases false:
+    (len arg_lv = len parms)                   -> (RTERR`Error(RTERR`WRONG_NO_OF_ARGS, nil, nil, []);
+                                                   return),
+    (SETTINGS`DTC() => len arg_lv = len opdom) -> (RTERR`Error(RTERR`WRONG_NO_OF_ARGS, nil, nil, []);
+                                                   return),
+    (SETTINGS`DTC() => forall i in set inds opdom & STATE`SubType(arg_lv(i), opdom(i))) ->
+                                    (RTERR`Error(RTERR`TYPE_INCOMP_IN_FNOP_APPLY, nil, nil, []);
+                                     return)
+  end;
+
+  def env_s = PAT`MatchLists(parms, arg_lv)
+  in
+    if env_s = {}
+    then RTERR`Error(RTERR`EMPTY_ENV_S, nil, nil, [])
+    else
+      let env in set env_s
+      in
+       (--STKM`PushEmptyEnv();
+        --STKM`PushBlkEnv(env);
+        STKM`PushEnvL([env]);
+#ifdef VDMPP
+        if STATE`IsDLOp(clmodName, opName)
+        then STKM`Push(arg_lv);
+
+        -- construct the quoted operation name and increment the history counter.
+        let opnm = if manglenm = nil
+                   then opName
+                   else manglenm,
+            fullopname = AUX`ConstructDoubleName(clmodName, opnm) --opName)
+        in
+         (
+#ifdef VICE
+          if clmodName = opName -- use of constructor
+          then STATE`UpdateHistCount(fullopname, mk_INSTRTP`req(), objref,true,arg_lv);
+#endif VICE
+          STATE`UpdateHistCount(fullopname, mk_INSTRTP`act(), objref
+#ifdef VICE
+                                ,sync,nil
+#endif VICE
+                                )
+         );
+#endif VDMPP
+       );
+ );
+\end{vdm_al}
+
+#ifdef VDMSL
+\begin{vdm_al}
+EvalDLFnApply: SEM`DLFN * seq of SEM`VAL ==> ()
+EvalDLFnApply(mk_SEM`DLFN(tp,body,-,-), arg_l) ==
+  cases false:
+    (len arg_l = len tp.fndom) -> RTERR`Error(RTERR`WRONG_NO_OF_ARGS, nil, nil, []),
+    (SETTINGS`DTC() => forall i in set inds tp.fndom & STATE`SubType(arg_l(i), tp.fndom(i))) ->
+                                  RTERR`Error(RTERR`NUMBER_ARG_NEQ_NUMBER_TYPE, nil, nil, []),
+    others -> def res = EXPR`EvalExtBody(body,arg_l)
+             in
+              (if SETTINGS`DTC() and not STATE`SubType(res,tp.fnrng)
+               then RTERR`Error(RTERR`TYPE_INCOMP, nil, nil, []);
+               STKM`Push(res))
+  end;
+\end{vdm_al}
+
+\begin{vdm_al}
+EvalDLOpApply: SEM`DLOP * seq of SEM`VAL ==> ()
+EvalDLOpApply(mk_SEM`DLOP(mk_AS`OpType(opdom,oprng,-),body,-,-), arg_l) ==
+  cases false:
+    (len arg_l = len opdom) -> RTERR`Error(RTERR`WRONG_NO_OF_ARGS, nil, nil, []),
+    (SETTINGS`DTC() => forall i in set inds opdom & STATE`SubType(arg_l(i), opdom(i))) ->
+                                  RTERR`Error(RTERR`NUMBER_ARG_NEQ_NUMBER_TYPE, nil, nil, []),
+    others -> def res = EXPR`EvalExtBody(body,arg_l)
+              in
+               (if SETTINGS`DTC() and
+                   (not STATE`SubType(res,oprng) and
+                     (not is_AS`VoidType(oprng) and res <> mk_SEM`NIL()))
+                    -- the last test here is only necessary at the
+                    -- specification level because of the way the approximation
+                    -- is made.
+                then RTERR`Error(RTERR`TYPE_INCOMP, nil, nil, []);
+                STKM`Push(res))
+  end;
+\end{vdm_al}
+#endif VDMSL
+
+#ifdef VDMPP
+The EvalOverOpFnApply operation is used for overloaded
+operations/functions. Depending upon the argument list the
+operation/function with the right type is selected (if none or more
+than one are found an error is reported).
+
+\begin{vdm_al}
+EvalOverOpFnApply: SEM`OverOPFN * seq of SEM`VAL ==> ()
+EvalOverOpFnApply(mk_SEM`OverOPFN(over,objref),arg_lv) ==
+ (dcl m : map AS`Name to AS`Name := {|->};
+  for all mk_(manglenm,clsnm) in set dom over do
+    let mk_(tp_l,-,-) = over(mk_(manglenm,clsnm))
+    in
+      if len tp_l = len arg_lv and forall i in set inds arg_lv & STATE`RealSubType(arg_lv(i), tp_l(i),false)
+      then
+        if clsnm in set dom m
+        then (RTERR`Error(RTERR`MULTIOVERLOADED, nil, nil, []);
+              return)
+        else m := m ++ { clsnm |-> manglenm };
+
+  if m = {|->}
+  then RTERR`Error(RTERR`NOOVERLOADED, nil, nil, [])
+  elseif not CheckMultiOverLoaded(m, mk_SEM`OverOPFN(over,objref), arg_lv)
+  then RTERR`Error(RTERR`MULTIOVERLOADED, nil, nil, [])
+  else
+    cases STATE`ExistsOneChild(dom m,dom m):
+      mk_(true, child) ->
+        let manglenm = m(child)
+        in
+          cases STATE`LookupAllFnsOpsPolys(child, manglenm):
+            mk_(true, mk_(opval,access)) ->
+              if STATE`AccessOk(access, STKM`GetOrigCl(), child)
+              then
+               (dcl f : SEM`FN | SEM`OP | SEM`ExplFN | SEM`ExplPOLY := opval;
+                cases true:
+                  (is_SEM`ExplOP(f))     -> (f.objref := objref;
+                                             f.manglenm := manglenm),
+                  (is_SEM`ExplFN(f))     -> f.objref := objref,
+                  (is_SEM`CompExplFN(f)) -> (f.objref := objref;
+                                             let fl = f.fl
+                                             in f.fl := [ mu(fl(i), objref |-> objref) | i in set inds fl ]),
+                  (is_SEM`ExplPOLY(f))   -> let mk_(-, -, fval) = over(mk_(manglenm, f.modName))
+                                            in
+                                              if is_SEM`CompExplFN(fval)
+                                              then
+                                               (f := fval;
+                                                f.objref := objref;
+                                                let fl = f.fl
+                                                in f.fl := [ mu(fl(i), objref |-> objref) | i in set inds fl ])
+                end;
+                ApplyOpFnMapSeq(f,arg_lv))
+              else RTERR`Error(RTERR`NOT_IN_SCOPE, nil, nil, []),
+            others -> RTERR`Error(RTERR`NOT_IN_SCOPE, nil, nil, [])
+          end,
+      others -> RTERR`Error(RTERR`MULTIOVERLOADED, nil, nil, [])
+    end;
+ );
+
+CheckMultiOverLoaded: (map AS`Name to AS`Name) * SEM`OverOPFN * seq of SEM`VAL ==> bool
+CheckMultiOverLoaded(m, mk_SEM`OverOPFN(over,objref), arg_lv) ==
+  let mk_(manglenm,-) in set dom over
+  in
+    let nm_s = dom m,
+        mnm = if MANGLE`IsMangled(manglenm)
+              then MANGLE`GetUnmangledName(manglenm)
+              else manglenm
+    in
+     (dcl defcon : bool := false,
+          stat : bool := false;
+      if STATE`IsAClass(mnm) and arg_lv = []
+      then defcon := true;
+      if objref = nil and STKM`HasCurObjRef() and (STATE`GetAllSupers(STKM`GetCurObjName()) \ dom m) = {}
+      then stat := true;
+
+      if (objref <> nil or STKM`HasCurObjRef()) and not defcon and not stat
+      then
+       (dcl done : set of seq of AS`Name := {},
+            notdone : set of seq of AS`Name;
+        if objref <> nil
+        then notdone := {[objref.tp]}
+        else notdone := {[STKM`GetCurObjName()]};
+            
+        while notdone <> {} do
+         (dcl newnd : set of seq of AS`Name := {};
+          for all ts in set notdone do
+            def s_s = STATE`GetSupers(hd ts)
+            in
+              if s_s = {}
+              then done := done union {ts}
+              else newnd := newnd union { [n] ^ ts | n in set s_s };
+           notdone := newnd);
+
+        return not exists t in set done & let s = nm_s inter elems t in s <> {} and s <> nm_s)
+      else
+        return true;
+     );
+\end{vdm_al}
+
+\subsection{Call Stmt}
+The call statement is special to VDM++
+
+\begin{vdm_al}
+ExeCALLGUARD: bool * AS`Name ==> ()
+ExeCALLGUARD(hasobj, oprt) ==
+  def [args] = STKM`Pop(1);
+  in
+   (dcl obj : [SEM`OBJ_Ref] := nil;
+    if hasobj
+    then
+      def [o] = STKM`Pop(1)
+      in obj := o
+    else
+      obj := STKM`GetCurObjRef();
+    def op_v = ConvertOverOPFNToExplOP(oprt,obj,hasobj,args)
+    in
+      cases false:
+        (is_SEM`OBJ_Ref(obj)) -> RTERR`Error(RTERR`OBJ_REF_EXP_CALL, nil, nil, []),
+        (is_SEM`ExplOP(op_v)) -> RTERR`Error(RTERR`NOT_EXPL_OP_CALL, nil, nil, []),
+        others                -> (GuardCheck(op_v,obj,args,true);
+                                  STKM`Push(args);
+                                  STKM`Push(op_v))
+      end
+   );
+
+ConvertOverOPFNToExplOP: (SEM`VAL | AS`Name) * [SEM`OBJ_Ref] * bool * seq of SEM`VAL ==> [SEM`VAL]
+ConvertOverOPFNToExplOP(op,obj,hasobj,args) ==
+ (dcl realnm : [AS`Name] := nil,
+      resval : [SEM`VAL] := nil;
+  -- Push the object as the current object if it exists
+  if hasobj
+  then
+    if is_SEM`OBJ_Ref(obj)
+    then STKM`PushCurObj(obj,nil,STKM`GetCurCl())
+    else (RTERR`Error(RTERR`OBJ_REF_EXP,obj,nil,[]);
+          return nil);
+
+  if is_AS`Name(op)
+  then
+    if hasobj
+    then
+      cases STATE`LookOpFctPoly(op):
+        mk_(true,true,val) -> resval := val,
+        others -> (RTERR`Error(RTERR`OP_OR_FUN_NOT_IN_SCOPE,nil,nil,[]);
+                   return nil)
+      end
+    elseif len op.ids = 1
+    then resval := STATE`LookUp(op)
+    elseif len op.ids = 2
+    then
+      cases STATE`LookStaticOpFctPoly(mk_AS`Name([(op.ids)(1)],op.cid), mk_AS`Name([(op.ids)(2)],op.cid)):
+        mk_(true,true,val) -> resval := val,
+        others             -> (RTERR`Error(RTERR`STATIC_NOT_IN_SCOPE,nil,nil,[]);
+                               return nil)
+      end
+    else resval := STATE`LookUp(op)
+  else resval := op;
+
+  if is_SEM`OverOPFN(resval)
+  then
+   (dcl m_s: map AS`Name to (SEM`VAL * AS`Name) := {|->};
+    def over = resval.overload;
+        origcl = STKM`GetOrigCl()
+    in
+      for all mk_(manglenm,clsnm) in set dom over do
+        let mk_(tp_l,-,-) = over(mk_(manglenm,clsnm))
+        in
+          if len tp_l = len args and forall i in set inds args & STATE`RealSubType(args(i),tp_l(i),false)
+          then
+            cases STATE`LookupAllFnsOpsPolys(clsnm,manglenm):
+              mk_(true, mk_(opfn,access)) -> if STATE`AccessOk(access, origcl, clsnm)
+                                          then m_s := m_s ++ { clsnm |-> mk_(opfn,manglenm) },
+              others                   -> skip
+            end;
+    if m_s <> {|->}
+    then
+      cases STATE`ExistsOneChild(dom m_s, dom m_s):
+        mk_(true, child) -> let mk_(rval,rnm) = m_s(child)
+                            in
+                             (resval := rval;
+                              realnm := rnm),
+        others           -> skip
+      end;
+   );
+
+  if hasobj
+  then STKM`PopCurObj();
+
+  if is_SEM`ExplOP(resval)
+  then
+    if resval.objref = nil
+    then return mu(resval, objref |-> obj, manglenm |-> realnm)
+    else return mu(resval, manglenm |-> realnm)
+  else
+    return resval;
+ );
+
+ExePPCALL: () ==> ()
+ExePPCALL() ==
+  def [args,op_v] = STKM`Pop(2)
+  in EvalExplOpApply(op_v, args);
+\end{vdm_al}
+
+\subsection{DLCALL Instruction}
+
+\begin{vdm_al}
+ExeDLCALL : AS`Name * AS`Name ==> ()
+ExeDLCALL(clname, fnopname) ==
+  def [-] = STKM`Pop(1);
+      name = AUX`SingleNameToString(AUX`ConstructDoubleName(clname, fnopname))
+  in RTERR`Error(RTERR`LOGDLCALL, nil, nil, [name]);
+\end{vdm_al}
+#endif VDMPP
+
+\subsection{Return Instruction}\label{sec:RETURN}
+
+The instruction {\em RETURN} that is used to return from a function
+call/application cleans the block environment and returns to origin
+caller.  In case the value to be returned
+(present at the top of the evaluation stack) contains any references
+to objects which are not known in the calling environment references
+to these temporary objects must be added to the calling function
+environment. If this is not done the object references would be
+deleted because the reference counter would reach zero.
+
+\begin{vdm_al}
+operations
+ExeRETURN: () ==> ()
+ExeRETURN() ==
+  CleanFunctionApply()
+pre STKM`CallStackLevel() > 0;
+\end{vdm_al}
+
+\subsection{GetPre Instruction}\label{sec:GETPRE}
+
+The instruction {\em GETPRE} that is used to push the pre-condition
+function onto the evaluation stack in case the value at the top is a
+function that has a pre-condition. Otherwise an empty sequence is inserted.
+
+\begin{vdm_al}
+ExeGETPRE: () ==> ()
+ExeGETPRE() ==
+  def [val] = STKM`Pop(1)
+  in
+    if is_SEM`CompExplFN(val)
+    then
+      let fnval = hd val.fl,
+          mnm = fnval.modName,
+          fnnm = fnval.fnName
+      in
+        if fnnm <> nil
+        then
+          def mk_(isit, lval) = STKM`IsLocalVal(AUX`PreName(fnnm))
+          in
+            if isit
+            then
+             (STKM`Push(lval);
+              STKM`Push(mk_SEM`BOOL(true)))
+            else
+              if mnm.ids <> []
+              then
+                def preval = STATE`GetPreCond(mnm,fnnm)
+                in
+                  if preval <> nil
+                  then
+                   (STKM`Push(preval);
+                    STKM`Push(mk_SEM`BOOL(true)))
+                  else STKM`Push(mk_SEM`BOOL(false))
+              else STKM`Push(mk_SEM`BOOL(false))
+        else STKM`Push(mk_SEM`BOOL(false))
+    else STKM`Push(mk_SEM`BOOL(false))
+
+pre STKM`LenES(1);
+
+ExeISCHECK: AS`BasicType | AS`Name ==> ()
+ExeISCHECK(Type) ==
+  def [arg_v] = STKM`Pop(1)
+  in
+    cases Type:
+      mk_AS`BooleanType(-)           -> STKM`Push(mk_SEM`BOOL(is_SEM`BOOL(arg_v))),
+      mk_AS`NumericType(<NAT>,-)     -> STKM`Push(mk_SEM`BOOL(AUX`IsNat(arg_v))),
+      mk_AS`NumericType(<NATONE>,-)  -> STKM`Push(mk_SEM`BOOL(AUX`IsNatOne(arg_v))),
+      mk_AS`NumericType(<INTEGER>,-) -> STKM`Push(mk_SEM`BOOL(AUX`IsInt(arg_v))),
+      mk_AS`NumericType(<RAT>,-)     -> STKM`Push(mk_SEM`BOOL(AUX`IsReal(arg_v))),
+      mk_AS`NumericType(<REAL>,-)    -> STKM`Push(mk_SEM`BOOL(AUX`IsReal(arg_v))),
+      mk_AS`TokenType(-)             -> STKM`Push(mk_SEM`BOOL(is_SEM`TOKEN(arg_v))),
+      mk_AS`CharType(-)              -> STKM`Push(mk_SEM`BOOL(is_SEM`CHAR(arg_v))),
+
+      mk_AS`Name(-,-)                -> if is_SEM`REC(arg_v)
+                                        then
+                                          let mk_SEM`REC(tag,-,-) = arg_v
+                                          in
+#ifdef VDMSL
+                                            if AUX`IsRecSel(tag)
+                                            --then STKM`Push(mk_SEM`BOOL(tag = AUX`UniqueTagName (Type)))
+                                            then def mk_(-,tagname) = AUX`LookUpRename(Type)
+                                                 in STKM`Push(mk_SEM`BOOL(tag = AUX`UniqueTagName (tagname)))
+                                            else RTERR`Error(RTERR`TAG_UNKNOWN, arg_v, nil, [])
+#endif VDMSL
+#ifdef VDMPP
+                                            if AUX`IsRecSel(tag)
+                                            then
+                                              def mk_(tagname,-) = AUX`ExtractTagName(Type, {})
+                                              in STKM`Push(mk_SEM`BOOL(tag = tagname))
+                                            else RTERR`Error(RTERR`TAG_UNKNOWN, arg_v, nil, [])
+#endif VDMPP
+                                        else STKM`Push(mk_SEM`BOOL(false)),
+      others                         -> STKM`Push(mk_SEM`BOOL(false))
+    end
+pre STKM`CallStackLevel() > 0;
+\end{vdm_al}
+
+The instruction {\em EOCL} is solely used to signal the ending of the
+instruction sequence of the debugger command that initiated the
+evaluation. This instruction is appended to the instruction sequence
+returned by {\em CMPL`E2I} to make sure that the call stack is
+``cleaned'' properly. The operation {\em ExeEOCL} simply removes the
+final item from the call stack.
+
+\begin{vdm_al}
+ExeEOCL: () ==> ()
+ExeEOCL() ==
+  STKM`PopCS()
+pre STKM`CallStackLevel() > 0;
+\end{vdm_al}
+
+\begin{vdm_al}
+operations
+CleanFunctionApply: () ==> ()
+CleanFunctionApply() ==
+  def mk_STKM`CallStackItem(<FNOP>,semval,-,-,-,-,-,-,-,-,-,-,-) = STKM`HeadCS()
+  in
+    cases true:
+      (is_SEM`ExplFN(semval)) -> CleanExplFnApply(semval),
+      (is_SEM`ExplOP(semval)) -> CleanExplOpApply(semval),
+      others                  -> RTERR`Error(RTERR`INTERNAL_ERROR, nil, nil, [])
+    end
+pre STKM`CallStackLevel() > 0;
+\end{vdm_al}
+
+\begin{vdm_al}
+CleanExplFnApply: SEM`ExplFN ==> ()
+#ifdef VDMSL
+CleanExplFnApply(mk_SEM`ExplFN(tp,-,-,-,-,-,-,-,-,-)) ==
+#endif VDMSL
+#ifdef VDMPP
+CleanExplFnApply(mk_SEM`ExplFN(tp,-,-,-,-,-,-,-,objref,-)) ==
+#endif VDMPP
+  def res_v = STKM`Head()
+  in
+   (if SETTINGS`DTC() and not STATE`SubType(res_v, tp.fnrng)
+    then
+     (RTERR`Error(RTERR`TYPE_INCOMP_RETURN, res_v, tp.fnrng, []);
+      return);
+    STKM`PopEnvL();
+    STKM`PopOS();
+#ifdef VDMSL
+    STKM`PopModule();
+#endif VDMSL
+#ifdef VDMPP
+    if objref = nil
+    then STKM`PopClNmCurObj()
+    else STKM`PopCurObj();
+#endif VDMPP
+    STKM`PopTypeInst();
+    STKM`PopCS();
+   )
+pre STKM`CallStackLevel() > 0;
+\end{vdm_al}
+
+
+\begin{vdm_al}
+  CleanExplOpApply: SEM`ExplOP ==> ()
+#ifdef VICE
+  CleanExplOpApply(mk_SEM`ExplOP(mk_AS`OpType(-,oprng,-),-,sync,manglenm,-,-,fnName,modName,-,objref,-)) ==
+#else
+#ifdef VDMSL
+  CleanExplOpApply(mk_SEM`ExplOP(mk_AS`OpType(-,oprng,-),-,-,-,-,-,-,-,-,-,-)) ==
+#endif VDMSL
+#ifdef VDMPP
+  CleanExplOpApply(mk_SEM`ExplOP(mk_AS`OpType(-,oprng,-),-,-,manglenm,-,-,fnName,modName,-,objref,-)) ==
+#endif VDMPP
+#endif VICE
+    def res_v = STKM`Head()
+    in
+     (
+#ifdef VDMPP
+      if fnName <> modName -- not a constructor
+      then
+#endif VDMPP
+        cases true:
+          (is_SEM`EXIT(res_v))   -> skip,
+          (is_SEM`CONT(res_v)),
+          (is_SEM`RETURN(res_v)) -> if not is_AS`VoidType(oprng)
+                                    then
+                                     (RTERR`Error(RTERR`OP_RETURNED_CONT, res_v, oprng, []);
+                                      return)
+                                    elseif STKM`HdContext() = <PUREOP>
+                                    then
+                                     (RTERR`Error(RTERR`OP_RETURNED_CONT, res_v, oprng, []);
+                                      return),
+          others                 -> if is_AS`VoidType(oprng)
+                                    then
+                                     (RTERR`Error(RTERR`OP_RETURNED_VALUE, res_v, oprng, []);
+                                      return)
+                                    elseif SETTINGS`DTC() and not STATE`SubType(res_v, oprng)
+                                    then
+                                     (RTERR`Error(RTERR`TYPE_INCOMP_RETURN, res_v, oprng, []);
+                                    return)
+        end;
+
+      if is_SEM`RETURN(res_v)
+      then
+        def - = STKM`Pop(1)
+        in STKM`Push(mk_SEM`CONT());
+
+      STKM`PopEnvL();
+#ifdef VDMSL
+      STKM`PopModule();
+#endif VDMSL
+      STKM`PopOS();
+#ifdef VDMPP
+      let opnm = if manglenm = nil
+                 then fnName
+                 else manglenm,
+          fullopname = AUX`ConstructDoubleName(modName, opnm) --opName)
+      in
+        STATE`UpdateHistCount(fullopname,mk_INSTRTP`fin(),objref
+#ifdef VICE
+                               ,sync,[res_v]
+#endif VICE
+                              );
+#ifdef VICE
+      if fnName = modName -- A constructor
+      then STKM`LateDeployInst();
+#endif VICE
+      if objref = nil
+      then STKM`PopClNmCurObj()
+      else STKM`PopCurObj();
+#endif VDMPP
+      STKM`PopCS();
+     )
+pre STKM`CallStackLevel() > 0;
+\end{vdm_al}
+
+\subsection{Unary Expressions}
+
+\begin{vdm_al}
+EvalUNOP: AS`UnaryOp ==> ()
+EvalUNOP(opr) ==
+  def [arg_v] = STKM`Pop(1);
+  in
+   (dcl res_v : SEM`VAL;
+    cases opr:
+      <NUMPLUS>,
+      <NUMMINUS>,
+      <FLOOR>,
+      <NUMABS>             -> res_v := EXPR`EvalNumUnaryExpr(opr, arg_v),
+      <NOT>                -> res_v := EXPR`EvalLogUnaryExpr(opr, arg_v),
+      <SETCARD>,
+      <SETDISTRUNION>,
+      <SETDISTRINTERSECT>,
+      <SETPOWER>           -> res_v := EXPR`EvalSetUnaryExpr(opr, arg_v),
+      <SEQHEAD>,
+      <SEQTAIL>,
+      <SEQLEN>,
+      <SEQELEMS>,
+      <SEQINDICES>,
+      <SEQDISTRCONC>,
+      <SEQREVERSE>         -> res_v := EXPR`EvalSeqUnaryExpr(opr, arg_v),
+      <MAPDOM>,
+      <MAPRNG>,
+      <MAPINVERSE>,
+      <MAPDISTRMERGE>      -> res_v := EXPR`EvalMapUnaryExpr(opr, arg_v),
+      others               -> error
+    end;
+    STKM`Push(res_v))
+pre STKM`LenES(1) and
+  def [arg_v ] = STKM`GetES(1)
+  in SEM`IsSemVal(arg_v);
+\end{vdm_al}
+
+\subsection{Binary Expressions}
+
+\begin{vdm_al}
+EvalBINOP : AS`BinaryOp ==> ()
+EvalBINOP (opr) ==
+  def [left_v, right_v] = STKM`Pop(2);
+  in
+   (dcl res_v : SEM`VAL;
+    cases opr:
+      <EQ>,
+      <NE>,
+      <EQUIV>         -> res_v := EXPR`EvalEqNeBinaryExpr(left_v, opr, right_v),
+      <NUMPLUS>,
+      <NUMMINUS>,
+      <NUMMULT>,
+      <NUMDIV>,
+      <NUMREM>,
+      <INTDIV>,
+      <NUMLT>,
+      <NUMLE>,
+      <NUMGT>,
+      <NUMGE>,
+      <NUMMOD>        -> res_v := EXPR`EvalNumBinaryExpr(left_v, opr, right_v),
+      <INSET>,
+      <NOTINSET>,
+      <SETUNION>,
+      <SETINTERSECT>,
+      <SETMINUS>,
+      <SUBSET>,
+      <PROPERSUBSET>  -> res_v := EXPR`EvalSetBinaryExpr(left_v, opr, right_v),
+      <SEQCONC>       -> res_v := EXPR`EvalSeqBinaryExpr(left_v, opr, right_v),
+      <MAPMERGE>,
+      <MAPDOMRESTTO>,
+      <MAPDOMRESTBY>,
+      <MAPRNGRESTTO>,
+      <MAPRNGRESTBY>  -> res_v := EXPR`EvalMapBinaryExpr(left_v, opr, right_v),
+      <COMPOSE>       -> res_v := EXPR`EvalComposeExpr(left_v,right_v),
+      <NUMEXP>        -> res_v := EXPR`EvalIterateExpr(left_v,right_v),
+      others          -> error
+    end;
+    STKM`Push(res_v))
+pre STKM`LenES(2) and
+    def [ left_v, right_v ] = STKM`GetES(2)
+    in SEM`IsSemVal(left_v) and SEM`IsSemVal(right_v);
+\end{vdm_al}
+
+\subsection{Appending sequence values}
+
+\begin{vdm_al}
+ExeAPPENDSEQ: () ==> ()
+ExeAPPENDSEQ() ==
+  def [mk_SEM`SEQ(seqv),val] = STKM`Pop(2)
+  in STKM`Push(mk_SEM`SEQ(seqv ^ [val]))
+pre STKM`LenES(2) and
+    def [val,seqv] = STKM`GetES(2)
+    in is_SEM`SEQ(seqv) and SEM`IsSemVal(val);
+\end{vdm_al}
+
+\subsection{Adding elements to set values}
+
+\begin{vdm_al}
+ExeADDSET: () ==> ()
+ExeADDSET() ==
+  def [mk_SEM`SET(setv),val] = STKM`Pop(2)
+  in STKM`Push(mk_SEM`SET(setv union {val}))
+pre STKM`LenES(2) and
+    def [val,setv] = STKM`GetES(2)
+    in is_SEM`SET(setv) and SEM`IsSemVal(val);
+\end{vdm_al}
+
+\subsection{Appending mapping values}
+
+\begin{vdm_al}
+ExeAPPENDMAP: () ==> ()
+ExeAPPENDMAP() ==
+  def [mk_SEM`MAP(mapv),domval,rngval] = STKM`Pop(3)
+  in
+    if domval not in set dom mapv or mapv(domval) = rngval
+    then STKM`Push(mk_SEM`MAP(mapv munion {domval |-> rngval}))
+    else RTERR`Error(RTERR`DUPLICATES_NOT_EQUAL,mk_SEM`MAP(mapv),nil,[])
+pre STKM`LenES(3) and
+    def [rngval,domval,mapv] = STKM`GetES(3)
+    in is_SEM`MAP(mapv) and SEM`IsSemVal(domval) and SEM`IsSemVal(rngval);
+\end{vdm_al}
+
+\subsection{Selecting an element from a sequence}
+
+\begin{vdm_al}
+ExeSELSEQELEM: () ==> ()
+ExeSELSEQELEM() ==
+  def [[val] ^ seqval] = STKM`Pop(1)
+  in
+   (STKM`Push(seqval);
+    STKM`Push(val))
+pre STKM`LenES(1) and
+    def [seqval] = STKM`GetES(1)
+    in seqval <> [];
+\end{vdm_al}
+
+\subsection{Creating a set range value}
+
+\begin{vdm_al}
+ExeSETRNG: () ==> ()
+ExeSETRNG() ==
+  def [lbval,ubval] = STKM`Pop(2)
+  in STKM`Push(EXPR`EvalSetRangeExpr(lbval,ubval))
+pre STKM`LenES(2) and
+    def [v1,v2] = STKM`GetES(2)
+    in SEM`IsSemVal(v1) and SEM`IsSemVal(v2);
+
+ExeSUBSEQ: () ==> ()
+ExeSUBSEQ() ==
+  def [seqval,lbval,ubval] = STKM`Pop(3)
+  in STKM`Push(EXPR`EvalSubSequenceExpr(seqval,lbval,ubval))
+pre STKM`LenES(3) and
+    def [v1,v2,v3] = STKM`GetES(3)
+    in SEM`IsSemVal(v1) and SEM`IsSemVal(v2) and SEM`IsSemVal(v3);
+
+ExeRECPATCONS: AS`Name * nat * CI`ContextId ==> ()
+ExeRECPATCONS(tag, length, cid) ==
+    def fields = STKM`Pop(length)
+    in STKM`Push(mk_STKM`RecordPattern(tag, fields, cid));
+
+ExeTUPPATCONS: nat * CI`ContextId ==> ()
+ExeTUPPATCONS(length, cid) ==
+    def fields = STKM`Pop(length)
+    in STKM`Push(mk_STKM`TuplePattern(fields, cid));
+
+ExeRECCONS: AS`Name * nat ==> ()
+ExeRECCONS(tag,length) ==
+  def val_l = STKM`Pop(length)
+  in STKM`Push(EXPR`EvalRecordConstructorExpr(tag,val_l))
+pre STKM`LenES(length) and
+    def v_l = STKM`GetES(length)
+    in forall v in set elems v_l & SEM`IsSemVal(v);
+
+ExeRECMOD: seq1 of AS`Name ==> ()
+ExeRECMOD(fid_l) ==
+    def val_l = STKM`Pop(len fid_l);
+        [rec] = STKM`Pop(1)
+    in STKM`Push(EXPR`EvalRecordModifierExpr(rec,fid_l,val_l))
+pre STKM`LenES(len fid_l + 1) and
+    def v_l ^ [rec] = STKM`GetES(len fid_l + 1)
+    in
+      SEM`IsSemVal(rec) and
+      forall i in set inds v_l & SEM`IsSemVal(v_l(i));
+
+ExeFIELDSEL: AS`Name ==> ()
+ExeFIELDSEL(field) ==
+  def [recval] = STKM`Pop(1)
+  in STKM`Push(EXPR`EvalFieldSelectExpr(recval,field))
+pre STKM`LenES(1) and
+    def [recval] = STKM`GetES(1)
+    in SEM`IsSemVal(recval);
+
+ExeISEMPTYSET: nat ==> ()
+ExeISEMPTYSET(n) ==
+  def val = STKM`GetNth(n);
+  in STKM`Push(mk_SEM`BOOL(val = {}));
+
+ExeISEMPTYSEQ: nat ==> ()
+ExeISEMPTYSEQ(n) ==
+  def val = STKM`GetNth(n)
+  in STKM`Push(mk_SEM`BOOL(val = []));
+
+ExeISNOTEMPTYSET: nat ==> ()
+ExeISNOTEMPTYSET(n) ==
+  def val = STKM`GetNth(n);
+  in STKM`Push(mk_SEM`BOOL(val <> {}));
+
+ExeISNOTEMPTYSEQ: nat ==> ()
+ExeISNOTEMPTYSEQ(n) ==
+  def val = STKM`GetNth(n)
+  in STKM`Push(mk_SEM`BOOL(val <> []));
+\end{vdm_al}
+
+\subsection{Construting Token values}
+
+\begin{vdm_al}
+ExeTOKENVAL: () ==> ()
+ExeTOKENVAL() ==
+  def [val] = STKM`Pop(1)
+  in STKM`Push(mk_SEM`TOKEN(val))
+pre STKM`LenES(1) and
+    SEM`IsSemVal(hd STKM`GetES(1));
+\end{vdm_al}
+
+\subsection{Selecting an Index from a Tuple}
+
+\begin{vdm_al}
+ExeTUPSEL: real ==> ()
+ExeTUPSEL(index) ==
+  def [tupval] = STKM`Pop(1)
+  in
+    cases tupval:
+      mk_SEM`TUPLE(v) -> if index in set inds v
+                         then STKM`Push(v(index))
+                         else RTERR`Error(RTERR`TUPLE_OUTSIDE_INDEX,tupval, nil, []),
+      others          -> RTERR`Error(RTERR`TUPLE_EXPECTED,tupval, nil, [])
+    end
+pre STKM`LenES(1) and
+    SEM`IsSemVal(hd STKM`GetES(1));
+\end{vdm_al}
+
+\subsection{Type Judgements}
+
+\begin{vdm_al}
+ExeTYPEJUDGE: AS`Type ==> ()
+ExeTYPEJUDGE(tp) ==
+  def [val] = STKM`Pop(1)
+  in
+   (STATE`SetTypeJudgement();
+    STKM`Push(mk_SEM`BOOL(STATE`RealSubType(val, tp, true)));
+    STATE`UnsetTypeJudgement());
+\end{vdm_al}
+
+\subsection{Instatiating Polymorphic Functions}
+
+\begin{vdm_al}
+UpdateTypeInfo: GLOBAL`Type * AS`Name ==> GLOBAL`Type
+UpdateTypeInfo(tp,usedclass) ==
+  cases tp:
+    mk_AS`BooleanType(-),
+    mk_AS`NumericType(-,-),
+    mk_AS`TokenType(-),
+    mk_AS`CharType(-),
+    mk_AS`VoidType(-),
+    mk_AS`QuoteType(-,-),
+    mk_AS`TypeVar(-,-),
+    mk_AS`AllType(-),
+    mk_AS`CompositeType(-,-,-)                -> return tp,
+    mk_AS`BracketedType(t,cid)                -> return mk_AS`BracketedType(UpdateTypeInfo(t,usedclass),cid),
+    mk_AS`UnionType(tps,cid)                  -> return mk_AS`UnionType([UpdateTypeInfo(tps(i),usedclass)
+                                                                         | i in set inds tps],cid),
+    mk_AS`ProductType(tps,cid)                -> return mk_AS`ProductType([UpdateTypeInfo(tps(i),usedclass)
+                                                                           | i in set inds tps],cid),
+    mk_AS`OptionalType(t,cid)                 -> return mk_AS`OptionalType(UpdateTypeInfo(t,usedclass),cid),
+    mk_AS`Set0Type(elemtp,cid)                -> return mk_AS`Set0Type(UpdateTypeInfo(elemtp,usedclass),cid),
+    mk_AS`Set1Type(elemtp,cid)                -> return mk_AS`Set1Type(UpdateTypeInfo(elemtp,usedclass),cid),
+    mk_AS`Seq0Type(elemtp,cid)                -> return mk_AS`Seq0Type(UpdateTypeInfo(elemtp,usedclass),cid),
+    mk_AS`Seq1Type(elemtp,cid)                -> return mk_AS`Seq1Type(UpdateTypeInfo(elemtp,usedclass),cid),
+    mk_AS`GeneralMap0Type(mapdom,maprng,cid)   -> return mk_AS`GeneralMap0Type(UpdateTypeInfo(mapdom,usedclass),
+                                                                      UpdateTypeInfo(maprng,usedclass),cid),
+    mk_AS`GeneralMap1Type(mapdom,maprng,cid)   -> return mk_AS`GeneralMap1Type(UpdateTypeInfo(mapdom,usedclass),
+                                                                      UpdateTypeInfo(maprng,usedclass),cid),
+    mk_AS`InjectiveMap0Type(mapdom,maprng,cid) -> return mk_AS`InjectiveMap0Type(UpdateTypeInfo(mapdom,usedclass),
+                                                                        UpdateTypeInfo(maprng,usedclass),cid),
+    mk_AS`InjectiveMap1Type(mapdom,maprng,cid) -> return mk_AS`InjectiveMap1Type(UpdateTypeInfo(mapdom,usedclass),
+                                                                        UpdateTypeInfo(maprng,usedclass),cid),
+    mk_AS`TypeName(nm,cid)                    -> if len nm.ids = 1
+#ifdef VDMPP
+                                                                   and not nm in set dom STATE`GetClasses()
+#endif VDMPP
+                                                 then return mk_AS`TypeName(AUX`ConstructDoubleName(usedclass,nm),cid)
+                                                 else return mk_AS`TypeName(nm,cid),
+    mk_AS`PartialFnType(fndom,fnrng,cid)      -> 
+                           return mk_AS`PartialFnType([UpdateTypeInfo(fndom(i),usedclass) | i in set inds fndom],
+                                               UpdateTypeInfo(fnrng,usedclass),cid),
+    mk_AS`TotalFnType(fndom,fnrng,cid)        ->
+                           return mk_AS`TotalFnType([UpdateTypeInfo(fndom(i),usedclass) | i in set inds fndom],
+                                             UpdateTypeInfo(fnrng,usedclass),cid),
+    mk_AS`OpType(opdom,oprng,cid)             ->
+                           return mk_AS`OpType([UpdateTypeInfo(opdom(i),usedclass) | i in set inds opdom],
+                                        UpdateTypeInfo(oprng,usedclass),cid),
+#ifdef VDMPP
+    mk_GLOBAL`ObjRefType(-)                   -> return tp,
+#endif VDMPP
+    others                                    -> error
+  end;
+\end{vdm_al}
+
+\begin{vdm_al}
+ExePOLYINST: seq of AS`Type * AS`Name ==> ()
+ExePOLYINST(inst,nm) ==
+  def [polyfn] = STKM`Pop(1);
+      inst' = [ UpdateTypeInfo(inst(i), nm) | i in set inds inst ]
+  in
+    cases true:
+      (is_SEM`ExplPOLY(polyfn))   -> STKM`Push(STATE`EvalFctTypeInstExpr(polyfn,inst')),
+      (is_SEM`CompExplFN(polyfn)) -> let fn_l = polyfn.fl
+                                     in
+                                       if forall fn in set elems fn_l & (elems inst) \ (dom fn.tm) = {}
+                                       then STKM`Push(polyfn)
+                                       else RTERR`Error(RTERR`NO_POLY_FUNC, nil, nil, []),
+#ifdef VDMPP
+      (is_SEM`OverOPFN(polyfn)) -> STKM`Push(STATE`EvalOverFctTypeInstExpr(polyfn,inst')),
+#endif VDMPP
+      others -> RTERR`Error(RTERR`NO_POLY_FUNC, nil, nil, [])
+    end
+pre STKM`LenES(1) and
+    def [polyfn] = STKM`GetES(1)
+    in
+      is_SEM`ExplPOLY(polyfn)
+#ifdef VDMPP
+      or is_SEM`OverOPFN(polyfn)
+#endif VDMPP
+;
+\end{vdm_al}
+
+\subsection{Appending tuple values}
+
+\begin{vdm_al}
+  ExeTUPCONS: nat ==> ()
+  ExeTUPCONS(length) ==
+    def val_l = STKM`Pop(length)
+    in STKM`Push(mk_SEM`TUPLE(val_l))
+  pre STKM`LenES(length) and
+      def v_l = STKM`GetES(length)
+      in forall v in set elems v_l & SEM`IsSemVal(v);
+
+  ExeSETCONS: nat ==> ()
+  ExeSETCONS(length) ==
+    def val_l = STKM`Pop(length)
+    in STKM`Push(mk_SEM`SET(elems val_l))
+  pre STKM`LenES(length) and
+      def v_l = STKM`GetES(length)
+      in forall v in set elems v_l & SEM`IsSemVal(v);
+
+  ExeSEQCONS: nat ==> ()
+  ExeSEQCONS(length) ==
+    def val_l = STKM`Pop(length)
+    in STKM`Push(mk_SEM`SEQ(val_l))
+  pre STKM`LenES(length) and
+      def v_l = STKM`GetES(length)
+      in forall v in set elems v_l & SEM`IsSemVal(v);
+
+  ExeMAPCONS: nat ==> ()
+  ExeMAPCONS(length) ==
+    def val_l = STKM`Pop(length * 2)
+    in
+     (dcl mapv : map SEM`VAL to SEM`VAL := { |-> };
+      for i = 1 to length do
+        let domval = val_l(i*2-1),
+            rngval = val_l(i*2)
+        in
+          if domval not in set dom mapv or mapv(domval) = rngval
+          then mapv := mapv munion {domval |-> rngval}
+          else RTERR`Error(RTERR`DUPLICATES_NOT_EQUAL,mk_SEM`MAP(mapv),nil,[]);
+      STKM`Push(mk_SEM`MAP(mapv));
+     )
+  pre STKM`LenES(length * 2) and
+      def v_l = STKM`GetES(length * 2)
+      in forall v in set elems v_l & SEM`IsSemVal(v);
+\end{vdm_al}
+
+\subsection{Checking Bindings for Sequence Comprehensions}
+
+\begin{vdm_al}
+  ExeSEQCOMPBIND: bool ==> ()
+  ExeSEQCOMPBIND(isSet) ==
+    def [pat,val_v] = STKM`Pop(2)
+    in
+      if isSet
+      then
+        cases false:
+          (is_STKM`PatternName(pat)) -> RTERR`Error(RTERR`PAT_NAME_IN_SEQCOMP, nil, nil, []),
+          (is_SEM`SET(val_v))        -> RTERR`Error(RTERR`SET_EXPECTED, val_v, nil, []),
+          others                     -> if forall elm in set val_v.v & AUX`IsInt(elm)
+                                        then (STKM`Push(pat);
+                                              STKM`Push(AUX`SetToSeq(val_v.v)))
+                                        else RTERR`Error(RTERR`NUMERIC_SET, val_v, nil, [])
+          end
+      else
+        cases false:
+          (is_SEM`SEQ(val_v))        -> RTERR`Error(RTERR`SEQ_EXPECTED, val_v, nil, []),
+          others                     -> (STKM`Push(pat);
+                                         STKM`Push(val_v.v))
+        end
+  pre STKM`LenES(2) and
+    def [val_v,pat] = STKM`GetES(2)
+    in SEM`IsSemVal(val_v) and STKM`IsPat(pat);
+
+  ExeSEQFOR: () ==> ()
+  ExeSEQFOR() ==
+    def [seqval] = STKM`Pop(1)
+    in
+      cases seqval:
+        mk_SEM`SEQ(l) -> STKM`Push(l),
+        others        -> RTERR`Error(RTERR`SEQ_EXPECTED, seqval, nil, [])
+      end
+  pre STKM`LenES(1);
+
+functions
+  NameInPattern : STKM`Pattern +> set of AS`Name
+  NameInPattern(pat) ==
+    cases pat:
+      mk_STKM`PatternName(nm,-,-)       -> if nm = nil then {} else {nm},
+      mk_STKM`MatchVal(-,-)             -> {},
+      mk_STKM`SetEnumPattern(els,-)     -> dunion {NameInPattern(p) | p in set elems els},
+      mk_STKM`SetUnionPattern(lp,rp,-)  -> NameInPattern(lp) union NameInPattern(rp),
+      mk_STKM`SeqEnumPattern(els,-)     -> dunion {NameInPattern(p) | p in set elems els},
+      mk_STKM`SeqConcPattern(lp,rp,-)   -> NameInPattern(lp) union NameInPattern(rp),
+      mk_STKM`MapEnumPattern(mls,-)     -> dunion {NameInPattern(p) | p in set elems mls},
+      mk_STKM`MapMergePattern(lp,rp,-)  -> NameInPattern(lp) union NameInPattern(rp),
+      mk_STKM`RecordPattern(-,fields,-) -> dunion {NameInPattern(p) | p in set elems fields},
+      mk_STKM`TuplePattern(fields,-)    -> dunion {NameInPattern(p) | p in set elems fields},
+      mk_STKM`MapletPattern(dp,rp,-)    -> NameInPattern(dp) union NameInPattern(rp),
+#ifdef VDMPP
+      mk_STKM`ObjectPattern(-,fields,-) -> dunion {NameInPattern(p) | p in set elems fields},
+      mk_STKM`FieldPattern(-,p,-)       -> NameInPattern(p),
+#endif VDMPP
+      others                            -> undefined
+  end;
+\end{vdm_al}
+
+\subsection{Sequence and Map Override Instruction}
+
+\begin{vdm_al}
+operations
+  ExeSEQMAPOVER: () ==> ()
+  ExeSEQMAPOVER() ==
+    def [seqmap_v,map_v] = STKM`Pop(2)
+    in STKM`Push(EXPR`EvalSeqModifyMapOverrideExpr(seqmap_v, map_v))
+  pre STKM`LenES(2) and
+      def [map_v,seqmap_v] = STKM`GetES(2)
+      in SEM`IsSemVal(map_v) and SEM`IsSemVal(seqmap_v);
+\end{vdm_al}
+
+\subsection{Pattern Instructions}
+
+\begin{vdm_al}
+  ExeSETENUM: nat * CI`ContextId ==> ()
+  ExeSETENUM(length, cid) ==
+    def fields = STKM`Pop(length);
+        fields' = [ fields(i) | i in set inds fields &
+                    fields(i) not in set { fields(j) | j in set inds fields & j < i } ]
+    in STKM`Push(mk_STKM`SetEnumPattern(fields', cid))
+  pre STKM`LenES(length) and
+      def v_l = STKM`GetES(length)
+      in forall v in set elems v_l & STKM`IsPat(v);
+
+  ExeSEQENUM: nat * CI`ContextId ==> ()
+  ExeSEQENUM(length, cid) ==
+    def fields = STKM`Pop(length)
+    in STKM`Push(mk_STKM`SeqEnumPattern(fields, cid))
+  pre STKM`LenES(length) and
+      def v_l = STKM`GetES(length)
+      in forall v in set elems v_l & STKM`IsPat(v);
+
+  ExeMAPLET: CI`ContextId ==> ()
+  ExeMAPLET(cid) ==
+    def [dompat, rngpat] = STKM`Pop(2)
+    in STKM`Push(mk_STKM`MapletPattern(dompat, rngpat, cid))
+  pre STKM`LenES(2) and
+      def [ dompat, rngpat ] = STKM`GetES(2)
+      in STKM`IsPat(dompat) and STKM`IsPat(rngpat);
+
+  ExeMAPENUM: nat * CI`ContextId ==> ()
+  ExeMAPENUM(length, cid) ==
+    def mls = STKM`Pop(length);
+        mls' = [ mls(i) | i in set inds mls &
+                 mls(i) not in set { mls(j) | j in set inds mls & j < i } ]
+    in STKM`Push(mk_STKM`MapEnumPattern(mls', cid))
+  pre STKM`LenES(length) and
+      def v_l = STKM`GetES(length)
+      in forall v in set elems v_l & is_STKM`MapletPattern(v);
+
+  ExeSetUnion: CI`ContextId ==> ()
+  ExeSetUnion(cid) ==
+    def [leftpat, rightpat] = STKM`Pop(2)
+    in STKM`Push(mk_STKM`SetUnionPattern(leftpat, rightpat, cid))
+  pre STKM`LenES(2) and
+      def [ left_v, right_v ] = STKM`GetES(2)
+      in STKM`IsPat(left_v) and STKM`IsPat(right_v);
+
+  ExeSeqConc: CI`ContextId ==> ()
+  ExeSeqConc(cid) ==
+    def [leftpat, rightpat] = STKM`Pop(2)
+    in STKM`Push(mk_STKM`SeqConcPattern(leftpat, rightpat, cid))
+  pre STKM`LenES(2) and
+      def [ left_v, right_v ] = STKM`GetES(2)
+      in STKM`IsPat(left_v) and STKM`IsPat(right_v);
+
+  ExeMapMerge: CI`ContextId ==> ()
+  ExeMapMerge(cid) ==
+    def [leftpat, rightpat] = STKM`Pop(2)
+    in STKM`Push(mk_STKM`MapMergePattern(leftpat, rightpat, cid))
+  pre STKM`LenES(2) and
+      def [ left_v, right_v ] = STKM`GetES(2)
+      in STKM`IsPat(left_v) and STKM`IsPat(right_v);
+
+#ifdef VDMPP
+  ExeOBJECTPAT: AS`Name * nat * CI`ContextId ==> ()
+  ExeOBJECTPAT(cls,length,cid) ==
+    def fields = STKM`Pop(length)
+    in STKM`Push(mk_STKM`ObjectPattern(cls, fields, cid))
+    pre STKM`LenES(length) and
+        def fields = STKM`GetES(length)
+        in forall fp in set elems fields & is_STKM`FieldPattern(fp);
+
+  ExeFIELDPAT: AS`Name * CI`ContextId ==> ()
+  ExeFIELDPAT(nm,cid) ==
+    def [pat] = STKM`Pop(1)
+    in STKM`Push(mk_STKM`FieldPattern(nm, pat, cid))
+  pre STKM`LenES(1) and
+      def [pat] = STKM`GetES(1)
+      in STKM`IsPat(pat);
+#endif VDMPP
+
+  ExeFREF: AS`Name * CI`ContextId ==> ()
+  ExeFREF(nm,ci) ==
+    def [sd] = STKM`Pop(1)
+    in STKM`Push(mk_STKM`FieldRef(sd,nm,ci))
+  pre STKM`LenES(2) and
+      def [ left_v, right_v ] = STKM`GetES(2)
+      in STKM`IsSD(right_v) and is_AS`Name(left_v);
+
+  ExeMOSREF: CI`ContextId ==> ()
+  ExeMOSREF(ci) ==
+    def [sd,val] = STKM`Pop(2)
+    in STKM`Push(mk_STKM`MapOrSeqRef(sd,val,ci))
+  pre STKM`LenES(2) and
+      def [ left_v, right_v ] = STKM`GetES(2)
+      in STKM`IsSD(right_v) and SEM`IsSemVal(left_v);
+
+  ExeATOMIC: nat1 ==> ()
+  ExeATOMIC(no) ==
+    def assignl = STKM`Pop(2 * no)
+    in
+     (for i = 1 to len assignl by 2 do
+        let rhs = assignl(i),
+            lhs = assignl(i + 1)
+        in
+          if is_SEM`CONT(rhs)
+          then (RTERR`Error(RTERR`OP_RETURNED_CONT, rhs, nil, []);
+                return)
+          else STATE`EvalStateDesignator(lhs, rhs);
+      STKM`Push(mk_SEM`CONT());
+      InvOK())
+  pre STKM`LenES(2 * no);
+
+  ExeMACRO: AS`MacroTp * CI`ContextId ==> ()
+  ExeMACRO(tp,cid) ==
+    cases tp:
+      <MACRO_FILE>   -> if cid <> CI`NilContextId
+                        then
+                          def mk_(fid,-) = CI`SplitCid(cid)
+                          in
+                            if fid >= 10
+                            then 
+                              def mk_(file,-,-) = CI`GetFileLineColPos(cid)
+                              in STKM`Push(mk_SEM`SEQ([mk_SEM`CHAR(file(i)) | i in set inds file])),
+      <MACRO_LINE>   -> if cid <> CI`NilContextId
+                        then
+                          def mk_(fid,-) = CI`SplitCid(cid)
+                          in
+                            if fid >= 10
+                            then 
+                              def mk_(-,line,-) = CI`GetFileLineColPos(cid)
+                              in STKM`Push(mk_SEM`NUM(line)),
+      <MACRO_COLUMN> -> if cid <> CI`NilContextId
+                        then
+                          def mk_(fid,-) = CI`SplitCid(cid)
+                          in
+                            if fid >= 10
+                            then 
+                              def mk_(-,-,colmun) = CI`GetFileLineColPos(cid)
+                              in STKM`Push(mk_SEM`NUM(colmun)),
+#ifdef VDMSL
+      <MACRO_CLMOD>  -> def modnm = STKM`CurrentModule();
+                            clmodnm = cases modnm:
+                                        mk_AS`Name([],-)     -> "unknown",
+                                        mk_AS`Name([nm^-],-) -> nm
+                                      end
+                        in STKM`Push(mk_SEM`SEQ([mk_SEM`CHAR(clmodnm(i)) | i in set inds clmodnm])),
+#endif VDMSL
+#ifdef VDMPP
+      <MACRO_CLMOD>  -> def cl = STKM`GetCurCl();
+                            clmodnm = cases cl:
+                                        mk_GLOBAL`Start()    -> "unknown",
+                                        mk_AS`Name([nm^-],-) -> nm
+                                      end
+                        in STKM`Push(mk_SEM`SEQ([mk_SEM`CHAR(clmodnm(i)) | i in set inds clmodnm])),
+#endif VDMPP
+      <MACRO_FNOP>   -> (dcl fnopnm : seq of char := "unknown";
+                         if STKM`CallStackLevel() > 0
+                         then
+                           def csi = STKM`GetCS(1)
+                           in
+                             if csi.type = <FNOP>
+                             then
+                               cases csi.nmOrDesc:
+                                 mk_AS`Name([nm],-)   -> fnopnm := nm,
+                                 mk_AS`Name([-,nm],-) -> fnopnm := nm
+                               end;
+                         STKM`Push(mk_SEM`SEQ([mk_SEM`CHAR(fnopnm(i)) | i in set inds fnopnm]))),
+      others -> RTERR`Error(RTERR`ID_UNKNOWN, nil, nil, [])
+    end;
+
+  ExeASSIGNSD: () ==> ()
+  ExeASSIGNSD() ==
+    def [rhs,lhs] = STKM`Pop(2);
+    in
+     (
+#ifdef VDMSL
+      def mod_nm = STKM`CurrentModule();
+      in
+      if is_AS`Name(lhs) and STATE`IsTheState(lhs, mod_nm)
+      then
+       (if is_SEM`REC(rhs) and AUX`EqualNames (AUX`UniqueTagName (lhs), rhs.tag)
+        then
+         (STATE`SetTheState(lhs,mod_nm,rhs);
+          STKM`Push(mk_SEM`CONT());
+          InvOK())
+        else
+          RTERR`Error(RTERR`ILLEGAL_STATE_INIT, rhs, nil, []);
+        return;
+       );
+#endif VDMSL
+      STATE`EvalStateDesignator(lhs, rhs);
+      if not STKM`RuntimeErrorExceptionOccurred()
+      then
+       (STKM`Push(mk_SEM`CONT());
+        InvOK());
+     )
+  pre STKM`LenES(2) and
+      def [ left_v, right_v ] = STKM`GetES(2)
+      in STKM`IsSD(left_v) and SEM`IsSemVal(right_v);
+
+  InvOK: () ==> ()
+  InvOK() ==
+    if SETTINGS`INV() and not STATE`CheckGlobInv()
+    then
+      if STKM`RuntimeErrorExceptionOccurred()
+      then STKM`GotoTrapHandler(STKM`RuntimeErrorVal())
+#ifdef VDMSL
+      else RTERR`Error(RTERR`STATE_INVARIANT_ERROR, nil, nil, []);
+#endif VDMSL
+#ifdef VDMPP
+      else RTERR`Error(RTERR`INST_INV_BROKEN, nil, nil, []);
+#endif VDMPP
+
+  ExeSEQELEMMATCH: nat ==> ()
+  ExeSEQELEMMATCH(index) ==
+    def pat = STKM`GetNth(index);
+        [val] ^ tl_val_l = STKM`GetNth(index - 1)
+    in
+      (BindPat(pat,val);
+       STKM`SetNth(index - 1,tl_val_l))
+  pre STKM`IsPat(STKM`GetNth(index));
+
+  ExeEmptyBlkEnv: SEM`Permission ==> ()
+  ExeEmptyBlkEnv(permis) ==
+    STKM`PushEmptyBlkEnv(permis);
+
+  ExeMatchAndBind: () ==> ()
+  ExeMatchAndBind() ==
+    def [val,pat] = STKM`Pop(2)
+    in BindPat(pat,val)
+  pre STKM`LenES(2) and
+      def [p,v] = STKM`GetES(2)
+      in SEM`IsSemVal(v) and STKM`IsPat(p);
+
+  BindPat: STKM`Pattern * SEM`VAL ==> ()
+  BindPat(pat,val) ==
+    def env_s = PAT`PatternMatch(pat,val)
+    in
+      if env_s = {}
+      then
+        if is_STKM`PatternName(pat) and pat.tp <> nil
+        then
+         (dcl tp : AS`Type;
+          if is_AS`TypeVar(pat.tp)
+          then def tm = STKM`HdTypeInst()
+               in if pat.tp in set dom tm
+               then tp := tm(pat.tp)
+               else tp := pat.tp
+          else tp := pat.tp;
+          RTERR`Error(RTERR`INCOMPATIBLE_BIND_TYPE, val, tp, [])
+         )
+        else RTERR`Error(RTERR`EMPTY_ENV_S, nil, nil, [])
+      else
+        let env in set env_s
+        in STKM`AddToTopBlkEnv(env);
+
+  ExeCOPYVAL: () ==> ()
+  ExeCOPYVAL() ==
+    STKM`Copy();
+
+  ExeDTC: AS`Type ==> ()
+  ExeDTC(tp) ==
+    if SETTINGS`DTC()
+    then def [val] = STKM`GetES(1)
+         in
+           if not STATE`SubType(val,tp)
+           then RTERR`Error(RTERR`TYPE_INCOMP, val, tp, [])
+  pre STKM`LenES(1) and
+      def [val] = STKM`GetES(1)
+      in SEM`IsSemVal(val);
+
+  ExeDTCSET: () ==> ()
+  ExeDTCSET() ==
+    def [mk_SEM`SET(setval)] = STKM`Pop(1)
+    in
+      if SETTINGS`DTC()
+      then def [val] = STKM`GetES(1)
+           in
+             if val not in set setval
+             then RTERR`Error(RTERR`VALUE_NOT_IN_SETBIND, val, nil, [])
+  pre STKM`LenES(2) and
+      def [setval,val] = STKM`GetES(2)
+      in SEM`IsSemVal(val) and is_SEM`SET(setval);
+
+  ExeSIZE: nat ==> ()
+  ExeSIZE(n) ==
+    def [val] = STKM`GetES(1)
+    in STKM`Push(mk_SEM`BOOL(card val = n));
+
+  ExeTRYANYMATCH: () ==> ()
+  ExeTRYANYMATCH() ==
+    def [val,pat] = STKM`Pop(2);
+        env_s = PAT`PatternMatch(pat,val)
+    in
+      cases env_s:
+        {}     -> STKM`Push(mk_SEM`BOOL(false)),
+        others -> (STKM`Push(env_s);
+                   STKM`Push(mk_SEM`BOOL(true)))
+      end
+  pre STKM`LenES(2) and
+      def [p,v] = STKM`GetES(2)
+      in SEM`IsSemVal(v) and STKM`IsPat(p);
+
+  ExeMATCHVAL: CI`ContextId ==> ()
+  ExeMATCHVAL(cid) ==
+    def [val] = STKM`Pop(1)
+    in STKM`Push(mk_STKM`MatchVal(val,cid));
+
+  ExeCLOSENV: SEM`BlkEnv * map AS`Name to (AS`Expr | <NOTYETSPEC>) ==> ()
+  ExeCLOSENV(blkenv,bodym) ==
+   (dcl closenv_m : map AS`Name to SEM`BlkEnv := {|->};
+    for all id in set dom bodym do
+      if bodym(id) <> <NOTYETSPEC>
+      then closenv_m := closenv_m ++ { id |-> FREE`FreeMapToBlkEnv(FREE`FreeInExpr(bodym(id),{})) };
+    if closenv_m = {|->}
+    then STKM`AddToTopBlkEnv(blkenv)
+    else
+      let newenv = mu(blkenv,id_m |-> { id |-> let mk_SEM`ValTp(v,t) = blkenv.id_m(id),
+                                                    val = SEM`UpdateClosEnv(v, closenv_m(id))
+                                                in
+                                                  mk_SEM`ValTp(val,t)
+                                           | id in set dom blkenv.id_m inter dom closenv_m })
+      in STKM`AddToTopBlkEnv(newenv));
+
+  ExeUPDATECLOSENV: AS`Expr ==> ()
+  ExeUPDATECLOSENV(expr) ==
+    def [fnval] = STKM`Pop(1);
+        blkenv =  FREE`FreeMapToBlkEnv(FREE`FreeInExpr(expr,{}))
+    in STKM`Push(SEM`UpdateClosEnv(fnval,blkenv));
+
+  ExeVERIFYINDEXARGS: () ==> ()
+  ExeVERIFYINDEXARGS() ==
+    def [lb_v , ub_v, step_v] = STKM`GetES(3)
+    in
+      cases false:
+        (is_SEM`NUM(lb_v))        -> RTERR`Error(RTERR`LOWER_BOUND_NOT_A_NUMBER, lb_v, nil, []),
+        (is_SEM`NUM(ub_v))        -> RTERR`Error(RTERR`UPPER_BOUND_NOT_A_NUMBER, ub_v, nil, []),
+        (is_SEM`NUM(step_v))      -> RTERR`Error(RTERR`STEP_NOT_A_NUMBER, step_v, nil, []),
+        (mk_SEM`NUM(0) <> step_v) -> RTERR`Error(RTERR`STEP_INDEX_IS_ZERO, step_v, nil,[])
+      end
+  pre STKM`LenES(3) and
+      def [v1,v2,v3] = STKM`GetES(3)
+      in SEM`IsSemVal(v1) and SEM`IsSemVal(v2) and SEM`IsSemVal(v3);
+\end{vdm_al}
+
+ The {\em ExeTESTCOUNTER} and {\em ExeINCRCOUNTER} operations are used
+ to respectively test whether the next iteration should be carried out
+ and the increment the (step) counter. Both operations are used with
+ an index-for-loop statement.
+
+\begin{vdm_al}
+  ExeTESTCOUNTER: () ==> ()
+  ExeTESTCOUNTER() ==
+    def [-,mk_SEM`NUM(current),mk_SEM`NUM(last),mk_SEM`NUM(step)] = STKM`GetES(4);
+        cont = if step > 0
+               then current <= last
+               else current >= last
+    in (STKM`Push(mk_SEM`BOOL(cont)))
+  pre  STKM`LenES(4) and
+      def [-,v1,v2,v3] = STKM`GetES(4)
+      in is_SEM`NUM(v1) and is_SEM`NUM(v2) and is_SEM`NUM(v3);
+
+  ExeINCRCOUNTER: () ==> ()
+  ExeINCRCOUNTER() ==
+    def [mk_SEM`NUM(current),topElm] = STKM`Pop(2);
+        [mk_SEM`NUM(-),mk_SEM`NUM(step)] = STKM`GetES(2);
+        new = current + step
+    in
+     (STKM`Push(mk_SEM`NUM(new));
+      STKM`Push(topElm))
+  pre STKM`LenES(4) and
+      def [-,v1,v2,v3] = STKM`GetES(4)
+      in is_SEM`NUM(v1) and is_SEM`NUM(v2) and is_SEM`NUM(v3);
+\end{vdm_al}
+
+\begin{vdm_al}
+  ExeNONDETSTMT: () ==> ()
+  ExeNONDETSTMT() ==
+    def [reljumps,stmtval] = STKM`Pop(2)
+    in
+      cases stmtval:
+        mk_SEM`CONT() -> cases reljumps:
+                           []     -> STKM`Push(stmtval),
+                           others -> (STKM`IncrPC(hd reljumps + 1);
+                                      STKM`Push(tl reljumps))
+                         end,
+        others        -> STKM`Push(stmtval)
+      end
+  pre STKM`LenES(2);
+
+  ExeRANDOM: () ==> ()
+  ExeRANDOM() ==
+    if SETTINGS`Random() <> -1
+    then
+      def [indices] = STKM`Pop(1)
+      in STKM`Push(Permute(indices));
+
+functions
+  Permute: seq of nat -> seq of nat
+  Permute(indices) ==
+    indices;
+
+\end{vdm_al}
+The {\em Permute} function is going to permute the given sequence of
+indices according to the given seed if the random setting has been
+swichted on. At the specification level this is not taken into account.
+
+#ifdef VDMPP
+\subsection{VDM++ Instructions}
+
+\begin{vdm_al}
+operations
+  -- token is used as parameter in implementation
+  ExeNEWOBJ: AS`Name * [token]==> ()
+  ExeNEWOBJ(nm, dlobject) ==
+    def mk_(ok, cl) = STATE`ExpandClassName(nm, STKM`GetCurCl(), {});
+        name = if ok then cl else nm
+    in
+      if SETTINGS`DTC() and STATE`CheckIfAbstractClass(name)
+      then RTERR`Error(RTERR`INST_ABS_CL, nil, nil, [AUX`SingleNameToString(name)])
+      else
+       (if not STATE`IsClassInit(name)
+        then STATE`InitClassName(name);
+        ExeNEWPOSABSOBJ(name, dlobject);)
+  pre let mk_AS`Name(ids,-) = nm in len ids = 1;
+
+  ExeNEWPOSABSOBJ: AS`Name * [token] ==> ()
+  ExeNEWPOSABSOBJ(name, dlobject) ==
+    if not STATE`IsAClass(name)
+    then RTERR`Error(RTERR`CLNM_NOT_DEFINED, nil, nil, [AUX`SingleNameToString(name)])
+    else
+      -- Get the structure of the instance varaible for the class.
+      -- remark all inst vars in insstrct are set to undefined.
+      def insstrct = STATE`GetInstInitVal(name);
+          tmp_obj  = mk_SEM`OBJ(name, insstrct,{|->});
+          tmp_ref  = STKM`MakeNewObj(tmp_obj, dlobject)
+      in
+       (STKM`Push(tmp_ref);
+        STKM`PushCurObj(tmp_ref,nil,nil))
+  pre let mk_AS`Name(ids,-) = name in len ids = 1;
+
+  ExeINITCLASS: AS`Name * nat ==> ()
+  ExeINITCLASS(nm,initno) ==
+    def mk_(ok, cl) = STATE`ExpandClassName(nm, STKM`GetPrevCl(), {});
+        name = if ok then cl else nm;
+        const_vals ^ [obj_ref] = STKM`Pop(initno + 1)
+    in
+      (STKM`Push(obj_ref);
+       STKM`Push(const_vals);
+       def prog = STATE`LookUpConstructor(name,const_vals)
+       in (STKM`PushCS(prog, "Running constructor for " ^ AUX`SingleNameToString(name), nil, <INTERNAL>)));
+
+  ExeBINDINSTVAR: AS`Name * AS`Name ==> ()
+  ExeBINDINSTVAR(clnm,nm) ==
+    def [val] = STKM`Pop(1);
+        --clnm = STKM`GetCurCl();
+        mk_SEM`OBJ(-,istrct,-) = STKM`GetCurObj();
+        local_inst : GLOBAL`ValueMap = istrct(clnm);
+    in
+      if nm in set dom local_inst
+      then
+        def mk_(v,acc) = local_inst(nm);
+            tp = STATE`GetInstVarsTp(clnm)(nm)
+        in STATE`SetInstanceVar(nm, val, mk_(true,true,v,tp,clnm,acc))
+      --else STATE`SetInstanceVar(nm, val, nil)
+      else STATE`SetInstanceVar(nm, val, STATE`IsInObjScope(nm, nil))
+  pre STKM`LenES(1) and
+      def [val] = STKM`GetES(1)
+      in SEM`IsSemVal(val);
+
+  ExeNEWCOMPL: bool ==> ()
+  ExeNEWCOMPL(checkinv) ==
+    if checkinv and SETTINGS`DTC() and not STATE`CheckInstanceInvariant()
+    then 
+      if STKM`RuntimeErrorExceptionOccurred()
+      then STKM`GotoTrapHandler(STKM`RuntimeErrorVal())
+      else RTERR`Error(RTERR`INST_INV_BROKEN, nil, nil, [])
+    else STKM`PopCurObj();
+
+  ExePUSHCLNMCUROBJ: AS`Name * AS`Name ==> ()
+  ExePUSHCLNMCUROBJ(cl, origcl) ==
+    STKM`PushClNmCurObj(cl, origcl);
+
+  ExePOPCLNMCUROBJ: () ==> ()
+  ExePOPCLNMCUROBJ() ==
+    STKM`PopClNmCurObj();
+
+  ExeSELFEXPR: () ==> ()
+  ExeSELFEXPR() ==
+    if STKM`HasCurObjRef()
+    then STKM`Push(STKM`GetCurObjRef())
+    else RTERR`Error(RTERR`NOOBJECT, nil, nil, []);
+\end{vdm_al}
+
+The $ExeISOFCLASS$ operation is responsible for checking whether the
+current element on top of the evaluation stack is of the class
+identified by $clfn$.  If the element is not an object reference
+the expression evaluates to false, otherwise is evaluated if the class
+name {\em nm} is a super class of the object or if the class name is
+equal to the class name of the object.
+
+\begin{vdm_al}
+  ExeISOFCLASS: AS`Name ==> ()
+  ExeISOFCLASS(clnm) ==
+    def [arg_v] = STKM`Pop(1)
+    in
+      cases false:
+        (STATE`IsAClass(clnm))  -> RTERR`Error(RTERR`CLNM_NOT_DEFINED, nil, nil, [AUX`SingleNameToString(clnm)]),
+        (is_SEM`OBJ_Ref(arg_v)) -> STKM`Push(mk_SEM`BOOL(false)),
+        others                  -> def objnm = arg_v.tp;
+                                   in STKM`Push(mk_SEM`BOOL((objnm = clnm) or STATE`IsSubClass(objnm, clnm)))
+      end;
+        
+\end{vdm_al}
+
+The operation {\em ExeISOFBASECLASS} takes a class name {\em
+  clnm} and assumes that its argument is placed at the top of the
+  evaluation stack. If the argument is not an object reference
+  the expression evaluates to false, otherwise, it is evaluated if the
+  class name {\em clnm} is a base class of the object.
+
+\begin{vdm_al}
+  ExeISOFBASECLASS: AS`Name ==> ()
+  ExeISOFBASECLASS(clnm) ==
+    def [arg_v] = STKM`Pop(1)
+    in
+      cases false:
+        (STATE`IsAClass(clnm))  -> RTERR`Error(RTERR`CLNM_NOT_DEFINED, nil, nil, [AUX`SingleNameToString(clnm)]),
+        (is_SEM`OBJ_Ref(arg_v)) -> STKM`Push(mk_SEM`BOOL(false)),
+        others                  -> def objnm = arg_v.tp;
+                                       found = mk_SEM`BOOL(STATE`IsBaseClass(clnm) and
+                                                           ((objnm = clnm) or STATE`IsSubClass(objnm, clnm)))
+                                   in STKM`Push(found)
+      end;
+\end{vdm_al}
+
+The operation {\em ExeSAMEBASECLASS} takes two value {\em
+  expr1-v} and {\em expr2-v} from the evaluation stack. If they are
+  not both object references,
+  the operation returns the semantics value of false, otherwise, it is
+  evaluated if the two object references have any common base classes.
+
+\begin{vdm_al}
+
+  ExeSAMEBASECLASS: () ==> ()
+  ExeSAMEBASECLASS() ==
+    cases STKM`Pop(2):
+      [mk_SEM`OBJ_Ref(-,objnm1), mk_SEM`OBJ_Ref(-,objnm2)] ->
+           def supers = STATE`GetAllSupers(objnm1) union {objnm1};
+               roots = { cl | cl in set supers & STATE`IsBaseClass(cl) and
+                                                 ((objnm2 = cl) or STATE`IsSubClass(objnm2, cl)) };
+               found = mk_SEM`BOOL( roots <> {} )
+           in STKM`Push(found),
+      others -> STKM`Push(mk_SEM`BOOL(false))
+    end;
+\end{vdm_al}
+
+The operation {\em ExeSAMECLASS} takes two values {\em
+  expr1-v} and {\em expr2-v} from the evaluation stack. If both values
+  are not object references the semantic value of false is returned,
+  otherwise, it is checked if the objects are instances of the same class.
+
+\begin{vdm_al}
+  ExeSAMECLASS: () ==> ()
+  ExeSAMECLASS() ==
+    cases STKM`Pop(2):
+      [mk_SEM`OBJ_Ref(-,objnm), mk_SEM`OBJ_Ref(-,objnm)] -> STKM`Push(mk_SEM`BOOL(true)),
+      others -> STKM`Push(mk_SEM`BOOL(false))
+    end;
+\end{vdm_al}
+
+\begin{vdm_al}
+  ExeHISTORY: INSTRTP`HistoryKind * seq of AS`Name ==> ()
+  ExeHISTORY(kind,opnms) ==
+    (dcl sum : nat := 0;
+     for nm in opnms do
+       def mk_SEM`NUM(val) = STATE`LookUpHistory(kind,nm)
+       in sum := sum + val;
+    STKM`Push(mk_SEM`NUM(sum)));
+
+  ExeSTARTLIST: bool ==> ()
+  ExeSTARTLIST(isset) ==
+    def [instr] = STKM`Pop(1);
+        instr_s = if isset
+                  then let mk_SEM`SET(s) = instr in s
+                  else {instr}
+    in
+      for all inst in set instr_s do
+        if is_SEM`OBJ_Ref(inst)
+        then SCHD`StartNewThread(inst)
+        else RTERR`Error(RTERR`NOOBJECT, nil, nil, [])
+  pre STKM`LenES(1);
+
+  ExeSTOPLIST: bool ==> ()
+  ExeSTOPLIST(isset) ==
+    def [instr] = STKM`Pop(1);
+        instr_s = if isset
+                  then let mk_SEM`SET(s) = instr in s
+                  else {instr};
+        curref = STKM`GetCurObjRef()
+    in
+     (dcl found : bool := false;
+      for all inst in set instr_s do
+        if is_SEM`OBJ_Ref(inst)
+        then
+          if inst = curref
+          then found := true
+          else SCHD`StopThread(inst)
+        else RTERR`Error(RTERR`NOOBJECT, nil, nil, []);
+      if found
+      then SCHD`StopThread(curref);
+     )
+  pre STKM`LenES(1);
+
+  ExeGUARD: bool ==> ()
+  ExeGUARD(log) ==
+    def [argv,fct_v] = STKM`GetES(2)
+    in
+      cases fct_v:
+        mk_SEM`ExplOP(-,-,-,-,-,-,-,-,-,objref,-) -> GuardCheck(fct_v,objref,argv,log),
+        mk_SEM`OverOPFN(-,objref) -> def val = ConvertOverOPFNToExplOP(fct_v,objref,false,argv)
+                                     in
+                                       if is_SEM`ExplOP(val)
+                                       then GuardCheck(val,objref,argv,log)
+      end;
+\end{vdm_al}
+
+\begin{vdm_al}
+  GuardCheck: SEM`ExplOP * [SEM`OBJ_Ref] * [seq of SEM`VAL] * bool ==> ()
+#ifdef VICE
+  GuardCheck(op_v,obj,arglv,log) ==
+    def mk_SEM`ExplOP(-,-,sync,manglenm,-,-,fnName,modName,-,objref,-) = op_v;
+#else
+#ifdef VDMPP
+  GuardCheck(op_v,obj,-,-) ==
+    def mk_SEM`ExplOP(-,-,-,manglenm,-,-,fnName,modName,-,objref,-) = op_v;
+#endif VDMPP
+#endif VICE
+        opnm = AUX`ConstructDoubleName(modName, fnName);
+    in
+     (dcl refcl : [AS`Name] := nil,
+#ifdef VICE
+          obj_ref : [SEM`OBJ_Ref] := objref,
+#endif VICE
+          permis_opnm : AS`Name;
+  
+#ifdef VICE
+      if obj = nil or objref = nil
+      then obj_ref := STKM`TopClNmCurObj();
+#endif VICE
+
+      if obj <> nil
+      then let objnm = obj.tp
+           in if STATE`IsSubClass(objnm, modName)
+              then refcl := modName
+              else refcl := objnm;
+      if obj <> nil
+      then permis_opnm := AUX`ConstructDoubleName(refcl, fnName)
+      else permis_opnm := opnm;
+
+#ifdef VICE
+       if log
+       then
+#endif VICE
+       let realnm = if manglenm = nil
+                    then opnm
+                    else AUX`ConstructDoubleName(modName, manglenm)
+       in
+#ifdef VICE
+       STATE`UpdateHistCount(realnm,mk_INSTRTP`req(),objref,sync,arglv);
+#else
+#ifdef VDMPP
+       STATE`UpdateHistCount(realnm,mk_INSTRTP`req(),objref);
+#endif VDMPP
+#endif VICE
+#ifdef VICE
+       if not STKM`OnCurCPU(obj_ref)
+       then def mid = STKM`AddMessageToBUS(obj_ref,op_v,arglv)
+            in
+              (if sync
+               then SCHD`SetThreadStatus(SCHD`CurThreadId(), mk_SCHDTP`SyncOp(mid));
+               return)
+       elseif STATE`IsStatic(modName,fnName) and not sync and log
+       then (STKM`AddBroadcastMessageToBUS(obj_ref,op_v,arglv);
+             return);
+#endif VICE
+       STKM`SetGuard(permis_opnm, obj));
+
+  ExeTHREADID: () ==> ()
+  ExeTHREADID() ==
+    STKM`Push(mk_SEM`NUM(SCHD`CurThreadId()));
+
+\end{vdm_al}
+#endif VDMPP
+
+#ifdef VICE
+
+\section{Timing Instructions}
+
+\begin{vdm_al}
+ExeINCRTIME : nat ==> ()
+ExeINCRTIME(n) ==
+  if (not STKM`InDuration() or SCHD`CheckingGuard()) --and
+     --STKM`GetCPUCapacity(STKM`GetCurCPU()) <> <INFINITE>
+  then STKM`IncrRelTime(n);
+
+ExeINCRTIME_PREF : AS`UnaryOp * nat ==> ()
+ExeINCRTIME_PREF(opr,oh) ==
+  def esval = hd STKM`GetES(1);
+      val = GetVal(esval)
+  in
+    if val = nil
+    then TimeError()
+    else
+      let mult = cases opr:
+                 -- both for dset union and intersect, all elements have to be
+                 -- visited, so time depends on total size
+                   <SETDISTRUNION>,
+                   <SETDISTRINTERSECT> -> if is_SEM`SET(val) and forall v in set val.v & is_SEM`SET(v)
+                                          then dsetsize(val)
+                                          else nil,
+                   <SETPOWER> -> if is_SEM`SET(val)
+                                 then (2 ** card val.v)
+                                 else nil,
+                   <SEQDISTRCONC> -> if is_SEM`SEQ(val) and forall v in set elems val.v & is_SEM`SEQ(v)
+                                     then dseqsize(val)
+                                     else nil,
+                   <SEQELEMS> ,
+                   <SEQINDICES> -> if is_SEM`SEQ(val)
+                                   then len val.v
+                                   else nil,
+                   <SEQTAIL> -> if is_SEM`SEQ(val)
+                                then (len val.v - 1)
+                                else nil,
+                   <SEQREVERSE> -> if is_SEM`SEQ(val)
+                                   then (len val.v)
+                                   else nil,
+                   <MAPDOM> -> if is_SEM`MAP(val)
+                               then (card dom val.v)
+                               else nil,
+                   <MAPRNG> -> if is_SEM`MAP(val)
+                               then (card rng val.v)
+                               else nil,
+                   <MAPDISTRMERGE> -> if is_SEM`SET(val) and forall v in set val.v & is_SEM`MAP(v)
+                                      then dmapsize(val)
+                                      else nil,
+                   <MAPINVERSE> -> if is_SEM`MAP(val)
+                                   then (card rng val.v)
+                                   else nil,
+                   others -> undefined
+                 end
+      in
+        if not STKM`InDuration()
+        then (if mult = nil
+              then TimeError()
+              else STKM`IncrRelTime(mult * oh));
+
+functions
+dsetsize : SEM`SET -> nat
+dsetsize(s) ==
+  if s.v = {}
+  then 0
+  else let s1 in set s.v
+       in card s1.v + dsetsize(mk_SEM`SET(s.v \ {s1}));
+
+dseqsize : SEM`SEQ -> nat
+dseqsize(s) ==
+  if s.v = []
+  then 0
+  else len (hd (s.v)).v + dseqsize(mk_SEM`SEQ(tl (s.v) ));
+
+dmapsize : SEM`SET -> nat
+dmapsize(m) ==
+  if m.v = {}
+  then 0
+  else let s1 in set m.v
+       in card dom s1.v + dmapsize(mk_SEM`SET(m.v \ {s1}));
+
+operations
+GetVal : STKM`EvalStackItem ==> [SEM`VAL]
+GetVal(esval) ==
+--  if is_AS`Name(esval) or is_AS`OldName(esval)
+--  then return STATE`LookUp(esval)
+--  elseif SEM`IsSemVal(esval)
+--  then return esval
+--  else return nil;
+  if SEM`IsSemVal(esval)
+  then return esval
+  else return nil;
+
+ExeINCRTIME_BIN : AS`BinaryOp * nat * [nat] ==> ()
+ExeINCRTIME_BIN(opr,oh1,oh2) ==
+  def [r_esval, l_esval] = STKM`GetES(2);
+      rval = GetVal(r_esval);
+      lval = GetVal(l_esval)
+  in
+  if nil in set {rval, lval}
+  then TimeError()
+  else let time =
+         cases opr:
+          <NUMEXP> -> if is_SEM`NUM(rval)
+                      then rval.v * oh1
+                      else nil,
+          <SETUNION> ,
+          <SETINTERSECT> ,
+          <PROPERSUBSET>,
+          <SETMINUS> -> if is_SEM`SET(lval) and is_SEM`SET(rval)
+                        then (card lval.v + card rval.v) * oh1
+                        else nil ,
+          <SUBSET> -> if is_SEM`SET(rval)
+                      then card rval.v * oh1
+                      else nil,
+          <INSET> ,
+          <NOTINSET> -> if is_SEM`SET(rval)
+                        then card rval.v * oh1
+                        else nil,
+          <SEQCONC> -> if is_SEM`SEQ(lval) and is_SEM`SEQ(rval)
+                       then (len lval.v + len rval.v) * oh1
+                       else nil,
+          <MAPMERGE> -> if is_SEM`MAP(lval) and is_SEM`MAP(rval)
+                        then card (dom lval.v inter dom rval.v) * oh2 +
+                             (card dom lval.v + card dom rval.v) * oh1
+                        else nil,
+          <MAPDOMRESTTO> -> if is_SEM`SET(lval)
+                            then card lval.v * oh1
+                            else nil,
+          <MAPDOMRESTBY> -> if is_SEM`SET(lval) and is_SEM`MAP(rval)
+                            then card (lval.v inter dom rval.v) * oh2 +
+                                 card (dom rval.v \ lval.v) * oh1
+                            else nil,
+          <MAPRNGRESTTO> -> if is_SEM`MAP(lval) and is_SEM`SET(rval)
+                            then card (rng lval.v inter rval.v) * oh1
+                            else nil,
+          <MAPRNGRESTBY> -> if is_SEM`MAP(lval) and is_SEM`SET(rval)
+                            then card (rng lval.v inter rval.v) * oh2 +
+                                 card (rng lval.v \ rval.v) * oh1
+                            else nil,
+          <COMPOSE> -> if is_SEM`MAP(lval) and is_SEM`MAP(rval)
+                       then card dom lval.v * oh1
+                       elseif is_SEM`CompExplFN(lval) and is_SEM`CompExplFN(rval)
+                       then 0
+                       else nil,
+           others -> undefined
+        end in
+      if not STKM`InDuration()
+      then (if time = nil
+            then TimeError()
+            else STKM`IncrRelTime(time));
+
+ExeINCRTIME_NEW : nat * AS`Name ==> ()
+ExeINCRTIME_NEW(oh, nm) ==
+  if not STKM`InDuration()
+  then
+    def inhstrct = STATE`GetInhStrct(nm) ^ [{nm}];
+        instvars = [ { cnm |-> len STATE`GetInstVars(cnm) | cnm in set inhstrct(i) }
+                     | i in set inds inhstrct ] in
+    STKM`IncrRelTime(oh * num_instvars(instvars));
+
+functions
+
+num_instvars : seq of (map AS`Name to nat) -> nat
+num_instvars(ivs) ==
+  if ivs = []
+  then 0
+  else map_sum(hd ivs) + num_instvars(tl ivs);
+
+map_sum : (map AS`Name to nat) -> nat
+map_sum(m) ==
+  if m = {|->}
+  then 0
+  else let d in set dom m in
+       m(d) + map_sum({d} <-: m);
+
+operations
+
+ExeINCRTIME_SETSEQMAP : nat ==> ()
+ExeINCRTIME_SETSEQMAP(oh) ==
+  def [r_esval,l_esval] = STKM`GetES(2);
+      lval = GetVal(l_esval);
+      rval = GetVal(r_esval)
+  in
+  let mult = if is_SEM`NUM(lval) and is_SEM`NUM(rval)
+             then (if rval.v > lval.v
+                   then rval.v - lval.v
+                   else 0)
+             elseif is_SEM`MAP(rval)
+             then card dom rval.v
+             else nil in
+  if not STKM`InDuration()
+  then (if mult = nil
+        then TimeError()
+        else STKM`IncrRelTime(mult * oh));
+
+ExeINCRTIME_STARTLIST : nat ==> ()
+ExeINCRTIME_STARTLIST(oh) ==
+  def esval = hd STKM`GetES(1);
+      val = GetVal(esval)
+  in
+  if not is_SEM`SET(val)
+    then TimeError()
+    elseif not STKM`InDuration()
+    then STKM`IncrRelTime(card val.v * oh);
+
+ExeINCRTIME_STOPLIST : nat ==> ()
+ExeINCRTIME_STOPLIST(oh) ==
+  def esval = hd STKM`GetES(1);
+      val = GetVal(esval)
+  in
+    if not is_SEM`SET(val)
+    then TimeError()
+    elseif not STKM`InDuration()
+    then STKM`IncrRelTime(card val.v * oh);
+
+-- This is called if a runtime value is of the wrong type. In this
+-- case the interpreter will itself signal a runtime error when the
+-- corresponding instruction is reached, so for now we do nothing.
+TimeError : () ==> ()
+TimeError () ==
+  skip;
+\end{vdm_al}
+
+The \emph{RETMES} instruction is used for returning a message to its caller
+(a synchronous operation on a different CPU).
+
+\begin{vdm_al}
+ExeRETMES: STKM`MessageId * nat * AS`Name * [AS`Name] * SCHDTP`ThreadId ==> ()
+ExeRETMES(id,prio,opnm,tocpu,threadid) ==
+  def [val] = STKM`GetES(1)
+  in
+    STKM`AddReturnMessageToBUS(id,STKM`GetTime(),prio,val,opnm,tocpu,threadid);
+\end{vdm_al}
+
+#endif VICE
+
+\begin{vdm_al}
+
+end INSTR
+\end{vdm_al}
+
+\vspace{0.5cm}
+
+#ifdef RTINFO
+\begin{rtinfo}
+{rtinfo.ast}[INSTR]
+\end{rtinfo}
+#endif RTINFO

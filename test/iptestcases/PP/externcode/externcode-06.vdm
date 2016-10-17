@@ -1,0 +1,25 @@
+class A is subclass of B6
+
+instance variables
+
+  k : nat
+
+operations
+
+public Test : () ==> nat
+Test() ==
+( return i + len j
+);
+
+end A
+
+class B6
+
+values
+
+  public i : nat = 0;
+  protected j : seq of char = [];
+  m : int = -1
+
+end B6
+

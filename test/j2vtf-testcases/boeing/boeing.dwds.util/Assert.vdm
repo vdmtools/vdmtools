@@ -1,0 +1,82 @@
+class Assert is subclass of Object
+operations 
+private  static fail : () ==> <VOID>
+fail() == 
+( let - = System.err.println(new  String("========== Assertion Failed =========="))
+  in 
+    skip ;
+  ( dcl   e : [Throwable] := new  Throwable();
+    let - = e.printStackTrace()
+    in 
+      skip ;
+    let - = System.exit__(1)
+    in 
+      skip 
+  ) ;
+  return  <VOID>
+) ;
+
+public  static that : bool  ==> <VOID>
+that(bool__) == 
+( if  assertionChecks and  not  bool__
+  then  
+    ( let - = fail()
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+public  static that : int  ==> <VOID>
+that(lng) == 
+( if  assertionChecks and  lng = 0
+  then  
+    ( let - = fail()
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+public  static that : real  ==> <VOID>
+that(dbl) == 
+( if  assertionChecks and  dbl = 0
+  then  
+    ( let - = fail()
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+private  Assert : () ==> Assert
+Assert() == 
+( skip 
+) ;
+
+public  static that : [Object] ==> <VOID>
+that(ref) == 
+( if  assertionChecks and  ref = nil  
+  then  
+    ( let - = fail()
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+public  static getAssertionChecks : () ==> bool 
+getAssertionChecks() == 
+( return  assertionChecks
+) ;
+
+public  static setAssertionChecks : bool  ==> <VOID>
+setAssertionChecks(doChecks) == 
+( assertionChecks := doChecks;
+  return  <VOID>
+) ;
+
+instance variables 
+  private  static assertionChecks : bool  := true  
+  
+end  Assert

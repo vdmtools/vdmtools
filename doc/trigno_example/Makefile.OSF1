@@ -1,0 +1,34 @@
+##---------------------------------------------------------------
+##                    Make file for DEC Unix / cxx
+##---------------------------------------------------------------
+VDMLIB  = /opt2/toolbox/cg/lib
+INCL    = -I/opt2/toolbox/cg/include
+
+## Nothing below this line should be changed.
+CC      = cxx
+# Option -taso used to load executables in lower 
+# 31 bits of the 64 bits address space.
+CCFLAGS =  -taso
+LIB     = -L$(VDMLIB) -lvdm -lCG -lm
+
+all: libcylio.so libmath.so
+
+libcylio.so: cylio.o tcfcylio.o 
+	$(CC) $(CCFLAGS) -shared -o $@  cylio.o tcfcylio.o ${LIB}
+
+cylio.o: cylio.cc
+	${CC} $(CCFLAGS)  -c  -o cylio.o cylio.cc ${INCL}
+
+tcfcylio.o: tcfcylio.cc
+	${CC} $(CCFLAGS) -c -o tcfcylio.o tcfcylio.cc ${INCL}
+
+libmath.so: tcfmath.cc
+	${CC} $(CCFLAGS) -c  -o tcfmath.o  tcfmath.cc ${INCL}
+	$(CC) $(CCFLAGS) -shared  -o $@  tcfmath.o ${LIB} 
+clean:
+	rm *.o *.so
+
+# target for debuging
+debug: cylio.o tcfcylio.o main.cc
+	${CC} $(CCFLAGS) -c main.cc -o main.o ${INCL}
+	${CC} $(CCFLAGS) -o debug cylio.o tcfcylio.o main.o ${LIB}

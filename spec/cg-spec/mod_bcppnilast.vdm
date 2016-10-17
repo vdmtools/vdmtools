@@ -1,0 +1,863 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Provides functions for building abstract syntax tree of C++/Java.
+% $Id: mod_bcppnilast.vdm,v 1.21 2002/12/19 12:46:21 mikhail Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\section{Module BC - Building the Abstract Syntax Tree of C++/Java}
+This module provides functions for building the abstract syntax tree of C++.
+
+\vspace{1cm}
+\begin{vdm_al}
+
+module BC
+
+imports
+
+  from BCCI all,
+  from CPP all,
+  from AS all,
+  from REP all,
+  from CI all
+
+exports all
+
+definitions
+
+  values
+
+  CGBasename: seq of char = "CGBase"
+
+functions
+
+\end{vdm_al}
+
+\subsection{Files}
+
+\begin{vdm_al}
+
+GenFile: [seq of CPP`FileName] * CPP`FileName * [CPP`Header] * CPP`CPPAS -> CPP`File
+GenFile(pcknm, nm, h, cppas) ==
+  BCCI`GenFile(pcknm, nm, h, cppas, CI`NilContextId);
+
+GenFile2: [seq of CPP`FileName] * CPP`FileName * [CPP`Header] * CPP`CPPAS * CI`ContextId -> CPP`File
+GenFile2(pcknm, nm, h, cppas, cid) ==
+  BCCI`GenFile(pcknm, nm, h, cppas, cid);
+\end{vdm_al}
+
+\subsection{Exceptions}
+
+\begin{vdm_al}
+GenTryBlock: seq of CPP`Stmt * seq of CPP`Handler * [CPP`CompoundStmt] -> CPP`TryBlock
+GenTryBlock(body,handlers,fin) ==
+  BCCI`GenTryBlock(body,handlers,fin,CI`NilContextId);
+
+GenHandler: (CPP`All|CPP`ExceptionDeclaration) * CPP`Stmt -> CPP`Handler
+GenHandler(exepdecl,stmt) ==
+  BCCI`GenHandler(exepdecl,stmt,CI`NilContextId);
+
+GenExceptionDeclaration: seq of CPP`TypeSpecifier * [CPP`Declarator] -> CPP`ExceptionDeclaration
+GenExceptionDeclaration(ts,decl) ==
+   BCCI`GenExceptionDeclaration(ts,decl,CI`NilContextId);
+\end{vdm_al}
+
+\subsection{Function Definitions}
+
+\begin{vdm_al}
+--- join these functions
+
+GenFctDef: seq of CPP`DeclSpecifier * CPP`Declarator * [seq of CPP`SimpleTypeName] * [CPP`Stmt]
+            -> CPP`FunctionDefinition
+GenFctDef( ds, decl, excs, body ) ==
+  BCCI`GenFctDef(ds, decl, excs, body, CI`NilContextId );
+
+GenJavaFctDef: CPP`AnnotationSpec * seq of CPP`Modifier * seq of CPP`DeclSpecifier * CPP`Declarator *
+           [seq of CPP`SimpleTypeName] * [CPP`Stmt] -> CPP`FunctionDefinition
+GenJavaFctDef(annol, ms, ds, decl, excs, body ) ==
+  BCCI`GenJavaFctDef(annol, ms, ds, decl, excs, body, CI`NilContextId );
+
+GenConstructorDef: CPP`AnnotationSpec * seq of CPP`DeclSpecifier * CPP`Declarator *
+                   [CPP`CtorInitializer] * CPP`Stmt -> CPP`FunctionDefinition
+GenConstructorDef(annol, ds, decl, ci, body ) ==
+  BCCI`GenConstructorDef(annol, ds, decl, ci, body, CI`NilContextId );
+
+GenConstructorDecl: CPP`AnnotationSpec * seq of CPP`Modifier * CPP`Declarator *  CPP`Stmt -> CPP`FunctionDefinition
+GenConstructorDecl(annol, ms, decl, body ) ==
+  BCCI`GenConstructorDecl(annol, ms, decl, body, CI`NilContextId );
+
+GenInitBase: CPP`Identifier * CPP`Identifier -> CPP`CtorInitializer
+GenInitBase(base,arg) ==
+  BCCI`GenInitBase(base,arg,CI`NilContextId);
+
+GenMemInitializer: CPP`Identifier * CPP`Exprs -> CPP`MemInitializer
+GenMemInitializer(id,el) ==
+ BCCI`GenMemInitializer(id,el,CI`NilContextId);
+
+GenInitBaseN: (CPP`Identifier | CPP`CompleteClassName | CPP`TemplateClassName)
+              * seq of CPP`Expr -> CPP`CtorInitializer
+GenInitBaseN(base,arg) ==
+  BCCI`GenInitBaseN(base,arg,CI`NilContextId);
+
+\end{vdm_al}
+
+\subsection{Declarations}
+
+\begin{vdm_al}
+
+GenInt: () -> CPP`Int
+GenInt() ==
+  BCCI`GenInt(CI`NilContextId);
+
+GenBool: () -> CPP`Bool
+GenBool() ==
+  BCCI`GenBool(CI`NilContextId);
+
+GenLong: () -> CPP`Long
+GenLong () ==
+  BCCI`GenLong(CI`NilContextId);
+
+GenUnsigned: () -> CPP`Unsigned
+GenUnsigned () ==
+  BCCI`GenUnsigned(CI`NilContextId);
+
+GenDouble: () -> CPP`Double
+GenDouble() ==
+  BCCI`GenDouble(CI`NilContextId);
+
+GenVoid: () -> CPP`Void
+GenVoid() ==
+  BCCI`GenVoid(CI`NilContextId);
+
+\end{vdm_al}
+
+\subsection{Declarator}
+
+\begin{vdm_al}
+
+GenFriend : () -> CPP`Friend
+GenFriend () ==
+  BCCI`GenFriend(CI`NilContextId);
+
+GenAsgnInit : CPP`Expr -> CPP`AsgnInit
+GenAsgnInit(e) ==
+  BCCI`GenAsgnInit( e,CI`NilContextId );
+
+GenArgDecl: CPP`DeclSpecifiers * CPP`Declarator -> CPP`ArgDecl
+GenArgDecl(ds, decl ) ==
+  BCCI`GenArgDecl( ds, decl, CI`NilContextId);
+
+GenArgAbs: CPP`DeclSpecifiers  * [CPP`AbstractDeclarator]-> CPP`ArgAbsDecl
+GenArgAbs(ds,decl) ==
+  BCCI`GenArgAbs(ds, decl,CI`NilContextId);
+
+GenFctDecl: CPP`Declarator * seq of CPP`ArgumentDeclaration -> CPP`FctDecl
+GenFctDecl(decl, argdecl) ==
+  BCCI`GenFctDecl(decl, argdecl,CI`NilContextId);
+
+GenStaticInitializerDecl: CPP`Declarator -> CPP`FctDecl
+GenStaticInitializerDecl(decl) ==
+  BCCI`GenStaticInitializerDecl(decl,CI`NilContextId);
+
+GenConstFctDecl: CPP`Declarator * seq of CPP`ArgumentDeclaration -> CPP`FctDecl
+GenConstFctDecl(decl, argdecl) ==
+  BCCI`GenConstFctDecl(decl, argdecl,CI`NilContextId);
+
+GenObjectInit: seq of CPP`Expr -> CPP`ObjectInit
+GenObjectInit( el) ==
+  BCCI`GenObjectInit( el,CI`NilContextId );
+
+GenIdentDeclaration: CPP`AnnotationSpec * CPP`DeclSpecifiers * [ CPP`DeclaratorList ] -> CPP`IdentDeclaration
+GenIdentDeclaration(annol, ds_l,dl) ==
+  BCCI`GenIdentDeclaration(annol, ds_l, dl, CI`NilContextId);
+
+GenIdentDecl: CPP`AnnotationSpec * CPP`DeclSpecifiers * CPP`Declarator * [CPP`Initializer] -> CPP`IdentDeclaration
+GenIdentDecl(annol, ds_l, decl, ini) ==
+  BCCI`GenIdentDecl(annol, ds_l, decl, ini,CI`NilContextId);
+
+GenInitDecl: CPP`Name * [CPP`Initializer] -> CPP`InitDeclarator
+GenInitDecl( name, initExpr ) ==
+  BCCI`GenInitDecl( name, initExpr,CI`NilContextId );
+
+GenClassTypeDecl: CPP`Identifier -> CPP`IdentDeclaration
+GenClassTypeDecl(id) ==
+  BCCI`GenClassTypeDecl(id,CI`NilContextId);
+
+\end{vdm_al}
+
+\subsection{Class Declarations}
+
+The function $GenClassHead$ generates a ``normal'' class head on the
+form:
+
+\begin{quote}
+
+{\tt class} $cls$ : {\tt public} $base1$, {\tt public} $base2$, \ldots
+
+\end{quote}
+
+
+
+\begin{vdm_al}
+-- the next two functions should be joint!!!!!!!!!!!!
+
+GenClassHead: CPP`Identifier * CPP`BaseSpec -> CPP`ClassHead
+GenClassHead(cls, base_l) ==
+  BCCI`GenClassHead(cls, base_l,CI`NilContextId);
+
+GenJavaClassHead: CPP`AnnotationSpec * seq of CPP`Modifier * CPP`Identifier  * CPP`BaseSpec *
+                  [CPP`InterSpec] * [seq of CPP`Identifier] -> CPP`ClassHead
+GenJavaClassHead(anno_l, ms, cls, base_l, inter_l, tp_l) ==
+  BCCI`GenJavaClassHead(anno_l, ms, cls, base_l, inter_l, tp_l, CI`NilContextId);
+
+GenJavaInterfaceHead: CPP`AnnotationSpec * seq of CPP`Modifier * CPP`Identifier * CPP`InterSpec *
+                  [seq of CPP`Identifier] -> CPP`InterfaceHead
+GenJavaInterfaceHead(anno_l, ms, cls, inter_l, tp_l) ==
+  BCCI`GenJavaInterfaceHead(anno_l, ms, cls, inter_l, tp_l, CI`NilContextId);
+
+#ifdef VDMPP
+operations
+GenAccessMemberList: map AS`Access to seq of CPP`MemberDeclaration ==> seq of CPP`MemberList
+GenAccessMemberList (acs_m) ==
+  BCCI`GenAccessMemberList (acs_m,CI`NilContextId);
+
+functions
+#endif VDMPP
+
+GenClassElaboratedType: CPP`Identifier -> CPP`ElaboratedTypeSpecifier
+GenClassElaboratedType (name) ==
+  BCCI`GenClassElaboratedType (name,CI`NilContextId);
+
+GenClassFriend: CPP`Identifier -> seq of CPP`MemberList
+GenClassFriend (name ) ==
+ BCCI`GenClassFriend (name,CI`NilContextId );
+
+GenCPPMemberList: [<PRIVATE>|<PROTECTED>|<PUBLIC>] * seq of CPP`MemberDeclaration -> seq of CPP`MemberList
+GenCPPMemberList (cppacc,md_l) ==
+  BCCI`GenCPPMemberList (cppacc,md_l,CI`NilContextId);
+
+-- the following four functions should be joint !!!!!!!!!!!!!!!!!!!
+-- The following 4 functions should be joint.
+
+  GenMemberList: seq of CPP`MemberDeclaration -> seq of CPP`MemberList
+  GenMemberList(md) ==
+    BCCI`GenMemberList(md,CI`NilContextId);
+
+  GenProtected: seq of CPP`MemberDeclaration -> seq of CPP`MemberList
+  GenProtected(md) ==
+    BCCI`GenProtected(md,CI`NilContextId);
+
+  GenPublic: seq of CPP`MemberDeclaration -> seq of CPP`MemberList
+  GenPublic(md) ==
+    BCCI`GenPublic(md,CI`NilContextId);
+
+  GenPrivate: seq of CPP`MemberDeclaration -> seq of CPP`MemberList
+  GenPrivate(md) ==
+    BCCI`GenPrivate(md,CI`NilContextId);
+
+  GenClassSpecifier: CPP`ClassHead * (seq of CPP`MemberList | seq of CPP`MemberDeclaration) -> CPP`ClassSpecifier
+  GenClassSpecifier(head,member_l) ==
+    BCCI`GenClassSpecifier(head,member_l,CI`NilContextId);
+
+  GenTypeClassSpecifier: CPP`ClassHead * (seq of CPP`MemberList | seq of CPP`MemberDeclaration) -> CPP`TypeSpecifier
+  GenTypeClassSpecifier(head,member_l) ==
+    BCCI`GenTypeClassSpecifier(head,member_l,CI`NilContextId);
+
+  GenTypeInterfaceSpecifier: CPP`InterfaceHead * seq of CPP`MemberDeclaration ->
+                             CPP`TypeSpecifier
+  GenTypeInterfaceSpecifier(head,member_l) ==
+    BCCI`GenTypeInterfaceSpecifier(head,member_l,CI`NilContextId);
+
+  GenTypeSpecifier:  CPP`Identifier | CPP`Int | CPP`Void | CPP`Double |
+                     CPP`Long | CPP`Unsigned | CPP`EnumSpecifier |
+                     CPP`SimpleTypeName | CPP`ClassSpecifier | <CONST> | <REFERENCE> |
+                     CPP`Bool ->
+                     CPP`TypeSpecifier
+  GenTypeSpecifier(nm) ==
+    BCCI`GenTypeSpecifier(nm,CI`NilContextId);
+
+  GenFctSpecifier: <VIRTUAL> -> CPP`FctSpecifier
+  GenFctSpecifier(arg) ==
+    BCCI`GenFctSpecifier(arg,CI`NilContextId);
+
+  GenStorageClassSpecifier: <AUTO> | <REGISTER> | <STATIC> | <EXTERN> -> CPP`StorageClassSpecifier
+  GenStorageClassSpecifier(arg) ==
+    BCCI`GenStorageClassSpecifier(arg,CI`NilContextId);
+
+  GenInterfaceSpecifier: CPP`InterfaceHead * seq of CPP`MemberDeclaration -> CPP`InterfaceSpecifier
+  GenInterfaceSpecifier(head,member_l) ==
+    BCCI`GenInterfaceSpecifier(head,member_l,CI`NilContextId);
+\end{vdm_al}
+
+\begin{vdm_al}
+  GenEnumSpec: [CPP`Identifier] * seq of CPP`Enumerator -> CPP`EnumSpecifier
+  GenEnumSpec(id, enum_l) ==
+    BCCI`GenEnumSpec(id, enum_l,CI`NilContextId);
+
+  GenEnum: CPP`Identifier * CPP`Expr -> CPP`EnumDefaultAssgn
+  GenEnum(id, expr) ==
+    BCCI`GenEnum(id, expr,CI`NilContextId);
+\end{vdm_al}
+
+\begin{vdm_al}
+  GenTypeDef : () -> CPP`TypeDef
+  GenTypeDef() ==
+    BCCI`GenTypeDef(CI`NilContextId);
+
+  GenTypeDefName : CPP`Identifier -> CPP`TypeDefName
+  GenTypeDefName(id) ==
+    BCCI`GenTypeDefName(id,CI`NilContextId);
+\end{vdm_al}
+
+\begin{vdm_al}
+  GenStaticMemberSpec: seq of CPP`DeclSpecifier * [CPP`Declarator] -> CPP`MemberSpecifier
+  GenStaticMemberSpec(ds_l, decl) ==
+    BCCI`GenStaticMemberSpec(ds_l, decl,CI`NilContextId);
+
+  GenMemberSpec: seq of CPP`DeclSpecifier * [CPP`Declarator] -> CPP`MemberSpecifier
+  GenMemberSpec(ds_l, decl) ==
+    BCCI`GenMemberSpec(ds_l, decl,CI`NilContextId);
+
+  GenPureMemberSpec: CPP`DeclSpecifiers * CPP`Declarator -> CPP`MemberSpecifier
+  GenPureMemberSpec(ds,decl) ==
+    BCCI`GenPureMemberSpec(ds,decl,CI`NilContextId);
+
+  GenAccBaseSpec: CPP`Identifier -> CPP`AccCompleteClassSpecifier
+  GenAccBaseSpec(cls) ==
+    BCCI`GenAccBaseSpec(cls,CI`NilContextId);
+
+  GenAccTemplateBaseSpec: CPP`TemplateClassName -> CPP`AccCompleteClassSpecifier
+  GenAccTemplateBaseSpec(tcn) ==
+    BCCI`GenAccTemplateBaseSpec(tcn,CI`NilContextId);
+
+  GenAccVirBaseSpec: CPP`Identifier -> CPP`AccCompleteClassSpecifier
+  GenAccVirBaseSpec(cls) ==
+    BCCI`GenAccVirBaseSpec(cls,CI`NilContextId);
+\end{vdm_al}
+
+\subsection{Statements}
+
+The function ``GenDecl'' is an example of a function which builds a
+special kind of declarations, namely declarations of one variable with
+some optional initialization expression.
+
+\begin{vdm_al}
+
+  GenDecl: CPP`DeclSpecifier * CPP`Name * [CPP`Initializer] -> CPP`DeclarationStmt
+  GenDecl( ds , name, initExpr) ==
+    BCCI`GenDecl( ds , name, initExpr,CI`NilContextId);
+
+  GenDeclStmt: CPP`Declaration -> CPP`DeclarationStmt
+  GenDeclStmt(decl) ==
+    mk_CPP`DeclarationStmt(decl,CI`NilContextId);
+
+  GenDecls: CPP`DeclSpecifier * seq1 of CPP`Name -> CPP`DeclarationStmt
+  GenDecls(ds, nm_l) ==
+    BCCI`GenDecls(ds, nm_l,CI`NilContextId);
+
+#ifdef VDMPP
+  GenPtrDecl: CPP`DeclSpecifiers * CPP`Name * [CPP`Expr] -> CPP`DeclarationStmt
+  GenPtrDecl(ds, nm, initExpr) ==
+    BCCI`GenPtrDecl(ds, nm, initExpr,CI`NilContextId);
+#endif VDMPP
+
+  GenIndirection: CPP`Declarator -> CPP`IndirectionDecl
+  GenIndirection(decl) ==
+    BCCI`GenIndirection(decl,CI`NilContextId);
+
+  GenRef:CPP`Declarator -> CPP`RefDecl
+  GenRef(decl) ==
+    BCCI`GenRef(decl,CI`NilContextId);
+
+  GenRefAbsDecl: [CPP`CVQualifierList] * [CPP`AbstractDeclarator] -> CPP`RefAbsDecl
+  GenRefAbsDecl(cvlist, decl) ==
+    BCCI`GenRefAbsDecl(cvlist, decl,CI`NilContextId);
+
+  GenAsgnStmt: CPP`Expr * CPP`Expr -> CPP`Stmt
+  GenAsgnStmt(var, val) ==
+    BCCI`GenAsgnStmt(var, val,CI`NilContextId);
+
+  GenAsgnMultStmt: CPP`Expr * CPP`Expr -> CPP`Stmt
+  GenAsgnMultStmt(var, val) ==
+    BCCI`GenAsgnMultStmt(var, val,CI`NilContextId);
+
+  GenEq: CPP`Expr * CPP`Expr -> CPP`Expr
+  GenEq(r,l) ==
+    BCCI`GenEq(r,l,CI`NilContextId);
+
+  GenNeq: CPP`Expr * CPP`Expr -> CPP`Expr
+  GenNeq(r, l) ==
+    BCCI`GenNeq(r, l,CI`NilContextId);
+
+  GenNewExpr: CPP`TypeSpecifier * CPP`Exprs -> CPP`AllocationTypeExpr | CPP`ClassInstanceCreationExpr
+  GenNewExpr(ts, expr_l) ==
+    BCCI`GenNewExpr(ts, expr_l,CI`NilContextId);
+
+  GenDeleteStmt: CPP`Expr -> CPP`Stmt
+  GenDeleteStmt(expr) ==
+    BCCI` GenDeleteStmt(expr,CI`NilContextId);
+
+  GenIfStmt: CPP`Expr * CPP`Stmt * [CPP`Stmt] -> CPP`Stmt
+  GenIfStmt(cond, alt1, alt2) ==
+    BCCI`GenIfStmt(cond, alt1, alt2,CI`NilContextId);
+
+  GenBlock: seq of CPP`Stmt -> CPP`Stmt
+  GenBlock(cpp_l) ==
+    BCCI`GenBlock(cpp_l,CI`NilContextId);
+
+  GenExpressionStmt: [ CPP`Expr ] -> CPP`Stmt
+  GenExpressionStmt( e ) ==
+    BCCI`GenExpressionStmt( e,CI`NilContextId );
+
+  GenForStmt: [CPP`ExpressionStmt | CPP`DeclarationStmt] * [CPP`Expr] *
+              seq of CPP`Expr * CPP`Stmt -> CPP`Stmt
+  GenForStmt(i, e1, e2_l, stmt) ==
+    BCCI`GenForStmt(i, e1, e2_l, stmt,CI`NilContextId);
+
+  GenForEachStmt: CPP`DeclarationStmt * CPP`Expr * CPP`Stmt -> CPP`Stmt
+  GenForEachStmt(e, expr, stmt) ==
+    BCCI`GenForEachStmt(e, expr, stmt, CI`NilContextId);
+
+  GenWhileStmt: CPP`Expr * CPP`Stmt -> CPP`Stmt
+  GenWhileStmt( e, s ) ==
+    BCCI`GenWhileStmt( e, s,CI`NilContextId );
+
+  GenSwitchStmt: CPP`Expr * seq of (CPP`CaseStmt | CPP`DefaultStmt) -> CPP`Stmt
+  GenSwitchStmt(expr, stmtL) ==
+    BCCI`GenSwitchStmt(expr, stmtL,CI`NilContextId);
+
+   GenCaseStmt: CPP`Expr * CPP`Stmt -> CPP`CaseStmt
+   GenCaseStmt(expr, stmt) ==
+    BCCI`GenCaseStmt(expr, stmt,CI`NilContextId);
+
+   GenBreakStmt: [CPP`Identifier] -> CPP`Break
+   GenBreakStmt(id) ==
+     BCCI`GenBreakStmt(id,CI`NilContextId);
+
+   GenContinueStmt: [CPP`Identifier] -> CPP`Continue
+   GenContinueStmt(id) ==
+     BCCI`GenContinueStmt(id,CI`NilContextId);
+
+   GenDefaultStmt: CPP`Stmt -> CPP`DefaultStmt
+   GenDefaultStmt(stmt) ==
+     BCCI`GenDefaultStmt(stmt,CI`NilContextId);
+
+   GenGenericReturnStmt: [CPP`Expr] -> CPP`Stmt
+   GenGenericReturnStmt(e) ==
+     BCCI`GenGenericReturnStmt(e,CI`NilContextId);
+
+   GenReturnStmt: [CPP`Expr] -> CPP`Stmt
+   GenReturnStmt(e) ==
+     BCCI`GenReturnStmt(e,CI`NilContextId);
+
+   GenFctCallObjMemAccStmt: CPP`Expr * seq of char * CPP`Exprs -> CPP`Stmt
+   GenFctCallObjMemAccStmt( obj, fname, par ) ==
+     BCCI`GenFctCallObjMemAccStmt( obj, fname, par,CI`NilContextId );
+
+  GenInclStmt: CPP`FileName -> CPP`IncludeStmt
+  GenInclStmt(id) ==
+    BCCI`GenInclStmt(id,CI`NilContextId);
+\end{vdm_al}
+
+\subsection{Expressions}
+
+\begin{vdm_al}
+
+    GenLogAnd: CPP`Expr * CPP`Expr -> CPP`Expr
+    GenLogAnd(e1, e2) == BCCI`GenLogAnd(e1, e2,CI`NilContextId);
+
+    GenLogOr: CPP`Expr * CPP`Expr -> CPP`Expr
+    GenLogOr( e1, e2 ) == BCCI`GenLogOr( e1, e2,CI`NilContextId );
+
+    GenLeq: CPP`Expr * CPP`Expr -> CPP`Expr
+    GenLeq( e1, e2) == BCCI`GenLeq( e1, e2,CI`NilContextId);
+
+    GenGeq: CPP`Expr * CPP`Expr -> CPP`Expr
+    GenGeq( e1, e2) == BCCI`GenGeq( e1, e2,CI`NilContextId);
+
+    GenGt: CPP`Expr * CPP`Expr -> CPP`Expr
+    GenGt( e1, e2) == BCCI`GenGt( e1, e2,CI`NilContextId);
+
+    GenLt: CPP`Expr * CPP`Expr -> CPP`Expr
+    GenLt( e1, e2) == BCCI`GenLt( e1, e2,CI`NilContextId);
+
+    GenTypeComp: (CPP`Expr | CPP`TypeSpecifier) * CPP`Expr -> CPP`Expr
+    GenTypeComp( e1, e2) == BCCI`GenTypeComp( e1, e2,CI`NilContextId);
+
+    GenPostPlusPlus: CPP`Expr -> CPP`Expr
+    GenPostPlusPlus( e ) ==
+     BCCI`GenPostPlusPlus( e,CI`NilContextId );
+
+    GenPostMinusMinus: CPP`Expr -> CPP`Expr
+    GenPostMinusMinus( e ) ==
+     BCCI`GenPostMinusMinus( e,CI`NilContextId );
+
+    GenStringLit: seq of char -> (CPP`StringLit | CPP`WStringLit)
+    GenStringLit(n_l) ==  BCCI`GenStringLit(n_l,CI`NilContextId);
+
+    GenIntegerLit: int -> CPP`IntegerLit
+    GenIntegerLit(n) == BCCI`GenIntegerLit(n,CI`NilContextId);
+
+    GenBoolLit: bool -> CPP`BoolLit
+    GenBoolLit(b) == BCCI`GenBoolLit(b,CI`NilContextId);
+
+    GenFloatingLit: real -> CPP`FloatingLit
+    GenFloatingLit( val) == BCCI`GenFloatingLit( val,CI`NilContextId);
+
+    GenCharLit: char -> (CPP`CharacterLit | CPP`WCharacterLit)
+    GenCharLit(ch) == BCCI`GenCharLit(ch,CI`NilContextId);
+
+    GenIndirectionExpr : CPP`Expr -> CPP`Expr
+    GenIndirectionExpr(e) == BCCI`GenIndirectionExpr(e,CI`NilContextId);
+
+    GenNot: CPP`Expr -> CPP`Expr
+    GenNot(e) == BCCI`GenNot(e,CI`NilContextId);
+
+    GenUnaryMinus: CPP`Expr -> CPP`Expr
+    GenUnaryMinus( e ) == BCCI`GenUnaryMinus( e,CI`NilContextId );
+
+    GenPlus: CPP`Expr * CPP`Expr -> CPP`Expr
+    GenPlus( e1, e2 ) ==
+      BCCI`GenPlus( e1, e2,CI`NilContextId );
+
+    GenMinus: CPP`Expr * CPP`Expr -> CPP`Expr
+    GenMinus( e1, e2 ) ==
+      BCCI`GenMinus( e1, e2,CI`NilContextId );
+
+    GenMult: CPP`Expr * CPP`Expr -> CPP`Expr
+    GenMult( e1, e2 ) ==
+      BCCI`GenMult( e1, e2,CI`NilContextId );
+
+    GenDiv: CPP`Expr * CPP`Expr -> CPP`Expr
+    GenDiv( e1, e2 ) ==
+      BCCI`GenDiv( e1, e2,CI`NilContextId );
+
+    GenMod: CPP`Expr * CPP`Expr -> CPP`Expr
+    GenMod( e1, e2 ) ==
+      BCCI`GenMod( e1, e2,CI`NilContextId );
+
+    GenBitAnd: CPP`Expr * CPP`Expr -> CPP`Expr
+    GenBitAnd(e1, e2) ==BCCI`GenBitAnd(e1, e2,CI`NilContextId);
+
+    GenLeftShift: CPP`Expr * CPP`Expr -> CPP`Expr
+    GenLeftShift(e1, e2) == BCCI`GenLeftShift(e1, e2,CI`NilContextId);
+
+    GenFctCall: CPP`Expr * CPP`Exprs -> CPP`Expr
+    GenFctCall(e1,es) ==
+      BCCI`GenFctCall(e1,es,CI`NilContextId);
+
+    GenGenericFctCall: CPP`Expr * CPP`Exprs -> CPP`Expr
+    GenGenericFctCall(e1,es) ==
+      BCCI`GenGenericFctCall(e1,es,CI`NilContextId);
+
+    GenObjectMemberAccess: CPP`Expr * CPP`Expr -> CPP`Expr
+    GenObjectMemberAccess( e, n) ==
+      BCCI`GenObjectMemberAccess( e, n,CI`NilContextId);
+
+    GenFctCallObjMemAcc: CPP`Expr * seq of char * CPP`Exprs -> CPP`Expr
+    GenFctCallObjMemAcc( obj, fname, par ) ==
+      BCCI`GenFctCallObjMemAcc( obj, fname, par,CI`NilContextId );
+
+    GenGenericFctCallObjMemAcc: CPP`Expr * seq of char * CPP`Exprs -> CPP`Expr
+    GenGenericFctCallObjMemAcc( obj, fname, par ) ==
+      BCCI`GenGenericFctCallObjMemAcc( obj, fname, par,CI`NilContextId );
+
+#ifdef VDMPP
+    GenFctCallPtrToObjMemAcc: CPP`Expr * CPP`Expr * CPP`Exprs -> CPP`Expr
+    GenFctCallPtrToObjMemAcc(obj,fnm,parms) ==
+      BCCI`GenFctCallPtrToObjMemAcc(obj,fnm,parms,CI`NilContextId);
+
+    GenGenericFctCallPtrToObjMemAcc: CPP`Expr * CPP`Expr * CPP`Exprs -> CPP`Expr
+    GenGenericFctCallPtrToObjMemAcc(obj,fnm,parms) ==
+      BCCI`GenGenericFctCallPtrToObjMemAcc(obj,fnm,parms,CI`NilContextId);
+
+    GenPointerToObjectMemberAccess: CPP`Expr * CPP`Expr -> CPP`Expr
+    GenPointerToObjectMemberAccess(obj, mem) ==
+      BCCI`GenPointerToObjectMemberAccess(obj, mem,CI`NilContextId);
+#endif
+
+    GenIdentifier: AS`Id -> CPP`Identifier
+    GenIdentifier( name ) ==
+      BCCI`GenIdentifier( name,CI`NilContextId );
+
+    GenCastExpr: CPP`TypeSpecifier * CPP`Expr -> CPP`Expr
+    GenCastExpr(ts, e) == BCCI`GenCastExpr(ts, e,CI`NilContextId);
+
+    GenCastExpr2: seq1 of CPP`TypeSpecifier * CPP`Expr -> CPP`Expr
+    GenCastExpr2(ts_l, e) ==
+      BCCI`GenCastExpr2(ts_l, e,CI`NilContextId);
+
+#ifdef VDMPP
+    GenCastPtrExpr: CPP`TypeSpecifier * CPP`Expr -> CPP`Expr
+    GenCastPtrExpr(ts, e) ==
+      BCCI`GenCastPtrExpr(ts, e,CI`NilContextId);
+#endif VDMPP
+
+    GenArrayApply: CPP`Expr * CPP`Expr -> CPP`Expr
+    GenArrayApply(e1, e2) == BCCI`GenArrayApply(e1, e2,CI`NilContextId);
+
+    GenGenericArrayApply: CPP`Expr * CPP`Expr -> CPP`Expr
+    GenGenericArrayApply(e1, e2) ==
+      BCCI`GenGenericArrayApply(e1, e2,CI`NilContextId);
+
+    GenGeneric: () -> CPP`TypeSpecifier
+    GenGeneric() ==
+      BCCI`GenGeneric(CI`NilContextId);
+
+    GenAsgnExpr: CPP`Expr * CPP`Expr -> CPP`Expr
+    GenAsgnExpr(e1, e2) ==
+      BCCI`GenAsgnExpr(e1, e2,CI`NilContextId);
+
+    GenAsgnPlusExpr: CPP`Expr * CPP`Expr -> CPP`Expr
+    GenAsgnPlusExpr(e1, e2) ==
+      BCCI`GenAsgnPlusExpr(e1, e2,CI`NilContextId);
+
+    GenCondExpr: CPP`Expr * CPP`Expr * CPP`Expr -> CPP`Expr
+    GenCondExpr( e1, e2, e3) ==
+      BCCI`GenCondExpr( e1, e2, e3,CI`NilContextId);
+
+
+    GenBracketedExpr: CPP`Expr -> CPP`Expr
+    GenBracketedExpr( e ) == BCCI`GenBracketedExpr( e ,CI`NilContextId);
+
+    GenThrowExpression: [CPP`Expr] -> CPP`Expr
+    GenThrowExpression(e) ==
+      BCCI`GenThrowExpression(e,CI`NilContextId);
+
+    GenArrayInitializer: [seq of (CPP`Expr | CPP`ArrayInitializer)] -> CPP`ArrayInitializer
+    GenArrayInitializer(vi) ==
+      BCCI`GenArrayInitializer(vi,CI`NilContextId);
+
+    GenArrayCreationExpr: CPP`SimpleTypeName * [CPP`ArrayNewDecl] * [CPP`ArrayNewDecl] *
+                          [CPP`ArrayInitializer] -> CPP`Expr
+    GenArrayCreationExpr(type, dimExpr, dim, arrayInit) ==
+      BCCI`GenArrayCreationExpr(type, dimExpr, dim, arrayInit, CI`NilContextId);
+
+\end{vdm_al}
+
+Note that the second field of ClassInstanceCreationExpr always is set
+to nil using this operation. This is because this field is not needed
+by any of the code generators.
+
+\begin{vdm_al}
+    GenClassInstanceCreationExpr: (CPP`CompleteClassName | CPP`PackageName | CPP`QualifiedName) *
+                                  seq of CPP`Expr -> CPP`Expr
+    GenClassInstanceCreationExpr(cn,es) ==
+      BCCI`GenClassInstanceCreationExpr(cn,es,CI`NilContextId);
+
+    GenAnonymousClassExpr: CPP`CompleteClassName * seq of CPP`Expr * seq of CPP`MemberDeclaration-> CPP`Expr
+    GenAnonymousClassExpr(cn,es,ml) ==
+      BCCI`GenAnonymousClassExpr(cn,es,ml,CI`NilContextId);
+
+\end{vdm_al}
+
+\subsection{Classes}
+
+\begin{vdm_al}
+
+  GenClass2Package: CPP`Identifier -> CPP`PackageName
+  GenClass2Package(id) ==
+    mk_CPP`SimplePackageName(id,id.cid);
+
+  GenQualifiedName2: CPP`QualifiedClassName * CPP`Name -> CPP`QualifiedName
+  GenQualifiedName2(qnm,nm) == BCCI`GenQualifiedName2(qnm,nm,CI`NilContextId);
+
+  GenTemplateClassName: CPP`Identifier * seq of CPP`Identifier -> CPP`TemplateClassName
+  GenTemplateClassName(tnm,args) ==
+    BCCI`GenTemplateClassName(tnm,args,CI`NilContextId);
+
+  GenQualifiedName: (CPP`Identifier | CPP`Expr) * CPP`Name -> CPP`QualifiedName
+  GenQualifiedName(cnm,nm) ==
+    BCCI`GenQualifiedName(cnm,nm,CI`NilContextId);
+
+#ifdef VDMPP
+  GenDest: CPP`Identifier -> CPP`Destructor
+  GenDest(id) ==
+    BCCI`GenDest(id,CI`NilContextId);
+#endif
+\end{vdm_al}
+
+\subsection{Interfaces}
+
+\begin{vdm_al}
+  GenInterfaceHead: CPP`AnnotationSpec * seq of CPP`Modifier * CPP`Identifier * CPP`InterSpec *
+                    [seq of CPP`Identifier] -> CPP`InterfaceHead
+  GenInterfaceHead(anno_l, ms, cls, interspec, tp_l) ==
+    BCCI`GenInterfaceHead(anno_l, ms, cls, interspec, tp_l, CI`NilContextId);
+
+  GenModifier: CPP`ModifierAccess -> CPP`Modifier
+  GenModifier(ma) ==
+    BCCI`GenModifier(ma,CI`NilContextId);
+\end{vdm_al}
+
+\subsection{Preprocessor}
+
+\begin{vdm_al}
+    GenInclusion: CPP`FileName -> CPP`QuoteIncl
+    GenInclusion( fn ) == BCCI`GenInclusion( fn,CI`NilContextId );
+
+    GenSimplePackageName: seq of char -> CPP`PackageName
+    GenSimplePackageName(cs) == BCCI`GenSimplePackageName(cs,CI`NilContextId);
+
+    GenQualifiedPackageName: CPP`PackageName * seq of char -> CPP`QualifiedPackageName
+    GenQualifiedPackageName(pn, cs) ==
+      BCCI`GenQualifiedPackageName(pn, cs, CI`NilContextId);
+
+    GenImportOnDemandDeclaration: CPP`PackageName -> CPP`TypeImportOnDemandDeclaration
+    GenImportOnDemandDeclaration( fn ) ==
+      BCCI`GenImportOnDemandDeclaration( fn,CI`NilContextId );
+
+    GenPackageDeclaration: CPP`PackageName -> CPP`PackageDeclaration
+    GenPackageDeclaration( pnm ) ==
+      BCCI`GenPackageDeclaration( pnm,CI`NilContextId );
+
+    GenPackageAndImportDeclarations:[CPP`PackageDeclaration] * CPP`ImportDeclarations ->
+                                    CPP`PackageAndImportDeclarations
+    GenPackageAndImportDeclarations(pd,impdecls) ==
+      BCCI`GenPackageAndImportDeclarations(pd,impdecls,CI`NilContextId);
+
+    GenSingleTypeImportDeclaration: CPP`Identifier -> CPP`SingleTypeImportDeclaration
+    GenSingleTypeImportDeclaration( id ) ==
+      BCCI`GenSingleTypeImportDeclaration( id,CI`NilContextId );
+
+    GenSqIncl: CPP`FileName -> CPP`SquareIncl
+    GenSqIncl(fn) ==
+      BCCI`GenSqIncl(fn,CI`NilContextId);
+
+    GenIdMacroDef: AS`Id * AS`Id -> CPP`IdMacroDef
+    GenIdMacroDef( id, ts ) ==
+      BCCI`GenIdMacroDef( id, ts,CI`NilContextId );
+
+    GenPreIfNotDef : CPP`Identifier -> CPP`PreIfNotDef
+    GenPreIfNotDef(id) == BCCI`GenPreIfNotDef(id,CI`NilContextId);
+
+    GenPreIf: CPP`Expr -> CPP`PreIf
+    GenPreIf(e) == BCCI`GenPreIf(e,CI`NilContextId);
+
+    GenPreIfDef: CPP`Expr -> CPP`PreIfDef
+    GenPreIfDef(e) == BCCI`GenPreIfDef(e,CI`NilContextId);
+
+
+    GenPreDefine: CPP`Identifier * CPP`Expr -> CPP`PreDefine
+    GenPreDefine(id,val) == BCCI`GenPreDefine(id,val,CI`NilContextId);
+
+    GenPreEndIf: CPP`Expr -> CPP`PreEndIf
+    GenPreEndIf(e) == BCCI`GenPreEndIf(e,CI`NilContextId);
+
+    GenPreMacro : CPP`Identifier -> CPP`PreMacro
+    GenPreMacro(id) == BCCI`GenPreMacro(id,CI`NilContextId);
+\end{vdm_al}
+
+\subsection{Annotation}
+
+\begin{vdm_al}
+
+    GenAnnotation : CPP`Identifier * [seq of char] -> CPP`Annotation
+    GenAnnotation(cls, args) == BCCI`GenAnnotation(cls, args, CI`NilContextId);
+\end{vdm_al}
+
+\subsection{Temporary Names}
+
+
+\begin{vdm_al}
+operations
+   GiveName: AS`Id ==> CPP`Identifier
+   GiveName(n) ==
+     BCCI`GiveName(n);
+
+   ResetVarno: () ==> ()
+   ResetVarno () == BCCI`ResetVarno ();
+
+\end{vdm_al}
+
+\begin{vdm_al}
+
+#ifdef VDMPP
+functions
+
+  PrefixClassName: AS`Id * CPP`Identifier -> CPP`Identifier
+  PrefixClassName(pr,nm) == BCCI`PrefixClassName(pr,nm);
+
+  PrefixName: AS`Id * CPP`Identifier -> CPP`Identifier
+  PrefixName(pr,nm) == BCCI`PrefixName(pr,nm);
+
+#endif VDMPP
+functions
+
+  AppendName: CPP`Identifier * AS`Id-> CPP`Identifier
+  AppendName(nm,pr) == BCCI`AppendName(nm,pr);
+
+operations
+  Rename: AS`Name | AS`OldName ==> CPP`Name | CPP`ObjectMemberAccess
+  Rename(nm) == BCCI`Rename(nm);
+
+  Rename2: AS`Name | AS`OldName ==> CPP`Name
+  Rename2(nm) == BCCI`Rename2(nm);
+
+functions
+  RenameOld: AS`OldName -> CPP`Name
+  RenameOld(nm) == BCCI`RenameOld(nm);
+
+#ifdef VDMSL
+  GenLengthId: AS`Name -> AS`Id
+  GenLengthId(rec) == BCCI`GenLengthId(rec);
+#endif
+
+  GenLengthName: AS`Name -> CPP`Name
+  GenLengthName(rec) == BCCI`GenLengthName(rec);
+
+#ifdef VDMSL
+  GenPosId: AS`Name * AS`Name -> AS`Id
+  GenPosId(rec, sel) == BCCI`GenPosId(rec, sel);
+#endif
+
+  GenPosName: AS`Name * AS`Name -> CPP`Name
+  GenPosName(rec, sel) == BCCI`GenPosName(rec, sel);
+
+#ifdef VDMPP
+   MkPrefix: AS`Id -> CPP`Identifier
+   MkPrefix(id) == BCCI`MkPrefix(id);
+
+  GiveMacroName: AS`Name -> CPP`Identifier
+  GiveMacroName(nm) == BCCI`GiveMacroName(nm);
+#endif
+
+  GivePrePostNm: AS`Name * AS`Id -> CPP`Name
+  GivePrePostNm(nm, nmtp) == BCCI`GivePrePostNm(nm, nmtp);
+
+  GivePrePostName: AS`Name * AS`Id -> AS`Name
+  GivePrePostName(nm, nmtp) == BCCI`GivePrePostName(nm, nmtp);
+
+#ifdef VDMPP
+  GiveBaseName: () -> CPP`Identifier
+  GiveBaseName() == BCCI`GiveBaseName();
+#endif
+
+  GiveExtFileName: AS`Id * AS`Id -> CPP`FileName
+  GiveExtFileName(cl,mthd) == BCCI`GiveExtFileName(cl,mthd);
+
+  GenBlockComments: seq of seq of char -> CPP`BlockComments
+  GenBlockComments(txt_l) == BCCI`GenBlockComments(txt_l, CI`NilContextId);
+
+  GenSingleLineComments: seq of char -> CPP`SingleLineComments
+  GenSingleLineComments(txt) == BCCI`GenSingleLineComments(txt, CI`NilContextId);
+
+  GenTrailingComments: seq of char -> CPP`TrailingComments
+  GenTrailingComments(txt) == BCCI`GenTrailingComments(txt, CI`NilContextId);
+
+  GenEndOfLineComments: seq of char -> CPP`EndOfLineComments
+  GenEndOfLineComments(txt) == BCCI`GenEndOfLineComments(txt, CI`NilContextId);
+
+  GenDocComments: seq of seq of char -> CPP`DocComments
+  GenDocComments(txt_l) == BCCI`GenDocComments(txt_l, CI`NilContextId);
+
+end BC
+
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[GenFctCallPtrToObjMemAcc]
+{rtinfo.ast}[BC]
+\end{rtinfo}
+

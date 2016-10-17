@@ -1,0 +1,35 @@
+class Queue
+
+types
+  public Item = token;
+
+instance variables
+  q : seq of Item := [];
+  inv len q <= max;
+
+values
+  max : nat = 256;
+
+operations
+  public Enqueue(i:Item) ==
+    q := q ^ [i];
+
+  public Dequeue : () ==> Item
+  Dequeue() ==
+    is not yet specified;
+
+functions
+  public Merge (q1 : seq of Item,
+                q2 : seq of Item) q : seq of Item
+  pre IsSorted(q1) and IsSorted(q2)
+  post IsSorted(q);
+
+  IsSorted : seq of Item +> bool
+  IsSorted(q) ==
+    forall i,j in set inds q & i < j => LessThan(q(i), q(j));
+
+  LessThan : Item * Item +> bool
+  LessThan (i,j) ==
+    is not yet specified
+
+end Queue

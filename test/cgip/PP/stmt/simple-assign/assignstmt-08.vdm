@@ -1,0 +1,17 @@
+class B
+
+instance variables
+
+public b : nat;
+
+end B
+class A is subclass of B
+
+operations
+
+public  Test: () ==> nat
+  Test() ==
+   (b := 8;
+    return b);
+
+end A

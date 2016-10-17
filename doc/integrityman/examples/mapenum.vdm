@@ -1,0 +1,13 @@
+functions
+
+MapEnum: nat * bool * nat * bool -> map nat to bool
+MapEnum(n1,b1,n2,b2) ==
+  {n1 |-> b1, n2 |-> b2}
+pre n1 <> n2
+
+--PO
+--(forall n1 : nat, b1 : bool, n2 : nat, b2 : bool &
+--   n1 <> n2 =>
+--   (forall m_3,m_4 in set {{n1 |-> b1},{n2 |-> b2}} &
+--      (forall id_5 in set dom (m_3), id_6 in set dom (m_4) &
+--         id_5 = id_6 => m_3(id_5) = m_4(id_6))))

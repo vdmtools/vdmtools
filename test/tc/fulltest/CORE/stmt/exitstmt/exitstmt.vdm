@@ -1,0 +1,27 @@
+class ExitStmtTest
+
+operations
+
+  Exit1: nat ==> nat
+  Exit1(n) ==
+    if n = 9
+    then return 0
+    else exit 'c';
+
+  Exit2: nat * char ==> ()
+  Exit2(n,c) ==
+    exit n + c;
+
+  Exit3: () ==> bool
+  Exit3() ==
+  let a = true
+  in
+    if a
+    then return a
+    else exit 8;
+
+  Exit4: nat ==> ()
+  Exit4(n) ==
+    exit 
+
+end ExitStmtTest

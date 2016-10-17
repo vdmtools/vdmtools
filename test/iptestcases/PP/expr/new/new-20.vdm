@@ -1,0 +1,31 @@
+class B
+
+instance variables
+
+i : nat := 0
+
+operations
+
+public B : nat  ==> B
+B(n) ==
+( i := n;
+  return self
+);
+
+public getI : () ==> nat
+getI() ==
+  return i;
+
+
+end B
+
+class A
+
+operations
+
+public Test : () ==> nat
+Test() ==
+  new B(3).getI()
+
+
+end A

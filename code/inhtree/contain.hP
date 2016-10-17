@@ -1,0 +1,517 @@
+//
+//	Container classes used with the VCM
+//
+//	Available containers:
+//		List<T>
+//		SList<T> (sorted list)
+//		UList<T> (unique list)
+//
+//	@(#)contain.hP	2.8 (C++): Container classes, (c) Cap Gemini Inn. 95/01/17
+//
+//	Author:	A. Duursma - Cap Gemini Inn.
+//	Manuals: none
+//	Platform: HP-UX with gcc-2.3.3
+//
+
+#ifndef contain_hP_
+#define contain_hP_
+
+static const char _sccs_id_contain[] = "@(#)contain.hP	2.8";
+
+#include <iostream.h>
+
+//
+//	Booleans
+//
+
+#ifndef TRUE
+#define TRUE	1
+#endif // TRUE
+
+#ifndef FALSE
+#define FALSE	0
+#endif // FALSE
+
+//
+//	LLink
+//
+
+template <class T>
+class LLink {
+public:
+	LLink<T>* next;
+	T	value;
+	// constructors ed.
+	LLink(const T& x) : value(x) {next = 0;}
+};
+
+template <class T> class List_iter; 
+
+template <class T>
+class List {
+public:
+	class ListRange { }; // for throwing errors
+	List(void);
+	// List(int); // for lists of lists
+	List(const List<T>& l);
+	List(const T& x);
+	virtual ~List(void);
+	List<T>& operator=(const List<T>& l);
+
+	virtual int operator==(const List<T>& l) const;
+	virtual int empty(void) const;
+	virtual T head(void) const;
+	virtual T& operator[](int i) const;
+	virtual int length(void) const;
+	virtual int index(const T& x) const;
+	virtual int member(const T& x) const;
+	virtual List<T>& tail(void);
+	virtual List<T>& reverse(void);
+	virtual List<T>& add(const T& x);
+	virtual List<T>& app(const T& x);
+	virtual List<T>& operator+(const T& x);
+	virtual List<T>& del(const T& x);
+protected:
+	LLink<T>* last;
+private:
+	friend class List_iter<T>;
+	T null(void) const;
+};
+
+//template <class T>
+//class QList : public List<T> {
+//public:
+//	// constructors ed.
+//	QList(void) : List<T>() {}
+//	QList(const QList<T>& l) : List<T>(l) {}
+//	QList(const T& x) : List<T>(x) {}
+//	virtual QList<T>& insert(const T& x)
+//	{
+//		add(x);
+//		return *this;
+//	}
+//	virtual QList<T>& app(const T& x)
+//	{
+//		add(x);
+//		last = last->next;
+//		return *this;
+//	}
+//};
+
+template <class T>
+class SList : public List<T> {
+private:
+        int order;
+        SList(const List<T>& l) : List<T>(l) {order = 1;}
+public:
+        SList(void) : List<T>() {order = 1;}
+        SList(const SList<T>& l) : List<T>(l) {order = l.order;}
+        SList(const T& x) : List<T>(x) {order = 1;}
+        SList<T>& operator=(const SList<T>& l)
+        {
+                if (this == &l) return *this;
+
+                List<T>::operator=(l);
+                order = l.order;
+                return *this;
+        }
+        List<T>& reverse(void)
+        {
+                List<T>::reverse();
+                order = -order;
+                return *this;
+        }
+        List<T>& add(const T& x)
+        {	
+                if (empty())
+                {
+                        return List<T>::add(x);
+                }
+
+                LLink<T>* p = last->next;
+                LLink<T>* q = last;
+                int go = TRUE;
+                
+                while (go)
+                {
+                        go = (p != last);
+                        if ((order == 1) && (x < p->value) ||
+                                ((order == -1) && (p->value < x)))
+                        {
+                                LLink<T>* tmp = new LLink<T>(x);
+                                q->next = tmp;
+                                tmp->next = p;
+                                return *this;
+                        }
+                        q = p;
+                        p = p->next;
+                }
+                LLink<T>* tmp = new LLink<T>(x);
+                tmp->next = last->next;
+                last->next = tmp;
+                last = tmp;
+                return *this;
+        }
+        virtual List<T>& app(const T& x)
+        {
+                return add(x);
+        }
+};
+
+template <class T>
+class UList : public List<T> {
+public:
+        // constructors ed.
+        UList(void) : List<T>() {}
+        UList(const UList<T>& l) : List<T>(l) {}
+        UList(const T& x) : List<T>(x) {}
+        // actions
+        List<T>& add(const T& x)
+        {	
+                if (!member(x)) List<T>::add(x);
+                return *this;
+        }
+        List<T>& app(const T& x)
+        {	
+                if (!member(x)) List<T>::app(x);
+                return *this;
+        }
+};
+
+template <class T>
+class List_iter {
+private:
+        const LLink<T>* p;
+        const LLink<T>* q;
+        const LLink<T>* last;
+public:
+        List_iter(const List<T>& l)
+        {
+                last = l.last; p = last; q = 0;
+        }
+        List_iter(const List_iter<T>& i)
+        {
+                last = i.last; p = i.q; q = 0;
+        }
+        List_iter& operator=(const List<T>& l)
+        {
+                last = l.last; p = last; q = 0;
+                return *this;
+        }
+        List_iter& operator=(const List_iter<T>& i)
+        {
+                last = i.last; p = i.q; q = 0;
+                return *this;
+        }
+        T* operator()() 
+        {
+                if (p == (LLink<T>*) 0) return 0;
+                q = p;
+                p = p->next;
+                if (p == last)
+                {
+                        p = 0;
+                }
+                return &(q->next->value);
+        }
+};
+
+template <class T>
+ostream& operator<<(ostream&s, const List<T>& l) 
+{
+        int first = TRUE;
+        List_iter<T> next(l);
+        const T* p;
+
+        s << "(";
+        while ((p = next()) != 0)
+        {
+                if (!first) s << ',';
+                else first = FALSE;
+                s << *p;
+        }
+        return s << ")";
+}
+
+template <class T> List<T>::List(void) { last = 0; }
+
+// template <class T> List<T>::List(int) { last = 0; }
+
+template <class T>
+List<T>::List(const List<T>& l)
+{
+        List_iter<T> next(l);
+        const T* p;
+
+        last = 0;
+        if ((p = next()) == 0)
+                return;
+
+        last = new LLink<T>(*p);
+        last->next = last;
+
+        while ((p = next()) != 0)
+        {
+                LLink<T>* tmp = new LLink<T>(*p);
+                tmp->next = last->next;
+                last->next=tmp;
+                last = tmp;
+        }
+}
+
+template <class T>
+List<T>::List(const T& x)
+{
+        last = new LLink<T>(x);
+        last->next = last;
+}
+
+template <class T>
+List<T>::~List(void)
+{
+        if (!empty())
+        {
+                LLink<T>* q;
+                LLink<T>* p = last->next;
+                while (p != last)
+                {
+                        q = p;
+                        p = p->next;
+                        delete q;
+                }
+                delete last;
+                last = 0;
+        }
+}
+
+template <class T>
+List<T>& List<T>::operator=(const List<T>& l) 
+{
+        if (this == &l) return *this;
+
+        if (!empty())
+        {
+                LLink<T>* q;
+                LLink<T>* p = last->next;
+                while (p != last)
+                {
+                        q = p;
+                        p = p->next;
+                        delete q;
+                }
+                delete last;
+                last = 0;
+        }
+        
+        List_iter<T> next(l);
+        const T* p;
+
+        if ((p = next()) == 0) return *this;
+
+        last = new LLink<T>(*p);
+        last->next = last;
+
+        while ((p = next()) != 0)
+        {
+                LLink<T>* tmp = new LLink<T>(*p);
+                tmp->next = last->next;
+                last->next = tmp;
+                last = tmp;
+        }
+        return *this;
+}
+
+template <class T>
+inline int List<T>::operator==(const List<T>& l) const
+{
+        return this == &l;
+}
+
+template <class T>
+int List<T>::empty(void) const
+{
+        return last == 0;
+}
+
+template <class T>
+List<T>& List<T>::tail(void)
+{
+        if (empty())
+        {
+                cerr << "Internal error: tail called with empty list\n";
+                return *this;
+        }
+        LLink<T>* tmp = last->next->next;
+        if (last->next == tmp) 
+        {
+                delete last;
+                last = 0;
+                return *this;
+        }
+        delete last->next;
+        last->next = tmp;
+        return *this;
+}
+
+template <class T>
+T List<T>::head(void) const
+{
+        if (empty())
+        {
+                cerr << "Internal error: head called with empty list\n";
+                // throw Range();
+                return null();
+        }
+        List_iter<T> next(*this);
+        return  *(next());
+}
+
+template <class T>
+T& List<T>::operator[](int i) const
+{
+        List_iter<T> next(*this);
+        T * p;
+        while (((p = next()) != 0) && (i-- > 0));
+        if (p != 0) return *p;
+        cerr << "Internal error: index out of range\n";
+        //throw Range();
+        return *(new T(null())); // memory leak! but exception so acceptable
+}
+
+template <class T>
+List<T>& List<T>::reverse(void)
+{
+        if (empty()) return *this;
+        LLink<T>* p = last->next;
+        LLink<T>* q = last;
+        LLink<T>* r;
+        while (p != last)
+        {
+                r = p->next;
+                p->next = q;
+                q = p;
+                p = r;
+        }
+        last = p->next;
+        p->next = q;
+        return *this;
+}
+
+template <class T>
+List<T>& List<T>::add(const T& x)
+{
+        if (empty())
+        {
+                last = new LLink<T>(x);
+                last->next = last;
+                return *this;
+        }
+        LLink<T>* tmp = new LLink<T>(x);
+        tmp->next = last->next;
+        last->next = tmp;
+        return *this;
+}
+
+template <class T>
+inline List<T>& List<T>::app(const T& x)
+{
+        add(x);
+        last = last->next;
+        return *this;
+}
+
+template <class T>
+inline List<T>& List<T>::operator+(const T& x)
+{
+        return app(x);
+}
+
+template <class T>
+int List<T>::length(void) const
+{
+        List_iter<T> next(*this);
+        const T* p;
+        int i = 0;
+
+        while ((p = next()) != 0)
+        {
+                i++;
+        }
+        return i;
+}
+
+template <class T>
+int List<T>::index(const T& x) const
+{
+        List_iter<T> next(*this);
+        const T* p;
+        int i = 0;
+
+        while ((p = next()) != 0)
+        {
+                if (*p == x) return i;
+                i++;
+        }
+        return -1;
+}
+
+template <class T>
+int List<T>::member(const T& x) const
+{
+        if (index(x) == -1) return FALSE;
+        return TRUE;
+}
+
+template <class T>
+List<T>& List<T>::del(const T& x)
+{
+        if (empty()) return *this;
+
+        LLink<T>* p = last->next;
+        LLink<T>* q = last;
+        while (p != last)
+        {
+                if (p->value == x)
+                {
+                        q->next = p->next;
+                        delete p;
+                }
+                else
+                {
+                        q = p;
+                }
+                p = q->next;
+        }
+        if (p->value == x)
+        {
+                if (q == last)
+                {
+                        delete last;
+                        last = 0;
+                }
+                else
+                {
+                        q->next = p->next;
+                        delete last;
+                        last = q;
+                }
+        }
+        return *this;
+}
+
+template <class T> T List<T>::null(void) const { return (T) (char)0;}
+//template <class T> T List<T>::null(void) const { return T(); }
+
+//#ifdef _String_NULL_TEMPL
+// template string List<string >::null(void) const { return string("");}
+//#endif // _String_NULL_TEMPL
+
+#endif // contain_hP_
+
+
+
+
+
+
+
+

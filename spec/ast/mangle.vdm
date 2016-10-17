@@ -1,0 +1,381 @@
+% $Id: mangle.vdm,v 1.5 2001/05/07 10:00:52 paulm Exp $
+
+\section{Name Mangling}
+
+\begin{vdm_al}
+
+module MANGLE
+
+imports
+
+#ifdef JSS
+from JSSREP all,
+#endif JSS
+from AS all,
+from CI all,
+from REP all,
+from UTIL all
+
+exports
+ 
+functions
+
+  Mangle : AS`Name * seq of AS`Type +> AS`Name;
+  IsMangled: AS`Name +> bool;
+  GetUnmangledName : AS`Name -> AS`Name;
+  MethType2Seq : AS`OpType | AS`FnType | AS`ParameterTypes +> seq of AS`Type;
+  UnMangle : AS`Name -> AS`Name * nat * seq of AS`Type
+
+definitions
+
+functions
+
+Mangle : AS`Name * seq of AS`Type +> AS`Name
+Mangle(p_nm, p_tps) == 
+  let l_idx = len p_nm.ids, 
+      l_arity = UTIL`itoa(len p_tps),
+      l_stringRep = stringifyTypeSeq(p_tps, '-'),
+      l_newId = p_nm.ids(l_idx) ^ "#" ^ l_arity ^ "|" ^ l_stringRep,
+      l_newIds = p_nm.ids ++ {l_idx |-> l_newId}
+  in
+    mu(p_nm, ids |-> l_newIds);
+
+UnMangle : AS`Name -> AS`Name * nat * seq of AS`Type
+UnMangle(p_nm) ==
+  def l_idx = len p_nm.ids;
+      mk_(l_id,l_arit,l_tpL) = UnMangleTypeSeq(p_nm.ids(l_idx))
+  in
+    mk_(mk_AS`Name(p_nm.ids ++ {l_idx |-> l_id},CI`NilContextId), l_arit, l_tpL)
+pre IsMangled(p_nm);
+
+IsMangled: AS`Name +> bool
+IsMangled(p_nm) ==
+  let l_idx = len p_nm.ids
+  in
+    '#' in set elems p_nm.ids(l_idx);
+
+MethType2Seq : AS`OpType | AS`FnType | AS`ParameterTypes +> seq of AS`Type
+MethType2Seq(p_tp) ==
+  cases true:
+    (is_AS`OpType(p_tp))          -> p_tp.opdom,
+    (is_(p_tp,AS`FnType))         -> p_tp.fndom,
+    (is_(p_tp,AS`ParameterTypes)) -> [ p_tp(i).tp | i in set inds p_tp ],
+    others -> undefined
+  end;
+
+GetUnmangledName : AS`Name -> AS`Name
+GetUnmangledName(p_nm) ==
+  let l_idx = len p_nm.ids,
+      l_unmangled ^ "#" ^ - = p_nm.ids(l_idx)
+  in
+    mu(p_nm, ids |-> p_nm.ids ++ {l_idx |-> l_unmangled})
+pre IsMangled(p_nm);
+
+\end{vdm_al}
+
+\begin{tabular}{|l|l|}\hline
+Type & Identifier \\ \hline
+BooleanType   & B \\
+NumericType   & See Below \\
+TokenType     & T \\
+CharType      & C \\
+QuoteType     & q \\
+CompositeType & c \\
+UnionType     & u \\
+ProductType   & p \\
+OptionalType  & o \\
+Set0Type       & t \\
+Set1Type       & t \\
+Seq0Type      & s \\
+Seq1Type      & s \\
+GeneralMap0Type& m \\
+GeneralMap1Type& m \\
+InjectiveMap0Type& m\\
+InjectiveMap1Type& m\\
+TypeName      & n \\
+PartialFnType & f \\
+TotalFnType   & f \\
+BracketedType & b \\
+TypeVar       & v \\
+ \hline
+\end{tabular}
+
+\begin{tabular}{|l|l|}\hline
+Type  & Identifier \\ \hline
+nat1  & M \\
+nat   & N \\
+int   & I \\
+rat   & Q \\
+real  & R \\ \hline
+\end{tabular}
+
+\section{Moving from seq of Type to seq of char}
+
+\begin{vdm_al}
+stringify : AS`Type -> seq of char
+stringify(tp) ==
+  cases tp:
+    mk_AS`BooleanType(-)              -> "B",
+    mk_AS`NumericType(-,-)            -> stringifyNumericType(tp),
+    mk_AS`TokenType(-)                -> "T",
+    mk_AS`CharType(-)                 -> "C",
+    mk_AS`QuoteType(lit,-)            -> "q-" ^ lit2string(lit),
+    mk_AS`UnionType(tps,-)            -> stringifyUnionType(tps),
+    mk_AS`ProductType(tps,-)          -> stringifyProductType(tps),
+    mk_AS`OptionalType(tp,-)          -> "o-" ^ stringify(tp),
+    mk_AS`Set0Type(elemtp,-),
+    mk_AS`Set1Type(elemtp,-)          -> "t-" ^ stringify(elemtp),
+    mk_AS`Seq0Type(elemtp,-),
+    mk_AS`Seq1Type(elemtp,-)          -> "s-" ^ stringify(elemtp),
+    mk_AS`GeneralMap0Type(md, mr,-),
+    mk_AS`GeneralMap1Type(md, mr,-),
+    mk_AS`InjectiveMap0Type(md, mr,-),
+    mk_AS`InjectiveMap1Type(md, mr,-) -> "m-" ^ stringify(md) ^ "-" ^ stringify(mr),
+    mk_AS`CompositeType(nm,-,-),
+    mk_AS`TypeName(nm,-)              -> "n-" ^ nm2string(nm),
+    mk_AS`PartialFnType(fd, fr,-),
+    mk_AS`TotalFnType(fd, fr,-)       -> stringifyFnType(fd, fr),
+    mk_AS`BracketedType(tp,-)         -> "b-" ^ stringify(tp),
+    mk_AS`TypeVar(nm,-)               -> "v-" ^ nm2string(nm),
+    others                            -> undefined
+  end;
+
+stringifyNumericType : AS`NumericType +> seq of char
+stringifyNumericType(tp) == 
+  let mk_AS`NumericType(bt,-) = tp 
+  in
+    cases bt:
+      (<NATONE>)  -> "M",
+      (<NAT>)     -> "N",
+      (<INTEGER>) -> "I",
+      (<RAT>)     -> "Q",
+      (<REAL>)    -> "R"
+    end;
+
+stringifyUnionType : seq of AS`Type +> seq of char
+stringifyUnionType(tps) == 
+  "u(" ^ stringifyTypeSeq(tps, '-') ^ ")";
+
+stringifyProductType : seq of AS`Type +> seq of char
+stringifyProductType(tps) == 
+  "p(" ^ stringifyTypeSeq(tps, '-') ^ ")";
+
+stringifyFnType : (AS`DiscretionaryType | AS`AllType) * AS`Type +> seq of char
+stringifyFnType(fd, fr) == 
+  "f-" ^ stringifyProductType(fd) ^ "-" ^ stringify(fr);
+
+nm2string : AS`Name +> seq of char
+nm2string(nm) == 
+  cases nm.ids:
+    [cl, n] -> cl ^ "`" ^ n,
+    [n]     -> n,
+    others  -> undefined
+  end;
+
+lit2string : AS`QuoteLit +> seq of char
+lit2string(p_val) == 
+  p_val.val;
+
+stringifyTypeSeq : seq of AS`Type * char +> seq of char
+stringifyTypeSeq (tps, sep) == 
+  cases tps:
+    []     -> [],
+    [e]    -> stringify(e),
+    --others -> stringify(hd tps) ^ [sep] ^ stringifyTypeSeq(tl tps, sep)
+    others -> conc [ (if i > 1 then [sep] else []) ^ stringify(tps(i)) | i in set inds tps ]
+  end; 
+\end{vdm_al}
+
+\section{Moving from seq of char to seq of Type}
+
+\begin{vdm_al}
+
+functions
+UnMangleTypeSeq: seq1 of char -> seq of char * nat * seq of AS`Type
+UnMangleTypeSeq(p_str) ==
+  let mk_(nm, num, params) = cases p_str:
+                               nm ^ "#" ^ num ^ "|" ^ params -> mk_(nm, num, params),
+                               nm ^ "#" ^ num ^ "|"          -> mk_(nm, num, "")
+                             end
+  in 
+    mk_(nm, UTIL`String2Num(num), unstringifyTypeSeq(params))
+pre '#' in set elems p_str;
+
+unstringifyTypeSeq: seq of char +> seq of AS`Type
+unstringifyTypeSeq(p_str) ==
+  let l_tokL = LexMangle(p_str)
+  in
+    ParseMangle(l_tokL);
+
+LexMangle: seq of char +> seq of MangleToken
+LexMangle(p_str) ==
+  conc [ cases p_str:
+           ""            -> [],
+           "-" ^ l       -> LexMangle(l),
+           l1 ^ "-" ^ l2 -> LexMangle(l1) ^ LexMangle(l2),
+           l ^ "-"       -> LexMangle(l),
+           "(" ^ l       -> [mk_LeftBracket()] ^ LexMangle(l),
+           l1 ^ "(" ^ l2 -> LexMangle(l1) ^ [mk_LeftBracket()] ^ LexMangle(l2),
+           l ^ "("       -> LexMangle(l) ^ [mk_LeftBracket()],
+           ")" ^ l       -> [mk_RightBracket()] ^ LexMangle(l),
+           l1 ^ ")" ^ l2 -> LexMangle(l1) ^ [mk_RightBracket()] ^ LexMangle(l2),
+           l ^ ")"       -> LexMangle(l) ^ [mk_RightBracket()],
+           others        -> [p_str]
+         end ];
+
+ParseMangle: seq of MangleToken -> seq of AS`Type
+ParseMangle(p_mantokL) ==
+  if p_mantokL = []
+  then []
+  else
+  let l_mangle = hd p_mantokL,
+      l_rest   = tl p_mantokL
+  in
+     cases l_mangle:
+       "B" -> [mk_AS`BooleanType(CI`NilContextId)] ^ ParseMangle(l_rest),
+       "M" -> NumericType(<NATONE>)  ^ ParseMangle(l_rest),
+       "N" -> NumericType(<NAT>)     ^ ParseMangle(l_rest),
+       "I" -> NumericType(<INTEGER>) ^ ParseMangle(l_rest),
+       "Q" -> NumericType(<RAT>)     ^ ParseMangle(l_rest),
+       "R" -> NumericType(<REAL>)    ^ ParseMangle(l_rest),
+       "T" -> [mk_AS`TokenType(CI`NilContextId)] ^ ParseMangle(l_rest),
+       "C" -> [mk_AS`CharType(CI`NilContextId)] ^ ParseMangle(l_rest),
+       "q" -> Quote(hd l_rest) ^ ParseMangle(tl l_rest),
+       "u" -> let mk_(l_parm,l_rest2) = ExtractParameterList(tl l_rest,0)
+              in
+                Union(l_parm) ^ ParseMangle(l_rest2), 
+       "p" -> let mk_(l_parm,l_rest2) = ExtractParameterList(tl l_rest,0)
+              in
+                Product(l_parm) ^ ParseMangle(l_rest2),
+       "o" -> let mk_(l_parm,l_rest2) = ExtractType(l_rest)
+              in
+                Optional(l_parm) ^ ParseMangle(l_rest2),
+       "t" -> let mk_(l_parm,l_rest2) = ExtractType(l_rest)
+              in
+                SetType(l_parm) ^ ParseMangle(l_rest2),
+       "s" -> let mk_(l_parm,l_rest2) = ExtractType(l_rest)
+              in
+                SeqType(l_parm) ^ ParseMangle(l_rest2),
+       "m" -> let mk_(l_parm,l_rest2) = ExtractType(l_rest),
+                  mk_(l_parm2,l_rest3) = ExtractType(l_rest2)
+              in
+                MapType(l_parm,l_parm2) ^ ParseMangle(l_rest3),
+       "n" -> Name(hd l_rest) ^ ParseMangle(tl l_rest),
+       "v" -> TypeVar(hd l_rest) ^ ParseMangle(tl l_rest),
+       "f" -> let mk_(l_parm,l_rest2) = ExtractType(l_rest),
+                  mk_(l_parm2,l_rest3) = ExtractType(l_rest2)
+              in
+                FnType(l_parm,l_parm2) ^ ParseMangle(l_rest3),
+       "b" -> let mk_(l_parm,l_rest2) = ExtractType(l_rest)
+              in
+                BracketedType(l_parm) ^ ParseMangle(l_rest2),
+       others -> undefined
+     end;
+
+NumericType: <NATONE> | <NAT> | <INTEGER> | <RAT> | <REAL> +> seq of AS`NumericType
+NumericType(p_quote) ==
+  [mk_AS`NumericType(p_quote,CI`NilContextId)];
+
+Quote: seq of char +> seq of AS`QuoteType
+Quote(p_str) ==
+  [mk_AS`QuoteType(mk_AS`QuoteLit(p_str,CI`NilContextId),CI`NilContextId)];
+
+Name: seq of char +> seq of AS`TypeName
+Name(p_str) ==
+  [mk_AS`TypeName(string2name(p_str),CI`NilContextId)];
+
+TypeVar: seq of char +> seq of AS`TypeVar
+TypeVar(p_str) ==
+  [mk_AS`TypeVar(string2name(p_str),CI`NilContextId)];
+
+string2name: seq of char +> AS`Name
+string2name(p_str) ==
+  let l_idL = cases p_str:
+                l_id1 ^ "`" ^ l_id2 -> [l_id1,l_id2],
+                others              -> [p_str]
+              end
+  in
+    mk_AS`Name(l_idL,CI`NilContextId);
+
+ExtractParameterList: seq of MangleToken * nat +> seq of MangleToken * seq of MangleToken
+ExtractParameterList(p_tokL,p_start) ==
+  cases p_tokL:
+    []               -> mk_([],[]),
+    [l_tok] ^ l_rest -> cases l_tok:
+                          mk_RightBracket() -> if p_start = 0
+                                               then mk_([],l_rest)
+                                               else mk_([l_tok], l_rest),
+                          mk_LeftBracket()  -> let mk_(l_l,l_r) = ExtractParameterList(l_rest,p_start + 1)
+                                               in mk_([l_tok] ^ l_l, l_r),
+                          others            -> let mk_(l_l,l_r) = ExtractParameterList(l_rest,p_start)
+                                               in mk_([l_tok] ^ l_l, l_r)
+                        end
+  end;
+
+ExtractType: seq of MangleToken +> seq of MangleToken * seq of MangleToken
+ExtractType(p_tokL) ==
+  let l_tok  = hd p_tokL,
+      l_rest = tl p_tokL
+  in
+    cases l_tok:
+      "B","M","I","Q","R","T","C","N" -> mk_([l_tok], l_rest),
+      "q"                             -> mk_(p_tokL(1,...,2), p_tokL(3,...,len p_tokL)),
+      "u","p"                         -> let mk_(l_parm, l_rest2) = ExtractParameterList(l_rest,0)
+                                         in
+                                           mk_(p_tokL(1,...,2) ^ tl l_parm, l_rest2),
+      "n", "v"                        -> mk_(p_tokL(1,...,2), p_tokL(3,...,len p_tokL)),
+      "o", "b", "t", "s"              -> let mk_(l_parm, l_rest2) = ExtractType(l_rest)
+                                         in
+                                           mk_([l_tok] ^ l_parm, l_rest2),
+      "m","f"                         -> let mk_(l_parm, l_rest2) = ExtractType(l_rest),
+                                             mk_(l_parm2, l_rest3) = ExtractType(l_rest2)
+                                         in
+                                           mk_([l_tok] ^ l_parm ^ l_parm2, l_rest3)
+    end;
+      
+Union: seq of MangleToken -> seq of AS`UnionType
+Union(p_tokL) ==
+  [mk_AS`UnionType(ParseMangle(p_tokL),CI`NilContextId)];
+
+Product: seq of MangleToken -> seq of AS`ProductType
+Product(p_tokL) ==
+  [mk_AS`ProductType(ParseMangle(p_tokL),CI`NilContextId)];
+
+Optional: seq of MangleToken -> seq of AS`OptionalType
+Optional(p_tokL) ==
+  [mk_AS`OptionalType(hd ParseMangle(p_tokL),CI`NilContextId)];
+
+SetType: seq of MangleToken -> seq of AS`Set0Type
+SetType(p_tokL) ==
+  [mk_AS`Set0Type(hd ParseMangle(p_tokL),CI`NilContextId)];
+
+SeqType: seq of MangleToken -> seq of AS`Seq0Type
+SeqType(p_tokL) ==
+  [mk_AS`Seq0Type(hd ParseMangle(p_tokL),CI`NilContextId)];
+
+MapType: seq of MangleToken * seq of MangleToken -> seq of AS`GeneralMap0Type
+MapType(p_domL,p_rngL) ==
+  [mk_AS`GeneralMap0Type(hd ParseMangle(p_domL), hd ParseMangle(p_rngL),CI`NilContextId)];
+
+FnType: seq of MangleToken * seq of MangleToken -> seq of AS`PartialFnType
+FnType(p_domL,p_rngL) ==
+  [mk_AS`PartialFnType((hd ParseMangle(p_domL)).tps, hd ParseMangle(p_rngL),CI`NilContextId)];
+
+BracketedType: seq of MangleToken -> seq of AS`BracketedType
+BracketedType(p_tokL) ==
+  [mk_AS`BracketedType(hd ParseMangle(p_tokL),CI`NilContextId)];
+
+types
+
+MangleToken = seq of char | SeparatorType;
+
+SeparatorType = LeftBracket | RightBracket;
+
+LeftBracket :: ;
+
+RightBracket :: ;
+
+--Normal :: ;
+
+end MANGLE
+\end{vdm_al}

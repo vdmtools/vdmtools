@@ -1,0 +1,18 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+functions
+public  f: nat -> nat
+  f(a) == a
+
+end A
+
+
+class B
+
+operations
+  public Test : () ==> nat
+  Test() ==
+   return new A().f(3)
+
+end B

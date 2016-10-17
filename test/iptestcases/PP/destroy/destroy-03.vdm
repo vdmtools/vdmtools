@@ -1,0 +1,38 @@
+ class A
+
+  instance variables
+
+    n : nat := 0;
+
+  operations
+
+public    Init : nat ==> A
+    Init(mn) ==
+      (n := mn;
+       return self);
+
+public    GetN : () ==> nat
+    GetN() ==
+      return n;
+
+end A
+
+
+class B
+
+functions
+
+  sum : seq of nat -> nat
+  sum(ns) ==
+    if ns = []
+    then 0
+    else hd ns + sum(tl ns);
+
+operations
+
+  public Test : () ==> nat
+  Test() ==
+    return (let n = sum ([new A().Init(i).GetN() | i in set {1,...,5}])
+            in n) + 7
+
+end B

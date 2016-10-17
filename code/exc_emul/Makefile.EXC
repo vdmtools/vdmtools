@@ -1,0 +1,18 @@
+
+# Use this file as make -f Makefile.EXC
+
+all: exc_test
+
+clean:
+	rm -f exc_test exc_test.o exc_emul.o 
+CXXFLAGS= -Wall 
+CXX=g++
+CC=gcc
+exc_test.o: exc_test.cc exc_emul.h exc_emul.o
+
+exc_test: exc_test.o exc_emul.o  
+	$(LINK.cc) $^ $(LOADLIBES) $(LDLIBS) -o $@
+
+exc_emul.o: exc_emul.cc exc_emul.h
+
+

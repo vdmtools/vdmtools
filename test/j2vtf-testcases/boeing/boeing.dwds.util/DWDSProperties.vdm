@@ -1,0 +1,121 @@
+class DWDSProperties is subclass of Object
+operations 
+public  static getProperties : () ==> [Properties]
+getProperties() == 
+( if  wiProps = nil  
+  then  
+    ( wiProps := new  DWDSProperties()
+    ) ;
+  return  wiProps.properties
+) ;
+
+private  DWDSProperties : () ==> DWDSProperties
+DWDSProperties() == 
+( let - = Object()
+  in 
+    skip ;
+  ( dcl   jarPathname : [String] := getJarPathname(wiJarFile),
+          jarFilename : [String] := jarPathname+File`separator+wiJarFile;
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (IOException,j2v_exception)) -> 
+          ( dcl   e : [IOException] := j2v_exception;
+            let - = Assert`that(false  )
+            in 
+              skip 
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( dcl   propFile : [File] := new  File(appPropertiesFile);
+        if  not  propFile.exists__()
+        then  
+          ( propFile := new  File(jarPathname+File`separator+appPropertiesFile)
+          ) ;
+        if  propFile.exists__()
+        then  
+          ( dcl   pbis : [BufferedInputStream] := new  BufferedInputStream(new  FileInputStream(propFile));
+            properties := new  Properties();
+            let - = properties.load(pbis)
+            in 
+              skip 
+          ) 
+        else  
+          ( dcl   dwdsResources : [JarResources] := new  JarResources(jarFilename),
+                  bais : [ByteArrayInputStream] := new  ByteArrayInputStream(dwdsResources.getResource(propertyFilePath+appPropertiesFile));
+            properties := new  Properties();
+            let - = properties.load(bais)
+            in 
+              skip 
+          ) ;
+        let - = properties.put(new  String("jar.file") , jarFilename)
+        in 
+          skip ;
+        let - = properties.put(new  String("jar.filepath") , jarPathname)
+        in 
+          skip 
+      ) 
+  ) 
+) ;
+
+public  static getProperty : [String] ==> [String]
+getProperty(key) == 
+( dcl   value__ : [String] := System.getProperty(key);
+  if  value__ <> nil  
+  then  
+    ( return  value__
+    ) 
+  else  
+    ( return  getProperties().getProperty(key)
+    ) 
+) ;
+
+private  getJarPathname : [String] ==> [String]
+getJarPathname(jarFilename) == 
+( dcl   jarPathname : [String] := nil  ,
+        pathSeparator : [String] := System.getProperty(new  String("path.separator")),
+        classpath : [String] := System.getProperty(new  String("java.class.path")),
+        searchName : [String] := File`separator+jarFilename,
+        pathTokenizer : [StringTokenizer] := new  StringTokenizer(classpath , pathSeparator , false  );
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  jarPathname = nil   and  pathTokenizer.hasMoreTokens() do  
+    ( dcl   aPath : [String] := pathTokenizer.nextToken();
+      if  aPath.endsWith(searchName)
+      then  
+        ( jarPathname := aPath.substring(0 , aPath.length()-jarFilename.length()-1)
+        ) 
+    ) ;
+  if  jarPathname = nil  
+  then  
+    ( jarPathname := System.getProperty(new  String("user.dir"))
+    ) ;
+  return  jarPathname
+) ;
+
+public  static getProperty : [String] * [String] ==> [String]
+getProperty(key, defaultValue) == 
+( dcl   value__ : [String] := System.getProperty(key);
+  if  value__ <> nil  
+  then  
+    ( return  value__
+    ) 
+  else  
+    ( return  getProperties().getProperty(key , defaultValue)
+    ) 
+) ;
+
+instance variables 
+  private  static wiJarFile : [String] := new  String("wi.jar");
+  private  static appPropertiesFile : [String] := new  String("WI.properties");
+  private  static propertyFilePath : [String] := new  String("boeing/dwds/");
+  private  properties : [Properties] := nil  ;
+  private  static wiProps : [DWDSProperties] := nil  
+  
+end  DWDSProperties

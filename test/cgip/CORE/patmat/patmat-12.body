@@ -1,0 +1,41 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+
+
+
+public Test : () ==> real  
+Test () ==
+return 
+let a = (mk_Range(mk_RealLit(34),mk_RealLit(3)))
+in LabelToStrings(a)
+
+functions
+
+   LabelToStrings: LabelNumber -> real | bool
+   LabelToStrings(label) ==
+     cases label:
+       mk_Range(l,r) ->
+         let mk_RealLit(l') = l,
+             mk_RealLit(r') = r in
+           l'+r'
+     end
+
+types
+
+LabelNumber = BoolLit | QuoteLit | NumLit | Range;
+
+Range :: l : NumLit
+         r : NumLit;
+
+BoolLit :: val : bool;
+
+QuoteLit :: val : seq of char;
+
+RealLit :: val : real;
+
+NumLit = RealLit
+inv mk_RealLit(v) == is_int(v)
+
+
+
+

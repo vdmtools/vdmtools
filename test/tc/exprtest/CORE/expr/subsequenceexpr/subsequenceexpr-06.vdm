@@ -1,0 +1,15 @@
+class SubSequenceExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = (if false 
+          then "ABC"
+          else {9,8})(1,...,2) 
+  in skip;
+
+------------------------------------------------------------------------------
+end SubSequenceExprTest

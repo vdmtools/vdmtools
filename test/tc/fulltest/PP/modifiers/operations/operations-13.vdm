@@ -1,0 +1,23 @@
+ class A
+
+  operations
+
+    public Op1 : nat ==> nat
+    Op1(n) ==
+      return n+1;
+
+end A
+
+class B
+
+  operations
+
+  protected Op1 : nat ==> nat
+  Op1(n) ==
+    return n+1;
+
+public Test : () ==> nat
+  Test() ==
+    return new A().Op1(5)
+
+end B

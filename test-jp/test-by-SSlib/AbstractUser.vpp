@@ -1,0 +1,90 @@
+--$Header: /home/vdmtools/cvsroot/toolbox/test-jp/test-by-SSlib/AbstractUser.vpp,v 1.1 2005/11/25 07:05:37 vdmtools Exp $
+class 利用者クラス is subclass of 人クラス
+--責任
+--システムの利用者を表す抽象クラス。
+
+instance variables
+	public ID : seq of char;
+	public 図書館 : 図書館クラス;
+	貸出集合 : set of 貸出クラス := {};
+
+operations
+
+--本を借りる。
+public 借りる : Date * 本実体クラス * 職員クラス ==> 貸出クラス
+借りる(today, 借用本, 操作者) ==
+	(
+	dcl ある貸出 : 貸出クラス := 操作者.貸出を作成する(today, self, 借用本);
+	貸出集合に追加する(ある貸出);
+	return ある貸出
+	)
+pre
+	借用本.貸出可能() and
+	self.借用可能(today)
+post
+	let	ある貸出 = 操作者.貸出を作成する(today, self, 借用本)	in
+	-- self.貸出集合 = 貸出集合~ union {ある貸出} and
+	借用本.貸出可能() = false and
+		ある貸出.借用者を得る() = self;
+
+--私が借用している本実体を返す。
+public 返す : Date * 本実体クラス ==> ()
+返す(返却日, 借用本) ==
+	let	{貸出} = {貸出 | 貸出 in set 貸出集合 &
+			貸出.本実体 = 借用本 and 貸出.返却日 = nil}	in
+	貸出.貸出を終わる(返却日, 借用本)
+pre
+	借用本.貸出可能() = false and
+	借用本 in set {貸出.本実体 | 貸出 in set 貸出集合}
+post
+	self. 貸出集合 = 貸出集合~ \
+		{貸出 | 貸出 in set 貸出集合 &
+			貸出.本実体 = 借用本 and 貸出.返却日 = nil} and
+	借用本.貸出可能() = true;
+
+--私が借用可能かどうかを返す。
+public 借用可能 : Date ==> bool
+借用可能(貸出日) ==
+	if 貸出集合 = {} then
+		return true
+	else
+		return
+			forall 貸出 in set 貸出集合 &
+				貸出.返却日 = nil or
+				(貸出.返却日 <> nil and
+				貸出日.≦(貸出.返却日));
+
+--私が借用している本の集合を返す。
+public 借りている本 : 利用者クラス ==> set of 本クラス
+借りている本 (操作員) ==
+	return {貸出.本実体.本 | 貸出 in set self.貸出集合 & 貸出.返却日 = nil}
+pre
+	操作員.職員() or self = 操作員;
+
+--私が借りている本の冊数を返す。
+public 借用数 : () ==> nat
+借用数() ==
+	return card self.借りている本実体(self);
+
+--私が借用している本実体の集合を返す。
+public 借りている本実体 : 利用者クラス ==> set of 本クラス
+借りている本実体 (操作員) ==
+	return {貸出.本実体 | 貸出 in set self.貸出集合 & 貸出.返却日 = nil}
+pre
+	操作員.職員() or self = 操作員;
+
+--職員かどうかを答える。
+public 職員 : () ==> bool
+職員() == is subclass responsibility;
+
+--インスタンス設定
+public IDを設定する : seq of char ==> ()
+IDを設定する(あるID) == ID := あるID;
+
+public 図書館を設定する : 図書館クラス ==> ()
+図書館を設定する(ある図書館) == 図書館 := ある図書館;
+
+public 貸出集合に追加する : 貸出クラス ==> ()
+貸出集合に追加する(ある貸出) == 貸出集合 := 貸出集合 union {ある貸出};
+
+end 利用者クラス

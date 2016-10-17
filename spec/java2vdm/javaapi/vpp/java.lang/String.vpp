@@ -1,0 +1,416 @@
+dlclass JavaLangString is subclass of JavaLangObject, JavaIoSerializable, JavaLangComparable
+uselib "j2vdll.so"
+values
+  public CLASS : JavaLangClass=new JavaLangClass("JavaLangString", <CLASS>, false);
+
+instance variables
+  public static NILStr: JavaLangString := new JavaLangString(<NIL>);
+
+operations 
+--
+--  To be able to use 'new JavaLangString("123")'
+--
+--public  JavaLangString : ( JavaLangString | seq of  char )  ==> JavaLangString
+--JavaLangString(value_) == 
+--JavaLangString''(if isofclass(JavaLangString,value_) then value_.toSeqOfChar() else value_) ;
+
+public  JavaLangString : seq of  char  ==> JavaLangString
+JavaLangString(value_) == 
+JavaLangString''(value_) ;
+
+public  JavaLangString : JavaLangString ==> JavaLangString
+JavaLangString(value_) == 
+JavaLangString''(value_.toSeqOfChar()) ;
+
+private  JavaLangString'' : seq of  char  ==> ()
+JavaLangString''(value_) == 
+is not yet specified ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+  return CLASS;
+
+--
+-- Just for testing
+--
+public  toSeqOfChar : () ==> seq of  char
+toSeqOfChar() == 
+is not yet specified ;
+
+public JavaLangString: <NIL> ==> JavaLangString
+JavaLangString(p) == isNil:=true;
+
+public trim: () ==> JavaLangString
+trim() ==
+( dcl lcL: seq of char := toSeqOfChar();
+	dcl i: int := 1;
+	dcl j: int := len lcL;
+	while i <= len lcL and lcL(i) = ' '
+  do
+  (	i := i + 1
+	);
+	while j>=1 and lcL(j) = ' '
+  do
+  (	j := j - 1
+	);
+	if (i>j)
+  then
+  (	JavaLangString("")
+  )
+  else
+  (	for u=i to j
+    do
+    ( lcL(u-i+1) := lcL(u)
+  	)
+	);
+	return new JavaLangString([lcL(x)| x in set inds(lcL) & x <= j-i+1]);
+);
+
+public  JavaLangString : () ==> JavaLangString
+JavaLangString() == 
+skip; -- JavaLangString'() ;
+
+--private  JavaLangString' : () ==> ()
+--JavaLangString'() == 
+--is not yet specified ;
+
+public  intern : () ==> JavaLangString
+intern() == 
+is not yet specified ;
+
+public  length : () ==> int 
+length() == 
+is not yet specified ;
+
+public  charAt : int  ==> char 
+charAt(index) == 
+is not yet specified ;
+
+public  getBytes : () ==> map  int  to  int 
+getBytes() == 
+is not yet specified ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+is not yet specified ;
+
+public  indexOf : int | char ==> int 
+indexOf(ch) == 
+  return indexOfIC(ch);
+
+private  indexOfIC : int | char ==> int 
+indexOfIC(ch) == 
+is not yet specified ;
+
+public  toString : () ==> JavaLangString
+toString() == 
+return self;
+
+public  indexOf : int  * int  ==> int 
+indexOf(ch, fromIndex) == 
+  return indexOfII(ch, fromIndex) ;
+
+private  indexOfII : int  * int  ==> int 
+indexOfII(ch, fromIndex) == 
+is not yet specified ;
+
+public  replace : char  * char  ==> JavaLangString
+replace(oldChar, newChar) == 
+is not yet specified ;
+
+public substring : int * int ==> JavaLangString
+substring(beginIndex,endIndex) == (
+  dcl e: JavaLangException := new JavaLangException(),
+      l_chars: seq of char := toSeqOfChar();
+  if (beginIndex < 0) 
+  then
+    exit new JavaLangIndexOutOfBoundsException()
+  elseif (endIndex > len l_chars) 
+  then
+    exit new JavaLangIndexOutOfBoundsException()
+  elseif (beginIndex > endIndex) 
+  then
+    exit new JavaLangIndexOutOfBoundsException()
+  else
+    return new JavaLangString(l_chars(beginIndex + 1, ... , endIndex))
+--  ( dcl l_chars: seq of char := toSeqOfChar();
+--	l_chars := [ l_chars(x) | x in set inds(l_chars) 
+--                                & x > beginIndex and x <= endIndex];
+--    return new JavaLangString(l_chars)
+--  )
+);
+
+public  substring : int  ==> JavaLangString
+substring(beginIndex) == 
+( return substring(beginIndex, length())
+);
+
+public  JavaLangString : map  int  to  char  ==> JavaLangString
+JavaLangString(value_) == 
+is not yet specified ;
+
+public  JavaLangString : map  int  to  int  ==> JavaLangString
+JavaLangString(bytes) == 
+is not yet specified ;
+
+public  toCharArray : () ==> map  int  to  char 
+toCharArray() == 
+is not yet specified ;
+
+public  toLowerCase : () ==> JavaLangString
+toLowerCase() == 
+is not yet specified ;
+
+public  toUpperCase : () ==> JavaLangString
+toUpperCase() == 
+is not yet specified ;
+
+public  lastIndexOf : int  ==> int 
+lastIndexOf(ch) == 
+  return lastIndexOfI(ch) ;
+
+private  lastIndexOfI : int  ==> int 
+lastIndexOfI(ch) == 
+is not yet specified ;
+
+public  JavaLangString : map  int  to  int  * int  ==> JavaLangString
+JavaLangString(ascii, hibyte) == 
+is not yet specified ;
+
+public  lastIndexOf : int  * int  ==> int 
+lastIndexOf(ch, fromIndex) == 
+  return lastIndexOfII(ch, fromIndex) ;
+
+private  lastIndexOfII : int  * int  ==> int 
+lastIndexOfII(ch, fromIndex) == 
+is not yet specified ;
+
+private  JavaLangString : int  * int  * map  int  to  char  ==> JavaLangString
+JavaLangString(offset, count, value_) == 
+is not yet specified ;
+
+public  JavaLangString : (map  int  to  char)  * int  * int  ==> JavaLangString
+JavaLangString(value_, offset, count) == 
+( setValueICMapIntInt(value_, offset, count)
+);
+
+private setValueICMapIntInt : map  int  to  char  * int  * int  ==> JavaLangString
+setValueICMapIntInt(value_, offset, count) == 
+is not yet specified ;
+
+public  JavaLangString : map  int  to  int  * int  * int  ==> JavaLangString
+JavaLangString(bytes, offset, len_gth) == 
+is not yet specified ;
+
+public  concat : JavaLangString ==> JavaLangString
+concat(str) == 
+( concat'(str.toSeqOfChar());
+  return self
+);
+
+public  concat' : seq of char ==> ()
+concat'(str) == 
+is not yet specified ;
+
+public  static copyValueOf : map  int  to  char  ==> JavaLangString
+copyValueOf(data) == 
+  return new JavaLangString([data(i)| i in set {0,...,(card dom data)-1}]) ;
+
+public equals: JavaLangObject ==> bool
+equals(anObject) ==
+  return
+	  if (isofclass(JavaLangString,anObject))
+    then
+  	  compareTo'(anObject.toString().toSeqOfChar()) = 0
+    else
+  	  false;
+
+public  JavaLangString : map  int  to  int  * int  * int  * int  ==> JavaLangString
+JavaLangString(ascii, hibyte, offset, count) == 
+is not yet specified ;
+
+public  endsWith : JavaLangString ==> bool 
+endsWith(suffix) == 
+  return lastIndexOf(suffix) = length() - suffix.length();
+
+public  getBytes : JavaLangString ==> map  int  to  int 
+getBytes(enc) == 
+is not yet specified ;
+
+public compareTo : JavaLangObject ==> int -- | JavaLangException 
+compareTo(o) ==
+( if (o.IsNil()) then (
+    exit new JavaLangClassCastException()
+	) else (
+		if (isofclass(JavaLangString,o)) then (
+			return compareTo'(def s:JavaLangString=o in s.toSeqOfChar())
+		) else (
+      exit new JavaLangClassCastException()
+		)
+	)
+);
+
+public  compareTo' : seq of char ==> int 
+compareTo'(o) == 
+is not yet specified ;
+
+public  getBytes : int  * int  * map  int  to  int  * int  ==> ()
+getBytes(srcBegin, srcEnd, dst, dstBegin) == 
+--is not yet specified ;
+error; -- can not have a map 'dst' as output parameter
+
+public  getChars : int  * int  * map  int  to  char  * int  ==> ()
+getChars(srcBegin, srcEnd, dst, dstBegin) == 
+--is not yet specified ;
+error; -- can not have a map 'dst' as output parameter
+
+public  indexOf : JavaLangString  ==> int 
+indexOf(str) == 
+  return indexOf(str, 0) ;
+
+public  indexOf : JavaLangString * int  ==> int 
+indexOf(str, fromIndex) == 
+  return indexOfcLI(str.toSeqOfChar(), fromIndex) ;
+
+private  indexOfcLI : seq of char * int  ==> int 
+indexOfcLI(str, fromIndex) == 
+is not yet specified ;
+
+public  static copyValueOf : map  int  to  char  * int  * int  ==> JavaLangString
+copyValueOf(data, offset, count) == 
+  return new JavaLangString([data(i)| i in set {offset,...,offset+count-1}])
+;
+
+public  startsWith : JavaLangString * int  ==> bool 
+startsWith(prefix, toffset) == 
+  return indexOf(prefix,toffset) = 0;
+
+public  startsWith : JavaLangString ==> bool 
+startsWith(prefix) == 
+  return indexOf(prefix) = 0;
+
+public  lastIndexOf : JavaLangString ==> int 
+lastIndexOf(str) == 
+  return lastIndexOf(str,length()-1) ;
+
+public  lastIndexOf : JavaLangString * int ==> int 
+lastIndexOf(str,fromIndex ) == 
+  return lastIndexOfcLI(str.toSeqOfChar(),fromIndex) ;
+
+private  lastIndexOfcLI : seq of char  * int ==> int 
+lastIndexOfcLI(str,fromIndex) == 
+is not yet specified ;
+
+--public  toLowerCase : JavaUtilLocale ==> JavaLangString
+--toLowerCase(locale) == 
+--is not yet specified ;
+
+--public  toUpperCase : JavaUtilLocale ==> JavaLangString
+--toUpperCase(locale) == 
+--is not yet specified ;
+
+--public  JavaLangString : JavaLangStringBuffer ==> JavaLangString
+--JavaLangString(buffer) == 
+--is not yet specified ;
+
+public  JavaLangString : map  int  to  int  * JavaLangString ==> JavaLangString
+JavaLangString(bytes, enc) == 
+is not yet specified ;
+
+public  JavaLangString : map  int  to  int  * int  * int  * JavaLangString ==> JavaLangString
+JavaLangString(bytes, offset, len_gth, enc) == 
+is not yet specified ;
+
+public equalsIgnoreCase: JavaLangString ==> bool
+equalsIgnoreCase(anotherString) ==
+	return compareToIgnoreCase(anotherString) = 0;
+
+public compareToIgnoreCase: JavaLangString ==> int
+compareToIgnoreCase(anotherString) ==
+(	dcl aux1 : JavaLangString := new JavaLangString();
+	dcl aux2 : JavaLangString := new JavaLangString();
+	aux1 := aux1.JavaLangString(self.toSeqOfChar()).toLowerCase();
+	aux2 := aux2.JavaLangString(anotherString.toSeqOfChar()).toLowerCase();
+	return aux1.compareTo'(aux2.toSeqOfChar())
+);
+
+public  regionMatches : int  * JavaLangString * int  * int  ==> bool 
+regionMatches(toffset, other, ooffset, len_) == 
+is not yet specified ;
+
+public  regionMatches : bool  * int  * JavaLangString * int  * int  ==> bool 
+regionMatches(ignoreCase, toffset, other, ooffset, len_) == 
+is not yet specified ;
+
+public  static valueOf : map  int  to  char  * int  * int  ==> JavaLangString
+valueOf(data, offset, count) == 
+is not yet specified ;
+
+public  static valueOf : map  int  to  char  ==> JavaLangString
+valueOf(data) == 
+is not yet specified ;
+
+--public  static valueOf : bool  ==> JavaLangString
+--valueOf(b) == 
+--is not yet specified ;
+
+--public  static valueOf : char  ==> JavaLangString
+--valueOf(c) == 
+--is not yet specified ;
+
+--public  static valueOf : real  ==> JavaLangString
+--valueOf(d) == 
+--is not yet specified ;
+
+--public  static valueOf : JavaLangObject ==> JavaLangString
+--valueOf(obj) == 
+--is not yet specified ;
+
+public static
+valueOf: bool | char | seq of char | int | real | JavaLangObject ==> JavaLangString
+valueOf(any) == 
+	if (is_(any,bool)) then (
+		return new JavaLangString().valueOfBool(any)
+	) elseif (is_(any,char)) then (
+		return new JavaLangString().valueOfChar(any)
+	) elseif (is_(any,seq of char)) then (
+		return new JavaLangString().valueOfSeqOfChar(any)
+	) elseif (is_(any,int)) then (
+		return new JavaLangString().valueOfInt(any)
+	) elseif (is_(any,real)) then (
+		return new JavaLangString().valueOfReal(any)
+	) else (
+		return new JavaLangString().valueOfObject(any)
+	);
+
+private
+valueOfBool: bool ==> JavaLangString
+valueOfBool(b) ==
+	is not yet specified;
+
+private
+valueOfChar: char ==> JavaLangString
+valueOfChar(c) ==
+	is not yet specified;
+
+private
+valueOfSeqOfChar: seq of char ==> JavaLangString
+valueOfSeqOfChar(chars) ==
+	is not yet specified;
+
+private
+valueOfInt: int ==> JavaLangString
+valueOfInt(i) ==
+	is not yet specified;
+
+private
+valueOfReal: real ==> JavaLangString
+valueOfReal(r) ==
+	is not yet specified;
+
+private
+valueOfObject: JavaLangObject ==> JavaLangString
+valueOfObject(o) ==
+	return o.toString();
+ 
+end  JavaLangString

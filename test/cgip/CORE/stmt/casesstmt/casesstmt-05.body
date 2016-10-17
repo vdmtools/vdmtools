@@ -1,0 +1,18 @@
+
+public Test : () ==> (bool | real)
+Test() ==
+( let a = f(3) in
+  cases a:
+    <RED> -> return 3
+  end
+)
+
+functions
+
+f: nat -> <RED> | <BLUE>
+f(a) ==
+<RED>
+
+
+
+

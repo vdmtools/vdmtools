@@ -1,0 +1,310 @@
+mk_CPP`AstCI(
+{ mk_CPP`File( nil,"A.java",nil,[ mk_CPP`IdentDeclaration( [ mk_CPP`TypeSpecifier( mk_CPP`ClassSpecifier( mk_CPP`ClassHead( [  ],<CLASS>,mk_CPP`Identifier( "B",41943041 ),[  ],nil,41943072 ),[ mk_CPP`IdentDeclaration( [ mk_CPP`TypeSpecifier( mk_CPP`Int( 41943042 ),41943045 ) ],[ mk_CPP`InitDeclarator( mk_CPP`Identifier( "i",41943043 ),nil,41943044 ) ],41943046 ),mk_CPP`IdentDeclaration( [ mk_CPP`TypeSpecifier( mk_CPP`Float( 41943047 ),41943050 ) ],[ mk_CPP`InitDeclarator( mk_CPP`Identifier( "f",41943048 ),nil,41943049 ) ],41943051 ),mk_CPP`FunctionDefinition( [ mk_CPP`Modifier( <PUBLIC>,41943052 ) ],[ mk_CPP`TypeSpecifier( mk_CPP`Int( 41943053 ),41943065 ) ],mk_CPP`FctDecl( mk_CPP`Identifier( "m",41943054 ),mk_CPP`ArgumentDeclarationList( [ mk_CPP`ArgDecl( [ mk_CPP`TypeSpecifier( mk_CPP`Float( 41943055 ),41943057 ) ],mk_CPP`Identifier( "p_f",41943056 ),41943058 ),mk_CPP`ArgDecl( [ mk_CPP`TypeSpecifier( mk_CPP`Int( 41943059 ),41943061 ) ],mk_CPP`Identifier( "p_i",41943060 ),41943062 ) ],nil,41943063 ),nil,41943064 ),nil,[  ],mk_CPP`FctBody( mk_CPP`CompoundStmt( [ mk_CPP`Return( mk_CPP`SimplePackageName( mk_CPP`Identifier( "i",41943066 ),41943067 ),41943068 ) ],41943069 ),41943070 ),41943071 ) ],41943073 ),41943074 ),mk_CPP`TypeSpecifier( mk_CPP`ClassSpecifier( mk_CPP`ClassHead( [  ],<CLASS>,mk_CPP`Identifier( "A",41943075 ),[ mk_CPP`SimplePackageName( mk_CPP`Identifier( "B",41943076 ),41943077 ) ],nil,41943189 ),[ mk_CPP`FunctionDefinition( [ mk_CPP`Modifier( <PUBLIC>,41943078 ) ],[ mk_CPP`TypeSpecifier( mk_CPP`Int( 41943079 ),41943091 ) ],mk_CPP`FctDecl( mk_CPP`Identifier( "m",41943080 ),mk_CPP`ArgumentDeclarationList( [ mk_CPP`ArgDecl( [ mk_CPP`TypeSpecifier( mk_CPP`Float( 41943081 ),41943083 ) ],mk_CPP`Identifier( "p_f",41943082 ),41943084 ),mk_CPP`ArgDecl( [ mk_CPP`TypeSpecifier( mk_CPP`Int( 41943085 ),41943087 ) ],mk_CPP`Identifier( "p_i",41943086 ),41943088 ) ],nil,41943089 ),nil,41943090 ),nil,[  ],mk_CPP`FctBody( mk_CPP`CompoundStmt( [ mk_CPP`Return( mk_CPP`BinExpr( mk_CPP`IntegerLit( 1,41943094 ),mk_CPP`BinOp( <PLUS>,41943095 ),mk_CPP`SimplePackageName( mk_CPP`Identifier( "i",41943092 ),41943093 ),41943096 ),41943097 ) ],41943098 ),41943099 ),41943100 ),mk_CPP`FunctionDefinition( [ mk_CPP`Modifier( <PUBLIC>,41943101 ) ],[ mk_CPP`TypeSpecifier( mk_CPP`Int( 41943102 ),41943106 ),mk_CPP`ArraySpecifier( 41943103 ) ],mk_CPP`FctDecl( mk_CPP`Identifier( "Test",41943104 ),nil,nil,41943105 ),nil,[  ],mk_CPP`FctBody( mk_CPP`CompoundStmt( [ mk_CPP`DeclarationStmt( mk_CPP`IdentDeclaration( [ mk_CPP`TypeSpecifier( mk_CPP`Int( 41943107 ),41943116 ) ],[ mk_CPP`InitDeclarator( mk_CPP`ArrayDecl( mk_CPP`Identifier( "k",41943108 ),nil,41943109 ),mk_CPP`AsgnInit( mk_CPP`ArrayCreationExpr( mk_CPP`Int( 41943110 ),mk_CPP`ArrayNewDecl( nil,mk_CPP`IntegerLit( 6,41943111 ),41943112 ),nil,nil,41943113 ),41943114 ),41943115 ) ],41943117 ),41943118 ),mk_CPP`DeclarationStmt( mk_CPP`IdentDeclaration( [ mk_CPP`TypeSpecifier( mk_CPP`SimplePackageName( mk_CPP`Identifier( "A",41943119 ),41943120 ),41943127 ) ],[ mk_CPP`InitDeclarator( mk_CPP`Identifier( "a",41943121 ),mk_CPP`AsgnInit( mk_CPP`ClassInstanceCreationExpr( mk_CPP`SimplePackageName( mk_CPP`Identifier( "A",41943122 ),41943123 ),nil,[  ],nil,41943124 ),41943125 ),41943126 ) ],41943128 ),41943129 ),mk_CPP`DeclarationStmt( mk_CPP`IdentDeclaration( [ mk_CPP`TypeSpecifier( mk_CPP`SimplePackageName( mk_CPP`Identifier( "B",41943130 ),41943131 ),41943138 ) ],[ mk_CPP`InitDeclarator( mk_CPP`Identifier( "b",41943132 ),mk_CPP`AsgnInit( mk_CPP`ClassInstanceCreationExpr( mk_CPP`SimplePackageName( mk_CPP`Identifier( "B",41943133 ),41943134 ),nil,[  ],nil,41943135 ),41943136 ),41943137 ) ],41943139 ),41943140 ),mk_CPP`ExpressionStmt( mk_CPP`AssignExpr( mk_CPP`ArrayApply( mk_CPP`SimplePackageName( mk_CPP`Identifier( "k",41943141 ),41943142 ),mk_CPP`IntegerLit( 0,41943143 ),41943144 ),mk_CPP`AssignOp( <ASEQUAL>,41943145 ),mk_CPP`FctCall( mk_CPP`QualifiedPackageName( mk_CPP`SimplePackageName( mk_CPP`Identifier( "b",41943146 ),41943147 ),mk_CPP`Identifier( "m",41943148 ),41943149 ),[ mk_CPP`FloatingLit( 0,41943150 ),mk_CPP`IntegerLit( 1,41943151 ) ],41943152 ),41943153 ),41943154 ),mk_CPP`ExpressionStmt( mk_CPP`AssignExpr( mk_CPP`ArrayApply( mk_CPP`SimplePackageName( mk_CPP`Identifier( "k",41943155 ),41943156 ),mk_CPP`IntegerLit( 1,41943157 ),41943158 ),mk_CPP`AssignOp( <ASEQUAL>,41943159 ),mk_CPP`FctCall( mk_CPP`QualifiedPackageName( mk_CPP`SimplePackageName( mk_CPP`Identifier( "a",41943160 ),41943161 ),mk_CPP`Identifier( "m",41943162 ),41943163 ),[ mk_CPP`FloatingLit( 0,41943164 ),mk_CPP`IntegerLit( 1,41943165 ) ],41943166 ),41943167 ),41943168 ),mk_CPP`ExpressionStmt( mk_CPP`AssignExpr( mk_CPP`ArrayApply( mk_CPP`SimplePackageName( mk_CPP`Identifier( "k",41943169 ),41943170 ),mk_CPP`IntegerLit( 2,41943171 ),41943172 ),mk_CPP`AssignOp( <ASEQUAL>,41943173 ),mk_CPP`FctCall( mk_CPP`QualifiedPackageName( mk_CPP`SimplePackageName( mk_CPP`Identifier( "super",41943177 ),41943178 ),mk_CPP`Identifier( "m",41943174 ),41943179 ),[ mk_CPP`FloatingLit( 0,41943175 ),mk_CPP`IntegerLit( 1,41943176 ) ],41943180 ),41943181 ),41943182 ),mk_CPP`Return( mk_CPP`SimplePackageName( mk_CPP`Identifier( "k",41943183 ),41943184 ),41943185 ) ],41943186 ),41943187 ),41943188 ) ],41943190 ),41943191 ) ],nil,41943192 ) ],41943193 ) },
+[ 
+mk_CI`TokenContextInfo([],
+[]),
+mk_CI`TokenContextInfo([],
+[]),
+mk_CI`TokenContextInfo([],
+[]),
+mk_CI`TokenContextInfo([],
+[]),
+mk_CI`TokenContextInfo([],
+[]),
+mk_CI`TokenContextInfo([],
+[]),
+mk_CI`TokenContextInfo([],
+[]),
+mk_CI`TokenContextInfo([],
+[]),
+mk_CI`TokenContextInfo([],
+[]),
+mk_CI`TokenContextInfo([mk_CI`TokenInfo(320,"class",mk_CI`TokenPos(1,1,1,1,1),mk_CI`TokenPos(1,1,1,1,6))
+,mk_CI`TokenInfo(358,"B",mk_CI`TokenPos(1,1,1,1,7),mk_CI`TokenPos(1,1,1,1,8))
+,mk_CI`TokenInfo(359,"{",mk_CI`TokenPos(1,1,1,1,9),mk_CI`TokenPos(1,1,1,1,10))
+,mk_CI`TokenInfo(330,"int",mk_CI`TokenPos(1,2,2,2,3),mk_CI`TokenPos(1,2,2,2,6))
+,mk_CI`TokenInfo(358,"i",mk_CI`TokenPos(1,2,2,2,7),mk_CI`TokenPos(1,2,2,2,8))
+,mk_CI`TokenInfo(344,";",mk_CI`TokenPos(1,2,2,2,8),mk_CI`TokenPos(1,2,2,2,9))
+,mk_CI`TokenInfo(333,"float",mk_CI`TokenPos(1,3,3,3,3),mk_CI`TokenPos(1,3,3,3,8))
+,mk_CI`TokenInfo(358,"f",mk_CI`TokenPos(1,3,3,3,9),mk_CI`TokenPos(1,3,3,3,10))
+,mk_CI`TokenInfo(344,";",mk_CI`TokenPos(1,3,3,3,10),mk_CI`TokenPos(1,3,3,3,11))
+,mk_CI`TokenInfo(287,"public",mk_CI`TokenPos(1,4,4,4,3),mk_CI`TokenPos(1,4,4,4,9))
+,mk_CI`TokenInfo(330,"int",mk_CI`TokenPos(1,4,4,4,10),mk_CI`TokenPos(1,4,4,4,13))
+,mk_CI`TokenInfo(358,"m",mk_CI`TokenPos(1,4,4,4,14),mk_CI`TokenPos(1,4,4,4,15))
+,mk_CI`TokenInfo(340,"(",mk_CI`TokenPos(1,4,4,4,16),mk_CI`TokenPos(1,4,4,4,17))
+,mk_CI`TokenInfo(333,"float",mk_CI`TokenPos(1,4,4,4,17),mk_CI`TokenPos(1,4,4,4,22))
+,mk_CI`TokenInfo(358,"p_f",mk_CI`TokenPos(1,4,4,4,23),mk_CI`TokenPos(1,4,4,4,26))
+,mk_CI`TokenInfo(345,",",mk_CI`TokenPos(1,4,4,4,26),mk_CI`TokenPos(1,4,4,4,27))
+,mk_CI`TokenInfo(330,"int",mk_CI`TokenPos(1,4,4,4,28),mk_CI`TokenPos(1,4,4,4,31))
+,mk_CI`TokenInfo(358,"p_i",mk_CI`TokenPos(1,4,4,4,32),mk_CI`TokenPos(1,4,4,4,35))
+,mk_CI`TokenInfo(341,")",mk_CI`TokenPos(1,4,4,4,35),mk_CI`TokenPos(1,4,4,4,36))
+,mk_CI`TokenInfo(359,"{",mk_CI`TokenPos(1,4,4,4,37),mk_CI`TokenPos(1,4,4,4,38))
+,mk_CI`TokenInfo(311,"return",mk_CI`TokenPos(1,4,4,4,39),mk_CI`TokenPos(1,4,4,4,45))
+,mk_CI`TokenInfo(358,"i",mk_CI`TokenPos(1,4,4,4,46),mk_CI`TokenPos(1,4,4,4,47))
+,mk_CI`TokenInfo(344,";",mk_CI`TokenPos(1,4,4,4,47),mk_CI`TokenPos(1,4,4,4,48))
+,mk_CI`TokenInfo(360,"}",mk_CI`TokenPos(1,4,4,4,49),mk_CI`TokenPos(1,4,4,4,50))
+,mk_CI`TokenInfo(360,"}",mk_CI`TokenPos(1,5,5,5,1),mk_CI`TokenPos(1,5,5,5,2))
+,mk_CI`TokenInfo(320,"class",mk_CI`TokenPos(1,7,7,7,1),mk_CI`TokenPos(1,7,7,7,6))
+,mk_CI`TokenInfo(358,"A",mk_CI`TokenPos(1,7,7,7,7),mk_CI`TokenPos(1,7,7,7,8))
+,mk_CI`TokenInfo(316,"extends",mk_CI`TokenPos(1,7,7,7,9),mk_CI`TokenPos(1,7,7,7,16))
+,mk_CI`TokenInfo(358,"B",mk_CI`TokenPos(1,7,7,7,17),mk_CI`TokenPos(1,7,7,7,18))
+,mk_CI`TokenInfo(359,"{",mk_CI`TokenPos(1,7,7,7,19),mk_CI`TokenPos(1,7,7,7,20))
+,mk_CI`TokenInfo(287,"public",mk_CI`TokenPos(1,9,9,9,3),mk_CI`TokenPos(1,9,9,9,9))
+,mk_CI`TokenInfo(330,"int",mk_CI`TokenPos(1,9,9,9,10),mk_CI`TokenPos(1,9,9,9,13))
+,mk_CI`TokenInfo(358,"m",mk_CI`TokenPos(1,9,9,9,14),mk_CI`TokenPos(1,9,9,9,15))
+,mk_CI`TokenInfo(340,"(",mk_CI`TokenPos(1,9,9,9,16),mk_CI`TokenPos(1,9,9,9,17))
+,mk_CI`TokenInfo(333,"float",mk_CI`TokenPos(1,9,9,9,17),mk_CI`TokenPos(1,9,9,9,22))
+,mk_CI`TokenInfo(358,"p_f",mk_CI`TokenPos(1,9,9,9,23),mk_CI`TokenPos(1,9,9,9,26))
+,mk_CI`TokenInfo(345,",",mk_CI`TokenPos(1,9,9,9,26),mk_CI`TokenPos(1,9,9,9,27))
+,mk_CI`TokenInfo(330,"int",mk_CI`TokenPos(1,9,9,9,28),mk_CI`TokenPos(1,9,9,9,31))
+,mk_CI`TokenInfo(358,"p_i",mk_CI`TokenPos(1,9,9,9,32),mk_CI`TokenPos(1,9,9,9,35))
+,mk_CI`TokenInfo(341,")",mk_CI`TokenPos(1,9,9,9,35),mk_CI`TokenPos(1,9,9,9,36))
+,mk_CI`TokenInfo(359,"{",mk_CI`TokenPos(1,9,9,9,37),mk_CI`TokenPos(1,9,9,9,38))
+,mk_CI`TokenInfo(311,"return",mk_CI`TokenPos(1,9,9,9,39),mk_CI`TokenPos(1,9,9,9,45))
+,mk_CI`TokenInfo(358,"i",mk_CI`TokenPos(1,9,9,9,46),mk_CI`TokenPos(1,9,9,9,47))
+,mk_CI`TokenInfo(257,"+",mk_CI`TokenPos(1,9,9,9,47),mk_CI`TokenPos(1,9,9,9,48))
+,mk_CI`TokenInfo(348,"1",mk_CI`TokenPos(1,9,9,9,48),mk_CI`TokenPos(1,9,9,9,49))
+,mk_CI`TokenInfo(344,";",mk_CI`TokenPos(1,9,9,9,49),mk_CI`TokenPos(1,9,9,9,50))
+,mk_CI`TokenInfo(360,"}",mk_CI`TokenPos(1,9,9,9,51),mk_CI`TokenPos(1,9,9,9,52))
+,mk_CI`TokenInfo(287,"public",mk_CI`TokenPos(1,11,11,11,3),mk_CI`TokenPos(1,11,11,11,9))
+,mk_CI`TokenInfo(330,"int",mk_CI`TokenPos(1,11,11,11,10),mk_CI`TokenPos(1,11,11,11,13))
+,mk_CI`TokenInfo(342,"[",mk_CI`TokenPos(1,11,11,11,14),mk_CI`TokenPos(1,11,11,11,15))
+,mk_CI`TokenInfo(343,"]",mk_CI`TokenPos(1,11,11,11,15),mk_CI`TokenPos(1,11,11,11,16))
+,mk_CI`TokenInfo(358,"Test",mk_CI`TokenPos(1,11,11,11,17),mk_CI`TokenPos(1,11,11,11,21))
+,mk_CI`TokenInfo(340,"(",mk_CI`TokenPos(1,11,11,11,22),mk_CI`TokenPos(1,11,11,11,23))
+,mk_CI`TokenInfo(341,")",mk_CI`TokenPos(1,11,11,11,23),mk_CI`TokenPos(1,11,11,11,24))
+,mk_CI`TokenInfo(359,"{",mk_CI`TokenPos(1,11,11,11,25),mk_CI`TokenPos(1,11,11,11,26))
+,mk_CI`TokenInfo(330,"int",mk_CI`TokenPos(1,12,12,12,5),mk_CI`TokenPos(1,12,12,12,8))
+,mk_CI`TokenInfo(358,"k",mk_CI`TokenPos(1,12,12,12,9),mk_CI`TokenPos(1,12,12,12,10))
+,mk_CI`TokenInfo(342,"[",mk_CI`TokenPos(1,12,12,12,10),mk_CI`TokenPos(1,12,12,12,11))
+,mk_CI`TokenInfo(343,"]",mk_CI`TokenPos(1,12,12,12,11),mk_CI`TokenPos(1,12,12,12,12))
+,mk_CI`TokenInfo(339,"=",mk_CI`TokenPos(1,12,12,12,13),mk_CI`TokenPos(1,12,12,12,14))
+,mk_CI`TokenInfo(325,"new",mk_CI`TokenPos(1,12,12,12,15),mk_CI`TokenPos(1,12,12,12,18))
+,mk_CI`TokenInfo(330,"int",mk_CI`TokenPos(1,12,12,12,19),mk_CI`TokenPos(1,12,12,12,22))
+,mk_CI`TokenInfo(342,"[",mk_CI`TokenPos(1,12,12,12,22),mk_CI`TokenPos(1,12,12,12,23))
+,mk_CI`TokenInfo(348,"6",mk_CI`TokenPos(1,12,12,12,23),mk_CI`TokenPos(1,12,12,12,24))
+,mk_CI`TokenInfo(343,"]",mk_CI`TokenPos(1,12,12,12,24),mk_CI`TokenPos(1,12,12,12,25))
+,mk_CI`TokenInfo(344,";",mk_CI`TokenPos(1,12,12,12,25),mk_CI`TokenPos(1,12,12,12,26))
+,mk_CI`TokenInfo(358,"A",mk_CI`TokenPos(1,14,14,14,5),mk_CI`TokenPos(1,14,14,14,6))
+,mk_CI`TokenInfo(358,"a",mk_CI`TokenPos(1,14,14,14,7),mk_CI`TokenPos(1,14,14,14,8))
+,mk_CI`TokenInfo(339,"=",mk_CI`TokenPos(1,14,14,14,9),mk_CI`TokenPos(1,14,14,14,10))
+,mk_CI`TokenInfo(325,"new",mk_CI`TokenPos(1,14,14,14,11),mk_CI`TokenPos(1,14,14,14,14))
+,mk_CI`TokenInfo(358,"A",mk_CI`TokenPos(1,14,14,14,15),mk_CI`TokenPos(1,14,14,14,16))
+,mk_CI`TokenInfo(340,"(",mk_CI`TokenPos(1,14,14,14,17),mk_CI`TokenPos(1,14,14,14,18))
+,mk_CI`TokenInfo(341,")",mk_CI`TokenPos(1,14,14,14,18),mk_CI`TokenPos(1,14,14,14,19))
+,mk_CI`TokenInfo(344,";",mk_CI`TokenPos(1,14,14,14,19),mk_CI`TokenPos(1,14,14,14,20))
+,mk_CI`TokenInfo(358,"B",mk_CI`TokenPos(1,15,15,15,5),mk_CI`TokenPos(1,15,15,15,6))
+,mk_CI`TokenInfo(358,"b",mk_CI`TokenPos(1,15,15,15,7),mk_CI`TokenPos(1,15,15,15,8))
+,mk_CI`TokenInfo(339,"=",mk_CI`TokenPos(1,15,15,15,9),mk_CI`TokenPos(1,15,15,15,10))
+,mk_CI`TokenInfo(325,"new",mk_CI`TokenPos(1,15,15,15,11),mk_CI`TokenPos(1,15,15,15,14))
+,mk_CI`TokenInfo(358,"B",mk_CI`TokenPos(1,15,15,15,15),mk_CI`TokenPos(1,15,15,15,16))
+,mk_CI`TokenInfo(340,"(",mk_CI`TokenPos(1,15,15,15,17),mk_CI`TokenPos(1,15,15,15,18))
+,mk_CI`TokenInfo(341,")",mk_CI`TokenPos(1,15,15,15,18),mk_CI`TokenPos(1,15,15,15,19))
+,mk_CI`TokenInfo(344,";",mk_CI`TokenPos(1,15,15,15,19),mk_CI`TokenPos(1,15,15,15,20))
+,mk_CI`TokenInfo(358,"k",mk_CI`TokenPos(1,17,17,17,5),mk_CI`TokenPos(1,17,17,17,6))
+,mk_CI`TokenInfo(342,"[",mk_CI`TokenPos(1,17,17,17,6),mk_CI`TokenPos(1,17,17,17,7))
+,mk_CI`TokenInfo(348,"0",mk_CI`TokenPos(1,17,17,17,7),mk_CI`TokenPos(1,17,17,17,8))
+,mk_CI`TokenInfo(343,"]",mk_CI`TokenPos(1,17,17,17,8),mk_CI`TokenPos(1,17,17,17,9))
+,mk_CI`TokenInfo(339,"=",mk_CI`TokenPos(1,17,17,17,10),mk_CI`TokenPos(1,17,17,17,11))
+,mk_CI`TokenInfo(358,"b",mk_CI`TokenPos(1,17,17,17,12),mk_CI`TokenPos(1,17,17,17,13))
+,mk_CI`TokenInfo(346,".",mk_CI`TokenPos(1,17,17,17,13),mk_CI`TokenPos(1,17,17,17,14))
+,mk_CI`TokenInfo(358,"m",mk_CI`TokenPos(1,17,17,17,14),mk_CI`TokenPos(1,17,17,17,15))
+,mk_CI`TokenInfo(340,"(",mk_CI`TokenPos(1,17,17,17,16),mk_CI`TokenPos(1,17,17,17,17))
+,mk_CI`TokenInfo(350,"0.0f",mk_CI`TokenPos(1,17,17,17,17),mk_CI`TokenPos(1,17,17,17,21))
+,mk_CI`TokenInfo(345,",",mk_CI`TokenPos(1,17,17,17,21),mk_CI`TokenPos(1,17,17,17,22))
+,mk_CI`TokenInfo(348,"1",mk_CI`TokenPos(1,17,17,17,23),mk_CI`TokenPos(1,17,17,17,24))
+,mk_CI`TokenInfo(341,")",mk_CI`TokenPos(1,17,17,17,24),mk_CI`TokenPos(1,17,17,17,25))
+,mk_CI`TokenInfo(344,";",mk_CI`TokenPos(1,17,17,17,25),mk_CI`TokenPos(1,17,17,17,26))
+,mk_CI`TokenInfo(358,"k",mk_CI`TokenPos(1,18,18,18,5),mk_CI`TokenPos(1,18,18,18,6))
+,mk_CI`TokenInfo(342,"[",mk_CI`TokenPos(1,18,18,18,6),mk_CI`TokenPos(1,18,18,18,7))
+,mk_CI`TokenInfo(348,"1",mk_CI`TokenPos(1,18,18,18,7),mk_CI`TokenPos(1,18,18,18,8))
+,mk_CI`TokenInfo(343,"]",mk_CI`TokenPos(1,18,18,18,8),mk_CI`TokenPos(1,18,18,18,9))
+,mk_CI`TokenInfo(339,"=",mk_CI`TokenPos(1,18,18,18,10),mk_CI`TokenPos(1,18,18,18,11))
+,mk_CI`TokenInfo(358,"a",mk_CI`TokenPos(1,18,18,18,12),mk_CI`TokenPos(1,18,18,18,13))
+,mk_CI`TokenInfo(346,".",mk_CI`TokenPos(1,18,18,18,13),mk_CI`TokenPos(1,18,18,18,14))
+,mk_CI`TokenInfo(358,"m",mk_CI`TokenPos(1,18,18,18,14),mk_CI`TokenPos(1,18,18,18,15))
+,mk_CI`TokenInfo(340,"(",mk_CI`TokenPos(1,18,18,18,16),mk_CI`TokenPos(1,18,18,18,17))
+,mk_CI`TokenInfo(350,"0.0f",mk_CI`TokenPos(1,18,18,18,17),mk_CI`TokenPos(1,18,18,18,21))
+,mk_CI`TokenInfo(345,",",mk_CI`TokenPos(1,18,18,18,21),mk_CI`TokenPos(1,18,18,18,22))
+,mk_CI`TokenInfo(348,"1",mk_CI`TokenPos(1,18,18,18,23),mk_CI`TokenPos(1,18,18,18,24))
+,mk_CI`TokenInfo(341,")",mk_CI`TokenPos(1,18,18,18,24),mk_CI`TokenPos(1,18,18,18,25))
+,mk_CI`TokenInfo(344,";",mk_CI`TokenPos(1,18,18,18,25),mk_CI`TokenPos(1,18,18,18,26))
+,mk_CI`TokenInfo(358,"k",mk_CI`TokenPos(1,19,19,19,5),mk_CI`TokenPos(1,19,19,19,6))
+,mk_CI`TokenInfo(342,"[",mk_CI`TokenPos(1,19,19,19,6),mk_CI`TokenPos(1,19,19,19,7))
+,mk_CI`TokenInfo(348,"2",mk_CI`TokenPos(1,19,19,19,7),mk_CI`TokenPos(1,19,19,19,8))
+,mk_CI`TokenInfo(343,"]",mk_CI`TokenPos(1,19,19,19,8),mk_CI`TokenPos(1,19,19,19,9))
+,mk_CI`TokenInfo(339,"=",mk_CI`TokenPos(1,19,19,19,10),mk_CI`TokenPos(1,19,19,19,11))
+,mk_CI`TokenInfo(318,"super",mk_CI`TokenPos(1,19,19,19,12),mk_CI`TokenPos(1,19,19,19,17))
+,mk_CI`TokenInfo(346,".",mk_CI`TokenPos(1,19,19,19,17),mk_CI`TokenPos(1,19,19,19,18))
+,mk_CI`TokenInfo(358,"m",mk_CI`TokenPos(1,19,19,19,18),mk_CI`TokenPos(1,19,19,19,19))
+,mk_CI`TokenInfo(340,"(",mk_CI`TokenPos(1,19,19,19,20),mk_CI`TokenPos(1,19,19,19,21))
+,mk_CI`TokenInfo(350,"0.0f",mk_CI`TokenPos(1,19,19,19,21),mk_CI`TokenPos(1,19,19,19,25))
+,mk_CI`TokenInfo(345,",",mk_CI`TokenPos(1,19,19,19,25),mk_CI`TokenPos(1,19,19,19,26))
+,mk_CI`TokenInfo(348,"1",mk_CI`TokenPos(1,19,19,19,27),mk_CI`TokenPos(1,19,19,19,28))
+,mk_CI`TokenInfo(341,")",mk_CI`TokenPos(1,19,19,19,28),mk_CI`TokenPos(1,19,19,19,29))
+,mk_CI`TokenInfo(344,";",mk_CI`TokenPos(1,19,19,19,29),mk_CI`TokenPos(1,19,19,19,30))
+,mk_CI`TokenInfo(311,"return",mk_CI`TokenPos(1,21,21,21,5),mk_CI`TokenPos(1,21,21,21,11))
+,mk_CI`TokenInfo(358,"k",mk_CI`TokenPos(1,21,21,21,12),mk_CI`TokenPos(1,21,21,21,13))
+,mk_CI`TokenInfo(344,";",mk_CI`TokenPos(1,21,21,21,13),mk_CI`TokenPos(1,21,21,21,14))
+,mk_CI`TokenInfo(360,"}",mk_CI`TokenPos(1,22,22,22,3),mk_CI`TokenPos(1,22,22,22,4))
+,mk_CI`TokenInfo(360,"}",mk_CI`TokenPos(1,23,23,23,1),mk_CI`TokenPos(1,23,23,23,2))
+],
+[mk_CI`ContextNodeInfo(mk_CI`TokenSpan(2,2,2), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(4,4,4), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(5,5,5), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(5,5,5), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(4,4,4), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(4,4,6), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(7,7,7), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(8,8,8), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(8,8,8), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(7,7,7), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(7,7,9), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(10,10,10), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(11,11,11), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(12,12,12), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(14,14,14), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(15,15,15), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(14,14,14), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(14,14,15), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(17,17,17), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(18,18,18), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(17,17,17), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(17,17,18), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(13,13,19), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(12,12,19), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(11,11,11), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(22,22,22), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(22,22,22), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(21,21,23), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(21,21,23), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(20,20,24), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(10,10,24), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(1,1,2), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(1,1,25), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(1,1,25), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(27,27,27), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(29,29,29), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(29,29,29), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(31,31,31), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(32,32,32), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(33,33,33), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(35,35,35), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(36,36,36), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(35,35,35), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(35,35,36), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(38,38,38), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(39,39,39), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(38,38,38), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(38,38,39), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(34,34,40), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(33,33,40), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(32,32,32), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(43,43,43), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(43,43,43), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(45,45,45), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(44,44,44), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(43,43,45), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(42,42,46), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(42,42,46), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(41,41,47), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(31,31,47), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(48,48,48), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(49,49,49), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(50,50,51), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(52,52,52), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(52,52,54), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(49,49,49), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(56,56,56), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(57,57,57), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(57,57,59), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(62,62,62), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(64,64,64), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(63,63,65), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(61,61,65), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(61,61,65), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(57,57,65), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(56,56,56), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(57,57,65), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(56,56,65), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(67,67,67), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(67,67,67), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(68,68,68), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(71,71,71), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(71,71,71), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(70,70,73), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(70,70,73), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(68,68,73), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(67,67,67), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(68,68,73), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(67,67,73), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(75,75,75), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(75,75,75), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(76,76,76), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(79,79,79), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(79,79,79), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(78,78,81), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(78,78,81), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(76,76,81), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(75,75,75), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(76,76,81), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(75,75,81), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(83,83,83), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(83,83,83), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(85,85,85), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(83,83,86), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(87,87,87), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(88,88,88), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(88,88,88), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(90,90,90), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(88,88,90), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(92,92,92), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(94,94,94), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(88,88,95), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(83,83,95), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(83,83,96), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(97,97,97), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(97,97,97), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(99,99,99), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(97,97,100), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(101,101,101), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(102,102,102), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(102,102,102), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(104,104,104), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(102,102,104), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(106,106,106), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(108,108,108), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(102,102,109), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(97,97,109), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(97,97,110), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(111,111,111), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(111,111,111), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(113,113,113), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(111,111,114), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(115,115,115), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(118,118,118), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(120,120,120), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(122,122,122), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(116,116,116), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(116,116,116), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(116,116,118), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(116,116,123), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(111,111,123), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(111,111,124), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(126,126,126), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(126,126,126), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(125,125,127), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(56,56,127), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(55,55,128), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(48,48,128), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(26,26,29), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(26,26,129), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(26,26,129), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(1,1,129), 0, nil, nil, 0, false, false),
+mk_CI`ContextNodeInfo(mk_CI`TokenSpan(1,1,129), 0, nil, nil, 0, false, false)
+])
+]
+, 
+{ 
+10 |->"A.java"}
+)

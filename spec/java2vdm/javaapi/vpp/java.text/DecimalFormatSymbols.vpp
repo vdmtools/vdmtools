@@ -1,0 +1,150 @@
+class JavaTextDecimalFormatSymbols is subclass of JavaLangCloneable, JavaIoSerializable, JavaLangObject
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaTextDecimalFormatSymbols" , <CLASS> , false  )
+instance variables 
+  static serialVersionUID : int := 0
+operations 
+public  clone : () ==> JavaLangObject
+clone() == 
+is not yet specified ;
+
+public  getNaN : () ==> JavaLangString
+getNaN() == 
+is not yet specified ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  getDigit : () ==> char 
+getDigit() == 
+is not yet specified ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+is not yet specified ;
+
+public  setDigit : char  ==> ()
+setDigit(digit) == 
+is not yet specified ;
+
+public  getPerMill : () ==> char 
+getPerMill() == 
+is not yet specified ;
+
+public  getPercent : () ==> char 
+getPercent() == 
+is not yet specified ;
+
+public  getInfinity : () ==> JavaLangString
+getInfinity() == 
+is not yet specified ;
+
+public  setPerMill : char  ==> ()
+setPerMill(perMill) == 
+is not yet specified ;
+
+public  setPercent : char  ==> ()
+setPercent(percent) == 
+is not yet specified ;
+
+public  getMinusSign : () ==> char 
+getMinusSign() == 
+is not yet specified ;
+
+public  getZeroDigit : () ==> char 
+getZeroDigit() == 
+is not yet specified ;
+
+public  setMinusSign : char  ==> ()
+setMinusSign(minusSign) == 
+is not yet specified ;
+
+public  setZeroDigit : char  ==> ()
+setZeroDigit(zeroDigit) == 
+is not yet specified ;
+
+public  equals : JavaLangObject ==> bool 
+equals(obj) == 
+is not yet specified ;
+
+public  setNaN : JavaLangString ==> ()
+setNaN(NaN) == 
+is not yet specified ;
+
+public  getCurrencySymbol : () ==> JavaLangString
+getCurrencySymbol() == 
+is not yet specified ;
+
+public  getDecimalSeparator : () ==> char 
+getDecimalSeparator() == 
+is not yet specified ;
+
+public  getPatternSeparator : () ==> char 
+getPatternSeparator() == 
+is not yet specified ;
+
+public  setInfinity : JavaLangString ==> ()
+setInfinity(infinity) == 
+is not yet specified ;
+
+public  JavaTextDecimalFormatSymbols : () ==> JavaTextDecimalFormatSymbols
+JavaTextDecimalFormatSymbols() == 
+( skip 
+) ;
+
+getExponentialSymbol : () ==> char 
+getExponentialSymbol() == 
+is not yet specified ;
+
+public  getGroupingSeparator : () ==> char 
+getGroupingSeparator() == 
+is not yet specified ;
+
+public  setDecimalSeparator : char  ==> ()
+setDecimalSeparator(decimalSeparator) == 
+is not yet specified ;
+
+public  setPatternSeparator : char  ==> ()
+setPatternSeparator(patternSeparator) == 
+is not yet specified ;
+
+setExponentialSymbol : char  ==> ()
+setExponentialSymbol(exp) == 
+is not yet specified ;
+
+public  setGroupingSeparator : char  ==> ()
+setGroupingSeparator(groupingSeparator) == 
+is not yet specified ;
+
+public  JavaTextDecimalFormatSymbols : <NIL> ==> JavaTextDecimalFormatSymbols
+JavaTextDecimalFormatSymbols(-) == 
+isNil := true  ;
+
+public  setCurrencySymbol : JavaLangString ==> ()
+setCurrencySymbol(currency) == 
+is not yet specified ;
+
+public  getMonetaryDecimalSeparator : () ==> char 
+getMonetaryDecimalSeparator() == 
+is not yet specified ;
+
+public  JavaTextDecimalFormatSymbols : JavaUtilLocale ==> JavaTextDecimalFormatSymbols
+JavaTextDecimalFormatSymbols(locale) == 
+( skip 
+) ;
+
+public  setMonetaryDecimalSeparator : char  ==> ()
+setMonetaryDecimalSeparator(sep) == 
+is not yet specified ;
+
+public  getInternationalCurrencySymbol : () ==> JavaLangString
+getInternationalCurrencySymbol() == 
+is not yet specified ;
+
+public  setInternationalCurrencySymbol : JavaLangString ==> ()
+setInternationalCurrencySymbol(currency) == 
+is not yet specified ;
+
+
+end  JavaTextDecimalFormatSymbols

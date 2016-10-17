@@ -1,0 +1,17 @@
+# positive testcases
+new project
+parse ($SOURCEPATH/test.vdm)
+parse ($SOURCEPATH/typeerr.vdm)
+$F = get files
+prettyprint ($SOURCEPATH/test.vdm)
+_exists file ($GENPATH/test.vdm.tex)
+_delete file ($GENPATH/test.vdm.tex)
+prettyprint ([$F])
+_exists file ($GENPATH/test.vdm.tex)
+_exists file ($GENPATH/typeerr.vdm.tex)
+_delete file ($GENPATH/test.vdm.tex)
+_delete file ($GENPATH/typeerr.vdm.tex)
+
+# negative testcases
+prettyprint (ThisFileDoesDefinitelyNotExist)
+prettyprint ([Does, Not, Exist])

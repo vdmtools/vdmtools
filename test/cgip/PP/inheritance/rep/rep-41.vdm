@@ -1,0 +1,50 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+class TYPE1
+
+types
+
+public
+  A::
+   n : nat
+   b : TYPE2`B
+
+end TYPE1
+
+
+class TYPE2
+
+types 
+  
+public
+  B :: 
+    a : [TYPE1`A]
+
+end TYPE2
+
+
+class B 
+
+operations 
+  public Test : () ==> nat
+  Test () ==
+   ( dcl  a : TYPE1`A := mk_TYPE1`A(3, mk_TYPE2`B(mk_TYPE1`A(4,mk_TYPE2`B(nil))));
+     return a.b.a.n
+   )
+
+end B
+
+
+
+
+
+
+
+
+
+
+
+
+
+

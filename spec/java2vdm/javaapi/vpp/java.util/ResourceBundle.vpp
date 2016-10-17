@@ -1,0 +1,55 @@
+class JavaUtilResourceBundle is subclass of JavaLangObject
+instance variables 
+  protected  parent : JavaUtilResourceBundle
+operations 
+public  getKeys : () ==> JavaUtilEnumeration
+getKeys() == 
+is not yet specified;
+
+public  getLocale : () ==> JavaUtilLocale
+getLocale() == 
+is not yet specified ;
+
+public  JavaUtilResourceBundle : () ==> JavaUtilResourceBundle
+JavaUtilResourceBundle() == 
+( skip 
+) ;
+
+public  static getBundle : JavaLangString ==> JavaUtilResourceBundle
+getBundle(baseName) == 
+  return new JavaUtilResourceBundle(<NIL>) ;
+
+public  getObject : JavaLangString ==> JavaLangObject
+getObject(key) == 
+is not yet specified ;
+
+public  getString : JavaLangString ==> JavaLangString
+getString(key) == 
+  return new JavaLangString(<NIL>) ;
+
+public  JavaUtilResourceBundle : <NIL> ==> JavaUtilResourceBundle
+JavaUtilResourceBundle(-) == 
+isNil := true  ;
+
+public  getStringArray : JavaLangString ==> map  int  to  JavaLangString
+getStringArray(key) == 
+is not yet specified ;
+
+protected  handleGetObject : JavaLangString ==> JavaLangObject
+handleGetObject(key) == 
+is not yet specified;
+
+protected  setParent : JavaUtilResourceBundle ==> ()
+setParent(parent) == 
+is not yet specified ;
+
+public  static getBundle : JavaLangString * JavaUtilLocale ==> JavaUtilResourceBundle
+getBundle(baseName, locale) == 
+is not yet specified ;
+
+--public  static getBundle : JavaLangString * JavaUtilLocale * ClassLoader ==> JavaUtilResourceBundle
+--getBundle(baseName, locale, loader) == 
+--is not yet specified ;
+
+
+end  JavaUtilResourceBundle

@@ -1,0 +1,22 @@
+class JavaIoFileReader is subclass of JavaIoInputStreamReader
+operations 
+public  JavaIoFileReader : <NIL> ==> JavaIoFileReader
+JavaIoFileReader(-) == 
+isNil := true  ;
+
+public  JavaIoFileReader : JavaIoFile ==> JavaIoFileReader
+JavaIoFileReader(file) == 
+( let - = JavaIoInputStreamReader(new JavaIoFileInputStream(file)) in skip 
+) ;
+
+public  JavaIoFileReader : JavaLangString ==> JavaIoFileReader
+JavaIoFileReader(fileName) == 
+( let - = JavaIoInputStreamReader(new JavaIoFileInputStream(fileName)) in skip 
+) ;
+
+public  JavaIoFileReader : JavaIoFileDescriptor ==> JavaIoFileReader
+JavaIoFileReader(fd) == 
+( let - = JavaIoInputStreamReader(new JavaIoFileInputStream(fd)) in skip 
+) ;
+
+end  JavaIoFileReader

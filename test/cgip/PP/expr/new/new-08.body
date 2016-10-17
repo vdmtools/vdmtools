@@ -1,0 +1,41 @@
+
+class B 
+
+
+operations
+
+
+  public Test : () ==>real
+  Test()  ==
+  ( dcl d : D:= new D(),
+      res : real;
+    res := d.Geta();
+    return res
+  )
+  
+
+end B
+
+
+class C
+
+types
+  e = nat
+
+end C
+
+
+class D is subclass of C
+
+instance variables
+  a : real := 34.45;
+  b : nat  := 1000;
+
+
+operations
+public  Geta: () ==> real
+  Geta()  ==
+  return a+b;
+
+end D
+

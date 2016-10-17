@@ -1,0 +1,20 @@
+class A
+
+types
+
+  Even = int
+  inv v == v mod 2 = 0;
+
+operations
+
+  public Test :() ==> bool
+  Test() ==
+   return pre_(if false then [8,3] else f,3)
+
+functions
+
+  f: nat -> nat
+  f(a) == a
+  pre a >4
+
+end A

@@ -1,0 +1,14 @@
+class A
+
+operations
+
+public Test : () ==> nat  
+Test () ==
+( 
+	if true then ( if true then (if false then return 1 else return 2) else (if false then return 0 else return 1) )
+		 else ( if true then (if false then return 0 else return 1) else (if false then return 1 else return 2) ) 
+			
+	 
+)
+   
+end A

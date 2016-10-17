@@ -1,0 +1,14 @@
+Test:() ==> seq of char
+Test() ==
+  (atomic (a := 10;
+           b := 11);
+   return if a = 10 then "invbroken" else undefined);
+
+
+state Sigma of
+
+  a : nat
+  b : nat
+inv mk_Sigma(a1,b1) ==  a1 = b1
+init s == s = mk_Sigma(5,5)
+end

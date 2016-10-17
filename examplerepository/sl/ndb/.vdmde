@@ -1,0 +1,6 @@
+r ndb.vdm
+i
+tc pos
+cg
+latex ndb.vdm
+quit

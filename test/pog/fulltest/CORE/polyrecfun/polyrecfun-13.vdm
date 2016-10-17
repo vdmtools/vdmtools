@@ -1,0 +1,18 @@
+
+class A
+
+functions
+meas[@A,@B] : map @A to @B -> nat
+meas(a) == card dom a;
+
+foo[@B] : map @B to @B -> nat
+foo(b) == 
+  cases dom b:
+  {}    -> 0,
+  others -> let x in set dom b in 1 + foo[@B]({x} <-: b)
+  end
+measure meas;
+
+end A
+
+

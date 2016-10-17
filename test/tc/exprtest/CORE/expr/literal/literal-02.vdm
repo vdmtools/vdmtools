@@ -1,0 +1,16 @@
+class LiteralTest
+
+types
+
+  T = nat
+  inv t == t > 6
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> T
+TestOP() ==
+  let - = ""
+  in return 8;
+
+------------------------------------------------------------------------------
+end LiteralTest

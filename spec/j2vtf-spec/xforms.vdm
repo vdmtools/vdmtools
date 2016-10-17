@@ -1,0 +1,77 @@
+\section{VDM++ Transformations}
+\label{sec:xfs}
+
+\begin{vdm_al}
+module XFS
+
+imports
+
+  from CI all,
+  from REP all,
+  from AS all,
+  from SXF all, 
+  from EXF all
+
+exports all
+
+definitions
+
+\end{vdm_al}
+Each of the various available transforms is assigned a unique
+identifier, the type of which indicates the kind of object (statement
+or expression) the transformation applies to. The  
+particular set of transforms which may be applicable to a given
+specification is denoted by the type {\em TransformResult}, which, for
+each transformation, records the context identifiers of the positions
+in the specification at which that transformation can be applied and
+(in most cases; not implemented for all transforms yet) a suggested
+rewrite at each such position (again either a statement or an
+expression as appropriate). 
+\begin{vdm_al}
+
+types
+
+XFId = SXF`SXFId | EXF`EXFId ;
+
+Rewrite = AS`Stmt | AS`Expr ;
+
+XFResult = map XFId to map CI`ContextId to [Rewrite] ;
+\end{vdm_al}
+
+The transforms which may be applicable to a given specification are
+obtained via the function {\em xfsClassList}. The search
+is limited to the particular set of transforms represented by the
+parameter {\em p\_ids} and the domain of the result is always equal to
+this set, so that transforms in the set for which no match is possible
+still appear in the result but mapped to the empty map. 
+
+The search is carried out by the two subfunctions {\em
+findStmtTransformsClassList} and {\em findExprTransformsClassList}
+which respectively deal with transformations applicable to statements
+and expressions. These essentially traverse the abstract syntax tree,
+passing 
+the search recursively to the subcomponents and carrying out local
+checks for matches at nodes which correspond to entities on which
+transformations are possible, each local test being represented as a
+predicate on that type of node. This matching process is described in
+more detail below. 
+
+\begin{vdm_al}
+
+functions
+
+xfsClassList : seq of AS`Class * set of XFId -> XFResult
+xfsClassList(p_cl, p_ids) == 
+  let l_stmtids = { b_id | b_id in set p_ids & is_SXF`SXFId(b_id) },
+      l_exprids = { b_id | b_id in set p_ids & is_EXF`EXFId(b_id) },
+      l_stmtXfs = SXF`sxfsClassList(p_cl, l_stmtids),
+      l_exprXfs = EXF`exfsClassList(p_cl, l_exprids)
+ in
+   l_stmtXfs munion l_exprXfs ;
+
+
+end XFS
+
+\end{vdm_al}
+
+

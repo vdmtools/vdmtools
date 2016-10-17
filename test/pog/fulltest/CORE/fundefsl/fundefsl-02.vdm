@@ -1,0 +1,9 @@
+class A
+  
+functions
+    
+  FunDefSl4: bool -> seq of nat -> set of real ->  bool
+  FunDefSl4(b)(nl)(rs) ==
+    b;
+
+end A

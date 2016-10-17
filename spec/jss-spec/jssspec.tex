@@ -1,0 +1,212 @@
+\documentclass[a4paper,dvips]{article}
+\usepackage[dvips]{color}
+\usepackage{vdmsl-2e}
+\usepackage{longtable}
+\usepackage{makeidx}
+\usepackage{ifad}
+\usepackage{colortbl}
+\usepackage{multicol}
+\usepackage{alltt}
+
+\newenvironment{formalparameters}{
+\vspace{2ex}\hrule\vspace{1ex}
+\noindent\textit{Formal Parameters}\\[2ex]
+\begin{tabular}{|>{\ttfamily}l|p{7cm}|}\hline}{%
+\hline\hline\end{tabular}\vspace{1ex}}
+ 
+\newcommand{\methodresult}[2]{%
+\vspace{2ex}\hrule\vspace{1ex}
+\noindent\textit{The Results}\\[2ex]
+\begin{tabular}{|>{\ttfamily}l|p{7cm}|}\hline
+#1 & #2 \\
+\hline\hline\end{tabular}\vspace{1ex}}
+
+\newcommand{\TBW}{\fbox{To be written}}
+\newcommand{\TBD}{\fbox{To be discussed}}
+
+\newcommand{\VDMTools}{\textsf{\textbf{VDMTools\raisebox{1ex}{\Pisymbol{psy}{226}}}}} 
+
+
+% VDMgray environment
+\newcolumntype{G}{>{\columncolor[gray]{0.8}}p{.98\columnwidth}}
+\newenvironment{VDMgray}%
+{\small\begin{alltt}\begin{tabular}{G}}%
+{\end{tabular}\end{alltt}\normalsize} 
+
+\usepackage{vdmsl-2e}
+\usepackage{vpp}
+\newcommand{\vdmstyle}[1]{\texttt{#1}}
+
+\definecolor{covered}{rgb}{0,0,0}      %black
+%\definecolor{not_covered}{gray}{0.5}   %gray for previewing
+\definecolor{not_covered}{gray}{0.6}   %gray for printing
+%\definecolor{not_covered}{rgb}{1,0,0}  %read
+
+%\documentstyle[vdmsl_v1.1.31,alltt,makeidx,ifad,a4]{article}
+
+\newcommand{\VDM}{VDM++}
+
+\newcommand{\StateDef}[1]{{\bf #1}}
+\newcommand{\TypeDef}[1]{{\bf #1}}
+\newcommand{\TypeOcc}[1]{{\it #1}}
+\newcommand{\FuncDef}[1]{{\bf #1}}
+\newcommand{\FuncOcc}[1]{#1}
+\newcommand{\ModDef}[1]{{\tiny #1}}
+
+
+\newcommand{\MCL}{Meta-IV Class Library}
+\newcommand{\NYI}{Notice, that this function/operation is not fully
+  specified in order to capture a possible integration with another
+  library than \MCL{}.}
+\newcommand{\nfs}{{\em not fully specified\/}}
+
+\makeindex
+
+\begin{document}
+
+\special{!userdict begin /bop-hook{gsave 220 30 translate
+0 rotate /Times-Roman findfont 21 scalefont setfont
+0 0 moveto (CONFIDENTIAL) show grestore}def end}
+
+\docdef{Specification of the Java Static Semantics}
+         {IFAD VDM Tool Group \\
+          IFAD A/S}
+         {\today,}
+         {IFAD-Legacy-2}
+         {Report}
+         {Under Development}
+         {Confidential}
+         {}
+         {\copyright IFAD}
+         {\item[V1.0] First version.}
+         {}
+
+\renewcommand{\thepage}{\roman{page}}
+
+\tableofcontents
+\newpage
+\renewcommand{\thepage}{\arabic{page}}
+\setcounter{page}{1}
+
+\parskip12pt
+\parindent0pt
+
+
+\section{Introduction}
+
+This document contains the specification of the Java Static Semantics.
+The Java language is described in \cite{Gosling&00}. This
+specification will act as a pre-condition to the Java to VDM++
+specification. 
+
+
+\section{Overall Structure}
+
+This section describes the {\bf design} of the specification, the {\bf
+strategy} used in the Java to VDM++ translator. In addition to these
+VDM modules there must a a module with a backend for VDM++ (converting
+the abstract syntax three for VDM++ to concrete ysntax inside RTF? files).
+
+\subsection{Design}
+
+The specification is divided into several modules:
+
+\begin{description} 
+\item[JSSDEF: ] (JSSDEF is an abbreviation of Java Static Semantics
+for DEFinitions).
+  Providing functions/operations for translating top-level Java to VDM++
+  definitions.
+
+\item[JSSEXPR: ] (EXPR is an abbreviation of EXPRession). Providing
+  functions/operations  for translating Java expressions corresponding
+  to VDM++ statements/expressions.
+
+\item[JSSSTMT: ] (STMT is an abbreviation of STateMenT). Providing
+  functions/operations for translating Java statements corresponding
+  to VDM++ statements.
+
+\item[JSSENV:] (ENV is an abbreviation for ENVironment). Provides
+  functions/operations for setting and looking up information about
+  the environment in which a construct is being translated in the
+  context of.´This includes things such as imports from packages.
+
+\item[JSSAUX:] (AUX is an abbreviation of AUXiliary). Provides auxiliary
+  functions and operations to the rest of the specification.
+
+\item[JSSVCM1:] (VCM1 is an abbreviation for Version Control
+Management First Pass).
+This module is responsible for building data structures holding deferent kind of
+information needed by the Static Sematics Checks.
+
+%\item[JSSVCM2:] (VCM2 is an abbreviation for Version Control
+%Management Second Pass).
+%This module is responsible for building data structures holding deferent kind of
+%information needed by the Static Sematics Checks.
+%
+%\item[JSSVCM2EXPR:] JR?
+%
+%\item[JSSVCM2STMT:] JR?
+
+\item[JSSERR:] (ERR is an abbreviation for ERRor). This module is
+responsible for logging all error messages/warnings produced during
+the static semantics check of a collection of Java files.
+
+\item[JSSERRMSG:] (ERRMSG is an abbreviation for ERRor MeSsaGes). This
+module is responsible for providing the unique identification of the
+different errors which can be reported by the Java Static Semantics
+analysis. Note that the source file for this is a file with the
+extension \texttt{.txt} used commonly for the specification and the code.
+
+\item[CPP:] (CPP is an abbreviation of C Plus Plus). Describing the
+  abstract syntax of Java and C++.
+
+\item[CI:] (CI is an abbreviation fo Context Information). It is used
+  to be able to refer back to errors in a concrete syntax such that
+  the user can understand error messages.
+
+\item[REP: ] Type Representations Module. Provides the type
+  definitions for the semantic domains which are used internally in
+  the static semantics to model the types from the abstract syntax and
+  the derived types.
+
+\item[AS: ] (AS is an abbreviation of Abstract Syntax). Describing the
+  abstract syntax of the VDM-SL/VDM++.
+
+\item[UTIL:] (UTIL is an abbreviation for UTILities). This module
+contains a number of operations which serve as common operations to
+different VDM specifications inside the specifications for VDMTools
+components. 
+\end{description}
+
+\include{jssdef.vdm}
+
+\include{jssstmt.vdm}
+
+\include{jssexpr.vdm}
+
+\include{jssenv.vdm}
+
+\include{jssvcm1.vdm}
+
+\include{jssrep.vdm}
+
+\include{jssaux.vdm}
+
+\include{javaerr.vdm}
+
+\include{jsserr.vdm}
+
+\include{jsserrmsg.vdm}
+
+\appendix
+\bibliographystyle{iptes}
+\bibliography{/home/peter/bib/dan}
+
+\newpage
+\addcontentsline{toc}{section}{Index}
+\printindex
+
+\end{document}
+
+
+

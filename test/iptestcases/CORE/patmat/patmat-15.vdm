@@ -1,0 +1,41 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+
+
+
+public Test : () ==> seq of seq of int
+Test () ==
+( dcl res: seq of seq of int := [];
+  let l = [1,2,3,4,5]
+  in ( let a^b = l
+       in res := res ^ [a] ^ [b];
+       let [a,b] ^ c = l
+       in res := res ^ [c];
+       let c ^ [a,b,d] = l
+       in res := res ^ [c];
+       let f ^ [a,b,c,d,e] = l
+       in res := res ^ [f];
+       let [a,b,c,d,e] ^ f = l
+       in res := res ^ [f];
+       let [a,b,c,d] ^ f = l
+       in res := res ^ [f];
+       let f ^ [a,b,c,d]  = l
+       in res := res ^ [f];
+	 let -^- = l
+	 in res := res ^ [l];
+     );
+  return res;
+)
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

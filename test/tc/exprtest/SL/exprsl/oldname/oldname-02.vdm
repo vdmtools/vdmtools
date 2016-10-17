@@ -1,0 +1,20 @@
+module OldNameTest
+exports all
+definitions
+
+state Sigma of
+a : nat
+end
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = b~
+  in skip;
+
+------------------------------------------------------------------------------
+
+end OldNameTest

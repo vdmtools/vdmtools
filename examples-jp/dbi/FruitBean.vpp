@@ -1,0 +1,36 @@
+class FruitBean
+instance variables
+public
+name: seq of char := "";
+public
+price: nat := 0;
+
+operations
+public
+FruitBean: seq of char * nat ==> FruitBean
+FruitBean(n, p) ==
+  (name := n;
+   price := p);
+
+public
+get_name: () ==> seq of char
+get_name() ==
+  return name;
+
+public
+set_name: seq of char ==> ()
+set_name(n) ==
+ (name := n);
+
+public
+get_price: () ==> nat
+get_price() ==
+  return price;
+
+public
+set_price: nat ==> ()
+set_price(p) ==
+ (price := p);
+
+end FruitBean
+

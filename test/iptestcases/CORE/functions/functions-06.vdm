@@ -1,0 +1,18 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+functions
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+f: seq of nat * nat -> bool |nat
+f( z, a) ==
+if  len z = a
+then 4
+else true
+
+operations
+
+  public Test : () ==> bool|nat  
+Test () ==
+    return let x = [2,3] in f(x,2)
+
+end A

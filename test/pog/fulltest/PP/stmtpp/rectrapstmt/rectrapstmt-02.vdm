@@ -1,0 +1,33 @@
+class RecTrapStmtTest
+
+operations
+
+public op : () ==> ()
+op() ==
+tixe { <A> |-> skip } in
+(dcl a : A := new A(),
+     i : nat;
+ i := a.op()
+)
+
+end RecTrapStmtTest
+
+class A
+
+operations
+
+public op : () ==> nat
+op() ==
+  let m = { x | x in set {1,...,10}} in
+  cases m:
+    {} -> return 1,
+    {r} -> return 2,
+    others -> exit <A>
+  end
+
+end A
+
+class B is subclass of A
+
+end B
+

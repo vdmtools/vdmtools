@@ -1,0 +1,66 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+
+--  A - C - E
+--    \   /
+--      D
+--
+-- B
+class A
+
+end A
+
+
+class C is subclass of A
+
+
+
+end C
+
+class D is subclass of A
+
+values
+protected
+  v = 'd'
+
+end D
+
+class E is subclass of C, D
+
+operations
+
+public   m: () ==> char  
+   m () ==
+    return v;
+
+   my_meth: () ==> char
+   my_meth() ==
+   is subclass responsibility
+
+   
+end E
+
+class B 
+
+operations 
+
+  public Test : () ==> char
+  Test () ==
+        new E().m()
+
+end B
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,16 @@
+class A
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = let a:A|int in isofclass(A,a)
+  in skip;
+
+------------------------------------------------------------------------------
+end A
+
+class C is subclass of A
+end C

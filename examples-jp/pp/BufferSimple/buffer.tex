@@ -1,0 +1,78 @@
+% LaTeX 2e Document.
+% 
+% $Id: buffer.tex,v 1.1 2005/11/10 07:15:56 vdmtools Exp $
+% 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PDF compatibility code. 
+\makeatletter
+\newif\ifpdflatex@
+\ifx\pdftexversion\@undefined
+\pdflatex@false
+%\message{Not using pdf}
+\else
+\pdflatex@true
+%\message{Using pdf}
+\fi
+
+\newcommand{\latexorpdf}[2]{
+  \ifpdflatex@ #2
+  \else #1
+  \fi
+}
+
+\newcommand{\pformat}{a4paper}
+
+\makeatother
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\latexorpdf{
+\documentclass[\pformat,12pt]{jarticle}
+}{
+\documentclass[\pformat,pdftex,12pt]{jarticle}
+}
+
+
+\usepackage[dvips]{color}
+\usepackage{longtable}
+\usepackage{alltt}
+\usepackage{graphics}
+\usepackage{vpp}
+\usepackage{makeidx}
+\makeindex
+
+\definecolor{covered}{rgb}{0,0,0}      %black
+%\definecolor{not_covered}{gray}{0.5}   %gray for previewing
+%\definecolor{not_covered}{gray}{0.6}   %gray for printing
+\definecolor{not_covered}{rgb}{1,0,0}  %red
+
+\newcommand{\InstVarDef}[1]{{\bf #1}}
+\newcommand{\TypeDef}[1]{{\bf #1}}
+\newcommand{\TypeOcc}[1]{{\it #1}}
+\newcommand{\FuncDef}[1]{{\bf #1}}
+\newcommand{\FuncOcc}[1]{#1}
+\newcommand{\MethodDef}[1]{{\bf #1}}
+\newcommand{\MethodOcc}[1]{#1}
+\newcommand{\ClassDef}[1]{{\sf #1}}
+\newcommand{\ClassOcc}[1]{#1}
+\newcommand{\ModDef}[1]{{\sf #1}}
+\newcommand{\ModOcc}[1]{#1}
+
+
+\title{BufferíPèÉî≈}
+\author{ç≤å¥êL}
+\date{ÇQÇOÇOÇTîN11åé10ì˙}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+BufferíPèÉî≈ÇÃó·ëËÅB
+
+\include{buffer.vpp}
+\include{producer.vpp}
+\include{consumer.vpp}
+\include{main.vpp}
+
+\end{document}

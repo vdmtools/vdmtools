@@ -1,0 +1,47 @@
+class JavaUtilStringTokenizer is subclass of JavaUtilEnumeration, JavaLangObject
+operations 
+public  nextToken : () ==> JavaLangString
+nextToken() == 
+is not yet specified ;
+
+public  countTokens : () ==> int 
+countTokens() == 
+is not yet specified ;
+
+public  nextElement : () ==> JavaLangObject
+nextElement() == 
+is not yet specified ;
+
+public  hasMoreTokens : () ==> bool 
+hasMoreTokens() == 
+  return false ;
+
+public  hasMoreElements : () ==> bool 
+hasMoreElements() == 
+is not yet specified ;
+
+public  nextToken : JavaLangString ==> JavaLangString
+nextToken(delim) == 
+is not yet specified ;
+
+public  JavaUtilStringTokenizer : <NIL> ==> JavaUtilStringTokenizer
+JavaUtilStringTokenizer(-) == 
+isNil := true  ;
+
+public  JavaUtilStringTokenizer : JavaLangString ==> JavaUtilStringTokenizer
+JavaUtilStringTokenizer(str) == 
+( skip 
+) ;
+
+public  JavaUtilStringTokenizer : JavaLangString * JavaLangString ==> JavaUtilStringTokenizer
+JavaUtilStringTokenizer(str, delim) == 
+( skip 
+) ;
+
+public  JavaUtilStringTokenizer : JavaLangString * JavaLangString * bool  ==> JavaUtilStringTokenizer
+JavaUtilStringTokenizer(str, delim, returnDelims) == 
+( skip 
+) ;
+
+
+end  JavaUtilStringTokenizer

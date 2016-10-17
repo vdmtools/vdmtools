@@ -1,0 +1,33 @@
+\begin{vdm_al}
+class Philosopher
+
+instance variables
+  theTable : Table;
+  turns : nat := 2
+
+operations
+  public Philosopher : Table ==> Philosopher
+  Philosopher (pt) == theTable := pt;
+
+  Think: () ==> ()
+  Think () ==
+    duration (200)
+      skip;
+
+  Eat: () ==> ()
+  Eat () ==
+    duration (200)
+      turns := turns - 1;
+
+thread
+  ( while (turns > 0) do
+      ( Think();
+        theTable.takeFork();
+        theTable.takeFork();
+        Eat();
+        theTable.releaseFork();
+        theTable.releaseFork() );
+    theTable.IamDone() )
+
+end Philosopher
+\end{vdm_al}

@@ -1,0 +1,240 @@
+module Support_module
+   exports
+      all
+   definitions
+      functions
+         Poly_fun[@elem]: @elem -> bool
+         Poly_fun( - ) == undefined  ;
+
+  FunDefSl7[@A] (a1,a2: @A,l1 ^ l2 : seq of nat) r : (@A * bool)
+  pre l1 <> []
+  post r = mk_(if 4 > 8 then a1 else a2, len l2 > 7);
+
+  FunDefSl8[@B] (b1, b2 : @B) r : bool
+  pre b1 <> b2
+  post pre_FunDefSl8[nat](3,5) and r <=> (b1 <> b2);
+
+  FunDefSl4[@A, @B]: seq of @A * set of @B -> bool
+  FunDefSl4(l,s) ==
+    len l = card s
+  pre true
+  post true;
+
+  FunDefSl71[@A] (a1,a2: @A,l1 ^ l2 : seq of nat) r : @A, s : bool ==
+    mk_(a1,a1=a2)
+    pre l1 <> []
+    post r = mk_(if 4 > 8 then a1 else a2, len l2 > 7);
+
+end Support_module
+module Main_module
+   imports 
+      from Support_module all
+   exports all
+   definitions
+      functions
+         Dummy_fun: int -> bool
+         Dummy_fun(  int_var ) == 
+           let
+             Poly_fun_inst = Support_module`Poly_fun[int]
+           in
+             Poly_fun_inst( int_var ) 
+end Main_module
+module ImpExpl
+
+imports from
+  Support_module
+    functions
+      Poly_fun[@elem]: @elem -> bool;
+      FunDefSl4[@A,@B]: seq of @A * set of @B -> bool;
+      FunDefSl7[@A]: @A * @A * seq of nat +> @A * bool;
+      FunDefSl71[@A]: @A * @A * seq of nat +> @A * bool
+
+exports
+functions
+  Dummy_fun: int -> bool;
+  LocalPF[@A,@B]: seq of @A * set of @B -> bool;
+  FunDefSl8[@B]: @B * @B +> bool;
+  FunDefSl4[@A,@B]: seq of @A * set of @B -> bool
+
+   definitions
+
+      functions
+ FunDefSl8[@B] (b1, b2 : @B) r : bool
+  pre b1 <> b2
+  post pre_FunDefSl8[nat](3,5) and r <=> (b1 <> b2);
+
+  FunDefSl4[@A, @B]: seq of @A * set of @B -> bool
+  FunDefSl4(l,s) ==
+    len l = card s
+  pre true
+  post true;
+
+    LocalPF[@A, @B]: seq of @A * set of @B -> bool
+    LocalPF(l,s) ==
+      Support_module`FunDefSl4[@A,@B](l,s);
+
+         Dummy_fun: int -> bool
+         Dummy_fun(  int_var ) == 
+           let
+             Poly_fun_inst = Support_module`Poly_fun[int]
+           in
+             Poly_fun_inst( int_var ) 
+end ImpExpl
+module ImpExpl2
+
+imports from
+  Support_module
+    functions
+      Poly_fun: nat -> bool
+exports
+functions
+  Dummy_fun: int -> bool
+
+   definitions
+
+      functions
+
+         Dummy_fun: int -> bool
+         Dummy_fun(  int_var ) == 
+           let
+             Poly_fun_inst = Support_module`Poly_fun[int]
+           in
+             Poly_fun_inst( int_var ) 
+end ImpExpl2
+
+
+
+
+module ABC
+
+exports all
+
+definitions
+
+functions
+
+f: A -> nat
+f(a) ==
+if is_B(a)
+then a.i
+else a.k
+
+types
+
+A = B | C;
+
+B ::
+  i : nat  
+  j : bool;
+
+C ::
+  i : bool
+  k : nat
+
+
+
+  
+
+end ABC
+
+
+module ABCDE
+
+exports all
+
+definitions
+
+functions
+
+f: A -> nat
+f(a) ==
+cases true:
+  (is_B(a)), (is_D(a)) -> a.i,
+  (is_C(a)) -> a.k,
+  (is_E(a)) -> a.j
+end
+
+
+types
+
+A = B | C | D | E;
+
+B ::
+  i : nat  
+  j : bool;
+
+C ::
+  i : bool
+  k : nat;
+
+D ::
+  l : seq of nat
+  i : nat;
+
+E ::
+  j : nat  
+
+end ABCDE
+
+module CALC
+
+exports all
+
+definitions
+
+types
+
+Expression = Value | UnaryExpression | BinaryExpression;
+
+Value = integer;
+
+UnaryExpression ::
+	operator : <plus> | <minus>
+	operand : Expression;
+
+BinaryExpression ::
+	operator : <plus> | <minus> | <times> | <divide>
+	left : Expression
+	right : Expression;
+
+functions
+
+Evaluate: Expression -> Value
+Evaluate( x ) ==
+cases x: 
+	mk_Value( y ) -> y,
+	mk_UnaryExpression( <plus>, y ) -> Evaluate(y),
+	mk_UnaryExpression( <minus>, y ) -> -Evaluate(y),
+	mk_BinaryExpression( <plus>, y, z ) -> Evaluate(y) + Evaluate(z),
+	mk_BinaryExpression( <minus>, y, z ) -> Evaluate(y) - Evaluate(z),
+	mk_BinaryExpression( <times>, y, z ) -> Evaluate(y) * Evaluate(z),
+	mk_BinaryExpression( <divide>, y, z ) -> Evaluate(y) / Evaluate(z),
+	others -> nil
+end
+
+end CALC
+
+module PolyMorf
+
+exports all
+
+definitions
+
+functions
+
+FE : int -> seq of int
+FE(a) ==
+[ a ];
+
+FI (a: int) r: seq of int
+post r = [ a ];
+
+PFE[@A] : @A -> seq of @A
+PFE(a) ==
+[ a ];
+
+PFI[@A] (a: @A) r: seq of @A
+post r = [ a ]
+
+end PolyMorf
+

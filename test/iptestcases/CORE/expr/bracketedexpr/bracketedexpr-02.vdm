@@ -1,0 +1,10 @@
+class A
+
+operations
+
+public Test : () ==> seq of  int
+Test () ==
+return
+[ 600 div (5 * 6), 600 div 5 * 6, 600 * (24 div 7), 600 * 24 div 7]
+
+end A

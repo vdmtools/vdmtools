@@ -1,0 +1,22 @@
+class UnaryTest
+types
+
+  UnionType :: seq of UnionType;
+
+  EmptyType ::
+  
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let n = 67,
+      - = dunion if true
+               then {{7,{}},{true}}
+               else n
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

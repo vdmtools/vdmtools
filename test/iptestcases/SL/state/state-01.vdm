@@ -1,0 +1,27 @@
+module A
+exports all
+definitions
+operations
+Inc: () ==> ()
+Inc() ==
+  i := i + 1;
+
+Test: () ==> seq of (int | bool)
+Test() ==
+( dcl res : seq of (int | bool) := [i];
+  Inc();
+  res := res ^ [i];
+  return res
+)
+
+state Sigma of
+  i : int
+  inv mk_Sigma(i) == i >= 10 
+  init s == s = mk_Sigma(10)
+end
+
+-- inv_Sigma: Sigma -> bool
+-- init_Sigma: () ==> () 
+-- is not supported by the VDM-SL interpreter
+
+end A

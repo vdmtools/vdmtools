@@ -1,0 +1,34 @@
+class A
+
+operations
+
+-- Exception caught by trap
+public Test1 : () ==> int 
+Test1() ==
+  trap e:seq of char with return len e
+  in
+    if true
+    then return 1
+    else exit "error";
+
+-- Exception passed on
+public Test2 : () ==> int 
+Test2() ==
+  trap e:seq of char with return len e
+  in
+    if true
+    then exit "abc"
+    else exit 1000;
+
+public Test : () ==> int * int
+Test() ==
+( dcl x : nat := 0,
+      y : nat := 0;
+  trap e:nat with y := e in
+  ( x := Test1();
+    y := Test2()
+  );
+  return mk_(x,y)
+)
+
+end A

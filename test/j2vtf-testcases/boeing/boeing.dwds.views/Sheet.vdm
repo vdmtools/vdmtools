@@ -1,0 +1,132 @@
+class Sheet is subclass of JPanel, ActionListener
+operations 
+public  Sheet : () ==> Sheet
+Sheet() == 
+( let - = setBackground(Color`lightGray)
+  in 
+    skip ;
+  let - = setLayout(new  GridBagLayout())
+  in 
+    skip 
+) ;
+
+public  setLabel : int  ==> <VOID>
+setLabel(selected) == 
+( if  sheetLabel <> nil  
+  then  
+    ( let - = remove(sheetLabel)
+      in 
+        skip 
+    ) ;
+  ( dcl   labelStr : [String] := (selected+1)+new  String(" of ")+numArray;
+    sheetLabel := new  JLabel(labelStr);
+    let - = sheetLabel.setFont(new  Font(new  String("SansSerif") , Font`BOLD , 12))
+    in 
+      skip ;
+    let - = addComponent(self   , sheetLabel , 4 , 0 , 1 , 1 , GridBagConstraints`NONE , GridBagConstraints`EAST , 1 , 5 , 1 , 1)
+    in 
+      skip 
+  ) ;
+  return  <VOID>
+) ;
+
+public  setSheets : int  * int  ==> <VOID>
+setSheets(numArray, selected) == 
+( dcl   arrowButton : [JButton];
+  Sheet`numArray := numArray;
+  let - = removeAll()
+  in 
+    skip ;
+  if  numArray <> 0
+  then  
+    ( dcl   leftButtonIcon : [ImageIcon] := new  ImageIcon(getClass().getResource(new  String("/boeing/dwds/images/left.gif")));
+      arrowButton := new  JButton(leftButtonIcon);
+      let - = arrowButton.setPreferredSize(new  Dimension(16 , 16))
+      in 
+        skip ;
+      let - = arrowButton.addActionListener(self  )
+      in 
+        skip ;
+      let - = arrowButton.setActionCommand(new  String("LEFT"))
+      in 
+        skip ;
+      let - = addComponent(self   , arrowButton , 0 , 0 , 1 , 1 , GridBagConstraints`NONE , GridBagConstraints`WEST , 1 , 1 , 1 , 0)
+      in 
+        skip ;
+      ( dcl   rightButtonIcon : [ImageIcon] := new  ImageIcon(getClass().getResource(new  String("/boeing/dwds/images/right.gif")));
+        arrowButton := new  JButton(rightButtonIcon);
+        let - = arrowButton.setPreferredSize(new  Dimension(16 , 16))
+        in 
+          skip ;
+        let - = arrowButton.addActionListener(self  )
+        in 
+          skip ;
+        let - = arrowButton.setActionCommand(new  String("RIGHT"))
+        in 
+          skip ;
+        let - = addComponent(self   , arrowButton , 1 , 0 , 1 , 1 , GridBagConstraints`NONE , GridBagConstraints`WEST , 1 , 0 , 1 , 5)
+        in 
+          skip ;
+        let - = setLabel(selected)
+        in 
+          skip 
+      ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  static main : map  int  to  [String] ==> <VOID>
+main(args) == 
+( return  <VOID>
+) ;
+
+public  actionPerformed : [ActionEvent] ==> <VOID>
+actionPerformed(event) == 
+( if  actionListenerList <> nil  
+  then  
+    ( let - = actionListenerList.actionPerformed(event)
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+public  addActionListener : [ActionListener] ==> <VOID>
+addActionListener(listener) == 
+( actionListenerList := AWTEventMulticaster`add(actionListenerList , listener);
+  return  <VOID>
+) ;
+
+public  removeActionListener : [ActionListener] ==> <VOID>
+removeActionListener(listener) == 
+( actionListenerList := AWTEventMulticaster`remove(actionListenerList , listener);
+  return  <VOID>
+) ;
+
+private  addComponent : [Container] * [Component] * int  * int  * int  * int  * int  * int  * int  * int  * int  * int  ==> <VOID>
+addComponent(container, component, gridX, gridY, gridWidth, gridHeight, fill, anchor, top, left, bottom, right) == 
+( dcl   lm : [LayoutManager] := container.getLayout(),
+        gbc : [GridBagConstraints] := new  GridBagConstraints();
+  gbc.gridx := gridX;
+  gbc.gridy := gridY;
+  gbc.gridwidth := gridWidth;
+  gbc.gridheight := gridHeight;
+  gbc.fill := fill;
+  gbc.anchor := anchor;
+  gbc.insets := new  Insets(top , left , bottom , right);
+  let - = (def l_6 :  GridBagLayout = (lm)
+  in l_6).setConstraints(component , gbc)
+  in 
+    skip ;
+  let - = container.add(component)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+instance variables 
+  sheetLabel : [JLabel];
+  numArray : int ;
+  actionListenerList : [ActionListener] := nil  
+  
+end  Sheet

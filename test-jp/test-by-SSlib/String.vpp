@@ -1,0 +1,176 @@
+class String is subclass of Sequence
+/*
+作成者 = 佐原伸
+作成日 = 2000年 10月 4日 
+責任
+	文字列(seq of char)を表す。
+概要
+	文字列の機能を定義する。
+注意事項
+	歴史的経過のため、より関数型プログラミングに適した関数と、そうでないものがある。
+	関数型プログラミングに適した関数は、英字名の場合大文字で始まる。
+	大文字で始まる同一名の関数がある場合、小文字で始まる関数・操作は、古い定義で、互換性のために存在する。
+	大文字で始まる同一名の関数が無い場合は、小文字で始まる関数・操作も関数型プログラミングに適している。
+*/
+	
+functions
+
+--変換関数群
+--数字文字列を整数に変換する
+static public asInteger: seq of char -> [int]
+asInteger(s) == 
+	if s <> [] then
+		let mk_(ok, i) = VDMUtil`seq_of_char2val[int](s) in if ok then i else nil
+	else
+		nil;
+
+static length : seq of char +> nat
+length(s) == len s;
+
+static lengthNil : [seq of char] +> nat
+lengthNil(s) == if s = nil then 0 else len s;
+	
+--判定関数群
+--数字文字列か判定する。
+static public isDigits : seq of char -> bool
+isDigits(s) ==
+	if s = [] then
+		true
+	else
+		Character`isDigit(hd s) and String`isDigits(tl s)
+	measure length;
+
+--空白かどうか判定する
+static public isSpace : [seq of char] -> bool
+isSpace(s) ==
+	if s = [] then
+		true
+	else
+		(hd s = ' ' or hd s = '\t') and String`isSpace(tl s)
+	measure lengthNil;
+
+static public 小さい : seq of char * seq of char -> bool
+小さい(s1, s2) == String`＜(s1)(s2);
+
+static public ＜ : seq of char -> seq of char -> bool
+＜(s1)(s2) == 
+	cases mk_(s1,s2):
+		mk_([],[])		-> false,
+		mk_([],-)		-> true,
+		mk_(-^-,[])	-> false,
+		mk_([先頭1]^後続1,[先頭2]^後続2)	->
+			if Character`小さい(先頭1,先頭2) then
+				true
+			elseif Character`小さい(先頭2,先頭1) then
+				false
+			else
+				String`小さい(後続1, 後続2)
+	end;
+
+static public 以下である : seq of char * seq of char -> bool
+以下である(s1, s2) == String`≦(s1)(s2);
+
+static public ≦ : seq of char -> seq of char -> bool
+≦(s1)(s2) == String`＜(s1)(s2) or s1 = s2;
+
+static public 大きい : seq of char * seq of char -> bool
+大きい(s1, s2) == String`＞(s1)(s2);
+
+static public ＞ : seq of char -> seq of char -> bool
+＞(s1)(s2) == String`小さい(s2, s1);
+
+static public 以上である : seq of char * seq of char -> bool
+以上である(s1, s2) == String`≧(s1)(s2);
+
+static public ≧ : seq of char -> seq of char -> bool
+≧(s1)(s2) == not String`＜(s1)(s2);
+
+/* 操作にして、ループ処理を行い効率化を図った。
+static public index: seq of char * char -> int
+index(文字列,文字) == Sequence`Index[char](文字)(文字列);
+*/
+
+static public Index: char -> seq of char -> int
+Index(文字)(文字列) == Sequence`Index[char](文字)(文字列);
+
+static public indexAll : seq of char * char -> set of int
+indexAll(文字列,文字) == Sequence`IndexAll[char](文字)(文字列);
+
+static public IndexAll : char -> seq of char -> set of int
+IndexAll(文字)(文字列) == Sequence`IndexAll[char](文字)(文字列);
+
+static public 含む : seq of char -> seq of char -> bool
+含む(ある文字列)(ある検索文字列) ==
+	let	索引群 = indexAll(ある文字列,ある検索文字列(1))
+	in	exists i in set 索引群 & 
+			SubStr(i)(len ある検索文字列)(ある文字列) = ある検索文字列
+pre
+	ある検索文字列 <> "";
+
+--部分文字列を得る。
+static public subStr :
+	seq1 of char * nat * nat -> seq of char
+subStr(文字列,開始位置,文字数) == 文字列(開始位置,...,開始位置+文字数-1);
+
+static public SubStr : nat -> nat -> seq1 of char -> seq of char
+SubStr(開始位置)(文字数)(文字列) == 文字列(開始位置,...,開始位置+文字数-1);
+
+static public GetToken : seq of char * set of char -> seq of char
+GetToken(a文字列, a区切り文字集合) == 
+	TakeWhile[char](lambda c : char & c not in set a区切り文字集合)(a文字列);
+
+static public DropToken : seq of char * set of char -> seq of char
+DropToken(a文字列, a区切り文字集合) == 
+	DropWhile[char](lambda c : char & c not in set a区切り文字集合)(a文字列);
+
+static public getLines : seq of char -> seq of seq of char
+getLines(a文字列) ==
+	getLines補助関数(a文字列)([]);
+
+static public getLines補助関数 : seq of char -> seq of seq of char -> seq of seq of char
+getLines補助関数(a文字列)(結果) ==
+	if a文字列 = [] then
+		結果
+	else
+		let 区切り文字集合 = {'\n'},
+			先頭行 = GetToken(a文字列, 区切り文字集合),
+			残りの文字列候補 = DropToken(a文字列, 区切り文字集合),
+			残りの文字列 = 
+				if 残りの文字列候補 <> [] and hd 残りの文字列候補 = '\n' then tl 残りの文字列候補 
+				else 残りの文字列候補
+		in
+		getLines補助関数(残りの文字列)(結果 ^ [先頭行])
+measure length;
+		
+operations
+--文字列判定操作群
+
+static public index: seq of char * char ==> int
+index(文字列,文字) == 
+	(
+	for i = 1 to len 文字列 do
+		if 文字列(i) = 文字 then return i;
+	return 0
+	);
+	
+--文字列操作操作群
+
+--部分文字列を得る。ただし、文字列長が指定された文字数より小さいとき、指定された詰め文字を補充する。
+static public subStrFill :
+	seq of char * nat * nat * char ==> seq of char
+subStrFill(文字列,開始位置,文字数,詰め文字) ==
+	let	最後の位置 = 開始位置+文字数-1
+	in	
+		(dcl 結果 : seq of char := "";
+		for i = 開始位置 to 最後の位置  do
+			(if i <= len 文字列 then
+				結果 := 結果 ^ [文字列(i)]
+			else
+				結果 := 結果 ^ [詰め文字]
+			);
+		return 結果
+		)
+pre
+	開始位置 > 0 and 文字数 >= 0;
+
+end String

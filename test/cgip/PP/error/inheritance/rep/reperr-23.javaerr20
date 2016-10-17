@@ -1,0 +1,4 @@
+type error in test case:
+rep-23.arg, l. 44, c. 11:
+  Error : m1 is multiple defined in super classes
+

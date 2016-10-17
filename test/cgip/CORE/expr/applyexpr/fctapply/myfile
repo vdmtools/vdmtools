@@ -1,0 +1,67 @@
+::::::::::::::
+fctapply-01.body
+::::::::::::::
+
+return 
+ [ f( 3, 32, mk_(9, 10)  ), 
+   f( if false
+	 then true
+	 else 9,
+      32, mk_(12,35) ),
+   f( 4, 1, mk_( if true	
+	         then 9
+		 else false,
+		 22) ),
+   g(),
+   h( false, 3 ),
+   h( 10, 11 ),
+   i( mk_(3, 3) ),
+   j( 20, 21, mk_(1,3), {1,3}, [1, 5], mk_(3,6) )  ]
+	
+
+functions 
+
+j: nat * nat * (nat *nat) * set of nat * seq of nat * (nat * nat ) -> set of nat
+j( a, (21), mk_(c, d), {e, f}, [g, h], mk_(i, j) )==
+{a, c, d, e, f, g, h,i, j};
+
+f: nat * nat * (nat * nat)-> set of nat
+f( a, b, mk_(c, d) ) ==
+{ a, b, d, d };
+
+g: () -> set of nat
+g() == {};
+
+h: (nat | bool) * nat -> set of nat
+h( a, b ) ==
+if is_nat( a )
+then { a, b}
+else { b };
+
+i: (nat * nat ) -> set of nat
+i ( mk_(a, a) ) ==
+{ a, a+1}
+
+::::::::::::::
+fctapply-01.exp
+::::::::::::::
+[ { 3, 10, 32 }, { 9, 32, 35 }, { 1, 4, 22 }, {  }, { 3 }, { 10, 11 }, { 3, 4 }, { 1, 3, 5, 6, 20 } ]
+::::::::::::::
+fctapply.arg
+::::::::::::::
+A`Test()
+
+::::::::::::::
+fctapply.head
+::::::::::::::
+class A
+
+methods
+
+Test() value r: seq of set of nat ==
+
+
+::::::::::::::
+fctapply.tail
+::::::::::::::
+end A

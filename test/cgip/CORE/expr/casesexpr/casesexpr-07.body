@@ -1,0 +1,10 @@
+
+public Test : () ==> nat 
+Test() ==
+return  
+    cases if true then 5 else mk_(1,2):
+       mk_(a,b) -> a,
+       b -> b
+    end
+
+

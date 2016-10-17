@@ -1,0 +1,8 @@
+[ mk_Test`BeaconsMet( 
+     [ mk_Test`TIVD( 60 ) ],
+     [  ] ),
+  mk_Test`BeaconsMet( 
+     [ mk_Test`TIVD( 60 ),
+       mk_Test`TIVD( 40 ) ],
+     [  ] ),
+  mk_Test`BeaconsMet( [  ],[  ] ) ]

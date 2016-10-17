@@ -1,0 +1,31 @@
+ class A
+
+instance variables
+
+  n : nat := 7;
+
+operations
+
+public  OpA: () ==> nat
+  OpA() ==
+    (n := Inc[nat]([n]);
+     return n);
+
+functions
+
+ private Inc[@tp]: seq of @tp +> nat
+             Inc(l) == len l
+
+end A
+
+class B
+
+operations
+
+public Test : () ==> nat
+  Test() ==
+   let a = new A()
+   in
+      a.OpA();
+
+end B

@@ -1,0 +1,25 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+instance variables
+public  invals : map Name to Value := InitInvals();
+types
+public  Name = seq of char;
+public  Value = [nat]
+operations
+public  InitInvals: () ==> map Name to Value
+  InitInvals () == 
+    return {|->}
+end A
+
+class B is subclass of A
+operations
+public  InitInvals: () ==> map Name to Value
+  InitInvals () == 
+    return { "tag1" |-> nil,
+                "tag2" |-> nil };
+
+  public Test : () ==> map A`Name to A`Value
+  Test() ==
+   return invals;
+end B
+

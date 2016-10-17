@@ -1,0 +1,1 @@
+[ true,<PinNotOk>,false ]

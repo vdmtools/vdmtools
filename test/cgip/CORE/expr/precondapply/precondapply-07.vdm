@@ -1,0 +1,25 @@
+class A
+
+types
+
+  Even = int
+  inv v == v mod 2 = 0;
+
+operations
+
+  public Test :() ==> bool
+  Test() ==
+   return pre_(f comp g,3)
+
+functions
+
+  g: nat -> nat
+  g(n) ==
+   2 * n
+  pre n < 92;
+
+  f(a:nat) r : nat
+  pre a >4
+  post 1 + a = r 
+
+end A

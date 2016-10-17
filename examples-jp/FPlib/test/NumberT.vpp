@@ -1,0 +1,80 @@
+\subsection{FNumberT}
+FNumberのテストを行う。
+
+\begin{vdm_al}
+--$Id $
+class FNumberT is subclass of FNumber
+functions
+static public run : () +>bool
+run() == 
+let	testcases = [ t1(), t2(), t3()]
+in
+FTestDriver`run(testcases);
+\end{vdm_al}
+
+\subsubsection{Min, Maxを検査する}
+\begin{vdm_al}
+static t1 : () -> FTestDriver`TestCase
+t1() ==
+	mk_FTestDriver`TestCase(
+	"FNumberT01:\t Min, Maxを検査する",
+	Min[int](GT)(-3)(4) = -3 and
+	Min[int](GT)(4)(-3) = -3 and
+	Min[nat](GT)(2)(10) = 2 and
+	Min[int](GT)(0)(0) = 0 and
+	Max[real](GT)(0.001)( -0.001) = 0.001 and
+	Max[real](GT)(-0.001)( 0.001) = 0.001 and
+	Max[real](GT)(0.0)(0.0) = 0.0)
+	;
+\end{vdm_al}
+
+\subsubsection{IsComputableを検査する}
+\begin{vdm_al}
+static t2 : () -> FTestDriver`TestCase
+t2() ==
+	mk_FTestDriver`TestCase(
+	"FNumberT02:\t IsComputableを検査する",
+	 IsComputable[char]('a') = false and
+	 IsComputable[int](-9) = true and
+	 IsComputable[nat](0) = true and
+	 IsComputable[nat1](1) = true and
+	 IsComputable[real](1.234) = true and
+	 IsComputable[rat](1.234) = true)
+	;
+\end{vdm_al}
+	
+\subsubsection{GT, GE, LT, LEを検査する}
+\begin{vdm_al}
+static t3 : () -> FTestDriver`TestCase
+t3() ==
+	mk_FTestDriver`TestCase(
+	"FNumberT03:\t GT, GE, LT, LEを検査する",
+	 LT(1)(2) and
+	 LT(2)(2) = false and
+	 LT(3)(2) = false and
+	 LT(1.1)(2.1) and
+	 LT(2.1)(2.1) = false and
+	 LT(3.1)(3.0) = false and
+	 LE(1)(2) and
+	 LE(2)(2) and
+	 LE(3)(2) = false and
+	 LE(1.9)(2.0) and
+	 LE(2.2)(2.2) and
+	 LE(3.0)(2.999) = false and
+	 GT(2)(1) and
+	 GT(2)(2) = false and
+	 GT(1)(2) = false and
+	 GT(2.0)(1.999) and
+	 GT(2.999)(2.999) = false and
+	 GT(1.999999999)(2.0) = false and
+	 GE(2)(1) and
+	 GE(2)(2) and
+	 GE(2)(3) = false and
+	 GE(2.0)(1.9) and
+	 GE(2.999999)(2.999999) and
+	 GE(2.999999999)(3.0) = false)
+	;
+
+
+end FNumberT
+\end{vdm_al}

@@ -1,0 +1,1 @@
+lambda m : FunctionT03`整数 & lambda n : FunctionT03`整数 & m mod n

@@ -1,0 +1,13 @@
+class SetComprehensionExpr
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = {a+b |mk_A(a,b) : A & true}
+  in skip;
+
+------------------------------------------------------------------------------
+end SetComprehensionExpr

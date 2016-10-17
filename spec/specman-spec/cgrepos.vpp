@@ -1,0 +1,32 @@
+\begin{vdm_al}
+class CGRepository is subclass of ProjectTypes
+
+operations
+
+  ---
+  --- WriteCGInfo writes the CGInfo, info, on the file system.
+  --- The name of the CGInfo file is stored in the options class.
+  ---
+
+public WriteCGInfo: CGInfo ==> ()
+  WriteCGInfo (info) ==
+    is not yet specified;
+\end{vdm_al}
+$WriteCGInfo$ writes the CGInfo, info, on the file system.
+The name of the CGInfo file is stored in the options class.
+
+\begin{vdm_al}
+
+  ---
+  --- GetCGInfo reads a the CGInfo from the file system.
+  --- The name of the CGInfo file is stored in the options class.
+  ---
+
+public GetCGInfo: () ==> CGInfo
+  GetCGInfo () ==
+    is not yet specified
+ 
+end CGRepository
+\end{vdm_al}
+$GetCGInfo$ reads a the CGInfo from the file system.
+The name of the CGInfo file is stored in the options class.

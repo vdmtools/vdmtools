@@ -1,0 +1,33 @@
+ class B
+
+instance variables
+
+  c : C := new C();
+
+operations
+
+public Test : () ==> nat
+  Test() ==
+    let dummy = c.d.b
+    in
+      return dummy
+
+end B
+
+class C
+
+instance variables
+
+  public d : D := new D();
+
+end C
+
+class D
+
+instance variables
+
+protected b : nat := 8;
+
+end D
+
+

@@ -1,0 +1,14 @@
+class A
+
+operations
+
+public Test : () ==> bool
+Test () ==
+  return def a in set {6,4} = true
+         in
+           a
+    
+end A
+
+
+

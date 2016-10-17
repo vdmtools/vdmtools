@@ -1,0 +1,13 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+public Test : () ==> set of nat  
+Test () ==
+( dcl s : set of nat := {};
+
+  for all mk_(a,b) in set {mk_(1,2), mk_(3,4), mk_(5,6)} do
+    s := s union {a,b};
+
+  return s
+)
+   
+end A

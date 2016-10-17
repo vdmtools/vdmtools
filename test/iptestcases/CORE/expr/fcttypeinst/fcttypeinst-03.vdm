@@ -1,0 +1,24 @@
+class A
+
+operations
+public Test : () ==> map int to nat1 
+Test () ==
+  return plus_bag[int](-1,emptybag[int]() )
+
+functions
+
+  emptybag[@elem]:( )-> map @elem to nat1
+  emptybag( ) ==
+    {|->};
+
+  num_bag[@elem]: @elem * (map @elem to nat) +> nat
+  num_bag( e,m ) ==
+    if e in set dom m
+    then m(e)
+    else 0;
+
+  plus_bag[@elem]: @elem * (map @elem to nat ) +> (map @elem to nat)
+  plus_bag(e,m)  ==
+    m ++ { e |-> num_bag[@elem](e,m) + 1 }
+
+end A

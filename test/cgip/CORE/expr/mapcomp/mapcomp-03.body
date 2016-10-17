@@ -1,0 +1,18 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of map ( nat * nat ) to nat  
+Test () ==
+
+return 
+[ {let a = mk_(a,b) in a |-> a |a,b in set let a = {1,2} in a union {2,4} }
+] 
+
+
+
+types
+
+ AD::
+  b : ( bool | nat )
+
+
+
+

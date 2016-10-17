@@ -1,0 +1,25 @@
+class A
+
+types
+
+public t1 :: ;
+
+public t2 :: ;
+
+operations
+
+public GetVal : () ==> [t1 | t2]
+GetVal() ==
+  if true
+  then return mk_t1()
+  else return mk_t2();
+
+public Test : () ==> nat
+Test() ==
+  let v = GetVal()
+  in
+    if is_t1(v)
+    then return 1
+    else return 2
+
+end A

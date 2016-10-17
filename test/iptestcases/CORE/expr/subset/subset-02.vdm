@@ -1,0 +1,12 @@
+class A
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+public
+Test: () ==> bool
+Test() ==
+  return (if true then {3} else {}) subset (if false then {true} else {})
+
+------------------------------------------------------------------------------
+end A

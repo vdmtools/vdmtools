@@ -1,0 +1,48 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Internal representation of position information
+% $Id: pos.vdm,v 1.3 2000/04/07 10:28:40 blackie Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\section{Position Information}
+
+This section presents the representation of the position information that 
+has been added to the abstract syntax, as defined in the AS module.
+
+\begin{vdm_al}
+module POS
+imports
+
+  from AS all,
+  from CI all,
+  from REP all
+  
+exports all
+
+definitions
+
+  types
+  
+    PosInfo    :: row : nat
+                  column : nat
+                  fileid : int
+                  counter : [CoverageCounter]
+                  label : [SymbolicLabel];
+
+   CoverageCounter :: int;
+   SymbolicLabel  = seq of char
+
+end POS
+\end{vdm_al}
+
+The {\it counter} field may be nil if runtime information is not required.
+The {\it label} field may be nil if not needed.
+
+
+
+
+
+
+
+

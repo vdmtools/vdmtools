@@ -1,0 +1,198 @@
+class JavaIoBufferedWriter is subclass of JavaIoWriter
+--values 
+--  CLASS : JavaLangClass = new  JavaLangClass("JavaIoBufferedWriter" , <CLASS> , false  )
+instance variables 
+  private  out : JavaIoWriter;
+  private  cb : map  int  to  char ;
+  private  nChars : int ;
+  private  nextChar : int ;
+  private  static defaultCharBufferSize : int  := 80;
+  private  lineSeparator : JavaLangString
+operations 
+public  close : () ==> ()
+close() == 
+( ( --if  out.IsNil()
+    --then  
+    --  return  ;
+    flushBuffer();
+    out.close();
+--    out := new  JavaIoWriter(<NIL>);   An abstract class can not be instatiate!
+    cb := {|->}
+  ) ;
+  skip 
+) ;
+
+public  flush : () ==> ()
+flush() == 
+( ( flushBuffer();
+    out.flush()
+  ) ;
+  skip 
+) ;
+
+private  min : int  * int  ==> int 
+min(a, b) == 
+( if  a < b
+  then  
+    return  a;
+  return  b
+) ;
+
+public  write : int  ==> ()
+write(c) == 
+( ( ensureOpen();
+    if  nextChar >= nChars
+    then  
+      flushBuffer();
+    def l_3 = nextChar;
+    l_2 = l_3
+    in ( nextChar := l_3+1;
+--      cb := cb ++ {l_2 |-> J2VUTIL`Convert("char" , c)}
+      cb := cb ++ {l_2 |-> (new JavaLangInteger(c)).charValue()}
+    ) 
+  ) ;
+  skip 
+) ;
+
+public  newLine : () ==> ()
+newLine() == 
+( writeStrIntInt(lineSeparator,0,1);
+  skip 
+) ;
+
+--public  getClass : () ==> JavaLangClass
+--getClass() == 
+--return  CLASS;
+
+private  ensureOpen : () ==> ()
+ensureOpen() == 
+( --if  out.IsNil()
+  --then  
+  --  exit  new  JavaIoIOException(new  JavaLangString("Stream closed"));
+  skip 
+) ;
+
+public flushBuffer : () ==> ()
+flushBuffer() == 
+( ( ensureOpen();
+    if  nextChar = 0
+    then  
+      return  ;
+    out.writeICMIntInt(cb , 0 , nextChar);
+    nextChar := 0
+  ) ;
+) ;
+
+public  write : (map  int  to  char | JavaLangString)  * int  * int  ==> ()
+write(buf, off, len__) ==
+  if isofclass(JavaLangString,buf)
+  then writeStrIntInt(buf, off, len__)
+  else writeICMIntInt(buf, off, len__);
+
+public  writeICMIntInt : map  int  to  char  * int  * int  ==> ()
+writeICMIntInt(cbuf, off, len__) == 
+( ( ensureOpen();
+    if  (off < 0) or  (off > (card  dom  cbuf)) or  (len__ < 0) or  ((off+len__) > (card  dom  cbuf)) or  ((off+len__) < 0)
+    then  
+      ( exit  new  JavaLangIndexOutOfBoundsException()
+      ) 
+    else  
+    ( if  len__ = 0
+      then  
+        ( return  
+        ) ;
+--    if  len__ >= nChars
+--    then  
+--      ( flushBuffer();
+--        out.write(cbuf , off , len__);
+--        return  
+--      ) ;
+--    ( dcl   b : int  := off,
+--            t : int  := off+len__;
+--      trap  j2v_break with  
+--        cases  true  : 
+--          (isofclass  (J2V_Break,j2v_break)) -> 
+--            skip ,
+--          others  -> 
+--            exit  j2v_break
+--        end  
+--      in  
+--        while  b < t do  
+--        ( dcl   d : int  := min(nChars-nextChar , t-b);
+--          let - = JavaLangSystem`arraycopy(cbuf , b , cb , nextChar , d)
+--          in 
+--            skip ;
+--          def l_3 = b
+--          in b := l_3+d;
+--          def l_3 = nextChar
+--          in nextChar := l_3+d;
+--          if  nextChar >= nChars
+--          then  
+--           flushBuffer()
+--        ) 
+--    )
+      flushBuffer();
+      if nChars - nextChar < len__
+      then exit new JavaLangConversionBufferFullException()
+      else
+        (
+          cb:=cb ++ {i|->cbuf(off+i-nextChar) | i in set {nextChar,...,nextChar+len__-1}};
+          nextChar:=nextChar+len__
+        )
+    )
+
+  ) ;
+) ;
+
+public  writeStrIntInt : JavaLangString * int  * int  ==> ()
+writeStrIntInt(s, off, len__) == 
+( ( ensureOpen();
+    ( dcl   b : int  := off,
+            t : int  := off+len__;
+      while  b < t do  
+      ( dcl   d : int  := min(nChars-nextChar , t-b),
+              m: map int to char := s.substring(b , b+d).toCharArray();
+--          s.getChars(b , b+d , cb , nextChar);
+        for i=b to b+d-1
+        do cb(nextChar+i-b):=m(i-b);
+        def l_3 = b
+        in b := l_3+d;
+        def l_3 = nextChar
+        in nextChar := l_3+d;
+        if  nextChar >= nChars
+        then  
+          flushBuffer()
+      )
+    ) 
+  ) ;
+  skip 
+) ;
+
+public  JavaIoBufferedWriter : <NIL> ==> JavaIoBufferedWriter
+JavaIoBufferedWriter(-) == 
+isNil := true  ;
+
+public  JavaIoBufferedWriter : JavaIoWriter ==> JavaIoBufferedWriter
+JavaIoBufferedWriter(out) == 
+( let - = JavaIoBufferedWriter(out , defaultCharBufferSize)
+  in 
+    skip 
+) ;
+
+public  JavaIoBufferedWriter : JavaIoWriter * int  ==> JavaIoBufferedWriter
+JavaIoBufferedWriter(out, sz) == 
+( let - = JavaIoWriter(out)
+  in 
+    skip ;
+  if  sz <= 0
+  then  
+    exit  new  JavaLangIllegalArgumentException(new  JavaLangString("Buffer size <= 0"));
+  JavaIoBufferedWriter`out := out;
+  cb := {l_3 |-> ' '|l_3 in set  {0,...,sz-1}};
+  nChars := sz;
+  nextChar := 0;
+  lineSeparator := new  JavaLangString("\n")
+) ;
+
+
+end  JavaIoBufferedWriter

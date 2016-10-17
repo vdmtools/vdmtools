@@ -1,0 +1,24 @@
+module A
+
+exports all
+
+definitions
+functions
+
+f: nat -> nat
+f(a) == a
+
+end A
+
+module B
+
+imports 
+  from A
+    functions f renamed g
+exports all
+definitions
+functions 
+g: () -> nat
+g() == 7
+
+end B

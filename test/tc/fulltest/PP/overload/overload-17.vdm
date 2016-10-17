@@ -1,0 +1,17 @@
+class C
+
+operations
+
+public Get2 : () ==> bool
+Get2() ==
+  return true;
+    
+public Get2 : seq of char ==> seq of char
+Get2(p_str) ==
+  return p_str;
+  
+public Get2 : map token to nat1 ==> map token to nat1
+Get2(p_map) ==
+  return p_map;
+  
+end C

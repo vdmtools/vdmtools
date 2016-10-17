@@ -1,0 +1,18 @@
+class JavaLangIndexOutOfBoundsException is subclass of JavaLangRuntimeException
+operations 
+public  JavaLangIndexOutOfBoundsException : () ==> JavaLangIndexOutOfBoundsException
+JavaLangIndexOutOfBoundsException() == 
+( let - = JavaLangRuntimeException() in skip 
+) ;
+
+public  JavaLangIndexOutOfBoundsException : <NIL> ==> JavaLangIndexOutOfBoundsException
+JavaLangIndexOutOfBoundsException(-) == 
+isNil := true  ;
+
+public  JavaLangIndexOutOfBoundsException : JavaLangString ==> JavaLangIndexOutOfBoundsException
+JavaLangIndexOutOfBoundsException(s) == 
+( let - = JavaLangRuntimeException(s) in skip
+) ;
+
+
+end  JavaLangIndexOutOfBoundsException

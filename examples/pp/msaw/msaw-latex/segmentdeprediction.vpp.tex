@@ -1,0 +1,105 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{vdm}\index{SegmentDePrediction|ClassDef}
+{\small\sf class} $SegmentDePrediction$  \kISO $\index{Vecteur3D|ClassOcc}Vecteur3D, \index{Parametres|ClassOcc}Parametres$
+\begin{instvar}\index{modeA|InstVarDef}
+\vardcl{modeA}{ModeA\index{ModeA|TypeOcc}}
+\end{instvar}
+\begin{methdef}\index{Set|MethodDef}
+\begin{method}{Set}
+\parms{modeA' : ModeA\index{ModeA|TypeOcc}, positions : Temps\index{Temps|TypeOcc} \Gmap \Lp Coordonnees\index{Coordonnees|TypeOcc} \X Pieds\index{Pieds|TypeOcc} \Rp , bulletin-meteo :  @BulletinMeteo} \Fdef\\ \begin{letstmt}
+\patdef{temps-actuel}{\fnapply{LaPlusRecente}{ \Dom positions}}
+\patdef{temps-passe}{\fnapply{LaPlusRecente}{ \Dom positions \Setdiff \set{temps-actuel}}}
+\patdef{\reccons{\kw{mk-}}{xy-actuel,modeC-actuel}}{\fnapply{positions}{temps-actuel}}
+\patdef{\reccons{\kw{mk-}}{xy-passe,modeC-passe}}{\fnapply{positions}{temps-passe}}
+\end{letstmt} \\
+\begin{defstmt}
+\eqdef{qnh-xy-actuel}{\invoke{bulletin-meteo}{\index{GetQNH|MethodOcc}
+\fnapply{GetQNH}{xy-actuel}}}
+\eqdef{qnh-xy-passe}{\invoke{bulletin-meteo}{\index{GetQNH|MethodOcc}
+\fnapply{GetQNH}{xy-passe}}}
+\end{defstmt} \\
+\begin{letstmt}
+\patdef{z-actuel}{\fnapply{ModeC2Altitude}{modeC-actuel,qnh-xy-actuel}}
+\patdef{z-passe}{\fnapply{ModeC2Altitude}{modeC-passe,qnh-xy-passe}}
+\patdef{\reccons{\kw{mk-}}{xy-prevu,z-prevu}} \\
+{\fnapply{PositionFuture}{xy-passe,z-passe,xy-actuel,z-actuel, \\
+DureeExtrapolation,VitesseMaximale}}
+\end{letstmt} \\
+\begin{blockstmt}
+\ass{modeA}{modeA'} ; \\
+\ass{xy-queue}{xy-actuel} ; \\
+\ass{z-queue}{z-actuel} ; \\
+\ass{xy-tete}{xy-prevu} ; \\
+\ass{z-tete}{z-prevu}
+\end{blockstmt}
+\begin{precond} \Card  \Dom positions \Ge 2
+\end{precond}
+\end{method}\index{GetmodeA|MethodDef}
+\begin{method}{GetmodeA}
+\parms{}\methvalue{ModeA\index{ModeA|TypeOcc}} \Fdef\\ \return{modeA}
+\end{method}
+\end{methdef}
+\begin{funcdef}\index{ModeC2Altitude|FuncDef}
+\begin{fn}[e]{ModeC2Altitude}
+\signature{Pieds\index{Pieds|TypeOcc} \X Hpa\index{Hpa|TypeOcc} \To Pieds\index{Pieds|TypeOcc}}
+\parms{modeC, qnh}
+modeC \Minus 27.5 \X \pex{1013.25 \Minus qnh}
+\end{fn}\index{PositionFuture|FuncDef}
+\begin{fn}[e]{PositionFuture}
+\signature{Coordonnees\index{Coordonnees|TypeOcc} \X Pieds\index{Pieds|TypeOcc} \X Coordonnees\index{Coordonnees|TypeOcc} \X Pieds\index{Pieds|TypeOcc} \X Duree\index{Duree|TypeOcc} \X KT\index{KT|TypeOcc} \To  \\
+Coordonnees\index{Coordonnees|TypeOcc} \X Pieds\index{Pieds|TypeOcc}}
+\parms{\reccons{\kw{mk-}}{x-passe,y-passe}, z-passe, \reccons{\kw{mk-}}{x-actuel,y-actuel}, z-actuel, d, vitesse}
+\begin{letexpr}
+\patdef{c}{\reccons{\kw{mk-}}{2 \X x-actuel \Minus x-passe,2 \X y-actuel \Minus y-passe}}
+\patdef{p}{2 \X z-actuel \Minus z-passe}
+\end{letexpr} \\
+\reccons{\kw{mk-}}{c,p}
+\end{fn}
+\end{funcdef}
+{\small\sf end} $SegmentDePrediction$
+
+\end{vdm}

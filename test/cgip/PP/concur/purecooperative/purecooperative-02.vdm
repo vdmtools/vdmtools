@@ -1,0 +1,108 @@
+--------------------------------------------------
+class Shared
+
+instance variables
+
+data : seq of seq of char := []
+
+operations
+
+public putB : seq of char ==> ()
+putB(m) ==
+(data := data;
+ data := data ^ [m];
+ data := data;
+ data := data;
+ data := data;
+ data := data;
+ data := data;
+ data := data;
+ data := data;
+ data := data;
+); 
+
+public putC : seq of char ==> ()
+putC(m) ==
+data := data ^ [m];
+
+public get : () ==> seq of seq of char
+get() ==
+  return data
+
+sync
+
+  per putB => #req(putB) < 10;
+  per putC => #req(putB) < 8 and #req(putC) < 5;
+  per get  => #fin(putB,putC) > 12
+
+end Shared
+--------------------------------------------------
+
+class B
+
+instance variables
+
+  s : Shared;
+
+operations
+
+public Set : Shared ==> ()
+Set(ns) == (s := ns)
+
+thread
+
+  while true do
+    s.putB("B");
+
+end B
+--------------------------------------------------
+class C
+
+instance variables
+
+  s : Shared;
+
+operations
+
+public Set : Shared ==> ()
+Set(ns) == (s := ns)
+
+thread
+
+  while true do
+    s.putC("C");
+
+
+end C
+--------------------------------------------------
+
+class A
+
+operations
+
+public Test : () ==> seq of seq of char
+Test() ==
+(
+  dcl b : B := new B(),
+      c : C := new C(),
+      s : Shared := new Shared();
+
+  b.Set(s);
+  c.Set(s);
+  
+  start(b);
+  start(c);
+
+  s.get();
+  
+)
+
+end A
+--------------------------------------------------
+
+
+
+
+
+
+

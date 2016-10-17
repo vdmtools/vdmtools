@@ -1,0 +1,31 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+( dcl m : map (real|bool) to real;
+  dcl a : nat :=1;
+  dcl b : nat,
+      q : map nat to nat := op();
+  b := 3;
+  if 1=1 then 
+    skip;
+  m := { a |-> b };
+  let m1 = { 4 |-> 4 }
+  in ( dcl b : bool := let a : bool = true in a;
+       if not b
+       then return m1
+       else ( dcl c : (nat | seq of char) := if b
+				             then 3
+					     else "hello world";
+	      m := m ++ { b |-> c };
+              ( dcl e : map real to nat := { 3.6 |-> 3};
+                m := m ++ e
+              );
+              ( dcl f : ( bool | nat ) := is_int(3);
+	        dcl g : map nat to nat := m1; 
+		return q ++ m1 ++ g ) ) )
+);
+
+op: () ==> map nat to nat  
+op () ==
+  return { i |-> 2*i | i in set {50,...,60} }
+
+
+

@@ -1,0 +1,80 @@
+class CasesExprTest
+	functions
+
+  f : () -> inmap rat to nat
+  f() ==
+    {2 |-> 5}
+  pre true
+--  post true
+
+types
+
+  A :: a: int
+       b: bool
+
+values
+
+  v1 : A = mk_A(1,true);
+  n : real = 88
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let t = true,
+      nill = nil,
+      one = 1,
+      - = let m:char =
+        cases n:
+         1
+	   -> t
+	,
+         7
+           -> card {1,2,3,3}
+	,
+         12
+           -> dunion { { 1,2,3}, {4,5,6} }
+        ,
+         13
+           -> power {true, false}
+        ,
+         14
+           -> len [1,2,true]
+        ,
+         15
+           -> conc [ ["abc",0], [true,mk_(1,false)] ]
+        ,
+         16
+           -> elems [ 'a', 1, true, 1, 0 ]
+        ,
+         17
+           -> inds [ 'a', 1, true, 1, 0 ]
+        ,
+         18
+           -> tl [ 'a', 1, true, 1, 0 ]
+        ,
+         19
+           -> hd [ 'a', one, t, one ]
+        ,
+         20
+           -> dom {1 |-> "abc", 2 |-> mk_(2,true)}
+        ,
+         21
+           -> rng {1 |-> "abc", 2 |-> mk_(2,true)}
+        ,
+         22
+           -> merge { {1 |-> "abc", 2 |-> mk_(2,true)}, { |-> } }
+        ,
+         23
+           -> dinter { { 1,2,3}, {4,5,6} }
+	,
+         others -> nill
+        end
+        in m 
+  in skip;
+
+------------------------------------------------------------------------------
+end CasesExprTest

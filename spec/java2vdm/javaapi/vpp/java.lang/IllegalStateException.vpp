@@ -1,0 +1,20 @@
+class JavaLangIllegalStateException is subclass of JavaLangRuntimeException
+operations 
+public  JavaLangIllegalStateException : () ==> JavaLangIllegalStateException
+JavaLangIllegalStateException() == 
+( let - = JavaLangRuntimeException()
+  in skip 
+) ;
+
+public  JavaLangIllegalStateException : <NIL> ==> JavaLangIllegalStateException
+JavaLangIllegalStateException(-) == 
+isNil := true  ;
+
+public  JavaLangIllegalStateException : JavaLangString ==> JavaLangIllegalStateException
+JavaLangIllegalStateException(s) == 
+( let - = JavaLangRuntimeException(s)
+  in skip 
+) ;
+
+
+end  JavaLangIllegalStateException

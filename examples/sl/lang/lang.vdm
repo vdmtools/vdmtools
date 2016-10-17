@@ -1,0 +1,38 @@
+types
+
+
+Expr = Const | Var | Infix | Cond;
+Const :: (nat | bool);
+Var :: id: seq of char
+       tp: [<Bool> | <Nat>];
+Infix :: Expr * Op * Expr;
+Cond :: test : Expr
+        const : Expr
+        altn : Expr;
+Op = token
+
+functions
+
+print_Expr : Expr -> seq1 of char
+print_Expr (e) ==
+  cases e:
+    mk_Const(-) -> "Const of"^(print_Const(e)),
+    mk_Var(id,-) -> "Var of"^id,
+    mk_Infix(mk_(e1,op,e2)) -> "Infix of"^print_Expr(e1)^","
+                                    ^print_Op(op)^","
+                                    ^print_Expr(e2),
+    mk_Cond(t,c,a) -> "Cond of"^print_Expr(t)^","
+                               ^print_Expr(c)^","
+                               ^print_Expr(a)
+  end;
+
+print_Const : Const -> seq1 of char
+print_Const(mk_Const(c)) ==
+  if is_nat(c)
+  then "nat"
+  else -- must be bool
+       "bool";
+
+print_Op : Op -> seq1 of char
+print_Op(-) == "op"
+

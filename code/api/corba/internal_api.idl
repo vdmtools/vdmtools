@@ -1,0 +1,54 @@
+/***
+*  * WHAT
+
+*  *    The CORBA IDL definition of the internal parts of the API of
+*  *    the VDM Toolbox. The public interface towards the Toolbox is
+*  *    described in corba_api.idl and metaiv_idl.idl
+*  *    
+*  * FILE
+*  *    $Source: /home/vdmtools/cvsroot/toolbox/code/api/corba/internal_api.idl,v $
+*  * VERSION
+*  *    $Revision: 1.4 $
+*  * DATE
+*  *    $Date: 2005/05/27 00:28:34 $
+*  * STATUS
+*  *    Under development
+*  * REFERENCES
+*  *    
+*  * PROJECT
+*  *    INFORMA and Toolbox
+*  * AUTHOR
+*  *    Ole Storm + $Author: vdmtools $
+*  * COPYRIGHT
+*  *    (C) Kyushu University
+***/
+
+
+#include "corba_api.idl"
+#include "metaiv_idl.idl"
+
+module ToolboxAPI {
+
+// Definition of events and event queues:
+typedef VDM::VDMGeneric Event;
+typedef VDM::VDMSequence EventList;
+
+
+interface Application : VDMApplication
+{
+  // This method returns the list of events associated with the client
+  // identified by id. If no events are available in the queue
+  // associated with client id the call is left "hanging" until an
+  // event is ready.
+  EventList GetEvents(in VDM::ClientID id)
+    raises (APIError);
+
+  // Use this extended registration method register the client such
+  // that it gets its own event queue in the server. The call to
+  // Application::RegisterEventListener() will then replace the call
+  // to VDMApplication::Register().
+  VDM::ClientID RegisterEventListener();
+
+};
+
+}; // module ToolboxAPI

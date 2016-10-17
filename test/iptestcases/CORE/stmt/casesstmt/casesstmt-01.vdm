@@ -1,0 +1,66 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+public Test : () ==> set of ( nat | seq of nat | real | seq of char | <WORLD> | bool )  
+Test () ==
+( dcl s : set of ( real | seq of (char|nat) | <WORLD> | bool )  ;
+  dcl b : bool := true;
+  cases let a = {3, 6,1} in a:
+     { a, b, c } -> let d = [a, b, c] in s := { d },
+     others      -> s := { } 
+  end;
+
+  cases if is_char('a')
+        then {3, 6}
+	else [3, 6] :
+         {a,b} -> ( dcl c : nat := 3;
+	            s:= s union {a -b -c } ),
+         [a,b] -> s := s union {a +b },
+	 others -> s := s union {"Something Wrong" }
+  end;
+
+  cases [ <HELLO>, <WORLD>]:
+    ( [<HELLO>, "World" ]) -> s := s union {"Something Wrong" },
+    [ <HELLO> , b ] -> s := s union { b }
+  end;
+ 
+
+  cases {3 |-> 4, false |-> <HELLO>}(3):
+       a -> while b do
+             ( if a>3
+	       then b := false;
+	       s := s union {false}
+             )
+  end;
+
+
+  cases b:
+     ( true ) -> s := s union {<WORLD>},
+     ( false ) -> if is_int(if 1=1 then <HELLO> else 1)
+		  then return {2}
+                  else s := s union { 3.64}
+  end;
+
+  cases 10 :
+       mk_(a, b ),
+       [ a, b ],
+        a ,
+       { a, b } -> s := s union {a},
+      others -> s := s union {1}
+  end;
+
+  return s
+)
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

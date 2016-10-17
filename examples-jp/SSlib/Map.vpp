@@ -1,0 +1,22 @@
+/* $Id: Map.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $
+ *@Ó”CF
+ *	Ê‘œ‚ğˆµ‚¤ŠÖ”‚ğ’ñ‹Ÿ‚·‚é 
+*/
+class Map
+
+functions
+--Ê‘œ‚ÉaKey‚ª‚ ‚ê‚ÎA‘Î‰‚·‚é’lˆæ‚Ì’l‚ğ•Ô‚µA–³‚¯‚ê‚Înil‚ğ•Ô‚·
+static public Get[@Œ^1, @Œ^2] : map @Œ^1 to @Œ^2 -> @Œ^1 -> [@Œ^2]
+Get(aMap)(aKey) ==
+	if aKey in set dom aMap then
+		aMap(aKey)
+	else
+		nil;
+
+static public Contains[@Œ^1, @Œ^2] : map @Œ^1 to @Œ^2 -> @Œ^2 -> bool
+Contains(aMap)(aValue) == aValue in set rng aMap;
+
+static public ContainsKey[@Œ^1, @Œ^2] : map @Œ^1 to @Œ^2 -> @Œ^1 -> bool
+ContainsKey(aMap)(aKey) == aKey in set dom aMap;
+	
+end Map

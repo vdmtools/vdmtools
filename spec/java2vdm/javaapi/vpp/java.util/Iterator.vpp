@@ -1,0 +1,20 @@
+class JavaUtilIterator --is subclass of JavaLangObject
+operations
+--public  JavaUtilIterator : <NIL> ==> JavaUtilIterator
+--JavaUtilIterator(-) ==
+--isNil:=true;
+ 
+public  next : () ==> JavaLangObject
+next() == 
+is subclass responsibility ;
+
+public  remove : () ==> ()
+remove() == 
+is subclass responsibility ;
+
+public  hasNext : () ==> bool 
+hasNext() == 
+is subclass responsibility ;
+
+
+end  JavaUtilIterator

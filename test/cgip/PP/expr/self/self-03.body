@@ -1,0 +1,21 @@
+class C
+
+  functions
+    public    f[@tp] : seq of @tp -> nat
+    f(l) == len l
+
+  types
+    public T::n:nat
+end C
+
+class B
+
+operations
+
+  public Test : () ==> nat
+  Test() ==
+  (  dcl a: C := new C();
+      return a.f[C`T]([mk_C`T(8)])
+  )
+
+end B

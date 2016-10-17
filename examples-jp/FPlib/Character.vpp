@@ -1,0 +1,76 @@
+\subsection{FCharacter}
+文字（char）型に関わる関数を提供する。
+文字型で定義された機能以外の機能を定義する。
+
+\begin{vdm_al}
+--$Id: Character.vpp,v 1.1 2005/10/31 02:09:58 vdmtools Exp $
+class FCharacter
+	
+functions
+\end{vdm_al}
+
+\subsubsection{変換関数群}
+
+数字を整数に変換する
+\begin{vdm_al}
+static public AsDigit: char +> [int]
+AsDigit(c) ==
+	cases c:
+	'0'	-> 0,
+	'1'	-> 1,
+	'2'	-> 2,
+	'3'	-> 3,
+	'4'	-> 4,
+	'5'	-> 5,
+	'6'	-> 6,
+	'7'	-> 7,
+	'8'	-> 8,
+	'9'	-> 9,
+	others	-> nil
+	end;
+\end{vdm_al}
+
+英数字の辞書順序を返す。英数字以外の文字の場合は256を返す。
+\begin{vdm_al}
+static public AsDictOrder : char +> int
+AsDictOrder(c) ==
+	let	
+		DictOrderStr = 			"0123456789aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ",
+		i = FString`Index(c)(DictOrderStr),
+		undefinedSeq = 256	
+	in
+	cases true:
+		(0 < i and i <= len DictOrderStr)	-> i - 1,
+		others					-> undefinedSeq
+	end;
+\end{vdm_al}
+		
+\subsubsection{判定関数群}
+
+数字かどうか判定する。
+\begin{vdm_al}
+static public IsDigit : char +> bool
+IsDigit(c) == c in set elems "0123456789";
+\end{vdm_al}
+
+文字の辞書順序での大小を判定する。
+\begin{vdm_al}
+static public LT: char -> char -> bool
+LT(c1)(c2) == AsDictOrder(c1) < AsDictOrder(c2);
+
+static public LE : char -> char -> bool
+LE(c1)(c2) ==  LT(c1)(c2) or c1 = c2;
+
+static public GT : char -> char -> bool
+GT(c1)(c2) == LT(c2)(c1);
+
+static public GE : char -> char -> bool
+GE(c1)(c2) == not LT(c1)(c2);
+			
+end FCharacter
+\end{vdm_al}
+
+
+\begin{rtinfo}
+[FCharacter]{vdm.tc}[FCharacter]
+\end{rtinfo}

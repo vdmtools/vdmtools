@@ -1,0 +1,156 @@
+\subsection{FInteger}
+整数型に関わる関数を定義する。
+
+\begin{vdm_al}
+--"$Id"
+class FInteger
+
+functions 
+\end{vdm_al}
+
+\subsubsection{変換関数群}
+
+AsStringは、符号を考慮して、整数を数字文字列に変換する。
+\begin{vdm_al}
+static public AsString: int -> seq1 of char 
+AsString(i) == 
+	if i < 0 then
+		"-" ^ FInteger`AsStringAux(-i)
+	else
+		FInteger`AsStringAux(i) ;
+\end{vdm_al}
+
+AsStringAuxは、符号を考慮せずに整数を数字文字列に変換する。
+\begin{vdm_al}		
+static public AsStringAux: nat -> seq1 of char 
+AsStringAux(n) == 
+	let	m = n mod 10,
+		d = n div 10
+	in
+		cases d:
+			0		-> AsChar(m),
+			others	-> AsStringAux(d) ^ AsChar(m)
+		end;
+\end{vdm_al}
+
+AsStringZは、整数をZZZ9.ZZ形式の数字文字列に変換する（まだ小数点は考慮していない）。
+\begin{vdm_al}
+static public AsStringZ: seq of char -> int -> seq1 of char 
+AsStringZ(z)(i) == 
+	let	minus = '-',
+		s = FString`SubStr(2)(len z)(z)	in
+	if i < 0 then
+		if z(1) = minus then
+			[minus] ^ AsStringZAux(s)(-i)(true)
+		else
+			AsStringZAux(z)(-i)(true)
+	else
+		if z(1) = minus then
+			AsStringZAux(s)(i)(true)
+		else
+			AsStringZAux(z)(i)(true) ;
+\end{vdm_al}
+ 
+AsStringZAuxは、整数をZZZ9.ZZ形式の数字文字列に変換する補助関数（まだ小数点は考慮していない）。
+１桁で0の場合は、変換指定が"z"なら空白を返す。
+\begin{vdm_al}
+static public AsStringZAux: seq of char -> nat  -> bool -> seq1 of char 
+AsStringZAux(z)(n)(toNowZero) == 
+  	let	zLen = len z,
+  		z文字 = z(zLen),
+  		zStr = FString`SubStr(1)(zLen - 1)(z),
+  		m = n mod 10,
+  		d = n div 10,
+  		wasZero = m = 0 and toNowZero and d <> 0 
+  	in
+  		cases zStr:
+  			[]		-> FInteger`AsCharZ(z文字)(m)(wasZero),
+  			others	-> 
+  				FInteger`AsStringZAux(zStr)(d)(wasZero) ^ 
+  				FInteger`AsCharZ(z文字)(m)(wasZero)
+		end;
+\end{vdm_al}
+ 
+AsCharZは、ゼロサプレスを考慮して、整数を文字列の文字に変換する。
+変換指定文字の全部のケースは考慮していない。
+\begin{vdm_al}
+static public AsCharZ : char -> nat -> bool ->  seq1 of char | bool
+AsCharZ(zChar)(n)(toNowZero) ==
+	cases n:
+		0	-> 
+			if zChar in set {'z', 'Z'} and toNowZero then
+				"0"
+			elseif zChar = '0'  or zChar = '9' then
+				"0"
+			else
+				" ",	
+		1	-> "1",
+		2	-> "2",
+		3	-> "3",
+		4	-> "4",
+		5	-> "5",
+		6	-> "6",
+		7	-> "7",
+		8	-> "8",
+		9	-> "9",
+		others	-> false
+	end;
+\end{vdm_al}
+
+
+AsCharは、１桁の整数iを文字列に変換する。
+ｉが１桁の整数でなければ、falseを返す。
+\begin{vdm_al}
+static public AsChar : int -> seq1 of char | bool
+AsChar(i) ==
+	cases i:
+		0	-> "0",
+		1	-> "1",
+		2	-> "2",
+		3	-> "3",
+		4	-> "4",
+		5	-> "5",
+		6	-> "6",
+		7	-> "7",
+		8	-> "8",
+		9	-> "9",
+		others	-> false
+	end;
+\end{vdm_al}
+
+Gcdは、x, yの最大公約数を得る。
+\begin{vdm_al}
+static public GCD : nat -> nat -> nat
+GCD(x)(y) == if y = 0 then x else GCD(y)(x rem y);
+\end{vdm_al}
+
+LCMは、x, yの最小公倍数を得る。
+\begin{vdm_al}
+static public LCM : nat -> nat -> nat
+LCM(x)(y) ==
+	cases mk_(x, y) :
+	mk_(-, 0)	-> 0,
+	mk_(0, -)	-> 0,
+	mk_(x, y)	-> (x / GCD(x)(y)) * y
+	end;
+\end{vdm_al}
+
+amodは商環（quotient ring）上での剰余計算を行う。
+例えば、暦の処理で１２で割った余りが０の場合１２を返したいときなどに使う。
+\begin{vdm_al}
+static public amod : int -> int -> int
+amod(x)(y) == 
+	let	a = x mod y
+	in
+	if a = 0 then 
+		y
+	else
+		x mod y ;
+			
+end FInteger
+\end{vdm_al}
+
+
+\begin{rtinfo}
+[FInteger]{vdm.tc}[FInteger]
+\end{rtinfo}

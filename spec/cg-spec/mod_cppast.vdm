@@ -1,0 +1,1444 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Abstract Syntax of C++/Java
+% $Id: mod_cppast.vdm,v 1.64 2001/09/18 09:11:52 paulm Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+#define CNTXT cid :- CI`ContextId
+
+\section{Module CPP - C++/Java Abstract Syntax}
+\label{sec:cpp}
+
+This module contains the definition of the abstract syntax of C++ and
+Java.  The C++ abstract syntax tree have been extended to also cover
+Javas abstract syntax.
+
+The basis of the definition of the abstract syntax of C++ has been
+the Grammar Summary in \cite{Ellis&90} section 17. Most of the names
+used in the abstract syntax is taken from the Grammar Summary, and the
+overall structure of the abstract syntax is also inspired from the
+Grammar Summary.
+
+
+The code generator can be in two modes: CPP and JAVA. Initially, the
+code generator is in CPP mode.
+
+
+%Following points differs from the {\em Grammar Summary\/} in \cite{Ellis&90}:
+
+%\begin{description}
+%\item{member-declarator} The construction:
+%\[
+%\mbox{identifier}_{opt}: constant-expression
+%\]
+%is omitted.
+%\end{description}
+
+\vspace{1cm}
+
+\begin{vdm_al}
+
+module CPP
+
+imports
+
+#ifdef JSS
+  from JSSREP all,
+#endif JSS
+  from AS all,
+  from CI all,
+  from REP all
+
+exports all
+
+definitions
+
+state CG of
+  mode     : <JAVA>|<CPP>
+init s==s=mk_CG(<CPP>)
+end
+
+operations
+
+setmode: (<JAVA>|<CPP>) ==> ()
+setmode(m) ==
+        mode := m;
+
+isJAVA:() ==> bool
+isJAVA()==
+        return (mode=<JAVA>);
+
+isCPP:() ==> bool
+isCPP()==
+        return (mode=<CPP>);
+
+
+types 
+
+\end{vdm_al}
+
+
+\subsection{Compilation Unit}
+A File can be a CPP or Java File. A File contains a name, a header and
+an abstract syntax tree. The Header of a CPP File contains a
+Preprocessor list while the Header of a Java File contains Package and
+Import Declarations.  The CPP AST is a sequence of Declarations,
+Include statements and Preprocessor statements, while the latter two
+are forbid in the JAVA AST.
+\begin{vdm_al}
+
+AstCI ::
+  ast: Files
+  tllci : seq of CI`TokenContextInfo
+  fidm : CI` FileIdMap
+;
+
+ Files = set of File;
+
+ File ::
+  dirname : [seq of FileName]
+  name : FileName
+  h    : [Header]
+  ast  : CPPAS
+  CNTXT
+ inv file == isJAVA() => forall e in set elems file.ast 
+                             & is_IdentDeclaration(e);
+
+ FileName = seq1 of char;
+
+ Header = Preprocessors |
+          PackageAndImportDeclarations
+ inv h == isJAVA() => is_PackageAndImportDeclarations(h) 
+          and
+          isCPP() => not is_PackageAndImportDeclarations(h);
+
+ CPPAS = seq of (Declaration | QuoteIncl | PreProcStmt | Comments )
+ inv declL == isJAVA() => forall decl in set elems declL &
+                            is_(decl,Declaration);
+\end{vdm_al}
+
+The following type is defined to be the main entry point for the Java
+to VDM++ conversion. It is essentially a wrapper for a Java class,
+with the file name and header for the file from which the class
+originates. 
+\begin{vdm_al}
+ Module:: name   : [FileName]                    -- implemented as AS`Name
+          header : [PackageAndImportDeclarations]
+          ast    : IdentDeclaration;             -- class decl
+\end{vdm_al}
+
+\subsubsection{Preprocessors (C++)}
+\begin{vdm_al}
+
+ Preprocessors = seq of Preprocessor
+ inv - == not isJAVA();
+
+ Preprocessor = IdMacroDef | 
+                FctMacroDef | 
+                SquareIncl |
+                QuoteIncl |
+		PreProcStmt
+  inv - == not isJAVA();
+
+ IdMacroDef :: 
+   id : seq1 of char
+   ts : seq1 of char
+   CNTXT
+ inv - == not isJAVA();
+
+ FctMacroDef ::
+   id : seq1 of char
+   id_l : seq of seq1 of char
+   ts   : seq1 of char
+   CNTXT
+ inv - == not isJAVA();
+
+ SquareIncl ::
+   name : FileName
+   CNTXT
+ inv - == not isJAVA();
+
+ QuoteIncl ::
+   name : FileName
+   CNTXT
+ inv - == not isJAVA();
+\end{vdm_al}
+
+\subsubsection{Preprocessor Statements (C++)}
+
+The $IncludeStmt$ is a statement used by the code generator. This
+statement corresponds to a quote include preprocessor. 
+
+\begin{vdm_al}
+
+  PreProcStmt = IncludeStmt |
+                PreIf |
+		PreIfDef |
+		PreIfNotDef |
+		PreDefine |
+		PreElse |
+		PreEndIf |
+		PreMacro
+ inv - == not isJAVA();
+
+  IncludeStmt ::
+    incl : QuoteIncl
+    CNTXT
+ inv - == not isJAVA();
+
+  PreIf ::
+        expr : Expr    -- must be constant expression
+	CNTXT
+ inv - == not isJAVA();
+
+  PreIfDef :: 
+         id  : Identifier
+	 CNTXT 
+ inv - == not isJAVA();
+ 
+  PreIfNotDef :: 
+         id  : Identifier
+	 CNTXT
+ inv - == not isJAVA();
+
+  PreDefine ::
+         id  : Identifier
+         val : Expr
+	 CNTXT
+  inv - == not isJAVA();
+
+  PreElse :: CNTXT
+  inv - == not isJAVA();
+
+  PreEndIf ::
+         id  : Identifier
+	 CNTXT 
+  inv - == not isJAVA();
+
+  PreMacro :: 
+        id : Identifier
+	CNTXT
+  inv - == not isJAVA();
+
+\end{vdm_al}
+
+\subsubsection{Annotations (Java)}
+\begin{vdm_al}
+ Annotation ::
+   cls : Identifier
+   args : [seq1 of char]
+   CNTXT
+ inv - == isJAVA();
+ 
+ AnnotationSpec = seq of Annotation;
+
+\end{vdm_al}
+
+\subsubsection{Package and Import Declarations (Java)}
+
+\begin{vdm_al}
+ PackageAndImportDeclarations ::
+   pd: [PackageDeclaration]
+   ims: ImportDeclarations
+   CNTXT
+ inv - == isJAVA();
+
+ PackageDeclaration:: 
+   name: PackageName
+   CNTXT
+ inv - == isJAVA();
+ 
+ PackageName =
+   QualifiedPackageName | SimplePackageName
+ inv - == isJAVA();
+
+ QualifiedPackageName::
+   pn: PackageName 
+   id: Identifier
+   CNTXT
+ inv - == isJAVA();
+ 
+ SimplePackageName::
+   id : Identifier
+   CNTXT
+ inv - == isJAVA();
+      
+ ImportDeclarations = seq of ImportDeclaration
+ inv - == isJAVA();
+  
+ ImportDeclaration =
+   SingleTypeImportDeclaration | TypeImportOnDemandDeclaration
+ inv - == isJAVA();
+
+ SingleTypeImportDeclaration::
+   name: PackageName
+   CNTXT
+ inv - == isJAVA();
+
+ TypeImportOnDemandDeclaration::
+   name: PackageName
+   CNTXT
+ inv - == isJAVA();
+
+\end{vdm_al}
+
+\subsection{Declarations} 
+
+In Java, the declarations at the outermost
+level can only be Class declarations or
+Interface declarations. Function definitions (MethodDeclarations) and
+SimpleTypeNames (FieldDeclarations) are not allowed at the outermost level.
+
+\begin{vdm_al}
+ Declaration =
+    IdentDeclaration |
+    FunctionDefinition;
+
+ IdentDeclaration ::
+    ds : seq of DeclSpecifier
+    dl : [DeclaratorList] -- why optionel??
+    annos : AnnotationSpec
+    CNTXT;
+
+ DeclSpecifiers = seq of DeclSpecifier;
+
+ DeclSpecifier =
+    StorageClassSpecifier | 
+    TypeSpecifier |
+    FctSpecifier |
+    ArraySpecifier |
+    Friend |
+    TypeDef |
+    Modifier 
+ inv spec == isJAVA()
+             => is_TypeSpecifier(spec) or
+	        is_Modifier(spec) or
+		is_StorageClassSpecifier(spec) or
+		is_ArraySpecifier(spec); 
+
+\end{vdm_al}
+
+\subsubsection{Declaration Specifiers}
+
+\begin{vdm_al}
+ StorageClassSpecifier ::
+    val: <AUTO> | <REGISTER> | <STATIC> | <EXTERN>
+    CNTXT;
+
+ TypeSpecifier :: 
+  tp:  SimpleTypeName | 
+       ClassSpecifier | 
+       InterfaceSpecifier |
+       EnumSpecifier | 
+       ElaboratedTypeSpecifier |
+       <CONST> |
+       <VOLATILE> |
+       <REFERENCE> |
+       <FINAL>
+  CNTXT
+ inv spec == isJAVA() => not (is_EnumSpecifier(spec.tp) or
+                              is_ElaboratedTypeSpecifier(spec.tp) or 
+                              spec.tp=<CONST> or spec.tp=<VOLATILE>)
+             and isCPP() => not (is_InterfaceSpecifier(spec.tp) or
+                                 spec.tp=<FINAL>);
+
+ ArraySpecifier ::
+   CNTXT
+ inv - == isJAVA();
+  
+ FctSpecifier ::
+   val : <INLINE> | <VIRTUAL>
+   CNTXT;    
+
+ Friend :: CNTXT;
+
+ TypeDef :: CNTXT;
+
+ Modifiers = seq of Modifier;
+
+ Modifier :: 
+   ma : ModifierAccess
+	     CNTXT;
+
+ ModifierAccess =
+            <PUBLIC> |
+            <PROTECTED> |
+            <PRIVATE> |
+            <ABSTRACT> |
+            <FINAL> |
+            <NATIVE> |
+            <SYNCHRONIZED> |
+            <TRANSIENT> |
+            <STATIC> |
+            <VOLATILE> |
+            <STRICTFP>;
+	    
+ EnumSpecifier ::
+   id : [Identifier]
+   el : seq of Enumerator
+   CNTXT;
+
+ Enumerator = Identifier | EnumDefaultAssgn;
+
+ EnumDefaultAssgn ::
+   id : Identifier
+   ce : Expr
+   CNTXT;
+
+ ElaboratedTypeSpecifier ::
+   ck : <CLASS> | <STRUCT> | <UNION> | <ENUM>
+   id : Identifier | EnumName
+   CNTXT;
+
+\end{vdm_al}
+
+\subsubsection{Declarators} 
+
+\begin{vdm_al}
+ DeclaratorList = seq of InitDeclarator;
+
+ InitDeclarator ::
+     decl : Declarator
+     i    : [ Initializer ]
+     CNTXT;
+
+ Initializer = AsgnInit | EnumInit | ObjectInit;
+
+ AsgnInit :: expr :Expr
+             CNTXT;
+ 
+ ObjectInit :: exprs : Exprs
+               CNTXT;
+
+ Declarator =
+     Name |
+     Destructor |
+     TypeDefName |
+     IndirectionDecl |
+     RefDecl |
+     PointerToMember |
+     FctDecl | 
+     ArrayDecl |
+     BracketedDecl
+ inv decl == isJAVA() => not(is_Destructor(decl) or is_TypeDefName(decl)
+                         or is_IndirectionDecl(decl) or is_RefDecl(decl) or
+                         is_PointerToMember(decl) or is_BracketedDecl(decl));
+ FctDecl ::
+     decl : Declarator
+     arg : [ArgumentDeclarationList] 
+     cvlist : [CVQualifierList]
+     CNTXT
+ inv fdecl == isJAVA() => (fdecl.cvlist = nil);
+
+ ArrayDecl ::
+     decl : Declarator
+     expr : [Expr]
+     CNTXT;
+
+ TypeName ::
+   tsp : seq of TypeSpecifier
+   ad  : [AbstractDeclarator]
+   CNTXT;
+ 
+ AbstractDeclarator =
+     IndirectionAbsDecl |
+     RefAbsDecl |
+     PointerToMemberAbs |
+     FctAbsDecl | 
+     ArrayAbsDecl |
+     BracketedAbsDecl;
+
+ FctAbsDecl ::
+     ad  : [AbstractDeclarator]
+     adl : ArgumentDeclarationList
+     cql : [CVQualifierList]
+     CNTXT;
+
+ ArrayAbsDecl ::
+     ad  : [AbstractDeclarator]
+     ce  : [Expr]
+     CNTXT;
+
+  ArgumentDeclarationList ::
+     arg      : [ seq of ArgumentDeclaration ]
+     ellipsis : [ <ELLIPSIS> ]
+     CNTXT;
+
+ ArgumentDeclaration = 
+     ArgDecl | 
+     DefaultArgDecl | 
+     ArgAbsDecl | 
+     DefaultArgAbsDecl |
+     VarArgDecl;
+
+ ArgDecl ::
+     ds  : DeclSpecifiers
+     decl: Declarator
+     CNTXT;
+
+ DefaultArgDecl ::
+     ds  : DeclSpecifiers
+     decl : Declarator
+     expr : Expr
+     CNTXT;
+
+ ArgAbsDecl ::
+     ds  : DeclSpecifiers
+     decl: [AbstractDeclarator]
+     CNTXT;
+
+ DefaultArgAbsDecl ::
+     ds   : DeclSpecifiers
+     decl : [AbstractDeclarator]
+     expr : Expr
+     CNTXT;
+
+ VarArgDecl ::
+     ds  : DeclSpecifiers
+     decl: Declarator
+     CNTXT;
+
+ EnumInit :: in_l : InitializerList
+             CNTXT;
+
+ InitializerList ::
+      list : seq1 of ( Expr | Initializer )
+      CNTXT;
+
+ IndirectionDecl ::
+     cvlist : [CVQualifierList]
+     decl   : [Declarator]
+     CNTXT;
+
+ RefDecl ::
+     cvlist : [CVQualifierList]
+     decl   : Declarator
+     CNTXT;
+
+ PointerToMember ::
+     ccn    : CompleteClassName
+     cvlist : [CVQualifierList]
+     decl   : Declarator
+     CNTXT
+  inv - == not isJAVA();
+
+ BracketedDecl ::
+     decl : Declarator
+     CNTXT;
+
+ CVQualifierList = seq of ( <CONST> | <VOLATILE> );
+
+ RefAbsDecl ::
+     cvlist : [CVQualifierList]
+     decl   : [AbstractDeclarator]
+     CNTXT;
+
+ IndirectionAbsDecl ::
+     cvlist : [CVQualifierList]
+     decl   : [AbstractDeclarator]
+     CNTXT;
+
+ PointerToMemberAbs ::
+     ccn    : CompleteClassName
+     cvlist : [CVQualifierList]
+     decl   : AbstractDeclarator
+     CNTXT;
+
+ BracketedAbsDecl ::
+     decl : AbstractDeclarator
+     CNTXT;
+
+\end{vdm_al}
+
+\subsection{Class Declarations} 
+A Java Class Declaration may only
+specify one base class. On the other hand, several interface classes
+can be specified.
+A C++ Class Declaration has no modifiers.
+\begin{vdm_al}
+
+ ClassSpecifier ::
+    ch : ClassHead
+    ml : seq of MemberList | seq of MemberDeclaration
+    CNTXT;
+--    inv cs == isCPP() => (forall e in set elems cs.ml & is_MemberList(e))                   
+-- and  isJAVA() => (forall e in set elems cs.ml & is_MemberDeclaration(e));
+ 
+ ClassHead ::
+    m     : Modifiers
+    ck    : <CLASS> | <STRUCT> | <UNION>
+    name  : [ Identifier ]
+    bs    : BaseSpec -- Base Classes in CPP and Base Class in Java
+    ispec : [InterSpec] -- Interface Classes in Java
+    tpspec : [seq of Identifier] -- Type Parameters
+    annospec : AnnotationSpec
+    CNTXT
+ inv ch == isJAVA() => (ch.ck = <CLASS> and
+                        is_Identifier(ch.name) and
+                        card(elems ch.bs)=1)
+           and  isCPP() => ((ch.m = []) and (ch.ispec = nil));
+
+ BaseSpec = seq of BaseSpecifier;
+
+ BaseSpecifier = PackageName | 
+                 VirCompleteClassSpecifier | 
+                 AccCompleteClassSpecifier
+ inv bs == isJAVA() => is_(bs,PackageName);
+
+ MemberList ::
+    a    : [ (<PRIVATE> | <PROTECTED> | <PUBLIC>) ]
+    md   : [seq of MemberDeclaration]
+    CNTXT
+ inv ml == isJAVA() => ml.a = nil; 
+
+ MemberDeclaration = 
+    MemberSpecifier |
+    IdentDeclaration |
+    FunctionDefinition |
+    QualifiedName |
+    PreProcStmt |
+    StaticInitializer
+ inv md == isJAVA() => (is_MemberSpecifier(md) or
+                        is_FunctionDefinition(md) or
+                        is_StaticInitializer(md) or
+			is_IdentDeclaration(md))
+           and isCPP() => not is_StaticInitializer(md);
+ 
+ MemberSpecifier ::
+    ds  : seq of DeclSpecifier
+    mdl : [seq of DeclPureSpec ]
+    CNTXT
+ inv ms == isJAVA() => ms.mdl = nil;
+
+ VirCompleteClassSpecifier ::
+   a  : [( <PRIVATE> | <PROTECTED> | <PUBLIC> ) ]
+   ccn : CompleteClassName
+   CNTXT;
+
+ AccCompleteClassSpecifier ::
+   a : <PRIVATE> | <PROTECTED> | <PUBLIC>
+   v : [<VIRTUAL>]
+   ccn : CompleteClassName
+   CNTXT;
+
+ DeclPureSpec :: 
+    decl   : Declarator | InitDeclarator
+    puresp : [ <PURE> ]
+    CNTXT;
+
+ StaticInitializer::
+   stmt : CompoundStmt
+   CNTXT;
+
+\end{vdm_al}
+
+    
+\subsubsection{Templates (C++)}
+The declaration of a class as specified by a template-class-name is 
+introduced is defined. (A template-class-name is a class-name).
+TemplateClassName has only been introduced as a QualifiedClassName.
+
+\begin{vdm_al}
+
+ TemplateName ::
+        id : Identifier
+	CNTXT
+ inv - == isCPP();
+
+ TemplateClassName ::
+        nm  : TemplateName
+        arg : seq of TemplateArg
+	CNTXT
+ inv - == isCPP();
+
+ TemplateArg = Expr | TypeName;
+
+\end{vdm_al}
+
+\subsubsection{Interface Declarations (Java)}
+
+\begin{vdm_al}
+ InterfaceSpecifier::
+    ih : InterfaceHead
+    ml : InterfaceBody
+    CNTXT;
+
+ InterfaceHead ::
+    m    : Modifiers
+    name : Identifier
+    bs   : InterSpec
+    tpspec : [seq of Identifier] -- Type Parameters
+    annospec : AnnotationSpec
+    CNTXT; -- Base Interface Classes 
+
+ InterfaceBody = seq of MemberDeclaration;
+
+ InterSpec = seq of PackageName; 
+
+
+\end{vdm_al}
+
+\subsection{Function Definition} 
+
+\begin{vdm_al}
+ FunctionDefinition ::
+     m: Modifiers
+     ds  : seq of DeclSpecifier
+     decl: Declarator
+     ci  : [CtorInitializer]
+     throw : [seq of SimpleTypeName] 
+     annos : AnnotationSpec
+     fb  : [FctBody]
+     CNTXT
+  inv fd == isJAVA() => (fd.ci = nil)
+            and isCPP() => (fd.m = [] and fd.throw = nil);
+
+ CtorInitializer = seq of MemInitializer;
+
+ MemInitializer ::
+  name : Identifier | CompleteClassName | TemplateClassName
+  el   : Exprs
+  CNTXT;
+
+ FctBody ::
+    stmt : CompoundStmt
+    CNTXT;
+
+\end{vdm_al}
+
+\subsection{SimpleTypeName Declarations}
+
+\begin{vdm_al}
+
+ SimpleTypeName =
+     PackageName | 
+     CompleteClassName |  -- what is the difference here?
+     QualifiedName | 
+     Bool |
+     Void |
+     Char | 
+     Short | 
+     Int | 
+     Long |
+     Float | 
+     Double |
+     Byte |
+     Signed | 
+     Unsigned
+ inv stn == isJAVA() => not (is_Signed(stn) or is_Unsigned(stn));
+
+ CompleteClassName =
+     QualifiedClassName | ResScopeQualifiedClassName;
+
+ QualifiedClassName =   Identifier | 
+                        TemplateClassName | 
+                        ClassResScopeQualifiedClassName
+ inv name == isJAVA() => not (is_TemplateClassName(name));
+
+ ClassResScopeQualifiedClassName ::
+    cn : Identifier
+    qcn : QualifiedClassName
+    CNTXT;
+
+ ResScopeQualifiedClassName ::
+   qcn : QualifiedClassName
+   CNTXT;
+
+ Char  :: CNTXT;
+ Short :: CNTXT;
+ Int   :: CNTXT;
+ Bool  :: CNTXT;
+ Long  :: CNTXT;
+ Float :: CNTXT;
+ Double :: CNTXT;
+ Byte :: CNTXT;
+ Void :: CNTXT;
+
+ EnumName ::
+   id : Identifier
+   CNTXT;
+
+ Signed :: CNTXT;
+ Unsigned :: CNTXT;
+
+ TypeDefName :: 
+     id : Identifier
+     CNTXT;
+\end{vdm_al}
+
+\subsection{Statements}
+
+\begin{vdm_al}
+ Stmt = LabelStmt |
+        ExpressionStmt |
+        CompoundStmt |
+        IfStmt |
+        SwitchStmt |
+        WhileStmt |
+        DoWhileStmt |
+        ForStmt |
+        ForEachStmt |
+        Break |
+        Continue |
+        Return |
+        Goto |
+        DeclarationStmt |
+        IncludeStmt |
+        PreProcStmt |
+        SynchronizedStmt |
+        TryBlock |
+        EmptyStmt
+
+ inv stmt == isJAVA() => not (is_Goto(stmt) or is_IncludeStmt(stmt)
+                               or is_PreIf(stmt) or is_PreIfDef(stmt) or is_PreIfNotDef(stmt) or 
+                               is_PreDefine(stmt) or is_PreElse(stmt) or is_PreEndIf(stmt)
+                               or is_PreMacro(stmt))
+           and isCPP() => not (is_SynchronizedStmt(stmt) 
+                            or is_EmptyStmt(stmt));
+
+ LabelStmt ::
+     id   : Identifier
+     stmt : Stmt
+     CNTXT;
+
+\end{vdm_al}
+Case labels and default labels may occur only in switch statements.
+\begin{vdm_al}
+
+ SwitchStmt ::
+    expr : Expr
+    block : SwitchBlock
+    CNTXT;
+    
+ SwitchBlock ::
+   groups : seq of SwitchBlockStmtGrp
+   labels : [SwitchLabels]
+   CNTXT
+   inv - == isJAVA();
+
+ SwitchBlockStmtGrp ::
+   labels : [SwitchLabels]
+   stmt  : [CompoundStmt] -- can this be optional??
+   CNTXT
+   inv - == isJAVA();
+    
+ SwitchLabels ::
+   stmt   : CaseStmt | DefaultStmt
+   labels : [SwitchLabels]
+   CNTXT
+   inv - == isJAVA();
+    
+ CaseStmt ::
+     cexpr : Expr -- should be constant, inv. se side 84.
+     stmt  : [Stmt]
+     CNTXT;
+ 
+ DefaultStmt ::
+     stmt : [Stmt]
+     CNTXT;
+
+ ExpressionStmt ::
+     expr : [Expr]
+     CNTXT;
+
+ CompoundStmt ::
+     stms : seq of Stmt
+     CNTXT;
+
+\end{vdm_al}
+
+The for statement has a slightly different syntax in C++ and in
+Java. The Java for loop allows multiple comma-separated expressions to
+appear in the initialization and increment sections of the loop. In
+C++ it is on the other hand the comma operator can be used to join
+multiple expressions into a single expression.  The code generator
+however only generates for statements with one expression in the initialization
+an increment sections of the for loop. As a consequence, the syntax of
+the for statement will be the same for C++ and Java in the code
+generated by the code generator.  
+
+\begin{vdm_al}
+
+ ForStmt ::
+    i     : seq of (ExpressionStmt | DeclarationStmt)
+    expr1 : [ Expr ]
+    expr2 : seq of Expr
+    stmt  : Stmt
+    CNTXT
+ inv forstmt == isCPP() => len forstmt.expr2 = 1;
+
+ ForEachStmt ::
+    e    : DeclarationStmt
+    expr : Expr
+    stmt : Stmt
+    CNTXT
+ ;
+
+\end{vdm_al}
+
+In Java, the break and continue statements may optionally be followed by a label that
+specifies an enclosing loop (for continue) or any enclosing statement (for break). The labelled forms of the statements allows any specified statement or loop to be broken or continued within a method definition - not only the nearest enclosing loop. The code generated by the code generator does however not make use of this optional label and we can be content with a common syntax for C++ and Java. 
+
+\begin{vdm_al}
+
+ Break ::
+   id : [Identifier]
+   CNTXT
+ inv b == isCPP() => b.id = nil;
+
+ Continue ::
+   id : [Identifier]
+   CNTXT
+ inv c == isCPP() => c.id = nil;
+
+ Return ::
+   expr : [ Expr ]
+   CNTXT; 
+ 
+ DeclarationStmt ::
+   decl : Declaration
+   CNTXT;
+
+ IfStmt ::
+    expr : Expr
+    alt1 : Stmt
+    alt2 : [ Stmt ]
+    CNTXT;
+
+ WhileStmt ::
+    expr : Expr
+    stmt : Stmt
+    CNTXT;
+
+ DoWhileStmt ::
+    stmt : Stmt
+    expr : Expr
+    CNTXT;
+
+ Goto ::
+   id : Identifier
+   CNTXT
+ inv - == isCPP();
+
+ SynchronizedStmt ::
+   expr : Expr
+   block: CompoundStmt
+   CNTXT
+ inv - == isJAVA();
+
+ EmptyStmt:: CNTXT
+ inv - == isJAVA();
+\end{vdm_al}
+
+\subsection{Expressions}
+
+\begin{vdm_al}
+
+  Exprs = seq of Expr;
+
+  Expr =
+        AssignExpr |
+        ConditionalExpr |
+        LogicalExpr |
+        BitExpr |
+        EqualityExpr |
+        TypeCompExpr |
+        RelationalExpr |
+        ShiftExpr |
+        BinExpr |
+        PmExpr |
+        CastExpr |
+        PreInDecrementExpr |
+        UnaryOpExpr | 
+        SizeOfExpr |
+        SizeOfType |
+        Literal |
+        This |
+        Super |
+        BracketedExpr |
+        DeallocationExpr |
+        DeallocationArrayExpr |
+        AllocationTypeExpr |
+        AllocationNewTypeExpr |
+        ArrayApply | 
+        FctCall |
+        ExplTypeConv |
+        ObjectMemberAccess |
+        PointerToObjectMemberAccess |
+        PostFixInDecrementExpr |
+        ThrowExpression |
+        ScopeResIdentifier |
+        ScopeResOpFctName |
+        ScopeResQualifiedName |
+        ClassInstanceCreationExpr|
+	ClassExpr |
+	ArrayCreationExpr |
+	ArrayInitializer |
+        Name
+ inv expr == (isJAVA() => not (is_PmExpr(expr)
+                               or is_DeallocationExpr(expr)
+                               or is_DeallocationArrayExpr(expr)
+			       or is_SizeOfExpr(expr) 
+                               or is_SizeOfType(expr)
+                  	       or is_AllocationNewTypeExpr(expr)
+                               or is_AllocationTypeExpr(expr) 
+                               or is_PointerToObjectMemberAccess(expr)))
+			       and
+	   isCPP() => not (is_ClassExpr(expr) or is_ArrayCreationExpr(expr));
+	        
+  AssignExpr :: 
+    unary      : Expr
+    assignop   : AssignOp
+    assignexpr : Expr
+    CNTXT;
+
+  AssignOp ::
+    op: <ASEQUAL> | <ASMULT> | <ASDIV> | <ASMOD> | <ASPLUS> | 
+        <ASMINUS> | <ASRIGHTSHIFT> | <ASLEFTSHIFT> | 
+        <ASBITWISEAND> | <ASBITWISEEXOR> | <ASBITWISEINCLOR> |
+	<ASUNSIGNEDRIGHTSHIFT>
+    CNTXT;
+	     
+  ConditionalExpr ::
+    cond  : Expr
+    expr1 : Expr
+    expr2 : Expr
+    CNTXT;
+
+  LogicalExpr ::
+    right : Expr
+    logop : LogOp
+    left  : Expr
+    CNTXT;
+
+  LogOp ::
+    op: <OR> | <AND>
+    CNTXT;
+
+  BitExpr ::
+    right : Expr
+    bitop : BitOp
+    left  : Expr
+    CNTXT;
+
+  BitOp ::
+    op: <EXCLOR> | <BITOR> | <BITAND>
+    CNTXT;
+
+  TypeCompExpr::
+    right : Expr | TypeName
+    op    : TcOp
+    left  : Expr
+    CNTXT;
+
+  TcOp ::
+    op: <ISINSTANCEOF>
+    CNTXT;
+
+  EqualityExpr ::
+    right : Expr
+    eqop  : EqOp
+    left  : Expr
+    CNTXT;
+
+  EqOp ::
+    op: <EQ> | <NEQ>
+    CNTXT;
+
+  RelationalExpr ::
+    right : Expr
+    relop : RelOp
+    left  : Expr
+    CNTXT;
+
+  RelOp ::
+    op: <LT> | <GT> | <LEQ> | <GEQ>
+    CNTXT;
+
+  ShiftExpr ::
+    right : Expr
+    shop  : ShOp
+    left  : Expr
+    CNTXT;
+
+  ShOp ::
+    op: <LEFTSHIFT> | <RIGHTSHIFT> | <UNSIGNEDRIGHTSHIFT> 
+    CNTXT;
+
+  BinExpr ::
+    right : Expr
+    binop : BinOp
+    left  : Expr
+    CNTXT;
+
+  BinOp ::
+    op: <PLUS> | <MINUS> | <MULT> | <DIV> | <MOD>
+    CNTXT;
+
+  CastExpr ::
+    typenm : TypeName | Expr
+    expr   : Expr
+    CNTXT;
+
+  PreInDecrementExpr ::
+     op   : <PPLUS> | <PMINUS>
+     expr : Expr
+     CNTXT;
+
+  UnaryOpExpr ::
+     op   : UnaryOp
+     expr : Expr
+     CNTXT;
+
+  UnaryOp :: val : <REFERENCE> | <INDIRECTION> | <ADDROP> | <PLUS> | 
+             <MINUS> | <NEG> | <COMPL>
+	     CNTXT
+  inv uop == isJAVA() => not ((uop.val=<REFERENCE>) or
+                              (uop.val=<INDIRECTION>) or
+                              (uop.val=<ADDROP>));
+
+  PostFixInDecrementExpr ::
+      op : <PPLUS> | <PMINUS>
+      expr : Expr
+      CNTXT;
+
+
+  Literal = IntegerLit | CharacterLit | FloatingLit | 
+            StringLit | BoolLit | NullLit | WCharacterLit | WStringLit;
+
+  IntegerLit ::
+      val : int
+      CNTXT;
+
+  CharacterLit ::
+     val : char
+     CNTXT;
+
+  WCharacterLit ::
+     val : char
+     CNTXT;
+
+  FloatingLit ::
+     val : real
+     CNTXT;
+
+  StringLit ::
+     val : seq of char
+     CNTXT;
+
+  WStringLit ::
+     val : seq of char
+     CNTXT;
+
+  BoolLit ::
+     val : bool
+     CNTXT;
+
+  BracketedExpr ::
+    expr : Expr
+    CNTXT;
+
+  This :: CNTXT;
+
+  FctCall ::
+      fct   : Expr
+      arg   : Exprs
+      CNTXT;
+
+  ArrayApply ::
+      array : Expr
+      arg   : Expr
+      CNTXT;
+
+  ExplTypeConv ::
+      stn   : SimpleTypeName
+      arg   : Exprs
+      CNTXT;
+
+  ObjectMemberAccess ::
+      object : Expr
+      name   : Expr
+      CNTXT;
+
+  ScopeResIdentifier ::
+    id : Identifier
+    CNTXT;
+
+  ScopeResOpFctName ::
+    opfctname : OperatorFunctionName
+    CNTXT;
+
+  ScopeResQualifiedName ::
+    qualname : QualifiedName
+    CNTXT;
+
+  Name = Identifier | OperatorFunctionName | ConversionFunctionName |
+         Destructor | QualifiedName | PackageName
+
+  inv n == (isJAVA() => not (is_ConversionFunctionName(n) or
+                             is_OperatorFunctionName(n))) and
+	   isCPP() => not is_(n,PackageName);
+ 
+  Identifier :: 
+      id : seq1 of char
+      CNTXT;
+
+  QualifiedName ::
+      qcn : QualifiedClassName | Expr
+      id  : Name
+      CNTXT;
+
+  Destructor ::
+      id : Identifier
+      CNTXT;
+
+  PmExpr ::
+    right : Expr
+    pmop  : PmOp
+    left  : Expr
+    CNTXT
+  inv - == not isJAVA();
+
+  PmOp ::
+    op: <DOTSTAR> | <ARROWSTAR>
+    CNTXT
+  inv - == not isJAVA();
+
+  SizeOfExpr ::
+     expr : Expr
+     CNTXT
+  inv - == not isJAVA();
+ 
+  SizeOfType ::
+     type : TypeName
+     CNTXT
+  inv - == not isJAVA();
+
+  AllocationTypeExpr ::
+     scoperes    : [ <SCOPERES> ]
+     placement   : Exprs 
+     newtypename : NewTypeName
+     newinit     : [NewInitializer]
+     CNTXT
+  inv - == not isJAVA();
+
+  AllocationNewTypeExpr ::
+     scoperes    : [ <SCOPERES> ]
+     placement   : Exprs
+     typename    : TypeName
+     newinit     : [NewInitializer]
+     CNTXT
+  inv - == not isJAVA();
+     
+  DeallocationExpr ::
+      scoperes : [ <SCOPERES> ]
+      expr     : Expr
+      CNTXT
+  inv - == not isJAVA();
+
+  DeallocationArrayExpr ::
+      scoperes : [ <SCOPERES> ]
+      expr     : Expr
+      CNTXT
+  inv - == not isJAVA();
+
+  NewTypeName ::
+     typespeclist : seq of TypeSpecifier
+     newdecl      : [NewDeclarator]
+     CNTXT;
+
+  NewDeclarator = CVNewDeclarator | ClassNewDecl | ArrayNewDecl;
+
+  ArrayCreationExpr ::
+    type      : SimpleTypeName
+    dimExpr   : [ArrayNewDecl]
+    dim       : [ArrayNewDecl]
+    arrayInit : [ArrayInitializer]
+    CNTXT
+    inv - == isJAVA();
+
+  ArrayInitializer ::
+    vi : [seq of (Expr | ArrayInitializer)]
+    CNTXT
+    inv - == isJAVA();
+
+  CVNewDeclarator ::
+     cv_qual_list : [CVQualifierList]
+     newdecl      : [NewDeclarator]
+     CNTXT;
+
+  ClassNewDecl ::
+     class_name   : CompleteClassName
+     cv_qual_list : [CVQualifierList]
+     newdecl      : [NewDeclarator]
+     CNTXT;
+
+  ArrayNewDecl ::
+     newdecl : [NewDeclarator]
+     expr    : [Expr]            -- added optional for Java
+     CNTXT;
+
+  NewInitializer ::
+    initl : [InitializerList]
+    CNTXT;
+  
+  PointerToObjectMemberAccess ::
+      p2object : Expr 
+      name     : Expr
+      CNTXT;
+
+  ClassInstanceCreationExpr::
+    classtype       : CompleteClassName | PackageName | QualifiedName
+    somethingDotNew : [Expr]
+    arg             : seq of Expr
+    ml              : [seq of MemberDeclaration]
+    CNTXT;
+\end{vdm_al}
+
+The ClassExpr construct correspond to using the .class literal selection
+inside Java.
+
+\begin{vdm_al}
+  ClassExpr ::
+    operand : SimpleTypeName
+    CNTXT
+  inv - == isJAVA();
+\end{vdm_al}
+
+\subsubsection{Conversion Functions (C++)}
+
+\begin{vdm_al}
+ConversionFunctionName ::
+   ctn : ConversionTypeName
+   CNTXT;
+
+ ConversionTypeName::
+   ts : seq of TypeSpecifier
+   ptr : [ PointerDecl | RefTypeDecl | PointerToMemberDecl ]
+   CNTXT;
+
+ PointerDecl ::
+   cvl : [CVQualifierList]
+   CNTXT;
+
+ RefTypeDecl ::
+   cvl : [CVQualifierList]
+   CNTXT;
+
+ PointerToMemberDecl ::
+   ccn : CompleteClassName
+   cvl : [CVQualifierList]
+   CNTXT;
+
+  Super :: CNTXT;
+
+  NullLit :: CNTXT;
+
+\end{vdm_al}
+
+\subsubsection{Overloaded Operators}
+
+\begin{vdm_al}
+  OperatorFunctionName ::
+      op : Operator
+      CNTXT;
+
+  Operator ::
+    op : <NEW> | <DELETE> | <PLUS> | <MINUS> | <STAR> | <DIV> | 
+         <PRECENTAGEMARK> | <CIRCUMFEX> | <AMPERSAND> | <VERTICALLINE> | 
+         <TILDE> | <EXCLAMATIONMARK> | <OPEQUAL> | <LESS> | <GREATER> |
+         <PLUSEQUAL> | <MINUSEQUAL> | <STAREQUAL> | <BACKSLASHEQUAL> |
+         <PERCENTAGEMARKEQUAL> | <CIRCUMFLEXEQUAL> | <ANDEQUAL> | 
+         <VERTICALLINEEQUAL> | <DOUBLELESS> | <DOUBLEGREATER> | 
+         <DOUBLELESSEQUAL> | <DOUBLEGREATEREQUAL> | <DOUBLEEQUAL> |
+         <EXCLAMATIONMARKEQUAL> | <LESSEQUAL> | <GREATEREQUAL> | 
+         <DOUBLEAND> | <DOUBLEVERTICALLINE> | <DOUBLEPLUS> | 
+         <DOUBLEMINUS> | <COMMA> | <ARROWSTAR> | <ARROW> | 
+         <BRACKETS> | <SQUAREBRACKETS>
+    CNTXT;
+\end{vdm_al}
+
+\subsection{Exception Handling}
+The exception handling in Java is similar, but not quite the same as in C++.
+
+\begin{vdm_al}
+
+ TryBlock ::
+   stmt : CompoundStmt
+   hdl  : seq of Handler
+   fin : [CompoundStmt]
+   CNTXT;
+
+ Handler ::
+   exepdecl : All | ExceptionDeclaration 
+   stmt     : Stmt
+   CNTXT;
+
+ All :: CNTXT;
+
+ ExceptionDeclaration ::
+   tsl  : seq of TypeSpecifier
+   decl : [ Declarator | AbstractDeclarator ]
+   CNTXT;
+
+ ThrowExpression ::
+   expr : [ Expr ]
+   CNTXT;
+  
+\end{vdm_al}
+
+\begin{vdm_al}
+ Comment = BlockComments |
+           SingleLineComments |
+           TrailingComments |
+           EndOfLineComments |
+           DocComments;
+
+ Comments = BlockComments |
+            DocComments;
+
+ BlockComments ::
+   txt : seq of seq of char
+   CNTXT;
+
+ SingleLineComments ::
+   txt : seq of char
+   CNTXT;
+
+ TrailingComments ::
+   txt : seq of char
+   CNTXT;
+
+ EndOfLineComments ::
+   txt : seq of char
+   CNTXT;
+
+ DocComments ::
+   txt : seq of seq of char
+   CNTXT;
+\end{vdm_al}
+
+\begin{vdm_al}
+ GenericsSpec ::
+   defs : seq of GenericsClasses
+   CNTXT
+ inv - == isJAVA();
+
+ GenericsClasses ::
+   id : PackageName
+   exteds : seq of PackageName
+   CNTXT
+ inv - == isJAVA();
+\end{vdm_al}
+
+\begin{vdm_al}
+end CPP
+\end{vdm_al}
+
+
+
+
+
+
+

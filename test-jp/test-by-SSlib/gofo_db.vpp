@@ -1,0 +1,232 @@
+/*
+ * 仮想DBの基本機能を定義する抽象クラス
+ * $Id: gofo_db.vpp,v 1.1 2005/11/25 07:05:38 vdmtools Exp $
+ *
+ *　責任：
+ *	仮想DB定義。 本クラスのインスタンス１つが、RDBでいえばひとつのリレーションを表す。
+   
+ *　使用方法：
+ *	（１）型定義の方法
+ *		スーパークラス『問題領域共通定義』を定義し、その中で、下記のように型「帳簿」と「記録」と「キー」を、
+ *		本クラスのサブクラス（この例の場合、OrgとBook）で定義した型「帳簿」と「記録」と「キー」を使って定義する。
+
+ 		 public 「帳簿」 = 
+ 		 	Org | Book ;   		
+  		 public 「記録」 = 
+  			Org`「記録」 | Book`「記録」 | ...;
+  		 public 「キー」 =
+  			Org`「キー」 | Book`「キー」 | ...;
+  			
+ *	（２）キー項目
+ *		いくつかの操作は、「記録」レコード中に「キー」型のキーという名前の項目があることを前提にしている。
+ */
+class Gofo_DB_Primitive is subclass of 『問題領域共通定義』
+
+types
+public 「明細行群」 = set of 「記録」;
+public 「選択基準」 = 「記録」 -> bool;	
+
+instance variables
+protected 本体 : 「明細行群」 := {};		--DBを模倣するための集合。
+protected 古値 : 「明細行群」 := {};		--DBのトランザクション処理を模倣するための集合。「確定する」までのold valueを表す。
+protected 選択部分 : 「明細行群」 := {};	--a条件で選択された集合を格納する
+
+functions	
+public select : 「選択基準」 * 「明細行群」 -> 「明細行群」
+select(選択基準, 明細行群) ==
+	{ a明細行 | a明細行 in set 明細行群 & 選択基準(a明細行) };
+
+public inserted : 「明細行群」 * 「明細行群」 * 「明細行群」 -> bool
+inserted(挿入分, 旧明細行群, 新明細行群) ==
+	挿入分 inter 旧明細行群 = {} and
+	新明細行群 = 旧明細行群 union 挿入分;
+
+public deleted : 「選択基準」 * 「明細行群」 * 「明細行群」 -> bool
+deleted(選択基準, 旧明細行群, 新明細行群) ==
+	新明細行群 = 旧明細行群 \ select(選択基準, 旧明細行群);
+
+public overridden : 「記録」 * 「選択基準」 * 「明細行群」 * 「明細行群」 -> bool
+overridden(a明細行, 選択基準, 旧明細行群, 新明細行群) ==
+	新明細行群 = (旧明細行群 \ select(選択基準, 旧明細行群)) union { a明細行};
+
+public updated : 「記録」 * 「記録」 * 「明細行群」 * 「明細行群」 -> bool
+updated(旧明細行, 新明細行, 旧明細行群, 新明細行群) ==
+	新明細行群 = (旧明細行群 \ { 旧明細行 }) union { 新明細行 };
+
+operations
+public 選択する : 「選択基準」 ==> 「明細行群」
+選択する(選択基準) == 
+	return select(選択基準, 本体)
+post RESULT = select(選択基準, 本体);
+
+public 挿入する : 「記録」 ==> ()
+挿入する(a記録) == 本体 := 本体 union { a記録 };
+
+public 削除する : 「選択基準」 ==> ()
+削除する(選択基準) ==
+	let 削除対象群 = select(選択基準,本体)
+	in  
+	本体 := 本体 \ 削除対象群
+post deleted(選択基準, 本体~, 本体);
+
+public 上書きする : 「記録」 * 「選択基準」 ==> ()
+上書きする(a明細行, 選択基準) ==
+	let 上書き対象群 = select(選択基準, 本体)
+	in  本体 := 本体 \ 上書き対象群 union { a明細行 }
+post overridden(a明細行, 選択基準, 本体~, 本体);
+
+public 挿入済みである : 「明細行群」 ==> bool
+挿入済みである(挿入分) ==
+	return inserted(挿入分, 古値, 本体);
+
+public 削除済みである : 「選択基準」 ==> bool
+削除済みである(選択基準) ==
+	return deleted(選択基準, 古値, 本体);
+
+public 上書き済みである : 「記録」 * 「選択基準」 ==> bool
+上書き済みである(a明細行, 選択基準) ==
+	return overridden(a明細行, 選択基準, 古値, 本体);
+
+public 更新済みである : 「記録」 * 「記録」 ==> bool
+更新済みである(a旧明細行, a新明細行) ==
+	return updated(a旧明細行, a新明細行, 古値, 本体);
+
+public 更新部分 : () ==> 「明細行群」
+更新部分() == return 本体 \ 古値;
+
+public ロードする : 「明細行群」 ==> ()
+ロードする(記録群) == 本体 := 記録群
+post 本体 = 記録群;
+
+public 確定する : () ==> ()
+確定する() == 古値 := 本体
+post 本体 = 本体~ and
+古値 = 本体;
+
+public 巻き戻す : () ==> ()
+巻き戻す() == 本体 := 古値
+post 古値 = 古値~  and
+本体 = 古値;
+
+public 準備ＯＫ : () ==> bool
+準備ＯＫ() == return (本体 = 古値);
+
+public 変化無し : () ==> bool
+変化無し() == return (本体 = 古値);
+  
+end Gofo_DB_Primitive
+---------------------------------------------------------------------------------------
+/*
+ * 仮想DB定義を表すクラス
+ *
+ *　責任：
+ *	仮想DB定義。 本クラスのインスタンス１つが、RDBでいえばひとつのリレーションを表す。
+ *
+ *　操作名に関する注意：
+ *	英語名の関数および操作は、Gofo3の他の言語版との名前の互換性を維持するため存在する。
+ *
+*/
+
+class Gofo_DB is subclass of Gofo_DB_Primitive
+
+operations
+--aIDの明細行が存在するかを返す。
+public 存在する : 「キー」 ==> bool
+存在する(aキー) ==
+	return self.findByKeyValues(aキー) <> nil;
+
+--条件に合う明細行（GofoBookクラスのインスタンス）の数を返す。
+public count : 「選択基準」 ==> nat
+count(選択基準) == return card select(選択基準, 本体);
+
+--DBの総件数を返す
+public countAll : () ==> nat
+countAll() == 
+	return card 本体;
+
+--与えられた明細行を削除する
+public delete : 「帳簿」 ==> ()
+delete(aBook) ==
+	let	選択基準1 = 
+			lambda x : 「記録」 & 
+				x.キー = aBook.明細記録を得る().キー,
+		対象群1 = select(選択基準1, 本体)
+	in
+	(
+	if 対象群1 = {} then
+		exit "gofo_db: DB更新エラー: キーが一致せず、削除できません。";
+	削除する(選択基準1) 
+	);
+
+--選択した明細行１件を返す。
+public fetch : () ==> 「記録」
+fetch() == 
+	let	a明細行 in set 選択部分 be st true	in
+	(
+	選択部分 := 選択部分 \ {a明細行};
+	return a明細行
+	);
+
+--選択した明細行群を返す。
+public fetchAll : () ==> 「明細行群」
+fetchAll() == return 選択部分;
+
+--全件を得る。ただし、この段階ではデータは取り出されていない。fetch()またはfetchAll()で取り出す。
+public findAll : () ==> ()
+findAll() == 選択部分 := 本体;
+	
+--指定されたIDを持つ明細行を抽出する。無ければnilを返す。
+public findByKeyValues : 「キー」 ==> [「記録」]
+findByKeyValues(aキー) ==  
+	let	選択基準 = lambda x : 「記録」 & x.キー = aキー	,
+		明細行群 = self.選択する(選択基準)	in
+	if 明細行群 = {} then
+		return nil
+	else
+		let	a明細行 in set 明細行群 be st card  明細行群 = 1	in
+		return a明細行;
+
+--fetchするための検索を行う。
+public selectWhere : GofoBook`「選択基準」 ==> ()
+selectWhere(選択基準) == 選択部分 := select(選択基準, 本体);
+
+
+--ある関連の派生元から派生先の集合を得る。
+public selectThrough : Gofo_Relationship_Class * 「記録」 ==> set of (Gofo_Relationship * 「記録」)
+selectThrough(ある関連, ある派生元) == 
+	(
+	dcl 結果群 : set of (Gofo_Relationship * 「記録」) := {};
+	for all あるリンク in set ある関連.インスタンス群 do(
+		if ある派生元 = あるリンク.派生元 then
+			結果群 := 結果群 union {mk_(あるリンク, あるリンク.派生先)}
+	);
+	return 結果群
+	);
+
+--ある関連の派生元から派生先へのリンク集合を得る。
+public selectLinkThrough : Gofo_Relationship_Class * 「記録」 ==> set of Gofo_Relationship
+selectLinkThrough(ある関連, ある派生元) == 
+	(
+	dcl あるリンク群 : set of Gofo_Relationship  := {};
+	for all あるリンク in set ある関連.インスタンス群 do(
+		if ある派生元 = あるリンク.派生元 then
+			あるリンク群 := あるリンク群 union {あるリンク}
+	);
+	return あるリンク群
+	);
+	
+--現在の明細記録で更新する。
+public update : 「帳簿」 ==> ()
+update(aBook) ==
+	let	選択基準1 = 
+			lambda x : 「記録」 & 
+				x.キー = aBook.明細記録を得る().キー,
+		対象群1 = select(選択基準1, 本体)
+	in
+	(
+	if 対象群1 = {} then
+		exit "gofo_db: DB更新エラー: キーが一致せず、更新できません。";
+	上書きする(aBook.明細記録を得る(), 選択基準1);
+	);
+
+end Gofo_DB

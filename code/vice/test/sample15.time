@@ -1,0 +1,6 @@
+# Repeat entry
+
+Addset : nat 10;
+AddEnv 3;
+AddEnv 4;
+* : real 20

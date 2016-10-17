@@ -1,0 +1,6 @@
+r newspeak.avdm
+i
+tc pos
+cg
+latex newspeak.avdm
+quit

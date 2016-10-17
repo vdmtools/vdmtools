@@ -1,0 +1,31 @@
+ class A
+
+  values
+
+    t : T = mk_T(3)
+
+  types
+
+    protected T::v : nat
+
+  functions
+
+public    f[@tp] : seq of @tp -> nat
+    f(l) == len l
+
+
+end A
+
+
+class B
+
+  operations
+
+public Test : () ==> nat
+  Test() ==
+    let a = new A()
+    in
+      return a.f[A`T]([8])
+
+
+end B

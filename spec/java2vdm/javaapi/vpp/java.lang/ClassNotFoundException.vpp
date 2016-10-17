@@ -1,0 +1,39 @@
+class JavaLangClassNotFoundException is subclass of JavaLangException
+operations 
+public  getException : () ==> JavaLangThrowable
+getException() == 
+is not yet specified ;
+
+public  printStackTrace : () ==> ()
+printStackTrace() == 
+is not yet specified ;
+
+public  JavaLangClassNotFoundException : () ==> JavaLangClassNotFoundException
+JavaLangClassNotFoundException() == 
+( skip 
+) ;
+
+public  JavaLangClassNotFoundException : <NIL> ==> JavaLangClassNotFoundException
+JavaLangClassNotFoundException(-) == 
+isNil := true  ;
+
+public  printStackTrace : JavaIoPrintStream ==> ()
+printStackTrace(ps) == 
+is not yet specified ;
+
+public  printStackTrace : JavaIoPrintWriter ==> ()
+printStackTrace(pw) == 
+is not yet specified ;
+
+public  JavaLangClassNotFoundException : JavaLangString ==> JavaLangClassNotFoundException
+JavaLangClassNotFoundException(s) == 
+( skip 
+) ;
+
+public  JavaLangClassNotFoundException : JavaLangString * JavaLangThrowable ==> JavaLangClassNotFoundException
+JavaLangClassNotFoundException(s, ex) == 
+( skip 
+) ;
+
+
+end  JavaLangClassNotFoundException

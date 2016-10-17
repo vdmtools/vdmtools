@@ -1,0 +1,18 @@
+class IfStmtTest
+
+operations
+
+  If15: () ==> seq of char | set of int
+  If15() ==
+  ( dcl a: int := 0;
+    if 1=1
+    then ( dcl a: bool;
+           let one = 1 in a := one;
+	   a := true;
+	   return a )
+    elseif 2=1
+    then ( a := 1;
+           return )
+    else skip );
+
+end IfStmtTest

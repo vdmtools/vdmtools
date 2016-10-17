@@ -1,0 +1,372 @@
+\subsubsection{Store}
+Storeは、電子錠の付いた物置で、かつ、そのテスト用のクラスである。
+本来は、テスト機能は別クラスに分離すべきであるが、手を抜いた。
+
+new Store().test()とすることで、想定した全てのテストを行う。
+
+\begin{vdm_al}
+--$Id: E-Locker.vpp,v 1.1 2006/01/18 04:55:34 vdmtools Exp $
+class Store is subclass of KeyCommon
+
+instance variables
+public 錠 : 『錠』:= new 『錠』();
+public 取手 :『取手』:= new 『取手』();
+public 施錠灯 :『施錠灯』:= new 『施錠灯』();
+public 表示窓 :『表示窓』:= new 『表示窓』();
+public ボタン : 『ボタン』:= new 『ボタン』();
+
+operations
+Init : () ==> ()
+Init() == (
+	取手.Init(施錠灯);
+	錠.Init(施錠灯, 取手, 表示窓, ボタン) ;
+	施錠灯.点ける() ;
+	取手を閉める() ;
+	表示窓.消す();
+);
+
+public 解錠する : 「鍵」 ==> ()
+解錠する(a鍵) == (
+	表示窓.ボタン列を設定する(a鍵) ;
+	錠.解錠する();
+);
+
+public 施錠する : () ==> ()
+施錠する() == (
+	ボタン.ボタンを設定する(Lボタン);
+	錠.施錠する()
+);
+
+public 取手を開ける : () ==> ()
+取手を開ける() == 取手.開く() ;
+
+public 取手を閉める : () ==> ()
+取手を閉める() == 取手.閉める();
+
+public 施錠鍵を登録する : 「鍵」==> ()
+施錠鍵を登録する(a鍵)  == (
+	表示窓.ボタン列を設定する(a鍵);
+	ボタン.ボタンを設定する(Lボタン);
+	錠.登録する() 
+);
+\end{vdm_al}
+
+以下はテスト機能である。
+\begin{vdm_al}
+public test :() ==> bool
+test() == (
+	return 
+		t1() and t2() and t3() and t4() and t5() and t6()
+);
+
+public t1 : () ==> bool
+t1() == (	--鍵1234で解錠する
+	Init() ;
+	解錠する([1,2,3,4]) ;
+	return 施錠灯.消えている()
+);
+
+public t2 : () ==> bool
+t2() == (	--鍵1234で解錠し、取手を開ける
+	Init() ;
+	解錠する([1,2,3,4]) ;
+	取手を開ける() ;
+	return 
+		施錠灯.消えている() and
+		取手.開いている()
+);
+
+public t3 : () ==> bool
+t3() == (	--鍵1919を登録する
+	Init() ;
+	解錠する([1,2,3,4]) ;
+	取手を開ける() ;
+	施錠鍵を登録する([1,9,1,9]) ;
+	return 
+		施錠灯.消えている() and
+		錠.鍵が一致([1,9,1,9]) 
+);
+
+public t4 : () ==> bool
+t4() == (	--新しい鍵1919で施錠する
+	Init() ;
+	解錠する([1,2,3,4]) ;
+	取手を開ける() ;
+	施錠鍵を登録する([1,9,1,9]) ;
+	取手を閉める() ;
+	施錠する();
+	return 
+		施錠灯.点いている() and
+		表示窓.消えている() 
+);
+
+public t5 : () ==> bool
+t5() == (	--新しい鍵1919で解錠する
+	Init() ;
+	解錠する([1,2,3,4]) ;
+	取手を開ける() ;
+	施錠鍵を登録する([1,9,1,9]) ;
+	取手を閉める() ;
+	施錠する();
+	解錠する([1,9,1,9]) ;
+	return 
+		施錠灯.消えている() and
+		取手.閉まっている() 
+);
+
+public t6 : () ==> bool
+t6() == (	--新しい鍵1919で解錠する
+	Init() ;
+	解錠する([1,2,3,4]) ;
+	取手を開ける() ;
+	施錠鍵を登録する([1,9,1,9]) ;
+	取手を閉める() ;
+	施錠する();
+	解錠する([1,9,1,9]) ;
+	return 
+		施錠灯.消えている() and
+		取手.閉まっている() 
+);
+
+end Store
+\end{vdm_al}
+
+\subsubsection{KeyCommon}
+共通の型や値を定義する。
+
+\begin{vdm_al}
+class KeyCommon
+
+values
+public 鍵桁数 = 4;
+public Lボタン = 'L';
+public Cボタン = 'C';
+
+types
+public 「鍵」 = seq of nat;
+
+end KeyCommon
+\end{vdm_al}
+
+\subsubsection{『錠』}
+電子錠である。
+
+\begin{vdm_al}
+class 『錠』 is subclass of KeyCommon
+
+instance variables
+public 施錠鍵 : 「鍵」;
+public 取手 :『取手』;
+public 施錠灯 :『施錠灯』;
+public 表示窓 :『表示窓』;
+public ボタン : 『ボタン』;
+inv	正しい鍵(施錠鍵);
+
+functions
+static public 正しい鍵 : 「鍵」-> bool
+正しい鍵(a鍵) ==   len a鍵 = 鍵桁数
+post	len a鍵 = 鍵桁数;
+
+operations
+public 鍵が一致 : 「鍵」==> bool
+鍵が一致(a鍵) == return 施錠鍵 = a鍵;
+
+public Init : 『施錠灯』*『取手』* 『表示窓』* 『ボタン』==> ()
+Init(a施錠灯, a取手, a表示窓, aボタン) == (
+	施錠鍵 := [1,2,3,4];
+	施錠灯 := a施錠灯;
+	取手 := a取手;
+	表示窓 := a表示窓;
+	ボタン := aボタン;
+);
+
+public  『錠』: () ==> 『錠』
+『錠』() == (
+	return self
+);
+
+public  『錠』: 「鍵」 ==> 『錠』
+『錠』(a鍵) == (
+	施錠鍵 := a鍵;
+	return self
+)
+pre	正しい鍵(a鍵) ;
+
+public 施錠する : () ==> ()
+施錠する() == 
+	(
+	if 取手.閉まっている() then
+		(表示窓.消す() ;
+		施錠灯.点ける())
+	else
+		skip
+	)
+pre	表示窓.点いている()  and 施錠灯.消えている() and 取手.閉まっている() and ボタン.L()
+post	表示窓.消えている() and 施錠灯.点いている() and 取手.閉まっている();
+
+public 解錠する : ()==> ()
+解錠する() ==  
+	(
+	if 表示窓.点いている() and 鍵が一致(表示窓.内容) and 正しい鍵(施錠鍵) then
+		(表示窓.消す();
+		施錠灯.消す())
+	else
+		skip
+	)
+pre 表示窓.点いている() and 施錠灯.点いている() and  正しい鍵(施錠鍵)
+post	表示窓.消えている() and 施錠灯.消えている();
+
+public 登録する : ()==> ()
+登録する() ==  施錠鍵 := 表示窓.内容
+pre	表示窓.点いている() and 施錠灯.消えている()  and ボタン.L()
+post	鍵が一致(表示窓.内容) ;
+end 『錠』
+\end{vdm_al}
+
+\subsubsection{『施錠灯』}
+\begin{vdm_al}
+class 『施錠灯』 is subclass of KeyCommon
+
+instance variables
+public 点灯 : bool;	-- trueなら点灯している
+
+operations
+public 点ける :  () ==> ()
+点ける() ==  点灯 := true
+post	点いている();
+
+public 消す :  () ==> ()
+消す() ==  点灯 := false
+post	消えている();
+
+public 点いている : () ==> bool
+点いている() ==   return 点灯
+post	点灯;
+
+public 消えている : () ==> bool
+消えている() ==   return not 点灯
+post	not 点灯;
+end 『施錠灯』
+\end{vdm_al}
+
+\subsubsection{『表示窓』}
+\begin{vdm_al}
+class 『表示窓』 is subclass of KeyCommon
+
+instance variables
+public 内容 : 「鍵」:= [];
+
+operations
+public 設定する : 『ボタン』`「ボタン」 ==> ()
+設定する(aボタン) ==
+	if len 内容 >= 鍵桁数 then
+		skip
+	else
+		内容 := 内容 ^ [aボタン]
+pre	『ボタン』`数字(aボタン)
+post
+	if len 内容 >= 鍵桁数 then
+		内容 = 内容~ 
+	else
+		内容 = 内容~ ^ [aボタン];
+\end{vdm_al}
+
+以下の操作は、ボタン列の最後から鍵桁数分だけを内容に設定する。
+Dropは、自作ライブラリで定義されている関数で、Drop(n)(列)と呼ぶと、列から頭のn個を削除した列を返す。
+\begin{vdm_al}
+public ボタン列を設定する : seq of 『ボタン』`「ボタン」 ==> ()
+ボタン列を設定する(aボタン列) == 
+	内容 := FSequence`Drop[nat]
+		(len 内容  + len aボタン列 - 鍵桁数)
+		(内容 ^ aボタン列)
+pre
+	『ボタン』`数字列(aボタン列) 
+post
+	内容 = FSequence`Drop[nat]
+	(len 内容~  + len aボタン列 - 鍵桁数)
+	(内容~ ^ aボタン列);
+
+public 消す : () ==> ()
+消す() == 内容 := []
+post	消えている();
+
+public 点いている : () ==> bool
+点いている() ==  return 内容 <> []
+post	内容 <> [];
+
+public 消えている : () ==> bool
+消えている() == return 内容 = []
+post	内容 = [];
+
+end 『表示窓』
+\end{vdm_al}
+
+\subsubsection{『ボタン』}
+\begin{vdm_al}
+class 『ボタン』 is subclass of KeyCommon
+
+types
+public 「ボタン」 = nat | char
+	inv	ボタン == 数字(ボタン) or ボタン in set {'C', 'L'};
+	
+instance variables
+public 内容 : 「ボタン」:= 'L';
+
+functions
+static public 数字 : 「ボタン」-> bool
+数字(aボタン) == aボタン in set {0,...,9} ;
+
+static public 数字列:  seq of 「ボタン」-> bool
+数字列(aボタン列) == forall b in set elems aボタン列 & 数字(b);
+
+operations
+public C : () ==> bool
+C() == return 内容 = Cボタン;
+
+public L : () ==> bool
+L() == return 内容 = Lボタン;
+
+public ボタンを設定する : 「ボタン」==> ()
+ボタンを設定する(aボタン) == 内容 := aボタン;
+
+end 『ボタン』
+\end{vdm_al}
+
+\subsubsection{『取手』}
+\begin{vdm_al}
+class 『取手』 is subclass of KeyCommon
+
+instance variables
+public 開閉 : bool := false;	-- trueならば開いている状態
+public 施錠灯 :『施錠灯』;
+
+operations
+public Init :『施錠灯』 ==> ()
+Init(a施錠灯) == 施錠灯 := a施錠灯;
+
+public 開く : () ==> ()
+開く() ==  
+	if 施錠灯.消えている() then
+		開閉 := true
+	else
+		開閉 := false
+post	
+	if 施錠灯.消えている() then
+		開閉 = true
+	else
+		開閉 = false;
+
+public 閉める : () ==> ()
+閉める() ==  
+	開閉 := false
+post	閉まっている() ;
+
+public 開いている : () ==> bool
+開いている() == return 開閉
+post	開閉;
+
+public 閉まっている : () ==> bool
+閉まっている() == return not 開閉
+post	not 開閉;
+end 『取手』
+\end{vdm_al}

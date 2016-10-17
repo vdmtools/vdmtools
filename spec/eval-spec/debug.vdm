@@ -1,0 +1,497 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Specification of the debug facilities
+% $Id: debug.vdm,v 1.44 2000/12/11 10:01:34 paulm Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\chapter{The Debugger module}
+
+The module {\em DEBUG} specifies the debug commands features available in the debugger.
+
+\begin{vdm_al}
+module DEBUG
+
+imports 
+  from CMPL all,
+  from CEXPR all,
+  from CSTMT all,
+  from AS all,
+  from CI all,
+  from REP all,
+  from PAT all,
+  from SEM all,
+  from SETTINGS all,
+  from STKM all,
+  from RTERR all,
+#ifdef VDMPP
+  from SCHD all,
+  from SCHDTP all,
+#ifdef VICE
+  from TIMEPARSER all,
+  from TIMEMAP all,
+  from TIME all,
+  from TIMETRACE all,
+  from TIMETRACETP all,
+#endif VICE
+#endif VDMPP
+  from INSTRTP all,
+  from STATE all,
+  from GLOBAL all,
+  from AUX all,
+  from DEBUGTP all
+
+exports all
+
+definitions
+
+state sigma of
+  breakpoints : map nat to DEBUGTP`BreakInfo
+  inActiveLevel : nat
+  breakId : nat
+init s == s = mk_sigma({|->}, 0, 0)
+end
+
+\end{vdm_al} 
+
+\section{EvalDebug, EvalPrint, and aux. functions for these}
+
+\begin{vdm_al}
+operations
+EvalDebug: (AS`Expr|AS`Stmt) * seq of char ==> STKM`EvaluationState * [SEM`VAL]
+EvalDebug(e, debugString) ==
+ (ResetInActivity();
+  return EvalPrintDebugAux(e, debugString));
+
+EvalPrintDebugAux: (AS`Expr|AS`Stmt) * seq of char ==> STKM`EvaluationState * [SEM`VAL]
+EvalPrintDebugAux(e, debugString) ==
+ (dcl instr : STKM`SubProgram := [];
+   if AUX`IsStmt(e)
+   then instr := CSTMT`S2I(e)
+   else instr := CEXPR`E2I(e);
+   STKM`SetContinue();
+   if SETTINGS`RTErrException()
+   then STKM`PushDS(STKM`GetEvaluatorState(), debugString, mk_STKM`DebugCmd(CSTMT`AddTrap(instr,[])))
+   else STKM`PushDS(STKM`GetEvaluatorState(), debugString, mk_STKM`DebugCmd(instr));
+   return EvalRun(true);
+ );
+\end{vdm_al}
+
+The operation {\em EvalRun} calls for VDM-SL {\em EvalMainLoop} with nil,
+and for VDM++ {\em EvalScheduler}. The operation is an auxiliary operation:
+\begin{vdm_al}
+EvalRun: [bool] ==> STKM`EvaluationState * [SEM`VAL]
+EvalRun(-) ==
+ (
+#ifdef VDMSL
+  def mk_(eval_state, semval) = STKM`EvalMainLoop()
+  in (if is_STKM`Success(eval_state)
+     then STKM`PopCS();
+     return mk_(eval_state, semval));
+#endif //VDMSL
+
+#ifdef VDMPP
+  STKM`ResetSlice();
+#ifdef VICE
+  if STKM`IsSystem()
+  then def mk_(eval_state, semval) = SCHD`EvalScheduler()
+       in
+        (if is_STKM`Success(eval_state)
+         then STKM`PopCS();
+         return mk_(eval_state, semval))
+  else
+#endif VICE
+  def mk_(eval_state, semval) = SCHD`EvalScheduler()
+  in
+   (if is_STKM`Success(eval_state)
+    then STKM`PopCS();
+    return mk_(eval_state, semval));
+#endif //VDMPP
+ );
+
+EvalAuxProgram: STKM`SubProgram * seq of char * bool ==> STKM`EvaluationState * [SEM`VAL]
+EvalAuxProgram(instr, debugStr, interruptible) ==
+ (dcl evalres : STKM`EvaluationState * [SEM`VAL];
+  DeActivateAllBreakpoints();
+  if SETTINGS`RTErrException()
+  then STKM`PushCS(mk_STKM`DebugCmd(CSTMT`AddTrap(instr, [])), debugStr, nil, <INTERNAL>)
+  else STKM`PushCS(mk_STKM`DebugCmd(instr), debugStr, nil, <INTERNAL>);
+#ifdef VDMPP
+  STKM`ResetSlice();
+#endif VDMPP
+  if interruptible
+  then evalres := STKM`EvalMainLoop()
+  else evalres := STKM`EvalUninterruptedLoop();
+  let mk_(eval_state, semval) = evalres
+  in
+   (ActivateAllBreakpoints();
+    if is_STKM`Success(eval_state)
+    then STKM`PopCS();
+    return mk_(eval_state, semval));
+ );
+
+EvalAuxCmd: AS`Expr * STKM`SubProgram * STKM`SubProgram * seq of char ==> STKM`EvaluationState * [SEM`VAL]
+EvalAuxCmd(e,instr_pre,instr_post, debugStr) ==
+  def instr : STKM`SubProgram = instr_pre ^ CEXPR`E2I(e) ^ instr_post
+  in
+    return EvalAuxProgram(instr, debugStr, true);
+
+EvalUninterruptedCmd: AS`Expr * STKM`SubProgram * STKM`SubProgram * seq of char ==> STKM`EvaluationState * SEM`VAL
+EvalUninterruptedCmd(e,instr_pre,instr_post, debugStr) ==
+#ifdef VICE
+  def old_compiling = TIME`GetCompilingTime()
+  in
+   (TIME`SetCompilingTime(false);
+#endif VICE
+    def instr : STKM`SubProgram = instr_pre ^ CEXPR`E2I(e) ^ instr_post
+    in
+#ifdef VICE
+     (TIME`SetCompilingTime(old_compiling);
+#endif VICE
+      return EvalAuxProgram(instr, debugStr, false);
+#ifdef VICE
+     );
+   );
+#endif VICE
+
+EvaluateExpression: AS`Expr * SEM`BlkEnv ==> SEM`VAL
+EvaluateExpression(e, env) ==
+ (STKM`PushEmptyEnv();
+  STKM`PushBlkEnv(env);
+  def mk_(eval_state, val) = EvalUninterruptedCmd(e, [], [], "EvaluateExpression")
+  in 
+   (STKM`PopEnvL();
+    if is_STKM`Success(eval_state)
+    then return val
+    else error
+   )
+ );
+
+EvalPrint: (AS`Expr|AS`Stmt) * seq of char ==> STKM`EvaluationState * [SEM`VAL]
+EvalPrint(e, debugString) ==
+ (ResetInActivity(); -- Not necesary, but consistent.
+  DeActivateAllBreakpoints();
+  def res = EvalPrintDebugAux(e, debugString)
+  in
+   (ActivateAllBreakpoints();
+    return res;
+   )
+ );
+
+\end{vdm_al}
+
+\section{Stepping commands}
+
+\begin{vdm_al}
+EvalStep: () ==> bool * [STKM`EvaluationState] * [SEM`VAL]
+EvalStep() ==
+ (STKM`SetStep();
+  return RunIfAllowed())
+pre is_STKM`Breakpoint(STKM`MainLoopState());
+
+EvalStepIn: () ==> bool * [STKM`EvaluationState] * [SEM`VAL]
+EvalStepIn() ==
+ (STKM`SetStepIn();
+  return RunIfAllowed())
+pre is_STKM`Breakpoint(STKM`MainLoopState());
+
+EvalSingleStep: () ==> bool * [STKM`EvaluationState] * [SEM`VAL]
+EvalSingleStep() ==
+ (STKM`SetSingleStep();
+  return RunIfAllowed())
+pre is_STKM`Breakpoint(STKM`MainLoopState());
+
+EvalContinue: () ==> bool * [STKM`EvaluationState] * [SEM`VAL]
+EvalContinue() ==
+ (STKM`SetContinue();
+  return RunIfAllowed())
+pre is_STKM`Breakpoint(STKM`MainLoopState());
+
+EvalFinish: () ==> bool * [STKM`EvaluationState] * [SEM`VAL]
+EvalFinish() ==
+ (STKM`SetFinish();
+  return RunIfAllowed())
+pre is_STKM`Breakpoint(STKM`MainLoopState());
+
+IsSteppingAllowed: () ==> bool
+IsSteppingAllowed() ==
+  def allow1 = STKM`CallStackLevel() > 0;
+      allow2 = not STKM`IsProgramAtEnd();
+      St = STKM`MainLoopState();
+      allow3 = is_STKM`Interrupt(St) or is_STKM`Breakpoint(St)
+  in return allow1 or allow2 or allow3;
+
+RunIfAllowed: () ==> bool * [STKM`EvaluationState] * [SEM`VAL]
+RunIfAllowed() ==
+ (STKM`ResetUpDn();
+  if IsSteppingAllowed()
+  then def mk_(eval_state, semval) = EvalRun(false)
+       in return mk_(true, eval_state, semval)
+  else return mk_(false, nil,nil));
+
+\end{vdm_al}
+
+
+\section{Breakpoints}
+
+All the following commands relates to setting/removing breakpoints and
+enabling/disabling breakpoints.
+
+\begin{vdm_al}
+
+EvalBreakName: AS`Name * [nat] * DEBUGTP`BreakStatus ==> bool * seq of char * [nat]
+EvalBreakName(name, id, status) ==
+  def mk_(isit, errMsg, cid, modcl, loc_nm) = STATE`GetFirstCIDOfFctOp(name)
+  in
+    if isit
+    then
+     (dcl id' : nat := id;
+      if id = nil
+      then
+       (breakId := breakId +1; 
+        id' := breakId);
+
+      breakpoints := breakpoints ++ { id' |-> mk_DEBUGTP`FnNameBreakInfo(modcl, loc_nm, status, cid)};
+
+      if is_DEBUGTP`Enabled(status)
+      then CI`SetBreakpoint(cid);
+
+      return mk_(true, "", id)
+     )
+    else return mk_(false, errMsg, nil);
+
+EvalBreakPos: seq of char * nat * nat * [nat] * DEBUGTP`BreakStatus ==> bool * seq of char * [nat]
+EvalBreakPos(fileName, line, col, id, status) ==
+  def mk_(found, errMsg, cid) = CI`GetCidAtPos(fileName, line, col)
+  in
+    if found
+    then
+      def breakable = CI`IsCidBreakable(cid)
+      in
+       (dcl id' : nat := id;
+        if not breakable
+        then error
+        elseif id = nil
+        then
+         (breakId := breakId +1;
+          id' := breakId);
+
+        breakpoints := breakpoints ++ { id' |-> mk_DEBUGTP`PosBreakInfo(fileName, line, col, status, cid)};
+
+        if is_DEBUGTP`Enabled(status)
+        then CI`SetBreakpoint(cid);                   
+        return mk_(true, "", id)
+       )
+    else return mk_(false, errMsg, nil);
+
+DeleteBreakpoint: nat ==> bool * [seq of char]
+DeleteBreakpoint(num) ==
+  if not num in set dom breakpoints
+  then return mk_(false, "No such breakpoint")
+  else let info = breakpoints(num)
+       in ( CI`RemoveBreakpoint(info.cid);
+            breakpoints := {num} <-: breakpoints;
+            return mk_(true, nil));
+  
+\end{vdm_al}
+
+When the user reinitializes his specifications, all breakpoints must
+be set once again. The reason for this is that the locations of the
+breakpoints will have moved to new context ids in case that the
+specification has changed.
+
+It is not necessary to remove the break information from the context ids,
+as one of two situations may present: 
+
+\begin{itemize}
+\item The specification has not changed, and the context id is at the same
+location as it was before the reinitialization. 
+\item The specification has changed and the context table for the given
+file have been deleted and rebuild.
+\end{itemize}
+
+\begin{vdm_al}
+
+UpdateBreakpoint: () ==> set of nat
+UpdateBreakpoint() ==
+ (dcl ids : set of nat := {};
+  for all id in set dom breakpoints do
+    let info = breakpoints(id)
+    in
+      cases true:
+        (is_DEBUGTP`FnNameBreakInfo(info)) -> if not UpdateFnNameBreakInfo(id, info)
+                                              then ids := ids union {id},
+        (is_DEBUGTP`PosBreakInfo(info))    -> if not UpdatePosBreakInfo(id, info)
+                                              then ids := ids union {id}
+      end;
+  breakpoints := ids <-: breakpoints;
+  return ids);
+
+UpdateFnNameBreakInfo: nat * DEBUGTP`FnNameBreakInfo ==> bool
+UpdateFnNameBreakInfo(id, mk_DEBUGTP`FnNameBreakInfo(modcl, name, status, -)) ==
+  def mk_(ok, -, -) = EvalBreakName(AUX`ConstructDoubleName(modcl, name), id, status)
+  in return ok;
+
+UpdatePosBreakInfo: nat * DEBUGTP`PosBreakInfo ==> bool
+UpdatePosBreakInfo(id, mk_DEBUGTP`PosBreakInfo(fileName, line, col, status, -)) ==
+  def mk_(ok, -, -) = EvalBreakPos(fileName, line, col, id, status)
+  in return ok;
+
+\end{vdm_al}
+
+\section{Query Functions}
+
+\begin{vdm_al}
+
+
+ActiveBreakpoint : CI`ContextId ==> bool
+ActiveBreakpoint (cid) ==
+  return inActiveLevel = 0 and
+         CI`IsBreakpointAtCid(cid);
+
+ExistsBreakpointForName: AS`Name * AS`Name ==> bool
+ExistsBreakpointForName(modClName, name) ==
+  return exists id in set dom breakpoints
+         & is_DEBUGTP`FnNameBreakInfo(breakpoints(id)) 
+           and breakpoints(id).modcl = modClName
+           and breakpoints(id).name = name;
+
+ExistsBreakpointForPos: seq of char * nat * nat ==> bool
+ExistsBreakpointForPos(fileName, line, col) ==
+  return exists id in set dom breakpoints
+         & is_DEBUGTP`PosBreakInfo(breakpoints(id)) 
+           and breakpoints(id).fileName = fileName
+           and breakpoints(id).line = line
+           and breakpoints(id).col = col;
+
+GetBreakpointNumForName: AS`Name * AS`Name ==> nat
+GetBreakpointNumForName (modClName, name) ==
+  let {num} = {id | id in set dom breakpoints 
+                  & breakpoints(id).modcl = modClName
+                    and breakpoints(id).name = name}
+  in
+    return num
+pre card {id | id in set dom breakpoints
+             & breakpoints(id).modcl = modClName
+               and breakpoints(id).name = name} = 1;
+    
+GetBreakpointNumForPos: seq of char * nat * nat ==> nat
+GetBreakpointNumForPos (fileName, line, col) ==
+  let {num} = {id | id in set dom breakpoints
+                  & breakpoints(id).fileName = fileName
+                    and breakpoints(id).line = line
+                    and breakpoints(id).col = col}
+  in
+    return num
+pre card {id | id in set dom breakpoints
+             & breakpoints(id).fileName = fileName
+               and breakpoints(id).line = line
+               and breakpoints(id).col = col} = 1;
+
+
+\end{vdm_al}
+
+\subsection{Enable/disable}
+
+\begin{vdm_al}
+
+EnableBreakpoint: nat ==> bool * [seq of char]
+EnableBreakpoint(num) == 
+  if not num in set dom breakpoints
+  then return mk_(false, "No such breakpoint")
+  else let info = breakpoints(num)
+       in if info.status = mk_DEBUGTP`Enabled()
+          then return mk_(false,"Breakpoint is already enabled")
+          else ( CI`SetBreakpoint(info.cid);
+                 breakpoints(num) := mu(info, status |-> mk_DEBUGTP`Enabled());
+                 return mk_(true, nil));
+
+DisableBreakpoint: nat ==> bool * [seq of char]
+DisableBreakpoint(num) == 
+  if not num in set dom breakpoints
+  then return mk_(false, "No such breakpoint")
+  else let info = breakpoints(num)
+       in if info.status = mk_DEBUGTP`Disabled() 
+          then return mk_(false,"Breakpoint is already disabled")
+          else ( CI`RemoveBreakpoint(info.cid);
+                 breakpoints(num) := mu(info, status |-> mk_DEBUGTP`Disabled());
+                 return mk_(true, nil));
+
+
+\end{vdm_al}
+
+\subsection{Activate/deactivate}
+
+When a print command has been issued, or when an internal recursive
+commands has been issued, then the toolbox should not break at any
+breakpoint.
+
+An example of a recursive command is evaluation of invariants or permission
+predicates. (It is the commands which called by the EvalAuxCmd).
+
+Several levels of recursive invocation of the EvalAuxCmd may be
+invoked. This means that it is not enough with just a boolean flag to
+indicate wether breakpoints may be used or not.
+
+\begin{vdm_al}
+ResetInActivity: () ==> ()
+ResetInActivity() ==
+  inActiveLevel := 0;
+
+ActivateAllBreakpoints : () ==> ()
+ActivateAllBreakpoints() ==
+(
+  inActiveLevel := inActiveLevel - 1;
+);
+
+DeActivateAllBreakpoints : () ==> ()
+DeActivateAllBreakpoints() ==
+(
+  inActiveLevel := inActiveLevel + 1;
+);
+
+\end{vdm_al}
+
+\section{Up/down commands}
+
+\begin{vdm_al}
+EvalStackUp: () ==> ()
+EvalStackUp() ==
+  STKM`GoUp();
+
+EvalStackDown: () ==> ()
+EvalStackDown() ==
+  STKM`GoDown();
+
+\end{vdm_al}
+
+#ifdef VDMPP
+\section{Thread Related Debug Commands}
+
+\begin{vdm_al}
+EvalSelThread: SCHDTP`ThreadId ==> ()
+EvalSelThread(id) ==
+  SCHD`SelThread(id);
+\end{vdm_al}
+
+\begin{vdm_al}
+EvalCurThread: () ==> SCHDTP`ThreadId
+EvalCurThread() ==
+  SCHD`CurThreadId();
+\end{vdm_al}
+
+#endif // VDMPP
+
+\begin{vdm_al}
+end DEBUG
+\end{vdm_al}
+
+
+\vspace{0.5cm}
+
+#ifdef RTINFO
+\begin{rtinfo}
+{rtinfo.ast}[DEBUG]
+\end{rtinfo}
+#endif RTINFO
+
+

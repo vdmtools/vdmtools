@@ -1,0 +1,14 @@
+encode UTF8
+r JFrameTest.vpp
+r VDMUtil.vpp
+r io.vpp
+r jni.vpp
+r jnienv.vpp
+r math.vpp
+init
+p new JFrameTest().System_currentTimeMillis()
+p new JFrameTest().Thread_sleep(5000)
+p new JFrameTest().JFrame_new()
+p new JFrameTest().JFrame_new2()
+p new JFrameTest().JFrame_new3()
+

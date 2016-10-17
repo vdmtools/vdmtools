@@ -1,0 +1,397 @@
+ThreadCreate -> id: 1 period: false objref: nil clnm: nil cpunm: 0 time: 0
+ThreadSwapIn -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 0
+CPUdecl ->  id: 1 expl: true sys: "FighterAircraft" name: "cpu1"
+CPUdecl ->  id: 2 expl: true sys: "FighterAircraft" name: "cpu2"
+CPUdecl ->  id: 3 expl: true sys: "FighterAircraft" name: "cpu3"
+DeployObj ->  objref: 1 clnm: "GLOBAL" cpunm: 0 time: 0
+DeployObj ->  objref: 2 clnm: "MissileDetector" cpunm: 0 time: 0
+DeployObj ->  objref: 3 clnm: "MissileDetector" cpunm: 0 time: 0
+DeployObj ->  objref: 4 clnm: "Sensor" cpunm: 0 time: 0
+DeployObj ->  objref: 5 clnm: "Sensor" cpunm: 0 time: 0
+OpRequest -> id: 1 opname: "Sensor`Sensor" objref: 5 clnm: "Sensor" cpunm: 0 async: false time: 0
+OpActivate -> id: 1 opname: "Sensor`Sensor" objref: 5 clnm: "Sensor" cpunm: 0 async: false time: 0
+OpCompleted -> id: 1 opname: "Sensor`Sensor" objref: 5 clnm: "Sensor" cpunm: 0 async: false time: 14
+DeployObj ->  objref: 6 clnm: "FlareController" cpunm: 0 time: 14
+DeployObj ->  objref: 7 clnm: "FlareController" cpunm: 0 time: 14
+OpRequest -> id: 1 opname: "FlareController`FlareController" objref: 7 clnm: "FlareController" cpunm: 0 async: false time: 14
+OpActivate -> id: 1 opname: "FlareController`FlareController" objref: 7 clnm: "FlareController" cpunm: 0 async: false time: 14
+OpCompleted -> id: 1 opname: "FlareController`FlareController" objref: 7 clnm: "FlareController" cpunm: 0 async: false time: 20
+DeployObj ->  objref: 8 clnm: "FlareDispenser" cpunm: 0 time: 20
+DeployObj ->  objref: 9 clnm: "FlareDispenser" cpunm: 0 time: 20
+OpRequest -> id: 1 opname: "FlareDispenser`FlareDispenser" objref: 9 clnm: "FlareDispenser" cpunm: 0 async: false time: 20
+OpActivate -> id: 1 opname: "FlareDispenser`FlareDispenser" objref: 9 clnm: "FlareDispenser" cpunm: 0 async: false time: 20
+OpCompleted -> id: 1 opname: "FlareDispenser`FlareDispenser" objref: 9 clnm: "FlareDispenser" cpunm: 0 async: false time: 26
+BUSdecl ->  id: 1 topo: {3, 2} name: "bus2"
+BUSdecl ->  id: 2 topo: {2, 1} name: "bus1"
+DeployObj ->  objref: 3 clnm: "MissileDetector" cpunm: 2 time: 26
+DeployObj ->  objref: 5 clnm: "Sensor" cpunm: 1 time: 26
+DeployObj ->  objref: 7 clnm: "FlareController" cpunm: 2 time: 26
+DeployObj ->  objref: 9 clnm: "FlareDispenser" cpunm: 3 time: 26
+DeployObj ->  objref: 10 clnm: "FighterAircraft" cpunm: 0 time: 26
+DeployObj ->  objref: 11 clnm: "GLOBAL" cpunm: 0 time: 26
+DeployObj ->  objref: 12 clnm: "MissileDetector" cpunm: 0 time: 26
+DeployObj ->  objref: 13 clnm: "FlareController" cpunm: 0 time: 26
+DeployObj ->  objref: 14 clnm: "FlareDispenser" cpunm: 0 time: 26
+DeployObj ->  objref: 15 clnm: "Environment" cpunm: 0 time: 26
+DeployObj ->  objref: 16 clnm: "Sensor" cpunm: 0 time: 26
+DeployObj ->  objref: 17 clnm: "World" cpunm: 0 time: 26
+DeployObj ->  objref: 18 clnm: "A" cpunm: 0 time: 26
+DeployObj ->  objref: 19 clnm: "A" cpunm: 0 time: 26
+OpRequest -> id: 1 opname: "A`Test" objref: 19 clnm: "A" cpunm: 0 async: false time: 28
+OpActivate -> id: 1 opname: "A`Test" objref: 19 clnm: "A" cpunm: 0 async: false time: 28
+DeployObj ->  objref: 20 clnm: "World" cpunm: 0 time: 28
+OpRequest -> id: 1 opname: "World`World" objref: 20 clnm: "World" cpunm: 0 async: false time: 28
+OpActivate -> id: 1 opname: "World`World" objref: 20 clnm: "World" cpunm: 0 async: false time: 28
+CPUdecl ->  id: 4 expl: false sys: "none" name: "vCPU1"
+DeployObj ->  objref: 21 clnm: "Environment" cpunm: 0 time: 28
+OpRequest -> id: 1 opname: "Environment`Environment" objref: 21 clnm: "Environment" cpunm: 0 async: false time: 28
+OpActivate -> id: 1 opname: "Environment`Environment" objref: 21 clnm: "Environment" cpunm: 0 async: false time: 28
+OpCompleted -> id: 1 opname: "Environment`Environment" objref: 21 clnm: "Environment" cpunm: 0 async: false time: 40
+DeployObj ->  objref: 21 clnm: "Environment" cpunm: 4 time: 40
+OpRequest -> id: 1 opname: "Environment`addSensor" objref: 21 clnm: "Environment" cpunm: 0 async: false time: 58
+MessageRequest -> busid: 0 fromcpu: 0 tocpu: 4 msgid: 1 callthr: 1 opname: "Environment`addSensor" objref: 21 size: 16 time: 58
+MessageActivate -> msgid: 1 time: 58
+MessageCompleted -> msgid: 1 time: 58
+ThreadCreate -> id: 2 period: false objref: 21 clnm: "Environment" cpunm: 4 time: 58
+ThreadSwapIn -> id: 2 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 58
+OpActivate -> id: 2 opname: "Environment`addSensor" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 58
+OpRequest -> id: 2 opname: "Sensor`getAperature" objref: 5 clnm: "Sensor" cpunm: 4 async: false time: 72
+MessageRequest -> busid: 0 fromcpu: 4 tocpu: 1 msgid: 2 callthr: 2 opname: "Sensor`getAperature" objref: 5 size: 8 time: 72
+MessageActivate -> msgid: 2 time: 72
+MessageCompleted -> msgid: 2 time: 72
+ThreadCreate -> id: 3 period: false objref: 5 clnm: "Sensor" cpunm: 1 time: 72
+ThreadSwapIn -> id: 3 objref: 5 clnm: "Sensor" cpunm: 1 overhead: 2 time: 72
+OpActivate -> id: 3 opname: "Sensor`getAperature" objref: 5 clnm: "Sensor" cpunm: 1 async: false time: 72
+OpCompleted -> id: 3 opname: "Sensor`getAperature" objref: 5 clnm: "Sensor" cpunm: 1 async: false time: 82
+ReplyRequest -> busid: 0 fromcpu: 1 tocpu: 4 msgid: 3 origmsgid: 2 callthr: 2 calleethr: 3 size: 136 time: 82
+ThreadSwapOut -> id: 3 objref: 5 clnm: "Sensor" cpunm: 1 overhead: 2 time: 82
+ThreadKill -> id: 3 cpunm: 1 time: 84
+MessageActivate -> msgid: 3 time: 82
+MessageCompleted -> msgid: 3 time: 82
+OpCompleted -> id: 2 opname: "Environment`addSensor" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 112
+ReplyRequest -> busid: 0 fromcpu: 4 tocpu: 0 msgid: 4 origmsgid: 1 callthr: 1 calleethr: 2 size: 1 time: 112
+ThreadSwapOut -> id: 2 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 112
+ThreadKill -> id: 2 cpunm: 4 time: 114
+MessageActivate -> msgid: 4 time: 112
+MessageCompleted -> msgid: 4 time: 112
+OpRequest -> id: 1 opname: "FlareController`addDispenser" objref: 7 clnm: "FlareController" cpunm: 0 async: false time: 118
+MessageRequest -> busid: 0 fromcpu: 0 tocpu: 2 msgid: 5 callthr: 1 opname: "FlareController`addDispenser" objref: 7 size: 16 time: 118
+MessageActivate -> msgid: 5 time: 118
+MessageCompleted -> msgid: 5 time: 118
+ThreadCreate -> id: 4 period: false objref: 7 clnm: "FlareController" cpunm: 2 time: 118
+ThreadSwapIn -> id: 4 objref: 7 clnm: "FlareController" cpunm: 2 overhead: 2 time: 118
+OpActivate -> id: 4 opname: "FlareController`addDispenser" objref: 7 clnm: "FlareController" cpunm: 2 async: false time: 118
+OpRequest -> id: 4 opname: "FlareDispenser`GetAngle" objref: 9 clnm: "FlareDispenser" cpunm: 2 async: false time: 124
+MessageRequest -> busid: 1 fromcpu: 2 tocpu: 3 msgid: 6 callthr: 4 opname: "FlareDispenser`GetAngle" objref: 9 size: 8 time: 124
+MessageActivate -> msgid: 6 time: 124
+MessageCompleted -> msgid: 6 time: 125
+ThreadCreate -> id: 5 period: false objref: 9 clnm: "FlareDispenser" cpunm: 3 time: 125
+ThreadSwapIn -> id: 5 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 125
+OpActivate -> id: 5 opname: "FlareDispenser`GetAngle" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: false time: 125
+OpCompleted -> id: 5 opname: "FlareDispenser`GetAngle" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: false time: 129
+ReplyRequest -> busid: 1 fromcpu: 3 tocpu: 2 msgid: 7 origmsgid: 6 callthr: 4 calleethr: 5 size: 64 time: 129
+ThreadSwapOut -> id: 5 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 129
+ThreadKill -> id: 5 cpunm: 3 time: 131
+MessageActivate -> msgid: 7 time: 130
+MessageCompleted -> msgid: 7 time: 131
+ThreadCreate -> id: 6 period: true objref: 9 clnm: "FlareDispenser" cpunm: 3 time: 179
+OpCompleted -> id: 4 opname: "FlareController`addDispenser" objref: 7 clnm: "FlareController" cpunm: 2 async: false time: 189
+ReplyRequest -> busid: 0 fromcpu: 2 tocpu: 0 msgid: 8 origmsgid: 5 callthr: 1 calleethr: 4 size: 1 time: 189
+ThreadSwapOut -> id: 4 objref: 7 clnm: "FlareController" cpunm: 2 overhead: 2 time: 189
+ThreadKill -> id: 4 cpunm: 2 time: 191
+MessageActivate -> msgid: 8 time: 189
+MessageCompleted -> msgid: 8 time: 189
+OpRequest -> id: 1 opname: "MissileDetector`addController" objref: 3 clnm: "MissileDetector" cpunm: 0 async: false time: 195
+MessageRequest -> busid: 0 fromcpu: 0 tocpu: 2 msgid: 9 callthr: 1 opname: "MissileDetector`addController" objref: 3 size: 16 time: 195
+MessageActivate -> msgid: 9 time: 195
+MessageCompleted -> msgid: 9 time: 195
+ThreadCreate -> id: 7 period: false objref: 3 clnm: "MissileDetector" cpunm: 2 time: 195
+ThreadSwapIn -> id: 7 objref: 3 clnm: "MissileDetector" cpunm: 2 overhead: 2 time: 195
+OpActivate -> id: 7 opname: "MissileDetector`addController" objref: 3 clnm: "MissileDetector" cpunm: 2 async: false time: 195
+OpRequest -> id: 7 opname: "FlareController`getAperature" objref: 7 clnm: "FlareController" cpunm: 2 async: false time: 209
+OpActivate -> id: 7 opname: "FlareController`getAperature" objref: 7 clnm: "FlareController" cpunm: 2 async: false time: 209
+OpCompleted -> id: 7 opname: "FlareController`getAperature" objref: 7 clnm: "FlareController" cpunm: 2 async: false time: 219
+ThreadSwapIn -> id: 6 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 231
+OpRequest -> id: 6 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 231
+OpActivate -> id: 6 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 231
+OpCompleted -> id: 6 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 239
+ThreadSwapOut -> id: 6 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 239
+ThreadKill -> id: 6 cpunm: 3 time: 241
+ThreadCreate -> id: 8 period: false objref: 7 clnm: "FlareController" cpunm: 2 time: 245
+OpCompleted -> id: 7 opname: "MissileDetector`addController" objref: 3 clnm: "MissileDetector" cpunm: 2 async: false time: 253
+ReplyRequest -> busid: 0 fromcpu: 2 tocpu: 0 msgid: 10 origmsgid: 9 callthr: 1 calleethr: 7 size: 1 time: 253
+ThreadSwapOut -> id: 7 objref: 3 clnm: "MissileDetector" cpunm: 2 overhead: 2 time: 253
+ThreadKill -> id: 7 cpunm: 2 time: 255
+MessageActivate -> msgid: 10 time: 253
+MessageCompleted -> msgid: 10 time: 253
+ThreadSwapIn -> id: 8 objref: 7 clnm: "FlareController" cpunm: 2 overhead: 2 time: 255
+ThreadCreate -> id: 9 period: false objref: 3 clnm: "MissileDetector" cpunm: 2 time: 257
+ThreadSwapOut -> id: 8 objref: 7 clnm: "FlareController" cpunm: 2 overhead: 2 time: 259
+ThreadSwapIn -> id: 9 objref: 3 clnm: "MissileDetector" cpunm: 2 overhead: 2 time: 261
+OpRequest -> id: 9 opname: "MissileDetector`getThreat" objref: 3 clnm: "MissileDetector" cpunm: 2 async: false time: 263
+ThreadSwapOut -> id: 9 objref: 3 clnm: "MissileDetector" cpunm: 2 overhead: 2 time: 263
+ThreadSwapIn -> id: 8 objref: 7 clnm: "FlareController" cpunm: 2 overhead: 2 time: 265
+OpCompleted -> id: 1 opname: "World`World" objref: 20 clnm: "World" cpunm: 0 async: false time: 265
+OpRequest -> id: 1 opname: "World`Run" objref: 20 clnm: "World" cpunm: 0 async: false time: 267
+OpActivate -> id: 1 opname: "World`Run" objref: 20 clnm: "World" cpunm: 0 async: false time: 267
+ThreadCreate -> id: 10 period: true objref: 21 clnm: "Environment" cpunm: 4 time: 269
+ThreadCreate -> id: 11 period: true objref: 9 clnm: "FlareDispenser" cpunm: 3 time: 273
+OpRequest -> id: 1 opname: "Environment`isFinished" objref: 21 clnm: "Environment" cpunm: 0 async: false time: 273
+MessageRequest -> busid: 0 fromcpu: 0 tocpu: 4 msgid: 11 callthr: 1 opname: "Environment`isFinished" objref: 21 size: 8 time: 273
+MessageActivate -> msgid: 11 time: 273
+MessageCompleted -> msgid: 11 time: 273
+ThreadCreate -> id: 12 period: false objref: 21 clnm: "Environment" cpunm: 4 time: 273
+ThreadSwapIn -> id: 12 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 273
+ThreadSwapOut -> id: 12 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 273
+ThreadSwapIn -> id: 10 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 275
+OpRequest -> id: 10 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 275
+OpActivate -> id: 10 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 275
+OpRequest -> id: 8 opname: "FlareController`getThreat" objref: 7 clnm: "FlareController" cpunm: 2 async: false time: 281
+OpCompleted -> id: 10 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 323
+ThreadSwapOut -> id: 10 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 323
+ThreadKill -> id: 10 cpunm: 4 time: 325
+ThreadSwapIn -> id: 11 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 1141
+OpRequest -> id: 11 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 1141
+OpActivate -> id: 11 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 1141
+OpCompleted -> id: 11 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 1149
+ThreadSwapOut -> id: 11 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 1149
+ThreadKill -> id: 11 cpunm: 3 time: 1151
+ThreadCreate -> id: 13 period: true objref: 21 clnm: "Environment" cpunm: 4 time: 1225
+DelayedThreadSwapIn -> id: 13 objref: 21 clnm: "Environment" delay: 56 cpunm: 4 overhead: 2 time: 1225
+OpRequest -> id: 13 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 1225
+OpActivate -> id: 13 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 1225
+ThreadCreate -> id: 14 period: true objref: 9 clnm: "FlareDispenser" cpunm: 3 time: 1251
+DelayedThreadSwapIn -> id: 14 objref: 9 clnm: "FlareDispenser" delay: 78 cpunm: 3 overhead: 2 time: 1251
+OpRequest -> id: 14 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 1251
+OpActivate -> id: 14 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 1251
+OpCompleted -> id: 14 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 1259
+ThreadSwapOut -> id: 14 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 1259
+ThreadKill -> id: 14 cpunm: 3 time: 1261
+OpCompleted -> id: 13 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 1273
+ThreadSwapOut -> id: 13 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 1273
+ThreadKill -> id: 13 cpunm: 4 time: 1275
+ThreadCreate -> id: 15 period: true objref: 9 clnm: "FlareDispenser" cpunm: 3 time: 2161
+DelayedThreadSwapIn -> id: 15 objref: 9 clnm: "FlareDispenser" delay: 10 cpunm: 3 overhead: 2 time: 2161
+OpRequest -> id: 15 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 2161
+OpActivate -> id: 15 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 2161
+OpCompleted -> id: 15 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 2169
+ThreadSwapOut -> id: 15 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 2169
+ThreadKill -> id: 15 cpunm: 3 time: 2171
+ThreadCreate -> id: 16 period: true objref: 21 clnm: "Environment" cpunm: 4 time: 2175
+DelayedThreadSwapIn -> id: 16 objref: 21 clnm: "Environment" delay: 50 cpunm: 4 overhead: 2 time: 2175
+OpRequest -> id: 16 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 2175
+OpActivate -> id: 16 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 2175
+OpCompleted -> id: 16 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 2223
+ThreadSwapOut -> id: 16 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 2223
+ThreadKill -> id: 16 cpunm: 4 time: 2225
+ThreadCreate -> id: 17 period: true objref: 9 clnm: "FlareDispenser" cpunm: 3 time: 3071
+DelayedThreadSwapIn -> id: 17 objref: 9 clnm: "FlareDispenser" delay: 10 cpunm: 3 overhead: 2 time: 3071
+OpRequest -> id: 17 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 3071
+OpActivate -> id: 17 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 3071
+OpCompleted -> id: 17 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 3079
+ThreadSwapOut -> id: 17 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 3079
+ThreadKill -> id: 17 cpunm: 3 time: 3081
+ThreadCreate -> id: 18 period: true objref: 21 clnm: "Environment" cpunm: 4 time: 3125
+DelayedThreadSwapIn -> id: 18 objref: 21 clnm: "Environment" delay: 50 cpunm: 4 overhead: 2 time: 3125
+OpRequest -> id: 18 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 3125
+OpActivate -> id: 18 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 3125
+OpCompleted -> id: 18 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 3173
+ThreadSwapOut -> id: 18 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 3173
+ThreadKill -> id: 18 cpunm: 4 time: 3175
+ThreadCreate -> id: 19 period: true objref: 9 clnm: "FlareDispenser" cpunm: 3 time: 3981
+DelayedThreadSwapIn -> id: 19 objref: 9 clnm: "FlareDispenser" delay: 10 cpunm: 3 overhead: 2 time: 3981
+OpRequest -> id: 19 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 3981
+OpActivate -> id: 19 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 3981
+OpCompleted -> id: 19 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 3989
+ThreadSwapOut -> id: 19 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 3989
+ThreadKill -> id: 19 cpunm: 3 time: 3991
+ThreadCreate -> id: 20 period: true objref: 21 clnm: "Environment" cpunm: 4 time: 4075
+DelayedThreadSwapIn -> id: 20 objref: 21 clnm: "Environment" delay: 50 cpunm: 4 overhead: 2 time: 4075
+OpRequest -> id: 20 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 4075
+OpActivate -> id: 20 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 4075
+OpCompleted -> id: 20 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 4123
+ThreadSwapOut -> id: 20 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 4123
+ThreadKill -> id: 20 cpunm: 4 time: 4125
+ThreadCreate -> id: 21 period: true objref: 9 clnm: "FlareDispenser" cpunm: 3 time: 4891
+DelayedThreadSwapIn -> id: 21 objref: 9 clnm: "FlareDispenser" delay: 10 cpunm: 3 overhead: 2 time: 4891
+OpRequest -> id: 21 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 4891
+OpActivate -> id: 21 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 4891
+OpCompleted -> id: 21 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 4899
+ThreadSwapOut -> id: 21 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 4899
+ThreadKill -> id: 21 cpunm: 3 time: 4901
+ThreadCreate -> id: 22 period: true objref: 21 clnm: "Environment" cpunm: 4 time: 5025
+DelayedThreadSwapIn -> id: 22 objref: 21 clnm: "Environment" delay: 50 cpunm: 4 overhead: 2 time: 5025
+OpRequest -> id: 22 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 5025
+OpActivate -> id: 22 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 5025
+OpCompleted -> id: 22 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 5073
+ThreadSwapOut -> id: 22 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 5073
+ThreadKill -> id: 22 cpunm: 4 time: 5075
+ThreadCreate -> id: 23 period: true objref: 9 clnm: "FlareDispenser" cpunm: 3 time: 5801
+DelayedThreadSwapIn -> id: 23 objref: 9 clnm: "FlareDispenser" delay: 10 cpunm: 3 overhead: 2 time: 5801
+OpRequest -> id: 23 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 5801
+OpActivate -> id: 23 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 5801
+OpCompleted -> id: 23 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 5809
+ThreadSwapOut -> id: 23 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 5809
+ThreadKill -> id: 23 cpunm: 3 time: 5811
+ThreadCreate -> id: 24 period: true objref: 21 clnm: "Environment" cpunm: 4 time: 5975
+DelayedThreadSwapIn -> id: 24 objref: 21 clnm: "Environment" delay: 50 cpunm: 4 overhead: 2 time: 5975
+OpRequest -> id: 24 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 5975
+OpActivate -> id: 24 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 5975
+OpCompleted -> id: 24 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 6023
+ThreadSwapOut -> id: 24 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 6023
+ThreadKill -> id: 24 cpunm: 4 time: 6025
+ThreadCreate -> id: 25 period: true objref: 9 clnm: "FlareDispenser" cpunm: 3 time: 6711
+DelayedThreadSwapIn -> id: 25 objref: 9 clnm: "FlareDispenser" delay: 10 cpunm: 3 overhead: 2 time: 6711
+OpRequest -> id: 25 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 6711
+OpActivate -> id: 25 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 6711
+OpCompleted -> id: 25 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 6719
+ThreadSwapOut -> id: 25 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 6719
+ThreadKill -> id: 25 cpunm: 3 time: 6721
+ThreadCreate -> id: 26 period: true objref: 21 clnm: "Environment" cpunm: 4 time: 6925
+DelayedThreadSwapIn -> id: 26 objref: 21 clnm: "Environment" delay: 50 cpunm: 4 overhead: 2 time: 6925
+OpRequest -> id: 26 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 6925
+OpActivate -> id: 26 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 6925
+OpCompleted -> id: 26 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 6973
+ThreadSwapOut -> id: 26 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 6973
+ThreadKill -> id: 26 cpunm: 4 time: 6975
+ThreadCreate -> id: 27 period: true objref: 9 clnm: "FlareDispenser" cpunm: 3 time: 7621
+DelayedThreadSwapIn -> id: 27 objref: 9 clnm: "FlareDispenser" delay: 10 cpunm: 3 overhead: 2 time: 7621
+OpRequest -> id: 27 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 7621
+OpActivate -> id: 27 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 7621
+OpCompleted -> id: 27 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 7629
+ThreadSwapOut -> id: 27 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 7629
+ThreadKill -> id: 27 cpunm: 3 time: 7631
+ThreadCreate -> id: 28 period: true objref: 21 clnm: "Environment" cpunm: 4 time: 7875
+DelayedThreadSwapIn -> id: 28 objref: 21 clnm: "Environment" delay: 50 cpunm: 4 overhead: 2 time: 7875
+OpRequest -> id: 28 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 7875
+OpActivate -> id: 28 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 7875
+OpCompleted -> id: 28 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 7923
+ThreadSwapOut -> id: 28 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 7923
+ThreadKill -> id: 28 cpunm: 4 time: 7925
+ThreadCreate -> id: 29 period: true objref: 9 clnm: "FlareDispenser" cpunm: 3 time: 8531
+DelayedThreadSwapIn -> id: 29 objref: 9 clnm: "FlareDispenser" delay: 10 cpunm: 3 overhead: 2 time: 8531
+OpRequest -> id: 29 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 8531
+OpActivate -> id: 29 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 8531
+OpCompleted -> id: 29 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 8539
+ThreadSwapOut -> id: 29 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 8539
+ThreadKill -> id: 29 cpunm: 3 time: 8541
+ThreadCreate -> id: 30 period: true objref: 21 clnm: "Environment" cpunm: 4 time: 8825
+DelayedThreadSwapIn -> id: 30 objref: 21 clnm: "Environment" delay: 50 cpunm: 4 overhead: 2 time: 8825
+OpRequest -> id: 30 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 8825
+OpActivate -> id: 30 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 8825
+OpCompleted -> id: 30 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 8873
+ThreadSwapOut -> id: 30 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 8873
+ThreadKill -> id: 30 cpunm: 4 time: 8875
+ThreadCreate -> id: 31 period: true objref: 9 clnm: "FlareDispenser" cpunm: 3 time: 9441
+DelayedThreadSwapIn -> id: 31 objref: 9 clnm: "FlareDispenser" delay: 10 cpunm: 3 overhead: 2 time: 9441
+OpRequest -> id: 31 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 9441
+OpActivate -> id: 31 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 9441
+OpCompleted -> id: 31 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 9449
+ThreadSwapOut -> id: 31 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 9449
+ThreadKill -> id: 31 cpunm: 3 time: 9451
+ThreadCreate -> id: 32 period: true objref: 21 clnm: "Environment" cpunm: 4 time: 9775
+DelayedThreadSwapIn -> id: 32 objref: 21 clnm: "Environment" delay: 50 cpunm: 4 overhead: 2 time: 9775
+OpRequest -> id: 32 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 9775
+OpActivate -> id: 32 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 9775
+OpCompleted -> id: 32 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 9823
+ThreadSwapOut -> id: 32 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 9823
+ThreadKill -> id: 32 cpunm: 4 time: 9825
+ThreadCreate -> id: 33 period: true objref: 9 clnm: "FlareDispenser" cpunm: 3 time: 10351
+DelayedThreadSwapIn -> id: 33 objref: 9 clnm: "FlareDispenser" delay: 10 cpunm: 3 overhead: 2 time: 10351
+OpRequest -> id: 33 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 10351
+OpActivate -> id: 33 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 10351
+OpCompleted -> id: 33 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 10359
+ThreadSwapOut -> id: 33 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 10359
+ThreadKill -> id: 33 cpunm: 3 time: 10361
+ThreadCreate -> id: 34 period: true objref: 21 clnm: "Environment" cpunm: 4 time: 10725
+DelayedThreadSwapIn -> id: 34 objref: 21 clnm: "Environment" delay: 50 cpunm: 4 overhead: 2 time: 10725
+OpRequest -> id: 34 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 10725
+OpActivate -> id: 34 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 10725
+OpCompleted -> id: 34 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 10773
+ThreadSwapOut -> id: 34 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 10773
+ThreadKill -> id: 34 cpunm: 4 time: 10775
+ThreadCreate -> id: 35 period: true objref: 9 clnm: "FlareDispenser" cpunm: 3 time: 11261
+DelayedThreadSwapIn -> id: 35 objref: 9 clnm: "FlareDispenser" delay: 10 cpunm: 3 overhead: 2 time: 11261
+OpRequest -> id: 35 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 11261
+OpActivate -> id: 35 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 11261
+OpCompleted -> id: 35 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 11269
+ThreadSwapOut -> id: 35 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 11269
+ThreadKill -> id: 35 cpunm: 3 time: 11271
+ThreadCreate -> id: 36 period: true objref: 21 clnm: "Environment" cpunm: 4 time: 11675
+DelayedThreadSwapIn -> id: 36 objref: 21 clnm: "Environment" delay: 50 cpunm: 4 overhead: 2 time: 11675
+OpRequest -> id: 36 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 11675
+OpActivate -> id: 36 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 11675
+OpRequest -> id: 36 opname: "GLOBAL`canObserve" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 11713
+OpActivate -> id: 36 opname: "GLOBAL`canObserve" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 11713
+OpCompleted -> id: 36 opname: "GLOBAL`canObserve" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 11751
+OpCompleted -> id: 36 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 11803
+ThreadSwapOut -> id: 36 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 11803
+ThreadKill -> id: 36 cpunm: 4 time: 11805
+ThreadCreate -> id: 37 period: true objref: 9 clnm: "FlareDispenser" cpunm: 3 time: 12171
+DelayedThreadSwapIn -> id: 37 objref: 9 clnm: "FlareDispenser" delay: 10 cpunm: 3 overhead: 2 time: 12171
+OpRequest -> id: 37 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 12171
+OpActivate -> id: 37 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 12171
+OpCompleted -> id: 37 opname: "FlareDispenser`evalQueue" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: true time: 12179
+ThreadSwapOut -> id: 37 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 12179
+ThreadKill -> id: 37 cpunm: 3 time: 12181
+ThreadCreate -> id: 38 period: true objref: 21 clnm: "Environment" cpunm: 4 time: 12605
+DelayedThreadSwapIn -> id: 38 objref: 21 clnm: "Environment" delay: 30 cpunm: 4 overhead: 2 time: 12605
+OpRequest -> id: 38 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 12605
+OpActivate -> id: 38 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 12605
+OpCompleted -> id: 38 opname: "Environment`createSignal" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 12619
+ThreadSwapOut -> id: 38 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 12619
+ThreadKill -> id: 38 cpunm: 4 time: 12621
+ThreadSwapIn -> id: 12 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 12621
+OpActivate -> id: 12 opname: "Environment`isFinished" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 12621
+OpCompleted -> id: 12 opname: "Environment`isFinished" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 12621
+ReplyRequest -> busid: 0 fromcpu: 4 tocpu: 0 msgid: 12 origmsgid: 11 callthr: 1 calleethr: 12 size: 1 time: 12621
+ThreadSwapOut -> id: 12 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 12621
+ThreadKill -> id: 12 cpunm: 4 time: 12623
+MessageActivate -> msgid: 12 time: 12621
+MessageCompleted -> msgid: 12 time: 12621
+OpRequest -> id: 1 opname: "MissileDetector`isFinished" objref: 3 clnm: "MissileDetector" cpunm: 0 async: false time: 12625
+MessageRequest -> busid: 0 fromcpu: 0 tocpu: 2 msgid: 13 callthr: 1 opname: "MissileDetector`isFinished" objref: 3 size: 8 time: 12625
+MessageActivate -> msgid: 13 time: 12625
+MessageCompleted -> msgid: 13 time: 12625
+ThreadSwapOut -> id: 8 objref: 7 clnm: "FlareController" cpunm: 2 overhead: 2 time: 12625
+ThreadCreate -> id: 39 period: false objref: 3 clnm: "MissileDetector" cpunm: 2 time: 12627
+ThreadSwapIn -> id: 39 objref: 3 clnm: "MissileDetector" cpunm: 2 overhead: 2 time: 12627
+OpActivate -> id: 39 opname: "MissileDetector`isFinished" objref: 3 clnm: "MissileDetector" cpunm: 2 async: false time: 12627
+OpRequest -> id: 39 opname: "FlareController`isFinished" objref: 7 clnm: "FlareController" cpunm: 2 async: false time: 12639
+OpActivate -> id: 39 opname: "FlareController`isFinished" objref: 7 clnm: "FlareController" cpunm: 2 async: false time: 12639
+OpRequest -> id: 39 opname: "FlareDispenser`isFinished" objref: 9 clnm: "FlareDispenser" cpunm: 2 async: false time: 12651
+MessageRequest -> busid: 1 fromcpu: 2 tocpu: 3 msgid: 14 callthr: 39 opname: "FlareDispenser`isFinished" objref: 9 size: 8 time: 12651
+MessageActivate -> msgid: 14 time: 12651
+MessageCompleted -> msgid: 14 time: 12652
+ThreadCreate -> id: 40 period: false objref: 9 clnm: "FlareDispenser" cpunm: 3 time: 12652
+ThreadSwapIn -> id: 40 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 12652
+OpActivate -> id: 40 opname: "FlareDispenser`isFinished" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: false time: 12652
+OpCompleted -> id: 40 opname: "FlareDispenser`isFinished" objref: 9 clnm: "FlareDispenser" cpunm: 3 async: false time: 12652
+ReplyRequest -> busid: 1 fromcpu: 3 tocpu: 2 msgid: 15 origmsgid: 14 callthr: 39 calleethr: 40 size: 1 time: 12652
+ThreadSwapOut -> id: 40 objref: 9 clnm: "FlareDispenser" cpunm: 3 overhead: 2 time: 12652
+ThreadKill -> id: 40 cpunm: 3 time: 12654
+MessageActivate -> msgid: 15 time: 12752
+MessageCompleted -> msgid: 15 time: 12753
+OpCompleted -> id: 39 opname: "FlareController`isFinished" objref: 7 clnm: "FlareController" cpunm: 2 async: false time: 12759
+OpCompleted -> id: 39 opname: "MissileDetector`isFinished" objref: 3 clnm: "MissileDetector" cpunm: 2 async: false time: 12765
+ReplyRequest -> busid: 0 fromcpu: 2 tocpu: 0 msgid: 16 origmsgid: 13 callthr: 1 calleethr: 39 size: 1 time: 12765
+ThreadSwapOut -> id: 39 objref: 3 clnm: "MissileDetector" cpunm: 2 overhead: 2 time: 12765
+ThreadKill -> id: 39 cpunm: 2 time: 12767
+MessageActivate -> msgid: 16 time: 12765
+MessageCompleted -> msgid: 16 time: 12765
+OpRequest -> id: 1 opname: "Environment`showResult" objref: 21 clnm: "Environment" cpunm: 0 async: false time: 12769
+MessageRequest -> busid: 0 fromcpu: 0 tocpu: 4 msgid: 17 callthr: 1 opname: "Environment`showResult" objref: 21 size: 8 time: 12769
+MessageActivate -> msgid: 17 time: 12769
+MessageCompleted -> msgid: 17 time: 12769
+ThreadCreate -> id: 41 period: false objref: 21 clnm: "Environment" cpunm: 4 time: 12769
+ThreadSwapIn -> id: 41 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 12769
+OpActivate -> id: 41 opname: "Environment`showResult" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 12769
+OpCompleted -> id: 41 opname: "Environment`showResult" objref: 21 clnm: "Environment" cpunm: 4 async: false time: 12773
+ReplyRequest -> busid: 0 fromcpu: 4 tocpu: 0 msgid: 18 origmsgid: 17 callthr: 1 calleethr: 41 size: 8 time: 12773
+ThreadSwapOut -> id: 41 objref: 21 clnm: "Environment" cpunm: 4 overhead: 2 time: 12773
+ThreadKill -> id: 41 cpunm: 4 time: 12775
+MessageActivate -> msgid: 18 time: 12773
+MessageCompleted -> msgid: 18 time: 12773
+OpCompleted -> id: 1 opname: "World`Run" objref: 20 clnm: "World" cpunm: 0 async: false time: 12777
+OpCompleted -> id: 1 opname: "A`Test" objref: 19 clnm: "A" cpunm: 0 async: false time: 12779
+ThreadSwapOut -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 12781

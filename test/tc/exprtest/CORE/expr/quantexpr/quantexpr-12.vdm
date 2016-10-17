@@ -1,0 +1,23 @@
+class QuantExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let A = "ABC",
+      s = {8,9},
+     - = exists1 a in set
+         cases false:
+             true -> A,
+             others -> s
+         end & 
+         cases false:
+             true -> A,
+             others -> s
+         end 
+  in skip;
+
+------------------------------------------------------------------------------
+end QuantExprTest

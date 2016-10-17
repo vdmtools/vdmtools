@@ -1,0 +1,116 @@
+
+class OpDefTest
+instance variables
+      a : nat := 7;
+      b : bool := true;
+      x : seq of nat := [];
+
+operations
+
+  Op1(c,d: nat) r : nat
+  ext wr a : nat
+  pre c <> d
+  post d = r and a~ = a;
+
+  Op2(c,d: nat) r : nat
+  ext rd a : nat
+  pre a <> c
+  post d = r;
+
+  Op3(c,d: nat) r : nat
+  ext rd a : nat
+  pre a <> c
+  post d = r
+  errs id1 : c = a -> r = a;
+
+  Op4() r : nat
+  ext rd a : nat
+      rd b : bool
+  pre a > 8
+  post true;
+
+  Op5(c,d: nat) r : nat
+  ext wr a:nat
+  pre c <> d
+  post a~ = r;
+
+  Op6(e,f: int) r : nat
+  ext wr a : nat
+  pre a < e and a < f
+  post exists r1 in set {a,e,f} & r <> r1
+  errs ERR1: e > f -> r = 0
+       ERR2: a = f -> a~ = a + 1;
+
+  Op7(g: bool) r : rat
+  ext wr b: bool
+  pre g = b
+  post if g then b~ = not b else r = 9
+  errs ERR1: 8 = 9 -> not b;
+
+  Op8()
+  ext wr a: nat
+  pre a <> 7
+  post a~ = a + 7;
+
+  Op9()
+  ext wr a: nat
+  post a~ = a + 1;
+
+  Op10()
+  ext wr a: nat
+  post a = if 7 = 9 then 8 else false;
+
+  Op11()
+  ext rd a: nat
+  post true;
+
+  Op12(t:nat)
+  ext rd a : nat
+  post t > 9
+  errs ERR1: t = a -> t = 8;
+
+  Op13()
+  ext wr x: seq of nat
+  post x = x~ ^ [2]
+
+types
+
+  public A :: a: int
+       b: bool
+
+
+operations
+
+  Op14: nat ==> [nat | bool]
+  Op14(aa) ==
+   return
+    if aa=1
+    then aa<6
+    elseif 7 = 9
+    then 8
+    else let n =  nil in n;
+
+  Op15: A ==> A | (bool * seq of char) | (int * nat1 * nat)
+  Op15(aa) ==
+   return
+    cases aa:
+      mk_A(1,true) -> mk_A(1,false),
+      mk_A(a,b) -> mk_(b,"test"),
+      others -> mk_(1,2,3)
+    end;
+  
+  Op16: nat ==> nat
+  Op16(aa) ==
+    is not yet specified;
+
+  Op17: nat ==> nat
+  Op17(n) ==
+   return n + 1
+  post n = RESULT;
+
+  Op18(aa: nat1) r : char ==
+   return 'g'
+  post a~ = aa + 7
+  errs Dummy: aa = 9 -> r = 'y';
+
+end OpDefTest

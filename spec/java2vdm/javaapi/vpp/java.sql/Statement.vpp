@@ -1,0 +1,127 @@
+class JavaSqlStatement is subclass of JavaLangObject
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaSqlStatement" , <INTERFACE> , false  )
+operations 
+
+JavaSqlStatement: <NIL> ==> JavaSqlStatement
+JavaSqlStatement(-) ==
+isNil:=true;
+
+public close : () ==> ()
+close() == 
+is not yet specified;
+
+public  cancel : () ==> ()
+cancel() == 
+is not yet specified;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  clearBatch : () ==> ()
+clearBatch() == 
+is not yet specified;
+
+public  getMaxRows : () ==> int 
+getMaxRows() == 
+is not yet specified;
+
+--public  getWarnings : () ==> SQLWarning
+--getWarnings() == 
+--is not yet specified;
+
+public  setMaxRows : int  ==> ()
+setMaxRows(max) == 
+is not yet specified;
+
+public  executeBatch : () ==> map  int  to  int 
+executeBatch() == 
+is not yet specified;
+
+public  getFetchSize : () ==> int 
+getFetchSize() == 
+is not yet specified;
+
+public  getResultSet : () ==> JavaSqlResultSet
+getResultSet() == 
+is not yet specified;
+
+public  clearWarnings : () ==> ()
+clearWarnings() == 
+is not yet specified;
+
+public  getConnection : () ==> JavaSqlConnection
+getConnection() == 
+is not yet specified;
+
+public  setFetchSize : int  ==> ()
+setFetchSize(rows) == 
+is not yet specified;
+
+public  getMoreResults : () ==> bool 
+getMoreResults() == 
+is not yet specified;
+
+public  getUpdateCount : () ==> int 
+getUpdateCount() == 
+is not yet specified;
+
+public  execute : JavaLangString ==> bool 
+execute(sql) == 
+is not yet specified;
+
+public  getMaxFieldSize : () ==> int 
+getMaxFieldSize() == 
+is not yet specified;
+
+public  getQueryTimeout : () ==> int 
+getQueryTimeout() == 
+is not yet specified;
+
+public  addBatch : JavaLangString ==> ()
+addBatch(sql) == 
+is not yet specified;
+
+public  getResultSetType : () ==> int 
+getResultSetType() == 
+is not yet specified;
+
+public  setMaxFieldSize : int  ==> ()
+setMaxFieldSize(max) == 
+is not yet specified;
+
+public  setQueryTimeout : int  ==> ()
+setQueryTimeout(seconds) == 
+is not yet specified;
+
+public  getFetchDirection : () ==> int 
+getFetchDirection() == 
+is not yet specified;
+
+public  setFetchDirection : int  ==> ()
+setFetchDirection(direction) == 
+is not yet specified;
+
+public  executeQuery : JavaLangString ==> JavaSqlResultSet
+executeQuery(sql) == 
+is not yet specified;
+
+public  setEscapeProcessing : bool  ==> ()
+setEscapeProcessing(enable) == 
+is not yet specified;
+
+public  executeUpdate : JavaLangString ==> int 
+executeUpdate(sql) == 
+is not yet specified;
+
+public  setCursorName : JavaLangString ==> ()
+setCursorName(name) == 
+is not yet specified;
+
+public  getResultSetConcurrency : () ==> int 
+getResultSetConcurrency() == 
+is not yet specified;
+
+
+end  JavaSqlStatement

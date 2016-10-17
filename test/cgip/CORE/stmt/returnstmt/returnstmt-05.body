@@ -1,0 +1,4 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ( [nat] | seq of nat)  
+Test () ==
+return [ 3, 6, [ 3, 6,2]](3)

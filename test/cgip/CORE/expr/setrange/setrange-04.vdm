@@ -1,0 +1,27 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of (set of nat)  
+Test () ==
+  return [{1,...,1}] ^
+         [{1,...,-1}] ^
+         [{let a = 1 in a, ...,let b = 10 in b}] ^
+         let a = f(25) in 
+           [{ if a = 10 then a else let a in set{<ERROR>, 3} 
+                                    in a,..., 
+              cases a: 10 -> a, 
+                       others -> let a in set {<ERROR>,34} in a 
+              end }] ^
+         [{card {1,2,3,4},..., f(25)}]
+
+functions
+f: nat -> nat | char
+f(n) ==
+  cases n:
+    25 -> 10,
+    others -> 'a'
+  end
+
+end A

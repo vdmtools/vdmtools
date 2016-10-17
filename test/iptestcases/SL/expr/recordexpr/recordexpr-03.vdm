@@ -1,0 +1,23 @@
+module C
+
+exports all
+
+definitions
+
+types REC::
+
+end C
+
+module A
+
+imports
+   from C all
+exports all
+definitions
+
+functions 
+
+  Test: () -> bool 
+  Test () == is_C`REC(mk_C`REC())
+
+end A

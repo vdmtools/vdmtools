@@ -1,0 +1,12 @@
+functions
+
+FinSet: nat -> set of nat
+FinSet(max) ==
+  {x | x :nat & x <= max}
+
+-- PO
+--(forall max : nat &
+--   (exists f_1 : map nat to nat &
+--      (forall x : nat & x <= max 
+--       =>
+--      (exists i_2 in set dom (f_1) & f_1(i_2) = x))))

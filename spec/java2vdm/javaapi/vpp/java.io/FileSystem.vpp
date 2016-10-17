@@ -1,0 +1,229 @@
+class JavaIoFileSystem is subclass of JavaLangObject
+instance variables 
+  public  static BA_EXISTS : int :=1;
+  public  static BA_REGULAR : int :=2;
+  public  static BA_DIRECTORY : int :=4;
+  public  static BA_HIDDEN : int :=8 
+operations 
+JavaIoFileSystem: <NIL> ==> JavaIoFileSystem
+JavaIoFileSystem(-) ==
+isNil:=true;
+
+public  listRoots : () ==> map  int  to  JavaIoFile
+listRoots() == 
+is not yet specified;
+
+public  list : JavaIoFile ==> map  int  to  JavaLangString
+list(f) == 
+is not yet specified;
+
+public  delete : JavaIoFile ==> bool 
+delete(f) == 
+is not yet specified;
+
+public  getSeparator : () ==> char 
+getSeparator() == 
+is not yet specified;
+
+public  static getFileSystem : () ==> JavaIoFileSystem
+getFileSystem() == 
+is not yet specified ;
+
+public  resolve : JavaIoFile ==> JavaLangString
+resolve(f) == 
+is not yet specified;
+
+public  hashCode : JavaIoFile ==> int 
+hashCode(f) == 
+is not yet specified;
+
+public  getLength : JavaIoFile ==> int 
+getLength(f) == 
+is not yet specified;
+
+public  getDefaultParent : () ==> JavaLangString
+getDefaultParent() == 
+is not yet specified;
+
+public  getPathSeparator : () ==> char 
+getPathSeparator() == 
+is not yet specified;
+
+public  isAbsolute : JavaIoFile ==> bool 
+isAbsolute(f) == 
+is not yet specified;
+
+public  normalize : JavaLangString ==> JavaLangString
+normalize(path) == 
+is not yet specified;
+
+public  setReadOnly : JavaIoFile ==> bool 
+setReadOnly(f) == 
+is not yet specified;
+
+public  deleteOnExit : JavaIoFile ==> bool 
+deleteOnExit(f) == 
+is not yet specified;
+
+public  checkAccess : JavaIoFile * bool  ==> bool 
+checkAccess(f, write) == 
+is not yet specified;
+
+public  rename : JavaIoFile * JavaIoFile ==> bool 
+rename(f1, f2) == 
+is not yet specified;
+
+public  canonicalize : JavaLangString ==> JavaLangString
+canonicalize(path) == 
+is not yet specified;
+
+public  compare : JavaIoFile * JavaIoFile ==> int 
+compare(f1, f2) == 
+is not yet specified;
+
+public  prefixLength : JavaLangString ==> int 
+prefixLength(path) == 
+is not yet specified;
+
+public  createDirectory : JavaIoFile ==> bool 
+createDirectory(f) == 
+is not yet specified;
+
+public  resolve : JavaLangString * JavaLangString ==> JavaLangString
+resolve(parent, child) == 
+is not yet specified;
+
+public  getLastModifiedTime : JavaIoFile ==> int 
+getLastModifiedTime(f) == 
+is not yet specified;
+
+public  getBooleanAttributes : JavaIoFile ==> int 
+getBooleanAttributes(f) == 
+is not yet specified;
+
+public  setLastModifiedTime : JavaIoFile * int  ==> bool 
+setLastModifiedTime(f, time) == 
+is not yet specified;
+
+public  createFileExclusively : JavaLangString ==> bool 
+createFileExclusively(pathname) == 
+is not yet specified;
+
+
+end  JavaIoFileSystem
+
+
+class J2VFileSystem is subclass of JavaIoFileSystem
+
+operations 
+
+public  J2VFileSystem : <NIL> ==> J2VFileSystem
+J2VFileSystem(-) == 
+isNil := true  ;
+
+public  listRoots : () ==> map  int  to  JavaIoFile
+listRoots() == 
+is not yet specified ;
+
+public  list : JavaIoFile ==> map  int  to  JavaLangString
+list(f) == 
+is not yet specified ;
+
+public  delete : JavaIoFile ==> bool 
+delete(f) == 
+is not yet specified ;
+
+public  getSeparator : () ==> char 
+getSeparator() == 
+  return '/' ;
+
+public  static getFileSystem : () ==> JavaIoFileSystem
+getFileSystem() == 
+  return new J2VFileSystem() ;
+
+public  resolve : JavaIoFile ==> JavaLangString
+resolve(f) == 
+  return f.getPath() ;
+
+public  hashCode : JavaIoFile ==> int 
+hashCode(f) == 
+is not yet specified ;
+
+public  getLength : JavaIoFile ==> int 
+getLength(f) == 
+is not yet specified ;
+
+public  getDefaultParent : () ==> JavaLangString
+getDefaultParent() == 
+  return new JavaLangString("./") ;
+
+public  getPathSeparator : () ==> char 
+getPathSeparator() == 
+  return ':' ;
+
+public  isAbsolute : JavaIoFile ==> bool 
+isAbsolute(f) == 
+is not yet specified ;
+
+public  normalize : JavaLangString ==> JavaLangString
+normalize(path) == 
+  return  path;
+
+public  setReadOnly : JavaIoFile ==> bool 
+setReadOnly(f) == 
+is not yet specified ;
+
+public  deleteOnExit : JavaIoFile ==> bool 
+deleteOnExit(f) == 
+is not yet specified ;
+
+public  checkAccess : JavaIoFile * bool  ==> bool 
+checkAccess(f, write) == 
+is not yet specified ;
+
+public  rename : JavaIoFile * JavaIoFile ==> bool 
+rename(f1, f2) == 
+is not yet specified ;
+
+public  canonicalize : JavaLangString ==> JavaLangString
+canonicalize(path) == 
+is not yet specified ;
+
+public  compare : JavaIoFile * JavaIoFile ==> int 
+compare(f1, f2) == 
+is not yet specified ;
+
+public  prefixLength : JavaLangString ==> int 
+prefixLength(path) == 
+  return 0;
+
+public  createDirectory : JavaIoFile ==> bool 
+createDirectory(f) == 
+is not yet specified ;
+
+public  resolve : JavaLangString * JavaLangString ==> JavaLangString
+resolve(parent, child) == 
+( dcl s: JavaLangString:=parent;
+  s:=parent.concat(new JavaLangString([getSeparator()])) ;
+  s:=parent.concat(child) ;
+  return s
+);
+
+public  getLastModifiedTime : JavaIoFile ==> int 
+getLastModifiedTime(f) == 
+is not yet specified ;
+
+public  getBooleanAttributes : JavaIoFile ==> int 
+getBooleanAttributes(f) == 
+is not yet specified ;
+
+public  setLastModifiedTime : JavaIoFile * int  ==> bool 
+setLastModifiedTime(f, time) == 
+is not yet specified ;
+
+public  createFileExclusively : JavaLangString ==> bool 
+createFileExclusively(pathname) == 
+is not yet specified ;
+
+
+end  J2VFileSystem

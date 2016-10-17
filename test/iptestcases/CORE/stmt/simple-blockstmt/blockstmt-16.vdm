@@ -1,0 +1,9 @@
+class A
+
+operations
+
+public Test : () ==> seq of (nat | bool)
+Test() ==
+(dcl a: nat := 10;
+ return [1]);
+end A

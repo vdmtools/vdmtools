@@ -1,0 +1,4515 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Stack Machine
+% $Id: stack-eval.vdm,v 1.79 2005/10/21 07:09:05 vdmtools Exp $
+% Implemented in: stackeval.cc, libman.cc
+%--------------------------------------------------------------------------------
+
+\chapter{The Core Stack Evaluator}\label{sec:stack}
+
+The module {\em STKM} defines the core parts of the stack evaluator.
+That is, the the necessary environment for evaluating the different
+stack instructions defined in module {\em INSTR}. The evaluator
+uses an evaluation stack by which programs are evaluated and a
+separate call stack to keep track of nested function calls.
+
+\begin{vdm_al}
+module STKM
+
+imports
+  from AUX all,
+  from AS all,
+  from REP all,
+  from CI all,
+  from DEBUG all,
+  from DEBUGTP all,
+  from SETTINGS all,
+  from SEM all,
+  from EXPR all,
+  from PAT all,
+  from GLOBAL all,
+  from INSTRTP all,
+  from INSTR all,
+  from STATE all,
+  from CMPL all,
+#ifdef VDMPP
+  from SCHDTP all,
+  from SCHD all,
+#ifdef VICE
+  from VC all,
+  from TIMETRACE all,
+  from TIMEPARSER all,
+  from TIMEMAP all,
+  from IO all,
+#endif VICE
+#endif VDMPP
+  from RTERR all
+
+exports all
+
+definitions
+\end{vdm_al}
+
+\section{The Stack Machine Environment}
+\label{sec:eval_stack_env}
+
+The following type declarations and the module state {\em sigma}
+together define the environment of the evaluator. A {\em SubProgram}
+is simply a sequence of instructions and values (values being either
+semantic values or names of identifiers).  A {\em SubProgram} will be
+generated for each function and operation of the specification.
+
+While a {\em SubProgram} is being evaluated the current position is
+recorded in the program counter, which is simply an index into the sub program instruction sequence.
+
+\begin{vdm_al}
+types
+
+  SubProgram = seq of ProgItem;
+
+  ProgItem = SEM`VAL | AS`Name | INSTRTP`Instruction;
+
+  ProgramCounter = nat;
+
+  SubProgramId = nat;
+\end{vdm_al}
+
+The evaluation stack can contain different kinds of values, i.e.\ semantic
+values, identifiers or sequence of semantic values. In addition the
+evaluation stack is used for patterns, state designators and for sets of
+block environments. Values are pushed onto the stack, while instructions
+may pop a number of values of the stack and push their result back onto the
+stack.
+
+\begin{vdm_al}
+  EvalStack = seq of EvalStackItem;
+
+  EvalStackItem = SEM`VAL | SemArgList | Pattern | StateDesignator |
+                  set of SEM`BlkEnv | seq of nat;
+ 
+  SemArgList = seq of SEM`VAL;
+\end{vdm_al}
+
+\subsection{Patterns in Stack-Machine}
+
+The evaluation stack can also contain a pattern. A pattern has almost
+the same structure as the corresponding AS`Pattern, the only
+difference is that a {\em MatchVal} contains a semantic value rather
+than an expression.
+
+\begin{vdm_al}
+
+  Pattern = PatternName | MatchVal | SetPattern | SeqPattern | MapPattern |
+            TuplePattern | RecordPattern | MapletPattern
+#ifdef VDMPP
+            | ObjectPattern | FieldPattern
+#endif VDMPP
+            ;
+
+  PatternName :: nm : [AS`Name] 
+                 tp : [AS`Type]
+                 cid :- CI`ContextId;
+
+  MatchVal ::
+    val : SEM`VAL
+    cid :- CI`ContextId;
+
+  SetPattern = SetEnumPattern | SetUnionPattern;
+
+  SetEnumPattern :: els : seq of Pattern
+                    cid :- CI`ContextId;
+
+  SetUnionPattern :: lp : Pattern
+                     rp : Pattern
+                     cid :- CI`ContextId;
+                   
+  SeqPattern = SeqEnumPattern | SeqConcPattern;
+
+  SeqEnumPattern :: els : seq of Pattern
+                    cid :- CI`ContextId;
+
+  SeqConcPattern :: lp : Pattern
+                    rp : Pattern
+                    cid :- CI`ContextId;
+  
+  MapPattern = MapEnumPattern | MapMergePattern;
+
+  MapletPattern :: dp : Pattern
+                   rp : Pattern
+                   cid :- CI`ContextId;
+
+  MapEnumPattern :: mls : seq of MapletPattern
+                    cid :- CI`ContextId;
+
+  MapMergePattern :: lp : Pattern
+                     rp : Pattern
+                     cid :- CI`ContextId;
+  
+  TuplePattern :: fields : seq of Pattern
+                  cid :- CI`ContextId;
+
+  RecordPattern :: nm: AS`Name
+                   fields: seq of Pattern
+                   cid :- CI`ContextId;
+
+#ifdef VDMPP
+  ObjectPattern :: cls : AS`Name
+                   fields : seq of FieldPattern
+                   cid :- CI`ContextId;
+
+  FieldPattern :: nm : AS`Name
+                  pat : Pattern
+                  cid :- CI`ContextId;
+#endif VDMPP
+
+\end{vdm_al}
+
+\begin{vdm_al}
+functions
+  -- This function is only used in pre conditions and is thus not implemented.
+  IsPat: EvalStackItem +> bool
+  IsPat(sctitem) ==
+    is_MatchVal(sctitem) or
+    is_PatternName(sctitem) or
+    is_SetEnumPattern(sctitem) or
+    is_SetUnionPattern(sctitem) or
+    is_SeqConcPattern(sctitem) or
+    is_SeqEnumPattern(sctitem) or
+    is_MapMergePattern(sctitem) or
+    is_MapEnumPattern(sctitem) or
+    is_TuplePattern(sctitem) or
+    is_RecordPattern(sctitem) or
+    is_MapletPattern(sctitem)
+#ifdef VDMPP
+    or is_ObjectPattern(sctitem)
+    or is_FieldPattern(sctitem)
+#endif VDMPP
+\end{vdm_al}
+
+\subsection{State Designators in Stack-Machine}
+
+In the same way as for patterns it is necessary to treat state
+designators seperately.
+
+\begin{vdm_al}
+types
+
+#ifdef VDMSL
+StateDesignator = AS`Name | FieldRef | MapOrSeqRef;
+#endif VDMSL
+#ifdef VDMPP
+StateDesignator = AS`Name | FieldRef | MapOrSeqRef | AS`SelfExpr;
+#endif VDMPP
+
+FieldRef :: var : StateDesignator
+            sel : AS`Name
+            cid :- CI`ContextId;
+
+MapOrSeqRef :: var : StateDesignator
+               arg : SEM`VAL
+               cid :- CI`ContextId;
+
+functions
+               
+  -- This function is only used in pre conditions and is thus not implemented.
+  IsSD: EvalStackItem +> bool
+  IsSD(sctitem) ==
+    is_AS`Name(sctitem) or
+    is_FieldRef(sctitem) or
+    is_MapOrSeqRef(sctitem) 
+\end{vdm_al}
+
+\subsection{The Call Stack}
+\label{sec:callstack}
+
+\begin{updatedSection}{2/5/2000}{Jesper K. Pedersen}
+
+The call stack is used for a number of things. These includes:
+\begin{itemize}
+\item Keeping information about functions at higher levels when calling
+  sub-functions, so that it is possible to restore the state of the stack
+  interpreter when the sub-function exits and the caller must continue on.
+\item Keeping information about the state of the stack interpreter prior to
+  a recursive debug. This is necessary to be able to restore the state in
+  case of a runtime error in the recursive debug.
+\item On the call stack information is also located, which makes it
+  possible to go up and down through the function invocations.
+\item On the call stack information is kept which makes it possible to show
+  a back trace stack.
+\item In certain situations the interpreter needs to evaluate something
+  which resembles a function call, and it therefore uses the call stack for
+  this too. (These situations includes evaluation of global values,
+  invariants for type names and more - see the function
+  DEBUG`EvalAuxCommand)
+\end{itemize}
+
+An alternative to using only one stack for both recursive debugs and
+recursive function calls would have been to have a debug-stack, where each
+of the elements were call-stacks. Each element on the debug stack would
+then stem from one recursive debug, and each element on a specific call
+stack would be one function invocation. This solution was, however,
+discarded due to efficiency consideration in the implementation.
+
+The CallStackItem record has the following fields:
+\begin{description}
+\item[type] Information about which kind this record is.
+\item[code] Code for the current function (This need more description!)
+\item[pc] Program Counter for the function which has called the function
+  the given record represent. That is when a sub-function is invoked a new
+  record is created and the program counter in the caller is inserted into
+  this record.
+\item[nmOrDesc] This field is used when showing the back trace stack. It is
+  either a textual representation of the function name or another text
+  describing the given record. (E.g. ``debug f(x)'' or ``Global
+  initialization'')
+\item[arg\_l] This variable contains the arguments for the function call
+  this record describes. (This field is only used for function invocation
+  records)
+\item[evalstate] This field is used to keep a copy of the entire state of
+  the interpreter. This is used when doing a recursive debug.
+\item[oldCid] This field contains the context id of the position in the
+  \textit{previous} function. That is the function calling the function
+  which this record describes. In case this record describes a recursive
+  debugging, then the context id is the location where this recursive
+  debugging is started from. This information is required when going
+  up/down in the back trace stack.
+\item[env\_l\_h, typeinst\_h, os\_h, cur\_mod\_obj\_l\_h] These four
+  variables contain the hight of the environment stack, the typeinst stack,
+  the old state stack, and the current module or object list stack,
+  respectively. These heights are required to be able to cut of the stacks
+  to the level they had at the point a given function was invoked (needed
+  when going up and down in the back trace stack). See the section on the
+  Up/Down commands (sec. \ref{sec:upDownCommands}) and the section on the EvaluatorStatus
+  record (sec. \ref{sec:EvaluatorStatus}) for more information about this.
+\end{description}
+
+\end{updatedSection}
+
+\begin{vdm_al}
+types
+
+  CallStack = seq of CallStackItem;
+
+  CSItemType = <DEBUGCMD> | <FNOP> | <INTERNAL>;
+  CallStackItem :: type : CSItemType
+                   code : Code
+                   pc : ProgramCounter
+                   nmOrDesc : AS`Name | seq of char
+                   arg_l : [seq of SEM`VAL]
+                   evalstate : [EvaluatorStatus] 
+                   oldCid : CI`ContextId
+                   env_l_h : [nat]
+                   typeinst_h : [nat]
+                   os_h : [nat]
+                   cur_mod_obj_l_h : [nat]
+                   rterror : bool
+                   measu : [SEM`VAL]
+
+  inv mk_CallStackItem(type, -, -, nmOrDesc, arg_l, evalstate,-, env_l_h, typeinst_h, os_h, cur_mod_obj_l_h,-,-) ==
+      (type = <DEBUGCMD> => 
+         arg_l = nil and 
+         evalstate <> nil and
+         not is_AS`Name(nmOrDesc) and  
+         env_l_h         = nil and
+         typeinst_h      = nil and
+         os_h            = nil and
+         cur_mod_obj_l_h = nil) and
+      (type = <FNOP> => 
+         arg_l <> nil and 
+         evalstate = nil and 
+         env_l_h         <> nil and
+         typeinst_h      <> nil and
+         os_h            <> nil and
+         cur_mod_obj_l_h <> nil);
+--       and
+--      (type = <INTERNAL> => 
+--         arg_l = nil and 
+--         evalstate = nil and
+--         not is_AS`Name(nmOrDesc) and 
+--         env_l_h         = nil and
+--         typeinst_h      = nil and
+--         os_h            = nil and
+--         cur_mod_obj_l_h = nil );
+                   
+
+#ifdef VDMSL
+  Code = SEM`ExplFN | SEM`OP | DebugCmd | SEM`DLFN;
+#endif VDMSL
+#ifdef VDMPP
+  Code = SEM`ExplFN | SEM`OP | DebugCmd;
+#endif VDMPP
+
+  DebugCmd :: instr : SubProgram;
+
+\end{vdm_al}  
+
+\subsection{The Evaluation State}
+
+The state of the stack machine when the {\em EvalMainLoop} is
+completing can either be a breakpoint, an interrupt, a success
+(completed execution), (in VDM++) either a guard state (meaning that
+it must be checked whether the permission guard is satisfied) or the
+maximum number of instructions for the given thread has been reached.
+\begin{vdm_al}
+
+#ifdef VDMSL
+  EvaluationState = Breakpoint | Interrupt | Success;
+#endif VDMSL
+#ifdef VDMPP
+  EvaluationState = Breakpoint | Interrupt | Success | Guard | EndOfSlice
+#ifdef VICE
+                    | EndOfCPUSlice
+#endif VICE
+  ;
+#endif VDMPP
+
+  Breakpoint :: ;
+  Success :: ;
+  Interrupt :: ;
+#ifdef VDMPP
+  EndOfSlice :: ;
+#ifdef VICE
+  EndOfCPUSlice :: ;
+#endif VICE
+
+  Guard ::
+    opnm : AS`Name
+    curobj: [SEM`OBJ_Ref];
+
+#endif VDMPP
+
+  DebugFlag =  Step | StepIn | SingleStep | Finish | Continue;
+
+  Step :: level : nat;
+  StepIn :: ;
+  SingleStep :: level : nat;
+  Finish :: level : nat;
+  Continue :: ;
+
+\end{vdm_al}
+
+Additional environment operations. 
+
+\begin{vdm_al}
+
+types
+
+operations
+
+  GetEnvLLengths: () ==> nat * nat
+  GetEnvLLengths() ==
+#ifdef VDMSL
+    let env_l = curr_state.env_l
+    in
+      return if len env_l = 0
+             then mk_(0,0) 
+             else mk_(len env_l, len hd env_l);
+#endif VDMSL
+#ifdef VDMPP
+    if not curcpu in set dom cpustate
+    then return mk_(0,0)
+    else let curthread = cpustate(curcpu).curthread,
+             env_l = cpustate(curcpu).threadstate(curthread).env_l
+         in
+           return if len env_l = 0
+                  then mk_(0,0) 
+                  else mk_(len env_l, len hd env_l);
+#endif VDMPP
+
+  UpgradeENVL: nat * nat ==> ()
+  UpgradeENVL(lenvl,ltopenvl) ==
+#ifdef VDMSL
+    let env_l = curr_state.env_l,
+        l = len env_l
+    in 
+      if l > 0 
+      then
+        let new_env_l = env_l(l + 1 - lenvl,...,l),
+            env = hd new_env_l,
+            new_env = env(len env + 1 - ltopenvl ,..., len env)
+        in
+          curr_state.env_l := [ new_env ] ^ tl new_env_l;
+#endif VDMSL
+#ifdef VDMPP
+    let curthread = cpustate(curcpu).curthread,
+        env_l = cpustate(curcpu).threadstate(curthread).env_l,
+        l = len env_l
+    in 
+      if l > 0 
+      then
+        let new_env_l = env_l(l + 1 - lenvl,...,l),
+            env = hd new_env_l,
+            new_env = env(len env + 1 - ltopenvl ,..., len env)
+        in
+          cpustate(curcpu).threadstate(curthread).env_l := [ new_env ] ^ tl new_env_l
+  pre curcpu in set dom cpustate;
+#endif VDMPP
+\end{vdm_al}
+
+\subsection{The Trap Stack}
+\label{sec:trapstack}
+
+In order to handle different kinds of exception handling statements a
+stack with the different trap handlers currently in scope is
+maintained. When an exit is returned the top-most trap-handler must be
+considered first.
+
+\begin{vdm_al}
+types
+
+  TrapStack = seq of Trap;
+
+  Trap :: handid : nat
+          lenes : nat
+          lencs : nat
+          lentis : nat
+          lenos : nat
+#ifdef VDMSL
+          lencurm : nat
+#endif VDMSL
+#ifdef VDMPP  
+          lenobjl : nat
+#endif VDMPP  
+          cid : CI`ContextId 
+          lenenvl: nat
+          lentopenvl: nat;
+\end{vdm_al}
+
+\subsection{The Stack Machine State}
+\label{sec:EvaluatorStatus}
+
+When interpreting concurrent specifications it will be necessary to
+``swap'' processes in and out of the main evaluation loop to model
+multitasking of concurrent processes.
+
+The state being swapped in and out is defined in the type {\em EvaluatorStatus}.
+
+A number of fields in the EvaluatorStatus record contains the extension
+\texttt{\_bak}. These fields are used to contain part of another stack (the one
+named the same but without this extension). For more information about
+this, please see the section on the Up/Down commands
+(sec. \ref{sec:upDownCommands}).
+
+The description of each of these fields are:
+\begin{description}
+\item[eval\_stack] This is the evaluator stack. The stackinterpreter will
+use this stack to contain intermediated value when interpreting. See
+section \ref{sec:eval_stack_env} for more information.
+
+\item[call\_stack] This stack is used to control recursive functions,
+recursive debugs, up/down commands and displaying of the back trace
+stack. See section \ref{sec:callstack} for more information.
+
+\item[curCid] This is the latest context id passed in program
+evaluation. This is used when showing the location in the program in case
+of either breakpoints or runtime errors.
+
+\item[trap\_stack] This stack is used to handle exceptions. See section
+\ref{sec:trapstack} for more information.
+
+\item[PC] This is the current program counter.
+
+\item[debug\_flag] This flag is used to signal the state of debugging to
+the stack interpreter.
+
+\item[upDnIndex] This is an index into the call stack used when going up
+and down on the back trace stack. See section \ref{sec:upDownCommands} for
+more information.
+
+#ifdef VDMPP
+\item[instrno] A counter used to limited the number of instructions a
+thread can be executed for before it is descheduled.
+#endif VDMPP
+
+#ifdef VICE
+\item[dur] A counter used to record the nesting level of duration
+statements. If this counter is nil, then time is incremented
+normally. If it is not nil, the value given by the outermost duration
+statement is used to increment the time.
+\item[cycle:] A counter used to record the nesting of cycle statements,
+similar to duration statements but relative to the number of clock
+cycles required. 
+\item[release\_time] The time at which a thread was released. This is
+used to limit the time a thread is allowed to execute for, if time
+sliced scheduling is being used.
+#endif VICE
+
+\item[cf] This is a stack used solely when debugging the code generated by
+  the stack code compiler. Instructions which pushes the name of a
+  compilation function on and off this stack is compiled into the program.
+  The actual instructions used for this is \texttt{ISTART} and
+  \texttt{IEND}.
+
+\item[env\_l] This is the environment which contains the variables of the program.
+
+\item[typeinst] This is a stack of type instantiation mappings used
+for polymorhic functions which are applied after they have been instantiated.
+
+\item[os] This is an environment which contains a copy of the environment
+at the time an operation is invoked. This is necessary to be able to refer
+to old values in the post conditions.
+
+#ifdef VDMSL
+
+\item[cur\_mod] This is a stack containing the modules for the current
+  execution. Whenever a function/operation is invoked the name of the
+  module is pushed onto this stack, and whenever it is left the name is pop
+  of the stack again. This means that the name of the current module will
+  always be on top of this stack.
+
+#endif VDMSL
+#ifdef VDMPP
+
+\item[obj\_l] This is a stack of objects which are in scope of the
+current evaluation.
+#endif VDMPP
+
+\end{description}
+
+\begin{vdm_al}
+
+types
+  Context = <PURE>|<ALL>|<PRE>|<POST>|<PUREOP>|<PTHREAD>;
+
+  EvaluatorStatus::  eval_stack : EvalStack
+                     call_stack : CallStack
+                     curCid     : CI`ContextId
+                     trap_stack : TrapStack
+                     PC : ProgramCounter
+                     debug_flag : DebugFlag
+                     upDnIndex : nat
+#ifdef VDMPP
+                     instrno : nat
+                     guard   : [Guard]
+#endif VDMPP
+#ifdef VICE
+                     status : SCHDTP`ThreadStatus
+                     release_time : [nat]
+#endif VICE
+                     cf : seq of ( seq of char * CI`ContextId)
+
+                     env_l     : SEM`ENVL
+                     env_l_bak : SEM`ENVL
+
+                     typeinst     : seq of map AS`TypeVar to AS`Type
+                     typeinst_bak : seq of map AS`TypeVar to AS`Type
+#ifdef VDMSL
+                     os     : seq of GLOBAL`StateMap
+                     os_bak : seq of GLOBAL`StateMap
+
+                     cur_mod     : seq of AS`Name
+                     cur_mod_bak : seq of AS`Name
+#endif VDMSL
+#ifdef VDMPP
+                     os     : seq of ( GLOBAL`OBJ_tab * map AS`Name to GLOBAL`SigmaClass )
+                     os_bak : seq of ( GLOBAL`OBJ_tab * map AS`Name to GLOBAL`SigmaClass )
+
+                     obj_l     : seq of GLOBAL`OBJscope
+                     obj_l_bak : seq of GLOBAL`OBJscope
+#endif VDMPP
+                     context : seq of Context
+;
+\end{vdm_al}
+
+#ifdef VDMPP
+\begin{vdm_al}
+types
+  Thread = ProcThread | PerThread | SpoThread;
+
+  ProcThread ::
+    instr : SubProgram;
+
+  PerThread ::
+    instr : SubProgram
+    period : AS`Expr
+    jitter : AS`Expr
+    delay : AS`Expr
+    offset : AS`Expr;
+
+  SpoThread ::
+    instr : SubProgram
+    delay : AS`Expr
+    bound : AS`Expr
+    offset : AS`Expr;
+
+  CPUSigma ::
+    threadstate  : map [SCHDTP`ThreadId] to EvaluatorStatus
+    curthread    : [SCHDTP`ThreadId]
+    curr_program : SubProgram
+#ifdef VICE
+    threads      : set of SCHDTP`ThreadId
+    syncopcall   : set of MessageId
+    objrefs      : set of SEM`OBJ_Ref
+    schd         : SCHDTP`PrimarySchedulerAlgorithm
+    prio         : SCHDTP`SecondarySchedulerAlgorithm
+    prio_tab     : map AS`Name to nat
+    messages     : map AS`Name to seq of Message
+    capacity     : nat | <INFINITE>
+    dur          : nat
+    cycle        : nat
+    time         : nat
+    idletime     : nat
+    swaptime     : nat;
+\end{vdm_al}
+
+Different information must be stored for each bus. This is:
+\begin{description}
+\item[kind:] The kind of bus that it is. This is meant to control the way 
+scheduling is done on the bus
+\item[capacity:] This indicates how fast the bus is in terms of bits per 
+time unit or a special value to indicate that it is infitely fast. 
+\item[cpus:] This is the set of cpus that is connected to the BUS.
+\item[time:] This indicates the current time of the bus.
+\item[waiting:] This is a sequences order according to time of the requests 
+being made from different CPU's and since they will not be entirely in sync
+it is neccesary to store these until the next time where the BUS gets 
+a chance to process them (and flush them to the logfile.
+\item[mes\_m:] This is a mapping from all missage identifiers send on 
+this bus to the actual messages (the contents).
+\item[log:] This is a complete log of all activity that has been going on 
+on this bus. 
+\end{description}
+
+\begin{vdm_al}
+  BUSSigma ::
+    kind     : SCHDTP`BUSKind
+    capacity : nat | <INFINITE>
+    cpus     : set of [AS`Name]
+    time     : nat
+    waiting  : seq of (MessageReq | MessageReplyReq)
+    mes_m    : map MessageId to Message
+    log      : seq of GLOBAL`ChanUsage
+  inv bus == forall i in set inds bus.log & 
+                i+1 in set inds bus.log => 
+                bus.log(i).tot <= bus.log(i+1).tot;
+
+  MessageReq :: 
+    busid  : [AS`Name] 
+    curcpu : [AS`Name] 
+    tcpu   : [AS`Name] 
+    mesid  : MessageId 
+    tid    : SCHDTP`ThreadId 
+    fullnm : AS`Name 
+    objref : [SEM`OBJ_Ref]
+    size   : nat 
+    time   : nat;
+
+  MessageReplyReq ::
+    busid     : [AS`Name] 
+    curcpu    : [AS`Name] 
+    tcpu      : [AS`Name] 
+    newmesid  : MessageId
+    mesid     : MessageId 
+    curthread : SCHDTP`ThreadId 
+    fromthread: SCHDTP`ThreadId 
+    size      : nat 
+    time      : nat;
+
+  MessageId = nat;
+
+  Message ::
+    id   : MessageId
+    time : nat                  -- the time where the message will be ready 
+    prio : nat
+    mes  : MessageInfo | MessageResponse | MessageBroadcast
+    part : nat;
+
+MessageInfo ::
+    obj_ref : [SEM`OBJ_Ref] 
+    opname  : AS`Name 
+    args    : seq of SEM`VAL
+    threadid: [SCHDTP`ThreadId]     -- nil indicates async operation
+    respond : [AS`Name];            -- the CPU that wish a response
+
+MessageResponse ::
+    opname  : AS`Name 
+    res     : SEM`VAL
+    clnm    : [AS`Name]
+    threadid: SCHDTP`ThreadId;
+
+MessageBroadcast ::
+    obj_refs: set of SEM`OBJ_Ref 
+    opname  : AS`Name 
+    args    : seq of SEM`VAL
+    tcpum   : map SEM`OBJ_Ref to [AS`Name] 
+    curcpu  : [AS`Name];            
+#endif VICE
+\end{vdm_al}
+
+\begin{description}
+\item[cpustate:] The state information for each CPU containing the dynamic 
+     stuff currently relevant for the CPU. In case no system
+     and/or CPUs are used this will simply contain a mapping for nil.
+#ifdef VICE
+\item[taskm:] is a map from active classes (tasks) that have been actively
+   deployed to a given CPU to the respective object reference.
+\item[busstate:] is a mapping contaning the information about all the busses
+   in the system model.
+\item[nextmesid:] is a number used to provide the next unique message identifier.
+%\item[nextvircpu:] is a number used to provide the next unique virtual CPU
+%identifier.
+\item[allocated:] is a mapping from object references (instances) to the CPU
+     that the corresponding object reference is allocated to. 
+#endif VICE
+#endif VDMPP
+\item[BREAK:]
+\item[lastres:] This is last result of the last expression that was completely
+     evaluated by the interpreter.
+\item[curcpu:] The current CPU that execution is processed on. In case no system
+     and/or CPUs are used this will simply be nil.
+\end{description}
+
+\begin{vdm_al}
+#ifdef VDMSL
+state sigma of
+  curr_state : EvaluatorStatus
+  curr_program : SubProgram
+  BREAK      : bool
+  lastres    : SEM`VAL
+  lastexit   : CI`ContextId
+init s == s = GetInitSigma(true)
+end
+#endif VDMSL
+#ifdef VDMPP
+state sigma of
+  cpustate   : map [AS`Name] to CPUSigma
+#ifdef VICE
+  syscpus    : map AS`Name to set of AS`Name
+  taskm      : map AS`Name to SEM`OBJ_Ref
+  busstate   : map AS`Name to BUSSigma
+  nextmesid  : nat
+  vircpus    : set of [AS`Name]
+  allocated  : map SEM`OBJ_Ref to [AS`Name]
+  delayed    : map SEM`OBJ_Ref to [AS`Name]
+#endif VICE
+  BREAK      : bool
+  lastres    : SEM`VAL
+  lastexit   : CI`ContextId
+  curcpu     : [AS`Name]
+inv s == s.curcpu in set dom s.cpustate 
+#ifdef VICE
+         and
+         rng s.allocated subset dom s.cpustate
+#endif VICE
+init s == s = GetInitSigma(true)
+end
+#endif VDMPP
+
+#ifdef VICE
+values
+  virtualbusid : AS`Name = mk_AS`Name(["vBUS"],-1);
+#endif VICE
+
+operations
+  GetInitSigma : bool ==> sigma
+  GetInitSigma(ast_is_new) == 
+#ifdef VDMSL
+    if ast_is_new
+    then 
+      return mk_sigma(EvaluatorStatusInit(), [], false, mk_SEM`UNDEF(), CI`NilContextId)
+    else 
+      return mk_sigma(EvaluatorStatusInit(), [], false, lastres, lastexit);
+#endif VDMSL
+#ifdef VDMPP
+    if ast_is_new
+    then 
+      return mk_sigma({nil |-> EmptyCPU(nil)},  -- cpustae
+#ifdef VICE
+                      {|->},                    -- syscpus
+                      {|->},                    -- taskm
+                      {|->},                    -- busstate
+                      0,                        -- nextmesid
+                      {nil},                    -- vircpus
+                      {|->},                    -- allocated
+                      {|->},                    -- delayed
+#endif VICE
+                      false,                    -- BREAK
+                      mk_SEM`UNDEF(),           -- lastres
+                      CI`NilContextId,          -- lastexit
+                      nil)                      -- curcpu
+    else 
+      return mk_sigma({nil |-> EmptyCPU(nil)}, -- cpustate,
+#ifdef VICE
+                      {|->},                   -- syscpus
+                      {|->},                   -- taskm
+                      {|->},                   -- busstate
+                      0,                       -- nextmesid
+                      {nil},                   -- vircpus,
+                      {|->},                   -- allocated,
+                      {|->},                   -- delayed
+#endif VICE
+                      false,                   -- BREAK
+                      lastres,                 -- lastres
+                      lastexit,                -- lastexit
+                      nil);                    -- curcpu
+
+#ifdef VICE
+functions
+
+RemoveOldEval: CPUSigma -> CPUSigma
+RemoveOldEval(mk_CPUSigma(-,-,-,-,-,objs,schd,prio,prio_tab,-,cap,-,-,-,-,-))==
+  mk_CPUSigma({|->},
+              nil,
+              [],
+              {},
+              {},
+              objs,
+              schd,
+              prio,
+              prio_tab,
+              {|->},
+              cap,
+              0,                     -- dur 
+              0,                     -- cycle
+              0,                     -- time
+              0,                     --idletime
+              100);
+  
+RemoveMesAndLog: BUSSigma -> BUSSigma
+RemoveMesAndLog(mk_BUSSigma(kind,cap,cpus,-,-,-,-)) ==
+  mk_BUSSigma(kind,cap,cpus,0,[],{|->},[]);
+#endif VICE
+#endif VDMPP
+\end{vdm_al}
+
+Even though redundant, the state also contains the instruction
+sequence currently being evaluated. This is simply for clarity and
+efficiency of the main evaluation loop.
+
+The field {\em BREAK} is modified by the instructions {\em
+  INSTRTP`CONTEXT} and read by the operation
+{\em EvalMainLoop}. It is used to signal whether the evaluation should
+be suspended due to a break point.
+
+\section{Initialisation of the CPU and BUS}
+
+\begin{vdm_al}
+
+operations 
+
+#ifdef VICE
+EmptyCPU: [AS`Expr] ==> CPUSigma
+EmptyCPU(decl) ==
+ (dcl prio: SCHDTP`SecondarySchedulerAlgorithm := mk_SCHDTP`RoundRobin(),
+      capacity : nat | <INFINITE> := <INFINITE>;
+  if decl <> nil
+  then capacity := SETTINGS`GetDefaultCapacity();
+  cases decl:
+    nil -> skip,
+    mk_AS`NewExpr(mk_AS`Name(["CPU"],-),[first, second],-) ->
+          (cases first:
+             mk_AS`QuoteLit("FP",-)   -> prio := mk_SCHDTP`PriorityBased(),
+             mk_AS`QuoteLit("FCFS",-) -> prio := mk_SCHDTP`RoundRobin(),
+             others                   -> RTERR`InitError(RTERR`UNSUPPRIO,first.cid,[])
+           end;
+           if (is_AS`RealLit(second) or is_AS`NumLit(second)) and is_nat(second.val)
+           then capacity := second.val
+           else RTERR`InitError(RTERR`UNSUPCPUCAP,second.cid,[])
+          ),
+    others -> RTERR`InitError(RTERR`WRONGCPUCONS,decl.cid,[])
+  end;
+  return 
+     mk_CPUSigma({|->},  
+                 nil,    -- curthread
+                 []      -- curr_program
+                 ,{},
+                 {},
+                 {},
+                 mk_SCHDTP`PureCooperative(),
+                 prio,
+                 {|->},
+                 {|->},
+                 capacity,
+                 0,          -- dur 
+                 0,          -- cycle
+                 0,          -- time
+                 0,          -- idletime
+                 100));      -- swaptime
+#else
+#ifdef VDMPP
+EmptyCPU: [AS`Expr] ==> CPUSigma
+EmptyCPU(-) ==
+  return 
+     mk_CPUSigma({|->},  
+                 nil,    -- curthread
+                 []);    -- curr_program
+#endif VDMPP
+#endif VICE
+
+#ifdef VICE
+EmptyBUS: [AS`Expr] ==> BUSSigma
+EmptyBUS(decl) ==
+  cases decl:
+    nil -> return mk_BUSSigma(mk_SCHDTP`FCFS(), <INFINITE>, GetAllCPUs(),0,[],{|->},[]), -- virtual bus
+    mk_AS`NewExpr(mk_AS`Name(["BUS"],-),[first, second, third],-) ->
+        (dcl kind : SCHDTP`BUSKind := mk_SCHDTP`FCFS(),
+             cap  : nat := 1,
+             cpus : set of [AS`Name] := {nil};
+         cases first:
+           mk_AS`QuoteLit("CSMACD",-) -> kind := mk_SCHDTP`CSMACD(),
+           mk_AS`QuoteLit("TDMA",-)   -> kind := mk_SCHDTP`TDMA(),
+           mk_AS`QuoteLit("FCFS",-)   -> kind := mk_SCHDTP`FCFS(),
+           others -> RTERR`InitError(RTERR`UNSUPPKIND,first.cid,[])
+         end;
+         if (is_AS`RealLit(second) or is_AS`NumLit(second)) and is_nat(second.val)
+         then cap := second.val
+         else RTERR`InitError(RTERR`UNSUPBUSCAP,second.cid,[]);
+
+         if is_AS`SetEnumerationExpr(third) and forall e in set elems third.els & is_AS`Name(e)
+         then cpus := elems third.els
+         else RTERR`InitError(RTERR`NOSETOFCPUS,third.cid,[]);
+         return mk_BUSSigma(kind,cap,cpus,0,[],{|->},[])
+        ),
+    others -> (RTERR`InitError(RTERR`WRONGBUSCONS,decl.cid,[]);
+               error)
+  end;
+
+\end{vdm_al}
+
+\section{Operations for dealing with CPUs and BUSses}
+
+\begin{vdm_al}
+AddThreadId: SCHDTP`ThreadId ==> ()
+AddThreadId(newt) ==
+  cpustate(curcpu).threads := cpustate(curcpu).threads union {newt};
+
+KillThreadId: SCHDTP`ThreadId ==> ()
+KillThreadId(newt) ==
+  cpustate(curcpu).threads := cpustate(curcpu).threads \ {newt};
+
+DeployInst: [AS`Name] * SEM`OBJ_Ref ==> ()
+DeployInst(cpunm,obj_ref) ==
+  (cpustate(cpunm).objrefs := cpustate(cpunm).objrefs union {obj_ref};
+   if cpunm <> nil
+   then STATE`SetCPUOfObjRef(cpunm,obj_ref);
+   allocated := allocated ++ {obj_ref |-> cpunm};
+   TIMETRACE`LogObjAlloc(obj_ref,cpunm,cpustate(nil).time)
+  )
+pre cpunm in set dom cpustate;
+
+--DelayDeployInst: [AS`Name] * SEM`OBJ_Ref ==> ()
+--DelayDeployInst(cpunm,obj_ref) ==
+--  (TIMETRACE`LogObjAlloc(obj_ref,nil,cpustate(nil).time);
+--   delayed(obj_ref) := cpunm);
+
+LateDeployInst: () ==> ()
+LateDeployInst() ==
+  if delayed <> {|->}  
+  then (for all obj_ref in set dom delayed do
+          DeployInst(delayed(obj_ref),obj_ref);
+        delayed := {|->});
+
+AddPriorityEntry: AS`Name * AS`Name * nat ==> ()
+AddPriorityEntry(cpunm,opnm,prio) ==
+  cpustate(cpunm).prio_tab := cpustate(cpunm).prio_tab ++ {opnm |-> prio}
+pre cpunm in set dom cpustate;
+
+--IncrTime: [AS`Name] * nat ==> ()
+-- IncrTime(cpunm, delta) ==
+--  (if cpustate(curcpu).idletime > cpustate(curcpu).time
+--   then cpustate(curcpu).time := cpustate(curcpu).idletime;
+--   cpustate(cpunm).time := cpustate(cpunm).time + delta)
+--pre cpunm in set dom cpustate;
+
+IncrIdleTime: [AS`Name] * nat ==> ()
+IncrIdleTime(cpunm, delta) ==
+  let curtime = MaxVal(cpustate(cpunm).idletime,cpustate(cpunm).time)
+  in
+    cpustate(cpunm).idletime := curtime + delta
+pre cpunm in set dom cpustate;
+
+CurCPUAnyThread: [AS`Name] ==> bool
+CurCPUAnyThread(nm) ==
+  return cpustate(nm).threads <> {} 
+pre nm in set dom cpustate;
+
+CurCPUAnyMessages: [AS`Name] ==> bool
+CurCPUAnyMessages(nm) ==
+--  return cpustate(nm).messages <> {|->}
+  if cpustate(nm).messages <> {|->}
+  then
+    def mes_m = cpustate(nm).messages;
+        opnm = FindFirstOpMes(mes_m);
+        mes = if opnm = nil
+              then let op in set dom mes_m
+                   in hd (cpustate(nm).messages(op))
+              else hd (cpustate(nm).messages(opnm));
+        mk_Message(-,t,-,-,-) = mes
+    in
+      return (t <= cpustate(nm).swaptime)
+  else return false
+pre nm in set dom cpustate;
+
+SelAndRunMessageCall: [AS`Name] ==> STKM`EvaluationState * [SEM`VAL]
+SelAndRunMessageCall(cpunm) ==
+ (def mes_m = cpustate(cpunm).messages;
+      opnm = FindFirstOpMes(mes_m);
+      mes = if opnm = nil
+            then let op in set dom mes_m
+                 in
+                   hd (cpustate(cpunm).messages(op))
+            else hd (cpustate(cpunm).messages(opnm))
+  in
+   (cpustate(cpunm).messages(opnm) := tl (cpustate(cpunm).messages(opnm));
+    if cpustate(cpunm).messages(opnm) = []
+    then cpustate(cpunm).messages := {opnm} <-: cpustate(cpunm).messages;
+    RunMessage(mes,cpunm)
+   )
+ )
+pre cpunm in set dom cpustate and
+    CurCPUAnyMessages(cpunm);
+\end{vdm_al}
+
+The \texttt{FindFirstOpMes} finds the operation with the highest priority
+in case any of the given operations with messages have a priority assigned. 
+Otherwise nil is returned to indicate that any operation can be selected.
+  
+\begin{vdm_al}
+FindFirstOpMes: map AS`Name to seq of Message ==> [AS`Name]
+FindFirstOpMes(mes_m) ==
+ (dcl ops : set of AS`Name := dom cpustate(curcpu).prio_tab inter dom mes_m,
+      opnm : AS`Name := if ops <> {}
+                        then let nm in set ops in nm
+                        else let nm in set dom mes_m in nm;
+  for all op in set ops do
+   if cpustate(curcpu).prio_tab(opnm) < cpustate(curcpu).prio_tab(op)
+    then opnm := op;
+  return opnm)
+pre mes_m <> {|->};
+\end{vdm_al}
+
+The \texttt{RunMessage} operation is given a message and in case it is time
+to execute this message a new thread is created with the appropriate 
+instructions and it is executed.
+
+\begin{vdm_al}
+RunMessage: Message * [AS`Name] ==> STKM`EvaluationState * [SEM`VAL]
+RunMessage(mk_Message(id,t,p,mes,-),cpunm) ==
+  if t <= cpustate(cpunm).swaptime
+  then
+   (SetCurCPU(cpunm,cpustate(cpunm).swaptime);
+    if is_MessageBroadcast(mes)
+    then RunBroadcastMessage(id,t,p,mes)
+    else
+     (dcl obj_desc : [GLOBAL`OBJ_Desc] := nil;
+      if mes.obj_ref <> nil
+      then obj_desc := STATE`Lookup_obj_tab(mes.obj_ref);
+      def clnm = if obj_desc <> nil
+                 then obj_desc.sem.tp
+                 else nil;
+          opnm = mes.opname;
+          fullnm = if clnm <> nil
+                   then AUX`ConstructDoubleName(clnm,opnm)
+                   else opnm;
+          opval = STATE`LookUp(fullnm);
+          prio: nat = if opnm in set dom cpustate(curcpu).prio_tab
+                      then cpustate(curcpu).prio_tab(opnm)
+                      else SCHD`Default_priority;
+          instr = [mk_INSTRTP`PUSHCONTEXT(<ALL>),
+                   mk_INSTRTP`PUSH(mu(opval,objref |-> mes.obj_ref)),
+                   mk_INSTRTP`PUSH(mes.args),
+                   mk_INSTRTP`GUARD(false),
+                   mk_INSTRTP`CONTEXT(GetCID(opval),false),
+                   mk_INSTRTP`APPLY()] ^
+                   (if mes.threadid <> nil
+                    then [mk_INSTRTP`RETMES(id,prio,fullnm,mes.respond,mes.threadid)]
+                    else []) ^
+                   [mk_INSTRTP`EOCL()];
+       in SCHD`RunMessageThread(clnm, mes.obj_ref, instr, prio, id);
+     )
+   )
+  else
+   (cpustate(cpunm).time := cpustate(cpunm).swaptime;
+    SCHD`DefaultEvalRes());
+
+RunBroadcastMessage: MessageId * nat * nat * MessageBroadcast ==> STKM`EvaluationState * [SEM`VAL]
+RunBroadcastMessage(id,-,-,mes) ==
+  let mk_MessageBroadcast(objrefs,opnm,args,-,cpu) = mes
+  in
+   (dcl tid : SCHDTP`ThreadId;
+    SetCurCPU(cpu,cpustate(cpu).swaptime);
+    for all objref in set objrefs do
+      def fullnm = opnm;
+          opval = STATE`LookUp(fullnm);
+          prio: nat = if opnm in set dom cpustate(curcpu).prio_tab
+                      then cpustate(curcpu).prio_tab(opnm)
+                      else SCHD`Default_priority
+      in
+        def instr = [mk_INSTRTP`PUSHCONTEXT(<ALL>),
+                     mk_INSTRTP`PUSH(mu(opval,objref |-> objref,sync |-> true)),
+                     mk_INSTRTP`PUSH(args),
+                     mk_INSTRTP`GUARD(false),
+                     mk_INSTRTP`CONTEXT(GetCID(opval),false),
+                     mk_INSTRTP`APPLY(),
+                     mk_INSTRTP`EOCL()]
+        in
+          (tid := SCHD`AddNewThreadId(false, objref, instr, prio,false,id);
+           SCHD`SetThreadStatus(tid, mk_SCHDTP`Running())
+          );
+    def cpuofthread = SCHD`GetCPUOfThread(tid)
+    in
+      SetCurCPU(cpuofthread,cpustate(cpuofthread).swaptime);
+    SCHD`RunThread(tid);
+   );
+  
+GetCID: SEM`OP | SEM`FN ==> CI`ContextId
+GetCID(val) ==
+  return if is_SEM`OverOPFN(val)
+         then CI`NilContextId
+         else val.fnName.cid;
+\end{vdm_al}
+
+\texttt{CPUWork} is an operation that check whether the next CPU that should be
+allowed to proceed its time has any work to do. It has work to do if
+the cpunm is known and it has instuctions instantiated and one of its
+threads are not blocked by a synchronouos operation call or a message
+i waiting for the CPU or a periodic thread is awaiting for one of the
+objects that have deployed to the CPU.
+
+\begin{vdm_al}
+CPUWork: [AS`Name] * nat ==> bool
+--CPUWork(cpunm, swapt) ==
+CPUWork(cpunm, -) ==
+  let threads = cpustate(cpunm).threads
+  in
+  return 
+--  not CPUSwapNeeded(cpunm) and
+  cpunm in set dom cpustate and
+  (--cpustate(cpunm).curr_program <> [] and 
+    exists tid in set threads & 
+        not is_SCHDTP`SyncOp(SCHD`GetThreadStatus(tid)) and
+        not is_SCHDTP`SyncOpRet(SCHD`GetThreadStatus(tid)) 
+   ) or
+   cpustate(cpunm).messages <> {|->} or
+   SCHD`PeriodicReady(cpunm,cpustate(cpunm).objrefs);
+  -- and
+  -- exists obj_ref in set cpustate(cpunm).objrefs &
+  --   STATE`LookUpThread(obj_ref.tp) <> nil;   
+\end{vdm_al}
+
+The \emph{ProcessBUS} operation is responsible for performing the processing of a 
+given BUS (nm) from its current time to when it has passed the time where
+it must be swapped out again (swapt).
+
+\begin{vdm_al}
+ProcessBUS: AS`Name * nat ==> STKM`EvaluationState * [SEM`VAL]
+ProcessBUS(nm,swapt) ==
+  --let mk_BUSSigma(kind,cap,cpus,t,waiting,mes_m,log) = busstate(nm)
+  let mk_BUSSigma(-,cap,-,t,-,mes_m,-) = busstate(nm)
+  in
+   (dcl newt : nat := t;
+    if not BUSWork(newt,swapt,busstate(nm).mes_m,busstate(nm).waiting)
+    then (busstate(nm).time := busstate(nm).time + SETTINGS`GetStepSize();
+          SCHD`DefaultEvalRes());
+    while newt <= swapt and BUSWork(newt,swapt,busstate(nm).mes_m, busstate(nm).waiting) do
+      (def first_mes = FindFirstMessage(busstate(nm).mes_m)
+       in
+        (while busstate(nm).waiting  <> [] and
+               (first_mes = nil or
+                (hd busstate(nm).waiting).time <= mes_m(first_mes).time) do
+           (let req = hd busstate(nm).waiting,
+                lastuse = if busstate(nm).log <> []
+                          then busstate(nm).log(len busstate(nm).log).tot
+                          else 0,
+                treq = MaxVal(req.time,lastuse)
+            in
+             (if is_MessageReq(req)
+              --then let mk_MessageReq(busid,curcpu,tcpu,mesid,threadid, fullnm,objref,size,time) = req
+              then let mk_MessageReq(busid,curcpu_,tcpu,mesid,threadid, fullnm,objref,size,-) = req
+                   in
+                     TIMETRACE`LogMessageRequest(busid,curcpu_,tcpu, mesid,threadid, fullnm,objref,size,treq)
+              --else let mk_MessageReplyReq(busid,curcpu_,tcpu,newmesid, mesid,curthread,fromthread, size,time) = req
+              else let mk_MessageReplyReq(busid,curcpu_,tcpu,newmesid, mesid,curthread,fromthread, size,-) = req
+                   in
+                     TIMETRACE`LogReplyRequest(busid,curcpu_,tcpu,newmesid, mesid,curthread, fromthread,size,treq);
+               busstate(nm).waiting := tl busstate(nm).waiting;
+               let entry = mk_GLOBAL`ChanUsage(treq,treq, req.curcpu,req.tcpu)
+               in
+                 busstate(nm).log := busstate(nm).log ^ [entry];
+               busstate(nm).time := treq;
+               newt := treq));
+         if first_mes = nil
+         then SCHD`DefaultEvalRes()
+         else
+         def mes = mes_m(first_mes);
+         in
+          (dcl size : nat;
+           if is_MessageResponse(mes.mes)
+           then size := SEM`Size(mes.mes.res)
+           else size := SEM`SizeValSeq(mes.mes.args);
+           def dura = CalcDuration(size,cap);
+           in
+            (dcl tcpu : [AS`Name] | map SEM`OBJ_Ref to [AS`Name] := nil;
+             if is_MessageResponse(mes.mes)
+             then tcpu := mes.mes.clnm
+             elseif is_MessageBroadcast(mes.mes)
+             then tcpu := mes.mes.tcpum
+             elseif mes.mes.obj_ref = nil
+             then tcpu := nil
+             elseif mes.mes.obj_ref in set dom allocated
+             then tcpu := allocated(mes.mes.obj_ref)
+             else tcpu := STATE`GetCPUOfObjRef(mes.mes.obj_ref);
+
+             def entry = mk_GLOBAL`ChanUsage(newt,newt+dura,curcpu,tcpu);
+             opnm = mes.mes.opname;
+             time = mes.time;
+             realt = MaxVal(newt,time)
+         in
+          (TIMETRACE`LogMessageActivate(mes.id,realt);
+           newt := realt + dura;
+           busstate(nm).mes_m := {first_mes} <-: busstate(nm).mes_m;
+           busstate(nm).log := busstate(nm).log ^ [entry];
+           if is_MessageBroadcast(mes.mes)
+           then InsertBroadMesInCPU(tcpu,opnm, mes,newt,mes.mes.obj_refs)  
+           else InsertMesInCPU(tcpu,opnm, mes,newt)            
+          ))))
+      );
+   busstate(nm).time := newt;
+   SCHD`DefaultEvalRes())
+    --if is_SCHDTP`CSMACD(kind)
+    --then error
+    --else error) -- FCFS right now
+         
+pre nm in set dom busstate;
+\end{vdm_al}
+
+The \emph{BUSWork} operation is used to check whether there is any work to
+be performed on the current bus in the period of time it has been allocated 
+from time t to time swapt.
+
+\begin{vdm_al}
+BUSWork: nat * nat * (map MessageId to Message) * seq of (MessageReq | MessageReplyReq) ==> bool
+BUSWork(t,swapt,mes_m,waiting) ==
+  return
+    t <= swapt and
+    (waiting <> [] or
+     exists mes in set rng mes_m &
+       mes.time <= swapt);
+\end{vdm_al}
+
+\begin{vdm_al}
+FindFirstMessage: map MessageId to Message ==> [MessageId]
+FindFirstMessage(mes_m) ==
+  (dcl firstm : [nat] := nil;
+   for all mid in set dom mes_m do
+     if Earlier(mes_m,mid,firstm)
+     then firstm := mid;
+   return firstm);
+\end{vdm_al}
+
+\begin{vdm_al}
+Earlier: (map MessageId to Message) * MessageId * [nat] ==> bool
+Earlier(mes_m,mes,id) ==
+  return id = nil or
+         mes_m(mes).time < mes_m(id).time or
+         mes_m(mes).time = mes_m(id).time and mes_m(mes).prio < mes_m(id).prio;
+\end{vdm_al}
+
+The \emph{InsertMesInCPU} operation is responsible for transferring messages
+from a BUS to the CPU that it is to be communicated to. In case the message is 
+a response of a synchronyous operation call the result must be placed on the 
+top of the given threads evaluation stack.
+
+\begin{vdm_al}
+InsertMesInCPU: [AS`Name] * AS`Name * Message * nat ==> ()
+InsertMesInCPU(tcpu,opnm, mes,time) == 
+ (dcl mes_s : seq of Message := if opnm in set dom cpustate(tcpu).messages
+                                then cpustate(tcpu).messages(opnm)
+                                else [ ],
+      i : nat := 1,
+      found : bool := false;
+  if mes_s <> []
+  then
+    while not found and i <= len mes_s do
+      if mes_s(i).time <= mes.time
+      then i := i + 1
+      else found := true;
+  let res_s = mes_s(1,...,i-1) ^ [mes] ^ mes_s(i,...,len mes_s),
+      m = mes.mes
+  in
+   (TIMETRACE`LogMessageCompleted(mes.id,time);
+    StepCPUTimeBack(tcpu,time);
+    if is_MessageResponse(mes.mes)
+    then
+     (SCHD`AddValToEvalStack(m.threadid,m.res);
+      cpustate(tcpu).threadstate(m.threadid).eval_stack :=
+              [m.res] ^ cpustate(tcpu).threadstate(m.threadid).eval_stack;
+      SCHD`SetThreadStatus(m.threadid,mk_SCHDTP`Running())
+     )
+    else
+     (cpustate(tcpu).messages(opnm) := res_s;);
+   );
+ );
+
+InsertBroadMesInCPU: (map SEM`OBJ_Ref to [AS`Name]) * AS`Name * Message * nat * set of SEM`OBJ_Ref ==> ()
+InsertBroadMesInCPU(tcpum,opnm, mes,time,objs) == 
+ (for all objref in set objs do
+    let tcpu = tcpum(objref),
+        newmes = mu(mes, mes |-> mk_MessageInfo(objref,opnm,mes.mes.args,nil,nil))
+    in
+     (dcl mes_s : seq of Message := if opnm in set dom cpustate(tcpu).messages
+                                    then cpustate(tcpu).messages(opnm)
+                                    else [ ],
+          i : nat := 1,
+          found : bool := false;
+      if mes_s <> []
+      then
+        while not found and i <= len mes_s do
+          if mes_s(i).time <= mes.time
+          then i := i + 1
+          else found := true;
+      let res_s = mes_s(1,...,i-1) ^ [newmes] ^ mes_s(i,...,len mes_s)
+      in
+       (StepCPUTimeBack(tcpu,time); 
+        cpustate(tcpu).messages(opnm) := res_s;
+       )
+     );
+  TIMETRACE`LogMessageCompleted(mes.id,time);
+ );
+\end{vdm_al}
+
+
+The \emph{CalcDuration} function must calculate the duration that it takes to 
+transfer data of \emph{size} over a line with a a given \emph{capacity} using
+a protocol that has an estimated \emph{overhead}.
+
+\begin{vdm_al}
+functions
+
+CalcDuration: nat * (nat1 | <INFINITE>) -> nat
+CalcDuration(size, capacity) ==
+  if capacity = <INFINITE>
+  then 0 
+  else
+    let dura = size div capacity
+    in
+      if dura = 0
+      then 1                    -- it always take a little bit of time
+      else dura; 
+\end{vdm_al}
+
+\begin{vdm_al}
+MaxVal: nat * nat -> nat
+MaxVal(x,y) ==
+  if x > y
+  then x
+  else y;
+\end{vdm_al}
+
+\begin{vdm_al}
+operations
+
+IsSystem: () ==> bool
+IsSystem() ==
+  return card dom cpustate > 1;
+\end{vdm_al}
+
+\begin{vdm_al}
+GetCPUCapacity: [AS`Name] ==> nat | <INFINITE>
+GetCPUCapacity(cpunm) ==
+  if cpunm = nil or cpunm not in set dom cpustate
+  then return SETTINGS`GetDefaultCapacity()
+  else return cpustate(cpunm).capacity;
+  
+#endif VICE
+
+functions
+
+  EvaluatorStatusInit : () -> EvaluatorStatus
+  EvaluatorStatusInit() == 
+#ifdef VDMSL
+    mk_EvaluatorStatus([],              -- eval_stack
+                       [],              -- call_stack
+                       CI`NilContextId, -- curCid
+                       [],              -- trap_stack
+                       0,               -- PC
+                       mk_Continue(),   -- debug_flag
+                       0,               -- upDnIndex
+                       [],              -- cf
+                       envl_init(),     -- env_l
+                       [],              -- env_l_bak
+                       typeinst_init(), -- typeinst
+                       [],              -- typeinst_bak
+                       [],              -- os 
+                       [],              -- os_bak 
+                       [],              -- cur_mod 
+                       [],              -- cur_mod_bak
+                       [<ALL>]          -- context
+#endif VDMSL
+#ifdef VDMPP
+    mk_EvaluatorStatus([],              -- eval_stack
+                       [],              -- call_stack
+                       CI`NilContextId, -- curCid
+                       [],              -- trap_stack
+                       0,               -- PC
+                       mk_Continue(),   -- debug_flag
+                       0,               -- upDnIndex
+                       0,               -- instrno
+                       nil,             -- guard
+#ifdef VICE
+                       mk_SCHDTP`Running(), -- status
+                       nil,             -- release_time
+#endif VICE
+                       [],              -- cf
+                       envl_init(),     -- env_l
+                       [],              -- env_l_bak
+                       typeinst_init(), -- typeinst
+                       [],              -- typeinst_bak
+                       [],              -- os
+                       [],              -- os_bak
+                       [],              -- obj_l
+                       [],              -- obj_l_bak
+                       [<ALL>]          -- context
+#endif VDMPP
+                      ); 
+
+\end{vdm_al}
+
+\subsection{Instantiating and Storing the State of the Evaluator}
+
+The following operations {\em Instantiate} and {\em Persist} are used
+to set, respectively read the state of the evaluator. A scheduling
+mechanism to facilitate the evaluation of concurrent processes should
+use these operations to swap processes in and out of the main
+evaluation loop. The scheduler will naturally have to maintain a queue
+of ``sleeping'' processes and their state as reported by {\em
+  Persist}. 
+
+#ifdef VICE
+Note that \emph{Instantiate} can also replace the current
+program. This is used with queueing threads which are being
+instantiated.
+#endif VICE
+
+\begin{vdm_al}
+
+
+operations
+
+  Instantiate : EvaluatorStatus * [SubProgram] ==> ()
+  Instantiate(es2, instr) ==
+#ifdef VDMSL
+   (
+    curr_state := es2; 
+    if instr <> nil
+    then
+     (curr_program := instr;
+      curr_state.PC := 0;)
+    else
+      if curr_state.call_stack <> []
+      --then curr_program := ExtractInstr(HeadCS().code)
+      then curr_program := ExtractInstr((hd curr_state.call_stack).code)
+      else curr_program := [];
+   );
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    if curthread <> nil
+    then
+     (
+      dcl curr_state : EvaluatorStatus,
+          curr_program : SubProgram;
+
+      curr_state := es2;
+      if instr <> nil
+      then
+       (curr_program := instr;
+        curr_state.PC := 0;)
+      else
+        if curr_state.call_stack <> []
+        then curr_program := ExtractInstr((hd curr_state.call_stack).code)
+        else curr_program := [];
+
+      cpustate(curcpu).curr_program := curr_program;
+      cpustate(curcpu).threadstate(curthread) := curr_state;
+     );
+#endif VDMPP
+\end{vdm_al}
+
+\begin{vdm_al}  
+  GetEvaluatorState : () ==> EvaluatorStatus
+  GetEvaluatorState() ==
+#ifdef VDMSL
+    return curr_state;
+#endif VDMSL
+#ifdef VDMPP
+    let curthread = cpustate(curcpu).curthread
+    in return cpustate(curcpu).threadstate(curthread)
+  pre curcpu in set dom cpustate;
+
+#ifdef VICE
+  AddCPU: [AS`Name] * AS`Name * [AS`Expr] ==> ()
+  AddCPU(sysnm,cpunm,decl) ==
+    (cpustate(cpunm) := EmptyCPU(decl);
+     if decl <> nil and sysnm <> nil
+     then syscpus(sysnm) := if sysnm in set dom syscpus
+                            then syscpus(sysnm) union {cpunm}
+                            else {cpunm};
+     SCHD`AddCPU(cpunm);
+     TIMETRACE`AddCPU(sysnm,cpunm,decl <> nil));
+\end{vdm_al}
+
+\begin{vdm_al}
+  AddBUS: AS`Name * [AS`Expr] ==> ()
+  AddBUS(busnm,decl) ==
+    (busstate(busnm) := EmptyBUS(decl);
+     TIMETRACE`AddBUS(busnm,busstate(busnm).cpus));
+#endif VICE
+
+  InitEvaluatorStatus : SubProgram * [ SEM`OBJ_Ref ] ==> EvaluatorStatus
+  InitEvaluatorStatus(instr, objref) ==
+    (dcl e : EvaluatorStatus := EvaluatorStatusInit(); 
+     if objref <> nil
+     then
+       e.obj_l := [mk_GLOBAL`OBJscope(objref, [objref.tp], [objref.tp])]; 
+     if instr <> []
+     then
+       let code : Code = mk_DebugCmd(instr ^ [mk_INSTRTP`EOCL()] )
+       in
+        (e.call_stack := [mk_CallStackItem(<INTERNAL>, code, 0, "Thread Start", 
+                                           nil,nil, CI`NilContextId, nil, nil, nil, nil, false, nil)]; 
+         e.debug_flag := mk_Continue(); 
+        );
+     return e); 
+#endif VDMPP
+
+  -- Implemented as: CallStackItem::ExtractInstr
+  ExtractInstr : Code ==> SubProgram
+  ExtractInstr(i) ==
+    if is_DebugCmd(i)
+    then return i.instr
+    else return CMPL`GetProgram(i.modName, i.instr);
+\end{vdm_al}
+
+\begin{vdm_al}
+  -- stackeval_Init corresponds to StackEval::Init 
+  stackeval_Init : bool ==> ()
+  stackeval_Init(ast_is_new) ==
+#ifdef VDMSL
+   (sigma := GetInitSigma(ast_is_new); 
+     -- STKM`ResetEnvL and STKM`ResetTypeInst() 
+     -- are moved from STATE`InitializeGS 
+     ResetEnvL (); 
+     ResetTypeInst();  
+   ); 
+#endif VDMSL
+#ifdef VDMPP
+   (sigma := GetInitSigma(ast_is_new); 
+     -- STKM`ResetEnvL and STKM`ResetTypeInst() 
+     -- are moved from STATE`InitializeGS 
+     if cpustate(curcpu).curthread <> nil
+     then ResetEnvL (); 
+   ); 
+#endif VDMPP
+\end{vdm_al}
+
+\begin{vdm_al}
+  -- What happens when a user executes the init command 
+  -- this is the top level function. 
+  -- Corresponds to tools.cc:EvalDefinition 
+  -- calls STATE`Init_Sigma()
+  User_Init : AS`Document * bool ==> () 
+  User_Init(ast, ast_is_new) == 
+    (
+#ifdef VICE
+     VC`InitState();
+     if not ast_is_new
+     then TIMETRACE`NewTimeTraceInit();
+#endif VICE 
+     CMPL`SetEmptyCompEnv();
+     stackeval_Init(ast_is_new); 
+#ifdef VDMPP
+     SCHD`InitScheduler(ast_is_new);
+#endif VDMPP
+     STATE`Init_Sigma(ast_is_new);
+     STATE`TranslateAST(ast, ast_is_new);
+     STATE`InitializeGSGV(ast_is_new);
+#ifdef VDMSL
+     -- Moved from InitializeGS
+     STATE`PushModuleIfAny();
+#endif VDMSL
+#ifdef VDMPP
+     RemoveAllGuards();
+#endif VDMPP
+    );
+
+#ifdef VDMPP
+RemoveAllGuards: () ==> ()
+RemoveAllGuards() ==
+  cpustate := {cpu |-> let t_m = cpustate(cpu).threadstate,
+                           upd_t_m = {tid |-> mu(t_m(tid),guard |-> nil) | tid in set dom t_m}
+                       in
+                         mu(cpustate(cpu),threadstate |-> upd_t_m)
+              | cpu in set dom cpustate};
+#endif VDMPP
+\end{vdm_al}
+
+User\_Init 
+
+User\_Init also pushes a module on the stack to have a current
+module. If a document is only a single definitions block, this ensures
+that we are always evaluating in the created module.  
+
+\begin{vdm_al}
+functions
+
+envl_init : () -> seq of SEM`ENV
+envl_init() == [[]];
+\end{vdm_al}
+
+This function creates an evaluation stack, with an initially empty
+function application environment.
+
+\begin{vdm_al}
+
+operations 
+
+ResetEnvL : () ==> ()
+ResetEnvL() == 
+#ifdef VDMSL
+  curr_state.env_l := envl_init();
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    if curthread <> nil
+    then cpustate(curcpu).threadstate(curthread).env_l := envl_init()
+  ; 
+#endif VDMPP
+\end{vdm_al}
+
+\begin{vdm_al}
+#ifdef VDMSL
+ResetTypeInst : () ==> ()
+ResetTypeInst() ==  
+  curr_state.typeinst := typeinst_init ();
+#endif VDMSL
+
+typeinst_init : () ==> seq of map AS`TypeVar to AS`Type
+typeinst_init() ==
+  return [{|->}]; 
+
+\end{vdm_al}
+
+This operation creates an empty type variable map in the type instantiation
+sequence.
+
+\subsection{Auxiliary operations on OS state}
+
+\begin{vdm_al}
+operations
+
+#ifdef VDMSL
+PushOS: () ==> ()
+PushOS() ==
+  def sm = STATE`GetModuleState(CurrentModule());
+  in curr_state.os := [sm] ^ curr_state.os;
+#endif VDMSL
+#ifdef VDMPP
+PushOS: () ==> ()
+PushOS() ==
+  let curthread = cpustate(curcpu).curthread
+  in
+    cpustate(curcpu).threadstate(curthread).os := 
+             [ STATE`Get_obj_tab() ] ^ cpustate(curcpu).threadstate(curthread).os;
+#endif VDMPP
+\end{vdm_al}
+
+\begin{vdm_al}
+operations
+PopOS: () ==> ()
+PopOS() ==
+#ifdef VDMSL
+  curr_state.os := tl curr_state.os;
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    cpustate(curcpu).threadstate(curthread).os := tl cpustate(curcpu).threadstate(curthread).os;
+#endif VDMPP
+\end{vdm_al}
+
+\subsection{Auxiliary operations on typeinst state}
+
+\begin{vdm_al}
+operations
+PushTypeInst : map AS`TypeVar to AS`Type ==> ()
+PushTypeInst(tm) ==
+#ifdef VDMSL
+  curr_state.typeinst := [tm] ^ curr_state.typeinst;
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    cpustate(curcpu).threadstate(curthread).typeinst := [tm] ^ cpustate(curcpu).threadstate(curthread).typeinst;
+#endif VDMPP
+\end{vdm_al}
+
+\begin{vdm_al}
+PopTypeInst: () ==> ()
+PopTypeInst() ==
+#ifdef VDMSL
+  curr_state.typeinst := tl curr_state.typeinst;
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    cpustate(curcpu).threadstate(curthread).typeinst := tl cpustate(curcpu).threadstate(curthread).typeinst;
+#endif VDMPP
+
+HdTypeInst: () ==> map AS`TypeVar to AS`Type
+HdTypeInst() ==
+#ifdef VDMSL
+  return hd curr_state.typeinst; 
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    return hd cpustate(curcpu).threadstate(curthread).typeinst; 
+#endif VDMPP
+\end{vdm_al}
+
+\subsection{Auxiliary operations on context state}
+
+\begin{vdm_al}
+operations
+PushContext: Context ==> ()
+PushContext(context) ==
+#ifdef VDMSL
+  curr_state.context := [context] ^ curr_state.context;
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    cpustate(curcpu).threadstate(curthread).context := [context] ^ cpustate(curcpu).threadstate(curthread).context;
+#endif VDMPP
+
+PopContext: () ==> ()
+PopContext() ==
+#ifdef VDMSL
+  curr_state.context := tl curr_state.context;
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    cpustate(curcpu).threadstate(curthread).context := tl cpustate(curcpu).threadstate(curthread).context;
+#endif VDMPP
+
+HdContext: () ==> Context
+HdContext() ==
+#ifdef VDMSL
+  return hd curr_state.context; 
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    return hd cpustate(curcpu).threadstate(curthread).context; 
+#endif VDMPP
+
+CheckContext: set of Context * RTERR`ERR ==> ()
+CheckContext(contexts,err) ==
+  if HdContext() in set contexts
+  then return
+  else RTERR`Error(err, nil, nil, []);  -- TODO
+\end{vdm_al}
+
+\subsection{Dealing with Environments}
+
+\begin{vdm_al}
+operations
+PopEnvL : () ==> ()
+PopEnvL () ==
+#ifdef VDMSL
+  curr_state.env_l := tl curr_state.env_l;
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    cpustate(curcpu).threadstate(curthread).env_l := tl cpustate(curcpu).threadstate(curthread).env_l;
+#endif VDMPP
+\end{vdm_al}
+
+The operation {\em PopEnvL} removes the current application
+environment from the evaluation stack.  
+#ifdef VDMPP
+The top element of the temporay object reference stack is also
+removed, and the object references bound to the environment is deleted.
+#endif VDMPP
+
+\begin{vdm_al}
+operations
+
+TopEnvL : () ==> SEM`ENV
+TopEnvL () ==
+#ifdef VDMSL
+    return hd curr_state.env_l
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    if curthread not in set dom cpustate(curcpu).threadstate
+#ifdef VICE
+       or curthread = nil
+#endif VICE
+    then return []
+    else return hd cpustate(curcpu).threadstate(curthread).env_l
+#endif VDMPP
+\end{vdm_al}
+
+This operation returns the current function application environment. The
+evaluation stack is not altered.
+
+\begin{vdm_al}
+operations
+
+PushEmptyBlkEnv: SEM`Permission ==> ()
+PushEmptyBlkEnv(permis) ==
+#ifdef VDMSL
+  def env_l = curr_state.env_l
+  in curr_state.env_l := [ [ mk_SEM`BlkEnv({|->},permis) ] ^ hd env_l ] ^ tl env_l
+  pre curr_state.env_l <> [];
+#endif VDMSL
+#ifdef VDMPP
+  def curthread = cpustate(curcpu).curthread;
+      env_l = cpustate(curcpu).threadstate(curthread).env_l
+  in
+    cpustate(curcpu).threadstate(curthread).env_l := [ [ mk_SEM`BlkEnv({|->},permis) ] ^ hd env_l ] ^ tl env_l
+  pre let curthread = cpustate(curcpu).curthread
+      in
+        cpustate(curcpu).threadstate(curthread).env_l <> [];
+#endif VDMPP
+\end{vdm_al}
+
+\begin{vdm_al}
+PushEmptyEnv : () ==> ()
+PushEmptyEnv () ==
+#ifdef VDMSL
+  curr_state.env_l := [ [] ] ^ curr_state.env_l;
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+   (if curthread not in set dom cpustate(curcpu).threadstate
+    then cpustate(curcpu).threadstate(curthread) := EvaluatorStatusInit();
+    cpustate(curcpu).threadstate(curthread).env_l := [ [] ] ^ cpustate(curcpu).threadstate(curthread).env_l
+   );
+#endif VDMPP
+\end{vdm_al}
+
+\begin{vdm_al}
+PushEnvL : seq of SEM`BlkEnv ==> ()
+PushEnvL (env_l) ==
+#ifdef VDMSL
+  curr_state.env_l := [ env_l ] ^ curr_state.env_l;
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+   (if curthread not in set dom cpustate(curcpu).threadstate
+    then cpustate(curcpu).threadstate(curthread) := EvaluatorStatusInit();
+    cpustate(curcpu).threadstate(curthread).env_l := [ env_l ] ^ cpustate(curcpu).threadstate(curthread).env_l
+   );
+#endif VDMPP
+\end{vdm_al}
+
+This operation creates a new and empty function application environment.
+This environment is made the current evaluation environment.
+
+\begin{vdm_al}
+operations
+
+IsEmptyEnvL : () ==> bool
+IsEmptyEnvL () ==
+  return (len TopEnvL() = 0);
+\end{vdm_al}
+
+This operation returns $\True$ if the current function application
+environment is empty, i.e.\ the current evaluation environment does not
+contain any block environments.
+
+\begin{vdm_al}
+operations
+
+AddToTopBlkEnv: SEM`BlkEnv ==> ()
+AddToTopBlkEnv(blkenv) ==
+#ifdef VDMSL
+  def env_l = curr_state.env_l;
+      env = hd env_l;
+      new_blkenv = AUX`CombineBlkEnv(hd env,blkenv)
+  in
+    curr_state.env_l := [ [ new_blkenv ] ^ tl env ] ^ tl env_l;
+#endif VDMSL
+#ifdef VDMPP
+  def curthread = cpustate(curcpu).curthread;
+      env_l = cpustate(curcpu).threadstate(curthread).env_l;
+      env = hd env_l;
+      new_blkenv = AUX`CombineBlkEnv(hd env,blkenv)
+  in
+    cpustate(curcpu).threadstate(curthread).env_l := [ [ new_blkenv ] ^ tl env ] ^ tl env_l;
+#endif VDMPP
+\end{vdm_al}
+
+#ifdef VDMPP
+The operation {\em GetObjLLen} is used for the test environment to
+check for memory leaks. 
+
+\begin{vdm_al}
+GetObjLLen: () ==> nat
+GetObjLLen() ==
+  let curthread = cpustate(curcpu).curthread
+  in
+#ifdef VICE
+    if not curthread in set dom cpustate(curcpu).threadstate
+    then return 0
+    else
+#endif VICE
+    return len cpustate(curcpu).threadstate(curthread).obj_l;
+\end{vdm_al}
+
+
+The operation {\em GetCurObjRef} returns the current object refence of
+the top of the object list {\em obj-l}.
+
+\begin{vdm_al}
+operations
+
+GetCurObjRef: () ==> SEM`OBJ_Ref
+GetCurObjRef() ==
+  let curthread = cpustate(curcpu).curthread,
+      mk_GLOBAL`OBJscope(ref,-,-) = hd cpustate(curcpu).threadstate(curthread).obj_l
+  in return ref
+pre let curthread = cpustate(curcpu).curthread
+    in
+      cpustate(curcpu).threadstate(curthread).obj_l <> [];
+\end{vdm_al}
+
+\begin{vdm_al}
+HasCurObjRef: () ==> bool
+HasCurObjRef() ==
+  return (GetObjLLen() > 0);
+\end{vdm_al}
+
+The operation {\em GetCurObjName} returns the name of the current
+object on the top of the object list {\em obj-l}.
+
+\begin{vdm_al}
+GetCurObjName: () ==> AS`Name
+GetCurObjName() ==
+  def curthread = cpustate(curcpu).curthread;
+      mk_GLOBAL`OBJscope(ref,-,-) = hd cpustate(curcpu).threadstate(curthread).obj_l;
+      mk_GLOBAL`OBJ_Desc(-,mk_SEM`OBJ(nm,-,-), -, -, -) = STATE`Lookup_obj_tab(ref)
+  in return nm
+  pre let curthread = cpustate(curcpu).curthread
+      in
+        cpustate(curcpu).threadstate(curthread).obj_l <> [];
+\end{vdm_al}
+
+The operation {\em GetCurCl} returns the current class of the scope,
+that is, the class being on top of the class stack of the object list
+{\em obj-l}
+
+\begin{vdm_al}
+GetCurCl: () ==> GLOBAL`OrigCl
+GetCurCl() ==
+  let curthread = cpustate(curcpu).curthread
+  in
+#ifdef VICE
+    if not curthread in set dom cpustate(curcpu).threadstate
+    then return mk_GLOBAL`Start()
+    else
+#endif VICE
+    if cpustate(curcpu).threadstate(curthread).obj_l = []
+    then return mk_GLOBAL`Start()
+    else
+      let mk_GLOBAL`OBJscope(-,cl,-) = hd cpustate(curcpu).threadstate(curthread).obj_l
+      in
+        return hd cl;
+
+GetPrevCl: () ==> GLOBAL`OrigCl
+GetPrevCl() ==
+  let curthread = cpustate(curcpu).curthread
+  in
+#ifdef VICE
+    if not curthread in set dom cpustate(curcpu).threadstate
+    then return mk_GLOBAL`Start()
+    else
+#endif VICE
+    cases cpustate(curcpu).threadstate(curthread).obj_l:
+      [] -> return mk_GLOBAL`Start(),
+      [o] -> let cls_l = o.class
+             in if len cls_l > 1
+                then return cls_l(2)
+                else return mk_GLOBAL`Start(),
+      [o1,o2]^- -> let cls_l = o1.class
+                   in if len cls_l > 1
+                      then return cls_l(2)
+                      else return hd o2.class
+    end;
+
+\end{vdm_al}
+
+
+\begin{vdm_al}
+-- Implemented in libman.cc
+GetOrigCl: () ==> GLOBAL`OrigCl
+GetOrigCl() ==
+  let curthread = cpustate(curcpu).curthread
+  in
+    if curthread = nil or 
+       curthread not in set dom cpustate(curcpu).threadstate or
+       cpustate(curcpu).threadstate(curthread).obj_l = []
+    then return mk_GLOBAL`Start()
+    else
+      let mk_GLOBAL`OBJscope(-,-,orig_cll) = hd cpustate(curcpu).threadstate(curthread).obj_l
+      in return hd orig_cll;
+--pre cpustate(curcpu).threadstate(curthread).obj_l <> [];
+\end{vdm_al}
+
+The \texttt{GetOrigOldCl} operation is needed when new expressions are
+used to extract the class for the object before the current origin for
+object was pushed.
+
+\begin{vdm_al}
+GetOrigOldCl: () ==> GLOBAL`OrigCl
+GetOrigOldCl() ==
+  let curthread = cpustate(curcpu).curthread
+  in
+    let mk_GLOBAL`OBJscope(-,-,orig_cll) = hd cpustate(curcpu).threadstate(curthread).obj_l
+    in if len orig_cll > 1
+       then return hd tl orig_cll
+       else return hd orig_cll
+  pre let curthread = cpustate(curcpu).curthread
+      in
+        cpustate(curcpu).threadstate(curthread).obj_l <> [];
+\end{vdm_al}
+
+\begin{vdm_al}
+HasCurCl: () ==> bool
+HasCurCl() ==
+  let curthread = cpustate(curcpu).curthread
+  in
+    if curthread = nil or curthread not in set dom cpustate(curcpu).threadstate
+    then return false
+    else return cpustate(curcpu).threadstate(curthread).obj_l <> [];
+\end{vdm_al}
+
+The operation {\em GetCurObj} returns the semantic value {\em SEM`OBJ}
+of the current of object, that is, the object being on top of the
+object stack {\em obj-l}.
+
+\begin{vdm_al}
+GetCurObj: () ==> SEM`OBJ
+GetCurObj()==
+  let curthread = cpustate(curcpu).curthread,
+      mk_GLOBAL`OBJscope(ref,-,-)=hd cpustate(curcpu).threadstate(curthread).obj_l 
+  in
+    return STATE`GetSemObjInTab(ref)
+  pre let curthread = cpustate(curcpu).curthread
+      in
+        cpustate(curcpu).threadstate(curthread).obj_l <> [];
+\end{vdm_al}
+
+The operation {\em IsEmptyObjL} checks if the {\em obj\_l} is
+empty. This could be the case when evaluating from the debugger.
+
+\begin{vdm_al}
+IsEmptyObjL: () ==> bool
+IsEmptyObjL() ==
+  let curthread = cpustate(curcpu).curthread
+  in
+    if curthread = nil or curthread not in set dom cpustate(curcpu).threadstate
+    then return false
+    else return cpustate(curcpu).threadstate(curthread).obj_l = [];
+
+\end{vdm_al}
+
+The operation {\em PushCurObj} pushes an object reference on the
+current object stack. 
+The operation takes three parameters:
+\begin{itemize}
+\item the object reference.
+\item the name of the class in the object reference that we are to
+look from.
+\item the original class from which we call. Only in the case where a
+client application is done, the clnm and the origcl is different.
+Consider the example below:
+
+\begin{verbatim}
+class A
+
+instance variables
+
+private
+   myvar : int := 3;
+
+operations
+public 
+  op1: () ==> ()
+  op1() ==
+    myvar := 4;
+   
+end A
+
+class B
+
+operations
+
+  Test: () ==> ()
+  Test() ==
+   (dcl a: A := new A()
+    a.op1();                      - the op1 is now a client to object a.
+   )
+
+end B
+\end{verbatim}
+\end{itemize}
+
+When calling the operation {\em a.op1()} operation {\em op1()} it
+should be checked that the modifier on operation {\em op1} is
+public. When evaluating the {\em FieldSelectExpr} ``a.op1''. The scope
+that is setting up is to push the object reference of {\em a}. The
+current class will be {\em A}, however, the orignal class will be {\em
+B}. Because the access check on op1, should be checked with the
+assumption that a.op1 is a client call from class B.
+When the semantic value of {\em op1} has been found, and when we are to
+set up the environment for evaluating the body of {\em op1}, the
+object scope would be pushing object reference of {\em a}, the current
+class will be {\em A} and the orignal class will also be {\em A},
+because now the code that is to evaluated inside op1 is {\bf not}
+client to class {\em A}.
+
+
+NOTE:
+HC: I think that we should not allow this use of nil. I suggest that
+the AS`Name are not optional.
+
+\begin{vdm_al}
+PushCurObj: SEM`OBJ_Ref * [AS`Name] * [GLOBAL`OrigCl] ==> ()
+PushCurObj(objref,clnm,origcl) ==
+  def curthread = cpustate(curcpu).curthread;
+      nmobjref = objref.tp;
+      nm = if clnm = nil
+           then nmobjref
+           else clnm;
+      orignm = if origcl = nil
+               then nmobjref
+               else origcl
+  in
+    cpustate(curcpu).threadstate(curthread).obj_l :=
+            [mk_GLOBAL`OBJscope(objref,[nm],[orignm])] ^ cpustate(curcpu).threadstate(curthread).obj_l;
+\end{vdm_al}
+
+
+The operation {\em PopCurObj} pops an object from the object stack
+{\em obj-l}.
+\begin{vdm_al}   
+PopCurObj: () ==> ()
+PopCurObj() ==
+  let curthread = cpustate(curcpu).curthread
+  in
+   cpustate(curcpu).threadstate(curthread).obj_l := tl cpustate(curcpu).threadstate(curthread).obj_l;
+\end{vdm_al}
+
+The operation {\em PushClNmCurObj} pushes a class name {\em clnm} on
+the object stack {\em obj-l}
+\begin{vdm_al}
+PushClNmCurObj: AS`Name * AS`Name ==> ()
+PushClNmCurObj(clnm, origcl) ==
+  let curthread = cpustate(curcpu).curthread
+  in
+    if cpustate(curcpu).threadstate(curthread).obj_l = []
+    then
+      def insstrct = STATE`GetInstInitVal(clnm);
+          tmp_obj = mk_SEM`OBJ(clnm, insstrct, {|->});
+          ref = MakeNewObj(tmp_obj, nil);
+          objscope = mk_GLOBAL`OBJscope(ref, [clnm], [origcl]);
+      in cpustate(curcpu).threadstate(curthread).obj_l := [objscope]
+    else
+      let mk_GLOBAL`OBJscope(obj, cl_l,orig_cll) = hd cpustate(curcpu).threadstate(curthread).obj_l
+      in cpustate(curcpu).threadstate(curthread).obj_l := 
+                 [mk_GLOBAL`OBJscope(obj, 
+                                     [clnm] ^ cl_l, 
+                                     [origcl] ^ orig_cll)] ^ tl cpustate(curcpu).threadstate(curthread).obj_l;
+--  pre let curthread = cpustate(curcpu).curthread
+--      in
+--        cpustate(curcpu).threadstate(curthread).obj_l <> [];
+\end{vdm_al}
+
+The operation {\em PopClNmCurObj} pops a class from the object stack.
+\begin{vdm_al}
+PopClNmCurObj: () ==> ()
+PopClNmCurObj() ==
+--  let curthread = cpustate(curcpu).curthread,
+--      mk_GLOBAL`OBJscope(obj, cl_l, orig_cll) = hd cpustate(curcpu).threadstate(curthread).obj_l 
+--  in cpustate(curcpu).threadstate(curthread).obj_l := 
+--            [mk_GLOBAL`OBJscope(obj, tl cl_l, tl orig_cll)] ^ tl cpustate(curcpu).threadstate(curthread).obj_l;
+  let curthread = cpustate(curcpu).curthread
+  in
+    if cpustate(curcpu).threadstate(curthread).obj_l = []
+    then return
+    else
+      let mk_GLOBAL`OBJscope(obj, [-]^cl_l, [-]^orig_cll) = hd cpustate(curcpu).threadstate(curthread).obj_l 
+      in
+        if cl_l = []
+        then
+          cpustate(curcpu).threadstate(curthread).obj_l := tl cpustate(curcpu).threadstate(curthread).obj_l
+        else
+          cpustate(curcpu).threadstate(curthread).obj_l := 
+           [mk_GLOBAL`OBJscope(obj, cl_l, orig_cll)] ^ tl cpustate(curcpu).threadstate(curthread).obj_l;
+\end{vdm_al}
+
+#endif VDMPP
+#ifdef VICE
+\begin{vdm_al}
+TopClNmCurObj: () ==> [SEM`OBJ_Ref]
+TopClNmCurObj() ==
+  let curthread = cpustate(curcpu).curthread
+  in
+    if len cpustate(curcpu).threadstate(curthread).obj_l = 0
+    then return nil
+    else return (hd cpustate(curcpu).threadstate(curthread).obj_l).obj;
+\end{vdm_al}
+#endif VICE
+
+\begin{vdm_al}
+operations
+
+PopBlkEnv : () ==> ()
+PopBlkEnv () ==
+#ifdef VDMSL
+  curr_state.env_l := [ tl hd curr_state.env_l ] ^ tl curr_state.env_l;
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+   cpustate(curcpu).threadstate(curthread).env_l := 
+          [ tl hd cpustate(curcpu).threadstate(curthread).env_l ] ^ tl cpustate(curcpu).threadstate(curthread).env_l;
+#endif VDMPP
+\end{vdm_al}
+
+This operation removes the current block environment from the current
+function application environment.
+
+#ifdef VDMPP
+The corresponding block environment in the temporary object reference
+stack is removed, and the object references bound in the block
+environment is deleted.
+#endif VDMPP
+
+\begin{vdm_al}
+operations
+
+PushBlkEnv: SEM`BlkEnv ==> ()
+PushBlkEnv(env) ==
+#ifdef VDMSL
+  def env_l = curr_state.env_l
+  in curr_state.env_l := [ [ env ] ^ hd env_l ] ^ tl env_l;
+#endif VDMSL
+#ifdef VDMPP
+  def curthread = cpustate(curcpu).curthread;
+      env_l = cpustate(curcpu).threadstate(curthread).env_l
+  in
+    cpustate(curcpu).threadstate(curthread).env_l := [ [ env ] ^ hd env_l ] ^ tl env_l;
+#endif VDMPP
+\end{vdm_al}
+
+This operation makes the argument block environment the current block
+environment in the current function application environment.
+
+#ifdef VDMPP
+A corresponding block environment is pushed on the temporary object
+reference stack, and the object references in the environment {\em
+  env} are incremented.
+#endif VDMPP
+
+
+\begin{vdm_al}
+operations
+
+AppendToTopBlkEnv : AS`Name * SEM`VAL * [AS`Type] ==> ()
+AppendToTopBlkEnv (id, val, tp) ==
+#ifdef VDMSL
+  let env_l = curr_state.env_l,
+      env = hd env_l,
+      mk_SEM`BlkEnv(id_m,perm) = hd env,
+      blkenv = mk_SEM`BlkEnv(id_m ++ { id |-> mk_SEM`ValTp(val, tp) }, perm)
+  in
+    curr_state.env_l := [ [ blkenv ] ^ tl env ] ^ tl env_l;
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread,
+      env_l = cpustate(curcpu).threadstate(curthread).env_l,
+      env = hd env_l,
+      mk_SEM`BlkEnv(id_m,perm) = hd env,
+      blkenv = mk_SEM`BlkEnv(id_m ++ { id |-> mk_SEM`ValTp(val, tp) }, perm)
+  in
+    cpustate(curcpu).threadstate(curthread).env_l := [ [ blkenv ] ^ tl env ] ^ tl env_l;
+#endif VDMPP
+\end{vdm_al}
+
+This operation will append an identifier, a semantic value and possible a type to the top BlkEnv. 
+
+
+\begin{vdm_al}
+operations
+
+TopBlkEnv : () ==> SEM`BlkEnv
+TopBlkEnv () ==
+#ifdef VDMSL
+  return hd hd curr_state.env_l;
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    return hd hd cpustate(curcpu).threadstate(curthread).env_l;
+#endif VDMPP
+\end{vdm_al}
+
+This operation returns the current block environment from the current
+function application environment.
+
+#ifdef VDMPP
+\begin{vdm_al}
+operations
+
+MakeNewObj: SEM`OBJ * [token]  ==> SEM`OBJ_Ref
+MakeNewObj(semobj,dlclassp) ==
+  def ref = STATE`global_obj_tab_insert(semobj,dlclassp) 
+  in 
+   (
+#ifdef VICE
+    AddNewObj(ref);
+#endif VICE
+    return ref;
+   ); 
+
+#ifdef VICE
+AddNewObj: SEM`OBJ_Ref ==> ()
+AddNewObj(ref) ==
+  if (HasCurObjRef())
+  then
+    def curref = GetCurObjRef()
+    in
+      if curref in set dom allocated
+      then DeployInst(allocated(curref),ref)
+      else TIMETRACE`LogObjAlloc(ref,nil,cpustate(nil).time)
+  else
+    if ref not in set dom allocated
+    then TIMETRACE`LogObjAlloc(ref,nil,cpustate(nil).time);
+
+AddToVirtualBUS: AS`Name ==> ()
+AddToVirtualBUS(newcpuid) ==
+  busstate(virtualbusid).cpus := busstate(virtualbusid).cpus union {newcpuid};
+#endif VICE
+\end{vdm_al}
+
+The operation {\em MakeNewObj} creates an object in the {\em
+  obj-tab}, and puts the temporary object reference in the object
+  reference environment.
+
+#endif VDMPP
+
+\subsection{The Up/Down functions}
+\label{sec:upDownCommands}
+
+\begin{updatedSection}{2/5/2000}{Jesper K. Pedersen}
+
+Whenever the user issues an up-command a number of the stacks located in the
+EvaluatorStatus (sec. \ref{sec:EvaluatorStatus}) is cut in two. This is
+done so the stacks will contain the content as was the case when the
+function which scope we go into was the active one. In other words, the
+stacks will look as they did when this function called its sub-function. The
+rest of the content of this stack is kept on a backup stack.
+
+This way the rest of the functions in the toolbox do not need to know
+anything about the up and down commands. As an example, the lookup functions
+work on the top element of the environment list (\texttt{env\_l}) without
+knowing that this element might stem from a function, which is currently
+stalled to let a sub-function evaluate.
+
+The backup-stacks are copied into the \texttt{CallStackItem} along with
+the environment list and copied back upon completion of the recursive debug
+command or print command. Furthermore the backup-stacks are emptied when
+a recursive debug or print command is issued.
+
+If the backup stack was not emptied when the new recursive debug command
+was issued, then the following scenario may have occured:
+
+\begin{enumerate}
+\item The user executes the \texttt{up} command a number of times (say
+  through the functions f,g and h).
+\item Then he invokes a recursive debug command.
+\item This command breaks at a breakpoint.
+\item the user executes the command \texttt{down}. This results in that
+  first the function \texttt{f} is brought to scope. On further invocation
+  of the \texttt{down} command \texttt{g} and finally \texttt{h} will
+  brought to scope. None of these functions is an extension to the recursive
+  debug command, but rather to the previous debug command.
+\end{enumerate}
+
+When one of continue, finish, step, stepin, or single-step commands is issued
+the elements from the backup stacks are moved back to the original stacks.
+
+\end{updatedSection}
+
+\begin{vdm_al}
+GoUp: () ==> ()
+GoUp() ==
+  def levels = GetNextStackLevelsUp()
+  in if levels = nil
+     then error
+     else UpdateStacks(levels);
+\end{vdm_al}
+
+\begin{vdm_al}
+GoDown: () ==> ()
+GoDown() ==
+#ifdef VDMSL
+  let upDnIndex = curr_state.upDnIndex
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread,
+      upDnIndex = cpustate(curcpu).threadstate(curthread).upDnIndex
+#endif VDMPP
+  in
+    cases upDnIndex:
+      0      -> error,
+      1      -> ResetUpDn(),
+      others -> def levels = GetNextStackLevelsDown()
+                in
+                  if levels = nil
+                  then error
+                  else UpdateStacks(levels)
+    end;
+\end{vdm_al}
+
+\begin{vdm_al}
+UpdateStacks: (nat * nat * nat * nat) ==> ()
+UpdateStacks(mk_(env_l_h, typeinst_h, os_h, cur_mod_obj_l_h)) ==
+#ifdef VDMSL
+( let env_l = curr_state.env_l_bak ^ curr_state.env_l
+  in (curr_state.env_l     := env_l(len env_l - env_l_h +1, ... , len env_l);
+      curr_state.env_l_bak := env_l(1, ... , len env_l - env_l_h));
+
+  let typeinst = curr_state.typeinst_bak ^ curr_state.typeinst
+  in (curr_state.typeinst     := typeinst(len typeinst - typeinst_h +1, ... , len typeinst);
+      curr_state.typeinst_bak := typeinst(1, ... , len typeinst - typeinst_h));
+
+  let os = curr_state.os_bak ^ curr_state.os
+  in (curr_state.os     := os(len os - os_h +1, ... , len os);
+      curr_state.os_bak := os(1, ... , len os - os_h));
+
+  let cur_mod = curr_state.cur_mod_bak ^ curr_state.cur_mod
+  in (curr_state.cur_mod     := cur_mod(len cur_mod - cur_mod_obj_l_h +1, ... , len cur_mod);
+      curr_state.cur_mod_bak := cur_mod(1, ... , len cur_mod - cur_mod_obj_l_h));
+);
+#endif VDMSL
+#ifdef VDMPP
+let curthread = cpustate(curcpu).curthread,
+    curr_state = cpustate(curcpu).threadstate(curthread)
+in
+( let env_l = curr_state.env_l_bak ^ curr_state.env_l
+  in (cpustate(curcpu).threadstate(curthread).env_l     := 
+                env_l(len env_l - env_l_h +1, ... , len env_l);
+      cpustate(curcpu).threadstate(curthread).env_l_bak := 
+                env_l(1, ... , len env_l - env_l_h));
+
+  let typeinst = curr_state.typeinst_bak ^ curr_state.typeinst
+  in (cpustate(curcpu).threadstate(curthread).typeinst     := 
+         typeinst(len typeinst - typeinst_h +1, ... , len typeinst);
+      cpustate(curcpu).threadstate(curthread).typeinst_bak := 
+         typeinst(1, ... , len typeinst - typeinst_h));
+
+  let os = curr_state.os_bak ^ curr_state.os
+  in (cpustate(curcpu).threadstate(curthread).os     := os(len os - os_h +1, ... , len os);
+      cpustate(curcpu).threadstate(curthread).os_bak := os(1, ... , len os - os_h));
+
+  let obj_l = curr_state.obj_l_bak ^ curr_state.obj_l
+  in (cpustate(curcpu).threadstate(curthread).obj_l     := 
+           obj_l(len obj_l - cur_mod_obj_l_h +1, ... , len obj_l);
+      cpustate(curcpu).threadstate(curthread).obj_l_bak := 
+           obj_l(1, ... , len obj_l - cur_mod_obj_l_h));
+);
+#endif VDMPP
+\end{vdm_al}
+
+\begin{vdm_al}
+ResetUpDn: () ==> ()
+ResetUpDn() ==
+#ifdef VDMSL     
+ (UpdateStacks(mk_(len curr_state.env_l    + len curr_state.env_l_bak,
+                   len curr_state.typeinst + len curr_state.typeinst_bak,
+                   len curr_state.os       + len curr_state.os_bak,
+                   len curr_state.cur_mod  + len curr_state.cur_mod_bak));
+  curr_state.upDnIndex := 0 );
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    if curthread <> nil
+    then 
+     (let curr_state = cpustate(curcpu).threadstate(curthread)
+      in
+        UpdateStacks(mk_(len curr_state.env_l    + len curr_state.env_l_bak,
+                         len curr_state.typeinst + len curr_state.typeinst_bak,
+                         len curr_state.os       + len curr_state.os_bak,
+                         len curr_state.obj_l    + len curr_state.obj_l_bak));
+      cpustate(curcpu).threadstate(curthread).upDnIndex := 0 );
+#endif VDMPP
+\end{vdm_al}
+
+\begin{vdm_al}
+GetNextStackLevelsUp: () ==> [nat * nat * nat * nat]
+GetNextStackLevelsUp() ==
+#ifdef VDMSL
+( dcl index : nat := curr_state.upDnIndex,
+      indexFound : nat := -1;
+
+  while index < len curr_state.call_stack do
+  ( index := index + 1;
+    if curr_state.call_stack(index).type = <DEBUGCMD>
+    then return nil
+    elseif curr_state.call_stack(index).type = <FNOP>
+    then if indexFound = -1
+         then indexFound := index
+         else ( curr_state.upDnIndex := indexFound;
+                return mk_(curr_state.call_stack(indexFound).env_l_h,
+                           curr_state.call_stack(indexFound).typeinst_h,
+                           curr_state.call_stack(indexFound).os_h,
+                           curr_state.call_stack(indexFound).cur_mod_obj_l_h)));
+  return nil);
+#endif VDMSL
+#ifdef VDMPP
+let curthread = cpustate(curcpu).curthread,
+    curr_state = cpustate(curcpu).threadstate(curthread)
+in
+( dcl index : nat := curr_state.upDnIndex,
+      indexFound : nat := -1;
+
+  while index < len curr_state.call_stack do
+  ( index := index + 1;
+    if curr_state.call_stack(index).type = <DEBUGCMD>
+    then return nil
+    elseif curr_state.call_stack(index).type = <FNOP>
+    then if indexFound = -1
+         then indexFound := index
+         else ( cpustate(curcpu).threadstate(curthread).upDnIndex := indexFound;
+                return mk_(curr_state.call_stack(indexFound).env_l_h,
+                           curr_state.call_stack(indexFound).typeinst_h,
+                           curr_state.call_stack(indexFound).os_h,
+                           curr_state.call_stack(indexFound).cur_mod_obj_l_h)));
+  return nil);
+#endif VDMPP
+\end{vdm_al}
+
+\begin{vdm_al}
+GetNextStackLevelsDown: () ==> [nat * nat * nat * nat]
+GetNextStackLevelsDown() ==
+#ifdef VDMSL
+( dcl index : nat := curr_state.upDnIndex;
+
+  while index > 1 do
+  ( index := index - 1;
+    if curr_state.call_stack(index).type = <FNOP>
+    then ( curr_state.upDnIndex := index;
+           return mk_(curr_state.call_stack(index).env_l_h,
+                      curr_state.call_stack(index).typeinst_h,
+                      curr_state.call_stack(index).os_h,
+                      curr_state.call_stack(index).cur_mod_obj_l_h)));
+  return nil);
+#endif VDMSL
+#ifdef VDMPP
+let curthread = cpustate(curcpu).curthread,
+    curr_state = cpustate(curcpu).threadstate(curthread)
+in
+( dcl index : nat := curr_state.upDnIndex;
+
+  while index > 1 do
+  ( index := index - 1;
+    if curr_state.call_stack(index).type = <FNOP>
+    then ( cpustate(curcpu).threadstate(curthread).upDnIndex := index;
+           return mk_(curr_state.call_stack(index).env_l_h,
+                      curr_state.call_stack(index).typeinst_h,
+                      curr_state.call_stack(index).os_h,
+                      curr_state.call_stack(index).cur_mod_obj_l_h)));
+  return nil);
+#endif VDMPP
+\end{vdm_al}
+
+\begin{vdm_al}
+CurrentBacktraceLevel: () ==> nat
+CurrentBacktraceLevel() ==
+#ifdef VDMSL
+  return len curr_state.env_l_bak + 1;
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    return len cpustate(curcpu).threadstate(curthread).env_l_bak + 1;
+#endif VDMPP
+\end{vdm_al}
+
+\begin{vdm_al}
+GetCidForCurBacktraceLevel: () ==> CI`ContextId
+GetCidForCurBacktraceLevel() ==
+#ifdef VDMSL
+  let level = len curr_state.env_l_bak
+  in if level = 0
+     then return GetCurCid()
+     else let cids = [ curr_state.call_stack(callStkIndex).oldCid | 
+                         callStkIndex in set inds curr_state.call_stack & 
+                           curr_state.call_stack(callStkIndex).type = <FNOP>]
+          in return cids(level);
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread,
+      curr_state = cpustate(curcpu).threadstate(curthread)
+  in
+     let level = len curr_state.env_l_bak
+     in if level = 0
+        then return GetCurCid()
+        else let cids = [ curr_state.call_stack(callStkIndex).oldCid | 
+                            callStkIndex in set inds curr_state.call_stack & 
+                              curr_state.call_stack(callStkIndex).type = <FNOP>]
+             in return cids(level);
+#endif VDMPP
+\end{vdm_al}
+
+\subsection{Module Operations}
+
+The operation $PushModule$ makes the module with name $mod-name$ the
+current module. 
+
+#ifdef VDMSL
+\begin{vdm_al}
+operations
+
+PushModule : AS`Name ==> ()
+PushModule (mod_name) ==
+  curr_state.cur_mod := [ mod_name ] ^ curr_state.cur_mod;
+\end{vdm_al}
+
+The operation $PrePushModule$ is used during initialisation to avoid a
+call to $RestoreModule$ and $InitGS$ (global values must be
+initialised before the state).
+
+The operation $GetModule$ returns the module value for a module name. If
+the module name does not exists, an error is generated.
+
+\begin{vdm_al}
+operations
+
+CurrentModule : () ==> AS`Name
+CurrentModule () ==
+  return hd curr_state.cur_mod
+\end{vdm_al}
+
+This operation returns the name of the current module.
+
+\begin{vdm_al}
+operations
+
+PrePushModule : AS`Name ==> bool
+PrePushModule (mod_name) ==
+  if (len curr_state.cur_mod > 0) and AUX`EqualNames(mod_name, hd curr_state.cur_mod)
+  then return false
+  else ( curr_state.cur_mod := [ mod_name ] ^ curr_state.cur_mod;
+         return true );
+\end{vdm_al}
+
+The operation $PopModule$ removes the current module from the module
+stack.  Upon removal, the global state is saved in the module value.
+This ensures that the module value contains the most recent state
+values.
+
+\begin{vdm_al}
+operations
+
+PopModule : () ==> ()
+PopModule () ==
+  curr_state.cur_mod := tl curr_state.cur_mod;
+\end{vdm_al}
+#endif VDMSL
+
+\subsection{Different State Manipulations}
+
+\begin{vdm_al}
+operations 
+
+IsLocalState : AS`Name ==> bool * [SEM`ValTp]
+IsLocalState (id) == 
+  def env = TopEnvL()
+  in
+   (for mk_SEM`BlkEnv(id_m,perm) in env do
+      if id in set dom id_m
+      then
+        if perm = <READ_WRITE>
+        then return mk_(true, id_m(id))
+        else
+#ifdef VDMPP
+          let mk_SEM`ValTp(val,-) = id_m(id)
+          in if is_SEM`OBJ_Ref(val)
+             then return mk_(false, nil)
+             else
+#endif VDMPP
+          return mk_(true, nil)
+      else
+         skip;
+    return mk_(false, nil)
+   );
+\end{vdm_al}
+
+This operation returns true if the input identifier is defined in the
+domain of the current local state.
+
+
+\begin{vdm_al}
+operations
+
+SetLocalState : AS`Name * SEM`ValTp ==> ()
+SetLocalState (id, valtp) == 
+#ifdef VDMSL
+  let env : seq of SEM`BlkEnv = hd curr_state.env_l
+  in
+    for i = 1 to len env do
+      let mk_SEM`BlkEnv(id_m,perm) = env(i)
+      in 
+        if perm = <READ_WRITE>
+        then
+          if id in set dom id_m
+          then
+           (curr_state.env_l(1)(i) := mk_SEM`BlkEnv(id_m ++ { id |-> valtp }, perm);
+            return)
+#endif VDMSL
+#ifdef VDMPP
+  def curthread = cpustate(curcpu).curthread;
+      env = hd cpustate(curcpu).threadstate(curthread).env_l
+  in
+    for i = 1 to len env do
+      let mk_SEM`BlkEnv(id_m,perm) = env(i)
+      in 
+        if perm = <READ_WRITE>
+        then
+          if id in set dom id_m
+          then
+           (cpustate(curcpu).threadstate(curthread).env_l(1)(i) :=
+                             mk_SEM`BlkEnv(id_m ++ { id |-> valtp }, perm);
+            return)
+#endif VDMPP
+pre def mk_(isit, -) = IsLocalState(id)
+    in isit;
+\end{vdm_al}
+
+This operation updates the identifier in the local state (a block
+environment with read/write permission)
+The reason that I use returnflag instead of just making a return in
+the line {\tt returnflag = true} is because of a bug, where an empty
+return statement inside of a loop doesn't return.
+
+\begin{vdm_al}
+IsLocalVal : AS`Name ==> bool * [SEM`VAL]
+IsLocalVal (name) == 
+  def topenv = TopEnvL()
+  in
+   (for mk_SEM`BlkEnv(id_m,-) in topenv do
+      if name in set dom id_m
+      then let mk_SEM`ValTp(val',-) = id_m(name)
+           in return mk_(true, val')
+      else skip;
+    return mk_(false, nil);
+   );
+\end{vdm_al}
+
+This operation returns true if the input identifier is defined in the
+current function application environment.
+
+#ifdef VDMSL
+\begin{vdm_al}
+
+IsOldState : AS`Name ==> bool
+IsOldState (id) ==
+  return id in set dom hd curr_state.os
+\end{vdm_al}
+
+This operation returns true if the input identifier is defined in the
+domain of the current old state map.
+
+\begin{vdm_al}
+operations
+
+GetOldStateVal : AS`Name ==> SEM`VAL
+GetOldStateVal (id) ==
+  return ((hd curr_state.os)(id)).val
+\end{vdm_al}
+
+This operation returns the value for the input identifier from the current
+old state map.
+
+\begin{vdm_al}
+operations
+
+EvalOldName : AS`OldName ==> SEM`VAL
+EvalOldName (mk_AS`OldName(name,cid)) ==
+  let id = name(len name)
+  in
+    if IsOldState (mk_AS`Name([id],cid))
+    then GetOldStateVal (mk_AS`Name([id],cid))
+    else error;
+\end{vdm_al}
+
+This operation returns the value of an old name.
+#endif VDMSL
+
+#ifdef VDMPP
+\begin{vdm_al}
+EvalOldName: AS`OldName ==> SEM`VAL
+EvalOldName(mk_AS`OldName(name, cid)) ==
+  def curthread = cpustate(curcpu).curthread;
+      orig_name = mk_AS`Name(name, cid);
+      mk_(old_obj_tab, classes_m) = hd cpustate(curcpu).threadstate(curthread).os;
+      mk_GLOBAL`OBJscope(ref,-,-)= hd cpustate(curcpu).threadstate(curthread).obj_l
+  in
+    if ref in set dom old_obj_tab
+    then
+     (dcl old_obj_sem : SEM`OBJ := old_obj_tab(ref).sem;
+      let clsnm = ref.tp
+      in
+        if clsnm in set dom classes_m
+        then
+          def statics = classes_m(clsnm).statics
+          in
+            if statics <> {|->}
+            then
+              let ins = old_obj_sem.ins,
+                  vm = ins(clsnm) ++ statics
+              in old_obj_sem := mu( old_obj_sem , ins |-> ins ++ { clsnm |-> vm } );
+      def mk_(isit, -, val, -, -,-) = STATE`IsInObjScope(orig_name,old_obj_sem)
+      in if isit
+         then return val
+         else RTERR`ErrorVal(RTERR`OLDID_NOT_IN_OS, nil, nil, []))
+    else RTERR`ErrorVal(RTERR`INTERNAL_ERROR, nil, nil, []);
+\end{vdm_al}
+#endif VDMPP
+
+
+\subsection{Stack Operations}
+
+The following operations all modify or read the state of the different
+stacks of the evaluator. That is the evaluation stack, the call stack,
+the context stack and the trap stack.
+
+\subsubsection{The CF stack}
+
+\begin{vdm_al}
+
+PushCF: (seq of char * CI`ContextId) ==> ()
+PushCF(e) ==
+#ifdef VDMSL
+  curr_state.cf := [e] ^ curr_state.cf;
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    cpustate(curcpu).threadstate(curthread).cf := [e] ^ cpustate(curcpu).threadstate(curthread).cf;
+#endif VDMPP
+
+PopCF: () ==> ()
+PopCF() ==
+#ifdef VDMSL
+  curr_state.cf := tl curr_state.cf;
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    cpustate(curcpu).threadstate(curthread).cf := tl cpustate(curcpu).threadstate(curthread).cf;
+#endif VDMPP
+
+PrintCf: () ==> seq of (seq of char * seq of char * nat * nat)
+PrintCf() ==
+#ifdef VDMSL
+  return [ def mk_(name, cid) = curr_state.cf(i);
+               mk_(file, line, column) = CI`GetFileLineColPos(cid)
+           in mk_(name,file,line,column) 
+         | i in set inds curr_state.cf];
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    return [ def mk_(name, cid) = cpustate(curcpu).threadstate(curthread).cf(i);
+                 mk_(file, line, column) = CI`GetFileLineColPos(cid)
+             in mk_(name,file,line,column) 
+           | i in set inds cpustate(curcpu).threadstate(curthread).cf];
+#endif VDMPP
+\end{vdm_al}
+\subsubsection{The Evaluation Stack}
+
+The evaluation stack is modified during evaluation. The operation {\em
+  Pop} pops a variable number of items of the evaluation stack and
+returns a sequence of the popped items. Items are popped one at a
+time, top-down, and {\em prepended} to the resulting sequence,
+therefore the sequence returned by {\em Pop} will be ordered with the
+topmost item at the rightmost position.
+
+\begin{vdm_al}
+
+  Pop : nat ==> seq of EvalStackItem
+  Pop(n) ==
+#ifdef VDMSL
+    let eval_stack = curr_state.eval_stack
+    in
+     (curr_state.eval_stack := eval_stack(n + 1,...,len eval_stack);
+      return [ eval_stack(n - i) | i in set {0,...,n - 1} ])
+  pre len curr_state.eval_stack >= n;
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread,
+      eval_stack = cpustate(curcpu).threadstate(curthread).eval_stack
+  in
+   (cpustate(curcpu).threadstate(curthread).eval_stack := eval_stack(n + 1,...,len eval_stack);
+    return [ eval_stack(n - i) | i in set {0,...,n - 1} ])
+  pre let curthread = cpustate(curcpu).curthread
+      in
+        len cpustate(curcpu).threadstate(curthread).eval_stack >= n;
+#endif VDMPP
+
+
+  Push : EvalStackItem ==> ()
+  Push(e) ==
+#ifdef VDMSL
+    curr_state.eval_stack := [e] ^ curr_state.eval_stack;
+#endif VDMSL
+#ifdef VDMPP
+    let curthread = cpustate(curcpu).curthread
+    in
+      cpustate(curcpu).threadstate(curthread).eval_stack := [e] ^ cpustate(curcpu).threadstate(curthread).eval_stack;
+#endif VDMPP
+\end{vdm_al}
+
+The operation {\em Head} returns the topmost item of the evaluation
+stack, but leaves the stack un-modified.
+
+\begin{vdm_al}
+  Head : () ==> EvalStackItem
+  Head() ==
+#ifdef VDMSL
+    return hd curr_state.eval_stack
+  pre len curr_state.eval_stack >= 1;
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    return hd cpustate(curcpu).threadstate(curthread).eval_stack
+  pre let curthread = cpustate(curcpu).curthread
+      in
+        len cpustate(curcpu).threadstate(curthread).eval_stack >= 1;
+#endif VDMPP
+
+  Copy : () ==> ()
+  Copy() ==
+#ifdef VDMSL
+    let eval_stack = curr_state.eval_stack
+    in 
+      curr_state.eval_stack := [hd eval_stack] ^ eval_stack
+  pre len curr_state.eval_stack >= 1;
+#endif VDMSL
+#ifdef VDMPP
+    let curthread = cpustate(curcpu).curthread,
+        eval_stack = cpustate(curcpu).threadstate(curthread).eval_stack
+    in
+      cpustate(curcpu).threadstate(curthread).eval_stack := [hd eval_stack] ^ eval_stack
+  pre let curthread = cpustate(curcpu).curthread
+      in
+        len cpustate(curcpu).threadstate(curthread).eval_stack >= 1;
+#endif VDMPP
+ 
+  Swap : () ==> ()
+  Swap() ==
+#ifdef VDMSL
+    let eval_stack = curr_state.eval_stack
+    in
+      curr_state.eval_stack := eval_stack ++ { 1 |-> eval_stack(2), 2 |-> eval_stack(1) }
+  pre len curr_state.eval_stack >= 2;
+#endif VDMSL
+#ifdef VDMPP
+    let curthread = cpustate(curcpu).curthread,
+        eval_stack = cpustate(curcpu).threadstate(curthread).eval_stack
+    in
+      cpustate(curcpu).threadstate(curthread).eval_stack := eval_stack ++ { 1 |-> eval_stack(2), 2 |-> eval_stack(1) }
+  pre let curthread = cpustate(curcpu).curthread
+      in
+        len cpustate(curcpu).threadstate(curthread).eval_stack >= 2;
+#endif VDMPP
+\end{vdm_al}
+
+The operation {\em GetES} returns the {\em n} first elements of the
+evaluation stack. Note that the order used here is reversed compared
+to the order from the {\em Pop} operation.
+  
+\begin{vdm_al}
+operations
+  GetES: nat ==> seq of EvalStackItem
+  GetES(n) ==
+#ifdef VDMSL
+    return [ curr_state.eval_stack(i) | i in set {1, ..., n} ]
+  pre LenES(n);
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    return [ cpustate(curcpu).threadstate(curthread).eval_stack(i) | i in set {1, ..., n} ]
+  pre LenES(n);
+#endif VDMPP
+
+  LenES: nat ==> bool
+  LenES(n) ==
+#ifdef VDMSL
+    return len curr_state.eval_stack >= n;
+#endif VDMSL
+#ifdef VDMPP
+    let curthread = cpustate(curcpu).curthread
+    in
+      return len cpustate(curcpu).threadstate(curthread).eval_stack >= n;
+#endif VDMPP
+
+  GetNth: nat ==> EvalStackItem
+  GetNth(n) ==
+#ifdef VDMSL
+    return curr_state.eval_stack(n)
+  pre LenES(n);
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    return cpustate(curcpu).threadstate(curthread).eval_stack(n)
+  pre LenES(n);
+#endif VDMPP
+
+  SetNth: nat * EvalStackItem ==> ()
+  SetNth(n,e) ==
+#ifdef VDMSL
+    curr_state.eval_stack(n) := e
+  pre LenES(n);
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    cpustate(curcpu).threadstate(curthread).eval_stack(n) := e
+  pre LenES(n);
+#endif VDMPP
+\end{vdm_al}
+
+
+\subsubsection{The Call Stack}
+
+\begin{vdm_al}
+PushCS : Code * (AS`Name | seq of char) * [seq of SEM`VAL] * CSItemType ==> ()
+PushCS(item, nm, val_l, type) ==
+  let context = cases true:
+                  (is_SEM`ExplFN(item)) -> <PURE>,
+                  (is_SEM`ExplOP(item)) -> if item.oppure
+                                           then <PUREOP>
+                                           else <ALL>,
+                  others                -> <ALL>
+                end
+  in
+#ifdef VDMSL
+  def cid = GetCurCid();
+      env_l_h    = len curr_state.env_l;
+      typeinst_h = len curr_state.typeinst;
+      os_h       = len curr_state.os;
+      cur_mod_obj_l_h = len curr_state.cur_mod
+  in
+   (curr_state.call_stack := 
+         [mk_CallStackItem(type, item, curr_state.PC, nm, val_l, nil, cid,
+                                                     env_l_h, typeinst_h, os_h, cur_mod_obj_l_h, false, nil)] 
+                                   ^ curr_state.call_stack;
+    curr_state.PC := 0;
+    curr_state.context := [context] ^ curr_state.context;
+    curr_program := ExtractInstr(item);
+   );
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+   (dcl curr_state : EvaluatorStatus := if curthread in set dom cpustate(curcpu).threadstate
+                                        then cpustate(curcpu).threadstate(curthread)
+                                        else EvaluatorStatusInit();
+    def cid = GetCurCid();
+        env_l_h    = len curr_state.env_l;
+        typeinst_h = len curr_state.typeinst;
+        os_h       = len curr_state.os;
+        cur_mod_obj_l_h = len curr_state.obj_l
+    in
+     (curr_state.call_stack := 
+         [mk_CallStackItem(type, item, curr_state.PC, nm, val_l, nil, cid,
+                                                     env_l_h, typeinst_h, os_h, cur_mod_obj_l_h, false, nil)] 
+                                   ^ curr_state.call_stack;
+      curr_state.PC := 0;
+      curr_state.context := [context] ^ curr_state.context;
+      cpustate(curcpu).threadstate(curthread) := curr_state;
+      cpustate(curcpu).curr_program := ExtractInstr(item))
+     );
+#endif VDMPP
+
+  PopCS : () ==> ()
+  PopCS() ==
+#ifdef VDMSL
+    let mk_CallStackItem(type, -, PC', -, -, evalState, cid, -, -, -, -, -, -) = hd curr_state.call_stack
+    in
+     (curr_state.PC := PC';
+      if (type = <DEBUGCMD>)
+      then
+       ( -- restore the back up stacks.
+        curr_state.env_l_bak := evalState.env_l_bak;
+        curr_state.typeinst_bak := evalState.typeinst_bak;
+        curr_state.os_bak := evalState.os_bak;
+        curr_state.curCid := cid;
+        curr_state.cur_mod_bak := evalState.cur_mod_bak;
+        curr_state.context := evalState.context;
+       )  
+      else PopContext();
+      curr_state.call_stack := tl curr_state.call_stack;
+      if len curr_state.call_stack = 0
+      then curr_program := []
+      else
+        let code = (hd curr_state.call_stack).code
+        in curr_program := ExtractInstr(code);
+     )
+  pre curr_state.call_stack <> [];
+#endif VDMSL
+#ifdef VDMPP
+    let curthread = cpustate(curcpu).curthread,
+        mk_CallStackItem(type, -, PC', -, -, evalState, cid, -, -, -, -, -, -) = 
+          hd cpustate(curcpu).threadstate(curthread).call_stack
+    in
+     (dcl curr_state : EvaluatorStatus := cpustate(curcpu).threadstate(curthread);
+      curr_state.PC := PC';
+      if (type = <DEBUGCMD>)
+      then
+       ( -- restore the back up stacks.
+        curr_state.env_l_bak := evalState.env_l_bak;
+        curr_state.typeinst_bak := evalState.typeinst_bak;
+        curr_state.os_bak := evalState.os_bak;
+        curr_state.curCid := cid;
+        curr_state.obj_l_bak := evalState.obj_l_bak;
+        curr_state.context := evalState.context;
+       )  
+      else curr_state.context := tl curr_state.context;
+      curr_state.call_stack := tl curr_state.call_stack;
+      cpustate(curcpu).threadstate(curthread) := curr_state; -- 
+
+      if len curr_state.call_stack = 0
+      then cpustate(curcpu).curr_program := []
+      else
+        let code = (hd curr_state.call_stack).code
+        in cpustate(curcpu).curr_program := ExtractInstr(code);
+     )
+  pre let curthread = cpustate(curcpu).curthread
+      in
+        cpustate(curcpu).threadstate(curthread).call_stack <> [];
+#endif VDMPP
+
+  HeadCS : () ==> CallStackItem
+  HeadCS() ==
+#ifdef VDMSL
+    return hd curr_state.call_stack
+  pre curr_state.call_stack <> [];
+#endif VDMSL
+#ifdef VDMPP
+    let curthread = cpustate(curcpu).curthread
+    in
+        return hd cpustate(curcpu).threadstate(curthread).call_stack
+  pre let curthread = cpustate(curcpu).curthread
+      in
+        cpustate(curcpu).threadstate(curthread).call_stack <> [];
+#endif VDMPP
+
+  GetCS: nat ==> CallStackItem
+  GetCS(n) ==
+#ifdef VDMSL
+    return curr_state.call_stack(n)
+  pre len curr_state.call_stack >= n;
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    return cpustate(curcpu).threadstate(curthread).call_stack(n)
+  pre let curthread = cpustate(curcpu).curthread
+      in len cpustate(curcpu).threadstate(curthread).call_stack >= n;
+#endif VDMPP
+
+  CallStackLevel: () ==> nat
+  CallStackLevel() ==
+#ifdef VDMSL
+    return len curr_state.call_stack;
+#endif VDMSL
+#ifdef VDMPP
+    let curthread = cpustate(curcpu).curthread
+    in
+        return len cpustate(curcpu).threadstate(curthread).call_stack;
+#endif VDMPP
+
+  PushDS : STKM`EvaluatorStatus * seq of char * Code ==> ()
+  PushDS (evalst, debugString, code) ==
+#ifdef VDMSL
+   (curr_state.call_stack := 
+          [mk_CallStackItem(<DEBUGCMD>, code, 
+                            curr_state.PC, debugString, nil, 
+                            evalst, GetCurCid(), nil, nil, nil, nil, false, nil)] ^ 
+          curr_state.call_stack;
+    curr_state.PC := 0;
+
+     -- reset the back up stacks
+    curr_state.env_l_bak := [];
+    curr_state.typeinst_bak := [];
+    curr_state.os_bak := [];
+    curr_state.cur_mod_bak := [];
+    --curr_state.context := [<ALL>];
+    curr_program := ExtractInstr(code);
+   );
+#endif VDMSL
+#ifdef VDMPP
+    let curthread = cpustate(curcpu).curthread
+    in
+     (dcl curr_state : EvaluatorStatus := cpustate(curcpu).threadstate(curthread);
+      curr_state.call_stack := 
+          [mk_CallStackItem(<DEBUGCMD>, code, 
+                            curr_state.PC, debugString, nil, 
+                            evalst, GetCurCid(), nil, nil, nil, nil, false, nil)] ^ 
+          curr_state.call_stack;
+      curr_state.PC := 0;
+
+     -- reset the back up stacks
+      curr_state.env_l_bak := [];
+      curr_state.typeinst_bak := [];
+      curr_state.os_bak := [];
+      curr_state.obj_l_bak := [];
+      --curr_state.context := [<ALL>];
+      cpustate(curcpu).threadstate(curthread) := curr_state;
+      cpustate(curcpu).curr_program := ExtractInstr(code);
+     );
+#endif VDMPP
+
+#ifdef VDMPP
+  get_objref_from_fnop : SEM`ExplOP | SEM`ExplFN ==> [SEM`OBJ_Ref]
+  get_objref_from_fnop(fnop) ==
+    cases fnop:
+      mk_SEM`ExplOP(-,-,-,-,-,-,-,-,-,objref,-) -> return objref,
+      mk_SEM`ExplFN(-,-,-,-,-,-,-,-,objref,-) -> return objref,
+      others              -> error
+    end;
+#endif VDMPP  
+
+  ReplaceEvaluatorStatus : EvaluatorStatus ==> ()
+  ReplaceEvaluatorStatus(e) ==
+    (
+#ifdef VDMSL
+      Instantiate(e,nil);
+#endif VDMSL
+#ifdef VDMPP
+      --This is only needed on implementation level since there 
+      --the stackeval field is a pointer to an EvaluatorStatus
+      --and since SetThreadstate(Curthread) does no longer copy the GetEvaluatorState
+      --back to the thread(CurThreadId()).stackeval field.
+
+      --thread(CurThreadId()).stackeval: = e; 
+      Instantiate(e,nil);
+#endif VDMPP
+    );
+
+  ThrowRuntimeErrorException: () ==> ()
+  ThrowRuntimeErrorException() ==
+    if SETTINGS`RTErrException()
+    then GotoTrapHandler(mk_SEM`EXIT(mk_SEM`QUOTE("RuntimeError")))
+    else error;
+
+  IsRuntimeErrorException: EvalStackItem ==> bool
+  IsRuntimeErrorException(v) ==
+    return
+      cases v:
+        mk_SEM`EXIT(mk_SEM`QUOTE("RuntimeError")) -> true,
+        others                                    -> false
+      end;
+
+  RuntimeErrorExceptionOccurred: () ==> bool
+  RuntimeErrorExceptionOccurred() ==
+    if STKM`LenES(1)
+    then
+      def val = Head()
+      in return IsRuntimeErrorException(val)
+    else return false;
+
+  PushRuntimeErrorVal: () ==> ()
+  PushRuntimeErrorVal() ==
+    Push(mk_SEM`EXIT(mk_SEM`QUOTE("RuntimeError")));
+
+  RuntimeErrorVal: () ==> SEM`EXIT
+  RuntimeErrorVal() ==
+   def [ev] = Pop(1)
+   in return ev;
+      
+  UserPopDS : () ==> ()
+  UserPopDS () ==
+#ifdef VDMSL
+    if not exists index in set inds curr_state.call_stack & curr_state.call_stack(index).type = <DEBUGCMD>
+    then error
+    else
+     (dcl more : bool := true;
+      DEBUG`ResetInActivity();
+      while more do
+        let mk_CallStackItem(type,-,-,-,-,evalst,-,-,-,-,-,-,-) = hd curr_state.call_stack
+        in
+          if type = <DEBUGCMD>
+          then
+            (ReplaceEvaluatorStatus(evalst);
+             more := false);
+     );
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    if not exists index in set inds cpustate(curcpu).threadstate(curthread).call_stack
+                  & cpustate(curcpu).threadstate(curthread).call_stack(index).type = <DEBUGCMD>
+    then error
+    else
+     (dcl more : bool := true;
+      DEBUG`ResetInActivity();
+      while more do
+        let mk_CallStackItem(type,code,-,nmOrDesc,-,evalst,cid,-,-,-,-,-,-) =
+                                         hd cpustate(curcpu).threadstate(curthread).call_stack
+        in
+         (if type = <DEBUGCMD>
+          then
+           (ReplaceEvaluatorStatus(evalst);
+            more := false);
+          if type = <FNOP> and is_SEM`ExplOP(code)
+          then
+           (STATE`UpdateHistCount(nmOrDesc, mk_INSTRTP`fin(), get_objref_from_fnop(code)
+#ifdef VICE
+                                               ,code.sync, nil
+#endif VICE
+                                 );
+            cpustate(curcpu).threadstate(curthread).curCid := cid;
+           );
+         );
+       );
+#endif VDMPP
+
+  IsProgramAtEnd : () ==> bool
+  IsProgramAtEnd() ==
+#ifdef VDMSL
+    return curr_state.PC >= len curr_program;
+#endif VDMSL
+#ifdef VDMPP
+    let curthread = cpustate(curcpu).curthread
+    in
+      return cpustate(curcpu).threadstate(curthread).PC >= len cpustate(curcpu).curr_program;
+#endif VDMPP
+\end{vdm_al}
+\subsubsection{The Context Stack}
+
+\begin{vdm_al}
+
+  SetCid: CI`ContextId ==> ()
+  SetCid(cid) ==
+
+#ifdef VDMSL
+    curr_state.curCid := cid;
+#endif VDMSL
+#ifdef VDMPP
+    let curthread = cpustate(curcpu).curthread
+    in
+      cpustate(curcpu).threadstate(curthread).curCid := cid;
+#endif VDMPP
+
+  GetCurCid : () ==> CI`ContextId
+  GetCurCid () ==
+#ifdef VDMSL
+    return curr_state.curCid;
+#endif VDMSL
+#ifdef VDMPP
+    let curthread = cpustate(curcpu).curthread
+    in
+#ifdef VICE
+      if not curthread in set dom cpustate(curcpu).threadstate
+      then return CI`NilContextId
+      else
+#endif VICE
+      return cpustate(curcpu).threadstate(curthread).curCid;
+#endif VDMPP
+
+\end{vdm_al}
+
+\subsection{The Trap Stack}
+
+The trap state must store information about the sizes of the different
+stacks and the environment lists. When one wish to ``goto'' a trap
+handler these states must be restored to the sizes at the time of
+pushing the trap handler information.
+
+\begin{vdm_al}
+  PushTS: nat ==> ()
+  PushTS(handid) ==
+#ifdef VDMSL
+    def les = len curr_state.eval_stack;
+        lcs = len curr_state.call_stack;
+        ltis = len curr_state.typeinst;
+        los = len curr_state.os;
+        lcurm = len curr_state.cur_mod;
+        cid = curr_state.curCid;
+        mk_(lenvl,ltopenvl) = GetEnvLLengths()
+    in
+      curr_state.trap_stack := [mk_Trap(handid,les,lcs,ltis,los,lcurm,cid,lenvl,ltopenvl)] ^ curr_state.trap_stack;
+#endif VDMSL
+#ifdef VDMPP
+    let curthread = cpustate(curcpu).curthread,
+        curr_state = cpustate(curcpu).threadstate(curthread)
+    in
+      def les = len curr_state.eval_stack;
+          lcs = len curr_state.call_stack;
+          ltis = len curr_state.typeinst;
+          los = len curr_state.os;
+          lobjl = len curr_state.obj_l;
+          cid = curr_state.curCid;
+          mk_(lenvl,ltopenvl) = GetEnvLLengths()
+      in
+        cpustate(curcpu).threadstate(curthread).trap_stack := 
+                                [mk_Trap(handid,les,lcs,ltis,los,lobjl,cid,lenvl,ltopenvl)] ^ curr_state.trap_stack;
+#endif VDMPP
+
+  PopTS: () ==> ()
+  PopTS() ==
+#ifdef VDMSL
+    curr_state.trap_stack := tl curr_state.trap_stack;
+#endif VDMSL
+#ifdef VDMPP
+    let curthread = cpustate(curcpu).curthread
+    in cpustate(curcpu).threadstate(curthread).trap_stack := tl cpustate(curcpu).threadstate(curthread).trap_stack;
+#endif VDMPP
+
+  EmptyTS: () ==> bool
+  EmptyTS() ==
+#ifdef VDMSL
+    return curr_state.trap_stack = [];
+#endif VDMSL
+#ifdef VDMPP
+    let curthread = cpustate(curcpu).curthread
+    in return cpustate(curcpu).threadstate(curthread).trap_stack = [];
+#endif VDMPP
+\end{vdm_al}
+
+If there is no trap handler the current operation should be finished
+(and cleaned up. This is done using the {\em ExeRETURN}
+operation. Otherwise we must find the program counter for the
+exception handler code and restore the different stacks to the state
+they were in when the handler was pushed.
+\begin{vdm_al}
+
+  GotoTrapHandler: SEM`EXIT ==> ()
+  GotoTrapHandler(item) ==
+    if EmptyTS()
+    then
+      if IsRuntimeErrorException(item)
+      then error
+      else
+       (Push(item);
+        INSTR`ExeRETURN())
+    else
+#ifdef VDMSL
+      let mk_Trap(handid,les,lcs,lti,los,lcurm,cid,lenvl,ltopenvl) = hd curr_state.trap_stack
+#endif VDMSL
+#ifdef VDMPP
+      let curthread = cpustate(curcpu).curthread
+      in
+       (dcl curr_state : EvaluatorStatus := cpustate(curcpu).threadstate(curthread);
+        let mk_Trap(handid,les,lcs,lti,los,lobjl,cid,lenvl,ltopenvl) = hd curr_state.trap_stack
+#endif VDMPP
+      in
+       (
+        curr_state.PC := FindTrapHandler(handid,lcs);
+
+        let len_es = len curr_state.eval_stack
+        in curr_state.eval_stack := [item] ^ curr_state.eval_stack(len_es + 1 - les,...,len_es);
+
+        let len_cs = len curr_state.call_stack
+        in
+         (
+#ifdef VDMSL
+          for mk_CallStackItem(type,code,-,-,-,-,-,-,-,-,-,-,-)
+#endif VDMSL
+#ifdef VDMPP
+          for mk_CallStackItem(type,code,-,nm,-,-,-,-,-,-,-,-,-)
+#endif VDMPP
+                             in curr_state.call_stack(1,...,len_cs - lcs) do
+            if type = <FNOP>
+            then
+              if is_SEM`ExplOP(code)
+              then
+               (
+#ifdef VDMPP
+                STATE`UpdateHistCount(nm, mk_INSTRTP`fin(),get_objref_from_fnop(code)
+#ifdef VICE
+                                         ,code.sync,nil
+#endif VICE
+                                         );
+#endif VDMPP
+                curr_state.context := tl curr_state.context;
+               )
+              else if is_SEM`ExplFN(code)
+              then curr_state.context := tl curr_state.context;
+          curr_state.call_stack := curr_state.call_stack(len_cs - lcs + 1,...,len_cs);
+         );
+
+        let len_typeinst = len curr_state.typeinst
+        in curr_state.typeinst := curr_state.typeinst(len_typeinst - lti + 1,...,len_typeinst);
+        let len_os = len curr_state.os
+        in curr_state.os := curr_state.os(len_os - los + 1,...,len_os);
+#ifdef VDMSL
+        let len_cur_mod = len curr_state.cur_mod
+        in curr_state.cur_mod := curr_state.cur_mod(len_cur_mod - lcurm + 1,...,len_cur_mod);
+#endif VDMSL
+#ifdef VDMPP
+        let len_obj_l = len curr_state.obj_l
+        in curr_state.obj_l := curr_state.obj_l(len_obj_l + 1 - lobjl,...,len_obj_l);
+#endif VDMPP
+        curr_state.env_l_bak := [];
+        curr_state.typeinst_bak := [];
+        curr_state.os_bak := [];
+#ifdef VDMSL
+        curr_state.cur_mod_bak := [];
+#endif VDMSL
+#ifdef VDMPP
+        curr_state.obj_l_bak := [];
+#endif VDMPP
+        curr_state.curCid := cid;
+#ifdef VDMPP
+        cpustate(curcpu).threadstate(curthread) := curr_state;
+#endif VDMPP
+        UpgradeENVL(lenvl,ltopenvl);
+       );
+#ifdef VDMPP
+     );
+#endif VDMPP
+
+  FindTrapHandler: nat * nat ==> ProgramCounter
+  FindTrapHandler(handid, lengthcallstack) ==
+#ifdef VDMSL
+   (dcl instr : STKM`SubProgram := curr_program;
+    if len curr_state.call_stack <> lengthcallstack
+    then
+     (instr := ExtractInstr(curr_state.call_stack (len curr_state.call_stack + 1 - lengthcallstack).code);
+      curr_program := instr;);
+    for i = 1 to len instr do
+      if is_INSTRTP`HANDID(instr(i)) and handid = instr(i).handid
+      then return i
+      else skip;
+    error);
+#endif VDMSL
+#ifdef VDMPP
+    let curthread = cpustate(curcpu).curthread,
+        curr_state = cpustate(curcpu).threadstate(curthread),
+        curr_program = cpustate(curcpu).curr_program
+    in
+     (dcl instr : STKM`SubProgram := curr_program;
+      if len curr_state.call_stack <> lengthcallstack
+      then
+       (instr := ExtractInstr(curr_state.call_stack (len curr_state.call_stack + 1 - lengthcallstack).code);
+        cpustate(curcpu).curr_program := instr;);
+      for i = 1 to len instr do
+        if is_INSTRTP`HANDID(instr(i)) and handid = instr(i).handid
+        then return i
+        else skip;
+      error);
+#endif VDMPP
+\end{vdm_al}
+
+\subsection{Measure Check}
+
+\begin{vdm_al}
+  MeasureCheck: SEM`VAL * AS`Name ==> ()
+  MeasureCheck(curr_mv,-) ==
+     (
+#ifdef VDMPP
+      dcl curr_state : EvaluatorStatus := let curthread = cpustate(curcpu).curthread
+                                          in cpustate(curcpu).threadstate(curthread);
+#endif VDMPP
+      dcl curcsi : CallStackItem := hd curr_state.call_stack;
+      let fnnm = curcsi.nmOrDesc
+      in
+       (dcl index : nat := 2,
+            found : bool := false;
+        while index <= len curr_state.call_stack and not found do
+         (let csi = curr_state.call_stack(index)
+          in
+            cases csi:
+              mk_CallStackItem(<FNOP>,-,-,(fnnm),-,-,-,-,-,-,-,-,prev_mv) ->
+                (cases mk_(curr_mv, prev_mv):
+                   mk_(-,nil) -> skip,
+                   mk_(mk_SEM`NUM(curr_v), mk_SEM`NUM(prev_v)) ->
+                       if prev_v <= curr_v
+                       then RTERR`Error(RTERR`MEASURE_ERROR, nil, nil, []),
+                   mk_(mk_SEM`TUPLE(curr_sv_l), mk_SEM`TUPLE(prev_sv_l)) ->
+                       if not (len curr_sv_l = len prev_sv_l
+                               and
+                               forall i in set inds curr_sv_l &
+                                 cases mk_(curr_sv_l(i), prev_sv_l(i)):
+                                   mk_(mk_SEM`NUM(curr_v), mk_SEM`NUM(prev_v)) -> curr_v <= prev_v,
+                                   others -> false
+                                 end
+                               and
+                               exists i in set inds curr_sv_l &
+                                 cases mk_(curr_sv_l(i), prev_sv_l(i)):
+                                   mk_(mk_SEM`NUM(curr_v), mk_SEM`NUM(prev_v)) -> curr_v < prev_v,
+                                   others -> false
+                                 end)
+                           then RTERR`Error(RTERR`MEASURE_ERROR, nil, nil, []),
+                       others -> RTERR`Error(RTERR`NAT_OR_TUPLE_OF_NAT_EXPECTED, nil, nil, [])
+                     end;
+                     found := true;
+                    ),
+              others -> skip
+            end;
+          index := index + 1;
+         );
+        curr_state.call_stack := [ mu(curcsi, measu |-> curr_mv) ] ^ tl curr_state.call_stack;
+#ifdef VDMPP
+        let curthread = cpustate(curcpu).curthread
+        in cpustate(curcpu).threadstate(curthread) := curr_state;
+#endif VDMPP
+       );
+     );
+\end{vdm_al}
+
+\subsection{Various Operations to Modify the State}
+
+The operation {\em IncrPC} increments/decrements the PC with {\em n}.
+\begin{vdm_al}
+  IncrPC: int ==> ()
+  IncrPC(n) ==
+#ifdef VDMSL
+    curr_state.PC := curr_state.PC + n;
+#endif VDMSL
+#ifdef VDMPP
+    let curthread = cpustate(curcpu).curthread
+    in
+      cpustate(curcpu).threadstate(curthread).PC := cpustate(curcpu).threadstate(curthread).PC + n;
+#endif VDMPP
+\end{vdm_al}
+
+The following operations are used to set the state of the debugging environment. 
+
+The operations {\em SetStep}, {\em SetStepIn}, {\em SetSingleStep}, {\em SetFinish}, and
+{\em SetContinue} should be called by the debugger to set the state of
+the evaluator.
+
+\begin{vdm_al}
+  SetStep : () ==> ()
+  SetStep() ==
+#ifdef VDMSL
+    curr_state.debug_flag := mk_Step(CallStackLevel());
+#endif VDMSL
+#ifdef VDMPP
+    let curthread = cpustate(curcpu).curthread
+    in
+      cpustate(curcpu).threadstate(curthread).debug_flag := mk_Step(CallStackLevel());
+#endif VDMPP
+
+  SetStepIn: () ==> ()
+  SetStepIn() ==
+#ifdef VDMSL
+    curr_state.debug_flag := mk_StepIn();
+#endif VDMSL
+#ifdef VDMPP
+    let curthread = cpustate(curcpu).curthread
+    in
+      cpustate(curcpu).threadstate(curthread).debug_flag := mk_StepIn();
+#endif VDMPP
+
+  SetSingleStep : () ==> ()
+  SetSingleStep() ==
+#ifdef VDMSL
+   curr_state.debug_flag := mk_SingleStep(CallStackLevel());
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    cpustate(curcpu).threadstate(curthread).debug_flag := mk_SingleStep(CallStackLevel());
+#endif VDMPP
+
+  SetFinish : () ==> ()
+  SetFinish () ==
+#ifdef VDMSL
+    curr_state.debug_flag := mk_Finish(CallStackLevel());
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    cpustate(curcpu).threadstate(curthread).debug_flag := mk_Finish(CallStackLevel());
+#endif VDMPP
+
+  SetContinue : () ==> ()
+  SetContinue () ==
+#ifdef VDMSL
+    curr_state.debug_flag := mk_Continue();
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    cpustate(curcpu).threadstate(curthread).debug_flag := mk_Continue();
+#endif VDMPP
+
+  GetDebugFlag : () ==> DebugFlag
+  GetDebugFlag () ==
+#ifdef VDMSL
+    return curr_state.debug_flag;
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    return cpustate(curcpu).threadstate(curthread).debug_flag;
+#endif VDMPP
+
+
+  SetDebugFlag: DebugFlag  ==> ()
+  SetDebugFlag(new_df) ==
+#ifdef VDMSL
+   curr_state.debug_flag := new_df;
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    cpustate(curcpu). threadstate(curthread).debug_flag := new_df;
+#endif VDMPP
+\end{vdm_al}
+
+The {\em SetBREAK} operation is used by the {\em INSTR`CONTEXT}
+to signal if the main evaluation loop in {\em EvalMainLoop} should be suspended.
+
+\begin{vdm_al}
+  SetBREAK : bool ==> ()
+  SetBREAK(b) ==
+    BREAK := b;
+
+  GetBREAK : () ==> bool
+  GetBREAK() ==
+    return BREAK;
+\end{vdm_al}
+
+\begin{vdm_al}
+  SetLastExitCid: CI`ContextId ==> ()
+  SetLastExitCid(cid) ==
+    lastexit := cid;
+
+  GetLastExitCid: () ==> CI`ContextId
+  GetLastExitCid() == return lastexit;
+\end{vdm_al}
+
+#ifdef VDMPP
+\subsection{Setting the guard evaluator state}
+
+\begin{vdm_al}
+  SetGuard: [AS`Name] * [SEM`OBJ_Ref] ==> ()
+  SetGuard(fullopnm, obj) ==
+    let curthread = cpustate(curcpu).curthread
+    in
+      cpustate(curcpu).threadstate(curthread).guard := mk_Guard(fullopnm, obj)
+  pre cpustate(curcpu).curthread <> nil;
+
+  ResetGuard: () ==> ()
+  ResetGuard() ==
+    let curthread = cpustate(curcpu).curthread
+    in
+      if curthread <> nil
+      then cpustate(curcpu).threadstate(curthread).guard := nil;
+\end{vdm_al}
+
+\begin{vdm_al}
+ResetSlice : () ==> ()
+ResetSlice() ==
+  let curthread = cpustate(curcpu).curthread
+  in
+    if curthread <> nil
+    then cpustate(curcpu).threadstate(curthread) := SCHD`InitSlice(cpustate(curcpu).threadstate(curthread));
+\end{vdm_al}
+
+\begin{vdm_al}
+EvalRunGuard: SubProgram * [SEM`OBJ_Ref] ==> EvaluationState * [SEM`VAL]
+EvalRunGuard(instr, objref) ==
+ (dcl res: EvaluationState * [SEM`VAL],
+      df : DebugFlag;
+
+  if objref <> nil
+  then PushCurObj(objref,nil,objref.tp);
+
+  PushCS(mk_STKM`DebugCmd(instr), "Guard Evaluation", nil, <INTERNAL>);
+  DEBUG`DeActivateAllBreakpoints();
+  df := GetDebugFlag();
+  SetDebugFlag(mk_STKM`Continue());
+
+  --SetCheckingGuard(true);
+  res := EvalMainLoop();
+  --SetCheckingGuard(false);
+
+  SetDebugFlag(df);
+  DEBUG`ActivateAllBreakpoints();
+
+  PopCS();
+
+  if objref <> nil
+  then PopCurObj();
+
+  return res;
+ );
+
+\end{vdm_al}
+
+\begin{vdm_al}
+EvalFieldOBJRefSelect: SEM`OBJ_Ref * AS`Name ==> SEM`VAL
+EvalFieldOBJRefSelect(objref, field) ==
+ (-- Setup the scope environment.
+  PushEmptyEnv();
+  PushCurObj(objref, objref.tp, GetCurCl());
+
+  def res_v = STATE`LookUp(field)
+  in
+   (PopCurObj();
+    PopEnvL();
+    return res_v);
+ );
+\end{vdm_al}
+#endif VDMPP
+
+\section{The Main loop}
+
+{\em EvalMainLoop} is the main operation used to evaluate an
+instruction sequence. The operation returns when the evaluation of the
+instruction sequence (the sub-program) is terminated or suspended.
+
+\begin{description}
+\item [Termination:] a program is terminated if the evaluation reaches
+  the end of the program or if a run time error occurs during evaluation.
+\item [Suspended:] a program is suspended if the evaluation meets a
+  break point or if the evaluation is suspended because a {\em
+    StepIn}, {\em Step} or {\em Single Step} was completed.
+\end{description}
+
+The status of the evaluator after {\em EvalMainLoop} has returned can
+be read by calling the {\em MainLoopState} operation.
+
+The {\em EvalMainLoop} operation assumes that the initialisation of
+the specification which has been read in has been made. In addition
+the object for which the execution should take place must have been
+pushed in the {\em STATE} module and the instruction code for the
+execution to be carried out must be installed inside the stack machine.
+\begin{vdm_al}
+  
+  EvalMainLoop : () ==> STKM`EvaluationState * [SEM`VAL]
+  EvalMainLoop() ==
+#ifdef VDMSL
+    (SetBREAK(false);
+
+     while curr_state.PC < len curr_program and not BREAK do
+      (curr_state.PC := curr_state.PC + 1;
+       EvalInstr( curr_program(curr_state.PC) );
+      );
+      def eval_state = MainLoopState()
+      in if is_Success(eval_state)
+         then return mk_(eval_state, hd Pop(1))
+         else return mk_(eval_state, nil)
+    );
+#endif VDMSL
+
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    (SetBREAK(false);
+
+     -- should never happen 
+     if (cpustate(curcpu).threadstate(curthread).guard <> nil)
+     then 
+       RTERR`Error(RTERR`INTERNAL_ERROR, nil, nil, []);
+
+     while cpustate(curcpu).threadstate(curthread).PC < len cpustate(curcpu).curr_program
+           and not BREAK
+           and cpustate(curcpu).threadstate(curthread).guard = nil
+           and not SCHD`Deschedule(cpustate(curcpu).threadstate(curthread))
+#ifdef VICE
+           and not CPUSwapNeeded(curcpu)
+           and not is_SCHDTP`SyncOp(SCHD`GetThreadStatus(SCHD`CurThreadId()))
+#endif VICE
+     do
+      (cpustate(curcpu).threadstate(curthread).PC := cpustate(curcpu).threadstate(curthread).PC + 1;
+       cpustate(curcpu).threadstate(curthread) := SCHD`IncInstrnum(cpustate(curcpu).threadstate(curthread));
+        EvalInstr( cpustate(curcpu).curr_program(cpustate(curcpu).threadstate(curthread).PC) );
+      );
+      def eval_state = MainLoopState()
+      in if is_Success(eval_state)
+#ifdef VICE
+            -- this is needed for async operation returns
+            and len cpustate(curcpu).threadstate(curthread).eval_stack > 0
+#endif VICE
+         then return mk_(eval_state, hd Pop(1))
+         else return mk_(eval_state, nil)
+    );
+#endif VDMPP
+
+  -- This is a temporary fix to allow checking of invariants that
+  -- include operation calls. 
+  EvalUninterruptedLoop : () ==> STKM`EvaluationState * SEM`VAL
+  EvalUninterruptedLoop() ==
+#ifdef VDMSL
+    (while curr_state.PC < len curr_program do
+      (curr_state.PC := curr_state.PC + 1;
+       EvalInstr( curr_program(curr_state.PC) );
+      );
+     return mk_(mk_Success(), hd Pop(1))
+    );
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    (while cpustate(curcpu).threadstate(curthread).PC < len cpustate(curcpu).curr_program do
+      (cpustate(curcpu).threadstate(curthread).PC := cpustate(curcpu).threadstate(curthread).PC + 1;
+       EvalInstr( cpustate(curcpu).curr_program(cpustate(curcpu).threadstate(curthread).PC) );
+      );
+      return mk_(mk_Success(), hd Pop(1))
+    );
+#endif VDMPP
+
+  -- It is crucial that the check for a guard is first!
+  -- This fixes bug where we exceed SETTINGS`GetMaxInstr and
+  -- at the same time run into a guard. 
+  MainLoopState : () ==> EvaluationState 
+  MainLoopState() ==
+#ifdef VDMSL
+     cases true:
+       (GetBREAK())                        -> return mk_Breakpoint(),
+       (curr_state.PC >= len curr_program) -> (lastres := Head();
+                                               return mk_Success()),
+       others                              -> return mk_Interrupt()
+     end;
+#endif VDMSL
+#ifdef VDMPP
+  let curthread = cpustate(curcpu).curthread
+  in
+    let es = cpustate(curcpu).threadstate(curthread)
+    in
+      cases true:
+       (es.guard <> nil) -> return es.guard,
+       (GetBREAK())      -> return mk_Breakpoint(),
+       (es.PC >= len cpustate(curcpu).curr_program) -> (lastres := Head();
+                                                        return mk_Success()),
+#ifdef VICE
+       (CPUSwapNeeded(curcpu) or is_SCHDTP`SyncOp(SCHD`GetThreadStatus(SCHD`CurThreadId())))
+                                                    -> if MultCPUs()
+                                                       then return mk_EndOfCPUSlice()
+                                                       else return mk_EndOfSlice(),
+#endif VICE
+       (SCHD`EndOfSliceReached(es))                 -> return mk_EndOfSlice(),
+#ifdef VICE
+       (SCHD`ASyncOpThread(curthread))              -> return mk_Success(),
+#endif VICE
+       others                                       -> return mk_Interrupt()
+     end;
+#endif VDMPP
+
+#ifdef VDMPP
+SetCurThread: SCHDTP`ThreadId ==> ()
+SetCurThread(id) ==
+  cpustate(curcpu).curthread := id;
+
+GetCurThread: () ==> [SCHDTP`ThreadId] 
+GetCurThread() ==
+  return cpustate(curcpu).curthread;
+
+DeleteThread: SCHDTP`ThreadId ==> ()
+DeleteThread(id) ==
+  (if id = cpustate(curcpu).curthread
+   then cpustate(curcpu).curthread := nil;
+   cpustate(curcpu).threadstate := {id} <-: cpustate(curcpu).threadstate;
+#ifdef VICE
+   cpustate(curcpu).threads := cpustate(curcpu).threads \ {id}
+#endif VICE
+  );
+#endif VDMPP
+
+#ifdef VICE
+AddThreadIdtoCPU: SCHDTP`ThreadId * [SEM`OBJ_Ref] ==> ()
+AddThreadIdtoCPU(threadid,objref) ==
+  let cpu = if objref in set dom allocated
+            then allocated(objref)
+            else curcpu
+  in
+    (cpustate(cpu).threads := cpustate(cpu).threads union {threadid};
+     if objref <> nil and objref not in set dom allocated
+     then (allocated(objref) := cpu;
+           cpustate(cpu).objrefs := cpustate(cpu).objrefs union {objref}));
+
+IncrRelTime : real ==> ()
+IncrRelTime(t) ==
+  IncrAbsTime(SETTINGS`GetTimeFactor() * t);
+
+IncrAbsTime : nat ==> ()
+IncrAbsTime(t) ==
+  (if cpustate(curcpu).idletime > cpustate(curcpu).time
+   then cpustate(curcpu).time := cpustate(curcpu).idletime;
+   cpustate(curcpu).time := cpustate(curcpu).time + t;
+   );
+
+IncrCycleTime : nat ==> ()
+IncrCycleTime(c) ==
+  (if cpustate(curcpu).idletime > cpustate(curcpu).time
+   then cpustate(curcpu).time := cpustate(curcpu).idletime;
+   cpustate(curcpu).time := cpustate(curcpu).time + TimeForClockCycles(c);
+   );
+
+TimeForClockCycles: nat ==> nat
+TimeForClockCycles(c) ==
+  def cap = GetCPUCapacity(curcpu)
+  in
+  return if curcpu = nil or cap = <INFINITE>
+         then 0
+         else (c div cap) + 1;
+
+InDuration : () ==> bool
+InDuration() ==
+  return cpustate(curcpu).dur > 0 or cpustate(curcpu).cycle > 0;
+
+GetTime : () ==> nat
+GetTime() ==
+  --return MaxVal(cpustate(curcpu).time,cpustate(curcpu).idletime);
+  GetTimeOfCPU(curcpu);
+
+GetTimeOfCPU : [AS`Name] ==> nat
+GetTimeOfCPU(cpunm) ==
+ (if cpunm not in set dom cpustate
+  then GetTimeOfCPU(curcpu);
+  return MaxVal(cpustate(cpunm).time,cpustate(cpunm).idletime);
+ );
+
+GetCPUTime : [AS`Name] ==> nat
+GetCPUTime(cpunm) ==
+  return MaxVal(cpustate(cpunm).time,cpustate(cpunm).idletime)
+pre cpunm in set dom cpustate;
+
+SetCPUTime : [AS`Name] * nat ==> ()
+SetCPUTime(cpunm,newtime) ==
+  cpustate(cpunm).time := MaxVal(cpustate(cpunm).time,newtime)
+pre cpunm in set dom cpustate;
+
+CPUSwapNeeded : [AS`Name] ==> bool
+CPUSwapNeeded(cpuid) ==
+  return not SCHD`CheckingGuard() and
+         cpustate(cpuid).time > cpustate(cpuid).swaptime + 2 and
+         MultCPUs();
+
+MultCPUs: () ==> bool
+MultCPUs() ==
+  return card dom cpustate > 1;
+
+GetPrimaryAlgorithm : () ==> SCHDTP`PrimarySchedulerAlgorithm
+GetPrimaryAlgorithm() ==
+  return cpustate(curcpu).schd;
+
+GetCurCPU: () ==> [AS`Name]
+GetCurCPU() ==
+  return curcpu;
+
+GetAllCPUs: () ==> set of [AS`Name]
+GetAllCPUs() ==
+  return dom cpustate;
+
+SetCurCPU: [AS`Name] * nat ==> ()
+SetCurCPU(cpu, swap) ==
+  (curcpu := cpu;
+   cpustate(curcpu).swaptime := swap);
+
+OnCurCPU: [SEM`OBJ_Ref] ==> bool
+OnCurCPU(obj_ref) ==
+  return (curcpu = nil and obj_ref not in set dom allocated)
+         or 
+         obj_ref in set cpustate(curcpu).objrefs;
+  
+CPUAllocated: SEM`OBJ_Ref ==> [AS`Name]
+CPUAllocated(objref) ==
+  return allocated(objref)
+pre objref in set dom allocated;
+
+AddMessageToBUS: [SEM`OBJ_Ref] * SEM`ExplOP * seq of SEM`VAL ==> MessageId
+AddMessageToBUS(objref,opsem,arg_lv) ==
+  def mesid = AddNewMessageId();
+      threadid = if opsem.sync
+                 then cpustate(curcpu).curthread
+                 else nil;
+      prio = SCHD`GetThreadPriority();
+      fullnm = AUX`ConstructDoubleName(opsem.modName,opsem.fnName);
+      m_info = mk_MessageInfo(objref,fullnm,arg_lv,threadid,curcpu);
+      mes = mk_Message(mesid,GetTime(),prio,m_info,1);
+      size = SEM`SizeValSeq(arg_lv);
+  in
+   (dcl busid : [AS`Name],
+        tcpu : [AS`Name];
+    if objref in set dom allocated
+    then busid := FindBUSFromClass(allocated(objref))
+    else busid := FindBUSFromClass(STATE`GetCPUOfObjRef(objref));
+    if objref = nil
+    then tcpu := nil
+    elseif objref in set dom allocated
+    then tcpu := allocated(objref)
+    else tcpu := STATE`GetCPUOfObjRef(mes.mes.obj_ref);
+    def time = GetTime()
+    in
+      (InsertMessageRequest(mk_MessageReq(busid,curcpu,tcpu,mesid,
+                                          cpustate(curcpu).curthread,
+                                          fullnm,objref,size,time));
+       busstate(busid).mes_m(mesid) := mes;
+       StepBUSTimeBack(busid,time);
+       if threadid <> nil
+       then cpustate(curcpu).syncopcall:= cpustate(curcpu).syncopcall union {mesid};
+       return mesid));
+
+InsertMessageRequest: MessageReq | MessageReplyReq ==> ()
+InsertMessageRequest(mesreq) ==
+  let busid = mesreq.busid,
+      time = mesreq.time
+  in
+    (dcl waiting : seq of (MessageReq | MessageReplyReq) := busstate(busid).waiting,
+         i : nat := 1;
+     if waiting = []
+     then busstate(busid).waiting := [mesreq]      
+     else if (hd waiting).time >= time
+          then busstate(busid).waiting := [mesreq] ^ waiting
+          else (while i < len waiting and waiting(i).time < time do
+                  i := i + 1;
+                 busstate(busid).waiting := waiting(1,...,i) ^ [mesreq] ^ waiting(i+1,...,len waiting)
+          )
+    );
+
+AddBroadcastMessageToBUS: [SEM`OBJ_Ref] * SEM`ExplOP * seq of SEM`VAL ==> ()
+AddBroadcastMessageToBUS(objref,opsem,arg_lv) ==
+   def mesid = AddNewMessageId();
+       prio = SCHD`GetThreadPriority();
+       clnm = opsem.modName;
+       objs = STATE`GetObjRefsOfClass(clnm);
+   in
+    (dcl busm : map SEM`OBJ_Ref to [AS`Name] := {|->};
+     for all obj in set objs do
+       if obj in set dom allocated
+       then busm := busm ++ {obj |-> FindBUSFromClass(allocated(obj))}
+       else busm := busm ++ {obj |-> FindBUSFromClass(STATE`GetCPUOfObjRef(obj))};
+     def busobjs = { busid |-> {obj| obj in set dom busm & busm(obj) = busid} | busid in set rng busm};
+         size = SEM`SizeValSeq(arg_lv);
+     in
+      (dcl tcpum : map SEM`OBJ_Ref to [AS`Name] := {|->};
+       for all obj in set objs do
+       if obj in set dom allocated
+       then tcpum := tcpum ++ {obj |-> allocated(obj)}
+       else tcpum := tcpum ++ {obj |-> STATE`GetCPUOfObjRef(objref)};
+       def buscpus = { busid |-> {tcpum(obj) | obj in set busobjs(busid)} | busid in set rng busm};
+           fullnm = AUX`ConstructDoubleName(opsem.modName,opsem.fnName);
+           time = GetTime()
+     in
+       for all busid in set dom busobjs do
+         (TIMETRACE`LogBroadMessageReq(busid,curcpu,buscpus(busid)\{curcpu},mesid,
+                                       fullnm,busobjs(busid),size,time);
+          def objsothercpus = {obj | obj in set busobjs(busid) & tcpum(obj) <> curcpu};
+              m_info = mk_MessageBroadcast(objsothercpus,fullnm, arg_lv,tcpum,curcpu);
+              mes = mk_Message(mesid,GetTime(),prio,m_info,1)
+          in
+            if objsothercpus <> {}
+            then busstate(busid).mes_m(mesid) := mes;
+          StepBUSTimeBack(busid,time))));
+
+AddReturnMessageToBUS: MessageId * nat * nat * SEM`VAL * AS`Name * [AS`Name] * SCHDTP`ThreadId ==> ()
+AddReturnMessageToBUS(mesid,t,prio,val,opnm,tcpu,fromthread) ==
+let curthread = cpustate(curcpu).curthread
+in
+  (def mesres = mk_MessageResponse(opnm, val,tcpu,fromthread);
+       busid = FindBUSFromClass(tcpu);
+       size = SEM`Size(val);
+       dura = CalcDuration(size,busstate(busid).capacity);
+       newmesid = AddNewMessageId();
+       mes = mk_Message(newmesid,t+dura,prio,mesres,1);
+       time = GetTime()
+   in
+     (InsertMessageRequest(mk_MessageReplyReq(busid,curcpu,tcpu, newmesid,mesid,curthread, fromthread,size,time));
+      busstate(busid).mes_m(newmesid) := mes;
+      StepBUSTimeBack(busid,time);
+      cpustate(curcpu).threadstate(curthread).PC := len cpustate(curcpu).curr_program;
+      SCHD`UpdateThreadWithReturnResult(val,fromthread);
+      --remove operation and args from this call
+      cpustate(tcpu).threadstate(fromthread).eval_stack := tl tl cpustate(tcpu).threadstate(fromthread).eval_stack;
+      cpustate(tcpu).threadstate(fromthread).PC := cpustate(tcpu).threadstate(fromthread).PC + 3;
+      --if necessary add result back on stack
+      --if val <> mk_SEM`CONT()
+      --then cpustate(tcpu).threadstate(fromthread).eval_stack := 
+      --           [val] ^ cpustate(tcpu).threadstate(fromthread).eval_stack;
+      if cpustate(curcpu).threadstate(curthread).call_stack <> []
+      then cpustate(curcpu).threadstate(curthread).call_stack := 
+               tl cpustate(curcpu).threadstate(curthread).call_stack
+     ));
+
+StepBUSTimeBack: AS`Name * nat ==> ()
+StepBUSTimeBack(busid,time) ==
+  let log = busstate(busid).log
+  in
+    if log = [] or (log(len log).tot < time and busstate(busid).time > time)
+    then busstate(busid).time := time; --MaxVal(time,busstate(busid).time); 
+
+StepCPUTimeBack: [AS`Name] * nat ==> ()
+StepCPUTimeBack(cpuid,time) ==
+  if cpustate(cpuid).idletime > cpustate(cpuid).time
+  then let t = MaxVal(cpustate(cpuid).time,time)
+       in
+         (cpustate(cpuid).time := t;
+          cpustate(cpuid).idletime := t); 
+\end{vdm_al}
+
+Messages thoughout one execution of an expression in the VDM interpreter are
+assigned a unique id.
+
+\begin{vdm_al}
+AddNewMessageId: () ==> nat
+AddNewMessageId() ==
+  (nextmesid := nextmesid + 1;
+   return nextmesid);
+
+FindBUSFromClass: [AS`Name] ==> [AS`Name]
+FindBUSFromClass(calledcpunm) ==
+ def curcpu_ = GetCurCPU();
+ in
+ (for all busid in set dom busstate do
+    if calledcpunm in set busstate(busid).cpus and
+       curcpu_ in set busstate(busid).cpus and
+       (busid = virtualbusid <=>
+        forall sysnm in set dom syscpus &
+          not {curcpu_,calledcpunm} subset syscpus(sysnm))
+    then return busid;
+  RTERR`Error(RTERR`NOBUS, nil, nil, [])
+ );
+
+FindFirstCPU: () ==> [AS`Name] * nat * [nat]
+FindFirstCPU() ==
+  let t_m = {cpunm |-> MaxVal(cpustate(cpunm).time,cpustate(cpunm).idletime) | cpunm in set dom cpustate}
+  in
+    return SmallNameAndNextTime(t_m);
+
+FindFirstBUS: () ==> AS`Name * nat * [nat]
+FindFirstBUS() ==
+  let t_m = {busnm |-> busstate(busnm).time | busnm in set dom busstate}
+  in
+    return SmallNameAndNextTime(t_m);
+
+UpdateObjRef: SEM`VAL ==> SEM`VAL
+UpdateObjRef(val) ==
+ (if (is_SEM`CompExplFN(val) or is_SEM`ExplPOLY(val) or is_SEM`ExplOP(val)) and dom allocated <> {}
+  then
+    let cl = if is_SEM`CompExplFN(val)
+             then (hd (val.fl)).modName
+             else val.modName
+    in
+      for all obj_ref in set dom allocated do
+        if cl = obj_ref.tp
+        then return mu(val,objref |-> obj_ref);
+  return val);
+
+functions
+
+SmallNameAndNextTime: map [AS`Name] to nat -> [AS`Name] * nat * [nat]
+SmallNameAndNextTime(t_m) ==
+  let first in set dom t_m be st forall t in set rng t_m & t >= t_m(first)
+  in
+    if card dom t_m > 1
+    then let next in set dom t_m \ {first} be st 
+             forall t in set rng ({first} <-: t_m) & t >= t_m(next)
+         in
+           mk_(first,t_m(first),t_m(next))
+    else mk_(first,t_m(first),nil);
+#endif VICE
+    
+operations
+  EvalInstr : INSTRTP`Instruction ==> ()
+  EvalInstr(i) ==
+    cases i:
+    mk_INSTRTP`PUSH(i)                      -> Push(i),
+    mk_INSTRTP`POP(n)                       -> def - = Pop(n) in skip,
+    mk_INSTRTP`COPYVAL()                    -> INSTR`ExeCOPYVAL(),
+    mk_INSTRTP`UNOP(op)                     -> INSTR`EvalUNOP(op),
+    mk_INSTRTP`BINOP(op)                    -> INSTR`EvalBINOP(op),
+    mk_INSTRTP`PRE()                        -> INSTR`ExePRE(),
+    mk_INSTRTP`POST()                       -> INSTR`ExePOST(),
+    mk_INSTRTP`ASSERT()                     -> INSTR`ExeASSERT(),
+    mk_INSTRTP`CASES()                      -> INSTR`ExeCASES(),
+    mk_INSTRTP`MEASURE()                    -> INSTR`ExeMEASURE(),
+    mk_INSTRTP`MEASURETPINST(tpparams)      -> INSTR`ExeMEASURETPINST(tpparams),
+    mk_INSTRTP`MEASURECHECK(measu)          -> INSTR`ExeMEASURECHECK(measu),
+    mk_INSTRTP`POSTENV(resnmtps,ci)         -> INSTR`ExePOSTENV(resnmtps,ci),
+    mk_INSTRTP`DTC(tp)                      -> INSTR`ExeDTC(tp),
+    mk_INSTRTP`DTCSET()                     -> INSTR`ExeDTCSET(),
+    mk_INSTRTP`SIZE(n)                      -> INSTR`ExeSIZE(n),
+    mk_INSTRTP`COMMENT(-,-)                 -> skip,
+    mk_INSTRTP`PUSHCONTEXT(context)         -> PushContext(context),
+    mk_INSTRTP`POPCONTEXT()                 -> PopContext(),
+    mk_INSTRTP`CHECKCONTEXT(contexts,err)   -> CheckContext(contexts,err),
+    mk_INSTRTP`ISTART(str, cid)             -> INSTR`ExeISTART(str, cid),
+    mk_INSTRTP`IEND(-)                      -> INSTR`ExeIEND(),
+    mk_INSTRTP`APPENDSEQ()                  -> INSTR`ExeAPPENDSEQ(),
+    mk_INSTRTP`APPENDMAP()                  -> INSTR`ExeAPPENDMAP(),
+    mk_INSTRTP`ADDSET()                     -> INSTR`ExeADDSET(),
+    mk_INSTRTP`SETRNG()                     -> INSTR`ExeSETRNG(),
+    mk_INSTRTP`SUBSEQ()                     -> INSTR`ExeSUBSEQ(),    
+    mk_INSTRTP`SELSEQELEM()                 -> INSTR`ExeSELSEQELEM(),        
+    mk_INSTRTP`TUPCONS(length)              -> INSTR`ExeTUPCONS(length),
+    mk_INSTRTP`SETCONS(length)              -> INSTR`ExeSETCONS(length),
+    mk_INSTRTP`SEQCONS(length)              -> INSTR`ExeSEQCONS(length),
+    mk_INSTRTP`MAPCONS(length)              -> INSTR`ExeMAPCONS(length),
+    mk_INSTRTP`APPLY()                      -> INSTR`ExeAPPLY(),
+    mk_INSTRTP`RETURN()                     -> INSTR`ExeRETURN(),
+    mk_INSTRTP`ISCHECK(ty)                  -> INSTR`ExeISCHECK(ty),
+    mk_INSTRTP`ISEMPTYSET(n)                -> INSTR`ExeISEMPTYSET(n),
+    mk_INSTRTP`ISEMPTYSEQ(n)                -> INSTR`ExeISEMPTYSEQ(n),    
+    mk_INSTRTP`ISNOTEMPTYSET(n)             -> INSTR`ExeISNOTEMPTYSET(n),
+    mk_INSTRTP`ISNOTEMPTYSEQ(n)             -> INSTR`ExeISNOTEMPTYSEQ(n),    
+    mk_INSTRTP`PUSHLIST(length)             -> INSTR`ExePUSHLIST(length),
+    mk_INSTRTP`LOOKUP(nm)                   -> INSTR`ExeLOOKUP(nm),
+#ifdef VDMPP
+    mk_INSTRTP`LOOKUPSTATIC(nm)             -> INSTR`ExeLOOKUPSTATIC(nm),
+    mk_INSTRTP`LOOKUPOP(nm)                 -> INSTR`ExeLOOKUPOP(nm),
+#endif VDMPP
+    mk_INSTRTP`CBR(n)                       -> INSTR`ExeCBR(n),
+    mk_INSTRTP`CNBR(n)                      -> INSTR`ExeCNBR(n),
+    mk_INSTRTP`BR(n)                        -> INSTR`ExeBR(n),
+    mk_INSTRTP`CONTEXT(cid, isStmt)         -> INSTR`ExeCONTEXT(cid, isStmt),
+    mk_INSTRTP`POPBLKENV()                  -> INSTR`ExePOPBLKENV(),
+    mk_INSTRTP`EOCL()                       -> INSTR`ExeEOCL(),
+    mk_INSTRTP`MULTBINDL(n,part)            -> INSTR`ExeMULTBINDL(n,part),
+    mk_INSTRTP`SELBLKENV(n)                 -> INSTR`ExeSELBLKENV(n),
+    mk_INSTRTP`APPENDBLKENV(id,tp)          -> INSTR`ExeAPPENDBLKENV(id,tp),
+    mk_INSTRTP`REMSTACKELEM(n)              -> INSTR`ExeREMSTACKELEM(n),
+    mk_INSTRTP`SWAP()                       -> INSTR`ExeSWAP(),
+    mk_INSTRTP`EMPTYBLKENV(permis)          -> INSTR`ExeEmptyBlkEnv(permis),
+    mk_INSTRTP`MATCHANDBIND()               -> INSTR`ExeMatchAndBind(),
+    mk_INSTRTP`MATCHVAL(cid)                -> INSTR`ExeMATCHVAL(cid),
+    mk_INSTRTP`TRYANYMATCH()                -> INSTR`ExeTRYANYMATCH(),        
+    mk_INSTRTP`CLOSENV(blkenv,b_m)          -> INSTR`ExeCLOSENV(blkenv,b_m),
+    mk_INSTRTP`ADDTOBLKENV()                -> INSTR`ExeADDTOBLKENV(),
+    mk_INSTRTP`UPDATECLOSENV(ex)            -> INSTR`ExeUPDATECLOSENV(ex),
+    mk_INSTRTP`ERRINST(err)                 -> INSTR`ExeERRINST(err),
+    mk_INSTRTP`SETENUM(length, cid)         -> INSTR`ExeSETENUM(length, cid),
+    mk_INSTRTP`SEQENUM(length, cid)         -> INSTR`ExeSEQENUM(length, cid),
+    mk_INSTRTP`MAPLET(cid)                  -> INSTR`ExeMAPLET(cid),
+    mk_INSTRTP`MAPENUM(length, cid)         -> INSTR`ExeMAPENUM(length, cid),
+    mk_INSTRTP`SETUNION(cid)                -> INSTR`ExeSetUnion(cid),
+    mk_INSTRTP`SEQCONC(cid)                 -> INSTR`ExeSeqConc(cid),
+    mk_INSTRTP`MAPMERGE(cid)                -> INSTR`ExeMapMerge(cid),
+#ifdef VDMPP
+    mk_INSTRTP`OBJECTPAT(cls,length,cid)    -> INSTR`ExeOBJECTPAT(cls,length,cid),
+    mk_INSTRTP`FIELDPAT(nm,cid)             -> INSTR`ExeFIELDPAT(nm,cid),
+#endif VDMPP
+    mk_INSTRTP`FREF(sel,cid)                -> INSTR`ExeFREF(sel,cid),
+    mk_INSTRTP`MOSREF(cid)                  -> INSTR`ExeMOSREF(cid),
+    mk_INSTRTP`ASSIGNSD()                   -> INSTR`ExeASSIGNSD(),
+    mk_INSTRTP`RECPATCONS(tag, length, cid) -> INSTR`ExeRECPATCONS(tag, length, cid),
+    mk_INSTRTP`TUPPATCONS(length, cid)      -> INSTR`ExeTUPPATCONS(length, cid),
+    mk_INSTRTP`RECCONS(tag,length)          -> INSTR`ExeRECCONS(tag,length), 
+    mk_INSTRTP`RECMOD(fid)                  -> INSTR`ExeRECMOD(fid),
+    mk_INSTRTP`FIELDSEL(nm)                 -> INSTR`ExeFIELDSEL(nm),
+    mk_INSTRTP`TOKENVAL()                   -> INSTR`ExeTOKENVAL(), 
+    mk_INSTRTP`SEQCOMPBIND(isSet)           -> INSTR`ExeSEQCOMPBIND(isSet),
+    mk_INSTRTP`SEQFOR()                     -> INSTR`ExeSEQFOR(),
+    mk_INSTRTP`SEQELEMMATCH(index)          -> INSTR`ExeSEQELEMMATCH(index),
+    mk_INSTRTP`SEQMAPOVER()                 -> INSTR`ExeSEQMAPOVER(),
+    mk_INSTRTP`TUPSEL(index)                -> INSTR`ExeTUPSEL(index),
+    mk_INSTRTP`TYPEJUDGE(tp)                -> INSTR`ExeTYPEJUDGE(tp),
+    mk_INSTRTP`POLYINST(inst,nm)            -> INSTR`ExePOLYINST(inst,nm),    
+    mk_INSTRTP`MKEXIT(isnil,cid)            -> INSTR`ExeMKEXIT(isnil,cid),
+    mk_INSTRTP`EXITVAL()                    -> INSTR`ExeEXITVAL(),
+    mk_INSTRTP`ISCONT()                     -> INSTR`ExeISCONT(),    
+    mk_INSTRTP`ISEXIT()                     -> INSTR`ExeISEXIT(),
+    mk_INSTRTP`ISNEEXIT()                   -> INSTR`ExeISNEEXIT(),
+    mk_INSTRTP`REMEXITVAL()                 -> INSTR`ExeREMEXITVAL(),
+    mk_INSTRTP`PUSHTH(n)                    -> INSTR`ExePUSHTH(n),
+    mk_INSTRTP`POPTH()                      -> INSTR`ExePOPTH(),
+    mk_INSTRTP`HANDID(-)                    -> skip,
+    mk_INSTRTP`VERIFYINDEXARGS()            -> INSTR`ExeVERIFYINDEXARGS(),
+    mk_INSTRTP`TESTCOUNTER()                -> INSTR`ExeTESTCOUNTER(),
+    mk_INSTRTP`INCRCOUNTER()                -> INSTR`ExeINCRCOUNTER(),
+    mk_INSTRTP`NONDETSTMT()                 -> INSTR`ExeNONDETSTMT(),
+    mk_INSTRTP`GETPRE()                     -> INSTR`ExeGETPRE(),
+    mk_INSTRTP`NOBODY(err,modnm,name,parms) -> INSTR`ExeNOBODY(err,modnm,name,parms),
+    mk_INSTRTP`TPTOSET(tp)                  -> INSTR`ExeTPTOSET(tp),
+    mk_INSTRTP`RANDOM()                     -> INSTR`ExeRANDOM(),    
+    mk_INSTRTP`ATOMIC(no)                   -> INSTR`ExeATOMIC(no),
+    mk_INSTRTP`LASTRES()                    -> Push(lastres),
+    mk_INSTRTP`MACRO(tp,cid)                -> INSTR`ExeMACRO(tp,cid),
+#ifdef VDMPP
+    -- VDM++ Instructions
+    mk_INSTRTP`NEWOBJ(nm, dlobject)         -> INSTR`ExeNEWOBJ(nm, dlobject),
+    mk_INSTRTP`NEWPOSABSOBJ(nm)             -> INSTR`ExeNEWPOSABSOBJ(nm, nil),
+    mk_INSTRTP`INITCLASS(nm,initno)         -> INSTR`ExeINITCLASS(nm,initno),
+    mk_INSTRTP`BINDINSTVAR(cl,nm)           -> INSTR`ExeBINDINSTVAR(cl,nm),
+    mk_INSTRTP`NEWCOMPL(checkinv)           -> INSTR`ExeNEWCOMPL(checkinv),
+    mk_INSTRTP`PUSHCLNMCUROBJ(cl,origcl)    -> INSTR`ExePUSHCLNMCUROBJ(cl,origcl),
+    mk_INSTRTP`POPCLNMCUROBJ()              -> INSTR`ExePOPCLNMCUROBJ(),
+    mk_INSTRTP`SELFEXPR()                   -> INSTR`ExeSELFEXPR(),
+    mk_INSTRTP`ISOFCLASS(clnm)              -> INSTR`ExeISOFCLASS(clnm), 
+    mk_INSTRTP`ISOFBASECLASS(clnm)          -> INSTR`ExeISOFBASECLASS(clnm), 
+    mk_INSTRTP`SAMEBASECLASS()              -> INSTR`ExeSAMEBASECLASS(), 
+    mk_INSTRTP`SAMECLASS()                  -> INSTR`ExeSAMECLASS(),
+    mk_INSTRTP`CALLGUARD(hasobj,oprt)       -> INSTR`ExeCALLGUARD(hasobj,oprt),
+    mk_INSTRTP`PPCALL()                     -> INSTR`ExePPCALL(),
+    mk_INSTRTP`DLCALL(clName, opNm)         -> INSTR`ExeDLCALL(clName, opNm),
+    mk_INSTRTP`HISTORY(kind,opnm)           -> INSTR`ExeHISTORY(kind,opnm),
+    mk_INSTRTP`STARTLIST(no)                -> INSTR`ExeSTARTLIST(no),
+    mk_INSTRTP`STOPLIST(no)                 -> INSTR`ExeSTOPLIST(no),
+    mk_INSTRTP`GUARD(log)                   -> INSTR`ExeGUARD(log),   
+    mk_INSTRTP`THREADID()                   -> INSTR`ExeTHREADID(),   
+#ifdef VICE
+    mk_INSTRTP`RETMES(id,prio,opnm,tcpu,fthread)    -> INSTR`ExeRETMES(id,prio,opnm,tcpu,fthread),
+    mk_INSTRTP`INCRTIME (i) -> INSTR`ExeINCRTIME(i),
+    mk_INSTRTP`RUNTIME_INCRTIME_PREF (opr, oh)      -> INSTR`ExeINCRTIME_PREF(opr,oh),
+    mk_INSTRTP`RUNTIME_INCRTIME_BIN (opr, oh1, oh2) -> INSTR`ExeINCRTIME_BIN(opr,oh1, oh2),
+    mk_INSTRTP`RUNTIME_INCRTIME_SETSEQMAP (oh)      -> INSTR`ExeINCRTIME_SETSEQMAP(oh),
+    mk_INSTRTP`RUNTIME_INCRTIME_NEW (oh,nm)         -> INSTR`ExeINCRTIME_NEW(oh,nm),
+    mk_INSTRTP`RUNTIME_INCRTIME_STARTLIST (oh)      -> INSTR`ExeINCRTIME_STARTLIST(oh),
+    mk_INSTRTP`RUNTIME_INCRTIME_STOPLIST (oh)       -> INSTR`ExeINCRTIME_STOPLIST(oh),
+    mk_INSTRTP`PUSHDURATION () -> cpustate(curcpu).dur := cpustate(curcpu).dur + 1,
+    mk_INSTRTP`POPDURATION (t) -> (cpustate(curcpu).dur := cpustate(curcpu).dur - 1;
+                                   if not InDuration()
+                                   then
+                                     if t <> nil
+                                     then IncrAbsTime(t)
+                                     else
+                                       def [tm] = Pop(1)
+                                       in IncrAbsTime(tm.v)),
+    mk_INSTRTP`PUSHCYCLE () -> cpustate(curcpu).cycle := cpustate(curcpu).cycle + 1,
+    mk_INSTRTP`POPCYCLE (c) -> (cpustate(curcpu).cycle := cpustate(curcpu).cycle - 1;
+                                if not InDuration()
+                                then
+                                  if c <> nil
+                                  then IncrCycleTime(c)
+                                  else
+                                    def [tm] = Pop(1)
+                                    in IncrCycleTime(tm.v)),
+    mk_INSTRTP`CURTIME()                             -> Push(mk_SEM`NUM(GetTime())),
+#endif VICE
+#endif VDMPP
+    others -> RTERR`Error(RTERR`INTERNAL_ERROR, nil, nil, [])
+    end;
+
+end STKM
+\end{vdm_al}
+
+\vspace{0.5cm}
+
+#ifdef RTINFO
+\begin{rtinfo}
+{rtinfo.ast}[STKM]
+\end{rtinfo}
+#endif RTINFO
+
+
+
+
+

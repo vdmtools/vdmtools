@@ -1,0 +1,36 @@
+[ mk_ERR`ErrMsg( 
+     10,
+     40,
+     17,
+     "Warning[33] : \"arg2\" is not used",
+     <WARNING> ),
+  mk_ERR`ErrMsg( 
+     10,
+     23,
+     33,
+     "Error[250] : Type of field number 2 is not compatible with its defined type in Record-Constructor-Expr",
+     <ERROR> ),
+  mk_ERR`ErrMsg( 
+     10,
+     21,
+     3,
+     "Error[19] : Return type of operation for \"Always3\" is different from signature",
+     <ERROR> ),
+  mk_ERR`ErrMsg( 
+     10,
+     43,
+     3,
+     "Warning[328] : Body of `always statement' cannot exit",
+     <WARNING> ),
+  mk_ERR`ErrMsg( 
+     10,
+     29,
+     5,
+     "Warning[328] : Body of `always statement' cannot exit",
+     <WARNING> ),
+  mk_ERR`ErrMsg( 
+     10,
+     13,
+     6,
+     "Warning[328] : Body of `always statement' cannot exit",
+     <WARNING> ) ]

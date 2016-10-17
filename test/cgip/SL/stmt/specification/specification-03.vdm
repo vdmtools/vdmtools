@@ -1,0 +1,44 @@
+module A
+
+exports all
+
+definitions
+state Sigma of
+ i: int
+ j: int
+ r  : real
+end
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+operations
+
+  m1 : real ==> int
+  m1(rl)  ==
+  ( dcl res : int;
+    [ ext wr i
+          rd j
+      pre  floor rl = rl
+      post res = j and i = j + rl ];
+    return res
+   );
+
+  m2: real ==> int * int * real
+  m2(rl)  ==
+  ( [ ext wr i, r
+      post i = floor(rl) and r = rl ];
+    [ ext rd i
+          wr j
+      post j = 2 * i ];
+    return mk_(i,j,r)
+   );
+
+  Test: () ==> seq of (int | int | real)  
+Test () ==
+  ( j := 10;
+    ( dcl v1: int := m1(1),
+          v2: int * int * real := m2(2.54);
+      let mk_(a,b,c) = v2 in
+        return [v1, a, b, c]
+    )
+  )
+
+end A

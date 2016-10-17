@@ -1,0 +1,41 @@
+ class A
+
+types
+
+  private T = nat
+
+instance variables
+
+  public n : T := 7;
+
+operations
+
+public
+  OpA: () ==> nat
+  OpA() ==
+    (n := Inc(n);
+     return n);
+
+  public initA : nat ==> A
+  initA (x) == 
+  ( n := x;
+    return self
+  )
+
+functions
+
+private Inc: nat +> nat
+             Inc(n) == n + 1
+
+end A
+class B is subclass of A
+
+operations
+
+public Test : () ==> nat
+  Test() ==
+    let a = new A().initA (6)
+   in
+      a.OpA();
+
+end B

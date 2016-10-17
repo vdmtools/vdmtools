@@ -1,0 +1,16 @@
+
+class A
+
+functions
+meas[@A,@B] : set of@A | set of @B -> nat
+meas(a) == card a;
+
+foo[@A,@B] : set of @A | set of @B -> nat
+foo(b) == 
+  cases b:
+  {}    -> 0,
+  others -> let x in set b in 1 + foo[@A,@B](b\{x})
+  end
+measure meas;
+
+end A

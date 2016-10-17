@@ -1,0 +1,16 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ( map nat to seq of nat)  
+Test () ==
+        (dcl  c: map nat to seq of nat := {1 |-> [1,3]};
+         c(1)(2) := 34;
+         return [c])
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

@@ -1,0 +1,16 @@
+class BinaryTest
+
+types
+
+  T = map (bool * nat) to (bool * nat)
+    
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - =   { 1 } :-> {true} in skip;
+
+------------------------------------------------------------------------------
+end BinaryTest

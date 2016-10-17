@@ -1,0 +1,327 @@
+%--------------------------------------------------------------------------------
+% $Id: ast-merge.vdm,v 1.8 2006/03/15 07:53:32 vdmtools Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\section{Combining two ASTs}
+This module specifies the computation of an ``action list'' to be used
+when changes introduced in the UML model are to be updated directly in
+the physical \vpp specification file. The update is based on merging
+two lists of tokens; some parts of the new file are based on tokens
+from the original specification file, while other parts are based on
+new tokens created from the UML model. This module computes a sequence
+of actions to be used when merging the two lists of tokens.
+\begin{vdm_al}
+
+module ASTMERGE
+
+imports
+
+  from AS all,
+  from REP all,
+  from CI all,
+  from AUML all,
+  from BUILD all
+
+exports all
+
+definitions
+
+types
+\end{vdm_al}
+
+The following type definitions represent the list of actions that
+describe how two ASTs should be merged into one. The merge is used
+when doing an automatic update of physical files due to changes in
+UML. A list of actions is simply modelled as a set of actions, since
+this set will later be processed to give a real sequence of actions
+with real token position information added. This sequence of actions
+will then subsequently be sorted according to the token position they
+manipulate.
+
+\begin{vdm_al}
+
+  ActionList = set of Action;
+
+  Action = SkipAction | InsertAction | ReplaceAction | UnknownAction;
+
+\end{vdm_al}
+This action means that the node $ast\_node$ should be removed in the
+merge of the two ASTs, i.e.\ the tokens associated with this node
+should simply be skipped during the merge.
+\begin{vdm_al}
+  SkipAction :: ast_node : AST_Node;
+\end{vdm_al}
+This action indicates that the tokens of the node $ast\_node$ should
+be added to the new file. This action is generated for new nodes
+introduced in UML. The field $where$ identifies the name of the class
+to which the new node should be inserted. This field is $nil$ if the
+node to be inserted is a full class.
+\begin{vdm_al}
+  InsertAction :: ast_node : AST_Node
+                  where : [AS`Name];
+\end{vdm_al}
+This action, which is generated when an existing node is modified in
+UML, means that the old representation of an node should be replaced
+be the new representation.
+\begin{vdm_al}
+  ReplaceAction :: old_node : AST_Node
+                   new_node : AST_Node;
+
+  UnknownAction :: new : AST_Node
+                   old : AST_Node;
+
+\end{vdm_al}
+The special action $UnknownAction$ is used to track potential errors
+during the merge. The action list should {\em never} contain this
+action.
+
+These are the possible AST nodes that the action list may include. The
+node $AS`Name$ could be used to handle the individual names of super
+classes seperately, but at the current stage changes in the
+inheritance relations of a class are handled by generating a
+$ReplaceAction$ for the node $AS`Class$.
+
+\begin{vdm_al}
+  AST_Node = AS`Name        -- Could be used for the individual super classes
+           | AS`ValueDef
+           | AS`InstAssignDef   -- Instance variables.
+           | AS`FnDef
+           | AS`OpDef
+           | AS`Class
+           | Condition;     -- Individual pre or post condition
+
+
+  ID = AS`Name | AS`Pattern | set of AS`Name;
+\end{vdm_al}
+
+Conditions are a special kind of node introduced to allow modification of pre
+and postconditions without involving the whole function or operation in 
+being overwritten.
+\begin{vdm_al}
+  ConditionKind = <pre> | <post>;
+
+  Condition :: kind : ConditionKind
+               body : AS`Expr
+               parent : AS`FnDef | AS`OpDef
+               cid:- CI`ContextId;
+
+functions
+
+  ComNewDel : set of ID * set of ID +> 
+              set of ID * set of ID * set of ID
+  ComNewDel(new_s, old_s) ==
+    mk_(new_s inter old_s,
+        new_s \ old_s, 
+        old_s \ new_s);
+
+\end{vdm_al}
+The function $CreateActionLists$ creates an action list for all
+classes passed to it. The function should be called for each file to
+be updated.
+\begin{vdm_al}
+
+-- p let n = ASVAL`ast(1).ast, o = ASVAL`ast(2).ast in ASTMERGE`CreateActionLists(n,o)
+
+  CreateActionLists : seq of AS`Class * seq of AS`Class +> ActionList
+  CreateActionLists(new_as, old_as) ==
+    let new_m = { e.nm |-> e | e in set elems new_as },
+        old_m = { e.nm |-> e | e in set elems old_as },
+        mk_(common, new, del) = ComNewDel(dom new_m, dom old_m)
+    in dunion { CreateActionList(new_m(id), old_m(id))
+              | id in set common }
+       union { mk_InsertAction(new_m(e), nil) | e in set new }
+       union { mk_SkipAction(old_m(e)) | e in set del };
+    
+
+  CreateActionList : AS`Class * AS`Class +> ActionList
+  CreateActionList(new_cl, old_cl) ==
+    let mk_AS`Class(-, -, -, n_def, -, -) = new_cl,
+        mk_AS`Class(nm, -, -, o_def, -, -) = old_cl,
+        --mk_AS`Definitions(-,n_val,n_fct,n_op,n_iv,n_tv,-,-,-,-) = n_def,
+        mk_AS`Definitions(-,n_val,n_fct,n_op,n_iv,-,-,-,-) = n_def,
+        --mk_AS`Definitions(-,o_val,o_fct,o_op,o_iv,o_tv,-,-,-,-) = o_def
+        mk_AS`Definitions(-,o_val,o_fct,o_op,o_iv,-,-,-,-) = o_def
+    in CreateInheritActions(old_cl, new_cl) 
+--    in CreateInheritActions(n_sup, o_sup)
+         union SeqToAction(nm, n_val, o_val)
+         union SeqToAction(nm, [n_iv(i) | i in set inds n_iv & is_AS`InstAssignDef(n_iv(i))], 
+                               [o_iv(i) | i in set inds o_iv & is_AS`InstAssignDef(o_iv(i))])
+         union MapToAction(nm, n_fct, o_fct)
+         --union MapToAction(nm, n_op, o_op)
+         union MapToAction(nm, n_op, o_op);
+         --union SeqToAction(nm, n_tv, o_tv);
+\end{vdm_al}
+The function $SeqToAction$ is called for all fields of $AS`Class$ that
+are represented as sequences of something. The function returns a set of
+actions.
+
+\begin{vdm_al}
+
+  SeqToMap : seq of AST_Node +> map ID to AST_Node
+  SeqToMap (node_l) ==
+    if len node_l = 0
+    then {|->}
+    else let e = hd node_l,
+             id = GenId(e)
+         in if id <> nil
+            then { id |-> e } ++ SeqToMap(tl node_l)
+            else SeqToMap(tl node_l);
+
+  SeqToAction : AS`Name * seq of AST_Node * seq of AST_Node +> ActionList
+  SeqToAction(cl_nm, new_as, old_as) ==
+--    let new_m = { GenId(e) |-> e | e in set elems new_as & GenId(e) <> nil},
+--        old_m = { GenId(e) |-> e | e in set elems old_as & GenId(e) <> nil},
+    let new_m = SeqToMap(new_as),
+        old_m = SeqToMap(old_as),
+        mk_(common, new, del) = ComNewDel(dom new_m, dom old_m)
+    in (dunion { CreateAction(new_m(id), old_m(id), cl_nm) | 
+                                              id in set common })
+       union { mk_InsertAction(new_m(e), cl_nm) | e in set new }
+       union { mk_SkipAction(old_m(e)) | e in set del };
+    
+  GenId : AST_Node +> [ID]
+  GenId (node) ==
+    cases node:
+      mk_AS`Name(-,-) -> node,
+      mk_AS`ValueDef(pat,-,-,-,-,-) -> pat,
+      mk_AS`InstAssignDef(ad,-,-,-) -> ad.var,
+      others -> nil
+    end;
+
+  MapToAction : AS`Name *
+                (map AS`Name to AS`FnDef | map AS`Name to AS`OpDef) *
+                (map AS`Name to AS`OpDef | map AS`Name to AS`FnDef) 
+              +> ActionList
+  MapToAction (cl_nm, new_m, old_m) ==
+    let mk_(common, new, del) = ComNewDel(dom new_m, dom old_m)
+    in (dunion { CreateAction(new_m(id), old_m(id), cl_nm) | id in set common })
+       union { mk_InsertAction(new_m(e), cl_nm) | e in set new }
+       union { mk_SkipAction(old_m(e)) | e in set del };
+
+  PrivDefaultEquiv : AST_Node * AST_Node -> bool
+  PrivDefaultEquiv(new,old) ==
+    cases true:
+      (is_AS`ValueDef(new)),
+      (is_AS`InstAssignDef(new)),
+      (is_AS`ImplFnDef(new)),
+      (is_AS`ImplOpDef(new))    -> new.access = <PRIVATE_AS> and old.access = <DEFAULT_AS> and
+                                     new = mu(old, access |-> <PRIVATE_AS>),
+      (is_AS`ExplFnDef(new)),
+      (is_AS`ExtExplFnDef(new)),
+      (is_AS`ExplOpDef(new)),
+      (is_AS`ExtExplOpDef(new)) -> new.access = <PRIVATE_AS> and old.access = <DEFAULT_AS> and
+                                     new = mu(old, access |-> <PRIVATE_AS>, body |-> new.body),
+      others -> false
+    end;
+\end{vdm_al}
+
+Implicit that new is from UML, and old is from VDM++ (RTF). 
+
+For functions and operatios, the expl|impl type can not be modified by the mapper.
+
+For polymorphic functions, the type var lists are currently ignored.
+
+\begin{vdm_al}
+
+  CreateAction : AST_Node * AST_Node * AS`Name +> set of Action
+  CreateAction(new, old, clnm) ==
+    if PrivDefaultEquiv(new,old)
+    then {}
+    else
+    cases new:
+      mk_AS`Name(-,-) -> if new = old then {} 
+                         else { mk_ReplaceAction(old, new)},
+      mk_AS`ValueDef(-,-,-,-,-,-),
+      mk_AS`InstAssignDef(-,-,-,-) -> if new = old then {}
+                                      else { mk_ReplaceAction(old, new)},
+      mk_AS`ExplFnDef(-,-,n_tp,n_parms,-,n_pre,n_post,n_acc,-,-,-) ->
+        if not is_AS`ExplFnDef(old)
+        then { mk_UnknownAction(new,old)}
+        else let mk_AS`ExplFnDef(-,-,o_tp,o_parms,-,o_pre,o_post,o_acc,-,-,-) = old
+             in if n_tp = o_tp and n_parms = o_parms and n_acc = o_acc
+                then ConditionsActions(o_pre, o_post, n_pre, n_post, old, clnm)
+                else {mk_ReplaceAction(old, new)} union
+                    ConditionsActions(o_pre, o_post, n_pre, n_post, old, clnm),
+      mk_AS`ImplFnDef(-,-,n_partps,n_res,n_pre,n_post,n_acc,-, -) ->
+        if not is_AS`ImplFnDef(old)
+        then { mk_UnknownAction(new,old)}
+        else let mk_AS`ImplFnDef(-,-,o_partps,o_res,o_pre, o_post,o_acc,-,-) = old
+             in if BUILD`GenPairs(n_partps) = BUILD`GenPairs(o_partps) 
+                   and n_res = o_res and n_acc = o_acc
+                   -- and n_params = o_params
+                then ConditionsActions(o_pre, o_post, n_pre, n_post, old, clnm)
+                else {mk_ReplaceAction(old, new)} union ConditionsActions(o_pre, o_post, n_pre, n_post, old, clnm),
+      mk_AS`ExtExplFnDef(-,-,n_partps,n_res,-,n_pre,n_post,n_acc,-,-,-) ->
+        if not is_AS`ExtExplFnDef(old)
+        then { mk_UnknownAction(new,old)}
+        else let mk_AS`ExtExplFnDef(-,-,o_partps,o_res,-,o_pre, o_post,o_acc,-,-,-) = old
+             in if BUILD`GenPairs(n_partps) = BUILD`GenPairs(o_partps) 
+                   and n_res = o_res and n_acc = o_acc
+                   -- and n_params = o_params
+                then ConditionsActions(o_pre, o_post, n_pre, n_post, old, clnm)
+                else {mk_ReplaceAction(old, new)} union ConditionsActions(o_pre, o_post, n_pre, n_post, old, clnm),
+      mk_AS`ExplOpDef(-,-,-,n_tp,n_param,-,n_pre,n_post,n_acc,-,-,-) ->
+        if not is_AS`ExplOpDef(old)
+        then { mk_UnknownAction(new,old)}
+        else let mk_AS`ExplOpDef(-,-,-,o_tp,o_param,-,o_pre,o_post,o_acc,-,-,-) = old
+             in 
+               if n_tp = o_tp and n_param = o_param and n_acc = o_acc
+               then ConditionsActions(o_pre, o_post, n_pre, n_post, old, clnm)
+               else {mk_ReplaceAction(old, new)} union
+                    ConditionsActions(o_pre, o_post, n_pre, n_post, old, clnm),
+      mk_AS`ImplOpDef(-,-,-,n_params,n_res,-,n_pre,n_post,-,n_acc,-,-,-) ->
+        if not is_AS`ImplOpDef(old)
+        then { mk_UnknownAction(new,old)}
+        else let mk_AS`ImplOpDef(-,-,-,o_params,o_res,-,o_pre, o_post,-,o_acc,-,-,-) = old
+             in if BUILD`GenPairs(n_params) = BUILD`GenPairs(o_params) and n_res = o_res and n_acc = o_acc
+                then ConditionsActions(o_pre, o_post, n_pre, n_post, old, clnm)
+                else {mk_ReplaceAction(old, new)} union ConditionsActions(o_pre, o_post, n_pre, n_post, old, clnm),
+      mk_AS`ExtExplOpDef(-,-,-,n_params,n_res,-,-,n_pre,n_post,-,n_acc,-,-,-) ->
+        if not is_AS`ExtExplOpDef(old)
+        then { mk_UnknownAction(new,old)}
+        else let mk_AS`ExtExplOpDef(-,-,-,o_params,o_res,-,-,o_pre, o_post,-,o_acc,-,-,-) = old
+             in if BUILD`GenPairs(n_params) = BUILD`GenPairs(o_params) and n_res = o_res and n_acc = o_acc
+                then ConditionsActions(o_pre, o_post, n_pre, n_post, old, clnm)
+                else {mk_ReplaceAction(old, new)} union ConditionsActions(o_pre, o_post, n_pre, n_post, old, clnm),
+      others -> {}
+    end;
+\end{vdm_al}
+
+For conditions, we consider pre and post conditions separately, taking
+the union of the relevant actions.
+\begin{vdm_al}
+  ConditionsActions: [AS`Expr] * [AS`Expr] * [AS`Expr] * [AS`Expr] * 
+                     (AS`FnDef | AS`OpDef) * AS`Name -> set of Action
+  ConditionsActions(o_pre, o_post, n_pre, n_post, parent, clnm) ==
+    ConditionAction(o_pre, n_pre, <pre>, parent, clnm) union 
+    ConditionAction(o_post, n_post, <post>, parent, clnm);
+\end{vdm_al}
+
+For a particular condition, if it is new in the model an insert action is
+generated; if it has been removed from the model, a skip action is generated; and
+if it has been changed between the old and new models, a replace action is generated.
+\begin{vdm_al}
+  ConditionAction : [AS`Expr] * [AS`Expr] * ConditionKind * 
+                    (AS`FnDef | AS`OpDef) * AS`Name -> set of Action
+  ConditionAction(old, new, kind, parent, clnm) ==
+    if old = new
+    then {}
+    else cases mk_(old, new):
+          mk_(nil, -) -> { mk_InsertAction(mk_Condition(kind, new, parent, new.cid),
+                                           clnm) },
+          mk_(-, nil) -> { mk_SkipAction(mk_Condition(kind, old, parent, old.cid))},
+          others      -> { mk_SkipAction(mk_Condition(kind, old, parent, old.cid)),
+                           mk_InsertAction(mk_Condition(kind, new, parent, new.cid), clnm) }
+          end;
+
+  CreateInheritActions : AS`Class * AS`Class +> ActionList
+  CreateInheritActions(old,new) ==
+    let mk_AS`Class(-,-,n_super,-,-,-) = new,
+        mk_AS`Class(-,-,o_super,-,-,-) = old
+    in if elems n_super = elems o_super
+       then {}
+       else {mk_ReplaceAction(old, new)};
+
+end ASTMERGE
+
+\end{vdm_al}

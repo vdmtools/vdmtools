@@ -1,0 +1,206 @@
+class JarResources is subclass of Object
+operations 
+private  init__ : () ==> <VOID>
+init__() == 
+( jarItemSizes := new  Hashtable();
+  ( dcl   jarFile : [ZipFile] := new  ZipFile(jarFilename),
+          jarList : [Enumeration] := jarFile.entries();
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip 
+        
+      end  
+    in  
+      while  jarList.hasMoreElements() do  
+      ( dcl   jarItem : [ZipEntry] := jarList.nextElement();
+        def l_8 = jarItem.getName();
+        l_7 = jarItem.getSize();
+        l_4 = if  is_(l_7,real ) then  floor(l_7) else  l_7;
+        l_3 = new  Integer(l_4)
+        in skip 
+      ) ;
+    let - = jarFile.close()
+    in 
+      skip ;
+    jarItemData := new  Hashtable(JarResources`getSize())
+  ) ;
+  return  <VOID>
+) ;
+
+public  getName : () ==> [String]
+getName() == 
+( return  jarFilename
+) ;
+
+public  getSize : () ==> int 
+getSize() == 
+( return  jarItemSizes.size()
+) ;
+
+public  itemNames : () ==> [Enumeration]
+itemNames() == 
+( return  jarItemSizes.keys()
+) ;
+
+public  getImage : [String] ==> [Image]
+getImage(imageName) == 
+( dcl   jarImage : [Image] := nil  ,
+        rawImage : map  int  to  int  := getResource(imageName);
+  if  rawImage <> nil  
+  then  
+    ( jarImage := Toolkit`getDefaultToolkit().createImage(rawImage)
+    ) ;
+  return  jarImage
+) ;
+
+public  static main : map  int  to  [String] ==> <VOID>
+main(args) == 
+( if  (card  dom  args) <> 2
+  then  
+    ( let - = System`err.println(new  String("usage: java JarResources <jar file name> <resource name>"))
+      in 
+        skip ;
+      let - = System`exit__(1)
+      in 
+        skip 
+    ) ;
+  ( dcl   jr : [JarResources] := new  JarResources(args(0));
+    let - = System`out.println(new  String("There are ")+jr.getSize()+new  String(" entries in Jar file ")+args(0))
+    in 
+      skip ;
+    ( dcl   buff : map  int  to  int  := jr.getResource(args(1));
+      if  buff = nil  
+      then  
+        ( let - = System`out.println(new  String("Could not find ")+args(1)+new  String("."))
+          in 
+            skip 
+        ) 
+      else  
+        ( let - = System`out.println(new  String("Found ")+args(1)+new  String(" (length = ")+(card  dom  buff)+new  String(")."))
+          in 
+            skip 
+        ) 
+    ) 
+  ) ;
+  return  <VOID>
+) ;
+
+public  getItemSize : [String] ==> int 
+getItemSize(itemName) == 
+( dcl   itemSize : int  := -1;
+  if  jarItemSizes.containsKey(itemName)
+  then  
+    ( itemSize := (def l_7 :  Integer = (jarItemSizes.get(itemName))
+      in l_7).intValue()
+    ) ;
+  return  itemSize
+) ;
+
+public  getResource : [String] ==> map  int  to  int 
+getResource(itemName) == 
+( dcl   resourceData : map  int  to  int ;
+  if  jarItemSizes.containsKey(itemName)
+  then  
+    ( if  not  jarItemData.containsKey(itemName)
+      then  
+        ( let - = loadJarItem(itemName)
+          in 
+            skip 
+        ) ;
+      resourceData := J2VUTIL`Convert("byte" , jarItemData.get(itemName))
+    ) 
+  else  
+    ( resourceData := nil  
+    ) ;
+  return  (resourceData)
+) ;
+
+private  loadJarItem : [String] ==> <VOID>
+loadJarItem(itemName) == 
+( trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (IOException,j2v_exception)) -> 
+        ( dcl   e : [IOException] := j2v_exception;
+          skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   bis : [BufferedInputStream] := nil  ,
+            jarData : map  int  to  int  := nil  ,
+            jarFile : [ZipFile] := new  ZipFile(jarFilename),
+            jarItem : [ZipEntry] := jarFile.getEntry(itemName);
+      if  jarItem <> nil  
+      then  
+        ( def l_4 = jarItem.getSize();
+          l_1 = if  is_(l_4,real ) then  floor(l_4) else  l_4
+          in ( dcl   itemSize : int  := l_1;
+            if  itemSize = -1
+            then  
+              ( itemSize := getItemSize(jarItem.getName())
+              ) ;
+            def l_4 = itemSize;
+            l_2 = if  is_(l_4,real ) then  floor(l_4) else  l_4;
+            l_1 = {l_5 |-> 0|l_5 in set  {0,...,l_2-1}}
+            in jarData := l_1;
+            bis := new  BufferedInputStream(jarFile.getInputStream(jarItem));
+            ( dcl   totalBytesRead : int  := 0,
+                    bytesRead : int  := 0,
+                    bytesRemaining : int  := itemSize-totalBytesRead,
+                    moreData : bool  := true  ;
+              trap  j2v_break with  
+                cases  true  : 
+                  (isofclass  (J2V_Break,j2v_break)) -> 
+                    skip 
+                  
+                end  
+              in  
+                while  bytesRemaining > 0 and  moreData do  
+                ( bytesRead := bis.read(jarData , totalBytesRead , bytesRemaining);
+                  if  bytesRead = -1
+                  then  
+                    ( moreData := false  
+                    ) 
+                  else  
+                    ( def l_3 = totalBytesRead
+                      in totalBytesRead := l_3+bytesRead;
+                      bytesRemaining := itemSize-totalBytesRead
+                    ) 
+                ) ;
+              let - = jarItemData.put(jarItem.getName() , jarData)
+              in 
+                skip 
+            ) 
+          ) 
+        ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  JarResources : [String] ==> JarResources
+JarResources(jarFilename) == 
+( JarResources`jarFilename := jarFilename;
+  let - = init__()
+  in 
+    skip 
+) ;
+
+public  flushResource : [String] ==> <VOID>
+flushResource(itemName) == 
+( if  jarItemData.containsKey(itemName)
+  then  
+    ( let - = jarItemData.remove(itemName)
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+instance variables 
+  private  jarItemSizes : [Hashtable];
+  private  jarItemData : [Hashtable];
+  private  jarFilename : [String]
+  
+end  JarResources

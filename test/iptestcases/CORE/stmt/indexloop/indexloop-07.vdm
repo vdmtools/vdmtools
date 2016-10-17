@@ -1,0 +1,20 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+public Test : () ==> seq of nat  
+Test () ==
+( dcl s : seq of nat := [];
+
+  let inc = if true then 'a' else 100 in
+  for i = 25 to  if true then inc else 100 by 1 do
+    s := s ^ [i];
+
+  return s
+)
+   
+end A

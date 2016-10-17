@@ -1,0 +1,54 @@
+%
+% WHAT
+%    The standard merge sort algorithm well known from standard 
+%    text books.
+% ID
+%    $Id: mergesort.vpp,v 1.3 2006/04/07 04:37:19 vdmtools Exp $
+% PROJECT
+%    Toolbox
+% COPYRIGHT
+%    (C) Kyushu University
+%
+
+\section{MergeSortクラス}
+
+\begin{vdm_al}
+class MergeSort is subclass of Sorter
+
+operations
+
+  public Sort: seq of int ==> seq of int
+  Sort(l) ==
+    return MergeSorter(l)
+
+functions
+
+  MergeSorter: seq of real -> seq of real
+  MergeSorter(l) ==
+    cases l:
+      []      -> l,
+      [e]     -> l,
+      others  -> let l1^l2 in set {l} be st abs (len l1 - len l2) < 2
+                 in
+                   let l_l = MergeSorter(l1),
+                       l_r = MergeSorter(l2) in
+                    Merge(l_l, l_r)
+    end;
+
+  Merge: seq of int * seq of int -> seq of int
+  Merge(l1,l2) ==
+    cases mk_(l1,l2):
+      mk_([],l),mk_(l,[]) -> l,
+      others              -> if hd l1 <= hd l2 then 
+                               [hd l1] ^ Merge(tl l1, l2)
+                             else
+                               [hd l2] ^ Merge(l1, tl l2)
+    end
+  pre forall i in set inds l1 & l1(i) >= 0 and
+      forall i in set inds l2 & l2(i) >= 0
+
+
+
+end MergeSort
+
+\end{vdm_al}

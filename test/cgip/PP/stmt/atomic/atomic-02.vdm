@@ -1,0 +1,21 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+public Test:() ==> seq of char
+Test() ==
+  (atomic (a := 10;
+           b := 11);
+   return if a = 10 then "invbroken" else undefined);
+
+instance variables
+
+  a : nat := 8;
+  b : nat := 8;
+  inv a = b
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

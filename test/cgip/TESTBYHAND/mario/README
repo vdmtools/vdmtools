@@ -1,0 +1,17 @@
+Test of Marios specification
+============================
+
+cp GraphicsTest.javaorig GraphicsTest.java
+cp PolyLineFrame.javaorig PolyLineFrame.java
+cp external_MATH.javaorig external_MATH.java
+~jojo/toolbox/linux/vppde -j -k *.rtf
+javac -classpath .:/home/jojo/toolbox/spec/test/metaivHenrik/dk/ifad/toolbox/VDM/VDM.jar *.java
+java -classpath .:/home/jojo/toolbox/spec/test/metaivHenrik/dk/ifad/toolbox/VDM/VDM.jar GraphicsTest 
+
+output: ------    --------
+              \  /
+               \/
+rm *.java
+rm *.class
+rm *.default
+

@@ -1,0 +1,25 @@
+-- Check attempted static call to non-static members in a client
+
+class A
+
+operations
+
+static public  op1: seq of nat  ==> nat
+op1(-) ==
+  return 10;
+
+public  op1 : nat  ==> nat
+op1(-) ==
+  return 10
+
+end A
+
+class B
+
+operations
+
+op1 : nat ==> nat
+op1(n) ==
+  A`op1(n);
+
+end B

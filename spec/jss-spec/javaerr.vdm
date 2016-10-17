@@ -1,0 +1,67 @@
+\section{The JAVAERR Module}
+
+\begin{vdm_al}
+module JAVAERR
+
+imports
+  from AS all,
+  from REP all,
+
+  from CPP all,
+  from CI all,
+  from UTIL all,
+  from JSSREP all,
+  from JSSERRMSG all
+
+exports
+types
+  struct SeverityType;
+  struct ErrType;
+  struct ErrMsg
+operations
+ GenErr : CI`ContextId * SeverityType * nat * seq of char ==> ErrMsg;
+
+definitions
+types
+
+  SeverityType = <WARNING> | <ERROR>;
+
+  ErrMsg ::
+    fid      : int
+    line     : int
+    col      : int
+    err      : seq of char
+    severity : SeverityType;
+
+  ErrType   = seq of ErrMsg;
+
+operations
+GenErr : CI`ContextId * SeverityType * nat * seq of char ==> ErrMsg
+GenErr(p_cid, p_SvTp,p_num,p_Txt) ==
+  let l_errStr = "[" ^ UTIL`itoa(p_num) ^ "]",
+      p_Txt' = cases p_SvTp:
+                 <WARNING> -> "Warning" ^ l_errStr ^ " : " ^ p_Txt,
+                 <ERROR>   -> "Error" ^ l_errStr ^ " : " ^ p_Txt
+               end
+  in
+  ( dcl l_msg : ErrMsg;
+    if p_cid = CI`NilContextId
+    then l_msg := mk_ErrMsg(-1,- 1, -1, p_Txt', p_SvTp)
+    else def mk_(-, l_fid, -, l_astpos, -) = CI`GetFilePos(p_cid);
+             l_pos_line = l_astpos.abs_line;
+             l_pos_col = l_astpos.column
+         in
+           l_msg := mk_ErrMsg(l_fid, l_pos_line, l_pos_col, p_Txt', p_SvTp);
+    return l_msg
+  );
+
+end JAVAERR
+\end{vdm_al}
+
+All user output from the static semantic checker is via the {\it
+GenErr} operation.
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}{rtinfo.ast}[JAVAERR]
+\end{rtinfo}

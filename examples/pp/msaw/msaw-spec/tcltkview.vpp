@@ -1,0 +1,28 @@
+class TclTkView is subclass of View
+
+   operations
+      ShowAlarm: MSAWTypes`ModeA * Obstacle ==> ()
+      ShowAlarm (modeA, obstacle) ==
+        is not yet specified;
+
+      ShowObstacleArtificiel: MSAWTypes`Coordonnees * MSAWTypes`NM * MSAWTypes`Pieds ==> ()
+      ShowObstacleArtificiel(centre, rayon, altitude_maximale) ==
+         is not yet specified;
+
+      ShowZoneAeroport: MSAWTypes`Coordonnees * MSAWTypes`NM * MSAWTypes`Pieds * MSAWTypes`NM ==> ()
+      ShowZoneAeroport (centre, rayon, altitude_maximale, rayon_au_sol) ==
+         is not yet specified;
+
+      ShowRadarData: MSAWTypes`ModeA * MSAWTypes`Coordonnees * MSAWTypes`Pieds ==> ()
+      ShowRadarData (modeA, position, modeC) ==
+         is not yet specified;
+
+      ShowSegmentDePrediction: MSAWTypes`Coordonnees * MSAWTypes`Coordonnees ==> ()
+      ShowSegmentDePrediction (xy_queue, xy_tete) ==
+         is not yet specified;
+
+      ShowTime: MSAWTypes`Temps ==> ()
+      ShowTime (t) ==
+         is not yet specified
+
+end TclTkView

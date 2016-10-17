@@ -1,0 +1,7 @@
+functions
+
+NonEmptySeq: seq of nat -> nat
+NonEmptySeq(list) ==
+  if len list > 1
+  then hd list
+  else 0

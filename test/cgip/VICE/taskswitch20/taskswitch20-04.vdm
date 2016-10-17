@@ -1,0 +1,66 @@
+class B
+
+instance variables
+
+  i : nat := 0
+
+operations
+
+  op : () ==> ()
+  op() ==
+    i := i + 1;
+
+  public finished : () ==> nat
+  finished() == 
+    return i;
+
+sync
+
+  per finished => #fin(op) > 5
+
+thread
+
+  periodic (1000,30,800,0)(op)
+
+end B
+
+class C
+
+instance variables
+
+  i : nat := 0
+
+operations
+
+  op : () ==> ()
+  op() ==
+    i := i + 1;
+
+  public finished : () ==> nat
+  finished() == 
+    return i;
+
+sync
+
+  per finished => #fin(op) > 7
+
+thread
+
+  periodic (500,40,450,900)(op)
+
+end C
+
+class A
+
+operations
+
+public Test : () ==> nat
+Test() ==
+ (dcl b : B := new B();
+  dcl c : C := new C();
+  start(c);
+  start(b);
+  return c.finished() + b.finished();
+ )
+
+end A

@@ -1,0 +1,38 @@
+In the $PromptErr$ state only the first error is printed out and the
+user is prompted to ask for the next errors.
+
+\begin{vdm_al}
+class PromptErr is subclass of ErrorState
+
+-- In the PromptErr state only the first error is printed out and the
+-- user is prompted to ask for the next errors.
+
+operations
+
+-- AddMsg prints out the first error when it occurs and changes state
+-- to NonPrintErr.
+
+public   AddMsg: Errors ==> ()
+  AddMsg(err) ==
+    def newstate = new NonPrintErr() in
+    ( err.ShowMsg();
+      self.SetNextState(err,newstate)
+    );
+\end{vdm_al}
+$AddMsg$ prints out the first error when it occurs and changes state
+to $NonPrintErr$.
+
+\begin{vdm_al}
+
+--  ChangeState is called when the "script" command is issued. State changes to
+--  ScriptErr.
+
+public   ChangeState: Errors ==> ()
+  ChangeState(err) ==
+    def newstate = new ScriptErr() in
+    self.SetNextState(err,newstate)
+
+end PromptErr
+\end{vdm_al}
+$ChangeState$ is called when the "script" command is issued. State changes to
+$ScriptErr$.

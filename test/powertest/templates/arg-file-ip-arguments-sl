@@ -1,0 +1,23 @@
+mk_AS`AstCI(
+  mk_AS`ApplyExpr(
+     mk_AS`Name([ "<<MODORCLASS>>","<<OPERATION>>" ], CI`CreateCid(5,2)),
+     [  ],
+     CI`CreateCid(5,3)),
+ [
+  mk_CI`TokenContextInfo([],[]),
+  mk_CI`TokenContextInfo([],[]),
+  mk_CI`TokenContextInfo([],[]),
+  mk_CI`TokenContextInfo([],[]),
+  mk_CI`TokenContextInfo([mk_CI`TokenInfo(406,"A",mk_CI`TokenPos(1,1,1,1,1),mk_CI`TokenPos(1,1,1,1,2)),
+  mk_CI`TokenInfo(373,"",mk_CI`TokenPos(1,1,1,1,2),mk_CI`TokenPos(1,1,1,1,3)),
+  mk_CI`TokenInfo(406,"Test",mk_CI`TokenPos(1,1,1,1,3),mk_CI`TokenPos(1,1,1,1,7)),
+  mk_CI`TokenInfo(40,"",mk_CI`TokenPos(1,1,1,1,7),mk_CI`TokenPos(1,1,1,1,8)),
+  mk_CI`TokenInfo(41,"",mk_CI`TokenPos(1,1,1,1,8),mk_CI`TokenPos(1,1,1,1,9))
+ ],[
+  mk_CI`ContextNodeInfo(mk_CI`TokenSpan(1,1,1), 0, nil, nil, 0, false, false),
+  mk_CI`ContextNodeInfo(mk_CI`TokenSpan(3,3,3), 0, nil, nil, 0, false, false),
+  mk_CI`ContextNodeInfo(mk_CI`TokenSpan(1,4,5), 0, nil, nil, 0, false, false)
+ ])
+],
+{ 5 |-> "stdin" }
+)

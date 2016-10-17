@@ -1,0 +1,40 @@
+class C1 is subclass of C
+
+operations
+
+public  IncZ: () ==> ()
+  IncZ() ==
+    x := x ^ "In class C1";
+
+ 
+public  Dummy: seq of char ==> ()
+  Dummy(nm) ==
+    (x := x ^ " " ^ nm;
+     x := x ^ " dummy in C1");
+ 
+public
+  ReadX: () ==> seq of char
+  ReadX() ==
+    return x;
+
+sync
+
+  per Dummy => #fin(IncZ) = 1;
+  per ReadX => #fin(Dummy, IncZ) = 2;
+
+end C1
+class Main
+
+operations
+
+  public Test : () ==> seq of char
+  Test() ==
+    let myo = new C1()
+    in
+      let t1 = new T().Init(myo,<act>,<one>,"t1")
+      in
+        (start(t1);
+         myo.IncZ();
+         myo.ReadX());
+
+end Main

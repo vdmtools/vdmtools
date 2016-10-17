@@ -1,0 +1,782 @@
+%%
+%% Toolbox DL Classes Manual
+%% $Id: dlclass_man.tex,v 1.9 2006/04/19 10:24:40 vdmtools Exp $
+%% 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PDF compatibility code. 
+\makeatletter
+\newif\ifpdflatex@
+\ifx\pdftexversion\@undefined
+\pdflatex@false
+%\message{Not using pdf}
+\else
+\pdflatex@true
+%\message{Using pdf}
+\fi
+
+\newcommand{\latexpdf}[2]{
+  \ifpdflatex@ #1
+  \else #2
+  \fi
+}
+
+\newcommand{\latexorpdf}[2]{
+  \ifpdflatex@ #2
+  \else #1
+  \fi
+}
+
+\makeatother
+
+#ifdef A4Format
+\newcommand{\pformat}{a4paper}
+#endif A4Format
+#ifdef LetterFormat
+\newcommand{\pformat}{letterpaper}
+#endif LetterFormat
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\latexorpdf{
+\documentclass[\pformat,12pt]{article}
+}{
+% pdftex option is used by graphic[sx],hyperref,toolbox.sty
+\documentclass[\pformat,pdftex,12pt]{article}
+}
+
+\usepackage{toolbox}
+\usepackage{vdmsl-2e}
+\usepackage{makeidx}
+\usepackage{alltt}
+\usepackage{verbatim}
+\usepackage{moreverb}
+
+% Ueki change start
+\AtBeginDvi{\special{pdf:tounicode 90ms-RKSJ-UCS2}}
+\usepackage[dvipdfm,bookmarks=true,bookmarksnumbered=true,colorlinks,plainpages=true]{hyperref}
+\usepackage{cite}
+
+\def\seename{$\Rightarrow$}
+% Ueki change end
+
+% Ueki delete start
+%\latexorpdf{
+%\usepackage[plainpages=true,colorlinks,linkcolor=black,citecolor=black,pagecolor=black, urlcolor=black]{hyperref}
+%}{
+%\usepackage[plainpages=true,colorlinks]{hyperref}
+%}
+% Ueki delete end
+
+\newcommand{\meti}[1]{\item[#1]\mbox{}\\}
+\newcommand{\Lit}[1]{`#1\Quote}
+\newcommand{\Rule}[2]{
+  \begin{quote}\begin{tabbing}
+    #1\index{#1}\ \ \= = \ \ \= #2  ; %    Adds production rule to index
+  \end{tabbing}\end{quote}
+  }
+
+\newcommand{\SeqPt}[1]{\{\ #1\ \}}
+\newcommand{\lfeed}{\\ \> \>}
+\newcommand{\OptPt}[1]{[\ #1\ ]}
+\newcommand{\dsepl}{\ $|$\ }
+\newcommand{\dsep}{\\ \> $|$ \>}
+\newcommand{\Lop}[1]{\Lit{\kw{#1}}}
+\newcommand{\Sig}[1]{\Lit{{\tt #1}}}
+\newcommand{\blankline}{\vspace{\baselineskip}}
+\newcommand{\Brack}[1]{(\ #1\ )}
+\newcommand{\nmk}{\footnotemark}
+\newcommand{\ntext}[1]{\footnotetext{{\bf Note: } #1}}
+
+
+%\usepackage[dvips]{color}
+\usepackage{longtable}
+\definecolor{covered}{rgb}{0,0,0}     %black
+\definecolor{not_covered}{gray}{0.5} %gray
+
+\parindent0mm
+
+\newlength{\keywwidth}
+
+\newcommand{\xfigpicture}[4]{
+\begin{figure}[hbt]
+\setlength{\unitlength}{1mm}
+\begin{center}
+\mbox{
+\begin{picture}(#1,#2)
+\put(0,0){\special{psfile=#3 hscale=70 vscale=55}}
+\end{picture} }
+\end{center}
+\caption{#4}
+\end{figure}
+}
+
+
+\newcommand{\vdmslpp}{VDM-SL}
+\newcommand{\Toolbox}{Toolbox}
+\newcommand{\aaa}{\tt }
+\newcommand{\cmd}{\tt }
+\newcommand{\id}[1]{%
+\settowidth{\keywwidth}{\tt #1}%
+\protect\makebox[\keywwidth][l]{{\it #1}}}
+\nolinenumbering
+
+
+\newcommand{\vdmcpplib}{\textit{VDM C++ Library}}
+
+\begin{document}
+\vdmtoolsmanualcsk{The Dynamic Link Facility for VDM++} 
+       {v9.0.6}
+       {2016}
+       {VDM++}
+       {1.0}
+
+
+\section{Introduction}
+
+This document is an extension to the {\it User Manual for the
+ VDM++ Toolbox} \cite{UserManPP-CSK}. Knowledge
+about C++ \cite{Stroustrup91} and The {\vdmcpplib}
+\cite{LibMan-CSK} is also assumed. Throughout the document we use the term
+``DL Classes''~(``dynamic link classes'') to mean VDM++ classes for
+which external code is to be executed. 
+
+You do not need to read this entire manual to get started using the
+Dynamic Link feature. Start by reading Section~\ref{sec:overview}
+to get an overall description of this
+feature. Section~\ref{sec:dlexample} shows an example of using the
+feature; all files from this example are also present in the
+appendices. Section~\ref{sec:codegen} demonstrates how code is
+generated from DL Classes by the C++ Code Generator.
+Section~\ref{sec:refguide} describes the individual components which are
+involved when using the Dynamic Link facility. 
+
+Appendix~\ref{sec:sysreq} provides detailed information about system
+requirements.
+
+
+
+
+\section{Overview}\label{sec:overview}
+
+In this section an overview of the use of DL classes is presented. The
+idea here is to give an informal idea of how to use the facility. More
+detailed information is presented in the Reference Guide in
+Section~\ref{sec:refguide}. 
+
+A diagram showing the approach is given in Figure~\ref{idea}. 
+\begin{figure}
+\begin{center}
+\includegraphics{overview.mps}
+\caption{Combination of code and VDM++ specification\label{idea}}
+\end{center}
+\end{figure}
+As can be seen from this diagram, a number of different components
+need to be provided to enable the facility:
+\begin{itemize}
+\item For each C++ class which is to be accessed at the VDM++ level, a
+DL Class must be written at the VDM++ level.
+\item An interface layer needs to be written in C++. This translates
+method calls at the VDM++ level into calls to the external code and
+translates the results into {\vdmcpplib} types. This should be compiled as a
+shared library (on Windows, a \texttt{.dll}).
+\end{itemize}
+Each of these components is described in more detail below.
+
+
+\subsection{Specifying a DL Class in VDM++}
+
+To specify a class as being a DL class in VDM++, the keyword
+\textsf{dlclass} should be used instead of \textsf{class}. The DL
+Class must contain a directive indicating the location of the
+shared library implementing the DL class. This is specified using the
+\textsf{uselib} directive. Thus a simple DL class might be
+
+\begin{alltt}
+\textsf{dlclass} EmptyDLClass
+
+\textsf{uselib} "EmptyDLClass.so"\footnote{Note that shared libraries
+  have file type \texttt{.so} on Unix whereas on Windows they are of
+  type \texttt{.dll}} 
+
+\textsf{end} EmptyDLClass
+\end{alltt}
+
+Of course, this is not a very interesting class since it contains no
+functionality! To expose methods in the external code, methods with
+body \textsf{is not yet specified} should be defined at the VDM++
+level. For example:
+
+\begin{alltt}
+\textsf{dlclass} SimpleDLClass
+
+\textsf{uselib} "SimpleDLClass.so"
+
+\textsf{operations}
+
+\textsf{public} CallExternal : nat ==> nat
+CallExternal (n) == \textsf{is not yet specified};
+
+\textsf{end} SimpleDLClass
+\end{alltt}
+Calls to \texttt{SimpleDLClass`CallExternal} will then, via the shared
+library, be directed to the external code corresponding to
+\texttt{SimpleDLClass}. 
+
+\subsection{Interfacing with a DL Class}
+
+The user must provide an interface between the VDM++ DL Class and the
+external code to which the DL Class corresponds. This interface is
+referred to as the interface layer and falls into three parts:
+\begin{enumerate}
+\item Functions for creating and deleting external objects must be
+provided. These are called respectively \texttt{DlClass\_new} and
+\texttt{DlClass\_delete}; 
+\item A function for redirecting method calls must be defined, which
+  is called \texttt{DlClass\_call};
+\item Each external class must be wrapped as a subclass of the class
+\texttt{DlClass}. That is, every external class must implement the
+\texttt{DlClass} interface.
+\end{enumerate}
+The prototypes for these functions and classes are defined in the file
+\texttt{dlclass.h} which is supplied with the Toolbox
+distribution. They can also be found in Appendix~\ref{app:dlclass_h}.  
+
+
+
+\subsection{Creating a Shared Library}
+
+Having created the interface layer, a shared library must be
+constructed. This is done by compiling the interface layer and the
+external code into a single shared library. On Unix using GNU g++, this
+is achieved using the flags \texttt{-shared -fpic}. On Windows using
+Microsoft Visual C++ it is achieved using the link flags
+\texttt{/dll /incremental:no}. In both cases the VDM C++ library must
+be linked in since the interface layer must use the types defined in
+this library. See the example Makefiles that are provided in
+Appendices~\ref{app:unixmake} and~\ref{app:winmake}. 
+
+\section{Example}\label{sec:dlexample}
+
+In this section we present portions of a small example of how to
+write a DL Class and interface layer code. The example is based on an
+external library -- ``MAPM'' -- for arbitrary precision mathematical
+calculations. This library is freely available for download from 
+\texttt{http://www.tc.umn.edu/$\sim$ringx004/mapm-main.html}.
+
+Since the VDM++ interpreter uses finite precision arithmetic, it is
+important that infinite precision mathematical objects are never
+handled directly by the Toolbox since by doing so the precision of
+the mathematical values will be compromised. 
+
+\subsection{The VDM++ Model}
+
+We define a class \texttt{BigInt} to represent arbitrary precision
+integers. This defines operations to create \texttt{BigInt}s, to
+convert a texttt{BigInt} to a string representation, and to perform
+addition on \texttt{BigInt}s. (Note that the \texttt{SetVal} operation is
+only used to create an initial value.) The class is connected to an
+interface layer called \texttt{bigint\_dl.so}. 
+
+\begin{alltt}
+\textsf{dlclass} BigInt
+
+\textsf{uselib} "bigint_dl.so"
+
+\textsf{operations}
+
+\textsf{public} Create : \textsf{nat} ==> BigInt
+Create(n) ==
+( SetVal(n);
+  \textsf{return} self
+);
+
+\textsf{public} toString : () ==> \textsf{seq} \textsf{of} \textsf{char}
+toString() ==
+  \textsf{is} \textsf{not} \textsf{yet} \textsf{specified};
+
+\textsf{public} plus : BigInt ==> BigInt
+plus(i) ==
+  \textsf{is} \textsf{not} \textsf{yet} \textsf{specified};
+
+\textsf{protected} SetVal : \textsf{nat} ==> ()
+SetVal(n) ==
+  \textsf{is} \textsf{not} \textsf{yet} \textsf{specified};
+
+\textsf{end} BigInt
+\end{alltt}
+
+We can then use \texttt{BigInt} in other classes in our
+specification. For example, the class \texttt{BankAccount} uses 
+\texttt{BigInt} as the type of one of its instance variables. As shown
+by the \texttt{Init} and \texttt{Deposit} operations, manipulation of
+this object is performed via operations 
+rather than directly.
+
+\begin{alltt}
+\textsf{class} BankAccount
+
+\textsf{instance} \textsf{variables}
+  name : \textsf{seq} \textsf{of} \textsf{char};
+  number : \textsf{nat};
+  balance : BigInt
+
+\textsf{operations}
+
+\textsf{public} Init : \textsf{seq} \textsf{of} \textsf{char} * \textsf{nat} ==> ()
+Init(nname, nnum) ==
+( name := nname;
+  number := nnum;
+  balance := new BigInt().Create(nnum);
+);
+
+\textsf{public} Deposit : BigInt ==> ()
+Deposit(bi) ==
+  balance := balance.plus(bi);
+
+\textsf{public} GetBalance : () ==> BigInt
+GetBalance() ==
+  \textsf{return} balance
+
+\textsf{end} BankAccount
+\end{alltt}
+
+
+\subsection{Interface Layer}
+
+The interface layer maps calls at the VDM++ level to C++ function
+calls. The complete files are included in
+Appendix~\ref{app:interfacelayer}. Here we describe selected excerpts.
+
+For each VDM++ \texttt{BigInt} object, there is a corresponding C++ \texttt{BigIntDL}
+object. This is linked to the external MAPM library via a member
+variable: 
+\begin{verbatim}
+class BigIntDL : public DlClass
+{
+
+  MAPM val;
+ 
+ public:
+ ...
+};
+\end{verbatim}
+
+
+
+To see how communication between the VDM++ level and the C++ level is
+mediated, consider the class function \texttt{toString} which returns
+a string representation of a \texttt{BigInt}.
+
+\begin{alltt}
+Sequence BigIntDL::toString()
+\{
+\#ifdef DEBUG
+  cout << "BigIntDL::toString" << endl;
+\#endif //DEBUG
+  char res[100];
+  val.toIntegerString(res);
+  return Sequence(string(res));
+\}
+\end{alltt}
+This function uses the library's own \texttt{toIntegerString}
+function. Note that since the value is to be returned to the VDM++
+Toolbox, a {\vdmcpplib} value must be returned by the function. 
+
+More interesting is the case where VDM++ objects are passed as
+parameters and/or returned as result. In this case, the {\vdmcpplib}
+class \texttt{DLObject} should be used. For example, consider the
+operation of addition:
+\begin{alltt}
+DLObject BigIntDL::plus (Sequence &p)
+\{
+\#ifdef DEBUG
+  cout << "BigIntDL::plus" << endl;
+\#endif //DEBUG
+  DLObject result("BigInt", new BigIntDL);
+  DLObject arg (p.Hd());
+  BigIntDL *resPtr = (BigIntDL*) result.GetPtr(),
+           *argPtr = (BigIntDL*) arg.GetPtr(); 
+  resPtr->setVal( val + argPtr->getVal());
+  return result;
+\}
+\end{alltt}
+Here, a new \texttt{DLObject} is created, as an instance of \texttt{BigInt}, to store
+the result of the operation. The argument object is extracted from the
+parameter list the pointers to the \texttt{BigIntDL} objects are extracted
+from the \texttt{DLObjects}, and the result is computed. Finally the
+result object is returned. 
+
+Objects created and returned in this way are subject to the VDM++
+Toolbox's normal object maintenance. Thus they will persist until no
+references exist to them at the VDM++ level, at which point
+\texttt{DlClass\_delete} will be called on such objects.
+
+
+
+\section{Using DL Classes in combination with the C++ Code Generator}\label{sec:codegen}
+
+DL Classes are treated by the code generator in such a manner as to
+allow virtually seamless use of generated code with the interface
+layer and external code. Of course, user implementations for VDM++
+operations specified as \textsf{is not yet specified} can be provided
+in the usual way, thus allowing direct communication with the external
+code rather than via the interface layer. In this section we
+illustrate both of these approaches.
+
+\subsection{Using Generated Code}
+
+The generated code uses the same calling structure as used by DL
+Classes. To allow this, each class has a public member which is a
+pointer to a DL Class:
+\begin{verbatim}
+class vdm_BigInt : public virtual CGBase {
+...
+public:
+  DlClass * BigInt_dlClassPtr;
+}
+\end{verbatim}
+C++ function calls corresponding to operation or function calls to DL
+Classes are then code generated using this pointer. For example,
+consider the operation \texttt{toString} from
+Section~\ref{sec:dlexample}. This would be code generated as a call to
+\texttt{DlClass\_call} using \texttt{BigInt\_dlClassPtr}.
+\begin{alltt}
+\#ifndef DEF_BigInt_toString
+ 
+type_cL vdm_BigInt::vdm_toString () \{  Sequence parmSeq_2;
+  int success_3;
+ 
+  return DlClass_call(BigInt_dlClassPtr, "toString", parmSeq_2, success_3);
+ 
+\}
+\#endif   
+\end{alltt}
+Thus calls within the generated code to
+\texttt{vdm\_BigInt::vdm\_toString} will be seamlessly handled by the
+interface layer.
+
+For VDM++ functions or operations that pass or receive objects, the
+situation is slightly more complicated. This is because the VDM++ Code
+Generator uses \texttt{ObjectRef} from the {\vdmcpplib} to represent
+objects passed between C++ functions. Therefore the code in the
+interface layer needs to be able to deal with this. For example, we 
+might modify \texttt{BigIntDL::plus} as follows:
+\begin{alltt}
+\#ifdef CG
+ObjectRef BigIntDL::plus (const Sequence &p)
+\#else
+DLObject BigIntDL::plus (const Sequence &p)
+\#endif //CG
+\{
+\#ifdef DEBUG
+  cout << "BigIntDL::plus" << endl;
+\#endif //DEBUG
+  // Extract arguments
+  BigIntDL *argPtr = GetDLPtr(p.Hd());
+
+  // Set up result object
+\#ifdef CG
+  ObjectRef result (new vdm_BigInt);
+\#else
+  DLObject result("BigInt", new BigIntDL);
+\#endif 
+
+  BigIntDL *resPtr = GetDLPtr(result);
+
+  // Perform manipulation on pointers, as needed for function
+  resPtr->setVal( val + argPtr->getVal());
+
+  return result;
+\}
+\end{alltt}
+This definition exploits the function \texttt{BigIntDL::GetDLPtr}:
+\begin{alltt}
+\#ifdef CG
+BigIntDL *BigIntDL::GetDLPtr(const ObjectRef& obj)
+\#else
+BigIntDL *BigIntDL::GetDLPtr(const DLObject& obj)
+\#endif //CG
+\{
+\#ifdef CG
+  vdm_BigInt *objRefPtr = ObjGet_vdm_BigInt(obj);
+  BigIntDL *objPtr = (BigIntDL*) objRefPtr->BigInt_dlClassPtr;
+\#else
+  BigIntDL *objPtr = (BigIntDL*) obj.GetPtr(); 
+\#endif
+  return objPtr;
+\}
+\end{alltt}
+
+\subsection{Supplying a User Implementation}
+
+%\hyperlink{toastref}{toast}
+Rather than communicate with the external code via the interface
+layer, the generated code can be made to call the external code
+directly. This is achieved using the standard mechanism for
+substituting code in generated code, as described in \cite{CGManPP-CSK}. 
+
+For instance, suppose we wish to call the addition
+operation  directly. For this, we need to supply an implementation of
+\texttt{vdm\_BigInt::vdm\_plus}. In the file
+\texttt{BigInt\_userimpl.cc} the function would be defined:
+
+\verbatiminput{dl-example/BigInt_userimpl.cc}
+
+To ensure that the correct version of the function is compiled, the
+file \texttt{BigInt\_userdef.h} needs to have the following contents: 
+
+\begin{alltt}
+\#define DEF_BigInt_USERIMPL
+\#define DEF_BigInt_plus
+\end{alltt}
+
+When the files are compiled, the execution uses the user supplied
+function instead of being directed to the interface layer.
+
+
+
+\section{Reference Guide}\label{sec:refguide}
+
+\subsection{DL Class Definitions}
+A DL Class is specified using the syntax
+
+\Rule{dlclass}{%
+  \Lop{dlclass}, identifier, \OptPt{inheritance clause} \lfeed
+   uselib clause, \lfeed
+   \OptPt{class body}, \lfeed
+  \Lop{end} identifier
+}
+\Rule{uselib clause}{%
+  \Lop{uselib}, text literal
+}
+Note that the syntactic classes not defined here are defined in
+\cite{LangManPP-CSK}. 
+A DL Class is treated by the Toolbox just as any other class, with the
+exception that any call to a function or operation with body
+\textsf{is not yet specified} is redirected to the external code
+specified in the uselib path. 
+
+
+
+\subsection{The \texttt{uselib} Path Environment}
+\label{sec:uselibpath}
+
+The name of the library is given with the {\tt uselib} option in the
+specification. This location can be given in several ways:
+\begin{itemize}
+\item A full path name for the library (e.g.\ 
+  \texttt{/home/foo/libs/libmath.so})
+\item Without path but with the environment variable {\tt
+    VDM\_DYNLIB} set to a list of directories in which to search for
+  the library. For example, the environment
+  variable could look like this: \path+/home/foo/libs:/usr/lib:.+ (Note
+  that if you set this variable you need a `.' in the list as in this
+  example if you want the search to include the current directory.)
+\item Without path and without the {\tt VDM\_DYNLIB} environment
+  variable set. This means that the library is supposed to be located
+  in the current directory.
+\end{itemize}
+
+\subsection{The Function \texttt{DlClass\_call}}
+This function is used to redirect method calls at the VDM++ level to
+appropriate method calls at the external code level. It takes as
+parameters: 
+\begin{description}
+\item[\texttt{DlClass* c}] A pointer to the object on which the call
+is being made;
+\item[\texttt{const char* name}] The name of the method being called;
+\item[\texttt{const Sequence\& params}] The parameters to the method call,
+passed as {\vdmcpplib} values;
+\item[\texttt{int\& success}] A reference parameter to a success flag.
+Setting this flag to \texttt{0} indicates failure; setting it to
+\texttt{1} indicates success.
+\end{description}
+The function returns the result of the method call in the form of a
+{\vdmcpplib} \texttt{Generic} object.
+
+It is the user's responsibility to provide an implementation of this
+function. 
+\subsection{The Function \texttt{DlClass\_delete}}
+This function is called by the Toolbox whenever an instance of a DL
+Class is to be destroyed. The Toolbox interpreter uses a garbage
+collection scheme based on reference counting, so this function is called
+whenever the reference count for an instance of a DL Class reaches 0. 
+The function is also called when objects are destroyed as a result of
+a \textsf{dlclose} call (see Section~\ref{sec:dlclose}).
+
+It is the user's responsibility to provide an implementation of this
+function. 
+
+\subsection{The Function \texttt{DlClass\_new}}
+This function is called by the Toolbox whenever an instance of a DL
+Class is created. It takes as parameter a string representing the name
+of the class being instantiated and returns a pointer to an instance
+of \texttt{DlClass}. 
+
+It is the user's responsibility to provide an
+implementation of this function.
+
+\subsection{The Class \texttt{DlClass}}
+The class \texttt{DlClass} is an abstract class specifying a prototype
+for one method: \texttt{DlMethodCall} which is used by a specific
+class to translate method calls at the VDM++ level into method calls
+on the external code. Note that indirection via \texttt{DlClass\_call}
+is necessary because the interface called by the Toolbox interpreter
+must be C code.
+
+It is the user's responsibility to provide an implementation of a
+subclass of this class for each external class which is being shadowed
+at the VDM++ level.
+
+\subsection{The DLObject Class}
+The \texttt{DLObject} is an extension to the {\vdmcpplib} which allows
+passing 
+of objects between the Toolbox interpreter and the external code. Each
+\texttt{DLObject} corresponds to an instance of DL Class and contains
+\texttt{DlClass} pointer. The class has the following methods:
+\begin{description}
+\item[\texttt{DLObject(const string \& name, DlClass *object)}]
+Constructor that creates a \texttt{DLObject} of the DL Class
+called \texttt{name} which is initialized with a pointer to a
+\texttt{DlClass} given by \texttt{object}.
+\item[\texttt{DLObject(const DLObject \& dlobj)}]
+Constructor that creates a new \texttt{DLObject} from an existing
+one.
+\item[\texttt{DLObject(const Generic \& dlobj)}]
+Constructor used for narrowing a \texttt{Generic}.
+\item[\texttt{DLObject \& operator=(const DLObject  \& dlobj)}]
+Gives this object the value of \texttt{dlobj}.
+\item[\texttt{DLObject \& operator=(const Generic \& gen)}]
+Gives this object the value of \texttt{gen}.
+\item[\texttt{string GetName() const}]
+Returns the name of the VDM++ DL Class that this object corresponds to.
+\item[\texttt{DlClass * GetPtr() const}]
+Returns the pointer to the external instance of \texttt{DlClass}. 
+\item[\texttt{DLObject::~DLObject()}]
+Destructor.
+\end{description}
+
+
+\subsection{Opening Libraries}
+
+Whenever the Toolbox command \textsf{init} is used all shared
+libraries corresponding to DL Classes are opened. These remain open
+until either a \textsf{dlclose} command is issued (see
+Section~\ref{sec:dlclose}) or \textsf{init} is called again. In the
+latter case the currently open libraries are all closed and then
+reopened as part of the initialization.
+
+\subsection{Closing Libraries}\label{sec:dlclose}
+
+On windows, dlls can only be overwritten when they are not loaded by another
+application. For this purpose you can use the \textsf{dlclose} command
+in the interpreter window (or command prompt for the command line
+version of the Toolbox) to close the loaded dlls.
+
+\textsf{dlclose} deletes the external C++ objects then closes the
+dlls. The VDM++ objects are not deleted in the Toolbox but they are
+marked as having no external C++ objects associated. If you then try
+to execute specifications that would invoke external methods on
+existing dlclass objects you will get a run time error. Non-dlclass
+method calls can still be done after a \textsf{dlclose} command, though.
+
+Most likely you will have to use \textsf{init} after a
+\textsf{dlclose} and after you have copied the new dlls.
+
+
+
+\subsection{Creating a Shared Library}\label{sec:create}
+
+The shared library must be compiled using the proper compiler as
+required in Section \ref{sec:sysreq}.  In order to create an
+executable shared library the interface layer
+must fulfill the following requirements:
+\begin{itemize}
+\item The prototype C functions defined in \texttt{dlclass.h} must be
+implemented in the interface layer;
+\item Each class in the external code for which there is a
+corresponding DL Class should be wrapped as a subclass of
+\texttt{DlClass} and an implementation of the class method
+\texttt{DlMethodCall} must be provided.
+\item The {\tt dlclass.h} header file, which is supplied as part of the
+distribution, must be included in the file(s) with the interface layer
+code since  it contains prototypes of the type-specific functions of
+the \vdmcpplib. 
+\end{itemize}
+
+See the example makefiles in Appendices~\ref{app:unixmake}
+and~\ref{app:winmake} for the actual compiler flags to use.
+
+A shared library should have the file extension {\tt ".so"} on Unix
+and \texttt{.dll} on Windows. 
+
+\newpage
+\bibliographystyle{iptes}
+\bibliography{ifad}
+\newpage
+\appendix
+
+\section{System Requirements}
+\label{sec:sysreq}
+
+To use the Dynamic Link feature of the {\it VDM++ Toolbox} you
+need a Toolbox license which includes the Dynamic Link feature
+(a line with the {\tt vppdl} feature must be present in the
+license file). The {\it VDM  C++ Library} and a compiler for creating
+an executable shared library from the integrated code are also required.
+
+This feature runs on the following combinations:
+\begin{itemize}
+\item Microsoft Windows 2000/XP/Vista and Microsoft Visual C++ 2005 SP1
+\item Mac OS X 10.4, 10.5
+\item Linux Kernel 2.4, 2.6 and GNU gcc 3, 4
+\item Solaris 10
+\end{itemize}
+
+Note that shared libraries are \textit{extremely} compiler
+sensitive. Deviation from the above combinations will most likely lead
+to runtime errors when using DL Classes.
+
+The compiler is required in order to create an executable shared
+library of the integrated code. 
+ 
+For installation of the Toolbox itself see Section 2 in \cite{UserManPP-CSK}
+and for installing the {\it VDM C++ Library} see Section 2 in \cite{CGManPP-CSK}.
+
+\newpage
+\section{dlclass.h}\label{app:dlclass_h}
+
+\verbatiminput{dl-example/dlclass.h}
+
+\newpage
+\section{Example Files}\label{app:interfacelayer}
+
+\subsection{VDM++ Layer}
+
+\verbatiminput{dl-example/bigint.vpp}
+
+\subsection{bigint\_dl.h}
+
+\verbatiminput{dl-example/bigint_dl.h}
+
+\subsection{bigint\_dl.cc}
+
+\verbatiminput{dl-example/bigint_dl.cc}
+
+\newpage
+\section{Unix Makefile}\label{app:unixmake}
+
+\verbatimtabinput{dl-example/Makefile}
+
+\newpage
+\section{Windows Makefile}\label{app:winmake}
+
+\verbatimtabinput{dl-example/Makefile.win32}
+
+
+
+
+
+\end{document}
+

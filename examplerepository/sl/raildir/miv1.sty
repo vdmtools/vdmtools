@@ -1,0 +1,1171 @@
+\typeout{Meta-IV Environment, Version 4.2, DiProGS 1987}
+
+%>>>>>>>>>>>>>>>>>>>>>>>   VERSION 4.2   <<<<<<<<<<<<<<<<<<<<<<<
+
+%************************************************************************
+%									*
+%	This new Meta-IV formatting environment uses paragraphs		*
+%	instead of figures, which ensures the correct (expected)	*
+%	positioning of the formulas.					*
+%	It also supports the annotation of the formulas and 		*
+%	referencing to the names in the formulas.			*
+%	Furthermore we have defined a lot of new commands to		*
+%	make the LaTeX source easier to read.				*
+%									*
+%	Most of the structured and often used constructions are		*
+%	defined as macros in the EDT editor. This is done by the	*
+%	file INIT.EDT and the help file META_IV.HLP.			*
+%									*
+%	The use of the environments is described in			*
+%	"MetaIV Environment" ,Steen Lynenskjold, Bo Bichel Noerbaek	*
+%	and Ole Frost Mikkelsen. (part of the DiProGS library)		*
+%									*
+%************************************************************************
+
+%************************************************************************
+%									*
+%	The meta-IV error- and warningmessages.				*
+%									*
+%	Based on TEX-facilities. 					*
+%									*
+%	20 July 1987  Ole Frost Mikkelsen                               *
+%									*
+%************************************************************************
+
+% This function makes a meta-iv environment errormessage with the #1 text.
+\newcommand{\@miverrmessage}[1]
+  {\begingroup%
+   \typeout{%
+     ! ********************* Meta-IV Environment Error **********************.%
+     ^^J!^^J! #1^^J!}%
+   \def\@mivstarline{%
+     **********************************************************************}
+   \errmessage{\@mivstarline}%
+   \endgroup}
+
+% This function makes a meta-iv environment warning with the #1 text.
+\newcommand{\@mivwarning}[1]
+  {\typeout{%
+     ! ********************* Meta-IV Environment Warning ********************.%
+     ^^J!^^J! #1^^J!^^J%
+     ! **********************************************************************.%
+  }}
+
+
+%************************************************************************
+%									*
+%	The meta-IV group handling.     				*
+%									*
+%	Heavily based on TEX-facilities. 				*
+%									*
+%	20 July 1987  Ole Frost Mikkelsen                               *
+%									*
+%************************************************************************
+
+% No miv-command has been given
+\@ifdefinable\@mivnothing%
+  {\def\@mivnothing{NOTHING}}
+
+% The miv-command that made the current group (The name of the group)
+\@ifdefinable\@mivcom%
+  {\def\@mivcom{NOTHING}}
+
+% The expected miv-commands, which should terminate the group (pure text)
+\@ifdefinable\@mivexp%
+  {\def\@mivexp{NOTHING}}
+
+\@ifdefinable\@mivtemp%
+  {\def\@mivtemp{}}
+
+% This function enters a new group named #1 and hopefully ended by #2
+\newcommand{\@mivbegin}[2]
+  {\begingroup%
+   \def\@mivcom{#1}%
+   \def\@mivexp{#2}}
+
+% This function terminates the group named #1 by the #2-command
+\newcommand{\@mivend}[2]
+  {\def\@mivtemp{#1}%
+   \ifx\@mivtemp\@mivcom%
+   \else%
+     \@miverrmessage{\@mivcom\space ended by #2 (\@mivexp\space was expected)}%
+   \fi%
+   \ifx\@mivcom\@mivnothing%
+   \else%
+     \endgroup%
+   \fi%
+   \ignorespaces}
+
+% This function starts a meta-iv environment named #1 and hopefully ended by #2
+% It is impossible to nest meta-iv environments and end the document before
+% all meta-iv environments are terminated.
+\newcommand{\@mivenvbegin}[2]
+  {\ifx\@mivcom\@mivnothing%
+   \else%
+     \@miverrmessage{%
+       #1 started before end of \@mivcom\space%
+           (\@mivexp\space was expected)^^J%
+       ! (This might later cause some strange errors)}%
+     %*** The following line prevents repeated report of the same error (dirty)
+     \def\@mivcom{NOTHING}%
+   \fi%
+   \@mivbegin{#1}{#2}%
+   %*** \enddocument is redefined to report all the nonterminated groups
+   %*** observe the recursive call of \enddocument each time a group is
+   %*** terminated.
+   \def\enddocument{%
+     \@miverrmessage{%
+       Document ended illegal (\@mivexp\space was expected)%
+       ^^J! (It probably also causes some LaTeX errors)}%
+     \endgroup%
+     \enddocument}%
+  }
+
+% This function terminates a meta-iv environment named #1 by #2
+\newcommand{\@mivenvend}[2]
+  {\@mivend{#1}{#2}}
+
+%************************************************************************
+%									*
+%       Optimized LaTeX commands.					*
+%									*
+%	These specialized commands are based on TEX-facilities.		*
+%	They make the formatting of formulas more than twice as		*
+%	fast as before.							*
+%									*
+%	30. July 1987	Ole Frost Mikkelsen				*
+%									*
+%************************************************************************
+
+\newsavebox{\@mivtempbox}
+
+\newcommand{\@mivboxc}[2]
+%  {\makebox[#1]{#2}}
+  {\leavevmode\hbox to#1{\hss #2\hss}}
+
+\newcommand{\@mivboxr}[2]
+%  {\makebox[#1][r]{#2}}
+  {\leavevmode\hbox to#1{\hss#2}}
+
+\newcommand{\@mivboxl}[2]
+%  {\makebox[#1][l]{#2}}
+  {\leavevmode\hbox to#1{#2\hss}}
+
+\newcommand{\@mivboxe}[1]
+%  {\makebox[#1]{}}
+  {\leavevmode\hbox to#1{\hss}}
+
+\newcommand{\@mivkeyw}[1]
+%  {\underline{\raisebox{0ex}[...][0ex]{\rm #1}}
+  {\setbox\@mivtempbox \hbox{\rm #1}%
+   \dp\@mivtempbox 0ex%
+   \underline{\box\@mivtempbox}}
+
+%************************************************************************
+%									*
+%	META-IV font command, counter declarations, lengths             *
+%       declarations, length initialisation                             *
+%									*
+%************************************************************************
+
+\newcommand{\MIVTXTTYPE}{\it}
+
+\newcounter{mivform}
+\newcounter{mivlin}
+\newcounter{domform}
+\newcounter{domlin}
+
+\newlength{\formvspace}
+\newlength{\linevspace}
+\newlength{\leftnumwid}
+\newlength{\rightnumwid}
+\newlength{\numwid}
+\newlength{\deltamivindent}
+\newlength{\mivindent}
+
+\newcommand{\initmivlengths}
+  {\setlength{\formvspace}{3ex}%
+   \setlength{\linevspace}{.5ex}%
+   \setlength{\leftnumwid}{2em}%
+   \setlength{\rightnumwid}{2em}%
+   \settowidth{\numwid}{\rm .}%
+   \addtolength{\numwid}{\leftnumwid}%
+   \addtolength{\numwid}{\rightnumwid}%
+   \setlength{\deltamivindent}{1.5em}%
+   \setlength{\mivindent}{0em}}
+
+\initmivlengths
+
+%************************************************************************
+%									*
+%	The indentation handling functions (aux. func.)			*
+%									*
+%************************************************************************
+
+\newcommand{\@mivnuma}
+   {{\rm%
+     \@mivboxr{\leftnumwid}{\themivform}%
+     .%
+     \@mivboxl{\rightnumwid}{\themivlin}%
+     \@mivboxe{\mivindent}%
+   }}
+\newcommand{\@mivnumb}
+   {{\rm%
+     \@mivboxe{\leftnumwid}%
+     .%
+     \@mivboxl{\rightnumwid}{\themivlin}%
+     \@mivboxe{\mivindent}%
+   }}
+\newcommand{\@mivnonumb}
+   {\@mivboxe{\numwid}%
+    \@mivboxe{\mivindent}}
+
+
+\newlength{\mivdiff}
+
+\newcommand{\mivin}
+%  {\setlength{\mivdiff}{\deltamivindent}%
+%   \addtolength{\mivindent}{\mivdiff}}
+  {\mivdiff\deltamivindent%
+   \advance\mivindent\mivdiff}
+
+\newcommand{\mivinw}[1]
+%  {\settowidth{\mivdiff}{#1}%
+%   \addtolength{\mivindent}{\mivdiff}}
+  {\setbox\@mivtempbox \hbox{#1}%
+   \mivdiff\wd\@mivtempbox%
+   \advance\mivindent\mivdiff}
+
+\newcommand{\dent}[1]
+%  {#1%
+%   \mivinw{#1}}
+  {\setbox\@mivtempbox \hbox{#1}%
+   \mivdiff\wd\@mivtempbox%
+   \advance\mivindent\mivdiff%
+   \box\@mivtempbox}
+
+\newcommand{\opin}[1]
+  {\dent{#1\ }}
+
+\newcommand{\mivforw}
+  {\@mivboxe{\mivdiff}}
+
+\newcommand{\mivback}
+  {\@mivboxe{-\mivdiff}}
+
+
+\newlength{\linespacing}
+\newcommand{\HSPACEW}[1]
+  {\settowidth{\linespacing}{#1}%
+   \@mivboxe{\linespacing}}
+
+\newcommand{\FORMVSPACE}
+   {\par%
+    \addvspace{\formvspace}}
+\newcommand{\LINEVSPACE}
+   {\nopagebreak%
+    \samepage%
+    \vspace{\linevspace}}
+
+%************************************************************************
+%									*
+%	Commands to print two texts at the same place.			*
+%									*
+%************************************************************************
+
+\newlength{\maxwidth}
+\newcommand{\overlayl}[2]
+  {{\settowidth{\maxwidth}{\shortstack{#1\\#2}}%
+    \@mivboxl{0em}{#1}%
+    \@mivboxl{\maxwidth}{#2}%
+  }}
+\newcommand{\overlayc}[2]
+  {{\settowidth{\maxwidth}{\shortstack{#1\\#2}}%
+    \@mivboxc{\maxwidth}{%
+      \@mivboxc{0em}{#1}%
+      \@mivboxc{0em}{#2}%
+    }%
+  }}
+\newcommand{\overlayr}[2]
+  {{\settowidth{\maxwidth}{\shortstack{#1\\#2}}%
+    \@mivboxr{\maxwidth}{#1}%
+    \@mivboxr{0em}{#2}%
+  }}
+
+%************************************************************************
+%									*
+%	Commands to set the formula- and linenumber explicitly.		*
+%	Commands to get the current formula- and linenumber.		*
+%									*
+%************************************************************************
+
+\newcommand{\SETFORM}[1]
+  {\setcounter{mivform}{#1}}
+\newcommand{\SETLIN}[1]
+  {\setcounter{mivlin} {#1}}
+
+\newcommand{\GETFORM}[1]
+  {\setcounter{#1}{\value{mivform}}}
+\newcommand{\GETLIN}[1]
+  {\setcounter{#1}{\value{mivlin}}}
+
+%************************************************************************
+%									*
+%	The commands to print keywords and enumerated values.		*
+%									*
+%************************************************************************
+
+\newcommand{\KEYW}[1]
+  {\@mivkeyw{#1}}
+%  {\underline{\raisebox{0ex}[1ex][0ex]{\rm #1}}}
+\newcommand{\keyw}[1]
+  {\KEYW{#1}%
+   \@mivwarning{`keyw' has been renamed to `KEYW'}}
+
+\newcommand{\QUOT}[1]
+  {\underline{\raisebox{0ex}[1ex][0ex]{\sc #1}}}
+\newcommand{\Q}[1]
+  {\QUOT{#1}}
+
+
+%************************************************************************
+%									*
+%	The function definition environment.				*
+%									*
+%************************************************************************
+
+\newlength{\thenwidth}
+
+\newcommand{\MIV}
+   {\@mivenvbegin{MIV}{VIM}%
+    \MIVTXTTYPE%
+    \refstepcounter{mivform}%
+    \setcounter{mivlin}{-1}%
+    \initmivlengths%
+    \settowidth{\thenwidth}{\@mivkeyw{then}}%
+    \setlength{\parindent}{0em}%
+    \par%
+    \addpenalty{-\@highpenalty}%
+    \addvspace{\formvspace}%
+    \samepage}
+
+\newcommand{\VIM}
+   {\par%
+    \addvspace{\formvspace}%
+    \addpenalty{-\@highpenalty}%
+    \@mivenvend{MIV}{VIM}}
+
+
+\newcommand{\MIVLB}
+   {\refstepcounter{mivlin}%
+    \@mivnuma}
+
+\newcommand{\MIVLN}
+   {\\%
+    \refstepcounter{mivlin}%
+    \@mivnumb}
+
+\newcommand{\MIVL}
+   {\nopagebreak%
+    \samepage%
+    \vspace{\linevspace}%
+    \samepage}
+
+\newcommand{\MIVLE}
+   {\\%
+    \refstepcounter{mivlin}%
+    \@mivnuma}
+
+\newcommand{\MIVDIE}
+   {\\%
+    \@mivnumb}
+
+\newcommand{\MIVLI}
+   {\\%
+    \@mivnonumb}
+
+
+%************************************************************************
+%									*
+%	The domain definition environment.				*
+%									*
+%************************************************************************
+
+\newlength{\domgrid}
+\newlength{\domeql}
+
+\newcommand{\DOMS}[1]
+   {\@mivenvbegin{DOMS}{SMOD}%
+    \MIVTXTTYPE%
+    \setcounter{domform}{\value{mivform}}%
+    \initmivlengths%
+    \settowidth{\domgrid}{#1}%
+    \settowidth{\domeql}{\rm =}%
+    \setlength{\parindent}{0em}%
+    \par%
+    \addvspace{\formvspace}%
+    \addpenalty{-\@highpenalty}%
+    \samepage}
+
+\newcommand{\SMOD}
+   {\par%
+    \addpenalty{-\@highpenalty}%
+    \addvspace{\formvspace}%
+    \@mivenvend{DOMS}{SMOD}}
+
+
+\newcommand{\DOMLB}[2]
+   {\refstepcounter{mivform}%
+    \setcounter{mivlin}{0}%
+    \@mivnuma%
+    \@mivboxl{\domgrid}{#1}%
+    \ %
+    \@mivboxc{\domeql}{\rm #2}%
+    \mbox{}}
+
+\newcommand{\DOMLN}[2]
+   {\\%
+    \DOMLB{#1}{#2}}
+
+\newcommand{\DOMLNN}
+   {\\%
+    \refstepcounter{mivlin}%
+    \@mivnumb%
+    \@mivboxe{\domgrid}%
+    \ %
+    \@mivboxe{\domeql}%
+    \ }
+
+\newcommand{\DOMLNE}
+   {\\%
+    \refstepcounter{mivlin}%
+    \@mivnuma%
+    \@mivboxe{\domgrid}%
+    \ %
+    \@mivboxe{\domeql}%
+    \ }
+
+\newcommand{\DOMDIE}[2]
+   {\\%
+    \@mivnuma%
+    \@mivboxl{\domgrid}{#1}%
+    \ %
+    \@mivboxc{\domeql}{\rm #2}%
+    \mbox{}}
+
+\newcommand{\DOMLI}
+   {\\%
+    \@mivnonumb%
+    \@mivboxe{\domgrid}%
+    \@mivboxe{\domeql}%
+    \ }
+
+%************************************************************************
+%									*
+%	         The function type listing environment			*
+%									*
+%************************************************************************
+
+\newcommand{\TYP}
+   {\@mivenvbegin{TYP}{PYT}%
+    \MIVTXTTYPE%
+    \setcounter{mivlin}{0}%
+    \initmivlengths%
+    \setlength{\parindent}{0em}%
+    \par%
+    \addpenalty{-\@highpenalty}%
+    \addvspace{\formvspace}%
+    \samepage}
+
+\newcommand{\PYT}
+   {\par%
+    \addvspace{\formvspace}%
+    \addpenalty{-\@highpenalty}%
+    \@mivenvend{TYP}{PYT}}
+
+\newcommand{\TYPLB}
+   {\refstepcounter{mivform}%
+    \@mivnuma%
+    \TYPE :\ }
+
+\newcommand{\TYPLN}
+   {\\%
+    \refstepcounter{mivform}%
+    \@mivnuma%
+    \TYPE :\ }
+
+\newcommand{\TYPLBR}[1]
+   {}
+
+\newcommand{\TYPLNR}[1]
+   {}
+
+\newcommand{\TYPLI}
+   {\\%
+    \@mivnonumb%
+    \TYPE :\ }
+
+
+%************************************************************************
+%									*
+%	The structured keywords (changing indentation)			*
+%									*
+%************************************************************************
+
+\newcommand{\MIVI}
+  {\@mivbegin{MIVI}{IVIM}%
+   \mivin%
+   \mivforw}
+\newcommand{\IVIM}
+  {\@mivend{MIVI}{IVIM}}
+
+\newcommand{\DENT}[1]
+  {\@mivbegin{DENT}{TNED}%
+   \dent{#1}}
+\newcommand{\TNED}
+  {\@mivend{DENT}{TNED}}
+
+\newcommand{\OPIN}[1]
+  {\@mivbegin{OPIN}{NIPO}%
+   \opin{#1}}
+\newcommand{\NIPO}
+  {\@mivend{OPIN}{NIPO}}
+
+\newcommand{\FUN}
+  {\@mivbegin{FUN}{NUF}%
+   \FUNDEF%
+   \mivin}
+\newcommand{\NUF}
+  {\@mivend{FUN}{NUF}}
+
+\newcommand{\PAR}
+  {\@mivbegin{PAR}{RAP}%
+   \opin{(}}
+\newcommand{\RAP}
+  {)%
+   \@mivend{PAR}{RAP}}
+
+\newcommand{\MAPPAR}
+  {\@mivbegin{MAPPAR}{RAPPAM}%
+   \opin{\BMAP}}
+\newcommand{\RAPPAM}
+  {\EMAP%
+   \@mivend{MAPPAR}{RAPPAM}}
+
+\newcommand{\SETPAR}
+  {\@mivbegin{SETPAR}{RAPTES}%
+   \opin{\BSET}}
+\newcommand{\RAPTES}
+  {\ESET%
+   \@mivend{SETPAR}{RAPTES}}
+
+\newcommand{\TUPPAR}
+  {\@mivbegin{TUPPAR}{RAPPUT}%
+   \opin{\BTUP}}
+\newcommand{\RAPPUT}
+  {\ETUP%
+   \@mivend{TUPPAR}{RAPPUT}}
+
+\newcommand{\IF}
+  {\@mivbegin{IFexp}{THEN}%
+   \opin{\@mivkeyw{if}}}
+\newcommand{\THEN}
+  {\mivback%
+   \@mivend{IFexp}{THEN}%
+   \@mivbegin{IF}{ELSE or FI}%
+   \opin{\@mivkeyw{then}}}
+\newcommand{\ELSE}
+  {\mivback%
+   \@mivend{IF}{ELSE}%
+   \@mivbegin{IF}{FI}%
+   \opin{\@mivboxl{\thenwidth}{\@mivkeyw{else}}}}
+\newcommand{\FI}
+  {\@mivend{IF}{FI}}
+
+\newlength{\mivgrid}
+
+\newcommand{\TAB}[1]
+  {\@mivbegin{TABextra}{BATextra}%
+   \settowidth{\mivgrid}{#1}%
+   \@mivbegin{TAB}{TAB... or BAT}%
+   \mivinw{}}
+\newcommand{\TABALI}[1]
+  {\mivback%
+   \@mivend{TAB}{TABALI}%
+   \@mivboxl{\mivgrid}{#1}%
+   \@mivbegin{TAB}{TAB... or BAT}%
+   \mivinw{\@mivboxe{\mivgrid}\ }}
+\newcommand{\TABLON}[1]
+  {\mivback%
+   \@mivend{TAB}{TABALI}%
+   \@mivboxl{\mivgrid}{#1}%
+   \@mivbegin{TAB}{TAB... or BAT}%
+   \mivin}
+\newcommand{\BAT}
+  {\@mivend{TAB}{BAT}%
+   \@mivend{TABextra}{BATextra}}
+
+
+\newcommand{\MCCART}[1]
+  {\@mivbegin{MCCARTextra}{TRACCMextra}%
+   \settowidth{\mivgrid}{#1}%
+   \@mivbegin{CASES}{CAS... or TRACCM}%
+   \mivinw{}}
+\newcommand{\TRACCM}
+  {\@mivend{CASES}{TRACCM}%
+   \@mivend{MCCARTextra}{TRACCMextra}}
+
+\newcommand{\CASES}
+  {\@mivkeyw{cases}\ %
+   \@mivbegin{CASESexp}{OF}%
+   \mivinw{\@mivkeyw{cases}\ }}
+\newcommand{\OF}[1]
+  {{:}%
+   \@mivend{CASESexp}{OF}%
+   \@mivbegin{CASESextra}{SESACextra}%
+   \settowidth{\mivgrid}{#1}%
+   \mivin%
+   \@mivbegin{CASES}{CAS... or SESAC}%
+   \mivinw{}}
+\newcommand{\SESAC}
+  {\@mivend{CASES}{SESAC}%
+   \@mivend{CASESextra}{SESACextra}}
+
+\newcommand{\CASALI}[1]
+  {\mivback%
+   \@mivend{CASES}{CASALI}%
+   \@mivboxl{\mivgrid}{#1}\ \ARW%
+   \@mivbegin{CASES}{CAS... or SESAC}%
+   \mivinw{\@mivboxe{\mivgrid}\ \ARW\ }}
+\newcommand{\CASLON}[1]
+  {\mivback%
+   \@mivend{CASES}{CASALI}%
+   \@mivboxl{\mivgrid}{#1}\ \ARW%
+   \@mivbegin{CASES}{CAS... or SESAC}%
+   \mivin}
+
+
+\newcommand{\MAPPING}[1]
+  {\MAPPAR%
+   \settowidth{\mivgrid}{#1}%
+   \@mivbegin{MAPPING}{MAP... or GNIPPAM}%
+   \mivinw{}}
+\newcommand{\MAPALI}[1]
+  {\mivback%
+   \@mivend{MAPPING}{MAPALI}%
+   \@mivboxl{\mivgrid}{#1}\ \MAPSTO%
+   \@mivbegin{MAPPING}{MAP... or GNIPPAM}%
+   \mivinw{\@mivboxe{\mivgrid}\ \MAPSTO\ }}
+\newcommand{\MAPLON}[1]
+  {\mivback%
+   \@mivend{MAPPING}{MAPALI}%
+   \@mivboxl{\mivgrid}{#1}\ \MAPSTO%
+   \@mivbegin{MAPPING}{MAP... or GNIPPAM}%
+   \mivin}
+\newcommand{\GNIPPAM}
+  {\@mivend{MAPPING}{GNIPPAM}%
+   \RAPPAM}
+
+\newcommand{\DOTALI}
+  {\mivback%
+   \ldots}
+
+\newcommand{\FOR}
+  {\@mivbegin{FOR-WHILE}{DO}%
+   \opin{\@mivkeyw{for}}}
+\newcommand{\TO}
+  {\@mivkeyw{to}}
+\newcommand{\FORALL}
+  {\@mivbegin{FOR-WHILE}{DO}%
+   \opin{\@mivkeyw{for}\ \@mivkeyw{all}}}
+\newcommand{\WHILE}
+  {\@mivbegin{FOR-WHILE}{DO}%
+   \opin{\@mivkeyw{while}}}
+\newcommand{\DO}
+  {\@mivkeyw{do}%
+   \@mivend{FOR-WHILE}{DO}%
+   \@mivbegin{DO}{OD}}
+\newcommand{\OD}
+  {\@mivend{DO}{OD}}
+
+\newcommand{\DEF}
+  {\@mivbegin{DEF}{FED}%
+   \opin{\@mivkeyw{def}}}
+\newcommand{\FED}
+  {\@mivend{DEF}{FED}}
+
+
+
+\newcommand{\DCL}
+  {\@mivbegin{DCL}{LCD}%
+   \opin{\@mivkeyw{dcl}}}
+\newcommand{\LCD}
+  {\@mivend{DCL}{LCD}}
+
+\newcommand{\LET}
+  {\@mivbegin{expIN}{IN}%
+   \opin{\@mivkeyw{let}}}
+\newcommand{\IN}
+  {\@mivkeyw{in}%
+   \@mivend{expIN}{IN}%
+   \@mivbegin{IN}{NI}%
+   \mivin}
+\newcommand{\INc}
+  {\@mivkeyw{in}%
+   \@mivend{expIN}{IN}%
+   \@mivbegin{IN}{NI}%
+   \mivinw{}}
+\newcommand{\NI}
+  {\@mivend{IN}{NI}}
+
+\newcommand{\ALWAYS}
+  {\@mivbegin{expIN}{IN}%
+   \opin{\@mivkeyw{always}}}
+\newcommand{\TRAP}
+  {\@mivbegin{expIN}{IN}%
+   \opin{\@mivkeyw{trap}}}
+\newcommand{\WITH}
+  {\@mivkeyw{with}}
+\newcommand{\TIXE}
+  {\@mivbegin{expIN}{IN}%
+   \opin{\@mivkeyw{tixe}}}
+
+\newcommand{\RET}
+  {\@mivbegin{RET}{TER}%
+   \opin{\@mivkeyw{return}}}
+\newcommand{\TER}
+  {\@mivend{RET}{TER}}
+
+
+%************************************************************************
+%									*
+%	The unstructured keywords.					*
+%									*
+%************************************************************************
+\newcommand{\Ii}{\underline{I}}
+\newcommand{\ready}{\@mivkeyw{ready}}
+\newcommand{\insist}{\@mivkeyw{insist}}
+\newcommand{\UNTIL}{\@mivkeyw{until}}
+\newcommand{\INTERNAL}{\@mivkeyw{internal}}
+\newcommand{\EELSE}{\@mivkeyw{else}}
+\newcommand{\TTHEN}{\@mivkeyw{then}}
+\newcommand{\IIF}{\@mivkeyw{if}}
+\newcommand{\USE}{\@mivkeyw{use}}
+\newcommand{\CONST}{\@mivkeyw{const}}
+\newcommand{\ARRAY}{\@mivkeyw{array}}
+\newcommand{\OFF}{\@mivkeyw{of}}
+\newcommand{\WWHILE}{\@mivkeyw{while}}
+\newcommand{\DDO}{\@mivkeyw{do}}
+\newcommand{\POLL}{\@mivkeyw{poll}}
+\newcommand{\NNOT}{\@mivkeyw{not}}
+\newcommand{\BEGIN}{\@mivkeyw{begin}}
+\newcommand{\END}{\@mivkeyw{end}}
+\newcommand{\TTYPE}{\@mivkeyw{type}}
+\newcommand{\AGENT}{\@mivkeyw{agent}}
+\newcommand{\REC}{\@mivkeyw{rec}}
+\newcommand{\VAR}{\@mivkeyw{var}}
+\newcommand{\INT}{\@mivkeyw{int-}}
+\newcommand{\EVAL}{\@mivkeyw{eval-}}
+\newcommand{\ELAB}{\@mivkeyw{elab-}}
+\newcommand{\RETR}{\@mivkeyw{retr-}}
+\newcommand{\INJ}{\@mivkeyw{inj-}}
+
+\newcommand{\INV}{\@mivkeyw{inv-}}
+\newcommand{\ISWF}{\@mivkeyw{is-wf-}}
+
+\newcommand{\II}{\@mivkeyw{I}}
+
+\newcommand{\TRUE}{\@mivkeyw{true}}
+\newcommand{\FALSE}{\@mivkeyw{false}}
+\newcommand{\NIL}{\@mivkeyw{nil}}
+\newcommand{\UNDEF}{\@mivkeyw{undefined}}
+\newcommand{\ERROR}{\@mivkeyw{error}}
+
+\newcommand{\TOKEN}{{\rm TOKEN}}
+\newcommand{\QUOTA}{{\rm QUOT}}
+\newcommand{\BOOL}{{\rm BOOL}}
+\newcommand{\INTG}{{\rm INTG}}
+\newcommand{\N}[1]{{\rm N\I{#1}}}
+\newcommand{\REAL}{{\rm REAL}}
+\newcommand{\STRING}{{\rm STRING}}
+
+\newcommand{\QBOOL}{\QUOT{BOOL}}
+\newcommand{\QINTG}{\QUOT{INTG}}
+\newcommand{\QREAL}{\QUOT{REAL}}
+\newcommand{\QSTRING}{\QUOT{STRING}}
+
+\newcommand{\START}{\@mivkeyw{start}}
+\newcommand{\INPUT}{\@mivkeyw{input}}
+\newcommand{\OUTPUT}{\@mivkeyw{output}}
+\newcommand{\FROMP}{\@mivkeyw{from}}
+\newcommand{\SETP}{\@mivkeyw{set}}
+\newcommand{\TOP}{\@mivkeyw{to}}
+
+\newcommand{\MK}{\@mivkeyw{mk-}}
+
+\newcommand{\SET}{\@mivkeyw{-set}}
+\newcommand{\CARD}{\@mivkeyw{card}}
+\newcommand{\UNION}{\@mivkeyw{union}}
+\newcommand{\INTERS}{\@mivkeyw{intersect}}
+
+\newcommand{\HD}{\@mivkeyw{hd}}
+\newcommand{\TL}{\@mivkeyw{tl}}
+\newcommand{\LEN}{\@mivkeyw{len}}
+\newcommand{\ELEMS}{\@mivkeyw{elems}}
+\newcommand{\IND}{\@mivkeyw{ind}}
+\newcommand{\CONC}{\@mivkeyw{conc}}
+
+\newcommand{\LST}{\@mivkeyw{lt}}
+\newcommand{\RST}{\@mivkeyw{rt}}
+
+\newcommand{\DOM}{\@mivkeyw{dom}}
+\newcommand{\RNG}{\@mivkeyw{rng}}
+\newcommand{\MERGE}{\@mivkeyw{merge}}
+
+\newcommand{\PRE}{\@mivkeyw{pre-}}
+\newcommand{\POST}{\@mivkeyw{post-}}
+
+\newcommand{\TYPE}{\@mivkeyw{type}}
+
+\newcommand{\SEL}{\@mivkeyw{s-}}
+\newcommand{\REF}{\@mivkeyw{ref}}
+\newcommand{\CTS}{\@mivkeyw{c}}
+
+\newcommand{\IS}{\@mivkeyw{is-}}
+\newcommand{\BST}{\@mivkeyw{be}\ \@mivkeyw{s.t.}}
+\newcommand{\EXIT}{\@mivkeyw{exit}}
+
+
+%************************************************************************
+%									*
+%	Mathematical symbols.						*
+%									*
+%************************************************************************
+
+\newcommand{\BATOM}{\mbox{$\lhd$}}
+\newcommand{\EATOM}{\mbox{$\rhd$}}
+\newcommand{\EQV}{\mbox{$\equiv$}}
+\newcommand{\EQ}{=}
+\newcommand{\NE}{\mbox{$\neq$}}
+\newcommand{\LT}{\mbox{$<$}}
+\newcommand{\GT}{\mbox{$>$}}
+\newcommand{\LE}{\mbox{$\leq$}}
+\newcommand{\GE}{\mbox{$\geq$}}
+
+\newcommand{\AND}{\mbox{$\wedge$}}
+\newcommand{\OR}{\mbox{$\vee$}}
+\newcommand{\NOT}{\mbox{$\neg$}}
+
+\newcommand{\MEMB}{\mbox{$\in$}}
+\newcommand{\NMEMB}{\mbox{$\not\in$}}
+\newcommand{\BMEM}{\mbox{$\ni$}}
+\newcommand{\NBMEM}{\mbox{$\not\ni$}}
+\newcommand{\U}{\mbox{$\cup$}}
+\newcommand{\ISECT}{\mbox{$\cap$}}
+\newcommand{\SETM}{\mbox{$\setminus$}}
+\newcommand{\SUBS}{\mbox{$\subset$}}
+\newcommand{\NSUBS}{\mbox{$\not\subset$}}
+\newcommand{\SUBSEQ}{\mbox{$\subseteq$}}
+\newcommand{\NSUBSEQ}{\mbox{$\not\subseteq$}}
+
+\newcommand{\COMP}{\mbox{$^{\circ}$}}
+\newcommand{\INVER}{\mbox{$^{\,-1}$}}
+
+\newcommand{\X}{\mbox{$\times$}}
+
+\newcommand{\A}{\mbox{$\,\forall$}}
+\newcommand{\E}{\mbox{$\,\exists$}}
+\newcommand{\EO}{\mbox{$\,\exists\,!$}}
+\newcommand{\THAT}{\mbox{$\triangle$}}
+\newcommand{\LAMB}{\mbox{$\lambda$}}
+\newcommand{\RHO}{\mbox{$\rho$}}
+\newcommand{\SIGMA}{\mbox{$\sigma$}}
+\newcommand{\BSIGMA}{\mbox{$\Sigma$}}
+
+\newcommand{\BAR}
+  {\mbox{$\mid$}}
+\newcommand{\FUNDEF}
+  {\overlayc%
+     {\raisebox{.6ex}{\scriptsize$\triangle$}}%
+     {\raisebox{-.5ex}{\small$=$}}}
+\newcommand{\ARW}
+  {\mbox{\small$\rightarrow$}}
+\newcommand{\PARW}
+  {\overlayl%
+     {\@mivboxe{.08em}%
+      \raisebox{.65ex}{\footnotesize$\sim$}}%
+     {\ARW}}
+\newcommand{\DARW}
+  {\@mivboxl{.15em}{\small$=$}%
+   \mbox{\small$\Rightarrow$}}
+\newcommand{\PDARW}
+  {\overlayl%
+     {\@mivboxe{.08em}%
+      \raisebox{.8ex}{\footnotesize$\sim$}}%
+     {\DARW}}
+\newcommand{\ENSB}
+  {\mbox{$\Leftrightarrow$}}
+
+\newcommand{\Y}{{\sf Y}}
+
+\newcommand{\T}{{\sf T}}
+
+\newcommand{\BNIL}
+  {\mbox{$[$}}
+\newcommand{\ENIL}
+  {\mbox{$\,]$}}
+\newcommand{\UL}
+  {\raisebox{.25ex}{\underline{\small\U}}}
+\newcommand{\MAP}
+  {\@mivboxl{0.1em}{\ARW}%
+   \mbox{$_{m}$}}
+\newcommand{\BIMAP}
+  {\@mivboxl{0.16em}{$\leftrightarrow$}%
+   \mbox{$_{m}$}}
+\newcommand{\MAPSTO}{$\mapsto$}
+
+\newcommand{\BTUP}{\mbox{$<$}}
+\newcommand{\ETUP}{\mbox{$\,>$}}
+\newcommand{\BMAP}{\mbox{$[$}}
+\newcommand{\EMAP}{\mbox{$\,]$}}
+\newcommand{\BSET}{\mbox{$\{$}}
+\newcommand{\ESET}{\mbox{$\,\}$}}
+
+\newcommand{\STAR}{\mbox{$^{*}$}}
+\newcommand{\PLUS}{\mbox{$^{+}$}}
+\newcommand{\CAT}{\mbox{$\hat{\ }$}}
+\newcommand{\IMPL}{\mbox{$\supset$}}
+\newcommand{\TURNSTY}{\mbox{$\vdash$}}
+
+\newcommand{\LSYN}{\mbox{$[\![\,$}}
+\newcommand{\RSYN}{\mbox{$\,]\!]$}}
+
+%************************************************************************
+%									*
+%	Priming and indexing facilities, etc.				*
+%									*
+%************************************************************************
+
+\newcommand{\I}[1]
+   {\mbox{$_{\MIVTXTTYPE #1}$}}
+
+\newcommand{\M}
+   {\mbox{$\,'$}}
+\newcommand{\MM}
+   {\mbox{$\,''$}}
+\newcommand{\MMM}
+   {\mbox{$\,'''$}}
+\newcommand{\MMMM}
+   {\mbox{$\,''''$}}
+
+\newcommand{\MI}[1]
+   {\overlayl{\M}{\I{#1}}}
+\newcommand{\MMI}[1]
+   {\overlayl{\MM}{\I{#1}}}
+\newcommand{\MMMI}[1]
+   {\overlayl{\MMM}{\I{#1}}}
+\newcommand{\MMMMI}[1]
+   {\overlayl{\MMMM}{\I{#1}}}
+
+\newcommand{\IM}[1]
+   {\overlayl{\M}{\I{#1}}}
+\newcommand{\IMM}[1]
+   {\overlayl{\MM}{\I{#1}}}
+\newcommand{\IMMM}[1]
+   {\overlayl{\MMM}{\I{#1}}}
+\newcommand{\IMMMM}[1]
+   {\overlayl{\MMMM}{\I{#1}}}
+
+%************************************************************************
+%									*
+%	Annotation Environment 						*
+%									*
+%************************************************************************
+
+\newlength{\annotin}
+
+% Start of annotation environment
+\newcommand{\ANN}[1]
+  {\@mivbegin{ANN}{NNA}%
+   \initmivlengths%
+   \setlength{\annotin}{\numwid}%
+   \addtolength{\annotin}{\deltamivindent}%
+   \setlength{\parindent}{0em}%
+   \par%
+   \addpenalty{-\@highpenalty}%
+   \addvspace{\formvspace}%
+   \begin{list}{}%
+     {\setlength{\labelwidth}{\annotin}%
+      \setlength{\leftmargin}{\annotin}%
+      \setlength{\labelsep}{0em}%
+      \setlength{\parsep}{0em}%
+      \setlength{\itemsep}{0em}%
+      \setlength{\topsep}{0em}%
+      \setlength{\partopsep}{0em}%
+     }%
+   \item[{\@mivboxe{\numwid}{\bf Annotations to}\ \NAME{#1}:}]%
+   \nopagebreak%
+   \vspace{\linevspace}%
+  }
+
+% End of annotation environment
+\newcommand{\NNA}
+  {\nopagebreak%
+   \vspace{\linevspace}%
+   \item[{\@mivboxe{\numwid}{\bf End of annotations}}]%
+   \end{list}%
+   \par%
+   \addvspace{\formvspace}%
+   \addpenalty{-\@highpenalty}%
+   \@mivend{ANN}{NNA}%
+  }
+
+
+% Free format annotation
+%     (\ANNOTE{tttt} --> "tttt            ")
+\newcommand{\ANNOTE}[1]
+  {\item[#1\hfill]}
+
+
+% Formatted single line annotation
+%     (\ANNL{nn} --> ".nn             ")
+\newcommand{\ANNL}[1]
+  {\item[{%
+     \@mivboxe{\leftnumwid}%
+     .%
+     #1%
+     \hfill%
+  }]}
+
+% Formatted interval annotation
+%     (\ANNI{nn}{mm} --> ".nn -- .mm      ")
+\newcommand{\ANNI}[2]
+  {\item[{%
+     \@mivboxe{\leftnumwid}%
+     .%
+     #1%
+     \@mivboxc{.8em}{--}%
+     .%
+     #2%
+     \hfill%
+  }]}
+
+
+% Formatted single domain annotation
+%     (\ANNDL{nref} --> "nn.             ")
+\newcommand{\ANNDL}[1]
+  {\item[{%
+     \@mivboxr{\leftnumwid}{\ref{#1}}%
+     .%
+     \hfill%
+  }]}
+
+
+% Formatted single domain annotation
+%     (\ANND{offset} --> "nn.             ")
+\newcommand{\ANND}[1]
+  {\setcounter{domlin}{\value{domform}}%
+   \addtocounter{domlin}{#1}%
+   \item[{%
+     \@mivboxr{\leftnumwid}{\thedomlin}%
+     .%
+     \hfill%
+   }]}
+
+% Formatted interval domain annotation
+%    (\ANNDI{offset1}{offset2} --> "nn1. -- nn2.    ")
+\newcommand{\ANNDI}[2]
+  {\item[{%
+     \setcounter{domlin}{\value{domform}}%
+     \addtocounter{domlin}{#1}%
+     \@mivboxr{\leftnumwid}{\thedomlin}%
+     .%
+     \@mivboxc{.8em}{--}%
+     \setcounter{domlin}{\value{domform}}%
+     \addtocounter{domlin}{#2}%
+     \thedomlin%
+     .%
+     \hfill%
+  }]}
+\newcommand{\ANNID}[2]
+  {\ANNDI{#1}{#2}%
+   \@mivwarning{`ANNID' has been renamed to `ANNDI'}}
+
+% Formatted single subdomain annotation
+%    {\ANNDN{offset}{mm} --> "nn.mm           "}
+\newcommand{\ANNDN}[2]
+  {\setcounter{domlin}{\value{domform}}%
+   \addtocounter{domlin}{#1}%
+   \item[{%
+     \@mivboxr{\leftnumwid}{\thedomlin}%
+     .%
+     #2%
+     \hfill%
+   }]}
+
+% Formatted interval subdomain annotation
+%    (\ANNDNI{offset}{ll}{mm} --> "nn.ll -- .mm    ")
+\newcommand{\ANNDNI}[3]
+  {\setcounter{domlin}{\value{domform}}%
+   \addtocounter{domlin}{#1}%
+   \item[{%
+     \@mivboxr{\leftnumwid}{\thedomlin}%
+     .%
+     #2%
+     \@mivboxc{.8em}{--}%
+     .%
+     #3%
+     \hfill%
+   }]}
+
+%************************************************************************
+%									*
+%	This supports the reference to names in normal text.		*
+%									*
+%************************************************************************
+
+\newcommand{\NAME}[1]
+   {{\MIVTXTTYPE #1\/}}
+\newcommand{\NAMEB}[1]
+   {\mbox{\MIVTXTTYPE #1\/}}
+
+\newcommand{\name}[1]
+   {\NAME{#1}%
+    \@mivwarning{`name' has been renamed to `NAME'}}
+
+
+%************************************************************************
+%									*
+%	Some very useful commands.					*
+%									*
+%************************************************************************
+
+\newcommand{\DB}
+  {\mbox{\sc
+     B%
+     \raisebox{-.5ex}{\@mivboxc{.1em}{J}}%
+     $\!$%
+     \raisebox{.2ex}{\o}%
+     $\!$%
+     R%
+     $\!$%
+     N%
+     $\!$%
+     \raisebox{-.5ex}{E}%
+     $\!$%
+     R%
+  }}
+
+\newcommand{\LATEX}
+  {\mbox{%
+     $\Gamma\!$%
+     \raisebox{-.4ex}{\A}%
+     $\!$%
+     T%
+     $\!$%
+     \raisebox{-.8ex}{\E}%
+     $\!$%
+     X%
+  }}
+
+

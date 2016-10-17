@@ -1,0 +1,123 @@
+class PartsTableModel is subclass of WireTableModel
+operations 
+protected  getItems : () ==> map  int  to  map  int  to  [String]
+getItems() == 
+( dcl   currPart : [Part] := nil  ,
+        columnType : [WireDataTypes] := WireDataTypes`WIRE_DATA_TYPE_NONE;
+  partsList := new  Vector();
+  ( dcl   partsIterator : [Iterator] := nil  ;
+    if  columnTypes = nil  
+    then  
+      let - = getColumnInfo()
+      in 
+        skip ;
+    if  not  bundleParts
+    then  
+      ( dcl   refDes : [RefDes] := context.getCurrentContextFieldObject(ContextTypes`REFDES);
+        if  refDes = nil  
+        then  
+          ( items := {l_5 |-> {l_4 |-> nil  |l_4 in set  {0,...,0-1}}|l_5 in set  {0,...,0-1}};
+            return  items
+          ) 
+        else  
+          ( partsIterator := refDes.getAllParts()
+          ) 
+      ) 
+    else  
+      ( dcl   bundle : [Bundle] := context.getCurrentContextFieldObject(ContextTypes`BUNDLE);
+        if  bundle = nil  
+        then  
+          ( items := {l_5 |-> {l_4 |-> nil  |l_4 in set  {0,...,0-1}}|l_5 in set  {0,...,0-1}};
+            return  items
+          ) 
+        else  
+          ( partsIterator := bundle.getAllParts()
+          ) 
+      ) ;
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip 
+        
+      end  
+    in  
+      while  partsIterator.hasNext() do  
+      ( let - = partsList.add(partsIterator.next())
+        in 
+          skip 
+      ) ;
+    items := {l_4 |-> nil  |l_4 in set  {0,...,partsList.size()-1}};
+    ( dcl   row : int  := 0;
+      partsIterator := partsList.iterator();
+      trap  j2v_break with  
+        cases  true  : 
+          (isofclass  (J2V_Break,j2v_break)) -> 
+            skip 
+          
+        end  
+      in  
+        while  partsIterator.hasNext() do  
+        ( items := items ++ {row |-> {l_5 |-> nil  |l_5 in set  {0,...,columnTypes.length-1}}};
+          currPart := partsIterator.next();
+          ( dcl   col : int  := 0;
+            while  col < columnTypes.length do  
+            ( trap  j2v_exception with  
+                cases  true  : 
+                  (isofclass  (Throwable,j2v_exception)) -> 
+                    ( dcl   t : [Throwable] := j2v_exception;
+                      items(row) := items(row) ++ {col |-> new  String([  ])}
+                    ) ,
+                  others  -> 
+                    exit  j2v_exception
+                end  
+              in  
+                ( columnType := columnTypes(col);
+                  items(row) := items(row) ++ {col |-> WireDataTypes`decodeValue(columnType , currPart)}
+                ) ;
+              col := col+1
+            ) 
+          ) ;
+          row := row+1
+        ) ;
+      return  items
+    ) 
+  ) 
+) ;
+
+public  getListName : () ==> [String]
+getListName() == 
+( return  new  String("Parts")
+) ;
+
+protected  getNoteText : int  ==> map  int  to  [String]
+getNoteText(row) == 
+( dcl   rowPart : [Part] := partsList.elementAt(row);
+  if  rowPart.hasDrawingNotes()
+  then  
+    ( return  {1 |-> rowPart.getDrawingNotesText() , 0 |-> rowPart.getPartName()}
+    ) 
+  else  
+    ( return  nil  
+    ) 
+) ;
+
+public  PartsTableModel : () ==> PartsTableModel
+PartsTableModel() == 
+( let - = WireTableModel()
+  in 
+    skip ;
+  propertyKey := new  String(new  String("parts_list.column."));
+  bundleParts := false  
+) ;
+
+public  setBundleParts : bool  ==> <VOID>
+setBundleParts(mode) == 
+( bundleParts := mode;
+  return  <VOID>
+) ;
+
+instance variables 
+  partsList : [Vector] := nil  ;
+  bundleParts : bool 
+  
+end  PartsTableModel

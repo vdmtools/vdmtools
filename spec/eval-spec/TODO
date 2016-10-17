@@ -1,0 +1,121 @@
+=======================================
+Instantiations of parameterized modules
+=======================================
+Compiling a Lambda expression will result in a SEM`ExplFN record, which
+contains the name of the module in which the expressions belongs. This is,
+for example, used for finding the definition of functions, called within
+the lambda expression. 
+
+If the instantiation part of a parameterized module is an expression, the
+expression is inserted as a global value in the module that is
+instantiated. Thus in the example below, a value called 'lessthan' will
+exists in the module A`binst. 
+
+Unfortunately this means that the lambda expression will seem to belong to
+this module rather than the module in which it physically stands. Thus in
+the example the function 'f' will be found in the module A`binst rather
+than in the module A.
+
+   module B
+   
+   parameters
+     types lessthan
+   
+   exports all
+   
+   definitions
+   
+   operations
+   
+   op : nat * nat ==> bool
+   op(a,b) ==
+     return lessthan(a,b);
+   
+   f: nat * nat ==> bool
+   f(x,y) ==
+     return false;
+   
+   end B
+   
+   module A
+   
+   instantiations
+   
+   binst as B(lessthan -> lambda a:nat ,b:nat & f(a,b)) all
+   
+   exports all
+   
+   definitions
+   
+   operations
+   
+   Test: () ==> nat
+   Test() ==
+     return binst`op(1,2);
+   
+   f: nat * nat ==> bool
+   f(x,y) ==
+     return true;
+   
+   end A
+
+The example above is the testcase named .../SL/parm_modules/parm_modules-15.body
+
+
+
+===========================================
+Lambda expressions in parameterized modules
+===========================================
+Compiling a Lambda expression will result in a SEM`ExplFN record, which
+contains the name of the module in which the expressions belongs. This is,
+for example, used for finding the definition of functions, called within
+the lambda expression. 
+
+If the lambda expression is located within a parameterized module, then the
+name of the module will be 'recorded' rather than the name of its
+instantiation. Thus in the example below, the lambda expression will have
+the module name B recorded rather than the module name A`binst
+
+This is a problem when the module is 'pushed' into context to evaluate the
+lambda expresion.
+
+A proposed solution would be to run though the instruction code for all
+functions and operations in the instantiated module, and replace the names
+for the parameterized module with the name for the instantiated module.
+
+   module B
+   
+   parameters
+     types T
+   
+   exports all
+   
+   definitions
+   
+   operations
+   
+   op : nat ==> (nat -> bool)
+   op(a) ==
+     return lambda b: nat & a < b;
+   
+   end B
+   
+   module A
+   
+   instantiations
+   
+   binst as B(T -> nat) all
+   
+   exports all
+   
+   definitions
+   
+   operations
+   
+   Test: () ==> nat
+   Test() ==
+     return binst`op(1)(2) ;
+   
+   end A
+
+The example above is the testcase named .../SL/parm_modules/parm_modules-16.body

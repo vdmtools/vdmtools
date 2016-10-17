@@ -1,0 +1,80 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+types
+
+
+  AAA = R3 | R4;
+
+  AAAA = R2 | R4;
+
+  AA = R1 | R2 | AAA;
+
+  R2 :: nat 
+        nat;
+
+  R3 :: nat 
+        nat;
+
+  R4 :: nat 
+        nat;
+
+  R1 :: nat 
+        nat;
+
+  B_ :: nat 
+        nat;
+
+  B' = bool | nat | char
+  inv b == if is_nat(b) then 
+             b > 10
+           else
+             true;
+
+  D2 = set of nat
+  inv s == s <> {};
+
+  Y = R1 | R2 | int;
+
+  A = B | C | D;
+
+  B = B' | B_;
+
+  C = real | <QUOTE>;
+
+  D = D1 | D1 | D3;
+  
+  D1 = seq of B';
+
+  D3 = D1 * D2;
+
+  Item = MenuItem | RemoveItem;
+  
+  MenuItem = Separator | Action;
+  
+  Action:: text: seq of char
+           s : <HELLO>;
+
+  Separator::;
+
+  RemoveItem::;
+
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> Colour  
+Test () ==
+( dcl colour :Colour := <RED>;
+  return colour
+);
+  
+types 
+public  Colour = <RED> | <BLUE> | <GREEN> | <BLACK> | <WHITE>
+  inv c == c = <RED>
+
+
+end A

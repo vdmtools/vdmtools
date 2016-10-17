@@ -1,0 +1,24 @@
+class B
+
+operations
+public B: int ==> B
+B(-) ==
+( skip
+);
+
+end B
+
+class A is subclass of B
+operations
+public A: int ==> A
+A(i) ==
+( let - = B(i) in skip;
+);
+
+public Test: () ==> int
+Test() ==
+( dcl a: A:=new A(0);
+  return 0
+)
+
+end A

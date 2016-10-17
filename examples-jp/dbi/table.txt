@@ -1,0 +1,8 @@
+            Table "public.fruit"
+ Column |         Type          | Modifiers 
+--------+-----------------------+-----------
+ name   | character varying(20) | not null
+ price  | integer               | 
+Indexes:
+    "fruit_pkey" PRIMARY KEY, btree (name)
+

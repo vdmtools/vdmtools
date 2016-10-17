@@ -1,0 +1,51 @@
+class C
+
+instance variables
+
+i : nat := 0;
+b : bool;
+
+operations
+
+  protected C: nat ==> C
+  C(n) ==
+    i := n;
+
+--  protected C: nat * bool ==> C
+  public C: nat * bool ==> C
+  C(n,b2) ==
+    (b := b2;
+     i := n);
+    
+public Get : () ==> nat
+Get() ==
+  return i;
+    
+public Get2 : () ==> bool
+Get2() ==
+  return b;
+  
+end C
+class D is subclass of C
+
+operations
+
+D: () ==> D
+D() ==
+  skip;
+
+end D
+class B
+
+operations
+
+Op:() ==> nat * bool
+Op() ==
+  (let d = new D(5,true) in
+   return mk_(d.Get(),d.Get2()));
+
+public Test : () ==> nat * bool
+Test() ==
+  Op();
+  
+end B

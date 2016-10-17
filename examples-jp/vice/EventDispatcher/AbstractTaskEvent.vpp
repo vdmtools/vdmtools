@@ -1,0 +1,18 @@
+\begin{vdm_al}
+class 『抽象タスク事象』 is subclass of 『事象共通定義』
+
+instance variables
+  private
+  抽象タスク : 『抽象タスク』;
+  private
+  事象 : 『事象』
+
+operations
+  public 『抽象タスク事象』: 『抽象タスク』 * 『事象』 ==> 『抽象タスク事象』
+  『抽象タスク事象』 (aタスク, a事象) == (抽象タスク := aタスク; 事象 := a事象);
+
+  public 欄を得る: () ==> 『抽象タスク』 * 『事象』
+  欄を得る () == return mk_ (抽象タスク, 事象)
+
+end 『抽象タスク事象』
+\end{vdm_al}

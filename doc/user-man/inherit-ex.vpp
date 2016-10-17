@@ -1,0 +1,31 @@
+class A
+
+end A
+
+class B is subclass of A
+
+instance variables
+
+  f : F := new F();
+
+end B
+
+class C is subclass of A
+
+instance variables
+
+  b : B := new B();
+
+end C
+
+class D is subclass of B,C
+
+end D
+
+class E is subclass of B
+
+end E
+
+class F
+
+end F

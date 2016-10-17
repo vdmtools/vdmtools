@@ -1,0 +1,219 @@
+#------------------------------------------------------------------------------
+# This is a default setup file for the test environment. Edit it to your needs.
+# Except from paths, case do not matter.
+# For each description valid values are given in parenthesis
+#------------------------------------------------------------------------------
+
+
+# What should be run from this test environment. (TC (type checkker), IP (interpreter), 
+# CPP, Java, Api, Debug, parser, rose, metaiv, RTF, POG)
+What-To-Run = IP
+
+# Which language should be executed (SL, PP, RT)
+Language = PP
+
+# What should be executed specifications and/or implementation (spec, impl)
+Run-Type = impl 
+#spec
+
+# How much progress information should be printed on standrad out during execution? 
+# (-1 means all, else the higher number the more output)
+Debug-Level = -1
+
+# How many test cases should be executed for each invocation of vdmde on
+# specification level? The larger the number, the faster overall test run,
+# but the longer it takes between results are output to the user.
+spec-job-size = 1
+
+# Should the generated files be keept after test execution (yes/no)
+keep = yes
+
+# Should the generated files be keep after test execution in case of errors (yes/no)
+keep-when-error = yes
+
+# Should error messages be written onto stdout together with progress information
+show-errors-in-progress = yes
+
+# Dump profiling output (yes/no)
+enable-profiling = no
+
+#--------------------------------------------------------------------------------
+# Setup of wildcard variables
+#--------------------------------------------------------------------------------
+parser-SL = ~/vdmwork/vdmde
+parser-PP = ~/vdmwork/vppde
+parser-RT = ~/vdmwork/vicede
+
+interpreter-spec    = ~/vdmwork/vdmde
+interpreter-impl-sl = ~/vdmwork/vdmde
+interpreter-impl-pp = ~/vdmwork/vppde
+interpreter-impl-rt = ~/vdmwork/vicede
+
+spec-compare        = ~/vdmwork/vdmde
+sem-backend         = ~/vdmwork/be_ip-sl
+extract-source-backend   = ~/vdmwork/be_spec-sl
+
+code-generator-SL = ~/vdmwork/vdmde
+code-generator-PP = ~/vdmwork/vppde
+code-generator-RT = ~/vdmwork/vicede
+code-generator-java-spec = ~/vdmwork/vdmde
+
+api-sl-server = ~/vdmwork/vdmde
+api-pp-server = ~/vdmwork/vppde
+
+# C++ Compiler
+compiler = /usr/bin/g++
+
+# C++ Compiler flags
+# for Mac OS X
+cflags = -I ~/vdmwork -D__darwin__ -liconv ~/vdmwork/libCG_darwin.a ~/vdmwork/libvdm_darwin.a
+# for Linux
+#cflags = -I ~/vdmwork -D__linux__ ~/vdmwork/libCG.a ~/vdmwork/libvdm.a
+# for Windows
+#cflags = /MD /W0 /EHsc /TP -D__STL_USE_NEWALLOC -DDYN_CAST -D_UNICODE -D__WIN32__  -D__x86__ -D__NT__ -D__OSVERSION__=4 /I. /I../stdlib
+
+#--------------------------------------------------------------------------------
+#                            Type Checker Options
+#--------------------------------------------------------------------------------
+# Directory with test cases
+TC-test-case-dir = ~/toolbox/trunk/test/tc
+
+# Where is the type checker specification located?
+TC-spec-dir = ~/toolbox/trunk/spec/ss-spec
+
+# What should be executed pos or def? (pos,def)
+TC-Type = def, pos
+
+#--------------------------------------------------------------------------------
+#                            Interpreter options
+#--------------------------------------------------------------------------------
+# Directory with test cases
+IP-test-case-dir = ~/toolbox/trunk/test/iptestcases
+# Alternate test case
+#IP-test-case-dir = ~/toolbox/trunk/test/cgip
+# Test cases for RT
+#IP-test-case-dir = ~/toolbox/trunk/test/cgip/VICE
+
+# Where is the type checker specification located?
+IP-spec-dir = ~/toolbox/trunk/spec/eval-spec
+
+# What to run (dtcon,dtcoff)
+IP-Type = dtcon, dtcoff
+
+#--------------------------------------------------------------------------------
+#                            C++ Code Generator options
+#--------------------------------------------------------------------------------
+
+#
+# compiler and compiler flags to run C++ Code Generator test under Windows
+#
+
+# Directory with test cases
+CPP-Test-case-dir = ~/toolbox/trunk/test/iptestcases/CORE, ~/toolbox/trunk/test/iptestcases/PP, ~/toolbox/trunk/test/iptestcases/SL
+
+# Where is the C++ Code Generator specification located?
+CPP-Spec-dir = ~/toolbox/trunk/spec/cg-spec
+
+cpp-lib-dir = ~/vdmwork
+
+#--------------------------------------------------------------------------------
+#                            Java Code generator options
+#--------------------------------------------------------------------------------
+# Directory with test cases
+Java-Test-case-dir = ~/toolbox/trunk/test/iptestcases/CORE, ~/toolbox/trunk/test/iptestcases/PP
+
+# Where is the Java Code Generator specification located?
+java-spec-dir = ~/toolbox/trunk/spec/cg-spec
+
+# Where is the Java Compiler located?
+compiler-java = $JDKHOME/bin/javac
+
+# for Mac OS X
+cflags-java = -J-Dfile.encoding=UTF-8 -encoding UTF8 -classpath .:$HOME/vdmwork/VDM.jar
+# for Linux
+#cflags-java = -classpath .:$HOME/vdmwork/VDM.jar
+# for Windows
+#cflags-java = -classpath ".;VDM.jar"
+
+interpreter-java = $JDKHOME/bin/java
+
+# for Mac OS X
+rtflags = -Dfile.encoding=UTF-8 -classpath .:$HOME/vdmwork/VDM.jar
+# for Linux
+#rtflags = -classpath .:$HOME/vdmwork/VDM.jar
+# for Windows
+#rtflags = -classpath ".;VDM.jar"
+
+java-stdlib-dir = $HOME/vdmwork
+# for Windows
+#java-stdlib-dir = ../stdlib
+
+java-gentestdir = 
+
+#--------------------------------------------------------------------------------
+#                            API options
+#--------------------------------------------------------------------------------
+# Directory with test cases
+api-test-case-dir = ~/toolbox/trunk/test/apitestcases/PP
+#api-test-case-dir = ~/toolbox/trunk/test/apitestcases/SL
+
+api-gen-path = ~/powertest/api
+#api-gen-path = ~/powertest/api-sl
+api-source-path = ~/toolbox/trunk/test/apitestcases/PP
+#api-source-path = ~/toolbox/trunk/test/apitestcases/SL
+
+api-run-interactive = no
+api-run-start-toolbox = yes
+#corba-init-args = -ORBtraceLevel 20 -ORBtraceInvocations
+corba-init-args = 
+server-init-args = 
+#--------------------------------------------------------------------------------
+#                            Debugger options
+#--------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------
+#                            Parser options
+#--------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------
+#                            Rose Link options
+#--------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------
+#                            MetaIV options
+#--------------------------------------------------------------------------------
+
+# Directory with test cases
+metaiv-test-case-dir = ~/toolbox/trunk/test/metaivtestcases
+
+#--------------------------------------------------------------------------------
+#                            RTF prettyprinter options
+#--------------------------------------------------------------------------------
+
+j2vtf-test-case-dir = .
+#java2vdm-test-case-dir = .
+#javacg-code-test-case-dir = .
+
+#-----------------------------------------------------------------------------
+#                            Java2VDM options
+#-----------------------------------------------------------------------------
+
+java2vdm-spec-dir = .
+javacg-code-test-case-dir = .
+java2vdm-test-case-dir = .
+java2vdm-static-semantics-only = no
+java2vdm-java-parser-only = no
+java2vdm-javac-before-parser = yes
+# A test case to try (all others defined by *-test-case-dir are ignored)
+java2vdm-test-case = .
+
+#-----------------------------------------------------------------------------
+#                            POG options
+#-----------------------------------------------------------------------------
+
+# Directory with test cases
+pog-test-case-dir = ~/toolbox/trunk/test/pog
+
+# Where is the POG specification located?
+pog-spec-dir = ~/toolbox/trunk/spec/pog-spec
+

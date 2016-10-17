@@ -1,0 +1,46 @@
+class B
+end B
+
+class C
+end C
+
+class A is subclass of B
+
+operations
+
+m: int ==> A | real
+m(i) ==
+  if i > 10 then
+    return i
+  else
+    ( dcl a : B := new A();
+      return a
+    );
+
+public Test : () ==> seq of bool
+Test() ==
+( dcl v1: A | int :=  new A(),
+      v2: B | A | C := new C(),
+      res: seq of bool;
+  res := [ 
+    samebaseclass(v1, v1),
+    samebaseclass(v2, v2),
+    samebaseclass(v1, v2)
+  ];
+  v2 := v1.m(0);
+  res := res ^ [
+    samebaseclass(v1, v2)];
+  v1 := 10;
+  res := res ^ [
+    samebaseclass(v1, v1),
+    samebaseclass(v1, v2)
+  ];
+  v2 := new C();
+  res := res ^ [
+    samebaseclass(if 1=2 then v1 else v2, let v = v2 in v),
+    samebaseclass(let v = v1 in v, if 1=1 then v1 else v2)
+  ];
+  return res
+)
+
+end A

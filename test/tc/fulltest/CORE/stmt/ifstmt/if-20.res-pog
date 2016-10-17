@@ -1,0 +1,6 @@
+[ mk_ERR`ErrMsg( 
+     10,
+     10,
+     5,
+     "Error[310] : operation may return without a value because of the empty else-statement",
+     <ERROR> ) ]

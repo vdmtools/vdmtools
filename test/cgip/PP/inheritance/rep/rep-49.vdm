@@ -1,0 +1,36 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+
+types
+
+protected
+MyType = nat;
+
+protected
+   Rec ::
+     entry1 : B
+     entry2 : nat;
+
+
+
+end A
+
+class B is subclass of A
+
+
+
+functions 
+
+f: Rec -> MyType
+f(r) ==
+r.entry2
+
+operations
+
+public Test : () ==> nat
+Test() ==
+return f(mk_Rec(new B(), 3))
+
+
+end B

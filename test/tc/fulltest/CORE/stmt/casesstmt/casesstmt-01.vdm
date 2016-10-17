@@ -1,0 +1,13 @@
+class CasesStmtTest
+
+operations
+
+  Cases: () ==> char
+  Cases() == let cas:(int*int)|seq of int = [] in
+    cases cas:
+      mk_(a,b) -> let n = 7 in return true and n,
+      l1 ^ l2 -> let n = 6 in return n,
+      a -> return 'a'
+    end;
+
+end CasesStmtTest

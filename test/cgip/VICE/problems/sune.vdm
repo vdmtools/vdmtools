@@ -1,0 +1,840 @@
+--
+class Actuator
+
+instance variables
+protected ID : nat;
+protected Type : NetworkTypes`nodeType;
+protected Corr : NetworkTypes`correction;
+protected Env : Surroundings;
+
+operations
+public GetID: () ==> nat
+ GetID() ==
+  return ID;
+
+public GetType: () ==> NetworkTypes`nodeType
+ GetType() ==
+  return Type;
+
+protected GetCorr: () ==> NetworkTypes`correction
+ GetCorr() ==
+  return Corr;
+
+public Step: () ==> ()
+ Step() ==
+  is subclass responsibility
+
+end Actuator
+class Environment
+
+
+instance variables
+
+--private io  : IO := new IO();
+private inlines : seq of inline := [];
+outlines : seq of nat := [];
+private simtime : nat;
+
+private finished : bool := false;
+
+--
+-- Types definition section
+--
+types
+
+-- Input file: TempIn, HumidIn, TimeIn
+public inline = nat * nat * nat;
+
+--
+-- Operations definition section
+--
+operations
+
+public Environment: seq of char ==> Environment
+ Environment(fname) ==
+  (def mk_(t,input) = mk_(20000,[mk_(180,210,2000),mk_(0,0,19999)])
+--io.freadval[nat * seq of inline](fname) 
+   in
+	   (inlines := input;
+   simtime := t;
+   );
+  )
+pre fname <> []
+post  inlines <> [] and simtime > 0;
+
+private CreateSignal: () ==> ()
+ CreateSignal() ==
+  (if len inlines > 0
+  then (dcl curtime : nat := time,
+    tBool : bool;
+	 def mk_ (tempIn, humidIn, timeIn) = hd inlines in
+	    (if timeIn <= curtime
+    then (HA`Env.SetTemp(tempIn);
+     HA`Env.SetHumid(humidIn);
+     --tBool := io.echo("\nNew env values set!");
+     --tBool := io.writeval[nat](timeIn);
+     inlines := tl inlines;
+     return
+     );
+	    );
+   )
+  else (finished := true;
+   return
+   );
+  );
+
+async public HandleEvent: () ==> ()
+HandleEvent() ==
+  outlines := outlines ^[time];
+
+public IsFinished: () ==> seq of nat
+ IsFinished() ==
+  return outlines;
+
+sync
+ per IsFinished => finished and #active(HandleEvent) = 0;
+
+thread
+
+-- period of thread (period, jitter, delay, offset)
+periodic(1000,0,0,0) (CreateSignal)
+
+end Environment
+--
+-- class definition
+--
+system HA
+
+--
+-- instance variables
+--
+instance variables
+
+-- cpu for host controller
+cpu1 : CPU := new CPU(<FCFS>, 1E9);
+-- cpu for sensors
+cpu2 : CPU := new CPU(<FCFS>, 1E6);
+-- cpu for actuators
+cpu3 : CPU := new CPU(<FCFS>, 1E6);
+cpu4 : CPU := new CPU(<FCFS>, 1E6);
+--cpu5 a CPU := new CPU(<FCFS>, 1E6);
+
+-- bus connecting host controller and sensors
+bus1 : BUS := new BUS(<FCFS>, 1E3, {cpu1, cpu2, cpu3, cpu4 });
+
+public static Env  : Surroundings
+:= new Surroundings();
+public static Env2  : Environment
+:= new Environment("dummy");
+public static Host  : HostController
+:= new HostController(180, 200);
+public static TempNode : TemperatureSensor
+:= new TemperatureSensor(1, <TEMPSENSOR>, 0, Env);
+public static HumidNode : HumidSensor
+:= new HumidSensor(2, <HUMIDSENSOR>, 0, Env);
+public static ThermNode : Thermostat
+:= new Thermostat(3, <THERMOSTAT>, Env);
+public static WinNode : Window
+:= new Window(4, <WINDOW>, Env);
+
+
+
+
+--
+-- Operations definition section
+--
+operations
+
+public HA: () ==> HA
+ HA() ==
+  (cpu1.deploy(Host);
+  cpu2.deploy(TempNode);
+  cpu2.deploy(HumidNode);
+  cpu3.deploy(ThermNode);
+	  cpu3.deploy(WinNode);
+	  );
+
+end HA
+--
+-- class definition
+--
+class HostController
+
+--
+-- instance variables
+--
+instance variables
+
+private finished  : bool := false;
+private print  : bool := true;
+
+private TargetTemp : nat;
+private Temp  : nat := 0;
+private TargetHumid : nat;
+private Humid  : nat := 0;
+
+private NodeList  : map nat to NetworkTypes`nodeType := { |-> };
+private Algo  : algType := <NONE>;
+
+--
+-- Types definition section
+--
+types
+
+public algType = <THTW> | <TTW> | <TT> | <TW> | <HW> | <NONE>;
+
+--
+-- Operations definition section
+--
+operations
+
+public HostController: nat * nat ==> HostController
+ HostController(t, h) ==
+  (TargetTemp := t;
+  TargetHumid := h;
+  );
+
+public UpdateValues: () ==> ()
+ UpdateValues() ==
+  cycles(1E9)
+  (for all r in set rng NodeList do
+   (if (r = <HUMIDSENSOR>)
+   then Humid := HA`HumidNode.ReadValue();
+if (r = <TEMPSENSOR>)
+	   then Temp := HA`TempNode.ReadValue();
+);
+	  );
+
+public GetAlgo: () ==> algType
+ GetAlgo() ==
+  return Algo;
+
+public GetTemp: () ==> nat
+ GetTemp() ==
+  return Temp;
+
+public GetHumid: () ==> nat
+ GetHumid() ==
+  return Humid;
+
+public Algorithm: () ==> ()
+ Algorithm() ==
+  cycles(1E11)
+  (cases Algo:
+   <THTW> -> THTWAlgo(),
+<TTW>  -> TTWAlgo(),
+<TT>  -> TTAlgo(),
+<TW>  -> TWAlgo(),
+<HW>  -> HWAlgo(),
+<NONE> -> return
+	  end
+  );
+
+private THTWAlgo: () ==> ()
+ THTWAlgo() ==
+	  (if (Humid > TargetHumid)
+	  then (HA`WinNode.SetCorrection(<OPEN>);
+   --printStr("Window opened!");
+	   HA`ThermNode.SetCorrection(<NONE>);
+   --printStr("Thermo set to NONE");
+   print := true;
+)
+	  elseif (Temp > TargetTemp+3)
+	  then (HA`WinNode.SetCorrection(<CLOSE>);
+   --printStr("Window closed!");
+   HA`ThermNode.SetCorrection(<DEC>);
+   --printStr("Thermo dec");
+print := true;
+)
+	  elseif (Temp < TargetTemp-3)
+  then (HA`WinNode.SetCorrection(<CLOSE>);
+   --printStr("Window closed!");
+   HA`ThermNode.SetCorrection(<INC>);
+   --printStr("Thermo inc");
+	   print := true;
+)
+	  else (HA`WinNode.SetCorrection(<CLOSE>);
+   --Pause();
+	   HA`ThermNode.SetCorrection(<NONE>);
+	   if print
+   then (HA`Env2.HandleEvent(); printStr("Target values reached");
+--    let - =
+--new IO().writeval[nat](time)
+--	    in skip;
+    );
+	   print := false;
+	   );
+	  );
+private TTWAlgo: () ==> ()
+ TTWAlgo() ==
+  (if (Temp > TargetTemp + 6)
+  then (HA`WinNode.SetCorrection(<OPEN>);
+   HA`ThermNode.SetCorrection(<DEC>);
+   print := true;
+)
+	  elseif (Temp > TargetTemp + 3)
+  then (HA`WinNode.SetCorrection(<CLOSE>);
+   HA`ThermNode.SetCorrection(<DEC>);
+print := true;
+)
+	  elseif (Temp < TargetTemp - 3)
+  then (HA`WinNode.SetCorrection(<CLOSE>);
+   HA`ThermNode.SetCorrection(<INC>);
+   print := true;
+)
+	  else (HA`WinNode.SetCorrection(<CLOSE>);
+   HA`ThermNode.SetCorrection(<NONE>);
+   if print
+   then (HA`Env2.HandleEvent(); printStr("Target values reached");
+--    let - =
+--new IO().writeval[nat](time)
+--	    in skip;
+    );
+   print := false;
+   );
+  );
+
+private TTAlgo: () ==> ()
+ TTAlgo() ==
+	  (if (Temp > TargetTemp + 3)
+  then (HA`ThermNode.SetCorrection(<DEC>);
+   print := true;
+)
+	  elseif (Temp < TargetTemp - 3)
+  then (HA`ThermNode.SetCorrection(<INC>);
+print := true;
+)
+	  else (HA`ThermNode.SetCorrection(<NONE>);
+   if print
+   then (HA`Env2.HandleEvent(); printStr("Target values reached");
+--    let - =
+--new IO().writeval[nat](time)
+--	    in skip;
+    );
+   print := false;
+   );
+	  );
+
+private TWAlgo: () ==> ()
+ TWAlgo() ==
+	  (if (Temp > TargetTemp + 3)
+  then (HA`WinNode.SetCorrection(<OPEN>);
+   print := true;
+)
+	  else (HA`WinNode.SetCorrection(<CLOSE>);
+   if print
+   then (HA`Env2.HandleEvent(); printStr("Target values reached");
+--    let - =
+--new IO().writeval[nat](time)
+--	    in skip;
+    );
+   print := false;
+   );
+  );
+
+private HWAlgo: () ==> ()
+ HWAlgo() ==
+	  (if (Humid > TargetHumid)
+  then (HA`WinNode.SetCorrection(<OPEN>);
+   print := true;
+)
+	  else (HA`WinNode.SetCorrection(<CLOSE>);
+   if print
+   then (HA`Env2.HandleEvent(); printStr("Target values reached");
+--    let - =
+--new IO().writeval[nat](time)
+--	    in skip;
+    );
+   print := false;
+   );
+  );
+
+
+
+private UpdateAlgorithm: () ==> ()
+ UpdateAlgorithm() ==
+	  (if (rng NodeList = {})
+  then Algo := <NONE>
+elseif (rng NodeList = {<TEMPSENSOR>, <HUMIDSENSOR>,
+<THERMOSTAT>, <WINDOW>})
+	  then Algo := <THTW>
+  elseif (rng NodeList = {<TEMPSENSOR>, <THERMOSTAT>,
+<WINDOW>})
+	  then Algo := <TTW>
+  elseif (rng NodeList = {<TEMPSENSOR>, <THERMOSTAT>})
+  then Algo := <TT>
+  elseif (rng NodeList = {<TEMPSENSOR>, <WINDOW>})
+  then Algo := <TW>
+  elseif (rng NodeList = {<HUMIDSENSOR>, <WINDOW>})
+  then Algo := <HW>
+  else Algo := <NONE>;
+	  );
+
+private printStr: seq of char ==> ()
+ printStr(str) ==
+	  (print := false;
+--let - = new IO().echo(str)
+--	  in
+--	   skip;
+  );
+
+public AddNode: nat * NetworkTypes`nodeType ==> ()
+ AddNode(id, type) ==
+  (NodeList := NodeList ++ {id |-> type};
+  UpdateAlgorithm();
+  )
+pre id not in set dom NodeList
+post card(dom NodeList) = card(dom NodeList~) + 1;
+
+public RemoveNode: nat * NetworkTypes`nodeType ==> ()
+ RemoveNode(id, type) ==
+  (if (NodeList(id) = type)
+  then NodeList := {id} <-: NodeList;
+  UpdateAlgorithm();
+  )
+pre id in set dom NodeList
+post card(dom NodeList) = card(dom NodeList~) - 1;
+
+private PeriodicOp: () ==> ()
+ PeriodicOp() ==
+(UpdateValues();
+	  Algorithm();
+  );
+
+public IsFinished: () ==> ()
+ IsFinished() ==
+skip;
+
+public Finish: () ==> ()
+ Finish() ==
+finished := true;
+
+sync
+
+per IsFinished => finished;
+per printStr => print;
+
+--
+-- Thread definition section
+--
+thread
+
+-- period of thread (period, jitter, delay, offset)
+periodic(500,0,0,0) (PeriodicOp)
+
+end HostController
+--
+-- class definition
+--
+class HumidSensor is subclass of Sensor
+
+--
+-- instance variables
+--
+instance variables
+
+finished : bool := false;
+
+--
+-- Operations definition section
+--
+operations
+public HumidSensor: nat * NetworkTypes`nodeType * nat *
+Surroundings ==> HumidSensor
+	 HumidSensor (id, type, val, envir) ==
+  (ID := id;
+  Type := type;
+  Value := val;
+  Env := envir;
+  );
+
+public PeriodicOp: () ==> ()
+	 PeriodicOp () ==
+	  cycles(1E6)
+  Value := Env.ReadHumid();
+
+public Finish: () ==> ()
+ Finish() ==
+  finished := true;
+
+public IsFinished: () ==> ()
+ IsFinished() ==
+  skip;
+
+sync
+ per IsFinished => finished;
+
+
+
+
+
+--
+-- Thread definition section
+--
+thread
+
+-- period of thread (period, jitter, delay, offset)
+periodic(500,10,0,0) (PeriodicOp)
+
+end HumidSensor
+--
+-- class definition
+--
+class NetworkTypes
+
+--
+-- instance variables
+--
+instance variables
+
+--
+-- Types definition section
+--
+types
+public nodeType  = <TEMPSENSOR> | <HUMIDSENSOR> | <WINDOW> | <THERMOSTAT> | <HOSTCONTROL> | <NONE>;
+public correction = <INC> | <DEC> | <OPEN> | <CLOSE> | <NONE>;
+
+--
+-- Operations definition section
+--
+operations
+
+--
+-- Functions definition section
+--
+functions
+
+--
+-- Values definition section
+--
+values
+
+end NetworkTypes
+--
+-- class definition
+--
+class Sensor
+
+--
+-- instance variables
+--
+instance variables
+
+protected ID : nat;
+protected Type : NetworkTypes`nodeType;
+protected Value : nat;
+protected Env : Surroundings;
+
+--
+-- Operations definition section
+--
+operations
+
+public GetID: () ==> nat
+ GetID() ==
+  return ID;
+
+public GetType: () ==> NetworkTypes`nodeType
+ GetType() ==
+  return Type;
+
+public ReadValue: () ==> nat
+ ReadValue() ==
+  cycles (1E3)
+return Value;
+
+public Step: () ==> ()
+ Step() ==
+  is subclass responsibility
+
+end Sensor
+--
+-- class definition
+--
+class Surroundings
+
+--
+-- instance variables
+--
+instance variables
+
+private envTemp : nat := 0;
+private envHumid : nat := 0;
+inv envTemp >= 0;
+inv envHumid >= 0;
+
+--
+-- Operations definition section
+--
+operations
+
+public Surroundings: () ==> Surroundings
+ Surroundings() ==
+  (envTemp := 180;
+  envHumid := 200;
+  );
+public SetTemp: nat ==> ()
+ SetTemp(t) ==
+  envTemp := t;
+
+public SetHumid: nat ==> ()
+ SetHumid(h) ==
+  envHumid := h;
+
+public ReadTemp: () ==> nat
+ ReadTemp() ==
+  return envTemp;
+
+public IncTemp: () ==> ()
+ IncTemp() ==
+  envTemp := envTemp + 1;
+
+public DecTemp: () ==> ()
+ DecTemp() ==
+	  envTemp := envTemp - 1;
+
+public ReadHumid: () ==> nat
+ ReadHumid() ==
+  return envHumid;
+public IncHumid: () ==> ()
+ IncHumid() ==
+  envHumid := envHumid + 1;
+
+public DecHumid: () ==> ()
+ DecHumid() ==
+  envHumid := envHumid - 1;
+
+sync
+ mutex(DecTemp);
+ mutex(ReadTemp, IncTemp, DecTemp, SetTemp);
+ mutex(ReadHumid, IncHumid, DecHumid, SetHumid);
+
+end Surroundings
+--
+-- class definition
+--
+class TemperatureSensor is subclass of Sensor
+
+--
+-- instance variables
+--
+instance variables
+
+finished : bool := false;
+
+--
+-- Operations definition section
+--
+operations
+public TemperatureSensor: nat * NetworkTypes`nodeType * nat *
+Surroundings ==> TemperatureSensor
+	 TemperatureSensor (id, type, val, envir) ==
+  (ID := id;
+  Type := type;
+  Value := val;
+  Env := envir;
+  );
+
+public PeriodicOp: () ==> ()
+PeriodicOp() ==
+	  cycles(1E6)
+	  Value := Env.ReadTemp();
+
+public Finish: () ==> ()
+ Finish() ==
+	  finished := true;
+public IsFinished: () ==> ()
+ IsFinished() ==
+  skip;
+
+sync
+ per IsFinished => finished;
+
+--
+-- Thread definition section
+--
+thread
+
+-- period of thread (period, jitter, delay, offset)
+periodic(500,10,0,0) (PeriodicOp)
+
+end TemperatureSensor
+--
+-- class definition
+--
+class Thermostat is subclass of Actuator
+
+--
+-- instance variables
+--
+instance variables
+
+finished : bool := false;
+
+--
+-- Operations definition section
+--
+operations
+public Thermostat: nat * NetworkTypes`nodeType * Surroundings
+==> Thermostat
+	 Thermostat (id, type, envir) ==
+  (ID := id;
+  Type := type;
+  Corr := <NONE>;
+  Env := envir;
+  );
+
+private PeriodicOp: () ==> ()
+ PeriodicOp() ==
+cycles(1E9)
+(dcl tempCorr: NetworkTypes`correction := GetCorr();
+
+if (tempCorr = <INC>)
+	  then HA`Env.IncTemp()
+  elseif (tempCorr = <DEC>)
+  then HA`Env.DecTemp();
+  );
+
+async public SetCorrection: NetworkTypes`correction ==> ()
+ SetCorrection(cor) ==
+  cycles(1E9)
+  Corr := cor
+pre (cor = <INC>) or (cor = <DEC>) or (cor = <NONE>);
+
+public GetCorrection: () ==> NetworkTypes`correction
+ GetCorrection() ==
+  return Corr;
+
+public Finish: () ==> ()
+ Finish() ==
+  finished := true;
+
+public IsFinished: () ==> ()
+ IsFinished() ==
+  skip;
+
+sync
+	 per IsFinished => finished;
+ mutex(SetCorrection, GetCorr);
+
+--
+-- Thread definition section
+--
+thread
+-- period of thread (period, jitter, delay, offset)
+periodic(500,10,0,0) (PeriodicOp)
+
+end Thermostat
+--
+-- class definition
+--
+class Window is subclass of Actuator
+
+--
+-- instance variables
+--
+instance variables
+finished : bool := false;
+
+--
+-- Operations definition section
+--
+operations
+public Window: nat * NetworkTypes`nodeType * Surroundings ==> Window
+	 Window (id, type, envir) ==
+  (ID := id;
+  Type := type;
+  Corr := <CLOSE>;
+  Env := envir;
+  );
+
+private PeriodicOp: () ==> ()
+ PeriodicOp() ==
+cycles(1E9)
+(dcl tempCorr: NetworkTypes`correction := GetCorr();
+
+if (tempCorr = <OPEN>)
+	  then (HA`Env.DecHumid();
+   HA`Env.DecTemp();
+   );
+  );
+
+async public SetCorrection: NetworkTypes`correction ==> ()
+ SetCorrection(cor) ==
+	  cycles(1E9)
+	  Corr := cor
+pre (cor = <OPEN>) or (cor = <CLOSE>);
+
+public GetCorrection: () ==> NetworkTypes`correction
+ GetCorrection() ==
+  return Corr;
+
+public Finish: () ==> ()
+ Finish() == finished := true;
+
+public IsFinished: () ==> ()
+ IsFinished() ==
+  skip;
+
+sync
+	 per IsFinished => finished;
+ mutex(SetCorrection, GetCorr);
+
+--
+-- Thread definition section
+--
+thread
+
+-- period of thread (period, jitter, delay, offset)
+periodic(500,10,0,0) (PeriodicOp)
+
+end Window
+--
+-- class definition
+--
+class World
+
+--
+-- instance variables
+--
+instance variables
+
+--private env   : Environment := HA`Env2;
+
+operations
+
+public World: () ==> World
+ World() ==
+ (--env := new Environment("scenario.txt");
+	 HA`Host.AddNode(HA`TempNode.GetID(),HA`TempNode.GetType());
+ HA`Host.AddNode(HA`HumidNode.GetID(),HA`HumidNode.GetType());
+ HA`Host.AddNode(HA`ThermNode.GetID(),HA`ThermNode.GetType());
+ HA`Host.AddNode(HA`WinNode.GetID(),HA`WinNode.GetType());
+
+ start(HA`TempNode);
+ start(HA`HumidNode);
+ start(HA`ThermNode);
+ start(HA`WinNode);
+	 start(HA`Host);
+ );
+
+public Run: () ==> seq of nat
+ Run() ==
+  (-- start environment creating input
+  start(HA`Env2);
+  -- wait til environment has finished creating input
+  HA`Env2.IsFinished();
+  -- kill HostController thread
+  --HA`Host.Finish();
+  );
+
+end World
+class A
+
+operations
+
+  public Test:() ==> seq of nat
+  Test() ==
+    return new World().Run();
+
+end A

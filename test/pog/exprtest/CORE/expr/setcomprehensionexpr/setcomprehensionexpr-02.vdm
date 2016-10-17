@@ -1,0 +1,13 @@
+class SetComprehensionExpr
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = {b| b : bool}
+  in skip;
+
+------------------------------------------------------------------------------
+end SetComprehensionExpr

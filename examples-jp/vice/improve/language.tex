@@ -1,0 +1,68 @@
+\subsection{Improvement of the VDM++ language}
+
+The VICE notation was recently evaluated by Marcel in his paper
+\cite{viceeval} presented at the first Overture workshop explaining the
+problems when describing distributed embedded real-time systems with VICE.
+The main challenges he identified with the current notation are:
+
+\begin{itemize}
+\item The VDM++ notation is by nature synchronous; operation calls are
+either blocked on an permission predicate or executed in the context of
+the thread of control of the caller (an active object with its own
+\verb+thread+ clause in the class definition). This is very cumbersome
+when describing embedded systems, which are typically reactive (and 
+therefore asynchronous) by nature. Of course, an event loop can be
+specified to simulate the asynchronicity, but it would clobber the
+specification greatly and lowers the productivity of the user. The
+specification is intrinsically bigger than necessary and the validation
+of the model is also more complex because of the increased model size.
+Users are typically overwhelmed by the amount of run-time data that such
+a ``hand-coded'' event loop generates. The language should therefore
+allow for \textit{asynchronous} operation calls to overcome this problem. 
+
+\item Similarly, the active object is currently the ``owner'' of the thread
+of control. This is ok when all threads are executed on the same processor
+(this is the current implementation in VICE) but it really complicates
+matters when distributed systems are modelled. Note that when describing
+embedded systems, this necessity is paramount, because the environment of
+the system can always be viewed as the ``second processor'' that works in
+full-parallel to and independent from the embedded system; both have their
+own behaviour and (timing) requirements that are only influenced by the
+(timed) exchange of stimuli and responses. Therefore, the ownership of the
+thread of control should move from the ``active class'' to the (physical
+or virtual) processor on which the class instance is deployed. The behaviour
+of the system is then determined by the scheduling policy on that processor
+and its total capacity (available computing power).  By doing this, it would
+be possible to describe deployment of software over a distributed computer
+system, also taking into account that one processor might be slower than
+another, leading to different response times. This would be a great step
+forward; as far as we know this has not been done before and it has a
+dramatic practical impact for describing industrial applications, where
+most systems nowadays are in fact already multi-processor solutions. 
+
+\item Last but not least, we have some ideas that would also allow
+describing the interconnection between the processors (the network) at
+a very high-level of abstraction. Inter task communication is now considered
+instantaneous in VDM++ (or must be encoded explicitly using duration
+statements) which is far from reality. The network deployment view we
+envisage gives rise to include communication overhead into the simulation
+model at relative little extra cost (for both describing and analysing the
+system). In combination with the asynchronous operation calls, all typical
+styles of inter processor (and inter task) communication can be described:
+synchronous, asynchronous and publish/subscribe, while remaining at a
+high-level of abstraction when writing the specification.
+
+\end{itemize}
+
+We believe that these changes can be achieved with limited impact to the
+existing syntax and semantics of the language and the tool. We are currently
+working on a scientific paper that describes these conceptual changes to the
+VDM++ language. This should be seen as a ``proof of concept'' description
+that could be used as a guideline to the full-blown implementation in
+VDMTools. The first draft of the paper is expected to be ready in
+February 2006. A case study illustrating the effect of these suggested
+improvements is presented in Sections~\ref{sec:viceorg} and \ref{sec:vicenew}.
+However, we do emphasise that this is ``work in progress''. For example,
+the specification using the improved language has not been mechanically
+verified because tool support is simply lacking.
+

@@ -1,0 +1,16 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+
+
+
+public Test : () ==> (seq of int) * set of int
+Test () ==
+let a = [1,2,3,4,5],
+    b = {1,2,3,4,5}
+in cases mk_(a,b):
+      mk_(l ^ r, l_s union r_s ) -> return mk_(l,l_s),
+      others -> return mk_([],{})
+   end
+
+
+

@@ -1,0 +1,32 @@
+class A
+
+
+functions
+
+public 
+idf : nat -> nat * nat
+idf(-) == mk_(1,2);
+
+public
+foo : nat -> nat
+foo(x) == 
+  if x = 0 
+  then 0 
+  else goo(x-1)
+measure idf;
+
+
+public
+idg : nat -> nat * nat
+idg(x) == mk_(2,4);
+
+public
+goo : nat -> nat
+goo(x) ==
+  if x = 0
+  then 0
+  else foo(x-1);
+
+
+  
+end A

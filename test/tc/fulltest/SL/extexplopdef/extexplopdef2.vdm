@@ -1,0 +1,36 @@
+module A
+exports all
+definitions
+
+state S of
+	S1: int
+	S2: int
+end
+
+values
+
+V1:int = 0;
+
+functions
+
+expf: int -> int
+	expf(a) == V1 + a;
+	
+implf(a:int) r:int
+pre a + V1 > 0
+post a + r + V1 > 0;
+
+operations
+
+expop: int ==> int
+	expop(a) == (dcl D:int := 0; return a + D + V1 + S1 + S2)
+pre a < S1 and a < S2 and a > V1
+post a > S1 and a > S2 and a > V1;
+
+implop(a:int) r:int
+	== (dcl D:int := 0; S1 := 0; return a + D + V1 + S1 + S2)
+ext rd S1
+pre a < S1 and a > S2 and a > V1
+post a > S1 and a < S2 and a > V1 and r < 0;
+
+end A

@@ -1,0 +1,54 @@
+\begin{vdm_al}
+module ZZZ
+
+imports
+  from DEBUG all,
+  from CMPL all,
+  from STKM all,
+  from INSTR all,
+  from SEM all,
+  from GLOBAL all,
+  from AS all,
+  from REP all,  
+  from EXPR 
+    operations EvalExpr : AS`Expr ==> SEM`VAL,   
+  from STATE
+    operations IsEmptyMods  : () ==> bool;
+               IsEmptyPmods : () ==> bool;
+               OM_TranslateDocument : AS`Document ==> ();
+               InitializeGS         : ()          ==> ()
+
+exports all
+
+definitions
+
+operations
+
+  Interprete : () ==> SEM`VAL | seq of char
+  Interprete() == (
+        SETTINGS`DtcOff();  -- Expanded by testfile
+        SETTINGS`InvOff();  -- Expanded by testfile
+        SETTINGS`PreOff();  -- Expanded by testfile
+        SETTINGS`PostOff();  -- Expanded by testfile
+        let mk_AS`AstCI(ast, tllci, fidm) = 
+#include "vdm.ast"
+        ,
+           mk_AS`AstCI(expr, tllci_e, fidm_e) =
+#include "vdmtest.arg"
+        in
+       (CI`UpdateStateSigma(tllci, fidm);
+        CI`UpdateStateSigma(tllci_e, fidm_e);
+        STKM`User_Init(ast, true); 
+        DEBUG`EvalDebug(expr,"Dummy String");
+        let eval_state = STKM`MainLoopState()
+        in cases eval_state:
+           mk_STKM`BreakPoint(),
+           mk_STKM`Interrupt() -> error,
+           mk_STKM`Success() -> return STKM`Head(),
+           mk_STKM`RuntimeError() -> return RTERR`GetError()
+           end;
+       )
+  );
+
+end ZZZ
+\end{vdm_al}

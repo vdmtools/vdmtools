@@ -1,0 +1,5 @@
+
+public Test : () ==> nat
+Test() ==
+ if let a = if true then "abc" else false in a then return 1 else return 2 
+   

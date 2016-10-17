@@ -1,0 +1,9 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+---------------------------------------------------------------------
+----------------- LetExpr         -----------------------------------
+---------------------------------------------------------------------
+public Test : () ==> nat   
+Test () ==
+let a = mk_(3, 7)
+in let mk_(a, b) = a
+   in return a

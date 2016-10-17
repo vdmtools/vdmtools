@@ -1,0 +1,154 @@
+*------------------------------------------------------------------*
+* The contents of this file allows you to test your specifications *
+* in a quick and easy way. Have this file displayed in a separate  *
+* emacs or shell and just copy-and-paste its contents line by line *
+* to the emacs window where the toolbox is running.                *
+*------------------------------------------------------------------*
+
+
+Exercise 5
+
+5.3
+    p IsDisj({1,2,3},{4,5,6}) returns true
+
+    p IsDisj({1,2,3},{3,4,5}) returns false
+
+5.4
+    p IsMutDisj({{1,2,3},{6,7,8},{4,5,6}}) returns false
+
+    p IsMutDisj({{1,3,7},{2,6,8},{4,5}}) returns true
+
+5.5
+    p Gcd({15,27,51}) returns 3
+
+    p Gcd({3,5,7}) returns 1
+
+5.6
+    p Primes(12) returns {2,3,5,7,11}
+
+
+Exercise 6
+
+6.5
+    p IsEmpty(Create()) returns true
+
+    p IsEmpty(EnQueue(1,Create())) returns false
+
+    p DeQueue(Create()) fails (pre-condition false)
+
+    p Inspect(EnQueue(3,EnQueue(2,EnQueue(1,Create())))) returns 1
+
+    p Inspect(DeQueue(EnQueue(3,EnQueue(2,EnQueue(1,Create()))))) returns 2
+
+    p UnQueue(DeQueue(EnQueue(3,EnQueue(2,EnQueue(1,Create())))),2) returns
+      mk_(3,[2])
+
+    p UnQueue(EnQueue(1,Create()),2), fails (pre-condition false)
+
+
+Exercise 8
+
+Insert the following in your specification before running the tests:
+
+types
+  Elem = <A> | <B> | <C> | <D> | <E> | <F> | <G>
+
+values
+  baga = {<A> |-> 3, <B> |-> 2, <C> |-> 4};
+  bagb = {<A> |-> 1, <C> |-> 5, <D> |-> 4, <E> |-> 1}
+
+Here are the test examples (NB! You can copy-and-paste results and use the 
+print command to compare actual with expected results, use $$ to get the 
+last (actual) result):
+
+    p Empty() returns { |-> }
+
+    p Add(<C>,baga) returns {<A> |-> 3,<B> |-> 2,<C> |-> 5}
+
+    p Add(<D>,baga) returns {<A> |-> 3,<B> |-> 2,<C> |-> 4,<D> |-> 1}
+
+    p Remove(<A>,bagb) returns {<C> |-> 5,<D> |-> 4,<E> |-> 1}
+
+    p Remove(<A>,baga) returns {<A> |-> 2,<B> |-> 2,<C> |-> 4}
+
+    p Remove(<D>,baga) fails (pre-condition false)
+
+    p In(<A>,baga) returns true
+
+    p In(<D>,baga) returns false
+
+    p Count(<D>,baga) returns 0
+
+    p Count(<D>,bagb) returns 4
+
+    p Size(baga) returns 9
+
+    p Union(baga,bagb) returns {<A> |-> 4,<B> |-> 2,<C> |-> 9,<D> |-> 4,<E> |-> 1}
+
+    p Intersection(baga,bagb) returns {<A> |-> 1,<C> |-> 4}
+
+    p Difference(baga,bagb) returns {<A> |-> 2,<B> |-> 2}
+
+    p Join(baga,bagb) returns {<A> |-> 3,<B> |-> 2,<C> |-> 5,<D> |-> 4,<E> |-> 1}
+
+    p SubBag(baga,bagb) returns false
+
+    p SubBag({<A> |-> 2,<C> |-> 4},baga) returns true
+
+    p SeqToBag([<A>,<A>,<B>,<C>,<A>]) returns {<A> |-> 3,<B> |-> 1,<C> |-> 1}
+    
+
+Exercise 9
+
+Insert the following in your specification before running the tests:
+
+values
+  bom = {1 |-> {2,4}, 2 |-> {3,4,5}, 3 |-> {5,6}, 4 |-> {6}, 5 |-> {4}, 6 |-> {}}
+
+Here are the test examples (NB! You can copy-and-paste results and use the 
+print command to compare actual with expected results, use $$ to get the 
+last (actual) result):
+
+    p inv_BOM({1 |->{2,5},2 |->{3,4,5},3 |->{4,6},4 |->{1},5 |->{},6 |->{}}) 
+      returns false
+
+    p inv_BOM({1 |-> {2,5}, 2 |-> {3,4,5}, 3 |-> {4,6}, 5 |-> {}, 6 |-> {}})
+      returns false
+
+    p inv_BOM({1 |->{2,4},2 |->{3,4,5},3 |->{4,6},4 |->{6},5 |->{},6 |->{}})
+      returns true
+
+    p Explode(3,bom) returns {4,5,6}
+
+    p Explode(1,bom) returns {2,3,4,5,6}
+
+    p Enter(bom,7,{1,2,3}) returns 
+      {1 |-> { 2,4 },2 |-> { 3,4,5 },3 |-> { 5,6 },4 |-> { 6 },5 |-> { 4 },6 |-> {  },7 |-> { 1,2,3 } }
+
+    p Enter(bom,3,{5,6}) fails (pre-condition false)
+
+    p Enter(bom,7,{1,2,8}) fails (pre-condition false)
+
+    p Delete(1,{1 |-> {}, 2 |-> {1}}) fails (pre-condition false)
+
+    p Delete(2,{1 |-> {}, 2 |-> {1}}) returns {1 |-> {}}
+
+    p Delete(7,bom) fails (pre-condition false)
+
+    p Add(1,3,bom) returns { 1 |-> { 2,3,4 },2 |-> { 3,4,5 },3 |-> { 5,6 },4 |-> { 6 },5 |-> { 4 },6 |-> {  } }
+
+    p Add(3,1,bom) fails (pre-condition false)
+
+    p Erase(3,1,bom) fails (pre-condition false)
+
+    p Erase(2,3,bom) returns { 1 |-> { 2,4 },2 |-> { 4,5 },3 |-> { 5,6 },4 |-> { 6 },5 |-> { 4 },6 |-> {  } }
+
+
+Exercise 10
+
+    p MaxTree(mk_Node(mk_Node(1,mk_Node(2,3)),mk_Node(4,5))) returns 5
+
+    p SumTree(mk_Node(mk_Node(1,mk_Node(2,3)),mk_Node(4,5))) returns 15
+
+    p TestTrees(mk_Node(mk_Node(1,mk_Node(2,3)),mk_Node(4,5)),mk_Node(mk_Node(mk_Node(mk_Node(1,2),3),4),5)) 
+      returns true

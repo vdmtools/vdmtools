@@ -1,0 +1,9 @@
+# positive testcases
+new project
+parse ($SOURCEPATH/classes.vpp)
+init
+get modules
+superclasses (C)
+subclasses (A)
+usesof (C)
+usedby (A)

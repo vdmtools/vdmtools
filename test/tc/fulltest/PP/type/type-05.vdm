@@ -1,0 +1,6 @@
+class TYPE
+types
+
+  A = @T;
+
+end TYPE

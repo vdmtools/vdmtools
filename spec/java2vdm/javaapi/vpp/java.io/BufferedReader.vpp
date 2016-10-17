@@ -1,0 +1,416 @@
+class JavaIoBufferedReader is subclass of JavaIoReader
+values 
+--  CLASS : JavaLangClass = new  JavaLangClass("JavaIoBufferedReader" , <CLASS> , false  )
+  private  INVALIDATED : int  = -2;
+  private  UNMARKED : int  = -1;
+instance variables 
+  private  in__ : JavaIoReader;
+  private  cb : map  int  to  char ;
+  private  nChars : int ;
+  private  nextChar : int ;
+  private  markedChar : int  := UNMARKED;
+  private  readAheadLimit : int  := 0;
+  private  skipLF : bool  := false  ;
+  private  markedSkipLF : bool  := false  ;
+  private  static defaultCharBufferSize : int  := 81;
+  private  static defaultExpectedLineLength : int  := 80
+operations 
+private  fill : () ==> ()
+fill() == 
+( dcl   dst : int ;
+  if  markedChar <= UNMARKED
+  then  
+    ( dst := 0
+    ) 
+  else  
+    ( dcl   delta : int  := nextChar-markedChar;
+      if  delta >= readAheadLimit
+      then  
+        ( markedChar := INVALIDATED;
+          readAheadLimit := 0;
+          dst := 0
+        ) 
+      else  
+        ( if  readAheadLimit <= (card  dom  cb)
+          then  
+            ( --let - = JavaLangSystem`arraycopy(cb , markedChar , cb , 0 , delta)
+              --in 
+              --  skip ;
+              cb:=cb++{l_3|->cb(l_3+markedChar)|l_3 in set  {0,...,delta-1}};
+              markedChar := 0;
+              dst := delta
+            ) 
+          else  
+            ( dcl   ncb : map  int  to  char  := {l_3 |-> ' '|l_3 in set  {0,...,readAheadLimit-1}};
+--              let - = JavaLangSystem`arraycopy(cb , markedChar , ncb , 0 , delta)
+--              in 
+--                skip ;
+              ncb := {l_3|->cb(l_3+markedChar)|l_3 in set  {0,...,delta-1}};
+              cb:=ncb;
+              markedChar := 0;
+              dst := delta
+            ) ;
+          nChars := delta;
+          def l_1 = nChars
+          in nextChar := l_1
+        ) 
+    ) ;
+  ( dcl   n : int ;
+    ( --n := in__.read(cb , dst , (card  dom  cb)-dst)
+      let mk_(l_n, l_cb)=in__.readMICIntInt'(cb , dst , (card  dom  cb)-dst)
+      in
+      ( n := l_n; cb:=l_cb
+      )
+    ) ;
+    while  n = 0 do  
+    ( --n := in__.read(cb , dst , (card  dom  cb)-dst)
+      let mk_(l_n, l_cb)=in__.readMICIntInt'(cb , dst , (card  dom  cb)-dst)
+      in
+      ( n := l_n; cb:=l_cb
+      )
+    ) ;
+    if  n > 0
+    then  
+      ( nChars := dst+n;
+        nextChar := dst
+      ) 
+  ) ;
+  skip 
+) ;
+
+public  read : () ==> int 
+read() == 
+( ensureOpen();
+  while  true   do  
+  ( if  nextChar >= nChars
+    then  
+      ( fill();
+        if  nextChar >= nChars
+        then  
+          return  -1
+      ) ;
+    if  skipLF
+    then  
+      ( skipLF := false  ;
+        if  cb(nextChar) = '\n'
+        then  
+          ( nextChar := nextChar+1
+          ) 
+      ) ;
+    def l_6 = nextChar;
+    l_5 = l_6
+    in ( nextChar := l_6+1;
+      def l_3 = cb(l_5)
+      in return  l_3
+    ) 
+  ) 
+) ;
+
+public  close : () ==> ()
+close() == 
+( --if  in__.IsNil()
+  --then  
+  --  return  ;
+  in__.close();
+--    in__ := new  JavaIoReader(<NIL>);   Abstract class!
+  cb := {|->}
+) ;
+
+public  mark : int  ==> ()
+mark(readAheadLimit) == 
+( if  readAheadLimit < 0
+  then  
+    ( exit  new  JavaLangIllegalArgumentException(new  JavaLangString("Read-ahead limit < 0"))
+    ) ;
+  ( ensureOpen();
+    JavaIoBufferedReader`readAheadLimit := readAheadLimit;
+    markedChar := nextChar;
+    markedSkipLF := skipLF
+  ) ;
+) ;
+
+public  ready : () ==> bool 
+ready() == 
+( ensureOpen();
+  return  (nextChar < nChars) or  in__.ready()
+) ;
+
+public  reset : () ==> ()
+reset() == 
+( ensureOpen();
+  if  markedChar < 0
+  then  
+    exit  new  JavaIoIOException(if  (markedChar = INVALIDATED) then  new  JavaLangString("Mark invalid") else  new  JavaLangString("Stream not marked"));
+  nextChar := markedChar;
+  skipLF := markedSkipLF
+) ;
+
+public  skip__ : int  ==> int 
+skip__(n) == 
+( if  n < 0
+  then  
+    ( exit  new  JavaLangIllegalArgumentException(new  JavaLangString("skip value is negative"))
+    ) ;
+  ( ensureOpen();
+    ( dcl   r : int  := n;
+      trap  j2v_break with  
+        cases  true  : 
+          (isofclass  (J2V_Break,j2v_break)) -> 
+            skip ,
+          others  -> 
+            exit  j2v_break
+        end  
+      in  
+        while  r > 0 do  
+        ( if  nextChar >= nChars
+          then  
+            fill();
+          if  nextChar >= nChars
+          then  
+            exit  new  J2V_Break();
+          if  skipLF
+          then  
+            ( skipLF := false  ;
+              if  cb(nextChar) = '\n'
+              then  
+                ( nextChar := nextChar+1
+                ) 
+            ) ;
+          ( dcl   d : int  := nChars-nextChar;
+            if  r <= d
+            then  
+              ( def l_3 = nextChar
+                in nextChar := l_3+r;
+                r := 0;
+                exit  new  J2V_Break()
+              ) 
+            else  
+              ( def l_3 = r
+                in r := l_3-d;
+                nextChar := nChars
+              ) 
+          ) 
+        ) ;
+      return  n-r
+    ) 
+  ) 
+) ;
+
+--public  getClass : () ==> JavaLangClass
+--getClass() == 
+--return  CLASS;
+
+public  readLine : () ==> JavaLangString
+readLine() == 
+( return  readLineBool(false  )
+) ;
+
+readLineBool : bool  ==> JavaLangString
+readLineBool(ignoreLF) == 
+( dcl   s : JavaLangStringBuffer := new  JavaLangStringBuffer(<NIL>),
+        startChar : int ,
+        omitLF : bool  := ignoreLF or  skipLF;
+  ( ensureOpen();
+    while  true   do  
+    ( if  nextChar >= nChars
+      then  
+        fill();
+      if  nextChar >= nChars
+      then  
+        ( if  not  s.IsNil() and  s.length() > 0
+          then  
+--            return  s.toString()
+            return  new JavaLangString(s.toSeqOfChar())
+          else  
+            return  new  JavaLangString(<NIL>)
+        ) ;
+      ( dcl   eol : bool  := false  ,
+              c : char, --  := 0,
+              i : int ;
+        if  omitLF and  (cb(nextChar) = '\n')
+        then  
+          nextChar := nextChar+1;
+        skipLF := false  ;
+        omitLF := false  ;
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip ,
+            others  -> 
+              exit  j2v_break
+          end  
+        in  
+          ( i := nextChar;
+            while  i < nChars do  
+            ( c := cb(i);
+              if  (c = '\n') or  (c = '\r')
+              then  
+                ( eol := true  ;
+                  exit  new  J2V_Break()
+                ) ;
+              i := i+1
+            ) 
+          ) ;
+        startChar := nextChar;
+        nextChar := i;
+        if  eol
+        then  
+          ( dcl   str : JavaLangString;
+            if  s.IsNil()
+            then  
+--              ( str := new  JavaLangString(cb , startChar , i-startChar)
+              ( str := new  JavaLangString([cb(j) | j in set {startChar,...,i-1}])
+              ) 
+            else  
+              ( let - = s.appendMICIntInt(cb , startChar , i-startChar)
+                in 
+                  skip ;
+--                str := s.toString()
+                str := new JavaLangString(s.toSeqOfChar())
+              ) ;
+            nextChar := nextChar+1;
+            if  c = '\r'
+            then  
+              ( skipLF := true  
+              ) ;
+            return  str
+          ) ;
+        if  s.IsNil()
+        then  
+          s := new  JavaLangStringBuffer(defaultExpectedLineLength);
+        let - = s.appendMICIntInt(cb , startChar , i-startChar)
+        in 
+          skip 
+      ) 
+    ) 
+  ) 
+) ;
+
+private  ensureOpen : () ==> ()
+ensureOpen() == 
+( --if  in__.IsNil()
+  --then  
+  --  exit  new  JavaIoIOException(new  JavaLangString("Stream closed"));
+  skip 
+) ;
+
+public  markSupported : () ==> bool 
+markSupported() == 
+( return  true  
+) ;
+
+public  read : map  int  to  char  * int  * int  ==> int 
+read(cbuf, off, len__) == 
+  return undefined;
+
+public  read' : map  int  to  char  * int  * int  ==> int * map  int  to  char
+read'(cbuf_, off, len__) == 
+( dcl cbuf : map  int  to  char := cbuf_;
+  ensureOpen();
+  if  (off < 0) or  (off > (card  dom  cbuf)) or  (len__ < 0) or  ((off+len__) > (card  dom  cbuf)) or  ((off+len__) < 0)
+  then  
+    ( exit  new  JavaLangIndexOutOfBoundsException()
+    ) 
+  else  
+    if  len__ = 0
+    then  
+      ( return  mk_(0,{|->})
+      ) ;
+  ( dcl   n : int; --  := read1(cbuf , off , len__);
+    let mk_(l_n, l_cbuf) = read1(cbuf , off , len__)
+    in
+    ( n:=l_n; cbuf:=l_cbuf );
+    if  n <= 0
+    then  
+      return  mk_(n,{|->});
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip ,
+        others  -> 
+          exit  j2v_break
+      end  
+    in  
+      while  (n < len__) and  in__.ready() do  
+      ( dcl   n1 : int; --  := read1(cbuf , off+n , len__-n);
+        let mk_(l_n, l_cbuf) = read1(cbuf , off+n , len__-n)
+        in
+        ( n1:=l_n; cbuf:=l_cbuf );
+        if  n1 <= 0
+        then  
+          exit  new  J2V_Break();
+        def l_3 = n
+        in n := l_3+n1
+      ) ;
+    return  mk_(n, cbuf)
+  ) 
+) ;
+
+private  read1 : map  int  to  char  * int  * int  ==> int * map  int  to  char
+read1(cbuf_, off, len__) == 
+( dcl cbuf : map  int  to  char := cbuf_;
+  if  nextChar >= nChars
+  then  
+    ( if  len__ >= (card  dom  cb) and  markedChar <= UNMARKED and  not  skipLF
+      then  
+        ( return  in__.readMICIntInt'(cbuf , off , len__)
+        ) ;
+      fill()
+    ) ;
+  if  nextChar >= nChars
+  then  
+    return  mk_(-1,{|->});
+  if  skipLF
+  then  
+    ( skipLF := false  ;
+      if  cb(nextChar) = '\n'
+      then  
+        ( nextChar := nextChar+1;
+          if  nextChar >= nChars
+          then  
+            fill();
+          if  nextChar >= nChars
+          then  
+            return  mk_(-1,{|->})
+        ) 
+    ) ;
+  ( dcl   n : int  := if len__ < nChars-nextChar then len__ else nChars-nextChar;
+--    let - = JavaLangSystem`arraycopy(cb , nextChar , cbuf , off , n)
+--    in 
+--      skip ;
+    cb:={i|->cb(nextChar+i-off) | i in set {off,...,off+n-1}};
+    def l_3 = nextChar
+    in nextChar := l_3+n;
+    return  mk_(n,cbuf)
+  ) 
+) ;
+
+public  JavaIoBufferedReader : <NIL> ==> JavaIoBufferedReader
+JavaIoBufferedReader(-) == 
+isNil := true  ;
+
+public  JavaIoBufferedReader : JavaIoReader ==> JavaIoBufferedReader
+JavaIoBufferedReader(in__) == 
+( let - = JavaIoBufferedReader(in__ , defaultCharBufferSize)
+  in 
+    skip 
+) ;
+
+public  JavaIoBufferedReader : JavaIoReader * int  ==> JavaIoBufferedReader
+JavaIoBufferedReader(in__, sz) == 
+( let - = JavaIoReader(in__)
+  in 
+    skip ;
+  if  sz <= 0
+  then  
+    exit  new  JavaLangIllegalArgumentException(new  JavaLangString("Buffer size <= 0"));
+  JavaIoBufferedReader`in__ := in__;
+  cb := {l_3 |-> ' '|l_3 in set  {0,...,sz-1}};
+  nChars := 0;
+  nextChar := nChars;
+  skipLF:=false;
+  markedChar := UNMARKED;
+) ;
+
+
+end  JavaIoBufferedReader

@@ -1,0 +1,9 @@
+functions
+
+SatFun(n: nat) r : nat
+post n = 0 => r = 1 and
+     n <> 0 => r = n * (n + 1)
+
+--PO
+--(forall n : nat &
+--   (exists r : nat & post_SatFun(n, r)))

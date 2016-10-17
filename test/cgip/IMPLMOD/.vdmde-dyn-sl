@@ -1,0 +1,13 @@
+r /home/bfroeh/dynsem/test/common_as.vdm
+r /home/bfroeh/dynsem/test/rep.vdm
+r /home/bfroeh/dynsem/test/global.vdm
+r /home/bfroeh/dynsem/test/sem.vdm
+r /home/bfroeh/dynsem/test/state.vdmsl
+r /home/bfroeh/dynsem/test/mod.vdmsl
+r /home/bfroeh/dynsem/test/def.vdmsl
+r /home/bfroeh/dynsem/test/expr.vdmsl
+r /home/bfroeh/dynsem/test/stmt.vdmsl
+r /home/bfroeh/dynsem/test/pat.vdm
+r /home/bfroeh/dynsem/test/aux.vdm
+r /home/bfroeh/dynsem/test/free.vdm
+r /home/bfroeh/dynsem/test/old.vdm

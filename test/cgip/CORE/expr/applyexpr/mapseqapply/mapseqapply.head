@@ -1,0 +1,8 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+public Test : () ==> map seq of char to seq of ( seq of nat | nat | bool | map nat to nat | real | seq of char | map nat to bool | <FALSE> )  
+Test () == 
+

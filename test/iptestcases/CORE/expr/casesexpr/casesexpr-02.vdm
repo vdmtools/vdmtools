@@ -1,0 +1,28 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of (set of ( set of seq of char | 
+				 map seq of char to (nat * nat)) 
+		         )  
+Test () ==
+return 
+[
+  { cases elem :
+      --[ a, a] -> {"a,a" |-> mk_(a, a ) },
+      --[ b, 1 ],
+      [ b,2 ] -> {"b,x" |-> mk_(b,b ) },
+      [ a, b, a, b ] -> {"a-b-a-b" |-> mk_(a, b ) },
+      [1,a],[4,b],[2,c],[3,c], [c,c] -> {"4" |-> mk_(4,4)},
+      others      -> {"Others"}
+    end | elem in set { [3,3],[4,4],[3,1],[1,2], [1,2,2,2], 
+		         [1,2,1,2] }}
+
+]
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

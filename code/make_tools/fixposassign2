@@ -1,0 +1,29 @@
+#! /usr/bin/perl
+
+# Filter to remove the default assignment of a rules position value. 
+
+local $/; 
+undef $/; 
+$file = <>; 
+$search = "  *++yyvsp = yyval;
+  *++yylsp = yyloc;";
+
+$new = "$search
+
+#ifdef YYLSP_SETPOS_EMPTYRULE
+//  if (yylen == 0)
+//  {
+    YYLSP_SETPOS_EMPTYRULE
+//  }
+//  else
+//  {
+//    YYLSP_SETPOS_NONEMPTYRULE
+//  }
+#endif // YYLSP_SETPOS_NONEMPTYRULE";
+ 
+$search_re = quotemeta($search);
+if ($file !~ s/^$search_re/$new/msx) {
+    die "$0: pattern not found, "; 
+} 
+print $file; 
+

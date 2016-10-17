@@ -1,0 +1,70 @@
+class JavaIoFilterOutputStream is subclass of JavaIoOutputStream
+--uselib "j2vdll.so"
+--values 
+--  CLASS : JavaLangClass = new  JavaLangClass("JavaIoFilterOutputStream" , <CLASS> , false  )
+instance variables 
+  protected  out : JavaIoOutputStream
+operations 
+public  close : () ==> ()
+close() == 
+(-- trap  j2v_exception with  
+ --   cases  true  : 
+ --     (isofclass  (JavaIoIOException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+ --       ( dcl   ignored : JavaIoIOException := j2v_exception;
+ --         skip 
+ --       ) ,
+ --     others  -> 
+ --       exit  j2v_exception
+ --   end  
+ -- in  
+ --   ( if 1=0 exit new JavaIoIOException();
+      flush();
+ --   ) ;
+  out.close();
+) ;
+
+public  flush : () ==> ()
+flush() == 
+( out.flush();
+) ;
+
+public  write : int  ==> ()
+write(b) == 
+( out.write(b)
+) ;
+
+public  write1 : map  int  to  int  ==> ()
+write1(b) == 
+( write2(b , 0 , (card  dom  b));
+) ;
+
+public  write2 : map  int  to  int  * int  * int  ==> ()
+write2(b, off, len__) == 
+( dcl i: int := card dom b, j: int := i-(len__+off);
+  if off < 0 or off >= i or j < 0 or j > i
+  then
+    exit  new  JavaLangIndexOutOfBoundsException();
+  ( dcl   i : int  := 0;
+    while  i < len__ do  
+    ( write(b(off+i));
+      i := i+1
+    ) 
+  ) ;
+) ;
+
+--public  getClass : () ==> JavaLangClass
+--getClass() == 
+--return  CLASS;
+
+--public  JavaIoFilterOutputStream : <NIL> ==> JavaIoFilterOutputStream
+--JavaIoFilterOutputStream(-) == 
+--isNil := true  ;
+
+public  JavaIoFilterOutputStream : JavaIoOutputStream ==> JavaIoFilterOutputStream
+JavaIoFilterOutputStream(out) == 
+( JavaIoFilterOutputStream`out := out;
+  skip
+) ;
+
+
+end  JavaIoFilterOutputStream

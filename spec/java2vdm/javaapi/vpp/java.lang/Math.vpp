@@ -1,0 +1,105 @@
+class JavaLangMath is subclass of JavaLangObject
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaLangMath" , <CLASS> , false  )
+instance variables 
+  public  static E : real  := 2.7182818284590452354;
+  public  static PI : real := 3.14159265358979323846
+operations 
+public  static cos : real  ==> real 
+cos(a) == 
+  return new MATH().cos(a) ;
+
+public  static exp : real  ==> real 
+exp(a) == 
+is not yet specified ;
+
+public  static log : real  ==> real 
+log(a) == 
+is not yet specified ;
+
+public  static sin : real  ==> real 
+sin(a) == 
+  return new MATH().sin(a) ;
+
+public  static tan : real  ==> real 
+tan(a) == 
+  return new MATH().tan(a) ;
+
+public  static acos : real  ==> real 
+acos(a) == 
+  return new MATH().acos(a) ;
+
+public  static asin : real  ==> real 
+asin(a) == 
+  return new MATH().asin(a) ;
+
+public  static atan : real  ==> real 
+atan(a) == 
+  return new MATH().atan(a) ;
+
+public  static ceil : real  ==> real 
+ceil(a) == 
+is not yet specified ;
+
+public  static rint : real  ==> real 
+rint(a) == 
+is not yet specified ;
+
+public  static sqrt : real  ==> real 
+sqrt(a) == 
+  return new MATH().sqrt(a) ;
+
+public  static abs__ : real  ==> real 
+abs__(a) == 
+  return abs a ;
+
+public  static max : real  * real  ==> real 
+max(a, b) == 
+  return if a >= b then a else b;
+
+public  static min : real  * real  ==> real 
+min(a, b) == 
+  return if a <= b then a else b;
+
+public  static pow : real  * real  ==> real 
+pow(a, b) == 
+is not yet specified ;
+
+public  static random : () ==> real 
+random() == 
+is not yet specified ;
+
+public  static round : real  ==> int 
+round(a) == 
+is not yet specified ;
+
+public  static atan2 : real  * real  ==> real 
+atan2(a, b) == 
+is not yet specified ;
+
+public  static floor__ : real  ==> real 
+floor__(a) == 
+is not yet specified ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  static toDegrees : real  ==> real 
+toDegrees(angrad) == 
+is not yet specified ;
+
+public  static toRadians : real  ==> real 
+toRadians(angdeg) == 
+is not yet specified ;
+
+public  static IEEEremainder : real  * real  ==> real 
+IEEEremainder(f1, f2) == 
+is not yet specified ;
+
+public  JavaLangMath : <NIL> ==> JavaLangMath
+JavaLangMath(-) == 
+isNil := true  ;
+
+
+end  JavaLangMath

@@ -1,0 +1,17 @@
+class A
+
+functions
+
+static public 
+id : nat -> nat
+id(x) == x;
+
+
+public static
+foo : nat -> nat
+foo(x) == 
+  if x = 1 then 1 else foo(x-1)
+pre x >= 1  
+measure id;
+  
+end A

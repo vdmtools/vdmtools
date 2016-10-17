@@ -1,0 +1,65 @@
+--$Id: gofo_relationship.vpp,v 1.1 2005/11/25 07:05:38 vdmtools Exp $
+---------------------------------
+class Gofo_Relationship_Class  is subclass of  『問題領域共通定義』
+--関連を管理する
+
+instance variables
+public クラス名 : seq of char := "";
+public インスタンス群 : set of Gofo_Relationship := {};
+
+operations
+public Gofo_Relationship_Class : seq of char ==> Gofo_Relationship_Class
+Gofo_Relationship_Class(aクラス名) ==
+	(
+	クラス名 := aクラス名;
+	return self
+	);
+
+--派生元から派生先に関連を作る。
+public link : set of  「記録」 * set of 「記録」 ==> set of Gofo_Relationship
+link(a派生元群, a派生先群) ==
+	(
+	for all a派生元 in set a派生元群 do (
+		for all a派生先 in set a派生先群 do(
+			dcl 関連 : Gofo_Relationship := new Gofo_Relationship();
+			関連.派生元設定(a派生元);
+			関連.派生先設定(a派生先);
+			インスタンス群 := インスタンス群 union {関連};
+		)
+	);
+	return インスタンス群
+	);
+	
+--照会
+public 派生先を得る : GofoBook * 「記録」 * GofoBook`「選択基準」 ==> set of 「記録」
+派生先を得る(a帳簿, a記録, a選択基準) == 
+		let	aリンク集合 = a帳簿.selectLinkThrough(self, a記録)
+		in
+		return 
+			{aリンク.派生先 | aリンク in set aリンク集合 & a選択基準(aリンク.派生先)};
+
+public 派生元を得る : GofoBook * 「記録」 * GofoBook`「選択基準」 ==> set of 「記録」
+派生元を得る(a帳簿, a記録, a選択基準) == 
+		let	aリンク集合 = a帳簿.selectLinkThrough(self, a記録)
+		in
+		return 
+			{aリンク.派生元 | aリンク in set aリンク集合 & a選択基準(aリンク.派生元)};
+
+end Gofo_Relationship_Class
+---------------------------------
+class Gofo_Relationship  is subclass of  『問題領域共通定義』
+--関連を保持する
+
+instance variables
+public 派生元 : 「記録」;
+public 派生先 : 「記録」;
+
+operations
+public 派生元設定 : 「記録」 ==> ()
+派生元設定(a派生元) == 派生元 := a派生元;
+
+
+public 派生先設定 : 「記録」 ==> ()
+派生先設定(a派生先) == 派生先 := a派生先;
+
+end Gofo_Relationship

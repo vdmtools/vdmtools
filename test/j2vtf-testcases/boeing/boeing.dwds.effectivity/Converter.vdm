@@ -1,0 +1,196 @@
+class Converter is subclass of Object
+operations 
+private  Converter : () ==> Converter
+Converter() == 
+( keyCntlr := new  NoteKeyController(NOTE_FIELD_DELIMITER , NOTE_FIELD_SEPARATOR)
+) ;
+
+public  static main : map  int  to  [String] ==> <VOID>
+main(args) == 
+( if  args.length < 1
+  then  
+    ( let - = System.out.println(new  String("Format:  Converter effectivity_file_name ..."))
+      in 
+        skip ;
+      return  
+    ) ;
+  ( dcl   converter : [Converter] := new  Converter();
+    ( dcl   idx : int  := 0;
+      while  idx < args.length do  
+      ( dcl   notesFilename : [File] := new  File(args(idx));
+        let - = System.out.print(new  String("====================> "))
+        in 
+          skip ;
+        let - = System.out.print(notesFilename.getPath())
+        in 
+          skip ;
+        let - = System.out.println(new  String(" <===================="))
+        in 
+          skip ;
+        let - = converter.convertNoteFile(notesFilename)
+        in 
+          skip ;
+        idx := idx+1
+      ) 
+    ) 
+  ) ;
+  return  <VOID>
+) ;
+
+private  convertNoteFile : [File] ==> <VOID>
+convertNoteFile(notesFilename) == 
+( dcl   inputNotesFile : [BufferedReader] := nil  ,
+        outputNotesFile : [BufferedWriter] := nil  ,
+        outputNoteKeysFile : [BufferedWriter] := nil  ,
+        lineNumber : int  := 0,
+        outputNoteFilename : [File] := new  File(notesFilename.getPath()+OUTPUT_NOTES_FILE_EXT),
+        outputNoteKeysFilename : [File] := new  File(notesFilename.getPath()+OUTPUT_NOTEKEYS_FILE_EXT);
+  let - = keyCntlr.initNoteKeyList()
+  in 
+    skip ;
+  always  
+    ( trap  j2v_exception with  
+        cases  true  : 
+          (is_ (j2v_exception,[Exception])) -> 
+            ( dcl   e : [Exception] := j2v_exception;
+              skip 
+            ) ,
+          others  -> 
+            exit  j2v_exception
+        end  
+      in  
+        ( if  inputNotesFile <> nil  
+          then  
+            ( let - = inputNotesFile.close()
+              in 
+                skip 
+            ) 
+        ) ;
+      trap  j2v_exception with  
+        cases  true  : 
+          (is_ (j2v_exception,[Exception])) -> 
+            ( dcl   e : [Exception] := j2v_exception;
+              skip 
+            ) ,
+          others  -> 
+            exit  j2v_exception
+        end  
+      in  
+        ( if  outputNotesFile <> nil  
+          then  
+            ( let - = outputNotesFile.close()
+              in 
+                skip 
+            ) 
+        ) 
+    ) 
+  in  
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (IOException,j2v_exception)) -> 
+          ( dcl   e : [IOException] := j2v_exception;
+            let - = System.out.println(e)
+            in 
+              skip ;
+            let - = e.printStackTrace()
+            in 
+              skip 
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( inputNotesFile := new  BufferedReader(new  FileReader(notesFilename));
+        outputNotesFile := new  BufferedWriter(new  FileWriter(outputNoteFilename));
+        ( dcl   inNoteRecord : [String] := inputNotesFile.readLine();
+          trap  j2v_break with  
+            cases  true  : 
+              (isofclass  (J2V_Break,j2v_break)) -> 
+                skip 
+              
+            end  
+          in  
+            while  inNoteRecord <> nil   do  
+            ( lineNumber := lineNumber+1;
+              ( dcl   uniqueNoteKey : [String] := keyCntlr.getGeneratedNoteId(inNoteRecord , lineNumber , System.out);
+                if  uniqueNoteKey <> nil  
+                then  
+                  ( dcl   outNoteRecord : [StringBuffer] := new  StringBuffer(inNoteRecord.length()+uniqueNoteKey.length()+NOTE_FIELD_DELIMITER.length()*2+NOTE_FIELD_SEPARATOR.length());
+                    let - = outNoteRecord.append(inNoteRecord)
+                    in 
+                      skip ;
+                    let - = outNoteRecord.append(NOTE_FIELD_SEPARATOR)
+                    in 
+                      skip ;
+                    let - = outNoteRecord.append(NOTE_FIELD_DELIMITER)
+                    in 
+                      skip ;
+                    let - = outNoteRecord.append(uniqueNoteKey)
+                    in 
+                      skip ;
+                    let - = outNoteRecord.append(NOTE_FIELD_DELIMITER)
+                    in 
+                      skip ;
+                    let - = outputNotesFile.write(outNoteRecord.toString() , 0 , outNoteRecord.length())
+                    in 
+                      skip ;
+                    let - = outputNotesFile.newLine()
+                    in 
+                      skip 
+                  ) ;
+                inNoteRecord := inputNotesFile.readLine()
+              ) 
+            ) 
+        ) 
+      ) ;
+  always  
+    ( trap  j2v_exception with  
+        cases  true  : 
+          (is_ (j2v_exception,[Exception])) -> 
+            ( dcl   e : [Exception] := j2v_exception;
+              skip 
+            ) ,
+          others  -> 
+            exit  j2v_exception
+        end  
+      in  
+        ( if  outputNoteKeysFile <> nil  
+          then  
+            ( let - = outputNoteKeysFile.close()
+              in 
+                skip 
+            ) 
+        ) 
+    ) 
+  in  
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (IOException,j2v_exception)) -> 
+          ( dcl   e : [IOException] := j2v_exception;
+            let - = System.out.println(e)
+            in 
+              skip ;
+            let - = e.printStackTrace()
+            in 
+              skip 
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( outputNoteKeysFile := new  BufferedWriter(new  FileWriter(outputNoteKeysFilename));
+        let - = keyCntlr.outputKeys(outputNoteKeysFile)
+        in 
+          skip 
+      ) ;
+  return  <VOID>
+) ;
+
+instance variables 
+  private  keyCntlr : [NoteKeyController] := nil  ;
+  private  static OUTPUT_NOTES_FILE_EXT : [String] := new  String(".dwd");
+  private  static OUTPUT_NOTEKEYS_FILE_EXT : [String] := new  String(".key");
+  private  static NOTE_FIELD_DELIMITER : [String] := new  String("\\\"");
+  private  static NOTE_FIELD_SEPARATOR : [String] := new  String(",")
+  
+end  Converter

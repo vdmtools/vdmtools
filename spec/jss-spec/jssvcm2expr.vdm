@@ -1,0 +1,691 @@
+\section{The JSSVCM2EXPR Module}
+
+This module takes care of collecting and setting the type information.
+
+\begin{vdm_al}
+module JSSVCM2EXPR
+
+imports
+from AS all,
+from CI all,
+from REP all,
+
+from CPP all,
+from JSSERR all,
+from JSSREP all,
+from JSSENV all,
+from JSSAUX all
+
+exports
+operations
+  ExpressionStmt: CPP`Expr ==> ();
+  Expr: CPP`Expr ==> JSSREP`TypeRep;
+  ExprList: seq of CPP`Expr ==> seq of JSSREP`TypeRep
+
+definitions
+
+operations
+\end{vdm_al}
+
+\begin{formalparameters}
+\verb+p_expr: CPP`Expr+ & The abstract syntax tree for a Java expression.\\
+\hline
+\end{formalparameters}
+\methodresult{()}{Indication whether the expression satisfy
+the requirements to be translated from Java to VDM++.}
+
+ExpressionStmt:  statement_expression SEMICOLON
+statement_expression:
+  AssignExpr
+  PreInDecrementExpr
+  post_increment_expression
+  post_decrement_expression
+  FctCall NO-RETURN CALL 
+  ClassInstanceCreationExpr ANONYMOUS if class block <> nil
+or
+  explicit_constructor_invocation:
+  ThrowExpression
+
+\begin{vdm_al}
+  ExpressionStmt: CPP`Expr ==> ()
+  ExpressionStmt(p_es) == (
+    let l_tr =
+    cases true:
+      (is_CPP`AssignExpr(p_es))                -> AssignExpr(p_es),
+      (is_CPP`PreInDecrementExpr(p_es))        -> PreInDecrementExpr(p_es),
+      (is_CPP`PostFixInDecrementExpr(p_es))    -> PostFixInDecrementExpr(p_es),
+      (is_CPP`FctCall(p_es))                   -> ShellFctCall(p_es),
+      (is_CPP`ClassInstanceCreationExpr(p_es)) -> ClassInstanceCreationExpr(p_es),
+
+      (is_CPP`ThrowExpression(p_es))           -> ThrowExpression(p_es)
+
+    end
+    in skip
+  );
+\end{vdm_al}
+
+\subsection{The void Method Call Expression}
+
+  PackageName OP CP
+  PackageName OP argument_list CP
+  
+\begin{vdm_al}
+  ShellFctCall: CPP`FctCall ==> JSSREP`TypeRep
+  ShellFctCall(p_fc) == 
+    let l_el = ExprList(p_fc.arg)
+    in
+    ( JSSENV`ResetLookUpName();
+      return
+        Function(p_fc.fct, l_el)
+    );
+
+  FctCall: CPP`FctCall ==> JSSREP`TypeRep
+  FctCall(p_fc) == 
+    return
+      Function(p_fc.fct, ExprList(p_fc.arg));
+\end{vdm_al}
+
+\begin{vdm_al}
+  Function: CPP`Expr * seq of JSSREP`TypeRep ==> JSSREP`TypeRep
+  Function(p_fct,p_trs) == 
+    if is_CPP`QualifiedPackageName(p_fct)
+    then return FunctionQPN(p_fct,p_trs)
+    elseif is_CPP`SimplePackageName(p_fct)
+    then return FunctionSPN(p_fct,p_trs)
+    else return mk_JSSREP`AllTypeRep();
+    
+  FunctionQPN: CPP`QualifiedPackageName * seq of JSSREP`TypeRep ==> JSSREP`TypeRep
+  FunctionQPN(p_qpn,p_trs) == (
+    dcl l_tr : [JSSREP`TypeRep] := nil;
+    if is_CPP`QualifiedPackageName(p_qpn.pn)
+    then let - = QualifiedPackageName(p_qpn.pn) in skip
+    else let - = SimplePackageName(p_qpn.pn) in skip;
+    let l_i2n = JSSAUX`Identifier2Name(p_qpn.id)
+    in
+    ( l_tr := JSSENV`SearchMethod(l_i2n,p_trs);
+      if l_tr = nil
+      then 
+        ------------------------------------------
+        -- Error message #1
+        -- The Method "%1" was not found
+        ------------------------------------------
+      ( JSSERR`GenErr(p_qpn.id.cid,<ERROR>,7,[JSSAUX`PrintName(l_i2n)]);
+        l_tr := mk_JSSREP`AllTypeRep()
+      );
+      CI`SetTypeInfo(p_qpn.cid,l_tr);
+      CI`SetTypeInfo(p_qpn.id.cid,l_tr);
+      if l_tr <> mk_JSSREP`AllTypeRep() 
+      then 
+      (
+        if is_JSSREP`ClassTypeRep(l_tr.type) or is_JSSREP`IntrfcTypeRep(l_tr.type)
+        then 
+          if not JSSENV`SetLookUpName(l_tr.type.name)
+          then
+            ------------------------------------------
+            -- Error message #1
+            -- The class/interface "%1" has not been pre-checked
+            ------------------------------------------
+            JSSERR`GenErr(p_qpn.id.cid,<ERROR>,1,[JSSAUX`PrintName(l_tr.type.name)])
+      )
+    );
+    return l_tr
+  );
+
+  FunctionSPN: CPP`SimplePackageName * seq of JSSREP`TypeRep ==> JSSREP`TypeRep
+  FunctionSPN(p_fct,p_trs) == (
+    dcl l_tr : [JSSREP`TypeRep] := nil;
+    let l_i2n = JSSAUX`Identifier2Name(p_fct.id)
+    in
+    ( 
+-- JR
+      JSSENV`ResetLookUpName();
+      l_tr := JSSENV`SearchMethod(l_i2n,p_trs);
+      if l_tr = nil
+      then 
+        ------------------------------------------
+        -- Error message #1
+        -- The Method "%1" was not found
+        ------------------------------------------
+      ( JSSERR`GenErr(p_fct.id.cid,<ERROR>,7,[JSSAUX`PrintName(l_i2n)]);
+        l_tr := mk_JSSREP`AllTypeRep()
+      );
+      CI`SetTypeInfo(p_fct.cid,l_tr);
+      CI`SetTypeInfo(p_fct.id.cid,l_tr);
+    );
+    return l_tr
+  );
+\end{vdm_al}
+  
+expression: assignment_expression
+assignment_expression:
+  ConditionalExpr
+  AssignExpr
+
+\begin{vdm_al}
+  Expr: CPP`Expr ==> JSSREP`TypeRep
+  Expr(p_expr) ==
+    let l_tr =
+    cases true:
+      (is_CPP`ConditionalExpr(p_expr))        -> ConditionalExpr(p_expr),
+      (is_CPP`LogicalExpr(p_expr))            -> LogicalExpr(p_expr),
+      (is_CPP`BitExpr(p_expr))                -> BitExpr(p_expr),
+      (is_CPP`EqualityExpr(p_expr))           -> EqualityExpr(p_expr),
+      (is_CPP`TypeCompExpr(p_expr))           -> TypeCompExpr(p_expr),
+      (is_CPP`RelationalExpr(p_expr))         -> RelationalExpr(p_expr),
+      (is_CPP`ShiftExpr(p_expr))              -> ShiftExpr(p_expr),
+      (is_CPP`BinExpr(p_expr))                -> BinExpr(p_expr),
+      (is_CPP`CastExpr(p_expr))               -> CastExpr(p_expr),
+      (is_CPP`PreInDecrementExpr(p_expr))     -> PreInDecrementExpr(p_expr),
+      (is_CPP`UnaryOpExpr(p_expr))            -> UnaryOpExpr(p_expr),
+      (is_CPP`PostFixInDecrementExpr(p_expr)) -> PostFixInDecrementExpr(p_expr),
+      (is_CPP`AssignExpr(p_expr))             -> AssignExpr(p_expr),
+-- PackageName (expanded)
+      (is_CPP`QualifiedPackageName(p_expr))   -> ShellPackageName(p_expr),
+      (is_CPP`SimplePackageName(p_expr))      -> ShellPackageName(p_expr),
+      others -> ShellPrimary(p_expr)
+    end
+    in
+      return l_tr;
+\end{vdm_al}
+    
+\begin{vdm_al}
+  ExprList: seq of CPP`Expr ==> seq of JSSREP`TypeRep
+  ExprList(p_exprL) == (
+    dcl l_trs : seq of JSSREP`TypeRep := [];
+    for l_expr in p_exprL do
+    ( JSSENV`ResetLookUpName();
+      l_trs := l_trs^[Expr(l_expr)]
+    );
+    return l_trs
+  );
+\end{vdm_al}
+
+\subsection{The Assign Expression}
+
+\begin{formalparameters}
+\verb+p_expr: CPP`AssignExpr+ & The abstract syntax tree for a Java
+assign expression.\\
+\hline
+\end{formalparameters}
+\methodresult{()}{Indication whether the assign expression satisfy
+the requirements to be translated from Java to VDM++.}
+
+\begin{vdm_al}
+
+  AssignExpr: CPP`AssignExpr ==> JSSREP`TypeRep
+  AssignExpr(p_expr) ==
+--    AssignOp(p_expr.assignop);
+    let l_lh = Expr(p_expr.unary),
+        l_rh = Expr(p_expr.assignexpr)
+    in
+      return l_lh;
+\end{vdm_al}
+
+\subsection{The Conditional Expression}
+
+\begin{vdm_al}
+  ConditionalExpr: CPP`ConditionalExpr ==> JSSREP`TypeRep
+  ConditionalExpr(p_expr) == (
+    let l_c = Expr(p_expr.cond) in skip;
+    let l_1 = Expr(p_expr.expr1) in skip;
+    let l_2 = Expr(p_expr.expr2)
+    in
+-- JR
+      return l_2
+  );
+\end{vdm_al}
+
+\subsection{The Logical Expression}
+
+\begin{vdm_al}
+  LogicalExpr: CPP`LogicalExpr ==> JSSREP`TypeRep
+  LogicalExpr(p_expr) ==
+    let l_l = Expr(p_expr.left),
+        l_r = Expr(p_expr.right)
+    in
+      return mk_JSSREP`BoolTypeRep({});
+\end{vdm_al}
+
+\subsection{The Bit Expression}
+
+\begin{vdm_al}
+  BitExpr: CPP`BitExpr ==> JSSREP`TypeRep
+  BitExpr(p_expr) == 
+    let l_l = Expr(p_expr.left),
+        l_r = Expr(p_expr.right)
+    in
+      return l_l;
+-- JR
+\end{vdm_al}
+
+\subsection{The Equality Expression}
+
+\begin{vdm_al}
+  EqualityExpr: CPP`EqualityExpr ==> JSSREP`TypeRep
+  EqualityExpr(p_expr) == 
+    let l_l = Expr(p_expr.left),
+        l_r = Expr(p_expr.right)
+    in 
+      return mk_JSSREP`BoolTypeRep({});
+\end{vdm_al}
+
+\subsection{The TypeComp Expression}
+
+\begin{vdm_al}
+  TypeCompExpr: CPP`TypeCompExpr ==> JSSREP`TypeRep
+  TypeCompExpr(p_expr) == 
+    let l_l = Expr(p_expr.left),
+        l_r = Expr(p_expr.right)
+    in 
+      return mk_JSSREP`BoolTypeRep({});
+\end{vdm_al}
+
+\subsection{The Relational Expression}
+
+\begin{vdm_al}
+  RelationalExpr: CPP`RelationalExpr ==> JSSREP`TypeRep
+  RelationalExpr(p_expr) ==
+    let l_l = Expr(p_expr.left),
+        l_r = Expr(p_expr.right)
+    in 
+      return mk_JSSREP`BoolTypeRep({});
+\end{vdm_al}
+
+\subsection{The Shift Expression}
+
+\begin{vdm_al}
+  ShiftExpr: CPP`ShiftExpr ==> JSSREP`TypeRep
+  ShiftExpr(p_expr) == 
+    let l_l = Expr(p_expr.left),
+        l_r = Expr(p_expr.right)
+    in 
+      return l_l;
+-- JR
+\end{vdm_al}
+
+\subsection{The Bin Expression}
+
+\begin{vdm_al}
+  BinExpr: CPP`BinExpr ==> JSSREP`TypeRep 
+  BinExpr(p_expr) ==
+    let l_l = Expr(p_expr.left),
+        l_r = Expr(p_expr.right)
+    in 
+      return mk_JSSREP`BoolTypeRep({});
+\end{vdm_al}
+
+\subsection{The Cast Expression}
+
+Any limitations on the actual type name?
+
+  CastExpr ::
+    typenm : TypeName | Expr
+    expr   : Expr
+    cid :- CI`ContextId;
+
+  TypeName ::
+    tsp : seq of TypeSpecifier
+    ad  : [AbstractDeclarator]
+    cid :- CI`ContextId;
+
+\begin{vdm_al}
+  CastExpr: CPP`CastExpr ==> JSSREP`TypeRep
+  CastExpr(p_expr) ==
+    return 
+      Expr(p_expr.typenm);
+\end{vdm_al}
+
+\subsection{The PreInDecrement Expression}
+
+\begin{vdm_al}
+  PreInDecrementExpr: CPP`PreInDecrementExpr ==> JSSREP`TypeRep
+  PreInDecrementExpr(p_expr) ==
+    return
+      Expr(p_expr.expr);
+\end{vdm_al}
+
+\subsection{The UnaryOp Expression}
+
+\begin{vdm_al}
+  UnaryOpExpr: CPP`UnaryOpExpr ==> JSSREP`TypeRep
+  UnaryOpExpr(p_expr) ==
+    return
+      Expr(p_expr.expr);
+\end{vdm_al}
+  
+\subsection{Primary}
+
+\begin{vdm_al}
+  ShellPrimary: CPP`Expr ==> JSSREP`TypeRep
+  ShellPrimary(p_e) == (
+    JSSENV`ResetLookUpName();
+    return Primary(p_e)
+  );
+
+  Primary: CPP`Expr ==> JSSREP`TypeRep
+  Primary(p_e) ==
+    return
+      cases true:
+--  Literal (expanded)
+        (is_CPP`BoolLit(p_e))      -> Literal(p_e),
+        (is_CPP`CharacterLit(p_e)) -> Literal(p_e),
+        (is_CPP`IntegerLit(p_e))   -> Literal(p_e),
+        (is_CPP`FloatingLit(p_e))  -> Literal(p_e),
+        (is_CPP`NullLit(p_e))      -> Literal(p_e),
+        (is_CPP`StringLit(p_e))    -> Literal(p_e),
+
+        (is_CPP`This(p_e))                      -> This(p_e),
+        (is_CPP`BracketedExpr(p_e))             -> Expr(p_e.expr),
+        (is_CPP`ClassInstanceCreationExpr(p_e)) -> ClassInstanceCreationExpr(p_e),
+        (is_CPP`ObjectMemberAccess(p_e))        -> ObjectMemberAccess(p_e),
+        (is_CPP`FctCall(p_e))                   -> FctCall(p_e),
+        (is_CPP`ArrayApply(p_e))                -> ArrayApply(p_e),
+        (is_CPP`QualifiedName(p_e))             -> QualifiedName(p_e),
+        (is_CPP`ClassExpr(p_e))                 -> ClassExpr(p_e),
+
+        (is_CPP`ArrayCreationExpr(p_e)) -> ArrayCreationExpr(p_e)
+    end;
+\end{vdm_al}
+
+\subsection{The Literal Expression}
+
+\begin{vdm_al}
+  Literal: CPP`Literal ==> JSSREP`TypeRep
+  Literal(p_lit) ==
+    let mk_(l_tr,l_cid) = 
+    cases p_lit:
+      mk_CPP`BoolLit(l_,l_c)      -> mk_(mk_JSSREP`BoolLitTypeRep(),l_c),
+      mk_CPP`CharacterLit(l_,l_c) -> mk_(mk_JSSREP`CharLitTypeRep(),l_c),
+-- JR we lost the actual type of Int: Byte, Short, Int, Long 
+      mk_CPP`IntegerLit(l_,l_c)   -> mk_(mk_JSSREP`IntLitTypeRep(),l_c),
+-- JR we lost the actual type of Real: Float, Double 
+      mk_CPP`FloatingLit(l_,l_c)  -> mk_(mk_JSSREP`RealLitTypeRep(),l_c),
+      mk_CPP`NullLit(l_c)         -> mk_(mk_JSSREP`NullLitTypeRep(),l_c),
+      mk_CPP`StringLit(l_,l_c)    -> mk_(mk_JSSREP`StrLitTypeRep(),l_c),
+-- JR 
+      others -> mk_(mk_JSSREP`AllTypeRep(),CI`NilContextId)
+    end
+    in 
+    ( CI`SetTypeInfo(l_cid, l_tr);
+      return l_tr
+    );
+\end{vdm_al}
+
+\subsection{The This Expression}
+
+\begin{vdm_al}
+  This: CPP`This ==> JSSREP`TypeRep
+  This(p_expr) ==
+    let l_tr = JSSENV`GetCurrentType()
+    in
+    ( CI`SetTypeInfo(p_expr.cid,l_tr);
+      return l_tr
+    );
+\end{vdm_al}
+
+\subsection{The Super Expression}
+
+\begin{vdm_al}
+  Super: CPP`Super ==> JSSREP`TypeRep
+  Super(p_expr) ==
+    return 
+      mk_JSSREP`AllTypeRep();
+-- JR
+\end{vdm_al}
+
+\subsection{The ArrayApply Expression}
+
+\begin{vdm_al}
+  ArrayApply: CPP`ArrayApply ==> JSSREP`TypeRep
+  ArrayApply(p_expr) == (
+    return
+      Expr(p_expr.array);
+--    Expr(p_expr.arg)
+  );
+\end{vdm_al}
+
+\subsection{The PostFixInDecrement Expression}
+
+\begin{vdm_al}
+  PostFixInDecrementExpr: CPP`PostFixInDecrementExpr ==> JSSREP`TypeRep
+  PostFixInDecrementExpr(p_expr) == (
+    return
+      Expr(p_expr.expr)
+  );
+\end{vdm_al}
+
+\subsection{The Throw Expression}
+
+\begin{vdm_al}
+  ThrowExpression: CPP`ThrowExpression ==> JSSREP`TypeRep
+  ThrowExpression(p_expr) ==
+    return
+      Expr(p_expr.expr);
+\end{vdm_al}
+
+\subsection{The ClassInstanceCreation Expression}
+
+\begin{vdm_al}
+  ClassInstanceCreationExpr: CPP`ClassInstanceCreationExpr ==> JSSREP`TypeRep
+  ClassInstanceCreationExpr(p_expr) == (
+    if p_expr.somethingDotNew <> nil
+    then Expr(p_expr.somethingDotNew);
+
+    let l_trs = ExprList(p_expr.arg)
+    in skip;
+
+--    JSSVCM1`MemberDeclarationList(p_expr.ml)
+    return 
+      InstanceName(p_expr.classtype)
+  );
+
+  InstanceName: CPP`PackageName ==> JSSREP`TypeRep
+  InstanceName(p_pn) ==
+    let l_name = JSSAUX`PackageName2Name(p_pn),
+        l_tr = JSSENV`LookUpTypeName(l_name) 
+    in
+    ( if l_tr = nil 
+      then
+      ------------------------------------------
+      -- Error message #1
+      -- The class/interface "%1" has not been pre-checked
+      ------------------------------------------
+      (-- JSSERR`GenErr(p_name.cid,<ERROR>,1,[JSSAUX`PrintName(l_name)]);
+        CI`SetTypeInfo(p_pn.cid,mk_JSSREP`AllTypeRep())
+      )
+      else CI`SetTypeInfo(p_pn.cid,l_tr);
+      return l_tr
+    );
+\end{vdm_al}
+
+\subsection{The Class Expression}
+
+\begin{vdm_al}
+  ClassExpr: CPP`ClassExpr ==> JSSREP`TypeRep
+  ClassExpr(p_expr) ==
+    return mk_JSSREP`AllTypeRep(); 
+-- JR JSSDEF`SimpleTypeName(p_expr.operand);
+\end{vdm_al}
+
+\subsection{The Create Array Expression}
+
+\begin{vdm_al}
+  ArrayCreationExpr: CPP`ArrayCreationExpr ==> JSSREP`TypeRep
+  ArrayCreationExpr(p_expr) ==
+    return mk_JSSREP`AllTypeRep();
+\end{vdm_al}
+  
+\subsection{The ObjectMemberAccess Expression}
+
+used in: field access
+record fields:
+  object : Expr = primary SUPER PackageName.SUPER
+  name   : Expr = Identifier
+
+\begin{vdm_al}
+  ObjectMemberAccess: CPP`ObjectMemberAccess ==> JSSREP`TypeRep
+  ObjectMemberAccess(p_expr) == (
+    dcl l_tr : [JSSREP`TypeRep] := nil;
+    let l_o = Expr(p_expr.object),
+        l_i2n = JSSAUX`Identifier2Name(p_expr.name)
+    in
+    ( l_tr := JSSENV`SearchField(l_i2n);
+      if l_tr = nil
+      then 
+        ------------------------------------------
+        -- Error message #1
+        -- The Field "%1" was not found
+        ------------------------------------------
+      ( JSSERR`GenErr(p_expr.name.cid,<ERROR>,7,[JSSAUX`PrintName(l_i2n)]);
+        l_tr := mk_JSSREP`AllTypeRep()
+      )
+      else
+      ( CI`SetTypeInfo(p_expr.cid,l_tr);
+        CI`SetTypeInfo(p_expr.name.cid,l_tr);
+        if is_JSSREP`ClassTypeRep(l_tr) or is_JSSREP`IntrfcTypeRep(l_tr)
+        then (
+          if not JSSENV`SetLookUpName(l_tr.name)
+          then
+            ------------------------------------------
+            -- Error message #1
+            -- The class/interface "%1" has not been pre-checked
+            ------------------------------------------
+            JSSERR`GenErr(p_expr.name.cid,<ERROR>,1,[JSSAUX`PrintName(l_tr.name)])
+        ) elseif is_JSSREP`ClassTypeRep(l_tr.type) 
+              or is_JSSREP`IntrfcTypeRep(l_tr.type)
+        then (
+          if not JSSENV`SetLookUpName(l_tr.type.name)
+          then
+            ------------------------------------------
+            -- Error message #1
+            -- The class/interface "%1" has not been pre-checked
+            ------------------------------------------
+            JSSERR`GenErr(p_expr.name.cid,<ERROR>,1,[JSSAUX`PrintName(l_tr.type.name)])
+        )
+      )
+    );
+    return l_tr
+  );
+\end{vdm_al}
+
+\end{vdm_al}
+
+\subsection{The QualifiedName Expression}
+
+used in: explicit constructor invocation and function call
+
+record fields
+  qcn : Expr (| QualifiedClassName)
+  id  : Name
+
+\begin{vdm_al}
+  QualifiedName: CPP`QualifiedName ==> JSSREP`TypeRep
+  QualifiedName(p_expr) == (
+    Expr(p_expr.qcn);
+    Expr(p_expr.id);
+    return nil
+  );
+\end{vdm_al}
+    
+\subsection{The Name Expression}
+
+used as: Identifier, PackageName or QualifiedName 
+
+\begin{vdm_al}
+  ShellPackageName: CPP`PackageName ==> JSSREP`TypeRep
+  ShellPackageName(p_pn) == (
+    JSSENV`ResetLookUpName();
+    return
+      if is_CPP`QualifiedPackageName(p_pn)
+      then QualifiedPackageName(p_pn)
+      else SimplePackageName(p_pn);
+  ); 
+  
+  QualifiedPackageName: CPP`QualifiedPackageName ==> JSSREP`TypeRep
+  QualifiedPackageName(p_qpn) == (
+    dcl l_tr : [JSSREP`TypeRep] := nil;
+    if is_CPP`QualifiedPackageName(p_qpn.pn)
+    then l_tr := QualifiedPackageName(p_qpn.pn)
+    elseif is_CPP`SimplePackageName(p_qpn.pn)
+    then l_tr := SimplePackageName(p_qpn.pn);
+    let l_i2n = JSSAUX`Identifier2Name(p_qpn.id)
+    in
+    ( l_tr := JSSENV`SearchField(l_i2n);
+      if l_tr = nil
+      then 
+        ------------------------------------------
+        -- Error message #1
+        -- The Field "%1" was not found
+        ------------------------------------------
+      ( JSSERR`GenErr(p_qpn.id.cid,<ERROR>,7,[JSSAUX`PrintName(l_i2n)]);
+        l_tr := mk_JSSREP`AllTypeRep()
+      )
+      else
+      ( CI`SetTypeInfo(p_qpn.cid,l_tr);
+        CI`SetTypeInfo(p_qpn.id.cid,l_tr);
+        if is_JSSREP`ClassTypeRep(l_tr.type) or is_JSSREP`IntrfcTypeRep(l_tr.type)
+        then 
+          if not JSSENV`SetLookUpName(l_tr.type.name)
+          then
+            ------------------------------------------
+            -- Error message #1
+            -- The class/interface "%1" has not been pre-checked
+            ------------------------------------------
+            JSSERR`GenErr(p_qpn.id.cid,<ERROR>,1,[JSSAUX`PrintName(l_tr.type.name)])
+      )
+    );
+    return l_tr
+  );
+   
+  SimplePackageName: CPP`SimplePackageName ==> JSSREP`TypeRep
+  SimplePackageName(p_spn) == (
+    dcl l_tr : [JSSREP`TypeRep] := nil;
+    let l_i2n = JSSAUX`Identifier2Name(p_spn.id)
+    in
+    ( l_tr := JSSENV`SearchField(l_i2n);
+      if l_tr = nil
+      then 
+        ------------------------------------------
+        -- Error message #1
+        -- The Field "%1" was not found
+        ------------------------------------------
+      ( JSSERR`GenErr(p_spn.id.cid,<ERROR>,7,[JSSAUX`PrintName(l_i2n)]);
+        l_tr := mk_JSSREP`AllTypeRep()
+      )
+      else
+      ( CI`SetTypeInfo(p_spn.cid,l_tr);
+        CI`SetTypeInfo(p_spn.id.cid,l_tr);
+        if is_JSSREP`ClassTypeRep(l_tr) or is_JSSREP`IntrfcTypeRep(l_tr)
+        then (
+          if not JSSENV`SetLookUpName(l_tr.name)
+          then
+            ------------------------------------------
+            -- Error message #1
+            -- The class/interface "%1" has not been pre-checked
+            ------------------------------------------
+            JSSERR`GenErr(p_spn.id.cid,<ERROR>,1,[JSSAUX`PrintName(l_tr.name)])
+        ) elseif is_JSSREP`ClassTypeRep(l_tr.type) 
+              or is_JSSREP`IntrfcTypeRep(l_tr.type)
+        then (
+          if not JSSENV`SetLookUpName(l_tr.type.name)
+          then
+            ------------------------------------------
+            -- Error message #1
+            -- The class/interface "%1" has not been pre-checked
+            ------------------------------------------
+            JSSERR`GenErr(p_spn.id.cid,<ERROR>,1,[JSSAUX`PrintName(l_tr.type.name)])
+        ) 
+      )
+    );
+    return l_tr
+  );
+\end{vdm_al}
+
+\begin{vdm_al}
+end JSSVCM2EXPR
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}{rtinfo.ast}[JSSEXPR]
+\end{rtinfo}

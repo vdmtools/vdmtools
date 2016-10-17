@@ -1,0 +1,37 @@
+/*
+テストグループ
+	FReadのテスト
+関連 UC
+	なし
+作成者
+佐原伸
+*/
+class FReadT is subclass of TestDriver
+functions
+public tests : () -> seq of TestCase
+tests () == 
+	[
+		new FReadT01()
+	];
+end FReadT
+----------------------------------------
+/*
+シナリオID
+	文字列のファイルからの読込。
+親UseCase
+	なし
+内容
+	文字列のファイルからの読込。
+*/
+class FReadT01 is subclass of TestCase
+operations 
+public test: () ==> bool
+test() == 
+	return
+		FRead`文字列を読み込む("./temp/String.txt")  = "これはテストです。"
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "FReadT01:\t文字列のファイルからの読込";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end FReadT01

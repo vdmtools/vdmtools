@@ -1,0 +1,26 @@
+\begin{vdm_al}
+class 哲学者
+
+instance variables
+  食卓 : 食卓;
+  回数 : nat := 2
+
+operations
+  public 哲学者 :食卓 ==> 哲学者
+  哲学者 (p食卓) == 食卓 := p食卓;
+
+  食べる: () ==> ()
+  食べる () ==
+    if 回数 > 0
+    then ( 食卓.フォークを取る();
+           食卓.フォークを取る();
+           duration (300) 回数 := 回数 - 1;
+           if 回数 = 0 then 食卓.食べた();
+           食卓.フォークを置く();
+           食卓.フォークを置く() )
+
+thread
+  periodic (300, 30, 5, 0) (食べる);
+
+end 哲学者
+\end{vdm_al}

@@ -1,0 +1,23 @@
+add                10;
+branch             11;
+call               12;
+cas                13;
+compare            14;
+div                15;
+fsqrt              16;
+logic              17;
+mul                18;
+neg                19;
+pop                20;
+push               21;
+return             22;
+sub                23;
+
+AddEnv             : int (add);
+Addset             : int (3);
+AllorExists        : int (add + branch);
+Always             : int (add * branch);
+Appendmap          : int (add + 2);
+Appendseq          : int (2 * add);
+Appendtup          : int 2 * (add + branch);
+Apply              : int logic + (add * branch)

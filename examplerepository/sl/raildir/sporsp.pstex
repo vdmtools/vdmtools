@@ -1,0 +1,109 @@
+%!PS-Adobe-2.0 EPSF-2.0
+%%Title: /tmp/xfig-fig023755
+%%Creator: fig2dev Version 2.1.8 Patchlevel 0
+%%CreationDate: Fri Jan 21 16:18:36 1994
+%%For: kmh@idruby (Kirsten Mark Hansen (Civ.ing.))
+%%Orientation: Portrait
+%%BoundingBox: 0 0 360 106
+%%Pages: 0
+%%EndComments
+/$F2psDict 200 dict def 
+$F2psDict begin
+$F2psDict /mtrx matrix put
+/l {lineto} bind def
+/m {moveto} bind def
+/s {stroke} bind def
+/n {newpath} bind def
+/gs {gsave} bind def
+/gr {grestore} bind def
+/clp {closepath} bind def
+/graycol {dup dup currentrgbcolor 4 -2 roll mul 4 -2 roll mul
+4 -2 roll mul setrgbcolor} bind def
+/col-1 {} def
+/col0 {0 0 0 setrgbcolor} bind def
+/col1 {0 0 1 setrgbcolor} bind def
+/col2 {0 1 0 setrgbcolor} bind def
+/col3 {0 1 1 setrgbcolor} bind def
+/col4 {1 0 0 setrgbcolor} bind def
+/col5 {1 0 1 setrgbcolor} bind def
+/col6 {1 1 0 setrgbcolor} bind def
+/col7 {1 1 1 setrgbcolor} bind def
+/col8 {.68 .85 .9 setrgbcolor} bind def
+/col9 {0 .39 0 setrgbcolor} bind def
+/col10 {.65 .17 .17 setrgbcolor} bind def
+/col11 {1 .51 0 setrgbcolor} bind def
+/col12 {.63 .13 .94 setrgbcolor} bind def
+/col13 {1 .75 .8 setrgbcolor} bind def
+/col14 {.7 .13 .13 setrgbcolor} bind def
+/col15 {1 .84 0 setrgbcolor} bind def
+	end
+/$F2psBegin {$F2psDict begin /$F2psEnteredState save def} def
+/$F2psEnd {$F2psEnteredState restore end} def
+%%EndProlog
+
+$F2psBegin
+0 setlinecap 0 setlinejoin
+-36.0 234.0 translate 0.900 -0.900 scale
+0.500 setlinewidth
+% Polyline
+n 39 159 m 119 159 l  199 239 l  439 239 l gs col-1 s gr
+% Polyline
+n 39 239 m 119 239 l  199 159 l  439 159 l gs col-1 s gr
+% Polyline
+n 199 154 m 199 164 l gs col-1 s gr
+% Polyline
+n 279 154 m 279 164 l gs col-1 s gr
+% Polyline
+n 359 154 m 359 164 l gs col-1 s gr
+% Polyline
+n 439 154 m 439 164 l gs col-1 s gr
+% Polyline
+n 199 234 m 199 244 l gs col-1 s gr
+% Polyline
+n 279 234 m 279 244 l gs col-1 s gr
+% Polyline
+n 359 234 m 359 244 l gs col-1 s gr
+% Polyline
+n 439 234 m 439 244 l gs col-1 s gr
+% Polyline
+n 299 159 m 304 159 l gs col-1 s gr
+% Polyline
+n 319 159 m 399 239 l gs col-1 s gr
+% Polyline
+n 119 154 m 119 164 l gs col-1 s gr
+% Polyline
+n 39 154 m 39 164 l gs col-1 s gr
+% Polyline
+n 39 234 m 39 244 l gs col-1 s gr
+% Polyline
+n 119 234 m 119 244 l gs col-1 s gr
+% Polyline
+n 364 194 m 354 204 l gs col-1 s gr
+/Times-Roman findfont 11.00 scalefont setfont
+74 149 m 
+gs 1 -1 scale (16) col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+154 149 m 
+gs 1 -1 scale (17) col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+234 149 m 
+gs 1 -1 scale (18) col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+314 149 m 
+gs 1 -1 scale (19) col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+394 149 m 
+gs 1 -1 scale (20) col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+74 259 m 
+gs 1 -1 scale (21) col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+234 259 m 
+gs 1 -1 scale (22) col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+314 259 m 
+gs 1 -1 scale (23) col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+394 259 m 
+gs 1 -1 scale (24) col-1 show gr
+$F2psEnd

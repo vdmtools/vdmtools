@@ -1,0 +1,360 @@
+\documentclass[a4paper,dvips]{article}
+\usepackage[dvips]{color}
+\usepackage{vdmsl-2e}
+\usepackage{longtable}
+\usepackage{makeidx}
+\usepackage{ifad}
+\usepackage{colortbl}
+\usepackage{multicol}
+\usepackage{alltt}
+
+\newenvironment{formalparameters}{
+\vspace{2ex}\hrule\vspace{1ex}
+\noindent\textit{Formal Parameters}\\[2ex]
+\begin{tabular}{|>{\ttfamily}l|p{7cm}|}\hline}{%
+\hline\hline\end{tabular}\vspace{1ex}}
+ 
+\newcommand{\methodresult}[2]{%
+\vspace{2ex}\hrule\vspace{1ex}
+\noindent\textit{The Results}\\[2ex]
+\begin{tabular}{|>{\ttfamily}l|p{7cm}|}\hline
+#1 & #2 \\
+\hline\hline\end{tabular}\vspace{1ex}}
+
+
+\newcommand{\TBW}{\fbox{To be written}}
+\newcommand{\TBD}{\fbox{To be discussed}}
+
+\newcommand{\VDMTools}{\textsf{\textbf{VDMTools\raisebox{1ex}{\Pisymbol{psy}{226}}}}} 
+
+
+% VDMgray environment
+\newcolumntype{G}{>{\columncolor[gray]{0.8}}p{.98\columnwidth}}
+\newenvironment{VDMgray}%
+{\small\begin{alltt}\begin{tabular}{G}}%
+{\end{tabular}\end{alltt}\normalsize} 
+
+\usepackage{vdmsl-2e}
+\usepackage{vpp}
+\newcommand{\vdmstyle}[1]{\texttt{#1}}
+
+\definecolor{covered}{rgb}{0,0,0}      %black
+%\definecolor{not_covered}{gray}{0.5}   %gray for previewing
+%\definecolor{not_covered}{gray}{0.6}   %gray for printing
+\definecolor{not_covered}{rgb}{1,0,0}  %read
+
+%\documentstyle[vdmsl_v1.1.31,alltt,makeidx,ifad,a4]{article}
+
+\newcommand{\VDM}{VDM++}
+
+\newcommand{\StateDef}[1]{{\bf #1}}
+\newcommand{\TypeDef}[1]{{\bf #1}}
+\newcommand{\TypeOcc}[1]{{\it #1}}
+\newcommand{\FuncDef}[1]{{\bf #1}}
+\newcommand{\FuncOcc}[1]{#1}
+\newcommand{\ModDef}[1]{{\tiny #1}}
+
+
+\newcommand{\MCL}{Meta-IV Class Library}
+\newcommand{\NYI}{Notice, that this function/operation is not fully
+  specified in order to capture a possible integration with another
+  library than \MCL{}.}
+\newcommand{\nfs}{{\em not fully specified\/}}
+
+\makeindex
+
+\begin{document}
+
+\special{!userdict begin /bop-hook{gsave 220 30 translate
+0 rotate /Times-Roman findfont 21 scalefont setfont
+0 0 moveto (CONFIDENTIAL) show grestore}def end}
+
+\docdef{Specification of the Java to VDM++ Translator}
+         {IFAD VDM Tool Group \\
+          IFAD A/S}
+         {\today,}
+         {IFAD-Legacy-1}
+         {Report}
+         {Under Development}
+         {Confidential}
+         {}
+         {\copyright IFAD}
+         {\item[V1.0] First version.}
+         {}
+
+\renewcommand{\thepage}{\roman{page}}
+
+\tableofcontents
+\newpage
+\renewcommand{\thepage}{\arabic{page}}
+\setcounter{page}{1}
+
+\parskip12pt
+\parindent0pt
+
+
+\section{Introduction}
+
+This document contains the specification of the Java to VDM++
+translator. The Java language is described in \cite{Gosling&00}. In
+essense it will be the reverse of the VDM++ to Java translator
+\cite{CGJavaManPP}. 
+
+
+\section{Overall Structure}
+
+This section describes the {\bf design} of the specification, the {\bf
+strategy} used in the Java to VDM++ translator. In addition to these
+VDM modules there must a a module with a backend for VDM++ (converting
+the abstract syntax three for VDM++ to concrete syntax inside RTF? files).
+
+\subsection{Design}
+
+The specification is divided into several modules:
+
+\begin{description} 
+\item[J2V: ] (J2V is an abbreviation of Java to VDM++ ).
+  Providing functions/operations for translating top-level Java to VDM++
+  definitions.
+
+\item[J2VCLASS:] This module describes the Java to VDM++ translation of
+the class structure including inheritance.
+
+\item[J2VEXPR: ] (EXPR is an abbreviation of EXPRession). Providing
+  functions/operations  for translating Java expressions corresponding
+  to VDM++ statements/expressions.
+
+\item[J2VSTMT: ] (STMT is an abbreviation of STateMenT). Providing
+  functions/operations for translating Java statements corresponding
+  to VDM++ statements.
+
+\item[J2VTYPE:] Providing functions/operations for type specifiers from
+  Java to type representations at the VDM++ level.
+
+\item[J2VOP:] (OP is an abbreviation for OPerations). Provides
+  functions/operations for translating Java operation definitions to
+  equivalent VDM++ definitions.
+
+\item[J2VENV:] (ENV is an abbreviation for ENVironment). Provides
+  functions/operations for setting and looking up information about
+  the environment in which a construct is being translated in the
+  context of.´This includes things such as imports from packages.
+
+\item[J2VNS:] (NS is an abbreviation for Name Spacing). Provides
+  functions/operations for dealing with name space differences between
+  Java and VDM++.
+
+\item[CPP:] (CPP is an abbreviation of C Plus Plus). Describing the
+  abstract syntax of Java and C++.
+
+\item[CI:] (CI is an abbreviation fo Context Information). It is used
+  to be able to refer back to errors in a concrete syntax such that
+  the user can understand error messages.
+
+\item[REP: ] Type Representations Module. Provides the type
+  definitions for the semantic domains which are used internally in
+  the static semantics to model the types from the abstract syntax and
+  the derived types.
+
+\item[J2VBVDM: ] (J2VBVDM is an abbreviation of Building VDM++). The construction
+  of part of an abstract tree of VDM++ is described in this module. The
+  main idea behind this module is divide the specification of the Java to
+  VDM++ translator into parts of the same nature. This module also provides
+  functions for naming temporary variables and auxiliary functions.
+
+\item[AS: ] (AS is an abbreviation of Abstract Syntax). Describing the
+  abstract syntax of the VDM-SL/VDM++.
+
+\item[J2VAUX:] (AUXIL is an abbreviation of AUXILiary). Provides auxiliary
+  functions and operations to the rest of the specification.
+
+\end{description}
+
+\section{Issues}
+
+There are a number of issues where we have major design decisions to
+make. Below we discuss the alternatives for each of the issues. This
+information is to serve as basis for making decisions for each of
+them.
+
+\begin{description}
+\item[static:] Java (and C++) has a static modifier which is currently not
+present in VDM++. We can either introduce this at the VDM++ level or
+we must treat all declarations made static in Java specially in the
+translation process. Thus, in the translation we would have to make a
+new instance of the given class before invoking a static constract.
+
+Alternatively, the introduction of static at the VDM++ level would
+require changes to the different Toolbox components.
+
+\noindent{\textbf{Estimate for static class members in VDM++}}
+
+\begin{tabular}{|l|l|p{5cm}|}\hline
+Component    & Estimate & Comment \\ \hline
+Parser       & 0.25d    & Add keyword (call syntax already exists -
+                          field select expression)\\
+Type checker & 0.5d     & No access to non-static class members, no
+                          self expr, no object expressions.\\
+Interpreter  & 3d       & Modify lookup mechanism, object initialization\\
+CGs          & 0.25d    & Straightforward - generate extra keyword\\
+Pretty printers
+             & 0.25d    & \\
+Rose Mapper  & 0.25d    & \\ 
+Test coverage 
+             & 0.25d    & \\
+Documentation
+             & 1d       & Must update language manual, Rose mapper
+                          manual, CG manuals, examples. \\ \hline
+\textbf{Total}
+             & \textbf{5.75d} &\\ \hline
+\end{tabular}
+
+\item[method overloading:]
+Java supports method (but not operator) overloading. This must be
+resolved in the translation either by offering primitive method
+overloading in VDM++, or by defining some name mangling scheme.
+
+\noindent\textbf{Estimate for Method Overloading in VDM++}
+
+\begin{tabular}{|l|l|p{5cm}|}\hline
+Component    & Estimate & Comment \\ \hline
+Parser       & 0.25d    & Currently signals problem if the same name
+                          is used in several places.\\
+Type checker & 1d       & Check a method exists for each call made;
+                          check overloaded method signatures are
+                          distinguishable. \\
+Interpreter  & 4d       & Modify lookup mechanism: must take argument
+                          types and then try to match against a method
+                          name; possible performance cost due to
+                          frequent type lookup.\\
+Rose Mapper  & 0.5d     & Check that mapper doesn't assume uniqueness
+                          of method names.\\ 
+Documentation
+             & 1d       & Must update language manual, CG
+                          manuals, examples. \\ \hline
+\textbf{Total}
+             & \textbf{6.75d} &\\ \hline
+\end{tabular}
+\item[constructor/destructor:] In Java (and C++) constructors can be
+defined for each class. In VDM++ this cannot be done in general (only
+initialisation of instance variables are possible and nothing can be
+transferred in the construction of a new instance of a class as
+parameters. Destructors in Java are called finalisers and it must be
+clarified how to deal with these.
+
+\noindent\textbf{Estimate for Constructors in VDM++} assuming method
+overloading is already in place.
+
+\begin{tabular}{|l|l|p{5cm}|}\hline
+Component    & Estimate & Comment \\ \hline
+Parser       & 1d       & Update new expressions, special signature (no
+                          return type) for constructors. \\
+Type checker & 1d       & Check class exists; check a corresponding
+                          constructor exists for new expressions.\\
+Interpreter  & 2d       & Straightforward if method overloading is
+                          already implemented.\\
+CGs          & 0.25d    & Straightforward - accept arguments in new
+                          expressions.\\
+Pretty printers
+             & 0.25d    & Straightforward - accept arguments in new
+                          expressions.\\
+Rose Mapper  & 1d       & Ensure that constructors are correctly
+                          mapped (care needed since signature is
+                          different).\\ 
+Documentation
+             & 1d       & Must update language manual, Rose mapper
+                          manual, examples. \\ \hline
+\textbf{Total}
+             & \textbf{6.5d} &\\ \hline
+\end{tabular}
+
+
+\item[Packages:] In Java packages have semantics whereas it is a
+purely syntactic part of VDM++ used in the management of projects and
+their organisation into directories.
+
+\noindent\textbf{Estimate for Packages in VDM++} 
+
+\begin{tabular}{|l|l|p{5cm}|}\hline
+Component    & Estimate & Comment \\ \hline
+Parser       & 3d       & Devise format for package declaration and
+                          import, update parser, add new modifier.\\ 
+Type checker & 2d       & Add appropriate data structures for
+                          packages; extend well-formedness functions
+                          for names to search imported packages.\\
+Interpreter  & 2d       & Modify look up mechanism; how much can be
+                          statically decided?\\
+CGs          & 2d       & Name spaces in VDM++?\\
+Pretty printers
+             & 1d       & \\
+Rose Mapper  & 2d       & Use Rose packages?\\ 
+Documentation
+             & 2d       & \\ \hline
+\textbf{Total}
+             & \textbf{14d} &\\ \hline
+\end{tabular}
+
+
+\item[Exception handling:] In Java the exception handling mechanism is
+more present from a type point of view than in VDM++. This is not
+necessarily a problem but it needs to be clarified.
+
+\item[Java Comments:] What do we do about Java comments? The current
+position is that we can probably support some kind of comments made
+before each definition (optionally naturally) with a special syntax
+such that these comments can be carried over to the corresponding VDM
+file before the VDM definition of the same construct. Currently this
+is not supported by the Java parser which simply ignorres all
+comments. It would also need to be taken into account in the VDM
+backend translating the VDM++ AS representation to concrete syntax so
+a kind of transfer format for this information must be defined. For
+arbitrary comments in the middle of definitions in Java it is going to
+be virtually impossible to position in an appropriate position at the
+VDM++ level source files.
+
+\item[Position information:] In the abstract syntax representation for
+Java (the CPP module) position information is covered inside the
+context information. This is neccesary in order to be able to report
+errors to users at the right positions whenever something is wrong or
+a limitation has been reached. However, presumably this information is
+going to be irrelevant when we transfer to the VDM++ level. At least
+it must be claried if it is realistic to keep track of where a
+construct generated to VDM++ originally came from in the Java source
+context.
+
+\end{description}
+
+\section{The VDM-SL Specification}
+
+\include{j2v.vdm}
+
+\include{j2vclass.vdm}
+
+\include{j2vop.vdm}
+
+\include{j2vtype.vdm}
+
+\include{j2vstmt.vdm}
+
+\include{j2vexpr.vdm}
+
+\include{j2venv.vdm}
+
+\include{j2vaux.vdm}
+
+\include{j2vns.vdm}
+
+\include{j2vbvdm.vdm}
+
+\appendix
+\bibliographystyle{iptes}
+\bibliography{/home/peter/bib/dan}
+
+\newpage
+\addcontentsline{toc}{section}{Index}
+\printindex
+
+\end{document}
+
+
+

@@ -1,0 +1,30 @@
+-- Check that incorrect type in inherited constructor is captured
+class A
+
+instance variables
+
+n : nat;
+
+operations
+
+A : nat ==> A
+A(m) ==
+( n := m;
+  return self
+)
+
+end A
+
+class B is subclass of A
+
+end B
+
+class C
+
+operations
+
+op : () ==> A
+op() ==
+  return new B(3.5)
+
+end C

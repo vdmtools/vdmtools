@@ -1,0 +1,27 @@
+class A_TypeErr
+
+types 
+typeA = nat
+inv i == i > 0
+
+functions
+f1: nat -> nat
+f1 (a) == a;
+
+f2: typeA -> nat
+f2 (b) == f1 (b)
+pre b < 0;
+
+f3: nat -> nat
+f3 (-) == f2 (1.3)
+
+end A_TypeErr
+
+class B_TypeErr
+
+types
+
+typeB = nat
+inv i == i < 42  
+
+end B_TypeErr

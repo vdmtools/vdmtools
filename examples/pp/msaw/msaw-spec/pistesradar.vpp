@@ -1,0 +1,78 @@
+class PistesRadar
+
+   types
+      PisteInfo ::
+         position: MSAWTypes`Coordonnees
+         modeC : MSAWTypes`Pieds
+         vitesse : [MSAWTypes`KT]
+         alarmes : set of MSAWTypes`Alarme
+
+   instance variables
+      pistes: map MSAWTypes`ModeA to (map MSAWTypes`Temps to PisteInfo) := {|->};
+   inv forall modea in set dom pistes 
+         & card dom pistes(modea) <= 2;
+
+   operations
+
+      Init: View ==> ()
+      Init (view) == 
+        skip;
+
+      SetPosition: MSAWTypes`ModeA * MSAWTypes`Temps * MSAWTypes`Coordonnees * MSAWTypes`Pieds ==> ()
+      SetPosition (modeA, temps, position, modeC) 
+      == let piste = {temps |-> mk_PisteInfo (position, modeC, nil, {})} in
+            if modeA in set dom pistes then 
+              let piste' = pistes(modeA) in
+                let t = new MSAWTypes().LaPlusRecente (dom piste') in 
+                  pistes (modeA) := {t |-> piste'(t)} ++ piste
+            else pistes := pistes munion {modeA |-> piste};
+
+      SetVitesse: MSAWTypes`ModeA * MSAWTypes`Temps * MSAWTypes`KT ==> ()
+      SetVitesse (modeA, temps, vitesse) ==
+        pistes (modeA)(temps).vitesse := vitesse
+      pre modeA in set dom pistes and temps in set dom pistes (modeA);
+
+      SetAlarm: MSAWTypes`ModeA * (Terrain|Obstacle) ==> ()
+      SetAlarm (modeA, obstacle) ==
+        let t = new MSAWTypes().LaPlusRecente (dom pistes (modeA)),
+            alarme = TypedAlarm (obstacle) 
+        in pistes (modeA)(t).alarmes := pistes (modeA)(t).alarmes union {alarme}
+      pre modeA in set dom pistes;
+
+      GetModeAs: () ==> set of MSAWTypes`ModeA
+      GetModeAs () ==
+        return dom pistes;
+
+      GetPositions: MSAWTypes`ModeA ==> map MSAWTypes`Temps to (MSAWTypes`Coordonnees * MSAWTypes`Pieds)
+      GetPositions (modeA) ==
+        let piste = pistes (modeA) in
+            return { t |-> mk_(piste(t).position, piste(t).modeC) | t in set
+                           dom piste }
+      pre modeA in set dom pistes;
+
+      GetVitesse: MSAWTypes`ModeA ==> MSAWTypes`KT
+      GetVitesse (modeA) ==
+        let piste = pistes (modeA),
+             t = new MSAWTypes().LaPlusRecente (dom piste) in
+            return piste(t).vitesse
+      pre modeA in set dom pistes;
+
+      DelPiste: MSAWTypes`ModeA ==> ()
+      DelPiste (modeA) ==
+        pistes := {modeA} <-: pistes
+      pre modeA in set dom pistes
+
+
+   functions
+      TypedAlarm: (Terrain|Obstacle) -> MSAWTypes`Alarme
+      TypedAlarm (obstacle) ==
+         cases true:
+            (isofclass (Terrain, obstacle)) -> <terrain>,
+            (isofclass (ObstacleArtificiel, obstacle)) -> <obstacle_artificiel>,
+            (isofclass (ReliefParticulier, obstacle)) -> <relief_particulier>,
+            (isofclass (ZoneMilitaire, obstacle)) -> <zone_militair>,
+            (isofclass (ZoneAeroport, obstacle)) -> <zone_aeroport>,
+            others -> nil
+         end
+
+end PistesRadar

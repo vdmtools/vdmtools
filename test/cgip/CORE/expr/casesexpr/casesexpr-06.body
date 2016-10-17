@@ -1,0 +1,25 @@
+
+public Test : () ==> seq of (set of ( seq of char | 
+				 map seq of char to (nat * nat)|
+                                 set of nat) | 
+			nat | seq of char | map nat to nat |
+			seq of nat | nat * nat | set of (nat | nat * nat)) 
+Test() ==
+return  [f(mk_AA(29,35))]
+
+
+functions
+f: AA -> nat 
+f(a) ==
+    cases a:
+       mk_AA(a,b) -> a,
+       b -> b.b
+    end
+
+
+types 
+
+  AA :: 
+   a : nat
+   b : nat
+

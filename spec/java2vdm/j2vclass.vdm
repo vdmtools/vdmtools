@@ -1,0 +1,570 @@
+\section{The J2VCLASS Module}
+
+\begin{vdm_al}
+
+module J2VCLASS
+imports
+from AS all,
+from CPP all,
+from CI all,
+from REP all,
+from JSSREP all,
+from J2VBVDM all,
+from J2VTYPE all,
+from J2VEXPR all,
+from J2VSTMT all,
+from J2VOP all,
+from J2VNS all,
+from JAVAERR all,
+from J2VERR all,
+from MANGLE all,
+
+from J2VAUX
+operations
+  TempVarsBeginBlock: () ==> ();
+  TempVarGetNext: seq of char ==> AS`Name;
+  TempVarsEndBlock: () ==> ();
+functions
+  IsASExpr: AS`Expr | seq of AS`Stmt +> bool;
+
+functions
+  ExtractSupers: CPP`BaseSpec * [CPP`InterSpec] +> seq of AS`Name,
+
+from J2V
+operations
+  MustTranslatePrivate: () ==> bool;
+  MustSkipUnspecified: () ==> bool;
+  GetClassComments: CI`ContextId ==> seq of seq of char;
+  GetMemberComments: CI`ContextId ==> seq of seq of char;
+  Push: () ==> CI`ContextId;
+  SetComments: CI`ContextId * seq1 of seq of char ==> ()
+
+exports
+operations
+  J2VClass: CPP`ClassSpecifier | CPP`InterfaceSpecifier ==> AS`Class;
+  J2VDefinitions: [CPP`DeclaratorList] * (seq of CPP`MemberList | seq of CPP`MemberDeclaration) ==> [AS`Definitions];
+  Init: CPP`Identifier * [AS`Name] * (<CLASS>|<INTERFACE>) ==> ();
+  Term: () ==> ();
+  GetName:  () ==> AS`Name;
+  GetSuper: () ==> [AS`Name];
+  IsInterface: () ==> bool
+values
+  v_null: AS`QuoteLit;
+  v_nullType: AS`QuoteType;
+  v_objectClassName: AS`Name;
+  v_IsNilOpNm: AS`Name;
+  v_CLASSvNm: AS`Name;
+  v_ClassNm: AS`Name
+
+types
+  State
+
+definitions
+
+types
+  State ::
+    name        : AS`Name
+    super       : [AS`Name]
+    classOrIface: <CLASS> | <INTERFACE>
+    statInit    : [AS`BlockStmt]
+
+\end{vdm_al}
+
+We introduce a state which includes at least a name of the class
+under translation and the name of its superclass (if any).
+The name of the class is needed by J2VExpr
+to translate JAVA's \texttt{this.something} to VDM++
+\texttt{ClassName`something}.
+The name of the superclass is used in translation of \texttt{super.something}
+
+Because of class definition could possibly
+be nested, we need a stack of State values which will be represented by
+a sequence of State with the top of the stack as the head of the sequence.
+
+\begin{vdm_al}
+
+state J2VClassSt of
+  classState: seq of State
+  init s == s = mk_J2VClassSt([])
+end
+
+values
+\end{vdm_al}
+
+The name of the ancestor of any class (except itself).
+
+\begin{vdm_al}
+--
+--  Can't init because CI is initialized after!!!
+--  v_objectClassName: AS`Name = J2VBVDM`GenName(["Object"])
+  v_objectClassName: AS`Name = mk_AS`Name(["JavaLangObject"],-1);
+  v_statInitName: AS`Name = mk_AS`Name(["j2v_staticInitializer"],-1);
+  v_NiLLitName: seq1 of char = "NIL";
+  v_IsNilOpNm: AS`Name = mk_AS`Name(["IsNil"],-1);
+  v_IsNilVarNm: AS`Name = mk_AS`Name(["isNil"],-1);
+  v_null:     AS`QuoteLit=J2VBVDM`GenQuoteLit(v_NiLLitName);
+  v_nullType: AS`QuoteType=J2VBVDM`GenQuoteType(v_null);
+  v_dummyVarNm: AS`Name = mk_AS`Name(["dummy"],-1);
+  v_CLASSvNm: AS`Name = mk_AS`Name(["CLASS"],-1);
+  v_ClassNm: AS`Name = mk_AS`Name(["JavaLangClass"],-1);
+  v_getClassOpNm: AS`Name = mk_AS`Name(["getClass"],-1);
+
+operations
+
+Init: CPP`Identifier * [AS`Name] * (<CLASS>|<INTERFACE>) ==> ()
+Init(p_name,p_super,p_cori) ==
+  let
+    l_super=p_super
+--      if p_super=nil
+--      then nil
+--      else J2VTYPE`J2VClassTypeName(p_super)
+  in
+    classState:=
+      [mk_State(J2VTYPE`J2VClassTypeName(p_name),l_super,p_cori,nil)]
+        ^ classState
+pre len classState = 0;
+  
+Term: () ==> ()
+Term() ==
+  classState := tl classState;
+
+GetName:  () ==> AS`Name
+GetName() == return (hd classState).name
+pre len classState > 0;
+
+GetSuper: () ==> [AS`Name]
+GetSuper() ==
+  return (hd classState).super
+pre len classState > 0;
+
+IsInterface: () ==> bool
+IsInterface() ==
+  return (hd classState).classOrIface = <INTERFACE>;
+
+--IsClass: () ==> bool
+--IsClass() ==
+--  return (hd classState).classOrIface = <CLASS>;
+
+GetStatInit: () ==> [AS`BlockStmt]
+GetStatInit() ==
+  return (hd classState).statInit
+pre len classState > 0;
+
+SetStatInit: AS`BlockStmt ==> ()
+SetStatInit(p_si) ==
+( dcl l_cs: State := hd classState;
+  l_cs.statInit := p_si;
+  classState := [l_cs]^tl classState;
+)
+pre len classState > 0;
+
+AddReturn: AS`ReturnStmt ==> ()
+AddReturn(p_stmt) ==
+( dcl l_si: AS`BlockStmt := (hd classState).statInit;
+  l_si.stmts := l_si.stmts^[p_stmt];
+  SetStatInit(l_si)
+)
+pre len classState > 0 and (hd classState).statInit<>nil;
+
+\end{vdm_al}
+
+The operations translates a class or interface definition to
+VDM++ class.
+
+\begin{vdm_al}
+J2VClass: CPP`ClassSpecifier | CPP`InterfaceSpecifier ==> AS`Class
+J2VClass(p_spec) ==
+( dcl l_class: AS`Class;
+  def l_comments = J2V`GetClassComments(p_spec.cid);
+      mk_(l_cori,l_classnm,l_bs,l_ispec) =
+        cases true:
+          (is_CPP`ClassSpecifier(p_spec)) ->
+            let mk_CPP`ClassHead(-,-,l_classnm',l_bs',l_ispec',-,-,-)=p_spec.ch
+            in mk_( <CLASS>, l_classnm', l_bs', l_ispec'),
+          (is_CPP`InterfaceSpecifier(p_spec)) ->
+            let mk_CPP`InterfaceHead(-,l_inm',l_bs',-,-,-) = p_spec.ih
+            in mk_( <INTERFACE>, l_inm', [], l_bs')
+        end;
+    l_classNm = J2VTYPE`J2VClassTypeName(l_classnm);
+    l_supers = J2VAUX`ExtractSupers(l_bs,l_ispec);
+--
+--  The 'extends' clause must not appear in the definition of the class Object.
+--  If the class declaration for any other class has no extends clause,
+--  then the class has the class Object as its implicit direct superclass.
+--
+--  While every class is an extension of class Object,
+--  there is no single interface of which all interfaces are extensions. 
+--
+    l_supers' = l_supers ^
+      if l_classNm<>v_objectClassName
+--       and l_cori=<CLASS>            -- make an interface subclass of Object!
+         and (l_ispec<>nil => len l_ispec=0)   -- make an interface subclass of Object!
+         and len l_bs=0
+      then [v_objectClassName]
+      else []
+  in
+  ( dcl l_defs: [AS`Definitions] := nil,
+        l_cid: int := CI`NilContextId;
+    Init
+      ( l_classnm,
+--        if l_cori=<INTERFACE> or l_supers'=[]  -- make an interface subclass of Object!
+        if l_cori=<INTERFACE> or l_supers'=[]
+        then nil
+		    else hd l_supers',
+        l_cori);
+    l_defs := J2VDefinitions(nil,p_spec.ml); -- ( ???p_decl.dl,p_spec.ml)
+    if l_defs<>nil
+    then
+    ( if len l_comments > 0 
+      then
+      ( l_cid := J2V`Push();
+        J2V`SetComments(l_cid,l_comments)
+      );
+--
+--    Generate  value public CLASS : Class=new Class("ClassName", <CLASS>, false);
+--
+    if l_classNm<>v_ClassNm
+    then
+      l_defs.valuem :=
+         l_defs.valuem ^
+            [ J2VBVDM`GenValueDef( 
+                J2VBVDM`GenPatternName(v_CLASSvNm),
+                J2VBVDM`GenTypeName(v_ClassNm),
+                J2VBVDM`GenNewExpr(
+                  v_ClassNm,
+                  [ J2VBVDM`GenTextLit(l_classNm.ids(1)),
+                    J2VBVDM`GenQuoteLit(if l_cori=<CLASS> then "CLASS" else "INTERFACE"),
+                    J2VBVDM`GenBoolLit(false) ]),
+                <DEFAULT_AS>,
+                false ) ];
+--
+--    If statInit not nil then generate a static function vdm_staticInitializer
+--    containing statInit as a body and put ' - = vdm_staticInitializer()'
+--    to the value section
+--
+      if GetStatInit() <> nil
+      then
+      (
+--        l_defs.valuem :=
+--          l_defs.valuem ^
+--            [ J2VBVDM`GenValueDef( 
+--                J2VBVDM`GenPatternName( nil ),
+--                nil,
+--                J2VBVDM`GenApplyExpr( 
+--                  v_statInitName,
+--                  []),
+--                <DEFAULT_AS>,
+--                false ) ];
+        l_defs.instvars :=
+          l_defs.instvars ^
+            [ J2VBVDM`GenInstAssignDef
+              ( J2VBVDM`GenAssignDef
+                ( v_dummyVarNm,
+                  J2VBVDM`GenQuoteType(J2VOP`v_void),
+                  J2VBVDM`GenApplyExpr(v_statInitName,[])
+                ),
+                <DEFAULT_AS>,
+                true,
+                CI`NilContextId
+              )
+            ];
+--            mk_AS`InstAssignDef( 
+--               mk_AS`AssignDef( 
+--                  mk_AS`Name( 
+--                     [ "dummy" ],
+--                     41943048 ),
+--                  mk_AS`QuoteType( 
+--                     mk_AS`QuoteLit( 
+--                        "VOID",
+--                        41943050 ),
+--                     41943049 ),
+--                  mk_AS`ApplyExpr( 
+--                     mk_AS`Name( 
+--                        [ "j2v_staticInitializer" ],
+--                        41943051 ),
+--                     [  ],
+--                     41943052 ),
+--                  41943053 ),
+--               <DEFAULT_AS>,-
+--               true,
+--               41943054 )
+
+        AddReturn(J2VBVDM`GenReturnStmt(J2VOP`v_void));
+        l_defs.opm :=
+          l_defs.opm ++
+            { MANGLE`Mangle(v_statInitName,[]) |->
+                J2VBVDM`GenExplOpDef(
+                  v_statInitName,
+                  J2VBVDM`GenOpType([],J2VBVDM`GenQuoteType(J2VOP`v_void)), -- J2VOP`v_voidType),
+                  [],
+                  J2VBVDM`GenOpBody(GetStatInit()),
+                  <DEFAULT_AS>,
+                  true,
+                  false,
+                  CI`NilContextId) }
+      );
+--
+--    Generate
+--        public  getClass : () ==> Class
+--        getClass() == 
+--          return CLASS;
+--
+      l_defs.opm :=
+        l_defs.opm ++
+          { MANGLE`Mangle(v_getClassOpNm,[]) |->
+              J2VBVDM`GenExplOpDef(
+                v_getClassOpNm,
+                J2VBVDM`GenOpType([],J2VBVDM`GenTypeName(v_ClassNm)),
+                [],
+                J2VBVDM`GenOpBody(J2VBVDM`GenReturnStmt(v_CLASSvNm)),
+                <PUBLIC_AS>,
+                false,
+                false,
+                CI`NilContextId) };
+--
+      l_class:=J2VBVDM`GenClass(GetName(),l_supers',l_defs,l_cid);
+      Term()
+    )
+    else
+      l_class:=undefined
+  );
+  return l_class
+);
+
+\end{vdm_al}
+
+What kind of definitions can be present in the declarator list?
+Presumably the \texttt{J2VDefinitions} operation can be defined using
+recursion and global variables for the different kinds of VDM++
+definitions!?!
+
+\begin{vdm_al}
+J2VDefinitions: [CPP`DeclaratorList] * (seq of CPP`MemberList | seq of CPP`MemberDeclaration) ==> [AS`Definitions]
+J2VDefinitions(p_declL,p_memberL) ==
+( dcl
+    l_defs:
+      AS`Definitions := mk_AS`Definitions( {|->}, [], {|->}, {|->}, [], [], nil, {|->}, CI`NilContextId);
+
+--  if p_memberL = []
+--  then
+--    return nil
+--  else
+    for i = 1 to len p_memberL
+    do
+    ( let l_item=p_memberL(i)
+      in
+        if is_CPP`MemberList(p_memberL(i))
+        then
+          error
+        else
+          l_defs:=J2VMemberDeclaration(p_declL, l_item, l_defs)
+    );
+--    l_defs:=MakeNULLvar(l_defs);
+--  if not IsInterface()
+--  then
+      l_defs:=MakeNULLconstr(l_defs); -- make an interface subclass of Object!
+    return l_defs
+);
+
+J2VMemberDeclaration: [CPP`DeclaratorList] * CPP`MemberDeclaration * AS`Definitions ==>  AS`Definitions
+J2VMemberDeclaration(-, p_member, p_defs) ==
+( dcl l_defs: AS`Definitions := p_defs;
+  if not J2V`MustTranslatePrivate() => not IsMemberPrivate(p_member)
+  then
+    cases true:
+      (is_CPP`FunctionDefinition(p_member)) -> return J2VFunctionDefinition(p_member, l_defs),
+      (is_CPP`IdentDeclaration(p_member)) ->
+    --      J2VInstVarsDefinition(p_member, l_defs)
+    --
+    --    The following is a trick to produce skeleton VDM classes
+    --    for java.* classes
+    --
+          if {} = {l_ts | l_ts in set elems p_member.ds & is_CPP`TypeSpecifier(l_ts)
+                                                          and (is_CPP`ClassSpecifier(l_ts.tp)
+                                                          or is_CPP`InterfaceSpecifier(l_ts.tp))}
+          then return J2VInstVarsDefinition(p_member, l_defs)
+          else
+            if J2V`MustSkipUnspecified() -- to produce skeleton 
+            then return l_defs
+            else error,            -- inner class
+      (is_CPP`StaticInitializer(p_member)) -> return J2VStaticInitializer(p_member,l_defs),-- static initializer
+      others -> if J2V`MustSkipUnspecified() -- to produce skeleton 
+                then return l_defs
+                else error
+    end;
+  return l_defs
+);
+
+J2VStaticInitializer: CPP`StaticInitializer * AS`Definitions ==>  AS`Definitions
+J2VStaticInitializer(p_si,p_defs) ==
+( dcl l_si: [AS`BlockStmt]:=GetStatInit();
+  def l_stmts = J2VSTMT`J2VStmt(p_si.stmt);
+      l_stmt = if len l_stmts = 1 and is_AS`BlockStmt(hd l_stmts)
+               then hd l_stmts
+               else J2VBVDM`GenBlockStmt([], l_stmts)
+  in
+    if l_si <> nil
+    then l_si.stmts := l_si.stmts^[l_stmt]
+    else l_si := l_stmt;
+  SetStatInit(l_si);
+  return p_defs
+);
+
+J2VFunctionDefinition:  CPP`FunctionDefinition * AS`Definitions ==> AS`Definitions
+J2VFunctionDefinition(p_fdef, p_defs) ==
+( dcl l_defs: AS`Definitions := p_defs;
+  def mk_(l_opdef,l_mopnm)=J2VOP`J2VOperation(p_fdef)
+  in l_defs.opm := l_defs.opm ++ {l_mopnm |-> l_opdef};
+  return l_defs
+);
+
+\end{vdm_al}
+
+For the time being, requires translation of an initializer to be an expression
+
+TODO:
+
+  static modifier
+                                
+\begin{vdm_al}
+
+J2VInstVarsDefinition: CPP`IdentDeclaration * AS`Definitions ==> AS`Definitions
+J2VInstVarsDefinition(p_vdef, p_defs) ==
+( dcl l_defs: AS`Definitions := p_defs;
+  def l_mods = { m |mk_CPP`Modifier(m,-) in set elems p_vdef.ds
+                 & m in set {<STATIC>,<PUBLIC>,<PROTECTED>,<PRIVATE>}};
+    l_types = { t |t in set elems p_vdef.ds & is_CPP`TypeSpecifier(t) };
+    l_isIface = IsInterface();
+    l_acc = cases true:
+              (l_isIface or <PUBLIC> in set l_mods) -> <PUBLIC_AS>,
+              (<PROTECTED> in set l_mods)           -> <PROTECTED_AS>,
+              (<PRIVATE> in set l_mods)             -> <PRIVATE_AS>,
+              others                                -> <DEFAULT_AS>
+            end;
+    l_isStatic = l_isIface or <STATIC> in set l_mods;
+    l_type = J2VTYPE`J2VType(
+--    l_type'= J2VTYPE`J2VType(
+              if l_types = {}
+              then J2VBVDM`GenInt()
+--                else iota x in set elems p_vdef.ds & true)
+              --else iota x in set l_types & true)
+              else let e in set l_types in e)
+--    l_type =
+--      if is_(l_type',AS`TypeName)
+--      then J2VBVDM`GenOptionalType(l_type')
+--      else l_type'
+  in (
+    J2VAUX`TempVarsBeginBlock();
+    for v in p_vdef.dl
+    do
+    ( dcl l_comments: seq of seq of char
+            := J2V`GetMemberComments(p_vdef.cid),
+          l_adef: AS`AssignDef,
+          l_cid: int := CI`NilContextId;
+      if len l_comments > 0 
+      then
+      ( l_cid := J2V`Push();
+        J2V`SetComments(l_cid,l_comments)
+      );
+      let
+        mk_(l_v,l_t)=J2VTYPE`GetTypeAndNameForArray(l_type,v.decl)
+      in
+      ( dcl l_tvar: AS`Name,
+            l_expr: [AS`Expr | seq of AS`Stmt]:=nil;
+        if v.i=nil
+        then
+          l_expr:=nil
+        else
+        ( l_tvar:= J2VAUX`TempVarGetNext([]);
+          l_expr:= J2VEXPR`J2VExpr' (v.i.expr,l_tvar,mk_J2VEXPR`ExprContext(l_t,nil,nil))
+        );
+        if l_expr<>nil and not J2VAUX`IsASExpr(l_expr)
+        then
+        (
+--
+-- for the time being, requires translation of an initializer to be an expression
+--
+-- If l\_expr is statements, we report an error here.
+--
+           J2VERR`GenErr(p_vdef.cid,<ERROR>,1,[hd GetName().ids,l_v.id]);
+--           exit 1;
+           l_expr:=nil
+        );
+        l_adef:=J2VBVDM`GenAssignDef(J2VBVDM`Id2Name(l_v),l_t,l_expr)
+      );
+
+      l_defs.instvars := l_defs.instvars ^ [J2VBVDM`GenInstAssignDef(l_adef, l_acc, l_isStatic, l_cid)]
+    );
+    J2VAUX`TempVarsEndBlock();
+    return l_defs
+  )
+)
+pre p_vdef.dl<>nil => (   
+      len p_vdef.dl>=1 and
+      forall v in set elems p_vdef.dl & v.i<>nil => is_CPP`AsgnInit(v.i));  -- and is_CPP`Identifier(v.decl));
+
+--MakeNULLvar: AS`Definitions ==> AS`Definitions
+--MakeNULLvar(p_defs) ==
+--( dcl l_defs: AS`Definitions := p_defs;
+--  let
+--    l_t=J2VBVDM`GenTypeName(GetName()),
+--    l_ie=J2VBVDM`GenBoolLit(true)
+--  in
+--    l_defs.instvars :=
+--      l_defs.instvars ^ 
+--       [J2VBVDM`GenInstAssignDef(
+--          J2VBVDM`GenAssignDef(J2VBVDM`GenName([v_NiLLitName]),l_t,l_ie),
+--          <PUBLIC_AS>,
+--          true,
+--          CI`NilContextId)];
+-- return l_defs
+--);
+
+MakeNULLconstr:  AS`Definitions ==> AS`Definitions
+MakeNULLconstr(p_defs) ==
+( dcl l_defs: AS`Definitions := p_defs;
+  def l_opnm  = GetName();
+      l_types = [v_nullType]
+  in
+    l_defs.opm :=
+      l_defs.opm ++
+        { MANGLE`Mangle(l_opnm,l_types) |->
+            J2VBVDM`GenExplOpDef(
+              l_opnm,
+              J2VBVDM`GenOpType(l_types, J2VBVDM`GenTypeName(l_opnm)),
+              [J2VBVDM`GenPatternName(nil)],
+              J2VBVDM`GenOpBody(J2VBVDM`GenAssignStmt(v_IsNilVarNm, J2VBVDM`GenBoolLit(true))),
+              <PUBLIC_AS>,   
+              false,          -- static
+              true,           -- constr
+              CI`NilContextId) };
+  return l_defs
+);
+
+functions
+  IsMemberPrivate: CPP`MemberDeclaration +> bool
+  IsMemberPrivate(p_member) ==
+    cases true:
+      (is_CPP`FunctionDefinition(p_member)) ->
+        <PRIVATE> in set GetModifiers(p_member.m),
+      (is_CPP`IdentDeclaration(p_member)) ->
+        <PRIVATE> in set GetModifiers(p_member.ds),
+      others
+        -> true
+    end;
+  
+  GetModifiers: seq of CPP`DeclSpecifier | seq of CPP`Modifier
+                +> set of CPP`ModifierAccess
+  GetModifiers(p_seq) ==
+    if p_seq = []
+    then {}
+    else {m|mk_CPP`Modifier(m,-) in set elems p_seq}
+
+end J2VCLASS
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}
+{rtinfo.ast}[J2VCLASS]
+\end{rtinfo}

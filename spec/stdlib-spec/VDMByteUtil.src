@@ -1,0 +1,79 @@
+
+functions
+-- VDM++: static public
+And: (int | seq of int) * (int | seq of int) -> (int | seq of int)
+And(b1, b2) == is not yet specified;
+
+-- VDM++: static public
+Or: (int | seq of int) * (int | seq of int) -> (int | seq of int)
+Or(b1, b2) == is not yet specified;
+
+-- VDM++: static public
+Exor: (int | seq of int) * (int | seq of int) -> (int | seq of int)
+Exor(b1, b2) == is not yet specified;
+
+-- VDM++: static public
+ShiftRight: int * int -> int
+ShiftRight(b1, b2) == is not yet specified;
+
+-- VDM++: static public
+ShiftLeft: int * int -> int
+ShiftLeft(b1, b2) == is not yet specified;
+
+-- VDM++: static public
+MaskedByteValueOf: int * int * int -> int
+MaskedByteValueOf(byte, fromBitNum, toBitNum) == is not yet specified;
+
+-- VDM++: static public
+CreateMaskByte:  int * int -> int
+CreateMaskByte(fromBitNum, toBitNum)== is not yet specified;
+
+-- VDM++: static public
+ByteToBits: int -> seq of int
+ByteToBits(byte) == is not yet specified;
+
+-- VDM++: static public
+BitsToByte: seq of int -> int
+BitsToByte(bits) == is not yet specified;
+
+-- VDM++: static public
+CompareTo : seq of int * seq of int -> int
+CompareTo (byteSeq1, byteSeq2) == is not yet specified;
+
+-- VDM++: static public
+Add: seq of int * seq of int -> seq of int
+Add(b1, b2) == is not yet specified;
+
+-- VDM++: static public
+Sub: seq of int * seq of int -> seq of int
+Sub(b1, b2) == is not yet specified;
+
+-- VDM++: static public
+CreateMaskByteSeq: int * int * int * int * int -> seq of int
+CreateMaskByteSeq(fromByteNum, fromBitNum, toByteNum, toBitNum, length) ==
+  is not yet specified;
+
+-- VDM++: static public
+HexStrToInt: seq1 of char -> int
+HexStrToInt(hexstr) == is not yet specified;
+
+-- VDM++: static public
+DecStrToInt: seq1 of char -> int
+DecStrToInt(decstr) == is not yet specified;
+
+-- VDM++: static public
+BinaryStrToInt: seq1 of char -> int
+BinaryStrToInt(binstr) == is not yet specified;
+
+-- VDM++: static public
+IntToHexStr: int * nat -> seq of char
+IntToHexStr(num, size) == is not yet specified;
+
+-- VDM++: static public
+IntToDecStr: int * nat -> seq of char
+IntToDecStr(num, size) == is not yet specified;
+
+-- VDM++: static public
+IntToBinaryStr: int * nat -> seq of char
+IntToBinaryStr(num, size) == is not yet specified;
+

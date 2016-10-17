@@ -1,0 +1,17 @@
+class A
+
+operations
+
+o1() b : bool
+pre true
+post false;
+
+public Test : () ==> bool
+Test () ==
+( 
+	dcl x : nat := 12;
+	if x < 3 then return x > 3;
+	return false;
+)
+   
+end A

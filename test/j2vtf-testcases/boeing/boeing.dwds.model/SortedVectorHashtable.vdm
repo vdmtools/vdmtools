@@ -1,0 +1,112 @@
+class SortedVectorHashtable is subclass of SortedHashtable
+operations 
+public  elements : () ==> [Enumeration]
+elements() == 
+( dcl   newList : [Vector] := new  Vector(SortedVectorHashtable`size()*3),
+        vectorList : [Enumeration] := SortedHashtable`elements();
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  vectorList.hasMoreElements() do  
+    ( dcl   elementList : [Vector] := vectorList.nextElement();
+      ( dcl   index : int  := 0;
+        while  index < elementList.size() do  
+        ( let - = newList.addElement(elementList.elementAt(index))
+          in 
+            skip ;
+          index := index+1
+        ) 
+      ) 
+    ) ;
+  return  newList.elements()
+) ;
+
+public  getElementCount : () ==> int 
+getElementCount() == 
+( dcl   elementCount : int  := 0,
+        vectorList : [Enumeration] := SortedHashtable`elements();
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  vectorList.hasMoreElements() do  
+    ( dcl   elementList : [Vector] := vectorList.nextElement();
+      def l_4 = elementCount
+      in elementCount := l_4+elementList.size()
+    ) ;
+  return  elementCount
+) ;
+
+public  SortedVectorHashtable : int  ==> SortedVectorHashtable
+SortedVectorHashtable(initialCapacity) == 
+( let - = SortedHashtable(initialCapacity)
+  in 
+    skip 
+) ;
+
+public  put : [ComparisonValue] * [Object] ==> [Object]
+put(key, value__) == 
+( if  SortedVectorHashtable`containsKey(key.toString())
+  then  
+    ( list := get(key.toString());
+      ( dcl   insertionKey : [ComparisonValue] := new  ComparisonValue(value__.toString());
+        let - = SortedVectorHashtable`insertIntoSortedList(insertionKey , value__ , list)
+        in 
+          skip 
+      ) 
+    ) 
+  else  
+    ( if  not  alreadyInserted
+      then  
+        ( list := new  Vector();
+          let - = SortedVectorHashtable`insertIntoSortedList(new  ComparisonValue(value__.toString()) , value__ , list)
+          in 
+            skip ;
+          alreadyInserted := true  
+        ) ;
+      let - = SortedHashtable`put(key , list)
+      in 
+        skip ;
+      alreadyInserted := false  
+    ) ;
+  return  value__
+) ;
+
+public  contains : [ComparisonValue] * [ComparisonValueInterface] ==> bool 
+contains(key, value__) == 
+( dcl   result : bool  := false  ,
+        listToSearch : [Enumeration] := nil  ;
+  if  SortedVectorHashtable`containsKey(key.toString())
+  then  
+    ( listToSearch := (def l_8 :  Vector = (get(key.toString()))
+      in l_8).elements();
+      trap  j2v_break with  
+        cases  true  : 
+          (isofclass  (J2V_Break,j2v_break)) -> 
+            skip 
+          
+        end  
+      in  
+        while  listToSearch.hasMoreElements() and  not  result do  
+        ( dcl   testValue : [ComparisonValueInterface] := listToSearch.nextElement();
+          if  testValue.equals(value__)
+          then  
+            ( result := true  
+            ) 
+        ) 
+    ) ;
+  return  result
+) ;
+
+instance variables 
+  private  static alreadyInserted : bool  := false  ;
+  list : [Vector] := nil  
+  
+end  SortedVectorHashtable

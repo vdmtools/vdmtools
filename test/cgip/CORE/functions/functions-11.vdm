@@ -1,0 +1,16 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+functions
+
+add: nat -> nat -> nat
+add(y)(z) ==
+  y+z;
+
+operations
+
+public Test : () ==> nat
+Test () ==
+    return add(1)(2)
+
+end A

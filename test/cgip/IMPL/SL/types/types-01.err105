@@ -1,0 +1,8 @@
+When dtc is set. invariant is brokoen:
+
+
+
+types-01.arg, l. 49, c. 11:
+  Run-Time Error 98: Incompatible types found in dynamic type check
+  actual value: mk_B`B_( 10,20 )
+  expected type: B`B_

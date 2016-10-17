@@ -1,0 +1,113 @@
+class StatusTextField is subclass of JTextField, ActionListener, MouseListener
+operations 
+public  getDataType : () ==> [Object]
+getDataType() == 
+( return  dataType
+) ;
+
+public  getDescription : () ==> [String]
+getDescription() == 
+( return  description
+) ;
+
+public  getStatusPanel : () ==> [StatusPanel]
+getStatusPanel() == 
+( return  statusPanel
+) ;
+
+public  mouseExited : [MouseEvent] ==> <VOID>
+mouseExited(event) == 
+( trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (NullPointerException,j2v_exception)) -> 
+        ( dcl   e : [NullPointerException] := j2v_exception;
+          skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( let - = statusPanel.setTipText(new  String([  ]))
+      in 
+        skip 
+    ) ;
+  return  
+) ;
+
+public  mouseClicked : [MouseEvent] ==> <VOID>
+mouseClicked(event) == 
+( return  
+) ;
+
+public  mouseEntered : [MouseEvent] ==> <VOID>
+mouseEntered(event) == 
+( trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (NullPointerException,j2v_exception)) -> 
+        ( dcl   e : [NullPointerException] := j2v_exception;
+          skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( let - = statusPanel.setTipText(description)
+      in 
+        skip 
+    ) ;
+  return  
+) ;
+
+public  mousePressed : [MouseEvent] ==> <VOID>
+mousePressed(event) == 
+( return  
+) ;
+
+public  mouseReleased : [MouseEvent] ==> <VOID>
+mouseReleased(event) == 
+( return  
+) ;
+
+public  actionPerformed : [ActionEvent] ==> <VOID>
+actionPerformed(event) == 
+( let - = statusPanel.updateContext()
+  in 
+    skip ;
+  return  
+) ;
+
+public  StatusTextField : [String] * [String] * [StatusPanel] * [Object] * bool  ==> StatusTextField
+StatusTextField(myText, myDescription, myPanel, myDataType, fieldEditable) == 
+( let - = JTextField(myText)
+  in 
+    skip ;
+  dataType := myDataType;
+  description := new  String(myDescription);
+  statusPanel := myPanel;
+  let - = setFont(StatusPanel.STATUS_FONT)
+  in 
+    skip ;
+  let - = setEditable(fieldEditable)
+  in 
+    skip ;
+  let - = setForeground(Color`red)
+  in 
+    skip ;
+  if  fieldEditable
+  then  
+    ( let - = addActionListener(self  )
+      in 
+        skip 
+    ) ;
+  let - = addMouseListener(self  )
+  in 
+    skip ;
+  return  
+) ;
+
+instance variables 
+  private  dataType : [Object];
+  private  description : [String];
+  private  statusPanel : [StatusPanel]
+  
+end  StatusTextField

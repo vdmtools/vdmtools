@@ -1,0 +1,19 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+types
+
+  T = T1 | char;
+  
+  T1 = Even | bool;
+  
+  Even = int
+  inv v == v mod 2 = 0;
+
+operations
+
+  public Test :() ==> bool
+  Test() ==
+    return is_(2,T);
+
+end A

@@ -1,0 +1,229 @@
+class BAController is subclass of WiringDataController
+operations 
+public  initialize : () ==> <VOID>
+initialize() == 
+( return  <VOID>
+) ;
+
+public  getCurrentContextObject : () ==> [Object]
+getCurrentContextObject() == 
+( return  nil  
+) ;
+
+public  getRepairViaId : [String] ==> [RepairAssessment]
+getRepairViaId(repairId) == 
+( dcl   connection : [Connection] := BAController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := BAController`getToolkit().getQuerySet(),
+        query : [String] := nil  ,
+        assessment : [RepairAssessment] := new  RepairAssessment(repairId);
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement(),
+            args : map  int  to  [Object] := {0 |-> repairId};
+      query := querySet.getQuery(WiringDataQuerySet.GET_SYSTEM_STATUS_VIA_REPAIR_ID , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  queryRS.next() do  
+          ( dcl   acSystemId : int  := queryRS.getInt(1),
+                  desiredStatus : [String] := queryRS.getString(2),
+                  acSystem : [AircraftSystem] := acSystemCntl.getViaId(acSystemId),
+                  sysRepair : [SystemRepair] := new  SystemRepair(repairId , acSystem , desiredStatus);
+            let - = assessment.addSystemRepair(sysRepair)
+            in 
+              skip 
+          ) ;
+        query := querySet.getQuery(WiringDataQuerySet.GET_WIRE_STATUS_VIA_REPAIR_ID , args);
+        queryRS := stmt.executeQuery(query);
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  queryRS.next() do  
+          ( dcl   wireId : int  := queryRS.getInt(1),
+                  bundleSegNum : int  := Integer.parseInt(queryRS.getString(2)),
+                  wireStatus : [String] := queryRS.getString(3),
+                  wireRepair : [WireRepair] := new  WireRepair(repairId , wireId , bundleSegNum , wireStatus);
+            let - = assessment.addWireRepair(wireRepair)
+            in 
+              skip 
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  return  assessment
+) ;
+
+public  updateToNewContext : [ContextSet] ==> <VOID>
+updateToNewContext(contextChanges) == 
+( return  <VOID>
+) ;
+
+public  saveRepairViaId : [RepairAssessment] ==> <VOID>
+saveRepairViaId(assessment) == 
+( dcl   connection : [Connection] := BAController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := BAController`getToolkit().getQuerySet(),
+        query : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement(),
+            repairId : [String] := assessment.getRepairId(),
+            aircraft : [Aircraft] := aircraftCntl.getCurrentContextObject(),
+            mds : [String] := aircraft.getAcType().getMDS(),
+            tailNumber : [String] := aircraft.getTailNumber(),
+            args : map  int  to  [Object] := {0 |-> repairId};
+      query := querySet.getQuery(WiringDataQuerySet.DELETE_STARTUP_DATA_VIA_REPAIR_ID , args);
+      ( dcl   result : int  := stmt.executeUpdate(query);
+        query := querySet.getQuery(WiringDataQuerySet.DELETE_SYSTEM_STATUS_VIA_REPAIR_ID , args);
+        result := stmt.executeUpdate(query);
+        query := querySet.getQuery(WiringDataQuerySet.DELETE_WIRE_STATUS_VIA_REPAIR_ID , args);
+        result := stmt.executeUpdate(query);
+        ( dcl   args1 : map  int  to  [Object] := {2 |-> tailNumber , 1 |-> mds , 0 |-> repairId};
+          query := querySet.getQuery(WiringDataQuerySet.INSERT_STARTUP_DATA_VIA_REPAIR_ID , args1);
+          result := stmt.executeUpdate(query);
+          ( dcl   systemList : [Enumeration] := assessment.getAllSystemRepairs();
+            trap  j2v_break with  
+              cases  true  : 
+                (isofclass  (J2V_Break,j2v_break)) -> 
+                  skip 
+                
+              end  
+            in  
+              while  systemList.hasMoreElements() do  
+              ( dcl   sysFix : [SystemRepair] := systemList.nextElement(),
+                      systemId : int  := sysFix.getAircraftSystem().getSystemId(),
+                      desiredStatus : [String] := sysFix.getDesiredStatusString(),
+                      args2 : map  int  to  [Object] := {2 |-> desiredStatus , 1 |-> new  Integer(systemId) , 0 |-> repairId};
+                query := querySet.getQuery(WiringDataQuerySet.INSERT_SYSTEM_STATUS_VIA_REPAIR_ID , args2);
+                result := stmt.executeUpdate(query)
+              ) ;
+            ( dcl   wireList : [Enumeration] := assessment.getAllWireRepairs();
+              trap  j2v_break with  
+                cases  true  : 
+                  (isofclass  (J2V_Break,j2v_break)) -> 
+                    skip 
+                  
+                end  
+              in  
+                while  wireList.hasMoreElements() do  
+                ( dcl   wireFix : [WireRepair] := wireList.nextElement(),
+                        wireId : int  := wireFix.getWire().getId(),
+                        wireStatus : [String] := wireFix.getWireStatusString(),
+                        bundleSegNum : [String] := Integer.toString(wireFix.getBundleSegmentNumber()),
+                        args3 : map  int  to  [Object] := {3 |-> wireStatus , 2 |-> bundleSegNum , 1 |-> new  Integer(wireId) , 0 |-> repairId};
+                  query := querySet.getQuery(WiringDataQuerySet.INSERT_WIRE_STATUS_VIA_REPAIR_ID , args3);
+                  result := stmt.executeUpdate(query)
+                ) ;
+              let - = stmt.close()
+              in 
+                skip 
+            ) 
+          ) 
+        ) 
+      ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  getWiresInBundleSegment : [String] * int  * [String] * int  * [String] ==> map  int  to  [Wire]
+getWiresInBundleSegment(bundleNumber, end1Id, end1Type, end2Id, end2Type) == 
+( dcl   wireIdList : [Vector] := new  Vector(),
+        connection : [Connection] := BAController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := BAController`getToolkit().getQuerySet(),
+        query : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement(),
+            args : map  int  to  [Object] := {4 |-> end2Type , 3 |-> new  Integer(end2Id) , 2 |-> end1Type , 1 |-> new  Integer(end1Id) , 0 |-> bundleNumber};
+      query := querySet.getQuery(WiringDataQuerySet.GET_WIRES_VIA_BUNDLE_ENDPOINTS , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        if  not  queryRS.next()
+        then  
+          ( args := args ++ {1 |-> new  Integer(end2Id)};
+            args := args ++ {2 |-> end2Type};
+            args := args ++ {3 |-> new  Integer(end1Id)};
+            args := args ++ {4 |-> end1Type};
+            query := querySet.getQuery(WiringDataQuerySet.GET_WIRES_VIA_BUNDLE_ENDPOINTS , args);
+            queryRS := stmt.executeQuery(query)
+          ) ;
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  queryRS.next() do  
+          ( let - = wireIdList.addElement(new  Integer(queryRS.getInt(1)))
+            in 
+              skip 
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  ( dcl   wireIdArray : map  int  to  [Integer] := {l_16 |-> nil  |l_16 in set  {0,...,wireIdList.size()-1}};
+    let - = wireIdList.copyInto(wireIdArray)
+    in 
+      skip ;
+    return  wireCntl.getViaId(wireIdArray)
+  ) 
+) ;
+
+BAController : [DataSourceToolkit] * [AircraftController] * [AircraftSystemController] * [WireController] ==> BAController
+BAController(dsToolkit, aircraftController, acSystemController, wireController) == 
+( let - = WiringDataController(dsToolkit)
+  in 
+    skip ;
+  BAController`aircraftCntl := aircraftController;
+  BAController`acSystemCntl := acSystemController;
+  BAController`wireCntl := wireController
+) ;
+
+instance variables 
+  private  aircraftCntl : [AircraftController] := nil  ;
+  private  acSystemCntl : [AircraftSystemController] := nil  ;
+  private  wireCntl : [WireController] := nil  
+  
+end  BAController

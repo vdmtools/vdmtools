@@ -1,0 +1,215 @@
+class EffectivitySelector is subclass of Object
+operations 
+public  purgeNoteList : () ==> <VOID>
+purgeNoteList() == 
+( let - = EffectivityNotes.removeAllElements()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+private  EffectivitySelector : () ==> EffectivitySelector
+EffectivitySelector() == 
+( EffectivityNotes := new  Vector();
+  retrofitController := RetrofitController.getRetrofitController();
+  ruleTreeBuilder := new  RuleTreeBuilder();
+  variableCollectorVisitor := new  VariableCollectorVisitor();
+  predefinedVarsContext := new  ExpressionContext();
+  context := new  ExpressionContext(predefinedVarsContext)
+) ;
+
+public  getAvailableRetrofits : () ==> [Collection]
+getAvailableRetrofits() == 
+( return  context.getVariableNames()
+) ;
+
+public  static getEffectivitySelector : () ==> [EffectivitySelector]
+getEffectivitySelector() == 
+( return  effectivitySelector
+) ;
+
+public  getActiveNoteIds : [Aircraft] ==> [Enumeration]
+getActiveNoteIds(aircraft) == 
+( let - = updateExpressionContext(aircraft)
+  in 
+    skip ;
+  ( dcl   approxNumOfNotes : int  := EffectivityNotes.size()/4,
+          activeNotes : [Vector] := new  Vector(approxNumOfNotes);
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (DWDSException,j2v_exception)) -> 
+          ( dcl   exceptionsFrame : [ExceptionsFrame] := ExceptionsFrame`getExceptionsFrame(),
+                  e : [DWDSException] := j2v_exception;
+            let - = exceptionsFrame.showExceptionMsgs(e)
+            in 
+              skip ;
+            let - = e.printStackTrace()
+            in 
+              skip 
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( dcl   noteList : [Enumeration] := EffectivityNotes.elements();
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  noteList.hasMoreElements() do  
+          ( dcl   note : [EffectivityNote] := noteList.nextElement();
+            if  note.isActiveNote(aircraft.getAcType() , context)
+            then  
+              ( let - = activeNotes.addElement(new  Integer(note.getNoteId()))
+                in 
+                  skip 
+              ) 
+          ) 
+      ) ;
+    return  activeNotes.elements()
+  ) 
+) ;
+
+private  updateExpressionContext : [Aircraft] ==> <VOID>
+updateExpressionContext(aircraft) == 
+( dcl   retrofitNotApplied : [Boolean] := new  Boolean(false  ),
+        retrofitApplied : [Boolean] := new  Boolean(true  ),
+        tailNumber : [Integer] := new  Integer(aircraft.getTailNumber()),
+        modelMDS : [String] := aircraft.getAcType().getMDS();
+  let - = predefinedVarsContext.assign(EQUIP_ID_VAR , tailNumber)
+  in 
+    skip ;
+  let - = predefinedVarsContext.assign(MODEL_VAR , modelMDS)
+  in 
+    skip ;
+  let - = predefinedVarsContext.assign(MIDS_TACAN_VAR , MIDS_TACAN_VAR_VALUE)
+  in 
+    skip ;
+  let - = predefinedVarsContext.assign(ALR67_VAR , ALR67_VAR_VALUE)
+  in 
+    skip ;
+  ( dcl   varList : [Iterator] := context.getVariableNames().iterator();
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip 
+        
+      end  
+    in  
+      while  varList.hasNext() do  
+      ( dcl   variableName : [String] := varList.next();
+        let - = context.assign(variableName , retrofitNotApplied)
+        in 
+          skip 
+      ) ;
+    ( dcl   retrofitEntry : [RetrofitEntry] := retrofitController.findRetrofitEntry(aircraft);
+      if  retrofitEntry <> nil  
+      then  
+        ( dcl   retrofitList : [Enumeration] := retrofitEntry.getRetrofits().elements();
+          trap  j2v_break with  
+            cases  true  : 
+              (isofclass  (J2V_Break,j2v_break)) -> 
+                skip 
+              
+            end  
+          in  
+            while  retrofitList.hasMoreElements() do  
+            ( dcl   retrofitVarName : [String] := retrofitList.nextElement();
+              let - = context.assign(retrofitVarName , retrofitApplied)
+              in 
+                skip 
+            ) 
+        ) 
+    ) 
+  ) ;
+  return  <VOID>
+) ;
+
+public  addNote : [AircraftType] * int  * [String] ==> <VOID>
+addNote(noteAcType, noteId, noteRuleText) == 
+( dcl   ruleTree : [BooleanExpr] := ruleTreeBuilder.buildTree(noteRuleText);
+  let - = EffectivityNotes.addElement(new  EffectivityNote(noteAcType , noteId , ruleTree))
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  rescanEffectivityRules : [AircraftType] ==> <VOID>
+rescanEffectivityRules(acType) == 
+( let - = predefinedVarsContext.removeAll()
+  in 
+    skip ;
+  let - = predefinedVarsContext.loadVariable(EQUIP_ID_VAR , EQUIP_ID_VAR_TYPE)
+  in 
+    skip ;
+  let - = predefinedVarsContext.loadVariable(MODEL_VAR , MODEL_VAR_TYPE)
+  in 
+    skip ;
+  let - = predefinedVarsContext.loadVariable(MIDS_TACAN_VAR , MIDS_TACAN_VAR_TYPE)
+  in 
+    skip ;
+  let - = predefinedVarsContext.loadVariable(ALR67_VAR , ALR67_VAR_TYPE)
+  in 
+    skip ;
+  let - = variableCollectorVisitor.clearCollectedNames()
+  in 
+    skip ;
+  ( dcl   noteList : [Enumeration] := EffectivityNotes.elements();
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip 
+        
+      end  
+    in  
+      while  noteList.hasMoreElements() do  
+      ( dcl   note : [EffectivityNote] := noteList.nextElement();
+        let - = note.visitNoteExpressions(acType , variableCollectorVisitor)
+        in 
+          skip 
+      ) ;
+    let - = context.removeAll()
+    in 
+      skip ;
+    ( dcl   varNamesList : [Iterator] := variableCollectorVisitor.getCollectedNames().iterator();
+      trap  j2v_break with  
+        cases  true  : 
+          (isofclass  (J2V_Break,j2v_break)) -> 
+            skip 
+          
+        end  
+      in  
+        while  varNamesList.hasNext() do  
+        ( dcl   varName : [String] := varNamesList.next();
+          let - = context.loadVariable(varName , variableCollectorVisitor.getVariableType(varName))
+          in 
+            skip 
+        ) 
+    ) 
+  ) ;
+  return  <VOID>
+) ;
+
+instance variables 
+  private  static effectivitySelector : [EffectivitySelector] := new  EffectivitySelector();
+  private  retrofitController : [RetrofitController] := nil  ;
+  private  EffectivityNotes : [Vector] := nil  ;
+  private  ruleTreeBuilder : [RuleTreeBuilder] := nil  ;
+  private  variableCollectorVisitor : [VariableCollectorVisitor] := nil  ;
+  private  predefinedVarsContext : [ExpressionContext] := nil  ;
+  private  context : [ExpressionContext] := nil  ;
+  private  static EQUIP_ID_VAR : [String] := new  String("EQUIP_ID");
+  private  static EQUIP_ID_VAR_TYPE : [Class] := new  Integer(0).getClass();
+  private  static MODEL_VAR : [String] := new  String("MODEL");
+  private  static MODEL_VAR_TYPE : [Class] := new  String().getClass();
+  private  static MIDS_TACAN_VAR : [String] := new  String("MIDS/TACAN");
+  private  static MIDS_TACAN_VAR_TYPE : [Class] := new  String().getClass();
+  private  static MIDS_TACAN_VAR_VALUE : [String] := new  String("TACAN");
+  private  static ALR67_VAR : [String] := new  String("ALR67");
+  private  static ALR67_VAR_TYPE : [Class] := new  String().getClass();
+  private  static ALR67_VAR_VALUE : [String] := new  String("ALR-67(V)3")
+  
+end  EffectivitySelector

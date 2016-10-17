@@ -1,0 +1,1882 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Providing functions generating code of vdm function definitions.
+% $Id: mod_fctdef.vdm,v 1.86 2006/05/26 01:31:55 vdmtools Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\section{Module FD - Code Generating VDM++ Function/Operation Definitions}
+
+The module ``FD'' provides functions for generating code corresponding
+to function and operation definitions.
+
+\vspace{1cm}
+
+\begin{vdm_al}
+
+module FD
+
+imports
+    from AS all,
+    from CPP all,
+    from DS all,
+    from BC all,
+    from REP all,
+    from CI all,
+    from CGMAIN all,
+    from CGAUX all,
+    from VD all,
+    from TPGEN all,
+    from CONC all,
+#ifdef VDMPP
+    from MANGLE all,
+    from UTIL all,
+#endif VDMPP
+    from CGEXPR
+    operations
+    SamePatternIds: seq of AS`Pattern ==> bool * map (AS`Name | AS`OldName) to set of REP`TypeRep;
+    DeclarePatterns: map (AS`Name | AS`OldName) to set of REP`TypeRep ==> seq of CPP`Stmt;
+    FindPatternId: AS`Pattern ==> map (AS`Name | AS`OldName) to set of REP`TypeRep;
+    CGExprExcl: AS`Expr * ([seq of char] | CPP`Name) * [REP`TypeRep]==> CPP`Expr * seq of CPP`Stmt;
+    MergeStmts: seq of CPP`Stmt * seq of CPP`Stmt ==> seq of CPP`Stmt,
+
+    from CGSTMT
+    operations GenStmt: AS`Stmt * bool ==> seq of CPP`Stmt,
+
+    from PM
+    operations
+    CGPatternMatchExcl: AS`Pattern * CGMAIN`VT * set of (AS`Name | AS`OldName) * CPP`Name *
+                    [map (AS`Name | AS`OldName) to REP`TypeRep] * [seq of CPP`Stmt] * bool ==> seq of CPP`Stmt * bool
+
+exports
+  operations
+            GenFctDef: AS`FnDef * bool ==> CPP`CPPAS;
+            GenOpDef: AS`Name * AS`OpDef * GenericStateDef * bool ==> CPP`CPPAS;
+            GenExceptionsHdr: () ==> seq of CPP`Identifier;
+#ifdef VDMPP
+            GenHiddenFctDecl: AS`Name * [AS`Type] ==> CPP`CPPAS;
+#endif VDMPP
+            GenFctOpDecl: AS`Name * (AS`FnDef | AS`OpDef) *
+            ([CPP`StorageClassSpecifier] | [CPP`Modifier])  * GenericStateDef ==> CPP`CPPAS | seq of CPP`MemberDeclaration;
+#ifdef VDMSL
+             GenExpFctOpDecl: AS`Name * (AS`FnDef | AS`OpDef) *
+             ([CPP`StorageClassSpecifier] | [CPP`Modifier])  * GenericStateDef * AS`Module ==> CPP`CPPAS | seq of CPP`MemberDeclaration;
+#endif VDMSL
+             -- IncludeImplicit: () ==> CPP`CPPAS;
+             IncludeExternalCC: () ==> CPP`CPPAS;
+             PushEnv:() ==> ();
+             PopEnv:() ==> ();
+             GenLocalFcts: seq of AS`FnDef ==> ();
+             LookUpLocFct: ( AS`Name | AS`OldName ) ==> bool;
+             InsertLocFct: ( AS`Name | AS`OldName ) ==> ();
+             ContainsImplicitFct: () ==> bool;
+             ContainsStaticImplicit: () ==> bool;
+             GetImplicitFcts: () ==> CPP`CPPAS
+  types
+    struct GenericStateDef
+
+definitions
+
+types
+#ifdef VDMSL
+  GenericStateDef = [AS`StateDef]
+#endif
+#ifdef VDMPP
+  GenericStateDef = [token]
+  inv g == g = nil
+#endif
+
+
+
+\end{vdm_al}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% GenFctDef AND GenOpDef
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{GenFctDef and GenOpDef}
+
+The functions $GenFctDef$ and $GenOpDef$ generates code corresponding
+to function and operation definitions, respectively.
+
+An \verb+ifdef+ is inserted arounf each generated function - this allows
+the user to overwrite the generated function. (C++)
+
+\begin{vdm_al}
+
+operations
+
+  GenFctDef: AS`FnDef * bool ==> CPP`CPPAS
+  GenFctDef(fn,isDlClass) ==
+    cases true:
+      (is_AS`ExplFnDef(fn))    -> GenExplFctDef(fn,false,isDlClass),
+      (is_AS`ExtExplFnDef(fn)) -> def fn_l = ExtFn2Fn(fn)
+                                  in
+                                    return conc [ GenExplFctDef(fn_l(i),false,isDlClass) | i in set inds fn_l],
+      (is_AS`ImplFnDef(fn))    -> GenImplDef(fn, nil)
+    end;
+
+  GenOpDef: AS`Name * AS`OpDef * GenericStateDef * bool ==> CPP`CPPAS
+  GenOpDef(opnm, opdef, sd, isDlClass) ==
+    cases true:
+      (is_AS`ExplOpDef(opdef))    -> GenExplOpDef(opnm, opdef, sd, false, isDlClass),
+      (is_AS`ExtExplOpDef(opdef)) -> def mk_(op,fn_l) = ExtOp2Op(opdef,sd)
+                                     in
+                                       return GenExplOpDef(opnm,op,sd, false,isDlClass) ^
+                                       conc [GenExplFctDef(fn_l(i),false, false) | i in set inds fn_l],
+      (is_AS`ImplOpDef(opdef))    -> GenImplDef(opdef, sd)
+    end
+\end{vdm_al}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% ExtFn2Fn and ExtOp2Op
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Extended explicit functions and operations are translated into
+explicit functions/operations before they are code generated. The
+operations $ExtFn2Fn$ and $ExtOp2Op$ makes this transformations.
+
+\begin{vdm_al}
+operations
+
+  ExtFn2Fn: AS`ExtExplFnDef ==> seq1 of AS`ExplFnDef
+  ExtFn2Fn(extfd) ==
+    let mk_AS`ExtExplFnDef(nm,tvars,partps,resnmtp,body,fnpre,fnpost,acc,stat,-,cid) = extfd
+    in
+     (dcl res_l : seq of AS`ExplFnDef := [];
+      def mk_(parms,fndom,fnrng) = Impl2ExplSignature(partps,resnmtp) in
+        let fntp = mk_AS`PartialFnType(fndom,fnrng,CI`NilContextId) in
+          let fd = mk_AS`ExplFnDef(nm,tvars,fntp,[parms], body,nil,nil,acc,stat, nil, cid) in
+            res_l := [fd];
+      if fnpre <> nil then
+          if CPP`isCPP() then
+            res_l := res_l ^ [CGAUX`MakePreFct(extfd, nil)]
+          else if (CGMAIN`get_preandpost_option()) then
+            res_l := res_l ^ [CGAUX`MakePreFct(extfd, nil)];
+      if fnpost <> nil then
+          if CPP`isCPP() then
+            res_l := res_l ^ [CGAUX`MakePostFct(extfd, nil)]
+          else if (CGMAIN`get_preandpost_option()) then
+            res_l := res_l ^ [CGAUX`MakePostFct(extfd, nil)];
+      return res_l
+    );
+
+
+  ExtOp2Op: AS`ExtExplOpDef * GenericStateDef ==> AS`ExplOpDef * seq of AS`ExplFnDef
+  ExtOp2Op(extop,sd) ==
+#ifdef VDMSL
+    let mk_AS`ExtExplOpDef(nm,pu,-,partps,resnmtp,body,-,oppre,oppost,-,acc,stat,constr,cid) = extop in
+#endif VDMSL
+#ifdef VDMPP
+    let mk_AS`ExtExplOpDef(nm,pu,sync,partps,resnmtp,body,-,oppre,-,-,acc,stat,constr,cid) = extop in
+#endif VDMPP
+    ( dcl opdef : AS`ExplOpDef,
+          fd_l  : seq of AS`ExplFnDef := [];
+      def mk_(parms,opdom,oprng) = Impl2ExplSignature(partps,resnmtp) in
+        let optp = mk_AS`OpType(opdom,oprng,CI`NilContextId) in
+#ifdef VDMSL
+          opdef := mk_AS`ExplOpDef(nm,pu,true,optp,parms,body,nil,nil,acc,stat,constr,cid);
+#endif VDMSL
+#ifdef VDMPP
+          opdef := mk_AS`ExplOpDef(nm,pu,sync,optp,parms,body,nil,nil,acc,stat,constr,cid);
+#endif VDMPP
+      if oppre <> nil then
+          if CPP`isCPP() then
+            fd_l := fd_l ^ [CGAUX`MakePreFct(extop, sd)]
+          else if (CGMAIN`get_preandpost_option()) then
+            fd_l := fd_l ^ [CGAUX`MakePreFct(extop, sd)];
+#ifdef VDMSL
+      if oppost <> nil then
+          if CPP`isCPP() then
+            fd_l := fd_l ^ [CGAUX`MakePostFct(extop, sd)]
+          else if (CGMAIN`get_preandpost_option()) then
+            fd_l := fd_l ^ [CGAUX`MakePostFct(extop, sd)];
+#endif VDMSL
+      return mk_(opdef,fd_l)
+    );
+
+
+  Impl2ExplSignature: AS`ParameterTypes * seq of AS`NameType ==> AS`Parameters * seq of AS`Type * [AS`Type]
+  Impl2ExplSignature(partps,resnmtps) ==
+  ( dcl parm_l : AS`Parameters := [],
+        tp_l   : seq of AS`Type := [],
+        restp  : AS`Type;
+    for mk_AS`PatTypePair(pat_l,tp,-) in partps do
+    ( parm_l := parm_l ^ pat_l;
+      tp_l := tp_l ^ [tp | - in set inds pat_l] );
+    cases resnmtps:
+      [] -> restp := mk_AS`VoidType(CI`NilContextId),
+      [mk_AS`NameType(-,tp,-)] -> restp := tp,
+      others -> restp := mk_AS`ProductType([resnmtps(i).tp | i in set inds resnmtps],CI`NilContextId)
+    end;
+    return mk_(parm_l,tp_l,restp)
+  )
+\end{vdm_al}
+
+\subsection{Explicit Function Definitions}
+
+%The pattern match is done in the code representing the function
+%definition.
+
+The operation $GenExplFctDef$ takes the type ``ExplFnDef''. It
+performs pattern match and calls then the $CGExprExcl$ function and
+returns the result.
+
+For example, the function definition:
+
+\begin{quote}
+\begin{verbatim}
+fct: (nat * nat) * nat -> nat
+fct(mk_(a,b), c) ==
+a+b+c
+\end{verbatim}
+\end{quote}
+
+could be translated into:
+
+\begin{quote}
+\begin{verbatim}
+Int fct_vdm(Int var1, Int var2)
+{
+  Int vdm_a, vdm_b, vdm_c;
+  int succ;
+  ...CGPatternMatch( "mk_(a,b)", var1, {}, succ);
+  if ( !succ ) // The pattern match of "mk_(a,b )" did not succeed.
+    RunTimeError();
+  ...CGPatternMatch( "c", var2, {}, succ) pattern_match_code(var1, mk_(a,b));
+  if ( !succ) // The pattern match of "c" did not succeed.
+    RunTimeError();
+  return vdm_a + vdm_b + vdm_c;
+}
+\end{verbatim}
+\end{quote}
+
+in C++ and
+
+\begin{quote}
+\begin{verbatim}
+public Integer fct (final Tuple var_1_1, final Integer var_2_2) throws CGException{
+    Integer a = null;
+    Integer b = null;
+    Integer c = null;
+    boolean succ_3 = true;
+    {
+      Sequence e_l_9 = new Sequence();
+      for (int i_10 = 1; i_10 <= var_1_1.Length(); i_10++)
+        e_l_9.ImpAppend(var_1_1.GetField(i_10));
+      if (succ_3 = 2 == e_l_9.Length()) {
+        a = UTIL.NumberToInt(e_l_9.Hd());
+        b = UTIL.NumberToInt(e_l_9.Index(2));
+      }
+    }
+    c = var_2_2;
+    if (!succ_3)
+      UTIL.RunTime("Pattern Match in Function Apply in function : fct failed");
+    return new Integer(new Integer(a.intValue() + b.intValue()).intValue() + c.intValue())
+;
+\end{verbatim}
+\end{quote}
+
+
+in Java.
+
+Since the body of this function is an expression, the expression is
+directly inserted in the return statement in the code. In the case
+where all the parameters are distinct names, these names can be
+declared in the parameter list in the code, and it is not necessary to
+perform patternmatch. For example, the function definition:
+
+\begin{quote}
+\begin{verbatim}
+fct: nat * nat * nat -> nat
+fct( a, b, c) ==
+a+b+c
+\end{verbatim}
+\end{quote}
+
+could be translated into:
+
+\begin{quote}
+\begin{verbatim}
+Int fct_vdm(Int a, Int b, Int c)
+{
+  return vdm_a + vdm_b + vdm_c;
+}
+\end{verbatim}
+\end{quote}
+
+in C++ and
+
+\begin{quote}
+\begin{verbatim}
+ public Integer fct1 (final Integer a, final Integer b, final Integer c) throws CGException
+{
+    return new Integer(new Integer(a.intValue() + b.intValue()).intValue() + c.intValue());
+}
+\end{verbatim}
+\end{quote}
+
+in Java.
+
+The operation $GenExplFctDef$ takes one input parameter: the abstract syntax tree of
+an explicit function definition.
+
+There might be more than one C++ function which corresponds to a VDM
+function definition. For example in the generation of code
+corresponding to a pattern match of set enumeration the C++ function
+$Permute$ is called.  Using \MCL{} these auxiliary functions are
+defined in the file {\tt cg\_aux.cc}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% GenExplFnDef
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{vdm_al}
+operations
+
+  IsSubresp: AS`FnBody | AS`OpBody ==> bool
+#ifdef VDMPP
+  IsSubresp(fnbody) ==
+    cases fnbody.body:
+      <SUBRESP> -> ( CGAUX`DefineClassAsAbstract();
+                     return true;
+                   ),
+      others ->
+          return false
+    end;
+#endif
+#ifdef VDMSL
+  IsSubresp(-) ==
+    return false;
+#endif
+
+  IsNotyetspecified: (AS`FnBody | AS`OpBody) * bool * bool==> bool
+  IsNotyetspecified(fnbody, isDlClass, isStatic) ==
+    cases fnbody.body:
+      <NOTYETSPEC> ->  ( impl := not isDlClass or impl;
+                         staticImpl := (not isDlClass and isStatic) or staticImpl;
+                         return true;
+                       ),
+      others -> return false
+    end;
+\end{vdm_al}
+
+$GenExceptionsHdr$ is used to allow different exceptions to be raised
+according to circumstances e.g. if the $jdktypes$ option is set, then
+a normal Java exception will be raised, rather than one defined in a
+VDM library (as these will not be available in that case).
+\begin{vdm_al}
+
+GenExceptionsHdr: () ==> seq of CPP`Identifier
+GenExceptionsHdr() ==
+  (CGAUX`InsertImport("jp.vdmtools.VDM.CGException");
+   return [BC`GenIdentifier("CGException")];);
+
+GenExplFctDef: AS`ExplFnDef * bool * bool ==> CPP`CPPAS
+GenExplFctDef(fndef, isimpl, isDlClass) ==
+let mk_AS`ExplFnDef(id, -, tp, parms_ll, body, prefn, postfn,acc,stat, -, fctcid) = fndef
+in
+ (dcl isimplicit : bool := isimpl,
+      isabstract : bool := false;
+  if CPP`isCPP()
+  then
+   (if IsSubresp(body)
+    then return []
+    elseif IsNotyetspecified(body,isDlClass, stat) and not isDlClass
+    then return [])
+  else
+   (if IsSubresp(body)
+    then isabstract := true
+    elseif IsNotyetspecified(body, false, stat)
+    then isimplicit := true);
+
+  PushEnv();
+  CGAUX`InitEnv();
+  CGAUX`SetException(false);
+  CGAUX`SetNotSupportedException(false);
+  BC`ResetVarno();
+
+  let parms = hd parms_ll
+  in
+    if len parms_ll <> 1
+    then
+     (PopEnv();
+      return [])
+    else
+      def mk_( -, pid_m ) = CGEXPR`SamePatternIds( parms );    --ændret rækkefølge
+          - = CGAUX`InsertNamesinEnv(dom pid_m);
+          rngtype = CGAUX`FromAS2RepType(tp.fnrng)
+      in
+       (if stat
+        then CGAUX`SetIsStatic();
+
+        VD`PushFctLoc( dom pid_m );
+        InsPosFct( pid_m );
+
+        def ds = [TPGEN`Rep2CppTypeSpecifier(rngtype, tp.fnrng)];
+            mk_(arg_l, varlist, inlineDecl) = MakeArgDecl(tp, parms, pid_m)
+        in
+         (def mk_(resVar_v, b_stmt) = GenExplFnBody(fndef, isDlClass, isimplicit, isabstract, arg_l, ds)
+          in
+           (dcl fb : seq of CPP`Stmt := [];
+            -- If necessary, insert body of child operation
+            if CPP`isJAVA() and isimplicit and IsNotyetspecified(body, isDlClass, stat)
+            then
+              def exdecl = BC`GenFctDecl (BC`GenIdentifier("impl_"^ CGAUX`GiveLastName(id)), arg_l);
+                  return_stmt = [BC`GenReturnStmt(DS`GenEmptyValue(CGAUX`RemoveNil(rngtype)))];
+              in
+               (dcl implfb : seq of CPP`Stmt;
+                if IsNotyetspecified(body, isDlClass, stat)
+                then implfb := [CGAUX`RunTime("Preliminary Function " ^ BC`Rename(id).id ^" has been called")]
+                else implfb := [CGAUX`RunTime("Implicit Function " ^ BC`Rename(id).id ^" has been called")];
+                implfb := implfb ^ return_stmt;
+                implcpp := def excs = GenExceptionsHdr()
+                           in -- make all external skeletons for implicit functions
+                            -- public so that the parent object can call them
+                             implcpp munion {fctcid |-> [BC`GenJavaFctDef([],
+                                                  [BC`GenModifier(<PUBLIC>)],ds,
+                                                 exdecl, excs,
+                                                 BC`GenBlock(implfb))]};
+               );
+          if parms <> [] and
+             not inlineDecl and
+             not (CPP`isJAVA() and (isimplicit or isabstract or CGMAIN`get_skeleton_option()))
+          then
+           (fb := GenArgPatternMatch(pid_m, fndef, varlist) ^ b_stmt ^ [BC`GenReturnStmt(resVar_v)])
+          else
+           (
+#ifdef VDMPP
+            if prefn <> nil and CGMAIN`get_testpreandpost_option()
+            then fb := [GenMethPreCall(id, FindVariables(arg_l), stat)] ^ fb;
+#endif VDMPP
+            if CPP`isCPP()
+            then fb := fb ^ b_stmt
+            elseif (not isabstract and not CGMAIN`get_skeleton_option())
+            then fb := fb ^ b_stmt
+            elseif isimplicit and IsNotyetspecified(body, isDlClass, stat)
+            then fb := fb ^ b_stmt
+            elseif isimplicit
+            then skip
+            else fb := [];
+#ifdef VDMPP
+            if postfn <> nil and CGMAIN`get_testpreandpost_option()
+            then fb := fb ^ [GenFnPostCall(id, resVar_v, FindVariables(arg_l), stat)];
+#endif VDMPP
+            if CPP`isJAVA()
+            then
+              if isimplicit and IsNotyetspecified(body, isDlClass, stat)
+              then fb := fb ^ [ BC`GenReturnStmt(resVar_v) ]
+              elseif not isabstract and not CGMAIN`get_skeleton_option()
+              then fb := fb ^ [ BC`GenReturnStmt(resVar_v) ]
+              else
+                def exprlist = FindVariables(arg_l)
+                in
+                  fb := fb ^ [ BC`GenReturnStmt(
+                                 BC`GenFctCallObjMemAcc(
+                                   BC`GenIdentifier("child"),
+                                   "impl_"^BC`Rename(id).id, exprlist)) ]
+            else fb := fb ^ [ BC`GenReturnStmt(resVar_v) ];
+           );
+
+          def decl = GenMethodDecl(id, arg_l)
+          in
+           (dcl cpp : CPP`CPPAS := [];
+            if CPP`isJAVA()
+            then
+             (def l_fsp = if stat
+                          then [BC`GenModifier(<STATIC>)]
+                          else [];
+                  excs = GenExceptionsHdr()
+              in
+                if not isabstract and not CGMAIN`get_skeleton_option()
+                then cpp := [BC`GenJavaFctDef([],l_fsp ^[CGAUX`JavaAccess(acc)],ds, decl, excs, BC`GenBlock(fb))]
+                elseif isabstract
+                then cpp := [BC`GenJavaFctDef([],l_fsp ^ [BC`GenModifier(<ABSTRACT>), CGAUX`JavaAccess(acc)],ds,
+                                   decl, excs, nil)]
+                else cpp := [BC`GenJavaFctDef([],l_fsp ^ [CGAUX`JavaAccess(acc)],ds,
+                                   decl, nil, BC`GenReturnStmt(DS`GenEmptyValue(rngtype) ))];
+             )
+            else
+              cpp := TPGEN`GenFctOpDefIfDef(id ,[BC`GenFctDef(ds, decl, nil, BC`GenBlock(fb))]);
+
+            PopEnv();
+            if prefn <> nil
+            then
+              if CPP`isCPP() or CGMAIN`get_preandpost_option()
+              then cpp := cpp ^ GenFctDef(CGAUX`MakePreFct(fndef, nil), false);
+            if postfn <> nil
+            then
+              if CPP`isCPP() or CGMAIN`get_preandpost_option()
+              then cpp := cpp ^ GenFctDef(CGAUX`MakePostFct(fndef, nil), false);
+            VD`DeleteLoc();
+            CGAUX`ResetIsStatic();
+            return cpp
+           )
+         )
+       )
+  )
+);
+
+GenMethodDecl : AS`Name * seq of CPP`ArgDecl ==> CPP`FctDecl
+GenMethodDecl(p_nm, p_arg_l) ==
+#ifdef VDMSL
+  if CPP`isCPP()
+  then BC`GenFctDecl (BC`Rename (p_nm), p_arg_l)
+  else BC`GenFctDecl (BC`Rename (CGAUX`InsertGlobalName(p_nm)), p_arg_l);
+#endif VDMSL
+#ifdef VDMPP
+  --let cnm = mk_AS`Name([CGAUX`GiveCurCName()], CI`NilContextId),
+  def cnm = CGAUX`GiveCurCASName();
+      cid = BC`Rename(cnm);
+  in
+   (dcl fnm : CPP`Name;
+    if CPP`isCPP()
+    then fnm := BC`Rename(p_nm)
+    else fnm := BC`Rename(CGAUX`InsertGlobalName(p_nm));
+    if CPP`isCPP()
+    then BC`GenFctDecl (BC`GenQualifiedName(cid, fnm), p_arg_l)
+    else BC`GenFctDecl(fnm, p_arg_l);
+   );
+#endif VDMPP
+
+GenExplFnBody : AS`ExplFnDef * bool * bool * bool * seq of CPP`ArgDecl * CPP`DeclSpecifiers
+                ==> [CPP`Expr] * seq of CPP`Stmt
+GenExplFnBody(p_fndef, p_isDlClass, p_isImplicit, p_isAbstract, p_arg_l, p_ds) ==
+  if p_isImplicit and CPP`isJAVA() and IsNotyetspecified(p_fndef.body, p_isDlClass, p_fndef.stat)
+  then
+    def exprlist = FindVariables(p_arg_l);
+        resVar = BC`GiveName("childResult")
+    in
+      return mk_(resVar,
+         [BC`GenDecl(hd p_ds, resVar,
+                     BC`GenAsgnInit( BC`GenFctCallObjMemAcc( BC`GenIdentifier("child"),
+                                                             "impl_"^BC`Rename(p_fndef.nm).id,
+                                                             exprlist)))])
+  elseif p_isImplicit and CPP`isJAVA()
+  then return mk_(nil, [CGAUX`RunTime("Implicit Function " ^ BC`Rename(p_fndef.nm).id ^ " has been called")])
+  elseif p_isAbstract and CPP`isJAVA()
+  then return mk_(nil,[])
+  elseif CPP`isCPP() and IsNotyetspecified(p_fndef.body, p_isDlClass, p_fndef.stat) and p_isDlClass
+  then GenerateDlCall(p_fndef.nm, p_arg_l,false, false)
+  else CGEXPR`CGExprExcl(p_fndef.body.body, "varRes", CGAUX`FromAS2RepType(p_fndef.tp.fnrng))
+\end{vdm_al}
+
+\begin{vdm_al}
+
+operations
+
+GenerateDlCall : AS`Name * seq of CPP`ArgDecl * bool * bool
+                 ==>  (CPP`Expr * seq of CPP`Stmt) | seq of CPP`Stmt
+GenerateDlCall(id, arg_l, isOp, isVoid) ==
+  def seqName = BC`GiveName("parmSeq");
+      parms = [ FindVariableinDecl(arg_l(i).decl) | i in set inds arg_l];
+      succFlag = BC`GiveName("success");
+      resName = BC`GiveName("dlCallResult");
+      fnm = CGAUX`GiveLastName(id) in
+  ( dcl body : seq of CPP`Stmt;
+    body := DS`GenSeqDecl(seqName, nil);
+    for p in parms do
+      body := body ^ [ BC`GenFctCallObjMemAccStmt(seqName, "ImpAppend", [p])];
+    body := body ^ [ BC`GenDecl(BC`GenTypeSpecifier(BC`GenIdentifier("int")),
+                                succFlag,nil)];
+    def dlArgs = [TPGEN`GenDlMember(), BC`GenStringLit(fnm), seqName, succFlag] in
+    let dlcall = BC`GenFctCall(BC`GenIdentifier("DlClass_call"), dlArgs) in
+    if isOp
+    then ( body := body ^ [ if isVoid then BC`GenExpressionStmt(dlcall) else BC`GenReturnStmt(dlcall)];
+           return body
+         )
+    else (
+           body := body ^ DS`GenGenericDecl(resName, BC`GenAsgnInit(dlcall));
+           return mk_(resName, body)
+         )
+  );
+\end{vdm_al}
+
+
+The next operations are auxiliary operations to $GenExplFctDef$ and
+$GenExplOpDef$. $MakeArgDecl$ returns a list of argument declarations
+and a list of pair of variable names and types used in the declaration
+list.
+
+
+\begin{vdm_al}
+FindVariables: seq of CPP`ArgDecl ==> seq of CPP`Expr
+FindVariables(arg_l) ==
+ (dcl exprs : seq of CPP`Expr := [];
+  for argdecl in arg_l do
+    let mk_CPP`ArgDecl(-, decl,-) = argdecl in
+     exprs := exprs^[FindVariableinDecl(decl)];
+  return exprs
+  );
+
+FindVariableinDecl: CPP`Declarator ==> CPP`Expr
+FindVariableinDecl(decl) ==
+  cases true:
+    (is_CPP`Identifier(decl)) -> return decl,
+    (is_CPP`RefDecl(decl))    -> let mk_CPP`RefDecl(-,declarator,-) = decl
+                                 in FindVariableinDecl(declarator),
+    others -> error
+  end;
+
+MakeArgDecl: (AS`FnType | AS`OpType) * seq of AS`Pattern * map (AS`Name|AS`OldName) to set of REP`TypeRep
+             ==> seq of CPP`ArgDecl * seq of CGMAIN`VT * bool
+MakeArgDecl(fntype, parms, pid_m) ==
+ (dcl varno : nat := 1,
+      argdecl_l : seq of CPP`ArgDecl := [],
+      varlist : seq of CGMAIN`VT := [];
+
+  let dtypes = if is_AS`OpType(fntype)
+               then fntype.opdom
+               else fntype.fndom
+  in
+   (for tmpType in dtypes do
+      def varname = BC`GiveName("var_" ^ CGAUX`StringNumber(varno));
+          tmpTypeRep = CGAUX`FromAS2RepType(tmpType)
+      in
+       (dcl refvarname : CPP`Declarator;
+        if CPP`isCPP()
+        then refvarname := BC`GenRef(varname)
+        else refvarname := varname;
+        varlist := varlist ^ [ mk_CGMAIN`VT(varname, tmpTypeRep) ];
+        varno := varno + 1;
+        def const_decl = [BC`GenTypeSpecifier(<CONST>), TPGEN`Rep2CppTypeSpecifier(tmpTypeRep,tmpType)]
+        in
+          argdecl_l := argdecl_l ^ [ BC`GenArgDecl(const_decl,refvarname)]
+       );
+
+    --def inlineDecl = (card dom pid_m = len parms) and
+    --                  forall p in set elems parms & is_AS`PatternName( p );
+    let count = card { p | p in set elems parms & is_AS`PatternName( p ) and p.nm = nil },
+        inlineDecl = (card dom pid_m = len parms - count) and
+                      forall p in set elems parms & is_AS`PatternName( p )
+    in
+     (dcl arg_l : seq of CPP`ArgDecl;
+      if inlineDecl
+      then arg_l := DeclPatArg( pid_m, parms, dtypes )
+      else arg_l := argdecl_l;
+      return mk_(arg_l, varlist, inlineDecl);
+     );
+   );
+);
+\end{vdm_al}
+
+The next operation $DeclPatArg$ returns a list of argument declarations and is
+called if the arguments of the function are going to be declared in
+the parameter list in the code.
+
+%LTO ??? changed - does not take pid\_m into account
+
+\begin{vdm_al}
+DeclPatArg: map AS`Name to set of REP`TypeRep * seq of AS`Pattern * AS`DiscretionaryType ==> seq of CPP`ArgDecl
+--DeclPatArg( pid_m, parm_l, argtypes ) ==
+DeclPatArg( -, parm_l, argtypes ) ==
+ (dcl rb    : seq of CPP`ArgDecl := [],
+      type  : REP`TypeRep;
+      --count : int :=1;
+--  for all tmp in set dom pid_m do
+  for count = 1 to len parm_l do
+    let mk_AS`PatternName(name, -, -) = parm_l(count)
+    in
+     (dcl varname : CPP`Identifier;
+          
+      if name <> nil
+      then varname := BC`Rename(CGAUX`InsertName(name))
+      else varname := BC`GiveName("unused_" ^ CGAUX`StringNumber(count));
+
+      type := CGAUX`FromAS2RepType(argtypes(count));
+      def const_decl = [BC`GenTypeSpecifier(<CONST>), TPGEN`Rep2CppTypeSpecifier(type, argtypes(count)) ]
+      in
+       (dcl refvarname : CPP`Declarator;
+        if CPP`isCPP()
+        then refvarname := BC`GenRef(varname)
+        else refvarname := varname;
+        rb := rb ^ [ BC`GenArgDecl(const_decl, refvarname)];
+       );
+     );
+  return rb
+ );
+
+\end{vdm_al}
+
+\subsection{Explicit Operation Definitions}
+
+The pseudo code of explicit operation definitions is much a like the
+pseudo code of explicit function definitions. Therefore we refer to
+the code generation of explicit function definitions for further
+information.
+
+\begin{vdm_al}
+
+InitMethod : AS`Parameters * AS`OpType ==> (map AS`Name to set of REP`TypeRep) * seq of CGMAIN`VT * REP`TypeRep *
+             bool * seq of CPP`ArgDecl
+InitMethod(parm_l, tp) ==
+ (PushEnv();
+  CGAUX`InitEnv();
+  CGAUX`SetNotSupportedException(false);
+  CGAUX`SetException(false);
+  BC`ResetVarno();
+  def mk_(-, pid_m) = CGEXPR`SamePatternIds(parm_l); --rækkefølge ændret
+      - = CGAUX`InsertNamesinEnv(dom pid_m);
+      rngtype = let mk_AS`OpType(-, oprng,-) = tp
+                in CGAUX`FromAS2RepType(oprng)
+  in
+   (VD`PushFctLoc( dom pid_m );
+    InsPosFct(pid_m);
+    CGAUX`CurrentRType(rngtype);
+    def mk_(arg_l, varlist, inlineDecl) = MakeArgDecl(tp, parm_l, pid_m)
+    in return mk_(pid_m, varlist, rngtype, inlineDecl, arg_l);
+   );
+ );
+
+GenExplOpDef: AS`Name * AS`ExplOpDef * GenericStateDef * bool * bool ==> CPP`CPPAS
+#ifdef VDMPP
+GenExplOpDef(opnm, opdef, sd, isimpl, isDlClass) ==
+  let mk_AS`ExplOpDef(nm,-,-,tp,parm_l,body,oppre,-,acc,stat,constr,opcid) = opdef
+  in
+#endif VDMPP
+#ifdef VDMSL
+GenExplOpDef(-, opdef, sd, isimpl, isDlClass) ==
+  let mk_AS`ExplOpDef(nm,-,-,tp,parm_l,body,-,-,-,stat,constr,-) = opdef
+  in
+#endif VDMSL
+   (dcl isimplicit : bool := isimpl,
+        isabstract : bool := false;
+
+    if CPP`isCPP()
+    then (if IsSubresp(body)
+          then return []
+          elseif IsNotyetspecified(body, isDlClass, stat) and not isDlClass
+          then return [])
+    else (if IsSubresp(body) or
+            ( CGMAIN`get_j2v_option() and
+              CGMAIN`isInterface(CGAUX`GiveCurCASName()) and
+              body.body = <NOTYETSPEC>)
+          then isabstract:= true
+          elseif IsNotyetspecified(body, false, stat)
+          then isimplicit:= true);
+
+    if stat
+    then CGAUX`SetIsStatic();
+#ifdef VDMPP
+    if constr and parm_l = []
+    then CGAUX`SetHasDefaultConstr();
+    CGAUX`ResetUsesSuper();
+    CGAUX`ResetUsesThis();
+#endif VDMPP
+    def mk_(pid_m, varlist, rngtype, inlineDecl, arg_l) = InitMethod(parm_l, tp);
+        decl = GenMethodDecl(nm, arg_l)
+    in
+     (dcl ds : seq of CPP`TypeSpecifier := [],
+#ifdef VDMPP
+          implfb : seq of CPP`Stmt := [],
+#endif VDMPP
+          fb : seq of CPP`Stmt := [];
+      if not constr
+      then ds := [TPGEN`Rep2CppTypeSpecifier(rngtype,tp.oprng)];
+      if not is_AS`IdentStmt(body.body)
+      then if parm_l <> [] and
+              not inlineDecl and
+              not (CPP`isJAVA() and (isimplicit or isabstract or CGMAIN`get_skeleton_option()))
+           then
+             fb := GenPatternBody(pid_m, opdef, isDlClass, arg_l, varlist)
+           else
+#ifdef VDMSL
+             def mk_(-, tfb) = GenInlineBody(opdef, rngtype, isDlClass, arg_l, isimplicit, isabstract)
+             in
+              (fb := tfb);
+#endif VDMSL
+#ifdef VDMPP
+             def mk_(timplfb, tfb) = GenInlineBody(opdef, rngtype, isDlClass, arg_l, isimplicit, isabstract)
+             in
+              (implfb := timplfb;
+               fb := tfb
+              );
+#endif VDMPP
+
+      (dcl cpp : CPP`CPPAS := [];
+#ifdef VDMPP
+      if CPP`isJAVA()
+      then
+       (dcl prec_fb : seq of CPP`Stmt := [];
+        if oppre <> nil and CGMAIN`get_testpreandpost_option()
+        then prec_fb := [GenMethPreCall(opdef.nm, FindVariables(arg_l), stat)];
+        if constr -- hack for constructor
+        then
+          def initfc = BC`GenExpressionStmt(
+                                   BC`GenFctCall(
+                                      BC`GenIdentifier("vdm_init_" ^ CGAUX`GiveLastName(CGAUX`GiveCurCASName())), []));
+                mk_(ok, su, st_l) = IsSuperFirst(fb);
+                new_fb = if ok
+                         then [su] ^ [initfc] ^ prec_fb ^ st_l
+                         else [initfc] ^ prec_fb ^ fb
+            in fb := new_fb
+          else
+            let new_fb = prec_fb ^ fb
+            in fb := new_fb;
+
+        if CGMAIN`get_conc_option() and not constr and not stat
+        then fb := CONC`GenConcOper( opnm, fb)
+        elseif CGMAIN`get_conc_option() and
+               CGAUX`GetHasDefaultConstr() and
+               CGAUX`GetOrderedSupers(CGAUX`GiveCurCASName()) = []
+        then fb := GenDefaultConstructorHdr(fb);
+
+        (dcl mods : seq of CPP`Modifier := [];
+         if isabstract
+         then mods := mods ^[BC`GenModifier(<ABSTRACT>)];
+
+         if stat
+         then mods := mods ^[BC`GenModifier(<STATIC>)];
+
+         mods := mods ^ [CGAUX`JavaAccess(acc)];
+         def excs = GenExceptionsHdr()
+         in
+           if isabstract
+           then cpp := [BC`GenJavaFctDef([],mods, ds, decl, excs, nil)]
+           elseif CGMAIN`get_skeleton_option()
+           then cpp := [BC`GenJavaFctDef([],mods, ds, decl, nil, BC`GenReturnStmt(DS`GenEmptyValue(rngtype)))]
+           else cpp := [BC`GenJavaFctDef([],mods, ds, decl, excs, BC`GenBlock(fb))];
+         if isimplicit
+         then
+           def excs = GenExceptionsHdr();
+               exdecl = BC`GenFctDecl (BC`GenIdentifier("impl_"^ CGAUX`GiveLastName(nm)), arg_l)
+           in -- make all external skeletons for implicit functions
+              -- public so that the parent object can call them
+             implcpp := implcpp munion {opcid |-> [BC`GenJavaFctDef([],[ BC`GenModifier(<PUBLIC>)], ds,
+                                                    exdecl, excs, BC`GenBlock(implfb))]};
+         )
+        )
+       else
+#endif VDMPP
+        (
+#ifdef VDMPP
+         dcl mi_l : seq of CPP`MemInitializer := [];
+         if constr -- hack for constructor
+         then
+           def initfc = BC`GenExpressionStmt(
+                                  BC`GenFctCall(
+                                     BC`GenIdentifier("vdm_init_" ^ CGAUX`GiveLastName(nm)), []))
+           in
+            (dcl new_fb : seq of CPP`Stmt := [initfc];
+             if CGAUX`GetOrderedSupers(nm) <> [] and fb <> []
+             then
+               def mk_(ok, mi, st_l) = IsMemInitFirst(nm, fb)
+               in
+                 if ok
+                 then (mi_l := mi_l ^ [mi];
+                       new_fb := new_fb ^ st_l)
+                 else (new_fb := new_fb ^ fb)
+             else new_fb := new_fb ^ fb;
+             fb := new_fb;);
+
+         if oppre <> nil and CGMAIN`get_testpreandpost_option()
+         then fb := [GenMethPreCall(opdef.nm, FindVariables(arg_l), stat)] ^ fb;
+
+         let fd = if constr
+                  then BC`GenConstructorDef([],ds, decl, mi_l, BC`GenBlock(fb))
+                  else BC`GenFctDef(ds, decl, nil, BC`GenBlock(fb))
+#endif VDMPP
+#ifdef VDMSL
+         let fd = BC`GenFctDef(ds, decl, nil, BC`GenBlock(fb))
+#endif VDMSL
+         in
+           cpp := TPGEN`GenFctOpDefIfDef(nm,[fd]);
+        );
+
+        PopEnv();
+        cpp := cpp ^ GenPrePost(opdef, sd);
+        CGAUX`ResetIsStatic();
+        return cpp
+      )
+     )
+);
+\end{vdm_al}
+
+\begin{vdm_al}
+
+#ifdef VDMPP
+GenDefaultConstructorHdr : seq of CPP`Stmt  ==> seq of CPP`Stmt
+GenDefaultConstructorHdr(fb) ==
+  let expdecl = BC`GenExceptionDeclaration(
+                                  [BC`GenTypeSpecifier(BC`GenIdentifier("Throwable"))],
+                                  BC`GenIdentifier("e")),
+      stmt = BC`GenExpressionStmt(
+                               BC`GenFctCall(
+                                 BC`GenIdentifier("System.out.println"),
+                                 [BC`GenFctCall(BC`GenIdentifier("e.getMessage"),[])])),
+      newfb = [ BC`GenExpressionStmt(BC`GenFctCall(BC`GenIdentifier("setSentinel"), []))] ^ fb,
+      handlers = [BC`GenHandler(expdecl,stmt)]
+  in
+     return [BC`GenTryBlock(newfb, handlers, nil)];
+#endif VDMPP
+
+GenPrePost: AS`OpDef * GenericStateDef ==> CPP`CPPAS
+GenPrePost(opdef, sd) ==
+( dcl cpp : CPP`CPPAS := [];
+  if opdef.oppre <> nil
+  then if CPP`isCPP()
+       then cpp := cpp ^ GenFctDef(CGAUX`MakePreFct(opdef, sd),false)
+       elseif (CGMAIN`get_preandpost_option())
+       then cpp := cpp ^ GenFctDef(CGAUX`MakePreFct(opdef, sd),false);
+#ifdef VDMSL
+  if opdef.oppost <> nil
+  then if CPP`isCPP()
+       then cpp := cpp ^ GenFctDef(CGAUX`MakePostFct(opdef, sd),false)
+       elseif (CGMAIN`get_preandpost_option())
+       then cpp := cpp ^ GenFctDef(CGAUX`MakePostFct(opdef, sd),false);
+#endif VDMSL
+  return cpp
+);
+
+GenArgPatternMatch: map (AS`Name | AS`OldName) to set of REP`TypeRep * (AS`ExplOpDef | AS`ExplFnDef) *
+                    seq of CGMAIN`VT ==> seq of CPP`Stmt
+GenArgPatternMatch(pid_m, opdef, varlist) ==
+def succ_v = BC`GiveName("succ");
+    l_parms = if is_AS`ExplFnDef(opdef)
+              then hd opdef.parms
+              else opdef.parms
+in
+( dcl var_l : seq of CGMAIN`VT := varlist,
+      p_s : set of (AS`Name | AS`OldName) := {},
+      fb : seq of CPP`Stmt := [],
+      pattern_fb : seq of CPP`Stmt := [],
+      tmp_fb : seq of CPP`Stmt := [],
+      need_succ : bool := false;
+
+  fb := CGEXPR`DeclarePatterns(pid_m);
+  for tmp in l_parms do
+   (if not (is_AS`PatternName(tmp) and tmp.nm = nil)
+    then
+      def mk_(match, Is_Excl) = PM`CGPatternMatchExcl( tmp, hd var_l, p_s, succ_v, nil, nil, false );
+                  patId = dom CGEXPR`FindPatternId ( tmp )
+      in
+       (tmp_fb := tmp_fb ^ match;
+        if not Is_Excl
+        then
+          (pattern_fb := pattern_fb ^ if need_succ
+                                      then [BC`GenIfStmt( succ_v, BC`GenBlock(tmp_fb), nil)]
+                                      else tmp_fb;
+           tmp_fb := []);
+        p_s := p_s union patId;
+        need_succ := need_succ or not Is_Excl);
+    var_l := tl var_l);
+  if tmp_fb <> []
+  then
+    pattern_fb := pattern_fb ^ if need_succ
+                               then [BC`GenIfStmt( succ_v, BC`GenBlock(tmp_fb), nil)]
+                               else tmp_fb;
+
+  -- The declaration for succ_v and check on it will only be generated
+  -- if some  pattern matching is actually being performed i.e. not
+  -- all of the patterns are don't care patterns
+  if pattern_fb <> []
+  then
+    def fctname = CGAUX`GiveLastName(opdef.nm)
+    in
+      let call    = if is_AS`ExplOpDef(opdef)
+                    then "operation call in operation "
+                    else "function apply in function ",
+          errMess = "Pattern match failed in " ^ call ^ fctname
+      in
+       (if need_succ
+        --then fb := fb ^ [ BC`GenDecl(DS`GenSmallBoolType(), succ_v, BC`GenAsgnInit(BC`GenBoolLit(false))) ];
+        then pattern_fb := [ BC`GenDecl(DS`GenSmallBoolType(), succ_v, BC`GenAsgnInit(BC`GenBoolLit(false))) ] ^ pattern_fb;
+        --fb := fb ^ pattern_fb;
+        fb := CGEXPR`MergeStmts(fb, pattern_fb);
+        if need_succ
+        then fb := fb ^ [BC`GenIfStmt(BC`GenNot(succ_v), CGAUX`RunTime(errMess), nil)]
+       );
+  return fb
+);
+
+GenPatternBody : map AS`Name to set of REP`TypeRep * AS`ExplOpDef * bool *
+                 seq of CPP`ArgDecl * seq of CGMAIN`VT==> seq of CPP`Stmt
+GenPatternBody(pid_m, opdef, isDlClass, arg_l, varlist) ==
+( dcl cppast : (CPP`Expr * seq of CPP`Stmt) | seq of CPP`Stmt,
+      fb : seq of CPP`Stmt := [];
+  fb := GenArgPatternMatch(pid_m, opdef, varlist);
+  if CPP`isCPP() and isDlClass and
+     IsNotyetspecified(opdef.body, isDlClass, opdef.stat)
+  then cppast := GenerateDlCall(opdef.nm, arg_l,true, is_AS`VoidType(opdef.tp.oprng))
+#ifdef VDMPP
+  elseif opdef.constr
+  then
+  ( CGAUX`SetConstr();
+    cppast := CGSTMT`GenStmt(opdef.body.body, true);
+--    if not CGAUX`UsesSuper()
+--    then
+--      fb := [BC`GenExpressionStmt(BC`GenFctCall(DS`GenThis(), []))]
+--            ^fb;
+    CGAUX`UnsetConstr()
+  )
+#endif VDMPP
+  else
+    cppast := CGSTMT`GenStmt(opdef.body.body, true);
+  if  is_AS`BlockStmt(opdef.body.body) and len cppast = 1 and
+      is_CPP`CompoundStmt(hd cppast)
+  then let mk_CPP`CompoundStmt(stmts,-) = hd cppast
+       in fb := fb ^ stmts
+  else fb := fb ^ cppast;
+  return fb
+);
+
+GenInlineBody : AS`OpDef * REP`TypeRep * bool * seq of CPP`ArgDecl * bool * bool
+                 ==> seq of CPP`Stmt * seq of CPP`Stmt
+GenInlineBody(opdef, rngtype, isDlClass, arg_l, isimplicit, isabstract) ==
+( dcl implfb : seq of CPP`Stmt := [],
+      fb : seq of CPP`Stmt := [];
+  def mk_AS`OpType(-, oprng,-) = opdef.tp;
+  in
+   (dcl return_stmt : seq of CPP`Stmt := [];
+    if not is_AS`VoidType(oprng)
+    then return_stmt := [BC`GenReturnStmt(DS`GenEmptyValue(rngtype))];
+    def id = BC`Rename(opdef.nm).id
+    in
+      if IsNotyetspecified(opdef.body, isDlClass, opdef.stat)
+      then implfb := [CGAUX`RunTime("Preliminary Operation " ^ id ^" has been called")] ^ return_stmt
+      else implfb := [CGAUX`RunTime("Implicit Operation " ^ id ^" has been called")] ^ return_stmt;
+   );
+
+  if CPP`isCPP() and isDlClass and
+     IsNotyetspecified(opdef.body, isDlClass, opdef.stat)
+  then
+    fb := GenerateDlCall(opdef.nm, arg_l, true, is_AS`VoidType(opdef.tp.oprng))
+#ifdef VDMPP
+  elseif opdef.constr and not isimplicit
+  then
+  ( CGAUX`SetConstr();
+    fb := CGSTMT`GenStmt(opdef.body.body, true);
+    CGAUX`UnsetConstr()
+  )
+#endif VDMPP
+  elseif not isimplicit and not isabstract and
+         not CGMAIN`get_skeleton_option()
+  then
+    fb := CGSTMT`GenStmt(opdef.body.body, true)
+  elseif isimplicit
+  then
+    def has_return_type = let mk_AS`OpType(-, oprng,-) = opdef.tp in
+                                      if is_AS`VoidType(oprng)
+                                      then false
+                                      else true;
+    in
+     (dcl resdecl : seq of CPP`Stmt := [],
+          return_stmt : seq of CPP`Stmt := [];
+      if not has_return_type
+      then
+        def exprlist = FindVariables(arg_l)
+        in resdecl := [BC`GenFctCallObjMemAccStmt(BC`GenIdentifier("child"),
+                                                  "impl_" ^ BC`Rename(opdef.nm).id,
+                                                  exprlist)];
+      if has_return_type
+      then
+        def exprlist = FindVariables(arg_l)
+        in return_stmt := [BC`GenReturnStmt(BC`GenFctCallObjMemAcc(BC`GenIdentifier("child"),
+                                                                   "impl_" ^ BC`Rename(opdef.nm).id,
+                                                                   exprlist))];
+      fb := resdecl ^ return_stmt
+     )
+  else
+    fb := [];
+  return mk_(implfb, fb)
+);
+
+#ifdef VDMPP
+
+GenMethPreCall : AS`Name * seq of CPP`Expr * bool ==> CPP`Stmt
+GenMethPreCall(nm, args, stat) ==
+  def prename = BC`Rename(mu(nm, ids |-> ["pre_" ^ hd nm.ids]^tl nm.ids))
+  in
+   (dcl preref : CPP`Expr;
+    if stat
+    then preref := BC`GenFctCall(prename, args)
+    elseif CPP`isCPP()
+    then preref := BC`GenFctCallPtrToObjMemAcc(DS`GenThis(), prename, args)
+    else preref := BC`GenFctCall(BC`GenObjectMemberAccess(DS`GenThis(),prename), args);
+    return BC`GenIfStmt(BC`GenNot(DS`GenGetValue(preref,mk_REP`BooleanTypeRep())),
+                        CGAUX`RunTime("Precondition failure in " ^ hd nm.ids), nil);
+   );
+
+GenFnPostCall : AS`Name * CPP`Expr * seq of CPP`Expr * bool ==> CPP`Stmt
+GenFnPostCall(nm, res, args, stat) ==
+  def postname = BC`Rename(mu(nm, ids |-> ["post_" ^ hd nm.ids]^tl nm.ids))
+  in
+   (dcl postref : CPP`Expr;
+    if stat
+    then postref := BC`GenFctCall(postname, args^[res])
+    elseif CPP`isCPP()
+    then postref := BC`GenFctCallPtrToObjMemAcc(DS`GenThis(), postname, args ^ [res])
+    else postref := BC`GenFctCall(BC`GenObjectMemberAccess(DS`GenThis(),postname), args ^[res]);
+    return BC`GenIfStmt(BC`GenNot(DS`GenGetValue(postref,mk_REP`BooleanTypeRep())),
+                       CGAUX`RunTime("Postcondition failure in " ^ hd nm.ids), nil);
+   );
+#endif VDMPP
+operations
+\end{vdm_al}
+
+\subsection{Implicit Definitions}
+
+The operation $GenImplDef$ generates code
+corresponding to implicit function and operation definitions. The
+operation $GenImplDef$ takes one parameter, which holds the abstract
+syntax of the function/operation definition.
+
+\begin{vdm_al}
+GenImplDef: (AS`ImplFnDef | AS`ImplOpDef) * GenericStateDef ==> CPP`CPPAS
+GenImplDef(fndef, sd) ==
+ (dcl cpp : CPP`CPPAS  := [];
+  BC`ResetVarno();
+  impl := true;
+  if CPP`isJAVA()
+  then
+    if is_AS`ImplFnDef(fndef)
+    then
+      def mk_AS`ImplFnDef(nm,tvars,partps,resnmtp,-,-,acc,stat,cid) = fndef;
+          mk_(parms,fndom,fnrng) = Impl2ExplSignature(partps,resnmtp);
+          fntp = mk_AS`PartialFnType(fndom,fnrng,CI`NilContextId);
+          body = mk_AS`FnBody(<NOTYETSPEC>, CI`NilContextId);
+          fd = mk_AS`ExplFnDef(nm,tvars,fntp,[parms],body,nil,nil,acc,stat,nil,cid)
+      in cpp := cpp ^ GenExplFctDef(fd,true,false)
+    elseif is_AS`ImplOpDef(fndef) then
+      def mk_AS`ImplOpDef(nm,pu,-,partps,resnmtp,-,-,-,-,acc,stat,constr,cid) = fndef;
+          mk_(parms,fndom,fnrng) = Impl2ExplSignature(partps,resnmtp);
+          optp = mk_AS`OpType(fndom,fnrng,CI`NilContextId);
+          body = mk_AS`OpBody(mk_AS`ErrorStmt(CI`NilContextId), CI`NilContextId);
+          op = mk_AS`ExplOpDef(nm,pu,true,optp,parms,body,nil,nil,acc,stat,constr,cid)
+      in cpp := cpp ^ GenExplOpDef(nm, op,sd,true,false)
+    else skip
+  else skip;
+  let fnpre = if is_AS`ImplFnDef(fndef)
+              then fndef.fnpre
+              else fndef.oppre
+  in
+    if fnpre <> nil then
+        cpp := cpp ^ GenFctDef(CGAUX`MakePreFct(fndef, sd),false);
+#ifdef VDMPP
+    if is_AS`ImplFnDef(fndef)
+    then
+#endif VDMPP
+    cpp:=  cpp ^ GenFctDef(CGAUX`MakePostFct(fndef, sd),false);
+    return cpp
+    );
+\end{vdm_al}
+
+\subsubsection{C++}
+An implicit
+function/operation is to be defined in a separate (among with other
+implicit functions and operations), and included in the `.cc' file of
+the current module.
+
+When all functions and operations defined in a module are code
+generated, the operation $IncludeExternalCC$ is used to generate the
+actual code (include preprocessor) corresponding to the implicit
+definitions. If the module $A$ e.g.\ contains some implicit function
+and/or operations, then $IncludeExternalCC$ will generate the following
+include preprocessor:
+
+\begin{quote}
+\begin{verbatim}#include "vdm_A_implicit.cc"
+\end{verbatim}
+\end{quote}
+
+It is then the users responsibility to implement the implicit
+functions and operations of the module $A$ in the file {\tt
+  vdm\_A\_implicit.cc}.
+
+%Note, that pre and post conditions are not supported in this version
+%of the code generator, and therefore the functions corresponding to
+%these constructs will always return {\sf true}.
+
+\begin{vdm_al}
+  IncludeExternalCC: () ==> CPP`CPPAS
+  IncludeExternalCC() ==
+    def nm = CGAUX`GiveCurCName() in
+    let incl = BC`GenInclStmt(CGAUX`GenFileExt(nm^TPGEN`Userimpl_Suffix)),
+        defexpr = BC`GenIdentifier("DEF_"^nm^TPGEN`Userimpl_Flag) in
+    let preif = BC`GenPreIfDef(defexpr),
+        preend = BC`GenPreEndIf(defexpr)
+    in if impl
+       then
+        ( impl := false;
+          return [incl]
+        )
+       else
+          return [preif, incl, preend];
+\end{vdm_al}
+
+\subsubsection{Java}
+
+The state $impl$ is used to indicate if the module currently being
+code generated contains implicit functions or operations or explicit
+function and operation definitions specified by "is not yet
+specified". $impl$ will then be {\sf true}.  When $impl$ is {\sl true}, an
+external class file is generated containing the methods stored in
+$implcpp$ (see mod\_class.vdm).
+
+\begin{vdm_al}
+operations
+ContainsImplicitFct:() ==> bool
+ContainsImplicitFct() == return impl;
+
+ContainsStaticImplicit:() ==> bool
+ContainsStaticImplicit() == return staticImpl;
+
+GetImplicitFcts:() ==> CPP`CPPAS
+GetImplicitFcts() ==
+        (dcl implfcts_cpp : CPP`CPPAS := [];
+         while card dom implcpp > 0 do
+             (let cid in set dom implcpp be st
+                forall fcid in set dom implcpp &
+                def mk_(-,-,tst,-,-) = CI`GetFilePos(cid);
+                    mk_CI`TokenPos(-,ast_start,-,-,-) = tst;
+                    mk_(-,-,tst2,-,-) = CI`GetFilePos(fcid);
+                    mk_CI`TokenPos(-,ast_startf,-,-,-) = tst2
+                in ast_start <= ast_startf
+             in (implfcts_cpp := implfcts_cpp ^ implcpp(cid);
+                 implcpp := {cid} <-: implcpp));
+         impl := false;
+         implcpp := {|->};
+         return implfcts_cpp;
+         );
+
+IsSuperFirst: seq of CPP`Stmt ==> bool * [CPP`Stmt] * [seq of CPP`Stmt]
+IsSuperFirst(stmts) ==
+  if stmts = []
+  then return mk_(false, nil, nil)
+  else let stmt = hd stmts
+       in
+         cases true:
+           (is_CPP`CompoundStmt(stmt)) -> def mk_(ok, su, st_l) = IsSuperFirst(stmt.stms)
+                                          in if ok
+                                             then let new_st_l = cases st_l:
+                                                                   [], [-] -> st_l,
+                                                                   others -> [mk_CPP`CompoundStmt(st_l,stmt.cid)]
+                                                                 end
+                                                  in return mk_(true, su, new_st_l ^ tl stmts)
+                                             else return mk_(false, nil, nil),
+           (is_CPP`ExpressionStmt(stmt)) -> if is_CPP`FctCall(stmt.expr) and is_CPP`Identifier(stmt.expr.fct)
+                                            then if stmt.expr.fct.id = "super"
+                                                 then return mk_(true, stmt, tl stmts)
+                                                 else return mk_(false, nil, nil)
+                                            else return mk_(false, nil, nil),
+           others -> return mk_(false, nil, nil)
+         end;
+
+#ifdef VDMPP
+IsMemInitFirst: AS`Name * seq of CPP`Stmt ==> bool * [CPP`MemInitializer] * [seq of CPP`Stmt]
+IsMemInitFirst(nm, stmts) ==
+  if stmts = []
+  then return mk_(false, nil, nil)
+  else let stmt = hd stmts
+       in
+         cases true:
+           (is_CPP`CompoundStmt(stmt)) -> def mk_(ok, su, st_l) = IsMemInitFirst(nm, stmt.stms)
+                                          in if ok
+                                             then let new_st_l = cases st_l:
+                                                                   [], [-] -> st_l,
+                                                                   others -> [mk_CPP`CompoundStmt(st_l,stmt.cid)]
+                                                                 end
+                                                  in return mk_(true, su, new_st_l ^ tl stmts)
+                                             else return mk_(false, nil, nil),
+           (is_CPP`Return(stmt)),
+           (is_CPP`ExpressionStmt(stmt)) -> if stmt.expr <> nil
+                                            then
+                                              let expr = CGAUX`StripBracketedAndCastExpr(stmt.expr)
+                                              in
+                                                if is_CPP`FctCall(expr) and
+                                                    def fct = expr.fct;
+                                                        cl_l = CGAUX`GetOrderedSupers(nm)
+                                                    in exists cl in set elems cl_l & fct = BC`Rename(cl)
+                                                then return mk_(true,
+                                                             mk_CPP`MemInitializer(expr.fct, expr.arg, expr.cid),
+                                                             tl stmts)
+                                                else return mk_(false, nil, nil)
+                                            else return mk_(false, nil, nil),
+           others -> return mk_(false, nil, nil)
+         end;
+#endif VDMPP
+
+\end{vdm_al}
+
+
+\subsection{Function Declarations (C++)}
+
+The next function returns a C++ function declaration/member
+declaration. It is called by $GenHFile$. The parameter $nm$ holds the name of the
+function/operation, $tp$ holds the type of the function/operation and
+$scs$ holds an optional storage type specifier.  The storage type
+specifier is used when the function/operation is {\em not\/} exported
+from the module where it is defined. In this case $scs$ should be set
+to $\const{static}$.
+
+In the VDM++ case a member declaration is returned. If a
+function/operation is subclass responsible, the corresponding
+C++ function is declared as a pure function.
+
+
+\begin{vdm_al}
+
+operations
+
+GenFctOpDecl: AS`Name * (AS`FnDef | AS`OpDef) * ([CPP`StorageClassSpecifier] | [CPP`Modifier])  * GenericStateDef ==> CPP`CPPAS | seq of CPP`MemberDeclaration
+#ifdef VDMSL
+GenFctOpDecl(mnm, df, scs, sd) ==
+#endif VDMSL
+#ifdef VDMPP
+GenFctOpDecl(mnm, df, scs, -) ==
+#endif VDMPP
+  if is_AS`ExplFnDef(df) and not len df.parms = 1
+  then return []
+  else
+#ifdef VDMSL
+    def nm = mnm;
+#endif VDMSL
+#ifdef VDMPP
+    def nm = if MANGLE`IsMangled(mnm)
+             then MANGLE`GetUnmangledName(mnm)
+             else mnm;
+#endif VDMPP
+        mk_(domtp_l, rngtp, domatp_l, rngatp) = FindDomRngTypes(df);
+        id = BC`Rename(nm);
+        ref = BC`GenRefAbsDecl(nil, nil);
+        argdecl_l = [ BC`GenArgAbs([BC`GenTypeSpecifier(<CONST>),
+                         TPGEN`Rep2CppTypeSpecifier(domtp_l(i), domatp_l(i))],ref) |
+                          i in set inds domtp_l ];
+        ds = TPGEN`Rep2CppTypeSpecifier(rngtp, rngatp);
+        dl = BC`GenFctDecl (id, argdecl_l);
+        scs_l = if scs = nil
+                then []
+                else [scs];
+        rtp = DS`GenBoolType();
+        dsarg_l = if rngtp = mk_REP`UnitTypeRep()
+                  then []
+                  else [BC`GenArgAbs([BC`GenTypeSpecifier(<CONST>),ds],ref)];
+        prenm = BC`GivePrePostNm(nm, "pre");
+        postnm = BC`GivePrePostNm(nm, "post")
+    in
+     (dcl cpp : CPP`CPPAS |seq of CPP`MemberDeclaration;
+#ifdef VDMSL
+          cpp := [ BC`GenIdentDecl([], scs_l ^ [ds], dl, nil) ];
+#endif VDMSL
+#ifdef VDMPP
+          let purefn : bool = (is_AS`ExplOpDef (df) or is_AS`ExtExplOpDef (df) or
+                               is_AS`ExplFnDef (df) or is_AS`ExtExplFnDef (df)) and
+                               df.body.body = <SUBRESP>
+          in
+            cpp := if (is_AS`ExplOpDef(df) or is_AS`ImplOpDef(df) or is_AS`ExtExplOpDef(df)) and df.constr
+                   then [BC`GenMemberSpec([],dl)]
+                   elseif df.stat
+                   then [BC`GenMemberSpec(scs_l ^ [BC`GenStorageClassSpecifier(<STATIC>), ds], dl)]
+                   elseif purefn
+                   then [BC`GenPureMemberSpec(scs_l ^ [BC`GenFctSpecifier(<VIRTUAL>), ds], dl)]
+                   else [BC`GenMemberSpec(scs_l ^ [BC`GenFctSpecifier(<VIRTUAL>),ds], dl)];
+#endif VDMPP
+          let statMod = if df.stat
+                        then [BC`GenStorageClassSpecifier(<STATIC>)]
+                        else [],
+              ds_l = scs_l ^ statMod ^ [rtp]
+          in
+            cases true:
+              (is_AS`ExtExplFnDef(df)),
+              (is_AS`ExplFnDef(df)),
+              (is_AS`ImplFnDef(df)) -> let fnpre = df.fnpre,
+                                           fnpost = df.fnpost
+                                       in
+                                        (if fnpre <> nil
+                                         then
+                                           let dl = BC`GenFctDecl(prenm, argdecl_l)
+                                           in
+#ifdef VDMSL
+                                             cpp := cpp ^ [BC`GenIdentDecl([], ds_l, dl, nil)];
+#endif VDMSL
+#ifdef VDMPP
+                                             cpp := cpp ^ [BC`GenMemberSpec(ds_l, dl)];
+#endif VDMPP
+                                         if fnpost <> nil
+                                         then
+                                           let dl = BC`GenFctDecl(postnm, argdecl_l ^ dsarg_l)
+                                           in
+#ifdef VDMSL
+                                             cpp := cpp ^ [BC`GenIdentDecl([], ds_l, dl, nil)]
+#endif VDMSL
+#ifdef VDMPP
+                                             cpp := cpp ^ [BC`GenMemberSpec(ds_l, dl)]
+#endif VDMPP
+                                        ),
+              (is_AS`ExtExplOpDef(df)),
+              (is_AS`ImplOpDef(df)),
+              (is_AS`ExplOpDef(df)) -> let oppre = df.oppre,
+                                           oppost = df.oppost
+                                       in
+                                        (dcl sdtp_l : seq of CPP`ArgAbsDecl := [];
+#ifdef VDMSL
+                                         if sd <> nil
+                                         then sdtp_l := [BC`GenArgAbs([BC`GenTypeSpecifier(<CONST>),
+                                                                          FindStateType(sd)], ref)];
+#endif VDMSL
+                                         if oppre <> nil
+                                         then
+                                           let dl = BC`GenFctDecl(prenm, argdecl_l ^ sdtp_l)
+                                           in
+#ifdef VDMSL
+                                             cpp := cpp ^ [BC`GenIdentDecl([], ds_l, dl, nil)];
+#endif VDMSL
+#ifdef VDMPP
+                                             cpp := cpp ^ [BC`GenMemberSpec(ds_l, dl)];
+#endif VDMPP
+                                         if oppost <> nil
+                                         then
+                                           let rds_l = if mk_REP`UnitTypeRep() = rngtp
+                                                       then []
+                                                       else dsarg_l,
+                                                 dl = BC`GenFctDecl(postnm, argdecl_l ^ rds_l ^ sdtp_l ^ sdtp_l)
+                                             in
+#ifdef VDMSL
+                                               cpp := cpp ^ [BC`GenIdentDecl([], ds_l, dl, nil)]
+#endif VDMSL
+#ifdef VDMPP
+                                               cpp := cpp ^ [BC`GenMemberSpec(ds_l, dl)]
+#endif VDMPP
+                                          )
+            end;
+          return cpp;
+     );
+
+#ifdef VDMSL
+GenExpFctOpDecl: AS`Name * (AS`FnDef | AS`OpDef) * ([CPP`StorageClassSpecifier] | [CPP`Modifier])  * GenericStateDef * AS`Module ==> CPP`CPPAS | seq of CPP`MemberDeclaration
+GenExpFctOpDecl(mnm, df, scs, sd, md) ==
+( dcl cpp : CPP`CPPAS |seq of CPP`MemberDeclaration;
+  if is_AS`ExplFnDef(df)
+  then if not len df.parms = 1
+       then return [];
+
+#ifdef VDMSL
+  def nm = mnm;
+#endif VDMSL
+#ifdef VDMPP
+  def nm = if MANGLE`IsMangled(mnm)
+           then MANGLE`GetUnmangledName(mnm)
+           else mnm;
+#endif VDMPP
+      importMap = md.intf.imp;
+      renamingMap = merge { { i |-> CGAUX`Combine2Names(j, (importMap(j).ren)(i)) | i in set dom importMap(j).ren } |
+        j in set dom importMap & importMap(j) <> nil };
+      mk_(domtp_l, rngtp, domatp_l, rngatp) = FindExpDomRngTypes(df, renamingMap);
+      id = BC`Rename(nm);
+      ref = BC`GenRefAbsDecl(nil, nil);
+
+      argdecl_l = [ BC`GenArgAbs([BC`GenTypeSpecifier(<CONST>),
+                       TPGEN`Rep2CppTypeSpecifier(domtp_l(i), domatp_l(i))],ref) |
+                        i in set inds domtp_l ];
+      ds = TPGEN`Rep2CppTypeSpecifier(rngtp, rngatp);
+      dl = BC`GenFctDecl (id, argdecl_l);
+      scs_l = if scs = nil
+              then []
+              else [scs];
+      rtp =  DS`GenBoolType();
+      dsarg_l = if rngtp = mk_REP`UnitTypeRep()
+                then []
+                else [BC`GenArgAbs([BC`GenTypeSpecifier(<CONST>),ds],ref)];
+      prenm = BC`GivePrePostNm(nm, "pre");
+      postnm = BC`GivePrePostNm(nm, "post")
+  in
+    (cpp := [ BC`GenIdentDecl([], scs_l ^ [ds], dl, nil) ];
+     let statMod = if df.stat
+                   then [BC`GenStorageClassSpecifier(<STATIC>)]
+                   else [],
+         ds_l = scs_l ^ statMod ^ [rtp]
+     in
+       cases true:
+         (is_AS`ExtExplFnDef(df)),
+         (is_AS`ExplFnDef(df)),
+         (is_AS`ImplFnDef(df)) -> let fnpre = df.fnpre,
+                                      fnpost = df.fnpost
+                                  in
+                                   (if fnpre <> nil
+                                    then let dl = BC`GenFctDecl(prenm, argdecl_l)
+                                         in
+                                           cpp := cpp ^ [BC`GenIdentDecl([], ds_l, dl, nil)];
+                                    if fnpost <> nil
+                                    then let dl = BC`GenFctDecl(postnm, argdecl_l ^ dsarg_l)
+                                         in
+                                           cpp := cpp ^ [BC`GenIdentDecl([], ds_l, dl, nil)]
+                                   ),
+         (is_AS`ExtExplOpDef(df)),
+         (is_AS`ImplOpDef(df)),
+         (is_AS`ExplOpDef(df)) -> let oppre = df.oppre,
+                                      oppost = df.oppost
+                                  in
+                                   (dcl sdtp_l : seq of CPP`ArgAbsDecl := [];
+                                    if sd <> nil
+                                    then sdtp_l := [BC`GenArgAbs([BC`GenTypeSpecifier(<CONST>),
+                                                       FindStateType(sd)], ref)];
+                                    if oppre <> nil
+                                    then let dl = BC`GenFctDecl(prenm, argdecl_l ^ sdtp_l)
+                                         in
+                                           cpp := cpp ^ [BC`GenIdentDecl([], ds_l, dl, nil)];
+                                    if oppost <> nil
+                                    then let rds_l = if mk_REP`UnitTypeRep() = rngtp
+                                                     then []
+                                                       else dsarg_l,
+                                               dl = BC`GenFctDecl(postnm, argdecl_l ^ rds_l ^ sdtp_l ^ sdtp_l)
+                                           in
+                                             cpp := cpp ^ [BC`GenIdentDecl([], ds_l, dl, nil)]
+                                     )
+       end
+   );
+  return cpp
+);
+#endif VDMSL
+
+#ifdef VDMPP
+GenHiddenFctDecl : AS`Name * [AS`Type] ==> CPP`CPPAS
+GenHiddenFctDecl(p_mangledNm, p_retTp) ==
+  def mk_(l_qualFctNm,-,l_fctTp) = MANGLE`UnMangle(p_mangledNm);
+      --l_args = [ mk_AS`Name(["p_" ^ UTIL`itoaR(i)], CI`NilContextId) | i in set inds l_fctTp];
+      l_args = [ mk_AS`Name(["p_" ^ UTIL`itoa(i)], CI`NilContextId) | i in set inds l_fctTp];
+      l_params = [ mk_AS`PatternName(l_args(i), nil, CI`NilContextId) | i in set inds l_args];
+      l_fctNm = mu(l_qualFctNm, ids |-> tl l_qualFctNm.ids);
+      l_fnm = BC`Rename(l_fctNm);
+      l_argl = DeclPatArg({|->}, l_params, l_fctTp);
+      l_argVals = [ BC`Rename(l_args(i)) | i in set inds l_args]
+  in
+   (dcl l_rngtype : REP`TypeRep;
+    if p_retTp = nil
+    then l_rngtype := mk_REP`UnitTypeRep()
+    else l_rngtype := CGAUX`FromAS2RepType(p_retTp);
+    def ds = [TPGEN`Rep2CppTypeSpecifier(l_rngtype, p_retTp)];
+        decl = BC`GenFctDecl(l_fnm, l_argl);
+        fcall = BC`GenGenericFctCall(BC`Rename(l_qualFctNm), l_argVals);
+        fb = BC`GenReturnStmt(fcall)
+    in
+       return [BC`GenFctDef(ds, decl, nil, BC`GenBlock([fb]))];
+   );
+#endif VDMPP
+
+#ifdef VDMSL
+FindStateType: GenericStateDef ==> CPP`TypeSpecifier
+FindStateType(sd) ==
+    let mk_AS`StateDef(tp, -,-,-) = sd in
+      return TPGEN`Rep2CppTypeSpecifier(CGAUX`FromAS2RepType(tp), tp);
+#endif
+\end{vdm_al}
+
+
+The function \verb+FindDomRngTypes+ takes a functions or operation
+definition as input and generates a product of the argument types
+and the result type.
+The types are extracted from the AS using \verb+FromAS2RepType+.
+
+\begin{vdm_al}
+
+
+FindDomRngTypes: AS`FnDef | AS`OpDef ==> seq of REP`TypeRep * REP`TypeRep * seq of AS`Type * [AS`Type]
+FindDomRngTypes(df) ==
+
+  -- EXPLICIT FUNCTIONS
+
+  if is_AS`ExplFnDef(df) or is_AS`ExplOpDef(df)
+  then
+    cases df.tp:
+
+      mk_AS`PartialFnType(fndom, fnrng,-),
+      mk_AS`TotalFnType(fndom, fnrng,-) ->
+        def dt_l = [ CGAUX`FromAS2RepType(fndom(i)) | i in set inds fndom ];
+            rt   = CGAUX`FromAS2RepType(fnrng) in
+          return mk_(dt_l, rt, fndom, fnrng),
+
+      mk_AS`OpType(opdom, oprng,-) ->
+        def dt_l = [ CGAUX`FromAS2RepType(opdom(i)) | i in set inds opdom ];
+            rt = CGAUX`FromAS2RepType(oprng) in
+          return mk_(dt_l, rt, opdom, oprng),
+      others -> return undefined
+    end
+  else
+
+  -- IMPLICIT FUNCTIONS
+
+    let resnmtp_l = df.resnmtps
+    in
+     (dcl rt : REP`TypeRep,
+          atp : [AS`Type] := nil;
+      def tp_l = [ CGAUX`FromAS2RepType(resnmtp_l(i).tp) | i in set inds resnmtp_l ];
+          artp_l = [ resnmtp_l(i).tp | i in set inds resnmtp_l]
+      in
+        if len tp_l = 0
+        then
+         (rt := mk_REP`UnitTypeRep();
+          atp := mk_AS`VoidType(CI`NilContextId))
+        else
+          if len tp_l = 1
+          then
+           (rt := hd tp_l;
+            atp := resnmtp_l(1).tp)
+          else
+           (rt := mk_REP`ProductTypeRep(tp_l);
+            atp := mk_AS`ProductType(artp_l, CI`NilContextId));
+
+      def mk_(rtp_l, atp_l) = FindImplDomType(df.partps)
+      in return mk_(rtp_l, rt, atp_l, atp );
+     );
+
+#ifdef VDMSL
+FindExpDomRngTypes: (AS`FnDef | AS`OpDef) * map AS`Name to AS`Name ==>
+  seq of REP`TypeRep * REP`TypeRep * seq of AS`Type * [AS`Type]
+FindExpDomRngTypes(df, m) ==
+
+  -- EXPLICIT FUNCTIONS
+
+  if is_AS`ExplFnDef(df) or is_AS`ExplOpDef(df) then
+    cases df.tp:
+
+      mk_AS`PartialFnType(fndom, fnrng,-),
+      mk_AS`TotalFnType(fndom, fnrng,-) ->
+        let fndom' = RenameTypeList(fndom, m),
+            fnrng' = RenameType(fnrng, m) in
+        def dt_l = [ CGAUX`FromAS2RepType(fndom'(i)) | i in set inds fndom' ];
+            rt   = CGAUX`FromAS2RepType(fnrng') in
+          return mk_(dt_l, rt, fndom', fnrng'),
+
+      mk_AS`OpType(opdom, oprng,-) ->
+        let opdom' = RenameTypeList(opdom, m),
+            oprng' = RenameType(oprng, m) in
+        def dt_l = [ CGAUX`FromAS2RepType(opdom'(i)) | i in set inds opdom' ];
+            rt = CGAUX`FromAS2RepType(oprng') in
+          return mk_(dt_l, rt, opdom', oprng'),
+      others -> return undefined
+    end
+  else
+
+  -- IMPLICIT FUNCTIONS
+
+    let resnmtp_l = df.resnmtps
+    in
+     (dcl rt : REP`TypeRep,
+          atp : [AS`Type] := nil;
+      def tp_l = [ CGAUX`FromAS2RepType(RenameType(resnmtp_l(i).tp, m)) | i in set inds resnmtp_l ];
+          artp_l = [ RenameType(resnmtp_l(i).tp, m) | i in set inds resnmtp_l]
+      in
+        if len tp_l = 0
+        then
+         (rt := mk_REP`UnitTypeRep();
+          atp := mk_AS`VoidType(CI`NilContextId))
+        else
+          if len tp_l = 1
+          then
+           (rt := hd tp_l;
+            atp := RenameType(resnmtp_l(1).tp, m))
+          else
+           (rt := mk_REP`ProductTypeRep(tp_l);
+            atp := mk_AS`ProductType(artp_l, CI`NilContextId));
+      def mk_(rtp_l, atp_l) = FindExpImplDomType(df.partps, m)
+      in return mk_(rtp_l, rt, atp_l, atp );
+     );
+
+FindExpImplDomType: seq of AS`PatTypePair  * map AS`Name to AS`Name ==> seq of REP`TypeRep * seq of AS`Type
+FindExpImplDomType(partp_l, m) ==
+( dcl rtp_l : seq of REP`TypeRep := [],
+      atp_l : seq of AS`Type := [];
+  for mk_AS`PatTypePair(pat_l, tp,-) in partp_l do
+    def ti = CGAUX`FromAS2RepType(RenameType(tp, m)) in
+      for - in pat_l do
+        ( rtp_l := rtp_l ^ [ti];
+          atp_l := atp_l ^ [tp]
+        );
+  return mk_(rtp_l, atp_l);
+);
+
+#endif VDMSL
+
+FindImplDomType: seq of AS`PatTypePair ==> seq of REP`TypeRep * seq of AS`Type
+FindImplDomType(partp_l) ==
+( dcl rtp_l : seq of REP`TypeRep := [],
+      atp_l : seq of AS`Type := [];
+  for mk_AS`PatTypePair(pat_l, tp,-) in partp_l do
+    def ti = CGAUX`FromAS2RepType(tp) in
+      for - in pat_l do
+        ( rtp_l := rtp_l ^ [ti];
+          atp_l := atp_l ^ [tp]
+        );
+  return mk_(rtp_l, atp_l);
+)
+
+#ifdef VDMSL
+functions
+
+RenameType : AS`Type * map AS`Name to AS`Name -> AS`Type
+RenameType(t, m) ==
+  cases t:
+    mk_AS`CompositeType(name, fields, -) -> if name in set dom m then mk_AS`CompositeType(m(name), fields, -1) else t,
+    mk_AS`UnionType(type_l,-)            -> mk_AS`UnionType(RenameTypeList(type_l, m), -1),
+    mk_AS`ProductType(type_l,-)          -> mk_AS`ProductType(RenameTypeList(type_l, m), -1),
+    mk_AS`OptionalType(t',-)             -> mk_AS`OptionalType(RenameType(t', m), -1),
+    mk_AS`Set0Type(t', -)                -> mk_AS`Set0Type(RenameType(t', m), -1),
+    mk_AS`Set1Type(t', -)                -> mk_AS`Set1Type(RenameType(t', m), -1),
+    mk_AS`Seq0Type(t', -)                -> mk_AS`Seq0Type(RenameType(t', m), -1),
+    mk_AS`Seq1Type(t', -)                -> mk_AS`Seq1Type(RenameType(t', m), -1),
+    mk_AS`GeneralMap0Type(md, mr, -)     -> mk_AS`GeneralMap0Type(RenameType(md, m), RenameType(mr, m), -1),
+    mk_AS`GeneralMap1Type(md, mr, -)     -> mk_AS`GeneralMap1Type(RenameType(md, m), RenameType(mr, m), -1),
+    mk_AS`InjectiveMap0Type(md, mr, -)   -> mk_AS`InjectiveMap0Type(RenameType(md, m), RenameType(mr, m), -1),
+    mk_AS`InjectiveMap1Type(md, mr, -)   -> mk_AS`InjectiveMap1Type(RenameType(md, m), RenameType(mr, m), -1),
+    mk_AS`OpType(dom_l, rgt, -)          -> mk_AS`OpType(RenameTypeList(dom_l, m), RenameType(rgt, m), -1),
+    mk_AS`PartialFnType(dom_l, rgt, -)   -> mk_AS`PartialFnType(RenameTypeList(dom_l, m), RenameType(rgt, m), -1),
+    mk_AS`TotalFnType(dom_l, rgt, -)     -> mk_AS`TotalFnType(RenameTypeList(dom_l, m), RenameType(rgt, m), -1),
+    mk_AS`BracketedType(t', -)           -> mk_AS`BracketedType(RenameType(t', m), -1),
+    mk_AS`TypeName(name, -)              -> if name in set dom m then mk_AS`TypeName(m(name), -1) else t,
+    others -> t
+  end;
+
+RenameTypeList : seq of AS`Type * map AS`Name to AS`Name -> seq of AS`Type
+RenameTypeList(tlist, m) == [RenameType(tlist(i), m) | i in set inds tlist];
+
+#endif VDMSL
+\end{vdm_al}
+
+\subsection{Local Function Definitions}
+
+When we are dealing with local function definitions, it is not
+possible to use C++ scope to model the VDM scope, as C++ does not
+support local function definitions inside functions. It is therefore
+chosen that the code generator does not support local function
+definitions. However, it should be possible to code generate,
+compile and execute a specification, containing local function
+definitions, as long as a branch containing an application of a local
+function definition is not executed. Consider the following
+expression:
+
+\begin{verbatim}
+let a = 1,
+    f: nat -> nat
+    f(n) ==
+      2*n
+in
+  if a <> 1 then
+    a
+  else
+    f(a)
+\end{verbatim}
+
+In this example, the branch containing the application of the local
+function definition will be reached during execution.
+
+In order to generate compilable code, the code generator need to know
+when to substitute function calls with ``run-time errors''. To do
+this, the code generator maintains a symbol table, containing the
+names of the local functions in the current scope.
+
+The symbol table is composed by a number of block environments. These
+block environments are created as a result of a new scope in a
+let/define\footnote{In define expressions/statements lambda
+  expressions can be used to introduce local functions.}
+expression/statement. The following types definitions are used for
+modeling the symbol table:
+
+\begin{vdm_al}
+types
+  BlkEnv = set of AS`Id;
+  Env = seq of BlkEnv
+\end{vdm_al}
+
+The symbol table is hold by the state variable $fcttab$.
+
+The operations $PushEnv$, $PopEnv$, $LookUpLocFct$ and $InsertLocFct$
+are used to manipulate the symbol table. $PushEnv$ and $PopEnv$ are
+used to open and close new scopes, whereas $LookUpLocFct$ and
+$InsertLocFct$ are used to lookup and insert a new local function
+definition, respectively.
+
+\begin{vdm_al}
+operations
+  PushEnv:() ==> ()
+  PushEnv() ==
+    fcttab := [{}] ^ fcttab;
+
+  PopEnv:() ==> ()
+  PopEnv() ==
+    fcttab := tl fcttab;
+
+  LookUpLocFct: ( AS`Name | AS`OldName ) ==> bool
+  LookUpLocFct(nm) ==
+    cases nm:
+      mk_AS`OldName([id], -),
+      mk_AS`Name([id], -) ->
+        ( for blk in fcttab do
+            if CGAUX`CleanIdentifier(id) in set blk then
+              return true;
+          return false
+        ),
+      others -> return false
+    end;
+
+  InsertLocFct: ( AS`Name | AS`OldName ) ==> ()
+  InsertLocFct(nm) ==
+  ( dcl blk : BlkEnv := hd fcttab;
+    blk := blk union { CGAUX`GiveLastName(nm) };
+    fcttab(1) := blk
+  );
+
+  InsPosFct: map ( AS`Name | AS`OldName ) to set of REP`TypeRep ==> ()
+  InsPosFct( pid_m ) ==
+    for all nm in set dom pid_m do
+    if exists typ in set pid_m(nm) & CGAUX`PossibleFnType(typ)
+    then
+      InsertLocFct(nm);
+
+\end{vdm_al}
+
+Finally, the operation $GenLocalFcts$ generates the code corresponding
+to local function definitions. Consider the following VDM (local)
+function:
+
+\begin{verbatim}
+fct: (nat * nat) * nat -> nat
+fct(mk_(a,b), c) ==
+  a+b+c
+\end{verbatim}
+
+$GenLocalFcts$ inserts the names of the local function definitions,
+$def-l$, in the current scope of the symbol table.
+
+\begin{vdm_al}
+  GenLocalFcts: seq of AS`FnDef ==> ()
+  GenLocalFcts(def_l) ==
+    for Def in def_l do
+      cases true:
+        (is_AS`ExplFnDef(Def)) -> ( InsertLocFct(Def.nm);
+                                  if Def.fnpre <> nil
+                                  then InsertLocFct(BC`GivePrePostName(Def.nm, "pre"));
+                                  if Def.fnpost <> nil
+                                  then InsertLocFct(BC`GivePrePostName(Def.nm, "post")) ),
+        (is_AS`ExtExplFnDef(Def)) -> ( InsertLocFct(Def.nm);
+                                     if Def.fnpre <> nil
+                                     then InsertLocFct(BC`GivePrePostName(Def.nm, "pre"));
+                                     if Def.fnpost <> nil
+                                     then InsertLocFct(BC`GivePrePostName(Def.nm, "post")) ),
+        (is_AS`ImplFnDef(Def)) -> ( InsertLocFct(Def.nm);
+                                  if Def.fnpre <> nil
+                                  then InsertLocFct(BC`GivePrePostName(Def.nm, "pre"));
+                                  InsertLocFct(BC`GivePrePostName(Def.nm, "post")) )
+      end;
+\end{vdm_al}
+
+
+\subsection{Module State}
+
+
+\begin{vdm_al}
+state Sigma of
+  fcttab : Env
+  impl : bool
+  staticImpl : bool
+  implcpp : map int to CPP`CPPAS
+  init s == s = mk_Sigma([{}], false, false, {|->})
+end
+
+end FD
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[FindDomRngTypes]
+{rtinfo.ast}[FD]
+\end{rtinfo}

@@ -1,0 +1,38 @@
+system date
+r /home/erik/toolbox/codegen/mod_mod.vdm 
+r /home/erik/toolbox/codegen/mod_statedef.vdm 
+r /home/erik/toolbox/codegen/mod_patmat.vdm 
+r /home/erik/toolbox/codegen/mod_cppast.vdm 
+r /home/erik/toolbox/codegen/mod_fctdef.vdmsl 
+r /home/erik/toolbox/codegen/mod_expr.vdmsl 
+r /home/erik/toolbox/codegen/mod_stmt.vdmsl 
+r /home/erik/toolbox/codegen/mod_typedef.vdmsl 
+r /home/erik/toolbox/codegen/mod_valdef.vdmsl 
+r /home/erik/toolbox/codegen/common_as.vdmsl 
+r /home/erik/toolbox/codegen/mod_bcppast.vdmsl 
+r /home/erik/toolbox/codegen/mod_vdm_ds.vdmsl 
+r /home/erik/toolbox/codegen/mod_aux.vdmsl 
+r /home/erik/toolbox/codegen/rep.vdmsl 
+r /home/erik/toolbox/codegen/mod_tpgen.vdmsl 
+r /home/erik/toolbox/codegen/mod_cg.vdmsl
+r /home/erik/toolbox/codegen/contextinfo.vdm
+system date
+
+# cg MOD 
+# cg SD
+# cg PM
+# cg CPP
+# cg FD
+# cg EXPR
+# cg STMT
+# cg TD
+# cg VD
+cg AS
+# cg BC
+# cg DS
+# cg AUX
+# cd REP
+# cg TPGEN
+# cg CG
+
+system date

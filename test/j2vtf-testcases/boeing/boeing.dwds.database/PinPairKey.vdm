@@ -1,0 +1,56 @@
+class PinPairKey is subclass of Object
+operations 
+public  getPin : () ==> [String]
+getPin() == 
+( return  pin
+) ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+( return  PinPairKey`getPin().hashCode()+PinPairKey`getRefDesId()
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( dcl   sb : [StringBuffer] := new  StringBuffer(20);
+  let - = sb.append(new  String("[RefDesId="))
+  in 
+    skip ;
+  let - = sb.append(getRefDesId())
+  in 
+    skip ;
+  let - = sb.append(new  String(",Pin="))
+  in 
+    skip ;
+  let - = sb.append(getPin())
+  in 
+    skip ;
+  let - = sb.append(']')
+  in 
+    skip ;
+  return  sb.toString()
+) ;
+
+public  getRefDesId : () ==> int 
+getRefDesId() == 
+( return  refdesId
+) ;
+
+public  equals : [Object] ==> bool 
+equals(obj) == 
+( return  (is_ (obj,[PinPairKey]) and  PinPairKey`getRefDesId() = (def l_13 :  PinPairKey = (obj)
+  in l_13).getRefDesId() and  PinPairKey`getPin().equals((def l_19 :  PinPairKey = (obj)
+  in l_19).getPin()))
+) ;
+
+public  PinPairKey : int  * [String] ==> PinPairKey
+PinPairKey(refdesId, pin) == 
+( PinPairKey`refdesId := refdesId;
+  PinPairKey`pin := pin
+) ;
+
+instance variables 
+  private  refdesId : int ;
+  private  pin : [String]
+  
+end  PinPairKey

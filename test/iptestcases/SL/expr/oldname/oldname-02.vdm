@@ -1,0 +1,21 @@
+module A
+exports all
+definitions
+operations
+
+
+Test:() ==> nat
+Test() ==
+
+  return(10)
+  post fct1~ = fct2
+
+state Sigma of
+  fct1 : nat -> nat
+  fct2 : nat -> nat
+end
+
+
+end A
+
+

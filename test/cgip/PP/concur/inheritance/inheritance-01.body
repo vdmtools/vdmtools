@@ -1,0 +1,44 @@
+class B
+
+instance variables
+ i : nat := 0
+
+operations
+
+public IncI : () ==> ()
+IncI() ==
+  i := i + 1;
+
+public Finished : () ==> nat
+Finished() == 
+  return i
+
+sync
+
+ per Finished => #fin(IncI) > 4
+
+thread
+  (IncI();
+   IncI();
+   IncI();
+   IncI();
+   IncI())
+
+end B
+ 
+
+class C is subclass of B
+
+end C
+
+class A
+
+operations
+
+public Test : () ==> nat
+Test() ==
+( dcl c : C := new C();
+  start(c);
+  c.Finished())
+
+end A

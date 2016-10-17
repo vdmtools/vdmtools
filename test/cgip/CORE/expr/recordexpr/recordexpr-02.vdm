@@ -1,0 +1,24 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> bool  
+Test () ==
+
+return let b = 1 in
+       let a = cases b:
+         1 -> mk_B(),
+         2 -> mk_C()  
+       end in a = mk_B()
+
+types
+B :: ;
+C ::
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

@@ -1,0 +1,396 @@
+\section{The J2VNS Module}
+
+\begin{vdm_al}
+module J2VNS
+
+imports
+  from AS all,
+  from CPP all,
+  from CI all,
+  from JSSREP all,
+  from JSSVCM1 all,
+  from JSSENV all,
+  from REP all,
+  from J2VENV all,
+  from J2VBVDM all,
+
+  from JSSAUX
+    functions
+      IsVDMKeyword: seq1 of char +> bool,
+
+  from J2VCLASS
+    operations
+      GetName:  () ==> AS`Name;
+      GetSuper: () ==> [AS`Name]
+
+exports
+  functions
+    J2VClassName: CPP`CompleteClassName +> AS`Name;
+    RenameKeyword: seq1 of char +> seq1 of char
+
+  operations
+    IsClassName: CPP`Identifier ==> bool;
+    GetNewJavaAPIClassName: AS`Name ==> AS`Name;
+    Init: [CPP`PackageName] * CPP`ImportDeclarations ==> ();
+    J2VPackageName: CPP`PackageName * bool ==> (AS`StateDesignator | AS`Expr)
+
+definitions
+
+types
+  NameSpace = map [CPP`PackageName] to set of CPP`Identifier
+
+values
+  capitalLetters: map char to char =
+  { 'a'|->'A',
+    'b'|->'B',
+    'c'|->'C',
+    'd'|->'D',
+    'e'|->'E',
+    'f'|->'F',
+    'g'|->'G',
+    'h'|->'H',
+    'i'|->'I',
+    'j'|->'J',
+    'k'|->'K',
+    'l'|->'L',
+    'm'|->'M',
+    'n'|->'N',
+    'o'|->'O',
+    'p'|->'P',
+    'q'|->'Q',
+    'r'|->'R',
+    's'|->'S',
+    't'|->'T',
+    'u'|->'U',
+    'v'|->'V',
+    'w'|->'W',
+    'x'|->'X',
+    'y'|->'Y',
+    'z'|->'Z' };
+  v_vdmKeywSuffix: seq1 of char="__";
+
+\end{vdm_al}
+
+Information on class type names available in translation-time of a compilation unit.
+Information aolso includes qualified package name where a class name is imported from.
+
+Class type names come from imported packages (only names of classes declared public) and
+the package which is declared in the compilation unit under translation (names of all classes in the package).
+
+\begin{vdm_al}
+
+state J2VNSSt of
+  nameSpace: NameSpace
+  inv mk_J2VNSSt(nmspace) == card dunion rng nmspace = Sum ({card nmspace(p) | p in set dom nmspace})
+  init s == s = mk_J2VNSSt({nil|->{}})
+end
+
+operations
+
+\end{vdm_al}
+
+The operation initializes a name space for a compilation unit adding classes' names from 
+the package the compilation unit belongs to and from packages the compilation unit imports.
+
+\begin{vdm_al}
+  Init: [CPP`PackageName] * CPP`ImportDeclarations ==> ()
+  Init(p_nm, p_ims) ==
+   (def l_cont : NameSpace = { p_nm |-> J2VENV`GetPackageInfo( p_nm, <ALL>) }
+    in
+     (nameSpace := l_cont;
+      nameSpace := nameSpace ++ { J2VENV`v_lang |-> J2VENV`GetPackageInfo( J2VENV`v_lang, <PUBLIC_ONLY>) };
+      nameSpace := nameSpace ++ { J2VENV`v_util |-> J2VENV`GetPackageInfo( J2VENV`v_util, <PUBLIC_ONLY>) };
+      nameSpace := nameSpace ++ { J2VENV`v_io |-> J2VENV`GetPackageInfo( J2VENV`v_io, <PUBLIC_ONLY>) };
+      for l_im in p_ims do
+        AddImportDeclaration(l_im))
+     );
+
+\end{vdm_al}
+
+The operation adds class names from from imported packages to the name space.
+
+\begin{vdm_al}
+  AddImportDeclaration: CPP`ImportDeclaration ==> ()
+  AddImportDeclaration(p_im) ==
+   (dcl l_cont : NameSpace := GetClasses(p_im);
+    for all l_p in set dom l_cont do
+      let l_existed = if l_p in set dom nameSpace
+                      then nameSpace(l_p)
+                      else {}
+      in nameSpace := nameSpace ++ { l_p |-> l_cont(l_p) union l_existed };
+  );
+\end{vdm_al}
+
+The operation checks whether a name is defined as a class or interface type name in the name space.
+
+\begin{vdm_al}
+  IsClassName: CPP`Identifier ==> bool
+  IsClassName(p_name) ==
+    def l_trep' = CI`GetJSSTypeInfo(p_name.cid);
+        l_trep = if is_JSSREP`FieldTypeRep(l_trep')
+                 then l_trep'.type
+                 else l_trep'
+    in
+      return
+        (is_JSSREP`ClassTypeRep(l_trep) or is_JSSREP`IntrfcTypeRep(l_trep))
+          => JSSVCM1`GetJSSTypeInfo(J2VBVDM`Id2Name(p_name))<>nil;
+
+\end{vdm_al}
+
+Provided that \texttt{p\_name} is a class type name, the operation returns the name of the package
+which contains the class \texttt{p\_name}.  The operation returns nil if the package turns
+to be the unnamed package.
+
+\begin{vdm_al}
+
+GetPackageName: CPP`Identifier ==> [CPP`PackageName]
+GetPackageName(p_name) ==
+( dcl l_pti: [JSSENV`ParseTypeInfo] := JSSVCM1`GetJSSTypeInfo(J2VBVDM`Id2Name(p_name)),
+      l_res: [CPP`PackageName] := nil;
+  if l_pti <> nil and l_pti.package <> nil
+  then
+  ( dcl l_name: AS`Ids := l_pti.package.ids,
+        l_len:  int := len l_name,
+        i: int := l_len-1;
+    l_res := mk_CPP`SimplePackageName( mk_CPP`Identifier( l_name(l_len), CI`NilContextId), CI`NilContextId);
+    while i>=1 do
+    ( l_res := mk_CPP`QualifiedPackageName( l_res, mk_CPP`Identifier(l_name(i),CI`NilContextId), CI`NilContextId);
+      i := i - 1
+    )
+  );
+  return l_res
+)
+pre IsClassName(p_name);
+
+\end{vdm_al}
+
+Translates a package name to a VDM++ expression.
+Although the operation gets a package name
+as a parameter, it does not mean that
+semantically we are dealing with a package name.
+For a sequence of identifiers separated by a dot,
+the java parser constructs CPP`PackageName regardless
+of the real semantic meaning of the sequence be that
+a qualified package name, or a field access.
+
+If p\_name is a simple package name,
+it is translated in AS`Name straight forward.
+
+For a qualified package name,
+we will try to identify a class name in the sequence
+of identifiers.
+If we have not succeeded, then the sequence
+is treated as a field access.
+Otherwise, we skip all qualifications of the class name
+and generate ClassName`field.
+
+Translation depends on which side of assignment is
+under translation.
+The parameter p\_islhs must be true if the left hand side
+is being translated.
+
+The operation returns:
+AS`Expr value corresponding to the p\_name if p\_islhs is true,
+AS`StateDesignator value corresponding to the p\_name if p\_islhs is false.
+
+JAVA:  a, b.c.d
+VDM++: a, b`c.d or b.c.d
+(depending on information about available class names)
+
+\begin{vdm_al}
+
+J2VPackageName: CPP`PackageName * bool ==> (AS`StateDesignator | AS`Expr)
+J2VPackageName(p_name, p_isLhs) ==
+--    cases true:
+--      (is_CPP`SimplePackageName(p_name)) ->
+--        let l_name=J2VBVDM`Id2Name(p_name.id)
+--        in return l_name,
+--      (is_CPP`QualifiedPackageName(p_name)) -> 
+        def mk_(l_expr,-)=J2VPackageName'(p_name,p_isLhs)
+        in  if is_AS`Name(l_expr)
+            then return RenameClassNames(l_expr)
+            else return l_expr
+--    end
+;
+
+\end{vdm_al}
+ 
+LIMITATIONS:
+
+No Qualified this (explicitly, or implicitly used).
+
+\begin{vdm_al}
+
+J2VPackageName': CPP`PackageName * bool ==> (AS`StateDesignator | AS`Expr) * bool
+J2VPackageName'(p_name,p_isLhs) ==
+    cases true:
+      (is_CPP`SimplePackageName(p_name)) ->
+        cases p_name.id.id:
+          "this"  -> return mk_(J2VCLASS`GetName(), true),
+          "super" -> return mk_(J2VCLASS`GetSuper(), true),
+          others  -> return mk_(J2VBVDM`Id2Name(p_name.id), IsClassName(p_name.id))
+        end,
+      (is_CPP`QualifiedPackageName(p_name)) ->
+        def l_id = p_name.id;
+            l_pn = p_name.pn;
+            l_isClass = IsClassName(l_id);
+        in
+         (dcl l_pn' : [CPP`PackageName] := nil;
+          if l_isClass
+          then l_pn' := GetPackageName(l_id);
+          if l_isClass and CmpPackageNames(l_pn, l_pn')
+          then return mk_(J2VBVDM`Id2Name(l_id), true)
+          else
+            def mk_(l_expr, l_isClass') = J2VPackageName'(l_pn,p_isLhs)
+            in 
+             (dcl name : AS`StateDesignator | AS`Expr;
+              if l_isClass'
+              then name := J2VBVDM`GenName(l_expr.ids^[J2VBVDM`Id2ASId(p_name.id)])
+              else
+               (dcl l_rnamed : AS`Expr;
+                if is_AS`Name(l_expr)
+                then l_rnamed := RenameClassNames(l_expr)
+                else l_rnamed := l_expr;
+                if not p_isLhs
+                then name := J2VBVDM`GenFieldSelectExpr(l_rnamed, J2VBVDM`Id2Name(p_name.id))
+                else name := J2VBVDM`GenFieldRef(l_rnamed, J2VBVDM`Id2Name(p_name.id));
+               );
+              return mk_(name,false);
+             );
+         )
+    end;
+
+RenameClassNames: AS`Name ==> AS`Name
+RenameClassNames(nm) ==
+  return
+    J2VBVDM`GenName( [ GetNewJavaAPIClassName(J2VBVDM`GenName([nm.ids(i)])).ids(1) | i in set inds nm.ids ] )  
+pre len nm.ids > 0;
+
+GetNewJavaAPIClassName: AS`Name ==> AS`Name
+GetNewJavaAPIClassName(clnm) ==
+  return
+    def l_nm  = clnm.ids(len clnm.ids);
+        l_pnm = JSSVCM1`GetPackageName(clnm);
+        l_ids = if l_pnm = nil or len l_pnm.ids = 0 or l_pnm.ids(1) <> "java"
+                then []
+                else l_pnm.ids
+    in  J2VBVDM`GenName([conc [Capitalize(l_ids(i)) | i in set inds l_ids] ^ l_nm])
+pre len clnm.ids > 0;
+
+Capitalize: seq1 of char ==> seq1 of char
+Capitalize(s) ==
+  return
+    [ToUpper(hd s)] ^ tl s;
+
+ToUpper: char ==> char
+ToUpper(c) ==
+  return
+    if c in set dom capitalLetters
+    then capitalLetters(c)
+    else c;
+
+Sum: set of nat ==> nat
+Sum(s) ==
+  ( dcl sum: nat:=0;
+    for all e in set s do
+      sum:=sum+e;
+    return sum  );
+
+functions
+
+\end{vdm_al}
+
+The function returns a name space including
+class names specified in an import declaration p\_imd.
+
+Prerequisites
+
+It is assumed here that imported class names are
+present in the environment and can be imported.
+
+\begin{vdm_al}
+operations
+GetClasses: CPP`ImportDeclaration ==> NameSpace
+GetClasses(p_imd) ==
+  cases true:
+    (is_CPP`SingleTypeImportDeclaration(p_imd))   -> J2VENV`GetSingleTypeName(p_imd.name),
+    (is_CPP`TypeImportOnDemandDeclaration(p_imd)) -> J2VENV`GetTypesOnDemand(p_imd.name)
+  end;
+
+\end{vdm_al}
+
+Makes a sequence of CPP`Identifier from a package name.
+
+\begin{vdm_al}
+functions
+PackageName2Ids: CPP`PackageName +> seq1 of CPP`Identifier
+PackageName2Ids(p_name) ==
+  if is_CPP`SimplePackageName(p_name)
+  then [p_name.id]
+  else PackageName2Ids(p_name.pn) ^ [p_name.id];
+
+\end{vdm_al}
+
+Compare two package names
+
+\begin{vdm_al}
+
+CmpPackageNames: [CPP`PackageName] * [CPP`PackageName] +> bool
+CmpPackageNames(p_name1, p_name2) ==
+  cases true:
+    (p_name1 = p_name2)               -> true,
+    (p_name1 = nil and p_name2 <> nil),
+    (p_name1 <> nil and p_name2 = nil)  -> false,
+    others  -> let l_ids1 = PackageName2Ids(p_name1),
+                   l_ids2 = PackageName2Ids(p_name2)
+               in
+                 len l_ids1 = len l_ids2 and forall i in set inds l_ids1 & l_ids1(i).id = l_ids2(i).id
+  end;
+
+\end{vdm_al}
+
+Converts a JAVA class name to the VDM++ class name.
+
+\begin{vdm_al}
+
+J2VClassName: CPP`CompleteClassName +> AS`Name
+J2VClassName(p_name) ==
+  let l_ids = ClassName2Ids(p_name)
+  in GetNewJavaAPIClassName( J2VBVDM`GenName([l_ids(i).id | i in set inds l_ids]));
+
+ClassName2Ids: CPP`CompleteClassName +> seq1 of CPP`Identifier
+ClassName2Ids(p_name) ==
+  cases true:
+    (is_CPP`Identifier(p_name)) -> [p_name],
+    (is_CPP`ClassResScopeQualifiedClassName(p_name))  -> ClassName2Ids(p_name.qcn) ^ [p_name.cn],
+    (is_CPP`ResScopeQualifiedClassName(p_name))  -> ClassName2Ids(p_name.qcn),
+    others -> undefined
+  end;
+
+--QualifiedClassName2Ids: CPP`QualifiedClassName +> seq1 of CPP`Identifier
+--QualifiedClassName2Ids(p_name) ==
+--  cases true:
+--    (is_CPP`Identifier(p_name.qcn)) -> [p_name],
+--    (is_CPP`ClassResScopeQualifiedClassName(p_name.qcn))  ->
+--      QualifiedClassName2Ids(p_name.qcn)^QualifiedClassName2Ids(p_name.cn),
+--    others -> undefined
+--  end;
+
+RenameKeyword: seq1 of char +> seq1 of char
+RenameKeyword(p_orig) ==
+  let
+    l_suffix =
+      if JSSAUX`IsVDMKeyword(p_orig)
+--         or p_orig in set {"Object", "Class", "getClass"}
+      then v_vdmKeywSuffix
+      else []
+  in p_orig^l_suffix;
+
+end J2VNS
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}
+{rtinfo.ast}[J2VNS]
+\end{rtinfo}

@@ -1,0 +1,25 @@
+class Date
+
+types
+  public Day = <Mon> | <Tue> | <Wed> | <Thu> | <Fri> | <Sat> | <Sun>;
+  public Month = <Jan> | <Feb> | <Mar> | <Apr> | <May> | <Jun> 
+        | <Jul> | <Aug> | <Sep> | <Oct> | <Nov> | <Dec>;
+  public Year = nat
+
+instance variables
+  d : Day;
+  m : Month;
+  y : Year
+
+operations
+
+  public SetDate : Day * Month * Year ==> ()
+  SetDate(nd,nm,ny) ==
+  ( d := nd;
+    m := nm;
+    y := ny );
+
+  public today : () ==> Date
+  today() ==
+    return new Date()
+end Date

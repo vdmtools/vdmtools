@@ -1,0 +1,20 @@
+class A
+end A
+
+class B	is subclass of A
+end B
+
+class C is subclass of A
+end C
+
+class Z
+operations
+	op: A * int ==> int
+	op(a, i) == return i;
+	
+	op: B * int ==> int
+	op(a, i) == return i;
+	
+	op: C * int ==> int
+	op(a, i) == return i;
+end Z

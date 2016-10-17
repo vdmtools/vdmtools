@@ -1,0 +1,15 @@
+class A
+
+types
+
+public T = (nat * nat)
+
+operations
+
+public Test : () ==> T
+Test () ==
+	(dcl r : T := def mk_(a,2) = mk_(1,2) in mk_(a,2);
+    	return r)
+
+   
+end A

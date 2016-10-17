@@ -1,0 +1,96 @@
+Public interface to ToolMediator provided to the client 
+through class ToolKit.
+
+\begin{vdm_al}
+class ToolMediator is subclass of ProjectTypes
+
+instance variables
+  inf: Interface;
+  bt : BaseTools := new BaseTools ();
+  rep: Repository := new Repository ();
+  opt: Options := new Options ();
+  err: Errors;
+  uml: UMLTool := new UMLTool ();
+  exprerr: Errors;
+
+
+operations
+
+  --- Public interface to ToolMediator provided to the client 
+  --- through class ToolKit
+
+public   Init: Interface * Errors * Errors ==> ()
+  Init (interface, e, expr_e) ==
+  ( inf := interface;
+    err := e;
+    exprerr := expr_e;
+    bt.SetMediator(self);
+    rep.SetMediator(self);
+    opt.SetMediator(self);
+    err.SetMediator(self);
+    exprerr.SetMediator(self);
+    uml.SetMediator(self)
+  );
+
+public   GetErrors: () ==> Errors 
+  GetErrors ()  ==
+    return err;
+
+public   GetExprErrors: () ==>  Errors 
+  GetExprErrors () ==
+    return exprerr;
+
+public   GetOptions: () ==> Options 
+  GetOptions ()  ==
+    return opt;
+
+public   GetInterface: () ==> Interface 
+  GetInterface ()  ==
+    return inf;
+
+public   GetBaseTools: () ==> BaseTools 
+  GetBaseTools () ==
+    return bt;
+
+public   GetRepository: () ==> Repository 
+  GetRepository ()  ==
+    return rep;
+
+public   GetUMLTool: () ==>  UMLTool 
+  GetUMLTool ()  ==
+    return uml;
+
+  ---
+  --- Abut the Toolbox version and features
+  ---
+
+public   Version: () ==> String
+  Version () ==
+    is not yet specified;
+
+public   Features: () ==>  seq of String
+  Features () ==
+    is not yet specified;
+
+
+  ---
+  --- Methods used to mediate communication between objects
+  ---
+
+  
+  --- Methods in Interface
+  
+public   Log : String ==> ()
+  Log (msg) ==
+    inf.Log (msg);
+
+public   CallBack: CallBackCommand ==> ()
+  CallBack(cmd) ==
+    inf.CallBack(cmd);
+
+public   GetFileName: FileId ==> [FileName] 
+  GetFileName(id) ==
+    rep.GetFileName(id)
+
+end ToolMediator
+\end{vdm_al}

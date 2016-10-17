@@ -1,0 +1,1129 @@
+%-----------------------------------------------------------------------------
+% $Id: mod_conc.vdm,v 1.22 2006/03/15 07:53:31 vdmtools Exp $
+% Implemented in: ???
+%-----------------------------------------------------------------------------
+
+%=============================================================================
+\section{Concurrency}
+%=============================================================================
+
+
+%-----------------------------------------------------------------------------
+\subsection{Introduction}
+%-----------------------------------------------------------------------------
+
+The whole specification could be put into the appendix.
+
+Whenever throughout this document the term ``method'' is used, it
+refers to Java methods. The terms ``operation'' and ``function'' refer
+to the VDM++ constructs.
+
+This module contains most of the functionality for generating code
+related to VDM++ Concurrency features. In the other modules of the CG
+more less only calls to this operations in this module are made.
+
+\begin{vdm_al}
+
+module CONC
+
+  imports
+    from REP all,
+    from CI all,
+    from CPP all,
+    from DS all,
+    from AS all,
+    from BC all,
+    from CGMAIN all,
+    from CGAUX all,
+    from CGEXPR all,
+    from CGSTMT all,  -- GenStmt()
+    from FD all,
+    from MANGLE all
+
+  exports all
+
+definitions
+
+
+\end{vdm_al}
+
+%-----------------------------------------------------------------------------
+\subsection{Types}
+%-----------------------------------------------------------------------------
+
+{\tt ClassInfo} stores information on each class extracted from the
+specification.
+
+{\bf topClass:} if the class is a top level class, i.e. not derived
+from any other class. Only such a class implements a reference to the
+Sentinel.
+
+{\bf baseClasses:} seq of the bases classes. The immediate super class
+is the first element, the top level class is the last.
+
+{\bf accPermPred:} map of operation name to guard expression. Contains
+defined and inherited (accumulated) permission predicates.
+
+{\bf mutexTable:} Contains defined and inherited (accumulated) mutex
+definitions. See {\tt UpdateMutexTable()} for further information.
+
+At this level permission predicates and mutex definitions are kept
+apart. They are only mixed together when the final expression is code
+generated.
+
+
+\begin{vdm_al}
+
+types
+
+  -- Expresses mutex constraints inherited and defined locally.
+
+MutexTable = map AS`Name to set of AS`Name;
+
+
+  -- Permission predicates inherited and defined locally (stored as AS`Expr!)
+  -- AS`Name is a fully qualified name, to assure correct handling of overridden operations and
+  -- of permission predicates defined for operations in base classes.
+
+    PredTable = map AS`Name to seq of AS`Expr;
+\end{vdm_al}
+
+The fields in class info are
+\begin{description}
+\item[topClass] ??
+\item[topPerThread] highest class defining periodic threads
+\item[topProcThread] highest class defining a procedural thread
+\item[newGuards] indicates if class defines OWN PermPreds or MutexDefs
+\item[baseClasses] ??
+\item[accPermPred] defined and inherited permission predicates
+\item[mutexTable] defined and inherited mutex constraints
+\item[nrOpers] number of defined operations
+\item[startCount] used as value for first operation constant
+\end{description}
+
+\begin{vdm_al}
+
+    ClassInfo :: topClass:        bool
+                 topPerThread:    bool
+                 topProcThread:   bool
+                 newGuards:       bool
+                 baseClasses:     seq of AS`Name
+                 accPermPred:     PredTable
+                 mutexTable:      MutexTable
+                 nrOpers:         nat
+                 startCount:      nat;
+
+\end{vdm_al}
+
+
+%-----------------------------------------------------------------------------
+\subsection{Global State}
+%-----------------------------------------------------------------------------
+
+This state is used to store information about concurrency constructs.
+
+Due to inheritance often information with a scope of the whole
+specification is needed. This information is mostly gathered in
+ExtractGlobalInformation which is called from  CLASS`GenClasses. The
+information, which operations are guarded or synchronized is gathered
+during the code generation of the permission predicates.
+
+{\underline Note:} In order for this to work it is important that the
+permission guards are evaluated (at least) once before code generating
+the VDM++ Operations. This is done when the function {\tt EvaluatePP}
+is generated.
+
+{\tt operConst} stores the value of the constant for each operation,
+which is used in GenEvaluatePP. The name is fully qualified, in order
+to handle overridden operations. Note that the constants need not be
+unique, when an inheritance tree is involved.
+
+The state has the following components:
+The first part of the state is relevant for all classes in the spec
+and only generated once
+\begin{description}
+\item[classDefs]    This is a map from all class names in the document to
+                    their *definition*
+\item[classInfos]   map from relevant class names to *collected info*
+\end{description}
+This part of the state is relevant for a single class and initialized
+for each class
+\begin{description}
+\item[operConst]    stores constants for operations (for evaluatePP).
+\item[defaultCast]  used in GenGuardExpr, GenEvalPP
+\item[currentClass] used to avoid dragging an additional parameter
+                    into each operation (which would also need changes in
+                    other modules)
+\end{description}
+
+\begin{vdm_al}
+
+state Conc of
+
+  classDefs:  map AS`Name to AS`Class
+  classInfos: map AS`Name to ClassInfo
+  operConst: map AS`Name to nat
+  defaultCast: AS`Name
+  currentClass: AS`Name
+
+end
+
+operations
+\end{vdm_al}
+
+Of the two operations below, one routine initializes the state global
+to the specification (e.g. inheritance information, class defintions),
+the other initializes the state belonging to a single class:
+e.g. operation attributes. The former is called from
+CLASS`GenClasses(), the latter from CLASS`GenJavaFile().
+
+\begin{vdm_al}
+  InitSpecState: () ==> ()
+  InitSpecState() == (
+    classDefs  := { |-> };
+    classInfos := { |-> };
+    operConst  := { |-> }
+  );
+
+  InitClassState: AS`Name ==> ()
+  InitClassState( name) == (
+    currentClass := name
+  );
+\end{vdm_al}
+
+This is used in CGEXPR`CGExpr
+\begin{vdm_al}
+  SetDefaultCast: AS`Name ==> ()
+  SetDefaultCast(n) == defaultCast := n;
+\end{vdm_al}
+
+Fully qualified names are always used (for mutex infos, and  permpreds).
+This way it is possible to look up the proper constant easily.
+
+\begin{vdm_al}
+  AssignOperConstants: nat * map AS`Name to AS`OpDef ==> ()
+  AssignOperConstants( s, opers ) ==
+   (dcl i : nat := s;
+    for all o in set dom opers do
+     (operConst := operConst ++ { QualifyName(o) |-> i };
+      i := i + 1)
+   );
+
+  GetOperConst: AS`Name ==> nat
+  GetOperConst( name) ==
+    return operConst(name);
+
+
+\end{vdm_al}
+
+
+%-----------------------------------------------------------------------------
+\subsection{Extracting Global Information}
+%-----------------------------------------------------------------------------
+
+
+\textit{ExtractGlobalInformation} is called from
+CLASS`GenClasses(). It takes parameters:
+\begin{description}
+\item[doc]     contains definitions of all classes in the file
+\item[classes]  contains the name of all classes in the toolbox
+\end{description}
+
+\begin{vdm_al}
+  ExtractGlobalInformation: AS`Document * set of AS`Name ==> ()
+  ExtractGlobalInformation( doc, classes ) ==
+   (
+    -- initialize classDefs with actual data
+    classDefs := { cl.nm |-> cl | cl in set elems doc };
+
+    -- initialize classInfos with empty records
+    classInfos := { x |->  mk_ClassInfo( false, false, false, false, [], {|->}, {|->}, 0, 0) | x in set classes };
+    ScanInheritance(classes);
+    ScanSyncDefs(classes)
+   );
+\end{vdm_al}
+
+ScanInheritance inserts the inheritance info (``class inheritance
+graph'') of to classInfos. It uses \texttt{GetOrderedSupers} from the
+\texttt{CGAUX} module to do this.
+\begin{vdm_al}
+  ScanInheritance: set of AS`Name ==>  ()
+  ScanInheritance(classes) ==
+    for all cl in set classes do
+      def inhl = CGAUX`GetOrderedSupers(cl)
+      in
+        classInfos := classInfos ++ { cl |-> mu(classInfos(cl), baseClasses |-> inhl,
+                                                                nrOpers |-> card dom classDefs(cl).defs.opm)};
+\end{vdm_al}
+
+ScanSyncDefs collects relevant information for all classes in
+parameter {\tt classes}. This includes:
+\begin{itemize}
+\item inherited and defined permission predicates;
+\item inherited and defined the mutex constraints;
+\end{itemize}
+whether it is a top level class or not.
+
+In order to be able to calculate ``accumulated'' permission predicates
+and mutex constraints efficiently I have to start with the base
+classes. This is achieved by first scanning classes with 0 base
+classes, then such with 1 base class and so on.
+
+Problem : wegen CGAUX kann man immer nur Ausdrücke aus der gleichen
+Klasse codegenerieren. zwei Varianten:
+
+\begin{itemize}
+\item entweder ich codegeneriere die Dinge alle lokal (kann zu
+      Problemen mit (nicht) Qualified name führen; Das ist aber
+      lösbar, wenn man defaultCast bei jedem Ausdruck setzt);
+      dann wird auch vieles mehrfach generiert
+\item oder ich stelle sicher, dass ich die Klassen zum Generieren in
+      einer Top down-Reihenfilge bekomme. Dann kann ich
+      ``inkrementel'' generieren. Vorteil: jeder guard expression wird
+      nur einmal generiert.
+\end{itemize}
+
+Variante 1 ist einfacher, wenn auch nicht so elegnat. Bei Variante
+zwei brauchte ich Veränderungen im restlichen Codegenerator. Das ist
+immer so ein Aufwand...
+
+\begin{vdm_al}
+  ScanSyncDefs: set of AS`Name ==> ()
+  ScanSyncDefs(classes) ==
+   (
+    dcl level: nat := 0,
+        toScan: set of AS`Name := classes,
+        isTopPerThread : bool,
+        isTopProcThread: bool,
+        hasNewGuards: bool,          -- indicates, if the class defines
+                                       -- additional Mutex/PermPred defintions
+        top: set of AS`Name,
+        guards: PredTable,
+        mutexTbl: MutexTable,
+        startCount: nat;
+
+    while(toScan <> {}) do
+     (
+      top := { c | c in set toScan & len classInfos(c).baseClasses = level and not CGMAIN`isInterface(c)};
+       -- calculates all top level classes, which are not interfaces
+
+      for all cl in set top do
+       (
+        -- permission predicates are gathered in a map for
+        -- convenient use in CONC`evalutatePP()
+
+        defaultCast := cl;
+
+        -- Names in guard expressions are not qualified. They are later
+        -- casted only to the class in (i) which the corresponding PermPred
+        -- is defined, or (ii) to another class, if the name is already
+        -- qualified.
+
+        -- Here the names of ``dom guards'' are qualified by by the
+        -- class name, where the
+        -- operation is defined (this need *not* be the currentClass).
+        -- This qualification is
+        -- done so that the names can be looked up later in the
+        -- Conc`operConst variable.
+
+        let ppDef = { p | p in set elems classDefs(cl).defs.syncs & is_AS`Permission(p) }
+        in guards := { QualifyName(spec) |-> [ mk_AS`GuardExpr(guard,cl) ]
+                       | mk_AS`Permission(spec, guard,-) in set ppDef };
+
+        -- in order to be able to optimize mutex definitions, they are
+        -- only codegenerated at the
+        -- time of use (in GenEvalPP). Therefore the used operation
+        -- names must be fully qualified.
+        -- This is handled in CreateMutexTable
+        let mutexDef = { m | m in set elems classDefs(cl).defs.syncs & is_AS`Mutex(m)}
+        in mutexTbl := CreateMutexTable(mutexDef);
+
+        hasNewGuards := (card dom mutexTbl <> 0) or (card dom guards <>0);
+
+        if level = 0
+        then
+         (  -- only for top level base classes
+          startCount := 0
+         )
+        else                     -- only for derived classes
+          let directBase = hd classInfos(cl).baseClasses
+          in
+           (
+            guards := MergePermPreds( classInfos(directBase).accPermPred, guards);
+            mutexTbl := MergeMutexTable( classInfos(directBase).mutexTable, mutexTbl);
+            startCount := classInfos(directBase).startCount + classInfos(directBase).nrOpers
+           );
+
+        isTopPerThread := is_AS`PerObl(classDefs(cl).defs.threaddef) and
+              (not exists a in set elems classInfos(cl).baseClasses & classInfos(a).topPerThread = true);
+
+        isTopProcThread := (classDefs(cl).defs.threaddef <> nil and
+                            not is_AS`PerObl(classDefs(cl).defs.threaddef)) and
+              (not exists a in set elems classInfos(cl).baseClasses & classInfos(a).topProcThread = true);
+
+        AssignOperConstants(startCount, classDefs(cl).defs.opm);
+
+        def isTopClass = { sc | sc in set elems CGAUX`GetOrderedSupers(cl) & not CGMAIN`isInterface(sc) } = {}
+        in
+          classInfos := classInfos ++ { cl |-> mu(classInfos(cl), topClass |-> isTopClass,
+                                                                  newGuards |-> hasNewGuards,
+                                                                  accPermPred |-> guards,
+                                                                  mutexTable |-> mutexTbl,
+                                                                  topPerThread |-> isTopPerThread,
+                                                                  topProcThread |-> isTopProcThread,
+                                                                  startCount |-> startCount) }
+       );
+
+      toScan := toScan \ top;
+
+      -- Now scan interfaces at this level. They are set to have
+      -- effectively empty class info, but this is still necessary
+      -- to ensure that the classInfos map is defined for all
+      -- possible VDM++ classes
+      def interfaces = { c | c in set toScan & len classInfos(c).baseClasses = level and CGMAIN`isInterface(c) }
+      in
+       (for all cl in set interfaces do
+          classInfos := classInfos ++ { cl |-> mu(classInfos(cl), topClass |-> false,
+                                                                  newGuards |-> false,
+                                                                  accPermPred |-> {|->},
+                                                                  mutexTable |-> {|->},
+                                                                  topPerThread |-> false,
+                                                                  topProcThread |-> false,
+                                                                  startCount |-> 0) };
+        toScan := toScan \ interfaces
+       );
+      level := level + 1
+     ) -- eo while
+   );
+
+  -- MergePermPreds combines two tables of permission predicates. The
+  -- expressions of the base class are put at the left side of the
+  -- result's sequences, that of the derived class at the right side.
+
+  MergePermPreds: PredTable * PredTable ==> PredTable
+  MergePermPreds( base, derived) ==
+   (
+    dcl combined : PredTable := base;
+    for all c in set dom derived do
+      if c in set dom combined
+      then combined := combined ++ { c |-> combined(c) ^ derived(c) }
+      else combined := combined ++ { c |-> derived(c) };
+    return combined
+   );
+
+\end{vdm_al}
+
+Example of expansion of mutex definition to map of mutex constraints:
+\begin{alltt}
+  mutex(A,B,C);       { {A,B,C},        { A |-> {A,B,C},
+  mutex(A,B);   ->      {A,B},     ->     B |-> {A,B,C},
+  mutex(C,D,E);         {C,D,E} }         C |-> {A,B,C,D,E},
+                                          D |-> {C,D,E},
+                                          E |-> {C,D,E} }
+\end{alltt}
+
+-- This creates a mutex table from the mutex definitions.
+-- All operation names that are unqualified (simple), are extended with
+-- the class name in which they were defined in order to refer to
+-- the correct operation in any context.
+
+\begin{vdm_al}
+
+  CreateMutexTable: set of AS`Mutex ==> MutexTable
+  CreateMutexTable( rawMutexDef ) ==
+    -- mutex(ALL) is expressed as AS`Mutex(nil, - ). In that case we
+    -- take all operations from this class. Here each mutex-definition
+    -- with Mutex.ops = ``nil'' is replaced by a sequence of all the
+    -- operation names. and we also qualify all operation names once
+    -- and forever
+   (dcl mutexDef : set of AS`Mutex := {};
+--    def mutexDef : set of AS`Mutex = { def ops = if (x = nil)
+--                                                 then AllOperations(defaultCast)
+--                                                 else x
+--                  in mk_AS`Mutex(QualifyNameSeq(ops), cid) | mk_AS`Mutex(x,cid) in set rawMutexDef };
+--    in
+    for all mk_AS`Mutex(ops,cid) in set rawMutexDef do
+      if ops = nil
+      then mutexDef := mutexDef union { mk_AS`Mutex(QualifyNameSeq(AllOperations(defaultCast)), cid) }
+      else mutexDef := mutexDef union { mk_AS`Mutex(QualifyNameSeq(ops), cid) };
+
+    -- creates an empty map; Is only initialized, because this avoids
+    -- case distinctions later
+     (dcl mutexTbl : MutexTable := { x |-> {} | x in set dunion { elems y.ops | y in set mutexDef }};
+      for all outer in set mutexDef do
+        for i in outer.ops do
+          mutexTbl := mutexTbl ++ { i |-> mutexTbl(i) union elems outer.ops };
+      return mutexTbl;
+     );
+   );
+
+  MergeMutexTable: MutexTable * MutexTable ==> MutexTable
+  MergeMutexTable( base, derived ) ==
+   (
+    dcl combined : MutexTable := base;
+    for all c in set dom derived do
+      if c in set dom combined
+      then combined := combined ++ { c |-> combined(c) union derived(c) }
+      else combined := combined ++ { c |-> derived(c)};
+    return combined
+  );
+
+  -- This class takes an unqualified name and looks in the inheritance
+  -- hierarchy (bottom-up) where the operation is defined. The class
+  -- name is returned as an AS`Id.
+
+  ClassDefiningOper: AS`Name ==> AS`Id
+  ClassDefiningOper( opnm ) ==
+   (def searchList = [defaultCast] ^ classInfos(defaultCast).baseClasses;
+    in
+      for clsnm in searchList do
+        if opnm in set dom classDefs(clsnm).defs.opm
+        then return CGAUX`NameToId(clsnm);
+    error; -- the operation was not defined at all, TC should catch this case
+   );
+
+  -- This returns all operations of the class *cname* that are visible
+  -- without using a base class qualifier i.e. all operations that
+  -- were not overridden from a lower level class.
+
+  AllOperations: AS`Name ==> seq of AS`Name
+  AllOperations(cname) ==
+    def searchList = [cname] ^ classInfos(cname).baseClasses;
+        operSet = dunion { dom classDefs(c).defs.opm | c in set elems searchList };
+    in return SetToSeq(operSet);
+
+  -- Takes an operation name and makes it fully qualified, if it has
+  -- no class specification. Qualification is  done by looking up in
+  -- inheritance garadds, where the operation is defined.
+
+operations
+  QualifyName: AS`Name ==> AS`Name
+  QualifyName(opnm) ==
+    if (len (opnm.ids) = 1)
+    then return mk_AS`Name([ ClassDefiningOper(opnm) ] ^ opnm.ids, opnm.cid)
+    else return opnm;
+
+  QualifyNameSeq: seq of AS`Name ==> seq of AS`Name
+  QualifyNameSeq(ns) ==
+    return [ QualifyName(ns(i)) | i in set inds ns ];
+
+functions
+  SetToSeq: set of AS`Name +> seq of AS`Name
+  SetToSeq(nameset) ==
+    cases nameset:
+      {} -> [],
+      {e} -> [e],
+      {e} union rest -> [e] ^ SetToSeq(rest)
+    end
+\end{vdm_al}
+
+%-----------------------------------------------------------------------------
+\subsection{Generating Operations}
+%-----------------------------------------------------------------------------
+
+{\tt GenConcOper} adds all constructs necessary for concurrency to the
+method and is called  (indirectly) through FD`GenExplOpDef. It
+encloses the statements of the function body in a try{} finally{}
+block and adds the necessary calls to sentinel.entering,
+sentinel.leaving. This is done for ALL operations.
+
+Parameter fb: seq of CPP`Stmt: list of statements generated so
+far. Note that this is NOT the same as the body of the
+VDM++-Operation. These will be extended by concurrency extensions.
+
+\begin{vdm_al}
+
+-- Is called from CLASS`GenExplOpDef, which in turn is called from
+-- CLASS`GenJavaFile.
+-- Generates the code for all types of VDM++ operations (observed,
+-- synchronized and guarded operations).
+-- Parameter fb: *code generated* body of the operation.
+operations
+  GenConcOper: AS`Name * seq of CPP`Stmt ==> seq of CPP`Stmt
+  GenConcOper( nm, fb) ==
+   (
+    let castedSentinel = if classInfos(currentClass).topClass
+                         then BC`GenIdentifier("sentinel")
+                         else BC`GenCastExpr(BC`GenTypeSpecifier(
+                                               BC`GenIdentifier((CGAUX`NameToId(currentClass)) ^ "Sentinel" )),
+                                             BC`GenIdentifier("sentinel"))
+    in
+    let javaCompliantNm = if MANGLE`IsMangled(nm)
+                          then MakeNameJavaCompliant(nm)
+                          else nm
+    in
+    def fenter = BC`GenFctCallObjMemAccStmt(BC`GenIdentifier("sentinel"),
+                                            "entering",
+                                            [BC`GenObjectMemberAccess(castedSentinel, BC`Rename(javaCompliantNm))]);
+        fleave = BC`GenFctCallObjMemAccStmt(BC`GenIdentifier("sentinel"),
+                                            "leaving",
+                                            [BC`GenObjectMemberAccess(castedSentinel, BC`Rename(javaCompliantNm))]);
+        cs = BC`GenBlock( [ fleave ])
+    in
+      return [ fenter, BC`GenTryBlock(fb, [], cs ) ];
+   );
+
+-- GenGuardExpr generates code for guard expressions. It takes care of
+-- the fact, that qualified
+-- names are used in permpreds e.g. #active(Base`push)=0.
+
+-- If the expression contains multiple operations, a sum of all
+-- individual expressions is generated.
+
+  GenGuardExpr: AS`Expr ==> CPP`Expr
+  GenGuardExpr( expr ) ==
+   (dcl exprlist : seq of CPP`Expr := [];
+                 -- this list cointains CPP expressions for each operation
+    let gname = cases true:
+                  (is_AS`ActExpr(expr))     -> BC`GenIdentifier("act"),
+                  (is_AS`FinExpr(expr))     -> BC`GenIdentifier("fin"),
+                  (is_AS`ActiveExpr(expr))  -> BC`GenIdentifier("active"),
+                  (is_AS`WaitingExpr(expr)) -> BC`GenIdentifier("waiting"),
+                  (is_AS`ReqExpr(expr))     -> BC`GenIdentifier("req")
+                end
+    in
+      for all o in set elems expr.mthd do
+        let mthdName = BC`GenIdentifier((o.ids)(len o.ids)) -- here we remove any classes qualifiers
+        in
+          def gexpr =  BC`GenArrayApply( BC`GenObjectMemberAccess( BC`GenIdentifier("sentinel"),  gname ),
+                                   BC`GenObjectMemberAccess( GenCastedSentinel(o), mthdName))
+                                                        -- ^ this expression is interesting, see below!
+          in exprlist := exprlist ^ [gexpr];
+
+    -- JAVA: ``new Integer( sentinel.active[ ] + sentinel.active[ ] + ... )''
+    return BC`GenNewExpr(BC`GenTypeSpecifier(BC`GenIdentifier("Integer")), [ BuildSumCPPExpr( exprlist ) ] )
+   );
+
+-- This takes a list of inputs and connects the elements by the plus (+) operator.
+  BuildSumCPPExpr: seq of CPP`Expr ==> CPP`Expr
+  BuildSumCPPExpr( exps) ==
+    if len exps = 1
+    then return hd exps
+    else return BC`GenPlus( hd exps, BuildSumCPPExpr( tl exps));
+
+-- This operation takes qualified AS`name (name : seq of seq of char := ["Base", "push"]) like
+--      ``Base`push''
+--  It extracts the class name  and creates a cast expression:
+--      ``((BaseSentinel)sentinel)''.
+-- The name ``push'' is never used.
+-- If the name is not qualified, the name in {\tt CONC`defaultCast} is used.
+
+  GenCastedSentinel: AS`Name ==> CPP`Expr
+  GenCastedSentinel( n ) ==
+    let castTo  = if len n.ids = 1
+                  then CGAUX`NameToId(defaultCast)
+                           -- n is unqualified name (this should not happen,
+                           -- when all names are qualified)
+                  else CGAUX`NameToId(n)
+                           -- n is qualified name, so we take the first
+                           -- part of the name (= class name)
+    in
+      if classInfos(currentClass).topClass
+      then return BC`GenIdentifier("sentinel")
+      else return BC`GenCastExpr(BC`GenTypeSpecifier(BC`GenIdentifier( castTo ^ "Sentinel" )),
+                            BC`GenIdentifier("sentinel"));
+
+\end{vdm_al}
+
+%-----------------------------------------------------------------------------
+\subsection{ Generating the {\tt evaluatePP} Method}
+%-----------------------------------------------------------------------------
+
+{\it GenEvaluatePP} generates the method {\tt evaluatePP}. Therefore
+it has to know which *guarded* operations the class possesses: both
+defined and inherited guarded operations (accumulated PermPreds). It
+also transforms the mutex constraints (inherited and defined) into
+permission predicates. Called from CLASS`GenJavaFile.
+
+The {\tt evaluatePP} method is always generated completely with all
+PP, because it overrides the version from potential base classes.
+
+\begin{vdm_al}
+
+GenEvaluatePP: AS`Name ==> seq of CPP`MemberDeclaration
+GenEvaluatePP ( cname ) ==
+ (dcl swst: seq of CPP`Stmt := [],
+      accPermPred: PredTable := classInfos(cname).accPermPred;
+
+  if (classInfos(cname).newGuards = false) and (not classInfos(cname).topClass)
+  then return [];
+
+  -- here we transform the mutex definitions into permission
+  -- predicates and add them to the accPermPred
+
+  def mutexTable = classInfos(cname).mutexTable;
+      natCid     = CI`PushCGType(mk_REP`NumericTypeRep(<NAT>));
+      boolCid    = CI`PushCGType(mk_REP`BooleanTypeRep());
+      zero       = mk_AS`RealLit(0, natCid)
+  in
+    for all guardedOper in set dom mutexTable do
+     (dcl actSeq : seq of AS`Name := [];
+
+      for all n in set mutexTable(guardedOper) do
+        actSeq := actSeq ^ [ n ];  -- n: AS`Name
+
+      let active       = mk_AS`ActiveExpr(actSeq, natCid),
+          completeExpr = mk_AS`BinaryExpr(active, <EQ>, zero, boolCid),
+          fullOperName = guardedOper
+      in
+        if fullOperName in set dom accPermPred
+        then accPermPred := accPermPred ++ { fullOperName |-> accPermPred(fullOperName) ^ [ completeExpr ] }
+        else accPermPred := accPermPred ++ { fullOperName |-> [ completeExpr ]  }
+     );
+
+  -- Here for each operation in accPermPred (including mutex-generated ones)
+  -- a case statement is generated
+
+  -- Even if there are no PPs/Mutex defs an empty EvaluatePP is generated.
+  -- This is necessay to satisfy ``interface EvaluatePP''.
+  -- It, however, is only done for all top-level classes.
+
+  if card dom accPermPred <> 0
+  then -- only if there are permission predicates now
+   (dcl stmt_l: seq of CPP`CaseStmt := [];
+    for all nm in set dom accPermPred do
+     (defaultCast := cname;
+      def mk_(res_v, res_stmt) = CGEXPR`CGExprExcl(BuildConjGuardExpr( accPermPred(nm) ), "res", nil)
+      in
+        stmt_l := stmt_l ^ [ BC`GenCaseStmt( BC`GenIntegerLit( GetOperConst( nm ) ),
+                                             BC`GenBlock( res_stmt ^ [BC`GenReturnStmt(res_v)] )) ]
+     );
+     swst := swst ^ [ BC`GenSwitchStmt( BC`GenIdentifier("fnr"), stmt_l) ]
+   );
+
+  --def newExpr = BC`GenClassInstanceCreationExpr(DS`GenBoolType().tp, [BC`GenBoolLit(true)]);
+  def newExpr = DS`GenBoolExpr(BC`GenBoolLit(true));
+  -- JAVA: ``return new Boolean(true)''
+      retStmt = BC`GenReturnStmt( newExpr )
+  -- Java: ``public Boolean evaluatePP(int fnr) { ... }''
+  in
+    return [ BC`GenJavaFctDef([], [BC`GenModifier(<PUBLIC>) ],
+                          [DS`GenBoolType()],
+                          BC`GenFctDecl( BC`GenIdentifier("evaluatePP"),
+                                         [BC`GenArgDecl( [ DS`GenSmallIntType() ],
+                                                         BC`GenIdentifier("fnr"))]),
+                          FD`GenExceptionsHdr(),
+                          BC`GenBlock( swst ^ [retStmt] )) ]
+);
+
+
+-- Builds a combined expression (connjunction) from sub-expressions.
+-- In exps the very left element represents a guard of the top most class.
+-- In the Java code also the base class´s epxression are at the left
+
+  BuildConjGuardExpr: seq of AS`Expr ==> AS`Expr
+  BuildConjGuardExpr(exps) ==
+    def boolCid = CI`PushCGType(mk_REP`BooleanTypeRep())
+    in
+      if len exps = 1
+      then return hd exps
+      else return mk_AS`BinaryExpr(hd exps, <AND>, BuildConjGuardExpr(tl exps), boolCid );
+
+\end{vdm_al}
+
+%-----------------------------------------------------------------------------
+\subsection{ Generating {\tt class {\it Local}Sentinel} }
+%-----------------------------------------------------------------------------
+
+{\it CreateLocalSentinel} returns the definition of the {\tt class
+LocalSentinel}. This includes constant definitions etc. If the class
+does not use synchronization constructs at all, the returned sequence is empty.
+
+The {\tt localSentinel} is created always, even when there are {\it no}
+operations defined in the class. In this case {\tt localSentinel} is
+superfluous for constant definitions (because there are none). By
+generating it nevertheless, inheritance of the inner classes is
+greatly simplified.
+
+\begin{vdm_al}
+
+GenLocalSentinel: AS`Name * AS`Definitions  ==> seq of CPP`MemberDeclaration
+GenLocalSentinel( cname, mk_AS`Definitions(-,-,-,oper,-,-,-,-,-) ) ==
+ (dcl pr_l : seq of CPP`MemberDeclaration := [],
+      cst_l  : seq of CPP`MemberDeclaration := [],
+      localClassName: seq of char := CGAUX`NameToId(cname)  ^ "Sentinel";
+
+  CGAUX`InsertImport("jp.vdmtools.VDM.Sentinel");
+
+   -- JAVA: ``volatile Sentinel sentinel;''
+   -- This reference is only generated for top level classes
+  if classInfos(cname).topClass
+  then pr_l:= pr_l ^ [ BC`GenIdentDeclaration( [], [BC`GenModifier(<VOLATILE>),
+                                             --BC`GenTypeSpecifier( BC`GenIdentifier( "Sentinel" ) )  ],
+                                             BC`GenTypeSpecifier( BC`GenIdentifier( localClassName ) )  ],
+                                             [ BC`GenInitDecl(  BC`GenIdentifier( "sentinel" ), nil ) ] )  ];
+
+   -- The following statement is only created for the highest class containing *periodic* threads.
+   -- JAVA: ``PeriodicThread perThread''
+   if classInfos(cname).topPerThread
+   then
+     (pr_l:= pr_l ^ [ BC`GenIdentDeclaration( [], [ BC`GenTypeSpecifier(
+                                                  BC`GenIdentifier( "PeriodicThread" ) )],
+                                              [ BC`GenInitDecl(  BC`GenIdentifier( "perThread" ), nil ) ] )  ];
+      CGAUX`InsertImport("jp.vdmtools.VDM.PeriodicThread"););
+
+   -- The following statement is only created for the highest class containing a *procedural* thread.
+   -- JAVA: ``Thread procThread''
+   if classInfos(cname).topProcThread
+   then
+     (pr_l:= pr_l ^ [ BC`GenIdentDeclaration( [], [BC`GenTypeSpecifier( BC`GenIdentifier( "VDMThread" ) ) ],
+                                               [ BC`GenInitDecl(  BC`GenIdentifier( "procThread" ), nil ) ] )  ];
+      CGAUX`InsertImport("jp.vdmtools.VDM.VDMThread"););
+
+  -- Here we generate a *symbolic constant* for each operation defined
+  -- in this class. This is so, because *all* operations are enhanced
+  -- with access code, and therefore need history counters and constants.
+
+  defaultCast := cname;
+
+  for all op in set dom oper do
+  -- iterates over all  operations defined *locally* in the class
+  -- (not inherited opers)
+
+    def javaCompliantOp = if MANGLE`IsMangled(op)
+                          then MakeNameJavaCompliant(op)
+                          else op;
+        vari = BC`GenIdentDecl([], [BC`GenModifier( <PUBLIC>),
+                                 BC`GenModifier(<FINAL>),
+                                 DS`GenSmallIntType() ],
+                                BC`Rename(javaCompliantOp),
+                                BC`GenAsgnInit(BC`GenIntegerLit(GetOperConst(QualifyName(op)))))
+      in
+        cst_l := cst_l ^ [ vari ];
+
+   -- JAVA: ``public final int nr_functions = ...''
+   cst_l := cst_l ^ [ BC`GenIdentDecl([], [BC`GenModifier( <PUBLIC>),
+                                        BC`GenModifier(<FINAL>),
+                                        DS`GenSmallIntType() ],
+                                       BC`GenIdentifier("nr_functions"),
+                                       BC`GenAsgnInit( BC`GenIntegerLit( len cst_l + classInfos(cname).startCount )))];
+
+
+   -- create class definition inlcuding normal constructor and default constructor
+
+   -- JAVA: ``init(nr_functions, instance)''
+   let initCall = BC`GenFctCall( BC`GenIdentifier("init"), [BC`GenIdentifier("nr_functions"),
+                                 BC`GenIdentifier("instance") ]) in
+   -- JAVA: ``public ASentinel (EvaluatePP instance) { init(...); }''
+   def constrDef =  BC`GenJavaFctDef([], [BC`GenModifier( <PUBLIC>) ], [],
+                                 BC`GenFctDecl(BC`GenIdentifier( localClassName ),
+                                 [BC`GenArgDecl( [ BC`GenTypeSpecifier( BC`GenIdentifier("EvaluatePP")) ],
+                                                 BC`GenIdentifier("instance"))] ),
+                                 FD`GenExceptionsHdr(),
+                                 BC`GenBlock( [ BC`GenExpressionStmt( initCall) ] ));
+    -- JAVA: ``public ASentinel() {}''
+       defaultConstrDef =  BC`GenJavaFctDef([], [ BC`GenModifier(<PUBLIC>) ], [],
+                                        BC`GenFctDecl( BC`GenIdentifier( localClassName ), [] ),
+                                        FD`GenExceptionsHdr(),
+                                        BC`GenBlock( [ ] ));
+
+   in
+    (dcl parent : CPP`Expr;
+     -- set parent to be the unique superclass
+     if classInfos(cname).topClass
+     then parent := BC`GenIdentifier("Sentinel")
+     else def superClasses = CGAUX`GetOrderedSupers(cname);
+              superClass = hd [ superClasses(i) | i in set inds superClasses
+                                             & not CGMAIN`isInterface(superClasses(i)) ]
+          in parent := BC`GenIdentifier(CGAUX`NameToId(superClass) ^ "Sentinel");
+
+     let classHd = BC`GenJavaClassHead( [], [], BC`GenIdentifier( localClassName ),
+                                      [ BC`GenClass2Package( parent)], nil, nil)
+     in
+       let cs = BC`GenClassSpecifier( classHd, cst_l ^ [ defaultConstrDef, constrDef ])
+       in pr_l := pr_l ^ [ BC`GenIdentDeclaration( [], [ BC`GenTypeSpecifier(cs) ] , nil ) ];
+
+     return pr_l;
+    );
+ );
+
+functions
+
+MakeNameJavaCompliant : AS`Name -> AS`Name
+MakeNameJavaCompliant(p_nm) ==
+  let l_newIds = [ MakeStringJavaCompliant(p_nm.ids(i)) | i in set inds p_nm.ids]
+  in mu(p_nm, ids |-> l_newIds);
+
+MakeStringJavaCompliant: seq of char -> seq of char
+MakeStringJavaCompliant(p_str) ==
+  if p_str = []
+  then []
+  else MakeCharJavaCompliant(hd p_str) ^ MakeStringJavaCompliant(tl p_str);
+
+MakeCharJavaCompliant: char -> seq of char
+MakeCharJavaCompliant(p_c) ==
+  if p_c = '#'
+  then "__"
+  elseif p_c = '|'
+  then "_"
+  elseif p_c = '`'
+  then "___"
+  elseif p_c = '-'
+  then "_"
+  else [p_c];
+
+operations
+  -- aux operation, that generates the necessary interfaces defintions for the user class
+
+GenConcInterface: AS`Name ==> seq of CPP`PackageName
+GenConcInterface( cname) ==
+ (dcl interfaces : seq of CPP`PackageName := [];
+
+  if classInfos(cname).topClass
+  then
+         -- Java: ``implements EvaluatePP''
+       interfaces := interfaces ^ [BC`GenClass2Package(BC`GenIdentifier("EvaluatePP"))];
+
+  if classInfos(cname).topProcThread
+  then
+       -- Java: ``implements Runnable''
+       interfaces := interfaces ^ [BC`GenSimplePackageName("Runnable")];
+
+  return interfaces;
+ );
+\end{vdm_al}
+
+\begin{vdm_al}
+functions
+
+GenSetSentinelMethod : AS`Name -> CPP`MemberDeclaration
+GenSetSentinelMethod(cname) ==
+  let localClassName: seq of char = CGAUX`NameToId(cname)  ^ "Sentinel"
+  in
+   -- JAVA: ``sentinel = new *Local*Sentinel(this);''
+  def body = BC`GenAsgnStmt( BC`GenIdentifier("sentinel"),
+                              BC`GenNewExpr(BC`GenTypeSpecifier(BC`GenIdentifier(localClassName)),
+                                             [ DS`GenThis()]));
+       -- JAVA: ``catch (CGException e) {''
+      expdecl = BC`GenExceptionDeclaration(
+                   [BC`GenTypeSpecifier(BC`GenIdentifier("Exception"))],
+                    BC`GenIdentifier("e"));
+       -- JAVA: ``System.out.println(e.getMessage);''
+      stmt = BC`GenExpressionStmt(BC`GenFctCall(
+                BC`GenIdentifier("System.out.println"),
+                [BC`GenFctCall(BC`GenIdentifier("e.getMessage"),[])]));
+      methodName = BC`GenIdentifier("setSentinel")
+  in
+  let handlers = [BC`GenHandler(expdecl,stmt)],
+      decl = BC`GenFctDecl(methodName, [])
+  in
+   BC`GenJavaFctDef([], [BC`GenModifier(<PUBLIC>)],
+                        [BC`GenTypeSpecifier(BC`GenVoid())], decl, nil,
+                        BC`GenTryBlock([body],handlers,nil));
+
+\end{vdm_al}
+
+%-----------------------------------------------------------------------------
+\subsection{ Procedural Thread Definitions}
+%-----------------------------------------------------------------------------
+
+For a procedural thread defintion simply a {\tt run()} method containing the (compound) statement
+defined in the thread definition is generated. This method is code-generated as a ``sequential''
+operation, because it cannot have permission predicates, and does not generate history events etc.
+
+\begin{vdm_al}
+operations
+
+  GenProceduralThread: AS`ThreadDef ==> seq of CPP`FunctionDefinition
+  GenProceduralThread( stmt ) ==
+   (CGAUX`CurrentRType(mk_REP`UnitTypeRep()); -- must be before CGSTMT`GenStmt
+    -- JAVA: ``try { ... } catch (Throwable e) { System.out.println(e.getMessage());}''
+    def expdecl = BC`GenExceptionDeclaration( [BC`GenTypeSpecifier(BC`GenIdentifier("Throwable"))],
+                                              BC`GenIdentifier("e"));
+        println = BC`GenExpressionStmt( BC`GenFctCall(BC`GenIdentifier("System.out.println"),
+                                        [BC`GenFctCall(BC`GenIdentifier("e.getMessage"),[])]));
+        handlers = [BC`GenHandler(expdecl,println)];
+    -- JAVA: ``public void run() { ... }''
+        runMthd =  BC`GenJavaFctDef( [], [BC`GenModifier(<PUBLIC>)],
+                                 [BC`GenTypeSpecifier(BC`GenVoid())],
+                                 BC`GenFctDecl(BC`GenIdentifier("run"),[]),
+                                 nil,
+                                 BC`GenTryBlock(CGSTMT`GenStmt(stmt, true),handlers,nil));
+    -- JAVA: ``procThread = ``new VDMThread( this )''
+    --let newExpr = BC`GenNewExpr(BC`GenTypeSpecifier( BC`GenIdentifier("VDMThread")), [ DS`GenThis()] ),
+        newExpr = BC`GenNewExpr(BC`GenTypeSpecifier( BC`GenIdentifier("VDMThread")), [ DS`GenThis()] );
+
+        asgnStmt = BC`GenAsgnStmt( BC`GenIdentifier("procThread"), newExpr);
+    -- JAVA: ``procThread.start()''
+        startStmt = BC`GenFctCallObjMemAccStmt( BC`GenIdentifier("procThread"), "start", []);
+    -- JAVA: ``public void start() { ... }''
+        stopStmt = BC`GenFctCallObjMemAccStmt( BC`GenIdentifier("procThread"), "stop", []);
+    -- JAVA: ``public void stop() { ... }''
+       startMthd = BC`GenJavaFctDef( [], [BC`GenModifier(<PUBLIC>)],
+                                 [BC`GenTypeSpecifier(BC`GenVoid())],
+                                 BC`GenFctDecl(BC`GenIdentifier("start"),[]),
+                                 FD`GenExceptionsHdr(),
+                                 BC`GenBlock( [asgnStmt] ^ [startStmt] ));
+       stopMthd = BC`GenJavaFctDef( [], [BC`GenModifier(<PUBLIC>)],
+                                [BC`GenTypeSpecifier(BC`GenVoid())],
+                                BC`GenFctDecl(BC`GenIdentifier("stop"),[]),
+                                FD`GenExceptionsHdr(),
+                                BC`GenBlock( [stopStmt] ))
+    in
+     (CGAUX`InsertImport("jp.vdmtools.VDM.VDMThread");
+      return [ runMthd, startMthd, stopMthd ]);
+   );
+
+\end{vdm_al}
+
+%-----------------------------------------------------------------------------
+
+\subsection{  Extensions to the User Class' constructor}
+%-----------------------------------------------------------------------------
+
+\begin{vdm_al}
+
+GenConstrExtensions: AS`Name ==> seq of CPP`Stmt
+GenConstrExtensions(cname)  ==
+ (dcl stmts: seq of CPP`Stmt := GenPeriodicThreads();
+
+  if classInfos(cname).topClass
+  then stmts := stmts ^ [BC`GenExpressionStmt(BC`GenFctCall(BC`GenIdentifier("setSentinel"), []))];
+  return stmts);
+
+\end{vdm_al}
+
+%-----------------------------------------------------------------------------
+\subsection{  Periodic Thread Definitions}
+%-----------------------------------------------------------------------------
+
+For each periodic thread a statement similar to the example below is
+generated. OPERNAME() is replaced with the name of the actual
+operation. Note, that in periodic thread definitions it is not
+possible to supply parameters for the operation call.
+
+\begin{alltt}
+perThread =  new PeriodicThread( 1000, perThread ) {
+               // anonymous class: subclassing on the fly
+               void threadDef() { OPERNAME(); }
+               // this is the code of the VDM++ thread definition
+             };
+\end{alltt}
+
+\begin{vdm_al}
+
+-- Generates the statements corresponding to periodic thread definitions
+-- and is called from CLASS`GenJavaConstructorDef.
+
+GenPeriodicThreads: () ==> seq of CPP`Stmt
+GenPeriodicThreads() ==
+ (dcl stmts : seq of CPP`Stmt := [];
+  if (is_AS`PerObl(classDefs(currentClass).defs.threaddef))
+  then
+    let mk_AS`PerObl( period, -,-,-,mtd, - )  = classDefs(currentClass).defs.threaddef
+    in
+    def periodExpr = CGEXPR`CGLiteral( period,
+                                   mk_CGMAIN`VT(BC`GenIdentifier("dummy"), mk_REP`NumericTypeRep(<INTEGER>)));
+        memDecl = BC`GenJavaFctDef( [], [BC`GenModifier( <PUBLIC>)],
+                                [BC`GenTypeSpecifier( BC`GenVoid()) ],
+                                BC`GenFctDecl(BC`GenIdentifier("threadDef"), []),
+                                FD`GenExceptionsHdr(),
+                                BC`GenExpressionStmt(BC`GenFctCall(BC`Rename(mtd),[]))) in
+    -- JAVA: ``new PeriodicThread( 1000 ) { ... }''
+    let newExpr = BC`GenAnonymousClassExpr(BC`GenIdentifier("PeriodicThread"),
+                                           [ periodExpr, BC`GenIdentifier("perThread") ],
+                                           [ memDecl] )
+    in
+    -- JAVA: ``perThread = ...''
+        stmts := stmts ^ [ BC`GenAsgnStmt(BC`GenIdentifier("perThread"), newExpr) ];
+
+  return stmts
+);
+
+GenPeriodicStartMethod : AS`PerObl ==> seq1 of CPP`FunctionDefinition
+GenPeriodicStartMethod(-) ==
+  def invokeCall = BC`GenFctCallObjMemAccStmt( BC`GenIdentifier("perThread"), "invoke", []);
+      startMthd = BC`GenJavaFctDef([], [BC`GenModifier(<PUBLIC>)],
+                                   [BC`GenTypeSpecifier(BC`GenVoid())],
+                                   BC`GenFctDecl(BC`GenIdentifier("start"),[]),
+                                   FD`GenExceptionsHdr(),
+                                   BC`GenBlock( [invokeCall] ));
+  in return [ startMthd ];
+\end{vdm_al}
+
+%-----------------------------------------------------------------------------
+\subsection{ Start and Start List Statements}
+%-----------------------------------------------------------------------------
+
+The VDM++ {\tt start({\it AS`Expr})}-statement is directly mapped to a
+\mbox{\tt {\it CPP`Expr}.start()} invocation in Java.
+
+The {\tt startlist({\it AS`Expr})}-statement cannot be mapped that
+easily, because the list is only evaluated at run-time. Therefore a
+call to a Java-library method \mbox{\tt static startlist(Sequence s)}
+is generated: \mbox{\tt Sequence.startlist( {\it CPP`Expr})}.
+
+\begin{vdm_al}
+
+GenStartStmt: AS`StartStmt * bool ==> seq of CPP`Stmt
+GenStartStmt( sstmt, - ) ==
+  def mk_(res_v, res_stmt) = CGEXPR`CGExprExcl(sstmt.expr, "tmpObj", nil);
+      fctCallExpr = BC`GenFctCallObjMemAcc(res_v, "start", [])
+  in
+    return res_stmt ^ [BC`GenExpressionStmt(fctCallExpr)];
+
+GenStartlistStmt: AS`StartListStmt * bool ==> seq of CPP`Stmt
+GenStartlistStmt( sstmt, - ) ==
+  def type = CGAUX`FindType(sstmt.expr);
+      mk_(res_v, res_stmt) = CGEXPR`CGExprExcl(sstmt.expr, "tmpSet", type);
+      tmpElem = BC`GiveName("tmpElem");
+      elemVT = mk_CGMAIN`VT(tmpElem, CGAUX`FindSetElemType(type));
+      setVT = mk_CGMAIN`VT(res_v, mk_REP`SetTypeRep(CGAUX`FindSetElemType(type)));
+      fctCallExpr = BC`GenFctCallObjMemAcc( tmpElem, "start", []);
+      body_l = [BC`GenExpressionStmt(fctCallExpr)]
+  in
+   (dcl rb : seq of CPP`Stmt := res_stmt;
+    if (type = nil) or not CGAUX`IsSetType(type)
+    then rb := rb ^ [BC`GenIfStmt (BC`GenNot(DS`GenIsSet(res_v)), CGAUX`RunTime ("A set was expected"), nil)];
+    rb := rb ^ DS`GenIterSet(setVT, nil, elemVT, body_l);
+    return rb;
+   );
+
+GenStopStmt: AS`StopStmt * bool ==> seq of CPP`Stmt
+GenStopStmt( sstmt, - ) ==
+  def mk_(res_v, res_stmt) = CGEXPR`CGExprExcl(sstmt.expr, "tmpObj", nil);
+      fctCallExpr = BC`GenFctCallObjMemAcc(res_v, "stop", [])
+  in
+    return res_stmt ^ [BC`GenExpressionStmt(fctCallExpr)];
+
+GenStoplistStmt: AS`StopListStmt * bool ==> seq of CPP`Stmt
+GenStoplistStmt( sstmt, - ) ==
+  def type = CGAUX`FindType(sstmt.expr);
+      mk_(res_v, res_stmt) = CGEXPR`CGExprExcl(sstmt.expr, "tmpSet", type);
+      tmpElem = BC`GiveName("tmpElem");
+      elemVT = mk_CGMAIN`VT(tmpElem, CGAUX`FindSetElemType(type));
+      setVT = mk_CGMAIN`VT(res_v, mk_REP`SetTypeRep(CGAUX`FindSetElemType(type)));
+      fctCallExpr = BC`GenFctCallObjMemAcc( tmpElem, "stop", []);
+      body_l = [BC`GenExpressionStmt(fctCallExpr)]
+  in
+   (dcl rb : seq of CPP`Stmt := res_stmt;
+    if (type = nil) or not CGAUX`IsSetType(type)
+    then rb := rb ^ [BC`GenIfStmt (BC`GenNot(DS`GenIsSet(res_v)), CGAUX`RunTime ("A set was expected"), nil)];
+    rb := rb ^ DS`GenIterSet(setVT, nil, elemVT, body_l);
+    return rb;
+   );
+\end{vdm_al}
+
+%-----------------------------------------------------------------------------
+\subsection{ ThreadId Expression }
+%-----------------------------------------------------------------------------
+
+
+\begin{vdm_al}
+
+GenThreadId: () ==> CPP`Expr
+GenThreadId() ==
+  (CGAUX`InsertImport("jp.vdmtools.VDM.VDMThread");
+  -- JAVA: ``VDMThread.getThreadId()''
+  return BC`GenFctCallObjMemAcc( BC`GenIdentifier("VDMThread"), "getThreadId", [] ););
+
+
+end CONC
+
+\end{vdm_al}
+\subsection{Test Coverage}
+
+\begin{rtinfo}{rtinfo.ast}[CONC]
+\end{rtinfo}
+
+

@@ -1,0 +1,1209 @@
+class Database is subclass of Object
+operations 
+private  Database : () ==> Database
+Database() == 
+( errorLog := ExceptionsFrame`getExceptionsFrame();
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dataSourceToolkit := DataSourceToolkit.getToolkit();
+      ( dcl   querySet : [WiringDataQuerySet] := dataSourceToolkit.getQuerySet();
+        acTypeCntl := new  AircraftTypeController(dataSourceToolkit);
+        acCntl := new  AircraftController(dataSourceToolkit , acTypeCntl);
+        effectivityCntl := new  EffectivityController(dataSourceToolkit , acTypeCntl , acCntl);
+        acSystemCntl := new  AircraftSystemController(dataSourceToolkit);
+        wireGroupCntl := new  WireGroupController(dataSourceToolkit);
+        wireEndpointCntl := new  WireEndpointController(dataSourceToolkit , effectivityCntl);
+        refdesCntl := new  RefDesController(dataSourceToolkit , effectivityCntl , acCntl , wireEndpointCntl);
+        wireCntl := new  WireController(dataSourceToolkit , effectivityCntl , acCntl , wireEndpointCntl , wireGroupCntl);
+        drawingNoteCntl := new  DrawingNoteController(dataSourceToolkit);
+        illustrationCntl := new  IllustrationController(dataSourceToolkit , effectivityCntl , acCntl);
+        partsCntl := new  PartsController(dataSourceToolkit , effectivityCntl , acCntl);
+        pinPairCntl := new  PinPairController(dataSourceToolkit);
+        metaInfoCntl := new  MetaInfoController(dataSourceToolkit);
+        bACntl := new  BAController(dataSourceToolkit , acCntl , acSystemCntl , wireCntl);
+        bundleCntl := new  BundleController(dataSourceToolkit , acCntl , wireCntl);
+        let - = initDatabase()
+        in 
+          skip 
+      ) 
+    ) 
+) ;
+
+public  getWire : int  ==> [Wire]
+getWire(wireId) == 
+( dcl   wire : [Wire] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( wire := wireCntl.getViaId(wireId)
+    ) ;
+  return  wire
+) ;
+
+public  getRefDes : int  ==> [RefDes]
+getRefDes(refdesId) == 
+( dcl   refdes : [RefDes] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( refdes := refdesCntl.getViaId(refdesId)
+    ) ;
+  return  refdes
+) ;
+
+public  getCGMData : int  ==> [InputStream]
+getCGMData(illustrationId) == 
+( dcl   cgmData : [InputStream] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( cgmData := illustrationCntl.getCGMDataViaId(illustrationId)
+    ) ;
+  return  cgmData
+) ;
+
+public  static getDatabase : () ==> [Database]
+getDatabase() == 
+( if  database = nil  
+  then  
+    ( database := new  Database()
+    ) ;
+  return  database
+) ;
+
+public  getDbVersion : () ==> map  int  to  [String]
+getDbVersion() == 
+( dcl   dbVersion : map  int  to  [String] := nil  ,
+        metaInfoId : [String] := new  String("DATA_VERSION");
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dbVersion := metaInfoCntl.getViaId(metaInfoId)
+    ) ;
+  return  dbVersion
+) ;
+
+protected  initDatabase : () ==> <VOID>
+initDatabase() == 
+( let - = effectivityCntl.initialize()
+  in 
+    skip ;
+  let - = acTypeCntl.initialize()
+  in 
+    skip ;
+  let - = acSystemCntl.initialize()
+  in 
+    skip ;
+  let - = acCntl.initialize()
+  in 
+    skip ;
+  let - = wireEndpointCntl.initialize()
+  in 
+    skip ;
+  let - = wireGroupCntl.initialize()
+  in 
+    skip ;
+  let - = wireCntl.initialize()
+  in 
+    skip ;
+  let - = refdesCntl.initialize()
+  in 
+    skip ;
+  let - = drawingNoteCntl.initialize()
+  in 
+    skip ;
+  let - = illustrationCntl.initialize()
+  in 
+    skip ;
+  let - = partsCntl.initialize()
+  in 
+    skip ;
+  let - = pinPairCntl.initialize()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  getDrawingNote : int  ==> [String]
+getDrawingNote(noteId) == 
+( dcl   drawingNote : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( drawingNote := drawingNoteCntl.getTextViaId(noteId)
+    ) ;
+  return  drawingNote
+) ;
+
+public  getPins : [RefDes] ==> map  int  to  [String]
+getPins(refdes) == 
+( dcl   pinArray : map  int  to  [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( pinArray := wireEndpointCntl.getPins(refdes)
+    ) ;
+  return  pinArray
+) ;
+
+public  getRefDes : [Wire] ==> map  int  to  [RefDes]
+getRefDes(wire) == 
+( dcl   refdesPair : map  int  to  [RefDes] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( refdesPair := refdesCntl.getViaWire(wire)
+    ) ;
+  return  refdesPair
+) ;
+
+public  getWire : [Bundle] ==> map  int  to  [Wire]
+getWire(bundle) == 
+( dcl   wireArray : map  int  to  [Wire] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( wireArray := bundleCntl.getWires(bundle.getId())
+    ) ;
+  return  wireArray
+) ;
+
+public  getWire : [RefDes] ==> map  int  to  [Wire]
+getWire(refdes) == 
+( dcl   wireArray : map  int  to  [Wire] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( wireArray := wireCntl.getViaRefDes(refdes)
+    ) ;
+  return  wireArray
+) ;
+
+public  getAircraftSystem : int  ==> [AircraftSystem]
+getAircraftSystem(acSystemId) == 
+( return  acSystemCntl.getViaId(acSystemId)
+) ;
+
+public  getParts : [Bundle] ==> map  int  to  [Part]
+getParts(bundle) == 
+( dcl   partArray : map  int  to  [Part] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( partArray := partsCntl.getViaBundle(bundle)
+    ) ;
+  return  partArray
+) ;
+
+public  getParts : [RefDes] ==> map  int  to  [Part]
+getParts(refdes) == 
+( dcl   partArray : map  int  to  [Part] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( partArray := partsCntl.getViaRefDes(refdes)
+    ) ;
+  return  partArray
+) ;
+
+public  getAllAircraftTypes : () ==> [Enumeration]
+getAllAircraftTypes() == 
+( return  acTypeCntl.getAllTypes()
+) ;
+
+public  getCGMData : [String] ==> [InputStream]
+getCGMData(cgmFilename) == 
+( dcl   cgmData : [InputStream] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( cgmData := illustrationCntl.getCGMDataViaFilename(cgmFilename)
+    ) ;
+  return  cgmData
+) ;
+
+public  getWire : [WireGroup] ==> map  int  to  [Wire]
+getWire(group) == 
+( dcl   wireArray : map  int  to  [Wire] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( wireArray := wireCntl.getViaWireGroup(group)
+    ) ;
+  return  wireArray
+) ;
+
+public  getWireGroup : [Wire] ==> [WireGroup]
+getWireGroup(wire) == 
+( dcl   group : [WireGroup] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( group := wireGroupCntl.getViaWire(wire)
+    ) ;
+  return  group
+) ;
+
+public  getAircraft : [String] ==> [Aircraft]
+getAircraft(acName) == 
+( return  getAircraft(acTypeCntl.getCurrentContextObject() , acName)
+) ;
+
+public  getShieldWire : [Wire] ==> map  int  to  [Wire]
+getShieldWire(shieldedWire) == 
+( dcl   wireArray : map  int  to  [Wire] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( wireArray := wireCntl.getShieldWires(shieldedWire)
+    ) ;
+  return  wireArray
+) ;
+
+public  getLocatorId : [RefDes] ==> [String]
+getLocatorId(refdes) == 
+( dcl   locatorId : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( locatorId := illustrationCntl.getLocatorIdViaRefdes(refdes)
+    ) ;
+  return  locatorId
+) ;
+
+public  getDrawingNotes : [Part] ==> [Iterator]
+getDrawingNotes(part) == 
+( dcl   wireNotes : [Iterator] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( wireNotes := drawingNoteCntl.getDrawingNotes(part)
+    ) ;
+  return  wireNotes
+) ;
+
+public  getDrawingNotes : [Wire] ==> [Iterator]
+getDrawingNotes(wire) == 
+( dcl   wireNotes : [Iterator] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( wireNotes := drawingNoteCntl.getDrawingNotes(wire)
+    ) ;
+  return  wireNotes
+) ;
+
+public  getRefDesMate : [RefDes] ==> [RefDes]
+getRefDesMate(refdes) == 
+( dcl   refdesMate : [RefDes] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( refdesMate := refdesCntl.getViaId(refdes.getMateId())
+    ) ;
+  return  refdesMate
+) ;
+
+public  hasDrawingNotes : [Part] ==> bool 
+hasDrawingNotes(part) == 
+( dcl   hasNotes : bool  := false  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   noteIds : map  int  to  [Integer] := drawingNoteCntl.getDrawingNoteIds(part);
+      if  noteIds <> nil   and  noteIds.length > 0
+      then  
+        ( hasNotes := true  
+        ) 
+    ) ;
+  return  hasNotes
+) ;
+
+public  hasDrawingNotes : [Wire] ==> bool 
+hasDrawingNotes(wire) == 
+( dcl   hasNotes : bool  := false  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   noteIds : map  int  to  [Integer] := drawingNoteCntl.getDrawingNoteIds(wire);
+      if  noteIds <> nil   and  noteIds.length > 0
+      then  
+        ( hasNotes := true  
+        ) 
+    ) ;
+  return  hasNotes
+) ;
+
+public  getWireEndpoint1 : [Wire] ==> [WireEndpoint]
+getWireEndpoint1(wire) == 
+( dcl   wireEnd : [WireEndpoint] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   wireEnds : map  int  to  [WireEndpoint] := wireEndpointCntl.getViaWireId(wire.getId());
+      if  wireEnds.length = 2
+      then  
+        ( wireEnd := wireEnds(0)
+        ) 
+    ) ;
+  return  wireEnd
+) ;
+
+public  getWireEndpoint2 : [Wire] ==> [WireEndpoint]
+getWireEndpoint2(wire) == 
+( dcl   wireEnd : [WireEndpoint] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   wireEnds : map  int  to  [WireEndpoint] := wireEndpointCntl.getViaWireId(wire.getId());
+      if  wireEnds.length = 2
+      then  
+        ( wireEnd := wireEnds(1)
+        ) 
+    ) ;
+  return  wireEnd
+) ;
+
+public  getIllustration : [String] ==> [Illustration]
+getIllustration(illustrationId) == 
+( dcl   illustration : [Illustration] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( illustration := illustrationCntl.getViaId(illustrationId)
+    ) ;
+  return  illustration
+) ;
+
+public  hasDrawingNotes : [Bundle] ==> bool 
+hasDrawingNotes(bundle) == 
+( dcl   hasNotes : bool  := false  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   noteIds : map  int  to  [Integer] := drawingNoteCntl.getDrawingNoteIds(bundle);
+      if  noteIds <> nil   and  noteIds.length > 0
+      then  
+        ( hasNotes := true  
+        ) 
+    ) ;
+  return  hasNotes
+) ;
+
+public  getAllWireNames : [Aircraft] ==> [Enumeration]
+getAllWireNames(aircraft) == 
+( dcl   wireNameList : [Enumeration] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( wireNameList := wireCntl.getAllNames(aircraft)
+    ) ;
+  return  wireNameList
+) ;
+
+public  setNewContext : [ContextSet] ==> <VOID>
+setNewContext(contextChanges) == 
+( trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( let - = acTypeCntl.updateToNewContext(contextChanges)
+      in 
+        skip ;
+      let - = acSystemCntl.updateToNewContext(contextChanges)
+      in 
+        skip ;
+      let - = acCntl.updateToNewContext(contextChanges)
+      in 
+        skip ;
+      let - = effectivityCntl.updateToNewContext(contextChanges)
+      in 
+        skip ;
+      let - = wireEndpointCntl.updateToNewContext(contextChanges)
+      in 
+        skip ;
+      let - = wireCntl.updateToNewContext(contextChanges)
+      in 
+        skip ;
+      let - = refdesCntl.updateToNewContext(contextChanges)
+      in 
+        skip ;
+      let - = wireGroupCntl.updateToNewContext(contextChanges)
+      in 
+        skip ;
+      let - = drawingNoteCntl.updateToNewContext(contextChanges)
+      in 
+        skip ;
+      let - = illustrationCntl.updateToNewContext(contextChanges)
+      in 
+        skip ;
+      let - = partsCntl.updateToNewContext(contextChanges)
+      in 
+        skip ;
+      let - = pinPairCntl.updateToNewContext(contextChanges)
+      in 
+        skip ;
+      let - = bundleCntl.updateToNewContext(contextChanges)
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+public  getWire : [RefDes] * [String] ==> map  int  to  [Wire]
+getWire(refdes, pin) == 
+( dcl   wireArray : map  int  to  [Wire] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( wireArray := wireCntl.getViaRefDesPin(refdes , pin)
+    ) ;
+  return  wireArray
+) ;
+
+public  getAllRefDesNames : [Aircraft] ==> [Enumeration]
+getAllRefDesNames(aircraft) == 
+( dcl   refdesNameList : [Enumeration] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( refdesNameList := refdesCntl.getAllNames(aircraft)
+    ) ;
+  return  refdesNameList
+) ;
+
+public  getPinArrangementId : [RefDes] ==> [String]
+getPinArrangementId(refdes) == 
+( dcl   pinArrangementId : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( pinArrangementId := illustrationCntl.getPinArrangementIdViaRefdes(refdes)
+    ) ;
+  return  pinArrangementId
+) ;
+
+public  getAircraftTypeByMDS : [String] ==> [AircraftType]
+getAircraftTypeByMDS(mds) == 
+( return  acTypeCntl.getViaName(mds)
+) ;
+
+public  getWire : [Aircraft] * [String] ==> [Wire]
+getWire(ac, wireName) == 
+( dcl   wireArray : map  int  to  [Wire] := nil  ,
+        wire : [Wire] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( wireArray := wireCntl.getViaName(ac , wireName);
+      if  wireArray.length > 0
+      then  
+        ( wire := wireArray(0)
+        ) 
+    ) ;
+  return  wire
+) ;
+
+public  loadRepairAssessment : [String] ==> [RepairAssessment]
+loadRepairAssessment(repairId) == 
+( dcl   repair : [RepairAssessment] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( repair := bACntl.getRepairViaId(repairId)
+    ) ;
+  return  repair
+) ;
+
+public  containsWire : [RefDes] * [Wire] ==> bool 
+containsWire(refdes, wire) == 
+( dcl   connected : bool  := false  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( connected := wireEndpointCntl.refdesContainsWire(refdes , wire)
+    ) ;
+  return  connected
+) ;
+
+public  getIllustrationSeries : [String] ==> map  int  to  [Illustration]
+getIllustrationSeries(figureNumber) == 
+( dcl   illustrationSeries : map  int  to  [Illustration] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( illustrationSeries := illustrationCntl.getSeriesViaFigureNumber(figureNumber)
+    ) ;
+  return  illustrationSeries
+) ;
+
+public  hasDrawingNotes : [AircraftType] ==> bool 
+hasDrawingNotes(type) == 
+( dcl   hasNotes : bool  := false  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   noteIds : map  int  to  [Integer] := drawingNoteCntl.getDrawingNoteIds(type);
+      if  noteIds <> nil   and  noteIds.length > 0
+      then  
+        ( hasNotes := true  
+        ) 
+    ) ;
+  return  hasNotes
+) ;
+
+public  containsPin : [RefDes] * [String] ==> bool 
+containsPin(refdes, pinName) == 
+( dcl   connected : bool  := false  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( connected := wireEndpointCntl.refdesContainsPin(refdes , pinName)
+    ) ;
+  return  connected
+) ;
+
+public  getBundle : [Aircraft] * [String] ==> [Bundle]
+getBundle(aircraft, bundleName) == 
+( dcl   bundle : [Bundle] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( bundle := bundleCntl.getViaName(aircraft , bundleName)
+    ) ;
+  return  bundle
+) ;
+
+public  getPinPairs : [RefDes] * [String] ==> map  int  to  [String]
+getPinPairs(refdes, pin) == 
+( dcl   pinPairArray : map  int  to  [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( pinPairArray := pinPairCntl.getViaRefDesPin(refdes , pin)
+    ) ;
+  return  pinPairArray
+) ;
+
+public  getRefDes : [Aircraft] * [String] ==> [RefDes]
+getRefDes(aircraft, refdesName) == 
+( dcl   refdes : [RefDes] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   refdesArray : map  int  to  [RefDes] := refdesCntl.getViaName(aircraft , refdesName);
+      if  refdesArray.length > 0
+      then  
+        ( refdes := refdesArray(0)
+        ) 
+    ) ;
+  return  refdes
+) ;
+
+public  containsWire : [RefDes] * [String] ==> bool 
+containsWire(refdes, wireName) == 
+( dcl   connected : bool  := false  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( connected := wireEndpointCntl.refdesContainsWire(refdes , wireName)
+    ) ;
+  return  connected
+) ;
+
+public  getAircraftByTailNumber : [String] ==> [Aircraft]
+getAircraftByTailNumber(tailNumber) == 
+( dcl   aircraft : [Aircraft] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( aircraft := acCntl.getViaTailNumber(tailNumber)
+    ) ;
+  return  aircraft
+) ;
+
+public  getAircraftByType : [AircraftType] ==> [Enumeration]
+getAircraftByType(acType) == 
+( dcl   acList : [Enumeration] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( acList := acCntl.getViaType(acType)
+    ) ;
+  return  acList
+) ;
+
+public  getWireGroup : [Aircraft] * [String] ==> [WireGroup]
+getWireGroup(aircraft, wireGroupName) == 
+( dcl   group : [WireGroup] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( group := wireGroupCntl.getViaName(aircraft , wireGroupName)
+    ) ;
+  return  group
+) ;
+
+public  getAircraft : [AircraftType] * [String] ==> [Aircraft]
+getAircraft(acType, acName) == 
+( dcl   aircraft : [Aircraft] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( aircraft := acCntl.getViaName(acType , acName)
+    ) ;
+  return  aircraft
+) ;
+
+public  isFixedContactPin : [RefDes] * [String] ==> bool 
+isFixedContactPin(refdes, pin) == 
+( dcl   isFixedPin : bool  := false  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( isFixedPin := pinPairCntl.isFixedContactPin(refdes , pin)
+    ) ;
+  return  isFixedPin
+) ;
+
+public  getCurrentContextObject : [ContextTypes] ==> [Object]
+getCurrentContextObject(contextType) == 
+( dcl   obj : [Object] := nil  ;
+  if  contextType = ContextTypes`PIN
+  then  
+    ( obj := wireEndpointCntl.getCurrentContextObject()
+    ) 
+  else  
+    if  contextType = ContextTypes`REFDES
+    then  
+      ( obj := refdesCntl.getCurrentContextObject()
+      ) 
+    else  
+      if  contextType = ContextTypes`WIRE
+      then  
+        ( obj := wireCntl.getCurrentContextObject()
+        ) 
+      else  
+        if  contextType = ContextTypes`GRAPHIC_ID
+        then  
+          ( obj := illustrationCntl.getCurrentContextObject()
+          ) 
+        else  
+          if  contextType = ContextTypes`TAIL_NUMBER
+          then  
+            ( obj := acCntl.getCurrentContextObject()
+            ) 
+          else  
+            if  contextType = ContextTypes`AIRCRAFT_TYPE
+            then  
+              ( obj := acTypeCntl.getCurrentContextObject()
+              ) 
+            else  
+              if  contextType = ContextTypes`BUNDLE
+              then  
+                ( obj := bundleCntl.getCurrentContextObject()
+                ) ;
+  return  obj
+) ;
+
+public  saveRepairAssessment : [RepairAssessment] ==> <VOID>
+saveRepairAssessment(assessment) == 
+( trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( let - = bACntl.saveRepairViaId(assessment)
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+public  getEffectivePreconditionIds : [Illustration] ==> [Set]
+getEffectivePreconditionIds(illustration) == 
+( dcl   list : [Set] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( list := illustrationCntl.getPreconditionsViaId(illustration.getIllustrationId())
+    ) ;
+  return  list
+) ;
+
+public  getWiresInBundleSegment : [String] * int  * [String] * int  * [String] ==> map  int  to  [Wire]
+getWiresInBundleSegment(bundleNumber, end1Id, end1Type, end2Id, end2Type) == 
+( dcl   wireArray : map  int  to  [Wire] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( wireArray := bACntl.getWiresInBundleSegment(bundleNumber , end1Id , end1Type , end2Id , end2Type)
+    ) ;
+  return  wireArray
+) ;
+
+public  getNames : [ContextTypes] * [String] * bool  * [ContextTypes] * [String] * [String] ==> map  int  to  [String]
+getNames(type, rePattern, doTrim, ParentType, parentValue, parentREPattern) == 
+( return  nil  
+) ;
+
+instance variables 
+  private  static database : [Database] := nil  ;
+  private  dataSourceToolkit : [DataSourceToolkit] := nil  ;
+  private  errorLog : [ExceptionsFrame] := nil  ;
+  private  acTypeCntl : [AircraftTypeController] := nil  ;
+  private  acCntl : [AircraftController] := nil  ;
+  private  acSystemCntl : [AircraftSystemController] := nil  ;
+  private  bundleCntl : [BundleController] := nil  ;
+  private  drawingNoteCntl : [DrawingNoteController] := nil  ;
+  private  effectivityCntl : [EffectivityController] := nil  ;
+  private  illustrationCntl : [IllustrationController] := nil  ;
+  private  partsCntl : [PartsController] := nil  ;
+  private  pinPairCntl : [PinPairController] := nil  ;
+  private  refdesCntl : [RefDesController] := nil  ;
+  private  wireCntl : [WireController] := nil  ;
+  private  wireEndpointCntl : [WireEndpointController] := nil  ;
+  private  wireGroupCntl : [WireGroupController] := nil  ;
+  private  metaInfoCntl : [MetaInfoController] := nil  ;
+  private  bACntl : [BAController] := nil  
+  
+end  Database

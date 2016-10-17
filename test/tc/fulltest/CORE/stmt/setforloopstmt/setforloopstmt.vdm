@@ -1,0 +1,35 @@
+class SetForLoopTest
+
+operations
+
+  SetForLoop1: () ==> nat1
+  SetForLoop1() ==
+    for all a in set {1,4,9} do
+      return a;
+
+  SetForLoop2: set of nat ==> ()
+  SetForLoop2(arg) ==
+    for all mk_(a,-) in set arg do
+      let n = 5 in return a and n;
+
+  SetForLoop3: bool ==> ()
+  SetForLoop3(b) ==
+    for all a in set let n = 7 in
+                     if b
+                     then {1,6,9}
+	             else n
+    do
+      skip;
+
+  SetForLoop4: () ==> nat1
+  SetForLoop4() ==
+    for all a in set {} do
+      return a;
+
+  SetForLoop5: () ==> ()
+  SetForLoop5() ==
+    for all a in set 7*9 do
+      return a
+      
+end SetForLoopTest
+

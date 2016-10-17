@@ -1,0 +1,5 @@
+public Test : () ==> bool  
+Test () ==
+return
+       exists a in set {1,2,3} & a > 0;
+  

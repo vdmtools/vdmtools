@@ -1,0 +1,6 @@
+r dbi.vpp
+r test3.vpp
+r io.vpp
+r VDMUtil.vpp
+init
+d new A().Test()

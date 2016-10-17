@@ -1,0 +1,36 @@
+class UnaryTest
+types
+
+  T = map nat to nat
+  inv m ==
+    m <> {|->};
+
+  T2 = T * T
+
+functions
+
+  f : T -> bool
+  f(m) ==
+    forall n in set dom m & n < 9;
+
+  f2 : T2 -> bool
+  f2(mk_(m,-)) ==
+    f(m) 
+    
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let  A = "ABC",
+       s = {8,9},
+       - = dom cases false:
+               true -> A,
+               others -> s
+           end 
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

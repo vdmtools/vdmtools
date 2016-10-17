@@ -1,0 +1,57 @@
+class Nullable
+instance variables
+-- 1) !!! Endless loop  public static NULL: Nullable:=new Nullable();
+  protected isNil: bool :=false
+operations
+  public Nullable: () ==> Nullable
+  Nullable() == isNil:=true;
+
+  public IsNil: () ==> bool
+  IsNil() == return isNil;
+
+  public equals : Nullable ==> bool
+  equals(n) ==
+    return IsNil() and n.IsNil();
+
+end Nullable
+
+class Object is subclass of Nullable
+instance variables
+  public static NULL: Nullable:=new Nullable()  -- 2) !!! Nullable() is not called
+operations
+  public Object: <NULL> ==> Object
+  Object(p) == let - = Nullable() in skip;
+end Object
+
+class PP is subclass of Object
+operations
+  public PP: <NULL> ==> PP
+  PP(p) == isNil := true;
+end PP
+
+class A is subclass of Object
+operations
+  public  o : Nullable ==> bool
+  o(p) == return if p.IsNil() then false else true;
+
+-- 3) !!! Run-Time Error 230: Name unknown  public  o : R ==> bool
+--                                       o(r) == return false;
+
+public  Test : () ==> seq of bool
+Test() == 
+( dcl p: Nullable := Object`NULL, t_p:Nullable:=Object`NULL;
+  return
+    [ p.IsNil(),
+      new PP().IsNil(),
+      new PP(<NULL>).IsNil(),
+      p=Object`NULL,
+      p=t_p,
+      o(new PP()), -- !!! RRun-Time Error 230: Name unknown   
+      o(p),
+      o(def t:Nullable=Object`NULL in t),
+      isofclass(PP, t_p),
+      o(new PP(<NULL>))
+    ]; 
+);
+
+end  A

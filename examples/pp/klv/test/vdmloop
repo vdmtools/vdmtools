@@ -1,0 +1,13 @@
+#!/bin/sh   
+
+## Runs a collection of VDM++ test examples for the sorting example.
+SPEC="../Beacon.rtf ../CabDisplay.rtf ../CheckSpeedEvent.rtf ../EmergencyBreak.rtf \
+      ../Event.rtf ../FLTV.rtf ../HeadMeetBeaconEvent.rtf ../KLV.rtf ../OnBoardComp.rtf \
+      ../TIV_A.rtf ../TIV_D.rtf ../TIV_E.rtf ../TailMeetBeaconEvent.rtf ../Test.rtf \
+      ../KLVStateEvent.rtf ../NoBeaconMetEvent.rtf ../MaxSpeedEvent.rtf"
+
+## Generate the test coverage file vdm.tc
+vppde -p -R vdm.tc $SPEC
+
+## Find all argument files and run them on the specification.
+find . -type f -name \*.arg -exec vdmtest {} \;

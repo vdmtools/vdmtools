@@ -1,0 +1,20 @@
+\subsection{分野クラス}
+本の分野を表す。
+\begin{vdm_al}	
+class 分野クラス
+values
+	- = "$Header: /home/vdmtools/cvsroot/toolbox/examples-jp/pp/library/Subject.vpp,v 1.2 2005/11/22 07:47:00 vdmtools Exp $"
+
+instance variables
+public 分野名 : seq of char;
+
+operations
+
+public 初期化する : seq of char  ==> ()
+初期化する(ある分野名) ==
+	(
+	分野名 := ある分野名;
+	);
+
+end 分野クラス
+\end{vdm_al}

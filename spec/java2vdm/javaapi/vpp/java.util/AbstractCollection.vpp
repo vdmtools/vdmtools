@@ -1,0 +1,213 @@
+class JavaUtilAbstractCollection is subclass of JavaUtilCollection
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaUtilAbstractCollection" , <CLASS> , false  )
+operations 
+--public  size : () ==> int 
+--size() == 
+--is subclass responsibility ;
+
+public  clear : () ==> ()
+clear() == 
+is not yet specified;
+--( dcl   e : JavaUtilIterator := iterator();
+--  while  e.hasNext() do  
+--  ( let - = e.next()
+--    in 
+--      skip ;
+--    e.remove()
+--  ) ;
+--  skip 
+--) ;
+
+public  isEmpty : () ==> bool 
+isEmpty() == 
+( return  size() = 0
+) ;
+
+public  toArray : () ==> map  int  to  JavaLangObject
+toArray() == 
+is not yet specified;
+--( dcl   result : map  int  to  JavaLangObject := {l_4 |-> new  JavaLangObject(<NIL>)|l_4 in set  {0,...,size()-1}},
+--        e : JavaUtilIterator := iterator();
+--  ( dcl   i : int  := 0;
+--    while  e.hasNext() do  
+--    ( result := result ++ {i |-> e.next()};
+--      i := i+1
+--    ) 
+--  ) ;
+--  return  result
+--) ;
+
+--public  getClass : () ==> JavaLangClass
+--getClass() == 
+--return  CLASS;
+
+--public  iterator : () ==> JavaUtilIterator
+--iterator() == 
+--is subclass responsibility ;
+
+public  toString : () ==> JavaLangString
+toString() == 
+is not yet specified;
+--( dcl   buf : JavaLangStringBuffer := new  JavaLangStringBuffer(),
+--        e : JavaUtilIterator := iterator();
+--  let - = buf.append(new  JavaLangString("["))
+--  in 
+--    skip ;
+--  ( dcl   maxIndex : int  := size()-1;
+--    ( dcl   i : int  := 0;
+--      while  i <= maxIndex do  
+----      ( let - = buf.append(JavaLangString`valueOf(e.next()))
+--      ( let - = buf.append(new JavaLangString("is not yet implemented"))
+--        in 
+--          skip ;
+--        if  i < maxIndex
+--        then  
+--          let - = buf.append(new  JavaLangString(", "))
+--          in 
+--            skip ;
+--        i := i+1
+--      ) 
+--    ) ;
+--    let - = buf.append(new  JavaLangString("]"))
+--    in 
+--      skip ;
+--    return  buf.toString()
+--  ) 
+--) ;
+
+--public  add : JavaLangObject ==> bool 
+--add(o) == 
+--( exit  new  JavaLangUnsupportedOperationException()
+--) ;
+
+--public  remove : JavaLangObject ==> bool 
+--remove(o) == 
+--is not yet specified;
+--( dcl   e : JavaUtilIterator := iterator();
+--  if  o.IsNil()
+--  then  
+--    while  e.hasNext() do  
+--    ( if  e.next().IsNil()
+--      then  
+--        ( e.remove();
+--          return  true  
+--        ) 
+--    ) 
+--  else  
+--    while  e.hasNext() do  
+--    ( if  o.equals(e.next())
+--      then  
+--        ( e.remove();
+--          return  true  
+--        ) 
+--    );
+-- return  false
+--) ;
+
+public  contains : JavaLangObject ==> bool 
+contains(o) == 
+is not yet specified;
+--( dcl   e : JavaUtilIterator := iterator();
+--  if  o.IsNil()
+--  then  
+--    while  e.hasNext() do  
+--    ( if  e.next().IsNil()
+--      then  
+--        return  true  
+--    ) 
+--  else  
+--    while  e.hasNext() do  
+--    ( if  o.equals(e.next())
+--      then  
+--        return  true  
+--    ) ;
+--  return  false  
+--) ;
+
+--protected  JavaUtilAbstractCollection : () ==> JavaUtilAbstractCollection
+--JavaUtilAbstractCollection() == 
+--( skip 
+--) ;
+
+public  addAll : JavaUtilCollection ==> bool 
+addAll(c) == 
+is not yet specified;
+--( dcl   modified : bool  := false  ,
+--        e : JavaUtilIterator := c.iterator();
+--  while  e.hasNext() do  
+--  ( if  add(e.next())
+--    then  
+--      modified := true  
+--  ) ;
+--  return  modified
+--) ;
+
+--public  toArray : map  int  to  JavaLangObject ==> map  int  to  JavaLangObject
+--toArray(a) == 
+--( dcl   size : int  := size();
+--  if  (card  dom  a) < size
+--  then  
+--    a := java`lang.reflect.Array.newInstance(a.getClass().getComponentType() , size);
+--  ( dcl   it : JavaUtilIterator := iterator();
+--    ( dcl   i : int  := 0;
+--      while  i < size do  
+--      ( a := a ++ {i |-> it.next()};
+--        i := i+1
+--      ) 
+--    ) ;
+--    if  (card  dom  a) > size
+--    then  
+--      a := a ++ {size |-> {|->}};
+--    return  a
+--  ) 
+--) ;
+
+public  removeAll : JavaUtilCollection ==> bool 
+removeAll(c) == 
+is not yet specified;
+--( dcl   modified : bool  := false  ,
+--        e : JavaUtilIterator := iterator();
+--  while  e.hasNext() do  
+--  ( if  c.contains(e.next())
+--    then  
+--      ( e.remove();
+--        modified := true  
+--      ) 
+--  ) ;
+--  return  modified
+--) ;
+
+public  retainAll : JavaUtilCollection ==> bool 
+retainAll(c) == 
+is not yet specified;
+--( dcl   modified : bool  := false  ,
+--        e : JavaUtilIterator := iterator();
+--  while  e.hasNext() do  
+--  ( if  not  c.contains(e.next())
+--    then  
+--      ( e.remove();
+--        modified := true  
+--      ) 
+--  ) ;
+--  return  modified
+--) ;
+
+public  JavaUtilAbstractCollection : <NIL> ==> JavaUtilAbstractCollection
+JavaUtilAbstractCollection(-) == 
+isNil := true  ;
+
+--public  containsAll : JavaUtilCollection ==> bool 
+--containsAll(c) == 
+--is not yet specified;
+--( dcl   e : JavaUtilIterator := c.iterator();
+--  while  e.hasNext() do  
+--  ( if  not  contains(e.next())
+--    then  
+--      return  false  
+--  ) ;
+--  return  true  
+--) ;
+
+
+end  JavaUtilAbstractCollection

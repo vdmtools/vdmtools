@@ -1,0 +1,252 @@
+class JavaIoInputStreamReader is subclass of JavaIoReader
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaIoInputStreamReader" , <CLASS> , false  )
+instance variables 
+  private  btc : ByteToCharConverter;
+  private  in__ : JavaIoInputStream;
+  private  static defaultByteBufferSize : int  := 80;
+  private  bb : map  int  to  int ;
+  private  nBytes : int  := 0;
+  private  nextByte : int  := 0
+operations 
+public  read : () ==> int 
+read() == 
+( dcl   cb : map  int  to  char  := {0 |-> ' '};
+  let mk_(l_r,l_m)=readMICIntInt'(cb , 0 , 1)
+  in
+    if l_r = -1
+    then  
+      return  -1
+    else  
+      return  J2VUTIL`toInt(l_m(0))
+) ;
+
+public  close : () ==> ()
+close() == 
+( ( --if  in__.IsNil()
+    --then  
+    --  return  ;
+    in__.close();
+    --in__ := new  JavaIoInputStream(<NIL>);
+    bb := {|->};
+    btc := new  ByteToCharConverter(<NIL>)
+  ) ;
+  skip 
+) ;
+
+public  ready : () ==> bool 
+ready() == 
+( ( ensureOpen();
+    return  (nextByte < nBytes) or  inReady()
+  ) 
+) ;
+
+private  inReady : () ==> bool 
+inReady() == 
+( --trap  j2v_exception with  
+  --  cases  true  : 
+  --    (isofclass  (JavaIoIOException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+  --      ( dcl   x : JavaIoIOException := j2v_exception;
+  --        return  false  
+  --      ) ,
+  --    others  -> 
+  --      exit  j2v_exception
+  --  end  
+  --in  
+      return  in__.available() > 0
+) ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+private  ensureOpen : () ==> ()
+ensureOpen() == 
+( --if  in__.IsNil()
+  --then  
+  --  exit  new  JavaIoIOException(new  JavaLangString("Stream closed"));
+  skip 
+) ;
+
+public  getEncoding : () ==> JavaLangString
+getEncoding() == 
+( ( --if  not  btc.IsNil()
+    --then  
+    --  return  btc.getCharacterEncoding()
+    --else  
+      return  new  JavaLangString(<NIL>)
+  ) 
+) ;
+
+private  malfunction : () ==> ()
+malfunction() == 
+( --exit  new  InternalError(J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(new  JavaLangString("Converter malfunction (") , J2VUTIL`Convert("JavaLangString" , btc.getCharacterEncoding())) , new  JavaLangString(") -- please submit a bug report via ")) , JavaLangSystem`getProperty(new  JavaLangString("java.vendor.url.bug"))));
+  skip 
+) ;
+
+private  fill : map  int  to  char  * int  * int  ==> int * map  int  to  char
+fill(cbuf_, off, end__) == 
+( dcl cbuf :  map  int  to  char := cbuf_,
+      nc : int  := 0;
+  if  nextByte < nBytes
+  then  
+    let mk_(l_nc, l_cbuf)=convertInto(cbuf , off , end__)
+    in
+    ( nc := l_nc; cbuf:=l_cbuf
+    );
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip ,
+      others  -> 
+        exit  j2v_break
+    end  
+  in  
+    while  off+nc < end__ do  
+    ( if  nBytes <> -1
+      then  
+        ( if  (nc > 0) and  not  inReady()
+          then  
+            exit  new  J2V_Break();
+--          nBytes := in__.read(bb)
+          let mk_(l_nb, l_bb)=in__.readMIIIntInt'(bb , 0 , card  dom  bb)
+          in
+          ( nBytes := l_nb; bb:=l_bb
+          )
+        ) ;
+      if  nBytes = -1
+      then  
+        ( nBytes := 0;
+--          def l_9 = nc
+--          in nc := l_9+flushInto(cbuf , off+nc , end__);
+          if  nc = 0
+          then  
+            return  mk_(-1,{|->})
+          else  
+            exit  new  J2V_Break()
+        ) 
+      else  
+        ( nextByte := 0;
+          let mk_(l_nc, l_cbuf)=convertInto(cbuf , off+nc , end__)
+          in
+          ( nc := nc + l_nc; cbuf:=l_cbuf
+          );
+        ) 
+    ) ;
+  return  mk_(nc,cbuf)
+) ;
+
+public  readMICIntInt : map  int  to  char  * int  * int  ==> int 
+readMICIntInt(cbuf, off, len__) == 
+  return undefined;
+
+public  readMICIntInt' : map  int  to  char  * int  * int  ==> int * map  int  to  char
+readMICIntInt'(cbuf, off, len__) == 
+( ( ensureOpen();
+    if  (off < 0) or  (off > (card  dom  cbuf)) or  (len__ < 0) or  ((off+len__) > (card  dom  cbuf)) or  ((off+len__) < 0)
+    then  
+      ( exit  new  JavaLangIndexOutOfBoundsException()
+      ) 
+    else  
+      if  len__ = 0
+      then  
+        ( return  mk_(0,{|->})
+        ) ;
+    return  fill(cbuf , off , off+len__)
+  ) 
+) ;
+
+--private  flushInto : map  int  to  char  * int  * int  ==> int 
+--flushInto(cbuf, off, end__) == 
+--( dcl   nc : int  := 0;
+--  trap  j2v_exception with  
+--    cases  true  : 
+--      (isofclass  (JavaLangConversionBufferFullException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+--        ( dcl   x : JavaLangConversionBufferFullException := j2v_exception;
+--         nc := btc.nextCharIndex()-off
+--        ) ,
+--      others  -> 
+--        exit  j2v_exception
+--    end  
+--  in  
+--    ( nc := btc.flush(cbuf , off , end__)
+--    ) ;
+--  return  nc
+--) ;
+
+private  convertInto : map  int  to  char  * int  * int  ==> int * map  int  to  char
+convertInto(cbuf_, off, end__) == 
+( dcl cbuf: map  int  to  char := cbuf_,
+      nc : int  := 0;
+  if  nextByte < nBytes
+  then  
+--    ( trap  j2v_exception with  
+--        cases  true  : 
+--          (isofclass  (JavaLangConversionBufferFullException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+--            ( dcl   x : JavaLangConversionBufferFullException := j2v_exception;
+--              nextByte := btc.nextByteIndex();
+--              nc := btc.nextCharIndex()-off
+--            ) ,
+--          others  -> 
+--            exit  j2v_exception
+--        end  
+--      in  
+--        ( nc := btc.convert(bb , nextByte , nBytes , cbuf , off , end__);
+--          nextByte := nBytes;
+--          if  btc.nextByteIndex() <> nextByte
+--          then  
+--            malfunction()
+--        ) 
+    ( let l_n=nBytes-nextByte
+      in
+      ( cbuf := cbuf ++ {i|->new JavaLangInteger(bb(nextByte+i-off)).charValue()|i in set {off,...,off+l_n-1}};
+        nc:=nBytes-nextByte;
+      );
+      nextByte := nBytes;
+    );
+--    ) ;
+  return   mk_(nc,cbuf)
+) ;
+
+public  JavaIoInputStreamReader : <NIL> ==> JavaIoInputStreamReader
+JavaIoInputStreamReader(-) == 
+isNil := true  ;
+
+public  JavaIoInputStreamReader : JavaIoInputStream ==> JavaIoInputStreamReader
+JavaIoInputStreamReader(in__) == 
+( let - = JavaIoInputStreamReader(in__ , new ByteToCharConverter(<NIL>))
+  in 
+    skip 
+) ;
+
+public  JavaIoInputStreamReader : JavaIoInputStream * JavaLangString ==> JavaIoInputStreamReader
+JavaIoInputStreamReader(in__, enc) == 
+( let - = JavaIoInputStreamReader(in__ , new ByteToCharConverter(<NIL>)) -- ByteToCharConverter`getConverter(enc))
+  in 
+    skip 
+) ;
+
+private  JavaIoInputStreamReader : JavaIoInputStream * ByteToCharConverter ==> JavaIoInputStreamReader
+JavaIoInputStreamReader(in__, btc) == 
+( let - = JavaIoReader(in__)
+  in 
+    skip ;
+--  if  in__.IsNil()
+--  then  
+--    exit  new  JavaLangNullPointerException(new  JavaLangString("input stream is null"));
+  JavaIoInputStreamReader`in__ := in__;
+  JavaIoInputStreamReader`btc := btc;
+  bb := {l_3 |-> 0|l_3 in set  {0,...,defaultByteBufferSize-1}}
+) ;
+
+
+end  JavaIoInputStreamReader
+
+
+class ByteToCharConverter is subclass of JavaLangObject
+operations 
+public  ByteToCharConverter : <NIL> ==> ByteToCharConverter
+ByteToCharConverter(-) == 
+isNil := true  ;
+
+end  ByteToCharConverter

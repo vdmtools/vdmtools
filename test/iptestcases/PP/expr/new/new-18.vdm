@@ -1,0 +1,43 @@
+class C
+
+instance variables
+
+i : nat := 0;
+b : bool;
+
+operations
+
+--  C: () ==> C
+public C: () ==> C
+  C() ==
+    skip;
+
+  C: nat * bool ==> C
+  C(n,b2) ==
+    (b := b2;
+     i := n);
+    
+end C
+class D is subclass of C
+
+operations
+
+D: () ==> D
+D() ==
+  skip;
+  
+end D
+class A
+
+operations
+
+Op:() ==> nat * seq of char
+Op() ==
+  let d = new C() in
+   return mk_(7,[]);
+
+public Test : () ==> nat * seq of char
+Test() ==
+  Op();
+  
+end A

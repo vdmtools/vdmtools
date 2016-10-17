@@ -1,0 +1,19 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+public Test: () ==> real
+Test() ==
+  (a := 27;
+   return a); 
+
+instance variables
+
+  a: real := 7.4;
+  inv a < 30;
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

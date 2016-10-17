@@ -1,0 +1,13 @@
+class A
+
+types
+
+  T = set of nat
+
+operations
+
+public Test : () ==> bool
+Test() ==
+  return is_(3, T)
+
+end A

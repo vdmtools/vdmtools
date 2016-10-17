@@ -1,0 +1,12 @@
+  Error : The type returned by the body statement is not compatible with the sig
+nature of Test
+  act : A
+  exp : ( seq1 of ( set of nat | seq1 of nat | map nat to nat | {} | [] | {|->} 
+) | [] )
+m4tmp1, l. 9, c. 11:
+  Error : Unknown identifier A
+m4tmp1, l. 10, c. 8:
+  Error : Type of assignment expression is not compatible to defined type of ins
+tance variable
+  act : seq1 of set of nat1
+  exp : A

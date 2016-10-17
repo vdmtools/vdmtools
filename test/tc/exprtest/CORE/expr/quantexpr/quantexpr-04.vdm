@@ -1,0 +1,13 @@
+class QuantExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = exists a in set {a | a : nat & a < 8} & a 
+  in skip;
+
+------------------------------------------------------------------------------
+end QuantExprTest

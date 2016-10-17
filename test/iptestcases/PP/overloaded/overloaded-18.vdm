@@ -1,0 +1,56 @@
+class A
+
+operations
+public
+Test: () ==> nat
+Test() ==
+  let c : C = new C()
+  in
+    return c.op(1,2);
+
+end A
+
+class SS
+
+end SS
+
+class S is subclass of SS
+
+operations
+public
+op: () ==> nat
+op() ==
+  return op(nil);
+
+public
+op: [nat] ==> nat
+op(n) ==
+  if n = nil
+  then return 0
+  else return n;
+
+end S
+
+class O
+end O
+
+class M is subclass of S, O
+
+operations
+public
+op: nat * nat ==> nat
+op(n,m) ==
+  is subclass responsibility;
+
+end M
+
+class C is subclass of M
+
+operations
+public
+op: nat * nat ==> nat
+op(n,m) ==
+  return op(n+m);
+
+end C
+

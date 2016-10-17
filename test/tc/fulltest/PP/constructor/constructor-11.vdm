@@ -1,0 +1,25 @@
+-- Simple check to ensure that incorrect type in constructor is picked up
+
+class A
+
+instance variables
+
+n : nat;
+
+operations
+
+public A() ==
+( n := m;
+)
+
+end A
+
+class B
+
+operations
+
+op : () ==> A
+op() ==
+  return new A()
+
+end B

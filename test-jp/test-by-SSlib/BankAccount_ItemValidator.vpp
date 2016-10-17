@@ -1,0 +1,147 @@
+/*
+#####
+# $Id: BankAccount_ItemValidator.vpp,v 1.1 2005/11/25 07:05:38 vdmtools Exp $
+### Validators
+
+# BankAccount の Generic な Validator
+*/
+
+class BankAccount_ItemValidator is subclass of GofoItemValidator, 『問題領域共通定義』
+
+instance variables
+private 項目名 : 「文字列」 := "";
+
+operations
+
+public BankAccount_ItemValidator :  「文字列」 ==> BankAccount_ItemValidator
+BankAccount_ItemValidator(ある項目名) == 
+	(
+	項目名 := ある項目名;
+	return self
+	);
+
+public validate_priv : [GofoItemValidator`「項目」] ==> [GofoApplicationException]
+validate_priv(-) == return new BankAccount_Exception(8001, "項目" ^ 項目名 ^ "のチェックは未定義です。");
+
+end BankAccount_ItemValidator
+------------------------------------------------------
+/*# このクラスは特殊で、未定義のチェック項目が適用されたら
+# 仮に与えられるものである。
+# チェックが未定義な項目に対してチェックが呼ばれてしまったら
+# 未定義チェックであるというメッセージを返す
+class OMS_InvalidItemValidator < OMS_ItemValidator
+*/
+class BankAccount_InvalidItemValidator is subclass of BankAccount_ItemValidator
+
+end BankAccount_InvalidItemValidator
+------------------------------------------------------
+class 数量Validator is subclass of BankAccount_ItemValidator
+
+operations
+public validate_priv : [GofoItemValidator`「項目」] ==> [GofoApplicationException]
+validate_priv(ある数量) == 
+	let	ある範囲チェック検査官 = new GofoRangeValidator(0,10 ** 14)	in 	-- 10 ** 14という数字は、テスト用に適当に設定した。
+	(
+	if is_real(ある数量) then
+		return ある範囲チェック検査官.isValid(ある数量)
+	/*
+	elseif is_(ある数量, 「文字列」) then
+		return ある範囲チェック検査官.validate_priv(String`asInteger(ある数量))
+	*/
+	else
+		return new BankAccount_Exception(8101, "項目が、数量ではありません。")
+	);
+
+end 数量Validator
+------------------------------------------------------
+class 金額Validator is subclass of BankAccount_ItemValidator
+
+operations
+public validate_priv : [GofoItemValidator`「項目」] ==> [GofoApplicationException]
+validate_priv(ある金額) == 
+	let	ある範囲チェック検査官 = new GofoRangeValidator(0,10 ** 14)	in -- 10 ** 14という数字は、テスト用に適当に設定した。
+	(
+	if is_real(ある金額) then
+		return ある範囲チェック検査官.isValid(ある金額)
+	/*
+	elseif is_(ある金額, 「文字列」) then
+		return ある範囲チェック検査官.validate_priv(String`asInteger(ある金額))
+	*/
+	else
+		return new BankAccount_Exception(8101, "項目が、金額ではありません。")
+	);
+
+end 金額Validator
+------------------------------------------------------
+class 識別子Validator  is subclass of BankAccount_ItemValidator
+
+operations
+public validate_priv : [GofoItemValidator`「項目」] ==> [GofoApplicationException]
+validate_priv(ある識別子) == 
+	let	ある識別子チェック検査官 = new GofoColLenValidator(1,8)	in
+	(
+	ある識別子チェック検査官.isValid(ある識別子)
+	);
+
+end 識別子Validator
+------------------------------------------------------
+class 伝票IDValidator  is subclass of BankAccount_ItemValidator
+
+operations
+public validate_priv : [GofoItemValidator`「項目」] ==> [GofoApplicationException]
+validate_priv(ある識別子) == 
+	let	ある識別子チェック検査官 = new GofoColLenValidator(5,10)	in
+	(
+	ある識別子チェック検査官.isValid(ある識別子)
+	);
+
+end 伝票IDValidator
+------------------------------------------------------
+class 顧客IDValidator  is subclass of BankAccount_ItemValidator
+
+operations
+public validate_priv : [GofoItemValidator`「項目」] ==> [GofoApplicationException]
+validate_priv(ある識別子) == 
+	let	ある識別子チェック検査官 = new GofoColLenValidator(1,8)	in
+	(
+	ある識別子チェック検査官.isValid(ある識別子)
+	);
+
+end 顧客IDValidator
+------------------------------------------------------
+class 営業店IDValidator  is subclass of BankAccount_ItemValidator
+
+operations
+public validate_priv : [GofoItemValidator`「項目」] ==> [GofoApplicationException]
+validate_priv(ある識別子) == 
+	let	ある識別子チェック検査官 = new GofoColLenValidator(3,4)	in
+	(
+	ある識別子チェック検査官.isValid(ある識別子)
+	);
+	
+end 営業店IDValidator 
+------------------------------------------------------
+class パスワードValidator is subclass of BankAccount_ItemValidator
+
+operations
+public validate_priv : [GofoItemValidator`「項目」] ==> [GofoApplicationException]
+validate_priv(ある識別子) == 
+	let	ある識別子チェック検査官 = new GofoColLenValidator(6,8)	in
+	(
+	ある識別子チェック検査官.isValid(ある識別子)
+	);
+	
+end パスワードValidator
+------------------------------------------------------
+class 自動継続区分Validator is subclass of BankAccount_ItemValidator
+
+operations
+public validate_priv : [GofoItemValidator`「項目」] ==> [GofoApplicationException]
+validate_priv(ある識別子) == 
+	let	ある識別子チェック検査官 = new GofoKubunValidator({<自動継続>, <非継続>})	in
+	(
+	ある識別子チェック検査官.isValid(ある識別子)
+	);
+	
+end 自動継続区分Validator
+------------------------------------------------------

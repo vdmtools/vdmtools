@@ -1,0 +1,35 @@
+module A
+imports from B all
+exports all
+definitions
+operations
+Test: () ==> set of int
+Test() ==
+( B`Op2(-10, 2);
+  B`Op1()
+)
+end A
+
+module B
+exports all
+definitions
+operations
+Op1: () ==> set of int
+Op1() ==
+  return s;
+
+Op2: int * int ==> ()
+Op2(lb, ub) ==
+  Op3(lb, ub);
+
+Op3: int * int ==> ()
+Op3(lb, ub) ==
+  s := {lb,...,ub}
+
+state Sigma of
+  s : set of int
+end
+
+end B
+
+

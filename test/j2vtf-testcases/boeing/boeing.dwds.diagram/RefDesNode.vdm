@@ -1,0 +1,509 @@
+class RefDesNode is subclass of DiagramNode
+operations 
+public  getMate : () ==> [RefDes]
+getMate() == 
+( return  if  (is_ (self  ,[SpliceWireTieGraphic])) then  nil   else  RefDesNode`refDes.getMate()
+) ;
+
+public  hasAMate : () ==> bool 
+hasAMate() == 
+( return  RefDesNode`refDes.hasAMate() and  not  (is_ (self  ,[SpliceWireTieGraphic]))
+) ;
+
+public  getRefDes : () ==> [RefDes]
+getRefDes() == 
+( return  RefDesNode`refDes
+) ;
+
+public  RefDesNode : () ==> RefDesNode
+RefDesNode() == 
+( let - = RefDesNode(nil  )
+  in 
+    skip ;
+  return  
+) ;
+
+public  getPinList : () ==> [Vector]
+getPinList() == 
+( return  pinList
+) ;
+
+protected  movePin : int  * int  ==> <VOID>
+movePin(fromIndex, toIndex) == 
+( dcl   tempPinHeight : [Integer] := PinHeight.elementAt(fromIndex);
+  let - = PinHeight.removeElementAt(fromIndex)
+  in 
+    skip ;
+  let - = PinHeight.insertElementAt(tempPinHeight , toIndex)
+  in 
+    skip ;
+  ( dcl   pinName : [String] := pinList.elementAt(fromIndex);
+    let - = pinList.removeElementAt(fromIndex)
+    in 
+      skip ;
+    let - = pinList.insertElementAt(pinName , toIndex)
+    in 
+      skip ;
+    ( dcl   tempPin : [PinGraphic] := pinGraphics.elementAt(fromIndex);
+      let - = pinGraphics.removeElementAt(fromIndex)
+      in 
+        skip ;
+      let - = pinGraphics.insertElementAt(tempPin , toIndex)
+      in 
+        skip ;
+      ( dcl   myLocation : [Point] := getLocation();
+        let - = setLocation(myLocation.x , myLocation.y)
+        in 
+          skip ;
+        return  
+      ) 
+    ) 
+  ) ;
+  return  <VOID>
+) ;
+
+public  getPinHeight : () ==> [Vector]
+getPinHeight() == 
+( return  PinHeight
+) ;
+
+public  getDrawingType : () ==> int 
+getDrawingType() == 
+( return  DrawingType
+) ;
+
+public  getGraphicType : () ==> int 
+getGraphicType() == 
+( return  0
+) ;
+
+public  getPinGraphics : () ==> [Vector]
+getPinGraphics() == 
+( return  pinGraphics
+) ;
+
+public  setLocation : int  * int  ==> <VOID>
+setLocation(newX, newY) == 
+( let - = DiagramNode`setLocation(newX , newY)
+  in 
+    skip ;
+  ( dcl   edgeList : [Enumeration] := edgesAtPin.elements();
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip 
+        
+      end  
+    in  
+      while  edgeList.hasMoreElements() do  
+      ( dcl   nextEdge : [DiagramEdge] := edgeList.nextElement(),
+              pointToUpdate : [ConnectionPoint] := nextEdge.getOriginatingPoint();
+        if  pointToUpdate.getNode() <> self  
+        then  
+          ( pointToUpdate := nextEdge.getTerminatingPoint()
+          ) ;
+        let - = pointToUpdate.setLocation(getConnectionPoint(pointToUpdate.getConnectionId() , pointToUpdate.getOrientation()))
+        in 
+          skip ;
+        ( dcl   terminatingNode : [RefDesNode] := nextEdge.getTerminatingPoint().getNode(),
+                startingNode : [RefDesNode] := nextEdge.getOriginatingPoint().getNode();
+          if  terminatingNode = startingNode
+          then  
+            ( pointToUpdate := nextEdge.getTerminatingPoint();
+              let - = pointToUpdate.setLocation(getConnectionPoint(pointToUpdate.getConnectionId() , pointToUpdate.getOrientation()))
+              in 
+                skip 
+            ) 
+        ) 
+      ) 
+  ) ;
+  return  <VOID>
+) ;
+
+public  getDominantMate : () ==> [RefDes]
+getDominantMate() == 
+( dcl   dominantMate : [RefDes];
+  if  RefDesNode`hasAMate() and  RefDesNode`refDes.getMate().isDominantMate()
+  then  
+    ( dominantMate := RefDesNode`refDes.getMate()
+    ) 
+  else  
+    ( dominantMate := RefDesNode`refDes
+    ) ;
+  return  dominantMate
+) ;
+
+public  initGraphicPins : () ==> <VOID>
+initGraphicPins() == 
+( return  
+) ;
+
+public  setDrawingType : int  ==> <VOID>
+setDrawingType(MyDrawingType) == 
+( DrawingType := MyDrawingType;
+  return  
+) ;
+
+public  addPin : [String] ==> <VOID>
+addPin(pin) == 
+( let - = pinList.addElement(pin)
+  in 
+    skip ;
+  let - = pinGraphics.addElement(new  PinGraphic(pin , self  ))
+  in 
+    skip ;
+  return  
+) ;
+
+public  clearPinGraphics : () ==> <VOID>
+clearPinGraphics() == 
+( ( dcl   idx : int  := 0;
+    while  idx < pinGraphics.size() do  
+    ( dcl   nextPin : [PinGraphic] := pinGraphics.elementAt(idx);
+      let - = containingCanvas.removeMouseListener(nextPin)
+      in 
+        skip ;
+      let - = containingCanvas.removeMouseMotionListener(nextPin)
+      in 
+        skip ;
+      idx := idx+1
+    ) 
+  ) ;
+  let - = pinGraphics.removeAllElements()
+  in 
+    skip ;
+  return  
+) ;
+
+private  getPinWireHeight : () ==> [Vector]
+getPinWireHeight() == 
+( dcl   WireHeightData : map  int  to  int  := nil  ,
+        PinWireHeight : [Vector] := nil  ,
+        Pins : [Vector] := getPinList();
+  if  Pins <> nil   and  Pins.size() > 1
+  then  
+    ( WireHeightData := {l_4 |-> 0|l_4 in set  {0,...,Pins.size()-1}};
+      PinWireHeight := new  Vector(Pins.size());
+      ( dcl   outer : int  := 0;
+        while  outer < Pins.size() do  
+        ( dcl   WireCount : int  := 0,
+                Wires : [Enumeration] := getEdges(Pins.elementAt(outer));
+          trap  j2v_break with  
+            cases  true  : 
+              (isofclass  (J2V_Break,j2v_break)) -> 
+                skip 
+              
+            end  
+          in  
+            while  Wires.hasMoreElements() do  
+            ( WireCount := WireCount+1;
+              ( dcl   NextWire : [DiagramEdge] := Wires.nextElement(),
+                      OriginatingPoint : [ConnectionPoint] := NextWire.getOriginatingPoint(),
+                      TerminatingPoint : [ConnectionPoint] := NextWire.getTerminatingPoint();
+                if  self   = OriginatingPoint.getNode()
+                then  
+                  ( def l_7 = WireHeightData(outer)
+                    in WireHeightData := WireHeightData ++ {outer |-> l_7+TerminatingPoint.getLocation().y}
+                  ) 
+                else  
+                  ( def l_7 = WireHeightData(outer)
+                    in WireHeightData := WireHeightData ++ {outer |-> l_7+OriginatingPoint.getLocation().y}
+                  ) 
+              ) 
+            ) ;
+          if  WireCount > 0
+          then  
+            ( def l_5 = WireHeightData(outer)
+              in WireHeightData := WireHeightData ++ {outer |-> l_5/WireCount}
+            ) 
+          else  
+            ( WireHeightData := WireHeightData ++ {outer |-> Integer.MAX_VALUE}
+            ) ;
+          let - = PinWireHeight.addElement(new  Integer(WireHeightData(outer)))
+          in 
+            skip ;
+          outer := outer+1
+        ) 
+      ) 
+    ) ;
+  return  PinWireHeight
+) ;
+
+public  sortPinsByHeight : () ==> <VOID>
+sortPinsByHeight() == 
+( dcl   AverageHeight : [Vector];
+  AverageHeight := getPinWireHeight();
+  if  AverageHeight <> nil  
+  then  
+    ( dcl   LowHeight : int ,
+            LowIndex : int ;
+      ( dcl   outer : int  := 0;
+        while  outer < pinList.size()-1 do  
+        ( LowHeight := (def l_7 :  Integer = (AverageHeight.elementAt(outer))
+          in l_7).intValue();
+          LowIndex := outer;
+          ( dcl   inner : int  := outer+1;
+            while  inner < pinList.size() do  
+            ( dcl   LowPin : [String] := pinList.elementAt(LowIndex),
+                    ComparePin : [String] := pinList.elementAt(inner),
+                    MyWireHeight : int  := (def l_13 :  Integer = (AverageHeight.elementAt(inner))
+                    in l_13).intValue();
+              if  MyWireHeight < LowHeight or  (MyWireHeight = LowHeight and  LowPin.compareTo(ComparePin) > 0)
+              then  
+                ( LowHeight := MyWireHeight;
+                  LowIndex := inner
+                ) ;
+              inner := inner+1
+            ) 
+          ) ;
+          if  LowIndex <> outer
+          then  
+            ( dcl   TempHeight : [Integer] := AverageHeight.elementAt(LowIndex);
+              let - = AverageHeight.removeElementAt(LowIndex)
+              in 
+                skip ;
+              let - = AverageHeight.insertElementAt(TempHeight , outer)
+              in 
+                skip ;
+              let - = movePin(LowIndex , outer)
+              in 
+                skip 
+            ) ;
+          outer := outer+1
+        ) 
+      ) 
+    ) ;
+  return  
+) ;
+
+public  RefDesNode : int  * int  * int  * int  ==> RefDesNode
+RefDesNode(x, y, width, height) == 
+( let - = RefDesNode()
+  in 
+    skip ;
+  let - = setBounds(x , y , width , height+LABEL_HEIGHT)
+  in 
+    skip 
+) ;
+
+public  contains : [String] ==> bool 
+contains(pinName) == 
+( return  pinList.contains(pinName)
+) ;
+
+public  setRefDes : [RefDes] ==> <VOID>
+setRefDes(refDes) == 
+( RefDesNode`refDes := refDes;
+  let - = setId(refDes.toString())
+  in 
+    skip ;
+  LABEL_WIDTH := labelFontMetrics.stringWidth(identifier);
+  ( dcl   currentSize : [Dimension] := getSize(),
+          newWidth : int  := currentSize.width;
+    if  newWidth < LABEL_WIDTH
+    then  
+      ( newWidth := LABEL_WIDTH
+      ) ;
+    let - = setSize(newWidth , currentSize.height)
+    in 
+      skip ;
+    pinList := new  Vector();
+    pinGraphics := new  Vector();
+    PinHeight := new  Vector()
+  ) ;
+  return  <VOID>
+) ;
+
+public  RefDesNode : [RefDes] ==> RefDesNode
+RefDesNode(refDes) == 
+( let - = DiagramNode()
+  in 
+    skip ;
+  if  refDes <> nil  
+  then  
+    ( let - = setId(refDes.toString())
+      in 
+        skip ;
+      ( dcl   currentSize : [Dimension] := getSize();
+        let - = setSize(currentSize.width , currentSize.height+LABEL_HEIGHT)
+        in 
+          skip 
+      ) 
+    ) ;
+  RefDesNode`refDes := refDes;
+  labelFont := new  Font(new  String("Courier") , Font`PLAIN , 11);
+  labelFontMetrics := getFontMetrics(labelFont);
+  LABEL_HEIGHT := labelFontMetrics.getAscent()+LABEL_SPACING;
+  pinList := new  Vector();
+  pinGraphics := new  Vector();
+  PinHeight := new  Vector();
+  let - = setForeground(REFDES_COLOR)
+  in 
+    skip ;
+  return  
+) ;
+
+public  sortPinsByOrientation : () ==> <VOID>
+sortPinsByOrientation() == 
+( if  pinList <> nil   and  pinList.size() > 1
+  then  
+    ( dcl   lastPinIndex : int  := pinList.size()-1;
+      ( dcl   outer : int  := pinList.size()-2;
+        while  outer >= 0 do  
+        ( dcl   OppositeSideConnections : int  := 0,
+                SameSideConnections : int  := 0,
+                Wires : [Enumeration] := getEdges(pinList.elementAt(outer));
+          trap  j2v_break with  
+            cases  true  : 
+              (isofclass  (J2V_Break,j2v_break)) -> 
+                skip 
+              
+            end  
+          in  
+            while  Wires.hasMoreElements() do  
+            ( dcl   NextWire : [DiagramEdge] := Wires.nextElement(),
+                    OriginatingPoint : [ConnectionPoint] := NextWire.getOriginatingPoint(),
+                    TerminatingPoint : [ConnectionPoint] := NextWire.getTerminatingPoint(),
+                    OriginatingOrientation : [Orientation] := OriginatingPoint.getOrientation(),
+                    TerminatingOrientation : [Orientation] := TerminatingPoint.getOrientation();
+              if  OriginatingOrientation = TerminatingOrientation
+              then  
+                ( SameSideConnections := SameSideConnections+1
+                ) 
+              else  
+                ( OppositeSideConnections := OppositeSideConnections+1
+                ) 
+            ) ;
+          if  SameSideConnections > OppositeSideConnections
+          then  
+            ( let - = movePin(outer , lastPinIndex)
+              in 
+                skip 
+            ) ;
+          outer := outer-1
+        ) 
+      ) 
+    ) ;
+  return  
+) ;
+
+public  addWireAtPin : [String] ==> <VOID>
+addWireAtPin(pin) == 
+( return  
+) ;
+
+protected  paintLabel : [Graphics] ==> <VOID>
+paintLabel(graphics) == 
+( if  refDes <> nil  
+  then  
+    ( dcl   location : [Point] := getLocation();
+      let - = graphics.setFont(labelFont)
+      in 
+        skip ;
+      let - = graphics.drawString(refDes.displayName() , location.x , location.y+labelFontMetrics.getAscent())
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+public  mouseMoved : [MouseEvent] ==> <VOID>
+mouseMoved(event) == 
+( if  getForeground() <> SELECT_COLOR
+  then  
+    ( dcl   currentColor : [Color] := getForeground(),
+            nextColor : [Color];
+      if  contains(event.getX() , event.getY())
+      then  
+        ( nextColor := HIGHLIGHT_COLOR
+        ) 
+      else  
+        ( nextColor := REFDES_COLOR
+        ) ;
+      if  currentColor <> nextColor
+      then  
+        ( let - = setForeground(nextColor)
+          in 
+            skip ;
+          let - = paint(containingCanvas.getGraphics())
+          in 
+            skip 
+        ) 
+    ) ;
+  return  
+) ;
+
+public  mouseExited : [MouseEvent] ==> <VOID>
+mouseExited(event) == 
+( return  
+) ;
+
+public  paintPinNames : [Graphics] ==> <VOID>
+paintPinNames(graphics) == 
+( dcl   pinGraphics : [Vector] := getPinGraphics();
+  ( dcl   pinIndex : int  := 0;
+    while  pinIndex < pinGraphics.size() do  
+    ( dcl   nextPin : [PinGraphic] := pinGraphics.elementAt(pinIndex);
+      let - = nextPin.paint(graphics)
+      in 
+        skip ;
+      pinIndex := pinIndex+1
+    ) 
+  ) ;
+  return  
+) ;
+
+public  mousePressed : [MouseEvent] ==> <VOID>
+mousePressed(event) == 
+( return  
+) ;
+
+public  equals : [String] * [String] ==> bool 
+equals(nodeName, pinName) == 
+( dcl   returnValue : bool  := false  ,
+        identifier : [String] := RefDesNode`getId();
+  if  identifier.equals(nodeName) or  identifier.equals(nodeName+pinName)
+  then  
+    ( returnValue := true  
+    ) 
+  else  
+    ( returnValue := false  
+    ) ;
+  return  returnValue
+) ;
+
+public  mouseReleased : [MouseEvent] ==> <VOID>
+mouseReleased(event) == 
+( return  
+) ;
+
+public  connectOrientation : [DiagramEdge] ==> [Orientation]
+connectOrientation(MyWire) == 
+( dcl   MyOrientation : [Orientation];
+  if  self   = MyWire.getOriginatingPoint().getNode()
+  then  
+    ( MyOrientation := MyWire.getOriginatingPoint().getOrientation()
+    ) 
+  else  
+    ( MyOrientation := MyWire.getTerminatingPoint().getOrientation()
+    ) ;
+  return  MyOrientation
+) ;
+
+public  getConnectionPoint : [String] * [Orientation] ==> [Point]
+getConnectionPoint(pinName, direction) == 
+is subclass responsibility ;
+
+instance variables 
+  protected  refDes : [RefDes] := nil  ;
+  protected  pinList : [Vector] := nil  ;
+  protected  pinGraphics : [Vector] := nil  ;
+  protected  PinHeight : [Vector] := nil  ;
+  protected  DrawingType : int ;
+  protected  labelFont : [Font] := nil  ;
+  protected  labelFontMetrics : [FontMetrics] := nil  ;
+  protected  static LABEL_HEIGHT : int  := 0;
+  protected  static LABEL_WIDTH : int  := 0;
+  protected  static LABEL_SPACING : int  := 2
+  
+end  RefDesNode

@@ -1,0 +1,134 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+public Test : () ==> map seq of char to seq of bool   
+Test () ==
+
+let multtype = { false,true, 'a', 3, -3, 0, 3.6,
+	         <YES>, {3}, [3,6], {3|-> 6}, mk_(3, 6), nil, 
+	         mk_A_(3,56) }
+in
+return {
+"ISBOOL" |->
+	[ forall a in set multtype & is_bool(f(a)),
+	  exists a in set multtype & is_bool(f(a)),
+	  is_bool( let a : nat | bool = true
+		   in is_bool( a ) ),
+	  is_bool( if { 3 |-> true, 2 |-> 2}(3)
+	           then <YES>
+		   else false ),
+          is_bool( let l : seq of nat | bool = [] in l),
+          is_bool( [true, false,3](1) ),
+          is_bool( f(true)),
+	  is_bool( f(false) ) ],
+
+"ISNAT" |-> 
+         [ forall a in set multtype & is_nat(f(a)),
+	   exists a in set multtype & is_nat(f(a)),
+           is_nat( let a : real = 3.6
+		   in a ),
+           is_nat( if 3<3.6
+		   then -3
+		   else <YES> ),
+           is_nat(let m : (map nat to nat) | nat = {|->} in m),
+	   is_nat({3 |->2, false |-> true}(3) ),
+	   is_nat( -0) ],
+
+"ISNAT1" |->
+	[ forall a in set multtype & is_nat1(f(a)),
+	  exists a in set multtype & is_nat1(f(a)),
+	  is_nat1( let a : real = 0
+		  in a ),
+	  is_nat1( if is_bool(f(-0.23))
+		   then 20
+		   else <YES> ),
+	  is_nat1( mk_A_(3,6).a ),
+	  is_nat1( f(3 + 6) ),
+	  is_nat1( f(1)) ],
+
+"ISINT" |->
+	[ forall a in set multtype & is_int( f(a) ),
+	  exists a in set multtype & is_int( f(a) ),
+	  is_int( let a : real = 38
+		  in a ),
+          is_int( if f(true)
+		  then 3
+	          else [3,6, {|->} ] ),
+	  is_int( {3 |->false, [] |-> 2 }(3) ),
+	  is_int( {{|->} |-> 3}( {|->} )  ),
+	  is_int( -3.36 ) ],
+
+"ISRAT" |->	
+	[ forall a in set multtype & is_rat( f(a) ),
+	  exists a in set multtype & is_rat( f(a) ),
+	  is_rat( let a : real | bool = -31
+		  in a ),
+          is_rat( if is_real(f(3))
+		  then <YES>
+	 	  else 3.02 ),
+	  is_rat( [34, []](2) ),
+	  is_rat( if 1 = 1 then 36/6.3 else []),
+	  is_rat( if 1 = 2 then 2 else multtype ) ],
+
+"ISREAL" |->
+	[ forall a in set multtype & is_real(f(a)),
+	  exists a in set multtype & is_real(f(a)),
+	  is_real( let a : real | bool = -31
+		  in a ),
+          is_real( if is_real(f(3))
+		  then 36
+	 	  else false ),
+	  is_real( [34, []](1) ),
+	  is_real( [nil, 36/6.3](2)),
+	  is_real( if nil = nil then multtype else 2.0) ],
+
+
+"ISCHAR" |->
+	[ forall a in set multtype & is_char( f(a) ),
+	  exists a in set multtype & is_char( f(a) ),
+	  is_char( let a : char | seq of char = "hello world"	
+	           in a ),
+          is_char( if is_bool( f(true))
+		   then 'z'
+		   else 3 ),
+	  is_char( if true = true then { |-> } else 'a'),
+	  is_char( ['a', 'b', 'c', false](3) ),
+	  is_char( let c : char | nat = '0' in c) ],
+
+"ISTAG" |->
+        [ forall a in set multtype & is_char( f(a) ),
+	  exists a in set multtype & is_char( f(a) ),
+	  is_A_( let a = if 'a' = 'a' then "hello spring" else mk_A_(1,1)
+		in a ),
+          is_A_( if is_B( if 'a' = 'a' then mk_B(3,6) else 1)
+		then mk_A_(3,6)
+		else "hello easter" ),
+	  is_A_( if  1=1 then mk_A_(3,6) else 1),
+          is_B( if  1 = 1.0 then mk_A_(3,1) else mk_B(3,1) ) ]
+}
+
+
+
+types
+
+  A_ ::
+   a : nat
+   b : nat;
+
+  B ::
+   a : nat
+   c : nat
+
+functions
+
+f: [int | <YES> | set of int | seq of int | map int to int | int * int | A_ | real | bool | char] -> 
+   [int | <YES> | set of int | seq of int | map int to int | int * int | A_ | real | bool | char]
+
+f(x) == 
+  x
+   
+
+end A

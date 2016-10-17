@@ -1,0 +1,23 @@
+class A
+
+operations
+
+public
+Test: () ==> bool
+Test() ==
+  return B`pre_f1(7);
+
+end A
+class B
+
+functions
+
+static
+public
+f1 : nat +> nat
+f1(n) ==
+  n
+pre n > 7
+post n <> RESULT;
+
+end B

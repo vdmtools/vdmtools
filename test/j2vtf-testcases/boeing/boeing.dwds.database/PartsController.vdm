@@ -1,0 +1,139 @@
+class PartsController is subclass of WiringDataController
+operations 
+public  initialize : () ==> <VOID>
+initialize() == 
+( return  <VOID>
+) ;
+
+public  getViaBundle : [Bundle] ==> map  int  to  [Part]
+getViaBundle(bundle) == 
+( dcl   bundleId : [Integer] := new  Integer(bundle.getId()),
+        partsList : [Vector] := new  Vector(10),
+        connection : [Connection] := PartsController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := PartsController`getToolkit().getQuerySet(),
+        query : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement(),
+            aircraft : [Aircraft] := aircraftCntl.getCurrentContextObject(),
+            acTypeId : [Integer] := new  Integer(aircraft.getAcType().getAcTypeId()),
+            effIdList : [String] := effectivityCntl.getEffIdSQLList(),
+            args : map  int  to  [Object] := {2 |-> effIdList , 1 |-> acTypeId , 0 |-> bundleId};
+      query := querySet.getQuery(WiringDataQuerySet.GET_PARTS_VIA_BUNDLE_ID , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  queryRS.next() do  
+          ( dcl   part : [Part] := new  Part(queryRS.getInt(1) , queryRS.getString(2) , queryRS.getString(3) , queryRS.getString(4) , queryRS.getString(5) , queryRS.getString(6) , queryRS.getString(7));
+            let - = partsList.addElement(part)
+            in 
+              skip 
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  ( dcl   numParts : int  := partsList.size(),
+          partsArray : map  int  to  [Part] := {l_21 |-> nil  |l_21 in set  {0,...,numParts-1}};
+    let - = partsList.copyInto(partsArray)
+    in 
+      skip ;
+    return  partsArray
+  ) 
+) ;
+
+public  getViaRefDes : [RefDes] ==> map  int  to  [Part]
+getViaRefDes(refdes) == 
+( dcl   refdesId : [Integer] := new  Integer(refdes.getId()),
+        partsList : [Vector] := new  Vector(10),
+        connection : [Connection] := PartsController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := PartsController`getToolkit().getQuerySet(),
+        query : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement(),
+            aircraft : [Aircraft] := aircraftCntl.getCurrentContextObject(),
+            acTypeId : [Integer] := new  Integer(aircraft.getAcType().getAcTypeId()),
+            effIdList : [String] := effectivityCntl.getEffIdSQLList(),
+            args : map  int  to  [Object] := {2 |-> effIdList , 1 |-> acTypeId , 0 |-> refdesId};
+      query := querySet.getQuery(WiringDataQuerySet.GET_PARTS_VIA_REFDES , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  queryRS.next() do  
+          ( dcl   part : [Part] := new  Part(queryRS.getInt(1) , queryRS.getString(2) , queryRS.getString(3) , queryRS.getString(4) , queryRS.getString(5) , queryRS.getString(6) , queryRS.getString(7));
+            let - = partsList.addElement(part)
+            in 
+              skip 
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  ( dcl   numParts : int  := partsList.size(),
+          partsArray : map  int  to  [Part] := {l_21 |-> nil  |l_21 in set  {0,...,numParts-1}};
+    let - = partsList.copyInto(partsArray)
+    in 
+      skip ;
+    return  partsArray
+  ) 
+) ;
+
+public  getCurrentContextObject : () ==> [Object]
+getCurrentContextObject() == 
+( return  nil  
+) ;
+
+public  updateToNewContext : [ContextSet] ==> <VOID>
+updateToNewContext(contextChanges) == 
+( return  <VOID>
+) ;
+
+PartsController : [DataSourceToolkit] * [EffectivityController] * [AircraftController] ==> PartsController
+PartsController(dsToolkit, effectivityController, aircraftController) == 
+( let - = WiringDataController(dsToolkit)
+  in 
+    skip ;
+  PartsController`effectivityCntl := effectivityController;
+  PartsController`aircraftCntl := aircraftController
+) ;
+
+instance variables 
+  private  effectivityCntl : [EffectivityController] := nil  ;
+  private  aircraftCntl : [AircraftController] := nil  
+  
+end  PartsController

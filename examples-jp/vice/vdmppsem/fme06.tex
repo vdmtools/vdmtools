@@ -1,0 +1,76 @@
+\documentclass{llncs}
+\usepackage{subfigure}
+\usepackage{epsfig} 
+\usepackage{llncs_vdmsl-2e}
+\nolinenumbering
+\setindent{outer}{\parindent}
+\setindent{inner}{0.0em}
+
+\newenvironment{delete}{}{}
+%
+% $Id: fme06.tex,v 1.1 2005/11/21 04:41:02 vdmtools Exp $
+%
+
+%
+% PREAMBLE
+%
+
+\usepackage{a4wide}
+\usepackage{alltt}
+
+% language settings
+\usepackage[english]{babel}
+
+% graphics includes
+\usepackage{graphicx}
+\graphicspath{{pictures/}}
+
+%
+% BEGIN DOCUMENT
+%
+
+\newcommand{\chessnl}
+	{Chess Information Technology B.V., P.O. Box 5021, 2000 CA Haarlem, The Netherlands.\mythanks \\
+	 \textit{http://www.chess.nl}~~email:\,\email{Marcel.Verhoef@chess.nl}}
+
+\newcommand{\ihadk}
+	{University College of Aarhus, Dalgas Avenue 2, DK-8000 \AA\/rhus C, Denmark. \\
+	 \textit{http://www.iha.dk}~~email:\,\email{pgl@iha.dk}}
+
+\newcommand{\esinl}
+	{Embedded Systems Institute, Den Dolech 2, 5612 AZ Eindhoven, The Netherlands.$^*$ \\
+	 \textit{http://www.esi.nl}~~email:\,\email{Jozef.Hooman@esi.nl}}
+
+\newcommand{\mythanks}
+	{\thanks{and Radboud University Nijmegen, Institute for Computer and Information Sciences,
+		 P.O. Box 9010, 6500 GL Nijmegen, The Netherlands. {\it http://www.cs.ru.nl/ita/}.
+		 This work has been carried out as part of the Boderc project under the responsibility
+		 of the Embedded Systems Institute. This project was partially supported by the
+		 Netherlands Ministry of Economic Affairs under the Senter TS program.}}
+
+\newcommand{\vdmtools}{\textsc{VDMTools}\/}
+\newcommand{\tbw}{\textsc{To Be Written}\/}
+
+\begin{document}
+
+% use empty page style
+\pagestyle{empty}
+
+% the title page
+\title{Modeling and Validating Distributed Embedded Real-Time Systems with VDM++\\
+\small{(working draft -- $Revision: 1.1 $ -- \today)}}
+\author{Marcel Verhoef\,\inst{1} \and Peter Gorm Larsen\,\inst{2} \and Jozef Hooman\,\inst{3}}
+\institute{\chessnl \and \ihadk \and \esinl}
+\maketitle
+
+\input{abstract}
+\input{intro}
+\input{istundsoll}
+\input{casestudy}
+\input{semantics.vdm}
+\input{discussion}
+
+\bibliographystyle{splncs}
+\bibliography{dan}
+
+\end{document}

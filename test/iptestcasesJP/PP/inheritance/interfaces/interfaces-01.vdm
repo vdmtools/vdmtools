@@ -1,0 +1,33 @@
+class ‚µ
+
+operations
+
+public ‘€ì1 : () ==> seq of char
+‘€ì1 () ==
+  is subclass responsibility
+
+end ‚µ
+
+class ‚Å
+
+end ‚Å
+
+class ‚Ñ is subclass of ‚µ, ‚Å
+
+operations
+
+public ‘€ì1 : () ==> seq of char
+‘€ì1() ==
+  return "‚Ñ`‘€ì1"
+
+end ‚Ñ
+
+class A
+
+operations
+
+public Test : () ==> seq of char
+Test() ==
+  return new ‚Ñ().‘€ì1()
+
+end A

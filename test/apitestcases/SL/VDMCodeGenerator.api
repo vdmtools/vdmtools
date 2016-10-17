@@ -1,0 +1,34 @@
+# positive testcases
+new project
+parse ($SOURCEPATH/test.vdm)
+init
+$M = get modules
+set genposinfo on
+codegen cpp (A)
+# check and clean up
+_exists file ($GENPATH/A.cc)
+_delete file ($GENPATH/A.cc)
+_delete file ($GENPATH/A.h)
+_delete file ($GENPATH/A_anonym.cc)
+_delete file ($GENPATH/A_anonym.h)
+codegen cpp ([$M])
+# check and clean up
+_exists file ($GENPATH/A.cc)
+_exists file ($GENPATH/B.cc)
+_delete file ($GENPATH/A.cc)
+_delete file ($GENPATH/A.h)
+_delete file ($GENPATH/A_anonym.cc)
+_delete file ($GENPATH/A_anonym.h)
+_exists file ($GENPATH/B.cc)
+_delete file ($GENPATH/B.cc)
+_delete file ($GENPATH/B.h)
+_delete file ($GENPATH/B_anonym.cc)
+_delete file ($GENPATH/B_anonym.h)
+
+# negative test cases
+codegen java (A)
+_exists file ($GENPATH/A.cc)
+codegen cpp (NotExist)
+codegen java ([$M])
+_exists file ($GENPATH/A.cc)
+_exists file ($GENPATH/B.cc)

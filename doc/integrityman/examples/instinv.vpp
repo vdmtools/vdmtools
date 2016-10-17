@@ -1,0 +1,22 @@
+class A
+
+instance variables
+
+  a : nat := 8;
+  inv a < 10;
+
+operations
+
+InstInvOp: () ==> nat
+InstInvOp() ==
+  (if a < 10
+   then a := a + 1;
+   return a)
+
+end A
+
+--PO1
+-- local - 1 > 0
+
+--PO2
+--while loop terminating

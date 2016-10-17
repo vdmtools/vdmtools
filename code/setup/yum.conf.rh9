@@ -1,0 +1,37 @@
+[main]
+cachedir=/var/cache/yum
+debuglevel=2
+logfile=/var/log/yum.log
+pkgpolicy=newest
+distroverpkg=redhat-release
+tolerant=1
+exactarch=1
+retries=20
+exclude=kernel*
+
+[base]
+name=Red Hat Linux $releasever - Base
+#baseurl=http://download.fedoralegacy.org/redhat/$releasever/os/$basearch/
+#baseurl=http://ftp.ne.jp/Linux/packages/fedora.legacy/redhat/$releasever/os/$basearch/
+baseurl=http://ftp.riken.go.jp/Linux/fedoralegacy/redhat/$releasever/os/$basearch/
+gpgcheck=1
+
+[updates-released]
+name=Red Hat Linux $releasever - Released Updates
+#baseurl=http://download.fedoralegacy.org/redhat/$releasever/updates/$basearch/
+#baseurl=http://ftp.ne.jp/Linux/packages/fedora.legacy/redhat/$releasever/updates/$basearch/
+baseurl=http://ftp.riken.go.jp/Linux/fedoralegacy/redhat/$releasever/updates/$basearch/
+gpgcheck=1
+
+#[updates-testing]
+#name=Red Hat Linux $releasever - Unreleased Updates
+#baseurl=http://download.fedoralegacy.org/redhat/$releasever/updates-testing/$basearch/
+#gpgcheck=1
+
+[legacy-utils]
+name=Fedora Legacy utilities for Red Hat Linux $releasever
+#baseurl=http://download.fedoralegacy.org/redhat/$releasever/legacy-utils/$basearch/
+#baseurl=http://ftp.ne.jp/Linux/packages/fedora.legacy/redhat/$releasever/legacy-utils/$basearch/
+baseurl=http://ftp.riken.go.jp/Linux/fedoralegacy/redhat/$releasever/legacy-utils/$basearch/
+gpgcheck=1
+

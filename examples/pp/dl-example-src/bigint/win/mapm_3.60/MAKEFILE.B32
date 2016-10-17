@@ -1,0 +1,93 @@
+# Borland makefile for MAPM library version >= 3.15
+# (version 3.50+, added MAPM_FFT  MCR)
+#
+# Tested with Borland C++ 5.2 and 5.5 command line compilers.
+#
+# Run this makefile from the source subdirectory with
+#   make -f makefile.b32
+#
+# Michael Bedward
+# mbedward@ozemail.com.au
+#
+# 7 June 2000
+
+LIBTARGET = mapm.lib
+CC = "//G/Program Files/Microsoft Visual Studio/VC98/bin/cl.exe"
+LINK = "//G/Program Files/Microsoft Visual Studio/VC98/bin/link.exe"
+
+# -c   compile only
+# add -v if you want debugging info
+CFLAGS = -DMSDOS -c
+
+# uncomment the relevant BCCINC macro...
+#
+# this is for Borland 5.5 (edit for your path)
+#BCCINC = -IC:/borland/bcc55/include
+
+# this is for Borland 5.2 which can find it's own headers
+#BCCINC =
+
+OBJECTS = MAPM5SIN.obj \
+	MAPMASIN.obj \
+	MAPMCBRT.obj \
+	MAPMCNST.obj \
+	MAPMFACT.obj \
+	MAPMFMUL.obj \
+	MAPMGUES.obj \
+	MAPMHASN.obj \
+	MAPMHSIN.obj \
+	MAPMIPWR.obj \
+	MAPMISTR.obj \
+	MAPMRSIN.obj \
+	MAPMSQRT.obj \
+	MAPMSTCK.obj \
+	MAPMUTIL.obj \
+	MAPM_ADD.obj \
+	MAPM_DIV.obj \
+	MAPM_EXP.obj \
+	MAPM_FFT.obj \
+	MAPM_LOG.obj \
+	MAPM_MUL.obj \
+	MAPM_POW.obj \
+	MAPM_RND.obj \
+	MAPM_SET.obj \
+	MAPM_SIN.obj
+
+MAPM5SIN.obj: MAPM5SIN.c
+MAPMASIN.obj: MAPMASIN.c
+MAPMCBRT.obj: MAPMCBRT.c
+MAPMCNST.obj: MAPMCNST.c
+MAPMFACT.obj: MAPMFACT.c
+MAPMFMUL.obj: MAPMFMUL.c
+MAPMGUES.obj: MAPMGUES.c
+MAPMHASN.obj: MAPMHASN.c
+MAPMHSIN.obj: MAPMHSIN.c
+MAPMIPWR.obj: MAPMIPWR.c
+MAPMISTR.obj: MAPMISTR.c
+MAPMRSIN.obj: MAPMRSIN.c
+MAPMSQRT.obj: MAPMSQRT.c
+MAPMSTCK.obj: MAPMSTCK.c
+MAPMUTIL.obj: MAPMUTIL.c
+MAPM_ADD.obj: MAPM_ADD.c
+MAPM_DIV.obj: MAPM_DIV.c
+MAPM_EXP.obj: MAPM_EXP.c
+MAPM_FFT.obj: MAPM_FFT.c
+MAPM_LOG.obj: MAPM_LOG.c
+MAPM_MUL.obj: MAPM_MUL.c
+MAPM_POW.obj: MAPM_POW.c
+MAPM_RND.obj: MAPM_RND.c
+MAPM_SET.obj: MAPM_SET.c
+MAPM_SIN.obj: MAPM_SIN.c
+
+%.obj : %.c
+	$(CC) $(CFLAGS) $< -o $@
+
+all: $(LIBTARGET)
+
+$(LIBTARGET): $(OBJECTS)
+	$(LINK) /lib /out:$(LIBTARGET) $^
+
+
+clean:
+	-erase *.obj
+	-erase *.lib

@@ -1,0 +1,19 @@
+class Main
+
+operations
+
+  public Test : () ==> seq of char
+  Test() ==
+    let myo = new C()
+    in
+      let t1 = new T().Init(myo,<instvar>,<list>,"t1 "),
+          t2 = new T().Init(myo,<instvar>,<list>,"t2 ")
+      in
+        (start(t1);
+         start(t2);
+         myo.IncZ();
+         myo.IncZ();
+         myo.IncCounter();
+         myo.ReadX());
+
+end Main

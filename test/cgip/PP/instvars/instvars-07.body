@@ -1,0 +1,53 @@
+class A
+
+instance variables
+  b        : bool := true;
+  k        : nat  := 10;
+  j        : nat;
+  l        : nat;
+  m        : nat;
+  q        : <YES> | <NO>;
+
+
+operations
+ 
+public  Get: () ==> bool * nat
+  Get() ==          
+    return mk_(b,k);
+
+public  Set: bool * nat ==> ()
+  Set(b1, x) ==
+  ( b := b1;
+    k := x
+  )
+
+end A
+
+class B 
+
+instance variables
+  a1: A;
+  a2: A | int;
+  a3: seq of A
+
+operations
+
+public  Test: () ==> (bool * nat) * (bool * nat)
+  Test() ==
+  ( dcl res1 : bool * nat,
+        res2 : bool * nat,
+        obj  : A;
+    a1 := new A();
+    a2 := new A();
+    a2.Set(false,50);
+    a3 := [a1,a2];
+    obj := a3(1);
+    res1 := obj.Get();
+    obj := a3(2);
+    res2 := obj.Get();
+    --res1 := a1.Get();
+    --res2 := a2.Get();
+    return mk_(res1,res2)
+  )
+
+end B

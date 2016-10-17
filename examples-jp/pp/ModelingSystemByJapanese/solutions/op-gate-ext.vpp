@@ -1,0 +1,19 @@
+-- Addition to the state based version of the gateway example
+-- State-based version for Chapter 10 (state-based modelling) 
+-- For exercise 10.1
+
+operations
+
+AddString(str: String) err: <Ok> | <AlreadyThere>
+ext wr cat: Category
+post if str in set cat
+     then cat = cat~ and err = <AlreadyThere>
+     else cat~ union {str} = cat and err = <Ok>;
+
+RomoveString(str: String)
+ext wr cat: Category
+post cat = cat~ \ {str};
+
+AddMessage(m: Message)
+ext wr input : seq of Message
+post input = input~ ^ [m]

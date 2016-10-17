@@ -1,0 +1,27 @@
+class A
+
+types
+R :: m : map nat to [nat];
+
+functions
+f : nat -> nat
+f(x) == x + 1;
+
+values 
+
+g : map nat to [nat] = {l |-> nil | l in set {0,...,12}};
+
+operations
+
+public Test : () ==> nat
+Test () ==
+( 
+	dcl i : int := 0,
+        j : nat := 1;	
+	while i < 12 do
+	( g := g   ++ {i |-> f(i)};
+	i := i + 2 );
+	return j;
+)   
+
+end A

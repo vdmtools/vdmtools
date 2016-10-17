@@ -1,0 +1,9 @@
+r FRead.vpp
+r FReadT.vpp
+r TestCase.vpp
+r TestDriver.vpp
+r TestLogger.vpp
+r io.vpp
+i
+cr t:=new FReadT()
+d t.run()

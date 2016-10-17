@@ -1,0 +1,1189 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Well-formedness of Patterns for the Static Semantics of VDM++
+% $Id: pat.vdm,v 1.44 2001/11/22 08:36:50 peter Exp $
+% Implemented in: pat.cc
+%--------------------------------------------------------------------------------
+
+\section{Patterns and Bindings}
+
+This section contains all well-formedness formulae which deals with
+the correctness of patterns and bindings.
+The interface of the PAT module can be seen from figure~\ref{pat}.
+
+The PAT module exports its constructs to the DEF module
+and the other second level modules (STMT and EXPR). PAT imports
+constructs from all the third level modules (TYPE, AUX and
+ENV).It is also shown that here exists a minor dependency to the EXPR
+module (use of the $wf-Expr$ operation) and the DEF module (use of the
+$wf-Type$ operation).
+
+The operations in this module only report errors if the set expression
+in a set binding does not belong to a set type and if record patterns
+are used with the wrong number of fields or non-existing tags are used
+for a record pattern. The different operations here will yield a pair,
+where the first indicates whether a matching was successfull and the
+second gives the resulting binding. The first component if modelled as
+an optional boolean value (true indicates that the matching succeded,
+false indicates that the matching failed, while nil indicates that
+some error have occured and reported). Notice that all operations are
+strict with respect to the nil value.
+
+%\insertfig{pat.ps}{13cm}{Interface for the PAT module}{\label{pat}}
+
+\begin{vdm_al}
+
+module PAT
+
+imports
+
+  from ERR all,
+  from AS all,
+
+  from CI all,
+
+  from REP all,
+
+  from TYPE operations
+    IsCompatible: TYPE`Ind * REP`TypeRep * REP`TypeRep ==> bool;
+    IsUnionRecursive: REP`TypeRep ==> bool;
+    IsOneValueType: TYPE`Ind * REP`TypeRep ==> bool
+    types Ind = <POS> | <DEF>,
+
+  from ENV operations
+#ifdef VDMSL
+    LookUpTag : TYPE`Ind * AS`Name * set of AS`Name ==> [AS`Name * seq of REP`FieldRep];
+    LookUpTypeName : AS`Name ==> [REP`TypeRep];
+#endif VDMSL
+#ifdef VDMPP
+    --GetCurClass : () ==> AS`Name;
+    LookUpDefClassForTypeName : AS`Name ==> [AS`Name];
+    LookUpTag : TYPE`Ind * AS`Name * set of AS`Name ==> [AS`Name * (ENV`AccessFieldRep|ENV`TagRepElem)];
+    --LookUpTypeInSuper: AS`Name * AS`Name ==> [AS`Name];
+    LookUpTypeName : AS`Name * bool ==> [REP`TypeRep|ENV`AccessType];
+    CheckAccess: AS`Name * [ENV`AccessType     |
+                            REP`TypeRep        |
+                            ENV`TagRepElem     |
+                            set of REP`TypeRep |
+                            set of (ENV`AccessOpTypeRep |
+                                    ENV`AccessFnTypeRep |
+                                    ENV`AccessPolyTypeRep)]
+               ==> [REP`TypeRep     |
+                    ENV`TagRepElem  |
+                    set of (REP`FnTypeRep | REP`OpTypeRep | REP`PolyTypeRep) ];
+    CheckClassName: AS`Name ==> bool;
+    LookUpInObject: AS`Name * AS`Name * bool * bool
+                  ==> [ENV`AccessType | set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep)];
+    CheckAccessCurClass : [ ENV`AccessType  |
+                            REP`TypeRep |
+                            ENV`TagRepElem  |
+                            set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep) |
+                            set of REP`TypeRep]
+                       ==> [ REP`TypeRep |
+                            ENV`TagRepElem  |
+                            set of (REP`FnTypeRep | REP`OpTypeRep | REP`PolyTypeRep) ];
+#endif VDMPP
+    TransType : [AS`Name] * AS`Type ==> REP`TypeRep
+    functions
+    PrintName : AS`Name -> seq of char
+
+#ifdef VDMPP
+    functions
+    IsAccessType: [ENV`AccessType|REP`TypeRep|ENV`TagRepElem|
+                  set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep)|
+                  set of (REP`FnTypeRep | REP`OpTypeRep)] -> bool;
+    StripAccessType: [ENV`AccessType|REP`TypeRep|ENV`TagRepElem] -> [REP`TypeRep|seq of REP`FieldRep];
+  types
+
+    AccessType = ENV`AccessTypeRep | ENV`AccessFnTypeRep  |
+                 ENV`AccessPolyTypeRep | ENV`AccessOpTypeRep |
+                 ENV`AccessFieldRep;
+
+    AccessTypeRep;
+    AccessFnTypeRep;
+    AccessPolyTypeRep;
+    AccessOpTypeRep;
+    AccessFieldRep;
+    TagRepElem = seq of REP`FieldRep
+#endif VDMPP
+,
+
+  from AUX
+    operations
+      ExtractSetType : REP`TypeRep ==> REP`TypeRep;
+      ExtractSeqType : REP`TypeRep ==> REP`TypeRep;
+      ExtractMapType : REP`TypeRep ==> [REP`TypeRep];
+      ExtractCompositeType : REP`TypeRep ==> [REP`TypeRep];
+      ExtractProductType : REP`TypeRep * nat * (<EQ>|<GE>) ==> [REP`ProductTypeRep];
+    functions
+    MergeTypes : [REP`TypeRep | set of REP`TypeRep] * [REP`TypeRep | set of REP`TypeRep] -> REP`TypeRep;
+    UnmaskSetType: TYPE`Ind * REP`TypeRep -> [REP`TypeRep];
+    UnmaskSeqType: TYPE`Ind * REP`TypeRep -> [REP`TypeRep];
+    UnmaskMapDomType : TYPE`Ind * REP`TypeRep -> [REP`TypeRep];
+    UnmaskMapRngType : TYPE`Ind * REP`TypeRep -> [REP`TypeRep],
+
+  from EXPR operations
+    wf_Expr: TYPE`Ind * AS`Expr * REP`TypeRep ==> bool * REP`TypeRep
+
+exports 
+  operations
+    wf_TypeBindList : TYPE`Ind * seq of AS`TypeBind ==> [bool] * (map AS`Name to (REP`TypeRep * nat1)) * seq of REP`TypeRep;
+    wf_MultiBindList: TYPE`Ind * seq of AS`MultBind * bool ==> [bool] * map AS`Name to (REP`TypeRep * nat1);
+    wf_PatternBind: TYPE`Ind * AS`PatternBind * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1);
+    wf_PatternList: TYPE`Ind * seq of AS`Pattern * seq of REP`TypeRep * AS`Name ==> bool * map AS`Name to (REP`TypeRep * nat1);
+    wf_Pattern: TYPE`Ind * AS`Pattern * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1);
+    wf_Bind : TYPE`Ind * AS`Bind ==> [bool] * map AS`Name to (REP`TypeRep * nat1);
+    wf_SetBind : TYPE`Ind * AS`SetBind ==> [bool] * map AS`Name to (REP`TypeRep * nat1);
+    wf_SeqBind : TYPE`Ind * AS`SeqBind ==> [bool] * map AS`Name to (REP`TypeRep * nat1);
+    wf_BindAndType : TYPE`Ind * AS`Bind ==> [bool] * (map AS`Name to (REP`TypeRep * nat1)) * REP`TypeRep;
+    PatternBind2TypeRep : AS`PatternBind ==> REP`TypeRep;
+    Pattern2TypeRep : AS`Pattern ==> REP`TypeRep;
+  functions
+  ExtractBindings: AS`Pattern -> map AS`Name to (REP`TypeRep * nat1);
+  ExtractPatternName: AS`Pattern -> map AS`Name to nat1
+
+definitions
+operations
+
+  wf_PatternBind: TYPE`Ind * AS`PatternBind * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+  wf_PatternBind(i,patbind,tp) ==
+    cases patbind:
+      mk_AS`SetBind(p,s,-)  ->
+        def mk_(wf_s,stp) = EXPR`wf_Expr(i,s,mk_REP`SetTypeRep(mk_REP`AllTypeRep()))
+        in
+          if TYPE`IsCompatible(i,stp,mk_REP`SetTypeRep(mk_REP`AllTypeRep()))
+          then
+          def elemtp = AUX`UnmaskSetType(i, AUX`ExtractSetType(stp))
+          in
+            if elemtp = nil
+                  -------------------------------------
+                  -- Error message #293
+                  -- An empty set is used in a set bind
+                  -------------------------------------
+            then (ERR`GenErr(s, <WARNING>,293,[]);
+                  def mk_(wf_p,bd) = wf_Pattern(i,p,tp)
+                  in
+                    return mk_(if wf_p = nil
+                               then nil
+                               else false,bd))
+            elseif TYPE`IsCompatible(i,tp,elemtp)
+            then def mk_(wf_p,bd) = wf_Pattern(i,p,tp)
+                 in
+                   return mk_(if wf_p =nil
+                              then nil
+                              else wf_p and wf_s,bd)
+                  -------------------------------------------------------------
+                  -- Error message #294
+                  -- Type of defining expression is not compatible with binding
+                  -------------------------------------------------------------
+            else (ERR`GenErr(s,<WARNING>,294,[]);
+                 def mk_(wf_p,bd) = wf_Pattern(i,p,elemtp)
+                 in
+                   return mk_(if wf_p =nil
+                              then nil
+                              else false,bd))
+               ---------------------------------------
+               -- Error message #295
+               -- Type of expression is not a set type
+               ---------------------------------------
+         else (ERR`GenErr(s,<ERROR>,295,[]);
+               return mk_(nil,ExtractBindings(p))),
+      mk_AS`TypeBind(p,t,-) ->
+      (
+#ifdef VDMPP
+        if is_AS`TypeName (t) then
+          def tnm = ENV`LookUpTypeName (t.name,true);
+              defcl = ENV`LookUpDefClassForTypeName(t.name);
+              ca = ENV`CheckAccess (if defcl = nil then t.name else defcl,tnm)
+          in
+          if ca = nil then
+            ---------------------
+            -- Error message #368
+            -- Access violation
+            ---------------------
+            ( ERR`GenErr(t.name,<ERROR>,368,[ENV`PrintName (t.name)]);
+              return mk_(nil,ExtractBindings(p)));
+#endif VDMPP
+        def ttp = ENV`TransType(nil,t) in
+        if TYPE`IsCompatible(i,tp,ttp)
+        then wf_Pattern(i,p,ttp)
+              -------------------------------------------------------------
+              -- Error message #294
+              -- Type of defining expression is not compatible with binding
+              -------------------------------------------------------------
+        else (ERR`GenErr(patbind,<WARNING>,294,[]);
+             def mk_(wf_p,bd) = wf_Pattern(i,p,ttp)
+             in
+               return mk_(if wf_p = nil
+                          then nil
+                          else false,bd))),
+      others -> wf_Pattern(i,patbind,tp)
+    end;
+
+--    wf_SeqOfPattern: TYPE`Ind * seq of AS`Pattern * REP`TypeRep ==>
+--                     [bool] * map AS`Name to REP`TypeRep
+--    wf_SeqOfPattern(i,p_l,tp) ==
+--      (dcl reswf: [bool] := true;
+--       dcl resbd : set of (map AS`Name to REP`TypeRep) := {};
+--
+--       for p in p_l do
+--         def mk_(wf_p,bd) = wf_Pattern(i,p,tp)
+--         in
+--         (reswf := if reswf = nil or wf_p = nil
+--                   then nil
+--                   else reswf and wf_p;
+--          resbd := resbd union {bd});
+--     def mk_(wf_b, bind) = MergeBindings(i,resbd)
+--     in
+--       return mk_(if reswf = nil
+--                  then nil
+--                  else wf_b and reswf, bind));
+
+    wf_Pattern: TYPE`Ind * AS`Pattern * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+    wf_Pattern (i, pat, tp) ==
+      cases true:
+        (is_AS`PatternName(pat))      -> wf_PatternName (i, pat, tp),
+        (is_AS`MatchVal(pat))         -> wf_MatchVal (i, pat, tp),
+        (is_AS`SetEnumPattern (pat))  -> wf_SetEnumPattern (i, pat, tp),
+        (is_AS`SetUnionPattern (pat)) -> wf_SetUnionPattern (i, pat, tp),
+        (is_AS`SeqEnumPattern (pat))  -> wf_SeqEnumPattern (i, pat, tp),
+        (is_AS`SeqConcPattern (pat))  -> wf_SeqConcPattern (i, pat, tp),
+        (is_AS`MapletPattern (pat))   -> wf_MapletPattern (i, pat, tp),
+        (is_AS`MapEnumPattern (pat))  -> wf_MapEnumPattern (i, pat, tp),
+        (is_AS`MapMergePattern (pat)) -> wf_MapMergePattern (i, pat, tp),
+        (is_AS`RecordPattern (pat))   -> wf_RecordPattern (i, pat, tp),
+        (is_AS`TuplePattern (pat))    -> wf_TuplePattern (i, pat, tp),
+#ifdef VDMPP
+        (is_AS`ObjectPattern (pat))   -> wf_ObjectPattern (i, pat, tp),
+#endif VDMPP
+        others -> error
+      end;
+
+    wf_PatternName: TYPE`Ind * AS`PatternName * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+    wf_PatternName (-,mk_AS`PatternName(nm,-,cid),tp) ==
+      ( CI`SetTypeInfo(cid, tp);
+        return mk_(true, if nm = nil
+                         then {|->}
+                         else {nm |-> mk_(tp,1)}) );
+
+    wf_MatchVal: TYPE`Ind * AS`MatchVal * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+    wf_MatchVal (i, mk_AS`MatchVal(val,cid),tp) ==
+      def mk_(wf_e,tp_e) = EXPR`wf_Expr(i,val,mk_REP`AllTypeRep())
+      in
+        ( CI`SetTypeInfo(cid, tp_e);
+          if TYPE`IsCompatible(i,tp_e,tp)
+          then if wf_e
+               -- 20100721
+               --then return mk_((i = <POS> or TYPE`IsOneValueType(i,tp)), {|->})
+               then return mk_((i = <POS> or TYPE`IsOneValueType(i,tp_e)), {|->})
+               else return mk_(nil,{|->})
+          else return mk_(false,{|->}));
+
+    wf_SetEnumPattern: TYPE`Ind * AS`SetEnumPattern * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+    wf_SetEnumPattern (i, mk_AS`SetEnumPattern(els,cid),tp) ==
+      def stp = AUX`ExtractSetType(tp)
+      in
+      ( CI`SetTypeInfo(cid, stp);
+        let elemtp = AUX`UnmaskSetType(i, stp)
+        in
+          if elemtp = nil
+          then return mk_(false,merge{ExtractBindings(p) |p in set elems els})
+          else def res = [ wf_Pattern(i, els(j), elemtp) | j in set inds els ];
+                   wf  = { wf_p | mk_(wf_p, -) in set elems res };
+                   b_s = [ let mk_(-, bd) = res(j) in bd | j in set inds res ];
+                   mk_(wf_b,bind) = MergeBindings(i,b_s)
+               in
+                 return mk_(if nil in set wf
+                            then nil
+                            elseif false in set wf
+                            then false
+                            else wf_b and (i = <DEF> => stp = tp),bind) );
+
+    wf_SetUnionPattern: TYPE`Ind * AS`SetUnionPattern * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+    wf_SetUnionPattern (i, mk_AS`SetUnionPattern(lp, rp, cid),tp) ==
+    def stp = AUX`ExtractSetType(tp)
+    in
+    ( CI`SetTypeInfo(cid, stp);
+      if TYPE`IsCompatible(i,tp, mk_REP`UnionTypeRep({
+                              mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
+                              mk_REP`SetTypeRep(mk_REP`AllTypeRep())}))
+      then
+        def mk_(wf_lp,bd_l) = wf_Pattern(i,lp,tp);
+            mk_(wf_rp,bd_r) = wf_Pattern(i,rp,tp);
+            mk_(wf_b,bind) = MergeBindings(i,[bd_l,bd_r])
+        in
+          return mk_(if wf_lp = nil or wf_rp = nil
+                     then nil
+                     else wf_lp and wf_rp and wf_b, bind)
+      else return mk_(false,merge{ExtractBindings(lp), ExtractBindings(rp)})
+    );
+\end{vdm_al}
+
+Please note that an $AS`SeqEnumPattern$ can never be an empty sequence
+as the empty sequence is represented using $AS`MatchVal$.
+
+\begin{vdm_al}
+    wf_SeqEnumPattern: TYPE`Ind * AS`SeqEnumPattern * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+    wf_SeqEnumPattern (i, mk_AS`SeqEnumPattern(els,cid),tp) ==
+      def stp = AUX`ExtractSeqType(tp)
+      in
+      ( CI`SetTypeInfo(cid, stp);
+        let elemtp = AUX`UnmaskSeqType(i,stp)
+        in
+          if elemtp = nil
+          then return mk_(false,merge{ExtractBindings(p) |p in set elems els})
+          else def res = [ wf_Pattern(i, els(j),elemtp) | j in set inds els ];
+                   wf  = { wf_p | mk_(wf_p, -) in set elems res };
+                   b_s = [ let mk_(-, bd) = res(j) in bd | j in set inds res ];
+                   mk_(wf_b,bind) = MergeBindings(i,b_s)
+               in
+                 return mk_(if nil in set wf
+                            then nil
+                            elseif false in set wf
+                            then false
+                            else wf_b and (i = <DEF> => stp = tp),bind) );
+
+    wf_SeqConcPattern: TYPE`Ind * AS`SeqConcPattern * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+    wf_SeqConcPattern (i, mk_AS`SeqConcPattern(lp, rp, cid),tp) ==
+      if TYPE`IsCompatible(i,tp,mk_REP`UnionTypeRep({
+                              mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()),
+                              mk_REP`SeqTypeRep(mk_REP`AllTypeRep())}))
+      then
+        def mk_(wf_lp,bd_l) = wf_Pattern(i,lp,tp);
+            mk_(wf_rp,bd_r) = wf_Pattern(i,rp,tp);
+            mk_(wf_b,bind) = MergeBindings(i,[bd_l,bd_r]);
+            stp = AUX`ExtractSeqType(tp)
+        in
+        ( CI`SetTypeInfo(cid, stp);
+          return mk_(if wf_lp = nil or wf_rp = nil
+                     then nil
+                     else wf_lp and wf_rp and wf_b, bind))
+      else return mk_(false,merge{ExtractBindings(lp), ExtractBindings(rp)});
+
+    wf_MapEnumPattern: TYPE`Ind * AS`MapEnumPattern * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+    wf_MapEnumPattern (i, mk_AS`MapEnumPattern(mls,cid),tp) ==
+      def mtp = AUX`ExtractMapType(tp)
+      in
+      ( CI`SetTypeInfo(cid, mtp);
+        let elemtp = mtp
+        in
+          if elemtp = nil
+          then def domdb = merge{ExtractBindings(p.dp) |p in set elems mls};
+                   rngdb = merge{ExtractBindings(p.rp) |p in set elems mls};
+                   mk_(-,bind) = MergeBindings(i,[domdb, rngdb])
+               in return mk_(false,bind)
+          else def res = [ wf_MapletPattern(i, mls(j),elemtp) | j in set inds mls ];
+                   wf  = { wf_p | mk_(wf_p, -) in set elems res };
+                   b_s = [ let mk_(-, bd) = res(j) in bd | j in set inds res ];
+                   mk_(wf_b,bind) = MergeBindings(i,b_s)
+               in
+                 return mk_(if nil in set wf
+                            then nil
+                            elseif false in set wf
+                            then false
+                            else wf_b and (i = <DEF> => mtp = tp),bind) );
+
+    wf_MapMergePattern: TYPE`Ind * AS`MapMergePattern * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+    wf_MapMergePattern (i, mk_AS`MapMergePattern(lp, rp, cid),tp) ==
+    def mtp = AUX`ExtractMapType(tp)
+    in
+    ( CI`SetTypeInfo(cid, mtp);
+      if TYPE`IsCompatible(i,tp, mk_REP`UnionTypeRep({
+                              mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(),mk_REP`AllTypeRep()),
+                              mk_REP`GeneralMapTypeRep(mk_REP`AllTypeRep(),mk_REP`AllTypeRep()),
+                              mk_REP`GeneralMapTypeRep(mk_REP`AllTypeRep(),mk_REP`AllTypeRep())}))
+      then
+        def mk_(wf_lp,bd_l) = wf_Pattern(i,lp,tp);
+            mk_(wf_rp,bd_r) = wf_Pattern(i,rp,tp);
+            mk_(wf_b,bind) = MergeBindings(i,[bd_l,bd_r])
+        in
+          return mk_(if wf_lp = nil or wf_rp = nil
+                     then nil
+                     else wf_lp and wf_rp and wf_b, bind)
+      else return mk_(false,merge{ExtractBindings(lp), ExtractBindings(rp)})
+    );
+
+    wf_MapletPattern: TYPE`Ind * AS`MapletPattern * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+    wf_MapletPattern (i, mk_AS`MapletPattern(dp, rp, cid),tp) ==
+    def mtp = AUX`ExtractMapType(tp)
+    in
+    ( CI`SetTypeInfo(cid, mtp);
+      if TYPE`IsCompatible(i,tp, mk_REP`UnionTypeRep({
+                              mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(),mk_REP`AllTypeRep()),
+                              mk_REP`GeneralMapTypeRep(mk_REP`AllTypeRep(),mk_REP`AllTypeRep()),
+                              mk_REP`GeneralMapTypeRep(mk_REP`AllTypeRep(),mk_REP`AllTypeRep())}))
+      then
+      def domtp = AUX`UnmaskMapDomType(i, mtp);
+          rngtp = AUX`UnmaskMapRngType(i, mtp);
+          mk_(wf_dp,bd_d) = wf_Pattern(i,dp,if domtp = nil then mk_REP`AllTypeRep() else domtp);
+          mk_(wf_rp,bd_r) = wf_Pattern(i,rp,if rngtp = nil then mk_REP`AllTypeRep() else rngtp);
+      in
+        def mk_(wf_b,bind) = MergeBindings(i,[bd_d,bd_r])
+        in
+          return mk_(if wf_dp = nil or wf_rp = nil
+                     then nil
+                     else wf_dp and wf_rp and wf_b, bind)
+      else return mk_(false,merge{ExtractBindings(dp), ExtractBindings(rp)})
+    );
+
+    wf_RecordPattern: TYPE`Ind * AS`RecordPattern * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+    wf_RecordPattern (i, mk_AS`RecordPattern(nm, flds, cid),tp) ==
+     (dcl realtp : REP`TypeRep := tp;
+      dcl reswf  : bool := true;
+
+      def pair = ENV`LookUpTag(i,nm,{});
+          comptp = AUX`ExtractCompositeType(tp)
+      in
+        ( if comptp = nil
+          then (CI`SetTypeInfo(cid, mk_REP`AllTypeRep());
+                return mk_(false, merge {ExtractBindings(p) |p in set elems flds}) );
+          if pair = nil
+                -------------------------------------
+                -- Error message #296
+                -- There exists no type with tag "%1"
+                -------------------------------------
+          then (ERR`GenErr (nm, <ERROR>,296,[ENV`PrintName(nm)]);
+                CI`SetTypeInfo(cid, mk_REP`AllTypeRep());
+                return mk_(nil, merge {ExtractBindings(p) |p in set elems flds}))
+--#ifdef VDMPP
+--          elseif ENV`LookUpTypeInSuper(pair.#1,ENV`GetCurClass()) = nil
+--                -----------------------------------------------------
+--                -- Error message #418
+--                -- There exists no type with tag "%1" that is visible
+--                -----------------------------------------------------
+--          then (ERR`GenErr (nm, <ERROR>,418,[ENV`PrintName(nm)]);
+--                CI`SetTypeInfo(cid, mk_REP`AllTypeRep());
+--                return mk_(nil, merge {ExtractBindings(p) |p in set elems flds}))
+--#endif VDMPP
+          ;
+          let newtag = pair.#1,
+              def_flds =
+#ifdef VDMPP
+                ENV`StripAccessType(pair.#2)
+#endif
+#ifdef VDMSL
+                pair.#2
+#endif VDMSL
+          in
+         (if len def_flds <> len flds then
+              ----------------------------------
+              -- Error message #297
+              -- Wrong number of fields for "%1"
+              ----------------------------------
+            ( ERR`GenErr (nm,<ERROR>,297,[ENV`PrintName(nm)]);
+              CI`SetTypeInfo(cid, mk_REP`AllTypeRep());
+              return mk_(nil, merge {ExtractBindings(p)
+                                      |p in set elems flds}));
+          realtp := GetRealType(realtp);
+          let dc_indices = {i | i in set inds def_flds &
+                                def_flds(i).dc}
+          in
+            for all dc_i in set dc_indices do
+              if not is_AS`PatternName(flds(dc_i))
+                    ------------------------------------------------------------
+                    -- Error message #298
+                    -- Field "%1" can only be matched with a name or don't care
+                    -- pattern
+                    ------------------------------------------------------------
+              then (ERR`GenErr(def_flds(1).sel, <ERROR>,298,[ENV`PrintName(def_flds(dc_i).sel)]);
+                    reswf := false);
+          def res = [ wf_Pattern(i, flds(j), def_flds(j).tp) | j in set inds flds ];
+              wf  = { wf_p |mk_(wf_p, -) in set elems res };
+              b_s = [ let mk_(-, bd) = res(j) in bd | j in set inds res ];
+              mk_(wf_b,bind) = MergeBindings(i,b_s);
+          in
+           (dcl wf_tp : bool;
+            if i = <DEF>
+            then wf_tp := realtp = mk_REP`CompositeTypeRep(newtag, def_flds)
+                          or
+                           (is_REP`InvTypeRep(realtp) =>
+                             (GetRealType(realtp.shape) = mk_REP`CompositeTypeRep(newtag, def_flds) and
+                              forall p in set elems flds & SimplePatterns(p)))
+            else wf_tp := TYPE`IsCompatible(i,mk_REP`CompositeTypeRep (newtag,def_flds), comptp);
+
+            if i = <DEF>
+            then CI`SetTypeInfo(cid, comptp)
+            else CI`SetTypeInfo(cid, mk_REP`CompositeTypeRep (newtag,def_flds));
+            return mk_(if nil in set wf
+                       then nil
+                       elseif false in set wf
+                       then false
+                       else reswf and wf_b and wf_tp,bind)))));
+
+    wf_TuplePattern: TYPE`Ind * AS`TuplePattern * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+    wf_TuplePattern (i, mk_AS`TuplePattern(flds,cid),tp) ==
+      def ptp = AUX`ExtractProductType(tp,len flds,<EQ>)
+      in
+        if ptp = nil
+        then
+         (CI`SetTypeInfo(cid, mk_REP`AllTypeRep());
+          for p in flds do
+            def mk_(-,-) = wf_Pattern(i, p, mk_REP`AllTypeRep()) in skip;
+          return mk_(false,merge{ExtractBindings(p)|p in set elems flds}))
+        else
+          let mk_REP`ProductTypeRep(tp_l) = ptp
+          in
+            if len tp_l <> len flds
+            then
+              (CI`SetTypeInfo(cid, mk_REP`ProductTypeRep([ mk_REP`AllTypeRep() | - in set inds flds] ));
+               for p in flds do
+                 def mk_(-,-) = wf_Pattern(i, p, mk_REP`AllTypeRep()) in skip;
+               return mk_(false,merge{ExtractBindings(p)|p in set elems flds}))
+            else
+              def realtp = GetRealType(tp);
+                  res = [ wf_Pattern(i, flds(j), tp_l(j)) | j in set inds flds ];
+                  wf  = { wf_p | mk_(wf_p, -) in set elems res };
+                  b_s = [ let mk_(-, bd) = res(j) in bd | j in set inds res ];
+                  mk_(wf_b,bind) = MergeBindings(i,b_s);
+              in
+               (dcl wf_tp : bool;
+                if i = <DEF>
+                then
+                  cases realtp:
+                    mk_REP`ProductTypeRep((tp_l)) -> wf_tp := true,
+                    mk_REP`UnionTypeRep(tps) -> wf_tp := forall t in set tps &
+                                                   is_REP`ProductTypeRep(t) and
+                                                   let mk_REP`ProductTypeRep(t_l) = t
+                                                   in len t_l = len tp_l,
+                    mk_REP`InvTypeRep(-,shape,-) -> wf_tp := (GetRealType(shape) = mk_REP`ProductTypeRep(tp_l)) and
+                                                    (forall p in set elems flds & SimplePatterns(p)),
+                    others -> wf_tp := false
+                  end
+                else wf_tp := TYPE`IsCompatible(i,mk_REP`ProductTypeRep (tp_l),tp);
+                CI`SetTypeInfo(cid, ptp);
+                return mk_(if nil in set wf
+                           then nil
+                           elseif false in set wf
+                           then false
+                           else wf_b and wf_tp,bind));
+
+#ifdef VDMPP
+    wf_ObjectPattern: TYPE`Ind * AS`ObjectPattern * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+    wf_ObjectPattern (i, mk_AS`ObjectPattern(cls,fields,cid),tp) ==
+      if ENV`CheckClassName(cls)
+      then
+       (dcl wf : set of [bool] := {},
+            --b_s : seq of (map AS`Name to REP`TypeRep) := [];
+            b_s : seq of (map AS`Name to (REP`TypeRep * nat1)) := [];
+        for mk_AS`FieldPattern(field,p,-) in fields do
+          def gtp = ENV`LookUpInObject(cls,field,false,false)
+          in 
+            if gtp = nil
+            then 
+              ----------------------------------------------
+              -- Error message #280
+              -- The field "%1" is not defined in class "%2"
+              ----------------------------------------------
+             (ERR`GenErr(field,<ERROR>,280,[ENV`PrintName(field),ENV`PrintName(cls)]);
+              wf := wf union {nil};)
+            else
+             (def ca = ENV`CheckAccessCurClass (gtp)
+              in
+                if ca = nil
+                then
+                  ---------------------
+                  -- Error message #368
+                  -- Access violation
+                  ---------------------
+                  ERR`GenErr(field,<ERROR>,368,[ENV`PrintName (field)]);
+              def ftp = ENV`StripAccessType(gtp);
+                  mk_(w, bd) = wf_Pattern(i, p, ftp)
+              in
+               (wf := wf union {w};
+                b_s := b_s ^ [bd];
+                CI`SetTypeInfo(p.cid, ftp)));
+        def mk_(wf_b, bind) = MergeBindings(i,b_s);
+            ptp = mk_REP`ObjRefTypeRep(cls);
+            wf_tp = TYPE`IsCompatible(i,ptp, tp)
+        in
+         (CI`SetTypeInfo(cid, ptp);
+          return mk_(if nil in set wf
+                     then nil
+                     elseif false in set wf
+                     then false
+                     else wf_b and wf_tp,bind)))
+      else
+        --------------------------------
+        -- Error message #284
+        -- "%1" is not an existing class
+        --------------------------------
+       (ERR`GenErr(cls,<ERROR>,284,[ENV`PrintName(cls)]);
+        return mk_(nil, {|->}));
+#endif VDMPP
+
+\end{vdm_al}
+
+The operation $wf-PatternList$ takes care of all errors and report
+them directly.
+
+\begin{vdm_al}
+  wf_PatternList: TYPE`Ind * seq of AS`Pattern * seq of REP`TypeRep * AS`Name ==> bool * map AS`Name to (REP`TypeRep * nat1)
+  wf_PatternList(i,p_l, tp_l, Pos) ==
+    (dcl reswf: bool := true;
+     --dcl resbd: seq of (map AS`Name to REP`TypeRep) := [{|->}];
+     dcl resbd: seq of (map AS`Name to (REP`TypeRep * nat1)) := [{|->}];
+
+     if len p_l <> len tp_l
+           ----------------------------------------------------
+           -- Error message #299
+           -- Number of patterns different than number of types
+           ----------------------------------------------------
+     then (ERR`GenErr(Pos,<ERROR>,299,[]);
+           for p in p_l do
+             CI`SetTypeInfo(p.cid, mk_REP`AllTypeRep());
+           return mk_(false,merge{ExtractBindings(p)|p in set elems p_l}));
+     for index=1 to len p_l do
+       def mk_(wf_pb,bd) = wf_Pattern(i,p_l(index),tp_l(index))
+       in
+         (if wf_pb = false
+               -----------------------
+               -- Error message #104
+               -- Pattern cannot match
+               -----------------------
+          then ERR`GenErr(p_l(index),<ERROR>,104,[]);
+          reswf := reswf and (wf_pb = true);
+          resbd := resbd ^ [bd]);
+     def mk_(wf_b, bind) = MergeBindings(i,resbd)
+     in
+       return mk_(reswf and wf_b, bind));
+
+\end{vdm_al}
+
+The operation {\it CheckSeqOfLocalDef} is curently simply calling the
+operation {\it CheckSeqOfValueDef} because the kind of local definitions
+which curretly are taken into account only are value definitions. In
+full standard VDM-SL functions can also be locally defined.
+
+\begin{vdm_al}
+  wf_Bind : TYPE`Ind * AS`Bind  ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+  wf_Bind(i, bind) ==
+    cases true:
+     (is_AS`SetBind(bind))  -> wf_SetBind(i, bind),
+     (is_AS`TypeBind(bind)) -> wf_TypeBind(i, bind),
+     others                 -> error
+    end;
+
+  wf_SetBind : TYPE`Ind * AS`SetBind  ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+  wf_SetBind(i, mk_AS`SetBind(p,s,-)) ==
+    --def mk_(wf_s,stp) = EXPR`wf_Expr(i,s,mk_REP`AllTypeRep())
+    def mk_(wf_s,stp) = EXPR`wf_Expr(i,s,mk_REP`SetTypeRep(mk_REP`AllTypeRep()))
+    in
+      if TYPE`IsCompatible(i,stp,mk_REP`UnionTypeRep({mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
+                                                      mk_REP`SetTypeRep(mk_REP`AllTypeRep())}))
+      then def elemtp = AUX`UnmaskSetType(i,AUX`ExtractSetType(stp))
+           in
+             if elemtp = nil
+             -------------------------------------
+             -- Error message #293
+             -- An empty set is used in a set bind
+             -------------------------------------
+             then (ERR`GenErr(s,<WARNING>,293,[]);
+             return mk_(false,ExtractBindings(p)))
+       else def mk_(wf_p,bd) = wf_Pattern(i,p,elemtp)
+            in
+              return mk_(if wf_p = nil
+                         then nil
+                         else wf_p and wf_s, bd)
+            ---------------------------------------
+            -- Error message #295
+            -- Type of expression is not a set type
+            ---------------------------------------
+      else (ERR`GenErr(s,<ERROR>,295,[]);
+            return mk_(nil,ExtractBindings(p)));
+
+  wf_TypeBind : TYPE`Ind * AS`TypeBind  ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+  wf_TypeBind(i, mk_AS`TypeBind(p,t,-)) ==
+     return wf_Pattern(i,p,ENV`TransType(nil,t));
+
+  wf_SeqBind : TYPE`Ind * AS`SeqBind  ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+  wf_SeqBind(i, mk_AS`SeqBind(p,s,-)) ==
+    def mk_(wf_s,stp) = EXPR`wf_Expr(i,s,mk_REP`SeqTypeRep(mk_REP`AllTypeRep()))
+    in
+      if TYPE`IsCompatible(i,stp,mk_REP`UnionTypeRep({mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()),
+                                                      mk_REP`SeqTypeRep(mk_REP`AllTypeRep())}))
+      then def elemtp = AUX`UnmaskSeqType(i,AUX`ExtractSeqType(stp))
+           in
+             if elemtp = nil
+             -------------------------------------
+             -- Error message #462
+             -- An empty seq is used in a seq bind
+             -------------------------------------
+             then (ERR`GenErr(s,<WARNING>,462,[]);
+             return mk_(false,ExtractBindings(p)))
+       else def mk_(wf_p,bd) = wf_Pattern(i,p,elemtp)
+            in
+              return mk_(if wf_p = nil
+                         then nil
+                         else wf_p and wf_s, bd)
+            ---------------------------------------
+            -- Error message #237
+            -- Expression is not a sequence type
+            ---------------------------------------
+      else (ERR`GenErr(s,<ERROR>,237,[]);
+            return mk_(nil,ExtractBindings(p)));
+
+  wf_BindAndType : TYPE`Ind * AS`Bind ==> [bool] * (map AS`Name to (REP`TypeRep * nat1)) * REP`TypeRep
+  wf_BindAndType(i, bind) ==
+    cases bind:
+     mk_AS`SetBind(p,s,-) ->
+       --def mk_(wf_s,stp) = EXPR`wf_Expr(i,s,mk_REP`AllTypeRep())
+       def set_alltp = mk_REP`UnionTypeRep({mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
+                                            mk_REP`SetTypeRep(mk_REP`AllTypeRep())});
+           mk_(wf_s,stp) = EXPR`wf_Expr(i,s,set_alltp)
+       in
+         if TYPE`IsCompatible(i,stp,set_alltp)
+         then def elemtp = AUX`UnmaskSetType(i,AUX`ExtractSetType(stp))
+              in
+                if elemtp = nil
+                -------------------------------------
+                -- Error message #293
+                -- An empty set is used in a set bind
+                -------------------------------------
+                then (ERR`GenErr(s,<WARNING>,293,[]);
+                return mk_(false,ExtractBindings(p),mk_REP`AllTypeRep()))
+          else def mk_(wf_p,bd) = wf_Pattern(i,p,elemtp)
+               in
+                 return mk_(if wf_p = nil
+                            then nil
+                            else wf_p and wf_s, bd,elemtp)
+               ---------------------------------------
+               -- Error message #295
+               -- Type of expression is not a set type
+               ---------------------------------------
+         else (ERR`GenErr(s,<ERROR>,295,[]);
+             return mk_(nil,ExtractBindings(p),mk_REP`AllTypeRep())),
+     mk_AS`TypeBind(p,t,-) ->
+       def mk_(wf,bd) = wf_Pattern(i,p,ENV`TransType(nil,t))
+       in
+         return mk_(wf,bd,ENV`TransType(nil,t))
+    end;
+
+  wf_TypeBindList : TYPE`Ind * seq of AS`TypeBind ==> [bool] * (map AS`Name to (REP`TypeRep * nat1)) * seq of REP`TypeRep
+  wf_TypeBindList(i,parms) ==
+   (dcl reswf : [bool] := true;
+    --dcl resbd : seq of (map AS`Name to REP`TypeRep) := [];
+    dcl resbd : seq of (map AS`Name to (REP`TypeRep * nat1)) := [];
+    dcl altbd : set of AS`Name := {};
+    dcl restp : seq of REP`TypeRep := [];
+    --dcl okbinds : bool * (map AS`Name to REP`TypeRep);
+    dcl okbinds : bool * (map AS`Name to (REP`TypeRep * nat1));
+    for tb in parms do
+      def mk_(wf,bd,tp) = wf_BindAndType(i,tb)
+      in
+       (reswf := if reswf = nil or wf = nil
+                 then nil
+                     else reswf and wf;
+        resbd := resbd ^ [bd];
+        restp := restp ^ [tp];
+        if dom bd inter altbd <> {}
+             -----------------------------------------------------------------
+             -- Error message #300
+             -- Multiple use of pattern identifier in parameters to
+             -- Lambda-Expr
+             -----------------------------------------------------------------
+        then ERR`GenErr(tb, <WARNING>,300,[]);
+        altbd := altbd union dom bd);
+    if reswf = true
+    then okbinds := MergeBindings (i,resbd)
+    else okbinds := mk_(false, {nm |-> mk_(mk_REP`AllTypeRep(),1) | nm in set altbd});
+    def mk_(ok, binds) = okbinds
+    in
+      return mk_(if reswf = nil
+                 then nil
+                 else reswf and ok, binds,restp));
+
+    wf_MultiBindList: TYPE`Ind * seq of AS`MultBind * bool ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+    wf_MultiBindList(i, mbs, mustmatch) ==
+      ( dcl reswf : [bool] := true;
+        --dcl resbd : seq of (map AS`Name to REP`TypeRep) := [];
+        dcl resbd : seq of (map AS`Name to (REP`TypeRep * nat1)) := [];
+        dcl altbd : set of AS`Name := {};
+        --dcl okbinds : bool * (map AS`Name to REP`TypeRep);
+        dcl okbinds : bool * (map AS`Name to (REP`TypeRep * nat1));
+        for all mb in set elems mbs do
+         --(dcl wfbd : [bool] * (map AS`Name to REP`TypeRep);
+         (dcl wfbd : [bool] * (map AS`Name to (REP`TypeRep * nat1));
+          if is_AS`MultSetBind(mb)
+          then wfbd := wf_MultiSetBind (i,mb,mustmatch)
+          else wfbd := wf_MultiTypeBind (i,mb);
+          def mk_(wf,bd) = wfbd
+          in
+            ( reswf := if reswf = nil or wf = nil
+                       then nil
+                       else reswf and wf;
+              resbd := resbd ^ [bd];
+              altbd := altbd union dom bd));
+        if reswf = true
+        then okbinds := MergeBindings (i,resbd)
+        else okbinds := mk_(false, {nm |-> mk_(mk_REP`AllTypeRep(),1) | nm in set altbd});
+        def mk_(ok, binds) = okbinds
+        in
+          return mk_(if reswf = nil
+                     then nil
+                     else reswf and ok, binds));
+
+    wf_MultiSetBind: TYPE`Ind * AS`MultSetBind * bool ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+    wf_MultiSetBind (i, mk_AS`MultSetBind(pats,e,-), mustmatch) ==
+    ( dcl reswf : [bool] := true;
+      --dcl resbd : seq of (map AS`Name to REP`TypeRep) := [];
+      dcl resbd : seq of (map AS`Name to (REP`TypeRep * nat1)) := [];
+      def altbinds = merge {ExtractBindings(pat) | pat in set elems pats} in
+      --def mk_(wf_e, etp) = EXPR`wf_Expr (i,e,mk_REP`AllTypeRep()) in
+      def set_alltp = mk_REP`UnionTypeRep({mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
+                                           mk_REP`SetTypeRep(mk_REP`AllTypeRep())});
+          mk_(wf_e, etp) = EXPR`wf_Expr (i,e,if mustmatch then mk_REP`SetTypeRep(mk_REP`AllTypeRep()) else set_alltp)
+      in
+        if TYPE`IsCompatible(i, etp, set_alltp)
+        then
+          def sttp = AUX`UnmaskSetType (<POS>,AUX`ExtractSetType (etp)) in
+           (if sttp = nil or mustmatch and i = <DEF> and TYPE`IsCompatible(<POS>, etp, mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()))
+                    -------------------------------------
+                    -- Error message #293
+                    -- An empty set is used in a set bind
+                    -------------------------------------
+              then (ERR`GenErr(e,<WARNING>,293,[]);
+                    --return mk_(if wf_e
+                      --         then false
+                        --       else true,altbinds)
+                    if mustmatch
+                    then reswf := nil
+                                 );
+              let sttp' = if sttp = nil then mk_REP`AllTypeRep () else sttp
+              in
+               --(dcl okbinds : bool * map AS`Name to REP`TypeRep;
+               (dcl okbinds : bool * map AS`Name to (REP`TypeRep * nat1);
+                for pat in pats do
+                  def mk_(match, bd) = wf_Pattern (i, pat, sttp') in
+                    ( reswf := if (nil = reswf) or (nil = match)
+                               then nil
+                               else reswf and match;
+                      resbd := resbd ^ [bd]);
+                if reswf = true
+                then okbinds := MergeBindings (i,resbd)
+                else okbinds := mk_(false, altbinds);
+                def mk_(ok, binds) = okbinds
+                in
+                  return mk_(if reswf = nil or not wf_e
+                             then nil
+                             else reswf and ok, binds)))
+        else
+          ---------------------------------------
+          -- Error message #295
+          -- Type of expression is not a set type
+          ---------------------------------------
+         (ERR`GenErr (e,<ERROR>,295,[]);
+          return mk_(nil, altbinds))
+    );
+
+  wf_MultiTypeBind: TYPE`Ind * AS`MultTypeBind ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+  wf_MultiTypeBind (i, mk_AS`MultTypeBind(pats,tp,-)) ==
+    let altbinds = merge {ExtractBindings(pat) | pat in set elems pats}
+    in
+     (dcl reswf : [bool] := true,
+          --resbd : seq of (map AS`Name to REP`TypeRep) := [],
+          resbd : seq of (map AS`Name to (REP`TypeRep * nat1)) := [],
+          --okbinds : bool * map AS`Name to REP`TypeRep;
+          okbinds : bool * map AS`Name to (REP`TypeRep * nat1);
+      for pat in pats do
+        def mk_(match, bd) = wf_Pattern (i, pat, ENV`TransType(nil,tp))
+        in
+         (reswf := if (nil = reswf) or (nil = match)
+                   then nil
+                   else reswf and match;
+          resbd := resbd ^ [bd]);
+      if reswf = true
+      then okbinds := MergeBindings (i,resbd)
+      else okbinds := mk_(false, altbinds);
+      def mk_(ok, binds) = okbinds
+      in
+        return mk_(if reswf = nil
+                   then nil
+                   else reswf and ok, binds));
+
+  MergeBindings: TYPE`Ind * seq of (map AS`Name to (REP`TypeRep * nat1))
+                 ==> bool * map AS`Name to (REP`TypeRep * nat1)--OK
+  MergeBindings (i, l) ==
+    cases l:
+      []     -> return mk_(true, {|->}),
+      [e]    -> return mk_(true, e),
+      others -> let bind = hd l
+                in
+                def mk_(ok,bd) = MergeBindings(i, tl l)
+                in
+                  let common = dom bind inter dom bd
+                  in
+                    if common = {}
+                    then return mk_(ok, bind munion bd)
+                    else
+                     (dcl all_ok : bool := true;
+                      dcl newbd: map AS`Name to (REP`TypeRep * nat1) := {|->};
+                      for all el in set common do
+                        let mk_(t1,c1) = bind(el),
+                            mk_(t2,c2) = bd(el)
+                        in
+                          let num = c1 + c2
+                          in
+                            if t1 <> t2
+                            then
+                              if TYPE`IsCompatible(i,t1,t2)
+                              then newbd := newbd ++ {el |-> mk_(t1,num)}
+                              elseif TYPE`IsCompatible(i,t2, t1)
+                              then newbd := newbd ++ {el |-> mk_(t2,num)}
+                              -------------------------------------------------------
+                              -- Error message #301
+                              -- "%1" is bound multiple times with incompatible types
+                              -------------------------------------------------------
+                              else (ERR`GenErr(el,<ERROR>,301,[ENV`PrintName(el)]);
+                                    newbd := newbd ++ {el |-> mk_(AUX`MergeTypes(t1, t2),1)};
+                                    all_ok := false)
+                            else newbd := newbd ++ {el |-> mk_(t1,num)};
+
+                      return mk_(all_ok and ok, (bd ++ newbd) munion (bind ++ newbd)))
+    end;
+
+  GetRealType: REP`TypeRep ==> REP`TypeRep
+  GetRealType(tp) ==
+   (dcl realtp : REP`TypeRep := tp;
+    while is_REP`TypeNameRep(realtp) and not TYPE`IsUnionRecursive(realtp) do
+#ifdef VDMSL
+      realtp := ENV`LookUpTypeName (realtp.nm);
+#endif VDMSL
+#ifdef VDMPP
+--      realtp :=
+--                   def tp = ENV`LookUpTypeName (realtp.nm,true)
+--                   in
+--                       if ENV`IsAccessType(tp) then
+--                          tp.tp
+--                       else ENV`LookUpTypeName (realtp.nm,true);
+      def tp = ENV`LookUpTypeName (realtp.nm,true)
+      in
+        if ENV`IsAccessType(tp)
+        then realtp := tp.tp
+        else realtp := tp;
+#endif VDMPP
+     return realtp);
+
+  functions
+
+--    ExtractPatternName: AS`Pattern -> set of AS`Name --OK
+--    ExtractPatternName (pat) ==
+--      cases pat :
+--        mk_AS`PatternName(nm,-,-)       -> if nm = nil then {} else {nm},
+--        mk_AS`MatchVal(-,-)             -> {},
+--        mk_AS`SetEnumPattern (pats,-)   -> dunion {ExtractPatternName(p) | p in set elems pats},
+--        mk_AS`SetUnionPattern (lp,rp,-) -> ExtractPatternName(lp) union ExtractPatternName(rp),
+--        mk_AS`SeqEnumPattern (pats,-)   -> dunion {ExtractPatternName(p) | p in set elems pats},
+--        mk_AS`SeqConcPattern (lp,rp,-)  -> ExtractPatternName(lp) union ExtractPatternName(rp),
+--        mk_AS`MapletPattern (dp,rp,-)   -> ExtractPatternName(dp) union ExtractPatternName(rp),
+--        mk_AS`MapEnumPattern (pats,-)   -> dunion {ExtractPatternName(p) | p in set elems pats},
+--        mk_AS`MapMergePattern (lp,rp,-) -> ExtractPatternName(lp) union ExtractPatternName(rp),
+--        mk_AS`RecordPattern (-,flds,-)  -> dunion {ExtractPatternName(p) | p in set elems flds},
+--        mk_AS`TuplePattern (flds,-)     -> dunion {ExtractPatternName(p) | p in set elems flds},
+--#ifdef VDMPP
+--        mk_AS`ObjectPattern (-,flds,-)  -> dunion {ExtractPatternName(p) | p in set elems flds},
+--        mk_AS`FieldPattern (-,p,-)      -> ExtractPatternName(p),
+--#endif VDMPP
+--        others -> undefined
+--      end;
+
+    ExtractPatternName: AS`Pattern -> map AS`Name to nat1 --OK
+    ExtractPatternName (pat) ==
+      cases pat :
+        mk_AS`PatternName(nm,-,-)       -> if nm = nil then {|->} else {nm |-> 1},
+        mk_AS`MatchVal(-,-)             -> {|->},
+        mk_AS`SetEnumPattern (pats,-)   -> MergePatternName([ExtractPatternName(pats(i)) | i in set inds pats]),
+        mk_AS`SetUnionPattern (lp,rp,-) -> MergePatternName([ExtractPatternName(lp),ExtractPatternName(rp)]),
+        mk_AS`SeqEnumPattern (pats,-)   -> MergePatternName([ExtractPatternName(pats(i)) | i in set inds pats]),
+        mk_AS`SeqConcPattern (lp,rp,-)  -> MergePatternName([ExtractPatternName(lp),ExtractPatternName(rp)]),
+        mk_AS`MapletPattern (dp,rp,-)   -> MergePatternName([ExtractPatternName(dp),ExtractPatternName(rp)]),
+        mk_AS`MapEnumPattern (pats,-)   -> MergePatternName([ExtractPatternName(pats(i)) | i in set inds pats]),
+        mk_AS`MapMergePattern (lp,rp,-) -> MergePatternName([ExtractPatternName(lp),ExtractPatternName(rp)]),
+        mk_AS`RecordPattern (-,flds,-)  -> MergePatternName([ExtractPatternName(flds(i)) | i in set inds flds]),
+        mk_AS`TuplePattern (flds,-)     -> MergePatternName([ExtractPatternName(flds(i)) | i in set inds flds]),
+#ifdef VDMPP
+        mk_AS`ObjectPattern (-,flds,-)  -> MergePatternName([ExtractPatternName(flds(i)) | i in set inds flds]),
+        mk_AS`FieldPattern (-,p,-)      -> ExtractPatternName(p),
+#endif VDMPP
+        others -> undefined
+      end;
+
+    MergePatternName: seq of (map AS`Name to nat1) -> map AS`Name to nat1
+    MergePatternName(l) ==
+      cases l:
+        []     -> {|->},
+        [e]    -> e,
+        others -> let m1 = hd l,
+                     m2 = MergePatternName(tl l)
+                  in 
+                    let common = dom m1 inter dom m2
+                    in
+                      if common = {}
+                      then m1 munion m2
+                      else common <-: m1 munion common <-: m2 munion
+                           { nm |-> m1(nm) + m2(nm) | nm in set common }
+      end;
+                        
+
+
+    ExtractBindings: AS`Pattern -> map AS`Name to (REP`TypeRep * nat1)
+    ExtractBindings (pat) ==
+      let pat_s = dom ExtractPatternName (pat) in
+        { nm |-> mk_(mk_REP`AllTypeRep(),1) | nm in set pat_s};
+
+    SimplePatterns : AS`Pattern -> bool
+    SimplePatterns(pat) ==
+      cases pat:
+        mk_AS`PatternName(-,-,-) -> true,
+        mk_AS`MatchVal(-,-) -> false,
+        mk_AS`SetUnionPattern(p1,p2,-),
+        mk_AS`SeqConcPattern(p1,p2,-),
+        mk_AS`MapMergePattern(p1,p2,-) -> SimplePatterns(p1) and SimplePatterns(p2),
+        mk_AS`SetEnumPattern(-,-),
+        mk_AS`SeqEnumPattern(-,-),
+        mk_AS`MapEnumPattern(-,-) -> false,
+        mk_AS`RecordPattern(-,p_l,-),
+        mk_AS`TuplePattern(p_l,-) -> forall p in set elems p_l & SimplePatterns(p),
+#ifdef VDMPP
+        mk_AS`ObjectPattern(-,p_l,-) -> forall p in set elems p_l & SimplePatterns(p),
+        mk_AS`FieldPattern(-,p,-) -> SimplePatterns(p),
+#endif VDMPP
+        others ->undefined
+      end;
+
+operations
+    PatternBind2TypeRep : AS`PatternBind ==> REP`TypeRep
+    PatternBind2TypeRep(patbind) ==
+      cases patbind:
+        mk_AS`SetBind(-,s,-)   -> def mk_(-, tp) = EXPR`wf_Expr(<POS>, s, mk_REP`SetTypeRep(mk_REP`AllTypeRep()))
+                                  in
+                                    if is_REP`SetTypeRep(tp)
+                                    then return tp.elemtp
+                                    else return mk_REP`AllTypeRep(),
+        mk_AS`TypeBind(-,tp,-) -> return ENV`TransType(nil,tp),
+        others                 -> return Pattern2TypeRep(patbind)
+      end;
+
+    Pattern2TypeRep : AS`Pattern ==> REP`TypeRep
+    Pattern2TypeRep(pat) ==
+      cases pat:
+        mk_AS`PatternName(-,-,-),
+        mk_AS`MatchVal(-,-)            -> return mk_REP`AllTypeRep(),
+        mk_AS`SetEnumPattern(Elems,-)  -> def tp_s = { Pattern2TypeRep(e) | e in set elems Elems }
+                                          in cases tp_s:
+                                               {}     -> return mk_REP`AllTypeRep(),
+                                               {t}    -> return mk_REP`SetTypeRep(t),
+                                               others -> return mk_REP`SetTypeRep(mk_REP`UnionTypeRep(tp_s))
+                                             end,
+        mk_AS`SeqEnumPattern(els,-)    -> def tp_s = { Pattern2TypeRep(e) | e in set elems els }
+                                          in cases tp_s:
+                                               {}     -> return mk_REP`AllTypeRep(),
+                                               {t}    -> return mk_REP`SeqTypeRep(t),
+                                               others -> return mk_REP`SeqTypeRep(mk_REP`UnionTypeRep(tp_s))
+                                             end,
+        mk_AS`MapEnumPattern(mls,-)    -> def dtp_s = { Pattern2TypeRep(e.dp) | e in set elems mls };
+                                              rtp_s = { Pattern2TypeRep(e.rp) | e in set elems mls };
+                                              dtp = cases dtp_s:
+                                                      {}     -> mk_REP`AllTypeRep(),
+                                                      {t}    -> t,
+                                                      others -> mk_REP`UnionTypeRep(dtp_s)
+                                                    end;
+                                              rtp = cases rtp_s:
+                                                      {}     -> mk_REP`AllTypeRep(),
+                                                      {t}    -> t,
+                                                      others -> mk_REP`UnionTypeRep(rtp_s)
+                                                    end
+                                          in return mk_REP`GeneralMapTypeRep(dtp, rtp),
+        mk_AS`SetUnionPattern(lp,rp,-) -> def ltp = Pattern2TypeRep(lp);
+                                              rtp = Pattern2TypeRep(rp);
+                                              tp_s = (if is_REP`SetTypeRep(ltp)
+                                                      then if is_REP`UnionTypeRep(ltp.elemtp)
+                                                          then ltp.elemtp.tps
+                                                          else {ltp.elemtp}
+                                                      else {}) union
+                                                     (if is_REP`SetTypeRep(rtp)
+                                                      then if is_REP`UnionTypeRep(rtp.elemtp)
+                                                          then rtp.elemtp.tps
+                                                          else {rtp.elemtp}
+                                                      else {})
+                                          in cases tp_s:
+                                                     {}     -> return mk_REP`AllTypeRep(),
+                                                     {t}    -> return mk_REP`SetTypeRep(t),
+                                                     others -> return mk_REP`SetTypeRep(mk_REP`UnionTypeRep(tp_s))
+                                             end,
+        mk_AS`SeqConcPattern(lp,rp,-)  -> def ltp = Pattern2TypeRep(lp);
+                                              rtp = Pattern2TypeRep(rp);
+                                              tp_s = (if is_REP`SeqTypeRep(ltp)
+                                                      then if is_REP`UnionTypeRep(ltp.elemtp)
+                                                          then ltp.elemtp.tps
+                                                          else {ltp.elemtp}
+                                                      else {}) union
+                                                     (if is_REP`SeqTypeRep(rtp)
+                                                      then if is_REP`UnionTypeRep(rtp.elemtp)
+                                                          then rtp.elemtp.tps
+                                                          else {rtp.elemtp}
+                                                      else {})
+                                          in cases tp_s:
+                                                     {}     -> return mk_REP`AllTypeRep(),
+                                                     {t}    -> return mk_REP`SeqTypeRep(t),
+                                                     others -> return mk_REP`SeqTypeRep(mk_REP`UnionTypeRep(tp_s))
+                                             end,
+        mk_AS`MapMergePattern(lp,rp,-)  -> def ltp = Pattern2TypeRep(lp);
+                                               rtp = Pattern2TypeRep(rp);
+                                               dtp_s = (if is_REP`GeneralMapTypeRep(ltp)
+                                                       then if is_REP`UnionTypeRep(ltp.mapdom)
+                                                            then ltp.elemtp.tps
+                                                            else {ltp.elemtp}
+                                                       else {}) union
+                                                      (if is_REP`GeneralMapTypeRep(rtp)
+                                                       then if is_REP`UnionTypeRep(rtp.mapdom)
+                                                            then rtp.elemtp.tps
+                                                            else {rtp.elemtp}
+                                                       else {});
+                                               rtp_s = (if is_REP`GeneralMapTypeRep(ltp)
+                                                       then if is_REP`UnionTypeRep(ltp.maprng)
+                                                            then ltp.elemtp.tps
+                                                            else {ltp.elemtp}
+                                                       else {}) union
+                                                      (if is_REP`GeneralMapTypeRep(rtp)
+                                                       then if is_REP`UnionTypeRep(rtp.maprng)
+                                                            then rtp.elemtp.tps
+                                                            else {rtp.elemtp}
+                                                       else {});
+                                               domtp = cases dtp_s:
+                                                       {}     -> mk_REP`AllTypeRep(),
+                                                       {t}    -> t,
+                                                       others -> mk_REP`UnionTypeRep(dtp_s)
+                                                     end;
+                                               rngtp = cases rtp_s:
+                                                       {}     -> mk_REP`AllTypeRep(),
+                                                       {t}    -> t,
+                                                       others -> mk_REP`UnionTypeRep(rtp_s)
+                                                     end
+                                            in return mk_REP`GeneralMapTypeRep(domtp, rngtp),
+        mk_AS`RecordPattern(tag,-,-)  ->
+#ifdef VDMSL
+                                         def tp = ENV`LookUpTypeName(tag)
+#endif VDMSL
+#ifdef VDMPP
+                                         def tp = ENV`LookUpTypeName(tag, false)
+#endif VDMPP
+                                         in if tp = nil
+                                            then return mk_REP`AllTypeRep()
+                                            else return tp,
+
+        mk_AS`TuplePattern(p_l,-) -> def tp_l = [ Pattern2TypeRep(p_l(i)) | i in set inds p_l ]
+                                     in return mk_REP`ProductTypeRep(tp_l),
+#ifdef VDMPP
+        mk_AS`ObjectPattern(cls,-,-) -> return mk_REP`ObjRefTypeRep(cls),
+#endif VDMPP
+        others -> return mk_REP`AllTypeRep()
+      end;
+
+end PAT
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[MotGeneralNumericType]
+{rtinfo.ast}[PAT]
+\end{rtinfo}

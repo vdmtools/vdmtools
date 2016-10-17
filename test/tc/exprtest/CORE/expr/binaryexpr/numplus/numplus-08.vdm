@@ -1,0 +1,21 @@
+class BinaryTest
+
+types
+  NUM = nat | int
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let A = "ABC",
+      s = {8,9},
+     - = 9 + if false 
+             then A
+             else s 
+  in skip;
+
+------------------------------------------------------------------------------
+end BinaryTest

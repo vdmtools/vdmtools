@@ -1,0 +1,13 @@
+class  MapComprehensionExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = {nil |-> a | a in set 7}
+  in skip;
+
+------------------------------------------------------------------------------
+end MapComprehensionExprTest

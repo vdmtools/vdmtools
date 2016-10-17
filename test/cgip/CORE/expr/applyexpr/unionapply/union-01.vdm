@@ -1,0 +1,35 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+public Test : () ==> set of (nat | seq of seq of nat | map nat to nat | map char to nat | char | seq of nat | seq of char)    
+Test () ==
+
+return {
+        (if 1=1
+        then (if true
+             then [[1,2,3],[1,2,4]]
+             else (if true
+                  then let b: map nat to nat = { 1 |-> 3, 2 |-> 5} in b
+                  else let b: inmap char to nat = { '1' |-> 3, '2' |-> 5} in b)(1) ) (1)
+        else ['a','b','c']) (3),
+
+        (if (if true
+            then true
+             else let e : bool = { 2|->true}(2) in e
+            )
+         then let e: inmap nat to nat = {1 |-> 2, 3 |-> 4} in e
+         else let b: map char to nat = { 'a' |-> 3, 'b' |-> 5} in b ) (3),
+
+        (if (if true
+             then true
+             else let e : bool = { 2|->false}(2) in e
+             )
+         then let e: map nat to nat = { 1 |-> 2, 3 |-> 4} in e
+         else let b: inmap char to nat = { 'a' |-> 3, 'b' |-> 5} in b)  (3)
+}
+
+end A

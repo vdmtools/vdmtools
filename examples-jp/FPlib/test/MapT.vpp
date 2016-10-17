@@ -1,0 +1,58 @@
+\subsection{FMapT}
+FMapのテストを行う。
+
+\begin{vdm_al}
+--$Id $
+class FMapT
+functions
+static public run : () +> bool
+run() == 
+let	testcases = [ t1(), t2()]
+in
+FTestDriver`run(testcases);
+\end{vdm_al}
+
+\subsubsection{Getを検査する}
+\begin{vdm_al}
+static t1 : () ->FTestDriver`TestCase
+t1() ==
+	mk_FTestDriver`TestCase(
+	"FMapT01:\t Getを検査する",
+	let	m1 = {1 |-> "KeiSato", 19 |-> "ShinSahara", 20 |-> "HisoshiSako"},
+		m2 = {"KeiSato" |-> 1,  "ShinSahara" |-> 19,  "HisoshiSako" |-> 20},
+		get1 = FMap`Get[int, seq of char],
+		get2 = FMap`Get[seq of char, int]
+	in
+	get1(m1)(19) = "ShinSahara" and
+	get1(m1)(2) = nil and
+	get2(m2)("ShinSahara") = 19 and
+	get2(m2)("KoizumiBoo") = nil)
+	;
+\end{vdm_al}
+
+
+\subsubsection{Contains, ContainsKeyを検査する}
+\begin{vdm_al}
+static t2 : () -> FTestDriver`TestCase
+t2() ==
+	mk_FTestDriver`TestCase(
+	"FMapT01:\t Contains, ContainsKeyを検査する",
+	let	m1 = {1 |-> "KeiSato", 19 |-> "ShinSahara", 20 |-> "HisoshiSako"},
+		m2 = {"KeiSato" |-> 1,  "ShinSahara" |-> 19,  "HisoshiSako" |-> 20},
+		c1 = FMap`Contains[int, seq of char],
+		k1 = FMap`ContainsKey[int, seq of char],
+		c2 = FMap`Contains[seq of char, int],
+		k2 = FMap`ContainsKey[seq of char, int]
+	in 
+		c1(m1)("KeiSato") and c1(m1)("ShinSahara") and c1(m1)("HisoshiSako") and
+		c1(m1)("KoizumiBoo") = false and
+		k1(m1)(1) and k1(m1)(19) and k1(m1)(20) and
+		not k1(m1)(99) and
+		c2(m2)(1) and c2(m2)(19) and c2(m2)(20) and
+		c2(m2)(30) = false and
+		k2(m2)("KeiSato") and k2(m2)("ShinSahara") and k2(m2)("HisoshiSako") and
+		k2(m2)("KoizumiBoo") = false)
+	;
+
+end FMapT
+\end{vdm_al}

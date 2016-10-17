@@ -1,0 +1,62 @@
+module TEST
+
+imports
+  from AS all,
+  from REP all,
+  from CI all,
+  from ENV all,
+  from ERR all,
+  from DEF all,
+  from VCM all,
+  from POG_MEDIATOR all,
+  from POGTP all,
+  from SPEC_AST all,
+
+  from TYPE
+    types Ind = <POS> | <DEF>
+
+exports all
+
+definitions
+
+types 
+
+ProofObligationPP :: po      : POG_MEDIATOR`String
+                     kind    : POGTP`Classification
+                     source  : seq of AS`Name
+                     loc     : POGTP`LocContext;
+
+operations
+go: AS`AstCI ==> ERR`ErrType | set of ProofObligationPP
+go(mk_AS`AstCI(mod_l, tllci, fidm)) ==
+ (--  Type check first...
+  CI`UpdateStateSigma (tllci,fidm);
+#ifdef VDMSL
+  for index = 1 to len mod_l do
+    VCM`UpdateModuleEnv(mod_l(index));
+  for unit in mod_l do
+    def - = DEF`wf_Module(<POS>, unit) in skip;
+#endif VDMSL
+#ifdef VDMPP
+  def - = VCM`UpdateParseEnvWithAST(mod_l) in skip;
+  for unit in mod_l do
+    def - = DEF`wf_Class(<POS>, unit) in skip;
+#endif VDMPP
+  def l_err = ERR`PrintErrors();
+      l_erronly = [l_err(i) | i in set inds l_err & l_err(i).severity = <ERROR>]
+  in 
+    if len l_erronly > 0 then return l_err;
+
+  -- Generate POG
+  SPEC_AST`SetAst(mk_AS`AstCI(mod_l, tllci, fidm));
+  POG_MEDIATOR`setupPOG();
+  POG_MEDIATOR`GenPO();
+  return convert(POG_MEDIATOR`GetPOs())
+ );
+
+convert: seq of POG_MEDIATOR`ProofObligationPP ==> set of ProofObligationPP
+convert(pogs) ==
+  return { let mk_POG_MEDIATOR`ProofObligationPP(-,po,kind,source,loc,-,-) = pogs(i)
+           in  mk_ProofObligationPP(po,kind,source,loc) | i in set inds pogs };
+
+end TEST

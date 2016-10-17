@@ -1,0 +1,15 @@
+Note for SGI's CC v4 Compiler users
+
+------------------------------------------------------------------------
+
+Known problems
+
+Patches required
+
+- You have to make sure that you have installed the C++_non_shared_libs
+package (from the "C++ translator" CD).
+
+- You must then install CC patch 1599 (you may also installed patches
+1260,1600, and 1628 though they should not be necessary).
+
+------------------------------------------------------------------------

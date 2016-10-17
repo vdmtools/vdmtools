@@ -1,0 +1,68 @@
+-- This testcase produces an error, if in the function "Test" no let
+-- expression to local define the value of the variable p is made.
+-- "Add(p)" produces an error, as the value of "p" is searched in the same
+-- module as "Add" is defined.
+
+module C
+  imports      
+    from B 
+      types
+        Point :: x : int
+                 y : int renamed Point
+      
+    exports
+       functions
+        Add : Point -> int
+
+    definitions
+      functions
+        Add : Point -> int
+        Add(p) == p.x + p.y
+end C
+
+module B
+  
+    exports 
+      types
+        struct Point
+ 
+      values 
+        p : Point
+   
+     definitions
+       types
+         Point :: x : int 
+                  y : int
+
+       values
+          p : Point = mk_Point(1,2)
+end B 
+
+module A
+  imports
+  
+    from C
+      functions
+       Add : Point -> int renamed Add,
+
+    from B 
+      types
+        Point :: x : int
+                 y : int renamed Point
+      
+      values    
+        p : Point renamed p
+ 
+     definitions
+      
+ 
+       functions
+
+         Test : () -> int
+         Test () == let k = p in
+                         Add(k)
+
+end A
+    
+   
+

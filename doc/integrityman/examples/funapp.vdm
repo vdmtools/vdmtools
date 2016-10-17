@@ -1,0 +1,24 @@
+values
+
+  c1 : nat = 8
+
+functions
+
+Div: real * real -> real
+Div(a,b) ==
+  a / b
+pre b <> 0;
+
+Use: real -> real
+Use(a1) ==
+  let b1 = if a1 <= c1 then a1 else 0
+  in
+    Div(a1,b1)
+pre a1 <> 0 and a1 < c1
+
+--PO
+--(forall a1 : real &
+-- a1 <> 0 and a1 < c1 =>
+-- (let b1 = (if a1 <= c1 then a1 else 0)
+--  in
+--    pre_Div(a1, b1)))

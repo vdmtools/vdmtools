@@ -1,0 +1,295 @@
+class JavaTextNumberFormat is subclass of JavaTextFormat
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaTextNumberFormat" , <CLASS> , false  )
+instance variables 
+  public  static INTEGER_FIELD : int  := 0;
+  public  static FRACTION_FIELD : int  := 1;
+  public  static cachedLocaleData : JavaUtilHashtable := new  JavaUtilHashtable(3);
+  public  static NUMBERSTYLE : int  := 0;
+  public  static CURRENCYSTYLE : int  := 1;
+  public  static PERCENTSTYLE : int  := 2;
+  public  static SCIENTIFICSTYLE : int  := 3;
+  private  groupingUsed : bool  := true  ;
+  private  maxIntegerDigits : int  := 40;
+  private  minIntegerDigits : int  := 1;
+  private  maxFractionDigits : int  := 3;
+  private  minFractionDigits : int  := 0;
+  private  parseIntegerOnly : bool  := false  ;
+  private  maximumIntegerDigits : int  := 40;
+  private  minimumIntegerDigits : int  := 1;
+  private  maximumFractionDigits : int  := 3;
+  private  minimumFractionDigits : int  := 0;
+  static currentSerialVersion : int  := 1;
+  private  serialVersionOnStream : int  := currentSerialVersion;
+  static serialVersionUID : int  := -0
+operations 
+public  clone : () ==> JavaLangObject
+clone() == 
+( dcl   other : JavaTextNumberFormat := JavaTextFormat`clone();
+  return  other
+) ;
+
+--public  format : int  ==> JavaLangString
+--format(number) == 
+--( dcl   sb : JavaLangStringBuffer := format(number , new  JavaLangStringBuffer() , new  JavaTextFieldPosition(0));
+--  return  sb.toString()
+--) ;
+
+public  format : real  ==> JavaLangString
+format(number) == 
+( dcl   sb : JavaLangStringBuffer := format''(number , new  JavaLangStringBuffer() , new  JavaTextFieldPosition(0));
+  return  sb.toString()
+) ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  hashCode : () ==> int 
+hashCode() == 
+( return  maximumIntegerDigits*37+maxFractionDigits
+) ;
+
+public  static getInstance : () ==> JavaTextNumberFormat
+getInstance() == 
+( return  new JavaTextNumberFormat().getInstance(JavaUtilLocale`getDefault() , NUMBERSTYLE)
+) ;
+
+public  parse : JavaLangString ==> JavaLangNumber
+parse(text) == 
+is not yet specified;
+--( dcl   parsePosition : JavaTextParsePosition := new  JavaTextParsePosition(0),
+--        result : JavaLangNumber := parse(text , parsePosition);
+--  if  parsePosition.index = 0
+--  then  
+--    ( exit  new  JavaTextParseException(J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(new  JavaLangString("Unparseable number: \"") , text) , new  JavaLangString("\"")) , parsePosition.errorIndex)
+--    ) ;
+--  return  result
+--) ;
+
+public  equals : JavaLangObject ==> bool 
+equals(obj) == 
+( if  obj.IsNil()
+  then  
+    return  false  ;
+  if  self   = obj
+  then  
+    return  true  ;
+  if  getClass() <> obj.getClass()
+  then  
+    return  false  ;
+  ( dcl   other : JavaTextNumberFormat := obj;
+    return  (maximumIntegerDigits = other.maximumIntegerDigits and  minimumIntegerDigits = other.minimumIntegerDigits and  maximumFractionDigits = other.maximumFractionDigits and  minimumFractionDigits = other.minimumFractionDigits and  groupingUsed = other.groupingUsed and  parseIntegerOnly = other.parseIntegerOnly)
+  ) 
+) ;
+
+public  isGroupingUsed : () ==> bool 
+isGroupingUsed() == 
+( return  groupingUsed
+) ;
+
+public  setGroupingUsed : bool  ==> ()
+setGroupingUsed(newValue) == 
+( groupingUsed := newValue;
+  skip 
+) ;
+
+public  JavaTextNumberFormat : <NIL> ==> JavaTextNumberFormat
+JavaTextNumberFormat(-) == 
+isNil := true  ;
+
+public  static getNumberInstance : () ==> JavaTextNumberFormat
+getNumberInstance() == 
+( return  new JavaTextNumberFormat().getInstance(JavaUtilLocale`getDefault() , JavaTextNumberFormat`NUMBERSTYLE)
+) ;
+
+public  static getPercentInstance : () ==> JavaTextNumberFormat
+getPercentInstance() == 
+( return  new JavaTextNumberFormat().getInstance(JavaUtilLocale`getDefault() , PERCENTSTYLE)
+) ;
+
+public  isParseIntegerOnly : () ==> bool 
+isParseIntegerOnly() == 
+( return  parseIntegerOnly
+) ;
+
+public  static getAvailableLocales : () ==> map  int  to  JavaUtilLocale
+getAvailableLocales() == 
+is not yet specified;
+--( return  LocaleData`getAvailableLocales(new  JavaLangString("NumberPatterns"))
+--) ;
+
+public  static getCurrencyInstance : () ==> JavaTextNumberFormat
+getCurrencyInstance() == 
+( return  new JavaTextNumberFormat().getInstance(JavaUtilLocale`getDefault() , CURRENCYSTYLE)
+) ;
+
+public  static getInstance : JavaUtilLocale ==> JavaTextNumberFormat
+getInstance(inLocale) == 
+( return  new JavaTextNumberFormat().getInstance(inLocale , JavaTextNumberFormat`NUMBERSTYLE)
+) ;
+
+public  setParseIntegerOnly : bool  ==> ()
+setParseIntegerOnly(value__) == 
+( parseIntegerOnly := value__;
+  skip 
+) ;
+
+public  static getInstance : JavaUtilLocale * int  ==> JavaTextNumberFormat
+getInstance(desiredLocale, choice) == 
+( --dcl   numberPatterns : map  int  to  JavaLangString := cachedLocaleData.get(desiredLocale);
+  --if  numberPatterns = {|->}
+  --then  
+  --  ( dcl   resource : JavaUtilResourceBundle := JavaUtilResourceBundle`getBundle(new  JavaLangString("java.text.resources.LocaleElements") , desiredLocale);
+  --    numberPatterns := resource.getStringArray(new  JavaLangString("NumberPatterns"));
+  --    let - = cachedLocaleData.put(desiredLocale , numberPatterns)
+  --    in 
+  --      skip 
+  --  ) ;
+--  return  new  JavaTextDecimalFormat(numberPatterns(choice) , new  JavaTextDecimalFormatSymbols(desiredLocale))
+  return  new  JavaTextDecimalFormat(new JavaLangString("???") , new  JavaTextDecimalFormatSymbols(desiredLocale))
+) ;
+
+static getScientificInstance : () ==> JavaTextNumberFormat
+getScientificInstance() == 
+( return  new JavaTextNumberFormat().getInstance(JavaUtilLocale`getDefault() , SCIENTIFICSTYLE)
+) ;
+
+public  getMaximumIntegerDigits : () ==> int 
+getMaximumIntegerDigits() == 
+( return  maximumIntegerDigits
+) ;
+
+public  getMinimumIntegerDigits : () ==> int 
+getMinimumIntegerDigits() == 
+( return  minimumIntegerDigits
+) ;
+
+public  getMaximumFractionDigits : () ==> int 
+getMaximumFractionDigits() == 
+( return  maximumFractionDigits
+) ;
+
+public  getMinimumFractionDigits : () ==> int 
+getMinimumFractionDigits() == 
+( return  minimumFractionDigits
+) ;
+
+public  setMaximumIntegerDigits : int  ==> ()
+setMaximumIntegerDigits(newValue) == 
+( maximumIntegerDigits := if newValue > 0 then newValue else 0; -- Math`max(0 , newValue);
+  if  minimumIntegerDigits > maximumIntegerDigits
+  then  
+    minimumIntegerDigits := maximumIntegerDigits;
+  skip 
+) ;
+
+public  setMinimumIntegerDigits : int  ==> ()
+setMinimumIntegerDigits(newValue) == 
+( minimumIntegerDigits := if newValue > 0 then newValue else 0; -- Math`max(0 , newValue);
+  if  minimumIntegerDigits > maximumIntegerDigits
+  then  
+    maximumIntegerDigits := minimumIntegerDigits;
+  skip 
+) ;
+
+public  static getNumberInstance : JavaUtilLocale ==> JavaTextNumberFormat
+getNumberInstance(inLocale) == 
+( return  new JavaTextNumberFormat().getInstance(inLocale , NUMBERSTYLE)
+) ;
+
+public  setMaximumFractionDigits : int  ==> ()
+setMaximumFractionDigits(newValue) == 
+( maximumFractionDigits := if newValue > 0 then newValue else 0; -- Math`max(0 , newValue);
+  if  maximumFractionDigits < minimumFractionDigits
+  then  
+    minimumFractionDigits := maximumFractionDigits;
+  skip 
+) ;
+
+public  setMinimumFractionDigits : int  ==> ()
+setMinimumFractionDigits(newValue) == 
+( minimumFractionDigits := if newValue > 0 then newValue else 0; -- Math`max(0 , newValue);
+  if  maximumFractionDigits < minimumFractionDigits
+  then  
+    maximumFractionDigits := minimumFractionDigits;
+  skip 
+) ;
+
+public  static getPercentInstance : JavaUtilLocale ==> JavaTextNumberFormat
+getPercentInstance(inLocale) == 
+( return  new JavaTextNumberFormat().getInstance(inLocale , PERCENTSTYLE)
+) ;
+
+public  static getCurrencyInstance : JavaUtilLocale ==> JavaTextNumberFormat
+getCurrencyInstance(inLocale) == 
+( return  new JavaTextNumberFormat().getInstance(inLocale , CURRENCYSTYLE)
+) ;
+
+static getScientificInstance : JavaUtilLocale ==> JavaTextNumberFormat
+getScientificInstance(inLocale) == 
+( return  new JavaTextNumberFormat().getInstance(inLocale , SCIENTIFICSTYLE)
+) ;
+
+public  parse : JavaLangString * JavaTextParsePosition ==> JavaLangNumber
+parse(text, parsePosition) == 
+is not yet specified;
+
+--private  readObject : ObjectInputStream ==> ()
+--readObject(stream) == 
+--( stream.defaultReadObject();
+--  if  serialVersionOnStream < 1
+--  then  
+--    ( maximumIntegerDigits := maxIntegerDigits;
+--      minimumIntegerDigits := minIntegerDigits;
+--      maximumFractionDigits := maxFractionDigits;
+--      minimumFractionDigits := minFractionDigits
+--    ) ;
+--  if  minimumIntegerDigits > maximumIntegerDigits or  minimumFractionDigits > maximumFractionDigits or  minimumIntegerDigits < 0 or  minimumFractionDigits < 0
+--  then  
+--    ( exit  new  InvalidObjectException(new  JavaLangString("Digit count range invalid"))
+--    ) ;
+--  serialVersionOnStream := currentSerialVersion;
+--) ;
+
+--private  writeObject : ObjectOutputStream ==> ()
+--writeObject(stream) == 
+--( maxIntegerDigits := if  (maximumIntegerDigits > Byte`MAX_VALUE) then  Byte`MAX_VALUE else  J2VUTIL`Convert("byte" , maximumIntegerDigits);
+--  minIntegerDigits := if  (minimumIntegerDigits > Byte`MAX_VALUE) then  Byte`MAX_VALUE else  J2VUTIL`Convert("byte" , minimumIntegerDigits);
+--  maxFractionDigits := if  (maximumFractionDigits > Byte`MAX_VALUE) then  Byte`MAX_VALUE else  J2VUTIL`Convert("byte" , maximumFractionDigits);
+--  minFractionDigits := if  (minimumFractionDigits > Byte`MAX_VALUE) then  Byte`MAX_VALUE else  J2VUTIL`Convert("byte" , minimumFractionDigits);
+--  stream.defaultWriteObject();
+--  skip 
+--) ;
+
+public  parseObject : JavaLangString * JavaTextParsePosition ==> JavaLangObject
+parseObject(source, parsePosition) == 
+( return  parse(source , parsePosition)
+) ;
+
+--public  format : int  * JavaLangStringBuffer * JavaTextFieldPosition ==> JavaLangStringBuffer
+--format(number, toAppendTo, pos) == 
+--is not yet specified;
+
+public  format'' : real  * JavaLangStringBuffer * JavaTextFieldPosition ==> JavaLangStringBuffer
+format''(num, toAppendTo, pos) == 
+is not yet specified;
+
+public  format' : JavaLangObject * JavaLangStringBuffer * JavaTextFieldPosition ==> JavaLangStringBuffer
+format'(number, toAppendTo, pos) == 
+( --if  isofclass  (Long,number) -- or  (isofclass  (BigInteger,number) and  def bi:BigInteger=number in bi.bitLength() < 64)
+  --then  
+  --  ( return  format''(def l:Long=number in l.longValue() , toAppendTo , pos)
+  --  ) 
+  --else  
+    if  isofclass  (JavaLangNumber,number)
+    then  
+      ( return  format''(def d:JavaLangNumber=number in d.doubleValue() , toAppendTo , pos)
+      ) 
+    else  
+      ( exit  new  JavaLangIllegalArgumentException(new  JavaLangString("Cannot format given JavaLangObject as a JavaLangNumber"))
+      ) 
+) ;
+
+
+end  JavaTextNumberFormat

@@ -1,0 +1,50 @@
+class A
+
+operations
+public
+Test: () ==> seq of set of seq of (char | nat)
+Test() == return
+  [
+    op1(),
+    op2(),
+    op3(),
+    op4(),
+    op5(),
+    op6(),
+    op7()
+  ];
+
+op1: () ==> set of seq of char
+op1() == let s = {"abc`def"}
+          in let  a ^ "`" ^ b in set s
+             in return {a ^ b};
+
+op2: () ==> set of seq of char
+op2() == let x = "abc`def"
+          in let a ^ "`" ^ b = x
+             in return {a ^ b};
+
+op3: () ==> set of seq of char
+op3() == let x = "abc<def>xyz"
+          in let a ^ "<" ^ b ^ ">" ^ c = x
+             in return {a ^ c};
+
+op4: () ==> set of seq of char
+op4() == let s = {"abc`def", "pqr", "System`out"}
+          in return { a ^ b | a ^ "`" ^ b in set s };
+
+op5: () ==> set of seq of char
+op5() == let s = {"abc`def", "pqr", "System`out"}
+          in return { a ^ b | a ^ "`" ^ b in set s & b = "out" };
+
+op6: () ==> set of seq of nat
+op6() == let s = {[1,2,3,4,5,6,7,8,9,10]}
+          in let a ^ b ^ c ^ d in set s be st len a = 2 and len b = 3 and len c = 3
+             in return { a ^ c };
+
+op7: () ==> set of seq of char
+op7() == let s = { "abcde", "abcba" }
+         in let a ^ b, c ^ a in set s 
+            in return {a};
+
+end A

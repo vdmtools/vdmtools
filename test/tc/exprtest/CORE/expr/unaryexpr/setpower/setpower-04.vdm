@@ -1,0 +1,14 @@
+class UnaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let f = false,
+      - = power f
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

@@ -1,0 +1,69 @@
+\subsection{FBusinessTableT}
+FBusinessTableのテストを行う。
+
+\begin{vdm_al}
+--$Id $
+class FBusinessTableT is subclass of FBusinessTable
+functions
+static public run : () +> bool
+run() == 
+let	testcases = [ t1(), t2()]
+in
+FTestDriver`run(testcases);
+\end{vdm_al}
+
+\subsubsection{Findを検査する}
+\begin{vdm_al}
+functions
+static t1 : () -> FTestDriver`TestCase
+t1() ==
+	mk_FTestDriver`TestCase(
+	"FBusinessTableT01:\t Find",
+	let	t =	[
+			mk_Entry(0, 3000000, 3000),
+			mk_Entry(3000001, 6000000, 6000),
+			mk_Entry(6000001, 9000000, 9000),
+			mk_Entry(9000001, 12000000, 12000),
+			mk_Entry(12000001, MAXNUMBER, 15000)
+			]
+	in
+	Find(t, -1) = nil and
+	Find(t, 0) = 3000 and
+	Find(t, 1000) = 3000 and
+	Find(t, 3000000) = 3000 and
+	Find(t, 3000001) = 6000 and
+	Find(t, 3000002) = 6000 and
+	Find(t, 6000000) = 6000 and
+	Find(t, 6000001) = 9000 and
+	Find(t, 6000002) = 9000 and
+	Find(t, 9000000) = 9000 and
+	Find(t, 9000001) = 12000 and
+	Find(t, 9000002) = 12000 and
+	Find(t, 12000000) = 12000 and
+	Find(t, 12000001) = 15000 and
+	Find(t, 12000002) = 15000 and
+	Find(t, MAXNUMBER) = 15000 and
+	Find(t, MAXNUMBER+1) = nil);
+\end{vdm_al}
+
+\subsubsection{FindInRegularIntervalsTablesを検査する}
+\begin{vdm_al}
+functions
+static t2 : () -> FTestDriver`TestCase
+t2() ==
+	mk_FTestDriver`TestCase(
+	"FBusinessTableT02:\t FindInRegularIntervalsTables",
+	FindInRegularIntervalsTables(10000000, 50, 1000000, 0) = 0 and 
+	FindInRegularIntervalsTables(10000000, 50, 1000000, 9999999) = 0 and 
+	FindInRegularIntervalsTables(10000000, 50, 1000000, 10000000) = 0 and 
+	FindInRegularIntervalsTables(10000000, 50, 1000000, 10300000) = 50 and 
+	FindInRegularIntervalsTables(10000000, 50, 1000000, 11000000) = 50 and 
+	FindInRegularIntervalsTables(10000000, 50, 1000000, 11300000) = 100 and 
+	FindInRegularIntervalsTables(0, 3000, 3000000, 0) = 0 and  
+	FindInRegularIntervalsTables(0, 3000, 3000000, 1) = 3000 and  
+	FindInRegularIntervalsTables(0, 3000, 3000000, 3000000) = 3000 and 
+	FindInRegularIntervalsTables(0, 3000, 3000000, 3000001) = 6000  
+	);
+	
+end FBusinessTableT
+\end{vdm_al}

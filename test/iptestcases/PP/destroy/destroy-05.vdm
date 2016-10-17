@@ -1,0 +1,34 @@
+ class A
+
+  instance variables
+
+    n : nat := 0;
+
+  operations
+
+public    Init : nat ==> A
+    Init(mn) ==
+      (n := mn;
+       return self);
+
+public    GetN : () ==> nat
+    GetN() ==
+      return n;
+
+end A
+
+
+class B
+
+operations
+
+  Op : A  ==> nat
+  Op(a) ==
+    return 2 * a.GetN();
+
+  public Test : () ==> nat
+  Test() ==
+    return (let n = Op(new A().Init(3))
+            in n) + 7
+
+end B

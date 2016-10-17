@@ -1,0 +1,32 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+functions
+
+add: nat -> nat -> nat
+add(y)(z) ==
+  y+z;
+
+ f:( (nat->nat) | bool ) -> nat
+ f(t) ==
+ if is_bool(t) then 1
+ else t(2);
+
+ h:(nat->nat) -> nat
+ h( v ) == v(1);
+
+ g: nat->nat
+ g(x) == x;
+
+ f2: ( (nat->nat) | bool )*(nat*nat) -> int
+ f2( u, mk_(d,e) ) ==
+ if is_bool(u) then d-e
+ else u(9);
+
+operations
+
+public Test :() ==> seq of nat 
+Test () ==
+    return [ f(true), if 1=2 then add(2)(3) else 2 , f2( false, mk_(7,4) ) ]
+
+end A

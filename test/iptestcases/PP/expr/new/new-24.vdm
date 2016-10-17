@@ -1,0 +1,37 @@
+class B
+
+instance variables
+protected n : nat;
+
+operations
+
+public B : nat ==> B
+B(pn) ==
+  n := pn;
+
+public getN : () ==> nat
+getN() ==
+  return n
+
+end B
+
+class C is subclass of B
+
+operations
+
+public getN : () ==> nat
+getN() ==
+  return n + 1
+
+end C
+
+class A
+
+operations
+
+public Test : () ==> nat
+Test() ==
+  let c = new C(10)
+  in return c.getN();
+
+end A

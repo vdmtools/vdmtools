@@ -1,0 +1,41 @@
+class A
+
+instance variables
+  b        : bool := true;
+  k        : nat  := Inc(10);
+  j        : nat  := 20;
+  l        : nat  := 30+4;
+  m        : nat  := 40;
+  q        : <YES> | <NO>:= <YES>;
+  v1 : set of (bool | int) := { 66,65,68,-121 };
+  v2 : seq of (<NO> | set of (bool | int)) := [ {4}, val ];
+  v3 : int * seq of (<NO> * set of (bool | int)) := mk_( - 100, [] );
+
+types 
+  R :: n: nat
+       t: real * nat
+       c: char
+
+values 
+  val = <NO>
+
+functions
+  Inc: nat -> nat 
+  Inc(n) ==
+    n + 1
+
+operations
+
+public  Test: () ==> 
+    set of ( real | <YES> | <NO> | bool | (set of (bool | int)) |
+             (seq of (<NO> | set of (bool | int))) |
+             (int * seq of (<NO> * set of (bool | int))) |
+             (real * nat) | char )
+
+  Test ()  ==
+    return { b, k, j, l, m, q, v1, v2, v3 }
+
+end A
+class B is subclass of A
+
+end B

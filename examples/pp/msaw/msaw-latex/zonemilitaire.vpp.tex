@@ -1,0 +1,49 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{vdm}\index{ZoneMilitaire|ClassDef}
+{\small\sf class} $ZoneMilitaire$  \kISO $\index{Obstacle|ClassOcc}Obstacle, \index{Polygone|ClassOcc}Polygone$
+\begin{instvar}\index{niveau-minimal|InstVarDef}
+\vardcl{niveau-minimal}{Pieds\index{Pieds|TypeOcc}}\index{niveau-maximal|InstVarDef}
+\vardcl{niveau-maximal}{Pieds\index{Pieds|TypeOcc}}\index{statut|InstVarDef}
+\vardcl{statut}{\const{zone\_active} | \const{zone\_inactive}}
+\instinv{niveau-minimal,niveau-maximal}{niveau-minimal < niveau-maximal
+}
+\end{instvar}
+\begin{methdef}\index{SetStatut|MethodDef}
+\begin{method}{SetStatut}
+\parms{statut' : \const{zone\_active} | \const{zone\_inactive}} \Fdef\\ \ass{statut}{statut'}
+\end{method}\index{Intersection|MethodDef}
+\begin{method}{Intersection}
+\parms{segment-de-prediction :  @SegmentDePrediction}\methvalue{\Bool } \Fdef\\ \begin{defstmt}
+\eqdef{points-de-vecteur}{\invoke{segment-de-prediction}{\index{GetPoints|MethodOcc}
+\fnapply{GetPoints}{}}}
+\end{defstmt} \\
+\return{\pex{statut = \const{zone\_active} \And  \\
+\exists{\reccons{\kw{mk-}}{xy,z} \In points-de-vecteur} \\
+{\fnapply{DansPolygone}{xy,sommets} \And  \\
+z \Ge niveau-minimal \And  \\
+z \Le niveau-maximal}}}
+\end{method}
+\end{methdef}
+{\small\sf end} $ZoneMilitaire$
+
+\end{vdm}

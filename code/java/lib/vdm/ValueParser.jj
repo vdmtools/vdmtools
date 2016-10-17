@@ -1,0 +1,707 @@
+//
+// Definition of productions for Java VDM Value parser
+// $Id: ValueParser.jj,v 1.2 2005/05/11 07:02:24 vdmtools Exp $
+//
+
+options {
+  JAVA_UNICODE_ESCAPE = true;
+}
+
+PARSER_BEGIN(ValueParser)
+
+package jp.vdmtools.VDM.ValueParser;
+
+import jp.vdmtools.VDM.ValueParser.JavaCharStream;
+import jp.vdmtools.VDM.ValueParser.ParseException;
+import jp.vdmtools.VDM.ValueParser.Token;
+import jp.vdmtools.VDM.ValueParser.TokenMgrError;
+import jp.vdmtools.VDM.ValueParser.ValueParserConstants;
+import jp.vdmtools.VDM.ValueParser.ValueParserTokenManager;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.io.FileInputStream;
+import java.io.ByteArrayInputStream;
+
+public class ValueParser 
+{
+  static boolean calledBefore=false;
+
+  public static class ParseError extends Exception {
+    public ParseError() {
+      super("ParseError");
+    }
+
+    public ParseError(String s) {
+      super(s);
+    }
+
+  }
+
+  public static jp.vdmtools.VDM.Tuple ParseVDMValue(String filename) throws ParseError
+  {
+    jp.vdmtools.VDM.Tuple result = new jp.vdmtools.VDM.Tuple(2);
+    try {
+      result.SetField(1, new Boolean(false));
+      result.SetField(2, null);
+    }
+    catch (jp.vdmtools.VDM.INDEX_OUT_OF_RANGE e) {
+        // Can never be reached
+    }
+    Object value = null;
+    try
+    {
+      FileInputStream fs = new FileInputStream(filename);
+      ValueParser parser = null;
+      if (!calledBefore) {
+        parser = new ValueParser(fs);
+        calledBefore = true;
+      }
+      parser.ReInit(fs);
+      value = Value();
+      result.SetField(1, new Boolean(true));
+      result.SetField(2, value);
+    }
+    catch (Exception ex)
+    {
+      ex.printStackTrace(System.out);
+      value = ex.getMessage();
+      try {
+        result.SetField(1, new Boolean(false));
+        result.SetField(2, value);
+      }
+      catch (jp.vdmtools.VDM.INDEX_OUT_OF_RANGE e) {
+         // Can never be reached
+      }
+    }
+    return result;
+  }
+
+  public static jp.vdmtools.VDM.Tuple ParseVDMString(String str) throws ParseError
+  {
+        jp.vdmtools.VDM.Tuple result = new jp.vdmtools.VDM.Tuple(2);
+        try {
+          result.SetField(1, new Boolean(false));
+          result.SetField(2, null);
+        }
+        catch (jp.vdmtools.VDM.INDEX_OUT_OF_RANGE e) {
+            // Can never be reached
+        }
+        Object value = null;
+        try
+        {
+            ByteArrayInputStream ss = new ByteArrayInputStream(str.getBytes());
+            ValueParser parser=null;
+            if (!calledBefore){
+              parser = new ValueParser(ss);
+              calledBefore = true;
+            }
+            parser.ReInit(ss);
+            value = Value();
+            result.SetField(1, new Boolean(true));
+            result.SetField(2, value);
+        }
+        catch (Exception ex)
+        {
+            ex.printStackTrace(System.out);
+            value = ex.getMessage();
+            try {
+              result.SetField(1, new Boolean(false));
+              result.SetField(2, value);
+            }
+            catch (jp.vdmtools.VDM.INDEX_OUT_OF_RANGE e) {
+                // Can never be reached
+            }
+        }
+        return result;
+    }
+
+    public static void main(String[] args)
+    {
+        try
+        {
+            if (args.length == 0)
+            {
+                ValueParser parser = new ValueParser(System.in);
+                Object value = parser.Value();
+                System.out.println(jp.vdmtools.VDM.UTIL.toString(value));
+            }
+            else
+            {
+                ValueParser parser = new ValueParser(new FileInputStream(args[0]));
+                Object value = parser.Value();
+                System.out.println(jp.vdmtools.VDM.UTIL.toString(value));
+                for (int i =1; i < args.length; i++)
+                {
+                    parser.ReInit(new FileInputStream(args[i]));
+                    value = parser.Value();
+                    System.out.println(jp.vdmtools.VDM.UTIL.toString(value));
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.out.println(ex.getMessage());
+        }
+    }
+
+}
+
+PARSER_END(ValueParser)
+
+SKIP:
+{
+    " "
+  |
+    "\t"
+  |
+    "\n"
+  |
+    "\r"
+}
+
+TOKEN: /* SYMBOLS */
+{
+  < BAR_ARROW: "|->" >
+|
+  < PRIME: "`" >
+|
+  < TOKENTYPE: "token" >
+|
+  < NIL: "nil" >
+|
+  < TRUE: "true" >
+| 
+  < FALSE: "false" >
+|
+  < MK_: "mk_" >
+|
+  < MK_TOKEN: "mk_token" >
+|
+  < MK_IDENTIFIER: "mk_" <IDENTIFIERORKEYWORD> >
+}
+
+TOKEN: /* IDENTIFIERS */
+{
+  < IDENTIFIERORKEYWORD: <LETTER> (["'","_"] | <DIGIT> | <LETTER>)* >
+|
+  < #LETTER: (["a"-"z","A"-"Z"] | "#"["a"-"z","A"-"Z"]) >
+|
+  < #DIGIT: ["0"-"9"] >
+}
+
+TOKEN: /* LITERALS */
+{
+  < NUMERICLITERAL: ("-")? (<DIGIT>)+ >
+|
+  < REALLITERAL: ("-")? (<DIGIT>)+ (("." (<DIGIT>)+) | <EXPONENT> | ("." (<DIGIT>)+ <EXPONENT>)) >
+|
+  < CHARACTERLITERAL: "'" (["\040"-"\133", "\135"-"\176"] | <EMBEDDEDCTRLCHAR> | <HIGHBITCHAR> | <DELETECHAR>) "'" >
+|
+  < TEXTLITERAL: "\"" (["\040"-"\041", "\043"-"\133", "\135"-"\176"] | <EMBEDDEDCTRLCHAR> | <HIGHBITCHAR> | <DELETECHAR>)* "\"" >
+|
+  < QUOTELITERAL: "<" <IDENTIFIERORKEYWORD> ">" >
+|
+  < #EXPONENT: ["E","e"] ("+"|"-")? (<DIGIT>)+ >
+|
+  < #EMBEDDEDCTRLCHAR: ["\000"-"\037"] >
+|
+  < #HIGHBITCHAR: ["\200"-"\377"] >
+|
+  < #DELETECHAR: "\177" >
+
+}
+
+/* PRODUCTIONS */
+
+Object Value()
+    throws ParseError:
+  { 
+      Object v;
+  }
+  {
+      LOOKAHEAD(MapVal())
+      v=MapVal()
+      {
+          return v;
+      }
+    |
+      v=SetVal()
+      {
+          return v;
+      }
+    |
+      v=SequenceVal()
+      {
+          return v;
+      }
+    |
+      v=NumericVal()
+      {
+          return v;
+      }
+    |
+      LOOKAHEAD(TokenVal())
+      v=TokenVal()
+      {
+          return v;
+      }
+    |
+      LOOKAHEAD(TupleVal())
+      v=TupleVal()
+      {
+          return v;
+      }
+    |
+      v=StringVal()
+      {
+          return v;
+      }
+    |
+      LOOKAHEAD(RecordVal())
+      v=RecordVal()
+      {
+          return v;
+      }
+    |
+      v=QuoteVal()
+      {
+          return v;
+      }
+    |
+      v=NilVal()
+      {
+          return v;
+      }
+    |
+      v=BoolVal()
+      {
+          return v;
+      }
+    |
+      v=CharVal()
+      {
+          return v;
+      }
+  }
+
+List ValueList()
+    throws ParseError:
+  {
+      List s = new ArrayList();
+  }
+  {
+      LOOKAHEAD(NonEmptyValueList())
+      s=NonEmptyValueList()
+      {
+          return s;
+      }
+    |
+      /* empty */
+      {
+          return s;
+      }
+  }
+
+List NonEmptyValueList()
+    throws ParseError:
+  { 
+      Object v;
+      List s = new ArrayList();
+  }
+  {
+      LOOKAHEAD(ValueAndNonEmptyValueList())
+      s=ValueAndNonEmptyValueList()
+      {
+          return s;
+      }
+    |
+      v=Value()
+      {
+          s.add(v);
+          return s;
+      }
+  }
+
+List ValueAndNonEmptyValueList()
+    throws ParseError:
+  { 
+      Object v;
+      List s1, s = new ArrayList();
+  }
+  {
+      v=Value()
+      {
+          s.add(v);
+      }
+      "," s1=NonEmptyValueList()
+      {
+          s.addAll(s1);
+          return s;
+      }
+  }
+
+jp.vdmtools.VDM.Tuple TupleVal()
+    throws ParseError:
+  {
+      jp.vdmtools.VDM.Tuple t;
+      List s;
+  }
+  {
+      <MK_> "(" s=ValueList()
+      {
+          t = new jp.vdmtools.VDM.Tuple(s.size());
+          for (int i = 0; i < s.size(); i++)
+          {
+              try {
+                t.SetField(i+1, s.get(i));
+              } 
+              catch (jp.vdmtools.VDM.INDEX_OUT_OF_RANGE e) {
+                throw new ParseError("Index out of range" + e.getMessage());
+              }
+          
+          }
+      }
+      ")"
+      {
+          return t;
+      }
+  }
+
+Map MapVal()
+    throws ParseError:
+  {
+      Map m = new HashMap();
+  }
+  {
+      "{" m=MapContents() "}"
+      {
+          return m;
+      }
+  }
+
+Map MapContents()
+    throws ParseError:
+  {
+      Map m = new HashMap();
+  }
+  {
+      LOOKAHEAD(ListOfMaplets())
+      m=ListOfMaplets()
+      {
+          return m;
+      }
+    |
+      <BAR_ARROW>
+      {
+          return m;
+      }
+  }
+
+Map ListOfMaplets()
+    throws ParseError:
+  {
+      Map m = new HashMap();
+  }
+  {
+      LOOKAHEAD(MapletAndListOfMaplets())
+      m=MapletAndListOfMaplets()
+      {
+          return m;
+      }
+    |
+      m=Maplet()
+      {
+          return m;
+      }
+  }
+
+Map MapletAndListOfMaplets()
+    throws ParseError:
+  {
+      Map ml, m = new HashMap();
+  }
+  {
+      ml=Maplet()
+      {
+          m.putAll(ml);
+      }
+      "," ml=ListOfMaplets()
+      {
+          m.putAll(ml);
+          return m;
+      }
+  }
+
+Map Maplet()
+    throws ParseError:
+  {
+      Object v1, v2;
+      Map m = new HashMap();
+  }
+  {
+      v1=Value()
+      {
+      }
+      <BAR_ARROW> v2=Value()
+      {
+          m.put(v1, v2);
+          return m;
+      }
+  }
+
+Set SetVal()
+    throws ParseError:
+  {
+      //TreeSet s = new TreeSet(new jp.vdmtools.VDM.UTIL.VDMCompare());
+      Set s = new HashSet();
+      List vl;
+  }
+  {
+      "{" vl=ValueList()
+      {
+          for (Iterator e = vl.iterator(); e.hasNext(); )
+          {
+              Object v = e.next();
+              s.add(v);
+          }
+      }
+      "}"
+      {
+          return s;
+      }
+  }
+
+List SequenceVal()
+    throws ParseError:
+  {
+      List s = new ArrayList();
+  }
+  {
+      "[" s=ValueList() "]"
+      {
+          return s;
+      }
+  }
+
+// REAL
+// Record RecordVal():
+// STUB
+//RecordValue RecordVal() // end STUB
+jp.vdmtools.VDM.Record RecordVal() // end STUB
+    throws ParseError:
+  {
+      jp.vdmtools.VDM.ValueParser.Token mkcls;
+      String cls;
+      String rnm;
+      List vl;
+      // REAL
+      jp.vdmtools.VDM.Record rv = null;
+      // STUB
+      //RecordValue rv; // end STUB
+  }
+  {
+      mkcls=<MK_IDENTIFIER>
+      {
+          cls = mkcls.image.substring(3);
+      }
+      <PRIME> rnm=Identifier()
+      {
+      }
+      "(" vl=ValueList()
+      {
+      }
+      ")"
+      {
+          // REAL:
+          String classname = cls + "$" + rnm;
+          Class params[] = null;
+          try {
+            Class cr = Class.forName(classname);
+            rv = (jp.vdmtools.VDM.Record) cr.newInstance();
+            params = new Class[vl.size()];
+            for (int i = 0; i < vl.size(); i++)
+            {
+               //params[i] = vl.get(i).getClass();
+               Class c = vl.get(i).getClass();
+               if ((c.getName() == "java.lang.Integer") || (c.getName() == "java.lang.Double"))
+                 c = Class.forName("java.lang.Number");
+               params[i] = c;
+            }
+            java.lang.reflect.Constructor constr = cr.getConstructor(params);
+            Object initArgs[] = new Object[vl.size()];
+            for (int i = 0; i < vl.size(); i++){
+                initArgs[i] = vl.get(i);
+            }
+            rv = (jp.vdmtools.VDM.Record) constr.newInstance(initArgs);
+          } 
+          catch (ClassNotFoundException e) {
+            throw new ParseError("Class not found: " + e.getMessage());
+          }
+          catch (InstantiationException e) {
+            throw new ParseError("Unable to instantiate class: " + 
+                                 e.getMessage());
+          }
+          catch (NoSuchMethodException e) {
+            throw new ParseError("No constructor exists for class " +
+                                 classname + " with parameters " + 
+                                 params.toString());
+          }
+          catch (IllegalAccessException e) {
+            throw new ParseError("Illegal access: " + e.getMessage());
+          }
+          catch (java.lang.reflect.InvocationTargetException e) {
+            throw new ParseError("Invocation target error: " + e.getMessage());
+          }
+
+
+          // for (int i = 0; i < vl.size(); i++)
+          // {
+          //     rv.SetField(i+1, vl.get(i);
+          // }
+          // STUB
+          //          rv = new RecordValue(cls, rnm, vl); // end STUB
+
+          return rv;
+      }
+  }
+
+String Identifier():
+  {
+      jp.vdmtools.VDM.ValueParser.Token id;
+  }
+  {
+      id=<IDENTIFIERORKEYWORD>
+      {
+          return id.image;
+      }
+  }
+
+jp.vdmtools.VDM.Token TokenVal()
+    throws ParseError:
+  {
+      jp.vdmtools.VDM.Token token;
+      Object o;
+      // RecordValue rv;
+  }
+  {
+      <MK_TOKEN> "(" o=Value()
+      {
+      }
+      ")"
+      {
+          // Vector v = new Vector();
+          // v.add(o);
+          // rv = new RecordValue("Token", v);
+          token = new jp.vdmtools.VDM.Token(o);
+          return token;
+      }
+  }
+
+Number NumericVal():
+  {
+      jp.vdmtools.VDM.ValueParser.Token n, r;
+  }
+  {
+      n=<NUMERICLITERAL>
+      {
+          return new Integer(n.image);
+      }
+    |
+      r=<REALLITERAL>
+      {
+          return new Double(r.image);
+      }
+  }
+
+Character CharVal():
+  {
+      jp.vdmtools.VDM.ValueParser.Token c;
+  }
+  {
+      c=<CHARACTERLITERAL>
+      {
+          return new Character(c.image.charAt(1));
+      }
+  }
+
+Boolean BoolVal():
+  { }
+  {
+      <TRUE>
+      {
+          return new Boolean(true);
+      }
+    |
+      <FALSE>
+      {
+          return new Boolean(false);
+      }
+  }
+
+// REAL
+// Quote QuoteVal():
+// STUB
+//QuoteValue QuoteVal(): // end STUB
+Object QuoteVal() throws ParseError:
+  {
+      jp.vdmtools.VDM.ValueParser.Token q;
+      // REAL
+      // Quote qv;
+  }
+  {
+      q=<QUOTELITERAL>
+      {
+          String qstr = q.image.substring(1, q.image.length()-1);
+          Object result = null;
+
+          String classname = "quotes." + qstr;
+          Class params[] = {};
+          try {
+            Class cr = Class.forName(classname);
+            result =  cr.newInstance();
+          } 
+          catch (ClassNotFoundException e) {
+            throw new ParseError("Class not found: " + e.getMessage());
+          }
+          catch (InstantiationException e) {
+            throw new ParseError("Unable to instantiate class: " + 
+                                 e.getMessage());
+          }
+          catch (IllegalAccessException e) {
+            throw new ParseError("Illegal access: " + e.getMessage());
+          }
+          // REAL:
+          // Class cr = Class.forName("quotes." + qstr);
+          // qv = (Quote) cr.newInstance();
+          // return rv;
+          // STUB
+          //          return new QuoteValue(qstr); // end STUB
+          return result;
+      }
+  }
+
+String StringVal():
+  {
+      jp.vdmtools.VDM.ValueParser.Token t;
+  }
+  {
+      t=<TEXTLITERAL>
+      {
+          return t.image.substring(1, t.image.length()-1);
+      }
+  }
+
+Object NilVal():
+  { }
+  {
+      <NIL>
+      {
+          // NOTICE: is null the correct value?
+          return null;
+      }
+  }

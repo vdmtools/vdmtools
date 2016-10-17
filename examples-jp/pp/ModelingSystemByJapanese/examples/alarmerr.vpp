@@ -1,0 +1,69 @@
+--$Header: /home/vdmtools/cvsroot/toolbox/examples-jp/pp/ModelingSystemByJapanese/examples/alarmerr.vpp,v 1.1 2006/01/04 06:44:17 vdmtools Exp $
+-- 専門家呼出システムの演習用にエラーを含む版
+-- エラー箇所を変更しないため、注釈以外は翻訳していない。
+-- VDM-SL model Version 1.01
+-- Date: 21 August 1997
+-- Engineer: JSF
+--　翻訳：佐原伸
+
+--工場全体は、各期間とその時勤務している専門家の集合を関係づけるスケジュールを含む；
+--警報の構成要素は起こりえる警報を記録する。
+class 専門家呼出システムエラー有クラス
+
+types
+
+  Plant :: schedule : Schedule
+           alarms   : set of Alarm
+  inv mk_Plant(schedule,alarms) ==
+        forall a in set alarms &
+	   forall per in set dom schedule &
+	     QualificationOK(schedule(per),a.quali,a);
+	     
+  Schedule = map Period to set of Expert
+  inv schedule == forall exs in set rng schedule & exss <> {};
+
+  Period = token;
+
+--専門家型は一意の識別子と資格の集合で表す。
+
+  Expert :: expertid : ExpertId
+            quali    : set of Qualification
+  inv ex == ex.quali <> {};
+
+  ExpertId = token;
+
+  Qualification = <Elec>  <Mech> | <Bio> | <Chem>;
+	   
+  Alarm :: alarmtext : seq of char
+           quali     : Qualification
+
+functions
+
+-- 与えられた期間に働いている専門家の数
+
+  NumberOfExperts: Period * Plant -> nat
+  NumberOfExperts(per,plant) ==
+    card plant.schedule(per)
+  pre per in set dom plant.schedule;
+
+--与えられた専門家が働いている期間
+
+  ExpertIsOnDuty: Expert * Plant -> set of Period
+  ExpertIsOnDuty(ex,mk_Plant(sch,-)) ==
+    {per| per in set dom sch & ex in set sch(per)}
+
+-- 与えられた警報を取り扱うための正しい資格を持つ専門家を捜す
+
+  ExpertToPage(a:Alarm,per:Period,plant:Plant) r Expert
+  pre per in set dom plant.schedule and
+      a in set plant.alarms
+  post r in set plant.schedule(per) and
+       a.quali in set r.qualifi;
+
+-- 与えられた資格を持つ専門家か判定する 
+
+  QualificationOK: set of Expert * Qualification -> bool
+  QualificationOK(exs,reqquali) ==
+    exists ex in set exs  reqquali = ex.quali
+
+end 専門家呼出システムエラー有クラス

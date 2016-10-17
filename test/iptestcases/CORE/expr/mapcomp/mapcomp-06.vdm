@@ -1,0 +1,34 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of map nat to nat  
+Test () ==
+
+( dcl A1 : aaA := mk_aaA(1,2);
+  dcl A2 : aaA := mk_aaA(1,3);
+
+  return  
+        [{ q.a1 |-> q.a1 | q in set { A1, A2 }},
+        { q.a1 |-> q.a1 | q in set { mk_aaA(1,2), mk_aaA(1,3) }}]
+        
+)
+
+types
+
+aaA :: a1 : nat
+     a2 : nat
+
+
+
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

@@ -1,0 +1,45 @@
+Note for xlC & Visual Age C++ users
+
+----------------------------------------------------------------------------
+
+Known problems
+
+Compiling
+
+xlC & VAC++ require explicit template notation such as template_class<Param>
+where most others (conformant) accept just template_class (inside template
+method bodies, etc):
+
+template <class Param> class template_class {
+template_class foo() ; // error for xlC
+template_class<Param> foo() // OK
+.....
+}
+
+That is being worked around in this adaptation, but may cause problems when
+porting template code from other platforms.
+
+Linking
+
+Repository handling in this compilers is imperfect, so you may experience
+various problems on link stage. The problems are generally of two kinds :
+unresolved symbols and duplicate symbols. The latter problem is not fatal,
+since the symbols are weak in that case. It may cause unacceptable code
+bloat when it comes to large projects, however. To overcome this problem,
+this adaptation simulates "separate template implementation". When compiling
+templates splitted to *.h/*.c scheme, these compilers produce better results
+(less duplicate symbols). The problem with undefined symbols is also caused
+by imperfect repository handling, but it may require manual intervention.
+General rule is : if you get "unresolved symbol" errors, explicit
+instantiation will most likely help, for example:
+
+Unresolved:
+__alloc<0, 0>::allocate(unsigned long)
+__alloc<0, 0>::deallocate(void*, unsigned long) >
+
+To work around this problem, just instantiate __alloc<0,0> explicitly in
+some module:
+
+template class __alloc<0,0>;
+
+----------------------------------------------------------------------------

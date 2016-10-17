@@ -1,0 +1,20 @@
+"class A
+
+operations
+
+public Test : () ==> nat
+Test() ==
+( trap P with 
+  ( dcl x : nat := 3,
+	y : nat := 1;
+	while x > 5 do
+		( y := y + 1;
+		 y := y;
+	       if (x > 5)
+				then y := y - 1
+				else y := y + 1)) 
+	in 
+		skip;
+	return 1); 		
+end A
+"

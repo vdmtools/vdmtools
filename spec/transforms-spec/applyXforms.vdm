@@ -1,0 +1,56 @@
+\section{Applying VDM++ Transformations}
+\label{sec:ax}
+
+This is the top-level module for applying \vdmpp\ transformations to a
+specification. The (identifiers of the) particular set of transforms
+to be applied is represented by the parameter {\em p\_ids} of the
+function {\em applyXFClassList}. This set is divided into two, one of
+expression transformations, the other of statement transformations,
+and the actual transformations are performed by the functions 
+{\em AEX`applyEXFClassList} and {\em ASX`applySXFClassList}
+respectively. 
+
+Statement transformations are performed before expression
+transformations. 
+
+Context identifiers are generally reset to nil during this process
+because it is impossible to determine the correct new context
+identifiers dynamically. So the output specification needs to be
+re-parsed.
+
+%%  do I need to set context id's back to nil everywhere??
+%%  currently types and names (and other things which don't depend on
+%%  statements) retain their existing context id's.
+
+
+\begin{vdm_al}
+module AX
+
+imports
+  from JSSREP all,
+  from CI all,
+  from REP all,
+  from AS all,
+  from XF all,
+  from ASX all, 
+  from AEX all
+
+exports all
+
+definitions
+
+functions
+
+applyXFClassList : seq of AS`Class * set of XF`XFId -> seq of AS`Class
+applyXFClassList(p_cl, p_ids) == 
+  let l_stmtids = { b_id | b_id in set p_ids & is_XF`SXFId(b_id) },
+      l_exprids = { b_id | b_id in set p_ids & is_XF`EXFId(b_id) },
+      l_stmtXfs = ASX`applySXFClassList(p_cl, l_stmtids)
+ in
+   AEX`applyEXFClassList(l_stmtXfs, l_exprids) ;
+
+end AX
+
+\end{vdm_al}
+
+

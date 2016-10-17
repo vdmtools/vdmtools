@@ -1,0 +1,26 @@
+class OpLTExpr is subclass of OpBinaryExpr
+operations 
+public  OpLTExpr : () ==> OpLTExpr
+OpLTExpr() == 
+( skip 
+) ;
+
+public  getOperatorString : () ==> [String]
+getOperatorString() == 
+( return  new  String("<")
+) ;
+
+public  OpLTExpr : [Expr] * [Expr] ==> OpLTExpr
+OpLTExpr(leftExpr, rightExpr) == 
+( let - = OpBinaryExpr(leftExpr , rightExpr)
+  in 
+    skip 
+) ;
+
+public  comparisonResults : [Comparable] * [Comparable] ==> [Boolean]
+comparisonResults(leftValue, rightValue) == 
+( return  new  Boolean(leftValue.compareTo(rightValue) < 0)
+) ;
+
+
+end  OpLTExpr

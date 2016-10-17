@@ -1,0 +1,119 @@
+class Integer
+
+/*
+ 責任
+   整数共通の振る舞いを表す。
+ 概要
+   すべての整数に共通な機能を定義する。
+ */
+ 
+values
+	Rcsid = "$Id: Integer.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $";
+	
+functions 
+
+--変換関数群
+
+--整数を数字文字列に変換する
+static public asString: int -> seq1 of char 
+asString(整数) == 
+	if 整数 < 0 then
+		"-" ^ Integer`asString補助関数(-整数)
+	else
+		Integer`asString補助関数(整数) ;
+		
+static public asString補助関数: nat -> seq1 of char 
+asString補助関数(自然数) == 
+	let	余り = 自然数 mod 10,
+		商 = 自然数 div 10
+	in
+		cases 商:
+			0		-> Integer`asChar(余り),
+			others	-> Integer`asString補助関数(商) ^ Integer`asChar(余り)
+		end;
+
+--整数をZZZ9.ZZ形式の数字文字列に変換するスタブ関数（まだ小数点は考慮していない）
+static public asStringZ: seq of char -> int -> seq1 of char 
+asStringZ(変換指定)(整数) == 
+	let	マイナス記号 = '-'	in
+	if 整数 < 0 then
+		if 変換指定(1) = マイナス記号 then
+			[マイナス記号] ^ Integer`asStringZ補助関数(String`subStr(変換指定,2,len 変換指定))(-整数, true)
+		else
+			Integer`asStringZ補助関数(変換指定)(-整数, true)
+	else
+		if 変換指定(1) = マイナス記号 then
+			Integer`asStringZ補助関数(String`subStr(変換指定,2,len 変換指定))(整数, true)
+		else
+			Integer`asStringZ補助関数(変換指定)(整数, true) ;
+ 		
+ static public asStringZ補助関数: seq of char -> nat  * bool -> seq1 of char 
+ asStringZ補助関数(変換指定)(自然数, これまでゼロだった) == 
+  	let	変換指定文字列長 = len 変換指定,
+  		変換指定文字 = 変換指定(変換指定文字列長),
+  		変換指定文字列 = String`subStr(変換指定,1,変換指定文字列長 - 1),
+  		余り = 自然数 mod 10,
+  		商 = 自然数 div 10,
+  		ゼロだった = 余り = 0 and これまでゼロだった and 商 <> 0 --１桁で0の場合は、変換指定がzなら空白を返したい
+  	in
+  		cases 変換指定文字列:
+  			[]		-> Integer`asCharZ(変換指定文字)(余り, ゼロだった),
+  			others	-> 
+  				Integer`asStringZ補助関数(変換指定文字列)(商, ゼロだった) ^ 
+  				Integer`asCharZ(変換指定文字)(余り, ゼロだった)
+ 		end;
+
+static public asCharZ : char -> nat * bool ->  seq1 of char | bool
+asCharZ(変換指定文字)(自然数, これまでゼロだった) ==
+	cases 自然数:
+		0	-> 
+			if 変換指定文字 in set {'z', 'Z'} and これまでゼロだった then
+				"0"
+			elseif 変換指定文字 = '0'  or 変換指定文字 = '9' then
+				"0"
+			else
+				" ",	--変換指定文字の全部のケースは考慮していない
+		1	-> "1",
+		2	-> "2",
+		3	-> "3",
+		4	-> "4",
+		5	-> "5",
+		6	-> "6",
+		7	-> "7",
+		8	-> "8",
+		9	-> "9",
+		others	-> false
+	end;
+
+
+--整数を文字列の文字に変換する。
+static public asChar : int -> seq1 of char | bool
+asChar(i) ==
+	cases i:
+		0	-> "0",
+		1	-> "1",
+		2	-> "2",
+		3	-> "3",
+		4	-> "4",
+		5	-> "5",
+		6	-> "6",
+		7	-> "7",
+		8	-> "8",
+		9	-> "9",
+		others	-> false
+	end;
+
+--最大公約数を得る
+static public 最大公約数 : nat -> nat -> nat
+最大公約数(x)(y) == if y = 0 then x else 最大公約数(y)(x rem y);
+
+--最小公倍数を得る
+static public 最小公倍数 : nat -> nat -> nat
+最小公倍数(x)(y) ==
+	cases mk_(x, y) :
+	mk_(-, 0)	-> 0,
+	mk_(0, -)	-> 0,
+	mk_(x, y)	-> (x / 最大公約数(x)(y)) * y
+	end;
+			
+end Integer

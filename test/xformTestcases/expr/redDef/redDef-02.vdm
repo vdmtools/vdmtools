@@ -1,0 +1,13 @@
+class A
+types 
+T = (real | seq of char)
+
+operations
+
+public Test : () ==> real  
+Test () ==
+	return (def x : T = (12-7) in x) + (def y : T = 0 in y)
+
+
+   
+end A

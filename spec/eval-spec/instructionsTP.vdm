@@ -1,0 +1,500 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Specification of stack instruction types
+% $Id: instructionsTP.vdm,v 1.25 2005/10/19 02:08:11 vdmtools Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\chapter{Instruction Set Types}\label{sec:instrtp}
+
+This module contain the types for the instructions. It is located in a
+separate module for the purpose of code generation.
+
+\begin{vdm_al}
+module INSTRTP
+imports
+  from AS all,
+  from REP all,
+  from SEM all,
+  from STKM all,
+  from CI all,
+  from PAT all,
+#ifdef VDMPP
+  from SCHDTP all,
+#ifdef VICE
+  from TIMEPARSER all,
+  from TIMEMAP all,
+#endif VICE
+#endif VDMPP
+  from GLOBAL all,
+  from RTERR all
+
+exports all
+
+definitions
+types
+  Instruction = ExprInstr |
+                StmtInstr |
+                AuxInstr |
+                EnvInstr |
+                PatInstr | 
+#ifdef VDMPP
+                VdmPPInstr |
+#ifdef VICE
+                VdmRTInstr |
+#endif VICE
+#endif VDMPP
+                EvalStackInstr;
+\end{vdm_al}
+
+The $CLOSENV$ instruction is used to deal with the closure environment
+of locally defined functions. This is necessary because any free
+identifiers occuring inside such locally defined functions must know
+about the value of these from the defining context. These values are
+not known at compile time so this instruction is used to repair that
+situation. The $nm$ component is the name of the
+function, but currently it is not used. This is caused by the fact
+that we believe that the closure environment for the corresponding pre
+and post-condition functions also should have their closure
+environments improved with the closure environment.
+
+\begin{vdm_al}
+
+  -- environment instructions
+  EnvInstr = LOOKUP |
+#ifdef VDMPP
+             LOOKUPSTATIC |
+             LOOKUPOP |
+#endif VDMPP
+             PRE |
+             POST |
+             ASSERT |
+             CASES |
+             MEASURE |
+             MEASURETPINST |
+             MEASURECHECK |
+             POSTENV |
+             EMPTYBLKENV |
+             CLOSENV |
+             UPDATECLOSENV |
+             MULTBINDL |
+             SELBLKENV |
+             POPBLKENV | 
+             APPENDBLKENV |
+             REMSTACKELEM |
+             ADDTOBLKENV |
+             PUSHCONTEXT |
+             POPCONTEXT |
+             CHECKCONTEXT;
+
+  PRE :: ;
+  POST :: ;
+  ASSERT :: ;
+  CASES :: ;
+  MEASURE :: ;
+  MEASURETPINST :: tpparms : seq of AS`TypeVar;
+  MEASURECHECK :: measu : AS`Name;
+  POSTENV :: resnmtps : seq of AS`NameType
+             ci :- CI`ContextId;
+
+  PUSHOS :: clmod : AS`Name;              -- field only really used by VDMSL.
+  POPOS:: ;
+
+  LOOKUP :: id : AS`Name | AS`OldName ;
+#ifdef VDMPP
+  LOOKUPSTATIC :: id : AS`Name;
+#endif VDMPP
+  LOOKUPOP :: id : AS`Name;
+
+  EMPTYBLKENV :: permis : SEM`Permission;
+    
+  MULTBINDL :: length : nat
+               part : PAT`PARTITION;
+
+  SELBLKENV :: n : nat;
+
+  APPENDBLKENV :: id : AS`Name
+                  tp : [AS`Type];
+
+  CLOSENV :: blkenv : SEM`BlkEnv
+             body_m : map AS`Name to (AS`Expr | <NOTYETSPEC>) ;
+
+  UPDATECLOSENV ::
+    expr : AS`Expr;
+  
+    
+  REMSTACKELEM:: n : nat;
+
+  POPBLKENV :: ;
+  
+  ADDTOBLKENV :: ;
+
+  AuxInstr = CBR | CNBR | BR | EOCL | ERRINST | COPYVAL | DTC | DTCSET |
+             SIZE | COMMENT | ISTART | IEND | NOBODY | TPTOSET | MACRO |
+             GETPRE | CONTEXT | PUSHOS | POPOS;
+
+  CBR :: length: int ;
+  BR :: length: int ;
+  CNBR :: length: int ;
+  ERRINST :: ident: RTERR`ERR;
+  COPYVAL :: ;
+  DTC :: tp : AS`Type;
+
+  DTCSET :: ;
+
+  SIZE :: n : nat;
+
+  -- The comment instruction is used to debug. It is simply ignored
+  COMMENT :: txt : seq of char
+             cid : CI`ContextId;
+
+  -- These two instructions is used to debug. The tell which compile function
+  -- starts respectivly end.
+  ISTART :: txt : seq of char
+            cid : CI`ContextId;
+
+  IEND :: txt : seq of char;
+  
+  NOBODY :: err : RTERR`ERR
+            modname : AS`Name
+            name : AS`Name
+            parms : AS`Parameters;
+
+  TPTOSET :: tp : AS`Type;
+
+  DLCALL :: cls : AS`Name
+            op  : AS`Name;
+
+  CONTEXT :: cid :- CI`ContextId
+             isStmt : bool;
+
+  PUSHCONTEXT :: context : STKM`Context;
+  POPCONTEXT ::;
+  CHECKCONTEXT :: contexts : set of STKM`Context
+                  err : RTERR`ERR;
+
+  MACRO :: tp  : AS`MacroTp
+           cid : CI`ContextId;
+
+  StmtInstr = 
+#ifdef VDMPP
+              PPCALL | CALLGUARD |  
+#endif VDMPP
+              MKEXIT | EXITVAL | ISCONT | ISEXIT | ISNEEXIT | REMEXITVAL |
+              PUSHTH | POPTH | HANDID | INDEXEXPRINSTR | NONDETSTMT |
+              RANDOM | ATOMIC | RETURN;
+
+#ifdef VDMPP
+  CALLGUARD :: hasobj : bool
+               oprt : AS`Name;
+
+  PPCALL :: ;
+#endif VDMPP
+
+  MKEXIT :: isnil : bool
+            cid :- CI`ContextId;
+
+  EXITVAL :: ;
+
+  ISCONT :: ;
+
+  ISEXIT :: ;
+
+  ISNEEXIT :: ;
+
+  REMEXITVAL :: ;
+
+  PUSHTH :: handid : nat;
+
+  POPTH :: ;
+
+  HANDID :: handid : nat;
+
+  INDEXEXPRINSTR =  VERIFYINDEXARGS | INCRCOUNTER | TESTCOUNTER;
+
+  VERIFYINDEXARGS ::;
+  INCRCOUNTER ::;
+  TESTCOUNTER :: ;
+  
+  NONDETSTMT :: ;
+
+  RANDOM :: ;
+
+  ATOMIC :: number : nat1;
+           
+  ExprInstr = APPLY | BINOP | UNOP | APPENDSEQ | APPENDMAP |
+              ADDSET | SELSEQELEM| SETRNG | SUBSEQ | RECCONS | RECMOD |
+              FIELDSEL | ISEMPTYSET | ISEMPTYSEQ | TOKENVAL | POLYINST |
+              ISNOTEMPTYSET | ISNOTEMPTYSEQ |
+              SEQCOMPBIND | SEQMAPOVER | TUPSEL |
+              SETCONS | SEQCONS | MAPCONS | SEQFOR |
+              ISCHECK | TYPEJUDGE | LASTRES | TUPCONS;
+
+  BINOP :: op : AS`BinaryOp;
+
+  UNOP :: op : AS`UnaryOp;
+
+  APPENDSEQ :: ;
+  APPENDMAP :: ;
+  ADDSET :: ;
+  SETRNG :: ;
+  SUBSEQ :: ;
+  RECCONS :: tag : AS`Name
+             length : nat;
+  RECMOD :: fid : seq1 of AS`Name;
+  FIELDSEL :: nm : AS`Name;
+  ISEMPTYSET :: n : nat;
+  ISEMPTYSEQ :: n : nat;
+  ISNOTEMPTYSET :: n : nat;
+  ISNOTEMPTYSEQ :: n : nat;
+
+  TOKENVAL :: ;
+
+  POLYINST :: inst : seq of AS`Type
+              nm : AS`Name;
+    
+  SEQCOMPBIND :: isSet : bool;
+  SEQMAPOVER :: ;
+  SEQFOR :: ;
+
+  TUPCONS :: length : nat;
+  TUPSEL :: index : real;
+
+  SETCONS :: length : nat;
+  SEQCONS :: length : nat;
+  MAPCONS :: length : nat;
+
+  TYPEJUDGE :: tp : AS`Type;
+
+  LASTRES :: ;
+        
+  SELSEQELEM :: ;
+
+  APPLY :: ;
+  RETURN :: ;
+
+  GETPRE :: ;
+
+  ISCHECK :: type: AS`BasicType | AS`Name;
+    
+  EOCL :: ;
+
+  EvalStackInstr = PUSHLIST | PUSH | POP | SWAP;
+
+  PatInstr = MATCHANDBIND | SETUNION |
+             SEQCONC | MAPMERGE | MATCHVAL | SEQELEMMATCH |
+             TRYANYMATCH | FREF | MOSREF | ASSIGNSD |
+             RECPATCONS | TUPPATCONS | SETENUM | SEQENUM | MAPLET | MAPENUM
+#ifdef VDMPP
+             | OBJECTPAT | FIELDPAT
+#endif VDMPP
+             ;
+
+  SWAP :: ;
+  
+  MATCHVAL :: cid :- CI`ContextId;
+  MATCHANDBIND :: ;
+  TRYANYMATCH :: ;
+  ENUMAPPEND ::;
+  SETENUM :: length : nat
+             cid :- CI`ContextId;
+  SEQENUM :: length : nat
+             cid :- CI`ContextId;
+  MAPLET :: cid :- CI`ContextId;
+  MAPENUM :: length : nat
+             cid :- CI`ContextId;
+  SETUNION :: cid :- CI`ContextId;
+  SEQCONC :: cid :- CI`ContextId;
+  MAPMERGE :: cid :- CI`ContextId;
+  RECPATCONS :: tag : AS`Name
+                length : nat
+                cid :- CI`ContextId;
+  TUPPATCONS :: length : nat
+                cid :- CI`ContextId;
+  SEQELEMMATCH :: index : nat;
+  FREF :: sel : AS`Name
+          cid :- CI`ContextId;
+  MOSREF :: cid :- CI`ContextId;
+  ASSIGNSD :: ;
+  
+  PUSHLIST :: length : nat;
+  PUSH :: val : SEM`VAL | seq of SEM`VAL | STKM`Pattern |
+                set of SEM`BlkEnv | seq of nat | AS`FctTypeInstExpr |
+                STKM`StateDesignator;
+
+  POP :: n : nat;
+
+#ifdef VDMPP
+  OBJECTPAT :: cls : AS`Name
+               length : nat
+               cid :- CI`ContextId;
+  FIELDPAT  :: nm : AS`Name
+               cid :- CI`ContextId;
+#endif VDMPP
+\end{vdm_al}
+#ifdef VDMPP
+\begin{vdm_al}
+  ----------------------------------------------------------------------
+  --                         VDM++ Instructions
+  ----------------------------------------------------------------------
+  VdmPPInstr = NEWEXPRS | SELFEXPR | ISOFCLASS | 
+               ISOFBASECLASS | SAMEBASECLASS | SAMECLASS |
+               HISTORY | STARTLIST | STOPLIST | GUARD | THREADID | DLCALL;
+
+  NEWEXPRS = NEWOBJ | NEWPOSABSOBJ | BINDINSTVAR | INITCLASS | NEWCOMPL |
+  PUSHCLNMCUROBJ | POPCLNMCUROBJ;
+
+  NEWOBJ:: nm: AS`Name
+           dlobject : [token]; -- type is metaiv-type DLObject in implementation 
+
+  NEWPOSABSOBJ:: nm: AS`Name;
+
+  BINDINSTVAR:: cls : AS`Name
+                nm: AS`Name;
+
+  INITCLASS:: nm: AS`Name
+              initno : nat;
+
+  -- The checkinv field here is used to indicate whether the instance
+  -- invariant should be checked now. This is because this instruction is 
+  -- used both for new expressions (when the invariant should be checked)
+  -- and for setting up the environment for dynamic type checking
+  -- (when the invariant should not be checked as instance variables need
+  -- not be defined).
+  NEWCOMPL:: checkinv : bool;
+
+  PUSHCLNMCUROBJ:: cl : AS`Name
+                   origcl : AS`Name;
+
+  POPCLNMCUROBJ:: ;
+
+  SELFEXPR :: ;
+
+  ISOFCLASS :: nm : AS`Name;
+
+  ISOFBASECLASS :: nm : AS`Name;
+
+  SAMEBASECLASS :: ;
+
+  SAMECLASS :: ;
+
+  HISTORY :: kind : HistoryKind
+             opnms : seq of AS`Name;
+
+HistoryKind = req | act | fin | waiting | active;
+
+  req ::;
+  act ::;
+  fin ::;
+  waiting ::;
+  active ::;
+  
+  STARTLIST :: islist : bool;
+
+  STOPLIST :: islist : bool;
+
+  GUARD :: log : bool;
+      
+  THREADID :: ;
+\end{vdm_al}
+
+#ifdef VICE
+\begin{vdm_al}
+  VdmRTInstr =  INCRTIME |
+                RUNTIME_INCRTIME_PREF |
+                RUNTIME_INCRTIME_BIN |
+                RUNTIME_INCRTIME_SETSEQMAP |
+                RUNTIME_INCRTIME_NEW |
+                RUNTIME_INCRTIME_STARTLIST |
+                RUNTIME_INCRTIME_STOPLIST |
+                PUSHDURATION |
+                POPDURATION |
+                PUSHCYCLE |
+                POPCYCLE |
+                CURTIME |
+                DEPLOY |
+                RETMES;
+\end{vdm_al}
+The instruction $INCRTIME$ represents the increment in time due to the
+duration of the preceding computation.
+\begin{vdm_al}
+  INCRTIME :: time : nat;
+\end{vdm_al}
+
+The instruction $RUNTIME\_INCRTIME\_PREF$ is used to represent prefix
+operations whose execution time depends on runtime values.
+\begin{vdm_al}
+  RUNTIME_INCRTIME_PREF :: opr : AS`UnaryOp
+                           oh : nat;
+\end{vdm_al}
+Here the field $oh$ represents the overhead for the operation, which
+will be multiplied by some value to be determined at runtime depending
+on actual runtime values and the prefix operation being executed.
+
+The operation $RUNTIME\_INCRTIME\_BIN$ is similar, but for binary
+operations. 
+\begin{vdm_al}
+  RUNTIME_INCRTIME_BIN :: opr : AS`BinaryOp
+                          oh1 : nat
+                          oh2 : [nat];
+\end{vdm_al}
+
+The operation $RUNTIME\_INCRTIME\_SETSEQMAP$ is used to represent
+those set, sequence and map operations whose execution time depends on
+the runtime size of the set, sequence or map in question.
+\begin{vdm_al}
+  RUNTIME_INCRTIME_SETSEQMAP :: oh : nat;
+\end{vdm_al}
+
+The operation $RUNTIME\_INCRTIME\_SETSEQMAP$ is used to represent the
+time taken to start a list of threads. Here the field $oh$ represents
+the overhead for starting a thread, which will be multiplied by the
+number of threads determined in the startlist statement at runtime.
+
+\begin{vdm_al}
+  RUNTIME_INCRTIME_STARTLIST :: oh : nat;
+\end{vdm_al}
+
+\begin{vdm_al}
+  RUNTIME_INCRTIME_STOPLIST :: oh : nat;
+\end{vdm_al}
+
+\begin{vdm_al}
+  RUNTIME_INCRTIME_NEW :: oh : nat
+                          nm : AS`Name;
+\end{vdm_al}
+
+\begin{vdm_al}
+  PUSHDURATION :: ;
+  POPDURATION :: time : [nat];
+
+  PUSHCYCLE :: ;
+  POPCYCLE :: time : [nat];
+\end{vdm_al}
+
+The $CURTIME$ instruction is used to give the user access to the current time 
+of the execution of a VICE thread. 
+\begin{vdm_al}
+  CURTIME :: ;
+
+  DEPLOY ::
+    instnm : AS`Name
+    tasknm : AS`Name;
+\end{vdm_al}
+
+RETMES is used for returning messages of syncronyous calls of operations over
+CPU boundaries.
+\begin{vdm_al}
+  RETMES ::
+     id       : STKM`MessageId
+     prio     : nat
+     opnm     : AS`Name
+     tocpu    : [AS`Name]
+     threadid : SCHDTP`ThreadId
+\end{vdm_al}
+#endif VICE
+#endif VDMPP
+
+\begin{vdm_al}  
+end INSTRTP
+\end{vdm_al}

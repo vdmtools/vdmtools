@@ -1,0 +1,102 @@
+class Math
+values
+pi = 3.14
+
+operations
+  getrec:()==> IA`unAB  
+  getrec() == if true then return mk_IA`recA(3)
+              else return mk_IA`recB(2);
+
+types
+A:: real
+  k : int;
+end Math
+
+class B
+values
+mk_(a,b) = mk_(3,6);
+c: char='a';
+d = a+1;
+e = 2+1;
+
+instance variables
+protected i: nat;
+--values
+--math:Math = new Math();
+end B
+
+class IA
+
+types
+public unAB = recA | recB;
+public recA::
+     k : int;
+public recB:: 
+     k : int;
+
+values
+protected n: nat = 3;
+
+operations
+  getx:()==> nat
+  getx() == is subclass responsibility;
+end IA
+
+class ID
+values
+protected k: nat = 3;
+
+operations
+  gety:()==> nat
+  gety() == is subclass responsibility;
+end ID
+
+class AA is subclass of B,IA,ID
+
+operations
+  getx:()==> nat  
+  getx() == if true then return n
+            else return k;
+
+  getrec:()==> unAB  
+  getrec() == if true then return mk_recA(3)
+              else return mk_IA`recB(2);
+
+  gety:()==> nat  
+  gety() == is subclass responsibility;
+
+  public Test: () ==> real
+  Test() == 
+--    return 2*math.pi
+      return 3.4
+end AA
+
+class A is subclass of AA
+operations
+  gety:()==> nat  
+  gety() == if true then return n
+            else return i;
+
+end A
+
+class Itest is subclass of IA
+end Itest
+
+class Itest2 is subclass of Itest
+end Itest2
+
+class Itest3 is subclass of Itest
+
+operations
+  getx:()==> nat  
+  getx() == if true then return n
+            else return 3;
+
+end Itest3
+
+
+
+
+
+
+

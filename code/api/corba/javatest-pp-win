@@ -1,0 +1,14 @@
+#!/bin/bash
+
+#CLASSES=client_example.jar:ToolboxAPI.jar
+CLASSES="client_example.jar;ToolboxAPI.jar"
+
+IFS_BACKUP=$IFS
+IFS=$'\n'
+PWD=`pwd`
+#export VDM_SOURCE_LOCATION=${PWD%api/corba}
+export VDM_SOURCE_LOCATION=`cygpath -w -m ${PWD%api/corba}`examples/sort/
+IFS=$IFS_BACKUP
+
+java -cp $CLASSES -DVDMPP=1 client_example -ORBInitRef NameService=corbaloc:iiop:1.0@localhost:2809/NameService
+

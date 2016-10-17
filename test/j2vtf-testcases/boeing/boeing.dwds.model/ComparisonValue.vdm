@@ -1,0 +1,36 @@
+class ComparisonValue is subclass of ComparisonValueInterface
+operations 
+public  hashCode : () ==> int 
+hashCode() == 
+( return  value__.hashCode()
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( return  value__
+) ;
+
+public  ComparisonValue : () ==> ComparisonValue
+ComparisonValue() == 
+( ComparisonValue`value__ := new  String()
+) ;
+
+public  ComparisonValue : [String] ==> ComparisonValue
+ComparisonValue(value__) == 
+( ComparisonValue`value__ := value__
+) ;
+
+public  equals : [ComparisonValueInterface] ==> bool 
+equals(anotherValue) == 
+( return  ComparisonValue`value__.equals(anotherValue.toString())
+) ;
+
+public  compareTo : [ComparisonValueInterface] ==> int 
+compareTo(anotherValue) == 
+( return  (ComparisonValue`value__.compareTo(anotherValue.toString()))
+) ;
+
+instance variables 
+  private  value__ : [String]
+  
+end  ComparisonValue

@@ -1,0 +1,9 @@
+Type error expected:
+
+Parsing "m4tmp1" ...
+Type checking A ... done
+Type checking B ... done
+m4tmp1, l. 42, c. 10:
+  Error : then-part is not of correct type
+  act : bool
+  exp : real

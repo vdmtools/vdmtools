@@ -1,0 +1,61 @@
+dlmodule C
+  imports 
+    from A
+      types 
+      Point
+ 
+  exports
+    operations
+      Place : A`Point ==> ();
+      Rotate : A`Point * real ==> A`Point
+
+  uselib "libio16.so"
+
+end C
+
+module APPROX
+
+  exports 
+    all
+
+  definitions
+    values
+      Rotate =  { [mk_(1,0),90.0] |-> mk_(0,1), [mk_(3,4),180.0] |-> mk_(-3,4)}
+
+end APPROX  
+
+module A
+  imports
+    from 
+      APPROX
+        values
+          Rotate,
+
+    from C
+      operations
+          Place : Point ==> () renamed Place ;
+          Rotate : Point * real ==> Point renamed Rotate
+
+    exports 
+      types
+        Point
+
+      operations 
+        Test : () ==> int*int
+
+     definitions
+       types
+         Point = int * int
+  
+       operations
+
+         Test : () ==> int * int
+         Test () ==  (
+           Place(mk_(1,2));
+           return Rotate(mk_(1,0),90.0)
+         )
+
+end A
+    
+   
+

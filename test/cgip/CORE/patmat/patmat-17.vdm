@@ -1,0 +1,30 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+
+
+
+public Test : () ==> seq of set of int
+Test () ==
+( dcl res: seq of set of int := [];
+  let s = {1,2,3,4,5}
+  in res :=
+    cases s :
+       (<Test>), (7.9), (true), (nil), ("test"), ('s') -> [],
+       {9,7} union s1 -> [],
+       {1,5} union s2 -> res ^ [s2]
+     end;
+  return res;
+)
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

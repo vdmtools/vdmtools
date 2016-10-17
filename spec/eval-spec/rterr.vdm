@@ -1,0 +1,664 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Specification of runtime error handling
+% $Id: rterr.vdm,v 1.21 2001/10/16 13:00:31 peter Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\chapter{Handling Error Messages}
+
+\begin{vdm_al}
+
+module RTERR
+
+imports 
+   from STATE all,
+   from SEM all,
+   from PAT all,
+   from STKM all,
+   from AS all,
+   from CI all,
+   from REP all,
+   from INSTRTP all,
+   from IO all,
+#ifdef VDMPP
+   from SCHDTP all,
+#ifdef VICE
+   from TIMEPARSER all,
+   from TIMEMAP all,
+#endif VICE
+#endif VDMPP
+   from GLOBAL all,
+   from UTIL all
+
+exports all
+
+definitions
+
+types
+  
+--  ERR = seq of char;
+  ERRSTR = seq of char;
+  ERR = nat
+
+operations
+  ErrorVal: ERR * [SEM`VAL] * [AS`Type] * seq of seq of char ==>
+            [SEM`VAL] | SEM`VAL * seq of (AS`Name | SEM`VAL) |
+	     bool * [CI`ContextId] * [AS`Name] * [AS`Name] |
+	     bool * bool *[SEM`VAL] * [AS`Type] * [AS`Name] *
+	     [AS`Access] | set of SEM`BlkEnv | set of AS`Name |
+	     bool * [GLOBAL`Type] * [AS`Invariant] *
+            [AS`Name] * [AS`Access] | bool |
+	    bool * bool * [SEM`VAL] | STKM`DebugCmd |
+	    nat * (map AS`Name to nat) * seq of AS`Type|
+	    (bool * [SEM`VAL])
+  ErrorVal(err, semval, type, txts) ==
+    (Error(err, semval, type, txts);
+     --return semval);
+     return STKM`RuntimeErrorVal());
+\end{vdm_al}
+
+The $ErrorVal$ operation is only needed to ensure that no type errors
+are reported from the places where the error is produced where a value
+should be produced. The value will in reality never be returned!
+
+\begin{vdm_al}
+  Error: ERR * [SEM`VAL] * [AS`Type] * seq of seq of char ==> ()
+  Error(err, semval, type, txts) ==
+    def err' = Num2Str(err) ^ ": " ^ UTIL`ReplacePercent(GetErrorMessage(err), txts)
+    in
+      (SetError("Run-Time Error " ^ err', semval, type, txts);
+       def - = IO`fwriteval[seq of char]("rterr.msg", GetError(), <start>)
+       --in error;
+       in STKM`ThrowRuntimeErrorException();
+      );
+\end{vdm_al}
+
+The $InitError$ operation is meant to be used for errors which are to
+be reported in the initialisation phase (i.e. before the state machine
+evaluation has really started).
+
+\begin{vdm_al}
+  InitError: ERR * CI`ContextId * seq of seq of char ==> ()
+  InitError(err, cid, txts) ==
+    def err' = Num2Str(err) ^ ": " ^ UTIL`ReplacePercent(GetErrorMessage(err), txts)
+    in
+    (dcl posmsg : seq of char;
+     if cid = CI`NilContextId
+     then posmsg := "Unknown position\n"
+     else def mk_(-, -, -, tokenpos, -) = CI`GetFilePos(cid);
+              mk_CI`TokenPos(-, abs_line, -, -, column) = tokenpos;
+              line = Num2Str(abs_line);
+              column_s = Num2Str(column) 
+           in posmsg := "Line " ^ line ^ " column " ^ column_s ^ "\n";
+     errmsg := posmsg ^ "Run-Time Error " ^ err';
+     def - = IO`fwriteval[seq of char]("rterr.msg", GetError(), <start>)
+     in 
+       error;
+    );
+
+  SetError: ERRSTR * [SEM`VAL] * [AS`Type] * seq of seq of char ==> ()
+  SetError(err,-,-,-) ==
+    (
+     def cid = STKM`GetCurCid()
+     in
+       if cid = CI`NilContextId
+       then errmsg := "Command line error \n"
+       else def mk_(-, -, -, tokenpos, -) = CI`GetFilePos(cid);
+                mk_CI`TokenPos(-, abs_line, -, -, column) = tokenpos;
+                line = Num2Str(abs_line);
+                column_s = Num2Str(column) 
+            in
+              errmsg := "Line " ^ line ^ " column " ^ column_s ^ "\n";
+     errmsg := errmsg ^ err;
+     );
+
+   GetError: () ==> seq of char
+   GetError() ==
+    return errmsg;
+
+functions
+
+Num2Str: nat -> seq of char
+Num2Str(n) ==
+let e = n div 10
+in if e = 0
+   then ConvertChar(n)
+   else Num2Str(e)^ConvertChar( n rem 10 );
+
+
+ConvertChar: nat -> seq of char
+ConvertChar(e) ==
+  cases e:
+        (0) -> "0",
+        (1) -> "1",
+        (2) -> "2",
+        (3) -> "3",
+        (4) -> "4",
+        (5) -> "5",
+        (6) -> "6",
+        (7) -> "7",
+        (8) -> "8",
+        (9) -> "9",
+        others -> undefined
+   end;
+
+GetErrorMessage: ERR -> seq of char
+GetErrorMessage(err) ==
+  cases err:
+    (BOOL_EXPECTED) -> "A boolean was expected",
+    (INT_EXPECTED) -> "An integer was expected",
+    (NUM_EXPECTED) -> "A number was expected",
+    (SET_EXPECTED) -> "A set was expected",
+    (SEQ_EXPECTED) -> "A sequence was expected",
+    (REC_EXPECTED) -> "A record was expected",
+    (MAP_EXPECTED) -> "A map was expected",
+    (TUPLE_EXPECTED) -> "A tuple was expected",
+    (SYMB_LIT_EXPECTED) -> "A symbolic literal was expected",
+    (TWO_BOOL_EXPECTED) -> "Two booleans were expected",
+    (TWO_INT_EXPECTED) -> "Two integers were expected",
+    (TWO_NUM_EXPECTED) -> "Two numbers were expected",
+    (TWO_SET_EXPECTED) -> "Two sets were expected",
+    (TWO_SEQ_EXPECTED) -> "Two sequences were expected",
+    (MAP_OR_SEQ_EXPECTED) -> "A map or a sequence was expected",
+    (TWO_MAP_EXPECTED) -> "Two maps were expected",
+    (SET_AND_MAP_EXPECTED) -> "A set and a map were expected",
+    (SEQ_AND_INT_EXPECTED) -> "A sequence and two integers were expected",
+    (PATTERNNAME_EXPECTED) -> "The binding pattern must evaluate to one patternname",
+    (CHAR_EXPECTED) -> "A char was expected",
+    (ALL_INTS_EXPECTED) -> "The binding set can only contain integers",
+    (ALL_NUMS_EXPECTED) -> "The indices for the loop must all be numbers",
+    (ALL_SETS_EXPECTED) -> "All elements to 'dunion' or 'dinter' must be sets",
+    (ALL_SEQS_EXPECTED) -> "All elements to 'conc' must be sequences",
+    (ALL_MAPS_EXPECTED) -> "All elements to 'merge' must be maps",
+    (OLDID_NOT_IN_OS) -> "The old name is not stored in the state",
+    (MAP_MERGE_DOM_OVERLAP) -> "Duplicate entries for 'merge' had different values",
+    (EMPTY_ENV_S) -> "The binding environment was empty",
+    (ZERO_BY_STEP) -> "Step length in loop was 0",
+    (EVAL_PRE_GIVES_FALSE) -> "The pre-condition evaluated to false",
+    (EVAL_POST_GIVES_FALSE) -> "The post-condition evaluated to false",
+    (ERROR_STATEMENT) -> "Can not evaluate 'error' statement",
+    (UNDEFINED_EXPRESSION) -> "Can not evaluate 'undefined' expression",
+    (NO_OTHERS_EXPR) -> "No 'others' branch in 'cases' expr",
+    (WRONG_QUANTIFIER) -> "Wrong quantifier",
+    (PAT_NAME_IN_SEQCOMP) -> "Only pattern name is allowed in sequence comprehension",
+    (ILLEGAL_INDICES) -> "Illegal index",
+    (DUPLICATES_NOT_EQUAL) -> "Duplicate entries had different values",
+--    (RECORD_TAG_UNKNOWN) -> "Unknown record tag",
+    (RECORD_SIZE_WRONG) -> "Actual record size different from definition",
+    (RECORD_FIELD_ID_UNKNOWN) -> "Unknown record field selector",
+    (ARG_NOT_IN_DOM) -> "Argument not found in map domain",
+    (FCT_V_TYPE_EXPECTED) -> "An explicit function/operation was expected",
+    (UNDEF_ENCOUNTERED) -> "Identifier is undefined/not initialized",
+    (ID_UNKNOWN) -> "Unknown identifier",
+    (OPERATOR_UNKNOWN) -> "Unknown operator",
+    (DIVISION_WITH_ZERO) -> "Division with zero",
+    (ZERO_LENGTH_DETECTED) -> "The sequence was empty",
+    (PATTERN_UNKNOWN) -> "Unknown pattern",
+    (SET_TOO_BIG) -> "Set too big for 'power' - limit is 25",
+    (EXPR_UNKNOWN) -> "Expression unknown",
+    (WRONG_NO_OF_ARGS) -> "Wrong number of arguments",
+    (STMT_UNKNOWN) -> "Unknown statement",
+    (REF_UNKNOWN) -> "Unknown reference in assign statement",
+    (TYPE_UNKNOWN) -> "Unknown type",
+    (IS_TYPE_UNKNOWN) -> "Unknown type in is_ expression",
+    (IDENTICAL_FIELDS) -> "identical selector names in composite type",
+    (TYPE_INCOMP) -> "Incompatible types found in dynamic type check",
+    (STATE_INVARIANT_ERROR) -> "State invariant was broken",
+    (TAG_MULTIPLE_DEF) -> "Multiple definitions of tag",
+    (NO_UNIQ_ELEM) -> "No unique element in 'iota'",
+    (OP_EXIT_CONT) -> "Operation exited or returned no result",
+    (NO_POLY_FUNC) -> "Instantiated function is not polymorphic",
+    (NO_INJECTIVE_MAP) -> " Map is not injective - 'inverse' fails",
+    (NOT_RNG_DOM_SUBSET) -> "The range is not a subset of the domain",
+    (TWO_FN_OR_MAP_EXPECTED) -> "Two functions or maps expected for 'comp'",
+    (FN_OR_MAP_OR_NUM_EXPECTED) -> "Wrong arguments for '**'",
+    (NAT_EXPECTED) -> "A natural number was expected",
+    (OP_RETURNED_CONT) -> "The operation did not return a value",
+    (STATE_DESIG_UNKNOWN) -> "Unknown state component",
+    (IMPL_OP_CALL) -> "Tried to call an implicit operation",
+    (ILLEGAL_STATE_INIT) -> "Illegal state initialisation",
+    (ILL_STATE_INIT_PAT) -> "Illegal state initialisation pattern",
+    (REC_PAT_EXPECTED) -> "Record pattern expected for state initialisation",
+    (ALL_PATID_EXPECTED) -> "Only pattern identifiers allowed for state initialisation",
+    (TYPE_BIND_EVAL) -> "Can not evaluate type binds",
+    (FNDEF_EXPECTED) -> "Function definition expected",
+    (IMPL_FN_APPLY) -> "Tried to apply an implicit function",
+    (POLY_NOT_INST) -> "The applied polymorphic function is not instantiated",
+    (MAP_AND_SET_EXPECTED) -> "A map and a set were expected",
+    (NOT_EXPL_OP_CALL) -> "The called object is not an explicit operation",
+    (GET_VALUE_EXPR) -> "No input value to get_value()",
+    (OP_CANT_RETURN_A_VALUE) -> "The operation's range is empty",
+  
+    (MOD_ALREADY_DEF) -> "The module is already defined",
+    (EQUAL_RENAMINGS) -> "Name clash for renaming",
+    (PARMOD_NOT_DEFINED) -> "Parameterised module is not defined",
+    (NOT_FULLY_INST) -> "Parameterised module is not fully instantiated",
+    (TYPE_ALREADY_DEF) -> "The type is already defined",
+    (MOD_NOT_DEFINED) -> "The module is not defined",
+    (TYPE_NOT_EXPORTED) -> "The type is not exported",
+    (CONSTRUCT_NOT_EXPORTED) -> "The construct is not exported",
+    (WRONG_STATE_TYPE) -> "Wrong state type",
+    (NOT_DEFINED_IN_MOD) -> "Incorrect use of 'using'",
+    (LIB_NOT_DEFINED) -> "couldn't open library: ",
+    (LIB_SYMBOL_NOT_DEFINED) -> "token not defined in library",
+    (LIB_ARGUMENT_WRONG_NUMBER) -> "actual number of argument didn't match the number the extern function expected",
+    (LIB_NOT_DECLARED) -> "Not declared in dl module",
+    (INTERNAL_ERROR) -> "Internal error, please report",
+    (LIB_TYPE_ERROR) -> "Incompatible type in dl module call",
+    (TYPE_NOT_SUPPORTED) -> "Type is not yet supported",
+    (LIB_CLOSE_ERR) -> "Couldn't close dynamic library",
+    (TAG_NOT_IN_NAME_MAP) -> "Name not defined in NameMap in dynamic library file",
+    (LIB_WRONG_SIGN) -> "Library function has wrong signature",
+    (FILE_DOES_NOT_EXISTS) -> "Library Name not found in the search path",
+    (CAN_NOT_BE_EVALUATED) -> "Extern function cannot be evaluated",
+    (FN_EXIT_CONT) -> "Function exited or returned no result",
+    (LIB_VERSION_NOT_FOUND) -> "Symbol VDMLibVersion not found in dynamic lib",
+    (LIB_WRONG_VERSION) -> "Version of VDM C++ library",
+    (EXTENDED_FCT_EXPECTED) -> "Extended function or operation expected",
+    (UNEXPECTED_INFLOW) -> "Unexpected input flow",
+    (COUND_NOT_MATCH_OUTFLOW) -> "Return value could not match output flows",
+  
+    (NONEMPTYSET_EXPECTED) -> "A nonempty set was expected",
+    (NUMBER_ARG_NEQ_NUMBER_TYPE) -> "Number of arguments does not match number type domain in function or operation",
+    (TYPE_INCOMP_RETURN) -> "Incompatible return type in function or operation application",
+    (TYPE_INCOMP_APPLY) -> "Incompatible type in variables in function or operation application",
+    (SET_EXP_IN_PATTERN_BIND) -> "Set expected in pattern bind",
+    (VALUE_NOT_IN_SETBIND) -> "Value is not in Set Bind",
+    (MTHD_EXIT_CONT) -> "Method exited or returned no result",
+    (OBJ_REF_EXP) -> "An object reference was expected in the expression",
+    (CLNM_NOT_DEFINED) -> "Class name is not defined: %1",
+    (TAG_UNKNOWN) -> "Tag is unknown within the current scope",
+  
+    (MULT_DEF_METHS) -> "The method name is multiple defined within the current scope",
+    (MULT_DEF_FCTS) -> "The function name is multiple defined within the current scope",
+    (MULT_INST_VARS) -> "The instance variable name is multiple defined within the current scope",
+    (MULT_VAL_IDS) -> "The identifier is multiple defined as a value in the current scope",
+    (TOPOLOGY_STMT) -> "Cannot evaluate topology statement",
+    (SPEC_STMT) -> "Cannot evaluate specification statement",
+    (INST_ABS_CL) -> "Cannot instantiate an abstract class: %1",
+    (NOT_CL_NAME_IN_NEW_STMT) -> "Unknown class name in new expression",
+    (OBJ_REF_EXP_CALL) -> "An object reference was expected in call statement",
+    (NOT_MTHD_NAME) -> "A name of a full method was expected in invoke statement",
+    (INST_INV_BROKEN) -> "Instance invariant was broken",
+    (IND_INH_NOT_SUPPORTED) -> "Indexed inheritance is not supported",
+    (UNEXP_RET_VAL_INIT_CL) -> "Initialisation statement returned a value",
+    (CIRC_CL_DEPENDENCY) -> "Circular inheritance dependecy detected",
+    (MULT_TPS_NAME) -> "Multiple defined types with the same name within current scope",
+    (DB_OBJ_EXISTS) -> "The object name already exists. Please destroy the object before creating a new object of the same name",
+    (DB_OBJ_NOT_EXISTS) -> "The name is not an object",
+    (OBJ_RECORD_EXP) -> "An object or record was expected",
+    (CIRC_CL_INIT) -> "Circular dependency in initialisation detected",
+    (NAME_UNKNOWN) -> "Name unknown",
+    (DC_NOT_PATTERN_NAME) -> "An abstract field of a record must only pattern match with a pattern name",
+    (LOCAL_COMPOSE_TYPEDEF) -> "The interpreter does not support local type definitions of records",
+    (NOTYETSPECFCT) -> "Cannot evaluate `not yet specified' functions",
+    (NOTYETSPECOP) -> "Cannot evaluate `not yet specified' operations",
+--    (REC_OR_OBJ_EXPECTED) -> "A record or object was expected",
+    (BUG_263) -> "You has hit bug number 263, please see the bug report for a work-around",
+    (EXIT_IN_INIT) -> "Exit value returned in initialisation of instance variable",
+  
+    (SUBRESP) -> "Cannot evaluate `sub responsible' functions",
+    (NUMERIC_SET) -> "Quantification in sequence comprehension must be over numeric values",
+    (WRONG_NO_RES) -> "Wrong number of results",
+    (LOWER_BOUND_NOT_A_NUMBER) -> "Lower bound is not a number",
+    (UPPER_BOUND_NOT_A_NUMBER) -> "Upper bound is not a number",
+    (STEP_NOT_A_NUMBER) -> "Step is not a number",
+    (UPPER_BOUND_LARGER_THAN_LOWER_BOUND) -> "Lower bound larger than upper bound",
+    (LOWER_BOUND_LARGER_THAN_UPPER_BOUND) -> "245:Lower bound larger than upper bound",
+    (STEP_INDEX_IS_ZERO) -> "Step index is zero",
+    (LOOP_EXPR_NOT_AN_EXPR) -> "Expression in while-statement does not evaluate to an expression",
+    (TEST_EXPR_NOT_AN_EXPR) -> "Test expression in if-statement does not evaluate to an expression",
+    (TUPLE_OUTSIDE_INDEX) -> "Tuple selection outside its index",
+    (INSTVAR_NOT_PUBLIC) -> "Instance variable must be public",
+    (INSTVAR_NOT_IN_SCOPE) -> "Instance variable is not in scope",
+    (FUN_NOT_IN_SCOPE) -> "Function is not in scope",
+    (OP_NOT_IN_SCOPE) -> "Operation is not in scope",
+    (VAL_NOT_IN_SCOPE) -> "Value is not in scope",
+    (POLYFUN_NOT_IN_SCOPE) -> "Polymorphic function is not in scope",
+    (TYPE_NOT_IN_SCOPE) -> "Type is not in scope",
+    (NOT_IN_SCOPE) -> "Construct not in scope",
+    (MULT_DEF) -> "Construct is multiple defined within the current scope",
+    (INIT_NOT_POSSIBLE) -> "Initialisation is not possible",
+-- this is probably caused by a value definition inside a class which
+-- is referring to a class which has not yet been initialized.
+    (INDEXED_ASSIGN) -> "Indexed assignment can only be done when initialized",
+    (OP_IN_GUARD) -> "You cannot use an operation inside a permission guard",
+    (NO_THREAD) -> "This class have no thread to start",
+    (DEADLOCK_DETECTED) -> "Deadlock is detected",
+-- This is now supported
+--  (PRE_COND_APPLY_EXPR) -> "The special pre-condition application expression is not supported in the interpreter",
+    (NO_GUARD_IN_INIT) -> "An operation with a permission guard may not be used in the initialisation of an instance variable",
+    (OP_OR_FUN_NOT_IN_SCOPE) -> "Operation or function is not in scope",
+    (OP_DEF_IN_MULTSUPERS) -> "Operation defined in multiple super classes, so it is not alllowed to add permission predicate for class",
+    (SEL_NONVALID_THREADID) -> "A non-valid thread id was used",
+    (MULT_THREAD_INH) -> "More than one thread inherited",
+    (LOGDLCALL) -> "Log of dlcall: %1",
+    (NOCONSTRUCTOR) -> "No constructor with this parameter list is in scope",
+    (MULTIOVERLOADED) -> "Unable to resolve overloaded operation call",
+    (STATIC_NOT_IN_SCOPE) -> "Static member is not in scope",
+    (STATIC_IV_NO_VALUE) -> "Static instance variable must be initialized",
+    (CANNOT_PROCEED_AFTER_RUNTIME_ERROR) -> "Cannot proceed after a runtime error.",
+    (NOOVERLOADED) -> "No overloaded operation or function with this parameter list is in scope",
+    (NOOBJECT) -> "No object is present",
+#ifdef VICE
+    (CPUIMPLCLASS) -> "When a system specification is made CPU is an implicit class",
+    (BUSIMPLCLASS) -> "When a system specification is made BUS is an implicit class",
+    (DEPLOYINST) -> "Only instances can be deployed to a CPU",
+    (NOBUS) -> "No BUS is connecting these two CPUs",
+    (ONLYDEPLOYORPRIO) -> "Only deploy and priority operations can be used in system constructor",
+    (UNSUPPRIO) -> "Unsupported CPU priority scheme",
+    (UNSUPCPUCAP) -> "Unsupported CPU capacity (should be a nat)",
+    (WRONGCPUCONS) -> "Wrong parameters to CPU constructor",
+    (UNSUPPKIND) -> "Unsupported BUS kind",
+    (UNSUPBUSCAP) -> "Unsupported BUS capacity (should be a nat)",
+    (NOSETOFCPUS) -> "This should be a set of CPU names",
+    (WRONGBUSCONS) -> "Wrong parameters to BUS constructor",
+#endif VICE
+  
+    (TYPE_INCOMP_IN_FNOP_APPLY) -> "Incompatible types found in call of function/operation with dynamic type check",
+    (TYPE_INV_BROKEN) -> "Type invariant was broken",
+    (EVAL_ASSERT_GIVES_FALSE) -> "The assertion evaluated to false",
+    (TAG_CYCLIC) -> "Circular defined tag detected",
+    (MULTIPLE_PATTERN) -> "Pattern may match multiply",
+    (DLMODULE_LOAD_ERROR) -> "Dlmodule loading failed",
+    (MEASURE_ERROR) -> "Measure error",
+    (NO_RUNNING_THREAD) -> "Thread is't started or is already dead",
+    (NAT_OR_TUPLE_OF_NAT_EXPECTED) -> "A natural number or a Tuple of natural number was expected",
+    (PURE_OP_EXIT) -> "Pure operation exited",
+    (PURE_OP_CALL) -> "Pure operation call impure operation",
+  
+    (UNKNOWN_AS_TYPE) -> "Internal Error: unknown AS type",
+    (UNKNOWN_OPERATOR) -> "Internal Error: Unknown operator",
+    (ID_NOT_IN_LIST) -> "Internal Error: id not in list",
+    (UNKNOWN_RECORD_TYPE) -> "Unknown record type",
+    (CIRCULAR_STATIC_DEPENDENCY) -> "Circular static dependency detected",
+    (UNKNOWN_OBJECT) -> "Internal Error: Unknown object",
+    (CIRCULAR_TYPE_INV_DEPENDENCY) -> "Circular type invariant dependency in dynamic type check",
+    (PERIODIC_THREAD_UNSUPPORTED) -> "Periodic Thread is't supported.",
+    (INCOMPATIBLE_BIND_TYPE) -> "Incompatible type found in pattern binding",
+    (DLCLASS_CALL_FAILED) -> "dlclass call failed",
+    (INVALID_INSTRUCTION) -> "Internal Error: Invalid Instruction",
+    (UNEXPECTED_PREFIX_OP) -> "Internal Error: unexpected prefix op",
+    (UNEXPECTED_BINARY_OP) -> "Internal Error: unexpected binary op",
+    (UNEXPECTED_EXPRESSION) -> "Internal Error: unexpected expression",
+    (UNEXPECTED_HISTORY_EVENT) -> "Internal Error: unexpected history event",
+    (UNEXPECTED_TRACE_EVENT) -> "Internal Error: unexpected trace event",
+    (UNABLE_OPEN_LOGFILE) -> "Unable to open logfile for writing",
+    (NO_HISTORY_MAP) -> "Internal Error: No HistMap",
+    (UNKNOWN_VALCOND) -> "Internal Error: Unknown ValCond",
+    (UNKNOWN_VALCOND_KIND) -> "Internal Error: Unknown ValCond kind",
+    (ILLEGAL_VALCOND_INDEX) -> "Internal Error: Illegal index",
+    (UNKNOWN_VALCOND_RECORD) -> "Internal Error: Unknown ValCond Record",
+    (OP_RETURNED_VALUE) -> "The operation return a value",
+    (OP_NAME_EXPECTED) -> "A operation name was expected",
+    (SPORADIC_THREAD_UNSUPPORTED) -> "Sporadic Thread is't supported.",
+    others -> undefined
+  end;
+
+state sigma of
+   errmsg : seq of char 
+init s ==
+   s = mk_sigma([])
+end
+  
+
+values
+BOOL_EXPECTED : ERR = 1;
+INT_EXPECTED : ERR = 2;
+NUM_EXPECTED : ERR = 3;
+SET_EXPECTED : ERR = 4;
+SEQ_EXPECTED : ERR = 5;
+REC_EXPECTED : ERR = 6;
+MAP_EXPECTED : ERR = 7;
+TUPLE_EXPECTED : ERR = 8;
+SYMB_LIT_EXPECTED : ERR = 9;
+TWO_BOOL_EXPECTED : ERR = 11;
+TWO_INT_EXPECTED : ERR = 12;
+TWO_NUM_EXPECTED : ERR = 13;
+TWO_SET_EXPECTED : ERR = 14;
+TWO_SEQ_EXPECTED : ERR = 15;
+MAP_OR_SEQ_EXPECTED : ERR = 16;
+TWO_MAP_EXPECTED : ERR = 17;
+SET_AND_MAP_EXPECTED : ERR = 18;
+SEQ_AND_INT_EXPECTED : ERR = 19;
+PATTERNNAME_EXPECTED : ERR = 20;
+CHAR_EXPECTED : ERR = 21;
+ALL_INTS_EXPECTED : ERR = 22;
+ALL_NUMS_EXPECTED : ERR = 23;
+ALL_SETS_EXPECTED : ERR = 24;
+ALL_SEQS_EXPECTED : ERR = 25;
+ALL_MAPS_EXPECTED : ERR = 27;
+OLDID_NOT_IN_OS : ERR = 51;
+MAP_MERGE_DOM_OVERLAP : ERR = 52;
+EMPTY_ENV_S : ERR = 53;
+ZERO_BY_STEP : ERR = 57;
+EVAL_PRE_GIVES_FALSE : ERR = 58;
+EVAL_POST_GIVES_FALSE : ERR = 59;
+ERROR_STATEMENT : ERR = 61;
+UNDEFINED_EXPRESSION : ERR = 62;
+NO_OTHERS_EXPR : ERR = 63;
+WRONG_QUANTIFIER : ERR = 64;
+PAT_NAME_IN_SEQCOMP : ERR = 65;
+ILLEGAL_INDICES : ERR = 66;
+DUPLICATES_NOT_EQUAL : ERR = 67;
+--RECORD_TAG_UNKNOWN : ERR = 68;
+RECORD_SIZE_WRONG : ERR = 69;
+RECORD_FIELD_ID_UNKNOWN : ERR = 70;
+ARG_NOT_IN_DOM : ERR = 71;
+FCT_V_TYPE_EXPECTED : ERR = 72;
+UNDEF_ENCOUNTERED : ERR = 73;
+ID_UNKNOWN : ERR = 74;
+OPERATOR_UNKNOWN : ERR = 75;
+DIVISION_WITH_ZERO : ERR = 76;
+ZERO_LENGTH_DETECTED : ERR = 77;
+PATTERN_UNKNOWN : ERR = 78;
+SET_TOO_BIG : ERR = 79;
+EXPR_UNKNOWN : ERR = 80;
+WRONG_NO_OF_ARGS : ERR = 81;
+STMT_UNKNOWN : ERR = 83;
+REF_UNKNOWN : ERR = 84;
+TYPE_UNKNOWN : ERR = 85;
+IS_TYPE_UNKNOWN : ERR = 86;
+IDENTICAL_FIELDS : ERR = 89;
+TYPE_INCOMP : ERR = 98;
+STATE_INVARIANT_ERROR : ERR = 99;
+TAG_MULTIPLE_DEF : ERR = 100;
+NO_UNIQ_ELEM : ERR = 110;
+OP_EXIT_CONT : ERR = 111;
+NO_POLY_FUNC : ERR = 112;
+NO_INJECTIVE_MAP : ERR = 113;
+NOT_RNG_DOM_SUBSET : ERR = 114;
+TWO_FN_OR_MAP_EXPECTED : ERR = 115;
+FN_OR_MAP_OR_NUM_EXPECTED : ERR = 116;
+NAT_EXPECTED : ERR = 117;
+OP_RETURNED_CONT : ERR = 119;
+STATE_DESIG_UNKNOWN : ERR = 120;
+IMPL_OP_CALL : ERR = 121;
+ILLEGAL_STATE_INIT : ERR = 122;
+ILL_STATE_INIT_PAT : ERR = 123;
+REC_PAT_EXPECTED : ERR = 124;
+ALL_PATID_EXPECTED : ERR = 125;
+TYPE_BIND_EVAL : ERR = 126;
+FNDEF_EXPECTED : ERR = 127;
+IMPL_FN_APPLY : ERR = 128;
+POLY_NOT_INST : ERR = 129;
+MAP_AND_SET_EXPECTED : ERR = 130;
+NOT_EXPL_OP_CALL : ERR = 131;
+GET_VALUE_EXPR : ERR = 132;
+OP_CANT_RETURN_A_VALUE : ERR = 133;
+
+MOD_ALREADY_DEF : ERR = 150;
+EQUAL_RENAMINGS : ERR = 151;
+PARMOD_NOT_DEFINED : ERR = 152;
+NOT_FULLY_INST : ERR = 153;
+TYPE_ALREADY_DEF : ERR = 154;
+MOD_NOT_DEFINED : ERR = 155;
+TYPE_NOT_EXPORTED : ERR = 156;
+CONSTRUCT_NOT_EXPORTED : ERR = 157;
+WRONG_STATE_TYPE : ERR = 158;
+NOT_DEFINED_IN_MOD : ERR = 159;
+LIB_NOT_DEFINED : ERR = 160;
+LIB_SYMBOL_NOT_DEFINED : ERR = 161;
+LIB_ARGUMENT_WRONG_NUMBER : ERR = 162;
+LIB_NOT_DECLARED : ERR = 163;
+INTERNAL_ERROR : ERR = 164;
+LIB_TYPE_ERROR : ERR = 165;
+TYPE_NOT_SUPPORTED : ERR = 166;
+LIB_CLOSE_ERR : ERR = 167;
+TAG_NOT_IN_NAME_MAP : ERR = 168;
+LIB_WRONG_SIGN : ERR = 169;
+FILE_DOES_NOT_EXISTS : ERR = 170;
+CAN_NOT_BE_EVALUATED : ERR = 171;
+FN_EXIT_CONT : ERR = 172;
+LIB_VERSION_NOT_FOUND : ERR = 173;
+LIB_WRONG_VERSION : ERR = 174;
+EXTENDED_FCT_EXPECTED : ERR = 175;
+UNEXPECTED_INFLOW : ERR = 176;
+COUND_NOT_MATCH_OUTFLOW : ERR = 177;
+
+NONEMPTYSET_EXPECTED : ERR = 200;
+NUMBER_ARG_NEQ_NUMBER_TYPE : ERR = 201;
+TYPE_INCOMP_RETURN : ERR = 202;
+TYPE_INCOMP_APPLY : ERR = 203;
+SET_EXP_IN_PATTERN_BIND : ERR = 204;
+VALUE_NOT_IN_SETBIND : ERR = 205;
+MTHD_EXIT_CONT : ERR = 206;
+OBJ_REF_EXP : ERR = 207;
+CLNM_NOT_DEFINED : ERR = 208;
+TAG_UNKNOWN : ERR = 209;
+
+MULT_DEF_METHS : ERR = 211;
+MULT_DEF_FCTS : ERR = 212;
+MULT_INST_VARS : ERR = 213;
+MULT_VAL_IDS : ERR = 214;
+TOPOLOGY_STMT : ERR = 215;
+SPEC_STMT : ERR = 216;
+INST_ABS_CL : ERR = 217;
+NOT_CL_NAME_IN_NEW_STMT : ERR = 218;
+OBJ_REF_EXP_CALL : ERR = 219;
+NOT_MTHD_NAME : ERR = 220;
+INST_INV_BROKEN : ERR = 221;
+IND_INH_NOT_SUPPORTED : ERR = 222;
+UNEXP_RET_VAL_INIT_CL : ERR = 223;
+CIRC_CL_DEPENDENCY : ERR = 224;
+MULT_TPS_NAME : ERR = 225;
+DB_OBJ_EXISTS : ERR = 226;
+DB_OBJ_NOT_EXISTS : ERR = 227;
+OBJ_RECORD_EXP : ERR = 228;
+CIRC_CL_INIT : ERR = 229;
+NAME_UNKNOWN : ERR = 230;
+DC_NOT_PATTERN_NAME : ERR = 231;
+LOCAL_COMPOSE_TYPEDEF : ERR = 232;
+NOTYETSPECFCT : ERR = 233;
+NOTYETSPECOP : ERR = 234;
+-- REC_OR_OBJ_EXPECTED : ERR = 235;
+BUG_263 : ERR = 236;
+EXIT_IN_INIT : ERR = 237;
+
+SUBRESP : ERR = 238;
+NUMERIC_SET : ERR = 239;
+WRONG_NO_RES : ERR = 240;
+LOWER_BOUND_NOT_A_NUMBER : ERR = 241;
+UPPER_BOUND_NOT_A_NUMBER : ERR = 242;
+STEP_NOT_A_NUMBER : ERR = 243;
+UPPER_BOUND_LARGER_THAN_LOWER_BOUND : ERR = 244;
+LOWER_BOUND_LARGER_THAN_UPPER_BOUND : ERR = 245;
+STEP_INDEX_IS_ZERO : ERR = 246;
+LOOP_EXPR_NOT_AN_EXPR : ERR = 247;
+TEST_EXPR_NOT_AN_EXPR : ERR = 248;
+TUPLE_OUTSIDE_INDEX : ERR = 249;
+INSTVAR_NOT_PUBLIC : ERR = 250;
+INSTVAR_NOT_IN_SCOPE : ERR = 251;
+FUN_NOT_IN_SCOPE : ERR = 252;
+OP_NOT_IN_SCOPE : ERR = 253;
+VAL_NOT_IN_SCOPE : ERR = 254;
+POLYFUN_NOT_IN_SCOPE : ERR = 255;
+TYPE_NOT_IN_SCOPE : ERR = 256;
+NOT_IN_SCOPE : ERR = 257;
+MULT_DEF : ERR = 258;
+INIT_NOT_POSSIBLE : ERR = 259;
+-- this is probably caused by a value definition inside a class which
+-- is referring to a class which has not yet been initialized.
+INDEXED_ASSIGN : ERR = 260;
+OP_IN_GUARD : ERR = 261;
+NO_THREAD : ERR = 262;
+DEADLOCK_DETECTED : ERR = 263;
+-- This is now supported
+--PRE_COND_APPLY_EXPR : ERR = 264;
+NO_GUARD_IN_INIT : ERR = 265;
+OP_OR_FUN_NOT_IN_SCOPE : ERR = 266;
+OP_DEF_IN_MULTSUPERS : ERR = 267;
+SEL_NONVALID_THREADID : ERR = 268;
+MULT_THREAD_INH : ERR = 269;
+LOGDLCALL : ERR = 279;
+NOCONSTRUCTOR : ERR = 280;
+MULTIOVERLOADED : ERR = 281;
+STATIC_NOT_IN_SCOPE : ERR = 282;
+STATIC_IV_NO_VALUE : ERR = 283;
+CANNOT_PROCEED_AFTER_RUNTIME_ERROR : ERR = 284;
+NOOVERLOADED : ERR = 285;
+NOOBJECT : ERR = 286;
+
+#ifdef VICE
+CPUIMPLCLASS : ERR = 287;
+BUSIMPLCLASS : ERR = 288;
+DEPLOYINST : ERR = 289;
+NOBUS : ERR = 290;
+ONLYDEPLOYORPRIO : ERR = 291;
+UNSUPPRIO : ERR = 292;
+UNSUPCPUCAP : ERR = 293;
+WRONGCPUCONS : ERR = 294;
+UNSUPPKIND : ERR = 295;
+UNSUPBUSCAP : ERR = 296;
+NOSETOFCPUS : ERR = 297;
+WRONGBUSCONS : ERR = 299;
+#endif VICE
+
+TYPE_INCOMP_IN_FNOP_APPLY : ERR = 298;
+TYPE_INV_BROKEN : ERR = 300;
+EVAL_ASSERT_GIVES_FALSE : ERR = 301;
+TAG_CYCLIC : ERR = 302;
+MULTIPLE_PATTERN : ERR = 303;
+DLMODULE_LOAD_ERROR : ERR = 304;
+MEASURE_ERROR : ERR = 305;
+NO_RUNNING_THREAD : ERR = 306;
+NAT_OR_TUPLE_OF_NAT_EXPECTED : ERR = 307;
+PURE_OP_EXIT : ERR = 308;
+PURE_OP_CALL : ERR = 309;
+
+UNKNOWN_AS_TYPE : ERR = 950;
+UNKNOWN_OPERATOR : ERR = 951;
+ID_NOT_IN_LIST : ERR = 952;
+UNKNOWN_RECORD_TYPE : ERR = 953;
+CIRCULAR_STATIC_DEPENDENCY : ERR = 954;
+UNKNOWN_OBJECT : ERR = 955;
+CIRCULAR_TYPE_INV_DEPENDENCY : ERR = 956;
+PERIODIC_THREAD_UNSUPPORTED : ERR = 957;
+INCOMPATIBLE_BIND_TYPE : ERR = 958;
+DLCLASS_CALL_FAILED : ERR = 959;
+INVALID_INSTRUCTION : ERR = 960;
+UNEXPECTED_PREFIX_OP : ERR = 961;
+UNEXPECTED_BINARY_OP : ERR = 962;
+UNEXPECTED_EXPRESSION : ERR = 963;
+UNEXPECTED_HISTORY_EVENT : ERR = 964;
+UNEXPECTED_TRACE_EVENT : ERR = 965;
+UNABLE_OPEN_LOGFILE : ERR = 966;
+NO_HISTORY_MAP : ERR = 967;
+UNKNOWN_VALCOND : ERR = 968;
+UNKNOWN_VALCOND_KIND : ERR = 969;
+ILLEGAL_VALCOND_INDEX : ERR = 970;
+UNKNOWN_VALCOND_RECORD : ERR = 971;
+OP_RETURNED_VALUE : ERR = 972;
+OP_NAME_EXPECTED : ERR = 973;
+SPORADIC_THREAD_UNSUPPORTED : ERR = 974;
+
+end RTERR
+\end{vdm_al}
+
+\vspace{0.5cm}
+
+#ifdef RTINFO
+\begin{rtinfo}
+{rtinfo.ast}[RTERR]
+\end{rtinfo}
+#endif RTINFO

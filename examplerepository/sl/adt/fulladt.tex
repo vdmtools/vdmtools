@@ -1,0 +1,292 @@
+\documentclass[11pt]{article}
+\usepackage{vdmsl-2e}
+\usepackage{longtable}
+\usepackage{a4}
+
+% a4 style
+%\oddsidemargin -0.4mm \evensidemargin -0.4mm
+%\topmargin -10.4mm \headheight 5mm \headsep 8mm
+%\footheight 5mm \footskip 15mm
+%\textheight 230mm \textwidth 160mm
+\parindent0mm
+\title{Abstract Data Types in VDM-SL}
+\author{Matthew Suderman\\Professor R. J. Sutcliffe, Cmpt 410\\Trinity Western University}
+\date{Spring Semester, 1997}
+
+\begin{document}
+\maketitle
+\thispagestyle{empty}
+
+\newpage
+\pagenumbering{roman}
+\pagestyle{plain}
+\tableofcontents
+
+\newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\section{Introduction and Rationale}
+
+\subsection{Formal Methods Rationale}
+\begin{quote}
+The term `software engineering' was first introduced in the late 1960s at a conference held to discuss what was then called the `software crisis'...  Early experience in building large software systems showed that existing methods of software development were not good enough.  Techniques applicable to small systems could not be scaled up.  Major projects were sometimes years late, cost much more than originally predicted, were unreliable, difficult to maintain and performed poorly.  Software develpment was in crisis...  Now, more than 20 years later, the `software crisis' has not been resolved... the demand for software is increasing faster than improvements in software productivity.(3)  \cite{SI}
+\end{quote}
+
+One cause of the crisis has been unreliable software resulting from design errors.  Although no method exists for completely eliminating such errors, there are methods for reducing them.  One method is exhaustively testing, or debugging, the software in order to find and correct defects.  Unfortunately, high reliability requires a great deal of testing.  ``For example, to measure a $10^{-9}$ probability of failure for a 1-hour mission one must test for more than $10^{9}$ hours'' \cite{HM}.  Another method is ``n-version programming''; that is, the system is designed and implemented by three or more different teams and each team's version is executed in parallel.  The output of each version is evaluated based on a voting system and the majority output is accepted as valid.  Unfortunately, this method requires additional resources for parallel execution and requires additional execution time to vote on the outputs.  Independence between versions may also be an illusion because different teams tend to make the same mistakes.  Consequently, many of the errors will slip through the voting system.\\
+
+``N-version programming'' and other related techniques such as ``recovery blocks'' are known as fault tolerance techniques.  Ideally software production should produce error-free software; that is, software production should avoid faults in the first place.  One category of fault avoidance techniques is formal methods.  Formal methods have actually been used to produce highly reliable software.  However, formal methods are slow in being accepted by the software industry because of the following commonly believed myths about formal methods:
+\begin{quote}
+\begin{itemize}
+\item[Myth 1]{\it Formal methods mean program proving.}
+\begin{itemize}
+\item[Fact]Formal methods involve much more than proving.  They can be used to achieve several different degrees of rigor in design; in fact, many systems employ formal specification but no proving at all.
+\end{itemize}
+\item[Myth 2]{\it Formal methods are so expensive that their use can only be justified in safety-critical systems.}
+\begin{itemize}
+\item[Fact]Peter Gorm Larsen concludes from the British Aerospace experiment that ``using formal specifications in this development process did not impose a significant cost or time-scale overhead across the whole development'' (12) \cite{PL}.
+\end{itemize}
+\item[Myth 3]{\it Formal methods require a high level of mathematical skill.}
+\begin{itemize}
+\item[Fact]Larsen also concludes that ``engineers can begin to use formal techniques with as little as one week's training provided expert support is available when they first apply them''(12) \cite{PL}.  In addition, formal methods do not need to be introduced in entirety.  Instead, they can be added gradually to the existing software production methods.
+\end{itemize}
+\item[Myth 4]{\it Clients cannot understand formal specifications.}
+\begin{itemize}
+\item[Fact]This might be true for most clients; however, formal specifications can be translated into natural language for the clients.  In fact, the translation of the client's system requirements into formal language and subsequent translation back into natural language could be used by the client to check that the system design is valid.
+\end{itemize}
+\item[Myth 5]{\it Formal methods have only been used for trivial system development.}
+\begin{itemize}
+\item[Fact]Currently, formal methods are being developed to model concurrency.  Writing programs that incorporate concurrency can hardly be called trivial.  Another example of non-trivial achievement is the VDM specification of ISO Modula-2 \cite{M2}.
+\end{itemize}
+\end{itemize}
+\end{quote}
+
+\subsection{Formal Methodology}
+
+Formal software development consists of formal specification and verification.  Formal specification is used to completely describe the system under development.  It uses a specification language which consists of a set of notations that are formally defined and based on mathematical logic.  The specification language can then be used to unambiguously describe all aspects of the software system:
+\begin{itemize}
+\item[$\bullet$]System environment.
+\item[$\bullet$]System requirements.
+\item[$\bullet$]System design necessary to achieve the requirements.
+\end{itemize}
+Formal verfication uses proof rules based on mathematical logic to prove that the formal specification:
+\begin{itemize}
+\item[$\bullet$]Exhibits certain forms of consistency and completeness.
+\item[$\bullet$]Satisfies the system requirements.
+\item[$\bullet$]Designs of differing abstraction levels exhibit uniform behavior.\cite{BRJS}
+\end{itemize}
+
+Exhaustive proof is very expensive.  Human proof construction would require many man-hours and possibly result in flawed proofs.  Machine proof, though more reliable, would require many hours of machine resources.  Even human-machine interactive proving is usually too expensive.  As a result, many designers choose to ignore verification altogether.  Others might choose to prove only the most critical parts of the design.  Finally others might employ prototyping and testing.  Prototyping is actually executing the specification.  Of course, this means that the specification must be written in an executable subset of the specification language and that a tool exists that can animate the specification.  Testing the specification requires that the designers create a batch of
+test cases which can be checked by the software tool.
+
+\subsection{The Vienna Development Method (VDM)}
+
+\subsubsection{History}
+
+{\tt VDM} originated in IBM's Vienna Laboratory in the early 1970s.  In 1974, a report authored by Hans Bekic, Dines Bjorner, Wolfgang Henapl, Cliff Jones and Peter Lucas contained a formal description of {\tt PL/I} using denotational semantics.  The notation used was originally known as {\tt Meta IV} and eventually became known as {\tt VDM}.
+
+\subsubsection{Definition of VDM}
+
+According to \cite{VDM}, {\tt VDM} is:
+\begin{quote}
+A formal method for the description and development of computer systems.  Its formal descriptions (or ``specifications'') use mathematical notation to provide a precise statement of the intended function of a system.  Such descriptions are built in terms of models of an underlying state with a collection of operations which are specified by pre- and post- conditions.  VDM's design approach is guided by a number of proof obligations whose discharge establishes the correctness of design by either data reification or operation decomposition.  Thus it can be seen that VDM is a complete development method which addresses all of the stages of development from specification through to code.  (xvi)
+\end{quote}
+
+In other words, {\tt VDM} is a formal method that consists of a specification language for system description, refining rules for making adesign more concrete and a proof theory for proving the consistency and completeness of a specification.
+
+\subsubsection{VDM Specification Language (VDM-SL)}
+
+VDM-SL is the {\tt VDM} notation used to specifiy or model a system.  More specifically, it consists of a mathematical model built from simple data types like sets, composite objects, maps and sequences along with the operations for manipulating them.\\
+
+VDM-SL has been standardized by the International Standards Institute ({\tt ISO}) and the British Standards Institute ({\tt BSI}).  The standard can be divided into five main parts: syntax, symbolic representation, static semantics and dynamic semantics.  VDM-SL syntax is defined in {\tt EBNF} and VDM-SL type definitions.  The type definitions are necessary because {\tt EBNF} does not permit functional style definitions. \\
+
+VDM-SL syntax can be symbolized mathematically and textually.  The textual representation substitues text for the mathematical symbols in the mathematical representation.  For example, all of the VDM-SL in the this document is in the mathematical form; however, originally, it was written in text form and later automatically processed in order to produce the mathematical form.\\
+
+The static semantics specification defines well-formed VDM-SL specifications.  In other words, it defines rules for such things as typing and scope.\\
+
+The dynamic semantics specification gives a formal meaning to the VDM-SL syntax.  It is based on domain universes constructed using set theory.  The domain universes contain all valid expressions of VDM-SL. \\ \cite{PNLP}
+
+\subsubsection{VDM-SL Specification}
+
+A typical specification consists of a state description and collections of domain definitions, constant definitions, operations and functions.  The state description defines the system initialisation and invariants for the system state.  Invariants establish the limits for system data.  For example, an integer variable could be defined to be greater than ten at all times.  Domain definitions are data types constructed using the data structuring mechanisms of VDM-SL. Functions are mappings between two domains.  As such they are referentially transparent; that is, they do not modify or receive input from anything other than their arguments.  Operations are essentially opaque functions since they may modify the system state \cite{PNLP}.
+
+\subsubsection{Implicit and Explicit Specification}  
+
+Functions and operations can be specified implicitly or explicitly or both implicitly and explicitly. Implicit specification describes the results of an operation of function whereas explicit specification describes a function or operation's algorithm.  For example, an explicit specification of a function to sort a list of integers might require a ``quick sort'' or  ``insert sort'' whereas an implicit specification of the same function would simply state that its output is a list of integers sorted from smallest to largest.  Thus, the explicit specification describes how to do something while the implicit specification describes a desired result.  Note that later the two specifications could be checked against one another to make sure that they are both ``saying the same thing.''
+\subsubsection{Reification}
+
+Reification is the process of making design decisions that bring a specification closer to the final implementation.  The first design is usually very abstract, using high level notation and objects.  Implementation dependencies are completely ignored.  Eventually, however, the design must be implemented on an actual machine; thus, the initial design must be reified.  In other words, a new design must be created that exhibits the same behavior as the initial design; however, it must also take some of the implementation dependencies into account.  If this latest design is not implementable then it too must be reified.  In fact, design reification continues until the specification can be implemented in a ``real life programming language.''\\
+
+For example, an abstract linked list needs only single links; however, a singly linked list might take longer to search than a doubly linked list.  Consequently, the designer will frequently introduce double links into the specification.  Note that though double links will decrease search time, they will also complicate the design and require additional storage space in the final implementation.  In fact, design reification generally tends to introduce redundancy and complexity into a specification.  Such complexity, however, is manageable because it is gradually increased at each level of abstraction.  Thus, at each level, the designer need only grapple with the changes from the previous design.\\
+
+Each level of reified design must exhibit the same behavior as the previous level.  The bridge between two successive levels is the {\tt retrieve} function.  This function translates the system state of the more concrete design into the system state of the more abstract design.  In other words, the {\tt retrieve} function, when provided with the state of the more concrete design, returns the corresponding state of the more abstract design.  To illustrate, consider the following sequence statements:
+\begin{quote}
+\begin{verbatim}
+InitList();
+Insert('a');
+Insert('b');
+Insert('c');
+Delete(2);
+\end{verbatim}
+\end{quote}
+
+The result of these statements would be the list whose first element is 'a' and second element is 'c'.  If the list is singly linked, then there is a link from the first element to the second element.  On the other hand, if the list is doubly linked then there is an additional link from the second element to the first.  Abstractly, the {\tt retrieve} function would receive the doubly linked list as input and return the singly linked list as output.  In this way, the retrieve function acts as a mapping between the more abstract singly linked list and the more concrete doubly linked list.\\
+
+The retrieve function can be used in two ways to ensure that the concrete design is equivalent to the more abstract design.  The first is by logical proof.  To illustrate, suppose that {\tt Insert} was implicitly specified for a doubly and singly linked list.  The retrieve function could then be utilized to prove that the post-conditions of both versions of {\tt Insert} are equivalent.  The second method is by execution.  In this case, both versions of {\tt Insert} are applied to the same sequence of inputs and then the doubly linked list state is compared to the singly linked list state using the {\tt retrieve} function.   
+\subsubsection{Proof Theory}
+
+{\tt VDM} has established a set of rules for proving the consistency and completeness of a specification.  The proof theory is based on propositional logic, predicate calculus and mathematical induction.  Proof can be used to demonstrate two types of consistency and completeness \footnote{Proof theory establishes consistency and completeness, not correctness.  {\tt VDM} is used to model a system; consequently, a specification may be consistent and complete but fail to correctly model the system under development.  In other words, a specification is not the system; rather, it describes the system.  For example, the specification could be incorrect because the designer failed to include all of the client's natural language system requirements.  In fact, this is a common error since natural language is ambiguous.}:
+\begin{enumerate}
+\item {\it Inter-level Consistency}:  The previous discussion about the {\tt retrieve} function's use in proving that two successive layers of decreasing abstraction are equivalent is also known as inter-level consistency.  The following is a more formal explanation of  this concept.  Let one level of design be labelled $L_{n}$ and its reification $L_{n+1}$.  Suppose that $L_{n}$ specifies a function $F_{n}$ and $L_{n+1}$ specifies its counterpart $F_{n+1}$.  To show that these two functions are equivalent it is merely necessary to show that their outputs are equivalent given equivalent input.  In other words, to prove that $F_{n+1}$ is equivalent to $F_{n}$, it is necessary to prove that the specification of $F_{n+1}$ in conjunction with the retrieve function specification is equivalent to $F_{n}$.
+\item {\it Inner-level Consistency and Completeness}:  By applying other proof rules to the individual layers of design, one can prove that each layer is internally consistent and complete.  One type of consistency is between the explicit and implicit specification of a function or operation.  It must be shown that the explicit specification implements the implicit specification.  Another type of consistency is between operations and system state invariants.  Operations must modify the system state without invalidating a state invariant.  For example, if a global integer variable must always be greater then five, then an operation must not assign the variable a value less than five.
+\end{enumerate}
+\subsection{The IFAD VDM-SL Toolbox}
+The {\tt IFAD VDM-SL Toolbox}\footnote{The IFAD VDM-SL Toolbox is available at $<$ftp.ifad.dk/pub/toolbox$>$.} supports the entire Vienna Development Method except for automatic proof.  It supports VDM-SL specification documentation, syntax checking and static semantics checking.  Specification verification is achieved through prototyping and testing rather than proof because, for most software projects, exhaustive proof is much too expensive.  Currently, the Toolbox performs optimally with specifications of 5000 - 10000 lines of VDM-SL.
+\begin{enumerate}
+\item {\it VDM-SL Documents}: Toolbox specification documents are \LaTeX\ documents which typically contain natural language and graphical description interspersed with actual VDM-SL.  This ability to mix formal with informal specification encourages liberal documentation of the VDM-SL specifications.
+\item {\it Static Semantics Checking}: Static semantics checking determines the well-formedness of a VDM-SL specification.  It discovers such errors as type mismatches and scope violations.  Its checking may also be extended to warn about a potential divide-by-zero or violation of system state invariants.
+\item {\it Prototyping}:  VDM-SL contains an executable subset; thus, the Toolbox contains tools for debugging and interpreting specifications which are written in the executable subset.  Implicit functions and operations specifications are examples of VDM-SL features that are not executable.  The debugging tool supports operations such as stepping and tracing which are commonly supported by regular programming environments.  The interpreter can not only animate specifications but it also checks such things as system state invariants and function pre- and post-conditions during specification execution.
+\item {\it Systematic Testing}:  Testing is supported by the Toolbox instead of proof.  It is the main method for automatically validating a specification.  Though it is not as exhaustive as proof, it can be quite thorough, depending on the number and variety of the tests applied to the specification.  \\
+
+Systematically testing a specification involves constructing a batch of tests and having the machine use them to check the specification automatically.  With each test, the testing tool produces statistics about what was tested.  The statistics state how many times the test required a construct to be evaluated and if the test completely evaluated it.  For example, a test may evaluate a function ten times but not completely if the function contained an if-else expression whose conditions always evaluated to true.  In other words, the function was not completely evaluated because the else part of the if statement was never evaluated.
+\item {\it Implementation}: Implementation of a specification can be performed automatically or by hand.  A formal specification can be automatically translated into C++ by one of the Toolbox's tools or it can performed by hand into some other language.\\
+
+Since ISO Modula-2 has been specified in VDM-SL, a Modula-2 implementation of a VDM-SL specification can be proven to be consistent with the specification.  However, this cannot be said for any other programming language.  Thus, confidence in the implementation must be achieved by applying the same tests to the implementation as to the specification \cite{ELL}.
+\end{enumerate}
+\subsection{Project Objectives}
+\begin{enumerate}
+\item To determine the ease or difficulty in {\em learning} VDM-SL.
+\item To determine the ease or difficulty in {\em using} VDM-SL.
+\item To evaluate the {\tt IFAD VDM-SL Toolbox}.
+\item To investigate the gap between VDM-SL specifications and ISO Modula-2 \footnote{Throughout this paper ``Modula-2'' actually means ``ISO Modula-2 with the generic extensions'' as defined in \cite{SR}.}.
+\item To investigate the affects of VDM-SL specification on the resulting ISO Modula-2 implementation.
+\end{enumerate}
+
+
+
+
+\subsection{The Project}
+This project specifies the following abstract data types (ADT) in VDM-SL:  a singly-linked list (2.5), a doubly linked list (2.6), a queue (2.7), a stack (2.8) and two versions of the binary tree (2.9 and 2.10).  To support the lists and trees, a node ADT(2.2) is also specified.  As was noted in the previous section, one of the objectives of this project is to translate at least some of the VDM-SL into ISO Modula-2.  In order to achieve this, some of the facilities provided by Modula-2 need to be modelled in VDM-SL, namely system addressing and dynamic memory.  Consequently, an address model is provided (2.1) for accessing dynamic memory in the somewhat simplistic system heap model (2.3) \footnote{The implementers of the VDM-SL Toolbox chose to perform translation somewhat differently.  Whereas this project specifies Modula-2 in VDM-SL, IFAD chose to implement VDM-SL facilities in C++.  In other words, this project requires most of the work to be done in VDM-SL whereas their translation scheme requires most of the work to be done in the target programming language, C++.  Unfortunately, the necessary time resources were not available for this project to really examine the implications of these two translation schemes.}.  The parts of the specification that have been translated into Modula-2 appear in Appendix A.  \\
+
+ADTs are usually encapsulated in modules.  Though VDM-SL provides modules, this project does not use them because the IFAD VDM-SL Toolbox did not support them very well, especially parameterized modules (ie. generic modules).  Clearly, ADTs must be encapsulated in some way, otherwise, naming conflicts and inappropriate data accesses and modifications can occur.  Thus, in this project, the ADTs are visually separated into subsections of the specification section (2).  For example, the singly-linked list appears only in subsection 2.5.  In other words, the subsections can approximately be considered as modules.  Naming conflicts are handled by prefixing each ADT's identifiers with the name of the ADT followed by an underscore.  The name of each ADT is {\tt Nodes} (linkable nodes),  {\tt SList} (singly-linked list), {\tt DList} (doubly-linked list), {\tt Heaps} (system heap), {\tt Queues}, {\tt Stacks}, {\tt STrees} (the first binary tree version) and {\tt Trees} (the second binary tree version).  Hence, the name of the insert operation for the singly-linked list is {\tt SList\_Insert}.  This scheme permits one to quickly determine the ADT to which the identifier belongs.\\
+
+Each of the ADTs is specified so as to be abstract with respect to its basic data type (eg.  the list can be a list of characters, reals, records, etc.).  To facilitate this, near the beginning of each ADT section, one or more type or value identifiers are declared which act as the ADT's generic parameters.  For example, the nodes module defines the {\tt Nodes\_Data} type.  Most of the {\tt ADTName\_Data} types  are assigned the type {\tt Data} which is defined in the testing section (2.11).  To change an ADT's underlying type, simply reassign the generic parameter(s).  For example, to change the size of the heap, simply reassign {\tt Heaps\_Size} in the system heap section.\\
+
+This project does not include any proving.  Instead, specification verification is achieved by specifying post-conditions for most operations and functions and then checking them at run-time in the toolbox interpreter.  The most extensive use of post-conditions appears in the singly- and doubly- linked lists and in the second version of the binary tree (2.11).  Both versions of the list employ VDM-SL sequences in their post-conditions.  A VDM-SL sequence is an order set of elements, all of the same type, that can be indexed with the numbers $1, 2, ..., n$ where $n$ is the length of the sequence.  The following table describes some of the sequence operations used in this specification.  Assume that $s$ and $t$ are sequences and that $i$ is a natural number.
+\begin{quote}
+\begin{tabular}{|l|l|l|}
+\hline
+Operation&Description&Example\\
+\hline
+{\tt hd }$s$&first element in $s$&{\tt hd }$[a, b, c] = a$\\
+{\tt tl }$s$&first element is $s$ removed&{\tt tl }$[a, b, c] = [b, c]$\\
+{\tt len }$s$&number of elements in $s$&{\tt len }$[a, b, c] = 3$\\
+{\tt elems }$s$&set of elements in $s$&{\tt elems }$[a, c, c] = \{a, c\}$\\
+{\tt inds }$s$&$\{1, ..., \mbox{{\tt len}} s\}$&{\tt inds }$[a, b, c] = \{1, 2, 3\}$\\
+$s\char94t$&concatenation&$[a, b]\char94[c, d] = [a, b, c,d]$\\
+$s(i)$&retrieve element at position $i$&$[a, b, c](2) = b$\\
+$s = t$&equality comparison&$[a, b] \not= [a, c]$\\
+\hline
+\end{tabular}
+\end{quote}
+For more information on the VDM-SL that will be used in this project see \cite{VDMSL}.\\
+
+The two versions of the binary tree work somewhat differently.  The first version is fairly abstract and most of its functions do not have post-conditions.  The second tree is much more concrete; it looks very similar to a binary tree implemented in Modula-2.  Most of its operations have post-conditions.  These post-conditions essentially compare the results of the second tree version with those of the first tree.  This methodology is very similar to ``n-programming''  discussed in section 1.1.  However, there is a difference in that the two versions of the tree are based on radically different designs -- one tree being much more abstract than the other.  The first tree is designed much like one would typically design a tree in VDM-SL.  It contains few efficiency optimizations and low-level programming considerations (eg. memory allocation).  The second tree, on the other hand, attempts to handle all of these considerations.  In a sense, these two versions interact similarly to different abstraction levels connected by a retrieve function such as those discussed in section 1.3.  Here, the {\tt Trees\_Set} can be viewed as the retrieve function (see section 2.10 for more information).\\
+
+The final specification section (2.11) provides operations for testing most of the specified ADTs.  See that section for more details.
+
+
+
+
+
+\newpage
+\input{adt.vdm.tex}
+
+
+
+
+
+\newpage
+\section{Conclusions}
+
+\subsection{VDM-SL}
+VDM-SL is a very rich modelling language.  It contains built-in data structures such as sequences, sets and maps which spring-board the modeller directly into system modelling.  One does not have think about messy system dependent details when working.  Before starting this project I specified a few data structures in an attempt to become comfortable with VDM-SL --- it didn't take very long.  In this project, I used several of these high level data structures and found their use quite natural and intuitive.  \\
+
+VDM-SL contains two facilities which promote specification reusability:  generics and modules.  Generics was generously used in this project.  Each data structure was a generic data structure; consequently, one could have a data structure of any type one wished.  For example, the list could be a list of characters, reals, or any other user-defined type.  In addition, the three node types could be handled generically.  This enabled me to reuse much of the singly-linked list specification when specifying the doubly-linked list.  The second facility that promotes reusability is modules.  Modules allow one to encapsulate related parts of a specification.  This is necessary for hiding unecessary details from other parts of the specification, simplifying the necessary identifier naming conventions and performing basic problem solving.  This project does not use modules and a quick look at the names of many of the identifiers reveals the resulting complexity.  For example, four of the data structures contain an operation or function for insertion.  Because there are no modules, each structure must give its insertion operation or function a unique name; hence, I made the decision to prefix each identifier with the name of its data structure.\\
+
+VDM-SL's most valuable facilities are those which promote reliable and consistent specification --- invariants, pre-conditions, post-conditions and strict type requirements.  This project uses these facilities generously; in fact, there is so much run-time checking that many of the specified operations run {\em very} slowly in the toolbox interpreter.  \\
+
+The most difficult part of VDM-SL specification is the translation of the VDM-SL into a lower level programming language.  Even though Modula-2's syntax is very similar to VDM-SL, translation from VDM-SL to Modula-2 requires that one model Modula-2 in VDM-SL.  That is the reason why a system heap was specified in this project.  Modelling a programming language is a lot of work, and, since I was unable to spend sufficient time modelling, the system heap and pointer modelling are not very accurate.  For example, the system heap model can operate on only one data type at a time.  In this project, the system heap operated on nodes only.  The heap model was also too simplistic.  Real system heaps are much more complex and unpredictable.  For instance, calling the {\tt Heaps\_Available} function before attempting to allocate memory requires that one assume that the heap does not change between the time that one calls the function and then attempts to allocate memory.  \\
+
+VDM-SL contains one very inconvenient feature:  if a module specifies a state, then there are only two ways to use it for multiple purposes.  To illustrate consider a list module that specifies an internal state and an importing module that wishes to use the list for two different things.  The first way to do this is to instantiate the list module twice; however, this requires the list module to be a parameterized module (ie. it must be generic).  The other way is to import the list state type (assuming that the list module exports the state) and then define two different list states.  Then, the following statement is necessary to insert an element into the first list state:\\
+\hspace*{7mm}{\tt List`Insert('a') using List`state1;}\\
+The statement to insert into the second list state is:\\
+\hspace*{7mm}{\tt List`Insert('a') using List`state2;}\\
+Clearly, this is all rather awkward.  It would be better to permit imports to rename modules so that a module could be imported twice but under different names.  
+     
+\subsection{The IFAD VDM-SL Toolbox}
+The toolbox was very helpful for learning VDM-SL.  The stringent type checking can be quite annoying at times, but it does uncover important errors.  For example, unlike type checkers for most programming languages, it reports boolean expressions that could never be false and sequence indexing that could be out of range.  Typically the type checker will find hundreds of errors and output even more warnings.  Many times the warnings it outputs save a great deal of debugging time, especially for VDM-SL novices.  The interpreter also aided in learning VDM-SL because it allows the user to investigate the results of many VDM-SL expressions.\\
+
+The toolbox was also invaluable for finding errors in the specification.  As was already mentioned the type checker saved a great deal of debugging time.  For example, when type checking the `link tree', a couple of if statements were found whose conditions could never be false.  A great deal more time would have had to be spent debugging had the type checker not caught these errors. Though the interpreter does not typically discover as many errors as the type checker, the ability of the interpreter to check pre- and post-conditions and type invariants was useful in finding many important errors as well.  For example, using the interpreter to test the singly-linked list, I discovered that the insertion operation was not behaving correctly when its post-conditions failed.  I quickly found out why when I looked at the system heap and translated the resulting list into a sequence.  It turned out that two `pointer' assignment statements in the operation were in the wrong order.  \\
+
+The major downfall of the toolbox was its inability to support modules, especially parameterized modules.  Though the toolbox was able to support some simple module examples, the more complex examples either failed in a type check or in the interpreter.  One example passed the type check but the interpreter was unable to intialize the group of modules because it could not find an identifier definition which was defined in one of the modules.  A great deal more work needs to be done by the vendors before the toolbox will adequately support modules.  Parameterized modules should be supported because they are necessary for general problem solving and specification reusability.  To discover some of the problems, attempt to modularize this specification using parameterized modules as I did initially.   
+
+\subsection{Some Lessons}
+First of all, I learned that early decisions are very important.  Two examples illustrate this lesson.  Early in the project I decided to use VDM-SL parameterized modules; however, as was noted in the previous section, the toolbox does not support them very well.  Consequently, much of my design work had to be modified in order to use the new identifier naming convention.  Secondly, discovering a proper basis for the entire specification took a long time, almost a third of the project time.  However, once that foundation was laid, the rest of the work was more or less straight forward.  Had the initial foundation been even slightly different, the end product would have been very different. \\
+
+Secondly, I learned that system design using formal methods and a supporting tool cuts down on later development time.  As was noted in the previous section, the toolbox type checker found many important errors that other non-formal type checkers would have missed.  The interpeter's checking of post-conditions and invariants was also important.  When checking the `link tree' whose post-conditions referred to the `set tree', I actually found a few errors in the `set tree' as well as in the `link tree'.    
+
+\subsection{Future Directions}
+The following are suggestions for future projects based on this project:
+\begin{enumerate}
+\item Because Modula-2 has been specified in VDM-SL by the ISO, it might be possible to use the ISO model instead of this specification's simplistic model to translate VDM-SL into Modula-2.
+\item One might also investigate the possibility of translating Modula-2 into VDM-SL in order to check the Modula-2 code using VDM-SL facilities.
+\item The toolbox can translate VDM-SL into C++ automatically.  It would be of interest to compare this C++ with hand-written C++ in terms of efficiency, reliability, etc.
+\item Another direction would be to specify a programming language specifically suited to implementing VDM-SL specifications.
+\end{enumerate}
+
+
+
+
+\newpage
+\begin{thebibliography}{VDMSL}
+
+\bibitem[BRJS]{BRJS}
+Butler, Ricky W. and Sally C. Johnson.  {\em Formal Methods for Life-Critical Software}.  American Institute of Aeronautics and Astronautics, Inc.:  Virginia, 1993.
+
+\bibitem[ELL]{ELL}
+Elmstrom, Rene, Peter Gorm Larsen and Poul Bogh Lassen.  {\em The IFAD VDM-SL Toolbox:  A Practical Approach to Formal Specification}.  The Institute of Applied Computer Science:  Denmark, 1994.
+ 
+\bibitem[HM]{HM}
+Holloway, Michael C.  {\em Why is Formal Methods Necessary?}  Available: $<$http://shemesh.larc.nasa.gov/whyfm2-basic.html$>$ (10 April 1997).
+
+\bibitem[M2]{M2}
+Andrews, D. and others.  ISO/IEC 10514-2 (International Standard).  {\em Information Technology --- Programming Languages --- Modula-2}.  ISO: Geneva, 1996.
+
+\bibitem[PL]{PL}
+Larsen, Peter Gorm.  ``Lessons Learned from Applying Formal Specifications in Industry.''  {\em IEEE Software}:  May, 1996.
+
+\bibitem[PNLP]{PNLP}
+Plat, Nico and Peter Gorm Larsen.  ``An Overview of the ISO VDM-SL Standard.'' {\em ACM SIGPLAN Notices}, vol 27 num 8, August 1992, pages 76--82.
+
+\bibitem[SI]{SI}
+Sommerville, Ian.  {\em Software Engineering}. 4th ed.  Addison-Wesley Publishing Company:  Wokingham, England, 1992.
+
+\bibitem[SR]{SR}
+Sutcliffe, Richard J. $<$mailto:rstuc@charity.twu.ca$>$.  {\em Standard Generic Modula-2}.  (Document ISO/IEC/JTC1/SC22/WG13 D235) 12 July 1996 $<$ftp://FTP.twu.ca/pub/modula2/WG13/ca101.GenericModula2CD$>$ (10 April 1997). 
+
+\bibitem[VDM]{VDM}
+D.J. Andrews and H. Bruun and B.S. Hansen and P.G. Larsen and N. Plat and others.  {\em Information Technology --- Programming Languages, their environments and system software interfaces --- Vienna Development Method-Specification Language Part 1:  Base language}.  ISO, 1995.  Draft International Standard: 13817-1.
+
+\bibitem[VDMSL]{VDMSL}
+The VDM Tool Group.  {\em The IFAD VDM-SL Language}.  Technical Report, IFAD, May 1996.  IFAD-VDM-1.  Available: $<$ftp.ifad.dk/pub/toolbox$>$ (10 April 1997).
+
+\bibitem[WD]{WD}
+Wilkins, David R.  {\em Getting Started with \LaTeX}.  Available: $<$http://www.maths.tcd.ie/~dwilkins/LaTeXPrimer/Index.html$>$ (10 April 1997).
+
+\end {thebibliography}
+
+\newpage
+\appendix
+\input{thesisapp.tex}
+\end{document}

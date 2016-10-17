@@ -1,0 +1,20 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of nat  
+Test () ==
+( dcl l : seq of nat;
+
+  let mk_(a,b,c) in set {mk_(2,2,3), mk_(3,2,10), mk_(1,2)} be st c = 10 in 
+    ( l := [a,b,c];
+      l := l ^ [c,b,a] );
+
+  let {a} in set {1, {2}, mk_(2,3)} in
+    l := l ^ [ a ];
+
+  let a in set {1,2,3,4} be st 
+    exists b2 in set {2,4,5} & b2 mod 2 = 0 and a + b2 = 7 in
+      let l2 = [a, 100] in l := l ^ l2;
+
+  return l
+)
+
+end A

@@ -1,0 +1,20 @@
+class LetBeSTExprTest
+types
+
+  A :: selid : nat
+       sel2 : bool
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = let a in set if false 
+                          then {"ABC"}
+                          else {9,8}  in a
+  in skip;
+
+------------------------------------------------------------------------------
+end LetBeSTExprTest

@@ -1,0 +1,19 @@
+class BinaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let A = "ABC",
+      s = {8,9},
+      t = true,
+      - = t in set
+         if false 
+         then A
+         else s
+  in skip;
+
+------------------------------------------------------------------------------
+end BinaryTest

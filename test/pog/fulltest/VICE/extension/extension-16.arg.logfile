@@ -1,0 +1,315 @@
+ThreadCreate -> id: 1 period: false objref: nil clnm: nil cpunm: 0 time: 0
+ThreadSwapIn -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 0
+CPUdecl ->  id: 1 expl: true sys: "SimpleEnv" name: "envCPU1"
+CPUdecl ->  id: 2 expl: true sys: "SimpleEnv" name: "envCPU2"
+DeployObj ->  objref: 1 clnm: "B" cpunm: 0 time: 0
+DeployObj ->  objref: 2 clnm: "B" cpunm: 0 time: 0
+DeployObj ->  objref: 3 clnm: "C" cpunm: 0 time: 0
+DeployObj ->  objref: 4 clnm: "C" cpunm: 0 time: 0
+DeployObj ->  objref: 2 clnm: "B" cpunm: 1 time: 0
+DeployObj ->  objref: 4 clnm: "C" cpunm: 2 time: 0
+CPUdecl ->  id: 3 expl: true sys: "Simple" name: "CPU1"
+CPUdecl ->  id: 4 expl: true sys: "Simple" name: "CPU2"
+DeployObj ->  objref: 5 clnm: "B" cpunm: 0 time: 0
+DeployObj ->  objref: 6 clnm: "C" cpunm: 0 time: 0
+BUSdecl ->  id: 1 topo: {4, 3} name: "BUS1"
+DeployObj ->  objref: 5 clnm: "B" cpunm: 3 time: 0
+DeployObj ->  objref: 6 clnm: "C" cpunm: 4 time: 0
+DeployObj ->  objref: 7 clnm: "SimpleEnv" cpunm: 0 time: 0
+DeployObj ->  objref: 8 clnm: "Simple" cpunm: 0 time: 0
+DeployObj ->  objref: 9 clnm: "C" cpunm: 0 time: 0
+DeployObj ->  objref: 10 clnm: "B" cpunm: 0 time: 0
+DeployObj ->  objref: 11 clnm: "A" cpunm: 0 time: 0
+DeployObj ->  objref: 12 clnm: "A" cpunm: 0 time: 0
+OpRequest -> id: 1 opname: "A`Test" objref: 12 clnm: "A" cpunm: 0 async: false time: 2
+OpActivate -> id: 1 opname: "A`Test" objref: 12 clnm: "A" cpunm: 0 async: false time: 2
+ThreadCreate -> id: 2 period: false objref: 5 clnm: "B" cpunm: 3 time: 4
+ThreadCreate -> id: 3 period: false objref: 6 clnm: "C" cpunm: 4 time: 8
+ThreadCreate -> id: 4 period: false objref: 2 clnm: "B" cpunm: 1 time: 12
+ThreadCreate -> id: 5 period: false objref: 4 clnm: "C" cpunm: 2 time: 16
+OpRequest -> id: 1 opname: "B`TestB#1|N" objref: 5 clnm: "B" cpunm: 0 async: false time: 22
+MessageRequest -> busid: 0 fromcpu: 0 tocpu: 3 msgid: 1 callthr: 1 opname: "B`TestB" objref: 5 size: 72 time: 22
+MessageActivate -> msgid: 1 time: 22
+MessageCompleted -> msgid: 1 time: 22
+ThreadCreate -> id: 6 period: false objref: 5 clnm: "B" cpunm: 3 time: 22
+ThreadSwapIn -> id: 6 objref: 5 clnm: "B" cpunm: 3 overhead: 2 time: 22
+ThreadSwapOut -> id: 6 objref: 5 clnm: "B" cpunm: 3 overhead: 2 time: 22
+ThreadSwapIn -> id: 2 objref: 5 clnm: "B" cpunm: 3 overhead: 2 time: 24
+OpRequest -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 24
+OpActivate -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 24
+OpCompleted -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 24
+OpRequest -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 28
+OpActivate -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 28
+OpCompleted -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 28
+OpRequest -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 32
+OpActivate -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 32
+OpCompleted -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 32
+OpRequest -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 36
+OpActivate -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 36
+OpCompleted -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 36
+OpRequest -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 40
+OpActivate -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 40
+OpCompleted -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 40
+OpRequest -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 44
+OpActivate -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 44
+OpCompleted -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 44
+OpRequest -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 48
+OpActivate -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 48
+OpCompleted -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 48
+OpRequest -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 52
+OpActivate -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 52
+OpCompleted -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 52
+OpRequest -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 56
+OpActivate -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 56
+OpCompleted -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 56
+OpRequest -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 60
+OpActivate -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 60
+OpCompleted -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 60
+OpRequest -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 64
+OpActivate -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 64
+OpCompleted -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 64
+OpRequest -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 68
+OpActivate -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 68
+OpCompleted -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 68
+OpRequest -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 72
+OpActivate -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 72
+OpCompleted -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 72
+OpRequest -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 76
+OpActivate -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 76
+OpCompleted -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 76
+OpRequest -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 80
+OpActivate -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 80
+OpCompleted -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 80
+OpRequest -> id: 2 opname: "B`IncB" objref: 5 clnm: "B" cpunm: 3 async: false time: 84
+ThreadSwapOut -> id: 2 objref: 5 clnm: "B" cpunm: 3 overhead: 2 time: 84
+ThreadSwapIn -> id: 6 objref: 5 clnm: "B" cpunm: 3 overhead: 2 time: 86
+OpActivate -> id: 6 opname: "B`TestB#1|N" objref: 5 clnm: "B" cpunm: 3 async: false time: 86
+OpRequest -> id: 6 opname: "C`TestC" objref: 6 clnm: "C" cpunm: 3 async: false time: 90
+MessageRequest -> busid: 1 fromcpu: 3 tocpu: 4 msgid: 2 callthr: 6 opname: "C`TestC" objref: 6 size: 72 time: 90
+MessageActivate -> msgid: 2 time: 90
+MessageCompleted -> msgid: 2 time: 91
+ThreadCreate -> id: 7 period: false objref: 6 clnm: "C" cpunm: 4 time: 91
+ThreadSwapIn -> id: 7 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 91
+ThreadSwapOut -> id: 7 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 91
+ThreadSwapIn -> id: 3 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 93
+OpRequest -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 93
+OpActivate -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 93
+OpCompleted -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 1093
+OpRequest -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 1097
+OpActivate -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 1097
+OpCompleted -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 2097
+OpRequest -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 2101
+OpActivate -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 2101
+OpCompleted -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 3101
+OpRequest -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 3105
+OpActivate -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 3105
+OpCompleted -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 4105
+OpRequest -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 4109
+OpActivate -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 4109
+OpCompleted -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 5109
+OpRequest -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 5113
+OpActivate -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 5113
+OpCompleted -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 6113
+OpRequest -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 6117
+OpActivate -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 6117
+OpCompleted -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 7117
+OpRequest -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 7121
+OpActivate -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 7121
+OpCompleted -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 8121
+OpRequest -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 8125
+OpActivate -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 8125
+OpCompleted -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 9125
+OpRequest -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 9129
+OpActivate -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 9129
+OpCompleted -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 10129
+OpRequest -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 10133
+OpActivate -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 10133
+OpCompleted -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 11133
+OpRequest -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 11137
+OpActivate -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 11137
+ThreadSwapOut -> id: 3 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 12137
+ThreadSwapIn -> id: 7 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 12139
+OpActivate -> id: 7 opname: "C`TestC" objref: 6 clnm: "C" cpunm: 4 async: false time: 12139
+OpCompleted -> id: 7 opname: "C`TestC" objref: 6 clnm: "C" cpunm: 4 async: false time: 12145
+ReplyRequest -> busid: 1 fromcpu: 4 tocpu: 3 msgid: 3 origmsgid: 2 callthr: 6 calleethr: 7 size: 64 time: 12145
+ThreadSwapOut -> id: 7 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 12145
+ThreadKill -> id: 7 cpunm: 4 time: 12147
+MessageActivate -> msgid: 3 time: 12146
+MessageCompleted -> msgid: 3 time: 12147
+ThreadSwapIn -> id: 3 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 12147
+OpCompleted -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 12147
+OpRequest -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 12151
+OpActivate -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 12151
+OpCompleted -> id: 6 opname: "B`TestB#1|N" objref: 5 clnm: "B" cpunm: 3 async: false time: 12155
+ReplyRequest -> busid: 0 fromcpu: 3 tocpu: 0 msgid: 4 origmsgid: 1 callthr: 1 calleethr: 6 size: 64 time: 12155
+ThreadSwapOut -> id: 6 objref: 5 clnm: "B" cpunm: 3 overhead: 2 time: 12155
+ThreadKill -> id: 6 cpunm: 3 time: 12157
+MessageActivate -> msgid: 4 time: 12155
+MessageCompleted -> msgid: 4 time: 12155
+OpRequest -> id: 1 opname: "C`TestC" objref: 6 clnm: "C" cpunm: 0 async: false time: 12161
+MessageRequest -> busid: 0 fromcpu: 0 tocpu: 4 msgid: 5 callthr: 1 opname: "C`TestC" objref: 6 size: 72 time: 12161
+MessageActivate -> msgid: 5 time: 12161
+MessageCompleted -> msgid: 5 time: 12161
+ThreadSwapOut -> id: 3 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 13151
+ThreadCreate -> id: 8 period: false objref: 6 clnm: "C" cpunm: 4 time: 13153
+ThreadSwapIn -> id: 8 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 13153
+OpActivate -> id: 8 opname: "C`TestC" objref: 6 clnm: "C" cpunm: 4 async: false time: 13153
+ThreadSwapOut -> id: 8 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 13159
+ThreadSwapIn -> id: 3 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 13161
+OpCompleted -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 13161
+ThreadSwapOut -> id: 3 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 13163
+ThreadSwapIn -> id: 8 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 13165
+OpCompleted -> id: 8 opname: "C`TestC" objref: 6 clnm: "C" cpunm: 4 async: false time: 13165
+ReplyRequest -> busid: 0 fromcpu: 4 tocpu: 0 msgid: 6 origmsgid: 5 callthr: 1 calleethr: 8 size: 64 time: 13165
+ThreadSwapOut -> id: 8 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 13165
+ThreadKill -> id: 8 cpunm: 4 time: 13167
+MessageActivate -> msgid: 6 time: 13165
+MessageCompleted -> msgid: 6 time: 13165
+ThreadSwapIn -> id: 3 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 13167
+OpRequest -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 13169
+OpActivate -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 13169
+OpRequest -> id: 1 opname: "B`TestB#1|N" objref: 2 clnm: "B" cpunm: 0 async: false time: 13173
+MessageRequest -> busid: 0 fromcpu: 0 tocpu: 1 msgid: 7 callthr: 1 opname: "B`TestB" objref: 2 size: 72 time: 13173
+MessageActivate -> msgid: 7 time: 13173
+MessageCompleted -> msgid: 7 time: 13173
+ThreadCreate -> id: 9 period: false objref: 2 clnm: "B" cpunm: 1 time: 13173
+ThreadSwapIn -> id: 9 objref: 2 clnm: "B" cpunm: 1 overhead: 2 time: 13173
+ThreadSwapOut -> id: 9 objref: 2 clnm: "B" cpunm: 1 overhead: 2 time: 13173
+ThreadSwapIn -> id: 4 objref: 2 clnm: "B" cpunm: 1 overhead: 2 time: 13175
+OpRequest -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13175
+OpActivate -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13175
+OpCompleted -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13175
+OpRequest -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13179
+OpActivate -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13179
+OpCompleted -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13179
+OpRequest -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13183
+OpActivate -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13183
+OpCompleted -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13183
+OpRequest -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13187
+OpActivate -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13187
+OpCompleted -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13187
+OpRequest -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13191
+OpActivate -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13191
+OpCompleted -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13191
+OpRequest -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13195
+OpActivate -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13195
+OpCompleted -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13195
+OpRequest -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13199
+OpActivate -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13199
+OpCompleted -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13199
+OpRequest -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13203
+OpActivate -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13203
+OpCompleted -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13203
+OpRequest -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13207
+OpActivate -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13207
+OpCompleted -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13207
+OpRequest -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13211
+OpActivate -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13211
+OpCompleted -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13211
+OpRequest -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13215
+OpActivate -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13215
+OpCompleted -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13215
+OpRequest -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13219
+OpActivate -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13219
+OpCompleted -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13219
+OpRequest -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13223
+OpActivate -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13223
+OpCompleted -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13223
+OpRequest -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13227
+OpActivate -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13227
+OpCompleted -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13227
+OpRequest -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13231
+OpActivate -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13231
+OpCompleted -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13231
+OpRequest -> id: 4 opname: "B`IncB" objref: 2 clnm: "B" cpunm: 1 async: false time: 13235
+ThreadSwapOut -> id: 4 objref: 2 clnm: "B" cpunm: 1 overhead: 2 time: 13235
+ThreadSwapIn -> id: 9 objref: 2 clnm: "B" cpunm: 1 overhead: 2 time: 13237
+OpActivate -> id: 9 opname: "B`TestB#1|N" objref: 2 clnm: "B" cpunm: 1 async: false time: 13237
+OpRequest -> id: 9 opname: "C`TestC" objref: 6 clnm: "C" cpunm: 1 async: false time: 13241
+MessageRequest -> busid: 0 fromcpu: 1 tocpu: 4 msgid: 8 callthr: 9 opname: "C`TestC" objref: 6 size: 72 time: 13241
+MessageActivate -> msgid: 8 time: 13241
+MessageCompleted -> msgid: 8 time: 13241
+ThreadSwapOut -> id: 3 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 14169
+ThreadCreate -> id: 10 period: false objref: 6 clnm: "C" cpunm: 4 time: 14171
+ThreadSwapIn -> id: 10 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 14171
+OpActivate -> id: 10 opname: "C`TestC" objref: 6 clnm: "C" cpunm: 4 async: false time: 14171
+ThreadSwapOut -> id: 10 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 14175
+ThreadSwapIn -> id: 3 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 14177
+OpCompleted -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 14177
+OpRequest -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 14181
+OpActivate -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 14181
+ThreadSwapOut -> id: 3 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 15181
+ThreadSwapIn -> id: 10 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 15183
+OpCompleted -> id: 10 opname: "C`TestC" objref: 6 clnm: "C" cpunm: 4 async: false time: 15185
+ReplyRequest -> busid: 0 fromcpu: 4 tocpu: 1 msgid: 9 origmsgid: 8 callthr: 9 calleethr: 10 size: 64 time: 15185
+ThreadSwapOut -> id: 10 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 15185
+ThreadKill -> id: 10 cpunm: 4 time: 15187
+MessageActivate -> msgid: 9 time: 15185
+MessageCompleted -> msgid: 9 time: 15185
+ThreadSwapIn -> id: 3 objref: 6 clnm: "C" cpunm: 4 overhead: 2 time: 15187
+OpCompleted -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 15187
+OpRequest -> id: 3 opname: "C`IncC" objref: 6 clnm: "C" cpunm: 4 async: false time: 15191
+OpCompleted -> id: 9 opname: "B`TestB#1|N" objref: 2 clnm: "B" cpunm: 1 async: false time: 15193
+ReplyRequest -> busid: 0 fromcpu: 1 tocpu: 0 msgid: 10 origmsgid: 7 callthr: 1 calleethr: 9 size: 64 time: 15193
+ThreadSwapOut -> id: 9 objref: 2 clnm: "B" cpunm: 1 overhead: 2 time: 15193
+ThreadKill -> id: 9 cpunm: 1 time: 15195
+MessageActivate -> msgid: 10 time: 15193
+MessageCompleted -> msgid: 10 time: 15193
+OpRequest -> id: 1 opname: "C`TestC" objref: 4 clnm: "C" cpunm: 0 async: false time: 15201
+MessageRequest -> busid: 0 fromcpu: 0 tocpu: 2 msgid: 11 callthr: 1 opname: "C`TestC" objref: 4 size: 72 time: 15201
+MessageActivate -> msgid: 11 time: 15201
+MessageCompleted -> msgid: 11 time: 15201
+ThreadCreate -> id: 11 period: false objref: 4 clnm: "C" cpunm: 2 time: 15201
+ThreadSwapIn -> id: 11 objref: 4 clnm: "C" cpunm: 2 overhead: 2 time: 15201
+ThreadSwapOut -> id: 11 objref: 4 clnm: "C" cpunm: 2 overhead: 2 time: 15201
+ThreadSwapIn -> id: 5 objref: 4 clnm: "C" cpunm: 2 overhead: 2 time: 15203
+OpRequest -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 15203
+OpActivate -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 15203
+OpCompleted -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 16203
+OpRequest -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 16207
+OpActivate -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 16207
+OpCompleted -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 17207
+OpRequest -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 17211
+OpActivate -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 17211
+OpCompleted -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 18211
+OpRequest -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 18215
+OpActivate -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 18215
+OpCompleted -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 19215
+OpRequest -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 19219
+OpActivate -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 19219
+OpCompleted -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 20219
+OpRequest -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 20223
+OpActivate -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 20223
+OpCompleted -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 21223
+OpRequest -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 21227
+OpActivate -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 21227
+OpCompleted -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 22227
+OpRequest -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 22231
+OpActivate -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 22231
+OpCompleted -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 23231
+OpRequest -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 23235
+OpActivate -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 23235
+OpCompleted -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 24235
+OpRequest -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 24239
+OpActivate -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 24239
+OpCompleted -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 25239
+OpRequest -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 25243
+OpActivate -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 25243
+OpCompleted -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 26243
+OpRequest -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 26247
+OpActivate -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 26247
+ThreadSwapOut -> id: 5 objref: 4 clnm: "C" cpunm: 2 overhead: 2 time: 27247
+ThreadSwapIn -> id: 11 objref: 4 clnm: "C" cpunm: 2 overhead: 2 time: 27249
+OpActivate -> id: 11 opname: "C`TestC" objref: 4 clnm: "C" cpunm: 2 async: false time: 27249
+OpCompleted -> id: 11 opname: "C`TestC" objref: 4 clnm: "C" cpunm: 2 async: false time: 27255
+ReplyRequest -> busid: 0 fromcpu: 2 tocpu: 0 msgid: 12 origmsgid: 11 callthr: 1 calleethr: 11 size: 64 time: 27255
+ThreadSwapOut -> id: 11 objref: 4 clnm: "C" cpunm: 2 overhead: 2 time: 27255
+ThreadKill -> id: 11 cpunm: 2 time: 27257
+MessageActivate -> msgid: 12 time: 27255
+MessageCompleted -> msgid: 12 time: 27255
+ThreadSwapIn -> id: 5 objref: 4 clnm: "C" cpunm: 2 overhead: 2 time: 27257
+OpCompleted -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 27257
+OpRequest -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 27261
+OpActivate -> id: 5 opname: "C`IncC" objref: 4 clnm: "C" cpunm: 2 async: false time: 27261
+OpCompleted -> id: 1 opname: "A`Test" objref: 12 clnm: "A" cpunm: 0 async: false time: 27263
+ThreadSwapOut -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 27265

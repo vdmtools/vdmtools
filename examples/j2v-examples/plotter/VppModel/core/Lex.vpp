@@ -1,0 +1,101 @@
+class Lex is subclass of JavaLangObject
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("Lex" , <CLASS> , false  )
+instance variables 
+  public  static NULL : int  := -2;
+  public  static EOL : int  := -1;
+  public  static PLUS : int  := 0;
+  public  static MINUS : int  := 1;
+  public  static MUL : int  := 2;
+  public  static DIV : int  := 3;
+  public  static POW : int  := 4;
+  public  static LEFT : int  := 5;
+  public  static RIGHT : int  := 6;
+  public  static ARG : int  := 7;
+  public  static e : int  := 8;
+  public  static pi : int  := 9;
+  public  static ABS : int  := 10;
+  public  static ACOS : int  := 11;
+  public  static ASIN : int  := 12;
+  public  static ATAN : int  := 13;
+  public  static CEIL : int  := 14;
+  public  static COS : int  := 15;
+  public  static EXP : int  := 16;
+  public  static FLOOR : int  := 17;
+  public  static LOG : int  := 18;
+  public  static SIN : int  := 19;
+  public  static SQRT : int  := 20;
+  public  static TAN : int  := 21;
+  public  static UMINUS : int  := 22;
+  public  static NUM : int  := 23;
+  public  lexem : JavaLangString := new  JavaLangString(<NIL>);
+  public  number : real ;
+  static lexems : map  int  to  JavaLangString := {22 |-> new  JavaLangString("u-") , 21 |-> new  JavaLangString("tan") , 20 |-> new  JavaLangString("sqrt") , 19 |-> new  JavaLangString("sin") , 18 |-> new  JavaLangString("log") , 17 |-> new  JavaLangString("floor") , 16 |-> new  JavaLangString("exp") , 15 |-> new  JavaLangString("cos") , 14 |-> new  JavaLangString("ceil") , 13 |-> new  JavaLangString("atan") , 12 |-> new  JavaLangString("asin") , 11 |-> new  JavaLangString("acos") , 10 |-> new  JavaLangString("abs") , 9 |-> new  JavaLangString("PI") , 8 |-> new  JavaLangString("E") , 7 |-> new  JavaLangString("arg") , 6 |-> new  JavaLangString(")") , 5 |-> new  JavaLangString("(") , 4 |-> new  JavaLangString("^") , 3 |-> new  JavaLangString("/") , 2 |-> new  JavaLangString("*") , 1 |-> new  JavaLangString("-") , 0 |-> new  JavaLangString("+")};
+  string : JavaLangString := new  JavaLangString(<NIL>)
+operations 
+public  getLex : () ==> int 
+getLex() == 
+( dcl   lexcode : int  := -1,
+        lexlen : int  := 0;
+  string := string.trim();
+  if  string.equals(new  JavaLangString([  ]))
+  then  
+    return  -1;
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip ,
+      others  -> 
+        exit  j2v_break
+    end  
+  in  
+    ( ( dcl   i : int  := 0;
+        while  i < (card  dom  lexems) do  
+        ( if  string.startsWith(lexems(i))
+          then  
+            ( lexcode := i;
+              lexlen := lexems(i).length();
+              exit  new  J2V_Break()
+            ) ;
+          i := i+1
+        ) 
+      ) 
+    ) ;
+  if  lexcode = -1
+  then  
+    ( if  JavaLangCharacter`isDigit(string.charAt(0))
+      then  
+        ( dcl   i : int ;
+          i := 0;
+          while  i < string.length() and  (JavaLangCharacter`isDigit(string.charAt(i)) or  string.charAt(i) = '.') do  
+          ( skip ;
+            i := i+1
+          ) ;
+          lexlen := i;
+          lexcode := NUM;
+          number := (JavaLangDouble`valueOf(string.substring(0 , lexlen))).doubleValue()
+        ) 
+      else  
+        ( exit  new  MyException(J2VUTIL`ConcatStr(new  JavaLangString("Unknown lexem, ") , string))
+        ) 
+    ) ;
+  lexem := string.substring(0 , lexlen);
+  string := string.substring(lexlen , string.length());
+  return  lexcode
+) ;
+
+public  Lex : <NIL> ==> Lex
+Lex(-) == 
+isNil := true  ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  Lex : JavaLangString ==> Lex
+Lex(str) == 
+( string := str
+) ;
+
+
+end  Lex

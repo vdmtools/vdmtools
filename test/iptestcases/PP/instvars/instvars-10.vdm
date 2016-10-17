@@ -1,0 +1,52 @@
+class A
+
+instance variables
+public  b        : bool;
+public  k        : nat := 3;
+public  j        : nat := 0;
+public  l        : nat := 4;
+public  m        : nat := 2;
+public  q        : <YES> | <NO>;
+
+public  d : B;
+
+
+end A
+
+
+class B
+
+instance variables
+
+  e : A;
+  d : nat
+
+operations
+
+  UpdateE: A ==> ()
+  UpdateE(a) ==
+   ( e := a;
+     d := 405 );
+
+
+  m: () ==> B
+  m() ==
+  ( dcl b : B := new B();
+    dcl a : A := new A();
+    b.UpdateE(a);
+    return b;
+  );
+
+  GetD: () ==> nat 
+  GetD() ==
+    return d;
+
+
+  public Test : () ==> nat
+  Test() ==
+  ( dcl c: B := new B().m(),
+        res : nat;
+    res:= c.GetD();
+    return res
+  )
+end B

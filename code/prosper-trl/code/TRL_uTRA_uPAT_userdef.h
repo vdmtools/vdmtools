@@ -1,0 +1,3 @@
+
+#define TAG_TRL_uTRA_uPAT  1500000
+

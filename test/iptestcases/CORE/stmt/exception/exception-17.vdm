@@ -1,0 +1,12 @@
+class A
+
+operations
+public Test : () ==> int 
+Test() ==
+  trap e:seq of char with return len e
+  in
+    if false
+    then return 1
+    else exit "abc"
+
+end A

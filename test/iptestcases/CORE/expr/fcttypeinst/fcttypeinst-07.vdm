@@ -1,0 +1,66 @@
+class A
+
+operations
+public
+Test: () ==> seq of bool
+Test() ==
+  return [t0(), t1(), t2(), t3(), t4(), t5(), t6()];
+
+functions
+filter1[@T]: seq of @T -> seq of @T
+filter1(s) ==
+[s(i) | i in set inds s & mod2(s(i))];
+
+filter2[@T]: (@T -> bool) * seq of @T -> seq of @T
+filter2(f,s) ==
+[s(i) | i in set inds s & f(s(i))];
+
+public filter3[@T]: (@T -> bool) -> seq of @T -> seq of @T
+filter3(f)(s) == [s(i) | i in set inds s & f(s(i))];
+
+mod2 : nat -> bool
+mod2(n) == n mod 2 = 0;
+
+public makeOrderMap : seq of bool +> map nat to bool
+makeOrderMap(s) == {i |-> s(i) | i in set inds s};
+
+public run : () -> seq of char * bool * map nat to bool
+run() ==
+let testcases = [t0(), t1(), t2(), t3(), t4(), t5(), t6()],
+testResults = makeOrderMap(testcases)
+in
+mk_("The result of regression test = ", forall i in set inds testcases & testcases(i), testResults);
+
+
+public t0 : () -> bool
+t0() == filter1[nat]([1,2,3,4,5,6]) = [2, 4, 6];
+
+public t1 : () -> bool
+t1() == filter2[nat](lambda x:nat & x mod 2 = 0, [1,2,3,4,5,6]) = [2, 4, 6];
+
+public t2 : () -> bool
+t2() == filter3[int](lambda x:int & x > 0)([1,2,-3,4,5,-6]) = [1,2,4,5];
+
+public t3 : () -> bool
+t3() == filter3[int](lambda x:int & x > 0)(
+filter3[int](lambda x:int & x mod 2 = 0)([1,2,-3,4,5,-6])
+) = [2, 4];
+
+public t4 : () -> bool
+t4() ==
+let f1 = filter3[int](lambda x:int & x > 0),
+f2 = filter3[int](lambda x:int & x mod 2 = 0),
+f9 = f1 comp f2
+in
+f9([1,2,-3,4,5,-6]) = [2, 4];
+
+public t5 : () -> bool
+t5() ==
+(filter3[int](lambda x:int & x > 0) comp filter3[int](lambda x:int & x mod 2 = 0)) ([1,2,-3,4,5,-6]) = [2, 4];
+
+public t6 : () -> bool
+t6() ==
+((filter3[int](lambda x:int & x > 0)) comp (filter3[int](lambda x:int & x mod 2 = 0))) ([1,2,-3,4,5,-6]) = [2, 4];
+
+end A
+

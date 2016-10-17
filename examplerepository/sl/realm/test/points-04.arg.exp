@@ -1,0 +1,2 @@
+{ mk_DefaultMod`NPoint( 1,9 ),
+  mk_DefaultMod`NPoint( 2,3 ) }

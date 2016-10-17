@@ -1,0 +1,964 @@
+%%
+%% Toolbox Language Manual
+%% $Id: install.tex,v 1.3 2006/04/19 10:30:10 vdmtools Exp $
+%% 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PDF compatibility code. 
+
+\makeatletter
+\newif\ifpdflatex@
+\ifx\pdftexversion\@undefined
+\pdflatex@false
+%\message{Not using pdf}
+\else
+\pdflatex@true
+%\message{Using pdf}
+\fi
+
+\newcommand{\latexpdf}[2]{
+  \ifpdflatex@ #1
+  \else #2
+  \fi
+}
+
+\newcommand{\latexorpdf}[2]{
+  \ifpdflatex@ #2
+  \else #1
+  \fi
+}
+
+#ifdef A4Format
+\newcommand{\pformat}{a4paper}
+#endif A4Format
+#ifdef LetterFormat
+\newcommand{\pformat}{letterpaper}
+#endif LetterFormat
+
+\makeatother
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\latexorpdf{
+\documentclass[\pformat,12pt]{article}
+}{
+% pdftex option is used by graphic[sx],hyperref,toolbox.sty
+\documentclass[\pformat,pdftex,12pt]{article}
+}
+
+\usepackage[dvipdfm]{graphicx, color}
+\usepackage[dvipdfm,bookmarks=true,bookmarksnumbered=true,colorlinks,plainpages=true]{hyperref}
+\usepackage{toolbox}
+\usepackage{vdmsl-2e}
+\usepackage{alltt}
+%\usepackage{graphics}
+%\usepackage{path}
+%\usepackage{palatino}
+\usepackage{ifthen}
+\usepackage{verbatimfiles}
+
+#ifdef VDMPP
+\usepackage{vpp}
+#endif VDMPP
+
+\graphicspath{{figures/}}
+
+% Ueki change start
+#ifdef JPN
+\AtBeginDvi{\special{pdf:tounicode 90ms-RKSJ-UCS2}}
+#endif JPN
+
+\def\seename{$\Rightarrow$}
+% Ueki change end
+
+% Ueki delete start
+%\latexorpdf{
+%\usepackage[plainpages=true,colorlinks,linkcolor=black,citecolor=black,pagecolor=black, urlcolor=black]{hyperref}
+%}{
+%\usepackage[plainpages=true,colorlinks]{hyperref}
+%}
+% Ueki delete end
+
+\makeindex
+
+\def\vdmsl{{\small VDM-SL}}
+\def\vdmpp{{\small VDM++}}
+
+#ifdef VDMSL
+\newcommand{\ifSLPP}[2]{#1-$<$version$>$}
+\newcommand{\vdmslpp}{VDM-SL}
+\newcommand{\vdmslppEm}{VDM-SL}
+\newcommand{\Toolbox}{VDMTools}
+\newcommand{\toolbox}{Toolbox}
+\newcommand{\vdmde}{vdmde}
+\newcommand{\vdmgde}{vdmgde}
+\newcommand{\vdmhome}{vdmhome}
+\newcommand{\vdmdeNineteenEl}{vdmde.el}
+\newcommand{\VdmSlPp}{\VdmSl}
+#endif VDMSL
+#ifdef VDMPP
+\newcommand{\ifSLPP}[2]{#2-<version>}
+\newcommand{\vdmslpp}{VDM++}
+\newcommand{\vdmslppEm}{VDM\/++}
+\newcommand{\Toolbox}{VDMTools}
+\newcommand{\toolbox}{toolbox}
+\newcommand{\vdmde}{vppde}
+\newcommand{\vdmgde}{vppgde}
+\newcommand{\vdmhome}{vpphome}
+\newcommand{\vdmdeNineteenEl}{vppde.el}
+\DeclareRobustCommand{\VdmSlPp}{VDM++-\VdmSl}
+#endif VDMPP
+#ifdef VDMVICE
+\newcommand{\ifSLPP}[2]{#2-<version>}
+\newcommand{\vdmslpp}{VDM++}
+\newcommand{\vdmslppEm}{VDM\/++}
+\newcommand{\Toolbox}{VDMTools}
+\newcommand{\toolbox}{toolbox}
+\newcommand{\vdmde}{vppde}
+\newcommand{\vdmgde}{vppgde}
+\newcommand{\vdmhome}{vpphome}
+\newcommand{\vdmdeNineteenEl}{vppde.el}
+\DeclareRobustCommand{\VdmSlPp}{VDM++-\VdmSl}
+#endif VDMVICE
+\newcommand{\cg}{\vdmslpp\raisebox{-0.6ex}{to}C++Code Generator}
+%\newcommand{\licensedat}{\texttt{license.dat}}
+
+% The use of VDMSL/VDMPP ifdef's have basicly been exchanged with the
+% use of LaTeX ifthenelse's.  For this two LaTeX boolean value VDMSL and
+% VDMpp have been defined  (Lowercase p's are used to avoid conflict with
+% the VDMPP environment variable.  The typical use are:
+%   \ifthenelse{\boolean{VDMsl}}{vdmsl-text}{vdmpp-text}
+%   \ifthenelse{\boolean{VDMsl}}{vdmsl-text}{}
+%   \ifthenelse{\boolean{VDMpp}}{vdmpp-text}{}
+% The advantage of this as opposed to ifdef's is that within a general
+% paragraph specific VDM-SL and VDM++ parts can be distinguished without
+% problematic empty lines.
+% 
+% The values are initialised such that exactly one of the values is true
+% and the other is false.  This should hopefully avoid strange behaviour
+% due to possible preprossing errors.  The default case is VDM-SL.
+\newboolean{VDMsl}
+\setboolean{VDMsl}{true}
+\newboolean{VDMpp}
+\setboolean{VDMpp}{false}
+#ifdef VDMSL
+\setboolean{VDMsl}{true}
+\setboolean{VDMpp}{false}
+#endif VDMSL
+#ifdef VDMPP
+\setboolean{VDMpp}{true}
+\setboolean{VDMsl}{false}
+#endif VDMPP
+
+\newcommand{\AfterInit}[1]{}
+%Initialisation must be performed before
+%  {\tt #1} can be called.}
+
+% This macro can be used in `description' lists where
+% the item given to `meti' is put on its own line,
+% thereby giving proper (nicer) identation to the
+% explanation.
+\newcommand{\meti}[1]{\item[#1]\mbox{}\\}
+
+\newcommand{\Index}[1]{#1\index{#1}}
+
+\newcommand{\Lit}[1]{`#1\Quote}
+\newcommand{\Rule}[2]{
+  \begin{quote}\begin{tabbing}
+    #1\ \ \= = \ \ \= #2  ; %    Adds production rule to index
+  \end{tabbing}\end{quote}
+  }
+\newcommand{\SeqPt}[1]{\{\ #1\ \}}
+\newcommand{\lfeed}{\\ \> \>}
+\newcommand{\OptPt}[1]{[\ #1\ ]}
+\newcommand{\dsepl}{\ $|$\ }
+\newcommand{\dsep}{\\ \> $|$ \>}
+\newcommand{\Lop}[1]{\Lit{\kw{#1}}}
+\newcommand{\Sig}[1]{\Lit{{\tt #1}}}
+\newcommand{\blankline}{\vspace{\baselineskip}}
+\newcommand{\Brack}[1]{(\ #1\ )}
+\newcommand{\nmk}{\footnotemark}
+\newcommand{\ntext}[1]{\footnotetext{{\bf Note: } #1}}
+
+
+%\usepackage[dvips]{color}
+%\usepackage{longtable}
+%\usepackage{float}
+%\definecolor{covered}{rgb}{0,0,0}     %black
+%\definecolor{not_covered}{gray}{0.5}  %gray
+
+%\restylefloat{figure}
+\setcounter{topnumber}{3}
+\def\topfraction{1.0}
+\setcounter{bottomnumber}{3}
+\def\bottomfraction{1.0}
+\setcounter{totalnumber}{3}
+\def\textfraction{.1}
+
+
+
+\newlength{\keywwidth}
+
+\newcommand{\xfigpicture}[4]{
+\begin{figure}[hbt]
+\setlength{\unitlength}{1mm}
+\begin{center}
+\mbox{
+\begin{picture}(#1,#2)
+\put(0,0){\special{psfile=#3 hscale=70 vscale=55}}
+\end{picture} }
+\end{center}
+\caption{#4}
+\end{figure}
+}
+
+\newcommand{\qq}{\marginpar{\bf ???}}
+\newcommand{\aaa}{\tt }
+\newcommand{\cmd}{\tt }
+%\newcommand{\id}[1]{%
+%  \settowidth{\keywwidth}{\tt #1}%
+%  \protect\makebox[\keywwidth][l]{{\it #1}}}
+%\nolinenumbering
+
+\begin{document}
+\vdmtoolsmanualcsk{\vdmslpp\ インストールマニュアル}
+         {\ifthenelse{\boolean{VDMsl}}{v8.0}{v8.0}}
+         {2007}
+         {\vdmslpp}
+         {1.1}
+
+%%\pagenumbering{roman}
+%%\tableofcontents\label{endtofc}
+%%\ifthenelse{\isodd{\value{page}}}{\mbox{}\newpage}{}
+%%\mbox{}
+%%\newpage
+%%\pagenumbering{arabic}
+
+%%\parskip2ex
+%%\parindent0mm
+
+\section{導入} \label{introduction}
+
+本書は \Toolbox\ のインストール方法についてのマニュアルです。 \Toolbox\ は以下のプラットフォームで
+インストールすることが出来ます:
+
+\begin{itemize}
+\item Linux GNU gcc 3.2 ～ 4.1版、Mac OS X 10.4 上で gcc 4 版。。
+%\item Dec cxx version 6.0-021 on DEC Alpha OSF1 v4.0d, or
+\item Windows 2000/XP/Vista 上でVisual C++ 2005 Express Edition SP1 版、及びWindows Platform SDK。
+\end{itemize}
+
+
+%An installation of \Toolbox\ consists of these three components: 
+\Toolbox\ のインストールは以下の要素から成ります.
+
+\begin{itemize}
+\item \Toolbox\ アプリケーション
+%\item the license file, and
+%\item a license server\index{license!server}. 
+\end{itemize}
+
+%The license file (typically named \licensedat) determines how you are
+%allowed to use \Toolbox\ (how many users can use it, and when the
+%license expires).  With an evaluation license file it is possible to
+%run any number of simultaneous sessions whereas a purchased copy of
+%\Toolbox\ will be installed with a license file that only allows a
+%limited number of simultaneous sessions. To maintain this purchased
+%copies must be installed with a license server\index{license!server}
+%program which will monitor that the license conditions are not
+%violated. The license server is not needed for an evaluation license
+%file.
+
+このマニュアルでは、WindowsプラットフォームとUnixプラットフォームのインストール
+方法について述べます。
+%VDMToolsのインストール説明は、WindowsプラットフォームとUnixプラットフォームの
+%2種類に分けられます。
+
+\newpage
+%\section{How to get a License File}
+
+%\subsection{A Free Evaluation License}
+
+%You can get a free evaluation license to \Toolbox, just contact CSK
+%(see how on the coverpage).  CSK will then send you a free one-month
+%evaluation license.
+
+%\subsection{A Purchased License}
+
+%A purchased license needs a server to run the license manager,
+%therefore specific information about this server must be provided.
+%This information is the IP address for Windows platforms and the
+%hostid for Unix platforms. The information can be accessed in the
+%following way:
+
+%\begin{description}
+%\item[IP address on the Windows Platform:] You can find the IP address
+%  this way:
+%  \begin{enumerate}
+%  \item From the {\em Start\/} menu open {\em Settings\/} and choose
+%    the Control Panel folder,
+%  \item then open the {\em Network} folder.
+%  \item then choose the {\em Protocols Tab},
+ % \item and press the {\em Properties\/} button.
+ % \item Here you will find the IP address.
+ % \end{enumerate}
+  
+%\item[Hostid on the Unix Platform:] You can find the hostid by typing
+%  {\tt hostid} on the machine that you want to run as the license
+%  server.
+%\end{description}
+
+%Send either the IP address for your Windows machine or the hostid for
+%your Unix machine to CSK (see how on the coverpage), and we will send
+%you a purchased license file.
+
+
+
+\newpage
+\section{Windowsプラットフォーム上でのインストール方法}
+\label{install-win32}
+
+
+% Remember \Index{install-nt}!!!!!!
+
+この章では、 \Toolbox\ をWindowsプラットフォーム上でインストールするための
+手順を説明します。\\
+\emph{注意: \Toolbox\ は使用する個々のコンピュータにインストールが必要です。また、
+            サーバー上でのインストールや、実行は出来ません。}
+
+% The \licensedat\ file is used both by the \Toolbox\ appplication and
+% by the license server, therefore it must be stored on the file system
+% such that it is always accessible by these applications.
+
+% The \Toolbox\ installation consists of the following two steps.
+\Toolbox\ のインストールは以下の手順にて行います。
+
+\begin{enumerate}
+\item \Toolbox\ のインストールはダウンロードしたEXEファイルの実行によりインストールが行われます。
+『next』を押してください。
+%インストールプログラムによって、インストールディレクトリの作成を指示されます。
+
+#ifdef VDMPP
+\begin{center}
+\includegraphics[scale=0.5, bb=0 0 466 363, clip]{install_pp_start.png}
+\end{center}
+#endif VDMPP
+#ifdef VDMSL
+\begin{center}
+\includegraphics[width=8cm, bb=0 -30 640 480]{install_sl_start.png}
+\end{center}
+#endif VDMSL
+
+\item 保存するディレクトリを選択し、『next』を押してください。
+
+#ifdef VDMPP
+\begin{center}
+\includegraphics[scale=0.5,bb=0 0 466 364]{install_pp_second.png}
+\end{center}
+#endif VDMPP
+#ifdef VDMSL
+\begin{center}
+\includegraphics[width=8cm,bb=0 -30 640 480]{install_sl_second.png}
+\end{center}
+#endif VDMSL
+
+
+\item インストールを開始する場合は『next』を押してください。
+前に戻る場合は『back』を押してください。
+
+#ifdef VDMPP
+\includegraphics[width=8cm,bb=0 -30 640 480]{install_pp_third.png}
+#endif VDMPP
+#ifdef VDMSL
+\includegraphics[width=8cm,bb=0 -30 640 480]{install_sl_third.png}
+#endif VDMSL
+
+\item 『next』を押すとインストールが始まります。
+
+#ifdef VDMPP
+\includegraphics[width=8cm,bb=0 0 640 480]{install_pp_bar.png}
+#endif VDMPP
+#ifdef VDMSL
+\includegraphics[width=8cm,bb=0 0 640 480]{install_sl_bar.png}
+#endif VDMSL
+
+\item インストールが終了したら、『Finish』を押してインストール完了です。
+
+#ifdef VDMPP
+\includegraphics[width=8cm,bb=0 -30 640 480]{install_pp_finish.png}
+#endif VDMPP
+#ifdef VDMSL
+\includegraphics[width=8cm,bb=0 -30 640 480]{install_sl_finish.png}
+#endif VDMSL
+
+  % and
+ % if you are not already using FLEXlm it will prompt for the full file
+ % name of the \licensedat\ file. 
+  
+ % The license file need not exist at
+ % the time of installation, but it must exist before \Toolbox\ can be
+ % started. The value (the full file name of the \licensedat\ file)
+ % will be stored in the environment variable LM\_LICENSE\_FILE. On the
+%  Windows 98 platform this will be set in the \texttt{autoexec.bat}
+%  file, and on the Windows 2000/NT platform this will be set in the
+%  Control Panel. When uninstalling \Toolbox\ the LM\_LICENSE\_FILE
+%  variable will not be unset, in this way it is possible to use same
+%  license file for several products.
+
+
+%\item For an evaluation license file: Copy the license file to the path
+%  you specified above. 
+
+%\item For a purchased license file: 
+  
+%  \begin{itemize}
+%  \item In the subdirectory \texttt{lm} of the \Toolbox\ installation
+%    directory you will find an executable \texttt{flexlminstall.exe}.
+%    Copy this executable to the license server machine and run it. It
+%    will ask for the destination directory (default \verb-c:\flexlm-)
+%    and then install the files into this directory. Copy the license
+%    file to the same directory.
+  
+%  \item From the {\em Start\/} menu open {\em Settings\/} and choose
+%    the Control Panel folder and from here start {\em FLEXlm
+%      License Manager}.
+  
+%    Choose {\em Setup\/} and fill out the paths of \texttt{lmgrd.exe},
+%    \licensedat, and the log file, \texttt{Debug.log}, to be the
+%    destination installation directory. \\
+%    {\em Do not choose the \texttt{lmgrd95.exe} file instead of
+%      \texttt{lmgrd.exe}, on any Windows platform.}
+    
+%  \item On Windows 98 you should select {\em Start server at Power
+%      Up\/} and on Windows 2000 and NT you should choose {\em Use NT Service}.
+  
+%    Then choose the {\em Licenses\/} tab and press {\em Show License
+%      File\/}; please check that the path to \texttt{ifad.exe} is the
+%    same as the path you installed FLEXlm in.
+  
+%    Choose the {\em Control\/} tab and press the {\em Start\/} button.
+%    It will say ``server started''; then verify that the server
+%    started properly by pressing the {\em Status\/} button. It should
+%    answer something like ``host: license server UP (MASTER)''.
+%    Otherwise check the \texttt{Debug.log} file to see what went
+%    wrong.
+    
+%  \item Finally copy the \licensedat\ file to the directory on the
+%    client machines that were designated to contain it.
+%  \end{itemize}
+\end{enumerate}
+
+#ifdef VDMPP
+
+%\subsection{Installing the VDM++ Add-In for Rational Rose}
+\subsection{VDM++の拡張であるRational Roseのインストール}
+
+%If Rational Rose (Rose 98 or Rose 2000) is already installed on your
+%Windows system, the VDM++ add-in will automatically be added to the Rose
+%environment when installing the \Toolbox{}. The VDM++ add-in will
+%automatically be registered in the Windows registry for Rational Rose.
+すでにRational Rose (Rose 98 or Rose 2000)がWindowsシステム内にインストールされているならば、
+VDM++拡張は \Toolbox{}をインストールしたときに自動的に追加されます。
+また、VDM++拡張はRational RoseをWindowsレジストリに登録します。
+
+%If the Toolbox is installed before Rose, the user has to
+%use the following steps to install the VDM++ add-in:
+Roseよりも先に\Toolbox{}をインストールした場合は、VDM++拡張をインストールするために
+以下の手順を行なう必要があります。
+
+\begin{enumerate}
+\item Roseをインストールします。
+
+\item {\tt inst\_addin.exe}というファイル名のインストールプログラムを実行します。
+そのファイルは、The VDM++ Toolbox内の {\tt uml} のサブフォルダ内に存在します。
+VDM++拡張はその時にRational RoseをWindowsレジストリに登録します。
+
+%Run the installation program named {\tt inst\_addin.exe}.
+%This can be found in the {\tt uml} subdirectory of the VDM++ Toolbox installation.
+%The VDM++ add-in will then
+%automatically be registered in the Windows registry for Rational Rose.
+
+\item Roseを再起動します。その後、拡張を起動し、Roseの管理メニューから確認してください。
+
+%Restart Rose. Confirm that your add-in is activated via the Add-In
+%Manager menu of Rose.
+
+\end{enumerate}
+
+#endif VDMPP
+
+%\subsection{Trouble Shooting on Windows}
+
+%This section enumerates the currently known problems and limitations
+%specific to the installation of \Toolbox\ on Windows systems:
+
+%\begin{itemize}
+%\item UNC network paths (\verb-\\host\share\path\...-) are not
+%  supported and will cause error messages from the GUI, like ``Error:
+%  ``\verb-\\host\share-'' must be an absolute pathname''. 
+
+%  A workaround for this problem is to map the UNC path to a drive
+%  letter. 
+%#ifdef VDMPP
+%\item An error looking like the one in Figure~\ref{fig:corbaerror} is
+%  caused by the absence of a TCP/IP connection and/or network adapter
+%  on the client machine.
+%  \begin{figure}[htbp]
+%    \begin{center}
+%      \resizebox{10cm}{!}{\includegraphics{corbaerror}}
+%      \caption{Error caused by absence of TCP/IP}\label{fig:corbaerror}
+%    \end{center}
+%  \end{figure}
+
+%  A workaround for this problem is as follows
+%  \begin{enumerate}
+%  \item Enable TCP/IP:
+%    \begin{itemize}
+%    \item Open Control Panel - Double click on Network;
+%    \item Select Protocol tab;
+%    \item Select TCP/IP Protocol (Windows installation CD might be
+%          required).
+ %   \end{itemize}
+
+%  \item Set the environment variable \verb+OMNIORB_USEHOSTNAME+ to 127.0.0.1:
+%    \begin{itemize}
+%    \item Open Control Panel - Double click on System;
+%    \item Select Environment tab;
+%    \item Create variable \verb+OMNIORB_USEHOSTNAME+;
+ %   \item Set value to 127.0.0.1
+ %   \end{itemize}
+ % \end{enumerate}
+
+%#endif // VDMPP
+  
+%\item An error looking like the one in Figure~\ref{fig:licpatherror}
+%  can be caused by two things:
+%  \begin{figure}[htbp]
+%    \begin{center}
+ %     \resizebox{10cm}{!}{\includegraphics{licenseerror}}
+ %     \caption{Error caused by wrong path of the LM\_LICENSE\_FILE variable 
+ %       or that the variable is not accessible yet.\label{fig:licpatherror}}
+ %   \end{center}
+ % \end{figure}
+ % \begin{enumerate}
+ % \item The filename of the LM\_LICENSE\_FILE variable in the
+ %   Control Panel (on Windows 2000/NT) or \texttt{autoexec.bat} (on
+ %   Windows 98) is either wrong or its path is wrong.
+    
+%    In this case make sure that the filename in LM\_LICENSE\_FILE
+%    variable is \licensedat\ containing the entire path to where it is
+%    stored on the file system.
+
+%  \item The LM\_LICENSE\_FILE is not accessible yet.
+    
+ %   In this case either make sure that the LM\_LICENSE\_FILE variable
+%    is accessible or reboot the machine. On Windows NT the
+%    LM\_LICENSE\_ FILE %%Note the extra space to allow meaningful line break.
+%    variable can be made accessible from within {\em
+%      Start$\rightarrow$Settings$\rightarrow$
+%    Control %%Note the extra space to allow meaningful line break.
+%    Panel$\rightarrow$System\/} by pressing the {\em Apply\/} button.
+%  \end{enumerate}
+  
+%\item An error looking like the one in Figure~\ref{fig:licdirerror}
+%  can be caused by the name of the LM\_LICENSE\_FILE variable in the
+%  Control Panel (on Windows 2000/NT) or \texttt{autoexec.bat} (on
+%  Windows 98) is the name of the directory, where the \licensedat\ file
+%  is stored.
+
+ % \begin{figure}[htbp]
+%    \begin{center}
+%      \resizebox{10cm}{!}{\includegraphics{licensedirerror}}
+%      \caption{Error caused by path alone given to the LM\_LICENSE\_FILE 
+%        variable.\label{fig:licdirerror}}
+%    \end{center}
+%  \end{figure}
+  
+%  In this case add the \licensedat\ filename to the pathname in the
+%  LM\_LICE NSE\_FILE variable. %%Note the extra space to allow meaningful line break.
+
+%\end{itemize}
+
+
+\newpage
+\section{Unixプラットフォーム上でのインストール方法}
+
+%The description of how to \Index{install} \Toolbox\ is separated into
+%two sections, one for installing \Index{evaluation copies}
+%(Section~\ref{evalinstall}) and one for installing \Index{purchased
+%  copies} (Section~\ref{purchinstall}).  Furthermore,
+%Section~\ref{sec:emacsinstall} describes how to install \Toolbox\ 
+%within Emacs, and Section~\ref{sec:unixtroubleshoot}.
+
+
+%\subsection{Installing an Evaluation Copy of VDMTools}\label{evalinstall}
+%
+%\begin{enumerate}
+%
+%\item Create a directory {\tt \vdmhome} to hold \Toolbox.
+%  
+%\item Read in the discs or the files downloaded from CSK's WWW or
+%  ftp server in the {\tt \vdmhome} directory with the {\tt tar}
+%  command.  This will create a number of files which must be installed
+%  explicitly as described in the following steps.
+%  
+%\item Install the executables {\tt bin/\vdmde} and {\tt bin/\vdmgde}
+%  either by moving them to your standard binary directory or by
+%  including the directory {\tt \vdmhome/bin} in your search-path.
+%  
+%\item In order to use the graphical user interface, {\tt \vdmgde}, you
+%  must set the environment variables:
+%
+%#ifdef VDMSL
+%  \begin{quote}
+%    {\tt \Index{VDMSLROOT}} to point to {\tt \vdmhome}
+%  \end{quote} 
+%#endif VDMSL 
+%#ifdef VDMPP 
+%  \begin{quote} 
+%    {\tt \Index{VDMPPROOT}} to point to {\tt \vdmhome}
+%  \end{quote}
+%#endif VDMPP
+%
+%  This can be done in the following way:
+%
+%  Using csh shell syntax:
+%#ifdef VDMSL
+%\begin{verbatim}
+%  setenv VDMSLROOT=/path/to/vdmhome
+%\end{verbatim}
+%#endif VDMSL 
+%#ifdef VDMPP 
+%\begin{verbatim}
+%  setenv VDMPPROOT=/path/to/vpphome
+%\end{verbatim}
+%#endif VDMPP
+  
+%  Using bash shell syntax:
+%#ifdef VDMSL
+%\begin{verbatim}
+%  VDMSLROOT=/path/to/vdmhome
+%  export VDMSLROOT
+%\end{verbatim}
+%#endif VDMSL 
+%#ifdef VDMPP 
+%\begin{verbatim}
+%  VDMPPROOT=/path/to/vpphome
+%  export VDMPPROOT
+%\end{verbatim}
+%#endif VDMPP
+  
+%\item Installing the license file.\index{license!file}
+  
+%  {\bf If you are not already running the FlexLm license server
+%    program} {\tt lmgrd} on the license manager host, you can install
+%  the \licensedat\ file by setting the environment variable {\tt
+%    \Index{LM\_LICENSE\_FILE}} to point to the license file
+%  \Index{\licensedat}. All users of \Toolbox\ must set this
+%  environment variable.
+  
+%  {\bf If you are already running the \Index{FlexLm} license server
+%    program} {\tt lmgrd} on the license manager host, and the {\tt
+%    SERVER} line in the \licensedat\ files of all your applications
+%  using FlexLm are identical, you can merge these files.  You will
+%  need to use only one license server program and use only one
+%  communications port. In this case you should copy the {\tt FEATURE}
+%  lines from the \licensedat\ supplied with \Toolbox\ into your
+%  current master \licensedat.
+  
+%  {\bf Notice} that you should not execute the {\tt lmgrd} program
+%  when installing an evaluation license.
+%\end{enumerate}
+
+%You should now be able to call the tools from the command line.
+
+
+%\subsection{Installing a Purchased Copy of VDMTools}\label{purchinstall}
+%\subsection{Installing a Copy of VDMTools}\label{purchinstall}
+\subsection{VDMToolsのインストールコピー}\label{purchinstall}
+
+\begin{enumerate}
+%\item Create a directory {\tt \vdmhome} to hold \Toolbox.
+\item \Toolbox を置くために、{\tt \vdmhome}ディレクトリを作成します。
+
+%\item Read in the discs or the files down-loaded from CSK's WWW or
+%  ftp server in the {\tt \vdmhome} directory with the {\tt tar}
+%  command.  This will create a number of files which must be installed
+%  explicitly as described in the following steps.
+\item {\tt tar}コマンドを用いて、{\tt \vdmhome}ディレクトリ内にディスクで読み込むか、
+         CSKのWEBサイトかｆｔｐサーバからダウンロードしてください。
+         ここでは、以下の手順で述べるように、たくさんのインストールされなければならないファイルが作成されます。
+
+%\item Install the executables {\tt bin/\Index{\vdmde}} and {\tt
+%    bin/\Index{\vdmgde}} either by moving them to your standard binary
+%  directory or by including the directory {\tt \vdmhome/bin} in your path.
+\item 実行ファイルを標準のバイナリディレクトリに移動するか、 {\tt \vdmhome/bin} にパスを通すかの
+         どちらかで、 {\tt bin/\Index{\vdmde}} と {\tt bin/\Index{\vdmgde}} に実行ファイルをインストールしてください。
+
+\end{enumerate}
+
+%\item In order to use the graphical user interface, {\tt \vdmgde}, you
+%  must set the environment variable:
+
+%#ifdef VDMSL
+%  \begin{quote}
+%    {\tt \Index{VDMSLROOT}} to point to {\tt \vdmhome}
+%  \end{quote} 
+%#endif VDMSL 
+%#ifdef VDMPP 
+%  \begin{quote} 
+%    {\tt \Index{VDMPPROOT}} to point to {\tt \vdmhome}
+%  \end{quote}
+%#endif VDMPP
+
+%  This can be done in the following way:
+
+%  Using csh shell syntax:
+%#ifdef VDMSL
+%\begin{verbatim}
+%  setenv VDMSLROOT=/path/to/vdmhome
+%\end{verbatim}
+%#endif VDMSL 
+%#ifdef VDMPP 
+%\begin{verbatim}
+%  setenv VDMPPROOT=/path/to/vpphome
+%\end{verbatim}
+%#endif VDMPP
+  
+%  Using bash shell syntax:
+%#ifdef VDMSL
+%\begin{verbatim}
+%  VDMSLROOT=/path/to/vdmhome
+%  export VDMSLROOT
+%\end{verbatim}
+%#endif VDMSL 
+%#ifdef VDMPP 
+%\begin{verbatim}
+%  VDMPPROOT=/path/to/vpphome
+%  export VDMPPROOT
+%\end{verbatim}
+%#endif VDMPP
+ 
+%\item Installing the license file.
+  
+%  {\bf If you are not already running the FlexLm license server
+%    program} {\tt lmgrd} on the license manager host, install the
+%  \licensedat\ file by setting the environment variable {\tt
+%    \Index{LM\_LICENSE\_FILE}} to point to the license
+%  file\index{license!file} \Index{\licensedat}.\\
+%  {\em All users of \Toolbox\ must set this environment variable}.
+  
+%  {\bf If you are already running the FlexLm license server program}
+%  {\tt lmgrd} on the license manager host, and the {\tt SERVER} line
+%  in the \licensedat\ files of all your applications using FlexLm are
+%  identical, you can merge these files. You will need to use only one
+%  license server program and use only one communications port. The
+%  steps are:
+
+%  \begin{enumerate}
+%  \item Copy the {\tt DAEMON} and {\tt FEATURE} lines, but not the
+%    {\tt SERVER} line, from the \licensedat\ supplied with \Toolbox\ 
+%    into your current master \licensedat.
+    
+%  \item Let the license manager re-read the master \licensedat\ file.
+%    In order to do this you must login on the server machine and run
+%    the program {\tt lm/lmreread}:
+    
+%#ifdef VDMSL
+%    \begin{alltt}
+%  hermes:> rlogin server
+%  hermes:> vdmhome/lm/lmreread
+%  hermes:>
+%    \end{alltt}
+%#endif VDMSL
+%#ifdef VDMPP
+%    \begin{alltt}
+%  hermes:> rlogin server
+%  hermes:> vpphome/lm/lmreread
+%  hermes:>
+%    \end{alltt}
+%#endif VDMPP
+
+%  \end{enumerate}
+
+%\item Installing the vendor daemon.
+  
+%  You must move the vendor daemon executable {\tt lm/IFAD} to the {\tt
+%    /etc} directory. If you prefer to install the vendor daemon in
+%  another directory you must change the path in the DAEMON line of
+%  \licensedat\ accordingly.
+
+%\item Starting the license server.
+  
+%  You should now start the license server program on the host machine.
+%  This is done by typing:
+
+%#ifdef VDMSL
+%  \begin{alltt}
+%  hermes:> rlogin server
+%  hermes:> vdmhome/lm/lmgrd >& vdmhome/lm/ifad.log &
+%  hermes:>
+%  \end{alltt}
+%#endif VDMSL
+%#ifdef VDMPP
+%  \begin{alltt}
+%  hermes:> rlogin server
+%  hermes:> vpphome/lm/lmgrd >& vpphome/lm/ifad.log &
+%  hermes:>
+%  \end{alltt}
+%#endif VDMPP
+
+%  Login as root and add the following two lines to the license
+%  manager host's {\tt etc/rc.local} file. This enables the license
+%  server program to be restarted whenever the host is booted up.
+%  Remember to specify the full pathname for {\tt \vdmhome/lm}.
+
+%  \begin{alltt}
+%  vhome=vdmhome/lm
+%  $vhome/lmgrd > $vhome/ifad.log 2>&1 &
+%  \end{alltt}
+  
+%  Now run the {\tt lm/lmstat} program\index{lmstat program} to verify
+%  the installation. It should look something like this:
+
+%  \begin{alltt}
+%  hermes:> lm/lmstat -a
+%  License server status (License file: /local/share/licenses/
+%      license.dat): hermes: license server UP (MASTER)
+%  Vendor daemon status (on hermes):
+%        IFAD (v3.x): UP
+%  Feature usage info:
+%  Users of vdmsl: 
+%  Users of vdmcg: 
+%  Users of vdmpp: 
+%  Users of vppcg: 
+%  Users of vdmdl:  (Total of 4 licenses available)
+%  hermes:>
+%  \end{alltt}
+  
+%  It should respond that both the license server and the vendor daemon
+%  are up, as in the example.
+
+%\end{enumerate}
+
+%You should now be able to call the tools from the command line.
+これで、コマンドラインからツールを起動することが可能になったはずです。
+
+\subsection{EmacsのためのVDMToolsのインストール}
+\label{sec:emacsinstall}
+
+%If you wish to use \Toolbox\ within Emacs you must perform the
+%following steps that show how to set up Emacs to support the tools in
+%Emacs.
+
+
+\begin{enumerate}
+%\item Installing the Emacs interface.
+\item Emacsインターフェースのインストール
+  
+%  Install the Emacs interface {\tt emacs/\Index{\vdmdeNineteenEl}}
+%  either by placing it with your existing Emacs utilities according to
+%  your own site procedures, or by moving it to one of your local
+%  directories.
+Emacsインターフェースを自身のサイト手順に従って、存在するEmacs環境に置くか、
+ローカルディレクトリに移動することで、 {\tt emacs/\Index{\vdmdeNineteenEl}}
+にEmacsインターフェースをインストールしてください。
+
+%\item Updating your {\tt .emacs} file\index{.emacs file}
+\item  {\tt .emacs} ファイルのアップデート
+  
+%  Set up your {\tt .emacs} file to read in the {\tt \vdmdeNineteenEl}
+%  interface. If you have located {\tt emacs/\vdmdeNineteenEl} with
+%  your standard Emacs utilities you must add the following line to
+%  your {\tt .emacs} file
+{\tt \vdmdeNineteenEl} 内に読み込むために {\tt .emacs} ファイルをセットアップしてください。
+もし、標準Emacs環境に {\tt emacs/\vdmdeNineteenEl} がある場合、
+ {\tt .emacs} へ以下の1行を加えなければなりません。
+
+#ifdef VDMSL
+  \begin{verbatim}
+  (autoload 'vdmde "vdmde" "" t)
+  \end{verbatim}
+#endif VDMSL
+#ifdef VDMPP
+  \begin{verbatim}
+  (autoload 'vppde "vppde" "" t)
+  \end{verbatim}
+#endif VDMPP
+
+%  otherwise you must add the full path to {\tt emacs/\vdmdeNineteenEl}
+%  like
+その他に、 {\tt emacs/\vdmdeNineteenEl} へ以下のようにフルパスを加えなければなりません。
+
+#ifdef VDMSL
+  \begin{verbatim}
+  (autoload 'vdmde "/path/vdmde" "" t)
+  \end{verbatim}
+#endif VDMSL
+#ifdef VDMPP
+  \begin{verbatim}
+  (autoload 'vppde "/path/vppde" "" t)
+  \end{verbatim}
+#endif VDMPP
+
+%\item Copy the Toolbox manual pages into your {\tt man} directory.
+\end{enumerate}
+
+%You should now be able to use the \Toolbox.
+これで、\Toolbox が使用可能になったはずです。
+
+
+%\subsection{Trouble Shooting on UNIX}
+%\label{sec:unixtroubleshoot}
+
+%This sections enumerates a number of known mistakes performed during
+%installation together with solutions and workarounds.
+
+%\begin{itemize}
+%\item When starting the license server an error message is reported
+%  (in the \path+ifad.log+ if output is piped into that file) looking
+%  like:
+%\begin{verbatim}
+%  license manager: can't initialize: No SERVER lines in
+%  license file (-13,66)
+%\end{verbatim}
+%  This occurs when you try to start the license server with an
+%  evaluation license, which is not needed. \Toolbox\ will still run
+%  despite this error.
+
+%\end{itemize}
+
+
+\newpage
+\section{新バージョンの取得方法}
+\Toolbox\ の新バージョンがリリースされたときは、以下のVDMTools information \Index{Web site}
+より取得することが出来ます
+
+\begin{verbatim}
+#ifdef ENG
+    http://www.vdmtools.jp/en
+#endif ENG
+#ifdef JPN
+    http://www.vdmtools.jp/
+#endif JPN
+\end{verbatim}
+
+%and \Index{ftp site}:
+
+%#ifdef VDMSL
+%\begin{verbatim}
+%    Site:      ftp.ifad.dk 
+%    Directory: /pub/toolbox
+%\end{verbatim}
+%#endif VDMSL
+%#ifdef VDMPP
+%\begin{verbatim}
+%    Site:      ftp.ifad.dk 
+%    Directory: /pub/vdm++_toolbox
+%\end{verbatim}
+%#endif VDMPP
+
+%Everyone who has a \Index{license} will be informed about new releases.
+
+
+\end{document}

@@ -1,0 +1,21 @@
+class TupleConstructorExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = let t:bool*nat = 
+         mk_(
+           if false 
+           then "ABC"
+           else {9,8},
+           cases false:
+             true -> "ABC",
+             others -> {9,8}
+           end ) in t
+  in skip;
+
+------------------------------------------------------------------------------
+end TupleConstructorExprTest

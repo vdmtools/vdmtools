@@ -1,0 +1,21 @@
+ class A
+
+  functions
+
+    f : nat -> nat
+    f(n) == n + 1
+    pre n > 0
+
+end A
+
+class B 
+
+  operations
+
+  public Test : () ==> nat
+    Test() ==
+      if new A().pre_f(1)
+      then return 0
+      else return 1
+
+end B

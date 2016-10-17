@@ -1,0 +1,13 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of (( map nat to map nat to nat) |
+                         ( seq of nat | map nat to 
+                                        ( nat | map 
+                                                nat to (seq of nat ))))  
+Test () ==
+        (dcl  c: map nat to map nat to nat := {|->};
+         dcl  d: ( seq of nat | map nat to ( nat | map nat to (seq of nat))) := {|->};
+         d(1)(2) := [1,2,3];
+         d(1)(2)(3) := 500;
+         c(1)(2) := 34;
+         c(1)(3) := 456;
+         return [c, d])

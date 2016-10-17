@@ -1,0 +1,39 @@
+****** The VDM-SL Toolbox Lite - Version 3.2 ******
+
+The CD contains:
+   - setup.exe
+   - README (This file)
+
+Installation:
+-------------
+The VDM-SL Toolbox Lite can be installed on PC/Pentium, Pentium
+Pro or compatible running Windows NT 4.0 or Windows 95. The
+Toolbox must be installed and used on partitions supporting long file
+names.
+
+The Toolbox is installed by running the setup.exe.
+
+
+The VDM-SL Toolbox Lite: 
+----------------------------- 
+
+The VDM-SL Toolbox Lite is a limited version of the full 
+VDM-SL Toolbox Lite. The Lite Toolbox supports only a subset of the
+VDM-SL language and a restricted size of specifications. The tools
+supported are:
+        * a syntax checker
+        * a type checker
+        * an interpreter and debugger.
+
+Furthermore, the full VDM-SL Toolbox currently supports:
+
+        * a code generator, that generates C++ code from your specification.
+        * a pretty printer, that makes it possible for you to generate
+          documentation from your specification in LaTeX and RTF format.
+        * dynamic link feature, that makes it possible to execute 
+          specification and external C++ code.
+        * test coverage and statistics tools, gives you the possibility to
+          assess the quality of your test cases in a test environment.
+        * an extended type checker that statically can detect possible 
+          run-time errors.
+

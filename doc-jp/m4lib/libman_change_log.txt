@@ -1,0 +1,106 @@
+変更履歴
+
+---2008/2/12～15---
+　・図 ⇒ Figureに修正
+　・結果型を"metaiv.h"を参考に修正
+　・型に"wstring","wchar_t"の訳には｢ワイド｣を追加
+　・結果型としてboolを返すものの説明で、1 or 0 の箇所をtrue or falseに修正
+　・M.Next(G), Sq.Next(G) ,St.Next(G)の説明の先頭に、｢次のキーが存在すれば｣を追加
+　・P28 The Record Information Map以降の関数の最後に付いている':'を削除
+　
+　P1
+　 - 複合型⇒合成型
+　P2
+　 - VDM クラス型 ⇒ VDM オブジェクト参照型
+　P5
+　 - "!="の演算子を追加
+　P7
+　 - 例題の実行結果
+　 　　2 The value of G1 is of type Int
+　 　⇒103 The value of G1 is of type Int
+　P8
+　 - 4.1出力ワイドストリームへ値の印刷
+　 　　最後に、｢タグ名を文字形式で印刷するには、5.12.1 The RecordInformation Map を使用する。｣を追加
+　P10
+　 - I / R ･･･｢ゼロによる除算はエラー第7 章参照を起こす。｣を追加
+　P14
+　 - 論理和 ⇒ 論理積
+　   論理積 ⇒ 論理和
+　P20 Map
+　 - Map M の説明で、空集合⇒空写像
+　 - M.ImpOverride(M1)の説明で、和集合⇒和
+　P28
+　 - Rc.SetTag(i)を削除
+　P31
+　 - GetSymTag(int tag, int size, wstring & s) を削除
+　P32
+　 - 参考文献にVDM++ Language Manualを追加
+　 
+---2007/12/11---
+　日本語の修正
+　P3
+　 - 現実には、合成型だけは汎用型の要素を含めることができるように実装されている。
+　   →現実には、合成型は汎用型の要素だけを含めることができるように実装されている。
+　 - Generics→汎用型
+　 - 汎用→汎用型
+
+---2007/12/10---
+　・「Specific functions on the VDM types」の翻訳を
+　　「VDM 型特異的関数」→「VDM 型の特有関数」に変更
+
+　・5章の表題を英語に統一
+　・bool→Bool
+
+　P3 
+　 - ユニオン型→合併型に変更
+　P8
+　 - 「CGReadTagMap(constchar*s)」→「CGReadTagMap(const char*s)」
+　 　（空白が欠陥していた）
+　P10
+　 - 「Unary minus」→「単項マイナス」
+　 - 「２進」→「２項」
+　P12
+　 - 英語の消し忘れを削除
+　P23
+　 - 「Sq.Tl() Sq の最後尾を返す。」→「Sq.Tl() Sq の尾部を返す。」
+　P24
+　 - 「Sq.IsEmpty() Sq が空ならば0 を、そうでない場合は1 を返す。」結果型: int
+　　　→Sq.Size() == 0 ならばtrue を、他の場合はfalse を返す。結果型: Bool
+　P30
+　 - 2つ目の「SetPrintFunction(int tag, int size, vdm pp function ptr f):」
+　 　→「SetPrintFunction(int tag, vdm pp function ptr f):」
+　P31
+　 - 「dump(ostream & o:」のタイプミス
+     →「dump(ostream & o)」
+
+---2007/12/07---
+　すべての例題において以下の2点を変更
+　　1.cout は wcout に変更
+　　2."\n" は endl に変更
+　P1
+　 - 利用可能環境を最新に変更
+　P4
+　 - footnoteに文字コードの注意事項を記載
+　 - A.MyType()は現在存在しないため削除
+　 - それに伴い例題からもA.MyType()を削除
+　P5
+　 - true/falseを返すものは結果型をint→Bool
+　 - A.ascii()の結果型はstring→wstring
+　P8
+　 - 出力ストリーム→出力ワイドストリーム
+　 - VDMSetTagMapとVDMTagDumpは現在存在しないため削除
+　 - 上記に伴い例題の変更
+　P14
+　 - B.GetValue()、!B、B1 && B2、B1.or(B2)、B1 || B2の結果型はbool
+　P16
+　 - Q.GetValue()の結果型はwstring
+　P17
+　 - C.GetValue()の結果型は wchar_t
+　P18
+　 - Tx.GetValue()の結果型は wstring
+　P19
+　 - Tk.GetValue()の結果型は wstring
+　P23
+　 - Sq.GetString(string& str)はSq.GetString(wstring& str)
+　P28
+　 - Rc.val2asc()は現在存在しないため削除

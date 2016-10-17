@@ -1,0 +1,33 @@
+class C
+
+instance variables
+
+i : nat := 0
+
+operations
+
+public
+  C: nat ==> C
+  C(n) ==
+    i := n;
+    
+public Get : () ==> nat
+Get() ==
+  return i;
+
+end C
+
+class B
+
+operations
+
+Op:() ==> nat
+Op() ==
+  (let c = new C(5) in
+   c.Get());
+
+public Test : () ==> nat
+Test() ==
+  Op();
+  
+end B

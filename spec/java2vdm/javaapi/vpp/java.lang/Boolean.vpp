@@ -1,0 +1,57 @@
+class JavaLangBoolean is subclass of JavaIoSerializable, JavaLangObject
+instance variables 
+  public  static TRUE : JavaLangBoolean := new JavaLangBoolean(true);
+  public  static FALSE : JavaLangBoolean := new JavaLangBoolean(false);
+  public  static TYPE : JavaLangClass := new JavaLangClass("boolean", <CLASS>, true);
+  public  static CLASS : JavaLangClass := new JavaLangClass("boolean", <CLASS>, true);  
+  private value__: bool;
+operations 
+public  JavaLangBoolean : bool  ==> JavaLangBoolean
+JavaLangBoolean(value__) == 
+( JavaLangBoolean`value__ := value__
+) ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+  return CLASS;
+
+public  hashCode : () ==> int 
+hashCode() == 
+	return if value__ then 1231 else 1237;
+
+public  toString : () ==> JavaLangString
+toString() == 
+  return new JavaLangString(if value__ then "true" else "false");
+
+public  JavaLangBoolean : <NIL> ==> JavaLangBoolean
+JavaLangBoolean(-) == 
+isNil := true  ;
+
+public  booleanValue : () ==> bool 
+booleanValue() == 
+  return value__ ;
+
+public  equals : JavaLangObject ==> bool 
+equals(obj) == 
+  return
+	  if isofclass(JavaLangBoolean,obj)
+    then value__ = def b: JavaLangBoolean=obj in b.booleanValue()
+	  else false;
+
+public  JavaLangBoolean : JavaLangString ==> JavaLangBoolean
+JavaLangBoolean(s) == 
+  let - = JavaLangBoolean(JavaLangBoolean`toBoolean(s)) in skip;
+
+public  static valueOf : JavaLangString ==> JavaLangBoolean
+valueOf(s) == 
+  return if JavaLangBoolean`toBoolean(s) then  JavaLangBoolean`TRUE else JavaLangBoolean`FALSE;
+
+public  static getBoolean : JavaLangString ==> bool 
+getBoolean(name) == 
+is not yet specified ;
+
+private static toBoolean: JavaLangString ==> bool
+toBoolean(name) ==
+  return not name.IsNil() and name.equalsIgnoreCase(new JavaLangString("true"));
+
+end  JavaLangBoolean

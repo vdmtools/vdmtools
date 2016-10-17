@@ -1,0 +1,55 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ( [set of ([int | bool]) | int | bool] )  
+Test () ==
+return
+[ { a.b | a in set { mk_AA(1, 3), mk_B(6), mk_C(2,3,false), mk_D(nil,nil) } },
+  let a = mk_AA( 3, 6)
+  in a.b,
+  ( if is_int(3)
+    then mk_C(3,3,nil)
+    else {3, 6 } ).d,
+  mk_D( nil, false ).e,
+  mk_E(1, 2, mk_D(3,false) ).d ]
+  
+  
+
+
+
+types
+
+  AA ::
+   a  : nat | bool
+   b  : bool | int;
+ 
+  B ::
+   b: real;
+
+  C ::
+   c : nat
+   d : nat 
+   b : [bool];
+
+  D ::
+   e : [ nat ]
+   b : [ bool ];
+
+  E ::
+   a : nat
+   d : nat
+   b : D
+
+
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

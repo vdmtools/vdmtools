@@ -1,0 +1,13 @@
+class SelfExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = self
+  in skip;
+
+------------------------------------------------------------------------------
+end SelfExprTest

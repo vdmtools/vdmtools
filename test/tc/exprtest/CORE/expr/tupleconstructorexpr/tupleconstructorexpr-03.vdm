@@ -1,0 +1,14 @@
+class TupleConstructorExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let t = true,
+      - = mk_(3 - t, {}, {3,true, nil})
+  in skip;
+
+------------------------------------------------------------------------------
+end TupleConstructorExprTest

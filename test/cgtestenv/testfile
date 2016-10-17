@@ -1,0 +1,1344 @@
+#!/bin/bash
+
+if [ -n "$DEBUG_ON" ] ; then
+  set $DEBUG_ON
+fi
+
+if [ -n "$BASEDIR" ] ; then
+  :
+else
+  echo BASEDIR not set!
+  exit
+fi
+
+if [ $OSTYPE = cygwin32 ]; then
+    export OSTYPE=win32
+fi
+
+if [ $IFADOSTYPE = win32 ]; then
+  # Default CG file extension on win32 is .cpp but the Makefiles specify files
+  # with .cc 
+  export VDMCGEXT=.cc
+fi
+
+###############
+# DEFINITIONS #
+###############
+if [ "$IFADOSTYPE" = "" ]; then
+  echo IFADOSTYPE is unset. Please investigate why.
+fi
+export IFADOSTYPE
+
+
+###############################################################
+## usage shell function                                      ##
+###############################################################
+
+FSH=`basename $0`
+
+usage()
+{
+  echo >&2
+  echo "Usage: $FSH [-Dy | -Cg] [-D] [-r] [-i | sp] [-w dir] [-sl | -pp] header-file [testarg]" >&2
+  echo >&2
+  echo "       Runs testsuite in directory identified by header-file (full" >&2
+  echo "       or relative path)" >&2
+  echo >&2
+  echo "       -Cg       Code Generator test (default)." >&2
+  echo "       -Dy       Dynamic Semantics test." >&2
+  echo "       -D        Dynamic type checking during interpreting of front-end." >&2
+  echo "       -dtc_on   Turn on Dynamic type check inside the dynamic specification." >&2
+  echo "       -inv_on   Turn on Invariant check inside the dynamic specification." >&2
+  echo "       -pre_on   Turn on Pre check inside the dynamic specification." >&2
+  echo "       -post_on  Turn on Post check inside the dynamic specification." >&2
+  echo "       -r        Collect run-time info." >&2
+  echo "       -sl       VDM-SL test suite (default)." >&2
+  echo "       -java     Backend in JAVA Mode. " >&2
+  echo "       -cpp      Backend in CPP Mode. " >&2
+  echo "       -pp       VDM++ test suite." >&2 
+  echo "       -i        Implementation test." >&2 
+  echo "       -sp       Specification test (default)." >&2
+  echo "       -w        Copy generated files to directory $CCDIR" >&2
+  echo "       testarg   Runs only test case testarg." >&2
+  echo >&2
+  echo "       Examples: " >&2
+  echo "           To use the implementation of the Dynamic semantics on some test-cases :" >&2
+  echo "                testfile -Dy -sl -i  /home/cg/test/CORE/expr/letexpr/letexpr.head" >&2
+  echo "           To interpret the specification  of the Dynamic semantics on some test-cases :" >&2
+  echo "                testfile -Dy -sl -sp /home/cg/test/CORE/expr/letexpr/letexpr.head" >&2
+  echo >&2
+  exit 1
+}
+
+###############################################################
+## mess shell function                                       ##
+###############################################################
+
+mess()
+{
+  case $1 in
+  -w) echo WARNING >> trace
+      echo WARNING
+      echo "$2" >> trace
+      echo "$2"
+      ;;
+  -k) echo "KNOWN BUG $2 ($3)" >> trace
+      echo "KNOWN BUG $2 ($3)"
+      cat $3 >> trace
+      cat $3
+      echo >> trace
+      echo 
+      ;;
+  -a) echo "ERROR $2 EXPECTED ($3)" >> trace
+      echo "ERROR $2 EXPECTED ($3)" 
+      cat $3 >> trace
+      cat $3 
+      echo >> trace
+      echo 
+      ;;
+  -m) echo "$2" >> trace
+      echo "$2"
+      ;;
+  *)  echo "UNEXPECTED RESULT: $1" >> trace
+      echo "UNEXPECTED RESULT: $1"  
+      ;;
+  esac
+}
+
+
+###############################################################
+## error shell function                                      ##
+##   arg1: error no.                                         ##
+##   arg2: optional, free use                                ##
+###############################################################
+
+error()
+{
+  case $1 in
+    2) if [ "$CGMODE" = "java" ] ; then
+         if test -f $TESTDIR/$2.javaerr2 ; then
+           mess -k 2 $TESTDIR/$2.javaerr2
+         else
+           mess "ERROR IN TEST CASE SPECIFICATION FOR $TESTDIR/$2"
+           mess -m "(error $1)"  
+         fi
+       else
+         if test -f $TESTDIR/$2.err2 ; then
+           mess -k 2 $TESTDIR/$2.err2
+         else
+           mess "ERROR IN TEST CASE SPECIFICATION FOR $TESTDIR/$2"
+           mess -m "(error $1)"  
+         fi
+       fi
+       ;;
+    3) mess "...$2 DID NOT SUCCEED"
+       mess -m "(error $1)"  
+       ;;
+    4) mess -w "ProgAS DIFFERENT FROM PREVIOUS GENERATED VERSION"
+       echo
+       ;;
+    5) if [ "$CGMODE" = "java" ] ; then
+         if test -f $TESTDIR/$2.javaerr5 ; then
+           mess -k 5 $TESTDIR/$2.javaerr5
+         else
+           mess "SYNTAX OR RUN-TIME ERROR OCCURRED IN FRONTEND FOR $2"
+           mess -m "(error $1)"  
+         fi
+       else
+         if test -f $TESTDIR/$2.err5 ; then
+          mess -k 5 $TESTDIR/$2.err5
+         else
+           mess "SYNTAX OR RUN-TIME ERROR OCCURRED IN FRONTEND FOR $2"
+           mess -m "(error $1)"  
+         fi
+       fi
+       ;;
+    6) mess "RUN-TIME ERROR OCCURRED IN BACKEND FOR $2"
+       mess -m "(error $1)"  
+       ;;
+    7) if [ "$CGMODE" = "java" ] ; then
+         if test -f $TESTDIR/$2.javaerr7 ; then
+           mess -k 7 $TESTDIR/$2.javaerr7
+         else
+           mess "COULD NOT COMPILE CODE FOR $2"
+           mess -m "(error $1)"  
+         fi
+       else
+         if test -f $TESTDIR/$2.err7 ; then
+           mess -k 7 $TESTDIR/$2.err7
+         else
+           mess "COULD NOT COMPILE CODE FOR $2"
+           mess -m "(error $1)"  
+         fi
+       fi
+       ;;
+    8) if [ "$CGMODE" = "java" ] ; then
+         if test -f $TESTDIR/$2.javaerr8 ; then
+           mess -k 8 $TESTDIR/$2.javaerr8
+         else
+           mess "RUN-TIME ERROR OCCURRED DURING EXECUTION OF CODE FOR $2"
+           mess -m "(error $1)"  
+         fi
+       else
+         if test -f $TESTDIR/$2.err8 ; then
+           mess -k 8 $TESTDIR/$2.err8
+         else
+           mess "RUN-TIME ERROR OCCURRED DURING EXECUTION OF CODE FOR $2"
+           mess -m "(error $1)"  
+         fi
+       fi
+       ;;
+    9) if [ "$CGMODE" = "java" ] ; then
+         if test -f $TESTDIR/$2.javaerr9 ; then
+           mess -k 8 $TESTDIR/$2.javaerr9
+         else
+           mess "CODE EVALUATION DIFFERS FROM EXPECTED VALUE FOR $2"
+           mess -m "(error $1)"  
+           echo
+         fi
+       else
+         if test -f $TESTDIR/$2.err9 ; then
+           mess -k 8 $TESTDIR/$2.err9
+         else
+           mess "CODE EVALUATION DIFFERS FROM EXPECTED VALUE FOR $2"
+           mess -m "(error $1)"  
+           echo
+         fi
+       fi
+       ;;
+   10) if [ "$CGMODE" = "java" ] ; then
+         if test -f $TESTDIR/$2.javaerr10 ; then
+           mess -k 10 $TESTDIR/$2.javaerr10
+         else
+           mess "THE CODE AND VDMDE EVALUATES TO DIFFERENT RESULTS FOR $2"
+           mess -m "(error $1)"  
+         fi
+       else
+         if test -f $TESTDIR/$2.err10 ; then
+           mess -k 10 $TESTDIR/$2.err10
+         else
+           mess "THE CODE AND VDMDE EVALUATES TO DIFFERENT RESULTS FOR $2"
+           mess -m "(error $1)"  
+         fi
+       fi
+       ;;
+   11) if [ "$CGMODE" = "java" ] ; then
+         if test -f $TESTDIR/$2.javaerr11 ; then
+           mess -k 11 $TESTDIR/$2.javaerr11
+         else
+           mess "SYNTAX OR RUN-TIME ERROR OCCURRED IN FRONTEND FOR $2"
+         fi
+       else
+         if test -f $TESTDIR/$2.err11 ; then
+           mess -k 11 $TESTDIR/$2.err11
+         else
+           mess "SYNTAX OR RUN-TIME ERROR OCCURRED IN FRONTEND FOR $2"
+         fi
+       fi
+       ;;
+    13) if [ "$CGMODE" = "java" ] ; then
+        mess "COULD NOT MAKE FOR $2"
+       else
+        mess "COULD NOT MAKE icode.cc FOR $2"
+       fi
+        ;;
+   20)  if [ "$CGMODE" = "java" ] ; then
+           if test -f $TESTDIR/$2.javaerr20 ; then
+              mess -k 20 $TESTDIR/$2.javaerr20
+           else
+              mess "COULD NOT CODEGENERATE TEST CASE FOR $2"
+              mess -m "(error $1)"  
+           fi
+        else
+           if test -f $TESTDIR/$2.err20 ; then
+              mess -k 20 $TESTDIR/$2.err20
+           else
+              mess "COULD NOT CODEGENERATE TEST CASE FOR $2"
+              mess -m "(error $1)"  
+           fi
+        fi
+       ;;
+   104) if is_expected_result $TESTDIR/$2.err104 $2.arg.msg; then
+          mess -k 104 $TESTDIR/$2.err104
+        else
+          if test -f $TESTDIR/$2.err104 ; then
+            mess -k 104 $TESTDIR/$2.err104
+          else
+            mess "RESULT DIFFERENT FROM PREVIOUS RESULT FOR $2"
+            mess -m "(error $1)"  
+          fi
+       fi
+       echo
+       ;;
+   105) if is_expected_result $TESTDIR/$2.err105 $2.arg.msg; then
+         echo $2 >> trace
+         echo $2 
+         mess -a 105 $TESTDIR/$2.err105
+       else 
+         if test -f $TESTDIR/$2.ipbug ; then
+	   mess -k "in interpreter" $TESTDIR/$2.ipbug
+	 else
+           mess  "RUN-TIME ERROR OCCURRED DURING THE INTERPRETATION OF $2" 
+           mess -m "(error $1)"  
+         fi
+        cat $2.arg.msg >> trace
+       fi
+       ;; 
+  106) mess "No expected result file ($TESTDIR/$2.dynval)"
+       ;;
+  107) mess "Actual and Expect Logfiles differ for $2"
+       ;;
+    *) mess "**Undefined error no.**"
+       mess -m "**Internal error in testfile.**" 
+       mess -m "(error $1)"  
+       ;;
+  esac
+}
+
+###############################################################
+## This function takes care of verifying if the expected     ##
+## result file is equal to the expected result.              ##
+###############################################################
+is_expected_result()
+{
+  FILE=$1
+  EXT="pp"
+  if $SL; then
+    EXT="sl"
+  fi
+
+  if [ -f $FILE -a -f $FILE-$EXT ]; then
+    mess -w "The file $FILE and the file $FILE-$EXT existed"
+  fi
+
+  #At implementation level the run-time error message is saved in
+  # rterr2.msg. At specification level it is stored in testcase.arg.msg.
+  if $SPEC; then
+    :
+  else
+    mv rterr2.msg $2
+  fi
+
+
+  # Check if the error file was produced running the test case.
+  # That is checking if "testcase".arg.msg exists
+  if test ! -f $2 ; then
+    return 1
+  fi
+
+
+  if [ -f $FILE -o -f $FILE-$EXT ]; then
+    if [ -f $FILE-$EXT ]; then
+      FILE=$FILE-$EXT
+    fi
+
+    tail +2 $FILE > tail1.$$
+    tail +2 $2 > tail2.$$
+    diff -w -B tail1.$$ tail2.$$
+    RES=$?
+#    diff -w -B <(tail +2 $FILE) <(tail +2 $2) # Does not work for NT...
+    rm -f tail1.$$ tail2.$$
+    if [ ! $RES -a  "$DTC_ON" = "-dtc_on" -a -f $FILE-dtc ]; then
+      tail +2 $FILE-dtc >tail.$$
+      tail +2 $2 > tail2.$$
+      diff -w -B tail1.$$ tail2.$$
+      RES=$?
+    fi
+    return $RES
+
+  else 
+    return 1;
+  fi
+}
+
+###############################################################
+##          Function to decide wether a module               ##
+##          is an implementation module                      ##
+##          $1 - the file name to search in                  ##
+###############################################################
+is_dlmod ()
+{
+  grep dlmodule $1 2>&1 /dev/null
+  return $?
+}
+
+###############################################################
+##          Function to decide whether a file                ##
+##          is written in VDM-SL or VDM++                    ##
+##          $1 - the file name to search in                  ##
+###############################################################
+is_vdmpp ()
+{
+  $VPPDEAUX -p $1 2>/dev/null
+  return $?
+}
+
+###############################################################
+##        Set the global variables                           ##
+###############################################################
+
+setGlobalVariables ()
+{
+
+#VDMDE used as an auxiliary tool
+VDMDEAUX=/opt/toolbox_main/bin/vdmde
+VPPDEAUX=/opt/vdm++_toolbox_main/bin/vppde
+
+FRONTEND=testspec
+FRONTENDDYNAMIC=testspec.dyn
+TESTVAL=testval
+COMP=comp
+INITFILE=init.cc
+RTIAST="-R rtinfo.ast"
+PERL=perl
+PERF=perf.txt
+
+TIME=time
+
+ICODE=icode
+JAVACODE=javacode
+MODE=VDMSL
+W=false
+CODEGEN=
+
+PFPARSER=$BASEDIR/pfparse
+GETSETTINGS=$BASEDIR/getsettings
+CONVERTSETTINGS=$BASEDIR/convertsettings
+
+#ARGFILE=`basename $TESTSUITE`.arg
+#EARGFILE=`basename $TESTSUITE`.earg
+CURDIR=`pwd`
+}
+
+
+###############################################################
+##         Read the options and set the global               ##
+##         variables                                         ##
+###############################################################
+
+readOptions ()
+{
+if test $# -eq 0 ; then
+  usage 
+fi
+
+while test $# -gt 0 ; do
+  case $1 in
+   -Cg)  CODEGEN=true
+         CGMODE=cpp
+         shift;;
+    -Dy) CODEGEN=false
+         FRONTEND=$FRONTENDDYNAMIC
+         shift;;
+    -D | \
+    -I | \
+    -P | \
+    -Q)  DTC="$DTC $1"
+         shift;;
+    -dtc_on)  DTC_ON=-dtc_on
+             shift;;
+    -inv_on ) INV_ON=-inv_on
+             shift;;
+    -pre_on)  PRE_ON=-pre_on
+             shift;;
+    -post_on) POST_ON=-post_on
+             shift;;
+    -r)  RTINFO=-r
+         shift;;
+    -sl) SL=true
+         MODE=VDMSL
+         PARSE=$VDMDEAUX
+         shift;;
+    -java)
+         CGMODE=java
+         shift;;
+    -cpp)
+         CGMODE=cpp
+         shift;;
+    -pp) PARSE=$VPPDEAUX
+         SL=false
+         MODE=VDMPP
+         shift;;
+    -sp) SPEC=true
+         shift;;
+    -i)  SPEC=false
+         shift;;
+    -w)  W=true
+         CCDIR=$2
+         shift; shift;;
+    -perf) PERF=true
+         shift;;
+    -priority)
+         PRIORITY_ON=-priority
+         shift;;
+    -*)  usage
+         exit;;
+    *)   break;;
+  esac
+done
+
+TESTDIR=`dirname $1`
+TESTSUITE=$TESTDIR/`basename $1 .head`
+HEADFILE=`basename $1`
+
+if test $# -eq 2 ; then
+        ARGS=$TESTDIR/$2.body
+else 
+        ARGS=$TESTSUITE-??.body
+fi
+
+}
+
+
+removeOldFiles ()
+{
+rm -f *-??.arg .vdmtest
+rm -f *-??.arg.err
+rm -f *-??.arg.pt
+rm -f *-??.arg.res
+rm -f *-??.arg.msg
+rm -f *-??.vdm 
+rm -f *-??.vdm++ 
+rm -f *-??.ast 
+rm -f *-??.dynval
+rm -f cgkind
+
+}
+
+logWhatIsBeingTested ()
+{
+mess -m "***************************************************************************"
+mess -m "Processing AST's for test suite $TESTSUITE"
+mess -m "Options: DTC: $DTC dtc_on: $DTC_ON inv_on: $INV_ON pre_on: $PRE_ON post_on: $POST_ON"
+mess -m "***************************************************************************"
+  
+}
+
+
+logWhichTestCaseIsBeingProcessed ()
+{
+   mess -m "***************************************************************************"
+   mess -m "Processing: $TESTSUITE with `basename $TESTCASE`"
+   mess -m "***************************************************************************"
+}
+
+# If the test case requires specification of thread priorities
+# generate priority.vdm
+makePriorityFile()
+{
+  if test -f $TESTDIR/$TESTCASE.priority; then
+    $PFPARSER $TESTDIR/$TESTCASE.priority > priority.arg
+  else
+    echo [] > priority.arg
+  fi
+  make -f $BASEDIR/Makefile priority.vdm
+}
+
+# Allow generation of test case specific settings
+# at the specification level - create testsettings.vdm
+makeTestSettingsFile()
+{
+  if test -f $TESTDIR/testsettings; then
+    $GETSETTINGS $TESTDIR/testsettings testsettings.vdm
+  else
+    cp -f $BASEDIR/testsettings.vdm .
+  fi
+}
+
+# Allow generation of test case specific settings
+# at the implementation level - create a command line string
+makeAuxilOptions()
+{
+  if test -f $TESTDIR/testsettings; then
+    cmdline1=`$CONVERTSETTINGS $TESTDIR/testsettings` 
+  else
+    cmdline1=""
+  fi
+
+  if [ "$PRIORITY_ON" = "-priority" -a -f $TESTDIR/$TESTCASE.priority ]; then
+    cmdline2="-Z $TESTDIR/$TESTCASE.priority"
+  else
+    cmdline2=""
+  fi
+  cmdline="$cmdline1 $cmdline2"
+}
+
+# Construct any necessary auxiliary files required for testing
+# the dynamic semantics at the specification level  
+makeAuxilFiles()
+{
+  if [ $SL = true ] ;  then
+    :
+  else
+    makePriorityFile
+    makeTestSettingsFile
+  fi
+}
+    
+
+# This function transforms the test cases in $arg
+# into a VDM-Sl or VDM++ syntax correct specification
+# and puts it in file m4tmp.
+# Furthermore, the variable NOTSL is to true if the test case
+# is written in VDM++ syntax originally, and ofcourse NOTSL is
+# to false if it is written in VDM++.
+makeTestCaseFile()
+{
+  if test -f $TESTSUITE.tail ; then
+     cat $TESTSUITE.head $arg  $TESTSUITE.tail > m4tmp1
+  else
+     cat $TESTSUITE.head $arg > m4tmp1
+  fi
+
+  # Test to see if the specification is written in VDM-SL or VDM++
+  if [ $SL = true ] && is_vdmpp m4tmp1  ; then
+     NOTSL=true
+     $PERL $BASEDIR/conv_pp2sl.pl < m4tmp1 > $TESTCASE.vdm
+  else
+     NOTSL=false
+     cp -f m4tmp1 $TESTCASE.vdm
+  fi
+
+  rm m4tmp1
+  chmod a-w $TESTCASE.vdm
+  mess -m "...$TESTCASE"
+}
+
+# This function takes three parameters:
+# arg1: a filename1 : the file to parse 
+# arg2: a boolean   : should the ast be decorated with type information.
+# arg3: a filename2 : the file to place the resulting AST.
+# The function returns : the result of parsing/type checking the specification
+# in filename1.
+
+parseAndGenerateAST()
+{
+    if $2 ; then
+     $PARSE -ta $1 >& /dev/null
+    else 
+     $PARSE -pa $1 >& /dev/null
+    fi
+
+    if [ $? != 0 ] ; then 
+      error 2 $TESTCASE
+      return 1
+    fi
+
+    cp -f m4pp $3
+
+    return 0
+}
+
+
+generate_cgkind()
+{
+ if [ "$CGMODE" = "java" ] ; then
+     echo "<JAVA>" > cgkind 
+ else
+     echo "<CPP>" > cgkind 
+ fi
+}
+
+
+#The function "generate+testspec_arg" generates the the function testspec.arg.
+#This function is a test module that contains the AST of the specification
+#that conforms the test case.
+generate_testspec_arg()
+{
+ echo make -f $BASEDIR/Makefile $FRONTEND.arg MODE=$MODE >& /dev/null
+ make -f $BASEDIR/Makefile $FRONTEND.arg MODE=$MODE >& /dev/null
+   
+
+ if [ $? != 0 ] ; then 
+   error 3 $TESTCASE
+   return 1
+ else
+   mv -f $FRONTEND.arg  $TESTCASE.arg
+   echo "$TESTCASE.arg" >> .vdmtest
+   mv -f $TESTVAL.ast $TESTCASE.ast
+#   if $NOTSL; then
+#     if $SL; then
+#      mv -f m4tmp $TESTCASE.vdm
+#     else
+#      mv -f m4tmp1 $TESTCASE.vdm++
+#      chmod a-w $TESTCASE.vdm++
+#      mv -f m4tmp $TESTCASE.vdm
+#     fi
+#   else
+#      mv -f m4tmp $TESTCASE.vdm
+#   fi
+#   chmod a-w $TESTCASE.vdm
+ fi
+ return 0
+}
+
+#
+runTheSpecification()
+{
+  if [ $SL = false -a $CODEGEN = false ] ; then
+    SPECFILES="$FRONTEND.vdm priority.vdm testsettings.vdm"
+  else
+    SPECFILES="$FRONTEND.vdm"
+  fi
+
+  if test  "$RTINFO" = "-r" ; then
+     time $VDMDEAUX -b -a $DTC $RTINFO  $RTIAST $SPECFILES
+  else
+     time $VDMDEAUX -b -a $DTC $RTINFO $SPECFILES
+  fi
+  return 0
+}
+
+###########################################################################
+#
+#    Saving the generated code in dir CCDIR if option -w is set.
+#
+###########################################################################
+saveGeneratedCode()
+{
+if $W; then
+  if test ! -d $CCDIR; then      
+          mkdir $CCDIR
+  fi 
+  cp -f A.h  $CURDIR/$CCDIR/`basename $TESTCASE`.h
+  cp -f A.cc $CURDIR/$CCDIR/`basename $TESTCASE`.cc
+  if test -f B.cc; then
+     cp -f B.cc  $CURDIR/$CCDIR/`basename $TESTCASE`.B.cc
+     cp -f B.h  $CURDIR/$CCDIR/`basename $TESTCASE`.B.h
+  fi
+  if test -f C.cc; then
+     cp -f C.cc  $CURDIR/$CCDIR/`basename $TESTCASE`.C.cc
+     cp -f C.h  $CURDIR/$CCDIR/`basename $TESTCASE`.C.h
+  fi
+  if test -f D.cc; then
+     cp -f D.cc  $CURDIR/$CCDIR/`basename $TESTCASE`.D.cc
+     cp -f D.h  $CURDIR/$CCDIR/`basename $TESTCASE`.D.h
+  fi
+  cp -f `basename $TESTCASE`.vdm $CURDIR/$CCDIR
+fi
+return 0
+}
+
+compileGeneratedCode()
+{
+ if [ "$CGMODE" = "java" ] ; then
+   make -f $TESTDIR/Makefile javac-$TESTCASE SUITE=-I$TESTDIR MODE=$MODE 
+ else
+   echo make -f $TESTDIR/Makefile $TESTCASE SUITE=-I$TESTDIR MODE=$MODE 
+   make -f $TESTDIR/Makefile $TESTCASE SUITE=-I$TESTDIR MODE=$MODE 
+ fi
+
+ if [ $? != 0 ] ; then
+   error 7 $TESTCASE
+   make -f $TESTDIR/Makefile clean >& /dev/null
+   return 1
+ fi
+ return 0
+
+}
+
+executeGeneratedCode()
+{
+ if [ "$CGMODE" = "java" ] ; then
+   make -s -f $TESTDIR/Makefile java-$TESTCASE SUITE=-I$TESTDIR MODE=$MODE  > $CURDIR/cres
+   cat $CURDIR/cres        
+ else
+   $ICODE > $CURDIR/cres         
+ fi
+
+ case $? in
+   0) ;;
+   1) ;;
+   *) error 8 $TESTCASE
+      make -f $TESTDIR/Makefile clean 
+      return 1
+      ;;
+ esac
+ make -f $TESTDIR/Makefile clean 
+ return 0
+}
+
+diffUsingVDMDE()
+{
+  make -f $BASEDIR/Makefile $COMP
+  $VDMDEAUX -ia $BASEDIR/$COMP.arg $COMP.vdm 
+  if [ $? != 0 ] ; then
+    error $1 $TESTCASE
+  else
+    mess -m "CODE EVALUATION MATCHES EXPECTED VALUE"
+  fi
+  return 0
+}
+
+checkExpectedValueForCG() 
+{
+ if  [ "$CGMODE" = "java" ] && test -f $ARGBASE.javaexp ; then
+      diff -w -B $ARGBASE.javaexp cres
+      if [ $? != 0 ] ; then 
+        cp -f $ARGBASE.javaexp ires
+        diffUsingVDMDE 9
+      else
+        mess -m "CODE EVALUATION MATCHES EXPECTED VALUE"
+      fi        
+ elif [ "$CGMODE" = "cpp" ] && test -f $ARGBASE.cppexp ; then
+      diff -w -B $ARGBASE.cppexp cres
+      if [ $? != 0 ] ; then 
+          cp -f $ARGBASE.cppexp ires
+          make -f $BASEDIR/Makefile $COMP
+          diffUsingVDMDE 9
+       else
+          mess -m "CODE EVALUATION MATCHES EXPECTED VALUE"
+       fi        
+ elif test -f $ARGBASE.exp ; then
+      diff -w -B $ARGBASE.exp cres
+      if [ $? != 0 ] ; then 
+        cp -f $ARGBASE.exp ires
+        diffUsingVDMDE 9
+      else
+        mess -m "CODE EVALUATION MATCHES EXPECTED VALUE"
+      fi
+ else 
+     # There is no expected value for the java/c++ cg.
+     if $SL ; then
+         $VDMDEAUX -ia $TESTSUITE.arg $TESTCASE.vdm
+     else
+        cp -f $TESTSUITE.arg testsuite.arg.tmp
+        perl -ne 's/(\w+)`(\w+)/new $1 ().$2/; print' <testsuite.arg.tmp > testsuite.arg++
+        echo $VPPDEAUX -ia testsuite.arg++ $TESTCASE.vdm
+        $VPPDEAUX -ia testsuite.arg++ $TESTCASE.vdm
+
+      case $? in
+        0) rm -f ires
+           cp -f m4pp  ires
+           diff -w ires cres
+           if [ $? != 0 ] ; then
+             diffUsingVDMDE 10
+           else
+             mess -m "THE CODE AND VDMDE EVALUATES TO SAME RESULT"
+           fi
+           ;;
+        *) error 11 $TESTCASE
+           return 1
+           ;;
+      esac
+    fi
+ fi
+ return 0
+}
+
+
+checkIfResGenerated()
+{
+ if test ! -f $TESTCASE.arg.res ; then
+    error $1 $TESTCASE
+    cat $TESTCASE.err
+    return 1
+ fi
+ return 0
+
+}
+
+exeBackendForCgSpec ()
+{
+ $BACKEND $CGMODE < $TESTCASE.arg.res
+ if [ $? != 0 ] ; then 
+   error 6 $TESTCASE
+   return 1
+ fi
+ return 0
+}
+
+
+GenerateCGFiles()
+{
+
+  if test -f $TESTSUITE.init ; then
+       cp -f $TESTSUITE.init $INITFILE
+  else
+       cp -f $BASEDIR/$INITFILE $INITFILE
+  fi
+
+  $BASEDIR/icodegen -$MODE -$CGMODE $BASEDIR/icode.skel $TESTSUITE.arg  > icode.cc
+
+  if [ $? != 0 ] ; then 
+    error 13 $TESTCASE
+    return 1
+  fi
+  return 0
+}
+
+
+
+exeTheCG()
+{
+
+ if $SL ; then
+   $CGSL -c $TESTCASE.vdm 
+   if [ $? != 0 ] ; then 
+     error 20 $TESTCASE
+     return 1
+   fi
+ else
+   if [ "$CGMODE" = "java" ] ; then
+      if [ "$TESTCASE" = "depend-05" ] ; then
+          make -f $TESTDIR/Makefile copyinterfacefile >& /dev/null
+      fi;
+      $CGPP -j -k $TESTCASE.arg
+      if [ $? != 0 ] ; then 
+        error 20 $TESTCASE
+        return 1
+      fi
+   else
+     $CGPP -c $TESTCASE.vdm
+     if [ $? != 0 ] ; then 
+     error 20 $TESTCASE
+     return 1
+     fi
+   fi
+ fi
+ return 0
+}
+
+
+
+
+buildSLArgumentFile ()
+{
+
+ # Building of the argument file
+ ARG_FILE=`perl -e '$s = $ARGV[0]; $s =~ s/-[0-9]+.body/.arg/g; print $s ' $arg`
+ $EXPRSL < $ARG_FILE > m4pp
+ if [ $? != 0 ]; then
+         echo UNEXPECTED RESULT >> trace
+         echo UNEXPECTED RESULT
+         echo Some error occured during parsing of the argument >> trace
+         exit 1
+ fi
+
+ cp -f m4pp  vdmtest.arg
+}
+
+buildPPArgumentFile ()
+{
+ # Building of the argument file
+ ARG_FILE=`perl -e '$s = $ARGV[0]; $s =~ s/-[0-9]+.body/.arg/g; print $s ' $arg`
+ # Change op call to new + method apply: A`Test() -> new A().Test()
+ perl -pe 's/(\w+)`(\w+)/new $1().$2/; ' $ARG_FILE >tmp.arg.file
+ $EXPRPP < tmp.arg.file > m4pp
+ if [ $? != 0 ]; then
+         echo UNEXPECTED RESULT >> trace
+         echo UNEXPECTED RESULT
+         echo Some error occured during parsing of the argument >> trace
+         exit 1
+ fi
+
+ cp -f m4pp  vdmtest.arg
+  
+}
+buildArgumentFile()
+{
+ if $SL ; then
+   buildSLArgumentFile
+ else
+   buildPPArgumentFile
+ fi
+
+}
+
+createDebugArg ()
+{
+   make -f $BASEDIR/Makefile $DEBUGARG
+
+ ### dtc
+ if [ "$DTC_ON" = "-dtc_on" ] ; then
+    perl -pe "s@SETTINGS\`Dtc(On|Off)@SETTINGS\`DtcOn@" $DEBUGARG > debug.perl
+ else
+    perl -pe "s@SETTINGS\`Dtc(On|Off)@SETTINGS\`DtcOff@" $DEBUGARG > debug.perl
+ fi
+ mv -f debug.perl $DEBUGARG
+
+ ### dtc
+ if [ "$INV_ON" = "-inv_on" ] ; then
+    perl -pe "s@SETTINGS\`Inv(On|Off)@SETTINGS\`InvOn@" $DEBUGARG > debug.perl
+ else
+    perl -pe "s@SETTINGS\`Inv(On|Off)@SETTINGS\`InvOff@" $DEBUGARG > debug.perl
+ fi
+ mv -f debug.perl $DEBUGARG
+
+
+ ### pre
+ if [ "$PRE_ON" = "-pre_on" ] ; then
+    perl -pe "s@SETTINGS\`Pre(On|Off)@SETTINGS\`PreOn@" $DEBUGARG > debug.perl
+ else
+    perl -pe "s@SETTINGS\`Pre(On|Off)@SETTINGS\`PreOff@" $DEBUGARG > debug.perl
+ fi
+ mv -f debug.perl $DEBUGARG
+
+ ### dtc
+ if [ "$POST_ON" = "-post_on" ] ; then
+    perl -pe "s@SETTINGS\`Post(On|Off)@SETTINGS\`PostOn@" $DEBUGARG > debug.perl
+ else
+    perl -pe "s@SETTINGS\`Post(On|Off)@SETTINGS\`PostOff@" $DEBUGARG > debug.perl
+ fi
+ mv -f debug.perl $DEBUGARG
+
+ ### priority
+ if [ "$PRIORITY_ON" = "-priority" ] ; then
+    perl -pe "s@SETTINGS\`PriorityBased(On|Off)@SETTINGS\`PriorityBasedOn@" $DEBUGARG > debug.perl
+ else
+    perl -pe "s@SETTINGS\`PriorityBased(On|Off)@SETTINGS\`PriorityBasedOff@" $DEBUGARG > debug.perl
+ fi
+ mv -f debug.perl $DEBUGARG
+}
+
+
+
+checkExpectedValueForDynsem ()
+{
+  if test $SPEC = true -a -f $TESTDIR/$TESTCASE.dynval_spec ; then
+        rm -f $TESTCASE.arg.logfile 
+        diff -w $TESTCASE.dynval $TESTDIR/$TESTCASE.dynval_spec
+	if [ $? != 0 ] ; then
+		cp -f $TESTCASE.dynval ires
+		cp -f $TESTDIR/$TESTCASE.dynval_spec cres
+		make -f $BASEDIR/Makefile $COMP
+		$VDMDEAUX -ia $BASEDIR/$COMP.arg $COMP.vdm
+		if [ $? != 0 ] ; then
+                	error 104 $TESTCASE
+		fi
+	fi
+ elif test -f $TESTDIR/$TESTCASE.dynval ; then
+        rm -f $TESTCASE.arg.logfile 
+        diff -w $TESTCASE.dynval $TESTDIR/$TESTCASE.dynval
+	if [ $? != 0 ] ; then
+		cp -f $TESTCASE.dynval ires
+		cp -f $TESTDIR/$TESTCASE.dynval cres
+		make -f $BASEDIR/Makefile $COMP
+		$VDMDEAUX -ia $BASEDIR/$COMP.arg $COMP.vdm
+		if [ $? != 0 ] ; then
+                	error 104 $TESTCASE 
+                fi
+	fi
+ elif test -f $TESTDIR/$TESTCASE.logfile ; then
+        diff -w $TESTCASE.arg.logfile $TESTDIR/$TESTCASE.logfile
+        if [ $? != 0 ] ; then
+                error 107 $TESTCASE
+        else
+                rm $TESTCASE.arg.logfile 
+        fi
+ elif test -f $TESTDIR/$TESTCASE.err105 ; then
+        echo ">> Output produced but no .dynval file (but expected error file existed) in $TESTCASE"                
+        cat $arg.msg
+        error 105 $TESTCASE
+        echo "Error 105 in $TESTCASE" >> err     
+ else
+        error 106 $TESTCASE
+ fi
+
+}
+
+exeBackendForDynSemSpec()
+{
+  $BEIP <$TESTCASE.arg.res >$TESTCASE.dynval
+}
+
+runTheIP()
+{
+ if $SL ; then           
+     ## SL and Implementation test
+     if is_dlmod $TESTDIR/$TESTCASE.body; then
+             make -f $TESTDIR/Makefile IMPLMOD=1 \
+                     SOURCE_DIR=$TESTDIR $TESTCASE
+     fi
+     echo Running: $IPSL -ia $DTC $TESTSUITE.arg $arg
+     $IPSL -ia $DTC $TESTSUITE.arg $TESTCASE.vdm -O $TESTCASE.dynval >& $TESTCASE.err
+     
+     case $? in
+             0) cp -f m4pp $TESTCASE.dynval
+                ;;
+             *) error 105 $TESTCASE
+                return 1
+                ;;
+
+     esac
+     # clean up
+     if is_dlmod $TESTDIR/$TESTCASE.body; then
+             make -f $TESTDIR/Makefile clean
+     fi
+ else
+
+    # PP and Implementation test
+    cp -f $TESTSUITE.arg testsuite.arg.tmp
+    perl -ne 's/(\w+)`(\w+)/new $1 ().$2/; print' <testsuite.arg.tmp > testsuite.arg++
+
+    echo Running $IPPP $cmdline -ia $DTC testsuite.arg++ $TESTCASE.vdm
+    echo $TESTCASE
+    $IPPP $cmdline -ia $DTC testsuite.arg++ $TESTCASE.vdm -O $TESTCASE.dynval >& $TESTCASE.err
+
+    if [ $? != 0 ] ; then
+      error 105 $TESTCASE
+      return 1
+    else
+      cp -f logfile $TESTCASE.arg.logfile
+    fi
+ fi
+ return 0
+}
+
+setVariablesAndLogSpecCodegen()
+{
+  # set the auxliary functions used for running the code generator on
+  # specification level
+  if $SL ; then
+     BACKEND=/opt/toolbox_main/bin/be_spec-sl
+  else
+     BACKEND=/opt/vdm++_toolbox_main/bin/be_spec-pp
+  fi
+
+  # The path where the specification is located should be written here.
+  # ... This would need another structuring of the call of testdir and
+  # test file
+}
+
+doTestSpecCodegen()
+{
+  setVariablesAndLogSpecCodegen
+
+  # Front end.
+  for arg in $ARGS ; do
+
+    ARGBASE=$TESTDIR/`basename $arg .body`
+    TESTCASE=`basename $ARGBASE`
+
+    # put the a syntax correct example of the test case in file m4tmp.
+    makeTestCaseFile
+
+    parseAndGenerateAST $TESTCASE.vdm true vdm.ast  &&
+    generate_cgkind &&
+    #Generate the file testspec.arg
+    generate_testspec_arg 
+
+    if [ $? != 0 ] ; then
+         ARGS=`echo $ARGS | /bin/sed -e "s/$arg//" `
+    fi
+
+
+  done
+
+  # Running the specification.
+  runTheSpecification
+  
+  echo $ARGS
+  for arg in $ARGS ; do
+     ARGBASE=$TESTDIR/`basename $arg .body`
+     TESTCASE=`basename $ARGBASE`
+     logWhichTestCaseIsBeingProcessed 
+
+     checkIfResGenerated 5 &&
+     exeBackendForCgSpec &&
+     GenerateCGFiles &&
+ 
+     saveGeneratedCode &&
+     compileGeneratedCode &&
+     executeGeneratedCode &&
+     checkExpectedValueForCG 
+
+  done
+}
+
+
+setVariablesAndLogImplCodegen()
+{
+  if  $SL  ; then
+    if [ -n "$CGSL" ] ; then
+     :
+    else
+     # if $CGSL is not set then take one in the search path
+     CGSL=vdmde 
+    fi
+    echo " CGSL = $CGSL" >> trace
+    echo " CGSL = $CGSL" > trace
+  else
+    if [ -n "$CGPP" ] ; then
+        :
+    else
+        # if $CGPP is not set then take one in the search path
+        CGPP=vppde
+    fi
+    echo " CGPP = $CGPP" >> trace
+    echo " CGPP = $CGPP" > trace
+  fi
+
+}
+
+
+
+doTestImplCodegen()
+{
+  
+  setVariablesAndLogImplCodegen
+
+  for arg in $ARGS ; do
+
+    ARGBASE=$TESTDIR/`basename $arg .body`
+    TESTCASE=`basename $ARGBASE`
+
+    # put the a syntax correct example of the test case in file m4tmp.
+    makeTestCaseFile
+
+    logWhichTestCaseIsBeingProcessed 
+
+    exeTheCG &&
+    GenerateCGFiles &&
+      
+    saveGeneratedCode &&
+    compileGeneratedCode &&
+    executeGeneratedCode &&
+    checkExpectedValueForCG
+  done
+}
+
+
+setVariablesAndLogSpecDynsem() 
+{
+  # set the auxliary functions used for running the dynamic sem generator on
+  # specification level
+  if $SL ; then
+     BEIP=/opt/toolbox_main/bin/be_ip-sl
+     EXPRSL=/opt/toolbox_main/bin/vdmexprsl
+     DEBUGARG=debug.arg
+  else
+     BEIP=/opt/vdm++_toolbox_main/bin/be_ip-pp
+     EXPRPP=/opt/vdm++_toolbox_main/bin/vdmexprpp
+     DEBUGARG=debugpp.arg
+  fi
+
+  # The path where the specification is located should be written here.
+  # ... This would need another structuring of the call of testdir and
+  # test file
+
+}
+
+doTestSpecDynsem()
+{
+  setVariablesAndLogSpecDynsem
+
+  for arg in $ARGS ; do
+
+    ARGBASE=$TESTDIR/`basename $arg .body`
+    TESTCASE=`basename $ARGBASE`
+
+    # put the a syntax correct example of the test case in file m4tmp.
+    makeTestCaseFile
+    makeAuxilFiles
+
+    parseAndGenerateAST $TESTCASE.vdm false vdm.ast  &&
+    buildArgumentFile &&
+    generate_testspec_arg 
+
+    if [ $? != 0 ] ; then
+
+         ARGS=`echo $ARGS | /bin/sed -e "s/$arg//" `
+    fi
+
+  done
+
+  createDebugArg
+
+  # Running the specification.
+  runTheSpecification
+
+  echo $ARGS
+  for arg in $ARGS ; do
+    ARGBASE=$TESTDIR/`basename $arg .body`
+    TESTCASE=`basename $ARGBASE`
+
+
+     checkIfResGenerated 105 &&
+     exeBackendForDynSemSpec &&
+     
+     checkExpectedValueForDynsem 
+  done
+}
+
+
+
+setVariablesAndLogImplDynsem() 
+{
+  if  $SL  ; then
+    if [ -n "$IPSL" ] ; then
+     :
+    else
+     # if $IPSL is not set then take one in the search path
+     IPSL=vdmde 
+    fi
+    echo " IPSL = $IPSL" >> trace
+    echo " IPSL = $IPSL"
+  else
+    if [ -n "$IPPP" ] ; then
+        :
+    else
+        # if $IPPP is not set then take one in the search path
+        IPPP=vppde
+    fi
+    echo " IPPP = $IPPP" >> trace
+    echo " IPPP = $IPPP" 
+  fi
+
+}
+
+doTestImplDynsem()
+{
+  setVariablesAndLogImplDynsem
+
+  for arg in $ARGS ; do
+
+    ARGBASE=$TESTDIR/`basename $arg .body`
+    TESTCASE=`basename $ARGBASE`
+
+    # put the a syntax correct example of the test case in file m4tmp.
+    makeTestCaseFile
+    makeAuxilOptions
+    runTheIP &&
+    checkExpectedValueForDynsem
+  done      
+}
+
+
+main() 
+{ 
+  setGlobalVariables "$@"
+  readOptions "$@"
+  removeOldFiles
+
+  ###############################################################
+  ## testfile, main loop1                                      ##
+  ##  - form AST's for ALL testcases                           ##
+  ###############################################################
+
+
+  logWhatIsBeingTested
+
+
+
+  if  [ $SPEC = true -a $CODEGEN = true ]  ; then
+      doTestSpecCodegen 
+  elif [ $SPEC = false -a $CODEGEN = true ] ; then
+      doTestImplCodegen
+  elif [ $SPEC = true -a  $CODEGEN = false ] ; then
+      doTestSpecDynsem
+  elif [ $SPEC = false -a $CODEGEN = false ] ; then
+      doTestImplDynsem
+  fi
+
+}
+
+main "$@"
+
+
+
+
+
+
+
+

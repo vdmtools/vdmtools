@@ -1,0 +1,150 @@
+class JavaIoCharArrayReader is subclass of JavaIoReader
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaIoCharArrayReader" , <CLASS> , false  )
+instance variables 
+  protected  buf : map  int  to  char ;
+  protected  pos : int ;
+  protected  markedPos : int  := 0;
+  protected  count : int 
+operations 
+public  read : () ==> int 
+read() == 
+( ( ensureOpen();
+    if  pos >= count
+    then  
+      return  -1
+    else  
+      def l_4 = pos;
+      l_3 = l_4
+      in ( pos := l_4+1;
+        def l_1 = J2VUTIL`toInt(buf(l_3))
+        in return  l_1
+      ) 
+  ) 
+) ;
+
+public  close : () ==> ()
+close() == 
+( buf := {|->};
+  skip 
+) ;
+
+public  mark : int  ==> ()
+mark(readAheadLimit) == 
+( ( ensureOpen();
+    markedPos := pos
+  ) ;
+  skip 
+) ;
+
+public  ready : () ==> bool 
+ready() == 
+( ( ensureOpen();
+    return  (count-pos) > 0
+  ) 
+) ;
+
+public  reset : () ==> ()
+reset() == 
+( ( ensureOpen();
+    pos := markedPos
+  ) ;
+  skip 
+) ;
+
+public  skip__ : int  ==> int 
+skip__(n_) == 
+( dcl n: int := n_;
+  ensureOpen();
+  if  pos+n > count
+  then  
+  ( n := count-pos
+  ) ;
+  if  n < 0
+  then  
+  ( return  0
+  ) ;
+  def l_3 = pos
+  in pos := l_3+n;
+  return  n
+) ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+private  ensureOpen : () ==> ()
+ensureOpen() == 
+( if  buf = {|->}
+  then  
+    exit  new  JavaIoIOException(new  JavaLangString("Stream closed"));
+  skip 
+) ;
+
+public  markSupported : () ==> bool 
+markSupported() == 
+( return  true  
+) ;
+
+public  read : map  int  to  char  * int  * int  ==> int * map  int  to  char
+read(b_, off, len___) == 
+( dcl len__: int := len___,
+      b: map  int  to  char:=b_;
+  ensureOpen();
+  if  (off < 0) or  (off > (card  dom  b)) or  (len__ < 0) or  ((off+len__) > (card  dom  b)) or  ((off+len__) < 0)
+  then  
+    ( exit  new  JavaLangIndexOutOfBoundsException()
+    ) 
+  else  
+    if  len__ = 0
+    then  
+      ( return  mk_(0,b)
+      ) ;
+  if  pos >= count
+  then  
+    ( return  mk_(-1,b)
+    ) ;
+  if  pos+len__ > count
+  then  
+    ( len__ := count-pos
+    ) ;
+  if  len__ <= 0
+  then  
+    ( return  mk_(0,b)
+    ) ;
+  ( dcl   k : int  := pos;
+    while  k < pos+len__ do  
+    ( b := b ++ {off+(k-pos) |-> buf(k)};
+      k := k+1
+    ) 
+  ) ;
+  def l_3 = pos
+  in pos := l_3+len__;
+  return  mk_(len__,b)
+) ;
+
+public  JavaIoCharArrayReader : map  int  to  char  ==> JavaIoCharArrayReader
+JavaIoCharArrayReader(buf) == 
+( JavaIoCharArrayReader`buf := buf;
+  JavaIoCharArrayReader`pos := 0;
+  JavaIoCharArrayReader`count := (card  dom  buf)
+) ;
+
+public  JavaIoCharArrayReader : <NIL> ==> JavaIoCharArrayReader
+JavaIoCharArrayReader(-) == 
+isNil := true  ;
+
+public  JavaIoCharArrayReader : map  int  to  char  * int  * int  ==> JavaIoCharArrayReader
+JavaIoCharArrayReader(buf, offset, length) == 
+( if  (offset < 0) or  (offset > (card  dom  buf)) or  (length < 0) or  ((offset+length) < 0)
+  then  
+    ( exit  new  JavaLangIllegalArgumentException()
+    ) ;
+  JavaIoCharArrayReader`buf := buf;
+  JavaIoCharArrayReader`pos := offset;
+  JavaIoCharArrayReader`count := if offset + length < (card dom buf) then offset + length else card dom buf;
+  JavaIoCharArrayReader`markedPos := offset
+) ;
+
+
+end  JavaIoCharArrayReader

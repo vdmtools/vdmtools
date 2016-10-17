@@ -1,0 +1,22 @@
+class A
+types
+
+  D :: 
+   n :nat 
+   f : (bool -> bool) | seq of bool
+   t : token
+  inv mk_D(a,b,c) == 
+    b(true);
+
+  E ::
+   r : real
+   f : (bool -> bool) | map real to bool
+  inv e == e.r = 9;
+
+functions
+
+  test: D | E -> bool
+  test(arg) ==
+    (arg.f)(true);
+
+end A

@@ -1,0 +1,33 @@
+module PAIRS
+
+parameters
+        types type1, type2
+
+exports all
+
+definitions
+
+types
+PAIR :: El1 : type1
+        El2 : type2
+
+functions
+CreatePair: type1 * type2 -> PAIR
+CreatePair(El1, El2) ==
+        mk_PAIR(El1, El2)
+
+end PAIRS
+
+module A
+
+instantiations
+        PairNat as PAIRS(type1 -> nat, type2 -> nat) all
+
+definitions
+functions
+
+Test: () -> PairNat`PAIR
+Test() ==
+        PairNat`CreatePair(1,2)
+
+end A

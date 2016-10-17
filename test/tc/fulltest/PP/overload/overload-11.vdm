@@ -1,0 +1,49 @@
+-- This test case checks that access modifiers and overloading interact as
+-- expected
+
+class A
+
+functions
+
+public fn : bool -> bool
+fn(b) ==
+   b ;
+
+fn : A -> bool
+fn(-) ==
+  false;
+
+protected fn : C -> bool
+fn(-) ==
+  false;
+
+end A
+
+class C 
+
+functions
+
+g : nat -> real
+g(-) ==
+  new A().fn(new A()); -- error
+
+end C
+
+class D is subclass of A
+
+functions
+
+g : nat -> real
+g(-) ==
+  fn(new A()); -- error
+
+h : nat -> bool
+h(-) ==
+  fn(new C());
+
+end D
+
+
+
+
+

@@ -1,0 +1,38 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ( int | real | bool | char | seq of char | <世界夫人> )  
+Test () ==
+return 
+[ let あ = 3 in あ,
+  0,
+  1,
+  3.0,
+  3.6,
+  -3,
+  -13.6364,
+  13.3564,
+  true,
+  false,
+  'A',
+  'z',
+  '3',
+  "",
+  "さようなら世界夫人",
+  <世界夫人> ]
+
+
+
+
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

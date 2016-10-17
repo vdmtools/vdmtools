@@ -1,0 +1,74 @@
+class A
+
+instance variables
+  public r1 : real := 1;
+  public r2: real  := 2.2;
+
+
+operations
+
+  public initA: real * real ==> A
+  initA  (a,b) ==
+  ( r1 := a;
+    r2 := b;
+    return self);
+
+  public Get: () ==> seq of real
+  Get() ==
+    return [r1,r2];
+
+
+  public Set: real * real ==> ()
+  Set(v1,v2) ==
+  ( r1 := v1;
+    r2 := v2 )
+
+end A
+class C is subclass of B, A
+
+instance variables
+
+  public r1 : real := 4
+operations
+
+  public initC:real==>C
+  initC(a) == 
+  (A`r1 := a;
+   return self);
+
+end C
+class B
+
+instance variables
+
+  c : C;
+
+operations
+
+  public Test : () ==>real
+  Test()  ==
+  ( c := new C().initC (88);
+    let [r1,r2] = c.Get()
+    in
+      return r1 + r2
+  )
+  
+
+end B
+
+
+class D is subclass of C
+
+instance variables
+  a : real := 34.45;
+  b : nat  := 1000;
+
+
+operations
+  Geta: () ==> real
+  Geta()  ==
+  return a+b;
+
+end D
+
+ 

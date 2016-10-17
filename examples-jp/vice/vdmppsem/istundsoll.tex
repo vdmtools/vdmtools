@@ -1,0 +1,145 @@
+\section{The VDM++ approach to real-time}
+\label{sec:vdmpp}
+
+The formal notation VDM++ is an object-oriented, model-based specification
+language, and is largely a superset of the ISO standardized notation VDM-SL
+\cite{ISOVDM95}. VDM++ was originally developed in the ESPRIT project
+\textsc{AFRODITE} and was subsequently improved by the Danish company
+IFAD. The real-time extensions to VDM++ where developed as part of the
+ESPRIT project \textsc{VICE}: ``VDM++ In a Constrained Environment''.
+Both the VDM++ and VICE notations are supported by the industry strength
+\vdmtools, which is now owned and maintained by the Japanese
+company CSK \cite{CskVdmHome}.
+
+VDM++ provides a precise and unambiguous notation for
+analysis of requirements and allows for early validation through testing
+and debugging using \vdmtools. In this way it is possible to bring
+testing activities forward to the specification phase of the
+development life-cycle. This pragmatic approach to applying formal
+techniques for systems development has been instrumental for a number
+of very successful applications in industry, for example \cite{Berg&99a},
+\cite{Horl&00b} and Felicia Networks. In Section~\ref{subsec:vdmppold}
+we present a short overview of the VDM++ language and its real-time
+extensions, both in terms of capabilities and limitations.
+In Section~\ref{subsec:vdmppnew} we will investigate how to overcome
+the limitations by introducing some extensions to the notation and its 
+associated tool support.
+
+\subsection{The existing VDM++ capabilities and limitations}
+\label{subsec:vdmppold}
+
+In VDM++, a complete formal specification consists of a collection of 
+class specifications. A class specification has the following components:
+
+\begin{description}
+\item[Class header:] This contains the class name declaration and
+inheritance information (single or multiple).
+
+\item[Instance variables:] The state of an object consists of
+variables which can be of simple types, types
+such as sets, sequences, tuples, records and maps, and object
+references (the clientship relation). Instance variables can have
+invariant and initial expressions.
+
+\item[Operations:] Class methods that may be defined implicitly,
+explicitly (through imperative statements),
+or as a mixture of both. The implicit style uses pre and
+post condition expressions. 
+
+%\item[Functions:] Functions are similar to operations except that the
+%body of a function is an expression rather than a statement. Also,
+%functions are not allowed to refer to instance variables.
+
+\item[Synchronization:] Operation invocation is defined with 
+synchronuous semantics (rendez-vous). It is possible to specify the
+circumstances in which an operation may be executed using a
+\textit{permission predicate} for the operation. This predicate is
+over the instance variables of the object, and also \textit{history
+variables} for that object. A history variable can be used to count
+the number of requests, activations and completions for an operation
+on that object.
+
+\item[Thread:] In VDM++ active objects are considered to
+model active world entities. An object can be
+made active by the specification of a thread. A thread is a sequence
+of statements which are executed to completion, at which point the
+thread dies. 
+\end{description}
+
+\vdmtools\ is a comprehensive suite of tools for
+the analysis and validation of formal models described in
+VDM++. Different variants of \vdmtools\ exists but in this article we
+limit our efforts to the version resulted from the VICE project and an
+auxiliary tool called \texttt{ShowVICE} \cite{Verhoef05}. The only part of 
+\vdmtools\ important for this article is the interpreter. It is able 
+to perform execution of VDM++ models. It has functionality enabling 
+debugging using breakpoints and single/multiple stepping directly at the
+VDM++ level. Execution of thread-based models, with different scheduling 
+policies selected by the user e.g.\ cooperative round-robin scheduling.
+
+Specifically in the VICE version of \vdmtools\ the notion of time and
+periodic threads is available. 
+In general the approach inside the interpreter is that the time of the
+previous instruction is recorded in an internal variable. The task
+switching overhead is a constant defined by the user. The
+execution time for statements executed since the previous event, is
+the sum of the execution times for each such statement. 
+However, there is a notion of a duration statement.
+A duration is an estimate of how much time a particular portion of a
+VDM model will take to execute, in the implementation, on the target
+processor. The information provided by a duration statement is
+used to override the default execution time calculated for that
+portion. 
+
+The basic idea of the approach is to simulate the timing behaviour of
+the target processor within the interpreter. To achieve
+this the interpreter maintains an internal variable which
+corresponds to the clock of the target processor i.e.\ the clock of the
+target processor will be simulated. The interpreter will adopt the
+same scheduling algorithm as that intended for the final system. During
+execution of the model a number of events will occur: 
+\begin{itemize}
+\item Swapping in and out of threads
+\item Operation requests, activations and completions
+\end{itemize}
+We call such events, trace events 
+\footnote{\textsc{TR:}For the purposes of this paper we
+restrict our interest to the swapping in and out of threads.}.
+
+Each trace event is logged in a trace file, with the time at which the
+event occurred. This time is the reading of the clock on the target
+processor as recorded by the interpreter when the event occurred. To
+maintain the internal variable representing the target processor's
+clock, selected portions of the VDM++ model are enhanced with duration
+information, a file of default duration information is utilized and
+the user provides a default task switching overhead. After the
+completing of an execution it is then possible to make use of the
+\texttt{ShowVICE} tool to automatically get information about the trace
+produced in the form of an extended sequence diagram with time annotations
+and thread context.
+
+\subsubsection{Limitations}
+
+\begin{enumerate}
+\item VDM++ is in fact a synchronous language, there is no notion of events
+\item VDMTools only supports uni-processor multi-threading
+\item \textsc{TR:} No access to the ``global time'' (if space available also
+new permission predicates).
+\item No notion of distribution in the language. Describe 5 basic communication
+patterns that we want to support.
+\item Fixed format for trace file.
+\item Only absolute time progress (\texttt{duration}) is supported, no relative
+notion of time (depending on CPU context or BUS properties).
+\end{enumerate}
+
+\subsection{Suggestions to overcome the limitations of VDM++}
+\label{subsec:vdmppnew}
+
+\noindent To Be Written.
+
+\begin{enumerate}
+\item Introduction of \texttt{async} operation calls.
+\item Introduction of \texttt{system}, \texttt{CPU}, \texttt{BUS}.
+\item Introduction of \texttt{cycles}.
+\item Flexible trace file.
+\end{enumerate}

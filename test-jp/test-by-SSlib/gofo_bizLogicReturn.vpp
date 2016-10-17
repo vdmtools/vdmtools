@@ -1,0 +1,78 @@
+/*
+ * Gofo業務論理の返値を表すクラス
+ * $Id: gofo_bizLogicReturn.vpp,v 1.1 2005/11/25 07:05:38 vdmtools Exp $
+ *
+ *　責任：
+ *	伝票のリストと例外のリスト、エラー報告伝票リストを格納する。 
+ *	業務論理の戻り値を格納する。 
+ 
+ *　使用方法：
+ *	（１）型定義の方法
+ *		スーパークラス『問題領域共通定義』を定義し、その中で、下記のように型「伝票」を、本クラスのサブクラス
+ *		（この例の場合、『株価ボード登録銘柄問い合わせ伝票』と『株価ボード登録伝票』）で定義した型「伝票」を使って定義する。
+  		
+ 		 public 「伝票」 = 
+ 			『株価ボード登録銘柄問い合わせ伝票』  | 『株価ボード登録伝票』 | ...;
+ */
+class GofoBizLogicReturn is subclass of 『問題領域共通定義』
+
+instance variables
+protected 伝票列 : seq of 「伝票」;
+protected 例外列 : seq of GofoApplicationException;
+protected エラー報告伝票列 : seq of 「伝票」;
+
+operations
+public 例外が発生した : () ==> bool
+例外が発生した() == return self.getExceptionList() <> [];
+
+public 正常に終了した  : ()  ==> bool
+正常に終了した() == return self.getExceptionList() = [];
+
+public GofoBizLogicReturn : () ==> GofoBizLogicReturn
+GofoBizLogicReturn() ==
+	(
+	伝票列 := [];
+	例外列 := [];
+	エラー報告伝票列 := [];
+	return self
+	);
+
+--伝票列を得る
+public getSlipList : () ==> seq of 「伝票」
+getSlipList() == return 伝票列;
+
+--例外列を得る
+public getExceptionList : () ==> seq of GofoApplicationException
+getExceptionList() == return 例外列;
+
+--エラー報告伝票列を得る
+public getErrorSlipList : () ==> seq of 「伝票」
+getErrorSlipList() == return エラー報告伝票列;
+
+--伝票列を設定する
+public putSlip : 『伝票』 ==>  GofoBizLogicReturn
+putSlip(a伝票) == 
+	(
+	伝票列 := 伝票列 ^ [a伝票];
+	return self
+	);
+
+--例外列を設定する
+public putError : [GofoApplicationException] ==>  GofoBizLogicReturn
+putError(a例外) == 
+	(
+	if a例外 <> nil then	-- nilの場合は例外が発生していない
+		例外列 := 例外列 ^ [a例外];
+	return self
+	);
+
+--エラー報告伝票列を設定する
+public putErrorSlip : [「伝票」] ==>  GofoBizLogicReturn
+putErrorSlip(aエラー報告伝票) == 
+	(
+	if aエラー報告伝票 <> nil then	-- nilの場合はエラー報告伝票が発生していない
+		エラー報告伝票列 := エラー報告伝票列 ^ [aエラー報告伝票];
+	return self
+	);
+
+end GofoBizLogicReturn

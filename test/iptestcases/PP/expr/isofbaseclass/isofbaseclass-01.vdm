@@ -1,0 +1,41 @@
+class B
+end B
+
+class C
+end C
+
+class A is subclass of B
+
+operations
+
+public Test : () ==> seq of bool
+Test() ==
+( dcl v1: A | B | int :=  new A(),
+      v2: B | A | C := new B(),
+      res: seq of bool;
+  res := [ 
+    isofbaseclass(A, v1),
+    isofbaseclass(B, v1),
+    isofbaseclass(B, v2),
+    isofbaseclass(C, v2),
+    isofbaseclass(A, v2)
+  ];
+  v2 := new C();
+  v1 := 10;
+  res := res ^ [
+    isofbaseclass(A, v1),
+    isofbaseclass(A, v2),
+    isofbaseclass(B, v2),
+    isofbaseclass(C, v2)
+  ];
+  v2 := new C();
+  v1 := new B();
+  res := res ^ [
+    isofbaseclass(A, let v = v2 in v),
+    isofbaseclass(B, if 1=2 then v1 else v2),
+    isofbaseclass(C, v2)
+  ];
+  return res
+)
+
+end A

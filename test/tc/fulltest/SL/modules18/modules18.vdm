@@ -1,0 +1,55 @@
+module A
+
+exports all
+
+definitions
+
+state StA of
+  a : nat
+  b : bool
+inv s == s.b
+init s == s = mk_StA(1,true)
+end
+
+operations
+
+  OpA: nat ==> ()
+  OpA(n) ==
+    a := a + n
+  pre n < 10;
+
+  ExportState: () ==> StA
+  ExportState() ==
+    return mk_StA(a,b)
+
+end A
+module B
+
+imports 
+ from A
+  operations OpA; ExportState
+
+exports all
+definitions
+
+operations
+
+  OpB: nat ==> bool
+  OpB(n) ==
+    return A`pre_OpA(n,A`ExportState())
+
+end B
+module C
+
+imports 
+ from A all
+exports all
+definitions
+
+operations
+
+  OpB: nat ==> bool
+  OpB(n) ==
+    return A`pre_OpA(n,A`ExportState())
+
+end C

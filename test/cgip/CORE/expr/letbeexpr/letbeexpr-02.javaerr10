@@ -1,0 +1,4 @@
+Due to a problem with set enumeration patterns used in let-be-st
+statements/expressions, the generated code will execute to:
+
+The binding environment was empty

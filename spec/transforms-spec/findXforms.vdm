@@ -1,0 +1,67 @@
+\section{Finding VDM++ Transformations}
+\label{sec:fx}
+
+This is the top-level module for finding possible \vdmpp\
+transformations in a specification. The (identifiers of the)
+particular set of transforms of interest is represented by the
+parameter {\em p\_ids} of the function {\em xfsClassList}. This set is
+divided into two, one of expression transformations, the other of
+statement transformations, and the appropriate kinds of
+transformations are found by the functions  {\em FEX`exfsClassList}
+and {\em FSX`sxfsClassList} respectively. The overall result is then
+the combination of the results of these two separate searches.
+
+The result takes the form of a mapping from transformation identifiers
+to another mapping which associates context identifiers with rewrites
+(which are either expressions or statements, as appropriate). Thus,
+for each possible transformation identifier the result indicates the
+positions in the abstract syntax tree at which that transformation can
+be applied (uniquely identified by the context identifiers) and, for
+each such position, the expression or statement which would replace
+the one at that position if the transformation were applied there
+(except that if no suggested replacement is defined the position maps
+to the value {\em nil}).
+
+Note that the domain of this result mapping is always equal to the
+set of transformations represented by the parameter {\em p\_ids}, so
+that transforms in the set for which no match is possible appear
+in the result mapped to the empty map.  
+
+\begin{vdm_al}
+module FX
+
+imports
+  from JSSREP all,
+  from CI all,
+  from REP all,
+  from AS all,
+  from XF all,
+  from FSX all,
+  from FEX all
+
+exports all
+
+definitions
+
+types
+
+Rewrite = AS`Stmt | AS`Expr ;
+
+XFResult = map XF`XFId to map CI`ContextId to [Rewrite] ;
+
+functions
+
+xfsClassList : seq of AS`Class * set of XF`XFId -> XFResult
+xfsClassList(p_cl, p_ids) == 
+  let l_stmtids = { b_id | b_id in set p_ids & is_XF`SXFId(b_id) },
+      l_exprids = { b_id | b_id in set p_ids & is_XF`EXFId(b_id) },
+      l_stmtXfs = FSX`sxfsClassList(p_cl, l_stmtids),
+      l_exprXfs = FEX`exfsClassList(p_cl, l_exprids)
+ in
+   l_stmtXfs munion l_exprXfs ;
+
+end FX
+
+\end{vdm_al}
+
+

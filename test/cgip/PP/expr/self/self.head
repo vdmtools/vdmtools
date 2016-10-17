@@ -1,0 +1,17 @@
+class A
+
+instance variables
+  r : real := 1;
+
+operations
+
+public  Get: () ==> real
+  Get() ==
+    return r;
+
+public  Inc : () ==> A
+  Inc() ==
+  ( r := r + 1;
+    return self )
+
+end A

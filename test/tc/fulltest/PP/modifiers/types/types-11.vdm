@@ -1,0 +1,18 @@
+ class B 
+
+  types
+
+    public T :: v : nat
+
+  operations
+
+    Op : () ==> T
+    Op() ==
+      return mk_T(3);
+
+  public Test : () ==> nat
+    Test() ==
+      let - = Op()
+      in return 1
+
+end B

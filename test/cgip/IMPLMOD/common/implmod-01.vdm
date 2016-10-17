@@ -1,0 +1,40 @@
+dlmodule B  
+  exports
+    functions
+      ExtCos : real -> real
+
+    uselib 
+      "libmath.so"
+end B
+
+module APPROX
+
+  exports 
+    all
+
+  definitions
+    values
+
+      ExtCos = { [0.5] |-> 0.877, [3.14] |-> -1.0 }
+
+end APPROX  
+
+module A
+  imports
+    from 
+      APPROX all,
+
+    from B
+      functions
+        ExtCos : real -> real
+   
+     definitions
+       functions
+
+         Test : () -> real
+         Test () ==  B`ExtCos(3.14)
+
+end A
+    
+   
+

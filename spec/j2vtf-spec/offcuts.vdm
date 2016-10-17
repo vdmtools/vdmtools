@@ -1,0 +1,38 @@
+hasBoolDclInitTrue : seq of AS`AssignDef * AS`Name * AS`Class -> bool
+hasBoolDclInitTrue(al, n, c) == exists a in set elems al & 
+                                  a.var = n and isBool(a.tp, c) 
+                                  and is_AS`BoolLit(a.dclinit) and a.dclinit.val;
+
+hasBoolDclInitFalse : seq of AS`AssignDef * AS`Name * AS`Class -> bool
+hasBoolDclInitFalse(al, n, c) == exists a in set elems al & 
+                                  a.var = n and isBool(a.tp, c) 
+                                  and is_AS`BoolLit(a.dclinit) and not a.dclinit.val;
+
+hasBoolDcl : seq of AS`AssignDef * AS`Name * AS`Class -> bool
+hasBoolDcl(al, n, c) == exists a in set elems al & a.var = n and isBool(a.tp, c);
+
+isSingleAssignment : AS`Stmt * AS`Name * AS`Expr -> bool
+isSingleAssignment(stmt, name, expr) == 
+               is_AS`BlockStmt(stmt) 
+               and let mk_AS`BlockStmt(al, sl, -) =  stmt in 
+               al = [] and len sl = 1 and isSingleAssignment(hd sl, name, expr)
+               or
+               is_AS`AssignStmt(stmt) and stmt.lhs = name and stmt.rhs = expr;
+
+isSingleReturn : AS`Stmt * AS`Expr -> bool
+isSingleReturn(stmt, expr) == 
+               is_AS`BlockStmt(stmt) 
+               and let mk_AS`BlockStmt(al, sl, -) =  stmt in 
+               al = [] and len sl = 1 and isSingleReturn(hd sl, expr)
+               or
+               is_AS`ReturnStmt(stmt) and stmt.val = expr;
+
+isSingleIfThenElse : AS`Stmt * AS`Expr * AS`Stmt * AS`Stmt -> bool
+isSingleIfThenElse(stmt, test, cons, altn) == 
+               is_AS`BlockStmt(stmt) 
+               and let mk_AS`BlockStmt(al, sl, -) =  stmt in 
+               al = [] and len sl = 1 and isSingleIfThenElse(hd sl, test, cons, altn)
+               or
+               is_AS`IfStmt(stmt) and stmt.test = test and stmt.cons = cons 
+               and stmt.elsif = [] and stmt.altn = altn;
+

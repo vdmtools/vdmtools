@@ -1,0 +1,68 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+
+--  A - C - E
+--    \   /
+--      D
+--
+-- B
+class A
+
+
+types
+d = seq of nat
+
+end A
+
+
+class C is subclass of A
+
+types
+  c = bool
+
+end C
+
+class D is subclass of A
+
+types
+
+public d = char
+
+end D
+
+class E is subclass of C, D
+
+operations
+
+public   m: () ==> char  
+   m () ==
+    (dcl a : d;
+     a:='d';
+     return a;
+     )
+
+end E
+
+class B 
+
+operations 
+  public Test : () ==> char  
+  Test () ==
+        new E().m()
+
+end B
+
+
+
+
+
+
+
+
+
+
+
+
+
+

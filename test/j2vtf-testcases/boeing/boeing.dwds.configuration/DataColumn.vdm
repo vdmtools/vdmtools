@@ -1,0 +1,35 @@
+class DataColumn is subclass of Object
+operations 
+public  getWidth : () ==> int 
+getWidth() == 
+( return  width
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( return  new  String("<")+getDataType().toString()+new  String(", \\\"")+getHeading()+new  String("\\\", ")+getWidth()+new  String(">")
+) ;
+
+public  getHeading : () ==> [String]
+getHeading() == 
+( return  heading
+) ;
+
+public  getDataType : () ==> [WireDataTypes]
+getDataType() == 
+( return  data_type
+) ;
+
+public  DataColumn : [WireDataTypes] * [String] * int  ==> DataColumn
+DataColumn(data_type_in, heading_in, width_in) == 
+( data_type := data_type_in;
+  heading := new  String(heading_in);
+  width := width_in
+) ;
+
+instance variables 
+  private  data_type : [WireDataTypes];
+  private  heading : [String];
+  private  width : int 
+  
+end  DataColumn

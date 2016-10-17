@@ -1,0 +1,19 @@
+class A
+
+operations
+
+public Test : () ==> bool  
+Test () ==
+( 
+	dcl a : bool;
+	(dcl b : bool := false;
+		( dcl c : bool := false;
+		if (2 > 1)
+	 	then (b := true)
+	 	else (b := false));
+		
+	return b
+	);
+)
+   
+end A

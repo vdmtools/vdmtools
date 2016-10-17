@@ -1,0 +1,104 @@
+\subsection{FQueue}
+待ち行列に関わる関数を定義する。
+
+\subsubsection{実装について}
+先頭列（hs）と後続列（ts）の２つの列の組を使って待ち行列を実装している。
+
+\subsubsection{使用方法}
+最初に
+\begin{verbatim}
+	let Q0 = FQueue`Empty[int]() in ...
+\end{verbatim}
+などとして空の待ち行列を定義する。
+
+待ち行列への追加は
+\begin{verbatim}
+	FQueue`EnQueue(1)(Q0)
+\end{verbatim}
+などとすればよい。
+
+\subsubsection{プログラム}
+\begin{vdm_al}
+--"$Id"
+class FQueue
+
+functions
+\end{vdm_al}
+
+Emptyは、空の待ち行列を定義する。
+\begin{vdm_al}
+static public Empty[@T] : () -> seq of @T * seq of @T
+Empty() == mk_([], []);
+\end{vdm_al}
+
+IsEmptyは、待ち行列が空か否かを返す。
+\begin{vdm_al}
+static public IsEmpty[@T] : (seq of @T * seq of @T) -> bool
+IsEmpty(s) == s = mk_([], []);
+\end{vdm_al}
+
+EnQueueは、待ち行列mk_(hs, ts)に要素eを追加した待ち行列を返す。
+実装としては、後続列tsの前に要素eを追加する。
+\begin{vdm_al}
+static public EnQueue[@T] : @T -> (seq of @T * seq of @T) -> seq of @T * seq of @T
+EnQueue(e)(mk_(hs, ts)) == mk_(hs, [e] ^ ts);
+\end{vdm_al}
+
+DeQueueは、待ち行列mk_(hs, ts)の先頭を削除した待ち行列を返す。
+待ち行列がすでに空の場合はnilを返す。
+先頭列hsが空の場合は、後続列tsを反転して先頭列とし、後続列を空とした待ち行列を返す。
+\begin{vdm_al}
+static public DeQueue[@T] : (seq of @T * seq of @T) -> [seq of @T * seq of @T]
+DeQueue(mk_(hs, ts)) == 
+	cases hs:
+		[-] ^ hstl	-> mk_(hstl, ts),
+		[]		-> 
+			cases ts:
+				[]		-> nil,
+				others	-> mk_(tl FSequence`Freverse[@T](ts), [])
+			end
+	end;
+\end{vdm_al}
+
+Topは、待ち行列の先頭要素を返す。
+待ち行列がすでに空なら、nilを返す。
+先頭列hsが空の場合は、後続列tsを反転して、その先頭要素を返す。
+\begin{vdm_al}
+static public Top[@T] : (seq of @T * seq of @T) -> [@T]
+Top(mk_(hs, ts)) == 
+	cases hs:
+		[h] ^ -	-> h,
+		[]		-> 
+			cases ts:
+				[]		-> nil,
+				others	-> hd FSequence`Freverse[@T](ts)
+			end
+	end;
+\end{vdm_al}
+
+FromListは、列sを待ち行列に変換して返す。
+\begin{vdm_al}
+static public FromList[@T] : seq of @T -> (seq of @T * seq of @T) -> seq of @T * seq of @T
+FromList(s)(q) ==
+	cases s:
+		[]		-> q,
+		[h] ^ stl	-> FromList[@T](stl)(EnQueue[@T](h)(q))
+	end;
+\end{vdm_al}
+
+ToListは、待ち行列qを列に変換して返す。
+\begin{vdm_al}
+static public ToList[@T] : (seq of @T * seq of @T) -> seq of @T
+ToList(q) ==
+	cases q:
+		(mk_([], []))	-> [],
+		q	-> [Top[@T](q)] ^ ToList[@T](DeQueue[@T](q))
+	end;
+
+end FQueue
+\end{vdm_al}
+
+
+\begin{rtinfo}
+[FQueue]{vdm.tc}[FQueue]
+\end{rtinfo}

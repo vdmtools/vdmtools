@@ -1,0 +1,66 @@
+module A
+
+exports all
+definitions
+
+operations
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+g(n1, n2: nat, -: set of nat) res: nat
+ext wr i
+pre n1 > n2 and i = 20
+post n1 + n2 = res and i = i~;
+
+op: nat ==> ()
+op(n) ==
+  i := i + n
+pre n < i
+post i = i~ + n;
+
+op2: () ==> nat
+op2 () ==
+  return i
+pre i > 12
+post i = i~ and RESULT < 100;
+
+h([a,b]: seq of nat, mk_(d,c):  nat * nat ) res: nat * nat
+pre let q = mk_(b,a) in q = mk_(d,c)
+post let mk_(i,j) = res in i + j < a + b;
+
+h2({a,b}: set of nat) res : seq of nat
+pre if 10 in set {a,b} then a > b else a <= b
+post if 20 in set {a,b} union {res} then res = [20] else res = [30];
+
+h09([a,b]: seq of nat, mk_(d,c):  nat * nat ) res: nat * nat, r: seq of nat
+pre let q = mk_(b,a) in q = mk_(d,c)
+post (let mk_(i,j) = res in i + j < a + b) and [a,b] = r;
+
+
+Test: () ==> seq of (nat | bool )
+Test () ==
+( dcl res : seq of (nat | bool ) :=
+    [
+      g(3,2, {1,2}),
+      pre_g(4,3, {}, mk_Sigma(10)),
+      post_g(3,5, {2}, 8, mk_Sigma(10), mk_Sigma(10)),
+
+      op2(),
+      pre_op2(mk_Sigma(i)),
+      post_op2(10, mk_Sigma(i), mk_Sigma(i)),
+      post_op2(10, mk_Sigma(i), mk_Sigma(i-1)),
+      
+      pre_op(1, mk_Sigma(i)),
+      post_op(1, mk_Sigma(i), mk_Sigma(i+1))
+    ];
+    
+    op(8);
+    res := res ^ [op2()];
+    return res ^ [i]
+)
+    
+
+state Sigma of 
+  i : int
+  init i == i = mk_Sigma(10)
+end
+
+end A

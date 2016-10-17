@@ -1,0 +1,35 @@
+class B
+end B
+
+class C
+end C
+
+class D is subclass of B, C
+end D
+
+class E is subclass of C
+end E
+
+class A is subclass of D
+
+operations
+
+
+public Test : () ==> seq of bool
+Test() ==
+( dcl v1: A | B | int :=  new A (),
+      v2: D | E := new D (),
+      v3: B | C := new B (),
+      v4: C := new E (),
+      res: seq of bool;
+
+  res := [ 
+    isofbaseclass(Y, v1)
+  ];
+
+  return res
+)
+
+end A
+
+

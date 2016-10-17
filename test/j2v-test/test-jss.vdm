@@ -1,0 +1,51 @@
+module TEST
+imports
+  from AS all,
+  from CPP all,
+  from CI all,
+  from REP all,
+  from JSSREP all,
+  from JSSDEF all,
+  from JAVAERR all,
+  from JSSERR all,
+  from JSSVCM1 all,
+  from JSSENV
+  operations
+    RemoveUnknownClasses: () ==> (),
+  from JSSAUX all
+
+exports all
+
+definitions
+
+operations
+
+go: CPP`AstCI ==> JAVAERR`ErrType
+go(mk_CPP`AstCI(p_files, p_tllci, p_fidm)) ==
+( dcl l_err : JAVAERR`ErrType := [],
+      l_modules : seq of CPP`Module := [],
+      l_modulewf : seq of bool := [];
+  CI`UpdateStateSigma(p_tllci, p_fidm);
+  for all l_file in set p_files 
+  do let l_identDecl : CPP`IdentDeclaration = l_file.ast(1)
+  in 
+    for l_i=1 to len l_identDecl.ds  
+    do let l_typeSpec : CPP`TypeSpecifier = l_identDecl.ds(l_i),
+           l_module = mk_CPP`Module(l_file.name,l_file.h,
+                                    mk_CPP`IdentDeclaration([l_typeSpec],nil,-1))
+       in
+        (l_modules := l_modules ^ [l_module];
+         l_modulewf := l_modulewf ^ [false]
+        );
+  for l_no=1 to len l_modulewf 
+  do l_modulewf(l_no) := JSSVCM1`UpdateParseEnvWithModuleBool(l_modules(l_no));
+
+  for l_no=1 to len l_modulewf 
+  do l_modulewf(l_no) := l_modulewf(l_no) and JSSDEF`jwf_Module(l_modules(l_no));
+         
+  l_err := l_err ^ JSSERR`PrintErrors();
+  JSSENV`RemoveUnknownClasses();
+  return l_err
+);
+
+end TEST

@@ -1,0 +1,53 @@
+class A
+
+operations
+protected op1: int ==> int
+op1(-) ==
+  return 1;
+
+protected op2: int * int ==> bool
+op2(a,b) ==
+  return a = b;
+
+protected op3(-: int) r: int
+post r = 1;
+
+protected op4(a: int, b: int) r: bool
+post r = (a = b);
+
+protected op5(-: int) r: int ==
+  return 1
+post r = 1;
+
+protected op6(a: int, b: int) r: bool ==
+  return a = b
+post r = (a = b);
+
+end A
+
+class B is subclass of A
+
+operations
+op1(-: int) r: int
+post r = 1;
+
+op2(a: int, b: int) r: bool ==
+  return a = b
+post r = (a = b);
+
+op3(-: int) r: int ==
+  return 1
+post r = 1;
+
+op4: int * int ==> bool
+op4(a,b) ==
+  return a = b;
+
+op5: int ==> int
+op5(-) ==
+  return 1;
+
+op6(a: int, b: int) r: bool
+post r = (a = b);
+
+end B

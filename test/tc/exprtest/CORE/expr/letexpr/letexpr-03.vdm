@@ -1,0 +1,25 @@
+class LetExprTest
+types
+
+  A :: selid : nat
+       sel2 : bool;
+
+  B :: sel1 : rat
+  inv b == b < 6
+  
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = let mk_A(n,b) = mk_A(7,5) 
+         in 
+           if b
+           then n
+           else b
+  in skip;
+
+------------------------------------------------------------------------------
+end LetExprTest

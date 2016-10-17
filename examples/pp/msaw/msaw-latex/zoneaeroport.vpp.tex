@@ -1,0 +1,39 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{vdm}\index{ZoneAeroport|ClassDef}
+{\small\sf class} $ZoneAeroport$  \kISO $\index{Obstacle|ClassOcc}Obstacle, \index{Cylindre|ClassOcc}Cylindre, \index{Cone|ClassOcc}Cone$
+\begin{instvar}\index{rayon-au-sol|InstVarDef}
+\vardcl{rayon-au-sol}{NM\index{NM|TypeOcc}}
+\instinv{\kObjectstate }{rayon-au-sol < rayon \And  \\
+Cylindre`centre = Cone`centre
+}
+\end{instvar}
+\begin{methdef}\index{Intersection|MethodDef}
+\begin{method}{Intersection}
+\parms{segment-de-prediction :  @SegmentDePrediction}\methvalue{\Bool } \Fdef\\ \begin{defstmt}
+\eqdef{points-de-vecteur}{\invoke{segment-de-prediction}{\index{GetPoints|MethodOcc}
+\fnapply{GetPoints}{}}}
+\end{defstmt} \\
+\return{\pex{\exists{\reccons{\kw{mk-}}{xy,z} \In points-de-vecteur} \\
+{\fnapply{DansCylindre}{xy,z,Cylindre`centre,rayon, \\
+altitude-maximale} \And  \\
+ \Not \fnapply{DansCone}{xy,z,Cone`centre,rayon-au-sol,angle}}}}
+\end{method}
+\end{methdef}
+{\small\sf end} $ZoneAeroport$
+
+\end{vdm}

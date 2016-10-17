@@ -1,0 +1,29 @@
+-- This test case checks that if more than one function could match the 
+-- argument type, then an error occurs.
+
+class A
+
+functions
+
+public fn : bool -> bool
+fn(b) ==
+   b ;
+
+public fn : A -> bool
+fn(-) ==
+  false;
+
+end A
+
+class C 
+
+functions
+
+g : nat -> real
+g(-) ==
+  let v = if true then new A() else false
+  in new A().fn(v);
+
+
+
+end C

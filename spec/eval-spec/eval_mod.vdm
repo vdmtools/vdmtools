@@ -1,0 +1,441 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Functions and operations which are used for translating a  module 
+%    from the abstract syntax representation to a semantic value 
+% $Id: eval_mod.vdm,v 1.46 2001/09/24 11:37:56 richard Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\section{Modules}
+
+The module MODULE contains all functions and operations definitions
+related to the translation and handling of modules.
+
+\begin{vdm_al}
+module MOD
+  imports
+    from AS all,
+    from RTERR all,
+    from AUX
+      operations
+        UniqueTagName : AS`Name ==> AS`Name
+  
+      functions
+        PreName : AS`Name -> AS`Name;
+        PostName : AS`Name -> AS`Name;
+        InvName : AS`Name -> AS`Name;
+        EqualNames : AS`Name * AS`Name -> bool;
+        IsRealName : AS`Name -> bool,
+
+    from DEF all,
+    from GLOBAL all,
+    from PAT all,  
+    from REP all,
+    from CI all,
+    from SETTINGS all,
+    from SEM all,
+    from DEBUG all,
+    from DEBUGTP all,
+    from CMPL all,
+    from CPAT all,
+    from STKM all,
+    from INSTRTP all,
+    from STATE all
+
+  exports
+    operations
+       TranslateModule : AS`Module ==> GLOBAL`SigmaMO;
+       TranslateDLModule : AS`DLModule ==> GLOBAL`SigmaIMO;
+       InitGS : [AS`StateDef] ==> GLOBAL`StateMap;
+       InitGV : seq of AS`ValueDef ==> GLOBAL`ValueMap
+
+definitions
+\end{vdm_al}
+
+subsection{Module Translation}
+
+\begin{vdm_al}
+operations
+
+TranslateModule : AS`Module ==> GLOBAL`SigmaMO
+TranslateModule (mk_AS`Module (mod_id, mk_AS`Interface (imp, exp,-), body,-)) ==
+ (CMPL`SetClMod(mod_id);
+  CMPL`ResetProgramTable(mod_id);
+    
+  def ren = BuildRenameMap (imp)
+  in
+    if body <> nil
+    then
+      def mk_GLOBAL`SigmaDEFS(explfns,explops,explpolys,
+                           tps,recsel,gv_init,gs_init,stp_id,stateinv) = DEF`TranslateDefinitions (mod_id,body);
+      in
+        return mk_GLOBAL`SigmaMO(explfns,explops,explpolys,tps,recsel,nil,
+                                 gv_init,[],{|->},gs_init,stp_id,stateinv,
+                                 BuildExportSig (exp, explfns, explpolys, ren),{|->},ren)
+    else
+      return mk_GLOBAL`SigmaMO({|->},{|->},{|->},{|->},{|->},
+                                                nil,[],[],{|->},nil,nil,nil,exp,{|->},ren);
+ );
+\end{vdm_al}
+
+The operation $TranslateModule$ translates a module definition into a
+module value. From the interface definition of the module, we generate a
+map with the renamings in all the import sections. The definitions part is
+translated, and the result is copied into the module value. The export
+signature is extended with possible pre, post and invariant predicate
+functions.
+
+\begin{vdm_al}
+operations
+
+BuildRenameMap : map AS`Name to [AS`ImportSig] ==> map AS`Name to AS`Name
+BuildRenameMap (imp_m) ==
+ (dcl rename_m : map AS`Name to AS`Name := { |-> };
+  for all id in set dom imp_m do
+    cases imp_m(id):
+      mk_AS`ImportSig(-,-,-,-,ren,cid) -> if dom ren inter dom rename_m <> {}
+                                          then RTERR`InitError(RTERR`EQUAL_RENAMINGS,cid,[])
+                                          else rename_m := rename_m munion MakeRenamings (id,ren),
+      others -> skip
+    end;
+  return rename_m;
+ );
+\end{vdm_al}
+
+The operation $BuildRenameMap$ creates the map with the renamings for all
+of the imported modules. If a renaming already exists, an error is
+generated.
+
+\begin{vdm_al}
+functions
+
+MakeRenamings : AS`Name * map AS`Name to AS`Name +> map AS`Name to AS`Name
+MakeRenamings (mk_AS`Name(mod_id,-), ren_m) ==
+  { nm |-> let mk_AS`Name (ren_nm,cid) = ren_m(nm)
+           in mk_AS`Name (mod_id ^ ren_nm,cid) | nm in set dom ren_m };
+\end{vdm_al}
+
+The function $MakeRenamings$ prepends all the construct names with the
+name of the defining module. This way, we always know where a renamed
+construct is defined.
+
+\begin{vdm_al}
+functions
+
+BuildExportSig : [AS`ExportSig] * (map AS`Name to SEM`CompExplFN) *
+                (map AS`Name to SEM`ExplPOLY) * map AS`Name to AS`Name +> [AS`ExportSig]
+BuildExportSig (exp_sig, explfns, explpolys, ren) ==
+  cases exp_sig:
+    mk_AS`ExportSig(tps,-,fns,ops,-) -> 
+        let new_fns = fns ++ 
+                      merge { let new_name = if name in set dom ren then ren(name) else name
+                              in
+                                if HasFnPrePostCond (new_name, explfns, explpolys)
+                                then GetPrePostFns (new_name, explfns, explpolys)
+                                else { |-> } | name in set dom fns } ++
+                      merge { let new_name = if name in set dom ren then ren(name) else name
+                              in
+                                if HasOpPrePostCond (new_name, explfns)
+                                then GetPrePostOps (new_name, explfns)
+                                else { |-> } | name in set dom ops } ++
+                      merge { let new_name = if name in set dom ren then ren(name) else name
+                              in
+                                if (tps(new_name) = <STRUCT>) and HasTpInvariant (new_name, explfns)
+                                then GetTpInvariant (new_name, explfns)
+                                else { |-> } | name in set dom tps }
+        in mu (exp_sig, fns |-> new_fns),
+    others -> exp_sig
+  end;
+\end{vdm_al}
+
+The function $BuildExportSig$ updates the export signature of a module
+with possible pre, post and invariant predicate functions. Invariant
+predicate functions are only added if the structure of a type is also
+exported from the module.
+
+\begin{vdm_al}
+functions
+
+HasFnPrePostCond : AS`Name * map AS`Name to SEM`CompExplFN * map AS`Name to SEM`ExplPOLY -> bool
+HasFnPrePostCond (name, efns, epfns) ==
+  if AUX`IsRealName (name)
+  then false
+  else
+    let Pre_name = AUX`PreName(name),
+        Post_name = AUX`PostName(name)
+    in
+      Pre_name in set dom efns or Post_name in set dom efns or
+      Pre_name in set dom epfns or Post_name in set dom epfns;
+\end{vdm_al}
+
+This function return $\True$ if a pre and/or post predicate function for a
+function definition exists, and $\False$ otherwise.
+
+\begin{vdm_al}
+functions
+
+GetPrePostFns : AS`Name * map AS`Name to SEM`CompExplFN * 
+                map AS`Name to SEM`ExplPOLY -> map AS`Name to (AS`TypeVarList * AS`FnType)
+GetPrePostFns (name, efns, epfns) ==
+  let Pre_name = AUX`PreName(name),
+      Post_name = AUX`PostName(name)
+  in
+    merge { if Pre_name in set dom efns
+            then
+              let mk_SEM`CompExplFN(fl,-) = efns(Pre_name)
+              in { Pre_name |-> mk_([], (hd fl).tp) }
+            else { |-> },
+            if Pre_name in set dom epfns
+            then
+              let mk_SEM`ExplPOLY(tpparms,tp,-,-,-,-,-,-,-) = epfns(Pre_name)
+              in { Pre_name |-> mk_(tpparms, tp) }
+            else { |-> },
+            if Post_name in set dom efns
+            then
+              let mk_SEM`CompExplFN(fl,-) = efns(Post_name)
+              in { Post_name |-> mk_([], (hd fl).tp) }
+            else { |-> },
+            if Post_name in set dom epfns
+            then
+              let mk_SEM`ExplPOLY(tpparms,tp,-,-,-,-,-,-,-) = epfns(Post_name)
+              in { Post_name |-> mk_(tpparms, tp) }
+            else { |-> } };
+\end{vdm_al}
+
+This function returns the map with the signatures for the pre and/or post
+predicate functions for function definitions.
+
+\begin{vdm_al}
+functions
+
+HasOpPrePostCond : AS`Name * map AS`Name to SEM`CompExplFN -> bool
+HasOpPrePostCond (name, efns) ==
+  if AUX`IsRealName (name)
+  then false
+  else
+    let Pre_name = AUX`PreName(name),
+        Post_name = AUX`PostName(name)
+    in 
+      Pre_name in set dom efns or Post_name in set dom efns;
+\end{vdm_al}
+
+This function returns $\True$ if a pre and/or post predicate function
+exists for an operation definition, and $\False$ otherwise.
+
+\begin{vdm_al}
+functions
+
+GetPrePostOps : AS`Name * map AS`Name to SEM`CompExplFN -> map AS`Name to (AS`TypeVarList * AS`FnType)
+GetPrePostOps (name, efns) ==
+  let Pre_name = AUX`PreName(name),
+      Post_name = AUX`PostName(name)
+  in
+    merge { if Pre_name in set dom efns
+            then
+              let mk_SEM`CompExplFN(fl,-) = efns(Pre_name)
+              in { Pre_name |-> mk_([], (hd fl).tp) }
+            else { |-> },
+            if Post_name in set dom efns
+            then
+              let mk_SEM`CompExplFN(fl,-) = efns(Post_name)
+              in { Post_name |-> mk_([], (hd fl).tp) }
+            else { |-> } };
+\end{vdm_al}
+
+This function returns the map with signatures for the pre and/or post
+predicate functions for an operation definition.
+
+\begin{vdm_al}
+functions
+
+HasTpInvariant : AS`Name * map AS`Name to SEM`CompExplFN -> bool
+HasTpInvariant (name, efns) ==
+  if AUX`IsRealName (name)
+  then false
+  else
+    let Inv_name = AUX`InvName(name)
+    in Inv_name in set dom efns;
+\end{vdm_al}
+
+This function returns $\True$ if an invariant predicate function is
+defined for a type definition, and $\False$ otherwise.
+
+\begin{vdm_al}
+functions
+
+GetTpInvariant : AS`Name * map AS`Name to SEM`CompExplFN -> map AS`Name to (AS`TypeVarList * AS`FnType)
+GetTpInvariant (name, efns) ==
+  let Inv_name = AUX`InvName(name)
+  in
+    if Inv_name in set dom efns
+    then
+      let mk_SEM`CompExplFN(fl,-) = efns(Inv_name)
+      in { Inv_name |-> mk_([], (hd fl).tp) }
+    else { |-> };
+\end{vdm_al}
+
+This function returns the map with the signature for the invariant
+predicate function for a type definition.
+
+\subsection{Module Initialization}
+
+\begin{vdm_al}
+operations
+-- Note that this operation is identical to InitGV in the CLASS module!!!
+InitGV : seq of AS`ValueDef ==> GLOBAL`ValueMap
+InitGV (val_l) == 
+ (dcl res_m : GLOBAL`ValueMap := { |-> };
+  STKM`PushEmptyBlkEnv(<READ_ONLY>);
+  for mk_AS`ValueDef (pat, tp, exp_e, access, -, -) in val_l do
+    def mk_(eval_state, exp_v) = DEBUG`EvalAuxCmd( exp_e,[],[], "Init of Global Values" );
+    in
+     (if not is_STKM`Success(eval_state)
+      then RTERR`InitError(RTERR`INTERNAL_ERROR,exp_e.cid,[])
+      elseif SETTINGS`DTC()
+      then
+        if (tp <> nil) and (not STATE`SubType (exp_v, tp))
+        then RTERR`InitError(RTERR`TYPE_INCOMP,exp_e.cid,[])
+        else skip;
+      def env_s = PAT`PatternMatch(CPAT`P2P(pat), exp_v)
+      in
+        if env_s <> {}
+        then
+          let env in set env_s
+          in
+            let id_m = env.id_m
+            in
+              for all id in set dom id_m do
+                let mk_SEM`ValTp(val,valtp) = id_m(id) 
+                in 
+                 (res_m := res_m ++ { id |-> mk_(val,DEF`RealAccess(access,<INST>)) };
+                  STKM`AppendToTopBlkEnv(id,val,valtp))
+        else
+          RTERR`InitError(RTERR`EMPTY_ENV_S,pat.cid,[]); 
+     );
+  STKM`PopBlkEnv();
+  return res_m;
+ );
+\end{vdm_al}
+
+The operation $InitGV$ initializes the global values of a module.  By
+pushing the just evaluated value to the evaluation stack, a value can
+depend on the values which have been defined before it in the value list.
+
+\begin{vdm_al}
+operations
+
+InitGS : [AS`StateDef] ==> GLOBAL`StateMap
+InitGS (sd) ==
+  cases sd:
+    nil -> return { |-> },
+    mk_AS`StateDef(mk_AS`CompositeType(-,fields_lv,-),-,nil,-) ->
+      return { fields_lv(i).sel |-> mk_GLOBAL`State(mk_SEM`UNDEF(), fields_lv(i).type) | i in set inds fields_lv },
+    mk_AS`StateDef(mk_AS`CompositeType(name,fields_lv,-),-,mk_AS`StateInit(initp,inite,cid),-) ->
+         (cases true:
+            (is_AS`BinaryExpr(inite)) ->
+              cases inite:
+                 mk_AS`BinaryExpr(mk_AS`Name(initid,-),<EQ>,-,-) -> 
+                    cases initp:
+                      mk_AS`PatternName(mk_AS`Name((initid),-),-,-) -> skip,
+                      others -> (RTERR`InitError(RTERR`ILL_STATE_INIT_PAT,cid,[]); error)
+                    end,
+                 others -> (RTERR`InitError(RTERR`ILL_STATE_INIT_PAT,cid,[]); error)
+               end,
+--            (is_AS`RecordConstructorExpr(inite)) ->
+--               cases false:
+--                 (is_AS`RecordPattern(initp)) -> (RTERR`InitError(RTERR`REC_PAT_EXPECTED,cid,[]); error),
+--                 (IsAllPatternName(initp))    -> (RTERR`InitError(RTERR`ALL_PATID_EXPECTED,cid,[]); error)
+--               end,
+            others -> (RTERR`InitError(RTERR`ILLEGAL_STATE_INIT,cid,[]); error)
+          end;
+
+          def expr = if is_AS`BinaryExpr(inite) then inite.right else inite;
+              mk_(eval_state,initv) = DEBUG`EvalAuxCmd(expr,[],[], "Init of Global State")
+          in
+            if not is_STKM`Success(eval_state)
+            then (RTERR`InitError(RTERR`INTERNAL_ERROR,cid,[]);error)
+            else
+              cases initv:
+                mk_SEM`REC(initname,initfields_lv,-) ->
+                   def name' = AUX`UniqueTagName (name)
+                   in
+                     cases false:
+                       (AUX`EqualNames (name', initname)),
+                       (len fields_lv = card dom initfields_lv) ->
+                             (RTERR`InitError(RTERR`ILLEGAL_STATE_INIT,cid,[]);error),
+                       others ->
+                           let res = { fields_lv(i).sel |-> mk_GLOBAL`State(initfields_lv(i), fields_lv(i).type)
+                                             | i in set inds fields_lv }
+                           in
+                             if SETTINGS`DTC() => forall id in set dom res & STATE`SubType(res(id).val, res(id).tp)
+                             then return res
+                             else (RTERR`InitError(RTERR`STATE_INVARIANT_ERROR,cid,[]);error)
+                     end,
+                others -> (RTERR`InitError(RTERR`ILLEGAL_STATE_INIT,cid,[]);error)
+              end;
+          error;
+         )
+  end;
+\end{vdm_al}
+
+The operation $InitGS$ initializes the global state of a module. The state
+can be initialized in two different manners. The first way is the use of an
+binary equality expression in which the initialization pattern identifier
+must be equal to the identifier on the left hand side of the binary
+expression. The second manner uses a record constructor expression. Here,
+the record pattern in the initialization must contain only pattern
+identifiers, and the record tag names and number of fields for the record
+pattern and the record constructor expression must be equal.
+
+\begin{vdm_al}
+functions
+
+IsAllPatternName : AS`PatternBind -> bool
+IsAllPatternName (pat_p) ==
+  cases pat_p:
+    mk_AS`PatternName(id,-,-)       -> if id = nil
+                                       then false
+                                       else true,
+    mk_AS`MatchVal(-,-)             -> false,
+    mk_AS`SetEnumPattern(els,-)     -> forall i in set inds els & IsAllPatternName(els(i)),
+    mk_AS`SetUnionPattern(lp, rp,-) -> IsAllPatternName(lp) and IsAllPatternName(rp),
+    mk_AS`SeqEnumPattern(els,-)     -> forall i in set inds els & IsAllPatternName(els(i)),
+    mk_AS`SeqConcPattern(lp, rp,-)  -> IsAllPatternName(lp) and IsAllPatternName(rp),
+    mk_AS`MapEnumPattern(mls,-)     -> forall i in set inds mls & IsAllPatternName(mls(i)),
+    mk_AS`MapMergePattern(lp, rp,-) -> IsAllPatternName(lp) and IsAllPatternName(rp),
+    mk_AS`RecordPattern(-, els,-)   -> forall i in set inds els & IsAllPatternName(els(i)),
+    mk_AS`TuplePattern(els,-)       -> forall i in set inds els & IsAllPatternName(els(i)),
+    mk_AS`MapletPattern(dp, rp,-)   -> IsAllPatternName(dp) and IsAllPatternName(rp),
+    others                          -> false
+  end;
+
+\end{vdm_al}
+
+The function $IsAllPatternId$ checks whether or not a pattern contains
+match values or ``don't care'' patterns. If so, $\False$ is returned, and
+$\True$ in all other cases.
+
+\begin{vdm_al}
+operations
+TranslateDLModule : AS`DLModule ==> GLOBAL`SigmaIMO
+TranslateDLModule (mk_AS`DLModule (mod_id, intf, useslib,-)) ==
+  def mk_AS`DLInterface (-,exp,-) = intf;
+      mk_GLOBAL`SigmaEXP(extfns,extops,extv) = DEF`TranslateDLExportSig(mod_id,exp,useslib)
+  in
+    return mk_GLOBAL`SigmaIMO(extfns,extops,extv,exp,{ |-> },{ |-> },useslib);
+end MOD
+\end{vdm_al}
+The operation $TranslateDLModule$ translates a module definition into a
+module value. From the interface definition of the module, we generate
+the semantic value for function, operation and values form the export
+signature.
+
+The variable file named by useslib is in the implementation searched
+for in several files, this search is done in the directories named
+with the envirioment variable VDM\_DYNLIB
+
+\begin{rtinfo}
+[TranslateDLModule]{rtinfo.ast}[MOD]
+\end{rtinfo}
+% Local Variables: 
+% TeX-master: "dynsem"
+% End: 

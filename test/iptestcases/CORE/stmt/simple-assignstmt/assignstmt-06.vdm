@@ -1,0 +1,22 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+public Test : () ==> seq of char
+Test () ==
+trap 9 with return "Hi"
+in
+  (dcl s : seq of char;
+   s := AnExit();
+   return s
+  );
+
+AnExit : () ==> seq of char
+AnExit() ==
+  exit 9;
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

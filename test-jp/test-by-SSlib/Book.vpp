@@ -1,0 +1,23 @@
+--$Header: /home/vdmtools/cvsroot/toolbox/test-jp/test-by-SSlib/Book.vpp,v 1.1 2005/11/25 07:05:38 vdmtools Exp $
+class 本クラス
+--責任
+--題名・著者が同じ本を一つと考える場合の、抽象的論理的概念としての「本」。
+--題名・著者を答え、本の実体クラスのインスタンスを生成・管理している主体。
+instance variables
+
+public 題名 : seq of char;
+public 著者 : 著者クラス;
+public 分野集合 : set of 分野クラス;
+
+operations
+
+public 初期化する : seq of char * 著者クラス * set of 分野クラス ==> ()
+初期化する(ある題名, ある著者, ある分野集合) ==
+	(
+	題名 := ある題名;
+	著者 := ある著者;
+	分野集合 := ある分野集合
+	);
+
+end 本クラス
+

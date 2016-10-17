@@ -1,0 +1,23 @@
+class JavaTextDateFormat is subclass of JavaTextFormat
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaTextDateFormat" , <CLASS> , false  )
+operations 
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+protected  JavaTextDateFormat : () ==> JavaTextDateFormat
+JavaTextDateFormat() == 
+( skip 
+) ;
+
+public  format : JavaUtilDate ==> JavaLangString
+format(date) == 
+is not yet specified ;
+
+public  JavaTextDateFormat : <NIL> ==> JavaTextDateFormat
+JavaTextDateFormat(-) == 
+isNil := true  ;
+
+
+end  JavaTextDateFormat

@@ -1,0 +1,134 @@
+#!/bin/bash
+
+BODY=.body
+HEAD=.head
+TAIL=.tail
+LIBR=.library
+LIBRARY_NAME=default
+INIT_FILE=".vdmde"
+LIST=""
+OUTPUT=Makefile
+FSH=`basename $0`
+
+###########################################################################################
+# BATCH to create automatically the makefile for the generated code of the CODE GENERATOR #
+###########################################################################################
+
+usage()
+{
+  echo >&2
+  echo "Usage: $FSH [-L library name] [-I Initialisation file]" >&2
+  echo >&2
+  echo "       Creates automatically a Makefile for an application with the." >&2
+  echo "       initialisation file." >&2
+  echo "       -L        Creates a library with the specified name(default if none)." >&2
+  echo "       -I        Specify the name of the initialisation file (.vdmde by default)." >&2
+  echo >&2
+  echo "       Example: $FSH -L my_library -I .vdmde-sl /home/me/my_directory" >&2
+  echo >&2
+  exit
+}
+
+
+Make_Head()
+{
+echo "## This Makefile has been generated automatically" > $HEAD
+echo "##" >> $HEAD
+echo "LIBDIR  = /usr/local/package/toolbox/cg/lib" >> $HEAD
+echo "SOURCES = /usr/local/package/toolbox/cg/include" >> $HEAD
+echo >> $HEAD
+echo "CXX      = g++ " >> $HEAD
+echo "CXXFLAGS = \$(INCL)" >> $HEAD 
+echo "INCL    = -I\$(SOURCES)" >> $HEAD
+echo "LIB     = -L\$(LIBDIR) -lvdm -lCG -liostream -lm" >> $HEAD 
+echo >> $HEAD
+echo "all: lib$LIBRARY_NAME.a" >> $HEAD
+echo >> $HEAD
+}
+
+Make_Tail()
+{
+echo > $TAIL
+echo "clean: rm -f *~ *.o" >> $TAIL
+}
+
+Make_Body() 
+{
+TOBUILD=`cut -c3- $INIT_FILE`
+echo > $BODY
+LIB="lib$LIBRARY_NAME.a:"
+for i in $TOBUILD; do
+        # We build a line in the Makefile for each of the module
+        MODULE_LIST=`egrep 'from [A-Z]* (all|types|values|functions|operations)' $i | awk '{print $2".h"}'`
+        MODULE_NAME=`grep  -v "^$" $i | egrep '^module [A-Z]+' | awk '{print $2}'`
+       
+        # We only take the first name found in MODULE_NAME
+        for j in $MODULE_NAME; do
+                MODULE_NAME=$j
+                break
+        done
+
+        # Generation of the library
+        echo -n "lib$LIBRARY_NAME.a($MODULE_NAME.o): $MODULE_NAME.cc $MODULE_NAME.h" >> $LIBR
+        # Dependencies
+        for k in $MODULE_LIST; do
+                        echo -n " $k" >> $LIBR
+        done
+        echo >> $LIBR
+
+
+        LIB="$LIB lib$LIBRARY_NAME.a($MODULE_NAME.o)"
+
+        LIST="$LIST $MODULE_NAME"  
+done
+
+echo >> $LIBR
+echo $LIB >> $LIBR
+echo "	-ranlib \$@" >> $LIBR
+echo >> $LIBR
+}
+
+
+while test $# -gt 0 ; do
+  case $1 in
+    -L)      LIBRARY_NAME=$2
+             shift;
+             shift;;
+    -I)      INIT_FILE=$2
+             shift;
+             shift;;
+    *)       usage
+             exit;;
+  esac
+done
+
+if test ! -s $INIT_FILE; then
+        echo "Initialisation file $INIT_FILE not found."
+else
+       
+        Make_Head
+        Make_Body
+        Make_Tail
+
+        echo "# Modules : $LIST" >> $HEAD
+        echo "" >> HEAD
+        cat $HEAD $LIBR $BODY $TAIL > $OUTPUT
+
+        rm -f $BODY
+        rm -f $HEAD
+        rm -f $LIBR
+        rm -f $TAIL
+fi
+
+
+
+
+
+
+
+
+
+
+
+
+

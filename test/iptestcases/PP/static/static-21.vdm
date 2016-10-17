@@ -1,0 +1,25 @@
+class A 
+
+values
+  mk_(x,y) : nat * nat = mk_(1,2);
+
+instance variables
+  static i : int  := 0;
+  static dummy : <VOID> := j2v_staticInitializer()
+  
+operations 
+public  Test : () ==> map  int  to  int 
+Test() == 
+( dcl   k : map  int  to  int  := {l_3 |-> 0|l_3 in set  {0,...,6-1}};
+  k := k ++ {0 |-> i};
+  return  k
+) ;
+ 
+static j2v_staticInitializer : () ==> <VOID>
+j2v_staticInitializer() == 
+( i := i+1;
+  return  <VOID>
+) ;
+ 
+
+end  A

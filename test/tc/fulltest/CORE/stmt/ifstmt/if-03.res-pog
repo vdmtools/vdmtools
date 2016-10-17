@@ -1,0 +1,12 @@
+[ mk_ERR`ErrMsg( 
+     10,
+     9,
+     23,
+     "Error[181] : Rhs of 'and' is not a boolean type",
+     <ERROR> ),
+  mk_ERR`ErrMsg( 
+     10,
+     7,
+     9,
+     "Error[115] : Test expression in \"If-Stmt\" is not of boolean type",
+     <ERROR> ) ]

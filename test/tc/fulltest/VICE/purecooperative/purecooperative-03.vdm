@@ -1,0 +1,89 @@
+class B
+
+instance variables
+
+s : Shared;
+
+operations
+
+public Init : Shared ==> ()
+Init(ns) == s := ns;
+
+op : () ==> ()
+op() ==
+ (dcl i : nat := 0;
+  while (i < 17) do
+    (s.Put("B");
+     i := i + 1
+    )
+ )
+
+thread
+ periodic (100,0,0,0)(op)
+
+end B
+
+class C
+
+instance variables
+
+s : Shared;
+
+operations
+
+public Init : Shared ==> ()
+Init(ns) == s := ns;
+
+op : () ==> ()
+op() ==
+ (dcl i : nat := 0;
+  while (i < 17) do
+    (s.Put("C");
+     i := i + 1
+    )
+ )
+
+thread
+ periodic (100,1,1,1)(op)
+
+end C
+
+class Shared
+
+instance variables
+
+data : seq of seq of char := []
+
+operations
+
+public Put : seq of char ==> ()
+Put(d) == data := data ^ [d];
+
+public Get : () ==> seq of seq of char
+Get() == return data;
+
+sync
+
+  mutex(Put,Get);
+  per Put => #req(Put) <= 17;
+  per Get => #req(Put) >= 17
+
+end Shared
+
+class A
+
+operations
+
+public Test : () ==> seq of seq of char
+Test() ==
+ ( dcl s : Shared := new Shared(),
+       b : B := new B(),
+       c : C := new C();
+   b.Init(s);
+   c.Init(s);
+   start(c);
+   start(b);
+   s.Get()
+ )
+
+end A

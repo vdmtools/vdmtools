@@ -1,0 +1,226 @@
+class IO
+
+-- 	VDMTools STANDARD LIBRARY: INPUT/OUTPUT
+--      ---------------------------------------
+-- 
+-- Standard library for the VDMTools Interpreter. When the interpreter
+-- evaluates the preliminary functions/operations in this file,
+-- corresponding internal functions is called instead of issuing a run
+-- time error. Signatures should not be changed, as well as name of
+-- module (VDM-SL) or class (VDM++). Pre/post conditions is 
+-- fully user customisable. 
+-- Dont care's may NOT be used in the parameter lists.
+--
+-- The in/out functions  will return false if an error occurs. In this
+-- case an internal error string will be set (see 'ferror').
+
+types
+ 
+public
+filedirective = <start>|<append> 
+
+functions
+
+-- Write VDM value in ASCII format to std out:
+public
+writeval[@p]: @p -> bool
+writeval(val)==
+  is not yet specified;
+
+-- Write VDM value in ASCII format to file.
+-- fdir = <start> will overwrite existing file,
+-- fdir = <append> will append output to the file (created if
+-- not existing).
+public
+fwriteval[@p]:seq1 of char * @p * filedirective -> bool
+fwriteval(filename,val,fdir) ==
+  is not yet specified;
+
+-- Read VDM value in ASCII format from file
+public
+freadval[@p]:seq1 of char -> bool * [@p]
+freadval(f) ==
+  is not yet specified
+  post let mk_(b,t) = RESULT in not b => t = nil;
+
+operations
+
+-- Write text to std out. Surrounding double quotes will be stripped,
+-- backslashed characters should be interpreted.
+public
+echo: seq of char ==> bool
+echo(text) ==
+  fecho ("",text,nil);
+
+-- Write text to file like 'echo'
+public
+fecho: seq of char * seq of char * [filedirective] ==> bool
+fecho (filename,text,fdir) ==
+  is not yet specified
+  pre filename = "" <=> fdir = nil;
+
+-- The in/out functions  will return false if an error occur. In this
+-- case an internal error string will be set. 'ferror' returns this
+-- string and set it to "".
+public
+ferror:()  ==> seq of char
+ferror () ==
+  is not yet specified
+end IO
+
+class A
+
+instance variables
+  i : nat := 1;
+  io : IO := new IO();
+
+types
+
+public  RecType:: n : nat
+                  i : int;
+
+public  EmptyType :: ;
+
+operations
+
+WriteVals : () ==> ()
+WriteVals() ==
+( dcl io : IO := new IO();
+  let - = io.fwriteval[seq of char]("stdlib-04-string", "stdlib-04 string", <start>) in
+  let - = io.fwriteval[seq of char]("stdlib-04-string-empty", "", <start>) in
+  let - = io.fwriteval[A]("stdlib-04-obj", new A(), <start>) in
+  let - = io.fwriteval[B]("stdlib-04-obj-empty", new B(), <start>) in
+  let - = io.fwriteval[A`RecType]("stdlib-04-rec", mk_RecType(1,-1), <start>) in
+  let - = io.fwriteval[A`EmptyType]("stdlib-04-rec-empty", mk_EmptyType(), <start>) in
+  let - = io.fwriteval[nat*nat]("stdlib-04-tup", mk_(1,2), <start>) in
+  let - = io.fwriteval[seq of nat]("stdlib-04-seq", [1,2,3], <start>) in
+  let - = io.fwriteval[seq of nat]("stdlib-04-seq-empty", [], <start>) in
+  let - = io.fwriteval[bool]("stdlib-04-bool", false, <start>) in
+  let - = io.fwriteval[int]("stdlib-04-int-neg", -1, <start>) in
+  let - = io.fwriteval[int]("stdlib-04-int-pos", 1000000, <start>) in
+  let - = io.fwriteval[real]("stdlib-04-real-neg", -0.1, <start>) in
+  let - = io.fwriteval[real]("stdlib-04-real-pos", 3.141592654, <start>) in
+  let - = io.fwriteval[[nat]]("stdlib-04-nil", nil, <start>) in
+  let - = io.fwriteval[<start>]("stdlib-04-quote", <start>, <start>) in
+  let - = io.fwriteval[char]("stdlib-04-char", 'a', <start>) in
+  let - = io.fwriteval[token]("stdlib-04-token", mk_token("tok"), <start>) in
+  let - = io.fwriteval[map nat to nat]("stdlib-04-map", {1|->2, 3|->4}, <start>) in
+  let - = io.fwriteval[map nat to nat]("stdlib-04-map-empty", {|->}, <start>) in
+  let - = io.fwriteval[set of nat]("stdlib-04-set", {1,2}, <start>) in
+  let - = io.fwriteval[set of nat]("stdlib-04-set-empty", {}, <start>) in
+  skip
+);
+
+types
+
+public alltypes = seq of char | A | B | RecType | EmptyType | nat * nat 
+               | seq of nat | bool | int | real | [nat] | <start> | char 
+               | token | map nat to nat | set of nat;
+
+operations
+
+public Test : () ==> seq of alltypes
+Test() ==
+( dcl result : seq of alltypes := [],
+      io : IO := new IO();
+  WriteVals();
+  let mk_(succ, val) = io.freadval[seq of char]("stdlib-04-string")
+  in if succ
+     then result := result ^ [val]
+     else error;
+  let mk_(succ, val) = io.freadval[seq of char]("stdlib-04-string-empty")
+  in if succ
+     then result := result ^ [val]
+     else error;
+--  let mk_(succ, val) = io.freadval[A]("stdlib-04-obj")
+--  in if succ
+--     then result := result ^ [val]
+--     else error;
+--  let mk_(succ, val) = io.freadval[B]("stdlib-04-obj-empty")
+--  in if succ
+--     then result := result ^ [val]
+--     else error;
+  let mk_(succ, val) = io.freadval[A`RecType]("stdlib-04-rec")
+  in if succ
+     then result := result ^ [val]
+     else error;
+  let mk_(succ, val) = io.freadval[A`EmptyType]("stdlib-04-rec-empty")
+  in if succ
+     then result := result ^ [val]
+     else error;
+  let mk_(succ, val) = io.freadval[nat*nat]("stdlib-04-tup")
+  in if succ
+     then result := result ^ [val]
+     else error;
+  let mk_(succ, val) = io.freadval[seq of nat]("stdlib-04-seq")
+  in if succ
+     then result := result ^ [val]
+     else error;
+  let mk_(succ, val) = io.freadval[seq of nat]("stdlib-04-seq-empty")
+  in if succ
+     then result := result ^ [val]
+     else error;
+  let mk_(succ, val) = io.freadval[bool]("stdlib-04-bool")
+  in if succ
+     then result := result ^ [val]
+     else error;
+  let mk_(succ, val) = io.freadval[int]("stdlib-04-int-neg")
+  in if succ
+     then result := result ^ [val]
+     else error;
+  let mk_(succ, val) = io.freadval[int]("stdlib-04-int-pos")
+  in if succ
+     then result := result ^ [val]
+     else error;
+  let mk_(succ, val) = io.freadval[real]("stdlib-04-real-neg")
+  in if succ
+     then result := result ^ [val]
+     else error;
+  let mk_(succ, val) = io.freadval[real]("stdlib-04-real-pos")
+  in if succ
+     then result := result ^ [val]
+     else error;
+  let mk_(succ, val) = io.freadval[[nat]]("stdlib-04-nil")
+  in if succ
+     then result := result ^ [val]
+     else error;
+  let mk_(succ, val) = io.freadval[<start>]("stdlib-04-quote")
+  in if succ
+     then result := result ^ [val]
+     else error;
+  let mk_(succ, val) = io.freadval[char]("stdlib-04-char")
+  in if succ
+     then result := result ^ [val]
+     else error;
+  let mk_(succ, val) = io.freadval[token]("stdlib-04-token")
+  in if succ
+     then result := result ^ [val]
+     else error;
+  let mk_(succ, val) = io.freadval[map nat to nat]("stdlib-04-map")
+  in if succ
+     then result := result ^ [val]
+     else error;
+  let mk_(succ, val) = io.freadval[map nat to nat]("stdlib-04-map-empty")
+  in if succ
+     then result := result ^ [val]
+     else error;
+  let mk_(succ, val) = io.freadval[set of nat]("stdlib-04-set")
+  in if succ
+     then result := result ^ [val]
+     else error;
+  let mk_(succ, val) = io.freadval[set of nat]("stdlib-04-set-empty")
+  in if succ
+     then result := result ^ [val]
+     else error;
+  let - = io.fwriteval[seq of A`alltypes]("stdlib-04-union", result, <start>) in
+  let mk_(succ, res) = io.freadval[seq of A`alltypes]("stdlib-04-union")
+  in if succ
+     then return res
+     else error;
+)
+
+end A
+
+class B
+
+end B

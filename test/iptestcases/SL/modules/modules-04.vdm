@@ -1,0 +1,156 @@
+module B
+exports 
+types struct Try
+
+values 
+  a, b : int;
+  tok  : token;
+  l    : seq1 of int
+
+definitions
+types 
+  Try :: try1 : nat 
+         try2 : nat
+  inv inv_try == (inv_try.try1 = 1)
+
+values
+  mk_(a,b) : int * int = mk_(100,200);
+  tok = mk_token(<TOKEN>);
+  --s : set of real = {300,...,305};
+  --l = [i | i in set s]
+  l = [i | i in set {300,...,305}]
+
+end B
+
+module C
+exports operations
+  op2: nat ==> ();
+  op3: () ==> seq of nat
+
+types struct Sigma
+
+definitions
+values
+  One : nat = 1
+
+operations
+
+  op1: set of nat ==> seq of nat
+  op1(ss) ==
+    if ss = {} then
+      return []
+    else
+      let e in set ss be st forall e1 in set ss \ {e} & e1 < e in
+        return op1(ss \ {e});
+
+  op2: nat ==> ()
+  op2(n) ==
+    s := s union {n};
+
+  op3: () ==> seq of nat
+  op3 
+  () == op1(s)
+  pre card s > One
+  post let l = RESULT in
+       forall i,j in set inds l &
+         if i < j then
+           l(i) > l(j)
+         else
+           l(i) < l(j)
+           
+state Sigma of
+  s : set of nat
+  init s == s = mk_Sigma({})
+end
+
+end C
+
+module D
+
+exports functions
+  f1, f2: set of nat * set of nat -> set of nat;
+  f3: set of nat * set of nat -> bool
+
+definitions
+functions
+
+  f1: set of nat * set of nat -> set of nat
+  f1(s1, s2) ==
+    s1 union s2;
+
+  f2: set of nat * set of nat -> set of nat
+  f2(s1, s2) ==
+    s1 inter s2;
+
+  f3: set of nat * set of nat -> bool
+  f3(s1, s2) ==
+    f4(s1, s2);
+
+  f4: set of nat * set of nat -> bool
+  f4(s1, s2) ==
+    s1 psubset s2
+
+end D
+
+module E
+
+exports types struct C; struct D 
+
+definitions
+types
+  A = set of nat;
+  B :: a : int
+       b : token;
+  C :: set of nat
+       set of nat;
+  D :: a : seq of nat
+       b : seq of token
+end E
+
+module A
+imports 
+
+from MyModule all,
+from B all,
+from C all,
+from D all,
+from E all
+
+
+exports
+  operations 
+  Test: () ==> seq of char
+
+definitions
+operations
+Test: () ==> seq of char
+Test() ==
+( dcl my_rec : MyModule`rec;
+  let rec = mk_MyModule`rec(mk_MyModule`rec2("hello"), mk_MyModule`rec2("world"))
+  in my_rec := mu(rec, field2 |-> mk_MyModule`rec2("friend"));
+  return my_rec.field2.a
+);
+
+end A
+
+
+module MyModule
+
+exports all
+definitions
+
+types
+
+  Expr =
+   rec |
+   rec2;
+
+rec ::
+  field1 : Expr
+  field2 : Expr;
+
+rec2 ::
+  a : seq of char
+
+
+end MyModule

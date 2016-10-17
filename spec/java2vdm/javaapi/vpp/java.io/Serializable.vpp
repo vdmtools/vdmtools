@@ -1,0 +1,7 @@
+class JavaIoSerializable is subclass of JavaLangObject
+operations
+JavaIoSerializable: <NIL> ==> JavaIoSerializable
+JavaIoSerializable(-) ==
+isNil:=true;
+
+end  JavaIoSerializable

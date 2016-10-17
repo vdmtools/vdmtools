@@ -1,0 +1,202 @@
+class Vector2 is subclass of Global
+
+instance variables
+
+  x: real;
+  y: real;
+
+operations 
+
+getX: () ==> real 
+getX () ==
+  return x;
+
+getY: () ==> real 
+getY () ==
+  return y;
+
+getCoord: () ==> real * real 
+getCoord () ==
+  return mk_(x,y);
+
+initialise: real * real ==> ()
+initialise (xx, yy) ==
+( x := xx;
+  y := yy 
+);
+
+initFromPoints: Point2 * Point2 ==> ()
+initFromPoints (a,b) == 
+  let mk_(a1,a2) = a.getCoord(),
+      mk_(b1,b2) = b.getCoord() in
+  ( x := b1-a1;
+    y := b2-a2 );
+
+create: real * real ==> Vector2 
+create (xx, yy) ==
+( dcl v : Vector2 := new Vector2();
+  v.initialise (xx,yy);
+  return v
+);
+
+createFromPoints: Point2 * Point2 ==> Vector2 
+createFromPoints (a,b) == 
+( dcl v : Vector2 := new Vector2();
+  v.initFromPoints (a,b);
+  return v
+);
+
+length: () ==> Length 
+length () ==
+( dcl math: Math := new Math();
+  let leng = math.sqrt (x*x + y*y) in
+  return leng
+);
+
+minus: () ==> Vector2 
+minus () ==
+( dcl mv : Vector2 := new Vector2();
+  mv.initialise (-x, -y);
+  return mv
+);
+
+scalarMult: real ==> Vector2 
+scalarMult (a) ==
+( dcl sm : Vector2 := new Vector2();
+  sm.initialise (a*x, a*y);
+  return sm
+);
+
+crossVector: () ==> Vector2 
+crossVector () ==
+( dcl cv : Vector2 := new Vector2();
+  cv.initialise (-y,x);
+  return cv
+);
+
+scalarProd: Vector2 ==> real 
+scalarProd (v) ==
+  let mk_(vx,vy) = v.getCoord() in
+  return x*vx + y*vy;
+
+determinant: Vector2 ==> real 
+determinant (v) ==
+  let mk_(vx,vy) = v.getCoord() in
+  return x*vy - y*vx;
+
+projection: Vector2 ==> Vector2 
+projection (d) ==
+  let db = scalarProd(d),
+      lsqr = x*x + y*y in
+  let coef = db/lsqr in
+  scalarMult (coef);
+
+copy: () ==> Vector2 
+copy () ==
+( dcl v : Vector2 := new Vector2();
+  v.initialise (x,y);
+  return v
+);
+
+rotate: Angle ==> Vector2 
+rotate (phi) ==
+( dcl v : Vector2 := new Vector2();
+  dcl math: Math := new Math();
+  let cos_phi = math.cos (phi),
+      sin_phi = math.sin (phi) in
+  v.initialise (x*cos_phi - y*sin_phi,
+                x*sin_phi + y*cos_phi);
+  return v
+);
+
+rotateWRT: Angle * Vector2 ==> Vector2 
+rotateWRT (phi, a) ==
+( dcl v : Vector2 := rotate (phi);
+  if v.scalarProd (a) >= 0
+  then return v
+  else return rotate (-phi)
+);
+
+rotateTowards: Angle * Vector2 ==> Vector2 
+rotateTowards (phi, a) ==
+( dcl v : Vector2 := rotate (phi);
+  let s_a = scalarProd (a) / (length() * a.length()) in
+  let a_v = a.scalarProd(v) / (a.length() * v.length()) in
+  if a_v >= s_a
+  then return v
+  else return rotate (-phi)
+);
+
+rotateAwayfrom: Angle * Vector2 ==> Vector2 
+rotateAwayfrom (phi, a) ==
+( dcl v : Vector2 := rotate (phi);
+  let self_a = scalarProd (a) / (length() * a.length()) in
+  let a_v = a.scalarProd(v) / (a.length() * v.length()) in
+  if a_v <= self_a
+  then return v
+  else return rotate (-phi)
+);
+
+normalise: () ==> Vector2 
+normalise () ==
+( dcl v: Vector2 := new Vector2();
+  let leng = length() in 
+  v.initialise (x/leng, y/leng);
+  return v
+);
+
+normaliseWith: Length ==> Vector2 
+normaliseWith (newlength) ==
+  let leng = length() in 
+  scalarMult (newlength/leng);
+
+midVectorNorm: Vector2 ==> Vector2 
+midVectorNorm (b) ==
+  let c = b.normaliseWith (length()) in
+  def origo = new Point2().create (0,0) in
+  let a_end = origo.pointPlusVector (self),
+      b'_end = origo.pointPlusVector (c) in
+  let midpoint = a_end.midPoint (b'_end) in
+  let mk_(m1,m2) = midpoint.getCoord() in
+  def v = new Vector2().create(m1,m2).normalise() in
+  return v;
+
+angle: Vector2 ==> Angle 
+angle (b) ==
+( dcl math: Math := new Math();
+  let ab = scalarProd (b),
+      a_len = length (),
+      b_len = b.length () in
+  let cos_phi = ab / (a_len * b_len) in
+  return math.arccos (cos_phi)
+);
+
+parallel: Vector2 ==> bool 
+parallel (b) ==
+( dcl math : Math := new Math();
+  let d = determinant (b) in
+  return math.epsilonSmall (d)
+);
+
+ortogonal: Vector2 ==> bool 
+ortogonal (b) ==
+( dcl math : Math := new Math();
+  let d = scalarProd (b) in
+  return math.epsilonSmall (d)
+);
+
+sameDir: Vector2 ==> bool 
+sameDir (b) ==
+( dcl math : Math := new Math();
+  let d = scalarProd (b) / (length () * b.length()) in
+  return math.epsilonSmall (d - 1)
+);
+
+oppositeDir: Vector2 ==> bool 
+oppositeDir (b) ==
+( dcl math : Math := new Math();
+  let d = scalarProd (b) / (length () * b.length()) in
+  return math.epsilonSmall (d + 1)
+);
+
+end Vector2

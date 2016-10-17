@@ -1,0 +1,13 @@
+class A
+
+instance variables
+
+  b : real;
+  
+operations
+
+public Test: () ==> real
+Test() ==
+  (b := 27;
+   return b); 
+end A

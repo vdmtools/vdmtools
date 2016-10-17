@@ -1,0 +1,13 @@
+class Nullable
+operations
+
+--  public Nullable: (<NIL>) ==> Nullable
+--  Nullable() == isNil:=true;
+
+  public IsNil: () ==> bool
+  IsNil() == return isNil
+
+instance variables
+  public isNil: bool :=false
+
+end Nullable

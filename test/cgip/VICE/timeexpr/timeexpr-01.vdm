@@ -1,0 +1,9 @@
+class A
+
+operations
+
+  public Test:() ==> nat
+  Test() ==
+    return time
+
+end A

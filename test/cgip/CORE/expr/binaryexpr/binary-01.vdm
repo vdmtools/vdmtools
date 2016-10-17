@@ -1,0 +1,66 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of (bool| nat)   
+Test () ==
+return
+[ true and true,
+  true and false,
+  false and true,
+  false and false,
+  ( if true
+    then 3 = 3.0 
+    else 1 = 1 ) and
+  ( if false
+    then 3= 4
+    else 3 = 9 ),
+  false and ( if true
+	     then true
+	     else false ),
+  true or true,
+  true or false,
+  false or true,
+  false or false,
+  true or if true
+	  then true
+	  else false,
+  ( if true 
+    then 3 = 4 
+    else true ) or 3 = 3,
+  true => false,
+  true => true,
+  false => true,
+  false => false,
+  ( if true 
+    then is_int(0.9)
+    else 0.9 = 0.8) => true,
+  ( if true
+    then (3 + 4.0) = 3
+    else false ) => 3=2,
+  true <=> false,
+  true <=> true,
+  false <=> true,
+  false <=> false,
+  3.0 = 1.3,
+  { 2 |-> 3} = { 3 |-> 1},
+  { 2 |-> 1} = f(10),
+  [ 1, 3] = [ 3, 2],
+  { 2, 4 } = { 4, 2 },
+  2.3 <> 3.0,
+  3.0 <> 3,
+  { 3 |-> 3.0} <> { 3.0 |-> 3},
+  [ 3.0, false] <> [ false, 3.0] ]
+
+functions
+
+f: nat -> (map nat to nat) | bool
+f(n) ==
+ false
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

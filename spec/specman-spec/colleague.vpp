@@ -1,0 +1,24 @@
+\begin{vdm_al}
+class ToolColleague is subclass of ProjectTypes
+
+instance variables
+protected  mediator : ToolMediator
+
+operations
+
+  ---
+  --- SetMediator MUST be called before any other methods in the 
+  --- sub classes of ToolColleague.
+  --- (is called in the initialisation statement of ToolMediator)
+  --- 
+
+public  SetMediator: ToolMediator ==> ()
+  SetMediator (m) ==
+    mediator := m
+
+end ToolColleague
+\end{vdm_al}
+$SetMediator$ MUST be called before any other methods in the sub
+classes of ToolColleague (is called in the initialisation statement
+of ToolMediator).
+

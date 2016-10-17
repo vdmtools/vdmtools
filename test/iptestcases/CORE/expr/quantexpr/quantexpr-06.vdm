@@ -1,0 +1,15 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+public Test : () ==> bool  
+Test () ==
+return
+       exists a in set {1,2,3} & a > 0;
+  
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

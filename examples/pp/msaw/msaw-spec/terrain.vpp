@@ -1,0 +1,20 @@
+class Terrain
+
+   instance variables
+      mosaique: map MSAWTypes`Coordonnees to MSAWTypes`Pieds := {|->};
+
+   operations
+      SetAltitude: MSAWTypes`Coordonnees * MSAWTypes`Pieds ==> ()
+      SetAltitude (coord, altitude)
+      == mosaique(coord) := altitude;
+
+      Intersection: SegmentDePrediction ==> bool
+      Intersection (segment_de_prediction) 
+      == def points_de_vecteur = segment_de_prediction.GetPoints () in
+            if points_de_vecteur = {}
+            then return false
+            else return (exists mk_(xy, z) in set points_de_vecteur &
+                            --z <= mosaique (xy))
+                            z <= 1)
+
+end Terrain

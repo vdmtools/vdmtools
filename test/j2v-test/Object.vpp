@@ -1,0 +1,750 @@
+class J2VUTIL
+operations
+
+  static
+  public Convert: seq1 of char * (int  | real | char | JavaLangString)
+                         ==> [(int  | real | char | JavaLangString)]
+  Convert(p_type,p_val) ==
+--    is not yet specified
+    cases p_type:
+      "JavaLangString" -> J2VUTIL`toString(p_val),
+      "char"   -> J2VUTIL`toChar(p_val),
+      "int"    -> J2VUTIL`toInt(p_val),
+--      "real",
+--      "double" -> J2VUTIL`toReal(p_val),
+      others   -> error
+    end
+  pre
+    cases p_type:
+      "boolean",
+  --    "void",
+      "char",
+      "short",
+      "int",
+      "long",
+      "float",
+      "double",
+      "byte",
+      "JavaLangString"
+        -> true,
+      others
+        -> false
+    end;
+
+  static
+  public BitOp: int * (<AND> | <OR> | <EXCLOR>) * int ==> int
+  BitOp(p_left,p_op,p_right) ==
+    is not yet specified;
+
+  static
+  public ConcatStr: JavaLangString * JavaLangString ==> JavaLangString
+  ConcatStr(p_str1,p_str2) ==
+  ( dcl l_res: JavaLangString := new JavaLangString([]);
+    if p_str2.IsNil() and not p_str1.IsNil()
+    then
+      l_res:=l_res.concat(p_str1)
+    elseif p_str1.IsNil() and not p_str2.IsNil()
+    then
+      l_res:=l_res.concat(p_str2)
+    else
+    ( l_res:=l_res.concat(p_str1);
+      l_res:=l_res.concat(p_str2)
+    );
+    return l_res
+  );
+
+  static
+  public toString : int  | real | char | JavaLangString ==> JavaLangString
+  toString(p_val) ==
+    return
+      cases true:
+        (is_int (p_val)) -> new JavaLangString(new J2VUTIL().itoa(p_val)),
+--        (is_char(p_val)) -> (new Character(p_val)).toString(),
+--        (isofclass(JavaLangString, p_val)) -> p_val,
+--  --    (is_real(p_val)) -> (new Float(p_val)).toString(),
+        others -> undefined
+      end;
+
+  public itoa: int ==> seq of char
+  itoa(n) ==
+    return
+      if n = 0
+      then "0"
+      elseif n<0 then itoaR(-n)
+      else itoaR(n);
+
+  public itoaR: int ==> seq of char
+  itoaR(n) ==
+    return
+      if n = 0
+      then ""
+      else let first= n div 10,
+               last = n mod 10 in
+           itoaR(first) ^
+           cases last:
+             0 -> "0",
+             1 -> "1",
+             2 -> "2",
+             3 -> "3",
+             4 -> "4",
+             5 -> "5",
+             6 -> "6",
+             7 -> "7",
+             8 -> "8",
+             9 -> "9"
+           end;
+
+  static
+  public toChar : int  | real | char ==> char
+  toChar(p_val) ==
+    return
+      cases true:
+--        (is_int (p_val)) -> (new Integer(p_val)).charValue(),
+        (is_char(p_val)) -> p_val,
+--        (is_real(p_val)) -> toChar(floor(p_val))
+        others -> undefined
+      end;
+
+  static
+  public toInt : int  | real | char ==> int
+  toInt(p_val) ==
+    return
+      cases true:
+        (is_int (p_val)) -> let l_i:int=p_val in l_i,
+--        (is_char(p_val)) -> let l_c:char=p_val in new Integer(l_c).intValue(),
+        (is_real(p_val)) -> let l_f:real=p_val in floor(l_f) 
+      end;    
+
+
+end J2VUTIL
+
+class J2V_Break
+end J2V_Break
+
+class Nullable
+operations
+  public IsNil: () ==> bool
+  IsNil() == return isNil
+instance variables
+  protected isNil: bool :=false
+end Nullable
+
+class JavaLangObject is subclass of Nullable
+operations 
+public JavaLangObject: <NIL> ==> JavaLangObject
+JavaLangObject(p) == isNil:=true;
+
+public  JavaLangObject : () ==> JavaLangObject
+JavaLangObject() ==
+skip;
+
+public  wait : () ==> ()
+wait() == 
+is not yet specified ;
+
+protected  clone : () ==> JavaLangObject
+clone() == 
+is not yet specified ;
+
+--public  wait : int  ==> ()
+--wait(timeout) == 
+--is not yet specified ;
+
+public  notify : () ==> ()
+notify() == 
+is not yet specified ;
+
+--public  wait : int  * int  ==> ()
+--wait(timeout, nanos) == 
+--is not yet specified ;
+
+protected  finalize : () ==> ()
+finalize() == 
+is not yet specified ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+is subclass responsibility ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+is not yet specified ;
+
+--public  toString : () ==> JavaLangString
+--toString() == 
+--is not yet specified ;
+
+public  notifyAll : () ==> ()
+notifyAll() == 
+is not yet specified ;
+
+private  static registerNatives : () ==> ()
+registerNatives() == 
+is not yet specified ;
+
+public  equals : JavaLangObject ==> bool 
+equals(obj) == 
+  return self = obj;
+
+--
+--  Just to test...
+--
+functions
+public Convert: (seq1 of char) * [int  | real | char | JavaLangString]
+               -> int  | real | char | JavaLangString
+Convert(p_type,p_val) ==
+  cases true:
+    (p_type="char") ->
+      cases true:
+        (is_(p_val, char)) -> p_val,
+        (is_(p_val, int)) -> ' ',
+        (is_(p_val, real)) -> ' ',
+        (is_(p_val, JavaLangString)) -> undefined
+      end,
+    others ->
+      undefined
+  end
+pre
+  cases true:
+    (p_type="boolean"),
+--    (p_type="void"),
+    (p_type="char"),
+    (p_type="short"),
+    (p_type="int"),
+    (p_type="long"),
+    (p_type="float"),
+    (p_type="double"),
+    (p_type="byte"),
+    (p_type="JavaLangString")
+      -> true,
+    others
+      -> false
+  end;
+
+
+end  JavaLangObject
+
+class JavaLangException is subclass of JavaLangObject
+operations 
+  public JavaLangException: <NIL> ==> JavaLangException
+  JavaLangException(p) == isNil:=true;
+end  JavaLangException
+
+class JavaLangString is subclass of JavaLangObject, JavaLangSerializable, JavaLangComparable
+instance variables
+  v: seq of char:=[]
+ 
+operations 
+public JavaLangString: <NIL> ==> JavaLangString
+JavaLangString(p) == isNil:=true;
+
+public  trim : () ==> JavaLangString
+trim() == 
+is not yet specified ;
+
+public  JavaLangString : () ==> JavaLangString
+JavaLangString() == 
+skip;
+
+public  intern : () ==> JavaLangString
+intern() == 
+is not yet specified ;
+
+public  length : () ==> int 
+length() == 
+  return len v;
+
+public  charAt : int  ==> char 
+charAt(index) == 
+  return v(index);
+
+public  getBytes : () ==> map  int  to  int 
+getBytes() == 
+is not yet specified ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+is not yet specified ;
+
+public  indexOf : int  ==> int 
+indexOf(ch) == 
+is not yet specified ;
+
+public  toString : () ==> JavaLangString
+toString() == 
+  return new JavaLangString(v) ;
+
+public  static valueOf : bool  ==> JavaLangString
+valueOf(b) == 
+  return
+    new JavaLangString(if b then "true" else "false");
+
+public  static valueOf : char  ==> JavaLangString
+valueOf(c) == 
+  return
+    new JavaLangString([c]);
+
+public  static valueOf : int  ==> JavaLangString
+valueOf(l) == 
+  return new JavaLangString(new J2VUTIL().itoa(l)) ;
+
+--public  static valueOf : real  ==> JavaLangString
+--valueOf(d) == 
+--is not yet specified ;
+
+public  indexOf : int  * int  ==> int 
+indexOf(ch, fromIndex) == 
+is not yet specified ;
+
+public  replace : char  * char  ==> JavaLangString
+replace(oldChar, newChar) == 
+is not yet specified ;
+
+public  substring : int  ==> JavaLangString
+substring(beginIndex) == 
+is not yet specified ;
+
+public  JavaLangString : seq of char  ==> JavaLangString
+JavaLangString(value_) == 
+  v:=value_;
+
+public  JavaLangString : map  int  to  char  ==> JavaLangString
+JavaLangString(value_) == 
+is not yet specified ;
+
+public  JavaLangString : map  int  to  int  ==> JavaLangString
+JavaLangString(bytes) == 
+is not yet specified ;
+
+public  toCharArray : () ==> map  int  to  char 
+toCharArray() == 
+  return { i-1 |-> v(i) | i in set inds v} ;
+
+public  toLowerCase : () ==> JavaLangString
+toLowerCase() == 
+is not yet specified ;
+
+public  toUpperCase : () ==> JavaLangString
+toUpperCase() == 
+is not yet specified ;
+
+public  lastIndexOf : int  ==> int 
+lastIndexOf(ch) == 
+is not yet specified ;
+
+public  substring : int  * int  ==> JavaLangString
+substring(beginIndex, endIndex) == 
+is not yet specified ;
+
+public  static valueOf : map  int  to  char  ==> JavaLangString
+valueOf(data) == 
+ return new JavaLangString([data(i)|i in set {0,...,card dom data - 1}]);
+
+public  JavaLangString : map  int  to  int  * int  ==> JavaLangString
+JavaLangString(ascii, hibyte) == 
+is not yet specified ;
+
+public  lastIndexOf : int  * int  ==> int 
+lastIndexOf(ch, fromIndex) == 
+is not yet specified ;
+
+private  JavaLangString : int  * int  * map  int  to  char  ==> JavaLangString
+JavaLangString(offset, count, value_) == 
+is not yet specified ;
+
+public  JavaLangString : map  int  to  char  * int  * int  ==> JavaLangString
+JavaLangString(value_, offset, count) == 
+is not yet specified ;
+
+public  JavaLangString : map  int  to  int  * int  * int  ==> JavaLangString
+JavaLangString(bytes, offset, len_gth) == 
+is not yet specified ;
+
+public  JavaLangString : JavaLangString ==> JavaLangString
+JavaLangString(value_) == 
+  v:=value_.toSeqOfChar();
+
+public  toSeqOfChar : () ==> seq of char
+toSeqOfChar() == return v;
+
+public  concat : JavaLangString ==> JavaLangString
+concat(str) == 
+(  v:=v ^ str.toSeqOfChar();
+  return self
+);
+
+public  static copyValueOf : map  int  to  char  ==> JavaLangString
+copyValueOf(data) == 
+is not yet specified ;
+
+public  equals : JavaLangObject ==> bool 
+equals(anObject) == 
+is not yet specified ;
+
+public  static valueOf : map  int  to  char  * int  * int  ==> JavaLangString
+valueOf(data, offset, count) == 
+is not yet specified ;
+
+public  JavaLangString : map  int  to  int  * int  * int  * int  ==> JavaLangString
+JavaLangString(ascii, hibyte, offset, count) == 
+is not yet specified ;
+
+public  indexOf : JavaLangString ==> int 
+indexOf(str) == 
+is not yet specified ;
+
+public  static valueOf : JavaLangObject ==> JavaLangString
+valueOf(obj) == 
+is not yet specified ;
+
+public  endsWith : JavaLangString ==> bool 
+endsWith(suffix) == 
+is not yet specified ;
+
+public  getBytes : JavaLangString ==> map  int  to  int 
+getBytes(enc) == 
+is not yet specified ;
+
+public  compareTo : JavaLangObject ==> int 
+compareTo(o) == 
+is not yet specified ;
+
+--public  compareTo : JavaLangString ==> int 
+--compareTo(anotherString) == 
+--is not yet specified ;
+
+public  getBytes : int  * int  * map  int  to  int  * int  ==> ()
+getBytes(srcBegin, srcEnd, dst, dstBegin) == 
+is not yet specified ;
+
+public  getChars : int  * int  * map  int  to  char  * int  ==> ()
+getChars(srcBegin, srcEnd, dst, dstBegin) == 
+is not yet specified ;
+
+public  indexOf : JavaLangString * int  ==> int 
+indexOf(str, fromIndex) == 
+is not yet specified ;
+
+public  static copyValueOf : map  int  to  char  * int  * int  ==> JavaLangString
+copyValueOf(data, offset, count) == 
+is not yet specified ;
+
+public  start_sWith : JavaLangString ==> bool 
+start_sWith(prefix) == 
+is not yet specified ;
+
+public  lastIndexOf : JavaLangString ==> int 
+lastIndexOf(str) == 
+is not yet specified ;
+
+public  toLowerCase : JavaLangLocale ==> JavaLangString
+toLowerCase(locale) == 
+is not yet specified ;
+
+public  toUpperCase : JavaLangLocale ==> JavaLangString
+toUpperCase(locale) == 
+is not yet specified ;
+
+public  JavaLangString : JavaLangStringBuffer ==> JavaLangString
+JavaLangString(buffer) == 
+is not yet specified ;
+
+public  JavaLangString : map  int  to  int  * JavaLangString ==> JavaLangString
+JavaLangString(bytes, enc) == 
+is not yet specified ;
+
+public  start_sWith : JavaLangString * int  ==> bool 
+start_sWith(prefix, toffset) == 
+is not yet specified ;
+
+public  lastIndexOf : JavaLangString * int  ==> int 
+lastIndexOf(str, fromIndex) == 
+is not yet specified ;
+
+--private  static getBTCConverter : JavaLangString ==> ByteToCharConverter
+--getBTCConverter(encoding) == 
+--is not yet specified ;
+
+--private  static getCTBConverter : JavaLangString ==> CharToByteConverter
+--getCTBConverter(encoding) == 
+--is not yet specified ;
+
+public  JavaLangString : map  int  to  int  * int  * int  * JavaLangString ==> JavaLangString
+JavaLangString(bytes, offset, len_gth, enc) == 
+is not yet specified ;
+
+public  equalsIgnoreCase : JavaLangString ==> bool 
+equalsIgnoreCase(anotherString) == 
+is not yet specified ;
+
+public  compareToIgnoreCase : JavaLangString ==> int 
+compareToIgnoreCase(str) == 
+is not yet specified ;
+
+public  regionMatches : int  * JavaLangString * int  * int  ==> bool 
+regionMatches(toffset, other, ooffset, len_) == 
+is not yet specified ;
+
+--private  getBytes : CharToByteConverter ==> map  int  to  int 
+--getBytes(ctb) == 
+--is not yet specified ;
+
+public  regionMatches : bool  * int  * JavaLangString * int  * int  ==> bool 
+regionMatches(ignoreCase, toffset, other, ooffset, len_) == 
+is not yet specified ;
+
+--private  JavaLangString : map  int  to  int  * int  * int  * ByteToCharConverter ==> JavaLangString
+--JavaLangString(bytes, offset, len_gth, btc) == 
+--is not yet specified ;
+
+instance variables 
+--  private  value_ : map  int  to  char ;
+--  private  offset : int ;
+--  private  count : int ;
+--  private  hash : int  := 0;
+--  private  static btcConverter : ThreadLocal := new ThreadLocal(<NIL>)  ;
+--  private  static ctbConverter : ThreadLocal := new ThreadLocal(<NIL>) ;
+--  private  static serialVersionUID : int  := -0;
+--  private  static serialPersistentFields : map  int  to  ObjectStreamField := {l_3 |-> new ObjectStreamField(<NIL>)  |l_3 in set  {0,...,0-1}};
+--  public  static CASE_INSENSITIVE_ORDER : Comparator := new  CaseInsensitiveComparator()
+  
+end  JavaLangString
+
+class JavaLangSerializable
+
+end  JavaLangSerializable
+
+class JavaLangComparable
+operations 
+public  compareTo : JavaLangObject ==> int 
+compareTo(o) == 
+is subclass responsibility ;
+
+end  JavaLangComparable
+
+class JavaLangStringBuffer is subclass of JavaLangObject
+operations
+public JavaLangStringBuffer: <NIL> ==> JavaLangStringBuffer
+JavaLangStringBuffer(p) == isNil:=true;
+
+end  JavaLangStringBuffer
+
+class JavaLangLocale is subclass of JavaLangObject
+operations
+public JavaLangLocale: <NIL> ==> JavaLangLocale
+JavaLangLocale(p) == isNil:=true;
+
+end  JavaLangLocale
+
+
+class JavaLangClass  is subclass of JavaLangObject --, JavaLangSerializable
+types
+--  public
+    CLASS ::
+      name : seq of char
+      cori : <CLASS> | <INTERFACE>
+      isPrim : bool
+
+instance variables
+  private val : JavaLangClass`CLASS;
+
+operations 
+
+--public  equals : JavaLangClass ==> bool 
+--equals(obj) == 
+--  return self = obj;
+
+--public  JavaLangClass : <NIL> ==> JavaLangClass
+--JavaLangClass(-) == 
+--isNil := true  ;
+
+--public  JavaLangClass : JavaLangClass`CLASS ==> JavaLangClass
+--JavaLangClass(v) == 
+--( val := v
+--);
+
+public  JavaLangClass :  seq1 of char * (<CLASS> | <INTERFACE>) * bool ==> JavaLangClass
+JavaLangClass(name,cori,prim) == 
+( val.name := name;
+  val.cori := cori;
+  val.isPrim := prim;
+);
+
+public  getName : () ==> JavaLangString
+getName() == 
+  return new JavaLangString(val.name);
+
+public  isArray : () ==> bool 
+isArray() == 
+  return false;
+
+--public  toString : () ==> JavaLangString
+--toString() == 
+--( dcl
+--    str: seq of char :=
+--      if isInterface()
+--      then "interface "
+--      else 
+--       if isPrimitive()
+--        then ""
+--        else "class ";
+--  str:=str^getName().toSeqOfChar();
+-- return new JavaLangString(str)
+--);
+
+--public  getFields : () ==> map  int  to  Field
+--getFields() == 
+--  return {|->};
+
+public  getClasses : () ==> map  int  to  JavaLangClass
+getClasses() == 
+  return {|->};
+
+--public  getMethods : () ==> map  int  to  Method
+--getMethods() == 
+--is not yet specified ;
+
+--public  getPackage : () ==> Package
+--getPackage() == 
+--is not yet specified ;
+
+public  getSigners : () ==> map  int  to  JavaLangObject
+getSigners() == 
+  return {|->};
+
+public  isInterface : () ==> bool 
+isInterface() == 
+  return val.cori=<INTERFACE>;
+
+public  isPrimitive : () ==> bool 
+isPrimitive() == 
+  return val.isPrim;
+
+--public  newInstance : () ==> JavaLangObject
+--newInstance() == 
+--is not yet specified ;
+
+--public  getModifiers : () ==> int 
+--getModifiers() == 
+--is not yet specified ;
+
+public  getInterfaces : () ==> map  int  to  JavaLangClass
+getInterfaces() == 
+  return {|->};
+
+--public  getSuperclass : () ==> JavaLangClass
+--getSuperclass() == 
+--is not yet specified ;
+
+--public  getClassLoader : () ==> ClassLoader
+--getClassLoader() == 
+--is not yet specified ;
+
+--public  static forName : JavaLangString ==> JavaLangClass
+--forName(className) == 
+--is not yet specified ;
+
+--public  getConstructors : () ==> map  int  to  Constructor
+--getConstructors() == 
+--is not yet specified ;
+
+--public  getComponentType : () ==> JavaLangClass
+--getComponentType() == 
+--is not yet specified ;
+
+--public  getField : JavaLangString ==> Field
+--getField(name) == 
+--is not yet specified ;
+
+--public  getDeclaredFields : () ==> map  int  to  Field
+--getDeclaredFields() == 
+--is not yet specified ;
+
+--public  getDeclaringClass : () ==> JavaLangClass
+--getDeclaringClass() == 
+--is not yet specified ;
+
+--public  getDeclaredClasses : () ==> map  int  to  JavaLangClass
+--getDeclaredClasses() == 
+--is not yet specified ;
+
+--public  getDeclaredMethods : () ==> map  int  to  Method
+--getDeclaredMethods() == 
+--is not yet specified ;
+
+--public  isInstance : JavaLangObject ==> bool 
+--isInstance(obj) == 
+--is not yet specified ;
+
+--public  getProtectionDomain : () ==> ProtectionDomain
+--getProtectionDomain() == 
+--is not yet specified ;
+
+--public  getResource : JavaLangString ==> URL
+--getResource(name) == 
+--is not yet specified ;
+
+--setSigners : map  int  to  JavaLangObject ==> ()
+--setSigners(signers) == 
+--is not yet specified ;
+
+--public  getDeclaredConstructors : () ==> map  int  to  Constructor
+--getDeclaredConstructors() == 
+--is not yet specified ;
+
+--public  isAssignableFrom : JavaLangClass ==> bool 
+--isAssignableFrom(cls) == 
+--is not yet specified ;
+
+--public  getDeclaredField : JavaLangString ==> Field
+--getDeclaredField(name) == 
+--is not yet specified ;
+
+--public  getConstructor : map  int  to  JavaLangClass ==> Constructor
+--getConstructor(parameterTypes) == 
+--is not yet specified ;
+
+--static getPrimitiveClass : JavaLangString ==> JavaLangClass
+--getPrimitiveClass(name) == 
+--is not yet specified ;
+
+--public  getResourceAsStream : JavaLangString ==> InputStream
+--getResourceAsStream(name) == 
+--is not yet specified ;
+
+--public  getMethod : JavaLangString * map  int  to  JavaLangClass ==> Method
+--getMethod(name, parameterTypes) == 
+--is not yet specified ;
+
+--public  static forName : JavaLangString * bool  * ClassLoader ==> JavaLangClass
+--forName(name, initialize, loader) == 
+--is not yet specified ;
+
+--public  getDeclaredConstructor : map  int  to  JavaLangClass ==> Constructor
+--getDeclaredConstructor(parameterTypes) == 
+--is not yet specified ;
+
+--public  getDeclaredMethod : JavaLangString * map  int  to  JavaLangClass ==> Method
+--getDeclaredMethod(name, parameterTypes) == 
+--is not yet specified ;
+
+--setProtectionDomain0 : ProtectionDomain ==> ()
+--setProtectionDomain0(pd) == 
+--is not yet specified ;
+
+
+end  JavaLangClass
+
+class JavaLangCharacter is subclass of JavaLangObject
+instance variables
+	public static MIN_VALUE : char:= ' ';
+	public static MAX_VALUE : char:= 'z';
+
+operations 
+
+public
+JavaLangCharacter: char ==> JavaLangCharacter
+JavaLangCharacter(ch) ==
+	skip;
+
+end JavaLangCharacter

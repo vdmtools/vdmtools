@@ -1,0 +1,108 @@
+class Shared
+
+instance variables
+
+i : nat := 0;
+j : nat := 0
+
+operations
+
+public IncI : () ==> ()
+IncI() == i := i + 1;
+
+public IncJ : () ==> ()
+IncJ() == j := j + 1;
+
+public Finished : () ==> nat * nat
+Finished() == return mk_(i,j)
+
+sync
+  mutex(IncI);
+  mutex(IncJ);
+  per Finished => i+j >= 12
+
+end Shared
+
+class B
+
+instance variables
+
+s : Shared
+
+operations
+
+public Init : Shared ==> ()
+Init(ns) == s := ns;
+
+done : () ==> ()
+done() == skip;
+
+public finished : () ==> ()
+finished() == skip;
+
+sync
+
+per finished => #fin(done) = 1
+
+thread
+
+    (dcl j:nat := 0;
+     while (j < 12) do
+       (s.IncI();
+        j := j + 1
+       );
+     done();
+    )
+
+end B
+
+class C
+
+instance variables
+
+s : Shared;
+
+operations 
+
+public Init : Shared ==> ()
+Init(ns) == s := ns;
+
+done : () ==> ()
+done() == skip;
+
+public finished : () ==> ()
+finished() == skip;
+
+
+sync 
+
+per finished => #fin(done) = 1
+
+thread
+
+    (dcl j:nat := 0;
+     while (j < 50) do
+      (s.IncJ();
+       j := j + 1
+      );
+     done();
+    )
+
+end C
+
+class A
+
+operations
+
+public Test : () ==> nat * nat
+Test() ==
+  ( dcl b : B := new B(),
+        c : C := new C(),
+        s : Shared := new Shared();
+    b.Init(s);
+    c.Init(s);
+    startlist({b,c});
+    s.Finished();
+  )
+
+end A

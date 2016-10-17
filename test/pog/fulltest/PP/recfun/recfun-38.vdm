@@ -1,0 +1,28 @@
+class A
+
+functions
+
+public
+  id : nat -> nat
+  id(x) == x;
+
+end A 
+
+class B
+
+functions
+  id : nat -> nat
+  id(x) == x+1;
+
+end B
+
+class AA is subclass of A, B
+
+functions
+
+public
+  foo : nat -> nat 
+  foo(x) == if x = 0 then 0 else AA`foo(x-1) + AA`id(x)
+  measure AA`id;
+
+end AA

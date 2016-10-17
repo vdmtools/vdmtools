@@ -1,0 +1,21 @@
+class A
+
+instance variables
+
+  b : B := new B();
+  
+operations
+
+public Test: () ==> real
+Test() ==
+  (b.a := 27;
+   return b.a); 
+end A
+
+class B
+instance variables
+
+  public a: real := 7.4;
+  inv a < 20;
+
+end B

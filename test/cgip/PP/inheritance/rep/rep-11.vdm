@@ -1,0 +1,25 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+values
+
+public  v1 = 'a'
+
+end A
+
+
+class B is subclass of A
+
+values
+
+  v1 = 2;
+  v2 = v1;
+
+operations
+
+public Test : () ==> nat|char  
+Test () ==
+return v2
+
+end B

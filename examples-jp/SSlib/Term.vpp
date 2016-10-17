@@ -1,0 +1,35 @@
+class 『期間』
+/*
+責任
+	開始と終了のTimeを持つ期間を表す。
+概要
+	私は開始と終了のTimeを持つ期間である。
+*/
+
+values
+	Rcsid = "$Id: Term.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $";
+
+instance variables
+開始時間 : [Time];
+終了時間 : [Time];
+
+functions
+static public 期間内である : Time * 『期間』 -> bool
+期間内である(ある時間, 期間) ==
+	(期間.開始時間 = nil or 期間.開始時間.≦(ある時間)) and
+	(期間.終了時間 = nil or 期間.終了時間.≧(ある時間));
+
+public ＝ : 『期間』 -> bool
+＝(a期間) == 
+	self.開始時間.＝(a期間.開始時間) and self.終了時間.＝(a期間.終了時間);
+
+operations
+public 『期間』:[Time]*[Time] ==> 『期間』
+『期間』(a開始時間, a終了時間) ==
+	(
+	開始時間 := a開始時間;
+	終了時間 := a終了時間;
+	return self
+	);
+	
+end  『期間』

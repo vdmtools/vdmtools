@@ -1,0 +1,18 @@
+-- for ubuntu --
+
+/etc/samba/smb.conf
+
+[global]
+    unix extensions = no
+
+[(share folder)]
+    follow symlinks = yes
+    wide links = yes
+
+-- for Mac OS X --
+/System/Library/LaunchDaemons/com.apple.smbd.plist
+
+<array>
+        <string>/usr/sbin/smbd</string>
+        <string>-no-symlinks</string>  
+</array>

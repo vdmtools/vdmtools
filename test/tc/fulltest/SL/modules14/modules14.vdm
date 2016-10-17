@@ -1,0 +1,21 @@
+module A
+
+exports functions f: nat -> nat
+
+definitions
+functions 
+
+  f: nat -> nat
+  f(n) == n+n
+
+end A
+
+module B
+
+imports
+  from A functions f: nat -> nat renamed g
+
+  exports functions g: nat -> nat -- this is the problem (f is defined in A)
+
+
+end B

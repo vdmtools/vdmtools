@@ -1,0 +1,34 @@
+class A
+
+instance variables 
+
+  i   : real;
+  j   : real;
+  b1  : bool;
+  b2  : bool;
+  s   : set of (real | char | bool) := {};
+
+operations
+
+  op: nat ==> nat
+  op (a) ==
+    return a;
+
+public  sss: () ==> nat
+  sss() ==
+  ( dcl c:nat := op(1);
+    return c
+  )
+
+end A
+
+class B is subclass of A
+
+operations
+
+
+public Test : () ==> nat
+Test ()  ==
+  self.sss()
+
+end B

@@ -1,0 +1,15 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq1 of nat  
+Test () ==
+( dcl a : seq1 of nat;
+  a := if true
+                         then let a in set {3, [3,6]} be st a = 3 in a
+                         else [3,4];
+  return a
+);
+  
+types 
+  myseq = seq1 of nat
+
+
+end A

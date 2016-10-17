@@ -1,0 +1,342 @@
+class SQL
+
+types
+public 文字列 = seq of char;
+public 副問い合わせ = SQL;
+public データ集合 = 文字列 | 副問い合わせ;
+
+public 選択項目 = 項目 | (項目 * 文字列) | (項目 * 文字列 * ((map 文字列 to 文字列) * [文字列]));
+public 項目 = 列名 | 副問い合わせ | (関数 * seq of 文字列);
+public 別名 = 文字列;
+public 表名 = データ集合 | (データ集合 * 別名) | (文字列 * seq1 of 左外部結合) | (文字列 * 別名 * seq1 of 左外部結合);
+public 列名 = 文字列;
+public 条件 = (文字列 * 演算子 * (データ集合 | set of 文字列)) |
+              (文字列 * が * (データ集合 | set of 文字列) * 演算子) |
+              (副問い合わせ * が * (<存在する> | <存在しない>));
+public 演算子 = <と等しい> | <と等しくない> | <等しい> | <等しくない> | <以上> | <以下> |
+                <より大> | <より大きい> | <より小> | <より小さい> | <以前> | <以後> |
+                <の範囲内> | <範囲内> | <の範囲外> | <範囲外> | <で始まる> | <で終わる> | <を含む>;
+public 関数 = <MAX> | <MIN> | <CONCAT> | <COUNT>;
+public が = <が>;
+public 左外部結合 = データ集合 * (seq1 of 結合条件) | データ集合 * 文字列 * (seq1 of 結合条件);
+public 結合条件 = (文字列 * <等しい> * 文字列) | (文字列 * が * 文字列 * <と等しい>)
+
+instance variables
+private iSELECT句項目列 : seq of 選択項目 := [];
+private iFROM句項目列 : seq of 表名 := [];
+private iWHERE句項目列 : seq of 条件 := [];
+private iGROUPBY句項目列 : seq of 列名 := [];
+private iORDERBY句項目列 : seq of 列名 := [];
+private i重複を除外する : bool := false;
+
+operations
+public
+SQL: () ==> SQL
+SQL() == skip;
+
+public
+SQL: seq of 表名 ==> SQL
+SQL(a表名列) ==
+  (iFROM句項目列 := a表名列;);
+
+public
+表名を追加する: 表名 ==> ()
+表名を追加する(a表名) ==
+  (iFROM句項目列 := iFROM句項目列 ^ [a表名]);
+
+public
+表名列を追加する: seq of 表名 ==> ()
+表名列を追加する(a表名列) ==
+  (for a表名 in a表名列 do
+     表名を追加する(a表名));
+
+public
+選択項目を追加する: 選択項目 ==> ()
+選択項目を追加する(a選択項目) ==
+  (iSELECT句項目列 := iSELECT句項目列 ^ [a選択項目]);
+
+public
+選択項目列を追加する: seq of 選択項目 ==> ()
+選択項目列を追加する(a選択項目列) ==
+  (for a選択項目 in a選択項目列 do
+     選択項目を追加する(a選択項目));
+
+public
+重複を除外する: () ==> ()
+重複を除外する() ==
+  i重複を除外する := true; 
+
+public
+AND条件を追加する: 条件 ==> ()
+AND条件を追加する(a条件) ==
+  (iWHERE句項目列 := iWHERE句項目列 ^ [a条件]);
+
+public
+AND条件列を追加する: seq of 条件 ==> ()
+AND条件列を追加する(a条件列) ==
+  (for a条件 in a条件列 do
+     AND条件を追加する(a条件));
+
+public
+グループ化キー項目を追加する: 列名 ==> ()
+グループ化キー項目を追加する(a列名) ==
+  (iGROUPBY句項目列 := iGROUPBY句項目列 ^ [a列名];);
+
+public
+グループ化キー項目列を追加する: seq of 列名 ==> ()
+グループ化キー項目列を追加する(a列名列) ==
+  (for a列名 in a列名列 do
+     グループ化キー項目を追加する(a列名));
+
+public
+ソートキー項目を追加する: 列名 ==> ()
+ソートキー項目を追加する(a列名) ==
+  (iORDERBY句項目列 := iORDERBY句項目列 ^ [a列名];);
+
+public
+ソートキー項目列を追加する: seq of 列名 ==> ()
+ソートキー項目列を追加する(a列名列) ==
+  (for a列名 in a列名列 do
+     ソートキー項目を追加する(a列名));
+
+public
+問い合わせ言語を取得する: bool * nat ==> 文字列
+問い合わせ言語を取得する(a改行あり, a字下げ) ==
+  if iFROM句項目列 = []
+  then error
+  else
+  return SELECT句を生成する(iSELECT句項目列,a改行あり, a字下げ) ^
+         FROM句を生成する(iFROM句項目列,a改行あり, a字下げ) ^
+         WHERE句を生成する(iWHERE句項目列,a改行あり, a字下げ) ^
+         GROUPBY句を生成する(iGROUPBY句項目列,a改行あり, a字下げ) ^
+         ORDERBY句を生成する(iORDERBY句項目列,a改行あり, a字下げ);
+
+private
+SELECT句を生成する: seq of 選択項目 * bool * nat ==> 文字列
+SELECT句を生成する(a選択項目列, a改行あり, a字下げ) ==
+  (dcl res : seq of char := "SELECT";
+   if i重複を除外する
+   then res := res ^ " DISTINCT";
+   res := res ^ 空白か改行(a改行あり,a字下げ+2);
+   if a選択項目列 = []
+   then res := res ^ "*"
+   else
+     for i = 1 to len a選択項目列 do
+       let a選択項目 = a選択項目列(i)
+       in
+        (if i > 1 then res := res ^ "," ^ 空白か改行(a改行あり,a字下げ+2);
+         cases a選択項目:
+           mk_(項目1, 項目2) -> if is_(項目1, 関数)
+                                then res := res ^ 関数を生成する(a選択項目)
+                                else res := res ^ 項目を生成する(項目1, a改行あり, a字下げ+2) ^ " " ^ 項目2,
+           mk_(項目1, 項目2, mk_(変換表, デフォルト)) ->
+                   if 変換表 = {|->}
+                   then res := res ^ 関数を生成する(項目1) ^ " " ^ 項目2
+                   else res := res ^ CASE句を生成する(項目1, 変換表, デフォルト) ^ " " ^ 項目2,
+           others -> res := res ^ 項目を生成する(a選択項目, a改行あり, a字下げ+2)
+         end;);
+   return res);
+
+private
+FROM句を生成する: seq of 表名 * bool * nat ==> 文字列
+FROM句を生成する(a表名列, a改行あり, a字下げ) ==
+  (dcl res : seq of char := 空白か改行(a改行あり,a字下げ) ^ "FROM";
+   res := res ^ 空白か改行(a改行あり,a字下げ+2);
+   for i = 1 to len a表名列 do
+     let a表名 = a表名列(i)
+     in
+      (if i > 1 then res := res ^ "," ^ 空白か改行(a改行あり,a字下げ+2);
+       res := res ^ cases a表名:
+                      mk_(項目1, 項目2, 項目3) -> 副問い合わせを生成する(項目1,a改行あり, a字下げ+2) ^ " " ^ 項目2 ^
+                                                  外部結合を生成する(項目3,a改行あり, a字下げ+2),
+                      mk_(項目1, 項目2) -> if is_(項目2, seq1 of 左外部結合)
+                                           then 副問い合わせを生成する(項目1,a改行あり, a字下げ+2) ^
+                                                外部結合を生成する(項目2,a改行あり, a字下げ+2)
+                                           else 副問い合わせを生成する(項目1,a改行あり, a字下げ+2) ^ " " ^ 項目2,
+                      others              -> 副問い合わせを生成する(a表名,a改行あり, a字下げ+2)
+                    end);
+  return res);
+
+private
+WHERE句を生成する: seq of 条件 * bool * nat ==> 文字列
+WHERE句を生成する(a条件列, a改行あり, a字下げ) ==
+  if a条件列 = []
+  then return ""
+  else return 空白か改行(a改行あり,a字下げ) ^ "WHERE" ^ 
+              空白か改行(a改行あり,a字下げ+2) ^ 条件を生成する(a条件列, a改行あり,a字下げ+2);
+  
+private
+条件を生成する: seq of 条件 * bool * nat ==> 文字列
+条件を生成する(a条件列, a改行あり, a字下げ) ==
+  (dcl res : seq of char := [];
+   for i = 1 to len a条件列 do
+     let a条件 = a条件列(i)
+     in       
+      (if i > 1 then res := res ^ " and" ^ 空白か改行(a改行あり,a字下げ);
+       cases a条件:
+         mk_(文字列1,a演算子,項目2) ->
+           cases a条件:
+             mk_(副問い合わせ1,<が>,<存在する>) ->
+               res := res ^ "EXISTS " ^ 副問い合わせを生成する(副問い合わせ1, a改行あり,a字下げ),
+             mk_(副問い合わせ1,<が>,<存在しない>) ->
+               res := res ^ "NOT EXISTS " ^ 副問い合わせを生成する(副問い合わせ1, a改行あり,a字下げ),
+             others ->
+               res := res ^ 文字列1 ^ 条件を得る(a演算子,文字列に変換する(項目2, a改行あり,a字下げ))
+           end,
+         mk_(文字列1,<が>,項目2,a演算子) -> res := res ^ 文字列1 ^ 条件を得る(a演算子,文字列に変換する(項目2, a改行あり,a字下げ)),
+         others -> skip -- TODO not yet
+       end);
+  return res);
+
+private
+ORDERBY句を生成する: seq of 列名 * bool * nat ==> 文字列
+ORDERBY句を生成する(a列名列, a改行あり, a字下げ) ==
+  if a列名列 = []
+  then return ""
+  else
+  (dcl res : seq of char := 空白か改行(a改行あり,a字下げ) ^ "ORDER BY";
+   res := res ^ 空白か改行(a改行あり,a字下げ+2);
+   for i = 1 to len a列名列 do
+     let a列名 = a列名列(i)
+     in
+      (if i > 1 then res := res ^ "," ^ 空白か改行(a改行あり,a字下げ+2);
+       res := res ^ a列名);
+  return res);
+
+private
+GROUPBY句を生成する: seq of 列名 * bool * nat ==> 文字列
+GROUPBY句を生成する(a列名列, a改行あり, a字下げ) ==
+  if a列名列 = []
+  then return ""
+  else
+  (dcl res : seq of char := 空白か改行(a改行あり,a字下げ) ^ "GROUP BY";
+   res := res ^ 空白か改行(a改行あり,a字下げ+2);
+   for i = 1 to len a列名列 do
+     let a列名 = a列名列(i)
+     in
+      (if i > 1 then res := res ^ "," ^ 空白か改行(a改行あり,a字下げ+2);
+       res := res ^ a列名);
+  return res);
+
+private
+文字列に変換する: (文字列 | set of 文字列 | 副問い合わせ) * bool * nat ==> 文字列
+文字列に変換する(a項目, a改行あり, a字下げ) ==
+  cases a項目:
+    - union - -> (dcl res : 文字列 := " )",
+                      最初の項目 : bool := true;
+                  for all w文字 in set a項目 do
+                   (if 最初の項目
+                    then 最初の項目 := false
+                    else res := ", " ^res;
+                    res := w文字 ^ res);
+                  res := "( " ^ res;
+                  return res),
+   others -> return 副問い合わせを生成する(a項目,  a改行あり, a字下げ+2)
+ end;
+
+private
+CASE句を生成する: 文字列 * (map 文字列 to 文字列) * [文字列] ==> 文字列
+CASE句を生成する(a文字列, a変換表, aデフォルト) ==
+  (dcl res : 文字列 := "CASE " ^ a文字列;
+   for all w条件 in set dom a変換表 do
+     res := res ^ " WHEN " ^ w条件 ^ " THEN " ^ a変換表(w条件);
+   if aデフォルト <> nil
+   then res := res ^ " ELSE " ^ aデフォルト;
+   res := res ^ " END";
+   return res);
+
+private
+項目を生成する: (文字列 | (関数 * seq of 文字列) | 副問い合わせ) * bool * nat==> 文字列
+項目を生成する(a項目, a改行あり, a字下げ) ==
+  cases a項目:
+    mk_(-, -) -> return 関数を生成する(a項目),
+    others    -> if is_(a項目, 副問い合わせ)
+                 then return 副問い合わせを生成する(a項目, a改行あり, a字下げ)
+                 else return a項目
+  end;
+
+private
+関数を生成する: 文字列 | (関数 * seq of 文字列) ==> 文字列
+関数を生成する(a欄名) ==
+  cases a欄名:
+    mk_(a関数, a引数) ->
+     (dcl res : seq of char := cases a関数:
+                                 <CONCAT> -> "CONCAT( ",
+                                 <MAX>    -> "MAX( ",
+                                 <MIN>    -> "MIN( ",
+                                 <COUNT>  -> "COUNT( ",
+                                 others   -> undefined
+                               end;
+      for i = 1 to len a引数 do
+       (if i > 1 then res := res ^ ", ";
+        res := res ^ a引数(i));
+      res := res ^ " )";
+      return res),
+    others -> return a欄名
+  end;
+
+private
+副問い合わせを生成する: (文字列 | 副問い合わせ) * bool * nat ==> 文字列
+副問い合わせを生成する(a項目, a改行あり, a字下げ) ==
+  cases true:
+    (is_(a項目, SQL)) -> return "( " ^ narrow_(a項目, SQL).問い合わせ言語を取得する(a改行あり, a字下げ+2) ^ " )",
+    others -> return a項目
+  end;
+
+private
+外部結合を生成する: seq1 of 左外部結合 * bool * nat ==> 文字列
+外部結合を生成する(a外部結合列, a改行あり, a字下げ) ==
+  (dcl res : seq of char := 空白か改行(a改行あり,a字下げ);
+   for a外部結合 in a外部結合列 do
+     (res := res ^ "LEFT OUTER JOIN " ^
+      cases a外部結合:
+        mk_(項目1, 項目2)         -> 副問い合わせを生成する(項目1, a改行あり, a字下げ+16) ^
+                                     空白か改行(a改行あり,a字下げ) ^ 
+                                     "ON ( " ^ 条件を生成する(項目2, a改行あり, a字下げ+7) ^ " )",
+        mk_(項目1, 項目2,  項目3) -> 副問い合わせを生成する(項目1, a改行あり, a字下げ+16) ^ " " ^ 項目2 ^
+                                     空白か改行(a改行あり,a字下げ) ^ 
+                                     "ON ( " ^ 条件を生成する(項目3, a改行あり, a字下げ+7) ^ " )"
+      end);
+   return res);
+
+
+functions
+private
+条件を得る: 演算子 * 文字列 -> 文字列
+条件を得る(a演算子,a文字列) ==
+  cases a演算子:
+    <と等しい>     -> " = " ^ a文字列,
+    <等しい>       -> " = " ^ a文字列,
+    <と等しくない> -> " <> " ^ a文字列,
+    <等しくない>   -> " <> " ^ a文字列,
+    <以上>         -> " >= " ^ a文字列,
+    <以下>         -> " <= " ^ a文字列,
+    <より大>       -> " > " ^ a文字列,
+    <より大きい>   -> " > " ^ a文字列,
+    <より小>       -> " < " ^ a文字列,
+    <より小さい>   -> " < " ^ a文字列,
+    <以前>         -> " > " ^ a文字列,
+    <以後>         -> " < " ^ a文字列,
+    <の範囲内>     -> " IN " ^ a文字列,
+    <範囲内>       -> " IN " ^ a文字列,
+    <の範囲外>     -> " NOT IN " ^ a文字列,
+    <範囲外>       -> " NOT IN " ^ a文字列,
+    <で始まる>     -> " LIKE " ^ a文字列,    -- 'XXX%'
+    <で終わる>     -> " LIKE " ^ a文字列,    -- '%XXX'
+    <を含む>       -> " LIKE " ^ a文字列,    -- '%XXX%'
+    others         -> undefined
+  end;
+
+private
+空白か改行: bool * nat -> 文字列
+空白か改行(a改行あり, a字下げ) ==
+  if a改行あり
+  -- 内包表現の条件に付けた「i <= a字下げ」はWarningを消す目的、意味はない
+  then "\n" ^ [ ' ' | i in set {1,...,a字下げ} & i <= a字下げ ]
+  else " ";
+
+values
+  JCGControl_package = "jp.scsk.masse.common.vdm.dao.base";
+
+end SQL
+

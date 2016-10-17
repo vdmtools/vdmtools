@@ -1,0 +1,36 @@
+module A
+
+imports 
+ from B all
+
+exports
+
+  types
+   T
+
+definitions
+
+types
+
+  T :: nat
+
+functions
+
+  fA: T -> T
+  fA(t) == B`fB(t)
+
+end A
+module B
+
+imports from A all
+
+exports all
+
+definitions
+
+functions
+
+  fB: A`T -> A`T
+  fB(a) == a
+
+end B

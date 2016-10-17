@@ -1,0 +1,16 @@
+
+class A
+
+functions
+meas[@A,@B] : @A * @B -> nat
+meas(mk_(a,b)) == card a + card b;
+
+foo[@A,@B] : @A * @B -> nat
+foo(mk_(a,b)) == 
+  cases b:
+  {}    -> 0,
+  others -> let x in set b in 1 + foo[@A,@B](mk_(a,b\{x}))
+  end
+measure meas;
+
+end A

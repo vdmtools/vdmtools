@@ -1,0 +1,22 @@
+module go
+
+imports
+  from AS all,
+  from REP all,
+  from CI all,
+  from XF all,
+  from XFT all,
+  from FX all,
+  from AX all,
+  from TEST all,
+  from UP all
+
+exports all
+
+definitions 
+
+operations
+  go : () ==> UP`Text
+  go() ==
+    TEST`go(<<AST>>,<<SID>>)
+end go

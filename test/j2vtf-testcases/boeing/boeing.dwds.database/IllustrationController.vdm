@@ -1,0 +1,360 @@
+class IllustrationController is subclass of WiringDataController
+operations 
+public  initialize : () ==> <VOID>
+initialize() == 
+( return  <VOID>
+) ;
+
+public  getCGMDataViaId : int  ==> [InputStream]
+getCGMDataViaId(illustrationId) == 
+( dcl   cgmData : [InputStream] := nil  ,
+        connection : [Connection] := IllustrationController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := IllustrationController`getToolkit().getQuerySet(),
+        query : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   cgmDataBuffer : map  int  to  int  := nil  ,
+            stmt : [Statement] := connection.createStatement(),
+            args : map  int  to  [Object] := {0 |-> new  Integer(illustrationId)};
+      query := querySet.getQuery(WiringDataQuerySet.GET_CGM_DATA_VIA_ILLUSTRATION_ID , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        if  queryRS.next()
+        then  
+          ( cgmDataBuffer := queryRS.getBytes(1)
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip ;
+        cgmData := new  ByteArrayInputStream(cgmDataBuffer)
+      ) 
+    ) ;
+  return  cgmData
+) ;
+
+public  getViaId : [String] ==> [Illustration]
+getViaId(illustrationId) == 
+( dcl   illustration : [Illustration] := nil  ,
+        connection : [Connection] := IllustrationController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := IllustrationController`getToolkit().getQuerySet(),
+        query : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement(),
+            args : map  int  to  [Object] := {0 |-> illustrationId};
+      query := querySet.getQuery(WiringDataQuerySet.GET_ILLUSTRATION_VIA_ID , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        if  queryRS.next()
+        then  
+          ( dcl   figureId : int  := queryRS.getInt(1),
+                  figureNumber : [String] := queryRS.getString(2),
+                  sheetNumber : [String] := queryRS.getString(3),
+                  orientationChar : [String] := queryRS.getString(4),
+                  revisionNumber : [String] := queryRS.getString(5),
+                  cgmFilename : [String] := queryRS.getString(6),
+                  orientation : int ;
+            if  orientationChar.equals(new  String("P"))
+            then  
+              ( orientation := Illustration`PORTRAIT
+              ) 
+            else  
+              ( orientation := Illustration`LANDSCAPE
+              ) ;
+            illustration := new  Illustration(figureId , illustrationId , figureNumber , sheetNumber , revisionNumber , cgmFilename , orientation)
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  return  illustration
+) ;
+
+public  getPreconditionsViaId : int  ==> [Set]
+getPreconditionsViaId(illustrationId) == 
+( dcl   precondCodes : [Set] := new  HashSet(),
+        precondList : [Set] := new  HashSet(),
+        precondMap : [HashMap] := new  HashMap(),
+        connection : [Connection] := IllustrationController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := IllustrationController`getToolkit().getQuerySet(),
+        query : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   effectivityList : [Set] := effectivityCntl.getActiveEffectivityIds(),
+            aircraft : [Aircraft] := aircraftCntl.getCurrentContextObject(),
+            acTypeId : [Integer] := new  Integer(aircraft.getAcType().getAcTypeId()),
+            stmt : [Statement] := connection.createStatement(),
+            args : map  int  to  [Object] := {1 |-> acTypeId , 0 |-> new  Integer(illustrationId)};
+      query := querySet.getQuery(WiringDataQuerySet.GET_PRECONDITION_VIA_ILLUSTRATION_ID , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  queryRS.next() do  
+          ( dcl   intObj : [Integer] := new  Integer(queryRS.getInt(1)),
+                  codeObj : [Integer] := new  Integer(queryRS.getInt(2));
+            let - = precondList.add(intObj)
+            in 
+              skip ;
+            let - = precondMap.put(intObj , codeObj)
+            in 
+              skip 
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip ;
+        let - = precondList.retainAll(effectivityList)
+        in 
+          skip ;
+        ( dcl   iterator : [Iterator] := precondList.iterator();
+          trap  j2v_break with  
+            cases  true  : 
+              (isofclass  (J2V_Break,j2v_break)) -> 
+                skip 
+              
+            end  
+          in  
+            while  iterator.hasNext() do  
+            ( dcl   intObj : [Integer] := iterator.next(),
+                    intCode : [Integer] := precondMap.get(intObj);
+              let - = precondCodes.add(intCode)
+              in 
+                skip 
+            ) 
+        ) 
+      ) 
+    ) ;
+  return  precondCodes
+) ;
+
+public  getCurrentContextObject : () ==> [Object]
+getCurrentContextObject() == 
+( return  curIllustration
+) ;
+
+public  getCGMDataViaFilename : [String] ==> [InputStream]
+getCGMDataViaFilename(cgmFilename) == 
+( dcl   cgmData : [InputStream] := nil  ,
+        cgmPathPrefix : [File] := new  File(DWDSProperties`getProperty(new  String("imagefile.prefix") , DWDSProperties`getProperty(new  String("jar.filepath")))),
+        cgmFile : [File] := new  File(cgmPathPrefix , cgmFilename);
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (FileNotFoundException,j2v_exception)) -> 
+        ( dcl   fileError : [DWDSException] := new  DWDSException(),
+                e : [FileNotFoundException] := j2v_exception;
+          let - = fileError.addMessage(DWDSException`ErrorOpeningFileForInput , cgmFile.toString())
+          in 
+            skip ;
+          exit  fileError
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( cgmData := new  BufferedInputStream(new  FileInputStream(cgmFile))
+    ) ;
+  return  cgmData
+) ;
+
+public  getLocatorIdViaRefdes : [RefDes] ==> [String]
+getLocatorIdViaRefdes(refdes) == 
+( dcl   graphicId : [String] := new  String([  ]),
+        refdesId : [Integer] := new  Integer(refdes.getId()),
+        connection : [Connection] := IllustrationController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := IllustrationController`getToolkit().getQuerySet(),
+        query : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement(),
+            effIdList : [String] := effectivityCntl.getEffIdSQLList(),
+            args : map  int  to  [Object] := {1 |-> effIdList , 0 |-> refdesId};
+      query := querySet.getQuery(WiringDataQuerySet.GET_LOCATOR_ID_VIA_REFDES , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        if  queryRS.next()
+        then  
+          ( graphicId := queryRS.getString(1)
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  return  graphicId
+) ;
+
+public  updateToNewContext : [ContextSet] ==> <VOID>
+updateToNewContext(contextChanges) == 
+( if  contextChanges.contains(ContextTypes`GRAPHIC_ID)
+  then  
+    ( dcl   illustrationId : [String] := contextChanges.get(ContextTypes`GRAPHIC_ID);
+      if  illustrationId <> nil  
+      then  
+        ( curIllustration := getViaId(illustrationId)
+        ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  getSeriesViaFigureNumber : [String] ==> map  int  to  [Illustration]
+getSeriesViaFigureNumber(figureNumber) == 
+( dcl   illustrationList : [Vector] := new  Vector(10),
+        illustration : [Illustration] := nil  ,
+        connection : [Connection] := IllustrationController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := IllustrationController`getToolkit().getQuerySet(),
+        query : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement(),
+            args : map  int  to  [Object] := {0 |-> figureNumber};
+      query := querySet.getQuery(WiringDataQuerySet.GET_ILLUSTRATION_SERIES_VIA_FIGURE_NUMBER , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  queryRS.next() do  
+          ( dcl   figureId : int  := queryRS.getInt(1),
+                  graphicId : [String] := queryRS.getString(2),
+                  sheetNumber : [String] := queryRS.getString(3),
+                  orientationChar : [String] := queryRS.getString(4),
+                  revisionNumber : [String] := queryRS.getString(5),
+                  cgmFilename : [String] := queryRS.getString(6),
+                  orientation : int ;
+            if  orientationChar.equals(new  String("P"))
+            then  
+              ( orientation := Illustration`PORTRAIT
+              ) 
+            else  
+              ( orientation := Illustration`LANDSCAPE
+              ) ;
+            illustration := new  Illustration(figureId , graphicId , figureNumber , sheetNumber , revisionNumber , cgmFilename , orientation);
+            let - = illustrationList.addElement(illustration)
+            in 
+              skip 
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  ( dcl   numIllustrations : int  := illustrationList.size(),
+          illustrationArray : map  int  to  [Illustration] := {l_19 |-> nil  |l_19 in set  {0,...,numIllustrations-1}};
+    let - = illustrationList.copyInto(illustrationArray)
+    in 
+      skip ;
+    return  illustrationArray
+  ) 
+) ;
+
+public  getPinArrangementIdViaRefdes : [RefDes] ==> [String]
+getPinArrangementIdViaRefdes(refdes) == 
+( dcl   graphicId : [String] := new  String([  ]),
+        refdesId : [Integer] := new  Integer(refdes.getId()),
+        connection : [Connection] := IllustrationController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := IllustrationController`getToolkit().getQuerySet(),
+        query : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement(),
+            args : map  int  to  [Object] := {0 |-> refdesId};
+      query := querySet.getQuery(WiringDataQuerySet.GET_PIN_ARRANGEMENT_ID_VIA_REFDES , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        if  queryRS.next()
+        then  
+          ( graphicId := queryRS.getString(1)
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  return  graphicId
+) ;
+
+IllustrationController : [DataSourceToolkit] * [EffectivityController] * [AircraftController] ==> IllustrationController
+IllustrationController(dsToolkit, effectivityController, aircraftController) == 
+( let - = WiringDataController(dsToolkit)
+  in 
+    skip ;
+  IllustrationController`effectivityCntl := effectivityController;
+  IllustrationController`aircraftCntl := aircraftController
+) ;
+
+instance variables 
+  private  effectivityCntl : [EffectivityController] := nil  ;
+  private  aircraftCntl : [AircraftController] := nil  ;
+  private  curIllustration : [Illustration] := nil  
+  
+end  IllustrationController

@@ -1,0 +1,21 @@
+class A
+end A
+class  IsOfBaseClassTest
+
+types
+
+  B = A
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let n = 5,
+      - = isofbaseclass(B,n)
+  in skip;
+
+------------------------------------------------------------------------------
+end IsOfBaseClassTest

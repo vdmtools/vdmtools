@@ -1,0 +1,16 @@
+class UnaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let n =0,
+      - = len if 6 > 9
+            then n
+            else []
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

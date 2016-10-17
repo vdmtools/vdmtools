@@ -1,0 +1,151 @@
+class SortedHashtable is subclass of Hashtable
+operations 
+public  keys : () ==> [Enumeration]
+keys() == 
+( dcl   stringList : [Vector] := new  Vector(sortedKeyList.size());
+  ( dcl   position : int  := 0;
+    while  position < sortedKeyList.size() do  
+    ( dcl   elementToAdd : [ComparisonValue] := sortedKeyList.elementAt(position);
+      let - = stringList.insertElementAt(elementToAdd.toString() , position)
+      in 
+        skip ;
+      position := position+1
+    ) 
+  ) ;
+  return  stringList.elements()
+) ;
+
+public  elements : () ==> [Enumeration]
+elements() == 
+( dcl   valueList : [Vector] := new  Vector(sortedKeyList.size());
+  ( dcl   index : int  := 0;
+    while  index < sortedKeyList.size() do  
+    ( dcl   keyValue : [String] := (def l_7 :  ComparisonValue = (sortedKeyList.elementAt(index))
+            in l_7).toString();
+      let - = valueList.insertElementAt(SortedHashtable`get(keyValue) , index)
+      in 
+        skip ;
+      index := index+1
+    ) 
+  ) ;
+  return  valueList.elements()
+) ;
+
+public  SortedHashtable : int  ==> SortedHashtable
+SortedHashtable(initialCapacity) == 
+( let - = Hashtable(initialCapacity)
+  in 
+    skip ;
+  sortedKeyList := new  Vector(initialCapacity)
+) ;
+
+public  remove : [ComparisonValue] ==> [Object]
+remove(key) == 
+( let - = removeFromSortedList(key , sortedKeyList)
+  in 
+    skip ;
+  let - = Hashtable`remove(key.toString())
+  in 
+    skip ;
+  return  key
+) ;
+
+public  put : [ComparisonValue] * [Object] ==> [Object]
+put(key, value__) == 
+( if  not  alreadyInserted
+  then  
+    ( let - = insertIntoSortedList(key , key , sortedKeyList)
+      in 
+        skip ;
+      alreadyInserted := true  
+    ) ;
+  let - = Hashtable`put(key.toString() , value__)
+  in 
+    skip ;
+  alreadyInserted := false  ;
+  return  value__
+) ;
+
+protected  removeFromSortedList : [ComparisonValue] * [Vector] ==> <VOID>
+removeFromSortedList(key, list) == 
+( dcl   lowerBound : int  := 0,
+        upperBound : int  := list.size()-1,
+        midPosition : int  := 0,
+        areDifferent : bool  := true  ;
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  lowerBound <= upperBound and  areDifferent do  
+    ( midPosition := (upperBound+lowerBound)/2;
+      ( dcl   testValue : [ComparisonValueInterface] := list.elementAt(midPosition);
+        if  testValue.compareTo(key) > 0
+        then  
+          ( upperBound := midPosition-1
+          ) 
+        else  
+          if  testValue.compareTo(key) < 0
+          then  
+            ( lowerBound := midPosition+1
+            ) 
+          else  
+            ( areDifferent := false  
+            ) 
+      ) 
+    ) ;
+  if  lowerBound < upperBound
+  then  
+    ( let - = list.removeElementAt(midPosition)
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+protected  insertIntoSortedList : [ComparisonValue] * [Object] * [Vector] ==> <VOID>
+insertIntoSortedList(key, value__, list) == 
+( dcl   lowerBound : int  := 0,
+        upperBound : int  := list.size()-1,
+        midPosition : int ,
+        areDifferent : bool  := true  ;
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  lowerBound <= upperBound and  areDifferent do  
+    ( midPosition := (upperBound+lowerBound)/2;
+      ( dcl   testValue : [ComparisonValueInterface] := list.elementAt(midPosition);
+        if  key.compareTo(testValue) > 0
+        then  
+          ( lowerBound := midPosition+1
+          ) 
+        else  
+          if  key.compareTo(testValue) < 0
+          then  
+            ( upperBound := midPosition-1
+            ) 
+          else  
+            ( areDifferent := false  
+            ) 
+      ) 
+    ) ;
+  if  lowerBound > upperBound
+  then  
+    ( let - = list.insertElementAt(value__ , lowerBound)
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+instance variables 
+  private  sortedKeyList : [Vector];
+  private  static alreadyInserted : bool  := false  
+  
+end  SortedHashtable

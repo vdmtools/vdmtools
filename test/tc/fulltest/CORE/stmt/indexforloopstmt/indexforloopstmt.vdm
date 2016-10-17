@@ -1,0 +1,30 @@
+class IndexForLoopTest
+
+operations
+
+  IndexForLoop1: () ==> ()
+  IndexForLoop1() ==
+    for id = 1 to 10 by 2 do
+      skip;
+
+  IndexForLoop2: real ==> real
+  IndexForLoop2(a) ==
+    for id = a to 2 * 9 do
+      return id;
+
+  IndexForLoop3: nat * bool ==> ()
+  IndexForLoop3(a, b) ==
+    for id = a to b by 7 do
+      skip;
+
+  IndexForLoop4: char ==> ()
+  IndexForLoop4(c) ==
+    for id = 1 to 8 by c do
+      skip;
+
+  IndexForLoop5: bool ==> ()
+  IndexForLoop5(a) ==
+    for id = 1 to 6 do
+      a := true
+      
+end IndexForLoopTest

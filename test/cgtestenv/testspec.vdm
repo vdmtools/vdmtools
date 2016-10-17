@@ -1,0 +1,26 @@
+\begin{vdm_al}
+module ZZZ
+
+imports
+  from CGMAIN all,
+  from CPP all,
+  from AS all,
+  from REP all,
+  from CI all
+
+exports all
+
+definitions
+
+operations
+
+
+  GenCPPAS: AS`AstCI * (<JAVA>|<CPP>) ==> CPP`CPPAS
+  GenCPPAS(mk_AS`AstCI(doc_l,tllci,fidm),cgkind) ==
+   ( CI`UpdateStateSigma(tllci,fidm);
+--   Should be included for the JAVA cg when it is merged onto the main branch.
+     CPP`setmode(cgkind);
+     let asnames = { doc.nm | doc in set elems doc_l}
+     in return CGMAIN`cg(doc_l,asnames))
+end ZZZ
+\end{vdm_al}

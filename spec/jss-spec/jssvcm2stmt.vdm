@@ -1,0 +1,386 @@
+\section{The JSSVCM2STMT Module}
+
+\begin{vdm_al}
+module JSSVCM2STMT
+
+imports
+  from AS all,
+  from CI all,
+  from REP all,
+
+  from CPP all,
+  from JSSAUX all,
+  from JSSREP all,
+  from JSSENV all,
+  from JSSVCM1
+  operations
+    CollectModifier: CPP`Modifier ==> CPP`ModifierAccess,
+  from JSSVCM2EXPR
+  operations
+    ExpressionStmt: CPP`Expr ==> ();
+    Expr: CPP`Expr ==> JSSREP`TypeRep;
+    ExprList: seq of CPP`Expr ==> seq of JSSREP`TypeRep,
+  from JSSERR
+  types
+    SeverityType = <WARNING> | <ERROR>
+  operations
+    GenErr : CI`ContextId * JSSERR`SeverityType * nat * seq of seq of char ==> ()
+exports
+operations
+  CollectStmt: CPP`Stmt ==> ()
+  
+definitions
+operations
+
+  CollectStmt: CPP`Stmt ==> ()
+  CollectStmt(p_stmt) == (
+    cases true:
+      (is_CPP`LabelStmt(p_stmt))        -> skip,
+      (is_CPP`ExpressionStmt(p_stmt))   -> CollectExpressionStmt(p_stmt),
+      (is_CPP`CompoundStmt(p_stmt))     -> CollectCompoundStmt(p_stmt),
+      (is_CPP`IfStmt(p_stmt))           -> CollectIfStmt(p_stmt),
+      (is_CPP`SwitchStmt(p_stmt))       -> CollectSwitchStmt(p_stmt),
+      (is_CPP`WhileStmt(p_stmt))        -> CollectWhileStmt(p_stmt),
+      (is_CPP`DoWhileStmt(p_stmt))      -> CollectDoWhileStmt(p_stmt),
+      (is_CPP`ForStmt(p_stmt))          -> CollectForStmt(p_stmt),
+      (is_CPP`Break(p_stmt))            -> skip,
+      (is_CPP`Continue(p_stmt))         -> skip,
+      (is_CPP`Return(p_stmt))           -> CollectReturnStmt(p_stmt),
+      (is_CPP`DeclarationStmt(p_stmt))  -> CollectDeclarationStmt(p_stmt),
+      (is_CPP`SynchronizedStmt(p_stmt)) -> CollectSynchronizedStmt(p_stmt),
+      (is_CPP`TryBlock(p_stmt))         -> CollectTryBlockStmt(p_stmt),
+      (is_CPP`EmptyStmt(p_stmt))        -> skip
+    end
+  );
+\end{vdm_al}
+
+\subsection{The Expression Statement}
+
+\begin{vdm_al}
+  CollectExpressionStmt: CPP`ExpressionStmt ==> ()
+  CollectExpressionStmt(p_stmt) ==
+    if p_stmt.expr <> nil
+    then JSSVCM2EXPR`ExpressionStmt(p_stmt.expr);
+\end{vdm_al}
+
+\subsection{The Compound Statement}
+
+\begin{vdm_al}
+  CollectCompoundStmt: CPP`CompoundStmt ==> ()
+  CollectCompoundStmt(p_stmt) == (
+    JSSENV`EnterLocalScope({|->});
+    for l_stmt in p_stmt.stms do
+      CollectStmt(l_stmt);
+    JSSENV`LeaveLocalScope()
+   );
+\end{vdm_al}
+
+\subsection{The If Statement}
+
+\begin{vdm_al}
+  CollectIfStmt: CPP`IfStmt ==> ()
+  CollectIfStmt(p_stmt) == (
+    JSSENV`EnterLocalScope({|->});
+    let l_tr = JSSVCM2EXPR`Expr(p_stmt.expr)
+    in skip;
+    CollectStmt(p_stmt.alt1);
+    if p_stmt.alt2 <> nil
+    then CollectStmt(p_stmt.alt2);
+    JSSENV`LeaveLocalScope()
+  );
+
+
+\end{vdm_al}
+
+\subsection{The Switch Statement}
+
+\begin{vdm_al}
+  CollectSwitchStmt: CPP`SwitchStmt ==> ()
+  CollectSwitchStmt(p_stmt) == (
+    let l_tr = JSSVCM2EXPR`Expr(p_stmt.expr)
+    in skip;
+    CollectSwitchBlock(p_stmt.block)
+  );
+\end{vdm_al}
+
+\begin{vdm_al}
+  CollectSwitchBlock: CPP`SwitchBlock ==> ()
+  CollectSwitchBlock(p_block) == (
+--   if p_block.labels <> nil and
+--      p_block.labels.stmt.stmt = nil
+--   then (l_reswf := false;
+    for i=1 to len p_block.groups do
+      CollectSwitchBlockStmtGrp(p_block.groups(i),i=len p_block.groups)
+  );
+\end{vdm_al}
+
+
+\begin{formalparameters}
+\verb+p_group: CPP`SwitchBlockStmtGrp+ & The abstract syntax tree for
+a swich block statement group.\\
+\verb+p_last: bool+ & An indication whether it is the last inside a
+switch statement. In that case only a warning should be generated if
+no break statement is used inside. \\
+\hline
+\end{formalparameters}
+\methodresult{()}{Indication whether the swich block statement group satisfy
+the requirements to be translated from Java to VDM++.}
+
+\begin{vdm_al}
+  CollectSwitchBlockStmtGrp: CPP`SwitchBlockStmtGrp * bool ==> ()
+  CollectSwitchBlockStmtGrp(p_group,p_last) ==
+    let l_stms = p_group.stmt.stms,
+        l_last = l_stms(len l_stms)
+    in
+      skip;
+\end{vdm_al}
+
+\subsection{The While Statement}
+
+\begin{vdm_al}
+  CollectWhileStmt: CPP`WhileStmt ==> ()
+  CollectWhileStmt(p_stmt) == (
+    let l_tr = JSSVCM2EXPR`Expr(p_stmt.expr)
+    in skip;
+    CollectStmt(p_stmt.stmt);
+  );
+\end{vdm_al}
+
+\subsection{The DoWhile Statement}
+
+\begin{vdm_al}
+  CollectDoWhileStmt: CPP`DoWhileStmt ==> ()
+  CollectDoWhileStmt(p_stmt) == (
+    let l_tr = JSSVCM2EXPR`Expr(p_stmt.expr)
+    in skip;
+    CollectStmt(p_stmt.stmt)
+  );
+\end{vdm_al}
+
+\subsection{The For Statement}
+
+\begin{vdm_al}
+  CollectForStmt: CPP`ForStmt ==> ()
+  CollectForStmt(p_stmt) == (
+    JSSENV`EnterLocalScope({|->});
+    CollectForIndexPart(p_stmt.i);
+    if p_stmt.expr1 <> nil
+    then 
+    let l_tr = JSSVCM2EXPR`Expr(p_stmt.expr1)
+    in skip;
+let l_trs = JSSVCM2EXPR`ExprList(p_stmt.expr2)
+-- JR
+in skip;
+    CollectStmt(p_stmt.stmt);
+    JSSENV`LeaveLocalScope();
+  );
+
+  CollectForIndexPart: seq of (CPP`ExpressionStmt | CPP`DeclarationStmt) ==> ()
+  CollectForIndexPart(p_stmtL) == (
+    for l_stmt in p_stmtL do
+      if is_CPP`ExpressionStmt(l_stmt)
+      then CollectExpressionStmt(l_stmt)
+      else CollectDeclarationStmt(l_stmt)
+  );
+\end{vdm_al}
+
+\subsection{The Return Statement}
+
+\begin{vdm_al}
+  CollectReturnStmt: CPP`Return ==> ()
+  CollectReturnStmt(p_stmt) ==
+    if p_stmt.expr <> nil
+    then 
+    let l_tr = JSSVCM2EXPR`Expr(p_stmt.expr)
+    in skip;
+\end{vdm_al}
+
+\subsection{The Declaration Statement}
+
+\begin{vdm_al}
+  CollectDeclarationStmt: CPP`DeclarationStmt ==> ()
+  CollectDeclarationStmt(p_stmt) ==
+    cases true:
+      (is_CPP`IdentDeclaration(p_stmt.decl)) -> CollectIdentDeclaration(p_stmt.decl)
+    end;  
+\end{vdm_al}
+
+
+
+\subsection{The local declaration Statement}
+Either
+1. local variable declaration
+or
+2. class or interface declaration
+
+\begin{vdm_al}
+  CollectIdentDeclaration: CPP`IdentDeclaration ==> ()
+  CollectIdentDeclaration(p_id) ==
+    let l_tr = CollectDeclSpecifiers(p_id.ds)
+    in
+      CollectDeclaratorList(l_tr,p_id.dl);
+\end{vdm_al}
+
+\begin{vdm_al}
+CollectDeclSpecifiers: CPP`DeclSpecifiers ==> JSSREP`TypeRep
+CollectDeclSpecifiers(p_dsl) ==
+  (dcl l_tr : JSSREP`TypeRep,
+       l_array : nat := 0;
+   for l_ds in p_dsl do
+     if is_CPP`TypeSpecifier(l_ds)
+     then l_tr := CollectTypeSpecifier(l_ds)
+     elseif is_CPP`ArraySpecifier(l_ds)
+     then l_array := l_array + 1;
+     -- Modifiers are ignorred
+    return if l_array = 0
+           then l_tr
+	   else mk_JSSREP`FieldTypeRep(l_tr,l_array)
+  )
+pre exists ts in set elems p_dsl & is_CPP`TypeSpecifier(ts);
+\end{vdm_al}
+
+\begin{vdm_al}
+  CollectDeclSpecifier: CPP`DeclSpecifier ==> JSSREP`TypeRep
+  CollectDeclSpecifier(p_ds) ==
+    let l_tr =
+    cases true:
+      (is_CPP`TypeSpecifier(p_ds))  -> CollectTypeSpecifier(p_ds),
+      (is_CPP`ArraySpecifier(p_ds)) -> CollectArraySpecifier(p_ds)
+-- JR MOVED case CPP`Modifier(p_ds) to CollectDeclSpecifiers
+    end
+    in
+      return l_tr;
+\end{vdm_al}
+
+\begin{vdm_al}
+  CollectTypeSpecifier: CPP`TypeSpecifier ==> JSSREP`TypeRep
+  CollectTypeSpecifier(p_ts) ==
+    let l_tr =
+    cases true:
+      (is_CPP`ClassSpecifier(p_ts.tp))     -> CollectClassSpecifier(p_ts.tp),
+      (is_CPP`InterfaceSpecifier(p_ts.tp)) -> CollectInterfaceSpecifier(p_ts.tp),
+      (is_CPP`QualifiedPackageName(p_ts.tp)) ->
+
+        mk_JSSREP`ClassTypeRep({},JSSAUX`PackageName2Name(p_ts.tp)),
+
+      (is_CPP`SimplePackageName(p_ts.tp))    ->
+
+        mk_JSSREP`ClassTypeRep({},JSSAUX`PackageName2Name(p_ts.tp)),
+
+      (is_CPP`QualifiedName(p_ts.tp))        ->
+-- JR
+        mk_JSSREP`AllTypeRep(),            
+-- JR
+      (is_CPP`Bool(p_ts.tp))               -> mk_JSSREP`BoolTypeRep({}),
+      (is_CPP`Char(p_ts.tp))               -> mk_JSSREP`CharTypeRep({}),
+      (is_CPP`Byte(p_ts.tp))               -> mk_JSSREP`ByteTypeRep({}),
+      (is_CPP`Short(p_ts.tp))              -> mk_JSSREP`ShortTypeRep({}),
+      (is_CPP`Int(p_ts.tp))                -> mk_JSSREP`IntTypeRep({}),
+      (is_CPP`Long(p_ts.tp))               -> mk_JSSREP`LongTypeRep({}),
+      (is_CPP`Float(p_ts.tp))              -> mk_JSSREP`FloatTypeRep({}),
+      (is_CPP`Double(p_ts.tp))             -> mk_JSSREP`DoubleTypeRep({}),
+      (is_CPP`Void(p_ts.tp))               -> mk_JSSREP`VoidTypeRep({})
+    end
+    in
+      return l_tr;
+\end{vdm_al}
+
+\begin{vdm_al}
+  CollectArraySpecifier: CPP`ArraySpecifier ==> JSSREP`TypeRep
+  CollectArraySpecifier(p_as) ==
+-- JR
+    return mk_JSSREP`AllTypeRep();
+\end{vdm_al}
+
+\begin{vdm_al}
+  CollectClassSpecifier: CPP`ClassSpecifier ==> JSSREP`TypeRep
+-- JR : flyttes til JSSVCM1 senere
+  CollectClassSpecifier(p_clsspec) ==
+    let l_tr = mk_JSSREP`AllTypeRep(),
+        l_ch = p_clsspec.ch,
+        l_pn = JSSAUX`PrintName(JSSAUX`Identifier2Name(l_ch.name))
+    in
+    ( JSSERR`GenErr(p_clsspec.cid,<ERROR>,6,[l_pn]);
+      JSSENV`SetError();
+      return l_tr
+    );
+    
+  CollectInterfaceSpecifier: CPP`InterfaceSpecifier ==> JSSREP`TypeRep
+-- JR : flyttes til JSSVCM1 senere
+  CollectInterfaceSpecifier(p_inter) == 
+    let l_tr = mk_JSSREP`AllTypeRep(),
+        l_ch = p_inter.ih ,
+        l_pn = JSSAUX`PrintName(JSSAUX`Identifier2Name(l_ch.name))
+    in
+    ( JSSERR`GenErr(p_inter.cid,<ERROR>,6,[l_pn]);
+      JSSENV`SetError();
+      return l_tr
+    );
+\end{vdm_al}
+
+
+\begin{vdm_al}
+  CollectDeclaratorList: JSSREP`TypeRep * [CPP`DeclaratorList] ==> ()
+  CollectDeclaratorList(p_tr,p_declL) ==
+    if p_declL <> nil
+    then for l_id in p_declL do CollectInitDeclarator(p_tr,l_id);
+\end{vdm_al}
+
+\subsection{Field Definitions}
+
+\begin{vdm_al}
+  CollectInitDeclarator: JSSREP`TypeRep * [CPP`InitDeclarator] ==> ()
+  CollectInitDeclarator(p_tr,p_id) == (
+    dcl l_decl : CPP`Declarator := p_id.decl,
+        l_array : nat := 0;
+    if p_id <> nil
+    then
+    ( while not is_CPP`Identifier(l_decl) do 
+      ( l_decl := l_decl.decl;
+        l_array := l_array+1
+      );
+      let l_name = JSSAUX`Identifier2Name(l_decl),
+          l_tr = mk_JSSREP`FieldTypeRep(p_tr,l_array)
+      in 
+        JSSENV`Add2CurrentLocals({l_name |-> l_tr})
+    )
+  );
+\end{vdm_al}
+
+
+
+
+
+\subsection{The Synchronized Statement}
+
+\begin{vdm_al}
+  CollectSynchronizedStmt: CPP`SynchronizedStmt ==> ()
+  CollectSynchronizedStmt(p_stmt) == (
+    let l_tr = JSSVCM2EXPR`Expr(p_stmt.expr)
+    in skip;
+    CollectCompoundStmt(p_stmt.block)
+  );
+\end{vdm_al}
+
+\subsection{The TryBlock Statement}
+
+\begin{vdm_al}
+  CollectTryBlockStmt: CPP`TryBlock ==> ()
+  CollectTryBlockStmt(p_stmt) == (
+    CollectCompoundStmt(p_stmt.stmt);
+    CollectHandlerList(p_stmt.hdl);
+    if p_stmt.fin <> nil
+    then CollectCompoundStmt(p_stmt.fin)
+  );
+
+  CollectHandlerList: seq of CPP`Handler ==> ()
+  CollectHandlerList(p_hdlL) ==
+    return;
+
+end JSSVCM2STMT
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}{rtinfo.ast}[JSSVCM2STMT]
+\end{rtinfo}

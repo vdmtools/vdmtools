@@ -1,0 +1,29 @@
+class A
+  
+functions
+
+f: nat -> nat | bool
+f(x) ==
+  if x = 8
+  then 9
+  else false;
+    
+  FunDefSl4(l: bool | seq of nat, s: set of (real | bool)) r:  bool ==
+    l and s <> {};
+
+ -- FunDefSl5[@A,@B,@C](n: nat, a: @A, f: (@A -> @B)) r: @B ==
+ --   is subclass responsibility;
+
+  FunDefSl6(l: seq of nat,s: set of bool) r: bool ==
+    FunDefSl4(l,s);
+
+  FunDefSl7[@A] (a1,a2: @A,l1 ^ l2 : seq of nat) r : @A, s : bool ==
+    mk_(a1,a1=a2)
+    pre if l1 <> []
+        then f(8)
+        else false
+    post if r = mk_(if 4 > 8 then a1 else a2, len l2 > 7)
+         then f(88)
+         else true;
+
+end A

@@ -1,0 +1,44 @@
+%$ld$
+\subsection{Event classes}
+Eventクラスは、event loopを管理するための抽象クラスである。
+\begin{vdm_al}
+class Event is subclass of 『共通定義』
+
+instance variables
+  evenID : ID
+
+operations
+  public Event: ID ==> Event
+  Event (id) == evenID := id;
+
+  public イベントを得る: () ==> ID
+  イベントを得る () == return evenID
+
+end Event
+\end{vdm_al}
+
+\begin{vdm_al}
+class InterruptEvent
+  is subclass of Event
+
+operations
+  public InterruptEvent: ID ==> InterruptEvent
+  InterruptEvent (id) == Event(id)
+
+end InterruptEvent
+\end{vdm_al}
+
+\begin{vdm_al}
+class NetworkEvent
+  is subclass of Event
+
+operations
+  public NetworkEvent: ID ==> NetworkEvent
+  NetworkEvent (id) == Event(id)
+
+end NetworkEvent
+\end{vdm_al}
+
+\begin{rtinfo}
+[NetworkEvent]{vdm.tc}[NetworkEvent]
+\end{rtinfo}

@@ -1,0 +1,6 @@
+m4tmp1, l. 10, c. 3:
+  Error : Unknown identifier s1
+m4tmp1, l. 10, c. 6:
+  Error : State designator is not well-formed
+m4tmp1, l. 11, c. 10:
+  Error : Unknown identifier s1

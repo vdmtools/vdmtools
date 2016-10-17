@@ -1,0 +1,22 @@
+\begin{vdm_al}
+class 『ナビDB検索』 is subclass of 『基本タスク』
+
+operations
+  public 『ナビDB検索』: 『事象処理者』 ==> 『ナビDB検索』
+  『ナビDB検索』 (a事象処理者) == 『基本タスク』("DBを検索する",a事象処理者);
+
+  -- we do not specify *what* the operation does
+  -- we only specify its execution time
+  private
+  DBを検索する: () ==> ()
+  DBを検索する() == duration (5000) skip;
+
+  private
+  事象を処理する: 『事象』 ==> ()
+  事象を処理する (a事象) ==
+    ( DBを検索する();
+    -- send message to next task in this scenario
+      ネットワークに送る("住所画面を更新する", a事象.事象IDを得る()) )
+
+end 『ナビDB検索』
+\end{vdm_al}

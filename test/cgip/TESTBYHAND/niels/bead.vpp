@@ -1,0 +1,92 @@
+class Bead is subclass of Global
+
+instance variables
+
+  no_of_Vertices : nat;
+  VerticeCoordinates : seq of Point2;
+  area : Area;
+  massMidpoint : Point2 := new Point2();
+  beadtype : BeadType;
+  BF_frame : VectorFrame;
+  beadnumber : BeadId;
+
+
+operations
+
+initialise (vertices : seq of Point2, vect1: Vector2, vect2: Vector2, bt : BeadType) ==
+( dcl math : Math := new Math();
+  no_of_Vertices := len vertices;
+  beadtype := bt;
+  VerticeCoordinates := vertices;
+
+  let corners = [ vertices(i).getCoord() | i in set inds vertices ] in
+  let mk_(area', mk_(xCent,yCent)) = math.polyCentroid (corners) in
+  ( area := area';
+    massMidpoint.initialise (xCent,yCent) );
+  computeBFframe (vect1, vect2);
+);
+
+create: seq of Point2 * Vector2 * Vector2 * BeadType ==> Bead
+create (vertices, vect1, vect2, bt) ==
+( dcl bead : Bead := new Bead();
+  bead.initialise (vertices, vect1, vect2, bt);
+  return bead
+);
+
+initFromLayerGeom: LayerGeom * BeadType ==> ()
+initFromLayerGeom (layerg, bt) ==
+  let lgverts = layerg.getVertices (),
+      mk_(vect1,vect2) = layerg.extractBeadWallVectors () in
+  initialise (lgverts, vect1, vect2, bt);
+
+initWithWidth: seq of Point2 * BeadType * Width ==> ()
+initWithWidth (vertices, bt, width) ==
+  is not yet specified;
+
+getId: () ==> Id 
+getId () ==
+  return beadnumber.bid;
+
+setId: Id ==> ()
+setId (id) ==
+  beadnumber := mk_BeadId(0,id);
+
+getBeadId: () ==> BeadId 
+getBeadId () ==
+  return beadnumber;
+
+getVertices: () ==> seq of Point2 
+getVertices () ==
+  return VerticeCoordinates;
+
+getArea: () ==> Area 
+getArea () ==
+  return area;
+
+getMassMidpoint: () ==> Point2 
+getMassMidpoint () ==
+  return massMidpoint;
+
+getBFframe: () ==> VectorFrame 
+getBFframe () ==
+  return BF_frame;
+
+getHeight: () ==> Height
+getHeight () ==
+  is not yet specified;
+
+getHWRatio: () ==> Ratio
+getHWRatio () ==
+  is not yet specified;
+
+computeBFframe: Vector2 * Vector2 ==> ()
+computeBFframe (vect1, vect2) ==
+  let c = vect1.midVectorNorm (vect2) in
+  let c' = c.crossVector () in
+  BF_frame := mk_VectorFrame (c,c');
+
+getLayerGeom: () ==> LayerGeom
+getLayerGeom () ==
+  is not yet specified;
+
+end Bead

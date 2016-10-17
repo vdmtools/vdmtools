@@ -1,0 +1,17 @@
+class BinaryTest
+
+types
+  NUM = nat | int
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = 3.01 + 4
+  in skip;
+
+------------------------------------------------------------------------------
+end BinaryTest

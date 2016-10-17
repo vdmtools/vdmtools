@@ -1,0 +1,28 @@
+f1: () -> nat
+f1() ==
+  10
+pre true;
+
+
+g: (nat * nat) -> nat
+g(mk_(n1, n2)) ==
+  n1 + n2;
+
+h: seq of nat -> nat * nat
+h([a,b]) ==
+  mk_(a,b);
+
+h2: set of nat -> seq of nat
+h2({a,b}) ==
+  let s = [a+1,b+2] in s
+
+
+operations
+
+  public Test :() ==> seq of ( nat * nat )
+  Test ()  ==
+    return 
+    [ h comp h2({2,3})
+    ]
+
+end A

@@ -1,0 +1,211 @@
+class B
+types
+  tb::a:int;
+
+unAB = recA | recB;
+recA::
+     k : int;
+recB:: 
+     k : int
+
+end B
+
+class A
+functions
+private
+  f:() +> int
+  f() == 3
+end A
+
+class C
+functions
+private
+  f:() +> int
+  f() == 45
+end C
+
+class AccTest1 -- ERROR
+types
+  public  t0 = t1 | t2 | B`tb;
+  public t1::a:int;
+  private t2::a:int
+end AccTest1
+
+class AccTest2 -- ERROR
+types
+  public  q0 = q1 | q2;
+  public  q1 = int;
+  public  q2 = q3 | q4;
+  public  q3 = int;
+  private q4::a:q0
+
+end AccTest2
+
+class AccTest3 -- ERROR
+types
+  private t = int;
+  private s = int
+operations
+  public op:() ==> t
+	 op () == return 3;
+
+  public ox:s ==> int
+         ox (a) == return a
+end AccTest3
+
+class AccTest4 -- ERROR
+types
+  private t = int;
+  private s = int
+operations
+  public op (a,b:t)r:int
+  post r > 3;
+
+  public os() r:s
+  post r < 7
+end AccTest4
+
+class AccTest5 -- ERROR
+types
+  private t = int;
+  private s = int
+values
+  protected mk_(v1,v2):t*int = mk_(9,11);
+  public mk_(v3,v4) = mk_(13,17);
+end AccTest5
+
+class AccTest6 -- ERROR
+types
+  private t::a:int
+values
+  public v = mk_t(9)
+end AccTest6
+
+class AccTest7 -- OK
+types
+  public t = int
+values
+  private v:t = 4;
+  public vv = v
+end AccTest7
+
+class AccTest8 -- ERROR
+types
+  private t = int;
+  private s = int
+operations
+  public op (a,b:t)r:int ==
+  return a+b;
+  
+
+  public os() r:s ==
+  return 4
+end AccTest8
+
+class AccTest9 -- ERROR
+types
+  private t = int;
+  private s = int
+functions
+  public f1:() +> t
+  f1() == 4;
+
+  public f1a:s +> int
+  f1a(b) == b;
+
+  public f2(a,b:t)r:int
+  post a+b = r;
+
+  public f3 () r:s
+  post r > 8;
+
+  public f4(a,b:t) r:int == a+b;
+
+  public f5()r:s == 7
+end AccTest9
+
+class AccTest10 -- ERROR
+types
+  private t = int;
+  private s = int
+functions
+  private f1[@p]: @p +> @p
+  f1 (a) == a;
+
+  public f2[@p]: map @p to t +> s
+  f2 (m) == m(1)
+end AccTest10
+
+class AccTest11 -- ERROR
+operations
+op:() ==> int
+op() == 
+  let a = new AccTest10()  in
+  return a.f1[int](3) + a.f2[int]({1|->2})
+end AccTest11
+
+class AccTest12
+types
+
+  private priv_t = int
+  inv v == v > 1000;
+
+  protected pro_t = int
+  inv v == v > 1000
+
+functions
+  private f(a:int)r:int
+  pre a > 10
+  post a = r;
+
+  protected g(a:int)r:int
+  pre a > 10
+  post a = r;
+
+  public ff:() +> bool
+  ff () == pre_f(11)
+end AccTest12
+
+class AccTest13 is subclass of AccTest12
+
+functions
+  fff:() +> bool
+  fff () == pre_f(13);
+
+  ggg:() +> bool
+  ggg () == pre_g(19);
+
+  bbb:() +> bool
+  bbb () == inv_priv_t (999) and inv_pro_t(1001)
+
+end AccTest13
+ 
+class AccTest14 -- Error
+types
+  private t = int;
+  private s = int
+instance variables
+  public a:t := 8
+end AccTest14
+
+class AccTest15
+types
+  public T = B
+end AccTest15
+
+class AccTest16
+
+functions
+
+g:A|C +> int
+g(c) == c.f()
+end AccTest16
+
+class AccTest17 is subclass of A,B
+operations
+  getrec:()==> unAB  
+  getrec() == if true then return mk_recA(3)
+              else return mk_B`recB(2);
+
+
+end AccTest17

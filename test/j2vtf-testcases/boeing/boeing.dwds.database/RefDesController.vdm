@@ -1,0 +1,324 @@
+class RefDesController is subclass of WiringDataController
+operations 
+public  getViaId : int  ==> [RefDes]
+getViaId(refdesId) == 
+( dcl   refdesIdArray : map  int  to  [Integer] := {0 |-> new  Integer(refdesId)},
+        refdesArray : map  int  to  [RefDes] := RefDesController`getViaId(refdesIdArray);
+  return  refdesArray(0)
+) ;
+
+public  initialize : () ==> <VOID>
+initialize() == 
+( return  <VOID>
+) ;
+
+public  getViaWire : [Wire] ==> map  int  to  [RefDes]
+getViaWire(wire) == 
+( dcl   refdesIdArray : map  int  to  [Integer] := endpointCntl.getRefDesIdViaWireId(wire.getId());
+  return  getViaId(refdesIdArray)
+) ;
+
+public  getAllNames : [Aircraft] ==> [Enumeration]
+getAllNames(aircraft) == 
+( if  debug
+  then  
+    ( let - = System.out.println(new  String("RefDesController.getAllNames(")+aircraft+new  String(") from DB"))
+      in 
+        skip 
+    ) ;
+  ( dcl   nameList : [Vector] := nil  ;
+    skip ;
+    ( dcl   connection : [Connection] := RefDesController`getToolkit().getConnection(),
+            querySet : [WiringDataQuerySet] := RefDesController`getToolkit().getQuerySet(),
+            query : [String] := nil  ;
+      trap  j2v_exception with  
+        cases  true  : 
+          (isofclass  (SQLException,j2v_exception)) -> 
+            ( dcl   e : [SQLException] := j2v_exception;
+              exit  convertSQLException(e , query)
+            ) ,
+          others  -> 
+            exit  j2v_exception
+        end  
+      in  
+        ( dcl   stmt : [Statement] := connection.createStatement(),
+                typeId : [Integer] := new  Integer(aircraft.getAcType().getAcTypeId()),
+                args : map  int  to  [Object] := {0 |-> typeId};
+          query := querySet.getQuery(WiringDataQuerySet`GET_COUNT_REFDES_NAMES , args);
+          ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+            let - = queryRS.next()
+            in 
+              skip ;
+            ( dcl   numRefDes : int  := queryRS.getInt(1);
+              nameList := new  Vector(numRefDes);
+              query := querySet.getQuery(WiringDataQuerySet`GET_ALL_REFDES_NAMES , args);
+              queryRS := stmt.executeQuery(query);
+              trap  j2v_break with  
+                cases  true  : 
+                  (isofclass  (J2V_Break,j2v_break)) -> 
+                    skip 
+                  
+                end  
+              in  
+                while  queryRS.next() do  
+                ( dcl   refdesName : [String] := queryRS.getString(1);
+                  let - = nameList.addElement(refdesName)
+                  in 
+                    skip 
+                ) ;
+              let - = queryRS.close()
+              in 
+                skip ;
+              let - = stmt.close()
+              in 
+                skip 
+            ) 
+          ) 
+        ) ;
+      return  nameList.elements()
+    ) 
+  ) 
+) ;
+
+public  getCurrentContextObject : () ==> [Object]
+getCurrentContextObject() == 
+( return  curRefDes
+) ;
+
+public  getViaId : map  int  to  [Integer] ==> map  int  to  [RefDes]
+getViaId(refdesIdArray) == 
+( if  debug
+  then  
+    ( let - = System.out.print(new  String("RefDesController.getViaId(["))
+      in 
+        skip ;
+      ( dcl   i : int  := 0;
+        while  i < refdesIdArray.length do  
+        ( if  i < refdesIdArray.length-1
+          then  
+            ( let - = System.out.print(refdesIdArray(i)+new  String(","))
+              in 
+                skip 
+            ) 
+          else  
+            ( let - = System.out.print(refdesIdArray(i))
+              in 
+                skip 
+            ) ;
+          i := i+1
+        ) 
+      ) ;
+      let - = System.out.print(new  String("])  "))
+      in 
+        skip 
+    ) ;
+  ( dcl   refdes : [RefDes] := nil  ,
+          refdesArray : map  int  to  [RefDes] := {l_5 |-> nil  |l_5 in set  {0,...,refdesIdArray.length-1}},
+          refdesToFind : [Vector] := new  Vector(refdesIdArray.length),
+          numFound : int  := 0;
+    ( dcl   i : int  := 0;
+      while  i < refdesIdArray.length do  
+      ( dcl   refdesKey : [Integer] := refdesIdArray(i);
+        refdes := refdesCache.get(refdesKey);
+        if  refdes = nil  
+        then  
+          ( let - = refdesToFind.addElement(refdesKey)
+            in 
+              skip 
+          ) 
+        else  
+          ( refdesArray := refdesArray ++ {numFound |-> refdes};
+            numFound := numFound+1
+          ) ;
+        i := i+1
+      ) 
+    ) ;
+    if  debug
+    then  
+      ( let - = System.out.println(new  String("Found ")+numFound+new  String(" of ")+refdesIdArray.length+new  String(" in the cache"))
+        in 
+          skip 
+      ) ;
+    if  refdesToFind.size() > 0
+    then  
+      ( dcl   connection : [Connection] := RefDesController`getToolkit().getConnection(),
+              querySet : [WiringDataQuerySet] := RefDesController`getToolkit().getQuerySet(),
+              query : [String] := nil  ;
+        trap  j2v_exception with  
+          cases  true  : 
+            (isofclass  (SQLException,j2v_exception)) -> 
+              ( dcl   e : [SQLException] := j2v_exception;
+                exit  convertSQLException(e , query)
+              ) ,
+            others  -> 
+              exit  j2v_exception
+          end  
+        in  
+          ( dcl   stmt : [Statement] := connection.createStatement(),
+                  refdesIdListString : [String] := genCommaSeparatedList(refdesToFind.elements()),
+                  args : map  int  to  [Object] := {0 |-> refdesIdListString};
+            query := querySet.getQuery(WiringDataQuerySet`GET_REFDES_VIA_ID , args);
+            ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+              trap  j2v_break with  
+                cases  true  : 
+                  (isofclass  (J2V_Break,j2v_break)) -> 
+                    skip 
+                  
+                end  
+              in  
+                while  queryRS.next() do  
+                ( dcl   refdesId : int  := queryRS.getInt(1),
+                        refdesName : [String] := queryRS.getString(2),
+                        refdesTypeId : int  := queryRS.getInt(3),
+                        refdesMateId : int  := queryRS.getInt(4);
+                  if  queryRS.wasNull()
+                  then  
+                    ( refdesMateId := -1
+                    ) ;
+                  refdes := new  RefDes(refdesId , refdesName , new  String([  ]) , refdesTypeId);
+                  let - = refdes.setMateId(refdesMateId)
+                  in 
+                    skip ;
+                  let - = refdesCache.put(new  Integer(refdesId) , refdes)
+                  in 
+                    skip ;
+                  refdesArray := refdesArray ++ {numFound |-> refdes};
+                  numFound := numFound+1
+                ) ;
+              let - = queryRS.close()
+              in 
+                skip ;
+              let - = stmt.close()
+              in 
+                skip 
+            ) 
+          ) 
+      ) ;
+    return  refdesArray
+  ) 
+) ;
+
+public  updateToNewContext : [ContextSet] ==> <VOID>
+updateToNewContext(contextChanges) == 
+( if  contextChanges.contains(ContextTypes`AIRCRAFT_TYPE) or  contextChanges.contains(ContextTypes`TAIL_NUMBER)
+  then  
+    ( let - = refdesCache.removeAll()
+      in 
+        skip ;
+      curRefDes := nil  
+    ) ;
+  if  contextChanges.contains(ContextTypes`REFDES)
+  then  
+    ( dcl   newRefDesName : [String] := contextChanges.get(ContextTypes`REFDES);
+      if  newRefDesName = nil  
+      then  
+        ( curRefDes := nil  
+        ) 
+      else  
+        ( let - = refdesCache.removeOld()
+          in 
+            skip ;
+          curRefDes := getViaName(aircraftCntl.getCurrentContextObject() , newRefDesName)(0);
+          let - = endpointCntl.preloadWireEndpointsViaRefDesId(curRefDes.getId())
+          in 
+            skip 
+        ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  getViaName : [Aircraft] * [String] ==> map  int  to  [RefDes]
+getViaName(aircraft, refdesName) == 
+( if  debug
+  then  
+    ( let - = System.out.println(new  String("RefDesController.getViaName(")+aircraft+new  String(", ")+refdesName+new  String(") from DB"))
+      in 
+        skip 
+    ) ;
+  ( dcl   refdesList : [Vector] := new  Vector(),
+          connection : [Connection] := RefDesController`getToolkit().getConnection(),
+          querySet : [WiringDataQuerySet] := RefDesController`getToolkit().getQuerySet(),
+          query : [String] := nil  ;
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (SQLException,j2v_exception)) -> 
+          ( dcl   e : [SQLException] := j2v_exception;
+            exit  convertSQLException(e , query)
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( dcl   stmt : [Statement] := connection.createStatement(),
+              acTypeId : [Integer] := new  Integer(aircraft.getAcType().getAcTypeId()),
+              args : map  int  to  [Object] := {1 |-> refdesName , 0 |-> acTypeId};
+        query := querySet.getQuery(WiringDataQuerySet`GET_REFDES_VIA_NAME , args);
+        ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+          trap  j2v_break with  
+            cases  true  : 
+              (isofclass  (J2V_Break,j2v_break)) -> 
+                skip 
+              
+            end  
+          in  
+            while  queryRS.next() do  
+            ( dcl   refdesId : [Integer] := new  Integer(queryRS.getInt(1)),
+                    refdesTypeId : int  := queryRS.getInt(2),
+                    refdesMateId : int  := queryRS.getInt(3);
+              if  queryRS.wasNull()
+              then  
+                ( refdesMateId := -1
+                ) ;
+              ( dcl   refdes : [RefDes] := refdesCache.get(refdesId);
+                if  refdes = nil  
+                then  
+                  ( refdes := new  RefDes(refdesId.intValue() , refdesName , new  String([  ]) , refdesTypeId);
+                    let - = refdes.setMateId(refdesMateId)
+                    in 
+                      skip ;
+                    let - = refdesCache.put(refdesId , refdes)
+                    in 
+                      skip 
+                  ) ;
+                let - = refdesList.addElement(refdes)
+                in 
+                  skip 
+              ) 
+            ) ;
+          let - = queryRS.close()
+          in 
+            skip ;
+          let - = stmt.close()
+          in 
+            skip 
+        ) 
+      ) ;
+    ( dcl   refdesArray : map  int  to  [RefDes] := {l_17 |-> nil  |l_17 in set  {0,...,refdesList.size()-1}};
+      let - = refdesList.copyInto(refdesArray)
+      in 
+        skip ;
+      return  refdesArray
+    ) 
+  ) 
+) ;
+
+RefDesController : [DataSourceToolkit] * [EffectivityController] * [AircraftController] * [WireEndpointController] ==> RefDesController
+RefDesController(dsToolkit, effectivityController, aircraftController, endpointController) == 
+( let - = WiringDataController(dsToolkit)
+  in 
+    skip ;
+  RefDesController`effectivityCntl := effectivityController;
+  RefDesController`aircraftCntl := aircraftController;
+  RefDesController`endpointCntl := endpointController;
+  refdesCache := new  ObjectCache(cacheSize)
+) ;
+
+instance variables 
+  private  refdesCache : [ObjectCache] := nil  ;
+  private  curRefDes : [RefDes] := nil  ;
+  private  aircraftCntl : [AircraftController] := nil  ;
+  private  effectivityCntl : [EffectivityController] := nil  ;
+  private  endpointCntl : [WireEndpointController] := nil  ;
+  private  static cacheSize : int  := 151
+  
+end  RefDesController

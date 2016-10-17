@@ -1,0 +1,26 @@
+class OpGTExpr is subclass of OpBinaryExpr
+operations 
+public  OpGTExpr : () ==> OpGTExpr
+OpGTExpr() == 
+( skip 
+) ;
+
+public  getOperatorString : () ==> [String]
+getOperatorString() == 
+( return  new  String(">")
+) ;
+
+public  OpGTExpr : [Expr] * [Expr] ==> OpGTExpr
+OpGTExpr(leftExpr, rightExpr) == 
+( let - = OpBinaryExpr(leftExpr , rightExpr)
+  in 
+    skip 
+) ;
+
+public  comparisonResults : [Comparable] * [Comparable] ==> [Boolean]
+comparisonResults(leftValue, rightValue) == 
+( return  new  Boolean(leftValue.compareTo(rightValue) > 0)
+) ;
+
+
+end  OpGTExpr

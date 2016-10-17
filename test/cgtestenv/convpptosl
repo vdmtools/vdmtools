@@ -1,0 +1,14 @@
+#! /usr/bin/perl
+
+undef $/; $* = 1; 
+$file = <STDIN>;
+$file =~ s/^class(\s+[A-Za-z_\47]+\s*)/module $1 \nexports all \ndefinitions \n/g; 
+$file =~s/^instance variables\s*(\w+\s*:\s*\w+\s*;\s*)+//g;
+$file =~ s/methods/operations/g;
+$file =~ s/([a-zA-Z0-9]+) *\(\) *(value[^:]+: *([^=]+))? *==/&Repl()/eg;
+$file =~ s/(([a-zA-Z0-9]+) *: *\(.*\n)\2 *: *\(.*\n/$1/g;
+print $file;      
+sub Repl { # $1 contains name, $3 is undefined or contains type
+  $t=(defined $3? $3:"()");  
+  return "$1: () ==> $t \n$1 () ==";
+}

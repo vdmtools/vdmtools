@@ -1,0 +1,679 @@
+class A
+
+operations
+
+public Test: () ==> seq of char
+Test() ==
+  return new VdmHolTranslator().testCase1();
+
+end A
+class VdmHolTranslator
+
+instance variables
+
+test1	:	IOmlDocument :=	
+
+new OmlDocument("",
+  new OmlSpecifications([
+    new OmlClass(
+      "UseCase1",
+      [
+        
+      ],
+      nil,
+      [
+        new OmlOperationDefinitions([
+          
+        ]),
+        new OmlFunctionDefinitions([
+          new OmlFunctionDefinition(
+            new OmlAccessDefinition(
+              false,
+              false,
+              new OmlScope(3)
+            ),
+            new OmlExplicitFunction(
+              "isAorB",
+              [
+                
+              ],
+              new OmlPartialFunctionType(
+                new OmlNatType(),
+                new OmlBoolType()
+              ),
+              [
+                new OmlParameter([
+                  new OmlPatternIdentifier("input")
+                ])
+              ],
+              new OmlFunctionBody(
+                new OmlBinaryExpression(
+                  new OmlBracketedExpression(new OmlBinaryExpression(
+                    new OmlName(
+                      nil,
+                      "input"
+                    ),
+                    new OmlBinaryOperator(4),
+                    new OmlSymbolicLiteralExpression(new OmlCharacterLiteral('A'))
+                  )),
+                  new OmlBinaryOperator(14),
+                  new OmlBracketedExpression(new OmlBinaryExpression(
+                    new OmlName(
+                      nil,
+                      "input"
+                    ),
+                    new OmlBinaryOperator(4),
+                    new OmlSymbolicLiteralExpression(new OmlCharacterLiteral('B'))
+                  ))
+                ),
+                false,
+                false
+              ),
+              new OmlFunctionTrailer(
+                nil,
+                nil
+              )
+            )
+          )
+        ])
+      ],
+      false
+    )
+  ]),
+  [
+  ]
+)
+;
+
+test2	:	IOmlDocument :=	
+new OmlDocument("",
+  new OmlSpecifications([
+    new OmlClass(
+      "UseCase2",
+      [
+        
+      ],
+      nil,
+      [
+        new OmlTypeDefinitions([
+          new OmlTypeDefinition(
+            new OmlAccessDefinition(
+              false,
+              false,
+              new OmlScope(2)
+            ),
+            new OmlSimpleType(
+              "TrafficLight",
+              new OmlUnionType(
+                new OmlUnionType(
+                  new OmlQuoteType(new OmlQuoteLiteral("red")),
+                  new OmlQuoteType(new OmlQuoteLiteral("orange"))
+                ),
+                new OmlQuoteType(new OmlQuoteLiteral("green"))
+              ),
+              nil
+            )
+          )
+        ])
+      ],
+      false
+    )
+  ]),
+  [
+  ]
+)
+;
+
+types
+
+HolTypeTranslation ::
+	type :					HolType
+	additionalTypeDefs :	seq of HolTypeDefinition
+
+operations
+
+public testCase1: () ==> seq of char
+testCase1 () == 
+	return translateDocument(test1).print()
+;
+
+public testCase2: () ==> seq of char
+testCase2 () == 
+	return translateDocument(test2).print()
+;
+
+functions
+
+public translateDocument: IOmlDocument -> HolDocument
+translateDocument (doc) ==
+	let
+		expression : [HolExpression] = 
+			if doc.hasExpression() then translateExpression(doc.getExpression())
+			else nil,
+		specifications : seq of HolClass = 
+			if doc.hasSpecifications() then translateClassList(doc.getSpecifications().getClassList())		-- TODO Maybe more than just the classes
+			else []
+	in
+		new HolDocument(expression, specifications)
+;
+
+translateClassList: seq of IOmlClass -> seq of HolClass
+translateClassList (classes) == 
+	if len classes = 0 then []
+	else conc [[translateClass(hd(classes))], translateClassList(tl(classes))]
+;
+
+translateClass: IOmlClass -> HolClass
+translateClass (cl) == 
+	new HolClass(	new HolIdentifier(cl.getIdentifier()),
+					translateTypeDefinitionsFromBlock(cl.getClassBody()),
+					translateFunctionDefinitionsFromBlock(cl.getClassBody())	)
+;
+
+translateNode: IOmlNode -> HolNode
+translateNode (node) == 
+	if isofclass(IOmlExpression, node) then translateExpression(node)
+	elseif isofclass(IOmlBinaryOperator, node) then translateBinaryOperator(node)
+	else new HolNode()
+;
+
+-- Types ------------------------------------------------------------------------------------------------
+
+-- This function will get the type definitions from the given sequence of definition blocks and translate these
+translateTypeDefinitionsFromBlock: seq of IOmlDefinitionBlock -> seq of HolTypeDefinition
+translateTypeDefinitionsFromBlock (blocks) == 
+	if len blocks = 0 then []
+	else
+		if isofclass(IOmlTypeDefinitions, hd(blocks)) then
+			conc [translateTypeDefinitions(hd(blocks)), translateTypeDefinitionsFromBlock(tl(blocks))]
+		else translateTypeDefinitionsFromBlock(tl(blocks))
+;
+
+translateTypeDefinitions: IOmlTypeDefinitions -> seq of HolTypeDefinition
+translateTypeDefinitions (defs) == 
+	translateTypeList(defs.getTypeList())
+;
+
+translateTypeList: seq of IOmlTypeDefinition -> seq of HolTypeDefinition
+translateTypeList (defs) == 
+	if len defs = 0 then []
+	else conc [[translateTypeDefinition(hd(defs))], translateTypeList(tl(defs))]
+;
+
+translateTypeDefinition: IOmlTypeDefinition -> seq of HolTypeDefinition
+translateTypeDefinition (typeDef) ==
+	let
+		shape : IOmlTypeShape = typeDef.getShape()
+	in
+		if isofclass(IOmlSimpleType, shape) then translateSimpleTypeDefinition(shape)
+		else []
+;
+
+translateSimpleTypeDefinition: IOmlSimpleType -> seq of HolTypeDefinition
+translateSimpleTypeDefinition (typeDef) == 
+	let
+		typeTranslation : HolTypeTranslation = translateType(typeDef.getType())
+	in
+		conc 
+		[
+			typeTranslation.additionalTypeDefs,	-- These first, to make sure the supporting types have been defined in advance
+			[new HolTypeDefinition(new HolIdentifier(typeDef.getIdentifier()), typeTranslation.type)]
+		]
+;
+
+translateType: IOmlType -> HolTypeTranslation
+translateType (type) == 
+	if isofclass(IOmlUnionType, type) then translateUnionType(type)
+	elseif isofclass(OmlQuoteType, type) then translateQuoteType(type)
+	else mk_HolTypeTranslation(new HolType(), [])
+;
+
+translateUnionType: IOmlUnionType -> HolTypeTranslation
+translateUnionType (type) == 
+	let 
+		lhs = translateType(type.getLhsType()),
+		rhs = translateType(type.getRhsType())
+	in
+		mk_HolTypeTranslation(
+			new HolUnionType(lhs.type, rhs.type),
+			conc [lhs.additionalTypeDefs, rhs.additionalTypeDefs]
+		)
+;
+
+translateQuoteType: IOmlQuoteType -> HolTypeTranslation
+translateQuoteType (type) == 
+	let
+		literal = type.getQuoteLiteral().getVal()
+	in
+		mk_HolTypeTranslation(
+			new HolTypeIdentifier(literal), 
+			[
+				new HolTypeDefinition(
+					new HolIdentifier(literal), 
+					new HolTypeIdentifier(conc [literal, "Literal"])	
+				)
+			]
+		)
+;
+
+-- Functions ------------------------------------------------------------------------------------------------
+
+-- This function will get the function definitions from the given sequence of definition blocks and translate these
+translateFunctionDefinitionsFromBlock: seq of IOmlDefinitionBlock -> seq of HolDefinition
+translateFunctionDefinitionsFromBlock (blocks) == 
+	if len blocks = 0 then []
+	else
+		if isofclass(IOmlFunctionDefinitions, hd(blocks)) then
+			conc [translateFunctionDefinitions(hd(blocks)), translateFunctionDefinitionsFromBlock(tl(blocks))]
+		else translateFunctionDefinitionsFromBlock(tl(blocks))
+;
+
+translateFunctionDefinitions: IOmlFunctionDefinitions -> seq of HolDefinition
+translateFunctionDefinitions (defs) == 
+	translateFunctionList(defs.getFunctionList())
+;
+
+translateFunctionList: seq of IOmlFunctionDefinition -> seq of HolDefinition
+translateFunctionList (defs) == 
+	if len defs = 0 then []
+	else conc [[translateFunctionDefinition(hd(defs))], translateFunctionList(tl(defs))]
+;
+
+translateFunctionDefinition: IOmlFunctionDefinition -> HolDefinition
+translateFunctionDefinition (funDef) ==																		-- TODO Do something with acces restrictions?
+	let
+		shape : IOmlFunctionShape = funDef.getShape()
+	in
+		if isofclass(IOmlExplicitFunction, shape) then new HolDefinition(translateExplicitFunction(shape))
+		else new HolDefinition()
+;
+
+translateExplicitFunction: IOmlExplicitFunction -> HolExpression
+translateExplicitFunction (fun) == 
+	let
+		parameterList : seq of HolIdentifier =
+			translateParameterList(fun.getParameterList())
+	in
+		new HolFunctionApplication
+		(
+			new HolReferedFunction(new HolIdentifier("$=")),
+			[	new HolIdentifier(fun.getIdentifier()),
+				new HolLambdaFunction(parameterList, translateFunctionBody(fun.getBody()))	]	
+		)
+;
+
+
+translateParameterList: seq of IOmlParameter -> seq of HolIdentifier
+translateParameterList (parameters) == 
+	if len parameters = 0 then []
+	else conc [translatePatternList((hd(parameters)).getPatternList()), translateParameterList(tl(parameters))]	-- TODO Just concatenating the patterns, but I am sure they have more meaning than that...
+;
+
+translatePatternList: seq of IOmlPattern -> seq of HolIdentifier
+translatePatternList (patterns) == 
+	if len patterns = 0 then []
+	else conc [[translatePattern(hd(patterns))], translatePatternList(tl(patterns))]
+;
+
+translatePattern: IOmlPattern -> HolIdentifier
+translatePattern (pattern) == 
+	if isofclass(IOmlPatternIdentifier, pattern) then translatePatternIdentifier(pattern)
+	else new HolIdentifier("")														-- TODO Add all other types of patterns here
+;
+
+translatePatternIdentifier: IOmlPatternIdentifier -> HolIdentifier
+translatePatternIdentifier (pattern) == 
+	new HolIdentifier(pattern.getIdentifier())
+;
+
+translateFunctionBody: IOmlFunctionBody -> HolExpression
+translateFunctionBody (body) == 
+	if body.getNotYetSpecified() then new HolExpression()							-- TODO
+	elseif body.getSubclassResponsibility() then new HolExpression()				-- TODO
+	else translateExpression(body.getFunctionBody())
+;
+
+-- Expressions ------------------------------------------------------------------------------------------------
+
+translateExpression: IOmlExpression -> HolExpression
+translateExpression (node) == 
+	if isofclass(IOmlBinaryExpression, node) then translateBinaryExpression(node)
+	elseif isofclass(IOmlBracketedExpression, node) then translateBracketedExpression(node)
+	elseif isofclass(IOmlSymbolicLiteralExpression, node) then translateSymbolicLiteralExpression(node)
+	elseif isofclass(IOmlName, node) then translateName(node)
+	else new HolExpression()
+;
+
+translateBinaryExpression: IOmlBinaryExpression -> HolFunctionApplication
+translateBinaryExpression(binExpr) ==
+	new HolFunctionApplication(	new HolReferedFunction(translateBinaryOperator(binExpr.getOperator())), 
+								[translateExpression(binExpr.getLhsExpression()), translateExpression(binExpr.getRhsExpression())]	)
+;
+
+translateBracketedExpression: IOmlBracketedExpression -> HolBrackets
+translateBracketedExpression(brExpr) ==
+	new HolBrackets(translateExpression(brExpr.getExpression()))
+;
+
+translateName: IOmlName -> HolIdentifier
+translateName(name) == 
+	new HolIdentifier(name.getIdentifier())
+;
+
+translateBinaryOperator: IOmlBinaryOperator -> HolIdentifier
+translateBinaryOperator(operator) == 
+	if     operator.getValue() = 0	then new HolIdentifier("")		-- Union		!!
+	elseif operator.getValue() = 1	then new HolIdentifier("$-")	-- Minus
+	elseif operator.getValue() = 2	then new HolIdentifier("")		-- Equiv		!!
+	elseif operator.getValue() = 3	then new HolIdentifier("")		-- PSubset		!!
+	elseif operator.getValue() = 4	then new HolIdentifier("$=")	-- Equals
+	elseif operator.getValue() = 5	then new HolIdentifier("")		-- notinset		!!
+	elseif operator.getValue() = 6	then new HolIdentifier("")		-- Rem			!!
+	elseif operator.getValue() = 7	then new HolIdentifier("$<")	-- Less than
+	elseif operator.getValue() = 8	then new HolIdentifier("$>")	-- Greater than
+	elseif operator.getValue() = 9	then new HolIdentifier("")		-- Not equal	!!
+	elseif operator.getValue() = 10	then new HolIdentifier("")		-- Tupsel		!!
+	elseif operator.getValue() = 11	then new HolIdentifier("")		-- Mod			!!
+	elseif operator.getValue() = 12	then new HolIdentifier("")		-- Difference	!!
+	elseif operator.getValue() = 13	then new HolIdentifier("")		-- in set		!!
+	elseif operator.getValue() = 14	then new HolIdentifier("$\\/")	-- Or
+	elseif operator.getValue() = 15	then new HolIdentifier("$>=")	-- Gr/eq
+	elseif operator.getValue() = 16	then new HolIdentifier("")		-- mapdomresby	!!
+	elseif operator.getValue() = 17	then new HolIdentifier("$/\\")	-- And
+	else new HolIdentifier("")
+;
+
+translateSymbolicLiteralExpression: IOmlSymbolicLiteralExpression -> HolIdentifier
+translateSymbolicLiteralExpression(literalExpression) == 
+	let literal = literalExpression.getLiteral() in
+		if isofclass(IOmlCharacterLiteral, literal) then translateIOmlCharacterLiteral(literal)
+		else new HolIdentifier("")
+;
+
+translateIOmlCharacterLiteral : IOmlCharacterLiteral -> HolIdentifier
+translateIOmlCharacterLiteral(charLit) == 
+	let
+		charStart	: seq of char = "#\"",
+		charVal		: seq of char = [charLit.getVal()],
+		charEnd		: seq of char = ['\"']
+	in
+		new HolIdentifier(conc [charStart, charVal, charEnd])
+
+end VdmHolTranslator
+class HolBrackets is subclass of HolExpression
+
+instance variables
+
+expression : HolExpression
+
+operations
+
+public HolBrackets : HolExpression ==> HolBrackets
+HolBrackets(newExpression) ==
+	expression := newExpression
+;
+
+public print : () ==> seq of char
+print () ==
+	return conc ["(", expression.print(), ")"]
+;
+
+end HolBrackets
+class HolClass 
+
+instance variables
+
+name :		HolIdentifier;
+typeDefs :	seq of HolTypeDefinition;
+funDefs :	seq of HolDefinition
+
+
+operations
+
+public HolClass : HolIdentifier * seq of HolTypeDefinition * seq of HolDefinition ==> HolClass
+HolClass(newName, newTypeDefs, newfunDefs) ==
+(
+	name := newName;
+	typeDefs := newTypeDefs;
+	funDefs := newfunDefs
+)
+;
+
+public print : () ==> seq of char
+print () ==
+(
+	dcl result : seq of char;
+
+	result := "";
+	for i = 1 to len typeDefs do
+		result := conc [result, typeDefs(i).print(), ";\n"];
+	for i = 1 to len funDefs do
+		result := conc [result, funDefs(i).print(), ";\n"];
+	
+	return result;
+)
+;
+
+end HolClass
+class HolDefinition is subclass of HolExpression
+
+instance variables
+objectToDefine:		HolExpression;
+
+operations
+
+public HolDefinition : HolExpression ==> HolDefinition
+HolDefinition(newObjectToDefine) ==
+	objectToDefine := newObjectToDefine
+;
+
+public print : () ==> seq of char
+print () ==
+	return conc ["Define `", objectToDefine.print(), "`"]
+;
+
+functions
+
+end HolDefinition
+class HolDocument
+
+instance variables
+expression : [HolExpression];
+specifications : seq of HolClass
+
+operations
+public HolDocument : () ==> HolDocument
+HolDocument () ==
+(
+	expression := nil;
+	specifications := []
+)
+;
+
+public HolDocument : [HolExpression] * seq of HolClass ==> HolDocument
+HolDocument (newExpression, newSpecs) ==
+(
+	expression := newExpression;
+	specifications := newSpecs
+)
+;
+
+public print : () ==> seq of char
+print() == 
+(
+	dcl result : seq of char;
+	result := "";
+	if expression <> nil then result := conc [result, expression.print(), ";"];
+	for i = 1 to len specifications do
+		result := conc [result, specifications(i).print(), ";"];
+	return result
+)
+end HolDocument
+class HolExpression is subclass of HolNode
+
+operations
+
+public HolExpression : () ==> HolExpression
+HolExpression () == skip
+;
+
+-- Must result in an object level expression
+public print : () ==> seq of char
+print () == return ""
+
+functions
+
+end HolExpression
+class HolFunction is subclass of HolExpression
+
+instance variables
+
+operations
+
+public print : () ==> seq of char
+print () == is subclass responsibility
+
+end HolFunction
+class HolFunctionApplication is subclass of HolExpression
+
+instance variables
+function:		HolFunction;
+parameters:	seq of HolExpression;
+
+
+operations
+
+public HolFunctionApplication : HolFunction * seq of HolExpression ==> HolFunctionApplication
+HolFunctionApplication(newFunction, newParameters) ==
+(
+	function := newFunction;
+	parameters := newParameters
+);
+
+public print : () ==> seq of char
+print () ==
+(
+	dcl result : seq of char;
+	result := function.print();
+	for i = 1 to len parameters do
+		result := conc [result, " ", parameters(i).print()];
+	return result
+);
+
+functions
+
+end HolFunctionApplication
+class HolNode
+
+operations
+
+public HolNode : () ==> HolNode
+HolNode () == skip
+;
+
+public print : () ==> seq of char
+print () == return ""
+
+functions
+
+end HolNode
+class HolReferedFunction is subclass of HolFunction
+
+instance variables
+
+reference : HolIdentifier
+
+operations
+
+public HolReferedFunction : HolIdentifier ==> HolReferedFunction
+HolReferedFunction (newRef) ==
+	reference := newRef
+;
+
+public print : () ==> seq of char
+print () ==
+	return reference.print()
+;
+
+end HolReferedFunction
+class HolType
+
+operations
+
+public HolType: () ==> HolType
+HolType () == skip
+;
+
+-- Must result in a Hol_datatype expression
+public print : () ==> seq of char
+print () == return "error"			-- TODO Improve this? (how?)
+
+end HolType
+class HolTypeDefinition
+
+instance variables
+name:		HolIdentifier;
+type:		HolType
+
+operations
+
+public HolTypeDefinition : HolIdentifier * HolType ==> HolTypeDefinition
+HolTypeDefinition(newName, newType) ==
+(
+	name := newName;
+	type := newType
+);
+
+public print : () ==> seq of char
+print () ==
+	return conc ["Hol_datatype `", name.print(), " = ", type.print(), "`"]
+;
+
+functions
+
+end HolTypeDefinition
+
+class HolTypeIdentifier is subclass of HolType
+
+instance variables
+name:		seq of char;
+
+operations
+
+public HolTypeIdentifier : seq of char ==> HolTypeIdentifier
+HolTypeIdentifier(newName) ==
+	name := newName;
+
+public HolTypeIdentifier : char ==> HolTypeIdentifier
+HolTypeIdentifier(newName) == 
+	name := [newName];
+
+public print : () ==> seq of char
+print () ==
+	return name;
+
+functions
+
+end HolTypeIdentifier
+
+class HolUnionType is subclass of HolType
+
+instance variables
+lhs:	HolType;
+rhs:	HolType
+
+
+operations
+
+public HolUnionType : HolType * HolType ==> HolUnionType
+HolUnionType(newLhs, newRhs) ==
+(
+	lhs := newLhs;
+	rhs := newRhs
+);
+
+public print : () ==> seq of char
+print () ==
+	return conc ["(", lhs.print(), ") | (", rhs.print(), ")"]
+;
+end HolUnionType

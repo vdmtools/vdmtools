@@ -1,0 +1,13 @@
+public Test :() ==> set of int
+Test() ==
+  (dcl i : set of int;
+       i :=  ElemToSet[int](-1);
+       return(i union {2})
+   )
+
+functions
+  ElemToSet[@elem]: @elem +> set of @elem
+  ElemToSet(e) ==
+    {e}
+
+end A

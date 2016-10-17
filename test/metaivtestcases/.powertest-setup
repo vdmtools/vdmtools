@@ -1,0 +1,127 @@
+#------------------------------------------------------------------------------
+# This is a default setup file for the test environment. Edit it to your needs.
+# Except from paths, case do not matter.
+# For each description valid values are given in parenthesis
+#------------------------------------------------------------------------------
+
+
+# What should be run from this test environment. (TC (type checkker), IP (interpreter), 
+# CPP, Java, Api, Debug, parser, rose, metaiv, RTF)
+What-To-Run = metaiv
+
+# Which language should be executed (SL, PP)
+Language = SL, PP
+
+# What should be executed specifications and/or implementation (spec, impl)
+Run-Type = impl
+
+# How much progress information should be printed on standrad out during execution? 
+# (-1 means all, else the higher number the more output)
+Debug-Level = 2
+
+# How many test cases should be executed for each invocation of vdmde on
+# specification level? The larger the number, the faster overall test run,
+# but the longer it takes between results are output to the user.
+spec-job-size = 10
+
+# Should the generated files be keept after test execution (yes/no)
+keep = no
+
+# Should the generated files be keep after test execution in case of errors (yes/no)
+keep-when-error = yes
+
+# Should error messages be written onto stdout together with progress information
+show-errors-in-progress = yes
+
+# Dump profiling output (yes/no)
+enable-profiling = no
+
+#--------------------------------------------------------------------------------
+# Setup of wildcard variables
+#--------------------------------------------------------------------------------
+parser-SL = /opt/toolbox/bin/vdmde
+parser-PP = /opt/toolbox/bin/vppde
+
+interpreter-spec    = /opt/toolbox/bin/vdmde
+interpreter-impl-sl = /opt/toolbox/bin/vdmde
+interpreter-impl-pp = /opt/toolbox/bin/vppde
+
+spec-compare        = /opt/toolbox/bin/vdmde
+sem-backend         = /opt/toolbox_main/bin/be_ip-sl
+
+extract-source-backend   = /opt/toolbox_main/bin/be_spec-sl
+
+code-generator-SL = /opt/toolbox/bin/vdmde
+code-generator-PP = /opt/toolbox/bin/vppde
+
+compiler       = /opt/gcc-2.95.2/bin/g++
+cflags = -I /opt/toolbox/cg/include -L /opt/toolbox/cg/lib -lvdm -lCG -lm -Wall
+
+#--------------------------------------------------------------------------------
+#                            Type Checker Options
+#--------------------------------------------------------------------------------
+# Directory with test cases
+TC-test-case-dir = ~/toolbox/testenvs/tctestcases/
+
+# What should be executed pos or def? (pos,def)
+TC-Type = pos, def
+
+# Where is the type checker specification located?
+TC-spec-dir = ~/toolbox/spec/ss-spec
+
+#--------------------------------------------------------------------------------
+#                            Interpreter options
+#--------------------------------------------------------------------------------
+# Directory with test cases
+IP-test-case-dir = ~/toolbox/testenvs/iptestcases/
+
+# Where is the type checker specification located?
+IP-spec-dir = ~/toolbox/spec/eval-spec/
+
+# What to run (dtcon,dtcoff)
+IP-Type = dtcon, dtcoff
+
+#--------------------------------------------------------------------------------
+#                            C++ Code Generator options
+#--------------------------------------------------------------------------------
+CPP-Test-case-dir = ~/toolbox/testenvs/iptestcases/CORE, ~/toolbox/testenvs/iptestcases/PP, ~/toolbox/testenvs/iptestcases/SL
+
+CPP-Spec-dir = ~/toolbox/spec/cg-spec/
+
+#--------------------------------------------------------------------------------
+#                            Java Code generator options
+#--------------------------------------------------------------------------------
+compiler-java = /opt/jdk1.3/bin/javac
+cflags-java = -classpath .:/opt/toolbox/javacg/VDM.jar
+rtflags = -classpath .:/opt/toolbox/javacg/VDM.jar
+java-spec-dir = ~/toolbox/spec/cg-spec/
+Java-Test-case-dir = ~/toolbox/testenvs/iptestcases/CORE, ~/toolbox/testenvs/iptestcases/PP
+java-stdlib-dir = ~/toolbox/linux
+java-gentestdir = 
+
+#--------------------------------------------------------------------------------
+#                            API options
+#--------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------
+#                            Debugger options
+#--------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------
+#                            Parser options
+#--------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------
+#                            Rose Link options
+#--------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------
+#                            MetaIV options
+#--------------------------------------------------------------------------------
+compiler       = /opt/gcc-2.95.2/bin/g++
+cflags = -I /opt/toolbox/cg/include -L /opt/toolbox/cg/lib -lvdm
+metaiv-test-case-dir = ~/toolbox/testenvs/metaivtestcases 
+#--------------------------------------------------------------------------------
+#                            RTF prettyprinter options
+#--------------------------------------------------------------------------------
+

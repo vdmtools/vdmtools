@@ -1,0 +1,19 @@
+class A
+
+functions
+
+
+
+public f : () -> (nat * bool * real) | nat
+f() ==
+  mk_(4,true,3.5);
+
+operations
+
+
+public Test : () ==> real
+Test () ==
+  return f() .# 3
+
+
+end A

@@ -1,0 +1,120 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Internal representation of types for the Static Semantics of Java
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\section{Type Representations}
+
+This section presents the type representation module which contains the type
+definitions for the semantic domains which are used internally in
+the static semantics to model the types from the abstract syntax
+and the derived types.
+
+As mentioned in the introduction JSSREP is imported by all
+modules in the hierarchy and it does only import the CPP module.
+
+
+\begin{vdm_al}
+module JSSREP
+
+imports
+  from AS all,
+  from CI all,
+  from REP all
+
+exports all
+
+definitions
+
+types
+
+  TypeRep = BoolTypeRep   |
+            CharTypeRep   |
+            ByteTypeRep   |
+            ShortTypeRep  |
+            IntTypeRep    |
+            LongTypeRep   |
+            FloatTypeRep  |
+            DoubleTypeRep |
+            NullTypeRep   |
+            StringTypeRep |
+            VoidTypeRep   |
+            ClassTypeRep  |
+            IntrfcTypeRep |
+            ImportTypeRep |
+            FieldTypeRep  |
+            MethodTypeRep |
+            AllTypeRep;
+
+  BoolTypeRep :: ;
+
+  CharTypeRep :: ;
+
+  ByteTypeRep  :: ;
+  ShortTypeRep :: ;
+  IntTypeRep   :: ;
+  LongTypeRep  :: ;
+
+  FloatTypeRep  :: ;
+  DoubleTypeRep :: ;
+
+  VoidTypeRep :: ;
+
+  ClassTypeRep ::
+    name : AS`Name;
+
+  IntrfcTypeRep ::
+    name : AS`Name;
+
+  ImportTypeRep ::
+    name : AS`Name;
+
+  FieldTypeRep ::
+    type : BoolTypeRep   |
+           CharTypeRep   |
+           ByteTypeRep   |
+           ShortTypeRep  |
+           IntTypeRep    |
+           LongTypeRep   |
+           FloatTypeRep  |
+           DoubleTypeRep |
+           NullTypeRep   |
+           StringTypeRep |
+           ClassTypeRep  |
+           IntrfcTypeRep |
+           VoidTypeRep   |
+	   AllTypeRep
+    array : nat;
+
+  MethodTypeRep ::
+    domainTypes : seq of FieldTypeRep
+    domainNames : seq of AS`Name
+    rangeType   : TypeRep;
+
+  StringTypeRep ::;
+
+  NullTypeRep ::;
+
+  AllTypeRep :: ;
+
+functions
+
+GetNameIfClassTR: TypeRep +> [AS`Name]
+GetNameIfClassTR(p_tp) ==
+  if is_ClassTypeRep(p_tp)
+  then p_tp.name
+  else nil;
+
+GetClassName: TypeRep +> [AS`Name]
+GetClassName(p_tp) ==
+  if is_ClassTypeRep(p_tp)
+  then p_tp.name
+  elseif is_FieldTypeRep(p_tp) and is_ClassTypeRep(p_tp.type)
+  then p_tp.type.name
+  else nil
+--pre is_ClassTypeRep(p_tp) or
+--    is_FieldTypeRep(p_tp) and is_ClassTypeRep(p_tp.type);
+    
+end JSSREP
+\end{vdm_al}

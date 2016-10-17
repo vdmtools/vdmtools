@@ -1,0 +1,47 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{vdm}\index{Terrain|ClassDef}
+{\small\sf class} $Terrain$  \kISO $\index{MSAWTypes|ClassOcc}MSAWTypes$
+\begin{instvar}\index{mosaique|InstVarDef}
+\vardcl{mosaique}{Coordonnees\index{Coordonnees|TypeOcc} \Gmap Pieds\index{Pieds|TypeOcc}}
+\instinit{mosaique}{\ass{mosaique}{\Emptymap }
+}
+\end{instvar}
+\begin{methdef}\index{SetAltitude|MethodDef}
+\begin{method}{SetAltitude}
+\parms{coordonnees : Coordonnees\index{Coordonnees|TypeOcc}, altitude : Pieds\index{Pieds|TypeOcc}} \Fdef\\ \ass{mosaique}{mosaique \Override \map{coordonnees \Mapsto altitude}}
+\end{method}\index{Intersection|MethodDef}
+\begin{method}{Intersection}
+\parms{segment-de-prediction :  @SegmentDePrediction}\methvalue{\Bool } \Fdef\\ \begin{defstmt}
+\eqdef{points-de-vecteur}{\invoke{segment-de-prediction}{\index{GetPoints|MethodOcc}
+\fnapply{GetPoints}{}}}
+\end{defstmt} \\
+\If points-de-vecteur = \set{}
+\Then \\
+\return{\False }
+\Else \\
+\return{\pex{\exists{\reccons{\kw{mk-}}{xy,z} \In points-de-vecteur} \\
+{z \Le 1}}}
+\Fi
+\end{method}
+\end{methdef}
+{\small\sf end} $Terrain$
+
+\end{vdm}

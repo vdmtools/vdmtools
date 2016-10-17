@@ -1,0 +1,24 @@
+class A
+
+functions 
+
+public
+ideven : nat -> nat 
+ideven(n) == n;
+
+public
+idodd : nat -> nat 
+idodd(n) == n;
+
+public 
+even : nat -> bool
+even(x) == if x = 0 then true else odd(x-1)
+measure ideven;
+
+public 
+odd : nat -> bool
+odd(x) == if x = 0 then false else even(x-1)
+measure idodd;
+
+
+end A

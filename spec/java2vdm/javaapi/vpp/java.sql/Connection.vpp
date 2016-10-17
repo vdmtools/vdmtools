@@ -1,0 +1,116 @@
+class JavaSqlConnection is subclass of JavaLangObject
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaSqlConnection" , <INTERFACE> , false  )
+instance variables 
+  public  static TRANSACTION_NONE : int :=0;
+  public  static TRANSACTION_READ_UNCOMMITTED : int :=0;
+  public  static TRANSACTION_READ_COMMITTED : int :=0;
+  public  static TRANSACTION_REPEATABLE_READ : int :=0;
+  public  static TRANSACTION_SERIALIZABLE : int :=0 
+operations 
+public  JavaSqlConnection : <NIL> ==> JavaSqlConnection
+JavaSqlConnection(-) == 
+isNil:=true ;
+
+public  close : () ==> ()
+close() == 
+is not yet specified ;
+
+public  commit : () ==> ()
+commit() == 
+is not yet specified ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+  return  CLASS;
+
+public  isClosed : () ==> bool 
+isClosed() == 
+is not yet specified ;
+
+public  rollback : () ==> ()
+rollback() == 
+is not yet specified ;
+
+public  getCatalog : () ==> JavaLangString
+getCatalog() == 
+is not yet specified ;
+
+public  getTypeMap : () ==> JavaUtilMap
+getTypeMap() == 
+is not yet specified ;
+
+public  isReadOnly : () ==> bool 
+isReadOnly() == 
+is not yet specified ;
+
+--public  getMetaData : () ==> DatabaseMetaData
+--getMetaData() == 
+--is not yet specified;
+
+--public  getWarnings : () ==> SQLWarning
+--getWarnings() == 
+--is not yet specified;
+
+public  setReadOnly : bool  ==> ()
+setReadOnly(readOnly) == 
+is not yet specified ;
+
+public  clearWarnings : () ==> ()
+clearWarnings() == 
+is not yet specified ;
+
+public  getAutoCommit : () ==> bool 
+getAutoCommit() == 
+is not yet specified ;
+
+public  setAutoCommit : bool  ==> ()
+setAutoCommit(autoCommit) == 
+is not yet specified ;
+
+public  createStatement : () ==> JavaSqlStatement
+createStatement() == 
+is not yet specified ;
+
+--public  setTypeMap : JavaUtilMap ==> ()
+--setTypeMap(map__) == 
+--is not yet specified;
+
+public  nativeSQL : JavaLangString ==> JavaLangString
+nativeSQL(sql) == 
+is not yet specified ;
+
+public  createStatement : int  * int  ==> JavaSqlStatement
+createStatement(resultSetType, resultSetConcurrency) == 
+is not yet specified ;
+
+public  setCatalog : JavaLangString ==> ()
+setCatalog(catalog) == 
+is not yet specified ;
+
+--public  prepareCall : JavaLangString ==> CallableStatement
+--prepareCall(sql) == 
+--is not yet specified;
+
+public  getTransactionIsolation : () ==> int 
+getTransactionIsolation() == 
+is not yet specified ;
+
+--public  prepareCall : JavaLangString * int  * int  ==> CallableStatement
+--prepareCall(sql, resultSetType, resultSetConcurrency) == 
+--is not yet specified;
+
+--public  prepareStatement : JavaLangString ==> PreparedStatement
+--prepareStatement(sql) == 
+--is not yet specified;
+
+public  setTransactionIsolation : int  ==> ()
+setTransactionIsolation(level) == 
+is not yet specified ;
+
+--public  prepareStatement : JavaLangString * int  * int  ==> PreparedStatement
+--prepareStatement(sql, resultSetType, resultSetConcurrency) == 
+--is not yet specified;
+
+
+end  JavaSqlConnection

@@ -1,0 +1,44 @@
+class C
+
+instance variables
+
+i : nat := 0;
+b : bool;
+
+operations
+
+public  C: () ==> C
+  C() ==
+    i := 9;
+
+  C: nat ==> C
+  C(n) ==
+     i := n;
+
+  public
+  Get: () ==> nat
+  Get() == return i
+end C
+class D is subclass of C
+
+operations
+
+public D: nat ==> D
+D(n) ==
+  skip;
+  
+end D
+class A
+
+operations
+
+Op:() ==> nat 
+Op() ==
+  let d = new D(8) in
+   return d.Get();
+
+public Test : () ==> nat 
+Test() ==
+  Op();
+  
+end A

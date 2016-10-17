@@ -1,0 +1,17 @@
+class A
+
+types
+
+public T = (nat * nat)
+
+operations
+
+-- this matches 2 transforms; redundant dcl and redundant def expr.
+
+public Test : () ==> T
+Test () ==
+	(dcl r : T := def mk_(a,2) = mk_(1,2) in mk_(a,2);
+    	return r)
+
+   
+end A

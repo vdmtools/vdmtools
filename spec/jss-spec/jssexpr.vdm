@@ -1,0 +1,992 @@
+\section{The JSSEXPR Module}
+
+This module takes care of the static semantics for all Java
+expressions.
+
+\begin{vdm_al}
+module JSSEXPR
+
+imports
+from AS all,
+from CI all,
+from REP all,
+
+from CPP all,
+from JSSERR all,
+from JAVAERR all,
+from JSSREP all,
+from JSSDEF
+operations
+  jwf_SimpleTypeName: CPP`SimpleTypeName ==> JSSREP`TypeRep * bool;
+  jwf_MemberDeclarationList: [seq of CPP`MemberDeclaration] ==> bool,
+from JSSAUX all,
+from JSSENV
+types
+  ClassTypeInfo;
+  ParseTypeInfo  
+operations
+  SearchField: AS`Name ==> [JSSREP`TypeRep];
+  GetCurrentType: () ==> [JSSREP`ClassTypeRep | JSSREP`IntrfcTypeRep];
+  GetCurrentSuper: () ==> [JSSREP`TypeRep];
+  FindSuperType: JSSREP`TypeRep * JSSREP`TypeRep ==> JSSREP`TypeRep;
+  SearchMethod: AS`Name * seq of JSSREP`TypeRep ==> [JSSREP`TypeRep] * [seq of JSSREP`TypeRep];
+  GetLookUpType: () ==> [AS`Name] * [JSSENV`ClassTypeInfo] * [JSSENV`ParseTypeInfo];
+  GetLookUpTypeName: () ==> [AS`Name];
+  SetLookUpType: [AS`Name] * [JSSENV`ClassTypeInfo] * [JSSENV`ParseTypeInfo] ==> ();
+  ResetLookUpName: () ==> ();
+  CheckIfIsClassInEnv: JSSREP`TypeRep ==> bool;
+  CheckIfClassLookUp: JSSREP`TypeRep ==> bool
+
+exports
+operations
+  jwf_Expr: CPP`Expr ==> JSSREP`TypeRep * bool;
+  jwf_ExprList: seq of CPP`Expr ==> seq of JSSREP`TypeRep * bool;
+  jwf_ExpressionStmt: CPP`Expr ==> bool
+
+definitions
+values
+  g_StringClassTR : JSSREP`TypeRep = 
+        mk_JSSREP`ClassTypeRep(mk_AS`Name(["String"],-1));
+
+operations
+\end{vdm_al}
+
+\begin{formalparameters}
+\verb+p_expr: CPP`Expr+ & The abstract syntax tree for a Java expression.\\
+\hline
+\end{formalparameters}
+\methodresult{JSSREP`TypeRep * bool}{The result is always a pair where
+the first element is the type derived for the argument expression and
+the second is an indication whether the expression satisfy
+the requirements to be translated from Java to VDM++. As a side effect
+all operations here inserts the derived type information in the
+appropriate context identification.}
+
+\begin{vdm_al}
+jwf_Expr: CPP`Expr ==> JSSREP`TypeRep * bool
+jwf_Expr(p_e) ==
+ (dcl l_SavedClassName : [AS`Name] := nil,
+      l_SavedClassInfo : [JSSENV`ClassTypeInfo] := nil,
+      l_SavedParseInfo : [JSSENV`ParseTypeInfo] := nil;
+  def mk_(l_name,l_class,l_parse) = JSSENV`GetLookUpType()
+  in 
+   (l_SavedClassName := l_name;
+    l_SavedClassInfo := l_class;
+    l_SavedParseInfo := l_parse
+   );
+  JSSENV`ResetLookUpName();
+  
+ (dcl l_wfexpr : JSSREP`TypeRep * bool;
+  cases true:
+    (is_CPP`AssignExpr(p_e))                -> l_wfexpr := jwf_AssignExpr(p_e),
+    (is_CPP`ConditionalExpr(p_e))           -> l_wfexpr := jwf_ConditionalExpr(p_e),
+    (is_CPP`LogicalExpr(p_e))               -> l_wfexpr := jwf_LogicalExpr(p_e),
+    (is_CPP`BitExpr(p_e))                   -> l_wfexpr := jwf_BitExpr(p_e),
+    (is_CPP`EqualityExpr(p_e))              -> l_wfexpr := jwf_EqualityExpr(p_e),
+    (is_CPP`TypeCompExpr(p_e))              -> l_wfexpr := jwf_TypeCompExpr(p_e),
+    (is_CPP`RelationalExpr(p_e))            -> l_wfexpr := jwf_RelationalExpr(p_e),
+    (is_CPP`ShiftExpr(p_e))                 -> l_wfexpr := jwf_ShiftExpr(p_e),
+    (is_CPP`BinExpr(p_e))                   -> l_wfexpr := jwf_BinExpr(p_e),
+    (is_CPP`CastExpr(p_e))                  -> l_wfexpr := jwf_CastExpr(p_e),
+    (is_CPP`PreInDecrementExpr(p_e))        -> l_wfexpr := jwf_PreInDecrementExpr(p_e),
+    (is_CPP`UnaryOpExpr(p_e))               -> l_wfexpr := jwf_UnaryOpExpr(p_e),
+    (is_CPP`ExplTypeConv(p_e))              -> l_wfexpr := jwf_ExplTypeConv(p_e),
+    (is_CPP`PostFixInDecrementExpr(p_e))    -> l_wfexpr := jwf_PostFixInDecrementExpr(p_e),
+-- Name expanded
+    (is_CPP`QualifiedPackageName(p_e))      -> l_wfexpr := jwf_QualifiedPackageName(p_e),
+    (is_CPP`SimplePackageName(p_e))         -> l_wfexpr := jwf_SimplePackageName(p_e),
+    others                                  -> l_wfexpr := jwf_Primary(p_e)
+  end;
+  JSSENV`SetLookUpType(l_SavedClassName,l_SavedClassInfo,l_SavedParseInfo);
+  return l_wfexpr;
+ )
+ );
+\end{vdm_al}
+
+\subsection{Primary}
+
+\begin{vdm_al}
+jwf_Primary: CPP`Expr ==> JSSREP`TypeRep * bool
+jwf_Primary(p_e) ==
+ (dcl l_wfexpr : JSSREP`TypeRep * bool;
+  cases true:
+-- primary expanded
+   (is_CPP`This(p_e))                      -> l_wfexpr := jwf_This(p_e),
+   (is_CPP`Super(p_e))                     -> l_wfexpr := jwf_Super(p_e),
+   (is_CPP`BracketedExpr(p_e))             -> l_wfexpr := jwf_BracketedExpr(p_e),
+   (is_CPP`ClassInstanceCreationExpr(p_e)) -> l_wfexpr := jwf_ClassInstanceCreationExpr(p_e),
+   (is_CPP`ObjectMemberAccess(p_e))        -> l_wfexpr := jwf_ObjectMemberAccess(p_e),
+   (is_CPP`FctCall(p_e))                   -> l_wfexpr := jwf_FctCall(p_e),
+   (is_CPP`ArrayApply(p_e))                -> l_wfexpr := jwf_ArrayApply(p_e),
+   (is_CPP`QualifiedName(p_e))             -> l_wfexpr := jwf_QualifiedName(p_e),
+   (is_CPP`ClassExpr(p_e))                 -> l_wfexpr := jwf_ClassExpr(p_e),
+   (is_CPP`ArrayCreationExpr(p_e))         -> l_wfexpr := jwf_ArrayCreationExpr(p_e),
+   (is_CPP`ArrayInitializer(p_e))          -> l_wfexpr := mk_(mk_JSSREP`AllTypeRep(),jwf_ArrayInitializer(p_e)),
+-- literal expanded
+   (is_CPP`IntegerLit(p_e))                -> l_wfexpr := mk_(mk_JSSREP`IntTypeRep(),true),
+   (is_CPP`CharacterLit(p_e))              -> l_wfexpr := mk_(mk_JSSREP`CharTypeRep(),true),
+   (is_CPP`FloatingLit(p_e))               -> l_wfexpr := mk_(mk_JSSREP`FloatTypeRep(),true),
+   (is_CPP`StringLit(p_e))                 -> l_wfexpr := mk_(g_StringClassTR,true),
+   (is_CPP`BoolLit(p_e))                   -> l_wfexpr := mk_(mk_JSSREP`BoolTypeRep(),true),
+   (is_CPP`NullLit(p_e))                   -> l_wfexpr := mk_(mk_JSSREP`NullTypeRep(),true)
+  end;
+   --(CI`SetJSSTypeInfo(p_e.cid,l_wfexpr.#1);
+  CI`SetJSSTypeInfo(GetCid(p_e),l_wfexpr.#1);
+  return l_wfexpr;
+ );
+ 
+\end{vdm_al}
+  
+\begin{vdm_al}
+jwf_BracketedExpr: CPP`BracketedExpr ==> JSSREP`TypeRep * bool
+jwf_BracketedExpr(p_be) ==
+  def mk_(l_restr,l_ewf) = jwf_Expr(p_be.expr);
+      l_reswf = JSSENV`CheckIfClassLookUp(l_restr)
+  in
+   (CI`SetJSSTypeInfo(p_be.cid,l_restr);
+    return mk_(l_restr,l_ewf and l_reswf)
+   );
+\end{vdm_al}
+
+\subsection{Expression list}
+
+\begin{vdm_al}
+jwf_ExprList: seq of CPP`Expr ==> seq of JSSREP`TypeRep * bool
+jwf_ExprList(p_exprL) ==
+ (dcl l_reswf : bool := true,
+      l_restr : seq of JSSREP`TypeRep := [];
+  for l_expr in p_exprL 
+  do def mk_(l_tr,l_wf) = jwf_Expr(l_expr)
+     in
+      (l_reswf := JSSENV`CheckIfIsClassInEnv(l_tr)and l_wf and l_reswf;
+       let l_tr' = if is_JSSREP`FieldTypeRep(l_tr)
+                   then l_tr 
+                   else mk_JSSREP`FieldTypeRep(l_tr,0)
+       in
+         (l_restr := l_restr ^ [l_tr'];
+          --CI`SetJSSTypeInfo(l_expr.cid,l_tr')
+          CI`SetJSSTypeInfo(GetCid(l_expr),l_tr')
+         )
+      );
+  return mk_(l_restr,l_reswf)
+ );
+
+SetTypeIntoArgs: seq of CPP`Expr * seq of JSSREP`TypeRep ==> ()
+SetTypeIntoArgs(p_exprL,p_sigL) ==
+  for i=1 to len p_exprL
+  do 
+    --CI`SetJSSTypeInfo(p_exprL(i).cid,p_sigL(i));
+    CI`SetJSSTypeInfo(GetCid(p_exprL(i)),p_sigL(i));
+
+\end{vdm_al}
+
+\begin{vdm_al}
+jwf_ExpressionStmt: CPP`Expr ==> bool
+jwf_ExpressionStmt(p_es) == 
+ (dcl l_wfes : JSSREP`TypeRep * bool;
+  JSSENV`ResetLookUpName();
+  cases true:
+   (is_CPP`AssignExpr(p_es))                -> l_wfes := jwf_AssignExpr(p_es),
+   (is_CPP`PreInDecrementExpr(p_es))        -> l_wfes := jwf_PreInDecrementExpr(p_es),
+   (is_CPP`PostFixInDecrementExpr(p_es))    -> l_wfes := jwf_PostFixInDecrementExpr(p_es),
+   (is_CPP`FctCall(p_es))                   -> l_wfes := jwf_FctCall(p_es),
+   (is_CPP`ClassInstanceCreationExpr(p_es)) -> l_wfes := jwf_ClassInstanceCreationExpr(p_es),
+   (is_CPP`ThrowExpression(p_es))           -> l_wfes := jwf_ThrowExpression(p_es)
+  end;
+  return l_wfes.#2
+ );
+\end{vdm_al}
+
+\subsection{The FctCall Expression}
+
+\begin{vdm_al}
+jwf_FctCall: CPP`FctCall ==> JSSREP`TypeRep * bool
+jwf_FctCall(p_fc) == 
+  def mk_(l_argtpL,l_argwf) = jwf_ExprList(p_fc.arg);
+      mk_(l_fcttp,l_sigL,l_fctwf) = jwf_Function(p_fc.fct,l_argtpL);
+      l_trwf = JSSENV`CheckIfIsClassInEnv(l_fcttp);
+      l_reswf = l_fctwf and l_argwf and l_trwf
+  in
+   (CI`SetJSSTypeInfo(p_fc.cid,l_fcttp);
+    if l_reswf
+    then SetTypeIntoArgs(p_fc.arg,l_sigL);
+    return mk_(l_fcttp,l_reswf)
+   );
+\end{vdm_al}
+
+
+\begin{vdm_al}
+jwf_Function: CPP`Expr * seq of JSSREP`TypeRep 
+          ==> JSSREP`TypeRep * [seq of JSSREP`TypeRep] * bool
+jwf_Function(p_fct,p_trs) == 
+  if is_CPP`QualifiedPackageName(p_fct)
+  then return jwf_FunctionQPN(p_fct,p_trs)
+  elseif is_CPP`SimplePackageName(p_fct)
+  then return jwf_FunctionSPN(p_fct,p_trs)
+  elseif is_CPP`QualifiedName(p_fct)
+  then return jwf_FunctionQN(p_fct,p_trs)
+  else return mk_(mk_JSSREP`AllTypeRep(),nil,false);
+
+jwf_FunctionQPN: CPP`QualifiedPackageName * seq of JSSREP`TypeRep
+             ==> JSSREP`TypeRep * [seq of JSSREP`TypeRep] * bool
+jwf_FunctionQPN(p_qpn,p_trs) == 
+ (dcl l_qpnwf : bool := true,
+      l_qpntr : JSSREP`TypeRep,
+      l_wf : bool;
+  if is_CPP`QualifiedPackageName(p_qpn.pn)
+  then
+    def mk_(tr,wf) = jwf_QualifiedPackageName(p_qpn.pn)
+    in
+     (l_qpntr := tr;
+      l_wf    := wf)
+  else
+    def mk_(tr,wf) = jwf_SimplePackageName(p_qpn.pn)
+    in
+     (l_qpntr := tr;
+      l_wf    := wf);
+  def l_i2n = JSSAUX`Identifier2Name(p_qpn.id);
+      mk_(l_fcttr,l_sigL) = JSSENV`SearchMethod(l_i2n,p_trs);
+      l_restr = if l_fcttr = nil
+                then mk_JSSREP`AllTypeRep()
+                else l_fcttr
+  in
+   (l_qpnwf := l_qpnwf and l_wf;
+    if l_fcttr = nil
+    then
+      ------------------------------------------
+      -- Error message #17
+      -- The Method "%1" was not found in class "%2" or supers
+      ------------------------------------------
+     (let l_cn = JSSAUX`ExtractTypeName(l_qpntr)
+      in 
+        --JSSERR`GenErr(p_qpn.id.cid,<ERROR>,17, [JSSAUX`PrintName(l_i2n),JSSAUX`PrintName(l_cn)]);
+        JSSERR`GenErr(GetCid(p_qpn.id),<ERROR>,17, [JSSAUX`PrintName(l_i2n),JSSAUX`PrintName(l_cn)]);
+      l_qpnwf := false
+     )
+    else l_qpnwf := JSSENV`CheckIfClassLookUp(l_restr);
+    CI`SetJSSTypeInfo(p_qpn.cid,l_restr);
+    --CI`SetJSSTypeInfo(p_qpn.id.cid,l_restr);
+    CI`SetJSSTypeInfo(GetCid(p_qpn.id),l_restr);
+    return mk_(l_restr,l_sigL,l_qpnwf)
+   )
+ );
+
+jwf_FunctionSPN: CPP`SimplePackageName * seq of JSSREP`TypeRep
+             ==> JSSREP`TypeRep * [seq of JSSREP`TypeRep] * bool
+jwf_FunctionSPN(p_spn,p_trs) == 
+ (dcl l_wffspn : bool := true;
+  def l_i2n = JSSAUX`Identifier2Name(p_spn.id);
+      mk_(l_fcttr,l_sigL) = JSSENV`SearchMethod(l_i2n,p_trs);
+      l_restr = if l_fcttr = nil
+                then mk_JSSREP`AllTypeRep()
+                else l_fcttr
+  in
+   (if l_fcttr = nil
+    then
+      ------------------------------------------
+      -- Error message #17
+      -- The Method "%1" was not found in class "%2" or supers
+      ------------------------------------------
+     (JSSERR`GenErr(p_spn.id.cid,<ERROR>,17,
+                      [JSSAUX`PrintName(l_i2n),
+                       JSSAUX`PrintName(JSSENV`GetLookUpTypeName())]);
+      l_wffspn := false
+     )
+    else l_wffspn := JSSENV`CheckIfIsClassInEnv(l_restr);
+    CI`SetJSSTypeInfo(p_spn.cid,l_restr);
+    CI`SetJSSTypeInfo(p_spn.id.cid,l_restr);
+    return mk_(l_restr,l_sigL,l_wffspn)
+   )
+ );
+
+jwf_FunctionQN: CPP`QualifiedName * seq of JSSREP`TypeRep
+            ==> JSSREP`TypeRep * [seq of JSSREP`TypeRep] * bool
+jwf_FunctionQN(p_qn,p_trs) == 
+ (dcl l_qnwf : bool := true;
+  def l_qcn = p_qn.qcn;
+      l_id = p_qn.id;
+      mk_(l_prmrtr,l_prmrwf) = jwf_Primary(l_qcn);
+      l_i2n = JSSAUX`Identifier2Name(l_id);
+      l_isClass = JSSENV`CheckIfClassLookUp(l_prmrtr);
+      mk_(l_fcttr,l_sigL) = JSSENV`SearchMethod(l_i2n,p_trs);
+      l_restr = if l_fcttr = nil
+                then mk_JSSREP`AllTypeRep()
+                else l_fcttr
+   in 
+    (l_qnwf := l_isClass and l_prmrwf;
+     if l_fcttr = nil
+     then
+       ------------------------------------------
+       -- Error message #17
+       -- The Method "%1" was not found in class "%2" or supers
+       ------------------------------------------
+      (let l_cn = JSSAUX`ExtractTypeName(l_prmrtr)
+       --in JSSERR`GenErr(l_id.cid,<ERROR>,17, [JSSAUX`PrintName(l_i2n),JSSAUX`PrintName(l_cn)]);
+       in JSSERR`GenErr(GetCid(l_id),<ERROR>,17, [JSSAUX`PrintName(l_i2n),JSSAUX`PrintName(l_cn)]);
+       l_qnwf := false)
+     else l_qnwf := JSSENV`CheckIfClassLookUp(l_restr) and l_qnwf;
+     CI`SetJSSTypeInfo(p_qn.cid,l_restr);
+     --CI`SetJSSTypeInfo(l_id.cid,l_restr);
+     CI`SetJSSTypeInfo(GetCid(l_id),l_restr);
+     return mk_(l_restr,l_sigL,l_qnwf)
+    )
+ );
+\end{vdm_al}
+
+
+\subsection{The Assign Expression}
+
+\begin{formalparameters}
+\verb+p_expr: CPP`AssignExpr+ & The abstract syntax tree for a Java
+assign expression.\\
+\hline
+\end{formalparameters}
+\methodresult{bool}{Indication whether the assign expression satisfy
+the requirements to be translated from Java to VDM++.}
+
+\begin{vdm_al}
+jwf_AssignExpr: CPP`AssignExpr ==> JSSREP`TypeRep * bool
+jwf_AssignExpr(p_expr) ==
+  def l_lhswf = jwf_Expr(p_expr.unary).#2;
+      l_opwf  = jwf_AssignOp(p_expr.assignop);
+      mk_(l_restr,l_rhswf) = jwf_Expr(p_expr.assignexpr);
+      l_trwf = JSSENV`CheckIfIsClassInEnv(l_restr)
+  in
+   (CI`SetJSSTypeInfo(p_expr.cid,l_restr);
+    return mk_(l_restr,l_lhswf and l_opwf and l_rhswf and l_trwf)
+   );
+\end{vdm_al}
+
+Limitations we may need to make with assign expressions will be
+present here.
+
+\begin{vdm_al}
+jwf_AssignOp: CPP`AssignOp ==> bool
+jwf_AssignOp(-) ==
+  return true;
+--  is not yet specified;
+\end{vdm_al}
+
+\subsection{The Conditional Expression}
+
+\begin{vdm_al}
+jwf_ConditionalExpr: CPP`ConditionalExpr ==> JSSREP`TypeRep * bool
+jwf_ConditionalExpr(p_expr) ==
+  def l_condwf  = jwf_Expr(p_expr.cond).#2;
+      mk_(l_tr1,l_expr1wf) = jwf_Expr(p_expr.expr1);
+      mk_(l_tr2,l_expr2wf) = jwf_Expr(p_expr.expr2);
+      l_restr = JSSENV`FindSuperType(l_tr1,l_tr2);
+      l_trwf = JSSENV`CheckIfIsClassInEnv(l_restr)
+  in
+   (CI`SetJSSTypeInfo(p_expr.cid,l_restr);
+    return mk_(l_restr,l_condwf and l_expr1wf and l_expr2wf and l_trwf)
+   );
+\end{vdm_al}
+
+\subsection{The Logical Expression}
+
+\begin{vdm_al}
+jwf_LogicalExpr: CPP`LogicalExpr ==> JSSREP`TypeRep * bool
+jwf_LogicalExpr(p_expr) ==
+  def l_rhswf = jwf_Expr(p_expr.right).#2;
+      l_lhswf = jwf_Expr(p_expr.left).#2;
+      l_restr = mk_JSSREP`BoolTypeRep()
+  in
+   (CI`SetJSSTypeInfo(p_expr.cid,l_restr);
+    return mk_(l_restr,l_rhswf and l_lhswf)
+   );
+\end{vdm_al}
+
+\subsection{The Bit Expression}
+
+Possibly limitation wrt operator.
+
+\begin{vdm_al}
+jwf_BitExpr: CPP`BitExpr ==> JSSREP`TypeRep * bool
+jwf_BitExpr(p_expr) ==
+  def mk_(l_rhstr,l_rhswf) = jwf_Expr(p_expr.right);
+      mk_(l_lhstr,l_lhswf) = jwf_Expr(p_expr.left);
+      l_restr = if JSSAUX`ExtractType(l_rhstr) = JSSAUX`ExtractType(l_lhstr)
+                and JSSAUX`ExtractType(l_rhstr) = mk_JSSREP`BoolTypeRep()
+                then mk_JSSREP`BoolTypeRep()
+                else mk_JSSREP`IntTypeRep()
+  in
+   (CI`SetJSSTypeInfo(p_expr.cid,l_restr);
+    return mk_(l_restr, l_rhswf and l_lhswf)
+   );
+\end{vdm_al}
+
+\subsection{The Equality Expression}
+
+\begin{vdm_al}
+jwf_EqualityExpr: CPP`EqualityExpr ==> JSSREP`TypeRep * bool
+jwf_EqualityExpr(p_expr) ==
+  def l_rhswf = jwf_Expr(p_expr.right).#2;
+      l_lhswf = jwf_Expr(p_expr.left).#2;
+      l_restr = mk_JSSREP`BoolTypeRep()
+  in
+   (CI`SetJSSTypeInfo(p_expr.cid,l_restr);
+    return mk_(l_restr,l_rhswf and l_lhswf)
+   );
+\end{vdm_al}
+
+\subsection{The TypeComp Expression}
+
+\begin{vdm_al}
+jwf_TypeCompExpr: CPP`TypeCompExpr ==> JSSREP`TypeRep * bool
+jwf_TypeCompExpr(p_expr) ==
+ (dcl l_rhswfT : JSSREP`TypeRep * bool;
+  if is_CPP`TypeName(p_expr.right)
+  then l_rhswfT := jwf_TypeName(p_expr.right)
+  else l_rhswfT := jwf_Expr(p_expr.right);
+  def l_rhswf = l_rhswfT.#2;
+      l_lhswfT = jwf_Expr(p_expr.left);
+      l_lhswf = l_lhswfT.#2;
+      l_restr = mk_JSSREP`BoolTypeRep()
+  in
+   (CI`SetJSSTypeInfo(p_expr.cid,l_restr);
+    return mk_(l_restr,l_rhswf and l_lhswf)
+   );
+ );
+\end{vdm_al}
+
+\subsection{The Relational Expression}
+
+\begin{vdm_al}
+jwf_RelationalExpr: CPP`RelationalExpr ==> JSSREP`TypeRep * bool
+jwf_RelationalExpr(p_expr) ==
+  def l_rhswf = jwf_Expr(p_expr.right).#2;
+      l_lhswf = jwf_Expr(p_expr.left).#2;
+      l_restr = mk_JSSREP`BoolTypeRep()
+  in
+   (CI`SetJSSTypeInfo(p_expr.cid,l_restr);
+    return mk_(l_restr,l_rhswf and l_lhswf)
+   );
+\end{vdm_al}
+
+\subsection{The Shift Expression}
+
+\begin{vdm_al}
+jwf_ShiftExpr: CPP`ShiftExpr ==> JSSREP`TypeRep * bool
+jwf_ShiftExpr(p_expr) ==
+  def l_rhswf = jwf_Expr(p_expr.right).#2;
+      mk_(l_tp,l_lhswf) = jwf_Expr(p_expr.left)
+  in
+   (CI`SetJSSTypeInfo(p_expr.cid,l_tp);
+    return mk_(l_tp,l_rhswf and l_lhswf)
+   );
+\end{vdm_al}
+
+\subsection{The Bin Expression}
+
+\begin{vdm_al}
+jwf_BinExpr: CPP`BinExpr ==> JSSREP`TypeRep * bool
+jwf_BinExpr(p_expr) == 
+ (dcl l_restr : JSSREP`TypeRep := mk_JSSREP`LongTypeRep();
+  def mk_(l_rhtr,l_rhswf) = jwf_Expr(p_expr.right);
+      mk_(l_lhtr,l_lhswf) = jwf_Expr(p_expr.left)
+  in
+   (if p_expr.binop.op = <PLUS>
+    then
+      if (JSSAUX`ExtractType(l_rhtr) = g_StringClassTR) 
+      or (JSSAUX`ExtractType(l_lhtr) = g_StringClassTR)
+      then l_restr := mk_JSSREP`FieldTypeRep(g_StringClassTR,0);
+    CI`SetJSSTypeInfo(p_expr.cid,l_restr);
+    def l_trwf = JSSENV`CheckIfIsClassInEnv(l_restr)
+    in
+      return mk_(l_restr,l_rhswf and l_lhswf and l_trwf)
+   )
+ );
+\end{vdm_al}
+
+\subsection{The Cast Expression}
+
+Any limitations on the actual type name?
+
+\begin{vdm_al}
+jwf_CastExpr: CPP`CastExpr ==> JSSREP`TypeRep * bool
+jwf_CastExpr(p_expr) ==
+  def l_tpnm = p_expr.typenm;
+  in
+   (dcl l_restr : JSSREP`TypeRep,
+        l_wftpnm : bool;
+    if is_CPP`TypeName(l_tpnm)
+    then
+      def mk_(tr,wf) = jwf_TypeName(l_tpnm)
+      in
+       (l_restr := tr;
+        l_wftpnm := wf)
+    else
+      def mk_(tr,wf) = jwf_Expr(l_tpnm)
+      in
+       (l_restr := tr;
+        l_wftpnm := wf);
+    def l_trwf = JSSENV`CheckIfIsClassInEnv(l_restr);
+       l_exprwf = jwf_Expr(p_expr.expr).#2
+    in
+     (CI`SetJSSTypeInfo(p_expr.cid,l_restr);
+      return mk_(l_restr,l_wftpnm and l_exprwf and l_trwf)
+     );
+   );
+
+jwf_TypeName: CPP`TypeName ==> JSSREP`TypeRep * bool
+jwf_TypeName(p_tn) == 
+ (dcl l_aads : [CPP`ArrayAbsDecl] := p_tn.ad,
+      l_array : nat := 0,
+      l_wftr : bool := true;
+  def l_ts = p_tn.tsp(1);
+      mk_(l_restr,l_wfts) = JSSDEF`jwf_SimpleTypeName(l_ts.tp)
+  in
+   (l_wftr := JSSENV`CheckIfClassLookUp(l_restr);
+    while l_aads <> nil 
+    do
+     (l_array := l_array+1;
+      l_aads := l_aads.ad
+     );
+    return mk_(mk_JSSREP`FieldTypeRep(l_restr,l_array),l_wfts and l_wftr)
+   )
+ );
+\end{vdm_al}
+
+\subsection{The PreInDecrement Expression}
+
+\begin{vdm_al}
+jwf_PreInDecrementExpr: CPP`PreInDecrementExpr ==> JSSREP`TypeRep * bool
+jwf_PreInDecrementExpr(p_expr) ==
+  def mk_(l_restr,l_wf) = jwf_Expr(p_expr.expr)
+  in
+   (CI`SetJSSTypeInfo(p_expr.cid,l_restr);
+    return mk_(l_restr,l_wf)
+   );
+\end{vdm_al}
+
+\subsection{The UnaryOp Expression}
+
+Possibly a limitation for the unary operators to be supported.
+
+\begin{vdm_al}
+jwf_UnaryOpExpr: CPP`UnaryOpExpr ==> JSSREP`TypeRep * bool
+jwf_UnaryOpExpr(p_expr) ==
+  def mk_(l_restr,l_exprwf) = jwf_Expr(p_expr.expr)
+  in
+   (CI`SetJSSTypeInfo(p_expr.cid,l_restr);
+    return mk_(l_restr,l_exprwf)
+   );
+\end{vdm_al}
+
+\subsection{The This Expression}
+
+\begin{vdm_al}
+jwf_This: CPP`This ==> JSSREP`TypeRep * bool
+jwf_This(p_expr) ==
+  def l_restr = JSSENV`GetCurrentType()
+  in
+   (CI`SetJSSTypeInfo(p_expr.cid,l_restr);
+    return mk_(l_restr,true)
+   );
+\end{vdm_al}
+
+\subsection{The Super Expression}
+
+\begin{vdm_al}
+jwf_Super: CPP`Super ==> JSSREP`TypeRep * bool
+jwf_Super(p_expr) ==
+  def l_restr = JSSENV`GetCurrentSuper()
+  in
+   (CI`SetJSSTypeInfo(p_expr.cid,l_restr);
+    if l_restr = nil
+    then return mk_(l_restr,false)
+    else return mk_(l_restr,JSSENV`CheckIfIsClassInEnv(l_restr))
+   );
+\end{vdm_al}
+
+\subsection{The ArrayApply Expression}
+
+  PackageName OSB expression CSB
+  primary\_no\_new\_array OSB expression CSB
+
+\begin{vdm_al}
+jwf_ArrayApply: CPP`ArrayApply ==> JSSREP`TypeRep * bool
+jwf_ArrayApply(p_expr) ==
+ (dcl trwf : JSSREP`TypeRep * bool;
+  if is_CPP`ArrayApply(p_expr.array)
+  then trwf := jwf_ArrayApply(p_expr.array)
+  else
+   (if is_CPP`SimplePackageName(p_expr.array)
+    then trwf := jwf_SimplePackageName(p_expr.array)
+    elseif is_CPP`QualifiedPackageName(p_expr.array)
+    then trwf := jwf_QualifiedPackageName(p_expr.array)
+    else trwf := jwf_Primary(p_expr.array));
+  def mk_(l_arraytr,l_arraywf) = trwf;
+      l_argwf = jwf_Expr(p_expr.arg).#2;
+      l_restr : JSSREP`FieldTypeRep 
+              = mk_JSSREP`FieldTypeRep(l_arraytr.type,l_arraytr.array-1);
+      l_trwf = JSSENV`CheckIfIsClassInEnv(l_restr)
+  in
+   (CI`SetJSSTypeInfo(p_expr.cid,l_restr);
+    return mk_(l_restr,l_arraywf and l_argwf and l_trwf)
+   )
+ )
+post RESULT.#1.array >= 0;
+\end{vdm_al}
+
+\subsection{The ExplTypeConv Expression}
+
+The type derivation must be defined here!!!
+
+\begin{vdm_al}
+jwf_ExplTypeConv: CPP`ExplTypeConv ==> JSSREP`TypeRep * bool
+jwf_ExplTypeConv(p_expr) ==
+  def mk_(l_restr,l_stnwf) = JSSDEF`jwf_SimpleTypeName(p_expr.stn);
+      l_argwf = jwf_ExprList(p_expr.arg).#2;
+      l_trwf = JSSENV`CheckIfIsClassInEnv(l_restr)
+  in
+   (CI`SetJSSTypeInfo(p_expr.cid,l_restr);
+    return mk_(l_restr,l_stnwf and l_argwf and l_trwf)
+   );
+\end{vdm_al}
+
+\subsection{The PostFixInDecrement Expression}
+
+The type derivation must be defined here!!!
+
+\begin{vdm_al}
+jwf_PostFixInDecrementExpr: CPP`PostFixInDecrementExpr ==>
+                            JSSREP`TypeRep * bool
+jwf_PostFixInDecrementExpr(p_expr) ==
+  def l_wf = jwf_Expr(p_expr.expr).#2;
+      l_restr = mk_JSSREP`FloatTypeRep()
+  in
+   (CI`SetJSSTypeInfo(p_expr.cid,l_restr);
+    return mk_(l_restr,l_wf)
+   );
+\end{vdm_al}
+
+\subsection{The Throw Expression}
+
+Do we have limitations about where an exception can be thrown?
+
+The type derivation must be defined here!!!
+
+\begin{vdm_al}
+jwf_ThrowExpression: CPP`ThrowExpression ==> JSSREP`TypeRep * bool
+jwf_ThrowExpression(p_expr) ==
+ (dcl trwf : JSSREP`TypeRep * bool := mk_(mk_JSSREP`AllTypeRep(),true); -- ??
+  if p_expr.expr <> nil
+  then trwf := jwf_Expr(p_expr.expr);
+  def mk_(l_restr,l_exprwf) = trwf;
+      l_trwf = JSSENV`CheckIfIsClassInEnv(l_restr)
+  in
+   (CI`SetJSSTypeInfo(p_expr.cid,l_restr);
+    return mk_(l_restr,l_exprwf and l_trwf)
+   );
+ );
+\end{vdm_al}
+
+\subsection{The ClassInstanceCreation Expression}
+
+Would there be any further restriction for the allowed member
+declarations here?
+
+\begin{vdm_al}
+jwf_ClassInstanceCreationExpr: CPP`ClassInstanceCreationExpr ==> JSSREP`TypeRep * bool
+jwf_ClassInstanceCreationExpr(p_expr) ==
+ (dcl --l_restr : [JSSREP`TypeRep] := nil,
+      l_reswf : bool := true;
+  def l_classtype = p_expr.classtype;
+      l_somethingDotNew = p_expr.somethingDotNew;
+      l_ct2n = if is_CPP`Identifier(l_classtype) 
+               then JSSAUX`Identifier2Name(l_classtype)
+--               else JSSAUX`PackageName2Name(l_classtype), -- QualifiedName ??
+               else
+                 def nm_l = JSSAUX`PackageName2SeqOfName(l_classtype)
+                 in nm_l(len nm_l);
+      l_stdnwf = if l_somethingDotNew = nil
+                 then true
+                 else jwf_Primary(l_somethingDotNew).#2;
+      mk_(l_argtpL,l_argwf) = jwf_ExprList(p_expr.arg);
+      l_memwf = JSSDEF`jwf_MemberDeclarationList(p_expr.ml);
+      l_type = mk_JSSREP`ClassTypeRep(l_ct2n);
+      l_clswf = JSSENV`CheckIfClassLookUp(l_type);
+      mk_(l_contr,l_sigL) = if len l_argtpL = 0
+                            then mk_(l_type,[])
+                            else JSSENV`SearchMethod(l_ct2n,l_argtpL);
+      l_restr = if l_contr = nil
+                then mk_JSSREP`AllTypeRep()
+                else l_contr
+  in
+   (l_reswf := l_clswf;
+    if l_contr = nil
+    then
+      ------------------------------------------
+      -- Error message #9
+      -- The Constructor "%1" was not found
+      ------------------------------------------
+     (JSSERR`GenErr(l_classtype.cid,<ERROR>,9,[JSSAUX`PrintName(l_ct2n)]);
+      l_reswf := false
+     )
+    else
+      SetTypeIntoArgs(p_expr.arg,l_sigL);
+    CI`SetJSSTypeInfo(p_expr.cid,l_restr);
+    CI`SetJSSTypeInfo(p_expr.classtype.cid,l_restr);
+    return mk_(l_restr,l_reswf and l_stdnwf and l_argwf and l_memwf)
+   )
+ );
+\end{vdm_al}
+
+\subsection{The Class Expression}
+
+\begin{vdm_al}
+jwf_ClassExpr: CPP`ClassExpr ==> JSSREP`TypeRep * bool
+jwf_ClassExpr(p_expr) ==
+  def mk_(l_restr,l_stnwf) = JSSDEF`jwf_SimpleTypeName(p_expr.operand);
+      l_trwf = JSSENV`CheckIfIsClassInEnv(l_restr)
+  in
+    return mk_(l_restr,l_stnwf and l_trwf);
+\end{vdm_al}
+
+\subsection{The ObjectMemberAccess Expression}
+
+\begin{vdm_al}
+jwf_ObjectMemberAccess: CPP`ObjectMemberAccess ==> JSSREP`TypeRep * bool
+jwf_ObjectMemberAccess(p_expr) ==
+ (dcl l_restr : [JSSREP`TypeRep] := nil,
+      l_wftr : bool := true;
+  def l_obj = p_expr.object;
+      mk_(l_objtr,l_objwf) = if is_CPP`QualifiedPackageName(l_obj) 
+                             then jwf_QualifiedPackageName(l_obj)
+                             elseif is_CPP`Super(l_obj)
+                             then jwf_Super(l_obj)
+                             else jwf_Primary(l_obj);
+      l_name = p_expr.name;
+      l_namewf = true; -- jwf_Identifier(l_name).#2,
+      l_i2n = JSSAUX`Identifier2Name(l_name)
+  in
+   (l_wftr := JSSENV`CheckIfClassLookUp(l_objtr);
+    l_restr := JSSENV`SearchField(l_i2n);
+    if l_restr = nil
+    then
+     (if is_JSSREP`FieldTypeRep(l_objtr)
+        and (l_objtr.array > 0)
+        and (l_i2n.ids = ["length"])
+      then
+        l_restr := mk_JSSREP`FieldTypeRep(mk_JSSREP`IntTypeRep(),0)
+      else
+        ------------------------------------------
+        -- Error message #7
+        -- The Identifier "%1" was not found
+        ------------------------------------------
+       --(JSSERR`GenErr(l_name.cid,<ERROR>,7,[JSSAUX`PrintName(l_i2n)]);
+       (JSSERR`GenErr(GetCid(l_name),<ERROR>,7,[JSSAUX`PrintName(l_i2n)]);
+        l_restr := mk_JSSREP`AllTypeRep();
+        l_wftr := false)
+     )
+    else l_wftr := JSSENV`CheckIfClassLookUp(l_restr);
+    CI`SetJSSTypeInfo(p_expr.cid,l_restr);
+    --CI`SetJSSTypeInfo(l_name.cid,l_restr);
+    CI`SetJSSTypeInfo(GetCid(l_name),l_restr);
+    return mk_(l_restr,l_objwf and l_namewf and l_wftr)
+   )
+ )
+post RESULT.#1 <> nil;
+\end{vdm_al}
+
+\subsection{The Create Array Expression}
+
+\begin{vdm_al}
+jwf_ArrayCreationExpr: CPP`ArrayCreationExpr ==> JSSREP`TypeRep * bool
+jwf_ArrayCreationExpr(p_ace) ==
+  def mk_(l_typetr,l_typewf) = JSSDEF`jwf_SimpleTypeName(p_ace.type);
+      mk_(l_de,l_dewf) = jwf_dimExpr(p_ace.dimExpr);
+      l_d = jwf_dim(p_ace.dim);
+      l_aiwf = if p_ace.arrayInit = nil
+               then true
+	             else jwf_ArrayInitializer(p_ace.arrayInit);
+	    l_trwf = JSSENV`CheckIfIsClassInEnv(l_typetr);
+	    l_restr = mk_JSSREP`FieldTypeRep(l_typetr,l_de + l_d)
+  in 
+   (
+    CI`SetJSSTypeInfo(p_ace.cid,l_restr);
+    return mk_(l_restr,l_typewf and l_dewf and l_aiwf and l_trwf)
+   );
+
+jwf_dimExpr: [CPP`ArrayNewDecl] ==> nat * bool
+jwf_dimExpr(p_and) ==
+ (dcl l_andwf : bool := true,
+      l_and : [CPP`ArrayNewDecl] := p_and,
+      l_dim : nat := 0;
+  if p_and <> nil
+  then
+   (while is_CPP`ArrayNewDecl(l_and.newdecl)
+    do
+     (l_dim := l_dim +1;
+      def mk_(l_tr,l_wf) = jwf_Expr(l_and.expr)
+      in
+       (CI`SetJSSTypeInfo(l_and.cid,l_tr);
+        l_andwf := l_wf and l_andwf;
+        l_and := l_and.newdecl)
+     );
+    l_dim := l_dim +1;
+    def mk_(l_tr,l_wf) = jwf_Expr(l_and.expr)
+    in
+     (CI`SetJSSTypeInfo(l_and.cid,l_tr);
+      l_andwf := l_wf and l_andwf)
+   );
+  return mk_(l_dim,l_andwf)
+ );
+
+jwf_dim: [CPP`ArrayNewDecl] ==> nat
+jwf_dim(p_and) ==
+ (dcl l_and : [CPP`ArrayNewDecl] := p_and,
+      l_dim : nat := 0;
+  if p_and <> nil
+  then
+   (while is_CPP`ArrayNewDecl(l_and.newdecl)
+    do
+     (l_dim := l_dim +1;
+      l_and := l_and.newdecl);
+    l_dim := l_dim +1
+   );
+  return l_dim
+ );
+\end{vdm_al}
+
+\subsection{The ArrayInitializer Expression}
+
+JR must be removed
+  ArrayInitializer ::
+    vi  : [seq of (Expr | ArrayInitializer)]
+
+\begin{vdm_al}
+jwf_ArrayInitializer: [CPP`ArrayInitializer] ==> bool
+jwf_ArrayInitializer(p_aiL) ==
+ (dcl l_aiwf : bool := true;
+  if p_aiL <> nil and p_aiL.vi <> nil
+  then 
+    for l_ai in p_aiL.vi 
+    do if is_CPP`ArrayInitializer(l_ai)
+       then l_aiwf := jwf_ArrayInitializer(l_ai) and l_aiwf
+       else
+         def mk_(l_tr,l_wf) = jwf_Expr(l_ai)
+         in 
+          (l_aiwf := l_wf and l_aiwf;
+           --CI`SetJSSTypeInfo(l_ai.cid,l_tr)
+           CI`SetJSSTypeInfo(GetCid(l_ai),l_tr)
+          );
+  return l_aiwf
+ ); 
+\end{vdm_al}
+
+\subsection{The QualifiedName Expression}
+
+used in: explicit constructor invocation and function call
+
+The type derivation must be defined here!!!
+
+\begin{vdm_al}
+jwf_QualifiedName: CPP`QualifiedName ==> JSSREP`TypeRep * bool
+jwf_QualifiedName(p_expr) ==
+  def mk_(l_qcntr,l_qcnwf)  = jwf_Expr(p_expr.qcn);
+      mk_(l_idtr,l_namewf)  = jwf_Expr(p_expr.id);
+      l_restr = CombineQualifiedNameTypes(l_qcntr,l_idtr);
+      l_trwf = JSSENV`CheckIfIsClassInEnv(l_restr)
+  in
+   (CI`SetJSSTypeInfo(p_expr.cid,l_restr);
+    return mk_(l_restr,l_qcnwf and l_namewf and l_trwf)
+   );
+
+CombineQualifiedNameTypes: JSSREP`TypeRep * JSSREP`TypeRep ==>
+                           JSSREP`TypeRep
+CombineQualifiedNameTypes(-,p_idtp) ==
+ -- is not yet specified;
+  return p_idtp;
+\end{vdm_al}
+
+\subsection{The Name Expression}
+
+used as: PackageName or QualifiedName
+
+The type derivation must be defined here!!!
+
+\begin{vdm_al}
+jwf_QualifiedPackageName: CPP`QualifiedPackageName ==> JSSREP`TypeRep * bool
+jwf_QualifiedPackageName(p_qpn) == 
+ (dcl l_restr : [JSSREP`TypeRep] := nil,
+      l_wfqpn : bool := true;
+  def l_pn = p_qpn.pn;
+--      mk_(l_tr,l_wf) = if is_CPP`QualifiedPackageName(l_pn)
+--                       then jwf_QualifiedPackageName(l_pn)
+--                       else jwf_SimplePackageName(l_pn);
+      mk_(l_tr,l_wf) = if JSSENV`SearchField(JSSAUX`PackageName2Name(p_qpn)) <> nil
+                       then mk_(mk_JSSREP`AllTypeRep(), true)
+                       else
+                         if is_CPP`QualifiedPackageName(l_pn)
+                         then jwf_QualifiedPackageName(l_pn)
+                         else jwf_SimplePackageName(l_pn);
+      l_id = p_qpn.id;
+      l_i2n = JSSAUX`Identifier2Name(l_id)
+  in 
+   (l_wfqpn := l_wf and l_wfqpn;
+    l_restr := JSSENV`SearchField(l_i2n);
+    if l_restr = nil
+    then
+     (if is_JSSREP`FieldTypeRep(l_tr)
+         and (l_tr.array > 0)
+         and (l_i2n.ids = ["length"])
+      then l_restr := mk_JSSREP`FieldTypeRep(mk_JSSREP`IntTypeRep(),0)
+      else 
+        ------------------------------------------
+        -- Error message #7
+        -- The Identifier "%1" was not found
+        ------------------------------------------
+       (JSSERR`GenErr(l_id.cid,<ERROR>,7,[JSSAUX`PrintName(l_i2n)]);
+        l_restr := mk_JSSREP`AllTypeRep();
+        l_wfqpn := false)
+     )
+    else l_wfqpn := JSSENV`CheckIfClassLookUp(l_restr)
+  );
+  CI`SetJSSTypeInfo(p_qpn.cid,l_restr);
+  CI`SetJSSTypeInfo(p_qpn.id.cid,l_restr);
+  return mk_(l_restr,l_wfqpn)
+ )
+post RESULT.#1 <> nil;
+
+jwf_SimplePackageName: CPP`SimplePackageName ==> JSSREP`TypeRep * bool
+jwf_SimplePackageName(p_spn) == 
+ (dcl l_restr : [JSSREP`TypeRep] := nil,
+      l_wfspn : bool := true;
+  def l_id = p_spn.id;
+      l_i2n = JSSAUX`Identifier2Name(l_id)
+  in
+   (l_restr := JSSENV`SearchField(l_i2n);
+    if l_restr = nil
+    then
+      ------------------------------------------
+      -- Error message #7
+      -- The Identifier "%1" was not found
+      ------------------------------------------
+     (JSSERR`GenErr(l_id.cid,<ERROR>,7,[JSSAUX`PrintName(l_i2n)]);
+      l_restr := mk_JSSREP`AllTypeRep();
+      l_wfspn := false
+     )
+    else
+      l_wfspn := JSSENV`CheckIfClassLookUp(l_restr)
+   );
+  CI`SetJSSTypeInfo(p_spn.cid,l_restr);
+  CI`SetJSSTypeInfo(p_spn.id.cid,l_restr);  
+  return mk_(l_restr,l_wfspn)
+ )
+post RESULT.#1 <> nil;
+
+functions
+GetCid : CPP`Expr +> CI`ContextId
+GetCid(expr) ==
+  expr.cid;
+
+end JSSEXPR
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}{rtinfo.ast}[JSSEXPR]
+\end{rtinfo}

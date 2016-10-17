@@ -1,0 +1,19 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ( ( nat * seq of char * (nat * nat ) * nat * nat ) )  
+Test () ==
+return 
+let a = 35
+in
+[
+  mk_( let a = 32
+       in a + 3, 
+
+       if 3 < 6.7
+       then "Hello World"
+       else {3, 6},
+	
+       mk_(3,6),
+       [false, 6](2),
+       a )
+
+]

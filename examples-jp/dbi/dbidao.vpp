@@ -1,0 +1,200 @@
+class DBIDao
+
+values
+public
+DBIERROR = <DBIERR>;
+
+instance variables
+protected
+dbi : DBI := dbiConnectionFactory`getDefaulutConnection();
+
+operations
+public
+DBIDao: () ==> DBIDao
+DBIDao() == skip;
+
+public
+getDBI: () ==> DBI
+getDBI() ==
+  return dbi;
+
+public
+begin: () ==> ()
+begin() ==
+  if not dbi.begin()
+  then exit DBIERROR; 
+
+public
+commit: () ==> ()
+commit() ==
+  if not dbi.commit()
+  then exit DBIERROR;
+
+public
+rollback: () ==> ()
+rollback() ==
+  if not dbi.rollback()
+  then exit DBIERROR;
+
+public
+execute: seq of char ==> [int]
+execute(sql) ==
+  cases dbi.execute2(sql):
+    mk_(true,n) -> return n,
+    others      -> exit DBIERROR
+  end;
+
+public
+executeQuery: seq of char ==> int
+executeQuery(sql) ==
+  cases dbi.executeQuery(sql):
+    mk_(true,n) -> return n,
+    others      -> exit DBIERROR
+  end;
+
+--public
+--insert: seq1 of char * [seq of char] * seq of char ==> bool * [nat]
+--insert(tbnm, clnm, vals) ==
+--  let sql = "insert into " ^ tbnm ^ (if clnm <> nil then " " ^ clnm else "") ^ " " ^ vals
+--  in 
+--    return dbi.insert(sql);
+--
+--public
+--update: seq1 of char * seq of char * [seq of char] ==> bool * [nat]
+--update(tbnm, vals, where) ==
+--  let sql = "update " ^ tbnm ^ " set " ^ vals ^ (if where <> nil then " where " ^ where else "")
+--  in
+--    return dbi.update(sql);
+
+public
+fetch: () ==> bool
+fetch() ==
+  cases dbi.fetch():
+    mk_(true,b) -> return b,
+    others      -> exit DBIERROR
+  end;
+
+public
+getString: nat ==> seq of char
+getString(i) ==
+  cases dbi.getString(i):
+    mk_(true,v) -> return v,
+    others      -> exit DBIERROR
+  end;
+
+public
+getInt: nat ==> int
+getInt(i) ==
+  cases dbi.getInt(i):
+    mk_(true,v) -> return v,
+    others      -> exit DBIERROR
+  end;
+
+public
+getRecordMap: () ==> map (seq1 of char) to (seq of char)
+getRecordMap() ==
+  cases dbi.getRecordMap():
+    mk_(true,m) -> return m,
+    others      -> exit DBIERROR
+  end;
+
+public
+getRecordSeq: () ==> seq of [seq of char]
+getRecordSeq() ==
+  cases dbi.getRecordSeq():
+    mk_(true,s) -> return s,
+    others      -> exit DBIERROR
+  end;
+
+end DBIDao
+
+class DBITableDao is subclass of DBIDao
+
+operations
+public
+getTableName: () ==> seq1 of char
+getTableName() ==
+  is subclass responsibility;
+
+public
+insert: seq1 of seq of char ==> nat
+insert(vals) ==
+  def tablenm = getTableName();
+      sql = "insert into " ^ tablenm ^ " values (" ^
+            conc [ (if i = 1 then "" else ",") ^ "'" ^ vals(i) ^ "'" | i in set inds vals ] ^
+            ")" 
+  in
+    cases dbi.execute2(sql):
+      mk_(true,n) -> return n,
+      others      -> exit DBIERROR
+    end;
+
+public
+update: seq1 of seq of char * [seq of char] ==> nat
+update(setvals, where) ==
+  def tablenm = getTableName();
+      sql = "update " ^ tablenm ^ " set " ^
+            conc [ (if i = 1 then "" else ",") ^ setvals(i) | i in set inds setvals ] ^
+            (if where = nil then "" else " where " ^ where)
+  in
+    cases dbi.execute2(sql):
+      mk_(true,n) -> return n,
+      others      -> exit DBIERROR
+    end;
+
+public
+delete: () ==> nat
+delete() ==
+  return delete(nil);
+
+public
+delete: [seq of char] ==> nat
+delete(where) ==
+  def tablenm = getTableName();
+      sql = "delete from " ^ tablenm ^ (if where = nil then "" else " where " ^ where);
+  in
+    cases dbi.execute2(sql):
+      mk_(true,n) -> return n,
+      others      -> exit DBIERROR
+    end;
+
+public
+count: () ==> nat
+count() ==
+  return count(nil);
+
+public
+count: [seq of char] ==> nat
+count(where) ==
+  def tablenm = getTableName();
+      sql = "select count(*) from " ^ tablenm ^ (if where = nil then "" else " where " ^ where);
+  in
+    cases dbi.count(sql):
+      mk_(true,n) -> return n,
+      others      -> exit DBIERROR
+    end;
+
+public
+drop: () ==> ()
+drop() ==
+  def tablenm = getTableName();
+      sql = "drop table if exists " ^ tablenm
+  in if not dbi.execute1(sql)
+     then exit DBIERROR;
+
+public
+createTable: seq1 of seq of char ==> ()
+createTable(columns) ==
+  def tablenm = getTableName();
+      sql = "create table " ^ tablenm ^ " (" ^
+            conc [ (if i = 1 then "" else ",") ^ columns(i) | i in set inds columns ] ^
+            ")"
+  in
+    if not dbi.execute1(sql)
+    then exit DBIERROR;
+
+end DBITableDao
+
+class DBICustomDao is subclass of DBIDao
+
+end DBICustomDao

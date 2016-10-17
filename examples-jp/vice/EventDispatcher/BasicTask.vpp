@@ -1,0 +1,15 @@
+\begin{vdm_al}
+class 『基本タスク』 is subclass of 『抽象タスク』
+
+operations
+  public 『基本タスク』: 「タスク名」 * 『事象処理者』 ==> 『基本タスク』
+  『基本タスク』 (aタスク名, a事象処理者) == 『抽象タスク』(aタスク名, a事象処理者);
+
+-- BasicTask『基本タスク』 just implements the standard event handling loop
+-- handleEvent事象を処理する is still left to the responsibility of the subclass of BasicTask『基本タスク』
+thread
+  while (true) do
+    事象を処理する(事象を得る())
+
+end 『基本タスク』
+\end{vdm_al}

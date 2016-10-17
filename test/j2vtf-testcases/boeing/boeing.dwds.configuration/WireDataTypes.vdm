@@ -1,0 +1,739 @@
+class WireDataTypes is subclass of Object
+operations 
+public  static last : () ==> [WireDataTypes]
+last() == 
+( return  last
+) ;
+
+public  next : () ==> [WireDataTypes]
+next() == 
+( return  WireDataTypes`next
+) ;
+
+public  prev : () ==> [WireDataTypes]
+prev() == 
+( return  WireDataTypes`prev
+) ;
+
+public  static size : () ==> int 
+size() == 
+( return  upperBound
+) ;
+
+public  static first : () ==> [WireDataTypes]
+first() == 
+( return  first
+) ;
+
+public  static elements : () ==> [Enumeration]
+elements() == 
+( dcl   instances : [Vector] := new  Vector(50),
+        curr : [WireDataTypes] := first;
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  curr <> nil   do  
+    ( let - = instances.add(curr)
+      in 
+        skip ;
+      curr := curr.next()
+    ) ;
+  return  instances.elements()
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( return  WireDataTypes`id
+) ;
+
+public  static type : [String] ==> [WireDataTypes]
+type(str) == 
+( dcl   foundType : [WireDataTypes],
+        typeList : [Enumeration] := WireDataTypes`elements();
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  typeList.hasMoreElements() do  
+    ( foundType := typeList.nextElement();
+      if  str.equalsIgnoreCase(foundType.toString())
+      then  
+        ( return  foundType
+        ) 
+    ) ;
+  return  nil  
+) ;
+
+private  WireDataTypes : [String] ==> WireDataTypes
+WireDataTypes(typeName) == 
+( WireDataTypes`id := typeName;
+  def l_3 = upperBound;
+  l_2 = l_3
+  in ( upperBound := l_3+1;
+    WireDataTypes`ord := l_2
+  ) ;
+  WireDataTypes`ord := ord;
+  if  first = nil  
+  then  
+    ( first := self  
+    ) ;
+  if  last <> nil  
+  then  
+    ( WireDataTypes`prev := last;
+      last.next := self  
+    ) ;
+  last := self  
+) ;
+
+public  static decodeValue : [WireDataTypes] * [Part] ==> [String]
+decodeValue(type, part) == 
+( dcl   itemValue : [String] := nil  ;
+  if  part <> nil  
+  then  
+    ( if  type = PART_NUMBER
+      then  
+        ( itemValue := part.getPartNumber()
+        ) 
+      else  
+        if  type = PART_NAME
+        then  
+          ( itemValue := part.getPartName()
+          ) 
+        else  
+          if  type = CAGE_CODE
+          then  
+            ( itemValue := part.getCageCode()
+            ) 
+          else  
+            if  type = PART_QUANTITY
+            then  
+              ( itemValue := part.getQuantity()
+              ) 
+            else  
+              if  type = SMR
+              then  
+                ( itemValue := part.getSMR()
+                ) 
+              else  
+                if  type = DRAWING_NOTE
+                then  
+                  ( if  part.hasDrawingNotes()
+                    then  
+                      ( itemValue := new  String("     *")
+                      ) 
+                  ) 
+                else  
+                  if  type = CLOCKING
+                  then  
+                    ( itemValue := part.getClocking()
+                    ) 
+                  else  
+                    ( itemValue := new  String([  ])
+                    ) 
+    ) 
+  else  
+    ( itemValue := new  String([  ])
+    ) ;
+  return  itemValue
+) ;
+
+public  static decodeValue : [WireDataTypes] * [Wire] ==> [String]
+decodeValue(type, wire) == 
+( if  wire = nil  
+  then  
+    ( return  new  String([  ])
+    ) 
+  else  
+    ( return  decodeValue(type , wire.getEnd1RefDes() , wire)
+    ) 
+) ;
+
+public  static decodeValue : [WireDataTypes] * [RefDes] * [Wire] ==> [String]
+decodeValue(type, refDes, wire) == 
+( dcl   itemValue : [String] := nil  ;
+  if  type = WIRE_DATA_TYPE_NONE
+  then  
+    ( itemValue := nil  
+    ) 
+  else  
+    if  type = REF_DES_NAME
+    then  
+      ( if  refDes <> nil  
+        then  
+          itemValue := refDes.displayName()
+      ) 
+    else  
+      if  type = WIRE_COLOR
+      then  
+        ( if  wire <> nil  
+          then  
+            itemValue := wire.getColor()
+        ) 
+      else  
+        if  type = WIRE_DRAWING_NOTE
+        then  
+          ( if  wire <> nil   and  wire.hasDrawingNotes()
+            then  
+              ( itemValue := new  String("     *")
+              ) 
+          ) 
+        else  
+          if  type = WIRE_EMI_CODE
+          then  
+            ( itemValue := nil  
+            ) 
+          else  
+            if  type = WIRE_END1_PIN
+            then  
+              ( if  wire <> nil  
+                then  
+                  itemValue := wire.getEnd1RefDesPin()
+              ) 
+            else  
+              if  type = WIRE_END1_REF_DES
+              then  
+                ( if  wire <> nil  
+                  then  
+                    itemValue := wire.getEnd1RefDes().displayName()
+                ) 
+              else  
+                if  type = WIRE_END1_REF_DES_PIN
+                then  
+                  ( if  wire <> nil  
+                    then  
+                      ( dcl   rdAndPin : [StringBuffer] := new  StringBuffer(wire.getEnd1RefDes().displayName());
+                        let - = rdAndPin.append(new  String(" - "))
+                        in 
+                          skip ;
+                        let - = rdAndPin.append(wire.getEnd1RefDesPin())
+                        in 
+                          skip ;
+                        itemValue := rdAndPin.toString()
+                      ) 
+                  ) 
+                else  
+                  if  type = WIRE_END1_REF_DES_PIN_TERM_CODE
+                  then  
+                    ( if  wire <> nil  
+                      then  
+                        ( itemValue := wire.getEnd1RefDes().displayName()+new  String(" - ")+wire.getEnd1RefDesPin()+new  String(" - ")+wire.getEnd1RefDesTermCode()
+                        ) 
+                    ) 
+                  else  
+                    if  type = WIRE_END1_FERRULE_WIRE_TYPE
+                    then  
+                      ( if  wire <> nil  
+                        then  
+                          itemValue := wire.getEnd1FerruleWireType()
+                      ) 
+                    else  
+                      if  type = WIRE_END1_FERRULE_TERM_CODE
+                      then  
+                        ( if  wire <> nil  
+                          then  
+                            itemValue := wire.getEnd1FerruleTermCode()
+                        ) 
+                      else  
+                        if  type = WIRE_END1_TERM_CODE
+                        then  
+                          ( if  wire <> nil  
+                            then  
+                              itemValue := wire.getEnd1RefDesTermCode()
+                          ) 
+                        else  
+                          if  type = WIRE_GAGE
+                          then  
+                            ( if  wire <> nil  
+                              then  
+                                itemValue := wire.getGage()
+                            ) 
+                          else  
+                            if  type = WIRE_LENGTH
+                            then  
+                              ( if  wire <> nil  
+                                then  
+                                  itemValue := wire.getLength()
+                              ) 
+                            else  
+                              if  type = WIRE_PHASE
+                              then  
+                                ( if  wire <> nil  
+                                  then  
+                                    itemValue := wire.getPhase()
+                                ) 
+                              else  
+                                if  type = WIRE_NAME
+                                then  
+                                  ( if  wire <> nil  
+                                    then  
+                                      itemValue := wire.toString()
+                                  ) 
+                                else  
+                                  if  type = WIRE_END2_PIN
+                                  then  
+                                    ( if  wire <> nil  
+                                      then  
+                                        itemValue := wire.getEnd2RefDesPin()
+                                    ) 
+                                  else  
+                                    if  type = WIRE_END2_REF_DES
+                                    then  
+                                      ( if  wire <> nil  
+                                        then  
+                                          itemValue := wire.getEnd2RefDes().displayName()
+                                      ) 
+                                    else  
+                                      if  type = WIRE_END2_REF_DES_PIN
+                                      then  
+                                        ( if  wire <> nil  
+                                          then  
+                                            ( dcl   rdAndPin : [StringBuffer] := new  StringBuffer(wire.getEnd2RefDes().displayName());
+                                              let - = rdAndPin.append(new  String(" - "))
+                                              in 
+                                                skip ;
+                                              let - = rdAndPin.append(wire.getEnd2RefDesPin())
+                                              in 
+                                                skip ;
+                                              itemValue := rdAndPin.toString()
+                                            ) 
+                                        ) 
+                                      else  
+                                        if  type = WIRE_END2_REF_DES_PIN_TERM_CODE
+                                        then  
+                                          ( if  wire <> nil  
+                                            then  
+                                              ( itemValue := wire.getEnd2RefDes().displayName()+new  String(" - ")+wire.getEnd2RefDesPin()+new  String(" - ")+wire.getEnd2RefDesTermCode()
+                                              ) 
+                                          ) 
+                                        else  
+                                          if  type = WIRE_END2_FERRULE_WIRE_TYPE
+                                          then  
+                                            ( if  wire <> nil  
+                                              then  
+                                                itemValue := wire.getEnd2FerruleWireType()
+                                            ) 
+                                          else  
+                                            if  type = WIRE_END2_FERRULE_TERM_CODE
+                                            then  
+                                              ( if  wire <> nil  
+                                                then  
+                                                  itemValue := wire.getEnd2FerruleTermCode()
+                                              ) 
+                                            else  
+                                              if  type = WIRE_END2_TERM_CODE
+                                              then  
+                                                ( if  wire <> nil  
+                                                  then  
+                                                    itemValue := wire.getEnd2RefDesTermCode()
+                                                ) 
+                                              else  
+                                                if  type = WIRE_TYPE
+                                                then  
+                                                  ( if  wire <> nil  
+                                                    then  
+                                                      itemValue := wire.getType()
+                                                  ) 
+                                                else  
+                                                  if  type = WIRE_SHIELDED_BY
+                                                  then  
+                                                    ( if  wire <> nil   and  wire.isShielded()
+                                                      then  
+                                                        ( dcl   shieldValue : [StringBuffer] := new  StringBuffer(),
+                                                                shields : [Iterator] := (def l_6 :  Wire = (wire)
+                                                                in l_6).getAllShields();
+                                                          trap  j2v_break with  
+                                                            cases  true  : 
+                                                              (isofclass  (J2V_Break,j2v_break)) -> 
+                                                                skip 
+                                                              
+                                                            end  
+                                                          in  
+                                                            while  shields.hasNext() do  
+                                                            ( dcl   nextWire : [Wire] := shields.next();
+                                                              let - = shieldValue.append(nextWire.getName())
+                                                              in 
+                                                                skip ;
+                                                              if  shields.hasNext()
+                                                              then  
+                                                                ( let - = shieldValue.append(new  String(", "))
+                                                                  in 
+                                                                    skip 
+                                                                ) 
+                                                            ) ;
+                                                          itemValue := shieldValue.toString()
+                                                        ) 
+                                                    ) 
+                                                  else  
+                                                    if  type = DRAWING_NOTE
+                                                    then  
+                                                      ( if  wire <> nil   and  wire.hasDrawingNotes()
+                                                        then  
+                                                          ( itemValue := new  String("     *")
+                                                          ) 
+                                                      ) 
+                                                    else  
+                                                      if  type = WIRE_SYSTEM_NUMBER
+                                                      then  
+                                                        ( if  wire <> nil  
+                                                          then  
+                                                            itemValue := wire.getSystem().getSystemNumber()
+                                                        ) 
+                                                      else  
+                                                        if  type = BUNDLE_NAME
+                                                        then  
+                                                          ( if  wire <> nil  
+                                                            then  
+                                                              itemValue := wire.getBundle()
+                                                          ) 
+                                                        else  
+                                                          if  type = BUNDLE_NET_NUMBER
+                                                          then  
+                                                            ( itemValue := nil  
+                                                            ) 
+                                                          else  
+                                                            if  type = REF_DES_BRANCH_LETTER
+                                                            then  
+                                                              ( if  refDes <> nil  
+                                                                then  
+                                                                  itemValue := refDes.getBranch()
+                                                              ) 
+                                                            else  
+                                                              ( itemValue := nil  
+                                                              ) ;
+  return  if  (itemValue = nil  ) then  new  String([  ]) else  itemValue
+) ;
+
+public  static decodeValue : [WireDataTypes] * [Wire] * [WireEndpoint] * [WireEndpoint] ==> [String]
+decodeValue(type, wire, end1, end2) == 
+( dcl   itemValue : [String] := nil  ;
+  if  type = WIRE_DATA_TYPE_NONE
+  then  
+    ( itemValue := nil  
+    ) 
+  else  
+    if  type = BUNDLE_NAME
+    then  
+      ( if  wire <> nil  
+        then  
+          itemValue := wire.getBundle()
+      ) 
+    else  
+      if  type = BUNDLE_NET_NUMBER
+      then  
+        ( itemValue := nil  
+        ) 
+      else  
+        if  type = WIRE_COLOR
+        then  
+          ( if  wire <> nil  
+            then  
+              itemValue := wire.getColor()
+          ) 
+        else  
+          if  type = WIRE_DRAWING_NOTE
+          then  
+            ( if  wire <> nil   and  wire.hasDrawingNotes()
+              then  
+                ( itemValue := new  String("     *")
+                ) 
+            ) 
+          else  
+            if  type = WIRE_END1_PIN
+            then  
+              ( if  wire <> nil  
+                then  
+                  itemValue := end1.getPinName()
+              ) 
+            else  
+              if  type = WIRE_END1_REF_DES
+              then  
+                ( if  wire <> nil  
+                  then  
+                    itemValue := WiringDataMediator`getMediator().getRefDes(end1.getRefDesId()).displayName()
+                ) 
+              else  
+                if  type = WIRE_END1_REF_DES_PIN
+                then  
+                  ( if  wire <> nil  
+                    then  
+                      ( dcl   rdAndPin : [StringBuffer] := new  StringBuffer(20);
+                        let - = rdAndPin.append(WiringDataMediator`getMediator().getRefDes(end1.getRefDesId()).displayName())
+                        in 
+                          skip ;
+                        let - = rdAndPin.append(new  String(" - "))
+                        in 
+                          skip ;
+                        let - = rdAndPin.append(end1.getPinName())
+                        in 
+                          skip ;
+                        itemValue := rdAndPin.toString()
+                      ) 
+                  ) 
+                else  
+                  if  type = WIRE_END1_REF_DES_PIN_TERM_CODE
+                  then  
+                    ( if  wire <> nil  
+                      then  
+                        ( dcl   rdAndPin : [StringBuffer] := new  StringBuffer(26);
+                          let - = rdAndPin.append(WiringDataMediator`getMediator().getRefDes(end1.getRefDesId()).displayName())
+                          in 
+                            skip ;
+                          let - = rdAndPin.append(new  String(" - "))
+                          in 
+                            skip ;
+                          let - = rdAndPin.append(end1.getPinName())
+                          in 
+                            skip ;
+                          let - = rdAndPin.append(new  String(" - "))
+                          in 
+                            skip ;
+                          let - = rdAndPin.append(end1.getWireTermCode())
+                          in 
+                            skip ;
+                          itemValue := rdAndPin.toString()
+                        ) 
+                    ) 
+                  else  
+                    if  type = WIRE_END1_FERRULE_WIRE_TYPE
+                    then  
+                      ( if  wire <> nil  
+                        then  
+                          itemValue := end1.getFerruleWireType()
+                      ) 
+                    else  
+                      if  type = WIRE_END1_FERRULE_TERM_CODE
+                      then  
+                        ( if  wire <> nil  
+                          then  
+                            itemValue := end1.getFerruleTermCode()
+                        ) 
+                      else  
+                        if  type = WIRE_END1_TERM_CODE
+                        then  
+                          ( if  wire <> nil  
+                            then  
+                              itemValue := end1.getWireTermCode()
+                          ) 
+                        else  
+                          if  type = WIRE_GAGE
+                          then  
+                            ( if  wire <> nil  
+                              then  
+                                itemValue := wire.getGage()
+                            ) 
+                          else  
+                            if  type = WIRE_LENGTH
+                            then  
+                              ( if  wire <> nil  
+                                then  
+                                  itemValue := wire.getLength()
+                              ) 
+                            else  
+                              if  type = WIRE_PHASE
+                              then  
+                                ( if  wire <> nil  
+                                  then  
+                                    itemValue := wire.getPhase()
+                                ) 
+                              else  
+                                if  type = WIRE_NAME
+                                then  
+                                  ( if  wire <> nil  
+                                    then  
+                                      itemValue := wire.toString()
+                                  ) 
+                                else  
+                                  if  type = WIRE_END2_PIN
+                                  then  
+                                    ( if  wire <> nil  
+                                      then  
+                                        itemValue := end2.getPinName()
+                                    ) 
+                                  else  
+                                    if  type = WIRE_END2_REF_DES
+                                    then  
+                                      ( if  wire <> nil  
+                                        then  
+                                          itemValue := WiringDataMediator`getMediator().getRefDes(end2.getRefDesId()).displayName()
+                                      ) 
+                                    else  
+                                      if  type = WIRE_END2_REF_DES_PIN
+                                      then  
+                                        ( if  wire <> nil  
+                                          then  
+                                            ( dcl   rdAndPin : [StringBuffer] := new  StringBuffer(20);
+                                              let - = rdAndPin.append(WiringDataMediator`getMediator().getRefDes(end2.getRefDesId()).displayName())
+                                              in 
+                                                skip ;
+                                              let - = rdAndPin.append(new  String(" - "))
+                                              in 
+                                                skip ;
+                                              let - = rdAndPin.append(end2.getPinName())
+                                              in 
+                                                skip ;
+                                              itemValue := rdAndPin.toString()
+                                            ) 
+                                        ) 
+                                      else  
+                                        if  type = WIRE_END2_REF_DES_PIN_TERM_CODE
+                                        then  
+                                          ( if  wire <> nil  
+                                            then  
+                                              ( dcl   rdAndPin : [StringBuffer] := new  StringBuffer(26);
+                                                let - = rdAndPin.append(WiringDataMediator`getMediator().getRefDes(end2.getRefDesId()).displayName())
+                                                in 
+                                                  skip ;
+                                                let - = rdAndPin.append(new  String(" - "))
+                                                in 
+                                                  skip ;
+                                                let - = rdAndPin.append(end2.getPinName())
+                                                in 
+                                                  skip ;
+                                                let - = rdAndPin.append(new  String(" - "))
+                                                in 
+                                                  skip ;
+                                                let - = rdAndPin.append(end2.getWireTermCode())
+                                                in 
+                                                  skip ;
+                                                itemValue := rdAndPin.toString()
+                                              ) 
+                                          ) 
+                                        else  
+                                          if  type = WIRE_END2_FERRULE_WIRE_TYPE
+                                          then  
+                                            ( if  wire <> nil  
+                                              then  
+                                                itemValue := end2.getFerruleWireType()
+                                            ) 
+                                          else  
+                                            if  type = WIRE_END2_FERRULE_TERM_CODE
+                                            then  
+                                              ( if  wire <> nil  
+                                                then  
+                                                  itemValue := end2.getFerruleTermCode()
+                                              ) 
+                                            else  
+                                              if  type = WIRE_END2_TERM_CODE
+                                              then  
+                                                ( if  wire <> nil  
+                                                  then  
+                                                    itemValue := end2.getWireTermCode()
+                                                ) 
+                                              else  
+                                                if  type = WIRE_TYPE
+                                                then  
+                                                  ( if  wire <> nil  
+                                                    then  
+                                                      itemValue := wire.getType()
+                                                  ) 
+                                                else  
+                                                  if  type = WIRE_SHIELDED_BY
+                                                  then  
+                                                    ( if  wire <> nil   and  wire.isShielded()
+                                                      then  
+                                                        ( dcl   shieldValue : [StringBuffer] := new  StringBuffer(),
+                                                                shields : [Iterator] := (def l_6 :  Wire = (wire)
+                                                                in l_6).getAllShields();
+                                                          trap  j2v_break with  
+                                                            cases  true  : 
+                                                              (isofclass  (J2V_Break,j2v_break)) -> 
+                                                                skip 
+                                                              
+                                                            end  
+                                                          in  
+                                                            while  shields.hasNext() do  
+                                                            ( dcl   nextWire : [Wire] := shields.next();
+                                                              let - = shieldValue.append(nextWire.getName())
+                                                              in 
+                                                                skip ;
+                                                              if  shields.hasNext()
+                                                              then  
+                                                                ( let - = shieldValue.append(new  String(", "))
+                                                                  in 
+                                                                    skip 
+                                                                ) 
+                                                            ) ;
+                                                          itemValue := shieldValue.toString()
+                                                        ) 
+                                                    ) 
+                                                  else  
+                                                    if  type = WIRE_SYSTEM_NUMBER
+                                                    then  
+                                                      ( if  wire <> nil  
+                                                        then  
+                                                          itemValue := wire.getSystem().getSystemNumber()
+                                                      ) 
+                                                    else  
+                                                      if  type = DRAWING_NOTE
+                                                      then  
+                                                        ( if  wire <> nil   and  wire.hasDrawingNotes()
+                                                          then  
+                                                            ( itemValue := new  String("     *")
+                                                            ) 
+                                                        ) 
+                                                      else  
+                                                        ( itemValue := nil  
+                                                        ) ;
+  return  if  (itemValue = nil  ) then  new  String([  ]) else  itemValue
+) ;
+
+instance variables 
+  private  id : [String];
+  public  ord : int ;
+  private  prev : [WireDataTypes];
+  private  next : [WireDataTypes];
+  private  static upperBound : int  := 0;
+  private  static first : [WireDataTypes] := nil  ;
+  private  static last : [WireDataTypes] := nil  ;
+  public  static WIRE_DATA_TYPE_NONE : [WireDataTypes] := new  WireDataTypes(new  String("WireDataTypeNone"));
+  public  static BUNDLE_NAME : [WireDataTypes] := new  WireDataTypes(new  String("BundleName"));
+  public  static BUNDLE_NET_NUMBER : [WireDataTypes] := new  WireDataTypes(new  String("BundleNetNumber"));
+  public  static REF_DES_BRANCH_LETTER : [WireDataTypes] := new  WireDataTypes(new  String("RefDesBranchLetter"));
+  public  static REF_DES_NAME : [WireDataTypes] := new  WireDataTypes(new  String("RefDesName"));
+  public  static WIRE_COLOR : [WireDataTypes] := new  WireDataTypes(new  String("WireColor"));
+  public  static WIRE_DRAWING_NOTE : [WireDataTypes] := new  WireDataTypes(new  String("WireDrawingNote"));
+  public  static WIRE_EMI_CODE : [WireDataTypes] := new  WireDataTypes(new  String("WireEMICode"));
+  public  static WIRE_END1_PIN : [WireDataTypes] := new  WireDataTypes(new  String("WireFromPin"));
+  public  static WIRE_END1_REF_DES : [WireDataTypes] := new  WireDataTypes(new  String("WireFromRefDes"));
+  public  static WIRE_END1_REF_DES_PIN : [WireDataTypes] := new  WireDataTypes(new  String("WireFromRefDesPin"));
+  public  static WIRE_END1_REF_DES_PIN_TERM_CODE : [WireDataTypes] := new  WireDataTypes(new  String("WireFromRefDesPinTermCode"));
+  public  static WIRE_END1_TERM_CODE : [WireDataTypes] := new  WireDataTypes(new  String("WireFromTermCode"));
+  public  static WIRE_END1_FERRULE_WIRE_TYPE : [WireDataTypes] := new  WireDataTypes(new  String("WireFromFerruleWireType"));
+  public  static WIRE_END1_FERRULE_TERM_CODE : [WireDataTypes] := new  WireDataTypes(new  String("WireFromFerruleTermCode"));
+  public  static WIRE_GAGE : [WireDataTypes] := new  WireDataTypes(new  String("WireGage"));
+  public  static WIRE_LENGTH : [WireDataTypes] := new  WireDataTypes(new  String("WireLength"));
+  public  static WIRE_PHASE : [WireDataTypes] := new  WireDataTypes(new  String("WirePhase"));
+  public  static WIRE_NAME : [WireDataTypes] := new  WireDataTypes(new  String("WireName"));
+  public  static WIRE_END2_PIN : [WireDataTypes] := new  WireDataTypes(new  String("WireToPin"));
+  public  static WIRE_END2_REF_DES : [WireDataTypes] := new  WireDataTypes(new  String("WireToRefDes"));
+  public  static WIRE_END2_REF_DES_PIN_TERM_CODE : [WireDataTypes] := new  WireDataTypes(new  String("WireToRefDesPinTermCode"));
+  public  static WIRE_END2_REF_DES_PIN : [WireDataTypes] := new  WireDataTypes(new  String("WireToRefDesPin"));
+  public  static WIRE_END2_TERM_CODE : [WireDataTypes] := new  WireDataTypes(new  String("WireToTermCode"));
+  public  static WIRE_END2_FERRULE_WIRE_TYPE : [WireDataTypes] := new  WireDataTypes(new  String("WireToFerruleWireType"));
+  public  static WIRE_END2_FERRULE_TERM_CODE : [WireDataTypes] := new  WireDataTypes(new  String("WireToFerruleTermCode"));
+  public  static WIRE_TYPE : [WireDataTypes] := new  WireDataTypes(new  String("WireType"));
+  public  static WIRE_SHIELDED_BY : [WireDataTypes] := new  WireDataTypes(new  String("WireShieldedBy"));
+  public  static WIRE_STATUS : [WireDataTypes] := new  WireDataTypes(new  String("WireStatus"));
+  public  static WIRE_SEGMENT_NUMBER : [WireDataTypes] := new  WireDataTypes(new  String("WireSegmentNumber"));
+  public  static WIRE_SYSTEM_NUMBER : [WireDataTypes] := new  WireDataTypes(new  String("WireSystemNumber"));
+  public  static SYSTEM_SELECTED : [WireDataTypes] := new  WireDataTypes(new  String("SystemSelected"));
+  public  static SYSTEM_ACTUAL_STATUS : [WireDataTypes] := new  WireDataTypes(new  String("SystemActualStatus"));
+  public  static SYSTEM_DESIRED_STATUS : [WireDataTypes] := new  WireDataTypes(new  String("SystemDesiredStatus"));
+  public  static SYSTEM_NUMBER : [WireDataTypes] := new  WireDataTypes(new  String("SystemNumber"));
+  public  static SYSTEM_NAME : [WireDataTypes] := new  WireDataTypes(new  String("SystemName"));
+  public  static PART_NUMBER : [WireDataTypes] := new  WireDataTypes(new  String("PartNumber"));
+  public  static PART_NAME : [WireDataTypes] := new  WireDataTypes(new  String("PartName"));
+  public  static CAGE_CODE : [WireDataTypes] := new  WireDataTypes(new  String("CageCode"));
+  public  static PART_QUANTITY : [WireDataTypes] := new  WireDataTypes(new  String("PartQuantity"));
+  public  static SMR : [WireDataTypes] := new  WireDataTypes(new  String("SMR"));
+  public  static DRAWING_NOTE : [WireDataTypes] := new  WireDataTypes(new  String("DrawingNote"));
+  public  static CLOCKING : [WireDataTypes] := new  WireDataTypes(new  String("Clocking"))
+  
+end  WireDataTypes

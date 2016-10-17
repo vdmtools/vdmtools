@@ -1,0 +1,27 @@
+  empty_bag[@elem] : () +> map @elem to nat1
+  empty_bag() ==
+     { |->};
+
+
+  num_bag[@elem] : @elem * map @elem to nat1 +> nat
+  num_bag(e, m) ==
+    if e in set dom m
+    then m(e)
+    else 0;
+
+  plus_bag[@elem] : @elem * map @elem to nat1 +> map @elem to nat1
+  plus_bag(e, m) ==
+    m ++ { e |-> num_bag[@elem](e, m) + 1 }
+
+operations
+
+  public Test : () ==> map int to nat1
+  Test () ==
+   ( let empty = empty_bag[int],
+         plusintbag = plus_bag[int]
+     in let mybag = plusintbag(3  ,empty())
+     in return mybag;
+   )
+
+
+end A

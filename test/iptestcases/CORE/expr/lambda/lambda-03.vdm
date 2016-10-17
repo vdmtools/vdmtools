@@ -1,0 +1,16 @@
+class A
+
+operations
+public Test :() ==> seq of nat
+Test() ==
+  return [ 
+    (lambda b : nat & b + 5)(0),
+    (lambda a: nat, b: nat & a + b)(1,2),
+    (lambda a: nat & lambda b: nat & a + b)(5)(7),
+
+    let add1 = lambda b : nat & b + 5 in add1(10),
+    let add2 = lambda a: nat, b: nat & a + b in add2(1,2),
+    let add3 = lambda a: nat & lambda b: nat & a + b in add3(5)(7)
+  ]
+   
+end A

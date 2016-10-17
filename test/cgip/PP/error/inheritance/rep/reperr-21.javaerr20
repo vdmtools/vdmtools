@@ -1,0 +1,6 @@
+
+Type error in test case.
+rep-21.arg, l. 44, c. 12:
+  Error : f is multiple defined in super classes
+rep-21.arg, l. 44, c. 12:
+  Error : Unknown identifier f

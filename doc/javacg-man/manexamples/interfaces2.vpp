@@ -1,0 +1,26 @@
+class E
+
+instance variables
+  protected i : nat;
+  private t : token
+
+end E
+
+class F
+
+values
+  public n : nat = 3
+
+operations
+  public  getx : () ==> nat
+  getx() == is subclass responsibility;
+
+end F
+
+class G is subclass of E, F
+
+operations
+  public  getx : () ==> nat
+  getx() == if true then return n else return i;
+
+end G

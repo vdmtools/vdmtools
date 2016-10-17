@@ -1,0 +1,54 @@
+ class B
+
+operations
+public
+Test: () ==> seq of real
+Test() ==
+let new_val : Value = cases is_real(3.6) :
+                          (true) -> new Value(),
+                          (false) -> 3
+                        end 
+in return [new_val.GetValue()];
+
+
+
+-- Workaround
+AddSeq : seq of nat * (bool|real) * [nat1] ==> seq of real
+AddSeq(seq_val, val, position) ==
+let new_val : Value = let a = 3 in (if is_real(val) 
+                                then new Value().Init(val)
+                                else  3
+                                )
+in return [new_val.GetValue()];
+
+
+end B
+
+
+class Value
+
+
+instance variables
+
+private val : real := 5;
+operations
+
+public 
+Init: real    ==> Value
+Init(new_val) ==
+(val := new_val;
+ return self;
+);
+
+public
+Init2: seq of real ==> Value
+Init2(myval) ==
+(val := hd myval;
+ return self;
+);
+
+public
+GetValue: () ==> real
+GetValue() == return val;
+
+end Value

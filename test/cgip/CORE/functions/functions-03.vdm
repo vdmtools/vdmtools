@@ -1,0 +1,51 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+functions
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+    f: nat* nat*nat*nat -> nat
+    f(a,a,b,b) ==
+      2 + a+b;
+
+    f3:nat* nat*nat*nat*nat*nat*bool*bool -> nat
+    f3(a,b,c,a,c,d,e,e) ==
+      if e then a + b else c + d;
+
+    g: nat* nat -> int
+    g(a,b) ==
+      2 + a * ( b - 3 );
+
+    h: (nat|real)*(nat|real) -> (nat|real)
+    h(a,a) ==
+      a+3;
+
+    f2:nat*(nat*nat) -> nat
+    f2(a, mk_(a,b)) ==
+     a*b;
+  
+    g2: nat -> nat
+    g2(a) ==
+      let a = a+1 in a ;
+  
+    h2: (nat*nat)*(nat*nat) -> nat 
+    h2(mk_(a,b),mk_(b,a) ) ==
+      a+b+h(1,1);
+
+aQ: () -> nat
+aQ () ==
+  3;
+    
+aQQ: () -> nat
+aQQ () ==
+  if 1=1 then 4 else 5
+
+operations
+
+  public Test : () ==> seq of ( int | real )   
+Test () ==
+    return 
+    [ f(1,1,2,2), f3(1,2,3,1,3,4,true,true), g( 2,1), h(3,3), h(3.3,3.3), f2(1,mk_(1,2)),
+      let z = mk_(9,8) in f2(9,z), g2(1), h2(mk_(1,2), mk_(2,1)), 
+      aQ(), aQQ() ]
+
+end A

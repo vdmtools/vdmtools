@@ -1,0 +1,1 @@
+"In class C1 t1 dummy in C1"

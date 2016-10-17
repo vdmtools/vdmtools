@@ -1,0 +1,10 @@
+public Test :() ==> set of int
+Test() ==
+  return  ElemToSet[int](-1)
+
+functions
+  ElemToSet[@elem]: @elem +> set of @elem
+  ElemToSet(e) ==
+    {e}
+
+end A

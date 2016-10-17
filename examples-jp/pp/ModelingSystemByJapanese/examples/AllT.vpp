@@ -1,0 +1,16 @@
+/*
+テストグループ
+	全テストケースのテスト
+作成者
+	佐原伸
+*/
+class AllT
+operations
+public run : () ==> seq of bool
+run () == 
+	return
+	[
+		new 専門家呼出システムT().run()
+	]
+	;
+end AllT

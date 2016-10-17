@@ -1,0 +1,12 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of real  
+Test () ==
+return 
+  [ i | i in set {1,2,3} & i < 3 ] ^
+  let i = {45,...,80} in
+    [ i+i | i in set i & i < 50] ^
+  [let j = 1 + i in j | i in set {45} union {50, 80} & 
+    if i = 50 then true else false ] ^
+  [ 2 | i in set {87,3,4} ]
+
+end A

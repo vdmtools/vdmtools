@@ -1,0 +1,92 @@
+\begin{vdm_al}
+class 『環境タスク』 is subclass of 『抽象タスク』
+
+types
+public 「事象ID⇒時間写像」 = map 「事象ID」 to 「時間」;
+
+instance variables
+  -- use a unique identifier for each generated event
+  static private 発番者 : 『発番者』:= new 『発番者』(4);
+  static private 事象ID : 「事象ID」 := 発番者.発番する();
+
+  -- we limit the number of inserted stimuli
+  protected 最大刺激数 : nat := 0;
+
+  -- administration for the event traces
+  -- e2s事象生起写像 is used for all out-going stimuli (environment to system)
+  -- s2e事象受理写像 is used for all received responses (system to environment)
+  -- 英語表現のout-goingとreceivedの主語はenvironmentの視点から表現されている
+  -- つまり事象の生起=「environmentからsystemへのout-going」となり
+  -- つまり事象の受理=「systemからenvironmentへのreceived responses」となる
+  protected 事象生起写像 : 「事象ID⇒時間写像」 := {|->};
+  protected 事象受理写像 : 「事象ID⇒時間写像」 := {|->}
+
+functions
+  -- checkResponseTimes応答時間をチェックする verifies for each received response whether
+  -- or not the elapse time did (not) exceed the user-defined limit
+  public 応答時間をチェックする: 「事象ID⇒時間写像」 * 「事象ID⇒時間写像」* 「時間」 -> bool
+  応答時間をチェックする (a事象生起写像, a事象受理写像, a許容時間) ==
+    forall idx in set dom a事象受理写像 &
+      a事象受理写像(idx) - a事象生起写像(idx) <= a許容時間
+  -- the responses received should also be sent
+  pre dom a事象生起写像 subset dom a事象受理写像
+
+operations
+  public 『環境タスク』: 「タスク名」 * 『事象処理者』 * nat ==> 『環境タスク』
+  『環境タスク』 (aタスク名, a事象処理者, a最大刺激数) == ( 最大刺激数 := a最大刺激数; 『抽象タスク』(aタスク名,a事象処理者) );
+
+  public 事象IDを得る: () ==> 「事象ID」
+  事象IDを得る () == ( dcl 結果 : 「事象ID」 := 事象ID; 事象ID := 発番者.発番する(); return 結果 );
+
+  -- setEvent事象を設定する is overloaded. Incoming messages are immediately handled
+  -- by calling handleEvent事象を処理する directly, in stead of added to an input queue.
+  public 事象を設定する: 『事象』 ==> ()
+  事象を設定する (a事象) == 事象を処理する(a事象);
+
+  -- Run shall be overloaded to implement the event generation loop
+  -- towards the system. typically, it starts a periodic thread
+  public Run: () ==> ()
+  Run () == is subclass responsibility;
+
+  -- logEnvToSys事象生起ログ is used to register登録する when an event was inserted into
+  -- the system. note that the 'time' keyword refers to the internal
+  -- simulation wall clock of VDMTools
+  public 事象生起ログ: 「事象ID」 ==> ()
+  事象生起ログ (a事象ID) == 事象生起写像 := 事象生起写像 munion {a事象ID |-> time};
+
+  -- logSysToEnv事象受理ログ is used to register登録する when an event was received from
+  -- the system. note that the 'time' keyword refers to the internal
+  -- simulation wall clock of VDMTools
+  public 事象受理ログ: 「事象ID」 ==> ()
+  事象受理ログ (a事象ID) == 事象受理写像 := 事象受理写像 munion {a事象ID |-> time};
+
+  -- getMinMaxAverage最小最大平均応答時間を得る calculates the minimum, maximum and average
+  -- response times that were observed during execution of the model
+  -- note that getMinMaxAverage最小最大平均応答時間を得る is blocked until the number of
+  -- system responses is equal to the number of sent stimuli
+  -- termination is ensured because only a maximum number of stimuli
+  -- is allowed to be inserted in the system, so eventually all
+  -- stimuli can be processed by the system. this method only works
+  -- when each stimulus leads to exactly one response, which is the
+  -- case in this instance
+  public 最小最大平均応答時間を得る: () ==> 「時間」 * 「時間」 * real
+  最小最大平均応答時間を得る () ==
+    ( dcl min : [「時間」] := nil, max : [「時間」] := nil, 差 : 「時間」 := 0;
+      for all cnt in set dom 事象受理写像 do
+        let dt = 事象受理写像(cnt) - 事象生起写像(cnt) in
+          ( if min = nil then min := dt
+            else (if min > dt then min := dt);
+            if max = nil then max := dt
+            else (if max < dt then max := dt);
+            差 := 差 + dt );
+      return mk_(min, max, 差 / card dom 事象受理写像) )
+  pre card dom 事象受理写像 > 0
+
+sync
+  -- getNum事象IDを得る is mutually exclusive to ensure unique values
+  mutex (事象IDを得る);
+  -- getMinMaxAverage最小最大平均応答時間を得る is blocked until all responses have been received
+  per 最小最大平均応答時間を得る => card dom 事象受理写像 = 最大刺激数
+
+end 『環境タスク』
+\end{vdm_al}

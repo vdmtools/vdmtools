@@ -1,0 +1,717 @@
+class StatusPanel is subclass of JPanel
+operations 
+public  getTipText : () ==> [String]
+getTipText() == 
+( return  tipField.getText()
+) ;
+
+public  StatusPanel : () ==> StatusPanel
+StatusPanel() == 
+( let - = StatusPanel(nil  )
+  in 
+    skip ;
+  return  
+) ;
+
+public  getTipField : () ==> [JTextField]
+getTipField() == 
+( return  tipField
+) ;
+
+private  setVisibility : () ==> <VOID>
+setVisibility() == 
+( dcl   isVisible : bool  := true  ,
+        queryString : [String] := new  String(panelName+new  String(".status_panel.1.visibility")),
+        myVisibility : [String] := DWDSProperties`getProperty(queryString);
+  if  panelName <> nil   and  myVisibility <> nil  
+  then  
+    ( if  myVisibility.toLowerCase().equals(new  String("off"))
+      then  
+        ( isVisible := false  
+        ) 
+    ) ;
+  let - = setVisible(isVisible)
+  in 
+    skip ;
+  return  
+) ;
+
+public  updateContext : () ==> <VOID>
+updateContext() == 
+( dcl   valueError : bool  := false  ,
+        db : [Database] := Database`getDatabase(),
+        acType : [AircraftType] := nil  ,
+        ac : [Aircraft] := nil  ,
+        refdes : [RefDes] := nil  ,
+        context : [ContextState] := ContextState`getContextState(),
+        contextUpdates : [ContextSet] := new  ContextSet(),
+        nextAircraftType : [String] := getUpdateValue(ContextTypes`AIRCRAFT_TYPE , context),
+        nextTailNumber : [String] := getUpdateValue(ContextTypes`TAIL_NUMBER , context),
+        nextRefDes : [String] := getUpdateValue(ContextTypes`REFDES , context),
+        nextPin : [String] := getUpdateValue(ContextTypes`PIN , context),
+        nextWire : [String] := getUpdateValue(ContextTypes`WIRE , context),
+        nextBundle : [String] := getUpdateValue(ContextTypes`BUNDLE , context);
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (IllegalArgumentException,j2v_exception)) -> 
+        ( dcl   e : [IllegalArgumentException] := j2v_exception;
+          let - = Toolkit`getDefaultToolkit().beep()
+          in 
+            skip ;
+          valueError := true  
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( acType := updateAcTypeContext(db , nextAircraftType , contextUpdates);
+      ac := updateAcContext(db , acType , nextTailNumber , contextUpdates)
+    ) ;
+  if  contextUpdates.size() > 0
+  then  
+    ( if  nextRefDes <> nil   or  nextWire <> nil   or  nextPin <> nil   or  nextBundle <> nil  
+      then  
+        ( let - = skipFieldBlanking()
+          in 
+            skip 
+        ) ;
+      let - = context.setCurrentContext(contextUpdates)
+      in 
+        skip 
+    ) 
+  else  
+    ( let - = restoreContextFields(context)
+      in 
+        skip 
+    ) ;
+  if  not  valueError
+  then  
+    ( context := ContextState`getContextState();
+      let - = contextUpdates.removeAll()
+      in 
+        skip ;
+      trap  j2v_exception with  
+        cases  true  : 
+          (isofclass  (IllegalArgumentException,j2v_exception)) -> 
+            ( dcl   e : [IllegalArgumentException] := j2v_exception;
+              let - = Toolkit`getDefaultToolkit().beep()
+              in 
+                skip 
+            ) ,
+          others  -> 
+            exit  j2v_exception
+        end  
+      in  
+        ( if  nextRefDes <> nil   or  nextPin <> nil  
+          then  
+            ( refdes := updateRefDesContext(db , ac , nextRefDes , contextUpdates);
+              let - = updatePinContext(db , refdes , nextPin , contextUpdates)
+              in 
+                skip 
+            ) 
+          else  
+            if  nextWire <> nil  
+            then  
+              ( let - = updateWireContext(db , ac , nextWire , contextUpdates)
+                in 
+                  skip 
+              ) 
+            else  
+              ( let - = updateBundleContext(db , ac , nextBundle , contextUpdates)
+                in 
+                  skip 
+              ) 
+        ) ;
+      if  contextUpdates.size() > 0
+      then  
+        ( let - = context.setCurrentContext(contextUpdates)
+          in 
+            skip 
+        ) 
+      else  
+        ( let - = restoreContextFields(context)
+          in 
+            skip 
+        ) 
+    ) ;
+  return  
+) ;
+
+private  skipFieldBlanking : () ==> <VOID>
+skipFieldBlanking() == 
+( skipFieldBlanking := true  ;
+  return  <VOID>
+) ;
+
+public  addTipField : int  * int  * int  * int  ==> <VOID>
+addTipField(xLocation, yLocation, width, columns) == 
+( let - = tipField.setColumns(width)
+  in 
+    skip ;
+  let - = setStatusConstraints(xLocation , yLocation , columns)
+  in 
+    skip ;
+  let - = add(tipField , statusConstraints)
+  in 
+    skip ;
+  return  
+) ;
+
+public  getDisplayProperties : () ==> <VOID>
+getDisplayProperties() == 
+( let - = getStatusTipProperties()
+  in 
+    skip ;
+  ( dcl   idx : int  := 1;
+    while  getStatusFieldProperties(idx) do  
+    ( skip ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  
+) ;
+
+public  setTipText : [String] ==> <VOID>
+setTipText(tipText) == 
+( let - = tipField.setText(tipText)
+  in 
+    skip ;
+  return  
+) ;
+
+public  StatusPanel : [String] ==> StatusPanel
+StatusPanel(myPanelName) == 
+( let - = JPanel()
+  in 
+    skip ;
+  statusConstraints := new  GridBagConstraints();
+  statusLayout := new  GridBagLayout();
+  let - = setLayout(statusLayout)
+  in 
+    skip ;
+  let - = setPanelName(myPanelName)
+  in 
+    skip ;
+  statusConstraints.insets.bottom := 1;
+  statusConstraints.insets.left := 1;
+  statusConstraints.insets.right := 1;
+  statusConstraints.insets.top := 1;
+  statusConstraints.anchor := GridBagConstraints`WEST;
+  tipField := new  JTextField();
+  let - = tipField.setFont(STATUS_FONT)
+  in 
+    skip ;
+  let - = tipField.setEditable(false  )
+  in 
+    skip ;
+  let - = setBackground(Color`lightGray)
+  in 
+    skip ;
+  return  
+) ;
+
+private  getStatusTipProperties : () ==> <VOID>
+getStatusTipProperties() == 
+( dcl   queryString : [String] := new  String(panelName+new  String(".status_tip.1.")),
+        xPosition : [String] := DWDSProperties`getProperty(queryString+new  String("x")),
+        yPosition : [String] := DWDSProperties`getProperty(queryString+new  String("y")),
+        width : [String] := DWDSProperties`getProperty(queryString+new  String("width")),
+        columns : [String] := DWDSProperties`getProperty(queryString+new  String("columns")),
+        fieldWidth : int  := 0,
+        fieldColumns : int  := 0,
+        xLocation : int  := 0,
+        yLocation : int  := 0;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (NumberFormatException,j2v_exception)) -> 
+        ( dcl   dwdsException : [DWDSException] := new  DWDSException(),
+                e : [NumberFormatException] := j2v_exception;
+          let - = dwdsException.addMessage(DWDSException`InvalidPrefsEntry , queryString)
+          in 
+            skip ;
+          let - = errorLog.showExceptionMsgs(dwdsException)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( xLocation := Integer.parseInt(xPosition);
+      yLocation := Integer.parseInt(yPosition);
+      fieldWidth := Integer.parseInt(width);
+      fieldColumns := Integer.parseInt(columns);
+      let - = addTipField(xLocation , yLocation , fieldWidth , fieldColumns)
+      in 
+        skip 
+    ) ;
+  return  
+) ;
+
+public  setPanelName : [String] ==> <VOID>
+setPanelName(myPanelName) == 
+( panelName := myPanelName;
+  let - = setVisibility()
+  in 
+    skip ;
+  return  
+) ;
+
+public  displayWireInfo : [Wire] ==> <VOID>
+displayWireInfo(wire) == 
+( dcl   componentCount : int  := getComponentCount();
+  ( dcl   idx : int  := 0;
+    while  idx < componentCount do  
+    ( dcl   component : [Component] := getComponent(idx);
+      if  is_ (component,[StatusTextField]) and  is_ ((def l_7 :  StatusTextField = (component)
+      in l_7).getDataType(),[WireDataTypes])
+      then  
+        ( dcl   statusTextField : [StatusTextField] := component,
+                wireDataType : [WireDataTypes] := statusTextField.getDataType();
+          let - = statusTextField.setText(WireDataTypes`decodeValue(wireDataType , wire))
+          in 
+            skip 
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  
+) ;
+
+private  getStatusFieldProperties : int  ==> bool 
+getStatusFieldProperties(entryNumber) == 
+( dcl   queryString : [String] := new  String(panelName+new  String(".status_field.")+entryNumber+new  String(".")),
+        labelName : [String] := DWDSProperties`getProperty(queryString+new  String("label")),
+        typeName : [String] := DWDSProperties`getProperty(queryString+new  String("data_type")),
+        xPosition : [String] := DWDSProperties`getProperty(queryString+new  String("x")),
+        yPosition : [String] := DWDSProperties`getProperty(queryString+new  String("y")),
+        width : [String] := DWDSProperties`getProperty(queryString+new  String("width")),
+        columns : [String] := DWDSProperties`getProperty(queryString+new  String("columns")),
+        editable : [String] := DWDSProperties`getProperty(queryString+new  String("editable")),
+        valuesFound : bool  := (labelName <> nil   or  typeName <> nil   or  xPosition <> nil   or  yPosition <> nil   or  width <> nil   or  columns <> nil   or  editable <> nil  );
+  if  valuesFound
+  then  
+    ( dcl   dataType : [Object] := ContextTypes`type(typeName);
+      if  dataType = nil  
+      then  
+        ( dataType := WireDataTypes`type(typeName)
+        ) ;
+      ( dcl   fieldWidth : int  := 0,
+              fieldColumns : int  := 0,
+              xLocation : int  := 0,
+              yLocation : int  := 0,
+              intDataValid : bool  := true  ;
+        trap  j2v_exception with  
+          cases  true  : 
+            (isofclass  (NumberFormatException,j2v_exception)) -> 
+              ( dcl   e : [NumberFormatException] := j2v_exception;
+                intDataValid := false  
+              ) ,
+            others  -> 
+              exit  j2v_exception
+          end  
+        in  
+          ( xLocation := Integer.parseInt(xPosition);
+            yLocation := Integer.parseInt(yPosition);
+            fieldWidth := Integer.parseInt(width);
+            fieldColumns := Integer.parseInt(columns)
+          ) ;
+        ( dcl   fieldEditable : bool  := (editable <> nil   and  editable.toLowerCase().equals(new  String("true")));
+          if  labelName <> nil   and  dataType <> nil   and  intDataValid
+          then  
+            ( let - = addStatusField(new  String([  ]) , labelName , xLocation , yLocation , fieldWidth , fieldColumns , dataType , fieldEditable)
+              in 
+                skip 
+            ) 
+          else  
+            ( dcl   dwdsException : [DWDSException] := new  DWDSException();
+              let - = dwdsException.addMessage(DWDSException`InvalidPrefsEntry , queryString)
+              in 
+                skip ;
+              let - = errorLog.showExceptionMsgs(dwdsException)
+              in 
+                skip 
+            ) 
+        ) 
+      ) 
+    ) ;
+  return  valuesFound
+) ;
+
+private  setStatusConstraints : int  * int  * int  ==> <VOID>
+setStatusConstraints(xLocation, yLocation, columns) == 
+( statusConstraints.gridx := xLocation;
+  statusConstraints.gridy := yLocation;
+  statusConstraints.gridwidth := columns;
+  if  columns > 1
+  then  
+    ( statusConstraints.fill := GridBagConstraints`HORIZONTAL
+    ) 
+  else  
+    ( statusConstraints.fill := GridBagConstraints`NONE
+    ) ;
+  return  
+) ;
+
+private  getStatusField : [ContextTypes] ==> [StatusTextField]
+getStatusField(contextType) == 
+( dcl   statusField : [StatusTextField] := nil  ,
+        componentCount : int  := getComponentCount(),
+        components : map  int  to  [Component] := getComponents();
+  ( dcl   idx : int  := 0;
+    while  idx < componentCount and  statusField = nil   do  
+    ( if  is_ (components(idx),[StatusTextField])
+      then  
+        ( statusField := components(idx);
+          if  statusField.getDataType() <> contextType or  statusField.getText().trim().length() = 0 or  not  statusField.isEditable()
+          then  
+            ( statusField := nil  
+            ) 
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  statusField
+) ;
+
+private  getStatusValue : [ContextTypes] ==> [String]
+getStatusValue(contextType) == 
+( dcl   statusValue : [String] := nil  ,
+        componentCount : int  := getComponentCount(),
+        components : map  int  to  [Component] := getComponents();
+  ( dcl   idx : int  := 0;
+    while  idx < componentCount and  statusValue = nil   do  
+    ( if  is_ (components(idx),[StatusTextField])
+      then  
+        ( dcl   statusTextField : [StatusTextField] := components(idx);
+          if  statusTextField.getDataType() = contextType and  statusTextField.isEditable()
+          then  
+            ( statusValue := statusTextField.getText().trim();
+              if  statusValue.length() = 0
+              then  
+                ( statusValue := nil  
+                ) 
+            ) 
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  statusValue
+) ;
+
+public  displayContextInfo : [ContextSet] ==> <VOID>
+displayContextInfo(contextSet) == 
+( dcl   componentCount : int  := getComponentCount();
+  ( dcl   idx : int  := 0;
+    while  idx < componentCount do  
+    ( dcl   component : [Component] := getComponent(idx);
+      if  is_ (component,[StatusTextField]) and  is_ ((def l_7 :  StatusTextField = (component)
+      in l_7).getDataType(),[ContextTypes])
+      then  
+        ( dcl   statusTextField : [StatusTextField] := component,
+                contextDataType : [ContextTypes] := statusTextField.getDataType(),
+                contextValue : [Object] := contextSet.get(contextDataType);
+          if  contextValue = nil  
+          then  
+            ( if  not  skipFieldBlanking
+              then  
+                ( let - = statusTextField.setText(new  String([  ]))
+                  in 
+                    skip 
+                ) 
+            ) 
+          else  
+            ( let - = statusTextField.setText(contextValue)
+              in 
+                skip 
+            ) 
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  skipFieldBlanking := false  ;
+  return  
+) ;
+
+private  restoreContextFields : [ContextState] ==> <VOID>
+restoreContextFields(context) == 
+( dcl   statusField : [StatusTextField] := nil  ,
+        dataType : [Object] := nil  ,
+        componentCount : int  := getComponentCount(),
+        components : map  int  to  [Component] := getComponents();
+  ( dcl   idx : int  := 0;
+    while  idx < componentCount do  
+    ( if  is_ (components(idx),[StatusTextField])
+      then  
+        ( statusField := components(idx);
+          dataType := statusField.getDataType();
+          if  statusField.isEditable() and  is_ (dataType,[ContextTypes]) and  statusField.getText().trim().length() = 0
+          then  
+            ( dcl   contextType : [ContextTypes] := dataType,
+                    contextObject : [Object] := context.getCurrentContextFieldObject(contextType),
+                    contextValue : [String] := getContextValue(contextType , contextObject);
+              if  contextValue <> nil  
+              then  
+                ( let - = statusField.setText(contextValue)
+                  in 
+                    skip 
+                ) 
+            ) 
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  
+) ;
+
+private  getContextValue : [ContextTypes] * [Object] ==> [String]
+getContextValue(contextType, contextObject) == 
+( dcl   contextValue : [String] := nil  ;
+  if  contextObject <> nil  
+  then  
+    ( if  contextType = ContextTypes`AIRCRAFT_TYPE
+      then  
+        ( contextValue := (def l_5 :  AircraftType = (contextObject)
+          in l_5).getMDS()
+        ) 
+      else  
+        if  contextType = ContextTypes`TAIL_NUMBER
+        then  
+          ( contextValue := (def l_5 :  Aircraft = (contextObject)
+            in l_5).getAcName()
+          ) 
+        else  
+          if  contextType = ContextTypes`REFDES
+          then  
+            ( contextValue := (def l_5 :  RefDes = (contextObject)
+              in l_5).getName()
+            ) 
+          else  
+            if  contextType = ContextTypes`PIN
+            then  
+              ( contextValue := contextObject
+              ) 
+            else  
+              if  contextType = ContextTypes`WIRE
+              then  
+                ( contextValue := (def l_5 :  Wire = (contextObject)
+                  in l_5).getName()
+                ) 
+              else  
+                if  contextType = ContextTypes`BUNDLE
+                then  
+                  ( contextValue := (def l_5 :  Bundle = (contextObject)
+                    in l_5).toString()
+                  ) 
+    ) ;
+  return  contextValue
+) ;
+
+private  getUpdateValue : [ContextTypes] * [ContextState] ==> [String]
+getUpdateValue(contextType, context) == 
+( dcl   contextObject : [Object] := context.getCurrentContextFieldObject(contextType),
+        contextValue : [String] := getContextValue(contextType , contextObject),
+        updateValue : [String] := getStatusValue(contextType);
+  if  updateValue <> nil   and  contextValue <> nil   and  (updateValue.equals(contextValue) or  updateValue.length() = 0)
+  then  
+    ( updateValue := nil  
+    ) ;
+  return  updateValue
+) ;
+
+private  addStatusField : [String] * [String] * int  * int  * int  * int  * [Object] * bool  ==> <VOID>
+addStatusField(text, description, xLocation, yLocation, width, columns, dataType, fieldEditable) == 
+( dcl   statusTextField : [StatusTextField] := new  StatusTextField(text , description , self   , dataType , fieldEditable);
+  let - = statusTextField.setColumns(width)
+  in 
+    skip ;
+  let - = setStatusConstraints(xLocation , yLocation , columns)
+  in 
+    skip ;
+  let - = add(statusTextField , statusConstraints)
+  in 
+    skip ;
+  return  
+) ;
+
+private  updateAcTypeContext : [Database] * [String] * [ContextSet] ==> [AircraftType]
+updateAcTypeContext(db, nextAircraftType, contextUpdates) == 
+( dcl   acType : [AircraftType] := nil  ;
+  if  nextAircraftType = nil  
+  then  
+    ( acType := db.getCurrentContextObject(ContextTypes`AIRCRAFT_TYPE)
+    ) 
+  else  
+    ( acType := db.getAircraftTypeByMDS(nextAircraftType);
+      if  acType <> nil  
+      then  
+        ( let - = contextUpdates.put(ContextTypes`AIRCRAFT_TYPE , nextAircraftType)
+          in 
+            skip 
+        ) 
+      else  
+        ( dcl   statusTextField : [StatusTextField] := getStatusField(ContextTypes`AIRCRAFT_TYPE);
+          if  statusTextField <> nil  
+          then  
+            ( let - = statusTextField.selectAll()
+              in 
+                skip 
+            ) ;
+          exit  new  IllegalArgumentException(new  String("Unknown Aircraft Type: ")+nextAircraftType)
+        ) 
+    ) ;
+  return  acType
+) ;
+
+private  updatePinContext : [Database] * [RefDes] * [String] * [ContextSet] ==> <VOID>
+updatePinContext(db, refdes, nextPin, contextUpdates) == 
+( dcl   pinFound : bool  := false  ;
+  if  nextPin <> nil  
+  then  
+    ( if  refdes <> nil  
+      then  
+        ( pinFound := db.containsPin(refdes , nextPin)
+        ) ;
+      if  refdes <> nil   and  pinFound
+      then  
+        ( let - = contextUpdates.put(ContextTypes`PIN , nextPin)
+          in 
+            skip 
+        ) 
+      else  
+        ( dcl   statusTextField : [StatusTextField] := getStatusField(ContextTypes`PIN);
+          if  statusTextField <> nil  
+          then  
+            ( let - = statusTextField.selectAll()
+              in 
+                skip 
+            ) ;
+          exit  new  IllegalArgumentException(new  String("Unknown Pin: ")+nextPin)
+        ) 
+    ) ;
+  return  <VOID>
+) ;
+
+private  updateWireContext : [Database] * [Aircraft] * [String] * [ContextSet] ==> <VOID>
+updateWireContext(db, ac, nextWire, contextUpdates) == 
+( dcl   wire : [Wire] := nil  ;
+  if  nextWire <> nil  
+  then  
+    ( wire := db.getWire(ac , nextWire);
+      if  wire <> nil  
+      then  
+        ( let - = contextUpdates.put(ContextTypes`WIRE , nextWire)
+          in 
+            skip 
+        ) 
+      else  
+        ( dcl   statusTextField : [StatusTextField] := getStatusField(ContextTypes`WIRE);
+          if  statusTextField <> nil  
+          then  
+            ( let - = statusTextField.selectAll()
+              in 
+                skip 
+            ) ;
+          exit  new  IllegalArgumentException(new  String("Unknown Wire: ")+nextWire)
+        ) 
+    ) ;
+  return  <VOID>
+) ;
+
+private  updateAcContext : [Database] * [AircraftType] * [String] * [ContextSet] ==> [Aircraft]
+updateAcContext(db, acType, nextTailNumber, contextUpdates) == 
+( dcl   ac : [Aircraft] := nil  ;
+  if  nextTailNumber = nil  
+  then  
+    ( ac := db.getCurrentContextObject(ContextTypes`TAIL_NUMBER)
+    ) 
+  else  
+    ( if  acType <> nil  
+      then  
+        ( ac := db.getAircraft(acType , nextTailNumber)
+        ) ;
+      if  acType <> nil   and  ac <> nil  
+      then  
+        ( let - = contextUpdates.put(ContextTypes`TAIL_NUMBER , nextTailNumber)
+          in 
+            skip 
+        ) 
+      else  
+        ( dcl   statusTextField : [StatusTextField] := getStatusField(ContextTypes`TAIL_NUMBER);
+          if  statusTextField <> nil  
+          then  
+            ( let - = statusTextField.selectAll()
+              in 
+                skip 
+            ) ;
+          exit  new  IllegalArgumentException(new  String("Unknown Aircraft: ")+nextTailNumber)
+        ) 
+    ) ;
+  return  ac
+) ;
+
+private  updateBundleContext : [Database] * [Aircraft] * [String] * [ContextSet] ==> <VOID>
+updateBundleContext(db, ac, nextBundle, contextUpdates) == 
+( dcl   bundle : [Bundle] := nil  ;
+  if  nextBundle <> nil  
+  then  
+    ( bundle := db.getBundle(ac , nextBundle);
+      if  bundle <> nil  
+      then  
+        ( let - = contextUpdates.put(ContextTypes`BUNDLE , nextBundle)
+          in 
+            skip 
+        ) 
+      else  
+        ( dcl   statusTextField : [StatusTextField] := getStatusField(ContextTypes`BUNDLE);
+          if  statusTextField <> nil  
+          then  
+            ( let - = statusTextField.selectAll()
+              in 
+                skip 
+            ) ;
+          exit  new  IllegalArgumentException(new  String("Unknown Bundle: ")+nextBundle)
+        ) 
+    ) ;
+  return  <VOID>
+) ;
+
+private  updateRefDesContext : [Database] * [Aircraft] * [String] * [ContextSet] ==> [RefDes]
+updateRefDesContext(db, ac, nextRefDes, contextUpdates) == 
+( dcl   refdes : [RefDes] := nil  ;
+  if  nextRefDes = nil  
+  then  
+    ( refdes := db.getCurrentContextObject(ContextTypes`REFDES)
+    ) 
+  else  
+    ( refdes := db.getRefDes(ac , nextRefDes);
+      if  refdes <> nil  
+      then  
+        ( let - = contextUpdates.put(ContextTypes`REFDES , nextRefDes)
+          in 
+            skip 
+        ) 
+      else  
+        ( dcl   statusTextField : [StatusTextField] := getStatusField(ContextTypes`REFDES);
+          if  statusTextField <> nil  
+          then  
+            ( let - = statusTextField.selectAll()
+              in 
+                skip 
+            ) ;
+          exit  new  IllegalArgumentException(new  String("Unknown RefDes: ")+nextRefDes)
+        ) 
+    ) ;
+  return  refdes
+) ;
+
+instance variables 
+  public  static STATUS_FONT : [Font] := new  Font(new  String("Monospaced") , Font`PLAIN , 12);
+  private  panelName : [String];
+  private  tipField : [JTextField];
+  private  statusConstraints : [GridBagConstraints];
+  private  statusLayout : [GridBagLayout];
+  private  errorLog : [ExceptionsFrame] := ExceptionsFrame`getExceptionsFrame();
+  private  skipFieldBlanking : bool  := false  
+  
+end  StatusPanel

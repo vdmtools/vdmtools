@@ -1,0 +1,8 @@
+class A
+functions
+        
+public f(a:nat) r:nat == 
+  is subclass responsibility
+post r > a;
+
+end A 

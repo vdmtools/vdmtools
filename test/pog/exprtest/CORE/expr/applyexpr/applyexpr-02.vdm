@@ -1,0 +1,52 @@
+class ApplyExprTest
+types
+
+  T = nat
+  inv n == n < 6;
+
+  T2 = seq of nat | bool
+  inv n == true;
+
+  T3 = <RED> | <GREEN>;
+
+  Arec::a1:nat
+   a2: [Brec]
+   a3: [Crec | bool];
+
+  Brec::b:nat;
+   
+  Crec::c: (nat| Brec | seq of (Arec | Brec))
+
+
+functions
+
+  f(a : nat) r : nat
+  pre a < 8
+  post a > r;
+
+  g: () -> T | T2 | bool
+  g() ==
+    [7,9];
+
+  h: T3 +> T3
+  h(v) ==
+    if v = <RED>
+    then h(<GREEN>)
+    else <RED>
+    
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> nat
+TestOP() ==
+  let x = if 7 < 9
+          then [1,8,9,true]
+          elseif 9 = 7
+          then lambda x : nat & x + 1
+          else {8 |-> 9, 9 |-> 6}
+  in return x(9);
+
+------------------------------------------------------------------------------
+end ApplyExprTest

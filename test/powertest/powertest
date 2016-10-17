@@ -1,0 +1,16 @@
+#!/bin/bash
+
+DIR=`dirname $0`
+INSTALL_DIR=/usr/local/omniORB
+PYTHONPATH=$INSTALL_DIR/lib/python2.2/site-packages:$INSTALL_DIR/lib/python2.2/site-packages/omniORB
+PYTHONPATH=$PYTHONPATH:$INSTALL_DIR/lib/python2.3/site-packages:$INSTALL_DIR/lib/python2.3/site-packages/omniORB
+PYTHONPATH=$PYTHONPATH:$INSTALL_DIR/lib/python2.4/site-packages:$INSTALL_DIR/lib/python2.4/site-packages/omniORB
+PYTHONPATH=$PYTHONPATH:$INSTALL_DIR/lib/python2.5/site-packages:$INSTALL_DIR/lib/python2.5/site-packages/omniORB
+PYTHONPATH=$PYTHONPATH:$INSTALL_DIR/lib/python2.6/site-packages:$INSTALL_DIR/lib/python2.6/site-packages/omniORB
+PYTHONPATH=$PYTHONPATH:$INSTALL_DIR/lib64/python2.6/site-packages:$INSTALL_DIR/lib64/python2.6/site-packages/omniORB
+PYTHONPATH=$PYTHONPATH:$INSTALL_DIR/lib/python2.7/site-packages:$INSTALL_DIR/lib/python2.7/site-packages/omniORB
+PYTHONPATH=$PYTHONPATH:$INSTALL_DIR/lib64/python2.7/site-packages:$INSTALL_DIR/lib64/python2.7/site-packages/omniORB
+export PYTHONPATH
+export LD_LIBRARY_PATH=$INSTALL_DIR/lib:$LD_LIBRARY_PATH
+export DYLD_LIBRARY_PATH=$INSTALL_DIR/lib:$DYLD_LIBRARY_PATH
+$DIR/powertest.script $@

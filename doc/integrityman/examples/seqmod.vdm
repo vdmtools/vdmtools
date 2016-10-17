@@ -1,0 +1,11 @@
+functions
+
+SeqMod: nat1 * real * seq of real -> seq of real
+SeqMod(ind,val,list) ==
+  list ++ {ind |-> val}
+pre ind in set inds list
+
+--PO
+--(forall ind : nat1, val : real, list : seq of real &
+--   ind in set inds (list) =>
+--      dom ({ind |-> val}) subset inds (list))

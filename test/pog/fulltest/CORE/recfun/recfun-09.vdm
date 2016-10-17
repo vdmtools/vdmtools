@@ -1,0 +1,30 @@
+class A
+
+functions 
+
+public
+idhf : nat -> nat 
+idhf(n) == n;
+
+public
+half : nat -> nat
+half(n) == 
+  if n = 0 then 0
+  else if n = 1 then 0
+  else 1 + half(n-2)
+measure idhf;
+
+public
+idlog : nat -> nat
+idlog(n) == n;
+
+public
+log : nat -> nat
+log(n) == 
+  if n = 0 then 0
+  else if n = 1 then 0
+  else 1 + log(1+half(n-2))
+measure idlog;
+
+
+end A

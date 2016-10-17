@@ -1,0 +1,7 @@
+mk_DefaultMod`Realm( 
+   { mk_DefaultMod`NPoint( 1,1 ),
+     mk_DefaultMod`NPoint( 1,9 ),
+     mk_DefaultMod`NPoint( 5,3 ) },
+   { mk_DefaultMod`NSeg( 
+        { mk_DefaultMod`NPoint( 1,1 ),
+          mk_DefaultMod`NPoint( 5,3 ) } ) } )

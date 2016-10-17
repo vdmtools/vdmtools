@@ -1,0 +1,12 @@
+#!/bin/sh   
+
+## Runs a collection of VDM++ test examples for the sorting example.
+## Uses a more advanced method for checking equality between result
+## and expected result.
+SPEC=../sort.vdm
+
+## Generate the test coverage file vdm.tc
+vdmde -p -R vdm.tc $SPEC
+
+## Find all argument files and run them on the specification.
+find . -type f -name \*.arg -exec vdmtest_adv {} \;

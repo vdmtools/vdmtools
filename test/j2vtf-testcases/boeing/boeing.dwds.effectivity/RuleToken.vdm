@@ -1,0 +1,8 @@
+class RuleToken
+operations 
+public  doTask : [TokenStack] ==> <VOID>
+doTask(stack) == 
+is subclass responsibility ;
+
+
+end  RuleToken

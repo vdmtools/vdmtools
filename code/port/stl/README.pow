@@ -1,0 +1,84 @@
+Note for PowerSoft's Power++ Users
+
+----------------------------------------------------------------------------
+
+Known problems
+
+Subject: Re: SGI STL Adaptation Page updated (STLport 2.031 release)
+Date: Wed, 1 Oct 1997 16:30:48 -0400
+From: Doni_Grande@ethyl.com (Doni Grande)
+
+This version (2.031) seems to work with Powersoft's Power++ 2.0 compiler,
+which is based on the Watcom C/C++ 11.0 compiler. The STL debug mode still
+won't compile, but everything else seems to work. Power++ does some memory
+management in debug mode that needs to be worked around, and there is a
+nuisance warning message that needs to be suppressed. I generally load all
+the STL headers I use in a single header file, and do the workarounds needed
+there. The STL.HPP file I use is below.
+
+// Power++ 2.0 include file
+//
+// stl.hpp -- Include all the files in the standard SGI STL distribution
+//
+
+#ifndef _STL_HPP_INCLUDED
+#define _STL_HPP_INCLUDED
+
+// Define symbol to indicate SGI STL
+#ifndef __SGISTL
+#define __SGISTL
+#endif
+
+// The following turns off warning 549:
+// 'sizeof' operand contains compiler generated information // This warning
+remains disabled after loading this file.
+
+#pragma warning 549 9;
+
+/* Redefine the C++ "new" and "delete" operators to not go through the
+component library's memory checker. */
+#if defined( _DEBUG ) && defined( new )
+# undef new
+# undef delete
+# define _REDEFINE_WNEW
+#endif
+
+// If can get STL debug working, use the following
+// #if defined( _DEBUG )
+// # define __STL_DEBUG 1 // #endif
+
+// Get rid of Watcom's min and max macros
+#undef min
+#undef max
+
+// Get configuration defines #include "stlcomp.h"
+
+#include "algo.h"
+#include "bvector.h"
+#include "deque.h"
+#include "heap.h"
+#include "list.h"
+#include "map.h"
+#include "multimap.h"
+#include "multiset.h"
+#include "pair.h"
+#include "set.h"
+#include "stack.h"
+#include "tempbuf.h"
+#include "vector.h"
+
+// SGI-specific additions
+#include "rope.h"
+#include "slist.h"
+#include "function.h"
+#include "hash_map.h"
+#include "hash_set.h"
+
+#ifdef _REDEFINE_WNEW
+# include "wnew.hpp"
+# undef _REDEFINE_WNEW
+#endif
+
+#endif
+
+----------------------------------------------------------------------------

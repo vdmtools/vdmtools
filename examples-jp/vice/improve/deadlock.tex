@@ -1,0 +1,18 @@
+\subsection{Increased support for analysis of deadlocks}
+
+Whenever a deadlock is reached in VDMTools, it can be hard for a
+user to determine what the cause of the deadlock is. Thus, the suggestion
+is to enable the user to inspect the state of the interpreter in this
+situation in a more convenient way. This could for example include:
+
+\begin{itemize}
+\item The ability to evaluate / debug the guards (synchronisation
+predicates) for the different selected operations that are active in
+that context
+\item Inspect the value of the history counters for the different
+operations in an easy manner
+\item The ability to inquire the status of the interpreter scheduler
+and all tasks
+\end{itemize}
+
+

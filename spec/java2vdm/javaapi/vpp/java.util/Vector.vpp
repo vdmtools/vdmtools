@@ -1,0 +1,484 @@
+-- extends JavaUtilAbstractList implements JavaUtilList, JavaLangCloneable
+--class JavaUtilVector is subclass of JavaUtilAbstractCollection
+class JavaUtilVector is subclass of JavaUtilAbstractList
+
+	instance variables
+
+	protected
+	capacityIncrement : int := 10;
+	public
+	elementCount: int := 0;
+	public
+	elementData: seq of JavaLangObject := [];
+
+	private
+	vector_capacity: int := capacityIncrement;
+
+	operations
+
+	public
+	JavaUtilVector: <NIL> ==> JavaUtilVector
+	JavaUtilVector (-) ==
+    isNil:=true;
+
+	public
+	JavaUtilVector: () ==> JavaUtilVector
+	JavaUtilVector () ==
+    let - = JavaUtilVector(10) in skip;
+
+	public
+	JavaUtilVector: int ==> JavaUtilVector
+	JavaUtilVector (-) ==
+    skip;
+
+  public
+  JavaUtilVector: int * int ==> JavaUtilVector
+  JavaUtilVector(initialCapacity, capacityIncrement) ==
+  ( -- let - = new JavaUtilAbstractList() in skip;
+    if initialCapacity < 0
+    then
+    ( dcl s: JavaLangString := new JavaLangString("Illegal Capacity: ");
+      s:=s.concat(new JavaLangInteger(initialCapacity).toString());
+      exit new JavaLangIllegalArgumentException(s)
+    );
+	  -- elementData := new JavaLangObject[initialCapacity];
+	  JavaUtilVector`capacityIncrement := capacityIncrement;
+  );
+
+	public
+	add: JavaLangObject ==> bool
+	add(o) == (
+		elementData := elementData ^ [o];
+    elementCount:=elementCount+1;
+		if (len elementData > vector_capacity) then (
+			vector_capacity := vector_capacity + 10
+		);
+		return true
+	);
+
+	public
+	addAll: JavaUtilCollection ==> bool 
+	addAll(c) == (
+--		if (c.IsNil()) then (
+--			exit new JavaLangNullPointerException();
+--		) elseif (c.size() = 0) then (
+		if (c.size() = 0) then (
+			return true
+		) elseif (isofclass(JavaUtilVector,c)) then (
+			let v: JavaUtilVector = c
+			in
+				elementData := elementData ^  v.elementData;
+			elementCount := len elementData;
+			while (elementCount > vector_capacity) do (
+				vector_capacity := vector_capacity + capacityIncrement;
+			);
+			return true
+			
+		) else (
+			dcl it: JavaUtilIterator := c.iterator();
+			while (it.hasNext()) do (
+				elementData := elementData ^ [it.next()];
+			);
+			elementCount := len elementData;
+			while (elementCount > vector_capacity) do (
+				vector_capacity := vector_capacity + capacityIncrement;
+			);
+			return true
+		)
+	);
+
+	public
+	addAllIn: int * JavaUtilCollection ==> bool
+	addAllIn(index,c) == (
+		if (index <0 or index > size()) then (
+			exit new JavaLangArrayIndexOutOfBoundsException();
+--		) elseif (c.IsNil()) then (
+--			exit new JavaLangNullPointerException();
+		) elseif (c.size() = 0) then (
+			return true
+		) elseif (isofclass(JavaUtilVector,c)) then (
+			let v: JavaUtilVector = c
+			in
+				elementData := 
+					[elementData(i) | i in set inds elementData & i <= index] ^
+				  v.elementData ^
+				  [elementData(j) | j in set inds elementData & j > index];
+			elementCount := len elementData;
+			while (elementCount > vector_capacity) do (
+				vector_capacity := vector_capacity + capacityIncrement;
+			);
+			return true
+			
+		) else (
+			dcl it: JavaUtilIterator := c.iterator();
+			dcl aux: seq of JavaLangObject := [];
+			while (it.hasNext()) do (
+				aux := aux ^ [it.next()];
+			);
+			elementData := 
+				[elementData(i) | i in set inds elementData & i <= index] ^ aux ^
+			  [elementData(j) | j in set inds elementData & j > index];
+			elementCount := len elementData;
+			while (elementCount > vector_capacity) do (
+				vector_capacity := vector_capacity + capacityIncrement;
+			);
+			return true
+		)
+	);
+
+	public
+	addElement: JavaLangObject ==> ()
+	addElement(o) == (
+		elementData := elementData ^ [o];
+    elementCount:=elementCount+1;
+		if (len elementData > vector_capacity) then (
+			vector_capacity := vector_capacity + 10
+		)
+	);
+
+	public
+	addIntObj: int * JavaLangObject ==> bool 
+	addIntObj(pos,o) == (
+		if (pos < 0 or pos > size()) then (
+			exit new JavaLangArrayIndexOutOfBoundsException();
+		) else (
+			elementData :=
+						[elementData(i) | i in set inds(elementData) & i <= pos] ^
+						[o] ^
+						[elementData(j) | j in set inds(elementData) & j >  pos];
+			elementCount := len elementData;
+			if (len elementData > vector_capacity) then (
+				vector_capacity := vector_capacity + 10
+			);
+			return true
+		)
+	);
+
+  public insertElementAt : JavaLangObject * int ==> ()
+  insertElementAt(obj, index) ==
+  (
+	  if index >= elementCount + 1
+    then
+    ( dcl s: JavaLangString := new JavaLangInteger(index).toString();
+          s:=s.concat(new JavaLangString(" > "));
+          s:=s.concat(new JavaLangInteger(elementCount).toString());
+	    exit new JavaLangArrayIndexOutOfBoundsException(s);
+	  );
+    let - = addIntObj(index,obj) in skip
+  );
+
+	public clear: () ==> ()
+	clear() == (
+		elementData := [];
+		elementCount := 0
+	);
+
+	public clone: () ==> JavaLangObject
+	clone() == (
+		dcl new_vector: JavaUtilVector := new JavaUtilVector();
+		new_vector.elementData := [elementData(i).clone() | 
+																i in set inds elementData];
+		return new_vector
+	);
+
+  public
+  toArray: () ==> map int to JavaLangObject
+  toArray() ==
+  ( dcl result: map int to JavaLangObject := {|->},
+        i: int := 0,
+        e: JavaUtilEnumeration := elements();
+--	JavaLangSystem.arraycopy(elementData, 0, result, 0, elementCount);
+    while e.hasMoreElements()
+    do
+    ( result:=result ++ {i|->e.nextElement()};
+      i:=i+1
+    ); 
+	  return result;
+  );
+
+	public contains: JavaLangObject ==> bool
+	contains(elem) ==
+		return elem in set elems elementData;
+
+	public containsAll: JavaUtilCollection ==> bool 
+	containsAll(c) ==
+--		if (c.IsNil()) then (
+--			exit new JavaLangNullPointerException();
+--		) elseif (isofclass(JavaUtilVector,c)) then (
+		if (isofclass(JavaUtilVector,c)) then (
+			let v: JavaUtilVector = c
+			in
+				return elems v.elementData subset elems elementData
+		) else (
+			dcl it : JavaUtilIterator := c.iterator();
+			dcl aux: bool := true;
+			while (aux = true and it.hasNext()) do (
+				if (contains(it.next()) = false) then (
+					aux := false
+				)
+			);
+			return aux
+		);
+
+	public elementAt: int ==> JavaLangObject
+	elementAt(index) == (
+		if (index <0 or index >= size()) then (
+			exit new JavaLangArrayIndexOutOfBoundsException();
+		) else (
+			return elementData(index+1);
+		)
+	);
+
+	public firstElement: () ==> JavaLangObject
+	firstElement() ==
+		if (elementData = []) then (
+			exit new JavaUtilNoSuchElementException()
+		) else (
+			return hd elementData
+		);
+
+	public get: int ==> JavaLangObject
+	get(index) == elementAt(index);
+
+	public isEmpty: () ==> bool
+	isEmpty() ==
+		return elementData = [];
+
+	public indexOf: JavaLangObject ==> int
+	indexOf(elem) ==
+		if (elem.IsNil()) then (
+			if (elem in set elems elementData) then (
+				return hd [i-1| i in set inds elementData & elementData(i) = elem]
+			) else (
+				return -1
+			)
+		) else (
+			if (exists x in set inds elementData & 
+					elementData(x).equals(elem) = true ) then (
+				return hd [i-1| i in set inds elementData & 
+				              elementData(i).equals(elem) = true]
+			) else (
+				return -1
+			)
+		);
+
+	public indexOfFrom: JavaLangObject * int ==> int
+	indexOfFrom(elem,index) ==
+		if (indexOf(elem) < index) then (
+			return -1
+		) else (
+			return indexOf(elem)
+		);
+
+	public lastElement: () ==> JavaLangObject
+	lastElement() ==
+		if (elementData = []) then (
+			exit new JavaUtilNoSuchElementException()
+		) else (
+			return elementData(len(elementData));
+		);
+
+	public remove: int ==> JavaLangObject
+	remove(index) ==
+		if (index < 0 or index >= size()) then (
+			exit new JavaLangArrayIndexOutOfBoundsException()
+		) else (
+			dcl res: JavaLangObject := elementData(index+1);
+			elementData := [elementData(i)|i in set inds elementData & i <> index+1];
+ 			elementCount := len elementData;
+			return res
+		);
+
+	public remove': JavaLangObject ==> bool
+	remove'(o) == (
+		dcl aux: int := indexOf(o);
+		if (aux < 0) then (
+			return false;
+		) else (
+			elementData := [elementData(i)|i in set inds elementData & i <> aux];
+ 			elementCount := len elementData;
+			return true
+		)
+	);
+
+  public
+  removeAllElements: () ==> ()
+  removeAllElements() ==
+  ( --for i=1 to elementCount
+    --do elementData(i) := JavaLangObject`NIL;
+    elementData := [];
+  	elementCount := 0
+  );
+
+	public removeElementAt: int ==> ()
+	removeElementAt(index) ==
+  (
+	  if index >= elementCount 
+    then
+    ( dcl s: JavaLangString := new JavaLangInteger(index).toString();
+          s:=s.concat(new JavaLangString(" >= "));
+          s:=s.concat(new JavaLangInteger(elementCount).toString());
+	    exit new JavaLangArrayIndexOutOfBoundsException(s);
+	  )
+   	elseif index < 0
+    then exit new JavaLangArrayIndexOutOfBoundsException(index);
+	  let - = remove(index) in skip
+  );
+
+  public removeElement: JavaLangObject ==> bool
+  removeElement(obj) ==
+  (	modCount:=modCount+1;
+	  return remove'(obj);
+  );
+
+	public removeAll: JavaUtilCollection ==> bool 
+	removeAll(c) == (
+--		if (c.IsNil()) then (
+--			exit new JavaLangNullPointerException();
+--		) elseif (isofclass(JavaUtilVector,c)) then (
+		if (isofclass(JavaUtilVector,c)) then (
+			let v: JavaUtilVector = c,
+			    oldsize: int = elementCount
+			in (
+				elementData := [elementData(i) | i in set inds elementData &
+				                v.contains(elementData(i)) = false];
+				elementCount := len elementData;
+				if (elementCount < oldsize) then (
+					return true
+				) else (
+					return false
+				)
+			)	
+		) else (
+			dcl it : JavaUtilIterator := c.iterator();
+			dcl oldsize : int := elementCount;
+			while (it.hasNext()) do (
+				dcl obj : JavaLangObject := it.next();
+				dcl aux : bool   := true;
+				while (contains(obj)) do (
+					aux := remove'(obj)
+				)
+			);
+			if (len elementData < oldsize) then (
+				return true
+			) else (
+				return false
+			)
+		)
+	);
+
+	public retainAll: JavaUtilCollection ==> bool
+	retainAll(c) == (
+--		if (c.IsNil()) then (
+--			exit new JavaLangNullPointerException();
+--		) elseif (isofclass(JavaUtilVector,c)) then (
+		if (isofclass(JavaUtilVector,c)) then (
+			let v: JavaUtilVector = c,
+			    oldsize: int = elementCount
+			in (
+				elementData := [elementData(i) | i in set inds elementData &
+				                v.contains(elementData(i)) = true];
+				elementCount := len elementData;
+				if (elementCount < oldsize) then (
+					return true
+				) else (
+					return false
+				)
+			)	
+		) else (
+			dcl it : JavaUtilIterator := c.iterator();
+			dcl oldsize : int := elementCount;
+			while (it.hasNext()) do (
+				dcl obj : JavaLangObject := it.next();
+				dcl aux : bool   := true;
+				if (contains(obj)=false) then (
+					aux := remove'(obj)
+				)
+			);
+			if (len elementData < oldsize) then (
+				return true
+			) else (
+				return false
+			)
+		)
+	);
+
+	public
+	set__: int * JavaLangObject ==> JavaLangObject
+	set__(index,element) == (
+		if (index < 0 or index >= size()) then (
+			exit new JavaLangArrayIndexOutOfBoundsException()
+		) else (
+			dcl ret_obj: JavaLangObject := elementData(index+1);
+			elementData := [elementData(i) | i in set inds elementData & i <= index] ^
+			               [element] ^ 
+			               [elementData(j) | j in set inds elementData & j > index+1];
+			return ret_obj
+		)
+	);
+
+	public
+  setElementAt: JavaLangObject * int ==> ()
+	setElementAt(element,index) ==
+  ( let - = set__(index,element) in skip
+  );
+
+	public
+	size: () ==> int
+	size() ==
+		return len elementData;
+
+	public subList: int * int ==> JavaUtilList
+	subList(fromIndex,toIndex) == 
+		if (fromIndex > toIndex) then (
+			exit new JavaLangIllegalArgumentException();
+		) elseif (fromIndex < 0 or toIndex > size()) then (
+			exit new JavaLangIndexOutOfBoundsException();
+		) else (
+			dcl res_list: JavaUtilAbstractList := new JavaUtilAbstractList();
+			if (fromIndex = toIndex) then (
+				return res_list
+			) else (
+				dcl aux : bool := true;
+				dcl aux : bool := true;
+				for i=fromIndex to toIndex-1 do (
+					aux := res_list.add(elementData(i+1))
+				);
+				return res_list
+			)
+		);
+	
+    public elements : () ==> JavaUtilEnumeration
+    elements() ==
+      return new VEnumeration(self);
+
+end JavaUtilVector
+
+class VEnumeration is subclass of JavaUtilEnumeration
+instance variables
+  v : JavaUtilVector;
+  count : int;
+
+operations
+  public VEnumeration : JavaUtilVector ==> VEnumeration
+  VEnumeration(v) ==
+  ( VEnumeration`v := v;
+    count := 1;
+  );
+
+	public hasMoreElements : () ==> bool
+	hasMoreElements () ==
+    return count <= v.elementCount;
+
+  public  nextElement : () ==> JavaLangObject
+  nextElement () ==
+  ( dcl o: JavaLangObject:= JavaLangObject`NIL;
+    if count <= v.elementCount
+    then
+    ( o:=v.elementData(count);
+      count := count+1
+    );
+    return o
+  );
+
+end VEnumeration

@@ -1,0 +1,37 @@
+import java.awt.*;
+import dk.ifad.toolbox.VDM.*;
+
+public class GraphicsTest{
+  
+  public static void main(String args[]) {
+
+    // sp: Sequence of PolyLine2
+
+    try {
+      Sequence sp = new Sequence();
+      
+      Box2 win = new Box2();
+      int w = 300;
+      int h = 300;
+      win.setBox2(new Vector2(),new Double(w),new Double (h));
+      PlotApp pa = new PlotApp();
+      sp = pa.plotData(win);
+      
+      PolyLineFrame gf = new PolyLineFrame();
+      Rectangle r = new Rectangle(0,0,w,h);
+      gf.setBounds(r);
+      // sp: Sequence of PolyLine2
+      gf.setPolyLines(sp);
+      gf.getBounds();
+      gf.show();
+    }
+    catch (CGException e){
+      System.out.println(e.getMessage());
+    }
+  }
+}
+
+
+
+
+

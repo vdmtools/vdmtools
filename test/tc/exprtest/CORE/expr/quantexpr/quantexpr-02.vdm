@@ -1,0 +1,13 @@
+class QuantExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = forall l1 ^ l2 in set {} & len l1 > len l2
+  in skip;
+
+------------------------------------------------------------------------------
+end QuantExprTest

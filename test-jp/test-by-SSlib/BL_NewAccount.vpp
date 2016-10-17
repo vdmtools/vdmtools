@@ -1,0 +1,108 @@
+/*$Header: /home/vdmtools/cvsroot/toolbox/test-jp/test-by-SSlib/BL_NewAccount.vpp,v 1.1 2005/11/25 07:05:37 vdmtools Exp $*/
+--------------------------------------------------------
+class 『普通預金口座開設』  is subclass of GofoBizLogic
+/* 
+目的
+　普通預金口座を、インターネットから顧客が開設する。
+開始条件
+　インターネットからの顧客の申請。
+アクター
+　顧客
+*/
+
+operations
+public check : 『普通預金口座開設伝票』 * 『普通預金口座開設_Carton』 ==> GofoBizLogicReturn
+check(ある伝票, あるカートン) ==
+	let	普通預金口座帳簿 = あるカートン.環境を得る("普通預金口座帳簿"),
+		顧客帳簿 = あるカートン.環境を得る("顧客帳簿")
+		--帳簿列 = あるカートン.帳簿列を得る(),
+		--普通預金口座帳簿 = 帳簿列(1),
+		--顧客帳簿 = 帳簿列(2)
+	in
+	(
+	dcl 返値 : GofoBizLogicReturn := new GofoBizLogicReturn();
+	
+	返値 := 返値.putError(new 伝票IDValidator().isValid(ある伝票.伝票ID));
+	返値 := 返値.putError(new 顧客IDValidator().isValid(ある伝票.顧客ID));
+	返値 := 返値.putError(new 営業店IDValidator().isValid(ある伝票.担当営業店ID));
+	返値 := 返値.putError(new パスワードValidator().isValid(ある伝票.登録パスワード));
+	返値 := 返値.putError(new 識別子Validator().isValid(ある伝票.普通預金ID));
+	
+	--前件チェック
+	---マスターチェック
+	if not 顧客帳簿.存在する(ある伝票.顧客ID) then
+		(
+		返値 := 返値.putError(new GofoApplicationException(0, "該当顧客が存在しない。")).
+		putSlip(ある伝票)
+		);
+	
+	if 普通預金口座帳簿.存在する(ある伝票.普通預金ID) then
+		(
+		返値 := 返値.putError(new GofoApplicationException(1, "普通預金口座がすでに存在する。")).
+		putSlip(ある伝票)
+		);
+		
+	return 返値
+	);
+
+public apply : 『普通預金口座開設伝票』 * 『普通預金口座開設_Carton』 ==> GofoBizLogicReturn
+apply(ある伝票, あるカートン) == 
+	let	普通預金口座帳簿 = あるカートン.環境を得る("普通預金口座帳簿"),
+		顧客帳簿 = あるカートン.環境を得る("顧客帳簿"),
+		入出金記録帳簿 = あるカートン.環境を得る("入出金記録帳簿")
+	in
+	(
+	dcl 返値 : GofoBizLogicReturn := new GofoBizLogicReturn();
+	dcl 普通預金 : GofoBook;
+	dcl 顧客 : GofoBook;
+	普通預金 := 
+		普通預金口座帳簿.create(
+			ある伝票.普通預金ID, 
+			ある伝票.顧客ID, 
+			ある伝票.発行時刻,
+			ある伝票.担当営業店ID,
+			ある伝票.登録パスワード
+		);
+	顧客 := 顧客帳簿.findByKeyValues(ある伝票.顧客ID);
+	顧客.明細記録を設定する(mu(顧客.明細記録を得る(), 普通預金口座ID |-> ある伝票.普通預金ID));
+	顧客.update();
+	-- 後件チェック
+	if 入出金記録帳簿.口座残高(ある伝票.普通預金ID, ある伝票.発行時刻) <> 0 then
+		(
+		返値 := 返値.putError(new GofoApplicationException(2, "口座開設時の口座残高が０でない。")).
+		putSlip(ある伝票)
+		);
+		
+	return 返値
+	)
+post
+	let	普通預金口座帳簿 = あるカートン.環境を得る("普通預金口座帳簿"),
+		顧客帳簿 = あるカートン.環境を得る("顧客帳簿"),
+		顧客 = 顧客帳簿.findByKeyValues(ある伝票.顧客ID),
+		普通預金口座 = 普通預金口座帳簿.findByKeyValues(ある伝票.普通預金ID)
+	in
+	--同一顧客の普通預金口座は他に存在しない
+	普通預金口座 <> nil and
+	--自己申請に基づく普通預金口座（顧客、普通預金口座番号、担当営業店、登録パスワード）が開設されている
+	普通預金口座帳簿.普通預金設定済(ある伝票.普通預金ID, ある伝票.顧客ID, ある伝票.担当営業店ID, ある伝票.登録パスワード) and
+	--　『顧客』と『普通預金口座』の関連が１対１であることで示されている
+	顧客.明細記録を得る().普通預金口座ID = ある伝票.普通預金ID
+	;
+
+public export : 『普通預金口座開設伝票』 * 『普通預金口座開設_Carton』 ==> GofoBizLogicReturn
+export(ある伝票, あるカートン) == is not yet specified;
+  /*# 出力伝票生成
+  def export(s, c)
+    puts "普通預金口座開設：新規登録：export"
+  end
+  */
+
+public summaryExport : 『普通預金口座開設_Carton』 ==> GofoBizLogicReturn
+summaryExport(あるカートン) == is not yet specified;
+  /*# 集計出力伝票生成
+  def summaryExport(c)
+    puts "普通預金口座開設：新規登録：summaryExport"
+  end
+  */
+
+end  『普通預金口座開設』

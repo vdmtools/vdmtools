@@ -1,0 +1,61 @@
+class C
+
+instance variables
+
+i : nat := 0;
+b : bool;
+
+operations
+
+protected
+  C: nat ==> C
+  C(n) ==
+    i := n;
+
+--protected
+public 
+  C: nat * bool ==> C
+  C(n,b2) ==
+    (b := b2;
+     i := n);
+    
+public Get : () ==> nat
+Get() ==
+  return i;
+    
+public Get2 : () ==> bool
+Get2() ==
+  return b;
+    
+public Get2 : seq of char ==> seq of char
+Get2(p_str) ==
+  return p_str;
+  
+public Get2 : map token to nat1 ==> map token to nat1
+Get2(p_map) ==
+  return p_map;
+  
+end C
+class D is subclass of C
+
+operations
+
+public D: () ==> D
+D() ==
+  skip;
+  
+end D
+class B
+
+operations
+
+Op:() ==> nat * seq of char
+Op() ==
+  (let d = new D(5,true) in
+   return mk_(d.Get(),d.Get2("test")));
+
+public Test : () ==> nat * seq of char
+Test() ==
+  Op();
+  
+end B

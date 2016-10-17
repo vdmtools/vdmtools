@@ -1,0 +1,21 @@
+--$Id: Product.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $
+class Product
+/*
+責任
+	組(Product, Tuple)を表す。
+概要
+	組型で定義された機能以外の機能を定義する。
+参照
+	多くの関数は、関数型プログラミング言語Concurrent Cleanのライブラリーから移植した。
+*/
+
+functions
+--カリー化を行う
+static public Curry[@型1, @型2, @型3] : (@型1 * @型2 -> @型3) -> @型1 -> @型2 -> @型3
+Curry(関数)(x)(y) == 関数(x, y);
+
+--カリー化の逆
+static public Uncurry[@型1, @型2, @型3] : (@型1 -> @型2 -> @型3) -> @型1 * @型2 -> @型3
+Uncurry(関数)(x,y) == 関数(x)(y);
+
+end Product

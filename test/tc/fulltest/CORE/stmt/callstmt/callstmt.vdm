@@ -1,0 +1,38 @@
+class CallStmtTest
+
+operations
+
+  Call1: nat ==> nat
+  Call1(n) ==
+    if true
+    then return 7
+    else Call1(0);
+
+  Call2: () ==> ()
+  Call2() ==
+    if Call1(1) <> 8
+    then Call2();
+
+  Call3: () ==> nat
+  Call3() ==
+    (Call2();
+     Call1(2));
+
+  Call4: bool * set of nat ==> ()
+  Call4(b,s1 union s2) ==
+    if b and s1 = s2
+    then Call4(6,{8,0});
+
+  Call5: () ==> ()
+  Call5() ==
+    DummyCall();
+
+  Call6: rat * char ==> nat
+  Call6(r,c) ==
+    Call3(r,c)
+
+end CallStmtTest
+
+
+
+

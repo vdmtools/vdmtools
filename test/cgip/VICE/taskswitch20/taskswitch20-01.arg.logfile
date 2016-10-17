@@ -1,0 +1,65 @@
+ThreadCreate -> id: 1 period: false objref: nil clnm: nil cpunm: 0 time: 0
+ThreadSwapIn -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 0
+DeployObj ->  objref: 1 clnm: "Shared" cpunm: 0 time: 0
+DeployObj ->  objref: 2 clnm: "B" cpunm: 0 time: 0
+DeployObj ->  objref: 3 clnm: "A" cpunm: 0 time: 0
+DeployObj ->  objref: 4 clnm: "A" cpunm: 0 time: 0
+OpRequest -> id: 1 opname: "A`Test" objref: 4 clnm: "A" cpunm: 0 async: false time: 2
+OpActivate -> id: 1 opname: "A`Test" objref: 4 clnm: "A" cpunm: 0 async: false time: 2
+DeployObj ->  objref: 5 clnm: "Shared" cpunm: 0 time: 2
+DeployObj ->  objref: 6 clnm: "B" cpunm: 0 time: 8
+DeployObj ->  objref: 7 clnm: "B" cpunm: 0 time: 12
+OpRequest -> id: 1 opname: "Shared`Init" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 20
+OpActivate -> id: 1 opname: "Shared`Init" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 20
+OpCompleted -> id: 1 opname: "Shared`Init" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 26
+OpRequest -> id: 1 opname: "B`Init" objref: 6 clnm: "B" cpunm: 0 async: false time: 32
+OpActivate -> id: 1 opname: "B`Init" objref: 6 clnm: "B" cpunm: 0 async: false time: 32
+OpCompleted -> id: 1 opname: "B`Init" objref: 6 clnm: "B" cpunm: 0 async: false time: 46
+OpRequest -> id: 1 opname: "B`Init" objref: 7 clnm: "B" cpunm: 0 async: false time: 52
+OpActivate -> id: 1 opname: "B`Init" objref: 7 clnm: "B" cpunm: 0 async: false time: 52
+OpCompleted -> id: 1 opname: "B`Init" objref: 7 clnm: "B" cpunm: 0 async: false time: 66
+ThreadCreate -> id: 2 period: false objref: 6 clnm: "B" cpunm: 0 time: 70
+ThreadCreate -> id: 3 period: false objref: 7 clnm: "B" cpunm: 0 time: 74
+OpRequest -> id: 1 opname: "Shared`IsFinished" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 78
+ThreadSwapOut -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 78
+ThreadSwapIn -> id: 2 objref: 6 clnm: "B" cpunm: 0 overhead: 2 time: 80
+OpRequest -> id: 2 opname: "B`Op" objref: 6 clnm: "B" cpunm: 0 async: false time: 80
+OpActivate -> id: 2 opname: "B`Op" objref: 6 clnm: "B" cpunm: 0 async: false time: 80
+OpRequest -> id: 2 opname: "Shared`wait" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 84
+OpActivate -> id: 2 opname: "Shared`wait" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 84
+OpRequest -> id: 2 opname: "Shared`AddToWaitSet" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 92
+OpActivate -> id: 2 opname: "Shared`AddToWaitSet" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 92
+OpCompleted -> id: 2 opname: "Shared`AddToWaitSet" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 104
+OpRequest -> id: 2 opname: "Shared`Awake" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 106
+ThreadSwapOut -> id: 2 objref: 6 clnm: "B" cpunm: 0 overhead: 2 time: 106
+ThreadSwapIn -> id: 3 objref: 7 clnm: "B" cpunm: 0 overhead: 2 time: 108
+OpRequest -> id: 3 opname: "B`Op" objref: 7 clnm: "B" cpunm: 0 async: false time: 108
+OpActivate -> id: 3 opname: "B`Op" objref: 7 clnm: "B" cpunm: 0 async: false time: 108
+OpRequest -> id: 3 opname: "Shared`wait" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 112
+OpActivate -> id: 3 opname: "Shared`wait" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 112
+OpCompleted -> id: 3 opname: "Shared`wait" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 120
+OpRequest -> id: 3 opname: "Shared`join" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 124
+OpActivate -> id: 3 opname: "Shared`join" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 124
+OpCompleted -> id: 3 opname: "Shared`join" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 124
+OpRequest -> id: 3 opname: "Shared`notify" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 128
+OpActivate -> id: 3 opname: "Shared`notify" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 128
+OpCompleted -> id: 3 opname: "Shared`notify" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 152
+OpCompleted -> id: 3 opname: "B`Op" objref: 7 clnm: "B" cpunm: 0 async: false time: 156
+ThreadSwapOut -> id: 3 objref: 7 clnm: "B" cpunm: 0 overhead: 2 time: 158
+ThreadSwapIn -> id: 2 objref: 6 clnm: "B" cpunm: 0 overhead: 2 time: 160
+OpActivate -> id: 2 opname: "Shared`Awake" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 160
+OpCompleted -> id: 2 opname: "Shared`Awake" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 160
+OpCompleted -> id: 2 opname: "Shared`wait" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 166
+OpRequest -> id: 2 opname: "Shared`join" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 170
+OpActivate -> id: 2 opname: "Shared`join" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 170
+OpCompleted -> id: 2 opname: "Shared`join" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 170
+OpRequest -> id: 2 opname: "Shared`notify" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 174
+OpActivate -> id: 2 opname: "Shared`notify" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 174
+OpCompleted -> id: 2 opname: "Shared`notify" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 178
+OpCompleted -> id: 2 opname: "B`Op" objref: 6 clnm: "B" cpunm: 0 async: false time: 182
+ThreadSwapOut -> id: 2 objref: 6 clnm: "B" cpunm: 0 overhead: 2 time: 184
+ThreadSwapIn -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 186
+OpActivate -> id: 1 opname: "Shared`IsFinished" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 186
+OpCompleted -> id: 1 opname: "Shared`IsFinished" objref: 5 clnm: "Shared" cpunm: 0 async: false time: 186
+OpCompleted -> id: 1 opname: "A`Test" objref: 4 clnm: "A" cpunm: 0 async: false time: 204
+ThreadSwapOut -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 206

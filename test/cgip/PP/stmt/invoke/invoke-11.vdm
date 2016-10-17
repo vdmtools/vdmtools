@@ -1,0 +1,47 @@
+class A
+
+instance variables
+  n : nat := 0;
+
+operations
+
+
+  GetN: () ==> nat
+  GetN() ==
+    return n;
+
+  SetN: nat ==> ()
+  SetN(v) ==
+    n := v
+
+end A
+
+class T20XXX
+
+operations
+public  GetN: nat ==> nat
+  GetN(n) ==
+    return n*n;
+
+
+  SetN: nat ==> nat
+  SetN(n) ==
+    return n+n
+  
+end T20XXX
+
+class B
+
+operations
+
+public Test : () ==> nat * nat
+  Test()==
+  ( dcl o : A |  T20XXX := new T20XXX(),
+        n1: nat,
+        n2: nat;
+    n1 := o.GetN(10);
+    n2 := o.GetN(20);
+    return mk_(n1,n2)
+  )
+    
+end B

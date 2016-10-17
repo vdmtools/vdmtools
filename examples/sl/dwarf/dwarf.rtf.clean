@@ -1,0 +1,242 @@
+
+--LINE 8 1
+types
+
+  LampId = <L1> | <L2> | <L3>;
+
+values
+
+  darklamps: set of LampId = {};
+
+  stoplamps: set of LampId = {<L1>,<L2>};
+
+  warninglamps: set of LampId = {<L1>,<L3>};
+
+  drivelamps: set of LampId = {<L2>,<L3>};
+
+
+--LINE 11 1
+types
+
+  Signal = map LampId to Lamp
+  inv m == dom m = {<L1>,<L2>,<L3>};
+
+
+--LINE 14 1
+  Lamp ::
+     ports    : set of PortId
+     scanners : set of ScanId;
+
+  PortId = <A> | <B>;
+
+  ScanId = <LA> | <LB> | <SA> | <SB> | <SAB>;
+
+
+--LINE 17 1
+values
+
+  L1On : Lamp = mk_Lamp({},{<SA>,<SB>,<LA>});
+
+  L1Off: Lamp = mk_Lamp({<A>,<B>},{<SAB>,<LB>});
+
+  L2On : Lamp = L1On;
+
+  L2Off: Lamp = L1Off;
+
+  L3On : Lamp = L1Off;
+
+  L3Off: Lamp = L1On;
+
+  darksignals: Signal = {<L1> |-> L1Off,
+                         <L2> |-> L2Off,
+                         <L3> |-> L3Off};
+                                        
+  stopsignals: Signal = {<L1> |-> L1On,
+                         <L2> |-> L2On,
+                         <L3> |-> L3Off};
+                                        
+  warningsignals: Signal = {<L1> |-> L1On,
+                            <L2> |-> L2Off,
+                            <L3> |-> L3On};
+
+  drivesignals: Signal = {<L1> |-> L1Off,
+                          <L2> |-> L2On,
+                          <L3> |-> L3On};
+                                        
+
+
+--LINE 20 1
+types
+  
+  LogCom = <stop> | <dark> | <drive> | <warning>;
+
+  Message = LogCom | <unknown> | <port_failure>;
+
+  Errors = map ElemId to [<ABU> | <ANU>];
+
+  ElemId = PortId | ScanId;
+
+
+--LINE 23 1
+operations
+
+  Control: [LogCom] * set of LampId ==> Message * Errors * Trace
+  Control(com,failures) ==
+    let newstate = NormalTrans(com)
+    in
+      ErrorCorrection(com,newstate,failures) 
+  pre AllowedCommand(com,lampstate);
+
+
+--LINE 26 1
+functions
+
+  AllowedCommand: [LogCom] * Signal +> bool
+  AllowedCommand(com,signal) ==
+    (com = <dark> => signal in set {stopsignals,darksignals}) and
+    (com in set {<warning>,<drive>} => signal <> darksignals);
+
+
+--LINE 29 1
+types
+
+  Trace = seq of set of LampId;
+
+state Dwarf of
+    trace : Trace
+    lampstate : Signal
+  inv mk_Dwarf(t,s) == 
+          MaxOneLampChange(t) and 
+          StopToDriveOrWarning(t) and
+          ToAndFromDark(t) and
+          AlwaysDefinedState(s) -- this may change when error are 
+                                -- taken into account
+  init s == s = mk_Dwarf([stoplamps],stopsignals)
+end
+
+
+--LINE 32 1
+operations
+
+  NormalTrans: [LogCom] ==> Dwarf
+  NormalTrans(command) ==
+    cases command:
+      nil       -> return mk_Dwarf([],lampstate),
+      <dark>    -> let t = if lampstate = stopsignals
+                           then [{<L1>},darklamps]
+                           else [] -- already in darksignals state
+                   in
+                     return mk_Dwarf(t,darksignals),
+      <stop>    -> let t = if lampstate = darksignals
+                           then [{<L1>},stoplamps]
+                           elseif lampstate = warningsignals
+                           then [{<L1>},stoplamps]
+                           elseif lampstate = drivesignals
+                           then [{<L2>},stoplamps]
+                           else [] -- already in stopsignals state
+                   in
+                     return mk_Dwarf(t,stopsignals),
+      <warning> -> let t = if lampstate = drivesignals
+                           then [{<L3>},warninglamps]
+                           elseif lampstate = stopsignals
+                           then [{<L1>},warninglamps]
+                           else [] -- already in warningsignals state
+                   in
+                     return mk_Dwarf(t,warningsignals),
+      <drive>   -> let t = if lampstate = warningsignals
+                           then [{<L3>},drivelamps]
+                           elseif lampstate = stopsignals
+                           then [{<L2>},drivelamps]
+                           else [] -- already in drivesignals state
+                   in
+                     return mk_Dwarf(t,drivesignals)
+    end
+  pre AllowedCommand(command,lampstate);
+
+
+--LINE 35 1
+  ErrorCorrection: [LogCom] * Dwarf * set of LampId ==> 
+                   Message * Errors * Trace
+  ErrorCorrection(com,dwarf,failures) ==
+     if failures = {<L2>}
+     then (cases com:
+             nil       -> let curlamps = trace(len trace)
+                          in
+                            if <L2> in set curlamps
+                            then let errdwarf = NormalTrans(<warning>)
+                                 in
+                                   NoCorrection(com,errdwarf,failures)
+                            else NoCorrection(com,dwarf,failures),
+             <dark>    -> NoCorrection(com,dwarf,failures),
+             <stop>    -> let errdwarf = NormalTrans(<warning>)
+                          in
+                            NoCorrection(com,errdwarf,failures),
+             <warning> -> NoCorrection(com,dwarf,failures),
+             <drive>   -> let errdwarf = NormalTrans(<warning>)
+                          in
+                            NoCorrection(com,errdwarf,failures)
+           end;
+          )
+     else (-- other error sitiuations have not yet been coped with
+           NoCorrection(com,dwarf,failures));
+
+  NoCorrection: [LogCom] * Dwarf * set of LampId ==> 
+                Message * Errors * Trace
+  NoCorrection(com,mk_Dwarf(newtr,newsignals),failures) ==
+    (trace := trace ^ newtr;
+     lampstate := newsignals;
+     let m = if failures <> {}
+             then <port_failure>
+             elseif com = nil
+             then <unknown>
+             else com
+     in
+       return mk_(m,{|->},newtr));
+
+functions
+
+
+--LINE 38 1
+  MaxOneLampChange: Trace +> bool
+  MaxOneLampChange(t) ==
+    forall i in set inds t \ {1} &
+        card (t(i -1) \  t(i)) <= 1 and card (t(i) \ t(i - 1)) <= 1;
+
+
+--LINE 41 1
+  StopToDriveOrWarning: Trace +> bool
+  StopToDriveOrWarning(t) ==
+    forall i,j in set inds t & 
+           (i < j and t(i) = stoplamps and 
+            t(j) in set {drivelamps,warninglamps} and
+            not exists k in set {i+1,...,j-1} &
+                  t(k) in set {darklamps, warninglamps,drivelamps}) 
+             =>
+            forall k in set {i+1,...,j-1} & card t(k) < 3 and card t(k) > 0;
+
+
+--LINE 44 1
+  ToAndFromDark: Trace +> bool
+  ToAndFromDark(t) ==
+    forall i in set inds t & t(i) = darklamps => ToOrFromStop(t,i); 
+
+  ToOrFromStop: Trace * nat1 +> bool
+  ToOrFromStop(t,i) ==
+    (i > 2 => t(i - 2) = stoplamps) and 
+    (i + 1 < len t => t(i + 2) = stoplamps);
+
+
+--LINE 47 1
+  AlwaysDefinedState: Signal +> bool
+  AlwaysDefinedState(sig) ==
+    sig in set {darksignals, 
+                stopsignals,
+                warningsignals,
+                drivesignals};
+
+
+--LINE 50 1
+  Inverted: LampId * ElemId +> bool
+  Inverted(lampid,elemid) ==
+    lampid in set {<L1>,<L2>} and elemid in set {<A>,<B>,<SAB>,<LB>} or
+    lampid = <L3> and elemid in set {<SA>,<SB>,<LA>};

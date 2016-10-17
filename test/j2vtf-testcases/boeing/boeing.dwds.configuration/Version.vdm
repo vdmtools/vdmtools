@@ -1,0 +1,16 @@
+class Version is subclass of Object
+operations 
+private  Version : () ==> Version
+Version() == 
+( skip 
+) ;
+
+public  static getVersion : () ==> [String]
+getVersion() == 
+( return  DWDSVersion
+) ;
+
+instance variables 
+  private  static DWDSVersion : [String] := new  String("2.07.01")
+  
+end  Version

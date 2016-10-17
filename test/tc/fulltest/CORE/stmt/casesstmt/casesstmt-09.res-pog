@@ -1,0 +1,24 @@
+[ mk_ERR`ErrMsg( 
+     10,
+     8,
+     5,
+     "Error[121] : Pattern can never match",
+     <ERROR> ),
+  mk_ERR`ErrMsg( 
+     10,
+     14,
+     17,
+     "Warning[306] : Block-Stmt will be terminated before last statement",
+     <WARNING> ),
+  mk_ERR`ErrMsg( 
+     10,
+     14,
+     15,
+     "Error[119] : others branch is not of correct type",
+     <ERROR> ),
+  mk_ERR`ErrMsg( 
+     10,
+     5,
+     3,
+     "Error[19] : Return type of operation for \"Cases\" is different from signature",
+     <ERROR> ) ]

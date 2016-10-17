@@ -1,0 +1,29 @@
+-- Applying polymorphic a function without instantiating it first.
+
+class A
+
+operations 
+
+public a1 : () ==> nat
+a1() == 
+  return g();
+
+public a2 : () ==> nat
+a2() == 
+  g();
+
+public a3 : () ==> nat
+a3() == 
+ self.g();
+
+public a4 : () ==> nat
+a4() == 
+  return new A().g();
+
+
+functions 
+
+public g[@A] : @A -> nat
+g(-) == is not yet specified;
+
+end A

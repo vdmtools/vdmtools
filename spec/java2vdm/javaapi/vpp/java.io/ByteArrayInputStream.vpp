@@ -1,0 +1,161 @@
+class JavaIoByteArrayInputStream is subclass of JavaIoInputStream
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaIoByteArrayInputStream" , <CLASS> , false  )
+instance variables 
+  private  isClosed : bool  := false  ;
+  protected  buf : map  int  to  int ;
+  protected  pos : int ;
+  protected  mark_ : int  := 0;
+  protected  count : int 
+operations 
+public  read : () ==> int 
+read() == 
+( ensureOpen();
+  def l_15 = (pos < count);
+  l_11 = pos;
+  l_10 = l_11
+  in ( if  l_15
+    then  
+      pos := l_11+1
+    else  
+      skip ;
+    def l_8 = buf(l_10)
+    in ( if  l_15
+      then  
+        pos := l_11+1
+      else  
+        skip ;
+      def l_7 = J2VUTIL`BitOp(l_8 , <AND> , 0)
+      in ( if  l_15
+        then  
+          pos := l_11+1
+        else  
+          skip ;
+        def l_6 = l_7;
+        l_1 = if  l_15 then  l_6 else  -1
+        in return  l_1
+      ) 
+    ) 
+  ) 
+) ;
+
+public  close : () ==> ()
+close() == 
+( isClosed := true  ;
+  skip 
+) ;
+
+public  mark : int  ==> ()
+mark(readAheadLimit) == 
+( ensureOpen();
+  mark_ := pos;
+) ;
+
+public  reset : () ==> ()
+reset() == 
+( ensureOpen();
+  pos := mark_;
+  skip 
+) ;
+
+public  skip__ : int  ==> int 
+skip__(n_) == 
+( dcl n: int := n_;
+  ensureOpen();
+  if  pos+n > count
+  then  
+    ( n := count-pos
+    ) ;
+  if  n < 0
+  then  
+    ( return  0
+    ) ;
+  def l_3 = pos
+  in pos := l_3+n;
+  return  n
+) ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  available : () ==> int 
+available() == 
+( ensureOpen();
+  return  count-pos
+) ;
+
+private  ensureOpen : () ==> ()
+ensureOpen() == 
+( skip 
+) ;
+
+public  markSupported : () ==> bool 
+markSupported() == 
+( return  true  
+) ;
+
+public  read : map  int  to  int  * int  * int  ==> int 
+read(b, off, len__) == 
+  return undefined;
+
+public  readMIIIntInt' : map  int  to  int  * int  * int  ==> int * map  int  to  int
+readMIIIntInt'(b_, off, len___) == 
+( dcl b: map  int  to  int := b_,
+      len__: int := len___;
+  ensureOpen();
+  if  b = {|->}
+  then  
+    ( exit  new  JavaLangNullPointerException()
+    ) 
+  else  
+    if  (off < 0) or  (off > (card  dom  b)) or  (len__ < 0) or  ((off+len__) > (card  dom  b)) or  ((off+len__) < 0)
+    then  
+      ( exit  new  JavaLangIndexOutOfBoundsException()
+      ) ;
+  if  pos >= count
+  then  
+    ( return  mk_(-1,{|->})
+    ) ;
+  if  pos+len__ > count
+  then  
+    ( len__ := count-pos
+    ) ;
+  if  len__ <= 0
+  then  
+    ( return  mk_(0,{|->})
+    ) ;
+--  let - = JavaLangSystem`arraycopy(buf , pos , b , off , len__)
+--  in 
+--    skip ;
+  for i=off to off+len__-1
+  do b(i):=buf(pos+i-off);
+  def l_3 = pos
+  in pos := l_3+len__;
+  return  mk_(len__,b)
+) ;
+
+public  JavaIoByteArrayInputStream : map  int  to  int  ==> JavaIoByteArrayInputStream
+JavaIoByteArrayInputStream(buf) == 
+( JavaIoByteArrayInputStream`buf := buf;
+  JavaIoByteArrayInputStream`pos := 0;
+  JavaIoByteArrayInputStream`count := (card  dom  buf)
+) ;
+
+public  JavaIoByteArrayInputStream : <NIL> ==> JavaIoByteArrayInputStream
+JavaIoByteArrayInputStream(-) == 
+isNil := true  ;
+
+public  JavaIoByteArrayInputStream : map  int  to  int  * int  * int  ==> JavaIoByteArrayInputStream
+JavaIoByteArrayInputStream(buf, offset, length) == 
+( JavaIoByteArrayInputStream`buf := buf;
+  JavaIoByteArrayInputStream`pos := offset;
+  JavaIoByteArrayInputStream`count
+    :=  if offset+length < card  dom  buf
+        then offset+length
+        else card  dom  buf;
+  JavaIoByteArrayInputStream`mark_ := offset
+) ;
+
+
+end  JavaIoByteArrayInputStream

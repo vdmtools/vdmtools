@@ -1,0 +1,52 @@
+module DefMod
+
+exports all
+definitions
+
+values
+  v = 10
+
+functions 
+  f1: int -> int
+  f1(i) ==
+  if pre_f2(v) then
+    i - v
+  else
+    undefined
+  pre i > v;
+
+  f2(i: int) r: int ==
+    i + v
+  pre i = v
+
+operations
+  o1: seq of int ==> set of int
+  o1(s) ==
+    return elems s
+  pre len s < v;
+
+  o2(b: bool) b': bool ==
+    return not b
+  pre b
+
+end DefMod
+
+module ApplyMod
+
+imports from DefMod all
+exports all
+
+definitions
+
+operations
+
+  Main: () ==> seq of bool
+  Main() ==
+  return 
+    [ DefMod`pre_f1(10), DefMod`pre_f1(11),
+      DefMod`pre_f2(10), DefMod`pre_f2(11),
+      DefMod`pre_o1([10]), DefMod`pre_o1([i| i in set {1,...,11}]),
+      DefMod`pre_o2(true), DefMod`pre_o2(false) ]
+      
+
+end ApplyMod

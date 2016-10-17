@@ -1,0 +1,16 @@
+\begin{vdm_al}
+class 『事象』 is subclass of 『事象共通定義』
+
+instance variables
+  private
+  事象ID : 「事象ID」;
+
+operations
+  public 『事象』: 「事象ID」 ==> 『事象』
+  『事象』 (a事象ID) == 事象ID := a事象ID;
+
+  public 事象IDを得る: () ==> 「事象ID」
+  事象IDを得る () == return 事象ID
+
+end 『事象』
+\end{vdm_al}

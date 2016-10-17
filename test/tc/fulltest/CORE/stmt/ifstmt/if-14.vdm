@@ -1,0 +1,62 @@
+class IfStmtTest
+
+operations
+
+  If10: () ==> nat
+  If10() ==
+    if true
+    then ( dcl a: nat := 0,
+               b: bool;
+	   dcl c: set of int;
+	   return ;
+	   return 8;
+	   let t = true in return t )
+    else ( let k = true in return not k;
+           SeqModify([1,2,3]) );
+
+  If12: seq of bool ==> set of int
+  If12(sb) ==
+    if true
+    then for a in sb do
+           return not sb
+    elseif 1>3
+    then for a in reverse sb do
+           return sb
+    elseif 2>3
+    then for all a in set sb do
+           skip
+    elseif 3>3
+    then for i=1 to 4 by 2 do
+           return sb(i) and true
+    elseif 4>3
+    then while true do
+           return
+    else let n = 7 in return n;
+
+  If13: () ==> nat
+  If13() ==
+    if true
+    then if 1=1
+         then let f = false in return f
+	 elseif 2=1
+	 then return [1,2,1]
+	 else return {1|->true}
+    else cases 4:
+           1 -> return not (2 >= 2),
+	   true -> return 34,
+	   others -> let n = nil in return n
+	 end;
+
+  If14: () ==> [bool | char]
+  If14() ==
+   (error;
+    if n=1
+    then If10(1)
+    elseif n=2
+    then If10()
+    elseif n=3
+    then If12({1,2,3})
+    else If13([1,2]));
+
+
+end IfStmtTest

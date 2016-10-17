@@ -1,0 +1,99 @@
+%!PS-Adobe-2.0 EPSF-2.0
+%%Title: /tmp/xfig-fig021343
+%%Creator: fig2dev Version 2.1.8 Patchlevel 0
+%%CreationDate: Mon Sep 12 10:45:51 1994
+%%For: kmh@idsun1 (Kirsten Mark Hansen,345Ø258,3754,,,,)
+%%Orientation: Portrait
+%%BoundingBox: 0 0 252 63
+%%Pages: 0
+%%EndComments
+/$F2psDict 200 dict def 
+$F2psDict begin
+$F2psDict /mtrx matrix put
+/l {lineto} bind def
+/m {moveto} bind def
+/s {stroke} bind def
+/n {newpath} bind def
+/gs {gsave} bind def
+/gr {grestore} bind def
+/clp {closepath} bind def
+/graycol {dup dup currentrgbcolor 4 -2 roll mul 4 -2 roll mul
+4 -2 roll mul setrgbcolor} bind def
+/col-1 {} def
+/col0 {0 0 0 setrgbcolor} bind def
+/col1 {0 0 1 setrgbcolor} bind def
+/col2 {0 1 0 setrgbcolor} bind def
+/col3 {0 1 1 setrgbcolor} bind def
+/col4 {1 0 0 setrgbcolor} bind def
+/col5 {1 0 1 setrgbcolor} bind def
+/col6 {1 1 0 setrgbcolor} bind def
+/col7 {1 1 1 setrgbcolor} bind def
+/col8 {.68 .85 .9 setrgbcolor} bind def
+/col9 {0 .39 0 setrgbcolor} bind def
+/col10 {.65 .17 .17 setrgbcolor} bind def
+/col11 {1 .51 0 setrgbcolor} bind def
+/col12 {.63 .13 .94 setrgbcolor} bind def
+/col13 {1 .75 .8 setrgbcolor} bind def
+/col14 {.7 .13 .13 setrgbcolor} bind def
+/col15 {1 .84 0 setrgbcolor} bind def
+	end
+/$F2psBegin {$F2psDict begin /$F2psEnteredState save def} def
+/$F2psEnd {$F2psEnteredState restore end} def
+%%EndProlog
+
+$F2psBegin
+0 setlinecap 0 setlinejoin
+-72.0 216.0 translate 0.900 -0.900 scale
+0.500 setlinewidth
+% Polyline
+n 139 179 m 179 219 l gs col-1 s gr
+% Polyline
+n 184 214 m 174 224 l gs col-1 s gr
+% Polyline
+n 164 194 m 154 204 l gs col-1 s gr
+% Polyline
+n 344 214 m 334 224 l gs col-1 s gr
+% Polyline
+n 324 194 m 314 204 l gs col-1 s gr
+% Polyline
+n 299 179 m 339 219 l gs col-1 s gr
+2.000 setlinewidth
+% Polyline
+n 119 179 m 159 179 l gs col-1 s gr
+0.500 setlinewidth
+% Polyline
+n 199 174 m 199 184 l gs col-1 s gr
+% Polyline
+n 159 174 m 159 184 l gs col-1 s gr
+% Polyline
+n 119 174 m 119 184 l gs col-1 s gr
+% Polyline
+n 79 174 m 79 184 l gs col-1 s gr
+% Polyline
+n 359 174 m 359 184 l gs col-1 s gr
+% Polyline
+n 319 174 m 319 184 l gs col-1 s gr
+% Polyline
+n 279 174 m 279 184 l gs col-1 s gr
+% Polyline
+n 239 174 m 239 184 l gs col-1 s gr
+% Polyline
+n 203 179 m 83 179 l gs col-1 s gr
+% Polyline
+n 174 169 m 174 179 l  149 179 l  149 169 l  clp gs 0.65 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 360 179 m 240 179 l gs col-1 s gr
+% Polyline
+n 339 169 m 339 179 l  314 179 l  314 169 l  clp gs 0.65 setgray fill gr
+gs col-1 s gr
+2.000 setlinewidth
+% Polyline
+n 279 179 m 299 179 l  319 199 l gs col-1 s gr
+/Times-Roman findfont 11.00 scalefont setfont
+154 239 m 
+gs 1 -1 scale (No derailing) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+299 239 m 
+gs 1 -1 scale (Possibility of derailing) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+$F2psEnd

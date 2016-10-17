@@ -1,0 +1,78 @@
+\begin{vdm_al}
+class AST is subclass of ProjectTypes
+
+types 
+  LocationType = <MEMORY> | <NONE>
+  -- LocationType could e.g. also be extended with
+  -- <REMOTE> or <FILE> later on. 
+
+  -- It might also be that an AST should have some
+  -- kind of read/write status.
+
+instance variables
+  location: LocationType := <NONE>;
+  ast: [AstVal] := nil;
+
+  inv   location = <MEMORY> => ast <> nil and
+        location = <NONE>   => ast = nil;
+
+
+operations
+
+public   Get: () ==> AstVal
+  Get() ==
+   return ast
+   pre location <> <NONE>;
+
+
+public   DeleteAST: () ==> ()
+  DeleteAST () ==
+   (location := <NONE>; 
+    ast := nil );
+
+
+public   Set: AstVal ==> ()
+  Set (ast') ==
+    cases location:
+      <MEMORY> -> ast := ast',
+      <NONE>   -> (ast := ast'; location := <MEMORY> )
+    end;
+
+  -- `Same' is used to compare two AST's. Two AST's are considered
+  -- to be the same if they are structural equal. That is, if the
+  -- two AST's represent the same specification where only the
+  -- position and type information are different.
+  -- `Same' should be used to decide the status of a class 
+  -- after syntax checking.
+
+public   Same: AstVal ==> bool
+  Same (ast') ==
+    return false;
+
+\end{vdm_al}
+$Same$ is used to compare two AST's. Two AST's are considered to be
+the same if they are structural equal. That is, if the two AST«s
+represent the same specification where only the position and type
+information are different.  $Same$ should be used to decide the status
+of a class after syntax checking.
+
+\begin{vdm_al}
+
+public   Save: StateStore ==> bool
+  Save (store) ==
+    if location = <NONE> then
+      store.WriteASTVal (location)
+    else
+      store.WriteASTVal (ast);
+
+public   Load: StateStore ==> bool
+  Load (store)  ==
+    def val = store.ReadASTVal() in
+    ( if is_AstVal(val) then
+        ( ast := val; location := <MEMORY> )
+      else
+        ( ast := nil; location := <NONE> );
+      return val <> nil )
+
+end AST
+\end{vdm_al}

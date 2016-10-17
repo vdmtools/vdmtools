@@ -1,0 +1,15 @@
+class A
+
+functions
+meas[@A] : seq of @A -> nat
+meas(a) == len a;
+
+foo[@B] : seq of @B -> seq of nat
+foo(b) == 
+  cases b:
+  []    -> [],
+  [-]^t -> [1]^foo[@B](t)
+  end
+measure meas;
+
+end A

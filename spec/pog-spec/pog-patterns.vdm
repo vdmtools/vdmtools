@@ -1,0 +1,204 @@
+\section{Proof obligations generation for patterns}
+
+\begin{vdm_al}
+module POG_PAT
+
+imports
+  from ENV all,
+  from POGTP all,
+
+  from POG_EXPR all,
+
+  from CHECK all,
+
+  from AS all,
+  from CI all,
+  from REP all
+
+exports
+  types
+    struct POG;
+
+  operations
+    pog_PatternBind : AS`PatternBind * POGTP`Context ==> POG;
+    pog_Pattern : AS`Pattern * POGTP`Context ==> POG;
+    pog_PatternSequence: seq of AS`Pattern * POGTP`Context ==> POG;
+    pog_Bind : AS`Bind * POGTP`Context ==> POG;
+    pog_SetBind : AS`SetBind * POGTP`Context ==> POG;
+    pog_TypeBind : AS`TypeBind * POGTP`Context ==> POG;
+    pog_SeqBind : AS`SeqBind * POGTP`Context ==> POG;
+    pog_BindList : AS`BindList * POGTP`Context ==> POG;
+
+definitions
+
+\end{vdm_al}
+
+\section{Patterns and Bindings}
+
+\begin{vdm_al}
+types
+  POG :: po  : seq of POGTP`ProofObligation
+         fv  : set of AS`Name
+         pid : set of AS`Name;
+
+operations
+
+  pog_PatternBind : AS`PatternBind * POGTP`Context ==> POG
+  pog_PatternBind (patbind,contxt) ==
+    cases patbind:
+      mk_AS`SetBind(-,-,-)  -> pog_SetBind(patbind,contxt),
+      mk_AS`TypeBind(-,-,-) -> pog_TypeBind(patbind,contxt),
+      others                -> pog_Pattern(patbind,contxt)
+    end;
+
+  pog_Pattern : AS`Pattern * POGTP`Context ==> POG
+  pog_Pattern (pat,contxt) ==
+      cases pat:
+        mk_AS`PatternName(-,-,-)            -> pog_PatternSequence([],contxt),
+        mk_AS`MatchVal(-,-)                 -> pog_MatchVal(pat,contxt),
+        mk_AS`SetUnionPattern (pat1,pat2,-),
+        mk_AS`SeqConcPattern (pat1,pat2,-),
+        mk_AS`MapMergePattern (pat1,pat2,-) -> pog_PatternSequence([pat1,pat2],contxt),
+        mk_AS`SetEnumPattern (pats,-),
+        mk_AS`SeqEnumPattern (pats,-),
+        mk_AS`RecordPattern (-,pats,-),
+        mk_AS`TuplePattern (pats,-)         -> pog_PatternSequence(pats,contxt),
+        mk_AS`MapEnumPattern (pats,-)       -> pog_PatternSequence(pats,contxt),
+        mk_AS`MapletPattern(dp, rp, -)      -> pog_PatternSequence([dp,rp],contxt),
+#ifdef VDMPP
+        mk_AS`ObjectPattern (-,fields,-)    -> pog_PatternSequence(fields,contxt),
+        mk_AS`FieldPattern(-, p, -)         -> pog_PatternSequence([p],contxt),
+#endif VDMPP
+        others -> error
+      end;
+
+  pog_MatchVal: AS`MatchVal * POGTP`Context ==> POG
+  pog_MatchVal (mk_AS`MatchVal(val,-),contxt) ==
+    --let pog_expr = POG_EXPR`pog_Expr(val,contxt),
+    --    -----------------------------------------
+    --    po       = pog_expr.po,
+    --    fv       = pog_expr.fv,
+    --    pid      = {}
+    --in
+    --    mk_POG(po,fv,pid);
+    def mk_POG_EXPR`POG(po,fv) = POG_EXPR`pog_Expr(val,contxt)
+    in return mk_POG(po,fv,{});
+
+  pog_PatternSequence: seq of AS`Pattern * POGTP`Context ==> POG
+  pog_PatternSequence (pats,contxt) ==
+    def pog_seq = [pog_Pattern(pats(i),contxt) | i in set inds pats];
+        ------------------------------------------------------------
+        po      = conc [pog_seq(i).po | i in set inds pog_seq];
+        fv      = dunion {pog_seq(i).fv | i in set inds pog_seq};
+        pid     = dunion {pog_seq(i).pid | i in set inds pog_seq}
+    in return mk_POG(po,fv,pid);
+
+\end{vdm_al}
+
+\subsection{Bindings}
+
+\begin{vdm_al}
+  pog_Bind : AS`Bind  * POGTP`Context ==> POG
+  pog_Bind(bind,contxt) ==
+    cases bind:
+     mk_AS`SetBind(-,-,-)  -> pog_SetBind(bind,contxt),
+     mk_AS`TypeBind(-,-,-) -> pog_TypeBind(bind,contxt)
+    end;
+
+  pog_SetBind : AS`SetBind  * POGTP`Context ==> POG
+  pog_SetBind(mk_AS`SetBind(pat,expr,-),contxt) ==
+    def  ------------------------------------------
+        pog_pat  = pog_Pattern(pat,contxt);
+        pog_expr = POG_EXPR`pog_Expr(expr,contxt);
+        ------------------------------------------
+        fv       = pog_pat.fv union pog_expr.fv;
+        pid      = pog_pat.pid;
+        names    = fv union pid;
+        ------------------------------------------
+        pog_set_tp = CHECK`SubtypeOfSet(expr,contxt);
+        pog_subtp  = CHECK`PatternSubtypeOfSetOfType(pat, expr, names, contxt);
+        ------------------------------------------
+        po       =  pog_subtp ^ pog_set_tp ^ pog_pat.po ^ pog_expr.po
+    in return mk_POG(po,fv,pid);
+
+  pog_TypeBind : AS`TypeBind * POGTP`Context ==> POG
+  pog_TypeBind(mk_AS`TypeBind(pat,tp,-),contxt) ==
+    def ------------------------------------------
+        mk_POG(po,fv,pid) = pog_Pattern(pat,contxt);
+        ------------------------------------------
+        names    = fv union pid;
+        ------------------------------------------
+        pog_subtp = CHECK`PatternSubtypeOf(pat,tp,names,contxt);
+        ------------------------------------------
+        po'      = pog_subtp ^ po
+    in return mk_POG(po',fv,pid);
+
+  pog_SeqBind : AS`SeqBind  * POGTP`Context ==> POG
+  pog_SeqBind(mk_AS`SeqBind(pat,expr,-),contxt) ==
+    def  ------------------------------------------
+        pog_pat  = pog_Pattern(pat,contxt);
+        pog_expr = POG_EXPR`pog_Expr(expr,contxt);
+        ------------------------------------------
+        fv       = pog_pat.fv union pog_expr.fv;
+        pid      = pog_pat.pid;
+        names    = fv union pid;
+        ------------------------------------------
+        pog_set_tp = CHECK`SubtypeOfSet(expr,contxt);
+        pog_subtp  = CHECK`PatternSubtypeOfSetOfType(pat, expr, names, contxt);
+        ------------------------------------------
+        po       =  pog_subtp ^ pog_set_tp ^ pog_pat.po ^ pog_expr.po
+    in return mk_POG(po,fv,pid);
+
+  pog_BindList : AS`BindList * POGTP`Context ==> POG
+  pog_BindList(binds,contxt) ==
+    def pog_seq = [pog_MultBind(binds(i),contxt) | i in set inds binds];
+        --------------------------------------------------------
+        po      = conc [pog_seq(i).po | i in set inds pog_seq];
+        fv      = dunion {pog_seq(i).fv | i in set inds pog_seq};
+        pid     = dunion {pog_seq(i).pid | i in set inds pog_seq}
+    in return mk_POG(po,fv,pid);
+
+  pog_MultBind : AS`MultBind * POGTP`Context ==> POG
+  pog_MultBind (mbinds,contxt) ==
+    cases mbinds:
+     mk_AS`MultSetBind(-,-,-)  -> pog_MultSetBind(mbinds,contxt),
+     mk_AS`MultTypeBind(-,-,-) -> pog_MultTypeBind(mbinds,contxt)
+    end;
+
+  pog_MultSetBind: AS`MultSetBind * POGTP`Context ==> POG
+  pog_MultSetBind (mk_AS`MultSetBind(pats,expr,-),contxt) ==
+    def --------------------------------------------
+        pog_pats = pog_PatternSequence(pats,contxt);
+        pog_expr = POG_EXPR`pog_Expr(expr,contxt);
+        --------------------------------------------
+        fv       = pog_pats.fv union pog_expr.fv;
+        pid      = pog_pats.pid;
+        names    = fv union pid;
+        --------------------------------------------
+        pog_set_tp = CHECK`SubtypeOfSet(expr,contxt);
+        pog_subtps = [CHECK`PatternSubtypeOfSetOfType(pats(i), expr, names, contxt) | i in set inds pats];
+        po       =  (conc pog_subtps) ^ pog_set_tp ^ pog_pats.po ^ pog_expr.po
+        --------------------------------------------
+    in return mk_POG(po,fv,pid);
+
+  pog_MultTypeBind: AS`MultTypeBind * POGTP`Context ==> POG
+  pog_MultTypeBind (mk_AS`MultTypeBind(pats,tp,-),contxt) ==
+    def --------------------------------------------
+        mk_POG(po,fv,pid) = pog_PatternSequence(pats,contxt);
+        --------------------------------------------
+        names      = fv union pid;
+        --------------------------------------------
+        pog_subtps = [CHECK`PatternSubtypeOf(pats(i),tp,names,contxt) | i in set inds pats];
+        --------------------------------------------
+        po'        = (conc pog_subtps) ^ po
+    in return mk_POG(po',fv,pid);
+
+end POG_PAT
+\end{vdm_al}
+
+\newpage
+
+\begin{rtinfo}[POG\_PAT`pog\_MultTypeBind]
+{rtinfo.ast}[POG_PAT]
+\end{rtinfo}
+

@@ -1,0 +1,21 @@
+######################################################################
+### This file describes the error messages of the Java static semantic
+### It is used to generate both the VDM-SL module and the 
+### C file.
+###
+### The syntax is very simple:
+### Lines starting with # and blank lines are ignored.
+### every second line is the number of the message, and every second line
+### is the message.
+######################################################################
+
+
+
+
+######################################################################
+###          Java statements
+######################################################################
+1
+Initializer of instance variable '%1.%2' is translated in VDM++ statements!
+2
+Internal error in class '%1': wrong type info!

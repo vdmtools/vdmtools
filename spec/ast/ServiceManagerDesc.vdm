@@ -1,0 +1,12 @@
+module ServiceManagerDesc
+
+definitions
+
+types
+
+ServiceStartUp = seq of ServiceDescription;
+
+ServiceDescription :: name : seq of char
+                      location : seq of seq of char
+
+end ServiceManagerDesc

@@ -1,0 +1,13 @@
+class SetEunumertionTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = {}
+  in skip;
+
+------------------------------------------------------------------------------
+end SetEunumertionTest

@@ -1,0 +1,18 @@
+class A
+
+operations
+
+public op : nat ==> nat
+op(-) == return 1
+
+end A
+
+class B is subclass of A
+
+operations
+
+public op : token ==> nat
+op(-) == return 1
+
+end B
+

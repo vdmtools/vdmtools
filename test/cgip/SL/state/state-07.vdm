@@ -1,0 +1,29 @@
+module A
+exports all
+definitions
+operations
+Test: () ==> int
+Test() ==
+( dcl ii : B := f();
+  let mk_B(i) = ii in return i
+)
+
+state sigma of
+	  st1 : B
+	  st2 : B
+    	  st3 : D
+	init s == s = mk_sigma( mk_B(1),c,mk_D(4,true))
+	end
+types
+	B :: b : int;
+	D :: d1 : int
+       	     d2 : bool
+
+values
+	c = mk_B(2)
+operations
+	f: () ==> B
+	f () ==
+	  def d = st2 in
+	  return d
+end A

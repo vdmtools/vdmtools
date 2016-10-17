@@ -1,0 +1,590 @@
+class EventDetector
+
+instance variables
+  static private hlctrl  : [Supervisor] := nil
+
+operations
+  public setSupervisor: Supervisor ==> ()
+  setSupervisor (phlc) == hlctrl := phlc;
+
+instance variables
+  static pimup    : nat := 0;
+  static pimdown  : nat := 0;
+  static align    : nat := 0;
+  static corr     : nat := 0;
+  static fuseup   : nat := 0
+  
+operations
+  async static public pimUpTrigger: () ==> ()
+  pimUpTrigger () == ( pimup := pimup + 1; hlctrl.pimUpEvent(pimup, time) );
+  
+  async static public pimDownTrigger: () ==> ()
+  pimDownTrigger () == ( pimdown := pimdown + 1; hlctrl.pimDownEvent(pimdown, time) );
+
+  async static public alignTrigger: () ==> ()
+  alignTrigger () == ( align := align + 1; hlctrl.alignDownEvent(align, time) );
+  
+  async static public corrTrigger: () ==> ()
+  corrTrigger () == ( corr := corr + 1; hlctrl.corrDownEvent(corr, time) );
+  
+  async static public fuseUpTrigger: () ==> ()
+  fuseUpTrigger () == ( fuseup := fuseup + 1; hlctrl.fuseUpEvent(fuseup, time) )
+  
+end EventDetector
+system PaperPathController
+
+instance variables
+  -- the third tier PID controllers for all motors
+  pctrl1 : PidController := new PidController(1,false);
+  pctrl2 : PidController := new PidController(2,false);
+  pctrl3 : PidController := new PidController(3,false);
+  pctrl4 : PidController := new PidController(4,false);
+  pctrl5 : PidController := new PidController(5,false);
+
+  -- the second tier sequence controllers for all motors
+  sctrl1 : SequenceController := new SequenceController();
+  sctrl2 : SequenceController := new SequenceController();
+  sctrl3 : SequenceController := new SequenceController();
+  sctrl4 : SequenceController := new SequenceController();
+  sctrl5 : SequenceController := new SequenceController();
+  
+  -- the event detector
+  detector : EventDetector := new EventDetector();
+  
+  -- the first tier supervisory controller
+  supervisor : Supervisor := new Supervisor();
+  
+  -- here we use a single CPU solution
+  cpu : CPU := new CPU(<FCFS>, 22E6);
+  
+operations
+  public PaperPathController: () ==> PaperPathController
+  PaperPathController () ==
+    ( -- deploy all the objects on the same CPU
+      cpu.deploy(pctrl1);
+      cpu.deploy(pctrl2);
+      cpu.deploy(pctrl3);
+      cpu.deploy(pctrl4);
+      cpu.deploy(pctrl5);
+      cpu.deploy(sctrl1);
+      cpu.deploy(sctrl2);
+      cpu.deploy(sctrl3);
+      cpu.deploy(sctrl4);
+      cpu.deploy(sctrl5);
+      cpu.deploy(detector);
+      cpu.deploy(supervisor) );
+      
+  public init: () ==> ()
+  init () ==
+    ( -- link the supervisor to the event detector
+      detector.setSupervisor(supervisor);
+      -- link the three tiers
+      supervisor.ejectSeqCtrl := sctrl1;
+      sctrl1.setLoopController(pctrl1);
+      supervisor.pimSeqCtrl := sctrl2;
+      sctrl2.setLoopController(pctrl2);
+      supervisor.alignSeqCtrl := sctrl3;
+      sctrl3.setLoopController(pctrl3);
+      supervisor.corrSeqCtrl := sctrl4;
+      sctrl4.setLoopController(pctrl4);
+      supervisor.fuseSeqCtrl := sctrl5;
+      sctrl5.setLoopController(pctrl5);
+      -- initialize the model
+      supervisor.init();
+      -- now start the motor control threads
+      startlist({pctrl1, pctrl2, pctrl3, pctrl4, pctrl5})  )
+        
+end PaperPathController
+class PidController
+
+instance variables
+  -- there are five motors in the paper path
+  -- declare the encoder input signal for each motor
+  static public enc1 : real := 0.0;
+  static public enc2 : real := 0.0;
+  static public enc3 : real := 0.0;
+  static public enc4 : real := 0.0;
+  static public enc5 : real := 0.0;
+  
+  -- declare the pwm output signal for each motor
+  static public pwm1 : real := 0.0;
+  static public pwm2 : real := 0.0;
+  static public pwm3 : real := 0.0;
+  static public pwm4 : real := 0.0;
+  static public pwm5 : real := 0.0;
+  
+  -- declare the wall-clock time variable
+  static public ctrltime : real := 0.0
+
+instance variables
+  -- the motor this class instance controls
+  motor : nat := 0;
+  hold : bool := false
+  
+operations
+  public PidController: nat * bool ==> PidController
+  PidController (pmtr, ptp) ==
+    ( -- remember which motor is controlled
+      motor := pmtr;
+     -- remember the control style
+      hold := ptp );
+  
+  public getEnc: () ==> real
+  getEnc () == 
+    cases (motor):
+      1 -> return enc1,
+      2 -> return enc2,
+      3 -> return enc3,
+      4 -> return enc4,
+      5 -> return enc5,
+      others -> error
+    end;
+    
+  public setPwm: real ==> ()
+  setPwm (val) ==
+    cases (motor):
+      1 -> pwm1 := val,
+      2 -> pwm2 := val,
+      3 -> pwm3 := val,
+      4 -> pwm4 := val,
+      5 -> pwm5 := val,
+      others -> error
+    end;
+
+values
+  ENCODER_GAIN : real = 5e-4
+  
+instance variables
+  output : real := 0
+  
+operations
+  private limit: real ==> real
+  limit (pval) ==
+    if pval < -0.999
+    then return -0.999
+    else if pval > 0.999
+         then return 0.999
+         else return pval;
+            
+  public CtrlLoop: () ==> ()
+  CtrlLoop () ==
+    -- first retrieve the current encoder value
+    ( dcl measured_value : real := ENCODER_GAIN * getEnc();
+      -- output the previous value if we are time synchronous
+      if hold then setPwm(output);
+      -- calculate the new pwm control value
+      output := limit(calcPID(measured_value));
+      -- output the new value directly if we are not time synchronous
+      -- otherwise wait until the next period is due
+      if not hold then setPwm(output) )
+
+thread
+  -- run the controller at 1 kHz and assume no jitter
+  periodic(0.001,0,0,0.001)(CtrlLoop)
+
+instance variables
+  profile : [SetpointProfile] := nil
+  
+operations
+  public setProfile: SetpointProfile ==> ()
+  setProfile (pprof) == profile := pprof;
+  
+  public getCurrentTime: () ==> real
+  getCurrentTime () == return ctrltime; --time;
+  
+  public getSetpoint: () ==> real
+  getSetpoint () ==
+    if profile = nil
+    then return 0
+    else return profile.getSetpoint(getCurrentTime());
+    
+  public getIntegratedSetpoint: () ==> real
+  getIntegratedSetpoint () ==
+    if profile = nil
+    then return 0
+    else return profile.getIntegratedSetpoint(getCurrentTime())
+    
+sync
+  mutex (setProfile, getSetpoint)
+
+instance variables
+  -- the PID controller settings
+  K    : real := 0.0;
+  taud : real := 0.0;
+  taui : real := 0.0;
+  ts   : real := 0.0;
+  N    : real := 0.0;
+  
+  -- the intermediate PID results
+  prev_error : real := 0.0;
+  curr_error : real := 0.0;
+  uP : real := 0.0;
+  uI : real := 0.0;
+  uD : real := 0.0
+    
+operations
+  public setUpPID: real * real * real * real * real ==> ()
+  setUpPID (pk, ptd, pti, pdt, pn) ==
+    ( K := pk; taud := ptd; taui := pti; ts := pdt; N := pn )
+    pre pk > 0 and ptd > 0 and pti > 0 and pdt > 0 and pn > 0;
+      
+  public calcPID: real ==> real
+  calcPID (mv) ==
+    ( -- first calculate the control error
+      curr_error := getIntegratedSetpoint() - mv;
+      -- calculate the proportional part
+      uP := K * curr_error;
+      -- calculate the integral part
+      uI := uI + K * ts * curr_error / taui;
+      -- calculate the differential part
+      uD := taud / (ts + taud / N) * uD / N + K * (curr_error - prev_error);
+      -- remember the error for the next iteration
+      prev_error := curr_error;
+      return uP + uI +uD )
+  
+end PidController
+class SequenceController
+
+instance variables
+  loopctrl : [PidController] := nil
+  
+operations
+  public setLoopController: PidController ==> ()
+  setLoopController (plc) ==
+    ( loopctrl := plc;
+      -- set-up the PID parameters (identical for all motors)
+      loopctrl.setUpPID(4.0, 0.00268, 0.01073, 0.001, 10));
+  
+  public init: () ==> ()
+  init () ==
+    ( dcl spp : SetpointProfile := new SetpointProfile();
+      -- ramp up the motor in one second
+      spp.add(0,0,6);
+      -- and maintain a constant speed indefinitely
+      spp.add(1,6,0);
+      -- push this profile towards the loop controller
+      loopctrl.setProfile(spp) );
+      
+  async public setSimpleProfile: real * real * real * real * real ==> ()
+  setSimpleProfile (v1, t1, acc, v2, t2) ==
+    ( dcl spp : SetpointProfile := new SetpointProfile(),
+          dt : real := (v2 - v1) / acc;
+      -- start accelerating at t1
+      spp.add(t1, v1, acc);
+      -- level out at v2
+      spp.add(t1+dt, v2, 0);
+      -- decellerate on time
+      spp.add(t2-dt, v2, -acc);
+      -- level out at v1
+      spp.add(t2, v1, 0);
+      -- push this profile to the loop controller
+      loopctrl.setProfile(spp) )
+    post t1 > time;
+    
+  async public setIntegratedProfile: real * real * real * real * real ==> ()
+  setIntegratedProfile (t1, v1, t2, acc, area) ==
+    if t2 > t1
+    then def dt = (t2 - t1) / 2 in
+         def tarea = dt * dt * abs acc in
+           if tarea > area
+           then def darea = tarea - area in
+                def dx = dt - MATH`sqrt(darea / abs acc);
+                    dy = dx * acc in
+                  ( dcl spp : SetpointProfile := new SetpointProfile();
+                    -- start accelerating at t1
+                    spp.add(t1, v1, acc);
+                    -- level out
+                    spp.add(t1+dx, dy, 0);
+                    -- decellerate on time
+                    spp.add(t2-dx, dy, -acc);
+                    -- level out at t2
+                    spp.add(t2, v1, 0);
+                    -- push this profile to the loop controller
+                    loopctrl.setProfile(spp) )
+    post t1 > time
+    
+end SequenceController
+class SetpointProfile
+
+types
+  public ProfileElement = seq of real
+  inv pe == len pe = 3
+  
+instance variables
+  profile : seq of ProfileElement := []
+  
+operations
+  public SetpointProfile: seq1 of ProfileElement ==> SetpointProfile
+  SetpointProfile (pprof) == profile := pprof;
+  
+  public add: real * real * real ==> ()
+  add (px, py, pdydx) == profile := profile ^ [[px,py,pdydx]]
+
+operations
+  private calcSetpoint: real * ProfileElement ==> real
+  calcSetpoint (pt, pe) ==
+    let px = pe(1), py = pe(2), pdydx = pe(3) in
+      return py + pdydx * (pt - px)
+    pre pt >= pe(1);
+    
+  private calcIntegratedSetpoint: real * ProfileElement ==> real
+  calcIntegratedSetpoint (pt, pe) ==
+    let px = pe(1), py = pe(2), pdydx = pe(3) in
+    let dx = pt - px in
+      return dx * py + pdydx * dx * dx * 0.5
+
+operations
+  public getSetpoint: real ==> real
+  getSetpoint (px) ==
+    ( dcl prev_pe : ProfileElement := hd profile;
+      for curr_pe in tl profile do
+        if curr_pe(1) > px
+        then return calcSetpoint(px, prev_pe)
+        else prev_pe := curr_pe;
+      -- first element is the appropriate element
+      return calcSetpoint(px, prev_pe) )  
+    pre len profile > 0;
+  
+  public getIntegratedSetpoint: real ==> real
+  getIntegratedSetpoint (px) ==
+    ( dcl res : real := 0,
+          prev_pe : ProfileElement := hd profile;
+      for curr_pe in tl profile do
+        if curr_pe(1) > px
+        then ( res := res + calcIntegratedSetpoint(px, prev_pe);
+               return res )
+        else ( res := res + calcIntegratedSetpoint(curr_pe(1), prev_pe);
+               prev_pe := curr_pe );
+      -- first element is the appropriate element
+      res := res + calcIntegratedSetpoint(px, prev_pe);
+      return res )
+    pre len profile > 0;
+             
+  public getInitialTime: () ==> real
+  getInitialTime () == return hd profile(1)
+  
+end SetpointProfile
+class Supervisor
+
+values
+  -- the width of an A4 sheet in mm
+  A4PAPER : real = 210;
+  -- the maximum paper speed in mm/sec
+  VP_MAX : real = 2000;
+  -- the maximum paper acceleration in mm/sec^2
+  AP_MAX : real = 20000;
+  -- the maximum motor speed in rev/sec
+  VREV_MAX : real = 47;
+  -- the maximum motor acceleration in rev/sec^2
+  AREV_MAX : real = 470;
+  -- the pinch radius in mm
+  PINCH_RADIUS : real = 13.9;
+  -- the number of cogs on the motor
+  MOTOR_WHEEL_COGS : nat = 18;
+  -- the number of cogs on the pinch
+  PINCH_WHEEL_COGS : nat = 37;
+  -- the position of the pinches on the path
+  pinches : seq of real = [0, 145, 320, 495];
+  -- the position of the sensors on the path
+  sensors : seq of real = [12, 186, 361, 537]
+
+instance variables
+  public ejectSeqCtrl : [SequenceController] := nil;
+  public pimSeqCtrl   : [SequenceController] := nil;
+  public alignSeqCtrl : [SequenceController] := nil;
+  public corrSeqCtrl  : [SequenceController] := nil;
+  public fuseSeqCtrl  : [SequenceController] := nil
+
+operations
+  public init: () ==> ()
+  init () ==
+    ( ejectSeqCtrl.init();
+      pimSeqCtrl.init();
+      alignSeqCtrl.init();
+      corrSeqCtrl.init();
+      fuseSeqCtrl.init() )
+
+instance variables
+  -- the number of pages per minute
+  public pages_per_minute : nat;
+  -- the inter sheet distance in mm
+  public inter_sheet_distance : real;
+  -- the alignment time in msec
+  public alignment_time : real;
+  -- the nominal paper speed in mm/sec
+  public v_nom_paper : real;
+  -- the maximal speed of a pinch in mm/sec
+  public v_max_pinch : real;
+  -- the maximal acceleration of a pinch in mm/sec
+  public a_max_pinch : real;
+  -- the maximum speed and acceleration on the paper path
+  public v_max_path : real;
+  public a_max_path : real;
+  -- the time to travel from the PIM sensor to the fuse sensor
+  public t_pim_fuse : real
+  
+operations
+  public Supervisor: nat * real * real ==> Supervisor
+  Supervisor (pppm, pisd, palignt) ==
+    ( -- initialize the instance variables
+      pages_per_minute := pppm;
+      inter_sheet_distance := pisd;
+      alignment_time := palignt;
+      -- pre-compute some common values, first the nominal sheet speed
+      v_nom_paper :=  (A4PAPER + inter_sheet_distance) * pages_per_minute / 60;
+      def circumference = 2 * MATH`pi * PINCH_RADIUS;
+          gear_ratio = MOTOR_WHEEL_COGS / PINCH_WHEEL_COGS in
+        -- calculate the maximum speed and acceleration at the pinch
+        ( v_max_pinch := VREV_MAX * gear_ratio * circumference;
+          a_max_pinch := AREV_MAX * gear_ratio * circumference;
+          -- truncate the calculated values (for safety)
+          v_max_pinch := floor v_max_pinch;
+          a_max_pinch := floor a_max_pinch );
+      -- calculate the valid maxima for speed and acceleration aka
+      -- the pinch maxima truncated by the allowed sheet maxima
+      if v_max_pinch > VP_MAX
+      then v_max_path := VP_MAX
+      else v_max_path := v_max_pinch;
+      if a_max_pinch > AP_MAX
+      then a_max_path := AP_MAX
+      else a_max_path := a_max_pinch;
+      -- calculate the travel time from PIM sensor to fuse sensor
+      t_pim_fuse := (sensors(4) - sensors(1)) / v_nom_paper )
+
+instance variables
+  first_sheet : [real] := nil
+  
+operations
+  async public pimUpEvent: nat * real ==> ()
+  pimUpEvent (ppue, pwhen) == if ppue = 1 then first_sheet := pwhen
+
+operations
+  async public pimDownEvent: nat * real ==> ()
+  pimDownEvent (-, -) ==
+    ( dcl dectime : real := time + 0.1,
+          acctime : real := dectime + alignment_time +
+            v_nom_paper / a_max_path;
+      -- we assume that the computation is completed in 100 msec
+      -- and we assume that the current speed is v_nom_paper
+      alignSeqCtrl.setSimpleProfile(v_nom_paper, dectime,
+        -a_max_path, 0, acctime) );
+
+operations
+  async public alignDownEvent: nat * real ==> ()
+  alignDownEvent (pade, pwhen) ==
+    -- calculate the distance between the sensors
+    def distance = sensors(4) - sensors(2) in
+    -- calculate the remaining distance for the leading edge
+    def leadedge = distance - A4PAPER in
+    -- calculate when the leading edge will reach the fuse sensor
+    def predicted = pwhen + leadedge / v_nom_paper in
+    -- calculate when the leading edge is due at this point
+    def required = first_sheet + pade * t_pim_fuse in
+    -- the allowed tolerance is 1 mm
+    def allowed = 1 / v_nom_paper in
+      ( -- first check if we are on track already
+        if abs(predicted - required) <= allowed then return;
+        -- we need to compensate in order to arrive on time
+        if predicted < required
+        then def too_early = (required - predicted) * v_nom_paper in skip
+        else def too_late = (predicted - required) * v_nom_paper in skip )
+
+operations  
+  async public corrDownEvent: nat * real ==> ()
+  corrDownEvent (pcde, -) ==
+    def corr = (sensors(4) - pinches(4) + 10) / v_nom_paper in
+    def next_due = first_sheet + (pcde + 1) * t_pim_fuse - corr in
+      fuseSeqCtrl.setSimpleProfile(v_nom_paper, time + 0.1,
+        a_max_path, v_max_path, next_due)
+
+instance variables
+  -- register the arrival time of each sheet
+  fuse_error : map nat to real := {|->}
+  
+operations
+  async public fuseUpEvent: nat * real ==> ()
+  fuseUpEvent (pfue, pwhen) ==
+    def when_due = first_sheet + pfue * t_pim_fuse in
+      fuse_error := fuse_error ++ {pfue |-> abs(pwhen - when_due)}     
+    post forall sheet in set dom fuse_error &
+           fuse_error(sheet) <= 1 / v_nom_paper
+
+end Supervisor
+class MATH
+
+-- 	VDMTools STANDARD LIBRARY: MATH
+--      --------------------------------------------
+-- 
+-- Standard library for the VDMTools Interpreter. When the interpreter
+-- evaluates the preliminary functions/operations in this file,
+-- corresponding internal functions is called instead of issuing a run
+-- time error. Signatures should not be changed, as well as name of
+-- module (VDM-SL) or class (VDM++). Pre/post conditions is 
+-- fully user customisable. 
+-- Dont care's may NOT be used in the parameter lists.
+
+  functions
+public
+    sin:real +> real
+    sin(v) ==
+    is not yet specified    
+    post abs RESULT <= 1;
+
+public
+    cos:real +> real
+    cos(v) ==
+    is not yet specified
+    post abs RESULT <= 1;
+
+public
+    tan:real -> real
+    tan(a) ==
+    is not yet specified
+    pre cos(a) <> 0;
+
+public
+    cot:real -> real	
+    cot(a) ==
+    is not yet specified -- Could also be: 1/tan(r)
+    pre sin(a) <> 0;
+
+public
+    asin:real -> real
+    asin(a) ==
+    is not yet specified
+    pre abs a <= 1;
+
+public
+    acos:real -> real
+    acos(a) ==
+    is not yet specified
+    pre abs a <= 1;
+
+public
+    atan:real +> real
+    atan(v) ==
+    is not yet specified;
+
+public
+    acot:real +> real
+    acot(a) ==
+    atan(1/a)
+    pre a <> 0;
+
+public static
+    sqrt:real -> real
+    sqrt(a) ==
+    is not yet specified
+    pre a >= 0;
+
+public
+    pi_f:() +> real
+    pi_f () ==
+    is not yet specified
+
+  values
+public
+    pi = 3.14159265358979323846
+
+ 
+end MATH

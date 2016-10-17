@@ -1,0 +1,6 @@
+r proglang.vdm
+i
+tc pos
+cg
+latex proglang.vdm
+quit

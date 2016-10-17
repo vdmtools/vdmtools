@@ -1,0 +1,137 @@
+class JavaIoReader is subclass of JavaLangObject
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaIoReader" , <CLASS> , false  )
+--instance variables 
+--  protected  lock : JavaLangObject;
+--  private maxSkipBufferSize : int  := 80;
+--  private skipBuffer : map  int  to  char  := {|->}
+operations 
+public  read : () ==> int 
+read() == 
+( dcl   cb : map  int  to  char  := {0 |-> ' '};
+  let mk_(l_r,l_m)=readMICIntInt'(cb , 0 , 1)
+  in
+    if l_r = -1
+    then  
+      return  -1
+    else  
+      return  J2VUTIL`toInt(l_m(0))
+) ;
+
+public  close : () ==> ()
+close() == 
+is not yet specified;
+
+public  mark : int  ==> ()
+mark(readAheadLimit) == 
+( exit  new  JavaIoIOException(new  JavaLangString("mark() not supported"));
+  skip 
+) ;
+
+public  ready : () ==> bool 
+ready() == 
+( return  false  
+) ;
+
+public  reset : () ==> ()
+reset() == 
+( exit  new  JavaIoIOException(new  JavaLangString("reset() not supported"));
+  skip 
+) ;
+
+--protected  JavaIoReader : () ==> JavaIoReader
+public  JavaIoReader : () ==> JavaIoReader
+JavaIoReader() == 
+( skip -- JavaIoReader`lock := self  
+) ;
+
+public  skip__ : int  ==> int 
+skip__(n) == 
+( if  n < 0
+  then  
+    exit  new  JavaLangIllegalArgumentException(new  JavaLangString("skip value is negative"));
+  ( dcl   remaining : int  := n,
+          c : int := 0;
+    while  remaining > 0 and c >= 0 do  
+    ( dcl c: int;
+      c := read();
+      if  c >= 0
+      then  
+       remaining := remaining-1
+    );
+    return  n-remaining
+  )
+--  ( def l_7 = Math`min(n , maxSkipBufferSize);
+--    l_2 = if  is_(l_7,real ) then  floor(l_7) else  l_7
+--    in ( dcl   nn : int  := l_2;
+--      ( if  (skipBuffer = {|->}) or  ((card  dom  skipBuffer) < nn)
+--        then  
+--          skipBuffer := {l_3 |-> ' '|l_3 in set  {0,...,nn-1}};
+--        ( dcl   r : int  := n;
+--          trap  j2v_break with  
+--            cases  true  : 
+--              (isofclass  (J2V_Break,j2v_break)) -> 
+--                skip ,
+--              others  -> 
+--                exit  j2v_break
+--            end  
+--          in  
+--            while  r > 0 do  
+--            ( def l_11 = skipBuffer;
+--              l_12 = 0;
+--              l_10 = Math`min(r , nn);
+--              l_5 = if  is_(l_10,real ) then  floor(l_10) else  l_10;
+--              l_1 = read(l_11 , l_12 , l_5)
+--              in ( dcl   nc : int  := l_1;
+--               if  nc = -1
+--                then  
+--                  exit  new  J2V_Break();
+--                def l_3 = r
+--                in r := l_3-nc
+--              ) 
+--            ) ;
+--          return  n-r
+--        ) 
+--      ) 
+--    ) 
+--  ) 
+) ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  readMIC : map  int  to  char  ==> int 
+readMIC(cbuf) == 
+( return  readMICIntInt(cbuf , 0 , (card  dom  cbuf))
+) ;
+
+public  JavaIoReader : <NIL> ==> JavaIoReader
+JavaIoReader(-) == 
+isNil := true  ;
+
+public  markSupported : () ==> bool 
+markSupported() == 
+( return  false  
+) ;
+
+public  readMICIntInt : map  int  to  char  * int  * int  ==> int 
+readMICIntInt(cbuf, off, len__) == 
+is not yet specified;
+
+public  readMICIntInt' : map  int  to  char  * int  * int  ==> int * map  int  to  char
+readMICIntInt'(cbuf, off, len__) == 
+is not yet specified;
+
+protected  JavaIoReader : JavaLangObject ==> JavaIoReader
+JavaIoReader(lock) == 
+( --if  lock.IsNil()
+  --then  
+  --  ( exit  new  JavaLangNullPointerException()
+  --  ) ;
+  --JavaIoReader`lock := lock
+  skip;
+) ;
+
+
+end  JavaIoReader

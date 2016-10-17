@@ -1,0 +1,23 @@
+class A
+instance variables 
+  protected a:int := 1;
+
+operations
+
+public op: int ==> A
+	op(x) == (a := x; return self)
+	post a > a~;
+
+end A
+
+class B is subclass of A
+instance variables 
+  protected b:int := 1;
+
+operations
+
+public op2: int ==> B
+	op2(x) == (a := x; return self)
+	post a > a~;
+
+end B

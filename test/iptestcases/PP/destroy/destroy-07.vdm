@@ -1,0 +1,36 @@
+ class A
+
+  instance variables
+
+    n : nat := 0;
+
+  operations
+
+public    Init : nat ==> A
+    Init(mn) ==
+      (n := mn;
+       return self);
+
+public    Equal : nat ==> bool
+    Equal(m) ==
+      return (m=n);
+
+public    GetN : () ==> nat
+    GetN() ==
+      return n;
+
+end A
+
+
+class B
+
+operations
+
+
+  public Test : () ==> nat
+  Test() ==
+    return (if new A().Equal(3)
+            then  3
+            else  0) + 8
+
+end B

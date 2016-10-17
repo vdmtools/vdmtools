@@ -1,0 +1,28 @@
+class B
+
+types
+
+  public MapTp = map nat to nat
+  inv m == card dom m < 7;
+
+end B
+class C
+
+operations
+
+static public Op: nat ==> B`MapTp
+Op(n) ==
+  return {n |-> n};
+
+end C
+class A
+
+operations
+
+public Test: () ==> map nat to nat
+Test() ==
+  let tmp = merge {C`Op(i) | i in set {1,...,4}}
+  in
+    return tmp
+
+end A

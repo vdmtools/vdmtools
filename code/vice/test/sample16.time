@@ -1,0 +1,5 @@
+# Meaningless type info - does not get picked up
+
+Addset : nat 10;
+AddEnv 3;
+* : char 20

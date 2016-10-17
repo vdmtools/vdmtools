@@ -1,0 +1,55 @@
+class Pars1
+
+operations
+
+public  MetPars1(a,b,c:nat) dummy : nat ==
+    return a + b
+pre a > c;
+
+public  MetPars2(m: map bool to nat) dummy : real ==
+    is not yet specified;
+
+public  MetPars3() dummy : bool ==
+    is subclass responsibility
+
+end Pars1
+
+class A
+
+operations
+public  MetA1() dummy: nat ==
+    return 5
+
+end A
+
+class B
+
+instance variables
+
+  mya : A
+
+operations
+
+public  MetB1(arg : nat) dummy : A ==
+    return mya
+ 
+end B
+
+class C is subclass of B
+end C
+
+class InvokeStmtTest is subclass of C
+
+instance variables
+  a : A;
+  b : B;
+  c : Pars1;
+  c2: C
+  
+operations
+
+--OK    
+  InvokeStmt7() dummy : nat ==
+    c.MetPars1(1,4,9);
+          
+end InvokeStmtTest

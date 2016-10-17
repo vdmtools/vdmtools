@@ -1,0 +1,27 @@
+#!/bin/sh 
+
+cp -p ../MSAW_Prototype.cd_lib/C26.vpp visualsegmentdeprediction.vpp
+cp -p  ../MSAW_Prototype.cd_lib/C25.vpp visualzoneaeroport.vpp
+cp -p  ../MSAW_Prototype.cd_lib/C19.vpp visualworkspace.vpp
+cp -p  ../MSAW_Prototype.cd_lib/C1.vpp msawtypes.vpp
+cp -p  ../MSAW_Prototype.cd_lib/C2.vpp detecteur.vpp
+cp -p  ../MSAW_Prototype.cd_lib/C3.vpp workspace.vpp
+cp -p  ../MSAW_Prototype.cd_lib/C4.vpp pistesradar.vpp
+cp -p  ../MSAW_Prototype.cd_lib/C5.vpp parametres.vpp
+cp -p  ../MSAW_Prototype.cd_lib/C6.vpp polygone.vpp
+cp -p  ../MSAW_Prototype.cd_lib/C7.vpp cylindre.vpp
+cp -p  ../MSAW_Prototype.cd_lib/C8.vpp cone.vpp
+cp -p  ../MSAW_Prototype.cd_lib/C9.vpp segmentdeprediction.vpp
+cp -p  ../MSAW_Prototype.cd_lib/C10.vpp vecteur3d.vpp
+cp -p  ../MSAW_Prototype.cd_lib/C11.vpp terrain
+cp -p  ../MSAW_Prototype.cd_lib/C12.vpp obstacle.vpp 
+cp -p  ../MSAW_Prototype.cd_lib/C13.vpp obstacleartificiel.vpp 
+cp -p  ../MSAW_Prototype.cd_lib/C14.vpp reliefparticulier.vpp
+cp -p  ../MSAW_Prototype.cd_lib/C15.vpp zonemilitaire
+cp -p  ../MSAW_Prototype.cd_lib/C16.vpp zoneaeroport.vpp 
+cp -p  ../MSAW_Prototype.cd_lib/C17.vpp bulletinmeteo.vpp
+cp -p  ../MSAW_Prototype.cd_lib/C20.vpp view.vpp
+cp -p  ../MSAW_Prototype.cd_lib/C21.vpp visualpistesradar.vpp
+cp -p  ../MSAW_Prototype.cd_lib/C22.vpp visualobstacleartificiel.vpp
+cp -p  ../MSAW_Prototype.cd_lib/C23.vpp visualdetecteur.vpp 
+cp -p  ../MSAW_Prototype.cd_lib/C24.vpp clock.vpp

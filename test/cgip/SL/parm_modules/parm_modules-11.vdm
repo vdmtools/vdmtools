@@ -1,0 +1,91 @@
+  
+module RELATIONS
+
+parameters
+        types ELEM1, ELEM2
+
+exports all
+
+definitions
+types
+RELATION = set of PAIR;
+
+PAIR :: El1 : ELEM1
+        El2 : ELEM2
+
+functions
+Domain: RELATION -> set of ELEM1
+Domain(R) ==
+        { a.El1 | a in set R};
+
+Range: RELATION -> set of ELEM2
+Range(R) ==
+        { a.El2 | a in set R};
+
+IsFunctional: RELATION -> bool
+IsFunctional(R) ==
+        forall a in set Domain(R) & card LookUp(R,a) = 1;
+
+LookUp: RELATION * ELEM1 -> set of ELEM2
+LookUp(R,e) ==
+        { a.El2 | a in set R & a.El1 = e};
+
+CreateRelation: ELEM1 * ELEM2 -> RELATION
+CreateRelation(E1,E2) ==
+        {mk_PAIR(E1,E2)} ;
+
+AddPairToRelation: ELEM1 * ELEM2 * RELATION -> RELATION
+AddPairToRelation(E1,E2,R) ==
+        R union CreateRelation(E1,E2);
+
+Join: RELATION * RELATION -> RELATION
+Join(R1,R2) ==
+        R1 inter R2;
+
+Union: RELATION * RELATION -> RELATION
+Union(R1,R2) ==
+        R1 union R2
+
+end RELATIONS
+
+module A
+
+instantiations
+        Rnat as RELATIONS(ELEM1 -> nat, ELEM2 -> nat) all
+
+exports all
+
+definitions
+operations
+
+Test: () ==> set of  nat
+Test() ==
+        (dcl Rel1 : Rnat`RELATION,
+             Rel2 : Rnat`RELATION,
+             Rel  : Rnat`RELATION;
+
+         Rel1 := Rnat`CreateRelation(10,20);
+         Rel1 := Rnat`AddPairToRelation(11,2,Rel1);
+         Rel1 := Rnat`AddPairToRelation(12,3,Rel1);
+         Rel1 := Rnat`AddPairToRelation(13,4,Rel1);
+
+
+         Rel2 := Rnat`CreateRelation(1,2);
+         Rel2 := Rnat`AddPairToRelation(2,2,Rel2);                
+         Rel2 := Rnat`AddPairToRelation(3,1,Rel2);
+         Rel2 := Rnat`AddPairToRelation(10,21,Rel2);
+
+         Rel := Rel1 union Rel2;
+
+         if Rnat`IsFunctional(Rel) then
+                return(Rnat`Domain(Rel))
+         else
+                return(Rnat`Range(Rel))
+
+        )
+
+end A
+
+
+
+

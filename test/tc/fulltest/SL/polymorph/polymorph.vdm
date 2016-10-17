@@ -1,0 +1,151 @@
+module POLY
+exports functions 
+  g[@p]:int -> int;
+  h,hh:bool -> bool;
+  f[@p]:@p -> @p;
+  ff[@q]:@q +> bool;
+  fff[@w]:@w +> bool;
+  fffff,ffff[@a,@c]: @a -> @c
+definitions
+
+functions
+
+f[@p]:@p -> @p
+f(a) == a;
+
+ff[@q](a:@q) r:bool
+post true;
+
+fff[@w](a:@w) r:bool ==
+  true;
+
+ffff[@a,@c]: @a -> @c
+ffff(a) == let t =  true in t;
+
+fffff[@a,@c]: @a -> @c
+fffff(a) == let t = true in t;
+
+g[@p]:int -> int
+g(a) == a;
+
+h:bool -> bool
+h(a) == a;
+
+hh:bool -> bool
+hh(a) == a
+end POLY
+
+module POLYALL
+exports all
+definitions
+
+functions
+
+f[@p]:@p -> @p
+f(a) == a;
+
+ff[@q](a:@q) r:bool
+post true;
+
+fff[@w](a:@w) r:bool ==
+  true;
+
+ffff[@a,@b]: @a -> @b
+ffff(a) == let t = true in t;
+
+fffff[@a,@b]: @a -> @b
+fffff(a) == let t = true in t;
+
+h:bool -> bool
+h(a) == a
+
+end POLYALL
+
+module A
+imports 
+from POLY functions
+  f[@p]:@p -> @p;
+  ff[@q]:@q +> bool;
+  fff[@w]:@w +> bool;
+  ffff[@a,@c]: @a -> @c;
+  h:bool -> bool,
+
+from POLYALL functions
+  f[@p]:@p -> @p;
+  ff[@q]:@q +> bool;
+  fff[@w]:@w +> bool;
+  ffff[@a,@b]: @a -> @b;
+  h:bool -> bool
+exports all
+definitions
+functions
+g:bool -> bool
+g(b) == POLY`f[bool](b)
+end A
+
+module B
+imports 
+from POLY  all,
+
+from POLYALL  all
+
+exports all
+definitions
+functions
+g:bool -> bool
+g(b) == POLY`f[bool](b);
+
+h:() -> bool
+h() == POLYALL`ff[int](2)
+end B
+
+module POLY2
+exports functions 
+  f[@p]:@p -> @q;
+  ff[@q]:@r +> bool;
+  fff[@a]:@w +> bool;
+  ffff[@a,@c,@q]: @a -> @c;
+  fffff:@a -> @c
+definitions
+
+functions
+
+f[@p]:@p -> @p
+f(a) == a;
+
+ff[@q](-:@q) r:bool
+post r;
+
+fff[@w](-:@w) r:bool ==
+  r;
+
+ffff[@a,@c]: @a -> @c
+ffff(-) == let t = true in t;
+
+fffff[@a,@c]: @a -> @c
+fffff(-) == let t = true in t;
+
+end POLY2
+
+module A2
+imports 
+from POLY functions
+  f[@p]:@p -> @q;
+  ff[@q]:@r +> bool;
+  fff[@a]:@w +> bool;
+  ffff[@a,@c,@w]: @a -> @c;
+  fffff:@a -> @c,
+
+from POLYALL functions
+  f[@p]:@p -> @q;
+  ff[@q]:@r +> bool;
+  fff[@a]:@w +> bool;
+  ffff[@a,@c,@w]: @a -> @c;
+  fffff:@a -> @c
+exports all
+definitions
+functions
+g:bool -> bool
+g(b) == POLY`f[bool](b)
+end A2
+

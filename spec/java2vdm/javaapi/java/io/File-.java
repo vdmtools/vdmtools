@@ -1,0 +1,63 @@
+package java.io;
+
+import java.net.URL;
+import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Hashtable;
+import java.util.Random;
+import java.security.AccessController;
+import java.security.AccessControlException;
+import sun.security.action.GetPropertyAction;
+
+public class File implements java.io.Serializable, Comparable {
+//static private  FileSystem fs;
+//native int getPrefixLength();
+//public static final  char separatorChar;
+public static final  String separator;
+//public static final  char pathSeparatorChar;
+//public static final  String pathSeparator;
+public File( String pathname){};
+public File( String parent,  String child){};
+public File( File parent,  String child){};
+//public native String getName();
+//public native String getParent();
+//public native File getParentFile();
+//public native String getPath();
+//public native boolean isAbsolute();
+//public native String getAbsolutePath();
+//public native File getAbsoluteFile();
+//public native String getCanonicalPath()throws IOException;
+//public native File getCanonicalFile()throws IOException;
+//public native URL toURL()throws MalformedURLException;
+//public native boolean canRead();
+//public native boolean canWrite();
+public native boolean exists();
+public native boolean isDirectory();
+//public native boolean isFile();
+//public native boolean isHidden();
+//public native long lastModified();
+//public native long length();
+//public native boolean createNewFile()throws IOException;
+//public native boolean delete();
+//public native void deleteOnExit();
+public native String[] list();
+//public native String[] list( FilenameFilter filter);
+//public native File[] listFiles();
+//public native File[] listFiles( FilenameFilter filter);
+//public native File[] listFiles( FileFilter filter);
+//public native boolean mkdir();
+//public native boolean mkdirs();
+//public native boolean renameTo( File dest);
+//public native boolean setLastModified( long time);
+//public native boolean setReadOnly();
+//public static native File[] listRoots();
+//public static native File createTempFile( String prefix,  String suffix,  File directory)throws IOException;
+//public static native File createTempFile( String prefix,  String suffix)throws IOException;
+////public native int compareTo( File pathname);
+//public native int compareTo( Object o);
+//public native boolean equals( Object obj);
+//public native int hashCode();
+public native String toString();
+
+}

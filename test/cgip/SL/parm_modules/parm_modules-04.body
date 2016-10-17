@@ -1,0 +1,72 @@
+module A
+
+imports 
+
+from MAIN all
+
+exports all
+
+definitions
+
+operations
+
+
+Test: () ==> seq of ( nat | nat1 | rat | real |  char | token )
+Test() ==
+return
+          MAIN`Sequence()
+
+end A
+
+module TYPES
+
+parameters
+
+types ELEM
+
+definitions
+
+functions
+
+  Sequence: ELEM -> seq of ELEM
+  Sequence(e) ==
+        [e]
+
+end TYPES
+
+module MAIN
+
+instantiations
+
+NatSequence as TYPES( ELEM -> nat) all,
+Nat1Sequence as TYPES( ELEM -> nat1) all,
+IntSequence as TYPES( ELEM -> int) all,
+RealSequence as TYPES( ELEM -> real) all,
+RatSequence as TYPES( ELEM -> rat) all,
+BoolSequence as TYPES( ELEM -> bool) all,
+CharSequence as TYPES( ELEM -> char) all,
+TokenSequence as TYPES( ELEM -> token) all
+
+exports all
+
+definitions
+
+functions
+
+Sequence : () +> seq of ( nat | nat1 | rat | real | char | token )
+Sequence() ==
+
+          NatSequence`Sequence(10) ^
+          Nat1Sequence`Sequence(10) ^
+          IntSequence`Sequence(-10) ^
+          RealSequence`Sequence(10.5) ^
+          RatSequence`Sequence(10.5) ^
+          BoolSequence`Sequence(false) ^
+          CharSequence`Sequence('c') ^
+          TokenSequence`Sequence(mk_token(1)) 
+
+
+
+end MAIN
+
+

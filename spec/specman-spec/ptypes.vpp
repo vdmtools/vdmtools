@@ -1,0 +1,244 @@
+\begin{vdm_al}
+class ProjectTypes
+
+types
+public   ModuleName :: nm: String;
+public   FileName :: nm : String;
+public   Name :: nm : String;
+public   InfoString :: nm : String;
+public   String = seq of char;
+
+public   FileId      = nat;
+
+public   AstVal :: val : token; -- implemented as Record
+public   DepGraph :: g : token; -- Implemented as Record
+public   TCEnv :: e : token;    -- Implemented as Tuple
+\end{vdm_al}
+$AstVal$ and $DepGraph$ are implemented as Records. $TCEnv$ is implemented as 
+Tuple.
+\begin{vdm_al}
+
+public   Message = ErrMsg | WarnMsg | InfoMsg;
+
+public   ErrMsg ::   
+    fid : int
+    line: int
+    col : int
+    msg : seq of seq of char;
+
+public   WarnMsg ::
+    fid : int
+    line: int
+    col : int
+    msg : seq of seq of char;
+   
+public   InfoMsg ::
+    msg : seq of seq of char;
+
+public   Action = FileAction | UnitAction;
+public   FileAction = <EDIT> | <SYNTAXCHECK> | <PP>;
+public   UnitAction = <TYPECHECK> | <CG> | <JCG>;
+public   Status = <NONE> | <ERROR> | <OK> | <DISABLED>;
+public   Succes = bool;
+
+public   UnitStat :: type   : Status | <POS> | <DEF>
+                     cg     : Status
+                     javaCg : Status;
+
+public   FileStat :: syntax: Status
+                     pp    : Status;
+
+public   SessionType = <NONE> | <STRUCTURED> | <FLAT> | <DISABLED>;
+
+public   Module :: nm  : ModuleName
+            ast : AstVal;
+
+public   FlatSpec :: nm : ModuleName
+              ast : AstVal; 
+
+  -- CGInfo represents the CGRepository.
+public   CGInfo :: repos : token; -- implemented as Tuple
+\end{vdm_al}
+$CGInfo$ represents the CGRepository.
+
+\begin{vdm_al}
+
+  -- ToolCommand represents a command in the command window.
+  -- E.g. print 10 + 10. Commands are parsed to the command
+  -- interpreter as String inclosed in a Token.
+public   ToolCommand :: command : token;  -- implemented as Token
+\end{vdm_al}
+$ToolCommand$ represents a command in the command window.
+E.g. $print 10 + 10$. Commands are parsed to the command
+interpreter as $String$ inclosed in a $Token$.
+
+\begin{vdm_al}
+
+
+  -- CalBackCommand is used to call back from BaseTools to the
+  -- Interface class, when parts of the interface must be changed
+  -- or updated
+  -- Also called from repository when change in present modules and files
+
+public   CallBackCommand = BreakNameSet | BreakPosSet | BreakRemove | 
+                    BreakEnable | 
+                    BreakDisable | BackTrace | BtGotoLevel |
+                    AddFiles | RemoveFiles | AddModules | RemoveModules | 
+                    ClearAll | 
+                    ChangedFileStatus | ChangedModuleStatus | 
+                    DependInfo | DependUpdate |
+		    RemoveFileChangedMark | AddFileChangedMark | 
+                    DrawInhTree | UpdateSelections | ClearInhTree |
+		    ChangedProjName | ClearDebugWindow |
+                    PogCleanUp | PogAdd | PogUpdateFilter;
+
+\end{vdm_al}
+$CallBackCommand$ is used to call back from BaseTools to the Interface
+class, when parts of the interface must be changed or updated Also
+called from repository when change in present modules and files
+
+\begin{vdm_al}
+
+public   BreakNameSet :: bp : token -- implemented as AS`Name
+                         num : nat;
+public   BreakPosSet :: bp : token -- implemented as AS`Name
+                        line : nat
+                        col : nat
+                        num : nat ;
+public   BreakRemove :: bp : nat;
+public   BreakEnable :: bp : nat;
+public   BreakDisable :: bp : nat;
+public   BackTrace :: info : seq of (token * seq of token);
+               -- Implemented as (Token * seq of SEM`VAL)
+public   BtGotoLevel :: level : nat;
+
+public   AddFiles :: nms : set of FileName;
+public   RemoveFiles :: nms : set of FileName;
+public   AddModules :: nms : set of ModuleName;
+public   RemoveModules :: nms : set of ModuleName;
+public   ClearAll :: ;
+
+public   ChangedFileStatus :: nm : FileName;
+public   ChangedModuleStatus :: nms : set of ModuleName;
+
+public   DependInfo ::
+    name : ModuleName
+    supers : set of ModuleName
+    subs : set of ModuleName
+    uses : set of ModuleName
+    used : set of ModuleName
+    compl : bool;
+
+public   DependUpdate:: 
+    names : set of ModuleName;
+
+public   ChangedProjName:: 
+    oldn : [FileName]
+    newn : [FileName];
+
+public   RemoveFileChangedMark :: nm : FileName;
+public   AddFileChangedMark :: nm : FileName;
+
+public PogCleanUp :: nms : seq of ModuleName;
+public PogAdd :: checked : seq of char
+                 modnm : seq of char
+                 memnm : seq of char
+                 locclass : seq of char
+                 kind : seq of char
+                 no : nat
+                 file : seq of char
+                 tmpfn : seq of char
+                 line : nat
+                 column : nat
+                 length : nat
+                 po : seq of char;
+public PogUpdateFilter :: ;
+
+  -- FlowMap is used by the SDA/Toolbox integration.
+  -- It is used to map the name of a flow to a semantic value
+
+public   FlowMap:: flows: map token to token;
+            -- Implemented as map AS`Name to SEM`VAL
+
+\end{vdm_al}
+
+The data type {\em DrawInhTree} represents the graphical
+representation of the inheritance tree to be drawn.
+
+\begin{vdm_al}
+public   DrawInhTree :: 
+      graph: seq of ( Node | Line );
+
+public   Node ::
+    x : nat
+    y : nat
+    name : seq of char;  -- Implemented as Token
+
+public   Line ::
+    pos1: nat * nat
+    pos2: nat * nat;
+
+
+\end{vdm_al}
+
+The {\em UpdateSelections\/} data type is used in making a call back
+to set the selection of classes/modules and files.
+
+\begin{vdm_al}
+public   UpdateSelections:: ;
+\end{vdm_al}
+
+The {\em ClearInhTree\/} data type is used in making a call back to
+clear the inheritance tree.
+
+\begin{vdm_al}
+public   ClearInhTree:: ;
+\end{vdm_al}
+
+The {\em ClearDebugWindow\/} data type is used in making a call back
+to clear the debug window (the display window) in the interprete tool.
+
+\begin{vdm_al}
+public   ClearDebugWindow:: ;
+\end{vdm_al}
+
+$FlowMap$ is used by the SDA/Toolbox integration.  It is used to map
+the name of a flow to a semantic value
+
+\begin{vdm_al}
+
+public   SemVal:: v: token; -- implemented as SEM`VAL
+
+  -- FunctionSet is used by the SDA/Toolbox integration.
+  -- Used for the set of function and operation names in the
+  -- current module
+
+public   FunctionSet::nms: set of token;
+               -- Implemented as set of AS`Name
+\end{vdm_al}
+$FunctionSet$ is used by the SDA/Toolbox integration.
+Used for the set of function and operation names in the
+current module
+
+\paragraph{Types for Repository and related classes}
+\mbox { }
+
+\begin{vdm_al}
+
+  -- Types for repository and related classes.
+ 
+public   UnitState = map ModuleName to VDMUnitElem;
+
+public   FileState   = map FileName to FileInfo;
+public   FileInfo    = ModuleNames * FileStatus * FileId * [TmpFileName];
+public   TmpFileName = FileName;
+public   ModuleNames = set of ModuleName;
+
+public   StateType = UnitState * FileState;
+
+public   IrregFileIds = <cmdLineFileId>|<cgFileId>|<tcFileId>|
+                 <tmpFileId>|<StdInFileId>
+
+
+end ProjectTypes
+\end{vdm_al}

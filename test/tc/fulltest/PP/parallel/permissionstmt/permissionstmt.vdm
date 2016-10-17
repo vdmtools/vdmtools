@@ -1,0 +1,72 @@
+class A
+operations
+protected  a1 () == is not yet specified;
+protected  a2 () == is not yet specified;
+protected  m () == is not yet specified
+functions
+protected  f : int -> bool
+  f (-) == true
+end A
+
+class PermStmt1 is subclass of A
+
+operations
+  b1 () == is not yet specified;
+  b2 () == is not yet specified;
+  protected m  () == is not yet specified
+sync
+  per m   => #act (a1) > #fin (a2);
+  per A`m => f(#active (b1) + #req (b2) + #waiting (A`m));
+  per a1  => true; 
+  per b1  => true 
+end PermStmt1
+
+class PermStmt2 is subclass of A
+
+operations
+  b1 () == is not yet specified;
+  b2 () == is not yet specified;
+  protected m  () == is not yet specified
+sync
+  per m   => #act (a1) > #fin (a2);
+  per A`m => f(#active (b1) + #req (b2) + #waiting (A`m));
+  per a1  => true; 
+  per b1  => true 
+end PermStmt2
+
+class PermStmt3 is subclass of A
+
+operations
+  b1 () == is not yet specified;
+  b2 () == is not yet specified;
+  protected m  () == is not yet specified
+sync
+  per m   => #act (a1) > #fin (a1);
+  per A`m => f(#active (b1) + #req (b2) + #waiting (A`m));
+  per a1  => true; 
+  per b1  => true 
+end PermStmt3
+
+class PermStmt4 is subclass of A
+
+instance variables
+  a1 : int
+operations
+  protected b1 () == is not yet specified;
+  protected m  () == is not yet specified
+sync
+  per mm  => #act (b1) > #fin (b1);  -- Error: mm not defined
+  per A`m => f(#active (a1));        -- Error: a1 not a method
+  per b1  => a1 = a1;                -- Error: expr must not contain
+                                     --        references to instance variables
+  per b1  => let n = 3 in n;         -- Error: value not boolean
+  per b1  => true;                   -- Error: multiple defined
+  per a2  => true                    -- Error: a2 not inherited
+end PermStmt4
+
+class PermStmt5 is subclass of A
+
+sync
+  per A`m => #act (a1) > #fin (a2)
+end PermStmt5
+

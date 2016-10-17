@@ -1,0 +1,18 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+
+public Test : () ==> nat
+Test() ==
+ if false then return 1 
+ elseif let a = if true then "abc" else true in a
+ then return 2 
+ else return 3
+   
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

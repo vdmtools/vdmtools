@@ -1,0 +1,47 @@
+class A
+end A
+
+class AssignStmtTest
+
+types
+
+  B ::
+   x : nat
+   y : real;
+
+instance variables
+
+  a: nat;
+  b: nat;
+  c: A;
+  d: map nat to bool;
+  e: A;
+  f : B := mk_B(8,9);
+  inv a < b and c;
+  
+operations
+
+  Assign1() ==
+    a := 7;
+
+  Assign2() ==
+   d(5) := true;
+
+  Assign3() ==
+    c := {|->}; 
+
+  Assign4(a1,a2:real) ==
+    (a := a1;
+     b := a2);
+
+  Assign5() ==
+    c := e;
+
+  Assign6(i: A) ==
+    c := i;
+
+  Assign7(i: nat) ==
+    (f.x := i;
+     f.y := i);
+
+end AssignStmtTest

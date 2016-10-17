@@ -1,0 +1,93 @@
+\subsection{FCharT}
+FCharacterのテストを行う。
+
+\begin{vdm_al}
+--$Id $
+class FCharT
+functions
+static public run : () +> bool
+run() == 
+	let	testcases = [ t1(), t2(), t3()]
+	in
+	FTestDriver`run(testcases);
+\end{vdm_al}
+
+\subsubsection{数字を整数に変換}
+\begin{vdm_al}
+static t1 : () -> FTestDriver`TestCase
+t1() ==
+	
+	mk_FTestDriver`TestCase(
+	"FCharT01:\t 数字を整数に変換",
+	let	c = new FCharacter()	
+	in
+		c.IsDigit('0') = true and
+		c.IsDigit('1') = true and
+		c.IsDigit('2') = true and
+		c.IsDigit('3') = true and
+		c.IsDigit('4') = true and
+		c.IsDigit('5') = true and
+		c.IsDigit('6') = true and
+		c.IsDigit('7') = true and
+		c.IsDigit('8') = true and
+		c.IsDigit('9') = true and
+		c.IsDigit('a') = false and
+		c.AsDigit('0') = 0 and
+		c.AsDigit('1') = 1 and
+		c.AsDigit('2') = 2 and
+		c.AsDigit('3') = 3 and
+		c.AsDigit('4') = 4 and
+		c.AsDigit('5') = 5 and
+		c.AsDigit('6') = 6 and
+		c.AsDigit('7') = 7 and
+		c.AsDigit('8') = 8 and
+		c.AsDigit('9') = 9 and
+		c.AsDigit('a') = nil)
+	;
+\end{vdm_al}
+
+\subsubsection{文字の辞書順序を返す}
+\begin{vdm_al}
+static t2 : () -> FTestDriver`TestCase
+t2() ==
+	
+	mk_FTestDriver`TestCase(
+	"FCharT02:\t 文字の辞書順序を返す",
+	let	c = new FCharacter()
+	in
+		c.AsDictOrder('0') = 0 and
+		c.AsDictOrder('9') = 9 and
+		c.AsDictOrder('a') = 10 and
+		c.AsDictOrder('A') = 11 and
+		c.AsDictOrder('z') = 60 and
+		c.AsDictOrder('Z') = 61 and
+		c.AsDictOrder('あ') = 256 and
+		c.AsDictOrder('+') = 256) 
+	;
+\end{vdm_al}
+
+\subsubsection{文字の大小を比較する}
+\begin{vdm_al}
+static t3 : () -> FTestDriver`TestCase
+t3() ==
+			
+	mk_FTestDriver`TestCase(
+	"FCharT03:\t 文字の大小を比較する",
+	let	LT = FCharacter`LT,
+		GT = FCharacter`GT,
+		LE = FCharacter`LE,
+		GE = FCharacter`GE
+	in
+		LT('a')('a') = false and
+		GT('a')('a') = false and
+		LT('1')('2') and
+		GT('1')('0') and
+		LT('9')('a') and
+		GT('あ')('0') and
+		LE('a')('0') = false and
+		GE('a')('0') and
+		FSequence`Fmap[char, bool](FCharacter`LT('5'))("456") = [false, false, true])
+	;
+
+end FCharT
+\end{vdm_al}

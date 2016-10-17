@@ -1,0 +1,125 @@
+%!PS-Adobe-2.0 EPSF-2.0
+%%Title: /tmp/xfig-fig006872
+%%Creator: fig2dev Version 2.1.8 Patchlevel 0
+%%CreationDate: Mon Mar 28 14:03:31 1994
+%%For: kmh@idruby (Kirsten Mark Hansen (Civ.ing.))
+%%Orientation: Portrait
+%%BoundingBox: 0 0 252 92
+%%Pages: 0
+%%EndComments
+/$F2psDict 200 dict def 
+$F2psDict begin
+$F2psDict /mtrx matrix put
+/l {lineto} bind def
+/m {moveto} bind def
+/s {stroke} bind def
+/n {newpath} bind def
+/gs {gsave} bind def
+/gr {grestore} bind def
+/clp {closepath} bind def
+/graycol {dup dup currentrgbcolor 4 -2 roll mul 4 -2 roll mul
+4 -2 roll mul setrgbcolor} bind def
+/col-1 {} def
+/col0 {0 0 0 setrgbcolor} bind def
+/col1 {0 0 1 setrgbcolor} bind def
+/col2 {0 1 0 setrgbcolor} bind def
+/col3 {0 1 1 setrgbcolor} bind def
+/col4 {1 0 0 setrgbcolor} bind def
+/col5 {1 0 1 setrgbcolor} bind def
+/col6 {1 1 0 setrgbcolor} bind def
+/col7 {1 1 1 setrgbcolor} bind def
+/col8 {.68 .85 .9 setrgbcolor} bind def
+/col9 {0 .39 0 setrgbcolor} bind def
+/col10 {.65 .17 .17 setrgbcolor} bind def
+/col11 {1 .51 0 setrgbcolor} bind def
+/col12 {.63 .13 .94 setrgbcolor} bind def
+/col13 {1 .75 .8 setrgbcolor} bind def
+/col14 {.7 .13 .13 setrgbcolor} bind def
+/col15 {1 .84 0 setrgbcolor} bind def
+	end
+/$F2psBegin {$F2psDict begin /$F2psEnteredState save def} def
+/$F2psEnd {$F2psEnteredState restore end} def
+%%EndProlog
+
+$F2psBegin
+0 setlinecap 0 setlinejoin
+-36.0 333.0 translate 0.900 -0.900 scale
+0.500 setlinewidth
+% Polyline
+n 121 354 m 114 354 114 357 7 arcto 4 {pop} repeat 114 364 132 364 7 arcto 4 {pop} repeat 139 364 139 361 7 arcto 4 {pop} repeat 139 354 121 354 7 arcto 4 {pop} repeat clp gs col-1 s gr
+% Polyline
+n 114 359 m 99 359 l gs col-1 s gr
+% Polyline
+n 281 274 m 274 274 274 277 7 arcto 4 {pop} repeat 274 284 292 284 7 arcto 4 {pop} repeat 299 284 299 281 7 arcto 4 {pop} repeat 299 274 281 274 7 arcto 4 {pop} repeat clp gs col-1 s gr
+% Polyline
+n 274 279 m 259 279 l gs col-1 s gr
+/Times-Italic findfont 10.00 scalefont setfont
+264 274 m 
+gs 1 -1 scale (K) col-1 show gr
+% Polyline
+n 259 274 m 259 284 l gs col-1 s gr
+% Polyline
+n 39 299 m 99 299 l  139 339 l  199 339 l  259 339 l  319 339 l gs col-1 s gr
+% Polyline
+n 39 339 m 99 339 l  139 299 l  319 299 l gs col-1 s gr
+% Polyline
+n 39 294 m 39 304 l gs col-1 s gr
+% Polyline
+n 99 294 m 99 304 l gs col-1 s gr
+% Polyline
+n 139 294 m 139 304 l gs col-1 s gr
+% Polyline
+n 199 294 m 199 304 l gs col-1 s gr
+% Polyline
+n 259 294 m 259 304 l gs col-1 s gr
+% Polyline
+n 319 294 m 319 304 l gs col-1 s gr
+% Polyline
+n 319 334 m 319 344 l gs col-1 s gr
+% Polyline
+n 259 334 m 259 344 l gs col-1 s gr
+% Polyline
+n 199 334 m 199 344 l gs col-1 s gr
+% Polyline
+n 139 334 m 139 344 l gs col-1 s gr
+% Polyline
+n 99 334 m 99 344 l gs col-1 s gr
+% Polyline
+n 39 334 m 39 344 l gs col-1 s gr
+% Polyline
+n 229 299 m 289 339 l gs col-1 s gr
+% Polyline
+n 264 314 m 254 324 l gs col-1 s gr
+% Polyline
+n 99 354 m 99 364 l gs col-1 s gr
+/Times-Roman findfont 11.00 scalefont setfont
+69 294 m 
+gs 1 -1 scale (16) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+119 309 m 
+gs 1 -1 scale (17) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+169 294 m 
+gs 1 -1 scale (18) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+229 294 m 
+gs 1 -1 scale (19) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+289 294 m 
+gs 1 -1 scale (20) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+69 354 m 
+gs 1 -1 scale (21) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+169 354 m 
+gs 1 -1 scale (22) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+229 354 m 
+gs 1 -1 scale (23) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+289 354 m 
+gs 1 -1 scale (24) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Italic findfont 10.00 scalefont setfont
+104 369 m 
+gs 1 -1 scale (A) col-1 show gr
+$F2psEnd

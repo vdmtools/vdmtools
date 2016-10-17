@@ -1,0 +1,17 @@
+public Test : () ==> real
+Test () ==
+(dcl res : real;
+ tixe {7 |-> return <ERR>,
+       ok |-> return ok}
+ in
+  (res := Op();
+   return res)  
+);
+
+Op: () ==> real
+Op() ==
+  exit 6.5;
+
+types
+
+Arec::c: nat | seq of nat

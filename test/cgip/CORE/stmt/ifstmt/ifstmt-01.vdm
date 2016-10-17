@@ -1,0 +1,69 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> set of ( [nat] | <WORLD> | char | seq of char )  
+Test () ==
+(dcl s : set of ( [nat] | <WORLD> | char| seq of char ):= {};
+ dcl n : nat :=0;
+ if let a = [ 3,6, 2] 
+    in len a = 3.6
+ then let mk_(a, 3) = mk_(6, 3)
+      in s := s union { a }
+ else let { a, b } = { <HELLO>, <WORLD> }
+      in s := s union {<WORLD> };
+
+ if if is_int(3)
+    then is_bool(if 'a' = 'a' then 3 else false)
+    else is_nat1(let a : real  = 6 in a)
+ then ( dcl a : nat := 1;
+	a := 3;
+        s := s union { 3 } )
+ else ( dcl b : nat := 47;
+	b := 0 + b;
+        s := s union { b } );
+
+ if [true, false](2)
+ then return s
+ else s := s union { nil };
+
+ if true
+ then while ( n < 3 ) do
+      ( n:= n+1;
+	s := s union {n }
+      )
+ else while (n < 5) do
+      ( n := n+1;
+        s := s union {n} );
+ 
+ if is_nat1(0)
+ then cases mk_(3, 4):
+         mk_(a,b) -> s := s union {a,b},
+         a -> s := s union {a}
+      end
+ else if is_nat(3)
+      then s := s union {3}
+      else s := s union {4};
+
+ if is_nat(let a : nat | bool = false in a)
+ then return s
+ elseif is_bool(if 3=4 then false else 3)
+     then s := s union {"HELLO"}
+     elseif is_nat(let a : char | nat  = 'r' in a)
+         then s := s union { 100 }
+	 else s := s union {'r'};
+
+ if {3|->false}(3)
+ then s := s union {"This should not happen" };
+
+ return s
+)
+ 
+   
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

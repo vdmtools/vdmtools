@@ -1,0 +1,15 @@
+class VisualZoneAeroport is subclass of ZoneAeroport
+
+   instance variables
+      view: View
+
+   operations
+      Set: MSAWTypes`Coordonnees * MSAWTypes`NM * MSAWTypes`Pieds * MSAWTypes`NM * View ==> ()
+      Set (centre', rayon', altitude_maximale',
+           rayon_au_sol', view') ==
+      (  self.ZoneAeroport`Set(centre',rayon',altitude_maximale',rayon_au_sol');
+         view := view';
+         view.ShowZoneAeroport (Cylindre`centre, rayon, altitude_maximale, rayon_au_sol)
+      )
+
+end VisualZoneAeroport

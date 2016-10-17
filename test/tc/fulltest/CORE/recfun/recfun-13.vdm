@@ -1,0 +1,39 @@
+class A
+
+types
+public
+Graph = map nat to seq of nat 
+inv g == forall i in set dom g & elems g(i) subset dom g;
+
+functions
+
+public 
+mesdephf : seq of nat * Graph * seq of nat -> nat * nat
+mesdephf(l,g,vis) ==
+  mk_(card dom g - len vis,len l);
+  
+public 
+mesrev : seq of nat -> nat
+mesrev(l) == len l;
+
+public 
+revers : seq of nat -> seq of nat
+revers(l) ==
+  cases l:
+  [] -> [],
+  [h]^t -> revers(t)^[h]
+  end
+measure mesrev;
+
+public
+depthf : seq of nat * Graph * seq of nat -> seq of nat 
+depthf(l,g,vis) ==
+  cases l:
+  [] -> revers(vis),
+  [h]^t -> if h in set elems vis 
+           then depthf(t,g,vis)
+           else depthf(g(h)^t,g,[h]^vis)
+  end
+measure measdephf;
+
+end A

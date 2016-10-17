@@ -1,0 +1,58 @@
+dlmodule B  
+  exports
+    functions
+      ExtCos : real -> real
+ 
+    operations
+      ExtSin : real ==> real
+
+    values
+      ExtPI : real
+
+    uselib 
+      "libmath.so"
+end B
+
+module APPROX
+
+  exports 
+    all
+
+  definitions
+    values
+
+      ExtCos = { [0.5] |-> 0.877, [3.14] |-> -1.0 };
+      ExtSin = { [0.5] |-> 0.479, [3.14] |-> 0.0};
+      ExtPI = {[] |-> 3.14159}
+
+end APPROX  
+
+module A
+  imports
+    from 
+      APPROX
+        values
+          ExtCos renamed CosValues;
+          ExtSin renamed SinValues;
+          ExtPI renamed PIVal,
+
+    from B
+      functions
+        ExtCos : real -> real renamed ExtCos
+ 
+      operations
+        ExtSin : real ==> real
+ 
+      values 
+        ExtPI : real renamed  PI
+   
+     definitions
+       functions
+
+         Test : () -> seq of real
+         Test () ==  [PI, ExtCos(0.5), B`ExtSin(0.5), ExtCos(3.14)]
+
+end A
+    
+   
+

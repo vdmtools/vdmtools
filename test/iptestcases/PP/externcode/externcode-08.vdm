@@ -1,0 +1,41 @@
+-- This case checks if package directives are correctly retained
+
+class A
+
+instance variables
+
+  k : nat
+
+operations
+
+public Test : () ==> seq of char
+Test() ==
+( dcl b8a : B8a := new B8a();
+  return b8a.Run()
+);
+
+end A
+
+class B8a
+
+operations
+
+public Run : () ==> seq of char
+Run() ==
+  return new B8b().Run();
+
+end B8a
+
+class B8b
+
+operations
+
+public Run : () ==> seq of char
+Run() ==
+  return "B8b`Run";
+
+
+end B8b
+
+
+

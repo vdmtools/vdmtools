@@ -1,0 +1,1027 @@
+%%
+%% Toolbox Language Manual
+%% $Id: DLMan.tex,v 1.11 2006/04/19 10:24:48 vdmtools Exp $
+%% 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PDF compatibility code. 
+
+\makeatletter
+\newif\ifpdflatex@
+\ifx\pdftexversion\@undefined
+\pdflatex@false
+%\message{Not using pdf}
+\else
+\pdflatex@true
+%\message{Using pdf}
+\fi
+
+\newcommand{\latexpdf}[2]{
+  \ifpdflatex@ #1
+  \else #2
+  \fi
+}
+
+\newcommand{\latexorpdf}[2]{
+  \ifpdflatex@ #2
+  \else #1
+  \fi
+}
+
+\makeatother
+
+#ifdef A4Format
+\newcommand{\pformat}{a4paper}
+#endif A4Format
+#ifdef LetterFormat
+\newcommand{\pformat}{letterpaper}
+#endif LetterFormat
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\latexorpdf{
+\documentclass[\pformat,12pt]{article}
+}{
+% pdftex option is used by graphic[sx],hyperref,toolbox.sty
+\documentclass[\pformat,pdftex,12pt]{article}
+}
+
+\usepackage{toolbox}
+\usepackage{vdmsl-2e}
+\usepackage{makeidx}
+\usepackage{alltt}
+\usepackage{verbatim}
+
+% Ueki change start
+\usepackage[dvipdfm,bookmarks=true,bookmarksnumbered=true,colorlinks,plainpages=true]{hyperref}
+% Ueki change end
+
+% Ueki delete start
+%\latexorpdf{
+%\usepackage[plainpages=true,colorlinks,linkcolor=black,citecolor=black,pagecolor=black, urlcolor=black]{hyperref}
+%}{
+%\usepackage[plainpages=true,colorlinks]{hyperref}
+%}
+% Ueki delete end
+
+\newcommand{\meti}[1]{\item[#1]\mbox{}\\}
+\newcommand{\Lit}[1]{`#1\Quote}
+\newcommand{\Rule}[2]{
+  \begin{quote}\begin{tabbing}
+    #1\index{#1}\ \ \= = \ \ \= #2  ; %    Adds production rule to index
+  \end{tabbing}\end{quote}
+  }
+
+\newcommand{\SeqPt}[1]{\{\ #1\ \}}
+\newcommand{\lfeed}{\\ \> \>}
+\newcommand{\OptPt}[1]{[\ #1\ ]}
+\newcommand{\dsepl}{\ $|$\ }
+\newcommand{\dsep}{\\ \> $|$ \>}
+\newcommand{\Lop}[1]{\Lit{\kw{#1}}}
+\newcommand{\Sig}[1]{\Lit{{\tt #1}}}
+\newcommand{\blankline}{\vspace{\baselineskip}}
+\newcommand{\Brack}[1]{(\ #1\ )}
+\newcommand{\nmk}{\footnotemark}
+\newcommand{\ntext}[1]{\footnotetext{{\bf Note: } #1}}
+
+
+%\usepackage[dvips]{color}
+\usepackage{longtable}
+\definecolor{covered}{rgb}{0,0,0}     %black
+\definecolor{not_covered}{gray}{0.5} %gray
+
+\parindent0mm
+
+\newlength{\keywwidth}
+
+\newcommand{\xfigpicture}[4]{
+\begin{figure}[hbt]
+\setlength{\unitlength}{1mm}
+\begin{center}
+\mbox{
+\begin{picture}(#1,#2)
+\put(0,0){\special{psfile=#3 hscale=70 vscale=55}}
+\end{picture} }
+\end{center}
+\caption{#4}
+\end{figure}
+}
+
+
+\newcommand{\vdmslpp}{VDM-SL}
+\newcommand{\Toolbox}{Toolbox}
+\newcommand{\aaa}{\tt }
+\newcommand{\cmd}{\tt }
+\newcommand{\id}[1]{%
+\settowidth{\keywwidth}{\tt #1}%
+\protect\makebox[\keywwidth][l]{{\it #1}}}
+\nolinenumbering
+
+\begin{document}
+\vdmtoolsmanualscsk{The Dynamic Link Facility}{2.0}
+
+
+\section{Introduction}
+
+This manual describes a feature of the VDMTools called the
+Dynamic Link facility. This feature enables that \vdmslpp\ 
+specifications can be combined with code written in C++. This
+combination enables that a \vdmslpp\ specification during
+interpretation can use and execute parts that are written in C++. It
+is called the Dynamic Link facility because the C++ code is
+dynamically linked together with the Toolbox.
+
+Use of this combination can be of interest in cases where only part of
+a system is developed using \vdmslpp. It can be valuable if:
+
+\begin{itemize}
+\item a new component should be developed using VDM-SL for a system
+  which already has been implemented;
+\item a system being specified in VDM-SL needs to make use of features
+  which are not available in VDM-SL itself; and
+\item it is desirable only to develop a part of the system using
+  VDM-SL.
+\end{itemize}
+
+With this Dynamic Link facility it is possible to investigate the
+interaction of the parts specified in VDM-SL with parts implemented in
+C++ at an early stage in the development process.
+
+
+\subsection{Using This Manual}
+
+This document is an extension to the {\it User Manual for the
+ VDM-SL Toolbox} \cite{UserMan-SCSK}. Before continuing reading this
+document it is recommended to read the {\it Dynamic Link Modules}
+section of {\it The VDM-SL Language} \cite{LangMan-SCSK}. Knowledge
+about C++ \cite{Stroustrup91} and {\it The VDM C++ Library}
+\cite{LibMan-SCSK} is also assumed.
+
+You do not need to read this entire manual to get started using the
+Dynamic Link feature. Start by reading Section~\ref{getting-started}
+to get a detailed description of an example using this feature. All
+files from this example are also present in the appendices.
+Section~\ref{sec:dlcomponents} describes the components which are
+involved when using the Dynamic Link facility one by one. Those who
+are interested in the way this feature has been implemented internally
+in the Toolbox should consult \cite{Frohlich&96}.
+
+Appendix~\ref{sec:sysreq} provides detailed information about system
+requirements.
+
+
+\section{Getting Started}
+\label{getting-started}
+
+The combination of formal specifications and code written in C++ only
+becomes feasible by establishing a common framework combining them.
+The most basic problem is that the values in these two different
+worlds have different representations. For the two worlds to
+communicate, it is necessary to convert values from the specification
+world to the code world and vice versa.  By means of small examples
+this section illustrates the idea of integrating code with a
+specification in order to obtain the required functionality.
+
+The examples present the integration of trigonometric functions into a
+specification using the VDM-SL Toolbox.  Trigonometric functions
+are not included in VDM-SL so in order to develop a system which needs
+such functions the Dynamic Link facility is used.
+
+\subsection{The Basic Idea}
+
+The aim of this approach is to be able to analyse the combination of
+specification and implementation. By combining code and specification
+the main intention is to provide a prototyping facility by integrating
+the execution of code into the interpretation of a specification.  We
+enable definitions, made at the code level, to be integrated with a
+formal specification, such that interpretation of a specification code
+definitions can be executed.  Therefore we distinguish between the
+specification level, which refers to the \vdmslpp\ specification and
+integration parts made at within the specification, and the code
+level, which relates to the code and its integration for the
+execution.
+
+Figure~\ref{idea} shows the components involved in combining
+specification and code. Firstly there are the \vdmslpp\ specification
+part and the external C++ code part, these are the light grey boxes in
+the figure. Secondly there is the part that interface the
+specification and code parts, this is the dark grey boxes in the
+figure. This interface consists of a part at specification level
+(called {\em Dynamic Link modules\/} or simply {\em DL modules\/}) and
+a part at code level (called {\em type conversion functions\/})
+
+ 
+\begin{figure}
+\begin{center}
+\resizebox{.55\textwidth}{!}%
+{\includegraphics{approach}}
+\caption{Combination of code and VDM-SL specification\label{idea}}
+\end{center}
+\end{figure}
+
+A DL module describes the \vdmslpp\ interface for every definition of
+the C++ code that will be used in the VDM-SL specification. This
+information is described as \vdmslpp\ function, operation, and value
+definitions.
+
+As the C++ code and the VDM-SL Toolbox have different
+representations for their values, type conversion functions to
+transform between the tow representations must be defined. These must
+be defined at the code level.  A number of conventions for these type
+conversion functions have been defined.  Generally, the values that
+are exchanged are of types from the VDM C++ Library. (The VDM C++
+library contains classes implementing all the VDM types such as Map,
+Set, Sequence, Char, Bool, etc.  This library is described in detail
+in \cite{LibMan-SCSK} and defined in the library file {\tt libvdm.a}, which
+is included in the \Toolbox\ distribution.)
+
+The convention for calling a C++ function taking parameters and
+returning a value is as follows:
+\begin{itemize}
+\item The parameters are passed as one value of type ``Sequence'' from
+  the VDM C++ Library, with each parameter being an element of the
+  sequence: the first argument being the first element, the second
+  argument being the second element etc.
+\item The returned value is of type Generic (which any VDM Library
+  class type can be converted to).
+\end{itemize}
+
+For calling C++ values and constants a function converting and
+returning the value/constant must be defined.
+
+Beside that type conversion functions to convert between the VDM C++
+values and the C++ code must be defined, no modifications of the C++
+code need to be performed.
+
+ 
+\subsection{An Example with Trigonometric Functions}
+
+In order to illustrate the idea an example which integrates 
+trigonometric functions into a specification is presented.
+
+The C++ code, which is to be integrated into a VDM-SL specification,
+is  given by the mathematical standard C library called $math$.
+The examples make use of implementations of the trigonometric functions  
+$sin$, $cos$ and of the constant $pi$. First, a specification
+which applies these definitions is presented and then the extensions 
+at specification level as well as at code level are shown.
+
+\subsection*{The VDM-SL Specification}
+
+The following VDM-SL specification gives an example of how the
+definitions of the DL module {\tt MATHLIB} are imported into the module
+{\tt CYLINDER}. Notice how the import from a DL module is identical to
+the import from an ordinary module, i.e.\ the module importing does
+not know whether the imported module is an ordinary module or a DL
+module.
+
+\begin{quote}
+\begin{verbatim}
+module CYLINDER
+
+imports
+  from MATHLIB
+    functions
+      ExtCos : real -> real;
+      ExtSin : real -> real
+   
+    values
+      ExtPI : real
+
+ definitions
+   functions
+     CircCyl_Vol : real * real * real -> real
+     CircCyl_Vol (r, h, a) ==
+       MATHLIB`ExtPI * r * r * h * MATHLIB`ExtSin(a)
+
+end CYLINDER      
+\end{verbatim}
+\end{quote}
+
+The module {\tt CYLINDER} imports the functions {\tt ExtCos} and 
+{\tt ExtSin} and the value {\tt ExtPI} from the DL
+module {\tt MATHLIB}.
+The function {\tt CircCyl\_Vol} evaluates the volume of a circular cylinder
+and makes use of the constant {\tt ExtPI} as well as the function {\tt ExtSin}.
+ 
+\subsection*{The Interface at VDM-SL Level}
+
+As mentioned above, the interface between code and specification has
+to be provided at two different levels. The interface at the VDM-SL
+level declares the VDM-SL types of the functions that are exported to
+the outside world.  The interface at the code level is based on the
+definition of the above mentioned type conversion functions.
+
+At the VDM-SL level the interface looks like:
+
+\begin{quote}
+\begin{verbatim}
+dlmodule MATHLIB
+
+  exports
+    functions
+      ExtCos : real -> real;
+      ExtSin : real -> real   
+      
+   values   
+      ExtPI : real
+      
+   uselib
+    "libmath.so"
+
+end MATHLIB
+\end{verbatim}
+\end{quote}
+
+A DL module must always contain an export section which declares all
+constructs that are available to the outside world.  The constructs
+from the export section can be imported by other modules.  The export
+section consists of the signatures for function and operation
+definitions and the type information for value definitions defining
+the \vdmslpp\ interface to the C++ code.  A value declaration in a DL
+module relates either to a constant or a variable definition in the
+code.
+
+The {\tt uselib} field contains the name of the shared object file,
+which contains the code accessed through the DL module.
+
+
+\subsection*{The Interface at C++ Level}
+
+The interface at the code level is developed in C++ and consists of a
+number of declarations and the definitions of the type conversion
+functions. The declaration part includes the standard mathematical
+library.  The type conversion functions convert the VDM C++ sequence
+value used by the Toolbox to values accepted by the C++ code and vice
+versa.  A generic VDM C++ type can have an underlying value of any VDM
+type (e.g.\ the generic VDM C++ type {\tt Sequence} represents a
+VDM-SL sequence which can contain arbitrary VDM elements.)
+
+The interface looks like:
+
+\begin{quote}
+\begin{verbatim}
+#include "metaiv.h"
+#include <math.h>
+
+# Platform specific directives/includes...
+
+extern "C" {
+  DLLFUN void InitDLModule(bool init);
+  DLLFUN void ExtCos(const Sequence & sq, Generic res);
+  DLLFUN void ExtSin(const Sequence & sq, Generic res);
+  DLLFUN void ExtPI (Generic res);
+}
+
+void InitDLModule(bool init)
+{
+  // This function is called by the Toolbox when modules are
+  // initialised and before they are unloaded.
+  // init is true on after load and false before unload. 
+}
+
+void ExtCos(const Sequence & sq, Generic res)
+{
+  res = (Real( cos(Real(sq[1])) ));
+}
+
+void ExtSin(const Sequence & sq, Generic res)
+{
+  res = (Real( sin(Real(sq[1])) ));
+}
+
+void ExtPI (Generic res)
+{
+  res = (Real(M_PI));
+}  
+\end{verbatim}
+\end{quote}
+
+Notice that {\em ExtPI\/} is defined as a \vdmslpp\ value in the
+\vdmslpp\ interface, but as a function in the code level interface.
+
+The Toolbox puts the arguments of the called function into a value of
+the generic VDM C++ type Sequence and passes it to the type conversion
+function. The type conversion function extracts and converts the
+elements of the sequence into values required by the integrated C++
+code. For example, the type conversion function {\tt ExtSin} extracts
+the first element of the sequence and casts it to the VDM C++ type
+{\tt Real}, which is casted automatically to the C++ type {\tt
+  double}.  This is given as argument to the {\tt sin} function at C++
+level and the result is converted into a VDM C++ value and returned to
+the \Toolbox.
+
+In this case a C standard library was used as code, but it could as
+well have been a user-defined C++ package. The approach is open to any
+kind of module developed in C++. The user is only required to develop
+a DL module and to define type conversion functions. Note that the
+type conversion functions must be enclosed in an {\tt extern "C"}
+linkage specification such that C++ parameter type mangling is not
+made part of the function symbol name that is stored in the shared
+object library.
+
+\subsection*{Creating A Shared Library}
+
+In order to create a dynamically linked library it is required that
+the type conversion functions are enclosed in an {\tt extern "C"}
+linkage specification as above. In addition, it is required that the
+{\tt metaiv.h} header file is included as above. Then the C++ code
+must be compiled with one of the supported compilers (see section
+\ref{sec:sysreq}), using the necessary flags to generate a shared
+library. It is recommended to record the way the library can be 
+created in a Makefile; example Makefiles showing the requisite flags
+are shown in Appendix~\ref{makefiles}. 
+For Solaris 10 this example would have a Makefile
+such as\footnote{Under the assumption that the interface at the C++
+  level is placed in a file called {\tt tcfmath.cc}.}:
+
+\begin{quote}
+\begin{verbatim}
+all: libcylio.so libmath.so
+
+%.so:
+ifeq ($(strip $(OSTYPE)),Darwin)
+        $(CXX) -dynamiclib -fPIC -o $@ $^ $(LIB)
+else
+        $(CXX) -shared -fPIC -o $@ $^ $(LIB)
+endif
+
+libcylio.so: cylio.o tcfcylio.o 
+
+cylio.o: cylio.cc
+        ${CXX} -c -fPIC -o $@ $< ${INCL}
+
+tcfcylio.o: tcfcylio.cc
+        ${CXX} -c -fPIC -o $@ $< ${INCL}
+
+libmath.so: tcfmath.o
+
+tcfmath.o: tcfmath.cc
+        ${CXX} -c -fPIC -o $@  $<  ${INCL}
+\end{verbatim}
+\end{quote}
+
+The options to be used under other supported platforms/compilers can
+be seen in Section~\ref{sec:create}.
+
+\subsection*{Running the Example}
+
+Having created the shared library {\tt libmath.so} it is now possible
+to start the Toolbox. The {\tt CYLINDER} module and the {\tt MATHLIB} DL
+modules can be read into the \Toolbox\ as any other module by syntax
+checking them. Initialising the specification now will establish the
+link to the shared library such that it is possible to interpret the
+{\tt CircCyl\_Vol} function, where the calls to {\tt MATHLIB`ExtPI} and
+{\tt MATHLIB`ExtSin} are calls to the library.  The \vdmslpp\ parts can
+also be debugged using the \VDMTools\ debugger, whereas the code parts
+for obvious reasons cannot.
+
+
+
+\subsection*{Extending this Example}
+
+In the appendices of this document, this small example has been
+extended with one more DL module. This extra module illustrates how to
+use a simple I/O interface for the input of the dimensions of a
+circular cylinder. Other examples from the Examples Repository
+(http://www.csr.ncl.ac.uk/vdm/examples/examples.html)
+illustrate the use of a more general user interface using Tcl/Tk.
+ 
+\section{Dynamic Link Components}
+\label{sec:dlcomponents}
+
+This section describes the different components which are involved
+when you are using the Dynamic Link facility, one by one. The
+intension is to enable you to use this section as a kind of reference
+guide after having read the previous section once.
+
+In this document we have used a general name convention. We would
+recommend you to make a convention yourself. It makes it much easier
+to find out where constructs are defined. The name convention we has
+used have a ``{\tt Ext}'' prefix for all constructs which are defined
+externally (i.e.\ in the C++ code). All files with conversion functions
+have a ``{\tt tcf}'' prefix.  Finally, on Unix all dynamically linked libraries
+have a ``{\tt lib}'' prefix and they all have an {\tt .so} extension;
+on Windows all dynamically linked libraries have a \texttt{.dll}
+extension. 
+
+\subsection{Dynamic Link Modules}
+
+A {\em DL module} provides the \vdmslpp\ interface to the code parts.
+Beside the module name it contains an import section, an export
+section, and the name of the library (containing the C++ code) to link
+dynamically with.
+\begin{itemize}
+\item The import section, which is optional, describes \vdmslpp\ types
+  used within the DL module.  An example of this is provided in the
+  {\tt CYLIO} DL module of Appendix~\ref{sec:math-cylio}.
+\item The export section describes the functions, operation and values
+  available from the DL module. Notice that unlike ordinary modules in
+  DL modules all exported constructs must be explicitely described,
+  i.e.\ no {\tt exports all} exists.
+\item The name of the shared library describes which library to link
+  dynamically with. This can be left our, in which case the
+  specification can by syntax and type checked, but not initialised or
+  interpreted.  
+  
+  Section~\ref{sec:uselibpath} describes how to define where the
+  \Toolbox\ should search for the library.
+\end{itemize}
+The precise syntax and semantics of the DL modules is described in
+more detail in the {\em Dynamic Link Modules} section of {\em The 
+VDM-SL Language} \cite{LangMan-SCSK}.
+
+The difference between functions and operations is the same for DL
+modules as for ordinary modules: functions must return a value and
+must not have any side effects. In contrast, operations may have side
+effects, and need not return any values. Naturally, this is simply a
+pragmatic difference which the Toolbox cannot check.
+
+
+\subsection{Type Conversion Functions}
+
+The purpose of the type conversion functions is to convert the values
+used by the Toolbox (these are objects of the {\it VDM C++ Library})
+into values required by the integrated code and vice versa.  A type
+conversion function must always take as argument an object of the {\it
+  VDM C++ Class} type {\tt Sequence} in order to handle functions with
+different arity. It returns either an object of the {\it VDM C++
+  Class} {\tt Generic} or {\tt void}. A type conversion function must
+be defined for each construct that is exported from a Dynamic Link
+module.
+
+If you wish to integrate a function which is defined in C++ code, (e.g.\
+{\tt double} {\tt Volume (double radius, double height)}),
+a type conversion function must be defined.
+In this case, the DL module should contain a corresponding function or operation
+definition, say {\tt functions ExtVolume: real * real -> real}.
+The Toolbox puts the evaluated arguments, given by the interpreted 
+specification, into an object of the class {\tt Sequence}, and passes it to 
+the type conversion functions. The definition of this small example is:
+
+\begin{quote}
+\begin{verbatim}
+void ExtVolume (const Sequence & sq1, Generic res)
+{
+  double rad, height;
+  rad = (Real) sq[1];
+  height = (Real) sq[2];
+  res = ( (Real) Volume(rad, height) );
+}
+\end{verbatim}
+\end{quote}
+
+The arguments for the function {\tt Volume} are extracted 
+from the sequence and converted into double values. The return value from
+{\tt Volume}
+is converted into an object of the class {\tt Real} which is automatically
+casted into a {\tt Generic}.
+
+Table~\ref{table1} provides an overview of related definitions in DL
+modules, type conversion functions, and C++ code, i.e.\ how values are
+represented at the different levels.  Appendix \ref{example} contains
+the type conversion functions for the trigonometric example.
+
+\begin{table}
+%\rotatebox{90}
+\begin{center}
+\begin{sideways}
+\begin{tabular}{|p{7cm}|p{7cm}|p{6cm}|}
+\hline
+{\it DL module definition}&{\it type conversion
+  function}&{\it C++ code}\\
+\hline \hline
+value definition&function with no argument and result type {\tt
+  Generic}&variable or constant \\ \hline
+\verb+values+            & & \\
+\verb+  ExtLength: real+ & \verb+Generic ExtLength ()+ & \verb+double Length = 5.0;+ \\
+\verb+  ExtMax:nat+      & \verb+Generic ExtMax ()+    & \verb+const int max = 20;+ \\ \hline\hline
+function or operation definition & 
+function with argument {\tt Sequence} and result {\tt Generic} & 
+function with result different from {\tt void} \\ \hline
+\verb+functions+ & \verb+Generic ExtVolume(Sequence sq1)+ & \verb+double Volume(double radius,+ \\
+\verb+  ExtVolume: real * real -> real+ &                 & \verb+              double height)+ \\
+or & & \\
+\verb+operations+ & & \\
+\verb+  ExtVolume: real * real ==> real+ & & \\ \hline \hline
+operation without result 
+& function with argument {\tt Sequence} and result type {\tt void}&
+function with result {\tt void} \\ \hline
+\verb+operations+ & \verb+void ExtShowItem(Sequence sq1)+ & \verb+void ShowItem (int item)+ \\
+\verb+  ExtShowItem: nat ==> ()+ & & \\[1ex]
+\hline \hline
+\end{tabular}
+\end{sideways}
+\end{center}
+\caption{Value representations at different levels.} 
+\label{table1}
+\end{table}
+
+\subsection{Converting Records}
+
+Special attention needs to be given to records. In the \vdmslpp\ 
+specification records are tagged with a name, whereas in the VDM C++
+Library they are tagged with an integer. These tags are refered to as
+``symbolic names'' and ``numeric tags'' respectively in the remaining
+of this section.
+
+The VDM C++ Library can maintain a map (called the Record Info Map),
+mapping numeric tags to symbolic names.  Any symbolic name which is
+sent to or returned from the code part of a dynamically linked module
+must have been registered in this map.
+
+This registering must be defined in a function named {\tt
+  InitDLModule}.  If this function exists the \Toolbox\ will call it
+during initialisation (when executing the {\tt init} command).  The
+example below illustrates how the Record Info Map is built within the
+InitDLModule function:
+\begin{itemize}
+\item For each symbolic name used, a corresponding numeric tag must be
+  added in the Record Info Map.  This is performed by executing:
+
+  \hspace*{1em}{\tt VDMGetDefaultRecInfoMap().NewTag(numtag, recordsize);}
+  
+  where {\tt numtag} is the numeric tag, and {\tt recordsize} is the
+  number of fields in the record.
+\item The symbolic name must be bound to the numeric tag.  This is
+  performed by executing:
+
+  \hspace*{1em}{\tt VDMGetDefaultRecInfoMap().SetSymTag(numtag, "symbname"); }
+  
+  where {\tt numtag} still is the numeric tag, and {\tt symbname} is
+  the symbolic name. Noce that the symbolic name must be encapsulated
+  in quotes.
+\end{itemize}
+
+
+In the example the numeric tag and record size are defined as
+constants ({\tt TagA\_X} and {\tt TagA\_X\_Size}).
+
+The examples:
+\begin{quote}
+\begin{verbatim}
+extern "C" void InitDLModule(bool init); 
+const int TagA_X = 1; 
+const int TagA_X_Size = 2; 
+void InitDLModule(bool init) {
+  if (init) {
+    VDMGetDefaultRecInfoMap().NewTag(TagA_X, TagA_X_Size);
+    VDMGetDefaultRecInfoMap().SetSymTag(TagA_X, "A`X"); 
+  }
+}
+\end{verbatim}
+\end{quote}
+
+When the \Toolbox\ is creating a Record value with name {\tt A`X} to
+be sent to the C++ code it will find the numeric tag corresponding to
+the sumbolic name {\tt A`X} in the Record Info Map of the DL Module.
+
+Notice the following issues when creating a Record Info Map:
+\begin{itemize}
+\item The symbolic name of the {\tt SetSymTag} command must be an
+  existing record name qualified with the corresponding module name,
+  and the record size of the {\tt NewTag} command must be the exact
+  number of fields of the record.
+\item Each symbolic tag must exists only once in the Record Info Map.
+\end{itemize}
+
+
+\subsubsection{Using Records in combination with the Code Generator}
+
+The Code Generator creates code that sets up the Record Info Map for
+code generated modules.  Thus if generated code is compiling and
+linking into a dynamically linked library, the InitDLModule function can
+simply call the function {\tt init\_\textit{Module}()}, to define the
+records in \textit{Module} in the Record Info Map.
+
+%
+%\subsection{Converting Tokens}
+%
+%The token type is exported from the toolbox as a C++ class {\tt Record}.
+%However, the tag of token records is always equal to {\tt TOKEN},
+%which is a macro declared in the file {\tt cg\_aux.h}, and the number
+%of fields in token records is always equal to 1. If you want to send a
+%token from the external code to the toolbox, the VDM-SL value {\tt
+%  mk\_token(<HELLO>)} can e.g.\ be constructed in the following way:
+%
+%\begin{quote}
+%\begin{verbatim}
+%Record token(TOKEN, 1); 
+%token.SetField(1, Quote("HELLO"));
+%\end{verbatim}
+%\end{quote}
+%
+
+\subsection{The \texttt{uselib} Path Environment}
+\label{sec:uselibpath}
+
+The name of the library is given with the {\tt uselib} option in the
+specification. This location can be given in several ways:
+\begin{itemize}
+\item A full path name for the library (e.g.\ 
+  /home/foo/libs/libmath.so)
+\item Without path, but with the environment variable {\tt
+    VDM\_DYNLIB} set. The library is searched for in every directory
+  name in the {\tt VDM\_DYNLIB} environment variable. The environment
+  variable could look like this: \path+/home/foo/libs:/usr/lib:.+ (Note
+  that if you set the variable, you need a `.' if you want the search
+  to look in the current directory too.)
+\item Without path, and without the {\tt VDM\_DYNLIB} environment
+  variable set. This means that the library is supposed to be located
+  in the current directory.
+\end{itemize}
+
+
+
+\subsection{DL Module Initialisation}
+\label{sec:init}
+
+The first time the Toolbox command ``init'' is used all modules will
+be loaded. The second time, the currently loaded modules are first
+unloaded, then the modules are loaded again.
+
+\subsubsection{Module Loading}
+When a shared library file is loaded by the Toolbox, the following
+will happen:  
+\begin{itemize}
+\item The global variables will be initialised. 
+\item The toolbox executes the function InitDLModule(true) in each
+  loaded module. 
+\end{itemize}
+
+\subsubsection{Module Unloading}
+When a shared library file is unloaded by the Toolbox, the following
+will happen:  
+\begin{itemize}
+\item The toolbox executes the function InitDLModule(false) in each
+  loaded module. 
+\item The global variables will be destructed.
+\end{itemize}
+
+
+\subsection{Creating a Shared Library}\label{sec:create}
+
+The shared library must be compiled using the proper compiler as
+required in Section \ref{sec:sysreq}.  In order to create an
+executable shared library the code with the type conversion functions
+must fulfill the following requirements:
+\begin{itemize}
+\item The type conversion functions must be enclosed in an {\tt extern "C"}
+linkage specification, otherwise the functions will not be reachable from
+outside the library.
+\item The {\tt metaiv.h} header file, which is part of the {\tt VDM
+    C++ Library}, must be included in the file with the type
+  conversion functions as it contains prototypes of the type specific
+  functions of the {\it VDM C++ Library}.
+\end{itemize}
+
+See the example makefiles in \ref{makefiles} for the actual compiler
+flags to use.
+
+On Unix a shared library should have the file extension {\tt ".so"} and 
+a prefix {\tt "lib"}. (A version number for the shared library is not
+required.) On Windows a shared library should have the file extension 
+\texttt{".dll"}
+
+\newpage
+\bibliographystyle{iptes}
+\bibliography{ifad}
+\newpage
+\appendix
+
+\section{System Requirements}
+\label{sec:sysreq}
+
+To use the Dynamic Link feature the {\it VDM-SL Toolbox}
+including a license to the Dynamic Link feature (a line with the {\tt
+  vdmdl} feature must be present in the license file) and the {\it VDM
+  C++ Library} are required. Furthermore a compiler is required in
+order to create an executable shared library of the integrated code.
+
+This feature runs on the following combinatins:
+\begin{itemize}
+\item Microsoft Windows 2000/XP/Vista and Microsoft Visual C++ 2005 SP1
+\item Mac OS X 10.4, 10.5
+\item Linux Kernel 2.4, 2.6 and GNU gcc 3, 4
+\item Solaris 10
+\end{itemize}
+
+The compiler is required in order to create an executable shared
+library of the integrated code. 
+ 
+For installation of the Toolbox itself see Section 2 in \cite{UserMan-SCSK}
+and for installing the {\it VDM C++ Library} see Section 2 in \cite{CGMan-SCSK}.
+
+
+
+\section{Overview of the Trignometric Example}
+\label{example}
+In this example a simple user interface to trigonometric functions in
+a specification is integrated in order to calculate the volume of a
+circular cylinder. This example is available with the distribution in
+the directory {\tt example}. To run the example do the following:
+\begin{itemize}
+  \item Edit the appropriate makefile, and set the paths at the top
+    to where your libraries are.
+  \item Compile the libraries
+  \begin{description}
+    \item[Linux] make -f Makefile.Linux
+    \item[Solaris 10] make -f Makefile.solaris2.6
+    \item[Microsoft Windows 2000/XP/Vista] make -f Makefile.win32
+  \end{description}
+  \item start the Toolbox, read the specifications, initialise and
+    call the function. In the command line version of the Toolbox this
+    would look as:
+\begin{verbatim}
+vdm> r cylio.vdm
+Parsing "cylio.vdm" ... done
+vdm> r cylinder.vdm
+Parsing "cylinder.vdm" ... done
+vdm> r math.vdm
+Parsing "math.vdm" ... done
+vdm> init
+Initializing specification ...
+vdm> p CYLINDER`CircCylOp()
+
+
+ Input of Circular Cylinder Dimensions
+  radius: 10
+  height: 10
+  slope [rad]: 1
+
+
+ Volume of Circular Cylinder
+
+Dimensions: 
+   radius: 10
+   height: 10
+   slope: 1
+
+ volume: 2643.56
+
+(no return value)
+\end{verbatim}
+\end{itemize}
+
+The {\it VDM-SL} document consists of a module {\sl CYLINDER} which
+imports the DL modules {\sl MATHLIB} and {\sl CYLIO}. The DL module {\sl
+  MATHLIB} provides an interface to the trigonemetric function $sinus$
+and the value $\pi$. The module {\sl CYLIO} contains a function for
+setting the dimension of the circular cylinder and for printing its
+volume.  The module {\sl CYLINDER} also defines a record for
+representing dimensions of a circular cylinder which is imported by
+the DL modules.
+
+For each DL modules there exists a corresponding shared library: {\sl
+  MATHLIB} to {\tt libmath.so/math.dll} and {\sl CYLIO} to {\tt
+  libcylio.so/cylio.dll}. 
+ 
+The shared library {\tt libmath.so/math.dll} provides the trigonometric
+functions $sine$, $cosine$ and the value $\pi$ which all are defined
+in the C standard library. The code consists of the type conversion
+functions.  The shared library \texttt{libcylio.so} (or
+\texttt{cylio.dll} on Windows) provides
+simple user 
+interface functions: {\tt GetCircCyl} asks for the dimensions of the
+cylinder and {\tt ShowCircCylVol} prints the cylinder dimensions and
+its volume on the screen. The cylinder dimensions are represented by a
+structure {\tt CircCyl} which has an equivalent definition in the
+specification, the record type {\it CircCyl}.
+
+\subsection{The Specifications}
+This appendix contains the  module specifications.
+\subsubsection{The Module \textsl{CYLINDER}}
+\verbatiminput{trigno/cylinder.vdm}
+
+\subsubsection{The Dynamic Link Modules \textsl{MATHLIB} and \textsl{CYLIO}}
+\label{sec:math-cylio}
+
+\verbatiminput{trigno/math.vdm}
+\verbatiminput{trigno/cylio.vdm}
+
+
+\subsection{The Shared Libraries}
+This appendix contains the source files used to build the shared libraries.
+\subsubsection{The MATHLIB shared library}
+\verbatiminput{trigno/tcfmath.cc}
+
+The type conversion function {\tt ExtSin} takes as argument an object 
+of the class {\tt Sequence}, extracts the argument and converts it into an
+object of the class {\tt Real}. This object is casted automatically in a
+{\tt double} value by application of the $sin$ function.
+The result value is converted into a Meta-IV value and returned to the
+Toolbox.
+
+\subsubsection{The CYLIO shared library}\label{sub:cylio}
+
+This section contains the sources of the shared library {\tt
+libcylio.so/cylio.dll}. 
+The file {\tt cylio.cc} provides a simple interface for the input of the
+dimensions of the circular cylinder and the printout of the volume.
+
+The file {\tt tcfcylio.cc} contains the type conversion functions.
+The type conversion functions also show the transformation of the
+circular cylinder values between the different representations of
+the type ``CircCyl'' used in C++ and in the Toolbox.
+
+\verbatiminput{trigno/cylio.h}
+\verbatiminput{trigno/cylio.cc}
+\verbatiminput{trigno/tcfcylio.cc}
+  
+\subsection{Makefiles}\label{makefiles}
+
+
+\subsubsection{Linux}\label{makefiles:linux}
+
+Here is an example makefile for Linux. 
+
+\verbatiminput{trigno/Makefile.Linux}
+
+
+\subsubsection{Solaris 2.6}\label{makefiles:sunos5}
+Here is the example makefile for Solaris 10
+
+\verbatiminput{trigno/Makefile.solaris2.6}
+
+
+\subsubsection{Windows}\label{makefiles:win}
+Here is the example makefile for Microsoft Windows, using GNU make.
+
+\verbatiminput{trigno/Makefile.win32}
+
+
+
+
+\section{Trouble Shooting}
+Once you have started creating your own type conversion functions, you
+will discover that suddenly strange error messages from the VDM C++
+library may occur.  This appendix will help you providing an idea of
+how to debug your libraries.
+
+The best thing is to start {\tt gdb} as usually, and debug through the
+code, to see where it goes wrong. This cannot be done straight away,
+since the symbols defined in the libraries are not known, when {\tt
+  gdb} is started.
+
+The solution is first to debug the specification with {\tt vdmde}, and
+when it has been discovered which external function goes wrong, a {\tt
+  main()} which calls that particular function can be created and
+linked together with your libraries. The main procedure could look
+like this:
+
+\verbatiminput{trigno/main.cc}
+
+\subsection{Segmentation Fault}
+
+Another problem you may have is that the toolbox crashes with a
+segmentation fault. This might very well be a problem in your external
+library. Again, {\tt vdmde} is started in order to see in which
+function the problems occur.
+
+There are three obvious things which can go wrong in the interface
+between the Toolbox and your code resulting in such an error:
+
+\begin{enumerate}
+\item Your functions do not have the correct signature:\\
+  {\tt void} {\em function\/}{\tt (Sequence }{\em args\/}{\tt )}\\
+  or {\tt Generic} {\em function\/}{\tt (Sequence }{\em args\/}{\tt )}
+\item A function which should return {\tt Generic} does not return any
+  value.
+\item The external code contain global uninitialised values or objects
+  (see Section \ref{sec:globalvalues}).
+\end{enumerate}
+
+\subsection{Using Tcl/Tk}
+
+If you wish to use Tcl/Tk in a dynamically linked library together
+with the Toolbox you should look at the other examples which have been
+made for this combination \footnote{There is no exercise being offered now.}.
+It is important that you do not call {\tt Tk\_MainLoop} 
+if you are using {\tt vdmgde} (the graphical version of the Toolbox) 
+because {\tt vdmgde} itself is implemented with Tcl/Tk and 
+therefore it will enter a deadlock situation where Tcl/Tk will be waiting 
+for the main Toolbox window to close in case {\tt Tk\_MainLoop} is called.
+
+One solution (which is used in the other examples) is to create a loop
+which calls {\tt Tk\_DoOneEvent} and terminates when the Tcl code has
+set a Tcl variable {\tt Done} non zero. Initially, the Tcl code sets
+{\tt Done} to zero and when the dialog window is closed {\tt Done} is
+set to 1.
+
+\subsection{Global Objects and initialisation of Global Values}
+\label{sec:globalvalues}
+
+On all supported platform (Windows, Mac, Linux, Solaris) C++ object
+constructors are called when the shared object is compiled and linked
+as described above.
+
+\subsection{Standard input and output under Microsoft Windows}
+
+Since the graphical version of the Toolbox runs as a GUI application
+under Windows, standard input and output streams are not
+available. Therefore shared libraries that attempt to use
+\texttt{cin}, \texttt{cout} and \texttt{cerr} will not work as
+expected. 
+
+\end{document}
+

@@ -1,0 +1,18 @@
+class Types
+
+types
+
+public A::    real
+          k : int;
+
+Item = MenuItem | RemoveItem;
+MenuItem = Separator | Action;
+Action :: text : String;
+Separator :: ;
+RemoveItem :: ;
+String = seq of char;
+
+public S = set of int
+inv s == s <> {};
+
+end Types

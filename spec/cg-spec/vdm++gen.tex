@@ -1,0 +1,286 @@
+% WHAT
+%   The main file of the document describing the specification of 
+%   the VDM++ part of the Code Generator Front-End.
+%
+% FILE
+%    $Source: /home/vdmtools/cvsroot/toolbox/spec/cg-spec/vdm++gen.tex,v $
+% VERSION
+%    $Revision: 1.7 $
+% DATE
+%    $Date: 1996/09/24 08:07:36 $
+% FORMAT
+%    $State: Exp $
+% PROJECT
+%    Afrodite/IDERS
+% STATUS
+%    Under development.
+% AUTHOR
+%    $Author: jeppe $
+% COPYRIGHT
+%    (C) 1993 IFAD, Denmark
+
+\documentclass[a4paper,dvips]{article}
+\usepackage[dvips]{color}
+\usepackage{vdmsl-2e}
+\usepackage{longtable}
+\usepackage{alltt}
+\usepackage{makeidx}
+\usepackage{ifad}
+
+\definecolor{covered}{rgb}{0,0,0}      %black
+%\definecolor{not_covered}{gray}{0.5}   %gray for previewing
+\definecolor{not_covered}{gray}{0.6}   %gray for printing
+%\definecolor{not_covered}{rgb}{1,0,0}  %read
+
+
+\newcommand{\StateDef}[1]{{\bf #1}}
+\newcommand{\TypeDef}[1]{{\bf #1}}
+\newcommand{\TypeOcc}[1]{{\it #1}}
+\newcommand{\FuncDef}[1]{{\bf #1}}
+\newcommand{\FuncOcc}[1]{#1}
+\newcommand{\ModDef}[1]{{\tiny #1}}
+
+\newcommand{\MCL}{Meta-IV Class Library }
+\newcommand{\vinput}[1]{
+\begin{verbatim}
+\input #1
+\end{verbatim}
+}
+
+\newcommand{\nfs}{{\em not fully specified\/}}
+\newcommand{\TBW}{To be written}
+\newcommand{\NYI}{Notice, that this function/operation is not fully
+  specified in order to capture a possible integration with another
+  library than \MCL.}
+
+\makeindex
+
+\begin{document}
+
+\special{!userdict begin /bop-hook{gsave 220 30 translate
+0 rotate /Times-Roman findfont 21 scalefont setfont
+0 0 moveto (CONFIDENTIAL) show grestore}def end}
+
+\docdef{Specification of the VDM++ Code Generator}
+         {IFAD VDM Tool Group \\
+          The Institute of Applied Computer Science}
+         {\today,}
+         {IFAD-VDM-29}
+         {Report}
+         {Under Development}
+         {Confidential}
+         {}
+         {\copyright IFAD}
+         {\item[V1.0] First version.}
+         {}
+
+
+\tableofcontents
+\newpage
+
+
+\section{Introduction}
+
+This document contains the first draft of the specification
+of the VDM++ part of the code generator front-end. In addition
+it describes the overall structure of the specification and
+the used strategies. 
+
+The specification in this document supports class definitions
+containing the following constructs:
+
+\begin{itemize}
+\item Inheritance:
+  \begin{itemize}
+  \item Representation.
+  \item Indexed.
+  \item Behavioral.
+  \end{itemize}
+\item Instance Variables ({\em invariants are not supported}).
+\item Explicit member function definitions.
+\item Value definitions.
+\item Full and preliminary method specifications.
+\item Statements:
+  \begin{itemize}
+  \item Invoke statements.
+  \item New statement.
+  \item Specification and Topology statements.
+  \end{itemize}
+\item Self Expressions
+ \end{itemize}
+
+
+
+\section{Overall Structure}
+
+The specification is divided into the following modules:
+
+\begin{description}
+\item[CLASS:] This module provides functions generating code
+  corresponding to VDM++ class definitions.
+
+\item[FVD:] This module provides functions generating code
+  corresponding to function and value definitions inside VDM++ class
+  definitions.
+
+\item[MD:] This module provides functions generating code
+  corresponding to method definitions, methods modeling behavioral
+  inheritance, and argument and type declarations/definitions.
+
+\item[STMT:] This module is defined [IFAD-CG-4]\footnote{This is a
+    doc. id.} bud is extended with functions generating code
+  corresponding to VDM++ statements. That is, {\em Call Statement\/}
+  has been changed into {\em Invoke Statement\/} and {\em New
+    Statement\/}, and where {\em Specification} and {\em Topology
+    Statements} have been added.
+
+\item[EXPR:] This module is defined [IFAD-CG-4] and is extended with
+  functions generation code corresponding to VDM++ expressions. That
+  is, {\em isOfBaseClass Expression},
+  {\em isOfClass Expression} and {\em Self Expression\/}. Note that
+  only {\em Self Expression\/} is supported in the first version of
+  the code generator.
+
+\item[TI:] This module provides operations keeping track of type
+  information collected by the type checker. This type information is
+  used to determine methods class membership and dependencies between
+  classes.
+
+\end{description}
+
+In addition to these modules, the specification uses of the modules
+$CPP$, $BC$, $AUX$, $DS$, $PM$, $VD$ and $VD$. These are all described
+in [IFAD-CG-4]. The VDM++ code generator uses the abstract syntax
+(module $AS$) and the type representation (module $REP$) described in
+\cite{Lassen&93a}.
+
+
+Strategies, such as temporary variables, renaming, specification
+style etc.\ used in this document will follow the same guidelines as
+described in [IFAD-CG-4]. Classes will be renamed using
+the following strings:
+
+\begin{itemize}
+\item {\em vdm\_\/} --- classes corresponding to VDM++ classes.
+
+\item {\em iclass\_index\_super\_\/} --- classes modeling indexed
+  inheritance from class {\em super\/} with the index {\em index\/}
+  (see section \ref{sec:class}).
+
+\end{itemize}
+
+
+%\subsection{The Meta-IV C++ Library}
+%
+%
+%The first version of the code generator will use the Meta-IV C++
+%Library. This raises two problems in the VDM++ part of the code
+%generator.
+%
+%In addition to the VDM-SL type set, VDM++ includes an object type,
+%which can be combined with the other types in the usual way. This
+%implies that the generated code can contain non Meta-IV objects which
+%might be inserted in e.g.\ a Meta-IV sequence. Unfortunately this is
+%not possible with out extending the Meta-IV library. The specification
+%in this document do not concern with this problem, and is to be
+%modified when the consequences to the code are clarified.
+%
+%Second, the way that indexed inheritance is modeled in the generated
+%code can not be compiled with version 2.2.2 of the GNU C++ compiler
+%(due to a bug). This bug has been fix in 2.5.8. The code generator
+%generates code which is supported by  version 2.5.8 of the GNU C++
+%compiler, and the Meta-IV library is to be ported to this version in
+%order to be used with the generated code.
+%
+%The remaining part of this document will not be concerned with the
+%former problems. This implies that parts of the specification are to
+%modified then the Meta-IV library is extended and ported to GNU C++
+%version 2.5.8.
+%
+
+\subsection{Run-Time Type Information}
+
+In order to code generate the expressions {\em isOfBaseClass} and {\em
+  isOfClass}, some run-time type information most be available (C++
+does not provide a standard way of doing such type inquires). However,
+the minimal information that a C++ class corresponding to a VDM++
+class need, are a unique identification of the class (e.g.\ the class
+name) and a unique identification of the root base classes (e.g.\ 
+their names). The information can be stored in a member
+variable in the class. The first version of the code generator will
+not support {\em isOfBaseClass} and {\em isOfClass} and run-time type
+information will therefore not be available for C++ classes generated
+by the specification in this document.
+
+Guidelines for adding run-time type information are described in
+\cite{Stroustrup91}. 
+
+
+
+
+
+%%%Specification.
+
+%%module CLASS
+\input{mod_class.vdm.tex}
+
+%%module FVD
+\input{mod_fvd.vdm.tex}
+
+%%module MD
+\input{mod_md.vdm.tex}
+
+\section{Function Definitions}\label{fctdef}
+\input{mod_fctdef.vdmpp.tex}
+
+
+\section{Expressions}\label{expr}
+\input{mod_expr.vdmpp.tex}
+
+
+\section{Pattern Match}\label{PM}
+\input{mod_patmat.vdm.tex}
+
+
+\section{Statements}
+\input{mod_stmt.vdmpp.tex}
+
+\section{Type Definitions}
+\label{TD}
+\input{mod_typedef.vdmpp.tex}
+
+\section{Value Definitions}
+\input{mod_valdef.vdmpp.tex}
+
+\appendix
+
+%\section{The Definition of the Abstract Syntax of VDM}
+%\label{AS}
+%\input{mod_as.vdm.tex}
+
+%\label{AS}
+%\input{rep.vdmpp.tex}
+
+%\section{The Definition of the Abstract Syntax of C++}
+%\input{mod_cppast.vdm.tex}
+
+%\section{Building the Abstract Syntax Tree of C++}
+%This module provides functions for building the abstract syntax tree of C++. 
+%\input{mod_bcppast.vdmpp.tex}
+
+%\section{Code Corresponding to Functions on VDM Data Structures}\label{DS}
+\input{mod_vdm_ds.vdmpp.tex}
+
+
+%\section{Auxiliary Module}\label{AUX}
+\input{mod_aux.vdmpp.tex}
+
+%%%module TI
+%\input{mod_ti.vdm.tex}
+
+
+%\newpage
+%\addcontentsline{toc}{section}{Index}
+%\printindex
+
+\end{document}

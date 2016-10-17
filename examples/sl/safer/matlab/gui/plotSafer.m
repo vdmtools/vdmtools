@@ -1,0 +1,97 @@
+function safer = plotSafer
+colordef black;
+cla;
+hold on;
+
+saferBlock1 = newDrawingList;
+saferBlock1.label = 'saferblock1';
+saferBlock1.drawinglist{1} = newThrusterBlock;
+saferBlock1.drawinglist{1}.label = 'thrusterblock1';
+saferBlock1.drawinglist{2} = newThruster;
+saferBlock1.drawinglist{2}.label = 'thruster11';
+saferBlock1.drawinglist{2} = moveDrawing(saferBlock1.drawinglist{2},[0 2 0]);
+saferBlock1.drawinglist{3} = newThruster;
+saferBlock1.drawinglist{3}.label = 'thruster12';
+saferBlock1.drawinglist{3} = rotateDrawing(saferBlock1.drawinglist{3},[0 0 0.5*pi]);
+saferBlock1.drawinglist{3} = moveDrawing(saferBlock1.drawinglist{3},[-1 -0.5 0]);
+saferBlock1.drawinglist{4} = newThruster;
+saferBlock1.drawinglist{4}.label = 'thruster13';
+saferBlock1.drawinglist{4} = rotateDrawing(saferBlock1.drawinglist{4},[0 0 0.5*pi]);
+saferBlock1.drawinglist{4} = moveDrawing(saferBlock1.drawinglist{4},[-1 -1.5 0]);
+saferBlock1.drawinglist{5} = newThruster;
+saferBlock1.drawinglist{5}.label = 'thruster14';
+saferBlock1.drawinglist{5} = rotateDrawing(saferBlock1.drawinglist{5},[0 0 pi]);
+saferBlock1.drawinglist{5} = moveDrawing(saferBlock1.drawinglist{5},[0 -2 0]);
+saferBlock1.drawinglist{6} = newThruster;
+saferBlock1.drawinglist{6}.label = 'thruster16';
+saferBlock1.drawinglist{6} = rotateDrawing(saferBlock1.drawinglist{6},[0.5*pi 0 0]);
+saferBlock1.drawinglist{6} = moveDrawing(saferBlock1.drawinglist{6},[0 -0.5 1]);
+saferBlock1.drawinglist{7} = newThruster;
+saferBlock1.drawinglist{7}.label = 'thruster15';
+saferBlock1.drawinglist{7} = rotateDrawing(saferBlock1.drawinglist{7},[0.5*pi 0 0]);
+saferBlock1.drawinglist{7} = moveDrawing(saferBlock1.drawinglist{7},[0 -1.5 1]);
+
+saferBlock2 = saferBlock1;
+saferBlock2.label = 'saferblock2';
+saferBlock2.drawinglist{1}.label = 'thrusterblock2';
+saferBlock2.drawinglist{2}.label = 'thruster21';
+saferBlock2.drawinglist{3}.label = 'thruster22';
+saferBlock2.drawinglist{4}.label = 'thruster23';
+saferBlock2.drawinglist{5}.label = 'thruster24';
+saferBlock2.drawinglist{6}.label = 'thruster26';
+saferBlock2.drawinglist{7}.label = 'thruster25';
+saferBlock2 = scaleDrawing(saferBlock2,[-1 1 1]);
+saferBlock2 = moveDrawing(saferBlock2,[10 0 0]);
+
+saferBlock3 = saferBlock1;
+saferBlock3.label = 'saferblock3';
+saferBlock3.drawinglist{1}.label = 'thrusterblock3';
+saferBlock3.drawinglist{2}.label = 'thruster31';
+saferBlock3.drawinglist{3}.label = 'thruster36';
+saferBlock3.drawinglist{4}.label = 'thruster35';
+saferBlock3.drawinglist{5}.label = 'thruster34';
+saferBlock3.drawinglist{6}.label = 'thruster32';
+saferBlock3.drawinglist{7}.label = 'thruster33';
+saferBlock3 = scaleDrawing(saferBlock3,[-1 1 1]);
+saferBlock3 = rotateDrawing(saferBlock3,[0 0.5*pi 0]);
+saferBlock3 = moveDrawing(saferBlock3,[10 0 -15]);
+
+saferBlock4 = saferBlock1;
+saferBlock4.label = 'saferblock4';
+saferBlock4.drawinglist{1}.label = 'thrusterblock4';
+saferBlock4.drawinglist{2}.label = 'thruster41';
+saferBlock4.drawinglist{3}.label = 'thruster46';
+saferBlock4.drawinglist{4}.label = 'thruster45';
+saferBlock4.drawinglist{5}.label = 'thruster44';
+saferBlock4.drawinglist{6}.label = 'thruster42';
+saferBlock4.drawinglist{7}.label = 'thruster43';
+saferBlock4 = rotateDrawing(saferBlock4,[0 -0.5*pi 0]);
+saferBlock4 = moveDrawing(saferBlock4,[0 0 -15]);
+
+safer = newDrawingList;
+safer.label = 'safer';
+safer.drawinglist{1} = saferBlock1;
+safer.drawinglist{2} = saferBlock2;
+safer.drawinglist{3} = saferBlock3;
+safer.drawinglist{4} = saferBlock4;
+safer.drawinglist{5} = newDrawingLine;
+safer.drawinglist{5}.line = [1 1 0;9 1 0];
+%safer.drawinglist{5} = setColor(safer.drawinglist{5},[0.9804 0.8039 0.1137]);
+safer.drawinglist{5} = setColor(safer.drawinglist{5},[0.5020 0.5020 0]);
+safer.drawinglist{6} = safer.drawinglist{5};
+safer.drawinglist{6}.line = [1 1 -15;9 1 -15];
+safer.drawinglist{6} = setColor(safer.drawinglist{6},[0.9804 0.8039 0.1137]);
+safer.drawinglist{7} = safer.drawinglist{5};
+safer.drawinglist{7}.line = [0 1 -1;0 1 -14];
+safer.drawinglist{7} = setColor(safer.drawinglist{7},[0.9804 0.8039 0.1137]);
+safer.drawinglist{8} = safer.drawinglist{7};
+safer.drawinglist{8}.line = [10 1 -1;10 1 -14];
+safer.drawinglist{8} = setColor(safer.drawinglist{8},[0.9804 0.8039 0.1137]);
+
+safer = plotDrawing(rotateDrawing(safer,[0 0 0]));
+
+grid off;
+rotate3d on;
+axis vis3d;
+axis normal;
+axis equal;

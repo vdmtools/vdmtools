@@ -1,0 +1,243 @@
+\subsection{FJapaneseCalendarT}
+FCalendarのテストを行う。
+
+\begin{vdm_al}
+--$Id $
+class FJapaneseCalendarT is subclass of FJapaneseCalendar
+functions
+static public run : () +> bool
+run() == 
+let	testcases = 
+		[ t1(), t2(), t3(), t4(), t5(), t6(), t7(), t8(), t9(), t10(),
+		t11()
+		]
+in
+FTestDriver`run(testcases);
+\end{vdm_al}
+
+\subsubsection{「GetHolidaysWithinDays」を検査する}
+\begin{vdm_al}
+static t1 : () -> FTestDriver`TestCase
+t1() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT`t1:\t 「GetHolidaysWithinDays」を検査する",
+	let	d = DateFromInt,
+		g = GetHolidaysWithinDates(GetHolidays)
+	in
+		g(d(2004)(4)(28))(d(2004)(4)(29)) = {d(2004)(4)(29)} and
+		g(d(2004)(4)(28))(d(2004)(5)(2)) = {d(2004)(4)(29)} and
+		g(d(2004)(4)(28))(d(2004)(5)(3)) = {d(2004)(4)(29), d(2004)(5)(3)} and
+		g(d(2004)(4)(28))(d(2004)(5)(4)) = {d(2004)(4)(29), d(2004)(5)(3), d(2004)(5)(4)} and
+		g(d(2004)(4)(28))(d(2004)(5)(5)) = {d(2004)(4)(29), d(2004)(5)(3), d(2004)(5)(4), d(2004)(5)(5)}  and
+		g(d(2004)(4)(29))(d(2004)(5)(5)) = {d(2004)(4)(29), d(2004)(5)(3), d(2004)(5)(4), d(2004)(5)(5)} and
+		g(d(2004)(4)(30))(d(2004)(5)(5)) = {d(2004)(5)(3), d(2004)(5)(4), d(2004)(5)(5)} and
+		g(d(2004)(1)(1))(d(2004)(12)(31)) = 
+			{d(2004)(1)(1), d(2004)(1)(12), d(2004)(2)(11), d(2004)(3)(20), d(2004)(4)(29),
+			d(2004)(5)(3), d(2004)(5)(4), d(2004)(5)(5), d(2004)(7)(19), d(2004)(9)(20), d(2004)(9)(23),
+			d(2004)(10)(11), d(2004)(11)(3), d(2004)(11)(23), d(2004)(12)(23)} and
+		g(d(2005)(3)(1))(d(2005)(3)(31)) = {d(2005)(3)(20), d(2005)(3)(21)} 
+	);
+\end{vdm_al}
+	
+\subsubsection{「GetHolidaysWithinDatesNotSunday」を検査する}
+\begin{vdm_al}
+static t2 : () -> FTestDriver`TestCase
+t2() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT`t2:\t 「GetHolidaysWithinDatesNotSunday」を検査する",
+	let	d = DateFromInt,
+		g = GetHolidaysWithinDatesNotSunday(GetHolidays)
+	in
+		g(d(2004)(1)(1))(d(2004)(12)(31)) = 
+			{d(2004)(1)(1), d(2004)(1)(12), d(2004)(2)(11), d(2004)(3)(20), d(2004)(4)(29),
+			d(2004)(5)(3), d(2004)(5)(4), d(2004)(5)(5), d(2004)(7)(19), d(2004)(9)(20), d(2004)(9)(23),
+			d(2004)(10)(11), d(2004)(11)(3), d(2004)(11)(23), d(2004)(12)(23)} and
+		g(d(2005)(3)(1))(d(2005)(3)(31)) = {d(2005)(3)(21)} and
+		g(d(2006)(1)(1))(d(2006)(1)(31)) = {d(2006)(1)(2), d(2006)(1)(9)} 
+	);
+\end{vdm_al}
+	
+\subsubsection{「GetHolidaysWithinDatesAsSunday」を検査する}
+\begin{vdm_al}
+static t3 : () -> FTestDriver`TestCase
+t3() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT`t3:\t 「GetHolidaysWithinDatesAsSunday」を検査する",
+	let	d = DateFromInt,
+		g = GetHolidaysWithinDatesAsSunday(GetHolidays)
+	in
+		g(d(2004)(1)(1))(d(2004)(12)(31)) = {} and
+		g(d(2005)(3)(1))(d(2005)(3)(31)) = {d(2005)(3)(20)} and
+		g(d(2006)(1)(1))(d(2006)(1)(31)) = {d(2006)(1)(1)} 
+	);
+\end{vdm_al}
+	
+\subsubsection{「GetNumberOfHolidaysWithinDates」を検査する}
+\begin{vdm_al}
+static t4: () -> FTestDriver`TestCase
+t4() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT`t4:\t 「GetNumberOfHolidaysWithinDates」を検査する",
+	let	d = DateFromInt,
+		g = GetNumberOfHolidaysWithinDates(GetHolidays)
+	in
+		g(d(2004)(4)(28))(d(2004)(4)(29)) = 1 and
+		g(d(2004)(4)(28))(d(2004)(5)(2)) = 1 and
+		g(d(2004)(4)(28))(d(2004)(5)(3)) = 2 and
+		g(d(2004)(4)(28))(d(2004)(5)(4)) = 3 and
+		g(d(2004)(4)(28))(d(2004)(5)(5)) = 4 and
+		g(d(2004)(4)(29))(d(2004)(5)(5)) = 4 and
+		g(d(2004)(4)(30))(d(2004)(5)(5)) = 3 and
+		g(d(2004)(1)(1))(d(2004)(12)(31)) = 15 and
+		g(d(2005)(3)(1))(d(2005)(3)(31)) = 2 and 
+		g(d(2006)(1)(1))(d(2006)(1)(31)) = 3
+	);
+\end{vdm_al}
+	
+\subsubsection{「GetNumberOfDayOff」を検査する}
+\begin{vdm_al}
+static t5: () -> FTestDriver`TestCase
+t5() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT`t5:\t 「GetNumberOfDayOff」を検査する",
+	let	d = DateFromInt,
+		g = GetNumberOfDayOff(GetHolidays)
+	in
+		g(d(2004)(4)(28))(d(2004)(4)(29)) = 1 and
+		g(d(2004)(4)(28))(d(2004)(5)(2)) = 2 and
+		g(d(2004)(4)(28))(d(2004)(5)(3)) = 3 and
+		g(d(2004)(4)(28))(d(2004)(5)(4)) = 4 and
+		g(d(2004)(4)(28))(d(2004)(5)(5)) = 5 and
+		g(d(2004)(4)(29))(d(2004)(5)(5)) = 5 and
+		g(d(2004)(4)(30))(d(2004)(5)(5)) = 4 and
+		g(d(2005)(3)(1))(d(2005)(3)(31)) = 5 and 
+		g(d(2006)(1)(1))(d(2006)(1)(31)) = 7
+	);
+\end{vdm_al}
+	
+\subsubsection{「GetNumberOfDayOff1」を検査する}
+\begin{vdm_al}
+static t6: () -> FTestDriver`TestCase
+t6() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT`t6:\t 「GetNumberOfDayOff1」を検査する",
+	let	d = DateFromInt,
+		g = GetNumberOfDayOff1(GetHolidays)
+	in
+		g(d(2004)(4)(28))(d(2004)(4)(29)) = 1 and
+		g(d(2004)(4)(28))(d(2004)(5)(2)) = 2 and
+		g(d(2004)(4)(28))(d(2004)(5)(3)) = 3 and
+		g(d(2004)(4)(28))(d(2004)(5)(4)) = 4 and
+		g(d(2004)(4)(28))(d(2004)(5)(5)) = 5 and
+		g(d(2004)(4)(29))(d(2004)(5)(5)) = 4 and
+		g(d(2004)(4)(30))(d(2004)(5)(5)) = 4 and
+		g(d(2005)(3)(1))(d(2005)(3)(31)) = 5 and 
+		g(d(2006)(1)(1))(d(2006)(1)(31)) = 6
+	);
+\end{vdm_al}
+	
+\subsubsection{休日を考慮した加減算(+-1)を検査する}
+\begin{vdm_al}
+static t7: () -> FTestDriver`TestCase
+t7() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT`t7:\t 休日を考慮した加減算(+-1)を検査する",
+	let	d = DateFromInt,
+		n = BusinessDateToFuture(GetHolidays),
+		p = BusinessDateToPast(GetHolidays)
+	in
+		n(d(2004)(4)(29)) = d(2004)(4)(30) and
+		p(d(2004)(4)(29)) = d(2004)(4)(28) and
+		n(d(2004)(5)(1)) = d(2004)(5)(6) and
+		n(d(2004)(5)(2)) = d(2004)(5)(6) and
+		p(d(2004)(5)(5)) = d(2004)(4)(30)
+	);
+\end{vdm_al}
+	
+\subsubsection{休日を考慮した加減算を検査する}
+\begin{vdm_al}
+static t8: () -> FTestDriver`TestCase
+t8() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT`t8:\t 休日を考慮した加減算を検査する",
+	let	d = DateFromInt,
+		n = BusinessDateToFuture(GetHolidays),
+		p = BusinessDateToPast(GetHolidays),
+		a = AddBusinessDays(GetHolidays),
+		s = SubtractBusinessDays(GetHolidays)
+	in
+		n(d(2004)(4)(28)) = a(d(2004)(4)(28))(0) and
+		p(d(2004)(4)(30)) = s(d(2004)(4)(30))(0)  and
+		n(d(2004)(4)(29)) = d(2004)(4)(30) and
+		n(d(2004)(5)(1)) = d(2004)(5)(6) and
+		p(d(2004)(5)(6)) = d(2004)(5)(6) and
+		p(d(2004)(5)(5)) = d(2004)(4)(30) and
+		s(d(2004)(5)(6))(1) = d(2004)(4)(30) and
+		a(d(2004)(5)(1))(1) = d(2004)(5)(7) and
+		s(d(2004)(5)(1))(-1) = d(2004)(4)(30) and
+		a(d(2004)(5)(6))(-1) = d(2004)(5)(6) and
+		s(d(2004)(5)(6))(1) = d(2004)(4)(30) and
+		s(d(2004)(5)(6))(6) = d(2004)(4)(22) and
+		a(d(2004)(4)(22))(6) = d(2004)(5)(6) 
+	);
+\end{vdm_al}
+	
+\subsubsection{休日の判定を検査する}
+\begin{vdm_al}
+static t9: () -> FTestDriver`TestCase
+t9() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT`t9:\t 休日の判定を検査する",
+	let	d = DateFromInt,
+		h = IsHoliday(GetHolidays),
+		f = IsDayOff(GetHolidays)
+	in
+		h(d(2004)(4)(29)) and
+		h(d(2004)(5)(2)) = false and
+		h(d(2004)(5)(3)) and
+		h(d(2004)(5)(4)) and
+		h(d(2004)(5)(5)) and
+		h(d(2004)(5)(6)) = false and
+		f(d(2004)(5)(2)) and
+		f(d(2004)(5)(9)) and
+		f(d(2005)(3)(19)) = false and
+		f(d(2005)(3)(20)) and
+		f(d(2005)(3)(21)) and
+		f(d(2005)(3)(22)) = false 
+	);
+\end{vdm_al}
+	
+\subsubsection{「和暦日付文字列を得る」を検査する}
+\begin{vdm_al}
+static t10: () -> FTestDriver`TestCase
+t10() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT`t10:\t 「和暦日付文字列を得る」を検査する",
+	GetJapaneseYearAsString(DateFromInt(2004)(2)(29)) = "16 229"
+	);
+\end{vdm_al}
+	
+\subsubsection{春分・夏至・秋分・冬至を検査する}
+\begin{vdm_al}
+static t11: () -> FTestDriver`TestCase
+t11() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT`t11:\t 春分・夏至・秋分・冬至を検査する",
+	let	d = DateFromInt
+	in
+	GetVernalEquinoxInJST(2004) = d(2004)(3)(20) and 
+	GetVernalEquinoxInJST(2003) = d(2003)(3)(21) and 
+	GetVernalEquinoxInJST(2020) = d(2020)(3)(20) and 
+	GetSummerSolsticeInJST(2004) = d(2004)(6)(21) and 
+	GetSummerSolsticeInJST(2003) = d(2003)(6)(22) and 
+	GetSummerSolsticeInJST(2020) = d(2020)(6)(21) and 
+	GetAutumnalEquinoxInJST(2004) = d(2004)(9)(23) and 
+	GetAutumnalEquinoxInJST(2003) = d(2003)(9)(23) and 
+	GetAutumnalEquinoxInJST(2020) = d(2020)(9)(22) and 
+	GetWinterSolsticeInJST(2004) = d(2004)(12)(22) and --2004-12-21?
+	GetWinterSolsticeInJST(2003) = d(2003)(12)(22) and 
+	GetWinterSolsticeInJST(2020) = d(2020)(12)(21)  
+	);
+	
+end FJapaneseCalendarT
+\end{vdm_al}

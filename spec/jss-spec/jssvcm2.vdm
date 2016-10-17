@@ -1,0 +1,403 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Version Control Management for the Static Semantics of Java
+% $Id: jssvcm2.vdm,v 1.5 2001/05/01 13:08:53 peter Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\section{The JSSVCM2 Module}
+
+This section presents the Java Version Control Manager module
+which is responsible for illustrating the functionality which
+the static semantics needs from the JSSVCM tool. Thus, this is not
+a part of the static semantics, but it indicates the interface
+which is needed from the static semantics.
+
+\begin{vdm_al}
+
+module JSSVCM2
+imports
+  from AS all,
+  from CI all,
+  from REP all,
+  from CPP all,
+  from JSSERR all,
+  from JSSREP all,
+  from JSSAUX all,
+  from JSSENV all,
+  from JSSVCM2STMT
+  operations
+    CollectStmt: CPP`Stmt ==> ()
+exports
+operations
+  UpdateASTWithTypeInfo: CPP`Files ==> ();
+  LoadMemberDeclarationList: seq of CPP`MemberDeclaration ==> ();
+  LoadDeclSpecifiers: CPP`DeclSpecifiers ==> JSSREP`TypeRep;
+  
+definitions
+operations
+
+  UpdateASTWithTypeInfo: CPP`Files ==> ()
+  UpdateASTWithTypeInfo(p_files) ==
+    for all l_file in set p_files do (
+--      JSSENV`ClearTypeInfo();
+      LoadFile(l_file)
+    );
+\end{vdm_al}
+
+\begin{vdm_al}
+  LoadFile: CPP`File ==> ()
+  LoadFile(p_file) == (
+    if p_file.h <> nil then skip;
+    LoadCPPAS(p_file.ast)
+  );
+\end{vdm_al}
+
+\begin{formalparameters}
+\verb+p_declL: seq of CPP`Declaration+ & The list of declarations from
+the given file.\\
+\hline
+\end{formalparameters}
+
+\begin{vdm_al}
+  LoadCPPAS: seq of CPP`Declaration ==> ()
+  LoadCPPAS(p_declL) ==
+    for l_decl in p_declL do
+      LoadDeclaration(l_decl);
+\end{vdm_al}
+
+\subsection{Declarations}
+
+\begin{formalparameters}
+\verb+p_decl: CPP`Declaration+ & The abstract syntax tree
+representation for a Java declaration.\\
+\hline
+\end{formalparameters}
+
+\begin{vdm_al}
+  LoadDeclaration: CPP`Declaration ==> ()
+  LoadDeclaration(p_decl) ==
+    if is_CPP`IdentDeclaration(p_decl)
+    then LoadIdentDeclaration(p_decl)
+    else LoadFunctionDefinition(p_decl);
+\end{vdm_al}
+
+\subsection{Declaration Specifiers}
+
+\begin{vdm_al}
+  LoadMemberDeclarationList: seq of CPP`MemberDeclaration ==> ()
+  LoadMemberDeclarationList(p_mdL) ==
+    for l_md in p_mdL do LoadMemberDeclaration(l_md);
+\end{vdm_al}
+
+\begin{vdm_al}
+  LoadMemberDeclaration: CPP`MemberDeclaration ==> ()
+  LoadMemberDeclaration(p_md) ==
+    cases true:
+      (is_CPP`IdentDeclaration(p_md))   -> LoadIdentDeclaration(p_md),
+      (is_CPP`FunctionDefinition(p_md)) -> LoadFunctionDefinition(p_md),
+      (is_CPP`StaticInitializer(p_md))  -> LoadStaticInitializer(p_md)
+    end;
+\end{vdm_al}
+
+\begin{vdm_al}
+  LoadIdentDeclaration: CPP`IdentDeclaration ==> ()
+  LoadIdentDeclaration(p_id) ==
+    let l_tr = LoadDeclSpecifiers(p_id.ds)
+    in
+      LoadDeclaratorList(l_tr,p_id.dl);
+\end{vdm_al}
+
+\begin{formalparameters}
+\verb+p_declL: CPP`DeclSpecifiers+ & A list of declaration specifiers.\\
+\hline
+\end{formalparameters}
+
+We first look for Modifiers in the list since they must belong to a succeding Type.
+If the list contains Modifiers then we rely on the fact that the Modifiers are
+left adjusted compared to the Type, that is, the typr representation is not
+determined yet.
+
+PROBLEM: elseif is CPP`ArraySpecifier(l\_ds)
+
+\begin{vdm_al}
+  LoadDeclSpecifiers: CPP`DeclSpecifiers ==> JSSREP`TypeRep
+  LoadDeclSpecifiers(p_declL) == (
+    dcl l_restr : JSSREP`TypeRep,
+        l_mas : set of CPP`ModifierAccess := {};
+    for l_ds in p_declL do
+      if is_CPP`Modifier(l_ds)
+      then l_mas := l_mas union {LoadModifier(l_ds)}
+--
+      else 
+        l_restr := LoadDeclSpecifier(l_ds);
+    l_restr.access := l_restr.access union l_mas;
+    return l_restr
+  );
+\end{vdm_al}
+
+check for CPP`Modifier(..) moved to LoadDeclSpecifiers(..)
+
+\begin{vdm_al}
+  LoadDeclSpecifier: CPP`DeclSpecifier ==> JSSREP`TypeRep
+  LoadDeclSpecifier(p_ds) ==
+    let l_tr =
+    cases true:
+      (is_CPP`TypeSpecifier(p_ds))  -> LoadTypeSpecifier(p_ds),
+      (is_CPP`ArraySpecifier(p_ds)) -> LoadArraySpecifier(p_ds)
+-- JR MOVED case CPP`Modifier(p_ds) to LoadDeclSpecifiers
+    end
+    in
+      return l_tr;
+\end{vdm_al}
+
+\begin{vdm_al}
+  LoadTypeSpecifier: CPP`TypeSpecifier ==> JSSREP`TypeRep
+  LoadTypeSpecifier(p_ts) ==
+    let l_restr =
+    cases true:
+      (is_CPP`ClassSpecifier(p_ts.tp))     -> LoadClassSpecifier(p_ts.tp),
+      (is_CPP`InterfaceSpecifier(p_ts.tp)) -> LoadInterfaceSpecifier(p_ts.tp),
+      (is_CPP`QualifiedPackageName(p_ts.tp)) ->
+        mk_JSSREP`ClassTypeRep({},JSSAUX`PackageName2Name(p_ts.tp)),
+      (is_CPP`SimplePackageName(p_ts.tp))    ->
+        mk_JSSREP`ClassTypeRep({},JSSAUX`PackageName2Name(p_ts.tp)),
+      (is_CPP`QualifiedName(p_ts.tp))        ->
+-- JR
+        mk_JSSREP`AllTypeRep(),            
+-- JR
+      (is_CPP`Bool(p_ts.tp))               -> mk_JSSREP`BoolTypeRep({}),
+      (is_CPP`Char(p_ts.tp))               -> mk_JSSREP`CharTypeRep({}),
+      (is_CPP`Byte(p_ts.tp))               -> mk_JSSREP`ByteTypeRep({}),
+      (is_CPP`Short(p_ts.tp))              -> mk_JSSREP`ShortTypeRep({}),
+      (is_CPP`Int(p_ts.tp))                -> mk_JSSREP`IntTypeRep({}),
+      (is_CPP`Long(p_ts.tp))               -> mk_JSSREP`LongTypeRep({}),
+      (is_CPP`Float(p_ts.tp))              -> mk_JSSREP`FloatTypeRep({}),
+      (is_CPP`Double(p_ts.tp))             -> mk_JSSREP`DoubleTypeRep({}),
+      (is_CPP`Void(p_ts.tp))               -> mk_JSSREP`VoidTypeRep({})
+    end
+    in
+      return l_restr;
+\end{vdm_al}
+
+\begin{vdm_al}
+  LoadClassSpecifier: CPP`ClassSpecifier ==> JSSREP`ClassTypeRep
+  LoadClassSpecifier(p_clsspec) == (
+    JSSENV`SetCurrentName(LoadClassHead(p_clsspec.ch));
+    LoadMemberDeclarationList(p_clsspec.ml);
+    return JSSENV`GetCurrentType()
+  );
+\end{vdm_al}
+
+\begin{vdm_al}
+  LoadClassHead: CPP`ClassHead ==> AS`Name
+  LoadClassHead(p_clshead) ==
+    return JSSAUX`Identifier2Name(p_clshead.name);
+\end{vdm_al}
+
+\begin{vdm_al}
+
+  LoadBaseSpec: seq of CPP`BaseSpecifier ==> seq of AS`Name
+  LoadBaseSpec(p_bs) ==
+    if len p_bs = 1
+    then return [JSSAUX`PackageName2Name(p_bs(1))]
+    else return [];
+
+\end{vdm_al}
+
+\begin{vdm_al}
+  LoadInterSpec: [CPP`InterSpec] ==> seq of AS`Name
+  LoadInterSpec(p_ispec) ==
+    return [];
+\end{vdm_al}
+
+\begin{vdm_al}
+  LoadInterfaceSpecifier: CPP`InterfaceSpecifier ==> JSSREP`IntrfcTypeRep
+  LoadInterfaceSpecifier(p_inter) == (
+    JSSENV`SetCurrentName(LoadInterfaceHead(p_inter.ih));
+    LoadInterfaceBody(p_inter.ml);
+    return JSSENV`GetCurrentType()
+  );
+\end{vdm_al}
+
+\begin{vdm_al}
+  LoadInterfaceHead: CPP`InterfaceHead ==> AS`Name
+  LoadInterfaceHead(p_ih) == 
+    return JSSAUX`Identifier2Name(p_ih.name);
+\end{vdm_al}
+
+\begin{vdm_al}
+  LoadInterfaceBody: CPP`InterfaceBody ==> ()
+  LoadInterfaceBody(p_inter) ==
+    LoadMemberDeclarationList(p_inter);
+\end{vdm_al}
+
+\begin{vdm_al}
+  LoadArraySpecifier: CPP`ArraySpecifier ==> JSSREP`TypeRep
+  LoadArraySpecifier(p_as) ==
+-- JR
+    return mk_JSSREP`AllTypeRep();
+\end{vdm_al}
+
+\begin{vdm_al}
+  LoadStaticInitializer: CPP`StaticInitializer ==> ()
+  LoadStaticInitializer(p_statinit) ==
+    JSSVCM2STMT`CollectStmt(p_statinit.stmt);
+\end{vdm_al}
+
+\begin{vdm_al}
+  LoadDeclaratorList: JSSREP`TypeRep * [CPP`DeclaratorList] ==> ()
+  LoadDeclaratorList(p_tr,p_declL) ==
+    if p_declL <> nil
+    then for l_id in p_declL do LoadInitDeclarator(p_tr,l_id);
+\end{vdm_al}
+
+\subsection{Field Definitions}
+
+\begin{vdm_al}
+  LoadInitDeclarator: JSSREP`TypeRep * [CPP`InitDeclarator] ==> ()
+  LoadInitDeclarator(p_tr,p_id) == (
+    dcl l_decl : CPP`Declarator := p_id.decl,
+        l_array : nat := 0;
+    if p_id <> nil
+    then
+    ( while not is_CPP`Identifier(l_decl) do 
+      ( l_decl := l_decl.decl;
+        l_array := l_array+1
+      );
+--      ExportField(l_decl,mk_JSSREP`FieldTypeRep(p_tr,l_array))
+    )
+  );
+\end{vdm_al}
+
+ Declarator = Name | FctDecl | ArrayDecl
+ Name = Identifier | PackageName |  QualifiedName (| Destructor ??)
+ PackageName = SimplePackageName | QualifiedPackageName
+
+\subsection{Function Definitions}
+\begin{vdm_al}
+  LoadFunctionDefinition: CPP`FunctionDefinition ==> ()
+  LoadFunctionDefinition(p_fd) == (
+    dcl l_decl : CPP`Declarator := p_fd.decl;
+    JSSENV`EnterLocalScope({|->});
+    while not is_CPP`FctDecl(l_decl) do 
+    ( l_decl := l_decl.decl;
+-- JR is CPP`ArrayDecl(l_decl) ?
+    );
+    let mk_CPP`FctDecl(l_id,l_arg,-,l_cid) = l_decl,
+        mk_(l_domainTypes,l_domainNames) = LoadArgumentDeclarationList(l_arg)
+    in
+    ( JSSENV`SetCurrentMethod(JSSAUX`Identifier2Name(l_id));
+      for i=1 to len l_domainTypes do
+      ( 
+        JSSENV`Add2CurrentLocals({l_domainNames(i) |-> l_domainTypes(i)});
+      );
+      LoadThrows(p_fd.throw);
+      LoadFctBody(p_fd.fb);
+      JSSENV`LeaveLocalScope()
+    )
+  );
+\end{vdm_al}
+
+\begin{vdm_al}
+  LoadArgumentDeclarationList: [CPP`ArgumentDeclarationList] ==> 
+                                  (seq of JSSREP`FieldTypeRep) * (seq of AS`Name)
+  LoadArgumentDeclarationList(p_adL) == (
+    dcl l_ns : seq of AS`Name := [],
+        l_trs : seq of JSSREP`FieldTypeRep := [];
+    if p_adL <> nil
+    then
+    ( for l_ad in p_adL.arg do
+      let mk_(l_n,l_tr) = LoadArgumentDeclaration(l_ad)
+      in
+      ( l_trs := l_trs ^ [l_tr];
+        l_ns := l_ns ^ [l_n]
+      )
+    );
+    return mk_(l_trs,l_ns)
+  );
+\end{vdm_al}
+
+ ArgumentDeclaration = ArgDecl
+
+\begin{vdm_al}
+  LoadArgumentDeclaration: CPP`ArgumentDeclaration ==> AS`Name * JSSREP`FieldTypeRep
+  LoadArgumentDeclaration(p_ad) ==
+    return
+      cases true:
+        (is_CPP`ArgDecl(p_ad)) -> LoadArgDecl(p_ad)
+      end;
+\end{vdm_al}
+
+\begin{vdm_al}
+  LoadArgDecl: CPP`ArgDecl ==> AS`Name * JSSREP`FieldTypeRep
+  LoadArgDecl(p_ad) == (
+    dcl l_decl : CPP`Declarator := p_ad.decl,
+        l_array : nat := 0;
+    let l_tr : JSSREP`TypeRep = LoadDeclSpecifiers(p_ad.ds)
+    in
+-- JR is CPP`?(l_decl)
+    ( while not is_CPP`Identifier(l_decl) do 
+      ( l_decl := l_decl.decl;
+        l_array := l_array+1
+      );
+      return mk_(JSSAUX`Identifier2Name(l_decl),
+                 mk_JSSREP`FieldTypeRep(l_tr,l_array))
+    )
+  );
+\end{vdm_al}
+
+
+\begin{vdm_al}
+  LoadThrows: [seq of CPP`SimpleTypeName] ==> ()
+  LoadThrows(p_throws) == (
+--    if p_throws <> nil
+--    then 
+--      for l_throw in p_throws do
+--        cases true:
+--          (is_(l_throw,CPP`PackageName)) -> LoadPackageName(l_throw)
+--        end;
+    return
+  );
+\end{vdm_al}
+
+
+\begin{vdm_al}
+  LoadFctBody: [CPP`FctBody] ==> ()
+  LoadFctBody(p_fctbody) ==
+    if p_fctbody = nil
+    then return
+    else JSSVCM2STMT`CollectStmt(p_fctbody.stmt);
+\end{vdm_al}
+
+
+  Name = Identifier
+         Destructor
+         QualifiedName
+         PackageName
+
+\begin{vdm_al}
+  LoadModifiers: CPP`Modifiers ==> set of CPP`ModifierAccess
+  LoadModifiers(p_mL)  == (
+    dcl l_mas : set of CPP`ModifierAccess := {};
+    for l_m in p_mL do
+      l_mas := l_mas union {LoadModifier(l_m)};
+    return l_mas
+  );
+\end{vdm_al}
+
+\begin{vdm_al}
+  LoadModifier: CPP`Modifier ==> CPP`ModifierAccess
+  LoadModifier(p_mod) ==
+    return p_mod.ma;
+\end{vdm_al}
+
+\begin{vdm_al}
+end JSSVCM2
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[MotGeneralNumericType]
+{rtinfo.ast}[JSSVCM2]
+\end{rtinfo}

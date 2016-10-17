@@ -1,0 +1,30 @@
+\subsection{AllT}
+すべてのテストケースを実行し、結果列を返す。
+
+\begin{vdm_al}
+--$Header: /home/vdmtools/cvsroot/toolbox/examples-jp/FPlib/test/AllT.vpp,v 1.1 2005/10/31 02:09:59 vdmtools Exp $
+class AllT
+
+functions
+static public run : () +> seq of bool
+run() == 
+	[
+	FSequenceT`run(),
+	FSetT`run(),
+	FCharT`run(),
+	FRealT`run(),
+	FFunctionT`run(),
+	FMapT`run(),
+	FHashtableT`run(),
+	FIntegerT`run(),
+	FNumberT`run(),
+	FProductT`run(),
+	FQueueT`run(),
+	FCalendarT`run(),
+	FBusinessTableT`run(),
+	FJapaneseCalendarT`run()
+	];
+
+end AllT
+\end{vdm_al}
+	

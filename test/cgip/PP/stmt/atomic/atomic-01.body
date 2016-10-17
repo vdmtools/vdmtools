@@ -1,0 +1,11 @@
+public Test:() ==> seq of char
+Test() ==
+  (atomic (a := 10;
+           b := 10);
+   return if a = 10 and b = 10 then "ok" else undefined);
+
+instance variables
+
+  a : nat := 8;
+  b : nat := 8;
+  inv a = b

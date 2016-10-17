@@ -1,0 +1,1663 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Scheduler.
+% $Id: schd.vdm,v 1.40 2000/06/26 14:36:04 paulm Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\chapter{Scheduling VDM++ Threads}
+
+The {\em SCHD} module is used for the top level scheduling of threads
+for the concurrent execution of VDM++ specifications.
+ 
+\begin{vdm_al}
+module SCHD
+
+imports
+ from UTIL all,
+ from SETTINGS all,
+ from DEBUG all,
+ from DEBUGTP all,
+ from STATE all,
+ from STKM all,
+ from SEM all,
+ from AS all,
+ from REP all,
+ from INSTRTP all,
+ from GLOBAL all,
+ from PAT all,
+ from CI all,
+ from SCHDTP all,
+#ifdef VICE
+ from TIMEPARSER all,
+ from TIMEMAP all,
+ from TIMETRACE
+   operations  
+      LogThreadSwapIn : SCHDTP`ThreadId * [SEM`OBJ_Ref] * [AS`Name] * nat ==> ();
+      LogDelayedThreadSwapIn : SCHDTP`ThreadId * [SEM`OBJ_Ref] * [AS`Name] * nat * nat ==> ();
+      LogThreadCreate: SCHDTP`ThreadId * bool * [SEM`OBJ_Ref] * [AS`Name] * [AS`Name] ==> ();
+      LogMessageCompleted: STKM`MessageId * nat ==> ();
+      LogKillThread: SCHDTP`ThreadId * [AS`Name] ==> (); 
+      LogThreadSwapOut : SCHDTP`ThreadId * [SEM`OBJ_Ref] * [AS`Name] * nat ==> (),
+#endif VICE
+ from RTERR all
+ 
+exports all
+
+
+definitions
+
+state Schedule of
+  threads             : SCHDTP`Threads 
+  curthread_m         : map [AS`Name] to [SCHDTP`ThreadId]
+#ifdef VICE
+  perthreads          : map [AS`Name] to (map SEM`OBJ_Ref to (SCHDTP`PerThreadInfo | SCHDTP`SpoThreadInfo))
+  cpualloc            : map SCHDTP`ThreadId to [AS`Name]
+  cpusblocked         : set of [AS`Name]
+  potentialperchanged : set of SEM`OBJ_Ref
+  lastswapedin        : map [AS`Name] to [SCHDTP`ThreadId]
+  lastswapedout       : map [AS`Name] to [SCHDTP`ThreadId]
+  tobekilled          : map [AS`Name] to [SCHDTP`ThreadId]
+  killed              : map [AS`Name] to bool
+  delayed             : [nat]
+#endif VICE
+  secondaryAlgorithm  : SCHDTP`SecondarySchedulerAlgorithm
+  classPriorityMap    : map AS`Id to nat
+  maxPriority         : nat
+  next_thread_id      : SCHDTP`ThreadId
+  checkingGuard       : bool
+init s == s = mk_Schedule({|->}, -- threads
+                          {|->}, -- curthread_m
+#ifdef VICE
+                          {|->}, -- perthreads
+                          {|->}, -- cpualloc
+                          {},    -- cpusblocked
+                          {},    -- potentialperchanged
+                          {|->}, -- lastswapedin
+                          {|->}, -- lastswapedout
+                          {|->}, -- tobekilled
+                          {|->}, -- killed
+                          nil,   -- delayed
+#endif VICE
+                          mk_SCHDTP`RoundRobin(), -- secondaryAlgorithm
+                          {|->}, -- classPriorityMap
+                          100,   -- maxPriority
+                          1,     -- next_thread_id
+                          false) -- checkingGuard
+end
+
+values
+
+  maxint : nat = 9999999999;
+\end{vdm_al}
+
+The state of the scheduler has a number of components:
+\begin{description}
+\item[threads:] contains all the active threads.
+\item[curthread:] contains the thread id that is running on the stack machine.
+#ifdef VICE
+\item[perthreads:] a mapping from CPU identifiers to a mapping from objects
+allocated on the respective CPU to information about the periodic thread
+associated with the particular obejct reference. The information stored about
+the periodic thread is sufficient to be able to calculate the interval in 
+which the next instance.
+\item[cpualloc:] a mapping that indicates what threadid that is allocated to 
+what CPU.
+\item[cpusblocked:] a collection of the CPU's that have no thraeds that are 
+able to proceed at a given moment. In case this set becomes equal to the 
+set of all CPUs a deadlock has occured.
+\item[potentialperchanged:] this is a collection of the object references 
+that are currently blocked where the permission predicate that is blocking 
+them potentially have been changed. This takes dependencies of the actual 
+permission predicates into account.
+#endif VICE
+\item[secondaryAlgorithm:] indicates which scheduling algorithm is
+currently being used. It is not envisaged that this can be changed
+\textit{during} execution.
+\item[classPriorityMap:] a mapping from class names to numeric
+priorities.
+\item[maxPriority:] the maximum priority, which is always greater than
+the maximum priority listed in the user-supplied priority file. The
+maximum priority will be assigned to the debug thread, to ensure that
+the debug thread terminates, and that it does so as soon as possible.
+\item[next\_thread\_id:] This is a counter that contains the next
+available thread identification.
+\end{description}
+
+
+\begin{vdm_al}
+operations
+
+ClearScheduler: () ==> ()
+ClearScheduler() ==
+(
+  -- This has a more complex implementation since we need
+  -- to delete the ThreadInfo .stackeval pointer. In the implementation this
+  -- method is used by the StackEval destructor.
+  threads := {|->};
+);
+
+InitScheduler: bool ==> ()
+#ifdef VICE
+InitScheduler(ast_is_new) ==
+#else
+InitScheduler(-) ==
+#endif
+(
+  ClearScheduler();
+#ifdef VICE
+  if not ast_is_new
+  then (tobekilled := {|->};--{id |-> nil | id in set dom tobekilled}; 
+        killed := {|->};
+        cpualloc := {|->};
+        curthread_m := {|->};
+        cpusblocked := {};
+        potentialperchanged := {};
+        lastswapedin := {|->};
+        lastswapedout := {|->};
+        delayed := nil);
+   perthreads := {nm |-> {|->} | nm in set dom perthreads};
+  --else perthreads := {id |-> ResetPerThreadInfo(perthreads(id))
+   --                  | id in set dom perthreads};
+#endif VICE
+  SetCurThread(0,false);
+  if SETTINGS`PriorityBased()
+  then secondaryAlgorithm := mk_SCHDTP`PriorityBased()
+  else secondaryAlgorithm := mk_SCHDTP`RoundRobin();
+  next_thread_id := 1;
+
+  StartDebugThread();
+)
+
+#ifdef VICE
+
+--functions
+
+--ResetPerThreadInfo: map SEM`OBJ_Ref to SCHDTP`PerThreadInfo +> map SEM`OBJ_Ref to SCHDTP`PerThreadInfo
+--ResetPerThreadInfo(perinfo) ==
+--  {oref |-> mu(perinfo(oref),iteration |-> 0,
+--                             release_time |-> 0,
+--                             next_minZZZ
+--  | oref in set dom perinfo};
+#endif VICE
+\end{vdm_al}
+
+
+\section{The Scheduler Evaluation}
+
+
+The threads in the scheduler can be divided into 
+#ifdef VICE
+three
+#else
+two 
+#endif VICE
+kinds: The
+threads that are started in the specification using the
+start/startlist statement,
+#ifdef VICE
+a periodic thread that is created when an instance of a class defining
+a periodic thread (directly or inherited) is created,
+#endif VICE
+or a thread that corresponds to an
+artificial thread, namely a debug thread. A debug thread is a thread
+that executes the expression/statement that the user wants to evaluate
+the first time after he has initialised the specification.
+
+Each thread has its own call stack. If a thread is interrupted because
+of a break-point, or run-time error, and the user wants to evaluate
+something (that is using recursive-debug) the call stack of the
+current thread is added with a debug command.  That is, it is only if
+there does not exists a current thread an artificial thread is
+created, otherwise all debug commands are evaluated in the scope of
+the current thread (that is, the one that is running on the stack
+machine).
+
+The state of the thread is described by {\em ThreadStatus}. Below is the 
+a state machine of which commands/operations that can change the status of the thread:
+
+\begin{figure}[H]
+\begin{center}
+\mbox{}
+%\resizebox{9cm}{!}{\includegraphics{schd}}
+\caption{Thread Status and Transitions}\label{fig}
+\end{center}
+\end{figure}
+
+
+The operation {\em EvalScheduler} is called by {\em EvalRun}
+in the {\em DEBUG} module. It is assumed that a current
+thread exists, that is, the stack machine is already instantiated with
+a thread. This has been done by InitScheduler that called StartDebugThread.
+
+{\em EvalScheduler} will be called after the commands {\em print,
+debug, step, stepin, singlestep} and {\em EvalAuxCmd}. The
+scheduler starts the main loop in the stack machine, and elaborates
+the result, in terms of which status the stack machine is in:
+
+\begin{itemize}
+\item The maximum number of instructions has been reached. In this
+      case we must select and run another thread.
+#ifdef VICE
+\item If the CPU has completed its slice it is necessary to find the
+      CPU or BUS that has advanced time the least and thus should be 
+      allowed to proceed if it has anything to do. If it has nothing
+      to do its local time is advanced with the step size.  
+#endif VICE
+\item A permission guard needs to be checked because a call of an
+      operation has been detected. In case there is no permission
+      guard the guard part of the state of the stack machine is set to
+      nil, and the main loop of the stack machine is started again.
+      Otherwise the permission guard code is ran. If it succeeds main
+loop of the stack machine is started again, otherwise, another thread
+should be selected and the current thread should be marked as blocked.
+
+\item A breakpoint or an interrupt has been reached. In this case
+      the result of the execution should be returned.
+
+\item Execution has succeeded.
+      If the thread is the debug thread the result should be returned. If
+      the call stack of the thread is greater than zero, and the
+thread is a normal active thread, it must mean that we are in the
+middle of evaluating an recursive debug session and thus the result of
+the previous evaluation should be returned. 
+
+      If the call stack is zero and it is not a debug thread, then the
+thread has been evaluated successfully, and it is therefore
+terminated: that is removed from the {\em threads} state and another
+thread is selected to be run.
+
+\end{itemize}
+\begin{vdm_al}
+
+operations
+
+  EvalScheduler : () ==> STKM`EvaluationState * [SEM`VAL]
+  EvalScheduler() ==
+   (dcl evalres : STKM`EvaluationState * [SEM`VAL];
+    STKM`ResetSlice();
+    evalres := STKM`EvalMainLoop();
+    while true do
+     (
+#ifdef VICE
+      SaveCurThreadState();
+      -- temp insertion
+#endif VICE
+      cases let mk_(stack_state,-) = evalres
+            in stack_state:
+        mk_STKM`EndOfSlice() ->
+            (
+#ifdef VICE
+             if cpusblocked = STKM`GetAllCPUs()
+             then
+               if perthreads <> {|->}
+               then evalres := RunNextPeriodicThread(STKM`GetCurCPU())
+               elseif potentialperchanged <> {} and
+                      exists tid in set dom threads &
+                        is_SCHDTP`Blocked(threads(tid).status) and
+                        threads(tid).status.objref in set 
+                        potentialperchanged union {nil}
+               then evalres := SelAndRunThread(mk_SCHDTP`MaxReached(), false)
+               else (RTERR`Error(RTERR`DEADLOCK_DETECTED,nil,nil,[]);
+                     error)
+             else 
+#endif VICE
+               evalres := SelAndRunThread(mk_SCHDTP`MaxReached(),  false)
+            ),
+#ifdef VICE
+        mk_STKM`EndOfCPUSlice() ->
+             def mk_(cpunm,cput,cswapt) = STKM`FindFirstCPU();
+                 mk_(busnm,bust,bswapt) = STKM`FindFirstBUS()
+             in
+               if bust <= cput
+               then
+                 let swapt = if bswapt = nil
+                             then cput
+                             elseif bust = bswapt
+                             then cput
+                             else UTIL`minset({cput,bswapt})
+                 in evalres := STKM`ProcessBUS(busnm,swapt)
+               else
+                 let swapt = if cswapt = nil
+                             then bust
+                             elseif cput = cswapt
+                             then bust
+                             else UTIL`minset({bust,cswapt})
+                 in
+                  (if not STKM`CPUWork(cpunm,swapt)
+                   then
+                    (STKM`IncrIdleTime(cpunm,SETTINGS`GetStepSize());
+                     evalres := DefaultEvalRes())
+                   else
+                    (STKM`SetCurCPU(cpunm,swapt);
+                     if STKM`CurCPUAnyMessages(cpunm)
+                     then (SwapOut(false,true);
+                           evalres := STKM`SelAndRunMessageCall(cpunm))
+                     --elseif STKM`CurCPUAnyThread(cpunm)
+                     --then (cpusblocked := {};
+                     --      evalres := SelAndRunThread(nil,true))
+                     elseif STKM`CurCPUAnyThread(cpunm) or cpunm in set dom perthreads 
+                     then (cpusblocked := cpusblocked \ {cpunm};
+                           evalres := SelAndRunThread(nil,true))
+                     elseif cpusblocked = STKM`GetAllCPUs()
+                     then (RTERR`Error(RTERR`DEADLOCK_DETECTED,nil,nil,[]);
+                           error)
+                     elseif PeriodicReady(cpunm,dom perthreads(cpunm))
+                     then evalres := RunNextPeriodicThread(cpunm)
+                     elseif STKM`GetCurCPU() in set dom curthread_m and
+                            curthread_m(STKM`GetCurCPU()) in set dom threads and
+                            threads(curthread_m(STKM`GetCurCPU())).status in set 
+                            { mk_SCHDTP`Running(), mk_SCHDTP`MaxReached() }
+                     then evalres := STKM`EvalMainLoop()
+                     else (cpusblocked := cpusblocked union {cpunm};
+                           STKM`IncrIdleTime(cpunm,SETTINGS`GetStepSize());
+                           evalres := DefaultEvalRes()))),
+#endif VICE
+        mk_STKM`Guard(fullopnm, obj) ->
+            (STKM`ResetGuard();
+             def instr = STATE`LookUpPermis(fullopnm)
+             in
+#ifdef VICE
+               if instr = nil
+               then
+                 if obj = nil or STKM`OnCurCPU(obj)
+                 then evalres := STKM`EvalMainLoop()
+                 else
+                   def cur = CurThreadId()
+                   in
+                    (if cur <> nil
+                     then threads(cur).status := mk_SCHDTP`MaxReached();
+                     evalres := SelAndRunThread(nil,false)
+                    )
+#else
+               if instr = nil
+               then evalres := STKM`EvalMainLoop()
+#endif VICE
+               else
+                 if RunGuard(instr, obj)
+                 then evalres := STKM`EvalMainLoop()
+                 else evalres := SelAndRunThread(mk_SCHDTP`Blocked(fullopnm, obj), false);
+            ),
+        mk_STKM`Breakpoint(),
+        mk_STKM`Interrupt() -> (return evalres;),
+        mk_STKM`Success()   ->
+#ifdef VICE
+              -- condition: CallStackLevel() > 0 is to return from a
+              -- recursive debug call.
+             (if IsDebugThread(CurThreadId()) and STKM`CallStackLevel() > 0
+              then return evalres; 
+              SwapOut(true,true);
+              if IsDebugThread(CurThreadId())
+              then return evalres
+              else
+                def cur = CurThreadId()
+                in
+                  if not IsPeriodicThread(cur)
+                  then 
+                    def mesid = threads(cur).mesid
+                    in
+                     (threads := {cur} <-: threads;
+                      STKM`DeleteThread(cur);
+                      cpualloc := {cur} <-: cpualloc;
+                      def cpu = STKM`GetCurCPU()
+                      in
+                        if mesid <> nil or cpu in set dom tobekilled
+                        then TIMETRACE`LogKillThread(tobekilled(cpu),cpu);
+                      killed(STKM`GetCurCPU()) := true;
+                      evalres := DefaultEvalRes()
+                     )
+                  else
+                   (if cur <> nil
+                    then SetThreadStatus(cur,mk_SCHDTP`Completed());
+                    def running = cur <> nil and IsPeriodicThread(cur) and
+                          threads(cur).status = mk_SCHDTP`Running() 
+                    in evalres := SelAndRunThread(nil, not running);
+                   );
+             )
+#else
+             (def cur = CurThreadId()
+              in
+                if IsDebugThread(CurThreadId())
+                then return evalres
+                else
+                 (threads := {cur} <-: threads;
+                  STKM`DeleteThread(cur); --
+                  evalres := SelAndRunThread(nil, true);
+                 )
+             )
+#endif VICE
+       end;
+     ); -- end of while loop
+    return evalres; -- to keep the type checker silent
+   );
+
+DefaultEvalRes: () ==> STKM`EvaluationState * [SEM`VAL]
+DefaultEvalRes() ==
+#ifdef VICE
+  if STKM`MultCPUs()
+  then return mk_(mk_STKM`EndOfCPUSlice(), nil)
+  else return mk_(mk_STKM`EndOfSlice(), nil);
+#else
+  return mk_(mk_STKM`EndOfSlice(), nil);
+#endif VICE
+\end{vdm_al}
+
+
+The operation {\em StartDebugThread} is used to create an artificial
+debug thread. It is called by the {\em InitScheduler} operation. 
+
+The {\em StartDebugThread} creates a new thread id and sets it to
+the current thread. The state of the now current thread is set to a
+running thread, with no object reference and an empty SubProgram. 
+The debug thread's priority is set to be the maximum
+priority. 
+
+\begin{vdm_al}
+StartDebugThread: () ==> ()
+StartDebugThread() ==
+#ifdef VICE
+  def cur = CurThreadId();
+      threadid = AddNewThreadId(true, nil, [] ,Default_priority,false,nil)
+  in
+   (SetCurThread(threadid,true);
+    if cur <> nil
+    then 
+     (SetThreadStatus(cur, mk_SCHDTP`Running());
+      SetMaxPriority(cur);
+      RestoreSTKM(cur)));
+#else
+  def threadid = AddNewThreadId(true, nil, [])
+  in
+   (SetCurThread(threadid,true);
+    def cur = CurThreadId()
+    in
+     (SetThreadStatus(cur, mk_SCHDTP`Running());
+      SetMaxPriority(cur);
+      RestoreSTKM(cur)));
+#endif VICE
+\end{vdm_al}
+
+The {\em RunGuard} operation is used to execute the instruction code
+for a guard. Note that it deactivates all break points before the
+evaluation and reactivates them afterwards.
+
+
+\begin{vdm_al}
+  RunGuard: STKM`SubProgram * [SEM`OBJ_Ref] ==> bool
+  RunGuard(instr, objref) ==
+   (SetCheckingGuard(true);
+    def mk_(main_state, eval_res) = STKM`EvalRunGuard(instr, objref)
+    in
+     (SetCheckingGuard(false);
+      cases main_state:
+        mk_STKM`Success()        -> let mk_SEM`BOOL(bool_res) = eval_res
+                                    in return bool_res,
+        mk_STKM`Guard(-,-)       -> (RTERR`Error(RTERR`OP_IN_GUARD, nil, nil, []);
+                                     error),
+#ifdef VICE
+        mk_STKM`EndOfCPUSlice()  -> return false,
+#endif VICE
+        others                   -> (RTERR`Error(RTERR`INTERNAL_ERROR, nil, nil, []);
+                                     error)
+       end;
+     );
+   );
+\end{vdm_al}
+
+{\em SelAndRunThread} selects the next thread which can
+be continued and let the stack machine execute that.
+
+The operation takes the following parameters:
+
+\begin{itemize}
+\item \texttt{threadstatus}. This is the status that the currently thread
+should be set to when it is to be swapped out. If the current thread
+is terminated this value will be nil.
+\item \texttt{curthread\_terminated}: a boolean indicating if the currently thread was terminated.
+\end{itemize}
+
+\begin{vdm_al}
+  SelAndRunThread: [SCHDTP`ThreadStatus] * bool ==> STKM`EvaluationState * [SEM`VAL]
+  SelAndRunThread(threadstatus, curthread_terminated) ==
+    def cur = CurThreadId()
+    in
+     (if not curthread_terminated and threadstatus <> nil and cur in set dom threads
+      then
+       (SetThreadStatus(cur, threadstatus);
+        SetThreadState(cur));
+#ifdef VICE
+      if IsPeriodicThread(cur) and curthread_terminated
+      then
+        cases GetThreadStatus(cur):
+          mk_SCHDTP`Completed() -> (SetThreadState(cur);
+                                    KillThread(tobekilled(STKM`GetCurCPU()));),
+          mk_SCHDTP`Blocked(-,-),
+          mk_SCHDTP`SyncOp(-)   -> skip,
+          others                -> (SetThreadState(cur);
+                                    SetCurThread(cur,true);
+                                    RestoreSTKM(cur);
+                                    STKM`ResetSlice();
+                                    return STKM`EvalMainLoop())
+        end;
+
+      if not curthread_terminated and IsRunningThread(cur)
+      then (RestoreInstrAndSTKM(cur);
+            STKM`ResetSlice();
+            return STKM`EvalMainLoop());
+#endif VICE
+      def nextthread = FindNextThread()
+      in
+        if nextthread = nil
+#ifdef VICE
+        then
+         (STKM`IncrIdleTime(STKM`GetCurCPU(),SETTINGS`GetStepSize());
+          cpusblocked := cpusblocked union {STKM`GetCurCPU()};
+          if perthreads = {|->}
+          then
+            if cpusblocked = STKM`GetAllCPUs()
+            then
+             (RTERR`Error(RTERR`DEADLOCK_DETECTED,nil,nil,[]);
+              error);
+          return DefaultEvalRes())
+#else
+        then
+         (RTERR`Error(RTERR`DEADLOCK_DETECTED,nil,nil,[]);
+          error)
+#endif VICE
+        else
+         (SetCurThread(nextthread,true);
+          SetThreadStatus(nextthread,mk_SCHDTP`Running());
+          RestoreSTKM(nextthread);
+          STKM`ResetSlice();
+#ifdef VICE
+          killed(STKM`GetCurCPU()) := false;
+#endif VICE
+          return STKM`EvalMainLoop();
+         )
+   );
+\end{vdm_al}
+
+#ifdef VICE
+
+\section{Dealing with Periodic Threads}
+
+\begin{vdm_al}
+RunNextPeriodicThread: [AS`Name] ==> STKM`EvaluationState * [SEM`VAL]
+RunNextPeriodicThread(cpu) ==
+  def perthrm = {objref |-> TimePerThread(perthreads(cpu)(objref)) | objref in set dom perthreads(cpu)};
+      time = STKM`GetTime()
+  in
+    let first in set dom perthrm be st UTIL`minset(rng perthrm) = perthrm(first)
+    in
+      (if perthrm(first) > time
+       then STKM`IncrIdleTime(cpu,perthrm(first) - time);
+       return SelAndRunThread(nil, true);
+      )
+pre cpu in set dom perthreads;
+\end{vdm_al}
+#endif VICE
+
+\begin{vdm_al}
+GetObjRefAndClass : SCHDTP`ThreadId ==> [SEM`OBJ_Ref] * [AS`Name]
+GetObjRefAndClass(threadid) ==
+ (dcl obj_ref : [SEM`OBJ_Ref] := nil;
+  if not IsDebugThread(threadid)
+  then obj_ref := GetObjRef(threadid);
+  let cl = if obj_ref = nil
+           then nil
+           else obj_ref.tp
+  in return mk_(obj_ref,cl));
+\end{vdm_al}
+
+#ifdef VICE
+\begin{vdm_al}
+  TimePerThread: SCHDTP`PerThreadInfo | SCHDTP`SpoThreadInfo ==> nat
+  TimePerThread(thrinfo) ==
+    if is_SCHDTP`PerThreadInfo(thrinfo)
+    then
+      return
+        def mode = SETTINGS`GetJitterMode()
+        in
+          cases mode:
+            <Early>  -> thrinfo.next_min,
+            <Late>   -> thrinfo.next_max,
+            <Random> -> let random in set {thrinfo.next_min,...,thrinfo.next_max}
+                        in
+                          random
+          end
+    else
+      let random in set {thrinfo.next_min,...,thrinfo.next_max}
+      in return random;
+
+  AddCPU: AS`Name ==> ()
+  AddCPU(cpunm) ==
+    perthreads(cpunm) := {|->};
+\end{vdm_al}
+
+The operation \textit{SetPerThread} sets those thread info fields
+which are relevant to periodic threads. Of course if the thread is
+procedural, these fields are set to be nil.
+\begin{vdm_al}
+  EvalValue : AS`Expr * SEM`OBJ_Ref ==> nat
+  EvalValue(expr,objref) ==
+   (STKM`SetCid(expr.cid);
+    STKM`PushCurObj(objref, nil, nil);
+    STKM`PushEmptyEnv();
+    def mk_(eval_state, exp_v) = DEBUG`EvalAuxCmd( expr,[],[], "Eval param for thread" );
+    in
+     (STKM`PopEnvL();
+      STKM`PopCurObj();
+      cases false:
+        (is_STKM`Success(eval_state)) -> RTERR`Error(RTERR`INTERNAL_ERROR,nil,nil,[]),
+        (is_SEM`NUM(exp_v))           -> RTERR`Error(RTERR`NAT_EXPECTED,nil,nil,[]),
+        others                        -> if is_nat(exp_v.v)
+                                         then return exp_v.v
+                                         else RTERR`Error(RTERR`NAT_EXPECTED,nil,nil,[])
+      end;
+      error);
+    );
+
+  SetPerThread : SEM`OBJ_Ref * STKM`PerThread * nat ==> ()
+  SetPerThread(objref, mk_STKM`PerThread(instr,p,j,d,o),prio) ==
+    def period = EvalValue(p,objref);
+        jitter = EvalValue(j,objref);
+        delay  = EvalValue(d,objref);
+        offset = EvalValue(o,objref);
+    in
+     (dcl cpu : [AS`Name];
+      if STKM`OnCurCPU(objref)
+      then cpu := STKM`GetCurCPU()
+      else cpu := STKM`CPUAllocated(objref);
+      def time = STKM`GetCPUTime(cpu);   -- current time for cpu
+      in -- TODO : parameter check
+        let tinfo = mk_SCHDTP`PerThreadInfo(period,
+                                            jitter,
+                                            delay,
+                                            offset,
+                                            1,
+                                            instr,
+                                            time,
+                                            time + offset,
+                                            time + offset + jitter,
+                                            prio)
+        in
+          if cpu in set dom perthreads
+          then perthreads(cpu) := perthreads(cpu) ++ {objref |-> tinfo} 
+          else perthreads(cpu) := {objref |-> tinfo});
+
+  SetSpoThread : SEM`OBJ_Ref * STKM`SpoThread * nat ==> ()
+  SetSpoThread(objref, mk_STKM`SpoThread(instr,d,b,o),prio) ==
+    def delay  = EvalValue(d,objref);
+        bound  = EvalValue(b,objref);
+        offset = EvalValue(o,objref);
+    in
+     (dcl cpu : [AS`Name];
+      if STKM`OnCurCPU(objref)
+      then cpu := STKM`GetCurCPU()
+      else cpu := STKM`CPUAllocated(objref);
+      def time = STKM`GetCPUTime(cpu);   -- current time for cpu
+      in -- TODO : parameter check
+        let tinfo = mk_SCHDTP`SpoThreadInfo(delay,
+                                            bound,
+                                            offset,
+                                            instr,
+                                            time,
+                                            time + offset,
+                                            time + offset + bound,
+                                            prio)
+        in
+          if cpu in set dom perthreads
+          then perthreads(cpu) := perthreads(cpu) ++ {objref |-> tinfo} 
+          else perthreads(cpu) := {objref |-> tinfo});
+\end{vdm_al}
+
+\begin{vdm_al}
+  IsRunningThread : SCHDTP`ThreadId ==> bool
+  IsRunningThread(threadid) ==
+    return threadid in set dom threads and threads(threadid).status = mk_SCHDTP`Running();
+\end{vdm_al}
+
+The operation \textit{IsPeriodicThread} tests whether a given thread is periodic or not.
+\begin{vdm_al}
+  IsPeriodicThread : SCHDTP`ThreadId ==> bool
+  IsPeriodicThread(threadid) ==
+    return threadid in set dom threads and threads(threadid).periodic;
+
+  ThreadObject: SCHDTP`ThreadId ==> [SEM`OBJ_Ref]
+  ThreadObject(threadid) ==
+    return
+      if threadid in set dom threads --and threads(threadid).periodic
+      then threads(threadid).obj
+      else nil;
+\end{vdm_al}
+#endif VICE
+
+\begin{vdm_al}
+GetObjRef : SCHDTP`ThreadId ==> [SEM`OBJ_Ref]
+GetObjRef(threadid) ==
+  return if threadid in set dom threads
+         then threads(threadid).obj
+         else nil;
+\end{vdm_al}
+
+{\em FindNextThread} checks the different threads in an
+order determined whether the scheduling is priority based or not. For
+each of the threads the status of the thread is examined and if it is
+blocked the premission guard must be executed and if it succeeds then
+that thread number can be returned. In case the status says that it is
+not blocked it can be chosen directly.
+
+If it is not possible to find a thread that is schedulable nil is returned. 
+
+\begin{vdm_al}
+  FindNextThread: () ==> [SCHDTP`ThreadId]
+  FindNextThread() ==
+   (def orders = SortTheThreads() in
+    -- orders is a sequence of sequence of threads
+    -- if round robin scheduling is being used, orders contains just
+    -- one sequence containing all of the threads
+    -- if priority based scheduling is being used, orders contains
+    -- sequences of threadids. For each o in elems orders, all the 
+    -- threads in o have equal priority. orders is ordered on 
+    -- thread priority
+    for order in orders do
+    ( 
+      for threadno in order do
+#ifdef VICE
+       (if cpualloc(threadno) = STKM`GetCurCPU()
+        then 
+#endif VICE
+        def status = GetThreadStatus(threadno)
+        in
+        if is_SCHDTP`Blocked(status)
+        then def mk_SCHDTP`Blocked(fullopnm,obj) = status;
+                 instr = STATE`LookUpPermis(fullopnm)
+             in
+               (RestoreSTKM(threadno);
+                def org_thread = CurThreadId()
+                in
+                (SetCurThread(threadno,false);
+                 def guardOK = RunGuard(instr,obj) in
+                 (
+#ifdef VICE
+                  if org_thread <> nil
+                  then 
+#endif VICE
+                       SetCurThread(org_thread,false);
+                  if guardOK
+                  then return threadno
+                  else skip;
+                 )
+                )
+               )
+
+#ifdef VICE
+        elseif is_SCHDTP`MaxReached(status)
+        then return threadno
+        elseif is_SCHDTP`SyncOp(status)
+        then skip
+#endif VICE
+
+        else return threadno;
+#ifdef VICE
+        )
+#endif VICE
+    );
+
+    return nil
+   );
+      
+\end{vdm_al}
+
+The operation \textit{SortTheThreads} sorts the current threads in the
+system based on the current scheduling algorithm being used. If round
+robin is being used, all of the threads are sorted at once using
+\textit{SortSelectedThreads}. If priority based scheduling is being
+used, threads of equal priority are sorted individually and the result
+is returned in order of priority.
+
+\begin{vdm_al}
+SortTheThreads: () ==> seq of seq of SCHDTP`ThreadId
+SortTheThreads() ==
+( dcl res : seq of seq of SCHDTP`ThreadId := [[]];
+     
+#ifdef VICE
+  def curtime = STKM`GetTime();
+      cpu = STKM`GetCurCPU();
+      objrefs = if cpu in set dom perthreads
+                then dom perthreads(cpu)
+                else {}
+  in
+#endif VICE                                 
+  cases secondaryAlgorithm:
+#ifdef VICE
+  mk_SCHDTP`RoundRobin() -> let thrs = {tid | tid in set dom threads
+                                            & tid in set dom cpualloc and
+                                              cpualloc(tid) = cpu and
+                                              (cpu in set dom tobekilled => tobekilled(cpu) <> tid)}
+                            in
+                              res := [SortSelectedThreads(thrs,objrefs, cpu,curtime, Default_priority)],
+#else
+  mk_SCHDTP`RoundRobin() -> res := [SortSelectedThreads(dom threads)],
+#endif VICE
+  mk_SCHDTP`PriorityBased() -> 
+#ifdef VICE
+    (dcl locres : map nat to set of SCHDTP`ThreadId := {|->};
+     for all objref in set objrefs do
+       let prio = perthreads(cpu)(objref).priority
+       in
+         if prio not in set dom locres
+         then locres(prio) := {};
+     for all id in set dom threads do
+       let prio = threads(id).priority
+       in
+         if prio in set dom locres
+         then
+           if id in set dom cpualloc and
+              cpualloc(id) = cpu and
+              (cpu in set dom tobekilled => tobekilled(cpu) <> id)
+           then locres(prio) := locres(prio) union {id}
+           elseif id in set dom cpualloc and
+                  cpualloc(id) = cpu and
+                  (cpu in set dom tobekilled => tobekilled(cpu) <> id)
+           then locres(prio) := {id}
+           else skip
+         else
+           if id in set dom cpualloc and
+              cpualloc(id) = cpu and
+              (cpu in set dom tobekilled => tobekilled(cpu) <> id)
+           then
+             locres(prio) := {id};
+     return Reverse([SortSelectedThreads(locres(i) ,objrefs,cpu,curtime,i) | i  in set dom locres])
+    )
+#else
+    (
+      --res := res ^ [[] | i in set {1,...,maxPriority}];
+      res := res ^ [[] | - in set {1,...,maxPriority}];
+      for p = maxPriority to 1 by -1 do
+        let threadsWithThisPriority = { id | id in set dom threads & threads(id).priority = p}
+        in
+          res(maxPriority + 1 - p) := SortSelectedThreads(threadsWithThisPriority)
+    )
+#endif VICE
+
+  end;
+  return res;
+);
+
+Reverse: seq of seq of SCHDTP`ThreadId ==> seq of seq of SCHDTP`ThreadId
+Reverse(list) ==
+  return [ list(len list - i) | i in set {0,...,len list - 1} ];
+
+#ifdef VICE
+\end{vdm_al}
+
+The \texttt{NextMin} and\texttt{NextMax} functions below are used to
+calculate the beginning and the end of the interval where the next
+appearance of a periodic thread should appear.
+
+\begin{vdm_al}
+functions
+
+NextMax: nat * nat * nat * nat * nat * nat -> nat
+NextMax(peri,jit,offset,i,curtime,dist) ==
+  max({offset + i * peri + jit, curtime + dist});
+
+NextMin: nat * nat * nat * nat * nat * nat -> nat
+NextMin(peri,jit,curtime,offset,dist,i) ==
+  max({offset + i * peri - jit, curtime + dist});
+#endif VICE
+\end{vdm_al}
+
+The operation {\em SortSelectedThreads} sorts the given set of 
+thread ids in a sequence
+ordered by their number in the following way: The first sub sequence
+will contain the thread id sorted by number starting from the thread
+ids that are greater than the current thread id. The next sub sequence will be
+the thread id ordered from the lowest thread id to the current thread id
+(if it still exists in the {\em threads} state).
+
+\begin{vdm_al}
+operations
+
+#ifdef VICE
+SortSelectedThreads : set of SCHDTP`ThreadId * set of [SEM`OBJ_Ref] * [AS`Name] * nat * [nat]
+                      ==> seq of SCHDTP`ThreadId
+SortSelectedThreads(selected,objrefs,cpu,time,prio) ==
+  def cur = CurThreadId()
+  in
+   (dcl res : seq of SCHDTP`ThreadId := [],
+        curcpu : [AS`Name] := STKM`GetCurCPU(),
+        threadseq2 : seq of SCHDTP`ThreadId := if cur = nil
+                                               then []
+                                               else [ id | id in set selected & id > cur and cpualloc(id) = curcpu],
+        threadseq1 : seq of SCHDTP`ThreadId := if cur = nil
+                                               then []
+                                               else [ id | id in set selected & id <= cur and cpualloc(id) = curcpu ],
+        perobjs : set of [SEM`OBJ_Ref] := { objref | objref in set objrefs
+                                                       & time >= TimePerThread(perthreads(cpu)(objref)) and
+                                                         (prio <> nil => perthreads(cpu)(objref).priority = prio) };
+    if perobjs <> {}
+    then
+      let obj_ref in set perobjs be st forall o in set perobjs \ {obj_ref} &
+              TimePerThread(perthreads(cpu)(obj_ref)) <= TimePerThread(perthreads(cpu)(o))
+      in
+        let pti = perthreads(cpu)(obj_ref)
+        in
+          def mk_(nextti,body,maxn) =
+                cases pti:
+                  mk_SCHDTP`PerThreadInfo(period,jitter,delay,offset,iteration,body,-,-,maxn,pri)  ->
+                    mk_(mk_SCHDTP`PerThreadInfo(period,jitter,delay,offset,iteration+1,body,time,
+                                                NextMin(period,jitter,time,offset,delay,iteration),
+                                                NextMax(period,jitter,offset,iteration,time,delay),pri),body,maxn),
+                  mk_SCHDTP`SpoThreadInfo(delay,bound,offset,body,-,-,maxn,pri) ->
+                    mk_(mk_SCHDTP`SpoThreadInfo(delay,bound,offset,body,time,time + delay,time + bound,pri),body,maxn),
+                  others -> undefined
+                end;
+              tid = AddNewThreadId(false,obj_ref,body,prio,true,nil)
+          in
+           (if time > maxn
+            then
+             (delayed := time - maxn;
+              killed(STKM`GetCurCPU()) := false);
+              res := threadseq2 ^ [tid] ^ threadseq1;
+              perthreads(cpu)(obj_ref) := nextti)
+    else res := threadseq2 ^ threadseq1;
+
+    return res;
+   );
+#else
+SortSelectedThreads : set of SCHDTP`ThreadId ==> seq of SCHDTP`ThreadId
+SortSelectedThreads(selected) ==
+( dcl res : seq of SCHDTP`ThreadId := [],
+      threadseq2 : seq of SCHDTP`ThreadId := [ id | id in set selected & id > CurThreadId() ],
+      threadseq1 : seq of SCHDTP`ThreadId := [ id | id in set selected & id <= CurThreadId() ];
+  res := threadseq2 ^ threadseq1;
+
+  return res;
+);
+#endif VICE
+
+#ifdef VICE
+PeriodicReady: [AS`Name] * set of SEM`OBJ_Ref ==> bool
+PeriodicReady(cpunm,objrefs) ==
+  return cpunm in set dom perthreads and
+         let tm = perthreads(cpunm)
+         in
+           exists objref in set objrefs & 
+             objref in set dom tm and
+             STKM`GetTime() >= TimePerThread(tm(objref));
+#endif VICE
+\end{vdm_al}
+
+{\em StartNewThread} takes an object reference and adds a new thread
+for this instance (if any threads are defined for the given class (or
+any of its superclasses).
+
+\begin{vdm_al}
+  StartNewThread: SEM`OBJ_Ref  ==> ()
+  StartNewThread(objref) ==
+    -- The thread should be started on the obj and not on the type
+    -- of the object. Consider the following example:
+    -- Let A be super class of B and consider
+    -- dcl obj : A := new B();
+    -- Starting the object obj would mean starting the object (new B());
+    -- and not starting the object A.
+    def clnm = objref.tp;
+        thread = STATE`LookUpThread(clnm)
+    in
+      cases thread:
+        nil -> RTERR`Error(RTERR`NO_THREAD, nil, nil, []),
+#ifdef VICE
+        mk_STKM`ProcThread(instr) -> def threadid = AddNewThreadId(false, objref, instr, Default_priority, false, nil)
+                                     in
+                                       (STATE`SetObjectThreadId(objref, threadid);
+                                        SetThreadPriority(threadid,clnm);
+                                        SetThreadStatus(threadid, mk_SCHDTP`Sleeping())),
+        mk_STKM`PerThread(-,-,-,-,-) -> SetPerThread(objref,thread,Default_priority),
+        mk_STKM`SpoThread(-,-,-,-)   -> SetSpoThread(objref,thread,Default_priority)
+#else
+        mk_STKM`ProcThread(instr) -> def threadid = AddNewThreadId(false, objref, instr)
+                                     in
+                                       (STATE`SetObjectThreadId(objref, threadid);
+                                        SetThreadPriority(threadid,clnm);
+                                        SetThreadStatus(threadid, mk_SCHDTP`Sleeping()))
+#endif VICE
+      end;
+\end{vdm_al}
+
+{\em StopThread} takes an object reference and stops threads
+for this instance (if any threads are defined for the given class (or
+any of its superclasses).
+
+\begin{vdm_al}
+  StopThread: SEM`OBJ_Ref  ==> ()
+  StopThread(objref) ==
+   (dcl found : bool := false;
+    for all tid in set dom threads do
+     if not IsDebugThread(tid)
+     then
+       if threads(tid).obj = objref
+       then
+#ifdef VICE
+         if tid in set dom cpualloc
+         then
+           if cpualloc(tid) = STKM`GetCurCPU()
+           then
+            (found := true;
+             KillThread(tid));
+#else
+        (found := true;
+         KillThread(tid));
+#endif VICE
+#ifdef VICE
+    if perthreads <> {|->}
+    then
+      let m = { cpu |-> perthreads(cpu) | cpu in set dom perthreads & objref in set dom perthreads(cpu) }
+      in
+        if m <> {|->}
+        then
+          let { cpu |-> pth_m } = m
+          in
+           (perthreads := perthreads ++ { cpu |-> ({objref} <-: pth_m) };
+            found := true);
+#endif VICE
+    if not found
+    then RTERR`Error(RTERR`NO_RUNNING_THREAD,nil,nil,[]);
+   );
+\end{vdm_al}
+
+The operation \textit{SetThreadPriority} takes a thread id and a class
+name, and uses the classPriorityMap to set the priority field for this
+thread in the thread info map.
+\begin{vdm_al}
+SetThreadPriority : SCHDTP`ThreadId * AS`Name ==> ()
+SetThreadPriority(threadid, clnm) ==
+  let id = hd clnm.ids in
+  let priority = if id in set dom classPriorityMap
+                 then classPriorityMap(id)
+                 else Default_priority in
+  threads(threadid).priority := priority;
+
+#ifdef VICE
+GetThreadPriority: () ==> nat
+GetThreadPriority() ==
+  return threads(curthread_m(STKM`GetCurCPU())).priority
+pre STKM`GetCurCPU() in set dom curthread_m and
+    curthread_m(STKM`GetCurCPU()) in set dom threads;
+#endif VICE
+\end{vdm_al}
+
+The operation \textit{SetMaxPriority} simply sets a threads priority
+to be the maximum one. This is only used for the debug thread.
+\begin{vdm_al}
+SetMaxPriority : SCHDTP`ThreadId ==> ()
+SetMaxPriority(threadid) ==
+#ifdef VICE
+  threads(threadid) := if threadid in set dom threads
+                       then mu(threads(threadid),priority |-> maxPriority)
+                       else mk_SCHDTP`ThreadInfo(false,nil,
+                                                 mk_SCHDTP`Sleeping(),
+                                                 STKM`EvaluatorStatusInit(),
+                                                 maxPriority, nil, false, nil);
+#else
+  threads(threadid) := if threadid in set dom threads
+                       then mu(threads(threadid),priority |-> maxPriority)
+                       else mk_SCHDTP`ThreadInfo(false,nil,
+                                                 mk_SCHDTP`Sleeping(),
+                                                 STKM`EvaluatorStatusInit(),
+                                                 maxPriority);
+#endif VICE
+\end{vdm_al}
+
+The {\em KillThread} operation is called when the reference counter
+for an object has reached zero and the object is destroyed. Its
+corresponding thread (if any) is then also killed. In case the object
+reference does not have a thread associated with it this operation
+will have no effect.
+
+
+\begin{vdm_al}
+  KillThread: SCHDTP`ThreadId ==> ()
+  KillThread(threadid) ==
+    (threads := {threadid} <-: threads;
+#ifdef VICE
+     cpualloc := {threadid} <-: cpualloc;
+     STKM`DeleteThread(threadid);
+--     STKM`KillThreadId(threadid);
+     killed(STKM`GetCurCPU()) := true;
+     TIMETRACE`LogKillThread(threadid,STKM`GetCurCPU())
+#endif VICE
+    );
+
+\end{vdm_al}
+
+
+The operation {\em CurThreadId} return the thread id of the current
+thread, that is, the one that is running on the stack machine
+currently.
+
+\begin{vdm_al}
+#ifdef VICE
+  CurThreadId: () ==>[SCHDTP`ThreadId]
+  CurThreadId() ==
+    def cpu = STKM`GetCurCPU();
+        thr = if cpu in set dom curthread_m
+              then curthread_m(cpu)
+              else -1
+    in
+      return cases thr:
+               nil    -> tobekilled(cpu),
+               (-1)   -> nil,
+               others -> thr
+             end;
+#else
+  CurThreadId: () ==> SCHDTP`ThreadId
+  CurThreadId() ==
+    return curthread_m(nil);
+#endif VICE
+\end{vdm_al}
+
+The operation {\em SelThread} is used to support the user command
+selthread.  The operation makes the scheduler schedule a certain
+thread id. It does not check the status of the thread, that is, if the
+thread is blocked, this thread is scheduled and the guard is
+evaluated.
+
+\begin{vdm_al}
+SelThread: SCHDTP`ThreadId ==> ()
+SelThread(selid) ==
+  def cur = CurThreadId()
+  in
+   (if not selid in set dom threads
+    then RTERR`Error(RTERR`SEL_NONVALID_THREADID,nil,nil,[]);
+
+#ifdef VICE
+    if cur <> nil
+    then
+#endif VICE
+     (SetThreadState(cur);
+      SetThreadStatus(cur, mk_SCHDTP`Sleeping());
+
+      SetCurThread(selid,true);
+  
+      RestoreSTKM(cur);
+      SetThreadStatus(cur, mk_SCHDTP`Running());
+     )
+   );
+\end{vdm_al}
+
+\section{The Primary Scheduling Algorithm}
+
+In this section we provide auxiliary operations for the primary
+scheduling algorithm. Note that since the primary scheduling algorithm
+determines when a thread should be \textit{descheduled}, these
+operations are used in the stack machine itself.
+
+\begin{vdm_al}
+Deschedule : STKM`EvaluatorStatus ==> bool
+Deschedule(threadstate) ==
+  if CheckingGuard()
+  then return false
+  else EndOfSliceReached(threadstate);
+
+IncInstrnum : STKM`EvaluatorStatus ==> STKM`EvaluatorStatus
+IncInstrnum(threadstate) ==
+  (dcl localstate : STKM`EvaluatorStatus := threadstate;
+   if not CheckingGuard() and SETTINGS`GetPrimaryAlgorithm() = mk_SCHDTP`InstrnumSlice()
+   then localstate.instrno := localstate.instrno + 1; 
+   return localstate);
+\end{vdm_al}
+
+The \texttt{EndOfSliceReached} operation is used to determine 
+whether the end of the current slice allocated to the executing thread
+has been reached.
+#ifdef VICE
+In case priority based scheduling is used and there exists a thread with 
+a higher priority on the same CPU that is blocked the end of the slice 
+is also reached if the blocking permission predicate potentially has 
+changed its value (determined by keeping track of changes made to the 
+things that it depend on).
+#endif VICE
+ 
+\begin{vdm_al}
+EndOfSliceReached : STKM`EvaluatorStatus ==> bool
+EndOfSliceReached(threadstate) ==
+ (
+#ifdef VICE
+  if secondaryAlgorithm = mk_SCHDTP`PriorityBased() and
+     exists objref in set potentialperchanged &
+       ThreadBlockedOnObjRefExists(objref,threads) and
+       threads(curthread_m(STKM`GetCurCPU())).priority < ObjRefPriority(objref)
+  then (--potentialperchanged := {};
+        return true);
+#endif VICE
+  cases SETTINGS`GetPrimaryAlgorithm():
+    mk_SCHDTP`PureCooperative() -> return false,
+#ifdef VICE
+    mk_SCHDTP`TimeSlice()       -> return STKM`GetTime() - threadstate.release_time > SETTINGS`GetTimeSlice(),
+#endif VICE
+    mk_SCHDTP`InstrnumSlice()   -> return threadstate.instrno >= SETTINGS`GetMaxInstr()
+  end);
+
+InitSlice : STKM`EvaluatorStatus ==> STKM`EvaluatorStatus
+InitSlice(threadstate) ==
+  (dcl localstate : STKM`EvaluatorStatus := threadstate;
+   cases SETTINGS`GetPrimaryAlgorithm():
+#ifdef VICE
+     mk_SCHDTP`TimeSlice()     -> localstate.release_time := STKM`GetTime(),
+#endif VICE
+     mk_SCHDTP`InstrnumSlice() -> localstate.instrno := 0,
+     others -> skip
+   end;
+   return localstate);
+
+CheckingGuard : () ==> bool
+CheckingGuard() ==
+  return checkingGuard;
+
+SetCheckingGuard : bool ==> ()
+SetCheckingGuard(b) ==
+  checkingGuard := b;
+\end{vdm_al}
+
+\section{Auxiliary operations on the State}
+
+The operations in this section are all operations that are auxiliary
+operations that sets information on the thread state or stack machine
+state, or that gets information on these states.
+
+The operation {\em RestoreSTKM} instantiate the state of the stack
+machine to the the state stored in the thread information of {\em
+threadid}.
+
+\begin{vdm_al}
+RestoreSTKM: SCHDTP`ThreadId ==> ()
+RestoreSTKM(threadid) ==
+  (STKM`SetCurThread(threadid);
+   STKM`Instantiate(threads(threadid).stackeval,nil))
+pre threadid in set dom threads;
+\end{vdm_al}
+
+#ifdef VICE 
+The SwapOut operation can be called from an initialisation
+situation and in that case the swapout should NOT be logged in the
+tracefile.
+
+\begin{vdm_al}
+SwapOut: bool * bool ==> ()
+SwapOut(kill,tobelogged) ==
+  if STKM`GetCurCPU() in set dom curthread_m and CurThreadId() in set dom threads
+  then def mk_(org_obj_ref, org_cl) = GetObjRefAndClass(CurThreadId())
+       in
+         (if tobelogged
+          then TIMETRACE`LogThreadSwapOut(CurThreadId(), org_obj_ref, org_cl,
+                                          SETTINGS`GetTaskSwitch());
+          if kill
+          then (tobekilled(STKM`GetCurCPU()) := CurThreadId();
+                curthread_m(STKM`GetCurCPU()) := nil);
+          -- Add task switching overhead           
+          def ts = SETTINGS`GetTaskSwitch() in     
+            if ts <> 0                               
+            then STKM`IncrAbsTime(ts);
+          lastswapedout(STKM`GetCurCPU()) := CurThreadId());
+\end{vdm_al}
+
+\textit{RestoreInstrAndSTKM} is similar but also instantiates the
+instruction code for queueing threads which are being started. Note
+that at the implementation level this uses the function
+\texttt{CalculateArgumentsForPushCS}. However this function is not available at
+the specification level.
+\begin{vdm_al}
+RestoreInstrAndSTKM : SCHDTP`ThreadId ==> ()
+RestoreInstrAndSTKM(threadid) ==
+  let instr = threads(threadid).periodBody
+  in
+   (if threads(threadid).stackeval.call_stack = []
+    then
+      let threadstate = threads(threadid).stackeval in
+      let env_l_h         = len threadstate.env_l,
+          typeinst_h      = len threadstate.typeinst,
+          os_h            = len threadstate.os,
+          cur_mod_obj_l_h = len threadstate.obj_l,
+          cid             = threadstate.curCid
+      in
+        threads(threadid).stackeval.call_stack := [mk_STKM`CallStackItem(<INTERNAL>, mk_STKM`DebugCmd(instr), 0, 
+                                                   "Thread Start", nil, nil, cid,
+                                                   env_l_h, typeinst_h, os_h, cur_mod_obj_l_h, false, nil)];
+    STKM`SetCurThread(threadid);
+    STKM`Instantiate(threads(threadid).stackeval, instr)
+  )
+pre threadid in set dom threads;
+
+UpdateThreadWithReturnResult: SEM`VAL * SCHDTP`ThreadId ==> ()
+UpdateThreadWithReturnResult(-,fromthread) ==
+  (--remove operation and args from this call
+   threads(fromthread).stackeval.eval_stack := tl tl threads(fromthread).stackeval.eval_stack;
+   threads(fromthread).stackeval.PC := threads(fromthread).stackeval.PC + 3
+  );
+
+AddValToEvalStack: SCHDTP`ThreadId * SEM`VAL ==> ()
+AddValToEvalStack(threadid,val) ==
+  if threads(threadid).stackeval.call_stack <> []
+  then threads(threadid).stackeval.eval_stack := [val] ^ threads(threadid).stackeval.eval_stack;
+\end{vdm_al}
+#endif VICE
+
+This operation returns if the thread id {\em threadid} is a artificial
+debug thread.
+
+\begin{vdm_al}
+IsDebugThread: SCHDTP`ThreadId ==>  bool
+IsDebugThread(threadid) ==
+  return threadid in set dom threads and threads(threadid).debug_thread;
+\end{vdm_al}
+
+{\em AddNewThreadId} creates a new thread in the {\em threads} state
+with some initial settings, the operation returns the thread id of the new thread.
+
+\begin{vdm_al}
+#ifdef VICE
+AddNewThreadId: bool * [SEM`OBJ_Ref] * STKM`SubProgram * nat * bool * [STKM`MessageId] ==> SCHDTP`ThreadId
+AddNewThreadId(debug_thread, objref, instr, prio,peri,mesid) ==
+  def threadid = GetNextThreadId();
+      clnm = if objref = nil
+             then nil
+             else objref.tp
+  in
+   (dcl cpu : [AS`Name];
+    threads := threads ++ { threadid |-> mk_SCHDTP`ThreadInfo(debug_thread,
+                                                              objref,
+                                                              mk_SCHDTP`Sleeping(),
+                                                              STKM`InitEvaluatorStatus(instr, objref),
+                                                              prio,instr,peri,mesid) };
+    STKM`AddThreadIdtoCPU(threadid,objref);
+ 
+    if STKM`OnCurCPU(objref)
+    then cpu := STKM`GetCurCPU()
+    else cpu := STKM`CPUAllocated(objref);
+
+    cpualloc(threadid) := cpu;
+    TIMETRACE`LogThreadCreate(threadid,peri,objref,clnm,cpu);
+    STKM`SetCPUTime(cpu,STKM`GetCPUTime(cpu));
+    return threadid;);
+#else
+AddNewThreadId: bool * [SEM`OBJ_Ref] * STKM`SubProgram ==> SCHDTP`ThreadId
+AddNewThreadId(debug_thread, objref, instr) ==
+  def threadid = GetNextThreadId()
+  in
+   (threads := threads ++ { threadid |-> mk_SCHDTP`ThreadInfo(debug_thread,
+                                                              objref,
+                                                              mk_SCHDTP`Sleeping(),
+                                                              STKM`InitEvaluatorStatus(instr, objref),
+                                                              Default_priority) };
+    return threadid;);
+#endif VICE
+
+#ifdef VICE
+GetCPUOfThread: SCHDTP`ThreadId ==> [AS`Name]
+GetCPUOfThread(threadid) ==
+  return cpualloc(threadid)
+pre threadid in set dom cpualloc;
+#endif VICE
+\end{vdm_al}
+
+{\em SetThreadStatus} sets the thread status of {\em threadid} to {\em tstatus}.
+\begin{vdm_al}
+SetThreadStatus: SCHDTP`ThreadId * SCHDTP`ThreadStatus ==> ()
+SetThreadStatus(threadid, tstatus) ==
+  if threadid in set dom threads
+  then
+   (threads(threadid).status := tstatus;
+#ifdef VICE
+    threads(threadid).stackeval.status := tstatus
+#endif VICE
+   );
+\end{vdm_al}
+
+{\em GetThreadStatus} returns the thread status of {\em threadid}.
+\begin{vdm_al}
+GetThreadStatus: SCHDTP`ThreadId ==> SCHDTP`ThreadStatus 
+GetThreadStatus(threadid) ==
+  return threads(threadid).status
+pre threadid in set dom threads;
+\end{vdm_al}
+
+{\em SetThreadState} sets the state of the thread to the current state
+of the stack machine and of the thread relevant state in module {\em STATE}.
+
+\begin{vdm_al}
+SetThreadState: SCHDTP`ThreadId ==> ()
+SetThreadState(threadid) ==
+  if threadid in set dom threads
+  then threads(threadid).stackeval := STKM`GetEvaluatorState()
+pre threadid in set dom threads;
+\end{vdm_al}
+
+{\em GetNextThreadId} returns the next avaialable thread id.
+\begin{vdm_al}
+GetNextThreadId: () ==> SCHDTP`ThreadId
+GetNextThreadId() ==
+ (dcl the_id : SCHDTP`ThreadId := next_thread_id;
+  next_thread_id := next_thread_id + 1;
+  return the_id;
+ );
+\end{vdm_al}
+
+{\em SetCurThread} sets the {\em id} to the current thread id. 
+The second parameter is used to control when logging is needed.
+\begin{vdm_al}
+SetCurThread: SCHDTP`ThreadId * bool ==> ()
+#ifdef VICE
+SetCurThread(id,log) ==
+  def curcpu = STKM`GetCurCPU()
+  in
+   (if curcpu in set dom curthread_m or 
+       (id in set dom threads and threads(id).periodic) or
+       (id = 1 and curthread_m = {|->}) -- first time  
+    then def mk_(org_obj_ref, org_cl) = GetObjRefAndClass(id) 
+         in
+          (if log and id <> 0 and 
+              (curcpu in set dom lastswapedin => id <> lastswapedin(curcpu))
+           then def ts = SETTINGS`GetTaskSwitch()
+                in
+                 (if curcpu in set dom curthread_m and curthread_m(curcpu) <> nil
+                  then SwapOut(false,true);
+                  if delayed = nil
+                  then TIMETRACE`LogThreadSwapIn(id, org_obj_ref, org_cl,ts)
+                  else (TIMETRACE`LogDelayedThreadSwapIn(id, org_obj_ref, org_cl, delayed,ts);
+                        delayed := nil);
+                  killed(curcpu) := false;
+                  lastswapedin(curcpu) := id));
+    if id <> 0
+    then (curthread_m(curcpu) := id;
+          STKM`SetCurThread(id));
+   );
+#else
+SetCurThread(id,-) ==
+  if id <> 0
+  then
+   (curthread_m(nil) := id;
+    STKM`SetCurThread(id));
+#endif VICE
+\end{vdm_al}
+
+#ifdef VICE
+{\em SaveCurThreadState} ensures that the evaluation state of a thread is 
+safely stored. 
+
+\begin{vdm_al}
+SaveCurThreadState: () ==> ()
+SaveCurThreadState() ==
+  if CurThreadId() in set dom threads
+  then threads(CurThreadId()).stackeval := STKM`GetEvaluatorState();
+
+GetLastSwapedIn: [AS`Name] ==> [SCHDTP`ThreadId]
+GetLastSwapedIn(cpuid) ==
+  return if cpuid in set dom lastswapedin
+         then lastswapedin(cpuid)
+         else nil;
+
+SetLastSwapedIn: [SCHDTP`ThreadId] * [AS`Name] ==> ()
+SetLastSwapedIn(tid,cpuid) ==
+ (lastswapedin(cpuid) := tid;
+  killed(cpuid) := false);
+
+ASyncOpThread: SCHDTP`ThreadId ==> bool
+ASyncOpThread(curthread) ==
+return
+  let cs = threads(curthread).stackeval.call_stack
+  in
+    len cs > 0 and
+    let csi = hd cs
+    in
+      is_STKM`DebugCmd(csi.code) and
+      let instr = hd csi.code.instr
+      in
+        is_INSTRTP`PUSH(instr) and
+        let val = instr.val
+        in
+          is_SEM`ExplOP(val) and
+          not val.sync
+pre curthread in set dom threads;
+\end{vdm_al}
+
+\begin{vdm_al}
+BlockedObjRef: SEM`OBJ_Ref ==> set of AS`Name
+BlockedObjRef(obj_ref) ==
+  return dunion
+         { let thr = threads(tid)
+           in
+             if is_SCHDTP`Blocked(thr.status) and 
+                (thr.status.objref = obj_ref or
+                 (thr.status.objref = nil and thr.obj = obj_ref))
+             then {thr.status.opnm}
+             else {}
+         | tid in set dom threads &
+           tid in set dom cpualloc and cpualloc(tid) = STKM`GetCurCPU()};
+
+PotentialPerChange: SEM`OBJ_Ref ==> ()
+PotentialPerChange(obj_ref) ==
+  potentialperchanged := potentialperchanged union {obj_ref};
+
+ObjRefPriority: SEM`OBJ_Ref ==> nat
+ObjRefPriority(obj_ref) ==
+  let tid in set dom threads be st threads(tid).obj = obj_ref or
+                                   is_SCHDTP`Blocked(threads(tid).status) and
+                                   threads(tid).status.objref = obj_ref
+  in
+    return threads(tid).priority
+pre ThreadBlockedOnObjRefExists(obj_ref,threads);
+
+functions
+
+  ThreadBlockedOnObjRefExists: SEM`OBJ_Ref * SCHDTP`Threads -> bool
+  ThreadBlockedOnObjRefExists(obj_ref,t_m) ==
+    exists tid in set dom t_m & t_m(tid).obj = obj_ref or
+                                is_SCHDTP`Blocked(t_m(tid).status) and
+                                t_m(tid).status.objref = obj_ref;
+\end{vdm_al}
+#endif VICE
+
+The value {\em Default\_priority} is a constant describing the default
+priority of a thread. 
+\begin{vdm_al}
+values
+Default_priority = 1;
+\end{vdm_al}
+
+\section{Priority-based Scheduling}
+
+In this section we provide auxiliary operations for priority based
+scheduling. Currently information about thread priority is stored in a
+separate file and read in to the toolbox.
+
+\subsection{Priority File}
+A syntactically correct priority file is well-formed if no class
+occurs more than once in it. A map from class names to priorities can
+then be generated. If a given class is not listed, then it is assumed
+to take the default (lowest) priority (that is, priority 1).
+
+\begin{vdm_al}
+
+functions
+
+WellFormedPriorityFile : SCHDTP`PriorityFile -> bool
+WellFormedPriorityFile(pf) ==
+  card { pe.clnm | pe in set elems pf} = len pf;
+
+\end{vdm_al}
+
+The function \textit{MakePriorityMap} converts a well-formed priority
+file into a map from class names to priority values.
+\begin{vdm_al}
+MakePriorityMap : SCHDTP`PriorityFile -> map AS`Id to nat
+MakePriorityMap(pf) ==
+  { clnm |-> priority | mk_SCHDTP`PriorityEntry(clnm, priority) in set elems pf};
+\end{vdm_al}
+
+Operations are provided for getting and setting the priority map. Note
+that when setting the priority map, the maximum priority value is set
+to be 1 greater than any of the priorities in the map. This ensures
+that the debug thread always has strictly higher priority than any
+other thread in the system.
+
+\begin{vdm_al}
+operations
+
+GetPriorityMap : () ==> map AS`Id to nat
+GetPriorityMap() ==
+  return classPriorityMap;
+
+SetPriorityMap: map AS`Id to nat ==> ()
+SetPriorityMap(pm) ==
+  (classPriorityMap := pm;
+   maxPriority := max(rng pm union {Default_priority}) + 1;
+  );
+
+#ifdef VICE
+RunMessageThread : [AS`Name] * [SEM`OBJ_Ref] * STKM`SubProgram * [nat] * STKM`MessageId
+                   ==> STKM`EvaluationState * [SEM`VAL]
+RunMessageThread(clnm,objref,instr,prio,mesid) ==
+  def p = if prio <> nil
+          then prio
+          else Default_priority;
+      tid = AddNewThreadId(false, objref, instr, p, false, mesid); 
+  in
+   (if tid <> GetLastSwapedIn(STKM`GetCurCPU())
+    then
+     (TIMETRACE`LogThreadSwapIn(tid,objref,clnm,SETTINGS`GetTaskSwitch());
+      SCHD`SetLastSwapedIn(tid,STKM`GetCurCPU()));
+    RunThread(tid);
+   );
+
+RunThread : SCHDTP`ThreadId ==> STKM`EvaluationState * [SEM`VAL]
+RunThread(tid) ==
+ (SetCurThread(tid,true);
+  SetThreadStatus(CurThreadId(), mk_SCHDTP`Running());
+  RestoreInstrAndSTKM(CurThreadId());
+  STKM`ResetSlice(); --
+  STKM`EvalMainLoop();
+ );
+#endif VICE
+\end{vdm_al}
+
+\begin{vdm_al}
+functions 
+max : set of nat -> nat
+max(s) ==
+  cases s:
+    {}     -> undefined,
+    {e}    -> e,
+    others -> iota e in set s & forall x in set s \ {e} & x < e
+  end;
+  
+end SCHD
+\end{vdm_al}
+\vspace{0.5cm}
+
+#ifdef RTINFO
+\begin{rtinfo}
+{rtinfo.ast}[SCHD]
+\end{rtinfo}
+#endif RTINFO

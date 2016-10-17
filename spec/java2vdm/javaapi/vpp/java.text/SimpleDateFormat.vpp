@@ -1,0 +1,19 @@
+class JavaTextSimpleDateFormat is subclass of JavaTextDateFormat
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaTextSimpleDateFormat" , <CLASS> , false  )
+operations 
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  JavaTextSimpleDateFormat : <NIL> ==> JavaTextSimpleDateFormat
+JavaTextSimpleDateFormat(-) == 
+isNil := true  ;
+
+public  JavaTextSimpleDateFormat : JavaLangString ==> JavaTextSimpleDateFormat
+JavaTextSimpleDateFormat(pattern) == 
+( skip 
+) ;
+
+
+end  JavaTextSimpleDateFormat

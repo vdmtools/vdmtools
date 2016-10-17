@@ -1,0 +1,22 @@
+ class B
+
+operations
+public
+Test: () ==> seq of real
+Test() ==
+( let b = f()
+  in return [3]
+);
+
+functions
+
+
+f: () -> seq of B
+f() ==
+(let b = new B()
+ in [b, b, b, b]
+)
+
+end B
+
+

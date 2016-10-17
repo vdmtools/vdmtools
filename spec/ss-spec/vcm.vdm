@@ -1,0 +1,1335 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Version Control Management for the Static Semantics of VDM++
+% $Id: vcm.vdm,v 1.62 2006/03/15 07:53:32 vdmtools Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\section{Version Control Management}
+#ifdef VDMPP
+This section presents the Version Control Manager module
+which is responsible for
+illustrating the functionality which the static semantics needs
+from the VCM tool. Thus, this is not a part of the static
+semantics, but it indicates the interface which is needed from
+the static semantics.
+The interface of the VCM module can be seen from figure~\ref{vcm}.
+
+VCM is only used in the ENV module and it
+only imports the AS and the REP modules.
+
+%\insertfig{vcm.ps}{13cm}{Interface for the VCM module}{\label{vcm}}
+#endif VDMPP
+#ifdef VDMSL
+This section presents the Version Control Manager module
+which is responsible for
+illustrating the functionality which the static semantics needs
+from the related tools (the parser and the VDM development
+environment).
+Thus, this is not a part of the static
+semantics, but it indicates the interface which is needed from
+the static semantics.
+The interface of the VCM module can be seen from figure~\ref{vcm}.
+
+VCM is only used in the ENV module and it
+only imports the AS and the REP modules.
+
+The static semantics requires an operation called $GetModuleRep$ which
+delivers an internal representation of a module (in the context of the
+module being tested). Whenever a module is parsed the module
+representation environment is updated by a call of the operation
+$UpdateModuleEnv$ from this module. A modules (internal)
+representation consists of some information about the parameters (if
+any) and some information about the exported constructs from the
+module. This is the information which is necessary for providing a
+context for modules which use another module.
+
+%\insertfig{vcm.ps}{13cm}{Interface for the VCM module}{\label{vcm}}
+#endif VDMSL
+
+\begin{vdm_al}
+module VCM
+
+imports
+  from ERR all,
+  from AS all,
+  from CI all,
+
+  from REP all,
+#ifdef VDMPP
+  from MANGLE all,
+  from UTIL all,
+#endif VDMPP
+
+  from TYPE
+    types Ind = <POS> | <DEF>,
+
+  from AUX functions
+    MakePreType : REP`FnTypeRep -> REP`FnTypeRep;
+    MakePostType : REP`FnTypeRep -> REP`FnTypeRep;
+    MakePolyPreType : seq of REP`TypeVarRep * REP`FnTypeRep -> seq of REP`TypeVarRep * REP`FnTypeRep;
+    MakePolyPostType : seq of REP`TypeVarRep * REP`FnTypeRep -> seq of REP`TypeVarRep * REP`FnTypeRep;
+#ifdef VDMSL
+    InstFn: (<PAR> | <VAR> | <REN>) * REP`TypeRep * map AS`Name to REP`TypeRep -> REP`TypeRep;
+    MakeOpPreType : [AS`Name] * REP`OpTypeRep * [AS`StateDef] -> REP`TypeRep;
+    MakeOpPostType : [AS`Name] * REP`OpTypeRep * [AS`StateDef] -> REP`TypeRep;
+#endif VDMSL
+    ExtName : AS`Name * AS`Name -> AS`Name;
+    Pre: AS`Name -> AS`Name;
+    Post: AS`Name -> AS`Name;
+    Inv: AS`Name -> AS`Name,
+
+  from PAT operations
+    wf_Pattern: TYPE`Ind * AS`Pattern * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1)
+    functions
+    ExtractBindings: AS`Pattern -> map AS`Name to (REP`TypeRep * nat1),
+  
+  from ENV operations
+#ifdef VDMPP
+    SetCurClass: AS`Name ==> ();
+#endif VDMPP
+    TransType: [AS`Name] * AS`Type ==> REP`TypeRep;
+    TransTypeDef: [AS`Name] * AS`Name * AS`Type * [AS`Invariant] ==> REP`TypeRep;
+    TransTypeList: [AS`Name] * seq of AS`Type ==> seq of REP`TypeRep;
+#ifdef VDMPP
+    GetOperationSignature : AS`OpDef ==> (seq of REP`TypeRep) * REP`TypeRep;
+    GetFunctionSignature : AS`FnDef ==> (seq of REP`TypeRep) * REP`TypeRep;
+#endif VDMPP
+
+  functions
+#ifdef VDMSL
+    PrintName : AS`Name -> seq of char;
+#endif VDMSL
+    ConstructImplDomType : AS`ParameterTypes -> seq of AS`Type;
+    ConstructImplRngType : seq of AS`NameType -> AS`Type;
+    TransFields : [AS`Name] * seq of AS`Field -> seq of REP`FieldRep
+
+#ifdef VDMPP
+  types
+
+    AccessTypeRep :: tp : REP`TypeRep
+                     a  : AS`Access
+                     stat : bool;
+    
+    AccessFnTypeRep :: tp : REP`FnTypeRep
+                       a  : AS`Access
+                       stat : bool;
+
+    AccessPolyTypeRep :: tp : REP`PolyTypeRep
+                         a  : AS`Access
+                         stat : bool;
+
+    AccessOpTypeRep :: tp : REP`OpTypeRep
+                       a  : AS`Access
+                       stat : bool
+                       oppure : bool;
+
+    AccessFieldRep :: tp : seq of REP`FieldRep
+                      a  : AS`Access;
+
+    ParseTypeInfo  :: nm    : AS`Name
+                      sys   : bool
+                      super : set of AS`Name 
+                      tps   : map AS`Name to ENV`AccessTypeRep
+                      vals  : map AS`Name to ENV`AccessTypeRep
+                      insts : map AS`Name to ENV`AccessTypeRep
+                      fcts  : map AS`Name to ENV`AccessFnTypeRep
+                      polys : map AS`Name to ENV`AccessPolyTypeRep
+                      ops   : map AS`Name to ENV`AccessOpTypeRep
+                      tags  : map AS`Name to ENV`AccessFieldRep
+                      overloaded : map AS`Name to 
+                                     set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep)
+                      thread  : <NONE> | <PER> | <DECL>
+                      constructors : set of ENV`AccessOpTypeRep
+                        -- AUGUSTO
+                      fndefs : map AS`Name to AS`FnDef -- function name to definition
+                      subresps : map AS`Name to (ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep | ENV`AccessOpTypeRep |
+                                    set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep))
+                      instinv : bool
+#endif VDMPP
+
+exports
+
+operations
+#ifdef VDMSL
+  GetFuncDefWOCtxt : AS`Name ==> [AS`FnDef]
+#endif VDMSL
+
+#ifdef VICE
+    IsSysClass : AS`Name ==> bool;
+#endif VICE
+#ifdef VDMPP
+  GetFuncDefWOCtxt : AS`Name ==> [AS`FnDef];
+  GetClassTypeRepWOCtxt : AS`Name ==> [ENV`ParseTypeInfo];
+  GetParseEnv : () ==> ParseTypeEnv;
+  GetClassTypeRep : AS`Name ==> [ENV`ParseTypeInfo];
+  UpdateParseEnv : AS`Name * ENV`ParseTypeInfo ==> ();
+  UpdateValuesInParseEnv: AS`Name * map AS`Name to REP`TypeRep ==> ();
+  UpdateParseEnvWithAST: AS`Document ==> bool;
+  IsClassName: AS`Name ==> bool;
+  GetTypes: () ==> set of AS`Name;
+ functions
+  ExportImplicitFunction : [AS`Name] * AS`ImplFnDef -> REP`FnTypeRep;
+  ExportExplicitFunction : [AS`Name] * AS`ExplFnDef -> REP`FnTypeRep;
+  ExportExtExplicitFunction : [AS`Name] * AS`ExtExplFnDef -> REP`FnTypeRep;
+  ExportImplicitOperation : [AS`Name] * AS`ImplOpDef -> REP`OpTypeRep;
+  ExportExplicitOperation : [AS`Name] * AS`ExplOpDef -> REP`OpTypeRep;
+  ExportExtExplicitOperation : [AS`Name] * AS`ExtExplOpDef -> REP`OpTypeRep;
+  MakeTpRng : REP`TypeRep * AS`Access * bool +> ENV`AccessTypeRep;
+  MakeFnRng : REP`FnTypeRep * AS`Access * bool +> ENV`AccessFnTypeRep;
+  MakePolyRng : REP`PolyTypeRep * AS`Access * bool +> ENV`AccessPolyTypeRep;
+  MakeOpRng : REP`OpTypeRep * AS`Access * bool * bool +> ENV`AccessOpTypeRep;
+#endif VDMPP
+#ifdef VDMPP
+  types
+  struct ParseTypeEnv
+#endif VDMPP
+#ifdef VDMSL
+types
+  struct ExpSigRep;
+  struct ModuleInfoEnv
+
+operations
+  GetModuleRep : AS`Name ==> bool * ExpSigRep;
+  UpdateModuleEnv : AS`Module | AS`DLModule ==> ();
+  GetModuleEnv : () ==> ModuleInfoEnv
+#endif VDMSL
+
+definitions
+  types
+#ifdef VDMPP
+    ParseTypeEnv   = map AS`Name to ENV`ParseTypeInfo;
+#endif VDMPP
+#ifdef VDMSL
+    ModuleInfoEnv = map AS`Name to ExpSigRep;
+
+    ExpSigRep :: tps  : map AS`Name to REP`TypeRep
+                 val  : map AS`Name to REP`TypeRep
+                 fns  : map AS`Name to REP`FnTypeRep
+                 polys: map AS`Name to REP`PolyTypeRep
+                 ops  : map AS`Name to REP`OpTypeRep
+                 tag  : map AS`Name to seq of REP`FieldRep
+                 fcts : map AS`Name to AS`FnDef
+#endif VDMSL
+
+#ifdef VDMPP
+values
+
+  OpDefAccess = <PRIVATE_AS>;
+  FnDefAccess = <PRIVATE_AS>;
+  InstvarDefAccess = <PRIVATE_AS>;
+  ValDefAccess = <PRIVATE_AS>;
+  TypesDefAccess = <PRIVATE_AS>
+
+#endif VDMPP
+
+#ifdef VICE
+  state VCMSt of
+    ParseEnv      : ParseTypeEnv           -- parsed class definitions (VDM++)
+    classNames    : set of AS`Name
+    clstypes      : set of AS`Name         -- locally defined types
+    init s == s = mk_VCMSt(
+                  {mk_AS`Name(["CPU"],CI`NilContextId) |->
+                      mk_ENV`ParseTypeInfo(mk_AS`Name(["CPU"],CI`NilContextId),
+                                      false,
+                                      {},
+                                      {|->},
+                                      {|->},
+                                      {|->},
+                                      {|->},
+                                      {|->},
+                                      CPUPriorityOperation(),
+                                      {|->},
+                                      CPUDeployOperation(),
+                                      <NONE>,
+                                      CPUConstructor(), --,
+                                      {|->}, -- AUGUSTO
+                                      {|->},
+                                      false
+                                     ),
+                    mk_AS`Name(["BUS"],CI`NilContextId) |->
+                      mk_ENV`ParseTypeInfo(mk_AS`Name(["BUS"],CI`NilContextId),
+                                      false,
+                                      {},
+                                      {|->},
+                                      {|->},
+                                      {|->},
+                                      {|->},
+                                      {|->},
+                                      {|->},
+                                      {|->},
+                                      {|->},
+                                      <NONE>,
+                                      BUSConstructor(),--,
+                                      {|->}, -- AUGUSTO
+                                      {|->},
+                                      false
+                                     )
+                   },
+                  {mk_AS`Name(["CPU"],CI`NilContextId), mk_AS`Name(["BUS"],CI`NilContextId)},
+                  {}
+                  )
+  end
+#else
+#ifdef VDMPP
+  state VCMSt of
+    ParseEnv      : ParseTypeEnv           -- parsed class definitions (VDM++)
+    classNames    : set of AS`Name
+    clstypes      : set of AS`Name         -- locally defined types
+    init s == s = mk_VCMSt({|->},{},{}) -- ParseEnv
+  end
+#endif VDMPP
+#ifdef VDMSL
+  state VCMSt of
+    ModuleEnv     : ModuleInfoEnv          -- parameter and export info
+    init s == s = mk_VCMSt({|->}) -- ModuleEnv
+  end
+#endif VDMSL
+#endif VICE
+
+  operations
+#ifdef VDMSL
+  GetModuleRep : AS`Name ==> bool * ExpSigRep
+  GetModuleRep(nm) ==
+    if nm in set dom ModuleEnv then 
+      return mk_(true, ModuleEnv(nm))
+    else 
+      let res = mk_ExpSigRep({|->},{|->},{|->},{|->}, {|->},{|->},{|->})
+      in
+        return mk_(false, res);
+  
+  GetModuleEnv : () ==> ModuleInfoEnv
+  GetModuleEnv() ==
+    return ModuleEnv;
+
+  UpdateModuleEnv: AS`Module | AS`DLModule ==> ()
+  UpdateModuleEnv(modu) ==
+    if is_AS`Module(modu)
+    then UpdateStdModuleEnv(modu)
+    else UpdateDLModuleEnv(modu);
+    
+  UpdateStdModuleEnv: AS`Module ==> ()
+  UpdateStdModuleEnv(mk_AS`Module(modid,intf,defs,-)) ==
+    def mk_AS`Interface(imp, exp, -) = intf;
+        bind = FindRenamedTypes(modid,imp)
+    in
+      if exp <> nil
+      then ExportSome(modid,exp,defs,bind)
+      else ExportAll(modid,defs,bind);
+    
+  UpdateDLModuleEnv: AS`DLModule ==> ()
+  UpdateDLModuleEnv(mk_AS`DLModule(modid,intf,-,-)) ==
+    let mk_AS`DLInterface(-,exp,-) = intf
+    in
+      ModuleEnv := ModuleEnv ++ {modid |-> ExportDLModule(modid,exp)};
+    
+  ExportSome: AS`Name * AS`ExportSig * AS`Definitions * map AS`Name to AS`Name ==> ()
+  ExportSome(modid, mk_AS`ExportSig(tps,val,fns,ops,-),
+             mk_AS`Definitions(typem,-,fnm,opm,State,-,-),bind) ==
+   def ntm = {nm |-> typem(nm) | nm in set dom typem inter dom tps & tps(nm) = <STRUCT>};
+       nfm = {nm |-> fnm(nm) | nm in set dom fnm inter dom fns & FindTypeVars(fnm(nm)) = []};
+       pfm = {nm |-> fnm(nm) | nm in set dom fnm inter dom fns & FindTypeVars(fnm(nm)) <> []};
+       nop = {nm |-> opm(nm) | nm in set dom opm inter dom ops};
+       monofns = {nm |-> let mk_(-,fntp) = fns(nm) in fntp | nm in set dom fns
+                                 & (nm in set dom fnm) => FindTypeVars(fnm(nm)) = []};
+       mk_(exptps,exptag) = ExportSomeTypes(modid,tps,typem,State);
+       invs = ExportInvs(modid,ntm);
+       expval = ExportSimple(modid,val);
+       expfns = ExportSimple(modid,monofns);
+       implfns = ExportPrePostFns(modid,nfm);
+       polyfns = ExportPolyFns(modid,pfm);
+       expops = ExportSimple(modid,ops);
+       implops = ExportPrePostOps(modid,nop,State);
+       fnm' = {mk_AS`Name(modid.ids^x.ids,CI`NilContextId) |-> fnm(x) | x in set dom fnm}; --AUGUSTO
+       allfns = invs munion expfns munion implfns munion implops;
+       newexp = mk_ExpSigRep(exptps,expval,allfns,polyfns,expops,exptag,fnm');
+       finalexp = UseRenamedTypes(newexp,bind)
+   in
+     ModuleEnv := ModuleEnv ++ {modid |-> finalexp};
+
+  ExportAll: AS`Name * AS`Definitions * map AS`Name to AS`Name ==> ()
+  ExportAll(modid, mk_AS`Definitions(typem,valuem,fnm,opm,State,-,-),bind) ==
+   def nfm = {nm |-> fnm(nm) | nm in set dom fnm & FindTypeVars(fnm(nm)) = []};
+       pfm = {nm |-> fnm(nm) | nm in set dom fnm & FindTypeVars(fnm(nm)) <> []};
+       mk_(tps,tag) = ExportTypes(modid,typem,State);
+       invs = ExportInvs(modid,typem);
+       val = ExportValues(modid,valuem);
+       fns = ExportFunctions(modid,nfm);
+       implfns = ExportPrePostFns(modid,nfm);
+       polyfns = ExportPolyFns(modid,pfm);
+       ops = ExportOperations(modid,opm);
+       implops = ExportPrePostOps(modid,opm,State);
+       fnm' = {mk_AS`Name(modid.ids^x.ids,CI`NilContextId) |-> fnm(x) | x in set dom fnm}; --AUGUSTO
+       allfns = invs munion fns munion implfns munion implops;
+       newexp = mk_ExpSigRep(tps,val,allfns,polyfns,ops,tag,fnm');
+       finalexp = UseRenamedTypes(newexp,bind)
+   in
+     ModuleEnv := ModuleEnv ++ {modid |-> finalexp};
+
+  ExportTypes: [AS`Name] * map AS`Name to AS`TypeDef * [AS`StateDef] ==>
+               map AS`Name to REP`TypeRep * map AS`Name to seq of REP`FieldRep
+  ExportTypes(modid,typem,State) ==
+   (dcl tp_m : map AS`Name to REP`TypeRep,
+        st_m : map AS`Name to REP`TypeRep := {|->};
+    if modid = nil
+    then tp_m := {nm |-> ENV`TransTypeDef(modid,nm,typem(nm).shape, typem(nm).Inv) | nm in set dom typem}
+    else tp_m := {AUX`ExtName(modid,nm) |-> ENV`TransTypeDef(modid,nm,typem(nm).shape, typem(nm).Inv)
+                    | nm in set dom typem};
+    if State <> nil
+    then let mk_AS`StateDef(tp,Invar,-,-) = State
+         in
+           if modid = nil
+           then st_m := {tp.name |-> ENV`TransTypeDef(modid,tp.name,tp,Invar)}
+           else st_m := {AUX`ExtName(modid,tp.name) |-> ENV`TransTypeDef(modid,tp.name,tp,Invar)};
+    if State <> nil and
+       (State.tp).name in set dom tp_m and
+       tp_m((State.tp).name) <> st_m((State.tp).name)
+         ------------------------------------------------------------
+         -- Error message #341
+         -- Type of state not compatible with similar type definition
+         ------------------------------------------------------------
+    then ERR`GenErr(State.tp, <WARNING>,341,[]);
+    (dcl tagenv : map AS`Name to seq of REP`FieldRep :=
+       if State = nil
+       then {|->}
+       else {if modid = nil
+             then (State.tp).name
+             else AUX`ExtName(modid,(State.tp).name) |-> ENV`TransFields(modid,(State.tp).fields)};
+
+     for all mk_AS`TypeDef(-,tp,-,-,-) in set rng typem do
+       tagenv := tagenv ++ ColTags(modid,tp);
+    return mk_(st_m ++ tp_m,tagenv)));
+#endif VDMSL
+
+#ifdef VDMPP
+functions
+  SetDefAccess:AS`Access * AS`Access +> AS`Access
+  SetDefAccess(acs,df) ==
+    if acs = <DEFAULT_AS> then df else acs;
+
+#ifdef VICE
+  CPUPriorityOperation: () +> map AS`Name to ENV`AccessOpTypeRep
+  CPUPriorityOperation() ==
+    let prionm= mk_AS`Name(["CPU","setPriority"],CI`NilContextId),
+        argptps = [mk_REP`AnyOpTypeRep(), mk_REP`NumericTypeRep(<NAT>)],
+        utp = mk_REP`UnitTypeRep(),
+        priotp = mk_REP`OpTypeRep(argptps,utp)
+    in {prionm |-> MakeOpRng(priotp,<PUBLIC_AS>,false,false)};
+
+  CPUDeployOperation: () +> map AS`Name to set of ENV`AccessOpTypeRep
+  CPUDeployOperation() ==
+    let dplnm = mk_AS`Name(["CPU","deploy"],CI`NilContextId),
+        argdtps = [mk_REP`ObjRefTypeRep(mk_AS`Name([],CI`NilContextId))],
+        utp = mk_REP`UnitTypeRep(),
+        dpltp1 = mk_REP`OpTypeRep(argdtps,utp),
+        chartp = mk_REP`CharTypeRep(),
+        stringtp = mk_REP`SeqTypeRep(chartp),
+        dpltp2 = mk_REP`OpTypeRep(argdtps^[stringtp],utp)
+    in {dplnm |-> {MakeOpRng(dpltp1,<PUBLIC_AS>,false,false),
+                   MakeOpRng(dpltp2,<PUBLIC_AS>,false,false)}};
+
+  CPUConstructor: () +> set of ENV`AccessOpTypeRep
+  CPUConstructor() ==
+    let nattp = mk_REP`NumericTypeRep(<NATONE>),
+        fcfs = mk_REP`QuoteTypeRep(mk_AS`Name(["FCFS"],CI`NilContextId)),
+        fp = mk_REP`QuoteTypeRep(mk_AS`Name(["FP"],CI`NilContextId)),
+        kindtp = mk_REP`UnionTypeRep({fcfs,fp}),
+        argtps = [kindtp,nattp],
+        cputp = mk_REP`ObjRefTypeRep(mk_AS`Name(["CPU"],CI`NilContextId)),
+        optp = mk_REP`OpTypeRep(argtps,cputp)
+    in {MakeOpRng(optp,<PUBLIC_AS>,false,false)};
+  
+  BUSConstructor: () +> set of ENV`AccessOpTypeRep
+  BUSConstructor() ==
+    let nattp = mk_REP`NumericTypeRep(<NATONE>),
+        fcfs = mk_REP`QuoteTypeRep(mk_AS`Name(["FCFS"],CI`NilContextId)),
+        tdma = mk_REP`QuoteTypeRep(mk_AS`Name(["TDMA"],CI`NilContextId)),
+        csmacd = mk_REP`QuoteTypeRep(mk_AS`Name(["CSMACD"],CI`NilContextId)),
+        kindtp = mk_REP`UnionTypeRep({fcfs,tdma,csmacd}),
+        cputp = mk_REP`ObjRefTypeRep(mk_AS`Name(["CPU"],CI`NilContextId)),
+        cpustp = mk_REP`SetTypeRep(cputp),
+        argtps = [kindtp,nattp,cpustp],
+        bustp = mk_REP`ObjRefTypeRep(mk_AS`Name(["BUS"],CI`NilContextId)),
+        optp = mk_REP`OpTypeRep(argtps,bustp)
+    in {MakeOpRng(optp,<PUBLIC_AS>,false,false)}
+  
+#endif VICE
+
+operations
+    
+  ExportTypes: AS`Name * map AS`Name to AS`TypeDef ==>
+               map AS`Name to ENV`AccessTypeRep * map AS`Name to ENV`AccessFieldRep
+  ExportTypes(cls,typem) ==
+    def tp_m = {AUX`ExtName(cls,nm) |-> 
+                mk_ENV`AccessTypeRep (
+                  ENV`TransTypeDef(cls,nm,typem(nm).shape, typem(nm).Inv),
+                  SetDefAccess(typem (nm).access,TypesDefAccess),
+                  true) -- static has no meaning for types
+                | nm in set dom typem} in
+    ( dcl tagenv : map AS`Name to ENV`AccessFieldRep := {|->};
+      for all mk_AS`TypeDef(-,tp,-,acs,-) in set rng typem do
+        def ct_m = ColTags (cls,tp);
+            acs' = SetDefAccess (acs,TypesDefAccess)
+        in
+          tagenv := tagenv ++ {n |-> mk_ENV`AccessFieldRep (ct_m(n),acs')|n in set dom ct_m};
+      return mk_(tp_m,tagenv));
+
+  ExportInstVars: AS`Name * seq of AS`InstanceVarDef ==> map AS`Name to ENV`AccessTypeRep * bool
+  ExportInstVars(cls, instvars) ==
+  ( dcl vars : map AS`Name to ENV`AccessTypeRep := {|->},
+        instinv : bool := false;
+    for inst in instvars do
+      cases inst:
+        mk_AS`InstAssignDef(mk_AS`AssignDef (var,tp,-,-),acs,stat,-) ->
+                     let acs' = SetDefAccess(acs,InstvarDefAccess)
+                     in
+                     vars := vars ++ { AUX`ExtName(cls,var) |->
+                                         mk_ENV`AccessTypeRep (ENV`TransType(cls,tp), acs', stat)},
+        mk_AS`InstanceInv(-,-,-) -> instinv := true
+      end;
+    return mk_(vars, instinv)
+  );
+
+  ExportThread: [AS`ThreadDef] ==> <NONE> | <PER> | <DECL>
+  ExportThread(thread) ==
+    if thread = nil
+    then return <NONE>
+    else if is_AS`PerObl(thread)
+         then return <PER>
+         else return <DECL>;
+  
+#endif VDMPP
+
+  ExportValues: [AS`Name] * seq of AS`ValueDef ==> NameToType
+  ExportValues(modid,valuel) ==
+   (
+    dcl val : NameToType := {|->};
+   
+    for mk_AS`ValueDef(pat,tp,-,acs,-,-) in valuel do
+      if tp = nil
+            -----------------------------------------------
+            -- Error message #342
+            -- All values in export section should be typed
+            -----------------------------------------------
+      then (
+#ifdef VDMSL
+            ERR`GenErr(pat, <ERROR>,342,[]);
+#endif VDMSL
+            let newbd = PAT`ExtractBindings(pat)
+            in
+              val := val ++ {SetName (modid,nm) |-> MakeTpRng (newbd(nm).#1, acs, true) | nm in set dom newbd}
+           )
+      else def mk_(-,bd) = PAT`wf_Pattern(<POS>,pat,ENV`TransType(modid,tp))
+           in
+             val := val ++ {SetName(modid,nm) |-> MakeTpRng (bd(nm).#1,acs, true) | nm in set dom bd};
+    return val)
+
+functions
+
+  SetName : [AS`Name] * AS`Name +> AS`Name
+  SetName (modid,nm) ==
+    if modid = nil
+    then nm 
+    else AUX`ExtName (modid,nm);
+
+#ifdef VDMSL
+
+  MakeTpRng : REP`TypeRep * AS`Access * bool +> REP`TypeRep
+  MakeTpRng (t,-,-) == t;
+
+  MakeFnRng : REP`FnTypeRep * AS`Access * bool +> REP`FnTypeRep 
+  MakeFnRng (f,-,-) == f;
+
+  MakeOpRng : REP`OpTypeRep * AS`Access * bool * bool +> REP`OpTypeRep
+  MakeOpRng (o,-,-,-) == o;
+
+  MakePolyRng : REP`PolyTypeRep * AS`Access * bool +> REP`PolyTypeRep
+  MakePolyRng (p,-,-) == p;
+
+  types
+    NameToFnType = map AS`Name to REP`FnTypeRep;
+    NameToType   = map AS`Name to REP`TypeRep;
+    NameToOpType = map AS`Name to REP`OpTypeRep;
+    NameToPolyType = map AS`Name to REP`PolyTypeRep
+#endif VDMSL
+#ifdef VDMPP
+
+  MakeTpRng : REP`TypeRep * AS`Access * bool +> ENV`AccessTypeRep
+  MakeTpRng (t, accs, stat) ==
+    mk_ENV`AccessTypeRep (t,SetDefAccess (accs,ValDefAccess), stat);
+
+  MakeFnRng : REP`FnTypeRep * AS`Access * bool +> ENV`AccessFnTypeRep
+  MakeFnRng (f,accs, stat) ==
+    mk_ENV`AccessFnTypeRep (f,SetDefAccess (accs,FnDefAccess), stat);
+
+  MakeOpRng : REP`OpTypeRep * AS`Access * bool * bool +> ENV`AccessOpTypeRep
+  MakeOpRng (o,accs,stat,oppure) ==
+    mk_ENV`AccessOpTypeRep (o,SetDefAccess (accs,OpDefAccess),stat,oppure);
+
+  MakePolyRng : REP`PolyTypeRep * AS`Access * bool +> ENV`AccessPolyTypeRep
+  MakePolyRng (p,accs, stat) ==
+    mk_ENV`AccessPolyTypeRep (p,SetDefAccess (accs,FnDefAccess), stat)
+
+types
+  NameToFnType = map AS`Name to ENV`AccessFnTypeRep;
+  NameToType   = map AS`Name to ENV`AccessTypeRep;
+  NameToOpType = map AS`Name to ENV`AccessOpTypeRep;
+  NameToPolyType = map AS`Name to ENV`AccessPolyTypeRep
+#endif VDMPP
+
+operations
+
+  ExportFunctions: [AS`Name] * map AS`Name to AS`FnDef ==> NameToFnType
+  ExportFunctions(modid,fnm) ==
+   (dcl fns : NameToFnType := {|->};
+    for all nm in set dom fnm do
+#ifdef VDMPP
+      if not MANGLE`IsMangled(nm) 
+      then 
+#endif VDMPP
+      let fndef = fnm (nm)
+      in
+        cases fndef:
+          mk_AS`ExplFnDef(-,-,-,-,-,-,-,acs,stat,-,-) ->
+            fns := fns ++ {SetName (modid,nm) |-> MakeFnRng (ExportExplicitFunction(modid,fndef),acs,stat)},
+          mk_AS`ImplFnDef(-,-,-,-,-,-,acs,stat,-) ->
+            fns := fns ++ {SetName (modid,nm) |-> MakeFnRng (ExportImplicitFunction(modid,fndef),acs,stat)},
+          mk_AS`ExtExplFnDef(-,-,-,-,-,-,-,acs,stat,-,-) ->
+            fns := fns ++ {SetName (modid,nm) |-> MakeFnRng (ExportExtExplicitFunction(modid,fndef),acs,stat)}
+        end;
+    return fns);
+#ifdef VDMPP
+\end{vdm_al}
+\texttt{ExportOverloads} is used to add any overloaded functions or
+operations to the environment for the current class being traversed.
+\begin{vdm_al}
+functions
+
+  ExportOverloads : AS`Name * map AS`Name to AS`OpDef * map AS`Name to AS`FnDef 
+                    -> map AS`Name to set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep )
+  ExportOverloads(p_nm, p_opm, p_fnm) ==
+    def l_ops = MakeOverloadedMap(p_nm, p_opm, true);
+        l_fns = MakeOverloadedMap(p_nm, p_fnm, false)
+    in
+       -- merge two maps
+       { SetName(p_nm,b_nm) |-> l_ops(b_nm) union l_fns(b_nm) | b_nm in set dom l_ops inter dom l_fns } munion
+       { SetName(p_nm,b_nm) |-> l_ops(b_nm) | b_nm in set dom l_ops \ dom l_fns } munion
+       { SetName(p_nm,b_nm) |-> l_fns(b_nm) | b_nm in set dom l_fns \ dom l_ops };
+\end{vdm_al}
+\texttt{MakeOverloadedMap} takes a map from names to operations or
+functions and returns a map from each overloaded name to the set of
+access types representing the different overloaded functions and
+operations for that name.
+\begin{vdm_al}
+operations
+
+  MakeOverloadedMap : AS`Name * ((map AS`Name to AS`OpDef) | (map AS`Name to AS`FnDef)) * bool
+                      ==> map AS`Name to set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep)
+  MakeOverloadedMap(p_nm, p_methmp, p_isop) ==
+    def l_mangledNames = { b_nm |-> MANGLE`UnMangle(b_nm).#1 | b_nm in set dom p_methmp & MANGLE`IsMangled(b_nm) }
+    in
+    ( dcl l_resMap : map AS`Name to set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep)
+                   := { b_nm |-> {} | b_nm in set rng l_mangledNames};
+
+      for all b_nm in set dom p_methmp do 
+        if b_nm in set dom l_mangledNames
+        then 
+          let l_meth = p_methmp(b_nm),
+              l_nm = l_mangledNames(b_nm)
+          in
+           (dcl l_methtp : (seq of REP`TypeRep) * REP`TypeRep;
+            if p_isop
+            then l_methtp := ENV`GetOperationSignature(l_meth)
+            else l_methtp := ENV`GetFunctionSignature(l_meth);
+            if p_isop
+            then l_resMap(l_nm) := l_resMap(l_nm) union
+                                   { MakeOpRng(mk_REP`OpTypeRep(l_methtp.#1, l_methtp.#2),
+                                               l_meth.access, l_meth.stat, l_meth.oppure) }
+            else
+              let fntype = if is_AS`ExplFnDef(l_meth) and is_AS`PartialFnType(l_meth.tp)
+                           then mk_REP`PartialFnTypeRep(l_methtp.#1, l_methtp.#2)
+                           else mk_REP`TotalFnTypeRep(l_methtp.#1, l_methtp.#2)
+              in 
+                if FindTypeVars(l_meth) = [] 
+                then l_resMap(l_nm) := l_resMap(l_nm) union { MakeFnRng(fntype, l_meth.access, l_meth.stat) }
+                else l_resMap(l_nm) := l_resMap(l_nm) union
+                        { MakePolyRng(mk_REP`PolyTypeRep(ENV`TransTypeList (p_nm, FindTypeVars(l_meth)), fntype),
+                                            l_meth.access, l_meth.stat) });
+      return l_resMap;
+    );
+
+ExportSubresps: AS`Name * map AS`Name to AS`FnDef * map AS`Name to AS`FnDef * map AS`Name to AS`OpDef
+                ==> map AS`Name to (ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep | ENV`AccessOpTypeRep |
+                                    set of (ENV`AccessOpTypeRep | ENV`AccessPolyTypeRep | ENV`AccessFnTypeRep))
+ExportSubresps(p_nm, p_fnm, p_pfm, p_opm) ==
+    ( dcl l_resMap : map AS`Name to (ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep | ENV`AccessOpTypeRep |
+                                     set of (ENV`AccessOpTypeRep | ENV`AccessPolyTypeRep | ENV`AccessFnTypeRep))
+                   := { |-> };
+      for all fnnm in set dom p_fnm do 
+        let fndef = p_fnm(fnnm)
+        in
+          if (is_AS`ExplFnDef(fndef) or is_AS`ExtExplFnDef(fndef)) and fndef.body.body = <SUBRESP>
+          then 
+            let nm = SetName(p_nm, fndef.nm),
+                atp = MakeFnRng (if is_AS`ExplFnDef(fndef) then ExportExplicitFunction(p_nm, fndef)
+                                                           else ExportExtExplicitFunction(p_nm, fndef),
+                                 fndef.access, fndef.stat)
+            in 
+              if nm in set dom l_resMap
+              then 
+                let atpg = l_resMap(nm),
+                    atp_s = if is_(atpg, set of (ENV`AccessOpTypeRep | ENV`AccessPolyTypeRep | ENV`AccessFnTypeRep))
+                            then atpg else {atpg}
+                in
+                  l_resMap(nm) := atp_s union {atp}
+              else
+                l_resMap(nm) := atp;
+      for all pfnm in set dom p_pfm do 
+        let fndef = p_pfm(pfnm)
+        in
+          if (is_AS`ExplFnDef(fndef) or is_AS`ExtExplFnDef(fndef)) and fndef.body.body = <SUBRESP>
+          then 
+            let nm = SetName(p_nm, fndef.nm)
+            in
+             (dcl atp : ENV`AccessPolyTypeRep;
+              if is_AS`ExplFnDef(fndef)
+              then atp := MakePolyRng (mk_REP`PolyTypeRep(ENV`TransTypeList (p_nm, fndef.tpparms),
+                                       ExportExplicitFunction(p_nm, fndef)),
+                                       fndef.access, fndef.stat)
+              else atp := MakePolyRng (mk_REP`PolyTypeRep(ENV`TransTypeList (p_nm, fndef.params),
+                                       ExportExtExplicitFunction(p_nm, fndef)),
+                                       fndef.access, fndef.stat);
+              if nm in set dom l_resMap
+              then 
+                let atpg = l_resMap(nm),
+                    atp_s = if is_(atpg, set of (ENV`AccessOpTypeRep | ENV`AccessPolyTypeRep | ENV`AccessFnTypeRep))
+                            then atpg else {atpg}
+                in
+                  l_resMap(nm) := atp_s union {atp}
+              else
+                l_resMap(nm) := atp);
+      for all opnm in set dom p_opm do 
+        let opdef = p_opm(opnm)
+        in
+          if (is_AS`ExplOpDef(opdef) or is_AS`ExtExplOpDef(opdef)) and opdef.body.body = <SUBRESP>
+          then 
+            let nm = SetName(p_nm, opdef.nm),
+                atp = MakeOpRng (if is_AS`ExplOpDef(opdef) then ExportExplicitOperation(p_nm, opdef)
+                                                           else ExportExtExplicitOperation(p_nm, opdef),
+                                 opdef.access, opdef.stat, opdef.oppure)
+            in 
+              if nm in set dom l_resMap
+              then 
+                let atpg = l_resMap(nm),
+                    atp_s = if is_(atpg, set of (ENV`AccessOpTypeRep | ENV`AccessPolyTypeRep | ENV`AccessFnTypeRep))
+                            then atpg else {atpg}
+                in
+                  l_resMap(nm) := atp_s union {atp}
+              else
+                l_resMap(nm) := atp;
+      return l_resMap;
+    );
+#endif VDMPP
+
+
+  ExportOperations: [AS`Name] * map AS`Name to AS`OpDef ==> NameToOpType
+  ExportOperations(modid,opm) ==
+   (dcl ops : NameToOpType := {|->};
+   
+    for all nm in set dom opm do
+#ifdef VDMPP
+      if not MANGLE`IsMangled(nm) 
+      then 
+#endif VDMPP
+        let opdef = opm (nm)
+        in
+          cases opdef:
+            mk_AS`ExplOpDef(-,oppure,-,-,-,-,-,-,acs,stat,-,-) ->
+              ops := ops ++ {SetName(modid,nm) |-> MakeOpRng (ExportExplicitOperation(modid,opdef),acs,stat,oppure)},
+            mk_AS`ImplOpDef(-,oppure,-,-,-,-,-,-,-,acs,stat,-,-) ->
+              ops := ops ++ {SetName(modid,nm) |-> MakeOpRng (ExportImplicitOperation(modid,opdef),acs,stat,oppure)},
+            mk_AS`ExtExplOpDef(-,oppure,-,-,-,-,-,-,-,-,acs,stat,-,-) ->
+              ops := ops ++ {SetName(modid,nm) |-> MakeOpRng (ExportExtExplicitOperation(modid,opdef),acs,stat,oppure)}
+          end;
+    return ops);
+
+#ifdef VDMPP
+\end{vdm_al}
+\texttt{ExportConstructors} adds those constructors in the current
+class to the environment for this class.
+\begin{vdm_al}
+
+operations
+
+  ExportConstructors: [AS`Name] * map AS`Name to AS`OpDef ==> set of ENV`AccessOpTypeRep
+  ExportConstructors(modid,opm) ==
+   (dcl ops : set of ENV`AccessOpTypeRep := {};
+   
+    for all nm in set dom opm do
+      let opdef = opm (nm)
+      in
+        cases opdef:
+          mk_AS`ExplOpDef(-,oppure,-,-,-,-,-,-,acs,stat,constr,-) ->
+            if constr
+            then ops := ops union {MakeOpRng (ExportExplicitOperation(modid,opdef),acs,stat,oppure)},
+          mk_AS`ImplOpDef(-,oppure,-,-,-,-,-,-,-,acs,stat,constr,-) ->
+            if constr
+            then ops := ops union {MakeOpRng (ExportImplicitOperation(modid,opdef),acs,stat,oppure)},
+          mk_AS`ExtExplOpDef(-,oppure,-,-,-,-,-,-,-,-,acs,stat,constr,-) ->
+            if constr
+            then ops := ops union {MakeOpRng (ExportExtExplicitOperation(modid,opdef),acs,stat,oppure)}
+        end;
+    return ops);
+#endif VDMPP
+
+operations
+  
+  ExportInvs: [AS`Name] * map AS`Name to AS`TypeDef ==> NameToFnType
+  ExportInvs(modid,typem) ==
+   (dcl invs : NameToFnType := {|->};
+   
+    for all mk_AS`TypeDef(nm,tp,Invar,acs,-) in set rng typem do
+      if Invar <> nil
+      then def fntp =  MakeFnRng (mk_REP`TotalFnTypeRep([ENV`TransType(modid,tp)],
+                                                        mk_REP`BooleanTypeRep()),acs, true)
+           in
+             invs := invs munion { SetName(modid,AUX`Inv(nm)) |-> fntp};
+    return invs);
+
+  ExportPrePostFns: [AS`Name] * map AS`Name to AS`FnDef ==> NameToFnType
+  ExportPrePostFns(modid,fnm) ==
+    (dcl fns : NameToFnType := {|->};
+
+     for all fndef in set rng fnm do
+       cases fndef:
+         mk_AS`ExplFnDef(nm,[],-,-,-,prefn,postfn,acs,stat,-,-) ->
+               def fntp = ExportExplicitFunction(modid,fndef);
+               in
+                (if prefn <> nil
+                 then fns := fns munion {SetName(modid,AUX`Pre(nm)) |->
+                                            MakeFnRng (AUX`MakePreType(fntp),acs,stat)};
+                 if postfn <> nil
+                 then fns := fns munion {SetName(modid,AUX`Post(nm)) |->
+                                            MakeFnRng (AUX`MakePostType(fntp),acs,stat)}),
+         mk_AS`ImplFnDef(nm,[],-,-,prefn,-,acs,stat,-) ->
+               def fntp = ExportImplicitFunction(modid,fndef)
+               in
+                (if prefn <> nil
+                 then fns := fns munion {SetName(modid,AUX`Pre(nm)) |->
+                                            MakeFnRng (AUX`MakePreType(fntp),acs, stat)};
+                 fns := fns munion {SetName(modid,AUX`Post(nm)) |->
+                                       MakeFnRng (AUX`MakePostType(fntp),acs, stat)}),
+         mk_AS`ExtExplFnDef(nm,[],-,-,-,prefn,postfn,acs,stat,-,-) ->
+               def fntp = ExportExtExplicitFunction(modid,fndef);
+               in
+                (if prefn <> nil 
+                 then fns := fns munion {SetName(modid,AUX`Pre(nm)) |->
+                                            MakeFnRng (AUX`MakePreType(fntp),acs, stat)};
+                 if postfn <> nil
+                 then fns := fns munion {SetName(modid,AUX`Post(nm)) |->
+                                            MakeFnRng (AUX`MakePostType(fntp),acs, stat)})
+       end;
+     return fns)
+  pre forall fndef in set rng fnm & FindTypeVars(fndef) = [];
+  
+  ExportPolyFns: [AS`Name] * map AS`Name to AS`FnDef ==> NameToPolyType
+  ExportPolyFns(modid,fnm) ==
+  ( dcl fns : NameToPolyType := {|->};
+
+    for all fname in set dom fnm do
+#ifdef VDMPP
+      if not MANGLE`IsMangled(fname) 
+      then
+#endif VDMPP
+      let fndef = fnm(fname)
+      in
+        cases fndef:
+          mk_AS`ExplFnDef(nm,tv_l,-,-,-,prefn,postfn,acs,stat,-,-) ->
+             def fntp = ExportExplicitFunction(modid,fndef);
+                 r_l = ENV`TransTypeList(modid,tv_l)
+             in
+              (fns := fns munion {SetName(modid,nm) |-> MakePolyRng (mk_REP`PolyTypeRep(r_l,fntp), acs, stat)};
+               if prefn <> nil
+               then 
+                 let mk_(t_l,pfn) = AUX`MakePolyPreType(r_l,fntp)
+                 in fns := fns munion {SetName(modid,AUX`Pre(nm)) |->
+                                          MakePolyRng (mk_REP`PolyTypeRep(t_l,pfn), acs, stat)};
+               if postfn <> nil
+               then 
+                 let mk_(t_l,pfn) = AUX`MakePolyPostType(r_l,fntp)
+                 in fns := fns munion {SetName(modid,AUX`Post(nm)) |->
+                                          MakePolyRng (mk_REP`PolyTypeRep(t_l,pfn), acs, stat)}),
+          mk_AS`ImplFnDef(nm,tv_l,-,-,prefn,-,acs,stat,-) ->
+             def fntp = ExportImplicitFunction(modid,fndef);
+                 r_l = ENV`TransTypeList(modid,tv_l)
+             in
+              (fns:= fns munion {SetName(modid,nm) |-> MakePolyRng (mk_REP`PolyTypeRep(r_l,fntp), acs, stat)};
+               if prefn <> nil
+               then
+                 let mk_(t_l,pfn) = AUX`MakePolyPreType(r_l,fntp)
+                 in fns := fns munion {SetName(modid,AUX`Pre(nm)) |-> 
+                                          MakePolyRng (mk_REP`PolyTypeRep(t_l,pfn), acs, stat)};
+               let mk_(t_l,pfn) = AUX`MakePolyPostType(r_l,fntp)
+               in fns := fns munion {SetName(modid,AUX`Post(nm)) |-> 
+                                        MakePolyRng (mk_REP`PolyTypeRep(t_l,pfn), acs, stat)}),
+          mk_AS`ExtExplFnDef(nm,tv_l,-,-,-,prefn,postfn,acs,stat,-,-) ->
+             def fntp = ExportExtExplicitFunction(modid,fndef);
+                 r_l = ENV`TransTypeList(modid,tv_l)
+             in
+              (fns := fns munion {SetName(modid,nm) |-> 
+                                     MakePolyRng (mk_REP`PolyTypeRep(r_l,fntp), acs, stat)};
+               if prefn <> nil 
+               then 
+                 let mk_(t_l,pfn) = AUX`MakePolyPreType(r_l,fntp)
+                 in  fns := fns munion {SetName(modid,AUX`Pre(nm)) |-> 
+                                           MakePolyRng (mk_REP`PolyTypeRep(t_l,pfn), acs, stat)};
+               if postfn <> nil
+               then 
+                 let mk_(t_l,pfn) = AUX`MakePolyPostType(r_l,fntp)
+                 in fns := fns munion {SetName(modid,AUX`Post(nm))|-> 
+                                          MakePolyRng (mk_REP`PolyTypeRep(t_l,pfn), acs, stat)})
+        end;
+    return fns)
+  pre forall fndef in set rng fnm & FindTypeVars(fndef) <> [];
+
+
+#ifdef VDMSL
+  ExportPrePostOps: [AS`Name] * map AS`Name to AS`OpDef * [AS`StateDef] ==> map AS`Name to REP`FnTypeRep
+  ExportPrePostOps(modid,opm,State) ==
+    (dcl fns : map AS`Name to REP`FnTypeRep := {|->};
+
+     for all opdef in set rng opm do
+       cases opdef:
+         mk_AS`ExplOpDef(nm,-,-,-,-,-,preop,postop,-,-,-,-) ->
+           def optp = ExportExplicitOperation(modid,opdef)
+           in
+            (if preop <> nil
+             then
+               let prenm = if modid = nil then AUX`Pre(nm) else AUX`ExtName(modid,AUX`Pre(nm)),
+                   pretp = AUX`MakeOpPreType(modid,optp,State)
+               in fns := fns munion {prenm |-> pretp};
+             if postop <> nil
+             then
+               let postnm = if modid = nil then AUX`Post(nm) else AUX`ExtName(modid,AUX`Post(nm)),
+                   posttp = AUX`MakeOpPostType(modid,optp,State)
+               in fns := fns munion {postnm |-> posttp}),
+         mk_AS`ImplOpDef(nm,-,-,-,-,-,preop,-,-,-,-,-,-) ->
+           def optp = ExportImplicitOperation(modid,opdef)
+           in
+            (if preop <> nil
+             then
+               let prenm = if modid = nil then AUX`Pre(nm) else AUX`ExtName(modid,AUX`Pre(nm)),
+                   pretp = AUX`MakeOpPreType(modid,optp,State)
+               in fns := fns munion {prenm |-> pretp};
+             let postnm = if modid = nil then AUX`Post(nm) else AUX`ExtName(modid,AUX`Post(nm)),
+                 posttp = AUX`MakeOpPostType(modid,optp,State)
+             in fns := fns munion {postnm |-> posttp}),
+         mk_AS`ExtExplOpDef(nm,-,-,-,-,-,-,preop,postop,-,-,-,-,-) ->
+           def optp = ExportExtExplicitOperation(modid,opdef)
+           in
+            (if preop <> nil
+             then
+               let prenm = if modid = nil then AUX`Pre(nm) else AUX`ExtName(modid,AUX`Pre(nm)),
+                   pretp = AUX`MakeOpPreType(modid,optp,State)
+               in fns := fns munion {prenm |-> pretp};
+             if postop <> nil
+             then
+               let postnm = if modid = nil then AUX`Post(nm) else AUX`ExtName(modid,AUX`Post(nm)),
+                   posttp = AUX`MakeOpPostType(modid,optp,State)
+               in fns := fns munion {postnm |-> posttp})
+       end;
+     return fns);
+     
+  ExportSomeTypes: [AS`Name] * map AS`Name to [<STRUCT>] * map AS`Name to AS`TypeDef * [AS`StateDef] ==>
+                   map AS`Name to REP`TypeRep * map AS`Name to seq of REP`FieldRep
+  ExportSomeTypes(modid,tps,typem,State) ==
+   (dcl exptps : map AS`Name to REP`TypeRep := {|->};
+    dcl exptag : map AS`Name to seq of REP`FieldRep := {|->};
+    let stid = if State = nil
+               then nil
+               else (State.tp).name
+    in
+      for all nm in set dom tps do
+        if nm = stid
+        then
+          let mk_AS`StateDef(tp,Invar,-,-) = State
+          in
+            if tps(nm) = nil
+            then
+              --exptps := exptps ++ {if modid = nil then nm else AUX`ExtName(modid,nm) |-> mk_REP`TypeParRep(nm)}
+              exptps := exptps ++ { if modid = nil
+                                    then nm
+                                    else AUX`ExtName(modid,nm) |-> ENV`TransTypeDef(modid,nm,tp,Invar) }
+            elseif modid = nil
+            then
+             (exptps := exptps ++ {stid |-> ENV`TransTypeDef(modid,nm,tp,Invar)};
+              exptag := exptag ++ {stid |-> ENV`TransFields(modid,tp.fields)})
+            else
+             (exptps := exptps ++ {AUX`ExtName(modid,tp.name) |-> ENV`TransTypeDef(modid,nm,tp,Invar)};
+              exptag := exptag ++ {AUX`ExtName(modid,tp.name) |-> ENV`TransFields(modid,tp.fields)})
+        elseif tps(nm) = <STRUCT>
+        then
+          if modid = nil
+          then
+            if nm in set dom typem
+            then
+              let mk_AS`TypeDef(-,tp,Invar,-,-) = typem(nm)
+              in
+               (exptps := exptps ++ {nm |-> ENV`TransTypeDef(modid,nm,tp,Invar)};
+                exptag := exptag ++ ColTags(modid,tp))
+            else
+             (----------------------------------------
+              -- Error message #343
+              -- The type "%1" cannot be exported here
+              ----------------------------------------
+              ERR`GenErr(nm,<WARNING>,343,[ENV`PrintName(nm)]);
+              exptps := {nm |-> mk_REP`AllTypeRep()} ++ exptps)
+          elseif nm in set dom typem
+          then
+            let mk_AS`TypeDef(-,tp,Invar,-,-) = typem(nm)
+            in
+             (exptps := exptps ++ {AUX`ExtName(modid,nm) |-> ENV`TransTypeDef(modid,nm,tp,Invar)};
+              exptag := exptag ++ ColTags(modid,tp))
+          else
+           (----------------------------------------
+            -- Error message #343
+            -- The type "%1" cannot be exported here
+            ----------------------------------------
+            ERR`GenErr(nm,<WARNING>,343,[ENV`PrintName(nm)]);
+            exptps := {AUX`ExtName(modid,nm) |-> mk_REP`AllTypeRep()} ++ exptps)
+        --else if modid = nil
+        --     then exptps := exptps ++ {nm |-> mk_REP`TypeParRep(nm)}
+        --     else exptps := exptps ++ {AUX`ExtName(modid,nm) |-> mk_REP`TypeParRep(nm)};
+        else
+          let mk_AS`TypeDef(-,tp,-,-,-) = typem(nm)
+          in
+            --if modid = nil
+            --then exptps := exptps ++ {nm |-> ENV`TransType(modid,tp)}
+            --else exptps := exptps ++ {AUX`ExtName(modid,nm) |-> ENV`TransType(modid,tp)};
+            exptps := exptps ++ { if modid = nil
+                                  then nm
+                                  else AUX`ExtName(modid,nm) |-> ENV`TransType(modid,tp) };
+
+     return mk_(exptps,exptag));
+
+
+  ExportSimple : [AS`Name] * map AS`Name to AS`Type ==> map AS`Name to REP`TypeRep
+  ExportSimple(modid,simple) ==
+    if modid = nil
+    then return {nm |-> ENV`TransType(modid,simple(nm)) | nm in set dom simple}
+    else return {AUX`ExtName(modid,nm) |-> ENV`TransType(modid,simple(nm)) | nm in set dom simple};
+
+  FindRenamedTypes:  AS`Name * map AS`Name to [AS`ImportSig] ==> map AS`Name to AS`Name
+  FindRenamedTypes(modid, imp_m) ==
+   (dcl bind : map AS`Name to AS`Name := {|->};
+
+    for all modnm in set dom imp_m do
+      if imp_m(modnm) <> nil
+      then
+        let mk_AS`ImportSig(-,-,-,-,ren,-) = imp_m(modnm)
+        in
+          for all nm in set dom ren do
+            bind := bind ++ {AUX`ExtName(modid,nm) |-> AUX`ExtName(modnm,ren(nm))}; 
+    return bind;
+   );
+
+  UseRenamedTypes: ExpSigRep * map AS`Name to AS`Name ==> ExpSigRep
+  UseRenamedTypes(mk_ExpSigRep(tps,val,fns,polys,ops,tag,fnm),bind) ==
+    (dcl tps' : map AS`Name to REP`TypeRep;
+     dcl val' : map AS`Name to REP`TypeRep;
+     dcl fns' : map AS`Name to REP`FnTypeRep;
+     dcl polys': map AS`Name to REP`PolyTypeRep;
+     dcl ops' : map AS`Name to REP`OpTypeRep;
+
+     let bind' = {nm |-> mk_REP`TypeNameRep(bind(nm)) | nm in set dom bind}
+     in
+     
+    (tps' := {nm |-> AUX`InstFn(<REN>,tps(nm),bind') | nm in set dom tps};
+     val' := {nm |-> AUX`InstFn(<REN>,val(nm),bind') | nm in set dom val};
+     fns' := {nm |-> AUX`InstFn(<REN>,fns(nm),bind') | nm in set dom fns};
+     polys' := {nm |-> AUX`InstFn(<REN>,polys(nm),bind') | nm in set dom polys};
+     ops' := {nm |-> AUX`InstFn(<REN>,ops(nm),bind') | nm in set dom ops};
+
+     return mk_ExpSigRep(tps',val',fns',polys',ops',tag,fnm)));
+     
+#endif VDMSL
+
+  ColTags: [AS`Name] * AS`Type ==> map AS`Name to seq of REP`FieldRep
+  ColTags(modid,tp) ==
+   (dcl tagenv : map AS`Name to seq of REP`FieldRep := {|->};
+   
+    cases tp:
+      mk_AS`BooleanType(-),
+      mk_AS`NumericType(-,-),
+      mk_AS`TokenType(-),
+      mk_AS`CharType(-),
+      mk_AS`QuoteType(-,-),
+      mk_AS`TypeName(-,-),
+      mk_AS`TypeVar(-,-) -> return {|->},
+      mk_AS`CompositeType(tag, fields, -) ->
+         def nested = {ColTags(modid,f.type) | f in set elems fields}
+         in
+          (for all t in set nested do
+              tagenv := tagenv ++ t;
+           return tagenv ++ {if modid = nil
+                             then tag
+                             else AUX`ExtName(modid,tag) |-> ENV`TransFields(modid,fields)}),
+       mk_AS`UnionType(tp_l,-),
+       mk_AS`ProductType(tp_l,-) -> def nested = {ColTags(modid,tp) | tp in set elems tp_l}
+                                    in
+                                     (for all t in set nested do
+                                        tagenv := tagenv ++ t;
+                                      return tagenv),
+       mk_AS`BracketedType(type,-),
+       mk_AS`OptionalType(type,-),
+       mk_AS`Set0Type(type,-),
+       mk_AS`Set1Type(type,-),
+       mk_AS`Seq0Type(type,-),
+       mk_AS`Seq1Type(type,-) -> return ColTags(modid,type),
+       mk_AS`GeneralMap0Type(d,r,-),
+       mk_AS`GeneralMap1Type(d,r,-),
+       mk_AS`InjectiveMap0Type(d,r,-),
+       mk_AS`InjectiveMap1Type(d,r,-) -> def d_tag = ColTags(modid,d);
+                                             r_tag = ColTags(modid,r)
+                                         in return d_tag ++ r_tag,
+       mk_AS`PartialFnType(tp_l, tp,-), 
+       mk_AS`TotalFnType(tp_l, tp,-) -> def nested = {ColTags(modid,tp) | tp in set elems tp_l};
+                                            r_tag  = ColTags(modid,tp)
+                                        in
+                                         (for all t in set nested do
+                                            tagenv := tagenv ++ t;
+                                          return tagenv ++ r_tag),
+       others -> error
+    end)
+
+functions
+
+#ifdef VDMSL
+  ExportDLModule: AS`Name * AS`DLExportSig +> ExpSigRep
+  ExportDLModule(modid,mk_AS`DLExportSig(val,fns,ops,-)) ==
+    def vm = {AUX`ExtName(modid,nm) |-> ENV`TransType(modid,val(nm)) | nm in set dom val};
+        fm = {AUX`ExtName(modid,nm) |-> ENV`TransType(modid,fns(nm)) | nm in set dom fns};
+        om = {AUX`ExtName(modid,nm) |-> ENV`TransType(modid,ops(nm)) | nm in set dom ops}
+    in
+      mk_ExpSigRep({|->},vm,fm,{|->},om,{|->},{|->});
+#endif VDMSL
+
+  ExportExplicitFunction : [AS`Name] * AS`ExplFnDef -> REP`FnTypeRep
+  ExportExplicitFunction(modid,mk_AS`ExplFnDef(-,-,tp,-,-,-,-,-,-,-,-)) ==
+    ENV`TransType(modid,tp);
+
+  ExportImplicitFunction : [AS`Name] * AS`ImplFnDef -> REP`FnTypeRep
+  ExportImplicitFunction(modid,mk_AS`ImplFnDef(-,-,partps,resnmtps,-,-,-,-,-)) ==
+   def domtps = ENV`ConstructImplDomType(partps);
+       rngtp = ENV`ConstructImplRngType(resnmtps);
+   in
+     mk_REP`TotalFnTypeRep(ENV`TransTypeList(modid,domtps), ENV`TransType(modid,rngtp));
+
+  ExportExtExplicitFunction : [AS`Name] * AS`ExtExplFnDef -> REP`FnTypeRep
+  ExportExtExplicitFunction(modid,mk_AS`ExtExplFnDef(-,-,partps,resnmtps,-,-,-,-,-,-,-)) ==
+   def domtps = ENV`ConstructImplDomType(partps);
+       rngtp = ENV`ConstructImplRngType(resnmtps);
+   in
+     mk_REP`TotalFnTypeRep(ENV`TransTypeList(modid,domtps), ENV`TransType(modid,rngtp));
+
+  ExportExplicitOperation : [AS`Name] * AS`ExplOpDef -> REP`OpTypeRep
+  ExportExplicitOperation(modid,mk_AS`ExplOpDef(-,-,-,tp,-,-,-,-,-,-,-,-)) ==
+    ENV`TransType(modid,tp);
+
+  ExportImplicitOperation : [AS`Name] * AS`ImplOpDef -> REP`OpTypeRep
+  ExportImplicitOperation(modid,mk_AS`ImplOpDef(-,-,-,partps,resnmtps,-,-,-,-,-,-,-,-)) ==
+    def domtps = ENV`TransTypeList(modid,ENV`ConstructImplDomType(partps));
+        rngtp = ENV`TransType(modid,ENV`ConstructImplRngType(resnmtps))
+    in             
+      mk_REP`OpTypeRep(domtps, rngtp); 
+
+  ExportExtExplicitOperation : [AS`Name] * AS`ExtExplOpDef -> REP`OpTypeRep
+  ExportExtExplicitOperation(modid,mk_AS`ExtExplOpDef(-,-,-,partps,resnmtps,-,-,-,-,-,-,-,-,-)) ==
+    def domtps = ENV`TransTypeList(modid,ENV`ConstructImplDomType(partps));
+        rngtp = ENV`TransType(modid,ENV`ConstructImplRngType(resnmtps))
+    in             
+      mk_REP`OpTypeRep(domtps, rngtp);
+
+  FindTypeVars: AS`FnDef +> AS`TypeVarList
+  FindTypeVars(fndef) ==
+    cases fndef:
+      mk_AS`ExplFnDef(-,tpl,-,-,-,-,-,-,-,-,-)  -> tpl,
+      mk_AS`ImplFnDef(-,tpl,-,-,-,-,-,-,-)      -> tpl,
+      mk_AS`ExtExplFnDef(-,tpl,-,-,-,-,-,-,-,-,-) -> tpl
+    end;
+
+operations
+#ifdef VDMSL
+  GetFuncDefWOCtxt : AS`Name ==> [AS`FnDef]
+  GetFuncDefWOCtxt(nm) ==
+     def clnm = mk_AS`Name([nm.ids(1)],CI`NilContextId);
+         classInfo = GetModuleTypeRepWOCtxt(clnm)
+     in
+       if classInfo = nil
+       then return nil
+       else
+         let wctxt = { x | x in set dom classInfo.fcts & x = nm }
+         in if wctxt = {}
+           then return nil
+           else
+             let x in set wctxt
+             in return classInfo.fcts(x);
+
+  GetModuleTypeRepWOCtxt : AS`Name ==> [ExpSigRep]
+  GetModuleTypeRepWOCtxt(nm) ==
+--    let wctxt = { x | x in set dom ModuleEnv & x.ids = nm.ids }
+--    in
+--      if wctxt = {}
+--      then return nil
+--      else
+--        let x in set wctxt
+--       in return ModuleEnv(x);
+    return
+      cases dom ModuleEnv:
+        {(nm)} union - -> ModuleEnv(nm),
+        others         -> nil
+      end;
+#endif VDMSL
+
+#ifdef VDMPP
+    GetFuncDefWOCtxt : AS`Name ==> [AS`FnDef]
+    GetFuncDefWOCtxt(nm) ==
+      def clnm = mk_AS`Name([nm.ids(1)],CI`NilContextId);
+          classInfo = GetClassTypeRepWOCtxt(clnm)
+      in 
+        if classInfo = nil
+        then return nil
+        else
+          let wctxt = { x | x in set dom classInfo.fndefs & x.ids = [nm.ids(2)]}
+          in if wctxt = {}
+             then 
+             -- Do search in superclasses!
+               let supers = classInfo.super
+               in 
+                 if supers = {} 
+                 then return nil 
+                 else return SearchFuncInSuper(nm,supers) 
+             else 
+               let x in set wctxt
+               in return classInfo.fndefs(x);
+
+    SearchFuncInSuper : AS`Name * set of AS`Name ==> [AS`FnDef]
+    SearchFuncInSuper(nm,sn) ==
+      let names = { mk_AS`Name(x.ids^[nm.ids(2)],0) | x in set sn },
+          nameseq = UTIL`set2seq[AS`Name](names)
+      in 
+        (for i = 1 to len nameseq do 
+          def f = GetFuncDefWOCtxt(nameseq(i))
+          in 
+            if f <> nil then return f;
+         return nil);  
+
+    GetParseEnv : () ==> ParseTypeEnv 
+    GetParseEnv() == return ParseEnv;
+
+    GetClassTypeRepWOCtxt : AS`Name ==> [ENV`ParseTypeInfo]
+    GetClassTypeRepWOCtxt(nm) ==
+      let wctxt = { x | x in set dom ParseEnv & x.ids = nm.ids }
+      in 
+        if wctxt = {} 
+        then return nil
+        else 
+          let x in set wctxt 
+          in return ParseEnv(x);   
+
+    GetClassTypeRep : AS`Name ==> [ENV`ParseTypeInfo]
+    GetClassTypeRep(nm) ==
+      if nm in set dom ParseEnv
+      then return ParseEnv(nm)
+      else return nil;
+  
+  GetTypes: () ==> set of AS`Name
+  GetTypes() ==
+    return clstypes;
+  
+#ifdef VICE   
+    IsSysClass : AS`Name ==> bool
+    IsSysClass(nm) ==
+      return nm in set dom ParseEnv and ParseEnv(nm).sys;
+#endif VICE
+
+   UpdateParseEnv : AS`Name * ENV`ParseTypeInfo ==> ()
+    UpdateParseEnv(nm, parse) ==
+      ParseEnv := ParseEnv ++ {nm |-> parse};
+
+    UpdateValuesInParseEnv: AS`Name * map AS`Name to REP`TypeRep ==> ()
+    UpdateValuesInParseEnv(nm,vals) ==
+    ( let stval = ParseEnv(nm).vals,
+          newstval = {tnm |-> mk_ENV`AccessTypeRep (vals (tnm), stval(tnm).a, stval(tnm).stat)
+                       | tnm in set dom vals & tnm in set dom stval} in
+      ParseEnv(nm).vals := newstval)
+--      ParseEnv(nm).expanded := true )
+    pre nm in set dom ParseEnv;
+
+    IsClassName: AS`Name ==> bool
+    IsClassName(p_nm) ==
+      return p_nm in set classNames;
+
+    UpdateParseEnvWithAST: AS`Document ==> bool
+    UpdateParseEnvWithAST(class_l) ==
+    ( for cls in class_l do
+        classNames := classNames union {cls.nm};
+      for mk_AS`Class(nm, sys, super, defs, -, -) in class_l do
+      ( 
+#ifdef VICE
+        if nm.ids = ["CPU"]
+        then (ERR`GenErr(nm,<ERROR>,403,[]);
+              return false)
+        elseif nm.ids = ["BUS"]
+        then (ERR`GenErr(nm,<ERROR>,404,[]);
+              return false);
+#endif VICE
+        ENV`SetCurClass(nm);
+        if defs = nil then
+          let pti = mk_ENV`ParseTypeInfo(nm,sys,elems super,{|->},{|->},{|->},
+                                         {|->},{|->},{|->},{|->},{|->},
+                                         <NONE>, {},{|->}, {|->}, false
+                                         ) in
+            UpdateParseEnv(nm,pti)
+        else 
+          let mk_AS`Definitions(typem,valuem,fnm,opm,instvars,-,thread,-,-) = defs
+          in
+           (clstypes := dom typem;
+            def nfm = {nm |-> fnm(nm) | nm in set dom fnm & FindTypeVars(fnm(nm)) = []};
+                pfm = {nm |-> fnm(nm) | nm in set dom fnm & FindTypeVars(fnm(nm)) <> []};
+                mk_(tps,tags) = ExportTypes(nm,typem);
+                invs = ExportInvs(nm,typem);
+                vals = ExportValues(nm,valuem);
+                mk_(instm, instinv) = ExportInstVars(nm,instvars);
+                td = ExportThread(thread);
+                fcts =  ExportFunctions(nm,nfm);
+                implfns = ExportPrePostFns(nm,nfm);
+                polys = ExportPolyFns(nm,pfm);
+                ops =  ExportOperations(nm,opm);
+                overloads = ExportOverloads(nm, opm, fnm);
+                constructors = ExportConstructors(nm,opm);
+                fndefs = fnm; --TODO: ATTENTION PATCH!!!!
+                subresps = ExportSubresps(nm, nfm, pfm, opm);
+                allfns = invs munion fcts munion implfns;
+                pti = mk_ENV`ParseTypeInfo(nm,sys,elems super,tps,vals,instm,
+                                             allfns,polys,ops,tags,
+                                             overloads, td,
+                                             constructors, fndefs,
+                                             subresps, instinv)
+            in
+              (clstypes := {};
+               UpdateParseEnv(nm,pti)))
+      );
+     return true
+    );
+#endif VDMPP
+
+end VCM
+
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[MostGeneralNumericType]
+{rtinfo.ast}[VCM]
+\end{rtinfo}

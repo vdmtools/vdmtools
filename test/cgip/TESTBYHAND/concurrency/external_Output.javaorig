@@ -1,0 +1,58 @@
+
+import dk.ifad.toolbox.VDM.*;
+import dk.ifad.toolbox.VDM.CGException;
+import java.lang.*;
+import java.util.Enumeration;
+import dk.ifad.toolbox.VDMCONC.*;
+
+import java.io.*;
+
+
+public class external_Output {
+
+  Output parent = null;
+  String target = "CON:";
+
+  PrintStream log;
+
+  public external_Output (Output parentOutput) {
+       parent = parentOutput;
+    try {
+   // FileOutputStream f =  new FileOutputStream("CON:");
+    log = new PrintStream(System.out);
+    } catch (Exception e) {System.out.println(e.getMessage()); }
+  }
+
+ void impl_SetName (final String s) throws CGException{
+   try {
+     target = s;
+     FileOutputStream f = new FileOutputStream(target);
+     log = new PrintStream(f);
+   } catch (Exception e) {System.out.println(e.getMessage()); }
+ }
+
+
+  void impl_PrintNL () throws CGException{
+
+    log.println("");
+
+ }
+
+  void impl_Yield()  throws CGException{
+    Thread.yield();
+  }
+
+  void impl_PrintNat (final Integer n) throws CGException{
+
+    log.print(n);
+ }
+
+  void impl_PrintString (final String s) throws CGException{
+    log.print(s);
+    log.flush();
+ }
+
+  void impl_PrintStringNL (final String s) throws CGException{
+    log.println(s);
+ }
+};

@@ -1,0 +1,25 @@
+class A
+
+operations
+public 
+Test: () ==> seq of seq of char
+Test() ==
+  let ts = "2012-08-12 09:48:34.672720000"
+  in
+    let date ^ " " ^ time = "2012-08-12 09:48:34.672720000"
+    in
+      let year ^ "-" ^ month ^ "-" ^ day = date,
+          hour ^ ":" ^ minute ^ ":" ^ second ^ "." ^ nanosecond = time
+      in
+        return [ year, month, day, hour, minute, second, nanosecond ];
+
+-- very slow in spec test
+public
+Test1: () ==> seq of seq of char
+Test1() ==
+  let ts = "2012-08-12 09:48:34.672720000"
+  in
+   let year ^ "-" ^ month ^ "-" ^ day ^ " " ^ hour ^ ":" ^ minute ^ ":" ^ second ^ "." ^ nanosecond = ts
+   in return [ year, month, day, hour, minute, second, nanosecond ];
+
+end A

@@ -1,0 +1,71 @@
+class IfExprTest
+functions
+
+  f : () -> inmap rat to nat
+  f() ==
+    {2 |-> 5}
+  pre true
+--  post true
+
+types
+
+  A :: a: int
+       b: bool
+
+values
+
+  v1 : A = mk_A(1,true);
+  n : real = 88
+    
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let t = true,
+      nn = nil,
+      - = let m:A =
+        if n=1
+	then t
+        elseif n=24
+        then 8+67
+        elseif n=25
+        then 8-67
+        elseif n=26
+        then 8*67
+        elseif n=27
+        then 8/67
+        elseif n=28
+        then 67 div 8
+        elseif n=29
+        then 67 rem 8
+        elseif n=30
+        then 67 mod 8
+        elseif n=31
+        then 67 < 8
+        elseif n=32
+	then 67 <= 8
+	elseif n=33
+	then 67 > 8
+	elseif n=34
+	then 67 >= 8
+	elseif n=35
+	then 67 = 8
+	elseif n=36
+	then 67 <> 8
+	elseif n=37
+	then (67=8) and true
+	elseif n=38
+	then (67=8) or true
+	elseif n=39
+	then (67=8) => false
+	elseif n=40
+	then (67=8) <=> false
+	else nn
+        in m 
+  in skip;
+
+------------------------------------------------------------------------------
+end IfExprTest

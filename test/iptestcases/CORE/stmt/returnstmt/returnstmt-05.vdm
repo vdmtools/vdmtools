@@ -1,0 +1,13 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> [nat] | seq of nat
+Test () ==
+return [ 3, 6, [ 3, 6,2]](3)-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

@@ -1,0 +1,15 @@
+\begin{vdm_al}
+class Options is subclass of ToolColleague
+
+operations
+
+public Read : FileName ==> ()
+  Read (project) ==
+    is not yet specified;
+
+public Save: FileName ==> ()
+  Save (project) ==
+    is not yet specified
+
+end Options
+\end{vdm_al}

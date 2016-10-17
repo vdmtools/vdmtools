@@ -1,0 +1,28 @@
+class A
+
+types
+public
+Graph = map nat to seq of nat 
+inv g == forall i in set dom g & elems g(i) subset dom g;
+
+functions
+
+public 
+revers : seq of nat -> seq of nat
+revers(l) ==
+  cases l:
+  [] -> [],
+  [h]^t -> revers(t)^[h]
+  end;
+
+public
+depthf : seq of nat * Graph * seq of nat -> seq of nat 
+depthf(l,g,vis) ==
+  cases l:
+  [] -> revers(vis),
+  [h]^t -> if h in set elems vis 
+           then depthf(t,g,vis)
+           else depthf(g(h)^t,g,[h]^vis)
+  end;
+
+end A

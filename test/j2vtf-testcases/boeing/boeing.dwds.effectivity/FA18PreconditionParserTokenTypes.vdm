@@ -1,0 +1,26 @@
+class FA18PreconditionParserTokenTypes
+instance variables 
+  public  static EOF : int  := 1;
+  public  static NULL_TREE_LOOKAHEAD : int  := 3;
+  public  static AND_OP : int  := 4;
+  public  static OR_OP : int  := 5;
+  public  static LPAREN : int  := 6;
+  public  static RPAREN : int  := 7;
+  public  static EQUIP_ID_TAG : int  := 8;
+  public  static LE_OP : int  := 9;
+  public  static GE_OP : int  := 10;
+  public  static IS_OP : int  := 11;
+  public  static INT_LITERAL : int  := 12;
+  public  static MODEL_TAG : int  := 13;
+  public  static STRING_LITERAL : int  := 14;
+  public  static ALR67_SYS_CONFIG_TAG : int  := 15;
+  public  static MIDS_TACAN_TAG : int  := 16;
+  public  static DCS_INSTALLED_TAG : int  := 17;
+  public  static TRUE_CONST : int  := 18;
+  public  static FALSE_CONST : int  := 19;
+  public  static COMMENT_DATA : int  := 20;
+  public  static COMMENT : int  := 21;
+  public  static WS : int  := 22;
+  public  static DIGIT : int  := 23
+  
+end  FA18PreconditionParserTokenTypes

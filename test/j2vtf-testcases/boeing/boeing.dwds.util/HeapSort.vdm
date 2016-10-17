@@ -1,0 +1,248 @@
+class HeapSort is subclass of Object
+operations 
+private  reorder : () ==> <VOID>
+reorder() == 
+( ( dcl   i : int  := (card  dom  boxes)-1;
+    while  i >= 0 do  
+    ( sortArray := sortArray ++ {i |-> boxes(0)};
+      let - = replaceVacancy(0)
+      in 
+        skip ;
+      i := i-1
+    ) 
+  ) ;
+  return  <VOID>
+) ;
+
+private  HeapSort : () ==> HeapSort
+HeapSort() == 
+( let - = Object()
+  in 
+    skip 
+) ;
+
+private  isSorted : () ==> bool 
+isSorted() == 
+( ( dcl   i : int  := 1;
+    while  i < (card  dom  sortArray) do  
+    ( ( dcl   l_1 : bool ;
+        def l_16 = sortAscending;
+        l_17 = (comparison.compare(sortArray(i) , sortArray(i-1)) >= 0);
+        l_1 = not  l_16 and  l_17 or  l_16 and  not  l_17
+        in l_1 := l_1;
+        if  l_1
+        then  
+          ( return  false  
+          ) 
+      ) ;
+      i := i+1
+    ) 
+  ) ;
+  return  true  
+) ;
+
+private  assignBoxes : () ==> <VOID>
+assignBoxes() == 
+( ( dcl   i : int  := (card  dom  sortArray)-1;
+    while  i >= 0 do  
+    ( def l_2 = lastIdx;
+      l_3 = l_2+1
+      in ( lastIdx := l_3;
+        def l_1 = lastIdx
+        in ( dcl   subIdx : int  := l_1;
+          boxes := boxes ++ {subIdx |-> sortArray(i)};
+          let - = assertPosition(subIdx)
+          in 
+            skip 
+        ) 
+      ) ;
+      i := i-1
+    ) 
+  ) ;
+  return  <VOID>
+) ;
+
+private  moveToVacancy : int  ==> <VOID>
+moveToVacancy(vacantIdx) == 
+( if  vacantIdx < lastIdx
+  then  
+    ( boxes := boxes ++ {vacantIdx |-> boxes(lastIdx)};
+      let - = assertPosition(vacantIdx)
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+private  assertPosition : int  ==> <VOID>
+assertPosition(childIdx) == 
+( dcl   child : [Object] := boxes(childIdx),
+        biggerParents : bool  := true  ;
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  childIdx > 0 and  biggerParents do  
+    ( dcl   parentIdx : int  := (childIdx-1)/2,
+            parent : [Object] := boxes(parentIdx);
+      ( dcl   l_10 : bool ;
+        def l_10 = sortAscending;
+        l_11 = (comparison.compare(parent , child) >= 0);
+        l_1 = not  l_10 and  l_11 or  l_10 and  not  l_11
+        in l_10 := l_1;
+        if  l_10
+        then  
+          ( boxes := boxes ++ {childIdx |-> parent};
+            childIdx := parentIdx
+          ) 
+        else  
+          ( biggerParents := false  
+          ) 
+      ) 
+    ) ;
+  boxes := boxes ++ {childIdx |-> child};
+  return  <VOID>
+) ;
+
+private  replaceVacancy : int  ==> <VOID>
+replaceVacancy(vacantIdx) == 
+( dcl   moreSubBoxes : bool  := true  ,
+        bothSubchildrenRemaining : bool  := true  ;
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  vacantIdx < lastIdx and  moreSubBoxes and  bothSubchildrenRemaining do  
+    ( dcl   child1Idx : int  := vacantIdx*2+1;
+      if  child1Idx > lastIdx
+      then  
+        ( let - = moveToVacancy(vacantIdx)
+          in 
+            skip ;
+          moreSubBoxes := false  
+        ) ;
+      ( dcl   child1 : [Object] := boxes(child1Idx),
+              child2Idx : int  := child1Idx+1;
+        if  child2Idx > lastIdx
+        then  
+          ( boxes := boxes ++ {vacantIdx |-> child1};
+            vacantIdx := child1Idx;
+            let - = moveToVacancy(vacantIdx)
+            in 
+              skip ;
+            bothSubchildrenRemaining := false  
+          ) ;
+        ( dcl   child2 : [Object] := boxes(child2Idx);
+          ( dcl   l_17 : bool ;
+            def l_10 = sortAscending;
+            l_11 = (comparison.compare(child1 , child2) >= 0);
+            l_1 = not  l_10 and  l_11 or  l_10 and  not  l_11
+            in l_17 := l_1;
+            if  l_17
+            then  
+              ( boxes := boxes ++ {vacantIdx |-> child2};
+                vacantIdx := child2Idx
+              ) 
+            else  
+              ( boxes := boxes ++ {vacantIdx |-> child1};
+                vacantIdx := child1Idx
+              ) 
+          ) 
+        ) 
+      ) 
+    ) ;
+  lastIdx := lastIdx-1;
+  return  <VOID>
+) ;
+
+public  static decodeSortMethod : [String] ==> [Compare]
+decodeSortMethod(sortMethodName) == 
+( dcl   sortMethod : [Compare] := nil  ;
+  if  sortMethodName.equalsIgnoreCase(new  String("Alphabetic"))
+  then  
+    ( sortMethod := new  StringCompare()
+    ) 
+  else  
+    if  sortMethodName.equalsIgnoreCase(new  String("NumericWithAlpha"))
+    then  
+      ( sortMethod := new  NumericAlphaCompare()
+      ) ;
+  return  sortMethod
+) ;
+
+public  static sort : [Vector] * [Compare] ==> <VOID>
+sort(sortVector, comparison) == 
+( let - = sort(sortVector , comparison , true  )
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  static sort : [Vector] * [Compare] * bool  ==> <VOID>
+sort(sortVector, comparison, sortAscending) == 
+( if  comparison <> nil  
+  then  
+    ( dcl   copyArray : map  int  to  [Object] := {l_4 |-> nil  |l_4 in set  {0,...,sortVector.size()-1}};
+      let - = sortVector.copyInto(copyArray)
+      in 
+        skip ;
+      let - = sort(copyArray , comparison , sortAscending)
+      in 
+        skip ;
+      ( dcl   i : int  := 0;
+        while  i < (card  dom  copyArray) do  
+        ( let - = sortVector.setElementAt(copyArray(i) , i)
+          in 
+            skip ;
+          i := i+1
+        ) 
+      ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  static sort : map  int  to  [Object] * [Compare] ==> <VOID>
+sort(sortArray, comparison) == 
+( let - = sort(sortArray , comparison , true  )
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  static sort : map  int  to  [Object] * [Compare] * bool  ==> <VOID>
+sort(sortArray, comparison, sortAscending) == 
+( if  comparison <> nil  
+  then  
+    ( dcl   sort : [HeapSort] := new  HeapSort();
+      sort.sortAscending := sortAscending;
+      sort.sortArray := sortArray;
+      sort.comparison := comparison;
+      if  not  sort.isSorted()
+      then  
+        ( sort.boxes := {l_3 |-> nil  |l_3 in set  {0,...,(card  dom  sortArray)-1}};
+          sort.lastIdx := -1;
+          let - = sort.assignBoxes()
+          in 
+            skip ;
+          let - = sort.reorder()
+          in 
+            skip 
+        ) 
+    ) ;
+  return  <VOID>
+) ;
+
+instance variables 
+  private  sortAscending : bool ;
+  private  comparison : [Compare];
+  private  boxes : map  int  to  [Object];
+  private  lastIdx : int  := -1;
+  private  sortArray : map  int  to  [Object]
+  
+end  HeapSort

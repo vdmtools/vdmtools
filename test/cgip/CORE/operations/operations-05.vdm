@@ -1,0 +1,14 @@
+class A
+
+operations
+
+public Test : () ==> nat
+Test () ==
+    return 
+     XF(1,5,2,2);
+
+  XF: nat*nat*nat*nat ==> nat
+  XF(a,a,b,b) ==
+    return a+b
+
+end A

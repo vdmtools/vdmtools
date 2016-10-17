@@ -1,0 +1,68 @@
+class A    
+functions
+public
+f2[@p]: @p * int -> map int to @p
+f2(a,b) == {b |-> a}
+types
+public
+aa::f1:map nat to bool
+    q:int
+end A
+
+class B
+functions
+public
+g[@p]: @p * int -> map int to @p
+g(a,b) == {b |-> a};
+public
+f0[@p]:@p -> bool
+f0(-) == true;
+public
+f1[@p]:@p*int -> map int to @p
+f1(a,b) == {b|->a}
+types
+public
+rr::f1:map nat to bool
+    q:int
+end B 
+
+class C is subclass of A
+functions
+public
+f1[@p]:@p -> bool
+f1(-) == true;
+public
+f0:int -> bool
+f0(a) == a>8
+end C
+class FctTypeInstExprTest is subclass of A
+types
+public
+rr::f1:map nat to bool
+    q:int
+functions
+
+f0:int -> bool
+f0(a) == a > 10;
+
+f1[@p]: @p * int -> map int to @p
+f1(a,b) == {b |-> a};
+
+f2[@p,@q]: @p * @q -> map @q to @p
+f2(a,b) == {b |-> a};
+
+f3[@p]: @p -> @p
+f3 (a) == a
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = f1[aaa](3,2)
+  in skip;
+
+------------------------------------------------------------------------------
+end FctTypeInstExprTest

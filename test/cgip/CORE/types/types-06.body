@@ -1,0 +1,16 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> Colour  
+Test () ==
+( dcl a : My_Rec2 := mk_MyRec(<RED>,3);
+  return a.b
+);
+  
+types 
+  MyRec::
+     a : Colour
+     b : nat;
+
+
+public  Colour = <RED> | <BLUE> | <GREEN> | <BLACK> | <WHITE>
+
+end A

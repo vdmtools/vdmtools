@@ -1,0 +1,30 @@
+-- This test will test the construct (new A()).A`b() both as an expression 
+-- and as a statement.
+
+class A
+
+  functions
+
+public
+  bfun: () -> nat
+  bfun() == 7;
+
+  operations
+
+public
+  bop:() ==> ()
+  bop() == skip;
+
+end A
+
+class X
+
+  operations
+
+  Test1: () ==> nat
+  Test1() ==
+  ( new A().A`bop();
+    return new A().A`bfun());
+
+end X  
+

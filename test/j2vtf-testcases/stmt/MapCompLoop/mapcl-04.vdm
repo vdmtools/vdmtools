@@ -1,0 +1,33 @@
+class A
+
+types
+R :: m :map nat to [nat];
+
+functions
+f: nat -> nat
+f(x) == x + 1;
+
+
+operations
+
+public Test : () ==> nat
+Test () ==
+( 
+	dcl i : seq of int := 0;
+	dcl j : nat := 1;
+	dcl b : B = new B();
+	
+	while i < 12 do
+	( b.g[bool] := b.g[bool]   ++ {i |-> f(i)};
+	i := i + 2 );
+	return j;
+)   
+end A
+
+class B
+functions
+
+g[@A] : () -> (map nat to [nat])
+g() == {l |-> nil | l in set {0,...,12}};
+
+end B

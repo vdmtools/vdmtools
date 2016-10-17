@@ -1,0 +1,95 @@
+class BundleSegment is subclass of Object
+operations 
+public  hashCode : () ==> int 
+hashCode() == 
+( return  getBundleNumber().hashCode()+getNode1Id().hashCode()+getNode1Type().hashCode()+getNode2Id().hashCode()+getNode2Type().hashCode()
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( dcl   outStr : [StringBuffer] := new  StringBuffer(new  String("BundleSegment<Bundle:"));
+  let - = outStr.append(getBundleNumber())
+  in 
+    skip ;
+  let - = outStr.append(new  String(",Id1:"))
+  in 
+    skip ;
+  let - = outStr.append(getNode1Id())
+  in 
+    skip ;
+  let - = outStr.append(new  String(",Type1:"))
+  in 
+    skip ;
+  let - = outStr.append(getNode1Type())
+  in 
+    skip ;
+  let - = outStr.append(new  String(",Id2:"))
+  in 
+    skip ;
+  let - = outStr.append(getNode2Id())
+  in 
+    skip ;
+  let - = outStr.append(new  String(",Type2:"))
+  in 
+    skip ;
+  let - = outStr.append(getNode2Type())
+  in 
+    skip ;
+  let - = outStr.append(new  String(">"))
+  in 
+    skip ;
+  return  outStr.toString()
+) ;
+
+public  getNode1Id : () ==> [String]
+getNode1Id() == 
+( return  node1Id
+) ;
+
+public  getNode2Id : () ==> [String]
+getNode2Id() == 
+( return  node2Id
+) ;
+
+public  getNode1Type : () ==> [String]
+getNode1Type() == 
+( return  node1Type
+) ;
+
+public  getNode2Type : () ==> [String]
+getNode2Type() == 
+( return  node2Type
+) ;
+
+public  getBundleNumber : () ==> [String]
+getBundleNumber() == 
+( return  bundleNumber
+) ;
+
+public  equals : [Object] ==> bool 
+equals(obj) == 
+( return  (is_ (obj,[BundleSegment]) and  BundleSegment`getBundleNumber().equals((def l_13 :  BundleSegment = (obj)
+  in l_13).getBundleNumber()) and  BundleSegment`getNode1Id().equals((def l_23 :  BundleSegment = (obj)
+  in l_23).getNode1Id()) and  BundleSegment`getNode1Type().equals((def l_33 :  BundleSegment = (obj)
+  in l_33).getNode1Type()) and  BundleSegment`getNode2Id().equals((def l_43 :  BundleSegment = (obj)
+  in l_43).getNode2Id()) and  BundleSegment`getNode2Type().equals((def l_53 :  BundleSegment = (obj)
+  in l_53).getNode2Type()))
+) ;
+
+public  BundleSegment : [String] * [String] * [String] * [String] * [String] ==> BundleSegment
+BundleSegment(bundleNumber, node1Id, node1Type, node2Id, node2Type) == 
+( BundleSegment`bundleNumber := bundleNumber;
+  BundleSegment`node1Id := node1Id;
+  BundleSegment`node1Type := node1Type;
+  BundleSegment`node2Id := node2Id;
+  BundleSegment`node2Type := node2Type
+) ;
+
+instance variables 
+  private  bundleNumber : [String];
+  private  node1Id : [String];
+  private  node1Type : [String];
+  private  node2Id : [String];
+  private  node2Type : [String]
+  
+end  BundleSegment

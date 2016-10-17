@@ -1,0 +1,160 @@
+#! /bin/bash
+
+CGHOME=/home/cg
+
+if [ -n "$DEBUG_ON" ] ; then
+  set $DEBUG_ON
+fi
+
+if [ -n "$BASEDIR" ] ; then
+  :
+else
+  BASEDIR=$CGHOME/cgtestenv
+fi
+
+export BASEDIR
+td=$BASEDIR/testdir
+
+if [ -n "$CGTESTDIR" ] ; then
+  :
+else
+  CGTESTDIR=$CGHOME/test
+fi
+
+########################
+# USAGE OF THE COMMAND #
+########################
+usage()
+{
+  echo "Usage: cg_allsl [-Cg | -Dy] [-s dir] [-i | -sp] [-dl]" >&2
+  echo >&2
+  echo "       Runs all VDM-SL test suites " >&2
+  echo >&2
+  echo "       -Cg       Code generator test (default)." >&2
+  echo "       -Dy       Dynamic Semantics test." >&2
+  echo >&2
+  echo "       -sp       Specification test (default)." >&2
+  echo "       -i        Implementation test." >&2
+  echo "       -s dir    Use specification located in dir." >&2
+  echo "                 Default dir: $SPEC" >&2
+  echo "       -dl       Only run dynamic link tests" >&2
+  echo "Results are written to file all.trace.sl.cg.<spec|impl>.<date>">&2
+
+  echo "       Example: `basename $0` -Dy -i" >&2
+  echo >&2
+  echo "To turn on debug information, set the enviorment variable DEBUG_ON to -x" >&2
+  echo "To change root directory of the testenvironment executables," >&2
+  echo "   set BASEDIR to the directory (Current value: $BASEDIR)" >&2
+  echo "To change root directory of the testcases," >&2
+  echo "   set CGTESTDIR to the directory (Current value: $CGTESTDIR)" >&2
+
+  exit
+}
+
+
+dl_only()
+{
+  if [ "$I" = "-i" ] ; then
+    $td $OPTIONS $CGTESTDIR/IMPLMOD
+  else
+    $td $OPTIONS $CGTESTDIR/IMPLMOD/common
+  fi
+  if [ "$TESTTYPE" = "-Dy" ] ; then
+    if [ "$I" = "-i" ] ; then
+      $td $OPTIONS $DTC $CGTESTDIR/IMPLMOD
+    else
+      $td $OPTIONS $DTC $CGTESTDIR/IMPLMOD/common
+    fi
+  fi
+  exit
+}
+    
+run_testdir () {
+  $td "$@"
+  cat trace >> $OUT  
+}
+
+###########################################
+# Test on the options of the command line #
+###########################################
+I="-sp -s"
+OPTIONS=false
+
+TESTTYPE=-Cg
+IMPSPEC=-i
+RTINFO=
+FILESUFFIX=".spec"
+TYPE="Specification"
+CGORDYN="Codegenerator"
+FILEEXT=".sl.cg"
+DLONLY=''
+
+while test $# -gt 0 ; do
+  case $1 in
+    -Cg)     shift;;
+    -Dy)     TESTTYPE=$1
+	     FILEEXT=".sl.dyn"
+	     CGORDYN="Dynamic Semantics"
+             shift;;
+    -s)      SPEC=$2
+             DTC="-dtc_on -inv_on -pre_on -post_on"
+             shift; shift;;
+    -sp)     I=-sp -s
+             RTINFO=-r
+             shift;;
+    -i)      I=-i
+             RTINFO=""
+             FILESUFFIX=".impl"
+	     TYPE="Implementation"
+             DTC="-D -I -P -Q"
+             shift;;
+    -dl)     DLONLY="TRUE"
+             shift;;
+    *)       usage
+             exit;;
+  esac
+done
+
+rm -f *.trace
+
+OPTIONS="$I $SPEC $TESTTYPE $RTINFO"
+OUTPUTFILENAME=all.trace
+TODAY=`date +%y%m%d`
+OUT=$OUTPUTFILENAME$FILEEXT$FILESUFFIX.$IFADOSTYPE.$TODAY
+
+echo "This is $0 processing in `pwd`" > $OUT
+echo "Testsuite for SL $CGORDYN $TYPE" >> $OUT
+echo "Start: `date`" >> $OUT
+
+if [ "$DLONLY" ] ; then
+  dl_only
+  exit
+fi
+
+# Tests common to CG and DYNSEM
+run_testdir $OPTIONS $CGTESTDIR/SL 
+run_testdir $OPTIONS $CGTESTDIR/CORE
+
+if [ "$I" = "-i" ] ; then
+  run_testdir $OPTIONS $CGTESTDIR/IMPL/SL
+  if [ "$IFADOSTYPE" != "win32" ] ; then
+    run_testdir $OPTIONS $CGTESTDIR/IMPLMOD
+  fi
+else
+  run_testdir $OPTIONS $CGTESTDIR/IMPLMOD/common
+fi
+
+# Tests for DYNSEM
+if [ "$TESTTYPE" = "-Dy" ]  ; then
+  run_testdir $OPTIONS $DTC $CGTESTDIR/SL 
+  run_testdir $OPTIONS $DTC $CGTESTDIR/CORE
+  
+  if [ "$I" = "-i" ] ; then
+    run_testdir $OPTIONS $DTC $CGTESTDIR/IMPL/SL
+    if [ "$IFADOSTYPE" != "win32" ] ; then
+      run_testdir $OPTIONS $DTC $CGTESTDIR/IMPLMOD
+    fi
+  else
+    run_testdir $OPTIONS $DTC $CGTESTDIR/IMPLMOD/common
+  fi
+fi  

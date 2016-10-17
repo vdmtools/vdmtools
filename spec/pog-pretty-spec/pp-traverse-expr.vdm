@@ -1,0 +1,645 @@
+\section{Traversal of expressions}
+
+\begin{vdm_al}
+module PP_TRA_EXPR
+
+imports
+  from PP_TAR_DEF all,
+  from PP_TAR_TYPE all,
+  from PP_TAR_EXPR all,
+  from PP_TAR_PAT all,
+
+  from PP_TRA_DEF all,
+  from PP_TRA_TYPE all,
+  from PP_TRA_PAT all,
+
+--  from HOL all,
+  from AS all,
+  from CI all,
+  from REP all
+
+exports
+  functions
+    trv_Expr: AS`Expr -> PP_TAR_EXPR`Expr;
+    trv_NameExpr : AS`Name -> PP_TAR_EXPR`NameExpr;
+    trv_NameName : AS`Name -> PP_TAR_EXPR`NameName;
+    trv_NameType : AS`Name -> PP_TAR_EXPR`NameType;
+    trv_Ids: AS`Ids -> PP_TAR_EXPR`Ids;
+
+definitions
+
+\end{vdm_al}
+
+\section{Expressions}
+
+\begin{vdm_al}
+functions
+
+  trv_Expr: AS`Expr -> PP_TAR_EXPR`Expr
+  trv_Expr (expr) ==
+    cases expr :
+    mk_AS`DefExpr(-,-,-)       -> trv_DefExpr(expr),
+    mk_AS`LetExpr(-,-,-)       -> trv_LetExpr(expr),
+    mk_AS`LetBeSTExpr(-,-,-,-) -> trv_LetBeSTExpr(expr),
+    mk_AS`IfExpr(-,-,-,-,-)    -> trv_IfExpr(expr),
+    mk_AS`CasesExpr(-,-,-,-)   -> trv_CasesExpr(expr),
+    mk_AS`PrefixExpr (-,-,-)   -> trv_PrefixExpr(expr),
+    mk_AS`BinaryExpr(-,-,-,-)  -> trv_BinaryExpr(expr),
+    mk_AS`AllOrExistsExpr(-,-,-,-) -> trv_AllOrExistsExpr(expr),
+    mk_AS`ExistsUniqueExpr(-,-,-) -> trv_ExistsUniqueExpr(expr),
+    mk_AS`SetEnumerationExpr(-,-) ->
+       trv_SetEnumerationExpr(expr),
+    mk_AS`SetComprehensionExpr(-,-,-,-) ->
+       trv_SetComprehensionExpr(expr),
+    mk_AS`SetRangeExpr(-,-,-) ->
+       trv_SetRangeExpr(expr),
+    mk_AS`SeqEnumerationExpr(-,-) ->
+       trv_SeqEnumerationExpr(expr),
+    mk_AS`SeqComprehensionExpr(-,-,-,-) ->
+       trv_SeqComprehensionExpr(expr),
+    mk_AS`SubSequenceExpr(-,-,-,-) ->
+       trv_SubSequenceExpr(expr),
+    mk_AS`SeqModifyMapOverrideExpr(-,-,-) ->
+       trv_SeqModifyMapOverrideExpr(expr),
+    mk_AS`MapEnumerationExpr(-,-) ->
+       trv_MapEnumerationExpr(expr),
+    mk_AS`MapComprehensionExpr(-,-,-,-) ->
+       trv_MapComprehensionExpr(expr),
+    mk_AS`TupleConstructorExpr(-,-) ->
+       trv_TupleConstructorExpr(expr),
+    mk_AS`TokenConstructorExpr(-,-) ->  
+       trv_TokenConstructorExpr(expr),
+    mk_AS`RecordConstructorExpr (-,-,-) -> 
+       trv_RecordConstructorExpr(expr),
+    mk_AS`RecordModifierExpr (-,-,-) -> 
+       trv_RecordModifierExpr (expr),
+    mk_AS`ApplyExpr (-,-,-)         -> trv_ApplyExpr(expr),
+    mk_AS`PreConditionApplyExpr (-,-,-) -> trv_PreConditionApplyExpr(expr),
+    mk_AS`FieldSelectExpr(-,-,-)    -> trv_FieldSelectExpr(expr),
+    mk_AS`TupleSelectExpr(-,-,-)    -> trv_TupleSelectExpr(expr),
+    mk_AS`LambdaExpr(-,-,-,-)       -> trv_LambdaExpr(expr),
+    mk_AS`IsExpr (-,-,-)            -> trv_IsExpr (expr),
+    mk_AS`TypeJudgementExpr (-,-,-) -> trv_TypeJudgementExpr(expr),
+    mk_AS`NarrowExpr (-,-,-)        -> trv_NarrowExpr(expr),
+    mk_AS`BoolLit(-,-),
+    mk_AS`RealLit(-,-),
+    mk_AS`NumLit(-,-),
+    mk_AS`CharLit(-,-),
+    mk_AS`TextLit(-,-),
+    mk_AS`QuoteLit(-,-),
+    mk_AS`NilLit(-)              -> trv_Literal(expr),
+    mk_AS`Name(-,-)              -> trv_NameExpr(expr),
+    mk_AS`OldName(-,-)           -> trv_OldName(expr),
+    mk_AS`UndefinedExpr(-)       -> trv_UndefinedExpr(expr),
+    mk_AS`IotaExpr(-,-,-)        -> trv_IotaExpr(expr),
+    mk_AS`FctTypeInstExpr(-,-,-) -> trv_FctTypeInstExpr(expr),
+    mk_AS`BracketedExpr(-,-)     -> trv_BracketedExpr(expr),
+#ifdef VDMPP
+    mk_AS`NewExpr(-,-,-)             -> trv_NewExpr(expr),
+    mk_AS`IsOfClassExpr(-,-,-)       -> trv_IsOfClassExpr(expr),
+    mk_AS`IsOfBaseClassExpr(-,-,-)   -> trv_IsOfBaseClassExpr(expr),
+    mk_AS`SelfExpr(-)                -> trv_SelfExpr(expr),
+    mk_AS`SameClassExpr(-,-,-)       -> trv_SameClassExpr(expr),
+    mk_AS`SameBaseClassExpr(-,-,-)   -> trv_SameBaseClassExpr(expr),
+    mk_AS`ActExpr(-,-)     -> trv_ActExpr(expr),
+    mk_AS`FinExpr(-,-)     -> trv_FinExpr(expr),
+    mk_AS`ActiveExpr(-,-)  -> trv_ActiveExpr(expr),
+    mk_AS`WaitingExpr(-,-) -> trv_WaitingExpr(expr),
+    mk_AS`ReqExpr(-,-)     -> trv_ReqExpr(expr),
+    mk_AS`ThreadIdExpr(-)  -> "threadid",
+--    mk_AS`GuardExpr(-,-)   -> trv_GuardExpr(expr),
+#endif
+#ifdef VICE
+    mk_AS`CurTimeExpr(-) ->      "time",
+#endif VICE
+    others -> undefined
+    end;
+\end{vdm_al}
+
+\begin{vdm_al}
+  trv_DefExpr : AS`DefExpr -> PP_TAR_EXPR`DefExpr
+  trv_DefExpr (mk_AS`DefExpr(defs,in_e,cid)) ==
+    let trv_defs = [let mk_(pat,exp) = defs(i),
+                        trv_pat = PP_TRA_PAT`trv_PatternBind(pat),
+                        trv_exp = trv_Expr(exp)
+                    in 
+                         mk_(trv_pat,trv_exp)
+                    | i in set inds defs]
+    in 
+        PP_TAR_EXPR`tar_DefExpr(trv_defs,trv_Expr(in_e),cid);
+
+  trv_LetExpr : AS`LetExpr -> PP_TAR_EXPR`LetExpr
+  trv_LetExpr (mk_AS`LetExpr(defs, expr, cid)) ==
+    let trv_defs = [PP_TRA_DEF`trv_LocalDef(defs(i)) 
+                    | i in set inds defs],
+        trv_expr = trv_Expr(expr)        
+    in 
+        PP_TAR_EXPR`tar_LetExpr(trv_defs,trv_expr,cid);
+
+  trv_LetBeSTExpr : AS`LetBeSTExpr -> PP_TAR_EXPR`LetBeSTExpr
+  trv_LetBeSTExpr (mk_AS`LetBeSTExpr(bind,st_e,in_e,cid)) ==
+--    let trv_bind = PP_TRA_PAT`trv_Bind(bind),
+    let trv_bind = PP_TRA_PAT`trv_BindList(bind),
+        trv_st_e = if st_e = nil then nil else trv_Expr(st_e),        
+        trv_in_e = trv_Expr(in_e)        
+    in 
+        PP_TAR_EXPR`tar_LetBeSTExpr(trv_bind,trv_st_e,trv_in_e,cid);
+
+\end{vdm_al}
+
+\subsection{Conditional Expressions}
+
+\begin{vdm_al}
+  trv_IfExpr : AS`IfExpr -> PP_TAR_EXPR`IfExpr
+  trv_IfExpr (mk_AS`IfExpr(test,cons,elsif,altn,cid)) ==
+    PP_TAR_EXPR`tar_IfExpr(trv_Expr(test),
+                    trv_Expr(cons),
+                    [trv_ElseIfExpr(elsif(i)) | i in set inds elsif],
+	            trv_Expr(altn),
+                    cid);
+
+  trv_ElseIfExpr : AS`ElseifExpr -> PP_TAR_EXPR`ElseifExpr
+  trv_ElseIfExpr (mk_AS`ElseifExpr(test,cons,cid)) ==
+    PP_TAR_EXPR`tar_ElseIfExpr(trv_Expr(test),trv_Expr(cons),cid);
+
+  trv_CasesExpr : AS`CasesExpr -> PP_TAR_EXPR`CasesExpr
+  trv_CasesExpr (mk_AS`CasesExpr(sel, altns, oth, cid)) ==
+    PP_TAR_EXPR`tar_CasesExpr(trv_Expr(sel), 
+                       [trv_CaseAltn(altns(i)) | i in set inds altns], 
+		       if oth = nil then nil else trv_Expr(oth),
+                       cid);
+
+  trv_CaseAltn : AS`CaseAltn -> PP_TAR_EXPR`CaseAltn
+  trv_CaseAltn (mk_AS`CaseAltn(pats,expr,cid)) ==
+    PP_TAR_EXPR`tar_CaseAltn(
+      [PP_TRA_PAT`trv_Pattern(pats(i)) | i in set inds pats],
+      trv_Expr(expr),
+      cid);
+
+\end{vdm_al}
+
+\subsection{Unary Expressions}
+
+\begin{vdm_al}
+  trv_PrefixExpr : AS`PrefixExpr -> PP_TAR_EXPR`PrefixExpr 
+  trv_PrefixExpr (mk_AS`PrefixExpr (op,unexpr,cid)) ==
+    PP_TAR_EXPR`tar_PrefixExpr(
+      mk_AS`PrefixExpr (op,unexpr,cid),
+      op,
+      trv_Expr(unexpr),
+      cid);
+
+\end{vdm_al}
+
+\subsection{Binary Expressions}
+
+\begin{vdm_al}
+
+  trv_BinaryExpr: AS`BinaryExpr -> PP_TAR_EXPR`BinaryExpr
+  trv_BinaryExpr(mk_AS`BinaryExpr(expr1,op,expr2,cid)) ==
+    let trv_expr1 = trv_Expr (expr1), 
+        trv_expr2 = trv_Expr (expr2)
+    in	
+        PP_TAR_EXPR`tar_BinaryExpr(trv_expr1,op,trv_expr2,cid);
+\end{vdm_al}
+
+\subsection{Quantified Expressions}
+
+\begin{vdm_al}
+--  trv_QuantExpr : AS`QuantExpr -> PP_TAR_EXPR`QuantExpr
+--  trv_QuantExpr(quant) ==
+--    cases quant:
+--      mk_AS`AllOrExistsExpr (-,-,-,-) -> trv_AllOrExistsExpr(quant),
+--      mk_AS`ExistsUniqueExpr(-,-,-)   -> trv_ExistsUniqueExpr(quant)
+--    end;
+
+  trv_AllOrExistsExpr : AS`AllOrExistsExpr -> PP_TAR_EXPR`AllOrExistsExpr 
+  trv_AllOrExistsExpr 
+    (mk_AS`AllOrExistsExpr (quant, binds, pred, cid)) ==
+    PP_TAR_EXPR`tar_AllOrExistsExpr(
+      quant,
+      PP_TRA_PAT`trv_BindList(binds),
+      trv_Expr(pred),
+      cid);
+      
+  trv_ExistsUniqueExpr : AS`ExistsUniqueExpr -> PP_TAR_EXPR`ExistsUniqueExpr
+  trv_ExistsUniqueExpr 
+    (mk_AS`ExistsUniqueExpr (bind, pred, cid)) ==
+    PP_TAR_EXPR`tar_ExistsUniqueExpr(
+      PP_TRA_PAT`trv_Bind(bind),
+      trv_Expr(pred), 
+      cid);
+
+\end{vdm_al}
+
+\subsection{Iota Expression}
+
+\begin{vdm_al}
+  trv_IotaExpr : AS`IotaExpr -> PP_TAR_EXPR`IotaExpr
+  trv_IotaExpr(mk_AS`IotaExpr(bind, pred, cid)) ==
+    PP_TAR_EXPR`tar_IotaExpr(
+      PP_TRA_PAT`trv_Bind(bind),
+      trv_Expr(pred), 
+      cid);
+
+\end{vdm_al}
+
+\subsection{Set Expressions}
+
+\begin{vdm_al}
+
+  trv_SetEnumerationExpr : AS`SetEnumerationExpr -> PP_TAR_EXPR`SetEnumerationExpr 
+  trv_SetEnumerationExpr (mk_AS`SetEnumerationExpr(els,cid)) ==
+    PP_TAR_EXPR`tar_SetEnumerationExpr 
+      ([trv_Expr(els(i)) | i in set inds els],cid);
+
+  trv_SetComprehensionExpr : AS`SetComprehensionExpr -> PP_TAR_EXPR`SetComprehensionExpr
+  trv_SetComprehensionExpr(mk_AS`SetComprehensionExpr(elem, bind, pred, cid)) ==
+    PP_TAR_EXPR`tar_SetComprehensionExpr
+      (trv_Expr(elem), 
+       PP_TRA_PAT`trv_BindList(bind), 
+       if pred = nil then nil else trv_Expr(pred),
+       cid);
+
+  trv_SetRangeExpr : AS`SetRangeExpr -> PP_TAR_EXPR`SetRangeExpr
+  trv_SetRangeExpr (mk_AS`SetRangeExpr(lb,ub,cid)) ==
+    PP_TAR_EXPR`tar_SetRangeExpr
+      (trv_Expr(lb), 
+       trv_Expr(ub), 
+       cid);
+
+\end{vdm_al}
+
+\subsection{Sequence Expressions}
+
+\begin{vdm_al}
+
+  trv_SeqEnumerationExpr : AS`SeqEnumerationExpr -> PP_TAR_EXPR`SeqEnumerationExpr
+  trv_SeqEnumerationExpr (mk_AS`SeqEnumerationExpr(els,cid)) ==
+    PP_TAR_EXPR`tar_SeqEnumerationExpr
+      ([trv_Expr(els(i)) | i in set inds els],cid);
+
+  trv_SeqComprehensionExpr : AS`SeqComprehensionExpr -> PP_TAR_EXPR`SeqComprehensionExpr
+  trv_SeqComprehensionExpr 
+    (mk_AS`SeqComprehensionExpr(elem,bind,pred,cid)) ==
+    PP_TAR_EXPR`tar_SeqComprehensionExpr
+      (trv_Expr(elem), 
+       cases true:
+         (is_AS`SetBind(bind)) -> PP_TRA_PAT`trv_SetBind(bind), 
+         (is_AS`SeqBind(bind)) -> PP_TRA_PAT`trv_SeqBind(bind), 
+         others -> undefined
+       end,
+       if pred = nil then nil else trv_Expr(pred),
+       cid);
+
+
+  trv_SubSequenceExpr : AS`SubSequenceExpr -> PP_TAR_EXPR`SubSequenceExpr
+  trv_SubSequenceExpr (mk_AS`SubSequenceExpr(sequence,frompos,topos,cid)) ==
+    PP_TAR_EXPR`tar_SubSequenceExpr
+      (trv_Expr(sequence), 
+       trv_Expr(frompos), 
+       trv_Expr(topos), 
+       cid);
+
+  trv_SeqModifyMapOverrideExpr : AS`SeqModifyMapOverrideExpr -> PP_TAR_EXPR`SeqModifyMapOverrideExpr
+  trv_SeqModifyMapOverrideExpr 
+    (mk_AS`SeqModifyMapOverrideExpr(seqmap,mapexp,cid)) ==
+    PP_TAR_EXPR`tar_SeqModifyMapOverrideExpr 
+      (trv_Expr(seqmap), 
+       trv_Expr(mapexp), 
+       cid);
+
+\end{vdm_al}
+
+\subsection{Map Expressions}
+
+\begin{vdm_al}
+
+  trv_MapEnumerationExpr : AS`MapEnumerationExpr -> PP_TAR_EXPR`MapEnumerationExpr
+  trv_MapEnumerationExpr (mk_AS`MapEnumerationExpr(els,cid)) ==
+    PP_TAR_EXPR`tar_MapEnumerationExpr 
+      ([trv_Maplet(els(i)) | i in set inds els],cid);
+
+  trv_Maplet: AS`Maplet -> PP_TAR_EXPR`Maplet  
+  trv_Maplet (mk_AS`Maplet(mdom,mrng,cid)) ==
+    PP_TAR_EXPR`tar_Maplet(trv_Expr(mdom),trv_Expr(mrng),cid);
+
+  trv_MapComprehensionExpr : AS`MapComprehensionExpr -> PP_TAR_EXPR`MapComprehensionExpr
+  trv_MapComprehensionExpr (mk_AS`MapComprehensionExpr(elem,bind,pred,cid)) ==
+    PP_TAR_EXPR`tar_MapComprehensionExpr
+      (trv_Maplet(elem), 
+       PP_TRA_PAT`trv_BindList(bind), 
+       if pred = nil then nil else trv_Expr(pred),
+       cid);
+
+
+\end{vdm_al}
+
+\subsection{Tuple Constructor}
+
+\begin{vdm_al}
+  trv_TupleConstructorExpr : AS`TupleConstructorExpr -> PP_TAR_EXPR`TupleConstructorExpr
+  trv_TupleConstructorExpr 
+    (mk_AS`TupleConstructorExpr(fields,cid)) ==
+    PP_TAR_EXPR`tar_TupleConstructorExpr
+      ([trv_Expr(fields(i)) | i in set inds fields],cid);
+\end{vdm_al}
+
+\subsection{Token Constructor} 
+
+\begin{vdm_al}
+  trv_TokenConstructorExpr: AS`TokenConstructorExpr -> PP_TAR_EXPR`TokenConstructorExpr
+  trv_TokenConstructorExpr
+    (mk_AS`TokenConstructorExpr(expr,cid)) == 
+    PP_TAR_EXPR`tar_TokenConstructorExpr(trv_Expr(expr),cid);
+
+\end{vdm_al}
+
+\subsection{Record Expressions}
+
+\begin{vdm_al}
+
+  trv_RecordConstructorExpr: AS`RecordConstructorExpr -> PP_TAR_EXPR`RecordConstructorExpr
+  trv_RecordConstructorExpr 
+    (mk_AS`RecordConstructorExpr(tag,fields,cid)) ==
+    PP_TAR_EXPR`tar_RecordConstructorExpr(
+      trv_NameName(tag),
+      [trv_Expr(fields(i)) | i in set inds fields],
+      cid);
+
+  trv_RecordModifierExpr : AS`RecordModifierExpr -> PP_TAR_EXPR`RecordModifierExpr
+  trv_RecordModifierExpr 
+    (mk_AS`RecordModifierExpr(rec,mods,cid)) ==
+    PP_TAR_EXPR`tar_RecordModifierExpr(
+      trv_Expr(rec),
+      [trv_RecordModification(mods(i)) | i in set inds mods],
+      cid);
+
+  trv_RecordModification : AS`RecordModification -> PP_TAR_EXPR`RecordModification
+  trv_RecordModification 
+    (mk_AS`RecordModification(field,new,cid)) ==
+    PP_TAR_EXPR`tar_RecordModification(
+       trv_NameName(field),
+       trv_Expr(new),
+       cid);
+
+  trv_FieldSelectExpr : AS`FieldSelectExpr -> PP_TAR_EXPR`FieldSelectExpr
+  trv_FieldSelectExpr (mk_AS`FieldSelectExpr(rec,field,cid)) ==
+    PP_TAR_EXPR`tar_FieldSelectExpr(
+      mk_AS`FieldSelectExpr(rec,field,cid),	
+      trv_Expr(rec),
+      trv_Expr(field), -- trv_NameName(field),
+      cid); 
+
+  trv_TupleSelectExpr : AS`TupleSelectExpr -> PP_TAR_EXPR`TupleSelectExpr
+  trv_TupleSelectExpr (mk_AS`TupleSelectExpr(tuple,num,cid)) ==
+    PP_TAR_EXPR`tar_TupleSelectExpr(
+      mk_AS`TupleSelectExpr(tuple,num,cid),	
+      trv_Expr(tuple),
+      trv_Expr(num),
+      cid); 
+
+\end{vdm_al}
+
+\subsection{Apply Expressions}
+
+% The current version of the well-formedness operations for apply
+% expressions creates unneccesary many warnings. This must be corrected
+% somehow in the future.
+
+\begin{vdm_al}
+  trv_FctTypeInstExpr: AS`FctTypeInstExpr -> PP_TAR_EXPR`FctTypeInstExpr
+  trv_FctTypeInstExpr(mk_AS`FctTypeInstExpr(polyfct,inst,cid)) ==
+    PP_TAR_EXPR`tar_FctTypeInstExpr(
+      trv_NameName(polyfct),
+      [PP_TRA_TYPE`trv_Type(inst(i)) | i in set inds inst],
+      cid);
+
+  trv_ApplyExpr : AS`ApplyExpr -> PP_TAR_EXPR`ApplyExpr
+  trv_ApplyExpr (mk_AS`ApplyExpr(fct,arg,cid)) ==
+    PP_TAR_EXPR`tar_ApplyExpr(
+      mk_AS`ApplyExpr(fct,arg,cid),
+      trv_Expr(fct),
+      [trv_Expr(arg(i)) | i in set inds arg],
+      cid);
+
+  trv_PreConditionApplyExpr : AS`PreConditionApplyExpr -> PP_TAR_EXPR`PreConditionApplyExpr
+  trv_PreConditionApplyExpr (mk_AS`PreConditionApplyExpr(fct,arg,cid)) ==
+    PP_TAR_EXPR`tar_PreConditionApplyExpr(
+      mk_AS`PreConditionApplyExpr(fct,arg,cid),
+      trv_Expr(fct),
+      [trv_Expr(arg(i)) | i in set inds arg],
+      cid);
+
+  trv_UndefinedExpr : AS`UndefinedExpr -> PP_TAR_EXPR`UndefinedExpr
+  trv_UndefinedExpr (mk_AS`UndefinedExpr(cid)) ==
+    PP_TAR_EXPR`tar_UndefinedExpr(cid);
+
+
+\end{vdm_al}
+
+\subsection{Bracketed Expression}
+
+\begin{vdm_al}
+  trv_BracketedExpr : AS`BracketedExpr -> PP_TAR_EXPR`BracketedExpr
+  trv_BracketedExpr(mk_AS`BracketedExpr(expr,cid)) ==
+    PP_TAR_EXPR`tar_BracketedExpr(trv_Expr(expr),cid);
+\end{vdm_al}
+
+
+\subsection{Lambda Expression} 
+
+\begin{vdm_al}
+  trv_LambdaExpr : AS`LambdaExpr -> PP_TAR_EXPR`LambdaExpr
+  trv_LambdaExpr (mk_AS`LambdaExpr(parm,body,-,cid)) ==
+    PP_TAR_EXPR`tar_LambdaExpr(
+      [PP_TRA_PAT`trv_TypeBind(parm(i)) | i in set inds parm],
+      trv_Expr(body),
+      cid);
+\end{vdm_al}
+
+\subsection{Is Expression}
+
+\begin{vdm_al}
+  trv_IsExpr : AS`IsExpr -> PP_TAR_EXPR`IsExpr
+  trv_IsExpr (mk_AS`IsExpr(tp,arg,cid)) ==
+    let trv_tp = cases tp:
+                   mk_AS`Name(-,-) -> trv_NameType(tp),
+                   mk_AS`BooleanType(-)   -> PP_TRA_TYPE`trv_BooleanType(tp),
+                   mk_AS`NumericType(-,-) -> PP_TRA_TYPE`trv_NumericType(tp),
+                   mk_AS`TokenType(-)     -> PP_TRA_TYPE`trv_TokenType(tp),
+                   mk_AS`CharType(-)      -> PP_TRA_TYPE`trv_CharType(tp)
+                 end
+    in 
+        PP_TAR_EXPR`tar_IsExpr(trv_tp,trv_Expr(arg),cid);
+
+  trv_TypeJudgementExpr : AS`TypeJudgementExpr -> PP_TAR_EXPR`TypeJudgementExpr
+  trv_TypeJudgementExpr (mk_AS`TypeJudgementExpr(expr,tp,cid)) ==
+    PP_TAR_EXPR`tar_TypeJudgementExpr(trv_Expr(expr), PP_TRA_TYPE`trv_Type(tp), cid);
+
+\end{vdm_al}
+
+\subsection{Narrow Expression}
+
+\begin{vdm_al}
+  trv_NarrowExpr : AS`NarrowExpr -> PP_TAR_EXPR`NarrowExpr
+  trv_NarrowExpr (mk_AS`NarrowExpr(expr,tp,cid)) ==
+    PP_TAR_EXPR`tar_NarrowExpr(trv_Expr(expr), PP_TRA_TYPE`trv_Type(tp), cid); 
+
+\end{vdm_al}
+
+\subsection{Names}
+
+The composite AS`Name plays a threefold role -
+it holds names which are 
+1) expressions,
+2) names (of tags, of fields,..), and 
+3) types.
+
+\begin{vdm_al}
+  trv_NameExpr : AS`Name -> PP_TAR_EXPR`NameExpr
+  trv_NameExpr (mk_AS`Name(ids,cid)) ==
+--    hd ids
+    PP_TAR_EXPR`tar_NameExpr(trv_Ids(ids),cid)
+  pre len ids <= 2;
+
+--  little optimization 
+--  PP_TAR_EXPR`tar_NameExpr(trv_Ids(ids),cid);
+
+  trv_NameName : AS`Name -> PP_TAR_EXPR`NameName
+  trv_NameName (mk_AS`Name(ids,cid)) ==
+    PP_TAR_EXPR`tar_NameName(trv_Ids(ids),cid);
+
+  trv_NameType : AS`Name -> PP_TAR_EXPR`NameType
+  trv_NameType (mk_AS`Name(ids,cid)) ==
+    PP_TAR_EXPR`tar_NameType(trv_Ids(ids),cid);
+
+\end{vdm_al}
+
+Note that old-names can only be used in the post context (i.e.\ in
+some kind of post-condition).
+
+\begin{vdm_al}
+
+  trv_OldName : AS`OldName -> PP_TAR_EXPR`OldName
+  trv_OldName (mk_AS`OldName(ids,cid)) ==
+    PP_TAR_EXPR`tar_OldNameName(trv_Ids(ids),cid);
+
+  trv_Ids: AS`Ids -> PP_TAR_EXPR`Ids
+  trv_Ids(ids) ==
+    PP_TAR_EXPR`tar_Ids(ids);
+
+
+\end{vdm_al}
+
+In the $wf-Literal$ operation it is taken into account that the
+abstract syntax indicate that a numeric literal can be an integer.
+However, the scanner and parser is made such that only positive number
+can occur as numeric literal and thus a small amount of optimisation
+can be done here.
+
+\begin{vdm_al}
+  trv_Literal : AS`Literal -> PP_TAR_EXPR`Literal  
+  trv_Literal (lit) ==
+    cases lit :
+      mk_AS`BoolLit(val,cid)  -> PP_TAR_EXPR`tar_BoolLit(val,cid),
+      mk_AS`CharLit(val,cid)  -> PP_TAR_EXPR`tar_CharLit(val,cid), 
+      mk_AS`RealLit(val,cid)  -> PP_TAR_EXPR`tar_RealLit(val,cid),
+      mk_AS`NumLit(val,cid)   -> PP_TAR_EXPR`tar_NumLit(val,cid),
+      mk_AS`QuoteLit(nm,cid)  -> PP_TAR_EXPR`tar_QuoteLit(nm,cid),
+      mk_AS`NilLit(cid)       -> PP_TAR_EXPR`tar_NilLit(cid),
+      mk_AS`TextLit(cl,cid)   -> PP_TAR_EXPR`tar_TextLit(cl,cid)
+    end;
+
+#ifdef VDMPP
+
+\end{vdm_al}
+
+\subsection{VDM++ expressions}
+
+\begin{vdm_al}
+
+trv_NewExpr : AS`NewExpr -> PP_TAR_EXPR`NewExpr
+trv_NewExpr(mk_AS`NewExpr(cls,args,cid)) ==
+  PP_TAR_EXPR`tar_NewExpr(
+    PP_TAR_EXPR`tar_ApplyExpr(
+      mk_AS`ApplyExpr(cls,args,cid),
+      trv_Expr(cls),
+      [trv_Expr(args(i)) | i in set inds args],
+      cid),
+    cid);
+
+trv_IsOfClassExpr : AS`IsOfClassExpr -> PP_TAR_EXPR`IsOfClassExpr
+trv_IsOfClassExpr(mk_AS`IsOfClassExpr(class,arg,cid)) ==
+  let trv_tp = trv_NameType(class)
+  in 
+      PP_TAR_EXPR`tar_IsOfClassExpr(trv_tp,trv_Expr(arg),cid);
+
+trv_IsOfBaseClassExpr : AS`IsOfBaseClassExpr -> PP_TAR_EXPR`IsOfBaseClassExpr
+trv_IsOfBaseClassExpr(mk_AS`IsOfBaseClassExpr(class,arg,cid)) ==
+  let trv_tp = trv_NameType(class)
+  in 
+      PP_TAR_EXPR`tar_IsOfBaseClassExpr(trv_tp,trv_Expr(arg),cid);
+
+trv_ReqExpr : AS`ReqExpr -> PP_TAR_EXPR`ReqExpr
+trv_ReqExpr(mk_AS`ReqExpr(nml,cid)) ==
+  let idsl = [PP_TAR_EXPR`tar_IdList(nml(i).ids) | i in set inds nml]
+  in 
+    PP_TAR_EXPR`tar_ReqExpr(idsl,cid);
+
+trv_ActExpr : AS`ActExpr -> PP_TAR_EXPR`ActExpr
+trv_ActExpr(mk_AS`ActExpr(nml,cid)) ==
+  let idsl = [PP_TAR_EXPR`tar_IdList(nml(i).ids) | i in set inds nml]
+  in 
+    PP_TAR_EXPR`tar_ActExpr(idsl,cid);
+
+trv_FinExpr : AS`FinExpr -> PP_TAR_EXPR`FinExpr
+trv_FinExpr(mk_AS`FinExpr(nml,cid)) ==
+  let idsl = [PP_TAR_EXPR`tar_IdList(nml(i).ids) | i in set inds nml]
+  in 
+    PP_TAR_EXPR`tar_FinExpr(idsl,cid);
+
+trv_ActiveExpr : AS`ActiveExpr -> PP_TAR_EXPR`ActiveExpr
+trv_ActiveExpr(mk_AS`ActiveExpr(nml,cid)) ==
+  let idsl = [PP_TAR_EXPR`tar_IdList(nml(i).ids) | i in set inds nml]
+  in 
+    PP_TAR_EXPR`tar_ActiveExpr(idsl,cid);
+
+trv_WaitingExpr : AS`WaitingExpr -> PP_TAR_EXPR`WaitingExpr
+trv_WaitingExpr(mk_AS`WaitingExpr(nml,cid)) ==
+  let idsl = [PP_TAR_EXPR`tar_IdList(nml(i).ids) | i in set inds nml]
+  in 
+    PP_TAR_EXPR`tar_WaitingExpr(idsl,cid);
+
+trv_SelfExpr : AS`SelfExpr -> PP_TAR_EXPR`SelfExpr
+trv_SelfExpr(mk_AS`SelfExpr(cid)) ==
+  PP_TAR_EXPR`tar_SelfExpr(cid);
+
+trv_SameClassExpr : AS`SameClassExpr -> PP_TAR_EXPR`SameClassExpr
+trv_SameClassExpr(mk_AS`SameClassExpr(expr1,expr2,cid)) ==
+  PP_TAR_EXPR`tar_SameClassExpr(trv_Expr(expr1),trv_Expr(expr2),cid);
+
+trv_SameBaseClassExpr : AS`SameBaseClassExpr -> PP_TAR_EXPR`SameBaseClassExpr
+trv_SameBaseClassExpr(mk_AS`SameBaseClassExpr(expr1,expr2,cid)) ==
+  PP_TAR_EXPR`tar_SameBaseClassExpr(trv_Expr(expr1),trv_Expr(expr2),cid);
+
+#endif
+
+end PP_TRA_EXPR
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[PP\_TRA\_EXPR`trv\_SeqModifyMapOverrideExpr]
+{rtinfo.ast}[PP_TRA_EXPR]
+\end{rtinfo}
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,64 @@
+/home/hermes/poul/afrodite/bin/vpp_ex - v1.4 - Tue 22-Mar-94
+
+
+Checking A for POS well-formedness
+Line: 8  column: 14  Warning : Identifier r not used  
+Line: 20  column: 7  Warning : Argument of is-expression can never be of this type  
+Act Type : ( int | <YES> )
+Exp Type : bool
+Line: 23  column: 14  Warning : Argument of is-expression can never be of this type  
+Act Type : []
+Exp Type : bool
+Line: 31  column: 15  Warning : Argument of is-expression can never be of this type  
+Act Type : bool
+Exp Type : nat
+Line: 33  column: 15  Warning : Argument of is-expression can never be of this type  
+Act Type : ( bool | <YES> )
+Exp Type : nat
+Line: 36  column: 15  Warning : Argument of is-expression can never be of this type  
+Act Type : {|->}
+Exp Type : nat
+Line: 45  column: 19  Warning : Argument of is-expression can never be of this type  
+Act Type : real
+Exp Type : bool
+Line: 45  column: 7  Warning : Argument of is-expression can never be of this type  
+Act Type : ( <YES> | {|->} )
+Exp Type : nat1
+Line: 48  column: 7  Warning : Argument of is-expression can never be of this type  
+Act Type : compose A of nat nat end
+Exp Type : nat1
+Line: 60  column: 7  Warning : Argument of is-expression can never be of this type  
+Act Type : map ( nat1 | [] ) to ( bool | {|->} )
+Exp Type : int
+Line: 72  column: 7  Warning : Argument of is-expression can never be of this type  
+Act Type : seq1 of nat1
+Exp Type : rat
+Line: 74  column: 7  Warning : Argument of is-expression can never be of this type  
+Act Type : set of ( bool | char | real | <YES> | compose A of nat nat end | ( nat1 * nat1 ) | set of nat1 | seq1 of nat1 | map nat1 to nat1 | nil )
+Exp Type : rat
+Line: 84  column: 7  Warning : Argument of is-expression can never be of this type  
+Act Type : seq1 of nat1
+Exp Type : real
+Line: 86  column: 7  Warning : Argument of is-expression can never be of this type  
+Act Type : set of ( bool | char | real | <YES> | compose A of nat nat end | ( nat1 * nat1 ) | set of nat1 | seq1 of nat1 | map nat1 to nat1 | nil )
+Exp Type : real
+Line: 92  column: 7  Warning : Argument of is-expression can never be of this type  
+Act Type : seq1 of char
+Exp Type : char
+Line: 97  column: 7  Warning : Argument of is-expression can never be of this type  
+Act Type : {|->}
+Exp Type : char
+Line: 104  column: 10  Warning : Argument of is-expression can never be of this type  
+Act Type : seq1 of char
+Exp Type : compose A of nat nat end
+Line: 109  column: 19  Warning : Argument of is-expression can never be of this type  
+Act Type : nat
+Exp Type : compose A of nat nat end
+Line: 110  column: 21  Warning : Argument of is-expression can never be of this type  
+Act Type : compose A of nat nat end
+Exp Type : compose B of nat nat end
+Line: 117  column: 3  Warning : The type A is not used in its defining class  
+Line: 121  column: 3  Warning : The type B is not used in its defining class  
+
+Dependencies for class A :
+  method Test

@@ -1,0 +1,29 @@
+module A
+
+exports all
+definitions
+
+operations
+
+
+
+
+Test: () ==> seq of int
+Test() ==
+  (Dummy();
+   return sta);
+
+Dummy: () ==> ()
+Dummy() ==
+  if len sta = 3
+  then return
+  else (sta := sta ^ [next];
+        next := next + 1;
+        Dummy());
+
+state Sigma of
+  sta: seq of int
+  next : int
+init s == s = mk_Sigma([],0)
+end-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

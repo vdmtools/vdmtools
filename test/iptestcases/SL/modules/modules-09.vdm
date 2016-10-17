@@ -1,0 +1,46 @@
+module A
+
+exports all
+
+definitions
+
+types 
+
+R :: f1 : nat
+     f2 : bool
+     f3 : seq of char
+
+end A
+
+module B
+
+imports from A 
+  types R :: f1 : nat
+     f2 : bool
+     f3 : seq of char
+  renamed W
+exports all  
+definitions
+
+functions
+
+h : W -> nat
+h(w) == w.f1 + len w.f3 ;
+
+end B
+
+module C
+
+imports
+  from A all,
+  from B all
+exports all
+definitions
+
+operations
+
+Test : () ==> nat
+Test() ==
+  return B`h(mk_A`R(3, true, "hi")) 
+
+end C

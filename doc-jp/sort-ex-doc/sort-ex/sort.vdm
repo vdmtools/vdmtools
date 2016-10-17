@@ -1,0 +1,163 @@
+\makeatletter
+\newif\ifpdflatex@
+\ifx\pdftexversion\@undefined
+\pdflatex@false
+%\message{Not using pdf}
+\else
+\pdflatex@true
+%\message{Using pdf}
+\fi
+
+\newcommand{\latexorpdf}[2]{
+  \ifpdflatex@ #2
+  \else #1
+  \fi
+}
+
+\newcommand{\pformat}{a4paper}
+
+\makeatother
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\latexorpdf{
+\documentclass[\pformat,12pt]{jarticle}
+}{
+\documentclass[\pformat,pdftex,12pt]{jarticle}
+}
+
+\usepackage{color}
+\usepackage{vdmsl-2e}
+\usepackage{longtable}
+\usepackage{alltt}
+\usepackage{makeidx}
+
+\definecolor{covered}{rgb}{0,0,0}
+%\definecolor{not_covered}{gray}{0.5}   %gray for previewing
+%\definecolor{not_covered}{gray}{0.6}   %gray for printing
+\definecolor{not_covered}{rgb}{1,0,0}
+
+\begin{document}
+\vdmtoolsmanualcsk{VDM-SL ソートアルゴリズム}{v9.0.6}{2016}{VDM-SL}{1.0}
+
+\section{はじめに}
+
+本書は{\it VDM-SL Toolbox} で提供される例題の一部であり、 {\tt vdmhome/examples}のディレクトリの中に置かれている。
+本書ではソートアルゴリズムの数々の仕様を例示するが、これはToolboxの基本的な機能を紹介するために　{\it User Manual}の {\it VDM Tools ガイドツアー} の中に用いられている。
+
+\section{仕様} 
+最初の例題では、教科書などでよく知られている標準マージソートアルゴリズムを示す。\\
+\begin{vdm_al}
+
+functions
+
+  MergeSort: seq of real -> seq of real
+  MergeSort(l) ==
+    cases l:
+      []      -> l,
+      [e]     -> l,
+      others  -> let l1^l2 in set {l} be st abs (len l1 - len l2) < 2
+                 in
+                   let l_l = MergeSort(l1),
+                       l_r = MergeSort(l2) in
+                    Merge(l_l, l_r)
+    end;
+
+
+  Merge: seq of int * seq of int -> seq of int
+  Merge(l1,l2) ==
+    cases mk_(l1,l2):
+      mk_([],l),mk_(l,[]) -> l,
+      others              -> if hd l1 <= hd l2 then 
+                               [hd l1] ^ Merge(tl l1, l2)
+                             else
+                               [hd l2] ^ Merge(l1, tl l2)
+    end
+  pre forall i in set inds l1 & l1(i) >= 0 and
+      forall i in set inds l2 & l2(i) >= 0
+\end{vdm_al}
+
+次の例題では、ソートアルゴリズムの陰仕様を示す。
+ {\tt ImplSort} 関数をToolboxにおいてここで述べるように処理することはできないが、
+ latexジェネレーター、型チェッカー、構文チェッカー、といった他のVDM-SL ツールならば
+ 全VDM-SL言語の処理が可能なため、この仕様も処理可能なものである。\\
+
+\begin{vdm_al}
+
+types
+
+  PosReal = real
+  inv r == r >= 0
+
+  
+functions
+
+  ImplSort(l: seq of PosReal) r: seq of PosReal
+  post IsPermutation(r,l) and IsOrdered(r);
+
+  IsPermutation: seq of real * seq of real -> bool
+  IsPermutation(l1,l2) ==
+    forall e in set (elems l1 union elems l2) &
+      card {i | i in set inds l1 & l1(i) = e} =
+      card {i | i in set inds l2 & l2(i) = e};
+
+  IsOrdered: seq of real -> bool
+  IsOrdered(l) ==
+    forall i,j in set inds l & i > j => l(i) >= l(j);
+
+\end{vdm_al}
+
+以下の例題では、陰関数 {\tt ImplSort} を陽関数である{\tt ExplSort}に変更した。
+ここでは \texttt{IsPermutation} テストをジェネレーター関数に変更している。
+
+\begin{vdm_al}
+
+  ExplSort : seq of PosReal -> seq of PosReal
+  ExplSort (l) ==
+    let r in set Permutations(l) be st IsOrdered(r) in r;
+
+  Permutations: seq of real -> set of seq of real
+  Permutations(l) ==
+    cases l:
+      [],[-] -> {l},
+      others -> dunion {{[l(i)]^j | 
+                         j in set Permutations(RestSeq(l,i))} | 
+                         i in set inds l}
+    end;
+
+  RestSeq: seq of real * nat -> seq of real
+  RestSeq(l,i) ==
+    [l(j) | j in set (inds l \ {i})]
+  pre i in set inds l
+  post elems RESULT subset elems l and
+       len RESULT = len l - 1;
+
+\end{vdm_al}
+
+最後の例もまた標準アルゴリズムのもので、挿入によるソートの原則に基づいたものである。
+
+\begin{vdm_al}
+
+  DoSort: seq of real -> seq of real
+  DoSort(l) ==
+    if l = [] then
+      []
+    else
+      let sorted = DoSort (tl l) in
+        InsertSorted (hd l, sorted);
+
+  InsertSorted: PosReal * seq of PosReal -> seq of PosReal
+  InsertSorted(i,l) ==
+    cases true :
+      (l = [])    -> [i],
+      (i <= hd l) -> [i] ^ l,
+      others      -> [hd l] ^ InsertSorted(i,tl l)
+    end
+
+
+\end{vdm_al}
+
+\vspace{0.5cm}
+
+
+
+\end{document}

@@ -1,0 +1,129 @@
+class DiagramEdge is subclass of PickableGraphic, ComparisonValueInterface
+operations 
+public  getId : () ==> [String]
+getId() == 
+( return  identifier
+) ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+( return  identifier.hashCode()
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( return  identifier
+) ;
+
+public  getDetour : () ==> int 
+getDetour() == 
+( return  Detour
+) ;
+
+public  setDetour : int  ==> <VOID>
+setDetour(MyDetour) == 
+( Detour := MyDetour;
+  return  
+) ;
+
+public  DiagramEdge : () ==> DiagramEdge
+DiagramEdge() == 
+( let - = PickableGraphic()
+  in 
+    skip 
+) ;
+
+public  setId : [String] ==> <VOID>
+setId(identifier) == 
+( DiagramEdge`identifier := identifier;
+  return  <VOID>
+) ;
+
+public  DiagramEdge : int  * int  * int  * int  ==> DiagramEdge
+DiagramEdge(x, y, width, height) == 
+( let - = PickableGraphic(x , y , width , height)
+  in 
+    skip 
+) ;
+
+public  contains : [String] ==> bool 
+contains(nodeId) == 
+( dcl   doesContainNode : bool  := false  ,
+        testNode : [DiagramNode];
+  if  originationPoint <> nil  
+  then  
+    ( testNode := originationPoint.getNode();
+      if  nodeId.equals(testNode.getId())
+      then  
+        ( doesContainNode := true  
+        ) 
+    ) ;
+  if  not  doesContainNode
+  then  
+    ( if  terminationPoint <> nil  
+      then  
+        ( testNode := terminationPoint.getNode();
+          if  nodeId.equals(testNode.getId())
+          then  
+            ( doesContainNode := true  
+            ) 
+        ) 
+    ) ;
+  return  doesContainNode
+) ;
+
+public  getOriginatingPoint : () ==> [ConnectionPoint]
+getOriginatingPoint() == 
+( return  originationPoint
+) ;
+
+public  getTerminatingPoint : () ==> [ConnectionPoint]
+getTerminatingPoint() == 
+( return  terminationPoint
+) ;
+
+public  DiagramEdge : [String] ==> DiagramEdge
+DiagramEdge(id) == 
+( let - = DiagramEdge()
+  in 
+    skip ;
+  identifier := id
+) ;
+
+public  equals : [ComparisonValueInterface] ==> bool 
+equals(anotherValue) == 
+( return  identifier.equals(anotherValue.toString())
+) ;
+
+public  compareTo : [ComparisonValueInterface] ==> int 
+compareTo(anotherValue) == 
+( dcl   testValue : [String] := anotherValue.toString();
+  return  identifier.compareTo(testValue)
+) ;
+
+public  addConnectionPoint : [RefDesNode] * [String] ==> <VOID>
+addConnectionPoint(node, connectionIdentifier) == 
+( dcl   newConnectionPoint : [ConnectionPoint] := new  ConnectionPoint();
+  let - = newConnectionPoint.setNode(node)
+  in 
+    skip ;
+  let - = newConnectionPoint.setConnectionId(connectionIdentifier)
+  in 
+    skip ;
+  if  originationPoint = nil  
+  then  
+    ( originationPoint := newConnectionPoint
+    ) 
+  else  
+    ( terminationPoint := newConnectionPoint
+    ) ;
+  return  <VOID>
+) ;
+
+instance variables 
+  protected  originationPoint : [ConnectionPoint] := nil  ;
+  protected  terminationPoint : [ConnectionPoint] := nil  ;
+  protected  identifier : [String] := nil  ;
+  private  Detour : int 
+  
+end  DiagramEdge

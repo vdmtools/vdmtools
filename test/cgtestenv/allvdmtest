@@ -1,0 +1,61 @@
+#! /bin/bash
+# Running all tests on $IFADOSTYPE. Specification tests only on Linux.
+# In this case, location of specifications must be specified!
+#
+# If the platform is Linux change the path such that all the utility
+# programs (e.g. cp, test, cat) are found firstly on the local
+# filesystem.
+
+if [ $IFADOSTYPE = Linux ]; then 
+  PATH=/bin:/usr/bin:$PATH
+  export PATH
+fi
+
+DEVNULL='/dev/null 2>&1'
+
+export CGHOME=/home/cg
+export BASEDIR=$CGHOME/cgtestenv
+export CGTESTDIR=$CGHOME/test
+
+if [ "$IFADOSTYPE" = "Linux" ] ; then
+    if [ -z "$CGSPEC" -o -z "$DYNSPEC" -o -z "$TCSPEC" ]; then
+	echo "CGSPEC should be set to directory for code generator specification"
+	echo "(Current value: $CGSPEC)"
+	echo "DYNSPEC should be set to directory for dynamic semantic specification"
+	echo "(Current value: $DYNSPEC)"
+	echo "TCSPEC should be set to directory for type checker specification"
+	echo "(Current value: $TCSPEC)"
+	exit 1
+    fi
+fi
+
+echo "The following executables will be used in this test:"
+pwd
+type vdmde vppde vdmexprsl vdmexprpp be_spec-sl be_spec-pp tsisl tsipp
+
+if [ "$IFADOSTYPE" = "Linux" ] ; then
+    $BASEDIR/cg_allsl -s $CGSPEC >$DEVNULL
+    $BASEDIR/cg_allsl -s $DYNSPEC >$DEVNULL
+    $BASEDIR/cg_allpp -s $CGSPEC >$DEVNULL
+    $BASEDIR/cg_allpp -s $DYNSPEC >$DEVNULL
+fi
+
+$BASEDIR/cg_allsl -i >$DEVNULL
+$BASEDIR/cg_allsl -i -Dy >$DEVNULL
+
+
+$BASEDIR/cg_allpp -i >$DEVNULL
+$BASEDIR/cg_allpp -i -Dy >$DEVNULL
+
+TCHOME=/home/vdm
+export TCSPECHOME=$TCHOME
+export BASEDIR=$TCHOME/tctestenv
+export TCTESTHOME=$TCHOME/test
+
+if [ "$IFADOSTYPE" = "Linux" ] ; then
+    $BASEDIR/tc_allsl -spec $TCSPEC >$DEVNULL
+    $BASEDIR/tc_allpp -spec $TCSPEC >$DEVNULL
+fi
+
+$BASEDIR/tc_allsl -i >$DEVNULL
+$BASEDIR/tc_allpp -i >$DEVNULL

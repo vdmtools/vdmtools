@@ -1,0 +1,14 @@
+class SubSequenceExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let n = 6,
+      - = n(6,...,1)
+  in skip;
+
+------------------------------------------------------------------------------
+end SubSequenceExprTest

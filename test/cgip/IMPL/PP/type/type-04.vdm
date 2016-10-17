@@ -1,0 +1,72 @@
+class A
+
+types
+  T1 = nat;
+  T2 = nat1;
+  T3 = bool;
+  T4 = int;
+  T5 = rat;
+  T6 = real;
+  T7 = char;
+  T8 = <Q>;
+  T9 = <A> | <B> | <C> | <D>;
+  T10= set of nat;
+  T11= set of ( map T1 to T7 );
+  T12= seq1 of char;
+  T13= seq of ( set of real );
+  T14= bool * nat * char;
+  T15= bool * T14 * ( nat | char );
+  T16= [ nat ];
+  T17= char | [int];
+  T18= [set of T1];
+  
+  T19:: nat char (T8|T9);
+  T20:: a: nat
+        b: char
+        c: T10;
+  T21:: rec: T19;
+  
+  T22 = set of T20
+  
+instance variables
+  i : int :=1;
+
+end A
+
+class C
+
+types 
+  
+  T1 = seq of nat;
+  T2 :: a: int
+        b: T3;
+  T3 = <A> | <B> | <C>;
+  T4 = nat
+
+end C
+
+class D is subclass of C
+
+end D
+
+class B is subclass of A,D
+
+functions
+
+  f1: C`T1 -> A`T1
+  f1(s) ==
+    if len s = 1 then
+      hd s
+    else
+      hd s + f1( tl s )
+
+operations
+
+public  Test: () ==> [(A`T2 | nat) | nat1] * nat * C`T3 * T17 * C`T3 * T17
+  Test() ==
+  ( dcl n: C`T4 := f1([1,2,3,4,5,6,7,8,9,10]);
+    let t1 = mk_C`T2(20,<C>),
+        t2 = mk_D`T2(30,<A>) in 
+    return mk_(n, t1.a, t1.b, t2.a, t2.b, 'a') )
+
+end B

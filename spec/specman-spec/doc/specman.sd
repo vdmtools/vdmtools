@@ -1,0 +1,324 @@
+Extern_References DEFINITIONS ::= BEGIN
+END
+
+Entities_Definitions DEFINITIONS ::= BEGIN
+base ::= SEQUENCE OF {
+	SEQUENCE {
+		items_count integer,
+		page_width real,
+		page_heigth real,
+		no_frame boolean,
+		portrait boolean,
+		margin real,
+		version string
+	}
+}
+meta_property ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string
+	}
+}
+class ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string
+	}
+}
+type ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		kind integer
+	}
+}
+association ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid
+	}
+}
+role ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		association oid,
+		class oid
+	}
+}
+operation ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		owner oid,
+		type oid
+	}
+}
+attribute ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		owner oid,
+		type oid
+	}
+}
+inheritance ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		ancestor oid,
+		subclasses SEQUENCE OF oid
+	}
+}
+event ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string
+	}
+}
+parameter ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		owner oid,
+		type oid,
+		range integer
+	}
+}
+activity ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		class oid,
+		owner oid
+	}
+}
+state ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		owner oid,
+		activities SEQUENCE OF oid,
+		entry_action string,
+		exit_action string
+	}
+}
+initial_state ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		owner oid
+	}
+}
+final_state ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		owner oid
+	}
+}
+condition_state ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		owner oid
+	}
+}
+history_state ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		owner oid
+	}
+}
+hstar_state ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		owner oid
+	}
+}
+connector ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid
+	}
+}
+transition ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		event oid,
+		src oid,
+		dst oid,
+		signature string,
+		conditions string,
+		actions string,
+		delay string
+	}
+}
+output ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		class oid,
+		transition oid,
+		event oid,
+		arguments string,
+		comment string
+	}
+}
+class_instance ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		class oid
+	}
+}
+message ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		src oid,
+		dst oid,
+		event oid,
+		arguments string
+	}
+}
+state_module ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		activity oid,
+		position SEQUENCE OF real
+	}
+}
+activity_module ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		activity oid,
+		position SEQUENCE OF real
+	}
+}
+event_trace ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string
+	}
+}
+action_on_event ::= SEQUENCE OF {
+	SEQUENCE {
+		state oid,
+		event oid,
+		action string
+	}
+}
+entity_position ::= SEQUENCE OF {
+	SEQUENCE {
+		entity oid,
+		module oid,
+		position SEQUENCE OF real
+	}
+}
+separator_position ::= SEQUENCE OF {
+	SEQUENCE {
+		state oid,
+		top_left SEQUENCE OF oid,
+		bottom_right SEQUENCE OF oid,
+		position SEQUENCE OF real
+	}
+}
+module_layout ::= SEQUENCE OF {
+	SEQUENCE {
+		entity oid,
+		portrait boolean,
+		nb_w_pages integer,
+		nb_h_pages integer
+	}
+}
+note ::= SEQUENCE OF {
+	SEQUENCE {
+		entity oid,
+		name string,
+		content string
+	}
+}
+base ::= {
+{49, 7.6, 11, t, f, 0, "
+%W%
+"}
+}
+class ::= {
+{"1", "class_1"}
+}
+type ::= {
+{"4", "unknown", 2},
+{"5", "void", 1},
+{"6", "string", 4},
+{"7", "integer", 4},
+{"8", "real", 4},
+{"9", "boolean", 4},
+{"10", "char", 4}
+}
+event ::= {
+{"44", "X"},
+{"45", "H"},
+{"46", "AddMsg"},
+{"47", "ChangeState"},
+{"48", "AllDone"}
+}
+activity ::= {
+{"2", "main", "1", NULL},
+{"17", "err!SwonMsg", "1", NULL},
+{"42", "err!ShowMsg", "1", NULL},
+{"49", "err!ChangeState(PromptErr)", "1", NULL}
+}
+state ::= {
+{"11", "PromptErr", "2", NULL, "", ""},
+{"12", "ScriptErr", "2", NULL, "", ""},
+{"13", "NoPrintErr", "2", NULL, "", ""},
+{"16", "ChangeState", "2", {"49"}, "", ""},
+{"25", "ScriptShow", "2", {"42"}, "", ""},
+{"29", "BatchErr", "2", NULL, "", ""},
+{"32", "BatchShow", "2", {"42"}, "", ""},
+{"36", "PromptAddMsg", "2", {"42"}, "", ""}
+}
+initial_state ::= {
+{"14", "", "2"},
+{"30", "", "2"}
+}
+transition ::= {
+{"15", "", NULL, "14", "11", "", "", "", ""},
+{"19", "", "48", "13", "16", "", "", "", ""},
+{"20", "", NULL, "16", "11", "", "", "", ""},
+{"22", "", "48", "12", "16", "", "", "", ""},
+{"24", "", "46", "13", "13", "", "", "", ""},
+{"26", "", "46", "12", "25", "", "", "", ""},
+{"28", "", NULL, "25", "12", "", "", "", ""},
+{"31", "", NULL, "30", "29", "", "", "", ""},
+{"33", "", "46", "29", "32", "", "", "", ""},
+{"34", "", NULL, "32", "29", "", "", "", ""},
+{"38", "", "46", "11", "36", "", "", "", ""},
+{"39", "", NULL, "36", "13", "", "", "", ""},
+{"41", "", "47", "11", "12", "", "", "", ""}
+}
+activity_module ::= {
+{"3", "2", {80, 10, 600, 400}}
+}
+entity_position ::= {
+{"11", "3", {240, 110, 320, 150, 0, 0}},
+{"12", "3", {470, 110, 550, 150, 0, 0}},
+{"13", "3", {240, 220, 320, 260, 0, 0}},
+{"14", "3", {230, 40, 250, 60}},
+{"15", "3", {0, -2.2143}},
+{"16", "3", {370, 190, 530, 240, 0, 0}},
+{"19", "3", {0.0499581, 2.99157}},
+{"20", "3", {-2.92806, 0.411065}},
+{"22", "3", {1.70632, -0.469782}},
+{"24", "3", {2.53784, 0.76318, 38.0132, -0.5034, 41.8342, 0.0714095}},
+{"25", "3", {400, 30, 490, 70, 0, 0}},
+{"26", "3", {-2.50217, 1.6155}},
+{"28", "3", {0.189199, -1.17227}},
+{"29", "3", {260, 330, 340, 370, 0, 0}},
+{"30", "3", {160, 340, 180, 360}},
+{"31", "3", {0, 3.09163}},
+{"32", "3", {410, 290, 500, 330, 0, 0}},
+{"33", "3", {0.0487425, 2.22187}},
+{"34", "3", {2.92292, -0.441179}},
+{"36", "3", {120, 170, 210, 210, 0, 0}},
+{"38", "3", {3.04434, -0.715744}},
+{"39", "3", {0.785398, -3.01724}},
+{"41", "3", {0.0249938, -3.11596}}
+}
+END

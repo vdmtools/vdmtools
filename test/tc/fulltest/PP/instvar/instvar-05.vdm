@@ -1,0 +1,28 @@
+class A
+
+instance variables
+
+public i1 : nat := 1;
+private i2 : nat := 1;
+protected i3: nat := 1;
+i4: nat := 1;
+
+operations
+
+Op: nat ==> nat
+Op(n) ==
+  for all i1 in set {n} do
+    return i1;
+
+Op2: nat ==> nat
+Op2(n) ==
+  for i1 in [n] do
+    return i;
+
+Op3: nat ==> nat
+Op3(n) ==
+  for i=true to 9 do 
+    return i
+
+end A
+

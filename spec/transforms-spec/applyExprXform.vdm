@@ -1,0 +1,1052 @@
+\subsection{Applying VDM++ Transformations to Expressions}
+\label{sec:aex}
+
+This module deals with the application of transformations to
+expressions. 
+
+Transformations are applied by traversing the abstract syntax tree,
+starting at the list of classes comprising the specification, until a
+node is found at which a transformation can be applied (the
+appropriate test function from the module XF is used to determine
+this). If a transformation can be applied at a particular node, no
+further transformations are attempted on that branch of the abstract
+syntax tree. If not, transformations are attempted on all
+sub-branches. 
+
+The (identifiers of the) particular set of transforms
+to be applied is represented by the parameter {\em p\_ids} of each
+function. In cases where a particular kind of expression has several 
+transformations, these transformations are attempted in the
+(increasing) numerical order of their identifiers. 
+
+Context identifiers are generally reset to nil during this process
+because it is impossible to calculate the correct new context
+identifiers. 
+
+%%  do I need to set context id's back to nil everywhere??
+%%  currently types and names (and other things which don't depend on
+%%  expressions) retain their existing context id's.
+
+\begin{vdm_al}
+module AEX
+
+imports
+  from JSSREP all,
+  from CI all,
+  from REP all,
+  from AS all,
+  from XF all
+
+exports all
+
+definitions
+
+values
+
+nilCid: int = -1 ;
+
+functions
+
+applyEXFClassList : seq of AS`Class * set of XF`EXFId -> seq of AS`Class
+applyEXFClassList(p_cl, p_ids) == 
+  if p_cl = [] 
+  then []
+  else let l_hdXfs = applyEXFClass(hd p_cl, p_ids), 
+           l_tlXfs = applyEXFClassList(tl p_cl, p_ids) in
+       [l_hdXfs] ^ l_tlXfs ;
+
+applyEXFClass : AS`Class * set of XF`EXFId -> AS`Class
+applyEXFClass(p_c, p_ids) == 
+  let l_newDefs = if p_c.defs = nil 
+                  then nil
+                  else applyEXFDefinitions(p_c.defs, p_ids) in
+  mu(p_c, defs |-> l_newDefs, cid |-> nilCid) ;
+
+applyEXFDefinitions : AS`Definitions * set of XF`EXFId -> AS`Definitions
+applyEXFDefinitions(mk_AS`Definitions(p_tm, p_vm, p_fm, p_om, p_iv, p_sy, p_th, p_tr,-), p_ids) == 
+  let l_newTm = applyEXFTypes(p_tm, p_ids), 
+      l_newVm = applyEXFVals(p_vm, p_ids),
+      l_newFm = applyEXFFns(p_fm, p_ids),
+      l_newOm = applyEXFOps(p_om, p_ids),
+      l_newIv = applyEXFIvs(p_iv, p_ids),
+      l_newSy = applyEXFSy(p_sy, p_ids),
+      l_newTh = applyEXFThread(p_th, p_ids) in
+  mk_AS`Definitions(l_newTm, l_newVm, l_newFm, l_newOm, l_newIv, l_newSy, l_newTh, p_tr, nilCid) ;
+
+applyEXFTypes : map AS`Name to AS`TypeDef * set of XF`EXFId -> map AS`Name to AS`TypeDef
+applyEXFTypes(p_tm, p_ids) ==
+  if p_tm = { |-> } 
+  then { |-> } 
+  else
+    let l_name in set dom p_tm
+    in
+      let l_td = applyEXFTypeDef(p_tm(l_name), p_ids),
+          l_dsub = applyEXFTypes({l_name} <-: p_tm, p_ids) 
+      in { l_name |-> l_td } munion l_dsub ; 
+
+applyEXFTypeDef : AS`TypeDef * set of XF`EXFId -> AS`TypeDef
+applyEXFTypeDef(p_td, p_ids) ==
+  if p_td.Inv = nil 
+  then p_td
+  else
+    let l_newInv = applyEXFInvt(p_td.Inv, p_ids)
+    in mu(p_td, Inv |-> l_newInv, cid |-> nilCid);
+
+applyEXFInvt : AS`Invariant * set of XF`EXFId -> AS`Invariant
+applyEXFInvt(p_invt, p_ids) == 
+  let l_newPat = applyEXFPat(p_invt.pat, p_ids), 
+      l_newExpr = applyEXFExpr(p_invt.expr, p_ids)
+  in mk_AS`Invariant(l_newPat, l_newExpr, nilCid) ;
+
+applyEXFPat : AS`Pattern * set of XF`EXFId -> AS`Pattern
+applyEXFPat(p_pat, p_ids) == 
+  cases true:
+    (is_AS`MatchVal(p_pat))         -> applyEXFMatchVal(p_pat, p_ids),
+    (is_AS`SetEnumPattern(p_pat)) -> applyEXFSetEnumPat(p_pat, p_ids),
+    (is_AS`SeqEnumPattern(p_pat)) -> applyEXFSeqEnumPat(p_pat, p_ids),
+    (is_AS`MapEnumPattern(p_pat)) -> applyEXFMapEnumPat(p_pat, p_ids),
+    (is_AS`RecordPattern(p_pat)) -> applyEXFRecordPat(p_pat, p_ids),
+    (is_AS`TuplePattern (p_pat))    -> applyEXFTuplePat(p_pat, p_ids),
+    (is_AS`SetUnionPattern(p_pat))   -> applyEXFSetUnionPat(p_pat, p_ids),
+    (is_AS`SeqConcPattern(p_pat))   -> applyEXFSeqConcPat(p_pat, p_ids),
+    (is_AS`MapMergePattern(p_pat))   -> applyEXFMapMergePat(p_pat, p_ids),
+    (is_AS`MapletPattern(p_pat))   -> applyEXFMapletPat(p_pat, p_ids),
+    (is_AS`ObjectPattern(p_pat)) -> applyEXFObjectPat(p_pat, p_ids),
+    (is_AS`FieldPattern(p_pat))   -> applyEXFFieldPat(p_pat, p_ids),
+    others -> mu(p_pat, cid |-> nilCid)
+  end ;
+
+applyEXFMatchVal : AS`MatchVal * set of XF`EXFId -> AS`MatchVal
+applyEXFMatchVal(p_pat, p_ids) == 
+  let l_newExpr = applyEXFExpr(p_pat.val, p_ids)
+  in mk_AS`MatchVal(l_newExpr, nilCid) ;
+
+applyEXFSetEnumPat : AS`SetEnumPattern * set of XF`EXFId -> AS`SetEnumPattern
+applyEXFSetEnumPat(p_pat, p_ids) == 
+  let l_newEls = applyEXFPatList(p_pat.Elems, p_ids)
+  in mk_AS`SetEnumPattern(l_newEls, nilCid) ;
+
+applyEXFSeqEnumPat : AS`SeqEnumPattern * set of XF`EXFId -> AS`SeqEnumPattern
+applyEXFSeqEnumPat(p_pat, p_ids) == 
+  let l_newEls = applyEXFPatList(p_pat.els, p_ids) in
+  mk_AS`SeqEnumPattern(l_newEls, nilCid) ;
+
+applyEXFMapEnumPat : AS`MapEnumPattern * set of XF`EXFId -> AS`MapEnumPattern
+applyEXFMapEnumPat(p_pat, p_ids) == 
+  let l_newEls = applyEXFPatList(p_pat.mls, p_ids) in
+  mk_AS`MapEnumPattern(l_newEls, nilCid) ;
+
+applyEXFRecordPat : AS`RecordPattern * set of XF`EXFId -> AS`RecordPattern
+applyEXFRecordPat(p_pat, p_ids) ==
+  let l_newFields = applyEXFPatList(p_pat.fields, p_ids) in
+  mk_AS`RecordPattern(p_pat.nm, l_newFields, nilCid) ;
+
+applyEXFTuplePat : AS`TuplePattern * set of XF`EXFId -> AS`TuplePattern
+applyEXFTuplePat(p_pat, p_ids) ==
+  let l_newFields = applyEXFPatList(p_pat.fields, p_ids) in
+  mk_AS`TuplePattern(l_newFields, nilCid) ;
+
+applyEXFSetUnionPat : AS`SetUnionPattern * set of XF`EXFId -> AS`SetUnionPattern
+applyEXFSetUnionPat(p_pat, p_ids) ==
+  let l_newLeft = applyEXFPat(p_pat.lp, p_ids),
+      l_newRight = applyEXFPat(p_pat.rp, p_ids) in
+  mk_AS`SetUnionPattern(l_newLeft, l_newRight, nilCid) ;
+
+applyEXFSeqConcPat : AS`SeqConcPattern * set of XF`EXFId -> AS`SeqConcPattern
+applyEXFSeqConcPat(p_pat, p_ids) ==
+  let l_newLeft = applyEXFPat(p_pat.lp, p_ids),
+      l_newRight = applyEXFPat(p_pat.rp, p_ids) in
+  mk_AS`SeqConcPattern(l_newLeft, l_newRight, nilCid) ;
+
+applyEXFMapMergePat : AS`MapMergePattern * set of XF`EXFId -> AS`MapMergePattern
+applyEXFMapMergePat(p_pat, p_ids) ==
+  let l_newLeft = applyEXFPat(p_pat.lp, p_ids),
+      l_newRight = applyEXFPat(p_pat.rp, p_ids) in
+  mk_AS`MapMergePattern(l_newLeft, l_newRight, nilCid) ;
+
+applyEXFMapletPat : AS`MapletPattern * set of XF`EXFId -> AS`MapletPattern
+applyEXFMapletPat(p_pat, p_ids) ==
+  let l_newDom = applyEXFPat(p_pat.dp, p_ids),
+      l_newRng = applyEXFPat(p_pat.rp, p_ids) in
+  mk_AS`MapletPattern(l_newDom, l_newRng, nilCid) ;
+
+applyEXFObjectPat : AS`ObjectPattern * set of XF`EXFId -> AS`ObjectPattern
+applyEXFObjectPat(p_pat, p_ids) ==
+  let l_newFields = applyEXFPatList(p_pat.fields, p_ids) in
+  mk_AS`ObjectPattern(p_pat.cls, l_newFields, nilCid) ;
+
+applyEXFFieldPat : AS`FieldPattern * set of XF`EXFId -> AS`FieldPattern
+applyEXFFieldPat(p_pat, p_ids) ==
+  let l_newPat = applyEXFPat(p_pat.pat, p_ids)
+  in
+  mk_AS`FieldPattern(p_pat.nm, l_newPat, nilCid) ;
+
+applyEXFPatList : seq of AS`Pattern * set of XF`EXFId -> seq of AS`Pattern
+applyEXFPatList(p_list, p_ids) == 
+  [ applyEXFPat(p_list(b_i), p_ids) | b_i in set inds p_list ];
+
+applyEXFVals : seq of AS`ValueDef * set of XF`EXFId -> seq of AS`ValueDef
+applyEXFVals(p_list, p_ids) == 
+  [ applyEXFValueDef(p_list(b_i), p_ids) | b_i in set inds p_list ];
+
+applyEXFValueDef : AS`ValueDef * set of XF`EXFId -> AS`ValueDef
+applyEXFValueDef(p_valDef, p_ids) == 
+  let mk_AS`ValueDef(l_pat, l_tp, l_val, l_ac, l_st, -) = p_valDef,
+      l_newPat = applyEXFPat(l_pat, p_ids),
+      l_newVal = applyEXFExpr(l_val, p_ids)
+  in mk_AS`ValueDef(l_newPat, l_tp, l_newVal, l_ac, l_st, nilCid); 
+
+applyEXFFns : map AS`Name to AS`FnDef * set of XF`EXFId -> map AS`Name to AS`FnDef
+applyEXFFns(p_fm, p_ids) == 
+  if p_fm = { |-> } 
+  then { |-> } 
+  else 
+    let l_name in set dom p_fm in
+      let l_fn = applyEXFFnDef(p_fm(l_name), p_ids),
+          l_dsub = applyEXFFns({l_name} <-: p_fm, p_ids) 
+    in 
+        {l_name |-> l_fn} munion l_dsub ; 
+
+applyEXFFnDef : AS`FnDef * set of XF`EXFId -> AS`FnDef 
+applyEXFFnDef(p_fnDef, p_ids) == 
+  cases true :
+    (is_AS`ExplFnDef(p_fnDef))  ->  applyEXFExplFnDef(p_fnDef, p_ids),
+    (is_AS`ImplFnDef(p_fnDef))  ->  applyEXFImplFnDef(p_fnDef, p_ids),
+    (is_AS`ExtExplFnDef(p_fnDef))  ->  applyEXFExtExplFnDef(p_fnDef, p_ids)
+  end ;
+
+applyEXFExplFnDef : AS`ExplFnDef * set of XF`EXFId -> AS`ExplFnDef
+applyEXFExplFnDef(p_fnDef, p_ids) == 
+  let mk_AS`ExplFnDef(l_nm, l_tpp, l_tp, l_parms, l_body, l_fnpre, l_fnpost, l_ac, l_st, l_measu, -) = p_fnDef, 
+      l_newParms = applyEXFParamList(l_parms, p_ids), 
+      l_newBody  = applyEXFFnBody(l_body, p_ids), 
+      l_newPre   = applyEXFOptExpr(l_fnpre, p_ids),
+      l_newPost  = applyEXFOptExpr(l_fnpost, p_ids)
+  in mk_AS`ExplFnDef(l_nm, l_tpp, l_tp, l_newParms, l_newBody, l_newPre, l_newPost, l_ac, l_st, l_measu, nilCid);
+
+applyEXFParamList : AS`ParametersList * set of XF`EXFId -> AS`ParametersList
+applyEXFParamList(p_list, p_ids) == 
+  [ applyEXFPatList(p_list(b_i), p_ids) | b_i in set inds p_list ] ;
+
+applyEXFImplFnDef : AS`ImplFnDef * set of XF`EXFId -> AS`ImplFnDef
+applyEXFImplFnDef(p_fnDef, p_ids) == 
+  let mk_AS`ImplFnDef(l_nm, l_pars, l_partps, l_res, l_fnpre, l_fnpost, l_ac, l_st, -) = p_fnDef, 
+      l_newPartps = applyEXFParamTypes(l_partps, p_ids), 
+      l_newPre    = applyEXFOptExpr(l_fnpre, p_ids),
+      l_newPost   = applyEXFExpr(l_fnpost, p_ids)
+  in mk_AS`ImplFnDef(l_nm, l_pars, l_newPartps, l_res, l_newPre, l_newPost, l_ac, l_st, nilCid) ;
+
+applyEXFExtExplFnDef : AS`ExtExplFnDef * set of XF`EXFId -> AS`ExtExplFnDef
+applyEXFExtExplFnDef(p_fnDef, p_ids) == 
+  let mk_AS`ExtExplFnDef(l_nm, l_pars, l_partps, l_res, l_body, l_fnpre, l_fnpost, l_ac, l_st, l_measu,-) = p_fnDef, 
+      l_newPartps = applyEXFParamTypes(l_partps, p_ids), 
+      l_newBody  = applyEXFFnBody(l_body, p_ids), 
+      l_newPre   = applyEXFOptExpr(l_fnpre, p_ids),
+      l_newPost  = applyEXFOptExpr(l_fnpost, p_ids)
+  in mk_AS`ExtExplFnDef(l_nm, l_pars, l_newPartps, l_res, l_newBody, l_newPre, l_newPost, l_ac, l_st, l_measu, nilCid) ;
+
+applyEXFFnBody : AS`FnBody * set of XF`EXFId -> AS`FnBody
+applyEXFFnBody(p_fnBody, p_ids) == 
+  let l_body = p_fnBody.body,
+      l_newBody = if l_body = <NOTYETSPEC> or l_body = <SUBRESP> 
+      then l_body
+      else applyEXFExpr(l_body, p_ids) in
+  mk_AS`FnBody(l_newBody, nilCid) ;
+
+applyEXFOps : map AS`Name to AS`OpDef * set of XF`EXFId -> map AS`Name to AS`OpDef
+applyEXFOps(p_om, p_ids) == 
+  if p_om = { |-> } 
+  then { |-> } 
+  else 
+    let l_name in set dom p_om in
+      let l_op = applyEXFOpDef(p_om(l_name), p_ids),
+          l_dsub = applyEXFOps({l_name} <-: p_om, p_ids) 
+    in 
+        {l_name |-> l_op} munion l_dsub ; 
+
+applyEXFOpDef : AS`OpDef * set of XF`EXFId -> AS`OpDef
+applyEXFOpDef(p_opDef, p_ids) == 
+  cases true :
+    (is_AS`ExplOpDef(p_opDef))  ->  applyEXFExplOpDef(p_opDef, p_ids),
+    (is_AS`ImplOpDef(p_opDef))  ->  applyEXFImplOpDef(p_opDef, p_ids),
+    (is_AS`ExtExplOpDef(p_opDef))  ->  applyEXFExtExplOpDef(p_opDef, p_ids)
+  end ;
+
+applyEXFExplOpDef : AS`ExplOpDef * set of XF`EXFId -> AS`ExplOpDef
+applyEXFExplOpDef(p_opDef, p_ids) == 
+  let mk_AS`ExplOpDef(l_nm,l_pure,l_sync,l_tp,l_parms,l_body,l_oppre,l_oppost,l_ac,l_st,l_con,-) = p_opDef,
+      l_newParms = applyEXFPatList(l_parms, p_ids), 
+      l_newBody  = applyEXFOpBody(l_body, p_ids), 
+      l_newPre   = applyEXFOptExpr(l_oppre, p_ids),
+      l_newPost  = applyEXFOptExpr(l_oppost, p_ids)
+  in mk_AS`ExplOpDef(l_nm,l_pure,l_sync,l_tp,l_newParms,l_newBody,l_newPre,l_newPost,l_ac,l_st,l_con,nilCid);
+
+applyEXFImplOpDef : AS`ImplOpDef * set of XF`EXFId -> AS`ImplOpDef
+applyEXFImplOpDef(p_opDef, p_ids) == 
+  let mk_AS`ImplOpDef(l_nm,l_pure,l_sync,l_partps,l_res,l_ext,l_oppre,l_oppost,l_errors,l_ac,l_st,l_con,-) = p_opDef,
+      l_newPartps = applyEXFParamTypes(l_partps, p_ids), 
+      l_newPre    = applyEXFOptExpr(l_oppre, p_ids),
+      l_newPost   = applyEXFExpr(l_oppost, p_ids),
+      l_newErrors   = applyEXFErrorList(l_errors, p_ids)
+  in mk_AS`ImplOpDef(l_nm,l_pure,l_sync,l_newPartps,l_res,l_ext,l_newPre,l_newPost,l_newErrors,l_ac,l_st,l_con,nilCid);
+
+applyEXFExtExplOpDef : AS`ExtExplOpDef * set of XF`EXFId -> AS`ExtExplOpDef 
+applyEXFExtExplOpDef(p_opDef, p_ids) == 
+  let mk_AS`ExtExplOpDef(l_nm,l_pure,l_sync,l_partps,l_res,l_body,l_ext,l_oppre,l_oppost,l_errors,l_ac,l_st,l_con,-) = p_opDef,
+      l_newPartps = applyEXFParamTypes(l_partps, p_ids), 
+      l_newBody  = applyEXFOpBody(l_body, p_ids), 
+      l_newPre   = applyEXFOptExpr(l_oppre, p_ids),
+      l_newPost  = applyEXFOptExpr(l_oppost, p_ids),
+      l_newErrors   = applyEXFErrorList(l_errors, p_ids)
+  in mk_AS`ExtExplOpDef(l_nm,l_pure,l_sync,l_newPartps,l_res,l_newBody,l_ext,l_newPre,l_newPost,l_newErrors,l_ac,l_st,l_con,nilCid);
+
+applyEXFParamTypes: AS`ParameterTypes * set of XF`EXFId -> AS`ParameterTypes
+applyEXFParamTypes(p_partps, p_ids) == 
+  [ applyEXFPatTypePair(p_partps(b_i), p_ids) | b_i in set inds p_partps ] ;
+
+applyEXFPatTypePair : AS`PatTypePair * set of XF`EXFId -> AS`PatTypePair
+applyEXFPatTypePair(p_ptp, p_ids) == 
+  let l_newPats = applyEXFPatList(p_ptp.pats, p_ids) in
+  mk_AS`PatTypePair(l_newPats, p_ptp.tp, nilCid) ; 
+
+applyEXFErrorList: seq of AS`Error * set of XF`EXFId -> seq of AS`Error
+applyEXFErrorList(p_errors, p_ids) == 
+  [ applyEXFError(p_errors(b_i), p_ids) | b_i in set inds p_errors ] ;
+
+applyEXFError : AS`Error * set of XF`EXFId -> AS`Error
+applyEXFError(p_err, p_ids) == 
+  let l_newCond = applyEXFExpr(p_err.cond, p_ids),
+      l_newAct = applyEXFExpr(p_err.action, p_ids)
+  in mk_AS`Error(p_err.nm, l_newCond, l_newAct, nilCid) ; 
+
+applyEXFOpBody : AS`OpBody * set of XF`EXFId -> AS`OpBody
+applyEXFOpBody(p_opBody, p_ids) == 
+  let l_body = p_opBody.body,
+      l_newBody = if l_body = <NOTYETSPEC> or l_body = <SUBRESP> 
+        then l_body
+        else applyEXFStmt(l_body, p_ids) in
+    mk_AS`OpBody(l_newBody, nilCid) ;
+
+applyEXFIvs : seq of AS`InstanceVarDef * set of XF`EXFId -> seq of AS`InstanceVarDef
+applyEXFIvs(p_ivl, p_ids) == 
+  [ applyEXFInstVarDef(p_ivl(b_i), p_ids) | b_i in set inds p_ivl ] ;
+
+applyEXFInstVarDef : AS`InstanceVarDef * set of XF`EXFId -> AS`InstanceVarDef
+applyEXFInstVarDef(p_inst, p_ids) == 
+  cases true :
+    (is_AS`InstAssignDef(p_inst))  ->  applyEXFInstAssignDef(p_inst, p_ids), 
+    (is_AS`InstanceInv(p_inst))     ->  applyEXFInstInv(p_inst, p_ids)
+  end ;
+
+applyEXFInstAssignDef : AS`InstAssignDef * set of XF`EXFId -> AS`InstAssignDef
+applyEXFInstAssignDef(p_inst, p_ids) == 
+  let l_newAd = applyEXFAssignDef(p_inst.ad, p_ids) in
+  mk_AS`InstAssignDef(l_newAd, p_inst.access, p_inst.stat, nilCid) ;
+
+applyEXFInstInv : AS`InstanceInv * set of XF`EXFId -> AS`InstanceInv
+applyEXFInstInv(p_inst, p_ids) == 
+  let l_newExpr = applyEXFExpr(p_inst.expr, p_ids) in
+  mk_AS`InstanceInv(l_newExpr, p_inst.access, nilCid) ;
+
+applyEXFAssignDef : AS`AssignDef * set of XF`EXFId -> AS`AssignDef
+applyEXFAssignDef(p_ass, p_ids) == 
+  let l_newExpr = applyEXFOptExpr(p_ass.dclinit, p_ids) in
+  mk_AS`AssignDef(p_ass.var, p_ass.tp, l_newExpr, nilCid) ;
+
+applyEXFAssignDefList : seq of AS`AssignDef * set of XF`EXFId -> seq of AS`AssignDef
+applyEXFAssignDefList(p_list, p_ids) == 
+  [ applyEXFAssignDef(p_list(b_i), p_ids) | b_i in set inds p_list ] ;
+
+applyEXFSy : seq of AS`SyncDef * set of XF`EXFId -> seq of AS`SyncDef
+applyEXFSy(p_list, p_ids) == 
+  [ applyEXFSyncDef(p_list(b_i), p_ids) | b_i in set inds p_list ] ;
+
+applyEXFSyncDef : AS`SyncDef * set of XF`EXFId -> AS`SyncDef
+applyEXFSyncDef(p_sync, p_ids) == 
+  cases true :
+    (is_AS`Permission(p_sync))     ->  applyEXFPerm(p_sync, p_ids),
+    others  ->  mu(p_sync, cid |-> nilCid)
+  end ;
+
+applyEXFPerm : AS`Permission * set of XF`EXFId -> AS`Permission 
+applyEXFPerm(p_sync, p_ids) == 
+  let l_newExpr = applyEXFExpr(p_sync.guard, p_ids) in
+  mk_AS`Permission(p_sync.spec, l_newExpr, nilCid) ;
+
+applyEXFThread : [AS`ThreadDef] * set of XF`EXFId -> [AS`ThreadDef]
+applyEXFThread(p_thread, p_ids) == 
+  cases true :
+  (p_thread = nil) -> nil,
+  (is_AS`PerObl(p_thread)) ->  mu(p_thread, cid |-> nilCid),
+  others -> applyEXFStmt(p_thread, p_ids) 
+  end ;
+
+applyEXFOptExpr : [AS`Expr] * set of XF`EXFId -> [AS`Expr]
+applyEXFOptExpr(p_expr, p_ids) == 
+  if p_expr = nil
+  then nil
+  else applyEXFExpr(p_expr, p_ids) ;
+
+applyEXFOptStmt : [AS`Stmt] * set of XF`EXFId -> [AS`Stmt]
+applyEXFOptStmt(p_stmt, p_ids) == 
+  if p_stmt = nil
+  then nil 
+  else applyEXFStmt(p_stmt, p_ids) ;
+
+applyEXFExprList : seq of AS`Expr * set of XF`EXFId -> seq of AS`Expr
+applyEXFExprList(p_list, p_ids) == 
+  [ applyEXFExpr(p_list(b_i), p_ids) | b_i in set inds p_list ] ;
+
+applyEXFLocalDefList : seq of AS`LocalDef * set of XF`EXFId -> seq of AS`LocalDef
+applyEXFLocalDefList(localDefs, p_ids) == 
+  [ applyEXFLocalDef(localDefs(b_i), p_ids) | b_i in set inds localDefs ] ;
+
+applyEXFLocalDef : AS`LocalDef * set of XF`EXFId -> AS`LocalDef
+applyEXFLocalDef(p_localDef, p_ids) == 
+  cases true :
+    (is_AS`ValueDef(p_localDef))  ->  applyEXFValueDef(p_localDef, p_ids),
+    others ->  applyEXFFnDef(p_localDef, p_ids)
+  end ; 
+
+applyEXFPatternBind : AS`PatternBind * set of XF`EXFId -> AS`PatternBind
+applyEXFPatternBind(p_pb, p_ids) == 
+  cases true :
+    (is_AS`SetBind(p_pb))  ->  applyEXFSetBind(p_pb, p_ids), 
+    (is_AS`TypeBind(p_pb))  ->  applyEXFTypeBind(p_pb, p_ids), 
+    others  ->  applyEXFPat(p_pb, p_ids)
+  end ;
+
+applyEXFBind : AS`Bind * set of XF`EXFId -> AS`Bind
+applyEXFBind(p_pb, p_ids) == 
+  cases true :
+    (is_AS`SetBind(p_pb))  ->  applyEXFSetBind(p_pb, p_ids), 
+    (is_AS`TypeBind(p_pb))  ->  applyEXFTypeBind(p_pb, p_ids)
+  end ;
+
+applyEXFTypeBind : AS`TypeBind * set of XF`EXFId -> AS`TypeBind
+applyEXFTypeBind(p_tb, p_ids) == 
+  let l_newPat = applyEXFPat(p_tb.pat, p_ids) in
+  mk_AS`TypeBind(l_newPat, p_tb.tp, nilCid) ;
+
+applyEXFTypeBindList : seq of AS`TypeBind * set of XF`EXFId -> seq of AS`TypeBind
+applyEXFTypeBindList(p_list, p_ids) == 
+  [ applyEXFTypeBind(p_list(b_i), p_ids) | b_i in set inds p_list ] ;
+
+applyEXFSetBind  : AS`SetBind * set of XF`EXFId -> AS`SetBind
+applyEXFSetBind(mk_AS`SetBind(p_pat, p_expr, -), p_ids) == 
+  let l_newPat = applyEXFPat(p_pat, p_ids),
+      l_newExpr = applyEXFExpr(p_expr, p_ids)
+  in
+  mk_AS`SetBind(l_newPat, l_newExpr, nilCid) ; 
+
+applyEXFSeqBind  : AS`SeqBind * set of XF`EXFId -> AS`SeqBind
+applyEXFSeqBind(mk_AS`SeqBind(p_pat, p_expr, -), p_ids) == 
+  let l_newPat = applyEXFPat(p_pat, p_ids),
+      l_newExpr = applyEXFExpr(p_expr, p_ids)
+  in
+  mk_AS`SeqBind(l_newPat, l_newExpr, nilCid) ; 
+
+applyEXFMultBind : AS`MultBind * set of XF`EXFId -> AS`MultBind
+applyEXFMultBind(p_pb, p_ids) == 
+  cases true :
+    (is_AS`MultSetBind(p_pb))  ->  applyEXFMultSetBind(p_pb, p_ids), 
+    (is_AS`MultTypeBind(p_pb))  ->  applyEXFMultTypeBind(p_pb, p_ids)
+  end ;
+
+applyEXFMultTypeBind : AS`MultTypeBind * set of XF`EXFId -> AS`MultTypeBind
+applyEXFMultTypeBind(p_tb, p_ids) == 
+  let l_newPats = applyEXFPatList(p_tb.pat, p_ids) in
+  mk_AS`MultTypeBind(l_newPats, p_tb.tp, nilCid) ;
+
+applyEXFMultSetBind  : AS`MultSetBind * set of XF`EXFId -> AS`MultSetBind
+applyEXFMultSetBind(mk_AS`MultSetBind(p_pats, p_expr, -), p_ids) == 
+  let l_newPats = applyEXFPatList(p_pats, p_ids),
+      l_newExpr = applyEXFExpr(p_expr, p_ids)
+  in
+  mk_AS`MultSetBind(l_newPats, l_newExpr, nilCid) ;
+
+applyEXFBindList : seq of AS`MultBind * set of XF`EXFId -> seq of AS`MultBind
+applyEXFBindList(p_list, p_ids) == 
+  [ applyEXFMultBind(p_list(b_i), p_ids) | b_i in set inds p_list ] ;
+
+applyEXFPBE : (AS`PatternBind * AS`Expr) * set of XF`EXFId -> (AS`PatternBind * AS`Expr)
+applyEXFPBE(mk_(p_pb, p_expr), p_ids) ==   
+  let l_pb = applyEXFPatternBind(p_pb, p_ids),
+      l_expr = applyEXFExpr(p_expr, p_ids)
+  in
+  mk_(l_pb, l_expr) ;
+
+applyEXFPBEList : seq of (AS`PatternBind * AS`Expr) * set of XF`EXFId -> seq of (AS`PatternBind * AS`Expr)
+applyEXFPBEList(p_pbel, p_ids) ==  
+  [ applyEXFPBE(p_pbel(b_i), p_ids) | b_i in set inds p_pbel ] ;
+
+applyEXFStateDesignator : AS`StateDesignator * set of XF`EXFId -> AS`StateDesignator
+applyEXFStateDesignator(p_sd, p_ids) == 
+  cases true :
+    (is_AS`FieldRef(p_sd))  ->  applyEXFFieldRef(p_sd, p_ids), 
+    (is_AS`MapOrSeqRef(p_sd))  ->  applyEXFMapOrSeqRef(p_sd, p_ids), 
+    others  ->  mu(p_sd, cid |-> nilCid)
+  end ;
+
+applyEXFFieldRef : AS`FieldRef * set of XF`EXFId -> AS`FieldRef
+applyEXFFieldRef(p_fr, p_ids) == 
+  let l_newSd = applyEXFStateDesignator(p_fr.var, p_ids) in
+  mk_AS`FieldRef(l_newSd, p_fr.sel, nilCid) ;
+
+applyEXFMapOrSeqRef : AS`MapOrSeqRef * set of XF`EXFId -> AS`MapOrSeqRef
+applyEXFMapOrSeqRef(p_msr, p_ids) == 
+  let l_newVar = applyEXFStateDesignator(p_msr.var, p_ids),
+      l_newArg = applyEXFExpr(p_msr.arg, p_ids)
+  in
+  mk_AS`MapOrSeqRef(l_newVar, l_newArg, nilCid) ;
+
+applyEXFElseifStmt : AS`ElseifStmt * set of XF`EXFId -> AS`ElseifStmt
+applyEXFElseifStmt(p_stmt, p_ids) == 
+  let l_newTest = applyEXFExpr(p_stmt.test, p_ids),
+      l_newCons = applyEXFStmt(p_stmt.cons, p_ids)
+  in
+  mk_AS`ElseifStmt(l_newTest, l_newCons, nilCid) ;
+
+applyEXFElseifStmtList : seq of AS`ElseifStmt * set of XF`EXFId -> seq of AS`ElseifStmt
+applyEXFElseifStmtList(p_list, p_ids) == 
+  [ applyEXFElseifStmt(p_list(b_i), p_ids) | b_i in set inds p_list ] ;
+
+applyEXFCasesStmtAltn : AS`CasesStmtAltn * set of XF`EXFId -> AS`CasesStmtAltn
+applyEXFCasesStmtAltn(p_altn, p_ids) == 
+  let l_newMatch = applyEXFPatList(p_altn.match, p_ids),
+      l_newBody = applyEXFStmt(p_altn.body, p_ids)
+  in
+  mk_AS`CasesStmtAltn(l_newMatch, l_newBody, nilCid) ;
+
+applyEXFCasesStmtAltnList : seq of AS`CasesStmtAltn * set of XF`EXFId -> seq of AS`CasesStmtAltn
+applyEXFCasesStmtAltnList(p_list, p_ids) == 
+  [ applyEXFCasesStmtAltn(p_list(b_i), p_ids) | b_i in set inds p_list ] ;
+
+applyEXFTrap : AS`Trap * set of XF`EXFId -> AS`Trap
+applyEXFTrap(p_trp, p_ids) == 
+  let l_newMatch = applyEXFPatternBind(p_trp.match, p_ids),
+      l_newPost = applyEXFStmt(p_trp.trappost, p_ids)
+  in
+  mk_AS`Trap(l_newMatch, l_newPost, nilCid) ;
+
+applyEXFTrapList : seq of AS`Trap * set of XF`EXFId -> seq of AS`Trap
+applyEXFTrapList(p_list, p_ids) == 
+  [ applyEXFTrap(p_list(b_i), p_ids) | b_i in set inds p_list ] ;
+
+applyEXFStmtList : seq of AS`Stmt * set of XF`EXFId -> seq of AS`Stmt
+applyEXFStmtList(p_list, p_ids) == 
+  [ applyEXFStmt(p_list(b_i), p_ids) | b_i in set inds p_list ] ;
+
+applyEXFStmt : AS`Stmt * set of XF`EXFId -> AS`Stmt
+applyEXFStmt(p_stmt, p_ids) == 
+  cases true :
+    (is_AS`DefStmt(p_stmt)) -> applyEXFDefStmt(p_stmt, p_ids),
+    (is_AS`LetStmt(p_stmt)) -> applyEXFLetStmt(p_stmt, p_ids),
+    (is_AS`LetBeSTStmt(p_stmt)) -> applyEXFLetBeSTStmt(p_stmt, p_ids),
+    (is_AS`AssignStmt(p_stmt)) -> applyEXFAssignStmt(p_stmt, p_ids),
+    (is_AS`AtomicAssignStmt(p_stmt)) -> applyEXFAtomicAssignStmt(p_stmt, p_ids),
+    (is_AS`SeqForLoopStmt(p_stmt)) -> applyEXFSeqForLoopStmt(p_stmt, p_ids),
+    (is_AS`SetForLoopStmt(p_stmt)) -> applyEXFSetForLoopStmt(p_stmt, p_ids),
+    (is_AS`IndexForLoopStmt(p_stmt)) -> applyEXFIndexForLoopStmt(p_stmt, p_ids),
+    (is_AS`WhileLoopStmt(p_stmt)) -> applyEXFWhileLoopStmt(p_stmt, p_ids),
+    (is_AS`CallStmt(p_stmt)) -> applyEXFCallStmt(p_stmt, p_ids),
+    (is_AS`ReturnStmt(p_stmt)) -> applyEXFReturnStmt(p_stmt, p_ids),
+    (is_AS`IfStmt(p_stmt)) -> applyEXFIfStmt(p_stmt, p_ids),
+    (is_AS`CasesStmt(p_stmt)) -> applyEXFCasesStmt(p_stmt, p_ids),
+    (is_AS`AlwaysStmt(p_stmt)) -> applyEXFAlwaysStmt(p_stmt, p_ids),
+    (is_AS`ExitStmt(p_stmt)) -> applyEXFExitStmt(p_stmt, p_ids),
+    (is_AS`TrapStmt(p_stmt)) -> applyEXFTrapStmt(p_stmt, p_ids),
+    (is_AS`RecTrapStmt(p_stmt)) -> applyEXFRecTrapStmt(p_stmt, p_ids),
+    (is_AS`BlockStmt(p_stmt)) -> applyEXFBlockStmt(p_stmt, p_ids),
+    (is_AS`NonDetStmt(p_stmt)) -> applyEXFNonDetStmt(p_stmt, p_ids),
+    (is_AS`SpecificationStmt(p_stmt)) -> applyEXFSpecificationStmt(p_stmt, p_ids),
+    (is_AS`StartStmt(p_stmt)) -> applyEXFStartStmt(p_stmt, p_ids),
+    (is_AS`StartListStmt(p_stmt)) -> applyEXFStartListStmt(p_stmt, p_ids),
+    others -> mu(p_stmt, cid |-> nilCid)
+  end;
+
+applyEXFDefStmt : AS`DefStmt * set of XF`EXFId -> AS`DefStmt
+applyEXFDefStmt(p_stmt, p_ids) == 
+  let l_newPbe = applyEXFPBEList(p_stmt.value, p_ids),
+      l_newStmt = applyEXFStmt(p_stmt.In, p_ids)
+  in
+  mk_AS`DefStmt(l_newPbe, l_newStmt, nilCid) ;
+
+applyEXFLetStmt : AS`LetStmt * set of XF`EXFId -> AS`LetStmt
+applyEXFLetStmt(p_stmt, p_ids) ==  
+  let l_newDefs = applyEXFLocalDefList(p_stmt.localdef, p_ids),
+      l_newStmt = applyEXFStmt(p_stmt.In, p_ids)
+  in
+  mk_AS`LetStmt(l_newDefs, l_newStmt, nilCid) ;
+
+applyEXFLetBeSTStmt : AS`LetBeSTStmt * set of XF`EXFId -> AS`LetBeSTStmt
+applyEXFLetBeSTStmt(p_stmt, p_ids) ==  
+  let l_newBind = applyEXFBindList(p_stmt.bind, p_ids),
+      l_newExpr = applyEXFOptExpr(p_stmt.St, p_ids),
+      l_newStmt = applyEXFStmt(p_stmt.In, p_ids)
+  in
+  mk_AS`LetBeSTStmt(l_newBind, l_newExpr, l_newStmt, nilCid) ;
+
+applyEXFAssignStmt : AS`AssignStmt * set of XF`EXFId -> AS`AssignStmt
+applyEXFAssignStmt(p_stmt, p_ids) == 
+  let l_newLhs = applyEXFStateDesignator(p_stmt.lhs, p_ids),
+      l_newRhs = applyEXFExpr(p_stmt.rhs, p_ids)
+  in
+  mk_AS`AssignStmt(l_newLhs, l_newRhs, nilCid) ;
+
+applyEXFAssignStmtList : seq of AS`AssignStmt * set of XF`EXFId -> seq of AS`AssignStmt
+applyEXFAssignStmtList(p_list, p_ids) == 
+  [ applyEXFAssignStmt(p_list(b_i), p_ids) | b_i in set inds p_list ] ;
+
+applyEXFAtomicAssignStmt : AS`AtomicAssignStmt * set of XF`EXFId -> AS`AtomicAssignStmt
+applyEXFAtomicAssignStmt(p_stmt, p_ids) == 
+  let l_newList = applyEXFAssignStmtList(p_stmt.atm, p_ids) in
+  mk_AS`AtomicAssignStmt(l_newList, nilCid) ; 
+
+applyEXFSeqForLoopStmt : AS`SeqForLoopStmt * set of XF`EXFId -> AS`SeqForLoopStmt
+applyEXFSeqForLoopStmt(p_stmt, p_ids) == 
+  let l_newBind = applyEXFPatternBind(p_stmt.cv, p_ids),
+      l_newExpr = applyEXFExpr(p_stmt.fseq, p_ids),
+      l_newStmt = applyEXFStmt(p_stmt.body, p_ids)
+  in
+  mk_AS`SeqForLoopStmt(l_newBind, l_newExpr, l_newStmt, nilCid) ;
+
+applyEXFSetForLoopStmt : AS`SetForLoopStmt * set of XF`EXFId -> AS`SetForLoopStmt
+applyEXFSetForLoopStmt(p_stmt, p_ids) == 
+  let l_newPat = applyEXFPat(p_stmt.cv, p_ids),
+      l_newExpr = applyEXFExpr(p_stmt.fset, p_ids),
+      l_newStmt = applyEXFStmt(p_stmt.body, p_ids)
+  in
+  mk_AS`SetForLoopStmt(l_newPat, l_newExpr, l_newStmt, nilCid) ;
+
+applyEXFIndexForLoopStmt : AS`IndexForLoopStmt * set of XF`EXFId -> AS`IndexForLoopStmt
+applyEXFIndexForLoopStmt(p_stmt, p_ids) == 
+  let l_newLb = applyEXFExpr(p_stmt.lb, p_ids),
+      l_newUb = applyEXFExpr(p_stmt.ub, p_ids),
+      l_newExpr = applyEXFOptExpr(p_stmt.By, p_ids),
+      l_newStmt = applyEXFStmt(p_stmt.body, p_ids)
+  in
+  mk_AS`IndexForLoopStmt(p_stmt.cv, l_newLb, l_newUb, l_newExpr, l_newStmt, nilCid) ;
+
+applyEXFWhileLoopStmt : AS`WhileLoopStmt * set of XF`EXFId -> AS`WhileLoopStmt
+applyEXFWhileLoopStmt(p_stmt, p_ids) == 
+  let l_newTest = applyEXFExpr(p_stmt.test, p_ids),
+      l_newBody = applyEXFStmt(p_stmt.body, p_ids)
+  in
+  mk_AS`WhileLoopStmt(l_newTest, l_newBody, nilCid) ;
+
+applyEXFCallStmt : AS`CallStmt * set of XF`EXFId -> AS`CallStmt
+applyEXFCallStmt(p_stmt, p_ids) == 
+  let l_newObj = applyEXFOptExpr(p_stmt.obj, p_ids),
+      l_newArgs = applyEXFExprList(p_stmt.args, p_ids)
+  in
+  mk_AS`CallStmt(l_newObj, p_stmt.oprt, l_newArgs, nilCid) ;
+
+applyEXFReturnStmt : AS`ReturnStmt * set of XF`EXFId -> AS`ReturnStmt
+applyEXFReturnStmt(p_stmt, p_ids) ==
+  let l_newVal = applyEXFOptExpr(p_stmt.val, p_ids) in
+  mk_AS`ReturnStmt(l_newVal, nilCid) ; 
+
+applyEXFIfStmt : AS`IfStmt * set of XF`EXFId -> AS`IfStmt
+applyEXFIfStmt(p_stmt, p_ids) ==
+  let l_newTest = applyEXFExpr(p_stmt.test, p_ids),
+      l_newCons = applyEXFStmt(p_stmt.cons, p_ids),
+      l_newElsif = applyEXFElseifStmtList(p_stmt.elsif, p_ids),
+      l_newAltn = applyEXFOptStmt(p_stmt.altn, p_ids)
+  in
+  mk_AS`IfStmt(l_newTest, l_newCons, l_newElsif, l_newAltn, nilCid) ;
+
+applyEXFCasesStmt : AS`CasesStmt * set of XF`EXFId -> AS`CasesStmt
+applyEXFCasesStmt(p_stmt, p_ids) == 
+  let l_newSel = applyEXFExpr(p_stmt.sel, p_ids),
+      l_newAltns = applyEXFCasesStmtAltnList(p_stmt.altns, p_ids),
+      l_newOther = applyEXFOptStmt(p_stmt.Others, p_ids)
+  in
+  mk_AS`CasesStmt(l_newSel, l_newAltns, l_newOther, nilCid) ;
+
+applyEXFAlwaysStmt : AS`AlwaysStmt * set of XF`EXFId -> AS`AlwaysStmt
+applyEXFAlwaysStmt(p_stmt, p_ids) ==
+  let l_newPost = applyEXFStmt(p_stmt.Post, p_ids),
+      l_newBody = applyEXFStmt(p_stmt.body, p_ids)
+  in
+  mk_AS`AlwaysStmt(l_newPost, l_newBody, nilCid) ;
+
+applyEXFExitStmt : AS`ExitStmt * set of XF`EXFId -> AS`ExitStmt
+applyEXFExitStmt(p_stmt, p_ids) ==
+  let l_newExpr = applyEXFOptExpr(p_stmt.expr, p_ids) in
+  mk_AS`ExitStmt(l_newExpr, nilCid) ; 
+
+applyEXFTrapStmt : AS`TrapStmt * set of XF`EXFId -> AS`TrapStmt
+applyEXFTrapStmt(p_stmt, p_ids) ==
+  let l_newPat = applyEXFPatternBind(p_stmt.pat, p_ids),
+      l_newPost = applyEXFStmt(p_stmt.Post, p_ids),
+      l_newBody = applyEXFStmt(p_stmt.body, p_ids)
+  in
+  mk_AS`TrapStmt(l_newPat, l_newPost, l_newBody, nilCid) ;
+
+applyEXFRecTrapStmt : AS`RecTrapStmt * set of XF`EXFId -> AS`RecTrapStmt
+applyEXFRecTrapStmt(p_stmt, p_ids) == 
+  let l_newTrap = applyEXFTrapList(p_stmt.traps, p_ids),
+      l_newBody = applyEXFStmt(p_stmt.body, p_ids)
+  in
+  mk_AS`RecTrapStmt(l_newTrap, l_newBody, nilCid) ;
+
+applyEXFBlockStmt : AS`BlockStmt * set of XF`EXFId -> AS`BlockStmt
+applyEXFBlockStmt(p_stmt, p_ids) == 
+  let l_newDcls = applyEXFAssignDefList(p_stmt.dcls, p_ids),
+      l_newBody = applyEXFStmtList(p_stmt.stmts, p_ids)
+  in
+  mk_AS`BlockStmt(l_newDcls, l_newBody, nilCid) ;
+
+applyEXFNonDetStmt : AS`NonDetStmt * set of XF`EXFId -> AS`NonDetStmt
+applyEXFNonDetStmt(p_stmt, p_ids) == 
+  let l_newStmts = applyEXFStmtList(p_stmt.stmts, p_ids) in
+  mk_AS`NonDetStmt(l_newStmts, nilCid) ;
+
+applyEXFSpecificationStmt : AS`SpecificationStmt * set of XF`EXFId -> AS`SpecificationStmt
+applyEXFSpecificationStmt(p_stmt, p_ids) == 
+  let l_newPre = applyEXFOptExpr(p_stmt.oppre, p_ids),
+      l_newPost = applyEXFExpr(p_stmt.oppost, p_ids),
+      l_newError = applyEXFErrorList(p_stmt.excps, p_ids)
+  in
+  mk_AS`SpecificationStmt(p_stmt.opext, l_newPre, l_newPost, l_newError, nilCid) ;
+
+applyEXFStartStmt : AS`StartStmt * set of XF`EXFId -> AS`StartStmt
+applyEXFStartStmt(p_stmt, p_ids) == 
+  let l_newExpr = applyEXFExpr(p_stmt.expr, p_ids) in
+  mk_AS`StartStmt(l_newExpr, nilCid) ;
+
+applyEXFStartListStmt : AS`StartListStmt * set of XF`EXFId -> AS`StartListStmt
+applyEXFStartListStmt(p_stmt, p_ids) == 
+  let l_newExpr = applyEXFExpr(p_stmt.expr, p_ids) in
+  mk_AS`StartListStmt(l_newExpr, nilCid) ;
+
+applyEXFElseifExpr : AS`ElseifExpr * set of XF`EXFId -> AS`ElseifExpr
+applyEXFElseifExpr(p_expr, p_ids) == 
+  let l_newTest = applyEXFExpr(p_expr.test, p_ids),
+      l_newCons = applyEXFExpr(p_expr.cons, p_ids)
+  in
+  mk_AS`ElseifExpr(l_newTest, l_newCons, nilCid) ;
+
+applyEXFElseifExprList : seq of AS`ElseifExpr * set of XF`EXFId -> seq of AS`ElseifExpr
+applyEXFElseifExprList(p_list, p_ids) == 
+  [ applyEXFElseifExpr(p_list(b_i), p_ids) | b_i in set inds p_list ] ;
+
+applyEXFCaseAltn : AS`CaseAltn * set of XF`EXFId -> AS`CaseAltn
+applyEXFCaseAltn(p_altn, p_ids) == 
+  let l_newMatch = applyEXFPatList(p_altn.match, p_ids),
+      l_newBody = applyEXFExpr(p_altn.body, p_ids)
+  in
+  mk_AS`CaseAltn(l_newMatch, l_newBody, nilCid) ;
+
+applyEXFCaseAltnList : seq of AS`CaseAltn * set of XF`EXFId -> seq of AS`CaseAltn
+applyEXFCaseAltnList(p_list, p_ids) == 
+  [ applyEXFCaseAltn(p_list(b_i), p_ids) | b_i in set inds p_list ] ;
+
+applyEXFMaplet : AS`Maplet  * set of XF`EXFId -> AS`Maplet
+applyEXFMaplet(p_expr, p_ids) == 
+  let l_newDom = applyEXFExpr(p_expr.mapdom, p_ids),
+      l_newRng = applyEXFExpr(p_expr.maprng, p_ids)
+  in
+  mk_AS`Maplet(l_newDom, l_newRng, nilCid) ;
+
+applyEXFMapletList : seq of AS`Maplet  * set of XF`EXFId -> seq of AS`Maplet
+applyEXFMapletList(p_list, p_ids) == 
+  [ applyEXFMaplet(p_list(b_i), p_ids) | b_i in set inds p_list ] ;
+
+applyEXFRecordModification : AS`RecordModification * set of XF`EXFId -> AS`RecordModification
+applyEXFRecordModification(p_rm, p_ids) == 
+  let l_newExpr = applyEXFExpr(p_rm.newexpr, p_ids) in
+  mk_AS`RecordModification(p_rm.field, l_newExpr, nilCid) ;
+
+applyEXFRecordModificationList : seq of AS`RecordModification * set of XF`EXFId -> seq of AS`RecordModification
+applyEXFRecordModificationList(p_list, p_ids) == 
+  [ applyEXFRecordModification(p_list(b_i), p_ids) | b_i in set inds p_list ] ;
+
+applyEXFExpr : AS`Expr * set of XF`EXFId -> AS`Expr
+applyEXFExpr(p_expr, p_ids) == 
+  cases true :
+  (is_AS`DefExpr(p_expr)) -> applyEXFDefExpr(p_expr, p_ids),
+  (is_AS`LetExpr(p_expr)) -> applyEXFLetExpr(p_expr, p_ids),
+  (is_AS`LetBeSTExpr(p_expr)) -> applyEXFLetBeSTExpr(p_expr, p_ids),
+  (is_AS`IfExpr(p_expr)) -> applyEXFIfExpr(p_expr, p_ids),
+  (is_AS`CasesExpr(p_expr)) -> applyEXFCasesExpr(p_expr, p_ids),
+  (is_AS`PrefixExpr (p_expr)) -> applyEXFPrefixExpr(p_expr, p_ids),
+  (is_AS`BinaryExpr(p_expr)) -> applyEXFBinaryExpr(p_expr, p_ids),
+  (is_AS`AllOrExistsExpr(p_expr)) -> applyEXFAllOrExistsExpr(p_expr, p_ids),
+  (is_AS`ExistsUniqueExpr(p_expr)) -> applyEXFExistsUniqueExpr(p_expr, p_ids),
+  (is_AS`SetEnumerationExpr(p_expr)) -> applyEXFSetEnumerationExpr(p_expr, p_ids),
+  (is_AS`SetComprehensionExpr(p_expr)) -> applyEXFSetComprehensionExpr(p_expr, p_ids),
+  (is_AS`SetRangeExpr(p_expr)) -> applyEXFSetRangeExpr(p_expr, p_ids),
+  (is_AS`SeqEnumerationExpr(p_expr)) -> applyEXFSeqEnumerationExpr(p_expr, p_ids),
+  (is_AS`SeqComprehensionExpr(p_expr)) -> applyEXFSeqComprehensionExpr(p_expr, p_ids),
+  (is_AS`SubSequenceExpr(p_expr)) -> applyEXFSubSequenceExpr(p_expr, p_ids),
+  (is_AS`SeqModifyMapOverrideExpr(p_expr)) -> applyEXFSeqModifyMapOverrideExpr(p_expr, p_ids),
+  (is_AS`MapEnumerationExpr(p_expr)) -> applyEXFMapEnumerationExpr(p_expr, p_ids),
+  (is_AS`MapComprehensionExpr(p_expr)) -> applyEXFMapComprehensionExpr(p_expr, p_ids),
+  (is_AS`TupleConstructorExpr(p_expr)) -> applyEXFTupleConstructorExpr(p_expr, p_ids),
+  (is_AS`TupleSelectExpr(p_expr)) -> applyEXFTupleSelectExpr(p_expr, p_ids),
+  (is_AS`TypeJudgementExpr (p_expr)) -> applyEXFTypeJudgementExpr(p_expr, p_ids),
+  (is_AS`PreConditionApplyExpr (p_expr)) -> applyEXFPreConditionApplyExpr(p_expr, p_ids),
+  (is_AS`TokenConstructorExpr(p_expr)) -> applyEXFTokenConstructorExpr(p_expr, p_ids),
+  (is_AS`RecordConstructorExpr (p_expr)) -> applyEXFRecordConstructorExpr(p_expr, p_ids),
+  (is_AS`RecordModifierExpr (p_expr)) -> applyEXFRecordModifierExpr(p_expr, p_ids),
+  (is_AS`ApplyExpr (p_expr)) -> applyEXFApplyExpr(p_expr, p_ids),
+  (is_AS`FieldSelectExpr(p_expr)) -> applyEXFFieldSelectExpr(p_expr, p_ids),
+  (is_AS`LambdaExpr(p_expr)) -> applyEXFLambdaExpr(p_expr, p_ids),
+  (is_AS`IsExpr (p_expr)) -> applyEXFIsExpr (p_expr, p_ids),
+  (is_AS`IotaExpr(p_expr)) -> applyEXFIotaExpr(p_expr, p_ids),
+  (is_AS`BracketedExpr(p_expr)) -> applyEXFBracketedExpr(p_expr, p_ids),
+  (is_AS`NewExpr(p_expr)) -> applyEXFNewExpr(p_expr, p_ids),
+  (is_AS`SameClassExpr(p_expr)) -> applyEXFSameClassExpr(p_expr, p_ids),
+  (is_AS`SameBaseClassExpr(p_expr)) -> applyEXFSameBaseClassExpr(p_expr, p_ids),
+  (is_AS`IsOfClassExpr(p_expr)) -> applyEXFIsOfClassExpr(p_expr, p_ids),
+  (is_AS`IsOfBaseClassExpr(p_expr)) -> applyEXFIsOfBaseClassExpr(p_expr, p_ids),
+    others -> mu(p_expr, cid |-> nilCid)
+  end;
+
+applyEXFIsOfBaseClassExpr : AS`IsOfBaseClassExpr * set of XF`EXFId -> AS`IsOfBaseClassExpr
+applyEXFIsOfBaseClassExpr(p_expr, p_ids) == 
+  let l_newArg = applyEXFExpr(p_expr.arg, p_ids) in
+  mk_AS`IsOfBaseClassExpr(p_expr.cls, l_newArg, nilCid) ;
+
+applyEXFIsOfClassExpr : AS`IsOfClassExpr * set of XF`EXFId -> AS`IsOfClassExpr
+applyEXFIsOfClassExpr(p_expr, p_ids) == 
+  let l_newArg = applyEXFExpr(p_expr.arg, p_ids) in
+  mk_AS`IsOfClassExpr(p_expr.cls, l_newArg, nilCid) ;
+
+applyEXFSameBaseClassExpr : AS`SameBaseClassExpr * set of XF`EXFId -> AS`SameBaseClassExpr
+applyEXFSameBaseClassExpr(p_expr, p_ids) ==
+  let l_newLhs = applyEXFExpr(p_expr.expr1, p_ids),
+      l_newRhs = applyEXFExpr(p_expr.expr2, p_ids)
+  in
+  mk_AS`SameBaseClassExpr(l_newLhs, l_newRhs, nilCid) ;
+
+applyEXFSameClassExpr : AS`SameClassExpr * set of XF`EXFId -> AS`SameClassExpr
+applyEXFSameClassExpr(p_expr, p_ids) ==
+  let l_newLhs = applyEXFExpr(p_expr.expr1, p_ids),
+      l_newRhs = applyEXFExpr(p_expr.expr2, p_ids)
+  in
+  mk_AS`SameClassExpr(l_newLhs, l_newRhs, nilCid) ;
+
+applyEXFNewExpr : AS`NewExpr * set of XF`EXFId -> AS`NewExpr
+applyEXFNewExpr(p_expr, p_ids) == 
+  let l_newArgs = applyEXFExprList(p_expr.args, p_ids) in
+  mk_AS`NewExpr(p_expr.cls, l_newArgs, nilCid) ;
+
+applyEXFBracketedExpr : AS`BracketedExpr * set of XF`EXFId -> AS`BracketedExpr
+applyEXFBracketedExpr(p_expr, p_ids) == 
+  let l_newExpr = applyEXFExpr(p_expr.expr, p_ids) in
+  mk_AS`BracketedExpr(l_newExpr, nilCid) ;
+
+applyEXFIotaExpr : AS`IotaExpr * set of XF`EXFId -> AS`IotaExpr
+applyEXFIotaExpr(p_expr, p_ids) ==
+  let l_newBind = applyEXFBind(p_expr.bind, p_ids),
+      l_newExpr = applyEXFExpr(p_expr.pred, p_ids)
+  in
+  mk_AS`IotaExpr(l_newBind, l_newExpr, nilCid) ;
+
+applyEXFLetExpr : AS`LetExpr * set of XF`EXFId -> AS`LetExpr
+applyEXFLetExpr(p_expr, p_ids) ==  
+  let l_newDefs = applyEXFLocalDefList(p_expr.localdef, p_ids),
+      l_newBody = applyEXFExpr(p_expr.body, p_ids)
+  in
+  mk_AS`LetExpr(l_newDefs, l_newBody, nilCid) ;
+
+applyEXFLetBeSTExpr : AS`LetBeSTExpr * set of XF`EXFId -> AS`LetBeSTExpr
+applyEXFLetBeSTExpr(p_expr, p_ids) ==  
+  let l_newLhs = applyEXFBindList(p_expr.lhs, p_ids),
+      l_newSuch = applyEXFOptExpr(p_expr.St, p_ids),
+      l_newExpr = applyEXFExpr(p_expr.In, p_ids)
+  in
+  mk_AS`LetBeSTExpr(l_newLhs, l_newSuch, l_newExpr, nilCid) ;
+
+applyEXFIfExpr : AS`IfExpr * set of XF`EXFId -> AS`IfExpr
+applyEXFIfExpr(p_expr, p_ids) ==
+  let l_newTest = applyEXFExpr(p_expr.test, p_ids),
+      l_newCons = applyEXFExpr(p_expr.cons, p_ids),
+      l_newElsif = applyEXFElseifExprList(p_expr.elsif, p_ids),
+      l_newAltn = applyEXFOptExpr(p_expr.altn, p_ids)
+  in
+  mk_AS`IfExpr(l_newTest, l_newCons, l_newElsif, l_newAltn, nilCid) ;
+
+applyEXFCasesExpr : AS`CasesExpr * set of XF`EXFId -> AS`CasesExpr
+applyEXFCasesExpr(p_expr, p_ids) ==
+  let l_newSel = applyEXFExpr(p_expr.sel, p_ids),
+      l_newAltn = applyEXFCaseAltnList(p_expr.altns, p_ids),
+      l_newOther = applyEXFOptExpr(p_expr.Others, p_ids)
+  in
+  mk_AS`CasesExpr(l_newSel, l_newAltn, l_newOther, nilCid) ;
+
+applyEXFPrefixExpr : AS`PrefixExpr * set of XF`EXFId -> AS`PrefixExpr
+applyEXFPrefixExpr(p_expr, p_ids) ==
+  let l_newExpr = applyEXFExpr(p_expr.arg, p_ids) in
+  mk_AS`PrefixExpr(p_expr.opr, l_newExpr, nilCid) ;
+
+applyEXFAllOrExistsExpr : AS`AllOrExistsExpr * set of XF`EXFId -> AS`AllOrExistsExpr
+applyEXFAllOrExistsExpr(p_expr, p_ids) == 
+  let l_newBind = applyEXFBindList(p_expr.bind, p_ids),
+      l_newExpr = applyEXFExpr(p_expr.pred, p_ids)
+  in
+  mk_AS`AllOrExistsExpr(p_expr.quant, l_newBind, l_newExpr, nilCid) ;
+
+applyEXFExistsUniqueExpr : AS`ExistsUniqueExpr * set of XF`EXFId -> AS`ExistsUniqueExpr
+applyEXFExistsUniqueExpr(p_expr, p_ids) == 
+  let l_newBind = applyEXFBind(p_expr.bind, p_ids),
+      l_newExpr = applyEXFExpr(p_expr.pred, p_ids)
+  in
+  mk_AS`ExistsUniqueExpr(l_newBind, l_newExpr, nilCid) ;
+
+applyEXFSetEnumerationExpr : AS`SetEnumerationExpr * set of XF`EXFId -> AS`SetEnumerationExpr
+applyEXFSetEnumerationExpr(p_expr, p_ids) ==
+  let l_newExprs = applyEXFExprList(p_expr.els, p_ids) in
+  mk_AS`SetEnumerationExpr(l_newExprs, nilCid) ;
+
+applyEXFSetComprehensionExpr : AS`SetComprehensionExpr * set of XF`EXFId -> AS`SetComprehensionExpr
+applyEXFSetComprehensionExpr(p_expr, p_ids) ==
+  let l_newElem = applyEXFExpr(p_expr.elem, p_ids),
+      l_newBind = applyEXFBindList(p_expr.bind, p_ids),
+      l_newPred = applyEXFOptExpr(p_expr.pred, p_ids)
+  in
+  mk_AS`SetComprehensionExpr(l_newElem, l_newBind, l_newPred, nilCid) ;
+
+applyEXFSetRangeExpr : AS`SetRangeExpr * set of XF`EXFId -> AS`SetRangeExpr
+applyEXFSetRangeExpr(p_expr, p_ids) ==
+  let l_newMin = applyEXFExpr(p_expr.lb, p_ids),
+      l_newMax = applyEXFExpr(p_expr.ub, p_ids)
+  in
+  mk_AS`SetRangeExpr(l_newMin, l_newMax, nilCid) ;
+
+applyEXFSeqEnumerationExpr : AS`SeqEnumerationExpr * set of XF`EXFId -> AS`SeqEnumerationExpr
+applyEXFSeqEnumerationExpr(p_expr, p_ids) ==
+  let l_newExprs = applyEXFExprList(p_expr.els, p_ids) in
+  mk_AS`SeqEnumerationExpr(l_newExprs, nilCid) ;
+
+applyEXFSeqComprehensionExpr : AS`SeqComprehensionExpr * set of XF`EXFId -> AS`SeqComprehensionExpr
+applyEXFSeqComprehensionExpr(mk_AS`SeqComprehensionExpr(p_elem, p_bind, p_pred,-), p_ids) ==
+  let l_newElem = applyEXFExpr(p_elem, p_ids),
+      l_newBind = cases true:
+                    (is_AS`SetBind(p_bind)) -> applyEXFSetBind(p_bind, p_ids),
+                    (is_AS`SeqBind(p_bind)) -> applyEXFSeqBind(p_bind, p_ids),
+                    others -> undefined
+                  end,
+      l_newPred = applyEXFOptExpr(p_pred, p_ids)
+  in
+  mk_AS`SeqComprehensionExpr(l_newElem, l_newBind, l_newPred, nilCid) ;
+
+applyEXFSubSequenceExpr : AS`SubSequenceExpr * set of XF`EXFId -> AS`SubSequenceExpr
+applyEXFSubSequenceExpr(p_expr, p_ids) ==
+  let l_newSeq = applyEXFExpr(p_expr.sequence, p_ids),
+      l_newMin = applyEXFExpr(p_expr.frompos, p_ids),
+      l_newMax = applyEXFExpr(p_expr.topos, p_ids)
+  in
+  mk_AS`SubSequenceExpr(l_newSeq, l_newMin, l_newMax, nilCid) ;
+
+applyEXFSeqModifyMapOverrideExpr : AS`SeqModifyMapOverrideExpr * set of XF`EXFId -> AS`SeqModifyMapOverrideExpr
+applyEXFSeqModifyMapOverrideExpr(p_expr, p_ids) == 
+  let l_newSeqmap = applyEXFExpr(p_expr.seqmap, p_ids),
+      l_newExpr = applyEXFExpr(p_expr.mapexp, p_ids)
+  in
+  mk_AS`SeqModifyMapOverrideExpr(l_newSeqmap, l_newExpr, nilCid) ;
+
+applyEXFMapEnumerationExpr : AS`MapEnumerationExpr * set of XF`EXFId -> AS`MapEnumerationExpr
+applyEXFMapEnumerationExpr(p_expr, p_ids) ==
+  let l_newMaplets = applyEXFMapletList(p_expr.els, p_ids) in
+  mk_AS`MapEnumerationExpr(l_newMaplets, nilCid) ;
+
+applyEXFMapComprehensionExpr : AS`MapComprehensionExpr * set of XF`EXFId -> AS`MapComprehensionExpr
+applyEXFMapComprehensionExpr(p_expr, p_ids) ==
+  let l_newElem = applyEXFMaplet(p_expr.elem, p_ids),
+      l_newBind = applyEXFBindList(p_expr.bind, p_ids),
+      l_newPred = applyEXFOptExpr(p_expr.pred, p_ids)
+  in
+  mk_AS`MapComprehensionExpr(l_newElem, l_newBind, l_newPred, nilCid) ;
+
+applyEXFTupleConstructorExpr : AS`TupleConstructorExpr * set of XF`EXFId -> AS`TupleConstructorExpr
+applyEXFTupleConstructorExpr(p_expr, p_ids) == 
+  let l_newExprs = applyEXFExprList(p_expr.fields, p_ids) in
+  mk_AS`TupleConstructorExpr(l_newExprs, nilCid) ;
+
+applyEXFTupleSelectExpr : AS`TupleSelectExpr * set of XF`EXFId -> AS`TupleSelectExpr
+applyEXFTupleSelectExpr(p_expr, p_ids) == 
+  let l_newExpr = applyEXFExpr(p_expr.tuple, p_ids) in
+  mk_AS`TupleSelectExpr(l_newExpr, p_expr.no, nilCid) ;
+
+applyEXFTypeJudgementExpr : AS`TypeJudgementExpr * set of XF`EXFId -> AS`TypeJudgementExpr
+applyEXFTypeJudgementExpr(p_expr, p_ids) == 
+  let l_newExpr = applyEXFExpr(p_expr.expr, p_ids) in 
+  mk_AS`TypeJudgementExpr(l_newExpr, p_expr.type, nilCid) ;
+
+applyEXFPreConditionApplyExpr : AS`PreConditionApplyExpr * set of XF`EXFId -> AS`PreConditionApplyExpr
+applyEXFPreConditionApplyExpr(p_expr, p_ids) ==
+  let l_newFct = applyEXFExpr(p_expr.fct, p_ids),
+      l_newArg = applyEXFExprList(p_expr.arg, p_ids)
+  in
+  mk_AS`PreConditionApplyExpr(l_newFct, l_newArg, nilCid) ;
+
+applyEXFTokenConstructorExpr : AS`TokenConstructorExpr * set of XF`EXFId -> AS`TokenConstructorExpr
+applyEXFTokenConstructorExpr(p_expr, p_ids) == 
+  let l_newExpr = applyEXFExpr(p_expr.field, p_ids) in
+  mk_AS`TokenConstructorExpr(l_newExpr, nilCid) ;
+
+applyEXFRecordConstructorExpr: AS`RecordConstructorExpr * set of XF`EXFId -> AS`RecordConstructorExpr
+applyEXFRecordConstructorExpr(p_expr, p_ids) == 
+  let l_newExpr = applyEXFExprList(p_expr.fields, p_ids) in
+  mk_AS`RecordConstructorExpr(p_expr.tag, l_newExpr, nilCid) ;
+
+applyEXFRecordModifierExpr : AS`RecordModifierExpr * set of XF`EXFId -> AS`RecordModifierExpr
+applyEXFRecordModifierExpr(p_expr, p_ids) == 
+  let l_newRec = applyEXFExpr(p_expr.rec, p_ids),
+      l_newMods = applyEXFRecordModificationList(p_expr.modifiers, p_ids)
+  in
+  mk_AS`RecordModifierExpr(l_newRec, l_newMods, nilCid) ;
+
+applyEXFApplyExpr : AS`ApplyExpr * set of XF`EXFId -> AS`ApplyExpr
+applyEXFApplyExpr(p_expr, p_ids) ==
+  let l_newFct = applyEXFExpr(p_expr.fct, p_ids),
+      l_newArg = applyEXFExprList(p_expr.arg, p_ids)
+  in
+  mk_AS`ApplyExpr(l_newFct, l_newArg, nilCid) ;
+
+applyEXFFieldSelectExpr : AS`FieldSelectExpr * set of XF`EXFId -> AS`FieldSelectExpr
+applyEXFFieldSelectExpr(p_expr, p_ids) == 
+  let l_newExpr = applyEXFExpr(p_expr.rec, p_ids) in
+  mk_AS`FieldSelectExpr(l_newExpr, p_expr.nm, nilCid) ;
+
+applyEXFLambdaExpr : AS`LambdaExpr * set of XF`EXFId -> AS`LambdaExpr
+applyEXFLambdaExpr(p_expr, p_ids) ==
+  let l_newParm = applyEXFTypeBindList(p_expr.parm, p_ids),
+      l_newBody = applyEXFExpr(p_expr.body, p_ids)
+  in
+  mk_AS`LambdaExpr(l_newParm, l_newBody, p_expr.type, nilCid) ;
+
+applyEXFIsExpr : AS`IsExpr * set of XF`EXFId -> AS`IsExpr
+applyEXFIsExpr(p_expr, p_ids) ==
+  let l_newExpr = applyEXFExpr(p_expr.arg, p_ids) in
+  mk_AS`IsExpr(p_expr.type, l_newExpr, nilCid) ;
+
+applyEXFDefExpr : AS`DefExpr * set of XF`EXFId -> AS`Expr
+applyEXFDefExpr(p_expr, p_ids) == 
+  cases true :
+    (mk_XF`EXFId(1) in set p_ids and XF`isRedundantDef(p_expr)) -> XF`getRedundantDefXF(p_expr),
+    (mk_XF`EXFId(2) in set p_ids and XF`isRenamingDef(p_expr)) -> XF`getRenamingDefXF(p_expr),
+    others ->
+       let l_newPbe = applyEXFPBEList(p_expr.Def, p_ids),
+           l_newExpr = applyEXFExpr(p_expr.In, p_ids)
+       in
+       mk_AS`DefExpr(l_newPbe, l_newExpr, nilCid) 
+  end ;
+
+applyEXFBinaryExpr : AS`BinaryExpr * set of XF`EXFId -> AS`Expr
+applyEXFBinaryExpr(p_expr, p_ids) == 
+  if mk_XF`EXFId(3) in set p_ids and XF`orToNotEquiv(p_expr)
+  then XF`getOrToNotEquivXF(p_expr)
+  else let l_newLeft = applyEXFExpr(p_expr.left, p_ids),
+      l_newRight = applyEXFExpr(p_expr.right, p_ids)
+  in
+  mk_AS`BinaryExpr(l_newLeft, p_expr.opr, l_newRight, nilCid) ;
+
+
+end AEX
+
+\end{vdm_al}

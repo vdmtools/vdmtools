@@ -1,0 +1,28 @@
+class View
+
+  operations
+
+      ShowAlarm: MSAWTypes`ModeA * Obstacle ==> () 
+      ShowAlarm (modeA, obstacle) ==
+        is subclass responsibility;
+
+      ShowObstacleArtificiel: MSAWTypes`Coordonnees * MSAWTypes`NM * MSAWTypes`Pieds ==> ()
+      ShowObstacleArtificiel (centre, rayon, altitude_maximale) ==
+        is subclass responsibility;
+
+      ShowZoneAeroport: MSAWTypes`Coordonnees * MSAWTypes`NM * MSAWTypes`Pieds * MSAWTypes`NM ==> ()
+      ShowZoneAeroport (centre, rayon, altitude_maximale, rayon_au_sol) ==
+        is subclass responsibility;
+
+      ShowRadarData: MSAWTypes`ModeA * MSAWTypes`Coordonnees * MSAWTypes`Pieds ==> ()
+      ShowRadarData (modeA, position, modeC) ==
+        is subclass responsibility;
+
+      ShowSegmentDePrediction: MSAWTypes`Coordonnees * MSAWTypes`Coordonnees ==> ()
+      ShowSegmentDePrediction (xy_queue, xy_tete) ==
+        is subclass responsibility;
+
+      ShowTime (t: MSAWTypes`Temps) ==
+        is subclass responsibility;
+
+end View

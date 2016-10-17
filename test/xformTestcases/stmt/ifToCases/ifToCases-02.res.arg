@@ -1,0 +1,23 @@
+"class A
+
+operations
+
+public Test : () ==> nat  
+Test() ==
+( cases true :
+	true -> ( dcl x : nat := 5;
+		cases x : 
+                  1 -> return 1,
+		  2 -> return 2
+                end),
+	others -> return 0
+	end;	
+	return 1);
+
+public Oper : nat * nat ==> nat
+Oper(a, b) ==
+  is not yet specified;
+
+   
+end A
+"

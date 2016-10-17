@@ -1,0 +1,41 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+
+
+
+public Test : () ==> seq of map int to int
+Test () ==
+( dcl res: seq of map int to int := [];
+  let s = {1|->1, 2|->2, 3|->3, 4|->4, 5|->5}
+  in ( let a munion b = s
+       in res := res ^ [a] ^ [b];
+       let {a |-> ar, b |-> br} munion c = s
+       in res := res ^ [c];
+       let c munion {a |-> ar,b |-> br,d |-> dr} = s
+       in res := res ^ [c];
+       let f munion {a |-> ar,b |-> br,c |-> cr,d |-> dr,e |-> er} = s
+       in res := res ^ [f];
+       let {a |-> ar,b |-> br,c |-> cr,d |-> dr,e |-> er} munion f = s
+       in res := res ^ [f];
+       let {a |-> ar,b |-> br ,c |-> cr,d |-> dr} munion f = s
+       in res := res ^ [f];
+       let f munion {a |-> ar,b |-> br,c |-> cr,d |-> dr}  = s
+       in res := res ^ [f];
+	 let - munion - = s
+	 in res := res ^ []
+     );
+  return res;
+)
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

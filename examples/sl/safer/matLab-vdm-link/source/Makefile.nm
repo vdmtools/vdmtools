@@ -1,0 +1,71 @@
+#
+# This makefile is used to compile clients that uses the CORBA
+# interface of the VDM Toolbox.  
+# This file should be used with the NMAKE tool on Win32 only.
+# 
+# Copyright IFAD 1998.  
+#
+
+# NOTE:
+# The variable TOP must point to the installation directory of omniORB
+#
+
+# Edit this variable to reflect the location of your installation
+OMNIDIR = \\hermes\local\share\lib\omniORB_2.6.1
+TBDIR="c:\Program Files\The IFAD VDM++ Toolbox V6.2"
+
+VDMAPI = ..\corba\metaiv_idlSK.obj corba_apiSK.obj corba_client.obj
+VDMLIB = vdm.lib
+WIN32LIB = user32.lib
+
+CORBA_CPPFLAGS = -D__WIN32__ -D__x86__ -D__NT__ -D__OSVERSION__=4
+INCDIR = -I. -I$(OMNIDIR)/include -I$(TBDIR)\cg\include -I$(TBDIR)\api\corba
+CORBA_LIB = omniORB260_rtd.lib omnithread2_rtd.lib wsock32.lib advapi32.lib \
+	    vdm.lib \
+            -libpath:$(OMNIDIR)/lib/x86_win32 -libpath:$(TBLIB)\cg\lib
+CXX = cl /nologo 
+CXXFLAGS = -MT -GX -GR $(DEBUG) $(CORBA_CPPFLAGS)
+
+#DEBUG = -Z7 -MTd
+#DEBUGLINK = -debug
+DEBUG = 
+DEBUGLINK = 
+
+COMPILEcc = $(CXX) $(CXXFLAGS) $(CPPFLAGS) $(TARGET_ARCH) $(INCDIR) -c
+CXXLINKOPTIONS = $(DEBUGLINK) /RELEASE /INCREMENTAL:NO /PDB:NONE /NOLOGO \
+           -align:0x1000 -subsystem:CONSOLE
+CCOUT = -Fo
+CCIN = -Tp
+LNKOUT = -out:
+LINK = link $(CXXLINKOPTIONS)
+
+OMNIIDL2 = $(OMNIDIR)\bin\x86_win32\omniidl2
+
+.SUFFIXES: .cc .obj
+
+all: saferinterfpp saferinterf
+
+allW95: saferinterfpp95 saferinterf95
+
+saferinterfpp: saferinterfpp.cpp 
+	mex -v -g -f ../mexopts-pp-NT4.bat saferinterfpp.cpp $(VDMAPI) $(VDMLIB) $(WIN32LIB)
+	mv -f saferinterfpp.dll ../../matlab/gui
+
+saferinterf: saferinterf.cpp
+	mex -v -g -f ../mexopts-sl-NT4.bat saferinterf.cpp $(VDMAPI) $(VDMLIB) $(WIN32LIB)
+	mv -f saferinterf.dll ../../matlab/gui
+
+saferinterfpp95: saferinterfpp.cpp
+	mex -v -g -f ../mexopts-pp-W95.bat saferinterfpp.cpp $(VDMAPI) $(VDMLIB) $(WIN32LIB)
+	mv -f saferinterfpp.dll ../../matlab/gui
+
+saferinterf95: saferinterf.cpp
+	mex -v -g -f ../mexopts-sl-W95.bat saferinterf.cpp $(VDMAPI) $(VDMLIB) $(WIN32LIB)
+	mv -f saferinterf.dll ../../matlab/gui
+
+
+clean:
+	rm -f *.obj *.pdb
+	rm -f vc60.pdb
+	cd ../corba nmake -f Client.nm clean
+

@@ -1,0 +1,83 @@
+\subsection{FIntegerT}
+FIntegerのテストを行う。
+
+\begin{vdm_al}
+--$Id $
+class FIntegerT is subclass of FInteger
+functions
+static public run : () +> bool
+run() == 
+let	testcases = [ t1(), t2(), t3() ]
+in
+FTestDriver`run(testcases);
+\end{vdm_al}
+
+\subsubsection{AsString, AsStringZ, AsCharを検査する}
+\begin{vdm_al}
+static t1 : () -> FTestDriver`TestCase
+t1() ==
+	mk_FTestDriver`TestCase(
+	"FIntegerT`t1\t AsString, AsStringZ, AsCharを検査する",
+	AsString(1234567890) = "1234567890" and
+	AsString(-1234567890) = "-1234567890" and
+	AsStringZ("zzz9")(9900) = "9900" and
+	AsStringZ("9")(0) = "0" and
+	AsStringZ("z")(0) = " " and
+	AsStringZ("z")(9) = "9" and
+	AsStringZ("zzz9")(9) = "   9" and
+	AsStringZ("0009")(9) = "0009" and
+	AsStringZ("-0009")(9) = "0009" and
+	AsStringZ("-zzz9")(-9999) = "-9999" and
+	AsStringZ("-zzz9")(-9) = "-   9" and
+	AsStringZ("-zzzzzzzzz9")(-1234567890) = "-1234567890" and
+	AsStringZ("zzz9")(-9999) = "9999" and
+	AsStringZ("zzz9")(-9) = "   9" and
+	AsString(0) = "0" and
+	AsChar(0) = "0" and 
+	AsChar(1) = "1" and
+	AsChar(2) = "2" and
+	AsChar(3) = "3" and
+	AsChar(4) = "4" and 
+	AsChar(5) = "5" and 
+	AsChar(6) = "6" and
+	AsChar(7) = "7" and
+	AsChar(8) = "8" and
+	AsChar(9) = "9" and
+	AsChar(10) = false
+	);
+\end{vdm_al}
+
+\subsubsection{Gcd, Lcmを検査する}
+\begin{vdm_al}
+static t2 : () -> FTestDriver`TestCase
+t2() ==
+	mk_FTestDriver`TestCase(
+	"FIntegerT`t2:\t Gcd, Lcmを検査する",
+	let	gcd = GCD(24),
+		lcm = LCM(7)
+	in
+	FSequence`Fmap[nat, nat](gcd)([36, 48, 16]) = [12, 24, 8]  and
+	FSequence`Fmap[nat, nat](lcm)([3, 4, 5]) = [21, 28, 35] and
+	LCM(7)(0) = 0 and
+	LCM(0)(3) = 0
+	);
+\end{vdm_al}
+
+\subsubsection{amodを検査する}
+\begin{vdm_al}
+static t3 : () -> FTestDriver`TestCase
+t3() ==
+	mk_FTestDriver`TestCase(
+	"FIntegerT`t3:\t amodを検査する",
+	amod(0)(12) = 12 and
+	amod(12)(12) = 12 and
+	amod(24)(12) = 12 and
+	amod(1)(12) = 1 and
+	amod(2)(12) = 2 and
+	amod(11)(12) = 11 and
+	amod(13)(12) = 1 and
+	amod(23)(12) = 11 
+	);
+
+end FIntegerT
+\end{vdm_al}

@@ -1,0 +1,288 @@
+class BundleWire is subclass of Object
+operations 
+public  BundleWire : () ==> BundleWire
+BundleWire() == 
+( dcl   outStream : [PrintWriter] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (IOException,j2v_exception)) -> 
+        ( dcl   e : [IOException] := j2v_exception;
+          let - = System`out.println(new  String("Problems"))
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   outfile : [BufferedOutputStream] := new  BufferedOutputStream(new  FileOutputStream(new  String("bundle_segment.ctl")));
+      outStream := new  PrintWriter(outfile , true  );
+      let - = outStream.println(new  String("LOAD DATA"))
+      in 
+        skip ;
+      let - = outStream.println(new  String("INFILE *"))
+      in 
+        skip ;
+      let - = outStream.println(new  String("INSERT"))
+      in 
+        skip ;
+      let - = outStream.println(new  String("INTO TABLE BUNDLE_SEGMENT"))
+      in 
+        skip ;
+      let - = outStream.println(new  String("FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY ")+'"'+'"')
+      in 
+        skip ;
+      let - = outStream.println(new  String("("))
+      in 
+        skip ;
+      let - = outStream.println('"'+new  String("BUNDLE_NO")+'"'+new  String(","))
+      in 
+        skip ;
+      let - = outStream.println('"'+new  String("NODE1")+'"'+new  String(","))
+      in 
+        skip ;
+      let - = outStream.println('"'+new  String("NODE1_TYPE")+'"'+new  String(","))
+      in 
+        skip ;
+      let - = outStream.println('"'+new  String("NODE2")+'"'+new  String(","))
+      in 
+        skip ;
+      let - = outStream.println('"'+new  String("NODE2_TYPE")+'"'+new  String(","))
+      in 
+        skip ;
+      let - = outStream.println('"'+new  String("WIRE_ID")+'"')
+      in 
+        skip ;
+      let - = outStream.println(new  String(")"))
+      in 
+        skip ;
+      let - = outStream.println(new  String("BEGINDATA"))
+      in 
+        skip ;
+      ( dcl   bundleInfo : [BundleSegmentInfo] := BundleSegmentInfo.getBundleSegmentInfo(),
+              enum : [Enumeration] := bundleInfo.getBundleSegments();
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  enum.hasMoreElements() do  
+          ( dcl   bundleSeg : [BundleSegment] := enum.nextElement(),
+                  bundle : [String] := bundleSeg.getBundleNumber(),
+                  endpt1 : [String] := bundleSeg.getNode1Id(),
+                  endpt1Type : [String] := bundleSeg.getNode1Type(),
+                  endpt2 : [String] := bundleSeg.getNode2Id(),
+                  endpt2Type : [String] := bundleSeg.getNode2Type(),
+                  listOfWires : [Enumeration] := getWires(bundle , endpt1 , endpt1Type , endpt2 , endpt2Type);
+            trap  j2v_break with  
+              cases  true  : 
+                (isofclass  (J2V_Break,j2v_break)) -> 
+                  skip 
+                
+              end  
+            in  
+              while  listOfWires.hasMoreElements() do  
+              ( dcl   wire : [Wire] := listOfWires.nextElement(),
+                      inbetween : [String] := '"'+new  String(",")+'"',
+                      temp : [String] := '"'+bundle+inbetween+endpt1+inbetween+endpt1Type+inbetween+endpt2+inbetween+endpt2Type+inbetween+wire.getId()+'"';
+                let - = outStream.println(temp)
+                in 
+                  skip 
+              ) 
+          ) ;
+        let - = System`out.println(new  String("done"))
+        in 
+          skip 
+      ) 
+    ) 
+) ;
+
+public  static main : map  int  to  [String] ==> <VOID>
+main(args) == 
+( dcl   aircraftType : [String] := new  String("F-15A"),
+        tailNumber : [String] := new  String("760012"),
+        contextUpdates : [ContextSet] := new  ContextSet(),
+        context : [ContextState] := ContextState`getContextState();
+  let - = contextUpdates.put(ContextTypes`AIRCRAFT_TYPE , aircraftType)
+  in 
+    skip ;
+  let - = contextUpdates.put(ContextTypes`TAIL_NUMBER , tailNumber)
+  in 
+    skip ;
+  let - = context.setCurrentContext(contextUpdates)
+  in 
+    skip ;
+  ( dcl   bundleWire : [BundleWire] := new  BundleWire();
+    skip 
+  ) ;
+  return  <VOID>
+) ;
+
+private  searchList : [RefDes] * [RefDes] * [Vector] ==> bool 
+searchList(refDes1, refDes2, list) == 
+( dcl   found1 : bool  := false  ,
+        found2 : bool  := false  ,
+        refDes : [RefDes],
+        name1 : [String] := refDes1.toString(),
+        name2 : [String] := refDes2.toString(),
+        enum : [Enumeration] := list.elements();
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  (not  found1 or  not  found2) and  enum.hasMoreElements() do  
+    ( refDes := enum.nextElement();
+      if  refDes.toString().equals(name1)
+      then  
+        ( found1 := true  
+        ) ;
+      if  refDes.toString().equals(name2)
+      then  
+        ( found2 := true  
+        ) 
+    ) ;
+  return  found1 and  found2
+) ;
+
+private  depthFirstTraversal : [BundleSegmentInfo] * [String] * int  * int  ==> <VOID>
+depthFirstTraversal(bundleInfo, bundle, endpoint1, endpoint2) == 
+( dcl   wiresAtRefdes : [Vector],
+        enum : [Enumeration] := bundleInfo.getEndpointConnector(bundle , endpoint1);
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  enum.hasMoreElements() do  
+    ( dcl   node : [Object] := enum.nextElement();
+      if  is_ (node,[RefDes])
+      then  
+        ( dcl   refdes : [RefDes] := node;
+          let - = refDesList.addElement(refdes)
+          in 
+            skip ;
+          ( dcl   list : [Iterator] := refdes.getAllWires();
+            trap  j2v_break with  
+              cases  true  : 
+                (isofclass  (J2V_Break,j2v_break)) -> 
+                  skip 
+                
+              end  
+            in  
+              while  list.hasNext() do  
+              ( dcl   wire : [Wire] := list.next();
+                let - = wires.addElement(wire)
+                in 
+                  skip 
+              ) ;
+            let - = refDesList.addElement(refdes)
+            in 
+              skip 
+          ) 
+        ) 
+      else  
+        ( dcl   nodeId : int  := (def l_5 :  BundleSegmentNode = (node)
+                in l_5).getNodeId();
+          if  nodeId <> endpoint2
+          then  
+            ( let - = depthFirstTraversal(bundleInfo , bundle , nodeId , endpoint1)
+              in 
+                skip 
+            ) 
+        ) 
+    ) ;
+  return  <VOID>
+) ;
+
+private  getWires : [String] * [String] * [String] * [String] * [String] ==> [Enumeration]
+getWires(bundle, endpoint1, endpoint1Type, endpoint2, endpoint2Type) == 
+( dcl   doSearch : bool  := false  ,
+        wireList : map  int  to  [Wire] := nil  ,
+        wireEnum : [Enumeration] := nil  ;
+  wires := new  Vector(300 , 50);
+  refDesList := new  Vector(50 , 50);
+  ( dcl   db : [Database] := Database`getDatabase(),
+          myString : [String] := endpoint1.trim(),
+          intEndpoint1 : int  := Integer`parseInt(myString);
+    myString := endpoint2.trim();
+    ( dcl   intEndpoint2 : int  := Integer`parseInt(myString);
+      if  endpoint1Type.equals(new  String("REFDES"))
+      then  
+        ( dcl   refDes1 : [RefDes] := db.getRefDes(intEndpoint1);
+          wireList := db.getWire(refDes1)
+        ) 
+      else  
+        if  endpoint2Type.equals(new  String("REFDES"))
+        then  
+          ( dcl   refDes2 : [RefDes] := db.getRefDes(intEndpoint2);
+            wireList := db.getWire(refDes2)
+          ) 
+        else  
+          ( dcl   bundleInfo : [BundleSegmentInfo] := BundleSegmentInfo.getBundleSegmentInfo();
+            let - = depthFirstTraversal(bundleInfo , bundle , intEndpoint1 , intEndpoint2)
+            in 
+              skip ;
+            wireEnum := wires.elements();
+            doSearch := true  
+          ) ;
+      ( dcl   newWires : [Vector] := new  Vector(300 , 50);
+        if  doSearch
+        then  
+          ( trap  j2v_break with  
+              cases  true  : 
+                (isofclass  (J2V_Break,j2v_break)) -> 
+                  skip 
+                
+              end  
+            in  
+              while  wireEnum.hasMoreElements() do  
+              ( dcl   wire : [Wire] := wireEnum.nextElement();
+                if  bundle.equals(wire.getBundle())
+                then  
+                  ( dcl   end1RefDes : [RefDes] := wire.getEnd1RefDes(),
+                          end2RefDes : [RefDes] := wire.getEnd2RefDes();
+                    if  not  searchList(end1RefDes , end2RefDes , refDesList)
+                    then  
+                      ( let - = newWires.addElement(wire)
+                        in 
+                          skip 
+                      ) 
+                  ) 
+              ) 
+          ) 
+        else  
+          ( ( dcl   i : int  := 0;
+              while  i < (card  dom  wireList) do  
+              ( if  bundle.equals(wireList(i).getBundle())
+                then  
+                  ( let - = newWires.addElement(wireList(i))
+                    in 
+                      skip 
+                  ) ;
+                i := i+1
+              ) 
+            ) 
+          ) ;
+        let - = wires.removeAllElements()
+        in 
+          skip ;
+        wireEnum := newWires.elements();
+        return  wireEnum
+      ) 
+    ) 
+  ) 
+) ;
+
+instance variables 
+  private  wires : [Vector];
+  private  refDesList : [Vector];
+  private  currentSegment : int 
+  
+end  BundleWire

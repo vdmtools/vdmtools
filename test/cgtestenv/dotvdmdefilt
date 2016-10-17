@@ -1,0 +1,52 @@
+#! /usr/bin/perl
+
+# Perl script to copy spec files given in a .vdmde
+# to the current directory if they are not up to date.
+# Arguments are: dir .vdmde_source .vdmde_destination
+# Purpose: to speed up reading spec files because they can be
+# from the local disk. 
+
+$dir = shift; 
+$from = shift; 
+$to = shift; 
+
+open FROM, "<$from" or die "open $from: $!"; 
+open OUT, ">$to" or die "open $to: $!"; 
+
+$dir =~ s|/$||;                 # Remove trailing / if any
+
+sub testcopy 
+{
+    my ($from, $to) = @_; 
+
+    $s0=(stat($from))[9]; 
+    $s1=(stat($to))[9]; 
+    if (! -f $to || 
+        $s0 >  $s1 || -s $from != -s $to) {
+        print STDERR "Copy $from ($s0)  $to ($s1)\n"; 
+        if (-f $to) {
+            unlink $to or warn "Failed to removed $to"; 
+        }
+        system("cp", $from, $to); 
+    } else {
+        print STDERR "File $to ok.\n"; 
+    }
+}
+
+while (defined ($_=<FROM>)) {
+    next if /system date/; 
+    if (/^\s*r\s+(\S+)/) {
+        $file = $1;
+        $from = $file; 
+        $file =~ m@([^/]+)$@; 
+        $to = $1; 
+        $from = $dir."/".$1; 
+        print OUT "r $to\n"; 
+        testcopy ($from, $to); 
+    } else {
+        print STDERR "$0: unknown line: $_\n"; 
+    }
+}
+
+
+        

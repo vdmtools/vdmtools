@@ -1,0 +1,162 @@
+class CircuitBreakerGraphic is subclass of RefDesNode
+operations 
+public  initGraphicPins : () ==> <VOID>
+initGraphicPins() == 
+( dcl   pinGraphics : [Vector] := getPinGraphics();
+  ( dcl   pinIndex : int  := 0;
+    while  pinIndex < pinGraphics.size() do  
+    ( dcl   nextPin : [PinGraphic] := pinGraphics.elementAt(pinIndex),
+            pinName : [String] := nextPin.getName();
+      let - = containingCanvas.addMouseListener(nextPin)
+      in 
+        skip ;
+      let - = containingCanvas.addMouseMotionListener(nextPin)
+      in 
+        skip ;
+      let - = nextPin.setFont(labelFont)
+      in 
+        skip ;
+      ( dcl   nameLength : int  := labelFontMetrics.stringWidth(pinName),
+              nameHeight : int  := labelFontMetrics.getHeight(),
+              pinLocation : [Point] := getConnectionPoint(pinIndex , Orientation.LEFT);
+        if  pinIndex = 0
+        then  
+          ( let - = nextPin.setBounds(pinLocation.x-nameLength+CIRCLE_DIAMETER , pinLocation.y+nameHeight , nameLength , nameHeight)
+            in 
+              skip 
+          ) 
+        else  
+          ( let - = nextPin.setBounds(pinLocation.x-nameLength+CIRCLE_DIAMETER , pinLocation.y-PIN_OFFSET-2 , nameLength , nameHeight)
+            in 
+              skip 
+          ) 
+      ) ;
+      pinIndex := pinIndex+1
+    ) 
+  ) ;
+  return  
+) ;
+
+public  addPin : [String] ==> <VOID>
+addPin(pin) == 
+( let - = pinList.addElement(pin)
+  in 
+    skip ;
+  let - = pinGraphics.addElement(new  PinGraphic(pin , self  ))
+  in 
+    skip ;
+  let - = PinHeight.addElement(new  Integer(0))
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+protected  getYConnectCoord : int  ==> int 
+getYConnectCoord(pinIndex) == 
+( dcl   yLocation : int  := getLocation().y+5;
+  def l_10 = yLocation
+  in yLocation := l_10+pinIndex*(HEIGHT+5-CIRCLE_DIAMETER);
+  return  yLocation
+) ;
+
+public  paint : [Graphics] ==> <VOID>
+paint(graphics) == 
+( dcl   topPin : [Point] := getConnectionPoint(0 , Orientation.LEFT),
+        bottomPin : [Point] := getConnectionPoint(1 , Orientation.LEFT);
+  let - = graphics.setColor(getForeground())
+  in 
+    skip ;
+  let - = paintLabel(graphics)
+  in 
+    skip ;
+  let - = paintPinNames(graphics)
+  in 
+    skip ;
+  let - = graphics.fillOval(topPin.x , topPin.y-PIN_OFFSET , CIRCLE_DIAMETER , CIRCLE_DIAMETER)
+  in 
+    skip ;
+  let - = graphics.fillOval(bottomPin.x , bottomPin.y-PIN_OFFSET , CIRCLE_DIAMETER , CIRCLE_DIAMETER)
+  in 
+    skip ;
+  let - = graphics.drawArc(topPin.x , topPin.y+CIRCLE_DIAMETER-PIN_OFFSET , WIDTH , HEIGHT-(2*(CIRCLE_DIAMETER-PIN_OFFSET)) , 270 , 180)
+  in 
+    skip ;
+  return  
+) ;
+
+public  CircuitBreakerGraphic : () ==> CircuitBreakerGraphic
+CircuitBreakerGraphic() == 
+( let - = CircuitBreakerGraphic(0 , 0)
+  in 
+    skip 
+) ;
+
+protected  paintLabel : [Graphics] ==> <VOID>
+paintLabel(graphics) == 
+( if  refDes <> nil  
+  then  
+    ( dcl   location : [Point] := getLocation();
+      let - = graphics.setFont(labelFont)
+      in 
+        skip ;
+      ( dcl   centerOfNode : int  := (location.x+location.x+WIDTH)/2,
+              textOrigin : int  := centerOfNode-(labelFontMetrics.stringWidth(refDes.displayName())/2);
+        let - = graphics.drawString(refDes.displayName() , textOrigin , location.y-6)
+        in 
+          skip 
+      ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  CircuitBreakerGraphic : int  * int  ==> CircuitBreakerGraphic
+CircuitBreakerGraphic(x, y) == 
+( let - = RefDesNode(x , y , WIDTH , HEIGHT+7)
+  in 
+    skip ;
+  let - = setNotifyOnMouseClick(true  )
+  in 
+    skip ;
+  let - = setNotifyOnMouseMotion(true  )
+  in 
+    skip ;
+  TOP_HEIGHT := LABEL_HEIGHT+7;
+  return  
+) ;
+
+protected  getYConnectCoord : [String] ==> int 
+getYConnectCoord(pinName) == 
+( dcl   index : int  := pinList.indexOf(pinName),
+        yLocation : int  := getYConnectCoord(index);
+  return  yLocation
+) ;
+
+private  getXConnectCoord : [Orientation] ==> int 
+getXConnectCoord(side) == 
+( dcl   xLocation : int  := getLocation().x;
+  if  side = Orientation.RIGHT
+  then  
+    ( def l_3 = xLocation
+      in xLocation := l_3+CIRCLE_DIAMETER
+    ) ;
+  return  xLocation
+) ;
+
+public  getConnectionPoint : int  * [Orientation] ==> [Point]
+getConnectionPoint(pinIndex, side) == 
+( return  new  Point(getXConnectCoord(side) , getYConnectCoord(pinIndex))
+) ;
+
+public  getConnectionPoint : [String] * [Orientation] ==> [Point]
+getConnectionPoint(pinName, side) == 
+( return  new  Point(getXConnectCoord(side) , getYConnectCoord(pinName))
+) ;
+
+instance variables 
+  private  static CIRCLE_DIAMETER : int  := 7;
+  private  static PIN_OFFSET : int  := (CIRCLE_DIAMETER-WireGraphic.SEGMENT_COUNT)/2;
+  private  static WIDTH : int  := 15;
+  private  static HEIGHT : int  := 42;
+  private  static TOP_HEIGHT : int 
+  
+end  CircuitBreakerGraphic

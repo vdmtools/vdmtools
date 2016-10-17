@@ -1,0 +1,73 @@
+class JavaUtilAbstractMap is subclass of JavaUtilMap, JavaLangObject
+operations 
+public  size : () ==> int 
+size() == 
+is not yet specified ;
+
+public  clear : () ==> ()
+clear() == 
+is not yet specified ;
+
+public  keySet : () ==> JavaUtilSet
+keySet() == 
+is not yet specified ;
+
+public  isEmpty : () ==> bool 
+isEmpty() == 
+is not yet specified ;
+
+public  entrySet : () ==> JavaUtilSet
+entrySet() == 
+is subclass responsibility ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+is not yet specified ;
+
+public  toString : () ==> JavaLangString
+toString() == 
+is not yet specified ;
+
+public  values__ : () ==> JavaUtilCollection
+values__() == 
+is not yet specified ;
+
+protected  JavaUtilAbstractMap : () ==> JavaUtilAbstractMap
+JavaUtilAbstractMap() == 
+( skip 
+) ;
+
+public  get : JavaLangObject ==> JavaLangObject
+get(key) == 
+is not yet specified ;
+
+public  putAll : JavaUtilMap ==> ()
+putAll(t) == 
+is not yet specified ;
+
+public  equals : JavaLangObject ==> bool 
+equals(o) == 
+is not yet specified ;
+
+public  remove : JavaLangObject ==> JavaLangObject
+remove(key) == 
+is not yet specified ;
+
+public  JavaUtilAbstractMap : <NIL> ==> JavaUtilAbstractMap
+JavaUtilAbstractMap(-) == 
+isNil := true  ;
+
+public  containsKey : JavaLangObject ==> bool 
+containsKey(key) == 
+is not yet specified ;
+
+public  put : JavaLangObject * JavaLangObject ==> JavaLangObject
+put(key, value__) == 
+is not yet specified ;
+
+public  containsValue : JavaLangObject ==> bool 
+containsValue(value__) == 
+is not yet specified ;
+
+
+end  JavaUtilAbstractMap

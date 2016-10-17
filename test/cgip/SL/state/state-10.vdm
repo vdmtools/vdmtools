@@ -1,0 +1,32 @@
+module A
+exports all
+definitions
+operations
+
+Test: () ==> seq of nat
+Test () == 
+(
+  dcl res : B := mk_B(3,mk_Rec(3,nil));
+  a.a1 := 3;
+  a.a2 := res;
+  return [ a.a2.b1]
+)
+
+
+types
+
+Rec ::
+  a1 : nat
+  a2 : [B];
+
+B ::
+  b1 : nat
+  b2 : Rec
+
+state sigma of
+	a: Rec
+	b: nat
+init s == s = mk_sigma(mk_Rec(0,nil), 0)
+end
+
+end A

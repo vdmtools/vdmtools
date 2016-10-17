@@ -1,0 +1,12 @@
+%$ld$
+\subsection{『共通定義』 classes}
+モデルで使用する共通の定義。
+\begin{vdm_al}
+class 『共通定義』
+
+types
+public ID = nat;
+public Time = nat;
+
+end 『共通定義』
+\end{vdm_al}

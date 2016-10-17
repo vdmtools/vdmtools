@@ -1,0 +1,74 @@
+sample1.time    Basic test to ensure that all the instructions are
+                recognized and merged correctly
+
+sample2.time    Basic test to ensure that all untyped and typed
+                instructions are recognized and merged correctly
+
+sample3.time    Simple test to check that all of the basic types are
+                recognized 
+
+sample4.time    Check that repeated entries are spotted
+
+sample5.time    Check that entries can be broken over several lines
+
+sample6.time    Check that comments can go anywhere
+
+sample7.time    Check that syntax error is spotted - missing ";"
+
+sample8.time    Check that syntax error is spotted - missing ":"
+
+sample9.time    Check that syntax error is spotted - missing time
+
+sample10.time   Check that syntax error is spotted - missing
+                instruction
+
+sample11.time   Unknown instruction
+
+sample12.time   Unknown type
+
+sample13.time   Wrong type for time 
+
+sample14.time   Extra time argument
+
+sample15.time   Repeat entry
+
+sample16.time   Meaningless type info - does not get picked up
+
+sample17.time   Overflow attempt
+
+sample18.time   Multiple syntax errors in one file
+
+sample19.time   Basic test to check that assembly language instructions
+                can be parsed
+
+sample20.time   Check that attempt to redefine an assembly language 
+                instruction is captured
+
+sample21.time   Check that an untyped instruction defined directly as an 
+                assembly language instruction is correctly parsed
+
+sample22.time   Check that an instruction defined as the sum of two time
+                expressions is correctly parsed
+
+sample23.time   Check that an instruction defined as the product of two time
+                expressions is correctly parsed
+
+sample24.time   Check that an instruction defined as a bracketed time
+                expression is correctly parsed
+
+sample25.time   Check that a typed instruction defined as a time expression
+                is correctly parsed
+
+sample26.time   Check that an error message is generated for an instruction
+                that is defined in terms of an undefined assembly language
+                instruction
+
+sample27.time   Check that an error message is generated for an instruction
+                that is defined in terms of an assembly language instruction
+                defined later in the file
+
+
+
+
+
+

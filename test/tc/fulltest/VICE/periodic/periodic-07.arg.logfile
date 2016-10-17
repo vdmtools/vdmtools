@@ -1,0 +1,58 @@
+ThreadCreate -> id: 1 period: false objref: nil clnm: nil cpunm: 0 time: 0
+ThreadSwapIn -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 0
+DeployObj ->  objref: 1 clnm: "B" cpunm: 0 time: 0
+DeployObj ->  objref: 2 clnm: "C" cpunm: 0 time: 0
+DeployObj ->  objref: 3 clnm: "A" cpunm: 0 time: 0
+DeployObj ->  objref: 4 clnm: "A" cpunm: 0 time: 0
+OpRequest -> id: 1 opname: "A`Test" objref: 4 clnm: "A" cpunm: 0 async: false time: 2
+OpActivate -> id: 1 opname: "A`Test" objref: 4 clnm: "A" cpunm: 0 async: false time: 2
+DeployObj ->  objref: 5 clnm: "C" cpunm: 0 time: 2
+ThreadCreate -> id: 2 period: true objref: 5 clnm: "C" cpunm: 0 time: 6
+OpRequest -> id: 1 opname: "B`finished" objref: 5 clnm: "C" cpunm: 0 async: false time: 10
+ThreadSwapOut -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 10
+ThreadSwapIn -> id: 2 objref: 5 clnm: "C" cpunm: 0 overhead: 2 time: 12
+OpRequest -> id: 2 opname: "B`op" objref: 5 clnm: "C" cpunm: 0 async: false time: 12
+OpActivate -> id: 2 opname: "B`op" objref: 5 clnm: "C" cpunm: 0 async: false time: 12
+OpCompleted -> id: 2 opname: "B`op" objref: 5 clnm: "C" cpunm: 0 async: false time: 20
+ThreadSwapOut -> id: 2 objref: 5 clnm: "C" cpunm: 0 overhead: 2 time: 20
+ThreadKill -> id: 2 cpunm: 0 time: 22
+ThreadCreate -> id: 3 period: true objref: 5 clnm: "C" cpunm: 0 time: 1000
+ThreadSwapIn -> id: 3 objref: 5 clnm: "C" cpunm: 0 overhead: 2 time: 1000
+OpRequest -> id: 3 opname: "B`op" objref: 5 clnm: "C" cpunm: 0 async: false time: 1000
+OpActivate -> id: 3 opname: "B`op" objref: 5 clnm: "C" cpunm: 0 async: false time: 1000
+OpCompleted -> id: 3 opname: "B`op" objref: 5 clnm: "C" cpunm: 0 async: false time: 1008
+ThreadSwapOut -> id: 3 objref: 5 clnm: "C" cpunm: 0 overhead: 2 time: 1008
+ThreadKill -> id: 3 cpunm: 0 time: 1010
+ThreadCreate -> id: 4 period: true objref: 5 clnm: "C" cpunm: 0 time: 1010
+DelayedThreadSwapIn -> id: 4 objref: 5 clnm: "C" delay: 9 cpunm: 0 overhead: 2 time: 1010
+OpRequest -> id: 4 opname: "B`op" objref: 5 clnm: "C" cpunm: 0 async: false time: 1010
+OpActivate -> id: 4 opname: "B`op" objref: 5 clnm: "C" cpunm: 0 async: false time: 1010
+OpCompleted -> id: 4 opname: "B`op" objref: 5 clnm: "C" cpunm: 0 async: false time: 1018
+ThreadSwapOut -> id: 4 objref: 5 clnm: "C" cpunm: 0 overhead: 2 time: 1018
+ThreadKill -> id: 4 cpunm: 0 time: 1020
+ThreadCreate -> id: 5 period: true objref: 5 clnm: "C" cpunm: 0 time: 1020
+DelayedThreadSwapIn -> id: 5 objref: 5 clnm: "C" delay: 9 cpunm: 0 overhead: 2 time: 1020
+OpRequest -> id: 5 opname: "B`op" objref: 5 clnm: "C" cpunm: 0 async: false time: 1020
+OpActivate -> id: 5 opname: "B`op" objref: 5 clnm: "C" cpunm: 0 async: false time: 1020
+OpCompleted -> id: 5 opname: "B`op" objref: 5 clnm: "C" cpunm: 0 async: false time: 1028
+ThreadSwapOut -> id: 5 objref: 5 clnm: "C" cpunm: 0 overhead: 2 time: 1028
+ThreadKill -> id: 5 cpunm: 0 time: 1030
+ThreadCreate -> id: 6 period: true objref: 5 clnm: "C" cpunm: 0 time: 2006
+ThreadSwapIn -> id: 6 objref: 5 clnm: "C" cpunm: 0 overhead: 2 time: 2006
+OpRequest -> id: 6 opname: "B`op" objref: 5 clnm: "C" cpunm: 0 async: false time: 2006
+OpActivate -> id: 6 opname: "B`op" objref: 5 clnm: "C" cpunm: 0 async: false time: 2006
+OpCompleted -> id: 6 opname: "B`op" objref: 5 clnm: "C" cpunm: 0 async: false time: 2014
+ThreadSwapOut -> id: 6 objref: 5 clnm: "C" cpunm: 0 overhead: 2 time: 2014
+ThreadKill -> id: 6 cpunm: 0 time: 2016
+ThreadCreate -> id: 7 period: true objref: 5 clnm: "C" cpunm: 0 time: 3006
+ThreadSwapIn -> id: 7 objref: 5 clnm: "C" cpunm: 0 overhead: 2 time: 3006
+OpRequest -> id: 7 opname: "B`op" objref: 5 clnm: "C" cpunm: 0 async: false time: 3006
+OpActivate -> id: 7 opname: "B`op" objref: 5 clnm: "C" cpunm: 0 async: false time: 3006
+OpCompleted -> id: 7 opname: "B`op" objref: 5 clnm: "C" cpunm: 0 async: false time: 3014
+ThreadSwapOut -> id: 7 objref: 5 clnm: "C" cpunm: 0 overhead: 2 time: 3014
+ThreadKill -> id: 7 cpunm: 0 time: 3016
+ThreadSwapIn -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 3016
+OpActivate -> id: 1 opname: "B`finished" objref: 5 clnm: "C" cpunm: 0 async: false time: 3016
+OpCompleted -> id: 1 opname: "B`finished" objref: 5 clnm: "C" cpunm: 0 async: false time: 3020
+OpCompleted -> id: 1 opname: "A`Test" objref: 4 clnm: "A" cpunm: 0 async: false time: 3028
+ThreadSwapOut -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 3030

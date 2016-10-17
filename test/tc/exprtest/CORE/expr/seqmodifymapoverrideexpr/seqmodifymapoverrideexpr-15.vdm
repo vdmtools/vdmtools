@@ -1,0 +1,37 @@
+class SeqModifyMapOverrideExprTest
+	types
+
+  MyType :: nt : bool;
+
+   Name ::
+    a: seq of char
+    b: [nat];
+    
+ MyMap = map Name to MyType  
+
+ functions
+  h: Name -> Name
+  h(nm) ==
+   nm
+ 
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = let m : MyMap = {|->},
+	     nm = mk_Name("id", nil)
+          in
+           m ++ { if dom m = {}
+                  then nm
+                  else h(nm) |-> mk_MyType(true)  }
+        
+  
+
+ 
+  in skip;
+
+------------------------------------------------------------------------------
+end SeqModifyMapOverrideExprTest

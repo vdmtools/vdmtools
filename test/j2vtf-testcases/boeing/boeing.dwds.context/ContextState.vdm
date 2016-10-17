@@ -1,0 +1,464 @@
+class ContextState is subclass of Observable
+operations 
+private  ContextState : () ==> ContextState
+ContextState() == 
+( currentContext := new  ContextSet();
+  previousContext := new  ContextSet();
+  contextChanges := new  ContextSet();
+  let - = ContextState`clearChanged()
+  in 
+    skip ;
+  db := Database`getDatabase()
+) ;
+
+public  static getContextState : () ==> [ContextState]
+getContextState() == 
+( if  state = nil  
+  then  
+    ( state := new  ContextState()
+    ) ;
+  return  state
+) ;
+
+public  getContextChanges : () ==> [ContextSet]
+getContextChanges() == 
+( return  contextChanges
+) ;
+
+public  getCurrentContext : () ==> [ContextSet]
+getCurrentContext() == 
+( return  currentContext
+) ;
+
+public  forceContextReload : () ==> <VOID>
+forceContextReload() == 
+( dcl   savedContext : [ContextSet] := getCurrentContext();
+  let - = setCurrentContext(new  ContextSet(ContextTypes`AIRCRAFT_TYPE , new  String([  ])))
+  in 
+    skip ;
+  let - = setCurrentContext(savedContext)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  getPreviousContext : () ==> [ContextSet]
+getPreviousContext() == 
+( return  previousContext
+) ;
+
+public  setCurrentContext : [ContextSet] ==> <VOID>
+setCurrentContext(newContext) == 
+( dcl   contextChanged : bool  := false  ,
+        lowestLevel : int  := Integer.MAX_VALUE;
+  let - = ViewsCursor`setWaitState()
+  in 
+    skip ;
+  ( dcl   updatedContext : [ContextSet] := new  ContextSet(),
+          changes : [ContextSet] := new  ContextSet(),
+          newContextKeys : [Enumeration] := newContext.keys();
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip 
+        
+      end  
+    in  
+      while  newContextKeys.hasMoreElements() do  
+      ( dcl   newContextKey : [ContextTypes] := newContextKeys.nextElement(),
+              newContextValue : [String] := newContext.get(newContextKey),
+              newCompareValue : [String] := newContextValue;
+        if  newContextKey = ContextTypes`REFDES
+        then  
+          ( newCompareValue := RefDes`stripBranchCode(newContextValue)
+          ) ;
+        if  contextChanged
+        then  
+          ( let - = updatedContext.put(newContextKey , newContextValue)
+            in 
+              skip ;
+            let - = changes.put(newContextKey , newContextValue)
+            in 
+              skip 
+          ) 
+        else  
+          ( if  not  newCompareValue.equals(currentContext.get(newContextKey))
+            then  
+              ( contextChanged := true  ;
+                lowestLevel := newContextKey.level;
+                let - = changes.put(newContextKey , newContextValue)
+                in 
+                  skip ;
+                if  newContextValue <> nil  
+                then  
+                  ( let - = updatedContext.put(newContextKey , newContextValue)
+                    in 
+                      skip 
+                  ) 
+              ) 
+          ) 
+      ) ;
+    if  contextChanged
+    then  
+      ( dcl   curContextKeys : [Enumeration] := currentContext.keys();
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  curContextKeys.hasMoreElements() do  
+          ( dcl   curContextKey : [ContextTypes] := curContextKeys.nextElement();
+            if  curContextKey.level < lowestLevel
+            then  
+              ( let - = updatedContext.put(curContextKey , currentContext.get(curContextKey))
+                in 
+                  skip 
+              ) 
+            else  
+              if  not  changes.contains(curContextKey)
+              then  
+                ( let - = changes.put(curContextKey , nil  )
+                  in 
+                    skip 
+                ) 
+          ) ;
+        ( dcl   acAndTypeSubset : [ContextSet] := new  ContextSet();
+          if  changes.contains(ContextTypes`AIRCRAFT_TYPE)
+          then  
+            ( let - = acAndTypeSubset.put(ContextTypes`AIRCRAFT_TYPE , changes.get(ContextTypes`AIRCRAFT_TYPE))
+              in 
+                skip 
+            ) ;
+          if  changes.contains(ContextTypes`TAIL_NUMBER)
+          then  
+            ( let - = acAndTypeSubset.put(ContextTypes`TAIL_NUMBER , changes.get(ContextTypes`TAIL_NUMBER))
+              in 
+                skip 
+            ) ;
+          if  acAndTypeSubset.size() > 0
+          then  
+            ( let - = db.setNewContext(acAndTypeSubset)
+              in 
+                skip 
+            ) ;
+          let - = updateModelStates(changes , updatedContext)
+          in 
+            skip ;
+          let - = ContextState`setChanged()
+          in 
+            skip ;
+          previousContext := currentContext;
+          currentContext := updatedContext;
+          contextChanges := changes;
+          let - = db.setNewContext(contextChanges)
+          in 
+            skip ;
+          let - = ContextState`notifyObservers(contextChanges)
+          in 
+            skip 
+        ) 
+      ) ;
+    let - = ViewsCursor`setDefaultState()
+    in 
+      skip 
+  ) ;
+  return  <VOID>
+) ;
+
+public  lookupViaName : [ContextTypes] * [String] ==> [Object]
+lookupViaName(modelObjectType, modelObjectName) == 
+( dcl   obj : [Object] := nil  ;
+  if  modelObjectType = ContextTypes`TAIL_NUMBER
+  then  
+    ( obj := db.getAircraft(modelObjectName)
+    ) 
+  else  
+    if  modelObjectType = ContextTypes`AIRCRAFT_TYPE
+    then  
+      ( obj := db.getAircraftTypeByMDS(modelObjectName)
+      ) 
+    else  
+      if  modelObjectType = ContextTypes`REFDES
+      then  
+        ( dcl   refDesName : [String] := RefDes`stripBranchCode(modelObjectName);
+          obj := db.getRefDes(db.getCurrentContextObject(ContextTypes`TAIL_NUMBER) , refDesName)
+        ) 
+      else  
+        if  modelObjectType = ContextTypes`WIRE
+        then  
+          ( obj := db.getWire(db.getCurrentContextObject(ContextTypes`TAIL_NUMBER) , modelObjectName)
+          ) 
+        else  
+          if  modelObjectType = ContextTypes`BUNDLE
+          then  
+            ( obj := db.getBundle(db.getCurrentContextObject(ContextTypes`TAIL_NUMBER) , modelObjectName)
+            ) ;
+  return  obj
+) ;
+
+public  getCurrentContextFieldName : [ContextTypes] ==> [String]
+getCurrentContextFieldName(fieldType) == 
+( return  currentContext.get(fieldType)
+) ;
+
+public  getCurrentContextFieldObject : [ContextTypes] ==> [Object]
+getCurrentContextFieldObject(fieldType) == 
+( return  db.getCurrentContextObject(fieldType)
+) ;
+
+public  setCurrentContext : [ContextTypes] * [Object] ==> <VOID>
+setCurrentContext(contextFieldType, newFieldValue) == 
+( dcl   newContext : [ContextSet] := new  ContextSet(contextFieldType , newFieldValue);
+  let - = setCurrentContext(newContext)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+private  updateModelStates : [ContextSet] * [ContextSet] ==> <VOID>
+updateModelStates(changes, updatedContext) == 
+( dcl   newRefDes : [RefDes] := nil  ,
+        newWire : [Wire] := nil  ,
+        newPin : [String] := nil  ,
+        errorLog : [ExceptionsFrame] := ExceptionsFrame`getExceptionsFrame(),
+        changesList : [Enumeration] := changes.keys();
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  changesList.hasMoreElements() do  
+    ( dcl   key : [ContextTypes] := changesList.nextElement(),
+            value__ : [String] := changes.get(key);
+      if  key = ContextTypes`REFDES and  value__ <> nil  
+      then  
+        ( newRefDes := lookupViaName(key , value__)
+        ) 
+      else  
+        if  key = ContextTypes`PIN and  value__ <> nil  
+        then  
+          ( newPin := value__
+          ) 
+        else  
+          if  key = ContextTypes`WIRE and  value__ <> nil  
+          then  
+            ( newWire := lookupViaName(key , value__)
+            ) 
+    ) ;
+  if  newRefDes = nil   and  newPin = nil   and  newWire = nil  
+  then  
+    ( skip 
+    ) 
+  else  
+    if  newRefDes = nil   and  newPin = nil   and  newWire <> nil  
+    then  
+      ( dcl   refDesName : [String] := newWire.getEnd1RefDes().displayName(),
+              pinName : [String] := newWire.getEnd1RefDesPin(),
+              bundleName : [String] := newWire.getBundle();
+        let - = updatedContext.put(ContextTypes`REFDES , refDesName)
+        in 
+          skip ;
+        let - = updatedContext.put(ContextTypes`PIN , pinName)
+        in 
+          skip ;
+        let - = updatedContext.put(ContextTypes`BUNDLE , bundleName)
+        in 
+          skip ;
+        let - = changes.put(ContextTypes`REFDES , refDesName)
+        in 
+          skip ;
+        let - = changes.put(ContextTypes`PIN , pinName)
+        in 
+          skip ;
+        let - = changes.put(ContextTypes`BUNDLE , bundleName)
+        in 
+          skip 
+      ) 
+    else  
+      if  newRefDes = nil   and  newPin <> nil   and  newWire = nil  
+      then  
+        ( dcl   refDes : [RefDes] := getCurrentContextFieldObject(ContextTypes`REFDES),
+                wireList : map  int  to  [Wire] := refDes.getWires(newPin);
+          if  wireList <> nil  
+          then  
+            ( dcl   wireName : [String] := wireList(0).toString(),
+                    bundleName : [String] := wireList(0).getBundle();
+              let - = updatedContext.put(ContextTypes`WIRE , wireName)
+              in 
+                skip ;
+              let - = updatedContext.put(ContextTypes`BUNDLE , bundleName)
+              in 
+                skip ;
+              let - = changes.put(ContextTypes`WIRE , wireName)
+              in 
+                skip ;
+              let - = changes.put(ContextTypes`BUNDLE , bundleName)
+              in 
+                skip 
+            ) 
+          else  
+            ( dcl   e : [DWDSException] := new  DWDSException();
+              let - = e.addMessage(DWDSException`InvalidRefdes , refDes.toString())
+              in 
+                skip ;
+              let - = errorLog.showExceptionMsgs(e)
+              in 
+                skip 
+            ) 
+        ) 
+      else  
+        if  newRefDes = nil   and  newPin <> nil   and  newWire <> nil  
+        then  
+          ( dcl   refDes : [RefDes] := nil  ;
+            if  newWire.getEnd1RefDesPin().equals(newPin)
+            then  
+              ( refDes := newWire.getEnd1RefDes()
+              ) 
+            else  
+              if  newWire.getEnd2RefDesPin().equals(newPin)
+              then  
+                ( refDes := newWire.getEnd2RefDes()
+                ) 
+              else  
+                ( let - = Assert`that(false  )
+                  in 
+                    skip 
+                ) ;
+            let - = Assert`that(refDes.containsWire(newWire))
+            in 
+              skip ;
+            ( dcl   refDesName : [String] := refDes.displayName(),
+                    bundleName : [String] := newWire.getBundle();
+              let - = updatedContext.put(ContextTypes`REFDES , refDesName)
+              in 
+                skip ;
+              let - = updatedContext.put(ContextTypes`BUNDLE , bundleName)
+              in 
+                skip ;
+              let - = changes.put(ContextTypes`REFDES , refDesName)
+              in 
+                skip ;
+              let - = changes.put(ContextTypes`BUNDLE , bundleName)
+              in 
+                skip 
+            ) 
+          ) 
+        else  
+          if  newRefDes <> nil   and  newPin = nil   and  newWire = nil  
+          then  
+            ( skip 
+            ) 
+          else  
+            if  newRefDes <> nil   and  newPin = nil   and  newWire <> nil  
+            then  
+              ( dcl   pin : [String];
+                if  newWire.getEnd1RefDes() = newRefDes
+                then  
+                  ( pin := newWire.getEnd1RefDesPin()
+                  ) 
+                else  
+                  ( let - = Assert`that(newWire.getEnd2RefDes() = newRefDes)
+                    in 
+                      skip ;
+                    pin := newWire.getEnd2RefDesPin()
+                  ) ;
+                ( dcl   bundleName : [String] := newWire.getBundle();
+                  let - = updatedContext.put(ContextTypes`PIN , pin)
+                  in 
+                    skip ;
+                  let - = updatedContext.put(ContextTypes`BUNDLE , bundleName)
+                  in 
+                    skip ;
+                  let - = changes.put(ContextTypes`PIN , pin)
+                  in 
+                    skip ;
+                  let - = changes.put(ContextTypes`BUNDLE , bundleName)
+                  in 
+                    skip 
+                ) 
+              ) 
+            else  
+              if  newRefDes <> nil   and  newPin <> nil   and  newWire = nil  
+              then  
+                ( dcl   wireArray : map  int  to  [Wire] := newRefDes.getWires(newPin);
+                  if  wireArray <> nil  
+                  then  
+                    ( dcl   wireName : [String] := wireArray(0).toString(),
+                            bundleName : [String] := wireArray(0).getBundle();
+                      let - = updatedContext.put(ContextTypes`WIRE , wireName)
+                      in 
+                        skip ;
+                      let - = updatedContext.put(ContextTypes`BUNDLE , bundleName)
+                      in 
+                        skip ;
+                      let - = changes.put(ContextTypes`WIRE , wireName)
+                      in 
+                        skip ;
+                      let - = changes.put(ContextTypes`BUNDLE , bundleName)
+                      in 
+                        skip 
+                    ) 
+                  else  
+                    ( dcl   e : [DWDSException] := new  DWDSException();
+                      let - = e.addMessage(DWDSException`InvalidRefdes , newRefDes.toString())
+                      in 
+                        skip ;
+                      let - = errorLog.showExceptionMsgs(e)
+                      in 
+                        skip 
+                    ) 
+                ) 
+              else  
+                if  newRefDes <> nil   and  newPin <> nil   and  newWire <> nil  
+                then  
+                  ( dcl   bundleName : [String] := newWire.getBundle();
+                    let - = updatedContext.put(ContextTypes`BUNDLE , bundleName)
+                    in 
+                      skip ;
+                    let - = changes.put(ContextTypes`BUNDLE , bundleName)
+                    in 
+                      skip 
+                  ) ;
+  if  changes.contains(ContextTypes`REFDES) and  updatedContext.get(ContextTypes`GRAPHIC_ID) = nil  
+  then  
+    ( if  newRefDes <> nil  
+      then  
+        ( dcl   newGraphicId : [String] := db.getLocatorId(newRefDes),
+                oldGraphicId : [String] := currentContext.get(ContextTypes`GRAPHIC_ID);
+          if  newGraphicId <> nil  
+          then  
+            ( if  newGraphicId.equals(oldGraphicId)
+              then  
+                ( let - = changes.remove(ContextTypes`GRAPHIC_ID)
+                  in 
+                    skip ;
+                  let - = updatedContext.put(ContextTypes`GRAPHIC_ID , oldGraphicId)
+                  in 
+                    skip 
+                ) 
+              else  
+                ( let - = updatedContext.put(ContextTypes`GRAPHIC_ID , newGraphicId)
+                  in 
+                    skip ;
+                  let - = changes.put(ContextTypes`GRAPHIC_ID , newGraphicId)
+                  in 
+                    skip 
+                ) 
+            ) 
+        ) 
+    ) ;
+  return  <VOID>
+) ;
+
+instance variables 
+  private  static state : [ContextState] := nil  ;
+  private  currentContext : [ContextSet];
+  private  previousContext : [ContextSet];
+  private  contextChanges : [ContextSet];
+  private  db : [Database] := nil  
+  
+end  ContextState

@@ -1,0 +1,10 @@
+*.vdmpp
+.vdmde-dep-pp
+*.tex
+*.log
+*.idx
+*.aux
+*.dvi
+*.blg
+*.bbl
+*.ps

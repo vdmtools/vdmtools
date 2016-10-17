@@ -1,0 +1,18 @@
+[ mk_JAVAERR`ErrMsg( 
+     10,
+     4,
+     7,
+     "Error[10] : The overloading for the method ovl cannot be translated to VDM++\r",
+     <ERROR> ),
+  mk_JAVAERR`ErrMsg( 
+     10,
+     11,
+     10,
+     "Error[9] : The Method ovl was not found\r",
+     <ERROR> ),
+  mk_JAVAERR`ErrMsg( 
+     10,
+     12,
+     10,
+     "Error[9] : The Method ovl was not found\r",
+     <ERROR> ) ]

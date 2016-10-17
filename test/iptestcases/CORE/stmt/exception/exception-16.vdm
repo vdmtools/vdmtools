@@ -1,0 +1,19 @@
+class A
+
+operations
+
+public Test : () ==> int
+Test() ==
+( dcl x : nat := 0; 
+  tixe {
+    n : nat |-> x := n,
+    r : real |-> x := floor r,
+    cs : seq of char |-> x := len cs
+  } in
+      if true
+      then exit 10
+      else skip;
+  return x
+)
+
+end A

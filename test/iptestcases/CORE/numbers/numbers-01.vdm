@@ -1,0 +1,51 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public  Test: () ==> seq1 of (real | seq1 of real)  
+Test () ==
+-- Just .0 does not make a numeric literal of type real!!!!!!!!!!!!
+-- So, unless we specify type explicitly, 2.0**32 is int and equal to 0.
+-- That is why we will have problem with generated code
+-- where '... div 2.0**32' or '... mod 2.0**32' appears !!! M.Lebedev
+-- This also explains that generated code produces different results than Interpeter.
+
+-- In wf_Literal, initial type of a numeric literal is intellegently transformed.
+-- So, it could narrow the type of 2.0 to become nat1. Interpreter still handles this properly,  
+-- but such a transformation has negative side effects for code generation because
+-- casting to narrower type could invalidate value of expression.
+
+  ( dcl floatTwo: real :=2.0,
+        A : real := 103.0 * (2**24) + 69.0*(2**16) + 35.0*(2**8) + 1,
+        B : real := 239.0 * (floatTwo**24) +  205.0*(floatTwo**16) + 171.0*(floatTwo**8) + 137,
+        C : real := 254 + 220*(floatTwo**8) + 186.0*(floatTwo**16) + 152.0*(floatTwo**24),
+        D : real := 118 + 84.0*(2**8) + 50.0*(2**16) + 16.0*(2**24),
+        F : real := floatTwo ** 37 + 1;
+    return [A, B, C, D, F] ^ 
+           [Convert_number_to_double_word (A)] ^
+           [Convert_number_to_double_word (B)] ^
+           [Convert_number_to_double_word (C)] ^
+           [Convert_number_to_double_word (D)] ^
+           [Convert_number_to_double_word (F)]
+  )
+ 
+functions
+ 
+  Convert_number_to_double_word: real -> seq1 of real
+  Convert_number_to_double_word(Nm) ==
+    let floatTwo:real=2.0,
+        lsw : real = Nm mod  (floatTwo**32),
+        msw : real = Nm div (floatTwo**32) in
+      Convert_number_to_word(lsw) ^ Convert_number_to_word(msw);
+ 
+  Convert_number_to_word: real -> seq1 of real
+  Convert_number_to_word (r) ==
+    [r]
+ 
+ 
+end A

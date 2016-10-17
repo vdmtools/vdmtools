@@ -1,0 +1,142 @@
+\subsection{FString}
+文字列（seq of char）に関わる関数を提供する。
+列型の関数を提供するFSequenceクラスを継承し、列型で定義された機能以外の機能を定義する。
+
+\begin{vdm_al}
+--"$Id"
+class FString is subclass of FSequence
+
+functions
+\end{vdm_al}
+
+\subsubsection{変換関数群}
+
+数字文字列を整数に変換する
+\begin{vdm_al}
+static public AsInteger: seq of char +> int
+AsInteger(s) == FString`AsIntegerAux(s)(0)
+pre
+	IsDigits(s);
+
+static private AsIntegerAux : seq of char -> int -> int
+AsIntegerAux(s)(sum) ==
+	if s = [] then
+		sum
+	else
+		AsIntegerAux(tl s)(10 * sum + FCharacter`AsDigit(hd s));
+\end{vdm_al}
+	
+\subsubsection{判定関数群}
+
+数字文字列か判定する。
+\begin{vdm_al}
+static public IsDigits : seq of char -> bool
+IsDigits(s) ==
+	if s = [] then
+		true
+	else
+		FCharacter`IsDigit(hd s) and FString`IsDigits(tl s)
+pre
+	forall i in set inds s & FCharacter`IsDigit(s(i));
+\end{vdm_al}
+
+空白かどうか判定する
+\begin{vdm_al}
+static public IsSpace : [seq of char] -> bool
+IsSpace(s) ==
+	if s = [] then
+		true
+	else
+		(hd s = ' ' or hd s = '\t' or hd s = '\n') and FString`IsSpace(tl s)
+post
+	forall i in set inds s & s(i) = ' ' or s(i) = '\t' or s(i) = '\n';
+\end{vdm_al}
+
+文字列の辞書順序での大小を判定する。
+\begin{vdm_al}
+static public LT : seq of char -> seq of char -> bool
+LT(s1)(s2) == 
+	cases mk_(s1,s2):
+		mk_([],[])		-> false,
+		mk_([],-)		-> true,
+		mk_(-^-,[])	-> false,
+		mk_([x1]^xs1,[x2]^xs2)	->
+			if FCharacter`LT(x1)(x2) then
+				true
+			elseif FCharacter`LT(x2)(x1) then
+				false
+			else
+				FString`LT(xs1)(xs2)
+	end;
+
+static public LE : seq of char -> seq of char -> bool
+LE(s1)(s2) == FString`LT(s1)(s2) or s1 = s2;
+
+static public GT : seq of char -> seq of char -> bool
+GT(s1)(s2) == FString`LT(s2)(s1);
+
+static public GE : seq of char -> seq of char -> bool
+GE(s1)(s2) == not FString`LT(s1)(s2);
+\end{vdm_al}
+
+Indexは、指定された文字cが文字列sの何番目にあるかを返す。最初の要素の位置を返す。
+\begin{vdm_al}
+static public Index: char -> seq of char -> int
+Index(c)(s) == FSequence`Index[char](c)(s);
+\end{vdm_al}
+
+IndexAllは、指定された文字cが文字列sの何番目にあるかを持つ自然数集合を返す。
+\begin{vdm_al}
+static public IndexAll : char -> seq of char -> set of nat1
+IndexAll(c)(s) == FSequence`IndexAll[char](c)(s);
+\end{vdm_al}
+
+文字列sが、部分文字列としてｔを含むかを返す。
+\begin{vdm_al}
+static public IsSubStr : seq of char -> seq of char -> bool
+IsSubStr(t)(s) ==
+	if t = "" then
+		true
+	else
+		let	indexSet = IndexAll(t(1))(s)
+		in	exists i in set indexSet & 
+				SubStr(i)(len t)(s) = t;
+\end{vdm_al}
+
+\subsubsection{文字列操作関数群}
+
+部分文字列を得る。
+\begin{vdm_al}
+static public SubStr : nat -> nat -> seq1 of char -> seq of char
+SubStr(i)(numOfChars)(s) == FSequence`SubSeq[char](i)(numOfChars)(s);
+\end{vdm_al}
+
+部分文字列を得る。ただし、文字列長が指定された文字数より小さいとき、指定された詰め文字を補充する。
+\begin{vdm_al}
+static public SubStrFill :
+	nat -> nat -> char -> seq of char -> seq of char
+SubStrFill(i)(numOfChars)(packChar)(s) ==
+	let	lastPos = i+numOfChars-1,
+		appendLen = lastPos -  len s
+	in
+	if appendLen <= 0 then
+		SubStr(i)(numOfChars)(s)
+	else
+		SubStr(i)(numOfChars)(s) ^ MkContChar(appendLen)(packChar);
+\end{vdm_al}
+
+指定された長さ（appendLen）の文字（packChar）から成る文字列を返す。
+\begin{vdm_al}
+static public MkContChar : nat1 -> char -> seq of char
+MkContChar(appendLen)(packChar) ==
+	let	r = lambda x : seq of char & x ^ [packChar]
+	in
+	(r ** appendLen)("")
+
+end FString
+\end{vdm_al}
+
+
+\begin{rtinfo}
+[FString]{vdm.tc}[FString]
+\end{rtinfo}

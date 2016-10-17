@@ -1,0 +1,211 @@
+class Shared
+
+instance variables
+
+data : seq of seq of char := [];
+
+operations
+
+public Insert : seq of char ==> ()
+Insert(chs) == data := data ^[chs];
+
+public Get : () ==> seq of seq of char
+Get() == return data;
+
+public IncB1 : () ==> ()
+IncB1() == skip;
+
+public IncB2 : () ==> ()
+IncB2() == skip;
+
+public IncC1 : () ==> ()
+IncC1() == skip;
+
+public IncC2 : () ==> ()
+IncC2() == skip;
+
+sync
+
+  mutex(Insert);
+  mutex(Insert,Get);
+  mutex(IncB1, IncB2, IncC1);
+  per Get => len data > 12;
+  per IncB1 => if data <> [] then data(len data) <> "b1"
+                             else true;
+  per IncB2 => if data <> [] then data(len data) <> "b2"
+                             else true;
+  per IncC1 => if data <> [] then data(len data) <> "c1"
+                             else true;
+  per IncC2 => if data <> [] then data(len data) <> "c2"
+                             else true;
+  
+  
+end Shared
+
+class B1
+
+instance variables
+
+s : Shared ;
+nm : seq of char ;
+ready : bool;
+
+operations
+
+public Init : Shared * seq of char ==> ()
+Init(ns, nnm) ==
+( s := ns;
+  nm := nnm);
+
+Op : () ==> ()
+Op() ==
+  (s.IncB1();s.Insert(nm);
+   )
+
+sync
+
+per Op => true;
+
+thread
+
+  (dcl i : nat := 0;
+   while i < 4 do
+     (Op();
+      i := i + 1
+     )   
+  )
+
+end B1
+
+class B2
+
+instance variables
+
+s : Shared ;
+nm : seq of char ;
+ready : bool;
+
+operations
+
+public Init : Shared * seq of char ==> ()
+Init(ns, nnm) ==
+( s := ns;
+  nm := nnm);
+
+Op : () ==> ()
+Op() ==
+  (s.IncB2();s.Insert(nm);
+   )
+
+sync
+
+per Op => true;
+
+thread
+
+  (dcl i : nat := 0;
+   while i < 4 do
+     (Op();
+      i := i + 1
+     )   
+  )
+
+end B2
+
+class C1
+
+instance variables
+
+s : Shared ;
+nm : seq of char ;
+ready : bool;
+
+operations
+
+public Init : Shared * seq of char ==> ()
+Init(ns, nnm) ==
+( s := ns;
+  nm := nnm);
+
+Op : () ==> ()
+Op() ==
+  (s.IncC1();s.Insert(nm);
+   )
+
+sync
+
+per Op => true;
+
+thread
+
+  (dcl i : nat := 0;
+   while i < 4 do
+     (Op();
+      i := i + 1
+     )   
+  )
+
+end C1
+
+class C2
+
+instance variables
+
+s : Shared ;
+nm : seq of char ;
+ready : bool;
+
+operations
+
+public Init : Shared * seq of char ==> ()
+Init(ns, nnm) ==
+( s := ns;
+  nm := nnm);
+
+Op : () ==> ()
+Op() ==
+  (s.IncC2();s.Insert(nm);
+   )
+
+sync
+
+per Op => true;
+
+thread
+
+  (dcl i : nat := 0;
+   while i < 4 do
+     (Op();
+      i := i + 1
+     )   
+  )
+
+end C2
+
+class A
+
+operations
+
+public Test : () ==> seq of seq of char
+Test() ==
+( dcl s : Shared := new Shared(),
+      b1 : B1 := new B1(),
+      b2 : B2 := new B2(),
+      c1 : C1 := new C1(),
+      c2 : C2 := new C2();
+  b1.Init(s,"b1");
+  b2.Init(s,"b2");
+  c1.Init(s,"c1");
+  c2.Init(s,"c2");
+  start(b2);
+  start(b1);
+  start(c2);
+  start(c1);
+  s.Get()
+)
+
+end A
+
+
+
+

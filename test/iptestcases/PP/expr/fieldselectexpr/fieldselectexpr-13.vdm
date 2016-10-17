@@ -1,0 +1,21 @@
+
+            class A
+              operations
+                public op : C ==> bool
+                       op(o) == ( dcl name : bool := false; return o.name; );
+
+                public Test : () ==> bool
+                Test() ==
+                  op(new C())
+            end A
+
+            class C
+              instance variables
+                public name : bool := true;
+
+              operations
+
+                public op2 : bool ==> bool
+                op2(b) == return b
+            end C
+

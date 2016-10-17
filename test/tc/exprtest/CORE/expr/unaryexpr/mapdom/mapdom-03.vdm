@@ -1,0 +1,34 @@
+class UnaryTest
+types
+
+  T = map nat to nat
+  inv m ==
+    m <> {|->};
+
+  T2 = T * T
+
+functions
+
+  f : T -> bool
+  f(m) ==
+    forall n in set dom m & n < 9;
+
+  f2 : T2 -> bool
+  f2(mk_(m,-)) ==
+    f(m) 
+    
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let n = 6,
+      - = dom if 7 <> 8
+            then {8 |-> nil}
+            else n
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

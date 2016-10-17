@@ -1,0 +1,12 @@
+public Test : () ==> nat
+Test() ==
+  tixe {
+    err |-> return 1
+   } in Test2();
+
+Test2: () ==> nat
+Test2() ==
+  (if true then exit <UPS>;
+   return 2)
+
+end A

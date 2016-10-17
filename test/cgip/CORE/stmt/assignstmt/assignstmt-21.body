@@ -1,0 +1,7 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ( seq of nat | seq of nat | map nat to nat | set of nat )  
+Test () ==
+( dcl s : A;
+  s := [{2,3}];
+  return s;
+)

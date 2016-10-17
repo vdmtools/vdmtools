@@ -1,0 +1,590 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Functions and operations which are used for translating a  class
+%    from the abstract syntax representation to a semantic value 
+% $Id: eval_class.vdm,v 1.48 2001/10/16 13:00:31 peter Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\chapter{Classes}
+
+The module CLASS contains all functions and operations definitions
+related to the translation and handling of classes.
+
+\begin{vdm_al}
+module CLASS
+  imports
+    from AS all,
+    from GLOBAL all,
+    from SEM all,
+
+     from SETTINGS
+       operations
+         DTC : () ==> bool,
+
+    from REP all,
+    from CI all,
+    from STKM all,
+    from SCHDTP all,
+    from INSTRTP all,
+    from RTERR all,
+    from CEXPR all,
+    from CSTMT all,
+    from DEBUG all,
+    from DEBUGTP all,
+    from CPAT all,
+    from DEF all,
+    from UTIL all,
+#ifdef VICE
+    from TIMEPARSER all,
+    from TIMEMAP all,
+    from TIME                                                
+      operations SetCompilingTime : bool ==> ();             
+                 GetCompilingTime : () ==> bool,             
+#endif VICE
+    from CMPL all,
+    from PAT all,
+    from AUX
+      functions
+        SingleNameToString: AS`Name -> seq of char;
+        ConstructDoubleName: AS`Name * AS`Name -> AS`Name,
+    from STATE all
+
+  exports
+    operations
+        GenInsMap: AS`Name ==> ();
+        InitGV : seq of AS`ValueDef ==> GLOBAL`ValueMap;
+        TransHierarchy: () ==> ();
+        EvalInhStrct: () ==> ();
+        CreateConstructor: AS`Name * seq of AS`InstAssignDef * seq of AS`Name * map AS`Name to AS`OpDef
+                           ==> map seq of AS`Type to (STKM`DebugCmd * AS`Access);
+        TransSyncs: AS`Document ==> ();
+
+    functions
+        ExtOpDom: AS`OpDef -> seq of AS`Type;
+        TransLocalHchy: AS`Name  -> map AS`Name to set of AS`Name
+
+definitions
+\end{vdm_al}
+
+\section{Initialisiation of Instance Variables}
+
+This has been merge into the InitClassName operation from the STATE
+module because of the split between static and non-static instance
+variables. Statics need to be initialised first!
+InitClVls: AS`Name * seq of AS`InstAssignDef ==> GLOBAL`ValueMap 
+
+This has been moved to the STATE
+module because of static initialisers in Java
+InitStaticInsts: seq of AS`InstAssignDef ==> map AS`Name to (SEM`VAL * AS`Access)
+
+The operation {\em GenInsMap} introduces the instance variables into
+the scope. If the instance variables are not initialised the value
+{\em UNDEF} is assigned.  Thus, the operation updates the field {\em
+inst\_init\_val}.
+
+\begin{vdm_al}
+operations
+  GenInsMap: AS`Name ==> ()
+  GenInsMap(nm) ==
+    def allsupers = STATE`GetAllSupers(nm);
+        instvars = STATE`GetInstVars(nm);
+        own = { nm |-> { ins |-> mk_(mk_SEM`UNDEF(),access) | 
+                         mk_AS`InstAssignDef(mk_AS`AssignDef(ins,-,-,-), access, -, -) in set elems instvars}};
+        supers = merge { STATE`GetInstInitVal(cl)   | cl in set allsupers}
+    in
+      STATE`SetInstInitVal(nm, own ++ supers);
+\end{vdm_al}
+
+In this functions it is assumed that no cyclic dependencies are
+represented in this class inheritance. We know that this is the case
+because {\em STATE`TransHierarchy} has been called before in the
+operation {\em STATE`TranslateAST}.
+
+The operation {\em InitGV} computes the value definitions of a class. By
+pushing the just evaluated value to the evaluation stack, a value can
+depend on the values which have been defined before it in the value list.
+
+\begin{vdm_al}
+-- Note that this operation is identical to InitGV in the MOD module!!!
+  InitGV : seq of AS`ValueDef ==> GLOBAL`ValueMap
+  InitGV (val_l) == 
+    if val_l <> []
+    then
+      def mk_AS`ValueDef (pat, tp, exp_e, access, -, -) = hd val_l;
+          mk_(eval_state, res) = DEBUG`EvalUninterruptedCmd( exp_e, [], [], "Init of Global Values" );
+          exp_v = if is_STKM`Success(eval_state)
+                 then res
+                 else undefined
+      in
+       (dcl res_m : GLOBAL`ValueMap := { |-> };
+        if SETTINGS`DTC()
+        then
+          if (tp <> nil) and (not STATE`SubType (exp_v, tp))
+          then RTERR`InitError(RTERR`TYPE_INCOMP,exp_e.cid,[])
+          else skip;
+        def env_s = PAT`PatternMatch(CPAT`P2P(pat), exp_v)
+        in
+          if env_s <> {}
+          then
+            let env in set env_s
+            in
+             (for all id in set dom env.id_m do
+                let mk_SEM`ValTp(val,-) = env.id_m(id) 
+                in 
+                  res_m := res_m ++ { id |-> mk_(val,DEF`RealAccess(access,<INST>))};
+              STKM`PushBlkEnv(env);
+              res_m := res_m ++ InitGV(tl val_l);
+              STKM`PopBlkEnv()
+             )
+          else
+            RTERR`InitError(RTERR`EMPTY_ENV_S,pat.cid,[]);
+        return res_m;
+       )
+    else return {|->};
+\end{vdm_al}
+
+\section{Translation of the Class Hierarchy}
+
+\begin{vdm_al}
+operations
+  TransHierarchy: () ==> ()
+  TransHierarchy() ==
+    def classes = STATE`GetClasses();
+        clhchy = { name |-> STATE`GetSupers(name) | name in set dom classes};
+        exp = { name | name in set dom classes & clhchy(name) = {} };
+        clhchy1 = ExpandHierarchy(clhchy, exp)
+    in
+      if OkHierarchy(clhchy1)
+      then STATE`SetHchy(clhchy1)
+      else RTERR`Error(RTERR`CIRC_CL_DEPENDENCY, nil, nil, []);
+\end{vdm_al}
+
+The next functions are auxiliary functions to the operation {\em TransHiearchy}. 
+
+The following function {\em ExpandHierarchy} expands the range of
+every entry in the hierarchy table {\em hchy'} such that for every
+class in the range, which does not inherit from other superclasses,
+its superclasses will be added to the range. The second argument {\em
+done} describes all the classes in the hiearchy which is fully
+expanded. The function returns the fully expanded hiearchy table.
+
+The function works as follows: The function is recursive, if the the
+domain of the hierarchy table {\em hchy'} is the same as the set {\em
+done}, the table {\em hchy'} is fully updated, because the set {\em done} contains the
+names of the classes which have been fully expanded in the table {\em
+hchy'}. Otherwise, for each class which is not fully expanded, a
+hierarchy table is constructed which expands the hierarchy tables for
+these names, using the function {\em ExpandNextLevel}. 
+
+For the newly expanded table the newly fully expanded names is
+computed with the function {\em NewlyDone}, and the function itself
+{\em ExpandHierarchy} is called again.
+
+\begin{vdm_al}
+functions
+  ExpandHierarchy: GLOBAL`Hierarchy * set of AS`Name -> GLOBAL`Hierarchy
+  ExpandHierarchy(hchy', done) ==
+    if dom hchy' = done
+    then hchy'
+    else
+      def not_done = dom hchy' \ done;
+          hchy'' = { nm |-> ExpandNextLevel(hchy'(nm), hchy', {}) | nm in set not_done };
+          newly_done = NewlyDone(hchy'', done)
+      in 
+        ExpandHierarchy(hchy'' ++ (not_done <-: hchy'), newly_done union done);
+\end{vdm_al}
+
+The function {\em ExpandNextLevel} takes three arguments:
+
+\begin{itemize}
+\item to\_exp: is the set of class names, which the function should expand such
+  that the set describes all the class names which is in the dependency tree of
+  the classes.
+\item hchy: is the hierarchy table build to far.
+\item in\_hchy: is a set of class names, which already is in the dependency
+  tree. This argument is included, in order to be able to check whether the
+  dependency chain is cyclic.
+\end{itemize}
+
+\begin{vdm_al}
+  ExpandNextLevel: set of AS`Name * GLOBAL`Hierarchy * set of AS`Name -> set of AS`Name
+  ExpandNextLevel(to_exp, hchy, in_hchy) ==
+    dunion { ExpCl(nm, hchy, in_hchy) union {nm} | nm in set to_exp};
+\end{vdm_al}
+
+The function {\em ExpCl} computes the superclasses of a class name. It takes
+three arguments:
+\begin{itemize}
+\item nm: the name of the class which super classes are to be computed.
+\item hchy': the hierarchy table.
+\item in\_hchy: the set of names which already are dependency chain.
+\end{itemize}
+
+\begin{vdm_al}
+operations
+  ExpCl: AS`Name * GLOBAL`Hierarchy * set of AS`Name ==> set of AS`Name
+  ExpCl(nm, hchy', in_hchy) ==
+   (if nm in set dom hchy'
+    then
+     (if hchy'(nm) = {}
+      then return in_hchy
+      else
+        if nm in set in_hchy
+        then RTERR`InitError(RTERR`CIRC_CL_DEPENDENCY,nm.cid, [])
+        else
+          def nextlevel= STATE`GetSupers(nm)
+          in return ExpandNextLevel( nextlevel, hchy', in_hchy union {nm}) union {nm}
+     )
+    else
+      RTERR`InitError(RTERR`CLNM_NOT_DEFINED,nm.cid, [AUX`SingleNameToString(nm)]);
+    return {}
+   );
+\end{vdm_al}
+
+The function {\em NewlyDone} computes the set of names which is fully expanded
+in the hierarchy table {\em hchy}. The second argument {\em done} is the set of
+names which currently are fully expanded in the hierarchy tree.
+
+\begin{vdm_al}
+functions
+  NewlyDone: GLOBAL`Hierarchy * set of AS`Name -> set of AS`Name
+  NewlyDone(hchy, done) ==
+    { nm | nm in set dom hchy & forall cl in set hchy(nm) & cl in set done };
+\end{vdm_al}
+
+\begin{vdm_al}
+  OkHierarchy: GLOBAL`Hierarchy -> bool
+  OkHierarchy(clhchy) ==
+    forall cl in set dom clhchy & cl not in set clhchy(cl)
+\end{vdm_al}
+
+\section{Translation of Inheritance Structure}
+
+\begin{vdm_al}
+operations
+  EvalInhStrct: () ==> ()
+  EvalInhStrct() ==
+   (dcl inhstrct : GLOBAL`InhStrct := {|->};
+    def classes = STATE`GetClasses() 
+    in
+      for all clname in set dom classes do
+        inhstrct := inhstrct ++ {clname |-> OrderOfProcess(clname)};
+    STATE`SetInhStrct(inhstrct);
+   );
+
+\end{vdm_al}
+
+The next functions computes the order of type checking a class and its super classes. 
+\begin{vdm_al}
+
+  OrderOfProcess: AS`Name ==> seq of set of AS`Name
+  OrderOfProcess(nm) ==
+    def supers = STATE`GetSupers(nm)
+    in return OrderOfProcess_Aux([{}], supers);
+
+  OrderOfProcess_Aux: seq of (set of AS`Name) * set of AS`Name ==> seq of set of AS`Name
+  OrderOfProcess_Aux(order, to_process) ==
+    if to_process = {}
+    then return order
+    else 
+      def new_order = [ to_process ] ^ [ order(i) \ to_process | i in set inds order];
+          supers = dunion { STATE`GetSupers(sb) | sb in set to_process }
+      in return OrderOfProcess_Aux(new_order, supers);
+
+\end{vdm_al}
+
+\section{Translation of The Local Hierarchy}
+
+The operation {\em TransLocalHchy} creates the local hierarchy of a class {\em nm}.
+
+\begin{vdm_al}
+functions
+  TransLocalHchy: AS`Name -> map AS`Name to set of AS`Name
+  TransLocalHchy(nm) ==
+    def supers = STATE`GetSupers(nm)
+    in { nm |-> supers} ++ merge { TransLocalHchy(cl) | cl in set supers}
+\end{vdm_al}
+
+\section{Hierarchy Look Up Auxiliary Functions/Operations}
+
+Constructors can be overloaded and this is taken into account in the
+CreateConstructor operation. In order to deal with the overloading a
+mapping from sequences of types to pairs of instruction code and
+access information is returned.
+
+\begin{vdm_al}
+operations
+  CreateConstructor: AS`Name * seq of AS`InstAssignDef * seq of AS`Name * map AS`Name to AS`OpDef
+                     ==> map seq of AS`Type to (STKM`DebugCmd * AS`Access)
+  CreateConstructor(curcls,instvars,supercls,opm) ==
+   (dcl constrmap : map seq of AS`Type to (STKM`DebugCmd * AS`Access) := {|->},
+        sp : STKM`SubProgram := [];
+    for cls in supercls do
+      sp := sp ^ [mk_INSTRTP`PUSHCLNMCUROBJ(cls,cls), 
+                  mk_INSTRTP`INITCLASS(cls,0),
+                  mk_INSTRTP`POPCLNMCUROBJ()];
+
+    for mk_AS`InstAssignDef(mk_AS`AssignDef(nm,tp,Iinit,-),-,static,-) in instvars do 
+      if Iinit <> nil and not static
+      then sp := sp ^ CEXPR`E2I(Iinit) ^ [mk_INSTRTP`DTC(tp), mk_INSTRTP`BINDINSTVAR(curcls,nm)];
+
+    --constrmap := {[] |-> mk_(mk_STKM`DebugCmd([mk_INSTRTP`POP(1)] ^ sp ^ [mk_INSTRTP`EOCL()]), <PUBLIC_AS>)};
+    for all opdef in set rng opm do
+      if opdef.constr
+      then
+        def tpl = ExtOpDom(opdef)
+        in
+         (constrmap := constrmap ++ {tpl |-> mk_(mk_STKM`DebugCmd(
+                                            sp ^
+                                            [mk_INSTRTP`LOOKUPOP(opdef.nm)] ^
+                                            [mk_INSTRTP`SWAP()] ^
+                                            [mk_INSTRTP`APPLY()] ^
+                                            (if tpl = []
+                                             then [mk_INSTRTP`POP(1)]
+                                             else []) ^
+                                            [mk_INSTRTP`EOCL()]), opdef.access)};
+         );
+    if [] not in set dom constrmap
+    then
+      constrmap := constrmap ++
+                   {[] |-> mk_(mk_STKM`DebugCmd([mk_INSTRTP`POP(1)] ^ sp ^ [mk_INSTRTP`EOCL()]), <PUBLIC_AS>)};
+  return constrmap);
+
+functions
+  ExtOpDom: AS`OpDef -> seq of AS`Type
+  ExtOpDom(opdef) ==
+    cases true:
+      (is_AS`ExplOpDef(opdef))    -> opdef.tp.opdom,
+      (is_AS`ImplOpDef(opdef)),
+      (is_AS`ExtExplOpDef(opdef)) -> conc [ let mk_AS`PatTypePair (pat_l,tp,-) = opdef.partps(j)
+                                            in [ tp | - in set inds pat_l ] | j in set inds opdef.partps ]
+    end;
+\end{vdm_al}
+
+\section{Translation of Synchronisation}
+
+\begin{vdm_al}
+operations
+
+  TransSyncs: AS`Document ==> ()
+  TransSyncs(cs) ==
+    def order = GetPermissionOrder(cs);
+        class_m = { class.nm |-> class.defs | class in set elems cs }
+    in
+      for clnm in order do
+       (CMPL`SetClMod(clnm);
+        TransSyncsForOneClass(clnm, class_m(clnm)));
+
+\end{vdm_al}
+
+The operation GetPermissionOrder returns a topologic sort of all the clases
+with respect to inheritance. Given the following example:
+\begin{verbatim}
+        A  D
+       / \/
+      B  C
+        / \
+       F   G
+\end{verbatim}
+
+The result will might be [A,D,B,C,F,G].
+
+The following variables are used:
+\begin{itemize}
+\item [res] The result of the operation
+\item [dep\_m] map from class name to it immediate parents. For example: \\
+      \{ A |-> \{\}, D |-> \{\}, B |->\{A\}, C |-> \{A,D\}, \ldots \}
+\item [no\_link] Set of all classes with no un-handled super classes.
+\item [rem\_m] equal to dep\_m with the classes from no\_link removed. That
+is classes that still have un-handled super classes
+\item [new\_m] equals to rem\_m with the classes from no\_link removed from the
+values of the maps.
+\end{itemize}
+
+\begin{vdm_al}
+
+  GetPermissionOrder: AS`Document ==> seq of AS`Name
+  GetPermissionOrder(cs) ==
+   (dcl res : seq of AS`Name := [],
+        dep_m : map AS`Name to set of AS`Name := {class.nm |-> elems class.supercls | class in set elems cs};
+    while dep_m <> {|->} do
+      let no_link = {cl_nm | cl_nm in set dom dep_m & dep_m(cl_nm) = {}},
+          rem_m = {cl_nm |-> dep_m(cl_nm) | cl_nm in set dom dep_m & dep_m(cl_nm) <> {}},
+          new_m = {cl_nm |-> dep_m(cl_nm) \ no_link | cl_nm in set dom rem_m}
+      in
+       (res := res ^ UTIL`set2seq[AS`Name](no_link);
+        dep_m := new_m );
+    return res);
+
+  TransSyncsForOneClass: AS`Name * [AS`Definitions] ==> ()
+  TransSyncsForOneClass(clnm, defs) ==
+    cases defs:
+      mk_AS`Definitions(-,-,-,opm,-,syncs,thread,-,-) ->
+         def superops = STATE`GetAllOpsNmsSupers(clnm) \ dom STATE`GetAllOps(clnm)
+         in
+          (TransThreadDef(clnm, thread);
+           for sync in syncs do
+             TransSyncDef(clnm, sync, dom opm, superops);
+           for all opnm in set superops do
+             STATE`SetPermission(clnm, opnm, MergePermissionWithSupers(clnm, opnm, []))
+          ),
+      others -> skip
+    end;
+
+-- GetInhThread depends on super classes already having been processed
+-- to work correctly
+#ifdef VICE
+  GetInhThread : AS`Name ==> [STKM`SubProgram * [nat * nat * nat * nat] ]
+#else
+  GetInhThread : AS`Name ==> [STKM`SubProgram]
+#endif VICE
+  GetInhThread(clnm) ==
+    def td = STATE`GetThreadDef(clnm)
+    in
+      if td <> nil
+      then return td
+      else
+        def supers = STATE`GetInhCon(clnm);
+            super_threads = { STATE`GetThreadDef(sclnm) | sclnm in set supers &
+                                 STATE`GetThreadDef(sclnm) <> nil }
+        in
+          cases super_threads:
+            {}     -> return nil,
+            {t}    -> return t,
+            others -> (RTERR`InitError(RTERR`MULT_THREAD_INH, clnm.cid, []);
+                       return nil)
+          end;
+
+  TransThreadDef: AS`Name * [AS`ThreadDef] ==> ()
+  TransThreadDef(clnm, Def) ==
+    cases true:
+      (Def = nil)         -> STATE`SetThreadField(clnm, GetInhThread(clnm)),
+#ifdef VICE
+      (is_AS`PerObl(Def)) -> STATE`SetPerThreadDef(clnm, Def),
+      (is_AS`SpoObl(Def)) -> STATE`SetSpoThreadDef(clnm, Def),
+#else
+      (is_AS`PerObl(Def)) -> RTERR`InitError(RTERR`PERIODIC_THREAD_UNSUPPORTED, Def.cid, []),
+      (is_AS`SpoObl(Def)) -> RTERR`InitError(RTERR`SPORADIC_THREAD_UNSUPPORTED, Def.cid, []),
+#endif VICE
+      --others              -> STATE`SetThreadDef(clnm, mk_STKM`ProcThread(CSTMT`S2I(Def))) -- AS`Stmt
+      others -> STATE`SetThreadDef(clnm, mk_STKM`ProcThread(
+                  [mk_INSTRTP`PUSHCONTEXT(<ALL>)] ^ CSTMT`S2I(Def) ^ [mk_INSTRTP`POPCONTEXT()])) -- AS`Stmt
+    end;
+
+  TransSyncDef: AS`Name * AS`SyncDef * set of AS`Name * set of AS`Name ==> ()
+  TransSyncDef(nm, Def, opnm_s, supers) ==
+    cases true:
+      (is_AS`Permission(Def)) -> TransPermission(nm, Def, opnm_s, supers),
+      (is_AS`Mutex(Def))      -> TransMutex(nm, Def, opnm_s),
+      others                  -> error
+    end;
+\end{vdm_al}
+
+#ifdef VICE
+Note that when translating a permission predicate, we ensure that no
+time increment instructions are generated. This is because when
+executing a permission predicate time will be incremented elsewhere by
+the task switching constant.
+#endif VICE
+
+\begin{vdm_al}
+-- opnm_s is the names of the operations defined in the given class.
+  TransPermission: AS`Name * AS`Permission * set of AS`Name * set of AS`Name ==> ()
+#ifdef VICE
+  TransPermission(clsnm, mk_AS`Permission(spec, guard, -), opnm_s,super_ops) ==
+#else
+  TransPermission(clsnm, mk_AS`Permission(spec, guard, -), opnm_s,-) ==
+#endif VICE
+#ifdef VICE
+    def old_compiling = TIME`GetCompilingTime()
+    in   
+     (TIME`SetCompilingTime(false);                   
+      CEXPR`AddDepIds(spec,opnm_s union super_ops);
+#endif VICE
+      def guard_code = CEXPR`E2I(guard)
+      in InstallPermission(clsnm, spec, guard_code, opnm_s);
+#ifdef VICE                                       
+      def mk_(nms,histnms) = CEXPR`StopDepIds() 
+      in
+        STATE`AddHistDeps(clsnm,AUX`ConstructDoubleName(clsnm,spec),nms,histnms);
+      TIME`SetCompilingTime(old_compiling)            
+    );                                               
+#endif VICE
+
+  InstallPermission: AS`Name * AS`Name * STKM`SubProgram * set of AS`Name ==> ()
+  InstallPermission(clnm, opnm, code, local_ops) ==
+    def existing_code = STATE`LookUpPermis(AUX`ConstructDoubleName(clnm, opnm));
+    in
+     (dcl res_code : STKM`SubProgram := [];
+      cases existing_code:
+        [mk_INSTRTP`PUSHCLNMCUROBJ(-,-)] ^ no_push_code ^ [mk_INSTRTP`POPCLNMCUROBJ()]
+                              -> res_code := MergePermission(code, no_push_code),
+        nil      -> if opnm in set local_ops
+                                 then res_code := code
+                                 else res_code := MergePermissionWithSupers(clnm, opnm, code),
+        others   -> error
+      end;
+      let push_code = [mk_INSTRTP`PUSHCLNMCUROBJ(clnm, clnm)] ^ res_code ^ [mk_INSTRTP`POPCLNMCUROBJ()]
+      in STATE`SetPermission(clnm, opnm, push_code));
+
+functions
+  MergePermission: STKM`SubProgram * STKM`SubProgram +> STKM`SubProgram
+  MergePermission(prog1, prog2) ==
+    cases prog1:
+      []     -> prog2,
+      others -> cases prog2:
+                  [] -> prog1,
+                  others -> CEXPR`ConcIfThenElse(prog1,prog2,[mk_INSTRTP`PUSH(mk_SEM`BOOL(false))])
+                end
+    end;
+
+operations
+  MergePermissionWithSupers: AS`Name * AS`Name * STKM`SubProgram ==> STKM`SubProgram
+  MergePermissionWithSupers(clnm, opnm, prog) ==
+    def supers = STATE`GetSupers(clnm);
+        super_codes = { STATE`LookUpPermis(AUX`ConstructDoubleName(supernm, opnm)) | supernm in set supers } \ {nil}
+    in
+      cases super_codes:
+        {}           -> return prog,
+        {super_code} -> return MergePermission(prog, super_code),
+        others       -> (RTERR`Error(RTERR`OP_DEF_IN_MULTSUPERS, nil, nil, []);
+                         return prog;) -- dummy
+      end;
+
+  TransMutex: AS`Name * AS`Mutex * set of AS`Name ==> ()
+  TransMutex(clnm, mk_AS`Mutex(ops, -), local_ops) ==
+    (dcl all_ops : set of AS`Name := {};
+#ifdef VICE
+    def old_compiling = TIME`GetCompilingTime()
+    in   
+     (TIME`SetCompilingTime(false);                   
+#endif VICE
+      if ops = nil
+      then all_ops := STATE`GetAllOpsNmsSupers(clnm)
+      else all_ops := elems ops;
+      for all opnm in set all_ops do 
+        def ops = cases all_ops:
+                    {op}   -> [op],
+                    others -> UTIL`set2seq[AS`Name](all_ops\{opnm})
+                  end;
+            pred = mk_AS`BinaryExpr(mk_AS`ActiveExpr(ops, CI`NilContextId), 
+                                    <EQ>, mk_AS`RealLit(0, CI`NilContextId), CI`NilContextId);
+            code = CEXPR`E2I(pred)
+        in InstallPermission(clnm, opnm, code, local_ops); 
+#ifdef VICE
+      TIME`SetCompilingTime(old_compiling)
+     );
+#endif VICE
+    );
+end CLASS
+\end{vdm_al}
+
+\vspace{0.5cm}
+
+#ifdef RTINFO
+\begin{rtinfo}
+{rtinfo.ast}[CLASS]
+\end{rtinfo}
+#endif RTINFO
+
+

@@ -1,0 +1,46 @@
+\section{VDM++ Expression Transformations}
+\label{sec:j2vxformexpr}
+
+\begin{vdm_al}
+module STRIP
+
+imports
+  from CI all,
+  from REP all,
+  from AS all
+
+exports all
+
+definitions
+
+functions
+
+stripBrackets : AS`Expr -> AS`Expr
+stripBrackets(p_expr) ==
+  if is_AS`BracketedExpr(p_expr) 
+  then stripBrackets(p_expr.expr)
+  else p_expr ;
+
+areEquivExprs : AS`Expr * AS`Expr -> bool
+areEquivExprs(p_expr1, p_expr2) ==
+  stripBrackets(p_expr1) = stripBrackets(p_expr2) ;
+
+stripBlocks : AS`Stmt -> AS`Stmt
+stripBlocks(p_stmt) == 
+  if is_AS`BlockStmt(p_stmt) and p_stmt.dcls = [] and len p_stmt.stmts = 1 
+  then stripBlocks(hd p_stmt.stmts)
+  else p_stmt ;
+
+areEquivStmts : AS`Stmt * AS`Stmt -> bool
+areEquivStmts(p_stmt1, p_stmt2) ==
+  stripBlocks(p_stmt1) = stripBlocks(p_stmt2) ;
+
+patternOfBind : AS`PatternBind -> AS`Pattern
+patternOfBind(p_patBind) == 
+  if is_AS`SetBind(p_patBind) or is_AS`TypeBind(p_patBind) 
+  then p_patBind.pat 
+  else p_patBind ;
+
+end STRIP
+\end{vdm_al}
+

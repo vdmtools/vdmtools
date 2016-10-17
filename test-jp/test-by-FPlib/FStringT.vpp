@@ -1,0 +1,151 @@
+\subsection{FStringT}
+文字列のテストを行う。
+
+\begin{vdm_al}
+--$Id $
+class FStringT
+functions
+static public run : () +> bool
+run() == 
+let	testcases = 
+		[
+		t1(), t2(), t3(), t4(), t5(), t6()
+		]
+in
+FTestDriver`run(testcases);
+\end{vdm_al}
+
+\subsubsection{文字列の大小を比較する}
+\begin{vdm_al}
+static t1 : () -> FTestDriver`TestCase
+t1() ==
+	
+	mk_FTestDriver`TestCase(
+	"FStringT01:\t 文字列の大小を比較する",
+	let	LT = FString`LT,
+		LE = FString`LE,
+		GT = FString`GT,
+		GE = FString`GE
+	in
+		LT("123")("123") = false and
+		GT("123")( "123") = false and
+		LE("123")("123") and
+		LE("123")("1234") and
+		GE("123")("1234") = false and
+		not LE("1234")("123") and
+		LE("")("") and
+		FSequence`Fmap[seq of char, bool](LT("123"))(["123", "1234", "", "223"]) = [false, true, false, true] and
+		FSequence`Fmap[seq of char, bool](LE("123"))(["1234", ""]) = [true, false] and
+		FSequence`Fmap[seq of char, bool](GT("123"))([ "123", "", "23"]) = [false, true, false] and
+		FSequence`Fmap[seq of char, bool](GE("123"))(["1234", ""]) = [false, true] )
+	;
+\end{vdm_al}
+
+\subsubsection{文字列が等しいかを比較する}
+\begin{vdm_al}
+static t2 : () -> FTestDriver`TestCase
+t2() ==
+	
+	mk_FTestDriver`TestCase(
+	"FStringT02:\t 文字列が等しいかを比較する",
+	let	s1234 = "1234",
+		s = new FString()
+	in
+		s1234 = "1234" and
+		s.IsSpace("") and
+		s.IsSpace("  ") and
+		s.IsSpace(" \t  ") and
+		s.IsSpace(" \t  \n ") and
+		s.IsSpace(" \t  \n a") = false and
+		s.IsSpace([]) ) 
+	;
+\end{vdm_al}
+
+\subsubsection{部分文字列を得る}
+\begin{vdm_al}	
+static t3 : () -> FTestDriver`TestCase
+t3() ==
+	
+	mk_FTestDriver`TestCase(
+	"FStringT03:\t 部分文字列を得る",
+	let	s = new FString(),
+		SubStr = FString`SubStr
+	in
+		s.SubStr(6)(6)("Shin Sahara") = "Sahara" and
+		s.SubStr(6)(8)("Shin Sahara") = "Sahara" and
+		s.SubStr(6)(3)("Shin Sahara") = "Sah" and
+		s.SubStr(1)(0)("Shin Sahara") = "" and
+		s.SubStrFill(1)(3)('*')("sahara") = "sah" and
+		s.SubStrFill(1)(6)('*')("sahara") = "sahara" and
+		s.SubStrFill(1)(10)('*')("sahara") = "sahara****" and
+		s.SubStrFill(3)(4)('*')("sahara") = "hara" and
+		s.SubStrFill(3)(10)('*')("sahara") = "hara******" and
+		s.SubStrFill(1)(0)('*')("sahara") = "" and
+		s.SubStrFill(1)(6)('*')("") = "******" and
+		FString`SubStr(6)(6)("Shin Sahara") = "Sahara" and
+		SubStr(6)(8)("Shin Sahara") = "Sahara" and
+	FSequence`Fmap[seq of char, seq of char](SubStr(6)(8))(["1234567890", "12345671"]) = ["67890", "671"]) 
+	;
+\end{vdm_al}
+
+\subsubsection{数字文字列の扱いを検査する}
+\begin{vdm_al}
+static t4 : () -> FTestDriver`TestCase
+t4() ==
+	
+	mk_FTestDriver`TestCase(
+	"FStringT04:\t 数字文字列の扱いを検査する",
+	FString`IsDigits("1234567890")  = true and
+	FString`IsDigits("abc")  = false and
+	FString`AsInteger("1234567890")  = 1234567890 and
+	FString`AsInteger("")  = 0 )
+	;
+\end{vdm_al}
+
+\subsubsection{指定した文字が、文字列に最初に出現する位置を検査する}
+\begin{vdm_al}
+static t5 : () -> FTestDriver`TestCase
+t5() ==
+	
+	mk_FTestDriver`TestCase(
+	"FStringT05:\t 指定した文字が、文字列に最初に出現する位置を検査する",
+		FString`Index('1')("1234567890")  = 1 and
+		FString`Index('0')("1234567890") = 10 and
+		FString`Index('a')("1234567890")  = 0 and
+		FString`IndexAll('1')("1234567890")  = {1} and
+		FString`IndexAll('0')("1234567890") = {10} and
+		FString`IndexAll('a')("1234567890")  = {} and 
+		FString`IndexAll('1')("1231567190")  = {1,4,8} and 
+		FString`IndexAll('1')("1231567191")  = {1,4,8,10} and
+		FString`Index('1')("1234567890")  = 1 and
+		FString`Index('0')("1234567890") = 10 and
+		FString`Index('a')("1234567890")  = 0 and
+		FString`IndexAll('1')("1234567890")  = {1} and
+		FString`IndexAll('0')("1234567890") = {10} and
+		FString`IndexAll('a')("1234567890")  = {} and 
+		FString`IndexAll('1')("1231567190")  = {1,4,8} and 
+		FString`IndexAll('1')("1231567191")  = {1,4,8,10} and
+		FSequence`Fmap[seq of char, int](FString`Index('1'))(["1234567890", "2345671"]) = [1, 7] and
+		FSequence`Fmap[seq of char, set of int](FString`IndexAll('1'))(["1231567190", "1231567191"]) = [{1,4,8}, {1,4,8,10}])
+	;
+\end{vdm_al}
+
+\subsubsection{指定した文字列が、ある文字列に含まれるかを検査する}
+\begin{vdm_al}
+static t6 : () -> FTestDriver`TestCase
+t6() ==
+	
+	mk_FTestDriver`TestCase(
+	"FStringT06:\t 指定した文字列が、ある文字列に含まれるかを検査する",
+	let IsSubStr = FString`IsSubStr
+	in
+	FString`IsSubStr( "abc")("1234567890")  = false and
+		IsSubStr("Sahara")("Sahara") = true and
+		IsSubStr("Saha")("Sahara") = true and
+		IsSubStr("hara")("Sahara") = true and
+		IsSubStr("ra")("Sahara") = true and
+		IsSubStr("")("Sahara") = true)
+	;
+
+end FStringT
+\end{vdm_al}

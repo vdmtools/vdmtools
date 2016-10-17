@@ -1,0 +1,5 @@
+m4tmp, l. 41, c. 16:
+  Error : Pattern cannot match
+m4tmp, l. 41, c. 19:
+  Error : Field: c can only be matched with a name or don't care pattern
+Errors: 2 

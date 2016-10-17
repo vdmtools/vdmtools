@@ -1,0 +1,193 @@
+VDMDE = vdmde
+SSDIR = ../ss-spec
+ASTDIR= ast
+LN = ln -s 
+
+LATEXFILE = statsem
+SL_LATEXFILE = $(LATEXFILE:%=%-vdmsl)
+PP_LATEXFILE = $(LATEXFILE:%=%-vdmpp)
+LATEX = latex
+RM = rm -f
+IFDEFFILT?=../../code/make_tools/ifdeffilt
+
+# Modules common for SL and PP type checker but mixed specifications
+MIXED = common_as.vdm tcaux.vdm def.vdm env.vdm err.vdm expr.vdm \
+	pat.vdm rep.vdm stmt.vdm test.vdm type.vdm vcm.vdm
+
+# Modules equal for SL and PP type checker
+EQUAL = 
+
+# Modules unique for the SL type checker
+SLSPECS = 
+
+# Modules unique for the PP type checker
+PPSPECS = 
+
+# Modules require-ring preprocessing
+SLMIXED =  $(MIXED:%.vdm=%.vdmsl)
+PPMIXED = $(MIXED:%.vdm=%.vdmpp)
+
+SLALL = $(SLSPECS) $(EQUAL) $(SLMIXED) errmsg.vdm
+PPALL = $(PPSPECS) $(EQUAL) $(PPMIXED) errmsg.vdm
+
+FIG = tcaux.fig def.fig err.fig overview.fig rep.fig type.fig env.fig expr.fig \
+      pat.fig stmt.fig vcm.fig
+
+FIGPS = $(FIG:.fig=.ps)
+
+all: vdmpp vdmsl 
+
+################################################################################
+# 
+# Main targets for SL and PP type checker
+#
+
+# Preprocessing vdm files:
+vdmsl: $(SLALL)
+vdmpp: $(PPALL)
+
+# Make documentation (.tex files) in dvi format:
+SLTEX all: $(SL_LATEXFILE).dvi
+PPTEX: $(PP_LATEXFILE).dvi
+
+# Make documentation  in ps format:
+SLPS: $(SL_LATEXFILE).ps 
+PPPS: $(PP_LATEXFILE).ps 
+
+#
+# Link
+#
+
+link: 
+	-$(LN) $(ASTDIR)/common_as.vdm
+	-$(LN) $(ASTDIR)/rep.fig
+	-$(LN) $(ASTDIR)/rep.vdm
+	-$(LN) $(ASTDIR)/pos.vdm
+	-$(LN) $(ASTDIR)/contextinfo.vdm
+	-$(LN) $(SSDIR)/tcaux.vdm
+	-$(LN) $(SSDIR)/def.vdm
+	-$(LN) $(SSDIR)/env.vdm
+	-$(LN) $(SSDIR)/err.vdm
+	-$(LN) $(SSDIR)/expr.vdm
+	-$(LN) $(SSDIR)/pat.vdm
+	-$(LN) $(SSDIR)/stmt.vdm
+	-$(LN) $(SSDIR)/type.vdm
+	-$(LN) $(SSDIR)/test.vdm
+	-$(LN) $(SSDIR)/vcm.vdm
+	-$(LN) $(SSDIR)/tcaux.fig
+	-$(LN) $(SSDIR)/def.fig
+	-$(LN) $(SSDIR)/env.fig
+	-$(LN) $(SSDIR)/err.fig
+	-$(LN) $(SSDIR)/expr.fig
+	-$(LN) $(SSDIR)/overview.fig
+	-$(LN) $(SSDIR)/pat.fig
+	-$(LN) $(SSDIR)/stmt.fig
+	-$(LN) $(SSDIR)/type.fig
+	-$(LN) $(SSDIR)/vcm.fig
+	-$(LN) $(SSDIR)/statsem.tex
+
+
+#
+# Documentatin
+#
+
+%.ps : %.fig
+	fig2dev -Lps $< $@ 
+
+LATEX_SLSPECS = $(SLSPECS:%=%.tex) $(SLMIXED:%=%.tex) 
+LATEX_PPSPECS = $(PPSPECS:%=%.tex) $(PPMIXED:%=%.tex) 
+LATEX_EQUAL_SPECS = $(EQUAL:%=%.tex)
+# Latex generation command
+VDMDE = vdmde -lrN
+
+# Test coverage information file 
+RTINFO = rtinfo.ast
+
+$(LATEX_SLSPECS) $(LATEX_EQUAL_SPECS) $(LATEX_PPSPECS): %.tex: % $(RTINFO)
+	 $(VDMDE) $<
+
+$(RTINFO):
+	@echo "Make link to $(RTINFO) for test coverage information"
+
+# generating SL document as dvi - file
+$(SL_LATEXFILE).dvi: $(LATEX_SLSPECS) $(LATEX_EQUAL_SPECS) $(SL_LATEXFILE).tex $(FIGPS) 
+	$(LATEX) $(SL_LATEXFILE)
+	bibtex $(SL_LATEXFILE)
+	makeindex $(SL_LATEXFILE).idx
+	$(LATEX) $(SL_LATEXFILE)
+	$(LATEX) $(SL_LATEXFILE)
+
+# generating PP document as dvi - file
+$(PP_LATEXFILE).dvi: $(LATEX_PPSPECS) $(LATEX_EQUAL_SPECS) $(PP_LATEXFILE).tex $(FIGPS) 
+	$(LATEX) $(PP_LATEXFILE)
+	bibtex $(PP_LATEXFILE)
+	makeindex $(PP_LATEXFILE).idx
+	$(LATEX) $(PP_LATEXFILE)
+
+# generating document as postscript file
+$(SL_LATEXFILE).ps : $(SL_LATEXFILE).dvi
+	dvips $(SL_LATEXFILE) -o
+
+$(PP_LATEXFILE).ps : $(PP_LATEXFILE).dvi
+	dvips $(PP_LATEXFILE) -o
+LATEX_SLSPECS = $(SLSPECS:%=%.tex) $(SLMIXED:%=%.tex) 
+LATEX_PPSPECS = $(PPSPECS:%=%.tex) $(PPMIXED:%=%.tex) 
+LATEX_EQUAL_SPECS = $(EQUAL:%=%.tex)
+
+#
+# VDM-SL sources
+#
+
+$(SLMIXED): %.vdmsl: %.vdm
+	-chmod -f +w $@
+	$(IFDEFFILT) -DVDMSL -DTPINFO $< >$@	
+	chmod a-w $@
+
+$(SL_LATEXFILE).tex: %-vdmsl.tex: %.tex
+	-chmod -f +w $@
+	$(IFDEFFILT) -DVDMSL -DTPINFO $< >$@	
+	chmod a-w $@
+
+#
+# VDM++ sources
+#
+
+$(PPMIXED): %.vdmpp: %.vdm
+	-chmod -f +w $@
+	$(IFDEFFILT) -DVDMPP -DVICE -DTPINFO $< >$@	
+	chmod a-w $@
+
+$(PP_LATEXFILE).tex: %-vdmpp.tex: %.tex
+	-chmod -f +w $@
+	$(IFDEFFILT) -DVDMPP -DTPINFO $< >$@	
+	chmod a-w $@
+
+#
+# Generation of help texts
+#
+errmsg.vdm: errmsg.txt
+	translateErr.pl vdm
+
+#
+# Updating the error comments in the specification files.
+#
+.PHONY: update
+update:
+	@if [ ! -e replaceComments.pl ]; then\
+	  echo "You have to link the program replaceComments.pl from the directory .../code/errmsg";\
+	  exit -1;\
+	fi;
+	@echo "Please remember to do a diff of the result."
+	@echo "The original files are renamed to .old"
+	./replaceComments.pl *.vdm
+
+#
+# Cleaning up!
+#
+
+RMEXT = aux log idx ind blg ps dvi bbl ilg toc tex
+
+clean:
+	$(RM) $(LATEX_SLSPECS) $(LATEX_PPSPECS) $(LATEX_EQUAL_SPECS) 
+	$(RM) *.vdmsl *.vdmpp $(FIGPS) 
+	$(RM) $(RMEXT:%=$(SL_LATEXFILE).%) $(RMEXT:%=$(PP_LATEXFILE).%)

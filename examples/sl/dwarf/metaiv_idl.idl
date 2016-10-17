@@ -1,0 +1,214 @@
+/***
+*  * WHAT
+*  *    The CORBA IDL definition of the VDM values it is possible to 
+*  *    pass between a client process and the VDM Toolbox.
+*  *    See the documentation supplied with the Toolbox for details
+*  *    on how to use the API and distributed VDM values.
+*  *    
+*  * FILE
+*  *    $Source: /home/vdmtools/cvsroot/toolbox/examples/sl/dwarf/metaiv_idl.idl,v $
+*  * VERSION
+*  *    $Revision: 1.2 $
+*  * DATE
+*  *    $Date: 2005/05/13 00:41:46 $
+*  * STATUS
+*  *    Under development
+*  * REFERENCES
+*  *    
+*  * PROJECT
+*  *    INFORMA and Toolbox
+*  * AUTHOR
+*  *    Ole Storm + $Author: vdmtools $
+*  * COPYRIGHT
+*  *    (C) 2016 Kyushu University
+***/
+
+typedef sequence<octet> bytes;
+
+exception APIError { string msg; };
+
+module VDM{
+
+  exception VDMError { short err; };
+
+  interface Generic
+    {
+      string ascii();
+      boolean IsNil();
+      boolean IsChar();
+      boolean IsNumeric();
+      boolean IsQuote();
+      boolean IsTuple();
+      boolean IsRecord();
+      boolean IsSet();
+      boolean IsMap();
+      boolean IsText();
+      boolean IsToken();
+      boolean IsBool();
+      boolean IsSequence();
+      boolean IsObjectRef();
+
+      void destroy()
+        raises (APIError);
+      // Call this method to indicate to the server that you will not
+      // be using this object any more. If this was the last reference
+      // to the server object, the resources associated with it will
+      // be released.
+      
+      bytes GetCPPValue();
+      // Returns the binary representation of the MetaIV value. In
+      // this way, by linking the (C++) client application with the
+      // VDM library, it is possible to create a 'real' MetaIV value
+      // in the client. This allows for more efficient access when
+      // iterating through a large VDM value.
+
+      Generic Clone();
+      // This function returns a copy of the value held by the object
+      // on which this method is invoked.
+      
+    };
+
+  interface Set;
+
+  interface Numeric : Generic
+    {
+      double GetValue();
+    };
+
+  interface Bool : Generic
+    {
+      boolean GetValue();
+    };
+
+  interface Nil : Generic
+    { };
+
+  interface Quote : Generic
+    {
+      string GetValue();
+    };
+
+  interface Char : Generic
+    {
+      char GetValue();
+    };
+
+  interface Text : Generic
+    {
+      string GetValue();
+    };
+
+  interface Token : Generic
+    {
+      string GetValue();
+    };
+
+  interface Map : Generic
+    {
+      void Insert(in Generic key, in Generic val)
+        raises (VDMError);
+      void ImpModify(in Generic key, in Generic val);
+      Generic Apply(in Generic key)
+        raises (VDMError);
+      void ImpOverride(in Map m);
+      unsigned long Size();
+      boolean IsEmpty();
+      Set Dom();
+      Set Rng();
+      boolean DomExists(in Generic g);
+      void RemElem(in  Generic g)
+        raises (VDMError);
+      short First(out Generic g);
+      short Next(out Generic g);
+    };
+      
+
+  interface Sequence : Generic
+    {
+      Generic Index(in long i)
+        raises (VDMError);
+      Generic Hd() 
+        raises (VDMError);
+      Sequence Tl()
+        raises (VDMError);
+      void ImpTl()
+        raises (VDMError);
+      void RemElem(in long i)
+        raises (VDMError);
+      long Length();
+      boolean GetString(out string s);
+      boolean IsEmpty();
+      void ImpAppend(in Generic g)
+        raises (APIError);
+      void ImpModify(in long i, in Generic g)
+        raises (VDMError, APIError);
+      void ImpPrepend(in Generic g)
+        raises (APIError);
+      void ImpConc(in Sequence s)
+        raises (APIError);
+      Set Elems();
+      short First(out Generic g);
+      short Next(out Generic g);
+    };
+
+
+  interface Set : Generic
+    {
+      void Insert(in Generic g);
+      unsigned long Card();
+      boolean IsEmpty();
+      boolean InSet(in Generic g);
+      void ImpUnion(in Set s);
+      void ImpIntersect(in Set s);
+      Generic GetElem()
+        raises (VDMError);
+      void RemElem(in Generic g)
+        raises (VDMError);
+      boolean SubSet(in Set s);
+      void ImpDiff(in Set s);
+      short First(out Generic g);
+      short Next(out Generic g);
+    };
+
+
+  interface Record : Generic
+    {
+      void SetField(in unsigned long i, in Generic g)
+        raises (VDMError);
+      Generic GetField(in unsigned long i)
+        raises (VDMError);
+      string GetTag()
+        raises (APIError);
+      boolean Is(in string tag);
+      unsigned long Length();
+    };
+
+  interface Tuple : Generic
+    {
+      void SetField(in unsigned long i, in Generic g)
+        raises (VDMError);
+      Generic GetField(in unsigned long i)
+        raises (VDMError);
+      unsigned long Length();
+    };
+};
+
+interface VDMFactory{
+  VDM::Numeric mkNumeric(in double r);
+  VDM::Bool mkBool(in boolean b);
+  VDM::Nil mkNil();
+  VDM::Quote mkQuote(in string s);
+  VDM::Char mkChar(in char c);
+  VDM::Text mkText(in string s);
+  VDM::Token mkToken(in string s);
+  VDM::Map mkMap();
+  VDM::Sequence mkSequence();
+  VDM::Set mkSet();
+  //  VDM::Record mkRecord(in string tag, in unsigned long length)
+  //    raises (APIError);
+  VDM::Tuple mkTuple(in unsigned long length);
+
+  VDM::Generic FromCPPValue(in bytes cppvalue);
+  // Converts a 'real' MetaIV value, in its binary representation, to
+  // a VDM::Generic. This function is the 'inverse' of GetCPPValue().
+};

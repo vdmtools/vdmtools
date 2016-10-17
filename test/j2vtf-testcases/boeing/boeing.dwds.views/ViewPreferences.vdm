@@ -1,0 +1,53 @@
+class ViewPreferences is subclass of Serializable
+operations 
+public  toString : () ==> [String]
+toString() == 
+( return  bounds+new  String(" isShowing:")+isShowing
+) ;
+
+public  getBounds : () ==> [Rectangle]
+getBounds() == 
+( return  bounds
+) ;
+
+public  isShowing : () ==> bool 
+isShowing() == 
+( return  isShowing
+) ;
+
+public  setShowing : bool  ==> <VOID>
+setShowing(b) == 
+( ViewPreferences`isShowing := b;
+  return  <VOID>
+) ;
+
+public  ViewPreferences : () ==> ViewPreferences
+ViewPreferences() == 
+( bounds := new  Rectangle(0 , 0 , 0 , 0);
+  isShowing := defaultIsShowing
+) ;
+
+public  setBounds : [Rectangle] ==> <VOID>
+setBounds(bounds) == 
+( ViewPreferences`bounds := bounds;
+  return  <VOID>
+) ;
+
+public  ViewPreferences : [Dimension] ==> ViewPreferences
+ViewPreferences(size) == 
+( bounds := new  Rectangle(size);
+  isShowing := defaultIsShowing
+) ;
+
+public  ViewPreferences : [Rectangle] * bool  ==> ViewPreferences
+ViewPreferences(bounds, isShowing) == 
+( ViewPreferences`bounds := bounds;
+  ViewPreferences`isShowing := isShowing
+) ;
+
+instance variables 
+  private  static defaultIsShowing : bool  := false  ;
+  private  bounds : [Rectangle];
+  private  isShowing : bool 
+  
+end  ViewPreferences

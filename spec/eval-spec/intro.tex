@@ -1,0 +1,54 @@
+\chapter{Introduction}
+\label{ch:intro}
+\pagenumbering{arabic}
+\raggedbottom
+
+In~\cite{Bruin93a}, the specification and implementation of an interpreter
+for the VDM-SL specification language is described. Because the
+interpreter is a commercial product, we could not include the complete
+specification as an appendix in the thesis. The document you are reading is
+only available to the VDMTools Group and the Overture Tools Group.
+
+In this report, we describe an abstract state machine semantics for the
+VDM-SL language. This language supports both the complete ISO/VDM-SL
+language (see~\cite{BSIVDM92}), and a structuring mechanism developed at
+IFAD (see~\cite{Bruin93a}). In this report, the following is described:
+
+\begin{itemize}
+\item The complete abstract syntax of the VDM-SL language.
+\item The semantic value domain used in the evaluation of a specification
+  in VDM-SL.
+\item The global definitions, types and state used in the evaluation.
+\item The complete dynamic semantics for the language.
+\end{itemize}
+
+All parts are specified in the VDM-SL language. Therefore, some
+syntactical differences must be taken into account when reading the
+specifications. For a overview of the differences, see
+also~\cite{Bruin93a}.
+
+This report is based on an existing document, written also at IFAD. This
+document, \cite{IPTESIFAD12}, describes an abstract state machine semantics
+for the IPTES Meta-IV subset of ISO/VDM-SL. Therefore, not all parts of the
+operation semantics described in this document are the result of the
+MSc.~project. The following are additions/changes to the semantics
+described in~\cite{IPTESIFAD12}:
+
+\begin{itemize}
+\item In~\cite{IPTESIFAD137}, a list of constructs is described that is not
+  part of the old version of the VDM-SL language. The semantics of
+  these constructs are added to the old operation semantics. These
+  constructs include the support for higher order functions, local function
+  definitions, lambda expressions, and the use of exception handling.
+
+\item Due to some changes in the abstract syntax, some of the old
+  specification had to be changed to comply to the new abstract syntax.
+
+\item The complete specification of the structuring mechanism is added to
+  the semantics.
+\end{itemize}
+
+% Local Variables: 
+% mode: LaTeX
+% TeX-master: "dynsem"
+% End: 

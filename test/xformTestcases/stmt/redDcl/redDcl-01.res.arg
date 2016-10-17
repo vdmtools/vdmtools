@@ -1,0 +1,10 @@
+"class A
+
+operations
+
+public Test : () ==> nat  
+Test () ==
+return (52 - 11) ;
+   
+end A
+"

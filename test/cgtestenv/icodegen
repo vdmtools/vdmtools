@@ -1,0 +1,63 @@
+#! /usr/bin/perl
+
+use Getopt::Long;
+
+my ($opt_sl, $opt_pp) = ('','');
+
+my $ok = GetOptions ('-VDMSL' => \$opt_sl,
+                     '-VDMPP' => \$opt_pp,
+                     '-java' => \$opt_java,
+                     '-cpp' => \$opt_cpp); 
+
+die "Exactly one of -VDMSL and -VDMPP must be used.\n"
+    unless ($opt_sl xor $opt_pp); 
+
+die "Exactly one of -java and -cpp must be used.\n"
+    unless ($opt_java xor $opt_cpp); 
+
+if ($opt_cpp){    
+  if ($opt_sl) {
+    $skel=shift(@ARGV); 
+    $arg=shift(@ARGV);
+    undef($/); 
+    open(IN, "<$skel") || die;
+    open(A, "<$arg") || die;
+    $A = <A>;
+    $A =~ s/\`/_/; 
+    $A = "vdm_" . $A; 
+    $I = <IN>; 
+    $I =~ s/YYY/#include "init.cc"/;
+    $I =~ s/ZZZ/$A/;
+    print $I;
+  } else {
+    $skel=shift(@ARGV); 
+    $arg=shift(@ARGV);
+    undef($/); 
+    open(IN, "<$skel") || die;
+    open(A, "<$arg") || die;
+    $A = <A>;
+    ($p1,$p2) = ($A =~ m/([a-zA-Z]+)\`([a-zA-Z]+)/); 
+    $I = <IN>;
+    $I =~ s/YYY/ObjectRef obj(new vdm_$p1()); /;           
+    $I =~ s/ZZZ/(ObjGet_vdm_$p1(obj))->vdm_$p2()/;
+    print $I;
+  }
+} else {
+  $skel=shift(@ARGV); 
+  $arg=shift(@ARGV);
+  undef($/); 
+  open(IN, "<$skel") || die;
+  open(A, "<$arg") || die;
+  $A = <A>;
+  ($p1,$p2) = ($A =~ m/([a-zA-Z]+)\`([a-zA-Z]+)/);
+  $I = <IN>;
+  $I =~ s/YYY/$p1 obj = new $p1(); /;           
+  $I =~ s/ZZZ/obj.$p2()/;
+  print $I;
+}
+ 
+            
+
+
+
+

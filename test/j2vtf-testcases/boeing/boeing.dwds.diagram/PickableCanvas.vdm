@@ -1,0 +1,111 @@
+class PickableCanvas is subclass of JPanel
+operations 
+public  clear : () ==> <VOID>
+clear() == 
+( ( dcl   index : int  := 0;
+    while  index < elementList.size() do  
+    ( dcl   elementToRemove : [PickableElement] := elementList.elementAt(index);
+      let - = removeElement(elementToRemove)
+      in 
+        skip ;
+      index := index+1
+    ) 
+  ) ;
+  let - = elementList.removeAllElements()
+  in 
+    skip ;
+  let - = repaint()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  PickableCanvas : () ==> PickableCanvas
+PickableCanvas() == 
+( let - = PickableCanvas(0 , 0)
+  in 
+    skip 
+) ;
+
+public  PickableCanvas : int  * int  ==> PickableCanvas
+PickableCanvas(width, height) == 
+( let - = JPanel()
+  in 
+    skip ;
+  elementList := new  Vector();
+  let - = PickableCanvas`setSize(width , height)
+  in 
+    skip ;
+  let - = PickableCanvas`setBackground(Color`white)
+  in 
+    skip 
+) ;
+
+public  add : [PickableElement] ==> <VOID>
+add(newElement) == 
+( let - = newElement.setCanvas(self  )
+  in 
+    skip ;
+  if  newElement.getNotifyOnMouseClick()
+  then  
+    ( let - = addMouseListener(newElement)
+      in 
+        skip 
+    ) ;
+  if  newElement.getNotifyOnMouseMotion()
+  then  
+    ( let - = addMouseMotionListener(newElement)
+      in 
+        skip 
+    ) ;
+  let - = elementList.addElement(newElement)
+  in 
+    skip ;
+  ( dcl   sizeChanged : bool  := false  ;
+    skip 
+  ) ;
+  return  <VOID>
+) ;
+
+public  paintComponent : [Graphics] ==> <VOID>
+paintComponent(graphics) == 
+( let - = JPanel`paintComponent(graphics)
+  in 
+    skip ;
+  ( dcl   index : int  := 0;
+    while  index < elementList.size() do  
+    ( dcl   nextElement : [PickableElement] := elementList.elementAt(index);
+      let - = nextElement.paint(graphics)
+      in 
+        skip ;
+      index := index+1
+    ) 
+  ) ;
+  return  <VOID>
+) ;
+
+public  removeElement : [PickableElement] ==> <VOID>
+removeElement(elementToDelete) == 
+( let - = removeMouseListener(elementToDelete)
+  in 
+    skip ;
+  let - = removeMouseMotionListener(elementToDelete)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  containsElement : [PickableElement] ==> bool 
+containsElement(element) == 
+( dcl   returnValue : bool  := false  ;
+  if  elementList.contains(element)
+  then  
+    ( returnValue := true  
+    ) ;
+  return  returnValue
+) ;
+
+instance variables 
+  private  elementList : [Vector]
+  
+end  PickableCanvas

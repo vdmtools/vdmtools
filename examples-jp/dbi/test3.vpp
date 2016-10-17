@@ -1,0 +1,73 @@
+class A
+
+instance variables
+private
+dbi : DBI := new DBI()
+
+operations
+public
+Test: () ==> bool
+Test() ==
+   (dcl res : bool := true;
+    res := dbi.connect("testdb");
+    if not res then return false;
+
+    res := selectTest();
+    if not res then return false;
+    return true;
+   );
+
+public
+selectTest: () ==> bool
+selectTest() ==
+  def sql = "SELECT * FROM testtb";
+      mk_(res,-) = dbi.executeQuery(sql)
+  in
+   (dcl tbs : seq of TestBean := [];
+    while def mk_(res,ok) = dbi.fetch() in res and ok do
+      def mk_(r,s) = dbi.getRecordSeq()
+      in
+        if r
+        then
+          let mk_(-,d1) = VDMUtil`seq_of_char2val[nat](s(2))
+          in
+            tbs := tbs ^ [new TestBean(s(1),d1,s(3))]
+        else return false;
+    showTestBeans(tbs);
+    return true;);
+
+public
+showTestBeans : seq of TestBean ==> ()
+showTestBeans(fruits) ==
+  for f in fruits do
+    let id = f.id,
+        data1 = VDMUtil`val2seq_of_char[nat](f.data1),
+        data2 = if f.data2 = nil
+                then ""
+                else f.data2,
+        io = new IO(),
+        b = io.echo(id ^ " " ^ data1 ^ " " ^ data2 ^ "\n")
+    in
+      skip;
+      
+end A
+
+class TestBean
+instance variables
+public
+id: seq of char := "";
+public
+data1: nat := 0;
+public
+data2: [seq of char] := nil;
+
+operations
+public
+TestBean: seq of char * nat * [seq of char] ==> TestBean
+TestBean(n, d1, d2) ==
+  (id := n;
+   data1 := d1;
+   data2 := d2);
+
+end TestBean
+

@@ -1,0 +1,9 @@
+class A
+
+instance variables
+  b        : bool := true;
+  k        : nat  := 10;
+  j        : nat  := 20;
+  l        : nat  := 30;
+  m        : nat  := 40;
+  q        : <YES> | <NO> := <YES>;

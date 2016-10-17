@@ -1,0 +1,20 @@
+functions
+
+  f1: [T22] -> set of ([ nat | T10 | [T7]])
+  f1(t) ==
+    if t = {} then
+      { nil }
+    else
+      dunion { { t20.a, t20.c, t20.b} | t20 in set t }
+
+operations
+
+public  Test: () ==> set of (nat | T10 | T7)
+  Test() ==
+    return f1({ mk_T20(1, 'a', {1}), 
+                mk_T20(3, 'r', {1,2,3}),
+                mk_T20(1, 'i', {}) } )
+
+end A
+
+class B is subclass of A

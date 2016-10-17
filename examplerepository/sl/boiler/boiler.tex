@@ -1,0 +1,37 @@
+%\documentstyle[a4,makeidx,vdmsl_v1.1.31]{article}
+
+% With latex2e you can use these lines instead
+\documentclass{article}
+\usepackage{a4}
+\usepackage{makeidx}
+\usepackage{vdmsl-2e}
+
+\newcommand{\StateDef}[1]{{\bf #1}}
+\newcommand{\TypeDef}[1]{{\bf #1}}
+\newcommand{\TypeOcc}[1]{{\it #1}}
+\newcommand{\FuncDef}[1]{{\bf #1}}
+\newcommand{\FuncOcc}[1]{#1}
+\newcommand{\ModDef}[1]{{\tiny #1}}
+
+\makeindex
+
+\begin{document}
+
+\title{\fbox{Boiler Example}}
+\author{Submitted by \fbox{DOD?}}
+\maketitle
+
+\begin{vdm}
+\input{ACTUATORS.vdm.tex}
+\input{ACTUATORS_TYPES.vdm.tex}
+\input{BOILER_ACTUATORS.vdm.tex}
+\input{BOILER_CAPTORS.vdm.tex}
+\input{BOILER_STATE.vdm.tex}
+\input{BOILER_TYPES.vdm.tex}
+\input{CAPTORS.vdm.tex}
+\input{CAPTORS_TYPES.vdm.tex}
+\end{vdm}
+
+\printindex
+\end{document}
+

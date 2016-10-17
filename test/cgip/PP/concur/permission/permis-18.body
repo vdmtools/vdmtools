@@ -1,0 +1,36 @@
+class C1 is subclass of C
+
+operations
+
+public  IncZ: () ==> ()
+  IncZ() ==
+    x := x ^ "In class C1 ";
+
+public  C_IncZ: () ==> ()
+  C_IncZ() ==
+    C`IncZ();
+
+sync
+
+  per InstvarOne => #fin(IncZ) = 1
+
+end C1
+class Main
+
+operations
+
+  public Test : () ==> seq of char
+  Test() ==
+    let myo = new C1()
+    in
+      let t1 = new T().Init(myo,<instvar>,<one>,"t1 "),
+          t2 = new T().Init(myo,<instvar>,<one>,"t2 ")
+      in
+        (start(t1);
+         start(t2);
+         myo.C_IncZ();
+         myo.C_IncZ();
+         myo.IncZ();
+         myo.ReadX());
+
+end Main

@@ -1,0 +1,77 @@
+class A
+
+instance variables
+  n : nat := 0;
+
+operations
+
+
+  GetN: () ==> nat
+  GetN() ==
+    return n;
+
+  SetN: nat ==> ()
+  SetN(v) ==
+    n := v;
+
+m2: () ==> bool
+m2() ==
+return true;
+
+
+m1: B|A ==> bool
+m1( arg1 )==
+def my_bool : bool = arg1.m2()
+in return my_bool
+
+end A
+
+
+class B
+
+
+operations
+  This : B ==> B
+  This(s) ==
+  ( return s );
+
+
+  DoSort: seq of real ==> seq of real
+  DoSort(l) ==
+  ( dcl t : seq of real := [];
+
+    if l = [] then return []
+    else (
+      t := DoSort (tl l);
+      t := self.This(self).This(self).InsertSorted (hd l,t);
+--      t := self!This(self)!InsertSorted(hd l,t);
+      return t
+    )
+  );
+
+
+  InsertSorted: real * seq of real ==> seq of real 
+  InsertSorted(i, l)  ==
+  (
+    cases true :
+      (l = [])    -> return [i],
+      (i <= hd l) -> return [i] ^ l,
+      others      -> (   dcl t : seq of real := [];
+                         t := InsertSorted(i,tl l);
+                         return [hd l] ^ t
+                     )
+    end
+  );
+
+
+
+public Test : () ==> seq of real
+  Test()  ==
+  ( dcl a   : B := new B(),      
+        b   : seq of nat;
+    b := a.DoSort([3,2,1]);
+    return b
+
+  )
+
+end B

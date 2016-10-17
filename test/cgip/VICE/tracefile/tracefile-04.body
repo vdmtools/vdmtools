@@ -1,0 +1,9 @@
+class A
+
+operations
+
+public Test : () ==> ()
+Test() ==
+  skip;
+
+end A

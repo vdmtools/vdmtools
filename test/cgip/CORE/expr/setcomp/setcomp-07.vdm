@@ -1,0 +1,18 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq1  of set of <ESSAI>  
+Test () ==
+return 
+[    { let a = <ESSAI> in a | a in set {<ESSAI>,2} }
+	
+]  
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

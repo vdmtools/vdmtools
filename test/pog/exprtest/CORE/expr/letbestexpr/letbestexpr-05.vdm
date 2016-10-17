@@ -1,0 +1,18 @@
+class LetBeSTExprTest
+types
+
+  A :: selid : nat
+       sel2 : bool
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = let b:bool be st b => false in if b then 7 else 5
+  in skip;
+
+------------------------------------------------------------------------------
+end LetBeSTExprTest

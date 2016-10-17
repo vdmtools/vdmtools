@@ -1,0 +1,27 @@
+\subsection{FProduct}
+組に関わる関数を定義する。
+
+\begin{vdm_al}
+--"$Id"
+class FProduct
+functions
+\end{vdm_al}
+
+Curryは、カリー化を行う。
+\begin{vdm_al}
+static public Curry[@T1, @T2, @T3] : (@T1 * @T2 -> @T3) -> @T1 -> @T2 -> @T3
+Curry(f)(x)(y) == f(x, y);
+\end{vdm_al}
+
+Uncurryは、カリー化の逆を行う。
+\begin{vdm_al}
+static public Uncurry[@T1, @T2, @T3] : (@T1 -> @T2 -> @T3) -> @T1 * @T2 -> @T3
+Uncurry(f)(x,y) == f(x)(y);
+
+end FProduct
+\end{vdm_al}
+
+
+\begin{rtinfo}
+[FProduct]{vdm.tc}[FProduct]
+\end{rtinfo}

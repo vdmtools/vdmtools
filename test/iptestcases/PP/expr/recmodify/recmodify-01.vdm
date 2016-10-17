@@ -1,0 +1,35 @@
+
+class A
+
+  types
+public    T1 = <v1> | <v2>;
+
+public    R1 :: t: T1;
+
+  instance variables
+    r:R1 := mk_R1(<v2>);
+
+  operations
+public    SetVal : R1 ==> ()
+    SetVal(x) ==
+      r := x;
+
+public    GetVal : () ==> R1
+    GetVal () ==
+      return r;
+
+end A
+
+class B
+
+  instance variables
+    a:A := new A();
+
+  operations
+    public Test : () ==> A`R1
+    Test() ==
+      let oldr = a.GetVal()
+      in (a.SetVal(mu(oldr, t |-> <v1>));
+          a.GetVal())
+
+end B

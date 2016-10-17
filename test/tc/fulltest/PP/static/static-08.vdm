@@ -1,0 +1,55 @@
+class A
+
+instance variables
+  static public a : nat := 1;
+  static protected b : nat := 2;
+
+operations
+  static public opA: () ==> nat
+  -- should yield 2
+  opA () == return a + A`a;
+
+  static public opB: () ==> nat
+  -- should yield 6
+  opB () == return b + A`b + opA();
+
+  public opC: () ==> nat
+  -- should yield 4
+  opC () == return a + A`a + A`opA();
+
+  public opD: () ==> nat
+  -- should yield 16
+  opD () == return b + A`b + opB() + A`opB()
+
+end A
+
+class B is subclass of A
+operations
+  static public opE: () ==> nat
+  -- should yield 2
+  opE () == return a + A`a;
+
+  static public opF: () ==> nat
+  -- should yield  12
+  opF () == return b + B`b + opA() + A`opB();
+
+  public opG: () ==> nat
+  -- should yield 22
+  opG () == return opE() + opC() + A`opD();
+
+  public opH: () ==> nat
+  -- should yield 42
+  opH () == return b + B`b + opD() + B`opG()
+end B
+
+class C
+instance variables
+  anA : A := new A();
+  anB : B := new B()
+
+operations
+  public Test: () ==> nat
+  -- should yield 106
+  Test () == return A`opA() + A`opB() + anA.opC() + anA.opD() +
+                    B`opE() + B`opF() + anB.opG() + anB.opH()
+end C

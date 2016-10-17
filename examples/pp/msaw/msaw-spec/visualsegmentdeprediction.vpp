@@ -1,0 +1,12 @@
+class VisualSegmentDePrediction is subclass of SegmentDePrediction
+
+   operations
+      Set: MSAWTypes`ModeA * map MSAWTypes`Temps to (MSAWTypes`Coordonnees * MSAWTypes`Pieds) * 
+           BulletinMeteo * View ==> ()
+      Set (modeA', positions, bulletin_meteo, view')
+      == (  self.SegmentDePrediction`Set (modeA', positions, bulletin_meteo);
+            view'.ShowSegmentDePrediction (xy_queue, xy_tete)
+         )
+      pre card dom positions >= 2
+
+end VisualSegmentDePrediction

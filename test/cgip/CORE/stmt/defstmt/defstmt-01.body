@@ -1,0 +1,9 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> nat  
+Test () ==
+( dcl n : nat := 5;
+  def n2 : nat  = n in
+    return n2 + 10
+)
+   
+end A

@@ -1,0 +1,5 @@
+To generate the specification for the VICE version of the static
+semantics (i.e. with support for the duration statement) a separate
+VICE directory should be made, and Makefile.VICE should be copied
+to this directory as Makefile. The usual setup follows, with a link
+to the ast directory, followed by "make linkall".

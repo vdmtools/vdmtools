@@ -1,0 +1,25 @@
+public Test :() ==> seq of (nat | char)
+Test() ==
+  return [f(10), f(20), f(30), f(40)]
+
+functions
+f: nat -> nat | char
+f(n) ==
+  cases n:
+    10 -> 'a',
+    20 -> n,
+    30 -> g(n),
+    40 -> h(n, 7),
+    others -> (lambda b : nat & b + 5)(n)
+  end;
+
+g: nat -> nat
+g(n) ==
+  let a = lambda b : nat & b + 5 in a(n);
+
+h: nat * nat -> nat
+h(i, j) ==
+  let a = lambda mk_(b,b) : nat * nat & (lambda q : nat & q + b + b)(i) in
+    a(mk_(j, j))
+
+end A

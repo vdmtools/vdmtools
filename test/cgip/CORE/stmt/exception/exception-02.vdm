@@ -1,0 +1,29 @@
+class A
+
+operations
+public Test : () ==> int | seq of int | <OK>
+Test() ==
+( dcl l : seq of nat := [];
+  trap <ERR> with return <OK>
+  in
+    always TestSeq(l) in
+  ( l := SetToSeq({-2,...,8});
+    return l )
+);
+
+SetToSeq: set of int ==> seq of int
+SetToSeq(s) ==
+  if s = {} then
+    exit <ERR>
+  else
+    let e in set s in 
+      return [e] ^ SetToSeq(s \ {e});
+
+TestSeq: seq of int ==> seq of int
+TestSeq(l) ==
+  if l = [] then
+    exit <ERR>
+  else
+    return l;
+
+end A

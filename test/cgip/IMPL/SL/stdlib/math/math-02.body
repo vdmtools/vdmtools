@@ -1,0 +1,14 @@
+module A
+imports from MATH all
+exports all
+definitions
+operations
+
+Test:() ==> seq of real
+Test () ==
+  return [
+    MATH`sin("A")
+    ]   
+
+end A
+    

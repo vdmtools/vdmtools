@@ -1,0 +1,29 @@
+class JavaTextParseException is subclass of JavaLangException
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaTextParseException" , <CLASS> , false  )
+instance variables 
+  private  errorOffset : int 
+operations 
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  getErrorOffset : () ==> int 
+getErrorOffset() == 
+( return  errorOffset
+) ;
+
+public  JavaTextParseException : <NIL> ==> JavaTextParseException
+JavaTextParseException(-) == 
+isNil := true  ;
+
+public  JavaTextParseException : JavaLangString * int  ==> JavaTextParseException
+JavaTextParseException(s, errorOffset) == 
+( let - = JavaLangException(s)
+  in 
+    skip ;
+  JavaTextParseException`errorOffset := errorOffset
+) ;
+
+
+end  JavaTextParseException

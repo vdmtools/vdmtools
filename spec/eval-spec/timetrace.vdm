@@ -1,0 +1,789 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Format and support for time trace logging
+% $Id: timetrace.vdm,v 1.1 2000/06/26 14:30:03 paulm Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\chapter{The TIMETRACE and TIMETRACETP Modules}
+
+\section{Introduction}
+This module contains the specification of the time trace file. This
+file contains information about runtime events such as swapping of
+threads, and requests, activations and completions of operations.
+
+\begin{vdm_al}
+
+module TIMETRACETP
+
+imports
+
+  from STKM all,
+
+  from GLOBAL all,
+
+  from CI all,
+
+  from SCHDTP all,
+
+  from AS all,
+
+  from SEM all,
+
+  from REP all,
+
+  from PAT all, 
+
+  from RTERR all,
+
+  from INSTRTP all
+
+exports all
+
+definitions
+
+\end{vdm_al}
+
+A trace is a sequence of trace items. A trace item is a time stamped
+trace event, so the overall trace is almost monotonically increasing with
+respect to the time of events (the places where the order not will be 
+appropriate will be places where one CPU is ahead of a different CPU
+within the allowed time step size.
+\begin{vdm_al}
+types
+
+Trace = seq of TraceEvent;
+
+\end{vdm_al}
+
+A trace event may be swapping in or out of a thread, or a request,
+activation or completion of an operation. 
+
+\begin{vdm_al}
+TraceEvent = ThreadSwapIn | ThreadSwapOut | DelayedThreadSwapIn |
+             OpRequest | OpActivate | OpCompleted | ThreadCreate |
+             ThreadKill |  MessageRequest | MessageActivate |
+             MessageCompleted | ReplyRequest | CPUdecl | BUSdecl |
+             DeployObj | MessageBroadReq | MessageBroadAct |
+             MessageBroadCom | InstVarChange; 
+ 
+
+\end{vdm_al}
+A thread swap in event consists solely of a thread id. Similarly for a
+swap out event.
+\begin{vdm_al}
+ThreadSwapIn :: id       : SCHDTP`ThreadId
+                objref   : [SEM`OBJ_Ref]
+                clnm     : [AS`Ids]
+                cpunm    : nat -- 0 is used for nil
+                overhead : nat
+                time     : nat;
+
+DelayedThreadSwapIn :: id       : SCHDTP`ThreadId
+                       objref   : [SEM`OBJ_Ref]
+                       clnm     : [AS`Ids]
+                       delay    : real
+                       cpunm    : nat
+                       overhead : nat
+                       time     : nat;
+
+ThreadSwapOut :: id       : SCHDTP`ThreadId
+                 objref   : [SEM`OBJ_Ref]
+                 clnm     : [AS`Ids]
+                 cpunm    : nat
+                 overhead : nat
+                 time     : nat;
+\end{vdm_al}
+
+An operation request consists of the name of the operation requested,
+and the object from which the request originated. Note that the name
+is fully qualified, and there includes the class in which the
+operation is defined. Operation activations and completions are similar.
+\begin{vdm_al}
+OpRequest :: id     : SCHDTP`ThreadId
+             opname : AS`Ids
+             objref : SEM`OBJ_Ref
+             clnm   : AS`Ids
+             cpunm  : nat
+             args   : [seq of SEM`VAL]
+             async  : bool
+             time   : nat;
+
+OpActivate :: id     : SCHDTP`ThreadId
+              opname : AS`Ids
+              objref : SEM`OBJ_Ref
+              clnm   : AS`Ids
+              cpunm  : nat
+              async  : bool
+              time   : nat;
+
+OpCompleted :: id     : SCHDTP`ThreadId
+               opname : AS`Ids
+               objref : SEM`OBJ_Ref
+               clnm   : AS`Ids
+               cpunm  : nat
+               res    : [SEM`VAL]
+               async  : bool
+               time   : nat;
+\end{vdm_al}
+
+Trace events are also present whenever threads are being created and killed
+after completion.
+\begin{vdm_al}
+ThreadCreate :: id     : SCHDTP`ThreadId
+                period : bool
+                objref : [SEM`OBJ_Ref]
+                clnm   : [AS`Name] 
+                cpunm  : nat
+                time   : nat;
+
+ThreadKill :: id    : SCHDTP`ThreadId
+              cpunm : nat
+              time  : nat;
+\end{vdm_al}
+
+A number of events appear whenever messages are sent between different CPUs.
+\begin{vdm_al}
+MessageRequest ::
+  busid   : nat
+  fromcpu : nat
+  tocpu   : nat
+  msgid   : nat
+  callthr : SCHDTP`ThreadId
+  opname  : AS`Ids
+  objref  : [SEM`OBJ_Ref]
+  size    : nat
+  time    : nat;
+
+ReplyRequest ::
+  busid     : nat
+  fromcpu   : nat
+  tocpu     : nat
+  msgid     : nat
+  origmsgid : nat
+  callthr   : SCHDTP`ThreadId
+  calleethr : SCHDTP`ThreadId
+  size      : nat
+  time      : nat;
+
+MessageActivate ::
+  msgid : nat
+  time  : nat;
+
+MessageCompleted ::
+  msgid : nat
+  time  : nat;
+
+MessageBroadReq ::
+  busid   : nat
+  fromcpu : nat
+  tocpu   : set of nat
+  msgid   : nat
+  opname  : AS`Ids
+  objref  : set of SEM`OBJ_Ref
+  size    : nat
+  time    : nat;
+
+MessageBroadAct ::
+  msgid : nat
+  time  : nat;
+
+MessageBroadCom ::
+  msgid : nat
+  time  : nat;
+
+InstVarChange ::
+  instnm : AS`Name
+  val    : SEM`VAL 
+  objref : SEM`OBJ_Ref
+  time   : nat
+  thrid  : nat;
+\end{vdm_al}
+
+Declaration of CPU's and BUS'es are also logged in the log file in order to be
+able to draw the overall system architecture.
+
+\begin{vdm_al}
+CPUdecl ::
+  id   : nat
+  sys  : [AS`Name]
+  name : [AS`Name]
+  expl : bool;
+  
+BUSdecl ::
+  id   : nat
+  topo : set of nat
+  name : [AS`Name];
+
+DeployObj ::
+  objref : SEM`OBJ_Ref
+  clnm   : AS`Name
+  cpunm  : nat
+  time   : nat;
+
+end TIMETRACETP
+\end{vdm_al}
+
+\vspace{0.5cm}
+
+\begin{rtinfo}
+{rtinfo.ast}[TIMETRACETP]
+\end{rtinfo}
+
+\begin{vdm_al}
+module TIMETRACE
+
+imports
+
+  from GLOBAL all,
+  from CI all,
+
+  from SCHDTP all,
+
+  from SCHD all,
+
+  from AS all,
+
+  from REP all,
+
+  from SEM all,
+
+  from INSTRTP all,
+  from IO all,
+  from STKM all,
+  from PAT all,
+  from RTERR all,
+  from TIMETRACETP all,
+
+  from TIMEPARSER all,
+
+  from MANGLE all,
+
+  from VC all
+
+exports
+  functions
+    Ids2String : AS`Ids -> seq of char;
+    TimeTraceInit: () -> TraceState
+  operations
+    AddToLogfile : TIMETRACETP`TraceEvent ==> ();
+    LogHistEvent: SCHDTP`ThreadId * AS`Name * AS`Name * INSTRTP`HistoryKind * 
+              SEM`OBJ_Ref * bool * [seq of SEM`VAL] ==> ();
+    LogDelayedThreadSwapIn : SCHDTP`ThreadId * [SEM`OBJ_Ref] * [AS`Name] * 
+                             nat * nat ==> ();
+    LogThreadSwapIn : SCHDTP`ThreadId * [SEM`OBJ_Ref] * [AS`Name] * nat ==> ();
+    LogThreadSwapOut : SCHDTP`ThreadId * [SEM`OBJ_Ref] * [AS`Name] * nat ==> ();
+    LogThreadCreate: SCHDTP`ThreadId * bool * [SEM`OBJ_Ref] * [AS`Name]
+                     * [AS`Name] ==> ();
+    LogKillThread: SCHDTP`ThreadId * [AS`Name] ==> ();
+    LogMessageRequest: [AS`Name] * [AS`Name] * [AS`Name] * STKM`MessageId *
+                       SCHDTP`ThreadId * AS`Name * [SEM`OBJ_Ref] *
+                       nat * nat ==> ();
+    LogBroadMessageReq: [AS`Name] * [AS`Name] * set of [AS`Name] * STKM`MessageId *
+                      AS`Name * set of SEM`OBJ_Ref *
+                     nat * nat ==> ();
+    LogReplyRequest: [AS`Name] * [AS`Name] * [AS`Name] * STKM`MessageId *
+                     STKM`MessageId * SCHDTP`ThreadId * SCHDTP`ThreadId * 
+                     nat * nat ==> ();
+    LogMessageActivate: STKM`MessageId * nat ==> ();
+    LogMessageCompleted: STKM`MessageId * nat ==> ();
+    LogObjAlloc: SEM`OBJ_Ref * [AS`Name] * nat ==> ();
+    AddArgLog: <ALL> | AS`Name ==> ();
+    AddBUS: [AS`Name] * set of [AS`Name] ==> ();
+    AddCPU: [AS`Name] * [AS`Name] * bool ==> ();
+    NewTimeTraceInit: () ==> ()
+
+definitions
+
+\end{vdm_al}
+
+The trace state consists of a trace, and the name of the file to which
+trace output should be written. Note that events are recorded both in
+the state, and also in the log file.
+\begin{vdm_al}
+state TraceState of
+  new_log   : bool
+  new_log_id: nat
+  log       : TIMETRACETP`Trace
+  logfile   : seq of char
+  id_m      : map [AS`Name] to nat
+  busid_m   : map [AS`Name] to nat
+  nextid    : nat
+  nextbusid : nat
+  logargs   : <ALL> | set of AS`Name
+  threadcreate : map SCHDTP`ThreadId to nat
+init tst == tst = TimeTraceInit()
+
+end
+\end{vdm_al}
+The operation $LogHistEvent$ is called from \texttt{STATE`UpdateHistCount}. It
+logs events relating to operation requests, activations and
+completions. Events are logged with the current time obtained from the
+stack machine.
+\begin{vdm_al}
+operations
+
+AddCPU: [AS`Name] * [AS`Name] * bool ==> ()
+AddCPU(sysnm,cpunm,expl) ==
+  def num = ConvertNameToNum(cpunm)
+  in
+    if num <> 0
+    then AddToLogfile(mk_TIMETRACETP`CPUdecl(num,sysnm,cpunm,expl));
+
+AddBUS: [AS`Name] * set of [AS`Name]  ==> ()
+AddBUS(busnm,cpus) ==
+  def num = ConvertBUSNameToNum(busnm);
+      converted = {ConvertNameToNum(cpu) | cpu in set cpus}
+  in
+    if num <> 0
+    then AddToLogfile(mk_TIMETRACETP`BUSdecl(num,converted,busnm));
+
+LogHistEvent: SCHDTP`ThreadId * AS`Name * AS`Name * INSTRTP`HistoryKind * 
+              SEM`OBJ_Ref * bool * [seq of SEM`VAL] ==> ()
+LogHistEvent(threadid, clnm, opname,kind,objref,async,vals) ==
+  def curtime = STKM`GetTime();
+      cpu = ConvertNameToNum(STKM`GetCurCPU());
+      val = if vals <> nil and is_INSTRTP`fin(kind)
+            then hd vals
+            else vals;
+      mk_(opids, opname2) = if MANGLE`IsMangled(opname)
+                            then def mk_(nm, -, -) = MANGLE`UnMangle(opname)
+                                 in mk_(opname.ids, nm)
+                            else mk_(opname.ids, opname)
+  in 
+    cases true:
+      (is_INSTRTP`req(kind)) -> 
+         let new_event =
+         mk_TIMETRACETP`OpRequest(threadid, opids, objref, clnm.ids,cpu,val,async,curtime)
+         in
+           (VC`AddOpReq(opname2,val,threadid,curtime);
+            AddToLogfile(new_event)),
+      (is_INSTRTP`act(kind)) -> 
+        let new_event = mk_TIMETRACETP`OpActivate(threadid, opids, objref, clnm.ids,cpu,async,curtime)
+        in 
+          (VC`AddOpAct(opname2,threadid,curtime);
+           AddToLogfile(new_event)),
+      (is_INSTRTP`fin(kind)) -> 
+       let new_event = mk_TIMETRACETP`OpCompleted(threadid, opids, objref, clnm.ids,cpu,val,async,curtime)
+       in
+         (VC`AddOpFin(opname2,val,threadid,curtime);
+          AddToLogfile(new_event)),
+      others -> error
+    end;
+
+\end{vdm_al}
+Similarly thread events are logged with the current time. These
+operations are called from SCHD`SelAndRunThread. 
+\begin{vdm_al}
+LogThreadSwapIn : SCHDTP`ThreadId * [SEM`OBJ_Ref] * [AS`Name] * nat ==> ()
+LogThreadSwapIn(threadid,objRef,clnm,overhead) ==
+  let ids = if clnm = nil then nil else clnm.ids in
+  def curtime = SCHD`max({threadcreate(threadid),STKM`GetTime()});
+      cpu = ConvertNameToNum(STKM`GetCurCPU())
+  in AddToLogfile(mk_TIMETRACETP`ThreadSwapIn(threadid,objRef,ids,
+                                              cpu,overhead,curtime));
+     
+LogDelayedThreadSwapIn : SCHDTP`ThreadId * [SEM`OBJ_Ref] * [AS`Name] * nat 
+                         * nat ==> ()
+LogDelayedThreadSwapIn(threadid, objRef, clnm, delay, overhead) ==
+  let ids = if clnm = nil then nil else clnm.ids in
+  def curtime = STKM`GetTime();
+      cpu = ConvertNameToNum(STKM`GetCurCPU())
+  in AddToLogfile(mk_TIMETRACETP`DelayedThreadSwapIn(threadid,objRef, 
+                                                     ids, delay,cpu,
+                                                     overhead,curtime));
+     
+LogThreadSwapOut : SCHDTP`ThreadId * [SEM`OBJ_Ref] * [AS`Name] * nat ==> ()
+LogThreadSwapOut(threadid, objRef, clnm,overhead) ==
+  let ids = if clnm = nil then nil else clnm.ids in
+  def curtime = STKM`GetTime();
+      cpu = ConvertNameToNum(STKM`GetCurCPU())
+  in AddToLogfile(mk_TIMETRACETP`ThreadSwapOut(threadid, objRef,
+ids,cpu,
+                                               overhead,curtime));
+     
+\end{vdm_al}
+
+\begin{vdm_al}
+  LogThreadCreate: SCHDTP`ThreadId * bool * [SEM`OBJ_Ref] * [AS`Name]
+                   * [AS`Name] ==> ()
+  LogThreadCreate(tid,peri,objref,clnm,cpunm) ==
+    def cpu = ConvertNameToNum(cpunm);
+        now = STKM`GetCPUTime(cpunm)
+    in
+      (threadcreate(tid) := now;
+       AddToLogfile(mk_TIMETRACETP`ThreadCreate(tid,peri,objref,clnm,cpu,now)));
+
+  LogKillThread: SCHDTP`ThreadId * [AS`Name] ==> ()
+  LogKillThread(tid,cpunm) ==
+     AddToLogfile(mk_TIMETRACETP`ThreadKill(tid,ConvertNameToNum(cpunm),
+                  STKM`GetTime()));
+
+  LogMessageRequest: [AS`Name] * [AS`Name] * [AS`Name] * STKM`MessageId *
+                     SCHDTP`ThreadId * AS`Name * [SEM`OBJ_Ref] *
+                     nat * nat ==> ()
+  LogMessageRequest(busid,fromcpu,tocpu,msgid,callthr,opname,
+                    objref,size,time) ==
+  def bid   = ConvertBUSNameToNum(busid);
+      fcpu  = ConvertNameToNum(fromcpu);
+      tcpu  = ConvertNameToNum(tocpu);
+      opids = opname.ids
+  in
+   AddToLogfile(mk_TIMETRACETP`MessageRequest(bid,fcpu,tcpu,msgid,
+                                              callthr,opids,objref,size,time));
+
+  LogReplyRequest: [AS`Name] * [AS`Name] * [AS`Name] * STKM`MessageId * 
+                   STKM`MessageId * SCHDTP`ThreadId * SCHDTP`ThreadId * 
+                   nat * nat ==> ()
+  LogReplyRequest(busid,fromcpu,tocpu,msgid,origmsgid,callthr,caleethr,size,time) ==
+  def bid   = ConvertBUSNameToNum(busid);
+      fcpu  = ConvertNameToNum(fromcpu);
+      tcpu  = ConvertNameToNum(tocpu)
+  in
+   AddToLogfile(mk_TIMETRACETP`ReplyRequest(bid,fcpu,tcpu,msgid,origmsgid,
+                                            caleethr,callthr,size,time));
+
+  LogMessageActivate: STKM`MessageId * nat ==> ()
+  LogMessageActivate(id,time) ==
+    AddToLogfile(mk_TIMETRACETP`MessageActivate(id,time));
+
+  LogMessageCompleted: STKM`MessageId * nat ==> ()
+  LogMessageCompleted(id,time) ==
+    AddToLogfile(mk_TIMETRACETP`MessageCompleted(id,time));
+
+  LogObjAlloc: SEM`OBJ_Ref * [AS`Name] * nat ==> ()
+  LogObjAlloc(objref,cpunm,time) ==
+   def clid = ConvertNameToNum(cpunm)
+   in
+    AddToLogfile(mk_TIMETRACETP`DeployObj(objref,objref.tp,clid,time));
+
+operations
+
+  LogBroadMessageReq: [AS`Name] * [AS`Name] * set of [AS`Name] * STKM`MessageId *
+                      AS`Name * set of SEM`OBJ_Ref *
+                     nat * nat ==> ()
+  LogBroadMessageReq(busid,fromcpu,tocpus,msgid,opname,
+                    objrefs,size,time) ==
+  def bid   = ConvertBUSNameToNum(busid);
+      fcpu  = ConvertNameToNum(fromcpu);
+      tcpus = {ConvertNameToNum(tocpu) | tocpu in set tocpus};
+      opids = opname.ids
+  in
+   AddToLogfile(mk_TIMETRACETP`MessageBroadReq(bid,fcpu,tcpus,msgid,
+                                               opids,objrefs,size,time));
+\end{vdm_al}
+
+\begin{vdm_al}
+AddArgLog: <ALL> | AS`Name ==> ()
+AddArgLog(arg) ==
+  if arg = <ALL> or logargs = <ALL>
+  then logargs := <ALL>
+  else logargs := logargs union {arg};
+
+ConvertNameToNum: [AS`Name] ==> nat
+ConvertNameToNum(nm) ==
+  if nm in set dom id_m
+  then return id_m(nm)
+  else (id_m(nm) := nextid;
+        nextid := nextid + 1;
+        return nextid -1);
+
+ConvertBUSNameToNum: [AS`Name] ==> nat
+ConvertBUSNameToNum(nm) ==
+  if nm in set dom busid_m
+  then return busid_m(nm)
+  else (busid_m(nm) := nextbusid;
+        nextbusid := nextbusid + 1;
+        return nextbusid -1);
+
+NewTimeTraceInit: () ==> ()
+NewTimeTraceInit() ==
+ (new_log_id := new_log_id + 1;
+  new_log := true;
+  log := [];
+  logfile := "logfile" ^ Int2Char(new_log_id)
+ );
+\end{vdm_al}
+
+The following functions are used to pretty-print TraceItems. This
+leads to more efficient use of the logfile.
+\begin{vdm_al}
+
+functions
+
+TraceEvent2String : TIMETRACETP`TraceEvent * (<ALL> | set of AS`Name) -> 
+                    seq of char
+TraceEvent2String(event,logargs) ==
+  cases event:
+  mk_TIMETRACETP`ThreadSwapIn(id, objref, clnm, cpunm,oh,time) -> 
+    "ThreadSwapIn -> " ^ "id: "^ Num2String(id) ^
+                         " objref: " ^ Objref2String(objref) ^
+                         " clnm: " ^ Clnm2String(clnm) ^
+                         " cpunm: " ^  Num2String(cpunm) ^
+                         " overhead: " ^ Num2String(oh) ^
+                         " time: " ^ Num2String(time),
+
+  mk_TIMETRACETP`ThreadSwapOut(id, objref, clnm, cpunm,oh,time) -> 
+    "ThreadSwapOut -> " ^ "id: "^ Num2String(id) ^
+                         " objref: " ^ Objref2String(objref) ^
+                         " clnm: " ^ Clnm2String(clnm) ^
+                         " cpunm: " ^  Num2String(cpunm) ^
+                         " overhead: " ^ Num2String(oh) ^
+                         " time: " ^ Num2String(time),
+
+  mk_TIMETRACETP`DelayedThreadSwapIn(id, objref, clnm, delay, cpunm,oh,time) -> 
+    "DelayedThreadSwapIn -> " ^ "id: "^ Num2String(id) ^
+                         " objref: " ^ Objref2String(objref) ^
+                         " clnm: " ^ Clnm2String(clnm) ^
+                         " delay: " ^ Num2String(delay) ^
+                         " cpunm: " ^  Num2String(cpunm) ^
+                         " overhead: " ^ Num2String(oh) ^
+                         " time: " ^ Num2String(time),
+
+  mk_TIMETRACETP`ThreadCreate(id, peri, objref, clnm,cpunm,time) ->
+  let obj = if objref = nil
+            then "nil"
+            else Objref2String(objref),
+      cl = if clnm = nil
+           then "nil"
+           else Clnm2String(clnm.ids)
+  in
+    "ThreadCreate -> " ^ "id: "^ Num2String(id) ^
+                         " period: " ^ Bool2Char(peri) ^   
+                         " objref: " ^ obj ^
+                         " clnm: " ^ cl ^
+                         " cpunm: " ^ Num2String(cpunm) ^
+                         " time: " ^ Num2String(time),
+
+  mk_TIMETRACETP`ThreadKill(id,cpunm,time) ->
+    "ThreadKill -> " ^ "id: "^ Num2String(id) ^
+                       " cpunm: " ^ Num2String(cpunm) ^
+                       " time: " ^ Num2String(time),
+
+  mk_TIMETRACETP`OpRequest(id, opname, objref, clnm, cpunm,vals,async,time) ->
+    "OpRequest -> "^ "id: "^ Num2String(id) ^
+                " opname: " ^ Ids2String(opname) ^
+                " objref: " ^ Objref2String(objref) ^
+                " clnm: " ^ Clnm2String(clnm) ^
+                " cpunm: " ^ Num2String(cpunm) ^
+                (if LogOpName(opname,logargs)
+                 then " args: " ^ "\"[" ^SEM`ValSeq2String(vals) ^ "]\""
+                 else "") ^
+                " async: " ^ Bool2Char(async) ^
+                " time: " ^ Num2String(time),
+
+  mk_TIMETRACETP`OpActivate(id, opname, objref, clnm, cpunm,async,time) ->
+    "OpActivate -> "^ "id: "^ Num2String(id) ^
+                " opname: " ^ Ids2String(opname) ^
+                " objref: " ^ Objref2String(objref) ^
+                " clnm: " ^ Clnm2String(clnm) ^
+                " cpunm: " ^ Num2String(cpunm) ^
+                " async: " ^ Bool2Char(async) ^
+                " time: " ^ Num2String(time),
+
+  mk_TIMETRACETP`OpCompleted(id, opname, objref, clnm, cpunm,val,async,time) ->
+    "OpCompleted -> "^ "id: "^ Num2String(id) ^
+                " opname: " ^ Ids2String(opname) ^
+                " objref: " ^ Objref2String(objref) ^
+                " clnm: " ^ Clnm2String(clnm) ^
+                " cpunm: " ^ Num2String(cpunm) ^
+                (if LogOpName(opname,logargs)
+                 then " result: " ^ "\"" ^ SEM`Val2String(val) ^"\""
+                 else "") ^
+                " async: " ^ Bool2Char(async) ^
+                " time: " ^ Num2String(time),
+  mk_TIMETRACETP`MessageRequest(busid, fromcpu, tocpu, msgid, callthr,
+                                opname, objref, size, time) ->
+    "MessageRequest -> " ^ "busid: "^ Num2String(busid) ^
+                           " fromcpu: " ^ Num2String(fromcpu) ^
+                           " tocpu: " ^ Num2String(tocpu) ^
+                           " msgid: " ^ Num2String(msgid) ^
+                           " callthr: " ^ Num2String(callthr) ^
+                           " opname: " ^ Ids2String(opname) ^
+                           " objref: " ^ Objref2String(objref) ^
+                           " size: " ^ Num2String(size) ^
+                           " time: " ^ Num2String(time),
+  mk_TIMETRACETP`ReplyRequest(busid, fromcpu, tocpu, msgid, 
+                              origmsgid,callthr,calleethr, size, time) ->
+    "ReplyRequest -> " ^ "busid: " ^ Num2String(busid) ^
+                         " fromcpu: " ^ Num2String(fromcpu) ^
+                         " tocpu: " ^ Num2String(tocpu) ^
+                         " msgid: " ^ Num2String(msgid) ^
+                         " origmsgid: " ^ Num2String(origmsgid) ^
+                         " callthr: " ^ Num2String(callthr) ^
+                         " calleethr: " ^ Num2String(calleethr) ^
+                         " size: " ^ Num2String(size) ^
+                         " time: " ^ Num2String(time),
+  mk_TIMETRACETP`MessageActivate(msgid, time) ->
+    "MessageActivate -> " ^ "msgid: " ^ Num2String(msgid) ^
+                            " time: " ^ Num2String(time),
+  mk_TIMETRACETP`MessageCompleted(msgid, time) ->
+    "MessageCompleted -> " ^ "msgid: " ^ Num2String(msgid) ^
+                             " time: " ^ Num2String(time),
+  mk_TIMETRACETP`MessageBroadReq(busid, fromcpu, tocpus, msgid, 
+                                opname, objrefs, size, time) ->
+    "MessageBroadReq -> " ^ "busid: "^ Num2String(busid) ^
+                            " fromcpu: " ^ Num2String(fromcpu) ^
+                            " tocpus: " ^ NatSet2String(tocpus) ^
+                            " msgid: " ^ Num2String(msgid) ^
+                            " opname: " ^ Ids2String(opname) ^
+                            " objrefs: " ^ ObjrefSet2String(objrefs) ^
+                            " size: " ^ Num2String(size) ^
+                            " time: " ^ Num2String(time),
+  mk_TIMETRACETP`CPUdecl(id,sysnm,cpunm,expl) ->
+    "CPUdecl -> " ^ " id: " ^ Num2String(id) ^
+                    " expl: " ^ Bool2Char(expl) ^
+                    " sys: " ^ (if sysnm = nil
+                                then "\"none\""
+                                else Ids2String(sysnm.ids)) ^
+                    " name: " ^ if cpunm = nil
+                                then "\"vCPU\""
+                                else Ids2String(cpunm.ids),
+  mk_TIMETRACETP`BUSdecl(id,topo,cpunm) ->
+    "BUSdecl -> " ^ " id: " ^ Num2String(id) ^ 
+                    " topo: " ^ "{" ^ NatSet2String(topo) ^ "}" ^
+                    " name: " ^ if cpunm = nil
+                                then "nil"
+                                else Ids2String(cpunm.ids),
+  mk_TIMETRACETP`DeployObj(objref,clnm,cpunm,time) ->
+    "DeployObj -> " ^ " objref: " ^ Objref2String(objref) ^
+                      " clnm: " ^ Ids2String(clnm.ids) ^
+                      " cpunm: " ^ Num2String(cpunm) ^
+                      " time: " ^ Num2String(time),
+  mk_TIMETRACETP`InstVarChange(instnm,val,objref,time,thrid) ->
+    "InstVarChange -> " ^ " instnm: " ^ Ids2String(instnm.ids) ^
+                          " val: " ^  "\"" ^ SEM`Val2String(val) ^"\"" ^
+                          " objref: " ^ Objref2String(objref) ^
+                          " time: " ^ Num2String(time) ^
+                          " id: " ^ Num2String(thrid)
+  end;
+
+LogOpName: AS`Ids * (<ALL> | set of AS`Name) -> bool
+LogOpName(opname,logargs) ==
+  logargs = <ALL> or 
+  mk_AS`Name(opname,CI`NilContextId) in set logargs;
+
+Num2String : real -> seq of char
+Num2String(r) ==
+  Int2String(floor r);
+
+Int2String: int -> seq of char
+Int2String(i) ==
+  if i = 0
+  then "0"
+  else let i_digits = Digits(i) in
+       conc [Int2Char(i_digits(i)) | i in set inds i_digits];
+
+Digits : int -> seq of int
+Digits(i) ==
+  if i = 0
+  then []
+  else Digits (i div 10) ^ [i mod 10];
+
+Clnm2String : [AS`Ids] -> seq of char
+Clnm2String(ids) ==
+  if ids = nil
+  then "nil"
+  else Ids2String(ids);
+
+Ids2String : AS`Ids -> seq of char
+Ids2String(ids) ==
+  let dq : seq of char = [ '"' ],
+      bq : seq of char = [ '`' ] in
+  let first = hd ids, rest = tl ids in
+    if len ids = 1
+    then  dq ^ first ^ dq 
+    elseif len ids = 2
+    then dq ^ first ^ bq ^ (hd rest) ^ dq
+    else dq ^ first ^ bq ^ (hd rest) ^ bq ^ (hd tl rest) ^ dq 
+  pre len ids in set {1,2,3};
+
+--Ids2String : AS`Ids -> seq of char
+--Ids2String(ids) ==
+--  if len ids = 1
+--  then  "\"" ^ hd ids ^ "\""  
+--  else "[ \"" ^(hd ids) ^ "\" , " ^ Ids2String(tl ids) ^ "]";
+
+Int2Char: int -> seq of char
+Int2Char(i) ==
+  cases i:
+  0 -> "0",
+  1 -> "1",
+  2 -> "2",
+  3 -> "3",
+  4 -> "4",
+  5 -> "5",
+  6 -> "6",
+  7 -> "7",
+  8 -> "8",
+  9 -> "9",
+  others -> []
+  end;
+
+Bool2Char: bool -> seq of char
+Bool2Char(b) ==
+  if b 
+  then "true"
+  else "false";
+
+Objref2String : [SEM`OBJ_Ref] -> seq of char
+Objref2String(objref) ==
+  if objref = nil
+  then "nil"
+  --else let mk_SEM`OBJ_Ref(n) = objref 
+  else let mk_SEM`OBJ_Ref(n,-) = objref 
+       in Int2String(n);
+
+ObjrefSet2String : set of SEM`OBJ_Ref -> seq of char
+ObjrefSet2String(objrefs) ==
+  NatSet2String({objref.ref | objref in set objrefs});
+
+NatSet2String: set of nat -> seq of char
+NatSet2String(ns) ==
+  if card ns = 1
+  then let {e} = ns in
+         Int2Char(e)
+  else let n in set ns
+       in
+         Int2Char(n) ^ ", " ^ NatSet2String(ns \ {n})
+pre ns <> {};
+
+TimeTraceInit: () -> TraceState
+TimeTraceInit() ==
+  mk_TraceState(true, 0, [], "logfile",{|->},{|->},
+                0,0,{},{|->});
+\end{vdm_al}
+
+The operation \texttt{AddToLogfile} is used within the module to add trace
+items to the log file. It uses the IO module to do this. If the trace
+is currently empty, a new trace file is begun, otherwise items are
+appended to the end of the file. This could lead to unexpected
+behaviour if the name of the log file is changed midway through
+execution. 
+
+\begin{vdm_al}
+
+operations
+
+AddToLogfile : TIMETRACETP`TraceEvent ==> ()
+AddToLogfile(te) ==
+  (log := log ^ [te];
+  let directive = if new_log
+                  then <start>
+                  else <append>
+  in
+    (def - = IO`fecho(logfile, TraceEvent2String(te,logargs) ^ "\n", directive) in
+        if new_log
+        then new_log := false)
+   );
+
+end TIMETRACE
+\end{vdm_al}
+
+\vspace{0.5cm}
+
+\begin{rtinfo}
+{rtinfo.ast}[TIMETRACE]
+\end{rtinfo}
+
+

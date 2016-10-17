@@ -1,0 +1,17 @@
+class UnaryTest
+types
+
+  A :: set of nat
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = dinter {{3,true,"he"},{8.6,false,"has"},{-8,7 < 6,"she"}}
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

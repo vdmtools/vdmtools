@@ -1,0 +1,14 @@
+This directory contains the Quadrilateral example (four side figures).
+This is a simple example illustrating the use of inheritance in
+VDM++. Further, this example show how to write a C++ program on top of
+the generated C++ code.
+
+Content of the directory:
+
+  - *.vpp                 The files of the Quadrilateral example.
+
+  - Makefile              Makefile to compile the generated C++ code
+                          (REMEMBER to update the TBDIR macro)
+  - app.cc                C++ main program
+  - *.h, *.cc             Generated code
+

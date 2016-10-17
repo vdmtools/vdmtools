@@ -1,0 +1,6 @@
+Type checking A ... done
+types-10.arg, l. 37, c. 16:
+  Error : Pattern cannot match
+types-10.arg, l. 37, c. 19:
+  Error : Field: c can only be matched with a name or don't care pattern
+Errors: 2 

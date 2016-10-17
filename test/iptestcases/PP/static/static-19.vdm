@@ -1,0 +1,24 @@
+class A
+
+operations
+
+public
+Test: () ==> seq of (nat | bool)
+Test() ==
+  return [B`x, C`x];
+
+end A
+class B
+
+instance variables
+
+  public static x : nat := 1;
+
+end B
+class C is subclass of B
+
+instance variables
+
+  public static x : bool := true;
+
+end C

@@ -1,0 +1,560 @@
+librandom.a(random.o): random.cc
+libexc_emul.a(exc_emul.o): exc_emul.cc exc_emul.h
+libtsiparser-pp.a(vppexprtc.o): vppexprtc.cc tag.h metaiv.h recover.h \
+ exc_emul.h binops.h Errors.h cg.h cg_aux.h CGBase.h ToolColleague.h \
+ ProjectTypes.h asquotes.h tbutils.h projectval.h \
+ ToolKit.h Repository.h BaseTools.h Interface.h pexpr.h scanner.h
+libtsiparser-pp.a(vpppars.o): vpppars.cc tag.h metaiv.h recover.h exc_emul.h \
+ binops.h Errors.h cg.h cg_aux.h CGBase.h ToolColleague.h \
+ ProjectTypes.h asquotes.h tbutils.h projectval.h \
+ ToolKit.h Repository.h BaseTools.h Interface.h vdmpars.h scanner.h
+libtsiparser-pp.a(vppstmt.o): vppstmt.cc tag.h metaiv.h recover.h exc_emul.h \
+ binops.h Errors.h cg.h cg_aux.h CGBase.h ToolColleague.h \
+ ProjectTypes.h asquotes.h tbutils.h projectval.h \
+ ToolKit.h Repository.h BaseTools.h Interface.h vppstmt.h scanner.h
+libtsiparser-pp.a(recover.o): recover.cc metaiv.h recover.h exc_emul.h tbutils.h \
+
+libtsiparser-pp.a(binops.o): binops.cc binops.h recover.h metaiv.h exc_emul.h Errors.h \
+ cg.h cg_aux.h CGBase.h ToolColleague.h ProjectTypes.h scanner.h \
+ projectval.h ToolKit.h Repository.h BaseTools.h \
+ Interface.h tbutils.h
+libtsiparser-pp.a(preprocess.o): preprocess.cc preprocess.h
+libparser-pp.a(vppexpr.o): vppexpr.cc tag.h metaiv.h recover.h exc_emul.h \
+ binops.h Errors.h cg.h cg_aux.h CGBase.h ToolColleague.h \
+ ProjectTypes.h asquotes.h tbutils.h projectval.h \
+ ToolKit.h Repository.h BaseTools.h Interface.h pexpr.h scanner.h
+libparser-pp.a(vpppars.o): vpppars.cc tag.h metaiv.h recover.h exc_emul.h \
+ binops.h Errors.h cg.h cg_aux.h CGBase.h ToolColleague.h \
+ ProjectTypes.h asquotes.h tbutils.h projectval.h \
+ ToolKit.h Repository.h BaseTools.h Interface.h vdmpars.h scanner.h
+libparser-pp.a(vppstmt.o): vppstmt.cc tag.h metaiv.h recover.h exc_emul.h \
+ binops.h Errors.h cg.h cg_aux.h CGBase.h ToolColleague.h \
+ ProjectTypes.h asquotes.h tbutils.h projectval.h \
+ ToolKit.h Repository.h BaseTools.h Interface.h vppstmt.h scanner.h
+libparser-pp.a(recover.o): recover.cc metaiv.h recover.h exc_emul.h tbutils.h \
+
+libparser-pp.a(binops.o): binops.cc binops.h recover.h metaiv.h exc_emul.h Errors.h \
+ cg.h cg_aux.h CGBase.h ToolColleague.h ProjectTypes.h scanner.h \
+ projectval.h ToolKit.h Repository.h BaseTools.h \
+ Interface.h tbutils.h
+libparser-pp.a(preprocess.o): preprocess.cc preprocess.h
+libparser-sl.a(pexpr.o): pexpr.cc tag.h metaiv.h recover.h exc_emul.h \
+ binops.h Errors.h cg.h cg_aux.h CGBase.h ToolColleague.h \
+ ProjectTypes.h asquotes.h tbutils.h projectval.h \
+ ToolKit.h Repository.h BaseTools.h Interface.h pexpr.h scanner.h
+libparser-sl.a(vdmpars.o): vdmpars.cc tag.h metaiv.h recover.h exc_emul.h \
+ binops.h Errors.h cg.h cg_aux.h CGBase.h ToolColleague.h \
+ ProjectTypes.h asquotes.h tbutils.h projectval.h \
+ ToolKit.h Repository.h BaseTools.h Interface.h vdmpars.h scanner.h
+libparser-sl.a(recover.o): recover.cc metaiv.h recover.h exc_emul.h tbutils.h \
+
+libparser-sl.a(binops.o): binops.cc binops.h recover.h metaiv.h exc_emul.h Errors.h \
+ cg.h cg_aux.h CGBase.h ToolColleague.h ProjectTypes.h scanner.h \
+ projectval.h ToolKit.h Repository.h BaseTools.h \
+ Interface.h tbutils.h
+libparser-sl.a(preprocess.o): preprocess.cc preprocess.h
+libsmall-parser-sl.a(small-pexpr.o): small-pexpr.cc tag.h metaiv.h recover.h \
+ exc_emul.h binops.h Errors.h cg.h cg_aux.h CGBase.h ToolColleague.h \
+ ProjectTypes.h asquotes.h tbutils.h projectval.h \
+ ToolKit.h Repository.h BaseTools.h Interface.h pexpr.h scanner.h
+libsmall-parser-sl.a(small-vdmpars.o): small-vdmpars.cc tag.h metaiv.h recover.h \
+ exc_emul.h binops.h Errors.h cg.h cg_aux.h CGBase.h ToolColleague.h \
+ ProjectTypes.h asquotes.h tbutils.h projectval.h \
+ ToolKit.h Repository.h BaseTools.h Interface.h vdmpars.h scanner.h
+libsmall-parser-sl.a(recover.o): recover.cc metaiv.h recover.h exc_emul.h tbutils.h \
+
+libsmall-parser-sl.a(binops.o): binops.cc binops.h recover.h metaiv.h exc_emul.h Errors.h \
+ cg.h cg_aux.h CGBase.h ToolColleague.h ProjectTypes.h scanner.h \
+ projectval.h ToolKit.h Repository.h BaseTools.h \
+ Interface.h tbutils.h
+libsmall-parser-sl.a(preprocess.o): preprocess.cc preprocess.h
+libvdm.a(metaiv.o): metaiv.cc metaiv.h vdm_priv.h m4lib_errmsg.h \
+
+libvdm.a(m4lib_errmsg.o): m4lib_errmsg.cc m4lib_errmsg.h metaiv.h
+libvdm.a(position.o): position.cc position.h metaiv.h tag.h
+libCG.a(cg.o): cg.cc m4lib_errmsg.h metaiv.h cg.h
+libCG.a(cg_aux.o): cg_aux.cc cg_aux.h metaiv.h
+libeval-sl.a(libman.o) libeval-pp.a(libman.o): libman.cc metaiv.h tag.h asquotes.h \
+ ftmain.h rt_errmsg.h tbutils.h rt_info.h position.h \
+ flexlm.h
+libeval-sl.a(evalstmt.o) libeval-pp.a(evalstmt.o): evalstmt.cc tag.h asquotes.h ftmain.h \
+ rt_errmsg.h metaiv.h tbutils.h rt_info.h
+libeval-sl.a(evalexpr.o) libeval-pp.a(evalexpr.o): evalexpr.cc tag.h asquotes.h ftmain.h \
+ rt_errmsg.h metaiv.h tbutils.h rt_info.h
+libeval-sl.a(pattern.o) libeval-pp.a(pattern.o): pattern.cc tag.h asquotes.h ftmain.h \
+ rt_errmsg.h metaiv.h tbutils.h
+libeval-sl.a(diverse.o) libeval-pp.a(diverse.o): diverse.cc tag.h asquotes.h ftmain.h \
+ rt_errmsg.h metaiv.h tbutils.h
+libeval-sl.a(genlatex.o) libeval-pp.a(genlatex.o): genlatex.cc metaiv.h rt_info.h genlatex.h \
+ tag.h asquotes.h tbutils.h tools.h ToolMediator.h cg.h \
+ cg_aux.h CGBase.h ProjectTypes.h Errors.h ToolColleague.h \
+ projectval.h ToolKit.h Repository.h BaseTools.h Interface.h
+libeval-sl.a(rt_errmsg.o) libeval-pp.a(rt_errmsg.o): rt_errmsg.cc ftmain.h rt_errmsg.h metaiv.h \
+ tag.h asquotes.h tbutils.h position.h tools.h \
+ ToolMediator.h cg.h cg_aux.h CGBase.h ProjectTypes.h Errors.h \
+ ToolColleague.h
+libeval-sl.a(freevars.o) libeval-pp.a(freevars.o): freevars.cc tag.h asquotes.h ftmain.h \
+ rt_errmsg.h metaiv.h tbutils.h
+libeval-sl.a(oldname.o) libeval-pp.a(oldname.o): oldname.cc tag.h asquotes.h ftmain.h \
+ rt_errmsg.h metaiv.h tbutils.h
+libeval-sl.a(rt_info.o) libeval-pp.a(rt_info.o): rt_info.cc rt_info.h metaiv.h tag.h
+libeval-sl.a(val2x.o) libeval-pp.a(val2x.o): val2x.cc metaiv.h val2x.h tbutils.h \
+ tag.h asquotes.h ftmain.h rt_errmsg.h
+libeval-sl.a(debug.o) libeval-pp.a(debug.o): debug.cc tag.h asquotes.h ftmain.h \
+ rt_errmsg.h metaiv.h tbutils.h position.h intconvquotes.h \
+ val2x.h stringext.h
+libeval-sl.a(testcoverage.o) libeval-pp.a(testcoverage.o): testcoverage.cc rt_info.h metaiv.h tag.h \
+ genlatex.h asquotes.h ftmain.h rt_errmsg.h \
+ tbutils.h
+libeval-sl.a(tcovtxt.o) libeval-pp.a(tcovtxt.o): tcovtxt.cc metaiv.h rt_info.h tcovtxt.h tag.h \
+ asquotes.h tbutils.h
+libss-sl.a(type.o) libss-pp.a(type.o): type.cc metaiv.h m4lib_errmsg.h tag.h statsem.h \
+ asquotes.h tbutils.h
+libss-sl.a(env.o) libss-pp.a(env.o): env.cc tag.h metaiv.h m4lib_errmsg.h statsem.h \
+ asquotes.h tbutils.h
+libss-sl.a(err.o) libss-pp.a(err.o): err.cc ProjectTypes.h metaiv.h cg.h cg_aux.h CGBase.h \
+ projectval.h ToolKit.h Repository.h ToolColleague.h \
+ BaseTools.h Interface.h tag.h statsem.h asquotes.h \
+ tbutils.h
+libss-sl.a(auxss.o) libss-pp.a(auxss.o): auxss.cc tag.h metaiv.h m4lib_errmsg.h statsem.h \
+ asquotes.h tbutils.h
+libss-sl.a(mk.o) libss-pp.a(mk.o): mk.cc tag.h metaiv.h m4lib_errmsg.h statsem.h \
+ asquotes.h tbutils.h
+libss-sl.a(def.o) libss-pp.a(def.o): def.cc metaiv.h m4lib_errmsg.h tag.h statsem.h \
+ asquotes.h tbutils.h
+libss-sl.a(expr.o) libss-pp.a(expr.o): expr.cc tag.h metaiv.h m4lib_errmsg.h statsem.h \
+ asquotes.h tbutils.h
+libss-sl.a(expr2.o) libss-pp.a(expr2.o): expr2.cc tag.h metaiv.h m4lib_errmsg.h statsem.h \
+ asquotes.h tbutils.h
+libss-sl.a(expr3.o) libss-pp.a(expr3.o): expr3.cc tag.h metaiv.h m4lib_errmsg.h statsem.h \
+ asquotes.h tbutils.h
+libss-sl.a(pat.o) libss-pp.a(pat.o): pat.cc tag.h metaiv.h m4lib_errmsg.h statsem.h \
+ asquotes.h tbutils.h
+libss-sl.a(stmt.o) libss-pp.a(stmt.o): stmt.cc tag.h metaiv.h m4lib_errmsg.h statsem.h \
+ asquotes.h tbutils.h
+libss-sl.a(vcm.o) libss-pp.a(vcm.o): vcm.cc tag.h metaiv.h m4lib_errmsg.h statsem.h \
+ asquotes.h tbutils.h
+libMGR-sl.a(AST.o) libMGR-pp.a(AST.o) libMGR-uml.a(AST.o): AST.cc AST.h metaiv.h cg.h cg_aux.h CGBase.h ProjectTypes.h \
+ StateStore.h
+libMGR-sl.a(NonPrintErr.o) libMGR-pp.a(NonPrintErr.o) libMGR-uml.a(NonPrintErr.o): NonPrintErr.cc NonPrintErr.h metaiv.h cg.h cg_aux.h \
+ CGBase.h ErrorState.h ProjectTypes.h Errors.h ToolColleague.h \
+ PromptErr.h
+libMGR-sl.a(ScriptErr.o) libMGR-pp.a(ScriptErr.o) libMGR-uml.a(ScriptErr.o): ScriptErr.cc ScriptErr.h metaiv.h cg.h cg_aux.h CGBase.h \
+ ErrorState.h ProjectTypes.h Errors.h ToolColleague.h PromptErr.h
+libMGR-sl.a(UnitStatus.o) libMGR-pp.a(UnitStatus.o) libMGR-uml.a(UnitStatus.o): UnitStatus.cc UnitStatus.h metaiv.h cg.h cg_aux.h \
+ CGBase.h ProjectTypes.h StateStore.h
+libMGR-sl.a(ErrorState.o) libMGR-pp.a(ErrorState.o) libMGR-uml.a(ErrorState.o): ErrorState.cc ErrorState.h metaiv.h cg.h cg_aux.h \
+ CGBase.h ProjectTypes.h Errors.h ToolColleague.h
+libMGR-sl.a(Options.o) libMGR-pp.a(Options.o) libMGR-uml.a(Options.o): Options.cc Options.h metaiv.h cg.h cg_aux.h CGBase.h \
+ ToolColleague.h ProjectTypes.h vdm_Options_prelim.cc
+libMGR-sl.a(ToolColleague.o) libMGR-pp.a(ToolColleague.o) libMGR-uml.a(ToolColleague.o): ToolColleague.cc ToolColleague.h metaiv.h cg.h \
+ cg_aux.h CGBase.h ProjectTypes.h ToolMediator.h
+libMGR-sl.a(VDMUnitElem.o) libMGR-pp.a(VDMUnitElem.o) libMGR-uml.a(VDMUnitElem.o): VDMUnitElem.cc VDMUnitElem.h metaiv.h cg.h cg_aux.h CGBase.h \
+ ProjectTypes.h AST.h StateStore.h UnitStatus.h
+libMGR-sl.a(BaseTools.o) libMGR-pp.a(BaseTools.o) libMGR-uml.a(BaseTools.o): BaseTools.cc BaseTools.h metaiv.h cg.h cg_aux.h CGBase.h \
+ ToolColleague.h ProjectTypes.h vdm_BaseTools_prelim.cc \
+ tools.h tbutils.h ToolMediator.h Errors.h projectval.h ToolKit.h \
+ Repository.h Interface.h StateStore.h NoneSes.h UpdateSes.h flexlm.h
+libMGR-sl.a(Errors.o) libMGR-pp.a(Errors.o) libMGR-uml.a(Errors.o): Errors.cc Errors.h metaiv.h cg.h cg_aux.h CGBase.h \
+ ToolColleague.h ProjectTypes.h ErrorState.h
+libMGR-sl.a(ProjectTypes.o) libMGR-pp.a(ProjectTypes.o) libMGR-uml.a(ProjectTypes.o): ProjectTypes.cc ProjectTypes.h metaiv.h cg.h cg_aux.h \
+ CGBase.h
+libMGR-sl.a(ToolKit.o) libMGR-pp.a(ToolKit.o) libMGR-uml.a(ToolKit.o): ToolKit.cc ToolKit.h metaiv.h cg.h cg_aux.h CGBase.h \
+ ProjectTypes.h Errors.h ToolColleague.h Interface.h ToolMediator.h
+libMGR-sl.a(BatchErr.o) libMGR-pp.a(BatchErr.o) libMGR-uml.a(BatchErr.o): BatchErr.cc BatchErr.h metaiv.h cg.h cg_aux.h CGBase.h \
+ ErrorState.h ProjectTypes.h Errors.h ToolColleague.h
+libMGR-sl.a(FileStatus.o) libMGR-pp.a(FileStatus.o) libMGR-uml.a(FileStatus.o): FileStatus.cc FileStatus.h metaiv.h cg.h cg_aux.h \
+ CGBase.h ProjectTypes.h StateStore.h
+libMGR-sl.a(PromptErr.o) libMGR-pp.a(PromptErr.o) libMGR-uml.a(PromptErr.o): PromptErr.cc PromptErr.h metaiv.h cg.h cg_aux.h CGBase.h \
+ ErrorState.h ProjectTypes.h Errors.h ToolColleague.h NonPrintErr.h \
+ ScriptErr.h
+libMGR-sl.a(ToolMediator.o) libMGR-pp.a(ToolMediator.o) libMGR-uml.a(ToolMediator.o): ToolMediator.cc ToolMediator.h metaiv.h cg.h cg_aux.h \
+ CGBase.h ProjectTypes.h BaseTools.h ToolColleague.h Errors.h \
+ Interface.h Options.h Repository.h SABaseTools.h UMLTool.h \
+ vdm_ToolMediator_prelim.cc
+libMGR-sl.a(CGRepository.o) libMGR-pp.a(CGRepository.o) libMGR-uml.a(CGRepository.o): CGRepository.cc CGRepository.h metaiv.h cg.h cg_aux.h \
+ CGBase.h ProjectTypes.h vdm_CGRepository_prelim.cc \
+ projectval.h ToolKit.h Repository.h ToolColleague.h BaseTools.h \
+ Interface.h tbutils.h rt_errmsg.h exc_emul.h
+libMGR-sl.a(Interface.o) libMGR-pp.a(Interface.o) libMGR-uml.a(Interface.o): Interface.cc Interface.h metaiv.h cg.h cg_aux.h CGBase.h \
+ ProjectTypes.h
+libMGR-sl.a(Repository.o) libMGR-pp.a(Repository.o) libMGR-uml.a(Repository.o): Repository.cc Repository.h metaiv.h cg.h cg_aux.h \
+ CGBase.h ToolColleague.h ProjectTypes.h BaseTools.h CGRepository.h \
+ Dependency.h NoneSes.h UpdateSes.h RepDatabase.h StatusInfo.h \
+ ToolMediator.h UpdateProject.h
+libMGR-sl.a(CGBase.o) libMGR-pp.a(CGBase.o) libMGR-uml.a(CGBase.o): CGBase.cc metaiv.h CGBase.h cg.h
+libMGR-sl.a(UpdateSes.o) libMGR-pp.a(UpdateSes.o) libMGR-uml.a(UpdateSes.o): UpdateSes.cc UpdateSes.h metaiv.h cg.h cg_aux.h CGBase.h \
+ ProjectTypes.h Dependency.h FileStatus.h RepDatabase.h \
+ ToolColleague.h Repository.h ToolMediator.h VDMUnitElem.h
+libMGR-sl.a(NoneSes.o) libMGR-pp.a(NoneSes.o) libMGR-uml.a(NoneSes.o): NoneSes.cc NoneSes.h metaiv.h cg.h cg_aux.h CGBase.h \
+ UpdateSes.h ProjectTypes.h FileStatus.h FlatSes.h RepDatabase.h \
+ ToolColleague.h Repository.h StructSes.h ToolMediator.h
+libMGR-sl.a(StructSes.o) libMGR-pp.a(StructSes.o) libMGR-uml.a(StructSes.o): StructSes.cc StructSes.h metaiv.h cg.h cg_aux.h CGBase.h \
+ UpdateSes.h ProjectTypes.h Dependency.h FileStatus.h RepDatabase.h \
+ ToolColleague.h Repository.h ToolMediator.h VDMUnitElem.h
+libMGR-sl.a(FlatSes.o) libMGR-pp.a(FlatSes.o) libMGR-uml.a(FlatSes.o): FlatSes.cc FlatSes.h metaiv.h cg.h cg_aux.h CGBase.h \
+ UpdateSes.h ProjectTypes.h FileStatus.h RepDatabase.h ToolColleague.h \
+ Repository.h StatusInfo.h ToolMediator.h VDMUnitElem.h
+libMGR-sl.a(UpdateProject.o) libMGR-pp.a(UpdateProject.o) libMGR-uml.a(UpdateProject.o): UpdateProject.cc UpdateProject.h metaiv.h cg.h \
+ cg_aux.h CGBase.h ToolColleague.h ProjectTypes.h BaseTools.h \
+ Dependency.h FileStatus.h FlatSes.h UpdateSes.h NoneSes.h \
+ RepDatabase.h Repository.h StateStore.h StructSes.h ToolMediator.h \
+ VDMUnitElem.h
+libMGR-sl.a(StatusInfo.o) libMGR-pp.a(StatusInfo.o) libMGR-uml.a(StatusInfo.o): StatusInfo.cc StatusInfo.h metaiv.h cg.h cg_aux.h \
+ CGBase.h ToolColleague.h ProjectTypes.h FileStatus.h RepDatabase.h \
+ Repository.h ToolMediator.h VDMUnitElem.h
+libMGR-sl.a(RepDatabase.o) libMGR-pp.a(RepDatabase.o) libMGR-uml.a(RepDatabase.o): RepDatabase.cc RepDatabase.h metaiv.h cg.h cg_aux.h \
+ CGBase.h ToolColleague.h ProjectTypes.h FileStatus.h StatusInfo.h \
+ ToolMediator.h VDMUnitElem.h
+libMGR-sl.a(SABaseTools.o) libMGR-pp.a(SABaseTools.o) libMGR-uml.a(SABaseTools.o): SABaseTools.cc SABaseTools.h metaiv.h cg.h cg_aux.h \
+ CGBase.h BaseTools.h ToolColleague.h ProjectTypes.h \
+ vdm_SABaseTools_prelim.cc tools.h tbutils.h ToolMediator.h Errors.h \
+ flexlm.h
+libMGR-sl.a(projectval.o) libMGR-pp.a(projectval.o) libMGR-uml.a(projectval.o): projectval.cc ProjectTypes.h metaiv.h cg.h cg_aux.h \
+ CGBase.h projectval.h ToolKit.h Repository.h \
+ ToolColleague.h BaseTools.h Interface.h tbutils.h tag.h \
+ asquotes.h ftmain.h rt_errmsg.h
+libMGR-sl.a(Dependency-sl.o): Dependency-sl.cc Dependency.h metaiv.h cg.h cg_aux.h \
+ CGBase.h ProjectTypes.h Repository.h ToolColleague.h \
+ vdm_Dependency_prelim.cc intconvquotes.h \
+ tag.h DEP.h AS.h AS-sl.h REP.h REP-sl.h StateStore.h \
+ projectval.h ToolKit.h BaseTools.h Interface.h tbutils.h \
+ asquotes.h ftmain.h rt_errmsg.h
+libMGR-sl.a(StateStore-sl.o): StateStore-sl.cc StateStore.h metaiv.h cg.h cg_aux.h \
+ CGBase.h ProjectTypes.h vdm_StateStore_prelim.cc \
+ projectval.h ToolKit.h Repository.h ToolColleague.h BaseTools.h \
+ Interface.h tbutils.h
+libMGR-sl.a(UMLTool-sl.o): UMLTool-sl.cc UMLTool.h metaiv.h cg.h cg_aux.h CGBase.h \
+ ToolColleague.h ProjectTypes.h vdm_UMLTool_prelim.cc \
+ tools.h tbutils.h ToolMediator.h Errors.h projectval.h ToolKit.h \
+ Repository.h BaseTools.h Interface.h flexlm.h
+libMGR-pp.a(Dependency-pp.o) libMGR-uml.a(Dependency-pp.o): Dependency-pp.cc Dependency.h metaiv.h cg.h cg_aux.h \
+ CGBase.h ProjectTypes.h Repository.h ToolColleague.h \
+ vdm_Dependency_prelim.cc intconvquotes.h \
+ tag.h DEP.h AS.h AS-pp.h REP.h REP-pp.h StateStore.h \
+ projectval.h ToolKit.h BaseTools.h Interface.h tbutils.h \
+ asquotes.h ftmain.h rt_errmsg.h
+libMGR-pp.a(StateStore-pp.o) libMGR-uml.a(StateStore-pp.o): StateStore-pp.cc StateStore.h metaiv.h cg.h cg_aux.h \
+ CGBase.h ProjectTypes.h vdm_StateStore_prelim.cc \
+ projectval.h ToolKit.h Repository.h ToolColleague.h BaseTools.h \
+ Interface.h tbutils.h
+libMGR-pp.a(UMLTool-pp.o) libMGR-uml.a(UMLTool-pp.o): UMLTool-pp.cc UMLTool.h metaiv.h cg.h cg_aux.h CGBase.h \
+ ToolColleague.h ProjectTypes.h vdm_UMLTool_prelim.cc \
+ tools.h tbutils.h ToolMediator.h Errors.h projectval.h ToolKit.h \
+ Repository.h BaseTools.h Interface.h flexlm.h
+libgen-sl.a(AS-sl.o): AS-sl.cc AS.h tag.h AS-sl.h metaiv.h cg.h cg_aux.h \
+ REP.h REP-sl.h
+libgen-sl.a(REP-sl.o): REP-sl.cc REP.h tag.h REP-sl.h metaiv.h cg.h \
+ cg_aux.h AS.h AS-sl.h
+libgen-pp.a(AUML.o): AUML.cc AUML.h metaiv.h cg.h cg_aux.h AS.h tag.h \
+ AS-pp.h REP.h REP-pp.h
+libgen-pp.a(BUILD.o): BUILD.cc BUILD.h metaiv.h cg.h cg_aux.h AS.h tag.h \
+ AS-pp.h REP.h REP-pp.h AUML.h DEP.h UMLERR.h
+libgen-pp.a(MERGE.o): MERGE.cc MERGE.h metaiv.h cg.h cg_aux.h AS.h tag.h \
+ AS-pp.h REP.h REP-pp.h AUML.h DEP.h UMLERR.h
+libgen-pp.a(UMLERR.o): UMLERR.cc UMLERR.h metaiv.h cg.h cg_aux.h AS.h tag.h \
+ AS-pp.h REP.h REP-pp.h
+libgen-pp.a(DEP.o): DEP.cc DEP.h metaiv.h cg.h cg_aux.h AS.h tag.h \
+ AS-pp.h REP.h REP-pp.h vdm_DEP_implicit.cc tools.h \
+ tbutils.h ToolMediator.h CGBase.h ProjectTypes.h Errors.h \
+ ToolColleague.h statsem.h asquotes.h projectval.h ToolKit.h \
+ Repository.h BaseTools.h Interface.h ftmain.h rt_errmsg.h \
+ intconvquotes.h
+libgen-pp.a(AS-pp.o): AS-pp.cc AS.h tag.h AS-pp.h metaiv.h cg.h cg_aux.h \
+ REP.h REP-pp.h
+libgen-pp.a(REP-pp.o): REP-pp.cc REP.h tag.h REP-pp.h metaiv.h cg.h \
+ cg_aux.h AS.h AS-pp.h
+libUML-pp.a(uml-be.o): uml-be.cc stdafx.h uml-be.h metaiv.h \
+ roseinterface.h roserdk.h vppinterface.h rt_errmsg.h \
+ mini-p-print.h AUML.h cg.h cg_aux.h AS.h tag.h REP.h UMLERR.h BUILD.h \
+ DEP.h MERGE.h intconvquotes.h
+libUML-pp.a(mini-p-print.o): mini-p-print.cc mini-p-print.h metaiv.h rt_errmsg.h \
+ tag.h AUML.h cg.h cg_aux.h AS.h REP.h BUILD.h \
+ DEP.h UMLERR.h asquotes.h
+libUML-pp.a(vppinterface.o): vppinterface.cc metaiv.h
+libUML-pp.a(parse_string.o): parse_string.cc parse_string.h metaiv.h pexpr.h \
+ scanner.h Errors.h cg.h cg_aux.h CGBase.h ToolColleague.h \
+ ProjectTypes.h tag.h intconvquotes.h \
+ BatchErr.h ErrorState.h
+libCG-sl.a(backend.o): backend.cc cgtag.h tagmap.h \
+ stringext.h tbutils.h metaiv.h vdmcg.h statsem.h asquotes.h tag.h \
+ position.h backend.h mod_cg.h mod_mod.h mod_statedef.h \
+ mod_bcppast.h mod_aux.h mod_ds.h mod_stmt.h mod_expr.h mod_fctdef.h \
+ mod_patmat.h mod_valdef.h mod_typedef.h tb_version.h
+libCG-sl.a(tagmap.o): tagmap.cc tagmap.h stringext.h cgtag.h tag.h \
+ asquotes.h
+libCG-sl.a(mod_bcppast.o): mod_bcppast.cc vdmcg.h metaiv.h statsem.h \
+ asquotes.h tbutils.h tag.h cgtag.h position.h backend.h \
+ mod_cg.h mod_mod.h mod_statedef.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h
+libCG-sl.a(mod_aux.o): mod_aux.cc vdmcg.h metaiv.h statsem.h \
+ asquotes.h tbutils.h tag.h cgtag.h position.h backend.h \
+ mod_cg.h mod_mod.h mod_statedef.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h
+libCG-sl.a(mod_cg.o): mod_cg.cc vdmcg.h metaiv.h statsem.h asquotes.h \
+ tbutils.h tag.h cgtag.h position.h backend.h mod_cg.h \
+ mod_mod.h mod_statedef.h mod_bcppast.h mod_aux.h mod_ds.h mod_stmt.h \
+ mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h mod_typedef.h
+libCG-sl.a(mod_ds.o): mod_ds.cc vdmcg.h metaiv.h statsem.h asquotes.h \
+ tbutils.h tag.h cgtag.h position.h backend.h mod_cg.h \
+ mod_mod.h mod_statedef.h mod_bcppast.h mod_aux.h mod_ds.h mod_stmt.h \
+ mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h mod_typedef.h
+libCG-sl.a(mod_mod.o): mod_mod.cc vdmcg.h metaiv.h statsem.h \
+ asquotes.h tbutils.h tag.h cgtag.h position.h backend.h \
+ mod_cg.h mod_mod.h mod_statedef.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h
+libCG-sl.a(mod_stmt.o): mod_stmt.cc vdmcg.h metaiv.h statsem.h \
+ asquotes.h tbutils.h tag.h cgtag.h position.h backend.h \
+ mod_cg.h mod_mod.h mod_statedef.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h
+libCG-sl.a(mod_valdef.o): mod_valdef.cc vdmcg.h metaiv.h statsem.h \
+ asquotes.h tbutils.h tag.h cgtag.h position.h backend.h \
+ mod_cg.h mod_mod.h mod_statedef.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h
+libCG-sl.a(vdmcg.o): vdmcg.cc vdmcg.h metaiv.h statsem.h asquotes.h \
+ tbutils.h tag.h cgtag.h position.h backend.h mod_cg.h \
+ mod_mod.h mod_statedef.h mod_bcppast.h mod_aux.h mod_ds.h mod_stmt.h \
+ mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h mod_typedef.h \
+ rt_errmsg.h exc_emul.h
+libCG-sl.a(mod_expr.o): mod_expr.cc vdmcg.h metaiv.h statsem.h \
+ asquotes.h tbutils.h tag.h cgtag.h position.h backend.h \
+ mod_cg.h mod_mod.h mod_statedef.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h
+libCG-sl.a(mod_fctdef.o): mod_fctdef.cc vdmcg.h metaiv.h statsem.h \
+ asquotes.h tbutils.h tag.h cgtag.h position.h backend.h \
+ mod_cg.h mod_mod.h mod_statedef.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h
+libCG-sl.a(mod_patmat.o): mod_patmat.cc vdmcg.h metaiv.h statsem.h \
+ asquotes.h tbutils.h tag.h cgtag.h position.h backend.h \
+ mod_cg.h mod_mod.h mod_statedef.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h
+libCG-sl.a(mod_typedef.o): mod_typedef.cc vdmcg.h metaiv.h statsem.h \
+ asquotes.h tbutils.h tag.h cgtag.h position.h backend.h \
+ mod_cg.h mod_mod.h mod_statedef.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h
+libCG-sl.a(mod_statedef.o): mod_statedef.cc vdmcg.h metaiv.h statsem.h \
+ asquotes.h tbutils.h tag.h cgtag.h position.h backend.h \
+ mod_cg.h mod_mod.h mod_statedef.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h
+libCG-pp.a(backend.o): backend.cc cgtag.h tagmap.h \
+ stringext.h tbutils.h metaiv.h vdmcg.h statsem.h asquotes.h tag.h \
+ position.h backend.h mod_class.h mod_fvd.h mod_md.h \
+ mod_bcppast.h mod_aux.h mod_ds.h mod_stmt.h mod_expr.h mod_fctdef.h \
+ mod_patmat.h mod_valdef.h mod_typedef.h tb_version.h
+libCG-pp.a(tagmap.o): tagmap.cc tagmap.h stringext.h cgtag.h tag.h \
+ asquotes.h
+libCG-pp.a(mod_bcppast.o): mod_bcppast.cc vdmcg.h metaiv.h statsem.h \
+ asquotes.h tbutils.h tag.h cgtag.h position.h backend.h \
+ mod_class.h mod_fvd.h mod_md.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h
+libCG-pp.a(mod_class.o): mod_class.cc vdmcg.h metaiv.h statsem.h \
+ asquotes.h tbutils.h tag.h cgtag.h position.h backend.h \
+ mod_class.h mod_fvd.h mod_md.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h
+libCG-pp.a(mod_aux.o): mod_aux.cc vdmcg.h metaiv.h statsem.h \
+ asquotes.h tbutils.h tag.h cgtag.h position.h backend.h \
+ mod_class.h mod_fvd.h mod_md.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h
+libCG-pp.a(mod_fvd.o): mod_fvd.cc vdmcg.h metaiv.h statsem.h \
+ asquotes.h tbutils.h tag.h cgtag.h position.h backend.h \
+ mod_class.h mod_fvd.h mod_md.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h
+libCG-pp.a(mod_md.o): mod_md.cc vdmcg.h metaiv.h statsem.h asquotes.h \
+ tbutils.h tag.h cgtag.h position.h backend.h mod_class.h \
+ mod_fvd.h mod_md.h mod_bcppast.h mod_aux.h mod_ds.h mod_stmt.h \
+ mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h mod_typedef.h
+libCG-pp.a(mod_ds.o): mod_ds.cc vdmcg.h metaiv.h statsem.h asquotes.h \
+ tbutils.h tag.h cgtag.h position.h backend.h mod_class.h \
+ mod_fvd.h mod_md.h mod_bcppast.h mod_aux.h mod_ds.h mod_stmt.h \
+ mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h mod_typedef.h
+libCG-pp.a(mod_stmt.o): mod_stmt.cc vdmcg.h metaiv.h statsem.h \
+ asquotes.h tbutils.h tag.h cgtag.h position.h backend.h \
+ mod_class.h mod_fvd.h mod_md.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h
+libCG-pp.a(mod_valdef.o): mod_valdef.cc vdmcg.h metaiv.h statsem.h \
+ asquotes.h tbutils.h tag.h cgtag.h position.h backend.h \
+ mod_class.h mod_fvd.h mod_md.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h
+libCG-pp.a(vdmcg.o): vdmcg.cc vdmcg.h metaiv.h statsem.h asquotes.h \
+ tbutils.h tag.h cgtag.h position.h backend.h mod_class.h \
+ mod_fvd.h mod_md.h mod_bcppast.h mod_aux.h mod_ds.h mod_stmt.h \
+ mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h mod_typedef.h \
+ rt_errmsg.h exc_emul.h
+libCG-pp.a(mod_expr.o): mod_expr.cc vdmcg.h metaiv.h statsem.h \
+ asquotes.h tbutils.h tag.h cgtag.h position.h backend.h \
+ mod_class.h mod_fvd.h mod_md.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h
+libCG-pp.a(mod_fctdef.o): mod_fctdef.cc vdmcg.h metaiv.h statsem.h \
+ asquotes.h tbutils.h tag.h cgtag.h position.h backend.h \
+ mod_class.h mod_fvd.h mod_md.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h
+libCG-pp.a(mod_patmat.o): mod_patmat.cc vdmcg.h metaiv.h statsem.h \
+ asquotes.h tbutils.h tag.h cgtag.h position.h backend.h \
+ mod_class.h mod_fvd.h mod_md.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h
+libCG-pp.a(mod_typedef.o): mod_typedef.cc vdmcg.h metaiv.h statsem.h \
+ asquotes.h tbutils.h tag.h cgtag.h position.h backend.h \
+ mod_class.h mod_fvd.h mod_md.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h
+dc_intf.o: dc_intf.cc
+mixedtexvdm.o: mixedtexvdm.cc tag.h asquotes.h \
+ ftmain.h rt_errmsg.h metaiv.h tbutils.h
+intconvquotes.o: intconvquotes.cc intconvquotes.h metaiv.h tag.h \
+ asquotes.h
+rmposinfo.o: rmposinfo.cc metaiv.h tag.h
+tkAppInit.o: tkAppInit.cc tb_version.h flexlm.h tools.h metaiv.h \
+ tbutils.h ToolMediator.h cg.h cg_aux.h CGBase.h ProjectTypes.h \
+ Errors.h ToolColleague.h asquotes.h
+tktreewin.o: tktreewin.cc tktreewin.h metaiv.h projectval.h ToolKit.h \
+ cg.h cg_aux.h CGBase.h ProjectTypes.h Repository.h ToolColleague.h \
+ BaseTools.h Interface.h
+treecalc.o: treecalc.cc treecalc.h contain.hP
+stringext.o: stringext.cc stringext.h
+tk_if.o: tk_if.cc exc_emul.h tbutils.h metaiv.h tools.h \
+ ToolMediator.h cg.h cg_aux.h CGBase.h ProjectTypes.h Errors.h \
+ ToolColleague.h tb_version.h val2x.h projectval.h ToolKit.h \
+ Repository.h BaseTools.h Interface.h UMLTool.h tag.h \
+ asquotes.h ftmain.h rt_errmsg.h BatchErr.h ErrorState.h
+bitmap_embed.o: bitmap_embed.cc /opt/tix-4.1.0.005/include/itcl/tk.h \
+ bitmaps/Down bitmaps/Left bitmaps/Right bitmaps/Up \
+ bitmaps/checkFailed bitmaps/checkOk bitmaps/clear bitmaps/clearBig \
+ bitmaps/close bitmaps/closeBig bitmaps/edit bitmaps/editBig \
+ bitmaps/errormarker bitmaps/first bitmaps/generatedOk \
+ bitmaps/generatedWarn bitmaps/last bitmaps/moveAround \
+ bitmaps/moveAroundBig bitmaps/moveDown bitmaps/moveDownBig \
+ bitmaps/moveUp bitmaps/moveUpBig bitmaps/next bitmaps/none \
+ bitmaps/pipe bitmaps/pipeBig bitmaps/prev bitmaps/print \
+ bitmaps/printBig bitmaps/printedOk bitmaps/printedFailed \
+ bitmaps/space bitmaps/toolbox_logo.xbm bitmaps/typeFailed \
+ bitmaps/typeOk
+printval.o: printval.cc metaiv.h tag.h val2x.h tbutils.h \
+
+test1.o: test1.cc metaiv.h backend.h val2x.h
+be-sl.o: be-sl.cc cgtag.h tagmap.h stringext.h \
+ tbutils.h metaiv.h vdmcg.h statsem.h asquotes.h tag.h \
+ position.h backend.h mod_bcppast.h mod_aux.h mod_ds.h mod_stmt.h \
+ mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h mod_typedef.h \
+ tb_version.h
+tm.o: tm.cc tagmap.h stringext.h cgtag.h tag.h \
+ asquotes.h
+test-be.o: test-be.cc metaiv.h tag.h asquotes.h \
+ ftmain.h rt_errmsg.h tbutils.h
+vdmde-sl.o: vdmde-sl.cc date.h flexlm.h rt_info.h metaiv.h \
+ tools.h tbutils.h ToolMediator.h cg.h cg_aux.h CGBase.h \
+ ProjectTypes.h Errors.h ToolColleague.h tb_version.h intconvquotes.h \
+ val2x.h testcoverage.h projectval.h ToolKit.h Repository.h \
+ BaseTools.h Interface.h PromptErr.h ErrorState.h BatchErr.h \
+ tb_getopt.h exc_emul.h vdmcg.h statsem.h asquotes.h tag.h \
+ cgtag.h position.h backend.h mod_cg.h mod_mod.h mod_statedef.h \
+ mod_bcppast.h mod_aux.h mod_ds.h mod_stmt.h mod_expr.h mod_fctdef.h \
+ mod_patmat.h mod_valdef.h mod_typedef.h
+test-vdmsl-sl.o: test-vdmsl-sl.cc vdmpars.h metaiv.h scanner.h \
+ Errors.h cg.h cg_aux.h CGBase.h ToolColleague.h \
+ ProjectTypes.h pexpr.h date.h statsem.h asquotes.h tbutils.h \
+ projectval.h ToolKit.h Repository.h BaseTools.h Interface.h \
+ BatchErr.h ErrorState.h ToolMediator.h tag.h m4lib_errmsg.h \
+ intconvquotes.h
+flexlm-sl.o: flexlm-sl.cc flexlm.h tb_version.h tbutils.h \
+ metaiv.h lm_client.h lm_code.h lm_attr.h
+test-sl.o: test-sl.cc statsem.h metaiv.h asquotes.h \
+ tbutils.h tag.h
+small-flexlm-sl.o: small-flexlm-sl.cc flexlm.h \
+ tb_version.h tbutils.h metaiv.h lm_client.h lm_code.h lm_attr.h
+tbutils-sl.o: tbutils-sl.cc tbutils.h metaiv.h tag.h \
+
+tools-sl.o: tools-sl.cc tools.h metaiv.h tbutils.h \
+ ToolMediator.h cg.h cg_aux.h CGBase.h ProjectTypes.h Errors.h \
+ ToolColleague.h tb_version.h exc_emul.h stringext.h flexlm.h date.h \
+ tag.h asquotes.h ftmain.h rt_errmsg.h statsem.h \
+ preprocess.h mixedtexvdm.h testcoverage.h tcovtxt.h vdmpars.h \
+ scanner.h pexpr.h vdmcg.h cgtag.h position.h backend.h mod_cg.h \
+ mod_mod.h mod_statedef.h mod_bcppast.h mod_aux.h mod_ds.h mod_stmt.h \
+ mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h mod_typedef.h \
+ genlatex.h val2x.h projectval.h ToolKit.h Repository.h BaseTools.h \
+ Interface.h
+small-tools-sl.o: small-tools-sl.cc tools.h metaiv.h \
+ tbutils.h ToolMediator.h cg.h cg_aux.h CGBase.h ProjectTypes.h \
+ Errors.h ToolColleague.h tb_version.h exc_emul.h stringext.h flexlm.h \
+ date.h tag.h asquotes.h ftmain.h rt_errmsg.h \
+ statsem.h preprocess.h mixedtexvdm.h testcoverage.h tcovtxt.h \
+ vdmpars.h scanner.h pexpr.h vdmcg.h cgtag.h position.h backend.h \
+ mod_cg.h mod_mod.h mod_statedef.h mod_bcppast.h mod_aux.h mod_ds.h \
+ mod_stmt.h mod_expr.h mod_fctdef.h mod_patmat.h mod_valdef.h \
+ mod_typedef.h genlatex.h val2x.h projectval.h ToolKit.h Repository.h \
+ BaseTools.h Interface.h
+Dependency-sl.o: Dependency-sl.cc Dependency.h metaiv.h cg.h cg_aux.h \
+ CGBase.h ProjectTypes.h Repository.h ToolColleague.h \
+ vdm_Dependency_prelim.cc intconvquotes.h \
+ tag.h DEP.h AS.h AS-sl.h REP.h REP-sl.h StateStore.h \
+ projectval.h ToolKit.h BaseTools.h Interface.h tbutils.h \
+ asquotes.h ftmain.h rt_errmsg.h
+StateStore-sl.o: StateStore-sl.cc StateStore.h metaiv.h cg.h cg_aux.h \
+ CGBase.h ProjectTypes.h vdm_StateStore_prelim.cc \
+ projectval.h ToolKit.h Repository.h ToolColleague.h BaseTools.h \
+ Interface.h tbutils.h
+UMLTool-sl.o: UMLTool-sl.cc UMLTool.h metaiv.h cg.h cg_aux.h CGBase.h \
+ ToolColleague.h ProjectTypes.h vdm_UMLTool_prelim.cc \
+ tools.h tbutils.h ToolMediator.h Errors.h projectval.h ToolKit.h \
+ Repository.h BaseTools.h Interface.h flexlm.h
+vdmexpr-sl.o: vdmexpr-sl.cc pexpr.h metaiv.h scanner.h \
+ Errors.h cg.h cg_aux.h CGBase.h ToolColleague.h ProjectTypes.h \
+ tbutils.h date.h intconvquotes.h ToolMediator.h projectval.h \
+ ToolKit.h Repository.h BaseTools.h Interface.h exc_emul.h
+tkAppInit-sl.o: tkAppInit-sl.cc tb_version.h flexlm.h tools.h metaiv.h \
+ tbutils.h ToolMediator.h cg.h cg_aux.h CGBase.h ProjectTypes.h \
+ Errors.h ToolColleague.h asquotes.h
+tcl_embed-sl.o: tcl_embed-sl.cc
+vppexpr-pp.o: vppexpr-pp.cc tag.h metaiv.h recover.h \
+ exc_emul.h binops.h Errors.h cg.h cg_aux.h CGBase.h ToolColleague.h \
+ ProjectTypes.h asquotes.h tbutils.h projectval.h \
+ ToolKit.h Repository.h BaseTools.h Interface.h pexpr.h scanner.h
+test-vdmsl-pp.o: test-vdmsl-pp.cc vdmpars.h metaiv.h scanner.h \
+ Errors.h cg.h cg_aux.h CGBase.h ToolColleague.h \
+ ProjectTypes.h pexpr.h date.h statsem.h asquotes.h tbutils.h \
+ projectval.h ToolKit.h Repository.h BaseTools.h Interface.h \
+ BatchErr.h ErrorState.h ToolMediator.h tag.h m4lib_errmsg.h \
+ intconvquotes.h
+test-pp.o: test-pp.cc statsem.h metaiv.h asquotes.h \
+ tbutils.h tag.h
+flexlm-pp.o: flexlm-pp.cc flexlm.h tb_version.h tbutils.h \
+ metaiv.h lm_client.h lm_code.h lm_attr.h
+tbutils-pp.o: tbutils-pp.cc tbutils.h metaiv.h tag.h \
+
+Dependency-pp.o: Dependency-pp.cc Dependency.h metaiv.h cg.h cg_aux.h \
+ CGBase.h ProjectTypes.h Repository.h ToolColleague.h \
+ vdm_Dependency_prelim.cc intconvquotes.h \
+ tag.h DEP.h AS.h AS-pp.h REP.h REP-pp.h StateStore.h \
+ projectval.h ToolKit.h BaseTools.h Interface.h tbutils.h \
+ asquotes.h ftmain.h rt_errmsg.h
+StateStore-pp.o: StateStore-pp.cc StateStore.h metaiv.h cg.h cg_aux.h \
+ CGBase.h ProjectTypes.h vdm_StateStore_prelim.cc \
+ projectval.h ToolKit.h Repository.h ToolColleague.h BaseTools.h \
+ Interface.h tbutils.h
+UMLTool-pp.o: UMLTool-pp.cc UMLTool.h metaiv.h cg.h cg_aux.h CGBase.h \
+ ToolColleague.h ProjectTypes.h vdm_UMLTool_prelim.cc \
+ tools.h tbutils.h ToolMediator.h Errors.h projectval.h ToolKit.h \
+ Repository.h BaseTools.h Interface.h flexlm.h
+tkAppInit-pp.o: tkAppInit-pp.cc tb_version.h flexlm.h tools.h metaiv.h \
+ tbutils.h ToolMediator.h cg.h cg_aux.h CGBase.h ProjectTypes.h \
+ Errors.h ToolColleague.h asquotes.h
+tcl_embed-pp.o: tcl_embed-pp.cc

@@ -1,0 +1,31 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations 
+
+public  m1: () ==> <A>  
+  m1 () ==
+    return <A>
+
+end A
+
+class C
+
+operations
+
+public  m1: () ==> <C>  
+  m1 () ==
+    return <C>
+
+end C
+
+class B is subclass of A,C
+
+operations 
+
+  public Test : () ==> <A>  
+  Test () ==
+    self.A`m1()
+
+end B

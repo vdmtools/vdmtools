@@ -1,0 +1,20 @@
+class JavaLangNumberFormatException is subclass of JavaLangIllegalArgumentException
+operations 
+public  JavaLangNumberFormatException : () ==> JavaLangNumberFormatException
+JavaLangNumberFormatException() == 
+( let - =  JavaLangIllegalArgumentException()
+  in skip
+) ;
+
+public  JavaLangNumberFormatException : <NIL> ==> JavaLangNumberFormatException
+JavaLangNumberFormatException(-) == 
+isNil := true  ;
+
+public  JavaLangNumberFormatException : JavaLangString ==> JavaLangNumberFormatException
+JavaLangNumberFormatException(s) == 
+( let - =  JavaLangIllegalArgumentException(s)
+  in skip 
+) ;
+
+
+end  JavaLangNumberFormatException

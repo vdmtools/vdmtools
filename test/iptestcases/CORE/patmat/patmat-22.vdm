@@ -1,0 +1,41 @@
+class A
+
+types
+public
+T = seq of char | seq of nat;
+
+public
+R :: a : T
+     b : T;
+
+public
+X = (T * T) | (T * T * T) | R;
+
+operations
+public
+Test: () ==> seq of seq of char
+Test() ==
+  return [
+    op(mk_("abc", "xyz")),
+    op(mk_("abc", "xyz", [1,2,3])),
+    op(mk_R("abc", "xyz"))
+  ];
+
+public
+op: X ==> seq of char
+op(x) ==
+  cases x:
+    mk_(a, b) -> return TtoStr(a) ^ " " ^ TtoStr(b),
+    mk_(a, b, c) -> return TtoStr(a) ^ " " ^ TtoStr(b) ^ " " ^ TtoStr(c),
+    mk_R(a, b) -> return TtoStr(a) ^ " " ^ TtoStr(b),
+    others -> return "error"
+  end;
+
+public
+TtoStr: T ==> seq of char
+TtoStr(t) ==
+  if is_(t, seq of nat)
+  then return "num"
+  else return t;
+
+end A

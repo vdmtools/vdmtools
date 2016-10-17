@@ -1,0 +1,19 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+types
+R::;
+S::c:char;
+operations
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+
+public Test : () ==> bool
+Test () == 
+  return cases mk_R():
+           mk_R() -> true
+         end;  
+    
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

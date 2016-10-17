@@ -1,0 +1,245 @@
+class RetrofitFile is subclass of Object
+operations 
+public  readData : () ==> bool 
+readData() == 
+( dcl   fileID : [String] := directoryPath+fileName,
+        recordNumber : int  := 0,
+        success : bool  := false  ,
+        dataFile : [File] := new  File(directoryPath , fileName);
+  acType := nil  ;
+  tailNumber := nil  ;
+  let - = retrofitList.removeAllElements()
+  in 
+    skip ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (FileNotFoundException,j2v_exception)) -> 
+        ( dcl   dwdsException : [DWDSException] := new  DWDSException(),
+                fileNotFoundException : [FileNotFoundException] := j2v_exception;
+          let - = dwdsException.addMessage(DWDSException`ErrorOpeningFileForInput , fileID)
+          in 
+            skip ;
+          let - = errorLog.showExceptionMsgs(dwdsException)
+          in 
+            skip 
+        ) ,
+      (isofclass  (IOException,j2v_exception)) -> 
+        ( dcl   dwdsException : [DWDSException] := new  DWDSException(),
+                ioException : [IOException] := j2v_exception;
+          let - = dwdsException.addMessage(DWDSException`ErrorReadingFile , {2 |-> new  String("Error reading retrofit data record") , 1 |-> new  Integer(recordNumber) , 0 |-> fileID})
+          in 
+            skip ;
+          let - = errorLog.showExceptionMsgs(dwdsException)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   fileReader : [FileReader] := new  FileReader(dataFile),
+            bufferedReader : [BufferedReader] := new  BufferedReader(fileReader);
+      recordNumber := recordNumber+1;
+      ( dcl   dataRecord : [String] := bufferedReader.readLine();
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  dataRecord <> nil   and  moreDataToRead(dataRecord) do  
+          ( let - = parseData(dataRecord)
+            in 
+              skip ;
+            recordNumber := recordNumber+1;
+            dataRecord := bufferedReader.readLine()
+          ) ;
+        let - = bufferedReader.close()
+        in 
+          skip ;
+        if  acType <> nil   and  tailNumber <> nil  
+        then  
+          ( dcl   ac : [Aircraft] := Database`getDatabase().getAircraftByTailNumber(tailNumber);
+            if  ac.getAcType().getMDS().equals(acType)
+            then  
+              ( success := true  ;
+                let - = retrofitEntry.setAircraft(ac)
+                in 
+                  skip ;
+                ( dcl   retroList : [Enumeration] := retrofitList.elements();
+                  trap  j2v_break with  
+                    cases  true  : 
+                      (isofclass  (J2V_Break,j2v_break)) -> 
+                        skip 
+                      
+                    end  
+                  in  
+                    while  retroList.hasMoreElements() do  
+                    ( let - = retrofitEntry.addRetrofit(retroList.nextElement())
+                      in 
+                        skip 
+                    ) 
+                ) 
+              ) 
+          ) 
+      ) 
+    ) ;
+  return  success
+) ;
+
+public  writeData : () ==> <VOID>
+writeData() == 
+( dcl   dataRecord : [String];
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (IOException,j2v_exception)) -> 
+        ( dcl   dwdsException : [DWDSException] := new  DWDSException(),
+                ioException : [IOException] := j2v_exception;
+          let - = dwdsException.addMessage(DWDSException`ErrorWritingFile , directoryPath+new  String("/")+fileName)
+          in 
+            skip ;
+          let - = errorLog.showExceptionMsgs(dwdsException)
+          in 
+            skip 
+        ) ,
+      (isofclass  (NullPointerException,j2v_exception)) -> 
+        ( dcl   dwdsException : [DWDSException] := new  DWDSException(),
+                nullPointerException : [NullPointerException] := j2v_exception;
+          let - = dwdsException.addMessage(DWDSException`ErrorWritingFile , directoryPath+new  String("/")+fileName)
+          in 
+            skip ;
+          let - = errorLog.showExceptionMsgs(dwdsException)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   aircraftType : [String] := retrofitEntry.getAircraftType(),
+            tailNumber : [String] := retrofitEntry.getTailNumber(),
+            changeList : [Vector] := retrofitEntry.getRetrofits(),
+            dataFile : [File] := new  File(directoryPath , fileName),
+            fileWriter : [FileWriter] := new  FileWriter(dataFile),
+            bufferedWriter : [BufferedWriter] := new  BufferedWriter(fileWriter);
+      dataRecord := DATA_IDENTIFIER+AIRCRAFT_MODEL+DATA_DELIMETER+aircraftType;
+      let - = bufferedWriter.write(dataRecord , 0 , dataRecord.length())
+      in 
+        skip ;
+      let - = bufferedWriter.newLine()
+      in 
+        skip ;
+      dataRecord := DATA_IDENTIFIER+TAIL_NUMBER+DATA_DELIMETER+tailNumber;
+      let - = bufferedWriter.write(dataRecord , 0 , dataRecord.length())
+      in 
+        skip ;
+      let - = bufferedWriter.newLine()
+      in 
+        skip ;
+      ( dcl   idx : int  := 0;
+        while  idx < changeList.size() do  
+        ( dcl   changeData : [String] := changeList.elementAt(idx);
+          dataRecord := DATA_IDENTIFIER+changeData+DATA_DELIMETER+RETROFIT_INCORPORATED;
+          let - = bufferedWriter.write(dataRecord , 0 , dataRecord.length())
+          in 
+            skip ;
+          let - = bufferedWriter.newLine()
+          in 
+            skip ;
+          idx := idx+1
+        ) 
+      ) ;
+      let - = bufferedWriter.newLine()
+      in 
+        skip ;
+      let - = bufferedWriter.write(END_OF_DATA , 0 , END_OF_DATA.length())
+      in 
+        skip ;
+      let - = bufferedWriter.newLine()
+      in 
+        skip ;
+      let - = bufferedWriter.close()
+      in 
+        skip 
+    ) ;
+  return  
+) ;
+
+private  RetrofitFile : () ==> RetrofitFile
+RetrofitFile() == 
+( return  
+) ;
+
+public  getRetrofitEntry : () ==> [RetrofitEntry]
+getRetrofitEntry() == 
+( return  retrofitEntry
+) ;
+
+private  parseData : [String] ==> <VOID>
+parseData(dataRecord) == 
+( if  dataRecord.startsWith(DATA_IDENTIFIER)
+  then  
+    ( dcl   delimiterPosition : int  := dataRecord.indexOf(DATA_DELIMETER);
+      if  delimiterPosition > -1
+      then  
+        ( dcl   parameterName : [String] := dataRecord.substring(DATA_IDENTIFIER_LENGTH , delimiterPosition),
+                parameterValue : [String] := dataRecord.substring(delimiterPosition+1);
+          if  parameterName.equals(AIRCRAFT_MODEL)
+          then  
+            ( acType := parameterValue
+            ) 
+          else  
+            if  parameterName.equals(TAIL_NUMBER)
+            then  
+              ( tailNumber := parameterValue
+              ) 
+            else  
+              if  parameterValue.equals(RETROFIT_INCORPORATED)
+              then  
+                ( let - = retrofitList.addElement(parameterName)
+                  in 
+                    skip 
+                ) 
+        ) 
+    ) ;
+  return  
+) ;
+
+public  moreDataToRead : [String] ==> bool 
+moreDataToRead(dataRecord) == 
+( return  (not  dataRecord.equals(END_OF_DATA))
+) ;
+
+public  RetrofitFile : [String] * [String] ==> RetrofitFile
+RetrofitFile(myDirectoryPath, myFileName) == 
+( directoryPath := myDirectoryPath;
+  fileName := myFileName;
+  retrofitEntry := new  RetrofitEntry();
+  retrofitList := new  Vector();
+  return  
+) ;
+
+public  setRetrofitEntry : [RetrofitEntry] ==> <VOID>
+setRetrofitEntry(myRetrofitEntry) == 
+( retrofitEntry := myRetrofitEntry;
+  return  
+) ;
+
+instance variables 
+  private  static AIRCRAFT_MODEL : [String] := new  String("MODEL");
+  private  static DATA_DELIMETER : [String] := new  String("|");
+  private  static DATA_IDENTIFIER : [String] := new  String("EquipmentConfiguration: ");
+  private  static DATA_IDENTIFIER_LENGTH : int  := DATA_IDENTIFIER.length();
+  private  static END_OF_DATA : [String] := new  String("[USER DATA]");
+  private  static RETROFIT_INCORPORATED : [String] := new  String("TRUE");
+  private  static TAIL_NUMBER : [String] := new  String("BUNO");
+  private  retrofitEntry : [RetrofitEntry];
+  private  directoryPath : [String];
+  private  fileName : [String];
+  private  errorLog : [ExceptionsFrame] := ExceptionsFrame`getExceptionsFrame();
+  private  tailNumber : [String] := nil  ;
+  private  acType : [String] := nil  ;
+  private  retrofitList : [Vector] := nil  
+  
+end  RetrofitFile

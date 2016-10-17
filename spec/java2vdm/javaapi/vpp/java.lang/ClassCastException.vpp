@@ -1,0 +1,22 @@
+class JavaLangClassCastException is subclass of JavaLangRuntimeException
+operations 
+public  JavaLangClassCastException : () ==> JavaLangClassCastException
+JavaLangClassCastException() == 
+( let - =  JavaLangRuntimeException()
+  in skip 
+) ;
+
+public  JavaLangClassCastException : <NIL> ==> JavaLangClassCastException
+JavaLangClassCastException(-) == 
+isNil := true  ;
+
+public  JavaLangClassCastException : JavaLangString ==> JavaLangClassCastException
+JavaLangClassCastException(s) == 
+( let - =  JavaLangRuntimeException(s)
+  in skip 
+) ;
+
+--public  test : () ==> bool
+--test() == return true;
+
+end  JavaLangClassCastException

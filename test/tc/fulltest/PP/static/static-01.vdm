@@ -1,0 +1,18 @@
+class B
+
+instance variables
+
+  x : nat := 1
+
+operations
+
+public GetX : () ==> nat
+GetX() ==
+  return 1;
+
+static op1 : nat ==> nat
+op1(n) ==
+  let v = self.GetX() in
+  return v
+
+end B

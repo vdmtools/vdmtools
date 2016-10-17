@@ -1,0 +1,24 @@
+class PickableElement is subclass of MouseListener, MouseMotionListener
+operations 
+public  getBounds : () ==> [Rectangle]
+getBounds() == 
+is subclass responsibility ;
+
+public  paint : [Graphics] ==> <VOID>
+paint(graphics) == 
+is subclass responsibility ;
+
+public  setCanvas : [JPanel] ==> <VOID>
+setCanvas(parentCanvas) == 
+is subclass responsibility ;
+
+public  getNotifyOnMouseClick : () ==> bool 
+getNotifyOnMouseClick() == 
+is subclass responsibility ;
+
+public  getNotifyOnMouseMotion : () ==> bool 
+getNotifyOnMouseMotion() == 
+is subclass responsibility ;
+
+
+end  PickableElement

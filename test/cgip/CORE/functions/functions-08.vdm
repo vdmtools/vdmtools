@@ -1,0 +1,55 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+functions
+f1: () -> nat
+f1() ==
+  10
+post RESULT = 10;
+
+f: (set of nat) | <ERROR> -> seq of nat
+f(s) ==
+  if s = {} then
+    []
+  else
+    let e in set s be st forall e1 in set s \ {e} & e < e1 in
+      [e] ^ f(s \ {e});
+
+g: (nat * nat) * set of nat -> nat
+g(mk_(n1, n2), -) ==
+  n1 + n2
+post RESULT = n1 + n2;
+
+h: seq of nat -> nat * nat
+h([a,b]) ==
+  mk_(a,b)
+pre let q = a + b in q > 10
+post let q =  mk_(a,b) in q <> RESULT;
+
+h2: set of nat -> seq of nat
+h2({a,b}) ==
+  let s = f({a,b}) in s
+post if a + b < 10 then true else false
+
+
+operations
+
+  public Test :() ==> seq of (real | bool | (seq of nat) ) 
+  Test () ==
+    return 
+    [
+      f1(),
+      post_f1(10),
+      f({3,56,1,4,4,1,22}),
+      g(mk_(3,2), {1,2}),
+      post_g(mk_(3,3), {}, 6),
+      post_g(mk_(0,0), {}, 0),
+      let mk_(a,b) = h([45,46]) in [a,b],
+      pre_h([3,4]),
+      post_h([3,4], mk_(3,4)),
+      h2({23,99}),
+      post_h2({23,99}, []),
+      post_h2({3,2}, [])
+    ]
+
+end A

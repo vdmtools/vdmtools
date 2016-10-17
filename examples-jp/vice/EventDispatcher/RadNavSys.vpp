@@ -1,0 +1,79 @@
+\begin{vdm_al}
+class 『ラジオナビシステム』 is subclass of 『事象共通定義』
+
+types
+  public 「性能データ」 = nat * nat * real
+
+instance variables
+  private
+  事象処理者 : 『事象処理者』 := new 『事象処理者』();
+  private
+  基本タスク集合 : set of 『基本タスク』 := {};
+  private
+  環境タスク写像 : map 「タスク名」 to 『環境タスク』 := {|->};
+  private
+  シナリオ : nat 
+
+operations
+  -- the constructor initialises the system and starts the application
+  -- tasks. because there are no events from the environment tasks yet
+  -- all tasks will block in their own event handler loops. similarly
+  -- the dispatcher task is started and blocked
+  『ラジオナビシステム』: nat ==> 『ラジオナビシステム』
+  『ラジオナビシステム』 (aシナリオ) ==
+    ( シナリオ := aシナリオ;
+      cases (シナリオ) :
+        1 -> ( アプリケーションタスクを追加する(new 『人機械界面キー押し処理1』(事象処理者));
+               アプリケーションタスクを追加する(new 『ラジオ音量調整』(事象処理者));
+               アプリケーションタスクを追加する(new 『人機械界面音量画面更新』(事象処理者));
+               アプリケーションタスクを追加する(new 『ラジオ交通情報処理』(事象処理者));
+               アプリケーションタスクを追加する(new 『ナビ交通情報解読』(事象処理者));
+               アプリケーションタスクを追加する(new 『人機械界面交通情報画面更新』(事象処理者)) ),
+        2 -> ( アプリケーションタスクを追加する(new 『人機械界面キー押し処理2』(事象処理者));
+               アプリケーションタスクを追加する(new 『ナビDB検索』(事象処理者));
+               アプリケーションタスクを追加する(new 『人機械界面住所画面更新』(事象処理者));
+               アプリケーションタスクを追加する(new 『ラジオ交通情報処理』(事象処理者));
+               アプリケーションタスクを追加する(new 『ナビ交通情報解読』(事象処理者));
+               アプリケーションタスクを追加する(new 『人機械界面交通情報画面更新』(事象処理者)) )
+      end;
+      startlist(基本タスク集合); start(事象処理者) )
+   pre aシナリオ in set {1, 2};
+
+  -- the addApplicationTaskアプリケーションタスクを追加する helper operation instantiates the callback
+  -- link to the task and adds it to the set of application tasks
+  private
+  アプリケーションタスクを追加する: 『基本タスク』 ==> ()
+  アプリケーションタスクを追加する (aタスク) ==
+    ( 基本タスク集合 := 基本タスク集合 union {aタスク};
+      事象処理者.登録する(aタスク) );
+
+  -- the addEnvironmentTask環境タスクを追加する helper operation instantiates the callback
+  -- link to the task and and starts the environment task. since the
+  -- VDMTools command-line always has the highest priority, the task will
+  -- not be scheduled for execution until some blocking operation is
+  -- called or the time slice is exceeded
+  private
+  環境タスクを追加する: 『環境タスク』 ==> ()
+  環境タスクを追加する (aタスク) ==
+    ( 環境タスク写像 := 環境タスク写像  munion {aタスク.  タスク名を得る () |-> aタスク};
+      事象処理者.登録する(aタスク);
+      aタスク.Run() );
+
+  -- the Run operation creates and starts the appropriate environment tasks
+  -- for this scenario. to ensure that the system model has ample time to
+  -- make progress (because RadNavSys『ラジオナビシステム』 will be started from the VDMTools
+  -- command-line which always has the highest priority) the calls to
+  -- getMinMaxAverage最大最小平均応答時間を得る will block until all responses have been received
+  -- by the environment task
+  public Run: () ==> map seq of char to 「性能データ」
+  Run () ==
+    ( cases (シナリオ):
+        1 -> ( 環境タスクを追加する(new 『音量つまみ』(事象処理者,10));
+               環境タスクを追加する(new 『交通情報送信』(事象処理者,10)) ),
+        2 -> ( 環境タスクを追加する(new 『住所書込』(事象処理者,10));
+               環境タスクを追加する(new 『交通情報送信』(事象処理者,10)) )
+      end;
+      return { 名前 |-> 環境タスク写像(名前).最小最大平均応答時間を得る() | 名前 in set dom 環境タスク写像 } )
+
+end 『ラジオナビシステム』
+\end{vdm_al}

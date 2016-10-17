@@ -1,0 +1,24 @@
+class JavaAwtToolkit is subclass of JavaLangObject
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaAwtToolkit" , <CLASS> , false  )
+operations 
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  JavaAwtToolkit : <NIL> ==> JavaAwtToolkit
+JavaAwtToolkit(-) == 
+isNil := true  ;
+
+public  createImage : map  int  to  int  ==> JavaAwtImage
+createImage(b) == 
+( return new JavaAwtImage(<NIL>)
+) ;
+
+public  static getDefaultToolkit : () ==> JavaAwtToolkit
+getDefaultToolkit() == 
+( return new JavaAwtToolkit(<NIL>)
+) ;
+
+
+end  JavaAwtToolkit

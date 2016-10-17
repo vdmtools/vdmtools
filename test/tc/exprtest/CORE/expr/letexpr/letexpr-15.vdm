@@ -1,0 +1,21 @@
+class LetExprTest
+types
+
+  A :: selid : nat
+       sel2 : bool;
+
+  B :: sel1 : rat
+  inv b == b < 6
+  
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = let s:set of nat = if 4 > 8 then {} else {|->} in s union {true}
+  in skip;
+
+------------------------------------------------------------------------------
+end LetExprTest

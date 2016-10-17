@@ -1,0 +1,68 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{vdm}\index{BulletinMeteo|ClassDef}
+{\small\sf class} $BulletinMeteo$  \kISO $\index{MSAWTypes|ClassOcc}MSAWTypes$
+\begin{instvar}\index{position-de-station|InstVarDef}
+\vardcl{position-de-station}{StationMeteo\index{StationMeteo|TypeOcc} \Gmap Coordonnees\index{Coordonnees|TypeOcc}}\index{qnh-locale|InstVarDef}
+\vardcl{qnh-locale}{Coordonnees\index{Coordonnees|TypeOcc} \Gmap Hpa\index{Hpa|TypeOcc}}
+\instinv{\kObjectstate }{position-de-station \Neq \Emptymap 
+}
+\end{instvar}
+\begin{methdef}\index{SetQNH|MethodDef}
+\begin{method}{SetQNH}
+\parms{station : StationMeteo\index{StationMeteo|TypeOcc}, qnh : Hpa\index{Hpa|TypeOcc}} \Fdef\\ \ass{qnh-locale}{qnh-locale \Override  \\
+\mapcomp{position \Mapsto qnh}{position : Coordonnees\index{Coordonnees|TypeOcc}} \\
+[ \Not \exists{station' \In  \Dom position-de-station} \\
+{\fnapply{Distance}{position,station'} <  \\
+\fnapply{Distance}{position,station}}]}
+\begin{precond}station \In  \Dom position-de-station
+\end{precond}
+\end{method}\index{SetPosition|MethodDef}
+\begin{method}{SetPosition}
+\parms{station : StationMeteo\index{StationMeteo|TypeOcc}, position : Coordonnees\index{Coordonnees|TypeOcc}} \Fdef\\ \If station \In  \Dom position-de-station
+\Then \\
+\ass{position-de-station}{position-de-station \Override \map{station \Mapsto position}}
+\Else \\
+\ass{position-de-station\pex{station}}{position}
+\Fi
+\end{method}\index{GetQNH|MethodDef}
+\begin{method}{GetQNH}
+\parms{position : Coordonnees\index{Coordonnees|TypeOcc}}\methvalue{Hpa\index{Hpa|TypeOcc}} \Fdef\\ \return{1013.25}
+\end{method}
+\end{methdef}
+\begin{syncdef}\index{GetQNH|MethodOcc}
+\per{GetQNH}{
+\fin{SetQNH} \Ge 1
+}
+\end{syncdef}
+{\small\sf end} $BulletinMeteo$
+
+\end{vdm}

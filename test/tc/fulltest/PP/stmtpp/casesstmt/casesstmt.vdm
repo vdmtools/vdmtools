@@ -1,0 +1,112 @@
+class CasesStmtTest
+operations
+
+  Cases1() dummy : char ==
+    let n = 7 in
+    cases [10]:
+      mk_(a,b) -> return true and n,
+      l1 ^ l2 -> return n,
+      a -> return 'a'
+    end;
+
+  Cases2() dummy : nat | bool ==
+    cases 6 - 9:
+      b -> return 8,
+      others -> return true
+    end;
+
+  Cases3() dummy : seq of char ==
+    cases {}:
+      a -> return "yes",
+      s1 union s2 -> let n = 5 - 7 in return n
+    end;
+
+  Cases4() ==
+    cases {1 |-> 'a'}:
+      s1 union s2 -> return s1 / s2,
+      mk_(a,b,7) ->  return a + b
+    end;
+
+  Cases5(arg1,arg2: real) dummy : real ==
+    let t = true in
+    cases arg1 + arg2:
+      (7 - t) -> return arg1,
+      others -> return 8.9
+    end;
+
+  Cases10: () ==> nat
+  Cases10() ==
+    cases true:
+    1 -> ( dcl a: nat := 0,
+               b: bool;
+	   dcl c: set of int;
+	   return ;
+	   return 8;
+	   let t = true in return t ),
+    others -> ( let k = true in return not k;
+                return 34 )
+    end;
+
+  Cases11: () ==> bool
+  Cases11() ==
+    cases true:
+    true ->  let a = [1] in return hd a > 9,
+    1 -> let a in set {1} in return a,
+    2 -> let a in set {1,2,3} be st a<3 in return a * 10001,
+    others -> def a = [1] in return hd a > 9
+    end;
+
+  Cases12: seq of bool ==> set of int
+  Cases12(sb) ==
+    cases true:
+    true -> for a in sb do
+           return not sb,
+    1 -> for a in reverse sb do
+           return sb,
+    2 -> for all a in set sb do
+           skip,
+    3 -> for i=1 to 4 by 2 do
+           return sb(i) and true,
+    4 -> while true do
+           return,
+    others ->let n = 7 in return n
+    end;
+
+  Cases13: () ==> nat
+  Cases13() ==
+    cases true:
+    true -> if 1=1
+         then let f = false in return f
+	 elseif 2=1
+	 then return [1,2,1]
+	 else return {1|->true},
+    others ->cases 4:
+           1 -> return not (2 >= 2),
+	   true -> return 34,
+	   others -> let n = nil in return n
+	 end
+    end;
+
+  Cases14: () ==> [bool | char]
+  Cases14() ==
+    cases n:
+    1 -> Cases10(1),
+    2 -> Cases10(),
+    3 -> Cases12({1,2,3}),
+    others -> Cases13([1,2])
+    end;
+
+  Cases15: () ==> seq of char | set of int
+  Cases15() ==
+  ( dcl a: int := 0;
+    cases 1:
+    1 -> ( dcl a: bool;
+           let one = 1 in a := one;
+	   a := true;
+	   return a ),
+    2 -> ( a := 1;
+           return ),
+    others -> skip
+    end);
+    
+end CasesStmtTest

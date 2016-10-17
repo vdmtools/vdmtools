@@ -1,0 +1,16 @@
+class ExprVisitor is subclass of Object
+operations 
+public  visitStringExpr : [StringExpr] ==> <VOID>
+visitStringExpr(node) == 
+is subclass responsibility ;
+
+public  visitBooleanExpr : [BooleanExpr] ==> <VOID>
+visitBooleanExpr(node) == 
+is subclass responsibility ;
+
+public  visitIntegerExpr : [IntegerExpr] ==> <VOID>
+visitIntegerExpr(node) == 
+is subclass responsibility ;
+
+
+end  ExprVisitor

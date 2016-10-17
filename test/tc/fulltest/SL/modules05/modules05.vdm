@@ -1,0 +1,68 @@
+module A
+
+imports from B all
+
+exports all
+
+definitions
+
+functions
+
+  f : () -> bool
+  f () ==
+    B`pre_g (10)
+
+end A
+
+module B
+
+exports
+
+  functions g : nat -> nat
+
+definitions
+
+functions
+
+  g : nat -> nat
+  g (n) ==
+    n + 1
+  pre (n >= 5)
+
+end B
+module C
+
+exports
+  types struct T
+
+definitions
+
+types
+
+T = <RED> | <GREEN>
+
+end C
+
+module D
+
+imports from C all
+
+exports
+
+functions
+  f : C`T * nat -> nat
+
+definitions
+
+functions
+
+  f : C`T * nat -> nat
+  f (c,n) ==
+   if c = <RED>
+   then 6
+   elseif c = <GREEN>
+   then 8
+   else 0
+
+end D
+

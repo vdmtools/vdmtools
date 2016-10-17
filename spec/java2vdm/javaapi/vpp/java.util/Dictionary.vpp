@@ -1,0 +1,41 @@
+class JavaUtilDictionary is subclass of JavaLangObject
+operations 
+--public  keys : () ==> JavaUtilEnumeration
+--keys() == 
+--is not yet specified;
+
+--public  size : () ==> int 
+--size() == 
+--is not yet specified;
+
+public  isEmpty : () ==> bool 
+isEmpty() == 
+is not yet specified;
+
+--public  elements : () ==> JavaUtilEnumeration
+--elements() == 
+--is not yet specified;
+
+--public  JavaUtilDictionary : () ==> JavaUtilDictionary
+--JavaUtilDictionary() == 
+--( skip 
+--) ;
+
+--public  get : JavaLangObject ==> JavaLangObject
+--get(key) == 
+--is not yet specified;
+
+--public  remove : JavaLangObject ==> JavaLangObject
+--remove(key) == 
+--is not yet specified;
+
+public  JavaUtilDictionary : <NIL> ==> JavaUtilDictionary
+JavaUtilDictionary(-) == 
+isNil := true  ;
+
+--public  put : JavaLangObject * JavaLangObject ==> JavaLangObject
+--put(key, value__) == 
+--is not yet specified;
+
+
+end  JavaUtilDictionary

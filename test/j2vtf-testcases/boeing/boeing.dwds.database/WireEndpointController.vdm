@@ -1,0 +1,585 @@
+class WireEndpointController is subclass of WiringDataController
+operations 
+public  initialize : () ==> <VOID>
+initialize() == 
+( return  <VOID>
+) ;
+
+public  getViaWireId : int  ==> map  int  to  [WireEndpoint]
+getViaWireId(wireId) == 
+( if  debug
+  then  
+    ( let - = System`out.print(new  String("WireEndpointController.getViaWireId(")+wireId+new  String(")  "))
+      in 
+        skip 
+    ) ;
+  ( dcl   wireEndsInfo : [WireEndpointInfo] := wireEndsInfoCache.get(new  Integer(wireId));
+    if  wireEndsInfo = nil  
+    then  
+      ( if  debug
+        then  
+          ( let - = System`out.println(new  String(" From DB"))
+            in 
+              skip 
+          ) ;
+        wireEndsInfo := getEndpointsViaWireId(wireId);
+        let - = wireEndsInfoCache.put(new  Integer(wireId) , wireEndsInfo)
+        in 
+          skip 
+      ) 
+    else  
+      ( if  debug
+        then  
+          ( let - = System`out.println(new  String(" From Cache"))
+            in 
+              skip 
+          ) 
+      ) ;
+    return  wireEndsInfo.getWireEndsInfo()
+  ) 
+) ;
+
+public  getPins : [RefDes] ==> map  int  to  [String]
+getPins(refdes) == 
+( if  debug
+  then  
+    ( let - = System`out.println(new  String("WireEndpointController.getPins(")+refdes+new  String(") from DB"))
+      in 
+        skip 
+    ) ;
+  ( dcl   pinList : [Vector] := new  Vector(100),
+          connection : [Connection] := WireEndpointController`getToolkit().getConnection(),
+          querySet : [WiringDataQuerySet] := WireEndpointController`getToolkit().getQuerySet(),
+          query : [String] := nil  ;
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (SQLException,j2v_exception)) -> 
+          ( dcl   e : [SQLException] := j2v_exception;
+            exit  convertSQLException(e , query)
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( dcl   stmt : [Statement] := connection.createStatement(),
+              refdesId : [Integer] := new  Integer(refdes.getId()),
+              args : map  int  to  [Object] := {0 |-> refdesId};
+        query := querySet.getQuery(WiringDataQuerySet`GET_ALL_REFDES_PINS , args);
+        ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+          trap  j2v_break with  
+            cases  true  : 
+              (isofclass  (J2V_Break,j2v_break)) -> 
+                skip 
+              
+            end  
+          in  
+            while  queryRS.next() do  
+            ( dcl   pinName : [String] := queryRS.getString(1);
+              let - = pinList.addElement(pinName)
+              in 
+                skip 
+            ) ;
+          let - = queryRS.close()
+          in 
+            skip ;
+          let - = stmt.close()
+          in 
+            skip 
+        ) 
+      ) ;
+    ( dcl   pinArray : map  int  to  [String] := {l_18 |-> nil  |l_18 in set  {0,...,pinList.size()-1}};
+      let - = pinList.copyInto(pinArray)
+      in 
+        skip ;
+      return  pinArray
+    ) 
+  ) 
+) ;
+
+public  getRefDesIdViaWireId : int  ==> map  int  to  [Integer]
+getRefDesIdViaWireId(wireId) == 
+( dcl   wireEnds : map  int  to  [WireEndpoint] := getViaWireId(wireId),
+        refdesIdArray : map  int  to  [Integer] := {l_6 |-> nil  |l_6 in set  {0,...,2-1}};
+  refdesIdArray := refdesIdArray ++ {0 |-> new  Integer(wireEnds(0).getRefDesId())};
+  refdesIdArray := refdesIdArray ++ {1 |-> new  Integer(wireEnds(1).getRefDesId())};
+  return  refdesIdArray
+) ;
+
+public  getWireIdViaRefDesId : int  ==> map  int  to  [Integer]
+getWireIdViaRefDesId(refdesId) == 
+( if  debug
+  then  
+    ( let - = System`out.println(new  String("WireEndpointController.getWireIdViaRefDesId(")+refdesId+new  String(")"))
+      in 
+        skip 
+    ) ;
+  ( dcl   wireIdList : [Vector] := new  Vector(),
+          connection : [Connection] := WireEndpointController`getToolkit().getConnection(),
+          querySet : [WiringDataQuerySet] := WireEndpointController`getToolkit().getQuerySet(),
+          query : [String] := nil  ;
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (SQLException,j2v_exception)) -> 
+          ( dcl   e : [SQLException] := j2v_exception;
+            exit  convertSQLException(e , query)
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( dcl   stmt : [Statement] := connection.createStatement(),
+              effIdList : [String] := effectivityCntl.getEffIdSQLList(),
+              args : map  int  to  [Object] := {1 |-> effIdList , 0 |-> new  Integer(refdesId)};
+        query := querySet.getQuery(WiringDataQuerySet`GET_WIRE_ID_VIA_REFDES , args);
+        ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+          trap  j2v_break with  
+            cases  true  : 
+              (isofclass  (J2V_Break,j2v_break)) -> 
+                skip 
+              
+            end  
+          in  
+            while  queryRS.next() do  
+            ( let - = wireIdList.addElement(new  Integer(queryRS.getInt(1)))
+              in 
+                skip 
+            ) ;
+          let - = queryRS.close()
+          in 
+            skip ;
+          let - = stmt.close()
+          in 
+            skip 
+        ) 
+      ) ;
+    ( dcl   numWires : int  := wireIdList.size(),
+            wireIdArray : map  int  to  [Integer] := {l_18 |-> nil  |l_18 in set  {0,...,numWires-1}};
+      let - = wireIdList.copyInto(wireIdArray)
+      in 
+        skip ;
+      return  wireIdArray
+    ) 
+  ) 
+) ;
+
+getEndpointsViaWireId : int  ==> [WireEndpointInfo]
+getEndpointsViaWireId(wireId) == 
+( if  debug
+  then  
+    ( let - = System`out.println(new  String("-WireEndpointController.getEndpointsViaWireId(")+wireId+new  String(") from DB"))
+      in 
+        skip 
+    ) ;
+  ( dcl   wireEnds : map  int  to  [WireEndpoint] := {l_4 |-> nil  |l_4 in set  {0,...,2-1}},
+          connection : [Connection] := WireEndpointController`getToolkit().getConnection(),
+          querySet : [WiringDataQuerySet] := WireEndpointController`getToolkit().getQuerySet(),
+          query : [String] := nil  ;
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (SQLException,j2v_exception)) -> 
+          ( dcl   e : [SQLException] := j2v_exception;
+            exit  convertSQLException(e , query)
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( dcl   stmt : [Statement] := connection.createStatement(),
+              args : map  int  to  [Object] := {0 |-> new  Integer(wireId)};
+        query := querySet.getQuery(WiringDataQuerySet`GET_WIRE_ENDS_VIA_WIRE_ID , args);
+        ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query),
+                end__ : int  := 0;
+          trap  j2v_break with  
+            cases  true  : 
+              (isofclass  (J2V_Break,j2v_break)) -> 
+                skip 
+              
+            end  
+          in  
+            while  queryRS.next() do  
+            ( dcl   refdesId : int  := queryRS.getInt(1),
+                    pinName : [String] := queryRS.getString(2),
+                    endType : int  := queryRS.getInt(3),
+                    endTermCode : [String] := queryRS.getString(4),
+                    ferruleTermCode : [String] := queryRS.getString(5),
+                    ferruleWireType : [String] := queryRS.getString(6);
+              wireEnds := wireEnds ++ {end__ |-> new  WireEndpoint(refdesId , wireId , pinName , endType , endTermCode , ferruleTermCode , ferruleWireType)};
+              end__ := end__+1
+            ) ;
+          let - = queryRS.close()
+          in 
+            skip ;
+          let - = stmt.close()
+          in 
+            skip 
+        ) 
+      ) ;
+    return  new  WireEndpointInfo(wireEnds(0) , wireEnds(1))
+  ) 
+) ;
+
+public  getCurrentContextObject : () ==> [Object]
+getCurrentContextObject() == 
+( return  curPin
+) ;
+
+preloadWireEndpointsViaRefDesId : int  ==> <VOID>
+preloadWireEndpointsViaRefDesId(refDesId) == 
+( if  debug
+  then  
+    ( let - = System`out.println(new  String("-WireEndpointController.loadWireEndpointsViaRefDesId(")+refDesId+new  String(") from DB"))
+      in 
+        skip 
+    ) ;
+  ( dcl   connection : [Connection] := WireEndpointController`getToolkit().getConnection(),
+          querySet : [WiringDataQuerySet] := WireEndpointController`getToolkit().getQuerySet(),
+          query : [String] := nil  ,
+          prevWireId : int  := -1,
+          endNum : int  := 0,
+          wireEnds : map  int  to  [WireEndpoint] := {l_18 |-> nil  |l_18 in set  {0,...,2-1}};
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (SQLException,j2v_exception)) -> 
+          ( dcl   e : [SQLException] := j2v_exception;
+            exit  convertSQLException(e , query)
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( dcl   stmt : [Statement] := connection.createStatement(),
+              args : map  int  to  [Object] := {0 |-> new  Integer(refDesId)};
+        query := querySet.getQuery(WiringDataQuerySet`GET_BOTH_WIRE_ENDS_VIA_REFDES_ID , args);
+        ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+          trap  j2v_break with  
+            cases  true  : 
+              (isofclass  (J2V_Break,j2v_break)) -> 
+                skip 
+              
+            end  
+          in  
+            while  queryRS.next() do  
+            ( dcl   wireId : int  := queryRS.getInt(1),
+                    refdesId : int  := queryRS.getInt(2),
+                    pinName : [String] := queryRS.getString(3),
+                    endType : int  := queryRS.getInt(4),
+                    endTermCode : [String] := queryRS.getString(5),
+                    ferruleTermCode : [String] := queryRS.getString(6),
+                    ferruleWireType : [String] := queryRS.getString(7);
+              wireEnds := wireEnds ++ {endNum |-> new  WireEndpoint(refdesId , wireId , pinName , endType , endTermCode , ferruleTermCode , ferruleWireType)};
+              endNum := endNum+1;
+              if  endNum = 2
+              then  
+                ( endNum := 0;
+                  if  prevWireId <> wireId
+                  then  
+                    ( dcl   sqlError : [DWDSException] := new  DWDSException();
+                      let - = sqlError.addMessage(DWDSException`DataSourceError , new  String("Wire IDs don't match"))
+                      in 
+                        skip ;
+                      exit  sqlError
+                    ) ;
+                  let - = wireEndsInfoCache.put(new  Integer(wireId) , new  WireEndpointInfo(wireEnds(0) , wireEnds(1)))
+                  in 
+                    skip 
+                ) ;
+              prevWireId := wireId
+            ) ;
+          let - = queryRS.close()
+          in 
+            skip ;
+          let - = stmt.close()
+          in 
+            skip 
+        ) 
+      ) 
+  ) ;
+  return  <VOID>
+) ;
+
+public  updateToNewContext : [ContextSet] ==> <VOID>
+updateToNewContext(contextChanges) == 
+( if  contextChanges.contains(ContextTypes`AIRCRAFT_TYPE) or  contextChanges.contains(ContextTypes`TAIL_NUMBER)
+  then  
+    ( let - = wireEndsInfoCache.removeAll()
+      in 
+        skip ;
+      let - = refdesEndsInfoCache.removeAll()
+      in 
+        skip ;
+      curPin := nil  
+    ) ;
+  if  contextChanges.contains(ContextTypes`REFDES) or  contextChanges.contains(ContextTypes`TAIL_NUMBER)
+  then  
+    ( let - = wireEndsInfoCache.removeOld()
+      in 
+        skip ;
+      let - = refdesEndsInfoCache.removeOld()
+      in 
+        skip ;
+      curPin := nil  
+    ) ;
+  if  contextChanges.contains(ContextTypes`PIN)
+  then  
+    ( curPin := contextChanges.get(ContextTypes`PIN)
+    ) ;
+  return  <VOID>
+) ;
+
+public  getWireIdViaRefDesIdPin : int  * [String] ==> map  int  to  [Integer]
+getWireIdViaRefDesIdPin(refdesId, pin) == 
+( if  debug
+  then  
+    ( let - = System`out.print(new  String("==========>WireEndpointController.getWireIdViaRefDesIdPin(")+refdesId+new  String(", ")+pin+new  String(")"))
+      in 
+        skip 
+    ) ;
+  ( dcl   wireIdArray : map  int  to  [Integer] := nil  ,
+          ends : map  int  to  [WireEndpoint] := nil  ,
+          refdesKey : [Integer] := new  Integer(refdesId),
+          refdesPinEnd : [RefDesEndpointInfo] := refdesEndsInfoCache.get(refdesKey);
+    if  refdesPinEnd = nil  
+    then  
+      ( refdesPinEnd := new  RefDesEndpointInfo();
+        let - = refdesEndsInfoCache.put(refdesKey , refdesPinEnd)
+        in 
+          skip 
+      ) ;
+    ends := refdesPinEnd.getPinInfo(pin);
+    if  ends = nil  
+    then  
+      ( if  debug
+        then  
+          ( let - = System`out.println(new  String(" from DB"))
+            in 
+              skip 
+          ) ;
+        ends := getEndpointsViaRefDesIdPin(refdesId , pin);
+        let - = refdesPinEnd.putPinInfo(pin , ends)
+        in 
+          skip 
+      ) 
+    else  
+      ( if  debug
+        then  
+          ( let - = System`out.println(new  String(" from Cache"))
+            in 
+              skip 
+          ) 
+      ) ;
+    if  (card  dom  ends) > 0
+    then  
+      ( wireIdArray := {l_3 |-> nil  |l_3 in set  {0,...,(card  dom  ends)-1}};
+        ( dcl   i : int  := 0;
+          while  i < (card  dom  ends) do  
+          ( wireIdArray := wireIdArray ++ {i |-> new  Integer(ends(i).getWireId())};
+            i := i+1
+          ) 
+        ) 
+      ) ;
+    return  wireIdArray
+  ) 
+) ;
+
+public  refdesContainsWire : [RefDes] * [Wire] ==> bool 
+refdesContainsWire(refdes, wire) == 
+( if  debug
+  then  
+    ( let - = System`out.println(new  String("WireEndpointController.refdesContainsWire1(")+refdes+new  String(", ")+wire+new  String(") from DB"))
+      in 
+        skip 
+    ) ;
+  ( dcl   containsWire : bool  := false  ,
+          connection : [Connection] := WireEndpointController`getToolkit().getConnection(),
+          querySet : [WiringDataQuerySet] := WireEndpointController`getToolkit().getQuerySet(),
+          query : [String] := nil  ;
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (SQLException,j2v_exception)) -> 
+          ( dcl   e : [SQLException] := j2v_exception;
+            exit  convertSQLException(e , query)
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( dcl   stmt : [Statement] := connection.createStatement(),
+              refdesId : [Integer] := new  Integer(refdes.getId()),
+              wireId : [Integer] := new  Integer(wire.getId()),
+              args : map  int  to  [Object] := {1 |-> wireId , 0 |-> refdesId};
+        query := querySet.getQuery(WiringDataQuerySet`GET_WIRE_ENDS_VIA_REFDES_ID_WIRE_ID , args);
+        ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+          containsWire := queryRS.next();
+          let - = queryRS.close()
+          in 
+            skip ;
+          let - = stmt.close()
+          in 
+            skip 
+        ) 
+      ) ;
+    return  containsWire
+  ) 
+) ;
+
+getEndpointsViaRefDesIdPin : int  * [String] ==> map  int  to  [WireEndpoint]
+getEndpointsViaRefDesIdPin(refdesId, pin) == 
+( if  debug
+  then  
+    ( let - = System`out.println(new  String("-WireEndpointController.getEndpointsViaRefDesIdPin(")+refdesId+new  String(") from DB"))
+      in 
+        skip 
+    ) ;
+  ( dcl   refdesEnds : [Vector] := new  Vector(),
+          connection : [Connection] := WireEndpointController`getToolkit().getConnection(),
+          querySet : [WiringDataQuerySet] := WireEndpointController`getToolkit().getQuerySet(),
+          query : [String] := nil  ;
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (SQLException,j2v_exception)) -> 
+          ( dcl   e : [SQLException] := j2v_exception;
+            exit  convertSQLException(e , query)
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( dcl   stmt : [Statement] := connection.createStatement(),
+              effIdList : [String] := effectivityCntl.getEffIdSQLList(),
+              args : map  int  to  [Object] := {2 |-> effIdList , 1 |-> pin , 0 |-> new  Integer(refdesId)};
+        query := querySet.getQuery(WiringDataQuerySet`GET_WIRE_ENDS_VIA_REFDES_ID_PIN , args);
+        ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+          trap  j2v_break with  
+            cases  true  : 
+              (isofclass  (J2V_Break,j2v_break)) -> 
+                skip 
+              
+            end  
+          in  
+            while  queryRS.next() do  
+            ( dcl   wireId : int  := queryRS.getInt(1),
+                    endType : int  := queryRS.getInt(2),
+                    endTermCode : [String] := queryRS.getString(3),
+                    ferruleTermCode : [String] := queryRS.getString(4),
+                    ferruleWireType : [String] := queryRS.getString(5);
+              let - = refdesEnds.addElement(new  WireEndpoint(refdesId , wireId , pin , endType , endTermCode , ferruleTermCode , ferruleWireType))
+              in 
+                skip 
+            ) ;
+          let - = queryRS.close()
+          in 
+            skip ;
+          let - = stmt.close()
+          in 
+            skip 
+        ) 
+      ) ;
+    ( dcl   ends : map  int  to  [WireEndpoint] := {l_17 |-> nil  |l_17 in set  {0,...,refdesEnds.size()-1}};
+      let - = refdesEnds.copyInto(ends)
+      in 
+        skip ;
+      return  ends
+    ) 
+  ) 
+) ;
+
+public  refdesContainsPin : [RefDes] * [String] ==> bool 
+refdesContainsPin(refdes, pinName) == 
+( if  debug
+  then  
+    ( let - = System`out.println(new  String("WireEndpointController.refdesContainsPin(")+refdes+new  String(", ")+pinName+new  String(") from DB"))
+      in 
+        skip 
+    ) ;
+  ( dcl   containsPin : bool  := false  ,
+          connection : [Connection] := WireEndpointController`getToolkit().getConnection(),
+          querySet : [WiringDataQuerySet] := WireEndpointController`getToolkit().getQuerySet(),
+          query : [String] := nil  ;
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (SQLException,j2v_exception)) -> 
+          ( dcl   e : [SQLException] := j2v_exception;
+            exit  convertSQLException(e , query)
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( dcl   stmt : [Statement] := connection.createStatement(),
+              refdesId : [Integer] := new  Integer(refdes.getId()),
+              effIdList : [String] := effectivityCntl.getEffIdSQLList(),
+              args : map  int  to  [Object] := {2 |-> effIdList , 1 |-> pinName , 0 |-> refdesId};
+        query := querySet.getQuery(WiringDataQuerySet`GET_WIRE_ENDS_VIA_REFDES_ID_PIN , args);
+        ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+          containsPin := queryRS.next();
+          let - = queryRS.close()
+          in 
+            skip ;
+          let - = stmt.close()
+          in 
+            skip 
+        ) 
+      ) ;
+    return  containsPin
+  ) 
+) ;
+
+public  refdesContainsWire : [RefDes] * [String] ==> bool 
+refdesContainsWire(refdes, wireName) == 
+( if  debug
+  then  
+    ( let - = System`out.println(new  String("WireEndpointController.refdesContainsWire2(")+refdes+new  String(", ")+wireName+new  String(") from DB"))
+      in 
+        skip 
+    ) ;
+  ( dcl   containsWire : bool  := false  ,
+          connection : [Connection] := WireEndpointController`getToolkit().getConnection(),
+          querySet : [WiringDataQuerySet] := WireEndpointController`getToolkit().getQuerySet(),
+          query : [String] := nil  ;
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (SQLException,j2v_exception)) -> 
+          ( dcl   e : [SQLException] := j2v_exception;
+            exit  convertSQLException(e , query)
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( dcl   stmt : [Statement] := connection.createStatement(),
+              refdesId : [Integer] := new  Integer(refdes.getId()),
+              args : map  int  to  [Object] := {1 |-> wireName , 0 |-> refdesId};
+        query := querySet.getQuery(WiringDataQuerySet`GET_WIRE_ENDS_VIA_REFDES_ID_WIRE , args);
+        ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+          containsWire := queryRS.next();
+          let - = queryRS.close()
+          in 
+            skip ;
+          let - = stmt.close()
+          in 
+            skip 
+        ) 
+      ) ;
+    return  containsWire
+  ) 
+) ;
+
+WireEndpointController : [DataSourceToolkit] * [EffectivityController] ==> WireEndpointController
+WireEndpointController(dsToolkit, effectivityController) == 
+( let - = WiringDataController(dsToolkit)
+  in 
+    skip ;
+  WireEndpointController`effectivityCntl := effectivityController;
+  wireEndsInfoCache := new  ObjectCache(wireEndsInfoCacheSize);
+  refdesEndsInfoCache := new  ObjectCache(refdesEndsInfoCacheSize)
+) ;
+
+instance variables 
+  private  wireEndsInfoCache : [ObjectCache] := nil  ;
+  private  refdesEndsInfoCache : [ObjectCache] := nil  ;
+  private  curPin : [String] := nil  ;
+  private  effectivityCntl : [EffectivityController] := nil  ;
+  private  static wireEndsInfoCacheSize : int  := 401;
+  private  static refdesEndsInfoCacheSize : int  := 101
+  
+end  WireEndpointController

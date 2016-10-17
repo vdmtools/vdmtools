@@ -1,0 +1,18 @@
+class Main
+--$Id: main.vpp,v 1.1 2005/10/31 05:45:33 vdmtools Exp $
+instance variables
+public b : Buffer := new Buffer();
+
+operations
+public run: () ==> ()
+run() ==
+	(
+	dcl 
+	prod: ¶YÒ := new ¶YÒ(b),
+	cons: Á”ïÒ := new Á”ïÒ(b);
+	start(prod);
+	start(cons);
+	cons.wait()
+	) 
+ end Main
+                                                         

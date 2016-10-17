@@ -1,0 +1,19 @@
+module go
+
+imports
+  from CGMAIN all,
+  from CPP all,
+  from AS all,
+  from REP all,
+  from CI all,
+  from TEST all
+
+exports all
+
+definitions 
+
+operations
+  go : () ==> CPP`Files
+  go() ==
+    TEST`go(<<AST>>,<<CGKIND>>)
+end go

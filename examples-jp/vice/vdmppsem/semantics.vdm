@@ -1,0 +1,134 @@
+\section{Semantics of the VDM++ Real-time approach}
+
+In order to understand the semantics consequences of the suggestions made for
+improving VDM++ in its ability to describe and validate distributed real time
+systems. The two subsections below presents the existing semantics of the
+handling of threads and the changes resulting from the suggested improvements
+respectively.
+
+\subsection{Dynamic Semantics for the existing VDM++ Interpreter}
+
+The semantics of VDM++ descriptions is (just like for VDM-SL in its
+ISO standard) defined in terms of sets of the set of mathematical
+models satisfying the constraints given in the descriptions.  This
+means that the interpreter from \vdmtools\ essentially reflects one of
+these models. 
+
+At the abstract level we could model the abstract syntax of threads as 
+a sequence of statements:
+
+\begin{delete}
+\begin{vdm_al}
+types
+\end{vdm_al}
+\end{delete}
+
+\begin{vdm_al}
+Thread = seq of TimedStmt;
+\end{vdm_al}
+The semantics for threads in the existing version of VDM++ then is a set of 
+traces with timing information interleaving the execution of the different 
+threads in a VDM++ description. Traces are sequences of trace elements where 
+trace elements represents an uninterrupted execution on the processor with
+information about when the execution began and ended. In \cite{Mukherjee&00}
+it was demonstrated how this set of traces can be specified. 
+
+Thus in order to illustrate the consequences of the suggested modifications to
+VDM++ it is probably worthwhile to briefly describe how the existing 
+interpreter is able to evaluate the VDM++ treads and producing one of the
+possible traces depending upon the chosen scheduling algorithm. In general the
+interpreter is constructed as a stack-machine where the VDM++ descriptions 
+first are compiled into instructions that can subsequently be interpreted 
+by the stack-machine. The entire interpreter is itself specified in 
+VDM-SL taking up more than 400 pages including explanation \cite{CSKDSVICE05}.
+
+We will not consider the actual compilation stage here for space limitations. 
+Figure~\ref{fig:DSint}~(a) presents a short overview of the structure of 
+the main functionality dealing with the stack-machine interpretation of the
+instructions relevant for threads.
+The different operations mentioned in Figure~\ref{fig:DSint}~(a) have
+the following responsibilities:
+\begin{description}
+\item[EvalRun:] This is the top-level operation for the stack-machine used 
+     when the user wish to execute a VDM++ construct. Prior to this the 
+     different VDM++ descriptions have been compiled into instruction code.
+\item[EvalScheduler:] This operation deals with slicing the evaluation of
+     the different instructions belonging to different threads up according
+     to the scheduling policy selected by the user. It makes use of 
+     \emph{EvalMainLoop} for evaluating the chosen thread and once that 
+     returns it uses \emph{SelAndRunThread} to select and execute the next 
+     thread if any more needs to be executed.
+\item[EvalMainLoop:] This is the main stack machine loop responsible for 
+     executing a sequence of instructions. Its execution may be blocked in 
+     different ways (e.g.\ by a permission guard being false) and will signal
+     back about this when it is finished.
+\item[EvalInstr:] This is the evaluation of a single instruction in the 
+     instruction set. It is essentially a large case onto the different
+     kinds of instructions to their own evaluation operation.
+\item[SelAndRunThread:] This operation selects and run the next thread 
+     according to the scheduling policy selected. In case no threads are 
+     ready to be executed at this point of time this operation is also 
+     responsible for advancing the time to the next periodic thread 
+     becoming ready to run.
+\item[FindNextThread:] This operation is responsible for finding the 
+     next thread to be executed. Thus, it must inspect the guards of the 
+     different blocked threads and take this into account with respect to 
+     the selected scheduling policy.
+\end{description}
+ 
+\begin{figure}[htb]
+\begin{center}
+\mbox{\subfigure[Existing VDM++ Interpreter.]{\epsfig{figure=DSoverview,width=.4\textwidth,angle=-90}}\quad%
+      \subfigure[New VDM++ Interpreter.]{\epsfig{figure=newDSoverview,width=.4\textwidth,angle=-90}}}
+%\includegraphics[width=0.6\columnwidth,angle=-90]{DSoverview.eps}
+%\includegraphics[width=0.6\columnwidth,angle=-90]{newDSoverview.eps}
+\caption{Operation Call Structure in the VDM++ Interpreter - \textbf{FIXME: sizes}} 
+\label{fig:DSint}
+\end{center}
+\end{figure}
+
+\subsection{Updates to the Interpreter for the suggested approach}
+
+With the suggested approach with multiple processors the
+interleaved semantics for threads will be modified. Now potential true
+parallel execution will be carried out at the different
+processors. Conceptually speaking this can be considered as having a
+set of traces similar to the semantics for the current semantics for
+VDM++ per processor. Subsequently traces from each processor than
+needs to be merged according to the respective time stamps with the
+traces from the other processors.
+
+%\begin{figure}[htb]
+%\begin{center}
+%\includegraphics[width=0.6\columnwidth,angle=-90]{newDSoverview.eps}
+%\caption{Operation Structure in new VDM++ Interpreter} 
+%\label{fig:newDSint}
+%\end{center}
+%\end{figure}
+
+Figure~\ref{fig:DSint}~(b) illustrates how the overall structure for
+the stack machine interpreter would need to be changed with the
+suggested approach. The operations in Figure~\ref{fig:DSint}~(b) with 
+a gray background corresponds to the new operations required. The main 
+responsibilities for these would be:
+
+\begin{description}
+\item[ScheduleCPU:] The main \emph{EvalRun} operation would now call the
+     \emph{ScheduleCPU} that would be responsible for the scheduling of 
+     the different processors being chosen for execution. Because of the 
+     possibility of asynchronous communication between the different CPUs 
+     the slices must be sufficiently small in granularity.
+\item[SelAndRunCPU:] This operation is responsible for selecting the next 
+     CPU to execute once a CPU have been thrown out of the \emph{ScheduleCPU}
+     operation. 
+\item[CommsFromOtherCPUs:] This operation needs to take communication from
+     other CPU's into account. Independently of the scheduling policies 
+     chosen for the different CPUs each of the CPU's will have a special 
+     thread dedicated to deal with such incoming messages with higher
+     priority than the threads specified by the user.
+\end{description}
+
+\begin{enumerate}
+\item Show extracts of some of the semantics operations from the two figures.
+\item Show the semantics of the implicit routing of messages.
+\end{enumerate}

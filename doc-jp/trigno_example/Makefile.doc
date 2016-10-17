@@ -1,0 +1,7 @@
+%.vdm.tex: %.vdm
+	vdmde -xNl $<
+
+all: math.vdm.tex cylio.vdm.tex cylinder.vdm.tex
+
+clean:
+	rm -f math.vdm.tex cylio.vdm.tex cylinder.vdm.tex

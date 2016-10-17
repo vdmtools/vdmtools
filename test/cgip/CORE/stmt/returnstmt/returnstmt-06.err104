@@ -1,0 +1,6 @@
+Bug in the test environment:
+
+Calling Test() is at specification level parsed as an apply expression, and thus
+EvalExplOpApply is called. In this case the empty return statement is not allowed.
+However, at the implementation level the Test() is parsed as a call statement.
+

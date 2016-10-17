@@ -1,0 +1,46 @@
+module A
+
+imports from DefMod all
+exports all
+
+definitions
+
+operations
+
+  Test: () ==> seq of (bool | int)
+  Test() ==
+  return 
+    [ DefMod`f1(mk_DefMod`R(10)),  DefMod`pre_f1(mk_DefMod`R(10)),
+      DefMod`f2(10), DefMod`o1(mk_DefMod`R(10)) ]
+      
+
+end A
+
+module DefMod
+
+exports all
+definitions
+
+values 
+  v = 10
+
+types 
+  R:: i: int
+
+functions 
+
+  f1: R -> int
+  f1(mk_R(i)) ==
+    i + v
+  pre i = v;
+
+  f2: int -> int
+  f2((v)) ==
+    v+v
+
+operations
+  o1: R ==> int
+  o1(mk_R((v))) ==
+    return v
+
+end DefMod

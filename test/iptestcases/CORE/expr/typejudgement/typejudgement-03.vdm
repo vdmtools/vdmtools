@@ -1,0 +1,21 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+types
+
+  Even = int
+  inv v == v mod 2 = 0;
+
+operations
+
+  public Test :() ==> bool
+  Test() ==
+   trap a with return a
+   in
+     return is_(OpCall(),map nat to Even);
+
+  OpCall: () ==> map nat to Even
+  OpCall() ==
+    exit true
+
+end A

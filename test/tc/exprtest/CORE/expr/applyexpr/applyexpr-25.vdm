@@ -1,0 +1,26 @@
+class ApplyExprTest
+types
+type_b:: first: nat
+         second: real;
+type_a:: b: [type_b]
+
+------------------------------ Actual Test data ------------------------------
+--operations
+functions
+
+TestOP: type_a -> bool
+TestOP(aa) ==
+--return
+if aa.b(1).first>10 then true
+--     ^^^^    this should produce an error (sequence) 
+-- when type_a.b is a simple type (e.g. nat), the type checker detects the error
+-- correctly
+else false
+
+values
+b1:type_b=mk_type_b(10, 10.2);
+a1:type_a=mk_type_a(b1);
+a2:type_a=mk_type_a(nil)
+
+------------------------------------------------------------------------------
+end ApplyExprTest

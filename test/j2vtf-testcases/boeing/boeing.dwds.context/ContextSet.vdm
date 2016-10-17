@@ -1,0 +1,173 @@
+class ContextSet is subclass of Dictionary
+operations 
+public  keys : () ==> [Enumeration]
+keys() == 
+( return  keys.elements()
+) ;
+
+public  size : () ==> int 
+size() == 
+( return  keys.size()
+) ;
+
+public  isEmpty : () ==> bool 
+isEmpty() == 
+( return  keys.isEmpty()
+) ;
+
+public  elements : () ==> [Enumeration]
+elements() == 
+( return  values__.elements()
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( dcl   value__ : [StringBuffer] := new  StringBuffer(new  String("["));
+  ( dcl   i : int  := 0;
+    while  i < keys.size() do  
+    ( let - = value__.append(keys.elementAt(i))
+      in 
+        skip ;
+      let - = value__.append(new  String("="))
+      in 
+        skip ;
+      let - = value__.append(values__.elementAt(i))
+      in 
+        skip ;
+      if  i+1 < keys.size()
+      then  
+        ( let - = value__.append(new  String(", "))
+          in 
+            skip 
+        ) ;
+      i := i+1
+    ) 
+  ) ;
+  let - = value__.append(new  String("]"))
+  in 
+    skip ;
+  return  value__.toString()
+) ;
+
+public  removeAll : () ==> <VOID>
+removeAll() == 
+( let - = keys.removeAllElements()
+  in 
+    skip ;
+  let - = values__.removeAllElements()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  ContextSet : () ==> ContextSet
+ContextSet() == 
+( keys := new  Vector();
+  values__ := new  Vector()
+) ;
+
+public  get : [Object] ==> [Object]
+get(key) == 
+( dcl   idx : int  := keys.indexOf(key);
+  if  idx >= 0
+  then  
+    ( return  values__.elementAt(idx)
+    ) 
+  else  
+    ( return  nil  
+    ) 
+) ;
+
+public  remove : [Object] ==> [Object]
+remove(key) == 
+( dcl   value__ : [Object] := nil  ,
+        idx : int  := keys.indexOf(key);
+  if  idx >= 0
+  then  
+    ( value__ := values__.elementAt(idx)
+    ) ;
+  let - = keys.removeElementAt(idx)
+  in 
+    skip ;
+  let - = values__.removeElementAt(idx)
+  in 
+    skip ;
+  return  value__
+) ;
+
+public  contains : [Object] ==> bool 
+contains(key) == 
+( return  keys.contains(key)
+) ;
+
+public  put : [Object] * [Object] ==> [Object]
+put(key, value__) == 
+( dcl   previousValue : [Object] := nil  ;
+  let - = Assert`that((key <> nil  ) and  (is_ (key,[ContextTypes])))
+  in 
+    skip ;
+  let - = Assert`that((value__ = nil  ) or  (is_ (value__,[String])))
+  in 
+    skip ;
+  ( dcl   idx : int  := keys.indexOf(key);
+    if  idx >= 0
+    then  
+      ( previousValue := values__.elementAt(idx);
+        let - = values__.setElementAt(value__ , idx)
+        in 
+          skip 
+      ) 
+    else  
+      ( dcl   j : int  := keys.size()-1;
+        if  j < 0 or  (def l_9 :  ContextTypes = (key)
+        in l_9).ContextTypes`ord > (def l_15 :  ContextTypes = (keys.elementAt(j))
+        in l_15).ContextTypes`ord
+        then  
+          ( let - = keys.addElement(key)
+            in 
+              skip ;
+            let - = values__.addElement(value__)
+            in 
+              skip 
+          ) 
+        else  
+          ( trap  j2v_break with  
+              cases  true  : 
+                (isofclass  (J2V_Break,j2v_break)) -> 
+                  skip 
+                
+              end  
+            in  
+              while  j >= 0 and  not  ((def l_11 :  ContextTypes = (key)
+              in l_11).ContextTypes`ord > (def l_17 :  ContextTypes = (keys.elementAt(j))
+              in l_17).ContextTypes`ord) do  
+              ( j := j-1
+              ) ;
+            j := j+1;
+            let - = keys.insertElementAt(key , j)
+            in 
+              skip ;
+            let - = values__.insertElementAt(value__ , j)
+            in 
+              skip 
+          ) 
+      ) ;
+    return  previousValue
+  ) 
+) ;
+
+public  ContextSet : [ContextTypes] * [Object] ==> ContextSet
+ContextSet(key, value__) == 
+( let - = ContextSet()
+  in 
+    skip ;
+  let - = ContextSet`put(key , value__)
+  in 
+    skip 
+) ;
+
+instance variables 
+  private  keys : [Vector];
+  private  values__ : [Vector]
+  
+end  ContextSet

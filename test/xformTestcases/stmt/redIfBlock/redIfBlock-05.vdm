@@ -1,0 +1,21 @@
+class A
+types T = bool;
+operations
+
+public Test : () ==> bool  
+Test() ==
+( 
+	dcl b : seq of char;
+	(dcl b : bool := false;
+		( dcl b : T := true;
+		 dcl c : bool := b;
+		if c
+	 	then (b := true)
+	 	else (b := false);
+		((return b;))
+		);
+	return b
+	);
+)
+   
+end A

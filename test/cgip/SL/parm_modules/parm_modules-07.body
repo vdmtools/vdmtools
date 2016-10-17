@@ -1,0 +1,66 @@
+module A
+
+imports 
+
+from MAIN all
+
+exports all
+
+definitions
+
+values
+
+VAL : real = 0.1
+
+operations
+
+
+Test: () ==>  real 
+Test() ==
+return
+          MAIN`Value()
+
+end A
+
+
+module TYPES
+
+parameters
+
+types  ELEM1,ELEM2
+
+values VALUE : ELEM2
+
+definitions
+
+functions
+
+GetValue: ELEM1 -> ELEM2
+GetValue(e) ==
+         VALUE
+
+
+end TYPES
+
+module MAIN
+
+imports 
+  from A all
+
+instantiations
+
+Try as TYPES( ELEM1 -> nat, ELEM2 -> real, VALUE -> A`VAL) all
+
+exports all
+
+definitions
+
+functions
+
+Value : () +>  real 
+Value() ==
+         Try`GetValue(10)
+
+end MAIN
+
+

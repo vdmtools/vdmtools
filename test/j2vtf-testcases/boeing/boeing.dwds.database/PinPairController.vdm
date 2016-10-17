@@ -1,0 +1,198 @@
+class PinPairController is subclass of WiringDataController
+operations 
+public  initialize : () ==> <VOID>
+initialize() == 
+( return  <VOID>
+) ;
+
+public  getCurrentContextObject : () ==> [Object]
+getCurrentContextObject() == 
+( return  nil  
+) ;
+
+getPinPairs : int  * [String] ==> map  int  to  [String]
+getPinPairs(refdesId, pin) == 
+( dcl   pinPairList : [Vector] := new  Vector(),
+        refdesKey : [Integer] := new  Integer(refdesId),
+        connection : [Connection] := PinPairController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := PinPairController`getToolkit().getQuerySet(),
+        query : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   supersetPinList : [Vector] := new  Vector(),
+            stmt : [Statement] := connection.createStatement(),
+            args : map  int  to  [Object] := {1 |-> pin , 0 |-> refdesKey};
+      query := querySet.getQuery(WiringDataQuerySet.GET_PIN_PAIRS_VIA_REFDES_PIN1 , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  queryRS.next() do  
+          ( dcl   pinPair : [String] := queryRS.getString(1);
+            let - = supersetPinList.addElement(pinPair)
+            in 
+              skip 
+          ) ;
+        if  supersetPinList.size() > 0
+        then  
+          ( dcl   supersetListStr : [String] := genCommaSeparatedList(supersetPinList.elements());
+            args := args ++ {0 |-> refdesKey};
+            args := args ++ {1 |-> supersetListStr};
+            query := querySet.getQuery(WiringDataQuerySet.GET_PIN_PAIRS_VIA_REFDES_PIN2 , args);
+            queryRS := stmt.executeQuery(query);
+            trap  j2v_break with  
+              cases  true  : 
+                (isofclass  (J2V_Break,j2v_break)) -> 
+                  skip 
+                
+              end  
+            in  
+              while  queryRS.next() do  
+              ( dcl   pinPair : [String] := queryRS.getString(1);
+                let - = pinPairList.addElement(pinPair)
+                in 
+                  skip 
+              ) 
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  ( dcl   numPins : int  := pinPairList.size(),
+          pinArray : map  int  to  [String] := {l_19 |-> nil  |l_19 in set  {0,...,numPins-1}};
+    let - = pinPairList.copyInto(pinArray)
+    in 
+      skip ;
+    return  pinArray
+  ) 
+) ;
+
+getContactInfo : int  * [String] ==> bool 
+getContactInfo(refdesId, pin) == 
+( dcl   isFixedPin : bool  := false  ,
+        refdesKey : [Integer] := new  Integer(refdesId),
+        connection : [Connection] := PinPairController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := PinPairController`getToolkit().getQuerySet(),
+        query : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   supersetPinList : [Vector] := new  Vector(),
+            stmt : [Statement] := connection.createStatement(),
+            args : map  int  to  [Object] := {1 |-> pin , 0 |-> refdesKey};
+      query := querySet.getQuery(WiringDataQuerySet.GET_COMMON_PIN_VIA_REFDES_ID , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        if  queryRS.next() and  queryRS.getInt(1) > 0
+        then  
+          ( isFixedPin := true  
+          ) 
+        else  
+          ( isFixedPin := false  
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  return  isFixedPin
+) ;
+
+public  getPinPairInfo : [PinPairKey] ==> [PinPairInfo]
+getPinPairInfo(key) == 
+( dcl   pinPairs : map  int  to  [String] := getPinPairs(key.getRefDesId() , key.getPin()),
+        isFixedContact : bool  := getContactInfo(key.getRefDesId() , key.getPin()),
+        ppInfo : [PinPairInfo] := new  PinPairInfo(pinPairs , isFixedContact);
+  let - = pinPairCache.put(key , ppInfo)
+  in 
+    skip ;
+  return  ppInfo
+) ;
+
+public  updateToNewContext : [ContextSet] ==> <VOID>
+updateToNewContext(contextChanges) == 
+( if  contextChanges.contains(ContextTypes`AIRCRAFT_TYPE) or  contextChanges.contains(ContextTypes`TAIL_NUMBER)
+  then  
+    ( let - = pinPairCache.removeAll()
+      in 
+        skip 
+    ) ;
+  if  contextChanges.contains(ContextTypes`REFDES)
+  then  
+    ( let - = pinPairCache.removeOld()
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+public  getViaRefDesPin : [RefDes] * [String] ==> map  int  to  [String]
+getViaRefDesPin(refdes, pin) == 
+( dcl   pinPairs : map  int  to  [String] := {l_3 |-> nil  |l_3 in set  {0,...,0-1}};
+  if  refdes.getType() = RefDes`SWITCH or  refdes.getType() = RefDes`RELAY
+  then  
+    ( dcl   key : [PinPairKey] := new  PinPairKey(refdes.getId() , pin),
+            pinPairInfo : [PinPairInfo] := pinPairCache.get(key);
+      if  pinPairInfo = nil  
+      then  
+        ( pinPairInfo := getPinPairInfo(key)
+        ) ;
+      pinPairs := pinPairInfo.getPinPairs()
+    ) ;
+  return  pinPairs
+) ;
+
+PinPairController : [DataSourceToolkit] ==> PinPairController
+PinPairController(dsToolkit) == 
+( let - = WiringDataController(dsToolkit)
+  in 
+    skip ;
+  pinPairCache := new  ObjectCache(cacheSize)
+) ;
+
+public  isFixedContactPin : [RefDes] * [String] ==> bool 
+isFixedContactPin(refdes, pin) == 
+( dcl   isFixedPin : bool  := false  ;
+  if  refdes.getType() = RefDes`SWITCH or  refdes.getType() = RefDes`RELAY
+  then  
+    ( dcl   key : [PinPairKey] := new  PinPairKey(refdes.getId() , pin),
+            pinPairInfo : [PinPairInfo] := pinPairCache.get(key);
+      if  pinPairInfo = nil  
+      then  
+        ( pinPairInfo := getPinPairInfo(key)
+        ) ;
+      isFixedPin := pinPairInfo.isFixedContactPin()
+    ) ;
+  return  isFixedPin
+) ;
+
+instance variables 
+  private  pinPairCache : [ObjectCache] := nil  ;
+  private  static cacheSize : int  := 211
+  
+end  PinPairController

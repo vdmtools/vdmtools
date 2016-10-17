@@ -1,0 +1,69 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+
+
+
+
+class D
+
+instance variables
+   i : char := 'd';
+
+types
+  T :: 
+    a : nat
+    b : char
+
+end D
+
+
+class A is subclass of  D
+
+types
+protected  T :: 
+    n : nat
+    c : char
+
+
+instance variables
+   i : char := 'a';
+
+end A
+
+class C is subclass of A 
+
+
+end C
+
+class B is subclass of C
+
+types
+  T :: 
+    a : nat
+    b : char
+
+
+instance variables
+   i : char :='b';
+
+operations 
+  public Test : () ==> char  
+  Test () ==
+    return mk_C`T(1,'a').c
+
+end B
+
+
+
+
+
+
+
+
+
+
+
+
+
+

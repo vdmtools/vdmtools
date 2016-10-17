@@ -1,0 +1,39 @@
+class Nullable
+
+operations
+
+  Dummy: () ==> ()
+  Dummy() ==
+    skip
+
+end Nullable
+class Object is subclass of Nullable
+
+values
+  protected c : A = new A(5,true);
+
+end Object
+
+class A is subclass of Object
+
+instance variables
+
+public  a_n : nat := 9;
+public  a_b : bool := false;
+   
+operations
+
+public A: nat * bool ==> A
+A(n,b) ==
+  (a_n := n;
+   a_b := b);
+
+--public A : () ==> A
+--A() ==
+--  skip;
+
+public Test: () ==> nat * bool
+Test() ==
+  return mk_(c.a_n,c.a_b);
+
+end A

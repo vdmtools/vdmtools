@@ -1,0 +1,29 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of nat  
+Test () ==
+( dcl a : Arec := mk_Arec(10,mk_Brec(30)),
+      b : Arec := mk_Arec(50,mk_Brec(60));
+
+ a.a1 := 20;
+ b := mu (b,a1 |-> 55);
+ a.a2.b := 40;
+ return [ a.a1,b.a1, a.a2.b ]
+)
+
+types
+
+Arec::a1:nat
+   a2:Brec;
+
+Brec::b:nat
+   
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

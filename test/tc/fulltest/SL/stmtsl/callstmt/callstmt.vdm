@@ -1,0 +1,37 @@
+module CallStmtTest
+exports all
+definitions
+
+state Sigma of
+  a : nat
+  b : bool
+end
+
+operations
+
+  Call1: nat ==> nat
+  Call1(n) ==
+    if true
+    then return 7
+    else Call1(0);
+
+  Call2: () ==> ()
+  Call2() ==
+    if Call1(a) <> 8
+    then Call2();
+
+  Call3: () ==> nat
+  Call3() ==
+    (Call2();
+     Call1(2));
+
+  Call4: bool * set of nat ==> ()
+  Call4(b,s1 union s2) ==
+    if b and s1 = s2
+    then Call4(6,{8,0});
+
+end CallStmtTest
+
+
+
+

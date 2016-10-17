@@ -1,0 +1,275 @@
+\section{The J2VOP Module}
+
+\begin{vdm_al}
+module J2VOP
+
+imports
+from AS all,
+from CPP all,
+from CI all,
+from REP all,
+from MANGLE all,
+from JSSREP all,
+from J2VEXPR all,
+from J2VTYPE all,
+from J2VSTMT all,
+from J2VBVDM all,
+
+from J2V
+operations
+  MustTranslateBodies: () ==> bool;
+  GetMemberComments: CI`ContextId ==> seq of seq of char;
+  Push: () ==> CI`ContextId;
+  SetComments: CI`ContextId * seq1 of seq of char ==> (),
+
+from J2VAUX
+  functions
+    IsCPPName: CPP`Name | CPP`Expr +> bool,
+
+from J2VCLASS
+operations
+  IsInterface: () ==> bool;
+  GetName:  () ==> AS`Name
+
+exports
+values
+v_void: AS`QuoteLit;
+--v_voidType: AS`QuoteType; -- TODO
+v_voidType: AS`Type; -- TODO
+
+operations
+J2VOperation: CPP`FunctionDefinition ==> AS`OpDef * AS`Name;
+GetRetType: () ==> AS`Type
+
+definitions
+
+values
+v_void: AS`QuoteLit = J2VBVDM`GenQuoteLit("VOID");
+--v_voidType: [AS`QuoteType] = nil -- =J2VBVDM`GenQuoteType(v_void)
+v_voidType: AS`Type = mk_AS`VoidType(CI`NilContextId) -- =J2VBVDM`GenQuoteType(v_void)
+
+types
+  State ::
+    retType: AS`Type
+
+state J2VOPSt of
+  opState: seq of State
+  init s == s = mk_J2VOPSt([])
+end
+
+operations
+
+Init: AS`Type ==> ()
+Init(p_type) ==
+( dcl stat: State;
+  stat.retType := p_type; 
+  opState:=[stat]^opState
+)
+pre len opState = 0;
+  
+Term: () ==> ()
+Term() ==
+  opState := tl opState;
+
+GetRetType: () ==> AS`Type
+GetRetType() == return (hd opState).retType
+pre len opState > 0;
+
+\end{vdm_al}
+
+The operation translates JAVA's function or 
+constructor in a VDM++ operation. It returns
+VDM operation definition AS`OpDef, and operation's 
+mangled name AS`Name.
+
+JAVA's \texttt{void} is translated in \texttt{<VOID>}.
+It allows us to have a call to a JAVA function which
+takes place in a statement be translated in
+\texttt{let - = a() in skip} regardless of whether the
+function has a return type or not.
+But this solution implies that we have to put
+\texttt{return <VOID>} as the last statement for an operation
+returning \texttt{<VOID>}.
+                                
+\begin{vdm_al}
+
+J2VOperation: CPP`FunctionDefinition ==> AS`OpDef * AS`Name
+J2VOperation(p_fundef) ==
+  def l_opnm=J2VEXPR`J2VExpr'(p_fundef.decl.decl,nil,nil);
+      l_ms= if p_fundef.m = []
+            then {}
+            else {m|mk_CPP`Modifier(m,-) in set elems p_fundef.m};
+      l_isIface = J2VCLASS`IsInterface();
+      l_isNative=<NATIVE> in set l_ms;
+      l_acc= cases true:
+               (l_isIface or <PUBLIC> in set l_ms) -> <PUBLIC_AS>,
+               (<PROTECTED> in set l_ms) -> <PROTECTED_AS>,
+               (<PRIVATE> in set l_ms) -> <PRIVATE_AS>,
+               others -> <DEFAULT_AS>
+             end;
+      l_isStatic=<STATIC> in set l_ms;
+      l_isAbstr=<ABSTRACT> in set l_ms;
+      l_isConstr = J2VCLASS`GetName() = l_opnm and len p_fundef.ds = 0;
+  in
+   (dcl l_retType : AS`TypeName,
+        l_types : seq of AS`Type := [],
+        l_names : AS`Parameters := [];
+    if l_isConstr
+    then l_retType := J2VBVDM`GenTypeName(l_opnm)
+    else
+      if len p_fundef.ds = 0 or is_CPP`Void(p_fundef.ds(1).tp)
+      then l_retType := v_voidType -- nil
+      else l_retType := J2VTYPE`GetTypeForArray(p_fundef.ds);
+    if p_fundef.decl.arg <> nil
+    then
+      def mk_(tps,nms) = J2VArgumentDeclarationList(p_fundef.decl.arg)
+      in
+       (l_types := tps;
+        l_names := nms);
+    def l_mopnm = MANGLE`Mangle(l_opnm,l_types) 
+    in
+     (dcl l_res: AS`ExplOpDef * AS`Name,
+          l_comments: seq of seq of char := J2V`GetMemberComments(p_fundef.cid),
+          l_cid: int := CI`NilContextId;
+      if len l_comments > 0 
+      then
+       (l_cid := J2V`Push();
+        J2V`SetComments(l_cid,l_comments)
+       );
+      Init( if l_retType = v_voidType
+            then J2VBVDM`GenQuoteType(v_void)
+            else l_retType );
+      l_res :=
+        mk_(
+          J2VBVDM`GenExplOpDef(
+            l_opnm,
+            J2VBVDM`GenOpType(l_types,          -- opdom
+                              l_retType),       -- oprng
+            l_names,  -- params
+            def l_stmt= GenOpBody ( p_fundef.fb,
+                                    l_retType = v_voidType,
+                                    l_isAbstr,
+                                    J2V`MustTranslateBodies()=>l_isNative) -- true) to produce skeleton
+            in
+              J2VBVDM`GenOpBody(l_stmt),
+            l_acc,   
+            l_isStatic,
+            l_isConstr,
+            l_cid),
+          l_mopnm);
+      Term();
+      return l_res;
+    )
+  )
+pre is_CPP`FctDecl(p_fundef.decl) and
+--    is_(p_fundef.decl.decl,CPP`Name) and
+    J2VAUX`IsCPPName(p_fundef.decl.decl) and
+    forall i in set inds p_fundef.ds &
+      (is_CPP`TypeSpecifier(p_fundef.ds(i)) or
+      is_CPP`ArraySpecifier(p_fundef.ds(i)))
+--    and is_CPP`SimpleTypeName(p_fundef.ds(i).tp)
+  ;
+
+GenOpBody: [CPP`FctBody] * bool * bool * bool ==> AS`Stmt | <SUBRESP> | <NOTYETSPEC>
+GenOpBody(p_body,p_isVoid,p_isAbstr,p_isNative) ==
+( dcl l_stmts: seq of AS`Stmt := [];
+      --l_block: AS`BlockStmt;
+  if p_body = nil or p_isNative
+  then skip
+  else l_stmts := J2VSTMT`J2VStmt(p_body.stmt);
+  if p_isVoid
+  then
+    let
+      l_ret = J2VBVDM`GenIdentStmt() -- J2VBVDM`GenReturnStmt(v_void) -- 
+    in
+--      if len l_stmts = 1 and is_AS`BlockStmt(hd l_stmts)
+--      then
+--      ( l_block:=hd l_stmts;
+--        if not is_AS`ReturnStmt(l_block.stmts(len l_block.stmts))
+--        then 
+--          l_block.stmts:=l_block.stmts^[l_ret];
+--        l_stmts:=[l_block]
+--      )
+--      else l_stmts:=l_stmts^[l_ret];
+      if len l_stmts = 0
+      then l_stmts:=l_stmts^[l_ret];
+
+  if J2VCLASS`IsInterface() or p_isAbstr
+  --then return <SUBRESP>     
+  then return <NOTYETSPEC>  -- make an interface subclass of Object!  
+  elseif p_isNative
+  then return <NOTYETSPEC>
+  else
+    if len l_stmts=1 and is_AS`BlockStmt(hd l_stmts)
+    then return hd l_stmts
+    else return J2VBVDM`GenBlockStmt([],l_stmts);
+ );
+
+\end{vdm_al}
+
+Translates a formal parameters list into
+two lists: the list of types and that of names.
+                              
+\begin{vdm_al}
+
+J2VArgumentDeclarationList: CPP`ArgumentDeclarationList ==> seq of AS`Type * AS`Parameters
+J2VArgumentDeclarationList(p_params) == (
+  dcl l_types: seq of AS`Type := [],
+      l_params: AS`Parameters := [];
+  for l_ad in p_params.arg do 
+    def mk_(l_t, l_p) = J2VArgumentDeclaration(l_ad)
+    in (l_types := l_types ^ [l_t];
+        l_params := l_params ^ [l_p]);
+  return mk_(l_types, l_params)
+)
+pre p_params.ellipsis = nil and
+    p_params.arg <> nil => forall p in set elems p_params.arg & is_CPP`ArgDecl(p);
+
+\end{vdm_al}
+
+Translates a formal parameter declaration in a pair
+of the corresponding VDM++ type and pattern name.
+                              
+\begin{vdm_al}
+
+J2VArgumentDeclaration: CPP`ArgumentDeclaration ==> AS`Type * AS`PatternName
+J2VArgumentDeclaration(p_param) == (
+  def l_types = {t|t in set elems p_param.ds & is_CPP`TypeSpecifier(t)};
+--
+--  There could be modifiers (e.g. final)!
+--
+--      l_type=J2VTYPE`J2VType(p_param.ds(1));
+      l_type =J2VTYPE`J2VType(iota x in set l_types & true);
+--      l_type' = J2VTYPE`J2VType(iota x in set l_types & true);
+--      l_type = if is_(l_type',AS`TypeName)
+--               then J2VBVDM`GenOptionalType(l_type')
+--               else l_type';
+--      l_n=p_param.decl;
+      mk_(l_n, l_t) = J2VTYPE`GetTypeAndNameForArray(l_type, p_param.decl);
+--        if is_CPP`Identifier(p_param.decl)
+--        then mk_(p_param.decl, l_type)
+--        else J2VTYPE`GetTypeAndNameForArray(l_type, p_param.decl);
+      l_name = if is_CPP`Identifier(l_n)
+               then J2VBVDM`GenPatternName(J2VBVDM`Id2Name(l_n))
+               else undefined 
+  in
+    return mk_(l_t, l_name)
+)
+pre is_CPP`ArgDecl(p_param) and
+--    len p_param.ds = 1 and
+--    is_CPP`TypeSpecifier(p_param.ds(1)) and
+--    is_(p_param.ds(1).tp, CPP`SimpleTypeName) and
+    let l_n = p_param.decl
+    in  is_CPP`Identifier(l_n) or is_CPP`ArrayDecl(l_n)
+-- TODO:  or is_CPP`SimplePackageName(l_n)
+--        or is_CPP`QualifiedPackageName(l_n)
+;
+  
+end J2VOP
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}
+{rtinfo.ast}[J2VOP]
+\end{rtinfo}

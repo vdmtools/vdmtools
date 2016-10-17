@@ -1,0 +1,5 @@
+
+// Initialization file for module A (VDM-SL)
+init_DefMod();
+init_ApplyMod();
+

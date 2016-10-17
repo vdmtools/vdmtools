@@ -1,0 +1,659 @@
+class ModelDataMediator is subclass of Object
+operations 
+public  ModelDataMediator : () ==> ModelDataMediator
+ModelDataMediator() == 
+( let - = Object()
+  in 
+    skip ;
+  rePatternCompiler := new  Perl5Compiler();
+  rePatternMatcher := new  Perl5Matcher();
+  context := ContextState`getContextState();
+  db := Database`getDatabase()
+) ;
+
+public  decodeType : [String] ==> [Object]
+decodeType(typeName) == 
+( dcl   typeException : [DWDSException] := nil  ,
+        type : [Object] := nil  ;
+  if  typeName = nil   or  typeName.length() = 0
+  then  
+    ( typeException := new  DWDSException();
+      let - = typeException.addMessage(DWDSException`InvalidTypeName , new  String([  ]))
+      in 
+        skip ;
+      exit  typeException
+    ) ;
+  type := ContextTypes`type(typeName);
+  if  type = nil  
+  then  
+    ( type := WireDataTypes`type(typeName)
+    ) ;
+  if  type = nil  
+  then  
+    ( typeException := new  DWDSException();
+      let - = typeException.addMessage(DWDSException`InvalidTypeName , typeName)
+      in 
+        skip ;
+      exit  typeException
+    ) ;
+  return  type
+) ;
+
+public  decodeREPattern : [String] ==> [Pattern]
+decodeREPattern(rePatternStr) == 
+( dcl   patternException : [DWDSException] := nil  ,
+        rePattern : [Pattern] := nil  ;
+  if  rePatternStr = nil  
+  then  
+    ( patternException := new  DWDSException();
+      exit  patternException
+    ) ;
+  if  not  rePatternStr.equalsIgnoreCase(new  String("None"))
+  then  
+    ( trap  j2v_exception with  
+        cases  true  : 
+          (isofclass  (MalformedPatternException,j2v_exception)) -> 
+            ( dcl   e : [MalformedPatternException] := j2v_exception;
+              patternException := new  DWDSException();
+              let - = patternException.addMessage(DWDSException`InvalidRegularExpression , e.getMessage())
+              in 
+                skip ;
+              exit  patternException
+            ) ,
+          others  -> 
+            exit  j2v_exception
+        end  
+      in  
+        ( rePattern := rePatternCompiler.compile(rePatternStr)
+        ) 
+    ) ;
+  return  rePattern
+) ;
+
+private  rePatternMatch : [Pattern] * [String] ==> [String]
+rePatternMatch(pattern, source) == 
+( dcl   results : [String] := nil  ;
+  if  pattern = nil   or  source = nil  
+  then  
+    ( results := source
+    ) 
+  else  
+    ( dcl   reResults : [MatchResult];
+      if  rePatternMatcher.contains(source , pattern)
+      then  
+        ( reResults := rePatternMatcher.getMatch();
+          ( dcl   x : int  := 0;
+            while  x < reResults.groups() do  
+            ( skip ;
+              x := x+1
+            ) 
+          ) ;
+          results := reResults.group(reResults.groups()-1)
+        ) 
+    ) ;
+  return  results
+) ;
+
+public  getContextLevelValue : [TreeLevelProperties] ==> [String]
+getContextLevelValue(desiredLevel) == 
+( dcl   unfilteredValue : [String] := nil  ,
+        type : [Object] := desiredLevel.getType();
+  if  is_ (type,[ContextTypes])
+  then  
+    ( unfilteredValue := context.getCurrentContextFieldName(type)
+    ) 
+  else  
+    if  is_ (type,[WireDataTypes])
+    then  
+      ( dcl   curRefDes : [RefDes] := context.getCurrentContextFieldObject(ContextTypes`REFDES),
+              curWire : [Wire] := context.getCurrentContextFieldObject(ContextTypes`WIRE);
+        unfilteredValue := WireDataTypes`decodeValue(type , curRefDes , curWire)
+      ) 
+    else  
+      ( let - = Assert`that(false  )
+        in 
+          skip 
+      ) ;
+  return  (rePatternMatch(desiredLevel.getREPattern() , unfilteredValue))
+) ;
+
+private  queryCTPin : [TreeNodeData] * [TreeLevelProperties] ==> [Enumeration]
+queryCTPin(parentNodeData, childLevel) == 
+( dcl   results : [Vector] := new  Vector();
+  if  parentNodeData = nil   or  not  (parentNodeData.getType() = ContextTypes`REFDES or  parentNodeData.getType() = ContextTypes`PIN)
+  then  
+    ( dcl   e : [DWDSException] := new  DWDSException();
+      let - = e.addMessage(DWDSException`UnsupportedContextNesting , {1 |-> parentNodeData.getType().toString() , 0 |-> childLevel.getType().toString()})
+      in 
+        skip ;
+      exit  e
+    ) ;
+  ( dcl   childPattern : [Pattern] := childLevel.getREPattern(),
+          refDes : [RefDes] := context.getCurrentContextFieldObject(ContextTypes`REFDES),
+          pinList : [Iterator] := refDes.getAllPins();
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip 
+        
+      end  
+    in  
+      while  pinList.hasNext() do  
+      ( dcl   pinName : [String] := pinList.next();
+        let - = buildChildNodeList(results , ContextTypes`PIN , pinName , pinName , childPattern)
+        in 
+          skip 
+      ) ;
+    let - = HeapSort`sort(results , childLevel.getSortMethod())
+    in 
+      skip ;
+    return  results.elements()
+  ) 
+) ;
+
+public  queryLevel : [TreeNodeData] * [TreeLevelProperties] ==> [Enumeration]
+queryLevel(parentNodeData, childLevel) == 
+( dcl   levelValues : [Enumeration] := nil  ,
+        childLevelType : [Object] := childLevel.getType();
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   e : [DWDSException] := j2v_exception;
+          let - = errorLog.showExceptionMsgs(e)
+          in 
+            skip ;
+          levelValues := nil  
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( if  is_ (childLevelType,[ContextTypes])
+      then  
+        ( if  childLevelType = ContextTypes`REPAIR_ID
+          then  
+            ( levelValues := queryCTRepairID(parentNodeData , childLevel)
+            ) 
+          else  
+            if  childLevelType = ContextTypes`TAIL_NUMBER
+            then  
+              ( levelValues := queryCTTailNumber(parentNodeData , childLevel)
+              ) 
+            else  
+              if  childLevelType = ContextTypes`AIRCRAFT_TYPE
+              then  
+                ( levelValues := queryCTAircraftType(parentNodeData , childLevel)
+                ) 
+              else  
+                if  childLevelType = ContextTypes`BUNDLE
+                then  
+                  ( levelValues := queryCTBundle(parentNodeData , childLevel)
+                  ) 
+                else  
+                  if  childLevelType = ContextTypes`GRAPHIC_ID
+                  then  
+                    ( levelValues := queryCTGraphicID(parentNodeData , childLevel)
+                    ) 
+                  else  
+                    if  childLevelType = ContextTypes`REFDES
+                    then  
+                      ( levelValues := queryCTRefDes(parentNodeData , childLevel)
+                      ) 
+                    else  
+                      if  childLevelType = ContextTypes`WIRE
+                      then  
+                        ( levelValues := queryCTWire(parentNodeData , childLevel)
+                        ) 
+                      else  
+                        if  childLevelType = ContextTypes`PIN
+                        then  
+                          ( levelValues := queryCTPin(parentNodeData , childLevel)
+                          ) 
+                        else  
+                          ( let - = Assert`that(false  )
+                            in 
+                              skip 
+                          ) 
+        ) 
+      else  
+        if  is_ (childLevelType,[WireDataTypes])
+        then  
+          ( if  childLevelType = WireDataTypes`WIRE_DATA_TYPE_NONE
+            then  
+              ( skip 
+              ) 
+            else  
+              if  childLevelType = WireDataTypes`BUNDLE_NAME
+              then  
+                ( skip 
+                ) 
+              else  
+                if  childLevelType = WireDataTypes`BUNDLE_NET_NUMBER
+                then  
+                  ( skip 
+                  ) 
+                else  
+                  if  childLevelType = WireDataTypes`REF_DES_BRANCH_LETTER
+                  then  
+                    ( levelValues := queryWDTBranchLetter(parentNodeData , childLevel)
+                    ) 
+                  else  
+                    if  childLevelType = WireDataTypes`REF_DES_NAME
+                    then  
+                      ( skip 
+                      ) 
+                    else  
+                      if  childLevelType = WireDataTypes`WIRE_COLOR
+                      then  
+                        ( skip 
+                        ) 
+                      else  
+                        if  childLevelType = WireDataTypes`WIRE_DRAWING_NOTE
+                        then  
+                          ( skip 
+                          ) 
+                        else  
+                          if  childLevelType = WireDataTypes`WIRE_EMI_CODE
+                          then  
+                            ( skip 
+                            ) 
+                          else  
+                            if  childLevelType = WireDataTypes`WIRE_END1_PIN
+                            then  
+                              ( skip 
+                              ) 
+                            else  
+                              if  childLevelType = WireDataTypes`WIRE_END1_REF_DES
+                              then  
+                                ( skip 
+                                ) 
+                              else  
+                                if  childLevelType = WireDataTypes`WIRE_END1_REF_DES_PIN
+                                then  
+                                  ( skip 
+                                  ) 
+                                else  
+                                  if  childLevelType = WireDataTypes`WIRE_END1_TERM_CODE
+                                  then  
+                                    ( skip 
+                                    ) 
+                                  else  
+                                    if  childLevelType = WireDataTypes`WIRE_GAGE
+                                    then  
+                                      ( skip 
+                                      ) 
+                                    else  
+                                      if  childLevelType = WireDataTypes`WIRE_LENGTH
+                                      then  
+                                        ( skip 
+                                        ) 
+                                      else  
+                                        if  childLevelType = WireDataTypes`WIRE_PHASE
+                                        then  
+                                          ( skip 
+                                          ) 
+                                        else  
+                                          if  childLevelType = WireDataTypes`WIRE_NAME
+                                          then  
+                                            ( skip 
+                                            ) 
+                                          else  
+                                            if  childLevelType = WireDataTypes`WIRE_END2_PIN
+                                            then  
+                                              ( skip 
+                                              ) 
+                                            else  
+                                              if  childLevelType = WireDataTypes`WIRE_END2_REF_DES
+                                              then  
+                                                ( skip 
+                                                ) 
+                                              else  
+                                                if  childLevelType = WireDataTypes`WIRE_END2_REF_DES_PIN
+                                                then  
+                                                  ( skip 
+                                                  ) 
+                                                else  
+                                                  if  childLevelType = WireDataTypes`WIRE_END2_TERM_CODE
+                                                  then  
+                                                    ( skip 
+                                                    ) 
+                                                  else  
+                                                    if  childLevelType = WireDataTypes`WIRE_TYPE
+                                                    then  
+                                                      ( skip 
+                                                      ) 
+                                                    else  
+                                                      ( let - = Assert`that(false  )
+                                                        in 
+                                                          skip 
+                                                      ) 
+          ) 
+    ) ;
+  return  levelValues
+) ;
+
+private  queryCTWire : [TreeNodeData] * [TreeLevelProperties] ==> [Enumeration]
+queryCTWire(parentNodeData, childLevel) == 
+( dcl   results : [Vector] := new  Vector();
+  if  parentNodeData = nil   or  not  (parentNodeData.getType() = ContextTypes`TAIL_NUMBER or  parentNodeData.getType() = ContextTypes`WIRE)
+  then  
+    ( dcl   e : [DWDSException] := new  DWDSException();
+      let - = e.addMessage(DWDSException`UnsupportedContextNesting , {1 |-> parentNodeData.getType().toString() , 0 |-> childLevel.getType().toString()})
+      in 
+        skip ;
+      exit  e
+    ) ;
+  ( dcl   childPattern : [Pattern] := childLevel.getREPattern(),
+          parentList : [Enumeration] := parentNodeData.getBaseValues(),
+          parentType : [Object] := parentNodeData.getType();
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip 
+        
+      end  
+    in  
+      while  parentList.hasMoreElements() do  
+      ( dcl   parentValue : [String] := parentList.nextElement();
+        if  parentType = ContextTypes`TAIL_NUMBER
+        then  
+          ( dcl   ac : [Aircraft] := context.lookupViaName(ContextTypes`TAIL_NUMBER , parentValue),
+                  wireList : [Enumeration] := db.getAllWireNames(ac);
+            trap  j2v_break with  
+              cases  true  : 
+                (isofclass  (J2V_Break,j2v_break)) -> 
+                  skip 
+                
+              end  
+            in  
+              while  wireList.hasMoreElements() do  
+              ( dcl   wireName : [String] := wireList.nextElement();
+                let - = buildChildNodeList(results , ContextTypes`WIRE , wireName , wireName , childPattern)
+                in 
+                  skip 
+              ) 
+          ) 
+        else  
+          if  parentType = ContextTypes`WIRE
+          then  
+            ( dcl   wire : [Wire] := context.lookupViaName(ContextTypes`WIRE , parentValue);
+              if  wire <> nil  
+              then  
+                ( let - = buildChildNodeList(results , ContextTypes`WIRE , wire.getName() , wire.getName() , childPattern)
+                  in 
+                    skip 
+                ) 
+            ) 
+          else  
+            ( let - = Assert`that(false  )
+              in 
+                skip 
+            ) 
+      ) ;
+    let - = HeapSort`sort(results , childLevel.getSortMethod())
+    in 
+      skip ;
+    return  results.elements()
+  ) 
+) ;
+
+private  queryCTBundle : [TreeNodeData] * [TreeLevelProperties] ==> [Enumeration]
+queryCTBundle(parentNodeData, childLevel) == 
+( let - = Assert`that(false  )
+  in 
+    skip ;
+  return  nil  
+) ;
+
+private  queryCTRefDes : [TreeNodeData] * [TreeLevelProperties] ==> [Enumeration]
+queryCTRefDes(parentNodeData, childLevel) == 
+( dcl   results : [Vector] := new  Vector();
+  if  parentNodeData = nil   or  not  (parentNodeData.getType() = ContextTypes`TAIL_NUMBER or  parentNodeData.getType() = ContextTypes`REFDES)
+  then  
+    ( dcl   e : [DWDSException] := new  DWDSException();
+      let - = e.addMessage(DWDSException`UnsupportedContextNesting , {1 |-> parentNodeData.getType().toString() , 0 |-> childLevel.getType().toString()})
+      in 
+        skip ;
+      exit  e
+    ) ;
+  ( dcl   childPattern : [Pattern] := childLevel.getREPattern(),
+          parentList : [Enumeration] := parentNodeData.getBaseValues();
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip 
+        
+      end  
+    in  
+      while  parentList.hasMoreElements() do  
+      ( dcl   parentType : [Object] := parentNodeData.getType(),
+              parentValue : [String] := parentList.nextElement();
+        if  parentType = ContextTypes`REFDES
+        then  
+          ( let - = buildChildNodeList(results , ContextTypes`REFDES , parentValue , parentValue , childPattern)
+            in 
+              skip 
+          ) 
+        else  
+          if  parentType = ContextTypes`TAIL_NUMBER
+          then  
+            ( dcl   ac : [Aircraft] := context.lookupViaName(ContextTypes`TAIL_NUMBER , parentValue),
+                    refDesNameList : [Enumeration] := db.getAllRefDesNames(ac);
+              trap  j2v_break with  
+                cases  true  : 
+                  (isofclass  (J2V_Break,j2v_break)) -> 
+                    skip 
+                  
+                end  
+              in  
+                while  refDesNameList.hasMoreElements() do  
+                ( dcl   refDesName : [String] := refDesNameList.nextElement();
+                  let - = buildChildNodeList(results , ContextTypes`REFDES , refDesName , refDesName , childPattern)
+                  in 
+                    skip 
+                ) 
+            ) 
+          else  
+            ( let - = Assert`that(false  )
+              in 
+                skip 
+            ) 
+      ) ;
+    let - = HeapSort`sort(results , childLevel.getSortMethod())
+    in 
+      skip ;
+    return  results.elements()
+  ) 
+) ;
+
+private  queryCTRepairID : [TreeNodeData] * [TreeLevelProperties] ==> [Enumeration]
+queryCTRepairID(parentNodeData, childLevel) == 
+( let - = Assert`that(false  )
+  in 
+    skip ;
+  return  nil  
+) ;
+
+private  queryCTGraphicID : [TreeNodeData] * [TreeLevelProperties] ==> [Enumeration]
+queryCTGraphicID(parentNodeData, childLevel) == 
+( let - = Assert`that(false  )
+  in 
+    skip ;
+  return  nil  
+) ;
+
+private  queryCTTailNumber : [TreeNodeData] * [TreeLevelProperties] ==> [Enumeration]
+queryCTTailNumber(parentNodeData, childLevel) == 
+( dcl   results : [Vector] := new  Vector();
+  if  parentNodeData = nil   or  not  (parentNodeData.getType() = ContextTypes`AIRCRAFT_TYPE)
+  then  
+    ( dcl   e : [DWDSException] := new  DWDSException();
+      let - = e.addMessage(DWDSException`UnsupportedContextNesting , {1 |-> parentNodeData.getType().toString() , 0 |-> childLevel.getType().toString()})
+      in 
+        skip ;
+      exit  e
+    ) ;
+  ( dcl   childPattern : [Pattern] := childLevel.getREPattern(),
+          parentList : [Enumeration] := parentNodeData.getBaseValues();
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip 
+        
+      end  
+    in  
+      while  parentList.hasMoreElements() do  
+      ( dcl   parentType : [Object] := parentNodeData.getType(),
+              parentValue : [String] := parentList.nextElement();
+        if  parentType = ContextTypes`AIRCRAFT_TYPE
+        then  
+          ( dcl   acType : [AircraftType] := context.lookupViaName(ContextTypes`AIRCRAFT_TYPE , parentValue),
+                  acList : [Enumeration] := db.getAircraftByType(acType);
+            trap  j2v_break with  
+              cases  true  : 
+                (isofclass  (J2V_Break,j2v_break)) -> 
+                  skip 
+                
+              end  
+            in  
+              while  acList.hasMoreElements() do  
+              ( dcl   ac : [Aircraft] := acList.nextElement();
+                let - = buildChildNodeList(results , ContextTypes`TAIL_NUMBER , ac.getAcName() , ac.getAcName() , childPattern)
+                in 
+                  skip 
+              ) 
+          ) 
+        else  
+          ( let - = Assert`that(false  )
+            in 
+              skip 
+          ) 
+      ) ;
+    let - = HeapSort`sort(results , childLevel.getSortMethod())
+    in 
+      skip ;
+    return  results.elements()
+  ) 
+) ;
+
+private  queryCTAircraftType : [TreeNodeData] * [TreeLevelProperties] ==> [Enumeration]
+queryCTAircraftType(parentNodeData, childLevel) == 
+( dcl   results : [Vector] := new  Vector();
+  if  parentNodeData <> nil   and  (not  parentNodeData.getIsALabelNode())
+  then  
+    ( dcl   e : [DWDSException] := new  DWDSException();
+      let - = e.addMessage(DWDSException`UnsupportedContextNesting , {1 |-> parentNodeData.getType().toString() , 0 |-> childLevel.getType().toString()})
+      in 
+        skip ;
+      exit  e
+    ) ;
+  ( dcl   childPattern : [Pattern] := childLevel.getREPattern(),
+          aircraftTypeList : [Enumeration] := db.getAllAircraftTypes();
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip 
+        
+      end  
+    in  
+      while  aircraftTypeList.hasMoreElements() do  
+      ( dcl   aircraftTypeName : [AircraftType] := aircraftTypeList.nextElement();
+        let - = buildChildNodeList(results , ContextTypes`AIRCRAFT_TYPE , aircraftTypeName.getMDS() , aircraftTypeName.getMDS() , childPattern)
+        in 
+          skip 
+      ) ;
+    let - = HeapSort`sort(results , childLevel.getSortMethod())
+    in 
+      skip ;
+    return  results.elements()
+  ) 
+) ;
+
+private  queryWDTBranchLetter : [TreeNodeData] * [TreeLevelProperties] ==> [Enumeration]
+queryWDTBranchLetter(parentNodeData, childLevel) == 
+( dcl   results : [Vector] := new  Vector();
+  if  parentNodeData = nil   or  not  (parentNodeData.getType() = ContextTypes`REFDES)
+  then  
+    ( dcl   e : [DWDSException] := new  DWDSException();
+      let - = e.addMessage(DWDSException`UnsupportedContextNesting , {1 |-> parentNodeData.getType().toString() , 0 |-> childLevel.getType().toString()})
+      in 
+        skip ;
+      exit  e
+    ) ;
+  ( dcl   childPattern : [Pattern] := childLevel.getREPattern(),
+          parentList : [Enumeration] := parentNodeData.getBaseValues();
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip 
+        
+      end  
+    in  
+      while  parentList.hasMoreElements() do  
+      ( dcl   parentType : [Object] := parentNodeData.getType(),
+              parentValue : [String] := parentList.nextElement();
+        if  parentType = ContextTypes`REFDES
+        then  
+          ( dcl   refDes : [RefDes] := context.lookupViaName(ContextTypes`REFDES , parentValue);
+            let - = buildChildNodeList(results , ContextTypes`REFDES , refDes.toString() , refDes.getBranch() , childPattern)
+            in 
+              skip 
+          ) 
+        else  
+          ( let - = Assert`that(false  )
+            in 
+              skip 
+          ) 
+      ) ;
+    let - = HeapSort`sort(results , childLevel.getSortMethod())
+    in 
+      skip ;
+    return  results.elements()
+  ) 
+) ;
+
+private  buildChildNodeList : [Vector] * [Object] * [String] * [String] * [Pattern] ==> <VOID>
+buildChildNodeList(results, baseType, baseValue, inputValue, nodePattern) == 
+( dcl   nodeValue : [String] := rePatternMatch(nodePattern , inputValue);
+  if  nodeValue <> nil   and  nodeValue.length() > 0
+  then  
+    ( dcl   existingNode : [TreeNodeData] := nil  ,
+            alreadyInList : bool  := false  ;
+      ( dcl   i : int  := 0;
+        while  i < results.size() do  
+        ( existingNode := results.elementAt(i);
+          if  nodeValue.equals(existingNode.toString())
+          then  
+            ( alreadyInList := true  ;
+              exit  new  J2V_Break()
+            ) ;
+          i := i+1
+        ) 
+      ) ;
+      if  alreadyInList
+      then  
+        ( let - = existingNode.addBaseValue(baseValue)
+          in 
+            skip 
+        ) 
+      else  
+        ( dcl   newNode : [TreeNodeData] := new  TreeNodeData(baseType , nodeValue);
+          let - = newNode.addBaseValue(baseValue)
+          in 
+            skip ;
+          let - = results.addElement(newNode)
+          in 
+            skip 
+        ) 
+    ) ;
+  return  <VOID>
+) ;
+
+instance variables 
+  private  errorLog : [ExceptionsFrame] := ExceptionsFrame`getExceptionsFrame();
+  private  rePatternCompiler : [PatternCompiler];
+  private  rePatternMatcher : [PatternMatcher];
+  private  context : [ContextState];
+  private  db : [Database]
+  
+end  ModelDataMediator

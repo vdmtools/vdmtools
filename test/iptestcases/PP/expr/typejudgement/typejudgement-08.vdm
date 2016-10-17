@@ -1,0 +1,32 @@
+class A
+
+types
+public T1 = B | nat | R1;
+
+public R1 :: a : nat
+             b : nat
+inv r == r.a < r.b;
+
+operations
+public Test: () ==> seq of bool
+Test() == return
+ [
+   is_nat(10),
+   let n = 3 in is_(n, T1),
+   let b = new B() in is_(b, B),
+   let r = mk_R1(1,2) in is_R1(r),
+   let r = mk_R1(1,2) in is_(r, R1),
+   def r = mk_R1(1,2) in is_(r, R1),
+   is_([1], seq of nat),
+   let s = [1,2,3] in forall x in set inds s & x < 5,
+   let s = {[2], [4,5]} in is_(s, set of seq of nat),
+   let p = mk_([{1}], {{2,3}}, [mk_(1,2)]) in is_(p, seq of set of nat * set of set of nat * seq of (nat * nat)),
+   let p = mk_([{1}], {{2,3}}, [mk_(1,-1)]) in is_(p, seq of set of nat * set of set of nat * seq of (nat * nat)),
+   let m = { 1 |-> { 2 |-> {3, 4, 5}}} in is_(m, map nat to (map nat to (set of nat)))
+ ];
+
+end A
+
+class B
+
+end B

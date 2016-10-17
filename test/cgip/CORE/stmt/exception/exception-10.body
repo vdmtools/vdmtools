@@ -1,0 +1,9 @@
+
+public Test : () ==> ()
+Test() ==
+  always skip in
+  skip;
+
+
+
+end A

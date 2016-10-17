@@ -1,0 +1,195 @@
+class JavaLangClass is subclass of JavaIoSerializable, JavaLangObject
+--uselib "j2vdll.so"
+types
+--  public
+    CLASS ::
+      name : seq of char
+      cori : <CLASS> | <INTERFACE>
+      isPrim : bool
+
+instance variables
+  private val : JavaLangClass`CLASS;
+
+operations 
+
+public  JavaLangClass : <NIL> ==> JavaLangClass
+JavaLangClass(-) == 
+isNil := true  ;
+
+--public  JavaLangClass : JavaLangClass`CLASS ==> JavaLangClass
+--JavaLangClass(v) == 
+--( val := v
+--);
+
+public  JavaLangClass :  seq1 of char * (<CLASS> | <INTERFACE>) * bool ==> JavaLangClass
+JavaLangClass(name,cori,prim) == 
+( --val.name := name;
+  --val.isPrim := prim;
+  --val.cori := cori;
+  val := mk_CLASS(name,cori,prim);
+);
+
+public  getName : () ==> JavaLangString
+getName() == 
+  return new JavaLangString(val.name);
+
+public  isArray : () ==> bool 
+isArray() == 
+  return false;
+
+public  toString : () ==> JavaLangString
+toString() == 
+( dcl
+    str: seq of char :=
+      if isInterface()
+      then "interface "
+      else 
+        if isPrimitive()
+        then ""
+        else "class ";
+  str:=str^getName().toSeqOfChar();
+ return new JavaLangString(str)
+);
+
+--public  getFields : () ==> map  int  to  Field
+--getFields() == 
+--  return {|->};
+
+public  getClasses : () ==> map  int  to  JavaLangClass
+getClasses() == 
+  return {|->};
+
+--public  getMethods : () ==> map  int  to  Method
+--getMethods() == 
+--is not yet specified ;
+
+--public  getPackage : () ==> Package
+--getPackage() == 
+--is not yet specified ;
+
+public  getSigners : () ==> map  int  to  JavaLangObject
+getSigners() == 
+  return {|->};
+
+public  isInterface : () ==> bool 
+isInterface() == 
+  return val.cori=<INTERFACE>;
+
+public  isPrimitive : () ==> bool 
+isPrimitive() == 
+  return val.isPrim;
+
+public  newInstance : () ==> JavaLangObject
+newInstance() == 
+  return new JavaLangObject() ;
+
+--public  getModifiers : () ==> int 
+--getModifiers() == 
+--is not yet specified ;
+
+public  getInterfaces : () ==> map  int  to  JavaLangClass
+getInterfaces() == 
+  return {|->};
+
+--public  getSuperclass : () ==> JavaLangClass
+--getSuperclass() == 
+--is not yet specified ;
+
+--public  getClassLoader : () ==> ClassLoader
+--getClassLoader() == 
+--is not yet specified ;
+
+public  static forName : JavaLangString ==> JavaLangClass
+forName(className) == 
+  return new JavaLangClass(className.toSeqOfChar(), <CLASS>, false) ;
+
+--public  getConstructors : () ==> map  int  to  Constructor
+--getConstructors() == 
+--is not yet specified ;
+
+--public  getComponentType : () ==> JavaLangClass
+--getComponentType() == 
+--is not yet specified ;
+
+--public  getField : JavaLangString ==> Field
+--getField(name) == 
+--is not yet specified ;
+
+--public  getDeclaredFields : () ==> map  int  to  Field
+--getDeclaredFields() == 
+--is not yet specified ;
+
+--public  getDeclaringClass : () ==> JavaLangClass
+--getDeclaringClass() == 
+--is not yet specified ;
+
+--public  getDeclaredClasses : () ==> map  int  to  JavaLangClass
+--getDeclaredClasses() == 
+--is not yet specified ;
+
+--public  getDeclaredMethods : () ==> map  int  to  Method
+--getDeclaredMethods() == 
+--is not yet specified ;
+
+--public  isInstance : JavaLangObject ==> bool 
+--isInstance(obj) == 
+--is not yet specified ;
+
+--public  getProtectionDomain : () ==> ProtectionDomain
+--getProtectionDomain() == 
+--is not yet specified ;
+
+--public  getResource : JavaLangString ==> JavaNetURL
+--getResource(name) == 
+--is not yet specified ;
+
+--setSigners : map  int  to  JavaLangObject ==> ()
+--setSigners(signers) == 
+--is not yet specified ;
+
+--public  getDeclaredConstructors : () ==> map  int  to  Constructor
+--getDeclaredConstructors() == 
+--is not yet specified ;
+
+--public  isAssignableFrom : JavaLangClass ==> bool 
+--isAssignableFrom(cls) == 
+--is not yet specified ;
+
+--public  getDeclaredField : JavaLangString ==> Field
+--getDeclaredField(name) == 
+--is not yet specified ;
+
+--public  getConstructor : map  int  to  JavaLangClass ==> Constructor
+--getConstructor(parameterTypes) == 
+--is not yet specified ;
+
+--static getPrimitiveClass : JavaLangString ==> JavaLangClass
+--getPrimitiveClass(name) == 
+--is not yet specified ;
+
+--public  getResourceAsStream : JavaLangString ==> JavaIoInputStream
+--getResourceAsStream(name) == 
+--is not yet specified ;
+
+--public  getMethod : JavaLangString * map  int  to  JavaLangClass ==> Method
+--getMethod(name, parameterTypes) == 
+--is not yet specified ;
+
+--public  static forName : JavaLangString * bool  * ClassLoader ==> JavaLangClass
+--forName(name, initialize, loader) == 
+--is not yet specified ;
+
+--public  getDeclaredConstructor : map  int  to  JavaLangClass ==> Constructor
+--getDeclaredConstructor(parameterTypes) == 
+--is not yet specified ;
+
+--public  getDeclaredMethod : JavaLangString * map  int  to  JavaLangClass ==> Method
+--getDeclaredMethod(name, parameterTypes) == 
+--is not yet specified ;
+
+--setProtectionDomain0 : ProtectionDomain ==> ()
+--setProtectionDomain0(pd) == 
+--is not yet specified ;
+
+
+end  JavaLangClass

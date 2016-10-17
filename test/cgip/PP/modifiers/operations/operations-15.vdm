@@ -1,0 +1,24 @@
+ class A is subclass of C
+
+end A
+class B
+
+instance variables
+
+public a :A := new A();
+
+operations
+
+public Test : () ==> nat
+  Test() ==
+    a.OpC();
+
+end B
+class C
+
+operations
+
+protected OpC: () ==> nat
+OpC() == return 7
+
+end C

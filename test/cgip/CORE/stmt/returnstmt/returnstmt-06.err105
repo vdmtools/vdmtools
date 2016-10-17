@@ -1,0 +1,6 @@
+Dynamic Type Error expected.
+c. 3:
+  Run-Time Error 202: Incompatible return type in function or operation applicat
+ion
+  actual value: RETURN_VAL
+  expected type: ( seq1 of ( nat | seq1 of nat | nil | [] ) | [] )

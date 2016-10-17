@@ -1,0 +1,11 @@
+functions
+
+MUnion: (map nat to nat) * (map nat to nat) -> map nat to nat
+MUnion(m1,m2) ==
+  m1 comp m2
+pre rng m2 subset dom m1
+
+--PO1
+--(forall m1 : (map nat to nat), m2 : (map nat to nat) &
+--   rng (m2) subset dom (m1) =>
+--   rng (m2) subset dom (m1))

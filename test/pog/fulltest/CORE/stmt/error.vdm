@@ -1,0 +1,9 @@
+class ErrorTest
+
+operations
+
+  ErrorOp: () ==>  ()
+  ErrorOp() ==
+    error;
+
+end ErrorTest

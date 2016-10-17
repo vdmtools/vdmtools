@@ -1,0 +1,18 @@
+class A
+
+operations
+
+blo : () ==> seq1 of char
+blo () ==
+( dcl bla : seq of char := "my piece of cake";
+  return bla(4,...,8)
+);
+
+public Test : () ==> seq of ((int | seq1 of (char|int)) | bool) 
+Test () ==
+( dcl bla : seq of char := "my piece of cake",
+      bla0: seq of char := bla(4,...,8);
+  return [blo (), bla0]
+);
+
+end A

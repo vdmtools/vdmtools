@@ -1,0 +1,125 @@
+class FlicsFileController is subclass of RetrofitDatabase
+operations 
+protected  finalize : () ==> <VOID>
+finalize() == 
+( trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          skip 
+        ) ,
+      (isofclass  (Throwable,j2v_exception)) -> 
+        ( dcl   t : [Throwable] := j2v_exception;
+          skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( if  dbConnection <> nil  
+      then  
+        ( let - = dbConnection.close()
+          in 
+            skip ;
+          dbConnection := nil  
+        ) ;
+      let - = RetrofitDatabase`finalize()
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+public  readData : () ==> <VOID>
+readData() == 
+( dcl   query : [String] := nil  ,
+        dbUrl : [String] := retrofitController.getDbUrl();
+  if  dbUrl <> nil  
+  then  
+    ( trap  j2v_exception with  
+        cases  true  : 
+          (isofclass  (SQLException,j2v_exception)) -> 
+            ( dcl   e : [SQLException] := j2v_exception;
+              skip 
+            ) ,
+          (isofclass  (DWDSException,j2v_exception)) -> 
+            ( dcl   dwdsException : [DWDSException] := j2v_exception;
+              let - = errorLog.showExceptionMsgs(dwdsException)
+              in 
+                skip 
+            ) ,
+          others  -> 
+            exit  j2v_exception
+        end  
+      in  
+        ( dbConnection := makeConnection(retrofitController.getDbDriver() , dbUrl , dbUser , dbPassword);
+          ( dcl   stmt : [Statement] := dbConnection.createStatement();
+            query := new  String("SELECT TCTO.TailNo, TCTO.TCTONum, A.Model ")+new  String("FROM   AircraftTCTOs TCTO,")+new  String("Aircraft A ")+new  String("WHERE  TCTO.TailNo = A.TailNo ");
+            ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+              trap  j2v_break with  
+                cases  true  : 
+                  (isofclass  (J2V_Break,j2v_break)) -> 
+                    skip 
+                  
+                end  
+              in  
+                while  queryRS.next() do  
+                ( dcl   tailNumber : [String] := queryRS.getString(1),
+                        retrofit : [String] := queryRS.getString(2),
+                        db : [Database] := Database`getDatabase(),
+                        aircraft : [Aircraft] := db.getAircraftByTailNumber(tailNumber);
+                  let - = retrofitController.addRetrofit(aircraft , retrofit)
+                  in 
+                    skip 
+                ) ;
+              let - = queryRS.close()
+              in 
+                skip ;
+              let - = stmt.close()
+              in 
+                skip 
+            ) 
+          ) 
+        ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  FlicsFileController : () ==> FlicsFileController
+FlicsFileController() == 
+( dbUser := DWDSProperties`getProperty(new  String("db.userid") , new  String("unknown"));
+  dbPassword := DWDSProperties`getProperty(new  String("db.password") , new  String("unknown"))
+) ;
+
+protected  makeConnection : [String] * [String] * [String] * [String] ==> [Connection]
+makeConnection(jdbcDriverName, dbJdbcUrlName, userId, userPassword) == 
+( dcl   dbConnection : [Connection] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (is_ (j2v_exception,[Exception])) -> 
+        ( dcl   initError : [DWDSException] := new  DWDSException(),
+                driverLoadError : [Exception] := j2v_exception;
+          let - = initError.addMessage(DWDSException`ErrorConnectingToDatabase , driverLoadError.getMessage())
+          in 
+            skip ;
+          exit  initError
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( let - = Class.forName(jdbcDriverName).newInstance()
+      in 
+        skip ;
+      dbConnection := DriverManager`getConnection(dbJdbcUrlName , userId , userPassword)
+    ) ;
+  return  dbConnection
+) ;
+
+instance variables 
+  private  dbUser : [String];
+  private  dbPassword : [String];
+  private  errorLog : [ExceptionsFrame] := ExceptionsFrame`getExceptionsFrame();
+  private  dbConnection : [Connection]
+  
+end  FlicsFileController

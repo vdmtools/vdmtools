@@ -1,0 +1,24 @@
+class IsExprTest
+types
+
+  A :: a : nat
+       b : real | bool;
+
+  B::;
+  C = A|B;
+  myt = seq of int;
+
+  D = myt | C
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = is_C(mk_A(33,44.5)) 
+  in skip;
+
+------------------------------------------------------------------------------
+end IsExprTest

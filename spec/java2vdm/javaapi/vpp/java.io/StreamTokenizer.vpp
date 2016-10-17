@@ -1,0 +1,127 @@
+dlclass JavaIoStreamTokenizer is subclass of JavaLangObject
+uselib "j2vdll.so"
+
+values
+  NEWLINE       = J2VUTIL`toInt('\n');
+  BACKSLASH_B   = J2VUTIL`toInt('\b');
+  BACKSLASH_R   = J2VUTIL`toInt('\r');
+  BACKSLASH_T   = J2VUTIL`toInt('\t');
+  DASH          = J2VUTIL`toInt('-');
+  PERIOD        = J2VUTIL`toInt('.');
+  ZERO          = J2VUTIL`toInt('0');
+  THREE         = J2VUTIL`toInt('3');
+  SEVEN         = J2VUTIL`toInt('7');
+  NINE          = J2VUTIL`toInt('9');
+  BACKSLASH     = J2VUTIL`toInt('\\');
+  CHAR_a        = J2VUTIL`toInt('a');
+  CHAR_b        = J2VUTIL`toInt('b');
+  CHAR_f        = J2VUTIL`toInt('f');
+  CHAR_n        = J2VUTIL`toInt('n');
+  CHAR_r        = J2VUTIL`toInt('r');
+  CHAR_t        = J2VUTIL`toInt('t');
+  CHAR_v        = J2VUTIL`toInt('v');
+  CHAR_z        = J2VUTIL`toInt('z');
+  CHAR_A        = J2VUTIL`toInt('A');
+  CHAR_Z        = J2VUTIL`toInt('Z');
+  FORWARD_SLASH = J2VUTIL`toInt('/');
+  STAR          = J2VUTIL`toInt('*');
+  SPACE         = J2VUTIL`toInt(' ');
+  DBL_QUOTE     = J2VUTIL`toInt('"');
+  QUOTE         = J2VUTIL`toInt(''');
+
+  public TT_EOF : int  = -1;
+  public TT_EOL : int  = J2VUTIL`toInt('\n');
+  public TT_NUMBER : int  = -2;
+  public TT_WORD : int  = -3;
+
+operations 
+
+public getTtype : () ==> int
+getTtype() ==
+  is not yet specified;
+
+public getNval : () ==> real
+getNval () ==
+  is not yet specified;
+
+public getSval : () ==> seq of char
+getSval() ==
+  is not yet specified;
+
+public  lineno : () ==> int 
+lineno() == 
+  is not yet specified;
+
+public  pushBack : () ==> ()
+pushBack() == 
+  is not yet specified;
+
+public  toString : () ==> JavaLangString
+toString() == 
+  let str = toSeqOfChar()
+  in return new JavaLangString(str);
+
+public toSeqOfChar : () ==> seq of char
+toSeqOfChar() ==
+  is not yet specified;
+
+public  nextToken : () ==> int 
+nextToken() == 
+  is not yet specified;
+
+public  commentChar : int  ==> ()
+commentChar(-) == 
+  is not yet specified;
+
+public  quoteChar : int  ==> ()
+quoteChar(-) == 
+  is not yet specified;
+
+public  wordChars : int  * int  ==> ()
+wordChars(low_, hi_) == 
+  is not yet specified;
+
+public  ordinaryChar : int  ==> ()
+ordinaryChar(ch) == 
+  is not yet specified;
+
+public  lowerCaseMode : bool  ==> ()
+lowerCaseMode(fl) == 
+  is not yet specified;
+
+public  ordinaryChars : int  * int  ==> ()
+ordinaryChars(low_, hi_) == 
+  is not yet specified;
+
+
+public  eolIsSignificant : bool  ==> ()
+eolIsSignificant(flag) == 
+  is not yet specified;
+
+public  slashStarComments : bool  ==> ()
+slashStarComments(flag) == 
+  is not yet specified;
+
+public  whitespaceChars : int  * int  ==> ()
+whitespaceChars(low_, hi_) == 
+  is not yet specified;
+
+public  slashSlashComments : bool  ==> ()
+slashSlashComments(flag) == 
+  is not yet specified;
+
+public  JavaIoStreamTokenizer : <NIL> ==> JavaIoStreamTokenizer
+JavaIoStreamTokenizer(-) == 
+isNil := true  ;
+
+private JavaIoStreamTokenizer' : seq of char ==> ()
+JavaIoStreamTokenizer'(-) ==
+  is not yet specified;
+
+public JavaIoStreamTokenizer : seq of char ==> JavaIoStreamTokenizer
+JavaIoStreamTokenizer(chars) ==
+( JavaIoStreamTokenizer'(chars);
+)
+
+
+end  JavaIoStreamTokenizer

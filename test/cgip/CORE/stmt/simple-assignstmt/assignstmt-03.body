@@ -1,0 +1,7 @@
+public Test : () ==> seq of char
+Test () ==
+(dcl s : map char to seq of char := {'1' |-> "Hi"};
+ s('1') := "iH";
+ return s('1')
+);
+   

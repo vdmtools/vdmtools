@@ -1,0 +1,92 @@
+class Sort
+
+  instance variables
+    protected data : seq of int
+
+  operations
+
+    public
+    data_init : seq of int ==> ()
+    data_init (l) == 
+      data := l;
+
+    sort_ascending : () ==> ()
+    sort_ascending () == is subclass responsibility;
+
+    sort_descending : () ==> ()
+    sort_descending () == is subclass responsibility
+
+end Sort
+
+class MergeSort is subclass of Sort
+
+
+operations
+  public
+  sort_ascending : () ==> ()
+  sort_ascending()  ==
+    data := MergeSorter(data)
+
+functions
+
+  MergeSorter: seq of real -> seq of real
+  MergeSorter(l) ==
+    cases l:
+      []      -> l,
+      [e]     -> l,
+      others  -> let l1^l2 in set {l} be st abs (len l1 - len l2) < 2
+                 in
+                   let l_l = MergeSorter(l1),
+                       l_r = MergeSorter(l2) in
+                    Merge(l_l, l_r)
+    end;
+
+  Merge: seq of int * seq of int -> seq of int
+  Merge(l1,l2) ==
+    cases mk_(l1,l2):
+      mk_([],l),mk_(l,[]) -> l,
+      others              -> if hd l1 <= hd l2 then 
+                               [hd l1] ^ Merge(tl l1, l2)
+                             else
+                               [hd l2] ^ Merge(l1, tl l2)
+    end
+  pre forall i in set inds l1 & l1(i) >= 0 and
+      forall i in set inds l2 & l2(i) >= 0
+
+
+
+
+end MergeSort
+
+
+class SelectionSort is subclass of Sort
+
+  functions
+
+    min_index : seq1 of nat -> nat
+    min_index(l) ==
+      if len l = 1
+      then 1
+      else let mi = min_index(tl l)
+           in if l(mi+1) < hd l
+              then mi+1
+              else 1
+
+  operations
+
+    sort_ascending : () ==> ()
+    sort_ascending () == SelectionSorter(1);
+
+    SelectionSorter : nat ==> ()
+    SelectionSorter (i) ==
+      if i < len data
+      then (dcl temp: nat;
+            dcl mi : nat := min_index(data(i,...,len data)) + i - 1;
+         
+            temp := data(mi);
+            data(mi) := data(i);
+            data(i) := temp;
+            SelectionSorter(i+1)
+           )
+
+end SelectionSort

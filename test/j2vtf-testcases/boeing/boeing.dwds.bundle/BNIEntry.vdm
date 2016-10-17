@@ -1,0 +1,110 @@
+class BNIEntry is subclass of Object
+operations 
+public  hashCode : () ==> int 
+hashCode() == 
+( return  bsKey.hashCode()
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( dcl   outStr : [StringBuffer] := new  StringBuffer(new  String("BNIEntry<Bundle:"));
+  let - = outStr.append(getBundleNumber())
+  in 
+    skip ;
+  let - = outStr.append(new  String(",NodeId:"))
+  in 
+    skip ;
+  let - = outStr.append(getNodeId())
+  in 
+    skip ;
+  let - = outStr.append(new  String(",Type:"))
+  in 
+    skip ;
+  let - = outStr.append(getNodeType())
+  in 
+    skip ;
+  let - = outStr.append(new  String(",Connections:"))
+  in 
+    skip ;
+  ( dcl   conns : [Enumeration] := BNIEntry`getConnections();
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip 
+        
+      end  
+    in  
+      while  conns.hasMoreElements() do  
+      ( dcl   mate : [BNIEntry] := conns.nextElement();
+        let - = outStr.append(mate.getNodeType()+new  String("/"))
+        in 
+          skip ;
+        let - = outStr.append(Integer`toString(mate.getNodeId()))
+        in 
+          skip ;
+        if  conns.hasMoreElements()
+        then  
+          ( let - = outStr.append(new  String(","))
+            in 
+              skip 
+          ) 
+      ) ;
+    let - = outStr.append(new  String(">"))
+    in 
+      skip ;
+    return  outStr.toString()
+  ) 
+) ;
+
+public  getBNIKey : () ==> [BNIKey]
+getBNIKey() == 
+( return  bsKey
+) ;
+
+public  getNodeId : () ==> int 
+getNodeId() == 
+( return  bsKey.getNodeId()
+) ;
+
+public  getNodeType : () ==> [String]
+getNodeType() == 
+( return  bsKey.getNodeType()
+) ;
+
+public  getConnections : () ==> [Enumeration]
+getConnections() == 
+( return  connections.elements()
+) ;
+
+public  getBundleNumber : () ==> [String]
+getBundleNumber() == 
+( return  bundleNumber
+) ;
+
+public  equals : [Object] ==> bool 
+equals(entry) == 
+( return  (is_ (entry,[BNIEntry]) and  getBNIKey().equals((def l_9 :  BNIEntry = (entry)
+  in l_9).getBNIKey()))
+) ;
+
+public  addConnection : [BNIEntry] ==> <VOID>
+addConnection(matingConnection) == 
+( let - = connections.addElement(matingConnection)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  BNIEntry : [String] * int  * [String] ==> BNIEntry
+BNIEntry(bundleNumber, nodeId, nodeType) == 
+( BNIEntry`bundleNumber := bundleNumber;
+  BNIEntry`bsKey := new  BNIKey(nodeId , nodeType);
+  BNIEntry`connections := new  Vector()
+) ;
+
+instance variables 
+  private  bundleNumber : [String];
+  private  bsKey : [BNIKey];
+  private  connections : [Vector]
+  
+end  BNIEntry

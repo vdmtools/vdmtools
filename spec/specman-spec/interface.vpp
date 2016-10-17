@@ -1,0 +1,112 @@
+\begin{vdm_al}
+class Interface is subclass of ProjectTypes
+
+operations
+
+public Log: String ==> ()
+  Log (msg) ==
+    is subclass responsibility;
+
+public Error: String ==> ()
+  Error (msg) ==
+    is subclass responsibility;
+
+public InterpreterLog : String ==> ()
+  InterpreterLog(msg) ==
+    is subclass responsibility;
+
+  -- 
+  -- ExecuteMainLoop is used by the debugger in BaseTools
+  -- to call back to the main loop when the interpretation
+  -- stops at a break point.
+  --
+
+public ExecuteMainLoop: () ==> ()
+  ExecuteMainLoop () ==
+    is subclass responsibility;
+\end{vdm_al}
+$ExecuteMainLoop$ is used by the debugger in BaseTools
+to call back to the main loop when the interpretation
+stops at a break point.
+
+\begin{vdm_al}
+
+public GetBtSeq:() ==> token|int
+  GetBtSeq() ==
+    is not yet specified;
+
+public SetBtSeq: token|int ==> ()
+  SetBtSeq(dummy) ==
+    is not yet specified;
+
+  --
+  -- CallBack is used by BaseTools when when parts of the interface 
+  -- must be changed or updated. E.g. when a break-point is set or 
+  -- deleted in the command window.
+  --
+
+public CallBack: CallBackCommand ==> ()
+  CallBack (cmd) ==
+    is subclass responsibility;
+
+\end{vdm_al}
+The following five functions handle the display of a progress meter.
+
+Call {\em InitMeter} to create and initialize a new meter; the default
+total number of steps is 100, corresponding to a percentage.,
+\begin{vdm_al}
+
+public InitMeter: String * String ==> ()
+  InitMeter (title, label) ==
+    skip;
+\end{vdm_al}
+
+To set a total other than the default, use {\em SetMeterTotal}:
+\begin{vdm_al}
+public SetMeterTotal : real ==> ()
+  SetMeterTotal(pct) ==
+    skip;
+\end{vdm_al}
+
+{\em IncrementMeter} updates the progress meter by one unit, without
+affecting the title or label.
+\begin{vdm_al}
+public IncrementMeter : [String] ==> ()
+  IncrementMeter(-) ==
+    skip;
+\end{vdm_al}
+
+Alternatively, {\em UpdateMeter} updates the progress to be value {\em
+pct} and also modifies the label.
+\begin{vdm_al}
+public UpdateMeter: real * String ==> ()
+  UpdateMeter (pct, label) ==
+    skip;
+\end{vdm_al}
+
+When finished with, the meter may be cleaned up using {\em DestroyMeter}. 
+\begin{vdm_al}
+public DestroyMeter: () ==> ()
+  DestroyMeter () ==
+    skip;
+\end{vdm_al}
+
+The following operations has to do with the Stop button in the gui interpreter. 
+\begin{vdm_al}
+public EnableUserInput: () ==> ()
+  EnableUserInput () ==
+    skip;
+
+public DisableUserInput: () ==> ()
+  DisableUserInput () ==
+    skip;
+
+public RefreshInterface: () ==> ()
+  RefreshInterface () ==
+    skip
+
+end Interface
+\end{vdm_al}
+$CallBack$ is used by BaseTools when when parts of the interface 
+must be changed or updated. E.g. when a break-point is set or 
+deleted in the command window.

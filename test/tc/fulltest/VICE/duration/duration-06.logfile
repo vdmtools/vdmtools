@@ -1,0 +1,7 @@
+req ->                 Op: A`Test  Obj: 2  Class: A  @ 2
+act ->                 Op: A`Test  Obj: 2  Class: A  @ 2
+req ->                 Op: A`op  Obj: 2  Class: A  @ 2
+act ->                 Op: A`op  Obj: 2  Class: A  @ 2
+fin ->                 Op: A`op  Obj: 2  Class: A  @ 22
+fin ->                 Op: A`Test  Obj: 2  Class: A  @ 26
+ThreadSwapOut ->       ThreadId: 1  Obj: nil  Class: nil  @ 28

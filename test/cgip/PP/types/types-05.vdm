@@ -1,0 +1,35 @@
+class A
+
+-- This is generating an interface B and
+--     B
+--    / \
+--   C   D
+-- 
+-- But misses the interface A - B
+
+-- So the proper result is:
+--     A
+--     |
+--     B
+--    / \
+--   C   D
+-- This generates problems in compiling Java and Runtime errors.
+
+types 
+
+public TypeA = TypeB;
+
+public TypeB = TypeC | TypeD;
+
+public TypeC :: cTypeC : nat;
+
+public TypeD :: cTypeD : nat;
+
+operations
+
+public
+Test : () ==> nat
+Test () == return 1;
+
+
+end A

@@ -1,0 +1,87 @@
+/*
+テストグループ
+	Integerのテスト
+関連 UC
+	なし
+作成者
+佐原伸
+*/
+class IntegerT is subclass of TestDriver
+functions
+tests : () -> seq of TestCase
+tests () == 
+	[ new IntegerT01(), new IntegerT02()
+	];
+end IntegerT
+---------------------------------------
+/*
+シナリオID
+	整数文字列変換。
+親UseCase
+	なし
+内容
+	整数を文字列に変換する。
+*/
+class IntegerT01 is subclass of TestCase
+operations 
+protected test: () ==> bool
+test() == 
+	let	i = new Integer()		in
+	return
+		(i.asString(1234567890) = "1234567890" and
+		i.asString(-1234567890) = "-1234567890" and
+		i.asStringZ("zzz9")(9900) = "9900" and
+		i.asStringZ("9")(0) = "0" and
+		i.asStringZ("z")(0) = " " and
+		i.asStringZ("z")(9) = "9" and
+		i.asStringZ("zzz9")(9) = "   9" and
+		i.asStringZ("0009")(9) = "0009" and
+		i.asStringZ("-0009")(9) = "0009" and
+		i.asStringZ("-zzz9")(-9999) = "-9999" and
+		i.asStringZ("-zzz9")(-9) = "-   9" and
+		i.asStringZ("zzz9")(-9999) = "9999" and
+		i.asStringZ("zzz9")(-9) = "   9" and
+		i.asString(0) = "0" and
+		i.asChar(0) = "0" and 
+		i.asChar(1) = "1" and
+		i.asChar(2) = "2" and
+		i.asChar(3) = "3" and
+		i.asChar(4) = "4" and 
+		i.asChar(5) = "5" and 
+		i.asChar(6) = "6" and
+		i.asChar(7) = "7" and
+		i.asChar(8) = "8" and
+		i.asChar(9) = "9" and
+		i.asChar(10) = false
+		)
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "IntegerT01:\t整数文字列変換";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end IntegerT01
+---------------------------------------
+/*
+シナリオID
+	最大公約数と最小公倍数を求める。
+親UseCase
+	なし
+内容
+	最大公約数と最小公倍数を求める。
+*/
+class IntegerT02 is subclass of TestCase
+operations 
+protected test: () ==> bool
+test() == 
+	let	gcd = Integer`最大公約数(24),
+		lcm = Integer`最小公倍数(7)
+	in
+	return
+		Sequence`fmap[nat, nat](gcd)([36, 48, 16]) = [12, 24, 8]  and
+		Sequence`fmap[nat, nat](lcm)([3, 4, 5]) = [21, 28, 35]
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "IntegerT02:\t最大公約数と最小公倍数を求める";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end IntegerT02

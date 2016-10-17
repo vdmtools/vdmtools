@@ -1,0 +1,16 @@
+class TYPE
+types
+
+  A = nat -> bool
+  inv f == true;
+
+  B = real -> bool | A
+  inv g == false
+
+functions
+
+  f : A | B +> bool | B
+  f(a) ==
+   a(99);
+
+end TYPE

@@ -1,0 +1,284 @@
+class Sensor
+types
+public MissileType = <MissileA> | <MissileB> | <MissileC> | <None>;
+instance variables
+io : SensorIO := new SensorIO().Init();
+missileValue : [MissileType|<Consumed>] := io.readMissileValue();
+operations
+public SetMissileValue : () ==> ()
+SetMissileValue() ==
+missileValue := io.readMissileValue();
+public ReadMissileValue : () ==> [MissileType]
+ReadMissileValue() ==
+return missileValue;
+public IsFinished : () ==> bool
+IsFinished() == return missileValue = nil;
+public GetMissileValue : () ==> [MissileType]
+GetMissileValue() ==
+let orgMissileValue = missileValue in
+(if missileValue <> nil
+then missileValue := <Consumed>;
+return orgMissileValue);
+end Sensor
+class MissileDetector
+instance variables
+sensorRef : Sensor;
+flareControlRef : FlareController;
+missileValue : [Sensor`MissileType] := <None>;
+timerRef : Timer
+operations
+public Init : Sensor * FlareController * Timer ==> ()
+Init (newSensor, newFlareController, newTimer) ==
+(sensorRef := newSensor;
+flareControlRef := newFlareController;
+timerRef := newTimer
+);
+public Step : () ==> ()
+Step() ==
+let newMissileValue = sensorRef.GetMissileValue() in
+Update(newMissileValue);
+Update : [Sensor`MissileType] ==> ()
+Update(newMissileType) ==
+(if newMissileType <> <None>
+then
+(missileValue := newMissileType;
+flareControlRef.MissileIsHere(missileValue);
+if missileValue <> nil
+then timerRef.Interrupt();
+)
+);
+public IsFinished : () ==> bool
+IsFinished() == return missileValue = nil;
+end MissileDetector
+class FlareController
+types
+Plan = seq of PlanStep;
+public PlanStep = FlareType * nat;
+public FlareType = <FlareOneA> | <FlareTwoA> | <FlareOneB> |
+<FlareTwoB> | <FlareOneC> | <FlareTwoC> |
+<DoNothingA> | <DoNothingB> | <DoNothingC>;
+instance variables
+missileDetectorRef : MissileDetector;
+timerRef : Timer;
+currentMissileValue : [Sensor`MissileType] := <None>;
+currentStep : nat := 0;
+fresh : bool := false;
+latestMissileValue : Sensor`MissileType := <None>;
+outputSequence : seq of (FlareType * nat) := [];
+numberOfFreshValues : nat := 0;
+noMoreMissiles : bool := false;
+values
+responseDB : map Sensor`MissileType to Plan =
+	{ <MissileA> |-> [ mk_(<FlareOneA>,900), mk_(<FlareTwoA>,500),
+	mk_(<DoNothingA>,100), mk_(<FlareOneA>,500)],
+	<MissileB> |-> [ mk_(<FlareTwoB>,500), mk_(<FlareTwoB>,700)],
+	<MissileC> |-> [ mk_(<FlareOneC>,400), mk_(<DoNothingC>,100),
+	mk_(<FlareTwoC>,400), mk_(<FlareOneC>,500)]
+	} ;
+missilePriority : map Sensor`MissileType to nat = 
+	{ <MissileA> |-> 1,
+	<MissileB> |-> 2,
+	<MissileC> |-> 3,
+	<None> |-> 0 }
+	
+operations
+public Init : MissileDetector * Timer ==> ()
+Init(initMissileDetector, initTimerRef) ==
+(missileDetectorRef := initMissileDetector;
+timerRef := initTimerRef;
+);
+public Step : () ==> ()
+Step() ==
+( if timerRef.CheckAwake()
+then (
+StepAlgorithm();
+if currentMissileValue = nil
+then noMoreMissiles := true
+elseif currentMissileValue <> <None>
+then let mk_(-, delay_val) =
+responseDB(currentMissileValue)(currentStep-1)
+in timerRef.Alarm(delay_val)
+)
+);
+StepAlgorithm : () ==> ()
+StepAlgorithm() ==
+(if fresh
+then (
+fresh := false;
+CheckFreshData();
+);
+StepPlan()
+);
+operations
+CheckFreshData : () ==> ()
+CheckFreshData() ==
+(if HigherPriority(latestMissileValue,
+currentMissileValue)
+then StartPlan(latestMissileValue);
+latestMissileValue := <None>;
+numberOfFreshValues := numberOfFreshValues + 1;
+);
+HigherPriority : Sensor`MissileType *
+Sensor`MissileType ==> bool
+HigherPriority(latest, current) ==
+return missilePriority(latest) > missilePriority(current);
+StartPlan : Sensor`MissileType ==> ()
+StartPlan(newMissileValue) ==
+(currentMissileValue := newMissileValue;
+currentStep := 1
+);
+ReleaseAFlare : FlareType ==> ()
+ReleaseAFlare(ft) ==
+outputSequence := outputSequence ^[mk_(ft,timerRef.GetTime())];
+StepPlan : () ==> ()
+StepPlan() ==
+if currentStep <= len responseDB(currentMissileValue)
+then
+(let mk_(flare, -) = responseDB(currentMissileValue)(currentStep)
+in ReleaseAFlare(flare);
+currentStep := currentStep + 1
+)
+else (currentMissileValue := <None>;
+currentStep := 0
+);
+public IsFinished : () ==> bool
+IsFinished() == return currentStep = 0 and noMoreMissiles;
+public GetResult : () ==> seq of (FlareType * nat)
+GetResult() == return outputSequence;
+public MissileIsHere : [Sensor`MissileType] ==> ()
+MissileIsHere(newMissileValue) ==
+	( if newMissileValue not in set { <None>, nil } then fresh := true;
+	if newMissileValue = nil
+	then noMoreMissiles := true
+	else latestMissileValue := newMissileValue;
+	);
+end FlareController
+
+class Timer
+instance variables
+currentTime : nat := 0;
+currentAlarm : [nat] := nil;
+values
+stepLength : nat = 100;
+operations
+public Alarm : nat ==> ()
+Alarm(n) ==
+SetAlarm(n);
+public CheckAwake : () ==> bool
+CheckAwake() ==
+return currentAlarm = nil or
+currentAlarm <= currentTime;
+public StepTime : () ==> ()
+StepTime() ==
+currentTime := currentTime + stepLength;
+public GetTime : () ==> nat
+GetTime() ==
+return currentTime;
+SetAlarm : nat ==> ()
+SetAlarm(n) ==
+currentAlarm := currentTime + n;
+public Interrupt : () ==> ()
+Interrupt() == currentAlarm := nil;
+end Timer
+class World
+instance variables
+sensor : Sensor := new Sensor();
+detector : MissileDetector := new MissileDetector();
+flareControl : FlareController := new FlareController();
+timerRef : Timer := new Timer();
+inputVals : seq of ([Sensor`MissileType] * nat) := [];
+operations
+public Run : () ==> (seq of (FlareController`FlareType * nat)) *
+(seq of ([Sensor`MissileType] * nat))
+Run() ==
+(detector.Init(sensor,flareControl,timerRef);
+flareControl.Init(detector,timerRef);
+while not (sensor.IsFinished() and detector.IsFinished() and
+flareControl.IsFinished()) do
+( inputVals := inputVals ^
+[mk_(sensor.ReadMissileValue(), timerRef.GetTime())];
+if not detector.IsFinished() then detector.Step();
+if not flareControl.IsFinished() then flareControl.Step();
+timerRef.StepTime();
+if not sensor.IsFinished() then sensor.SetMissileValue();
+);
+return mk_(flareControl.GetResult(), inputVals)
+)
+end World
+class IO
+-- IFAD VDMTools STANDARD LIBRARY: INPUT/OUTPUT
+-- --------------------------------------------
+--
+-- Standard library for the VDMTools Interpreter. When the interpreter
+-- evaluates the preliminary functions/operations in this file,
+-- corresponding internal functions is called instead of issuing a run
+-- time error. Signatures should not be changed, as well as name of
+-- module (IFAD VDM-SL) or class (VDM++). Pre/post conditions is
+-- fully user customisable.
+--
+-- Note VDM++: Polymorphic functions are protected. In order to call
+-- these functions you should:
+-- 1: Either make the standard library class called IO superclass of all
+-- classes, or
+-- 2: Make a subclass of the standard library class and define
+-- an operation that calls the polymorphic function. This operation
+-- should then be called elsewhere in the specification.
+-- The in/out functions will return false if an error occurs. In this
+-- case an internal error string will be set (see 'ferror').
+types
+public filedirective = <start>|<append>
+functions
+-- Write VDM value in ASCII format to std out:
+public writeval[@p]: @p -> bool
+writeval(val)==
+is not yet specified;
+-- Write VDM value in ASCII format to file.
+-- fdir = <start> will overwrite existing file,
+-- fdir = <append> will append output to the file (created if
+-- not existing).
+public fwriteval[@p]:seq1 of char * @p * filedirective -> bool
+fwriteval(filename,val,fdir) ==
+is not yet specified;
+-- Read VDM value in ASCII format from file
+public freadval[@p]:seq1 of char -> bool * [@p]
+freadval(f) ==
+is not yet specified
+post let mk_(b,t) = RESULT in not b => t = nil;
+operations
+-- Write text to std out. Surrounding double quotes will be stripped,
+-- backslashed characters should be interpreted.
+public echo: seq of char ==> bool
+echo(text) ==
+fecho ("",text,nil);
+-- Write text to file like 'echo'
+public fecho: seq of char * seq of char * [filedirective] ==> bool
+fecho (filename,text,fdir) ==
+is not yet specified
+pre filename = "" <=> fdir = nil;
+-- The in/out functions will return false if an error occur. In this
+-- case an internal error string will be set. 'ferror' returns this
+-- string and set it to "".
+public ferror:() ==> seq of char
+ferror () ==
+is not yet specified
+end IO
+class SensorIO is subclass of IO
+instance variables
+curIndex : nat := 0;
+mvList : seq of Sensor`MissileType := [];
+operations
+public Init : () ==> SensorIO
+Init() ==
+( let mk_(-,list) = freadval[seq1 of Sensor`MissileType]("scenario.txt")
+in
+mvList := list;
+curIndex := 1;
+return self
+);
+public readMissileValue : () ==> [Sensor`MissileType]
+readMissileValue() ==
+if curIndex <= len mvList
+then (curIndex := curIndex + 1;
+return mvList(curIndex-1))
+else return nil;
+end SensorIO

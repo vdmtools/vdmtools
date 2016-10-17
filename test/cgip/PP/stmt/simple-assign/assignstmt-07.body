@@ -1,0 +1,14 @@
+class A
+
+instance variables
+
+a : nat;
+
+operations
+
+public  Test: () ==> nat
+  Test() ==
+   (a := 8;
+    return a);
+
+end A

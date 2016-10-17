@@ -1,0 +1,29 @@
+class C
+
+instance variables
+
+i : nat := 0
+
+operations
+
+public Set : nat ==> ()
+Set(j) ==
+  i := j
+
+end C
+
+class B
+
+operations
+
+Op:() ==> ()
+Op() ==
+  (let c = new C() in
+   c.Set(1));
+
+public Test : () ==> nat
+Test() ==
+  (Op();
+   return 1)
+
+end B

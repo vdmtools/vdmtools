@@ -1,0 +1,32 @@
+class A
+
+
+types
+   Rec ::
+     entry1 : Rec | MyRec
+     entry2 : nat;
+
+
+   MyRec ::
+     e1 : nat
+     e2 : seq of nat | seq of int;
+
+instance variables 
+  a1 : Rec := mk_Rec(mk_MyRec(3, []),3);
+  a2 : Rec := mk_Rec(mk_MyRec(34, []),34);
+
+operations
+
+  public Test : () ==> real
+  Test() ==
+  ( dcl res : real;
+    a2.entry1 := a1;
+    a2.entry2 := 3;
+    return a2.entry2
+  )
+
+end A
+
+class B
+
+end B

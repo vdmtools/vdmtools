@@ -1,0 +1,15 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> nat  
+Test () ==
+  let a : nat be st a > 5 in
+    return a
+
+end A

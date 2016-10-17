@@ -1,0 +1,2 @@
+The generated code and the interpreter evaluates to different results,
+due to different scope rules. This problem MUST be resolved ASAP.

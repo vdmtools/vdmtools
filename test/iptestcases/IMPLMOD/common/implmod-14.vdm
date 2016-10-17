@@ -1,0 +1,132 @@
+{\small\sf dlmodule} $C$
+\begin{interface}{exports}
+\begin{modulesignature}{operations}
+Place:\Int  \X \Int  \Oto (), \\
+Rotate:\Lp \Int  \X \Int  \Rp  \X \Real  \Oto \Int  \X \Int 
+\end{modulesignature}
+\end{interface}
+\begin{expr}
+\kw{uselib }\Dquote libio14.so \Dquote \end{expr}
+{\small\sf end} {\it C}
+
+{\small\sf dlmodule} $B$
+\begin{interface}{exports}
+\begin{modulesignature}{values}
+ExtPI:\Real 
+\end{modulesignature}
+\begin{modulesignature}{functions}
+ExtCos:\Real  \To \Real 
+\end{modulesignature}
+\begin{modulesignature}{operations}
+ExtSin:\Real  \Oto \Real 
+\end{modulesignature}
+\end{interface}
+\begin{expr}
+\kw{uselib }\Dquote libmath.so \Dquote \end{expr}
+{\small\sf end} {\it B}
+
+{\small\sf module} $APPROX$
+\begin{interface}{exports}
+\kw{all}
+\end{interface}
+\kDefinitions
+\kValues
+\val{Rotate}{\map{\seq{\reccons{\kw{mk-}}{1,0},90} \Mapsto \reccons{\kw{mk-}}{0,1}, \\
+\seq{\reccons{\kw{mk-}}{3,4},180} \Mapsto \reccons{\kw{mk-}}{ \Uminus 3, \Uminus 4}};}
+\val{ExtPI}{\map{\seq{} \Mapsto 3.141590};}
+\val{ExtCos}{\map{\seq{0.500000} \Mapsto 0.877000,\seq{3.140000} \Mapsto  \Uminus 1,\seq{0.785000} \Mapsto 0.707000};}
+\val{ExtSin}{\map{\seq{0.500000} \Mapsto 0.479000,\seq{3.140000} \Mapsto 0,\seq{0.785000} \Mapsto 0.707000}}
+{\small\sf end} {\it APPROX}
+
+{\small\sf module} $JOKER$
+\begin{interface}{imports}
+\begin{from}{B}
+\begin{modulesignature}{functions}
+ExtCos:\Real  \To \Real 
+\end{modulesignature}
+\begin{modulesignature}{operations}
+ExtSin:\Real  \Oto \Real 
+\end{modulesignature}
+\end{from}
+\end{interface}
+\begin{interface}{exports}
+\begin{modulesignature}{operations}
+Dummy:() \Oto (), \\
+Joke:\Real  \X \Real  \Oto \Real 
+\end{modulesignature}
+\end{interface}
+\kDefinitions
+\kOperations
+\begin{op}[e]{Joke}%
+\signature{\Real  \X \Real  \Oto \Real }
+\parms{a,b}
+\annlab[o]{JOKER`Joke}
+\If \pex{a < b}
+\Then \\
+\call{B`ExtSin}{a}
+\Else \\
+\return{\fnapply{B`ExtCos}{b}}
+\Fi;
+\end{op}
+\begin{op}[e]{Dummy}%
+\signature{() \Oto ()}
+\parms{}
+\annlab[o]{JOKER`Dummy}
+\Skip 
+\end{op}
+{\small\sf end} {\it JOKER}
+
+{\small\sf module} $A$
+\begin{interface}{imports}
+\begin{from}{APPROX}
+\kw{all}
+\end{from}
+\begin{from}{B}
+\begin{modulesignature}{values}
+ExtPI:\Real \ \kw{renamed}\ PI
+\end{modulesignature}
+\begin{modulesignature}{functions}
+ExtCos:\Real  \To \Real \ \kw{renamed}\ MyCos
+\end{modulesignature}
+\begin{modulesignature}{operations}
+ExtSin:\Real  \Oto \Real 
+\end{modulesignature}
+\end{from}
+\begin{from}{C}
+\begin{modulesignature}{operations}
+Place:\Int  \X \Int  \Oto ()\ \kw{renamed}\ Place; \\
+Rotate:\Lp \Int  \X \Int  \Rp  \X \Real  \Oto \Int  \X \Int \ \kw{renamed}\ Rotate
+\end{modulesignature}
+\end{from}
+\begin{from}{JOKER}
+\begin{modulesignature}{operations}
+Joke:\Real  \X \Real  \Oto \Real \ \kw{renamed}\ Joke
+\end{modulesignature}
+\end{from}
+\end{interface}
+\begin{interface}{exports}
+\kw{all}
+\end{interface}
+\kDefinitions
+\kOperations
+\begin{op}[e]{Test}%
+\signature{() \Oto \seqof*{\Opt{\Real  | \Lp \Int  \X \Int  \Rp }}}
+\parms{}
+\annlab[o]{A`Test}
+\begin{blockstmt}
+\call{Place}{1,2} ; \\
+\return{\seq{PI,\fnapply{CircCyl-Vol}{2,2,0.785000},\fnapply{MyCos}{0.785000}, \\
+\fnapply{Joke}{0.500000,3.140000},\fnapply{Rotate}{\reccons{\kw{mk-}}{3,4},180}}}
+\end{blockstmt};
+\end{op}
+\begin{op}[e]{CircCyl-Vol}%
+\signature{\Real  \X \Real  \X \Real  \Oto \Real }
+\parms{r,h,a}
+\annlab[o]{A`CircCyl-Vol}
+\begin{letstmt}
+\patdef{pi}{PI}
+\end{letstmt} \\
+\return{\pex{pi \X r \X r \X h \X \fnapply{B`ExtSin}{a}}}
+\end{op}
+{\small\sf end} {\it A}
+

@@ -1,0 +1,21 @@
+class A
+
+operations
+
+public Test : () ==> nat
+Test() ==
+  (dcl s : Shared := new Shared(),
+       b1 : B := new B(),
+       b2 : B := new B();
+   s.Init({});
+   b1.Init(s,"b1");
+   b2.Init(s,"b2");
+   start(b1);
+   start(b2);
+   s.SetJoin(2);
+   s.join();
+   s.notify();
+   s.IsFinished();
+   return 1)
+
+end A

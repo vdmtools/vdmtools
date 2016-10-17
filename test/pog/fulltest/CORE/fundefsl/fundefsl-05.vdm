@@ -1,0 +1,13 @@
+class A
+        
+types
+        R = real
+        inv r == r < 10;
+       
+functions
+        a: int -> R
+        a(x) == is not yet specified
+        pre x < 10
+        post RESULT > 10;
+
+end A 

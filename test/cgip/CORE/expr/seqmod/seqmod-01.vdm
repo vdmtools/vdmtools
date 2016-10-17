@@ -1,0 +1,15 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of (real|<ONE>)  
+Test () ==
+return 
+        [ 2, 6, <ONE>] ++ { 2 |-> 9} 
+
+end A

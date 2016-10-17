@@ -1,0 +1,147 @@
+class NodePlacement is subclass of Object
+operations 
+public  packNodes : () ==> <VOID>
+packNodes() == 
+is subclass responsibility ;
+
+public  plotNodes : () ==> <VOID>
+plotNodes() == 
+is subclass responsibility ;
+
+public  NodePlacement : () ==> NodePlacement
+NodePlacement() == 
+( nodePlotCount := 0;
+  return  
+) ;
+
+protected  selectNextNode : () ==> [GraphNode]
+selectNextNode() == 
+( dcl   highNode : [GraphNode] := nil  ,
+        myNode : [GraphNode],
+        highScore : int  := -1,
+        lowIndex : int  := Integer.MAX_VALUE,
+        myIndex : int ,
+        myScore : int ;
+  ( dcl   idx : int  := nodePlotCount;
+    while  idx < graphLayout.size() do  
+    ( myNode := graphLayout.elementAt(idx);
+      myScore := myNode.calculateScore();
+      if  connectionPlotted(myNode)
+      then  
+        ( if  myNode.getNode().hasAMate()
+          then  
+            ( myIndex := 1
+            ) 
+          else  
+            ( myIndex := 0
+            ) 
+        ) 
+      else  
+        ( if  myNode.getNode().hasAMate()
+          then  
+            ( myIndex := 3
+            ) 
+          else  
+            ( myIndex := 2
+            ) 
+        ) ;
+      if  myIndex < lowIndex or  (myIndex = lowIndex and  myScore > highScore)
+      then  
+        ( lowIndex := myIndex;
+          highScore := myScore;
+          highNode := myNode
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  highNode
+) ;
+
+protected  moreNodesToPlot : () ==> bool 
+moreNodesToPlot() == 
+( return  (nodePlotCount < graphLayout.size())
+) ;
+
+private  connectionPlotted : [GraphNode] ==> bool 
+connectionPlotted(graphNode) == 
+( return  getNodeConnection(graphNode , 1) <> nil  
+) ;
+
+protected  getNodeConnection : [GraphNode] * int  ==> [Point]
+getNodeConnection(graphNode, connectIndex) == 
+( dcl   nodeConnection : [Point] := nil  ,
+        plottedNode : [GraphNode] := nil  ,
+        nodeConnections : [Vector] := graphNode.getConnections(),
+        connectionsFound : int  := 0;
+  ( dcl   idx : int  := 0;
+    while  idx < nodePlotCount and  nodeConnection = nil   do  
+    ( plottedNode := graphLayout.elementAt(idx);
+      if  nodeConnections.contains(plottedNode.getNode())
+      then  
+        ( connectionsFound := connectionsFound+1;
+          if  connectionsFound = connectIndex
+          then  
+            ( nodeConnection := plottedNode.getCoordinates()
+            ) 
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  nodeConnection
+) ;
+
+protected  setMateDominance : [GraphNode] * [GraphNode] ==> <VOID>
+setMateDominance(childNode, parentNode) == 
+( dcl   childPins : [Vector] := childNode.getNode().getPinList(),
+        childRefDes : [RefDes] := childNode.getNode().getRefDes(),
+        childMate : [RefDes] := childRefDes.getMate(),
+        parentPins : [Vector] := parentNode.getNode().getPinList(),
+        parentRefDes : [RefDes] := parentNode.getNode().getRefDes(),
+        parentMate : [RefDes] := parentRefDes.getMate();
+  if  childNode.getColumn() < parentNode.getColumn()
+  then  
+    ( if  graphLayout.nodesConnected(childRefDes , childPins , parentRefDes , parentPins) or  graphLayout.nodesConnected(childRefDes , childPins , parentMate , parentPins)
+      then  
+        ( let - = childRefDes.setDominantMate(false  )
+          in 
+            skip ;
+          let - = childMate.setDominantMate(true  )
+          in 
+            skip 
+        ) 
+      else  
+        ( let - = childRefDes.setDominantMate(true  )
+          in 
+            skip ;
+          let - = childMate.setDominantMate(false  )
+          in 
+            skip 
+        ) 
+    ) 
+  else  
+    ( if  graphLayout.nodesConnected(childRefDes , childPins , parentRefDes , parentPins) or  graphLayout.nodesConnected(childRefDes , childPins , parentMate , parentPins)
+      then  
+        ( let - = childRefDes.setDominantMate(true  )
+          in 
+            skip ;
+          let - = childMate.setDominantMate(false  )
+          in 
+            skip 
+        ) 
+      else  
+        ( let - = childRefDes.setDominantMate(false  )
+          in 
+            skip ;
+          let - = childMate.setDominantMate(true  )
+          in 
+            skip 
+        ) 
+    ) ;
+  return  
+) ;
+
+instance variables 
+  protected  static graphLayout : [GraphLayout] := GraphLayout.getGraphLayout();
+  protected  nodePlotCount : int 
+  
+end  NodePlacement

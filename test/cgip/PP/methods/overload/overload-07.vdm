@@ -1,0 +1,61 @@
+class StdLib
+types
+public String = seq of char;
+
+functions
+-------------------------------------
+-- Convert a bool to a String
+-------------------------------------
+public static ToString[@T]: @T -> String
+  ToString (pval) ==
+    if is_bool(pval) then if pval then "true" else "false"
+    elseif is_int(pval) 
+    then let result : int = pval mod 10,
+             rest : int = pval div 10
+         in if rest > 0 then
+               ToString[@T](rest) ^ GetStringFromNum(result)
+            else GetStringFromNum(result)
+    else ""
+pre is_int(pval) => pval >= 0
+post true;
+
+-------------------------------------
+-- Convert a int to a String
+-------------------------------------
+public static ToString[@T1,@T2] : @T1 * @T2 -> String
+ToString(val1,val2) ==
+  ToString[@T1](val1) ^ ToString[@T2](val2)
+pre pre_ToString[@T1](val1) and pre_ToString[@T2](val2)
+post true;
+
+-------------------------------------
+-- Convert a int < 10 to a String
+-------------------------------------
+public static GetStringFromNum : int  -> String --| nat | real
+GetStringFromNum(val) ==
+(  cases val:
+     0 ->  "0",
+     1 ->  "1",
+     2 ->  "2",
+     3 ->  "3",
+     4 ->  "4",
+     5 ->  "5",
+     6 ->  "6",
+     7 ->  "7",
+     8 ->  "8",
+     9 ->  "9"
+  end)
+pre val < 10;
+
+
+
+end StdLib
+class A
+
+operations
+
+public Test: () ==> seq of char
+Test() ==
+  return StdLib`ToString[int,char,bool](765) -- error
+
+end A

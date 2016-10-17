@@ -1,0 +1,58 @@
+\section{Stripping Brackets and Blocks}
+\label{sec:strip}
+
+This module contains:
+\begin{enumerate}
+  \item functions which remove brackets from around expressions and
+        redundant blocks from around statements (where a redundant
+        block is one which contains no local declarations and which 
+        has a body which consists of a single statement);
+  \item functions which test whether two expressions or two statements
+        are the same up to the inclusion of redundant brackets or
+        redundant blocks at the topmost level.
+\end{enumerate}
+
+\begin{vdm_al}
+module STRIP
+
+imports
+  from JSSREP all,
+  from CI all,
+  from REP all,
+  from AS all
+
+exports all
+
+definitions
+
+functions
+
+stripBrackets : AS`Expr -> AS`Expr
+stripBrackets(p_expr) ==
+  if is_AS`BracketedExpr(p_expr) 
+  then stripBrackets(p_expr.expr)
+  else p_expr ;
+
+areEquivExprs : AS`Expr * AS`Expr -> bool
+areEquivExprs(p_expr1, p_expr2) ==
+  stripBrackets(p_expr1) = stripBrackets(p_expr2) ;
+
+stripBlocks : AS`Stmt -> AS`Stmt
+stripBlocks(p_stmt) == 
+  if is_AS`BlockStmt(p_stmt) and p_stmt.dcls = [] and len p_stmt.stmts = 1 
+  then stripBlocks(hd p_stmt.stmts)
+  else p_stmt ;
+
+areEquivStmts : AS`Stmt * AS`Stmt -> bool
+areEquivStmts(p_stmt1, p_stmt2) ==
+  stripBlocks(p_stmt1) = stripBlocks(p_stmt2) ;
+
+patternOfBind : AS`PatternBind -> AS`Pattern
+patternOfBind(p_patBind) == 
+  if is_AS`SetBind(p_patBind) or is_AS`TypeBind(p_patBind) 
+  then p_patBind.pat 
+  else p_patBind ;
+
+end STRIP
+\end{vdm_al}
+

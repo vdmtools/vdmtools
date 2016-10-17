@@ -1,0 +1,138 @@
+class Parser is subclass of JavaLangObject
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("Parser" , <CLASS> , false  )
+instance variables 
+  lx : Lex := new  Lex(<NIL>);
+  programm : JavaLangString := new  JavaLangString(<NIL>)
+operations 
+public  Parser : () ==> Parser
+Parser() == 
+( skip 
+) ;
+
+protected  parseS : () ==> int 
+parseS() == 
+( dcl   lex : int  := lx.getLex();
+  if  lex = Lex`MINUS
+  then  
+    ( lex := parseT(Lex`NULL);
+      programm := J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(programm , new  JavaLangString("u-")) , new  JavaLangString(" "))
+    ) 
+  else  
+    ( lex := parseT(lex)
+    ) ;
+  while  true   do  
+  ( if  lex <> Lex`PLUS and  lex <> Lex`MINUS
+    then  
+      return  lex;
+    ( dcl   op : JavaLangString := lx.lexem;
+      lex := parseT(Lex`NULL);
+      programm := J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(programm , op) , new  JavaLangString(" "))
+    ) 
+  ) 
+) ;
+
+protected  parseE : int  ==> int 
+parseE(lexem) == 
+( dcl   lex : int  := lexem;
+  if  lex = Lex`NULL
+  then  
+    lex := lx.getLex();
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    ( cases  lex: 
+        (Lex`e), (Lex`pi), (Lex`NUM), (Lex`ARG) -> 
+          ( programm := J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(programm , lx.lexem) , new  JavaLangString(" "));
+            exit  new  J2V_Break()
+          ) ,
+        (Lex`LEFT) -> 
+          ( lex := parseS();
+            if  lex <> Lex`RIGHT
+            then  
+              ( exit  new  MyException(new  JavaLangString(") expected"))
+              ) ;
+            exit  new  J2V_Break()
+          ) ,
+        (Lex`TAN), (Lex`SQRT), (Lex`SIN), (Lex`LOG), (Lex`FLOOR), (Lex`EXP), (Lex`COS), (Lex`CEIL), (Lex`ATAN), (Lex`ASIN), (Lex`ACOS), (Lex`ABS) -> 
+          ( dcl   op : JavaLangString := lx.lexem;
+            lex := lx.getLex();
+            if  lex <> Lex`LEFT
+            then  
+              ( exit  new  MyException(new  JavaLangString("( expected"))
+              ) ;
+            lex := parseS();
+            if  lex <> Lex`RIGHT
+            then  
+              ( exit  new  MyException(new  JavaLangString(") expected"))
+              ) ;
+            programm := J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(programm , op) , new  JavaLangString(" "));
+            exit  new  J2V_Break()
+          ) ,
+        (Lex`EOL) -> 
+          ( if  true  
+            then  
+              exit  new  MyException(new  JavaLangString("Unexpected end"));
+            exit  new  J2V_Break()
+          ) ,
+        others  -> 
+          ( exit  new  MyException(J2VUTIL`ConcatStr(new  JavaLangString("Unexpected ") , lx.lexem))
+          ) 
+      end  
+    ) ;
+  lex := lx.getLex();
+  return  lex
+) ;
+
+protected  parseP : int  ==> int 
+parseP(lexem) == 
+( dcl   lex : int  := parseE(lexem);
+  while  true   do  
+  ( if  lex <> Lex`POW
+    then  
+      return  lex;
+    ( dcl   op : JavaLangString := lx.lexem;
+      lex := parseE(Lex`NULL);
+      programm := J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(programm , op) , new  JavaLangString(" "))
+    ) 
+  ) 
+) ;
+
+protected  parseT : int  ==> int 
+parseT(lexem) == 
+( dcl   lex : int  := parseP(lexem);
+  while  true   do  
+  ( if  lex <> Lex`MUL and  lex <> Lex`DIV
+    then  
+      return  lex;
+    ( dcl   op : JavaLangString := lx.lexem;
+      lex := parseP(Lex`NULL);
+      programm := J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(programm , op) , new  JavaLangString(" "))
+    ) 
+  ) 
+) ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  Parser : <NIL> ==> Parser
+Parser(-) == 
+isNil := true  ;
+
+public  parse : JavaLangString ==> JavaLangString
+parse(str) == 
+( lx := new  Lex(str);
+  programm := new  JavaLangString([  ]);
+  if  parseS() <> Lex`EOL
+  then  
+    exit  new  MyException(new  JavaLangString("EOL expected."));
+  return  programm
+) ;
+
+
+end  Parser

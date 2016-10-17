@@ -1,0 +1,380 @@
+\subsection{Sequence}
+\subsubsection{責任}
+	列を表す。
+\subsubsection{概要}
+	Sequence型で定義された機能以外の機能を定義する。
+\subsubsection{注意事項}
+	歴史的経過のため、より関数型プログラミングに適した関数と、そうでないものがある。
+	関数型プログラミングに適した関数は、英字名の場合大文字で始まる。
+	大文字で始まる同一名の関数がある場合、小文字で始まる関数・操作は、古い定義で、互換性のために存在する。
+	大文字で始まる同一名の関数が無い場合は、小文字で始まる関数・操作も関数型プログラミングに適している。
+\subsubsection{参照}
+	多くの関数は、関数型プログラミング言語Concurrent Cleanのライブラリーから移植した。
+
+\begin{vdm_al}	
+class Sequence
+
+values
+
+	Rcsid = "$Id: Sequence.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $";
+	
+functions 
+
+--列sの要素の合計を返す。
+static public Σ[@型]: seq of @型 ->  @型
+Σ(列) == Σ補助関数[@型](列)(0)
+pre
+	is_(列, seq of int) or is_(列, seq of nat) or is_(列, seq of nat1) or
+ 	is_(列, seq of real) or is_(列, seq of rat);
+
+static Σ補助関数[@型] : seq of @型 -> @型 -> @型
+Σ補助関数(列)(合計) ==
+	if 列 = [] then
+		合計
+	else
+		Σ補助関数[@型](tl 列)(合計 + hd 列);
+
+--列sの全要素の積を返す
+static public Π[@型]: seq of @型 ->  @型
+Π(列) == Π補助関数[@型](1)(列)
+pre
+	is_(列, seq of int) or is_(列, seq of nat) or is_(列, seq of nat1) or
+ 	is_(列, seq of real) or is_(列, seq of rat);
+ 	
+static Π補助関数[@型] : @型 -> seq of @型 -> @型
+Π補助関数(積)(列) ==
+	cases 列 :
+	[先頭] ^ 後続列	-> Π補助関数[@型](積 * 先頭)(後続列),
+	[]			-> 積
+	end;
+
+--列sの要素の平均を求める
+static public 平均を得る[@型]: seq of @型 ->  [real]
+平均を得る(列) == if 列 = [] then nil else 平均を得る補助関数[@型](0)(0)(列);
+
+static 平均を得る補助関数[@型] : @型 -> @型 -> seq of @型 -> real
+平均を得る補助関数(合計)(要素数)(列) ==
+	cases 列 :
+	[先頭] ^ 後続列	-> 平均を得る補助関数[@型](合計 + 先頭)(要素数 + 1)(後続列),
+	[]			-> 合計 / 要素数
+	end;
+
+--関数fで与えられた全順序で、列sの要素が昇順であるか否かを返す。
+static public 全順序昇順か？ [@型]:
+	(@型 * @型 -> bool) -> seq of @型 -> bool
+全順序昇順か？ (順序決定関数)(列) ==
+	forall i,j  in set inds 列 & i < j  => 順序決定関数(列(i),列(j)) or 列(i) = 列(j);
+
+--関数fで与えられた全順序で、列sの要素が降順であるか否かを返す。
+static public 全順序降順か？ [@型]:
+	(@型 * @型 -> bool) -> seq of @型 -> bool
+全順序降順か？ (順序決定関数)(列) ==
+	forall i,j  in set inds 列 & i < j  => 順序決定関数(列(j),列(i)) or 列(i) = 列(j);
+
+--演算子＜で与えられた全順序で、列sの要素が昇順であるか否かを返す。
+static public 昇順か？ [@型]: seq of @型 -> bool
+昇順か？(列) ==
+	全順序昇順か？ [@型](lambda x : @型, y : @型 & x < y)(列);
+
+--演算子＜で与えられた全順序で、列sの要素が降順であるか否かを返す。
+static public 降順か？[@型]: seq of @型 -> bool
+降順か？(列) ==
+	全順序降順か？ [@型](lambda x : @型, y : @型 & x < y)(列);
+
+--関数fで与えられた順序で、列sの要素を昇順にソートする。
+/*
+static public slowsort[@型] : (@型 * @型 -> bool) -> seq of @型 -> seq of @型
+slowsort(順序決定関数)(列) ==
+	cases 列:
+		[]	-> [],
+		[要素]	-> [要素],
+		[要素]^-	-> 
+			let	左 = sort[@型](順序決定関数)([列(i) | i in set inds 列 & 順序決定関数(列(i),要素)]),
+				中 = [列(i) | i in set inds 列 & not 順序決定関数(列(i),要素) and
+                                                                     not 順序決定関数(要素,列(i))],
+				右 = sort[@型](順序決定関数)([列(i) | i in set inds 列 & 順序決定関数(要素,列(i))])
+			in
+				左 ^ 中 ^ 右
+	end;
+*/
+	
+--関数fで与えられた順序で、列sの要素を昇順にクイックソートする。
+static public sort[@型] : (@型 * @型 -> bool) -> seq of @型 -> seq of @型
+sort(順序決定関数)(列) ==
+	cases 列:
+		[]	-> [],
+		[要素]^部分列	-> 
+			sort[@型](順序決定関数)([部分列(i) | i in set inds 部分列 & 順序決定関数(部分列(i),要素)]) ^
+			[要素] ^
+			sort[@型](順序決定関数)([部分列(i) | i in set inds 部分列 & not 順序決定関数(部分列(i),要素)])
+	end;
+
+--演算子＜で与えられた順序で、列sの要素を昇順にソートする。
+static public 昇順Sort[@型] : seq of @型 -> seq of @型
+昇順Sort(列) == sort[@型](lambda x : @型, y : @型 & x < y)(列);
+
+--演算子＞で与えられた順序で、列sの要素を昇順にソートする。演算子＜から見れば降順。
+static public 降順Sort[@型] : seq of @型 -> seq of @型
+降順Sort(列) == sort[@型](lambda x : @型, y : @型 & x > y)(列);
+
+--順序決定関数列で与えられた順序であればtrue、そうでなければfalseを返す。
+static public 順序通りか？[@型] : seq of (@型 * @型 -> bool) -> seq of @型 -> seq of @型 -> bool
+順序通りか？(順序決定関数列)(列1)(列2) ==
+	cases mk_(列1,列2):
+		mk_([],[])		-> false,
+		mk_([],-)		-> true,
+		mk_(-,[])	-> false,
+		mk_([先頭1]^後続1,[先頭2]^後続2)	->
+			if (hd 順序決定関数列)(先頭1,先頭2) then
+				true
+			elseif (hd 順序決定関数列)(先頭2,先頭1) then
+				false
+			else
+				Sequence`順序通りか？[@型](tl 順序決定関数列)(後続1)(後続2)
+	end;
+
+--関数fで与えられた順序で、列s1,s2の要素をマージする。
+static public マージする[@型] : (@型 * @型 -> bool) -> seq of @型 -> seq of @型 -> seq of @型
+マージする(順序決定関数)(s1)(s2) == 
+	cases mk_(s1,s2):
+		mk_([], y)						-> y,
+		mk_(x, [])						-> x,
+		mk_([先頭1]^後続1,[先頭2]^後続2)		->
+			if 順序決定関数(先頭1,先頭2) then
+				[先頭1] ^ Sequence`マージする[@型](順序決定関数)(後続1)(s2)
+			else
+				[先頭2] ^ Sequence`マージする[@型](順序決定関数)(s1)(後続2)
+	end;
+
+--列の指定された位置に要素を追加する。
+static public InsertAt[@型]: nat1 -> @型 -> seq of @型 -> seq of @型
+InsertAt(位置)(要素)(列) ==
+	cases mk_(位置, 列) :
+	mk_(1, a列)				-> [要素] ^ a列,
+	mk_(-, [])				-> [要素],
+	mk_(a位置, [先頭] ^ 後続列)	-> [先頭] ^ InsertAt[@型](a位置 - 1)(要素)(後続列)
+	end;
+
+--列の指定された位置の要素を削除する。
+static public RemoveAt[@型]: nat1 -> seq of @型 -> seq of @型
+RemoveAt(位置)(列) ==
+	cases mk_(位置, 列) :
+	mk_(1, [-] ^ 後続列)		-> 後続列,
+	mk_(a位置, [先頭] ^ 後続列)	-> [先頭] ^ RemoveAt[@型](a位置 - 1)(後続列),
+	mk_(-, [])				-> []
+	end;
+
+--列から重複する要素を削除する。
+static public RemoveDup[@型] :  seq of @型 ->  seq of @型
+RemoveDup(列) == 
+	cases 列 :
+	[先頭]^後続		-> [先頭] ^ RemoveDup[@型](filter[@型](lambda x : @型 & x <> 先頭)(後続)) ,
+	[]			-> []
+	end
+measure length;
+
+static length[@T] : seq of @T +> nat
+length(列) == len 列;
+	
+--列から要素を削除する
+static public RemoveMember[@型] :  @型 -> seq of @型 -> seq of @型
+RemoveMember(要素)(列) == 
+	cases 列 :
+	[先頭]^後続		-> if 要素 = 先頭 then 後続 else [先頭] ^ RemoveMember[@型](要素)(後続),
+	[]			-> []
+	end;
+	
+--列から要素を削除する
+static public RemoveMembers[@型] :  seq of @型 -> seq of @型 -> seq of @型
+RemoveMembers(要素列)(列) == 
+	cases 要素列 :
+	[]			-> 列,
+	[先頭]^後続		-> RemoveMembers[@型](後続)(RemoveMember[@型](先頭)(列))
+	end;
+
+--列の指定された位置の要素を指定された新要素で置き換える。
+static public UpdateAt[@型]: nat1 -> @型 -> seq of @型 -> seq of @型
+UpdateAt(位置)(要素)(列) ==
+	cases mk_(位置, 列) :
+	mk_(-, [])				-> [],
+	mk_(1, [-] ^ 後続列)		-> [要素] ^ 後続列,
+	mk_(a位置,  [先頭] ^ 後続列)	-> [先頭] ^ UpdateAt[@型](a位置 - 1)(要素)(後続列)
+	end;
+
+--列の先頭i個からなる列を返す。
+static public take[@型]: int -> seq of @型 -> seq of @型
+take(i)(列) == 列(1,...,i);
+
+--列の先頭から、関数を満たし続ける間の部分列を返す。
+static public TakeWhile[@型] : (@型 -> bool) -> seq of @型 ->seq of @型
+TakeWhile(関数)(列) ==
+	cases 列 :
+	[先頭] ^ 後続列	-> 
+		if 関数(先頭) then
+			[先頭] ^ TakeWhile[@型](関数)(後続列)
+		else
+			[],
+	[]	-> []
+	end;
+
+--列の先頭i個を除く列を返す。
+static public drop[@型]: int -> seq of @型 -> seq of @型
+drop(i)(列) == 列(i+1,...,len 列);
+
+--列の先頭から、関数を満たさない間の部分列を返す。
+static public DropWhile[@型] : (@型 -> bool) -> seq of @型 ->seq of @型
+DropWhile(関数)(列) ==
+	cases 列 :
+	[先頭] ^ 後続列	-> 
+		if 関数(先頭) then
+			DropWhile[@型](関数)(後続列)
+		else
+			列,
+	[]	-> []
+	end;
+
+--指定された列を、先頭から関数を満たし続ける間の列と、関数を満たさなくなって以降の列の組に分ける。
+static public Span[@型] : (@型 -> bool) -> seq of @型 -> seq of @型 * seq of @型
+Span(関数)(列) ==
+	cases 列 :
+	[先頭] ^ 後続列	-> 
+		if 関数(先頭) then
+			let	mk_(条件を満たす列, 条件を満たさない列) = Span[@型](関数)(後続列)
+			in
+			mk_([先頭] ^ 条件を満たす列, 条件を満たさない列)
+		else
+			mk_([], 列),
+	[]	-> mk_([], [])
+	end;
+
+--列の開始位置から要素数分取り出した部分列を返す
+static public SubSeq[@型]: nat -> nat -> seq1 of @型 -> seq of @型
+SubSeq(開始位置)(要素数)(列) == 列(開始位置,...,開始位置+要素数-1);
+
+--列の最後の要素を返す。
+static public last[@型]: seq of @型 -> @型
+last(列) == 列(len 列);
+
+--関数を列に適用した結果の列を返す。
+static public fmap[@型1,@型2]: (@型1 -> @型2) -> seq of @型1 -> seq of @型2
+fmap(関数)(列) == [関数(列(i)) | i in set inds 列];
+
+--関数によって列を濾過する。つまり、列のうち関数を満たすものの列を返す。
+static public filter[@型]: (@型 -> bool) -> seq of @型 -> seq of @型
+filter(関数)(列) == [列(i) | i in set inds 列 & 関数(列(i))];
+
+--列に対するたたみ込み演算（左側から適用)
+static public Foldl[@型1, @型2] : 
+	(@型1 -> @型2 -> @型1) -> @型1 -> seq of @型2 -> @型1
+Foldl(関数)(引数)(列) == 
+	cases 列 :
+	[]			-> 引数,
+	[先頭] ^ 後続列	-> Foldl[@型1,@型2](関数)(関数(引数)(先頭))(後続列)
+	end;
+
+--列に対するたたみ込み演算（右側から適用）
+static public Foldr[@型1, @型2] : 
+	(@型1 -> @型2 -> @型2) -> @型2 -> seq of @型1 -> @型2
+Foldr(関数)(引数)(列) == 
+	cases 列 :
+	[]			-> 引数,
+	[先頭] ^ 後続列	-> 関数(先頭)(Foldr[@型1,@型2](関数)(引数)(後続列))
+	end;
+
+--要素があるか否かを返す。
+static public isMember[@型] : @型 -> seq of @型 -> bool
+isMember(要素)(列) == 
+	cases 列 :
+	[先頭]^後続		-> 要素 = 先頭 or isMember[@型] (要素)(後続),
+	[]			-> false
+	end;
+
+--要素列中の要素が、列にあるか否かを返す。
+static public isAnyMember[@型]:  seq of @型 -> seq of @型 -> bool
+isAnyMember(要素列)(列) == 
+	cases 要素列 :
+	[先頭]^後続		->  isMember[@型] (先頭)(列) or isAnyMember[@型] (後続)(列) ,
+	[]			-> false
+	end;
+
+--指定された要素が、列の何番目にあるかを返す。最初の要素の位置を返す。
+static public Index[@型]: @型 -> seq of @型 -> int
+Index(要素)(列) == 
+	let	i = 0
+	in	Index補助関数[@型](要素)(列)(i);
+
+static Index補助関数[@型]: @型 -> seq of @型 -> int -> int
+Index補助関数(要素)(列)(索引) ==
+	cases 列:
+		[]			-> 0,
+		[先頭]^後続	->
+			if 先頭 = 要素 then 
+				索引 + 1
+			else
+				Index補助関数[@型](要素)(後続)(索引+1)
+	end;
+	
+--指定された要素が、列の何番目にあるかを持つ集合を返す。
+static public IndexAll[@型] : @型 -> seq of @型 -> set of int
+IndexAll(要素)(列) == {i | i in set inds 列 & 列(i) = 要素};
+	
+--列の要素が列の場合、その要素を要素として持つ列を返す。
+static public flatten[@型] : seq of seq of @型 -> seq of @型
+flatten(列) == conc 列;
+
+--列の要素がnilのものを削除した列を返す
+static public compact[@型] : seq of [@型] -> seq of @型
+compact(列) == [列(i) | i in set inds 列 & 列(i) <> nil];
+
+--列の逆順の列を得る。reverseが予約語のため、freverseという関数名にした。
+static public freverse[@型] : seq of @型 -> seq of @型
+freverse(列) == [列(len 列 + 1 -  i) | i in set inds 列];
+
+--列から順列を得る
+static public Permutations[@型]: seq of @型 -> set of seq of @型
+Permutations(列) == 
+cases 列:
+	[],[-] -> {列},
+	others -> dunion {{[列(i)]^j | j in set Permutations[@型](RestSeq[@型](列,i))} | i in set inds 列}
+end
+measure length;
+
+--列のi番目の要素を除いた残りの列を返す
+static public RestSeq[@型]: seq of @型 * nat -> seq of @型
+RestSeq(列,i) == [列(j) | j in set (inds 列 \ {i})];
+
+--組の列を、列の組に変換する
+static public Unzip[@型1, @型2] : seq of (@型1 * @型2) -> seq of @型1 * seq of @型2
+Unzip(列) ==
+	cases 列 :
+	[]				-> mk_([], []),
+	[mk_(x, y)] ^ 後続列	->
+		let	mk_(xs, ys) = Unzip[@型1, @型2](後続列)
+		in
+		mk_([x] ^ xs, [y] ^ ys)
+	end
+measure lengthUnzip;
+
+static lengthUnzip[@T1, @T2] : seq of (@T1 * @T2) +> nat
+lengthUnzip(列) == len 列;
+
+--列の組を、組の列に変換する
+static public Zip[@型1, @型2] : seq of @型1 * seq of @型2 -> seq of (@型1 * @型2)
+Zip(列1, 列2) == Zip2[@型1, @型2](列1)(列2);
+\end{vdm_al}
+
+列の組を、組の列に変換する（より関数型プログラミングに適した形式）
+\begin{vdm_al}	
+static public Zip2[@型1, @型2] : seq of @型1 -> seq of @型2 -> seq of (@型1 * @型2)
+Zip2(列1)(列2) == 
+	cases mk_(列1, 列2) :
+	mk_([先頭1] ^ 後続列1, [先頭2] ^ 後続列2)		-> [mk_(先頭1, 先頭2)] ^ Zip2[@型1, @型2](後続列1)(後続列2),
+	mk_(-, -)							-> []
+	end;
+
+end Sequence
+\end{vdm_al}
+
+\begin{rtinfo}
+[Sequence]{vdm.tc}[Sequence]
+\end{rtinfo}

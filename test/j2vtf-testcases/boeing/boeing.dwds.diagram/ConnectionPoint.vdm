@@ -1,0 +1,99 @@
+class ConnectionPoint is subclass of Object
+operations 
+public  getNode : () ==> [RefDesNode]
+getNode() == 
+( return  ConnectionPoint`node
+) ;
+
+public  getLocation : () ==> [Point]
+getLocation() == 
+( return  ConnectionPoint`location
+) ;
+
+public  getOrientation : () ==> [Orientation]
+getOrientation() == 
+( return  ConnectionPoint`edgeOrientation
+) ;
+
+public  ConnectionPoint : () ==> ConnectionPoint
+ConnectionPoint() == 
+( let - = ConnectionPoint(0 , 0 , Orientation.UNDEFINED , nil   , nil  )
+  in 
+    skip 
+) ;
+
+public  getConnectionId : () ==> [String]
+getConnectionId() == 
+( return  ConnectionPoint`connectionId
+) ;
+
+public  setLocation : [Point] ==> <VOID>
+setLocation(newLocation) == 
+( ConnectionPoint`location := newLocation;
+  return  <VOID>
+) ;
+
+public  setNode : [RefDesNode] ==> <VOID>
+setNode(node) == 
+( ConnectionPoint`node := node;
+  return  <VOID>
+) ;
+
+public  setConnectionId : [String] ==> <VOID>
+setConnectionId(connectionId) == 
+( ConnectionPoint`connectionId := connectionId;
+  return  <VOID>
+) ;
+
+public  setOrientation : [Position] ==> <VOID>
+setOrientation(positionOnNode) == 
+( if  positionOnNode = Position.TOP
+  then  
+    ( ConnectionPoint`edgeOrientation := Orientation.UP
+    ) 
+  else  
+    if  positionOnNode = Position.BOTTOM
+    then  
+      ( ConnectionPoint`edgeOrientation := Orientation.DOWN
+      ) 
+    else  
+      if  positionOnNode = Position.LEFT
+      then  
+        ( ConnectionPoint`edgeOrientation := Orientation.LEFT
+        ) 
+      else  
+        if  positionOnNode = Position.RIGHT
+        then  
+          ( ConnectionPoint`edgeOrientation := Orientation.RIGHT
+          ) ;
+  return  <VOID>
+) ;
+
+public  setOrientation : [Orientation] ==> <VOID>
+setOrientation(orientation) == 
+( ConnectionPoint`edgeOrientation := orientation;
+  return  <VOID>
+) ;
+
+public  ConnectionPoint : int  * int  * [Orientation] * [RefDesNode] * [String] ==> ConnectionPoint
+ConnectionPoint(x, y, edgeOrientation, node, connectionId) == 
+( let - = ConnectionPoint(new  Point(x , y) , edgeOrientation , node , connectionId)
+  in 
+    skip 
+) ;
+
+public  ConnectionPoint : [Point] * [Orientation] * [RefDesNode] * [String] ==> ConnectionPoint
+ConnectionPoint(location, edgeOrientation, node, connectionId) == 
+( ConnectionPoint`location := new  Point(location);
+  ConnectionPoint`edgeOrientation := edgeOrientation;
+  ConnectionPoint`node := node;
+  ConnectionPoint`connectionId := connectionId
+) ;
+
+instance variables 
+  private  location : [Point];
+  private  edgeOrientation : [Orientation];
+  private  node : [RefDesNode];
+  private  connectionId : [String]
+  
+end  ConnectionPoint

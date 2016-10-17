@@ -1,0 +1,70 @@
+class FunDefTest
+instance variables
+
+  inst : nat1
+
+functions
+
+  FunDef1: () -> nat1
+  FunDef1() ==
+    7;
+
+  FunDef2: bool -> bool
+  FunDef2(a,b) ==
+    true;
+
+  FunDef3: (nat * nat) -> nat
+  FunDef3(a) ==
+    let mk_(b,-) = a
+    in
+      b;
+
+  FunDef4: () -> nat
+  FunDef4() ==
+    let n = 4.8 in n;
+
+  FunDef5: nat -> nat
+  FunDef5(arg) ==
+    FunDef4()
+  pre arg > 7;
+
+  FunDef6: char -> seq of char
+  FunDef6(c) ==
+    [c| i in set {1,...,9}]
+  pre c < 9;
+
+  FunDef7() r : nat
+  pre 5 < 9
+  post r < 8;
+
+  FunDef8(a,b: nat) r : bool
+  pre a < b
+  post FunDef4() > b <=> r;
+
+  FunDef9(a,b : nat) r : nat
+  post r;
+
+  FunDef10(r: nat) r: nat
+  post true;
+
+  FunDef11() r : nat
+  post r;
+
+  FunDef12(a: nat) r : nat
+  pre if false then a else false
+  post r = a;
+
+  FunDef13: () -> nat1
+  FunDef13() ==
+    inst;
+
+  FunDef14(a : nat) r : nat
+  pre pre_FunDef12(a) and pre_FunDef6('c')
+  post post_FunDef11(a) and post_FunDef12(a,r);
+
+  FunDef15: set of rat -> nat1
+  FunDef15(s) ==
+    card s
+  pre let n = 7 in  (s <> {}) and n
+  
+end FunDefTest

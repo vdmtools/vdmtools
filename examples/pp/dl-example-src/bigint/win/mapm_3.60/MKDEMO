@@ -1,0 +1,16 @@
+	#
+	#  compile and link the 3 demo programs  (Unix systems with GCC)
+	#
+rm -f calc validate primenum
+#
+gcc -Wall -O calc.c lib_mapm.a -s -static -o calc -lm
+gcc -Wall -O validate.c lib_mapm.a -s -static -o validate -lm
+gcc -Wall -O primenum.c lib_mapm.a -s -static -o primenum -lm
+#
+#
+#         to compile and link the C++ demo program
+#         using the C++ MAPM wrapper class.
+#         (default is commented out)
+#
+# g++ cpp_demo.cpp lib_mapm.a -s -o cpp_demo -lm
+#

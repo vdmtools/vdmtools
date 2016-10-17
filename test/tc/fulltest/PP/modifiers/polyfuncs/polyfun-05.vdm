@@ -1,0 +1,19 @@
+ class A
+
+  functions
+
+    f[@tp]: seq of @tp -> nat
+    f(l) ==
+      len l;
+
+end A
+
+class B is subclass of A
+
+  operations
+
+  public Test : () ==> nat
+    Test() ==
+      return f[nat]([0])
+
+end B

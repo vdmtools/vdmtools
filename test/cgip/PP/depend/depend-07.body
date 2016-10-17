@@ -1,0 +1,30 @@
+class A
+
+instance variables
+  state        : [B] := new B();
+
+operations
+  public Test : () ==> set of int
+  Test() ==
+    
+    return { a.getInfo() |
+               a in set state.getelements()}
+
+end A
+
+class B
+
+operations
+public getelements:() ==> set of C
+getelements()==return {}
+
+end B
+
+class C
+operations
+
+public getInfo:() ==> int
+getInfo()==
+return 1
+
+end C

@@ -1,0 +1,70 @@
+class Part is subclass of Object
+operations 
+public  getId : () ==> int 
+getId() == 
+( return  partId
+) ;
+
+public  getSMR : () ==> [String]
+getSMR() == 
+( return  sMR
+) ;
+
+public  getCageCode : () ==> [String]
+getCageCode() == 
+( return  cageCode
+) ;
+
+public  getClocking : () ==> [String]
+getClocking() == 
+( return  clocking
+) ;
+
+public  getPartName : () ==> [String]
+getPartName() == 
+( return  partName
+) ;
+
+public  getQuantity : () ==> [String]
+getQuantity() == 
+( return  quantity
+) ;
+
+public  getPartNumber : () ==> [String]
+getPartNumber() == 
+( return  partNumber
+) ;
+
+public  hasDrawingNotes : () ==> bool 
+hasDrawingNotes() == 
+( return  mediator.hasDrawingNotes(self  )
+) ;
+
+public  getDrawingNotesText : () ==> [String]
+getDrawingNotesText() == 
+( return  mediator.getDrawingNotesText(self  )
+) ;
+
+public  Part : int  * [String] * [String] * [String] * [String] * [String] * [String] ==> Part
+Part(partId, partNumber, partName, cageCode, quantity, sMR, clocking) == 
+( Part`partId := partId;
+  Part`partNumber := partNumber;
+  Part`partName := partName;
+  Part`cageCode := cageCode;
+  Part`quantity := quantity;
+  Part`sMR := sMR;
+  Part`clocking := clocking;
+  Part`mediator := WiringDataMediator.getMediator()
+) ;
+
+instance variables 
+  private  mediator : [WiringDataMediator];
+  private  partId : int ;
+  private  partNumber : [String];
+  private  partName : [String];
+  private  cageCode : [String];
+  private  quantity : [String];
+  private  sMR : [String];
+  private  clocking : [String]
+  
+end  Part

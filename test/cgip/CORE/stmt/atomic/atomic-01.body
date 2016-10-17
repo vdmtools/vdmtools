@@ -1,0 +1,13 @@
+public Test :() ==> seq of char
+Test() ==
+  (dcl a : Even,
+       b : seq of char;
+
+   atomic (a := 8;
+           b := "test");
+   return if a = 8 then b else undefined);
+
+types
+
+  Even = nat
+  inv n == n mod 2 = 0;

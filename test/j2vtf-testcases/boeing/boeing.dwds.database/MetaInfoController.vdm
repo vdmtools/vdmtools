@@ -1,0 +1,76 @@
+class MetaInfoController is subclass of WiringDataController
+operations 
+public  initialize : () ==> <VOID>
+initialize() == 
+( return  <VOID>
+) ;
+
+public  getViaId : [String] ==> map  int  to  [String]
+getViaId(metaInfoId) == 
+( dcl   connection : [Connection] := MetaInfoController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := MetaInfoController`getToolkit().getQuerySet(),
+        query : [String] := nil  ,
+        versionList : [Vector] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement(),
+            args : map  int  to  [Object] := {0 |-> metaInfoId};
+      versionList := new  Vector();
+      query := querySet.getQuery(WiringDataQuerySet.GET_VERSION_VIA_ID , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  queryRS.next() do  
+          ( dcl   versionText : [String] := queryRS.getString(1);
+            let - = versionList.addElement(versionText)
+            in 
+              skip 
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  ( dcl   versionArray : map  int  to  [String] := {l_16 |-> nil  |l_16 in set  {0,...,versionList.size()-1}};
+    let - = versionList.copyInto(versionArray)
+    in 
+      skip ;
+    return  versionArray
+  ) 
+) ;
+
+public  getCurrentContextObject : () ==> [Object]
+getCurrentContextObject() == 
+( return  nil  
+) ;
+
+public  updateToNewContext : [ContextSet] ==> <VOID>
+updateToNewContext(contextChanges) == 
+( return  <VOID>
+) ;
+
+MetaInfoController : [DataSourceToolkit] ==> MetaInfoController
+MetaInfoController(dsToolkit) == 
+( let - = WiringDataController(dsToolkit)
+  in 
+    skip 
+) ;
+
+
+end  MetaInfoController

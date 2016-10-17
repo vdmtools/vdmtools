@@ -1,0 +1,18 @@
+-- overload function in subclass
+class A1
+
+functions
+
+public g : bool -> nat
+g(-) == 7;
+
+end A1
+
+class A2 is subclass of A1
+
+functions 
+
+public g : nat -> nat
+g(n) == n;
+
+end A2

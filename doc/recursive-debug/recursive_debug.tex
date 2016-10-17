@@ -1,0 +1,303 @@
+\documentclass[]{article}
+\usepackage{isolatin1, a4wide,epsfig}
+
+\setlength{\parskip}{\baselineskip}
+\setlength{\parindent}{0cm}
+\begin{document}
+
+\section{Recursive Debug in the Interpreter. - IFAD-VDM-61}
+\label{sec:first}
+In the VDM-SL interpreter and in the non parallel VDM-PP interpreter, it is
+today possible to invoke a debug command or a print command
+recursively. This is very useful for inspecting variables, and for
+``trying'' the next command, before it is actually executed by the
+interpreter.
+
+Three issues need to be addressed when the above functionality is offered
+from the toolbox, namely:
+\begin{enumerate}
+\item Should the changes made to the state by the recursive debug call
+``survive'' after the debug call has finished and execution returns to the
+original breakpoint.
+\item What should happen when a runtime error occur in the recursive debug
+call
+\item How should the recursive debug levels be represented in the GUI.
+\end{enumerate}
+
+Today these three questions are answered with:
+\begin{enumerate}
+\item Yes, changes should survive (that is, this is the case for our
+  toolboxes today).
+\item When a runtime error occurs, then it should be possible for the user
+  to continue his original debugging. This is essential as inspection of
+  variables also are made using recursive debug (and misspelling a variable
+  name should not force the user to restart debugging all over again.)
+  Furthermore, it would be very useful if it was possible to inspect
+  variable in the scope of the runtime error. These two wishes together
+  forms the need for a command called \texttt{popd} (that is, pop-debug).
+  Optional this command could be executed implicit by the toolboxes when
+  the user invokes \texttt{step}, \texttt{continue} or one of the other
+  debugger commands.
+\item A Suggestion to this issue, is that each level of recursive debug is
+  shown on the call stack just like ordinary recursive function calls. This
+  can be seen in figure 1.
+\end{enumerate}
+
+\textbf{NOTE}: The above is part how it is today, and part wishes for how
+it could be, and all of it only relates to the non-parallel part of the interpreter.
+
+
+
+
+\section{Conceptually view of recursive debugging.}
+\label{sec:concep_view}
+
+Whenever a recursive debug command is issued, then this may conceptully be
+viewed as if the debug command had been part of the
+original program as the next line. To see it that way, a few items needs
+to be pointed out:
+
+\begin{itemize}
+\item Program execution must stop after the recursive debug command, and
+  the result of its evaluation must be printed.
+\item This view makes sure that the scope is OK, namely that the scope is
+  the current function. Therefore it is possible to type ``print var''.
+\item In contrast to if the expression had been part of the original
+  program literally, a runtime error meet during recursive debugging will
+  not make the whole program stop.
+\end{itemize}
+
+
+
+
+\section{Should threads started in recursive debugging survive?}
+\label{sec:survive}
+
+When introducing the recursive debugging into the parallel part, a few
+additional issues need to be addressed. First of all the command issued may
+start new threads. Should these threads be kill when the recursive debug
+command returns? 
+
+The following is an example, which may be used to discuss this issue:
+
+\begin{verbatim}
+class Counter
+
+instance variables
+  counter : nat
+
+thread
+  while true do
+    counter := counter + 1    
+
+end Counter
+
+
+
+class A
+
+instance variables
+  myref : Counter
+
+operations
+
+start: () ==> ()
+start() ==
+  (myref := new Counter();
+   start(myref));
+
+restart: () ==> nat
+restart() ==
+  let oldcount = obj.counter,
+  in ( myref := new Counter()
+      start(myref);
+      return oldcount)
+
+end A
+\end{verbatim}
+
+In this example, the class \texttt{Counter} is a simple counter which does
+nothing else than define a thread, which counts its instance variable up
+in an infinity. 
+
+The class A uses this counter and it has two operations, which may start
+and restart the counting respectively. \footnote{In a real implementation
+these two operations should have been located in the counter class, please
+forgive me for not finding a good example}
+Starting and restarting the counter is done by creating a new
+\texttt{Counter} object, and starting its thread.
+
+The following is a debugging session, where the second debug command is
+invoked recursively. (Though this fact should not change much on the discussion).
+
+\begin{verbatim}
+vdmpp> cr obj := new A()
+vdmpp> debug obj.start()
+vdmpp> debug do-some-command
+vdmpp> debug obj.restart();   <-- issued recursively
+\end{verbatim}
+
+If the threads started from any of the debug commands are terminated when
+the command is finished, then the system above would not work, as the
+counter thread would be terminated when the \texttt{restart} command was
+finished executing its instructions.
+
+The conclusion must therefore be: 
+\begin{quote}
+Threads started by recursive debugging commands should not be terminated
+when the recursive debug command terminates. 
+\end{quote}
+
+The rules for normal termination of threads do of course still apply. That
+is, when an object with an active thread goes out of scope, then the thread
+will be terminated.
+
+
+
+
+
+\section{Which Processes to Schedule when doing Recursive Debugging.}
+When invoking a recursive debugging command the scheduler should continue scheduling each of the threads, the question is, however, which threads should be schedules?
+
+The following reasonable suggestions exists:
+\begin{enumerate}
+\item Only the new thread should be scheduled, all other threads should
+simply be ignored, and should first be rescheduled whenever the recursive
+debugging is finished.
+\item All threads should be scheduled including the thread with the
+breakpoint (that is the thread where a breakpoint was meet, allowing a
+recursive debugging to be started). The recursive debugging should be seen
+as a new thread.
+\item All threads excluding the thread with the breakpoint should be scheduled.
+\end{enumerate}
+
+The function which may be invoked from the recursive debug command may
+require that the other threads are running. An example could be that it
+meets a history guard, which will not allow it to continue before some
+other thread has left a given operation. Therefore other threads needs to
+be running.
+
+The question is now only, should the thread which has meet a breakpoint be
+scheduled or not?
+
+>From the conceptual view in section \ref{sec:concep_view}, the recursive
+debug command should be seen as \emph{the next line of code} in the given
+thread. This implies that the thread which have meet a breakpoint should
+\textbf{not} be scheduled.
+
+Fortunately, this also implies that we have a well defined location to
+break when the recursive debug command has finished, just as it is the case
+today in the existing tools. 
+
+
+\section{Runtime Errors meet in the Initial Debugging Command.}
+What should happen if a runtime error occurs in any of the threads which
+the original debug command is parent to?
+
+An answer to this question could be that the whole debug session should
+terminate. This answer is based on the view that all the threads combine
+one whole system, and a runtime error in one part of the system means that
+the whole system has entered an undetermined state.
+
+An example where this view seems reasonable is a system where a timer is
+executing in its own thread. If this timer meets a runtime error and the
+tread is terminated, then a vital part of the system has stopped, and the
+concept of time is missing for the other component of the system.
+
+Another possible view of runtime errors in threads may be that it is up to
+the user to verify if the rest of the system may continue. If he wishes to
+continue debugging then he just ask the system to continue. The thread with
+the runtime error will then be discarded and the system will continue
+scheduling the rest of the threads.
+
+A silly example of this could be a simulation of a consumer/producer system
+with a number of consumers, and a timer attached to the system. This timer
+will be used to probe the idle time of each of the consumers. The system
+may model \emph{to much idle time - fire one of the consumers} by letting a
+consumer thread throw a runtime error if the given consumer has been idle
+for too long.
+
+In this system the user may want to continue after a runtime error with one
+less consumer.
+
+It is obvious that continuing after a runtime error may lead to a state of
+the system where \emph{strange things may happen}! And using runtime errors
+in the above way seems to be a dirty hack, which could be avoided. 
+
+Therefore I find that a runtime error should mean ``\emph{the whole program has
+meet a runtime error}'' rather than just ``\emph{the given thread has meet a
+runtime error}''.
+
+
+\section{Runtime Errors meet in recursive Debugging Commands.}
+Having discussed runtime errors which stems from the initial debug command,
+the question is now: \emph{what should happen if a runtime error
+occur in a recursive debug command?}
+
+An obvious answer could be that all the threads started from the recursive
+debug command should be terminated when a runtime error occur in any of
+these threads - This is just like the answer from above. 
+
+This is, however, no good as the new thread started by the recursive debug
+command may now be part of the original system, as was the case in section
+\ref{sec:survive}, and if they are terminated then the whole system will be
+effected.
+
+Therefore in general we can not decide which threads, started from a
+recursive debug command, may be killed when a runtime error occurs. 
+
+A solution to this problem is to view all the sub-threads to the recursive
+debug thread as being part of the \textbf{initial} system rather than being part of
+the recursive debug command. Thus when a runtime error occur in any of
+these threads then the whole system will terminate. If on the other hand a
+runtime error occur in the recursive debug thread then only this thread will
+terminate.
+
+This solution requires that we can distinguish between a runtime error in
+the latest debug command and in the original debug command.
+
+What is even worse, the user needs to understand the difference between a
+runtime error in the original debug threads and in its sub-threads. In
+other words, sometimes he may recover from a runtime error in recursive
+debug commands and sometimes he may not (He may not recover when the error
+occurs in any of the sub-threads as they are now regarded as being part of
+the initial system).
+
+A less ambitious solution to this problem could be to forbid new threads to
+be started from a recursive debugging command. If the user invokes a
+recursive debug command, which starts a new thread, then a runtime error
+may simply be thrown, to signal that this is not allowed.
+
+Again we have a non-symmetric solution, but this time the rules are much
+easier to understand from the users point of view, namely: ``\emph{in
+recursive debug commands you are not allowed to start new threads.}''
+
+\section{Representing recursive debugging in the GUI.}
+Finally we need to discuss how recursive debugging for the parallel part of
+VDM-PP may be represented in the GUI. 
+
+We may reuse the strategy from the original approach discussed in section
+\ref{sec:first}, as can be seen in figure 1, with the change that each
+thread have their separate debug stack. This can be seen in figure 2.
+
+\textbf{NOTE}: In figure 2 a recursive debug command is done \emph{in the
+thread} rather than starting a new thread as has been done in the previous
+discussion.
+
+Typing \texttt{popd} can only be done when the thread in scope contains a
+recursive debug command, and this command then means that the given threads
+recursive debug command should be poped.
+
+As threads started in recursive debugging commands are part of the initial
+system, it is not possible to invoke \texttt{popd} in these
+threads. Therefore allowing creation of new threads in recursive debug
+commands, do not change the behavior of how it should be shown in the GUI,
+as long as the basic assumption described in section \ref{sec:concep_view}
+is kept. Namely that starting a recursive debugging command is just like
+inserting the command as the next line of the original program. Which
+implies that it is not possible to have the original thread and the
+recursive debugging command running at the same time.
+
+
+\end{document}
+

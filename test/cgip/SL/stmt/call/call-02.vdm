@@ -1,0 +1,35 @@
+module A
+exports all
+definitions
+operations
+
+Op2: set of int ==> ()
+Op2(s2) ==
+  s := s2 union s;
+
+Op3: set of int ==> seq of int
+Op3(s) ==
+  if s = {} then
+    return []
+  else
+    let e in set s be st forall e2 in set s \ {e} & e >= e2 in 
+      return [e] ^ Op3(s \ {e});
+
+
+Test: () ==> seq of int
+Test() ==
+( 
+  Op2(let s = {40,...,45} in s);
+  Op2({99,...,102});
+  Op2({50,42,200} union {-1000});
+  Op3(if card s <> 1 then s else s union {1})
+)
+
+state Sigma of
+  s : set of int
+  init s == s = mk_Sigma({})
+end
+
+end A
+
+

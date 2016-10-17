@@ -1,0 +1,19 @@
+class A 
+
+
+functions
+
+id : nat -> nat 
+id(x) == x;
+
+end A
+
+class B
+
+functions
+fac : nat -> bool
+fac(n) == if n = 0 then 0 else fac(n-1)
+measure A`id;
+        
+
+end B

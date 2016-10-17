@@ -1,0 +1,29 @@
+class Nullable
+instance variables
+  public static NULL: Object:= new Object();
+  protected isNil: bool :=false
+operations
+  public Nullable: <XX> ==> Nullable
+  Nullable(-) == isNil:=true;
+
+  public IsNil: () ==> bool
+  IsNil() == return isNil
+end Nullable
+
+class Object
+
+operations
+  public Object: <NULL> ==> Object
+  Object(p) == let - = new Nullable(<XX>) in skip;
+end Object
+
+class A is subclass of Object
+operations
+
+public  Test : () ==> bool
+Test() == 
+( dcl p: Object := Nullable`NULL, t_p:Object:=Nullable`NULL;
+  return p = t_p
+);
+
+end  A

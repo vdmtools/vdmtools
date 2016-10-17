@@ -1,0 +1,23 @@
+class  MapComprehensionExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let A = "ABC",
+      s = {8,9},
+      - = let m:map int to int =
+         { (cases false:
+             true -> A,
+             others -> s
+           end) |->
+           (cases false:
+             true -> A,
+             others -> s
+           end) | i in set {1} } in m 
+  in skip;
+
+------------------------------------------------------------------------------
+end MapComprehensionExprTest

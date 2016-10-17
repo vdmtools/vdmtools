@@ -1,0 +1,301 @@
+-- --------------------------------------------
+-- VPPUnit - VDM++ Unit test library
+-- --------------------------------------------
+class Test
+
+  operations
+
+    public Run: TestResult ==> ()
+    Run (-) == is subclass responsibility;
+
+    public Run: set of bool ==> seq of char
+    Run(bs) == is subclass responsibility;
+
+    public Run: () ==> ()
+    Run() == is subclass responsibility;
+
+end Test
+
+-- --------------------------------------------
+class ATestSuite is subclass of Test
+
+  instance variables
+
+    tests : seq of Test := [];
+
+  operations
+
+    public Run : () ==> seq of char
+    Run () ==
+      (dcl tr : TestResult := new TestResult();
+       Run(tr);
+       tr.Show());
+
+    public Run: TestResult ==> ()
+    Run(result) ==
+      for test in tests do
+        test.Run(result);
+
+    public AddTest: Test ==> ()
+    AddTest(test) ==
+      tests := tests ^ [test];
+
+end ATestSuite
+
+-- --------------------------------------------
+class TestCase is subclass of Test
+
+  instance variables
+    name : seq of char
+
+  operations
+    public TestCase : seq of char ==> TestCase
+    TestCase(nm) == name := nm;
+
+    public GetName : () ==> seq of char
+    GetName () == return name;
+
+    protected AssertTrue : bool ==> ()
+    AssertTrue (b) == if not b then exit <FAILURE>;
+
+    protected AssertFalse : bool ==> ()
+    AssertFalse (b) == if b then exit <FAILURE>;
+
+    public Run : TestResult ==> ()
+    Run (tr) ==
+      trap <FAILURE>
+        with
+          tr.AddFailure(self)
+        in
+          (SetUp();
+           RunTest();
+           TearDown());
+
+    protected SetUp : () ==> ()
+    SetUp() == is subclass responsibility;
+
+    protected RunTest : () ==> ()
+    RunTest() == is subclass responsibility;
+
+    protected TearDown : () ==> ()
+    TearDown() == is subclass responsibility;
+
+end TestCase
+
+-- --------------------------------------------
+class TestResult
+
+  instance variables
+    failures : seq of TestCase := [];
+    io : IO := new IO();
+
+  operations
+    public AddFailure: TestCase ==> ()
+    AddFailure (test) == failures := failures ^ [test];
+
+    public Print : seq of char ==> ()
+    Print (s) ==
+      def - = io.echo(s ^ "\n") in skip;
+
+    public Show : () ==> seq of char
+    Show () ==
+     (if failures = [] then
+        Print ("*** All Tests Passed. ***")
+      else
+        for failure in failures do
+          Print ("*** FAILED: " ^ failure.GetName());
+      def res = io.GetString() in return res)
+
+end TestResult
+class IO
+
+instance variables
+
+  string : seq of char := "";
+types
+ 
+public
+filedirective = <start>|<append> 
+
+functions
+
+-- Write VDM value in ASCII format to std out:
+public
+writeval[@p]: @p -> bool
+writeval(val)==
+  is not yet specified;
+
+-- Write VDM value in ASCII format to file.
+-- fdir = <start> will overwrite existing file,
+-- fdir = <append> will append output to the file (created if
+-- not existing).
+public
+fwriteval[@p]:seq1 of char * @p * filedirective -> bool
+fwriteval(filename,val,fdir) ==
+  is not yet specified;
+
+-- Read VDM value in ASCII format from file
+public
+freadval[@p]:seq1 of char -> bool * [@p]
+freadval(f) ==
+  is not yet specified
+  post let mk_(b,t) = RESULT in not b => t = nil;
+
+operations
+
+
+public GetString: () ==> seq of char
+GetString() ==
+  return string;
+
+-- Write text to std out. Surrounding double quotes will be stripped,
+-- backslashed characters should be interpreted.
+public
+echo: seq of char ==> bool
+echo(text) ==
+  fecho ("",text,nil);
+
+-- Write text to file like 'echo'
+public
+fecho: seq of char * seq of char * [filedirective] ==> bool
+fecho (filename,text,fdir) ==
+  (string := string ^ text; return true)
+  pre filename = "" <=> fdir = nil;
+
+-- The in/out functions  will return false if an error occur. In this
+-- case an internal error string will be set. 'ferror' returns this
+-- string and set it to "".
+public
+ferror:()  ==> seq of char
+ferror () ==
+  is not yet specified
+end IO
+class Integer
+
+  functions
+
+    static public to_string : int -> seq of char
+    to_string(i) == 
+	if i < 0 then
+	  "-" ^ to_string_aux(-i)
+	else
+	  to_string_aux(i);
+		
+    static public to_string_aux : nat -> seq of char 
+    to_string_aux(n) == 
+	let r = n mod 10,
+	    q = n div 10
+	in
+	    cases q :
+	      0	     -> to_char(r),
+	      others -> to_string_aux(q) ^ to_char(r)
+	    end;
+
+    static public to_char : int -> seq of char
+    to_char(i) ==
+	cases i:
+		0	-> "0",
+		1	-> "1",
+		2	-> "2",
+		3	-> "3",
+		4	-> "4",
+		5	-> "5",
+		6	-> "6",
+		7	-> "7",
+		8	-> "8",
+		9	-> "9",
+		others	-> "x"
+	end;
+
+end Integer
+class STACK
+
+  types
+    public ELEM = int;
+
+  instance variables
+     elements : seq of ELEM := [];
+
+  operations
+
+     public Push : ELEM ==> ()
+     Push(e) ==
+       elements := [e] ^ elements
+     pre  true
+     post hd elements = e;
+
+     public Top : () ==> ELEM
+     Top() ==
+       return hd elements
+     pre  len elements > 0
+     post hd elements = RESULT;
+
+     public length : () ==> int
+     length() ==
+       return len elements
+     pre  true
+     post len elements = RESULT;
+
+
+     public Pop : () ==> ()
+     Pop() ==
+       elements := tl elements
+     pre  len elements > 0
+     post tl elements~ = elements
+
+end STACK
+class test00 is subclass of TestCase
+
+  operations
+
+    protected SetUp : () ==> ()
+    SetUp() == skip;
+
+    protected RunTest : () ==> ()
+    RunTest() ==
+      (dcl stack : STACK := new STACK();
+       AssertTrue(stack.length() = 0));
+
+    protected TearDown: () ==> ()
+    TearDown () == skip;
+
+end test00
+
+class test01 is subclass of TestCase
+
+  operations
+
+    protected SetUp : () ==> ()
+    SetUp() == skip;
+
+    protected RunTest : () ==> ()
+    RunTest() ==
+      (dcl stack : STACK := new STACK();
+       stack.Push(10);
+       AssertTrue(stack.Top() = 10));
+
+    protected TearDown: () ==> ()
+    TearDown () == skip;
+
+end test01
+
+class testapp
+
+  operations
+    public Execute : () ==> seq of char
+    Execute() ==
+      (dcl ts : ATestSuite := new ATestSuite();
+       ts.AddTest(new test00("New Stack is nil."));
+       ts.AddTest(new test01("Push 10."));
+       ts.Run());
+
+end testapp
+class A
+
+operations
+ 
+  public Test : () ==> seq of char
+  Test() ==
+    new testapp().Execute();
+
+end A

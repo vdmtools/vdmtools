@@ -1,0 +1,19 @@
+module A
+exports all
+definitions
+operations
+Test : () ==> invariant
+Test () ==
+( invariant := mk_invariant(a+1,b+1);
+  return invariant
+)
+
+
+state invariant of
+  a: nat
+  b: nat
+inv S == let mk_invariant(a,b) = S in a >= b
+init S == S = mk_invariant(0,0)
+end
+
+end A

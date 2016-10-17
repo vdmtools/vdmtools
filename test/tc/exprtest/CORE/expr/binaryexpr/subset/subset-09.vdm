@@ -1,0 +1,13 @@
+class BinaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = (if true then {3} else {}) subset (if false then {true} else {})
+  in skip;
+
+------------------------------------------------------------------------------
+end BinaryTest

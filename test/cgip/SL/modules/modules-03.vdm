@@ -1,0 +1,148 @@
+module B
+exports 
+types struct Try
+
+values 
+  a, b : int;
+  tok  : token;
+  l    : seq1 of int
+
+definitions
+types 
+  Try :: try1 : nat 
+         try2 : nat
+  inv inv_try == (inv_try.try1 = 1)
+
+values
+  mk_(a,b) : int * int = mk_(100,200);
+  tok = mk_token(<TOKEN>);
+  --s : set of real = {300,...,305};
+  --l = [i | i in set s]
+  l = [i | i in set {300,...,305}]
+
+end B
+
+module C
+exports operations
+  op2: nat ==> ();
+  op3: () ==> seq of nat
+
+types struct Sigma
+
+definitions
+values
+  One : nat = 1
+
+operations
+
+  op1: set of nat ==> seq of nat
+  op1(s) ==
+    if s = {} then
+      return []
+    else
+      let e in set s be st forall e1 in set s \ {e} & e1 < e in
+        return op1(s \ {e});
+
+  op2: nat ==> ()
+  op2(n) ==
+    s := s union {n};
+
+  op3: () ==> seq of nat
+  op3 
+  () == op1(s)
+  pre card s > One
+  post let l = RESULT in
+       forall i,j in set inds l &
+         if i < j then
+           l(i) > l(j)
+         else
+           l(i) < l(j)
+           
+state Sigma of
+  s : set of nat
+  init s == s = mk_Sigma({})
+end
+
+end C
+
+module D
+
+exports functions
+  f1, f2: set of nat * set of nat -> set of nat;
+  f3: set of nat * set of nat -> bool
+
+definitions
+functions
+
+  f1: set of nat * set of nat -> set of nat
+  f1(s1, s2) ==
+    s1 union s2;
+
+  f2: set of nat * set of nat -> set of nat
+  f2(s1, s2) ==
+    s1 inter s2;
+
+  f3: set of nat * set of nat -> bool
+  f3(s1, s2) ==
+    f4(s1, s2);
+
+  f4: set of nat * set of nat -> bool
+  f4(s1, s2) ==
+    s1 psubset s2
+
+end D
+
+module E
+
+exports types struct C; struct D 
+
+definitions
+types
+  A = set of nat;
+  B :: a : int
+       b : token;
+  C :: set of nat
+       set of nat;
+  D :: a : seq of nat
+       b : seq of token
+end E
+
+module A
+imports 
+
+from B types
+   Try renamed tries,
+
+from C operations
+  op2: nat ==> ();
+  op3,
+
+-- Fejl i TC:
+--types Sigma:: s : set of nat,
+
+from D functions
+  f3; f2: set of nat * set of nat -> set of nat;
+  f1,
+
+from E types
+  C:: set of nat
+      set of nat;
+  D:: a : seq of nat
+      b : seq of token
+
+exports
+  operations 
+  Test: () ==> nat 
+
+definitions
+operations
+Test: () ==> nat
+Test() ==
+        return(mk_tries(1,20).try1)
+
+
+end A
+
+
+
+

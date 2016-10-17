@@ -1,0 +1,52 @@
+class A is subclass of C
+
+instance variables
+  state        : [B] := new B();
+  a : (int*real) | int := 2;   
+
+operations
+  public Test : () ==> real
+  Test() ==
+    return evalExpr();
+   operations
+
+  getState: () ==> B
+  getState() == return state
+  pre state <> nil;
+
+  evalExpr: () ==> [ItemId] 
+  evalExpr() ==
+   (cases a:
+    2 -> let a=1 in
+         getState().getVarVal(),
+    mk_(a,b) -> newNumVal(a),
+    others-> let a=1 in
+         getState().getVarVal()
+    end
+    );
+ 
+newNumVal : real ==> ItemId
+newNumVal(v) ==
+(
+ getState().getVarVal()
+);
+
+end A
+
+class B is subclass of C
+
+instance variables
+   id : ItemId := 4;
+operations
+
+public getVarVal:() ==> ItemId
+getVarVal()==return id
+
+end B
+
+class C
+
+types
+public ItemId = nat | int
+
+end C

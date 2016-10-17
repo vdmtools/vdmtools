@@ -1,0 +1,23 @@
+functions
+
+Simple: () -> nat
+Simple() ==
+  let x in set {1,2}
+  in
+    x;
+
+Choose: (nat -> bool) -> nat
+Choose(p) ==
+  let r : nat be st pre_(p,r) and p(r)
+  in
+    r
+pre exists x : nat & pre_(p,x) and p(x) = true
+
+--PO1
+--(forall p : (nat -> bool) &
+--   (exists x : nat & pre_(p,x) and p(x) = true) 
+--   =>
+--   (exists r : nat & pre_(p,r) and p(r)))
+
+--PO2
+--(exists x in set {1,2} & true)

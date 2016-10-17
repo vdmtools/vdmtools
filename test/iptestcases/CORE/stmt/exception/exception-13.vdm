@@ -1,0 +1,11 @@
+class A
+
+operations
+
+public Test : () ==> nat | bool
+Test() ==
+  trap a : bool with return a
+  in
+    exit 7;
+
+end A

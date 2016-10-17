@@ -1,0 +1,98 @@
+class PinTableModel is subclass of WireTableModel
+operations 
+protected  getItems : () ==> map  int  to  map  int  to  [String]
+getItems() == 
+( dcl   currRefDes : [RefDes] := context.getCurrentContextFieldObject(ContextTypes`REFDES),
+        currPin : [String] := nil  ,
+        currWire : [Wire] := nil  ,
+        wireList : map  int  to  [Wire] := nil  ;
+  if  columnTypes = nil  
+  then  
+    let - = getColumnInfo()
+    in 
+      skip ;
+  ( dcl   tmpWires : [Vector] := getWiresToInclude(),
+          pinListRows : map  int  to  [PinListRow] := {l_13 |-> nil  |l_13 in set  {0,...,tmpWires.size()-1}};
+    ( dcl   i : int  := 0;
+      while  i < pinListRows.length do  
+      ( pinListRows := pinListRows ++ {i |-> new  PinListRow(currRefDes , tmpWires.elementAt(i))};
+        i := i+1
+      ) 
+    ) ;
+    tmpWires := nil  ;
+    let - = HeapSort`sort(pinListRows , new  NumericAlphaCompare())
+    in 
+      skip ;
+    wires := new  Vector(pinListRows.length);
+    ( dcl   i : int  := 0;
+      while  i < pinListRows.length do  
+      ( let - = wires.addElement(pinListRows(i).getWire())
+        in 
+          skip ;
+        i := i+1
+      ) 
+    ) ;
+    items := {l_3 |-> nil  |l_3 in set  {0,...,pinListRows.length-1}};
+    if  pinListRows.length > 0
+    then  
+      ( ( dcl   row : int  := 0;
+          while  row < pinListRows.length do  
+          ( items := items ++ {row |-> {l_5 |-> nil  |l_5 in set  {0,...,columnTypes.length-1}}};
+            ( dcl   col : int  := 0;
+              while  col < columnTypes.length do  
+              ( items(row) := items(row) ++ {col |-> WireDataTypes`decodeValue(columnTypes(col) , pinListRows(row).getWire() , pinListRows(row).getEnd1() , pinListRows(row).getEnd2())};
+                col := col+1
+              ) 
+            ) ;
+            row := row+1
+          ) 
+        ) 
+      ) ;
+    return  items
+  ) 
+) ;
+
+public  PinTableModel : () ==> PinTableModel
+PinTableModel() == 
+( let - = WireTableModel()
+  in 
+    skip 
+) ;
+
+public  update : [Object] ==> bool 
+update(contextChanges) == 
+( dcl   changes : [ContextSet] := contextChanges;
+  if  changes.contains(ContextTypes`REFDES)
+  then  
+    ( return  true  
+    ) 
+  else  
+    ( return  false  
+    ) 
+) ;
+
+protected  getWiresToInclude : () ==> [Vector]
+getWiresToInclude() == 
+( dcl   refdes : [RefDes] := context.getCurrentContextFieldObject(ContextTypes`REFDES),
+        wires : [Vector] := new  Vector();
+  if  refdes <> nil  
+  then  
+    ( dcl   refdesWires : [Iterator] := refdes.getAllWires();
+      trap  j2v_break with  
+        cases  true  : 
+          (isofclass  (J2V_Break,j2v_break)) -> 
+            skip 
+          
+        end  
+      in  
+        while  refdesWires.hasNext() do  
+        ( let - = wires.addElement(refdesWires.next())
+          in 
+            skip 
+        ) 
+    ) ;
+  return  wires
+) ;
+
+
+end  PinTableModel

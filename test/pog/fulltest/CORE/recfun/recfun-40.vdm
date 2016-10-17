@@ -1,0 +1,17 @@
+class A
+
+functions
+
+public
+id : nat -> nat
+id(x) == x;
+
+public
+foo : nat -> nat
+foo(x) == 
+  if x = 0 then 0
+  elseif x = 1 then foo(x-1)
+  else foo(x-1)
+measure id;
+
+end A

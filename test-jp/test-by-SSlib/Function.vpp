@@ -1,0 +1,61 @@
+\begin{vdm_al}
+class Function
+/*
+責任
+	関数プログラミングに関わる振る舞いを表す。
+概要
+	関数プログラミングに共通な機能を定義する。
+参照
+	多くの関数は、関数型プログラミング言語Concurrent Cleanのライブラリーから移植した。
+*/
+values
+	Rcsid = "$Id: Function.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $";
+	
+functions 
+\end{vdm_al}
+
+ある条件ｐが真になるまで、初期値xに関数fを繰り返し適用する。
+\begin{vdm_al}
+static public Funtil[@型] : (@型 -> bool) -> (@型 -> @型) -> @型 -> @型
+Funtil(p)(f)(x) == if p(x) then x else Funtil[@型](p)(f)(f(x));
+\end{vdm_al}
+
+ある条件ｐが真である間、初期値xに関数fを繰り返し適用する。
+\begin{vdm_al}
+static public Fwhile[@型] : (@型 -> bool) -> (@型 -> @型) -> @型 -> @型
+Fwhile(p)(f)(x) == if p(x) then Fwhile[@型](p)(f)(f(x)) else x;
+\end{vdm_al}
+
+関数の連続適用
+\begin{vdm_al}
+static public Seq[@型] : seq of (@型 -> @型) -> @型 -> @型
+Seq(関数列)(引数) ==
+	cases 関数列 :
+	[先頭関数] ^ 後続関数列	-> Seq[@型](後続関数列)(先頭関数(引数)),
+	[]					-> 引数
+	end
+--measure length
+;
+
+--static length[@型] : seq of (@型 -> @型) -> @型 -> nat
+--length(関数列)(-) == len 関数列;
+\end{vdm_al}
+
+\begin{vdm_al}
+static public 関数を読み込む[@型] : seq of char -> [@型]
+関数を読み込む(ファイル名) ==
+	let 
+		io = new IO(),
+		mk_(結果, f) = io.freadval[@型](ファイル名)
+	in
+	if 結果 then
+		f
+	else
+		let -= io.echo("Can't read values from the data file = " ^ ファイル名)
+		in
+		nil;
+\end{vdm_al}
+
+\begin{vdm_al}
+end Function
+\end{vdm_al}

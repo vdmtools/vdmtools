@@ -1,0 +1,36 @@
+\begin{vdm_al}
+class 『住所書込』 is subclass of 『環境タスク』
+
+operations
+  public 『住所書込』: 『事象処理者』 * nat ==> 『住所書込』
+  『住所書込』 (a事象処理者, a最大刺激数) == 『環境タスク』("住所を書込む", a事象処理者, a最大刺激数);
+
+  -- handleEvent事象を処理する receives the responses from the system
+  -- and checks whether the response time for the matching
+  -- stimulus was less than or equal to 2000 -> 80000 time units
+  private
+  事象を処理する: 『事象』 ==> ()
+  事象を処理する (a事象) == duration (0) 事象受理ログ(a事象.事象IDを得る())
+  post 応答時間をチェックする(事象生起写像,事象受理写像,80000);
+
+  -- createSignal事象を生起する generates the stimuli for the system
+  private
+  事象を生起する: () ==> ()
+  事象を生起する () ==
+    duration (0)
+      if (card dom 事象生起写像 < 最大刺激数) then
+        ( dcl 事象ID : nat := 事象IDを得る();
+          事象生起ログ(事象ID);
+          割込を起こす("キー押しを処理する", 事象ID) );
+
+  -- start the thread of the task
+  public Run: () ==> ()
+  Run () == start(self)
+
+thread
+-- 下記のperiodic構文は実時間拡張の書式に既になっている
+-- 通常のVDM++の書式では「periodic (1000) (事象を生起する)」でないと構文エラーになる
+  periodic (1000,0,0,0) (事象を生起する)
+
+end 『住所書込』
+\end{vdm_al}

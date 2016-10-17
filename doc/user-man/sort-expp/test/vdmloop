@@ -1,0 +1,11 @@
+#!/bin/sh   
+
+## Runs a collection of VDM++ test examples for the sorting example.
+SPEC="../dosort.vpp ../implsort.vpp ../sorter.vpp ../explsort.vpp \
+      ../mergesort.vpp ../sortmachine.vpp"
+
+## Generate the test coverage file vdm.tc
+vppde -p -R vdm.tc $SPEC
+
+## Find all argument files and run them on the specification.
+find . -type f -name \*.arg -exec vdmtest {} \;

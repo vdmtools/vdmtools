@@ -1,0 +1,71 @@
+class JavaIoFilterInputStream is subclass of JavaIoInputStream
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaIoFilterInputStream" , <CLASS> , false  )
+instance variables 
+  protected  in__ : JavaIoInputStream
+operations 
+public  read : () ==> int 
+read() == 
+( return  in__.read()
+) ;
+
+public  close : () ==> ()
+close() == 
+( in__.close()
+;
+) ;
+
+public  mark : int  ==> ()
+mark(readlimit) == 
+( in__.mark(readlimit);
+) ;
+
+public  reset : () ==> ()
+reset() == 
+( in__.reset();
+) ;
+
+public  skip__ : int  ==> int 
+skip__(n) == 
+( return  in__.skip__(n)
+) ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  available : () ==> int 
+available() == 
+( return  in__.available()
+) ;
+
+public  read : map  int  to  int  ==> int 
+read(b) == 
+( return  read(b , 0 , card dom b)
+) ;
+
+public  markSupported : () ==> bool 
+markSupported() == 
+( return  in__.markSupported()
+) ;
+
+--
+-- Array is used as output parameter!
+--
+public  read : map  int  to  int  * int  * int  ==> int 
+read(b, off, len__) == 
+  return undefined;
+--( return  in__.read(b , off , len__)
+--) ;
+
+public  JavaIoFilterInputStream : <NIL> ==> JavaIoFilterInputStream
+JavaIoFilterInputStream(-) == 
+isNil := true  ;
+
+protected  JavaIoFilterInputStream : JavaIoInputStream ==> JavaIoFilterInputStream
+JavaIoFilterInputStream(in__) == 
+( JavaIoFilterInputStream`in__ := in__
+) ;
+
+
+end  JavaIoFilterInputStream

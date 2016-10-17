@@ -1,0 +1,40 @@
+module A
+
+imports 
+  from B
+   types 
+     MyRec ::
+        b : nat;
+   MyType
+
+
+definitions
+
+types 
+   MyAType = map B`MyType to B`MyType
+
+operations
+
+   Test: () ==> int
+   Test() ==
+     return 0
+end A
+
+module B
+
+exports
+ types
+ struct  MyRec;
+ MyType
+
+
+definitions
+
+types
+
+  MyRec ::
+    b: nat;
+
+  MyType = nat
+
+end B

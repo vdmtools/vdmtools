@@ -1,0 +1,17 @@
+class A
+
+types
+
+  SeqOfChar = seq of char
+  
+operations
+
+test: nat * nat ==> nat
+test(x,x) ==
+  return 8;
+   
+public Test : () ==> nat
+Test() ==
+  test(8,7) 
+
+end A

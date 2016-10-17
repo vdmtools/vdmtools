@@ -1,0 +1,69 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+
+--  A - C - E
+--    \   /
+--      D
+--
+-- B
+class A
+
+
+
+end A
+
+
+class C is subclass of A
+
+types
+public  d3 ::
+    a: char
+    b: char
+
+end C
+
+class D is subclass of A
+
+types
+public  d ::
+    a: nat
+    b: nat
+
+end D
+
+class E is subclass of C, D
+
+operations
+
+public   m: () ==> char  
+   m () ==
+    ( dcl a: d;
+      a := mk_d(3,6);
+      return '3';
+    )
+
+end E
+
+class B 
+
+operations 
+  public Test : () ==> char  
+  Test () ==
+        new E().m()
+
+end B
+
+
+
+
+
+
+
+
+
+
+
+
+
+

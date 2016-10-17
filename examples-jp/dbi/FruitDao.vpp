@@ -1,0 +1,50 @@
+class FruitDao is subclass of DBITableDao
+
+values
+tablename = "fruit";
+
+operations
+public
+FruitDao: () ==> FruitDao
+FruitDao() ==
+  skip;
+
+public
+getTableName: () ==> seq1 of char
+getTableName() ==
+  return tablename;
+
+public
+insert: FruitBean ==> nat
+insert(f) ==
+  let name = f.get_name(),
+      price = VDMUtil`val2seq_of_char[nat](f.get_price())
+  in return insert([name, price]);
+
+public
+selectList: [seq of char] ==> seq of FruitBean
+selectList(where) ==
+  let sql = "SELECT * FROM fruit" ^ (if where = nil then "" else " where " ^ where),
+      - = executeQuery(sql)
+  in
+   (dcl fruits : seq of FruitBean := [];
+      while fetch() do
+        let
+--            name = getString(1),
+--            price = getInt(2)
+            rec = getRecordSeq(),
+--            recm = getRecordMap(),
+            name = rec(1),
+            mk_(-,price) = VDMUtil`seq_of_char2val[nat](rec(2))
+        in
+          fruits := fruits ^ [new FruitBean(name, price)];
+      return fruits;);
+
+public
+createTable: () ==> ()
+createTable() ==
+  createTable(["name varchar(20) primary key", "price int"]);
+  --createTable(["name varchar2(20 CHAR) primary key", "price int"]); -- oracle UTF8
+  --createTable(["name nvarchar(20) primary key", "price int"]);  -- oracle UTF16
+
+end FruitDao

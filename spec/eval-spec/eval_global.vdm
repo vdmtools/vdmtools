@@ -1,0 +1,491 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Global definitions for the dynamic semantic 
+%    (e.g. different module value definitions)
+% $Id: eval_global.vdm,v 1.34 2006/05/26 01:36:56 vdmtools Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\chapter{Global Definitions and Types}
+\label{ch:global}
+
+
+In this chapter, we describe the module GLOBAl, which contains the global 
+definitions used in the interpreter. Global definitions include global type 
+definitions. 
+
+\begin{vdm_al}
+module GLOBAL
+
+  imports
+    from AS all,
+    from REP all,
+    from CI all,
+    from SEM all,
+    from STKM all,
+    from INSTRTP all,
+    from PAT all,
+#ifdef VDMPP
+    from SCHDTP all,
+#endif VDMPP
+    from RTERR all
+
+  exports all
+
+definitions
+\end{vdm_al}
+
+
+#ifdef VICE
+
+\section{Channels and Processors}
+
+For each channel the following information is recorded:
+\begin{description}
+\item[fromt:] The time where the transfer of the value to be 
+              communication is able to start.
+\item[tot:] The time where the transfer of this particular information
+            is terminated.
+\item[fcpu:] The processor that the transfer comes from.
+\item[tcpu:] The processor that the transfer goes to.
+\end{description}
+
+\begin{vdm_al}
+types
+
+  ChanUsage ::
+    fromt : nat
+    tot   : nat
+    fcpu  : [AS`Name]
+    tcpu  : [AS`Name] | set of [AS`Name];
+
+\end{vdm_al}
+#endif VICE
+
+\section{State Value}
+
+#ifdef VDMSL
+In VDM-SL, we use a state value. Each state value is represented by a
+map of type $StateMap$. 
+
+\begin{vdm_al}
+types
+
+StateMap = map AS`Name to State
+\end{vdm_al}
+
+The state map is a map from identifiers to state values.
+#endif VDMSL
+
+\begin{vdm_al}
+types
+
+State :: val : SEM`VAL
+         tp : AS`Type
+\end{vdm_al}
+
+A state value, $State: Exp $, consists of a semantic value, $val$, and a type,
+$tp$.
+
+#ifdef VDMPP
+The State type is used for local states.
+#endif VDMPP
+
+#ifdef VDMSL
+\begin{vdm_al}
+types
+
+--StateInv = AS`Name * seq of AS`Name * AS`Pattern * AS`Expr
+StateInv = AS`Name * seq of AS`Name * AS`Pattern * AS`Expr * STKM`Pattern * STKM`SubProgram
+\end{vdm_al}
+
+A state invariant, of type $StateInv$, represents the possible invariant
+defined for the state, and is defined as:
+\[ \reccons{\kw{mk-}}{id, id-l, pat, expr} \]
+where $id$ is the name of the type of the state, $id-l$ is the sequence
+containing all the names of the state components, $pat$ is the pattern from
+the invariant definition, and $expr$ is the actual invariant expression.
+#endif VDMSL
+
+\section{Global Values}
+
+\begin{vdm_al}
+types
+
+ValueMap = map AS`Name to (SEM`VAL * AS`Access)
+inv valmap == 
+    forall nm in set dom valmap &
+    len nm.ids = 1
+\end{vdm_al}
+
+#ifdef VDMSL
+Global values are stored in a map of type $ValueMap$. The domain of the map
+consists of all the identifiers of the global values, and each identifier
+maps to a semantic value.
+#endif VDMSL
+
+#ifdef VDMPP 
+The {\em ValuMap} data type is used to store semantics values of
+values and instance variables and their access rigths. 
+#endif VDMPP
+
+#ifdef VDMSL
+\section{Module and Definitions Values}
+
+In the interpreter, we make a distinction between normal module values and
+values for parameterized modules.
+
+\subsection{Normal Module Value}
+
+A normal module value is the result of the translation of a module
+definition (of type $Module$) of a non-parameterized module, or of the
+instantiation of a module. A normal module value is defined as:
+
+\begin{vdm_al}
+types
+
+SigmaMO :: explfns : map AS`Name to SEM`CompExplFN
+           explops : map AS`Name to SEM`ExplOP
+           explpolys : map AS`Name to SEM`ExplPOLY
+           tps : map AS`Name to AS`TypeDef
+           recsel : map AS`Name to RecSel
+           gv : [ValueMap]
+           gv_init : seq of AS`ValueDef
+           gv_inst : seq of AS`ValueDef
+           gs : StateMap
+           gs_init : [AS`StateDef]
+           stp_id : [AS`Name]
+           stateinv : [StateInv]
+           exp : [AS`ExportSig]
+           imp : map AS`Name to [set of AS`Name]
+           ren : map AS`Name to AS`Name
+\end{vdm_al}
+
+
+In a module value, we maintain all information of a module. This
+information consists of function and operation values ($explfns$,
+$explpolys$, and $explops$), types and
+record selectors ($tps$ and $recsel$), global values ($gv$, $gv-init$, and
+$gv-inst$), module state ($gs$, $gs-init$, $stateinv$, and $stp-id$), and
+module interface ($exp$, $imp$, $ren$). 
+The module state is represented as a stack of states in
+order to cope with the using operator.
+
+\subsection{Implementation Module Value}
+\begin{vdm_al}
+types
+
+SigmaIMO :: extfns : map AS`Name to SEM`DLFN
+            extops : map AS`Name to SEM`DLOP
+            extv : [ValueMap]
+            exp : AS`DLExportSig
+            imp : map AS`Name to [set of AS`Name]
+            ren : map AS`Name to AS`Name
+            useslib : [AS`TextLit]
+\end{vdm_al}
+
+The implementation module value consists of function and operation values
+($extfns$, and $extops$), global values ($gv$), module interface ($alias$,
+$exp$, $imp$, $inst$, and $been-inst$) and the name of the code
+related to thhis implementation module.
+
+\begin{vdm_al}
+types
+SigmaEXP :: extfns : map AS`Name to SEM`DLFN
+            extops : map AS`Name to SEM`DLOP
+            extv : [map AS`Name to SEM`LOC]
+\end{vdm_al}
+
+The result of the translation of the export section of an implemenation module
+contains semantic values for function, operations and values.
+
+\subsection{Definitions Value}
+
+\begin{vdm_al}
+types
+
+SigmaDEFS :: explfns : map AS`Name to SEM`CompExplFN
+             explops : map AS`Name to SEM`ExplOP
+             explpolys : map AS`Name to SEM`ExplPOLY
+             tps : map AS`Name to AS`TypeDef
+             recsel : map AS`Name to RecSel
+             gv_init : seq of AS`ValueDef
+             gs_init : [AS`StateDef]
+             stp_id : [AS`Name]
+             stateinv : [StateInv]
+\end{vdm_al}
+
+The result of the translation of a definitions block is a definitions
+value. This value contains information about functions and operations
+($explfns$, $explpolys$, and $explops$),
+types and record selectors ($tps$ and $recsel$), global values ($gv-init$),
+and the state ($gs-init$, $stp-id$, and $stateinv$).
+
+
+\section{Record Selectors}
+
+\begin{vdm_al}
+types
+
+RecSel = nat * (map AS`Name to nat) * seq of AS`Type * AS`Access;
+
+\end{vdm_al}
+
+Record selectors are used to extract the proper value from a record value.
+If the tuple:
+$ \reccons{\kw{mk-}}{n, pos, tp-l} $ is a record selector, we know that
+the corresponding record value has $n$ components. The map $pos$ contains
+for every component the corresponding index in the record value, and $tp-l$
+is a sequence with the type for each of the components.
+#endif VDMSL
+
+ 
+#ifdef VDMPP
+
+\section{Class Values}
+
+\begin{vdm_al}
+types
+
+All_Fns_Ops_Polys = map AS`Name to ((SEM`CompExplFN | SEM`ExplOP | SEM`ExplPOLY) * AS`Access);
+
+SigmaClass ::
+  inhcon         : InhCon
+  instvars       : seq of AS`InstAssignDef
+  instvars_tp    : map AS`Name to AS`Type
+  inst_inv       : seq of AS`InstanceInv * STKM`SubProgram -- seq of AS`InstanceInv -- 20130709
+  inst_init_val  : SEM`InsStrct
+  vls_def        : seq of AS`ValueDef
+  vls_init       : ValueMap
+  explfns        : map AS`Name to SEM`CompExplFN
+  explops        : map AS`Name to SEM`ExplOP
+  overloaded     : map AS`Name to Overloaded
+  explpolys      : map AS`Name to SEM`ExplPOLY
+  localtps       : map AS`Name to AS`TypeDef
+  recsel         : map AS`Name to RecSel
+  localhchy      : map AS`Name to set of AS`Name
+  isinit         : bool
+  constructor    : map seq of AS`Type to (STKM`DebugCmd * AS`Access)
+  defaultcons    : bool
+  statics        : ValueMap -- map AS`Name to (SEM`VAL * AS`Access)
+  statichist     : map AS`Name to SEM`History
+  perm_pred      : map AS`Name to STKM`SubProgram
+  thread         : [STKM`Thread]
+#ifdef VICE
+  depnms         : map AS`Name to (<ALL> | set of AS`Name)
+  -- mapping from operation name to the instance variables its 
+  -- permission predicate depends upon
+  depops         : map AS`Name to set of AS`Name
+  -- mapping from operation name to the operation invocations its 
+  -- permission predicate depends upon
+  sys            : bool
+#endif VICE
+  all_fns_ops_polys : All_Fns_Ops_Polys
+
+inv sgmcl == 
+   (forall name in set dom sgmcl.recsel &
+    let mk_AS`Name(idl,-)= name in
+     len idl = 1) and
+   (forall typedef in set rng sgmcl.localtps &
+    let mk_AS`TypeDef(nm,-,-,-,-)=typedef
+    in len nm.ids = 1) and
+   (forall mk_(-,access) in set rng sgmcl.explfns union rng sgmcl.explops union
+				rng sgmcl.explpolys union rng sgmcl.recsel union rng sgmcl.vls_init &
+	access in set {<PRIVATE_AS>,<PROTECTED_AS>,<PUBLIC_AS>});
+\end{vdm_al}
+
+The {\em SigmaClass} describes:
+
+\begin{itemize}
+\item inhcon: The controlled inheritance of the class.
+
+  \begin{vdm_al}
+  InhCon = set of AS`Name
+  inv icon == forall name in set icon &
+              let mk_AS`Name(ids,-)= name
+              in len ids = 1;
+  \end{vdm_al}
+  
+The Overloaded type is a mapping from the arity of the operation to a
+mapping from the mangled name to a sequence of types
+used in the parameters to the overloaded operation/function.
+
+\begin{vdm_al}
+  Overloaded = map nat to map AS`Name to ((seq of AS`Type) * AS`Access * [SEM`CompExplFN]);
+\end{vdm_al}
+  
+  The map goes from the class name of the all the superclasses.
+
+\item instvars: The instance variables of the class.
+
+
+\item inst\_inv: The instance invariant.
+
+\item inst\_init\_val: Contains the structure of the instance
+  variables for the specific class. All instance variable are set to
+  the semantic value undefined. This entry is used during
+  initialisation of values, and for creating new objects (EvalNewExpr).
+
+\item vls\_def. The value definitions.
+
+\item vls\_init. The initialisation of values.
+\item fullmths. A map of the full methods in the class.
+\item prelmths: A map of the preliminary methods in the class.
+\item explfns: A map of the explicit functions in the class.
+\item localtyps: A map of the types defined in the class.
+\item recsel: A map from the tag names of records to record
+  selectors. Record selectors are used to extract the proper value
+  from a record value.  
+
+\begin{vdm_al}
+RecSel = nat * (map AS`Name to nat) * seq of AS`Type * AS`Access;
+\end{vdm_al}
+
+If the tuple: $ \reccons{\kw{mk-}}{n, pos,
+    tp-l} $ is a record selector, we know that the corresponding
+  record value has $n$ components. The map $pos$ contains for every
+  component the corresponding index in the record value, and $tp-l$ is
+  a sequence with the type for each of the components.
+\item localhchy: A map from class names to set of class names,
+  describing the structure of the inheritance of this class.
+
+\item isinit: is a boolean describing if the class has been initialised.
+\item constructor: Contains a mapping of the stack machine instructions to initialize a
+new object of the class. The domain of this mapping reflects the types
+of the different constructors.
+\item defaultcons: This is a Boolean which indicates whether a default
+constructor (i.e. one without parameters) is present for the given class.
+\end{itemize}
+
+
+The next type is a map describing the hierarchy of the classes. It 
+goes from a class name to all its superclasses including the classes
+that can be inherited through several levels.
+
+
+\begin{vdm_al}
+Hierarchy = map AS`Name to set of AS`Name;
+
+\end{vdm_al}
+
+The next type {\em InhStrct} is a type that describes the inheritance
+structure of certain class.
+
+Consider the inheritance structure below where class {\em A} and {\em
+D} are super classes to {\em G}.
+
+\begin{verbatim}
+ 
+A - B - C
+  \      \ 
+   \      -G
+    \    /
+D -- E - F
+\end{verbatim}
+
+A value of inheritance structure for {\em G} could be:
+\begin{verbatim}
+{ G |-> [{A,D},{B,E},{C,F}]}
+\end{verbatim}
+
+\begin{vdm_al}
+InhStrct = map AS`Name to (seq of set of AS`Name);
+\end{vdm_al}
+
+This value will be used to describe the order of initialising the
+objects of the classes.
+
+\begin{vdm_al}
+
+OBJscope ::
+   obj : SEM`OBJ_Ref
+   class :  seq of AS`Name
+   origcl: seq of OrigCl; 
+-- commented out by PGL because this is violated by the invocation of 
+-- static operations
+--inv mk_OBJscope(objref, cl_l, orig_cll) == 
+--    let mk_SEM`OBJ(objnm,-,-) = STATE`GetSemObjInTab(objref) in
+--    let allsupers = STATE`GetAllSupers(objnm) in
+--    forall nm in set elems cl_l &
+--     nm in set allsupers union {objnm};
+
+\end{vdm_al}
+
+The type {\em OBJscope} is used to describe the current object being
+evaluated. The {\em OBJscope} contains the semantic value of the
+object, and a stack of class names describing which class (scope) of
+the object that we are currently evaluating. Furthermore, it contains
+a class describing which class that has called the construction
+currently evaluating.
+
+
+The type {\em OrigCl} is used to model the original class, that is the
+class from which the construction being evaluated is called from. See also the
+comments to the operation in the STATE moduel: {\em PushCurObj}. The original class can
+be a name of the original class, or it can be an empty record {\em Start}. The start record
+is used to model the very first element on the stack, that is, if the user writes
+\begin{verbatim}
+debug new A().Test()
+\end{verbatim}
+
+In this case the original class is the debugger environment, and it will be modelled
+with the {\em mk-Start()} value.
+
+\begin{vdm_al}
+OrigCl = AS`Name | Start;
+
+Start ::;
+\end{vdm_al}
+
+\begin{vdm_al}
+
+OBJ_tab = map SEM`OBJ_Ref to OBJ_Desc;
+
+
+OBJ_Desc ::
+    ref_count : nat
+    sem : SEM`OBJ
+    threadid : [ SCHDTP`ThreadId ]
+    DlClassInstancePtr : [token]
+    procid : [AS`Name];
+
+\end{vdm_al}
+
+The type {\em OBJ-tab} is a table of all objects. The table goes from
+an object reference {\em OBJ-Ref} to a object description. The object
+description {\em OBJ-Desc} contains a reference counter denoting
+numbers of references to the object and the semantic value of the object. 
+
+The DlClassInstancePtr is used on the implementation level and is
+(naturally) a pointer to a DlClassInstance.
+
+Furthermore it contains an optional threadid, denoting the thread that
+may have been started on this object. 
+
+#endif
+
+\subsection{Representation of Type Definitions}
+
+
+The type {\em Type} describes the various representation of type in
+VDM++.  The abstract syntax of the VDM++ does not any longer have a
+representation of the object reference type. That is why the GLOBAL`Type is defined.
+
+\begin{vdm_al}
+types
+#ifdef VDMPP
+
+Type = AS`Type | ObjRefType;
+
+ObjRefType ::
+   nm : AS`Name
+#endif VDMPP
+
+#ifdef VDMSL
+Type = AS`Type
+#endif VDMSL
+end GLOBAL
+\end{vdm_al}
+
+
+
+

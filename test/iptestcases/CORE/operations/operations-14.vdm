@@ -1,0 +1,19 @@
+class A
+
+operations
+
+
+g__: seq of nat ==> nat 
+g__([n1, n2]) ==
+( dcl a : nat := 35;
+  a := n1 + n2;
+  return n1 + n2
+);
+
+
+public Test () res : nat ==
+(
+  g__([3,3]);
+)
+
+end A

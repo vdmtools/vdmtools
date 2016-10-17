@@ -1,0 +1,21 @@
+class QuantExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let A = "ABC",
+      s = {8,9},
+     - = forall a in set
+         if false 
+         then A
+         else s & 
+         if false 
+         then A
+         else s 
+  in skip;
+
+------------------------------------------------------------------------------
+end QuantExprTest

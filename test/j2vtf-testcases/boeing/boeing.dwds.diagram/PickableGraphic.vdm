@@ -1,0 +1,276 @@
+class PickableGraphic is subclass of JComponent, PickableElement, Serializable
+operations 
+public  getCanvas : () ==> [JPanel]
+getCanvas() == 
+( return  containingCanvas
+) ;
+
+public  contains : int  * int  ==> bool 
+contains(x, y) == 
+( dcl   liesWithin : bool  := false  ,
+        boundingBox : [Rectangle] := getBounds();
+  liesWithin := (x >= boundingBox.x and  x < (boundingBox.x+boundingBox.width) and  y >= boundingBox.y and  y < (boundingBox.y+boundingBox.height));
+  return  liesWithin
+) ;
+
+public  getOrientation : () ==> [Orientation]
+getOrientation() == 
+( return  PickableGraphic`orientation
+) ;
+
+public  getWasSelected : () ==> bool 
+getWasSelected() == 
+( return  wasSelected
+) ;
+
+public  hasBeenPlotted : () ==> bool 
+hasBeenPlotted() == 
+( return  plotted
+) ;
+
+public  PickableGraphic : () ==> PickableGraphic
+PickableGraphic() == 
+( let - = PickableGraphic(0 , 0 , 0 , 0)
+  in 
+    skip 
+) ;
+
+public  setWasSelected : bool  ==> <VOID>
+setWasSelected(wasSelected) == 
+( PickableGraphic`wasSelected := wasSelected;
+  return  <VOID>
+) ;
+
+public  contains : [Point] ==> bool 
+contains(point) == 
+( dcl   liesWithin : bool  := false  ,
+        boundingBox : [Rectangle] := getBounds();
+  liesWithin := (point.x >= boundingBox.x and  point.x < (boundingBox.x+boundingBox.width) and  point.y >= boundingBox.y and  point.y < (boundingBox.y+boundingBox.height));
+  return  liesWithin
+) ;
+
+public  getWasHighlighted : () ==> bool 
+getWasHighlighted() == 
+( return  wasHighlighted
+) ;
+
+public  paint : [Graphics] ==> <VOID>
+paint(graphics) == 
+is subclass responsibility ;
+
+public  setHasBeenPlotted : bool  ==> <VOID>
+setHasBeenPlotted(plotted) == 
+( PickableGraphic`plotted := plotted;
+  return  <VOID>
+) ;
+
+public  setWasHighlighted : bool  ==> <VOID>
+setWasHighlighted(wasHighlighted) == 
+( PickableGraphic`wasHighlighted := wasHighlighted;
+  return  <VOID>
+) ;
+
+public  setCanvas : [JPanel] ==> <VOID>
+setCanvas(parentCanvas) == 
+( containingCanvas := parentCanvas;
+  return  <VOID>
+) ;
+
+public  getDefaultBackground : () ==> [Color]
+getDefaultBackground() == 
+( if  defaultBackgroundColor = nil  
+  then  
+    ( return  nil  
+    ) 
+  else  
+    ( return  new  Color(defaultBackgroundColor.getRGB())
+    ) 
+) ;
+
+public  getDefaultForeground : () ==> [Color]
+getDefaultForeground() == 
+( if  defaultForegroundColor = nil  
+  then  
+    ( return  nil  
+    ) 
+  else  
+    ( return  new  Color(defaultForegroundColor.getRGB())
+    ) 
+) ;
+
+public  getNotifyOnMouseClick : () ==> bool 
+getNotifyOnMouseClick() == 
+( return  notifyOnMouseClick
+) ;
+
+public  getSelectedBackground : () ==> [Color]
+getSelectedBackground() == 
+( if  selectedBackgroundColor = nil  
+  then  
+    ( return  nil  
+    ) 
+  else  
+    ( return  new  Color(selectedBackgroundColor.getRGB())
+    ) 
+) ;
+
+public  getSelectedForeground : () ==> [Color]
+getSelectedForeground() == 
+( if  selectedForegroundColor <> nil  
+  then  
+    ( return  new  Color(selectedForegroundColor.getRGB())
+    ) 
+  else  
+    ( return  nil  
+    ) 
+) ;
+
+public  PickableGraphic : int  * int  * int  * int  ==> PickableGraphic
+PickableGraphic(x, y, width, height) == 
+( let - = JComponent()
+  in 
+    skip ;
+  let - = setBounds(x , y , width , height)
+  in 
+    skip ;
+  let - = setForeground(nil  )
+  in 
+    skip ;
+  let - = setBackground(nil  )
+  in 
+    skip 
+) ;
+
+public  getNotifyOnMouseMotion : () ==> bool 
+getNotifyOnMouseMotion() == 
+( return  notifyOnMouseMotion
+) ;
+
+public  setNotifyOnMouseClick : bool  ==> <VOID>
+setNotifyOnMouseClick(notify) == 
+( notifyOnMouseClick := notify;
+  return  <VOID>
+) ;
+
+public  setNotifyOnMouseMotion : bool  ==> <VOID>
+setNotifyOnMouseMotion(notify) == 
+( notifyOnMouseMotion := notify;
+  return  <VOID>
+) ;
+
+public  getHighlightedBackground : () ==> [Color]
+getHighlightedBackground() == 
+( if  highlightBackgroundColor = nil  
+  then  
+    ( return  nil  
+    ) 
+  else  
+    ( return  new  Color(highlightBackgroundColor.getRGB())
+    ) 
+) ;
+
+public  getHighlightedForeground : () ==> [Color]
+getHighlightedForeground() == 
+( if  highlightForegroundColor = nil  
+  then  
+    ( return  nil  
+    ) 
+  else  
+    ( return  new  Color(highlightForegroundColor.getRGB())
+    ) 
+) ;
+
+public  mouseMoved : [MouseEvent] ==> <VOID>
+mouseMoved(event) == 
+is subclass responsibility ;
+
+public  mouseExited : [MouseEvent] ==> <VOID>
+mouseExited(event) == 
+is subclass responsibility ;
+
+public  mouseClicked : [MouseEvent] ==> <VOID>
+mouseClicked(event) == 
+( return  <VOID>
+) ;
+
+public  mouseDragged : [MouseEvent] ==> <VOID>
+mouseDragged(event) == 
+( return  <VOID>
+) ;
+
+public  mouseEntered : [MouseEvent] ==> <VOID>
+mouseEntered(event) == 
+( return  <VOID>
+) ;
+
+public  mousePressed : [MouseEvent] ==> <VOID>
+mousePressed(event) == 
+is subclass responsibility ;
+
+public  mouseReleased : [MouseEvent] ==> <VOID>
+mouseReleased(event) == 
+is subclass responsibility ;
+
+public  setDefaultBackground : [Color] ==> <VOID>
+setDefaultBackground(newColor) == 
+( defaultBackgroundColor := new  Color(newColor.getRGB());
+  return  <VOID>
+) ;
+
+public  setDefaultForeground : [Color] ==> <VOID>
+setDefaultForeground(newColor) == 
+( defaultForegroundColor := new  Color(newColor.getRGB());
+  return  <VOID>
+) ;
+
+public  setOrientation : [Orientation] ==> <VOID>
+setOrientation(newOrientation) == 
+( orientation := newOrientation;
+  return  <VOID>
+) ;
+
+public  setSelectedBackground : [Color] ==> <VOID>
+setSelectedBackground(newColor) == 
+( selectedBackgroundColor := new  Color(newColor.getRGB());
+  return  <VOID>
+) ;
+
+public  setSelectedForeground : [Color] ==> <VOID>
+setSelectedForeground(newColor) == 
+( selectedForegroundColor := new  Color(newColor.getRGB());
+  return  <VOID>
+) ;
+
+public  setHighlightedBackground : [Color] ==> <VOID>
+setHighlightedBackground(newColor) == 
+( highlightBackgroundColor := new  Color(newColor.getRGB());
+  return  <VOID>
+) ;
+
+public  setHighlightedForeground : [Color] ==> <VOID>
+setHighlightedForeground(newColor) == 
+( highlightForegroundColor := new  Color(newColor.getRGB());
+  return  <VOID>
+) ;
+
+instance variables 
+  public  static HIGHLIGHT_COLOR : [Color] := new  Color(0 , 200 , 210);
+  public  static REFDES_COLOR : [Color] := Color`black;
+  public  static SELECT_COLOR : [Color] := Color`red;
+  public  static SHIELD_COLOR : [Color] := Color`green;
+  public  static WIRE_COLOR : [Color] := Color`darkGray;
+  private  orientation : [Orientation] := Orientation.UNDEFINED;
+  private  wasSelected : bool  := false  ;
+  private  wasHighlighted : bool  := false  ;
+  private  selectedBackgroundColor : [Color] := Color`green;
+  private  selectedForegroundColor : [Color] := Color`orange;
+  private  highlightBackgroundColor : [Color] := Color`yellow;
+  private  highlightForegroundColor : [Color] := Color`red;
+  private  defaultBackgroundColor : [Color] := nil  ;
+  private  defaultForegroundColor : [Color] := nil  ;
+  protected  containingCanvas : [JPanel] := nil  ;
+  private  notifyOnMouseClick : bool  := false  ;
+  private  notifyOnMouseMotion : bool  := false  ;
+  private  plotted : bool  := false  
+  
+end  PickableGraphic

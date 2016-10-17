@@ -1,0 +1,17 @@
+class A
+  instance variables
+  n: nat := 1
+end A
+
+class B is subclass of A
+  instance variables
+  u: nat := 1;
+  v: nat := 2
+end B
+
+class C is subclass of A, B
+  instance variables
+  public a: A;
+  public b: B
+end C
+  

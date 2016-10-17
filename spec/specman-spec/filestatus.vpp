@@ -1,0 +1,137 @@
+\begin{vdm_al}
+class FileStatus is subclass of ProjectTypes
+
+instance variables
+  status    : FileStat := mk_FileStat (<NONE>, <NONE>);
+  timestamp : nat := 0;
+  modified  : bool := false;
+  
+\end{vdm_al}
+
+The $modified$ flag signals the correspondance between the parsed file
+and the file on the file system, if \textsc{false} the file on the
+file system is unmodified compared to the time of parsing, if
+\textsc{true} the file on the file system is newer then the parsed
+file. 
+
+\begin{vdm_al}
+operations
+
+public GetStatus: () ==> FileStat 
+  GetStatus () ==
+    return status;
+
+  ---
+  --- SetStatus updates the status of its associated file.
+  --- The first field of the return value indicates whether the file must
+  --- update its associated units:
+  ---   mk_(false,-) -> enable units in file, delete units not longer in file
+  ---   mk_(true,-)  -> disable all units
+  ---   
+  ---   whereas the second field indicates that the status of the file has changed:
+  ---     mk_(-,true) -> the status has changed,
+  ---     mk_(-,false)-> the status is unchanged.
+  ---   
+
+public SetStatus : FileAction * Status ==>  bool * bool 
+  SetStatus (action, tp) ==
+    def oldstat = status in
+     (cases action:
+        <EDIT> ->        ( status := mk_FileStat (<NONE>,<NONE>);
+                           let changedStatus = oldstat <> status
+                           in return mk_(true, changedStatus)),
+        <SYNTAXCHECK> -> ( status := mk_FileStat (tp,<NONE>);
+                           let changedStatus = oldstat <> status
+                           in return mk_( (tp <> <OK>), changedStatus)),
+        <PP> ->          ( status := mk_FileStat (<OK>,tp);
+                           let changedStatus = oldstat <> status
+                           in return mk_(false, changedStatus) )
+      end;
+      return mk_(false, false)); 
+\end{vdm_al}
+$SetStatus$ updates the status of its associated file.
+The first field of the return value indicates whether the file must
+update its associated units:
+\begin{itemize}
+\item $mk-(false,-)$ :enable units in file, delete units not longer in file
+\item $mk-(true,-)$: disable all units
+\end{itemize}
+whereas the second field indicates that the status of the file has changed:
+\begin{itemize}
+\item $mk-(-,true)$: the status has changed,
+\item $mk-(-,false)$: the status is unchanged.
+\end{itemize}
+
+\begin{vdm_al}
+
+public SetTimestamp: nat ==>  bool 
+  SetTimestamp (t) ==
+    let oldtime = timestamp
+    in
+     (timestamp := t;
+      modified := false;
+      return timestamp > oldtime and oldtime > 0);
+
+\end{vdm_al}
+
+$SetTimestamp$ sets the timestamp for the associated file. If the file
+was modified on the filesystem, $modified$ is set to
+\textsc{false}. The return value indicates whether the $modified$ flag
+has changed:
+\begin{itemize}
+\item \textsc{true}: The file modification status is changed and
+  should be updated in the interface,
+\item \textsc{false}: The file modification status is not changed, and
+  update in the interface is not necessary. 
+\end{itemize}
+
+$SetTimestamp$ is called from class $RepDatabase$.
+
+\begin{vdm_al}
+
+public GetTimestamp: () ==> nat 
+  GetTimestamp ()  == 
+    return timestamp;
+
+public IsModified: () ==> bool 
+  IsModified () ==
+    return modified;
+
+public SetModified: ()  ==> ()
+  SetModified ()  ==
+    modified := true;   
+
+\end{vdm_al}
+
+\begin{vdm_al}
+public Allowed: Action ==> bool
+  Allowed (kind)  ==
+    (cases kind:
+      <EDIT>,
+      <SYNTAXCHECK> -> return true,
+      <PP>          -> return status.syntax = <OK>,
+      others        -> return false
+     end;); 
+
+public Save: StateStore ==> bool 
+  Save(store) ==
+    def ok1 = store.WriteStatus(status.syntax);
+        ok2 = store.WriteStatus(status.pp)
+    in 
+      return ok1 and ok2;
+
+public Load: StateStore ==> bool 
+  Load(store) ==
+    def syntax = store.ReadStatus ();
+        pp     = store.ReadStatus ()
+    in
+      if syntax <> nil and pp <> nil
+      then
+       (status := mk_FileStat(syntax, pp);
+        return true)
+      else
+       (status := mk_FileStat(<NONE>, <NONE>);
+        return false);
+
+end FileStatus
+\end{vdm_al}

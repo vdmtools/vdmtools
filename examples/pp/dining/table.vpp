@@ -1,0 +1,83 @@
+class Table
+
+   instance variables
+      places: DiningPhilosopherTypes`Places := {|->};
+      order: DiningPhilosopherTypes`Order := [];
+   inv
+      card elems order = len order and
+      forall p in set elems order & p in set dom places and
+      forall i in set inds order &
+         let left = (i mod len order) - 1,
+             right = (i mod len order) + 1 in
+            ((places(order(left)) inter places(order(i))) union
+             (places(order(right)) inter places(order(i)))) = places(order(i)) and
+             card {card f | f in set rng places} <= 2; 
+
+   operations
+      public
+      AddPhilosopher: Philosopher ==> ()
+      AddPhilosopher(p) ==
+      [ ext wr order
+            rd places
+        pre p not in set dom places
+        post let philos_left ^ philos_right = order~ in
+                order = philos_left ^ [p] ^ philos_right ];
+
+      public
+      RemovePhilosopher: Philosopher ==> ()
+      RemovePhilosopher(p) ==
+      [ ext wr order
+            rd places
+        pre p in set dom places
+        post let philos_left ^ ([p]) ^ philos_right = order~ in
+                order = philos_left ^ philos_right ];
+
+      public
+      AddFork: Fork ==> ()
+      AddFork(f) ==
+      [ ext wr places
+        pre not exists fs in set rng places & f in set fs
+        post exists fs in set rng places & f in set fs and
+             forall p in set dom places~ &
+                forall f' in set places~(p) &
+                   f' in set places(p) ];
+ 
+      public
+      RemoveFork: Fork ==> ()
+      RemoveFork(f) ==
+      [ ext wr places
+        pre exists fs in set rng places & f in set fs
+        post not exists fs in set rng places & f in set fs and
+             forall p in set dom places~ &
+                forall f' in set places~(p) \ {f} &
+                   f' in set places(p) ];
+
+         public
+         StartEating(p: Philosopher) forks: set of Fork
+         ext wr places
+         pre p in set dom places
+         post forks subset places~(p) and
+              card forks = 2 and
+              forall p' in set dom places &
+                 places(p') = places~(p')\forks;
+
+      public
+      StartThinking: Philosopher * set of Fork ==> ()
+      StartThinking(p, forks) ==
+      [ ext rd order
+            wr places
+        pre p in set dom places
+        post forall p' in set dom places\{p} &
+                forall f in set places~(p') & f in set places(p') and
+             forall p' in set dom places &
+                exists f in set forks &
+                   IsNextTo (f, p', order, places) => f in set places(p') ]
+
+   functions
+      IsNextTo: Fork * Philosopher * DiningPhilosopherTypes`Order * 
+                DiningPhilosopherTypes`Places -> bool
+      IsNextTo (f, p, order, places) ==
+         undefined
+
+end Table
+

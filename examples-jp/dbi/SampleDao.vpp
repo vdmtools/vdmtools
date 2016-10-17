@@ -1,0 +1,106 @@
+class EmployDao is subclass of DBITableDao
+
+values
+tablename = "employ";
+
+operations
+
+public
+getTableName: () ==> seq1 of char
+getTableName() ==
+  return tablename;
+
+public
+insert: EmployBean ==> nat
+insert(e) ==
+  let empid = e.empid,
+      depid = e.depid,
+      jobcd = e.jobcd,
+      fname = e.fname,
+      lname = e.lname,
+      salary = VDMUtil`val2seq_of_char[nat](e.salary)
+  in return insert([empid, depid, jobcd, fname, lname, salary]);
+
+public
+createTable: () ==> ()
+createTable() ==
+  createTable(["EmpID varchar(20) primary key",
+          "DepID varchar(20) not null",
+          "JobCD varchar(20) not null",
+          "FName varchar(20) not null",
+          "LName varchar(20) not null",
+          "Salary int not null"]);
+
+end EmployDao
+ 
+class EmployBean
+
+instance variables
+public empid : seq of char := "";
+public depid : seq of char := "";
+public jobcd : seq of char := "";
+public fname : seq of char := "";
+public lname : seq of char := "";
+public salary : int := 0;
+
+operations
+private
+EmployBean: () ==> EmployBean
+EmployBean() == skip;
+
+public
+EmployBean: seq of char * seq of char * seq of char * seq of char * seq of char * int ==> EmployBean
+EmployBean(aEmpid, aDepid, aJobcd, aFname, aLName, aSalary) ==
+  (empid := aEmpid;
+   depid := aDepid;
+   jobcd := aJobcd;
+   fname := aFname;
+   lname := aLName;
+   salary := aSalary);
+
+end EmployBean
+
+class DeptDao is subclass of DBITableDao
+
+values
+tablename = "department";
+
+operations
+
+public
+getTableName: () ==> seq1 of char
+getTableName() ==
+  return tablename;
+
+public
+insert: DeptBean ==> nat
+insert(e) ==
+  return insert([e.depid, e.depnm]);
+
+public
+createTable: () ==> ()
+createTable() ==
+  createTable(["DepID varchar(20) primary key",
+          "DepNm varchar(20) not null"]);
+          --"DepNm varchar(20 CHAR) not null"]);
+
+end DeptDao
+
+class DeptBean
+
+instance variables
+public depid : seq of char := "";
+public depnm : seq of char := "";
+
+operations
+private
+DeptBean: () ==> DeptBean
+DeptBean() == skip;
+
+public
+DeptBean: seq of char * seq of char ==> DeptBean
+DeptBean(aDepid, aDepnm) ==
+  (depid := aDepid;
+   depnm := aDepnm);
+
+end DeptBean

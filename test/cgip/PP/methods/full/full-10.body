@@ -1,0 +1,61 @@
+class A
+
+instance variables 
+
+  i   : real;
+  j   : real;
+  b1  : bool;
+  b2  : bool;
+protected  s   : set of (real | char | bool) := {};
+
+
+operations 
+
+
+  m1: real * real ==> real * real
+  m1(a,b)  ==
+  ( i := a;
+    j := b;
+    return mk_(A`i,A`j)
+  );
+
+  m2: () ==> real * real
+  m2() ==
+    let {a,b} = s in
+      self.m1(a,b)
+
+end A
+
+class B is subclass of A
+
+instance variables
+
+  sq : seq of real
+
+operations
+
+  m3: () ==> ()
+  m3() ==
+    while sq <> [] do
+    ( s := A`s union { hd sq };
+      sq := tl B`sq
+    )
+
+
+
+operations 
+
+  m4: real * real ==> real | B
+  m4(r1,r2) ==
+    if r1 = r2 
+    then return r1+r2
+    else return self;
+      
+  public Test : () ==> real | B
+  Test() ==
+   ( dcl a : (B|real) := self.m4(3,4).m4(3,3);
+     return a;
+   ) 
+
+
+end B

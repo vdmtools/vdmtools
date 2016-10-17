@@ -1,0 +1,16 @@
+class A
+
+types
+
+public T::x:nat
+   y:seq of char
+
+operations
+
+public Test : () ==> T
+Test () ==
+( dcl r : T := mk_T(12, "hi");
+    return r
+)
+   
+end A

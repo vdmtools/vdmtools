@@ -1,0 +1,114 @@
+%!PS-Adobe-2.0 EPSF-2.0
+%%Title: /tmp/xfig-fig001908
+%%Creator: fig2dev Version 2.1.8 Patchlevel 0
+%%CreationDate: Tue Feb  1 14:49:25 1994
+%%For: kmh@idruby (Kirsten Mark Hansen (Civ.ing.))
+%%Orientation: Portrait
+%%BoundingBox: 0 0 333 86
+%%Pages: 0
+%%EndComments
+/$F2psDict 200 dict def 
+$F2psDict begin
+$F2psDict /mtrx matrix put
+/l {lineto} bind def
+/m {moveto} bind def
+/s {stroke} bind def
+/n {newpath} bind def
+/gs {gsave} bind def
+/gr {grestore} bind def
+/clp {closepath} bind def
+/graycol {dup dup currentrgbcolor 4 -2 roll mul 4 -2 roll mul
+4 -2 roll mul setrgbcolor} bind def
+/col-1 {} def
+/col0 {0 0 0 setrgbcolor} bind def
+/col1 {0 0 1 setrgbcolor} bind def
+/col2 {0 1 0 setrgbcolor} bind def
+/col3 {0 1 1 setrgbcolor} bind def
+/col4 {1 0 0 setrgbcolor} bind def
+/col5 {1 0 1 setrgbcolor} bind def
+/col6 {1 1 0 setrgbcolor} bind def
+/col7 {1 1 1 setrgbcolor} bind def
+/col8 {.68 .85 .9 setrgbcolor} bind def
+/col9 {0 .39 0 setrgbcolor} bind def
+/col10 {.65 .17 .17 setrgbcolor} bind def
+/col11 {1 .51 0 setrgbcolor} bind def
+/col12 {.63 .13 .94 setrgbcolor} bind def
+/col13 {1 .75 .8 setrgbcolor} bind def
+/col14 {.7 .13 .13 setrgbcolor} bind def
+/col15 {1 .84 0 setrgbcolor} bind def
+	end
+/$F2psBegin {$F2psDict begin /$F2psEnteredState save def} def
+/$F2psEnd {$F2psEnteredState restore end} def
+%%EndProlog
+
+$F2psBegin
+0 setlinecap 0 setlinejoin
+-117.0 234.0 translate 0.900 -0.900 scale
+0.500 setlinewidth
+% Polyline
+n 439 204 m 439 214 l gs 0.20 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 439 209 m 459 209 l gs 0.20 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 466 204 m 459 204 459 207 7 arcto 4 {pop} repeat 459 214 477 214 7 arcto 4 {pop} repeat 484 214 484 211 7 arcto 4 {pop} repeat 484 204 466 204 7 arcto 4 {pop} repeat clp gs 1.00 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 499 174 m 499 184 l gs col-1 s gr
+% Polyline
+n 439 174 m 439 184 l gs col-1 s gr
+% Polyline
+n 379 174 m 379 184 l gs col-1 s gr
+% Polyline
+n 319 174 m 319 184 l gs col-1 s gr
+% Polyline
+n 259 174 m 259 184 l gs col-1 s gr
+n 199 174 m 199 174 l gs col-1 s gr
+n 199 174 m 199 174 l gs col-1 s gr
+% Polyline
+n 199 174 m 199 184 l gs col-1 s gr
+% Polyline
+n 139 174 m 139 184 l gs col-1 s gr
+% Polyline
+n 139 179 m 499 179 l gs col-1 s gr
+% Polyline
+n 239 169 m 239 179 l  209 179 l  209 169 l  clp gs 0.20 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 239 169 m 234 164 l gs 0.20 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 139 239 m 259 239 l  319 199 l  349 179 l gs 1.00 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 139 234 m 139 244 l gs 1.00 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 199 234 m 199 239 l gs 1.00 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 199 239 m 199 244 l gs 1.00 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 259 234 m 259 244 l gs 1.00 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 314 194 m 324 204 l gs 1.00 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 244 229 m 244 239 l  214 239 l  214 229 l  clp gs 0.20 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 214 229 m 219 224 l gs 1.00 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 199 224 m 199 214 l gs 0.20 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 199 219 m 179 219 l gs 0.20 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 161 214 m 154 214 154 217 7 arcto 4 {pop} repeat 154 224 172 224 7 arcto 4 {pop} repeat 179 224 179 221 7 arcto 4 {pop} repeat 179 214 161 214 7 arcto 4 {pop} repeat clp gs 1.00 setgray fill gr
+gs col-1 s gr
+$F2psEnd

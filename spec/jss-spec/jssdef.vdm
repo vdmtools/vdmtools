@@ -1,0 +1,559 @@
+\section{The JSSDEF Module}
+
+This is the main top-level module taking care of the static semantics
+for the top-level Java definitions.
+
+\begin{vdm_al}
+module JSSDEF
+
+imports
+  from AS all,
+  from CI all,
+  from REP all,
+
+  from CPP all,
+  from JSSAUX all,
+  from JSSREP all,
+  from JSSEXPR
+    operations
+      jwf_Expr: CPP`Expr ==> JSSREP`TypeRep * bool;
+      jwf_ExprList: seq of CPP`Expr ==> seq of JSSREP`TypeRep * bool,
+  from JSSSTMT
+    operations
+      jwf_Stmt: CPP`Stmt ==> bool,
+  from JSSENV
+    operations
+      SetPackage: [AS`Name] ==> ();
+      Add2Imports: AS`Name * seq of AS`Name ==> ();
+      SetCurrentParseAndClassInfo: [AS`Name] ==> bool;
+      GetCurrentType: () ==> [JSSREP`ClassTypeRep | JSSREP`IntrfcTypeRep];
+      EnterLocalScope : map AS`Name to JSSREP`TypeRep ==> ();
+      LeaveLocalScope : () ==> ();
+      CheckFieldAndMethodNames: () ==> bool;
+      CheckOverloading: AS`Name ==> bool;
+      Add2CurrentLocals: AS`Name * JSSREP`FieldTypeRep ==> bool;
+      SetCurrentMethodReturnType: JSSREP`TypeRep ==> ();
+      CheckForVDMKeywords: AS`Name ==> ();
+      CheckIfClassLookUp: JSSREP`TypeRep ==> bool;
+      ClassDependency: AS`Name ==> (),
+  from JSSERR 
+    operations
+      GenErr : CI`ContextId * JAVAERR`SeverityType * nat * seq of seq of char ==> (),
+  from JAVAERR all
+
+exports
+
+operations
+  jwf_Module: CPP`Module ==> bool;
+  jwf_DeclSpecifierList: seq of CPP`DeclSpecifier ==> JSSREP`TypeRep * bool * int;
+  jwf_TypeSpecifier: CPP`TypeSpecifier ==> JSSREP`TypeRep * bool;
+  jwf_SimpleTypeName: CPP`SimpleTypeName ==> JSSREP`TypeRep * bool;
+  jwf_MemberDeclarationList: [seq of CPP`MemberDeclaration] ==> bool;
+  jwf_Modifiers: seq of CPP`Modifier ==> bool;
+  jwf_Modifier: CPP`Modifier ==> bool;
+  jwf_ArgDecl: CPP`ArgDecl ==> AS`Name * JSSREP`FieldTypeRep * bool;
+
+definitions
+operations
+\end{vdm_al}
+
+\begin{formalparameters}
+\verb+p_mod: CPP`Module+ & The abstract syntax tree for one Java
+                           module to be translated to VDM++.\\
+\hline
+\end{formalparameters}
+\methodresult{bool}{Indication whether the argument module satisfy
+the requirements to be translated from Java to VDM++.}
+
+\begin{vdm_al}
+jwf_Module: CPP`Module ==> bool
+jwf_Module(p_mod) ==
+  (dcl l_reswf : bool := true;
+   def l_clsnm = JSSAUX`ExtractClassName(p_mod.ast)
+   in
+     (JSSENV`CheckForVDMKeywords(l_clsnm);
+      l_reswf := jwf_Header(p_mod.header) and l_reswf;
+      l_reswf := jwf_Declaration(p_mod.ast) and l_reswf
+     );
+   return l_reswf
+  );
+\end{vdm_al}
+
+\begin{vdm_al}
+jwf_Header: [CPP`Header] ==> bool
+jwf_Header(p_header) ==
+  if p_header = nil
+  then return true
+  else
+    def l_pkwf = jwf_Package(p_header.pd);
+        l_ipwf = jwf_Imports(p_header.ims);
+    in
+      return l_pkwf and l_ipwf;
+\end{vdm_al}
+
+After 'FirstRun' check that no part of a package name is also the
+name of a class or interface
+
+\begin{vdm_al}
+jwf_Package: [CPP`PackageDeclaration] ==> bool
+jwf_Package(p_pd) == (
+  dcl l_notTypeName : bool := true;
+  if p_pd <> nil
+  then JSSENV`SetPackage(JSSAUX`PackageName2Name(p_pd.name));
+-- JR
+  return l_notTypeName
+);
+
+jwf_Imports: [CPP`ImportDeclarations] ==> bool
+jwf_Imports(p_idL) ==
+ (dcl l_reswf : bool := true;
+  if p_idL <> nil
+  then 
+    for l_id in p_idL 
+    do cases true:
+        (is_CPP`SingleTypeImportDeclaration(l_id)) ->
+          l_reswf := jwf_SingleTypeImportDeclaration(l_id) and l_reswf,
+        (is_CPP`TypeImportOnDemandDeclaration(l_id)) ->
+          l_reswf := jwf_TypeImportOnDemandDeclaration(l_id) and l_reswf,
+         others -> l_reswf := false
+       end;
+  return l_reswf
+ );
+
+jwf_SingleTypeImportDeclaration: CPP`SingleTypeImportDeclaration ==> bool
+jwf_SingleTypeImportDeclaration(p_stid) ==
+ (def l_name = JSSAUX`PackageName2Name(p_stid.name);
+      l_idL = JSSAUX`PackageName2SeqOfName(p_stid.name);
+  in JSSENV`Add2Imports(l_name,l_idL);
+  return true
+ );
+   
+jwf_TypeImportOnDemandDeclaration: CPP`TypeImportOnDemandDeclaration ==> bool
+jwf_TypeImportOnDemandDeclaration(p_tiodd) ==
+ (def l_name = JSSAUX`PackageName2Name(p_tiodd.name);
+      l_idL = JSSAUX`PackageName2SeqOfName(p_tiodd.name) ^ [mk_AS`Name(["*"],CI`NilContextId)];
+  in JSSENV`Add2Imports(l_name,l_idL);
+  return true
+ );
+\end{vdm_al}
+
+
+\subsection{Declarations}
+
+\begin{formalparameters}
+\verb+p_decl: CPP`Declaration+ & The abstract syntax tree
+representation for a Java declaration.\\
+\hline
+\end{formalparameters}
+\methodresult{bool}{Indication whether the declaration satisfy
+the requirements to be translated from Java to VDM++.}
+
+\begin{vdm_al}
+  jwf_Declaration: CPP`Declaration ==> bool
+  jwf_Declaration(p_decl) ==
+    if is_CPP`IdentDeclaration(p_decl)
+    then jwf_IdentDeclaration(p_decl)
+    else jwf_FunctionDefinition(p_decl);
+\end{vdm_al}
+
+\begin{vdm_al}
+  jwf_IdentDeclaration: CPP`IdentDeclaration ==> bool
+  jwf_IdentDeclaration(p_decl) ==
+     def mk_(l_tr,l_wfdsl,-) = jwf_DeclSpecifierList(p_decl.ds);
+         l_reswf = l_wfdsl and jwf_DeclaratorList(l_tr,p_decl.dl);
+     in return l_reswf;
+\end{vdm_al}
+
+\subsection{Declaration Specifiers}
+
+\begin{formalparameters}
+\verb+p_declL: seq of CPP`DeclSpecifier+ & A list of declaration specifiers.\\
+\hline
+\end{formalparameters}
+\methodresult{bool}{Indication whether all of the declaration
+specifiers satisfy the requirements to be translated from Java to
+VDM++.}
+
+\begin{vdm_al}
+  jwf_DeclSpecifierList: seq of CPP`DeclSpecifier ==> JSSREP`TypeRep * bool * int
+  jwf_DeclSpecifierList(p_declL) ==
+    (dcl l_reswf : bool := true,
+         l_restr : JSSREP`TypeRep := mk_JSSREP`AllTypeRep(),
+         l_dim : int := 0;
+     for l_decl in p_declL do
+       cases true:
+        (is_CPP`TypeSpecifier(l_decl))  -> def mk_(l_tr,l_wfts) = jwf_TypeSpecifier(l_decl)
+                                           in
+                                            (l_reswf := l_wfts and l_reswf;
+                                             l_restr := l_tr),
+        (is_CPP`ArraySpecifier(l_decl)) -> l_dim := l_dim + 1,
+        (is_CPP`Modifier(l_decl))       -> l_reswf := jwf_Modifier(l_decl) and l_reswf
+       end;
+     return mk_(l_restr,l_reswf,l_dim)
+    );
+\end{vdm_al}
+
+\begin{vdm_al}
+  jwf_TypeSpecifier: CPP`TypeSpecifier ==> JSSREP`TypeRep * bool
+  jwf_TypeSpecifier(p_decl) ==
+    let l_tp = p_decl.tp
+    in
+      cases true:
+        (is_CPP`ClassSpecifier(l_tp))     -> jwf_ClassSpecifier(l_tp),
+        (is_CPP`InterfaceSpecifier(l_tp)) -> jwf_InterfaceSpecifier(l_tp),
+        others                            -> jwf_SimpleTypeName(l_tp)
+      end;
+\end{vdm_al}
+
+\begin{vdm_al}
+jwf_SimpleTypeName: CPP`SimpleTypeName ==> JSSREP`TypeRep * bool
+jwf_SimpleTypeName(p_stn) ==
+  cases true:
+   (is_CPP`QualifiedPackageName(p_stn)) -> jwf_ClassTypeName(p_stn),
+   (is_CPP`SimplePackageName(p_stn))    -> jwf_ClassTypeName(p_stn),
+--(is_CPP`QualifiedName(p_stn))        -> mk_JSSREP`AllTypeRep(),
+   (is_CPP`Bool(p_stn))                 -> return mk_(mk_JSSREP`BoolTypeRep(),true),
+   (is_CPP`Char(p_stn))                 -> return mk_(mk_JSSREP`CharTypeRep(),true),
+   (is_CPP`Byte(p_stn))                 -> return mk_(mk_JSSREP`ByteTypeRep(),true),
+   (is_CPP`Short(p_stn))                -> return mk_(mk_JSSREP`ShortTypeRep(),true),
+   (is_CPP`Int(p_stn))                  -> return mk_(mk_JSSREP`IntTypeRep(),true),
+   (is_CPP`Long(p_stn))                 -> return mk_(mk_JSSREP`LongTypeRep(),true),
+   (is_CPP`Float(p_stn))                -> return mk_(mk_JSSREP`FloatTypeRep(),true),
+   (is_CPP`Double(p_stn))               -> return mk_(mk_JSSREP`DoubleTypeRep(),true),
+   (is_CPP`Void(p_stn))                 -> return mk_(mk_JSSREP`VoidTypeRep(),true),
+   others                               -> return mk_(mk_JSSREP`AllTypeRep(),false)
+  end;
+      
+  jwf_ClassTypeName: CPP`PackageName ==> JSSREP`TypeRep * bool
+  jwf_ClassTypeName(p_pn) ==
+    def l_pn2n  = JSSAUX`PackageName2Name(p_pn);
+        l_restr = mk_JSSREP`ClassTypeRep(l_pn2n);
+        l_reswf = JSSENV`CheckIfClassLookUp(l_restr)
+    in
+     (CI`SetJSSTypeInfo(p_pn.cid,l_restr);
+      return mk_(l_restr,l_reswf)
+     );
+
+\end{vdm_al}
+
+\begin{vdm_al}
+jwf_ClassSpecifier: CPP`ClassSpecifier ==> JSSREP`TypeRep * bool
+jwf_ClassSpecifier(p_clsspec) ==
+  def l_name  = JSSAUX`Identifier2Name(p_clsspec.ch.name);
+      l_clswf = JSSENV`SetCurrentParseAndClassInfo(l_name);
+      l_restr = JSSENV`GetCurrentType()
+  in
+   (--JSSENV`ClassDependency(l_name);
+    def l_hdwf = jwf_ClassHead(p_clsspec.ch);
+        l_fopwf = JSSENV`CheckFieldAndMethodNames();
+        l_mowf = JSSENV`CheckOverloading(l_name);
+        l_mdlwf = jwf_MemberDeclarationList(p_clsspec.ml)
+    in
+     (JSSENV`ClassDependency(l_name);
+      return 
+        mk_(l_restr,
+            l_clswf and l_hdwf and l_fopwf and l_mowf and l_mdlwf)
+     )
+   );
+\end{vdm_al}
+
+\begin{vdm_al}
+jwf_InterfaceSpecifier: CPP`InterfaceSpecifier ==> JSSREP`TypeRep * bool
+jwf_InterfaceSpecifier(p_inter) ==
+  def l_name = JSSAUX`Identifier2Name(p_inter.ih.name);
+      l_ifcwf = JSSENV`SetCurrentParseAndClassInfo(l_name);
+      l_restr = JSSENV`GetCurrentType()
+  in
+   (--JSSENV`ClassDependency(l_name);
+    def l_ihwf = jwf_InterfaceHead(p_inter.ih);
+        l_fopwf = JSSENV`CheckFieldAndMethodNames();
+        l_mowf = JSSENV`CheckOverloading(l_name);
+        l_mdlwf = jwf_MemberDeclarationList(p_inter.ml)
+    in
+     (JSSENV`ClassDependency(l_name);
+      return 
+        mk_(l_restr,
+            l_ifcwf and l_ihwf and l_fopwf and l_mowf and l_mdlwf)
+     )
+  );
+\end{vdm_al}
+
+\begin{vdm_al}
+jwf_ClassHead: CPP`ClassHead ==> bool
+jwf_ClassHead(-) ==
+  return true;
+-- JSSENV`ExpandInheritance(JSSAUX`Identifier2Name(p_clshead.name));
+\end{vdm_al}
+
+\begin{vdm_al}
+jwf_InterfaceHead: CPP`InterfaceHead ==> bool
+jwf_InterfaceHead(p_head) ==
+  def l_modwf = jwf_Modifiers(p_head.m);
+      l_bswf  = true -- JSSENV`ExpandInheritance(JSSAUX`Identifier2Name(p_head.name))
+  in
+    return l_modwf and l_bswf;
+\end{vdm_al}
+\begin{vdm_al}
+jwf_MemberDeclarationList: [seq of CPP`MemberDeclaration] ==> bool
+jwf_MemberDeclarationList(p_memL) ==
+  (dcl l_reswf : bool := true;
+   if p_memL <> nil
+   then
+     for l_decl in p_memL do
+       l_reswf := jwf_MemberDeclaration(l_decl) and l_reswf;
+
+   return l_reswf
+  );
+
+jwf_MemberDeclaration: CPP`MemberDeclaration ==> bool
+jwf_MemberDeclaration(p_member) ==
+  cases true:
+    (is_CPP`FunctionDefinition(p_member)) -> jwf_FunctionDefinition(p_member),
+    (is_CPP`StaticInitializer(p_member))  -> jwf_StaticInitializer(p_member),
+    (is_CPP`IdentDeclaration(p_member))   -> jwf_IdentDeclaration(p_member),
+    others -> return false
+  end;
+\end{vdm_al}
+
+Maybe further limitations needs to be made to static initializers. In
+that case it must be done here.
+
+\begin{vdm_al}
+jwf_StaticInitializer: CPP`StaticInitializer ==> bool
+jwf_StaticInitializer(p_statinit) ==
+  JSSSTMT`jwf_Stmt(p_statinit.stmt);
+\end{vdm_al}
+
+Presumably all modifiers can be accepted??
+
+\begin{vdm_al}
+jwf_Modifiers: seq of CPP`Modifier ==> bool
+jwf_Modifiers(p_modL) ==
+  (dcl l_reswf : bool := true;
+
+   for l_mod in p_modL do
+     l_reswf := jwf_Modifier(l_mod) and l_reswf;
+   return l_reswf
+  );
+
+jwf_Modifier: CPP`Modifier ==> bool
+jwf_Modifier(p_mod) ==
+  if p_mod.ma = <SYNCHRONIZED>
+  then (------------------------------------------
+        -- Error message #13
+        -- The synchronized modifier is not supported
+        ------------------------------------------
+        JSSERR`GenErr(p_mod.cid,<WARNING>,13,[]);
+        return true
+       )
+  else return true;
+\end{vdm_al}
+
+\begin{vdm_al}
+jwf_DeclaratorList: JSSREP`TypeRep * [CPP`DeclaratorList] ==> bool
+jwf_DeclaratorList(p_tr,p_declL) ==
+  ( dcl l_reswf : bool := true;
+    if p_declL <> nil
+    then
+      for l_id in p_declL do
+        l_reswf := jwf_InitDeclarator(p_tr,l_id) and l_reswf;
+    return l_reswf
+  );
+\end{vdm_al}
+
+\subsection{Field Definitions}
+
+\begin{vdm_al}
+  jwf_InitDeclarator: JSSREP`TypeRep * [CPP`InitDeclarator] ==> bool
+  jwf_InitDeclarator(p_tr,p_id) == (
+    dcl l_decl : CPP`Declarator := p_id.decl;
+    if p_id <> nil
+    then
+    ( while not is_CPP`Identifier(l_decl) do
+        l_decl := l_decl.decl;
+      let l_init = p_id.i
+      in
+        if l_init = nil
+        then return true
+        else jwf_Initializer(p_tr,l_init)
+    );
+    return true
+  );
+
+jwf_Initializer: JSSREP`TypeRep * CPP`Initializer ==> bool
+jwf_Initializer(p_tp,p_init) ==
+  cases true:
+    (is_CPP`AsgnInit(p_init))   -> jwf_AsgnInit(p_tp,p_init),
+    (is_CPP`EnumInit(p_init))   -> jwf_EnumInit(p_tp,p_init),
+    (is_CPP`ObjectInit(p_init)) -> jwf_ObjectInit(p_tp,p_init),
+    others -> return false
+  end;
+
+jwf_AsgnInit: JSSREP`TypeRep * CPP`AsgnInit ==> bool
+jwf_AsgnInit(p_tp,p_init) ==
+  (CI`SetJSSTypeInfo(p_init.cid,p_tp);
+   def l_wf = JSSEXPR`jwf_Expr(p_init.expr).#2
+   in
+     return l_wf
+  );
+
+jwf_EnumInit: JSSREP`TypeRep * CPP`EnumInit ==> bool
+jwf_EnumInit(p_tp,p_init) ==
+  (CI`SetJSSTypeInfo(p_init.cid,p_tp);
+   let l_inL = p_init.in_l
+   in
+     (dcl l_reswf : bool := true;
+      for l_init in l_inL.list do
+        if is_CPP`AsgnInit(l_init)
+        then l_reswf := jwf_AsgnInit(p_tp,l_init) and l_reswf
+        elseif is_CPP`EnumInit(l_init)
+        then l_reswf := jwf_EnumInit(p_tp,l_init) and l_reswf
+        elseif is_CPP`ObjectInit(l_init)
+        then l_reswf := jwf_ObjectInit(p_tp,l_init) and l_reswf
+        else def l_wf = JSSEXPR`jwf_Expr(l_init).#2
+             in
+               l_reswf := l_wf and l_reswf;
+      return l_reswf
+     )
+  );
+
+jwf_ObjectInit: JSSREP`TypeRep * CPP`ObjectInit ==> bool
+jwf_ObjectInit(p_tp,p_init) ==
+  (CI`SetJSSTypeInfo(p_init.cid,p_tp);
+   def l_wf = JSSEXPR`jwf_ExprList(p_init.exprs).#2
+   in
+     return l_wf
+  );
+
+\end{vdm_al}
+
+\subsection{Function Definitions}
+
+\begin{vdm_al}
+jwf_FunctionDefinition: CPP`FunctionDefinition ==> bool
+jwf_FunctionDefinition(p_fd) ==
+ (dcl l_decl : CPP`Declarator := p_fd.decl;
+
+-- JR
+--  while not is_CPP`FctDecl(l_decl) do
+--    l_decl := l_decl.decl;
+-- JR is CPP`ArrayDecl(l_decl) ? NO - seq of ArraySpecifier => dim
+
+  JSSENV`EnterLocalScope({|->});
+  def l_mwf = jwf_Modifiers(p_fd.m);
+      mk_(l_dstr,l_dswf,l_dsdim) = jwf_DeclSpecifierList(p_fd.ds);
+      l_restr = mk_JSSREP`FieldTypeRep(l_dstr,l_dsdim);
+      l_wfd = jwf_FctDecl(l_decl)
+  in
+   (JSSENV`SetCurrentMethodReturnType(l_restr);
+    def l_wfb = jwf_FctBody(p_fd.fb);
+        l_wts = jwf_Throws(p_fd.throw)
+    in 
+     (CI`SetJSSTypeInfo(p_fd.cid,l_restr);
+      JSSENV`LeaveLocalScope();
+      return l_mwf and l_dswf and l_wfd and l_wfb and l_wts
+     )
+   )
+ );
+\end{vdm_al}
+
+Just read method info
+
+\begin{vdm_al}
+jwf_FctDecl: CPP`FctDecl ==> bool
+jwf_FctDecl(p_fd) == 
+ (dcl l_namewf : bool := true;
+  def mk_(l_Types,l_Names,l_wfadl) = jwf_ArgumentDeclarationList(p_fd.arg);
+  in
+   (if is_CPP`Identifier(p_fd.decl)
+    then def - = JSSAUX`Identifier2Name(p_fd.decl) in skip
+    else def - = JSSAUX`PackageName2Name(p_fd.decl) in skip;
+    for i=1 to len l_Types do
+      l_namewf := JSSENV`Add2CurrentLocals(l_Names(i),l_Types(i)) and l_namewf;
+    return l_wfadl and l_namewf)
+ );
+\end{vdm_al}
+
+\begin{vdm_al}
+jwf_ArgumentDeclarationList: [CPP`ArgumentDeclarationList]
+                         ==> (seq of JSSREP`FieldTypeRep) * (seq of AS`Name) * bool
+jwf_ArgumentDeclarationList(p_adL) ==
+  ( dcl l_reswf : bool := true,
+        l_names : seq of AS`Name := [],
+-- JR just read method info
+        l_trs : seq of JSSREP`FieldTypeRep := [];
+    if p_adL <> nil
+    then
+    ( for l_ad in p_adL.arg do
+      def mk_(l_name,l_tr,l_wfal) = jwf_ArgumentDeclaration(l_ad)
+      in
+      ( l_trs := l_trs ^ [l_tr];
+        l_names := l_names ^ [l_name];
+        l_reswf := l_wfal and l_reswf
+      )
+    );
+    return mk_(l_trs,l_names,l_reswf)
+  );
+\end{vdm_al}
+
+ ArgumentDeclaration = ArgDecl
+
+\begin{vdm_al}
+jwf_ArgumentDeclaration: CPP`ArgumentDeclaration ==> AS`Name * JSSREP`FieldTypeRep * bool
+jwf_ArgumentDeclaration(p_ad) ==
+-- JR just read method info
+  cases true:
+   (is_CPP`ArgDecl(p_ad)) -> return jwf_ArgDecl(p_ad)
+  end;
+\end{vdm_al}
+
+\begin{vdm_al}
+jwf_ArgDecl: CPP`ArgDecl ==> AS`Name * JSSREP`FieldTypeRep * bool
+jwf_ArgDecl(p_ad) ==
+  ( dcl l_decl : CPP`Declarator := p_ad.decl,
+        l_array : nat := 0;
+    --def mk_(l_dsltr,l_dslwf,l_dsldim) = jwf_DeclSpecifierList(p_ad.ds)
+    def mk_(l_dsltr,-,l_dsldim) = jwf_DeclSpecifierList(p_ad.ds)
+    in
+    ( while not is_CPP`Identifier(l_decl) do
+      ( l_decl := l_decl.decl;
+        l_array := l_array+1
+      );
+      return mk_(JSSAUX`Identifier2Name(l_decl), mk_JSSREP`FieldTypeRep(l_dsltr,l_array+l_dsldim),
+true)
+    )
+  );
+\end{vdm_al}
+
+\begin{vdm_al}
+jwf_FctBody: [CPP`FctBody] ==> bool
+jwf_FctBody(p_fctbody) ==
+  if p_fctbody = nil
+  then return true
+  else JSSSTMT`jwf_Stmt(p_fctbody.stmt);
+\end{vdm_al}
+
+\begin{vdm_al}
+jwf_Throws: [seq of CPP`SimpleTypeName] ==> bool
+jwf_Throws(p_throws) ==
+  if p_throws = nil
+  then return true
+  else (dcl l_reswf : bool := true;
+        for l_nm in p_throws do
+        ( def l_wf = jwf_SimpleTypeName(l_nm).#2
+          in
+            l_reswf :=  l_wf and l_reswf;
+        );
+        return l_reswf
+       );
+\end{vdm_al}
+
+\begin{vdm_al}
+end JSSDEF
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}{rtinfo.ast}[JSSDEF]
+\end{rtinfo}
+

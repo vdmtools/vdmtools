@@ -1,0 +1,20 @@
+class CasesStmtTest
+
+operations
+
+  ErrorAction: char ==> bool
+  ErrorAction(-) ==
+    return true;
+
+  Cases: () ==> int | bool
+  Cases() ==
+    cases true:
+    true -> trap pat with ErrorAction (pat) in
+         exit,
+    (true and false) -> trap pat with ErrorAction (pat) in
+         exit 'p',
+    others ->trap pat with ErrorAction (pat) in
+         exit true
+    end;
+
+end CasesStmtTest

@@ -1,0 +1,180 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Internal representation of types for the Static Semantics of VDM++
+% $Id: rep.vdm,v 1.19 2001/03/29 11:39:06 john Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\section{Type Representations}
+
+This section presents the type representation module which contains the type
+definitions for the semantic domains which are used internally in
+the static semantics to model the types from the abstract syntax
+and the derived types.
+The interface of the REP module can be seen from figure~\ref{rep}.
+
+As mentioned in the introduction REP is imported by all
+modules in the hierarchy and it does only import the AS module.
+
+%\insertfig{rep.ps}{13cm}{Interface for the REP module}{\label{rep}}
+
+\begin{vdm_al}
+module REP
+
+imports
+#ifdef JSS
+  from JSSREP all, 
+#endif JSS
+  from AS all,
+  from CI all
+  
+exports all
+
+definitions
+
+  types
+  
+    TypeRep    = InvTypeRep |
+                 BasicTypeRep |
+                 QuoteTypeRep |
+		 CompositeTypeRep |
+		 UnionTypeRep |
+                 ProductTypeRep |
+		 SetTypeRep |
+		 SeqTypeRep | 
+                 MapTypeRep |
+                 TypeVarRep |
+		 TypeParRep |
+		 TypeNameRep |
+		 FnTypeRep |
+#ifdef VDMPP
+                 ObjRefTypeRep |
+                 OverTypeRep |
+#endif VDMPP
+#ifdef VICE
+                 AnyOpTypeRep |
+#endif VICE
+                 OpTypeRep |
+                 ExitTypeRep |
+		 PolyTypeRep |
+		 AllTypeRep |
+		 TmpTypeRep |
+                 UnitTypeRep |
+                 RetTypeRep |
+		 NilTypeRep |
+		 EmptySetTypeRep |
+		 EmptySeqTypeRep |
+                 EmptyMapTypeRep;
+
+InvTypeRep :: name      : AS`Name
+              shape     : TypeRep
+              invariant : AS`Pattern * AS`Expr;
+	      
+BasicTypeRep = BooleanTypeRep | NumericTypeRep | TokenTypeRep | CharTypeRep;
+
+BooleanTypeRep :: ;
+
+NumericTypeRep :: qtp : <NATONE> | <NAT> | <INTEGER> | <RAT> | <REAL>;
+
+TokenTypeRep :: ;
+
+CharTypeRep :: ;
+
+QuoteTypeRep :: lit : AS`Name;
+
+CompositeTypeRep :: nm : AS`Name
+                    fields : seq of FieldRep;
+
+FieldRep :: sel : [AS`Name]
+            tp  : TypeRep
+	    dc  : bool;
+	    
+UnionTypeRep :: tps : set of TypeRep;
+
+ProductTypeRep :: tps : seq1 of TypeRep;
+
+SetTypeRep :: elemtp : TypeRep;
+
+SeqTypeRep :: elemtp : TypeRep;
+
+MapTypeRep = GeneralMapTypeRep | InjectiveMapTypeRep;
+
+GeneralMapTypeRep :: mapdom : TypeRep          
+                     maprng : TypeRep;
+
+InjectiveMapTypeRep :: mapdom : TypeRep                          
+                       maprng : TypeRep;
+
+TypeNameRep :: nm : AS`Name;
+
+  
+TypeVarRep :: nm : AS`Name; -- type variable from functions
+
+TypeParRep :: nm : AS`Name; -- type parameters from modules and
+                            -- types which are not imported by struct!
+
+FnTypeRep = PartialFnTypeRep | TotalFnTypeRep;                         
+
+PartialFnTypeRep :: fndom : DiscretionaryTypeRep | AllTypeRep
+                    fnrng : TypeRep;
+
+TotalFnTypeRep :: fndom : DiscretionaryTypeRep | AllTypeRep
+                  fnrng : TypeRep;
+
+DiscretionaryTypeRep = seq of TypeRep;
+
+#ifdef VDMPP
+ObjRefTypeRep :: nm : AS`Name;
+OverTypeRep :: tps : set of TypeRep;
+#endif VDMPP
+
+#ifdef VICE
+    AnyOpTypeRep ::;
+#endif VICE
+
+    OpTypeRep :: Dom  : DiscretionaryTypeRep 
+                 Rng  : TypeRep;
+
+    ExitTypeRep :: tp : TypeRep;
+
+    PolyTypeRep :: vars : seq of TypeVarRep
+                   tp   : FnTypeRep;
+
+    AllTypeRep :: ;
+
+    TmpTypeRep :: ;
+
+    UnitTypeRep :: ;
+        
+    RetTypeRep :: ;
+
+    NilTypeRep ::;
+
+    --EmptySetTypeRep ::;
+    EmptySetTypeRep:: elemtp :- TypeRep;
+
+    --EmptySeqTypeRep ::;
+    EmptySeqTypeRep:: elemtp :- TypeRep;
+
+    --EmptyMapTypeRep ::;
+    EmptyMapTypeRep :: mapdom :- TypeRep
+                       maprng :- TypeRep;
+
+end REP
+\end{vdm_al}
+
+{\it TypeRep} is an extension of the abstract syntactic class {\it
+Type} which is used internally by the VDM++ tools. Thus, the types
+defined in this section should strictly speaking not be present in the
+abstract syntax document. The main reason for having these
+semantically used domains together with the rest of the abstract
+syntax is that it has been decided that it is more convinient to use
+the abstract syntax for types directly in the semantics (alternatively
+one could define equivalent domain definitions for each of the types
+which are present in the abstract syntax for {\it Type}).
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[MotGeneralNumericType]
+{rtinfo.ast}[REP]
+\end{rtinfo}

@@ -1,0 +1,54 @@
+class S
+
+operations
+public
+getNum: () ==> nat
+getNum() ==
+  return getNum(0);
+
+public
+getNum: nat ==> nat
+getNum(-) == is subclass responsibility;
+
+end S
+
+class C is subclass of S
+
+instance variables
+private
+s : [S] := nil;
+
+operations
+public
+C: () ==> C
+C() == skip;
+
+public
+C: S ==> C
+C(x) == ( s := x; );
+
+public
+getNum: nat ==> nat
+getNum(n) ==
+  if s <> nil
+  then return s.getNum(n+1)
+  else return n+1;
+
+end C
+
+class A
+
+operations
+public
+Test: () ==> nat
+Test() ==
+  let s1 : S = new C(),
+      s2 : S = new C(s1),
+      s3 : S = new C(s2),
+      s4 : S = new C(s3),
+      s5 : S = new C(s4)
+  in
+    return s5.getNum();
+
+end A
+

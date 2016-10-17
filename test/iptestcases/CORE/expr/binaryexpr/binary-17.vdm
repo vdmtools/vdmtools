@@ -1,0 +1,12 @@
+-- Test case for optimization of "in set dom" construction
+
+class A
+
+operations
+
+public Test : () ==> seq of bool
+Test() ==
+  return [1 in set dom { 2 |-> 'a', 3 |-> 'b', 1 |-> 'c'},
+          'd' in set rng { 2 |-> 'a', 3 |-> 'b', 1 |-> 'c'}]
+
+end A

@@ -1,0 +1,13 @@
+class CasesStmtTest
+
+operations
+
+  Cases: () ==> seq of char
+  Cases() ==
+    cases {}:
+      a -> return "yes",
+      s1 union s2 -> return 5 + 7
+    end;
+
+
+end CasesStmtTest

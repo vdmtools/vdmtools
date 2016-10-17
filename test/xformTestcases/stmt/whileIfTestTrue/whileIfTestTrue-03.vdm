@@ -1,0 +1,26 @@
+class A
+
+operations
+
+public Test : () ==> nat
+Test () ==
+( 
+	tixe {
+	P |-> (	
+	dcl x : nat := 3;
+	dcl y : nat := 1;
+	while (((x > 5))) do
+		(if x > 5
+				then y := y + 1
+				else y := y - 1;
+		 y:= y;
+	       if (x > 5)
+				then y := y - 1
+				else y := y + 1);) }
+	in 
+		skip;
+	 	
+	return 1	
+
+); 		
+end A

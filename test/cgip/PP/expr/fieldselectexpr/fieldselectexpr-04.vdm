@@ -1,0 +1,45 @@
+class A
+
+operations
+
+public Test : () ==> seq of (int|map nat to nat)
+Test () ==
+( dcl a:  C := mk_Rec ({1|->2}),
+      b:  C := new A (),
+      d:  D := mk_Rec2 ({3|->4}),
+      e:  E := new B (),
+      f:  F := mk_Rec ({5|->6}),
+      g:  F := new A (),
+      h:  A := new A (),
+      i: Rec:= mk_Rec({7|->8}),
+      res : seq of int;
+  res := [ a.c(1), b.c(1), d.c(3), e.c(2), f.c(5), g.c(5), h.c(7), i.c(7) ];
+  return res
+)
+
+functions
+
+public 
+c: int -> int | map nat to nat
+c (i) ==
+  i
+
+types
+
+C = A | Rec;
+
+D = Rec | Rec2|nat;
+
+E = A | B;
+
+F = E | D;
+ 
+Rec::c: int | map nat to nat;
+
+Rec2::c:map nat to nat
+
+end A
+
+class B is subclass of A
+
+end B

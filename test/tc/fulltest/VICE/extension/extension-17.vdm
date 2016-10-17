@@ -1,0 +1,44 @@
+system ASys
+
+instance variables
+
+static public sb : B := new B();
+scpu : CPU := new CPU(<FP>, 1e5)
+
+operations
+
+  public ASys: () ==> ASys
+  ASys() ==
+   ( scpu.deploy(sb,"DUMMY"))
+
+end ASys
+class C
+
+operations
+
+  public OpC: nat ==> nat
+  OpC(n) ==
+   return n + 1;
+
+end C
+class B
+
+instance variables
+  public sc : C := new C();
+
+operations
+
+public OpB: nat ==> nat
+OpB(n) ==
+  return n + 99;
+
+end B
+
+class A
+
+operations
+  public Test: () ==> nat
+  Test () ==
+     return ASys`sb.OpB(8) + ASys`sb.sc.OpC(42);
+
+end A

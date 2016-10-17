@@ -1,0 +1,18 @@
+class B
+
+instance variables
+  s : set of A
+
+operations
+
+
+  public Test : () ==> seq of real
+  Test() ==
+  ( dcl r1  : seq of real,
+        r2  : seq of real;
+    def  a_val = new A() in
+      r1 := a_val.Get();
+    return r1;
+  )
+
+end B

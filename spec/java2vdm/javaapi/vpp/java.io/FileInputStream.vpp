@@ -1,0 +1,175 @@
+dlclass JavaIoFileInputStream is subclass of JavaIoInputStream
+uselib "j2vdll.so"
+--values 
+--  CLASS : JavaLangClass = new  JavaLangClass("JavaIoFileInputStream" , <CLASS> , false  )
+instance variables 
+--  private  fd : JavaIoFileDescriptor;
+--  static dummy : <VOID> := j2v_staticInitializer()
+operations 
+
+public  read : () ==> int 
+read() == 
+( dcl res : int :=read'();
+  if res < -1
+  then exit new JavaIoIOException()
+  else return res
+);
+
+private  read' : () ==> int 
+read'() == 
+is not yet specified ;
+
+public  close : () ==> ()
+close() == 
+is not yet specified ;
+
+public  getFD : () ==> JavaIoFileDescriptor
+getFD() == 
+is not yet specified ;
+--( if  not  fd.IsNil()
+--  then  
+--    return  fd;
+--  exit  new  JavaIoIOException()
+--) ;
+
+--private  static initIDs : () ==> ()
+--initIDs() == 
+--is not yet specified ;
+
+public  skip__ : int  ==> int 
+skip__(n) == 
+is not yet specified ;
+
+protected  finalize : () ==> ()
+finalize() == 
+is not yet specified ;
+--( if  not  fd.IsNil()
+--  then  
+--    ( if  fd <> fd.in__
+--      then  
+--        ( close()
+--        ) 
+--    ) ;
+--  skip 
+--) ;
+
+--public  getClass : () ==> JavaLangClass
+--getClass() == 
+--return  CLASS;
+
+public  available : () ==> int 
+available() == 
+is not yet specified ;
+
+--public  read : map  int  to  int  ==> int 
+--read(b) == 
+--( return  readBytes(b , 0 , (card  dom  b))
+--) ;
+
+private  open : seq of char ==> int
+open(name) == 
+is not yet specified ;
+
+--public  read : map  int  to  int  * int  * int  ==> int 
+--read(b, off, len__) == 
+--( return  readBytes(b , off , len__)
+--) ;
+public  readMIIIntInt' : map  int  to  int  * int  * int  ==> int * map  int  to  int 
+readMIIIntInt'(b_, off, len__) == 
+( return  readBytes(b_ , off , len__)
+);
+
+--private  readBytes : map  int  to  int  * int  * int  ==> int 
+--readBytes(b, off, len__) == 
+
+private  readBytes : map  int  to  int  * int  * int  ==> int * map  int  to  int
+readBytes(b_, off, len__) == 
+( let mk_(l_n,l_b)=readBytes'(len__),
+      l_len = if l_n < len__ then l_n else len__
+  in 
+  ( dcl b: map  int  to  int := b_;
+    for i=off to off+l_len-1
+    do  b(i):=l_b(i-off);
+    return mk_(l_n,b);
+  )
+);
+
+private  readBytes' : int ==> int * map  int  to  int
+readBytes'(l) == 
+is not yet specified ;
+
+--public  JavaIoFileInputStream : <NIL> ==> JavaIoFileInputStream
+--JavaIoFileInputStream(-) == 
+--isNil := true  ;
+
+public  JavaIoFileInputStream : JavaIoFile ==> JavaIoFileInputStream
+JavaIoFileInputStream(file) == 
+( let - = JavaIoFileInputStream(file.getPath())
+  in 
+    skip 
+) ;
+
+--static j2v_staticInitializer : () ==> <VOID>
+--j2v_staticInitializer() == 
+--( initIDs();
+--  return  <VOID>
+--) ;
+
+public  JavaIoFileInputStream : JavaLangString ==> JavaIoFileInputStream
+JavaIoFileInputStream(name) == 
+  JavaIoFileInputStream''(name);
+
+public  JavaIoFileInputStream : seq of char ==> JavaIoFileInputStream
+JavaIoFileInputStream(name) == 
+  JavaIoFileInputStream'''(name);
+
+--private  JavaIoFileInputStream' : (JavaLangString | seq of char) ==> ()
+--JavaIoFileInputStream'(name) == 
+--( if isofclass(JavaLangString,name)
+--  then JavaIoFileInputStream''(name)
+--  else JavaIoFileInputStream'''(name);
+--);
+
+private JavaIoFileInputStream'' : JavaLangString ==> ()
+JavaIoFileInputStream''(name) == 
+( --dcl   security : SecurityManager := JavaLangSystem`getSecurityManager();
+  --if  not  security.IsNil()
+  --then  
+  --  ( security.checkRead(name)
+  --  ) ;
+--  fd := new  JavaIoFileDescriptor();
+  if open(name.toSeqOfChar()) <> 0
+  then
+    exit
+      new JavaIoFileNotFoundException(name)
+  else
+    skip
+) ;
+
+private JavaIoFileInputStream''' : seq of char ==> ()
+JavaIoFileInputStream'''(name) == 
+( if open(name) <> 0
+  then
+    exit
+      new JavaIoFileNotFoundException(new JavaLangString(name))
+  else
+    skip
+) ;
+
+public  JavaIoFileInputStream : JavaIoFileDescriptor ==> JavaIoFileInputStream
+JavaIoFileInputStream(fdObj) == 
+is not yet specified;
+--( dcl   security : SecurityManager := JavaLangSystem`getSecurityManager();
+--  if  fdObj.IsNil()
+--  then  
+--    ( exit  new  JavaLangNullPointerException()
+--    ) ;
+--  if  not  security.IsNil()
+--  then  
+--    ( security.checkRead(fdObj)
+--   ) ;
+--  fd := fdObj
+--) ;
+
+
+end  JavaIoFileInputStream

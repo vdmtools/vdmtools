@@ -1,0 +1,31 @@
+class Timer
+
+  instance variables
+    hour: nat := 0;
+    min: nat := 0;
+    sec: nat := 0
+  
+  operations
+    IncrementTime: () ==> ()
+    IncrementTime() == (
+       sec := sec + 1;
+       if sec = 60 then (sec := 0; min := min + 1);
+       if min = 60 then (min := 0; hour := hour + 1);
+       if hour = 24 then hour := 0;
+    );
+  
+    -- This is for use by threads other than the periodic thread
+    public SetClock: nat * nat * nat ==> ()
+    SetClock(h,m,s) == ( 
+      hour := h;
+      min  := m;
+      sec  := s
+    );
+  
+  thread
+    periodic (1000) (IncrementTime)
+
+  sync 
+    mutex(IncrementTime, SetClock);
+   
+end Timer

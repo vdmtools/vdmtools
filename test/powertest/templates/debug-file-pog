@@ -1,0 +1,22 @@
+module go
+
+imports
+  from AS all,
+  from REP all,
+  from CI all,
+  from ENV all,
+  from POG_MEDIATOR all,
+  from POGTP all,
+  from TEST all
+
+exports all
+
+definitions 
+
+operations
+  go : () ==> set of TEST`ProofObligationPP -- POG_MEDIATOR`String 
+  go() ==
+  ( return TEST`go(<<AST>>)
+  )
+
+end go

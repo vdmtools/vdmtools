@@ -1,0 +1,8 @@
+class TYPE
+types
+
+  A ::
+   sel : nat
+   sel : bool;
+
+end TYPE

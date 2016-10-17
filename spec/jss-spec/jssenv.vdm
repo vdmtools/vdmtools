@@ -1,0 +1,1935 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Environment manipulating operations for the Static Semantics of Java
+% $Id:
+% Implemented in: jssenv.cc
+%--------------------------------------------------------------------------------
+
+\section{The JSSENV Module}
+
+This section contains the environment module which
+is responsible for maintaining the
+state of the static semantics (except for the error messages).
+It mainly consists of operations to lookup identifiers, scope
+manipulating operations, and operations which expand the
+definitions to initialize the state.
+
+The JSSENV module exports its
+constructs to all the other modules from level 1 to 3 in the
+hierarchy. JSSENV only imports constructs from the JSSVCM module which
+is not considered to belong to the hierarchy at all.
+
+
+\begin{vdm_al}
+module JSSENV
+imports
+  from AS all,
+  from CI all,
+  from REP all,
+  from CPP all,
+  from JSSREP all,
+  from JAVAERR all,
+  from JSSERR all,
+  from JSSAUX all,
+  from JSSVCM1
+  operations
+    GetParseEnvDom: () ==> set of AS`Name;
+    IsInParseEnv: AS`Name ==> bool;
+    GetParseInfo: AS`Name ==> [ParseTypeInfo];
+    UpdateParseEnv: AS`Name * ParseTypeInfo ==> ();
+    RemoveClassesFromParseEnv: set of AS`Name ==> ()
+
+exports
+types
+  struct ClassTypeInfo;
+  struct ParseTypeInfo;
+operations
+-- 1. run
+  ClearTypeInfo: () ==> ();
+  PushTypeInfo: () ==> bool;
+  PopTypeInfo: () ==> ();
+  InitParseInfo: AS`Name ==> ();
+  GetName: () ==> AS`Name;
+  SetPackage: [AS`Name] ==> ();
+  GetPackage: () ==> [AS`Name];
+  SetParseType: [JSSREP`ClassTypeRep | JSSREP`IntrfcTypeRep] ==> ();
+  GetParseType: () ==> JSSREP`ClassTypeRep | JSSREP`IntrfcTypeRep;
+  SetExtends: seq of AS`Name ==> ();
+  GetExtends: () ==> seq of AS`Name;
+  SetImplements: seq of AS`Name ==> ();
+  GetImplements: () ==> seq of AS`Name;
+  SetTypeParameters: seq of AS`Name ==> ();
+  GetTypeParameters: () ==> seq of AS`Name;
+  AddTypeInfoField: AS`Name * JSSREP`TypeRep ==> ();
+  AddTypeInfoMethod: AS`Name * JSSREP`MethodTypeRep ==> ();
+  CheckForVDMKeywords: AS`Name ==> ();
+-- 2. run Type Information
+  Add2Imports: AS`Name * seq of AS`Name ==> ();
+  CheckOverloading: AS`Name ==> bool;
+  WarnForVDMKeyword: seq1 of char * CI`ContextId ==> ();
+  GetCurrentType: () ==> [JSSREP`ClassTypeRep | JSSREP`IntrfcTypeRep];
+  GetCurrentSuper: () ==> [JSSREP`TypeRep];
+  FindSuperType: JSSREP`TypeRep * JSSREP`TypeRep ==> JSSREP`TypeRep;
+  EnterLocalScope: map AS`Name to JSSREP`TypeRep ==> ();
+  LeaveLocalScope: () ==> ();
+  SetCurrentMethodReturnType: JSSREP`TypeRep ==> ();
+  GetCurrentMethodReturnType: () ==> JSSREP`TypeRep;
+  Add2CurrentLocals: AS`Name * JSSREP`FieldTypeRep ==> bool;
+  LookUpTypeOf: AS`Name ==> [JSSREP`ClassTypeRep|JSSREP`IntrfcTypeRep];
+  SearchField: AS`Name ==> [JSSREP`TypeRep];
+  SearchMethod: AS`Name * seq of JSSREP`TypeRep ==> [JSSREP`TypeRep]* [seq of JSSREP`TypeRep];
+  -- for J2V
+  DeduceMethodParaType: AS`Name * AS`Name * seq of JSSREP`TypeRep * nat1
+                        ==> [AS`Name];
+  GetLookUpType: () ==> [AS`Name] * [JSSENV`ClassTypeInfo] * [JSSENV`ParseTypeInfo];
+  GetLookUpTypeName: () ==> [AS`Name];
+  SetLookUpType: [AS`Name] * [JSSENV`ClassTypeInfo] * [JSSENV`ParseTypeInfo] ==> ();
+  ResetLookUpName: () ==> ();
+  SetLookUpNameTo: AS`Name ==> bool;
+  CheckIfClassLookUp: JSSREP`TypeRep ==> bool;
+  CheckIfIsClassInEnv: JSSREP`TypeRep ==> bool;
+
+-- 2. run Dependencies
+  SetCurrentParseAndClassInfo: [AS`Name] ==> bool;
+  CheckFieldAndMethodNames: () ==> bool;
+  InsertServer: AS`Name ==> ();
+  ClassDependency: AS`Name ==> ();
+
+  RemoveUnknownClasses: () ==> ();
+
+  UpdateJavaType : () ==> ();
+  InitJavaTypes: AS`Name * AS`Name * AS`Name * JSSREP`TypeRep ==> ();
+
+definitions
+types
+--AccessTypeRep ::
+--  access : CPP`Modifiers
+--  typeRep : JSSREP`TypeRep;
+
+ParseTypeInfo ::
+  package : [AS`Name]
+  nesting : [AS`Name]
+  name : [AS`Name]
+  type : [JSSREP`ClassTypeRep | JSSREP`IntrfcTypeRep]
+  extends    : seq of AS`Name
+  implements : seq of AS`Name
+  fields  : map AS`Name to JSSREP`FieldTypeRep
+  methods : map AS`Name to set of JSSREP`MethodTypeRep
+
+functions
+
+MakeEmptyParseInfo: [AS`Name] * [AS`Name]
+                  * [AS`Name] * [JSSREP`ClassTypeRep|JSSREP`IntrfcTypeRep]
+                  * seq of AS`Name * seq of AS`Name
+                 -> ParseTypeInfo
+MakeEmptyParseInfo(p_package,p_nesting,p_name,p_type,
+                   p_extends,p_implements) ==
+  mk_ParseTypeInfo(p_package,p_nesting,p_name,p_type,p_extends,p_implements,
+                   {|->},{|->});
+types
+
+ClassTypeInfo ::
+  isJavaType : bool
+  calcInheritance : bool
+  type : [JSSREP`ClassTypeRep | JSSREP`IntrfcTypeRep]
+  extends       : [seq of AS`Name]
+  implements    : [seq of AS`Name]
+  extendsAll    : seq of AS`Name
+  implementsAll : seq of AS`Name
+  subclasses    : set of AS`Name
+  servers : set of AS`Name
+  clients : set of AS`Name
+  fields  : map (seq of (seq of char)) to AS`Name
+  methods : map (seq of (seq of char)) to AS`Name
+  serversOLD : set of AS`Name;
+
+  ClassTypeEnv = map AS`Name to ClassTypeInfo
+
+functions
+
+MakeEmptyClassInfo: () -> ClassTypeInfo
+MakeEmptyClassInfo() ==
+  mk_ClassTypeInfo(false, -- isJavaType
+                   true,  -- calcInheritance
+                   nil,   -- type
+                   nil,   -- extends
+                   nil,   -- implements
+                   [],    -- extendsAll
+                   [],    -- implementsAll
+                   {},    -- subclasses
+                   {},    -- servers
+                   {},    -- clients
+                   {|->}, -- fields
+                   {|->}, -- methods
+                   {}     -- serversOLD
+                  );
+
+\end{vdm_al}
+
+1. run Syntax Checking for non-translateable Java constructs
+\begin{itemize}
+\item s\_Nesting: The nesting of the current class or interface. Together with
+the current package declaration it defines the possible ways
+to reference the class or interface
+\item s\_StackOfTypes: A stack of names of the current nested classes or interfaces
+\item s\_CurrentParseInfo: The ParseTypeInfo for the current class or interface
+\item s\_Package: The current package name
+\item s\_Imports: The current import statements
+\item s\_ImportFields: The fields in the current import statements
+\item s\_Name: The name of the current class or interface
+\item s\_Type: The type of the current class or interface, that is,
+either 'class' or 'interface'
+\item s\_Extends: The super class/interfaces of the current class or interface
+\item s\_Implements: The super interfaces of the current class
+
+\item s\_NameTable: A table of the possible ways to reference a type
+\end{itemize}
+
+2.run: determining types
+\begin{itemize}
+\item s\_UnknownTypeNames : A set op looked up but unknown classes/interfaces
+\item s\_CurrentName: The current class or interface name
+\item s\_CurrentLocals : A display stack of local variables
+\item s\_LookUpName : The name of a class searched for fields or methods, starts from
+within the current class (s\_CurrentName)
+\item s\_LookUpParseInfo : Parse type Info for the lookup class stated by s\_LookUpName
+\end{itemize}
+2. run dependencies between classes
+\begin{itemize}
+\item s\_CurrentClassInfo : The Class type Info for the current class
+\item s\_LookUpClassInfo : The Class type Info for a looked up class
+\item s\_TheObjectClass : The Object class name
+\item s\_CurrentMethodReturnType : The return type of the function definition 
+currently being type checked. Possible since anonymous classes are not allowed.
+\item ClassEnv : a table of information for dependency relations between classes
+\end{itemize}
+
+\begin{vdm_al}
+  state TypeInfo of
+-- 1. run Syntax Check
+    s_Nesting         : [AS`Name]
+    s_StackOfTypes    : seq of AS`Name
+    s_CurrentParseInfo : [ParseTypeInfo]
+    s_Package : [AS`Name]
+    s_Imports      : seq of AS`Name
+    s_ImportFields : set of (seq of seq of char)
+    s_Name : [AS`Name]
+    s_Type : [JSSREP`ClassTypeRep | JSSREP`IntrfcTypeRep]
+    s_Extends    : seq of AS`Name
+    s_Implements : seq of AS`Name
+    s_TypeParameters : seq of AS`Name
+
+    s_NameTable : map AS`Name to AS`Name
+-- 2. run Type Check
+    s_UnknownTypeNames : set of AS`Name
+    s_CurrentName   : [AS`Name]
+    s_CurrentLocals : seq of (map AS`Name to JSSREP`FieldTypeRep)
+    s_LookUpName     : [AS`Name]
+    s_LookUpParseInfo : [ParseTypeInfo]
+-- 2. run Dependencies
+    s_CurrentClassInfo : [ClassTypeInfo]
+    s_LookUpClassInfo : [ClassTypeInfo]
+    s_TheObjectClass : [AS`Name]
+    s_CurrentMethodReturnType : [JSSREP`TypeRep]
+
+    ClassEnv : ClassTypeEnv
+
+  init s == s =
+    mk_TypeInfo(
+      nil, -- s_Nesting
+      [],  -- s_StackOfTypes
+      nil, -- s_CurrentParseInfo
+      nil, -- s_Package
+      [],  -- s_Imports
+      {},  -- s_ImportFields
+      nil, -- s_Name
+      nil, -- s_Type
+      [],  -- s_Extends
+      [],  -- s_Implements
+      [],  -- s_TypeParameters
+
+      {|->}, -- s_NameTable
+      {},    -- s_UnknownTypeNames
+      nil,   -- s_CurrentName
+      [],    -- s_CurrentLocals
+
+      nil,  -- s_LookUpName
+      nil,  -- s_LookUpParseInfo
+      nil,  -- s_CurrentClassInfo
+      nil,  -- s_LookUpClassInfo : [ClassTypeInfo]
+
+      nil,  -- s_TheObjectClass
+
+      nil,  -- s_CurrentMethodReturnType
+
+      {|->} -- ClassEnv
+    )
+  end
+\end{vdm_al}
+
+\begin{vdm_al}
+operations
+  ClearTypeInfo: () ==> ()
+  ClearTypeInfo() == (
+    s_Nesting         := nil;
+    s_StackOfTypes    := [];
+    s_CurrentParseInfo := nil;
+    s_Package := nil;
+    s_Imports      := [];
+    s_ImportFields := {};
+    s_Name := nil;
+    s_Type := nil;
+    s_Extends    := [];
+    s_Implements := [];
+    s_TypeParameters := [];
+    s_CurrentName   := nil;
+    s_CurrentLocals := [];
+    s_LookUpName := nil;
+    if s_TheObjectClass = nil
+    then s_TheObjectClass := mk_AS`Name(["Object"],CI`NilContextId);
+    s_CurrentMethodReturnType := nil
+  );
+\end{vdm_al}
+
+\begin{vdm_al}
+SetPackage: [AS`Name] ==> ()
+SetPackage(p_name) ==
+  s_Package := p_name;
+\end{vdm_al}
+
+\begin{vdm_al}
+GetPackage: () ==> [AS`Name]
+GetPackage() ==
+  return s_Package;
+\end{vdm_al}
+
+A set of all names in import statements, not including the class name or '*' 
+\begin{vdm_al}
+Add2Imports: AS`Name * seq of AS`Name ==> ()
+Add2Imports(p_name,p_idL) ==
+ (s_Imports := s_Imports ^ [p_name];
+  for l_i=1 to len p_idL-1
+  do s_ImportFields := s_ImportFields union {p_idL(l_i).ids}
+ );
+\end{vdm_al}
+
+\begin{vdm_al}
+SetParseType: [JSSREP`ClassTypeRep | JSSREP`IntrfcTypeRep] ==> ()
+SetParseType(p_type) ==
+  s_Type := p_type;
+\end{vdm_al}
+
+\begin{vdm_al}
+GetParseType: () ==> JSSREP`ClassTypeRep | JSSREP`IntrfcTypeRep
+GetParseType() ==
+  return s_Type
+pre s_Type <> nil;
+\end{vdm_al}
+
+\begin{vdm_al}
+SetExtends: seq of AS`Name ==> ()
+SetExtends(p_extends) ==
+  s_Extends := s_Extends
+             ^ [p_extends(b_i) | b_i in set inds p_extends
+                               & p_extends(b_i) not in set elems s_Extends];
+
+GetExtends: () ==> seq of AS`Name
+GetExtends() ==
+  return s_Extends;
+\end{vdm_al}
+
+\begin{vdm_al}
+SetImplements: seq of AS`Name ==> ()
+SetImplements(p_implements) ==
+  s_Implements := p_implements;
+
+GetImplements: () ==> seq of AS`Name
+GetImplements() ==
+  return s_Implements;
+\end{vdm_al}
+
+\begin{vdm_al}
+SetTypeParameters: seq of AS`Name ==> ()
+SetTypeParameters(p_typeparameters) ==
+  s_TypeParameters := p_typeparameters;
+
+GetTypeParameters: () ==> seq of AS`Name
+GetTypeParameters() ==
+  return s_TypeParameters;
+\end{vdm_al}
+
+Remember the return type of the currently type checked function definition.
+This is possible since anonymous classes are not allowed, and so are nested
+function definition.
+\begin{vdm_al}
+SetCurrentMethodReturnType: JSSREP`TypeRep ==> ()
+SetCurrentMethodReturnType(p_tr) ==
+  if is_JSSREP`AllTypeRep(p_tr)
+  then s_CurrentMethodReturnType := nil
+  else s_CurrentMethodReturnType := p_tr;
+\end{vdm_al}
+
+Return the return type of the currently type checked function definition.
+\begin{vdm_al}
+GetCurrentMethodReturnType: () ==> JSSREP`TypeRep
+GetCurrentMethodReturnType() ==
+  return s_CurrentMethodReturnType;
+\end{vdm_al}
+
+\begin{vdm_al}
+PushTypeInfo: () ==> bool
+PushTypeInfo() ==
+  if (s_Name <> nil) and (s_CurrentParseInfo <> nil)
+  then
+   (JSSVCM1`UpdateParseEnv(s_Name,s_CurrentParseInfo);
+    ------------------------------------------
+    -- Error message #6
+    -- Nested class or interface declarations are not supported
+    ------------------------------------------
+    JSSERR`GenErr(s_Name.cid,<ERROR>,6,[]);
+    s_Name := nil;
+    s_CurrentParseInfo := nil;
+    return false
+   )
+  else
+    return true;
+\end{vdm_al}
+
+\begin{vdm_al}
+PopTypeInfo: () ==> ()
+PopTypeInfo() ==
+  (JSSVCM1`UpdateParseEnv(s_Name,s_CurrentParseInfo);
+   InitClassInfo(s_CurrentParseInfo);
+   s_StackOfTypes := tl s_StackOfTypes;
+   if len s_StackOfTypes = 0
+   then s_Name := nil
+   else s_Name := hd s_StackOfTypes;
+   if s_Name = nil
+   then s_CurrentParseInfo := nil
+   else s_CurrentParseInfo := JSSVCM1`GetParseInfo(s_Name)
+  );
+\end{vdm_al}
+
+\begin{vdm_al}
+InitParseInfo: AS`Name ==> ()
+InitParseInfo(p_name) ==
+  (dcl l_sosoc : seq of seq of char := [];
+   s_Name := p_name;
+   s_StackOfTypes := [s_Name]^s_StackOfTypes;
+   for l_name in s_StackOfTypes
+   do let mk_AS`Name(l_ids,-) = l_name
+      in l_sosoc := l_ids^l_sosoc;
+   s_Nesting := mk_AS`Name(l_sosoc,CI`NilContextId);
+   s_CurrentParseInfo := MakeEmptyParseInfo(s_Package,s_Nesting,
+                                      s_Name,s_Type,s_Extends,s_Implements);
+   Add2NameTable(p_name);
+   if p_name.ids(1) = "Object"
+   then s_TheObjectClass := p_name
+  );
+\end{vdm_al}
+
+\begin{vdm_al}
+Add2NameTable: AS`Name ==> ()
+Add2NameTable(p_name) ==
+ (s_NameTable := s_NameTable
+    ++ {mk_AS`Name(s_Nesting.ids,s_Nesting.cid) |-> p_name};
+  s_NameTable := s_NameTable ++ {p_name |-> p_name};
+  if s_Package <> nil
+  then s_NameTable := s_NameTable
+         ++ {mk_AS`Name(s_Package.ids ^ s_Nesting.ids,s_Nesting.cid)
+            |-> p_name}
+ )
+pre s_Nesting <> nil;
+\end{vdm_al}
+
+
+\begin{vdm_al}
+CheckNameTableFor: AS`Name ==> [AS`Name]
+CheckNameTableFor(p_name) ==
+ return
+   if p_name in set dom s_NameTable
+   then s_NameTable(p_name)
+   else nil;
+\end{vdm_al}
+
+\begin{vdm_al}
+GetName: () ==> AS`Name
+GetName() ==
+  return s_Name
+pre s_Name <> nil;
+\end{vdm_al}
+
+\begin{vdm_al}
+AddTypeInfoField: AS`Name * JSSREP`TypeRep ==> ()
+AddTypeInfoField(p_n,p_tr) ==
+  s_CurrentParseInfo.fields := s_CurrentParseInfo.fields ++ {p_n |-> p_tr}
+pre s_CurrentParseInfo <> nil;
+\end{vdm_al}
+
+\begin{vdm_al}
+AddTypeInfoMethod: AS`Name * JSSREP`MethodTypeRep ==> ()
+AddTypeInfoMethod(p_name,p_mtr) ==
+  (dcl l_mtr : set of JSSREP`MethodTypeRep := {};
+   if p_name in set dom s_CurrentParseInfo.methods
+   then l_mtr := s_CurrentParseInfo.methods(p_name);
+   l_mtr := l_mtr union {p_mtr};
+   s_CurrentParseInfo.methods := s_CurrentParseInfo.methods++{p_name |-> l_mtr};
+  )
+pre s_CurrentParseInfo <> nil;
+\end{vdm_al}
+
+
+2. run : TC
+
+Calc inheritance on the fly.
+
+In case of a class expand the chain of extended classes and
+the closure of implemented interfases.
+In case of an interfase expand the closure of extended interfaces/classes.
+Update ClassEnv for all types that are not yet expanded.
+Also update the ClassEnv with sub class dependency, this
+includes the implemented interfaces.
+\begin{vdm_al}
+
+ExpandInheritance: AS`Name ==> bool
+ExpandInheritance(p_name) ==
+  def l_pti : [ParseTypeInfo] = LookUpParseInfo(p_name)
+  in
+    if l_pti = nil
+    then return false
+    elseif is_JSSREP`ClassTypeRep(l_pti.type)
+    then return ExpandClassExtends(p_name) and ExpandClassImplements(p_name)
+    else return ExpandIntrfcExtends(p_name);
+
+ExpandClassExtends: AS`Name ==> bool
+ExpandClassExtends(p_name) ==
+ (dcl l_reswf : bool := true,
+      l_cn : AS`Name := p_name,
+      l_cti : [ClassTypeInfo] := LookUpClassInfo(p_name);
+  if l_cti.calcInheritance
+  then
+   (dcl l_BTcn : seq of AS`Name := [l_cn],
+        l_extendsL : seq of AS`Name := if ((len l_cn.ids = 3)
+                                           and (l_cn.ids(3) = "Object"))
+                                       or (l_cn.ids(1) = "Object")
+                                       then []
+                                       else let objClass = s_TheObjectClass
+                                            in 
+                                                if objClass = nil or 
+                                                   objClass.cid <> CI`NilContextId 
+                                                then  
+                                                   [objClass]
+                                                else
+                                                   [mu (objClass,cid |-> p_name.cid)],
+        l_calc : bool := len l_cti.extendsAll = 1;
+    while l_calc
+    do
+     (l_cn := l_cti.extendsAll(1);
+      l_cti := LookUpClassInfo(l_cn);
+      l_calc := (l_cti <> nil) and (not l_cn in set s_UnknownTypeNames);
+      l_reswf := l_calc and l_reswf;
+      if l_calc
+      then
+       (l_BTcn := [l_cn] ^ l_BTcn;
+        l_calc := l_cti.calcInheritance;
+        if l_calc
+        then l_calc := len l_cti.extendsAll = 1
+        else
+         (l_extendsL := l_cti.extendsAll;
+          for l_nm in l_extendsL
+          do let l_e = elems l_BTcn
+             in UpdateSubClasses(l_nm,l_e)
+         )
+       )
+     );
+--    l_BTcn := [l_cn] ^ l_BTcn;
+    while len l_BTcn > 0
+    do let l_hd = hd l_BTcn
+       in -- only existing classes to be updated are in the sequence
+        (l_cti := LookUpClassInfo(l_hd);
+         if l_reswf
+         then l_cti.extendsAll := l_extendsL;
+         l_cti.calcInheritance := not l_reswf;
+         l_extendsL := [l_hd] ^ l_extendsL;
+         l_BTcn := tl l_BTcn;
+         if not l_cti.isJavaType
+         then l_cti.subclasses := elems l_BTcn;
+         ClassEnv := ClassEnv ++ {l_hd |-> l_cti}
+        )
+   );
+  return l_reswf
+ );
+
+ExpandIntrfcExtends: AS`Name ==> bool
+ExpandIntrfcExtends(p_name) ==
+ (dcl l_cti : ClassTypeInfo := LookUpClassInfo(p_name);
+  def mk_(l_tewf,l_extendsAll) = TransExtends(l_cti.extendsAll,{p_name})
+  in
+   (l_cti.extendsAll := l_extendsAll;
+    l_cti.calcInheritance := not l_tewf;
+    ClassEnv := ClassEnv ++ {p_name |-> l_cti};
+    return l_tewf
+   )
+ );
+
+\end{vdm_al}
+
+For an interface calculate the transitive closure of extended interfaces or classes
+
+\begin{vdm_al}
+TransExtends: seq of AS`Name * set of AS`Name ==> bool * seq of AS`Name
+TransExtends(p_names,p_subs) ==
+ (dcl l_reswf : bool := true,
+      l_cti : [ClassTypeInfo],
+      l_exts  : seq of AS`Name := [];
+  for l_name in p_names
+  do
+   (l_cti := LookUpClassInfo(l_name);
+    if l_cti = nil
+    then l_reswf := false
+    elseif is_JSSREP`ClassTypeRep(l_cti.type)
+    then  -- interface extends class
+      skip
+    else  -- interface extends interface
+    def mk_(l_tewf,l_extendsAll) = TransExtends(l_cti.extendsAll, {l_name} union p_subs)
+    in 
+     (if l_cti.calcInheritance
+      then
+       (l_reswf := l_tewf and l_reswf;
+        l_cti.extendsAll := l_extendsAll;
+        l_cti.calcInheritance := not l_tewf;
+       );
+      l_exts := l_exts ^ [l_name] ^ l_cti.extendsAll;
+      if not l_cti.isJavaType
+      then
+       (l_cti.subclasses := l_cti.subclasses union p_subs;
+        ClassEnv := ClassEnv ++ {l_name |-> l_cti}
+       )
+     )
+   );
+  return mk_(l_reswf,l_exts)
+ );
+
+ExpandClassImplements: AS`Name ==> bool
+ExpandClassImplements(p_name) ==
+ (dcl l_cti : ClassTypeInfo := LookUpClassInfo(p_name);
+  def mk_(l_tiwf,l_implementsAll) = TransImpls(l_cti.implementsAll,{p_name})
+  in
+   (l_cti.implementsAll := l_implementsAll;
+    l_cti.calcInheritance := not l_tiwf;
+    ClassEnv := ClassEnv ++ {p_name |-> l_cti};
+    return l_tiwf
+   )
+ );
+\end{vdm_al}
+
+JR params
+
+\begin{vdm_al}
+TransImpls: seq of AS`Name * set of AS`Name ==> bool * seq of AS`Name
+TransImpls(p_names,p_subs) ==
+ (dcl l_reswf : bool := true,
+      l_cti : [ClassTypeInfo],
+      l_exts  : seq of AS`Name := [];
+  for l_name in p_names
+  do
+   (l_cti := LookUpClassInfo(l_name);
+    if l_cti = nil
+    then l_reswf := false
+    else
+    def mk_(l_tiwf,l_implementsAll) = TransImpls(l_cti.implementsAll, {l_name} union p_subs)
+    in
+     (if l_cti.calcInheritance
+      then
+       (l_reswf := l_tiwf and l_reswf;
+        l_cti.implementsAll := l_implementsAll;
+        l_cti.calcInheritance := not l_tiwf;
+       );
+      l_exts := l_exts ^ [l_name] ^ l_cti.implementsAll;
+      if not l_cti.isJavaType
+      then
+       (l_cti.subclasses := l_cti.subclasses union p_subs;
+        ClassEnv := ClassEnv ++ {l_name |-> l_cti}
+       )
+     )
+   );
+  return mk_(l_reswf,l_exts)
+ );
+\end{vdm_al}
+
+\begin{vdm_al}
+AddAndSetUnknownClass: AS`Name ==> ()
+AddAndSetUnknownClass(p_name) ==
+ (AddUnknownClass(p_name);
+  def - = SetLookUpNameTo(p_name) in skip
+ );
+\end{vdm_al}
+
+\begin{vdm_al}
+AddUnknownClass: AS`Name ==> ()
+AddUnknownClass(p_name) ==
+  AddUnknownType(p_name,mk_JSSREP`ClassTypeRep(p_name));
+
+AddUnknownInterface: AS`Name ==> ()
+AddUnknownInterface(p_name) ==
+  AddUnknownType(p_name,mk_JSSREP`IntrfcTypeRep(p_name));
+
+AddUnknownType: AS`Name * JSSREP`TypeRep ==> ()
+AddUnknownType(p_n,p_t) ==
+  if not p_n in set dom s_NameTable
+  then
+   (s_NameTable := s_NameTable ++ {p_n |-> p_n};
+    let l_pti : ParseTypeInfo = MakeEmptyParseInfo(nil,nil,p_n,p_t,[],[])
+    in JSSVCM1`UpdateParseEnv(p_n,l_pti);
+    let l_cti : ClassTypeInfo = MakeEmptyClassInfo()
+    in
+      ClassEnv := ClassEnv ++ {p_n |-> l_cti};
+    s_UnknownTypeNames := s_UnknownTypeNames union {p_n}
+   );
+\end{vdm_al}
+
+
+JR params
+
+Remove a set of classes/interfaces from the project
+\begin{vdm_al}
+RemoveClasses: set of AS`Name ==> ()
+RemoveClasses(p_classes) ==
+ (s_NameTable := p_classes <-: s_NameTable;
+  JSSVCM1`RemoveClassesFromParseEnv(p_classes);
+  s_UnknownTypeNames := s_UnknownTypeNames \ p_classes
+ )
+pre p_classes subset dom s_NameTable;
+
+RemoveUnknownClasses: () ==> ()
+RemoveUnknownClasses() ==
+ (s_NameTable := s_UnknownTypeNames <-: s_NameTable;
+  JSSVCM1`RemoveClassesFromParseEnv(s_UnknownTypeNames);
+--  for all l_class in set dom JSSVCM1`GetParseEnvDom
+--  do let s_UnknownTypeNames
+  s_UnknownTypeNames := {}
+ );
+\end{vdm_al}
+
+\begin{vdm_al}
+SetCurrentParseAndClassInfo: [AS`Name] ==> bool
+SetCurrentParseAndClassInfo(p_name) ==
+ (dcl l_reswf : bool := (p_name <> nil)
+                  and (p_name in set dom s_NameTable);
+  if l_reswf
+  then
+   (s_CurrentName := s_NameTable(p_name);
+    l_reswf := JSSVCM1`IsInParseEnv(s_CurrentName)
+            and (s_CurrentName in set dom ClassEnv);
+    if l_reswf
+    then
+     (s_CurrentParseInfo := JSSVCM1`GetParseInfo(s_CurrentName);
+      s_CurrentClassInfo := ClassEnv(s_CurrentName);
+      if s_CurrentClassInfo.calcInheritance
+      then
+       (l_reswf := ExpandInheritance(s_CurrentName) and l_reswf;
+        s_CurrentClassInfo := ClassEnv(s_CurrentName)
+       );
+      s_CurrentClassInfo.serversOLD := s_CurrentClassInfo.servers;
+      s_CurrentClassInfo.servers := {};
+      ClassEnv := ClassEnv ++ {s_CurrentName |-> s_CurrentClassInfo}
+     )
+   );
+  ResetLookUpName();
+  return l_reswf
+ );
+\end{vdm_al}
+
+\begin{vdm_al}
+GetCurrentType: () ==> [JSSREP`ClassTypeRep | JSSREP`IntrfcTypeRep]
+GetCurrentType() ==
+  return if s_CurrentParseInfo = nil
+            and s_CurrentParseInfo.type = nil
+         then nil
+         else s_CurrentParseInfo.type
+pre s_CurrentParseInfo <> nil;
+\end{vdm_al}
+
+\begin{vdm_al}
+GetCurrentSuper: () ==> [JSSREP`TypeRep]
+GetCurrentSuper() ==
+  if len s_CurrentClassInfo.extendsAll = 0
+  then 
+    ------------------------------------------
+    -- Error message #8
+    -- The class/interface "%1" is not part of this project
+    ------------------------------------------
+    let l_name = s_CurrentParseInfo.name,
+        l_new = mk_AS`Name(l_name.ids ^ [".super"],l_name.cid)
+    in
+     (JSSERR`GenErr(l_name.cid,<ERROR>,8,[JSSAUX`PrintName(l_new)]);
+      return nil)
+  else 
+    return mk_JSSREP`ClassTypeRep(s_CurrentClassInfo.extendsAll(1))
+pre (s_CurrentParseInfo <> nil) and (s_CurrentClassInfo <> nil);
+\end{vdm_al}
+
+Find the common type for the two arguments. Both must be class references
+\begin{vdm_al}
+FindSuperType: JSSREP`TypeRep * JSSREP`TypeRep ==> JSSREP`TypeRep
+FindSuperType(p_tr1,p_tr2) ==
+-- JR    if RunTimeMatch(p_tr1, p_tr2)
+  if JSSAUX`ExtractType(p_tr1) = JSSAUX`ExtractType(p_tr2)
+  then return if is_JSSREP`AllTypeRep(p_tr1)
+              then p_tr2
+              else p_tr1
+  else
+  def l_nm1 = JSSREP`GetClassName(p_tr1);
+      l_nm2 = JSSREP`GetClassName(p_tr2);
+  in
+   (dcl l_cti1 : [ClassTypeInfo] := nil;
+    if l_nm1 <> nil
+    then l_cti1 := LookUpClassInfo(l_nm1);
+    let clsnm = if l_cti1 <> nil and
+                   l_nm2 in set elems l_cti1.extendsAll
+                then l_nm2
+                else l_nm1
+    in
+      return mk_JSSREP`ClassTypeRep(clsnm);
+   );
+
+\end{vdm_al}
+
+\begin{vdm_al}
+EnterLocalScope : map AS`Name to JSSREP`TypeRep ==> ()
+EnterLocalScope(l_map) ==
+  s_CurrentLocals := [l_map] ^ s_CurrentLocals;
+\end{vdm_al}
+
+\begin{vdm_al}
+  LeaveLocalScope : () ==> ()
+  LeaveLocalScope() ==
+    s_CurrentLocals := tl s_CurrentLocals
+  pre len s_CurrentLocals > 0;
+\end{vdm_al}
+
+\begin{vdm_al}
+Add2CurrentLocals: AS`Name * JSSREP`FieldTypeRep ==> bool
+Add2CurrentLocals(p_name,p_type) ==
+  def l_reswf = CheckLocalField2MethodName(p_name)
+  in
+   (s_CurrentLocals(1) := s_CurrentLocals(1) ++ {p_name|->p_type};
+   return l_reswf)
+pre len s_CurrentLocals > 0;
+
+--  LookUpInLocals: AS`Name ==> [JSSREP`FieldTypeRep]
+--  LookUpInLocals(l_name) ==
+--    for i=1 to len s_CurrentLocals do
+--      if l_name in set dom s_CurrentLocals(i)
+--      then return s_CurrentLocals(i)(l_name)
+--      else return nil;
+\end{vdm_al}
+
+Set the name of the current lookup type to the name of the current type.
+Also set the type information.
+
+\begin{vdm_al}
+ResetLookUpName: () ==> ()
+ResetLookUpName() ==
+ (s_LookUpName := s_CurrentName;
+  s_LookUpParseInfo := s_CurrentParseInfo;
+  s_LookUpClassInfo := s_CurrentClassInfo
+ );
+\end{vdm_al}
+
+\begin{vdm_al}
+GetLookUpType: () ==> [AS`Name] * [JSSENV`ClassTypeInfo] * [JSSENV`ParseTypeInfo]
+GetLookUpType() ==
+  return mk_(s_LookUpName,s_LookUpClassInfo,s_LookUpParseInfo);
+\end{vdm_al}
+
+\begin{vdm_al}
+GetLookUpTypeName: () ==> [AS`Name]
+GetLookUpTypeName() ==
+  return
+    if s_LookUpName = nil
+    then mk_AS`Name(["?class?"],-1)
+    else s_LookUpName;
+\end{vdm_al}
+
+\begin{vdm_al}
+SetLookUpType: [AS`Name] * [JSSENV`ClassTypeInfo] * [JSSENV`ParseTypeInfo] ==> ()
+SetLookUpType(p_LookUpName,p_LookUpClassInfo,p_LookUpParseInfo) ==
+ (s_LookUpName := p_LookUpName;
+  s_LookUpClassInfo := p_LookUpClassInfo;
+  s_LookUpParseInfo := p_LookUpParseInfo);
+\end{vdm_al}
+
+Set the name of the current lookup type to name.
+Also get the type information from the .
+
+\begin{vdm_al}
+SetLookUpNameTo: AS`Name ==> bool
+SetLookUpNameTo(p_name) ==
+ (dcl l_reswf : bool := true;
+  let l_name = if p_name in set dom s_NameTable
+               then s_NameTable(p_name)
+               else nil
+  in
+   (s_LookUpName := l_name;
+    if l_name = nil
+    then s_LookUpParseInfo := nil
+    else s_LookUpParseInfo := LookUpParseInfo(l_name);
+    if s_LookUpParseInfo = nil
+    then s_LookUpClassInfo := nil
+    else
+      s_LookUpClassInfo := if l_name = nil
+                           then nil
+                           elseif not l_name in set dom ClassEnv
+                           then nil
+                           else ClassEnv(l_name)
+   );
+  if s_LookUpClassInfo <> nil
+  then
+    if s_LookUpClassInfo.calcInheritance
+    then
+     (l_reswf := ExpandInheritance(s_LookUpName) and l_reswf;
+      s_LookUpClassInfo := ClassEnv(s_LookUpName)
+     );
+  return
+    l_reswf and (s_LookUpParseInfo <> nil) and (s_LookUpClassInfo <> nil)
+ );
+\end{vdm_al}
+
+\begin{vdm_al}
+LookUpParseInfo: AS`Name ==> [ParseTypeInfo]
+LookUpParseInfo(p_name) ==
+ (dcl l_name : [AS`Name] := nil,
+      l_pti :  [JSSENV`ParseTypeInfo] := nil;
+  if p_name in set dom s_NameTable
+  then l_name := s_NameTable(p_name)
+  elseif JSSVCM1`IsInParseEnv(p_name)
+  then l_name := p_name;
+  if l_name <> nil
+  then l_pti := JSSVCM1`GetParseInfo(l_name)
+  else
+    ------------------------------------------
+    -- Error message #8
+    -- The class/interface "%1" is not part of this project
+    ------------------------------------------
+   (JSSERR`GenErr(p_name.cid,<ERROR>,8,[JSSAUX`PrintName(p_name)]);
+    AddUnknownClass(p_name)
+   );
+  return l_pti;
+ );
+
+CheckIfIsClassInEnv: JSSREP`TypeRep ==> bool
+CheckIfIsClassInEnv(p_tr) ==
+  let l_tr = JSSAUX`ExtractType(p_tr)
+  in
+   (if is_JSSREP`ClassTypeRep(l_tr)
+       or is_JSSREP`IntrfcTypeRep(l_tr)
+    then
+      let l_name = l_tr.name
+      in
+       (InsertServer(l_name);
+        if l_name in set dom s_NameTable
+        then return true
+        else
+          ------------------------------------------
+          -- Error message #8
+          -- The class/interface "%1" is not part of this project
+          ------------------------------------------
+         (JSSERR`GenErr(l_name.cid,<ERROR>,8,[JSSAUX`PrintName(l_name)]);
+          AddUnknownClass(l_name);
+          return false)
+       );
+    return true
+   );
+  
+CheckIfClassLookUp: JSSREP`TypeRep ==> bool
+CheckIfClassLookUp(p_tr) ==
+  let l_tr = JSSAUX`ExtractType(p_tr)
+  in
+   (if is_JSSREP`ClassTypeRep(l_tr)
+       or is_JSSREP`IntrfcTypeRep(l_tr)
+    then
+      def l_name = l_tr.name;
+          l_exists = CheckIfIsClassInEnv(p_tr)
+      in
+        return SetLookUpNameTo(l_name) and l_exists;
+    return true
+   );
+
+\end{vdm_al}
+
+\begin{vdm_al}
+LookUpTypeOf: AS`Name ==> [JSSREP`ClassTypeRep|JSSREP`IntrfcTypeRep]
+LookUpTypeOf(p_n) ==
+  if p_n in set dom s_NameTable
+  then return JSSVCM1`GetParseInfo(s_NameTable(p_n)).type
+  else return nil;
+
+LookUpStatic: AS`Name ==> [JSSREP`ClassTypeRep|JSSREP`IntrfcTypeRep]
+LookUpStatic(p_n) ==
+  if CheckIfClassLookUp(mk_JSSREP`ClassTypeRep(p_n))
+  then return JSSVCM1`GetParseInfo(s_NameTable(p_n)).type
+  else return nil;
+\end{vdm_al}
+
+\begin{vdm_al}
+LookUpLocalType: AS`Name ==> [JSSREP`FieldTypeRep]
+LookUpLocalType(p_n) == (
+  for i=1 to len s_CurrentLocals
+  do if p_n in set dom s_CurrentLocals(i)
+     then return s_CurrentLocals(i)(p_n);
+  return nil
+);
+\end{vdm_al}
+
+\begin{vdm_al}
+LookUpExtendsFieldType: AS`Name ==> [JSSREP`FieldTypeRep]
+LookUpExtendsFieldType(p_n) ==
+ (if s_LookUpClassInfo <> nil
+  then
+    for l_cn in s_LookUpClassInfo.extendsAll
+    do
+     (def l_pti = LookUpParseInfo(l_cn)
+      in if (l_pti <> nil) and (p_n in set dom l_pti.fields)
+         then return l_pti.fields(p_n)
+     );
+  return LookUpImplementsFieldType(p_n)
+ );
+\end{vdm_al}
+
+\begin{vdm_al}
+LookUpImplementsFieldType: AS`Name ==> [JSSREP`FieldTypeRep]
+LookUpImplementsFieldType(p_n) ==
+ (if s_LookUpClassInfo <> nil
+  then
+    for l_in in s_LookUpClassInfo.implementsAll
+    do
+     (def l_pti = LookUpParseInfo(l_in)
+      in if (l_pti <> nil) and (p_n in set dom l_pti.fields)
+      then return l_pti.fields(p_n)
+     );
+  return nil
+ );
+\end{vdm_al}
+
+\begin{vdm_al}
+LookUpFieldType: AS`Name ==> [JSSREP`FieldTypeRep]
+LookUpFieldType(p_n) ==
+  if s_LookUpParseInfo = nil
+  then return nil
+  elseif p_n in set dom s_LookUpParseInfo.fields
+  then return s_LookUpParseInfo.fields(p_n)
+  else LookUpExtendsFieldType(p_n);
+\end{vdm_al}
+
+JR search:
+   if LookUpName == CurrentName then look in locals, fields, types
+   if LookUpName <> CurrentName then look in fields, types
+
+\begin{vdm_al}
+SearchField: AS`Name ==> [JSSREP`TypeRep]
+SearchField(p_n) ==
+ (dcl l_tr : [JSSREP`TypeRep] := nil;
+  if s_LookUpName = s_CurrentName
+  then l_tr := LookUpLocalType(p_n);
+  if l_tr = nil
+  then
+   (l_tr := LookUpFieldType(p_n);
+    if l_tr = nil
+    then
+--     (l_tr := LookUpStatic(p_n);
+     (l_tr := LookUpTypeOf(p_n);
+      if l_tr = nil
+      then
+        l_tr := LookUpImportName(p_n)
+     )
+   );
+  if l_tr = nil
+  then
+   (if p_n.ids = ["super"]
+    then 
+      def l_supertr = GetCurrentSuper()
+      in if l_supertr <> nil
+         then l_tr := LookUpTypeOf(l_supertr.name)
+--       else mk_JSSREP`AllTypeRep()
+    elseif (p_n.ids = ["this"])
+    then l_tr := GetCurrentType()
+   );
+  return l_tr
+ );
+\end{vdm_al}
+ 
+\begin{vdm_al}
+LookUpImportName: AS`Name ==> [JSSREP`TypeRep]
+LookUpImportName(p_n) ==
+  return 
+    if p_n.ids in set s_ImportFields
+    then mk_JSSREP`ImportTypeRep(p_n)
+    else nil;
+\end{vdm_al}
+
+\begin{vdm_al}
+LookUpMethodType: AS`Name * seq of JSSREP`TypeRep * ParseTypeInfo
+              ==> [JSSREP`TypeRep] * [seq of JSSREP`TypeRep]
+LookUpMethodType(p_n,p_softr,p_pti) ==
+  let l_metM = p_pti.methods
+  in
+    if p_n in set dom l_metM
+    then
+      let l_mtr = l_metM(p_n)
+      in TestSignature(l_mtr,p_softr)
+    else return mk_(nil,nil);
+\end{vdm_al}
+
+\begin{vdm_al}
+LookUpExtendsMethodType: AS`Name * AS`Name * seq of JSSREP`TypeRep
+                     ==> [JSSREP`TypeRep]* [seq of JSSREP`TypeRep]
+LookUpExtendsMethodType(p_cn,p_mn,p_softr) ==
+  def l_pti = LookUpParseInfo(p_cn)
+  in
+    if l_pti = nil
+    then return mk_(nil,nil)
+    else
+      return LookUpMethodType(p_mn,p_softr,l_pti)
+; --pre p_cn in set dom s_NameTable;
+\end{vdm_al}
+
+\begin{vdm_al}
+TestSignature: set of JSSREP`MethodTypeRep * seq of JSSREP`TypeRep
+           ==> [JSSREP`TypeRep] * [seq of JSSREP`TypeRep]
+TestSignature(l_somtr, l_softr) ==
+  def s = {e|e in set l_somtr & len e.domainTypes = len l_softr and
+                                RestSigMatch(l_softr,e.domainTypes,0)}
+  in
+    if card s = 1
+    then
+      let e in set s
+      in return mk_(e.rangeType,e.domainTypes)
+    else return mk_(nil,nil);
+\end{vdm_al}
+
+\begin{vdm_al}
+SearchMethod: AS`Name * seq of JSSREP`TypeRep ==> [JSSREP`TypeRep] * [seq of JSSREP`TypeRep]
+SearchMethod(p_n,p_softr) ==
+ (def mk_(l_mettr,l_sigL) = LookUpMethodType(p_n,p_softr,s_LookUpParseInfo)
+  in if l_mettr <> nil
+     then return mk_(l_mettr,l_sigL);
+  for l_cn in s_LookUpClassInfo.extendsAll
+  do
+    def mk_(l_emettr,l_esigL) = LookUpExtendsMethodType(l_cn,p_n,p_softr)
+    in if l_emettr <> nil
+       then return mk_(l_emettr,l_esigL);
+  for l_cn in s_LookUpClassInfo.implementsAll
+  do
+    def mk_(l_imettr,l_isigL) = LookUpExtendsMethodType(l_cn,p_n,p_softr)
+    in if l_imettr <> nil
+       then return mk_(l_imettr,l_isigL);
+  if p_n.ids = ["super"]
+  then 
+   (def l_supertr = GetCurrentSuper()
+    in if l_supertr = nil 
+       then return mk_(nil,nil)
+       else def l_n = l_supertr.name;
+                l_ftr = LookUpTypeOf(l_n)       -- get the real type
+            in if (l_ftr <> nil) and CheckIfClassLookUp(l_ftr)
+               then 
+                (if len p_softr = 0             -- not default constructor
+                 then return mk_(l_ftr,[])
+                 else return LookUpMethodType(l_n,p_softr,s_LookUpParseInfo)
+                )
+               else return mk_(nil,nil)
+   );
+  if (p_n.ids = ["this"])
+  then 
+    def l_thistr = GetCurrentType()
+    in if l_thistr = nil 
+       then return mk_(nil,nil)
+       else def l_n = l_thistr.name;
+                l_ftr = LookUpTypeOf(l_n) -- get the real type
+            in if (l_ftr <> nil) and CheckIfClassLookUp(l_ftr)
+               then 
+                (if len p_softr = 0             -- not default constructor
+                 then return mk_(l_ftr,[])
+                 else return LookUpMethodType(l_n,p_softr,s_LookUpParseInfo)
+                )
+               else return mk_(nil,nil);
+  return mk_(nil,nil)
+ );
+\end{vdm_al}
+
+The \texttt{DeduceMethodParaType} operation is used by the Java to
+VDM++ translator to deduce the real type for \texttt{null} references.
+
+\begin{formalparameters}
+\verb+p_clsnm: AS`Name+ & The name of the class in which the method
+should appear (or in one of its superclasses).\\
+\verb+p_metnm: AS`Name+ & The name of the method in that class. \\
+\verb+p_tpL: seq1 of JSSREP`TypeRep+ & The list of the type
+representations derived by the JSS analysis for the actual parameters.\\
+\verb+p_index: nat1+ & The index for which a null must be replace with the class for
+which the method was defined.\\
+\hline
+\end{formalparameters}
+\methodresult{AS`Name}{The result is the name of the class which
+appear in the given index (replacing the null).}
+
+\begin{vdm_al}
+DeduceMethodParaType: AS`Name * AS`Name * seq of JSSREP`TypeRep * nat1
+                      ==> [AS`Name]
+DeduceMethodParaType(p_clsnm,p_metnm,p_tpL,p_index) ==
+  def l_pti = LookUpParseInfo(p_clsnm)
+  in
+    if l_pti = nil
+    then return nil
+    else
+      let l_metM = l_pti.methods
+      in
+       (if p_metnm in set dom l_metM
+        then
+          let l_mettps = l_metM(p_metnm),
+              l_desiredlen = len p_tpL
+          in
+            let l_sigs = {b_mettp.domainTypes | b_mettp in set l_mettps
+                          & len b_mettp.domainTypes = l_desiredlen}
+            in
+              for all l_sig in set l_sigs do
+                if RestSigMatch(l_sig,p_tpL,p_index)
+                then return l_sig(p_index).type.name;
+        def extendsL = LookUpClassExtendsAll(p_clsnm)
+        in
+          if extendsL <> nil
+          then DeduceMethodParaType(hd extendsL,p_metnm,p_tpL,p_index)
+          else return nil
+       )
+pre JSSVCM1`IsInParseEnv(p_clsnm) and
+    p_index in set inds p_tpL;
+
+RestSigMatch: seq of JSSREP`TypeRep * seq of JSSREP`TypeRep * nat ==> bool
+RestSigMatch(p_sig,p_tpL,p_index) ==
+  (for l_index = 1 to len p_sig do
+     if p_index <> l_index and
+        not RunTimeMatch(p_sig(l_index),p_tpL(l_index))
+     then return false;
+   return true
+  )
+pre len p_sig = len p_tpL and
+    p_index in set inds p_sig union {0};
+
+functions
+
+RunTimeMatch: JSSREP`TypeRep * JSSREP`TypeRep -> bool
+RunTimeMatch(p_actual,p_formal) ==
+  let l_a = JSSAUX`ExtractType(p_actual),
+      l_f = JSSAUX`ExtractType(p_formal)
+  in
+   (p_actual = p_formal)
+   or is_JSSREP`AllTypeRep(l_a)
+   or is_JSSREP`AllTypeRep(l_f)
+   or (is_JSSREP`NullTypeRep(l_a) and is_JSSREP`ClassTypeRep(l_f))
+   or CheckEqualType(p_actual,p_formal)
+   or ((is_JSSREP`FieldTypeRep(p_actual) and is_JSSREP`FieldTypeRep(p_formal))
+       and (p_actual.type in set v_number_tps and p_formal.type in set v_number_tps)
+       and p_actual.array = p_formal.array);
+
+operations
+
+CheckEqualType: JSSREP`TypeRep * JSSREP`TypeRep ==> bool
+CheckEqualType(p_a,p_f) ==
+  if not (is_JSSREP`FieldTypeRep(p_a) and is_JSSREP`FieldTypeRep(p_f))
+  then return false
+  elseif p_a.array <> p_f.array
+  then return false
+  else
+  let l_at = p_a.type,
+      l_ft = p_f.type
+  in
+    --if not ((is_JSSREP`ClassTypeRep(l_at) or is_JSSREP`IntrfcTypeRep(l_at))
+    --    and (is_JSSREP`ClassTypeRep(l_ft) or is_JSSREP`IntrfcTypeRep(l_ft)))
+    if not (is_JSSREP`ClassTypeRep(l_ft) or is_JSSREP`IntrfcTypeRep(l_ft))
+    then return false
+    else
+    let l_ftn = l_ft.name,
+        --l_atn = l_at.name,
+        l_atn = cases l_at:
+                  mk_JSSREP`ClassTypeRep(name)  -> name,
+                  mk_JSSREP`IntrfcTypeRep(name) -> name,
+                  mk_JSSREP`BoolTypeRep()       -> mk_AS`Name(["Boolean"],CI`NilContextId),
+                  mk_JSSREP`CharTypeRep()       -> mk_AS`Name(["Character"],CI`NilContextId),
+                  mk_JSSREP`ByteTypeRep()       -> mk_AS`Name(["Byte"],CI`NilContextId),
+                  mk_JSSREP`ShortTypeRep()      -> mk_AS`Name(["Short"],CI`NilContextId),
+                  mk_JSSREP`IntTypeRep()        -> mk_AS`Name(["Integer"],CI`NilContextId),
+                  mk_JSSREP`LongTypeRep()       -> mk_AS`Name(["Long"],CI`NilContextId),
+                  mk_JSSREP`FloatTypeRep()      -> mk_AS`Name(["Float"],CI`NilContextId),
+                  mk_JSSREP`DoubleTypeRep()     -> mk_AS`Name(["Double"],CI`NilContextId),
+                  others -> nil
+                end
+    in
+      if l_atn = nil
+      then return false
+      elseif l_atn.ids = l_ftn.ids
+      then return true
+      else
+      def l_atnl = CheckNameTableFor(l_atn);
+          l_ftnl = CheckNameTableFor(l_ftn)
+      in
+        if (l_atnl = nil) or (l_ftnl = nil)
+        then return false
+        elseif (l_atnl.ids = l_ftnl.ids) or (l_ftnl.ids = ["Object"])
+        then return true
+        else
+        def l_extendsAll = LookUpClassExtendsAll(l_atn)
+        in
+          if (l_extendsAll <> nil)
+          and (l_ftn in set elems l_extendsAll)
+          then return true
+          else
+          def l_implementsAll = LookUpClassImplementsAll(l_atn)
+          in
+            if (l_implementsAll <> nil) 
+              and (l_ftn in set elems l_implementsAll)
+            then return true
+            else
+             (for l_ec in l_extendsAll do
+              def l_iA = LookUpClassImplementsAll(l_ec)
+              in
+                if (l_iA <> nil) and (l_ftn in set elems l_iA)
+                then return true;
+              return false
+             );
+\end{vdm_al}
+
+\begin{vdm_al}
+operations
+
+CheckForVDMKeywords: AS`Name ==> ()
+CheckForVDMKeywords(p_clsid) ==
+ (WarnForVDMKeyword(hd (p_clsid.ids),p_clsid.cid);
+  def l_pti = LookUpParseInfo(p_clsid)
+  in
+    if l_pti <> nil
+    then
+     (for all l_metnm in set dom l_pti.methods do
+        WarnForVDMKeyword(hd (l_metnm.ids),l_metnm.cid);
+      for all l_fnm in set dom l_pti.fields do
+        WarnForVDMKeyword(hd (l_fnm.ids),l_fnm.cid)
+     )
+ )
+pre p_clsid in set JSSVCM1`GetParseEnvDom();
+
+WarnForVDMKeyword: seq1 of char * CI`ContextId ==> ()
+WarnForVDMKeyword(p_nm,p_cid) ==
+  if JSSAUX`IsVDMKeyword(p_nm) or JSSAUX`IsVDMPrefix(p_nm)
+  then ------------------------------------------
+       -- Error message #12
+       -- %1 is a reserved keyword in VDM++
+       ------------------------------------------
+       JSSERR`GenErr(p_cid,<WARNING>,12,[p_nm]);
+\end{vdm_al}
+
+\subsection{Treatment of Overloading}
+
+\begin{vdm_al}
+operations
+\end{vdm_al}
+
+Must be called after SetCurrentClassInfo and ExpandInheritance
+\begin{vdm_al}
+CheckFieldAndMethodNames: () ==> bool
+CheckFieldAndMethodNames() ==
+ (dcl l_reswf : bool := true;
+  for all l_nm in set dom s_CurrentParseInfo.fields 
+  do
+   (let l_field = s_CurrentParseInfo.fields(l_nm)
+    in l_reswf := CheckIfIsClassInEnv(l_field) and l_reswf;
+    s_CurrentClassInfo.fields := s_CurrentClassInfo.fields
+                                  ++ {l_nm.ids |-> l_nm}
+   );
+  for all l_nm in set dom s_CurrentParseInfo.methods 
+  do
+   (let l_methods = s_CurrentParseInfo.methods(l_nm)
+    in 
+     (for all l_method in set l_methods
+      do
+       (l_reswf := CheckIfIsClassInEnv(l_method.rangeType) and l_reswf;
+        for l_rt in l_method.domainTypes
+        do l_reswf := CheckIfIsClassInEnv(l_rt) and l_reswf
+       )
+     );
+    s_CurrentClassInfo.methods := s_CurrentClassInfo.methods
+                                  ++ {l_nm.ids |-> l_nm}
+   );
+  let l_common = (dom s_CurrentClassInfo.fields)
+           inter (dom s_CurrentClassInfo.methods)
+  in if l_common <> {}
+     then
+       ------------------------------------------
+       -- Error message #15
+       -- The Identifier '%1' has ambiguous definitions
+       ------------------------------------------
+      (for all l_ids in set l_common
+       do let l_nm = s_CurrentClassInfo.fields(l_ids)
+          in JSSERR`GenErr(l_nm.cid,<ERROR>,15,[JSSAUX`PrintName(l_nm)]);
+       l_reswf := false);
+  return CheckFieldAndMethodNamesInExtends()
+     and CheckFieldAndMethodNamesInImplements()
+     and l_reswf
+ )
+pre (s_CurrentParseInfo <> nil) and (s_CurrentClassInfo <> nil);
+
+CheckFieldAndMethodNamesInExtends: () ==> bool
+CheckFieldAndMethodNamesInExtends() ==
+ (dcl l_reswf : bool := true;
+  for l_ec in s_CurrentClassInfo.extendsAll
+  do
+  def l_cti = LookUpClassInfo(l_ec)
+  in
+    if l_cti = nil
+    then
+      ------------------------------------------
+      -- Error message #8
+      -- The class/interface "%1" is not part of this project
+      ------------------------------------------
+     (JSSERR`GenErr(l_ec.cid,<ERROR>,8,[JSSAUX`PrintName(l_ec)]);
+      AddUnknownClass(l_ec);
+      l_reswf := false
+     )
+    else  -- JR Fields/Methods Not Private
+     (let l_fields = s_CurrentClassInfo.fields,
+          l_common = (dom l_fields) inter (dom l_cti.methods)
+      in
+        if l_common <> {}
+        then
+          ------------------------------------------
+          -- Error message #16
+          -- The Identifier '%1' has ambiguous definitions with a super Class/Interface
+          ------------------------------------------
+         (for all l_ids in set l_common
+          do
+            let l_nm = l_fields(l_ids)
+            in JSSERR`GenErr(l_nm.cid,<ERROR>,16,[JSSAUX`PrintName(l_nm)]);
+          l_reswf := false
+         );
+      let l_methods = s_CurrentClassInfo.methods,
+          l_common = (dom l_methods) inter (dom l_cti.fields)
+      in
+        if l_common <> {}
+        then
+          ------------------------------------------
+          -- Error message #16
+          -- The Identifier '%1' has ambiguous definitions with a super Class/Interface
+          ------------------------------------------
+         (for all l_ids in set l_common
+          do
+            let l_nm = l_methods(l_ids)
+            in JSSERR`GenErr(l_nm.cid,<ERROR>,16,[JSSAUX`PrintName(l_nm)]);
+            l_reswf := false
+         )
+     );
+  return l_reswf
+ )
+pre not s_CurrentClassInfo.calcInheritance;
+
+CheckFieldAndMethodNamesInImplements: () ==> bool
+CheckFieldAndMethodNamesInImplements() ==
+ (dcl l_reswf : bool := true;
+  for l_intrfc in s_CurrentClassInfo.implementsAll
+  do def l_cti = LookUpClassInfo(l_intrfc)
+     in if l_cti = nil
+        then
+          ------------------------------------------
+          -- Error message #8
+          -- The class/interface "%1" is not part of this project
+          ------------------------------------------
+         (JSSERR`GenErr(l_intrfc.cid,<ERROR>,8,[JSSAUX`PrintName(l_intrfc)]);
+          AddUnknownInterface(l_intrfc);
+          l_reswf := false)
+        else
+         (let l_fields = s_CurrentClassInfo.fields,
+              l_common = (dom l_fields) inter (dom l_cti.methods)
+          in if l_common <> {}
+             then
+               ------------------------------------------
+               -- Error message #16
+               -- The Identifier '%1' has ambiguous definitions with a super Class/Interface
+               ------------------------------------------
+              (for all l_ids in set l_common
+               do let l_nm = l_fields(l_ids)
+                  in JSSERR`GenErr(l_nm.cid,<ERROR>,16,[JSSAUX`PrintName(l_nm)]);
+               l_reswf := false);
+          let l_methods = s_CurrentClassInfo.methods,
+              l_common = (dom l_methods) inter (dom l_cti.fields)
+          in if l_common <> {}
+             then
+               ------------------------------------------
+               -- Error message #16
+               -- The Identifier '%1' has ambiguous definitions with a super Class/Interface
+               ------------------------------------------
+              (for all l_ids in set l_common
+               do let l_nm = l_methods(l_ids)
+                  in JSSERR`GenErr(l_nm.cid,<ERROR>,16,[JSSAUX`PrintName(l_nm)]);
+               l_reswf := false)
+         );
+  return l_reswf
+ );
+\end{vdm_al}
+
+Must be called after SetCurrentClassInfo, ExpandInheritance
+and CheckFieldAndMethodNames.
+\begin{vdm_al}
+CheckLocalField2MethodName: AS`Name ==> bool
+CheckLocalField2MethodName(p_local) ==
+ (dcl l_reswf : bool := true;
+  if p_local.ids in set dom s_CurrentClassInfo.methods
+  then
+    ------------------------------------------
+    -- Error message #15
+    -- The Identifier '%1' has ambiguous definitions
+    ------------------------------------------
+-- JR ERROR -> WARNING !
+   (JSSERR`GenErr(p_local.cid,<WARNING>,15,[JSSAUX`PrintName(p_local)]);
+    l_reswf := false);
+  for l_cls in s_CurrentClassInfo.extendsAll
+  do def l_cti = LookUpClassInfo(l_cls)
+     in if l_cti = nil
+        then
+          ------------------------------------------
+          -- Error message #8
+          -- The class/interface "%1" is not part of this project
+          ------------------------------------------
+         (JSSERR`GenErr(l_cls.cid,<ERROR>,8,[JSSAUX`PrintName(l_cls)]);
+          AddUnknownClass(l_cls);
+          l_reswf := false)
+        elseif p_local.ids in set dom l_cti.methods
+        then
+          ------------------------------------------
+          -- Error message #15
+          -- The Identifier '%1' has ambiguous definitions
+          ------------------------------------------
+         (JSSERR`GenErr(p_local.cid,<ERROR>,15,[JSSAUX`PrintName(p_local)]);
+          l_reswf := false);
+  for l_cls in s_CurrentClassInfo.implementsAll
+  do def l_cti = LookUpClassInfo(l_cls)
+     in if l_cti = nil
+        then
+          ------------------------------------------
+          -- Error message #8
+          -- The class/interface "%1" is not part of this project
+          ------------------------------------------
+         (JSSERR`GenErr(l_cls.cid,<ERROR>,8,[JSSAUX`PrintName(l_cls)]);
+          AddUnknownInterface(l_cls);
+          l_reswf := false)
+        elseif p_local.ids in set dom l_cti.methods
+        then
+          ------------------------------------------
+          -- Error message #15
+          -- The Identifier '%1' has ambiguous definitions
+          ------------------------------------------
+         (JSSERR`GenErr(p_local.cid,<ERROR>,15,[JSSAUX`PrintName(p_local)]);
+          l_reswf := false);
+   return l_reswf
+ )
+pre (s_CurrentParseInfo <> nil)
+and (s_CurrentClassInfo <> nil)
+and (not s_CurrentClassInfo.calcInheritance);
+
+
+CheckOverloading: AS`Name ==> bool
+CheckOverloading(p_clsnm) ==
+ (dcl l_reswf : bool := true;
+  def l_pti = LookUpParseInfo(p_clsnm);
+      l_extendsAll = LookUpClassExtendsAll(p_clsnm)
+  in
+    if (l_pti = nil) or (l_extendsAll = nil)
+    then l_reswf := false
+    else
+-- 20140409
+--      for all l_metnm in set dom l_pti.methods do
+--        l_reswf := CheckMethodOverloading(l_metnm, [p_clsnm] ^ l_extendsAll) and l_reswf;
+      skip;
+  return l_reswf
+ )
+pre p_clsnm in set JSSVCM1`GetParseEnvDom();
+\end{vdm_al}
+
+\begin{formalparameters}
+\verb+p_metnm: AS`Name+ & The name of the method to be checked for
+incorrect use of type overloading (all numeric Java values will
+overlap at the VDM++ level).\\
+\verb+p_classL: seq1 of AS`Name+ & The list of the class lists in which the check must
+be performed (stating from the defining class.\\
+\verb+p_argtplS: set of seq of JSSREP`TypeRep+ & The collection of all argument types
+which has been checked for overloading consistency so far.\\
+\hline
+\end{formalparameters}
+\methodresult{bool}{The result indicates whether the given method is
+consistently overloaded.}
+
+The \texttt{CheckMethodOverloading} operation is used to ensure that
+situations allowed by Java for method overloading of numeric
+parameters and in case of class types with common superclass are found.
+All of these cannot be supported by the Java to
+VDM++ translator because all numeric types at the VDM level are
+overlapping. The operation makes use of a number of simple auxiliary
+functions checking the actual matching conditions.
+
+\begin{vdm_al}
+CheckMethodOverloading: AS`Name * seq1 of AS`Name ==> bool
+CheckMethodOverloading(p_metnm,p_classL) ==
+ (dcl l_allmetsigs : set of seq of JSSREP`TypeRep := {},
+      l_metsigs : set of seq of JSSREP`TypeRep := {},
+      l_reswf : bool := true;
+  for l_class in p_classL
+  do
+  def l_pti = LookUpParseInfo(l_class)
+  in
+    if l_pti = nil
+    then l_reswf := false
+    elseif p_metnm in set dom l_pti.methods
+    then let l_mettps = l_pti.methods(p_metnm),
+             l_sigs = {b_mettp.domainTypes | b_mettp in set l_mettps}
+         in l_allmetsigs := l_allmetsigs union l_sigs;
+  l_metsigs := l_allmetsigs;
+  for all l_sig in set l_allmetsigs do
+   (l_metsigs := l_metsigs \ {l_sig};
+    if SigOverlap(l_sig,l_metsigs)
+    then
+      ------------------------------------------
+      -- Error message #10
+      -- The overloading for the method %1 cannot be translated to VDM++
+      ------------------------------------------
+      (JSSERR`GenErr(p_metnm.cid,<ERROR>,10, [JSSAUX`PrintName(p_metnm)]);
+       l_reswf := false)
+    );
+  return l_reswf
+ );
+
+functions
+
+SigOverlap: seq of JSSREP`TypeRep * set of seq of JSSREP`TypeRep -> bool
+SigOverlap(p_sig,p_metsigs) ==
+  exists l_sig in set p_metsigs & SigMatch(p_sig,l_sig);
+
+operations
+SigMatch: seq of JSSREP`TypeRep * seq of JSSREP`TypeRep ==> bool
+SigMatch(p_sig1,p_sig2) ==
+  if len p_sig1 <> len p_sig2
+  then return false
+  else return forall l_index in set inds p_sig1 & TypeMatch(p_sig1(l_index),p_sig2(l_index));
+\end{vdm_al}
+
+\begin{formalparameters}
+\verb+p_tp1: JSSREP`TypeRep+ & The type of the n`th parameter belonging to
+the first method.\\
+\verb+p_tp2: JSSREP`TypeRep+ & The type of the n`th parameter belonging to
+the second method.\\
+\hline
+\end{formalparameters}
+\methodresult{bool}{The result indicates whether the parameters are of
+the same type.}
+
+The \texttt{TypeMatch} operation is used to check if parameter types are
+consistent from the VDM++ point of view, that is, the intrinsic numeric
+types are all the same, and to check the whether in case of class types
+one is a superclass of the other.
+
+\begin{vdm_al}
+operations
+TypeMatch: JSSREP`TypeRep * JSSREP`TypeRep ==> bool
+TypeMatch(p_tp1,p_tp2) ==
+  let l_tps : set of JSSREP`TypeRep = {p_tp1.type,p_tp2.type},
+      l_numbertps = card(l_tps inter v_number_tps),
+      l_notnumbertps = card(l_tps inter v_notnumber_tps)
+  in
+    if l_numbertps = 2                -- both are numeric types
+    then return p_tp1.array = p_tp2.array
+    elseif l_numbertps = 1            -- one is numeric, the other not
+    then return false
+    else                              -- none are numeric
+      if l_notnumbertps = 2           -- both are not class types
+      then return p_tp1 = p_tp2
+      elseif l_notnumbertps = 1       -- one is a class type
+      then return false
+      else return                     -- both are class types
+        (p_tp1.array = p_tp2.array)
+        and SuperClassMatch(p_tp1.type,p_tp2.type);
+
+
+SuperClassMatch: JSSREP`TypeRep * JSSREP`TypeRep ==> bool
+SuperClassMatch(p_tp1,p_tp2) ==
+  def l_n1 = p_tp1.name;
+      l_n2 = p_tp2.name;
+      l_cti1 = LookUpClassInfo(l_n1);
+      l_cti2 = LookUpClassInfo(l_n2);
+      l_reswf = (l_cti1 <> nil) and (l_cti2 <> nil)
+  in
+    return
+      l_reswf
+    and
+      let l_n1s = if l_reswf
+                  then s_NameTable(l_n1)
+                  else nil,
+          l_n2s = if l_reswf
+                  then s_NameTable(l_n2)
+                  else nil,
+          l_cti1eA = elems l_cti1.extendsAll,
+          l_cti2eA = elems l_cti2.extendsAll,
+          l_cti1iA = elems l_cti1.implementsAll,
+          l_cti2iA = elems l_cti2.implementsAll
+      in
+        ((l_n1s in set l_cti2eA)
+      or (l_n1  in set l_cti2eA)
+      or (l_n2s in set l_cti1eA)
+      or (l_n2  in set l_cti1eA)
+      or (l_n1s in set l_cti2iA)
+      or (l_n1  in set l_cti2iA)
+      or (l_n2s in set l_cti1iA)
+      or (l_n2  in set l_cti1iA));
+
+values
+
+v_number_tps : set of JSSREP`TypeRep =
+               {mk_JSSREP`ByteTypeRep(),
+                mk_JSSREP`ShortTypeRep(),
+                mk_JSSREP`IntTypeRep(),
+                mk_JSSREP`LongTypeRep(),
+                mk_JSSREP`FloatTypeRep(),
+                mk_JSSREP`DoubleTypeRep()};
+
+v_notnumber_tps : set of JSSREP`TypeRep =
+                 {mk_JSSREP`CharTypeRep(),
+                  mk_JSSREP`BoolTypeRep()}
+
+operations
+\end{vdm_al}
+\begin{formalparameters}
+\verb+p_class: AS`Name+ & The current class/interface being type checked\\
+\hline
+\end{formalparameters}
+
+Either creates or initialize the ClassTypeInfo struct used when
+type checking a class/interface. The struct is used when collecting dependencies.
+Must be called before ExpandInheritance
+\begin{vdm_al}
+InitClassInfo: ParseTypeInfo ==> ()
+InitClassInfo(p_pti) ==
+ (dcl l_cti : ClassTypeInfo := if p_pti.name in set dom ClassEnv
+                               then ClassEnv(p_pti.name)
+                               else MakeEmptyClassInfo();
+  let l_p = p_pti.package,
+      l_ids = if l_p <> nil
+              then l_p.ids
+              else nil
+  in l_cti.isJavaType := (l_p <> nil)
+                     and (len l_ids > 1)
+                     and (l_ids(1) = "java")
+                     and ((l_ids(2) = "io")
+                       or ((l_ids(2) = "lang" )
+                           and (if len l_ids = 3
+                                then (l_ids(3) = "ref")
+                                  or (l_ids(3) = "reflect")
+                                else true
+                               )
+                          )
+                       or (l_ids(2) = "net")
+                       or ((l_ids(2) = "sequrity")
+                           and (if len l_ids = 3
+                                then (l_ids(3) = "acl")
+                                  or (l_ids(3) = "cert")
+                                  or (l_ids(3) = "interfaces")
+                                  or (l_ids(3) = "spec")
+                                else true
+                               )
+                          )
+                       or (l_ids(2) = "sql")
+                       or ((l_ids(2) = "util")
+                           and (if len l_ids = 3
+                                then (l_ids(3) = "jar")
+                                  or (l_ids(3) = "zip")
+                                else true
+                               )
+                          )
+                         );
+  l_cti.type := p_pti.type;
+  l_cti.extends    := p_pti.extends;
+  l_cti.implements := p_pti.implements;
+  l_cti.calcInheritance := true;
+  l_cti.extendsAll    := l_cti.extends;
+  l_cti.implementsAll := l_cti.implements;
+  ClassEnv := ClassEnv ++ {p_pti.name |-> l_cti}
+ );
+\end{vdm_al}
+
+\begin{vdm_al}
+LookUpClassInfo: AS`Name ==> [ClassTypeInfo]
+LookUpClassInfo(p_name) ==
+  let l_name = if p_name in set dom s_NameTable
+               then s_NameTable(p_name)
+               else nil
+  in
+   (if l_name = nil
+    then
+      ------------------------------------------
+      -- Error message #8
+      -- The class/interface "%1" is not part of this project
+      ------------------------------------------
+     (JSSERR`GenErr(p_name.cid,<ERROR>,8,
+                    [JSSAUX`PrintName(p_name)]);
+      AddUnknownClass(p_name);
+     );
+    if l_name = nil
+    then return nil
+    elseif not l_name in set dom ClassEnv
+    then return nil
+    else return ClassEnv(l_name)
+   );
+
+LookUpClassExtendsAll: AS`Name ==> [seq of AS`Name]
+LookUpClassExtendsAll(p_name) ==
+  def l_cti = LookUpClassInfo(p_name)
+  in
+    if l_cti = nil
+    then return nil
+    else
+     (if l_cti.calcInheritance
+      then
+       (def - = ExpandInheritance(p_name) in skip;
+        return LookUpClassInfo(p_name).extendsAll
+       )
+      else return l_cti.extendsAll
+     );
+
+LookUpClassImplementsAll: AS`Name ==> [seq of AS`Name]
+LookUpClassImplementsAll(p_name) ==
+  def l_cti = LookUpClassInfo(p_name)
+  in
+    if l_cti = nil
+    then return nil
+    else
+     (if l_cti.calcInheritance
+      then
+       (def - = ExpandInheritance(p_name) in skip;
+        return LookUpClassInfo(p_name).extendsAll
+       )
+      else return l_cti.implementsAll
+     );
+\end{vdm_al}
+
+
+Calculate the dependent classes for this class, that is, it's sub classes
+and server classes. Inform the dependent classes of this relationship.
+\begin{vdm_al}
+ClassDependency: AS`Name ==> ()
+ClassDependency(p_class) ==
+  def l_servers2add = GetServers2add();
+      l_servers2del = GetServers2del()
+  in
+   (
+    for all l_server in set l_servers2add
+    do InsertClient(l_server,p_class);
+    for all l_server in set l_servers2del
+    do RemoveClient(l_server,p_class)
+   );
+
+GetClients: AS`Name ==> set of AS`Name
+GetClients(p_class) ==
+  return
+    let l_cti : ClassTypeInfo = ClassEnv(p_class)
+    in
+      l_cti.clients
+pre p_class in set dom ClassEnv;
+
+GetSubClasses: AS`Name ==> set of AS`Name
+GetSubClasses(p_class) ==
+  return
+    let l_cti : ClassTypeInfo = ClassEnv(p_class)
+    in
+      l_cti.subclasses
+pre p_class in set dom ClassEnv;
+\end{vdm_al}
+
+\begin{vdm_al}
+InsertServer: AS`Name ==> ()
+InsertServer(p_type) ==
+ (dcl l_cti : ClassTypeInfo :=
+                if s_CurrentName in set dom ClassEnv
+                then ClassEnv(s_CurrentName)
+                else MakeEmptyClassInfo();
+  if not l_cti.isJavaType
+  then
+   (l_cti.servers := l_cti.servers union {p_type};
+    ClassEnv := ClassEnv ++ {s_CurrentName |-> l_cti}
+   )
+ );
+
+GetServers2add: () ==> set of AS`Name
+GetServers2add() ==
+  return
+    let l_cti : ClassTypeInfo = ClassEnv(s_CurrentName)
+    in
+      l_cti.servers \ l_cti.serversOLD
+pre s_CurrentName in set dom ClassEnv;
+
+GetServers2del: () ==> set of AS`Name
+GetServers2del() ==
+  return
+    let l_cti : ClassTypeInfo = ClassEnv(s_CurrentName)
+    in
+      l_cti.serversOLD \ l_cti.servers
+pre s_CurrentName in set dom ClassEnv;
+\end{vdm_al}
+
+\begin{vdm_al}
+InsertClient: AS`Name * AS`Name ==> ()
+InsertClient(p_class,p_type) ==
+ (dcl l_cti : [ClassTypeInfo] := LookUpClassInfo(p_class);
+  if (l_cti <> nil) and (not l_cti.isJavaType)
+  then
+   (l_cti.clients := l_cti.clients union {p_type};
+    ClassEnv := ClassEnv ++ {p_class |-> l_cti}
+   )
+ );
+\end{vdm_al}
+
+\begin{vdm_al}
+UpdateSubClasses: AS`Name * set of AS`Name ==> ()
+UpdateSubClasses(p_class,p_subs) ==
+ (dcl l_cti : [ClassTypeInfo] := LookUpClassInfo(p_class);
+  if (l_cti <> nil) and (not l_cti.isJavaType)
+  then
+   (l_cti.subclasses := l_cti.subclasses union p_subs;
+    ClassEnv := ClassEnv ++ {p_class |-> l_cti}
+   )
+ );
+\end{vdm_al}
+
+\begin{vdm_al}
+RemoveClient: AS`Name * AS`Name ==> ()
+RemoveClient(p_class,p_type) ==
+ (dcl l_cti : [ClassTypeInfo] := LookUpClassInfo(p_class);
+  if (l_cti <> nil) and (not l_cti.isJavaType)
+  then
+   (l_cti.clients := l_cti.clients \ {p_type};
+    ClassEnv := ClassEnv ++ {p_class |-> l_cti}
+   )
+ );
+\end{vdm_al}
+
+\begin{vdm_al}
+  UpdateJavaType : () ==> ()
+  UpdateJavaType() == skip;
+
+  InitJavaTypes: AS`Name * AS`Name * AS`Name * JSSREP`TypeRep ==> ()
+  InitJavaTypes(l_package,l_nesting,l_name,l_type)
+    == skip;
+\end{vdm_al}
+
+\begin{vdm_al}
+end JSSENV
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[MostGeneralNumericType]
+{rtinfo.ast}[JSSENV]
+\end{rtinfo}
+

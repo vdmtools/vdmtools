@@ -1,0 +1,19 @@
+class A
+
+instance variables
+
+public i1 : nat := 1;
+private i2 : nat := 1;
+protected i3: nat := 1;
+i4: nat := 1;
+inv i1 = i2;
+
+operations
+
+Op: nat ==> nat
+Op(n) ==
+  (i3 := i1;
+   def i1 = n in return i1)
+
+end A
+

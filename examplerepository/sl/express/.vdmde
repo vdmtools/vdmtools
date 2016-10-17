@@ -1,0 +1,6 @@
+r express.vdm
+i
+tc pos
+cg
+latex express.vdm
+quit

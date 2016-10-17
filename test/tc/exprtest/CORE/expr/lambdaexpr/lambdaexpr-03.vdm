@@ -1,0 +1,20 @@
+class LambdaExprTest
+  functions
+
+  f : nat -> nat -> nat -> bool
+  f(n)(m)(r) ==
+    n + m > r
+    
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = lambda s1 union s2 : seq of nat & s1
+  in skip;
+
+------------------------------------------------------------------------------
+end LambdaExprTest
+

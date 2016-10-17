@@ -1,0 +1,13 @@
+class IfStmtTest
+
+operations
+
+  If2: () ==>  nat | map [nat1] to (bool | seq of char)
+  If2() ==
+    if let a in set {1,true} in a
+    then return 7
+    elseif true
+    then return {0 |-> true}
+    else return {9|-> false,nil |-> "test"};
+
+end IfStmtTest

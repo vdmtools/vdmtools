@@ -1,0 +1,23 @@
+class A
+
+
+functions
+
+public f[@A,@B]: set of @A * @B -> nat
+f(as,b) ==
+ if is_bool(b)
+ then card as
+ else 8;
+
+
+operations
+
+  public Test : () ==> real
+  Test() ==
+  ( dcl res : real;
+    res := self.f[nat,nat]({1},1);
+    return res;
+  )
+
+end A
+

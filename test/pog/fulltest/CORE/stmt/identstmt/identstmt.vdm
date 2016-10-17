@@ -1,0 +1,7 @@
+class IdentStmtTest
+operations
+
+  IdentStmt1() ==
+    skip
+    
+end IdentStmtTest

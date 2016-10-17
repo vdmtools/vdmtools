@@ -1,0 +1,79 @@
+class SystemRepair is subclass of Object
+operations 
+public  getRepairId : () ==> [String]
+getRepairId() == 
+( return  repairId
+) ;
+
+public  static decodeStatus : int  ==> [String]
+decodeStatus(systemStatus) == 
+( return  systemStatusNames(systemStatus)
+) ;
+
+public  getDesiredStatus : () ==> int 
+getDesiredStatus() == 
+( return  desiredStatus
+) ;
+
+public  getAircraftSystem : () ==> [AircraftSystem]
+getAircraftSystem() == 
+( return  acSystem
+) ;
+
+public  setDesiredStatus : int  ==> <VOID>
+setDesiredStatus(desiredStatus) == 
+( SystemRepair`desiredStatus := desiredStatus;
+  return  <VOID>
+) ;
+
+public  getDesiredStatusString : () ==> [String]
+getDesiredStatusString() == 
+( return  decodeStatus(getDesiredStatus())
+) ;
+
+public  setDesiredStatus : [String] ==> <VOID>
+setDesiredStatus(desiredStatusStr) == 
+( dcl   found : bool  := false  ;
+  ( dcl   i : int  := 0;
+    while  i < (card  dom  systemStatusNames) and  not  found do  
+    ( if  desiredStatusStr.equals(systemStatusNames(i))
+      then  
+        ( let - = setDesiredStatus(i)
+          in 
+            skip ;
+          found := true  
+        ) ;
+      i := i+1
+    ) 
+  ) ;
+  return  <VOID>
+) ;
+
+public  SystemRepair : [String] * [AircraftSystem] * int  ==> SystemRepair
+SystemRepair(repairId, acSystem, desiredStatus) == 
+( SystemRepair`repairId := repairId;
+  SystemRepair`acSystem := acSystem;
+  SystemRepair`desiredStatus := desiredStatus
+) ;
+
+public  SystemRepair : [String] * [AircraftSystem] * [String] ==> SystemRepair
+SystemRepair(repairId, acSystem, desiredStatusStr) == 
+( let - = SystemRepair(repairId , acSystem , 0)
+  in 
+    skip ;
+  let - = setDesiredStatus(desiredStatusStr)
+  in 
+    skip 
+) ;
+
+instance variables 
+  private  repairId : [String];
+  private  acSystem : [AircraftSystem];
+  private  desiredStatus : int ;
+  public  static REPAIRED : int  := 0;
+  public  static INWORK : int  := 1;
+  public  static DEACTIVATED : int  := 2;
+  public  static DAMAGED : int  := 3;
+  private  static systemStatusNames : map  int  to  [String] := {3 |-> new  String("DAMAGED") , 2 |-> new  String("DEACTIVATED") , 1 |-> new  String("INWORK") , 0 |-> new  String("REPAIRED")}
+  
+end  SystemRepair

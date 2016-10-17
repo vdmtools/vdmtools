@@ -1,0 +1,20 @@
+class TYPE
+types
+
+  A = set of (nat -> nat);
+
+  B = map A to nat;
+
+  C = map (bool -> bool) to [bool];
+
+  D = inmap (nat * (bool -> bool) * token) to C;
+
+  E = set of (A * bool);
+
+  F = set of B
+  inv s == let n = 6.9 in n;
+
+  G = set of nat
+  inv s union [h] == true;
+
+end TYPE

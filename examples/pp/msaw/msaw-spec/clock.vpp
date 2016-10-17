@@ -1,0 +1,18 @@
+class Clock
+
+  instance variables 
+    now: MSAWTypes`Temps := 0;
+
+  operations
+    Now: () ==> MSAWTypes`Temps 
+    Now() == 
+      return now;
+
+    Tick: () ==> ()
+    Tick() ==
+      now := now + 1;
+
+  thread
+    periodic (MSAWTypes`Secondes) (Tick)
+
+end Clock

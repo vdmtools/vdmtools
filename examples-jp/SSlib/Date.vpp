@@ -1,0 +1,213 @@
+class Date  is subclass of CalendarDefinition	-- 日付
+/*
+責任
+	グレゴリオ歴の日付を表す。
+概要
+	私は、グレゴリオ歴の日付であり、グレゴリオ暦クラス（Calendar）と強調して暦の処理を行う。
+	グレゴリオ暦クラス（Calendar）が、同一日付のオブジェクトは一つしかないことを保証している。
+	日付の有効期限は、インスタンス変数で修正ユリウス日を2倍精度浮動小数点で持って計算しているので、実用上ほぼ無限である。
+*/
+
+values
+	Rcsid = "$Id: Date.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $";
+	
+instance variables--インスタンス変数
+
+private 修正ユリウス日 : real := 0;
+private 使用する暦 : Calendar;
+
+/*
+修正ユリウス日は、ユリウス日では数値が大きくなりすぎたので採用された日付を表す数値で、1858年11月17日を0とする。
+計算誤差の関係から、2倍精度浮動小数点(Cではdouble)でなければならない。
+*/
+
+functions--関数定義
+
+----照会
+
+public 曜日数を得る: () -> Calendar`「曜日数」
+曜日数を得る() == 暦().曜日数を得る(self);
+
+public 曜日名を得る : () -> Calendar`「曜日名」
+曜日名を得る() == 暦().曜日名を得る(self) ;
+
+--指定された曜日が、selfと日付の間に何日あるかを返す。 
+public 指定曜日が何日あるか得る: Date * Calendar`「曜日名」 -> int
+指定曜日が何日あるか得る(日付,曜日名) == 暦().指定曜日が何日あるか得る(self,日付,曜日名);
+
+--selfと日付の間の休日あるいは日曜日の数を返す（開始日を含む）
+public 休日数を得る: Date -> int
+休日数を得る(日付) == 暦().休日数を得る(self,日付);
+
+--selfと日付の間の休日あるいは日曜日の数を返す（開始日を含まない）
+public 開始日を含まない休日数を得る: Date -> int
+開始日を含まない休日数を得る(日付) == 暦().開始日を含まない休日数を得る(self,日付) ;
+
+--日付から、その日付の属する年を求める。
+public 年: () -> int
+年() == 暦().年(self);
+		
+--日付から、その日付の属する月を求める。
+public 月: () -> int
+月() == 暦().月(self);
+		
+--日付から、日を求める。
+public 日: () -> int
+日() == 暦().日(self);
+
+/* 計算  */
+
+--休日でない日付を返す（未来へ向かって探索する）
+public 未来の平日を得る : ()-> Date
+未来の平日を得る() == 暦().未来の平日を得る(self);
+
+--休日でない日付を返す（過去へ向かって探索する）
+public 過去の平日を得る : ()-> Date
+過去の平日を得る() == 暦().過去の平日を得る(self);
+
+--selfに、平日n日分を加算する
+public 平日を加算する : int -> Date
+平日を加算する(加算日数) == 暦().平日を加算する(self,加算日数);
+
+--selfに、平日n日分を減算する
+public 平日を減算する : int -> Date
+平日を減算する(減算日数) == 暦().平日を減算する(self,減算日数) ;
+
+/* 検査 */
+
+public 日曜日か？ : () -> bool
+日曜日か？() == 暦().日曜日か？(self);
+
+public 土曜日か？ : () -> bool
+土曜日か？() == 暦().土曜日か？(self);
+
+public ウィークデイか？ : () -> bool
+ウィークデイか？() == 暦().ウィークデイか？(self);
+
+public 平日か？ : () -> bool
+平日か？() == 暦().平日か？(self);
+
+public 休日か？ : () -> bool 
+休日か？() == 暦().休日か？(self);
+
+public お休みか？ : () -> bool 
+お休みか？() ==  暦().お休みか？(self);
+
+--new Date().整数三つ組から日付を得る(2001,12,31).年始からの日数() = 365
+public 年始からの日数: () -> int
+年始からの日数() == 暦().年始からの日数(self);
+
+/* 変換 */
+
+public 年月日の整数三つ組を得る: () -> int * int * int
+年月日の整数三つ組を得る() == mk_(self.年(), self.月(), self.日());
+
+private 文字列変換補助関数: int -> seq of char
+文字列変換補助関数(整数) == 
+	let	str = Integer`asString	in
+	if 整数 >= 10 then str(整数) else "0" ^ str(整数);
+
+public 日付文字列を得る: () -> seq of char
+日付文字列を得る() == self.asString();
+
+operations--操作定義
+
+----クラスレベルのインスタンス変数へのアクセス操作
+
+----変換
+
+public asString: () ==> seq of char
+asString() ==
+	(let	asString =Integer`asString,
+		y = self.年(),
+		m = self.月(),
+		d = self.日(),
+		年文字列 = asString(y),
+		月文字列 = 文字列変換補助関数(m),
+		日付文字列 = 文字列変換補助関数(d)
+	in
+		return 年文字列 ^ 月文字列 ^ 日付文字列
+	);
+
+public print: ()   ==> seq of char
+print() ==
+	(let	asString =Integer`asString,
+		y = self.年(),
+		m = self.月(),
+		d = self.日(),
+		年文字列 = asString(y),
+		月文字列 = 文字列変換補助関数(m),
+		日付文字列 = 文字列変換補助関数(d)
+	in
+		return 年文字列 ^ "年" ^ 月文字列 ^ "月" ^ 日付文字列 ^ "日"
+	);
+
+
+----比較
+
+/*
+操作名
+	大小比較を行う関数群。
+引数
+	日付
+返値
+	真ならtrueを返し、そうでなければfalseを返す。
+内容
+	自身と与えられた日付の大小比較を行う。
+*/
+public ＜: Date ==> bool
+＜(日付) == return floor self.修正ユリウス日獲得() < floor 日付.修正ユリウス日獲得();
+
+public ＞: Date ==> bool
+＞(日付) == return floor self.修正ユリウス日獲得() > floor 日付.修正ユリウス日獲得();
+
+public ≦: Date ==> bool
+≦(日付) == return not self.＞(日付);
+
+public ≧: Date ==> bool
+≧(日付) == return not self.＜(日付);
+
+--自身と与えられた日付が等しいか判定する。
+public ＝: Date 
+	==> 
+	bool	--等しければtrueを返し、そうでなければfalseを返す。
+＝(日付) ==  return (floor self.修正ユリウス日獲得() = floor 日付.修正ユリウス日獲得());
+
+--自身と与えられた日付が等しくないか判定する。
+public ≠: Date 
+	==> 
+	bool	--等しければfalseを返し、そうでなければtrueを返す。
+≠(日付) ==  return (floor self.修正ユリウス日獲得() <> floor 日付.修正ユリウス日獲得());
+
+----計算
+
+--自身に日数を加算した日付を返す
+public ＋: int ==> Date
+＋(加算日数) == return 暦().修正ユリウス日から日付を得る(self.修正ユリウス日獲得() + 加算日数) ;
+
+--自身から日数を減算した日付を返す
+public －: int ==> Date
+－(減算日数) == return 暦().修正ユリウス日から日付を得る(self.修正ユリウス日獲得() - 減算日数) ;
+
+--インスタンス変数へのアクセス操作
+
+--修正ユリウス日
+public 修正ユリウス日設定: real ==> ()
+修正ユリウス日設定(実数) == 修正ユリウス日 := 実数;
+
+public 修正ユリウス日獲得: () ==> real
+修正ユリウス日獲得() == return 修正ユリウス日;
+
+public 暦 : () ==> Calendar
+暦() == return 使用する暦;
+
+--構成子
+public Date : Calendar * real ==> Date
+Date(指定された暦, ある修正ユリウス日) == 
+	(
+	使用する暦 := 指定された暦;
+	修正ユリウス日設定(ある修正ユリウス日);
+	return self
+	);
+
+end Date

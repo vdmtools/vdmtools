@@ -1,0 +1,2 @@
+(dcl a: nat := 10;
+ return [1]);

@@ -1,0 +1,23 @@
+class JavaLangArrayIndexOutOfBoundsException is subclass of JavaLangIndexOutOfBoundsException
+operations 
+public  JavaLangArrayIndexOutOfBoundsException : () ==> JavaLangArrayIndexOutOfBoundsException
+JavaLangArrayIndexOutOfBoundsException() == 
+( let - = JavaLangIndexOutOfBoundsException() in skip  
+) ;
+
+public  JavaLangArrayIndexOutOfBoundsException : int  ==> JavaLangArrayIndexOutOfBoundsException
+JavaLangArrayIndexOutOfBoundsException(index) == 
+( let - = JavaLangIndexOutOfBoundsException(new JavaLangInteger(index).toString()) in skip  
+) ;
+
+public  JavaLangArrayIndexOutOfBoundsException : <NIL> ==> JavaLangArrayIndexOutOfBoundsException
+JavaLangArrayIndexOutOfBoundsException(-) == 
+isNil := true  ;
+
+public  JavaLangArrayIndexOutOfBoundsException : JavaLangString ==> JavaLangArrayIndexOutOfBoundsException
+JavaLangArrayIndexOutOfBoundsException(s) == 
+( let - = JavaLangIndexOutOfBoundsException(s) in skip  
+) ;
+
+
+end  JavaLangArrayIndexOutOfBoundsException

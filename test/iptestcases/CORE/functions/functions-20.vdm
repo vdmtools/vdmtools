@@ -1,0 +1,28 @@
+class A
+
+instance variables
+
+  b : B := new B();
+
+operations
+
+public Test: () ==> B`RecType
+Test() ==
+  return b.Poly[B`RecType](mk_B`RecType(-9,7),mk_B`RecType(-9,7));
+  
+end A
+
+class B
+
+types
+
+public  RecType:: i : int
+                  n : nat;
+
+functions
+
+  public Poly[@T]: @T * RecType -> @T
+  Poly(t,t2) ==
+    t;
+    
+end B

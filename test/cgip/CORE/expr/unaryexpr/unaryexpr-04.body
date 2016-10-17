@@ -1,0 +1,62 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> map seq of char to seq of ( int | set of ( nat | set of nat | bool ) |  map ( nat | bool ) to ( nat | bool ) )  
+Test () ==
+
+return 
+
+{ 
+"MAPDOM" |->
+    [   dom let a = 3,
+		b = { false, true }
+	    in{ a|-> b},
+        dom if true
+	     then { 3 |-> 4}
+	     else let a in set {4, {3|->4}} in a,
+	dom { a |-> b | a in set {3, 6}, b in set {false} },
+        dom [ {3 |-> 4} ](1),
+        dom if 1=2 then {1 |-> 2} else { |-> },
+	dom { 4 |-> 4, 6 |-> 7 } ],
+
+"MAPRNG" |->
+    [
+	if 1=2 then 1 else rng { 3 |-> 4, 5 |-> 8 },
+	rng let a: map nat to nat = { |-> } in a,
+	rng let a = { 3|->false, 4 |-> {3, 6} }
+            in a,
+        rng if true
+	    then { [] |-> 3, {|->} |-> {3,6} }
+	    else let a in set {<FALSE>, {3|->234}} in a,
+        let a = { 3 |-> 78, 3.6 |-> 0 }
+        in rng  a ],
+
+"MAPMERGE" |->
+    [    if 1=2 then 1 else rng merge { if 1=2 
+                                        then let a in set {1, {3|->4}} in a
+                                        else { 3 |-> 4}, {5 |-> 6} },
+	 merge { if false
+	         then let a in set {3, {4|->4}} in a
+		 else { 4 |-> 8 },
+		 { 3 |-> 9 } },
+	 merge if true
+	       then { { 3 |-> 10 }, if 1=2 
+                                    then let a in set {1,{3|->36}} in a 
+                                    else { 6 |-> 1 } }
+	       else let a in set {4, { {3|->4}}} in a,
+	 merge let a = { false |-> 3 },
+		   b = { 3 |-> false }
+               in { a, b },
+	 merge ( { { 3 |-> 3} } union { {5|-> 1} } ),
+         let a = { { false |-> 3 } }
+         in merge a,
+
+         merge f() ]
+
+}
+
+
+
+functions
+
+f: () -> set of map nat to nat
+f () ==
+{ {1|->2}, {3|->4}}

@@ -1,0 +1,16 @@
+class SetRangeExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let t = true,
+      - = {if 6 <8
+         then 7
+         else t,...,-9}
+  in skip;
+
+------------------------------------------------------------------------------
+end SetRangeExprTest

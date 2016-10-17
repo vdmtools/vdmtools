@@ -1,0 +1,30 @@
+ class A
+
+instance variables
+
+  public n : nat := 7;
+
+operations
+
+  OpA: () ==> nat
+  OpA() ==
+    (n := Inc(n);
+     return n);
+
+functions
+
+private Inc: nat +> nat
+             Inc(n) == n + 1
+
+end A
+class B is subclass of A
+
+operations
+
+public Test : () ==> nat
+  Test() ==
+    let a = new A()
+   in
+      a.OpA();
+
+end B

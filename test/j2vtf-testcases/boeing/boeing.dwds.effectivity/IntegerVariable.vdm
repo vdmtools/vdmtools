@@ -1,0 +1,73 @@
+class IntegerVariable is subclass of IntegerExpr, ExprVariable
+operations 
+public  toString : () ==> [String]
+toString() == 
+( dcl   sb : [StringBuffer] := new  StringBuffer(32);
+  let - = sb.append(new  String("intVar:"))
+  in 
+    skip ;
+  let - = sb.append(variableName)
+  in 
+    skip ;
+  return  sb.toString()
+) ;
+
+public  toPostfix : () ==> [String]
+toPostfix() == 
+( return  IntegerVariable`toString()
+) ;
+
+public  IntegerVariable : () ==> IntegerVariable
+IntegerVariable() == 
+( skip 
+) ;
+
+public  getVariableName : () ==> [String]
+getVariableName() == 
+( return  variableName
+) ;
+
+public  doTask : [TokenStack] ==> <VOID>
+doTask(stack) == 
+( let - = stack.push(self  )
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  accept : [ExprVisitor] ==> <VOID>
+accept(visitor) == 
+( let - = visitor.visitIntegerExpr(self  )
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  IntegerVariable : [String] ==> IntegerVariable
+IntegerVariable(variableName) == 
+( IntegerVariable`variableName := variableName
+) ;
+
+public  setVariableName : [String] ==> <VOID>
+setVariableName(variableName) == 
+( IntegerVariable`variableName := variableName;
+  return  <VOID>
+) ;
+
+public  evaluate : [ExpressionContext] ==> [Object]
+evaluate(context) == 
+( if  variableName = nil  
+  then  
+    ( dcl   ex : [DWDSException] := new  DWDSException();
+      let - = ex.addMessage(DWDSException`InvalidOperationException , IntegerVariable`getClass().getName()+new  String(" was not assigned a name before evaluation"))
+      in 
+        skip ;
+      exit  ex
+    ) ;
+  return  context.lookup(IntegerVariable`variableName)
+) ;
+
+instance variables 
+  variableName : [String] := nil  
+  
+end  IntegerVariable

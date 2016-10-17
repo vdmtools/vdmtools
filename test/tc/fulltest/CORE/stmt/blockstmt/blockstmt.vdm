@@ -1,0 +1,101 @@
+class BlockStmtTest
+
+operations
+
+  BlockStmt1: () ==> ()
+  BlockStmt1() ==
+    (dcl a: nat := 6;
+     dcl b: bool;
+
+     b := true;
+     if a > 8
+     then skip
+     else return);
+
+  BlockStmt2: seq of char ==> nat1
+  BlockStmt2(arg) ==
+    (dcl a : bool;
+
+     if arg = "test"
+     then (dcl a : nat1 := 7;
+           return a)
+     else return 9);
+
+  BlockStmt3: bool * bool * real ==> ()
+  BlockStmt3(a1, a2, b1) ==
+    (dcl a : nat;
+     if a1 and a2
+     then a := 7
+     else a := BlockStmt2("mytest"));
+
+  BlockStmt4: () ==> ()
+  BlockStmt4() ==
+    (dcl a : real := BlockStmt2("test");
+
+     a := a + 8.9);
+
+  BlockStmt5: () ==> nat * nat
+  BlockStmt5() ==
+    (dcl b : bool := let n = 9 in n;
+     if b
+     then return mk_(6,8)
+     else (dcl a : real;
+           return mk_(7,7)));
+
+  BlockStmt6: () ==> ()
+  BlockStmt6() ==
+    (dcl a : bool := true;
+
+     let b = false
+     in
+       a := a and b);
+
+  BlockStmt7: bool ==> nat1
+  BlockStmt7(b) ==
+    (dcl a: nat;
+
+     if b
+     then return 6;
+     a := 6;
+     return a;
+     return 4;
+     a := a + 4);
+
+  BlockStmt8: () ==> real 
+  BlockStmt8() ==
+    (dcl a: rat := 6.333;
+     for all b in set {1,5,true} do
+       let c = b * 2 in
+        (if c = 8
+	 then return a;
+	 if c <> 7
+	 then return c));
+
+  BlockStmt9: () ==> bool
+  BlockStmt9() ==
+  ( dcl a: int := 1;
+    dcl b: bool := a>1;
+    return b );
+
+  BlockStmt10: () ==> seq of nat
+  BlockStmt10() ==
+  ( return;
+    return [42]);
+      
+  BlockStmt11: () ==> bool
+  BlockStmt11() ==
+  ( dcl a:int := 1,
+        b:bool := false;
+    atomic (a:=6;
+            b:=true
+	   );
+    return if a>1 then b else true
+  );
+
+  BlockStmt12: () ==> set of nat
+  BlockStmt12() ==
+  (dcl a : map nat to [Unknown * bool] := {|->};
+
+   return dom a);
+   
+end BlockStmtTest     

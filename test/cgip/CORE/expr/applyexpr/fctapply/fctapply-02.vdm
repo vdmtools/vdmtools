@@ -1,0 +1,15 @@
+class A
+
+operations
+
+public Test : () ==> seq of set of nat  
+Test () ==
+ return  f( 3, 32, mk_(9, 10)  )
+
+functions 
+
+f( a:nat, b:nat, mk_(c, d):nat * nat ) res :set of nat
+pre a < b
+post res = {a,b,c,d}
+
+end A

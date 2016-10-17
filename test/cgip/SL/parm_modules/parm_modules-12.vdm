@@ -1,0 +1,58 @@
+  
+
+module VectorsMod
+
+parameters types X, Y
+exports all
+
+definitions
+
+types
+
+Vector = map X to Y
+
+functions
+
+promote: (Y * Y -> Y)  ->  (Vector * Vector -> Vector)
+promote(op) == lambda mk_(v1,v2) : Vector * Vector & 
+		{ x |-> op(v1(x),v2(x)) | 
+			x in set (dom v1 inter dom v2) };
+
+Empty: () -> Vector
+Empty() == {|->};
+
+Add: Vector * X * Y -> Vector
+Add(v,x,y) ==
+  v ++ {x |-> y} 
+
+end VectorsMod
+module A
+
+instantiations
+
+  MyVector as VectorsMod(X -> nat,
+                         Y -> T) all
+
+exports all
+
+definitions
+
+types
+
+  T = bool 
+
+functions
+
+  F: T * T -> T
+  F(a,b) == a and b;
+
+  G: MyVector`Vector * MyVector`Vector -> MyVector`Vector
+  G(v1,v2) ==
+   MyVector`promote(F)(mk_(v1,v2));
+
+  Test: () -> MyVector`Vector
+  Test() ==
+    G(MyVector`Add(MyVector`Empty(),1,true),
+      MyVector`Add(MyVector`Empty(),1,false))
+
+end A

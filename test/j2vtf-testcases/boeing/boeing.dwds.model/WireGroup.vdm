@@ -1,0 +1,51 @@
+class WireGroup is subclass of Object
+operations 
+public  getName : () ==> [String]
+getName() == 
+( return  wireGroupName
+) ;
+
+public  getWire : int  ==> [Wire]
+getWire(wireId) == 
+( return  mediator.getWire(wireId)
+) ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+( return  WireGroup`getName().hashCode()
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( return  WireGroup`getName()
+) ;
+
+public  getAcTypeId : () ==> int 
+getAcTypeId() == 
+( return  acTypeId
+) ;
+
+public  getAllWires : () ==> [Iterator]
+getAllWires() == 
+( return  mediator.getAllWires(self  )
+) ;
+
+public  equals : [Object] ==> bool 
+equals(obj) == 
+( return  (is_ (obj,[WireGroup]) and  WireGroup`getName().equals((def l_9 :  WireGroup = (obj)
+  in l_9).getName()))
+) ;
+
+public  WireGroup : int  * [String] ==> WireGroup
+WireGroup(acTypeId, wireGroupName) == 
+( WireGroup`acTypeId := acTypeId;
+  WireGroup`wireGroupName := wireGroupName;
+  WireGroup`mediator := WiringDataMediator`getMediator()
+) ;
+
+instance variables 
+  private  acTypeId : int ;
+  private  wireGroupName : [String];
+  private  mediator : [WiringDataMediator]
+  
+end  WireGroup

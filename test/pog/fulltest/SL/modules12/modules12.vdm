@@ -1,0 +1,76 @@
+module A
+
+imports 
+  from B 
+   types
+    Name = seq of char;
+
+    KMschedUpdate = seq of char;
+    TSUpdate      = seq of char;
+
+    TCRarg = int; 
+
+    BO = bool;
+
+    Err::
+      succ : B`BO
+      mess :seq of char
+  
+   values
+    Ok: B`Err
+
+definitions
+
+types
+
+  BO = bool
+
+operations
+
+EvalTCR : B`Name * seq of B`TCRarg ==> [B`KMschedUpdate] * [B`TSUpdate] * B`Err
+EvalTCR(rulename,al) ==
+cases rulename:
+  "TCR_SetTermVal" -> return mk_(nil,nil,B`Ok),   -- TCR_SetTermVal(al(1)),
+   others -> let errmes = "TCI: Internal Error: TCI'EvalTCR: operation '"^rulename^
+                         " does not exist" in
+            return mk_(nil,nil,mk_B`Err(false,errmes))
+end
+
+end A
+module B
+
+exports
+types
+  struct Err;
+  struct KMschedUpdate;
+  struct TSUpdate;
+  struct TCRarg;
+  struct Name;
+  struct BO
+
+values 
+  Ok: Err
+
+definitions
+
+values
+  
+Ok = mk_Err(true, "")
+
+types
+  
+  BO = bool;
+
+  Name = seq of char;
+
+  KMschedUpdate = seq of char;
+  TSUpdate      = seq of char;
+
+  TCRarg = int; 
+
+  Err::
+    succ : BO
+    mess :seq of char
+
+
+end B

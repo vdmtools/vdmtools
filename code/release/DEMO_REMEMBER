@@ -1,0 +1,92 @@
+Contents of a demo tape:
+
+  * VDM-SL Toolbox
+     - vdmde
+     - vdmgde
+     - lib etc.
+  * VDM++ Toolbox
+  * LOV/OMT (/usr/local/package/lovomt)
+  * ~peter/toolbox/demo (VDM-SL demos)
+  * VenusDemo (incl xv + screen dumps and tcl/tk/tix libraries)
+  * ghostview
+  * gcc
+  * emacs
+  * specification manager (spec)
+  * producer/consumer example
+
+  ** LICENSE FILE **
+
+ optional:
+
+  * gdb, gunzip, gzip
+
+
+Contents of tapes (Paris February 1996):
+
+total 26138
+drwxr-xr-x   3 erik     other         512 Feb 16 13:24 .
+drwxr-xr-x 119 erik     daemon      12288 Mar  4 16:25 ..
+-rw-r--r--   1 erik     other     3448783 Feb 16 13:04 VenusDemo.tar.gz
+-rw-r--r--   1 erik     other     6521230 Feb 16 11:41 gcc-2.6.3.tar.gz
+-rw-r--r--   1 erik     other     7089723 Feb 16 11:32 gcc-2.7.2.tar.gz
+-rw-r--r--   1 erik     other     5514903 Feb 16 11:41 gdb-4.15.1.tar.gz
+-rwxr-xr-x   1 erik     other       65536 Feb 16 13:23 gunzip.sunos4
+-rw-r--r--   1 erik     other      798720 Feb 16 13:24 gzip-1.2.4.tar
+-rw-r--r--   1 erik     other     1533475 Feb 16 11:29 libg++-2.6.2.tar.gz
+-rw-r--r--   1 erik     other     1610541 Feb 16 11:29 libg++-2.7.1.tar.gz
+-rw-r--r--   1 erik     other       77643 Feb 16 12:32 m4libs.src.tar.gz
+drwxr-xr-x   2 erik     other         512 Feb 16 13:25 vdm++
+
+./tape/vdm++:
+total 4715
+drwxr-xr-x   2 erik     other         512 Feb 16 13:25 .
+drwxr-xr-x   3 erik     other         512 Feb 16 13:24 ..
+-rw-r--r--   1 erik     other        4394 Sep 28 14:28 INSTALL
+-rw-r--r--   1 erik     other        6861 Sep 28 14:28 README
+-rw-r--r--   1 erik     other       14980 Sep 28 14:28 example.tar.gz
+-rw-r--r--   1 erik     other        6784 Sep 28 14:28 include.tar.gz
+-rw-r--r--   1 erik     other       47899 Sep 28 14:28 lib.tar.gz
+-rw-r--r--   1 erik     other     2148018 Feb 16 13:13 sunos4.bin.tar.gz
+-rw-r--r--   1 erik     other     2103020 Nov  2 10:37 sunos5.bin.tar.gz
+-rw-r--r--   1 erik     other      457386 Sep 28 14:29 vdm++doc_a4.tar.gz
+ 
+
+Technical Information
+---------------------
+
+Hardware:
+  - Sun Sparc or HP 700 architecture. 
+  - Min 8 Mb memory
+  - 10 Mb free disk space
+
+Software:
+  - SunOS 4.1.x, SunOS 5.3 or greater, HPUX 9.0x. 
+  - GNU Emacs 
+
+Content of delivery:
+  - Syntax checker
+  - Static semantics analyzer
+  - Latex generator
+  - Interpreter
+  - Debugger
+  - Test coverage tool
+  - Emacs-based development environment
+
+Documentation includes:
+  - Language reference manual
+  - Quick reference card
+  - Users manual for the VDM-SL Toolbox
+  - User manual for the DMtoC++ Code Generator
+  - The VDM C++ Library 
+  - Examples
+
+Optional add-on feature:
+  - VDM-SL to C++ code generation including C++ libraries
+
+
+Til FME:
+
+ * Sun Sparc running SunOS 4.1.x or SunOS 5.3
+ * A colour screen
+ * Min. 150 Mb free disk space (initial guess)
+ * Min.  16 Mb memory

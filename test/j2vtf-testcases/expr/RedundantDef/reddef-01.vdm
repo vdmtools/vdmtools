@@ -1,0 +1,11 @@
+class A
+
+operations
+
+public Test : () ==> nat  
+Test () ==
+	return def x : nat = (12-7) in x;
+
+
+   
+end A

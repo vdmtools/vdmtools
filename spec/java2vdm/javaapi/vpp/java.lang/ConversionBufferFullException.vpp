@@ -1,0 +1,18 @@
+class JavaLangConversionBufferFullException is subclass of JavaLangRuntimeException
+operations 
+public  JavaLangConversionBufferFullException : () ==> JavaLangConversionBufferFullException
+JavaLangConversionBufferFullException() == 
+( let - = JavaLangRuntimeException() in skip 
+) ;
+
+public  JavaLangConversionBufferFullException : <NIL> ==> JavaLangConversionBufferFullException
+JavaLangConversionBufferFullException(-) == 
+isNil := true  ;
+
+public  JavaLangConversionBufferFullException : JavaLangString ==> JavaLangConversionBufferFullException
+JavaLangConversionBufferFullException(s) == 
+( let - = JavaLangRuntimeException(s) in skip
+) ;
+
+
+end  JavaLangConversionBufferFullException

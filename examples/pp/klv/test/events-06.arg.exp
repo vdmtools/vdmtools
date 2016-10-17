@@ -1,0 +1,49 @@
+[ mk_Test`BeaconsMet( 
+     [ mk_Test`TIVD( 60 ) ],
+     [  ] ),
+  mk_Test`BeaconsMet( 
+     [ mk_Test`TIVD( 60 ),
+       mk_Test`TIVD( 40 ) ],
+     [  ] ),
+  mk_Test`KLVstate( 
+     mk_Test`CabDisp( false,false,false ),
+     mk_Test`EmerBreak( false ) ),
+  mk_Test`BeaconsMet( 
+     [ mk_Test`TIVD( 60 ),
+       mk_Test`TIVD( 40 ),
+       mk_Test`TIVD( 70 ) ],
+     [  ] ),
+  mk_Test`BeaconsMet( 
+     [ mk_Test`TIVD( 40 ),
+       mk_Test`TIVD( 70 ) ],
+     [ mk_Test`TIVE( 60 ) ] ),
+  mk_Test`BeaconsMet( 
+     [ mk_Test`TIVD( 70 ) ],
+     [ mk_Test`TIVE( 60 ),
+       mk_Test`TIVE( 40 ) ] ),
+  mk_Test`KLVstate( 
+     mk_Test`CabDisp( true,false,false ),
+     mk_Test`EmerBreak( false ) ),
+  mk_Test`BeaconsMet( 
+     [  ],
+     [ mk_Test`TIVE( 60 ),
+       mk_Test`TIVE( 40 ),
+       mk_Test`TIVE( 70 ) ] ),
+  mk_Test`KLVstate( 
+     mk_Test`CabDisp( true,false,false ),
+     mk_Test`EmerBreak( false ) ),
+  mk_Test`BeaconsMet( 
+     [  ],
+     [ mk_Test`TIVE( 60 ),
+       mk_Test`TIVE( 40 ),
+       mk_Test`TIVE( 70 ) ] ),
+  mk_Test`KLVstate( 
+     mk_Test`CabDisp( false,true,false ),
+     mk_Test`EmerBreak( true ) ),
+  mk_Test`BeaconsMet( 
+     [  ],
+     [ mk_Test`TIVE( 40 ),
+       mk_Test`TIVE( 70 ) ] ),
+  mk_Test`BeaconsMet( 
+     [  ],
+     [ mk_Test`TIVE( 70 ) ] ) ]

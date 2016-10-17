@@ -1,0 +1,1259 @@
+%-------------------------------------------------------------------------------_
+% WHAT
+%    Compilation of expressions into stack instructions
+% $Id: cexpr.vdm,v 1.37 2005/10/25 05:00:22 vdmtools Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\chapter{Compilation of Expressions}\label{sec:cexpr}
+
+This module specifies how ASTs representing expressions
+are translated into the stack machine instructions defined in module
+{\em STKM}.
+\begin{vdm_al}
+module CEXPR
+
+imports
+  from AS all,
+  from CI all,
+  from SEM all,
+  from REP all,
+  from INSTRTP all,
+  from STKM all,
+  from PAT all,
+  from IO all,
+  from CMPL all,
+  from CPAT all,
+  from AUX all,
+#ifdef VDMPP
+  from SCHDTP all,
+#ifdef VICE
+  from TIME
+    operations
+      GetCompilingTime : () ==> bool;
+      MkCbr : () ==> STKM`SubProgram;
+      MkBr : () ==> STKM`SubProgram;
+      MkMatchPattern : () ==> STKM`SubProgram;
+      MkSetCompInsert : () ==> STKM`SubProgram;
+      MkSeqCompInsert : () ==> STKM`SubProgram;
+      MkMapCompInsert : () ==> STKM`SubProgram;
+      MkRuntimePrefixOp : AS`UnaryOp ==> STKM`SubProgram;
+      MkRuntimeBinaryOp : AS`BinaryOp ==> STKM`SubProgram;
+      MkRuntimeSetSeqMap : AS`SetRangeExpr | AS`SubSequenceExpr | AS`SeqModifyMapOverrideExpr ==> STKM`SubProgram;
+    functions
+      E2Time : AS`Expr -> STKM`SubProgram;
+      IsRuntimePrefixOp : AS`UnaryOp -> bool;
+      IsRuntimeBinaryOp : AS`BinaryOp -> bool,
+  from TIMEMAP
+    types Timemap,
+  from TIMEPARSER all,
+#endif VICE
+#endif VDMPP
+
+  from GLOBAL all,
+  from RTERR all
+
+exports
+  functions
+    ConcIfThenElse : STKM`SubProgram * STKM`SubProgram * STKM`SubProgram +> STKM`SubProgram;
+    CombRepeatUntil : STKM`SubProgram +> STKM`SubProgram;
+    CombWhileLoop : STKM`SubProgram -> STKM`SubProgram;
+    CombWhileLoopWithCond: STKM`SubProgram * STKM`SubProgram -> STKM`SubProgram
+
+  operations
+#ifdef VICE
+    AddDepIds : AS`Name * set of AS`Name ==> ();
+    StopDepIds : () ==> set of AS`Name * set of AS`Name;
+#endif VICE
+    E2I : AS`Expr ==> STKM`SubProgram
+
+definitions
+
+#ifdef VICE
+state Depend of
+  opnm    : [AS`Name]
+  nms     : <ALL> | set of AS`Name
+  histnms : set of AS`Name
+  opnms   : set of AS`Name
+init s == s = mk_Depend(nil,{},{},{})
+end
+#endif VICE
+\end{vdm_al}
+
+\section{Introduction to Functions and Apply Expression}
+
+Consider the apply expression below:
+
+\begin{verbatim}
+  f(mk_(3,4), a)
+\end{verbatim}
+
+The apply expression can in be a map, sequence or function apply.
+
+The corresponding instruction code for this should be:
+\begin{verbatim}
+    [ EMPTYLIST,
+      E2I("mk_(3,4)"), APPENDESTCK,
+      E2I("a"), APPENDESTCK,         // Now a sequence of semantic values
+                                     // is pushed on the evaluation stack.
+      "f", LOOKUP,                   // Now the semantic value of "f"
+                                     // is pushed on the evaluation stack.
+      APPLY
+    ]
+\end{verbatim}
+
+The {\tt Apply} instruction pops two elements from the evaluation
+stack: the semantic value of the "applicator" and its
+argumentlist. See the description of the {\tt APPLY} instruction in
+Section \ref{sec:APPLY}. For function application the APPLY
+instruction sets-up the block-environment and scope environment. It
+pushes the semantic value of the function on the call stack.
+
+Returning from the function application consists of:
+\begin{itemize}
+\item Cleaning the environment for the function application, that is, the block environment and object scope.
+\item Pop the instruction set of the call stack.
+\end{itemize}
+
+See the {\tt RETURN} instruction (Section \ref{sec:RETURN}) and the
+compilation order for a function body
+(Section~\ref{sec:CompileFnBody}) for a further description.
+
+Say that the function {\em f} in the example performs a simple addition:
+
+\begin{verbatim}
+ f: (nat * nat) * bool -> nat
+ f( mk_(a,b), -) ==
+   a+b
+\end{verbatim}
+
+The call stack looks like:
+
+\fctstacktwo{[.., EMPTYLIST, ..., APPLY , ...]}{3}
+            {...}{..}
+
+Say that the {\tt PC=45} when executing the {\tt APPLY} instruction,
+the {\tt PC} is set to {\tt PC=(1)}
+and the function stack looks like:
+
+\fctstacktwo{["a", LOOKUP, "b", LOOKUP, mk\_BINOP(<ADD>), RETURN]}{45}
+            {[..., EMPTYLIST, ...., APPLY, ...]}{3}
+
+
+Executing the instruction {\tt RETURN} will pop from the call stack which sets the PC to 45 again.
+
+The function {\em E2I} takes an expression and generates corresponding instruction code.
+
+\begin{vdm_al}
+
+operations
+  E2I : AS`Expr ==> STKM`SubProgram
+  E2I(e) ==
+   (dcl res : seq of char * STKM`SubProgram;
+    cases true:
+      (is_AS`BracketedExpr(e))            -> res := mk_("BracketedExpr",E2I(e.expr)),
+      (is_AS`DefExpr(e))                  -> res := mk_("DefExpr",CompileDefExpr(e)),
+      (is_AS`LetExpr(e))                  -> res := mk_("LetExpr",CompileLetExpr(e)),
+      (is_AS`LetBeSTExpr(e))              -> res := mk_("LetBeSTExpr",CompileLetBeSTExpr(e)),
+      (is_AS`AllOrExistsExpr(e))          -> res := mk_("AllOrExistsExpr",CompileAllOrExistsExpr(e)),
+      (is_AS`ExistsUniqueExpr(e))         -> res := mk_("ExistsUniqueExpr",CompileExistsUniqueExpr(e)),
+      (is_AS`IotaExpr(e))                 -> res := mk_("IotaExpr",CompileIotaExpr(e)),
+      (is_AS`ApplyExpr(e))                -> res := mk_("ApplyExpr",CompileApplyExpr(e)),
+      (is_AS`FieldSelectExpr(e))          -> res := mk_("FieldSelectExpr",CompileFieldSelectExpr(e)),
+      (is_AS`IfExpr(e))                   -> res := mk_("IfExpr",CompileIfExpr(e)),
+      (is_AS`CasesExpr(e))                -> res := mk_("CasesExpr",CompileCasesExpr(e)),
+      (is_AS`PrefixExpr(e))               -> res := mk_("PrefixExpr",CompileUnaryExpr(e)),
+      (is_AS`BinaryExpr(e))               -> res := mk_("BinaryExpr",CompileBinaryExpr(e)),
+      (is_AS`SetRangeExpr(e))             -> res := mk_("SetRangeExpr",CompileSetRangeExpr(e)),
+      (is_AS`SubSequenceExpr(e))          -> res := mk_("SubSequenceExpr",CompileSubSequenceExpr(e)),
+      (is_AS`SetEnumerationExpr(e))       -> res := mk_("SetEnumerationExpr",CompileSetEnumExpr(e)),
+      (is_AS`SeqEnumerationExpr(e))       -> res := mk_("SeqEnumerationExpr",CompileSeqEnumExpr(e)),
+      (is_AS`MapEnumerationExpr(e))       -> res := mk_("MapEnumerationExpr",CompileMapEnumExpr(e)),
+      (is_AS`SetComprehensionExpr(e))     -> res := mk_("SetComprehensionExpr",CompileSetComprehensionExpr(e)),
+      (is_AS`SeqComprehensionExpr(e))     -> res := mk_("SeqComprehensionExpr",CompileSeqComprehensionExpr(e)),
+      (is_AS`MapComprehensionExpr(e))     -> res := mk_("MapComprehensionExpr",CompileMapComprehensionExpr(e)),
+      (is_AS`TupleConstructorExpr(e))     -> res := mk_("TupleConstructorExpr",CompileTupleConstructorExpr(e)),
+      (is_AS`RecordConstructorExpr(e))    -> res := mk_("RecordConstructorExpr",CompileRecordConstructorExpr(e)),
+      (is_AS`RecordModifierExpr(e))       -> res := mk_("RecordModifierExpr", CompileRecordModifierExpr(e)),
+      (is_AS`SeqModifyMapOverrideExpr(e)) -> res := mk_("SeqModifyMapOverrideExpr", CompileSeqModifyMapOverrideExpr(e)),
+      (is_AS`LambdaExpr(e))               -> res := mk_("LambdaExpr",CompileLambdaExpr(e)),
+      (is_AS`FctTypeInstExpr(e))          -> res := mk_("FctTypeInstExpr",CompileFctTypeInstExpr(e)),
+      (is_AS`IsExpr(e))                   -> res := mk_("IsExpr",CompileIsExpr(e)),
+      (is_AS`NarrowExpr(e))               -> res := mk_("NarrowExpr",CompileNarrowExpr(e)),
+      (is_AS`TokenConstructorExpr(e))     -> res := mk_("TokenConstructorExpr",CompileTokenConstructorExpr(e)),
+      (is_AS`TupleSelectExpr(e))          -> res := mk_("TupleSelectExpr",CompileTupleSelectExpr(e)),
+      (is_AS`TypeJudgementExpr(e))        -> res := mk_("TypeJudgementExpr",CompileTypeJudgementExpr(e)),
+      (is_AS`PreConditionApplyExpr(e))    -> res := mk_("PreConditionApplyExpr",CompilePreConditionApplyExpr(e)),
+      (is_AS`Name(e))                     -> res := mk_("Name",CompileName(e)),
+      (is_AS`OldName(e))                  -> res := mk_("OldName",[mk_INSTRTP`LOOKUP(e)]),
+      (is_AS`BoolLit(e))                  -> res := mk_("BoolLit",[mk_INSTRTP`PUSH(mk_SEM`BOOL(e.val))]),
+      (is_AS`NilLit(e))                   -> res := mk_("NilLit", [mk_INSTRTP`PUSH(mk_SEM`NIL())]),
+      (is_AS`RealLit(e))                  -> res := mk_("RealLit",[mk_INSTRTP`PUSH(mk_SEM`NUM(e.val))]),
+      (is_AS`NumLit(e))                   -> res := mk_("NumLit",[mk_INSTRTP`PUSH(mk_SEM`NUM(e.val))]),
+      (is_AS`TextLit(e))                  -> res := mk_("TextLit",[mk_INSTRTP`PUSH(mk_SEM`SEQ([ mk_SEM`CHAR(e.val(i))
+                                                                                 | i in set inds e.val ]))]),
+      (is_AS`CharLit(e))                  -> res := mk_("CharLit",[mk_INSTRTP`PUSH(mk_SEM`CHAR(e.val))]),
+      (is_AS`QuoteLit(e))                 -> res := mk_("QuoteLit",[mk_INSTRTP`PUSH(mk_SEM`QUOTE(e.val))]),
+      (is_AS`UndefinedExpr(e))            -> res := mk_("UndefinedExpr", [mk_INSTRTP`ERRINST(RTERR`UNDEFINED_EXPRESSION)]),
+      (is_AS`LastRes(e))                  -> res := mk_("LastRes", [mk_INSTRTP`LASTRES()]),
+      (is_AS`Macro(e))                    -> res := mk_("Macro", [mk_INSTRTP`MACRO(e.tp,e.cid)]),
+#ifdef VDMPP
+      (is_AS`SelfExpr(e))                 -> res := mk_("SelfExpr",CompileSelfExpr(e)),
+      (is_AS`NewExpr(e))                  -> res := mk_("NewExpr",CompileNewExpr(e, nil)),
+      (is_AS`IsOfClassExpr(e))            -> res := mk_("IsOfClassExpr",CompileIsOfClassExpr(e)),
+      (is_AS`IsOfBaseClassExpr(e))        -> res := mk_("IsOfBaseClassExpr",CompileIsOfBaseClassExpr(e)),
+      (is_AS`SameBaseClassExpr(e))        -> res := mk_("SameBaseClassExpr",CompileSameBaseClassExpr(e)),
+      (is_AS`SameClassExpr(e))            -> res := mk_("SameClassExpr",CompileSameClassExpr(e)),
+      (is_AS`ThreadIdExpr(e))             -> res := mk_("ThreadIdExpr",CompileThreadIdExpr(e)),
+      (is_AS`ActExpr(e))                  -> res := mk_("ActExpr",CompileHistoryExpr(e.mthd,mk_INSTRTP`act())),
+      (is_AS`FinExpr(e))                  -> res := mk_("FinExpr",CompileHistoryExpr(e.mthd,mk_INSTRTP`fin())),
+      (is_AS`ActiveExpr(e))               -> res := mk_("ActiveExpr",CompileHistoryExpr(e.mthd,mk_INSTRTP`active())),
+      (is_AS`WaitingExpr(e))              -> res := mk_("WaitingExpr",CompileHistoryExpr(e.mthd,mk_INSTRTP`waiting())),
+      (is_AS`ReqExpr(e))                  -> res := mk_("ReqExpr",CompileHistoryExpr(e.mthd,mk_INSTRTP`req())),
+#ifdef VICE
+      (is_AS`CurTimeExpr(e))              -> res := mk_("CurTimeExpr",[mk_INSTRTP`CURTIME()]),
+#endif VICE
+#endif VDMPP
+      others                              -> def - = IO`fwriteval[AS`Expr]("unsupport.msg", e, <start>)
+                                             in
+                                               error
+    end;
+    let mk_(name,expr_l) = res,
+        cid = e.cid
+    in
+     (dcl prog : STKM`SubProgram :=
+            CMPL`IStart(name, cid) ^ CMPL`SetContext(cid, false) ^ expr_l ^ CMPL`IEnd(name);
+#ifdef VICE
+      if TIME`GetCompilingTime()
+      then prog := prog ^ TIME`E2Time(e);
+#endif VICE
+      return prog;
+     );
+    );
+\end{vdm_al}
+
+\section{Define Expression}
+
+\begin{vdm_al}
+operations
+
+  CompileDefExpr: AS`DefExpr ==> STKM`SubProgram
+  CompileDefExpr(mk_AS`DefExpr(def_l,In,-)) ==
+   (dcl def_sp : STKM`SubProgram := [];
+    for mk_(pb,expr) in def_l do
+      cases pb:
+        mk_AS`PatternName(nm,-,-) -> if nm = nil
+                                     then def_sp := def_sp ^ E2I(expr) ^ [mk_INSTRTP`POP(1)]
+                                     else def_sp := def_sp ^ E2I(expr) ^ [mk_INSTRTP`APPENDBLKENV(nm,nil)],
+        others                    -> def_sp := def_sp ^ E2I(expr) ^ CPAT`PB2I(pb) ^ [mk_INSTRTP`MATCHANDBIND()]
+      end;
+    return [mk_INSTRTP`EMPTYBLKENV(<READ_ONLY>)] ^ def_sp ^ E2I(In) ^ [mk_INSTRTP`POPBLKENV()];
+   );
+\end{vdm_al}
+
+\section{Name Expressions}
+
+\begin{vdm_al}
+  CompileName: AS`Name ==> STKM`SubProgram
+  CompileName(nm) ==
+#ifdef VICE
+   (if opnm <> nil
+    then nms := if nms = <ALL> or nm in set opnms
+                then <ALL>
+                else nms union {nm};
+#endif VICE
+
+    return [mk_INSTRTP`LOOKUP(nm)];
+
+#ifdef VICE
+   );
+#endif VICE
+\end{vdm_al}
+
+\section{Let Expression}
+
+\begin{vdm_al}
+operations
+  CompileLetExpr: AS`LetExpr ==> STKM`SubProgram
+  CompileLetExpr(mk_AS`LetExpr(localdef,body,-)) ==
+   (dcl valdef : STKM`SubProgram := [];
+    for ldef in localdef do
+      cases true:
+        (is_AS`ValueDef(ldef))     -> let mk_AS`ValueDef(pat,tp,val,-,-,-) = ldef
+                                      in
+                                       (valdef := valdef ^ E2I(val) ^
+                                                   (if tp = nil then [] else [mk_INSTRTP`DTC(tp)]);
+                                        cases pat:
+                                          mk_AS`PatternName(nm,nil,-) ->
+                                               if nm = nil
+                                               then valdef := valdef ^ [mk_INSTRTP`POP(1)]
+                                               else valdef := valdef ^ [mk_INSTRTP`APPENDBLKENV(nm,nil)],
+                                          others -> valdef := valdef ^ CPAT`P2I(pat) ^ [mk_INSTRTP`MATCHANDBIND()]
+                                        end
+                                       ),
+        (is_AS`ExplFnDef(ldef)),
+        (is_AS`ImplFnDef(ldef)),
+        (is_AS`ExtExplFnDef(ldef)) -> def mk_(blkenv,b_m) = PAT`ConstructFN(CMPL`GetClMod(), ldef)
+                                      in valdef := valdef ^ [mk_INSTRTP`CLOSENV(blkenv,b_m)],
+        others                     -> error
+      end;
+    return [mk_INSTRTP`EMPTYBLKENV(<READ_ONLY>)] ^ valdef ^ E2I(body) ^ [mk_INSTRTP`POPBLKENV()]);
+\end{vdm_al}
+
+\section{Let be such that Expression}
+
+If a let-be-expression contains a type binding a run-time error must
+be raised. Otherwise instructions for the "such that" part must be
+constructed seperately. Since it is neccesary to loop through the
+alternative values in the set a general strategy is used: First
+instructions before the loop are gathered. Then the instructions
+inside the loop are collected and finally the instructions clealing up
+after the loop are produced. These three components are combined by
+the CombRepeatUntil function. This means that a VDM expression such as:
+
+\begin{verbatim}
+let pat in set setexpr be st pred
+in
+  inexpr
+\end{verbatim}
+
+will produce an instruction sequence like:
+
+\begin{verbatim}
+[E2I(setexpr),
+ mk_INSTRTP`EMPTYBLKENV(<READ_ONLY>), -- this one is simpy there because the
+                         -- loop must start by popping a blockenv.
+ -- outer loop part
+ mk_INSTRTP`POPBLKENV(),
+ mk_INSTRTP`EMPTYBLKENV(<READ_ONLY>),
+ mk_INSTRTP`SELELEM()],
+ CPAT`P2I(lhs.pat),
+ mk_INSTRTP`TRYANYMATCH(),
+ mk_INSTRTP`CBR(3),
+ mk_INSTRTP`PUSH(mk_SEM`BOOL(false)), -- take next elem
+ mk_INSTRTP`BR("until end of outer loop")
+
+ -- inner loop part
+ E2I(pred),
+ mk_INSTRTP`CBR(8),
+ mk_INSTRTP`ISEMPTYSET(2),
+ mk_INSTRTP`CBR(3)
+ mk_INSTRTP`PUSH(mk_SEM`BOOL(true)),
+ mk_INSTRTP`SELBLKENV(2),
+ mk_INSTRTP`BR("until end of inner loop")
+
+ mk_INSTRTP`PUSH(mk_SEM`BOOL(false)),
+ mk_INSTRTP`PUSH(mk_SEM`BOOL(false)),
+ mk_INSTRTP`BR("until end of inner loop")
+ mk_INSTRTP`PUSH(mk_SEM`BOOL(true)),
+ -- end inner loop part
+
+ mk_INSTRTP`CNBR( -len inner_loop_part),
+ mk_INSTRTP`REMSTACKELEM(2), -- get rid of the set of blkenvs
+ -- end outer loop part
+ mk_INSTRTP`CNBR(-len outer_loop_part),
+ mk_INSTRTP`POP(1), -- get rid of the rest of the set value from the stack
+ E2I(inexpr),
+ mk_INSTRTP`POPBLKENV()]
+\end{verbatim}
+
+\begin{description}
+\item[prep\_instr:] This part is preparing the remaining instruction
+evaluation. The value stack will be extended with the set value and
+the environment list will be extended with an empty block environment.
+\item[out\_loop\_instr:]  The outer loop instructions start by checking
+whether the set value on top of the evaluation stack is non-empty. If
+this is the case an element from the set is selected and the pattern
+is matched against this element. If this succeeds the inner loop is
+entered. After completing the inner loop it is necessary to get rid of
+the set of environments again. Thus, the instructions in the outer
+loop does not add anything to the evaluation stack upon completion.
+\item[in\_loop\_instr:] The inner loop instructions assumes that the
+evaluation stack contains a set of environments at the top and that
+the next element is a set value. It starts by checking whether the
+predicate is satisfied for the selected environment. In case it is
+satisfied we need to leave both loops. Otherwise we must select a new
+environment from the top of the evaluation stack in case there is more
+and then repeat the inner loop again. In case there is no more
+environments left we should leave the inner loop and run the outer
+loop again.
+\item[postt\_instr:] The post-instructions are the part which removes
+the remaning set from the evaluation stack, evaluates the instructions
+for the in-expression and finally pops the block environment which was
+pushed for the matching between the pattern and the selected element
+from the set.
+\end{description}
+
+\begin{vdm_al}
+  CompileLetBeSTExpr: AS`LetBeSTExpr ==> STKM`SubProgram
+  CompileLetBeSTExpr(mk_AS`LetBeSTExpr(lhs,St,In,-)) ==
+    def prep_instr = CPAT`CompileMultBindL(lhs,<DONT_PARTITION>);
+    in
+     (dcl body_instr : STKM`SubProgram := [];
+      if St = nil
+      then body_instr := ConcIfThenElse([mk_INSTRTP`ISEMPTYSET(1)],
+                                        [mk_INSTRTP`ERRINST(RTERR`EMPTY_ENV_S)],
+                                        [mk_INSTRTP`SELBLKENV(1)] ^ E2I(In) ^ [mk_INSTRTP`POPBLKENV()])
+      else
+        def St_instr = [mk_INSTRTP`SELBLKENV(1)] ^ E2I(St);
+            St_succ = E2I(In) ^ [mk_INSTRTP`POPBLKENV(), mk_INSTRTP`PUSH(mk_SEM`BOOL(true))];
+            St_failed = [mk_INSTRTP`POPBLKENV(), mk_INSTRTP`PUSH(mk_SEM`BOOL(false))];
+            loop_instr = ConcIfThenElse([mk_INSTRTP`ISEMPTYSET(1)],
+                                        [mk_INSTRTP`ERRINST(RTERR`EMPTY_ENV_S)],
+                                        ConcIfThenElse(St_instr, St_succ, St_failed))
+        in body_instr := CombRepeatUntil(loop_instr);
+      let postt_instr = [mk_INSTRTP`REMSTACKELEM(2)]
+      in
+        return prep_instr ^ body_instr ^ postt_instr);
+
+functions
+  CombRepeatUntil:STKM`SubProgram +> STKM`SubProgram
+  CombRepeatUntil(loop_instr) ==
+    loop_instr ^ [mk_INSTRTP`CNBR(-len loop_instr-1)];
+
+  CombWhileLoop: STKM`SubProgram -> STKM`SubProgram
+  CombWhileLoop(loop_instr) ==
+    --[mk_INSTRTP`CNBR(len loop_instr+1)] ^ loop_instr ^ [mk_INSTRTP`CBR(-len loop_instr-1)];
+    ConcIfThenElse([], loop_instr ^ [mk_INSTRTP`CBR(-len loop_instr-1)], []);
+
+  CombWhileLoopWithCond: STKM`SubProgram * STKM`SubProgram -> STKM`SubProgram
+  CombWhileLoopWithCond(condition, loop_instr) ==
+    --let while_body = condition ^ [mk_INSTRTP`CNBR(len body+1)] ^ loop_instr,
+    --    goto_start = [mk_INSTRTP`BR(-len while_body-1)]
+    --in while_body ^ goto_start;
+    [mk_INSTRTP`BR(len loop_instr)] ^ loop_instr ^ condition ^ [mk_INSTRTP`CBR(-len loop_instr -len condition -1)];
+\end{vdm_al}
+
+\section{Quantified Expressions}
+
+A quantified expression such as:
+
+\begin{verbatim}
+forall a in set {1,2} & a > 1
+\end{verbatim}
+will compile into code such as:
+
+\begin{vdm_al}
+operations
+  CompileAllOrExistsExpr: AS`AllOrExistsExpr ==> STKM`SubProgram
+  CompileAllOrExistsExpr(mk_AS`AllOrExistsExpr(quant,bind,pred,-)) ==
+    def prep_instr = CPAT`CompileMultBindL(bind,<DONT_PARTITION>);
+        succ_instr = [mk_INSTRTP`PUSH(mk_SEM`BOOL(true))];
+        fail_instr = [mk_INSTRTP`PUSH(mk_SEM`BOOL(false))];
+        q_i = if quant = <ALL>
+              then succ_instr   -- forall
+              else fail_instr;  -- exists
+        body_instr = [mk_INSTRTP`SELBLKENV(1)] ^ E2I(pred) ^ [mk_INSTRTP`POPBLKENV()] ^
+                     (if quant = <ALL>
+                      then ConcIfThenElse([], fail_instr, fail_instr ^ succ_instr)  -- forall
+                      else ConcIfThenElse([], succ_instr ^ succ_instr, fail_instr));-- exists
+        loop_instr = ConcIfThenElse([mk_INSTRTP`ISEMPTYSET(1)], q_i ^ succ_instr, body_instr)
+    in
+      return prep_instr ^ CombRepeatUntil(loop_instr) ^ [mk_INSTRTP`REMSTACKELEM(2)];
+\end{vdm_al}
+
+\begin{vdm_al}
+  CompileEUandICommon: AS`Bind * AS`Expr ==> STKM`SubProgram
+  CompileEUandICommon(bind,expr) ==
+    def bind_l = cases bind:
+                   mk_AS`TypeBind(pat,tp,ci) -> [mk_AS`MultTypeBind([pat],tp,ci)],
+                   mk_AS`SetBind(pat,Set,ci) -> [mk_AS`MultSetBind([pat],Set,ci)],
+                   others -> undefined
+                 end;
+        prep_instr = CPAT`CompileMultBindL(bind_l,<DO_PARTITION>) ^ [mk_INSTRTP`PUSH({})];
+        succ_instr = [mk_INSTRTP`PUSH(mk_SEM`BOOL(true))];
+        fail_instr = [mk_INSTRTP`PUSH(mk_SEM`BOOL(false))];
+        pred_instr = E2I(expr);
+        more_than_one_pred = [mk_INSTRTP`ADDTOBLKENV(), mk_INSTRTP`SIZE(2)];
+        loop_body = [mk_INSTRTP`SELBLKENV(2)] ^
+                    ConcIfThenElse(pred_instr, more_than_one_pred, fail_instr) ^
+                    [mk_INSTRTP`POPBLKENV()];
+        loop_instr = ConcIfThenElse([mk_INSTRTP`ISEMPTYSET(2)], succ_instr, loop_body)
+    in
+      return prep_instr ^ CombRepeatUntil(loop_instr) ^ [mk_INSTRTP`REMSTACKELEM(2)];
+\end{vdm_al}
+
+\section{Exists Unique Expression}
+
+\begin{vdm_al}
+  CompileExistsUniqueExpr: AS`ExistsUniqueExpr ==> STKM`SubProgram
+  CompileExistsUniqueExpr(mk_AS`ExistsUniqueExpr(bind,pred,-)) ==
+    def new_bind = PAT`DoCarePattern(bind, mk_AS`Name(["1"], CI`NilContextId));
+        common = CompileEUandICommon(new_bind, pred)
+    in
+      return common ^ [mk_INSTRTP`SIZE(1), mk_INSTRTP`REMSTACKELEM(2)];
+\end{vdm_al}
+
+\section{Iota Expression}
+
+\begin{vdm_al}
+  CompileIotaExpr: AS`IotaExpr ==> STKM`SubProgram
+  CompileIotaExpr(mk_AS`IotaExpr(bind,pred,-)) ==
+    def new_bind = PAT`DoCarePattern(bind, mk_AS`Name(["1"], CI`NilContextId));
+        common = CompileEUandICommon(new_bind, pred);
+        one_found = [mk_INSTRTP`SELBLKENV(1)] ^ E2I(PAT`GetExpr(PAT`SelPattern(new_bind))) ^
+                    [mk_INSTRTP`POPBLKENV(), mk_INSTRTP`REMSTACKELEM(2)];
+    in
+      return common ^ ConcIfThenElse([mk_INSTRTP`SIZE(1)],
+                                     one_found,
+                                     [mk_INSTRTP`ERRINST(RTERR`NO_UNIQ_ELEM)]);
+\end{vdm_al}
+
+\section{Apply Expression}
+
+\begin{vdm_al}
+operations
+  CompileApplyExpr: AS`ApplyExpr ==> STKM`SubProgram
+  CompileApplyExpr(mk_AS`ApplyExpr(fct,arg,-)) ==
+    def args = conc [ E2I(arg(i)) | i in set inds arg ] ^ [mk_INSTRTP`PUSHLIST(len arg)]
+    in
+      return E2I(fct) ^ args ^
+#ifdef VDMPP
+           [mk_INSTRTP`GUARD(true)] ^
+#endif VDMPP
+           CMPL`SetContext(fct.cid, false) ^
+           [mk_INSTRTP`APPLY()];
+\end{vdm_al}
+
+\section{Field Select Expression}
+
+\begin{vdm_al}
+operations
+  CompileFieldSelectExpr: AS`FieldSelectExpr ==> STKM`SubProgram
+  CompileFieldSelectExpr(mk_AS`FieldSelectExpr(rec,nm,-)) ==
+#ifdef VDMSL
+    return E2I(rec) ^ [mk_INSTRTP`FIELDSEL(nm)];
+#endif VDMSL
+#ifdef VDMPP
+    cases nm:
+      mk_AS`Name(-,-) -> return E2I(rec) ^ [mk_INSTRTP`FIELDSEL(nm)],
+      mk_AS`FctTypeInstExpr(polyfct,inst,-)
+                      -> return E2I(rec) ^ [mk_INSTRTP`FIELDSEL(polyfct),
+                                            mk_INSTRTP`POLYINST(inst,CMPL`GetClMod())],
+      others -> error
+    end;
+#endif VDMPP
+\end{vdm_al}
+
+\section{Set Range Expression}
+
+\begin{vdm_al}
+  CompileSetRangeExpr: AS`SetRangeExpr ==> STKM`SubProgram
+  CompileSetRangeExpr(expr) ==
+    let mk_AS`SetRangeExpr(lb,ub,-) = expr
+    in return E2I(lb) ^ E2I(ub) ^
+#ifdef VICE
+           TIME`MkRuntimeSetSeqMap(expr) ^
+#endif VICE
+           [mk_INSTRTP`SETRNG()];
+\end{vdm_al}
+
+\section{Subsequence Expression}
+
+\begin{vdm_al}
+  CompileSubSequenceExpr: AS`SubSequenceExpr ==> STKM`SubProgram
+  CompileSubSequenceExpr(expr) ==
+    let mk_AS`SubSequenceExpr(sequence,frompos,topos,-) = expr
+    in return E2I(sequence) ^ E2I(frompos) ^ E2I(topos) ^
+#ifdef VICE
+           TIME`MkRuntimeSetSeqMap(expr) ^
+#endif VICE
+           [mk_INSTRTP`SUBSEQ()];
+\end{vdm_al}
+
+\section{Mapping Enumeration}
+
+\begin{vdm_al}
+  CompileMapEnumExpr: AS`MapEnumerationExpr ==> STKM`SubProgram
+  CompileMapEnumExpr(mk_AS`MapEnumerationExpr(els,-)) ==
+    if els <> []
+    then return conc [ let mk_AS`Maplet(mapdom,maprng,-) = els(i)
+                       in E2I(mapdom) ^ E2I(maprng) | i in set inds els ] ^ [mk_INSTRTP`MAPCONS(len els)]
+    else return [mk_INSTRTP`PUSH(mk_SEM`MAP({|->}))];
+\end{vdm_al}
+
+\section{Sequence Enumeration}
+
+\begin{vdm_al}
+  CompileSeqEnumExpr: AS`SeqEnumerationExpr ==> STKM`SubProgram
+  CompileSeqEnumExpr(mk_AS`SeqEnumerationExpr(els,-)) ==
+    if els <> []
+    then return conc [ E2I(els(i)) | i in set inds els ] ^ [mk_INSTRTP`SEQCONS(len els)]
+    else return [mk_INSTRTP`PUSH(mk_SEM`SEQ([]))];
+\end{vdm_al}
+
+\section{Set Enumeration}
+
+\begin{vdm_al}
+  CompileSetEnumExpr: AS`SetEnumerationExpr ==> STKM`SubProgram
+  CompileSetEnumExpr(mk_AS`SetEnumerationExpr(els,-)) ==
+    if els <> []
+    then return conc [ E2I(els(i)) | i in set inds els ] ^ [mk_INSTRTP`SETCONS(len els)]
+    else return [mk_INSTRTP`PUSH(mk_SEM`SET({}))];
+\end{vdm_al}
+
+\section{Set Comprehension}
+
+\begin{vdm_al}
+  CompileSetComprehensionExpr: AS`SetComprehensionExpr ==> STKM`SubProgram
+  CompileSetComprehensionExpr(mk_AS`SetComprehensionExpr(elem,bind,pred,-)) ==
+    def prep_instr = CPAT`CompileMultBindL(bind,<DO_PARTITION>) ^ [mk_INSTRTP`PUSH(mk_SEM`SET({}))];
+        then_instr = E2I(elem) ^ [mk_INSTRTP`ADDSET()]
+#ifdef VICE
+                    ^ TIME`MkSetCompInsert()
+#endif VICE
+        ;
+        condition = [mk_INSTRTP`ISNOTEMPTYSET(2)];
+    in
+     (dcl loop_instr : STKM`SubProgram := [mk_INSTRTP`SELBLKENV(2)];
+      if pred = nil
+      then loop_instr := loop_instr ^ then_instr
+      else def pred_instr = E2I(pred)
+           in loop_instr := loop_instr ^ ConcIfThenElse(pred_instr, then_instr, []);
+      loop_instr := loop_instr ^ [mk_INSTRTP`POPBLKENV()];
+      let clean_stack = [mk_INSTRTP`REMSTACKELEM(2)]
+      in
+        return prep_instr ^ CombWhileLoopWithCond(condition, loop_instr) ^ clean_stack;);
+\end{vdm_al}
+
+\section{Sequence Comprehension}
+
+The instruction code for a sequence comprehension:
+\begin{verbatim}
+[i | i in set {1,2}]
+\end{verbatim}
+
+will look like:
+\begin{verbatim}
+
+--mk_INSTRTP`ISTART( "SeqComprehensionExpr" ),
+  mk_INSTRTP`CONTEXT( 41943063,false ),
+  mk_INSTRTP`PUSH( mk_STKM`PatternName( mk_AS`Name( [ "i" ], 41943057 ), nil, 41943058 ) ),
+  .. E2I {1,2} ...
+
+  mk_INSTRTP`SEQCOMPBIND(  ), -- Push the pattern and the sequence of the set
+                              -- that we are going to traverse.
+  mk_INSTRTP`PUSH( mk_SEM`SEQ( [  ] ) ),  -- Push the "result" of the sequence comprehension.
+                                       -- The eval stack is now:
+                                      [ mk_SEM`SEQ([]),
+                                        [mk_SEM`Val(1), mk_SEM`Val(2)],
+                                        mk_AS`PatternName(mk_AS`Name("i")) ]
+
+label: loop
+  mk_INSTRTP`ISEMPTYSEQ( 2 ),     -- Check if the sequence that we traverse
+                                  -- is empty. The sequence is the second
+                                  -- element on the evaluation stack.
+  mk_INSTRTP`UNOP( <NOT> ),
+  mk_INSTRTP`CNBR( 7 ),           -- If the sequence is empty we are done,
+                                  -- Jump to the end of the
+
+  mk_INSTRTP`EMPTYBLKENV( <READ_ONLY> ), -- otherwise: Push a block environment
+                                         -- for the free variables in the
+                                         -- pattern.
+  mk_INSTRTP`SEQELEMMATCH( 3 ),          -- Bind the pattern to the first
+                                         -- element of the sequence at the
+                                         -- second place in the evaluation
+                                         -- stack. The binding is introduced in
+                                         -- the block-environment.
+                                         -- From the sequence that we traverse
+                                         -- the element that we used in
+                                         -- the pattern match is removed.
+                                         -- Thus after the first traversion the
+                                         -- evaluation stack looks like:
+                                         -- [ mk_SEM`([]),
+                                         --   [ mk_SEM`Val(2)],
+                                         --   mk_AS`PatternName(mk_AS`Name("i"))]
+--  mk_INSTRTP`PUSH(                       -- Evaluate the predicate. (In this
+--                                         -- case always true)
+--
+--     mk_SEM`BOOL( true ) ),
+--  mk_INSTRTP`CBR( 1 ),
+--  mk_INSTRTP`BR( 7 ),
+--  mk_INSTRTP`ISTART("Name" ),            -- Compute the expression.
+  mk_INSTRTP`CONTEXT( 41943056,false ),
+  mk_INSTRTP`LOOKUP( mk_AS`Name( [ "i" ], 41943056 ) ),
+--  mk_INSTRTP`IEND( "Name" ),
+  mk_INSTRTP`APPENDSEQ(  ),              -- and append it with the result sequence
+                                         -- on the evaluation stack.
+  mk_INSTRTP`POPBLKENV(  ),              -- Remove the temporary block
+                                         -- environment
+  mk_INSTRTP`BR( -10 ),                  -- Jump to the next traversion.
+                                         -- After the first traversion the
+                                         -- evaluation stack looks like:
+                                         -- [ mk_SEM`SEQ([mk_SEM`Val(1)]),
+                                         --   [ mk_SEM`Val(1)],
+                                         --   mk_AS`PatternName(mk_AS`("i"))]
+
+
+  mk_INSTRTP`REMSTACKELEM( 2 ),          -- After the evaluation:
+                                         -- The evaluation stack looks like:
+                                         -- [ mk_SEM`SEQ([mk_SEM..(1), mk_SEM..(2))],
+                                         --   [],
+                                         --   mk_AS`PatternName(mk_AS`Name("i"))].
+                                         -- REMSTACKELEM removes the
+                                         -- second element on the evaluation
+                                         -- stack. That is, the empty sequence.
+
+  mk_INSTRTP`REMSTACKELEM( 2 ),          -- Removes the pattern from the
+                                         -- evaluation stack.
+--  mk_INSTRTP`IEND( "SeqComprehensionExpr" ),
+\end{verbatim}
+
+\begin{vdm_al}
+  CompileSeqComprehensionExpr: AS`SeqComprehensionExpr ==> STKM`SubProgram
+  CompileSeqComprehensionExpr(mk_AS`SeqComprehensionExpr(elem,bind,pred,-)) ==
+   (dcl prep_instr : STKM`SubProgram := [];
+    cases bind:
+      mk_AS`SetBind(pat,set_e,-) ->
+         prep_instr := CPAT`P2I(pat) ^ E2I(set_e) ^ [mk_INSTRTP`SEQCOMPBIND(true), mk_INSTRTP`PUSH(mk_SEM`SEQ([]))],
+      mk_AS`SeqBind(pat,seq_e,-) ->
+         prep_instr := CPAT`P2I(pat) ^ E2I(seq_e) ^ [mk_INSTRTP`SEQCOMPBIND(false), mk_INSTRTP`PUSH(mk_SEM`SEQ([]))],
+      others -> error
+    end;
+    def condition = [mk_INSTRTP`ISNOTEMPTYSEQ(2)];
+        then_branch = E2I(elem) ^ [mk_INSTRTP`APPENDSEQ()]
+#ifdef VICE
+                      ^ TIME`MkSeqCompInsert()
+#endif VICE
+          ;
+    in
+     (dcl loop_instr : STKM`SubProgram := [mk_INSTRTP`EMPTYBLKENV(<READ_ONLY>),
+                                           mk_INSTRTP`SEQELEMMATCH(3)];
+      if pred = nil
+      then loop_instr := loop_instr ^ then_branch
+      else def pred_instr = E2I(pred)
+           in loop_instr := loop_instr ^ ConcIfThenElse(pred_instr, then_branch, []);
+      loop_instr := loop_instr ^ [mk_INSTRTP`POPBLKENV()];
+      let clean_stack = [mk_INSTRTP`REMSTACKELEM(2), mk_INSTRTP`REMSTACKELEM(2)]
+      in
+        return prep_instr ^ CombWhileLoopWithCond(condition, loop_instr) ^ clean_stack);
+   );
+\end{vdm_al}
+
+\section{Map Comprehension}
+
+\begin{vdm_al}
+  CompileMapComprehensionExpr: AS`MapComprehensionExpr ==> STKM`SubProgram
+  CompileMapComprehensionExpr(mk_AS`MapComprehensionExpr(elem,bind,pred,-)) ==
+    def prep_instr = CPAT`CompileMultBindL(bind,<DO_PARTITION>) ^ [mk_INSTRTP`PUSH(mk_SEM`MAP({|->}))];
+        then_instr = E2I(elem.mapdom) ^ E2I(elem.maprng) ^ [mk_INSTRTP`APPENDMAP()]
+#ifdef VICE
+                     ^ TIME`MkMapCompInsert()
+#endif VICE
+        ;
+        condition = [mk_INSTRTP`ISNOTEMPTYSET(2)];
+     in
+      (dcl loop_instr : STKM`SubProgram := [mk_INSTRTP`SELBLKENV(2)];
+       if pred = nil
+       then loop_instr := loop_instr ^ then_instr
+       else def pred_instr = E2I(pred)
+            in loop_instr := loop_instr ^ ConcIfThenElse(pred_instr, then_instr, []);
+       loop_instr := loop_instr ^ [mk_INSTRTP`POPBLKENV()];
+       let clean_stack = [mk_INSTRTP`REMSTACKELEM(2)]
+       in
+         return prep_instr ^ CombWhileLoopWithCond(condition, loop_instr) ^ clean_stack);
+\end{vdm_al}
+
+\section{Tuple Expressions}
+
+\begin{vdm_al}
+  CompileTupleConstructorExpr: AS`TupleConstructorExpr ==> STKM`SubProgram
+  CompileTupleConstructorExpr(mk_AS`TupleConstructorExpr(fields,-)) ==
+    return conc [ E2I(fields(i)) | i in set inds fields ] ^ [mk_INSTRTP`TUPCONS(len fields)];
+\end{vdm_al}
+
+\section{Record Expressions}
+
+\begin{vdm_al}
+  CompileRecordConstructorExpr: AS`RecordConstructorExpr ==> STKM`SubProgram
+  CompileRecordConstructorExpr(mk_AS`RecordConstructorExpr(tag,fields,-)) ==
+    return conc [ E2I(fields(i)) | i in set inds fields ] ^ [mk_INSTRTP`RECCONS(tag,len fields)];
+
+  CompileRecordModifierExpr: AS`RecordModifierExpr ==> STKM`SubProgram
+  CompileRecordModifierExpr(mk_AS`RecordModifierExpr(rec,modifiers,-)) ==
+    def fid_l = [ modifiers(i).field | i in set inds modifiers ];
+        sp_val = conc [ E2I(modifiers(i).newexpr) | i in set inds modifiers ]
+    in return E2I(rec) ^ sp_val ^ [mk_INSTRTP`RECMOD(fid_l)];
+\end{vdm_al}
+
+\section{Sequence and Map Modifier Expression}
+
+\begin{vdm_al}
+  CompileSeqModifyMapOverrideExpr: AS`SeqModifyMapOverrideExpr ==> STKM`SubProgram
+  CompileSeqModifyMapOverrideExpr(expr) ==
+    return E2I(expr.seqmap) ^ E2I(expr.mapexp) ^
+#ifdef VICE
+           TIME`MkRuntimeSetSeqMap(expr) ^
+#endif VICE
+           [mk_INSTRTP`SEQMAPOVER()];
+\end{vdm_al}
+
+\section{If-Then-Else Expression}
+
+To be able to evaluate conditional expressions (amongst others) in the
+context of a stack machine we must have an instruction that allows the
+program to branch --- perform jumps. Therefore we introduce the
+conditional branch instruction {\tt CBR(n)}. The instruction pops one
+item of the stack and branches according to the boolean value of this
+item. If {\em true} the instuction increments the PC with the value of
+the argument for the instruction {\em n}, and consequently it branches
+relatively to the PC with this offset. If the item popped of the stack
+is {\em false} the program evaluation continues unaffected with the
+next instruction.
+
+Furthermore it seems natural to add an instruction to perform an
+unconditional branch. The instruction {\tt BR} pops one item, the
+offset, of the stack and branches unconditionally with this offset.
+
+Using the branch instructions just introduced, the following if expression
+\begin{quote}
+  if {\em cond\_expr}
+  then {\em expr\_1}
+  else {\em expr\_2}
+\end{quote}
+would be translated to the following (pseudo) stack instructions:
+\begin{alltt}
+    [cond_expr, CBR(len expr_2 + 1),
+     expr_2, BR(len expr_1 + 1), expr_1 ]
+\end{alltt}
+where {\tt cond\_expr}, {\tt expr\_1} and {\tt expr\_2} are the
+complete stack instructions for the coresponding expressions {\em
+  cond\_expr}, {\em expr\_1} and {\em expr\_2}. Furthermore {\tt len}
+is used to denote the length of an instruction sequence to compute the
+offset for the branch instructions.
+
+For a more concrete example, the following if-then-else expression
+\begin{quote}
+  if 3+7 = a
+  then 3+42*5
+  else 17
+\end{quote}
+will result in these instructions
+\begin{quote}
+{\tt [ 3, 7, ADD, 'a', LOOKUP, EQUAL, CBR(2),\\
+ 17, BR(8),\\
+ 3, 42, 5, MUL, ADD]}
+\end{quote}
+The following table shows the evolution of the stack and PC as the
+program is interpreted (assuming that the identifier 'a' equals 42):
+
+\begin{center}
+\begin{tabular}{|l|l|}
+Stack & PC  \\ \hline
+- & 1 \\
+8 & 2 \\
+8,3 & 3\\
+8,3,7 & 4\\
+8,10 & 5\\
+8,10,'a' & 6\\
+8,10,42 & 7\\
+8,FALSE & 8\\
+- & 16\\
+17 & -\\ \hline
+\end{tabular}
+\end{center}
+
+If-then-elseif expressions can be handled by treating the {\em elseif}
+part of the expression as an if-the-else expression.
+
+\begin{vdm_al}
+operations
+  CompileIfExpr : AS`IfExpr ==> STKM`SubProgram
+  CompileIfExpr(e) ==
+    def mk_AS`IfExpr(cond_e, expr1_e, elif_l, altn_e, -) = e;
+        cond_l = E2I(cond_e);
+        expr1_l = E2I(expr1_e)
+#ifdef VICE
+                  ^ TIME`MkCbr()
+#endif VICE
+    in
+      if len elif_l = 0
+      then ConcIfThenElse(cond_l, expr1_l, E2I(altn_e)
+#ifdef VICE
+                          ^ TIME`MkBr()
+#endif VICE
+                         )
+      else
+        def mk_AS`ElseifExpr(elif_cond, elif_expr, elif_cid) = hd elif_l;
+          --altn_l = E2I(mk_AS`IfExpr(elif_cond, elif_expr, tl elif_l, altn_e, elif_cid))
+            altn_l = CompileIfExpr(mk_AS`IfExpr(elif_cond, elif_expr, tl elif_l, altn_e, elif_cid))
+#ifdef VICE
+                        ^ TIME`MkCbr()
+#endif VICE,
+        in return ConcIfThenElse(cond_l, expr1_l, altn_l);
+
+functions
+  ConcIfThenElse : STKM`SubProgram * STKM`SubProgram * STKM`SubProgram +> STKM`SubProgram
+  ConcIfThenElse(cond_l, exp1_l, altn_l) ==
+    cases mk_(exp1_l, altn_l):
+      mk_([],-) -> cond_l ^ [mk_INSTRTP`CBR(len altn_l)] ^ altn_l,
+      mk_(-,[]) -> cond_l ^ [mk_INSTRTP`CNBR(len exp1_l)] ^ exp1_l,
+      others    -> cond_l ^ [mk_INSTRTP`CBR(len altn_l + 1)] ^ altn_l ^ [mk_INSTRTP`BR(len exp1_l)] ^ exp1_l
+    end;
+\end{vdm_al}
+
+\section{Cases Expression}
+
+\begin{vdm_al}
+operations
+  CompileCasesExpr : AS`CasesExpr ==> STKM`SubProgram
+  CompileCasesExpr( mk_AS`CasesExpr(sel,altns,others_e,-)) ==
+   (dcl sp: STKM`SubProgram := [];
+    if others_e = nil
+    then sp := [mk_INSTRTP`ERRINST(RTERR`NO_OTHERS_EXPR)]
+    else sp := E2I(others_e)
+#ifdef VICE
+                               ^ TIME`MkBr()
+#endif VICE
+                  ;
+        -- cases check disabled
+        --tsp : STKM`SubProgram := [mk_INSTRTP`SWAP()],
+        --err_sp : STKM`SubProgram := [mk_INSTRTP`ERRINST(RTERR`MULTIPLE_PATTERN)];
+
+    for mk_AS`CaseAltn(match_lp,body_e,-) in reverse altns do
+      --def body_instr = [mk_INSTRTP`SELBLKENV(1), mk_INSTRTP`POP(1)] ^ E2I(body_e) ^ [mk_INSTRTP`POPBLKENV()]
+      def body_instr = [mk_INSTRTP`SELBLKENV(1)] ^ E2I(body_e) ^ [mk_INSTRTP`POPBLKENV(), mk_INSTRTP`REMSTACKELEM(2)]
+#ifdef VICE
+                       ^ TIME`MkCbr()
+#endif VICE
+         ;
+         onep = len match_lp = 1
+      in
+       (dcl lsp : STKM`SubProgram := if onep then sp else [mk_INSTRTP`PUSH(mk_SEM`BOOL(false))];
+        for pat in reverse match_lp do
+          def test_instr = [mk_INSTRTP`COPYVAL()] ^ CPAT`P2I(pat) ^ [mk_INSTRTP`TRYANYMATCH()]
+#ifdef VICE
+                           ^ TIME`MkMatchPattern()
+#endif VICE
+          in
+           (
+#ifdef VICE
+            lsp := lsp ^ TIME`MkBr();
+#endif VICE
+            -- cases check disabled
+            --lsp := ConcIfThenElse(test_instr,
+            --                      ConcIfThenElse([mk_INSTRTP`CASES()], [mk_INSTRTP`SWAP()] ^ tsp, []) ^
+            --                        (if onep then body_instr else [mk_INSTRTP`PUSH(mk_SEM`BOOL(true))]),
+            --                      lsp);
+            --tsp := ConcIfThenElse(test_instr, err_sp, tsp);
+            lsp := ConcIfThenElse(test_instr,
+                                  if onep
+                                  then body_instr
+                                  else [mk_INSTRTP`PUSH(mk_SEM`BOOL(true))],
+                                  lsp);
+           );
+        sp := lsp ^ (if onep then [] else ConcIfThenElse([], body_instr, sp));
+       );
+    return E2I(sel) ^ sp ^ [mk_INSTRTP`REMSTACKELEM(2)];
+   );
+\end{vdm_al}
+
+\section{Unary Expressions}
+
+\begin{vdm_al}
+operations
+  CompileUnaryExpr : AS`PrefixExpr ==> STKM`SubProgram
+  CompileUnaryExpr( mk_AS`PrefixExpr(opr, arg_e,-)) ==
+#ifdef VICE
+    if TIME`IsRuntimePrefixOp(opr)
+    then return E2I(arg_e) ^ TIME`MkRuntimePrefixOp(opr) ^ [mk_INSTRTP`UNOP(opr)]
+    else return E2I(arg_e) ^ [mk_INSTRTP`UNOP(opr)];
+#else
+    return E2I(arg_e) ^ [mk_INSTRTP`UNOP(opr)];
+#endif VICE
+\end{vdm_al}
+
+\section{Binary Expressions}
+
+\begin{vdm_al}
+operations
+  CompileBinaryExpr : AS`BinaryExpr ==> STKM`SubProgram
+  CompileBinaryExpr(mk_AS`BinaryExpr(left_e, opr, right_e, -)) ==
+    cases opr:
+      <AND>,
+      <OR>,
+      <IMPLY>         -> return CompileLogBinaryExpr(left_e, opr, right_e),
+      <EQ>,
+      <NE>,
+      <EQUIV>,
+      <NUMPLUS>,
+      <NUMMINUS>,
+      <NUMMULT>,
+      <NUMDIV>,
+      <NUMREM>,
+      <INTDIV>,
+      <NUMLT>,
+      <NUMLE>,
+      <NUMGT>,
+      <NUMGE>,
+      <NUMMOD>,
+      <INSET>,
+      <NOTINSET>,
+      <SETUNION>,
+      <SETINTERSECT>,
+      <SETMINUS>,
+      <SUBSET>,
+      <PROPERSUBSET>,
+      <SEQCONC>,
+      <MAPMERGE>,
+      <MAPDOMRESTTO>,
+      <MAPDOMRESTBY>,
+      <MAPRNGRESTTO>,
+      <MAPRNGRESTBY>,
+      <COMPOSE>,
+      <NUMEXP>        -> return CompileOrdinaryBinaryExpr(left_e, opr, right_e),
+      others          -> error
+    end;
+\end{vdm_al}
+
+\begin{vdm_al}
+  CompileLogBinaryExpr: AS`Expr * AS`BinaryOp * AS`Expr ==> STKM`SubProgram
+  CompileLogBinaryExpr(left_e, op, right_e) ==
+    def sp_left   = E2I(left_e);
+        def_true  = [mk_INSTRTP`PUSH(mk_SEM`BOOL(true))];
+        def_false = [mk_INSTRTP`PUSH(mk_SEM`BOOL(false))];
+        sp_right  = ConcIfThenElse(E2I(right_e), def_true, def_false)
+    in
+      cases op:
+        <AND>   -> return ConcIfThenElse(sp_left, sp_right, def_false),
+        <OR>    -> return ConcIfThenElse(sp_left, def_true, sp_right),
+        <IMPLY> -> return ConcIfThenElse(sp_left, sp_right, def_true)
+      end;
+\end{vdm_al}
+
+\begin{vdm_al}
+  CompileOrdinaryBinaryExpr:  AS`Expr * AS`BinaryOp * AS`Expr ==> STKM`SubProgram
+  CompileOrdinaryBinaryExpr(left_e, opr, right_e) ==
+    def left_l  = E2I(left_e);
+        right_l = E2I(right_e)
+    in
+#ifdef VICE
+      if TIME`IsRuntimeBinaryOp(opr)
+      then return left_l ^ right_l ^ TIME`MkRuntimeBinaryOp(opr) ^ [mk_INSTRTP`BINOP(opr)]
+      else return left_l ^ right_l ^ [mk_INSTRTP`BINOP(opr)];
+#else
+      return left_l ^ right_l ^ [mk_INSTRTP`BINOP(opr)];
+#endif VICE
+\end{vdm_al}
+
+\section{Token Constructor Expression}
+
+\begin{vdm_al}
+operations
+  CompileTokenConstructorExpr: AS`TokenConstructorExpr ==> STKM`SubProgram
+  CompileTokenConstructorExpr(mk_AS`TokenConstructorExpr(field,-)) ==
+    return E2I(field) ^ [mk_INSTRTP`TOKENVAL()];
+\end{vdm_al}
+
+\section{Tuple Selection Expressions}
+
+\begin{vdm_al}
+  CompileTupleSelectExpr: AS`TupleSelectExpr ==> STKM`SubProgram
+  CompileTupleSelectExpr(mk_AS`TupleSelectExpr(tuple,no,-)) ==
+    return E2I(tuple) ^ [mk_INSTRTP`TUPSEL(no.val)];
+\end{vdm_al}
+
+\section{Type Judgements}
+
+\begin{vdm_al}
+  CompileTypeJudgementExpr: AS`TypeJudgementExpr ==> STKM`SubProgram
+  CompileTypeJudgementExpr(mk_AS`TypeJudgementExpr(expr,type,-)) ==
+    return E2I(expr) ^ [mk_INSTRTP`TYPEJUDGE(type)];
+\end{vdm_al}
+
+\section{Pre-condition Application Expressions}
+
+\begin{vdm_al}
+  CompilePreConditionApplyExpr: AS`PreConditionApplyExpr ==> STKM`SubProgram
+  CompilePreConditionApplyExpr(mk_AS`PreConditionApplyExpr(fct,arg_l,-)) ==
+    def thensp = conc [ E2I(arg_l(i)) | i in set inds arg_l ]
+                 ^ [mk_INSTRTP`PUSHLIST(len arg_l)]
+                 ^ CMPL`SetContext(fct.cid, false) ^ [mk_INSTRTP`APPLY()]
+    in return E2I(fct) ^ ConcIfThenElse([mk_INSTRTP`GETPRE()],
+                                        thensp,
+                                        [mk_INSTRTP`PUSH(mk_SEM`BOOL(true))]);
+\end{vdm_al}
+
+\section{Lambda Expressions}
+
+This operation returns a semantic function value that represents the given
+lambda expression. A closure environment is created to preserve the
+bindings for the free variables in the body of the lambda expression. The
+range type of the function denotes all possible types.
+
+\begin{vdm_al}
+operations
+  CompileLambdaExpr: AS`LambdaExpr ==> STKM`SubProgram
+  CompileLambdaExpr(mk_AS`LambdaExpr(type_l,body,rng_tp,-)) ==
+   (dcl type_l_l : seq of seq of AS`TypeBind := [type_l],
+        body : AS`Expr := body,
+        rngtp : [AS`Type] := rng_tp,
+        pi_l_l : seq of seq of STKM`Pattern := [],
+        lft : AS`Type;
+
+    while is_AS`LambdaExpr(body) do
+      let mk_AS`LambdaExpr(type_l',body',rng_tp',-) = body
+      in
+       (type_l_l := [type_l'] ^ type_l_l;
+        rngtp := rng_tp';
+        body := body');
+
+    if rngtp = nil
+    then lft := mk_AS`AllType(CI`NilContextId)
+    else lft := rngtp;
+
+    for typel in type_l_l do
+     (dcl pat_l : seq of AS`Pattern := [],
+          tp_l : seq of AS`Type := [];
+      for mk_AS`TypeBind(pat,tp,-) in typel do
+       (pat_l := pat_l ^ [ pat ];
+        tp_l := tp_l ^ [ tp ]);
+      pi_l_l := [CPAT`PL2PL(pat_l)] ^ pi_l_l;
+      lft := mk_AS`TotalFnType(tp_l, lft, CI`NilContextId));
+
+    def clmodName = CMPL`GetClMod();
+        body_prog = CMPL`CompileLambdaBody(body);
+        blkenv = mk_SEM`BlkEnv({|->},<READ_ONLY>)
+    in
+      return [mk_INSTRTP`PUSH(SEM`CompFN(mk_SEM`ExplFN(lft, pi_l_l, body_prog, blkenv, { |-> },
+                                                       nil, clmodName,false,nil,<PRIVATE_AS>))),
+              mk_INSTRTP`UPDATECLOSENV(body)]
+   );
+\end{vdm_al}
+
+\section{Polymorphic Function Instantiation}
+
+\begin{vdm_al}
+  CompileFctTypeInstExpr: AS`FctTypeInstExpr ==> STKM`SubProgram
+  CompileFctTypeInstExpr(mk_AS`FctTypeInstExpr(polyfct,inst,-)) ==
+    return [mk_INSTRTP`LOOKUP(polyfct), mk_INSTRTP`POLYINST(inst,CMPL`GetClMod())];
+\end{vdm_al}
+
+\section{Is Expression}
+
+\begin{vdm_al}
+  CompileIsExpr: AS`IsExpr ==>  STKM`SubProgram
+  CompileIsExpr(mk_AS`IsExpr(type,arg,-)) ==
+    return E2I(arg) ^ [mk_INSTRTP`ISCHECK(type)];
+\end{vdm_al}
+
+\section{Narrow Expression}
+
+\begin{vdm_al}
+  CompileNarrowExpr: AS`NarrowExpr ==>  STKM`SubProgram
+  CompileNarrowExpr(mk_AS`NarrowExpr(expr,type,-)) ==
+    return E2I(expr) ^ [mk_INSTRTP`DTC(type)];
+\end{vdm_al}
+
+#ifdef VDMPP
+There is a lot of different ways in which the new-expressions can be
+used and while debugging it is worth to notice that there are a number
+of rules which are followed for the evaluation and the value stack for
+the different cases. These can be summarised as:
+\begin{enumerate}
+\item \texttt{new A()} Without any constructor in A this must leave
+one value on top of the evaluation stack (the reference to this new A
+object).
+\item \texttt{new A(7)} When A has a constructor it must leave exactly
+the same on top of the evaluation stack (note that the constructor
+makes a major difference in the way it gets evaluated).
+\item \texttt{new A().op()} Without constructor this expression must
+leave the result of evaluating the op operation only on top of the
+evaluation stack.
+\item \texttt{new A(7).op()} With a constructor this expression must
+just like above only leave the operation result on top of the
+stack. Note that because of the constructor the expression will be
+evaluated by first creating the instance, then calling the constructor
+and finally calling the operation op.
+\item \texttt{new A(7).op(9)} Same as above. The complications are
+related to when the arguments for the constuctor and the operation are
+taken from the evaluation stack. This is further complicated by the
+presence of overloading.
+\item Note that in all cases above when a new instance of a class is
+being created, all instance variables in all superclasses must also be
+initialised. Each of these can also have constructors. When each of
+these initialisations are completed they must not leave any values on
+the evaluation stack. In this initialisation the statically declared
+instance variables must also be looked up.
+\end{enumerate}
+
+\begin{vdm_al}
+operations
+  CompileNewExpr: AS`NewExpr * [token] ==> STKM`SubProgram
+  CompileNewExpr(mk_AS`NewExpr(nm,exprs,-), dlobject) ==
+    return conc [ E2I(exprs(i)) | i in set inds exprs ] ^
+           [mk_INSTRTP`NEWOBJ(nm, dlobject),
+            mk_INSTRTP`INITCLASS(nm,len exprs),
+            mk_INSTRTP`NEWCOMPL(true)] ^
+           (if exprs <> []
+            then [mk_INSTRTP`POP(1)]
+            else []);
+
+  CompileIsOfClassExpr: AS`IsOfClassExpr ==> STKM`SubProgram
+  CompileIsOfClassExpr(mk_AS`IsOfClassExpr(clnm,arg,-)) ==
+    return E2I(arg) ^ [mk_INSTRTP`ISOFCLASS(clnm)];
+
+  CompileIsOfBaseClassExpr: AS`IsOfBaseClassExpr ==> STKM`SubProgram
+  CompileIsOfBaseClassExpr(mk_AS`IsOfBaseClassExpr(clnm,arg,-)) ==
+     return E2I(arg) ^ [mk_INSTRTP`ISOFBASECLASS(clnm)];
+
+  CompileSameBaseClassExpr: AS`SameBaseClassExpr ==> STKM`SubProgram
+  CompileSameBaseClassExpr(mk_AS`SameBaseClassExpr(expr1,expr2,-)) ==
+    return E2I(expr1) ^ E2I(expr2) ^ [mk_INSTRTP`SAMEBASECLASS()];
+
+  CompileSameClassExpr: AS`SameClassExpr ==> STKM`SubProgram
+  CompileSameClassExpr(mk_AS`SameClassExpr(expr1,expr2,-)) ==
+    return E2I(expr1) ^ E2I(expr2) ^ [mk_INSTRTP`SAMECLASS()];
+
+functions
+  CompileSelfExpr: AS`SelfExpr +> STKM`SubProgram
+  CompileSelfExpr(-) ==
+    [mk_INSTRTP`SELFEXPR()];
+
+  CompileThreadIdExpr: AS`ThreadIdExpr +> STKM`SubProgram
+  CompileThreadIdExpr(mk_AS`ThreadIdExpr(-)) ==
+    [mk_INSTRTP`THREADID()];
+
+operations
+  CompileHistoryExpr: seq of AS`Name * INSTRTP`HistoryKind ==> STKM`SubProgram
+  CompileHistoryExpr(mthds,tp) ==
+   (dcl qualified_names : seq of AS`Name := [];
+    for nm in mthds do
+      let mk_AS`Name(ids, -) = nm
+      in if len ids = 2
+         then qualified_names := qualified_names ^ [nm]
+         else qualified_names := qualified_names ^ [AUX`ConstructDoubleName(CMPL`GetClMod(), nm)];
+
+#ifdef VICE
+    if opnm <> nil
+    then histnms := histnms union elems mthds;
+#endif VICE
+    return [mk_INSTRTP`HISTORY(tp, qualified_names)]
+   );
+#ifdef VICE
+
+  AddDepIds: AS`Name * set of AS`Name ==> ()
+  AddDepIds(nm,ops) ==
+    (opnm := nm;
+     opnms := ops;
+     nms := {};
+     histnms := {});
+
+  StopDepIds: () ==> set of AS`Name * set of AS`Name
+  StopDepIds() ==
+    return mk_(nms,histnms);
+#endif VICE
+\end{vdm_al}
+#endif VDMPP
+
+\begin{vdm_al}
+end CEXPR
+\end{vdm_al}
+
+\vspace{0.5cm}
+
+#ifdef RTINFO
+\begin{rtinfo}
+{rtinfo.ast}[CEXPR]
+\end{rtinfo}
+#endif RTINFO

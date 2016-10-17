@@ -1,0 +1,30 @@
+[ mk_ERR`ErrMsg( 
+     10,
+     17,
+     3,
+     "Error[352] : Invariant pattern is different from type definition",
+     <ERROR> ),
+  mk_ERR`ErrMsg( 
+     10,
+     18,
+     7,
+     "Warning[33] : \"s\" is not used",
+     <WARNING> ),
+  mk_ERR`ErrMsg( 
+     10,
+     18,
+     16,
+     "Warning[33] : \"h\" is not used",
+     <WARNING> ),
+  mk_ERR`ErrMsg( 
+     10,
+     15,
+     12,
+     "Error[15] : Invariant condition must be boolean expression",
+     <ERROR> ),
+  mk_ERR`ErrMsg( 
+     10,
+     15,
+     7,
+     "Warning[33] : \"s\" is not used",
+     <WARNING> ) ]

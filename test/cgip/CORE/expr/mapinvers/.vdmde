@@ -1,0 +1,17 @@
+system date
+r /home/hanne/toolbox/spec/codegen/mod_mod.vdm 
+r /home/hanne/toolbox/spec/codegen/mod_statedef.vdm 
+r /home/hanne/toolbox/spec/codegen/mod_cg.vdm 
+r /home/hanne/toolbox/spec/codegen/mod_patmat.vdm 
+r /home/hanne/toolbox/spec/codegen/mod_cppast.vdm 
+r /home/hanne/toolbox/spec/codegen/mod_fctdef.vdmsl 
+r /home/hanne/toolbox/spec/codegen/mod_expr.vdmsl 
+r /home/hanne/toolbox/spec/codegen/mod_stmt.vdmsl 
+r /home/hanne/toolbox/spec/codegen/mod_typedef.vdmsl 
+r /home/hanne/toolbox/spec/codegen/mod_valdef.vdmsl 
+r /home/hanne/toolbox/spec/codegen/common_as.vdmsl 
+r /home/hanne/toolbox/spec/codegen/mod_bcppast.vdmsl 
+r /home/hanne/toolbox/spec/codegen/mod_vdm_ds.vdmsl 
+r /home/hanne/toolbox/spec/codegen/mod_aux.vdmsl 
+r /home/hanne/toolbox/spec/codegen/rep.vdmsl
+system date

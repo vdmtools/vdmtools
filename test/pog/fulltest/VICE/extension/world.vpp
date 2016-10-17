@@ -1,0 +1,150 @@
+class World
+
+-- In this version of the World class all environment instances will
+-- implicitly be allocated to their own processors and have an
+-- infinitely fast connection of messages to and from the system.
+
+instance variables
+  -- create an MMI class instance
+  static public mmi : MMI := new MMI();
+  -- define the first CPU with fixed priority scheduling and 22E6 MIPS
+  CPU1 : CPU := new CPU (<FP>, 22E6,0);
+
+  -- create an Radio class instance
+  static public radio : Radio := new Radio();
+  -- define the second CPU with fixed priority scheduling and 11E6 MIPS
+  CPU2 : CPU := new CPU (<FP>, 11E6,0);
+
+  -- create an Navigation class instance
+  static public navigation : Navigation := new Navigation();
+  -- define the third CPU with fixed priority scheduling and 113 MIPS
+  CPU3 : CPU := new CPU (<FP>, 113E6,0); 
+
+  -- create a communication bus that links the three CPU's together
+  BUS1 : BUS := new BUS (<CSMACD>, 72E3, 0, <SYSTEM>, {CPU1, CPU2, CPU3})
+
+types
+  public perfdata = nat * nat * real
+
+instance variables
+  static public envTasks : map seq of char to EnvironmentTask := {|->};
+
+operations
+  public World: () ==> World
+  World () ==
+    ( -- deploy mmi on CPU1
+      CPU1.deploy(mmi);
+      CPU1.setPriority("HandleKeyPress",100);
+      CPU1.setPriority("UpdateScreen",90);
+      -- deploy radio on CPU2
+      CPU2.deploy(radio);
+      CPU2.setPriority("AdjustVolume",100);
+      CPU2.setPriority("DecodeTMC",90);
+      -- deploy navigation on CPU3
+      CPU3.deploy(navigation);
+      CPU3.setPriority("DatabaseLookup", 100);
+      CPU3.setPriority("DecodeTMC", 90)
+      -- starting the CPUs and BUS is implicit
+    );
+
+  addEnvironmentTask: seq of char * EnvironmentTask ==> ()
+  addEnvironmentTask (pnm, penv) ==
+    ( envTasks := envTasks munion { pnm |-> penv };
+      penv.Run() );
+
+  public RunScenario1 : () ==> map seq of char to perfdata
+  RunScenario1 () ==
+    ( addEnvironmentTask("VolumeKnob", new VolumeKnob(10));
+      addEnvironmentTask("TransmitTMC", new TransmitTMC(10));
+      return { name |-> envTasks(name).getMinMaxAverage() 
+             | name in set dom envTasks } );
+
+  public RunScenario2 : () ==> map seq of char to perfdata 
+  RunScenario2 () ==
+    ( addEnvironmentTask("InsertAddress", new InsertAddress(10));
+      addEnvironmentTask("TransmitTMC", new TransmitTMC(10));
+      return { name |-> envTasks(name).getMinMaxAverage() 
+             | name in set dom envTasks } );
+
+end World
+class World
+
+-- In this version of the World class the volumeknop and transmitTMC
+-- instances are explicitly allocated to a common processors and have a
+-- connection of messages to and from the system with limited capability.
+
+instance variables
+  -- create an MMI class instance
+  static public mmi : MMI := new MMI();
+  -- define the first CPU with fixed priority scheduling and 22E6 MIPS
+  CPU1 : CPU := new CPU (<FP>, 22E6,0);
+
+  -- create an Radio class instance
+  static public radio : Radio := new Radio();
+  -- define the second CPU with fixed priority scheduling and 11E6 MIPS
+  CPU2 : CPU := new CPU (<FP>, 11E6,0);
+
+  -- create an Navigation class instance
+  static public navigation : Navigation := new Navigation();
+  -- define the third CPU with fixed priority scheduling and 113 MIPS
+  CPU3 : CPU := new CPU (<FP>, 113E6,0); 
+
+  -- define common environment CPU for volumeknop and transmitTMC
+  EnvCPU1 : CPU := new CPU (<FP>, 40E6,0);
+
+  -- create a communication bus that links the three CPU's together
+  BUS1 : BUS := new BUS (<CSMACD>, 72E3, 0, <SYSTEM>, {CPU1, CPU2, CPU3});
+
+  -- Create environment instances
+  static public volumeknob := new VolumeKnob(10);
+  static public transmitTMC := new TransmitTMC(10);
+  -- create a communication bus between the system and the environment
+  BUS2 : BUS := new BUS (<FCFS>, 2E3, 0, <ENVIRONMENT>, {EnvCPU1});
+
+types
+  public perfdata = nat * nat * real
+
+instance variables
+  static public envTasks : map seq of char to EnvironmentTask := {|->};
+
+operations
+
+  public World: () ==> World
+  World () ==
+    ( -- deploy mmi on CPU1
+      CPU1.deploy(mmi);
+      CPU1.setPriority("HandleKeyPress",100);
+      CPU1.setPriority("UpdateScreen",90);
+      -- deploy radio on CPU2
+      CPU2.deploy(radio);
+      CPU2.setPriority("AdjustVolume",100);
+      CPU2.setPriority("DecodeTMC",90);
+      -- deploy navigation on CPU3
+      CPU3.deploy(navigation);
+      CPU3.setPriority("DatabaseLookup", 100);
+      CPU3.setPriority("DecodeTMC", 90)
+      -- starting the CPUs and BUS is implicit
+      EnvCPU1.deploy(volumeknob);
+      EnvCPU1.deploy(transmitTMC);
+    );
+
+  addEnvironmentTask: seq of char * EnvironmentTask ==> ()
+  addEnvironmentTask (pnm, penv) ==
+    ( envTasks := envTasks munion { pnm |-> penv };
+      penv.Run() );
+
+  public RunScenario1 : () ==> map seq of char to perfdata
+  RunScenario1 () ==
+    ( addEnvironmentTask("VolumeKnob", new VolumeKnob(10));
+      addEnvironmentTask("TransmitTMC", new TransmitTMC(10));
+      return { name |-> envTasks(name).getMinMaxAverage() 
+             | name in set dom envTasks } );
+
+  public RunScenario2 : () ==> map seq of char to perfdata 
+  RunScenario2 () ==
+    ( addEnvironmentTask("InsertAddress", new InsertAddress(10));
+      addEnvironmentTask("TransmitTMC", new TransmitTMC(10));
+      return { name |-> envTasks(name).getMinMaxAverage() 
+             | name in set dom envTasks } );
+
+end World

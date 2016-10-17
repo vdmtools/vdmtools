@@ -1,0 +1,31 @@
+class A
+
+values
+  public v : nat = 1
+
+operations
+  public op : nat ==> nat
+  op(n) == is subclass responsibility
+
+functions
+  public f : nat -> nat
+  f(n) == is subclass responsibility
+
+end A
+
+class B is subclass of A
+
+functions
+  public g : nat -> nat
+  g(n) == is subclass responsibility
+
+end B
+
+class C is subclass of A
+
+functions
+  public g : nat -> nat
+  g(n) == n + 1
+
+end C
+

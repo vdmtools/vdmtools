@@ -1,0 +1,19 @@
+types
+
+T1 = nat * bool;
+
+T2 = nat * bool * real
+
+functions
+
+Select: T1 | T2 -> nat
+Select(a) ==
+  a.#1
+
+--PO1
+--(forall a : (T1 | T2) & 
+--   is_(a,(nat * bool * real)) => 1 <= 3)
+
+--PO2
+--(forall a : (T1 | T2) & 
+--   is_(a,(nat * bool)) => 1 <= 2)

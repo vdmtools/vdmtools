@@ -1,0 +1,16 @@
+class UnaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let f = false,
+      - = floor if 6 <> 8
+              then -8.9
+              else f
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

@@ -1,0 +1,25 @@
+module go
+
+imports from TEST all,
+from AS all,
+from CI all,
+from REP all,
+from STKM all,
+from SEM all,
+from GLOBAL all,
+from INSTRTP all,
+from SCHDTP all,
+from PAT all,
+from RTERR all
+
+exports all
+
+definitions
+
+operations
+
+  go : () ==> SEM`VAL
+  go() ==
+    TEST`test(<<ARG>>,<<AST>>,<<DTC>>);
+
+end go

@@ -1,0 +1,9 @@
+# Simple test to check that all of the basic types are recognized
+AddEnv : nat    1;
+AddEnv : nat1   1;
+AddEnv : real   1;
+AddEnv : rat    1;
+AddEnv : bool   1;
+AddEnv : char   1;
+AddEnv : token  1;
+AddEnv : int    1

@@ -1,0 +1,5 @@
+[ true,
+  false,
+  true,
+  false,
+  mk_A`sigma( 1,2 ) ]

@@ -1,0 +1,45 @@
+class Queue4Thread is subclass of Queue
+
+types
+public Thread ::
+	id : nat
+	priority : nat;
+
+public ThreadQueue = seq of Thread;
+	
+instance variables
+tQueue : ThreadQueue;
+
+functions
+static public IsEmpty : ThreadQueue -> bool
+IsEmpty(s) == isEmpty[Thread](s) ;
+
+public Top : ThreadQueue -> [Thread]
+Top(ある待ち行列) == top[Thread](ある待ち行列);
+
+operations
+public Empty : () ==> ()
+Empty() == tQueue := empty[Thread]();
+
+public EnQueue : Thread ==> ()
+EnQueue(ある要素) == 
+	tQueue := enQueue[Thread](ある要素, tQueue);
+
+public DeQueue: () ==> ()
+DeQueue() == 
+	tQueue := deQueue[Thread](tQueue);
+
+public TopAndDeQueue : () ==> [Thread] * ThreadQueue
+TopAndDeQueue() == (
+	def 
+		mk_(t, tail) = topAndDeQueue[Thread](tQueue)
+	in (
+		tQueue := tail;
+		return mk_(t, tail)
+	)
+);
+
+public GetQueue : () ==> ThreadQueue
+GetQueue() == return tQueue;
+
+end Queue4Thread

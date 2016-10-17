@@ -1,0 +1,447 @@
+VDM Examples Repository
+=======================
+
+Below is a list of examples which can be freely obtained. All the
+volunteers which have submitted these examples so far have also made
+the source text available (those who have submitted each of the
+examples given below are mentioned as well). Thus, if you are
+interested in investigating the examples further you can play around
+with the source (they all come as a gzip'ed tar files; if retrieved
+with FTP use ``gunzip -c file.tar.gz | tar -xvf -''; if retrieved with
+Mosaic, Mosaic will automatically gunzip it and you should save it as
+file.tar and un-tar by ``tar -xvf file.tar'') and if you have access
+to the IFAD VDM-SL Toolbox you can actually analyse the source texts
+further. All the postscript versions of the documents have been
+automatically generated from the source texts which have been
+submitted unless the providers have explicitly produced the postscript
+output. Those who have submitted plain ASCII specifications have been
+included in a simple skeleton. Thus, some places the line breaks could
+be improved.
+
+   Specification of an ammunition control system. (Paul Mukherjee)
+   The Source file and a postscript version can be obtained (12 pp). 
+
+   This specification describes the safety requirements involved in adding and
+   removing explosives at an explosives storage site. The specification is based
+   on United Kingdom Ministry of Defence regulations concerning safe storage
+   of explosives, which in turn are based on UN regulations. Details of the
+   specification may be found in: 
+
+   P. Mukherjee and V. Stavridou, "The Formal Specification of Safety
+   Requirements for the Storage of Explosives", technical report DITC 185/91,
+   National Physical Laboratory, 1991. 
+
+   P. Mukherjee and V. Stavridou, "The Formal Specification of Safety
+   Requirements for Storing Explosives", Formal Aspects of Computing,
+   5(4):299-336, 1993. 
+
+   Railway Interlocking Systems. (Kirsten Mark Hansen)
+   The source files and postscript version can be obtained (32pp). 
+
+   This specification presents a VDM model of a real-life railway interlocking
+   system. The safety requirements, which the interlocking system should fulfil
+   are specified using VDM-SL, and are validated by executing the specification
+   using the VDM-SL Toolbox. An interpretation of the safety requirements is
+   proposed, and the interpretation is validated to be acceptable. The model
+   development illustrates how concepts may be captured and validated for a
+   non-trivial system. Further publications may be found in: 
+
+   K.M. Hansen, Formalising Railway Interlocking Systems, Nordic Seminar on
+   Dependable Computing Systems, Department of Computer Science,
+   Technical University of Denmark, August 1994, pp. 83-94. 
+
+   Formal Semantics of Data Flow Diagrams. (Peter Gorm Larsen)
+   The Source file and a postscript version can be obtained (48pp). 
+
+   Data Flow Diagrams are used in Structured Analysis and are based on an
+   abstract model for data flow transformations. This specification is a
+   transformation from an abstract syntax representation of a data flow diagram
+   into an abstract syntax representation of a VDM specification. Details can be
+   found in: 
+
+   P.G. Larsen, Nico Plat, and Hans Toetenel, ``A Formal Semantics of Data
+   Flow Diagrams'', Formal Aspects of Computing, 1994, December. 
+
+   Specification of the Single Transferable Vote (STV) algorithm. (Paul
+   Mukherjee)
+   The Source file and a postscript version can be obtained (15pp). 
+
+   STV is a scheme for performing elections, as advocated by the Electoral
+   Reform Society. This specification formalises the English language
+   requirements and has been tested by animating the specification. Details may
+   be found in: 
+
+   P. Mukherjee and B.A. Wichmann, "STV: A Case Study of the Use of VDM",
+   Technical Report DITC 219/93, National Physical Laboratory, 1993. 
+
+   P. Mukherjee and B.A. Wichmann, "Single Transferable Vote" A Case Study
+   of the Use of VDM-SL", Proc. The Mathematics of Dependable Systems, ed.
+   C.J. Mitchell, Oxford University Press 1994. 
+
+   Specification of the MAA standard. (Graeme Parkin)
+   The Source file and a postscript version can be obtained (9pp). 
+
+   The Message Authenticator Algorithm (MAA) standard is used in the area of
+   data security in banking and the scope of the standard is authentication. More
+   details can be found in: 
+
+   G.I. Parkin and G O'Neill, ``Specification of the MAA standard in VDM'', In
+   S. Prehn and W.J. Toetenel (eds), ``VDM'91: Formal Software Development
+   Methods'', Springer-Verlag, October 1991. 
+
+   The Specification of a Binary Relational Database System (NDB) (Rich
+   Bradford) The Source file and a postscript report including the validation plan
+   of the specification can be obtained (37pp).
+   The Non-programmer database system (NDB) is a nicely engineered binary
+   relational database system invented by Norman Winterbottom of IBM. The
+   formal Specification of NDB was originally undertaken by Anne Walshe,
+   who has subsequently documented the specification and its refinement. 
+
+   NDB has been used as an example problem for modular specification in
+   VDM-SL. However, the version available here is a "flat" specification. The
+   postscript file includes a significant description of the validation of the
+   specification using execution. Test coverage is not used though. 
+
+   Relevant publications are: 
+
+   A. Walshe, "NDB: The Formal Specification and Rigorous Design of a
+   Single-User Database System", in C.B. Jones and R.C. Shaw (eds), "Case
+   Studies in Systematic Software Development", Prentice Hall 1990, ISBN
+   0-13-116088-5 
+
+   J.S. Fitzgerald and C.B. Jones, "Modularizing the Formal Description of a
+   Database System", in D. Bjorner, C.A.R. Hoare and H. Langmaack (eds),
+   VDM '90: VDM and Z - Formal Methods in Software Development,
+   Springer-Verlag, LNCS 428, 1990 
+
+   Denotational Semantics of the programming language NewSpeak. (Paul
+   Mukherjee)
+   The Source file and a postscript version can be obtained (73pp). 
+
+   The programming language NewSpeak is a language designed specifically for
+   use in safety-critical systems. It employs the notion of Orwellian
+   programming - undesirable properties are avoided by restricting the syntax of
+   the programming language. This is a formal semantics for the language in
+   VDM-SL. Details of the language and its semantics: 
+
+   P. Mukherjee, "A Semantics for NewSpeak in VDM-SL". In T. Denvir, M.
+   Naftalin, M. Bertran (eds), "FME '94: Industrial Benefit of Formal Methods",
+   Springer-Verlag, October 1994, to appear. 
+
+   I.F. Currie, "NewSpeak - a reliable programming language". In C. Sennett
+   (ed), "High-Integrity Software", Pitman 1989. 
+
+   Dynamic Semantics of mini-C (Niels K. Kirkegaard)
+   The Source files and a postscript version can be obtained (92pp). Note that the
+   source files here do not include the .sty file used by the IDERS project so
+   some editing of the source text is needed if one wish to pretty-print the
+   document directly. 
+
+   This specification describes the dynamic semantics of a language called
+   mini-C. mini-C is dialect of the C programming language. mini-C is used as
+   textual notation of the Hatley/Pirbhai notation in the Specification and
+   Design Animator of the IDERS project. 
+
+   Further references: 
+
+   Alejandro Alonso, Luciano Baresi, Hanne Christensen, Marko Heikkinen, 
+   ``IDERS: An Integrated Environment for the Development of Hard
+   Real-Time Systems'' EUROMICRO Workshop on Real-Time Systems,
+   Odense, Denmark, June 1995 
+
+   Static Semantics of mini-C (Niels K. Kirkegaard)
+   The Source files and a postscript version can be obtained (103pp). Note that
+   the source files here do not include the .sty file used by the IDERS project so
+   some editing of the source text is needed if one wish to pretty-print the
+   document directly. 
+
+   This specification describes the static semantic of a language called mini-C.
+   mini-C is dialect of the C programming language. mini-C is used as textual
+   notation of the Hatley/Pirbhai notation in the Specification and Design
+   Animator of the IDERS project. 
+
+   Further references: 
+
+   Alejandro Alonso, Luciano Baresi, Hanne Christensen, Marko Heikkinen, 
+   ``IDERS: An Integrated Environment for the Development of Hard
+   Real-Time Systems'' EUROMICRO Workshop on Real-Time Systems,
+   Odense, Denmark, June 1995 
+
+   Looseness Analysis Tool for a VDM-SL Subset. (Peter Gorm Larsen)
+   The Source files and a postscript version can be obtained. 
+
+   The specification language VDM-SL contains a notion of looseness. This is a
+   specification of a looseness analysis tool which given a specification written
+   in a subset of VDM-SL can determine which values a given VDM expression
+   (using the definitions) may evaluate to in the different models for the
+   specification. This illustrates how looseness (underdeterminedness) is
+   combined with recursion in VDM-SL. Here the use of the test coverage
+   facility of the IFAD VDM-SL Toolbox is illustrated. Details may be found
+   in: 
+
+   P.G. Larsen, ``Evaluation of Underdetermined Explicit Definitions''. In T.
+   Denvir, M. Naftalin, M. Bertran (eds), "FME '94: Industrial Benefit of
+   Formal Methods", Springer-Verlag, October 1994, to appear. 
+
+   A crosswords assistant. (Yves Ledru)
+   The Source file and a postscript version can be obtained (10pp). 
+
+   This tutorial example is taken out of a VDM course given to the students of
+   the Diplôme d'Etudes Supérieures Spécialisées en Génie Informatique (5th
+   year) at the Université Joseph Fourier. This example uses the implicit style of
+   specification of VDM-SL and thus may not be executed with the IFAD
+   toolbox. 
+
+   Soccer Referee's book. (Yves Ledru)
+   The Source file and a postscript version can be obtained (15pp). 
+
+   This tutorial example is taken out of a VDM course given to the students of
+   the Diplôme d'Etudes Supérieures Spécialisées en Génie Informatique (5th
+   year) at the Université Joseph Fourier. A first version uses the implicit style
+   of specification of VDM-SL and thus may not be executed with the IFAD
+   toolbox. An explicit version is given as an appendix. 
+
+   The specifications of the operations performed in a bar (Kevin Blackburn).
+   The Source file and a postscript version can be obtained (6pp). 
+
+   This specification was produced during a VDM-SL course presented by Peter
+   Gorm Larsen to ICL Enterprise Engineering. The modelling of bags was one
+   of the exercises the attendees (including the author) was confronted with
+   during the course. This specification is mainly intended for the purpose of
+   illustrating how bags can be used. 
+
+   Modelling of Realms in VDM-SL (Peter Gorm Larsen).
+   The Source files and a postscript version can be obtained (22pp). 
+
+   This document is simply an attempt to model the basic data structures and
+   auxiliary functions necessary to represent realms. A geometric realm defined
+   here is a planner graph over a finite resolution grid. This example have been
+   partly tested and the test coverage information is displayed on the postscript
+   version of the document. The script used for testing is included among the
+   source files. 
+
+   Realms are used to represent geographical data. This document is based on: 
+
+   Realms: A Foundation for Spatial Data Types in Database Systems, Ralf
+   Hartmut Güting and Marcus Schneider, Advances in Spatial Databases -
+   Third International Symposium, SSD'93, Springer-Verlag, June 1993. 
+
+   Map Generalisation, Ngo Quoc Tao, UNU/IIST, Macau, Draft, January, 1996.
+
+   A VDM Specification of the Steam-Boiler Problem (Yves Ledru and
+   Marie-Laure Potet).
+   The Source files and a postscript version as: part 1 part 2 and part 3 can be
+   obtained (60pp altogether). 
+
+   This is a VDM-SL solution to the Steam Boiler Control Specification
+   Problem. The seminar "Methods for Semantics and Specification" was held at
+   Schloss Dagstuhl, Wadern, Germany, on June 5-9, 1995. The seminar took
+   the form of a "competition" between different researchers who had been
+   invited as representatives of their particular methods. This specification is
+   split into a number of modules which are placed in different files. 
+
+   Mapping between EXPRESS representations (Marcel Verhoef)
+   The Source file and postscript version can be obtained (5pp). 
+
+   The (building) industry in Europe currently uses the ISO-STEP standard to
+   define information models with the aim to exchange data about those
+   information models. The ISO-STEP standard contains the EXPRESS
+   modelling language and several programming language bindings and an
+   ASCII neutral format to implement interfaces to those models. Unfortunately,
+   industry has not reached consensus on a particular information model,
+   therefore multiple models exist. This raises the need to migrate instances
+   from one model to another and vice-versa, commonly referred to as the
+   "mapping". The aim of this exercise was to determine the applicability of
+   VDM-SL with respect to these types of problems. For more details on the
+   mapping issue down-loadable copies of two papers resulting from this
+   research is available. The example shows a simple VDM-SL abstract syntax
+   representation of the ISO STEP part 21 physical file format and a
+   transformation process for a particular set of abstract syntax instances. It
+   implements a mapping between the relational model representation (rmrep)
+   into a simple polynomial representation. 
+
+   Specification of an automatic planner. (T.L. McCluskey and Pat Diskin)
+   The Source file and postscript version can be obtained (5pp). 
+
+   The specification is of the input language, and the central operations, of a
+   domain-independent, partial order, constraint posting goal directed planner. It
+   is essentially a model-based version of Chapman's TWEAK (1), and is used
+   as a case study on VDM courses at the Univ. of Huddersfield. It is described
+   fully, and prototyped in Prolog, in (2). 
+
+   (1) Planning for Conjunctive Goals, D.Chapman, AI Journal no 32, 1987. (2)
+   The Construction of Formal Specifications: an Introduction to the
+   Model-Based and Algebraic Approaches, J.Turner and T.L.McCluskey,
+   McGraw-Hill Software Engineering Series, London. ISBN 0-07-707735-0. 
+
+   A combination of Trignometric Functions and I/O with VDM in a small
+   specification for calculating the volume of a cylinder (Brigitte Fröhlich)
+   The Source files and postscript version can be obtained (5pp). 
+
+   This small example is used in the user manual for the dynamic link facility
+   and in the paper describing how this has been developed. 
+
+   A combination of a Tcl/Tk User Interface with VDM (Brigitte Fröhlich)
+   The Source files and postscript version can be obtained (5pp). 
+
+   This small example illustrates how the Dynamic Link facility can be used to
+   combine a VDM-SL specification with a general user interface using
+   TCL/TK. The example here is a small database where one can insert new
+   entries and make enquires about the data. 
+
+   A small Sorting Example (Peter Gorm Larsen)
+   The Source files and postscript version can be obtained (3pp). 
+
+   This small example is used for demonstration purposes in the Users manual to
+   the IFAD VDM-SL Toolbox. This small specification contains a number of
+   different VDM-SL specification for sorting of numeric values. Both implicit
+   and explicit examples are given. It is also illustrated how one can combine
+   code generated by the VDM-SL to C++ code generator with hand coded C++
+   code. 
+
+   VDM-SL Specifications for a Simulation Tool (V. S. Alagar and D.
+   Muthiayen) 
+
+   The Source files and postscript version can be obtained (35pp). 
+
+   The simulator specified in VDM-SL in this example is the main component
+   of an animation tool designed for use in the validation of complex real-time
+   reactive systems described using TROM (Timed Reactive Object Model)
+   formalism. We include two versions of the specifications; Section 2 contains
+   the version in which implicit operations are used, and most of the operations
+   are rewritten as explicit operations in the version contained in Section 3. 
+
+   VDM-SL Specification of a Graph Editor (V. S. Alagar, D. Muthiayen and
+   K. Periyasamy) 
+
+   The The source file and postscript version can be obtained (18pp). 
+
+   The goal of this example is to specify and design a Graph Editor. The editor
+   can be used to create and manipulate several geometric objects. The design can
+   be verified by observing the behavior of the editor while actually drawing and
+   manipulating the objects on the screen. Following sections describe the
+   informal requirements of the editor, a system model for it and its formal
+   specifications in VDM-SL. 
+
+   Modelling Medical Information Systems (Richard Bradford and John
+   Fitzgerald) 
+
+   The postscript version can be obtained (33pp). 
+
+   The Common Basic Specification (CBS) Generic Model is a structured
+   model of activities undertaken by the UK National Health Service. The model
+   is mediated by a mixture of entity-relationship models and informal text. The
+   work described here involves the development of a prototype formal model
+   for part of the CBS. It shows how the constructs in the entity-relationship
+   models might be represented in a VDM-SL specification and raises some of
+   the semantic questions which result from the model's informality. The
+   prototype model was developed and tested using the IFAD VDM-SL Toolbox.
+   A source file will be available shortly.
+
+   Abstract Data Types in VDM-SL (Matthew Suderman and Rick Sutcliffe) 
+
+
+   This is a thesis prepared as partial fulfillment of a BSc by Matt Suderman at
+   Trinity Western University in Canada under the direction of R. Sutcliffe. The
+   source of the actual VDM-SL also available. 
+
+   This work specifies a number of abstract data types (ADT) in VDM-SL. This
+   includes single-linked lists, double-linked lists, queues, stacks and binary
+   trees. In addition this work is initiating a translation from VDM-SL to Modula-2
+   so system addressing and dynamic memerory handing is specified in
+   VDM-SL.
+
+   Specification of the SAFER system (Sten Agerholm and Peter Gorm
+   Larsen) 
+
+
+   The source VDM-SL files and test scripts and a postscript version are
+   available. 
+
+   This specification is a VDM model of the SAFER (Simplified Aid for EVA
+   Rescue) example presented in the second volume of the NASA guidebook
+   on formal methods. Here Appendix C contains a complete listing of the
+   SAFER system using PVS. We have translated this PVS specification rather
+   directly into VDM-SL. 
+
+   In the VDM-SL model we have abstracted away form a number of parts
+   which has been left as uninterpreted functions in the PVS model. This has
+   been done because we have defined the purpose of the model to clarify the
+   functionality of the thruster selection logic and the protocol for the automatic
+   attitude hold functionality. Otherwise we have on purpose varied as little as
+   possible from the given PVS model. In order to visualise this example the
+   dynamic link feature is illustrated as well. 
+
+   More explanation about this work can be found in the paper: 
+
+   Sten Agerholm and Peter Gorm Larsen, Modeling and Validating SAFER in
+   VDM-SL, ed: Michael Holloway, in ``Fourth NASA Langley Formal Methods
+   Workshop", "NASA", September 1997. 
+
+
+   Static and Dynamic Semantics of a Simple Programming Language 
+   (Bernhard K. Aichernig and Andreas Kerschbaumer)
+
+
+   A VDM-SL specification of the static and dynamic semantics of a
+   typed imperative programming language is to be developed. The abstract
+   syntax and an informal description of the semantics of the language
+   is given. 
+
+   Static semantics: The static semantics should define and
+   check the well-formedness of programs in the given language. This 
+   includes static type checking, the complete and unambiguous 
+   definition of all variables inside program blocks, and scoping.
+
+   Dynamic semantics: The dynamic semantics associates a 
+   meaning to a programming language. In this example the dynamic 
+   semantics is a function mapping a program to its final global
+   environment, which is the  state of all global 
+   variables after execution. 
+
+   Abstract Metro Specifications in VDM-SL (Sten Agerholm)
+
+   This example provides three different abstract specifications of a metro
+   door management system in VDM-SL. The purpose of the presentation is
+   to describe alternatives to the Metro specification developed in the
+   SPECTRUM project (Esprit project no.\ 23173) and presented in the
+   Proceedings of FMSP'98, published by ACM SIGSOFT, March
+   1998. Also available at ftp://ftp.ifad.dk/pub/papers/final.ps.gz.
+
+
+   A bibliography Database (Anne Maarsel)
+
+   This example illustrates how one can define a bibliography database 
+   to store records of different types, such as books, articles, etc. 
+   In addition there is operations to manipulate a library of such 
+   bibliographies. Examples of such operations could be storing a new 
+   record, deleting a record, or searching for all records by a certain 
+   author. Note that this example is made by a student so there is a 
+   number of places where the specification could be improved.
+
+   Multiprocessor Shared-Memory Information Exchange (MSMIE) (Savi Maharaj)
+
+   The Multiprocessor Shared-Memory Information Exchange (MSMIE) is a
+   protocol for ``inter-processor communications in distributed,
+   microprocessor-based nuclear safety systems'' which has been used in
+   the embedded software of Westinghouse nucear systems designs.
+   This small note contains three level of abstract descriptions
+   expressed using VDM-SL (and one alternative modelling strategy). 
+
+   More information about the protocol can be found in ``Multiprocessor
+   Shared-Memory Information Exchange'' by L.L.\ Santoline et al. This
+   was published in IEEE Transactions on Nuclear Science, 16(1),
+   1989. More information about the VDM model (and a corresponding PVS
+   model) and the analysis of it can be found in ``Proof in VDM: Case
+   Studies'' edited by J.C.\ Bicarregui. This is published by Springer in
+   the FACIT series with ISBN 3540761861.
+
+Maintained by Peter Gorm Larsen, IFAD, Denmark, email peter@ifad.dk. 
+Further information for possible inclusion is more than welcome. 
+
+Peter Gorm Larsen
+IFAD
+Forskerparken 10
+DK-5230 Odense M
+Denmark
+

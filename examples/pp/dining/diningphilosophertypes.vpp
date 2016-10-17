@@ -1,0 +1,10 @@
+class DiningPhilosopherTypes
+
+   types
+      public Places = map Philosopher to set of Fork;
+      public Order = seq of Philosopher;
+      public Status = <thinking>|<eating>;
+      public Time = real
+
+end DiningPhilosopherTypes
+

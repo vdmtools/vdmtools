@@ -1,0 +1,66 @@
+class JavaUtilObservable is subclass of JavaLangObject
+instance variables
+    private changed: bool := false;
+    private obs: JavaUtilVector;
+
+operations 
+public  JavaUtilObservable : () ==> JavaUtilObservable
+JavaUtilObservable() == 
+( obs := new JavaUtilVector();
+) ;
+
+public  hasChanged : () ==> bool 
+hasChanged() == 
+  return changed;
+
+protected  setChanged : () ==> ()
+setChanged() == 
+  changed := true;
+
+protected  clearChanged : () ==> ()
+clearChanged() == 
+  changed := false;
+
+public  countObservers : () ==> int 
+countObservers() == 
+  return obs.size();
+
+public  JavaUtilObservable : <NIL> ==> JavaUtilObservable
+JavaUtilObservable(-) == 
+isNil := true  ;
+
+public  deleteObservers : () ==> ()
+deleteObservers() == 
+  obs.removeAllElements();
+
+public  notifyObservers : () ==> ()
+notifyObservers() == 
+  notifyObservers(JavaLangObject`NIL);
+
+public  addObserver : JavaUtilObserver ==> ()
+addObserver(o) == 
+(	if not obs.contains(o)
+  then obs.addElement(o);
+);
+
+public  notifyObservers : JavaLangObject ==> ()
+notifyObservers(arg) == 
+( dcl arrLocal: map int to JavaLangObject;
+  if not changed
+  then
+    return;
+  
+  arrLocal := obs.toArray();
+  clearChanged();
+
+  for i = (card dom arrLocal)-1 to 0 by -1
+  do def o: JavaUtilObserver = arrLocal(i) in o.update(self, arg)
+);
+
+public  deleteObserver : JavaUtilObserver ==> ()
+deleteObserver(o) == 
+( let - = obs.removeElement(o) in skip;
+);
+
+
+end  JavaUtilObservable

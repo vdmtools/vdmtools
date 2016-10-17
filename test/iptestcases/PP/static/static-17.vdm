@@ -1,0 +1,48 @@
+class Nullable
+instance variables
+-- 1) !!! Endless loop  public static NULL: Nullable:=new Nullable();
+  protected isNil: bool :=false
+operations
+  public Nullable: <XX> ==> Nullable
+  Nullable(-) == isNil:=true;
+
+  public IsNil: () ==> bool
+  IsNil() == return isNil
+end Nullable
+
+class Object is subclass of Nullable
+instance variables
+  public static NULL: Nullable:=new Nullable(<XX>) 
+operations
+  public Object: <NULL> ==> Object
+  Object(p) == let - = Nullable(<XX>) in skip;
+end Object
+
+class PP is subclass of Object
+operations
+  public PP: <NULL> ==> PP
+  PP(p) == isNil := true;
+end PP
+
+class RR is subclass of Object
+operations
+  public RR: <NULL> ==> RR
+  RR(r) == isNil := true;
+end RR
+
+class A is subclass of Object
+operations
+  public  op : PP  ==> bool
+  op(p) == return if p.IsNil() then false else true;
+
+ public  op : RR ==> bool
+ op(r) == return false;
+
+public  Test : () ==> seq of bool
+Test() == 
+( return
+    [ op(new PP()), 
+      op(new RR())];
+);
+
+end  A

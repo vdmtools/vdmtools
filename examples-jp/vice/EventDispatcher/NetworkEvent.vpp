@@ -1,0 +1,9 @@
+\begin{vdm_al}
+class 『ネットワーク事象』 is subclass of 『事象』
+
+operations
+  public 『ネットワーク事象』: 「事象ID」 ==> 『ネットワーク事象』
+  『ネットワーク事象』 (a事象ID) == 『事象』(a事象ID)
+
+end 『ネットワーク事象』
+\end{vdm_al}

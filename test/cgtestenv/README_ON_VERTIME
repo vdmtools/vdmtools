@@ -1,0 +1,23 @@
+VERTIME :
+This tool works in cooperation with the dynamic semantics and Code Generator 
+test environment. It takes two files as arguments. These files are produced
+by the environment. The file produced is called resume.txt and contains some
+informations about time. To use this files with the vertime command you first
+have to use twice the test environment two create the two different files for
+the two different versions.
+
+To create the file resume.txt you have to add lines in the test-scripts of
+the code generator test environment (sorry but it was an personal use). First
+use the time command over the call for the interpretation of the testcase to 
+assess the time spent. A redirection of that time will be made in a file referenced
+by the $TIME constant. The following lines then will have to be used :
+###                echo $TESTDIR/$TESTCASE `egrep "[0-9]+.[0-9]+ real[ ]+[0-9]+.[0-9]+ user[ ]+[0-9]+.[0-9]+ sys" $TIME | awk '{print $1 " : " $3 " : " $5}'` >> resume.txt
+
+(### has to be removed)
+
+It must be precised that of course the two files provided to the command have to reference the 
+same test-cases, otherwise for some obvious reasons, the comparisons wouldn't be correct. 
+
+Once the ouput is produced you just have to run once latex2e on result.tex.
+
+Sorry for that ugly user interface...

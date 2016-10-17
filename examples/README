@@ -1,0 +1,7 @@
+This is the examples directory for the VDM distribution. 
+
+sort/:	This is the sort example described in the user manual with 
+        Makefiles, testscripts and hand written code. 
+
+The other directories contains the fully specifications from some of the 
+examples from the language manual.

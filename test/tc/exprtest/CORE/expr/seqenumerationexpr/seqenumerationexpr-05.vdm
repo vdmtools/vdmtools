@@ -1,0 +1,18 @@
+class SeqEnumerationExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let A = "ABC",
+      - = let a:seq of nat =
+         [ cases false:
+             true -> A,
+             others -> {9,8}
+           end ] in a 
+  in skip;
+
+------------------------------------------------------------------------------
+end SeqEnumerationExprTest

@@ -1,0 +1,12 @@
+"class A
+
+operations
+
+public Test : () ==> nat  
+Test () ==
+ if 1 = 1 
+  then if 1 <> 1 then return 0
+  else if 1 <> 1 then return 1;
+   
+end A
+"

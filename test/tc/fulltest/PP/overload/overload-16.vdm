@@ -1,0 +1,23 @@
+-- This test case checks that non-identical return types in overloaded 
+-- operations are detected
+
+class A
+
+operations
+
+op2 : bool ==> bool
+op2(b) ==
+  return b;
+
+op2 : nat ==> bool
+op2(b) ==
+  return b=1;
+
+ATest3 : () ==> bool
+ATest3() ==
+  let v = true
+  in
+     return op2(v);
+
+end A
+

@@ -1,0 +1,75 @@
+\begin{vdm_al}
+class 『抽象タスク』 is subclass of 『事象共通定義』, Queue
+
+instance variables
+  --履歴を見やすいようにタスク名を保持する。
+  private
+  自タスク名 : 「タスク名」 := [];
+
+ --本タスクで処理する通常事象の待ち行列
+  private
+  ネットワーク事象列 : seq of 『ネットワーク事象』 := empty[『ネットワーク事象』]();
+  --本タスクで処理する、優先順位の高い事象の待ち行列
+  private
+  割込事象列 : seq of 『割込事象』 := empty[『割込事象』]();
+
+  --出力メッセージのための処理者（dispatcher）へのリンク
+  private
+  事象処理者 : 『事象処理者』
+
+operations
+  public 『抽象タスク』: 「タスク名」 * 『事象処理者』 ==> 『抽象タスク』
+  『抽象タスク』 (aタスク名, a事象処理者) == ( 自タスク名 := aタスク名; 事象処理者 := a事象処理者; );
+
+  public タスク名を得る: () ==> 「タスク名」
+  タスク名を得る () == return 自タスク名;
+
+  --『事象処理者』が、本タスクの適当な事象列に挿入するための操作
+  public 事象を設定する: 『事象』 ==> ()
+  事象を設定する (a事象) == 
+    if isofclass(『ネットワーク事象』,a事象)
+    then ネットワーク事象列 := enQueue[『ネットワーク事象』](ネットワーク事象列, a事象)
+    else 割込事象列 := enQueue[『割込事象』](割込事象列, a事象);
+
+  -- getEvent事象を得る is called by the event loop of this AbstractTask『抽象タスク』 instance to process
+  -- incoming eventsネットワーク事象列 when they are available. note that getEvent事象を得る is blocked by a
+  -- permission predicate (see sync) when no eventsネットワーク事象列 are available and also
+  -- note that getEvent事象を得る gives interrupts割込事象列 priority over other eventsネットワーク事象列
+  protected 事象を得る: () ==> 『事象』
+  事象を得る () ==
+    cases true :
+      (not isEmpty[『割込事象』](割込事象列)) ->
+        ( dcl 事象: 『事象』 := top[『割込事象』](割込事象列);
+           割込事象列 := deQueue[『割込事象』](割込事象列);
+           return 事象 ),
+      (not isEmpty[『ネットワーク事象』](ネットワーク事象列)) ->
+        ( dcl 事象: 『事象』 := top[『ネットワーク事象』](ネットワーク事象列);
+           ネットワーク事象列 := deQueue[『ネットワーク事象』](ネットワーク事象列);
+           return 事象 ),
+      others -> error
+    end;
+
+  -- handleEvent事象を処理する shall be overloaded by the derived classes to implement
+  -- the actual event loop handling. a typical event loop handler would be
+  -- thread while (true) do handleEvent事象を処理する(getEvent事象を得る())
+  protected 事象を処理する: 『事象』 ==> ()
+  事象を処理する (-) == is subclass responsibility;
+
+  -- sendMessageネットワークに送る is used to send a message to another task
+  -- typically used for inter process communication
+  protected ネットワークに送る: 「タスク名」 * 「事象ID」 ==> ()
+  ネットワークに送る (a先タスク名, a事象ID) == 事象処理者.ネットワークに送信する(自タスク名, a先タスク名, a事象ID);
+
+  -- raiseInterrupt割込を起こす is used to send a high-priority message
+  -- typically used to communicate from environment to the system or vice versa
+  protected 割込を起こす: 「タスク名」 * 「事象ID」 ==> ()
+  割込を起こす (a先タスク名, a事象ID) == 事象処理者.割込を送信する(自タスク名, a先タスク名, a事象ID)
+
+sync
+  -- setEvent事象を設定する and getEvent事象を得る are mutually exclusive
+  mutex (事象を設定する, 事象を得る);
+  -- getEvent事象を得る is blocked until at least one message is available
+  per 事象を得る => not isEmpty[『ネットワーク事象』](ネットワーク事象列) or not isEmpty[『割込事象』](割込事象列)
+
+end 『抽象タスク』
+\end{vdm_al}

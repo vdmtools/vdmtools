@@ -1,0 +1,92 @@
+class Illustration is subclass of Object
+operations 
+protected  finalize : () ==> <VOID>
+finalize() == 
+( if  cgmDataInputStream <> nil  
+  then  
+    ( let - = cgmDataInputStream.close()
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+public  getCGMStream : () ==> [InputStream]
+getCGMStream() == 
+( dcl   cgmFile : [String] := getCGMFilename();
+  if  cgmFile <> nil   and  (card  dom  cgmFile)() > 0
+  then  
+    ( cgmDataInputStream := Database`getDatabase().getCGMData(cgmFile)
+    ) 
+  else  
+    ( cgmDataInputStream := Database`getDatabase().getCGMData(getIllustrationId())
+    ) ;
+  return  cgmDataInputStream
+) ;
+
+public  getGraphicId : () ==> [String]
+getGraphicId() == 
+( return  graphicId
+) ;
+
+public  getCGMFilename : () ==> [String]
+getCGMFilename() == 
+( return  cgmFilename
+) ;
+
+public  getOrientation : () ==> int 
+getOrientation() == 
+( return  orientation
+) ;
+
+public  getSheetNumber : () ==> [String]
+getSheetNumber() == 
+( return  sheetNumber
+) ;
+
+public  getFigureNumber : () ==> [String]
+getFigureNumber() == 
+( return  figureNumber
+) ;
+
+public  getIllustrationId : () ==> int 
+getIllustrationId() == 
+( return  illustrationId
+) ;
+
+public  getRevisionNumber : () ==> [String]
+getRevisionNumber() == 
+( return  revisionNumber
+) ;
+
+public  getEffectivePreconditionIds : () ==> [Set]
+getEffectivePreconditionIds() == 
+( return  mediator.getEffectivePreconditionIds(self  )
+) ;
+
+public  Illustration : int  * [String] * [String] * [String] * [String] * [String] * int  ==> Illustration
+Illustration(illustrationId, graphicId, figureNumber, sheetNumber, revisionNumber, cgmFilename, orientation) == 
+( Illustration`illustrationId := illustrationId;
+  Illustration`graphicId := graphicId;
+  Illustration`figureNumber := figureNumber;
+  Illustration`sheetNumber := sheetNumber;
+  Illustration`revisionNumber := revisionNumber;
+  Illustration`cgmFilename := cgmFilename;
+  Illustration`orientation := orientation;
+  Illustration`mediator := WiringDataMediator.getMediator()
+) ;
+
+instance variables 
+  private  illustrationId : int ;
+  private  graphicId : [String];
+  private  figureNumber : [String];
+  private  sheetNumber : [String];
+  private  revisionNumber : [String];
+  private  cgmFilename : [String];
+  private  orientation : int ;
+  private  cgmDataInputStream : [InputStream] := nil  ;
+  private  mediator : [WiringDataMediator];
+  public  static PORTRAIT : int  := 0;
+  public  static LANDSCAPE : int  := 1
+  
+end  Illustration

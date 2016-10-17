@@ -1,0 +1,106 @@
+\subsection{FJapaneseCalendar}
+日本の暦に関わる関数を定義する。
+
+\begin{vdm_al}
+--"$Id"
+class FJapaneseCalendar is subclass of FCalendar
+
+values
+public DiffBetweenGMTandJST = 9;
+public DiffBetweenSeirekiAndHoureki = 1988;
+
+functions
+\end{vdm_al}
+
+GetHolidaysは、指定した年yyyy（2000年以降）の日本の休日の集合を返す。
+\begin{vdm_al}
+static public GetHolidays: int -> set of Date	
+GetHolidays(yyyy) ==
+	let	Seijin = GetNthDayOfWeekOfMonth(<Mon>)(2)(1)(yyyy),	
+		Umi = 
+			if yyyy >= 2003 then GetNthDayOfWeekOfMonth(<Mon>)(3)(7)(yyyy) 
+			else DateFromInt(yyyy)(7)(20),
+		Keirou = 
+			if yyyy >= 2003 then GetNthDayOfWeekOfMonth(<Mon>)(3)(9)(yyyy) 
+			else DateFromInt(yyyy)(9)(15),
+		Taiiku = GetNthDayOfWeekOfMonth(<Mon>)(2)(10)(yyyy) ,
+		NationalHoliday =  {
+			DateFromInt(yyyy)(1)(1), 
+			Seijin,
+			DateFromInt(yyyy)(2)(11),
+			GetVernalEquinoxInJST(yyyy), 
+			DateFromInt(yyyy)(4)(29),
+			DateFromInt(yyyy)(5)(3),
+			DateFromInt(yyyy)(5)(4), 	--formally this date is not national holiday
+			DateFromInt(yyyy)(5)(5),
+			Umi,
+			Keirou,
+			GetAutumnalEquinoxInJST(yyyy),
+			Taiiku,
+			DateFromInt(yyyy)(11)(3),
+			DateFromInt(yyyy)(11)(23),
+			DateFromInt(yyyy)(12)(23)
+		},
+		holidayInLieu = {d + 1 | d in set NationalHoliday & IsSunday(d)}	
+	in
+	NationalHoliday union holidayInLieu;
+\end{vdm_al}
+
+GetDateInJSTは、日本標準時基準の日付を得る。
+\begin{vdm_al}
+static public GetDateInJST : Date -> Date
+GetDateInJST(d) == GetDateInST(DiffBetweenGMTandJST)(d);
+\end{vdm_al}
+
+\begin{vdm_al}
+static private AsStringAux: int -> seq of char
+AsStringAux(i) == 
+	let	str = FInteger`AsString	in
+	if i >= 10 then str(i) else " " ^ str(i);
+\end{vdm_al}
+	
+GetJapaneseYearAsStringは、平成以後の和暦日付文字列を得る
+\begin{vdm_al}
+static public GetJapaneseYearAsString : Date -> seq of char
+GetJapaneseYearAsString(d) == 
+	let	asString =FInteger`AsString,
+		JapaneseYear = Year(d) - DiffBetweenSeirekiAndHoureki,
+		m = Month(d),
+		aDate = Day(d),
+		YY = asString(JapaneseYear),
+		MM = AsStringAux(m),
+		DD = AsStringAux(aDate)	
+	in
+	YY ^ MM ^ DD;
+\end{vdm_al}
+
+GetVernalEquinoxInJSTは、yyyy年の日本標準時の春分を得る。
+\begin{vdm_al}
+static public GetVernalEquinoxInJST : int -> Date
+GetVernalEquinoxInJST(yyyy) ==GetDateInJST(GetVernalEquinoxInGMT(yyyy)) ;
+\end{vdm_al}
+
+GetSummerSolsticeInJSTは、yyyy年の日本標準時の夏至を得る。
+\begin{vdm_al}
+static public GetSummerSolsticeInJST : int -> Date
+GetSummerSolsticeInJST(yyyy) ==GetDateInJST(GetSummerSolsticeInGMT(yyyy)) ;
+\end{vdm_al}
+
+GetAutumnalEquinoxInJSTは、yyyy年の日本標準時の秋分を得る。
+\begin{vdm_al}
+static public GetAutumnalEquinoxInJST : int -> Date
+GetAutumnalEquinoxInJST(yyyy) ==GetDateInJST(GetAutumnalEquinoxInGMT(yyyy)) ;
+\end{vdm_al}
+
+GetWinterSolsticeInJSTは、yyyy年の日本標準時の冬至を得る。
+\begin{vdm_al}
+static public GetWinterSolsticeInJST : int -> Date
+GetWinterSolsticeInJST(yyyy) ==GetDateInJST(GetWinterSolsticeInGMT(yyyy)) ;
+
+end FJapaneseCalendar
+\end{vdm_al}
+
+
+\begin{rtinfo}
+[FJapaneseCalendar]{vdm.tc}[FJapaneseCalendar]
+\end{rtinfo}

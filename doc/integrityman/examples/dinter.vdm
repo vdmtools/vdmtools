@@ -1,0 +1,8 @@
+functions
+
+DInter: set of set of nat -> set of nat
+DInter(ss) ==
+  dinter ss
+
+--PO
+--(forall ss : set of set of nat & ss <> {})

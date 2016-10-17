@@ -1,0 +1,217 @@
+
+\section{Traversing types}
+
+\begin{vdm_al}
+module PP_TRA_TYPE
+
+imports
+
+  from PP_TAR_TYPE all,
+
+  from AS all,
+  from CI all,
+  from REP all
+
+exports
+  functions
+    trv_Type : AS`Type -> PP_TAR_TYPE`Type;
+    trv_BooleanType: AS`BooleanType -> PP_TAR_TYPE`BooleanType;
+    trv_NumericType: AS`NumericType -> PP_TAR_TYPE`NumericType;
+    trv_TokenType: AS`TokenType -> PP_TAR_TYPE`TokenType;
+    trv_CharType: AS`CharType -> PP_TAR_TYPE`CharType;
+    trv_FnType: AS`FnType -> PP_TAR_TYPE`FnType;
+    trv_TypeVar: AS`TypeVar -> PP_TAR_TYPE`TypeVar;
+    trv_Ids: AS`Ids -> PP_TAR_TYPE`Ids;
+definitions
+
+\end{vdm_al}
+
+\begin{vdm_al}
+functions
+
+  trv_Type : AS`Type -> PP_TAR_TYPE`Type
+  trv_Type (tp) ==
+    cases tp:
+      mk_AS`BooleanType(-)          -> trv_BooleanType(tp),
+      mk_AS`NumericType(-,-)        -> trv_NumericType(tp),
+      mk_AS`TokenType(-)            -> trv_TokenType(tp),
+      mk_AS`CharType(-)             -> trv_CharType(tp),
+      mk_AS`VoidType(-)             -> trv_VoidType(tp),
+      mk_AS`QuoteType(-,-)          -> trv_QuoteType(tp),
+      mk_AS`ProductType(-,-)        -> trv_ProductType(tp),
+      mk_AS`UnionType(-,-)          -> trv_UnionType(tp),
+      mk_AS`CompositeType(-,-,-)    -> trv_CompositeType(tp),
+      mk_AS`OptionalType(-,-)       -> trv_OptionalType(tp),
+      mk_AS`Seq0Type(-,-)           -> trv_Seq0Type(tp),
+      mk_AS`Seq1Type(-,-)           -> trv_Seq1Type(tp),
+      mk_AS`BracketedType(-,-)      -> trv_BracketedType(tp),
+      mk_AS`Set0Type(-,-)           -> trv_Set0Type(tp),
+      mk_AS`Set1Type(-,-)           -> trv_Set1Type(tp),
+      mk_AS`GeneralMap0Type(-,-,-)   -> trv_GeneralMap0Type(tp),
+      mk_AS`GeneralMap1Type(-,-,-)   -> trv_GeneralMap1Type(tp),
+      mk_AS`InjectiveMap0Type(-,-,-) -> trv_InjectiveMap0Type(tp),
+      mk_AS`InjectiveMap1Type(-,-,-) -> trv_InjectiveMap1Type(tp),
+      mk_AS`PartialFnType(-,-,-)    -> trv_PartialFnType(tp),
+      mk_AS`TotalFnType(-,-,-)      -> trv_TotalFnType(tp),
+      mk_AS`OpType(-,-,-)           -> trv_OpType(tp),
+      mk_AS`TypeName(-,-)           -> trv_TypeName(tp),
+      mk_AS`TypeVar(-,-)            -> trv_TypeVar(tp),
+      others -> undefined
+    end;
+
+  trv_BooleanType: AS`BooleanType -> PP_TAR_TYPE`BooleanType
+  trv_BooleanType(mk_AS`BooleanType(cid)) ==
+    PP_TAR_TYPE`tar_BooleanType(cid);
+
+  trv_NumericType: AS`NumericType -> PP_TAR_TYPE`NumericType
+  trv_NumericType(mk_AS`NumericType(btp,cid)) ==
+    cases btp:
+      <NATONE>  -> PP_TAR_TYPE`tar_NatOneType(cid),
+      <NAT>     -> PP_TAR_TYPE`tar_NatType(cid),
+      <INTEGER> -> PP_TAR_TYPE`tar_IntegerType(cid),
+      <RAT>     -> PP_TAR_TYPE`tar_RatType(cid),
+      <REAL>    -> PP_TAR_TYPE`tar_RealType(cid),
+      others    -> undefined
+    end;
+
+  trv_TokenType: AS`TokenType -> PP_TAR_TYPE`TokenType
+  trv_TokenType(mk_AS`TokenType(cid)) ==
+    PP_TAR_TYPE`tar_TokenType(cid);
+
+  trv_CharType: AS`CharType -> PP_TAR_TYPE`CharType
+  trv_CharType(mk_AS`CharType(cid)) ==
+    PP_TAR_TYPE`tar_CharType(cid);
+
+  trv_VoidType: AS`VoidType -> PP_TAR_TYPE`VoidType
+  trv_VoidType(mk_AS`VoidType(cid)) ==
+    PP_TAR_TYPE`tar_VoidType(cid);
+
+  trv_QuoteType: AS`QuoteType -> PP_TAR_TYPE`QuoteType
+  trv_QuoteType(mk_AS`QuoteType(lit,cid)) ==
+    PP_TAR_TYPE`tar_QuoteType(lit,cid);
+
+  trv_ProductType: AS`ProductType -> PP_TAR_TYPE`ProductType
+  trv_ProductType(mk_AS`ProductType(stp,cid)) ==
+    PP_TAR_TYPE`tar_ProductType ([trv_Type(stp(i)) | i in set inds stp],cid);
+
+  trv_UnionType: AS`UnionType -> PP_TAR_TYPE`UnionType
+  trv_UnionType(mk_AS`UnionType(stp,cid)) ==
+    PP_TAR_TYPE`tar_UnionType ([trv_Type(stp(i)) | i in set inds stp],cid);
+
+  trv_CompositeType: AS`CompositeType -> PP_TAR_TYPE`CompositeType
+  trv_CompositeType(mk_AS`CompositeType(tag,fields,cid)) ==
+    PP_TAR_TYPE`tar_CompositeType(trv_Name(tag),
+                                  [trv_Field(fields(i)) | i in set inds fields],
+                                  cid)
+  pre forall i in set inds fields & fields(i).sel <> nil;
+  -- No anonymous fields
+
+  trv_OptionalType: AS`OptionalType -> PP_TAR_TYPE`OptionalType
+  trv_OptionalType(mk_AS`OptionalType(tp,cid)) ==
+    PP_TAR_TYPE`tar_OptionalType(trv_Type(tp),cid);
+
+--  trv_SeqType: AS`SeqType -> PP_TAR_TYPE`SeqType
+--  trv_SeqType(tp) ==
+--    cases tp:
+--      mk_AS`Seq0Type(-,-) -> trv_Seq0Type(tp),
+--      mk_AS`Seq1Type(-,-) -> trv_Seq1Type(tp)
+--    end;
+
+  trv_Seq0Type: AS`Seq0Type -> PP_TAR_TYPE`Seq0Type
+  trv_Seq0Type(mk_AS`Seq0Type(elemtp,cid)) ==
+    PP_TAR_TYPE`tar_Seq0Type(trv_Type(elemtp),cid);
+
+  trv_Seq1Type: AS`Seq1Type -> PP_TAR_TYPE`Seq1Type
+  trv_Seq1Type(mk_AS`Seq1Type(elemtp,cid)) ==
+    PP_TAR_TYPE`tar_Seq1Type(trv_Type(elemtp),cid);
+
+  trv_BracketedType: AS`BracketedType -> PP_TAR_TYPE`BracketedType
+  trv_BracketedType(mk_AS`BracketedType(tp,cid)) ==
+    PP_TAR_TYPE`tar_BracketedType(trv_Type(tp),cid);
+
+  trv_Set0Type: AS`Set0Type -> PP_TAR_TYPE`Set0Type
+  trv_Set0Type(mk_AS`Set0Type(elemtp,cid)) ==
+    PP_TAR_TYPE`tar_Set0Type(trv_Type(elemtp),cid);
+
+  trv_Set1Type: AS`Set1Type -> PP_TAR_TYPE`Set1Type
+  trv_Set1Type(mk_AS`Set1Type(elemtp,cid)) ==
+    PP_TAR_TYPE`tar_Set1Type(trv_Type(elemtp),cid);
+
+--  trv_MapType: AS`MapType -> PP_TAR_TYPE`MapType
+--  trv_MapType(tp) ==
+--    cases tp:
+--      mk_AS`GeneralMapType  (-,-,-) -> trv_GeneralMapType(tp),
+--      mk_AS`InjectiveMapType(-,-,-) -> trv_InjectiveMapType(tp)
+--    end;
+
+  trv_GeneralMap0Type: AS`GeneralMap0Type -> PP_TAR_TYPE`GeneralMap0Type
+  trv_GeneralMap0Type(mk_AS`GeneralMap0Type(mapdom,maprng,cid)) ==
+    PP_TAR_TYPE`tar_GeneralMap0Type (trv_Type(mapdom),trv_Type(maprng),cid);
+
+  trv_GeneralMap1Type: AS`GeneralMap1Type -> PP_TAR_TYPE`GeneralMap1Type
+  trv_GeneralMap1Type(mk_AS`GeneralMap1Type(mapdom,maprng,cid)) ==
+    PP_TAR_TYPE`tar_GeneralMap1Type (trv_Type(mapdom),trv_Type(maprng),cid);
+
+  trv_InjectiveMap0Type: AS`InjectiveMap0Type -> PP_TAR_TYPE`InjectiveMap0Type
+  trv_InjectiveMap0Type(mk_AS`InjectiveMap0Type(mapdom,maprng,cid)) ==
+    PP_TAR_TYPE`tar_InjectiveMap0Type (trv_Type(mapdom),trv_Type(maprng),cid);
+
+  trv_InjectiveMap1Type: AS`InjectiveMap1Type -> PP_TAR_TYPE`InjectiveMap1Type
+  trv_InjectiveMap1Type(mk_AS`InjectiveMap1Type(mapdom,maprng,cid)) ==
+    PP_TAR_TYPE`tar_InjectiveMap1Type (trv_Type(mapdom),trv_Type(maprng),cid);
+
+  trv_FnType: AS`FnType -> PP_TAR_TYPE`FnType
+  trv_FnType(fntype) ==
+    cases fntype:
+      mk_AS`PartialFnType(-,-,-) -> trv_PartialFnType(fntype),
+      mk_AS`TotalFnType(-,-,-)   -> trv_TotalFnType(fntype)
+    end;
+
+  trv_PartialFnType: AS`PartialFnType -> PP_TAR_TYPE`PartialFnType
+  trv_PartialFnType(mk_AS`PartialFnType(fndom,fnrng,cid)) ==
+    PP_TAR_TYPE`tar_PartialFnType(trv_DiscretionaryType(fndom), trv_Type(fnrng), cid);
+
+  trv_TotalFnType: AS`TotalFnType -> PP_TAR_TYPE`TotalFnType
+  trv_TotalFnType(mk_AS`TotalFnType(fndom,fnrng,cid)) ==
+    PP_TAR_TYPE`tar_TotalFnType(trv_DiscretionaryType(fndom), trv_Type(fnrng), cid);
+
+  trv_OpType: AS`OpType -> PP_TAR_TYPE`OpType
+  trv_OpType(mk_AS`OpType(opdom,oprng,cid)) ==
+    PP_TAR_TYPE`tar_OpType(trv_DiscretionaryType(opdom), trv_Type(oprng), cid);
+
+  trv_DiscretionaryType : AS`DiscretionaryType -> PP_TAR_TYPE`DiscretionaryType
+  trv_DiscretionaryType(tps) ==
+    [trv_Type(tps(i)) | i in set inds tps];
+
+  trv_TypeVar: AS`TypeVar -> PP_TAR_TYPE`TypeVar
+  trv_TypeVar(mk_AS`TypeVar(name,cid)) ==
+    PP_TAR_TYPE`tar_TypeVar(trv_Name(name),cid);
+
+  trv_TypeName: AS`TypeName -> PP_TAR_TYPE`TypeName
+  trv_TypeName(mk_AS`TypeName(name,cid)) ==
+    PP_TAR_TYPE`tar_TypeName(trv_Name(name),cid);
+
+  trv_Name: AS`Name -> PP_TAR_TYPE`Name
+  trv_Name(mk_AS`Name(ids,cid)) ==
+    PP_TAR_TYPE`tar_Name(trv_Ids(ids),cid);
+
+  trv_Ids: AS`Ids -> PP_TAR_TYPE`Ids
+  trv_Ids(ids) ==
+    PP_TAR_TYPE`tar_Ids(ids);
+
+  trv_Field: AS`Field  -> PP_TAR_TYPE`Field
+  trv_Field(mk_AS`Field(sel,tp,dc,cid)) ==
+    PP_TAR_TYPE`tar_Field(if sel = nil then nil else trv_Name(sel),
+                          trv_Type(tp),
+                          dc,
+                          cid);
+
+end PP_TRA_TYPE
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[PP\_TRA\_TYPE`trv_DiscretionaryType]
+{rtinfo.ast}[PP_TRA_TYPE]
+\end{rtinfo}
+

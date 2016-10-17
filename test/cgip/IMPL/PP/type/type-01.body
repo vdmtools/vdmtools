@@ -1,0 +1,35 @@
+operations
+
+  m1: T1 ==> T10
+  m1(a) ==
+    return { i | i in set {1,2,3,4,5,6,7,8,9,10} & i <= a };
+
+  m2: T2 * T2 ==> T13
+  m2(a,b) ==
+  ( dcl s: [T1] | ( set of nat ),
+        res: T13;
+    s := self.m1(a);
+    res := [ s ];
+    s := self.m1(b);
+    res := res ^ [ s ];
+    return res );
+
+
+  m3: T7 * T21 ==> seq of ( T10 | char )
+  m3(cha, b) ==
+  ( dcl sq: [T13],
+        s : char;
+    sq := self.m2(2,3);
+    let mk_T19(a,ch,-) = b.rec in
+      sq := sq ^ [ cha, ch, {a} ];
+    return sq );
+
+public  Test: () ==> T8 * seq of ( T10 | char )
+  Test() ==
+  ( dcl t: seq of ( T10 | char );
+    t := self.m3('a',mk_T21( mk_T19(20, 't', <Q>) ) );
+    return mk_(<Q>, t) )
+
+end A
+
+class B is subclass of A

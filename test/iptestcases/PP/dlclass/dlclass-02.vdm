@@ -1,0 +1,30 @@
+dlclass Example
+
+uselib "dlclass_test1.so"
+
+-- Purpose of test: 
+-- test external dlclass operation 'extop'.
+
+operations
+public
+  extop : nat ==> seq of nat
+  extop(n) == is not yet specified
+
+end Example
+
+--==============================--
+
+class A
+
+operations
+
+public
+  Test : () ==> seq of nat
+  Test() == 
+    return 
+       let e = new Example() 
+       in 
+         e.extop(3)
+
+end A
+

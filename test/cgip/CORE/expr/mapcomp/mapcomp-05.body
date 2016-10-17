@@ -1,0 +1,28 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> set of ( map ((<A> | <B> | <C> | set of nat | seq of nat | inmap nat to nat | nat * nat ) )
+                         to ((<A> | <B> | <C> | set of nat | seq of nat | inmap nat to nat | nat * nat ) ))  
+Test () ==
+
+( dcl M1 : inmap nat to nat := {1 |-> 2, 3 |-> 4};
+
+  return   {
+        { q |-> q | q in set { <A>, <B>, <C> }},
+        { q |-> q | q in set { {1,2}, {1,3}}},
+        { q |-> q | q in set { [1,2], [1,3]}},
+        { q |-> q | q in set { M1}},
+        { q |-> q | q in set { mk_(1,2), mk_(1,3)}}
+        }
+
+)
+
+types
+
+AxA :: a1 : nat
+     a2 : nat
+
+
+
+
+
+
+

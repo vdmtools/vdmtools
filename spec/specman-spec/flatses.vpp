@@ -1,0 +1,52 @@
+\begin{vdm_al}
+class FlatSes is subclass of UpdateSes
+
+operations
+  
+public Type:() ==>  ProjectTypes`SessionType 
+  Type() ==
+    return <FLAT>;
+
+public UpdateSC: Repository * RepDatabase * FileName * ((seq of Module) | FlatSpec) ==> ()
+  UpdateSC(rep, repdb, nm, spec) ==
+   (dcl changedModStat : set of ModuleName := {};
+    let suc = if spec = [] then <ERROR> else <OK>
+    in
+     (repdb.AddSetOfFiles({nm});
+      repdb.StoreState();
+
+      def old_s = repdb.ModulesInFile(nm) in
+      def mk_(disable, changedStatus) = repdb.SetFileStatus(nm, <SYNTAXCHECK>, suc)
+      in
+       (if is_FlatSpec(spec)
+        then repdb.SetModulesInFile(nm, {spec.nm});
+       
+        if disable
+        then changedModStat := self.DisableUnits(repdb, old_s)
+        else changedModStat := self.EnableFlat(rep, repdb, spec);
+
+        repdb.GenCallBack(changedModStat);
+
+        if changedStatus
+        then repdb.GetMediator().CallBack( mk_ChangedFileStatus( nm ) )))
+   );
+
+  --- EnableFlat is only called by flat specifications. The module can only be enabled
+  --- if all corresponding files are syntax checked with succes. If the status of
+  --- the module changes the name inserted in a set is returned. 
+        
+public EnableFlat: Repository * RepDatabase * FlatSpec ==> set of ModuleName 
+  EnableFlat(rep, repdb, sp) ==
+    let mk_FlatSpec(un,ast) = sp,
+        mk_(-,mk_FileStat(sc,-)) = rep.GetStatus().Status(un),
+        changed = repdb.EnableUnit(un, ast, sc)
+    in
+      return if changed then {un} else {};
+
+end FlatSes
+\end{vdm_al}
+$EnableFlat$ is only called by flat specifications. The module can
+only be enabled if all corresponding files are syntax checked with
+succes. If the status of the module changes the name inserted in a set
+is returned.
+

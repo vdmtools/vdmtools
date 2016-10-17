@@ -1,0 +1,9 @@
+functions
+
+SubType: real -> nat
+SubType(r) ==
+  r
+pre is_nat(r)
+
+--PO
+--(forall r : real & is_nat(r) => is_nat(r))

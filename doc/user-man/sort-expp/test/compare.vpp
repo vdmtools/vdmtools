@@ -1,0 +1,11 @@
+class COM
+
+functions
+
+  Compare: bool +> seq of char
+  Compare(argcmp) ==
+    if argcmp
+    then "SUCCESS: Result equals expected result"
+    else "FAILURE: Result differs from expected result"
+
+end COM

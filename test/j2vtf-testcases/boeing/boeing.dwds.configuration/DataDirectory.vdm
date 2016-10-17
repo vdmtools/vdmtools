@@ -1,0 +1,68 @@
+class DataDirectory is subclass of Object
+operations 
+public  getDirectory : () ==> [File]
+getDirectory() == 
+( return  path
+) ;
+
+public  static main : map  int  to  [String] ==> <VOID>
+main(args) == 
+( trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (IOException,j2v_exception)) -> 
+        ( dcl   e : [IOException] := j2v_exception;
+          let - = System.out.println(new  String("  ")+e.getMessage())
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( let - = System.out.println(new  String("This should work."))
+      in 
+        skip ;
+      ( dcl   dd1 : [DataDirectory] := new  DataDirectory(new  String("."));
+        let - = System.out.println(new  String("  Testing directory: ")+dd1.getDirectory())
+        in 
+          skip 
+      ) 
+    ) ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (IOException,j2v_exception)) -> 
+        ( dcl   e : [IOException] := j2v_exception;
+          let - = System.out.println(new  String("  ")+e.getMessage())
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( let - = System.out.println(new  String("This should NOT work."))
+      in 
+        skip ;
+      ( dcl   dd1 : [DataDirectory] := new  DataDirectory(new  String("c:\\\\I\\\\Dont\\\\Exist"));
+        let - = System.out.println(new  String("  Testing directory: ")+dd1.getDirectory())
+        in 
+          skip 
+      ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  DataDirectory : [String] ==> DataDirectory
+DataDirectory(path_in) == 
+( path := new  File(path_in);
+  if  not  path.isDirectory()
+  then  
+    ( dcl   leader : [String] := new  String("Data Directory does not exist: ");
+      exit  new  IOException(leader.concat(path_in))
+    ) 
+) ;
+
+instance variables 
+  private  path : [File]
+  
+end  DataDirectory

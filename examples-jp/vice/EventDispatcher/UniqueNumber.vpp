@@ -1,0 +1,53 @@
+\subsection{『発番者』}
+\subsubsection{責任}
+唯一の番号を発番する。
+
+\begin{vdm_al}
+class 『発番者』
+
+values
+初期値 = 1;
+
+instance variables
+private
+桁数  : nat := 1;
+private
+番号  : nat := 初期値 -- 次に発行する番号
+
+functions
+唯一の番号を得る : nat * nat1 -> nat
+唯一の番号を得る(数候補, 桁数) ==
+    if 数候補 >= 10 ** 桁数 then
+        番号を初期化する()
+    else
+        数候補;
+
+operations
+public 『発番者』 : nat ==> 『発番者』
+『発番者』(a桁数) == 桁数 := a桁数;
+\end{vdm_al}
+与えられた桁数内の唯一の番号を発番する。
+\begin{vdm_al}
+public 発番する : () ==> nat
+発番する() ==
+    --呼び出し時の番号の値で発番し、自身の番号の値に 1 を加える。
+    let 数 = 唯一の番号を得る(番号, 桁数)
+    in
+    (
+    番号 := 番号 + 1;
+    return 数
+    );
+
+public 番号を初期化する : () ==> nat
+番号を初期化する() ==
+    (
+    番号 := 初期値;
+    return 番号
+    );
+
+end 『発番者』
+\end{vdm_al}
+
+\begin{rtinfo}
+[『発番者』]{vdm.tc}[『発番者』]
+\end{rtinfo}

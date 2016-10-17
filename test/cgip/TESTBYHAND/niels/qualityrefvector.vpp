@@ -1,0 +1,72 @@
+class QRV is subclass of Global
+
+instance variables
+
+  epsilon: Angle := 45;
+  Ar: [Area] := nil;
+  Af: Area := 0;
+  Ab: Area := 0;
+  LegLength : [Length] := nil;
+  WeldSize : [Length] := nil
+
+operations
+
+create: Angle *  [Area] * Area * Area * [Length] * [Length] ==> QRV
+create (e,ar,af,ab,ll,ws) ==
+( dcl qrv : QRV := new QRV();
+  qrv.setEpsilon (e);
+  qrv.setAr (ar);
+  qrv.setAf (af);
+  qrv.setAb (ab);
+  qrv.setLegLength (ll);
+  qrv.setWeldSize (ws);
+  return qrv
+);
+
+setEpsilon: Angle ==> ()
+setEpsilon (e) ==
+  epsilon := e;
+
+setAr (a: [Area]) ==
+  Ar := a;
+
+setAf: Area ==> ()
+setAf (a) ==
+  Af := a;
+
+setAb: Area ==> ()
+setAb (a) ==
+  Ab := a;
+
+setLegLength (ll: [Length]) ==
+  LegLength := ll;
+
+setWeldSize (ws: [Length]) ==
+  WeldSize := ws;
+
+getEpsilon: () ==> Angle 
+getEpsilon () ==
+  return epsilon;
+
+getAr: () ==> [Area]
+getAr () ==
+  return Ar;
+
+
+getAf: () ==> Area 
+getAf () ==
+  return Af;
+
+getAb: () ==> Area 
+getAb () ==
+  return Ab;
+
+getLegLength: () ==> [Length]
+getLegLength () ==
+  return LegLength;
+
+getWeldSize: () ==> [Length]
+getWeldSize () ==
+  return WeldSize;
+
+end QRV

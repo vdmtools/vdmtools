@@ -1,0 +1,237 @@
+class A
+
+types
+
+Rec :: f : real
+
+operations
+
+public Test1 : () ==> int
+Test1() ==
+  tixe {
+     a : int |-> return a,
+     b : bool |-> return -1
+    }
+    in
+      exit 1;
+
+public Test2 : () ==> int
+Test2() ==
+(  tixe {
+     a : int |-> return a,
+     b : bool |-> return -1
+    }
+    in
+      exit 2;
+   return 1
+);
+
+public Test3 : () ==> int
+Test3() ==
+( let x = 3 
+  in 
+  (  tixe {
+       a : int |-> return a,
+       b : bool |-> return 1
+     }
+     in
+        exit x;
+  );
+  return 1;
+);
+
+public Test4 : () ==> int
+Test4() ==
+( dcl x : int := 4;
+  if true
+  then tixe {
+         a : int |-> return a,
+         b : bool |-> return x
+       }
+       in
+          exit true
+  else return -1
+);
+
+public Test5 : () ==> int
+Test5() ==
+( dcl x : int := -1;
+  if true
+  then tixe {
+         a : int |-> exit true,
+         b : bool |-> x := 5
+       }
+       in
+          exit 1
+  else return -1;
+  return x
+);
+
+public Test6: () ==> int
+Test6() ==
+( dcl x : int := -1;
+  cases x:
+    (-1) -> tixe {
+             r : Rec |-> x:= floor r.f,
+             b : bool |-> exit mk_Rec(6.5),
+             n : int |-> exit true
+           } 
+           in
+             if true
+             then exit 10
+             else x := -2,
+    (0) -> x := -3,
+    others -> x := -4
+  end;
+  return x
+);
+
+public Test7: () ==> int
+Test7() ==
+( dcl x : int := -1,
+      i : int := 0;
+  while i < 10 do
+    tixe {
+      r : Rec  |-> x:= floor r.f,
+      b : bool |-> exit mk_Rec(6.5),
+      n : int  |-> x := n
+    } 
+    in
+    ( i := i + 1;
+      if i = 5
+      then exit 7
+    );
+  return x
+);
+
+public Test8: () ==> int
+Test8() ==
+( dcl x : int := -1,
+      s : seq of int := [ i | i in set {1,...,10}];
+  for i in s do
+    tixe {
+      r : Rec  |-> x:= floor r.f,
+      b : bool |-> exit mk_Rec(6.5),
+      n : int  |-> x := n
+    } 
+    in
+      if i = 5
+      then exit 8;
+  return x
+);
+
+public Test9: () ==> int
+Test9() ==
+( dcl x : int := -1,
+      s : set of int := {1,...,10};
+  for all i in set s do
+    tixe {
+      r : Rec  |-> x:= floor r.f,
+      b : bool |-> exit mk_Rec(9.5),
+      n : int  |-> x := n
+    } 
+    in
+      if i = 5
+      then exit false;
+  return x
+);
+
+public Test10: () ==> int
+Test10() ==
+( dcl x : int := -1;
+  for i = 1 to 10 do
+    tixe {
+      r : Rec  |-> x:= floor r.f,
+      b : bool |-> exit mk_Rec(9.5),
+      n : int  |-> x := n
+    } 
+    in
+      if i = 10
+      then exit i;
+  return x
+);
+
+public Test11: () ==> int
+Test11() ==
+( let x in set {1,...,10}
+  be st x mod 2 = 0
+  in
+    tixe {
+      r : Rec  |-> return floor r.f,
+      b : bool |-> exit mk_Rec(11.5),
+      n : int  |-> exit true
+    } 
+    in
+      exit x;
+);
+
+public Test12 : () ==> int
+Test12() ==
+( def x = 12
+  in 
+  (  tixe {
+       a : int |-> return a,
+       b : bool |-> return 1
+     }
+     in
+        exit x;
+  );
+  return 1;
+);
+
+public Test13 : () ==> int
+Test13() ==
+( dcl x : int := -1;
+  || 
+  ( tixe {
+       a : int |-> return a,
+       b : bool |-> (x := 13;
+                     return x)
+    }
+    in
+      exit false,
+    return x
+  )
+);
+
+Test14 : () ==> int
+Test14() ==
+( dcl x : int := -1;
+  always x := x + 1
+  in
+    tixe {
+      a : int |-> return a,
+      b : bool |-> x := 13
+    }
+    in
+      exit false;
+  return x
+);
+
+Test15 : () ==> int
+Test15() ==
+( dcl x : int := -1;
+  trap r:Rec with x := floor r.f
+  in
+    tixe {
+      a : int |-> exit mk_Rec(15.5),
+      b : bool |-> exit 1
+    }
+    in
+      if true
+      then exit false
+      elseif false
+      then exit mk_Rec(-1)
+      else exit 1;
+
+  return x
+);
+
+public Test : () ==> seq of int
+Test() ==
+  return [Test1(), Test2(), Test3(), Test4(), Test5(), Test6(),
+          Test7(), Test8(), Test9(), Test10(), Test11(), Test12(),
+          Test13(), Test14(), Test15()]
+
+
+end A

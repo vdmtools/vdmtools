@@ -1,0 +1,15 @@
+class BinaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let n = nil,
+      a = "a",
+      - = n munion a
+  in skip;
+
+------------------------------------------------------------------------------
+end BinaryTest

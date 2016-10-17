@@ -1,0 +1,6 @@
+r worldcup.vdm
+tc pos
+i
+cg
+l worldcup.vdm
+cquit

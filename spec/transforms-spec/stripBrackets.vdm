@@ -1,0 +1,929 @@
+\section{General Stripping of Brackets}
+\label{sec:stripBrackets}
+
+This module contains:
+\begin{enumerate}
+  \item functions which remove brackets from around expressions and
+        redundant blocks from around statements (where a redundant
+        block is one which contains no local declarations and which 
+        has a body which consists of a single statement);
+  \item functions which test whether two expressions or two statements
+        are the same up to the inclusion of redundant brackets or
+        redundant blocks at the topmost level.
+\end{enumerate}
+
+\begin{vdm_al}
+module SB
+
+imports
+  from JSSREP all,
+  from CI all,
+  from REP all,
+  from AS all
+
+exports all
+
+definitions
+
+values
+
+nilCid: int = -1 ;
+
+functions
+
+stripBracketsClassList : seq of AS`Class -> seq of AS`Class
+stripBracketsClassList(p_cl) == 
+  if p_cl = [] 
+  then []
+  else let l_hdXfs = stripBracketsClass(hd p_cl), 
+           l_tlXfs = stripBracketsClassList(tl p_cl) in
+       [l_hdXfs] ^ l_tlXfs ;
+
+stripBracketsClass : AS`Class -> AS`Class
+stripBracketsClass(p_c) == 
+  let l_newDefs = if p_c.defs = nil 
+                  then nil
+                  else stripBracketsDefinitions(p_c.defs) in
+  mu(p_c, defs |-> l_newDefs, cid |-> nilCid) ;
+
+stripBracketsDefinitions : AS`Definitions -> AS`Definitions
+stripBracketsDefinitions(mk_AS`Definitions(p_tm, p_vm, p_fm, p_om, p_iv, p_sy, p_th, p_tr,-)) == 
+  let l_newTm = stripBracketsTypes(p_tm), 
+      l_newVm = stripBracketsVals(p_vm),
+      l_newFm = stripBracketsFns(p_fm),
+      l_newOm = stripBracketsOps(p_om),
+      l_newIv = stripBracketsIvs(p_iv),
+      l_newSy = stripBracketsSy(p_sy),
+      l_newTh = stripBracketsThread(p_th) in
+  mk_AS`Definitions(l_newTm, l_newVm, l_newFm, l_newOm, l_newIv, l_newSy, l_newTh, p_tr, nilCid) ;
+
+stripBracketsTypes : map AS`Name to AS`TypeDef -> map AS`Name to AS`TypeDef
+stripBracketsTypes(p_tm) ==
+  if p_tm = { |-> } 
+  then { |-> } 
+  else let l_name in set dom p_tm in 
+    let l_td = stripBracketsTypeDef(p_tm(l_name)),
+        l_dsub = stripBracketsTypes({l_name} <-: p_tm) 
+       in  
+       {l_name |-> l_td} munion l_dsub ; 
+
+stripBracketsTypeDef : AS`TypeDef -> AS`TypeDef
+stripBracketsTypeDef(p_td) ==
+  if p_td.Inv = nil 
+  then p_td
+  else let l_newInv = stripBracketsInvt(p_td.Inv) in
+  mu(p_td, Inv |-> l_newInv, cid |-> nilCid) ;
+
+stripBracketsInvt : AS`Invariant -> AS`Invariant
+stripBracketsInvt(p_invt) == 
+  let l_newExpr = stripBracketsExpr(p_invt.expr) in
+  mk_AS`Invariant(p_invt.pat, l_newExpr, nilCid) ;
+
+stripBracketsVals : seq of AS`ValueDef -> seq of AS`ValueDef
+stripBracketsVals(p_list) == 
+  [ stripBracketsValueDef(p_list(b_i)) | b_i in set inds p_list ] ;
+
+stripBracketsValueDef : AS`ValueDef -> AS`ValueDef
+stripBracketsValueDef(p_valDef) == 
+  let l_newVal = stripBracketsExpr(p_valDef.val) in 
+    mu(p_valDef, val |-> l_newVal, cid |-> nilCid) ;
+
+stripBracketsFns : map AS`Name to AS`FnDef -> map AS`Name to AS`FnDef
+stripBracketsFns(p_fm) == 
+  if p_fm = { |-> } 
+  then { |-> } 
+  else 
+    let l_name in set dom p_fm in
+      let l_fn = stripBracketsFnDef(p_fm(l_name)),
+          l_dsub = stripBracketsFns({l_name} <-: p_fm) 
+    in 
+        {l_name |-> l_fn} munion l_dsub ; 
+
+stripBracketsFnDef : AS`FnDef -> AS`FnDef 
+stripBracketsFnDef(p_fnDef) == 
+  cases true :
+    (is_AS`ExplFnDef(p_fnDef))  ->  stripBracketsExplFnDef(p_fnDef),
+    (is_AS`ImplFnDef(p_fnDef))  ->  stripBracketsImplFnDef(p_fnDef),
+    (is_AS`ExtExplFnDef(p_fnDef))  ->  stripBracketsExtExplFnDef(p_fnDef)
+  end ;
+
+stripBracketsExplFnDef : AS`ExplFnDef -> AS`ExplFnDef
+stripBracketsExplFnDef(p_fnDef) == 
+  let mk_AS`ExplFnDef(l_nm, l_tpp, l_tp, l_parms, l_body, l_fnpre, l_fnpost, l_ac, l_st, l_measu, -) = p_fnDef, 
+      l_newBody  = stripBracketsFnBody(l_body), 
+      l_newPre   = stripBracketsOptExpr(l_fnpre),
+      l_newPost  = stripBracketsOptExpr(l_fnpost)
+  in mk_AS`ExplFnDef(l_nm, l_tpp, l_tp, l_parms, l_newBody, l_newPre, l_newPost, l_ac, l_st, l_measu, nilCid);
+
+stripBracketsImplFnDef : AS`ImplFnDef -> AS`ImplFnDef
+stripBracketsImplFnDef(p_fnDef) == 
+  let mk_AS`ImplFnDef(l_nm, l_pars, l_partps, l_res, l_fnpre, l_fnpost, l_ac, l_st, -) = p_fnDef, 
+      l_newPre    = stripBracketsOptExpr(l_fnpre),
+      l_newPost   = stripBracketsExpr(l_fnpost)
+  in mk_AS`ImplFnDef(l_nm, l_pars, l_partps, l_res, l_newPre, l_newPost, l_ac, l_st, nilCid) ;
+
+stripBracketsExtExplFnDef : AS`ExtExplFnDef -> AS`ExtExplFnDef
+stripBracketsExtExplFnDef(p_fnDef) == 
+  let mk_AS`ExtExplFnDef(l_nm, l_pars, l_partps, l_res, l_body, l_fnpre, l_fnpost, l_ac, l_st, l_measu,-) = p_fnDef, 
+      l_newBody  = stripBracketsFnBody(l_body), 
+      l_newPre   = stripBracketsOptExpr(l_fnpre),
+      l_newPost  = stripBracketsOptExpr(l_fnpost)
+  in mk_AS`ExtExplFnDef(l_nm, l_pars, l_partps, l_res, l_newBody, l_newPre, l_newPost, l_ac, l_st, l_measu, nilCid) ;
+
+stripBracketsFnBody : AS`FnBody -> AS`FnBody
+stripBracketsFnBody(p_fnBody) == 
+  let l_body = p_fnBody.body,
+      l_newBody = if l_body = <NOTYETSPEC> or l_body = <SUBRESP> 
+      then l_body
+      else stripBracketsExpr(l_body) in
+  mk_AS`FnBody(l_newBody, nilCid) ;
+
+stripBracketsOps : map AS`Name to AS`OpDef -> map AS`Name to AS`OpDef
+stripBracketsOps(p_om) == 
+  if p_om = { |-> } 
+  then { |-> } 
+  else 
+    let l_name in set dom p_om in
+      let l_op = stripBracketsOpDef(p_om(l_name)),
+          l_dsub = stripBracketsOps({l_name} <-: p_om) 
+    in 
+        {l_name |-> l_op} munion l_dsub ; 
+
+stripBracketsOpDef : AS`OpDef -> AS`OpDef
+stripBracketsOpDef(p_opDef) == 
+  cases true :
+    (is_AS`ExplOpDef(p_opDef))  ->  stripBracketsExplOpDef(p_opDef),
+    (is_AS`ImplOpDef(p_opDef))  ->  stripBracketsImplOpDef(p_opDef),
+    (is_AS`ExtExplOpDef(p_opDef))  ->  stripBracketsExtExplOpDef(p_opDef)
+  end ;
+
+stripBracketsExplOpDef : AS`ExplOpDef -> AS`ExplOpDef
+stripBracketsExplOpDef(p_opDef) == 
+  let mk_AS`ExplOpDef(l_nm,l_pure,l_sync,l_tp,l_parms,l_body,l_oppre,l_oppost,l_ac,l_st,l_con,-) = p_opDef,
+      l_newBody  = stripBracketsOpBody(l_body), 
+      l_newPre   = stripBracketsOptExpr(l_oppre),
+      l_newPost  = stripBracketsOptExpr(l_oppost)
+  in mk_AS`ExplOpDef(l_nm,l_pure,l_sync,l_tp,l_parms,l_newBody,l_newPre,l_newPost,l_ac,l_st,l_con,nilCid);
+
+stripBracketsImplOpDef : AS`ImplOpDef -> AS`ImplOpDef
+stripBracketsImplOpDef(p_opDef) == 
+  let mk_AS`ImplOpDef(l_nm,l_pure,l_sync,l_partps,l_res,l_ext,l_oppre,l_oppost,l_errors,l_ac,l_st,l_con,-) = p_opDef,
+      l_newPre    = stripBracketsOptExpr(l_oppre),
+      l_newPost   = stripBracketsExpr(l_oppost),
+      l_newErrors   = stripBracketsErrorList(l_errors)
+  in mk_AS`ImplOpDef(l_nm,l_pure,l_sync,l_partps,l_res,l_ext,l_newPre,l_newPost,l_newErrors,l_ac,l_st,l_con,nilCid);
+
+stripBracketsExtExplOpDef : AS`ExtExplOpDef -> AS`ExtExplOpDef 
+stripBracketsExtExplOpDef(p_opDef) == 
+  let mk_AS`ExtExplOpDef(l_nm,l_pure,l_sync,l_partps,l_res,l_body,l_ext,l_oppre,l_oppost,l_errors,l_ac,l_st,l_con,-) = p_opDef, 
+      l_newBody  = stripBracketsOpBody(l_body), 
+      l_newPre   = stripBracketsOptExpr(l_oppre),
+      l_newPost  = stripBracketsOptExpr(l_oppost),
+      l_newErrors   = stripBracketsErrorList(l_errors)
+  in mk_AS`ExtExplOpDef(l_nm,l_pure,l_sync,l_partps,l_res,l_newBody,l_ext,l_newPre,l_newPost,l_newErrors,l_ac,l_st,l_con,nilCid);
+
+stripBracketsErrorList: seq of AS`Error -> seq of AS`Error
+stripBracketsErrorList(p_errors) == 
+  [ stripBracketsError(p_errors(b_i)) | b_i in set inds p_errors ] ;
+
+stripBracketsError : AS`Error -> AS`Error
+stripBracketsError(p_err) == 
+  let l_newCond = stripBracketsExpr(p_err.cond),
+      l_newAct = stripBracketsExpr(p_err.action)
+  in mk_AS`Error(p_err.nm, l_newCond, l_newAct, nilCid) ; 
+
+stripBracketsOpBody : AS`OpBody -> AS`OpBody
+stripBracketsOpBody(p_opBody) == 
+  let l_body = p_opBody.body,
+      l_newBody = if l_body = <NOTYETSPEC> or l_body = <SUBRESP> 
+        then l_body
+        else stripBracketsStmt(l_body) in
+    mk_AS`OpBody(l_newBody, nilCid) ;
+
+stripBracketsIvs : seq of AS`InstanceVarDef -> seq of AS`InstanceVarDef
+stripBracketsIvs(p_ivl) == 
+  [ stripBracketsInstVarDef(p_ivl(b_i)) | b_i in set inds p_ivl ] ;
+
+stripBracketsInstVarDef : AS`InstanceVarDef -> AS`InstanceVarDef
+stripBracketsInstVarDef(p_inst) == 
+  cases true :
+    (is_AS`InstAssignDef(p_inst))  ->  stripBracketsInstAssignDef(p_inst), 
+    (is_AS`InstanceInv(p_inst))     ->  stripBracketsInstInv(p_inst)
+  end ;
+
+stripBracketsInstAssignDef : AS`InstAssignDef -> AS`InstAssignDef
+stripBracketsInstAssignDef(p_inst) == 
+  let l_newAd = stripBracketsAssignDef(p_inst.ad) in
+  mk_AS`InstAssignDef(l_newAd, p_inst.access, p_inst.stat, nilCid) ;
+
+stripBracketsInstInv : AS`InstanceInv -> AS`InstanceInv
+stripBracketsInstInv(p_inst) == 
+  let l_newExpr = stripBracketsExpr(p_inst.expr) in
+  mk_AS`InstanceInv(l_newExpr, p_inst.access, nilCid) ;
+
+stripBracketsAssignDef : AS`AssignDef -> AS`AssignDef
+stripBracketsAssignDef(p_ass) == 
+  let l_newExpr = stripBracketsOptExpr(p_ass.dclinit) in
+  mk_AS`AssignDef(p_ass.var, p_ass.tp, l_newExpr, nilCid) ;
+
+stripBracketsAssignDefList : seq of AS`AssignDef -> seq of AS`AssignDef
+stripBracketsAssignDefList(p_list) == 
+  [ stripBracketsAssignDef(p_list(b_i)) | b_i in set inds p_list ] ;
+
+stripBracketsSy : seq of AS`SyncDef -> seq of AS`SyncDef
+stripBracketsSy(p_list) == 
+  [ stripBracketsSyncDef(p_list(b_i)) | b_i in set inds p_list ] ;
+
+stripBracketsSyncDef : AS`SyncDef -> AS`SyncDef
+stripBracketsSyncDef(p_sync) == 
+  cases true :
+    (is_AS`Permission(p_sync))     ->  stripBracketsPerm(p_sync),
+    others  ->  mu(p_sync, cid |-> nilCid)
+  end ;
+
+stripBracketsPerm : AS`Permission -> AS`Permission 
+stripBracketsPerm(p_sync) == 
+  let l_newExpr = stripBracketsExpr(p_sync.guard) in
+  mk_AS`Permission(p_sync.spec, l_newExpr, nilCid) ;
+
+stripBracketsThread : [AS`ThreadDef] -> [AS`ThreadDef]
+stripBracketsThread(p_thread) == 
+  cases true :
+  (p_thread = nil) -> nil,
+  (is_AS`PerObl(p_thread)) ->  mu(p_thread, cid |-> nilCid),
+  others -> stripBracketsStmt(p_thread) 
+  end ;
+
+stripBracketsOptExpr : [AS`Expr] -> [AS`Expr]
+stripBracketsOptExpr(p_expr) == 
+  if p_expr = nil
+  then nil
+  else stripBracketsExpr(p_expr) ;
+
+stripBracketsOptStmt : [AS`Stmt] -> [AS`Stmt]
+stripBracketsOptStmt(p_stmt) == 
+  if p_stmt = nil
+  then nil 
+  else stripBracketsStmt(p_stmt) ;
+
+stripBracketsExprList : seq of AS`Expr -> seq of AS`Expr
+stripBracketsExprList(p_list) == 
+  [ stripBracketsExpr(p_list(b_i)) | b_i in set inds p_list ] ;
+
+stripBracketsLocalDefList : seq of AS`LocalDef -> seq of AS`LocalDef
+stripBracketsLocalDefList(localDefs) == 
+  [ stripBracketsLocalDef(localDefs(b_i)) | b_i in set inds localDefs ] ;
+
+stripBracketsLocalDef : AS`LocalDef -> AS`LocalDef
+stripBracketsLocalDef(p_localDef) == 
+  cases true :
+    (is_AS`ValueDef(p_localDef))  ->  stripBracketsValueDef(p_localDef),
+    others ->  stripBracketsFnDef(p_localDef)
+  end ; 
+
+stripBracketsPatternBind : AS`PatternBind -> AS`PatternBind
+stripBracketsPatternBind(p_pb) == 
+  cases true :
+    (is_AS`SetBind(p_pb))  ->  stripBracketsSetBind(p_pb), 
+    others  ->  p_pb
+  end ;
+
+stripBracketsBind : AS`Bind -> AS`Bind
+stripBracketsBind(p_pb) == 
+  cases true :
+    (is_AS`SetBind(p_pb))  ->  stripBracketsSetBind(p_pb), 
+    others  ->  p_pb
+  end ;
+
+stripBracketsSetBind  : AS`SetBind -> AS`SetBind
+stripBracketsSetBind(mk_AS`SetBind(p_pat, p_expr, -)) == 
+  let l_newExpr = stripBracketsExpr(p_expr)
+  in
+  mk_AS`SetBind(p_pat, l_newExpr, nilCid) ; 
+
+stripBracketsSeqBind  : AS`SeqBind -> AS`SeqBind
+stripBracketsSeqBind(mk_AS`SeqBind(p_pat, p_expr, -)) == 
+  let l_newExpr = stripBracketsExpr(p_expr)
+  in
+  mk_AS`SeqBind(p_pat, l_newExpr, nilCid) ; 
+
+stripBracketsMultBind : AS`MultBind -> AS`MultBind
+stripBracketsMultBind(p_pb) == 
+  cases true :
+    (is_AS`MultSetBind(p_pb))  ->  stripBracketsMultSetBind(p_pb), 
+    others  ->  p_pb
+  end ;
+
+stripBracketsMultSetBind  : AS`MultSetBind -> AS`MultSetBind
+stripBracketsMultSetBind(mk_AS`MultSetBind(p_pats, p_expr, -)) == 
+  let l_newExpr = stripBracketsExpr(p_expr)
+  in
+  mk_AS`MultSetBind(p_pats, l_newExpr, nilCid) ;
+
+stripBracketsBindList : seq of AS`MultBind -> seq of AS`MultBind
+stripBracketsBindList(p_list) == 
+  [ stripBracketsMultBind(p_list(b_i)) | b_i in set inds p_list ] ;
+
+stripBracketsPBE : (AS`PatternBind * AS`Expr) -> (AS`PatternBind * AS`Expr)
+stripBracketsPBE(mk_(p_pb, p_expr)) ==   
+  let l_pb = stripBracketsPatternBind(p_pb),
+      l_expr = stripBracketsExpr(p_expr)
+  in
+  mk_(l_pb, l_expr) ;
+
+stripBracketsPBEList : seq of (AS`PatternBind * AS`Expr) -> seq of (AS`PatternBind * AS`Expr)
+stripBracketsPBEList(p_pbel) ==  
+  [ stripBracketsPBE(p_pbel(b_i)) | b_i in set inds p_pbel ] ;
+
+stripBracketsStateDesignator : AS`StateDesignator -> AS`StateDesignator
+stripBracketsStateDesignator(p_sd) == 
+  cases true :
+    (is_AS`FieldRef(p_sd))  ->  stripBracketsFieldRef(p_sd), 
+    (is_AS`MapOrSeqRef(p_sd))  ->  stripBracketsMapOrSeqRef(p_sd), 
+    others  ->  mu(p_sd, cid |-> nilCid)
+  end ;
+
+stripBracketsFieldRef : AS`FieldRef -> AS`FieldRef
+stripBracketsFieldRef(p_fr) == 
+  let l_newSd = stripBracketsStateDesignator(p_fr.var) in
+  mk_AS`FieldRef(l_newSd, p_fr.sel, nilCid) ;
+
+stripBracketsMapOrSeqRef : AS`MapOrSeqRef -> AS`MapOrSeqRef
+stripBracketsMapOrSeqRef(p_msr) == 
+  let l_newVar = stripBracketsStateDesignator(p_msr.var),
+      l_newArg = stripBracketsExpr(p_msr.arg)
+  in
+  mk_AS`MapOrSeqRef(l_newVar, l_newArg, nilCid) ;
+
+stripBracketsElseifStmt : AS`ElseifStmt -> AS`ElseifStmt
+stripBracketsElseifStmt(p_stmt) == 
+  let l_newTest = stripBracketsExpr(p_stmt.test),
+      l_newCons = stripBracketsStmt(p_stmt.cons)
+  in
+  mk_AS`ElseifStmt(l_newTest, l_newCons, nilCid) ;
+
+stripBracketsElseifStmtList : seq of AS`ElseifStmt -> seq of AS`ElseifStmt
+stripBracketsElseifStmtList(p_list) == 
+  [ stripBracketsElseifStmt(p_list(b_i)) | b_i in set inds p_list ] ;
+
+stripBracketsCasesStmtAltn : AS`CasesStmtAltn -> AS`CasesStmtAltn
+stripBracketsCasesStmtAltn(p_altn) == 
+  let l_newBody = stripBracketsStmt(p_altn.body)
+  in
+  mk_AS`CasesStmtAltn(p_altn.match, l_newBody, nilCid) ;
+
+stripBracketsCasesStmtAltnList : seq of AS`CasesStmtAltn -> seq of AS`CasesStmtAltn
+stripBracketsCasesStmtAltnList(p_list) == 
+  [ stripBracketsCasesStmtAltn(p_list(b_i)) | b_i in set inds p_list ] ;
+
+stripBracketsTrap : AS`Trap -> AS`Trap
+stripBracketsTrap(p_trp) == 
+  let l_newMatch = stripBracketsPatternBind(p_trp.match),
+      l_newPost = stripBracketsStmt(p_trp.trappost)
+  in
+  mk_AS`Trap(l_newMatch, l_newPost, nilCid) ;
+
+stripBracketsTrapList : seq of AS`Trap -> seq of AS`Trap
+stripBracketsTrapList(p_list) == 
+  [ stripBracketsTrap(p_list(b_i)) | b_i in set inds p_list ] ;
+
+stripBracketsStmtList : seq of AS`Stmt -> seq of AS`Stmt
+stripBracketsStmtList(p_list) == 
+  [ stripBracketsStmt(p_list(b_i)) | b_i in set inds p_list ] ;
+
+stripBracketsStmt : AS`Stmt -> AS`Stmt
+stripBracketsStmt(p_stmt) == 
+  cases true :
+    (is_AS`DefStmt(p_stmt)) -> stripBracketsDefStmt(p_stmt),
+    (is_AS`LetStmt(p_stmt)) -> stripBracketsLetStmt(p_stmt),
+    (is_AS`LetBeSTStmt(p_stmt)) -> stripBracketsLetBeSTStmt(p_stmt),
+    (is_AS`AssignStmt(p_stmt)) -> stripBracketsAssignStmt(p_stmt),
+    (is_AS`AtomicAssignStmt(p_stmt)) -> stripBracketsAtomicAssignStmt(p_stmt),
+    (is_AS`SeqForLoopStmt(p_stmt)) -> stripBracketsSeqForLoopStmt(p_stmt),
+    (is_AS`SetForLoopStmt(p_stmt)) -> stripBracketsSetForLoopStmt(p_stmt),
+    (is_AS`IndexForLoopStmt(p_stmt)) -> stripBracketsIndexForLoopStmt(p_stmt),
+    (is_AS`WhileLoopStmt(p_stmt)) -> stripBracketsWhileLoopStmt(p_stmt),
+    (is_AS`CallStmt(p_stmt)) -> stripBracketsCallStmt(p_stmt),
+    (is_AS`ReturnStmt(p_stmt)) -> stripBracketsReturnStmt(p_stmt),
+    (is_AS`IfStmt(p_stmt)) -> stripBracketsIfStmt(p_stmt),
+    (is_AS`CasesStmt(p_stmt)) -> stripBracketsCasesStmt(p_stmt),
+    (is_AS`AlwaysStmt(p_stmt)) -> stripBracketsAlwaysStmt(p_stmt),
+    (is_AS`ExitStmt(p_stmt)) -> stripBracketsExitStmt(p_stmt),
+    (is_AS`TrapStmt(p_stmt)) -> stripBracketsTrapStmt(p_stmt),
+    (is_AS`RecTrapStmt(p_stmt)) -> stripBracketsRecTrapStmt(p_stmt),
+    (is_AS`BlockStmt(p_stmt)) -> stripBracketsBlockStmt(p_stmt),
+    (is_AS`NonDetStmt(p_stmt)) -> stripBracketsNonDetStmt(p_stmt),
+    (is_AS`SpecificationStmt(p_stmt)) -> stripBracketsSpecificationStmt(p_stmt),
+    (is_AS`StartStmt(p_stmt)) -> stripBracketsStartStmt(p_stmt),
+    (is_AS`StartListStmt(p_stmt)) -> stripBracketsStartListStmt(p_stmt),
+    others -> mu(p_stmt, cid |-> nilCid)
+  end;
+
+stripBracketsDefStmt : AS`DefStmt -> AS`DefStmt
+stripBracketsDefStmt(p_stmt) == 
+  let l_newPbe = stripBracketsPBEList(p_stmt.value),
+      l_newStmt = stripBracketsStmt(p_stmt.In)
+  in
+  mk_AS`DefStmt(l_newPbe, l_newStmt, nilCid) ;
+
+stripBracketsLetStmt : AS`LetStmt -> AS`LetStmt
+stripBracketsLetStmt(p_stmt) ==  
+  let l_newDefs = stripBracketsLocalDefList(p_stmt.localdef),
+      l_newStmt = stripBracketsStmt(p_stmt.In)
+  in
+  mk_AS`LetStmt(l_newDefs, l_newStmt, nilCid) ;
+
+stripBracketsLetBeSTStmt : AS`LetBeSTStmt -> AS`LetBeSTStmt
+stripBracketsLetBeSTStmt(p_stmt) ==  
+  let l_newBind = stripBracketsBindList(p_stmt.bind),
+      l_newExpr = stripBracketsOptExpr(p_stmt.St),
+      l_newStmt = stripBracketsStmt(p_stmt.In)
+  in
+  mk_AS`LetBeSTStmt(l_newBind, l_newExpr, l_newStmt, nilCid) ;
+
+stripBracketsAssignStmt : AS`AssignStmt -> AS`AssignStmt
+stripBracketsAssignStmt(p_stmt) == 
+  let l_newLhs = stripBracketsStateDesignator(p_stmt.lhs),
+      l_newRhs = stripBracketsExpr(p_stmt.rhs)
+  in
+  mk_AS`AssignStmt(l_newLhs, l_newRhs, nilCid) ;
+
+stripBracketsAssignStmtList : seq of AS`AssignStmt -> seq of AS`AssignStmt
+stripBracketsAssignStmtList(p_list) == 
+  [ stripBracketsAssignStmt(p_list(b_i)) | b_i in set inds p_list ] ;
+
+stripBracketsAtomicAssignStmt : AS`AtomicAssignStmt -> AS`AtomicAssignStmt
+stripBracketsAtomicAssignStmt(p_stmt) == 
+  let l_newList = stripBracketsAssignStmtList(p_stmt.atm) in
+  mk_AS`AtomicAssignStmt(l_newList, nilCid) ; 
+
+stripBracketsSeqForLoopStmt : AS`SeqForLoopStmt -> AS`SeqForLoopStmt
+stripBracketsSeqForLoopStmt(p_stmt) == 
+  let l_newBind = stripBracketsPatternBind(p_stmt.cv),
+      l_newExpr = stripBracketsExpr(p_stmt.fseq),
+      l_newStmt = stripBracketsStmt(p_stmt.body)
+  in
+  mk_AS`SeqForLoopStmt(l_newBind, l_newExpr, l_newStmt, nilCid) ;
+
+stripBracketsSetForLoopStmt : AS`SetForLoopStmt -> AS`SetForLoopStmt
+stripBracketsSetForLoopStmt(p_stmt) == 
+  let l_newExpr = stripBracketsExpr(p_stmt.fset),
+      l_newStmt = stripBracketsStmt(p_stmt.body)
+  in
+  mk_AS`SetForLoopStmt(p_stmt.cv, l_newExpr, l_newStmt, nilCid) ;
+
+stripBracketsIndexForLoopStmt : AS`IndexForLoopStmt -> AS`IndexForLoopStmt
+stripBracketsIndexForLoopStmt(p_stmt) == 
+  let l_newLb = stripBracketsExpr(p_stmt.lb),
+      l_newUb = stripBracketsExpr(p_stmt.ub),
+      l_newExpr = stripBracketsOptExpr(p_stmt.By),
+      l_newStmt = stripBracketsStmt(p_stmt.body)
+  in
+  mk_AS`IndexForLoopStmt(p_stmt.cv, l_newLb, l_newUb, l_newExpr, l_newStmt, nilCid) ;
+
+stripBracketsWhileLoopStmt : AS`WhileLoopStmt -> AS`WhileLoopStmt
+stripBracketsWhileLoopStmt(p_stmt) == 
+  let l_newTest = stripBracketsExpr(p_stmt.test),
+      l_newBody = stripBracketsStmt(p_stmt.body)
+  in
+  mk_AS`WhileLoopStmt(l_newTest, l_newBody, nilCid) ;
+
+stripBracketsCallStmt : AS`CallStmt -> AS`CallStmt
+stripBracketsCallStmt(p_stmt) == 
+  let l_newObj = stripBracketsOptExpr(p_stmt.obj),
+      l_newArgs = stripBracketsExprList(p_stmt.args)
+  in
+  mk_AS`CallStmt(l_newObj, p_stmt.oprt, l_newArgs, nilCid) ;
+
+stripBracketsReturnStmt : AS`ReturnStmt -> AS`ReturnStmt
+stripBracketsReturnStmt(p_stmt) ==
+  let l_newVal = stripBracketsOptExpr(p_stmt.val) in
+  mk_AS`ReturnStmt(l_newVal, nilCid) ; 
+
+stripBracketsIfStmt : AS`IfStmt -> AS`IfStmt
+stripBracketsIfStmt(p_stmt) ==
+  let l_newTest = stripBracketsExpr(p_stmt.test),
+      l_newCons = stripBracketsStmt(p_stmt.cons),
+      l_newElsif = stripBracketsElseifStmtList(p_stmt.elsif),
+      l_newAltn = stripBracketsOptStmt(p_stmt.altn)
+  in
+  mk_AS`IfStmt(l_newTest, l_newCons, l_newElsif, l_newAltn, nilCid) ;
+
+stripBracketsCasesStmt : AS`CasesStmt -> AS`CasesStmt
+stripBracketsCasesStmt(p_stmt) == 
+  let l_newSel = stripBracketsExpr(p_stmt.sel),
+      l_newAltns = stripBracketsCasesStmtAltnList(p_stmt.altns),
+      l_newOther = stripBracketsOptStmt(p_stmt.Others)
+  in
+  mk_AS`CasesStmt(l_newSel, l_newAltns, l_newOther, nilCid) ;
+
+stripBracketsAlwaysStmt : AS`AlwaysStmt -> AS`AlwaysStmt
+stripBracketsAlwaysStmt(p_stmt) ==
+  let l_newPost = stripBracketsStmt(p_stmt.Post),
+      l_newBody = stripBracketsStmt(p_stmt.body)
+  in
+  mk_AS`AlwaysStmt(l_newPost, l_newBody, nilCid) ;
+
+stripBracketsExitStmt : AS`ExitStmt -> AS`ExitStmt
+stripBracketsExitStmt(p_stmt) ==
+  let l_newExpr = stripBracketsOptExpr(p_stmt.expr) in
+  mk_AS`ExitStmt(l_newExpr, nilCid) ; 
+
+stripBracketsTrapStmt : AS`TrapStmt -> AS`TrapStmt
+stripBracketsTrapStmt(p_stmt) ==
+  let l_newPat = stripBracketsPatternBind(p_stmt.pat),
+      l_newPost = stripBracketsStmt(p_stmt.Post),
+      l_newBody = stripBracketsStmt(p_stmt.body)
+  in
+  mk_AS`TrapStmt(l_newPat, l_newPost, l_newBody, nilCid) ;
+
+stripBracketsRecTrapStmt : AS`RecTrapStmt -> AS`RecTrapStmt
+stripBracketsRecTrapStmt(p_stmt) == 
+  let l_newTrap = stripBracketsTrapList(p_stmt.traps),
+      l_newBody = stripBracketsStmt(p_stmt.body)
+  in
+  mk_AS`RecTrapStmt(l_newTrap, l_newBody, nilCid) ;
+
+stripBracketsBlockStmt : AS`BlockStmt -> AS`Stmt
+stripBracketsBlockStmt(mk_AS`BlockStmt(p_dcls, p_body, -)) == 
+  if p_dcls = [] and len p_body = 1 
+  then stripBracketsStmt(hd p_body)
+  else let l_newDcls = stripBracketsAssignDefList(p_dcls),
+           l_newBody = stripBracketsStmtList(p_body)
+  in
+  mk_AS`BlockStmt(l_newDcls, l_newBody, nilCid) ;
+
+stripBracketsNonDetStmt : AS`NonDetStmt -> AS`NonDetStmt
+stripBracketsNonDetStmt(p_stmt) == 
+  let l_newStmts = stripBracketsStmtList(p_stmt.stmts) in
+  mk_AS`NonDetStmt(l_newStmts, nilCid) ;
+
+stripBracketsSpecificationStmt : AS`SpecificationStmt -> AS`SpecificationStmt
+stripBracketsSpecificationStmt(p_stmt) == 
+  let l_newPre = stripBracketsOptExpr(p_stmt.oppre),
+      l_newPost = stripBracketsExpr(p_stmt.oppost),
+      l_newError = stripBracketsErrorList(p_stmt.excps)
+  in
+  mk_AS`SpecificationStmt(p_stmt.opext, l_newPre, l_newPost, l_newError, nilCid) ;
+
+stripBracketsStartStmt : AS`StartStmt -> AS`StartStmt
+stripBracketsStartStmt(p_stmt) == 
+  let l_newExpr = stripBracketsExpr(p_stmt.expr) in
+  mk_AS`StartStmt(l_newExpr, nilCid) ;
+
+stripBracketsStartListStmt : AS`StartListStmt -> AS`StartListStmt
+stripBracketsStartListStmt(p_stmt) == 
+  let l_newExpr = stripBracketsExpr(p_stmt.expr) in
+  mk_AS`StartListStmt(l_newExpr, nilCid) ;
+
+stripBracketsElseifExpr : AS`ElseifExpr -> AS`ElseifExpr
+stripBracketsElseifExpr(p_expr) == 
+  let l_newTest = stripBracketsExpr(p_expr.test),
+      l_newCons = stripBracketsExpr(p_expr.cons)
+  in
+  mk_AS`ElseifExpr(l_newTest, l_newCons, nilCid) ;
+
+stripBracketsElseifExprList : seq of AS`ElseifExpr -> seq of AS`ElseifExpr
+stripBracketsElseifExprList(p_list) == 
+  [ stripBracketsElseifExpr(p_list(b_i)) | b_i in set inds p_list ] ;
+
+stripBracketsCaseAltn : AS`CaseAltn -> AS`CaseAltn
+stripBracketsCaseAltn(p_altn) == 
+  let l_newBody = stripBracketsExpr(p_altn.body)
+  in
+  mk_AS`CaseAltn(p_altn.match, l_newBody, nilCid) ;
+
+stripBracketsCaseAltnList : seq of AS`CaseAltn -> seq of AS`CaseAltn
+stripBracketsCaseAltnList(p_list) == 
+  [ stripBracketsCaseAltn(p_list(b_i)) | b_i in set inds p_list ] ;
+
+stripBracketsMaplet : AS`Maplet  -> AS`Maplet
+stripBracketsMaplet(p_expr) == 
+  let l_newDom = stripBracketsExpr(p_expr.mapdom),
+      l_newRng = stripBracketsExpr(p_expr.maprng)
+  in
+  mk_AS`Maplet(l_newDom, l_newRng, nilCid) ;
+
+stripBracketsMapletList : seq of AS`Maplet  -> seq of AS`Maplet
+stripBracketsMapletList(p_list) == 
+  [ stripBracketsMaplet(p_list(b_i)) | b_i in set inds p_list ] ;
+
+stripBracketsRecordModification : AS`RecordModification -> AS`RecordModification
+stripBracketsRecordModification(p_rm) == 
+  let l_newExpr = stripBracketsExpr(p_rm.newexpr) in
+  mk_AS`RecordModification(p_rm.field, l_newExpr, nilCid) ;
+
+stripBracketsRecordModificationList : seq of AS`RecordModification -> seq of AS`RecordModification
+stripBracketsRecordModificationList(p_list) == 
+  [ stripBracketsRecordModification(p_list(b_i)) | b_i in set inds p_list ] ;
+
+stripBracketsExpr : AS`Expr -> AS`Expr
+stripBracketsExpr(p_expr) == 
+  cases true :
+  (is_AS`DefExpr(p_expr)) -> stripBracketsDefExpr(p_expr),
+  (is_AS`LetExpr(p_expr)) -> stripBracketsLetExpr(p_expr),
+  (is_AS`LetBeSTExpr(p_expr)) -> stripBracketsLetBeSTExpr(p_expr),
+  (is_AS`IfExpr(p_expr)) -> stripBracketsIfExpr(p_expr),
+  (is_AS`CasesExpr(p_expr)) -> stripBracketsCasesExpr(p_expr),
+  (is_AS`PrefixExpr (p_expr)) -> stripBracketsPrefixExpr(p_expr),
+  (is_AS`BinaryExpr(p_expr)) -> stripBracketsBinaryExpr(p_expr),
+  (is_AS`AllOrExistsExpr(p_expr)) -> stripBracketsAllOrExistsExpr(p_expr),
+  (is_AS`ExistsUniqueExpr(p_expr)) -> stripBracketsExistsUniqueExpr(p_expr),
+  (is_AS`SetEnumerationExpr(p_expr)) -> stripBracketsSetEnumerationExpr(p_expr),
+  (is_AS`SetComprehensionExpr(p_expr)) -> stripBracketsSetComprehensionExpr(p_expr),
+  (is_AS`SetRangeExpr(p_expr)) -> stripBracketsSetRangeExpr(p_expr),
+  (is_AS`SeqEnumerationExpr(p_expr)) -> stripBracketsSeqEnumerationExpr(p_expr),
+  (is_AS`SeqComprehensionExpr(p_expr)) -> stripBracketsSeqComprehensionExpr(p_expr),
+  (is_AS`SubSequenceExpr(p_expr)) -> stripBracketsSubSequenceExpr(p_expr),
+  (is_AS`SeqModifyMapOverrideExpr(p_expr)) -> stripBracketsSeqModifyMapOverrideExpr(p_expr),
+  (is_AS`MapEnumerationExpr(p_expr)) -> stripBracketsMapEnumerationExpr(p_expr),
+  (is_AS`MapComprehensionExpr(p_expr)) -> stripBracketsMapComprehensionExpr(p_expr),
+  (is_AS`TupleConstructorExpr(p_expr)) -> stripBracketsTupleConstructorExpr(p_expr),
+  (is_AS`TupleSelectExpr(p_expr)) -> stripBracketsTupleSelectExpr(p_expr),
+  (is_AS`TypeJudgementExpr (p_expr)) -> stripBracketsTypeJudgementExpr(p_expr),
+  (is_AS`PreConditionApplyExpr (p_expr)) -> stripBracketsPreConditionApplyExpr(p_expr),
+  (is_AS`TokenConstructorExpr(p_expr)) -> stripBracketsTokenConstructorExpr(p_expr),
+  (is_AS`RecordConstructorExpr (p_expr)) -> stripBracketsRecordConstructorExpr(p_expr),
+  (is_AS`RecordModifierExpr (p_expr)) -> stripBracketsRecordModifierExpr(p_expr),
+  (is_AS`ApplyExpr (p_expr)) -> stripBracketsApplyExpr(p_expr),
+  (is_AS`FieldSelectExpr(p_expr)) -> stripBracketsFieldSelectExpr(p_expr),
+  (is_AS`LambdaExpr(p_expr)) -> stripBracketsLambdaExpr(p_expr),
+  (is_AS`IsExpr (p_expr)) -> stripBracketsIsExpr (p_expr),
+  (is_AS`IotaExpr(p_expr)) -> stripBracketsIotaExpr(p_expr),
+  (is_AS`BracketedExpr(p_expr)) -> stripBracketsBracketedExpr(p_expr),
+  (is_AS`NewExpr(p_expr)) -> stripBracketsNewExpr(p_expr),
+  (is_AS`SameClassExpr(p_expr)) -> stripBracketsSameClassExpr(p_expr),
+  (is_AS`SameBaseClassExpr(p_expr)) -> stripBracketsSameBaseClassExpr(p_expr),
+  (is_AS`IsOfClassExpr(p_expr)) -> stripBracketsIsOfClassExpr(p_expr),
+  (is_AS`IsOfBaseClassExpr(p_expr)) -> stripBracketsIsOfBaseClassExpr(p_expr),
+  others -> mu(p_expr, cid |-> nilCid)
+  end;
+
+stripBracketsIsOfBaseClassExpr : AS`IsOfBaseClassExpr -> AS`IsOfBaseClassExpr
+stripBracketsIsOfBaseClassExpr(p_expr) == 
+  let l_newArg = stripBracketsExpr(p_expr.arg) in
+  mk_AS`IsOfBaseClassExpr(p_expr.cls, l_newArg, nilCid) ;
+
+stripBracketsIsOfClassExpr : AS`IsOfClassExpr -> AS`IsOfClassExpr
+stripBracketsIsOfClassExpr(p_expr) == 
+  let l_newArg = stripBracketsExpr(p_expr.arg) in
+  mk_AS`IsOfClassExpr(p_expr.cls, l_newArg, nilCid) ;
+
+stripBracketsSameBaseClassExpr : AS`SameBaseClassExpr -> AS`SameBaseClassExpr
+stripBracketsSameBaseClassExpr(p_expr) ==
+  let l_newLhs = stripBracketsExpr(p_expr.expr1),
+      l_newRhs = stripBracketsExpr(p_expr.expr2)
+  in
+  mk_AS`SameBaseClassExpr(l_newLhs, l_newRhs, nilCid) ;
+
+stripBracketsSameClassExpr : AS`SameClassExpr -> AS`SameClassExpr
+stripBracketsSameClassExpr(p_expr) ==
+  let l_newLhs = stripBracketsExpr(p_expr.expr1),
+      l_newRhs = stripBracketsExpr(p_expr.expr2)
+  in
+  mk_AS`SameClassExpr(l_newLhs, l_newRhs, nilCid) ;
+
+stripBracketsNewExpr : AS`NewExpr -> AS`NewExpr
+stripBracketsNewExpr(p_expr) == 
+  let l_newArgs = stripBracketsExprList(p_expr.args) in
+  mk_AS`NewExpr(p_expr.cls, l_newArgs, nilCid) ;
+
+stripBracketsBracketedExpr : AS`BracketedExpr -> AS`Expr
+stripBracketsBracketedExpr(p_expr) == 
+  cases true :
+    (is_AS`BracketedExpr(p_expr.expr)) -> stripBracketsBracketedExpr(p_expr.expr),
+    (isAtomic(p_expr.expr)),
+    (isLiteral(p_expr.expr)) -> p_expr.expr,
+    (isBracketedExpr(p_expr.expr)) ->  stripBracketsExpr(p_expr.expr),
+    others -> let l_newExpr = stripBracketsExpr(p_expr.expr) in
+                mk_AS`BracketedExpr(l_newExpr, nilCid) 
+  end ;
+
+isLiteral : AS`Expr -> bool
+isLiteral(p_expr) == 
+  is_AS`BoolLit(p_expr) or is_AS`NilLit(p_expr) or is_AS`RealLit(p_expr) or is_AS`NumLit(p_expr)
+    or is_AS`CharLit(p_expr) or is_AS`TextLit(p_expr) or is_AS`QuoteLit(p_expr) ;
+
+isAtomic : AS`Expr -> bool
+isAtomic(p_expr) ==
+  is_AS`UndefinedExpr(p_expr) or is_AS`SelfExpr(p_expr) or 
+--   is_AS`CurTimeExpr(p_expr) or
+   is_AS`ThreadIdExpr(p_expr) or is_AS`Name(p_expr) or is_AS`OldName(p_expr) ;
+
+isBracketedExpr : AS`Expr -> bool
+isBracketedExpr(p_expr) ==
+  is_AS`SetEnumerationExpr(p_expr) or is_AS`SetComprehensionExpr(p_expr) or
+  is_AS`SetRangeExpr(p_expr) or is_AS`SeqEnumerationExpr(p_expr) or 
+  is_AS`SeqComprehensionExpr(p_expr) or is_AS`MapEnumerationExpr(p_expr) or
+  is_AS`MapComprehensionExpr(p_expr) or is_AS`TupleConstructorExpr(p_expr) or
+  is_AS`TypeJudgementExpr(p_expr) or is_AS`PreConditionApplyExpr(p_expr) or
+  is_AS`TokenConstructorExpr(p_expr) or is_AS`RecordConstructorExpr(p_expr) or
+  is_AS`RecordModifierExpr(p_expr) or is_AS`IsExpr(p_expr) or 
+  is_AS`SameClassExpr(p_expr) or is_AS`SameBaseClassExpr(p_expr) or
+  is_AS`IsOfClassExpr(p_expr) or is_AS`IsOfBaseClassExpr(p_expr) or
+  is_AS`ActExpr(p_expr) or is_AS`FinExpr(p_expr) or is_AS`ActiveExpr(p_expr) or
+  is_AS`WaitingExpr(p_expr) or is_AS`ReqExpr(p_expr) ;
+
+stripBracketsIotaExpr : AS`IotaExpr -> AS`IotaExpr
+stripBracketsIotaExpr(p_expr) ==
+  let l_newBind = stripBracketsBind(p_expr.bind),
+      l_newExpr = stripBracketsExpr(p_expr.pred)
+  in
+  mk_AS`IotaExpr(l_newBind, l_newExpr, nilCid) ;
+
+stripBracketsLetExpr : AS`LetExpr -> AS`LetExpr
+stripBracketsLetExpr(p_expr) ==  
+  let l_newDefs = stripBracketsLocalDefList(p_expr.localdef),
+      l_newBody = stripBracketsExpr(p_expr.body)
+  in
+  mk_AS`LetExpr(l_newDefs, l_newBody, nilCid) ;
+
+stripBracketsLetBeSTExpr : AS`LetBeSTExpr -> AS`LetBeSTExpr
+stripBracketsLetBeSTExpr(p_expr) ==  
+  let l_newLhs = stripBracketsBindList(p_expr.lhs),
+      l_newSuch = stripBracketsOptExpr(p_expr.St),
+      l_newExpr = stripBracketsExpr(p_expr.In)
+  in
+  mk_AS`LetBeSTExpr(l_newLhs, l_newSuch, l_newExpr, nilCid) ;
+
+stripBracketsIfExpr : AS`IfExpr -> AS`IfExpr
+stripBracketsIfExpr(p_expr) ==
+  let l_newTest = stripBracketsExpr(p_expr.test),
+      l_newCons = stripBracketsExpr(p_expr.cons),
+      l_newElsif = stripBracketsElseifExprList(p_expr.elsif),
+      l_newAltn = stripBracketsOptExpr(p_expr.altn)
+  in
+  mk_AS`IfExpr(l_newTest, l_newCons, l_newElsif, l_newAltn, nilCid) ;
+
+stripBracketsCasesExpr : AS`CasesExpr -> AS`CasesExpr
+stripBracketsCasesExpr(p_expr) ==
+  let l_newSel = stripBracketsExpr(p_expr.sel),
+      l_newAltn = stripBracketsCaseAltnList(p_expr.altns),
+      l_newOther = stripBracketsOptExpr(p_expr.Others)
+  in
+  mk_AS`CasesExpr(l_newSel, l_newAltn, l_newOther, nilCid) ;
+
+stripBracketsPrefixExpr : AS`PrefixExpr -> AS`PrefixExpr
+stripBracketsPrefixExpr(p_expr) ==
+  let l_newExpr = stripBracketsExpr(p_expr.arg) in
+  mk_AS`PrefixExpr(p_expr.opr, l_newExpr, nilCid) ;
+
+stripBracketsAllOrExistsExpr : AS`AllOrExistsExpr -> AS`AllOrExistsExpr
+stripBracketsAllOrExistsExpr(p_expr) == 
+  let l_newBind = stripBracketsBindList(p_expr.bind),
+      l_newExpr = stripBracketsExpr(p_expr.pred)
+  in
+  mk_AS`AllOrExistsExpr(p_expr.quant, l_newBind, l_newExpr, nilCid) ;
+
+stripBracketsExistsUniqueExpr : AS`ExistsUniqueExpr -> AS`ExistsUniqueExpr
+stripBracketsExistsUniqueExpr(p_expr) == 
+  let l_newBind = stripBracketsBind(p_expr.bind),
+      l_newExpr = stripBracketsExpr(p_expr.pred)
+  in
+  mk_AS`ExistsUniqueExpr(l_newBind, l_newExpr, nilCid) ;
+
+stripBracketsSetEnumerationExpr : AS`SetEnumerationExpr -> AS`SetEnumerationExpr
+stripBracketsSetEnumerationExpr(p_expr) ==
+  let l_newExprs = stripBracketsExprList(p_expr.els) in
+  mk_AS`SetEnumerationExpr(l_newExprs, nilCid) ;
+
+stripBracketsSetComprehensionExpr : AS`SetComprehensionExpr -> AS`SetComprehensionExpr
+stripBracketsSetComprehensionExpr(p_expr) ==
+  let l_newElem = stripBracketsExpr(p_expr.elem),
+      l_newBind = stripBracketsBindList(p_expr.bind),
+      l_newPred = stripBracketsOptExpr(p_expr.pred)
+  in
+  mk_AS`SetComprehensionExpr(l_newElem, l_newBind, l_newPred, nilCid) ;
+
+stripBracketsSetRangeExpr : AS`SetRangeExpr -> AS`SetRangeExpr
+stripBracketsSetRangeExpr(p_expr) ==
+  let l_newMin = stripBracketsExpr(p_expr.lb),
+      l_newMax = stripBracketsExpr(p_expr.ub)
+  in
+  mk_AS`SetRangeExpr(l_newMin, l_newMax, nilCid) ;
+
+stripBracketsSeqEnumerationExpr : AS`SeqEnumerationExpr -> AS`SeqEnumerationExpr
+stripBracketsSeqEnumerationExpr(p_expr) ==
+  let l_newExprs = stripBracketsExprList(p_expr.els) in
+  mk_AS`SeqEnumerationExpr(l_newExprs, nilCid) ;
+
+stripBracketsSeqComprehensionExpr : AS`SeqComprehensionExpr -> AS`SeqComprehensionExpr
+stripBracketsSeqComprehensionExpr(mk_AS`SeqComprehensionExpr(p_elem, p_bind, p_pred,-)) ==
+  let l_newElem = stripBracketsExpr(p_elem),
+      l_newBind = cases true:
+                    (is_AS`SetBind(p_bind)) -> stripBracketsSetBind(p_bind),
+                    (is_AS`SeqBind(p_bind)) -> stripBracketsSeqBind(p_bind),
+                    others -> undefined
+                  end,
+      l_newPred = stripBracketsOptExpr(p_pred)
+  in
+  mk_AS`SeqComprehensionExpr(l_newElem, l_newBind, l_newPred, nilCid) ;
+
+stripBracketsSubSequenceExpr : AS`SubSequenceExpr -> AS`SubSequenceExpr
+stripBracketsSubSequenceExpr(p_expr) ==
+  let l_newSeq = stripBracketsExpr(p_expr.sequence),
+      l_newMin = stripBracketsExpr(p_expr.frompos),
+      l_newMax = stripBracketsExpr(p_expr.topos)
+  in
+  mk_AS`SubSequenceExpr(l_newSeq, l_newMin, l_newMax, nilCid) ;
+
+stripBracketsSeqModifyMapOverrideExpr : AS`SeqModifyMapOverrideExpr -> AS`SeqModifyMapOverrideExpr
+stripBracketsSeqModifyMapOverrideExpr(p_expr) == 
+  let l_newSeqmap = stripBracketsExpr(p_expr.seqmap),
+      l_newExpr = stripBracketsExpr(p_expr.mapexp)
+  in
+  mk_AS`SeqModifyMapOverrideExpr(l_newSeqmap, l_newExpr, nilCid) ;
+
+stripBracketsMapEnumerationExpr : AS`MapEnumerationExpr -> AS`MapEnumerationExpr
+stripBracketsMapEnumerationExpr(p_expr) ==
+  let l_newMaplets = stripBracketsMapletList(p_expr.els) in
+  mk_AS`MapEnumerationExpr(l_newMaplets, nilCid) ;
+
+stripBracketsMapComprehensionExpr : AS`MapComprehensionExpr -> AS`MapComprehensionExpr
+stripBracketsMapComprehensionExpr(p_expr) ==
+  let l_newElem = stripBracketsMaplet(p_expr.elem),
+      l_newBind = stripBracketsBindList(p_expr.bind),
+      l_newPred = stripBracketsOptExpr(p_expr.pred)
+  in
+  mk_AS`MapComprehensionExpr(l_newElem, l_newBind, l_newPred, nilCid) ;
+
+stripBracketsTupleConstructorExpr : AS`TupleConstructorExpr -> AS`TupleConstructorExpr
+stripBracketsTupleConstructorExpr(p_expr) == 
+  let l_newExprs = stripBracketsExprList(p_expr.fields) in
+  mk_AS`TupleConstructorExpr(l_newExprs, nilCid) ;
+
+stripBracketsTupleSelectExpr : AS`TupleSelectExpr -> AS`TupleSelectExpr
+stripBracketsTupleSelectExpr(p_expr) == 
+  let l_newExpr = stripBracketsExpr(p_expr.tuple) in
+  mk_AS`TupleSelectExpr(l_newExpr, p_expr.no, nilCid) ;
+
+stripBracketsTypeJudgementExpr : AS`TypeJudgementExpr -> AS`TypeJudgementExpr
+stripBracketsTypeJudgementExpr(p_expr) == 
+  let l_newExpr = stripBracketsExpr(p_expr.expr) in 
+  mk_AS`TypeJudgementExpr(l_newExpr, p_expr.type, nilCid) ;
+
+stripBracketsPreConditionApplyExpr : AS`PreConditionApplyExpr -> AS`PreConditionApplyExpr
+stripBracketsPreConditionApplyExpr(p_expr) ==
+  let l_newFct = stripBracketsExpr(p_expr.fct),
+      l_newArg = stripBracketsExprList(p_expr.arg)
+  in
+  mk_AS`PreConditionApplyExpr(l_newFct, l_newArg, nilCid) ;
+
+stripBracketsTokenConstructorExpr : AS`TokenConstructorExpr -> AS`TokenConstructorExpr
+stripBracketsTokenConstructorExpr(p_expr) == 
+  let l_newExpr = stripBracketsExpr(p_expr.field) in
+  mk_AS`TokenConstructorExpr(l_newExpr, nilCid) ;
+
+stripBracketsRecordConstructorExpr: AS`RecordConstructorExpr -> AS`RecordConstructorExpr
+stripBracketsRecordConstructorExpr(p_expr) == 
+  let l_newExpr = stripBracketsExprList(p_expr.fields) in
+  mk_AS`RecordConstructorExpr(p_expr.tag, l_newExpr, nilCid) ;
+
+stripBracketsRecordModifierExpr : AS`RecordModifierExpr -> AS`RecordModifierExpr
+stripBracketsRecordModifierExpr(p_expr) == 
+  let l_newRec = stripBracketsExpr(p_expr.rec),
+      l_newMods = stripBracketsRecordModificationList(p_expr.modifiers)
+  in
+  mk_AS`RecordModifierExpr(l_newRec, l_newMods, nilCid) ;
+
+stripBracketsApplyExpr : AS`ApplyExpr -> AS`ApplyExpr
+stripBracketsApplyExpr(p_expr) ==
+  let l_newFct = stripBracketsExpr(p_expr.fct),
+      l_newArg = stripBracketsExprList(p_expr.arg)
+  in
+  mk_AS`ApplyExpr(l_newFct, l_newArg, nilCid) ;
+
+stripBracketsFieldSelectExpr : AS`FieldSelectExpr -> AS`FieldSelectExpr
+stripBracketsFieldSelectExpr(p_expr) == 
+  let l_newExpr = stripBracketsExpr(p_expr.rec) in
+  mk_AS`FieldSelectExpr(l_newExpr, p_expr.nm, nilCid) ;
+
+stripBracketsLambdaExpr : AS`LambdaExpr -> AS`LambdaExpr
+stripBracketsLambdaExpr(p_expr) ==
+  let l_newBody = stripBracketsExpr(p_expr.body)
+  in
+  mk_AS`LambdaExpr(p_expr.parm, l_newBody, p_expr.type, nilCid) ;
+
+stripBracketsIsExpr : AS`IsExpr -> AS`IsExpr
+stripBracketsIsExpr(p_expr) ==
+  let l_newExpr = stripBracketsExpr(p_expr.arg) in
+  mk_AS`IsExpr(p_expr.type, l_newExpr, nilCid) ;
+
+stripBracketsDefExpr : AS`DefExpr -> AS`Expr
+stripBracketsDefExpr(p_expr) == 
+  let l_newPbe = stripBracketsPBEList(p_expr.Def),
+      l_newExpr = stripBracketsExpr(p_expr.In)
+  in
+      mk_AS`DefExpr(l_newPbe, l_newExpr, nilCid) ;
+
+stripBracketsBinaryExpr : AS`BinaryExpr -> AS`Expr
+stripBracketsBinaryExpr(p_expr) == 
+  let l_newLeft = stripBracketsExpr(p_expr.left),
+      l_newRight = stripBracketsExpr(p_expr.right)
+  in
+  mk_AS`BinaryExpr(l_newLeft, p_expr.opr, l_newRight, nilCid) ;
+
+
+end SB
+\end{vdm_al}
+

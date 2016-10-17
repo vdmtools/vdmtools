@@ -1,0 +1,96 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+types
+
+
+  AAA = R3 | R4;
+
+  AAAA = R2 | R4;
+
+  AA = R1 | R2 | AAA;
+
+  R2 :: nat 
+        nat;
+
+  R3 :: nat 
+        nat;
+
+  R4 :: nat 
+        nat;
+
+  R1 :: nat 
+        nat;
+
+  B_ :: nat 
+        nat;
+
+  B' = bool | nat | char
+  inv b == if is_nat(b) then 
+             b > 10
+           else
+             true;
+
+  D2 = set of nat
+  inv s == s <> {};
+
+  Y = R1 | R2 | int;
+
+  A = B | C | D;
+
+  B = B' | B_;
+
+  C = real | <QUOTE>;
+
+  D = D1 | D1 | D3;
+  
+  D1 = seq of B';
+
+  D3 = D1 * D2;
+
+  Item = MenuItem | RemoveItem;
+  
+  MenuItem = Separator | Action;
+  
+  Action:: text: seq of char
+           s : <HELLO>;
+
+  Separator::;
+
+  RemoveItem::;
+
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+-- Testing dont care for records.
+
+public Test : () ==> inmap nat to nat  
+Test () ==
+( if val1 = val2
+  then 
+      if mp1(val2) = 34
+      then let mk_Rec1(a,b,c)=val1,
+               mk_Rec1(d,e, mk_(f,g))=val2
+           in return {a|->c, f |-> c}
+);
+  
+types 
+
+  Rec1 ::
+     a: nat
+     b: nat
+     c:- nat | nat * nat
+ 
+values
+
+  val1 = mk_Rec1(1,2,3);
+  val2 = mk_Rec1(1,2,6);
+
+  mp1 = {val1 |-> 34};
+  
+
+end A

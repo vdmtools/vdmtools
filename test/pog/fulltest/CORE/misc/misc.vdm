@@ -1,0 +1,31 @@
+class misc
+types
+  B:: n: nat
+      b: [bool];
+
+  A:: n: nat
+      b: [bool]
+
+-- this test will test that it is the correct type, which is given to
+-- the if expression.
+functions
+f:() -> B
+f() ==
+mu(mk_B(12,true), n |-> if false 
+                     then 10
+                     else 20,
+               b |-> cases false:
+                       true -> true,
+                       others -> nil
+                     end );
+
+g:() -> B|A
+g() ==
+mu(if true then mk_B(12,true) else mk_A(12,true), n |-> if false 
+                     then 10
+                     else 20,
+               b |-> cases false:
+                       true -> true,
+                       others -> nil
+                     end )
+end misc

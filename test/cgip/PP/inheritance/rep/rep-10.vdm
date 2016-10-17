@@ -1,0 +1,40 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+instance variables
+public  a: nat :=1;
+  inv a <> 0;
+
+operations
+public  SetVal: nat ==> ()
+  SetVal(n) ==
+    a := n
+
+end A
+
+class C is subclass of A
+
+instance variables
+public  a: nat
+
+operations
+public  SetVal: nat ==> ()
+  SetVal(n) ==
+    a := n
+
+end C
+
+class D is subclass of C
+
+end D
+
+class B is subclass of D
+
+operations
+  public Test : () ==> nat * nat  
+  Test () ==
+  ( self.SetVal(1);
+    self.A`SetVal(2);
+    return mk_(a,A`a)
+  )
+end B

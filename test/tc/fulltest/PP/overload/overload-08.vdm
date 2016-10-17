@@ -1,0 +1,26 @@
+-- This checks that if no function exists with arity matching the number of 
+-- parameters in an apply expression, an error occurs.
+
+class A
+
+functions
+
+public fn : bool -> bool
+fn(b) ==
+   b ;
+
+public fn : A -> bool
+fn(-) ==
+  false;
+
+end A
+
+class C is subclass of A
+
+functions
+
+g : nat -> real
+g(n) ==
+  fn(n,n)
+
+end C

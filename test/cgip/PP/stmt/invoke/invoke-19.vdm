@@ -1,0 +1,45 @@
+class A
+
+instance variables
+protected  n : nat := 0;
+
+operations
+ 
+  t:()==>nat
+  t()==return n
+
+end A
+
+class C is subclass of A
+
+operations
+
+  m2:()==>nat
+  m2()==return n
+
+end C
+
+class B
+
+instance variables
+  z : int := 0;
+
+
+operations
+  rmap:()==> map int to A 
+  rmap()==
+      let a = new A(),  
+          b = 3
+      in return { b |-> a};
+
+
+
+public Test : () ==> seq of nat
+  Test() ==
+  ( 
+    let res = rmap()
+    in let a in set dom res
+       in return [a]
+  )
+
+end B

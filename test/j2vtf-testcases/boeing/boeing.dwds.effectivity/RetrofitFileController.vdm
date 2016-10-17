@@ -1,0 +1,75 @@
+class RetrofitFileController is subclass of RetrofitDatabase
+operations 
+public  readData : () ==> <VOID>
+readData() == 
+( dcl   inputFileList : map  int  to  [String] := getFileList();
+  ( dcl   idx : int  := 0;
+    while  idx < inputFileList.length do  
+    ( dcl   retrofitFile : [RetrofitFile] := new  RetrofitFile(filePath , inputFileList(idx));
+      if  retrofitFile.readData()
+      then  
+        ( let - = addRetrofits(retrofitFile.getRetrofitEntry())
+          in 
+            skip 
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  
+) ;
+
+private  getFileList : () ==> map  int  to  [String]
+getFileList() == 
+( dcl   fileExtension : [String] := new  String(".")+fileType,
+        filteredVector : [Vector] := new  Vector(),
+        fileDirectory : [File] := new  File(filePath),
+        fileList : map  int  to  [String] := fileDirectory.list();
+  ( dcl   idx : int  := 0;
+    while  idx < fileList.length do  
+    ( if  fileList(idx).endsWith(fileExtension)
+      then  
+        ( let - = filteredVector.addElement(fileList(idx))
+          in 
+            skip 
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  ( dcl   filteredList : map  int  to  [String] := {l_14 |-> nil  |l_14 in set  {0,...,filteredVector.size()-1}};
+    let - = filteredVector.copyInto(filteredList)
+    in 
+      skip ;
+    return  filteredList
+  ) 
+) ;
+
+public  RetrofitFileController : () ==> RetrofitFileController
+RetrofitFileController() == 
+( fileType := retrofitController.getDbType();
+  filePath := retrofitController.getDbUrl();
+  return  
+) ;
+
+private  addRetrofits : [RetrofitEntry] ==> <VOID>
+addRetrofits(retrofitEntry) == 
+( dcl   db : [Database] := Database`getDatabase(),
+        aircraftType : [String] := retrofitEntry.getAircraftType(),
+        tailNumber : [String] := retrofitEntry.getTailNumber(),
+        retrofitList : [Vector] := retrofitEntry.getRetrofits(),
+        ac : [Aircraft] := db.getAircraftByTailNumber(tailNumber);
+  ( dcl   idx : int  := 0;
+    while  idx < retrofitList.size() do  
+    ( let - = retrofitController.addRetrofit(ac , retrofitList.elementAt(idx))
+      in 
+        skip ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  
+) ;
+
+instance variables 
+  private  filePath : [String];
+  private  fileType : [String]
+  
+end  RetrofitFileController

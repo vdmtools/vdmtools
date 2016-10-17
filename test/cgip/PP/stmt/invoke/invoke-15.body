@@ -1,0 +1,43 @@
+class A
+
+instance variables
+  n : nat := 0;
+
+operations
+
+
+  GetN: () ==> nat
+  GetN() ==
+    return n;
+
+  SetN: nat ==> ()
+  SetN(v) ==
+    n := v;
+
+
+m2: () ==> bool
+m2() ==
+return true;
+
+protected m1: B ==> bool
+m1( arg1 ) ==
+def my_bool : bool = arg1.m2()
+in return my_bool
+
+end A
+
+
+class B is subclass of A
+
+
+operations
+
+
+public Test : () ==> bool
+  Test() ==
+  ( dcl a : nat | A;
+    a := 35;
+    a.m1(self);
+  )
+
+end B

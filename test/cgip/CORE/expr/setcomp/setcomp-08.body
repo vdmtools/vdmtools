@@ -1,0 +1,6 @@
+public Test : () ==> set of nat  
+Test () ==
+return 
+    { a| a in set {1,2,3} & a <> 2}
+	
+

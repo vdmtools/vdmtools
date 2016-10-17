@@ -1,0 +1,379 @@
+class JavaIoPrintStream is subclass of JavaIoFilterOutputStream
+--values 
+--  CLASS : JavaLangClass = new  JavaLangClass("JavaIoPrintStream" , <CLASS> , false  )
+instance variables 
+  private  autoFlush : bool; --  := false  ;
+  private  trouble : bool; --  := false  ;
+  private  textOut : JavaIoBufferedWriter;
+  private  charOut : JavaIoOutputStreamWriter;
+  private  closing : bool; --  := false  
+operations 
+public  close : () ==> ()
+close() == 
+( ( if  not  closing
+    then  
+      ( closing := true  ;
+--        trap  j2v_exception with  
+--          cases  true  : 
+--            (isofclass  (JavaIoIOException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+--              ( dcl   x : JavaIoIOException := j2v_exception;
+--               trouble := true  
+--              ) ,
+--            others  -> 
+--              exit  j2v_exception
+--          end  
+--        in  
+          ( textOut.close();
+            out.close()
+          ) ;
+        textOut := new  JavaIoBufferedWriter(<NIL>);
+        charOut := new  JavaIoOutputStreamWriter(<NIL>);
+--        out := new  JavaIoOutputStream(<NIL>)             An abstract class!
+      ) 
+  ) ;
+) ;
+
+public  flush : () ==> ()
+flush() == 
+( ( 
+--    trap  j2v_exception with  
+--      cases  true  : 
+--        (isofclass  (JavaIoIOException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+--          ( dcl   x : JavaIoIOException := j2v_exception;
+--            trouble := true  
+--          ) ,
+--        others  -> 
+--          exit  j2v_exception
+--      end  
+--    in  
+      ( ensureOpen();
+        out.flush()
+      ) 
+  ) ;
+) ;
+
+public  print : bool | char | int | real | (map  int  to  char ) | JavaLangObject ==> ()
+print(b) == 
+( cases true:
+    (is_bool(b)) ->
+      ( dcl t: JavaLangString:=new  JavaLangString("true"),
+          f: JavaLangString:=new JavaLangString("false"),
+          r: JavaLangString:=if  b then  t else  f;
+        writeStr(r) ),
+    (is_char(b)) ->
+      (dcl c: char := b; write(J2VUTIL`toInt(c)) ), -- write(JavaLangString`valueOf(b))
+    (is_int(b)) ->
+      (dcl i: int := b; writeStr((new JavaLangInteger(i)).toString()) ),
+    (is_real(b)) ->
+      (dcl r: real := b; writeStr(JavaLangString`valueOf(r)) ),
+    (isofclass(JavaLangObject,b)) ->
+      ( 
+        if isofclass(JavaLangString,b)
+        then
+        ( dcl s:JavaLangString:=b;
+          if  s.IsNil()
+          then  
+            ( s := new  JavaLangString("null")
+            ) ;
+          writeStr(s);
+        )
+        else
+          def o: JavaLangObject = b in writeStr(JavaLangString`valueOf(o))
+      ),
+    others ->
+      (dcl m: map  int  to  char:=b; writeMIC(m))
+  end
+) ;
+
+--public  print : JavaLangString ==> ()
+--public  print : JavaLangObject ==> ()
+--print(obj) == 
+--( 
+--  if isofclass(JavaLangString,obj)
+--  then
+--    ( dcl s:JavaLangString:=obj;
+--      if  s.IsNil()
+--      then  
+--        ( s := new  JavaLangString("null")
+--        ) ;
+--      write(s);
+--    )
+--  else
+--    write(JavaLangString`valueOf(obj))
+--) ;
+
+--public  print : char  ==> ()
+--print(c) == 
+--( write(JavaLangString`valueOf(c))
+--) ;
+
+----public  print : int  ==> ()
+--public  print : real  ==> ()
+--print(d) == 
+--( write(JavaLangString`valueOf(d))
+--) ;
+
+--public  print : map  int  to  char  ==> ()
+--print(s) == 
+--( write(s);
+--) ;
+
+public  write : int  ==> ()
+write(b) == 
+( trap  j2v_exception:JavaLangException with  
+    cases  true  : 
+----      (isofclass  (InterruptedIOException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+----        ( dcl   x : InterruptedIOException := j2v_exception;
+----          let - = Thread`currentThread().interrupt()
+----          in 
+----            skip 
+----        ) ,
+      ( isofclass  (JavaIoIOException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+        ( dcl   x : JavaIoIOException := j2v_exception;
+          trouble := true  
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( ( ensureOpen();
+        exit new JavaIoIOException();
+        out.write(b);
+--        if  (b = '\n') and  autoFlush
+        if  (b = J2VUTIL`toInt('\n') ) and  autoFlush
+        then  
+          out.flush()
+      ) 
+    ) ;
+) ;
+
+--public test: () ==> bool
+--test() == return true;
+
+private  newLine : () ==> ()
+newLine() == 
+(
+--  trap  j2v_exception with  
+--    cases  true  : 
+--      (isofclass  (InterruptedIOException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+--        ( dcl   x : InterruptedIOException := j2v_exception;
+--          let - = Thread`currentThread().interrupt()
+--          in 
+--            skip 
+--        ) ,
+--      (isofclass  (JavaIoIOException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+--        ( dcl   x : JavaIoIOException := j2v_exception;
+--         trouble := true  
+--        ) ,
+--      others  -> 
+--        exit  j2v_exception
+--    end  
+--  in  
+    ( ( ensureOpen();
+        textOut.newLine();
+        textOut.flushBuffer();
+        charOut.flushBuffer();
+        if  autoFlush
+        then  
+          out.flush()
+      ) 
+    ) ;
+) ;
+
+public  println : () ==> ()
+println() == 
+( newLine();
+) ;
+
+--public  getClass : () ==> JavaLangClass
+--getClass() == 
+--return  CLASS;
+
+public  println : bool | char | int | real | (map  int  to  char ) | JavaLangObject ==> ()
+println(x) == 
+( print(x);
+  newLine()
+) ;
+
+--public  println : char  ==> ()
+--println(x) == 
+--( print(x);
+--  newLine()
+--) ;
+
+--public  println : int  ==> ()
+--println(x) == 
+--( print(x);
+--  newLine()
+--) ;
+
+--public  println : real  ==> ()
+--println(x) == 
+--( print(x);
+--  newLine()
+--) ;
+
+--public  println : map  int  to  char  ==> ()
+--println(x) == 
+--( print(x);
+--  newLine()
+--) ;
+
+--public  println : JavaLangObject ==> ()
+--println(x) == 
+--( print(x);
+--  newLine()
+--) ;
+
+--public  println : JavaLangString ==> ()
+--println(x) == 
+--( print(x);
+--  newLine()
+--) ;
+
+protected  setError : () ==> ()
+setError() == 
+( trouble := true  ;
+) ;
+
+public  checkError : () ==> bool 
+checkError() == 
+( if  not  out.IsNil()
+  then  
+    flush();
+  return  trouble
+) ;
+
+private  ensureOpen : () ==> ()
+ensureOpen() == 
+( --if  out.IsNil()
+  --then  
+  --  exit  new  JavaIoIOException(new  JavaLangString("Stream closed"));
+  skip
+) ;
+
+private  writeMIC : map  int  to  char  ==> ()
+writeMIC(buf) == 
+(
+--  trap  j2v_exception with  
+--    cases  true  : 
+--      (isofclass  (InterruptedIOException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+--        ( dcl   x : InterruptedIOException := j2v_exception;
+--          let - = Thread`currentThread().interrupt()
+--          in 
+--            skip 
+--        ) ,
+--      (isofclass  (JavaIoIOException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+--        ( dcl   x : JavaIoIOException := j2v_exception;
+--          trouble := true  
+--        ) ,
+--      others  -> 
+--        exit  j2v_exception
+--    end  
+--  in  
+    ( ( ensureOpen();
+        textOut.write(buf);
+        textOut.flushBuffer();
+        charOut.flushBuffer();
+        if  autoFlush
+        then  
+          ( ( dcl   i : int  := 0;
+              while  i < (card  dom  buf) do  
+              ( if  buf(i) = '\n'
+                then  
+                  out.flush();
+                i := i+1
+              ) 
+            ) 
+          ) 
+      ) 
+    ) ;
+) ;
+
+private  writeStr : JavaLangString ==> ()
+writeStr(s) == 
+(
+--  trap  j2v_exception with  
+--    cases  true  : 
+--      (isofclass  (InterruptedIOException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+--        ( dcl   x : InterruptedIOException := j2v_exception;
+--          let - = Thread`currentThread().interrupt()
+--          in 
+--           skip 
+--        ) ,
+--      (isofclass  (JavaIoIOException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+--        ( dcl   x : JavaIoIOException := j2v_exception;
+--          trouble := true  
+--        ) ,
+--      others  -> 
+--        exit  j2v_exception
+--    end  
+--  in  
+    ( ( ensureOpen();
+        textOut.writeStr(s);
+        textOut.flushBuffer();
+        charOut.flushBuffer();
+        if  autoFlush and  (s.indexOf(J2VUTIL`toInt('\n')) >= 0)
+        then  
+          out.flush()
+      ) 
+    ) ;
+) ;
+
+public  write : map  int  to  int  * int  * int  ==> ()
+write(buf, off, len__) == 
+(
+--  trap  j2v_exception with  
+--    cases  true  : 
+--      (isofclass  (InterruptedIOException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+--        ( dcl   x : InterruptedIOException := j2v_exception;
+--          let - = Thread`currentThread().interrupt()
+--          in 
+--            skip 
+--        ) ,
+--      (isofclass  (JavaIoIOException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+--        ( dcl   x : JavaIoIOException := j2v_exception;
+--          trouble := true  
+--        ) ,
+--      others  -> 
+--        exit  j2v_exception
+--    end  
+--  in  
+    ( ( ensureOpen();
+        out.write2(buf , off , len__);
+        if  autoFlush
+        then  
+          out.flush()
+      ) 
+    ) ;
+) ;
+
+--public  JavaIoPrintStream : <NIL> ==> JavaIoPrintStream
+--JavaIoPrintStream(-) == 
+--isNil := true  ;
+
+--public  JavaIoPrintStream : JavaIoOutputStream ==> JavaIoPrintStream
+--JavaIoPrintStream(out) == 
+--( let - = JavaIoPrintStream(out , false  )
+--  in skip
+--) ;
+
+public  JavaIoPrintStream : JavaIoOutputStream * bool  ==> JavaIoPrintStream
+JavaIoPrintStream(out, autoFlush) == 
+( let - = JavaIoFilterOutputStream(out)
+  in 
+    skip ;
+--  if  out.IsNil()
+--  then  
+--    ( exit  new  JavaLangNullPointerException(new  JavaLangString("Null output stream"))
+--    ) ;
+  JavaIoPrintStream`autoFlush := autoFlush;
+  JavaIoPrintStream`trouble := false;
+  JavaIoPrintStream`closing := false;
+
+  JavaIoPrintStream`charOut := new  JavaIoOutputStreamWriter(self  );
+  JavaIoPrintStream`textOut := new  JavaIoBufferedWriter(JavaIoPrintStream`charOut)
+) ;
+
+
+end  JavaIoPrintStream

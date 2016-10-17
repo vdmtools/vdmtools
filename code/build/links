@@ -1,0 +1,1988 @@
+# $Id: links,v 1.154 2006/09/23 11:13:30 vdmtools Exp $
+ 
+# Script for lnconf perl script. 
+
+BASELINK=baselink
+TOOLBOXLINK=toolboxlink
+
+BUILD   = $BASELINK/build
+DIVDIR  = $BASELINK/diverse
+EVALDIR = $BASELINK/eval
+SFDIR   = $BASELINK/specfile
+CGDIR   = $BASELINK/cg
+LIBDIR  = $BASELINK/lib
+PARSDIR = $BASELINK/parser
+RECODIR = $BASELINK/recover
+SSDIR   = $BASELINK/statsem
+EXCDIR  = $BASELINK/exc_emul
+RANDIR  = $BASELINK/random
+GUIDIR  = $BASELINK/gui
+UTILSDIR= $BASELINK/utils
+MGRDIR  = $BASELINK/specman
+TRACESDIR= $BASELINK/traces
+LICENSEDIR = $BASELINK/license
+
+EVALGENDIR=$EVALDIR/gencode
+LOCAL_EVALGENDIR_SL=gencodesl
+LOCAL_EVALGENDIR_PP=gencodepp
+LOCAL_EVALGENDIR_RT=gencodert
+
+SSGENDIR=$SSDIR/gencode
+
+RELEASEDIR = $BASELINK/release
+SPECDIRROOT = $TOOLBOXLINK/spec
+MGRSPECDIR = $TOOLBOXLINK/spec/specman-spec/spec
+EXAMPLES= $TOOLBOXLINK/examples
+STDLIB = $TOOLBOXLINK/spec/stdlib-spec
+
+MGRCODE = $MGRDIR/code
+ERRMSG =  $BASELINK/errmsg
+
+# POG STUFF 
+POGDIR  = $BASELINK/pog
+POGAUXDIR = $BASEDIR/pog-aux
+POGPRETTYDIR = $BASEDIR/pog-pretty
+
+POGGENDIR = $BASEDIR/pog/gencode
+POG_AUXGENDIR = $BASEDIR/pog-aux/gencode
+POG_PRETTYGENDIR = $BASEDIR/pog-pretty/gencode
+
+# CODE GENERATED FROM SPEC USED IN THE CG
+CGGENDIR = $CGDIR/gencode
+
+# UML STUFF
+
+INHTREE = $BASELINK/inhtree
+
+UMLDIR  = $BASELINK/uml
+UMLSPEC = $TOOLBOXLINK/spec/uml-spec
+UMLCODE = $UMLDIR/code
+DEPDIR  = $BASELINK/dep
+DEPCODE = $DEPDIR/code
+ASREPDIR   = $BASELINK/as-rep
+MAKE_TOOLS = $BASELINK/make_tools
+PORTDIR = $BASELINK/port
+WIN32DIR = $BASELINK/win32
+ELISPDIR = $BASELINK/elisp
+CORBACODE = $BASELINK/api/corba
+LATEXDIR = $TOOLBOXLINK/doc/latex
+FLEXLM_DIR_UNIX = /local/share/globe/flex_sdk
+MACOSXDIR = $BASELINK/macosx
+
+# RT
+RTDIR = $BASELINK/vice
+RTPARSER = $BASELINK/cg/gencode/vice
+
+# WORD STUFF
+
+WORDDIR = $BASELINK/word
+
+checkdir BASEDIR
+ln $BASEDIR $BASELINK
+
+checkdir TOOLBOXDIR
+ln $TOOLBOXDIR $TOOLBOXLINK
+
+checkdir BASELINK DIVDIR EVALDIR CGDIR LIBDIR PARSDIR RECODIR SSDIR EXCDIR \
+         RANDIR GUIDIR UTILSDIR MGRDIR MGRCODE \
+         MAKE_TOOLS PORTDIR UMLDIR UMLCODE DEPDIR DEPCODE \
+         WORDDIR ELISPDIR LATEXDIR ERRMSG RTDIR \
+	 POGDIR POGPRETTYDIR POGAUXDIR
+
+
+checkdir UMLSPEC
+
+# linkMAKEDEP:
+ln $BUILD/DependALL.$OSTYPE .
+oscheck(win32) ln $BUILD/DependALL.Linux .
+# link build stuff
+ln $BUILD/Makefile .
+ln $BUILD/Makefile.gencode
+
+ln $TOOLBOXLINK/spec speclink
+# linkMAKE_TOOLS:
+ln $MAKE_TOOLS/ifdeffilt .
+ln $MAKE_TOOLS/bitmap_embedder.pl .
+ln $MAKE_TOOLS/tcl2code2.pl .
+ln $MAKE_TOOLS/fixparser.pl .
+ln $MAKE_TOOLS/fixposassign .
+ln $MAKE_TOOLS/fixposassign2 .
+ln $MAKE_TOOLS/fixerrlab.pl .
+ln $MAKE_TOOLS/gentagtab.pl .
+ln $MAKE_TOOLS/mkmap.pl .
+ln $MAKE_TOOLS/patch-h.pl .
+ln $MAKE_TOOLS/linkchg.pl .
+ln $MAKE_TOOLS/depend.pl .
+ln $MAKE_TOOLS/lnconf .
+ln $MAKE_TOOLS/sln
+
+# The LINKFILE
+ln $LINKFILE .
+
+# LICENSE
+ln $LICENSEDIR .
+
+# linkPORT:
+#ln $PORTDIR/String.h tb_string.h
+#ln $PORTDIR/tb_port.h .
+ln $PORTDIR/tb_getopt.h .
+ln $PORTDIR/tb_dlfcn.h .
+ln $PORTDIR/tb_hash_map.h .
+ln $PORTDIR/tb_pthread.h .
+oscheck(win32|OSF1) ln $PORTDIR/strstream.h .
+oscheck(win32) ln $PORTDIR/bstring.h .
+oscheck(win32) ln $PORTDIR/getopt.c .
+oscheck(win32) ln $PORTDIR/getopt.h .
+#oscheck(win32|OSF1) ln $PORTDIR/stl.h .
+#oscheck(win32) ln $PORTDIR/stl .
+# unistd.h should not be used on OSF1
+#oscheck(win32) ln $PORTDIR/unistd.h .
+oscheck(win32|OSF1) ln $PORTDIR/iostream.h .
+oscheck(win32|OSF1) ln $PORTDIR/fstream.h .
+oscheck(win32|OSF1) ln $PORTDIR/iomanip.h .
+oscheck(OSF1) ln $PORTDIR/iostream.hxx .
+ln $PORTDIR/tb_readline.h .
+ln $PORTDIR/tb_readline.cc tb_readline-pp.cc
+ln $PORTDIR/tb_readline.cc tb_readline-rt.cc
+ln $PORTDIR/tb_readline.cc tb_readline-sl.cc
+
+# linkWIN32:
+oscheck(win32) ln $WIN32DIR/wise/setup.wse .
+oscheck(win32) ln $WIN32DIR/wise/inst_addin.wse .
+oscheck(win32) ln $WIN32DIR/unix2dos .
+oscheck(win32) ln $WIN32DIR/wise/dirtowise .
+ln $WIN32DIR/print_name_vers.cc .
+oscheck(win32) ln $WIN32DIR/wise/wisemod .
+oscheck(win32) ln $GUIDIR/vdmgde.rc .
+oscheck(win32) ln $WIN32DIR .
+oscheck(win32) ln $WIN32DIR/mscver.cc .
+oscheck(win32) ln $WIN32DIR/nsis/vdmtools.nsi
+
+# linkMACOSX
+oscheck(Darwin) ln $MACOSXDIR/Info.plist.pp .
+oscheck(Darwin) ln $MACOSXDIR/Info.plist.sl .
+oscheck(Darwin) ln $MACOSXDIR/Info.plist.rt .
+oscheck(Darwin) ln $MACOSXDIR/PkgInfo .
+oscheck(Darwin) ln $MACOSXDIR/vdmtools.icns .
+oscheck(Darwin) ln $MACOSXDIR/panther .
+oscheck(Darwin) ln $MACOSXDIR/dylib .
+oscheck(Darwin) ln $MACOSXDIR/Distribution.xml .
+oscheck(Darwin) ln $MACOSXDIR/Resources .
+
+ln  $UTILSDIR/tb_exceptions.h
+ln  $UTILSDIR/tb_exceptions.cc
+
+ln  $DIVDIR/vdmfixproject.cc
+
+# linkGUI:
+#ln $GUIDIR/*.tcl .
+#ln $GUIDIR/bitmaps .
+#ln $GUIDIR/tkAppInit.cc .
+#ln $GUIDIR/tk_if.cc .
+#ln $GUIDIR/help/interface.html .
+#ln $GUIDIR/help/makeman.tcl .
+oscheck(win32)	ln $GUIDIR/vdmgde.rc .
+oscheck(win32)	ln $GUIDIR/vdmgde.ico .
+
+# linkDIVERSE:
+ln $DIVDIR/date.h .
+ln $DIVDIR/tb_version.w .
+ln $DIVDIR/mixedtexvdm.h .
+ln $DIVDIR/mixedtexvdm.cc .
+ln $DIVDIR/vdmde.cc vdmde-sl.cc
+ln $DIVDIR/vdmde.cc vdmde-pp.cc
+ln $DIVDIR/vdmde.cc vdmde-rt.cc
+ln $DIVDIR/cli_options.cc cli_options-sl.cc
+ln $DIVDIR/cli_options.cc cli_options-pp.cc
+ln $DIVDIR/cli_options.cc cli_options-rt.cc
+ln $DIVDIR/cli_options.h
+ln $DIVDIR/tb_wstring.h
+ln $DIVDIR/tb_wstring.cc
+
+# Link the examples directory
+ln $EXAMPLES .
+
+# linkRAN:
+ln $RANDIR/random.h .
+ln $RANDIR/random.cc .
+ln $RANDIR/RANDOM.java .
+
+# linkUTILS:
+ln $UTILSDIR/tools.h .
+ln $UTILSDIR/tools.cc .
+ln $UTILSDIR/codegen_tools.h .
+ln $UTILSDIR/codegen_tools.cc .
+ln $UTILSDIR/javagen_tools.h .
+ln $UTILSDIR/javagen_tools.cc .
+ln $UTILSDIR/tbutils.h .
+ln $UTILSDIR/tbutils.cc tbutils-sl.cc
+ln $UTILSDIR/tbutils.cc tbutils-pp.cc
+ln $UTILSDIR/tbutils.cc tbutils-rt.cc
+ln $UTILSDIR/intconvquotes.h .
+ln $UTILSDIR/intconvquotes.cc intconvquotes-sl.cc
+ln $UTILSDIR/intconvquotes.cc intconvquotes-pp.cc
+ln $UTILSDIR/intconvquotes.cc intconvquotes-rt.cc
+ln $UTILSDIR/tag_offsets .
+ln $UTILSDIR/astaux.h .
+ln $UTILSDIR/astaux.cc astaux-sl.cc
+ln $UTILSDIR/astaux.cc astaux-pp.cc
+ln $UTILSDIR/astaux.cc astaux-rt.cc
+ln $UTILSDIR/astaux.cc astaux-test-sl.cc
+ln $UTILSDIR/astaux.cc astaux-test-pp.cc
+ln $UTILSDIR/astaux.cc astaux-test-rt.cc
+ln $UTILSDIR/pp-ast.cc pp-ast-sl.cc
+ln $UTILSDIR/pp-ast.cc pp-ast-pp.cc
+ln $UTILSDIR/pp-ast.cc pp-ast-rt.cc
+ln $UTILSDIR/timing.h .
+ln $UTILSDIR/UTIL.h .
+ln $UTILSDIR/UTIL_anonym.h
+ln $UTILSDIR/UTIL_userdef.h
+ln $UTILSDIR/UTIL_userimpl.cc
+ln $UTILSDIR/unmangle.y .
+ln $UTILSDIR/unmangle.h .
+ln $UTILSDIR/MANGLE.h
+ln $UTILSDIR/MANGLE_anonym.h
+ln $UTILSDIR/MANGLE_userdef.h
+ln $UTILSDIR/MANGLE_userimpl.cc
+
+# libparser.a -- expression and spec. parser
+
+# linkPARSER:
+ln $PARSDIR/common.y .
+ln $PARSDIR/pexpr.h .
+ln $PARSDIR/scanner.h .
+ln $PARSDIR/vdmpars.h .
+ln $PARSDIR/vppstmt.h .
+ln $PARSDIR/vdmpars.l .
+ln $PARSDIR/vdmexpr.cc .
+ln $PARSDIR/binops.h .
+ln $PARSDIR/binops.cc .
+ln $PARSDIR/preprocess.w .
+ln $PARSDIR/parse_expr.h .
+ln $PARSDIR/parse_expr.cc .
+ln $PARSDIR/contextinfo.w .
+ln $RECODIR/recover.cc .
+ln $RECODIR/recover.h .
+
+##### LINK
+
+# linkSpecFile : linkRtfParser linkLatexParser
+ln $SFDIR/specfile.cc
+ln $SFDIR/specfile.h
+ln $SFDIR/tokenlist.h
+ln $SFDIR/tokenlist.cc
+ln $SFDIR/chunks.h
+ln $SFDIR/chunks.cc
+ln $SFDIR/extr_pp_info.h
+ln $SFDIR/extr_pp_info.cc
+
+##### LATEX PARSER
+
+# linkLatexParser :
+ln $SFDIR/latexspecfile.cc
+
+##### RTF PARSER
+
+# linkRtfParser:
+ln $SFDIR/rtf.h
+ln $SFDIR/rtf2text.h
+ln $SFDIR/rtf-unix.h
+ln $SFDIR/stdcharnames.h
+ln $SFDIR/tokenscan.h
+ln $SFDIR/reader.h
+ln $SFDIR/text-writer.cc
+ln $SFDIR/reader.cc
+ln $SFDIR/tokenscan.cc
+ln $SFDIR/rtfspecfile.cc
+ln $SFDIR/rtfnewclass.cc
+
+# linkLIB:
+ln $LIBDIR/vdm_priv.h .
+ln $LIBDIR/m4lib_errmsg.cc .
+ln $LIBDIR/m4lib_errmsg.h .
+ln $LIBDIR/metaiv.cc .
+ln $LIBDIR/metaiv.h .
+#ln $LIBDIR/vdm_malloc.cc .
+ln $LIBDIR/vdm_fingerprint.cc .
+ln $LIBDIR/vdm_recinfomap.cc .
+ln $LIBDIR/vdmlib_container.h .
+oldl vdmlib_inline.h 
+ln $LIBDIR/vdmlib_values.h .
+ln $LIBDIR/backslash.cc .
+ln $LIBDIR/backslash.h  .
+ln $LIBDIR/position.cc .
+ln $LIBDIR/position.h .
+#ln $LIBDIR/val_tag.h .
+#ln $LIBDIR/tag.h .
+ln $LIBDIR/cg.h .
+ln $LIBDIR/cg.cc .
+ln $LIBDIR/cg_aux.h .
+ln $LIBDIR/cg_aux.cc .
+ln $LIBDIR/stringext.h .
+ln $LIBDIR/stringext.cc .
+ln $LIBDIR/valueparser.y .
+ln $LIBDIR/valuescanner.l .
+ln $LIBDIR/valuescanner.h .
+ln $LIBDIR/IO_userimpl.cc .
+oscheck(win32)ln $LIBDIR/IO_userimpl.cc IO_userimpl.cpp
+ln $LIBDIR/MATH_userimpl.cc
+oscheck(win32)ln $LIBDIR/MATH_userimpl.cc MATH_userimpl.cpp
+ln $LIBDIR/VDMUtil_userimpl.cc
+oscheck(win32)ln $LIBDIR/VDMUtil_userimpl.cc VDMUtil_userimpl.cpp
+ln $STDLIB/code/pp/IO_userimpl.cc IO_userimpl-pp.cc
+ln $STDLIB/code/sl/IO_userimpl.cc IO_userimpl-sl.cc
+ln $STDLIB/code/pp/MATH_userimpl.cc MATH_userimpl-pp.cc
+ln $STDLIB/code/sl/MATH_userimpl.cc MATH_userimpl-sl.cc
+ln $STDLIB/code/pp/VDMUtil_userimpl.cc VDMUtil_userimpl-pp.cc
+ln $STDLIB/code/sl/VDMUtil_userimpl.cc VDMUtil_userimpl-sl.cc
+ln $STDLIB/code/pp/quotes
+
+# libeval.a -- common evaluation object files (dynamic semantics)
+#              test coverage and latex generator
+
+# linkEVAL:
+ln $EVALDIR/evalexpr.h .
+ln $EVALDIR/evalexpr.cc .
+ln $EVALDIR/evaldl.cc .
+ln $EVALDIR/evaldl.h .
+ln $EVALDIR/dlclass.h
+ln $EVALDIR/dlfactory.h
+ln $EVALDIR/dlfactory.cc
+ln $EVALDIR/freevars.cc .
+ln $EVALDIR/genlatex.cc .
+ln $EVALDIR/genlatex.h .
+oldl $EVALDIR/genlatex_pp.cc
+oldl $EVALDIR/genlatex_pp.h 
+ln $EVALDIR/libman.cc .
+ln $EVALDIR/evalsd.cc .
+ln $EVALDIR/oldname.cc .
+ln $EVALDIR/pattern.cc .
+ln $EVALDIR/rt_errmsg.cc .
+ln $EVALDIR/rt_errmsg_jp_utf8.cc .
+ln $EVALDIR/rt_errmsg.h .
+ln $EVALDIR/rt_info.h .
+ln $EVALDIR/rt_info.cc .
+oldl printval.cc
+ln $EVALDIR/val2x.cc .
+ln $EVALDIR/val2x.h .
+ln $EVALDIR/tbdebug.cc .
+ln $EVALDIR/testcoverage.cc .
+ln $EVALDIR/testcoverage.h .
+ln $EVALDIR/tcovtxt.cc .
+ln $EVALDIR/tcovtxt.h .
+#ln $EVALDIR/semrec.h .
+#ln $EVALDIR/semrec.cc .
+ln $EVALDIR/be_ip.cc .
+ln $EVALDIR/vdmstdlib.h .
+ln $EVALDIR/vdmstdlib.cc .
+ln $EVALDIR/schd.h .
+ln $EVALDIR/schd.cc .
+ln $EVALDIR/objtab.h .
+#ln $EVALDIR/objtab.cc .
+
+# Stack evaluator
+ln $EVALDIR/compile.h .
+ln $EVALDIR/compile.cc .
+ln $EVALDIR/cexpr.cc .
+ln $EVALDIR/cstmt.cc .
+ln $EVALDIR/cpat.cc .
+ln $EVALDIR/instructions.cc .
+ln $EVALDIR/debug.cc .
+
+ln $EVALDIR/stackeval.h .
+ln $EVALDIR/stackeval.cc .
+ln $EVALDIR/evaldebug.h .
+
+ln $EVALDIR/settings.cc .
+ln $EVALDIR/settings.h .
+
+ln $EVALDIR/evalstop.h .
+ln $EVALDIR/semvalues.cc .
+ln $EVALDIR/semvalues.h .
+ln $EVALDIR/pattern.h .
+ln $EVALDIR/oldname.h .
+ln $EVALDIR/freevars.h .
+ln $EVALDIR/libman.h .
+ln $EVALDIR/tbdebug.h .
+ln $EVALDIR/evalmod.h .
+ln $EVALDIR/evalmod.cc .
+ln $EVALDIR/evalclass.h .
+ln $EVALDIR/evalclass.cc .
+ln $EVALDIR/evaldef.h .
+ln $EVALDIR/evaldef.cc .
+ln $EVALDIR/evalstate.cc .
+ln $EVALDIR/evalstate.h .
+ln $EVALDIR/stateutil.cc .
+ln $EVALDIR/evalaux.h .
+ln $EVALDIR/evalaux.cc .
+ln $EVALDIR/evalsystem.h .
+ln $EVALDIR/evalsystem.cc .
+
+ln $TRACESDIR/traces.h .
+ln $TRACESDIR/traces.cc .
+
+## .h files needed by INSTRTP
+#INSTRTP_SUPPORT=$EVALDIR/INSTRTP-support
+
+ln $EVALGENDIR/PAT.h .
+ln $EVALGENDIR/RTERR.h .
+ln $EVALGENDIR/STKM.h .
+#ln $EVALGENDIR/dummy_userdef.h POS.h
+#ln $EVALGENDIR/dummy_userdef.h POS_anonym.h
+ln $EVALGENDIR/dummy_userdef.h PAT_anonym.h
+ln $EVALGENDIR/dummy_userdef.h RTERR_anonym.h
+ln $EVALGENDIR/dummy_userdef.h STKM_anonym.h
+#ln $EVALGENDIR/dummy_userdef.h STATE.h
+#ln $EVALGENDIR/dummy_userdef.h STATE_anonym.h
+#ln $EVALGENDIR/dummy_userdef.h TI_anonym.h
+ln $EVALGENDIR/dummy_userdef.h CGAUX_anonym.h
+ln $EVALGENDIR/dummy_userdef.h TIMETRACE_anonym.h
+
+
+ln $EVALDIR/dlclasstest/dlclass_test1.cc .
+ln $EVALDIR/dlclasstest/dlclass_test1.h .
+
+# linkSS:
+ln $SSDIR/tcaux.cc auxss.cc
+ln $SSDIR/def.cc .
+ln $SSDIR/env.cc .
+ln $SSDIR/err.cc .
+ln $SSDIR/expr.cc .
+ln $SSDIR/expr2.cc .
+ln $SSDIR/expr3.cc .
+ln $SSDIR/mk.cc .
+ln $SSDIR/pat.cc .
+ln $SSDIR/statsem.h .
+ln $SSDIR/stmt.cc .
+ln $SSDIR/test-vdmsl.cc .
+ln $SSDIR/type.cc .
+ln $SSDIR/vcm.cc .
+ln $SSDIR/test.cc .
+ln $SSDIR/rec.cc .
+ln $SSDIR/rec.h .
+
+ln $SSGENDIR/SSAUX.h AUX.h
+ln $SSGENDIR/AUX_anonym.h
+ln $SSGENDIR/AUX_userimpl.cc
+ln $SSGENDIR/DEF.h
+ln $SSGENDIR/DEF_anonym.h
+ln $SSGENDIR/DEF_userimpl.cc
+ln $SSGENDIR/ENV.h
+ln $SSGENDIR/ENV_anonym.h
+ln $SSGENDIR/ENV_userimpl.cc
+ln $SSGENDIR/STMT.h
+ln $SSGENDIR/STMT_anonym.h
+ln $SSGENDIR/STMT_userimpl.cc
+ln $SSGENDIR/TYPE.h
+ln $SSGENDIR/TYPE_anonym.h
+ln $SSGENDIR/TYPE_userimpl.cc
+ln $SSGENDIR/VCM.h
+ln $SSGENDIR/VCM_anonym.h
+ln $SSGENDIR/VCM_userimpl.cc
+
+# Specification Manager: 
+
+# linkMGR:
+ln $MGRCODE/*.cc .
+ln $MGRCODE/*.h .
+ln gencodespecman/*.cc .
+ln gencodespecman/*.h .
+
+oldl SABaseTools_userimpl.cc
+oldl SABaseTools_userdef.h
+
+# Service Manager
+ln gencodesm/*.cc .
+ln gencodesm/*.h .
+
+#
+# Dependency library
+#
+#??customevents.h
+
+# linkDEP:
+ln $DEPCODE/*.cc .
+ln $DEPCODE/*.h .
+
+# linkUML:
+ln $UMLCODE/*.cc .
+ln $UMLCODE/*.h .
+ln gencodeuml/*.cc .
+ln gencodeuml/*.h  .
+
+#
+# The CORBA interface
+#
+ln $CORBACODE/NewProxies.cc .
+ln $CORBACODE/NewProxies.h .
+ln $CORBACODE/corba_api.cc .
+ln $CORBACODE/corba_api.h .
+ln $CORBACODE/corba_api.idl .
+ln $CORBACODE/corba_client.cc .
+ln $CORBACODE/corba_client.h .
+ln $CORBACODE/init_corba.cc .
+ln $CORBACODE/init_corba.h .
+ln $CORBACODE/metaiv_impl.cc .
+ln $CORBACODE/metaiv_impl.h .
+ln $CORBACODE/object_map.cc .
+ln $CORBACODE/object_map.h .
+ln $CORBACODE/cmd_queue.h .
+ln $CORBACODE/cmd_queue.cc .
+
+ln $CORBACODE/internal_api.idl .
+ln $CORBACODE/metaiv_idl.idl .
+ln $CORBACODE/Makefile.java Makefile.javaapi
+ln $CORBACODE/ToolboxClient.java .
+
+# link the corba directory with Makefile and Makefile.nm inside
+# ln $CORBACODE corba 
+#  is bad since it create corba corba/corba corba/corba/corba ...
+#  for each time lnconf is run. 
+#  Use this instead: 
+ln $CORBACODE . 
+
+#ln corba_api.cc  corba_api-sl.cc 
+#ln corba_api.cc  corba_api-pp.cc
+##################################################################
+# UML Stuff
+##################################################################
+
+ln $UMLCODE/VPPStereotypes.ini .
+
+##################################################################
+# Word Stuff
+##################################################################
+
+ln $WORDDIR/VDM.dot .
+ln $WORDDIR/NewClass.rtf .
+
+##################################################################
+# Elisp stuff
+##################################################################
+
+ln $ELISPDIR/vdmde.el .
+ln $ELISPDIR/vppde.el .
+ln $ELISPDIR/vicede.el .
+ln $ELISPDIR/COPYING .
+
+##################################################################
+# Latex stuff
+##################################################################
+
+ln $LATEXDIR/vdmsl-2e.sty .
+ln $LATEXDIR/vpp.sty .
+ln $LATEXDIR/vdmsl-2e-nms.sty .
+ln $LATEXDIR/vpp-nms.sty .
+
+##################################################################
+# The VDMSL/VDM++ Code Generator Library
+##################################################################
+
+# linkCG: linkGenCG
+
+ln $CGDIR/asquotes.h .
+ln $CGDIR/backend.cc .
+ln $CGDIR/backend.h .
+ln $CGDIR/cgtag.h .
+ln $CGDIR/mod_cgaux.cc .
+ln $CGDIR/mod_cgaux.h .
+ln $CGDIR/mod_cgmain.cc .
+ln $CGDIR/mod_cgmain.h .
+ln $CGDIR/mod_ds.cc .
+ln $CGDIR/mod_ds.h .
+ln $CGDIR/mod_expr.cc .
+ln $CGDIR/mod_expr.h .
+ln $CGDIR/mod_fctdef.cc .
+ln $CGDIR/mod_fctdef.h .
+ln $CGDIR/mod_mod.cc .
+ln $CGDIR/mod_mod.h .
+ln $CGDIR/mod_patmat.cc .
+ln $CGDIR/mod_patmat.h .
+ln $CGDIR/mod_statedef.cc .
+ln $CGDIR/mod_statedef.h .
+ln $CGDIR/mod_stmt.cc .
+ln $CGDIR/mod_stmt.h .
+ln $CGDIR/mod_tpgen.cc
+ln $CGDIR/mod_tpgen.h
+ln $CGDIR/mod_typedef.cc .
+ln $CGDIR/mod_typedef.h .
+ln $CGDIR/mod_valdef.cc .
+ln $CGDIR/mod_valdef.h .
+ln $CGDIR/tagmap.cc .
+ln $CGDIR/tagmap.h .
+ln $CGDIR/vdmcg.cc .
+ln $CGDIR/vdmcg.h .
+ln $CGDIR/test1.cc .
+ln $CGDIR/test1.h .
+ln $CGDIR/mod_class.h
+ln $CGDIR/mod_class.cc
+ln $CGDIR/mod_conc.h
+ln $CGDIR/mod_conc.cc
+ln $CGDIR/mod_fvd.h
+ln $CGDIR/mod_fvd.cc
+ln $CGDIR/anonym_cg-pp.cc
+ln $CGDIR/anonym_cg-sl.cc
+ln $CGDIR/anonym_cg-rt.cc
+
+ln $CGGENDIR/main_tag.h
+
+ln $CGGENDIR/AS_userdef.h
+ln $CGGENDIR/CPP_userdef.h
+ln $CGGENDIR/REP_userdef.h
+ln $CGGENDIR/CI_userdef.h
+ln $CGGENDIR/CI_userimpl.cc .
+ln $CGGENDIR/CGTYPES_userdef.h
+ln $CGGENDIR/BC_userdef.h
+ln $CGGENDIR/BCCI_userdef.h
+#ln $CGGENDIR/TI.h
+ln $CGGENDIR/CGAUX.h
+ln $CGGENDIR/CGAUX_userimpl.cc
+ln $CGGENDIR/CGMAIN.h
+ln $CGGENDIR/CGMAIN_anonym.h
+#ln $CGGENDIR/TI_userimpl.cc TI_userimpl-pp.cc
+#ln $CGGENDIR/TI_userimpl.cc TI_userimpl-rt.cc
+ln $CGGENDIR/CONC.h
+
+# CGGenCode
+ln $CGGENDIR/AS.h 	
+ln $LOCAL_EVALGENDIR_SL/AS.h AS-sl.h
+ln $LOCAL_EVALGENDIR_PP/AS.h AS-pp.h
+ln $LOCAL_EVALGENDIR_RT/AS.h AS-rt.h
+ln $CGGENDIR/REP.h 	
+ln $LOCAL_EVALGENDIR_SL/REP.h REP-sl.h
+ln $LOCAL_EVALGENDIR_PP/REP.h REP-pp.h
+ln $LOCAL_EVALGENDIR_RT/REP.h REP-rt.h
+ln $CGGENDIR/CPP.h 	
+ln $LOCAL_EVALGENDIR_SL/CPP.h CPP-sl.h
+ln $LOCAL_EVALGENDIR_PP/CPP.h CPP-pp.h
+ln $LOCAL_EVALGENDIR_RT/CPP.h CPP-rt.h
+ln $CGGENDIR/CI.h
+ln $LOCAL_EVALGENDIR_SL/CI.h CI-sl.h
+ln $LOCAL_EVALGENDIR_PP/CI.h CI-pp.h
+ln $LOCAL_EVALGENDIR_RT/CI.h CI-rt.h
+
+ln $CGGENDIR/CGTYPES.h
+ln $LOCAL_EVALGENDIR_SL/CGTYPES.h CGTYPES-sl.h
+ln $LOCAL_EVALGENDIR_PP/CGTYPES.h CGTYPES-pp.h
+ln $LOCAL_EVALGENDIR_RT/CGTYPES.h CGTYPES-rt.h
+
+ln $CGGENDIR/BC.h
+ln $LOCAL_EVALGENDIR_SL/BC.h BC-sl.h
+ln $LOCAL_EVALGENDIR_PP/BC.h BC-pp.h
+ln $LOCAL_EVALGENDIR_RT/BC.h BC-rt.h
+
+ln $CGGENDIR/BCCI.h
+ln $LOCAL_EVALGENDIR_SL/BCCI.h BCCI-sl.h
+ln $LOCAL_EVALGENDIR_PP/BCCI.h BCCI-pp.h
+ln $LOCAL_EVALGENDIR_RT/BCCI.h BCCI-rt.h
+
+ln $CGGENDIR/AS_anonym.h 	
+ln $LOCAL_EVALGENDIR_SL/AS_anonym.h AS_anonym-sl.h
+ln $LOCAL_EVALGENDIR_PP/AS_anonym.h AS_anonym-pp.h
+ln $LOCAL_EVALGENDIR_RT/AS_anonym.h AS_anonym-rt.h
+
+ln $CGGENDIR/CPP_anonym.h
+ln $LOCAL_EVALGENDIR_SL/CPP_anonym.h CPP_anonym-sl.h
+ln $LOCAL_EVALGENDIR_PP/CPP_anonym.h CPP_anonym-pp.h
+ln $LOCAL_EVALGENDIR_RT/CPP_anonym.h CPP_anonym-rt.h
+
+ln $CGGENDIR/REP_anonym.h 	
+ln $LOCAL_EVALGENDIR_SL/REP_anonym.h REP_anonym-sl.h
+ln $LOCAL_EVALGENDIR_PP/REP_anonym.h REP_anonym-pp.h
+ln $LOCAL_EVALGENDIR_RT/REP_anonym.h REP_anonym-rt.h
+
+ln $CGGENDIR/CI_anonym.h
+ln $LOCAL_EVALGENDIR_SL/CI_anonym.h CI_anonym-sl.h
+ln $LOCAL_EVALGENDIR_PP/CI_anonym.h CI_anonym-pp.h
+ln $LOCAL_EVALGENDIR_RT/CI_anonym.h CI_anonym-rt.h
+
+ln $CGGENDIR/CGTYPES_anonym.h
+ln $LOCAL_EVALGENDIR_SL/CGTYPES_anonym.h CGTYPES_anonym-sl.h
+ln $LOCAL_EVALGENDIR_PP/CGTYPES_anonym.h CGTYPES_anonym-pp.h
+ln $LOCAL_EVALGENDIR_RT/CGTYPES_anonym.h CGTYPES_anonym-rt.h
+
+ln $CGGENDIR/BC_anonym.h
+ln $LOCAL_EVALGENDIR_SL/BC_anonym.h BC_anonym-sl.h
+ln $LOCAL_EVALGENDIR_PP/BC_anonym.h BC_anonym-pp.h
+ln $LOCAL_EVALGENDIR_RT/BC_anonym.h BC_anonym-rt.h
+
+ln $CGGENDIR/BCCI_anonym.h
+ln $LOCAL_EVALGENDIR_SL/BCCI_anonym.h BCCI_anonym-sl.h
+ln $LOCAL_EVALGENDIR_PP/BCCI_anonym.h BCCI_anonym-pp.h
+ln $LOCAL_EVALGENDIR_RT/BCCI_anonym.h BCCI_anonym-rt.h
+
+## INSTRTP generated files
+ln $EVALGENDIR/INSTRTP.h
+ln $EVALGENDIR/INSTRTP_anonym.h
+ln $EVALGENDIR/INSTRTP_userdef.h .
+
+ln $LOCAL_EVALGENDIR_SL/INSTRTP.h INSTRTP-sl.h
+ln $LOCAL_EVALGENDIR_SL/INSTRTP.cc INSTRTP-sl.cc
+ln $LOCAL_EVALGENDIR_SL/INSTRTP_anonym.h INSTRTP_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/INSTRTP_anonym.cc INSTRTP_anonym-sl.cc
+
+ln $LOCAL_EVALGENDIR_PP/INSTRTP.h INSTRTP-pp.h
+ln $LOCAL_EVALGENDIR_PP/INSTRTP.cc INSTRTP-pp.cc
+ln $LOCAL_EVALGENDIR_PP/INSTRTP_anonym.h INSTRTP_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/INSTRTP_anonym.cc INSTRTP_anonym-pp.cc
+
+ln $LOCAL_EVALGENDIR_RT/INSTRTP.h INSTRTP-rt.h
+ln $LOCAL_EVALGENDIR_RT/INSTRTP.cc INSTRTP-rt.cc
+ln $LOCAL_EVALGENDIR_RT/INSTRTP_anonym.h INSTRTP_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/INSTRTP_anonym.cc INSTRTP_anonym-rt.cc
+
+## DEBUGTP generated files
+ln $EVALGENDIR/DEBUGTP.h
+ln $EVALGENDIR/DEBUGTP_anonym.h
+ln $EVALGENDIR/DEBUGTP_userdef.h DEBUGTP_userdef.h
+
+ln $LOCAL_EVALGENDIR_SL/DEBUGTP.h DEBUGTP-sl.h
+ln $LOCAL_EVALGENDIR_SL/DEBUGTP.cc DEBUGTP-sl.cc
+ln $LOCAL_EVALGENDIR_SL/DEBUGTP_anonym.h DEBUGTP_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/DEBUGTP_anonym.cc DEBUGTP_anonym-sl.cc
+
+ln $LOCAL_EVALGENDIR_PP/DEBUGTP.h DEBUGTP-pp.h
+ln $LOCAL_EVALGENDIR_PP/DEBUGTP.cc DEBUGTP-pp.cc
+ln $LOCAL_EVALGENDIR_PP/DEBUGTP_anonym.h DEBUGTP_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/DEBUGTP_anonym.cc DEBUGTP_anonym-pp.cc
+
+ln $LOCAL_EVALGENDIR_RT/DEBUGTP.h DEBUGTP-rt.h
+ln $LOCAL_EVALGENDIR_RT/DEBUGTP.cc DEBUGTP-rt.cc
+ln $LOCAL_EVALGENDIR_RT/DEBUGTP_anonym.h DEBUGTP_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/DEBUGTP_anonym.cc DEBUGTP_anonym-rt.cc
+
+# CC - files
+ln $LOCAL_EVALGENDIR_SL/AS.cc AS-sl.cc
+ln $LOCAL_EVALGENDIR_PP/AS.cc AS-pp.cc
+ln $LOCAL_EVALGENDIR_RT/AS.cc AS-rt.cc
+
+ln $LOCAL_EVALGENDIR_SL/REP.cc REP-sl.cc
+ln $LOCAL_EVALGENDIR_PP/REP.cc REP-pp.cc
+ln $LOCAL_EVALGENDIR_RT/REP.cc REP-rt.cc
+
+ln $LOCAL_EVALGENDIR_SL/CPP.cc CPP-sl.cc
+ln $LOCAL_EVALGENDIR_PP/CPP.cc CPP-pp.cc
+ln $LOCAL_EVALGENDIR_RT/CPP.cc CPP-rt.cc
+
+## SCHDTP generated files
+ln $EVALGENDIR/SCHDTP.h
+ln $EVALGENDIR/SCHDTP_anonym.h
+ln $EVALGENDIR/SCHDTP_userdef.h .
+
+#ln $LOCAL_EVALGENDIR_SL/SCHDTP.h SCHDTP-sl.h
+#ln $LOCAL_EVALGENDIR_SL/SCHDTP.cc SCHDTP-sl.cc
+#ln $LOCAL_EVALGENDIR_SL/SCHDTP_anonym.h SCHDTP_anonym-sl.h
+#ln $LOCAL_EVALGENDIR_SL/SCHDTP_anonym.cc SCHDTP_anonym-sl.cc
+
+ln $LOCAL_EVALGENDIR_PP/SCHDTP.h SCHDTP-pp.h
+ln $LOCAL_EVALGENDIR_PP/SCHDTP.cc SCHDTP-pp.cc
+ln $LOCAL_EVALGENDIR_PP/SCHDTP_anonym.h SCHDTP_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/SCHDTP_anonym.cc SCHDTP_anonym-pp.cc
+
+ln $LOCAL_EVALGENDIR_RT/SCHDTP.h SCHDTP-rt.h
+ln $LOCAL_EVALGENDIR_RT/SCHDTP.cc SCHDTP-rt.cc
+ln $LOCAL_EVALGENDIR_RT/SCHDTP_anonym.h SCHDTP_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/SCHDTP_anonym.cc SCHDTP_anonym-rt.cc
+
+ln $LOCAL_EVALGENDIR_SL/CI.cc CI-sl.cc
+ln $LOCAL_EVALGENDIR_PP/CI.cc CI-pp.cc
+ln $LOCAL_EVALGENDIR_RT/CI.cc CI-rt.cc
+
+oldl POS-sl.cc
+oldl POS-pp.cc
+
+ln $LOCAL_EVALGENDIR_SL/CGTYPES.cc CGTYPES-sl.cc
+ln $LOCAL_EVALGENDIR_PP/CGTYPES.cc CGTYPES-pp.cc
+ln $LOCAL_EVALGENDIR_RT/CGTYPES.cc CGTYPES-rt.cc
+
+ln $LOCAL_EVALGENDIR_SL/BC.cc BC-sl.cc
+ln $LOCAL_EVALGENDIR_PP/BC.cc BC-pp.cc
+ln $LOCAL_EVALGENDIR_RT/BC.cc BC-rt.cc
+
+ln $LOCAL_EVALGENDIR_SL/BCCI.cc BCCI-sl.cc
+ln $LOCAL_EVALGENDIR_PP/BCCI.cc BCCI-pp.cc
+ln $LOCAL_EVALGENDIR_RT/BCCI.cc BCCI-rt.cc
+
+# CC global files
+
+ln $LOCAL_EVALGENDIR_SL/AS_anonym.cc AS_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_PP/AS_anonym.cc AS_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_RT/AS_anonym.cc AS_anonym-rt.cc
+
+ln $LOCAL_EVALGENDIR_SL/REP_anonym.cc REP_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_PP/REP_anonym.cc REP_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_RT/REP_anonym.cc REP_anonym-rt.cc
+
+ln $LOCAL_EVALGENDIR_SL/CPP_anonym.cc CPP_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_PP/CPP_anonym.cc CPP_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_RT/CPP_anonym.cc CPP_anonym-rt.cc
+
+ln $LOCAL_EVALGENDIR_SL/CI_anonym.cc CI_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_PP/CI_anonym.cc CI_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_RT/CI_anonym.cc CI_anonym-rt.cc
+
+oldl POS_anonym-sl.cc
+oldl POS_global-sl.cc
+oldl POS_anonym-pp.cc
+oldl POS_global-pp.cc
+
+ln $LOCAL_EVALGENDIR_SL/CGTYPES_anonym.cc CGTYPES_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_PP/CGTYPES_anonym.cc CGTYPES_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_RT/CGTYPES_anonym.cc CGTYPES_anonym-rt.cc
+
+ln $LOCAL_EVALGENDIR_SL/BC_anonym.cc BC_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_PP/BC_anonym.cc BC_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_RT/BC_anonym.cc BC_anonym-rt.cc
+
+ln $LOCAL_EVALGENDIR_SL/BCCI_anonym.cc BCCI_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_PP/BCCI_anonym.cc BCCI_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_RT/BCCI_anonym.cc BCCI_anonym-rt.cc
+
+ln $LOCAL_EVALGENDIR_PP/J2V.cc J2V-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2V.h
+ln $LOCAL_EVALGENDIR_PP/J2VAUX.cc J2VAUX-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VAUX.h
+ln $LOCAL_EVALGENDIR_PP/J2VAUX_anonym.cc J2VAUX_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VAUX_anonym.h
+ln $LOCAL_EVALGENDIR_PP/J2VBVDM.cc J2VBVDM-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VBVDM.h
+ln $LOCAL_EVALGENDIR_PP/J2VBVDM_anonym.cc J2VBVDM_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VBVDM_anonym.h
+ln $LOCAL_EVALGENDIR_PP/J2VCLASS.cc J2VCLASS-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VCLASS.h
+ln $LOCAL_EVALGENDIR_PP/J2VCLASS_anonym.cc J2VCLASS_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VCLASS_anonym.h
+ln $LOCAL_EVALGENDIR_PP/J2VENV.cc J2VENV-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VENV.h
+ln $LOCAL_EVALGENDIR_PP/J2VENV_anonym.cc J2VENV_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VENV_anonym.h
+ln $LOCAL_EVALGENDIR_PP/J2VERR.cc J2VERR-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VERR.h
+ln $LOCAL_EVALGENDIR_PP/J2VERR_anonym.cc J2VERR_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VERR_anonym.h
+ln $LOCAL_EVALGENDIR_PP/J2VERRMSG.cc J2VERRMSG-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VERRMSG.h
+ln $LOCAL_EVALGENDIR_PP/J2VERRMSG_anonym.cc J2VERRMSG_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VERRMSG_anonym.h
+ln $LOCAL_EVALGENDIR_PP/J2VEXPR.cc J2VEXPR-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VEXPR.h
+ln $LOCAL_EVALGENDIR_PP/J2VEXPR_anonym.cc J2VEXPR_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VEXPR_anonym.h
+ln $LOCAL_EVALGENDIR_PP/J2VNS.cc J2VNS-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VNS.h
+ln $LOCAL_EVALGENDIR_PP/J2VNS_anonym.cc J2VNS_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VNS_anonym.h
+ln $LOCAL_EVALGENDIR_PP/J2VOP.cc J2VOP-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VOP.h
+ln $LOCAL_EVALGENDIR_PP/J2VOP_anonym.cc J2VOP_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VOP_anonym.h
+ln $LOCAL_EVALGENDIR_PP/J2VSTMT.cc J2VSTMT-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VSTMT.h
+ln $LOCAL_EVALGENDIR_PP/J2VSTMT_anonym.cc J2VSTMT_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VSTMT_anonym.h
+ln $LOCAL_EVALGENDIR_PP/J2VTYPE.cc J2VTYPE-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VTYPE.h
+ln $LOCAL_EVALGENDIR_PP/J2VTYPE_anonym.cc J2VTYPE_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2VTYPE_anonym.h
+ln $LOCAL_EVALGENDIR_PP/J2V_anonym.cc J2V_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/J2V_anonym.h
+
+ln $LOCAL_EVALGENDIR_PP/JAVAERR.cc JAVAERR-pp.cc
+ln $LOCAL_EVALGENDIR_PP/JAVAERR.h
+ln $LOCAL_EVALGENDIR_PP/JAVAERR_anonym.cc JAVAERR_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/JAVAERR_anonym.h
+ln $LOCAL_EVALGENDIR_PP/JSSAUX.cc JSSAUX-pp.cc
+ln $LOCAL_EVALGENDIR_PP/JSSAUX.h
+ln $LOCAL_EVALGENDIR_PP/JSSAUX_anonym.cc JSSAUX_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/JSSAUX_anonym.h
+ln $LOCAL_EVALGENDIR_PP/JSSDEF.cc JSSDEF-pp.cc
+ln $LOCAL_EVALGENDIR_PP/JSSDEF.h
+ln $LOCAL_EVALGENDIR_PP/JSSDEF_anonym.cc JSSDEF_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/JSSDEF_anonym.h
+ln $LOCAL_EVALGENDIR_PP/JSSENV.cc JSSENV-pp.cc
+ln $LOCAL_EVALGENDIR_PP/JSSENV.h
+ln $LOCAL_EVALGENDIR_PP/JSSENV_anonym.cc JSSENV_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/JSSENV_anonym.h
+ln $LOCAL_EVALGENDIR_PP/JSSERR.cc JSSERR-pp.cc
+ln $LOCAL_EVALGENDIR_PP/JSSERR.h
+ln $LOCAL_EVALGENDIR_PP/JSSERR_anonym.cc JSSERR_anonym-pp.cc 
+ln $LOCAL_EVALGENDIR_PP/JSSERR_anonym.h
+ln $LOCAL_EVALGENDIR_PP/JSSERRMSG.cc JSSERRMSG-pp.cc
+ln $LOCAL_EVALGENDIR_PP/JSSERRMSG.h
+ln $LOCAL_EVALGENDIR_PP/JSSERRMSG_anonym.cc JSSERRMSG_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/JSSERRMSG_anonym.h
+ln $LOCAL_EVALGENDIR_PP/JSSEXPR.cc JSSEXPR-pp.cc
+ln $LOCAL_EVALGENDIR_PP/JSSEXPR.h
+ln $LOCAL_EVALGENDIR_PP/JSSEXPR_anonym.cc JSSEXPR_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/JSSEXPR_anonym.h
+
+oldl $LOCAL_EVALGENDIR_PP/JSSJAVA.cc JSSJAVA-pp.cc
+oldl $LOCAL_EVALGENDIR_PP/JSSJAVA.h
+oldl $LOCAL_EVALGENDIR_PP/JSSJAVA_anonym.cc JSSJAVA_anonym-pp.cc
+oldl $LOCAL_EVALGENDIR_PP/JSSJAVA_anonym.h
+
+ln $LOCAL_EVALGENDIR_PP/JSSREP.cc JSSREP-pp.cc
+ln $LOCAL_EVALGENDIR_PP/JSSREP.h
+ln $LOCAL_EVALGENDIR_PP/JSSREP_anonym.cc JSSREP_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/JSSREP_anonym.h
+
+ln $LOCAL_EVALGENDIR_PP/JSSSTMT.cc JSSSTMT-pp.cc
+ln $LOCAL_EVALGENDIR_PP/JSSSTMT.h
+ln $LOCAL_EVALGENDIR_PP/JSSSTMT_anonym.cc JSSSTMT_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/JSSSTMT_anonym.h
+
+ln $LOCAL_EVALGENDIR_PP/JSSVCM1.cc JSSVCM1-pp.cc
+ln $LOCAL_EVALGENDIR_PP/JSSVCM1.h
+ln $LOCAL_EVALGENDIR_PP/JSSVCM1_anonym.cc JSSVCM1_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/JSSVCM1_anonym.h
+
+###
+### Inheritance Tree
+### 
+
+# linkINHTREE:
+ln $INHTREE/contain.hP
+ln $INHTREE/tktreewin.cc
+ln $INHTREE/tktreewin.h
+ln $INHTREE/treecalc.cc
+ln $INHTREE/treecalc.h
+
+###
+### %-sl.cc and %-pp.cc files
+###
+
+#ln CGAUX_if.cc CGAUX_if-pp.cc
+#ln CGAUX_if.cc CGAUX_if-sl.cc
+#ln Dependency.cc Dependency-pp.cc
+#ln Dependency.cc Dependency-sl.cc
+#ln StateStore.cc StateStore-pp.cc
+#ln StateStore.cc StateStore-sl.cc
+#ln TPGEN_if.cc TPGEN_if-pp.cc
+#ln TPGEN_if.cc TPGEN_if-sl.cc
+#ln UMLTool.cc UMLTool-pp.cc
+#ln UMLTool.cc UMLTool-sl.cc
+#ln expr.cc expr-pp.cc
+#ln expr.cc expr-sl.cc
+oldl printval-pp.cc
+oldl printval-sl.cc
+oldl readpp.cc 
+
+#ln rmposinfo.cc rmposinfo-pp.cc
+#ln rmposinfo.cc rmposinfo-sl.cc
+ln tagmap.cc tagmap-pp.cc
+ln tagmap.cc tagmap-sl.cc
+ln test.cc test-pp.cc
+ln test.cc test-sl.cc
+ln test1.cc test1-pp.cc
+ln test1.cc test1-sl.cc
+ln be_ip.cc be_ip-pp.cc
+ln be_ip.cc be_ip-sl.cc
+ln parse_expr.cc parse_expr-pp.cc
+ln parse_expr.cc parse_expr-sl.cc
+#ln tkAppInit.cc tkAppInit-pp.cc
+#ln tkAppInit.cc tkAppInit-rt.cc
+#ln tkAppInit.cc tkAppInit-sl.cc
+#ln tkAppInit.cc tkAppInit-uml-pp.cc
+#ln tkAppInit.cc tkAppInit-uml-rt.cc
+#ln tk_if.cc tk_if-pp.cc
+#ln tk_if.cc tk_if-rt.cc
+#ln tk_if.cc tk_if-sl.cc
+#ln tktreewin.cc tktreewin-pp.cc
+#ln tktreewin.cc tktreewin-sl.cc
+#ln unmangle.cc unmangle-pp.cc
+#ln unmangle.cc unmangle-sl.cc
+#ln vdmcg.cc vdmcg-pp.cc
+#ln vdmcg.cc vdmcg-sl.cc
+ln vdmexpr.cc vdmexpr-pp.cc
+ln vdmexpr.cc vdmexpr-sl.cc
+ln test-vdmsl.cc test-vdmsl-pp.cc
+ln test-vdmsl.cc test-vdmsl-sl.cc
+
+ln vdmpars.l vdmpars.web
+
+# Small
+# ln small-pexpr-sl.cc
+# ln small-vdmpars-sl.cc
+# ln small-tools-sl.cc
+
+# errmsg for static semantic
+ln $ERRMSG/errmsg.txt .
+ln $ERRMSG/errmsg_jp_utf8.txt .
+ln $ERRMSG/translateErr.pl .
+ln $ERRMSG/translateErr2.pl .
+ln $ERRMSG/replaceComments.pl .
+ln $ERRMSG/convertToHexquad.cc .
+
+# RT
+ln $RTDIR/code/timeparser_aux.h .
+ln $RTDIR/code/timeparser.x .
+ln $RTDIR/code/timeparser.y .
+ln $RTDIR/code/TIMEPARSER_userdef.h .
+ln $RTDIR/code/TIMEMAP_userdef.h .
+ln $RTDIR/code/TIMETRACETP_userdef.h .
+ln $RTDIR/code/VC_userdef.h .
+ln $RTDIR/code/VC_userimpl.cc .
+ln $RTDIR/code/valcond.cc .
+ln $RTDIR/code/valcond.h .
+
+#ln $RTDIR/gencode/TIMEMAP.cc
+#ln $RTDIR/gencode/TIMEMAP.h
+#ln $RTDIR/gencode/TIMEMAP_anonym.cc
+#ln $RTDIR/gencode/TIMEMAP_anonym.h
+#ln $RTDIR/gencode/TIMEPARSER.cc
+#ln $RTDIR/gencode/TIMEPARSER.h
+#ln $RTDIR/gencode/TIMEPARSER_anonym.cc
+#ln $RTDIR/gencode/TIMEPARSER_anonym.h
+#ln $RTDIR/gencode/TIMETRACETP.cc
+#ln $RTDIR/gencode/TIMETRACETP.h
+#ln $RTDIR/gencode/TIMETRACETP_anonym.cc
+#ln $RTDIR/gencode/TIMETRACETP_anonym.h
+#ln $RTDIR/gencode/VC.cc
+#ln $RTDIR/gencode/VC.h
+#ln $RTDIR/gencode/VC_anonym.cc
+#ln $RTDIR/gencode/VC_anonym.h
+
+ln $LOCAL_EVALGENDIR_RT/TIMEMAP.cc
+ln $LOCAL_EVALGENDIR_RT/TIMEMAP.h
+ln $LOCAL_EVALGENDIR_RT/TIMEMAP_anonym.cc
+ln $LOCAL_EVALGENDIR_RT/TIMEMAP_anonym.h
+ln $LOCAL_EVALGENDIR_RT/TIMEPARSER.cc
+ln $LOCAL_EVALGENDIR_RT/TIMEPARSER.h
+ln $LOCAL_EVALGENDIR_RT/TIMEPARSER_anonym.cc
+ln $LOCAL_EVALGENDIR_RT/TIMEPARSER_anonym.h
+ln $LOCAL_EVALGENDIR_RT/TIMETRACETP.cc
+ln $LOCAL_EVALGENDIR_RT/TIMETRACETP.h
+ln $LOCAL_EVALGENDIR_RT/TIMETRACETP_anonym.cc
+ln $LOCAL_EVALGENDIR_RT/TIMETRACETP_anonym.h
+ln $LOCAL_EVALGENDIR_RT/VC.cc
+ln $LOCAL_EVALGENDIR_RT/VC.h
+ln $LOCAL_EVALGENDIR_RT/VC_anonym.cc
+ln $LOCAL_EVALGENDIR_RT/VC_anonym.h
+
+ln $EVALGENDIR/SEM.h .
+ln $EVALGENDIR/SEM_anonym.h .
+ln $EVALGENDIR/SEM_userdef.h .
+
+ln $LOCAL_EVALGENDIR_SL/SEM.cc SEM-sl.cc
+ln $LOCAL_EVALGENDIR_SL/SEM.h SEM-sl.h
+ln $LOCAL_EVALGENDIR_SL/SEM_anonym.cc SEM_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/SEM_anonym.h SEM_anonym-sl.h
+ln $LOCAL_EVALGENDIR_PP/SEM.cc SEM-pp.cc
+ln $LOCAL_EVALGENDIR_PP/SEM.h SEM-pp.h
+ln $LOCAL_EVALGENDIR_PP/SEM_anonym.cc SEM_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/SEM_anonym.h SEM_anonym-pp.h
+ln $LOCAL_EVALGENDIR_RT/SEM.cc SEM-rt.cc
+ln $LOCAL_EVALGENDIR_RT/SEM.h SEM-rt.h
+ln $LOCAL_EVALGENDIR_RT/SEM_anonym.cc SEM_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/SEM_anonym.h SEM_anonym-rt.h
+
+ln $EVALGENDIR/GLOBAL.h .
+ln $EVALGENDIR/GLOBAL_anonym.h .
+ln $EVALGENDIR/dummy_userdef.h GLOBAL_userdef.h
+
+ln $LOCAL_EVALGENDIR_SL/GLOBAL.cc GLOBAL-sl.cc
+ln $LOCAL_EVALGENDIR_SL/GLOBAL.h GLOBAL-sl.h
+ln $LOCAL_EVALGENDIR_SL/GLOBAL_anonym.cc GLOBAL_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/GLOBAL_anonym.h GLOBAL_anonym-sl.h
+ln $LOCAL_EVALGENDIR_PP/GLOBAL.cc GLOBAL-pp.cc
+ln $LOCAL_EVALGENDIR_PP/GLOBAL.h GLOBAL-pp.h
+ln $LOCAL_EVALGENDIR_PP/GLOBAL_anonym.cc GLOBAL_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/GLOBAL_anonym.h GLOBAL_anonym-pp.h
+ln $LOCAL_EVALGENDIR_RT/GLOBAL.cc GLOBAL-rt.cc
+ln $LOCAL_EVALGENDIR_RT/GLOBAL.h GLOBAL-rt.h
+ln $LOCAL_EVALGENDIR_RT/GLOBAL_anonym.cc GLOBAL_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/GLOBAL_anonym.h GLOBAL_anonym-rt.h
+
+#ln $LOCAL_EVALGENDIR_SL/MANGLE.cc MANGLE-sl.cc
+#ln $LOCAL_EVALGENDIR_SL/MANGLE.h MANGLE-sl.h
+#ln $LOCAL_EVALGENDIR_SL/MANGLE_anonym.cc MANGLE_anonym-sl.cc
+#ln $LOCAL_EVALGENDIR_SL/MANGLE_anonym.h MANGLE_anonym-sl.h
+ln $LOCAL_EVALGENDIR_PP/MANGLE.cc MANGLE-pp.cc
+ln $LOCAL_EVALGENDIR_PP/MANGLE.h MANGLE-pp.h
+ln $LOCAL_EVALGENDIR_PP/MANGLE_anonym.cc MANGLE_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/MANGLE_anonym.h MANGLE_anonym-pp.h
+ln $LOCAL_EVALGENDIR_RT/MANGLE.cc MANGLE-rt.cc
+ln $LOCAL_EVALGENDIR_RT/MANGLE.h MANGLE-rt.h
+ln $LOCAL_EVALGENDIR_RT/MANGLE_anonym.cc MANGLE_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/MANGLE_anonym.h MANGLE_anonym-rt.h
+
+ln $LOCAL_EVALGENDIR_SL/UTIL.cc UTIL-sl.cc
+ln $LOCAL_EVALGENDIR_SL/UTIL.h UTIL-sl.h
+ln $LOCAL_EVALGENDIR_SL/UTIL_anonym.cc UTIL_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/UTIL_anonym.h UTIL_anonym-sl.h
+ln $LOCAL_EVALGENDIR_PP/UTIL.cc UTIL-pp.cc
+ln $LOCAL_EVALGENDIR_PP/UTIL.h UTIL-pp.h
+ln $LOCAL_EVALGENDIR_PP/UTIL_anonym.cc UTIL_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/UTIL_anonym.h UTIL_anonym-pp.h
+ln $LOCAL_EVALGENDIR_RT/UTIL.cc UTIL-rt.cc
+ln $LOCAL_EVALGENDIR_RT/UTIL.h UTIL-rt.h
+ln $LOCAL_EVALGENDIR_RT/UTIL_anonym.cc UTIL_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/UTIL_anonym.h UTIL_anonym-rt.h
+
+#ln backend.cc backend-rt.cc
+#ln tagmap.cc tagmap-rt.cc
+#ln mod_bcppast.cc mod_bcppast-rt.cc
+#ln mod_class.cc mod_class-rt.cc
+#ln mod_conc.cc mod_conc-rt.cc
+#ln mod_cgaux.cc mod_cgaux-rt.cc
+#ln mod_fvd.cc mod_fvd-rt.cc
+#ln mod_ds.cc mod_ds-rt.cc
+#ln mod_stmt.cc mod_stmt-rt.cc
+#ln mod_valdef.cc mod_valdef-rt.cc
+#ln vdmcg.cc vdmcg-rt.cc
+#ln mod_expr.cc mod_expr-rt.cc
+#ln mod_fctdef.cc mod_fctdef-rt.cc
+#ln mod_patmat.cc mod_patmat-rt.cc
+#ln mod_typedef.cc mod_typedef-rt.cc
+#ln mod_tpgen.cc mod_tpgen-rt.cc
+#ln mod_cgmain.cc mod_cgmain-rt.cc
+
+ln $RTDIR/test/tp_test.cc tp_test.cc
+
+#Dependency RT
+#ln Dependency.cc Dependency-rt.cc
+#ln StateStore.cc StateStore-rt.cc
+#ln UMLTool.cc UMLTool-rt.cc
+
+#test
+ln test1.cc test1-rt.cc
+
+
+# RT interpreter
+ln $RTDIR/code/time.cc
+ln $RTDIR/code/timetrace.h TIMETRACE.h
+ln $RTDIR/code/timetrace.cc
+ln $LOCAL_EVALGENDIR_RT/SCHDTP.h SCHDTP-rt.h
+ln $LOCAL_EVALGENDIR_RT/SCHDTP.cc SCHDTP-rt.cc
+ln $LOCAL_EVALGENDIR_RT/SCHDTP_anonym.h SCHDTP_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/SCHDTP_anonym.cc SCHDTP_anonym-rt.cc
+
+
+#ln tk_if.cc tk_if-uml-rt.cc 
+
+# Priority parser
+ln $EVALDIR/priority.x
+ln $EVALDIR/priority.y
+ln $EVALDIR/pr_test.cc
+ln $EVALDIR/priority_aux.h
+
+# VDM Java library
+# ln javalib
+JAVALIB=$BASELINK/java/lib/vdm
+ln $JAVALIB/Makefile Makefile.javalib
+ln $JAVALIB/CGException.java 
+ln $JAVALIB/INDEX_OUT_OF_RANGE.java
+ln $JAVALIB/NotSupportedConstructException.java
+ln $JAVALIB/Record.java
+ln $JAVALIB/UTIL.java
+ln $JAVALIB/VDMRunTimeException.java
+ln $JAVALIB/VDMSpecException.java
+ln $JAVALIB/Tuple.java
+ln $JAVALIB/Token.java
+ln $JAVALIB/start.java
+ln $JAVALIB/append.java
+ln $JAVALIB/CollectionFactory.java
+ln $JAVALIB/DefaultCollection.java
+ln $JAVALIB/ValueParser.jj
+JAVACONCLIB=$BASELINK/java/lib/vdmconc
+ln $JAVACONCLIB/EvaluatePP.java
+ln $JAVACONCLIB/PeriodicThread.java
+ln $JAVACONCLIB/Sentinel.java
+ln $JAVACONCLIB/VDMThread.java
+
+oscheck(Darwin) ln $MACOSXDIR/Info.plist.pp .
+#oscheck(Darwin) ln $MACOSXDIR/vppde.script
+#oscheck(Darwin) ln $MACOSXDIR/vppgde.script
+#oscheck(Darwin) ln $MACOSXDIR/vicede.script
+#oscheck(Darwin) ln $MACOSXDIR/vicegde.script
+#oscheck(Darwin) ln $MACOSXDIR/vdmde.script
+#oscheck(Darwin) ln $MACOSXDIR/vdmgde.script
+
+oscheck(Linux|SunOS|FreeBSD) ln $RELEASEDIR/vppde.script
+oscheck(Linux|SunOS|FreeBSD) ln $RELEASEDIR/vppgde.script
+oscheck(Linux|SunOS|FreeBSD) ln $RELEASEDIR/vicede.script
+oscheck(Linux|SunOS|FreeBSD) ln $RELEASEDIR/vicegde.script
+oscheck(Linux|SunOS|FreeBSD) ln $RELEASEDIR/vdmde.script
+oscheck(Linux|SunOS|FreeBSD) ln $RELEASEDIR/vdmgde.script
+
+SMDIR = $BASEDIR/servicemanager
+ln $SMDIR/ServiceManagerDesc_userdef.h
+ln $SMDIR/service_startup.x
+ln $SMDIR/service_startup.y
+ln $SMDIR/servicemanager.h
+ln $SMDIR/servicemanager.cc
+ln $SMDIR/service_startup_aux.h
+ln $SMDIR/externalservice.h
+ln $SMDIR/externalservicemanager.h
+ln $SMDIR/parserservice.h
+ln $SMDIR/parserservice.cc
+
+#
+# Java2VDM++
+#
+
+J2VDIR = $BASEDIR/java2vdm++
+ln $J2VDIR/javamain.cc javamain-pp.cc
+ln $J2VDIR/javamain.cc javamain-rt.cc
+ln $J2VDIR/javaparse.w
+ln $J2VDIR/java2vdm.h
+
+ln $J2VDIR/javascan.h
+
+ln $J2VDIR/javascan.l
+ln $J2VDIR/j2vbe.cc j2vbe-pp.cc
+ln $J2VDIR/j2vbe.cc j2vbe-rt.cc
+ln $J2VDIR/as2ascii.h
+ln $J2VDIR/as2ascii.cc as2ascii-sl.cc
+ln $J2VDIR/as2ascii.cc as2ascii-pp.cc
+ln $J2VDIR/as2ascii.cc as2ascii-rt.cc
+ln $J2VDIR/JAVAERR_userdef.h
+ln $J2VDIR/JAVAERR_userimpl.cc .
+ln $J2VDIR/J2V_userdef.h
+ln $J2VDIR/J2VAUX_userdef.h
+ln $J2VDIR/J2VBVDM_userdef.h
+ln $J2VDIR/J2VCLASS_userdef.h
+ln $J2VDIR/J2VENV_userdef.h
+ln $J2VDIR/J2VERR_userdef.h
+ln $J2VDIR/J2VERRMSG_userdef.h
+
+ln $J2VDIR/J2VEXPR_userdef.h
+ln $J2VDIR/J2VNS_userdef.h
+ln $J2VDIR/J2VOP_userdef.h
+ln $J2VDIR/J2VSTMT_userdef.h
+ln $J2VDIR/J2VTYPE_userdef.h
+
+ln $J2VDIR/JSSAUX_userdef.h
+ln $J2VDIR/JSSAUX_userimpl.cc .
+#ln $J2VDIR/JSSAUX_userimpl.cc JSSAUX_userimpl-pp.cc
+#ln $J2VDIR/JSSAUX_userimpl.cc JSSAUX_userimpl-rt.cc
+ln $J2VDIR/JSSDEF_userdef.h
+ln $J2VDIR/JSSENV_userdef.h
+ln $J2VDIR/JSSERR_userdef.h
+ln $J2VDIR/JSSERRMSG_userdef.h
+ln $J2VDIR/JSSEXPR_userdef.h
+#ln $J2VDIR/JSSJAVA_userdef.h
+ln $J2VDIR/JSSREP_userdef.h
+ln $J2VDIR/JSSSTMT_userdef.h
+ln $J2VDIR/JSSVCM1_userdef.h
+ln $J2VDIR/J2VBVDM_userimpl.cc
+ln $J2VDIR/J2VEXPR_userimpl.cc
+#ln $J2VDIR/UTIL_anonym.h
+
+J2VAPIDIR = $BASEDIR/java2vdm++/javaapi
+ln $J2VAPIDIR/Comparable.cc
+ln $J2VAPIDIR/Comparable.h
+ln $J2VAPIDIR/Comparable_anonym.cc
+ln $J2VAPIDIR/Comparable_anonym.h
+ln $J2VAPIDIR/FileDescriptor.cc
+ln $J2VAPIDIR/FileDescriptor.h
+ln $J2VAPIDIR/FileDescriptor_anonym.cc
+ln $J2VAPIDIR/FileDescriptor_anonym.h
+ln $J2VAPIDIR/FileOutputStream.cc
+ln $J2VAPIDIR/FileOutputStream.h
+ln $J2VAPIDIR/FileOutputStream_anonym.cc
+ln $J2VAPIDIR/FileOutputStream_anonym.h
+ln $J2VAPIDIR/Integer.cc
+ln $J2VAPIDIR/Integer.h
+ln $J2VAPIDIR/Integer_anonym.cc
+ln $J2VAPIDIR/Integer_anonym.h
+ln $J2VAPIDIR/J2VUTIL.cc
+ln $J2VAPIDIR/J2VUTIL.h
+ln $J2VAPIDIR/J2VUTIL_anonym.cc
+ln $J2VAPIDIR/J2VUTIL_anonym.h
+ln $J2VAPIDIR/Locale.cc JavaLocale.cc
+ln $J2VAPIDIR/Locale.h JavaLocale.h
+ln $J2VAPIDIR/Locale_anonym.cc
+ln $J2VAPIDIR/Locale_anonym.h
+ln $J2VAPIDIR/Number.cc
+ln $J2VAPIDIR/Number.h
+ln $J2VAPIDIR/Number_anonym.cc
+ln $J2VAPIDIR/Number_anonym.h
+ln $J2VAPIDIR/Object.cc
+ln $J2VAPIDIR/Object.h
+ln $J2VAPIDIR/Object_anonym.cc
+ln $J2VAPIDIR/Object_anonym.h
+ln $J2VAPIDIR/OutputStream.cc
+ln $J2VAPIDIR/OutputStream.h
+ln $J2VAPIDIR/OutputStream_anonym.cc
+ln $J2VAPIDIR/OutputStream_anonym.h
+ln $J2VAPIDIR/Serializable.cc
+ln $J2VAPIDIR/Serializable.h
+ln $J2VAPIDIR/Serializable_anonym.cc
+ln $J2VAPIDIR/Serializable_anonym.h
+ln $J2VAPIDIR/String.cc JavaString.cc
+ln $J2VAPIDIR/String.h JavaString.h
+ln $J2VAPIDIR/StringBuffer.cc
+ln $J2VAPIDIR/StringBuffer.h
+ln $J2VAPIDIR/StringBuffer_anonym.cc
+ln $J2VAPIDIR/StringBuffer_anonym.h
+ln $J2VAPIDIR/String_anonym.cc
+ln $J2VAPIDIR/String_anonym.h
+ln $J2VAPIDIR/j2vmain.h
+ln $J2VAPIDIR/j2vmain.cc
+
+ln $J2VAPIDIR/Character.cc
+ln $J2VAPIDIR/Character.h
+#ln $J2VAPIDIR/Character_anonym.cc
+#ln $J2VAPIDIR/Character_anonym.h
+ln $J2VAPIDIR/FileInputStream.cc
+ln $J2VAPIDIR/FileInputStream.h
+#ln $J2VAPIDIR/FileInputStream_anonym.cc
+#ln $J2VAPIDIR/FileInputStream_anonym.h
+ln $J2VAPIDIR/File.cc
+ln $J2VAPIDIR/File.h
+ln $J2VAPIDIR/DriverManager.cc
+ln $J2VAPIDIR/DriverManager.h
+#ln $J2VAPIDIR/DriverManager_anonym.cc
+#ln $J2VAPIDIR/DriverManager_anonym.h
+ln $J2VAPIDIR/SqlConnection.cc
+ln $J2VAPIDIR/SqlConnection.h
+#ln $J2VAPIDIR/SqlConnection_anonym.cc
+#ln $J2VAPIDIR/SqlConnection_anonym.h
+ln $J2VAPIDIR/SqlException.cc
+ln $J2VAPIDIR/SqlException.h
+ln $J2VAPIDIR/SqlStatement.cc
+ln $J2VAPIDIR/SqlStatement.h
+#ln $J2VAPIDIR/SqlStatement_anonym.cc
+#ln $J2VAPIDIR/SqlStatement_anonym.h
+ln $J2VAPIDIR/SqlResultSet.cc
+ln $J2VAPIDIR/SqlResultSet.h
+#ln $J2VAPIDIR/SqlResultSet_anonym.cc
+#ln $J2VAPIDIR/SqlResultSet_anonym.h
+ln $J2VAPIDIR/StreamTokenizer.cc
+ln $J2VAPIDIR/StreamTokenizer.h
+ln $J2VAPIDIR/Double.h
+ln $J2VAPIDIR/Double.cc
+
+# cpp links for use in Visual studio
+oscheck(win32)ln $J2VAPIDIR/Comparable.cc Comparable.cpp
+#oscheck(win32)ln $J2VAPIDIR/Comparable_anonym.cc Comparable_anonym.cpp
+oscheck(win32)ln $J2VAPIDIR/FileDescriptor.cc FileDescriptor.cpp
+#oscheck(win32)ln $J2VAPIDIR/FileDescriptor_anonym.cc FileDescriptor_anonym.cpp
+oscheck(win32)ln $J2VAPIDIR/FileOutputStream.cc FileOutputStream.cpp
+#oscheck(win32)ln $J2VAPIDIR/FileOutputStream_anonym.cc FileOutputStream_anonym.cpp
+oscheck(win32)ln $J2VAPIDIR/Integer.cc Integer.cpp
+#oscheck(win32)ln $J2VAPIDIR/Integer_anonym.cc Integer_anonym.cpp
+oscheck(win32)ln $J2VAPIDIR/J2VUTIL.cc J2VUTIL.cpp
+#oscheck(win32)ln $J2VAPIDIR/J2VUTIL_anonym.cc J2VUTIL_anonym.cpp
+oscheck(win32)ln $J2VAPIDIR/Locale.cc JavaLocale.cc 
+oscheck(win32)ln $J2VAPIDIR/Locale.cc JavaLocale.cpp
+#oscheck(win32)ln $J2VAPIDIR/Locale_anonym.cc Locale_anonym.cpp
+oscheck(win32)ln $J2VAPIDIR/Number.cc Number.cpp
+#oscheck(win32)ln $J2VAPIDIR/Number_anonym.cc Number_anonym.cpp
+oscheck(win32)ln $J2VAPIDIR/Object.cc Object.cpp
+#oscheck(win32)ln $J2VAPIDIR/Object_anonym.cc Object_anonym.cpp
+oscheck(win32)ln $J2VAPIDIR/OutputStream.cc OutputStream.cpp
+#oscheck(win32)ln $J2VAPIDIR/OutputStream_anonym.cc OutputStream_anonym.cpp
+oscheck(win32)ln $J2VAPIDIR/Serializable.cc Serializable.cpp
+#oscheck(win32)ln $J2VAPIDIR/Serializable_anonym.cc Serializable_anonym.cpp
+oscheck(win32)ln $J2VAPIDIR/String.cc JavaString.cc 
+oscheck(win32)ln $J2VAPIDIR/String.cc JavaString.cpp
+oscheck(win32)ln $J2VAPIDIR/StringBuffer.cc StringBuffer.cpp
+#oscheck(win32)ln $J2VAPIDIR/StringBuffer_anonym.cc StringBuffer_anonym.cpp
+#oscheck(win32)ln $J2VAPIDIR/String_anonym.cc String_anonym.cpp
+oscheck(win32)ln $J2VAPIDIR/j2vmain.cc j2vmain.cpp
+oscheck(win32)ln $J2VAPIDIR/Character.cc Character.cpp
+#oscheck(win32)ln $J2VAPIDIR/Character_anonym.cc Character_anonym.cpp
+oscheck(win32)ln $J2VAPIDIR/FileInputStream.cc FileInputStream.cpp
+#oscheck(win32)ln $J2VAPIDIR/FileInputStream_anonym.cc FileInputStream_anonym.cpp
+oscheck(win32)ln $J2VAPIDIR/File.cc File.cpp
+oscheck(win32)ln $J2VAPIDIR/DriverManager.cc DriverManager.cpp
+#oscheck(win32)ln $J2VAPIDIR/DriverManager_anonym.cc DriverManager_anonym.cpp
+oscheck(win32)ln $J2VAPIDIR/SqlConnection.cc SqlConnection.cpp
+#oscheck(win32)ln $J2VAPIDIR/SqlConnection_anonym.cc SqlConnection_anonym.cpp
+oscheck(win32)ln $J2VAPIDIR/SqlException.cc SqlException.cpp
+oscheck(win32)ln $J2VAPIDIR/SqlStatement.cc SqlStatement.cpp
+#oscheck(win32)ln $J2VAPIDIR/SqlStatement_anonym.cc SqlStatement_anonym.cpp
+oscheck(win32)ln $J2VAPIDIR/SqlResultSet.cc SqlResultSet.cpp
+#oscheck(win32)ln $J2VAPIDIR/SqlResultSet_anonym.cc SqlResultSet_anonym.cpp
+oscheck(win32)ln $J2VAPIDIR/StreamTokenizer.cc StreamTokenizer.cpp
+
+#
+# POG
+#
+
+ln $POGAUXDIR/CAST_userdef.h
+ln $POGAUXDIR/CAST_userimpl.cc
+ln $POGAUXDIR/CI_uAUX_userdef.h
+ln $POGAUXDIR/CI_uAUX_userimpl.cc
+ln $POGAUXDIR/FRESH_userdef.h
+ln $POGAUXDIR/FRESH_userimpl.cc
+ln $POGAUXDIR/PID_userdef.h
+ln $POGAUXDIR/PID_userimpl.cc
+ln $POGAUXDIR/PURE_uPAT_userdef.h
+ln $POGAUXDIR/PURE_uPAT_userimpl.cc
+ln $POGAUXDIR/REP2TYPE_userdef.h
+ln $POGAUXDIR/REP2TYPE_userimpl.cc
+ln $POGAUXDIR/SPEC_uAST_userdef.h
+ln $POGAUXDIR/SPEC_uAST_userimpl.cc
+ln $POGAUXDIR/TYPE2REP_userdef.h
+ln $POGAUXDIR/TYPE2REP_userimpl.cc
+#ln $POGAUXDIR/extproj-interface.cc
+#ln $POGAUXDIR/extproj-interface.h
+
+ln $POGDIR/CHECK_userdef.h
+ln $POGDIR/CHECK_userimpl.cc
+ln $POGDIR/CON_uENV_userdef.h
+ln $POGDIR/GEN_uINV_userdef.h
+ln $POGDIR/GEN_uPO_userdef.h
+ln $POGDIR/POGTP_userdef.h
+ln $POGDIR/POGTP_userimpl.cc
+ln $POGDIR/POG_uDEF_userdef.h
+ln $POGDIR/POG_uDEF_userimpl.cc
+ln $POGDIR/POG_uEXPR_userdef.h
+ln $POGDIR/POG_uEXPR_userimpl.cc
+ln $POGDIR/POG_uMEDIATOR_userdef.h
+ln $POGDIR/POG_uMEDIATOR_userimpl.cc
+ln $POGDIR/POG_uPAT_userdef.h
+ln $POGDIR/POG_uSTMT_userdef.h
+ln $POGDIR/POG_uSTMT_userimpl.cc
+ln $POGDIR/pog-interface.cc
+ln $POGDIR/pog-interface.h
+ln $POGDIR/GEN_uPO_userimpl.cc
+
+ln $POGPRETTYDIR/PP_uMEDIATOR_userdef.h
+ln $POGPRETTYDIR/PP_uTAR_uDEF_userdef.h
+ln $POGPRETTYDIR/PP_uTAR_uDEF_userimpl.cc
+ln $POGPRETTYDIR/PP_uTAR_uEXPR_userdef.h
+ln $POGPRETTYDIR/PP_uTAR_uEXPR_userimpl.cc
+ln $POGPRETTYDIR/PP_uTAR_uPAT_userdef.h
+ln $POGPRETTYDIR/PP_uTAR_uPO_userdef.h
+ln $POGPRETTYDIR/PP_uTAR_uTYPE_userdef.h
+ln $POGPRETTYDIR/PP_uTRA_uDEF_userdef.h
+ln $POGPRETTYDIR/PP_uTRA_uDEF_userimpl.cc
+ln $POGPRETTYDIR/PP_uTRA_uEXPR_userdef.h
+ln $POGPRETTYDIR/PP_uTRA_uEXPR_userimpl.cc
+ln $POGPRETTYDIR/PP_uTRA_uPAT_userdef.h
+ln $POGPRETTYDIR/PP_uTRA_uPO_userdef.h
+ln $POGPRETTYDIR/PP_uTRA_uTYPE_userdef.h
+
+
+ln $POGGENDIR/CAST.h
+ln $POGGENDIR/CAST_anonym.h
+ln $POGGENDIR/CHECK.h
+ln $POGGENDIR/CHECK_anonym.h
+ln $POGGENDIR/CI_uAUX.h
+ln $POGGENDIR/CI_uAUX_anonym.h
+ln $POGGENDIR/CON_uENV.h
+ln $POGGENDIR/CON_uENV_anonym.h
+ln $POGGENDIR/FRESH.h
+ln $POGGENDIR/FRESH_anonym.h
+ln $POGGENDIR/GEN_uINV.h
+ln $POGGENDIR/GEN_uINV_anonym.h
+ln $POGGENDIR/GEN_uPO.h
+ln $POGGENDIR/GEN_uPO_anonym.h
+ln $POGGENDIR/PID.h
+ln $POGGENDIR/PID_anonym.h
+ln $POGGENDIR/POGTP.h
+ln $POGGENDIR/POGTP_anonym.h
+ln $POGGENDIR/POG_uDEF.h
+ln $POGGENDIR/POG_uDEF_anonym.h
+ln $POGGENDIR/POG_uEXPR.h
+ln $POGGENDIR/POG_uEXPR_anonym.h
+ln $POGGENDIR/POG_uMEDIATOR.h
+ln $POGGENDIR/POG_uMEDIATOR_anonym.h
+ln $POGGENDIR/POG_uPAT.h
+ln $POGGENDIR/POG_uPAT_anonym.h
+ln $POGGENDIR/POG_uSTMT.h
+ln $POGGENDIR/POG_uSTMT_anonym.h
+ln $POGGENDIR/PURE_uPAT.h
+ln $POGGENDIR/PURE_uPAT_anonym.h
+ln $POGGENDIR/REP2TYPE.h
+ln $POGGENDIR/REP2TYPE_anonym.h
+ln $POGGENDIR/SPEC_uAST.h
+ln $POGGENDIR/SPEC_uAST_anonym.h
+ln $POGGENDIR/TYPE2REP.h
+ln $POGGENDIR/TYPE2REP_anonym.h
+
+ln $POG_PRETTYGENDIR/PP_uMEDIATOR.h
+ln $POG_PRETTYGENDIR/PP_uMEDIATOR_anonym.h
+ln $POG_PRETTYGENDIR/PP_uTAR_uDEF.h
+ln $POG_PRETTYGENDIR/PP_uTAR_uDEF_anonym.h
+ln $POG_PRETTYGENDIR/PP_uTAR_uEXPR.h
+ln $POG_PRETTYGENDIR/PP_uTAR_uEXPR_anonym.h
+ln $POG_PRETTYGENDIR/PP_uTAR_uPAT.h
+ln $POG_PRETTYGENDIR/PP_uTAR_uPAT_anonym.h
+ln $POG_PRETTYGENDIR/PP_uTAR_uPO.h
+ln $POG_PRETTYGENDIR/PP_uTAR_uPO_anonym.h
+ln $POG_PRETTYGENDIR/PP_uTAR_uTYPE.h
+ln $POG_PRETTYGENDIR/PP_uTAR_uTYPE_anonym.h
+ln $POG_PRETTYGENDIR/PP_uTRA_uDEF.h
+ln $POG_PRETTYGENDIR/PP_uTRA_uDEF_anonym.h
+ln $POG_PRETTYGENDIR/PP_uTRA_uEXPR.h
+ln $POG_PRETTYGENDIR/PP_uTRA_uEXPR_anonym.h
+ln $POG_PRETTYGENDIR/PP_uTRA_uPAT.h
+ln $POG_PRETTYGENDIR/PP_uTRA_uPAT_anonym.h
+ln $POG_PRETTYGENDIR/PP_uTRA_uPO.h
+ln $POG_PRETTYGENDIR/PP_uTRA_uPO_anonym.h
+ln $POG_PRETTYGENDIR/PP_uTRA_uTYPE.h
+ln $POG_PRETTYGENDIR/PP_uTRA_uTYPE_anonym.h
+
+ln $LOCAL_EVALGENDIR_SL/CAST.cc CAST-sl.cc
+ln $LOCAL_EVALGENDIR_SL/CAST.h  CAST-sl.h
+ln $LOCAL_EVALGENDIR_SL/CAST_anonym.cc CAST_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/CAST_anonym.h  CAST_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/CHECK.cc CHECK-sl.cc
+ln $LOCAL_EVALGENDIR_SL/CHECK.h  CHECK-sl.h
+ln $LOCAL_EVALGENDIR_SL/CHECK_anonym.cc CHECK_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/CHECK_anonym.h  CHECK_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/CI_uAUX.cc CI_uAUX-sl.cc
+ln $LOCAL_EVALGENDIR_SL/CI_uAUX.h  CI_uAUX-sl.h
+ln $LOCAL_EVALGENDIR_SL/CI_uAUX_anonym.cc CI_uAUX_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/CI_uAUX_anonym.h  CI_uAUX_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/CON_uENV.cc CON_uENV-sl.cc
+ln $LOCAL_EVALGENDIR_SL/CON_uENV.h  CON_uENV-sl.h
+ln $LOCAL_EVALGENDIR_SL/CON_uENV_anonym.cc CON_uENV_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/CON_uENV_anonym.h  CON_uENV_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/FRESH.cc FRESH-sl.cc
+ln $LOCAL_EVALGENDIR_SL/FRESH.h  FRESH-sl.h
+ln $LOCAL_EVALGENDIR_SL/FRESH_anonym.cc FRESH_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/FRESH_anonym.h  FRESH_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/GEN_uINV.cc GEN_uINV-sl.cc
+ln $LOCAL_EVALGENDIR_SL/GEN_uINV.h  GEN_uINV-sl.h
+ln $LOCAL_EVALGENDIR_SL/GEN_uINV_anonym.cc GEN_uINV_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/GEN_uINV_anonym.h  GEN_uINV_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/GEN_uPO.cc GEN_uPO-sl.cc
+ln $LOCAL_EVALGENDIR_SL/GEN_uPO.h  GEN_uPO-sl.h
+ln $LOCAL_EVALGENDIR_SL/GEN_uPO_anonym.cc GEN_uPO_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/GEN_uPO_anonym.h  GEN_uPO_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/PID.cc PID-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PID.h  PID-sl.h
+ln $LOCAL_EVALGENDIR_SL/PID_anonym.cc PID_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PID_anonym.h  PID_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/POGTP.cc POGTP-sl.cc
+ln $LOCAL_EVALGENDIR_SL/POGTP.h  POGTP-sl.h
+ln $LOCAL_EVALGENDIR_SL/POGTP_anonym.cc POGTP_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/POGTP_anonym.h  POGTP_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/POG_uDEF.cc POG_uDEF-sl.cc
+ln $LOCAL_EVALGENDIR_SL/POG_uDEF.h  POG_uDEF-sl.h
+ln $LOCAL_EVALGENDIR_SL/POG_uDEF_anonym.cc POG_uDEF_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/POG_uDEF_anonym.h  POG_uDEF_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/POG_uEXPR.cc POG_uEXPR-sl.cc
+ln $LOCAL_EVALGENDIR_SL/POG_uEXPR.h  POG_uEXPR-sl.h
+ln $LOCAL_EVALGENDIR_SL/POG_uEXPR_anonym.cc POG_uEXPR_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/POG_uEXPR_anonym.h  POG_uEXPR_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/POG_uMEDIATOR.cc POG_uMEDIATOR-sl.cc
+ln $LOCAL_EVALGENDIR_SL/POG_uMEDIATOR.h  POG_uMEDIATOR-sl.h
+ln $LOCAL_EVALGENDIR_SL/POG_uMEDIATOR_anonym.cc POG_uMEDIATOR_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/POG_uMEDIATOR_anonym.h  POG_uMEDIATOR_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/POG_uPAT.cc POG_uPAT-sl.cc
+ln $LOCAL_EVALGENDIR_SL/POG_uPAT.h  POG_uPAT-sl.h
+ln $LOCAL_EVALGENDIR_SL/POG_uPAT_anonym.cc POG_uPAT_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/POG_uPAT_anonym.h  POG_uPAT_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/POG_uSTMT.cc POG_uSTMT-sl.cc
+ln $LOCAL_EVALGENDIR_SL/POG_uSTMT.h  POG_uSTMT-sl.h
+ln $LOCAL_EVALGENDIR_SL/POG_uSTMT_anonym.cc POG_uSTMT_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/POG_uSTMT_anonym.h  POG_uSTMT_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uMEDIATOR.cc PP_uMEDIATOR-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uMEDIATOR.h  PP_uMEDIATOR-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uMEDIATOR_anonym.cc PP_uMEDIATOR_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uMEDIATOR_anonym.h  PP_uMEDIATOR_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uTAR_uDEF.cc PP_uTAR_uDEF-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uTAR_uDEF.h  PP_uTAR_uDEF-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uTAR_uDEF_anonym.cc PP_uTAR_uDEF_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uTAR_uDEF_anonym.h  PP_uTAR_uDEF_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uTAR_uEXPR.cc PP_uTAR_uEXPR-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uTAR_uEXPR.h  PP_uTAR_uEXPR-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uTAR_uEXPR_anonym.cc PP_uTAR_uEXPR_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uTAR_uEXPR_anonym.h  PP_uTAR_uEXPR_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uTAR_uPAT.cc PP_uTAR_uPAT-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uTAR_uPAT.h  PP_uTAR_uPAT-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uTAR_uPAT_anonym.cc PP_uTAR_uPAT_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uTAR_uPAT_anonym.h  PP_uTAR_uPAT_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uTAR_uPO.cc PP_uTAR_uPO-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uTAR_uPO.h  PP_uTAR_uPO-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uTAR_uPO_anonym.cc PP_uTAR_uPO_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uTAR_uPO_anonym.h  PP_uTAR_uPO_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uTAR_uTYPE.cc PP_uTAR_uTYPE-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uTAR_uTYPE.h  PP_uTAR_uTYPE-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uTAR_uTYPE_anonym.cc PP_uTAR_uTYPE_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uTAR_uTYPE_anonym.h  PP_uTAR_uTYPE_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uTRA_uDEF.cc PP_uTRA_uDEF-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uTRA_uDEF.h  PP_uTRA_uDEF-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uTRA_uDEF_anonym.cc PP_uTRA_uDEF_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uTRA_uDEF_anonym.h  PP_uTRA_uDEF_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uTRA_uEXPR.cc PP_uTRA_uEXPR-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uTRA_uEXPR.h  PP_uTRA_uEXPR-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uTRA_uEXPR_anonym.cc PP_uTRA_uEXPR_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uTRA_uEXPR_anonym.h  PP_uTRA_uEXPR_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uTRA_uPAT.cc PP_uTRA_uPAT-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uTRA_uPAT.h  PP_uTRA_uPAT-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uTRA_uPAT_anonym.cc PP_uTRA_uPAT_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uTRA_uPAT_anonym.h  PP_uTRA_uPAT_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uTRA_uPO.cc PP_uTRA_uPO-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uTRA_uPO.h  PP_uTRA_uPO-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uTRA_uPO_anonym.cc PP_uTRA_uPO_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uTRA_uPO_anonym.h  PP_uTRA_uPO_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uTRA_uTYPE.cc PP_uTRA_uTYPE-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uTRA_uTYPE.h  PP_uTRA_uTYPE-sl.h
+ln $LOCAL_EVALGENDIR_SL/PP_uTRA_uTYPE_anonym.cc PP_uTRA_uTYPE_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PP_uTRA_uTYPE_anonym.h  PP_uTRA_uTYPE_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/PURE_uPAT.cc PURE_uPAT-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PURE_uPAT.h PURE_uPAT-sl.h
+ln $LOCAL_EVALGENDIR_SL/PURE_uPAT_anonym.cc PURE_uPAT_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/PURE_uPAT_anonym.h  PURE_uPAT_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/REP2TYPE.cc REP2TYPE-sl.cc
+ln $LOCAL_EVALGENDIR_SL/REP2TYPE.h  REP2TYPE-sl.h
+ln $LOCAL_EVALGENDIR_SL/REP2TYPE_anonym.cc REP2TYPE_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/REP2TYPE_anonym.h  REP2TYPE_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/SPEC_uAST.cc SPEC_uAST-sl.cc
+ln $LOCAL_EVALGENDIR_SL/SPEC_uAST.h  SPEC_uAST-sl.h
+ln $LOCAL_EVALGENDIR_SL/SPEC_uAST_anonym.cc SPEC_uAST_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/SPEC_uAST_anonym.h  SPEC_uAST_anonym-sl.h
+ln $LOCAL_EVALGENDIR_SL/TYPE2REP.cc TYPE2REP-sl.cc
+ln $LOCAL_EVALGENDIR_SL/TYPE2REP.h  TYPE2REP-sl.h
+ln $LOCAL_EVALGENDIR_SL/TYPE2REP_anonym.cc TYPE2REP_anonym-sl.cc
+ln $LOCAL_EVALGENDIR_SL/TYPE2REP_anonym.h  TYPE2REP_anonym-sl.h
+
+ln $LOCAL_EVALGENDIR_PP/CAST.cc CAST-pp.cc
+ln $LOCAL_EVALGENDIR_PP/CAST.h  CAST-pp.h
+ln $LOCAL_EVALGENDIR_PP/CAST_anonym.cc CAST_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/CAST_anonym.h  CAST_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/CHECK.cc CHECK-pp.cc
+ln $LOCAL_EVALGENDIR_PP/CHECK.h  CHECK-pp.h
+ln $LOCAL_EVALGENDIR_PP/CHECK_anonym.cc CHECK_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/CHECK_anonym.h  CHECK_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/CI_uAUX.cc CI_uAUX-pp.cc
+ln $LOCAL_EVALGENDIR_PP/CI_uAUX.h  CI_uAUX-pp.h
+ln $LOCAL_EVALGENDIR_PP/CI_uAUX_anonym.cc CI_uAUX_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/CI_uAUX_anonym.h  CI_uAUX_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/CON_uENV.cc CON_uENV-pp.cc
+ln $LOCAL_EVALGENDIR_PP/CON_uENV.h  CON_uENV-pp.h
+ln $LOCAL_EVALGENDIR_PP/CON_uENV_anonym.cc CON_uENV_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/CON_uENV_anonym.h  CON_uENV_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/FRESH.cc FRESH-pp.cc
+ln $LOCAL_EVALGENDIR_PP/FRESH.h  FRESH-pp.h
+ln $LOCAL_EVALGENDIR_PP/FRESH_anonym.cc FRESH_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/FRESH_anonym.h  FRESH_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/GEN_uINV.cc GEN_uINV-pp.cc
+ln $LOCAL_EVALGENDIR_PP/GEN_uINV.h  GEN_uINV-pp.h
+ln $LOCAL_EVALGENDIR_PP/GEN_uINV_anonym.cc GEN_uINV_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/GEN_uINV_anonym.h  GEN_uINV_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/GEN_uPO.cc GEN_uPO-pp.cc
+ln $LOCAL_EVALGENDIR_PP/GEN_uPO.h  GEN_uPO-pp.h
+ln $LOCAL_EVALGENDIR_PP/GEN_uPO_anonym.cc GEN_uPO_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/GEN_uPO_anonym.h  GEN_uPO_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/PID.cc PID-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PID.h  PID-pp.h
+ln $LOCAL_EVALGENDIR_PP/PID_anonym.cc PID_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PID_anonym.h  PID_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/POGTP.cc POGTP-pp.cc
+ln $LOCAL_EVALGENDIR_PP/POGTP.h  POGTP-pp.h
+ln $LOCAL_EVALGENDIR_PP/POGTP_anonym.cc POGTP_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/POGTP_anonym.h  POGTP_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/POG_uDEF.cc POG_uDEF-pp.cc
+ln $LOCAL_EVALGENDIR_PP/POG_uDEF.h  POG_uDEF-pp.h
+ln $LOCAL_EVALGENDIR_PP/POG_uDEF_anonym.cc POG_uDEF_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/POG_uDEF_anonym.h  POG_uDEF_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/POG_uEXPR.cc POG_uEXPR-pp.cc
+ln $LOCAL_EVALGENDIR_PP/POG_uEXPR.h  POG_uEXPR-pp.h
+ln $LOCAL_EVALGENDIR_PP/POG_uEXPR_anonym.cc POG_uEXPR_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/POG_uEXPR_anonym.h  POG_uEXPR_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/POG_uMEDIATOR.cc POG_uMEDIATOR-pp.cc
+ln $LOCAL_EVALGENDIR_PP/POG_uMEDIATOR.h  POG_uMEDIATOR-pp.h
+ln $LOCAL_EVALGENDIR_PP/POG_uMEDIATOR_anonym.cc POG_uMEDIATOR_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/POG_uMEDIATOR_anonym.h  POG_uMEDIATOR_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/POG_uPAT.cc POG_uPAT-pp.cc
+ln $LOCAL_EVALGENDIR_PP/POG_uPAT.h  POG_uPAT-pp.h
+ln $LOCAL_EVALGENDIR_PP/POG_uPAT_anonym.cc POG_uPAT_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/POG_uPAT_anonym.h  POG_uPAT_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/POG_uSTMT.cc POG_uSTMT-pp.cc
+ln $LOCAL_EVALGENDIR_PP/POG_uSTMT.h  POG_uSTMT-pp.h
+ln $LOCAL_EVALGENDIR_PP/POG_uSTMT_anonym.cc POG_uSTMT_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/POG_uSTMT_anonym.h  POG_uSTMT_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uMEDIATOR.cc PP_uMEDIATOR-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uMEDIATOR.h  PP_uMEDIATOR-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uMEDIATOR_anonym.cc PP_uMEDIATOR_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uMEDIATOR_anonym.h  PP_uMEDIATOR_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uTAR_uDEF.cc PP_uTAR_uDEF-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uTAR_uDEF.h  PP_uTAR_uDEF-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uTAR_uDEF_anonym.cc PP_uTAR_uDEF_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uTAR_uDEF_anonym.h  PP_uTAR_uDEF_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uTAR_uEXPR.cc PP_uTAR_uEXPR-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uTAR_uEXPR.h  PP_uTAR_uEXPR-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uTAR_uEXPR_anonym.cc PP_uTAR_uEXPR_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uTAR_uEXPR_anonym.h  PP_uTAR_uEXPR_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uTAR_uPAT.cc PP_uTAR_uPAT-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uTAR_uPAT.h  PP_uTAR_uPAT-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uTAR_uPAT_anonym.cc PP_uTAR_uPAT_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uTAR_uPAT_anonym.h  PP_uTAR_uPAT_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uTAR_uPO.cc PP_uTAR_uPO-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uTAR_uPO.h  PP_uTAR_uPO-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uTAR_uPO_anonym.cc PP_uTAR_uPO_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uTAR_uPO_anonym.h  PP_uTAR_uPO_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uTAR_uTYPE.cc PP_uTAR_uTYPE-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uTAR_uTYPE.h  PP_uTAR_uTYPE-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uTAR_uTYPE_anonym.cc PP_uTAR_uTYPE_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uTAR_uTYPE_anonym.h  PP_uTAR_uTYPE_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uTRA_uDEF.cc PP_uTRA_uDEF-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uTRA_uDEF.h  PP_uTRA_uDEF-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uTRA_uDEF_anonym.cc PP_uTRA_uDEF_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uTRA_uDEF_anonym.h  PP_uTRA_uDEF_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uTRA_uEXPR.cc PP_uTRA_uEXPR-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uTRA_uEXPR.h  PP_uTRA_uEXPR-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uTRA_uEXPR_anonym.cc PP_uTRA_uEXPR_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uTRA_uEXPR_anonym.h  PP_uTRA_uEXPR_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uTRA_uPAT.cc PP_uTRA_uPAT-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uTRA_uPAT.h  PP_uTRA_uPAT-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uTRA_uPAT_anonym.cc PP_uTRA_uPAT_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uTRA_uPAT_anonym.h  PP_uTRA_uPAT_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uTRA_uPO.cc PP_uTRA_uPO-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uTRA_uPO.h  PP_uTRA_uPO-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uTRA_uPO_anonym.cc PP_uTRA_uPO_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uTRA_uPO_anonym.h  PP_uTRA_uPO_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uTRA_uTYPE.cc PP_uTRA_uTYPE-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uTRA_uTYPE.h  PP_uTRA_uTYPE-pp.h
+ln $LOCAL_EVALGENDIR_PP/PP_uTRA_uTYPE_anonym.cc PP_uTRA_uTYPE_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PP_uTRA_uTYPE_anonym.h  PP_uTRA_uTYPE_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/PURE_uPAT.cc PURE_uPAT-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PURE_uPAT.h  PURE_uPAT-pp.h
+ln $LOCAL_EVALGENDIR_PP/PURE_uPAT_anonym.cc PURE_uPAT_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/PURE_uPAT_anonym.h  PURE_uPAT_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/REP2TYPE.cc REP2TYPE-pp.cc
+ln $LOCAL_EVALGENDIR_PP/REP2TYPE.h  REP2TYPE-pp.h
+ln $LOCAL_EVALGENDIR_PP/REP2TYPE_anonym.cc REP2TYPE_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/REP2TYPE_anonym.h  REP2TYPE_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/SPEC_uAST.cc SPEC_uAST-pp.cc
+ln $LOCAL_EVALGENDIR_PP/SPEC_uAST.h  SPEC_uAST-pp.h
+ln $LOCAL_EVALGENDIR_PP/SPEC_uAST_anonym.cc SPEC_uAST_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/SPEC_uAST_anonym.h  SPEC_uAST_anonym-pp.h
+ln $LOCAL_EVALGENDIR_PP/TYPE2REP.cc TYPE2REP-pp.cc
+ln $LOCAL_EVALGENDIR_PP/TYPE2REP.h  TYPE2REP-pp.h
+ln $LOCAL_EVALGENDIR_PP/TYPE2REP_anonym.cc TYPE2REP_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/TYPE2REP_anonym.h TYPE2REP_anonym-pp.h
+
+ln $LOCAL_EVALGENDIR_RT/CAST.cc CAST-rt.cc
+ln $LOCAL_EVALGENDIR_RT/CAST.h  CAST-rt.h
+ln $LOCAL_EVALGENDIR_RT/CAST_anonym.cc CAST_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/CAST_anonym.h  CAST_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/CHECK.cc CHECK-rt.cc
+ln $LOCAL_EVALGENDIR_RT/CHECK.h  CHECK-rt.h
+ln $LOCAL_EVALGENDIR_RT/CHECK_anonym.cc CHECK_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/CHECK_anonym.h  CHECK_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/CI_uAUX.cc CI_uAUX-rt.cc
+ln $LOCAL_EVALGENDIR_RT/CI_uAUX.h  CI_uAUX-rt.h
+ln $LOCAL_EVALGENDIR_RT/CI_uAUX_anonym.cc CI_uAUX_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/CI_uAUX_anonym.h  CI_uAUX_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/CON_uENV.cc CON_uENV-rt.cc
+ln $LOCAL_EVALGENDIR_RT/CON_uENV.h  CON_uENV-rt.h
+ln $LOCAL_EVALGENDIR_RT/CON_uENV_anonym.cc CON_uENV_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/CON_uENV_anonym.h  CON_uENV_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/FRESH.cc FRESH-rt.cc
+ln $LOCAL_EVALGENDIR_RT/FRESH.h  FRESH-rt.h
+ln $LOCAL_EVALGENDIR_RT/FRESH_anonym.cc FRESH_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/FRESH_anonym.h  FRESH_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/GEN_uINV.cc GEN_uINV-rt.cc
+ln $LOCAL_EVALGENDIR_RT/GEN_uINV.h  GEN_uINV-rt.h
+ln $LOCAL_EVALGENDIR_RT/GEN_uINV_anonym.cc GEN_uINV_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/GEN_uINV_anonym.h  GEN_uINV_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/GEN_uPO.cc GEN_uPO-rt.cc
+ln $LOCAL_EVALGENDIR_RT/GEN_uPO.h  GEN_uPO-rt.h
+ln $LOCAL_EVALGENDIR_RT/GEN_uPO_anonym.cc GEN_uPO_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/GEN_uPO_anonym.h  GEN_uPO_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/PID.cc PID-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PID.h  PID-rt.h
+ln $LOCAL_EVALGENDIR_RT/PID_anonym.cc PID_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PID_anonym.h  PID_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/POGTP.cc POGTP-rt.cc
+ln $LOCAL_EVALGENDIR_RT/POGTP.h  POGTP-rt.h
+ln $LOCAL_EVALGENDIR_RT/POGTP_anonym.cc POGTP_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/POGTP_anonym.h  POGTP_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/POG_uDEF.cc POG_uDEF-rt.cc
+ln $LOCAL_EVALGENDIR_RT/POG_uDEF.h  POG_uDEF-rt.h
+ln $LOCAL_EVALGENDIR_RT/POG_uDEF_anonym.cc POG_uDEF_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/POG_uDEF_anonym.h  POG_uDEF_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/POG_uEXPR.cc POG_uEXPR-rt.cc
+ln $LOCAL_EVALGENDIR_RT/POG_uEXPR.h  POG_uEXPR-rt.h
+ln $LOCAL_EVALGENDIR_RT/POG_uEXPR_anonym.cc POG_uEXPR_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/POG_uEXPR_anonym.h  POG_uEXPR_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/POG_uMEDIATOR.cc POG_uMEDIATOR-rt.cc
+ln $LOCAL_EVALGENDIR_RT/POG_uMEDIATOR.h  POG_uMEDIATOR-rt.h
+ln $LOCAL_EVALGENDIR_RT/POG_uMEDIATOR_anonym.cc POG_uMEDIATOR_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/POG_uMEDIATOR_anonym.h  POG_uMEDIATOR_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/POG_uPAT.cc POG_uPAT-rt.cc
+ln $LOCAL_EVALGENDIR_RT/POG_uPAT.h  POG_uPAT-rt.h
+ln $LOCAL_EVALGENDIR_RT/POG_uPAT_anonym.cc POG_uPAT_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/POG_uPAT_anonym.h  POG_uPAT_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/POG_uSTMT.cc POG_uSTMT-rt.cc
+ln $LOCAL_EVALGENDIR_RT/POG_uSTMT.h  POG_uSTMT-rt.h
+ln $LOCAL_EVALGENDIR_RT/POG_uSTMT_anonym.cc POG_uSTMT_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/POG_uSTMT_anonym.h  POG_uSTMT_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uMEDIATOR.cc PP_uMEDIATOR-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uMEDIATOR.h  PP_uMEDIATOR-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uMEDIATOR_anonym.cc PP_uMEDIATOR_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uMEDIATOR_anonym.h  PP_uMEDIATOR_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uTAR_uDEF.cc PP_uTAR_uDEF-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uTAR_uDEF.h  PP_uTAR_uDEF-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uTAR_uDEF_anonym.cc PP_uTAR_uDEF_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uTAR_uDEF_anonym.h  PP_uTAR_uDEF_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uTAR_uEXPR.cc PP_uTAR_uEXPR-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uTAR_uEXPR.h  PP_uTAR_uEXPR-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uTAR_uEXPR_anonym.cc PP_uTAR_uEXPR_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uTAR_uEXPR_anonym.h  PP_uTAR_uEXPR_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uTAR_uPAT.cc PP_uTAR_uPAT-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uTAR_uPAT.h  PP_uTAR_uPAT-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uTAR_uPAT_anonym.cc PP_uTAR_uPAT_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uTAR_uPAT_anonym.h  PP_uTAR_uPAT_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uTAR_uPO.cc PP_uTAR_uPO-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uTAR_uPO.h  PP_uTAR_uPO-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uTAR_uPO_anonym.cc PP_uTAR_uPO_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uTAR_uPO_anonym.h  PP_uTAR_uPO_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uTAR_uTYPE.cc PP_uTAR_uTYPE-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uTAR_uTYPE.h  PP_uTAR_uTYPE-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uTAR_uTYPE_anonym.cc PP_uTAR_uTYPE_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uTAR_uTYPE_anonym.h  PP_uTAR_uTYPE_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uTRA_uDEF.cc PP_uTRA_uDEF-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uTRA_uDEF.h  PP_uTRA_uDEF-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uTRA_uDEF_anonym.cc PP_uTRA_uDEF_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uTRA_uDEF_anonym.h  PP_uTRA_uDEF_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uTRA_uEXPR.cc PP_uTRA_uEXPR-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uTRA_uEXPR.h  PP_uTRA_uEXPR-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uTRA_uEXPR_anonym.cc PP_uTRA_uEXPR_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uTRA_uEXPR_anonym.h  PP_uTRA_uEXPR_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uTRA_uPAT.cc PP_uTRA_uPAT-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uTRA_uPAT.h  PP_uTRA_uPAT-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uTRA_uPAT_anonym.cc PP_uTRA_uPAT_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uTRA_uPAT_anonym.h  PP_uTRA_uPAT_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uTRA_uPO.cc PP_uTRA_uPO-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uTRA_uPO.h  PP_uTRA_uPO-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uTRA_uPO_anonym.cc PP_uTRA_uPO_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uTRA_uPO_anonym.h  PP_uTRA_uPO_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uTRA_uTYPE.cc PP_uTRA_uTYPE-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uTRA_uTYPE.h  PP_uTRA_uTYPE-rt.h
+ln $LOCAL_EVALGENDIR_RT/PP_uTRA_uTYPE_anonym.cc PP_uTRA_uTYPE_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PP_uTRA_uTYPE_anonym.h  PP_uTRA_uTYPE_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/PURE_uPAT.cc PURE_uPAT-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PURE_uPAT.h  PURE_uPAT-rt.h
+ln $LOCAL_EVALGENDIR_RT/PURE_uPAT_anonym.cc PURE_uPAT_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/PURE_uPAT_anonym.h  PURE_uPAT_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/REP2TYPE.cc REP2TYPE-rt.cc
+ln $LOCAL_EVALGENDIR_RT/REP2TYPE.h  REP2TYPE-rt.h
+ln $LOCAL_EVALGENDIR_RT/REP2TYPE_anonym.cc REP2TYPE_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/REP2TYPE_anonym.h  REP2TYPE_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/SPEC_uAST.cc SPEC_uAST-rt.cc
+ln $LOCAL_EVALGENDIR_RT/SPEC_uAST.h  SPEC_uAST-rt.h
+ln $LOCAL_EVALGENDIR_RT/SPEC_uAST_anonym.cc SPEC_uAST_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/SPEC_uAST_anonym.h  SPEC_uAST_anonym-rt.h
+ln $LOCAL_EVALGENDIR_RT/TYPE2REP.cc TYPE2REP-rt.cc
+ln $LOCAL_EVALGENDIR_RT/TYPE2REP.h  TYPE2REP-rt.h
+ln $LOCAL_EVALGENDIR_RT/TYPE2REP_anonym.cc TYPE2REP_anonym-rt.cc
+ln $LOCAL_EVALGENDIR_RT/TYPE2REP_anonym.h TYPE2REP_anonym-rt.h
+
+#
+# QTGUI
+#
+QTGUIDIR = $BASEDIR/qtgui
+ln $QTGUIDIR/browserF.cc
+ln $QTGUIDIR/browserF.h
+ln $QTGUIDIR/codeF.cc
+ln $QTGUIDIR/codeF.h
+ln $QTGUIDIR/errorF.cc
+ln $QTGUIDIR/errorF.h
+ln $QTGUIDIR/interfacesF.cc
+ln $QTGUIDIR/interfacesF.h
+ln $QTGUIDIR/interpreterF.cc
+ln $QTGUIDIR/interpreterF.h
+ln $QTGUIDIR/logF.cc
+ln $QTGUIDIR/logF.h
+ln $QTGUIDIR/mainF.cc
+ln $QTGUIDIR/mainF.h
+ln $QTGUIDIR/optionsF.cc
+ln $QTGUIDIR/optionsF.h
+ln $QTGUIDIR/referencesF.cc
+ln $QTGUIDIR/referencesF.h
+ln $QTGUIDIR/searchF.cc
+ln $QTGUIDIR/searchF.h
+ln $QTGUIDIR/vdm.cc vdm-sl.cc
+ln $QTGUIDIR/vdm.cc vdm-pp.cc
+ln $QTGUIDIR/vdm.cc vdm-rt.cc
+oscheck(win32)ln $QTGUIDIR/vdm.cc vdm-uml-rt.cc
+oscheck(win32)ln $QTGUIDIR/vdm.cc vdm-uml-pp.cc
+ln $QTGUIDIR/windowF.cc
+ln $QTGUIDIR/windowF.h 
+ln $QTGUIDIR/qtInterface.h 
+ln $QTGUIDIR/interface2TB.h
+ln $QTGUIDIR/interface2TB.cc
+ln $QTGUIDIR/tooltips.h
+ln $QTGUIDIR/roseF.cc
+ln $QTGUIDIR/roseF.h
+ln $QTGUIDIR/toolOptionsDialog.cc
+ln $QTGUIDIR/toolOptionsDialog.h
+ln $QTGUIDIR/toolboxthread.cc
+ln $QTGUIDIR/toolboxthread.h
+ln $QTGUIDIR/splashF.cc
+ln $QTGUIDIR/splashF.h
+ln $QTGUIDIR/customevents.cc
+ln $QTGUIDIR/customevents.h
+ln $QTGUIDIR/pogF.h
+ln $QTGUIDIR/pogF.cc
+ln $QTGUIDIR/localeutil.h
+ln $QTGUIDIR/localeutil.cc
+ln $QTGUIDIR/qtport.h
+ln $QTGUIDIR/qtport.cc
+ln $QTGUIDIR/imagedata.h
+ln $QTGUIDIR/imagedata.cc
+ln $QTGUIDIR/vdm_ja_JP.ts
+
+QTIMGDIR = $QTGUIDIR/img
+ln $QTIMGDIR img
+
+#
+# Transformations
+#
+TRANSDIR = $BASEDIR/transforms
+
+ln $TRANSDIR/AEX_userdef.h
+ln $TRANSDIR/ASX_userdef.h
+ln $TRANSDIR/AX_userdef.h
+ln $TRANSDIR/FEX_userdef.h
+ln $TRANSDIR/FSX_userdef.h
+ln $TRANSDIR/FX_userdef.h
+ln $TRANSDIR/OPP_userdef.h
+ln $TRANSDIR/STRIP_userdef.h
+ln $TRANSDIR/SB_userdef.h
+ln $TRANSDIR/XF_userdef.h
+
+ln $LOCAL_EVALGENDIR_PP/AEX.cc AEX-pp.cc
+ln $LOCAL_EVALGENDIR_PP/AEX.h
+ln $LOCAL_EVALGENDIR_PP/AEX_anonym.cc AEX_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/AEX_anonym.h
+ln $LOCAL_EVALGENDIR_PP/ASX.cc ASX-pp.cc
+ln $LOCAL_EVALGENDIR_PP/ASX.h
+ln $LOCAL_EVALGENDIR_PP/ASX_anonym.cc ASX_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/ASX_anonym.h
+ln $LOCAL_EVALGENDIR_PP/AX.cc AX-pp.cc
+ln $LOCAL_EVALGENDIR_PP/AX.h
+ln $LOCAL_EVALGENDIR_PP/AX_anonym.cc AX_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/AX_anonym.h
+ln $LOCAL_EVALGENDIR_PP/FEX.cc FEX-pp.cc
+ln $LOCAL_EVALGENDIR_PP/FEX.h
+ln $LOCAL_EVALGENDIR_PP/FEX_anonym.cc FEX_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/FEX_anonym.h
+ln $LOCAL_EVALGENDIR_PP/FSX.cc FSX-pp.cc
+ln $LOCAL_EVALGENDIR_PP/FSX.h
+ln $LOCAL_EVALGENDIR_PP/FSX_anonym.cc FSX_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/FSX_anonym.h
+ln $LOCAL_EVALGENDIR_PP/FX.cc FX-pp.cc
+ln $LOCAL_EVALGENDIR_PP/FX.h
+ln $LOCAL_EVALGENDIR_PP/FX_anonym.cc FX_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/FX_anonym.h
+ln $LOCAL_EVALGENDIR_PP/OPP.cc OPP-pp.cc
+ln $LOCAL_EVALGENDIR_PP/OPP.h
+ln $LOCAL_EVALGENDIR_PP/OPP_anonym.cc OPP_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/OPP_anonym.h
+ln $LOCAL_EVALGENDIR_PP/SB.cc SB-pp.cc
+ln $LOCAL_EVALGENDIR_PP/SB.h
+ln $LOCAL_EVALGENDIR_PP/SB_anonym.cc SB_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/SB_anonym.h
+ln $LOCAL_EVALGENDIR_PP/STRIP.cc STRIP-pp.cc
+ln $LOCAL_EVALGENDIR_PP/STRIP.h
+ln $LOCAL_EVALGENDIR_PP/STRIP_anonym.cc STRIP_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/STRIP_anonym.h
+ln $LOCAL_EVALGENDIR_PP/XF.cc XF-pp.cc
+ln $LOCAL_EVALGENDIR_PP/XF.h
+ln $LOCAL_EVALGENDIR_PP/XF_anonym.cc XF_anonym-pp.cc
+ln $LOCAL_EVALGENDIR_PP/XF_anonym.h
+
+J2VJAVAAPIDIR = $TOOLBOXLINK/spec/java2vdm/javaapi/lib
+ln $J2VJAVAAPIDIR/Makefile.javaapijar Makefile.javaapijar

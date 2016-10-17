@@ -1,0 +1,9 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+
+public Test : () ==> set of ( seq of nat | set of nat )  
+Test () ==
+return
+{
+  { c | [c]^l in set {[1],[2],[3,4]} }
+}

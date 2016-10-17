@@ -1,0 +1,48 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq  of set of ( nat | nat * nat | set of nat)  
+Test () ==
+return 
+[ { 1 | mk_A'_'sSA'() in set { mk_A'_'sSA'() } },
+  { a | mk_B( a) in set { mk_B(2) } },
+  { 3 | mk_C(3) in set { mk_C(3), mk_A'_'sSA'() } },
+  { {a,b} | mk_D({a,b}) in set { mk_D({10,11} ) } },
+  { mk_(a,b) | mk_E([a,b]) in set { mk_E([123,124]) } },
+  { mk_(a,b) | mk_F(mk_(a,b) ) in set { mk_F(mk_(200, 201) ) } },
+  { a + b + c | mk_G(a,b,c), a in set { mk_G(3,6,1), 3,false } } ]
+
+
+
+types
+
+ A'_'sSA'::;
+
+ B::
+  a: nat;
+
+ C::
+  a:nat;
+
+ D::
+  b: set of nat;
+
+ E ::
+  a: seq of nat;
+
+ F::
+  a :nat * nat;
+
+ G ::
+  a : nat
+  b : nat
+  c : nat
+
+
+
+
+
+
+
+
+
+
+

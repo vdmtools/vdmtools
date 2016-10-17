@@ -1,0 +1,69 @@
+
+
+module VALUE1
+
+imports 
+  from VALUE2 all
+exports all
+definitions
+
+values
+
+  
+v1 : VALUE2`B = mk_VALUE2`B(mk_A(3, mk_VALUE2`B(nil)))
+
+types
+
+  A::
+   n : nat
+   b : VALUE2`B
+
+end VALUE1
+
+
+module VALUE2
+
+imports
+  from VALUE1 all
+
+exports all
+definitions
+values
+
+v2 : nat = 35
+
+types 
+  
+  B :: 
+    a : [VALUE1`A]
+
+end VALUE2
+
+
+module A 
+
+imports from VALUE1 all,
+        from VALUE2 all
+exports all
+definitions
+operations 
+  Test: () ==> nat
+  Test () ==
+    return VALUE1`v1.a.n
+
+
+end A
+
+
+
+
+
+
+
+
+
+
+
+
+
+

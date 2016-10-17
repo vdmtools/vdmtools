@@ -1,0 +1,16 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+f: seq of nat * nat -> bool
+f( z, a) ==
+  len z = a;
+
+g: nat * seq of nat -> bool
+g( a, z) ==
+  len z = a
+
+operations
+
+  public Test : () ==> bool  
+Test () ==
+    return let x = [2,3] in f(x,2) and g(2,x)
+
+end A

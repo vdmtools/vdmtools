@@ -1,0 +1,92 @@
+##
+# DELUXE-USR-LOCAL-BIN-INSERT
+# (do not remove this comment)
+##
+echo $PATH | grep -q -s "/usr/local/bin"
+if [ $? -eq 1 ] ; then
+    PATH=$PATH:/usr/local/bin
+    export PATH
+fi
+
+alias grep='grep --color=auto'
+
+export CLICOLOR=1
+export EDITOR=vim
+
+export PATH=/usr/local/bin:/sbin:/usr/sbin:${PATH}:${HOME}/bin:.
+
+# C environment
+#export MACOSX_DEPLOYMENT_TARGET=10.4
+#export MACOSX_DEPLOYMENT_TARGET=10.5
+#export MACOSX_DEPLOYMENT_TARGET=10.6
+#export MACOSX_DEPLOYMENT_TARGET=10.7
+#export MACOSX_DEPLOYMENT_TARGET=10.8
+#export MACOSX_DEPLOYMENT_TARGET=10.9
+#export MACOSX_DEPLOYMENT_TARGET=10.10
+#export MACOSX_DEPLOYMENT_TARGET=10.11
+export MACOSX_DEPLOYMENT_TARGET=10.12
+
+if [ "10.4" = ${MACOSX_DEPLOYMENT_TARGET} ]; then
+    export SDKNAME=MacOSX${MACOSX_DEPLOYMENT_TARGET}u.sdk
+    export SDK=/Developer/SDKs/${SDKNAME}
+    export ARCH="-arch i386 -arch ppc"
+    export CC=gcc-4.0
+    export CXX=g++-4.0
+    export ANTHOME=/usr
+else
+    if [ "10.10" = ${MACOSX_DEPLOYMENT_TARGET} ]; then
+        export SDKNAME=MacOSX10.11.sdk #xCode 7.1
+    else
+        export SDKNAME=MacOSX${MACOSX_DEPLOYMENT_TARGET}.sdk
+    fi
+    export COCOA=1
+    if [ "10.5" = ${MACOSX_DEPLOYMENT_TARGET} ]; then
+        export SDK=/Developer/SDKs/${SDKNAME}
+        export ARCH="-arch i386 -arch ppc"
+        export CC=gcc-4.2
+        export CXX=g++-4.2
+        export ANTHOME=/usr
+    elif [ "10.6" = ${MACOSX_DEPLOYMENT_TARGET} ]; then
+        export SDK=/Developer/SDKs/${SDKNAME}
+        export ARCH="-arch x86_64"
+        export CC=gcc-4.2
+        export CXX=g++-4.2
+        export ANTHOME=/usr
+    else
+        export SDK=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/${SDKNAME}
+        export ARCH="-arch x86_64"
+        export CC=clang
+        export CXX=clang++
+        if [ "10.7" = ${MACOSX_DEPLOYMENT_TARGET} ]; then
+            export ANTHOME=/usr
+        else
+            export ANTHOME=/usr/local/apache-ant-1.9.6
+            export PATH=${ANTHOME}/bin:${PATH}
+        fi
+    fi
+fi
+
+export GCC=${CC}
+
+# java environment
+export JDKHOME=/usr
+export JAVACCHOME=/usr/local/javacc-5.0
+
+export QTVERSION=4
+#export QT4DIR=/usr/local/qt4
+export QT4DIR=/usr/local/Trolltech/Qt-4.8.7
+export DYLD_LIBRARY_PATH=${QT4DIR}/lib:${DYLD_LIBRARY_PATH}
+
+export CORBADIR=/usr/local/omniORB
+export DYLD_LIBRARY_PATH=${CORBADIR}/lib:${DYLD_LIBRARY_PATH}
+
+export OSTYPE=`uname`
+export YACC=bison
+
+export TBDIR=/Users/drk/vdmtools
+export TBCODE=${TBDIR}/code
+export LNCONF=${TBCODE}/make_tools/lnconf
+export POWERTEST=${TBDIR}/test/powertest/powertest
+export POWERTESTDIR=${HOME}/powertest
+export TESTDIR=${POWERTESTDIR}
+

@@ -1,0 +1,26 @@
+-- testing use of overloaded operation with wrong  number of parameters
+
+class A
+
+operations
+
+public
+Test: () ==> nat
+Test() ==
+  return new B().Op(7,true)
+
+end A
+
+class B
+
+operations
+
+public Op: () ==> nat
+Op() ==
+  return 7;
+
+public Op: nat ==> nat
+Op(p) ==
+  return p + 8;
+    
+end B

@@ -1,0 +1,18 @@
+	#
+	# library build script for Unix based machines with GCC
+	#
+rm -f lib_mapm.a mapm*.o
+#
+gcc -c -Wall -O2 mapm*.c
+#
+rm mapmutil.o mapmfmul.o
+#
+#   use better optimizations for these two ....
+#
+gcc -c -Wall -O3 mapmutil.c
+gcc -c -Wall -O3 mapmfmul.c
+#
+ar rc lib_mapm.a mapmhasn.o mapmhsin.o mapm_pow.o mapm_log.o mapm_exp.o mapmasin.o mapm_sin.o mapm5sin.o mapmrsin.o mapmsqrt.o mapmcbrt.o mapmgues.o mapmfact.o mapmipwr.o mapm_rnd.o mapmstck.o mapm_div.o mapm_mul.o mapmfmul.o mapm_fft.o mapm_add.o mapmistr.o mapm_set.o mapmutil.o mapmcnst.o
+#
+rm mapm*.o
+#

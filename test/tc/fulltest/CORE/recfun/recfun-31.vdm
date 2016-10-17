@@ -1,0 +1,30 @@
+class A
+
+types
+
+public
+Tree :: t : nat | Tree * Tree
+
+functions
+
+
+
+public 
+id : Tree -> nat
+id(x) == 
+  cases x:
+  mk_(x,y) -> 2 + id(x) + id(y),
+  others -> 1
+  end;
+
+public
+foo : Tree -> nat
+foo(mk_Tree(x)) ==
+  cases x:
+  mk_(x,y) -> foo(x) + foo(y),
+  others -> x
+  end
+measure id;
+
+
+end A 

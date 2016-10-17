@@ -1,0 +1,78 @@
+class Thread1
+
+thread
+  while(true) do skip;
+
+end Thread1
+
+class Thread2
+
+operations
+protected  m () == is not yet specified
+
+thread
+  while true do return 6; --periodic (10)(m)
+
+end Thread2
+
+class NoThread
+end NoThread
+
+class Thread3 is subclass of Thread2, NoThread
+end Thread3
+
+class StartStmtTest
+
+operations 
+
+  Start1: () ==> ()
+  Start1() ==
+    start(new Thread1());
+
+  Start2: () ==> ()
+  Start2() ==
+    start(new Thread2());
+
+  Start3: () ==> ()
+  Start3() ==
+    start(new Thread3());
+
+  Start4: () ==> ()
+  Start4() ==
+    start(if 1=2 then new Thread3() else let n = 10 in n);
+
+  Start5: () ==> ()
+  Start5() ==
+    start(new NoThread());
+
+  Start6: () ==> ()
+  Start6() ==
+    let obj: Thread1 | int | NoThread in start(obj);
+
+  Start7: () ==> ()
+  Start7() ==
+    startlist({new Thread1(), new Thread2()});
+
+  Start8: () ==> ()
+  Start8() ==
+    startlist({new NoThread(),let c = 'c' in c,new Thread1()});
+
+  Start9: () ==> ()
+  Start9() ==
+    startlist({new Thread3()});
+
+  Start10: () ==> ()
+  Start10() ==
+    startlist({new NoThread()});
+
+  Start11: () ==> ()
+  Start11() ==
+    start(8);
+
+thread 
+  while (true) do skip;
+
+end StartStmtTest
+
+
+

@@ -1,0 +1,243 @@
+dlclass DBI
+
+uselib "dbi.so"
+
+types
+
+public
+DATE = nat * nat * nat; -- year, month, day
+public
+TIME = nat * nat * nat; -- hour, minute, second
+public
+TIMESTAMP = nat * nat * nat * nat * nat * nat * nat; -- year, month, day, hour, minute, second, fraction
+
+public
+RESTYPE = bool | int | char | seq of char | DATE | TIME | TIMESTAMP |
+          map (seq1 of char) to (seq of char) | seq of [seq of char] ;
+
+private
+DBIRES = int * seq of char * seq of char * [RESTYPE]; -- error code, error status, error message, return value
+
+values
+private
+NOERR = 0;
+
+instance variables
+--debug : bool := false;
+debug : bool := true;
+
+operations
+public
+connect: seq1 of char ==> bool
+connect(dsn) ==
+  return postProcc1(dl_connect(dsn));
+
+public
+executeQuery: seq1 of char ==> bool * [int]
+executeQuery(sql) ==
+  return postProcc2(dl_executeQuery(sql));
+
+public
+fetch: () ==> bool * [bool]
+fetch() ==
+  return postProcc2(dl_fetch());
+
+public
+count: seq1 of char ==> bool * [nat]
+count(sql) ==
+  if not postProcc1(dl_executeQuery(sql))
+  then return mk_(false, nil)
+  else
+    if not postProcc1(dl_fetch())
+    then return mk_(false, nil)
+    else return postProcc2(dl_getInt(1));
+
+public
+execute1: seq1 of char ==> bool
+execute1(sql) ==
+  return postProcc1(dl_execute(sql));
+
+public
+execute2: seq1 of char ==> bool * [RESTYPE]
+execute2(sql) ==
+  return postProcc2(dl_execute(sql));
+
+public
+begin: () ==> bool
+begin() ==
+  return postProcc1(dl_startTransaction());
+
+public
+commit: () ==> bool
+commit() ==
+  return postProcc1(dl_commitTransaction());
+
+public
+rollback: () ==> bool
+rollback() ==
+  return postProcc1(dl_rollbackTransaction());
+
+public
+getString: nat ==> bool * [seq of char]
+getString(i) ==
+  return postProcc2(dl_getString(i));
+
+public
+getInt: nat ==> bool * [int]
+getInt(i) ==
+  return postProcc2(dl_getInt(i));
+
+public
+getRecordMap: () ==> bool * [map (seq1 of char) to (seq of char)]
+getRecordMap() ==
+  return postProcc2(dl_getRecordMap());
+
+public
+getRecordSeq: () ==> bool * [seq of [seq of char]]
+getRecordSeq() ==
+  return postProcc2(dl_getRecordSeq());
+
+functions
+public
+getQuote[@T]: nat -> bool * [@T]
+getQuote(i) ==
+  def mk_(res, -, -, v) = dl_getQuote[@T](i)
+  in
+    if res = NOERR
+    then mk_(true, v)
+    else mk_(false, nil);
+
+-- private staff
+operations
+private
+dl_connect: seq of char ==> DBIRES
+dl_connect(dsn) == is not yet specified;
+
+private
+dl_startTransaction: () ==> DBIRES
+dl_startTransaction() == is not yet specified;
+
+private
+dl_commitTransaction: () ==> DBIRES
+dl_commitTransaction() == is not yet specified;
+
+private
+dl_rollbackTransaction: () ==> DBIRES
+dl_rollbackTransaction() == is not yet specified;
+
+private
+dl_execute: seq of char ==> DBIRES
+dl_execute(sql) == is not yet specified;
+
+private
+dl_executeQuery: seq of char ==> DBIRES
+dl_executeQuery(sql) == is not yet specified;
+
+private
+dl_fetch: () ==> DBIRES
+dl_fetch() == is not yet specified;
+
+private
+dl_getInt: nat ==> DBIRES
+dl_getInt(i) == is not yet specified;
+
+private
+dl_getString: nat ==> DBIRES
+dl_getString(i) == is not yet specified;
+
+private
+dl_getChar: nat ==> DBIRES
+dl_getChar(i) == is not yet specified;
+
+private
+dl_getNumeric: nat ==> DBIRES
+dl_getNumeric(i) == is not yet specified;
+
+private
+dl_getDate: nat ==> DBIRES
+dl_getDate(i) == is not yet specified;
+
+private
+dl_getTime: nat ==> DBIRES
+dl_getTime(i) == is not yet specified;
+
+private
+dl_getTimestamp: nat ==> DBIRES
+dl_getTimestamp(i) == is not yet specified;
+
+private
+dl_getRecordMap: () ==> DBIRES
+dl_getRecordMap() == is not yet specified;
+
+private
+dl_getRecordSeq: () ==> DBIRES
+dl_getRecordSeq() == is not yet specified;
+
+private
+postProcc1: DBIRES ==> bool
+postProcc1(mk_(res, s, e, -)) ==
+  if res = NOERR
+  then return true
+  else
+    if debug
+    then
+      def io = new IO();
+          - = io.echo(s ^ "\n");
+          - = io.echo(e ^ "\n")
+      in return false
+    else return false;
+
+private
+postProcc2: DBIRES ==> bool * [RESTYPE]
+postProcc2(mk_(res, s, e, v)) ==
+  if res = NOERR
+  then return mk_(true, v)
+  else
+    if debug
+    then
+      def io = new IO();
+          - = io.echo(s ^ "\n");
+          - = io.echo(e ^ "\n")
+      in return mk_(false, nil)
+    else return mk_(false, nil);
+
+functions
+private
+dl_getQuote[@T]: nat -> int * seq of char * seq of char * [@T]
+dl_getQuote(i) == is not yet specified;
+
+end DBI
+
+class dbiConnectionFactory
+
+instance variables
+private static
+dbi : [DBI] := nil;
+private static
+dsn : seq of char := "";
+
+operations
+public static
+getDefaulutConnection: () ==> [DBI]
+getDefaulutConnection() ==
+  (if dbi = nil
+   then
+     def tdbi = new DBI();
+         ok = tdbi.connect(getDefaultDsn())
+     in
+       if ok
+       then dbi := tdbi
+       else def - = new IO().echo("connection failed (" ^ dsn ^ ").\n") in skip;
+   return dbi);
+
+public static
+getDefaultDsn: () ==> seq of char
+getDefaultDsn() ==
+  return dsn;
+
+public static
+setDefaultDsn: seq of char ==> ()
+setDefaultDsn(aDsn) ==
+  dsn := aDsn; 
+
+end dbiConnectionFactory

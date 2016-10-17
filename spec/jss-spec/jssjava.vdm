@@ -1,0 +1,441 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Creating build-in Java classes for the Static Semantics of Java
+% $Id:
+% Implemented in: jssjava.cc
+%--------------------------------------------------------------------------------
+
+\section{The JSSJAVA Module}
+
+This section contains the operation to create the 'build-in' Java classes
+like String, System etc.
+The JSSJAVA module exports its
+constructs to ?
+JR
+
+\begin{vdm_al}
+module JSSJAVA
+imports
+  from AS all,
+  from CI all,
+  from REP all,
+  from CPP all,
+  from JSSREP all,
+  from JSSERR all,
+  from JSSAUX all,
+  from JSSENV
+  operations
+    UpdateJavaType : () ==> ();
+    InitJavaTypes: AS`Name * AS`Name * AS`Name * JSSREP`TypeRep ==> ();
+    AddTypeInfoField: AS`Name * JSSREP`TypeRep ==> ();
+    AddTypeInfoMethod: AS`Name * JSSREP`MethodTypeRep ==> ();
+
+exports
+  operations
+    AddJavaTypes: () ==> ();
+
+definitions
+operations
+  AddJavaTypes: () ==> ()
+  AddJavaTypes() == (
+
+    let l_BoolTR   = mk_JSSREP`BoolTypeRep(),
+        l_CharTR   = mk_JSSREP`CharTypeRep(),
+        l_ByteTR   = mk_JSSREP`ByteTypeRep(),
+--        l_ShortTR  = mk_JSSREP`ShortTypeRep(),
+        l_IntTR    = mk_JSSREP`IntTypeRep(),
+--        l_LongTR   = mk_JSSREP`LongTypeRep(),
+--        l_FloatTR  = mk_JSSREP`FloatTypeRep(),
+--        l_DoubleTR = mk_JSSREP`DoubleTypeRep(),
+        l_VoidTR   = mk_JSSREP`VoidTypeRep(),
+        l_FieldTR   = mk_JSSREP`ClassTypeRep(mk_AS`Name(["Field"],CI`NilContextId)),
+        l_MethodTR  = mk_JSSREP`ClassTypeRep(mk_AS`Name(["Method"],CI`NilContextId)),
+        l_PackageTR = mk_JSSREP`ClassTypeRep(mk_AS`Name(["Package"],CI`NilContextId)),
+        l_ObjectTR  = mk_JSSREP`ClassTypeRep(mk_AS`Name(["Object"],CI`NilContextId)),
+        l_ClassTR   = mk_JSSREP`ClassTypeRep(mk_AS`Name(["Class"],CI`NilContextId)),
+        l_StringTR  = mk_JSSREP`ClassTypeRep(mk_AS`Name(["String"],CI`NilContextId))
+    in
+
+-- class Object
+
+    ( let l_package = mk_AS`Name(["java","lang"],CI`NilContextId),
+          l_name    = mk_AS`Name(["Object"],CI`NilContextId),
+          l_nesting = l_name,
+          l_type    = mk_JSSREP`ClassTypeRep(l_name)
+      in
+      ( JSSENV`InitJavaTypes(l_package,l_nesting,l_name,l_type);
+
+-- class Object constructor: Object()
+
+        let l_method = l_name,
+            l_return = mk_JSSREP`FieldTypeRep(l_type,0),
+            l_domTypes = [],
+            l_domNames = [],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class Object method: clone() ==> Object
+
+        let l_method = mk_AS`Name(["clone"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_type,0),
+            l_domTypes = [],
+            l_domNames = [],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class Object method: finalize() ==> ()
+
+        let l_method = mk_AS`Name(["finalize"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_VoidTR,0),
+            l_domTypes = [],
+            l_domNames = [],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class Object method: getClass() ==> Class
+
+        let l_method = mk_AS`Name(["getClass"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_ClassTR,0),
+            l_domTypes = [],
+            l_domNames = [],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class Object method: hashCode() ==> int
+
+        let l_method = mk_AS`Name(["hashCode"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_IntTR,0),
+            l_domTypes = [],
+            l_domNames = [],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class Object method: toString() ==> String
+
+        let l_method = mk_AS`Name(["toString"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_StringTR,0),
+            l_domTypes = [],
+            l_domNames = [],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class Object method: equals() ==> bool
+
+        let l_method = mk_AS`Name(["equals"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_BoolTR,0),
+            l_domTypes = [mk_JSSREP`FieldTypeRep(l_ObjectTR,1)],
+            l_domNames = [mk_AS`Name(["obj"],CI`NilContextId)],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+        JSSENV`UpdateJavaType();
+      );
+
+-- class Class
+
+      let l_package = mk_AS`Name(["java","lang"],CI`NilContextId),
+          l_name    = mk_AS`Name(["Class"],CI`NilContextId),
+          l_nesting = l_name,
+          l_type    = mk_JSSREP`ClassTypeRep(l_name)
+      in
+      ( JSSENV`InitJavaTypes(l_package,l_nesting,l_name,l_type);
+
+-- class Class method: getName() ==> String
+
+        let l_method = mk_AS`Name(["getName"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_StringTR,0),
+            l_domTypes = [],
+            l_domNames = [],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class Class method: isArray() ==> bool
+
+        let l_method = mk_AS`Name(["isArray"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_BoolTR,0),
+            l_domTypes = [],
+            l_domNames = [],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class Class method: toString() ==> String
+
+        let l_method = mk_AS`Name(["toString"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_StringTR,0),
+            l_domTypes = [],
+            l_domNames = [],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class Class method: getFields() ==> Field[]
+
+        let l_method = mk_AS`Name(["getFields"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_FieldTR,1),
+            l_domTypes = [],
+            l_domNames = [],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class Class method: getClasses() ==> Class[]
+
+        let l_method = mk_AS`Name(["getClasses"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_ClassTR,1),
+            l_domTypes = [],
+            l_domNames = [],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class Class method: getMethods() ==> Method[]
+
+        let l_method = mk_AS`Name(["toString"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_MethodTR,0),
+            l_domTypes = [],
+            l_domNames = [],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class Class method: getPackage() ==> Package
+
+        let l_method = mk_AS`Name(["getPackage"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_PackageTR,0),
+            l_domTypes = [],
+            l_domNames = [],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+        JSSENV`UpdateJavaType()
+      );
+
+-- class Exception
+
+      let l_package = mk_AS`Name(["java","lang"],CI`NilContextId),
+          l_name    = mk_AS`Name(["Exception"],CI`NilContextId),
+          l_nesting = l_name,
+          l_type    = mk_JSSREP`ClassTypeRep(l_name)
+      in
+      ( JSSENV`InitJavaTypes(l_package,l_nesting,l_name,l_type);
+
+        JSSENV`UpdateJavaType()
+      );
+
+-- class System
+
+      let l_package = mk_AS`Name(["java","lang"],CI`NilContextId),
+          l_name    = mk_AS`Name(["System"],CI`NilContextId),
+          l_nesting = l_name,
+          l_type    = mk_JSSREP`ClassTypeRep(l_name)
+      in
+      ( JSSENV`InitJavaTypes(l_package,l_nesting,l_name,l_type);
+
+-- class System field: PrintStream out
+
+        let l_field = mk_AS`Name(["out"],CI`NilContextId),
+            l_fieldName = mk_AS`Name(["PrintStream"],CI`NilContextId),
+            l_fieldType = mk_JSSREP`FieldTypeRep(mk_JSSREP`ClassTypeRep(l_fieldName),0)
+        in JSSENV`AddTypeInfoField(l_field,l_fieldType);
+        JSSENV`UpdateJavaType()
+      );
+
+-- class String
+
+      let l_package = mk_AS`Name(["java","lang"],CI`NilContextId),
+          l_name    = mk_AS`Name(["String"],CI`NilContextId),
+          l_nesting = l_name,
+          l_type    = mk_JSSREP`ClassTypeRep(l_name)
+      in
+      ( JSSENV`InitJavaTypes(l_package,l_nesting,l_name,l_type);
+
+-- class String constructor: String()
+
+        let l_method = l_name,
+            l_return = mk_JSSREP`FieldTypeRep(l_type,0),
+            l_domTypes = [],
+            l_domNames = [],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class String constructor: String(char value__[])
+
+        let l_method = l_name,
+            l_return = mk_JSSREP`FieldTypeRep(l_type,0),
+            l_domTypes = [mk_JSSREP`FieldTypeRep(l_CharTR,1)],
+            l_domNames = [mk_AS`Name(["value__"],CI`NilContextId)],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class String constructor: String(byte bytes[])
+
+        let l_method = l_name,
+            l_return = mk_JSSREP`FieldTypeRep(l_type,0),
+            l_domTypes = [mk_JSSREP`FieldTypeRep(l_ByteTR,1)],
+            l_domNames = [mk_AS`Name(["bytes"],CI`NilContextId)],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class String constructor: String(byte bytes[],int l)
+
+        let l_method = l_name,
+            l_return = mk_JSSREP`FieldTypeRep(l_type,0),
+            l_domTypes = [mk_JSSREP`FieldTypeRep(l_ByteTR,1),
+                          mk_JSSREP`FieldTypeRep(l_IntTR,0)],
+            l_domNames = [mk_AS`Name(["ascii"],CI`NilContextId),
+                          mk_AS`Name(["hibyte"],CI`NilContextId)],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class String constructor: String(char value__[],int offset,int count)
+
+        let l_method = l_name,
+            l_return = mk_JSSREP`FieldTypeRep(l_type,0),
+            l_domTypes = [mk_JSSREP`FieldTypeRep(l_CharTR,1),
+                          mk_JSSREP`FieldTypeRep(l_IntTR,0),
+                          mk_JSSREP`FieldTypeRep(l_IntTR,0)],
+            l_domNames = [mk_AS`Name(["value__"],CI`NilContextId),
+                          mk_AS`Name(["offset"],CI`NilContextId),
+                          mk_AS`Name(["count"],CI`NilContextId)],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class String constructor: String(byte bytes[],int offset,int length)
+
+        let l_method = l_name,
+            l_return = mk_JSSREP`FieldTypeRep(l_type,0),
+            l_domTypes = [mk_JSSREP`FieldTypeRep(l_ByteTR,1),
+                          mk_JSSREP`FieldTypeRep(l_IntTR,0),
+                          mk_JSSREP`FieldTypeRep(l_IntTR,0)],
+            l_domNames = [mk_AS`Name(["bytes"],CI`NilContextId),
+                          mk_AS`Name(["offset"],CI`NilContextId),
+                          mk_AS`Name(["length"],CI`NilContextId)],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class String constructor: String(String value__)
+
+        let l_method = l_name,
+            l_return = mk_JSSREP`FieldTypeRep(l_type,0),
+            l_domTypes = [mk_JSSREP`FieldTypeRep(l_type,0)],
+            l_domNames = [mk_AS`Name(["value__"],CI`NilContextId)],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class String method: length() ==> int
+
+        let l_method = mk_AS`Name(["length"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_IntTR,0),
+            l_domTypes = [],
+            l_domNames = [],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class String method: toString() ==> String
+
+        let l_method = mk_AS`Name(["toString"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_type,0),
+            l_domTypes = [],
+            l_domNames = [],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class String method: toString() ==> String
+
+        let l_method = mk_AS`Name(["valueOf"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_type,0),
+            l_domTypes = [],
+            l_domNames = [],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class String method: substring(int beginIndex, int endIndex) ==> String
+
+        let l_method = mk_AS`Name(["substring"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_type,0),
+            l_domTypes = [mk_JSSREP`FieldTypeRep(l_IntTR,0),
+                          mk_JSSREP`FieldTypeRep(l_IntTR,0)],
+            l_domNames = [mk_AS`Name(["beginIndex"],CI`NilContextId),
+                          mk_AS`Name(["endIndex"],CI`NilContextId)],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class String method: concat(String str) ==> String
+
+        let l_method = mk_AS`Name(["concat"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_type,0),
+            l_domTypes = [mk_JSSREP`FieldTypeRep(l_type,0)],
+            l_domNames = [mk_AS`Name(["str"],CI`NilContextId)],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class String method: equals(Object anObject) ==> boolean
+
+        let l_method = mk_AS`Name(["equals"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_BoolTR,0),
+            l_domTypes = [mk_JSSREP`FieldTypeRep(l_ObjectTR,0)],
+            l_domNames = [mk_AS`Name(["anObject"],CI`NilContextId)],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+        JSSENV`UpdateJavaType()
+      );
+
+-- class PrintStream
+
+      let l_package = mk_AS`Name(["java","io"],CI`NilContextId),
+          l_name    = mk_AS`Name(["PrintStream"],CI`NilContextId),
+          l_nesting = l_name,
+          l_type    = mk_JSSREP`ClassTypeRep(l_name)
+      in
+      ( JSSENV`InitJavaTypes(l_package,l_nesting,l_name,l_type);
+
+-- class PrintStream method: println(int i) ==> ()
+
+        let l_method = mk_AS`Name(["println"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_VoidTR,0),
+            l_domTypes = [mk_JSSREP`FieldTypeRep(l_IntTR,0)],
+            l_domNames = [mk_AS`Name(["i"],CI`NilContextId)],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class PrintStream method: println(Object x) ==> ()
+
+        let l_method = mk_AS`Name(["println"],CI`NilContextId),
+            l_return = mk_JSSREP`FieldTypeRep(l_VoidTR,0),
+            l_domTypes = [mk_JSSREP`FieldTypeRep(l_ObjectTR,0)],
+            l_domNames = [mk_AS`Name(["x"],CI`NilContextId)],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+        JSSENV`UpdateJavaType()
+      );
+      
+-- class Vector
+
+      let l_package = mk_AS`Name(["java","util"],CI`NilContextId),
+          l_name    = mk_AS`Name(["Vector"],CI`NilContextId),
+          l_nesting = l_name,
+          l_type    = mk_JSSREP`ClassTypeRep(l_name)
+      in
+      ( JSSENV`InitJavaTypes(l_package,l_nesting,l_name,l_type);
+
+-- class Vector constructor: Vector() ==> ()
+
+        let l_method = l_name,
+            l_return = mk_JSSREP`FieldTypeRep(l_type,0),
+            l_domTypes = [],
+            l_domNames = [],
+            l_mtr = mk_JSSREP`MethodTypeRep(l_domTypes,l_domNames,l_return)
+        in JSSENV`AddTypeInfoMethod(l_method,l_mtr);
+
+-- class Vector field: length ==> ()
+
+        let l_field = mk_AS`Name(["length"],CI`NilContextId),
+            l_fieldType = mk_JSSREP`FieldTypeRep(mk_JSSREP`IntTypeRep(),0)
+        in JSSENV`AddTypeInfoField(l_field,l_fieldType);
+        JSSENV`UpdateJavaType()
+      )
+    )
+  );
+
+end JSSJAVA
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[MostGeneralNumericType]
+{rtinfo.ast}[JSSJAVA]
+\end{rtinfo}

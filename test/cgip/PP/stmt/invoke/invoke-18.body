@@ -1,0 +1,88 @@
+class A
+
+instance variables
+public  n : nat := 0;
+
+operations
+ 
+public  t:()==>nat
+  t()==return n
+
+end A
+
+class C is subclass of A
+
+operations
+
+public  m2:()==>nat
+  m2()==return n
+
+end C
+
+class B
+
+instance variables
+  z : int := 0;
+  aa : A|C := new A ();
+  vmp: map int to (A|bool) := {1|->new A()}
+
+types
+
+  R::v:int
+
+operations
+
+public  m1:()==>A|C
+  m1() ==
+    return aa;
+
+public  m3:A|C==>()
+  m3(z)==aa:=z;
+
+public  rmap:()==> map int to A
+  rmap()==return vmp;
+
+public  m4:()==>A|C|nat
+  m4() ==
+  if z>0 then return aa
+  else return z;
+
+public  g:() ==> ()
+  g () ==
+    z:=1;
+
+public  h:int ==> B|A
+  h(a) ==
+    return self;
+
+public  j:() ==> A|B|int
+  j() ==
+    return new A ();
+ 
+public  k:()==>int
+  k() ==
+    return 4;
+
+public Test : () ==> seq of nat
+  Test() ==
+  ( dcl a   : A := new A(),
+        b   : C := new C(),
+        n   : nat,
+        mp  : map int to (A|bool) := {1|->new A()},
+        mq  : map int to R := {1|->mk_R(1)},
+        sq  : seq of A := [new A ()],
+        res : seq of nat;
+    n:= mp(1).t();
+    n:= mq(1).v;
+    n:= sq(1).t();
+    a:= self.rmap()(1);
+    m3(b);
+--    n:=a.t(); 
+--    n:=aa.t();
+--    n:=self.m4();
+    g();
+    n:=m4().m2();
+    return res
+  )
+
+end B

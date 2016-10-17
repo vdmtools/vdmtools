@@ -1,0 +1,53 @@
+class B
+end B
+
+class C
+end C
+
+class D is subclass of B, C
+end D
+
+class E is subclass of C
+end E
+
+class A is subclass of D
+
+operations
+
+public Test : () ==> seq of bool
+Test() ==
+( dcl v1: A | int :=  new A(),
+      v2: D | E | B := new B(),
+      v3: B | C := new C(),
+      v4: D | E | int := new D(),
+      v5: C | E := new E(),
+      res: seq of bool;
+
+  res := [ 
+    samebaseclass(v1, v1),
+    samebaseclass(v1, v2),
+    samebaseclass(v1, v3),
+    samebaseclass(v1, v4),
+    samebaseclass(v1, v5),
+
+    samebaseclass(v2, v2),
+    samebaseclass(v2, v3),
+    samebaseclass(v2, v4),
+    samebaseclass(v2, v5),
+
+    samebaseclass(v3, v3),
+    samebaseclass(v3, v4),
+    samebaseclass(v3, v5),
+
+    samebaseclass(v4, v4),
+    samebaseclass(v4, v5),
+
+    samebaseclass(v5, v5)
+  ];
+
+  return res
+)
+
+end A
+
+

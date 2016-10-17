@@ -1,0 +1,88 @@
+\begin{vdm_al}
+class 『事象処理者』 is subclass of 『ログ作成者』, 『事象共通定義』,  Queue
+
+instance variables
+  private
+  タスク名写像 : map 「タスク名」 to 『抽象タスク』 := {|->};
+  private
+  ネットワークタスク事象列 : seq of 『抽象タスク事象』 := empty[『抽象タスク事象』]();
+  private
+  割込タスク事象列: seq of 『抽象タスク事象』 := empty[『抽象タスク事象』]();
+
+operations
+  -- Register登録する is used to maintain a callback link to all the tasks in the system and
+  -- the environment. the link is used by the SendNetworkネットワークに送信する and SendInterrupt割込を送信する operations
+  -- and the event loop of the EventDispatcher『事象処理者』 (see thread)
+  public 登録する: 『抽象タスク』 ==> ()
+  登録する (aタスク) ==
+    タスク名写像 := タスク名写像 munion { aタスク.タスク名を得る() |-> aタスク }
+    pre aタスク.タスク名を得る() not in set dom タスク名写像;
+
+  -- setEventタスク事象を設定する is used to maintain temporary queuesタスク名写像 for the event loop of
+  -- EventDispatcher『事象処理者』. it is called by the SendNetworkネットワークに送信する and SendInterrupt割込を送信する operations
+  -- which are in turn called from the other tasks in the system and the environment.
+  private
+  タスク事象を設定する: 『抽象タスク』 * 『事象』 ==> ()
+  タスク事象を設定する (aタスク, a事象) == 
+    if isofclass(『ネットワーク事象』,a事象)
+    then ネットワークタスク事象列 := enQueue[『抽象タスク事象』](ネットワークタスク事象列, new 『抽象タスク事象』(aタスク,a事象))
+    else 割込タスク事象列 := enQueue[『抽象タスク事象』](割込タスク事象列, new 『抽象タスク事象』(aタスク,a事象));
+
+  -- getEventタスク事象を得る is used to retrieve events from the temporary event queuesタスク名写像 if they are
+  -- available. otherwise getEventタスク事象を得る is blocked (see sync) which will also block the
+  -- event handler of EventDispatcher『事象処理者』
+  private
+  タスク事象を得る: () ==> 『抽象タスク』 * 『事象』
+  タスク事象を得る () ==
+    cases true :
+      (not isEmpty[『抽象タスク事象』](割込タスク事象列)) ->
+        ( dcl タスク事象 : 『抽象タスク事象』 := top[『抽象タスク事象』](割込タスク事象列);
+           割込タスク事象列 := deQueue[『抽象タスク事象』](割込タスク事象列);
+           return タスク事象.欄を得る() ),
+      (not isEmpty[『抽象タスク事象』](ネットワークタスク事象列)) ->
+        ( dcl タスク事象 : 『抽象タスク事象』 := top[『抽象タスク事象』](ネットワークタスク事象列);
+           ネットワークタスク事象列 := deQueue[『抽象タスク事象』](ネットワークタスク事象列);
+           return タスク事象.欄を得る() ),
+      others -> error
+    end;
+
+  -- SendNetworkネットワークに送信する is typically called by a system or an environment
+  -- task. The event is logged for post analysis and it is added
+  -- to the temporary event queue for handling by the event loop
+  public ネットワークに送信する: 「タスク名」 * 「タスク名」 * 「事象ID」  ==> ()
+  ネットワークに送信する (a元タスク名, a先タスク名, a事象ID) ==
+    duration (0)
+      ( dcl タスク: 『抽象タスク』 := タスク名写像(a先タスク名);
+        ネットワーク事象を表示する(a元タスク名, a先タスク名, a事象ID);
+        タスク事象を設定する(タスク, new 『ネットワーク事象』(a事象ID)) )
+    pre a先タスク名 in set dom タスク名写像;
+
+  -- SendInterrupt割込を送信する is typically called by a system or an environment
+  -- task. The event is logged for post analysis and it is added
+  -- to the temporary event queue for handling by the event loop
+  public 割込を送信する: 「タスク名」 * 「タスク名」 * 「事象ID」  ==> ()
+  割込を送信する (a元タスク名, a先タスク名, a事象ID) ==
+    duration (0)
+      ( dcl タスク: 『抽象タスク』 := タスク名写像(a先タスク名);
+        割込事象を表示する(a元タスク名, a先タスク名, a事象ID);
+        タスク事象を設定する(タスク, new 『割込事象』(a事象ID)) )
+    pre a先タスク名 in set dom タスク名写像;
+
+-- the event handler of EventDispatcher『事象処理者』. note that we can simulate the overhead
+-- of the operating system, which is typically also running on our system,
+-- by changing the duration below. note that the while loop is blocked (and
+-- this thread will be suspended) if there are no events in either queue
+thread
+  duration (0)
+    while (true) do
+      def mk_ (タスク,事象) = タスク事象を得る() in
+        タスク.事象を設定する(事象)
+
+sync
+  -- setEventタスク事象を設定する and getEventタスク事象を得る are mutually exclusive
+  mutex(タスク事象を設定する, タスク事象を得る);
+  -- the thread shall be blocked until there is at least one message available
+  per タスク事象を得る => not isEmpty[『抽象タスク事象』](ネットワークタスク事象列) or not isEmpty[『抽象タスク事象』](割込タスク事象列) 
+
+end 『事象処理者』
+\end{vdm_al}

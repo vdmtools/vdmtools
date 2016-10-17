@@ -1,0 +1,42 @@
+module A
+
+exports all
+definitions
+
+operations
+f1() res: nat, r: real, s: seq of char, t: int * set of int
+pre true
+post res > r and hd s = 'a' and let mk_(i,j) = t in i = card j;
+
+g(n1, n2: nat, -: set of nat) res: nat
+pre n1 > n2
+post n1 + n2 = res;
+
+h09([a,b]: seq of nat, mk_(d,c):  nat * nat ) res: nat * nat, r: seq of nat
+pre let q = mk_(b,a) in q = mk_(d,c)
+post (let mk_(i,j) = res in i + j < a + b) and [a,b] = r;
+
+h2({a,b}: set of nat) res : seq of nat
+pre if 10 in set {a,b} then a > b else a <= b
+post if 20 in set {a,b} union {res} then res = [20]  
+                                    else res = [30];
+
+
+Test: () ==> seq of (nat | bool | (seq of nat) )
+Test() ==
+    return 
+    [
+      pre_f1(),
+      post_f1(mk_(10, 6, "abc",mk_(4,{0,1,2,1}))),
+
+      pre_g(4,3, {}),
+      post_g(3,5, {2}, 8),
+
+      pre_h09([3,4], mk_(4,3)),
+      post_h09([12,45], mk_(12,45), mk_(mk_(45, 50), [45,12])),
+
+      pre_h2({23,99}),
+      post_h2({23,99}, [23,99])
+    ]
+
+end A

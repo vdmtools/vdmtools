@@ -1,0 +1,747 @@
+class Global
+	types
+		public EventType = <ElementAvailable>;
+		public Position = <p1> | <p2> | <p3> | <p4>;
+		public Event :: Type : EventType
+																		Sender : PassiveModule
+																		Pos : Position;
+
+		public ElementData :: 		Color : nat 
+													InputTime : nat 
+												 OutputTime : nat;
+												 	
+		public Element = ElementData | <None> ;		
+		public Attachment :: Source : Module 
+																							SourcePos : Position
+																							Sink : Module 
+																							SinkPos : Position;
+end Global
+class IO
+
+-- 	VDMTools STANDARD LIBRARY: INPUT/OUTPUT
+--      --------------------------------------------
+-- 
+-- Standard library for the VDMTools Interpreter. When the interpreter
+-- evaluates the preliminary functions/operations in this file,
+-- corresponding internal functions is called instead of issuing a run
+-- time error. Signatures should not be changed, as well as name of
+-- module (VDM-SL) or class (VDM++). Pre/post conditions is 
+-- fully user customisable. 
+-- Dont care's may NOT be used in the parameter lists.
+--
+-- The in/out functions  will return false if an error occurs. In this
+-- case an internal error string will be set (see 'ferror').
+
+types
+ 
+public
+filedirective = <start>|<append> 
+
+functions
+
+-- Write VDM value in ASCII format to std out:
+public
+writeval[@p]: @p -> bool
+writeval(val)==
+  is not yet specified;
+
+-- Write VDM value in ASCII format to file.
+-- fdir = <start> will overwrite existing file,
+-- fdir = <append> will append output to the file (created if
+-- not existing).
+public
+fwriteval[@p]:seq1 of char * @p * filedirective -> bool
+fwriteval(filename,val,fdir) ==
+  is not yet specified;
+
+-- Read VDM value in ASCII format from file
+public
+freadval[@p]:seq1 of char -> bool * [@p]
+freadval(f) ==
+  is not yet specified
+  post let mk_(b,t) = RESULT in not b => t = nil;
+
+operations
+
+-- Write text to std out. Surrounding double quotes will be stripped,
+-- backslashed characters should be interpreted.
+public
+echo: seq of char ==> bool
+echo(text) ==
+  fecho ("",text,nil);
+
+-- Write text to file like 'echo'
+public
+fecho: seq of char * seq of char * [filedirective] ==> bool
+fecho (filename,text,fdir) ==
+  is not yet specified
+  pre filename = "" <=> fdir = nil;
+
+-- The in/out functions  will return false if an error occur. In this
+-- case an internal error string will be set. 'ferror' returns this
+-- string and set it to "".
+public
+ferror:()  ==> seq of char
+ferror () ==
+  is not yet specified
+end IO
+
+
+
+
+
+
+
+
+
+
+class Log
+	types
+		public Entry = (seq of char);
+		public Entries = seq of Entry;
+		
+	instance variables
+		public static entries : Entries := [];
+			
+	operations
+		public static write: (seq of char) ==> ()
+		write(s) == 
+		(
+			--let - = new IO().echo(s ^ "\n") in skip;
+			entries := entries ^ [s];
+			return
+		);
+	
+	sync
+		mutex(write);
+end Log
+
+
+
+
+
+
+class EventQueue
+	instance variables
+		queue : seq of Global`Event := [];
+		length : nat := 0;
+		max_length : nat := 1;
+	
+	operations
+		public get: () ==> Global`Event
+		get() ==
+		(			
+			Log`write("EventQueue.get");
+			let e=queue(length) in
+			(
+				if(length>1) then queue:=queue(1,...,length-1) else queue:=[];
+   			length := length - 1;
+				return e
+			);
+		)
+		pre length>0;
+	
+		public put: Global`Event ==> ()
+		put(e) ==
+		(
+			Log`write("EventQueue.put");
+			length := length + 1;
+			queue:=[e]^queue;
+			return
+		)
+		pre length < max_length;
+	
+		public available: () ==> bool
+		available() ==
+		(
+			return length > 0
+		);
+		
+		public EventQueue: nat ==> EventQueue
+		EventQueue(ml) ==
+		(
+			max_length := ml;
+			return
+		);
+	
+		public isIdle: () ==> bool 
+		isIdle() == return length = 0;
+	
+	sync
+		per get => #act(get) < #fin(put);
+	
+end EventQueue
+
+
+
+
+
+
+class Module
+	instance variables
+		
+	operations
+		public attach: Global`Position * Module * Global`Position ==> ()
+		attach(p1,m,p2) == is subclass responsibility;
+		
+		public isIdle: () ==> bool
+		isIdle() == return true;
+		
+	thread
+		skip;
+end Module
+
+
+
+
+
+
+
+class ActiveModule is subclass of Module
+	types	
+		protected OutputModulePort :: Sink : PassiveModule 
+																	 Pos : Global`Position;
+
+	instance variables
+		protected output : map Global`Position to OutputModulePort := { |-> };
+
+	operations
+		public attach: Global`Position * --Passive
+                                                 Module * Global`Position ==> ()
+		attach(p,dm,dp) ==
+		(
+			Log`write("ActiveModule.attach");
+			output := output ++ {p |-> mk_OutputModulePort(dm,dp)};
+			return
+		)
+                pre isofclass(PassiveModule,dm);
+
+		async public putEvent: Global`Event ==> ()
+		putEvent(e) == is subclass responsibility;
+						
+		-- Put an element (e) in the output connected at a given position (p)
+		protected generateOutput: Global`Element * Global`Position==> ()
+		generateOutput(e,p) ==
+		(
+			Log`write("ActiveModule.generateOutput");
+			output(p).Sink.putElement(e)
+		);
+
+
+end ActiveModule
+
+
+
+
+
+
+
+class PassiveModule is subclass of Module
+	types	
+		protected OutputModulePort :: Sink : ActiveModule 
+																	 Pos : Global`Position;
+
+	instance variables
+		protected output : map Global`Position to OutputModulePort := { |-> };
+		inv card dom output <= 1;			-- A passive module can only be connected to one output
+
+	operations
+		public attach: Global`Position * --Active
+                                                 Module * Global`Position ==> ()
+		attach(p,dm,dp) ==
+		(
+			Log`write("PassiveModule.attach");
+			output := output ++ {p |-> mk_OutputModulePort(dm,dp)};
+			return
+		);
+		
+		public putElement: Global`Element ==> ()
+		putElement(e) == is subclass responsibility;
+
+		public getElement: () ==> Global`Element
+		getElement() == is subclass responsibility;
+
+		protected generateOutput: Global`EventType ==> ()
+		generateOutput(e) == (
+			Log`write("PassiveModule.generateOutput");
+			let p in set dom output in
+				output(p).Sink.putEvent(mk_Global`Event(e,self,output(p).Pos));
+		)
+		pre card dom output > 0;
+		
+end PassiveModule
+
+
+
+
+
+
+class Conveyer is subclass of PassiveModule
+	types
+		public Slot = <Empty> | Global`Element;
+		
+	values
+		default_length = 10;	
+	
+	instance variables
+		length : nat := default_length;
+		slots : seq of Slot := [<Empty>|n in set {1,...,length} & n=n];
+		first_write : bool := true;
+		
+	operations
+		public Conveyer: nat ==> Conveyer
+		Conveyer(l) ==
+		(
+		 length := l;
+			slots := [<Empty>|n in set {1,...,length} & n=n];			
+		);
+			 
+			 
+
+			 
+		public putElement: Global`Element ==> ()
+		putElement(e) ==
+		(
+			Log`write("Conveyer.putElement");
+			slots := [e] ^ tl(slots);
+			return
+		)
+		pre not sensor1();					-- assure that the first slot is empty
+		
+		public getElement: () ==> Global`Element
+		getElement() ==  
+		(
+			Log`write("Conveyer.getElement");
+			let e = slots(length) in
+			(
+				slots := slots(1,...,length-1) ^ [<Empty>];
+				Log`write("Conveyer is now empty");
+				return	e
+			);
+		)
+		pre sensor2();					-- assure that the last slot has an item
+		
+		public empty: () ==> bool
+		empty() == return (forall i in set elems slots & i=<Empty>);
+		
+		public isIdle: () ==> bool 
+		isIdle() == return empty();
+
+		
+		adv: () ==> ()
+		adv() == 
+		(
+			duration(100)
+			(
+				if empty() then return; 	-- skip if no slots have items
+				Log`write("Conveyer.adv");
+				slots := [<Empty>] ^ slots(1,...,length-1)
+			);
+			return		
+		)
+		pre not sensor2();			-- assure that the last slot is empty
+		
+		
+		sensor1: () ==> bool
+		sensor1() ==
+		(
+			return hd(slots) <> <Empty>
+		);
+
+		sensor2: () ==> bool
+		sensor2() ==
+		(
+			let - = new IO().fwriteval[seq of Slot]("slots.txt",Conveyer`slots,<append>) in skip;
+			return slots(length) <> <Empty>
+		);
+
+
+		thread
+			while true do
+			(
+						adv();
+						if sensor2() 
+							then generateOutput(<ElementAvailable>)
+			);
+			
+			
+			
+			sync
+				mutex(putElement,adv);
+				mutex(getElement,adv);
+				
+				per adv => (exists e in set elems slots(1,...,length-1) & not e = <Empty>) 
+									 and slots(length) = <Empty>;
+end Conveyer
+
+
+
+
+class Press is subclass of PassiveModule
+	instance variables
+		element : Global`Element := <None>;
+
+	operations
+		public isIdle: () ==> bool 
+		isIdle() == return (element = <None>);
+
+		public getElement: () ==> Global`Element
+		getElement() == (
+			let e = element in 
+			(
+				Log`write("Press.get");
+				element := <None>;
+				return e
+			);
+		);
+		
+		async public putElement: Global`Element ==> ()
+		putElement(e) == 
+		(
+			Log`write("Press.put");
+			element := e;
+			process(e);
+			return
+		);
+		
+		 process: Global`Element ==> ()
+		process(e) == 
+		(
+ 			Log`write("Press.process");
+				-- Generate an event for the output sink when the element has been processed (after some time);
+				duration(100)skip;
+				generateOutput(<ElementAvailable>);
+				return
+		);
+	
+	sync
+		mutex(putElement);
+end Press
+
+-----------------------------------------------------------------------------------------
+
+class ActiveLink is subclass of ActiveModule
+	instance variables
+
+	operations
+			async public putEvent: Global`Event ==> ()
+			putEvent(e) == (
+				Log`write("ActiveLink.putEvent");
+				generateOutput(e.Sender.getElement(), <p2>)
+			);
+
+	sync
+		mutex(putEvent);
+end ActiveLink
+
+
+class PassiveLink is subclass of PassiveModule
+	instance variables
+		element : Global`Element := <None>;
+	
+	operations
+			public isIdle: () ==> bool 
+			isIdle() == return (element = <None>);
+
+			async public putElement: Global`Element ==> ()
+			putElement(e) == (				
+	 			Log`write("PassiveLink.putElement");
+	 			element := e;
+	 			generateOutput(<ElementAvailable>);
+			)pre element = <None>;
+			
+			public getElement: () ==> Global`Element
+			getElement() == (
+ 			Log`write("PassiveLink.getElement");
+				let e = element in
+				(
+					element := <None>;
+					return element
+				);
+			)pre not element = <None>;
+
+	sync
+		mutex(putElement);
+end PassiveLink
+
+-----------------------------------------------------------------------------------------
+
+class ActiveConsumer is subclass of ActiveModule
+	instance variables
+		event : Global`Event | <None> := <None>;
+		public elements : seq of Global`Element := [];
+		first_write : bool := true;
+		wait_length : nat := 0;
+
+	operations
+			public isIdle: () ==> bool 
+			isIdle() == return (event = <None>);
+
+			async public putEvent: Global`Event ==> ()
+			putEvent(e) == (
+				Log`write("ActiveConsumer.putEvent");
+				elements := elements ^ [mu(e.Sender.getElement(), OutputTime|->time)];
+				if first_write then let - = new IO().fwriteval[seq of Global`Element]("output_elements.txt",elements,<start>) in first_write := false
+				else let - = new IO().fwriteval[seq of Global`Element]("output_elements.txt",elements,<append>) in skip;
+				Log`write("ActiveConsumer.putEvent (done)");
+			);
+			
+			public attach: --Passive
+                                       Module ==> ()
+			attach(m) == if m<>m then skip;
+			
+			public wait: nat ==> ()
+			wait(n) == (
+				Log`write("ActiveConsumer.wait");
+				wait_length := n;
+				waitSync();
+			);
+			
+			waitSync: () ==> ()
+			waitSync() == Log`write("ActiveConsumer.waitSync");
+			
+	sync
+		mutex(putEvent);
+		per waitSync => len elements >= wait_length;
+		
+end ActiveConsumer
+
+
+class PassiveConsumer is subclass of PassiveModule
+	instance variables
+		public elements : seq of Global`Element := [];
+
+	operations
+		public putElement: Global`Element ==> ()
+		putElement(e) == 
+		(
+			Log`write("PassiveConsumer.putElement");
+			elements := elements ^ [e];
+		);
+		
+		public attach: --Active
+                               Module ==> ()
+		attach(m) == if m<>m then skip;
+end PassiveConsumer
+
+-----------------------------------------------------------------------------------------
+
+
+class Robot is subclass of ActiveModule
+	types
+		public State :: 	Position : Global`Position 
+												ElementA : Global`Element | <Some>
+												ElementB : Global`Element | <Some>;
+		public Action = <PICKUP_A> | <PICKUP_B> | <RELEASE_A> | <RELEASE_B> | <MOVETO_1> | <MOVETO_2> | <MOVETO_3> | <MOVETO_4>;
+		public Actions = seq of Action;
+		public EventType = <ElementAvailable_P2> | <ElementAvailable_P4>;
+		
+
+	values
+		initial_state = mk_State(<p4>, <None>, <None>);
+	
+	instance variables
+		event_queue : EventQueue := new EventQueue();
+		current_state : State := initial_state;
+
+		transition_table : map (State * Robot`EventType) to Actions :=
+			{
+				mk_(mk_State(<p4>, <None>, <None>), <ElementAvailable_P4>) |-> 			[<PICKUP_A>, <MOVETO_2>, <RELEASE_A>],
+				mk_(mk_State(<p2>, <None>, <None>), <ElementAvailable_P2>) |-> 			[<MOVETO_3>, <PICKUP_B>, <MOVETO_2>, <RELEASE_B>],
+				mk_(mk_State(<p2>, <None>, <None>), <ElementAvailable_P4>) |-> 			[<MOVETO_4>, <PICKUP_A>, <MOVETO_2>, <RELEASE_A>]
+			};
+		
+	operations
+		public Robot: (map (State * Robot`EventType) to Actions) ==> Robot
+		Robot(tt) == transition_table := tt;
+	
+		public isIdle: () ==> bool 
+		isIdle() == return (not event_queue.available() and current_state.ElementA = <None> and current_state.ElementB = <None>);
+	
+	
+		public putEvent: Global`Event ==> ()
+		putEvent(e) == 
+			(
+				Log`write("Robot.putEvent");				
+				if e.Pos = <p2> then handleEvent(<ElementAvailable_P2>, e.Sender);
+				if e.Pos = <p4> then handleEvent(<ElementAvailable_P4>, e.Sender);
+				return
+			);
+				
+		
+		async handleEvent: Robot`EventType * PassiveModule ==> ()
+		handleEvent(e,m) ==
+			performSequence(transition_table(mk_(generalizeState(current_state), e)), m);
+			
+		generalizeState: State ==> State
+		generalizeState(s) == 
+		(
+			return mk_State(s.Position, if s.ElementA = <None> then <None> else <Some>, if s.ElementA = <None> then <None> else <Some>)
+		);	
+		
+		performSequence: Actions * PassiveModule ==> ()
+		performSequence(as,m) ==
+		(
+			for a in as do
+				(
+					if a = <MOVETO_1> then moveTo(<p1>);
+					if a = <MOVETO_2> then moveTo(<p2>);
+					if a = <MOVETO_3> then moveTo(<p3>);
+					if a = <MOVETO_4> then moveTo(<p4>);
+					
+					if a = <PICKUP_A> then current_state := mu(current_state, ElementA |->	m.getElement());
+					if a = <PICKUP_B> then current_state := mu(current_state, ElementB |->	m.getElement());
+					
+					if a = <RELEASE_A> then releaseA();
+					if a = <RELEASE_B> then releaseB();
+				);
+				
+				return
+		);
+		
+		releaseA: () ==> ()
+		releaseA() ==
+		(
+			Log`write("Robot.releaseA");				
+			let e = current_state.ElementA in
+			(
+				current_state := mu(current_state, ElementA |->	<None>);
+				generateOutput(e, current_state.Position)
+			);				
+		);
+		
+		releaseB: () ==> ()
+		releaseB() ==
+		(
+			Log`write("Robot.releaseB");				
+			let e = current_state.ElementB in
+			(
+				current_state := mu(current_state, ElementB |->	<None>);
+				generateOutput(e, locationB())
+			);				
+		)pre not current_state.ElementB = <None>;
+
+		
+		moveTo: Global`Position ==> ()
+		moveTo(p) == (
+			Log`write("Robot.moveTo");				
+			duration(50)
+				current_state := mu(current_state, Position |-> p)
+			);
+		
+		locationB: () ==> Global`Position
+		locationB() == 
+			if current_state.Position = <p4> then return <p3>
+			else if current_state.Position = <p3> then return <p2>
+			else if current_state.Position = <p2> then return <p1>
+			else return <p1>;
+		
+	sync
+		mutex(handleEvent);
+		
+end Robot
+
+
+
+
+
+
+
+
+
+class Environment
+	instance variables
+		public busy : bool := true;
+
+	operations
+		public finish: () ==> ()
+		finish() == CS`consumer1.wait(3);
+
+	thread
+		(
+			CS`conveyer1.putElement(mk_Global`ElementData(1, time, 0));			
+			duration(8000)skip;
+			CS`conveyer1.putElement(mk_Global`ElementData(2, time, 0));			
+			duration(8000)skip;
+			CS`conveyer1.putElement(mk_Global`ElementData(3, time, 0));			
+
+			skip
+		);
+		
+end Environment
+
+
+
+class World
+	instance variables
+		env : Environment := new Environment();
+		busy : bool := true;
+
+	operations
+
+		public run: () ==> Log`Entries
+		run() == (
+			for a in CS`attachments do 
+				a.Source.attach(a.SourcePos, a.Sink, a.SinkPos);
+			
+			(
+				dcl ms:set of Module := {};
+				for a in CS`attachments do 
+					ms := ms union {a.Sink,a.Source};
+
+				for all m in set ms do
+						start(m);
+			);							
+
+			start(env);
+			env.finish();
+
+			return Log`entries
+		);
+end World
+
+
+
+system CS
+	instance variables
+		public static conveyer1 : Conveyer := new Conveyer();
+		public static conveyer2 : Conveyer := new Conveyer();
+		public static link1 : ActiveLink := new ActiveLink();
+		public static link2 : ActiveLink := new ActiveLink();
+		public static robot1 : Robot := new Robot();
+		public static press1 : Press := new Press();
+		public static consumer1 : ActiveConsumer := new ActiveConsumer();
+		public static consumer2 : PassiveConsumer := new PassiveConsumer();
+		public static attachments : seq of Global`Attachment := 
+			[
+				mk_Global`Attachment(conveyer1,<p2>,robot1,<p4>),
+				mk_Global`Attachment(robot1,<p2>,press1,<p1>),
+				mk_Global`Attachment(press1,<p1>,robot1,<p2>),
+				mk_Global`Attachment(robot1,<p1>,conveyer2,<p1>),
+				mk_Global`Attachment(conveyer2,<p2>,consumer1,<p1>)
+			];
+	  cpu1 : CPU := new CPU(<FCFS>,1E06);
+	  cpu2 : CPU := new CPU(<FCFS>,1E06);
+	  cpu3 : CPU := new CPU(<FCFS>,1E06);
+	  cpu4 : CPU := new CPU(<FCFS>,1E06);
+	  cpu5 : CPU := new CPU(<FCFS>,1E06);
+
+  	bus1 : BUS := new BUS(<FCFS>,1E06,{cpu1,cpu2,cpu3,cpu4,cpu5});
+
+  	--bus1 : BUS := new BUS(<FCFS>,1E06,{cpu1,cpu2});
+  	--bus2 : BUS := new BUS(<FCFS>,1E06,{cpu2,cpu3});
+  	--bus3 : BUS := new BUS(<FCFS>,1E06,{cpu2,cpu4});
+  	--bus4 : BUS := new BUS(<FCFS>,1E06,{cpu4,cpu5});
+
+		-- Static deployment of instances to CPUs
+		operations
+		public CS: () ==> CS
+		CS() == (
+			cpu1.deploy(conveyer1);
+			cpu2.deploy(robot1);
+			cpu3.deploy(press1);
+			cpu4.deploy(conveyer2);
+			cpu5.deploy(consumer1);
+		);
+
+end CS

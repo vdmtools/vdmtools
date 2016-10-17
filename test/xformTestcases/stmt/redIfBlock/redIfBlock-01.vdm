@@ -1,0 +1,15 @@
+class A
+
+operations
+
+public Test : () ==> bool  
+Test () ==
+( 
+	dcl b : bool := false;
+	if 2 > 1
+	then (b := true)
+	else (b := false);
+	return b
+)
+   
+end A

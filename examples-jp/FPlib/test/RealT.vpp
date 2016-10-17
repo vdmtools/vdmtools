@@ -1,0 +1,111 @@
+\subsection{FRealT}
+FRealのテストを行う。
+
+\begin{vdm_al}
+--$Id $
+class FRealT
+values
+e = 10 ** -10;
+
+functions
+static public run : () +> bool
+run() == 
+let	testcases = [ t1(), t2(), t3(), t4(), t5() ]
+in
+FTestDriver`run(testcases);
+\end{vdm_al}
+
+\subsubsection{「利子を得るInterest」を検査する}
+\begin{vdm_al}
+static t1 : () -> FTestDriver`TestCase
+t1() ==
+	
+	mk_FTestDriver`TestCase(
+	"FRealT01:\t {「利子を得るInterest」を検査する",
+	FReal`Interest(2)(10)  - 0.07177346254161253  < e )
+	;
+\end{vdm_al}
+
+\subsubsection{「平方根を得るRoot」を検査する}
+\begin{vdm_al}
+static t2 : () -> FTestDriver`TestCase
+t2() ==
+	
+	mk_FTestDriver`TestCase(
+	"FRealT02:\t 「平方根を得るRoot」を検査する",
+	let	r = new FReal()		in
+	r.Root(2)  - 1.414213562382246 < e)
+	;
+\end{vdm_al}
+
+\subsubsection{「小数点以下n桁か？tIsDecimalPlacesN」と「小数点以下何桁か？NumberOfDecimalPlaces」を検査する}
+\begin{vdm_al}
+static t3 : () -> FTestDriver`TestCase
+t3() ==
+	
+	mk_FTestDriver`TestCase(
+	"FRealT03:\t 「小数点以下n桁か？tIsDecimalPlacesN」と「小数点以下何桁か？NumberOfDecimalPlaces」を検査する",
+	let	r = new FReal()		in
+		r.IsDecimalPlacesN(2)(10.01)  and
+		r.IsDecimalPlacesN(2)(-10.01)  and
+		not r.IsDecimalPlacesN(3)(10.01)  and
+		r.IsDecimalPlacesN(3)(10.012)  and
+		r.IsDecimalPlacesN(3)(-10.012)  and
+		r.IsDecimalPlacesN(0)(10.0)  and
+		r.IsDecimalPlacesN(2)(10.011) = false  and
+		r.IsDecimalPlacesN(0)(10.1) = false and
+		r.IsDecimalPlacesN(0)(-10.1) = false and
+		r.NumberOfDecimalPlaces(-1.2) = 1 and
+		r.NumberOfDecimalPlaces(1.0) = 0 and
+		r.NumberOfDecimalPlaces(1) = 0 and
+		r.NumberOfDecimalPlaces(1.23) = 2)
+	;
+\end{vdm_al}
+
+\subsubsection{「桁数Figures」を検査する}
+\begin{vdm_al}
+static t4 : () -> FTestDriver`TestCase
+t4() ==
+	
+	mk_FTestDriver`TestCase(
+	"FRealT04:\t 「桁数Figures」を検査する",
+	let	r = new FReal()		in
+		r.Figures(0) = 1 and
+		r.Figures(1) = 1 and
+		r.Figures(9) = 1 and
+		r.Figures(10) = 2 and
+		r.Figures(99) = 2 and
+		r.Figures(100) = 3 and
+		r.Figures(0.1) = 3 and
+		r.Figures(9.1) = 3 and
+		r.Figures(10.1) = 4 and
+		r.Figures(10.123) = 6 and
+		r.Figures(-10.123) = 6 and
+		r.Figures(-0.1) = 3 and
+		r.Figures(-0) = 1 and
+		r.FiguresOfInteger(1) = 1 and
+		r.FiguresOfInteger(-1) = 1 and
+		r.FiguresOfInteger(10) = 2 and
+		r.FiguresOfInteger(-10) = 2)
+	;
+\end{vdm_al}
+
+\subsubsection{「小数点以下n桁で四捨五入するRound」を検査する}
+\begin{vdm_al}
+static t5 : () -> FTestDriver`TestCase
+t5() ==
+	
+	mk_FTestDriver`TestCase(
+	"FRealT05:\t 「小数点以下n桁で四捨五入するRound」を検査する",
+	FReal`Round(10.12345)(4) = 10.1235 and
+	FReal`Round(10.12345)(3) = 10.123 and
+	FReal`Round(10.12345)(2) = 10.12 and
+	FReal`Round(10.125)(2) = 10.13 and
+	FReal`Round(10.14)(1) = 10.1 and
+	FReal`Round(10.15)(1) = 10.2 and
+	FReal`Round(10.5)(0) = 11 and
+	FReal`Round(10.4)(0) = 10 )
+	;
+	
+end FRealT
+\end{vdm_al}

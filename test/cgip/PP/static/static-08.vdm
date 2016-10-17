@@ -1,0 +1,19 @@
+class A
+instance variables
+        public static AI:int := 1;
+
+operations
+        public get: () ==> int
+                get() == return AI;
+
+end A
+
+class B is subclass of A
+operations
+        public get: () ==> int
+                get() == return AI + 1;
+               
+        public update: int ==> ()
+                update(i) == AI := i;
+       
+end B 

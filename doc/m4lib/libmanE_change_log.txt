@@ -1,0 +1,32 @@
+今後変更するmemo
+P4
+ - footnoteに文字コードの注意事項を記載
+P5
+ - true/falseを返すものは結果型をint→Bool
+ - A.ascii()の結果型はstring→wstring
+
+変更履歴
+---2008/2/12---
+すべての例題において以下の2点を変更
+  1.cout は wcout に変更
+  2."\n" は endl に変更
+
+P1
+ - composite ⇒ compound
+ - 対応プラットフォームの更新
+
+P2
+ - VDM Class ⇒ VDM Object Reference
+
+P4
+ - A.MyType()の削除
+ - 上記の例題からも削除
+
+P8
+ - VDMSetTagMapとVDMTagDumpは現在存在しないため削除
+ - 上記に伴い例題の変更
+ 
+ 
+Quote
+ - Q.GetValue()
+   string ⇒ wstring

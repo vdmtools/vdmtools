@@ -1,0 +1,578 @@
+\section{Mediator for Proof Obligation Generation}
+
+\begin{vdm_al}
+module POG_MEDIATOR
+
+imports
+  from ENV all,
+  from SPEC_AST all,
+
+  from POGTP  all,
+  from POG_DEF all,
+  from POG_PAT all,
+
+  from PP_MEDIATOR all,
+
+  from AS all,
+  from CI all,
+  from REP all
+
+exports all
+
+definitions
+
+values
+  PROOF_OBLIGATION_TXT: seq of char = "Integrity property";
+
+types
+
+String = seq of char;
+
+ProofObligationPP :: no      : nat
+                     po      : String
+                     kind    : POGTP`Classification
+                     source  : seq of AS`Name
+                     loc     : POGTP`LocContext
+                     cid     : CI`ContextId
+                     checked : bool;
+
+PO                :: no      : nat
+                     kind    : POGTP`Classification
+                     po      : String
+                     cid     : CI`ContextId
+                     checked : bool;
+
+operations
+
+state STATE of
+--
+-- Filters (an empty set means that the filter is not set)
+--
+  modnms    :  set of [AS`Name]
+  memnms    :  set of [AS`Name]
+  locs      :  set of POGTP`LocClassification
+  kinds     :  set of POGTP`Classification
+  chckMarks :  set of bool
+--
+  availModnms    :  set of [AS`Name]
+  availMemnms    :  set of [AS`Name]
+  availLocs      :  set of POGTP`LocClassification
+  availKinds     :  set of POGTP`Classification
+  availChckMarks :  set of bool
+--
+-- POGs
+--
+  pogs     :  map [AS`Name] to map [AS`Name] * POGTP`LocClassification
+                               to seq of PO
+
+  polst    : seq of ProofObligationPP
+  status   : seq of String
+--  typeDefs : seq of AS`Name
+--  fnDefs : seq of AS`Name
+init s == s = mk_STATE(
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {},
+                {true,false},
+                {|->},
+                [],
+                [] )
+end
+
+operations
+
+getModnms : () ==> set of [AS`Name]
+getModnms() ==
+  return availModnms;
+
+setModnms : set of [AS`Name] ==> ()
+setModnms(s) ==
+  modnms := s;
+
+getMemnms : () ==> set of [AS`Name]
+getMemnms() ==
+  return availMemnms;
+
+setMemnms : set of [AS`Name] ==> ()
+setMemnms(s) ==
+  memnms := s;
+
+getLocs : () ==> set of POGTP`LocClassification
+getLocs() ==
+  return availLocs;
+
+setLocs : set of POGTP`LocClassification ==> ()
+setLocs(s) ==
+  locs := s;
+
+getKinds : () ==> set of POGTP`Classification
+getKinds() ==
+  return availKinds;
+
+setKinds : set of POGTP`Classification ==> ()
+setKinds(s) ==
+  kinds := s;
+
+getChckMarks : () ==> set of bool
+getChckMarks() ==
+  return availChckMarks;
+
+setChckMarks : set of bool ==> ()
+setChckMarks(s) ==
+  chckMarks := s;
+
+setupPOG : () ==> ()
+setupPOG () ==
+  (
+   polst     := [];
+   status    := [];
+--   pogs      := {|->};
+--   SPEC_AST`setup();
+--   typeDefs  := SPEC_AST`GetTypeDefNames(nil);
+--   fnDefs    := SPEC_AST`GetFnDefNames(nil);
+  );
+
+isFiltered : [AS`Name]
+              * [AS`Name]
+              * POGTP`LocClassification
+              * POGTP`Classification
+              * bool ==> bool
+isFiltered(modnm,memnm,loc,kind,check) ==
+  return (modnms<>{}         => modnm in set modnms)
+         and (memnms<>{}     => memnm in set memnms)
+         and (locs<>{}       => loc in set locs)
+         and (kinds<>{}      => kind in set kinds)
+         and (chckMarks<>{}  => check in set chckMarks);
+
+applyFilters: () ==> seq of ProofObligationPP
+applyFilters() ==
+( dcl l_res: seq of ProofObligationPP := [],
+      l_modnms: set of [AS`Name]
+        := if modnms<>{} then modnms else availModnms,
+      l_memnms: set of [AS`Name]
+        := if memnms<>{} then memnms else availMemnms,
+      l_locs :  set of POGTP`LocClassification
+        := if locs<>{} then locs else availLocs,
+      l_kinds :  set of POGTP`Classification
+        := if kinds<>{} then kinds else availKinds,
+      l_ChckMarks :  set of bool
+        := if chckMarks<>{} then chckMarks else availChckMarks;
+  for all modnm in set dom pogs inter l_modnms
+  do
+  ( let modPogs = pogs(modnm)
+    in
+      for all loc in set dom modPogs
+      do
+      ( if loc.#2 in set l_locs
+           and loc.#1 in set l_memnms
+        then
+          let pos = modPogs(loc)
+          in
+            for po in pos
+            do
+              if po.kind in set l_kinds
+                 and po.checked in set l_ChckMarks
+              then
+                l_res := l_res
+                           ^  [ mk_ProofObligationPP(
+                                  po.no,
+                                  po.po,
+                                  po.kind,
+                                  [],
+                                  mk_POGTP`LocContext(
+                                    loc.#2,
+                                    modnm,
+                                    loc.#1),
+                                  po.cid,
+                                  po.checked) ]
+      )
+  );
+  return l_res
+);
+
+setCheckMark: [POGTP`LocContext * nat] ==> bool
+setCheckMark(-) ==
+( return true;
+);
+
+ComputePOs' : AS`AstCI ==> seq of ProofObligationPP
+ComputePOs' (astci)  ==
+( def lst = POG_DEF`pog_AstCI(astci)
+  in
+  ( dcl oldLoc: [[AS`Name] * POGTP`LocClassification] := nil,
+        oldMod: [AS`Name] | <NIL> := <NIL>,
+        modPogs: map [AS`Name] * POGTP`LocClassification to seq of PO := {|->},
+        memPogs: seq of PO := [],
+        res   : seq of ProofObligationPP := [],
+        idx   : nat :=1;
+    for i=1 to len lst
+    do
+    ( let item  = lst(i),
+          modnm = item.loc.modName
+      in
+      ( if modnm <> oldMod
+        then
+        ( pogs := pogs ++ {modnm|->modPogs};
+          oldMod := modnm;
+          modPogs:= {|->}
+        );
+        let loc = mk_(item.loc.name,item.loc.class)
+        in
+        ( if loc = oldLoc
+          then idx:=idx+1
+          else
+          ( idx:=1;
+            if oldLoc<>nil
+            then modPogs := modPogs ++ {oldLoc|->memPogs};
+            memPogs := [];
+            oldLoc := loc
+          );
+          let l_po = PP_MEDIATOR`trv_Expr(item.po)
+          in
+          ( memPogs := memPogs^[mk_PO(idx,item.kind,l_po,item.cid,false)];
+            availModnms  := availModnms union {item.loc.modName};
+            availMemnms  := availMemnms union {item.loc.name};
+            availLocs    := availLocs   union {item.loc.class};
+            availKinds   := availKinds  union {item.kind};
+
+            if isFiltered(item.loc.modName,
+                          item.loc.name,
+                          item.loc.class,
+                          item.kind,
+                          false)
+            then res := res
+                          ^ [mk_ProofObligationPP(
+                                 idx, -- item.no,
+                                 l_po,
+                                 item.kind,
+                                 item.source,
+                                 item.loc,
+                                 item.cid,
+                                 false)]
+          )
+        )
+      )
+    );
+    if oldLoc<>nil   then modPogs := modPogs ++ {oldLoc|->memPogs};
+    if oldMod<><NIL> then pogs := pogs ++ {oldMod|->modPogs};
+    return res
+  )
+);
+
+--GenPOForTypeDef : nat ==> ()
+--GenPOForTypeDef (index) ==
+--  let tppos = ComputePOForTypeDef(typeDefs(index))
+--  in
+--      (polst := polst^tppos;
+--       status := status^["New" | i in set inds tppos];
+--      );
+
+--GenPOForFnDef : nat ==> ()
+--GenPOForFnDef (index) ==
+--  let fnpos = ComputePOForFnDef(fnDefs(index))
+--  in
+--     (polst := polst^fnpos;
+--      status := status^["New" | i in set inds fnpos];
+--     );
+
+--GenPOForValueDef : () ==> ()
+--GenPOForValueDef () ==
+--  let valpos = ComputePOForValueDef()
+--  in
+--      (polst  := polst^valpos;
+--       status := status^["New" | i in set inds valpos];
+--       polst := [mu(polst(i), no |-> i) | i in set inds polst];
+--      );
+
+GenPO : () ==> ()
+GenPO ()  ==
+  (
+   polst        := ComputePOs'(mk_AS`AstCI(SPEC_AST`GetASTs(),[],{|->}));
+   status       := ["New" | - in set inds polst]
+  );
+
+GenPOforModules : seq of AS`Name ==> ()
+GenPOforModules (nms)  ==
+  (
+   polst        := [];
+   for i=1 to len nms
+   do  polst:=polst^ComputePOs'(mk_AS`AstCI([SPEC_AST`GetModule(nms(i),SPEC_AST`GetASTs())],[],{|->}));
+   status       := ["New" | - in set inds polst]
+  );
+
+
+GetPOs: () ==>  seq of ProofObligationPP
+GetPOs() ==
+  return polst;
+
+GetPrettyPO : () ==> String
+GetPrettyPO ()  ==
+  return ComputePrettyPOs(polst);
+
+GetNumberOfPO : () ==> nat
+GetNumberOfPO () ==
+  return len polst;
+
+GetPO : nat1 ==> String
+GetPO (i) ==
+--  return polst(i).po
+    return "Integrity property"^" #"^Nat2str(polst(i).no)^" :\n"
+           ^polst(i).po
+--     (let number  =  "Proof Obligation #"^Nat2str(polst(i).no)^" :\n",
+--          explain =  "In "^PP_MEDIATOR`PrintPOLocContext(polst(i).loc)^", "
+--                     ^PP_MEDIATOR`PrintPOLocation(polst(i).cid)^": "
+--                     ^PP_MEDIATOR`PrintPODueTo(polst(i).kind,polst(i).source)^"\n",
+--           line    = conc ["-" | i in set inds explain]
+--        in
+--            number
+--          ^explain
+--          ^line
+--          ^"\n"
+--          ^polst(i).po)
+pre i <= len polst;
+
+
+--GetPOStatus : nat1 ==> String
+--GetPOStatus (index) ==
+--  return status(index)
+--pre index <= len status;
+
+--GetPOName : nat1 ==> String
+--GetPOName (index) ==
+--  return PP_MEDIATOR`PrintName(polst(index).loc.name)
+--pre index <= len polst;
+
+--GetPOLocation : nat1 ==> String
+--GetPOLocation (index) ==
+--  return PP_MEDIATOR`PrintPOLocation(polst(index).cid)
+--pre index <= len polst;
+
+--GetPOLine : nat1 ==> nat
+--GetPOLine (index) ==
+--  let mk_(line,-) = CI`GetLocation(polst(index).cid)
+--  in
+--      return line
+--pre index <= len polst;
+
+--GetPOCol : nat1 ==> nat
+--GetPOCol (index) ==
+--  let mk_(-,col) = CI`GetLocation(polst(index).cid)
+--  in
+--      return col
+--pre index <= len polst;
+
+--GetPODueTo : nat1 ==> String
+--GetPODueTo (index) ==
+--  return PP_MEDIATOR`PrintPODueTo(polst(index).kind,polst(index).source)
+--pre index <= len polst;
+
+--GetPOClassification : nat1 ==> String
+--GetPOClassification (index) ==
+--  return PP_MEDIATOR`PrintPOKind(polst(index).kind)
+--pre index <= len polst;
+
+--GetPOLocClassification : nat1 ==> String
+--GetPOLocClassification (index) ==
+--  return PP_MEDIATOR`PrintPOLocContext(polst(index).loc)
+--pre index <= len polst;
+
+functions
+
+ComputePOForTypeDef : AS`Name -> seq of ProofObligationPP
+ComputePOForTypeDef (name) ==
+  def typedef = SPEC_AST`GetTypeDef(name);
+      contxt  = POGTP`InitialContext();
+      lst     = POG_DEF`pog_TypeDef(typedef,contxt)
+  in
+      [mk_ProofObligationPP(
+         lst(i).no,
+         PP_MEDIATOR`trv_Expr(lst(i).po),
+         lst(i).kind,
+         lst(i).source,
+         lst(i).loc,
+         lst(i).cid,
+         false)        | i in set inds lst];
+
+ComputePOForFnDef : AS`Name -> seq of ProofObligationPP
+ComputePOForFnDef (name) ==
+  def fndef   = SPEC_AST`GetFnDef(name);
+      contxt  = POGTP`InitialContext();
+      poglst  = POG_DEF`pog_FnDef(fndef,contxt,{});
+      lst     = poglst.po
+  in
+      [mk_ProofObligationPP(
+         lst(i).no,
+         PP_MEDIATOR`trv_Expr(lst(i).po),
+         lst(i).kind,
+         lst(i).source,
+         lst(i).loc,
+         lst(i).cid,
+         false)        | i in set inds lst];
+
+ComputePOForValueDef : () -> seq of ProofObligationPP
+ComputePOForValueDef () ==
+  def vals          = SPEC_AST`GetValueDefSeq();
+      contxt        = POGTP`InitialContext();
+      vals_contxt   = POGTP`UpdateLoc(<values>, mk_AS`Name([""],CI`NilContextId), contxt);
+      poglst        = POG_DEF`pog_ValueDefList(vals,vals_contxt);
+      lst           = poglst.po
+  in
+      [mk_ProofObligationPP(
+         lst(i).no,
+         PP_MEDIATOR`trv_Expr(lst(i).po),
+         lst(i).kind,
+         lst(i).source,
+         lst(i).loc,
+         lst(i).cid,
+         false)        | i in set inds lst];
+
+ComputePOs : AS`AstCI -> seq of ProofObligationPP
+ComputePOs (astci)  ==
+  def lst = POG_DEF`pog_AstCI(astci)
+  in
+    [mk_ProofObligationPP(
+       lst(i).no,
+       PP_MEDIATOR`trv_Expr(lst(i).po),
+       lst(i).kind,
+       lst(i).source,
+       lst(i).loc,
+       lst(i).cid,
+       false)        | i in set inds lst];
+
+ComputePrettyPOs :seq of ProofObligationPP -> String
+ComputePrettyPOs (polst)  ==
+  List2SeparatorList(
+    "\n\n",
+    [(let number  =  "Integrity property"^" #"^Nat2str(polst(i).no)^" :\n",
+          explain =  "In "^PP_MEDIATOR`PrintPOLocContext(polst(i).loc)^", "
+                    ^PP_MEDIATOR`PrintPOLocation(polst(i).cid)^": "
+                    ^PP_MEDIATOR`PrintPODueTo(polst(i).kind,polst(i).source)^"\n",
+          line    = conc ["-" | - in set inds explain]
+      in
+        number ^ explain ^ line ^ "\n" ^ polst(i).po)
+      | i in set inds polst]);
+
+
+-- Gluing spec with po list
+
+operations
+
+--old_GlueSpecWithPoLst : () ==> String
+--old_GlueSpecWithPoLst () ==
+--  return
+--    let ast = mk_AS`AstCI([SPEC_AST`GetAst()],[],{|->}).ast,
+--        -- slightly strange but the GetAst returns a AS`Module
+--        -- but an AS ast can be more than that therefore to
+--        -- get the right types and compatibility in the future!!!
+--        mk_(mod_name,pp_mod) =
+--          cases ast:
+--            -^-  ->
+--              cases ast(1):
+--                 mk_AS`Definitions(-,-,-,-,-,-) -> undefined,
+--                 mk_AS`Module(nm,-,defs,-)      ->
+--                   mk_(PP_MEDIATOR`trv_NameName(nm),
+--                       PP_MEDIATOR`trv_Module(ast(1))),
+--                 mk_AS`DLModule(-,-,-,-)      -> undefined
+--               end,
+--            others -> undefined
+--          end,
+--        pp_po = List2SeparatorList(";\n\n",
+--                   [pp_ProofObligationAsVdmFunction(polst(i))
+--                    | i in set inds polst])
+--    in
+--        "module "^mod_name^"\n\n"
+--       ^"definitions\n\n"
+--       ^pp_mod
+--       ^"\n\nfunctions\n\n"
+--       ^pp_po
+--       ^"\n\nend "^mod_name^"\n";
+
+GlueSpecWithPoLst : () ==> String
+GlueSpecWithPoLst () ==
+  return
+    def modnm    = SPEC_AST`GetModuleName();
+        mod_name = PP_MEDIATOR`trv_NameName(modnm);
+        pp_mod   = PP_MEDIATOR`trv_Definitions(modnm);
+        pp_po    = List2SeparatorList(";\n\n", [pp_ProofObligationAsVdmFunction(polst(i)) | i in set inds polst])
+    in
+      "module " ^ mod_name ^ "\n\n"
+       ^"definitions\n\n"
+       ^pp_mod
+       ^"\n\nfunctions\n\n"
+       ^pp_po
+       ^"\n\nend "^mod_name^"\n";
+
+functions
+
+  pp_ProofObligationAsVdmFunction : ProofObligationPP -> String
+  pp_ProofObligationAsVdmFunction
+    (mk_ProofObligationPP(no,po,kind,source,loc,cid,-)) ==
+         "-- "^"Integrity property"^" #"^Nat2str(no)^" : "
+        ^"In "^PP_MEDIATOR`PrintPOLocContext(loc)^" "
+        ^"verifying "^PP_MEDIATOR`PrintPODueTo(kind,source)
+        ^"; "
+        ^PP_MEDIATOR`PrintPOLocation(cid)
+        ^"\n"
+        ^"PO"^Nat2str(no)^" : () -> bool\n"
+        ^"PO"^Nat2str(no)^" () ==\n"
+        ^po;
+
+
+
+-- Auxiliary
+
+
+
+  List2SeparatorList : String * seq of String -> String
+  List2SeparatorList (separator,ss) ==
+    if ss = [] then
+      ""
+    else
+      let head = hd ss,
+          tail = if tl ss = [] then
+                   ""
+                 else
+                   separator^List2SeparatorList(separator,tl ss)
+      in
+          head^tail;
+
+
+  Nat2str : nat -> seq of char
+  Nat2str (n) ==
+    let d     = n div 10,
+        r     = n - 10 * d,
+        r_str = cases r:
+                  0 -> "0",
+                  1 -> "1",
+                  2 -> "2",
+                  3 -> "3",
+                  4 -> "4",
+                  5 -> "5",
+                  6 -> "6",
+                  7 -> "7",
+                  8 -> "8",
+                  9 -> "9"
+                end,
+        d_str = if d = 0
+                then ""
+                else Nat2str(d)
+    in
+       d_str^r_str;
+
+
+end POG_MEDIATOR
+
+\end{vdm_al}
+
+\newpage
+
+\begin{rtinfo}[POG\_MEDIATOR`pp\_ProofObligationAsVdmFunction]
+{rtinfo.ast}[POG_MEDIATOR]
+\end{rtinfo}
+

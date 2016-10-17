@@ -1,0 +1,22 @@
+\begin{vdm_al}
+class 『ナビ交通情報解読』 is subclass of 『基本タスク』
+
+operations
+  public 『ナビ交通情報解読』: 『事象処理者』 ==> 『ナビ交通情報解読』
+  『ナビ交通情報解読』 (a事象処理者) == 『基本タスク』("交通情報を解読する",a事象処理者);
+
+  -- we do not specify *what* the operation does
+  -- we only specify its execution time
+  private
+  交通情報を解読する: () ==> ()
+  交通情報を解読する () == duration (500) skip;
+
+  private
+  事象を処理する: 『事象』 ==> ()
+  事象を処理する (a事象) ==
+    ( 交通情報を解読する();
+      -- send message to next task in this scenario
+      ネットワークに送る("交通情報画面を更新する", a事象.事象IDを得る()) )
+
+end 『ナビ交通情報解読』
+\end{vdm_al}

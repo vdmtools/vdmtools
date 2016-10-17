@@ -1,0 +1,177 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{ifad}
+% \usepackage{a4}
+
+\newcommand{\TBW}{TO BE WRITTEN}
+
+\begin{document}
+
+
+\docdef{Coding Standards in the Toolbox Development}
+         {IFAD VDM Tool Group \\
+          The Institute of Applied Computer Science}
+         {\today}
+         {IFAD-VDM-56}
+         {Report}
+         {Draft}
+         {Internal}
+         {}
+         {\copyright IFAD}
+         {\item[1.0] Initial version, added porting experiences from
+         DEC Alpha.}
+         {\mbox{}}
+
+\pagenumbering{roman}
+\tableofcontents
+
+\pagebreak
+\renewcommand{\thepage}{\arabic{page}}
+\setcounter{page}{1}
+\parskip6pt
+\parindent0pt
+
+
+\section{Introduction}
+
+This document describes guidelines that must be followed when
+developing C++, VDM-SL or VDM++ code(/specification). The objective of
+the coding standard is to improve the quality of code/specifications
+developed within the Toolbox group. 
+
+
+The strategy of introducing a coding standard into the development
+work of the Toolbox is to start with a standard which easily can be
+introduced and then step by step improve the coding standard to be
+more and more specific. 
+
+\section{Common Guidelines}
+
+\subsection{Line Length}
+
+\subsection{Header Files}
+
+\subsection{Header Classes/Modules}
+
+\subsection{Header Functions/Methods/Operations}
+
+
+\section{VDM-SL}
+In this section the coding standard for specifications written in
+VDM-SL is described.
+
+\section{Porting issues}
+\label{sec:port}
+
+This section describes what to take in consideration in order to write
+code compilable on all platforms. It should furthermore be possible to
+track the origin of a specific requirement. This way it will be 
+possible to update the porting limitations due to change in platform
+and/or compiler. 
+
+\subsection{DEC cxx compiler on DEC Unix}
+\label{sec:dec}
+
+\subsubsection{Conditional Expression}
+
+In conditional expressions should the invocation of method in a
+temporary metaiv object be avoided. The following will give a
+\texttt{ML} error, \textit{Null pointer detected}, on the DEC:
+
+\begin{verbatim}
+Sequence elseStmt(b_stmt.IsEmpty() ?
+                  Sequence().ImpAppend(return_stmt) : 
+                  <...> );
+\end{verbatim}
+
+This can be re-written this way:
+\begin{verbatim}
+Sequence appRet (Sequence().ImpAppend(return_stmt));
+Sequence elseStmt(b_stmt.IsEmpty() ?
+                  appRet :
+                  <...>);
+\end{verbatim}
+
+\subsubsection{Method invocation of casted metaiv objects}
+
+Method invocation of a casted metaiv object needs extra parentheses
+around the cast. The \texttt{cxx}-compiler cannot compile the
+following: 
+\begin{verbatim}
+Record (a).GetField (1);
+\end{verbatim}
+
+Extra parentheses should be added like this:
+\begin{verbatim}
+(Record (a)).GetField (1);
+\end{verbatim}
+
+\textbf{Note:} This restriction applies specific to version
+\texttt{5.5} of the \texttt{cxx} compiler.
+
+\subsubsection{Template casts}
+
+Template casts is not supported by the DEC compiler. The following
+cannot compile:
+\begin{verbatim}
+static_cast <IntVal&>(m);
+\end{verbatim}
+
+Instead a macro has been defined:
+\begin{quote}
+\begin{verbatim}
+#ifdef __alpha 
+#define STATIC_CAST(c) (c) 
+#else 
+#define STATIC_CAST(c)
+static_cast<c> 
+#endif // __alpha
+\end{verbatim}
+\end{quote}
+Used this way:
+\begin{verbatim}
+STATIC_CAST (IntVal&)(m);
+\end{verbatim}
+
+
+\subsubsection{Misc. DEC}
+
+\begin{itemize}
+\item Output string stream has no \texttt{freeze} method
+\item \texttt{pair}-template should be initialised when
+  declared. This:
+\begin{verbatim}
+   pair<MapVal::MapType::iterator, bool> p;
+   p = value.insert( pair<const Generic, Generic> (dom_el, ran_el) );
+\end{verbatim}
+  should be changed to:
+\begin{verbatim}
+  pair<MapVal::MapType::iterator, bool> 
+  p( value.insert( pair<const Generic, Generic> (gdom, gran) ));
+\end{verbatim}
+\item In \texttt{exc\_emul.h}, the type of \texttt{jmp\_buf\_type} is
+  \texttt{long} on the \textit{Alpha}-architecture (\texttt{int} on
+  all other platforms).
+\item Type \texttt{bool} is not directly supported by the compiler,
+  instead it is defined by including \textit{STL}-header
+  \texttt{vector}. 
+\item On DEC there is no global \textit{STL} header file, instead each
+  specific template header must be included as needed (file
+  \texttt{metaiv.cc}): 
+\begin{verbatim}
+  #ifndef __alpha
+  #include <stl.h>
+  #else
+  #include <map>
+  #include <vector>
+  #include <set>
+  #endif // __alpha
+\end{verbatim}
+
+\end{itemize}
+\end{document}
+
+
+
+
+

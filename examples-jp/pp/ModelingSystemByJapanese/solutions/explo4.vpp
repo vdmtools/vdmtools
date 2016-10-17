@@ -1,0 +1,34 @@
+-- Explosives store controller 
+-- For Chapter 8 (Mappings)
+-- Fourth version: for exercise 8.10
+
+types
+
+Site = map StoreName to Store;
+
+StoreName = token;
+
+Store :: contents : set of Object
+         xbound   : nat
+         ybound   : nat
+inv mk_Store(contents, xbound, ybound) ==
+   forall o in set contents & InBounds(o,xbound,ybound)
+   and 
+   not exists o1, o2 in set contents & 
+              o1 <> o2 and Overlap(o1,o2);
+
+Inventory = set of InventoryItem;
+
+InventoryItem :: store : StoreName
+                 item  : Object
+
+functions
+
+SiteInventory: Site -> Inventory
+SiteInventory(site) ==
+  dunion {StoreInventory(name,site(name).contents) 
+         | name in set dom site};
+
+StoreInventory: StoreName * set of Object -> Inventory
+StoreInventory(name,objects) ==
+  {mk_InventoryItem(name,o) | o in set objects}

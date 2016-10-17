@@ -1,0 +1,35 @@
+# ASCIIの清書用PDFファイルを生成するMakefile
+# 「注記」
+# 　　bibliographyやrtinfoに関するエラーメッセージが出るが、returnキーを押して続行してよい。
+
+VSRC = Hotel.vdm \
+       HotelT.vdm \
+       TestDriver.vdm \
+	   TestLogger.vdm
+
+TSRC = $(addsuffix .tex, $(foreach f, $(VSRC), $f))
+
+#LATEX = pdflatex
+LATEX = dotexshop
+BIBTEX=jbibtex
+
+%.vdm.tex: %.vdm
+	iconv -f SJIS -t EUCJP $< > EUC/$<
+	perl replace.pl EUC/$< 
+	nkf -s EUC/$<.tex > $<.tex
+	
+all: HotelKey-ascii
+
+HotelKey-ascii: $(TSRC) HotelKey-ascii.tex
+	$(LATEX) HotelKey-ascii
+	$(BIBTEX) HotelKey-ascii
+	$(LATEX) HotelKey-ascii
+	$(LATEX) HotelKey-ascii
+
+clean:
+	rm -rf *.aux *.log *.bbl *.blg *.dvi *~ *.toc *.idx
+	rm -rf *.bak vdmprofile *.vdm.tex *.ps
+	rm -rf EUC/*.vdm.tex
+
+realclean: clean
+	rm -rf HotelKey-ascii.pdf

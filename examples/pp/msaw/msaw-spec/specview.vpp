@@ -1,0 +1,40 @@
+class SpecView is subclass of View
+
+  instance variables
+    now: MSAWTypes`Temps := 0;
+    alarms: map MSAWTypes`ModeA to map MSAWTypes`Temps to Obstacle := {|->};
+
+  operations
+      GetAlarms: () ==> map MSAWTypes`ModeA to map MSAWTypes`Temps to Obstacle
+      GetAlarms() ==
+	return alarms;
+
+      ShowAlarm: MSAWTypes`ModeA * Obstacle ==> ()
+      ShowAlarm (modeA, obstacle) ==
+        if modeA in set dom alarms
+	then alarms(modeA) := alarms(modeA) ++  {now |-> obstacle}
+	else alarms(modeA) := {now |-> obstacle};
+
+
+      ShowObstacleArtificiel: MSAWTypes`Coordonnees * MSAWTypes`NM * MSAWTypes`Pieds ==> ()
+      ShowObstacleArtificiel (centre, rayon, altitude_maximale) ==
+         skip;
+
+      ShowZoneAeroport: MSAWTypes`Coordonnees * MSAWTypes`NM * MSAWTypes`Pieds * MSAWTypes`NM ==> ()
+      ShowZoneAeroport (centre, rayon,
+                        altitude_maximale, rayon_au_sol) ==
+         skip;
+
+      ShowRadarData: MSAWTypes`ModeA * MSAWTypes`Coordonnees * MSAWTypes`Pieds ==> ()
+      ShowRadarData (modeA, position, modeC) ==
+         skip;
+
+      ShowSegmentDePrediction: MSAWTypes`Coordonnees * MSAWTypes`Coordonnees ==> ()
+      ShowSegmentDePrediction (xy_queue, xy_tete) ==
+         skip;
+
+      ShowTime: MSAWTypes`Temps ==> ()
+      ShowTime (t) ==
+         now := t
+
+end SpecView

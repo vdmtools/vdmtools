@@ -1,0 +1,25 @@
+    public Test : () ==> int
+    Test() ==
+    ( dcl retval : int := 0;
+      let gm : Combined = mk_RecordA(4)
+      in
+      cases gm:
+      mk_RecordA(a) -> 
+        if a < 10
+        then ( retval := 1; ),
+        -- else skip,
+      mk_RecordB(a) ->
+        if a < 10
+        then retval := 3
+        else skip
+      end;
+      return retval;
+    )
+
+
+  types
+    RecordA :: a : int;
+    RecordB :: a : int;
+
+    Combined = RecordA | RecordB;
+

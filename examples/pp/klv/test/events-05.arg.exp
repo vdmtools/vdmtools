@@ -1,0 +1,78 @@
+[ mk_Test`BeaconsMet( 
+     [ mk_Test`TIVD( 60 ) ],
+     [  ] ),
+  mk_Test`BeaconsMet( 
+     [ mk_Test`TIVD( 60 ),
+       mk_Test`TIVD( 40 ) ],
+     [  ] ),
+  mk_Test`BeaconsMet( 
+     [ mk_Test`TIVD( 60 ),
+       mk_Test`TIVD( 40 ),
+       mk_Test`TIVD( 30 ) ],
+     [  ] ),
+  mk_Test`BeaconsMet( 
+     [ mk_Test`TIVD( 60 ),
+       mk_Test`TIVD( 40 ),
+       mk_Test`TIVD( 30 ),
+       mk_Test`TIVD( 50 ) ],
+     [  ] ),
+  mk_Test`BeaconsMet( 
+     [ mk_Test`TIVD( 60 ),
+       mk_Test`TIVD( 40 ),
+       mk_Test`TIVD( 30 ),
+       mk_Test`TIVD( 50 ),
+       mk_Test`TIVD( 60 ) ],
+     [  ] ),
+  mk_Test`BeaconsMet( 
+     [ mk_Test`TIVD( 60 ),
+       mk_Test`TIVD( 40 ),
+       mk_Test`TIVD( 30 ),
+       mk_Test`TIVD( 50 ),
+       mk_Test`TIVD( 60 ),
+       mk_Test`TIVD( 70 ) ],
+     [  ] ),
+  mk_Test`BeaconsMet( 
+     [ mk_Test`TIVD( 40 ),
+       mk_Test`TIVD( 30 ),
+       mk_Test`TIVD( 50 ),
+       mk_Test`TIVD( 60 ),
+       mk_Test`TIVD( 70 ) ],
+     [ mk_Test`TIVE( 60 ) ] ),
+  mk_Test`BeaconsMet( 
+     [ mk_Test`TIVD( 30 ),
+       mk_Test`TIVD( 50 ),
+       mk_Test`TIVD( 60 ),
+       mk_Test`TIVD( 70 ) ],
+     [ mk_Test`TIVE( 60 ),
+       mk_Test`TIVE( 40 ) ] ),
+  mk_Test`BeaconsMet( 
+     [ mk_Test`TIVD( 50 ),
+       mk_Test`TIVD( 60 ),
+       mk_Test`TIVD( 70 ) ],
+     [ mk_Test`TIVE( 60 ),
+       mk_Test`TIVE( 40 ),
+       mk_Test`TIVE( 30 ) ] ),
+  mk_Test`BeaconsMet( 
+     [ mk_Test`TIVD( 60 ),
+       mk_Test`TIVD( 70 ) ],
+     [ mk_Test`TIVE( 60 ),
+       mk_Test`TIVE( 40 ),
+       mk_Test`TIVE( 30 ),
+       mk_Test`TIVE( 50 ) ] ),
+  mk_Test`BeaconsMet( 
+     [ mk_Test`TIVD( 70 ) ],
+     [ mk_Test`TIVE( 60 ),
+       mk_Test`TIVE( 40 ),
+       mk_Test`TIVE( 30 ),
+       mk_Test`TIVE( 50 ),
+       mk_Test`TIVE( 60 ) ] ),
+  mk_Test`BeaconsMet( 
+     [ mk_Test`TIVD( 70 ) ],
+     [ mk_Test`TIVE( 60 ),
+       mk_Test`TIVE( 40 ),
+       mk_Test`TIVE( 30 ),
+       mk_Test`TIVE( 50 ),
+       mk_Test`TIVE( 60 ) ] ),
+  mk_Test`KLVstate( 
+     mk_Test`CabDisp( false,false,true ),
+     mk_Test`EmerBreak( false ) ) ]

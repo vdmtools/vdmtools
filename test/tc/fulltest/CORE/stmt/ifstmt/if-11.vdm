@@ -1,0 +1,15 @@
+class IfStmtTest
+
+operations
+
+  If11: () ==> bool
+  If11() ==
+    if true
+    then let a = [1] in return hd a > 9
+    elseif 1>1
+    then let a in set {1} in return a
+    elseif 2>1
+    then let a in set {1,2,3} be st a<3 in return a * 10001
+    else def a = [1] in return hd a > 9;
+
+end IfStmtTest

@@ -1,0 +1,72 @@
+class JavaIoBufferedOutputStream is subclass of JavaIoFilterOutputStream
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaIoBufferedOutputStream" , <CLASS> , false  )
+instance variables 
+  protected  buf : map  int  to  int ;
+  protected  count : int 
+operations 
+public  flush : () ==> ()
+flush() == 
+(	flushBuffer();
+  out.flush()
+);
+
+private flushBuffer : () ==> ()
+flushBuffer() ==
+( if count > 0
+  then out.write2(buf, 0, count);
+	count := 0
+);
+
+public  write : int  ==> ()
+write(b) == 
+(	if count >= card dom buf
+  then flushBuffer();
+	buf := buf ++ {count|->b};
+  count:=count+1;
+);
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+--public  write : map  int  to  int  * int  * int  ==> ()
+--write(b, off, len__) == 
+public  write2 : map  int  to  int  * int  * int  ==> ()
+write2(b, off, len__) == 
+(	if len__ >= card dom buf
+  then
+  ( flushBuffer();
+	  out.write2(b, off, len__);
+	  return
+	);
+	if len__ > (card dom buf) - count
+  then flushBuffer();
+
+--	JavaLangSystem.arraycopy(b, off, buf, count, len__);
+  for i=0 to len__-1
+  do buf := buf ++ {count+i|->b(off+i)};
+
+	count:=count+len__;
+);
+
+public  JavaIoBufferedOutputStream : <NIL> ==> JavaIoBufferedOutputStream
+JavaIoBufferedOutputStream(-) == 
+isNil := true  ;
+
+public  JavaIoBufferedOutputStream : JavaIoOutputStream ==> JavaIoBufferedOutputStream
+JavaIoBufferedOutputStream(out) ==  
+( let - = JavaIoBufferedOutputStream(out,512) in skip
+) ;
+
+public  JavaIoBufferedOutputStream : JavaIoOutputStream * int  ==> JavaIoBufferedOutputStream
+JavaIoBufferedOutputStream(out, size) == 
+( let - = JavaIoFilterOutputStream(out) in skip;
+  if size <= 0
+  then exit new JavaLangIllegalArgumentException(new JavaLangString("Buffer size <= 0"));
+
+	buf := {i|->0 | i in set {0,...,size-1}};
+  count:=0;
+) ;
+
+end  JavaIoBufferedOutputStream

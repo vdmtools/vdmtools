@@ -1,0 +1,26 @@
+module A
+
+exports all
+definitions
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+---------------------------------------------------------------------
+----------------- LetExpr         -----------------------------------
+---------------------------------------------------------------------
+
+Test: () ==> nat   
+Test () ==
+return
+ let x = 1 in
+   let f: nat -> nat
+       f(n) ==
+         x + n
+   in
+     let x = 2 in
+       f(x)
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

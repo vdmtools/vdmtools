@@ -1,0 +1,17 @@
+-- Test case which checks that overlapping types in function parameters 
+-- are detected
+
+
+class A
+
+functions
+
+fn : real -> real
+fn(r) ==
+  r;
+
+fn : nat -> real
+fn(n) ==
+  n;
+
+end A

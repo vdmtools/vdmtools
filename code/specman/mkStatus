@@ -1,0 +1,29 @@
+#!/usr/bin/perl 
+
+# usage: mkStatus vpp-files
+#
+# Creating files `Status' and `Depend' (empty) in current directory and soft linking
+# to files in argument list by creating links "C<num>.vpp".
+# Information is extracted from files in argument list 
+# (vpp files expected) by grepping after "class" in first column
+# and class name assigned to second word in that line.
+
+open(S,">./Status") || die "Cannot open file ./Status for writing\n";
+open(D,">./Depend") || die "Cannot open file ./Depend for writing\n";
+
+$process="";
+foreach $i (0..$#ARGV) {
+    ($dr, $nm) = $ARGV[$i] =~ /(.*)\/(.*)/;
+    $cl = `grep ^class $ARGV[$i]`;
+    ($F1, $class, $Etc) = ($cl =~ /^(\S+)\s+(\S+)\s*(.*)/);
+    $ii = $i + 1;
+    print S "$class $ii type none ascii no \n";
+    print "$class $ii type none ascii no \n";
+    $process .= "-t $class ";
+    $ln = "C$ii.vpp";
+    system("ln -s $ARGV[$i] $ln ");
+}					
+# print $process,"\n";
+chop($dir = "-l ".`pwd`);
+open(T,">../.tmparg") || die "Cannot open file ../.tmparg for writing\n";
+print T "$dir $process";

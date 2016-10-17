@@ -1,0 +1,18 @@
+class A
+
+operations
+
+public Test : () ==> bool  
+Test () ==
+( 
+	let i in set {1,2,3} be st i > 1 in
+	(dcl x : bool := false;
+	if ((x)) then 
+		if x then return true else return false
+		else return false )
+
+ 
+)
+   
+end A
+

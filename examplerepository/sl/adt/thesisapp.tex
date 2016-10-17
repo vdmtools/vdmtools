@@ -1,0 +1,366 @@
+\section{Generic Modula-2 Code}
+\subsection{Generic Definition Module for Singly-Linked List}
+\begin{quote}
+\begin{verbatim}
+GENERIC DEFINITION MODULE Lists(Data: TYPE; AssignData: AssignProcType);
+
+TYPE
+     AssignProcType = PROCEDURE (VAR Data; Data);
+
+     (* ``Nat'' means ``Natural Number'' as in VDM-SL *)
+     Nat1 = [1 .. MAX(CARDINAL)];
+     Nat = CARDINAL;
+     
+     Traversal = PROCEDURE(Data): Data;
+     List;
+  
+     
+PROCEDURE InitList(VAR list: List);
+(* Post: Empty(list) = TRUE *)
+     
+PROCEDURE CanInsert(list: List; position: Nat1): BOOLEAN; 
+(* Pre:  'memory available' AND position <= Length(list) + 1 *)
+PROCEDURE Insert(VAR list: List; data: Data; position: Nat1);
+(* Post: GetLength(list') + 1 = GetLength(list) 
+          AND GetElement(list', 1..position - 1) 
+               = GetElement(list, 1..position - 1)
+          AND GetElement(list', position..GetLength(list')) 
+               = GetElement(list, position + 1..GetLength(list))
+          AND GetElement(list, position) = data *)
+
+PROCEDURE CanUpdate(list: List; position: Nat1): BOOLEAN;
+(* Pre: position <= Length(list) *)
+PROCEDURE Update(VAR list: List; data: Data; position: Nat1);
+(* Post: GetLength(list') = GetLength(list) 
+          AND p <> position 
+               ==> GetElement(list', p) = GetElement(list, p) 
+          AND GetElement(list, position) = data *)
+
+PROCEDURE CanAppend(list: List; data: Data): BOOLEAN;
+(* Pre: 'memory available' AND NOT Empty(list) *)
+PROCEDURE Append(VAR list: List; data: Data);
+(* Post:  GetLength(list') + 1 = GetLength(list) 
+          AND GetElement(GetLength(list)) = data 
+          AND GetElement(list', 1..GetLength(list')) 
+               = GetLength(list, 1..GetLength(list')) *)
+
+PROCEDURE CanDelete(list: List; position: Nat1): BOOLEAN;
+(* Pre: position <= GetLength(list) *)
+PROCEDURE Delete(VAR list: List; position: Nat1);
+(* Post: GetLength(list') = GetLength(list) + 1  
+          AND GetElement(list', 1..position - 1) 
+               = GetElement(list, 1..position - 1)
+          AND  GetElement(list', position + 1..) 
+               = GetElement(list, position ..) *)
+ 
+PROCEDURE Traverse(VAR list: List; traversal: Traversal);
+(* Post: for all p GetElement(list, p) 
+               = traversal(GetElement(list', p)) *)
+     
+PROCEDURE GetLength(list: List): Nat;
+(* Post: the number of elements in the list *)
+
+PROCEDURE Empty(list: List): BOOLEAN;
+(* Post: GetLength(list) = 0 <==> Empty(list) = TRUE *)     
+
+PROCEDURE CanGetElement(list: List; position: Nat1): BOOLEAN;
+(* Pre: position <= GetLength(list) *)
+PROCEDURE GetElement(list: List; position: Nat1): Data;
+(* Post: GetElement(list, position) = data at position in the list *)
+
+END Lists.
+
+
+\end{verbatim}
+\end{quote}
+\subsection{Generic Implementation Module for Singly-Linked List}
+\begin{quote}
+\begin{verbatim}
+GENERIC IMPLEMENTATION MODULE Lists(Data: TYPE; AssignData: AssignProcType);
+
+FROM Storage IMPORT ALLOCATE, DEALLOCATE;
+
+TYPE
+     NodePtr = POINTER TO Node;
+     Node = RECORD 
+               data: Data;
+               next: NodePtr;
+          END;
+     List = NodePtr;
+
+
+
+MODULE MyStorage;
+(* Module ``MyStorage'' is necessary to implement the function
+ ``StorageAvailable''.  ``StorageAvailable'' returns true if
+ ``MYNEW'' will return a new non-NIL pointer to a node; otherwise,
+ if ``MYNEW'' will return a NIL pointer ``StorageAvailable'' returns
+ false. In other words, ``StorageAvailable'' returns true if another
+ ``Node'' can be allocated in the system heap and false otherwise. *)
+ 
+IMPORT ALLOCATE, DEALLOCATE, Node, NodePtr;
+EXPORT MYNEW, StorageAvailable;
+
+VAR temp: NodePtr;
+
+PROCEDURE StorageAvailable(): BOOLEAN;
+BEGIN
+     RETURN temp <> NIL;
+END StorageAvailable;
+
+PROCEDURE MYNEW(init: Node): NodePtr;
+VAR new: NodePtr;
+BEGIN
+     IF temp = NIL THEN
+          RETURN NIL
+     ELSE
+          new := temp;
+          new^ := init;
+          NEW(temp);
+          RETURN new
+     END
+END MYNEW; 
+
+BEGIN
+     NEW(temp);
+END MyStorage;
+
+
+
+
+PROCEDURE InitList(VAR list: List);
+BEGIN
+     list := NIL;
+END InitList;
+
+PROCEDURE MkNode(data: Data; next: NodePtr): Node;
+VAR node: Node;
+BEGIN
+     AssignData(node.data, data);
+     node.next := next;
+     RETURN node;
+END MkNode;
+
+PROCEDURE IsEmpty(list: List): BOOLEAN;
+BEGIN
+     RETURN list = NIL
+END IsEmpty; 
+
+PROCEDURE Length(list: List): Nat;
+BEGIN
+     IF NOT IsEmpty(list) THEN
+          RETURN 1 + Length(list^.next);
+     ELSE
+          RETURN 0;
+     END;
+END Length;
+
+PROCEDURE PtrToNode(list: List; position: Nat1): NodePtr;
+BEGIN
+     IF position > 1 THEN
+          RETURN PtrToNode(list^.next, position - 1);
+     ELSE
+          RETURN list;
+     END;
+END PtrToNode;
+
+PROCEDURE InsertAtBeginning(VAR list: List; data: Data); 
+VAR new: NodePtr;
+BEGIN
+     new := MYNEW(MkNode(data, list));
+     list := new;
+END InsertAtBeginning;
+
+PROCEDURE InsertAfter(ptr: NodePtr; data: Data);
+VAR new: NodePtr;
+BEGIN
+     new := MYNEW(MkNode(data, ptr^.next));
+     ptr^.next := new;
+END InsertAfter;
+
+PROCEDURE Insert(VAR list: List; data: Data; position: Nat1);
+BEGIN
+     IF position = 1 THEN
+          InsertAtBeginning(list, data);
+     ELSE
+          InsertAfter(PtrToNode(list, position - 1), data);
+     END;
+END Insert;
+
+PROCEDURE CanInsert(list: List; position: Nat1): BOOLEAN; 
+BEGIN
+     RETURN (position <= Length(list) + 1) AND StorageAvailable(); 
+END CanInsert;
+
+PROCEDURE Append(VAR list: List; data: Data);
+VAR ptr: NodePtr;
+BEGIN
+     ptr := list;
+     IF ptr = NIL THEN
+          InsertAtBeginning(list, data);
+     ELSE
+          WHILE ptr^.next <> NIL DO 
+               ptr := ptr^.next;
+          END;
+          InsertAfter(ptr, data);
+     END;
+END Append;
+
+PROCEDURE CanAppend(): BOOLEAN;
+BEGIN
+     RETURN StorageAvailable();
+END CanAppend;
+
+PROCEDURE Update(VAR list: List; data: Data; position: Nat1);
+VAR ptr: NodePtr;
+BEGIN
+     ptr := PtrToNode(list, position);
+     AssignData(ptr^.data, data);
+END Update;
+
+PROCEDURE CanUpdate(list: List; position: Nat1): BOOLEAN;
+BEGIN
+     RETURN (position <= Length(list)) AND StorageAvailable();
+END CanUpdate;                 
+
+PROCEDURE DeleteAtBeginning(VAR list: List);
+VAR temp: NodePtr;
+BEGIN
+     temp := list;
+     list := list^.next;
+     DISPOSE(temp);
+END DeleteAtBeginning;
+
+PROCEDURE DeleteAfter(ptr: NodePtr);
+VAR temp: NodePtr;
+BEGIN
+     temp := ptr^.next;
+     ptr^.next := temp^.next;
+     DISPOSE(temp);
+END DeleteAfter;
+
+PROCEDURE Delete(VAR list: List; position: Nat1);
+BEGIN
+     IF position = 1 THEN
+          DeleteAtBeginning(list);
+     ELSE
+          DeleteAfter(PtrToNode(list, position - 1));
+     END;
+END Delete;
+
+PROCEDURE CanDelete(list: List; position: Nat1): BOOLEAN;
+BEGIN
+     RETURN position <= Length(list);
+END CanDelete;
+
+PROCEDURE Traverse(VAR list: List; traversal: Traversal);
+VAR ptr: NodePtr;
+BEGIN
+     ptr := list;
+     WHILE ptr <> NIL DO
+          AssignData(ptr^.data, traversal(ptr^.data));
+          ptr := ptr^.next;
+     END;
+END Traverse;
+
+PROCEDURE GetLength(list: List): Nat;
+BEGIN
+     RETURN Length(list);
+END GetLength;
+
+PROCEDURE Empty(list: List): BOOLEAN;
+BEGIN
+     RETURN IsEmpty(list);
+END Empty;
+
+PROCEDURE GetElement(list: List; position: Nat1): Data;
+VAR ptr: NodePtr;
+BEGIN
+     ptr := PtrToNode(list, position);
+     RETURN ptr^.data;
+END GetElement;
+
+PROCEDURE CanGetElement(list: List; position: Nat1): BOOLEAN;
+BEGIN
+     RETURN position <= Length(list);
+END CanGetElement;
+
+END List.
+
+\end{verbatim}
+\end{quote}
+\subsection{Generic Definition Module for Queues}
+\begin{quote}
+\begin{verbatim}
+
+GENERIC DEFINITION MODULE Queues(Data: TYPE; AssignData: List.AssignProcType);
+
+TYPE
+     Queue;
+     Nat = CARDINAL;
+
+PROCEDURE InitQueue(VAR q: Queue);
+(* Post: Empty(q) = TRUE *)
+
+PROCEDURE CanEnqueue(q: Queue; d: Data): BOOLEAN;
+(* Pre: 'memory available' *)
+PROCEDURE Enqueue(VAR q: Queue; d: Data);
+(* Post: the Length(q) time, Dequeue(q) is called, Dequeue(q) = d *)
+
+PROCEDURE CanDequeue(q: Queue): BOOLEAN;
+(* Pre: NOT Empty(q) *)
+PROCEDURE Dequeue(VAR q: Queue): Data;
+(* Post: Dequeue(q') = GetHead(q') *)
+
+PROCEDURE CanGetHead(q: Queue);
+(* Pre: NOT Empty(q) *)
+PROCEDURE GetHead(q: Queue): Data;
+(* Post: GetHead(q) = the oldest enqueued element *)
+ 
+PROCEDURE Length(q: Queue): Nat;
+(* Post: Length(q) = the number of elements enqueued - number dequeued *)
+
+PROCEDURE Empty(q: Queue): BOOLEAN;
+(* Post: Length(q) = 0 <==> Empty(q) = TRUE *)
+
+END Queues.
+
+\end{verbatim}
+\end{quote}
+\subsection{Generic Definition Module for Stacks}
+\begin{quote}
+\begin{verbatim}
+
+GENERIC DEFINITION MODULE Stacks(Data: TYPE; AssignData: List.AssignProcType);
+
+TYPE
+     Stack;
+     Nat = CARDINAL;
+
+PROCEDURE InitStack(VAR s: Stack);
+(* Post: Empty(s) = TRUE *)
+
+PROCEDURE CanPush(s: Stack; d: Data): BOOLEAN;
+(* Pre: 'memory available' *)
+PROCEDURE Push(VAR s: Stack; d: Data);
+(* Post: Pop(s) = d *)
+
+PROCEDURE CanPop(s:Stack): BOOLEAN;
+(* Pre: NOT Empty(s) *)
+PROCEDURE Pop(VAR s:Stack): Data;
+(* Post: Pop(s') = GetTop(s') *)
+
+PROCEDURE CanGetTop(s: Stack): BOOLEAN;
+(* Pre: NOT Empty(s) *)
+PROCEDURE GetTop(s: Stack);
+(* Post: GetTop(s) = the list element to be pushed *)
+
+PROCEDURE Length(s: Stack): Nat;
+(* Post: Length(s) = the number of elements pushed - number popped *)
+
+PROCEDURE Empty(s: Stack): BOOLEAN;
+(* Post: Length(s) = 0 <==> Empty(s) *)
+
+END Stacks.
+\end{verbatim}
+\end{quote}

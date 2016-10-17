@@ -1,0 +1,75 @@
+dlmodule C 
+  exports
+    operations
+      Place : int * int ==> ();
+      Rotate : (int * int) * real ==> int * int
+
+    uselib 
+      "libio10.so"
+end C
+
+dlmodule B  
+  exports
+    functions
+      ExtCos : real -> real;
+      ExtSin : real -> real
+
+    values
+      ExtPI : real
+
+    uselib 
+      "libmath.so"
+end B
+
+module APPROX
+
+  exports 
+    all
+
+  definitions
+    values
+      Rotate =  { [mk_(1,0),90.0] |-> mk_(0,1), 
+                  [mk_(3,4),180.0] |-> mk_(-3,4)};
+      ExtPI = { [] |-> 3.14159};
+      ExtCos = { [0.5] |-> 0.877, [3.14] |-> -1.0 };
+      ExtSin = { [0.5] |-> 0.479, [3.14] |-> 0.0}
+ 
+end APPROX  
+
+module A
+  imports
+    from 
+      APPROX
+        values
+          Rotate;
+          ExtPI;
+          ExtCos renamed CosValues;
+          ExtSin renamed SinValues,
+
+    from C
+      operations
+          Place : int * int ==> () renamed Place ;
+          Rotate : (int * int) * real ==> int * int renamed Rotate,
+   
+    from B
+      values
+        ExtPI: real
+
+      functions
+        ExtCos : real -> real;
+        ExtSin : real -> real   
+   
+
+     definitions
+       operations
+
+         Test : () ==> seq of [(int * int)]
+         Test () ==  (
+           Place(1,2);
+           return [B`ExtPI, Rotate(mk_(1,0),90.0), B`ExtCos(0.5), B`ExtSin(3.14)]
+        )
+
+end A
+    
+   
+

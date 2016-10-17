@@ -1,0 +1,72 @@
+class IntegerConstant is subclass of IntegerExpr
+operations 
+public  toString : () ==> [String]
+toString() == 
+( return  if  (constValue = nil  ) then  new  String("null") else  constValue.toString()
+) ;
+
+public  toPostfix : () ==> [String]
+toPostfix() == 
+( return  IntegerConstant`toString()
+) ;
+
+public  IntegerConstant : () ==> IntegerConstant
+IntegerConstant() == 
+( skip 
+) ;
+
+public  IntegerConstant : int  ==> IntegerConstant
+IntegerConstant(constValue) == 
+( IntegerConstant`constValue := new  Integer(constValue)
+) ;
+
+public  setConstantValue : int  ==> <VOID>
+setConstantValue(constValue) == 
+( IntegerConstant`constValue := new  Integer(constValue);
+  return  <VOID>
+) ;
+
+public  doTask : [TokenStack] ==> <VOID>
+doTask(stack) == 
+( let - = stack.push(self  )
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  accept : [ExprVisitor] ==> <VOID>
+accept(visitor) == 
+( let - = visitor.visitIntegerExpr(self  )
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  IntegerConstant : [Integer] ==> IntegerConstant
+IntegerConstant(constValue) == 
+( IntegerConstant`constValue := constValue
+) ;
+
+public  setConstantValue : [Integer] ==> <VOID>
+setConstantValue(constValue) == 
+( IntegerConstant`constValue := constValue;
+  return  <VOID>
+) ;
+
+public  evaluate : [ExpressionContext] ==> [Object]
+evaluate(context) == 
+( if  constValue = nil  
+  then  
+    ( dcl   ex : [DWDSException] := new  DWDSException();
+      let - = ex.addMessage(DWDSException`InvalidOperationException , IntegerConstant`getClass().getName()+new  String(" was not assigned a value before evaluation"))
+      in 
+        skip ;
+      exit  ex
+    ) ;
+  return  constValue
+) ;
+
+instance variables 
+  constValue : [Integer] := nil  
+  
+end  IntegerConstant

@@ -1,0 +1,31 @@
+-- This test used to test that import directives can be retained when modified
+
+class A
+
+instance variables
+
+  k : nat
+
+operations
+
+public Test : () ==> seq of char
+Test() ==
+( dcl b10 : B10 := new B10();
+  return b10.Run()
+);
+
+end A
+
+class B10
+
+operations
+
+public Run : () ==> seq of char
+Run() ==
+  return "";
+
+end B10
+
+
+
+

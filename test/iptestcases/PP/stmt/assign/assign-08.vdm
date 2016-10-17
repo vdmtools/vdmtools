@@ -1,0 +1,26 @@
+class A
+
+instance variables
+
+  b : B := new B();
+  
+operations
+
+public Test: () ==> map real to nat
+Test() ==
+  (b.a(1).contents(4.5) := 27;
+   return b.a(1).contents); 
+end A
+
+class B
+instance variables
+
+  public a: set of C := {mk_C({7.4 |-> 6, 4 |-> 5})};
+
+types
+
+public
+  C ::
+    contents : map real to nat;
+    
+end B

@@ -1,0 +1,115 @@
+class A
+
+instance variables
+private
+edao : EmployDao;
+ddao : DeptDao;
+
+operations
+public
+Test: () ==> bool
+Test() ==
+   trap err with return false
+   in
+   (
+    dbiConnectionFactory`setDefaultDsn("testdb");
+    --dbiConnectionFactory`setDefaultDsn("oracle");
+
+    edao := new EmployDao();
+    ddao := new DeptDao();
+    
+
+    println("create table");
+    createTable();
+
+    println("inset data");
+    insertData();
+
+    println("select data");
+    selectData();
+
+    println("select data2");
+    selectData2();
+
+    println("select data3");
+    selectData3();
+
+    return true;
+   );
+
+private
+selectData: () ==> ()
+selectData() ==
+  def sdao = new SampleCustomDao();
+      l = sdao.selectList1()
+  in
+    for e in l do 
+      let s = e.empid ^ " " ^ e.depid1 ^ 
+          (if e.depid2 <> nil
+           then " " ^ e.depid2 ^ " " ^ e.depnm
+           else"")
+      in
+        println(s);
+
+private
+selectData2: () ==> ()
+selectData2() ==
+  def sdao = new SampleCustomDao();
+      l = sdao.selectList2()
+  in
+    for e in l do 
+      let s = e.empid ^ " " ^ e.depid1 ^ 
+          (if e.depnm <> nil
+           then " " ^ e.depnm
+           else"")
+      in
+        println(s);
+
+private
+selectData3: () ==> ()
+selectData3() ==
+  def sdao = new SampleCustomDao();
+      l = sdao.selectList3()
+  in
+    for e in l do 
+      let s = e.depid ^ " " ^ e.jobcd
+      in
+        println(s);
+
+private
+createTable: () ==> ()
+createTable() ==
+  (trap e with skip in edao.drop();
+   edao.createTable();
+   trap e with skip in ddao.drop();
+   ddao.createTable());
+
+private
+insertData: () ==> ()
+insertData() ==
+  let employ = [new EmployBean("emp01", "dep01", "job01", "fname1", "lname1", 100),
+                new EmployBean("emp02", "dep01", "job01", "fname2", "lname2", 250),
+                new EmployBean("emp03", "dep02", "job02", "fname3", "lname3", 200),
+                new EmployBean("emp04", "dep02", "job03", "fname4", "lname4", 200),
+                new EmployBean("emp05", "dep02", "job03", "fname5", "lname5", 130),
+                new EmployBean("emp06", "dep03", "job03", "fname6", "lname6", 150)],
+      dept = [new DeptBean("dep01", "総務部"),
+              new DeptBean("dep02", "経理部"),
+              new DeptBean("dep04", "営業部"),
+              new DeptBean("dep05", "管理部")]
+  in
+   (edao.begin();
+    trap ex with edao.rollback()
+    in
+     (for e in employ do
+        def - = edao.insert(e) in skip;
+      for d in dept do
+        def - = ddao.insert(d) in skip;
+      edao.commit()));
+
+private
+println: seq of char ==> ()
+println(v) ==
+  def - = new IO().echo(v ^ "\n") in skip;
+
+end A

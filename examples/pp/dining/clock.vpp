@@ -1,0 +1,17 @@
+class Clock
+
+   operations
+      public
+      GetTime: () ==> DiningPhilosopherTypes`Time
+      GetTime() ==
+         is not yet specified;
+
+      Tick: () ==> ()
+      Tick() ==
+        is not yet specified;
+
+   thread
+     periodic (100)(Tick)
+
+end Clock
+

@@ -1,0 +1,169 @@
+class A
+
+instance variables
+private
+dbi : DBI := new DBI()
+
+operations
+public
+Test: () ==> bool
+Test() ==
+   (dcl res : bool := true;
+    res := dbi.connect("testdb");
+    if not res then return false;
+
+    def - = dropTable() in skip;
+    res := createTable();
+    if not res then return false;
+
+    res := insertData();
+    if not res then return false;
+
+    res := selectTest();
+    if not res then return false;
+    return true;
+   );
+ 
+public
+createTable: () ==> bool
+createTable() ==
+  let sql = "CREATE TABLE saving_account_book (\n" ^
+               "gfs_id text primary key,\n" ^
+               "gfs_last_modified timestamp not null default CURRENT_TIMESTAMP,\n" ^
+               "gfs_deleted smallint default 0,\n" ^
+               "account_no varchar(10) not null unique,\n" ^
+               "client_no varchar(10) not null default ' ',\n" ^
+               "branch_no varchar(10) not null default ' ',\n" ^
+               "password varchar(10) not null default ' ',\n" ^
+               "amount numeric not null default 0,\n" ^
+               "start_date date not null default current_date,\n" ^
+               "applied_date date not null default current_date,\n" ^
+               "period numeric not null default 1,\n" ^
+               "auto_renewal smallint not null default 1);"
+  in
+    return dbi.execute1(sql);
+
+public
+dropTable: () ==> bool
+dropTable() ==
+  let sql = "DROP TABLE saving_account_book;"
+  in
+    return dbi.execute1(sql);
+
+public
+insertData: () ==> bool
+insertData() ==
+  let sql = "insert into saving_account_book\n" ^
+            "(gfs_id, account_no, client_no, branch_no, password)\n" ^
+            "values('kei1', '0001', '0022', '0010', 'pass');"
+  in
+    def mk_(b,-) = dbi.execute2(sql)
+    in return b;
+
+public
+selectTest: () ==> bool
+selectTest() ==
+  def sql = "SELECT * FROM saving_account_book";
+      mk_(res,-) = dbi.executeQuery(sql)
+  in
+    if not res
+    then return false
+    else 
+     (dcl sabs : seq of SavingAccountBookBean := [];
+      while def mk_(-,ok) = dbi.fetch() in ok do
+        def mk_(r1,p1) = dbi.getString(1);
+            mk_(r2,p2) = dbi.getString(2);
+            mk_(r3,p3) = dbi.getInt(3);
+            mk_(r4,p4) = dbi.getString(4);
+            mk_(r5,p5) = dbi.getString(5);
+            mk_(r6,p6) = dbi.getString(6);
+            mk_(r7,p7) = dbi.getString(7);
+            mk_(r8,p8) = dbi.getInt(8);
+            mk_(r9,p9) = dbi.getString(9);
+            mk_(r10,p10) = dbi.getString(10);
+            mk_(r11,p11) = dbi.getInt(11);
+            mk_(r12,p12) = dbi.getInt(12);
+            mk_(r13,p13) = dbi.getString(2);
+            mk_(r14,p14) = dbi.getString(9);
+            mk_(r15,p15) = dbi.getString(11)
+        in
+         (if r1 and r2 and r3 and r4 and r5 and r6 and r7 and r8 and r9 and r10 and r11 and r12
+          then sabs := sabs ^ [new SavingAccountBookBean(p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12)]
+          else return false;
+          def io = new IO();
+              - = io.echo(p13 ^ "\n");
+              - = io.echo(p14 ^ "\n");
+              - = io.echo(p15 ^ "\n")
+          in
+            skip);
+      
+      --showSavingAccountBookBean(fruits);
+      return true;);
+
+public
+showSavingAccountBookBeans : seq of SavingAccountBookBean ==> ()
+showSavingAccountBookBeans(sabs) ==
+  --for f in fruits do
+  --  def p1 = f.name;
+  --      price = VDMUtil`val2seq_of_char[nat](f.price);
+  --      io = new IO();
+  --      b = io.echo(name ^ " " ^ price ^ "\n")
+  --  in
+      skip;
+      
+end A
+
+class SavingAccountBookBean
+
+
+instance variables
+public
+gfs_id: seq of char := "";
+public
+--gfs_last_modified: DBI`TIMESTAMP := mk_(0,0,0,0,0,0,0);
+gfs_last_modified: seq of char := "";
+public
+gfs_deleted: nat := 0;
+public
+account_no : seq of char := "";
+public
+client_no : seq of char := " ";
+public
+branch_no : seq of char := " ";
+public
+password : seq of char := " ";
+public
+amount : nat := 0;
+public
+--start_date : DBI`DATE := mk_(0,0,0);
+start_date : seq of char := "";
+public
+--applied_date : DBI`DATE := mk_(0,0,0);
+applied_date : seq of char := "";
+public
+period : nat := 1;
+public
+auto_renewal : nat := 1;
+
+operations
+public
+--SavingAccountBookBean: seq of char * DBI`TIMESTAMP * nat * seq of char * seq of char * seq of char *
+--                       seq of char * nat * DBI`DATE * DBI`DATE * nat * nat ==> SavingAccountBookBean
+SavingAccountBookBean: seq of char * seq of char * nat * seq of char * seq of char * seq of char *
+                       seq of char * nat * seq of char * seq of char * nat * nat ==> SavingAccountBookBean
+SavingAccountBookBean(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12) ==
+  (gfs_id := p1;
+   gfs_last_modified := p2;
+   gfs_deleted := p3;
+   account_no := p4;
+   client_no := p5;
+   branch_no := p6;
+   password := p7;
+   amount := p8;
+   start_date := p9;
+   applied_date := p10;
+   period := p11;
+   auto_renewal := p12);
+
+end SavingAccountBookBean
+

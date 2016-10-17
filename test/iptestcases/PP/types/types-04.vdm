@@ -1,0 +1,29 @@
+class B
+
+instance variables
+
+i : [seq of char]
+
+operations
+
+public create : [seq of char] ==> B
+create(s) ==
+( i := s;
+  return self
+);
+
+public get : () ==> [seq of char]
+get() ==
+  return i;
+
+end B
+
+class A
+
+operations
+
+public Test : () ==> [seq of char]
+Test() ==
+  return new B().create(nil).get();
+
+end A

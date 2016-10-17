@@ -1,0 +1,15 @@
+class A
+
+operations
+
+MyDelay : nat ==> nat
+MyDelay(n) ==
+  if n > 0
+  then MyDelay(n-1)
+  else return 0;
+
+public Test : () ==> nat
+Test() ==
+  MyDelay(100)
+
+end A

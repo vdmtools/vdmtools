@@ -1,0 +1,8 @@
+VolumeKnob:10;
+TransmitTMC:9;
+EventDispatcher:8;
+MMIHandleKeyPressOne:6;
+MMIUpdateScreen:5;
+RadioAdjustVolume:4;
+RadioHandleTMC:3;
+NavigationDecodeTMC:2

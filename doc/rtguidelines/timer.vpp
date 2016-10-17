@@ -1,0 +1,56 @@
+class Timer
+
+instance variables
+
+currentTime  : nat  := 0;
+active       : bool := false;
+currentAlarm : nat  := 0;
+
+values
+
+stepLength : nat = 100;
+
+thread
+
+periodic(100)(IncTime)
+
+operations
+IncTime: () ==> ()
+IncTime() ==
+  if active
+  then currentTime := currentTime + stepLength;
+
+public Alarm : nat ==> ()
+Alarm(wakeup) ==
+( currentAlarm := wakeup;
+  Start();
+  WaitAlarm());
+
+WaitAlarm : () ==> ()
+WaitAlarm() == Stop();
+
+sync
+
+  per WaitAlarm => currentTime >= currentAlarm;
+
+operations
+
+public Interruption : () ==> ()
+Interruption() ==
+  currentTime := currentAlarm;
+
+Start : () ==> ()
+Start() ==
+( active := true;
+  currentTime := 0);
+
+Stop : () ==> ()
+Stop() ==
+  active := false;
+
+sync
+
+mutex(Start, Interruption, IncTime);
+mutex(Start, Stop);
+
+end Timer

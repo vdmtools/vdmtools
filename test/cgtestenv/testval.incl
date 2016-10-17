@@ -1,0 +1,15 @@
+\begin{vdm_al}
+module YYY
+
+imports
+  from AS all
+
+exports all
+
+definitions
+values
+  ast = 
+#include "vdm.ast"
+
+end YYY
+\end{vdm_al}

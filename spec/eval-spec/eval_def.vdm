@@ -1,0 +1,1601 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Functions and operations which are used in translating the definitions of
+%    a module into semantic values
+% $Id: eval_def.vdm,v 1.54 2006/05/26 01:31:55 vdmtools Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\chapter{Definitions}
+
+The module DEF contains alle functions and operations related to definitions
+translation.
+
+\begin{vdm_al}
+module DEF
+
+  imports 
+    from AS all,
+    from RTERR all,
+    from AUX all,
+    from GLOBAL all,
+#ifdef VDMPP
+    from MANGLE all,
+    from SCHDTP all,
+#endif VDMPP
+
+#ifdef VDMSL
+    from OLD
+      functions
+        OldNameInExpr : AS`Expr -> AS`Expr,
+#endif VDMSL
+    from STATE all,
+    from PAT all,
+    from REP all,
+    from CI all,
+    from STKM all,
+    from CMPL all,
+    from CEXPR all,
+    from CSTMT all,
+    from CPAT all,
+    from INSTR all,
+    from INSTRTP all,
+#ifdef VICE
+    from TIMEPARSER all,
+    from TIMEMAP all,
+#endif VICE
+    from CLASS all,
+    from SEM all
+
+  exports all
+
+definitions
+
+types
+
+FnTuple = (map AS`Name to SEM`CompExplFN) * (map AS`Name to SEM`ExplPOLY);
+
+OpMap = map AS`Name to SEM`ExplOP;
+
+\end{vdm_al}
+\section{Definitions Translation}
+
+#ifdef VDMSL
+\begin{vdm_al}
+operations
+
+TranslateDefinitions: AS`Name * AS`Definitions ==> GLOBAL`SigmaDEFS
+TranslateDefinitions (mod_id, mk_AS`Definitions (tm, vm, fnm, opm, gst, -, -)) ==
+  def mk_(efn, epf) = TransFnMap (mod_id, fnm);
+      eop = TransOpMap (mod_id, opm);
+      recsel = TransTpDefMap(tm);
+  in
+   (dcl sigmadefs : GLOBAL`SigmaDEFS := mk_GLOBAL`SigmaDEFS(efn,eop,epf,tm,recsel,[],nil,nil,nil);
+
+    cases gst:
+      mk_AS`StateDef(tp,-,-,-) -> (if tp.name in set dom recsel
+                                   then RTERR`InitError(RTERR`TYPE_ALREADY_DEF,tp.cid,[])
+                                   else sigmadefs.recsel := recsel munion TransTP({mk_(tp,<PUBLIC_AS>)});
+                                   sigmadefs.tps := sigmadefs.tps ++ GenStateTypeDef (gst);
+                                   sigmadefs.stp_id := tp.name;
+                                   sigmadefs.explfns := sigmadefs.explfns ++ CreateStateInvAndInit(mod_id,gst);
+                                  )
+    end;
+
+    sigmadefs.explfns  := sigmadefs.explfns ++ CreateInvs (mod_id, tm);
+    sigmadefs.explfns  := sigmadefs.explfns ++ CreateOperationPrePostFns (mod_id, opm, gst);
+    sigmadefs.gv_init  := vm;
+    sigmadefs.gs_init  := gst;
+    sigmadefs.stateinv := StateInvariant (gst);
+    return sigmadefs;
+   );
+\end{vdm_al}
+
+The operation $TranslateDefinitions$ translates a definitions block into a
+definitions value. Function and operation definitions are translated into
+semantic function and operation values, the record selectors are created
+for the type definitions, and the pre, post and invariant functions are
+created. If a state is defined, the state type is added to the type
+definitions, and the record selectors are updated.
+#endif VDMSL
+
+
+#ifdef VDMPP
+\begin{vdm_al}
+operations
+ReadClasses: AS`Class ==> map AS`Name to GLOBAL`SigmaClass
+ReadClasses(mk_AS`Class(nm, -, supercls, defs, -, -))== -- VDMRT
+ (dcl sigmacl : GLOBAL`SigmaClass := EmptySigmaClass();
+  CMPL`SetClMod(nm);
+  CMPL`ResetProgramTable(nm);
+     -- TransInheritance must be moved                           
+  sigmacl.inhcon := TransInheritance(supercls);
+  if defs = nil
+  then return { nm |-> sigmacl};
+  let mk_AS`Definitions(typem, valuem, fnm, opm, as_instvars,-,-,-,-) = defs
+  in 
+   (let mk_(instvars, instinv, instvars_tp) = TransInstVars(as_instvars)
+    in
+     (sigmacl.instvars    := instvars;
+      sigmacl.instvars_tp := instvars_tp;
+      -- 20130709
+      --sigmacl.inst_inv := instinv;
+      if instinv <> []
+      then
+       (dcl code : STKM`SubProgram := [];
+        for i = len instinv to 1 by -1 do
+          def cond = CEXPR`E2I(instinv(i).expr)
+          in
+            code := if i = 1
+                    then cond
+                    else CEXPR`ConcIfThenElse(cond, code, [mk_INSTRTP`PUSH(mk_SEM`BOOL(false))]);
+        --sigmacl.inst_inv := code;
+        sigmacl.inst_inv := mk_(instinv, code);
+       )
+      else sigmacl.inst_inv := mk_([], []);
+      sigmacl.inst_init_val := {|->});
+    sigmacl.vls_def  := valuem;
+
+    sigmacl.vls_init := {|->};
+    def mk_(efn, epf) = TransFnMap(nm, fnm) 
+    in 
+     (sigmacl.explfns := efn;
+      sigmacl.explpolys := epf;
+     );
+    def overloaded = TransOverloaded(opm,fnm);
+        eop = TransOpMap(nm, opm)
+    in 
+     (sigmacl.explops := eop;
+      sigmacl.overloaded := overloaded
+     );
+    def prepostfns = CreateOperationPrePostFns(nm, opm, nil)
+    in
+     (sigmacl.explfns := sigmacl.explfns ++ CreateInvs(nm, typem) ++ prepostfns;
+      sigmacl.localtps:= UpdateTypeDefs(typem,CMPL`GetClMod());
+      sigmacl.recsel := TransLocalRecSel(typem) );
+    sigmacl.all_fns_ops_polys := MergeFnsOpsPolys(sigmacl);
+    sigmacl.localhchy := {|->};   
+
+    -- it is important that this call is made after the actual
+    -- semantic values have been installed in the different mappings
+    def m = ExtractStaticMembers(fnm, opm, sigmacl)
+    in sigmacl.statics := { nm |-> let val = m(nm)
+                                   in if is_SEM`CompExplFN(val)
+                                      then mk_(val, (hd val.fl).access)
+                                      else mk_(val, val.access) | nm in set dom m };
+    sigmacl.defaultcons := STATE`GetDefaultCons(nm);
+   );
+  return { nm |-> sigmacl }
+);
+
+functions
+
+EmptySigmaClass: () -> GLOBAL`SigmaClass
+EmptySigmaClass() ==
+  mk_GLOBAL`SigmaClass({},          -- inhcon         : InhCon
+                       [],          -- instvars       : seq of AS`InstAssignDef
+                       {|->},       -- instvars_tp    : map AS`Name to AS`Type
+                       mk_([], []), -- inst_inv       : seq of AS`InstanceInv * STKM`SubProgram
+                       {|->},       -- inst_init_val  : SEM`InsStrct
+                       [],          -- vls_def        : seq of AS`ValueDef
+                       {|->},       -- vls_init       : ValueMap
+                       {|->},       -- explfns        : map AS`Name to SEM`CompExplFN
+                       {|->},       -- explops        : map AS`Name to SEM`ExplOP
+                       {|->},       -- overloaded     : map AS`Name to Overloaded
+                       {|->},       -- explpolys      : map AS`Name to SEM`ExplPOLY
+                       {|->},       -- localtps       : map AS`Name to AS`TypeDef
+                       {|->},       -- recsel         : map AS`Name to RecSel
+                       {|->},       -- localhchy      : map AS`Name to set of AS`Name
+                       false,       -- isinit         : bool
+                       {|->},       -- constructor    : map seq of AS`Type to (STKM`DebugCmd * AS`Access)
+                       false,       -- defaultcons    : bool
+                       {|->},       -- statics        : ValueMap
+                       {|->},       -- statichist     : map AS`Name to SEM`History
+                       {|->},       -- perm_pred      : map AS`Name to STKM`SubProgram
+                       nil,         -- thread         : [STKM`Thread]
+#ifdef VICE
+                       {|->},       -- depnms         : map AS`Name to (<ALL> | set of AS`Name)
+                       {|->},       -- depops         : map AS`Name to set of AS`Name
+                       false,       -- sys            : bool
+#endif VICE
+                       {|->}        -- all_fns_ops_polys : All_Fns_Ops_Polys
+                      );
+
+operations
+
+UpdateConstructors: AS`Name * (seq of AS`Name) * (map AS`Name to AS`OpDef) * seq of AS`InstAssignDef ==>
+                    map seq of AS`Type to (STKM`DebugCmd * AS`Access)
+UpdateConstructors(cls,supercls,opm,instvars) ==
+--  let superlist = if supercls = []
+--                  then []
+--                  else STATE`AllSuperList(1,supercls)
+--  in
+--    CLASS`CreateConstructor(cls,instvars,superlist,opm);
+  if supercls = []
+  then return CLASS`CreateConstructor(cls,instvars,[],opm)
+  else
+    def superlist = STATE`AllSuperList(1,supercls)
+    in return CLASS`CreateConstructor(cls,instvars,superlist,opm);
+\end{vdm_al}
+
+The operation {\em ReadClasses} translates one class into the state.
+The fields {\em inst\_init\_val} (the initial values of instance
+variables), {\em vls\_init} (the values of values) are all assigned to
+an empty value.  These values cannot be computed before all the
+classes in the specification has been read. This is done by the
+operation {\em InitSigma}. The flag {\em isinit} is set to false, the
+flag describes the initialisation of the values and instance variables
+of the class.
+
+\begin{vdm_al}
+functions
+
+  MergeFnsOpsPolys : GLOBAL`SigmaClass -> GLOBAL`All_Fns_Ops_Polys
+  MergeFnsOpsPolys(s) ==
+    --merge { s.explfns, s.explops, s.explpolys };
+   (let explfns = s.explfns
+    in { nm |-> mk_(explfns(nm), (hd explfns(nm).fl).access) | nm in set dom explfns })
+   ++
+   (let explops = s.explops
+    in { nm |-> mk_(explops(nm), explops(nm).access) | nm in set dom explops })
+   ++
+   (let explpolys = s.explpolys
+    in { nm |-> mk_(explpolys(nm), explpolys(nm).access) | nm in set dom explpolys });
+
+operations
+  UpdateTypeDefs: (map AS`Name to AS`TypeDef) * AS`Name ==> map AS`Name to AS`TypeDef
+  UpdateTypeDefs(typem,curcls) ==
+    return
+      {nm |-> mu(typem(nm), shape |-> UpdateType(typem(nm).shape,curcls),
+                            access |-> RealAccess(typem(nm).access,<TP>))
+      | nm in set dom typem};
+
+  UpdateType: AS`Type * AS`Name ==> AS`Type
+  UpdateType(type,curcls) ==
+    cases type :
+      mk_AS`TypeName(nm,ci)             -> if STATE`AClass(nm) 
+                                           then return type
+                                           elseif len nm.ids = 1
+                                           then return mk_AS`TypeName(mk_AS`Name(curcls.ids ^ [hd nm.ids],ci),ci)
+                                           else return type,
+      mk_AS`CompositeType(nm,fields,ci) -> def new_fls = [mu(fields(i),type |-> UpdateType(fields(i).type,curcls))
+                                                           | i in set inds fields]
+                                           in return mk_AS`CompositeType(nm,new_fls,ci),
+      mk_AS`UnionType(typeset,ci)       -> def new_ts = [UpdateType(typeset(i),curcls)| i in set inds typeset]
+                                           in return mk_AS`UnionType(new_ts,ci),
+      mk_AS`ProductType(typeseq,ci)     -> def new_ts = [UpdateType(typeseq(i),curcls)| i in set inds typeseq]
+                                           in return mk_AS`ProductType(new_ts,ci),
+      mk_AS`OptionalType(tp,ci)         -> return mk_AS`OptionalType(UpdateType(tp,curcls),ci),
+      mk_AS`Set0Type(tp,ci)             -> return mk_AS`Set0Type(UpdateType(tp,curcls),ci),
+      mk_AS`Set1Type(tp,ci)             -> return mk_AS`Set1Type(UpdateType(tp,curcls),ci),
+      mk_AS`BracketedType(tp,ci)        -> return mk_AS`BracketedType(UpdateType(tp,curcls),ci),
+      mk_AS`Seq0Type(tp,ci)             -> return mk_AS`Seq0Type(UpdateType(tp,curcls),ci),
+      mk_AS`Seq1Type(tp,ci)             -> return mk_AS`Seq1Type(UpdateType(tp,curcls),ci),
+      mk_AS`GeneralMap0Type(dt,rt,ci)    -> return mk_AS`GeneralMap0Type(UpdateType(dt,curcls), UpdateType(rt,curcls),ci),
+      mk_AS`GeneralMap1Type(dt,rt,ci)    -> return mk_AS`GeneralMap1Type(UpdateType(dt,curcls), UpdateType(rt,curcls),ci),
+      mk_AS`InjectiveMap0Type(dt,rt,ci)  -> return mk_AS`InjectiveMap0Type(UpdateType(dt,curcls), UpdateType(rt,curcls),ci),
+      mk_AS`InjectiveMap1Type(dt,rt,ci)  -> return mk_AS`InjectiveMap1Type(UpdateType(dt,curcls), UpdateType(rt,curcls),ci),
+      mk_AS`PartialFnType(dt,rt,ci)     -> def new_dt = [UpdateType(dt(i),curcls) | i in set inds dt]
+                                           in return mk_AS`PartialFnType(new_dt,UpdateType(rt,curcls),ci),
+      mk_AS`TotalFnType(dt,rt,ci)       -> def new_dt = [UpdateType(dt(i),curcls) | i in set inds dt]
+                                           in return mk_AS`TotalFnType(new_dt,UpdateType(rt,curcls),ci),
+      others                            -> return type
+    end
+\end{vdm_al}
+#endif VDMPP
+
+#ifdef VDMSL
+\begin{vdm_al}
+functions
+
+GenStateTypeDef : AS`StateDef -> map AS`Name to AS`TypeDef
+GenStateTypeDef (mk_AS`StateDef(tp,Inv,-,-)) ==
+  let id = tp.name
+  in
+    { id |-> mk_AS`TypeDef (id, tp, Inv, Default_Tp, id.cid) }
+\end{vdm_al}
+
+This function returns the type definition corresponding to the state type.
+
+\begin{vdm_al}
+operations
+
+StateInvariant : [AS`StateDef] ==> [GLOBAL`StateInv]
+StateInvariant (sd) ==
+  cases sd:
+    nil -> return nil,
+    mk_AS`StateDef (mk_AS`CompositeType (name,fields_lv,-),invariant,-,-) ->
+       cases invariant:
+         nil                        -> return nil,
+         mk_AS`Invariant(pat,exp,-) -> let id_l = [ fields_lv(i).sel | i in set inds fields_lv ]
+                                       in return mk_(name, id_l, pat, exp, CPAT`P2P(pat), CEXPR`E2I(exp))
+       end
+  end;
+\end{vdm_al}
+
+This function returns the invariant for a module state, if the module
+defines a state. Otherwise, a $\Nil$-value is returned.
+#endif VDMSL
+
+#ifdef VDMPP
+\section{Reading Inheritance}
+
+The functions in this section describes the translation of the inheritance
+structure in the {\em SigmaClass} data type.
+
+The function {\em TransInheritance} computes the superclasses of a class.
+
+\begin{vdm_al}
+functions
+TransInheritance: seq of AS`Name  -> GLOBAL`InhCon
+TransInheritance(inh_l) ==
+  elems inh_l;
+\end{vdm_al}
+
+\section{Reading Instance Variables}
+
+The functions in this section describes the translation of instance variabels
+into the {\em SigmaClass} data type. The main function is the function
+{\em TrasnInstVars}.
+
+\begin{vdm_al}
+TransInstVars: seq of AS`InstanceVarDef -> seq of AS`InstAssignDef * seq of AS`InstanceInv * map AS`Name to AS`Type
+TransInstVars(ivar_l) ==
+  let instvars = [ ivar_l(i) | i in set inds ivar_l & is_AS`InstAssignDef(ivar_l(i)) ],
+      instinv  = [ ivar_l(i) | i in set inds ivar_l & is_AS`InstanceInv(ivar_l(i)) ],
+      instvars_tp = { asgndef.ad.var |-> asgndef.ad.tp | asgndef in set elems ivar_l & is_AS`InstAssignDef(asgndef)}
+  in mk_(instvars, instinv, instvars_tp);
+\end{vdm_al}
+
+\section{Extracting Static Member Declarations}
+
+Static members inside classes must be available at any time (even if there does 
+not exists any instances of a class). The \texttt{ExtractStaticMembers} operation
+extract the statically declared function and operations from a class. This means 
+that more references to such semantic entities will be present at a given time.
+
+\begin{vdm_al}
+operations
+
+ExtractStaticMembers: map AS`Name to AS`FnDef * map AS`Name to AS`OpDef * GLOBAL`SigmaClass ==> 
+                      map AS`Name to (SEM`CompExplFN | SEM`ExplPOLY | SEM`ExplOP)
+ExtractStaticMembers(fnm, opm, sigma) ==
+ (dcl statmap : map AS`Name to SEM`VAL := {|->};
+
+  for all fnnm in set dom fnm do
+    if fnm(fnnm).stat
+    then
+     (statmap(fnnm) := LookUpLocalFn(fnnm,sigma);
+      if fnm(fnnm).fnpre <> nil
+      then
+        let prenm = AUX`PreName(fnnm)
+        in statmap(prenm) := LookUpLocalFn(prenm,sigma);
+      if fnm(fnnm).fnpost <> nil
+      then
+        let postnm = AUX`PostName(fnnm)
+        in statmap(postnm) := LookUpLocalFn(postnm,sigma)
+     );
+
+  for all opnm in set dom opm do
+    if opm(opnm).stat
+    then statmap(opnm) := sigma.explops(opnm);
+
+  return statmap
+ );
+
+functions
+LookUpLocalFn: AS`Name * GLOBAL`SigmaClass -> (SEM`CompExplFN | SEM`ExplPOLY)
+LookUpLocalFn(fnnm, sigma) ==
+  cases true:
+    (fnnm in set dom sigma.explfns)   -> sigma.explfns(fnnm),
+    (fnnm in set dom sigma.explpolys) -> sigma.explpolys(fnnm),
+    others                            -> undefined
+  end;
+\end{vdm_al}
+
+\section{Reading Types}
+
+The function {\em TransLocalRecSel} computes all the Local Record
+Selector Type information.
+\begin{vdm_al}
+functions
+TransLocalRecSel: map AS`Name to AS`TypeDef -> map AS`Name to GLOBAL`RecSel
+TransLocalRecSel(tpdefs) == 
+  --TransTP({mk_(shape,RealAccess(access,<TP>)) | mk_AS`TypeDef(-,shape,-,access,-) in set rng tpdefs});
+  TransTP({mk_(shape,access) | mk_AS`TypeDef(-,shape,-,access,-) in set rng tpdefs});
+\end{vdm_al}
+#endif VDMPP
+
+\begin{vdm_al}
+operations
+
+TransFnMap: AS`Name * map AS`Name to AS`FnDef ==> FnTuple
+TransFnMap(mod_id, fnm) ==
+ (dcl efn : map AS`Name to SEM`CompExplFN := { |-> },
+      epf : map AS`Name to SEM`ExplPOLY := { |-> };
+  for all id in set dom fnm do
+    def FNval = TransFN(mod_id, fnm(id))
+    in
+      cases true:
+        (is_SEM`CompExplFN(FNval)) ->  efn := efn ++ {id |-> FNval}
+                                                  ++ CreatePrePostFns(mod_id, fnm(id),id),
+        (is_SEM`ExplPOLY(FNval))   ->  epf := epf ++ {id |-> FNval}
+                                                  ++ CreatePolyPrePostFns(mod_id,fnm(id),id)
+      end;
+  return mk_(efn, epf)
+ );
+\end{vdm_al}
+
+This operation translates all function definitions into semantic function
+values. It also creates the pre and/or post predicate functions for the
+function definitions.
+
+\begin{vdm_al}
+operations
+
+TransFN: AS`Name * AS`FnDef ==> SEM`FN | SEM`POLY
+TransFN(mod_id, fn) ==
+  cases true:
+    (is_AS`ExplFnDef(fn))    -> TransExplFN(mod_id, fn),
+    (is_AS`ExtExplFnDef(fn)) -> TransExtExplFN(mod_id, fn),
+    (is_AS`ImplFnDef(fn))    -> TransImplFN(mod_id, fn),
+    others -> error
+  end;
+
+TransExplFN : AS`Name * AS`ExplFnDef ==> SEM`FN | SEM`POLY
+TransExplFN(mod_id, fn_def) ==
+  let mk_AS`ExplFnDef(nm,ttp,tp,parms_l,-,-,-,access,-,-,-) = fn_def
+  in
+    def pi_l = [CPAT`PL2PL(parms_l(j)) | j in set inds parms_l];
+        instr = CMPL`CompileFnOpDef(fn_def);
+    in
+      if ttp = []
+      then return SEM`CompFN(mk_SEM`ExplFN(tp, pi_l, instr,
+                                           AUX`MkEmptyBlkEnv(<READ_ONLY>),
+                                           { |-> }, nm, mod_id,false,nil, RealAccess(access,<FN>)))
+      else return mk_SEM`ExplPOLY(ttp, tp, pi_l, instr,
+                                  AUX`MkEmptyBlkEnv(<READ_ONLY>),
+                                  nm, mod_id, nil, RealAccess(access,<FN>));
+
+TransImplFN : AS`Name * AS`ImplFnDef ==> SEM`FN | SEM`POLY
+TransImplFN(mod_id, fn_def) ==
+  let mk_AS`ImplFnDef(nm,ttp,parml,resnmtps,-,-,access,-,-) = fn_def
+  in
+    def mk_(fndom,parms) = ImplicitTypeParams(parml);
+        fnrng = ImplicitResType(resnmtps);
+        tp = mk_AS`TotalFnType(fndom,fnrng,CI`NilContextId);
+        pi_l = CPAT`PL2PL(parms);
+        instr = CMPL`CompileFnOpDef(fn_def);
+    in
+      if ttp = []
+      then return SEM`CompFN(mk_SEM`ExplFN(tp, [pi_l], instr,
+                                           AUX`MkEmptyBlkEnv(<READ_ONLY>),
+                                           { |-> }, nm, mod_id,true, nil, RealAccess(access,<FN>)))
+      else return mk_SEM`ExplPOLY(ttp, tp, [pi_l], instr,
+                                  AUX`MkEmptyBlkEnv(<READ_ONLY>), nm, 
+                                  mod_id, nil, RealAccess(access,<FN>));
+
+TransExtExplFN : AS`Name * AS`ExtExplFnDef ==> SEM`FN | SEM`POLY
+TransExtExplFN(mod_id, fn_def) ==
+  let mk_AS`ExtExplFnDef(nm,ttp,parml,resnmtps,-,-,-,access,-,-,-) = fn_def
+  in
+    def mk_(fndom,parms) = ImplicitTypeParams(parml);
+        fnrng = ImplicitResType(resnmtps);
+        tp = mk_AS`TotalFnType(fndom,fnrng,CI`NilContextId);
+        pi_l = CPAT`PL2PL(parms);
+        instr = CMPL`CompileFnOpDef(fn_def);
+    in
+      if ttp = []
+      then return SEM`CompFN(mk_SEM`ExplFN(tp, [pi_l], instr,
+                                           AUX`MkEmptyBlkEnv(<READ_ONLY>),
+                                           { |-> }, nm, mod_id,false, nil, RealAccess(access,<FN>)))
+      else return mk_SEM`ExplPOLY(ttp, tp, [pi_l], instr,
+                                  AUX`MkEmptyBlkEnv(<READ_ONLY>), nm, 
+                                  mod_id, nil, RealAccess(access,<FN>));
+\end{vdm_al}
+
+This operation translates a single function definition into a semantic
+function value. Note that the initial closure environment is empty, and, in
+case of explicit non-polymorphic functions, the type instantiation map is
+also empty.
+
+\section{Creating Pre and Post Functions}
+
+\begin{vdm_al}
+operations
+
+CreatePrePostFns: AS`Name * AS`FnDef * AS`Name ==> map AS`Name to SEM`CompExplFN
+CreatePrePostFns (mod_id, fndef,overloadnm) ==
+  cases true:
+    (is_AS`ExplFnDef (fndef))    -> CreateExplPrePostFns (mod_id, fndef, overloadnm),
+    (is_AS`ExtExplFnDef (fndef)) -> CreateExtExplPrePostFns (mod_id, fndef, overloadnm),
+    (is_AS`ImplFnDef (fndef))    -> CreateImplPrePostFns (mod_id, fndef, overloadnm),
+    others -> error
+  end;
+\end{vdm_al}
+
+
+
+\begin{vdm_al}
+operations
+CreateExplPrePostFns: AS`Name * AS`ExplFnDef * AS`Name ==> map AS`Name to SEM`CompExplFN
+CreateExplPrePostFns (mod_id, mk_AS`ExplFnDef (name, -,tp,parms,-,Pre_e,Post_e,access,-,-,-),overloadnm) ==
+ (dcl res_m : map AS`Name to SEM`CompExplFN := { |-> };
+
+  if Pre_e = nil
+  then skip
+  else def nid = CI`NilContextId;
+           nm_pre = AUX`PreName(overloadnm);
+           bt = mk_AS`BooleanType (nid);
+           pi_l = CPAT`PL2PL(hd parms);
+           fn_pre = SEM`CompFN(mk_SEM`ExplFN (mk_AS`TotalFnType (tp.fndom,bt,nid),
+                                              [pi_l],
+                                              CMPL`CompilePrePostExpr(Pre_e),
+                                              AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                              { |-> }, nm_pre, mod_id,false, nil,
+                                              RealAccess(access,<FN>)))
+       in
+         res_m := res_m ++ { nm_pre |-> fn_pre };
+
+  if Post_e = nil
+  then skip
+  else def mk_AS`Name(-, cid) = name;
+           nm_post   = AUX`PostName(overloadnm);
+           tp_post   = CreateFunctionPostType (tp.fndom, [tp.fnrng]);
+           parm_post = CPAT`PL2PL(hd parms) ^ [mk_STKM`PatternName(mk_AS`Name(["RESULT"],cid),nil,cid)];
+           fn_post = SEM`CompFN(mk_SEM`ExplFN (tp_post,
+                                               [ parm_post ],
+                                               CMPL`CompilePrePostExpr(Post_e),
+                                               AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                               { |-> }, nm_post, mod_id,false,nil,
+                                               RealAccess(access,<FN>)))
+       in
+         res_m := res_m ++ { nm_post |-> fn_post };
+  return res_m
+ );
+\end{vdm_al}
+
+\begin{vdm_al}
+operations
+
+CreateExtExplPrePostFns: AS`Name * AS`ExtExplFnDef * AS`Name ==> map AS`Name to SEM`CompExplFN
+CreateExtExplPrePostFns (mod_id, mk_AS`ExtExplFnDef(-,-,parml,resnmtps,-,Pre_e,Post_e,access,-,-,-),overloadnm) ==
+  let mk_(fndom,parms) = ImplicitTypeParams(parml),
+      mk_(resnms,restps) = ImplicitResNameTypes(resnmtps)
+  in
+   (dcl res_m : map AS`Name to SEM`CompExplFN := { |-> };
+
+    if Pre_e = nil
+    then skip
+    else def nid = CI`NilContextId;
+             nm_pre  = AUX`PreName(overloadnm);
+             pi_l = CPAT`PL2PL(parms);
+             fn_pre = SEM`CompFN(mk_SEM`ExplFN (mk_AS`TotalFnType (fndom, mk_AS`BooleanType (nid),nid),
+                                                [ pi_l ],
+                                                CMPL`CompilePrePostExpr(Pre_e),
+                                                AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                                { |-> }, nm_pre, mod_id,false,nil,
+                                                RealAccess(access,<FN>)))
+         in
+           res_m := res_m ++ { nm_pre |-> fn_pre };
+
+    if Post_e = nil
+    then skip
+    else def p_res = CreatePostParms(resnms);
+             nm_post   = AUX`PostName(overloadnm);
+             tp_post   = CreateFunctionPostType (fndom, restps);
+             parm_post = CPAT`PL2PL(parms) ^ CPAT`PL2PL(p_res);
+             fn_post = SEM`CompFN(mk_SEM`ExplFN (tp_post,
+                                                 [ parm_post ],
+                                                 CMPL`CompilePrePostExpr(Post_e),
+                                                 AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                                 { |-> }, nm_post, mod_id,false,nil,
+                                                 RealAccess(access,<FN>)))
+         in
+           res_m := res_m ++ { nm_post |-> fn_post };
+    return res_m
+  )
+
+\end{vdm_al}
+
+This operation creates the semantic function values for the pre and/or post
+predicate functions for a non-polymorphic implicit function definition.
+
+\begin{vdm_al}
+operations
+
+CreateImplPrePostFns: AS`Name * AS`ImplFnDef * AS`Name ==> map AS`Name to SEM`CompExplFN
+CreateImplPrePostFns (mod_id, mk_AS`ImplFnDef(-,-,parml,resnmtps,Pre_e,Post_e,access,-,-),overloadnm) ==
+  let mk_(fndom,parms) = ImplicitTypeParams(parml),
+      mk_(resnms,restps) = ImplicitResNameTypes(resnmtps)
+  in
+   (dcl res_m : map AS`Name to SEM`CompExplFN := { |-> };
+
+    if Pre_e = nil
+    then skip
+    else def nid = CI`NilContextId;
+             nm_pre  = AUX`PreName(overloadnm);
+             pi_l = CPAT`PL2PL(parms);
+             fn_pre = SEM`CompFN(mk_SEM`ExplFN (mk_AS`TotalFnType (fndom, mk_AS`BooleanType (nid),nid),
+                                                [ pi_l ],
+                                                CMPL`CompilePrePostExpr(Pre_e),
+                                                AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                                { |-> }, nm_pre, mod_id,false,nil,
+                                                RealAccess(access,<FN>)))
+         in
+           res_m := res_m ++ { nm_pre |-> fn_pre };
+
+    def p_res = CreatePostParms(resnms);
+        nm_post   = AUX`PostName(overloadnm);
+        tp_post   = CreateFunctionPostType (fndom, restps);
+        parm_post = CPAT`PL2PL(parms) ^ CPAT`PL2PL(p_res);
+        fn_post = SEM`CompFN(mk_SEM`ExplFN (tp_post,
+                                            [ parm_post ],
+                                            CMPL`CompilePrePostExpr(Post_e),
+                                            AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                            { |-> }, nm_post, mod_id,false,nil,
+                                            RealAccess(access,<FN>)))
+    in
+      res_m := res_m ++ { nm_post |-> fn_post };
+    return res_m
+  )
+\end{vdm_al}
+
+\begin{vdm_al}
+functions
+
+CreatePostParms: seq of AS`Name +> seq of AS`Pattern
+CreatePostParms(resnms) ==
+  cases resnms:
+    []     -> [],
+    [nm]   -> [mk_AS`PatternName(nm,nil,nm.cid)],
+    others -> [mk_AS`TuplePattern([ mk_AS`PatternName (resnms(i),nil,resnms(i).cid)
+                             | i in set inds resnms ],(hd resnms).cid)]
+  end;
+\end{vdm_al}
+
+Toghether these two operations return the semantic function values for
+the pre and/or post predicate functions for a non-polymorphic explicit
+or extended explicit function definition.  Both the closure
+environment and the type instantiation map are empty.
+
+\begin{vdm_al}
+
+operations
+
+CreatePolyPrePostFns: AS`Name * AS`FnDef * AS`Name ==> map AS`Name to SEM`ExplPOLY
+CreatePolyPrePostFns (mod_id,fndef,overloadnm) ==
+  cases true:
+    (is_AS`ExplFnDef (fndef))    -> CreateExplPolyPrePostFns (mod_id, fndef, overloadnm),
+    (is_AS`ExtExplFnDef (fndef)) -> CreateExtExplPolyPrePostFns (mod_id, fndef, overloadnm),
+    (is_AS`ImplFnDef (fndef))    -> CreateImplPolyPrePostFns (mod_id, fndef, overloadnm),
+    others -> error
+  end;
+\end{vdm_al}
+
+\begin{vdm_al}
+operations
+
+CreateExplPolyPrePostFns: AS`Name * AS`ExplFnDef * AS`Name ==> map AS`Name to SEM`ExplPOLY
+CreateExplPolyPrePostFns (mod_id, mk_AS`ExplFnDef (-, ttp, tp, parms, -, Pre_e, Post_e, access, -, -, -),
+                            overloadnm) ==
+ (dcl res_m : map AS`Name to SEM`ExplPOLY := { |-> };
+
+  if Pre_e = nil
+  then skip
+  else def nid = CI`NilContextId;
+           nm_pre  = AUX`PreName(overloadnm);
+           pi_l = [CPAT`PL2PL(parms(j)) | j in set inds parms];
+           fn_pre = mk_SEM`ExplPOLY (ttp,
+                                     mk_AS`TotalFnType (tp.fndom, mk_AS`BooleanType (nid),nid),
+                                     pi_l,
+                                     CMPL`CompilePrePostExpr(Pre_e),
+                                     AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                     nm_pre,
+                                     mod_id,nil,RealAccess(access, <FN>))
+       in
+         res_m := res_m ++ { nm_pre |-> fn_pre };
+
+  if Post_e = nil
+  then skip
+  else def nid = CI`NilContextId;
+           nm_post   = AUX`PostName(overloadnm);
+           tp_post   = CreateFunctionPostType (tp.fndom, [tp.fnrng]);
+           parm_post = CPAT`PL2PL(hd parms) ^ [mk_STKM`PatternName(mk_AS`Name(["RESULT"],nid),nil,nid)];
+           fn_post = mk_SEM`ExplPOLY (ttp,
+                                      tp_post,
+                                      [ parm_post ],
+                                      CMPL`CompilePrePostExpr(Post_e),
+                                      AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                      nm_post,
+                                      mod_id,nil,RealAccess(access, <FN>))
+       in
+         res_m := res_m ++ { nm_post |-> fn_post };
+  return res_m
+)
+\end{vdm_al}
+
+\begin{vdm_al}
+operations
+
+CreateExtExplPolyPrePostFns: AS`Name * AS`ExtExplFnDef * AS`Name ==> map AS`Name to SEM`ExplPOLY
+CreateExtExplPolyPrePostFns (mod_id, mk_AS`ExtExplFnDef(-,ttp,parml,resnmtps,-,Pre_e,Post_e,access,-,-,-),
+                             overloadnm) ==
+  let mk_(fndom,parms) = ImplicitTypeParams(parml),
+      mk_(resnms,restps) = ImplicitResNameTypes(resnmtps)
+  in
+   (dcl res_m : map AS`Name to SEM`ExplPOLY := { |-> };
+
+    if Pre_e = nil
+    then skip
+    else def nid = CI`NilContextId;
+             nm_pre = AUX`PreName(overloadnm);
+             pi_l = CPAT`PL2PL(parms);
+             fn_pre = mk_SEM`ExplPOLY (ttp,
+                                       mk_AS`TotalFnType (fndom, mk_AS`BooleanType (nid),nid),
+                                       [ pi_l ],
+                                       CMPL`CompilePrePostExpr(Pre_e),
+                                       AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                       nm_pre,
+                                       mod_id,nil,RealAccess(access,<FN>))
+         in
+           res_m := res_m ++ { nm_pre |-> fn_pre };
+
+    if Post_e = nil
+    then skip
+    else def res_p = CreatePostParms(resnms);
+             nm_post = AUX`PostName(overloadnm);
+             tp_post = CreateFunctionPostType (fndom, restps);
+             parm_post =  CPAT`PL2PL(parms) ^ CPAT`PL2PL(res_p);
+             fn_post = mk_SEM`ExplPOLY (ttp,
+                                        tp_post,
+                                        [ parm_post ],
+                                        CMPL`CompilePrePostExpr(Post_e),
+                                        AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                        nm_post,
+                                        mod_id,nil,RealAccess(access,<FN>))
+         in
+           res_m := res_m ++ { nm_post |-> fn_post };
+  return res_m
+ );
+\end{vdm_al}
+
+This operation creates the semantic function values for the pre and/or post
+predicate functions for an explicit polymorphic function definitions.
+
+\begin{vdm_al}
+operations
+
+CreateImplPolyPrePostFns: AS`Name * AS`ImplFnDef * AS`Name ==> map AS`Name to SEM`ExplPOLY
+CreateImplPolyPrePostFns (mod_id, 
+                               mk_AS`ImplFnDef(-, ttp, parml, resnmtps, Pre_e, Post_e,access,
+                                                  -, -),overloadnm) ==
+  let mk_(fndom,parms) = ImplicitTypeParams(parml),
+      mk_(resnms,restps) = ImplicitResNameTypes(resnmtps)
+  in
+   (dcl res_m : map AS`Name to SEM`ExplPOLY := { |-> };
+
+    if Pre_e = nil
+    then skip
+    else def nid = CI`NilContextId;
+             nm_pre = AUX`PreName(overloadnm);
+             pi_l = CPAT`PL2PL(parms);
+             fn_pre = mk_SEM`ExplPOLY (ttp,
+                                       mk_AS`TotalFnType (fndom, mk_AS`BooleanType (nid),nid),
+                                       [ pi_l ],
+                                       CMPL`CompilePrePostExpr(Pre_e),
+                                       AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                       nm_pre,
+                                       mod_id,nil,RealAccess(access,<FN>))
+         in
+           res_m := res_m ++ { nm_pre |-> fn_pre };
+
+    def res_p = CreatePostParms(resnms);
+        nm_post = AUX`PostName(overloadnm);
+        tp_post = CreateFunctionPostType (fndom, restps);
+        parm_post =  CPAT`PL2PL(parms) ^ CPAT`PL2PL(res_p);
+        fn_post = mk_SEM`ExplPOLY (ttp,
+                                   tp_post,
+                                   [ parm_post ],
+                                   CMPL`CompilePrePostExpr(Post_e),
+                                   AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                   nm_post,
+                                   mod_id,nil,RealAccess(access,<FN>))
+    in
+      res_m := res_m ++ { nm_post |-> fn_post };
+  return res_m
+ );
+\end{vdm_al}
+
+This operation returns the semantic function values for the pre and/or post
+predicate functions for an implicit polymorphic function definition.
+
+\begin{vdm_al}
+functions
+
+ImplicitTypeParams : AS`ParameterTypes +> AS`DiscretionaryType * AS`Parameters
+ImplicitTypeParams (partps) ==
+  cases partps:
+    []     -> mk_([], []),
+    others -> let tp_l = conc [ let mk_AS`PatTypePair (pat_l,tp,-) = partps(j)
+                                in [ tp | - in set inds pat_l ] | j in set inds partps ],
+                  parm_l = conc [ let mk_AS`PatTypePair (pat_l,-,-) = partps(j)
+                                  in [ pat_l(i) | i in set inds pat_l ] | j in set inds partps ]
+              in mk_(tp_l,parm_l)
+  end;
+\end{vdm_al}
+
+This operation converts the pattern/type pairs of an implicit function or
+operation definition into a type and a sequence. The sequence contains all
+the patterns defined, and the type is the domain type of the function or
+operation.
+
+\begin{vdm_al}
+functions
+
+ImplicitResNameTypes: seq of AS`NameType +> seq of AS`Name * seq of AS`Type
+ImplicitResNameTypes(resnmtps) ==
+  cases resnmtps:
+    []     -> mk_([],[]),
+    others -> let nm_l = [ resnmtps(i).nm | i in set inds resnmtps ],
+                  tp_l = [ resnmtps(i).tp | i in set inds resnmtps ]
+              in mk_(nm_l, tp_l)
+  end;
+\end{vdm_al}
+
+This operation converts the result name/types of an implicit or
+extended explicit function/operation into a sequence of name and a
+type. If there is only one name/type this type is returned, if there
+is more than one type these are combined in an AS`ProductType.
+
+
+\begin{vdm_al}
+functions
+
+ImplicitResType: seq of AS`NameType +> AS`Type
+ImplicitResType(resnmtps) ==
+  let nid = CI`NilContextId
+  in 
+    cases resnmtps:
+      []                        -> mk_AS`VoidType(nid),
+      [mk_AS`NameType(-,tp,-)]  -> tp,
+      others                    -> let tp_l = [ resnmtps(i).tp | i in set inds resnmtps ]
+                                   in mk_AS`ProductType(tp_l, nid)
+    end;
+\end{vdm_al}
+
+This operation converts the result types of an implicit or extended
+explicit function/operation into a type: if the sequence has one
+element into this type, if it has more than one element into a product type.
+
+\begin{vdm_al}
+functions
+
+CreateFunctionPostType : AS`DiscretionaryType * AS`DiscretionaryType +> AS`Type
+CreateFunctionPostType (tpdom, tprng) ==
+  let nid = CI`NilContextId,
+      realrng = if len tprng <= 1
+                then tprng
+                else [mk_AS`ProductType(tprng,(hd tprng).cid)]
+  in
+    mk_AS`TotalFnType (tpdom ^ realrng, mk_AS`BooleanType (nid),nid)
+\end{vdm_al}
+
+This operation returns the type of a post predicate function in a function definition.
+
+\begin{vdm_al}
+functions
+
+CreateOperationPreType : AS`DiscretionaryType * [AS`Name] +> AS`Type
+CreateOperationPreType (tpdom, st_id) ==
+  let nid = CI`NilContextId,
+      btp = mk_AS`BooleanType (nid),
+      sttp = if st_id = nil
+             then []
+             else [mk_AS`TypeName (st_id,st_id.cid)]
+  in
+    mk_AS`TotalFnType (tpdom ^ sttp,btp,nid);
+\end{vdm_al}
+
+This operation returns the type of a pre predicate function in an operation definition.
+
+\begin{vdm_al}
+functions
+
+CreateOperationPostType : AS`DiscretionaryType * AS`DiscretionaryType * [AS`Name] +> AS`Type
+CreateOperationPostType (tpdom, tprng, st_id) ==
+  let nid = CI`NilContextId,
+      btp = mk_AS`BooleanType (nid),
+      realtprng = cases tprng:
+                    []     -> [],
+                    [-]    -> tprng,
+                    others -> [mk_AS`ProductType(tprng,(hd tprng).cid)]
+                  end,
+      sttp = if st_id = nil
+             then []
+             else let st_tp = mk_AS`TypeName (st_id,st_id.cid)
+                  in [st_tp,st_tp]
+  in 
+    mk_AS`TotalFnType (tpdom ^ realtprng ^ sttp,btp,nid);
+\end{vdm_al}
+
+This operation returns the type of the post predicate function for an
+operation definition.
+
+\begin{vdm_al}
+operations
+
+#ifdef VDMPP
+
+TransOverloaded: (map AS`Name to AS`OpDef) * (map AS`Name to AS`FnDef) ==> map AS`Name to GLOBAL`Overloaded
+TransOverloaded(opm,fnm) ==
+  (dcl over : map AS`Name to GLOBAL`Overloaded := {|->};
+
+   for all id in set dom opm union dom fnm do
+     if MANGLE`IsMangled(id)
+     then
+       def mk_(realid,arit,tp_l) = MANGLE`UnMangle(id);
+            acc = if id in set dom opm 
+                  then opm(id).access
+                  else fnm(id).access;
+            overload = if realid in set dom over
+                       then over(realid) ++
+                            if arit in set dom over(realid)
+                            then {arit |-> over(realid)(arit) ++ {id |-> mk_(tp_l,acc,nil)}}
+                            else {arit |-> {id |-> mk_(tp_l,acc,nil)}}
+                       else {arit |-> {id |-> mk_(tp_l,acc,nil)}}
+        in
+          (over := over ++ {realid |-> overload};
+           if id in set dom fnm and fnm(id).fnpre <> nil
+           then over := over ++ {AUX`PreName(realid) |->
+                                 let m = if AUX`PreName(realid) in set dom over
+                                         then over(AUX`PreName(realid))
+                                         else {|->}
+                                 in
+                                 m ++
+                                 {arit |-> 
+                                    {AUX`PreName(id) |-> overload(arit)(id)
+                                    | id in set dom overload(arit)}
+                                 | arit in set dom overload}
+                                 };
+           if id in set dom fnm and fnm(id).fnpost <> nil
+           then over := over ++ {AUX`PostName(realid) |-> 
+                                 let m = if AUX`PostName(realid) in set dom over
+                                         then over(AUX`PostName(realid))
+                                         else {|->}
+                                 in
+                                 m ++
+                                 {arit + 1 |->
+                                    {AUX`PostName(id) |-> 
+                                     let mk_(t,acc,-) = overload(arit)(id),
+                                         restp = if is_AS`ExplFnDef(fnm(id))
+                                                 then [fnm(id).tp.fnrng]
+                                                 else let nl = fnm(id).resnmtps
+                                                      in
+                                                        [nl(i).tp | i in set inds nl]
+                                     in
+                                       mk_(CreateFunctionPostType(t,restp).fndom,acc)
+                                    | id in set dom overload(arit)}
+                                 | arit in set dom overload}
+                                };
+          );
+   return over); 
+#endif VDMPP
+
+TransOpMap: AS`Name * map AS`Name to AS`OpDef ==> OpMap
+TransOpMap(mod_id, opm) ==
+ (dcl eop : map AS`Name to SEM`ExplOP := { |-> };
+  for all id in set dom opm do
+    def OPval = TransOP(mod_id, opm(id))
+    in
+      cases true:
+        (is_SEM`ExplOP(OPval)) -> eop := eop ++ { id |-> OPval }
+      end;
+  return eop
+ );
+\end{vdm_al}
+
+The operation $TransOpMap$ creates for all the operation definitions the
+corresponding semantic operation values.
+
+\begin{vdm_al}
+operations
+
+TransOP: AS`Name * AS`OpDef ==> SEM`OP
+TransOP(mod_id, op) ==
+  cases true:
+    (is_AS`ExplOpDef(op))    -> TransExplOP(mod_id, op),
+    (is_AS`ExtExplOpDef(op)) -> TransExtExplOP(mod_id, op),
+    (is_AS`ImplOpDef(op))    -> TransImplOP(mod_id, op),
+    others -> error
+  end;
+
+TransExplOP: AS`Name * AS`ExplOpDef ==> SEM`OP
+TransExplOP(mod_id, op) ==
+  let mk_AS`ExplOpDef(nm,oppure,sync,tp,parms,-,-,-,access,-,-,-) = op
+  in
+    def pi_l = CPAT`PL2PL(parms)
+    in
+      return mk_SEM`ExplOP(tp,oppure,sync,nil,pi_l,CMPL`CompileFnOpDef(op),
+                           nm,mod_id,false,nil,RealAccess(access,<OP>));
+
+TransImplOP: AS`Name * AS`ImplOpDef ==> SEM`OP
+TransImplOP(mod_id, op) ==
+  let mk_AS`ImplOpDef(nm,oppure,sync,parml,resnmtps,-,-,-,-,access,-,-,-)  = op
+  in
+    def mk_(opdom,parms) = ImplicitTypeParams(parml);
+        oprng = ImplicitResType(resnmtps);
+        tp = mk_AS`OpType(opdom,oprng,CI`NilContextId);
+        pi_l = CPAT`PL2PL(parms);
+    in 
+      return mk_SEM`ExplOP(tp,oppure,sync,nil,pi_l,CMPL`CompileFnOpDef(op),
+                           nm,mod_id,true,nil,RealAccess(access,<OP>));
+
+TransExtExplOP: AS`Name * AS`ExtExplOpDef ==> SEM`OP
+TransExtExplOP(mod_id, op) ==
+  let mk_AS`ExtExplOpDef(nm,oppure,sync,parml,resnmtps,-,-,-,-,-,access,-,-,-) = op
+  in
+    def mk_(opdom,parms) = ImplicitTypeParams(parml);
+        oprng = ImplicitResType(resnmtps);
+        tp = mk_AS`OpType(opdom,oprng,CI`NilContextId);
+        pi_l = CPAT`PL2PL(parms);
+    in 
+      return mk_SEM`ExplOP(tp,oppure,sync,nil,pi_l,CMPL`CompileFnOpDef(op),
+                           nm,mod_id,false,nil,RealAccess(access,<OP>));
+
+\end{vdm_al}
+
+This operation translates an operation definition into a semantic operation value.
+
+\begin{vdm_al}
+operations
+
+CreateOperationPrePostFns : AS`Name * (map AS`Name to AS`OpDef) * [AS`StateDef] ==> 
+                            map AS`Name to SEM`CompExplFN
+CreateOperationPrePostFns (mod_id, opm, gst) ==
+ (dcl res_m : map AS`Name to SEM`CompExplFN := { |-> };
+  for all id in set dom opm do
+    let op_def = opm(id)
+    in
+      cases true:
+        (is_AS`ExplOpDef(op_def))    -> res_m := res_m ++ CreateExplOpFns(mod_id, op_def, gst),
+        (is_AS`ExtExplOpDef(op_def)) -> res_m := res_m ++ CreateExtExplOpFns(mod_id, op_def, gst),
+        (is_AS`ImplOpDef(op_def))    -> res_m := res_m ++ CreateImplOpFns (mod_id, op_def, gst),
+        others -> error
+      end;
+  return res_m;
+ );
+\end{vdm_al}
+
+This operation creates for all operation definitions the semantic function
+values for the pre and/or post predicate functions.
+
+\begin{vdm_al}
+functions
+
+CreateOperationPreParms : AS`Parameters * [AS`StateDef] +> AS`ParametersList
+CreateOperationPreParms (parm, gst) ==
+  cases gst:
+    mk_AS`StateDef(tp,-,-,-) -> let sigma_parm = CreateSigmaPattern (tp, false)
+                                in [ parm ^ [ sigma_parm ] ],
+    nil                      -> [ parm ],
+    others                   -> undefined
+  end;
+\end{vdm_al}
+
+This operation returns the parameters for the pre predicate function of an
+operation definition.
+
+\begin{vdm_al}
+functions
+       
+CreateExplOperationPostParms : AS`Parameters * AS`DiscretionaryType * [AS`StateDef] +> AS`ParametersList
+CreateExplOperationPostParms (parm, resnmtps, gst) ==
+  let nid = CI`NilContextId,
+      res_parm = if resnmtps = []
+                 then []
+                 else [ mk_AS`PatternName(mk_AS`Name(["RESULT"],nid),nil,nid) ]
+  in
+    cases gst:
+      nil                      -> [ parm ^ res_parm ],
+      mk_AS`StateDef(tp,-,-,-) -> let sigma_old = CreateSigmaPattern (tp, true),
+                                      sigma_res = CreateSigmaPattern (tp, false)
+                                  in [ parm ^ res_parm ^ [ sigma_old, sigma_res ] ],
+      others                   -> undefined
+    end;
+\end{vdm_al}
+
+This operation returns the parameters for the post predicate function of an
+explicit operation definition.
+
+
+\begin{vdm_al}
+functions
+       
+CreateExtExplOperationPostParms : AS`Parameters * seq of AS`Name* [AS`StateDef] +> AS`ParametersList
+CreateExtExplOperationPostParms (parm, resnms, gst) ==
+  let res_parm = CreatePostParms(resnms)
+  in
+    cases gst:
+      nil                      -> [ parm ^ res_parm ],
+      mk_AS`StateDef(tp,-,-,-) -> let sigma_old = CreateSigmaPattern (tp, true),
+                                      sigma_res = CreateSigmaPattern (tp, false)
+                                  in [ parm ^ res_parm ^ [ sigma_old, sigma_res ] ]
+    end;
+\end{vdm_al}
+
+This operation returns the parameters for the post predicate function of an
+explicit operation definition.
+
+
+\begin{vdm_al}
+functions
+
+CreateImplOperationPostParms : AS`Parameters * seq of AS`Name * [AS`StateDef] +> AS`ParametersList
+CreateImplOperationPostParms (parm, resnms, gst) ==
+  let res_parm = CreatePostParms(resnms)
+  in
+    cases gst:
+      nil                      -> [ parm ^ res_parm ],
+      mk_AS`StateDef(tp,-,-,-) -> let sigma_old = CreateSigmaPattern (tp, true),
+                                      sigma_res = CreateSigmaPattern (tp, false)
+                                  in [ parm ^ res_parm ^ [ sigma_old, sigma_res ] ]
+    end;
+\end{vdm_al}
+
+This operation returns the parameters for the post predicate function of an
+explicit operation definition.
+
+\begin{vdm_al}
+functions
+
+CreateSigmaPattern : AS`CompositeType * bool +> AS`RecordPattern
+CreateSigmaPattern (mk_AS`CompositeType (tag,fields,cid), old_names) ==
+  let rec_l = [ let mk_AS`Field (sel,-,-,cid2) = fields(i)
+                in cases sel:
+                     nil    -> mk_AS`PatternName (nil,nil,cid2),
+                     mk_AS`Name(sel_id,cid3) -> let sel_id' = if old_names
+                                                              then sel_id(1) ^ "~"
+                                                              else sel_id(1)
+                                    in mk_AS`PatternName (mk_AS`Name([sel_id'],cid3),nil,cid3)
+                   end | i in set inds fields ]
+  in
+    mk_AS`RecordPattern (tag,rec_l,cid);
+\end{vdm_al}
+
+This operation creates a record pattern corresponding to the state type. If
+the record pattern denotes the old state pattern, all pattern identifiers
+are appended with the hook symbol. This way, we create unique pattern
+identifiers for each of the old state components.
+
+\begin{vdm_al}
+operations
+
+CreateExplOpFns : AS`Name * AS`ExplOpDef * [AS`StateDef] ==> map AS`Name to SEM`CompExplFN
+#ifdef VDMSL
+CreateExplOpFns (mod_id, mk_AS`ExplOpDef (nm,-,-,mk_AS`OpType(opdom,oprng,-),parms,-,Pre_e,Post_e,access,-,-,-),gst) ==
+  let st_id = if gst = nil
+              then nil
+              else gst.tp.name
+  in
+#endif VDMSL
+#ifdef VDMPP
+CreateExplOpFns (mod_id, mk_AS`ExplOpDef (nm,-,-,mk_AS`OpType(opdom,-,-),parms,-,Pre_e,-,access,-,-,-),gst) ==
+#endif VDMPP
+   (dcl res_m : map AS`Name to SEM`CompExplFN := { |-> };
+
+    if Pre_e = nil
+    then skip
+    else
+      def nm_pre  = AUX`PreName(nm);
+          pl = CreateOperationPreParms (parms, gst);
+          fn_pre = SEM`CompFN(
+#ifdef VDMSL
+                      mk_SEM`ExplFN (CreateOperationPreType (opdom, st_id),
+#endif VDMSL
+#ifdef VDMPP
+                      mk_SEM`ExplFN (CreateOperationPreType (opdom, nil),
+#endif VDMPP
+                                     [CPAT`PL2PL(pl(i)) | i in set inds pl],
+                                     CMPL`CompilePrePostExpr(Pre_e),
+                                     AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                     { |-> }, nm_pre, mod_id,false,nil,
+                                     RealAccess(access,<OP>)))
+      in
+        res_m := res_m ++ { nm_pre |-> fn_pre };
+
+#ifdef VDMSL
+    if Post_e = nil
+    then skip
+    else
+      def nm_post   = AUX`PostName(nm);
+          oprng_l   = if is_AS`VoidType(oprng)
+                      then []
+                      else [oprng];
+          tp_post   = CreateOperationPostType (opdom, oprng_l, st_id);
+          expr_post = if gst = nil
+                      then Post_e
+                      else OLD`OldNameInExpr (Post_e);
+          parm_post = CreateExplOperationPostParms (parms, oprng_l, gst);
+          fn_post = SEM`CompFN(
+                      mk_SEM`ExplFN (tp_post,
+                                     [CPAT`PL2PL(parm_post(i)) | i in set inds parm_post],
+                                     CMPL`CompilePrePostExpr(expr_post),
+                                     AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                     { |-> }, nm_post, mod_id,false,nil,
+                                     RealAccess(access,<OP>)))
+      in
+        res_m := res_m ++ { nm_post |-> fn_post };
+#endif VDMSL
+  return res_m
+)
+\end{vdm_al}
+
+\begin{vdm_al}
+operations
+
+#ifdef VDMSL
+CreateExtExplOpFns : AS`Name * AS`ExtExplOpDef * [AS`StateDef] ==> map AS`Name to SEM`CompExplFN
+CreateExtExplOpFns (mod_id, mk_AS`ExtExplOpDef (nm,-,-,partps,resnmtps,-,-,Pre_e,Post_e,-,access,-,-,-),gst) ==
+  let mk_(opdom,parms) = ImplicitTypeParams(partps),
+      mk_(resnms,restps) = ImplicitResNameTypes(resnmtps),
+      st_id = if gst = nil
+              then nil
+              else gst.tp.name
+#endif VDMSL
+#ifdef VDMPP
+CreateExtExplOpFns : AS`Name * AS`ExtExplOpDef * [AS`StateDef] ==> map AS`Name to SEM`CompExplFN
+CreateExtExplOpFns (mod_id, mk_AS`ExtExplOpDef (nm,-,-,partps,-,-,-,Pre_e,-,-,access,-,-,-),gst) ==
+  let mk_(opdom,parms) = ImplicitTypeParams(partps)
+#endif VDMPP
+  in
+   (dcl res_m : map AS`Name to SEM`CompExplFN := { |-> };
+
+    if Pre_e = nil
+    then skip
+    else
+      def nm_pre  = AUX`PreName(nm);
+          pl = CreateOperationPreParms (parms, gst);
+          fn_pre = SEM`CompFN(
+#ifdef VDMSL
+                   mk_SEM`ExplFN (CreateOperationPreType (opdom, st_id),
+#endif VDMSL
+#ifdef VDMPP
+                   mk_SEM`ExplFN (CreateOperationPreType (opdom, nil),
+#endif VDMPP
+                                  [CPAT`PL2PL(pl(i)) | i in set inds pl],
+                                  CMPL`CompilePrePostExpr(Pre_e),
+                                  AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                  { |-> }, nm_pre, mod_id,false,nil,RealAccess(access,<OP>)))
+      in
+        res_m := res_m ++ { nm_pre |-> fn_pre };
+
+#ifdef VDMSL
+    if Post_e = nil
+    then skip
+    else
+      def nm_post   = AUX`PostName(nm);
+          tp_post   = CreateOperationPostType (opdom, restps, st_id);
+          expr_post = if gst = nil
+                      then Post_e
+                      else OLD`OldNameInExpr (Post_e);
+          parm_post = CreateExtExplOperationPostParms (parms, resnms, gst);
+          fn_post = SEM`CompFN(
+                      mk_SEM`ExplFN (tp_post,
+                                     [CPAT`PL2PL(parm_post(i)) | i in set inds parm_post],
+                                     CMPL`CompilePrePostExpr(expr_post),
+                                     AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                     { |-> }, nm_post, mod_id,false,nil,RealAccess(access,<OP>)))
+      in
+        res_m := res_m ++ { nm_post |-> fn_post };
+#endif VDMSL
+    return res_m
+   );
+\end{vdm_al}
+
+Togehter these operations create the semantic function value for the
+pre and/or post predicate functions for an explicit operation
+definition. The closure environment and the type instantiation map in
+the semantic function values are both empty. In case of a post
+predicate function, we replace all occurences of old names with normal
+names, but only if a state is defined.
+
+\begin{vdm_al}
+operations
+
+
+#ifdef VDMSL
+CreateImplOpFns : AS`Name * AS`ImplOpDef * [AS`StateDef] ==> map AS`Name to SEM`CompExplFN
+CreateImplOpFns (mod_id, mk_AS`ImplOpDef (name,-,-,partps,resnmtps,-,Pre_e,Post_e,-,access,-,-,-),gst) ==
+  let mk_(fn_tp, fn_parm) = ImplicitTypeParams (partps),
+      mk_(res_nms, res_tps) = ImplicitResNameTypes(resnmtps),
+      st_id = if gst = nil
+              then nil
+              else gst.tp.name
+#endif VDMSL
+#ifdef VDMPP
+CreateImplOpFns : AS`Name * AS`ImplOpDef * [AS`StateDef] ==> map AS`Name to SEM`CompExplFN
+CreateImplOpFns (mod_id, mk_AS`ImplOpDef (name,-,-,partps,-,-,Pre_e,-,-,access,-,-,-),gst) ==
+  let mk_(fn_tp, fn_parm) = ImplicitTypeParams (partps)
+#endif VDMPP
+  in
+   (dcl res_m : map AS`Name to SEM`CompExplFN := { |-> };
+
+    if Pre_e = nil
+    then skip
+    else
+      def nm_pre = AUX`PreName(name);
+          pi_l = CreateOperationPreParms (fn_parm, gst);
+          fn_pre = SEM`CompFN(
+#ifdef VDMSL
+                      mk_SEM`ExplFN (CreateOperationPreType (fn_tp, st_id),
+#endif VDMSL
+#ifdef VDMPP
+                      mk_SEM`ExplFN (CreateOperationPreType (fn_tp, nil),
+#endif VDMPP
+                                     [CPAT`PL2PL(pi_l(i)) | i in set inds pi_l],
+                                     CMPL`CompilePrePostExpr(Pre_e),
+                                     AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                     { |-> }, nm_pre, mod_id,false,nil,RealAccess(access,<OP>)))
+      in
+        res_m := res_m ++ { nm_pre |-> fn_pre };
+
+#ifdef VDMSL
+    def nm_post   = AUX`PostName(name);
+        tp_post   = CreateOperationPostType (fn_tp, res_tps, st_id);
+        expr_post = if gst = nil
+                    then Post_e
+                    else OLD`OldNameInExpr (Post_e);
+        parm_post = CreateImplOperationPostParms (fn_parm, res_nms, gst);
+        fn_post = SEM`CompFN(
+                    mk_SEM`ExplFN (tp_post,
+                                   [CPAT`PL2PL(parm_post(i)) | i in set inds parm_post],
+                                   CMPL`CompilePrePostExpr(expr_post),
+                                   AUX`MkEmptyBlkEnv (<READ_ONLY>),
+                                   { |-> }, nm_post, mod_id,false,nil,RealAccess(access,<OP>)))
+    in
+      res_m := res_m ++ { nm_post |-> fn_post };
+#endif VDMSL
+  return res_m
+);
+\end{vdm_al}
+
+This operation creates the semantic function values for the pre and/or post
+predicate function for an implicit operation definition.
+
+\section{Translation of Record Selector Information}
+
+#ifdef VDMSL
+\begin{vdm_al}
+TransTpDefMap: map AS`Name to AS`TypeDef ==> map AS`Name to GLOBAL`RecSel
+TransTpDefMap(tm) ==
+  --TransTP({mk_(shape,RealAccess(access,<TP>)) | mk_AS`TypeDef(-,shape,-,access,-) in set rng tm });
+  TransTP({mk_(shape,access) | mk_AS`TypeDef(-,shape,-,access,-) in set rng tm });
+\end{vdm_al}
+#endif VDMSL
+
+\begin{vdm_al}
+TransTP: set of (AS`Type * AS`Access) ==> map AS`Name to GLOBAL`RecSel
+TransTP(typeset) ==
+  if typeset = {}
+  then return { |-> }
+  else
+    let mk_(type,access) in set typeset
+    in
+     --(dcl tmp : map AS`Name to ((nat * (map AS`Name  to nat) * seq of AS`Type) * AS`Access) := {|->};
+     (dcl tmp : map AS`Name to GLOBAL`RecSel := {|->};
+      cases type :
+        mk_AS`CompositeType(nm,fields,-) -> tmp := { nm |-> TCompT(fields, access) } munion
+                                                   TransTP({mk_(fields(i).type,access) | i in set inds fields }),
+        mk_AS`UnionType(typeset,-)       -> tmp := TransTP({mk_(t,access)|t in set elems typeset}),
+        mk_AS`ProductType(typeseq,-)     -> tmp := TransTP({mk_(t,access)|t in set elems typeseq}),
+        mk_AS`OptionalType(tp,-),
+        mk_AS`Set0Type(tp,-),
+        mk_AS`Set1Type(tp,-),
+        mk_AS`BracketedType(tp,-),
+        mk_AS`Seq0Type(tp,-),
+        mk_AS`Seq1Type(tp,-)             -> tmp := TransTP({mk_(tp,access)}),
+        mk_AS`GeneralMap0Type(dt,rt,-),
+        mk_AS`GeneralMap1Type(dt,rt,-),
+        mk_AS`InjectiveMap0Type(dt,rt,-),
+        mk_AS`InjectiveMap1Type(dt,rt,-)  -> tmp := TransTP({mk_(dt,access), mk_(rt,access)}),
+        mk_AS`OpType(dt,rt,-),
+        mk_AS`PartialFnType(dt,rt,-),
+        mk_AS`TotalFnType(dt,rt,-)       -> tmp := TransTP({mk_(rt,access)} union {mk_(t,access)|t in set elems dt})
+      end;
+      --let inc_access = {nm |-> tmp(nm) | nm in set dom tmp}
+      --in
+        --return inc_access munion TransTP(typeset \ { mk_(type,access) }));
+       def ttp = TransTP(typeset \ { mk_(type,access) });
+           nms = dom tmp inter dom ttp 
+       in
+        (if nms <> {}
+         then 
+           for all n in set nms do
+             if tmp(n) <> ttp(n) 
+             then RTERR`InitError(RTERR`TYPE_ALREADY_DEF,n.cid,[]);
+         --return inc_access munion ttp;
+         return tmp munion ttp;
+        );
+     );
+\end{vdm_al}
+
+This operation analyses a set of types and creates for all the composite
+types the record selectors. For all non-composite types, $TransTP$ is
+called recursively.
+
+\begin{vdm_al}
+TCompT: seq of AS`Field * AS`Access ==> GLOBAL`RecSel
+TCompT(fields, access) ==
+  if len [ fields(i) | i in set inds fields & fields(i).sel <> nil ] <> 
+     card { fields(i).sel | i in set inds fields & fields(i).sel <> nil }
+  then (RTERR`InitError(RTERR`IDENTICAL_FIELDS,(hd fields).cid,[]);
+        return mk_(0,{|->},[],<PRIVATE_AS>)) -- dummy return for toolbox
+  else return mk_(len fields,
+                  { fields(i).sel  |-> i | i in set inds fields & fields(i).sel <> nil },
+                  [ fields(i).type | i in set inds fields ],
+                  RealAccess(access,<TP>))
+\end{vdm_al}
+
+This operation creates the record selector for the fields of a composite
+type. The record selector consists of three fields. The first field
+contains the number of fields in the composite type, the second field is a
+map from field identifier to field position, and the last field is a
+sequence with the type of each field in the composite type.
+
+#ifdef VDMSL
+\begin{vdm_al}
+operations
+CreateStateInvAndInit:  AS`Name * AS`StateDef ==> map AS`Name to SEM`CompExplFN
+CreateStateInvAndInit (mod_id, mk_AS`StateDef(tp,Inv,Init,-)) ==
+ (dcl res : map AS`Name to SEM`CompExplFN := {|->};
+  if Inv <> nil
+  then
+    let mk_AS`Invariant(pattern,expr,-) = Inv,
+        nid = CI`NilContextId
+    in
+      res := res ++ {AUX`InvName(tp.name) |->
+                       TransFN(mod_id, mk_AS`ExplFnDef(
+                                           tp.name, 
+                                           [], 
+                                           mk_AS`TotalFnType([tp], mk_AS`BooleanType(nid),nid),
+                                           [[pattern]], 
+                                           mk_AS`FnBody(expr, CI`NilContextId), 
+                                           nil, 
+                                           nil, 
+                                           Default_Tp,
+                                           false,
+                                           nil,
+                                           nid)) };
+
+  if Init <> nil
+  then
+    let mk_AS`StateInit(pattern,expr,-) = Init,
+        nid = CI`NilContextId
+    in
+      res := res ++ {AUX`InitName(tp.name) |->
+                     TransFN(mod_id, mk_AS`ExplFnDef(
+                                           tp.name,
+                                           [], 
+                                           mk_AS`TotalFnType([tp], mk_AS`BooleanType(nid),nid),
+                                           [[pattern]], 
+                                           mk_AS`FnBody(expr,CI`NilContextId), 
+                                           nil, 
+                                           nil, 
+                                           Default_Inst,
+                                           false,
+                                           nil,
+                                           nid)) };
+  return res);
+\end{vdm_al}
+This operation creates the semantic function values for the state
+invariant and state init functions.
+
+#endif VDMSL
+
+\section{Translation of Invariants}
+
+\begin{vdm_al}
+operations
+
+CreateInvs: AS`Name * map AS`Name to AS`TypeDef ==> map AS`Name to SEM`CompExplFN
+CreateInvs(mod_id, tm) ==
+ (dcl res : map AS`Name to SEM`CompExplFN := {|->};
+  let nid = CI`NilContextId
+  in 
+    for all name in set dom tm do
+      let mk_AS`TypeDef(-,shape,Inv,access,-) = tm(name)
+      in 
+        cases Inv:
+          mk_AS`Invariant(pattern,expr,-) -> let fntp = mk_AS`TotalFnType([shape], mk_AS`BooleanType(nid),nid)
+                                             in res := res ++ { AUX`InvName(name) |->
+                                                               TransFN(mod_id,
+                                                                       mk_AS`ExplFnDef(
+                                                                         name,
+                                                                         [],
+                                                                         fntp,
+                                                                         [[ pattern ]],
+                                                                         mk_AS`FnBody(expr, nid),
+                                                                         nil,
+                                                                         nil, 
+                                                                         access,
+                                                                         false,
+                                                                         nil,
+                                                                         nid)) },
+          others -> skip
+        end;
+  return res);
+values
+
+  Default_Op : AS`Access   = <PRIVATE_AS>;
+  Default_Fn : AS`Access   = <PRIVATE_AS>;
+  Default_Val : AS`Access  = <PRIVATE_AS>;
+  Default_Tp : AS`Access   = <PRIVATE_AS>;
+  Default_Inst : AS`Access = <PRIVATE_AS>;
+
+functions
+
+RealAccess: AS`Access * (<OP>|<FN>|<VAL>|<TP>|<INST>) +> AS`Access
+RealAccess(access,kind) ==
+  cases access:
+    <DEFAULT_AS>         -> cases kind:
+                              <OP>   -> Default_Op, 
+                              <FN>   -> Default_Fn,
+                              <VAL>  -> Default_Val,
+                              <TP>   -> Default_Tp,
+                              <INST> -> Default_Inst
+                            end,
+    <NOT_INITIALISED_AS> -> <PRIVATE_AS>,
+    others               -> access
+  end;
+
+#ifdef VDMPP
+end DEF
+#endif VDMPP 
+
+\end{vdm_al}
+
+The operation {\em CreateInvs} returns the semantic function values
+for the invariant predicate functions for the type definitions in a
+definitions block.  \vspace{0.5cm}
+
+#ifdef VDMSL
+
+\begin{vdm_al}
+functions
+TranslateDLExportSig: AS`Name * AS`DLExportSig * [AS`TextLit] -> GLOBAL`SigmaEXP
+TranslateDLExportSig (mod_id, mk_AS`DLExportSig(val,fns,ops,-),-) ==
+  let efn = { nm |-> mk_SEM`DLFN(fns(nm), mk_SEM`LOC(nm), nm, mod_id) | nm in set dom fns },
+      eop = { nm |-> mk_SEM`DLOP(ops(nm), mk_SEM`LOC(nm), nm, mod_id) | nm in set dom ops },
+      gv  = { nm |-> mk_SEM`LOC(nm) | nm in set dom val }
+  in
+    mk_GLOBAL`SigmaEXP(efn,eop,gv);
+
+end DEF
+\end{vdm_al}
+
+The operation $TranslateDLExportSig$\ generates the semantic values
+for the definitions of the export signature of an implemenation
+module.
+
+The mk\_SEM`LOC is the container for the address to the function. In
+the implementation this will be a void pointer packed in an Int. The
+code mk\_SEM`LOC(nm) is in the implementation replaced with a function
+call to dlsym(lib,nm), which looks up $nm$ in $lib$.
+
+The second argument to the function (uselib) is in the
+implementation the address of the library in which $nm$ should be found.
+#endif VDMSL
+
+
+#ifdef RTINFO
+\begin{rtinfo}
+[CreateExplOperationPostParms]{rtinfo.ast}[DEF]
+\end{rtinfo}
+#endif RTINFO
+
+% Local Variables: 
+% mode: LaTeX
+% TeX-master: "dynsem"
+% End:
+
+

@@ -1,0 +1,38 @@
+##---------------------------------------------------------------
+##                    Make file for Windows 32bit
+##             This Makefile can only be used with GNU make
+##---------------------------------------------------------------
+
+CC       = cl.exe
+CFLAGS   = /nologo /c /MT /W0 /GD /GX /D "WIN32" /D "_USRDLL" /TP
+INCPATH  = /I//hermes/georg/toolbox/winnt
+
+LINK     = link.exe
+LPATH    = /LIBPATH:C:/work
+LFLAGS   = /dll /incremental:no /DEFAULTLIB:vdm.lib
+
+# IMPLICITE RULES
+
+%.obj: %.cc
+	$(CC) $(CFLAGS) $(INCPATH) /Fo"$@" $<
+
+%.dll:
+	$(LINK) $(LPATH) $(LFLAGS) /out:"$@" $^
+
+# TARGETS
+
+all: math.dll cylio.dll
+
+math.dll: tcfmath.obj
+
+cylio.dll: tcfcylio.obj cylio.obj
+
+clean:
+	rm -f math.lib math.exp math.dll 
+	rm -f cylio.lib cylio.exp cylio.dll
+	rm -f tcfmath.obj tcfcylio.obj cylio.obj
+	rm -f *~
+
+
+
+

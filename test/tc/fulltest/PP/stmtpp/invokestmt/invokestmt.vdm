@@ -1,0 +1,101 @@
+class Pars1
+
+operations
+
+public  MetPars1(a,b,c:nat) dummy : nat ==
+    return a + b;
+
+public  MetPars2(m: map bool to nat) dummy : real ==
+    is not yet specified;
+
+public  MetPars3() dummy : bool ==
+    is subclass responsibility
+
+end Pars1
+
+class A
+
+operations
+public  MetA1() dummy: nat ==
+    return 5
+
+end A
+
+class B
+
+instance variables
+
+  mya : A
+
+operations
+
+public  MetB1(arg : nat) dummy : A ==
+    return mya
+ 
+end B
+
+class C is subclass of B
+end C
+
+class InvokeStmtTest is subclass of C
+
+instance variables
+  a : A;
+  b : B;
+  c : Pars1;
+  c2: C
+  
+operations
+
+-- OK
+  InvokeStmt1() dummy : B ==  
+    (dcl c : nat := a.MetA1();
+     return b);
+
+--OK
+  InvokeStmt2(d: nat) dummy : nat ==  
+    InvokeStmt1().MetB1(d).MetA1();
+
+--OK
+  InvokeStmt3(arg : bool) dummy : A | B ==  
+    if arg
+    then return a
+    else return b;
+
+--DEF    
+  InvokeStmt4() dummy : nat ==  --OK
+    InvokeStmt3(true).MetA1();
+
+--POSDEF    
+  InvokeStmt5() dummy : real ==
+    InvokeStmt2(4,7);
+
+--POSDEF
+  InvokeStmt6() dummy : real ==
+    InvokeStmt2(true);
+
+--OK    
+  InvokeStmt7() dummy : nat ==
+    c.MetPars1(1,4,9);
+
+--OK    
+  InvokeStmt8() dummy : real ==
+    c.MetPars2({|->});
+
+--OK  
+  InvokeStmt9() dummy : bool ==
+    c.MetPars3();
+
+--POSDEF    
+  InvokeStmt10() dummy : bool ==
+    d.InvokeStmt9();
+
+--OK    
+  InvokeStmt11() dummy : nat ==
+    new A().MetA1();
+
+--OK
+  InvokeStmt12(b2 : B) dummy : B ==
+    InvokeStmt12(c2)
+            
+end InvokeStmtTest

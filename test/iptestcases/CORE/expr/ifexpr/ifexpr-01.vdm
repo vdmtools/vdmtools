@@ -1,0 +1,63 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ( int | bool | real |
+                         set of nat |
+			 nat * ( set of nat  ) |
+			 set of real |
+			 seq of bool |
+			 map nat to nat | 
+                         seq of int )  
+Test () ==
+return 
+[ if let a = [3, 6] in len a = 2
+  then let a = { 3 |-> 3}
+       in dom a
+  else let b = { 3 |-> 6, false |-> 7 }
+       in dom b,
+  
+  if exists e in set {3, 6} & ( e = 6 ) or (e mod 2 = 0)
+  then if card {3, 6} = 0
+       then 3
+       else false
+  else forall a in set { 3, false, 'a'} & is_int(a) or 
+					  is_bool(a) or 
+					  is_char(a),
+  
+  if (3 > 4 ) and { 3 |-> false}(3)
+  then mk_(35, {3, 6} )
+  else [ i = 2 | i in set { 1, 3, 6} ],
+  
+  if [ false, true](2)
+  then [ 2, 6,4](3)
+  else { 3 |-> 4 } munion { 2 |-> 4 },
+
+  if true
+  then 3
+  else 4,
+
+  if let mk_(a, -) = mk_(false, 3)
+     in a
+  then [ ]
+  elseif exists e in set { false, true} & e
+      then forall e in set { 'a', 'b'} & is_char(e)
+      else { 3.6 },
+
+  if false
+  then 3
+    elseif card {} = 3
+        then 9 
+        elseif len [ 3 ] = 1
+	then 3.7
+        else 3
+  
+]
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

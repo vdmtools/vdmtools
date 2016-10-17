@@ -1,0 +1,11 @@
+ThreadCreate -> id: 1 period: false objref: nil clnm: nil cpunm: 0 time: 0
+ThreadSwapIn -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 0
+DeployObj ->  objref: 1 clnm: "A" cpunm: 0 time: 0
+DeployObj ->  objref: 2 clnm: "A" cpunm: 0 time: 0
+OpRequest -> id: 1 opname: "A`Test" objref: 2 clnm: "A" cpunm: 0 async: false time: 4
+OpActivate -> id: 1 opname: "A`Test" objref: 2 clnm: "A" cpunm: 0 async: false time: 4
+OpRequest -> id: 1 opname: "A`op" objref: 2 clnm: "A" cpunm: 0 async: false time: 4
+OpActivate -> id: 1 opname: "A`op" objref: 2 clnm: "A" cpunm: 0 async: false time: 4
+OpCompleted -> id: 1 opname: "A`op" objref: 2 clnm: "A" cpunm: 0 async: false time: 24
+OpCompleted -> id: 1 opname: "A`Test" objref: 2 clnm: "A" cpunm: 0 async: false time: 28
+ThreadSwapOut -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 30

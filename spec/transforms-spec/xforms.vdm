@@ -1,0 +1,820 @@
+\section{VDM++ Transformations}
+\label{sec:xf}
+
+This module contains the basic functions associated with the specific
+\vdmpp\ transformations. It is used both by the functions which find
+possible transforms (module FX) and by those which apply
+transformations (module AX).
+
+The transformations which are currently supported apply to certain
+kinds of expressions (define expressions and binary expressions) and
+certain kinds of statements (if statements, block statements, while
+loop statements, and define statements). The specific transformations
+for expressions and statements are listed in
+Tables~\ref{fig:exprxfs} and~\ref{fig:stmtxfs} respectively. 
+
+The first column of each of these tables shows the unique identifier
+which is assigned to each transformation of that kind. The second and
+third columns respectively show the name of the transformation and the
+kind of expression or statement to which it applies.
+
+\begin{figure}[htbp]
+  \begin{center}
+\begin{tabular}{|l|l|l|l|}
+Id & Name & Expression Type & Description \\ \hline \hline
+1 & isRedundantDef & Def Expr & \\ \hline
+2 & isRenamingDef & Def Expr & \\ \hline
+3 & orToNotEquiv & Binary Expr & \\ \hline
+\end{tabular}    
+    \caption{Expression Transformations}
+    \label{fig:exprxfs}
+  \end{center}
+\end{figure}
+
+\begin{figure}[htbp]
+  \begin{center}
+\begin{tabular}{|l|l|l|l|}
+Id & Name & Statement Type & Description \\ \hline \hline
+1 & whileIfTestTrue &  While Loop & \\ \hline
+2 & ifToCases & If Stmt & \\ \hline
+3 & ifToEquiv & If Stmt & \\ \hline
+4 & nestedIfsNoElses & If Stmt  & \\ \hline
+5 & isMapCompLoop & Block Stmt  & \\ \hline
+6 & ifTestTrue & Block Stmt  & \\ \hline
+7 & ifTestFalse & Block Stmt  & \\ \hline
+8 & isRedundantIfBlock & Block Stmt  & \\ \hline
+9 & ifToAnd & Block Stmt &  \\ \hline
+10 & isRedundantIfBlockNoElse & Block Stmt &  \\ \hline
+11 & isRenamingDefStmt & Define Stmt &  \\ \hline
+12 & isRedundantDcl & Block Stmt &  \\ \hline
+\end{tabular}    
+    \caption{Statement Transformations}
+    \label{fig:stmtxfs}
+  \end{center}
+\end{figure}
+
+In the specification there are 2 functions for each transformation:
+one which has the same name as the transformation and which tests
+whether the given transformation can be applied, and a second (whose
+name is similar but is prefixed "get...") which returns the result of
+applying that transformation. 
+
+The module also contains a number of auxiliary functions.
+
+
+\begin{vdm_al}
+module XF
+
+imports
+  from JSSREP all,
+  from CI all,
+  from REP all,
+  from AS all,
+  from STRIP all,
+  from OPP all
+
+exports all
+
+definitions
+
+types
+
+\end{vdm_al}
+
+The types {\em EXFId} and {\em SXFId} uniquely identify the different
+transformations which apply to expressions and statements
+respectively. For simplicity we use natural numbers. 
+
+\begin{vdm_al}
+
+SXFId :: id : nat ;
+
+EXFId :: id : nat ;
+
+XFId = SXFId | EXFId ;
+
+functions
+
+ifToCases : AS`IfStmt * [AS`Expr] -> bool
+ifToCases(mk_AS`IfStmt(p_test, -, p_elsif, p_altn, -), p_expr) == 
+  let l_test = STRIP`stripBrackets(p_test)
+  in 
+    isEqualityLHS(l_test, p_expr) 
+    and let l_common = STRIP`stripBrackets(l_test.left)
+        in (p_elsif <> [] or p_altn <> nil)
+           and commonElseifs(p_elsif, l_common) 
+           and commonElse(p_altn, l_common) ;
+
+getIfToCasesXF : AS`IfStmt -> AS`CasesStmt
+getIfToCasesXF(p_stmt) == 
+  let l_test = STRIP`stripBrackets(p_stmt.test),
+      l_sel = STRIP`stripBrackets(l_test.left),
+      l_caseAltns = makeAltnsIf(p_stmt) 
+  in mk_AS`CasesStmt(l_sel, l_caseAltns, nil, CI`NilContextId)
+pre ifToCases(p_stmt, nil) ;
+
+makeAltnsIf : AS`IfStmt -> seq of AS`CasesStmtAltn
+makeAltnsIf(p_stmt) == 
+  let mk_AS`IfStmt(l_test, l_cons, l_elsif, l_altn, -) = p_stmt,
+      l_test' = STRIP`stripBrackets(l_test),
+      l_cons' = STRIP`stripBlocks(l_cons),
+      l_firstAltn = makeAltn(l_test', l_cons'),
+      l_elseifAltns = [makeAltn(STRIP`stripBrackets(l_elsif(i).test), l_elsif(i).cons) | i in set inds l_elsif ],
+      l_elseAltns = if l_altn = nil then [] else makeAltnsIf(STRIP`stripBlocks(l_altn)) 
+  in [l_firstAltn] ^ l_elseifAltns ^ l_elseAltns
+pre ifToCases(p_stmt, nil) ;
+
+makeAltn : AS`BinaryExpr * AS`Stmt -> AS`CasesStmtAltn
+makeAltn(p_expr, p_stmt) == 
+  let l_test = STRIP`stripBrackets(p_expr.right),
+      l_pat = mk_AS`MatchVal(l_test, CI`NilContextId)
+  in mk_AS`CasesStmtAltn([l_pat], p_stmt, CI`NilContextId)
+pre p_expr.opr = <EQ> ;
+
+-- test for transformation F 
+
+isRedundantDef : AS`DefExpr -> bool
+isRedundantDef(mk_AS`DefExpr(p_defs, p_expr, -)) == 
+  exists mk_(l_patBind, -) in set elems p_defs & 
+    let l_pat = STRIP`patternOfBind(l_patBind) in 
+      is_AS`PatternName(l_pat) and -- added to remove unwanted matches; but too strong
+        patExprEquiv(l_pat, STRIP`stripBrackets(p_expr));
+
+getRedundantDefXF : AS`DefExpr -> AS`Expr
+getRedundantDefXF(p_expr) == 
+  let mk_AS`DefExpr(l_defs, l_body, -) = p_expr
+  in 
+  let mk_(l_patBind, l_expr) in set elems l_defs 
+  be st patExprEquiv(STRIP`patternOfBind(l_patBind), STRIP`stripBrackets(l_body))
+  in if len l_defs = 1
+     then l_expr
+     else mk_AS`DefExpr(l_defs, l_expr, CI`NilContextId)
+pre isRedundantDef(p_expr) ;
+
+-- test for transformation G
+
+isMapCompLoop : AS`BlockStmt * AS`Class -> bool
+isMapCompLoop(mk_AS`BlockStmt(p_al, p_sl, -), p_c) == 
+  p_sl <> []
+  and exists mk_AS`AssignDef(b_var, b_tp, b_init, -) in set elems p_al & 
+    isIntOrNat(b_tp, p_c) and hasMapCompLoop(p_sl, b_var) and b_init <> nil ;
+
+getMapCompLoopXF : AS`BlockStmt * AS`Class -> AS`BlockStmt
+getMapCompLoopXF(p_stmt, p_c) == 
+  let mk_AS`BlockStmt(l_al, l_sl, -) = p_stmt,
+      mk_AS`WhileLoopStmt(l_test, l_body, -) = hd l_sl,
+      [l_s1, l_s2] = l_body.stmts,
+      mk_AS`BinaryExpr(l_left, l_op, l_right, -) = l_test,
+      mk_AS`AssignStmt(p_l1, p_r1, -) = l_s1,
+      p_r2 = l_s2.rhs,
+      l_maplet = hd p_r1.mapexp.els in
+  let b_ad in set elems l_al be st b_ad.var = l_left in
+  let l_varInit = b_ad.dclinit,
+      l_pat = mk_AS`PatternName(l_left, nil, CI`NilContextId), 
+      l_right' = getRight(l_right, l_op),
+      l_set = getSet(l_varInit, l_right', p_r2.opr),
+      l_pred = getPred(l_varInit, p_r2.right, l_left, p_r2.opr),
+      l_bind = mk_AS`MultSetBind([l_pat], l_set, CI`NilContextId),
+      l_mapComp = mk_AS`MapComprehensionExpr(l_maplet, [l_bind], l_pred, CI`NilContextId),
+      l_owr = mk_AS`SeqModifyMapOverrideExpr(p_r1.seqmap, l_mapComp, CI`NilContextId),
+      l_ass = mk_AS`AssignStmt(p_l1, l_owr, CI`NilContextId)
+  in mk_AS`BlockStmt(l_al, [l_ass] ^ tl l_sl, CI`NilContextId)
+pre isMapCompLoop(p_stmt, p_c) ; 
+
+getRight : AS`Expr * AS`BinaryOp -> AS`Expr
+getRight(p_expr, p_op) == 
+  cases p_op :
+    <NUMLT> -> mk_AS`BinaryExpr(p_expr, <NUMMINUS>, mk_AS`RealLit(1, CI`NilContextId), CI`NilContextId), 
+    <NUMGT> -> mk_AS`BinaryExpr(p_expr, <NUMPLUS>, mk_AS`RealLit(1, CI`NilContextId), CI`NilContextId), 
+    others -> p_expr
+  end 
+pre isNumComparisonOp(p_op) ;
+
+getSet : [AS`Expr] * AS`Expr * AS`BinaryOp -> AS`SetRangeExpr
+getSet(p_first, p_last, p_op) == 
+  if p_op = <NUMPLUS>
+  then mk_AS`SetRangeExpr(p_first, p_last, CI`NilContextId)
+  else mk_AS`SetRangeExpr(p_last, p_first, CI`NilContextId)
+pre p_first <> nil and p_op in set {<NUMPLUS>, <NUMMINUS>} ;
+
+getPred : AS`Expr * AS`RealLit * AS`Name * AS`BinaryOp -> [AS`Expr]
+getPred(p_first, p_step, p_name, p_op) == 
+  if abs p_step.val = 1 
+  then nil
+  else let l_left = if is_AS`RealLit(p_first) and p_first.val = 0 
+                    then p_name
+                    else if p_op = <NUMMINUS>
+                         then mk_AS`BinaryExpr(p_first, <NUMMINUS>, p_name, CI`NilContextId)
+                         else mk_AS`BinaryExpr(p_name, <NUMMINUS>, p_first, CI`NilContextId),
+           l_mod = mk_AS`BinaryExpr(l_left, <NUMMOD>, p_step, CI`NilContextId)
+       in mk_AS`BinaryExpr(l_mod, <EQ>, mk_AS`RealLit(0, CI`NilContextId), CI`NilContextId)
+pre p_op in set {<NUMPLUS>, <NUMMINUS>} ;
+
+-- test for transformation I
+
+isRedundantDcl : AS`BlockStmt -> bool
+isRedundantDcl(p_stmt) == 
+  let mk_AS`BlockStmt(l_al, l_sl, -) = p_stmt in 
+    len l_al = 1 
+    and len l_sl = 1 
+    and let [l_a] = l_al, [l_s] = l_sl in
+      is_AS`ReturnStmt(l_s)
+      and l_a.var = l_s.val;
+
+getRedundantDclXF : AS`BlockStmt -> AS`ReturnStmt
+getRedundantDclXF(p_stmt) == 
+ mk_AS`ReturnStmt((hd p_stmt.dcls).dclinit, CI`NilContextId) 
+pre isRedundantDcl(p_stmt) ;
+
+
+-- test for transformation J (simplified)
+
+isRenamingDefStmt : AS`DefStmt -> bool
+isRenamingDefStmt(mk_AS`DefStmt(p_defs, -, -)) == 
+  exists  mk_(l_patBind, l_expr) in set elems p_defs & 
+    let l_pat = STRIP`patternOfBind(l_patBind) in 
+      is_AS`PatternName(l_pat) and is_AS`Name(STRIP`stripBrackets(l_expr)) ;
+
+getRenamingDefSXF : AS`DefStmt -> [AS`DefStmt]
+getRenamingDefSXF(p_stmt) == nil 
+pre isRenamingDefStmt(p_stmt) ;
+
+isRenamingDef : AS`DefExpr -> bool
+isRenamingDef(mk_AS`DefExpr(p_defs, -, -)) == 
+  exists  mk_(l_patBind, l_expr) in set elems p_defs & 
+    let l_pat = STRIP`patternOfBind(l_patBind) in 
+      is_AS`PatternName(l_pat) and is_AS`Name(STRIP`stripBrackets(l_expr)) ;
+
+getRenamingDefXF : AS`DefExpr -> [AS`DefExpr]
+getRenamingDefXF(p_expr) == nil 
+pre isRenamingDef(p_expr) ;
+
+
+-- test for transformation L
+
+ifTestTrue : AS`BlockStmt * AS`Class -> bool
+ifTestTrue(mk_AS`BlockStmt(p_al, p_sl, -), p_class) == 
+  p_sl <> [] 
+  and exists b_a in set elems p_al & 
+    isBool(b_a.tp, p_class) 
+    and is_AS`BoolLit(b_a.dclinit) 
+    and b_a.dclinit.val 
+    and isSingleIfTest(hd p_sl, b_a.var);
+
+getIfTestTrueXF : AS`BlockStmt * AS`Class -> AS`BlockStmt
+getIfTestTrueXF(p_stmt, p_c) == 
+  let mk_AS`BlockStmt(l_dcls, l_body, -) = p_stmt,
+      l_first = hd l_body,
+      l_newFirst = getThen(l_first),
+      l_newBody = [l_newFirst] ^ tl l_body
+  in mk_AS`BlockStmt(l_dcls, l_newBody, CI`NilContextId)
+pre ifTestTrue(p_stmt, p_c) ;
+
+ifTestFalse : AS`BlockStmt * AS`Class -> bool
+ifTestFalse(mk_AS`BlockStmt(p_al, p_sl, -), p_class) == 
+  p_sl <> [] 
+  and exists b_a in set elems p_al & 
+    isBool(b_a.tp, p_class) 
+    and is_AS`BoolLit(b_a.dclinit) 
+    and not b_a.dclinit.val
+    and isSingleIfTest(hd p_sl, b_a.var);
+
+getIfTestFalseXF : AS`BlockStmt * AS`Class -> AS`BlockStmt
+getIfTestFalseXF(p_stmt, p_c) == 
+  let mk_AS`BlockStmt(l_dcls, l_body, -) = p_stmt,
+      l_first = hd l_body,
+      l_newFirst = getElse(l_first),
+      l_newBody = [l_newFirst] ^ tl l_body
+  in mk_AS`BlockStmt(l_dcls, l_newBody, CI`NilContextId)
+pre ifTestFalse(p_stmt, p_c) ;
+
+-- test for transformation N(1)
+
+ifToEquiv : AS`IfStmt -> bool
+ifToEquiv(mk_AS`IfStmt(-, p_cons, p_elsif, p_altn, -)) == 
+           p_elsif = [] 
+           and p_altn <> nil
+           and isSingleIfThenElseNoDcls(p_cons)
+           and isSingleIfThenElseNoDcls(p_altn) 
+           and let mk_(l_test1, l_cons1, l_altn1) = ifOf(p_cons),
+                   mk_(l_test2, l_cons2, l_altn2) = ifOf(p_altn) in
+               l_altn1 <> nil
+               and l_altn2 <> nil
+               and STRIP`areEquivExprs(l_test1, l_test2)
+               and STRIP`areEquivStmts(l_cons1, l_altn2)
+               and STRIP`areEquivStmts(l_cons2, l_altn1) ;
+
+getIfToEquivXF : AS`IfStmt -> AS`IfStmt
+getIfToEquivXF(p_stmt) == 
+  let mk_AS`IfStmt(l_test, l_cons, -, -, -) = p_stmt,
+      mk_(l_test', l_cons', l_altn') = ifOf(l_cons),
+      l_test0 = STRIP`stripBrackets(l_test),
+      l_test0' = STRIP`stripBrackets(l_test'),
+      l_newTest = mk_AS`BinaryExpr(l_test0, <EQUIV>, l_test0', CI`NilContextId),
+      l_test1 = OPP`bracketExpr(l_test0, l_newTest),
+      l_test1' = OPP`bracketExpr(l_test0', l_newTest),
+      l_newTest' = mk_AS`BinaryExpr(l_test1, <EQUIV>, l_test1', CI`NilContextId),
+      l_newCons = STRIP`stripBlocks(l_cons'), 
+      l_newAltn = STRIP`stripBlocks(l_altn') 
+  in mk_AS`IfStmt(l_newTest', l_newCons, [], l_newAltn, CI`NilContextId)
+pre ifToEquiv(p_stmt) ;
+
+orToNotEquiv : AS`BinaryExpr -> bool
+orToNotEquiv(mk_AS`BinaryExpr(p_left, p_op, p_right, -)) ==  
+  p_op = <OR> and 
+  let l_left = STRIP`stripBrackets(p_left),
+      l_right = STRIP`stripBrackets(p_right)
+  in
+  is_AS`BinaryExpr(l_left) 
+  and is_AS`BinaryExpr(l_right) 
+  and let mk_AS`BinaryExpr(l_ll, l_lop, l_lr, -) = l_left, 
+          mk_AS`BinaryExpr(l_rl, l_rop, l_rr, -) = l_right,
+          l_ll' = STRIP`stripBrackets(l_ll),
+          l_lr' = STRIP`stripBrackets(l_lr),
+          l_rl' = STRIP`stripBrackets(l_rl),
+          l_rr' = STRIP`stripBrackets(l_rr) 
+      in
+        l_lop = <AND> and l_rop = <AND> 
+        and is_AS`PrefixExpr(l_ll') and is_AS`PrefixExpr(l_rr') 
+        and let mk_AS`PrefixExpr(l_llop, l_llexpr, -) = l_ll',
+                mk_AS`PrefixExpr(l_rrop, l_rrexpr, -) = l_rr',
+                l_llexpr' = STRIP`stripBrackets(l_llexpr), 
+                l_rrexpr' = STRIP`stripBrackets(l_rrexpr)
+             in
+                l_llop = <NOT> and l_rrop = <NOT> 
+                and l_llexpr' = l_rl' and l_rrexpr' = l_lr' ;
+
+getOrToNotEquivXF : AS`BinaryExpr -> AS`PrefixExpr
+getOrToNotEquivXF(p_expr) == 
+  let l_left = STRIP`stripBrackets(p_expr.left),
+      mk_AS`BinaryExpr(l_ll, -, l_lr, -) = l_left,
+      l_ll' = STRIP`stripBrackets(l_ll),
+      l_lr' = STRIP`stripBrackets(l_lr),
+      l_equiv = mk_AS`BinaryExpr(l_ll'.arg, <EQUIV>, l_lr', CI`NilContextId),
+      l_lequiv = OPP`bracketExpr(l_ll'.arg, l_equiv),
+      l_requiv = OPP`bracketExpr(l_lr', l_equiv),
+      l_equiv' = mk_AS`BinaryExpr(l_lequiv, <EQUIV>, l_requiv, CI`NilContextId),
+      l_bequiv = mk_AS`BracketedExpr(l_equiv', CI`NilContextId)
+  in mk_AS`PrefixExpr(<NOT>, l_bequiv, CI`NilContextId)
+pre orToNotEquiv(p_expr) ;
+
+
+isRedundantIfBlock : AS`BlockStmt * AS`Class -> bool
+isRedundantIfBlock(mk_AS`BlockStmt(p_al, p_sl, -), p_c) ==  
+  len p_sl = 2 
+  and exists b_a in set elems p_al & 
+    isBool(b_a.tp, p_c)
+    and isRedundantIfStmt(hd p_sl, b_a.var) 
+    and isSingleReturnVal(p_sl(2), b_a.var) 
+    and let l_dcls = getDcls(hd p_sl) in 
+        not exists b_a' in set elems l_dcls & b_a'.var = b_a.var ;
+
+isRedundantIfBlockNoElse : AS`BlockStmt * AS`Class -> bool
+isRedundantIfBlockNoElse(mk_AS`BlockStmt(p_al, p_sl, -), p_c) ==  
+  len p_sl = 2 
+  and exists mk_AS`AssignDef(l_var, l_tp, l_init, -) in set elems p_al & 
+    isBool(l_tp, p_c) 
+    and is_AS`BoolLit(l_init)
+    and isRedundantIfNoElse(hd p_sl, l_var, l_init) 
+    and isSingleReturnVal(p_sl(2), l_var) 
+    and let l_dcls = getDcls(hd p_sl) in 
+        not exists b_a' in set elems l_dcls & b_a'.var = l_var ;
+
+isRedundantIfNoElse : AS`Stmt * AS`Name * AS`BoolLit-> bool
+isRedundantIfNoElse(p_stmt, p_name, p_b) == 
+  ( is_AS`BlockStmt(p_stmt) 
+    and let mk_AS`BlockStmt(-, l_sl, -) =  p_stmt in 
+    len l_sl = 1 
+    and isRedundantIfNoElse(hd l_sl, p_name, p_b) )
+  or
+    is_AS`IfStmt(p_stmt) 
+    and let mk_AS`IfStmt(-, l_cons, l_elsif, l_altn, -) = p_stmt in
+      l_elsif = [] 
+      and l_altn = nil 
+      and isSingleAssignmentLHS(l_cons, p_name) 
+      and let l_b1 = assignsTo(l_cons, p_name) in
+         is_AS`BoolLit(l_b1)
+          and areOpposite(l_b1, p_b) ;
+
+
+getRedundantIfBlockXF : AS`BlockStmt * AS`Class -> AS`BlockStmt
+getRedundantIfBlockXF(p_stmt, p_c) ==
+  let mk_AS`BlockStmt(l_al, l_sl, -) = p_stmt,
+      l_name = returnValue(l_sl(2)),
+      l_test = getTest(hd l_sl),
+      l_neg = assignsTo(getThen(hd l_sl), l_name).val,
+      l_result = if l_neg then l_test else mk_AS`PrefixExpr(<NOT>, l_test, CI`NilContextId),
+      l_newReturn = mk_AS`ReturnStmt(l_result, CI`NilContextId),
+      l_newBody = replaceIf(hd l_sl, l_newReturn)
+  in mk_AS`BlockStmt(l_al, [l_newBody], CI`NilContextId)
+ pre isRedundantIfBlock(p_stmt, p_c) or isRedundantIfBlockNoElse(p_stmt, p_c);
+
+replaceIf : AS`Stmt * AS`Stmt -> AS`Stmt
+replaceIf(p_stmt, p_newBody) == 
+  if is_AS`IfStmt(p_stmt) 
+  then p_newBody
+  else let mk_AS`BlockStmt(l_al, l_sl, -) =  p_stmt,
+           l_newIf = replaceIf(hd l_sl, p_newBody)
+       in mk_AS`BlockStmt(l_al, [l_newIf], CI`NilContextId)
+pre isSingleIfThenElse(p_stmt) ;
+
+-- test for transformation R
+
+whileIfTestTrue : AS`WhileLoopStmt -> bool
+whileIfTestTrue(mk_AS`WhileLoopStmt(p_test, p_body, -)) == 
+  let l_test = STRIP`stripBrackets(p_test) in
+               isSingleIfTest(p_body, l_test)
+               or 
+               is_AS`BlockStmt(p_body) 
+               and let l_sl = p_body.stmts in 
+               l_sl <> [] and  isSingleIfTest(hd l_sl, l_test);
+
+getWhileIfTestTrue : AS`WhileLoopStmt -> AS`WhileLoopStmt
+getWhileIfTestTrue(p_stmt) == 
+  let mk_AS`WhileLoopStmt(l_test, l_body, -) = p_stmt,
+      l_stripTest = STRIP`stripBrackets(l_test),
+      l_newBody = if isSingleIfTest(l_body, l_stripTest)
+                  then getThen(l_body)
+                  else mk_AS`BlockStmt(l_body.dcls, [getThen(hd
+                  l_body.stmts)] ^ tl l_body.stmts, CI`NilContextId)
+  in mk_AS`WhileLoopStmt(l_stripTest, l_newBody, CI`NilContextId)
+pre whileIfTestTrue(p_stmt) ;
+
+-- test for transformation U
+
+ifToAnd : AS`BlockStmt -> bool
+ifToAnd(p_block) == 
+  let l_sl = p_block.stmts in 
+    len l_sl = 2 
+    and let [l_s1, l_s2] = l_sl in
+      isSingleIfThenElseNoDcls(l_s1)
+      and getElsif(l_s1) = []
+      and getElse(l_s1) = nil
+      and isSingleReturn(getThen(l_s1))
+      and isSingleReturn(l_s2)
+      and let l_expr = returnValue(l_s2) in
+        is_AS`BoolLit(l_expr) 
+        and not l_expr.val ;
+
+-- brackets in and expression?
+
+getIfToAndXF: AS`BlockStmt -> AS`BlockStmt
+getIfToAndXF(p_stmt) == 
+  let mk_AS`BlockStmt(l_dcls, l_body, -) = p_stmt,
+      l_s1 = hd l_body, 
+      l_and = 
+        mk_AS`BinaryExpr(getTest(l_s1), <AND>, returnValue(getThen(l_s1)), CI`NilContextId), 
+      l_left = OPP`bracketExpr(getTest(l_s1), l_and),
+      l_right = OPP`bracketExpr(returnValue(getThen(l_s1)), l_and),
+      l_and' = mk_AS`BinaryExpr(l_left, <AND>, l_right, CI`NilContextId), 
+      l_newBody = [mk_AS`ReturnStmt(l_and', CI`NilContextId)] 
+  in mk_AS`BlockStmt(l_dcls, l_newBody, CI`NilContextId)
+pre ifToAnd(p_stmt) ;
+
+-- test for transformation W
+
+nestedIfsNoElses : AS`IfStmt -> bool
+nestedIfsNoElses(mk_AS`IfStmt(-, p_cons, p_elsif, p_altn, -)) == 
+  p_elsif = [] and p_altn = nil and isIfNoElse(p_cons) ;
+
+-- brackets in and expression?
+
+getNestedIfsNoElsesXF : AS`IfStmt -> AS`IfStmt
+getNestedIfsNoElsesXF(p_stmt) == 
+  let mk_AS`IfStmt(p_test, p_cons, -, -, -) = p_stmt,
+      l_newTest = mk_AS`BinaryExpr(p_test, <AND>, getTest(p_cons), CI`NilContextId),
+      l_right = OPP`bracketExpr(getTest(p_cons), l_newTest),
+      l_left = OPP`bracketExpr(p_test, l_newTest),
+      l_newTest' = mk_AS`BinaryExpr(l_left, <AND>, l_right, CI`NilContextId),
+      l_newCons = getThen(p_cons) 
+  in mk_AS`IfStmt(l_newTest', l_newCons, [], nil, CI`NilContextId)
+pre nestedIfsNoElses(p_stmt) ;
+
+-- auxiliary functions 
+
+isEqualityLHS : AS`Expr * [AS`Expr] -> bool
+isEqualityLHS(p_expr1, p_expr2) == 
+  let l_expr1 = STRIP`stripBrackets(p_expr1) in 
+  is_AS`BinaryExpr(l_expr1)
+  and l_expr1.opr = <EQ>
+  and (p_expr2 <> nil => STRIP`stripBrackets(l_expr1.left) = p_expr2) ;
+
+commonElse : [AS`Stmt] * AS`Expr -> bool
+commonElse(p_stmt, p_expr) == 
+  p_stmt <> nil => 
+    let l_stmt = STRIP`stripBlocks(p_stmt) in 
+    is_AS`IfStmt(l_stmt) and ifToCases(l_stmt, p_expr) ;
+
+commonElseifs : seq of AS`ElseifStmt * AS`Expr -> bool
+commonElseifs(p_el, p_expr) == 
+  forall b_es in set elems p_el & isEqualityLHS(b_es.test, p_expr) ;
+
+hasMapCompLoop : seq1 of AS`Stmt * AS`Name -> bool
+hasMapCompLoop(p_sl, p_name) == 
+  let l_s = hd p_sl
+  in 
+    is_AS`WhileLoopStmt(l_s) 
+    and let mk_AS`WhileLoopStmt(l_test, l_body, -) = l_s in 
+      is_AS`BinaryExpr(l_test) 
+      and l_test.left = p_name 
+      and isNumComparisonOp(l_test.opr) 
+      and is_AS`BlockStmt(l_body) 
+      and l_body.dcls = [] 
+      and isMapCompIteration(l_body.stmts, p_name, sign(l_test.opr)) ;
+
+isIntOrNat : AS`Type * AS`Class -> bool
+isIntOrNat(p_t, p_c) == 
+  cases p_t:
+    mk_AS`NumericType(l_b, -)   -> l_b in set {<NAT>, <NATONE>, <INTEGER>},
+    mk_AS`TypeName(l_name, -) -> let typem = p_c.defs.typem
+                                 in l_name in set dom typem and isIntOrNat(typem(l_name).shape, p_c),
+    others                    -> false
+  end;
+
+isBool : AS`Type * AS`Class -> bool
+isBool(p_t, p_c) == 
+  cases p_t:
+    mk_AS`BooleanType(-)          -> true,
+    mk_AS`TypeName(l_n, -) -> let typem = p_c.defs.typem
+                              in l_n in set dom typem and isIntOrNat(typem(l_n).shape, p_c),
+    others                    -> false
+  end;
+
+getTest : AS`Stmt -> AS`Expr
+getTest(p_stmt) == 
+  if is_AS`BlockStmt(p_stmt) 
+  then getTest(hd p_stmt.stmts)
+  else p_stmt.test
+pre isSingleIfThenElse(p_stmt) ;
+
+getThen : AS`Stmt -> AS`Stmt
+getThen(p_stmt) == 
+  if is_AS`BlockStmt(p_stmt) 
+  then getThen(hd p_stmt.stmts)
+  else p_stmt.cons
+pre isSingleIfThenElse(p_stmt) ;
+
+getElse : AS`Stmt -> [AS`Stmt]
+getElse(p_stmt) == 
+  if is_AS`BlockStmt(p_stmt) 
+  then getElse(hd p_stmt.stmts)
+  else p_stmt.altn
+pre isSingleIfThenElse(p_stmt) ;
+
+getElsif : AS`Stmt -> seq of AS`ElseifStmt
+getElsif(p_stmt) == 
+  if is_AS`BlockStmt(p_stmt) 
+  then getElsif(hd p_stmt.stmts)
+  else p_stmt.elsif
+pre isSingleIfThenElse(p_stmt) ;
+
+ifOf : AS`Stmt -> AS`Expr * AS`Stmt * [AS`Stmt]
+ifOf(p_stmt) ==
+  if is_AS`IfStmt(p_stmt)
+  then mk_(p_stmt.test, p_stmt.cons, p_stmt.altn)
+  else ifOf(hd p_stmt.stmts)
+pre isSingleIfThenElse(p_stmt) ;
+
+isSingleReturnVal : AS`Stmt * AS`Expr -> bool
+isSingleReturnVal(p_stmt, p_expr) == 
+  isSingleReturn(p_stmt) and returnValue(p_stmt)= p_expr ;
+
+isSingleReturn : AS`Stmt -> bool
+isSingleReturn(p_stmt) == 
+  ( is_AS`BlockStmt(p_stmt) 
+    and let mk_AS`BlockStmt(l_al, l_sl, -) =  p_stmt in 
+    l_al = [] and len l_sl = 1 and isSingleReturn(hd l_sl) )
+  or
+  is_AS`ReturnStmt(p_stmt) ;
+
+returnValue : AS`Stmt -> AS`Expr
+returnValue(p_stmt) ==
+  if is_AS`ReturnStmt(p_stmt)
+  then p_stmt.val
+  else returnValue(hd p_stmt.stmts)
+pre isSingleReturn(p_stmt) ;
+
+getDcls : AS`Stmt -> seq of AS`AssignDef 
+getDcls(p_stmt) == 
+  if is_AS`IfStmt(p_stmt) 
+  then []
+  else let mk_AS`BlockStmt(l_al, l_sl, -) =  p_stmt,
+           l_dcls = getDcls(hd l_sl)
+       in l_al ^ l_dcls
+pre isSingleIfThenElse(p_stmt) ;
+
+isSingleIfThenElse : AS`Stmt -> bool
+isSingleIfThenElse(p_stmt) == 
+  ( is_AS`BlockStmt(p_stmt) 
+    and let mk_AS`BlockStmt(-, l_sl, -) =  p_stmt in 
+      len l_sl = 1 and isSingleIfThenElse(hd l_sl) )
+  or
+  is_AS`IfStmt(p_stmt) ;
+
+isSingleIfThenElseNoDcls : AS`Stmt -> bool
+isSingleIfThenElseNoDcls(p_stmt) == 
+  ( is_AS`BlockStmt(p_stmt) 
+    and let mk_AS`BlockStmt(l_al, l_sl, -) =  p_stmt in 
+      l_al = [] and len l_sl = 1 and isSingleIfThenElseNoDcls(hd l_sl) )
+  or
+  is_AS`IfStmt(p_stmt) ;
+
+isNumComparisonOp : AS`BinaryOp -> bool
+isNumComparisonOp(p_op) == 
+  p_op in set {<NUMLT>, <NUMLE>, <NUMGT>, <NUMGE>} ;
+
+sign : AS`BinaryOp -> AS`BinaryOp
+sign(p_op) == 
+  cases p_op:
+    <NUMLT>, <NUMLE> -> <NUMPLUS>,
+    others -> <NUMMINUS>
+  end
+pre isNumComparisonOp(p_op);
+
+areOpposite : AS`BoolLit * AS`BoolLit -> bool
+areOpposite(p_b1, p_b2) == p_b1.val <=> not p_b2.val ;
+
+isSingleAssignmentLHS : AS`Stmt * AS`Name -> bool
+isSingleAssignmentLHS(p_stmt, p_name) == 
+  ( is_AS`BlockStmt(p_stmt) 
+    and let mk_AS`BlockStmt(l_al, l_sl, -) =  p_stmt in 
+      l_al = [] and len l_sl = 1 and isSingleAssignmentLHS(hd l_sl, p_name) )
+  or
+  is_AS`AssignStmt(p_stmt) and p_stmt.lhs = p_name ;
+
+assignsTo : AS`Stmt * AS`Name -> AS`Expr
+assignsTo(p_stmt, p_name) ==
+  if is_AS`AssignStmt(p_stmt)
+  then p_stmt.rhs
+  else assignsTo(hd p_stmt.stmts, p_name)
+pre isSingleAssignmentLHS(p_stmt, p_name) ;
+
+isIfNoElse : AS`Stmt -> bool
+isIfNoElse(p_stmt) == 
+  is_AS`IfStmt(p_stmt) and p_stmt.elsif = [] and p_stmt.altn = nil
+  or
+  is_AS`BlockStmt(p_stmt) and p_stmt.dcls = [] and len p_stmt.stmts = 1 and isIfNoElse(hd p_stmt.stmts) ; 
+
+isRedundantIfStmt : AS`Stmt * AS`Name -> bool
+isRedundantIfStmt(p_stmt, p_name) == 
+  ( is_AS`BlockStmt(p_stmt) 
+    and let mk_AS`BlockStmt(-, l_sl, -) =  p_stmt in 
+    len l_sl = 1 
+    and isRedundantIfStmt(hd l_sl, p_name) )
+  or
+    is_AS`IfStmt(p_stmt) 
+    and let mk_AS`IfStmt(-, l_cons, l_elsif, l_altn, -) = p_stmt in
+      l_elsif = [] 
+      and l_altn <> nil 
+      and isSingleAssignmentLHS(l_cons, p_name) 
+      and isSingleAssignmentLHS(l_altn, p_name) 
+      and let l_b1 = assignsTo(l_cons, p_name),
+              l_b2 = assignsTo(l_altn, p_name) in
+         is_AS`BoolLit(l_b1)
+         and is_AS`BoolLit(l_b2)
+         and areOpposite(l_b1, l_b2) ;
+
+isSingleIfTest : AS`Stmt * AS`Expr -> bool
+isSingleIfTest(p_stmt, p_test) == 
+  ( is_AS`BlockStmt(p_stmt) 
+    and let mk_AS`BlockStmt(l_al, l_sl, -) =  p_stmt in 
+      l_al = [] and len l_sl = 1 and isSingleIfTest(hd l_sl, p_test))
+  or
+  is_AS`IfStmt(p_stmt) and STRIP`stripBrackets(p_stmt.test) = p_test ;
+
+isMapCompIteration : seq of AS`Stmt * AS`Name * AS`BinaryOp -> bool
+isMapCompIteration(p_sl, p_name, p_op) == 
+  len p_sl = 2 
+  and let [l_s1, l_s2] = p_sl in 
+    is_AS`AssignStmt(l_s1) 
+    and is_AS`AssignStmt(l_s2) 
+    and isMapOverrideAssign(l_s1)
+    and isIntIncrementAssign(l_s2, p_name, p_op) ;
+
+isMapOverrideAssign : AS`AssignStmt -> bool
+isMapOverrideAssign(mk_AS`AssignStmt(p_l, p_r, -)) == 
+  is_AS`SeqModifyMapOverrideExpr(p_r) 
+  and matchesStateDesignator(p_l, p_r.seqmap)
+  and is_AS`MapEnumerationExpr(p_r.mapexp) 
+  and len p_r.mapexp.els = 1 ;
+
+matchesStateDesignator : AS`StateDesignator * AS`Expr -> bool
+matchesStateDesignator(p_sd, p_expr) == 
+  cases true :
+    (is_AS`Name(p_sd)) -> p_sd = p_expr,
+    (is_AS`FieldRef(p_sd)) -> matchesFieldRef(p_sd, p_expr),
+    (is_AS`MapOrSeqRef(p_sd)) -> matchesMapOrSeqRef(p_sd, p_expr)
+  end ; 
+
+matchesFieldRef : AS`FieldRef * AS`Expr -> bool
+matchesFieldRef(p_sd, p_expr) == 
+  is_AS`FieldSelectExpr(p_expr) 
+  and matchesStateDesignator(p_sd.var, p_expr.rec)
+  and p_sd.sel = nameOf(p_expr) ;
+
+nameOf : AS`FieldSelectExpr -> AS`Name
+nameOf(p_expr) == 
+  if is_AS`FctTypeInstExpr(p_expr.nm) 
+  then p_expr.nm.polyfct
+  else p_expr.nm ;
+
+matchesMapOrSeqRef : AS`MapOrSeqRef * AS`Expr -> bool
+matchesMapOrSeqRef(p_sd, p_expr) == 
+  is_AS`ApplyExpr(p_expr) 
+  and matchesStateDesignator(p_sd.var, p_expr.fct)
+  and len p_expr.arg = 1
+  and p_sd.arg = hd p_expr.arg ; 
+
+isIntIncrementAssign : AS`AssignStmt * AS`Name * AS`BinaryOp -> bool
+isIntIncrementAssign(mk_AS`AssignStmt(p_l, p_r, -), p_name, p_op) == 
+  p_l = p_name
+  and is_AS`BinaryExpr(p_r) 
+  and p_r.left = p_name 
+  and p_r.opr = p_op 
+  and is_AS`RealLit(p_r.right)
+  and is_int(p_r.right.val)
+  and p_r.right.val <> 0 ;
+
+-- assumes brackets stripped from input expression 
+
+patExprEquiv : AS`Pattern * AS`Expr -> bool
+patExprEquiv(p_pat, p_expr) == 
+  cases true :
+    (is_AS`PatternName(p_pat))     -> patNameExprEquiv(p_pat, p_expr),
+    (is_AS`MatchVal(p_pat))        -> matchValExprEquiv(p_pat, p_expr),
+    (is_AS`TuplePattern(p_pat))    -> tuplePatExprEquiv(p_pat, p_expr),
+    (is_AS`SetEnumPattern(p_pat))  -> setEnumPatExprEquiv(p_pat, p_expr),
+    (is_AS`SeqEnumPattern(p_pat))  -> seqEnumPatExprEquiv(p_pat, p_expr),
+    (is_AS`MapEnumPattern(p_pat))  -> mapEnumPatExprEquiv(p_pat, p_expr),
+    (is_AS`SetUnionPattern(p_pat)) -> setUnionPatExprEquiv(p_pat, p_expr),
+    (is_AS`SeqConcPattern(p_pat))  -> seqConcPatExprEquiv(p_pat, p_expr),
+    (is_AS`MapMergePattern(p_pat)) -> mapMergePatExprEquiv(p_pat, p_expr),
+    (is_AS`RecordPattern(p_pat))   -> recordPatExprEquiv(p_pat, p_expr),
+    (is_AS`ObjectPattern(p_pat))   -> false,
+    (is_AS`FieldPattern(p_pat))    -> false
+  end ;
+
+patNameExprEquiv : AS`PatternName * AS`Expr -> bool
+patNameExprEquiv(p_pat, p_expr) == is_AS`Name(p_expr) and p_pat.nm = p_expr ;
+
+matchValExprEquiv : AS`MatchVal * AS`Expr -> bool
+matchValExprEquiv(p_pat, p_expr) == STRIP`stripBrackets(p_pat.val) = p_expr ;
+
+tuplePatExprEquiv : AS`TuplePattern * AS`Expr -> bool
+tuplePatExprEquiv(p_pat, p_expr) == 
+  is_AS`TupleConstructorExpr(p_expr)
+  and patListExprListEquiv(p_pat.fields, p_expr.fields) ;
+
+patListExprListEquiv : seq of AS`Pattern * seq of AS`Expr -> bool
+patListExprListEquiv(p_pl, p_el) ==
+  len p_pl = len p_el 
+  and forall b_i in set inds p_pl & patExprEquiv(p_pl(b_i), STRIP`stripBrackets(p_el(b_i))) ;
+
+setEnumPatExprEquiv : AS`SetEnumPattern * AS`Expr -> bool
+setEnumPatExprEquiv(p_pat, p_expr) == 
+  is_AS`SetEnumerationExpr(p_expr)
+  and patListExprListEquiv(p_pat.Elems, p_expr.els) ;
+
+seqEnumPatExprEquiv : AS`SeqEnumPattern * AS`Expr -> bool
+seqEnumPatExprEquiv(p_pat, p_expr) == 
+  is_AS`SeqEnumerationExpr(p_expr)
+  and patListExprListEquiv(p_pat.els, p_expr.els) ;
+
+mapEnumPatExprEquiv : AS`MapEnumPattern * AS`Expr -> bool
+mapEnumPatExprEquiv(p_pat, p_expr) == 
+  is_AS`MapEnumerationExpr(p_expr) and
+  len p_pat.mls = len p_expr.els and
+  let mls = p_pat.mls,
+      els = p_expr.els
+  in forall i in set inds mls & patExprEquiv(mls(i).dp, els(i).mapdom) and patExprEquiv(mls(i).rp, els(i).maprng);
+
+setUnionPatExprEquiv : AS`SetUnionPattern * AS`Expr -> bool
+setUnionPatExprEquiv(p_pat, p_expr) == 
+  is_AS`BinaryExpr(p_expr) 
+  and p_expr.opr = <SETUNION>
+  and patExprEquiv(p_pat.lp, STRIP`stripBrackets(p_expr.left)) 
+  and patExprEquiv(p_pat.rp, STRIP`stripBrackets(p_expr.right)) ;
+
+seqConcPatExprEquiv : AS`SeqConcPattern * AS`Expr -> bool
+seqConcPatExprEquiv(p_pat, p_expr) == 
+  is_AS`BinaryExpr(p_expr) 
+  and p_expr.opr = <SEQCONC>
+  and patExprEquiv(p_pat.lp, STRIP`stripBrackets(p_expr.left)) 
+  and patExprEquiv(p_pat.rp, STRIP`stripBrackets(p_expr.right)) ;
+
+mapMergePatExprEquiv : AS`MapMergePattern * AS`Expr -> bool
+mapMergePatExprEquiv(p_pat, p_expr) == 
+  is_AS`BinaryExpr(p_expr) 
+  and p_expr.opr = <MAPMERGE>
+  and patExprEquiv(p_pat.lp, STRIP`stripBrackets(p_expr.left)) 
+  and patExprEquiv(p_pat.rp, STRIP`stripBrackets(p_expr.right)) ;
+
+recordPatExprEquiv : AS`RecordPattern * AS`Expr -> bool
+recordPatExprEquiv(p_pat, p_expr) == 
+  is_AS`RecordConstructorExpr(p_expr)
+  and p_pat.nm = p_expr.tag
+  and patListExprListEquiv(p_pat.fields, p_expr.fields) ;
+
+end XF
+
+\end{vdm_al}

@@ -1,0 +1,146 @@
+\subsection{FReal}
+実数（real）に関わる関数を提供する。
+実数や数値演算であらかじめ定義された機能以外の機能を定義する。
+
+\begin{vdm_al}
+--"$Id"
+class FReal
+
+values
+	ErrRng = 10 ** -10;
+	h = 10 ** -5;	
+
+functions
+\end{vdm_al}
+
+Figuresは、実数の（小数点や小数点以下の桁数を含む）桁数を返す。
+\begin{vdm_al}
+static public Figures : real -> nat
+Figures(x) ==
+	let	i = floor(x)	in
+	if x = i then
+		FiguresOfInteger(i)
+	else
+		FiguresOfInteger(i) + 1 + NumberOfDecimalPlaces(x);
+\end{vdm_al}
+
+FiguresOfIntegerは、整数iの整数部桁数を返す。
+\begin{vdm_al}
+static public FiguresOfInteger : int -> nat
+FiguresOfInteger(i) == FiguresOfIntegerAux(1)(i)
+post
+	if i = 0 then
+		RESULT = 1
+	else
+		10 ** (RESULT - 1) <= abs(i) and abs(i) < 10 ** RESULT;
+\end{vdm_al}
+
+FiguresOfIntegerAuxは、整数iの整数部桁数nを返す補助関数。
+\begin{vdm_al}
+static FiguresOfIntegerAux : nat -> int -> nat
+FiguresOfIntegerAux(n)(i) ==
+	let	q = i div 10 in
+	cases q :
+		0		-> n,
+		others	-> FReal`FiguresOfIntegerAux(n + 1)(q)
+	end;
+\end{vdm_al}
+
+IsDecimalPlacesNは、実数xが小数点以下n桁か否かを示す。
+\begin{vdm_al}
+static public IsDecimalPlacesN : nat -> real -> bool
+IsDecimalPlacesN(n)(x) == 
+	NumberOfDecimalPlaces(x) = n;
+\end{vdm_al}
+
+NumberOfDecimalPlacesは、実数xが小数点以下何桁かを返す。
+\begin{vdm_al}
+static public NumberOfDecimalPlaces : real -> nat
+NumberOfDecimalPlaces(x) == NumberOfDecimalPlacesAux(0)(x);
+\end{vdm_al}
+
+NumberOfDecimalPlacesAuxは、実数xが小数点以下何桁かを返す補助関数。
+\begin{vdm_al}
+static NumberOfDecimalPlacesAux : nat -> real -> nat
+NumberOfDecimalPlacesAux(n)(x) ==
+	if x = floor(x) then
+		n
+	else
+		NumberOfDecimalPlacesAux(n + 1)(x * 10);
+\end{vdm_al}
+
+Roundは、実数rを小数点以下n桁で四捨五入する。
+\begin{vdm_al}
+static public Round : real -> nat -> real
+Round(r)(n) ==
+	let	m = 10 ** n
+	in
+	floor(r * m  + 0.5) / m
+pre
+	r >= 0;
+\end{vdm_al}
+
+Differentiateは、関数f(x)をxで微分する。
+\begin{vdm_al}
+static public Differentiate : (real -> real) ->real -> real
+Differentiate(f)(x) == (f(x+h) - f(x)) / h ;
+\end{vdm_al}
+
+NewtonOfEquationは、ニュートン法で方程式を解く。
+\begin{vdm_al}
+static public NewtonOfEquation: (real ->real) -> real -> real
+NewtonOfEquation(f)(x) ==
+	let	endCndition = lambda y : real & abs(f(y)) < ErrRng,
+		next = lambda y : real & y - (f(y) / Differentiate(f)(y))	in
+	FFunction`Funtil[real](endCndition)(next)(x);
+\end{vdm_al}
+
+Rootは、ニュートン法で実数xの平方根を求める。
+ニュートン法のテストのために作成した。
+\begin{vdm_al}
+static public Root: real -> real
+Root(x) ==
+	let	f = lambda y : real & y ** 2 - x	in
+	NewtonOfEquation(f)(x)
+pre
+	ErrRng > 0
+post
+	abs(RESULT ** 2 - x) < ErrRng;
+\end{vdm_al}
+
+Returnsは、利子interestでy年間運用したとき、元利合計が何倍になるかを得る。
+\begin{vdm_al}
+static public Returns : real -> int -> real
+Returns(interest)(y) == (1 + interest) ** y
+pre
+	interest >= 0 and y > 0;
+\end{vdm_al}
+
+InterestOfImplicitは、years年間運用してx倍にしたいとき、必要な利子を得る関数の要求仕様。
+\begin{vdm_al}
+static InterestOfImplicit : real * int -> real
+InterestOfImplicit(x,y) ==
+	is not yet specified
+pre
+	x > 1.0 and y > 0 and ErrRng > 0
+post
+	x > 1.0 and y > 0 and ErrRng > 0 and
+	exists1 interest : real & 
+		let	finalReturns = Returns(interest)(y)
+		in	abs (x - finalReturns) < ErrRng  and RESULT = interest;
+\end{vdm_al}
+
+Interestは、y年間運用してx倍にしたいとき、必要な利子を得る。
+\begin{vdm_al}
+static public Interest: real -> int -> real
+Interest(x)(y) ==
+	let	f = lambda interest : real & x - Returns(interest)(y)	in
+	NewtonOfEquation(f)(x);
+	
+end FReal
+\end{vdm_al}
+
+
+\begin{rtinfo}
+[FReal]{vdm.tc}[FReal]
+\end{rtinfo}

@@ -1,0 +1,30 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq  of set of nat  
+Test () ==
+return 
+[  { a + b | [ a, b ], a in set { [3,6], 3,false } },
+   { a + 7 | [a], a in set { [1], 1, false}, b in set {1,2} & a >= b },
+   { a + 9 | [a] in set { [1], [2], [false] }, a in set { 1, 2 } } ]
+
+
+
+
+  
+
+  
+
+
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

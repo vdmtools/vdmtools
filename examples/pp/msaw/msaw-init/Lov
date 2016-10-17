@@ -1,0 +1,166 @@
+! ##########################################################
+!
+!  Lov Editors app-defaults file 
+!
+!  General appearance and behavior defaults
+!
+!	For color terminals 100dpi
+!
+! ##########################################################
+
+Lov*defaultVirtualBindings: \
+      osfBackSpace        :   <Key>BackSpace\n\
+      osfInsert           :   <Key>Insert\n\
+      osfDelete           :   <Key>Delete\n\
+      osfBeginLine        :   <Key>Home\n\
+      osfEndLine          :   <Key>End\n\
+      osfPageDown         :   <Key>Next\n\
+      osfPageUp           :   <Key>Prior\n\
+      osfLeft             :   <Key>Left\n\
+      osfRight            :   <Key>Right\n\
+      osfUp               :   <Key>Up\n\
+      osfDown             :   <Key>Down\n\
+      osfSelect           :   <Key>Select\n\
+      osfClear            :   <Key>Clear
+
+Lov*allowShellResize:		true
+Lov*borderWidth:		0
+Lov*traversalOn:		true
+Lov*keyboardFocusPolicy:	explicit
+Lov*title:			Lov
+
+Lov*XmScrolledWindow.foregroundPixmap:	75_foreground
+
+Lov*XmScrollBar.troughColor:		#f3f3f3
+Lov*XmScrollBar.bottomShadowColor:	#000000
+Lov*XmScrollBar.topShadowColor:		#e9e9e9
+Lov*XmList*highlightThickness:		0
+Lov*XmList*listSpacing:			2
+
+!
+! ######### FOREGROUND #########
+!
+
+Lov*foreground:				#111111
+Lov*bar_menu*foreground:		#fce089
+Lov*popup_menu*foreground:		#fce089
+Lov*XmForm.foreground:			#111111
+Lov*XmList.foreground:			#483d8b
+Lov*XmScrolledWindow.foreground:	#e9e9e9
+Lov*XmDialogShell*XmText*foreground:	#483d8b
+
+Lov*bottomShadowColor:			#151515
+Lov*highlightColor:			#151515
+Lov*XmToggleButton.selectColor:		#ff0000
+
+Lov*dashLines:				true
+
+!
+! ######### BACKGROUND #########
+!
+
+! Others
+Lov*background:				#cfcfcf
+Lov*XmScrolledWindow.background:	#cfcfcf
+Lov*XmPushButton.background:		#e9e9e9
+Lov*XmForm.background:			#cfcfcf
+Lov*XmDrawingArea.background:		#eaeaea
+Lov*XmList.background:			#e6e6e6
+Lov*XmText.background:			#e9e9e9
+
+! Menu Bar and Menu Popup
+Lov*bar_menu*background:		#a0a0b0
+Lov*XmDrawingArea*popup_menu*background:#a0a0b0
+Lov*XmList*popup_menu*background:	#a0a0b0
+Lov*LOGO*background:			#a0a0b0
+
+!
+! ############### FONTS #############
+!
+
+Lov*XmMainWindow*XmRowColumn*fontList: 	-adobe-helvetica-bold-r-normal--11-*
+Lov*XmMainWindow*bar_menu*fontList: 	-adobe-helvetica-medium-r-normal--14-*
+Lov*XmMainWindow*popup_menu*fontList: 	-adobe-helvetica-medium-r-normal--14-*
+Lov*XmLabelGadget*fontList:		-adobe-helvetica-bold-r-normal--11-*
+Lov*XmPushButton*fontList:		-adobe-helvetica-bold-r-normal--11-*
+Lov*XmPushButtonGadget*fontList:	-adobe-helvetica-bold-r-normal--11-*
+Lov*fontList: 				-adobe-helvetica-medium-r-normal--11-*
+Lov*Help*XmText*fontList:		-adobe-courier-medium-r-normal--11-*
+
+! Version label
+Lov*VersionLabel.fontList:		-adobe-times-bold-i-normal--14-*
+
+! Message Font
+Lov*XmMainWindow*XmForm*XmText*fontList:-adobe-helvetica-bold-o-normal--11-*
+
+! Application Fonts File
+Lov*fontPath:				$(XINFO)/Fonts/ffonts.100
+
+! Palette's buttons Color
+Lov*PaletteButton.background:	#a0a0b0
+Lov*PaletteButton.foreground:	#fce089
+
+!
+! ######### OEDIT SPECIFICITIES #########
+!
+
+! Objects Color
+oedit*XmDrawingArea.foreground:	#1919b0
+oedit*associationColor:		#e12222
+oedit*inheritanceColor:		#119700
+oedit*classBGColor:		#ffffbb
+oedit*instanceBGColor:		#ffffbb
+oedit*rectSelColor:		black
+
+! Import Mask
+oedit*importMask:		cd
+
+! C++ Generation
+oedit*autoImport:		omt_vdm_templates
+
+! Geometry of application
+oedit*geometry:			600x520+200+200
+
+!
+! ######### FEDIT SPECIFICITIES #########
+!
+
+! Objects Color
+fedit*XmDrawingArea.foreground:	#1919b0
+fedit*dataFlowColor:		#119700
+fedit*controlFlowColor:		#e12222
+fedit*crSelFlowColor:		#119700
+fedit*processBGColor:		#ffffbb
+fedit*actorBGColor:		#ffffbb
+fedit*storeBGColor:             transparent
+
+! Import Mask
+fedit*importMask:		[cf]d
+
+! Geometry of application
+fedit*geometry:			600x520+200+200
+
+!
+! ######### BEDIT SPECIFICITIES #########
+!
+
+! Objects Color
+bedit*XmDrawingArea.foreground: #1919b0
+bedit*transitionColor:          #119700
+bedit*separatorColor:           #e12222
+bedit*outputColor:              #e12222
+bedit*outputBGColor:            #ffffbb
+bedit*stateBGColor:             #ffffbb
+
+! Geometry of application
+bedit*geometry:                 600x520+200+200
+
+!
+! Import Mask
+bedit*importMask:		[cs]d
+
+! ######### OPENWINDOWS #########
+!
+
+OpenWindows.FocusLenience:	true
+OpenWindows.SetInput:		followmouse

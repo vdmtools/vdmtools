@@ -1,0 +1,38 @@
+module m1
+exports all
+definitions
+
+state X of
+  x: nat
+end
+
+operations
+
+setX: (nat) ==> ()
+setX (val) == x:= val;
+
+readX: () ==> nat
+readX () == return x
+end m1
+
+
+module A
+imports
+  from m1
+    operations
+      setX: (nat) ==> () renamed setX;
+      readX: () ==> nat renamed readX
+exports all
+definitions
+operations
+
+f1 : () ==> int
+f1() == return 1;
+
+Test: () ==> seq of int
+Test() == (
+  setX(10);
+	let h = readX in
+	return [f1(),h(),f1()]
+)
+end A

@@ -1,0 +1,27 @@
+class IsNotYetSpec
+
+operations
+  IsNotYetSpec1: nat * bool ==> bool
+  IsNotYetSpec1(a,b) ==
+    is not yet specified;
+
+  IsNotYetSpec2(a,b : nat) c : bool ==
+    is not yet specified;
+
+  
+functions
+  IsNotYetSpec3: nat * bool -> bool
+  IsNotYetSpec3(a,b) ==
+    is not yet specified;
+
+  IsNotYetSpec4(a,b : nat) c : bool ==
+    is not yet specified;
+
+  -- note "d" will not be reported "not to be used", since the body of the function is "is not yet spec."
+  -- 17 Sep. 1998 15:42 -- Jesper K. Pedersen
+  IsNotYetSpec5(a,b : nat) c: nat,d : bool ==
+    is not yet specified
+  post c>10;
+
+
+end  IsNotYetSpec

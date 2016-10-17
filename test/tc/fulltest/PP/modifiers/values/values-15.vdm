@@ -1,0 +1,23 @@
+ class A
+
+  values
+
+    protected v : nat = 5
+
+end A
+class C is subclass of A
+
+end C
+class B is subclass of C
+
+  values
+
+    private v : nat = 3
+
+  operations
+
+public Test : () ==> nat
+  Test() ==
+    return v
+
+end B

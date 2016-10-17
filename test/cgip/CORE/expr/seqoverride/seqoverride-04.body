@@ -1,0 +1,13 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> map bool to (nat|seq of char)  
+Test () ==
+
+return 
+
+ let m = {false |-> 7} in
+ let ms = if m(false) = 7
+          then {true |->"false"}
+          else nil
+ in ms ++ m
+
+

@@ -1,0 +1,13 @@
+class JavaUtilEmptyStackException is subclass of JavaLangRuntimeException
+operations 
+public  JavaUtilEmptyStackException : () ==> JavaUtilEmptyStackException
+JavaUtilEmptyStackException() == 
+( skip 
+) ;
+
+public  JavaUtilEmptyStackException : <NIL> ==> JavaUtilEmptyStackException
+JavaUtilEmptyStackException(-) == 
+isNil := true  ;
+
+
+end  JavaUtilEmptyStackException

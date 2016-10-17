@@ -1,0 +1,5 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> set of ( nat | seq of char )  
+Test () ==
+return { 3, 6, "hello world" }
+

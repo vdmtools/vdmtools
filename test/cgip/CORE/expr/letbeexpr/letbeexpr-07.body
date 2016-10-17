@@ -1,0 +1,6 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> nat  
+Test () ==
+  return let a in set {1,...,10} be st a > 5 in a
+
+end A

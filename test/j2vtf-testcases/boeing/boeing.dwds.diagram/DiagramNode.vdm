@@ -1,0 +1,302 @@
+class DiagramNode is subclass of PickableGraphic, ComparisonValueInterface
+operations 
+public  getId : () ==> [String]
+getId() == 
+( return  identifier
+) ;
+
+public  getPins : () ==> [Enumeration]
+getPins() == 
+( return  edgesAtPin.keys()
+) ;
+
+public  getEdges : () ==> [Enumeration]
+getEdges() == 
+( return  edgesAtPin.elements()
+) ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+( return  identifier.hashCode()
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( return  identifier
+) ;
+
+public  DiagramNode : () ==> DiagramNode
+DiagramNode() == 
+( let - = PickableGraphic()
+  in 
+    skip ;
+  edgesAtPin := new  SortedVectorHashtable(30);
+  edgesAtPosition := {l_4 |-> nil  |l_4 in set  {0,...,Position.size()-1}};
+  ( dcl   index : int  := 0;
+    while  index < Position.size() do  
+    ( edgesAtPosition := edgesAtPosition ++ {index |-> new  SortedVectorHashtable(15)};
+      index := index+1
+    ) 
+  ) 
+) ;
+
+public  getEdgeCount : () ==> int 
+getEdgeCount() == 
+( dcl   returnValue : int  := edgesAtPin.getElementCount();
+  return  returnValue
+) ;
+
+public  setId : [String] ==> <VOID>
+setId(id) == 
+( identifier := id;
+  return  <VOID>
+) ;
+
+public  getEdges : [String] ==> [Enumeration]
+getEdges(pinName) == 
+( dcl   pinVector : [Vector] := edgesAtPin.get(pinName);
+  if  pinVector = nil  
+  then  
+    ( return  new  Vector().elements()
+    ) 
+  else  
+    ( return  pinVector.elements()
+    ) 
+) ;
+
+public  getConnectionPoints : () ==> [Enumeration]
+getConnectionPoints() == 
+( return  edgesAtPin.keys()
+) ;
+
+public  DiagramNode : [String] ==> DiagramNode
+DiagramNode(id) == 
+( let - = DiagramNode()
+  in 
+    skip ;
+  identifier := id
+) ;
+
+public  getEdgeCount : [Position] ==> int 
+getEdgeCount(atPosition) == 
+( dcl   returnValue : int  := edgesAtPosition(atPosition.ord).getElementCount();
+  return  returnValue
+) ;
+
+public  getEdges : [Position] * [String] ==> [Enumeration]
+getEdges(atPosition, atPin) == 
+( dcl   returnElements : [Enumeration] := nil  ;
+  if  edgesAtPosition(atPosition.ord).containsKey(atPin)
+  then  
+    ( dcl   returnVector : [Vector] := edgesAtPosition(atPosition.ord).get(atPin);
+      returnElements := returnVector.elements()
+    ) ;
+  return  returnElements
+) ;
+
+public  contains : [String] * [DiagramEdge] ==> bool 
+contains(connectionId, edge) == 
+( dcl   result : bool  := edgesAtPin.contains(new  ComparisonValue(connectionId.toString()) , new  ComparisonValue(edge.toString()));
+  return  result
+) ;
+
+public  equals : [ComparisonValueInterface] ==> bool 
+equals(anotherValue) == 
+( return  identifier.equals(anotherValue.toString())
+) ;
+
+public  getEdgeCount : [Position] * [String] ==> int 
+getEdgeCount(atPosition, atPin) == 
+( dcl   returnValue : int ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (NullPointerException,j2v_exception)) -> 
+        ( dcl   e : [NullPointerException] := j2v_exception;
+          returnValue := 0
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   elementsAtPin : [Vector] := edgesAtPosition(atPosition.ord).get(atPin);
+      returnValue := elementsAtPin.size()
+    ) ;
+  return  returnValue
+) ;
+
+public  getIndexOfPin : [Position] * [String] ==> int 
+getIndexOfPin(position, pin) == 
+( dcl   returnIndex : int  := -1;
+  if  edgesAtPosition(position.ord).containsKey(pin)
+  then  
+    ( dcl   pinList : [Enumeration] := edgesAtPosition(position.ord).keys(),
+            index : int  := 0;
+      trap  j2v_break with  
+        cases  true  : 
+          (isofclass  (J2V_Break,j2v_break)) -> 
+            skip 
+          
+        end  
+      in  
+        while  pinList.hasMoreElements() do  
+        ( dcl   pinToCompare : [String] := pinList.nextElement();
+          if  pinToCompare.equals(pin)
+          then  
+            ( returnIndex := index;
+              exit  new  J2V_Break()
+            ) ;
+          index := index+1
+        ) 
+    ) ;
+  return  returnIndex
+) ;
+
+public  compareTo : [ComparisonValueInterface] ==> int 
+compareTo(anotherValue) == 
+( dcl   testValue : [String] := anotherValue.toString();
+  return  identifier.compareTo(testValue)
+) ;
+
+public  addEdgeAtPin : [String] * [DiagramEdge] ==> <VOID>
+addEdgeAtPin(connectionPoint, edge) == 
+( let - = edgesAtPin.put(new  ComparisonValue(connectionPoint) , edge)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+private  createArrayOfSortedIndicies : [Vector] * [Position] ==> map  int  to  int 
+createArrayOfSortedIndicies(elementVector, position) == 
+( dcl   indexArray : map  int  to  int  := {l_4 |-> 0|l_4 in set  {0,...,elementVector.size()-1}};
+  ( dcl   index : int  := 0;
+    while  index < (card  dom  indexArray) do  
+    ( indexArray := indexArray ++ {index |-> index};
+      index := index+1
+    ) 
+  ) ;
+  ( dcl   currIndex : int  := 0;
+    while  currIndex < (card  dom  indexArray) do  
+    ( dcl   currEdge : [DiagramEdge] := elementVector.elementAt(indexArray(currIndex)),
+            currPoint : [ConnectionPoint] := currEdge.getOriginatingPoint();
+      if  currPoint.getNode().equals(self  )
+      then  
+        ( currPoint := currEdge.getTerminatingPoint()
+        ) ;
+      ( dcl   nextIndex : int  := currIndex+1;
+        while  nextIndex < (card  dom  indexArray) do  
+        ( dcl   nextEdge : [DiagramEdge] := elementVector.elementAt(indexArray(nextIndex)),
+                nextPoint : [ConnectionPoint] := nextEdge.getOriginatingPoint();
+          if  nextPoint.getNode().equals(self  )
+          then  
+            ( nextPoint := nextEdge.getTerminatingPoint()
+            ) ;
+          if  (position = Position.RIGHT and  nextPoint.getLocation().y < currPoint.getLocation().y) or  (position = Position.LEFT and  nextPoint.getLocation().y < currPoint.getLocation().y) or  (position = Position.TOP and  nextPoint.getLocation().x > currPoint.getLocation().x) or  (position = Position.BOTTOM and  nextPoint.getLocation().x > currPoint.getLocation().x)
+          then  
+            ( dcl   temp : int  := indexArray(nextIndex);
+              ( dcl   ScanIndex : int  := nextIndex;
+                while  ScanIndex > currIndex do  
+                ( indexArray := indexArray ++ {ScanIndex |-> indexArray(ScanIndex-1)};
+                  ScanIndex := ScanIndex-1
+                ) 
+              ) ;
+              indexArray := indexArray ++ {currIndex |-> temp};
+              currPoint := nextPoint
+            ) ;
+          nextIndex := nextIndex+1
+        ) 
+      ) ;
+      currIndex := currIndex+1
+    ) 
+  ) ;
+  return  indexArray
+) ;
+
+public  addEdgeAtPosition : [Position] * [String] * [DiagramEdge] ==> <VOID>
+addEdgeAtPosition(positionOnNode, connectionPoint, edge) == 
+( let - = edgesAtPosition(positionOnNode.ord).put(new  ComparisonValue(connectionPoint) , edge)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  getRelativeWireIndex : [DiagramEdge] * [Position] * [String] * bool  ==> int 
+getRelativeWireIndex(edge, position, pin, InvertIndex) == 
+( dcl   ReturnIndex : int  := -1;
+  let - = System`out.println(new  String("getRelativeWireIndex(")+edge+new  String(", ")+position+new  String(", ")+pin+new  String(", ")+InvertIndex+new  String(")"))
+  in 
+    skip ;
+  if  edgesAtPosition(position.ord).containsKey(pin)
+  then  
+    ( dcl   elementVector : [Vector] := edgesAtPosition(position.ord).get(pin),
+            sortedIndexArray : map  int  to  int  := createArrayOfSortedIndicies(elementVector , position);
+      ( dcl   index : int  := 0;
+        while  index < (card  dom  sortedIndexArray) do  
+        ( dcl   edgeToCompare : [DiagramEdge] := elementVector.elementAt(sortedIndexArray(index));
+          if  edgeToCompare.equals(edge)
+          then  
+            ( ReturnIndex := index;
+              exit  new  J2V_Break()
+            ) ;
+          index := index+1
+        ) 
+      ) ;
+      if  InvertIndex
+      then  
+        ( dcl   MaxWireFound : bool  := false  ,
+                MyWire : [DiagramEdge] := elementVector.elementAt(sortedIndexArray(ReturnIndex)),
+                StartPoint : [Point] := MyWire.getOriginatingPoint().getLocation(),
+                EndPoint : [Point] := MyWire.getTerminatingPoint().getLocation();
+          ( dcl   index : int  := (card  dom  sortedIndexArray)-1;
+            while  index >= 0 and  not  MaxWireFound do  
+            ( dcl   edgeToCompare : [DiagramEdge] := elementVector.elementAt(sortedIndexArray(index));
+              if  (StartPoint.equals(edgeToCompare.getOriginatingPoint().getLocation()) and  EndPoint.equals(edgeToCompare.getTerminatingPoint().getLocation())) or  (StartPoint.equals(edgeToCompare.getTerminatingPoint().getLocation()) and  EndPoint.equals(edgeToCompare.getOriginatingPoint().getLocation()))
+              then  
+                ( MaxWireFound := true  ;
+                  ReturnIndex := index-ReturnIndex
+                ) ;
+              index := index-1
+            ) 
+          ) 
+        ) 
+    ) ;
+  return  ReturnIndex
+) ;
+
+public  getAbsoluteWireIndex : [DiagramEdge] * [Position] * [String] * [RefDesNode] * bool  ==> int 
+getAbsoluteWireIndex(edge, position, pin, ReferenceNode, InvertIndex) == 
+( dcl   ReturnIndex : int  := getRelativeWireIndex(edge , position , pin , InvertIndex);
+  if  ReturnIndex <> -1
+  then  
+    ( dcl   MyOrientation : [Orientation] := Position.orientationOf(position),
+            PinHeight : int  := ReferenceNode.getConnectionPoint(pin , MyOrientation).getLocation().y,
+            ThePins : [Enumeration] := getPins(),
+            ThePin : [String],
+            ThePinHeight : int ;
+      trap  j2v_break with  
+        cases  true  : 
+          (isofclass  (J2V_Break,j2v_break)) -> 
+            skip 
+          
+        end  
+      in  
+        while  ThePins.hasMoreElements() do  
+        ( ThePin := ThePins.nextElement();
+          ThePinHeight := ReferenceNode.getConnectionPoint(ThePin , MyOrientation).getLocation().y;
+          if  ThePinHeight < PinHeight
+          then  
+            ( def l_6 = ReturnIndex
+              in ReturnIndex := l_6+getEdgeCount(position , ThePin)
+            ) 
+        ) 
+    ) ;
+  return  ReturnIndex
+) ;
+
+instance variables 
+  protected  edgesAtPin : [SortedVectorHashtable] := nil  ;
+  protected  edgesAtPosition : map  int  to  [SortedVectorHashtable];
+  protected  currentEdgePosition : [Position] := nil  ;
+  protected  identifier : [String] := nil  ;
+  protected  startingPosition : [Position] := nil  
+  
+end  DiagramNode

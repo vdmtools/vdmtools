@@ -1,0 +1,43 @@
+%$ld$
+\subsubsection{AbstractTask}
+
+EnvironmentTaskは、環境中でタスクをモデル化する。
+\begin{vdm_al}
+class EnvironmentTask
+  is subclass of AbstractTask
+
+instance variables
+  static id : ID := 0;	--生成された各eventの識別子
+
+  -- event traceのための管理用
+  protected 出力履歴写像 : map ID to nat := {|->};
+  protected 入力履歴写像 : map ID to nat := {|->}
+
+operations
+  public IDを得る: () ==> ID
+  IDを得る () ==
+    ( dcl 返値 : ID := id;
+      id := id + 1;
+      return 返値 );
+
+  public Run: () ==> ()
+  Run () == is subclass responsibility;
+
+  public updateTime: Time ==> ()
+  updateTime (delta) == skip;
+
+  public   出力イベントを追加する : ID ==> ()
+  出力イベントを追加する (id) == 出力履歴写像 := 出力履歴写像 munion {id |-> time};
+
+  public 入力イベントを追加する: ID ==> ()
+  入力イベントを追加する (id) == 入力履歴写像 := 入力履歴写像 munion {id |-> time}
+
+sync
+  mutex (IDを得る);
+
+end EnvironmentTask
+\end{vdm_al}
+
+\begin{rtinfo}
+[EnvironmentTask]{vdm.tc}[EnvironmentTask]
+\end{rtinfo}

@@ -1,0 +1,801 @@
+%%
+%% Toolbox Language Manual
+%% $Id: DLMan.tex,v 1.11 2006/04/19 10:24:48 vdmtools Exp $
+%% 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PDF compatibility code. 
+
+\makeatletter
+\newif\ifpdflatex@
+\ifx\pdftexversion\@undefined
+\pdflatex@false
+%\message{Not using pdf}
+\else
+\pdflatex@true
+%\message{Using pdf}
+\fi
+
+\newcommand{\latexpdf}[2]{
+  \ifpdflatex@ #1
+  \else #2
+  \fi
+}
+
+\newcommand{\latexorpdf}[2]{
+  \ifpdflatex@ #2
+  \else #1
+  \fi
+}
+
+\makeatother
+
+#ifdef A4Format
+\newcommand{\pformat}{a4paper}
+#endif A4Format
+#ifdef LetterFormat
+\newcommand{\pformat}{letterpaper}
+#endif LetterFormat
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\latexorpdf{
+\documentclass[\pformat,12pt]{jarticle}
+}{
+% pdftex option is used by graphic[sx],hyperref,toolbox.sty
+\documentclass[\pformat,pdftex,12pt]{jarticle}
+}
+
+\usepackage{toolbox}
+\usepackage{vdmsl-2e}
+\usepackage{makeidx}
+\usepackage{alltt}
+\usepackage{verbatim}
+
+% Ueki change start
+\AtBeginDvi{\special{pdf:tounicode 90ms-RKSJ-UCS2}}
+\usepackage[dvipdfm,bookmarks=true,bookmarksnumbered=true,colorlinks,plainpages=true]{hyperref}
+% Ueki change end
+
+% Ueki delete start
+%\latexorpdf{
+%\usepackage[plainpages=true,colorlinks,linkcolor=black,citecolor=black,pagecolor=black, urlcolor=black]{hyperref}
+%}{
+%\usepackage[plainpages=true,colorlinks]{hyperref}
+%}
+% Ueki delete end
+
+\newcommand{\meti}[1]{\item[#1]\mbox{}\\}
+\newcommand{\Lit}[1]{`#1\Quote}
+\newcommand{\Rule}[2]{
+  \begin{quote}\begin{tabbing}
+    #1\index{#1}\ \ \= = \ \ \= #2  ; %    Adds production rule to index
+  \end{tabbing}\end{quote}
+  }
+
+\newcommand{\SeqPt}[1]{\{\ #1\ \}}
+\newcommand{\lfeed}{\\ \> \>}
+\newcommand{\OptPt}[1]{[\ #1\ ]}
+\newcommand{\dsepl}{\ $|$\ }
+\newcommand{\dsep}{\\ \> $|$ \>}
+\newcommand{\Lop}[1]{\Lit{\kw{#1}}}
+\newcommand{\Sig}[1]{\Lit{{\tt #1}}}
+\newcommand{\blankline}{\vspace{\baselineskip}}
+\newcommand{\Brack}[1]{(\ #1\ )}
+\newcommand{\nmk}{\footnotemark}
+\newcommand{\ntext}[1]{\footnotetext{{\bf Note: } #1}}
+
+
+%\usepackage[dvips]{color}
+\usepackage{longtable}
+\definecolor{covered}{rgb}{0,0,0}     %black
+\definecolor{not_covered}{gray}{0.5} %gray
+
+\parindent0mm
+
+\newlength{\keywwidth}
+
+\newcommand{\xfigpicture}[4]{
+\begin{figure}[hbt]
+\setlength{\unitlength}{1mm}
+\begin{center}
+\mbox{
+\begin{picture}(#1,#2)
+\put(0,0){\special{psfile=#3 hscale=70 vscale=55}}
+\end{picture} }
+\end{center}
+\caption{#4}
+\end{figure}
+}
+
+
+\newcommand{\vdmslpp}{VDM-SL}
+\newcommand{\Toolbox}{Toolbox}
+\newcommand{\aaa}{\tt }
+\newcommand{\cmd}{\tt }
+\newcommand{\id}[1]{%
+\settowidth{\keywwidth}{\tt #1}%
+\protect\makebox[\keywwidth][l]{{\it #1}}}
+\nolinenumbering
+
+\begin{document}
+\vdmtoolsmanualcsk{ダイナミックリンク機能}
+       {v9.0.6}
+       {2016}
+       {VDM-SL}
+       {1.0}
+
+
+\section{導入}
+
+本書は、ダイナミックリンク機能と呼ばれる VDMToolの特性を記述している。
+この特性が、 \vdmslpp\ 仕様と C++で記述されたコードとの連結可能性の実現である。
+この連結で、インタープリタで翻訳中の \vdmslpp\ 仕様で C++で書かれた部分を利用したり実行したりすることが、可能となる。 
+これはダイナミックリンク機能と呼ばれるが、 C++コードがダイナミックに Toolboxとリンクされるからである。
+
+システムの一部のみ\vdmslpp\ を用いて開発した場合に、この連結の利用が興味深いものとなる。
+次のような場合には、役に立つ可能性がある:
+
+\begin{itemize}
+\item 既に実装されているシステムに対し、VDM-SLを用いて新しい構成要素を開発すべきであるとき;
+\item VDM-SLで仕様の定められたシステムで、そのVDM-SL自体では利用できない機能を用いる必要があるとき; そして
+\item VDM-SLを用いて、単にシステムの一部を開発することが求められているとき。
+\end{itemize}
+
+このダイナミックリンク機能を用いることで、開発過程の初期段階でVDM-SLで仕様が定められた部分とC++で実装された部分との、相互作用を探しだすことが可能となる。
+
+
+\subsection{本書の利用}
+
+本書は、{\it VDM-SL Toolbox ユーザーマニュアル} \cite{UserMan-CSK}を拡張したものである。
+本書を読み進める前に、  {\it VDM-SL 言語} \cite{LangMan-CSK}の{\it ダイナミックリンクモジュール}章を読まれることを推奨する。
+C++ \cite{Stroustrup91} および {\it VDM C++ ライブラリ}\cite{LibMan-CSK}の知識も、仮定されている。
+
+ダイナミックリンク特性の使用を始めるにあたって、本書すべてを読む必要はない。
+この特性を利用した例題の詳細な記述を得るには、第‾\ref{getting-started}章を
+読むことから始めよう。
+この例題にあるすべてのファイルは、付録にも載せてある。
+第‾\ref{sec:dlcomponents}章では、ダイナミックリンク機能を利用する場合に含めることとなる構成要素を、１つ１つ記述する。
+Toolboxの中にこの機能を実装する方法に興味をもつならば、 \cite{Frohlich&96}を参照するべきであろう。
+
+付録‾\ref{sec:sysreq}では、システム要求について詳細情報を載せる。
+
+
+\section{はじめに}
+\label{getting-started}
+
+形式仕様と C++によるコード記述の結合は、それらを結ぶ共通の枠組みの設定を行ってこそ、実現可能となる。
+もっとも基本的な問題は、これら２つの異なる世界の値が異なる表現をすることにある。
+２つの世界でやり取りを行うためには、仕様からコードの世界に値を変換したり、またその逆も行うことが不可欠となる。
+この章では小さな例題を用いて、要求される機能性獲得のため、コードを仕様と統合する考え方を提示する。
+
+例題では、VDM-SL Toolboxを用いて、三角関数の１つの仕様への統合を提供する。 
+三角関数は VDM-SL に含まれず、したがってこのような関数を必要とするシステム開発を行うためには、ダイナミックリンク機能が用いられる。
+
+\subsection{基本概念}
+
+この手引きの目的は、仕様と実装の連結を分析できることにある。 
+コードと仕様を結びつけることにより最も行いたいことは、コードの実行を仕様翻訳に統合して組み入れることで、機能のプロトタイプを提供することである。
+形式仕様と統合されるよう、コードレベルでなされた定義を有効にして、仕様のコード定義の翻訳が実行可能であるようにする。
+したがって、 \vdmslpp\ 仕様とその仕様内の統合部分である仕様レベル、および、コードとその実行のための統合部分であるコードレベル、との間の相違を区別する。
+
+図‾\ref{idea} では、仕様とコードの一体化に伴う要素を示す。
+第一に\vdmslpp\ 仕様部分と外部 C++ コード部分であり、これらは図中の淡色グレーの四角で表される。
+次に仕様とコード部分のインターフェイス部分であり、図中では濃色グレーの四角である。 
+このインターフェイス部は、仕様レベル部分({\em ダイナミックリンクモジュール\/} または単に {\em DLモジュール\/}と呼ばれる) とコードレベル部分({\em 型変換関数\/}と呼ばれる)からなる。
+
+ 
+\begin{figure}
+\begin{center}
+\resizebox{.55\textwidth}{!}%
+{\includegraphics{approach}}
+\caption{コードとVDM-SL仕様の連結\label{idea}}
+\end{center}
+\end{figure}
+
+DL モジュールは、 VDM-SL 仕様中で用いられる C++ コードのすべての定義に対する、 \vdmslpp\ インターフェイスを記述する。
+この情報は、 \vdmslpp\ の関数、操作、値の定義として記述されている。
+
+ C++ コードと VDM-SL Toolbox は値に対する表現が異なるために、２つの表現間で変換を行うための型変換関数が定義されなければならない。
+これらはコードレベルで定義されていなければならない。
+これらの型変換関数のために、たくさんの慣例が定義されている。 
+一般的に、換えられる側の値は、VDM C++ ライブラリからの型である。
+(VDM C++ライブラリは、マップ型、集合型、列型、文字型、ブール型、等といった全VDM型を実装するクラスを含む。
+このライブラリは、 \cite{LibMan-CSK}に詳細が記述され、ライブラリファイル {\tt libvdm.a}で定義がなされていて、 \Toolbox\ 配布に含まれるものである。)
+
+パラメータを取り値を１つ返す C++関数呼出しのための慣例は、以下の通り:
+\begin{itemize}
+\item パラメータは、VDM C++ ライブラリから ``列''型 の1つの値として渡されるが、各パラメータは列の１要素で: 最初の要素は最初の引数、２番目の要素は２番目の引数、等となる。
+\item 返される値は一般型 (任意の VDM ライブラリクラス型はこれに変換できる)。
+\end{itemize}
+
+ C++ 値や定数を呼び出すために、値／定数を変換し返す関数が、定義されなければならない。
+
+VDM C++値と C++ コード間で、変換を行うための型変換関数が定義されなければならないのに加えて、C++コードの修正を行う必要はない。
+
+ 
+\subsection{三角関数の例題}
+
+概念の説明のために、三角関数を仕様に統合する例題を示す。
+
+ VDM-SL 仕様に統合されるべきC++コードが、$math$と呼ばれる数学標準 C ライブラリで与えられている。
+例題では、三角関数 $sin$、$cos$　や　定数 $pi$　の実装を、利用している。
+最初にこれらの定義を適用する仕様が示され、その後にコードレベルと同様の仕様レベルでの拡張が示される。
+
+\subsection*{VDM-SL 仕様}
+
+以下の VDM-SL 仕様では、どのようにDL モジュール {\tt MATHLIB} の定義がモジュール{\tt CYLINDER}にインポートされるかという例題が与えられている。
+DL モジュールからのインポートが通常モジュールからのインポートといかに同一であるか、つまり、インポートするモジュールはインポートされるモジュールが通常のモジュールであるか DLモジュールであるかが分からない、ということに注意しよう。
+
+\begin{quote}
+\begin{verbatim}
+module CYLINDER
+
+imports
+  from MATHLIB
+    functions
+      ExtCos : real -> real;
+      ExtSin : real -> real
+   
+    values
+      ExtPI : real
+
+ definitions
+   functions
+     CircCyl_Vol : real * real * real -> real
+     CircCyl_Vol (r, h, a) ==
+       MATHLIB`ExtPI * r * r * h * MATHLIB`ExtSin(a)
+
+end CYLINDER      
+\end{verbatim}
+\end{quote}
+
+モジュール {\tt CYLINDER} は、 DLモジュール {\tt MATHLIB}から、関数 {\tt ExtCos} と{\tt ExtSin} および値 {\tt ExtPI} をインポートする。
+関数 {\tt CircCyl\_Vol} は円柱の容積を評価し、関数 {\tt ExtSin}と同じく定数 {\tt ExtPI} を利用する。
+ 
+\subsection*{VDM-SL レベルのインターフェイス}
+
+上記で述べた通り、コードと仕様間のインターフェイスは、２つの異なるレベルで提供されなければならない。
+ VDM-SLレベルのインターフェイスは、外部世界にエクスポートされる関数の VDM-SL 型を宣言する。
+コードレベルのインターフェイスは、上記で述べた型変換関数の定義に基づく。.
+
+VDM-SL レベルでのインターフェイスは次のようなものである:
+
+\begin{quote}
+\begin{verbatim}
+dlmodule MATHLIB
+
+  exports
+    functions
+      ExtCos : real -> real;
+      ExtSin : real -> real   
+      
+   values   
+      ExtPI : real
+      
+   uselib
+    "libmath.so"
+
+end MATHLIB
+\end{verbatim}
+\end{quote}
+
+DLモジュールは常に、外部世界で利用できる全構成要素を宣言するエクスポートセクションを含まなければならない。 
+エクスポートセクションにある構成要素は、他のモジュールによるインポートが可能である。
+エクスポートセクションは、関数と操作定義のためのシグニチャと、C++コードに対し \vdmslpp\ インターフェイスを定義する値定義の型情報からなる。
+DLモジュール内の値宣言は、コード内の定数または変数定義に関連している。
+
+ {\tt uselib} 項は共有オブジェクトファイルの名称を含むが、DLモジュールを通してアクセスされたコードを含むものである。
+
+
+\subsection*{C++レベルのインターフェイス}
+
+コードレベルのインターフェイスは、C++で開発され、たくさんの宣言と型変換関数の定義から成り立っている。 
+宣言部分には標準数学ライブラリを含める。
+型変換関数は、Toolboxが用いる VDM C++ 列値を C++ コードが受け取る値に変換し、またその逆も行う。 
+一般的な VDM C++ 型は、任意の VDM型に内在する値をもつことができる (たとえば一般的な VDM C++型である {\tt 列} は、任意の VDM 要素を含めることが可能なVDM-SL列を表す。)
+
+インターフェイスは次のようになる:
+
+\begin{quote}
+\begin{verbatim}
+#include "metaiv.h"
+#include <math.h>
+
+# Platform specific directives/includes...
+
+extern "C" {
+  Generic ExtCos(Sequence sq);
+  Generic ExtSin(Sequence sq);
+  Generic ExtPI ();
+}
+
+Generic ExtCos(Sequence sq)
+{
+  double rad;
+  rad = Real(sq[1]);
+  return (Real( cos(rad) ));
+}
+
+Generic ExtSin(Sequence sq)
+{
+  double rad; 
+  rad = Real(sq[1]);
+  return (Real( sin(rad) ));
+}
+
+Generic ExtPI (Sequence sq)
+{
+  return(Real(M_PI));
+}  
+\end{verbatim}
+\end{quote}
+
+ {\em ExtPI\/} は、 \vdmslpp\ インターフェイス中では \vdmslpp\ 値、しかしコードレベルインターフェイス中では関数、として定義されていることに注意しよう。
+
+Toolbox は、呼び出された関数の引数を一般的な VDM C++ 列型の値として取り入れて、それを型変換関数に渡す。
+型変換関数は、列の要素を抽出し変換し、統合された C++コードで求められる値にする。たとえば型変換関数 {\tt ExtSin} は、列の最初の要素を抽出し、それを VDM C++ 型{\tt Real}に型変換するが、これは自動的に C++型 {\tt double}になる。
+これが C++レベルで {\tt sin} 関数に対する引数として与えられ、結果は VDM C++ 値に変換されて \Toolbox\ に返される。
+
+この場合、C 標準ライブラリはコードとして利用されたが、ユーザー定義の C++ パッケージであったとしても同様であった。
+この方法は、C++で開発される任意のモジュールに公開されている。 
+ユーザーにはただ、 DLモジュールを開発し型変換関数を定義することだけ要求される。
+型変換関数は {\tt 外部 "C"}関連仕様として取り込まれていなければならず、C++ パラメータ型絞込みは、共有オブジェクトライブラリにある関数標識名称から一部つくられたものではないことに注意したい。
+
+\subsection*{共有ライブラリの生成}
+
+ダイナミックリンクライブラリの生成には、上記のように {\tt 外部 "C"}関連仕様に型変換関数が取り込まれていることが求められる。
+加えて、上記のように{\tt metaiv.h} ヘッダーファイルを含むことが求められる。
+さらに C++ コードは、１つのサポートされるコンパイラ(第‾\ref{sec:sysreq}章を参照)で、共有ライブラリ生成に必要なフラグを用いてコンパイルされなければならない。 
+ライブラリを Makeファイルで生成できる方法は、記録が推奨される; 例題の Makeファイルは不可欠なフラグと共に、付録‾\ref{makefiles}で示されている。
+Solaris 10に対し、この例題の Makeファイルは次のようなものとなるであろう\footnote{ただし、C++ レベルのインターフェイスが {\tt tcfmath.cc}という名称のファイルにおかれると仮定する。}:
+
+\begin{quote}
+\begin{verbatim}
+all: libcylio.so libmath.so
+
+%.so:
+        ${CXX} -shared -mimpure-text -v -o $@ -Wl,-B,symbolic\
+        $^  ${LIB}
+
+libcylio.so: cylio.o tcfcylio.o 
+
+cylio.o: cylio.cc
+        ${CXX} -c -fpic -o $@ $< ${INCL}
+
+tcfcylio.o: tcfcylio.cc
+        ${CXX} -c -fpic -o $@ $< ${INCL}
+
+libmath.so: tcfmath.o
+
+tcfmath.o: tcfmath.cc
+        ${CXX} -c -fpic -o $@  $<  ${INCL}
+\end{verbatim}
+\end{quote}
+
+他のサポートされるプラットフォーム／コンパイラで用いるオプションについては、第‾\ref{sec:create}章で見ることができる。
+
+\subsection*{例題の実行}
+
+共有ライブラリ {\tt libmath.so} を生成したら、Toolboxを始めることができる。
+{\tt CYLINDER} モジュールと {\tt MATHLIB} DLモジュールは、他のモジュール同様、構文チェックを行うことで \Toolbox\ に読み込むことができる。 
+今現在の仕様を初期化することで、{\tt CircCyl\_Vol} 関数が翻訳できるというような標準ライブラリへのリンクを構築することが可能となるわけで、ここでは {\tt MATHLIB`ExtPI} や{\tt MATHLIB`ExtSin} の呼び出しがライブラリの呼び出しとなる。 \vdmslpp\ 部分もまた \VDMTools\ デバッガを用いることでデバッグ可能であるが、一方で明白なことだが、コード部分はデバッグできない。
+
+
+
+\subsection*{例題の拡張}
+
+本書の付録の中で、この小例題にはもう１つの DLモジュールを追加して拡張している。
+この追加モジュールでは、円柱の寸法を入力するための簡単な入出力インターフェイスの使用方法を説明する。
+例題リポジトリ \\(\tt http://www.csr.ncl.ac.uk/vdm/examples/examples.html)にある他の例題では、Tcl/Tkを使用したより一般的なユーザーインターフェイス利用を説明している。
+ 
+\section{ダイナミックリンク構成要素}
+\label{sec:dlcomponents}
+
+この章では、ダイナミックリンク機能を使用する場合に含まれる様々な構成要素について、１つ１つ説明する。 
+目的は、ここまでの章を一度読んだ後、この章を参照ガイドとして利用することができるようにすることである。
+
+本書では一般的な名称慣例を用いてきた。
+ここでは自身で慣例をつくることを推奨することになる。 
+これにより、どこで構成概念が定義されたか見つけ出すのがずっと容易になる。 
+使用してきた名称慣例の中には、外部で(つまり、C++ コード中で)定義された構成要素すべてに``{\tt Ext}'' 接頭辞をつける、というものがある 。 
+変換関数をもつすべてのファイルは ``{\tt tcf}'' 接頭辞をつける。
+最後に、Unix上では、すべてのダイナミックリンクライブラリが ``{\tt lib}'' 接頭辞をつけてすべてが {\tt .so} 拡張子をとり;
+Windows上では、すべてのダイナミックリンクライブラリが \texttt{.dll}拡張子をとる。
+
+\subsection{ダイナミックリンクモジュール}
+
+ {\em DLモジュール} は、コード部分への \vdmslpp\ インターフェイスを提供する。
+モジュール名称に加えて、インポート節、エクスポート節、そしてダイナミックリンクを行うためのライブラリ(C++コード含む)の名称、が含まれている。
+\begin{itemize}
+\item インポート節はオプションであるが、DLモジュール内で使用される \vdmslpp\ 型を記述する。
+この例題は、付録‾\ref{sec:math-cylio}の{\tt CYLIO} DLモジュールで提示されている。
+\item エクスポート節は、DLモジュールから利用できる関数、操作、値を記述する。
+DLモジュール内の通常のモジュールとは異なり、エクスポートされた構成要素のすべてを明示的に記述しなければならない、つまり{\tt exports all}はない、ということに注意しよう。
+\item 共有ライブラリの名称は、ダイナミックリンクを行うライブラリを示す。
+これは残しておくこともできて、この場合の仕様は、構文および型のチェックはできるが、初期化や翻訳はできない。
+  
+  第‾\ref{sec:uselibpath}章では、\Toolbox\ はライブラリを探す場所をどのように定義するのか、を述べる。
+\end{itemize}
+DLモジュールの正確な構文と動作がさらに詳細に、{\em VDM-SL 言語} \cite{LangMan-CSK}の{\em ダイナミックリンクモジュール}章に記述されている。
+
+関数と操作の違いは、通常モジュールに対すると同じくDLモジュールに対して:関数は、値を返さなければならず副次的作用があってはならない。
+反対に、操作は副次的作用を起こす可能性があるので、値を返す必要はない。
+当然ながらこれは単に、Toolbox ではチェックできない実際的な相違である。
+
+
+\subsection{型変換関数}
+
+型変換関数の目的は、Toolboxにより使用される値 (これらは {\it VDM C++ ライブラリ}のオブジェクトである)を、統合されたコードで求められる値に変換したりその逆を行ったりすることである。
+型変換関数は、異なる引数の数をもった関数を取り扱うために、引数として {\it
+  VDM C++ クラス}  {\tt 列} 型オブジェクトを常に取らなければならない。
+ダイナミックリンクモジュールからエクスポートされた各々の構成要素に対し、型変換関数が定義されなければならない。
+
+ C++ コードで定義された関数(たとえば{\tt double} {\tt Volume (double radius, double height)})を統合する場合、型変換関数が定義されるべきである。
+この場合、 DLモジュールは相当の関数や操作、たとえば {\tt functions ExtVolume: real * real -> real}、を含むべきである。
+Toolbox は、翻訳された仕様によって与えられる評価済みの引数を {\tt Sequence}クラスのオブジェクトに取り入れ、型変換関数に渡す。
+この小さな例題の定義は以下の通り:
+
+\begin{quote}
+\begin{verbatim}
+Generic ExtVolume (Sequence sq1)
+{
+  double rad, height;
+  rad = (Real) sq[1];
+  height = (Real) sq[2];
+  return( (Real) Volume(rad, height) );
+}
+\end{verbatim}
+\end{quote}
+
+関数 {\tt Volume} に対する引数は、列から抽出され、倍精度値に変換される。
+{\tt Volume}からの返り値は、クラス {\tt Real}のオブジェクトに変換され、これは自動的に{\tt Generic}に型変換される。
+
+Table‾\ref{table1} では、 DLモジュールで関連する定義の概観、型変換関数、そして C++ コードを、つまり様々なレベルで値がどのように表されるかを、提示する。 
+付録 \ref{example} は、三角関数例題のための型変換関数を含む。
+
+\begin{table}
+%\rotatebox{90}
+\begin{center}
+\begin{sideways}
+\begin{tabular}{|p{7cm}|p{7cm}|p{6cm}|}
+\hline
+{\it DLモジュール定義}&{\it 型変換関数}&{\it C++コード}\\
+\hline \hline
+値定義&引数なし結果型 {\tt Generic}の関数&変数または定数 \\ \hline
+\verb+values+            & & \\
+\verb+  ExtLength: real+ & \verb+Generic ExtLength ()+ & \verb+double Length = 5.0;+ \\
+\verb+  ExtMax:nat+      & \verb+Generic ExtMax ()+    & \verb+const int max = 20;+ \\ \hline\hline
+関数または操作定義 & 
+引数{\tt Sequence}結果型 {\tt Generic}の関数 & 
+結果型 {\tt void}でない関数 \\ \hline
+\verb+functions+ & \verb+Generic ExtVolume(Sequence sq1)+ & \verb+double Volume(double radius,+ \\
+\verb+  ExtVolume: real * real -> real+ &                 & \verb+              double height)+ \\
+or & & \\
+\verb+operations+ & & \\
+\verb+  ExtVolume: real * real ==> real+ & & \\ \hline \hline
+結果なしの操作
+& 引数{\tt Sequence}結果型 {\tt void}の関数&
+結果型{\tt void}の関数 \\ \hline
+\verb+operations+ & \verb+void ExtShowItem(Sequence sq1)+ & \verb+void ShowItem (int item)+ \\
+\verb+  ExtShowItem: nat ==> ()+ & & \\[1ex]
+\hline \hline
+\end{tabular}
+\end{sideways}
+\end{center}
+\caption{様々なレベルの値表現} 
+\label{table1}
+\end{table}
+
+\subsection{レコード変換}
+
+レコードに対しては、特に注意を払う必要がある。
+ \vdmslpp\ において、仕様レコードには名称がタグ付けされるが、一方 VDM C++ライブラリにおいては、整数がタグ付けされる。
+これらのタグは以下の章で、各々``記号名'' および ``数値タグ'' として参照される。
+
+VDM C++ ライブラリは、数値タグから記号名への写像であるマップ（レコード情報マップと呼ぶ）の管理ができる。
+ダイナミックリンクモジュールのコード部分への受け渡しを行う記号名はいずれも、このマップに登録されたものでなければならない。
+
+この登録は、{\tt InitDLModule}という関数中で定義されなければならない。 
+この関数が存在するなら、 \Toolbox\ は初期化中に( {\tt init} コマンドを実行するとき) これを呼び出す。
+以下の例題は、InitDLModule関数内でどのようにレコード情報マップがつくられるかを明らかする:
+\begin{itemize}
+\item 用いられる各記号名に対して、レコード情報マップ内で各々に相当する数値タグが追加されなければならない。
+これは次の実行で行われる:
+
+  \hspace*{1em}{\tt VDMGetDefaultRecInfoMap().NewTag(numtag, recordsize);}
+  
+ {\tt numtag} は数値タグ、 {\tt recordsize} はレコード中の項目数である。
+\item 記号名は数値タグと結び付かなければならない。
+これは次の実行で行われる:
+
+  \hspace*{1em}{\tt VDMGetDefaultRecInfoMap().SetSymTag(numtag, "symbname"); }
+  
+ここでも{\tt numtag} は数値タグ、 {\tt symbname}は記号名である。
+記号名は引用符を用いて囲われていなければならないことに注意しよう。
+\end{itemize}
+
+
+例題の中で、数値タグとレコードサイズは定数 ({\tt TagA\_X} と {\tt TagA\_X\_Size})で定義される。
+
+例題:
+\begin{quote}
+\begin{verbatim}
+extern "C" void InitDLModule(bool init); 
+const int TagA_X = 1; 
+const int TagA_X_Size = 2; 
+void InitDLModule(bool init) {
+  if (init) {
+    VDMGetDefaultRecInfoMap().NewTag(TagA_X, TagA_X_Size);
+    VDMGetDefaultRecInfoMap().SetSymTag(TagA_X, "A`X"); 
+  }
+}
+\end{verbatim}
+\end{quote}
+
+ \Toolbox\ は、C++ コードに送る {\tt A`X}という名称のレコード値を生成するとき、DLモジュール中のレコード情報マップで、記号名 {\tt A`X} に相当する数値タグを見つけることになる。
+
+レコード情報マップを生成する場合は以下の問題に注意しよう:
+\begin{itemize}
+\item  {\tt SetSymTag} コマンドの記号名は、相当するモジュール名で修飾された現存のレコード名でなければならないし、{\tt NewTag} コマンドのレコードサイズは正確にレコード項目数でなければならない。
+\item レコード情報マップ中で各記号タグが現れるのは、各々一回でなければならない。
+\end{itemize}
+
+
+\subsubsection{コードジェネレータと組み合わせたレコード利用}
+
+コードジェネレータは、コード生成されたモジュールに対して、レコード情報マップを構成するコードを生成する。
+このように、生成コードがコンパイルされてダイナミックリンクライブラリにリンクされるならば、 InitDLModule 関数が単に関数 {\tt init\_\textit{Module}()}を呼び出すことで、レコード情報マップ中の \textit{Module} 内でレコード定義を行うことができる。
+
+
+\subsection{トークンの変換}
+
+トークン型は C++ クラス {\tt レコード}として、ツールボックスからエクスポートされる。
+しかし、トークンレコードのタグは常にファイル {\tt cg\_aux.h}におけるマクロ宣言である {\tt TOKEN}と同等となり、トークンレコードの項目数は常に１である。
+外部コードから toolboxへトークンを送ろうとする場合、VDM-SL 値 {\tt mk\_token(<HELLO>)} を、たとえば以下の方法で、構成できる:
+
+\begin{quote}
+\begin{verbatim}
+Record token(TOKEN, 1); 
+token.SetField(1, Quote("HELLO"));
+\end{verbatim}
+\end{quote}
+
+
+\subsection{\texttt{uselib} パス環境}
+\label{sec:uselibpath}
+
+仕様中で、ライブラリ名称は {\tt uselib}オプションで与えられる。
+この場所については、いくつかの方法で与えることができる:
+\begin{itemize}
+\item ライブラリへの絶対パス名称 (たとえば /home/foo/libs/libmath.so)で与える。
+\item パスなしで環境変数 {\tt VDM\_DYNLIB}の集合で与える。 
+{\tt VDM\_DYNLIB}環境変数の全ディレクトリ名称に対しては、ライブラリが検索を行う。
+環境変数は次のようなものとなる: \path+/home/foo/libs:/usr/lib:.+ (変数設定において、カレントディレクトリも捜す検索の場合は、`.' が必要)。
+\item パスなしで {\tt VDM\_DYNLIB}環境変数の集合も与えない。
+ライブラリがカレントディレクトリに置かれていると仮定することを意味する。
+\end{itemize}
+
+
+
+\subsection{DL モジュールの初期化}
+\label{sec:init}
+
+Toolbox コマンド ``init'' が初回に用いられるときに、全モジュールは読み込まれる。
+２度目には、現在読み込まれているモジュールがまずは領域解放され、その後にモジュールは改めて読み込まれる。
+
+\subsubsection{モジュール搭載}
+共有ライブラリファイルが Toolboxに読み込まれると、以下が起きる:  
+\begin{itemize}
+\item グローバル変数が初期化される。
+\item  toolbox が各搭載モジュールにある関数InitDLModule(true) を実行する。 
+\end{itemize}
+
+\subsubsection{モジュール領域解放}
+共有ライブラリファイルが Toolboxにより領域解放されると、以下が起きる:
+\begin{itemize}
+\item toolbox が各搭載モジュールの関数 InitDLModule(false) を実行する。
+\item グローバル変数が破棄される。
+\end{itemize}
+
+
+\subsection{共有ライブラリの生成}\label{sec:create}
+
+共有ライブラリは、第 \ref{sec:sysreq}章に示される適切なコンパイラを用いてコンパイルされなければならない。
+実行可能な共有ライブラリを生成するために、型変換関数を含むコードは以下の要求を満たす必要がある:
+\begin{itemize}
+\item 型変換関数は {\tt 外部 "C"}関連仕様の中に入っていなければならないが、そうでない場合に、これらの関数がライブラリの外から連絡可能でなくなるからである。
+\item   {\tt VDM C++ ライブラリ}の一部である{\tt metaiv.h} ヘッダーファイルは、型変換関数を含むファイル中になければならないが、これが {\it VDM C++ ライブラリ}の型仕様関数のプロトタイプを含んでいるからである。
+\end{itemize}
+
+実際に利用するコンパイラフラグについては、\ref{makefiles} にある Makeファイル例題を参照しよう。
+
+Unix上で、共有ライブラリならばファイル拡張子は {\tt ".so"} とし、接頭辞 {\tt "lib"}をつけるべきである。
+(共有ライブラリでは版番号は必要でない。) 
+ Windows上では、共有ライブラリはファイル拡張子を \texttt{".dll"}とするべきである。
+
+\newpage
+\bibliographystyle{iptes}
+\bibliography{ifad}
+\newpage
+\appendix
+
+\section{システム要求}
+\label{sec:sysreq}
+
+ダイナミックリンク機能を利用するためには、ダイナミックリンク機能のライセンスを含む{\it VDM-SL Toolbox}と {\it VDM C++ ライブラリ} が必要である。
+さらに、実行可能な統合コード共有ライブラリを生成するために、コンパイラが必要である。
+
+この機能は次の組み合わせで動く:
+\begin{itemize}
+\item Microsoft Windows 2000/XP/Vista上のMicrosoft Visual C++ 2005 SP1
+\item Mac OS X 10.4, 10.5
+\item Linux Kernel 2.4, 2.6上のGNU gcc 3, 4
+\item Solaris 10
+\end{itemize}
+
+実行可能な統合コード共有ライブラリを生成するために、コンパイラが必要である。 
+Toolbox 自身のインストールには、 \cite{UserMan-CSK}第2章を、 {\it VDM C++ ライブラリ} のインストールには、 \cite{CGMan-CSK}第2章を参照しよう。
+
+
+
+\section{三角関数例題の概観}
+\label{example}
+この例題中で円柱の容積を計算するために、仕様にある三角関数のための簡単なユーザーインターフェイスが統合されている。
+この例題は、ディレクトリ {\tt example}中に配布されていて利用可能である。
+例題の実行には以下を行うこと:
+\begin{itemize}
+  \item 適切なMakeファイルを編集し、ライブラリがある場所の先頭をパス設定する。
+  \item ライブラリをコンパイルする。
+  \begin{description}
+    \item[Linux] make -f Makefile.Linux
+    \item[Solaris 10] make -f Makefile.solaris2.6
+    \item[Microsoft Windows 2000/XP/Vista] make -f Makefile.win32
+  \end{description}
+  \item Toolboxをスタートし、仕様を読み込み、関数の初期化と呼び出しを行う。
+ Toolbox コマンドライン版では以下のようになる:
+\begin{verbatim}
+vdm> r cylio.vdm
+Parsing "cylio.vdm" ... done
+vdm> r cylinder.vdm
+Parsing "cylinder.vdm" ... done
+vdm> r math.vdm
+Parsing "math.vdm" ... done
+vdm> init
+Initializing specification ...
+vdm> p CYLINDER`CircCylOp()
+
+
+ Input of Circular Cylinder Dimensions
+  radius: 10
+  height: 10
+  slope [rad]: 1
+
+
+ Volume of Circular Cylinder
+
+Dimensions: 
+   radius: 10
+   height: 10
+   slope: 1
+
+ volume: 2643.56
+
+(no return value)
+\end{verbatim}
+\end{itemize}
+
+{\it VDM-SL} 文書は、DLモジュール {\sl MATHLIB} と {\sl CYLIO}をインポートするモジュールである{\sl CYLINDER}から構成される。 
+DLモジュール {\sl MATHLIB} は、三角関数 $sinus$と値 $\pi$に対するインターフェイスを提供している。 
+モジュール {\sl CYLIO} は、円柱の寸法を設定しその容量を表示するための関数を含める。
+モジュール {\sl CYLINDER} もまた、DLモジュールによってインポートされた円柱の寸法を表示するためのレコードを定義している。
+
+各 DL モジュールに対して相当する共有ライブラリが、次の通り存在する: \\{\tt libmath.so/math.dll}に対して{\sl MATHLIB}、また {\tt libcylio.so/cylio.dll}に対して{\sl CYLIO}。 
+共有ライブラリ {\tt libmath.so/math.dll} は、三角関数 $sine$、 $cosine$、や値 $\pi$ を提供するが、すべて C 標準ライブラリで定義されているものである。
+コードは型変換関数から構成される。
+共有ライブラリ \texttt{libcylio.so} (あるいはWindows上ならば\texttt{cylio.dll}) は、簡単なユーザーインターフェイス関数を提供する: {\tt GetCircCyl} が円柱の寸法を訊ねると{\tt ShowCircCylVol} が円柱の寸法とその容積を画面上に表示する。
+円柱の寸法は、レコード型{\it CircCyl}の仕様のなかで同等の定義がなされているが、この構造 {\tt CircCyl}によって表わされる。
+
+\subsection{仕様}
+この付録では、モジュール仕様を含む。
+\subsubsection{モジュール \textsl{CYLINDER}}
+\verbatiminput{trigno/cylinder.vdm}
+
+\subsubsection{ダイナミックリンクモジュール \textsl{MATHLIB} と \textsl{CYLIO}}
+\label{sec:math-cylio}
+
+\verbatiminput{trigno/math.vdm}
+\verbatiminput{trigno/cylio.vdm}
+
+
+\subsection{共有ライブラリ}
+この付録は、共有ライブラリを構築するのに用いられるソースファイルを含む。
+\subsubsection{MATHLIB 共有ライブラリ}
+\verbatiminput{trigno/tcfmath.cc}
+
+型変換関数 {\tt ExtSin} は、引数としてクラス {\tt Sequence}のオブジェクトを取り込み、その引数を抽出してクラス {\tt Real}のオブジェクトに変換する。
+このオブジェクトは、 $sin$ 関数のアプリケーションによって、自動的に{\tt double}値に型変換される。
+結果の値は Meta-IV に変換され、Toolboxに返される。
+
+\subsubsection{CYLIO 共有ライブラリ}\label{sub:cylio}
+
+この章に、共有ライブラリ {\tt libcylio.so/cylio.dll}のソースを含む。 
+ファイル {\tt cylio.cc} が、円柱の寸法の入力と容量の表示出力のための簡単なインターフェイスを提供する。
+
+ファイル {\tt tcfcylio.cc} は型変換関数を含む。
+型変換関数もまた、C++ や Toolboxで用いられる型 ``CircCyl''の様々な表現間における円柱値の転換を表す。
+
+\verbatiminput{trigno/cylio.h}
+\verbatiminput{trigno/cylio.cc}
+\verbatiminput{trigno/tcfcylio.cc}
+  
+\subsection{Makeファイル}\label{makefiles}
+
+
+\subsubsection{Linux上}\label{makefiles:linux}
+
+ここにあるのは Linux上のMakeファイル例題。 
+
+\verbatiminput{trigno/Makefile.Linux}
+
+
+ここにあるのは Solaris 10上のMakeファイル例題。
+
+\verbatiminput{trigno/Makefile.solaris2.6}
+
+
+\subsubsection{Windows上}\label{makefiles:win}
+ここにあるのは Microsoft Windows上のMakeファイル例題で、GNU Makeを用いている。
+
+\verbatiminput{trigno/Makefile.win32}
+
+
+
+
+\section{トラブルシューティング}
+一旦独自の型変換関数の生成を始めると、見慣れないエラーメッセージが VDM C++ライブラリから出されることに気づくだろう。
+この付録は、ライブラリをどのようにデバッグするか考える際に、助けとなるはずである。
+
+一番よい方法は、通常通り {\tt gdb}を始めて、どこがうまくいかないのか理解するため、コードを通してデバッグすることである。
+これは早急にはできないが、{\tt gdb}のスタート時には、ライブラリ中で定義される記号がまだわからないからである。
+
+解決法としては、第一に {\tt vdmde}の仕様をデバッグすることであり、そしてどの外部関数がうまくいかないかを発見したとき、特定の関数を呼び出す {\tt main()}が生成され、ライブラリと共にリンクされる。
+主な手順は次のようになるだろう:
+
+\verbatiminput{trigno/main.cc}
+
+\subsection{分割障害}
+
+もう1つの問題として、 toolbox が分割障害でクラッシュすることがある。
+これは、外部ライブラリの問題として大変よく問題になる。
+どの関数で問題が起きるのかを確かめるため、 {\tt vdmde} を再び始める。
+
+Toolboxと結果としてこのようなエラーとなったコードとの間のインターフェイスで、うまくいかない可能性が明らかに３つある:
+
+\begin{enumerate}
+\item 関数が正しいシグニチャをもたない:\\  {\tt void} {\em function\/}{\tt (Sequence }{\em args\/}{\tt )}\\  または {\tt Generic} {\em function\/}{\tt (Sequence }{\em args\/}{\tt )}
+\item  {\tt Generic}を返すべき関数が値を返さない。
+\item 外部コードが、グローバルに初期化されていない値またはオブジェクトを含める (第 \ref{sec:globalvalues}章を参照)。
+\end{enumerate}
+
+\subsection{Tcl/Tkの使用}
+
+ダイナミックリンクライブラリでToolboxと共に Tcl/Tk の使用を望む場合は、この結合のために作成された他の例題を見るべきである
+\footnote{現在提供されている例題はない。}。 
+{\tt vdmgde} (Toolboxのグラフィカル版)を用いている場合は {\tt Tk\_MainLoop}を呼び出さないことが重要で、 {\tt vdmgde}が Tcl/Tk を実装しているからであり、そのため {\tt Tk\_MainLoop}が呼び出された場合は　Tcl/Tk がメインの Toolbox ウィンドウがクローズされるのを待つというデッドロック状況に入ってしまうからである。
+
+１つの解決法 (他の例題で用いられている) として、{\tt Tk\_DoOneEvent} を呼び出してTclコードがTcl変数 {\tt Done}をゼロ以外に設定した場合に終了するような、ループを生成することである。
+最初は Tcl コードが{\tt Done}をゼロに設定し、ダイアログウィンドウがクローズされたときには{\tt Done} は 1に設定される。
+
+\subsection{グローバルオブジェクトとグローバル値初期化}
+\label{sec:globalvalues}
+
+サポートされているすべてのプラットフォーム (Linux、Solaris 10、Windows)上で、上記のような共有オブジェクトのコンパイルやリンクが成されるとき、 C++ オブジェクト構成要素が呼び出される。
+
+\subsection{Microsoft Windowsの標準入出力}
+
+Windowsのもとで、Toolboxのグラフィカル版は GUI アプリケーションとして実行されるため、標準入出力は利用できない。
+したがって、\texttt{cin}、\texttt{cout}、\texttt{cerr}を使用しようとする共有ライブラリは、期待したようには動かないはずである。
+
+\end{document}
+

@@ -1,0 +1,115 @@
+/*
+テストグループ
+	Setのテスト
+関連 UC
+	なし
+作成者
+佐原伸
+*/
+class SetT is subclass of TestDriver
+functions
+tests : () -> seq of TestCase
+tests () == 
+	[
+		new SetT01(),
+		new SetT02(),
+		new SetT03(),
+		new SetT04()
+	];
+end SetT
+----------------------------------------
+/*
+シナリオID
+	列との比較と、列への変換。
+親UseCase
+	なし
+内容
+	列との比較と、列への変換。
+*/
+class SetT01 is subclass of TestCase
+operations 
+protected test: () ==> bool
+test() == 
+	return
+		Set`hasSameElems[int](Set`asSequence[int]({1,2,3,4}),{1,2,3,4}) and
+		(elems Set`asSequence[int]({1,2,3,3,4}) = {1,2,3,4})
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SetT01:\t列との比較と、列への変換";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SetT01
+----------------------------------------
+/*
+シナリオID
+	組み合わせを得る。
+親UseCase
+	なし
+内容
+	組み合わせを得る。
+*/
+class SetT02 is subclass of TestCase
+operations 
+protected test: () ==> bool
+test() == 
+	return
+		Set`Combinations[int](2)({1,2,3}) = { { 1,2 }, { 1,3 }, { 2,3 } } and
+		Set`Combinations[int](2)({1,2,3,4}) = { { 1,2 },  { 1,3 },  { 1,4 },  { 2,3 },  { 2,4 },  { 3,4 } } and
+		Set`fmap[set of int, set of set of int](Set`Combinations[int](2))({{1,2,3}, {1,2,3,4}}) =
+			{{ { 1,2 }, { 1,3 }, { 2,3 } }, { { 1,2 },  { 1,3 },  { 1,4 },  { 2,3 },  { 2,4 },  { 3,4 } } } and
+		Set`Combinations[int](3)({1,2,3,4}) = { { 1,2,3 },  { 1,2,4 },  { 1,3,4 },  { 2,3,4 } } and
+		Set`Combinations[seq of char](2)({"佐原", "佐藤", "酒匂", "谷津", "西川" }) = 
+			{ { "佐原",    "佐藤" },  { "佐原",    "西川" },  { "佐原",    "谷津" },  { "佐原",    "酒匂" },  { "佐藤",    "西川" }, 
+			{ "佐藤",    "谷津" },  { "佐藤",    "酒匂" },  { "西川",    "谷津" },  { "西川",    "酒匂" },  { "谷津",    "酒匂" } }
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SetT02:\t組み合わせを得る";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SetT02
+-------------------------------------------------------------
+/*
+シナリオID
+	fmapの検査シナリオ
+親UseCase
+	なし
+内容
+	fmapを検査する。
+*/
+class SetT03 is subclass of TestCase
+operations 
+public  test: () ==> bool
+test() == 
+	return
+		Set`fmap[int, int](lambda x:int & x mod 3)({1,2,3,4,5})  = {0, 1, 2} and
+		Set`fmap[seq of char, seq of char]
+			(Sequence`take[char](2))({"佐原伸", "酒匂寛"}) = {"佐原", "酒匂"}
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SetT03:\tfmapを検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SetT03
+-------------------------------------------------------------
+/*
+シナリオID
+	Σの検査シナリオ
+親UseCase
+	なし
+内容
+	Σを検査する。
+*/
+class SetT04 is subclass of TestCase
+operations 
+public  test: () ==> bool
+test() == 
+	return
+		Set`Σ[int]({1,...,10}) = 55 and
+		Set`Σ[real]({0.1, 0.2, 0.3}) = 0.6 and
+		Set`Σ[nat]({1, 2, 3, 3}) = 6 --集合だから、重複した要素は加算されない
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SetT04:\tΣを検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SetT04

@@ -1,0 +1,11 @@
+class IfStmtTest
+
+operations
+
+  If1: () ==>  set of (nat | bool)
+  If1() ==
+    if true => false
+    then return {}
+    else return {9,8,true};
+
+end IfStmtTest

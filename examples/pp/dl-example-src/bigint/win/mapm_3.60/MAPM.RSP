@@ -1,0 +1,13 @@
+LIB_MAPM
+y
++mapmhsin+mapmhasn&
++mapm_pow&
++mapm_log+mapm_exp+mapmasin+mapm_sin+mapm5sin&
++mapmrsin+mapmsqrt+mapmcbrt&
++mapmgues+mapmfact&
++mapmipwr+mapm_rnd&
++mapmstck+mapm_div+mapm_mul+mapmfmul+mapm_fft&
++mapm_add+mapmistr+mapm_set+mapmutil&
++mapmcnst
+
+

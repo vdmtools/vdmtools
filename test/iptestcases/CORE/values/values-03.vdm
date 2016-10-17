@@ -1,0 +1,31 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+values
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+  a           : real        = let b = 10 in b;
+  {b,c}       : set of nat  = if 10 = 20 
+                              then let a in set{10, {30}} in a 
+                              else {20,30};
+  [d,e]       : seq of int  = [ i | i in set {100,200} ];
+  mk_(f,g)    : nat * nat   = mk_(55,56); --fct('a');
+  mk_R(h,i,j) = mk_R('h','i','j');
+  {20,30,k}   : set of (nat|char) = {30,'k',20}
+
+functions
+  fct: char -> real * real
+  fct(c) ==
+    if c = 'a' then
+      mk_(55,56)
+    else
+      mk_(10,20)
+
+types R :: char char char
+
+operations
+
+  public Test : () ==> seq of (char | nat)  
+Test () ==
+    return [a,b,c,d,e,f,g,h,i,j,k]
+
+end A

@@ -1,0 +1,20 @@
+class A
+
+instance variables
+
+  b : B := new B();
+  
+operations
+
+public Test: () ==> map real to nat
+Test() ==
+  (b.a(4) := 27;
+   return b.a); 
+end A
+
+class B
+instance variables
+
+  public a: map real to nat:= {7.4 |-> 6, 4 |-> 5};
+
+end B

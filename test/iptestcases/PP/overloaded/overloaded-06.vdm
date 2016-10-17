@@ -1,0 +1,32 @@
+-- testing use of overloaded operation with multiple definitions
+
+class A is subclass of B
+
+operations
+
+public
+Test: () ==> nat
+Test() ==
+  return F(7)
+
+end A
+
+class B is subclass of C
+
+functions
+
+public F: () -> nat
+F() == 7;
+
+public F: nat +> nat
+F(p) == p + 8;
+  
+end B
+class C
+
+functions
+
+public F: real -> nat
+F(r) == r div 5;
+
+end C

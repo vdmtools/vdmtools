@@ -1,0 +1,153 @@
+\section{Operator Precedence in VDM++}
+\label{sec:opp}
+
+
+\begin{vdm_al}
+module OPP
+
+imports
+  from JSSREP all,
+  from CI all,
+  from REP all,
+  from AS all
+
+exports all
+
+definitions
+
+types
+
+Precedence :: family : Family
+              level : Level;
+
+Family = nat;
+
+Level = nat;
+
+TypePrecedence = nat;
+
+values
+
+maxTypePrec : TypePrecedence = 6 ;
+
+maxExprPrec : Precedence = mk_Precedence(0, 0) ;
+
+functions
+
+higher : Precedence * Precedence -> bool
+higher(mk_Precedence(p_f1, p_l1), mk_Precedence(p_f2, p_l2)) ==
+  p_f1 < p_f2 or p_f1 = p_f2 and p_l1 <= p_l2 ;
+
+stronger : AS`Expr * AS`Expr -> bool
+stronger(p_exp1, p_exp2) == higher(levelExpr(p_exp1), levelExpr(p_exp2)) ;
+
+levelType : AS`Type -> TypePrecedence
+levelType(p_ty) ==
+  cases true :
+    (is_AS`PartialFnType(p_ty)),
+    (is_AS`TotalFnType(p_ty)) -> 1,
+    (is_AS`UnionType(p_ty)) -> 2,
+    (is_AS`ProductType(p_ty)) -> 3,
+    (is_AS`GeneralMap0Type(p_ty)),
+    (is_AS`GeneralMap1Type(p_ty)),
+    (is_AS`InjectiveMap0Type(p_ty)),
+    (is_AS`InjectiveMap1Type(p_ty)) -> 4,
+    (is_AS`Set0Type(p_ty)),
+    (is_AS`Set1Type(p_ty)),
+    (is_AS`Seq0Type(p_ty)),
+    (is_AS`Seq1Type(p_ty)) -> 5,
+    (is_AS`OpType(p_ty)) -> 0, -- correct?
+    others -> maxTypePrec
+  end ;
+
+levelExpr : AS`Expr -> Precedence
+levelExpr(p_expr) == 
+  cases true :
+  (is_AS`DefExpr(p_expr)) -> mk_Precedence(6, 1),
+  (is_AS`LetExpr(p_expr)) -> mk_Precedence(6, 1),
+  (is_AS`LetBeSTExpr(p_expr)) -> mk_Precedence(6, 1),
+  (is_AS`IfExpr(p_expr)) -> mk_Precedence(6, 1),
+  (is_AS`PrefixExpr (p_expr)) -> levelUnaryOp(p_expr.opr),
+  (is_AS`BinaryExpr(p_expr)) -> levelBinaryOp(p_expr.opr),
+  (is_AS`AllOrExistsExpr(p_expr)) -> mk_Precedence(6, 1),
+  (is_AS`ExistsUniqueExpr(p_expr)) -> mk_Precedence(6, 1),
+  (is_AS`SubSequenceExpr(p_expr)) -> mk_Precedence(2, 1),
+  (is_AS`SeqModifyMapOverrideExpr(p_expr)) -> mk_Precedence(3, 1),
+  (is_AS`TupleSelectExpr(p_expr)) -> mk_Precedence(2, 1), -- correct?
+  (is_AS`ApplyExpr(p_expr)) -> mk_Precedence(2, 1),
+  (is_AS`FieldSelectExpr(p_expr)) -> mk_Precedence(2, 1),
+  (is_AS`LambdaExpr(p_expr)) -> mk_Precedence(6, 1),
+  (is_AS`IotaExpr(p_expr)) -> mk_Precedence(6, 1),
+  (is_AS`NewExpr(p_expr)) -> mk_Precedence(6, 1), -- correct?
+  (is_AS`GuardExpr(p_expr)) -> mk_Precedence(6, 1), -- correct?
+  (is_AS`FctTypeInstExpr(p_expr)) -> mk_Precedence(2, 1),
+  (is_AS`LastRes(p_expr)) -> mk_Precedence(6, 1), -- correct? max?
+  others -> maxExprPrec
+  end;
+
+levelBinaryOp : AS`BinaryOp -> Precedence
+levelBinaryOp(p_op) ==
+  cases p_op :
+    <COMPOSE> -> mk_Precedence(1, 1),
+    <NUMEXP> -> mk_Precedence(1, 2),
+    <NUMPLUS>,
+    <NUMMINUS>,
+    <SETUNION>,
+    <SETMINUS>,
+    <SEQCONC>,
+    <MAPMERGE> -> mk_Precedence(3, 1),
+    <NUMMULT>,
+    <NUMDIV>,
+    <NUMREM>,
+    <NUMMOD>,
+    <INTDIV>,
+    <SETINTERSECT> -> mk_Precedence(3, 2), 
+    <MAPDOMRESTTO>,
+    <MAPDOMRESTBY> -> mk_Precedence(3, 4),
+    <MAPRNGRESTTO>,
+    <MAPRNGRESTBY> -> mk_Precedence(3, 5),
+    <NUMLT>,
+    <NUMLE>,
+    <NUMGT>,
+    <NUMGE>,
+    <EQ>,
+    <NE>,
+    <SUBSET>,
+    <PROPERSUBSET>,
+    <INSET>,
+    <NOTINSET> -> mk_Precedence(4, 1),
+    <AND> -> mk_Precedence(5, 4), 
+    <OR> -> mk_Precedence(5, 3),
+    <IMPLY> -> mk_Precedence(5, 2), 
+    <EQUIV> -> mk_Precedence(5, 1)
+  end ;
+
+levelUnaryOp : AS`UnaryOp -> Precedence
+levelUnaryOp(p_op) ==
+  cases p_op :
+    <NOT> -> mk_Precedence(5, 5),
+    <MAPINVERSE> -> mk_Precedence(3, 3),
+    others -> mk_Precedence(3, 6)
+  end ;
+
+bracketType : AS`Type * TypePrecedence -> AS`Type
+bracketType(p_t, p_p) == 
+  if levelType(p_t) < p_p 
+  then mk_AS`BracketedType(p_t, CI`NilContextId)
+  else p_t ;
+
+bracketExpr : AS`Expr * AS`Expr -> AS`Expr
+bracketExpr(p_e1, p_e2) == 
+  if stronger(p_e1, p_e2)
+  then p_e1
+  else mk_AS`BracketedExpr(p_e1, CI`NilContextId) ;
+
+end OPP
+
+\end{vdm_al}
+
+
+\begin{rtinfo}
+[TotalxCoverage]{tcov1.tc}
+\end{rtinfo}
+

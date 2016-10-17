@@ -1,0 +1,18 @@
+"class A
+
+functions
+f : nat -> nat
+f(x) == x + 1;
+
+operations
+
+public Test : () ==> map nat to [nat]
+Test () ==
+( dcl l : seq of map nat to [nat] := [{ l |-> nil | l in set {0,...,12} }], 
+	i : int := 0,
+	j : nat;
+	l(1) := l(1) ++ { i |-> f(i) | i in set {0, ..., 12 - 1} };
+	||(j := 2, j := 3);
+	return l(1));   
+end A
+"

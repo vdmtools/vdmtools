@@ -1,0 +1,17 @@
+module CGRel
+
+  exports all
+
+  definitions
+
+  types
+
+    Cg = <A> | <B> | <C> | <D> | <E> | <F> | <G> | <H> | <J> | <K> | <L> | <S>;
+    CompatRel = map Cg to set of Cg
+
+  functions
+
+    build_rel : set of (Cg * Cg) -> CompatRel
+    build_rel (s) == {|->}
+
+end CGRel

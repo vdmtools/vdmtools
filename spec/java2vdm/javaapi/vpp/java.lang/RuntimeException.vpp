@@ -1,0 +1,20 @@
+class JavaLangRuntimeException is subclass of JavaLangException
+operations 
+public  JavaLangRuntimeException : () ==> JavaLangRuntimeException
+JavaLangRuntimeException() == 
+( let - =  JavaLangException()
+  in skip 
+) ;
+
+public  JavaLangRuntimeException : <NIL> ==> JavaLangRuntimeException
+JavaLangRuntimeException(-) == 
+isNil := true  ;
+
+public  JavaLangRuntimeException : JavaLangString ==> JavaLangRuntimeException
+JavaLangRuntimeException(s) == 
+( let - =  JavaLangException(s)
+  in skip 
+) ;
+
+
+end  JavaLangRuntimeException

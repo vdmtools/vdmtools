@@ -1,0 +1,60 @@
+class AircraftType is subclass of Object
+operations 
+public  getMDS : () ==> [String]
+getMDS() == 
+( return  mds
+) ;
+
+public  getModel : () ==> [String]
+getModel() == 
+( return  model
+) ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+( return  acTypeId
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( return  AircraftType`getMDS()
+) ;
+
+public  getSeries : () ==> [String]
+getSeries() == 
+( return  series
+) ;
+
+public  getAcTypeId : () ==> int 
+getAcTypeId() == 
+( return  acTypeId
+) ;
+
+public  getCustomer : () ==> [String]
+getCustomer() == 
+( return  customer
+) ;
+
+public  equals : [Object] ==> bool 
+equals(obj) == 
+( return  (is_ (obj,[AircraftType]) and  acTypeId = (def l_10 :  AircraftType = (obj)
+  in l_10).getAcTypeId())
+) ;
+
+public  AircraftType : int  * [String] * [String] * [String] * [String] ==> AircraftType
+AircraftType(acTypeId, customer, model, series, mds) == 
+( AircraftType`acTypeId := acTypeId;
+  AircraftType`customer := customer;
+  AircraftType`model := model;
+  AircraftType`series := series;
+  AircraftType`mds := mds
+) ;
+
+instance variables 
+  private  acTypeId : int ;
+  private  customer : [String];
+  private  model : [String];
+  private  series : [String];
+  private  mds : [String]
+  
+end  AircraftType

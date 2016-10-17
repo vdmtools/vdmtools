@@ -1,0 +1,61 @@
+class IfExprTest
+functions
+
+  f : () -> inmap rat to nat
+  f() ==
+    {2 |-> 5}
+  pre true
+--  post true
+
+types
+
+  A :: a: int
+       b: bool
+
+values
+
+  v1 : A = mk_A(1,true);
+  n : real = 88
+    
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let t = true,
+      nn = nil,
+      - = let m:char*bool =
+        if n=1
+	then t
+	elseif n=41
+	then {1,2,3} union {4,5,6}
+	elseif n=42
+	then {1,2,3} inter {4,5,6}
+	elseif n=43
+	then {1,2,3} \ {3,4,5,6}
+	elseif n=44
+	then {1,2,3} subset {3,4,5,6}
+	elseif n=45
+	then {1,2,3} psubset {3,4,5,6}
+	elseif n=45
+	then true in set {1,2,3}
+	elseif n=46
+	then true not in set {1,2,3}
+	elseif n=47
+	then ["abc",0] ^ [true,mk_(1,false)]
+	elseif n=59
+	then {2,mk_(3,true),[1,2,3]}
+	elseif n=60
+	then {i*2 | i in set {1,...,5} }
+	elseif n=61
+	then [2,mk_(3,true),[1,2,3]]
+	elseif n=62
+	then [i*2 | i in set {1,...,5}]
+	else nn
+        in m 
+  in skip;
+
+------------------------------------------------------------------------------
+end IfExprTest

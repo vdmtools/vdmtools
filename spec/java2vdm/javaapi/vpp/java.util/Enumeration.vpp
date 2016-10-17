@@ -1,0 +1,16 @@
+class JavaUtilEnumeration is subclass of JavaLangObject
+operations 
+public  JavaUtilEnumeration : <NIL> ==> JavaUtilEnumeration
+JavaUtilEnumeration(-) ==
+isNil:=true;
+
+public  nextElement : () ==> JavaLangObject
+nextElement() == 
+is not yet specified ;
+
+public  hasMoreElements : () ==> bool 
+hasMoreElements() == 
+is not yet specified ;
+
+
+end  JavaUtilEnumeration

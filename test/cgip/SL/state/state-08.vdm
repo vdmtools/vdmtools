@@ -1,0 +1,27 @@
+module A
+exports all
+definitions
+operations
+Test: () ==> int
+Test() ==
+( dcl ii : int := f();
+  let i = ii in return i
+)
+
+state sigma of
+	  st1 : T
+	  st2 : U
+	init s == s = mk_sigma( mk_(23,true), mk_(47,true) )
+	end
+
+types
+
+  	T = int * bool;
+	U = int * bool
+
+operations
+	f: () ==> int
+	f () ==
+	  let mk_(d,-) = st1 in
+	  return d
+end A

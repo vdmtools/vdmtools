@@ -1,0 +1,50 @@
+class JavaUtilALListItr is subclass of JavaUtilALItr, JavaUtilListIterator
+
+operations
+
+public
+  JavaUtilALListItr: JavaUtilAbstractList * int ==> JavaUtilALListItr
+	JavaUtilALListItr(al, idx) ==
+  ( let - = JavaUtilALItr(al) in skip;
+	  cursor:= idx
+  );
+
+	public hasPrevious: () ==> bool
+  hasPrevious() ==
+    return cursor <> 0;
+
+	public previous : () ==> JavaLangObject
+  previous() ==
+  (	cursor:=cursor-1;
+    ( dcl previous : JavaLangObject := al.get(cursor);
+		  lastRet := cursor;
+		  return previous;
+    )
+  );
+
+	public nextIndex: () ==> int
+	nextIndex() ==
+    return cursor;
+
+	public previousIndex : () ==> int
+	previousIndex() ==
+    return cursor-1;
+
+	public set__ : JavaLangObject ==> ()
+	set__(o) == 
+  ( if lastRet = -1
+    then exit new JavaLangIllegalStateException();
+
+		al.set__(lastRet, o);
+		expectedModCount := al.modCount
+  );
+
+--	public add: JavaLangObject ==> ()
+--	add(o) ==
+--  ( al.addIntObj(cursor, o);
+--    cursor:=cursor+1;
+--		lastRet := -1;
+--		expectedModCount := al.modCount;
+--  );
+
+end JavaUtilALListItr

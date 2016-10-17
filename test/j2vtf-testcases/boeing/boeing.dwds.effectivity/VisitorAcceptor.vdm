@@ -1,0 +1,8 @@
+class VisitorAcceptor
+operations 
+public  accept : [ExprVisitor] ==> <VOID>
+accept(visitor) == 
+is subclass responsibility ;
+
+
+end  VisitorAcceptor

@@ -1,0 +1,19 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of int  
+Test () ==
+  return g(7)(2,...,3)
+
+
+functions
+g: nat -> <ERROR> | seq of int
+g(y) ==
+  if y <> 10 then
+    <ERROR>
+  else
+    [ 1, 2, 5, 12, 6, -2, -12, 45, 99, -21 ]
+
+end A

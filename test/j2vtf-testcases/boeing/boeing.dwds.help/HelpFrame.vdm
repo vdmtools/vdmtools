@@ -1,0 +1,87 @@
+class HelpFrame is subclass of JFrame
+operations 
+public  setHelpPage : [URL] ==> <VOID>
+setHelpPage(helpPageAddress) == 
+( let - = setCursor(WAIT_CURSOR)
+  in 
+    skip ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (IOException,j2v_exception)) -> 
+        ( dcl   dwdsException : [DWDSException] := new  DWDSException(),
+                ioException : [IOException] := j2v_exception;
+          let - = dwdsException.addMessage(DWDSException`ErrorOpeningFileForInput , helpPageAddress.toString())
+          in 
+            skip ;
+          let - = errorLog.showExceptionMsgs(dwdsException)
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( let - = editorPane.setPage(helpPageAddress)
+      in 
+        skip 
+    ) ;
+  let - = setCursor(DEFAULT_CURSOR)
+  in 
+    skip ;
+  return  
+) ;
+
+public  HelpFrame : [String] ==> HelpFrame
+HelpFrame(frameName) == 
+( let - = JFrame(frameName)
+  in 
+    skip ;
+  let - = setSize(720 , 600)
+  in 
+    skip ;
+  let - = setBackground(Color`gray)
+  in 
+    skip ;
+  let - = getContentPane().setLayout(new  BorderLayout())
+  in 
+    skip ;
+  ( dcl   helpPanel : [JPanel] := new  JPanel();
+    let - = helpPanel.setLayout(new  BorderLayout())
+    in 
+      skip ;
+    let - = getContentPane().add(helpPanel , BorderLayout`CENTER)
+    in 
+      skip ;
+    let - = editorPane.setEditorKit(editorKit)
+    in 
+      skip ;
+    let - = editorPane.setBackground(Color`white)
+    in 
+      skip ;
+    let - = editorPane.setEditable(false  )
+    in 
+      skip ;
+    ( dcl   scrollPane : [JScrollPane] := new  JScrollPane();
+      let - = scrollPane.getViewport().add(editorPane)
+      in 
+        skip ;
+      let - = helpPanel.add(scrollPane , BorderLayout`CENTER)
+      in 
+        skip ;
+      let - = helpPanel.add(helpButtonPanel , BorderLayout`WEST)
+      in 
+        skip ;
+      return  
+    ) 
+  ) 
+) ;
+
+instance variables 
+  private  static WAIT_CURSOR : [Cursor] := Cursor`getPredefinedCursor(Cursor`WAIT_CURSOR);
+  private  static DEFAULT_CURSOR : [Cursor] := Cursor`getPredefinedCursor(Cursor`DEFAULT_CURSOR);
+  private  editorKit : [HTMLEditorKit] := new  HTMLEditorKit();
+  private  editorPane : [JEditorPane] := new  JEditorPane();
+  private  helpButtonPanel : [HelpButtonPanel] := new  HelpButtonPanel(self  );
+  private  errorLog : [ExceptionsFrame] := ExceptionsFrame`getExceptionsFrame()
+  
+end  HelpFrame

@@ -1,0 +1,38 @@
+{\small\sf dlmodule} $B$
+\begin{interface}{exports}
+\begin{modulesignature}{functions}
+ExtCos:\Real  \To \Real 
+\end{modulesignature}
+\end{interface}
+\kw{uselib}\Dquote libmath.so \Dquote {\small\sf end} {\it B} \\
+{\small\sf module} $APPROX$
+\begin{interface}{exports}
+\kw{all}
+\end{interface}
+\kDefinitions
+\kValues
+\val{ExtCos}{\map{\seq{0.500000} \Mapsto 0.877000,\seq{3.140000} \Mapsto  \Uminus 1}}
+{\small\sf end} {\it APPROX} \\
+{\small\sf module} $A$
+\begin{interface}{imports}
+\begin{from}{APPROX}
+\kw{all}
+\end{from}
+\begin{from}{B}
+\begin{modulesignature}{functions}
+ExtCos:\Real  \To \Real \ \kw{renamed}\ ExtCos
+\end{modulesignature}
+\end{from}
+\end{interface}
+\begin{interface}{exports}
+\kw{all}
+\end{interface}
+\kDefinitions
+\kFunctions
+\begin{fn}[e]{Test}%
+\signature{() \To \Real }
+\parms*{\Lp \Rp }
+\annlab[o]{A`Test}
+\fnapply{ExtCos}{3.140000}
+\end{fn}
+{\small\sf end} {\it A} \\

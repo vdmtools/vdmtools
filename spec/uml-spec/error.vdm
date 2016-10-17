@@ -1,0 +1,55 @@
+%--------------------------------------------------------------------------------
+% $Id: error.vdm,v 1.6 2000/04/07 11:14:59 blackie Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\begin{vdm_al}
+module UMLERR
+
+imports
+
+  from AS all,
+  from REP all,
+  from CI all
+
+
+exports all
+
+definitions
+
+state ErrState of
+  Warnings : ErrorsType
+  init e == e = mk_ErrState({|->})
+end
+
+types
+  
+  ErrInfo :: instance_var : AS`Name;
+--             tp : AS`Type;
+
+  ErrorsType = map AS`Name to set of ErrInfo;
+
+operations
+
+  GenWarning : AS`Name * AS`Name ==> ()
+  GenWarning(c,i) ==
+  ( if c not in set dom Warnings
+    then Warnings := Warnings munion { c |-> {i} }
+    else let s = {i} union Warnings(c)
+         in Warnings := Warnings ++ { c |-> s }
+  );
+
+  ClearWarnings : () ==> ()
+  ClearWarnings () ==
+    Warnings := {|->};
+
+  GetWarnings : () ==> ErrorsType
+  GetWarnings () ==
+    return Warnings;
+
+end UMLERR
+  
+  
+
+
+
+\end{vdm_al}

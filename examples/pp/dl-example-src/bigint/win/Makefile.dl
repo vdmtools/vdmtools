@@ -1,0 +1,34 @@
+##---------------------------------------------------------------
+##                    Make file for Windows 32bit
+##             This Makefile can only be used with GNU make
+##---------------------------------------------------------------
+
+CC       = cl.exe
+MAPMDIR = ./mapm_3.60
+
+CFLAGS   = /nologo /c /MT /W0 /GD /GX /D "WIN32" /TP
+DLLFLAGS = /D "_USRDLL" 
+INCPATH  = -I//hermes/paulm/toolbox/jfits/winnt -I//hermes/paulm/manuals/doc/dlclass/example/win/mapm_3.60
+
+
+LINK     = link.exe
+LPATH    = /LIBPATH:D:/tbdev/jfits
+LFLAGS   = /dll /incremental:no /DEFAULTLIB:vdm.lib
+
+all: bigint_dl.dll
+
+bigint_dl.obj: bigint_dl.cpp
+	$(CC) $(CFLAGS) $(DLLFLAGS) $(INCPATH) /Fo"$@" $<
+
+%.dll:
+	$(LINK) $(LPATH) $(LFLAGS) /out:"$@" $^
+
+bigint_dl.dll: bigint_dl.obj $(MAPMDIR)/mapm.lib
+
+
+clean:
+	rm -f bigint_dl.dll bigint_dl.obj
+
+
+
+

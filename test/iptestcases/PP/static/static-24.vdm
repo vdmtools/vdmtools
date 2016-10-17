@@ -1,0 +1,954 @@
+class Writer is subclass of Object
+--values 
+--  CLASS : Class = new  Class("Writer" , <CLASS> , false  )
+instance variables 
+  private  writeBuffer : map  int  to  char ;
+  private  writeBufferSize : int  := 80;
+  protected  lock : Object
+operations 
+public  close : () ==> ()
+close() == 
+is subclass responsibility ;
+
+public  flush : () ==> ()
+flush() == 
+is subclass responsibility ;
+
+protected  Writer : () ==> Writer
+Writer() == 
+( Writer`lock := self  
+) ;
+
+public  write : int  ==> ()
+write(c) == 
+( ( if  writeBuffer = {|->}
+    then  
+      ( writeBuffer := {l_3 |-> ' '|l_3 in set  {0,...,writeBufferSize-1}}
+      ) ;
+--    writeBuffer := writeBuffer ++ {0 |-> J2VUTIL`Convert("char" , c)};
+    writeBuffer := writeBuffer ++ {0 |-> c};
+    write(writeBuffer , 0 , 1)
+  ) ;
+) ;
+
+--public  getClass : () ==> Class
+--getClass() == 
+--return  CLASS;
+
+public  write : map  int  to  char  ==> ()
+write(cbuf) == 
+( write(cbuf , 0 , (card  dom  cbuf));
+) ;
+
+--public  Writer : <NIL> ==> Writer
+--Writer(-) == 
+--isNil := true  ;
+
+public  write : String ==> ()
+write(str) == 
+( write(str , 0 , str.length());
+) ;
+
+protected  Writer : Object ==> Writer
+Writer(lock) == 
+( if  lock.IsNil()
+  then  
+    ( skip -- exit  new  NullPointerException()
+    ) ;
+  Writer`lock := lock
+) ;
+
+public  write : map  int  to  char  * int  * int  ==> ()
+write(cbuf, off, len__) == 
+is subclass responsibility ;
+
+public  write : String * int  * int  ==> ()
+write(str, off, len__) == 
+( ( dcl   cbuf : map  int  to  char ;
+    if  len__ <= writeBufferSize
+    then  
+      ( if  writeBuffer = {|->}
+        then  
+          ( writeBuffer := {l_3 |-> ' '|l_3 in set  {0,...,writeBufferSize-1}}
+          ) ;
+        cbuf := writeBuffer
+      ) 
+    else  
+      ( cbuf := {l_3 |-> ' '|l_3 in set  {0,...,len__-1}}
+      ) ;
+    str.getChars(off , (off+len__) , cbuf , 0);
+    write(cbuf , 0 , len__)
+  ) ;
+  skip 
+) ;
+
+
+end  Writer
+class String is subclass of Object --, Serializable, Comparable
+--uselib "j2vlib.so"
+--values
+--  public CLASS : Class=new Class("String", <CLASS>, false);
+
+operations 
+--
+--  To be able to use 'new String("123")'
+--
+public  String : seq of  char  ==> String
+String(value_) == 
+setValue(value_) ;
+
+public  setValue : seq of  char  ==> ()
+setValue(value_) == 
+--is not yet specified ;
+skip;
+
+--public  getClass : () ==> Class
+--getClass() == 
+--  return CLASS;
+
+--
+-- Just for testing
+--
+public  toSeqOfChar : () ==> seq of  char
+toSeqOfChar() == 
+is not yet specified ;
+
+public String: <NIL> ==> String
+String(p) == isNil:=true;
+
+public  trim : () ==> String
+trim() == 
+is not yet specified ;
+
+public  String : () ==> String
+String() == 
+skip ;
+
+public  intern : () ==> String
+intern() == 
+is not yet specified ;
+
+public  length : () ==> int 
+length() == 
+is not yet specified ;
+
+public  charAt : int  ==> char 
+charAt(index) == 
+is not yet specified ;
+
+public  getBytes : () ==> map  int  to  int 
+getBytes() == 
+is not yet specified ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+is not yet specified ;
+
+public  indexOf : int  ==> int 
+indexOf(ch) == 
+is not yet specified ;
+
+public  toString : () ==> String
+toString() == 
+is not yet specified ;
+
+public  static valueOf : bool  ==> String
+valueOf(b) == 
+is not yet specified ;
+
+public  static valueOf : char  ==> String
+valueOf(c) == 
+is not yet specified ;
+
+public  static valueOf : real  ==> String
+valueOf(d) == 
+is not yet specified ;
+
+public  indexOf : int  * int  ==> int 
+indexOf(ch, fromIndex) == 
+is not yet specified ;
+
+public  replace : char  * char  ==> String
+replace(oldChar, newChar) == 
+is not yet specified ;
+
+public  substring : int  ==> String
+substring(beginIndex) == 
+is not yet specified ;
+
+public  String : map  int  to  char  ==> String
+String(value_) == 
+is not yet specified ;
+
+public  String : map  int  to  int  ==> String
+String(bytes) == 
+is not yet specified ;
+
+public  toCharArray : () ==> map  int  to  char 
+toCharArray() == 
+is not yet specified ;
+
+public  toLowerCase : () ==> String
+toLowerCase() == 
+is not yet specified ;
+
+public  toUpperCase : () ==> String
+toUpperCase() == 
+is not yet specified ;
+
+public  lastIndexOf : int  ==> int 
+lastIndexOf(ch) == 
+is not yet specified ;
+
+public  substring : int  * int  ==> String
+substring(beginIndex, endIndex) == 
+is not yet specified ;
+
+public  static valueOf : map  int  to  char  ==> String
+valueOf(data) == 
+is not yet specified ;
+
+public  String : map  int  to  int  * int  ==> String
+String(ascii, hibyte) == 
+is not yet specified ;
+
+public  lastIndexOf : int  * int  ==> int 
+lastIndexOf(ch, fromIndex) == 
+is not yet specified ;
+
+private  String : int  * int  * map  int  to  char  ==> String
+String(offset, count, value_) == 
+is not yet specified ;
+
+public  String : (map  int  to  char)  * int  * int  ==> String
+String(value_, offset, count) == 
+( setValueICMapIntInt(value_, offset, count)
+);
+
+private setValueICMapIntInt : map  int  to  char  * int  * int  ==> String
+setValueICMapIntInt(value_, offset, count) == 
+is not yet specified ;
+
+public  String : map  int  to  int  * int  * int  ==> String
+String(bytes, offset, len_gth) == 
+is not yet specified ;
+
+public  String : String ==> String
+String(value_) == 
+is not yet specified ;
+
+public  concat : String ==> String
+concat(str) == 
+is not yet specified ;
+
+public  static copyValueOf : map  int  to  char  ==> String
+copyValueOf(data) == 
+is not yet specified ;
+
+public  equals : Object ==> bool 
+equals(anObject) == 
+is not yet specified ;
+
+public  static valueOf : map  int  to  char  * int  * int  ==> String
+valueOf(data, offset, count) == 
+is not yet specified ;
+
+public  String : map  int  to  int  * int  * int  * int  ==> String
+String(ascii, hibyte, offset, count) == 
+is not yet specified ;
+
+public  indexOf : String ==> int 
+indexOf(str) == 
+is not yet specified ;
+
+public  static valueOf : Object ==> String
+valueOf(obj) == 
+is not yet specified ;
+
+public  endsWith : String ==> bool 
+endsWith(suffix) == 
+is not yet specified ;
+
+public  getBytes : String ==> map  int  to  int 
+getBytes(enc) == 
+is not yet specified ;
+
+public  compareTo : Object ==> int 
+compareTo(o) == 
+is not yet specified ;
+
+--public  compareTo : String ==> int 
+--compareTo(anotherString) == 
+--is not yet specified ;
+
+public  getBytes : int  * int  * map  int  to  int  * int  ==> ()
+getBytes(srcBegin, srcEnd, dst, dstBegin) == 
+is not yet specified ;
+
+public  getChars : int  * int  * map  int  to  char  * int  ==> ()
+getChars(srcBegin, srcEnd, dst, dstBegin) == 
+is not yet specified ;
+
+public  indexOf : String * int  ==> int 
+indexOf(str, fromIndex) == 
+is not yet specified ;
+
+public  static copyValueOf : map  int  to  char  * int  * int  ==> String
+copyValueOf(data, offset, count) == 
+is not yet specified ;
+
+public  startsWith : String ==> bool 
+startsWith(prefix) == 
+is not yet specified ;
+
+public  lastIndexOf : String ==> int 
+lastIndexOf(str) == 
+is not yet specified ;
+
+--public  toLowerCase : Locale ==> String
+--toLowerCase(locale) == 
+--is not yet specified ;
+
+--public  toUpperCase : Locale ==> String
+--toUpperCase(locale) == 
+--is not yet specified ;
+
+--public  String : StringBuffer ==> String
+--String(buffer) == 
+--is not yet specified ;
+
+public  String : map  int  to  int  * String ==> String
+String(bytes, enc) == 
+is not yet specified ;
+
+public  start_sWith : String * int  ==> bool 
+start_sWith(prefix, toffset) == 
+is not yet specified ;
+
+public  lastIndexOf : String * int  ==> int 
+lastIndexOf(str, fromIndex) == 
+is not yet specified ;
+
+public  String : map  int  to  int  * int  * int  * String ==> String
+String(bytes, offset, len_gth, enc) == 
+is not yet specified ;
+
+public  equalsIgnoreCase : String ==> bool 
+equalsIgnoreCase(anotherString) == 
+is not yet specified ;
+
+public  compareToIgnoreCase : String ==> int 
+compareToIgnoreCase(str) == 
+is not yet specified ;
+
+public  regionMatches : int  * String * int  * int  ==> bool 
+regionMatches(toffset, other, ooffset, len_) == 
+is not yet specified ;
+
+public  regionMatches : bool  * int  * String * int  * int  ==> bool 
+regionMatches(ignoreCase, toffset, other, ooffset, len_) == 
+is not yet specified ;
+
+ 
+end String
+class PrintStream is subclass of FilterOutputStream
+--values 
+--  CLASS : Class = new  Class("PrintStream" , <CLASS> , false  )
+instance variables 
+--  private  autoFlush : bool  := false  ;
+--  private  trouble : bool  := false  ;
+  private  textOut : BufferedWriter;
+  private  charOut : OutputStreamWriter;
+--  private  closing : bool  := false
+operations 
+
+public  PrintStream : <NIL> ==> PrintStream
+PrintStream(-) == 
+isNil := true  ;
+
+public  PrintStream : OutputStream * bool  ==> PrintStream
+PrintStream(out, autoFlush) == 
+( let - = FilterOutputStream(out)
+  in 
+    skip ;
+---  PrintStream`autoFlush := autoFlush;
+  PrintStream`charOut := new  OutputStreamWriter(self  );
+  PrintStream`textOut := new  BufferedWriter(charOut)
+) ;
+
+
+end  PrintStream
+class OutputStreamWriter is subclass of Writer
+--values 
+--  CLASS : Class = new  Class("OutputStreamWriter" , <CLASS> , false  )
+instance variables 
+  private  ctb : CharToByteConverter;
+  private  out : OutputStream;
+  private  static defaultByteBufferSize : int  := 80;
+  private  bb : map  int  to  int ;
+  private  nextByte : int  := 0;
+  private  nBytes : int  := 0
+operations 
+public  close : () ==> ()
+close () ==
+skip;
+
+public  flush : () ==> ()
+flush () ==
+skip;
+
+public  write : int  ==> ()
+write(c) == 
+skip;
+
+--public  getClass : () ==> Class
+--getClass() == 
+--return  CLASS;
+
+private  ensureOpen : () ==> ()
+ensureOpen() == 
+skip;
+
+public flushBuffer : () ==> ()
+flushBuffer() == 
+skip;
+
+public  getEncoding : () ==> String
+getEncoding() == 
+ return new String("123");
+
+public  write : map  int  to  char  * int  * int  ==> ()
+write(cbuf, off, len__) == 
+skip;
+
+public  write : String * int  * int  ==> ()
+write(str, off, len__) == 
+skip;
+
+public  OutputStreamWriter : <NIL> ==> OutputStreamWriter
+OutputStreamWriter(-) == 
+isNil := true  ;
+
+public  OutputStreamWriter : OutputStream ==> OutputStreamWriter
+OutputStreamWriter(out) == 
+( let - = OutputStreamWriter(out , new  CharToByteConverter(<NIL>))
+  in 
+    skip 
+) ;
+
+public  OutputStreamWriter : OutputStream * String ==> OutputStreamWriter
+OutputStreamWriter(out, enc) == 
+( let - = OutputStreamWriter(out , new  CharToByteConverter(<NIL>))
+  in 
+    skip 
+) ;
+
+private  OutputStreamWriter : OutputStream * CharToByteConverter ==> OutputStreamWriter
+OutputStreamWriter(out, ctb) == 
+( let - = Writer(out)
+  in 
+    skip ;
+--  if  out.IsNil()
+--  then  
+--    exit  new  NullPointerException(new  String("out is null"));
+  OutputStreamWriter`out := out;
+  OutputStreamWriter`ctb := ctb;
+  bb := {l_3 |-> 0|l_3 in set  {0,...,defaultByteBufferSize-1}};
+  nBytes := defaultByteBufferSize
+) ;
+
+
+end  OutputStreamWriter
+
+
+class CharToByteConverter is subclass of Object
+operations 
+public  CharToByteConverter : <NIL> ==> CharToByteConverter
+CharToByteConverter(-) == 
+isNil := true  ;
+
+end  CharToByteConverter
+--
+--  Has an abstract method. 
+--
+class OutputStream is subclass of Object
+--uselib "j2vlib.so"
+--values 
+--  CLASS : Class = new  Class("OutputStream" , <CLASS> , false  )
+
+end  OutputStream
+class Object is subclass of Nullable
+--uselib "j2vlib.so"
+operations 
+public Object: <NIL> ==> Object
+Object(p) == isNil:=true;
+
+public  Object : () ==> Object
+Object() ==
+--let - = Nullable() in skip;
+skip;
+
+public  wait : () ==> ()
+wait() == 
+is not yet specified ;
+
+protected  clone : () ==> Object
+clone() == 
+is not yet specified ;
+
+public  wait : int  ==> ()
+wait(timeout) == 
+is not yet specified ;
+
+public  notify : () ==> ()
+notify() == 
+is not yet specified ;
+
+public  wait : int  * int  ==> ()
+wait(timeout, nanos) == 
+is not yet specified ;
+
+protected  finalize : () ==> ()
+finalize() == 
+is not yet specified ;
+
+--public  getClass : () ==> Class
+--getClass() == 
+--  return new Class(<NIL>);
+--is subclass responsibility ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+is not yet specified ;
+
+--public  toString : () ==> String
+--toString() == 
+--is not yet specified ;
+
+public  notifyAll : () ==> ()
+notifyAll() == 
+is not yet specified ;
+
+public  equals : Object ==> bool 
+equals(obj) == 
+  return self = obj;
+
+end  Object
+class Nullable
+operations
+--  public Nullable: seq1 of char * (<CLASS> | <INTERFACE>) ==> Nullable
+--  Nullable(-) == skip;
+
+--  public Nullable: (<NIL>) ==> Nullable
+--  Nullable() == isNil:=true;
+
+--  public Nullable: () ==> Nullable
+--  Nullable() == skip;
+
+  public IsNil: () ==> bool
+  IsNil() == return isNil
+
+instance variables
+  protected isNil: bool :=false
+
+end Nullable
+class FilterOutputStream is subclass of OutputStream
+--uselib "j2vlib.so"
+--values 
+--  CLASS : Class = new  Class("FilterOutputStream" , <CLASS> , false  )
+instance variables 
+  protected  out : OutputStream
+operations 
+
+public  FilterOutputStream : OutputStream ==> FilterOutputStream
+FilterOutputStream(out) == 
+( FilterOutputStream`out := out
+) ;
+
+
+end  FilterOutputStream
+class FileOutputStream is subclass of OutputStream
+--uselib "j2vlib.so"
+--values 
+--  CLASS : Class = new  Class("FileOutputStream" , <CLASS> , false  )
+operations 
+public  close : () ==> ()
+close() == 
+is not yet specified ;
+
+--public  getFD : () ==> FileDescriptor
+--getFD() == 
+--is not yet specified ;
+
+public  write : int  ==> ()
+write(b) == 
+( if writeInt(b) <> 0
+  then skip; -- exit new IOException()
+);
+
+private  writeInt : int  ==> int
+writeInt(b) == 
+is not yet specified ;
+
+protected  finalize : () ==> ()
+finalize() == 
+is not yet specified ;
+
+--public  getClass : () ==> Class
+--getClass() == 
+--return  CLASS;
+
+--public  write1 : map  int  to  int  ==> ()
+--write1(b) == 
+----  is not yet specified ;
+--  OutputStream`write1(b);
+
+--public  write2 : map  int  to  int  * int  * int  ==> ()
+--write2(b, off, len__) == 
+----  is not yet specified ;
+--  OutputStream`write2(b, off, len__);
+
+--public  FileOutputStream : <NIL> ==> FileOutputStream
+--FileOutputStream(-) == 
+--isNil := true  ;
+
+--public  FileOutputStream : File ==> FileOutputStream
+--FileOutputStream(file) == 
+--( skip 
+--) ;
+
+--public  FileOutputStream : String ==> FileOutputStream
+--FileOutputStream(name) == 
+--( FileOutputStream1(name)
+--) ;
+
+private  FileOutputStream1 : String ==> ()
+FileOutputStream1(name) == 
+( if open(name) <> 0
+  then
+    skip -- exit new FileNotFoundException (name)
+  else
+    skip
+) ;
+
+private open : String ==> int
+open(name) == 
+--is not yet specified ;
+return 0;
+
+private openAppend : String ==> int
+openAppend(name) == 
+--is not yet specified ;
+return 0;
+
+public  FileOutputStream : String * bool  ==> FileOutputStream
+FileOutputStream(name, append) == 
+( FileOutputStream2(name, append)
+);
+
+private  FileOutputStream2 : String * bool  ==> ()
+FileOutputStream2(name, append) == 
+( if append then
+    if openAppend(name) <> 0
+    then
+      skip -- exit new FileNotFoundException (name)
+  else
+    FileOutputStream1(name)
+) ;
+
+--public  FileOutputStream : FileDescriptor ==> FileOutputStream
+--FileOutputStream(fdObj) == 
+--( skip 
+--) ;
+
+
+end  FileOutputStream
+class Class is subclass of Object --Serializable, Object
+--uselib "j2vlib.so"
+types
+--  public
+    CLASS ::
+      name : seq1 of char
+      cori : <CLASS> | <INTERFACE>
+      primary : bool
+
+instance variables
+  private val : Class`CLASS;
+
+operations 
+
+--public  Class : <NIL> ==> Class
+--Class(-) == 
+--isNil := true  ;
+
+--public  Class : Class`CLASS ==> Class
+--Class(v) == 
+--( val := v
+--);
+
+public  Class :  (seq1 of char) * (<CLASS> | <INTERFACE>) * bool ==> Class
+Class(name,cori,p) == 
+( 
+  val.primary := p;
+  val.cori := cori;
+  val.name := name;
+);
+
+public  getName : () ==> String
+getName() == 
+  return new String(val.name);
+
+public  isArray : () ==> bool 
+isArray() == 
+  return false;
+
+public  toString : () ==> String
+toString() == 
+( dcl
+    str: seq of char :=
+      if isInterface()
+      then "interface "
+      else 
+        if isPrimitive()
+        then ""
+        else "class ";
+  str:=str^getName().toSeqOfChar();
+ return new String(str)
+);
+
+--public  getFields : () ==> map  int  to  Field
+--getFields() == 
+--  return {|->};
+
+public  getClasses : () ==> map  int  to  Class
+getClasses() == 
+  return {|->};
+
+--public  getMethods : () ==> map  int  to  Method
+--getMethods() == 
+--is not yet specified ;
+
+--public  getPackage : () ==> Package
+--getPackage() == 
+--is not yet specified ;
+
+public  getSigners : () ==> map  int  to  Object
+getSigners() == 
+  return {|->};
+
+public  isInterface : () ==> bool 
+isInterface() == 
+  return val.cori=<INTERFACE>;
+
+public  isPrimitive : () ==> bool 
+isPrimitive() == 
+  return val.primary;
+
+--public  newInstance : () ==> Object
+--newInstance() == 
+--is not yet specified ;
+
+--public  getModifiers : () ==> int 
+--getModifiers() == 
+--is not yet specified ;
+
+public  getInterfaces : () ==> map  int  to  Class
+getInterfaces() == 
+  return {|->};
+
+--public  getSuperclass : () ==> Class
+--getSuperclass() == 
+--is not yet specified ;
+
+--public  getClassLoader : () ==> ClassLoader
+--getClassLoader() == 
+--is not yet specified ;
+
+--public  static forName : String ==> Class
+--forName(className) == 
+--is not yet specified ;
+
+--public  getConstructors : () ==> map  int  to  Constructor
+--getConstructors() == 
+--is not yet specified ;
+
+--public  getComponentType : () ==> Class
+--getComponentType() == 
+--is not yet specified ;
+
+--public  getField : String ==> Field
+--getField(name) == 
+--is not yet specified ;
+
+--public  getDeclaredFields : () ==> map  int  to  Field
+--getDeclaredFields() == 
+--is not yet specified ;
+
+--public  getDeclaringClass : () ==> Class
+--getDeclaringClass() == 
+--is not yet specified ;
+
+--public  getDeclaredClasses : () ==> map  int  to  Class
+--getDeclaredClasses() == 
+--is not yet specified ;
+
+--public  getDeclaredMethods : () ==> map  int  to  Method
+--getDeclaredMethods() == 
+--is not yet specified ;
+
+--public  isInstance : Object ==> bool 
+--isInstance(obj) == 
+--is not yet specified ;
+
+--public  getProtectionDomain : () ==> ProtectionDomain
+--getProtectionDomain() == 
+--is not yet specified ;
+
+--public  getResource : String ==> URL
+--getResource(name) == 
+--is not yet specified ;
+
+--setSigners : map  int  to  Object ==> ()
+--setSigners(signers) == 
+--is not yet specified ;
+
+--public  getDeclaredConstructors : () ==> map  int  to  Constructor
+--getDeclaredConstructors() == 
+--is not yet specified ;
+
+--public  isAssignableFrom : Class ==> bool 
+--isAssignableFrom(cls) == 
+--is not yet specified ;
+
+--public  getDeclaredField : String ==> Field
+--getDeclaredField(name) == 
+--is not yet specified ;
+
+--public  getConstructor : map  int  to  Class ==> Constructor
+--getConstructor(parameterTypes) == 
+--is not yet specified ;
+
+--static getPrimitiveClass : String ==> Class
+--getPrimitiveClass(name) == 
+--is not yet specified ;
+
+--public  getResourceAsStream : String ==> InputStream
+--getResourceAsStream(name) == 
+--is not yet specified ;
+
+--public  getMethod : String * map  int  to  Class ==> Method
+--getMethod(name, parameterTypes) == 
+--is not yet specified ;
+
+--public  static forName : String * bool  * ClassLoader ==> Class
+--forName(name, initialize, loader) == 
+--is not yet specified ;
+
+--public  getDeclaredConstructor : map  int  to  Class ==> Constructor
+--getDeclaredConstructor(parameterTypes) == 
+--is not yet specified ;
+
+--public  getDeclaredMethod : String * map  int  to  Class ==> Method
+--getDeclaredMethod(name, parameterTypes) == 
+--is not yet specified ;
+
+--setProtectionDomain0 : ProtectionDomain ==> ()
+--setProtectionDomain0(pd) == 
+--is not yet specified ;
+
+
+end  Class
+class BufferedWriter is subclass of Writer
+--values 
+--  CLASS : Class = new  Class("BufferedWriter" , <CLASS> , false  )
+instance variables 
+  private  out : Writer;
+  private  cb : map  int  to  char ;
+  private  nChars : int ;
+  private  nextChar : int ;
+  private  static defaultCharBufferSize : int  := 80;
+  private  lineSeparator : String
+operations 
+public  close : () ==> ()
+close() == 
+is not yet specified;
+
+public  flush : () ==> ()
+flush() == 
+is not yet specified;
+
+private  min : int  * int  ==> int 
+min(a, b) == 
+is not yet specified;
+
+public  write : int  ==> ()
+write(c) == 
+is not yet specified;
+
+public  newLine : () ==> ()
+newLine() == 
+is not yet specified;
+
+--public  getClass : () ==> Class
+--getClass() == 
+--return  CLASS;
+
+private  ensureOpen : () ==> ()
+ensureOpen() ==
+is not yet specified;
+
+public flushBuffer : () ==> ()
+flushBuffer() ==
+is not yet specified;
+
+public  write : map  int  to  char  * int  * int  ==> ()
+write(cbuf, off, len__) == 
+is not yet specified;
+
+public  write : String * int  * int  ==> ()
+write(s, off, len__) == 
+is not yet specified;
+
+public  BufferedWriter : <NIL> ==> BufferedWriter
+BufferedWriter(-) == 
+isNil := true  ;
+
+public  BufferedWriter : Writer ==> BufferedWriter
+BufferedWriter(out) == 
+( let - = BufferedWriter(out , defaultCharBufferSize)
+  in 
+    skip 
+) ;
+
+public  BufferedWriter : Writer * int  ==> BufferedWriter
+BufferedWriter(out, sz) == 
+( let - = Writer(out)
+  in 
+    skip ;
+--  if  sz <= 0
+--  then  
+--    exit  new  IllegalArgumentException(new  String("Buffer size <= 0"));
+--  BufferedWriter`out := out;
+--  cb := {l_3 |-> ' '|l_3 in set  {0,...,sz-1}};
+--  nChars := sz;
+--  nextChar := 0;
+--  lineSeparator := new  String("\n")
+) ;
+
+
+end  BufferedWriter
+class A
+
+operations
+
+public Test:() ==> nat
+Test() ==
+  let s = new String("tmp1.tmp")
+  in
+    let t = new FileOutputStream(s,true)
+    in
+      let ps = new PrintStream(t,false)
+      in
+        return 8
+
+end A

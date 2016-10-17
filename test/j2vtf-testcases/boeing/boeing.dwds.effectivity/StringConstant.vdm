@@ -1,0 +1,77 @@
+class StringConstant is subclass of StringExpr
+operations 
+public  toString : () ==> [String]
+toString() == 
+( if  constValue = nil  
+  then  
+    ( return  new  String("null")
+    ) 
+  else  
+    ( dcl   sb : [StringBuffer] := new  StringBuffer((card  dom  constValue)()+2);
+      let - = sb.append(''')
+      in 
+        skip ;
+      let - = sb.append(constValue)
+      in 
+        skip ;
+      let - = sb.append(''')
+      in 
+        skip ;
+      return  sb.toString()
+    ) 
+) ;
+
+public  toPostfix : () ==> [String]
+toPostfix() == 
+( return  StringConstant`toString()
+) ;
+
+public  StringConstant : () ==> StringConstant
+StringConstant() == 
+( skip 
+) ;
+
+public  doTask : [TokenStack] ==> <VOID>
+doTask(stack) == 
+( let - = stack.push(self  )
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  accept : [ExprVisitor] ==> <VOID>
+accept(visitor) == 
+( let - = visitor.visitStringExpr(self  )
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  StringConstant : [String] ==> StringConstant
+StringConstant(constValue) == 
+( StringConstant`constValue := constValue
+) ;
+
+public  setConstantValue : [String] ==> <VOID>
+setConstantValue(constValue) == 
+( StringConstant`constValue := constValue;
+  return  <VOID>
+) ;
+
+public  evaluate : [ExpressionContext] ==> [Object]
+evaluate(context) == 
+( if  constValue = nil  
+  then  
+    ( dcl   ex : [DWDSException] := new  DWDSException();
+      let - = ex.addMessage(DWDSException`InvalidOperationException , StringConstant`getClass().getName()+new  String(" was not assigned a value before evaluation"))
+      in 
+        skip ;
+      exit  ex
+    ) ;
+  return  constValue
+) ;
+
+instance variables 
+  constValue : [String] := nil  
+  
+end  StringConstant

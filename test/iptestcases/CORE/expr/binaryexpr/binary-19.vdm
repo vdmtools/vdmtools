@@ -1,0 +1,11 @@
+-- Test case for munion
+
+class A
+
+operations
+
+public Test : () ==> seq of map nat to char
+Test() ==
+  return [{ 2 |-> 'a', 3 |-> 'b', 1 |-> 'c'} munion { 2 |-> 'a', 3 |-> 'b', 1 |-> 'd'}]
+
+end A

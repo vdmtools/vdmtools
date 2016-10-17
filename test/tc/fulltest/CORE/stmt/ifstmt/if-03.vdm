@@ -1,0 +1,11 @@
+class IfStmtTest
+
+operations
+
+  If3: () ==>  bool | (nat1 * nat1) 
+  If3() ==
+    if 6*8
+    then return mk_(8,8)
+    else let n = 7 in return false and n;
+
+end IfStmtTest

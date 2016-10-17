@@ -1,0 +1,39 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+types
+
+  Even = nat
+  inv n == n mod 2 = 0
+
+operations
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+---------------------------------------------------------------------
+----------------- LetExpr         -----------------------------------
+---------------------------------------------------------------------
+
+public Test : () ==> seq of bool   
+Test () ==
+return
+[ let a = 1 in
+  let a = 3, b = a in b = a,
+
+  let c = 4 in
+  let mk_(c,d) : (int*int) = mk_(0,c), e = f(c), g=0 in e=g and d>c
+]    -- TRY ALSO without type definition 
+
+
+functions
+
+f: (int|bool) -> int|bool
+f(x) ==
+if is_int(x) then
+  let x = -1, y = x+2  in x + y  
+else
+  false
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

@@ -1,0 +1,33 @@
+/* $Id: Queue.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $ */
+-- 待ち行列(Queue)
+class Queue
+
+functions
+static public empty[@型] : () -> seq of @型
+empty() == [];
+
+static public isEmpty[@型] : seq of @型 -> bool
+isEmpty(s) == s = [];
+	
+static public enQueue[@型] : @型 * seq of @型 -> seq of @型
+enQueue(ある要素, ある待ち行列) == ある待ち行列 ^ [ある要素];
+
+static public deQueue[@型] : seq of @型 -> seq of @型
+deQueue(ある待ち行列) == 
+	if ある待ち行列 = [] then
+		[]
+	else
+		tl ある待ち行列;
+
+static public top[@型] : seq of @型 -> [@型]
+top(ある待ち行列) == 
+	if ある待ち行列 = [] then
+		nil
+	else
+		hd ある待ち行列;
+		
+static public topAndDeQueue[@型] : seq of @型 -> [@型] * seq of @型
+topAndDeQueue(ある待ち行列) == 
+	mk_(top[@型](ある待ち行列), deQueue[@型](ある待ち行列)) ;
+
+end Queue

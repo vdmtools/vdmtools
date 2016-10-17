@@ -1,0 +1,29 @@
+class LetExprTest
+types
+
+  A :: selid : nat
+       sel2 : bool;
+
+  B :: sel1 : rat
+  inv b == b < 6
+  
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = let a = b + 8,
+            f [@A,@B]: map @A to @B * @A -> @B
+            f(m,a) == m(a),
+            g[@C,@A](a: @A,c:@C) r : nat
+            post a <> c and 5 < r,
+            b : nat = f[nat,nat]({|->},7) + a,
+            mk_(a,c) = mk_(6,true)
+        in
+          g[nat,nat](2,3) + f[bool,nat]({true |-> 6},c) + b
+  in skip;
+
+------------------------------------------------------------------------------
+end LetExprTest

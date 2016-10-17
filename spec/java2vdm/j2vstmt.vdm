@@ -1,0 +1,1196 @@
+\section{The J2VSTMT Module}
+
+\begin{vdm_al}
+module J2VSTMT
+
+imports
+  from AS all,
+  from CPP all,
+  from CI all,
+  from REP all,
+  from JSSREP all,
+
+  from J2VTYPE
+    functions
+      J2VType: CPP`TypeSpecifier +> AS`Type;
+      GetPureType: AS`Type +> AS`Type;
+      GetTypeAndNameForArray: AS`Type * CPP`Declarator +> CPP`Identifier * AS`Type,
+
+  from J2VOP all,
+  from J2VEXPR all,
+
+  from J2VCLASS
+    values
+      v_IsNilOpNm: AS`Name,
+
+  from J2VBVDM
+    functions
+      GenNewExpr: AS`Name * seq of AS`Expr +> AS`NewExpr;
+      GenAlwaysStmt: AS`Stmt * AS`Stmt +> AS`AlwaysStmt;
+      GenTrap: AS`PatternBind * AS`Stmt * AS`Stmt +> AS`TrapStmt;
+      GenName: seq of AS`Id +> AS`Name;
+      GenMatchVal: AS`Expr +> AS`MatchVal;
+      GenIsOfClass: AS`Name * AS`Expr +> AS`IsOfClassExpr;
+      GenCasesStmt: [AS`Expr] * seq1 of AS`CasesStmtAltn +> AS`CasesStmt;
+      GenCasesStmtAltn: seq of AS`Pattern * AS`Stmt +> AS`CasesStmtAltn;
+      GenDefStmt: seq of (AS`PatternBind * AS`Expr) * AS`Stmt +>  AS`DefStmt;
+      GenBlockStmt: seq of AS`AssignDef * seq of AS`Stmt +> AS`BlockStmt;
+      GenWhileLoopStmt: AS`Expr * AS`Stmt +> AS`WhileLoopStmt;
+      GenIdentStmt: () +> AS`IdentStmt;
+      GenIfStmt: AS`Expr * AS`Stmt * seq of AS`ElseifStmt * [AS`Stmt] +> AS`IfStmt;
+      GenReturnStmt: [AS`Expr] +> AS`ReturnStmt;
+      GenAssignDef: AS`Name * AS`Type * [AS`Expr] +> AS`AssignDef;
+      Id2Name: CPP`Identifier +> AS`Name;
+      GenBasicType: <BOOLEAN> | <INTEGER> | <REAL> | <CHAR> +> AS`BasicType;
+      GenBoolLit: bool +> AS`BoolLit;
+      GenBracketedExpr: AS`Expr +> AS`BracketedExpr;
+      GenExitStmt: [AS`Expr] +> AS`ExitStmt;
+      GenBinaryExpr:  AS`Expr * AS`BinaryOp * AS`Expr +> AS`BinaryExpr;
+      GenApplyExpr: AS`Expr * seq of AS`Expr +> AS`ApplyExpr;
+      GenFieldSelectExpr: AS`Expr * (AS`Name | AS`FctTypeInstExpr) +> AS`FieldSelectExpr;
+      GenPrefixExpr: AS`UnaryOp * AS`Expr +> AS`PrefixExpr;
+      GenTypeBind: AS`Pattern * AS`Type +> AS`TypeBind;
+      GenPatternName: [AS`Name] +> AS`PatternName;
+      GenTypeName: AS`Name +> AS`TypeName,
+
+  from J2VAUX
+    functions
+      IsTempVarAssgn: AS`Stmt +> bool;
+      IsASExpr: AS`Expr | seq of AS`Stmt +> bool;
+
+    operations
+      TempVarsBeginBlock: () ==> ();
+      TempVarGetNext: seq of char ==> AS`Name;
+      TempVarsEndBlock: () ==> ()
+
+exports
+
+operations
+  J2VStmt: CPP`Stmt ==> seq of AS`Stmt;
+  ProcessStmts: seq of AS`Stmt ==> seq of AS`Stmt
+
+definitions
+
+values
+  v_ExceptionClassName: seq1 of char = "JavaLangException";
+  v_TrapPatternName: seq1 of char = "j2v_exception";
+  v_BreakPatternName: seq1 of char = "j2v_break";
+  v_BreakClassName: seq1 of char = "J2V_Break";
+
+operations
+
+\end{vdm_al}
+
+\subsection{Top level operation to translate a statement}
+
+\begin{formalparameters}
+\verb+p_expr: CPP`Stmt+ & The abstract syntax tree for a Java
+                     statement to be translated
+                     to sequence of VDM++ statements.\\
+\hline
+\end{formalparameters}
+\methodresult{seq of AS`Stmt}{VDM++ statements implementing the original Java one.}
+
+\begin{vdm_al}
+
+J2VStmt: CPP`Stmt ==> seq of AS`Stmt
+J2VStmt(p_stmt) == (
+  dcl l_stmts: seq of AS`Stmt := [];
+  J2VAUX`TempVarsBeginBlock();
+  l_stmts:=
+    ProcessStmts(J2VStmt'(p_stmt));
+  J2VAUX`TempVarsEndBlock();
+  return l_stmts);
+
+J2VStmt': CPP`Stmt ==> seq of AS`Stmt
+J2VStmt'(p_stmt) ==
+  cases true:
+    (is_CPP`LabelStmt(p_stmt))        -> J2VLabelStmt(p_stmt),
+    (is_CPP`ExpressionStmt(p_stmt))   -> J2VExpressionStmt(p_stmt),
+    (is_CPP`CompoundStmt(p_stmt))     -> J2VCompoundStmt(p_stmt),
+    (is_CPP`IfStmt(p_stmt))           -> J2VIfStmt(p_stmt),
+    (is_CPP`SwitchStmt(p_stmt))       -> J2VSwitchStmt(p_stmt),
+    (is_CPP`WhileStmt(p_stmt))        -> J2VWhileStmt(p_stmt),
+    (is_CPP`DoWhileStmt(p_stmt))      -> J2VDoWhileStmt(p_stmt),
+    (is_CPP`ForStmt(p_stmt))          -> J2VForStmt(p_stmt),
+    (is_CPP`ForEachStmt(p_stmt))      -> J2VForEachStmt(p_stmt),
+    (is_CPP`Break(p_stmt))            -> J2VBreakStmt(p_stmt),
+    (is_CPP`Continue(p_stmt))         -> J2VContinueStmt(p_stmt),
+    (is_CPP`Return(p_stmt))           -> J2VReturnStmt(p_stmt),
+--    (is_CPP`DeclarationStmt(p_stmt))  -> J2VDeclarationStmt(p_stmt),
+    (is_CPP`SynchronizedStmt(p_stmt)) -> J2VSynchronizedStmt(p_stmt),
+    (is_CPP`TryBlock(p_stmt))         -> J2VTryBlockStmt(p_stmt),
+    (is_CPP`EmptyStmt(p_stmt))        -> J2VEmptyStmt(p_stmt)
+  end;
+
+\end{vdm_al}
+
+\subsection{Translate of a label}
+
+Translation of a label is not supported.
+\begin{vdm_al}
+
+J2VLabelStmt: CPP`LabelStmt ==> seq of AS`Stmt
+J2VLabelStmt(p_stmt) ==
+  J2VStmt(p_stmt.stmt);
+\end{vdm_al}
+
+\subsection{Translation of an expression statement}
+
+The operation \texttt{J2VExpressionStmt} translates JAVA's expression statement.
+\begin{small}
+\begin{verbatim}
+JAVA: i; i=1;
+VDM++:  def -=i in skip; i=1;
+\end{verbatim}
+\end{small}
+
+\begin{vdm_al}
+J2VExpressionStmt: CPP`ExpressionStmt ==> seq of AS`Stmt
+J2VExpressionStmt(p_stmt) ==
+  let l_e = p_stmt.expr
+  in
+    if l_e = nil
+    then return ProcessStmts([J2VBVDM`GenIdentStmt()])
+    else return ProcessStmts(J2VEXPR`J2VExpr(l_e,nil,nil));
+--  return
+--    ProcessStmts
+--    ( let l_e=p_stmt.expr
+--      in  if l_e = nil
+--          then [J2VBVDM`GenIdentStmt()]
+--          else J2VEXPR`J2VExpr(l_e,nil,nil)); -- J2VEXPR`J2VExpr'(l_e,nil);
+
+
+--    then return [J2VBVDM`GenReturnStmt(nil)]
+--    else let l_val = J2VEXPR`J2VExpr'(l_expr,nil)
+    -- if the expression has a value, the value is discarded
+    -- maybe use J2VExpr here instead??
+--         in  
+--	   if is_(l_val,AS`Expr)
+--	   then return [J2VBVDM`GenReturnStmt(l_val)]
+	   -- ZZZ assign to some kind of dummy must be done instead
+	   -- e.g. let - = l_val in skip
+--	   else return l_val;
+
+\end{vdm_al}
+
+\subsection{Translation of a compound statement}
+
+Translates JAVA's blocks to block statements in VDM++.
+Each time, in JAVA, a declaration occures which is preceeded
+by non-declaration, we will have a new block started in VDM++.
+
+JAVA:
+  { i=1; i=2; int j; j=1; }
+ 
+VDM:
+  ( i:=1; i:=2; ( dcl j: int; j:=1 ) )
+
+
+TODO:
+  int i=1; { int k=++i; ...}
+
+
+\begin{vdm_al}
+
+J2VCompoundStmt: CPP`CompoundStmt ==> seq of AS`Stmt
+J2VCompoundStmt(p_stmt) ==
+  return
+    let l_stmts=p_stmt.stms
+    in
+--      if l_stmts=[]
+--      then [J2VBVDM`GenBlockStmt([], [J2VBVDM`GenIdentStmt()])]
+--      else
+        [ProcStmts(l_stmts, nil)];
+
+--
+-- p_stmts JAVA statements to translate
+-- p_block VDM block to hold the result to
+--
+
+\end{vdm_al}
+
+The operation \texttt{ProcStmts} translates
+a sequence of JAVA statements in a VDM++ block.
+Each time, in the sequence, a declaration occures
+which is preceeded by non-declaration,
+we start a new block in VDM++.
+
+JAVA:
+   i=1; i=2; int j; j=1; 
+VDM:
+  ( i:=1; i:=2; ( dcl j: int; j:=1 ) )
+
+\begin{formalparameters}
+\verb+p_expr: CPP`Stmt+ & The abstract syntax tree for a Java
+                     statement to be translated
+                     to sequence of VDM++ statements.\\
+\verb+p_block: AS`BlockStmt+ & The block where VDM++ statements are inserted.\\
+\hline
+\end{formalparameters}
+\methodresult{AS`BlockStmt}{VDM++ block implementing the original Java statement.}
+
+\begin{vdm_al}
+
+ProcStmts: seq of CPP`Stmt * [AS`BlockStmt] ==> AS`BlockStmt
+ProcStmts(p_stmts, p_block) ==
+(
+  dcl l_block: AS`BlockStmt :=
+        if p_block=nil then J2VBVDM`GenBlockStmt([], [])
+        else p_block;
+
+  if p_stmts=[]
+  then (
+    if l_block.stmts=[]
+    then l_block.stmts:=[J2VBVDM`GenIdentStmt()];
+--
+--  ProcessStmts must be eliminated later on.
+--
+    l_block.stmts:=ProcessStmts(l_block.stmts);
+    return l_block)
+  else
+    if is_CPP`DeclarationStmt(hd p_stmts)
+    then
+      if l_block.stmts=[]
+      then (
+        l_block:=ProcAssignDefs(tl p_stmts,GetAssignDefs(hd p_stmts),l_block);
+        l_block.stmts:=ProcessStmts(l_block.stmts);
+        return l_block )
+      else
+        def l_block'=ProcStmts(p_stmts, nil)
+        in (
+          l_block.stmts:=l_block.stmts ^ [l_block'];
+          l_block.stmts:=ProcessStmts(l_block.stmts);
+          return l_block)
+    else (
+      l_block.stmts:=l_block.stmts ^ J2VStmt'(hd p_stmts);
+      return ProcStmts(tl p_stmts, l_block)) );
+
+\end{vdm_al}
+
+The operation \texttt{ProcAssignDefs}
+processes \texttt{p\_adefs} (a list of pairs).
+Each pair consists of
+a VDM++ definition (possibly with an initializer) and
+a sequence of VDM++ statements calculating the
+initial value of the variable declared by the definition.
+The operation insert them into the VDM++ block \texttt{p\_block}
+and calls \texttt{ProcStmts} to translate
+statements \texttt{p\_stmts}.
+
+\begin{formalparameters}
+\verb+p_stmts: seq of CPP`Stmt+ & The abstract syntax trees for Java
+                     statements to be translated.\\
+\verb+p_adefs: seq of ((seq of AS`Stmt) * AS`AssignDef)+ & The list of
+variables' declarations with statements calculating their initial values.\\
+\hline
+\end{formalparameters}
+\methodresult{seq of AS`Stmt}{VDM++ block containing VDM declarations
+from \texttt{p\_adefs} and implementing the original Java statements.}
+
+\begin{vdm_al}
+
+ProcAssignDefs: seq of CPP`Stmt *
+                seq of ((seq of AS`Stmt) * AS`AssignDef) *
+                AS`BlockStmt
+                ==> AS`BlockStmt
+ProcAssignDefs(p_stmts, p_adefs, p_block) == (
+  dcl l_block: AS`BlockStmt := p_block;
+--  dcl l_block': AS`BlockStmt;
+
+  if p_stmts=[] and p_adefs=[]
+  then (
+    l_block.stmts:=l_block.stmts^[J2VBVDM`GenIdentStmt()];
+--
+-- ProcessStmts is not nice. Will eliminate it soon. M.Lebedev (May be not!)
+--
+    l_block.stmts:=ProcessStmts(l_block.stmts);
+    return l_block )
+  else
+    if p_adefs<>[]
+    then
+      let mk_(l_stmts, l_adef)=hd p_adefs
+      in  if l_stmts=[]
+          then (
+            l_block.dcls:=l_block.dcls^[l_adef];
+            return ProcAssignDefs(p_stmts, tl p_adefs, l_block) )
+          else (
+            l_block.stmts:=l_block.stmts^l_stmts;
+            def l_block'=
+              ProcAssignDefs(
+                p_stmts,
+                tl p_adefs,
+                J2VBVDM`GenBlockStmt([l_adef], []))
+            in
+              l_block.stmts:=l_block.stmts^[l_block'];
+--
+-- This is not nice. Will eliminate it soon. M.Lebedev
+--
+            l_block.stmts:=ProcessStmts(l_block.stmts);
+            return l_block )
+    else
+--
+--  ASSERT: p_adefs=[] and p_stmts<>[]
+--     
+      return ProcStmts(p_stmts, l_block) );
+
+\end{vdm_al}
+
+The operation \texttt{GetAssignDefs}
+processes Java declaration to the list
+of pairs.
+Each pair consists of
+a VDM++ definition (possibly with an initializer) and
+a sequence of VDM++ statements calculating the
+initial value of the variable declared by the definition.
+
+\begin{vdm_al}
+
+GetAssignDefs: CPP`DeclarationStmt ==> seq of ((seq of AS`Stmt) * AS`AssignDef)
+GetAssignDefs(p_stmt) == (
+  dcl l_assgnDefs: seq of ((seq of AS`Stmt) * AS`AssignDef) := [];
+  def l_decl = p_stmt.decl;
+      l_type = J2VTYPE`J2VType(l_decl.ds(1))
+--      l_type'=J2VTYPE`J2VType(l_decl.ds(1)),
+--      l_type =
+--        if is_(l_type',AS`TypeName)
+--        then J2VBVDM`GenOptionalType(l_type')
+--        else l_type'
+  in
+    for v in l_decl.dl do
+      def mk_(l_v, l_t) = J2VTYPE`GetTypeAndNameForArray(l_type, v.decl);
+--                if is_CPP`Identifier(v.decl)
+--                then mk_(v.decl, l_type)
+--                else J2VTYPE`GetTypeAndNameForArray(l_type, v.decl)
+          l_tvar = J2VAUX`TempVarGetNext([]);
+--
+--                Initialization
+--
+      in
+       (dcl l_expr : [AS`Expr | seq of AS`Stmt] := nil;
+        if v.i <> nil
+        then l_expr :=  J2VEXPR`J2VExpr' (v.i.expr,l_tvar,mk_J2VEXPR`ExprContext(l_t,nil,nil));
+        def mk_(l_e, l_stmts)=
+--                    if is_(l_expr, seq of AS`Stmt)
+                    if l_expr<>nil and not J2VAUX`IsASExpr(l_expr)
+                    then mk_(l_tvar, l_expr)
+                    else mk_(l_expr, []);
+            defs = mk_(l_stmts,
+                        J2VBVDM`GenAssignDef(
+                          J2VBVDM`Id2Name(l_v), -- v.decl,
+                          l_t, -- l_type,
+                          l_e  -- dclinit
+                        ) );
+        in l_assgnDefs := l_assgnDefs ^ [defs];
+       );
+  return l_assgnDefs
+)
+pre
+  let l_decl=p_stmt.decl
+  in
+    is_CPP`IdentDeclaration(l_decl) and
+    len l_decl.ds = 1 and
+    l_decl.dl<>nil =>    -- for the time being, handle only AsgnInit
+    len l_decl.dl>=1 and
+    forall v in set elems l_decl.dl & v.i<>nil => is_CPP`AsgnInit(v.i);
+     
+\end{vdm_al}
+
+\subsection{Translation of \texttt{if}}
+
+The operation \texttt{J2VIfStmt} translates \texttt{if} statement.
+
+\begin{formalparameters}
+\verb+p_expr: CPP`IfStmt+ & The abstract syntax tree for a Java
+                     \texttt{if} statement to be translated.\\
+\hline
+\end{formalparameters}
+\methodresult{seq of AS`Stmt}{VDM++ statements implementing the original Java one.}
+
+\begin{vdm_al}
+
+J2VIfStmt: CPP`IfStmt ==> seq of AS`Stmt
+J2VIfStmt(p_stmt) ==
+  def mk_CPP`IfStmt(l_test',l_then',l_else',-) = p_stmt;
+      l_tvar = J2VAUX`TempVarGetNext([]);
+      l_test = J2VEXPR`J2VExpr''(l_test',l_tvar,nil); -- new name
+--      l_isStmts = is_(l_test,seq of AS`Stmt);
+      l_isStmts = not J2VAUX`IsASExpr(l_test);
+      mk_(l_vdmexpr,l_prestmt)=
+        if l_isStmts
+        then mk_(l_tvar,l_test)
+        else mk_(l_test,[]);
+      l_stmts = J2VStmt(l_then')
+  in
+   (dcl l_if: seq of AS`Stmt := [],
+        l_then : AS`Stmt,
+        l_else : [AS`Stmt] := nil;
+    if len l_stmts > 1
+    then l_then := J2VBVDM`GenBlockStmt([],l_stmts)
+    else l_then := hd l_stmts;
+    if l_else' <> nil
+    then
+      def l_stmts=J2VStmt(l_else')
+      in
+        if len l_stmts > 1
+        then l_else := J2VBVDM`GenBlockStmt([],l_stmts)
+        else l_else := hd l_stmts;
+    l_if := l_prestmt ^ [J2VBVDM`GenIfStmt(l_vdmexpr,l_then,[],l_else)];
+    if l_isStmts
+    then
+      l_if := [J2VBVDM`GenBlockStmt([J2VBVDM`GenAssignDef(l_tvar, J2VBVDM`GenBasicType(<BOOLEAN>),nil)], l_if)];
+    return l_if;
+   );
+\end{vdm_al}
+
+\subsection{Translation of \texttt{switch}}
+
+For switch statements the underlying strategy is to map:
+
+\begin{small}
+\begin{verbatim}
+switch ( Expression )
+{case ConstantExpression1 :
+ case ConstantExpression2 : BlockStatementA
+ default : BlockStatementB
+ }
+\end{verbatim}
+\end{small}
+The pseudo VDM++ generated from this would ideally be:
+\begin{small}
+\begin{verbatim}
+cases J2VExpr'(Expression):
+  (J2VExpr'(ConstantExpression1)),
+  (J2VExpr'(ConstantExpression2)) -> J2VStmt(BlockStatementA),
+  others                         -> J2VStmt(BlockStatementB)
+end
+\end{verbatim}
+\end{small}
+However, sometimes it may only be possible to translate the
+\texttt{Expression} used for the switching part to a sequence of
+statements. In this case one would have to do the first part as:
+\begin{small}
+\begin{verbatim}
+statements comming from J2VExpr'(Expression,tmp_v);
+cases tmp_v:
+\end{verbatim}
+\end{small}
+
+The body of a switch statement only makes sense as a VDM cases
+statement if:
+\begin{enumerate}
+\item All switch block statement groups are terminated by a break
+statement and;
+\item The default statement only is present at the end of the switch
+blocks (if anywhere).
+\end{enumerate}
+Both of these things should be checked in the Java static semantics so
+the first recommendation is to disallow translating Java classes which
+does not satisfy this requirement.
+
+\begin{formalparameters}
+\verb+p_expr: CPP`SwitchStmt+ & The abstract syntax tree for a Java
+                     \texttt{switch} statement to be translated.\\
+\hline
+\end{formalparameters}
+\methodresult{seq of AS`Stmt}{VDM++ statements implementing the original Java one.}
+
+\begin{vdm_al}
+J2VSwitchStmt: CPP`SwitchStmt ==> seq of AS`Stmt
+J2VSwitchStmt(p_stmt) ==  (
+  dcl l_altn    : AS`CasesStmtAltn :=
+                  J2VBVDM`GenCasesStmtAltn(
+                    [ J2VBVDM`GenMatchVal(
+                        J2VBVDM`GenBracketedExpr(
+                          J2VBVDM`GenIsOfClass(
+                            J2VBVDM`GenName([v_BreakClassName]),
+                            J2VBVDM`GenName([v_BreakPatternName])
+                          )
+                        )
+                      )
+                    ],
+                    J2VBVDM`GenIdentStmt()
+                  ),
+      l_caseexp : AS`CasesStmt :=
+                  J2VBVDM`GenCasesStmt(J2VBVDM`GenBoolLit(true),[l_altn]);
+  dcl l_prestmt : seq of AS`Stmt := [];
+  dcl l_vdmexpr : [AS`Expr] := nil;
+  dcl l_vdmaltns: seq of AS`CasesStmtAltn := [];
+  def mk_CPP`SwitchStmt(l_expr,l_block,-) = p_stmt;
+      l_switch = J2VEXPR`J2VExpr'(l_expr,nil,nil);
+      l_cases  = J2VSwitchBlock(l_block)
+  in
+  (
+--    if is_(l_switch,AS`Expr)
+    if J2VAUX`IsASExpr(l_switch)
+    then
+    ( l_vdmexpr := l_switch;
+      l_vdmaltns:= l_cases
+    )
+    else
+    (  l_vdmexpr := nil;
+       l_vdmaltns:= l_cases;
+       l_prestmt := l_switch
+    );
+		if (J2VBreakOnStatement(p_stmt,0)) then
+      return [ J2VBVDM`GenTrap(
+               J2VBVDM`GenMatchVal(J2VBVDM`GenName([v_BreakPatternName])),
+               l_caseexp,
+							 J2VBVDM`GenBlockStmt(
+                 [],
+	               l_prestmt ^	[ J2VBVDM`GenCasesStmt(l_vdmexpr,l_vdmaltns)]
+               )
+             )
+           ]
+		else
+      return l_prestmt ^
+           [ J2VBVDM`GenCasesStmt(l_vdmexpr,l_vdmaltns)]
+  )
+);
+   
+J2VSwitchBlock: CPP`SwitchBlock ==> seq of AS`CasesStmtAltn
+J2VSwitchBlock(p_sblock) == (
+  dcl l_vdmcases: seq of AS`CasesStmtAltn := [];
+--  for all l_counter in set inds(p_sblock.groups) do (
+  for l_counter=1 to len p_sblock.groups do (
+    l_vdmcases := l_vdmcases^[J2VSwitchBlockStmtGrp(p_sblock.groups(l_counter))]
+  );
+  -- what about the labels on the SwitchBlock? Seems to be always nil.
+  return l_vdmcases
+); 
+
+J2VSwitchBlockStmtGrp: CPP`SwitchBlockStmtGrp ==> AS`CasesStmtAltn
+J2VSwitchBlockStmtGrp(l_sbgrp) == (
+  dcl l_patterns : seq of AS`Pattern := [],
+      l_vdmstmt  : seq of AS`Stmt := [];
+  l_patterns := SwitchLblCollectPatterns(l_sbgrp.labels);
+  if (l_sbgrp.stmt <> nil) then (
+    l_vdmstmt := J2VStmt(l_sbgrp.stmt)
+  );
+  cases len(l_vdmstmt):
+    0 -> return J2VBVDM`GenCasesStmtAltn(
+                  l_patterns,
+                  J2VBVDM`GenBlockStmt([], [J2VBVDM`GenIdentStmt()])
+                ),
+    1 -> return J2VBVDM`GenCasesStmtAltn(
+                  l_patterns,
+                  hd(l_vdmstmt)
+                ),
+    others -> return J2VBVDM`GenCasesStmtAltn(
+                       l_patterns,
+                       J2VBVDM`GenBlockStmt([],l_vdmstmt)
+                     )
+  end
+)
+pre l_sbgrp.stmt <> nil;
+
+SwitchLblCollectPatterns: [CPP`SwitchLabels] ==> seq of AS`Pattern
+SwitchLblCollectPatterns(p_label) == (
+  if (p_label = nil) then (  -- stop case
+    return []
+  ) else (
+    if (is_CPP`CaseStmt(p_label.stmt)) then ( -- is a case -> has pattern
+      let
+        mk_CPP`SwitchLabels(l_casestmt,l_nextlbl,-) = p_label
+      in
+        return
+          [ J2VBVDM`GenMatchVal
+              ( J2VBVDM`GenBracketedExpr
+                  ( J2VEXPR`J2VExpr''(l_casestmt.cexpr,nil,nil) ) ) ]
+          ^ SwitchLblCollectPatterns(l_nextlbl)
+    ) else (  -- is default -> no pattern
+      return []
+    )
+  )
+);
+
+\end{vdm_al}
+
+\subsection{Translation of \texttt{while}}
+
+The operation \texttt{J2VWhileStmt} translates JAVA while loop to
+VDM++ while loop. If a continuation condition is
+translated in a VDM++ expression then overall translation
+is straight forward.
+
+\begin{small}
+\begin{verbatim}
+JAVA:   while(cond) stmt
+VDM++:  while(cond) do stmt
+\end{verbatim}
+\end{small}
+
+If translation of continuation condition yields statements (prestmts),
+we declare a boolean variable (we can do this because
+java compiler guarantees that value of a continuation
+condition of a loop is always of the boolean type), and
+put prestmts before while and after stmts inside the loop body.
+
+\begin{small}
+\begin{verbatim}
+( dcl: tb: bool; prestmts while tb do ( stmts prestmts ) )
+\end{verbatim}
+\end{small}
+
+\begin{formalparameters}
+\verb+p_expr: CPP`WhileStmt+ & The abstract syntax tree for a Java
+                     \texttt{while} statement to be translated.\\
+\hline
+\end{formalparameters}
+\methodresult{seq of AS`Stmt}{VDM++ statements implementing the original Java one.}
+
+\begin{vdm_al}
+J2VWhileStmt: CPP`WhileStmt ==> seq of AS`Stmt
+J2VWhileStmt(p_stmt) ==
+( dcl l_prestmt : seq of AS`Stmt := [],
+      l_while   : seq of AS`Stmt := [],
+      l_body    : AS`Stmt,
+      l_hd      : AS`BlockStmt,
+      l_vdmexpr : [AS`Expr] := nil,
+      l_altn    : AS`CasesStmtAltn
+        :=  J2VBVDM`GenCasesStmtAltn(
+              [ J2VBVDM`GenMatchVal(
+                  J2VBVDM`GenBracketedExpr(
+                    J2VBVDM`GenIsOfClass(
+                      J2VBVDM`GenName([v_BreakClassName]),
+                      J2VBVDM`GenName([v_BreakPatternName])))) ],
+              J2VBVDM`GenIdentStmt()),
+      l_others  : AS`CasesStmtAltn
+        :=  J2VBVDM`GenCasesStmtAltn
+              ([],J2VBVDM`GenExitStmt(J2VBVDM`GenName([v_BreakPatternName]))),
+      l_case    : AS`CasesStmt
+        := J2VBVDM`GenCasesStmt
+            ( J2VBVDM`GenBoolLit(true),[l_altn,l_others]);
+  def l_tvar = J2VAUX`TempVarGetNext([]);
+      l_expr = J2VEXPR`J2VExpr''(p_stmt.expr,l_tvar,nil); -- new name
+      l_stmt = J2VStmt(p_stmt.stmt)
+  in
+--  ( if is_(l_expr,AS`Expr)
+  ( if J2VAUX`IsASExpr(l_expr)
+    then l_vdmexpr := l_expr
+    else
+    ( l_vdmexpr := l_tvar;
+      l_prestmt := l_expr;
+    );
+    if len l_stmt=1 and is_AS`BlockStmt(hd l_stmt)
+    then
+    ( l_hd:=hd l_stmt;
+      l_hd.stmts:=l_hd.stmts^l_prestmt;
+      l_body:=l_hd;
+    )
+    else
+      l_body:=J2VBVDM`GenBlockStmt([],l_stmt^l_prestmt);
+    l_while :=l_prestmt^[J2VBVDM`GenWhileLoopStmt(l_vdmexpr,l_body)];
+--    if is_(l_expr,seq of AS`Stmt)
+    if not J2VAUX`IsASExpr(l_expr)
+    then
+      l_while
+        := [J2VBVDM`GenBlockStmt
+              ( [J2VBVDM`GenAssignDef
+                  ( l_tvar,
+                    J2VBVDM`GenBasicType(<BOOLEAN>),nil)],
+                    l_while)]
+    );
+  return
+    if (J2VBreakOnStatement(p_stmt,0))  -- true
+    then
+      [ J2VBVDM`GenTrap
+          ( J2VBVDM`GenMatchVal(J2VBVDM`GenName([v_BreakPatternName])),
+            l_case,
+            hd(l_while)) ]
+    else
+      l_while
+);
+ 
+\end{vdm_al}
+
+\subsection{Translation of \texttt{do...while}}
+
+The operation \texttt{J2VDoWhileStmt}
+translates \texttt{do...while} statement.
+
+\begin{formalparameters}
+\verb+p_expr: CPP`DoWhileStmt+ & The abstract syntax tree for a Java
+                     \texttt{do...while} statement to be translated.\\
+\hline
+\end{formalparameters}
+\methodresult{seq of AS`Stmt}{VDM++ statements implementing the original Java one.}
+
+\begin{vdm_al}
+
+J2VDoWhileStmt: CPP`DoWhileStmt ==> seq of AS`Stmt
+J2VDoWhileStmt(p_stmt) ==
+( dcl l_prestmt : seq of AS`Stmt := [],
+      l_while   : seq of AS`Stmt := [],
+      l_body    : AS`Stmt,
+      l_hd      : AS`BlockStmt,
+      l_vdmexpr : [AS`Expr] := nil;
+  dcl l_altn    : AS`CasesStmtAltn :=
+                  J2VBVDM`GenCasesStmtAltn(
+                    [ J2VBVDM`GenMatchVal(
+                        J2VBVDM`GenBracketedExpr(
+                          J2VBVDM`GenIsOfClass(
+                            J2VBVDM`GenName([v_BreakClassName]),
+                            J2VBVDM`GenName([v_BreakPatternName])
+                          )
+                        )
+                      )
+                    ],
+                    J2VBVDM`GenIdentStmt()
+                  ),
+      l_others  : AS`CasesStmtAltn
+        :=  J2VBVDM`GenCasesStmtAltn
+              ([],J2VBVDM`GenExitStmt(J2VBVDM`GenName([v_BreakPatternName]))),
+      l_case    : AS`CasesStmt :=
+                  J2VBVDM`GenCasesStmt(J2VBVDM`GenBoolLit(true),[l_altn,l_others]);
+  def l_tvar = J2VAUX`TempVarGetNext([]);
+      l_expr = J2VEXPR`J2VExpr''(p_stmt.expr,l_tvar,nil); -- new name
+      l_stmt = J2VStmt(p_stmt.stmt)
+  in
+  ( if J2VAUX`IsASExpr(l_expr)
+    then l_vdmexpr := l_expr
+    else
+    ( l_vdmexpr := l_tvar;
+      l_prestmt := l_expr;
+    );
+    if len l_stmt=1 and is_AS`BlockStmt(hd l_stmt)
+    then
+    ( l_hd:=hd l_stmt;
+      l_hd.stmts:=l_hd.stmts^l_prestmt;
+      l_body:=l_hd;
+    )
+    else
+      l_body:=J2VBVDM`GenBlockStmt([],l_stmt^l_prestmt);
+    l_while :=l_prestmt^[J2VBVDM`GenBlockStmt([],l_stmt^l_prestmt),
+                         J2VBVDM`GenWhileLoopStmt(l_vdmexpr,l_body)];
+    if not J2VAUX`IsASExpr(l_expr)
+    then
+      l_while
+        := [J2VBVDM`GenBlockStmt
+              ( [J2VBVDM`GenAssignDef
+                  ( l_tvar,
+                    J2VBVDM`GenBasicType(<BOOLEAN>),nil)],
+                    l_while)]
+    );
+  return if (J2VBreakOnStatement(p_stmt,0)) then
+           [ J2VBVDM`GenTrap(
+               J2VBVDM`GenMatchVal(J2VBVDM`GenName([v_BreakPatternName])),
+               l_case,
+               J2VBVDM`GenBlockStmt([],l_while)
+             )
+           ]
+         else
+           l_while
+);
+
+\end{vdm_al}
+
+\subsection{Translation of \texttt{for}}
+
+The operation \texttt{J2VForStmt}
+translates \texttt{for} statement.
+
+\begin{formalparameters}
+\verb+p_expr: CPP`ForStmt+ & The abstract syntax tree for a Java
+                     \texttt{for} statement to be translated.\\
+\hline
+\end{formalparameters}
+\methodresult{seq of AS`Stmt}{VDM++ statements implementing the original Java one.}
+
+\begin{vdm_al}
+
+J2VForStmt: CPP`ForStmt ==> seq of AS`Stmt
+J2VForStmt(p_stmt) ==
+( dcl l_for :  seq of AS`Stmt := [],
+      l_init : AS`BlockStmt,
+      l_hd :   AS`BlockStmt,
+      l_body : AS`Stmt;
+  dcl l_altn : AS`CasesStmtAltn :=
+                  J2VBVDM`GenCasesStmtAltn(
+                    [ J2VBVDM`GenMatchVal(
+                        J2VBVDM`GenBracketedExpr(
+                          J2VBVDM`GenIsOfClass(
+                            J2VBVDM`GenName([v_BreakClassName]),
+                            J2VBVDM`GenName([v_BreakPatternName])
+                          )
+                        )
+                      )
+                    ],
+                    J2VBVDM`GenIdentStmt()
+                  ),
+      l_others : AS`CasesStmtAltn := J2VBVDM`GenCasesStmtAltn
+                                        ([],J2VBVDM`GenExitStmt(J2VBVDM`GenName([v_BreakPatternName]))),
+      l_case   : AS`CasesStmt := J2VBVDM`GenCasesStmt(J2VBVDM`GenBoolLit(true),[l_altn,l_others]);
+  def l_tvar = J2VAUX`TempVarGetNext([]);
+  in
+   (dcl l_expr :  AS`Expr | seq of AS`Stmt;
+    if p_stmt.expr1 <> nil
+    then l_expr := J2VEXPR`J2VExpr''(p_stmt.expr1,l_tvar,nil) -- the stop expression
+    else l_expr := J2VBVDM`GenBoolLit(true);
+--      l_isStmts = is_(l_expr,seq of AS`Stmt);
+    def l_isStmts = not J2VAUX`IsASExpr(l_expr);
+      mk_(l_vdmexpr,l_prestmt) = if l_isStmts
+                                 then mk_(l_tvar,l_expr)
+                                 else mk_(l_expr,[]);
+      l_cntxt= p_stmt.cid;
+      l_updt = 
+        conc([J2VStmt(mk_CPP`ExpressionStmt(p_stmt.expr2(l_idx),l_cntxt))
+             | l_idx in set inds(p_stmt.expr2)]); -- update block: may be a context problem with l_cntxt ?!
+      l_stmt = J2VStmt(p_stmt.stmt) -- the loop statement
+  in
+  ( l_init := ProcStmts(p_stmt.i,nil);
+    l_init.stmts := let l_stmts=l_init.stmts
+                    in
+                      if len l_stmts = 1 and is_AS`IdentStmt(hd l_stmts)
+                      then []
+                      else l_init.stmts;
+    if len l_stmt = 1 and is_AS`BlockStmt(hd l_stmt)
+    then
+    ( l_hd := hd l_stmt;
+      l_hd.stmts := l_hd.stmts ^ l_updt ^ l_prestmt;
+      l_body := l_hd;
+    )
+    else
+      l_body := J2VBVDM`GenBlockStmt([], l_stmt ^ l_updt ^ l_prestmt);
+    l_for := l_prestmt ^ [J2VBVDM`GenWhileLoopStmt(l_vdmexpr, l_body)];
+    if l_isStmts
+    then
+      l_init.dcls := l_init.dcls ^ [ J2VBVDM`GenAssignDef (l_tvar, J2VBVDM`GenBasicType(<BOOLEAN>), nil) ];
+    if len l_init.dcls <> 0
+    then
+    ( l_init.stmts := l_init.stmts ^ l_for;
+      l_for := [l_init]
+    )
+    else
+      l_for := l_init.stmts ^ l_for;
+    if (J2VBreakOnStatement(p_stmt,0))
+    then
+      return [ J2VBVDM`GenTrap(J2VBVDM`GenMatchVal(J2VBVDM`GenName([v_BreakPatternName])),
+                               l_case,
+                               J2VBVDM`GenBlockStmt([],l_for)) ]
+    else
+      return l_for
+   )
+   )
+--      l_isStmts = is_(l_expr,seq of AS`Stmt);
+)
+--pre p_stmt.expr1 <> nil
+;
+
+-- ForEachStmt is't supported
+J2VForEachStmt: CPP`ForEachStmt ==> seq of AS`Stmt
+J2VForEachStmt(p_stmt) ==
+  return [ mk_AS`ErrorStmt(p_stmt.cid)] ;
+\end{vdm_al}
+
+\subsection{Translation of \texttt{break}}
+
+Concerning break and continue statements in Java it looks as if they
+can be used to jump out to an arbitrary surrounding block. It is not
+at all clear whether we will be able to translate that to VDM++ in a
+meaningfull way. Thus, maybe we need to restrict the tranlation wrt
+this.
+
+\begin{vdm_al}
+J2VBreakStmt: CPP`Break ==> seq of AS`Stmt
+J2VBreakStmt(-) ==
+--  return
+--    if J2V`MustSkipUnspecified()
+--    then []
+--    else undefined;
+  return [GenBreakExit()];
+
+GenBreakExit: () ==> AS`ExitStmt
+GenBreakExit() ==
+  return
+    J2VBVDM`GenExitStmt
+      ( J2VBVDM`GenNewExpr
+          ( J2VBVDM`GenName([v_BreakClassName]),[]));
+ 
+\end{vdm_al}
+
+\subsection{Translation of \texttt{continue}}
+
+It is not supported.
+
+\begin{vdm_al}
+
+J2VContinueStmt: CPP`Continue ==> seq of AS`Stmt
+J2VContinueStmt(-) ==
+--  is not yet specified;
+  return [];
+
+\end{vdm_al}
+
+\subsection{Translation of \texttt{return}}
+
+\begin{vdm_al}
+
+J2VReturnStmt: CPP`Return  ==> seq of AS`Stmt
+J2VReturnStmt(p_stmt) ==
+  def l_type = J2VOP`GetRetType();
+      l_tvar = J2VAUX`TempVarGetNext([]);
+  in
+   (dcl l_cntxt: J2VEXPR`ExprContext,
+        l_expr : [AS`Expr | seq of AS`Stmt] := nil;
+    l_cntxt.type := l_type;
+    if p_stmt.expr <> nil
+    then l_expr := J2VEXPR`J2VExpr'(p_stmt.expr,l_tvar,l_cntxt); -- new name
+--      if l_expr=nil or is_(l_expr,AS`Expr)
+    if l_expr = nil or J2VAUX`IsASExpr(l_expr)
+    then return [J2VBVDM`GenReturnStmt(l_expr)]
+    else return l_expr ^ [J2VBVDM`GenReturnStmt(l_tvar)] -- the same name
+   );
+ 
+\end{vdm_al}
+
+\subsection{Translation of \texttt{synchronized}}
+
+It is not supported.
+
+\begin{vdm_al}
+
+J2VSynchronizedStmt: CPP`SynchronizedStmt ==> seq of AS`Stmt
+J2VSynchronizedStmt(p_stmt) ==
+--  is not yet specified;
+--  return [];
+  return J2VStmt(p_stmt.block);
+
+\end{vdm_al}
+
+\subsection{Translation of \texttt{catch}}
+
+\begin{vdm_al}
+
+J2VHandler: CPP`Handler * seq of char ==> AS`CasesStmtAltn
+J2VHandler(p_handler,p_e) ==
+( dcl l_tspec: CPP`TypeSpecifier := hd(p_handler.exepdecl.tsl);
+  dcl l_decl : CPP`Declarator    := p_handler.exepdecl.decl;
+--  dcl l_stmt : seq of AS`Stmt    := J2VStmt(p_handler.stmt);
+  dcl l_stmt : AS`Stmt    := hd J2VStmt(p_handler.stmt);
+  dcl l_assign: AS`AssignDef     := mk_AS`AssignDef(J2VBVDM`Id2Name(l_decl),J2VTYPE`J2VType(l_tspec),J2VBVDM`GenName([p_e]),-1);
+--  dcl l_defst: AS`BlockStmt      := J2VBVDM`GenBlockStmt([l_assign],l_stmt);
+  dcl l_defst: AS`BlockStmt      := J2VBVDM`GenBlockStmt(l_stmt.dcls^[l_assign],l_stmt.stmts);
+  def l_aux1 = J2VBVDM`GenName([p_e]);
+      l_type = J2VTYPE`J2VType(l_tspec);
+--      mk_AS`OptionalType(l_t,-) = l_type;
+      l_t=J2VTYPE`GetPureType(l_type);
+      l_aux2 = l_t.name;
+      l_is =
+        if hd l_t.name.ids = v_ExceptionClassName
+        then
+--        J2VBVDM`GenTypeJudgementExpr(l_aux1,l_type)
+          J2VBVDM`GenBinaryExpr
+          ( J2VBVDM`GenIsOfClass(l_aux2,l_aux1),
+            <OR>,
+            J2VBVDM`GenApplyExpr
+            ( J2VBVDM`GenFieldSelectExpr
+              ( J2VBVDM`GenName([v_TrapPatternName]),
+                J2VCLASS`v_IsNilOpNm
+              ),
+              []
+            )
+          )
+        else
+--        J2VBVDM`GenIsOfClass(l_aux2,l_aux1),
+          J2VBVDM`GenBinaryExpr
+          ( J2VBVDM`GenIsOfClass(l_aux2,l_aux1),
+            <AND>,
+            J2VBVDM`GenPrefixExpr
+            ( <NOT>,
+              J2VBVDM`GenApplyExpr
+              ( J2VBVDM`GenFieldSelectExpr
+                ( J2VBVDM`GenName([v_TrapPatternName]),
+                  J2VCLASS`v_IsNilOpNm
+                ),
+                []
+              )
+            )
+          );
+      l_aux3 = J2VBVDM`GenBracketedExpr(l_is)
+  in
+    return
+      J2VBVDM`GenCasesStmtAltn
+        ( [J2VBVDM`GenMatchVal(l_aux3)],
+          l_defst )
+)
+pre is_CPP`ExceptionDeclaration(p_handler.exepdecl) and len(p_handler.exepdecl.tsl) = 1;
+
+  J2VHandlers: seq of CPP`Handler * CPP`Stmt * seq of char ==> AS`TrapStmt
+  J2VHandlers(p_handlers,p_stmt,p_e) ==
+    def l_others = J2VBVDM`GenCasesStmtAltn ( [],J2VBVDM`GenExitStmt(J2VBVDM`GenName([v_TrapPatternName])) );
+        l_case = J2VBVDM`GenCasesStmt ( J2VBVDM`GenBoolLit(true),
+                           [ J2VHandler(p_handlers(i),p_e) | i in set inds p_handlers ] ^ [l_others] );
+        l_trap = J2VBVDM`GenTrap (J2VBVDM`GenTypeBind (J2VBVDM`GenPatternName(J2VBVDM`GenName([p_e])),
+                                                       J2VBVDM`GenTypeName(J2VBVDM`GenName([v_ExceptionClassName]))),
+                                              l_case,hd J2VStmt(p_stmt) );
+    in return l_trap;
+ 
+\end{vdm_al}
+
+\subsection{Translation of \texttt{try}}
+
+\begin{vdm_al}
+
+  J2VTryBlockStmt: CPP`TryBlock ==> seq of AS`Stmt
+  J2VTryBlockStmt(p_stmt) ==
+    if (p_stmt.fin = nil)
+    then return [ J2VHandlers(p_stmt.hdl,p_stmt.stmt,v_TrapPatternName) ]
+    else
+      def l_always = J2VBVDM`GenAlwaysStmt(hd J2VStmt(p_stmt.fin),
+                                           J2VHandlers(p_stmt.hdl,p_stmt.stmt,v_TrapPatternName));
+      in return [l_always];
+
+\end{vdm_al}
+
+\subsection{Translation of the empty statement \texttt{;}}
+
+The operation \texttt{J2VEmptyStmt} translates
+JAVA's empty statement \texttt{;} in VMD++ \texttt{skip}.
+
+\begin{vdm_al}
+functions
+  J2VEmptyStmt: CPP`EmptyStmt +> seq of AS`Stmt
+  J2VEmptyStmt(-) ==
+    [J2VBVDM`GenIdentStmt()];
+\end{vdm_al}
+
+\subsection{Auxiliary operation \texttt{ProcessStmts}}
+
+The operation \texttt{ProcessStmts} processes VDM++ statements replacing
+stubs (if any) for auxiliary pattern names definitions.
+Whenever such a stub occurs in \texttt{p\_stmts}, it is
+replace with a real \texttt{def} block containing
+the rest statements of the original sequence.
+
+\begin{vdm_al}
+operations
+ProcessStmts: seq of AS`Stmt ==> seq of AS`Stmt
+ProcessStmts(p_stmts) == (
+  dcl l_def:AS`DefStmt := J2VBVDM`GenDefStmt([], J2VBVDM`GenIdentStmt()),
+      l_block: seq of AS`Stmt := [],
+      l_stmts: seq of AS`Stmt := p_stmts,
+      l_res: seq of AS`Stmt := [];
+
+  while len l_stmts >= 1 and not J2VAUX`IsTempVarAssgn(hd l_stmts) do (
+    l_res:=l_res ^ [hd l_stmts];
+    l_stmts:=tl l_stmts );
+
+  while len l_stmts >= 1 and J2VAUX`IsTempVarAssgn(hd l_stmts) do (
+    l_def.value:=l_def.value ^ (hd l_stmts).value;
+    l_stmts:=tl l_stmts );
+
+  while len l_stmts >= 1 and not J2VAUX`IsTempVarAssgn(hd l_stmts) do (
+    l_block:=l_block ^ [hd l_stmts];
+    l_stmts:=tl l_stmts );
+
+  if len l_stmts >= 1 and J2VAUX`IsTempVarAssgn(hd l_stmts)
+  then
+    l_block:=l_block ^ ProcessStmts(l_stmts);
+
+  l_def.In :=
+    if len l_block = 0
+    then
+      J2VBVDM`GenIdentStmt()
+    elseif len l_block = 1
+    then
+      hd l_block
+    else
+      J2VBVDM`GenBlockStmt([], l_block);
+
+  if len l_def.value > 0
+  then
+    l_res:=l_res ^ [l_def];
+
+  return l_res
+);
+
+functions
+
+\end{vdm_al}
+
+\subsection{Auiliary function for translation of \texttt{break}}
+
+\begin{vdm_al}
+
+  J2VBreakOnStatement: [CPP`Stmt] * int -> bool
+  J2VBreakOnStatement(p_stmt,p_context) ==
+    if (p_stmt = nil)
+    then false
+    elseif (p_context > 1)
+    then false
+    else
+      cases true:
+        (is_CPP`LabelStmt(p_stmt))        -> J2VBreakOnLabelStmt(p_stmt,p_context),
+        (is_CPP`ExpressionStmt(p_stmt))   -> false,
+        (is_CPP`CompoundStmt(p_stmt))     -> J2VBreakOnCompoundStmt(p_stmt,p_context),
+        (is_CPP`IfStmt(p_stmt))           -> J2VBreakOnIfStmt(p_stmt,p_context),
+        (is_CPP`SwitchStmt(p_stmt))       -> J2VBreakOnSwitch(p_stmt,p_context),
+        (is_CPP`WhileStmt(p_stmt))        -> J2VBreakOnWhileStmt(p_stmt,p_context),
+        (is_CPP`DoWhileStmt(p_stmt))      -> J2VBreakOnDoWhileStmt(p_stmt,p_context),
+        (is_CPP`ForStmt(p_stmt))          -> J2VBreakOnForStmt(p_stmt,p_context),
+        (is_CPP`Break(p_stmt))            -> true,
+        (is_CPP`Continue(p_stmt))         -> false,
+        (is_CPP`Return(p_stmt))           -> false,
+        (is_CPP`DeclarationStmt(p_stmt))  -> false,
+--        (is_CPP`SynchronizedStmt(p_stmt)) -> J2VBreakOnSynchronizedStmt(p_stmt),
+        (is_CPP`TryBlock(p_stmt))         -> J2VBreakOnTryBlockStmt(p_stmt,p_context),
+        (is_CPP`EmptyStmt(p_stmt))        -> false,
+        others                            -> false
+      end;
+
+  J2VBreakOnLabelStmt: CPP`LabelStmt * int -> bool
+  J2VBreakOnLabelStmt(p_stmt,p_context) ==
+    J2VBreakOnStatement(p_stmt.stmt,p_context);
+
+  J2VBreakOnCompoundStmt: CPP`CompoundStmt * int -> bool
+  J2VBreakOnCompoundStmt(p_stmt,p_context) ==
+    exists i in set inds p_stmt.stms & J2VBreakOnStatement(p_stmt.stms(i),p_context);
+
+  J2VBreakOnIfStmt: CPP`IfStmt * int -> bool
+  J2VBreakOnIfStmt(p_stmt,p_context) ==
+    if (p_stmt.alt2 = nil)
+    then J2VBreakOnStatement(p_stmt.alt1,p_context)
+    else J2VBreakOnStatement(p_stmt.alt1,p_context) or J2VBreakOnStatement(p_stmt.alt2,p_context);
+
+  J2VBreakOnSwitch: CPP`SwitchStmt * int -> bool
+  J2VBreakOnSwitch(p_stmt,p_context) ==
+    exists x in set inds p_stmt.block.groups &
+           J2VBreakOnStatement(p_stmt.block.groups(x).stmt,p_context+1) = true;
+
+  J2VBreakOnWhileStmt: CPP`WhileStmt * int -> bool
+  J2VBreakOnWhileStmt(p_stmt,p_context) ==
+    J2VBreakOnStatement(p_stmt.stmt,p_context+1);
+
+  J2VBreakOnDoWhileStmt: CPP`DoWhileStmt * int -> bool
+  J2VBreakOnDoWhileStmt(p_stmt,p_context) ==
+    J2VBreakOnStatement(p_stmt.stmt,p_context+1);
+
+  J2VBreakOnForStmt: CPP`ForStmt * int -> bool
+  J2VBreakOnForStmt(p_stmt,p_context) ==
+    J2VBreakOnStatement(p_stmt.stmt,p_context+1);
+
+  J2VBreakOnTryBlockStmt: CPP`TryBlock * int -> bool
+  J2VBreakOnTryBlockStmt(p_stmt,p_context) ==
+    let search_finally = if (p_stmt.fin = nil)
+                         then false
+                         else J2VBreakOnStatement(p_stmt.fin,p_context),
+        search_stmt = J2VBreakOnStatement(p_stmt.stmt,p_context)
+    in
+      search_finally
+      or search_stmt
+      or exists i in set inds(p_stmt.hdl)
+         & J2VBreakOnHandler(p_stmt.hdl(i),p_context) = true;
+
+  J2VBreakOnHandler: CPP`Handler * int -> bool
+  J2VBreakOnHandler(p_handler,p_context) ==
+    J2VBreakOnStatement(p_handler.stmt,p_context);
+
+end J2VSTMT
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}
+{rtinfo.ast}[J2VSTMT]
+\end{rtinfo}

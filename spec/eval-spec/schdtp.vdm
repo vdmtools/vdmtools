@@ -1,0 +1,282 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Scheduler types
+% $Id: schdtp.vdm,v 1.14 2000/04/07 11:14:55 blackie Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\chapter{Scheduler Types}
+
+This module contains all the types used for the scheduler. They are placed in
+seperate module in order to be able to code generate the types seperately.
+ 
+\begin{vdm_al}
+module SCHDTP
+
+imports
+   from AS all,
+   from CI all,
+   from REP all,
+   from INSTRTP all,
+   from SEM all,
+   from PAT all,
+   from GLOBAL all,
+   from STKM all,
+   from RTERR all
+
+exports all
+
+definitions
+
+types
+
+\end{vdm_al}
+
+The type {\em Threads} describes the current threads
+in the interpreter. It is a map from a thread id to a record
+containing the relevant information of the thread.  The
+{\em Threads} data type should only contain the threads that at some
+point is schedulable. That is, the intension is that the
+{\em Threads} should not contain terminated threads.
+
+
+\begin{vdm_al}
+Threads = map ThreadId to ThreadInfo;
+\end{vdm_al}
+
+The information relevant for a thread is described by the record {\em
+ThreadInfo}. The thread information is:
+\begin{description}
+\item[debug\_thread:] a boolean indicating if the thread is an artificial debug thread.
+
+\item[obj\_ref:] this field contains the object reference for the
+given thread. In case the thread is a debug thread this value will be
+nil.
+
+\item[status:] The status of the thread, it may e.g. be running, sleeping, etc. See also the data type {\em ThreadStatus}.
+
+\item[stackeval:] Whenever a thread is not scheduled - that is not
+running in the stack machine - this field contains the state of the
+stack machine as it was when it was swapped out from the stack
+machine. 
+
+\item[currstate:] When a thread is not scheduled - that is not running
+- this field contains the thread specific state like for instance,
+block-environments, scope etc. as it was just before it was swapped
+out from the stack machine. When the trhead is running in the stack
+machine this field has the value nil.
+
+\item[priority:] A field to be used for describing the priority of the
+thread. Currently priority-based scheduling is not supported.
+#ifdef VICE
+\item[mesid:] A field used to identify that a thread was started because of a 
+   message call. This identifies the message that started it and that will be
+logged once the thread is finished execution and is killed.
+#endif VICE
+\end{description}
+
+
+\begin{vdm_al}
+  ThreadInfo ::
+    debug_thread : bool
+    obj          : [SEM`OBJ_Ref]
+    status       : ThreadStatus
+    stackeval    : STKM`EvaluatorStatus
+    priority     : nat
+#ifdef VICE
+    periodBody   : [STKM`SubProgram]
+    periodic     : bool
+    mesid        : [STKM`MessageId]
+#endif VICE
+      ;
+\end{vdm_al}
+
+The type {\em ThreadStatus} describes the state that each thread can be in.
+\begin{vdm_al}
+  ThreadStatus = Running | Blocked | MaxReached | Sleeping 
+#ifdef VICE
+                 | SyncOp | SyncOpRet | Completed
+#endif VICE
+;
+\end{vdm_al}
+
+If the thread is running in the stack machine the status of the thread is {\em Running}.
+\begin{vdm_al}
+  Running :: ;
+\end{vdm_al}
+
+The thread is blocked in case a permission predicate must be evaluated
+before it is allowed to run. The {\em opnm} describes the name of the
+operation that blocks the thread, the {\em objref} is the object scope
+that the operation should be run in, if it is nil, it means the
+current object scope.
+
+\begin{vdm_al}
+  Blocked ::
+    opnm : AS`Name
+    objref : [SEM`OBJ_Ref];
+\end{vdm_al}
+
+The thread is in a {\em MaxReached} state in the thread is being swapped 
+out because maximum number of instructions have been reached.
+\begin{vdm_al}
+  MaxReached :: ;
+\end{vdm_al}
+
+The thread is in a {\em Sleeping} state in case the thread can be
+scheduled, but is actually not running on the stack machine. So the
+difference between a Sleeping and a Running thread is that the Running
+thread is actually running in the stack-machine where as the sleeping
+threads are schedulable, but is not currently running in the stack
+machine.
+
+\begin{vdm_al}
+  Sleeping ::;
+\end{vdm_al}
+
+#ifdef VICE
+
+\begin{vdm_al}
+PerThreadInfo ::
+    period       : nat
+    jitter       : nat
+    distance     : nat
+    offset       : nat
+    iteration    : nat
+    periodBody   : [STKM`SubProgram]
+    release_time : nat
+    next_min     : nat
+    next_max     : nat
+    priority     : nat
+inv pti == pti.next_min <= pti.next_max;
+
+SpoThreadInfo ::
+    delay        : nat
+    bound        : nat
+    offset       : nat
+    periodBody   : [STKM`SubProgram]
+    release_time : nat
+    next_min     : nat
+    next_max     : nat
+    priority     : nat
+inv sti == sti.next_min <= sti.next_max;
+\end{vdm_al}
+
+The thread is in a {\em SyncOp} state when a synchronious operation 
+deployed at a different CPU is called.
+
+\begin{vdm_al}
+  SyncOp ::
+    id : STKM`MessageId;
+\end{vdm_al}
+
+The thread is in a {\em SyncOpRet} state when a synchronious operation 
+deployed at a different CPU is called and a message has been received that
+its execution is complete.
+
+\begin{vdm_al}
+  SyncOpRet ::;
+\end{vdm_al}
+
+The thread is in a {\em Completed} state when we deal with a periodic thread
+and its execution is complete.
+
+\begin{vdm_al}
+  Completed ::;
+\end{vdm_al}
+#endif VICE
+
+
+A thread id is a natural number.
+
+\begin{vdm_al}
+  ThreadId = nat;
+\end{vdm_al}
+
+\section{Priorities}
+
+In this section we define the abstract syntax for the file in which
+thread priorities are defined. 
+
+\begin{vdm_al}
+PriorityFile = seq of PriorityEntry;
+
+PriorityEntry::clnm : AS`Id
+               priority : nat;
+\end{vdm_al}
+A priority file consists of a number of priority entries. Each
+priority entry relates a class name to a numeric priority, where 1
+(the default) is the lowest priority.
+
+\section{Scheduling Algorithms}
+
+We define two types of scheduling algorithm: primary and
+secondary. The primary scheduling algorithm defines the manner in
+which a thread may be descheduled.
+
+\begin{vdm_al}
+PrimarySchedulerAlgorithm = PureCooperative 
+#ifdef VICE
+                            | TimeSlice 
+#endif VICE
+                            | InstrnumSlice;
+
+PureCooperative :: ;
+#ifdef VICE
+TimeSlice :: ;
+#endif VICE
+InstrnumSlice :: ;
+\end{vdm_al}
+
+\begin{description}
+\item[Pure Cooperative] The only way in which a thread may be
+descheduled is by termination of the thread, or reaching a permission
+predicate that is false. The onus is on the specifier to ensure (any)
+fairness. 
+#ifdef VICE
+\item[Time Slice] Each thread has a maximum amount of simulated time
+which it may executed for.
+#endif VICE
+\item[Instrnum Slice] Each thread has a maximum number of stack
+instructions which it may be executed for.
+\end{description}
+
+We define a union type for secondary scheduling algorithms, to make
+addition of new algorithms easy. Currently only two algorithms are
+supported: 
+\begin{description}
+\item[Round robin] In which each thread is given equal opportunity to
+be selected by the scheduler.
+\item[Priority based] In which the scheduler attempts to schedule
+threads of higher priority in preference to those with lower
+priority. Note that this does \textit{not} imply that lower priority
+threads are automatically interrupted when a higher priority one is
+enabled. 
+\end{description}
+
+\begin{vdm_al}
+SecondarySchedulerAlgorithm = RoundRobin | PriorityBased;
+
+RoundRobin :: ;
+PriorityBased :: ;
+
+#ifdef VICE
+BUSKind = CSMACD | FCFS | TDMA;
+
+-- Carrier Sense Multiple Access Coallition Detection
+CSMACD :: ;
+
+-- First Come First Served
+FCFS ::;
+
+-- Time Division Multiple Access
+TDMA ::;
+#endif VICE
+
+\end{vdm_al}
+
+\begin{vdm_al}
+
+end SCHDTP
+\end{vdm_al}
+

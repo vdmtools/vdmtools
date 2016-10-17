@@ -1,0 +1,867 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    
+% $Id: build.vdm,v 1.33 2006/03/15 07:53:32 vdmtools Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\section{Building the abstract UML representation}
+The conversion from a VDM++ ast to an abstract UML representation is specified in this section. The abstract UML data type is defined in module $AUML$.
+\begin{vdm_al}
+module BUILD
+
+imports
+
+  from AS all,
+  from REP all,
+  from AUML all,
+  from UMLERR all,
+  from DEP all,
+  from CI all
+        
+exports all
+
+definitions
+
+operations
+\end{vdm_al}
+The main operation for transforming VDM++ ast's into UML representation.
+\begin{vdm_al}
+  BuildUmlModel : seq1 of AS`Class ==> AUML`Model
+  BuildUmlModel(c_l) ==
+    def mk_(inh,stat) = GetGraphs();
+        assoc_m = GenUniAssocs(stat) in
+    ( UMLERR`ClearWarnings();
+      GenUMLWarnings(stat);
+      return mk_AUML`Model(GenClasses(c_l, assoc_m),
+                           GenInherit(inh),
+                           assoc_m)
+    );
+
+  -- For testing at the specification level:
+  SpecTest : seq1 of AS`Class ==> AUML`Model
+  SpecTest(cl_l) ==
+    let nm_s = { MkName(s.nm) | s in set elems cl_l } in
+    --( dcl dummy : set of AS`Name := DEP`MkGraph(cl_l, nm_s);
+    ( def - = DEP`MkGraph(cl_l, nm_s) in skip;
+      return BuildUmlModel(cl_l)
+    );
+       
+    
+
+functions
+
+  GenClasses : seq1 of AS`Class * AUML`Associations +> AUML`Classes
+  GenClasses(c_l, assoc_m) ==
+    { MkName(nm) |-> MkClass(nm, defs, assoc_m(MkName(nm)) ) 
+    --| mk_AS`Class(nm,-,-,defs,useslib,-) in set elems c_l & true }; -- & useslib=nil }; --FIXME etn. we ignore dlclasses, is it ok.
+    | mk_AS`Class(nm,-,-,defs,-,-) in set elems c_l & true }; -- & useslib=nil }; --FIXME etn. we ignore dlclasses, is it ok.
+
+  GenInherit : DEP`Dependencies +> AUML`Inheritance
+  GenInherit(inh) ==
+    { MkName(nm) |-> { MkName(par) | par in set DEP`Ancestors(nm, inh) } | nm in set dom inh };
+
+  GenUniAssocs : DEP`Associations +> AUML`Associations
+  GenUniAssocs(stat) ==
+    { MkName(cl_nm) |-> GenAssocMap(cl_nm, stat(cl_nm),dom stat) | cl_nm in set dom stat };
+
+  GenAssocMap : AS`Name * set of DEP`Ref * set of AS`Name +> AUML`UniAssoc
+  GenAssocMap(c_nm, ref_s,allclnm_s) ==
+    let unf_ref_s = 
+          { mk_DEP`Ref(o,t,DEP`UnfoldType(t,c_nm,{},allclnm_s,0),
+                       v,e,acc,stat) 
+          | mk_DEP`Ref(o,t,-,v,e,acc,stat) in set ref_s} in
+    { MkName(rlnm) |-> GenRole(tp,unf_tp,snm, expr, acc, stat) 
+    | mk_DEP`Ref(snm, tp, unf_tp, rlnm, expr, acc, stat) in set unf_ref_s 
+      & not NonValidObjMap(unf_tp, snm) 
+      and ValidAssoc(unf_tp) };
+
+
+  ValidAssoc : AS`Type +> bool
+  ValidAssoc(tp) ==
+    if SimpleAssoc(tp)
+    then true
+    else cases tp:
+           mk_AS`GeneralMap0Type(-, tt, -),
+           mk_AS`GeneralMap1Type(-, tt, -),
+           mk_AS`InjectiveMap0Type(-, tt, -),
+           mk_AS`InjectiveMap1Type(-, tt, -) -> SimpleAssoc(tt),
+           others -> false
+         end;
+
+\end{vdm_al}
+This function tests whether a given object reference is of the kind
+we, according to the mapping rules defined in~\cite{INFORMA-IFAD-7},
+have decided to translate into UML. An object reference in $tp$ is
+represented by an $AS`TypeName$ record. At this point we are certain
+that the existence of such an record in $tp$ corresponds to an object
+reference, since $tp$ is derived from the dependency graph. Only
+``real'' object references will result in an arc in this graph.
+\begin{vdm_al}
+
+functions
+  
+  SimpleAssoc : AS`Type +> bool
+  SimpleAssoc(tp) ==
+    cases tp :
+      mk_AS`TypeName(-,-),
+      mk_AS`OptionalType(mk_AS`TypeName(-,-),-),
+      mk_AS`Set0Type(mk_AS`TypeName(-,-),-),
+      mk_AS`Set1Type(mk_AS`TypeName(-,-),-),
+      mk_AS`Seq0Type(mk_AS`TypeName(-,-),-),
+      mk_AS`Seq1Type(mk_AS`TypeName(-,-),-) -> true,
+      others -> false
+    end;
+
+
+  NonValidObjMap : AS`Type * AS`Name +> bool
+  NonValidObjMap(tp, snm) ==
+    cases tp:
+      mk_AS`GeneralMap0Type(mk_AS`TypeName(-,-), 
+                           mk_AS`TypeName(server,-),-),
+      mk_AS`GeneralMap1Type(mk_AS`TypeName(-,-), 
+                           mk_AS`TypeName(server,-),-),
+      mk_AS`InjectiveMap0Type(mk_AS`TypeName(-,-), 
+                           mk_AS`TypeName(server,-),-),
+      mk_AS`InjectiveMap1Type(mk_AS`TypeName(-,-), 
+                             mk_AS`TypeName(server,-),-) -> 
+        server <> snm,
+      others -> false 
+    end;
+\end{vdm_al}
+The function $NonValidObjMap$ checks whether the dependency
+represented by $tp$ is a valid association or not. The reason is that
+an object reference like $map A to B$ will result in two arcs in the
+dependency graph, namely an arc from the current class towards class
+$B$ and an arc in the other direction. $NonValidObjMap$ returns true
+on the arc directed from $B$ and false on the arc towards $B$.
+\begin{vdm_al}
+
+operations
+
+  GenUMLWarnings : DEP`Associations ==> ()
+  GenUMLWarnings(stat) ==
+    for all cl_nm in set dom stat do
+      let ref_s = stat(cl_nm) 
+      in for all mk_DEP`Ref(-, tp, -, rlnm, -, -, -) in set ref_s do
+        if not ValidAssoc(DEP`UnfoldType(tp,cl_nm,{}, dom stat,0))
+        then UMLERR`GenWarning(cl_nm, rlnm);
+        
+functions
+         
+
+  GenRole : AS`Type * AS`Type * AS`Name * [AS`Expr] * AS`Access * bool 
+            +> AUML`Role
+  GenRole(tp, unf_tp, snm, expr, acc, stat) ==
+    let q = GenQualifier(tp, unf_tp)
+    in mk_AUML`Role(MkName(snm), 
+                    GenCard(unf_tp), 
+                    q, 
+                    expr, 
+                    tp,
+                    unf_tp, 
+                    RoleType(unf_tp),
+                    AS2AUML_Access(acc),
+                    stat,
+                    nil);
+
+  GenCard : AS`Type +> AUML`Cardinality
+  GenCard(tp) ==
+    cases tp:
+      mk_AS`TypeName(-,-) -> <ONE>,
+      mk_AS`Set0Type(-,-),
+      mk_AS`Set1Type(-,-),
+      mk_AS`Seq0Type(-,-) -> <MANY>,
+      mk_AS`Seq1Type(-,-) -> <ONE_TO_MANY>,
+      mk_AS`OptionalType(-,-) -> <ZERO_ONE>,
+      mk_AS`GeneralMap0Type(-, tt,-),
+      mk_AS`GeneralMap1Type(-, tt,-),
+      mk_AS`InjectiveMap0Type(-, tt,-),
+      mk_AS`InjectiveMap1Type(-, tt,-) -> GenCard(tt),
+      others -> <ONE>
+    end;
+
+
+  GenQualifier : AS`Type * AS`Type +> [AS`Type]
+  GenQualifier(tp, unf_tp) ==
+    if is_AS`GeneralMap0Type(tp) or is_AS`GeneralMap1Type(tp) or
+       is_AS`InjectiveMap0Type(tp) or is_AS`InjectiveMap1Type(tp)
+    -- First check if the folded type is a map and use the folded domain type:
+    then cases tp:
+           mk_AS`GeneralMap0Type(q, -,-),
+           mk_AS`GeneralMap1Type(q, -,-),
+           mk_AS`InjectiveMap0Type(q, -,-),
+           mk_AS`InjectiveMap1Type(q, -,-) -> q
+         end
+    else
+    -- otherwise we use the completely unfolded type unf_tp:
+      cases unf_tp:
+        mk_AS`GeneralMap0Type(q, -,-),
+        mk_AS`GeneralMap1Type(q, -,-),
+        mk_AS`InjectiveMap0Type(q, -,-),
+        mk_AS`InjectiveMap1Type(q, -,-) -> q,
+        others -> nil
+      end;
+
+  RoleType : AS`Type +> AUML`RoleType
+  RoleType(tp) ==
+    cases tp:
+      mk_AS`Seq0Type(-,-),
+      mk_AS`Seq1Type(-,-) -> <ORDERED>,
+      mk_AS`GeneralMap0Type(-,tt,-),
+      mk_AS`GeneralMap1Type(-,tt,-),
+      mk_AS`InjectiveMap0Type(-,tt,-),
+      mk_AS`InjectiveMap1Type(-,tt,-) -> RoleType(tt),
+      others -> <NORMAL>
+    end;
+
+
+  MkClass : AS`Name * AS`Definitions * AUML`UniAssoc +> AUML`Class
+  MkClass(nm, c, ua_m) ==
+    let mk_AS`Definitions(-,val_l,fnm,opm,inst_l,-,-,-,-) = c
+    in mk_AUML`Class(
+         GenAttributes(inst_l, nm, ua_m),
+         GenValues(val_l),
+         GenMethods(opm),
+         GenFunctions(fnm),
+         IsAbstract(opm),
+         nil
+       );
+\end{vdm_al}
+When generating attributes it is tested, for each attribute, that this
+attribute is not already generated as an association.
+\begin{vdm_al}
+     
+  GenAttributes : seq of AS`InstanceVarDef * AS`Name * AUML`UniAssoc +> AUML`InstanceVars
+  GenAttributes(inst_l, -, ua_m) ==
+    let assigndefs = { mk_(iv.ad,iv.access,iv.stat) | iv in set elems inst_l & is_AS`InstAssignDef(iv) } 
+    in 
+    { MkName(nm) |-> mk_AUML`ValDef(tp,expr,AS2AUML_Access(acc),stat,nil)
+     | mk_(mk_AS`AssignDef(nm,tp,expr,-),acc,stat) in set assigndefs
+     & not MkName(nm) in set dom ua_m };
+
+  GenValues : seq of AS`ValueDef +> AUML`ValuesDef
+  GenValues(val_l) ==
+    if len val_l = 0
+    then { |-> }
+    else let mk_AS`ValueDef(pat,tp,val,acc,stat,-) = hd val_l
+         in { pat |-> mk_AUML`ValDef(tp,val,AS2AUML_Access(acc),stat,nil) }
+            ++ 
+            GenValues(tl val_l);
+
+  GenMethods : map AS`Name to AS`OpDef +> AUML`CommonSign
+  GenMethods(opm) ==
+    { MkUniqueName(nm, GetOpParms(opm(nm))) |-> MkMtSignature(opm(nm)) | nm in set dom opm };
+
+  MkMtSignature : AS`OpDef +> AUML`Signature
+  MkMtSignature(m) ==
+    cases m:
+      mk_AS`ExplOpDef(-,-,-,optp,pattern_l,-,oppre,oppost,acc,stat,-,-) ->
+        mk_AUML`Signature(Pair(optp, pattern_l), optp.oprng, 
+                          <EXPL>,nil,oppre,oppost,AS2AUML_Access(acc),stat,nil),
+      mk_AS`ImplOpDef(-,-,-,pattype_l,nametype_l,-,oppre,oppost,-,acc,stat,-,-) ->
+        mk_AUML`Signature(GenPairs(pattype_l), GenReturnType(nametype_l),
+                          <IMPL>,nil,oppre,oppost,AS2AUML_Access(acc), stat, nil),
+      mk_AS`ExtExplOpDef(-,-,-,pattype_l,nametype_l,-,-,oppre,oppost,-,acc,stat,-,-) ->
+        mk_AUML`Signature(GenPairs(pattype_l), GenReturnType(nametype_l),
+                          <EXT>,nil,oppre,oppost,AS2AUML_Access(acc),stat,nil)
+      end;
+
+  GenFunctions : map AS`Name to AS`FnDef +> AUML`CommonSign
+  GenFunctions(fn_m) ==
+    { MkUniqueName(nm, GetFnParms(fn_m(nm))) |-> MkFnSignature(fn_m(nm)) | nm in set dom fn_m };
+
+  MkFnSignature : AS`FnDef +> AUML`Signature
+  MkFnSignature(f) ==
+    cases f:
+      mk_AS`ExplFnDef(-,-,ftp,pattern_l,-,fnpre,fnpost,acc,stat,-,-) ->
+        let p_or_t = if is_AS`PartialFnType(ftp)
+                     then <PARTIAL> else <TOTAL>
+        in
+        mk_AUML`Signature(Pair(ftp, conc pattern_l), ftp.fnrng, 
+                          <EXPL>,p_or_t,fnpre,fnpost,AS2AUML_Access(acc),stat,nil),
+  
+      mk_AS`ImplFnDef(-,-,pattype_l,nametype_l,fnpre,fnpost,acc,stat, -) ->
+        mk_AUML`Signature(GenPairs(pattype_l), GenReturnType(nametype_l),
+                          <IMPL>,nil,fnpre,fnpost,AS2AUML_Access(acc),stat, nil),
+      mk_AS`ExtExplFnDef(-,-,pattype_l,nametype_l,-,fnpre,fnpost,acc,stat,-,-) ->
+        mk_AUML`Signature(GenPairs(pattype_l), GenReturnType(nametype_l),
+                          <EXT>,nil,fnpre,fnpost,AS2AUML_Access(acc),stat,nil)
+      end;
+
+  Pair : (AS`FnType | AS`OpType) * AS`Parameters +> seq of AUML`PatType
+  Pair(tp, params) ==
+    let tps = if is_AS`OpType(tp) 
+              then tp.opdom
+              else tp.fndom 
+    in 
+    [ let pat = params(i), tp = tps(i) in mk_AUML`PatType(pat, tp) | i in set inds tps ];
+
+  GenPairs : AS`ParameterTypes +> seq of AUML`PatType
+  GenPairs(ptps) ==
+    conc [ let mk_AS`PatTypePair(pats,tp,-) = ptps(i) in
+           [ mk_AUML`PatType(pats(j), tp) | j in set inds pats ]
+         | i in set inds ptps ];
+
+  GenReturnType : seq of AS`NameType +> AS`Type
+  GenReturnType(nt_l) ==
+    cases nt_l:
+      []     -> mk_AS`VoidType(CI`NilContextId),
+      [nt]   -> nt.tp,
+      others -> mk_AS`ProductType( [nt_l(i).tp | i in set inds nt_l], CI`NilContextId )
+    end;
+
+  IsAbstract : map AS`Name to AS`OpDef +> bool
+  IsAbstract(opm) ==
+    exists m in set rng opm 
+    & is_AS`ExplOpDef(m) and m.body.body = <SUBRESP>
+      or is_AS`ExtExplOpDef(m) and m.body.body = <SUBRESP>;
+
+
+  MkName : AS`Name -> AUML`Name
+  MkName(nm) ==
+    let mk_AS`Name(ids,-) = nm in
+    if len ids = 1 
+    then hd ids
+    else hd ids ^ "`" ^ conc tl ids
+  pre len nm.ids > 0 and len nm.ids < 2;
+
+  MkUniqueName : AS`Name * seq of AS`Type -> AUML`Name
+  MkUniqueName(-,-) ==
+    is not yet specified;
+
+  GetFnParms : AS`FnDef -> seq of AS`Type
+  GetFnParms(-) ==
+    is not yet specified;
+
+  GetOpParms : AS`OpDef -> seq of AS`Type
+  GetOpParms(-) ==
+    is not yet specified;
+
+  AS2AUML_Access : AS`Access -> AUML`Access
+  AS2AUML_Access(acc) ==
+    cases acc:
+    <PUBLIC_AS> ->    <PUBLIC>,
+    <PROTECTED_AS> -> <PROTECTED>,
+    others ->         <PRIVATE>
+    end;
+
+  GetClass : seq of char * AUML`Model +> AUML`Class
+  GetClass(nm,mdl) ==
+    mdl.classes(nm);    
+
+  GetInh : AUML`Model -> map AUML`Name to set of AUML`Name
+  GetInh(m) ==
+    m.inheritance;
+
+operations
+
+  GetGraphs : () ==> DEP`Dependencies * DEP`Associations
+  GetGraphs() ==
+    return mk_(DEP`InheritanceGraph(), DEP`StatGraph());
+
+functions
+
+  RoleToAs : AUML`Role +> AS`Type
+  RoleToAs(rl) ==
+    let mk_AUML`Role(nm, cd, quali, initval, tp, unftp, role_t,acc, stat, id) = rl
+    in if tp <> nil
+       then 
+         let uml_tp = RoleToAs(mk_AUML`Role(nm, cd, quali, initval, nil, nil, role_t,acc, stat, id))
+         in
+           if unftp = uml_tp
+           then tp
+           else uml_tp
+       else
+         if quali = nil
+         then cases cd:
+           <ONE> -> mk_AS`TypeName(MkAsName(nm), CI`NilContextId),
+           <ZERO_ONE> -> mk_AS`OptionalType(mk_AS`TypeName(MkAsName(nm), CI`NilContextId), CI`NilContextId),
+           <ONE_TO_MANY> -> mk_AS`Seq1Type(mk_AS`TypeName(MkAsName(nm), CI`NilContextId), CI`NilContextId),
+           <MANY> -> if role_t = <NORMAL>
+                     then mk_AS`Set0Type(mk_AS`TypeName(MkAsName(nm), CI`NilContextId), CI`NilContextId)
+                     else mk_AS`Seq0Type(mk_AS`TypeName(MkAsName(nm), CI`NilContextId), CI`NilContextId)
+           end
+         else mk_AS`GeneralMap0Type(quali, 
+                                   RoleToAs(mk_AUML`Role(nm, cd, nil, nil, tp, unftp, role_t, acc, stat, id)),
+                                   CI`NilContextId);
+        
+
+  MkAsName : AUML`Name +> AS`Name
+  MkAsName(nm) ==
+    mk_AS`Name(Break(nm, 1), CI`NilContextId);
+    
+  Break : AUML`Name * nat +> seq of seq of char
+  Break(nm, i) ==
+    if i = len nm
+    then [nm]
+    elseif nm(i) = '`'
+    then [nm(1, ..., i-1), nm(i+1, ..., len nm)]
+    else Break(nm, i+1);
+
+ 
+end BUILD
+\end{vdm_al}
+
+\section{Operations for merging two representations}
+The module $MERGE$ defines operations for merging two abstract UML
+representations into one representation.
+\begin{vdm_al}
+module MERGE
+
+imports
+
+  from AS all,
+  from REP all,
+  from CI all,
+  from AUML all,
+  from UMLERR all,
+  from DEP all
+        
+exports all
+
+
+definitions
+
+state sigma of
+  history : seq of (EntityType * AUML`Name * AllDom * AllRng * AllRng)
+  init h == h = mk_sigma([])
+end
+
+\end{vdm_al}
+The following type definitions declare the different states of a class
+in the context of the UML Tool. One version of a class is compared to
+an older version of the same class to give one of the status
+indicators mentioned below. The meaning of the status indicators are:
+\begin{tabular}{c|l} \hline\\
+  M & The class was modified from one version to the other. \\
+  A & The class was added, i.e. it was not known in the old model.\\
+  D & The class was deleted, i.e. it existed in the old version of the
+  model, but is missing in the new one. \\
+  -- & No changes \\
+  ? & Unknown --- meaning that this class is not known in the old as well as in the new version of the model.\\
+\end{tabular}
+
+The unknown status indicator appears when the set of classes known in
+the VDM++ model is different from the set of classes known in the UML
+model.
+
+\begin{vdm_al}
+types
+  StateMap = map AUML`Name to State;
+  StateMaps = map AUML`Name to (State * State);
+  State = Modified | Deleted | Added | None | Unknown;
+
+  Modified :: s : seq1 of char
+  inv m == m.s = "M";
+
+  Deleted :: s : seq1 of char
+  inv d == d.s = "D";
+
+  Added :: s : seq1 of char
+  inv a == a.s = "A";
+
+  None :: s : seq1 of char
+  inv n == n.s = "-";
+
+  Unknown :: s : seq1 of char
+  inv u == u.s = "?";
+
+  DefaultMap = map AUML`Name to (bool * bool);
+
+  AllDefs = AUML`InstanceVars | AUML`ValuesDef | AUML`CommonSign;
+
+  AllDom = AUML`Name | AS`Pattern;
+  AllRng = AS`Type | AUML`ValDef | AUML`Signature | AUML`Role;
+
+  EntityType = <INSTVAR> | <VALUE> | <FUNCTION> | <METHOD> | <ASSOC>;
+
+  GuiSettings = map AUML`Name to (bool * bool);
+
+  values
+    MODIFIED : State = mk_Modified("M");
+    DELETED : State = mk_Deleted("D");
+    ADDED : State = mk_Added("A");
+    NONE : State = mk_None("-");
+    UNKNOWN : State = mk_Unknown("?");
+
+operations
+  Merge : AUML`Model * AUML`Model * GuiSettings ==> AUML`Model
+  Merge(m1, m2, settings) ==
+    let mk_AUML`Model(c_m1, i_m1, a_m1) = m1,
+        mk_AUML`Model(c_m2, i_m2, a_m2) = m2
+    in
+       def new_classes = MergeClasses(dom settings <: c_m1, dom settings <: c_m2, settings);
+           new_assocs = MergeAssociations(dom settings <: a_m1, dom settings <: a_m2, settings) 
+       in return
+    mk_AUML`Model(new_classes,
+                  MergeInherit(dom settings <: i_m1, dom settings <: i_m2, settings),
+                  ValidAssocs(new_assocs, (dom settings) \ dom new_classes));
+
+\end{vdm_al}
+$Merge$ merges the two representations passed to it. If the two
+representations are not ``compatible'', i.e.\ there are conflicting
+definitions for some of the entities in the classes, the definitions
+from the leftmost parameter overrides the other.
+
+The argument $gs$ contains the settings selected by the user in the
+Merge-GUI. $gs$ is a mapping from the set of names in both models to
+tuples of two booleans, indicating if a given class of each model is
+to participate in the merge or not.
+\begin{vdm_al}
+
+operations
+  MergeClasses : AUML`Classes * AUML`Classes * GuiSettings ==> AUML`Classes
+  MergeClasses(c1, c2, gs) ==
+    return
+    { nm |-> let mk_AUML`Class(i_m1, v_m1, m_m1, f_m1, a1, -) = GetClass(nm, c1),
+                 mk_AUML`Class(i_m2, v_m2, m_m2, f_m2, a2, id) = GetClass(nm, c2)
+             in mk_AUML`Class(MergeIt(<INSTVAR>, nm, {|->}, i_m1, i_m2, gs(nm)),
+                              MergeIt(<VALUE>, nm, {|->}, v_m1, v_m2, gs(nm)),
+                              MergeIt(<METHOD>, nm,  f_m1, m_m1, m_m2, gs(nm)),
+                              MergeIt(<FUNCTION>, nm, m_m1, f_m1, f_m2, gs(nm)),
+                              a1 or a2, id)
+    | nm in set dom c1 union dom c2 & let mk_(gs1, gs2) = gs(nm) in gs1 or gs2};
+
+\end{vdm_al}
+
+$MergeIt$ merges two maps of entities for a particular class. Points
+of incompatibility between the maps to be merged are decided using the
+boolean values $gs$ corresponding to the tool settings. If the user
+does not care, then a best attempt is made to merge the maps, but any
+conflicts are recorded, for the user to resolve.
+
+The parameter $other_map$ is used in the case of functions or
+operations, to ensure that a name is not used for both a function and
+operation. This is necessary because the toolbox currently flags such
+cases as being syntax errors. $other_map$ corresponds to the functions
+(operations) for operation map (function map) $m1$.
+
+Note that this function is not symmetric in its arguments. It is
+implicit that $m1$ corresponds to the VDM model and $m2$ to the UML
+model. This is important when resolving conflicts as (for instance),
+the kind of a method will always be based on that given by the VDM
+version. 
+\begin{vdm_al}
+  MergeIt : EntityType * AUML`Name * map AllDom to AllRng * map AllDom to AllRng * map AllDom to AllRng * (bool * bool)
+            ==> map AllDom to AllRng
+  MergeIt(ent_type, nm, other_map, m1, m2, gs) ==
+    let mk_(gs1, gs2) = gs
+    in
+      if gs1 and not gs2
+      then UpdateIds(m1,m2)
+      elseif gs2 and not gs1
+      then OverrideDontCares(ent_type, nm, m2, m1)
+      else
+        let d1 = dom m1,
+            d2 = dom m2
+        in
+         (dcl res : map AllDom to AllRng := {|->};
+          for all k in set dom m1 union dom m2 do
+            if k in set d1 and k in set d2
+            then res := res ++ { k |-> Resolve(ent_type, nm, k, m1(k), m2(k)) }
+            elseif k not in set d2
+            then res := res ++ { k |-> m1(k) }
+            elseif k in set dom other_map
+            then res := res ++ { k |-> Record(ent_type, nm, k, m2(k), other_map(k)) }
+            else res := res ++ { k |-> m2(k) };
+          return res;
+         );
+
+  UpdateIds : map AllDom to AllRng * map AllDom to AllRng ==> map AllDom to AllRng 
+  UpdateIds (vpp,uml) ==
+    return
+    { d |-> UpdateId(vpp(d), uml(d)) | d in set dom vpp inter dom uml } 
+    munion
+    (dom vpp \ dom uml) <: vpp;
+
+  UpdateId : AllRng * AllRng ==> AllRng
+  UpdateId(vpp, uml) ==
+    let vpp' : AUML`Signature | AUML`Role | AUML`ValDef = vpp,
+        uml' : AUML`Signature | AUML`Role | AUML`ValDef = uml
+    in return mu(vpp', id |-> uml'.id);
+
+\end{vdm_al}
+
+Following on from the comment above, here p is implicitly from
+the UML model, and q from the VDM model. Note that it is explicitly
+prohibited to convert an implicit VDM function or operation into an
+explicit one, via the UML mapper. This is because at the UML level,
+this distinction does not really exist, so such a change should always
+be performed at the VDM level.
+\begin{vdm_al}
+  Override : EntityType * AUML`Name * AllDom * AllRng * AllRng ==> AllRng
+  Override (et, clnm, nm, p,q) ==
+    cases true:
+      (is_AUML`Role(p)) -> let p' : AUML`Role = p,
+                               q' : AUML`Role = q
+                           in return mk_AUML`Role(p'.server, p'.cd, p'.quali, q'.initval, q'.tp,
+                                                  q'.unftp, p'.role_t, p'.acc, p'.stat, p'.id),
+      (is_AUML`Signature(p)) -> let p' : AUML`Signature = p,
+                                    q' : AUML`Signature = q
+                                in if p'.postcond = nil and q'.kind = <IMPL>
+                                   then Record(et, clnm, nm, p, q)
+                                   else return mk_AUML`Signature(p'.param, p'.returntype, q'.kind, 
+                                                          q'.fntype, p'.precond, p'.postcond, 
+                                                          p'.acc, q'.stat, p'.id),
+      others -> return p
+    end;
+
+-- Following on from the comment above, here m is implicitly from
+-- the UML model, and n from the VDM model
+  OverrideDontCares : EntityType * AUML`Name * map AllDom to AllRng * map AllDom to AllRng ==> map AllDom to AllRng
+  OverrideDontCares(et, clnm, m, n) ==
+     (dcl res : map AllDom to AllRng := {|->};
+      for all k in set dom m do
+       if k in set dom n
+       then res := res ++ { k |-> Override(et, clnm, k, m(k), n(k)) }
+       else res := res ++ { k |-> m(k) };
+      return res;
+     );
+
+  Resolve : EntityType * AUML`Name * AllDom * AllRng * AllRng ==> AllRng
+  Resolve(et, clnm, nm, def1, def2) ==
+    if def1 <> def2
+    then Record(et, clnm, nm, def1, def2)  -- record the conflict
+    else return def1;  -- The setting in the don't-care fields of def1 will
+                -- override def2.
+
+operations
+  -- Unfortunately Polymorf operations do not exist...
+  Record : EntityType * AUML`Name * AllDom * AllRng * AllRng ==> AllRng
+  Record(et, clnm, id,def1,def2) ==
+  ( history := history ^ [mk_(et, clnm,id,def1,def2)];
+    return def1;
+  );
+
+  ClearConflicts : () ==> ()
+  ClearConflicts() ==
+    history := [];
+
+  GetConflicts : () ==> seq of (EntityType * AUML`Name * AllDom * AllRng * AllRng)
+  GetConflicts() ==
+    return history;
+
+  GetConflictClasses : () ==> set of AUML`Name
+  GetConflictClasses () ==
+    return { let mk_(-,nm,-,-,-) = history(i) 
+              in nm | i in set inds history };
+
+functions
+    
+\end{vdm_al}
+$MapDiff(m,n)$ calculates the map that is $m$ ``minus'' $n$. That is,
+the result is a map equal to $m$ but with elements also present in $n$
+removed. Notice that this is {\em not} identical to the ``domain
+restricted by'' operator, but more like a set difference.
+\begin{vdm_al}
+  MapDiff[@md,@mr] : map @md to @mr * map @md to @mr +> map @md to @mr
+  MapDiff(m,n) ==
+    { d |-> m(d) | d in set dom m & d in set dom n => m(d) <> n(d) };
+
+  GetClass : AUML`Name * AUML`Classes +> AUML`Class
+  GetClass(nm, c_m) ==
+    if nm in set dom c_m
+    then c_m(nm)
+    --else mk_AUML`Class({|->},{|->},{|->},{|->},{|->},false,nil);
+    else mk_AUML`Class({|->},{|->},{|->},{|->},false,nil);
+
+
+  MergeInherit : AUML`Inheritance * AUML`Inheritance * GuiSettings +> AUML`Inheritance
+  MergeInherit(i1, i2, gs_m) ==
+    { e |-> let mk_(gs1, gs2) = gs_m(e)
+            in if gs1 and gs2 
+               then GetInh(e, i1) union GetInh(e, i2) 
+               elseif gs1 
+               then GetInh(e, i1)
+               else GetInh(e, i2)
+    | e in set dom i1 union dom i2 
+    & let mk_(gs1, gs2) = gs_m(e) 
+      in gs1 or gs2};
+
+  GetInh : AUML`Name * AUML`Inheritance +> set of AUML`Name
+  GetInh(e, i_m) ==
+    if e in set dom i_m
+    then i_m(e)
+    else {};
+
+  
+  --MergeAssociations : AUML`Associations * AUML`Associations * GuiSettings +> AUML`Associations
+  --MergeAssociations(a1, a2, gs_m) ==
+  --  { cl |-> MergeIt[AUML`Name, AUML`Role]
+  --                  (<ASSOC>, cl, {|->}, GetAssoc(cl, a1), GetAssoc(cl, a2), gs_m(cl))
+  --  | cl in set dom a1 union dom a2 & let mk_(gs1, gs2) = gs_m(cl) in gs1 or gs2};
+operations
+  MergeAssociations : AUML`Associations * AUML`Associations * GuiSettings ==> AUML`Associations
+  MergeAssociations(a1, a2, gs_m) ==
+    return 
+    { cl |-> MergeIt(<ASSOC>, cl, {|->}, GetAssoc(cl, a1), GetAssoc(cl, a2), gs_m(cl))
+    | cl in set dom a1 union dom a2 & let mk_(gs1, gs2) = gs_m(cl) in gs1 or gs2};
+
+functions
+  GetAssoc : AUML`Name * AUML`Associations +> AUML`UniAssoc
+  GetAssoc(e, a_m) ==
+    if e in set dom a_m
+    then a_m(e)
+    else {|->};
+\end{vdm_al}
+
+Note that we need to treat associations carefully, to ensure that any
+assocations which refer to classes which have been deleted in the
+merged model, do not appear in the merged model. 
+
+To this end, we specify the function $ValidRole$ which takes a
+role and a set of class names (all those names that no longer exist 
+in the merged model) and returns true iff this role refers to a class 
+that no longer exists.
+\begin{vdm_al}
+RedundantRole: AUML`Role * set of AUML`Name +> bool
+RedundantRole(rl, deleted_nms) ==
+  rl.server in set deleted_nms or 
+  if is_AS`TypeName(rl.quali)
+  then elems rl.quali.name.ids inter deleted_nms <> {}
+  else false;
+\end{vdm_al}
+
+\begin{vdm_al}
+ValidUniAssoc : AUML`UniAssoc * set of AUML`Name +> AUML`UniAssoc
+ValidUniAssoc(uniassoc, deleted_nms) ==
+  { d |-> uniassoc(d) | d in set dom uniassoc & 
+                        not RedundantRole(uniassoc(d), deleted_nms)};
+\end{vdm_al}
+
+\begin{vdm_al}
+ValidAssocs : AUML`Associations * set of AUML`Name +> AUML`Associations
+ValidAssocs(assocs, deleted_nms) ==
+  {d |-> ValidUniAssoc(assocs(d),deleted_nms) 
+            | d in set dom assocs \ deleted_nms };
+\end{vdm_al}
+
+\section{Functions for computing differences between models and the state of classes}
+$CalcState$ compares two models; an old model and a new one. The
+result is an indication of the state of each class in the new model,
+i.e. an indication telling if the class was modified, deleted, added
+or unchanged.
+\begin{vdm_al}
+     
+  CalcState : AUML`Model * AUML`Model +> StateMap
+  CalcState(old, new) ==
+    let mk_AUML`Model(oc,-,-) = old,
+        mk_AUML`Model(nc,-,-) = new
+    in { cl |-> MkState(cl, old, new) | cl in set dom oc union dom nc };
+\end{vdm_al}
+$CalcInitState$ is used when the maper starts for the first time. This
+situation is treated differently as $CalcState$ considers all classes
+to have been added initially.
+\begin{vdm_al}
+  CalcInitState : AUML`Model * AUML`Model +> StateMaps
+  CalcInitState(vpp, uml) ==
+    let common = dom uml.classes inter dom vpp.classes
+    in { cl |-> let cl_state = MkState(cl, uml, vpp)
+                in mk_(cl_state, cl_state) | cl in set common}
+       munion
+       { cl |-> mk_(ADDED, UNKNOWN) | cl in set dom vpp.classes \ common}
+       munion
+       { cl |-> mk_(UNKNOWN, ADDED) | cl in set dom uml.classes \ common};
+       
+
+  MkState : AUML`Name * AUML`Model * AUML`Model +> State
+  MkState(nm, old, new) ==
+    let mk_AUML`Model(oc,oi,oa) = old,
+        mk_AUML`Model(nc,ni,na) = new
+    in if nm in set dom oc and nm in set dom nc
+       then if oc(nm) = nc(nm) and GetAssoc(nm, oa) = GetAssoc(nm, na) and
+               GetInh(nm, oi) = GetInh(nm, ni)
+            then NONE
+            else MODIFIED
+    elseif nm in set dom oc
+    then DELETED
+    else ADDED;
+
+
+  MergeStates : StateMap * StateMap +> StateMaps
+  MergeStates(vpp,uml) ==
+    let s = dom vpp union dom uml
+    in { e |-> mk_( GetState(e,vpp), GetState(e,uml) )  
+       | e in set s
+       & ValidState(GetState(e,vpp), GetState(e,uml)) };
+
+
+  ValidState : State * State +> bool
+  ValidState(s1, s2) ==
+    if s1 = DELETED and s2 = UNKNOWN
+    then false
+    elseif s2 = DELETED and s1 = UNKNOWN
+    then false
+    else true;
+
+
+  GetState : AUML`Name * StateMap +> State
+  GetState(e,m) ==
+    if e in set dom m
+    then m(e)
+    else UNKNOWN;
+
+
+  DefaultSettings : StateMaps +> DefaultMap
+  DefaultSettings(m) ==
+    { nm |-> mkDefault(m(nm)) | nm in set dom m};
+
+
+  mkDefault : (State * State) -> (bool * bool)
+  mkDefault(t) ==
+    let mk_(p,q) = t 
+    in
+    cases t:
+      (mk_(MODIFIED, MODIFIED)),
+      (mk_(MODIFIED, ADDED)) -> mk_(true, true),
+      (mk_(MODIFIED, NONE)),
+      (mk_(MODIFIED, UNKNOWN)),
+      (mk_(MODIFIED, DELETED)) -> mk_(true, false),
+      (mk_(DELETED, DELETED)) -> mk_(false, false),
+      (mk_(DELETED, ADDED)) -> mk_(false, true),
+      (mk_(DELETED, NONE)) -> mk_(true, false),
+      (mk_(DELETED, UNKNOWN)) -> mk_(false, false),
+      (mk_(ADDED, ADDED)) -> mk_(true, true),
+      (mk_(ADDED, UNKNOWN)) -> mk_(true, false),
+      (mk_(ADDED, NONE)) -> mk_(true, true),
+      (mk_(NONE, NONE)) -> mk_(true, true),
+      (mk_(NONE, UNKNOWN)) -> mk_(true, false),
+      (mk_(UNKNOWN, UNKNOWN)) -> mk_(false,false),  -- Should be impossible!
+      others -> let mk_(a,b) = mkDefault(mk_(q,p)) in mk_(b,a)
+    end;
+
+
+  -- Returns the definitions from class m not present in class n,
+  -- or defined in an other way in class n.
+  ClassDiff : AUML`Class * AUML`Class +> AUML`Class
+  ClassDiff(m, n) ==
+    --let mk_AUML`Class(i1, t1, v1, m1, f1, -, id1) = m,
+    let mk_AUML`Class(i1, v1, m1, f1, -, id1) = m,
+        --mk_AUML`Class(i2, t2, v2, m2, f2, -, id2) = n
+        mk_AUML`Class(i2, v2, m2, f2, -, id2) = n
+    in
+    mk_AUML`Class(MapDiff[AUML`Name, AUML`ValDef](i1, i2),
+                  --MapDiff[AUML`Name, AUML`TVarDef](t1, t2),
+                  MapDiff[AS`Pattern, AUML`ValDef](v1, v2),
+                  MapDiff[AUML`Name, AUML`Signature](m1, m2),
+                  MapDiff[AUML`Name, AUML`Signature](f1, f2), true,
+                  if id1 = nil then id2 else id1);
+
+
+  IsEqual : AUML`Name * AUML`Model * AUML`Model +> bool
+  IsEqual(cl_nm, m1, m2) ==
+    let mk_AUML`Model(cl1,i1,a1) = m1,
+        mk_AUML`Model(cl2,i2,a2) = m2
+    in
+    if (cl_nm in set dom cl1) and (cl_nm in set dom cl2)
+    then cl1(cl_nm) = cl2(cl_nm) 
+         and GetInh(cl_nm, i1) = GetInh(cl_nm, i2)
+         and GetAssoc(cl_nm, a1) = GetAssoc(cl_nm, a2)
+    else false;
+
+end MERGE
+
+\end{vdm_al}
+
+

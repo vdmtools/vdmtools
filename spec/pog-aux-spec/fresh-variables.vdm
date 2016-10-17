@@ -1,0 +1,103 @@
+\section{The FRESH Module}
+
+\begin{vdm_al}
+module FRESH
+
+
+imports  
+
+  from AS all,
+  from CI all,
+  from REP all
+
+exports 
+
+functions 
+  GetName : seq of char * set of AS`Name -> AS`Name;
+  GetNameList : seq of char * nat * set of AS`Name -> seq of AS`Name;
+
+definitions 
+
+operations 
+
+state FRESH of 
+  next: nat
+init f == f = mk_FRESH(1)
+end
+
+operations
+
+GetNext : () ==> nat
+GetNext() ==
+  (next := next + 1;
+   return next - 1; 
+  );
+
+functions 
+
+
+
+  -- the 2*n stuff is to get low numbers first 
+  -- the implementation picks big numbers in the set first
+  GetName : seq of char * set of AS`Name -> AS`Name
+  GetName (basename,used_names) ==
+    mk_AS`Name([basename ^ "_" ^ Nat2str(GetNext())], CI`NilContextId)	
+  post RESULT not in set used_names;
+
+
+--   let n = card used_names in 
+--     let i in set {0,...,2*n} be st 
+--         mk_AS`Name([basename^Nat2str(2*n - i)],CI`NilContextId)
+--         not in set used_names
+--     in 
+--         mk_AS`Name([basename^Nat2str(2*n - i)],CI`NilContextId)
+
+  GetNameList : seq of char * nat * set of AS`Name -> seq of AS`Name
+  GetNameList (bname,num,used_names) ==
+    --[GetName(bname,used_names)| i in set {1,...,num}]
+    [GetName(bname,used_names)| - in set {1,...,num}]
+  post len RESULT = num and
+       forall i in set inds RESULT & RESULT(i) not in set used_names;
+
+--    if num = 0 then 
+--     []
+--    else 
+--      let head           = GetName(bname,used_names),
+--          new_used_names = {head} union used_names,
+--          tail           = GetNameList(bname,num-1,new_used_names)
+--      in 
+--          [head]^tail
+
+
+          
+  Nat2str : nat -> seq of char
+  Nat2str (n) == 
+    let d     = n div 10,
+        r     = n - 10 * d,
+        r_str = cases r:
+                  0 -> "0",
+                  1 -> "1",
+                  2 -> "2",
+                  3 -> "3",
+                  4 -> "4",
+                  5 -> "5",
+                  6 -> "6",
+                  7 -> "7",
+                  8 -> "8",
+                  9 -> "9"
+                end,
+        d_str = if d = 0 
+                then ""
+                else Nat2str(d)
+    in
+       d_str ^ r_str;
+
+end FRESH
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[FRESH`trv\_SameBaseClassExpr]
+{rtinfo.ast}[FRESH]
+\end{rtinfo}
+

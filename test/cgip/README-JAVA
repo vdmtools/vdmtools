@@ -1,0 +1,23 @@
+Test of the Java Codegenerator.
+===============================
+
+Test of the Java Options
+========================
+are not tested by the test environment!!
+
+
+Test of the Java Multiple Inheritance
+=====================================
+only depend-05 makes use of a javainterfaces file
+The Java CG only generates interfaces on IMPLEMENTATION level!!!!
+
+.javaexp and .javerr files
+==========================
+expected results: if .javaexp exists, this result is used, otherwise .exp is used
+                  .cppexp files are only for C++
+
+expected errors: the Java Codegenerator has it's own .javaerr files. 
+                 When the Java code generation result in an error 9 for example
+                 and the file .javaerr9 does not exist, we will get an 
+                 UNEXPECTED ERROR, though a .err9 file might exist.
+

@@ -1,0 +1,40 @@
+%$ld$
+\subsubsection{Logger}
+
+\begin{vdm_al}
+class Logger is subclass of 『共通定義』
+
+types
+  string = seq of char
+
+instance variables
+  static io : IO := new IO();
+  static id : ID := 0;
+
+operations
+  public ネットワークイベントを表示する: seq of char * seq of char * ID ==> ()
+  ネットワークイベントを表示する (送信者, 受信者, id) ==
+    ( def - = io.writeval[seq of (seq of char | ID)]
+        (["ネットワーク", 送信者, 受信者, id, time]) in id := id + 1;
+      def - = io.fwriteval[seq of (seq of char | ID)]
+        ("mytrace.txt", ["ネットワーク", 送信者, 受信者, id, time], <append>) in skip );
+
+  public 割込イベントを表示する: seq of char * seq of char * ID ==> ()
+  割込イベントを表示する (送信者, 受信者, id) ==
+    ( def - = io.writeval[seq of (seq of char | ID)]
+        (["割込", 送信者, 受信者, id, time]) in id := id + 1;
+      def - = io.fwriteval[seq of (seq of char | ID)]
+        ("mytrace.txt", ["割込", 送信者, 受信者, id, time], <append>) in skip );
+
+  static public wait: () ==> ()
+  wait () == skip
+    
+sync
+  per wait => id > 30
+
+end Logger
+\end{vdm_al}
+
+\begin{rtinfo}
+[Logger]{vdm.tc}[Logger]
+\end{rtinfo}

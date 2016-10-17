@@ -1,0 +1,254 @@
+class T
+
+types
+
+public
+  Mode = <mutex> | <fin> | <act> | <active> | <req> | <waiting> | 
+         <instvar> | <all>
+
+instance variables
+
+  o : C;
+  m : Mode;
+  n : <one> | <list>;
+  name : seq of char := "";
+
+thread
+
+  cases mk_(m,n) :
+    mk_(<mutex>,<one>) -> o.MutexOne(name),
+    mk_(<mutex>,<list>) -> o.MutexList(name),
+    mk_(<fin>,<one>),
+    mk_(<fin>,<list>),
+    mk_(<act>,<one>),
+    mk_(<act>,<list>) -> o.Dummy(name),
+    mk_(<req>,<one>),
+    mk_(<req>,<list>),
+    mk_(<waiting>,<one>) -> o.WaitingOne(name),
+    mk_(<active>,<one>) -> o.ActiveOne(name),
+    mk_(<active>,<list>) -> o.ActiveList(name),
+    mk_(<waiting>,<list>) -> o.WaitingList(name),
+    mk_(<instvar>,<one>) -> o.InstvarOne(name),
+    mk_(<instvar>,<list>) -> o.InstvarList(name),
+    mk_(<all>,-) -> o.IncZ()
+  end
+
+operations
+
+public
+  Init: C * Mode * (<one> | <list>) * seq of char ==> T
+  Init(myo,mymode,myn,myname) ==
+    (o := myo;
+     m := mymode;
+     n := myn;
+     name := myname;
+     return self);
+
+end T
+class C
+
+instance variables
+
+  protected x : seq of char := "";
+  protected counter : nat := 1;
+  protected z : nat := 0;
+
+operations
+
+public
+  Dummy: seq of char ==> ()
+  Dummy(nm) ==
+    (Append(nm ^ "dummy ");
+     skip);
+
+public
+  MutexOne: seq of char ==> ()
+  MutexOne(nm) ==
+    (x := x ^nm ^"mutex ";
+     x := x ^ "one ");
+
+public
+  MutexList: seq of char ==> ()
+  MutexList(nm) ==
+    (x := x ^nm ^"mutex ";
+     x := x ^ "list ");
+
+public
+  FinOne: seq of char ==> ()
+  FinOne(nm) ==
+    (x := x ^nm ^"fin ";
+     x := x ^ "one ");
+
+public
+  FinList: seq of char ==> ()
+  FinList(nm) ==
+    (x := x ^nm ^"fin ";
+     x := x ^ "list ");
+
+public
+  ActOne: seq of char ==> ()
+  ActOne(nm) ==
+    (x := x ^nm;
+     Dummy("from ActOne "));
+
+public
+  ActList: seq of char ==> ()
+  ActList(nm) ==
+    (x := x ^nm ^"act ";
+     x := x ^ "list ");
+
+public
+  ActiveOne: seq of char ==> ()
+  ActiveOne(nm) ==
+    (Append(nm ^"active ");
+     Wait();
+     Append(nm ^ "one "));
+
+public
+  ActiveList: seq of char ==> ()
+  ActiveList(nm) ==
+    (Append(nm ^"active ");
+     Wait();
+     Append(nm ^ "list "));
+
+  Append : seq of char ==> ()
+  Append(y) ==
+    x := x ^ y;
+
+public
+  ReqOne: seq of char ==> ()
+  ReqOne(nm) ==
+    (Append(nm ^"req ");
+     Append("one "));
+
+public
+  ReqList: seq of char ==> ()
+  ReqList(nm) ==
+    (x := x ^nm ^"req ";
+     x := x ^ "list ");
+
+public
+  WaitingOne: seq of char ==> ()
+  WaitingOne(nm) ==
+    (Append(nm ^"waiting ");
+     Append(nm^ "one "));
+
+public
+  WaitingList: seq of char ==> ()
+  WaitingList(nm) ==
+    (x := x ^nm ^"waiting ";
+     x := x ^ "list ");
+
+public
+  InstvarOne: seq of char ==> ()
+  InstvarOne(nm) ==
+    (Append(nm ^"instvar one "));
+
+public
+  InstvarList: seq of char ==> ()
+  InstvarList(nm) ==
+    (x := x ^nm ^"instvar list ");
+
+public
+  ReadX: () ==> seq of char
+  ReadX() ==
+    return x;
+
+public
+  Wait: () ==> ()
+  Wait() ==
+    Append("Wait ");
+
+public
+  Completed: () ==> ()
+  Completed() ==
+    (Append("Completed ");
+     skip);
+
+public
+  IncZ:() ==> ()
+  IncZ() ==
+    (x := x ^ "incz ";
+     z := z + 1;
+     x := x ^ "again ");
+
+public
+  IncCounter:() ==> ()
+  IncCounter() ==
+    (x := x ^ "inccounter ";
+     counter := counter + 1);
+
+sync
+
+  mutex(Append);
+
+  mutex(MutexOne);
+
+  mutex(WaitingList);
+
+  mutex(MutexList,Dummy);
+
+  per ReadX => 
+      #fin(MutexOne,MutexList,ActiveOne,ActiveList,WaitingOne,InstvarOne,WaitingList) > counter or
+      #fin(InstvarList) = counter or 
+      #fin(FinOne,FinList,ActOne) = 1 or
+      #fin(MutexOne,Dummy,ActList) = 3;
+
+  per FinOne => #fin(Dummy) = 2;
+
+  per FinList => #fin(FinOne,Dummy) = 2; 
+
+  per ActOne => #act(Dummy) = 2;
+
+  per ActList => #act(Dummy,MutexOne) = 2;
+
+  per Wait => (#fin(Dummy) = 1 and 
+               #fin(ActiveOne) + #active(ActiveOne) >= 2) or
+              #fin(ActiveList,ActiveOne) + #active(ActiveList,ActiveOne) = 3 or
+              #waiting(WaitingOne) = 2 or
+              #waiting(ActiveList,Dummy) = 2 or
+              #waiting(WaitingOne, WaitingList) = 2 or
+              #fin(ReqOne) = 1;
+
+  per Completed => #fin(ActiveOne) = 2 or
+                   #fin(ActiveOne,ActiveList) = 3;
+
+  per ReqOne => #req(WaitingOne) = 2;
+
+  per ReqList => #req(WaitingOne,ReqOne) = 3;
+
+  per InstvarOne => z = 2;
+
+  per InstvarList => z = 2 and counter = 2;
+
+  per WaitingOne => #fin(Wait) = 1 or #fin(ReqOne) = 1;
+
+  per WaitingList => #fin(Wait) = 1
+
+end C
+class C1 is subclass of C
+
+sync
+
+  mutex(all);
+
+end C1
+class Main
+
+operations
+
+  public Test : () ==> seq of char
+  Test() ==
+    let myo = new C1()
+    in
+      let t1 = new T().Init(myo,<instvar>,<list>,"t1"),
+          t2 = new T().Init(myo,<instvar>,<list>,"t2")
+      in
+        (start(t1);
+         start(t2);
+         myo.IncZ();
+         myo.IncZ();
+         myo.IncCounter();
+         myo.ReadX());
+
+end Main

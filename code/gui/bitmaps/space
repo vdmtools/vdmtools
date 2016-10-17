@@ -1,0 +1,4 @@
+#define space_width 1
+#define space_height 1
+static unsigned char space_bits[] = {
+   0x00};

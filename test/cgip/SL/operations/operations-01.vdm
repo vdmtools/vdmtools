@@ -1,0 +1,57 @@
+module A
+
+exports all
+definitions
+
+operations
+op1: set of nat  ==> seq of nat
+op1(s) ==
+  if s = {} then
+    return []
+  else
+    let e in set s be st forall e1 in set s \ {e} & e1 < e in
+      return [e] ^ op1(s \ {e})
+pre card s < 100
+post card s = len RESULT;
+
+op2: (int * int) | <ERROR> ==> set of int
+op2(mk_(n1, n2)) ==
+  let s = {n1, n2} in
+    return s
+pre let r = n1 + n2 in r <= abs(n1 * n2) or n1 = 0 or n2 = 0
+post let r = {n1, n2} in r = RESULT;
+
+op3: set of real ==> set of int
+op3({e1, e2}) ==
+  return {floor e1, floor e2}
+pre if e1 <> e2 then {e1,e2} <> {20} else e2 + e1 > -1000
+post if {e1, e2} = {1.1, 3.3} then true else e1 = e2 or e1 <> e2;
+
+op4: seq of nat ==> ()
+op4([a,b]) ==
+  for e in [a,b] do
+    if e > 100 then
+      error;
+  
+Test: () ==> seq1 of (bool | seq of nat | set of int)
+Test() ==
+( op4([1,2]);
+  return 
+    [ 
+      op1({1,...,5}),
+      pre_op1({1,...,100}),
+      post_op1({1,...,20}, [i | i in set {1,...,20}]),
+      op2(mk_(99,-99)),
+      pre_op2(mk_(2,3)),
+      post_op2(mk_(7,7), {7}),
+      op3({31.9,-32.4}),
+      pre_op3({20,10}),
+      post_op3({1.1,3.3}, {}),
+      pre_Test(),
+      post_Test([true, true, false])
+    ]
+)
+pre true
+post len RESULT > 1
+
+end A

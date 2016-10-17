@@ -1,0 +1,2 @@
+"Quoted method call" is code generated as a call to super. This is not correct in
+this specification.

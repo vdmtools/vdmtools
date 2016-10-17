@@ -1,0 +1,53 @@
+-- Test case based on bug report submitted by Cydney Minkowitz 12/07/01
+
+class BaseClass
+
+values
+
+public v : int = 99; -- default value
+
+operations
+
+public
+getV : () ==> int
+getV () == return self.v;
+
+end BaseClass
+
+class SubClass is subclass of BaseClass
+
+values
+
+public v : int = 100;  -- value specific to objects of this class
+
+operations
+
+public
+getV : () ==> int
+getV () == return self.v;
+
+end SubClass
+
+class VTest
+  
+functions
+
+public
+getFirstV : seq1 of BaseClass +> int
+getFirstV(objs) == (hd objs).getV();
+
+end VTest
+
+class A
+
+operations
+
+public Test : () ==> int
+Test() ==
+  return new VTest().getFirstV([new BaseClass()]);
+
+end A
+
+
+
+

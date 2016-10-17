@@ -1,0 +1,12 @@
+class ExprVariable
+operations 
+public  getVariableName : () ==> [String]
+getVariableName() == 
+is subclass responsibility ;
+
+public  setVariableName : [String] ==> <VOID>
+setVariableName(variableName) == 
+is subclass responsibility ;
+
+
+end  ExprVariable

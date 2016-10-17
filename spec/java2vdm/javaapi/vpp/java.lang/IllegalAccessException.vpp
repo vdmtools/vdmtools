@@ -1,0 +1,18 @@
+class JavaLangIllegalAccessException is subclass of JavaLangException
+operations 
+public  JavaLangIllegalAccessException : () ==> JavaLangIllegalAccessException
+JavaLangIllegalAccessException() == 
+( skip 
+) ;
+
+public  JavaLangIllegalAccessException : <NIL> ==> JavaLangIllegalAccessException
+JavaLangIllegalAccessException(-) == 
+isNil := true  ;
+
+public  JavaLangIllegalAccessException : JavaLangString ==> JavaLangIllegalAccessException
+JavaLangIllegalAccessException(s) == 
+( skip 
+) ;
+
+
+end  JavaLangIllegalAccessException

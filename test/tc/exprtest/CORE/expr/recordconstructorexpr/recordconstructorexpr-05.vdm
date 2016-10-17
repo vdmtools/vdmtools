@@ -1,0 +1,19 @@
+class RecordConstructorExprTest
+types
+
+A :: n: nat
+     r : real
+     b : bool | <RED>
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = mk_A(1,6,if true then false else 7)
+  in skip;
+
+------------------------------------------------------------------------------
+end RecordConstructorExprTest

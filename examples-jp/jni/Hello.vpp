@@ -1,0 +1,42 @@
+class Hello
+
+values
+private
+classname = "jni/test/sample/Hello";
+
+instance variables
+private static
+cls : [jclass] := nil;
+private
+obj : [jobject] := nil;
+
+operations
+public
+Hello: () ==> Hello
+Hello() ==
+ (obj := JNI`NewObject(GetClass(), [], "()V");
+  return self);
+
+public static
+adds: int * int ==> int
+adds(a,b) ==
+ return JNI`CallStaticMethod(GetClass(), "adds", [a,b], "(II)I");
+
+public
+add: int * int ==> int
+add(a,b) ==
+  return JNI`CallMethod(obj, GetClass(), "add", [a,b], "(II)I");
+
+private static
+GetClass: () ==> jclass
+GetClass() ==
+ (if cls = nil
+  then
+   (let version = JNIEnv`JNI_VERSION_1_6,
+        options = [ "-Xmx128m", "-verbose:gc", "-Djava.class.path=." ]
+    in
+      def - = JNI`CreateJavaVM(version, options) in skip;
+    cls := JNI`FindClass(classname));
+  return cls;)
+
+end Hello

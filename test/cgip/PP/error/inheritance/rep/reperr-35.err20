@@ -1,0 +1,7 @@
+m4tmp1, l. 35, c. 12:
+  Error : A composite type with tag F`d is not defined
+m4tmp1, l. 35, c. 12:
+  Error : Type of assignment expression is not compatible to defined type of ins
+tance variable
+  act : compose F`d of nat1 nat1 end
+  exp : d

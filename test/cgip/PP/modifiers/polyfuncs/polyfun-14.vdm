@@ -1,0 +1,21 @@
+ class A
+
+  functions
+
+    public f[@tp] : seq of @tp -> nat
+    f(l) == len l
+    pre len l < 100
+
+end A
+
+class B is subclass of A
+
+  operations
+
+  public Test : () ==> nat
+    Test() ==
+      if pre_f[nat]([1])
+      then return 0
+      else return 1
+
+end B

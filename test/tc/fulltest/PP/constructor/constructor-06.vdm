@@ -1,0 +1,29 @@
+-- Check that return stmt in constructor is optional, but if present should 
+-- be type correct
+
+class A
+
+instance variables
+
+n : nat := 0;
+
+operations
+
+public A : () ==> A
+A() ==
+( n := 0;
+  return self
+);
+
+public A : nat ==> A
+A(m) ==
+( n := m;
+  return n;
+);
+
+public A : seq1 of nat ==> A
+A(l) ==
+( n := hd l;
+)
+
+end A

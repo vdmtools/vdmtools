@@ -1,0 +1,534 @@
+class WireController is subclass of WiringDataController
+operations 
+public  getViaId : int  ==> [Wire]
+getViaId(wireId) == 
+( dcl   wireIdArray : map  int  to  [Integer] := {0 |-> new  Integer(wireId)},
+        wireArray : map  int  to  [Wire] := WireController`getViaId(wireIdArray);
+  return  wireArray(0)
+) ;
+
+public  initialize : () ==> <VOID>
+initialize() == 
+( return  <VOID>
+) ;
+
+public  getViaBundleId : int  ==> map  int  to  [Wire]
+getViaBundleId(bundleId) == 
+( dcl   wireIdList : [Vector] := new  Vector(),
+        connection : [Connection] := WireController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := WireController`getToolkit().getQuerySet(),
+        query : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement(),
+            effIdList : [String] := effectivityCntl.getEffIdSQLList(),
+            args : map  int  to  [Object] := {1 |-> effIdList , 0 |-> new  Integer(bundleId)};
+      query := querySet.getQuery(WiringDataQuerySet`GET_WIRE_ID_VIA_BUNDLE_ID , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  queryRS.next() do  
+          ( let - = wireIdList.addElement(new  Integer(queryRS.getInt(1)))
+            in 
+              skip 
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  ( dcl   numWires : int  := wireIdList.size(),
+          wireIdArray : map  int  to  [Integer] := {l_17 |-> nil  |l_17 in set  {0,...,numWires-1}};
+    let - = wireIdList.copyInto(wireIdArray)
+    in 
+      skip ;
+    ( dcl   wireArray : map  int  to  [Wire] := WireController`getViaId(wireIdArray);
+      return  wireArray
+    ) 
+  ) 
+) ;
+
+public  getShieldWires : [Wire] ==> map  int  to  [Wire]
+getShieldWires(shieldedWire) == 
+( if  debug
+  then  
+    ( let - = System.out.print(new  String("WireController.getShieldWires(")+shieldedWire+new  String(") from DB"))
+      in 
+        skip 
+    ) ;
+  ( dcl   shieldIdList : [Vector] := new  Vector(),
+          connection : [Connection] := WireController`getToolkit().getConnection(),
+          querySet : [WiringDataQuerySet] := WireController`getToolkit().getQuerySet(),
+          query : [String] := nil  ;
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (SQLException,j2v_exception)) -> 
+          ( dcl   e : [SQLException] := j2v_exception;
+            exit  convertSQLException(e , query)
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( dcl   stmt : [Statement] := connection.createStatement(),
+              args : map  int  to  [Object] := {0 |-> new  Integer(shieldedWire.getId())};
+        query := querySet.getQuery(WiringDataQuerySet`GET_SHIELD_WIRE_IDS_VIA_WIRE_ID , args);
+        ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+          trap  j2v_break with  
+            cases  true  : 
+              (isofclass  (J2V_Break,j2v_break)) -> 
+                skip 
+              
+            end  
+          in  
+            while  queryRS.next() do  
+            ( let - = shieldIdList.addElement(new  Integer(queryRS.getInt(1)))
+              in 
+                skip 
+            ) ;
+          let - = queryRS.close()
+          in 
+            skip ;
+          let - = stmt.close()
+          in 
+            skip 
+        ) 
+      ) ;
+    ( dcl   shieldIdArray : map  int  to  [Integer] := {l_17 |-> nil  |l_17 in set  {0,...,shieldIdList.size()-1}};
+      let - = shieldIdList.copyInto(shieldIdArray)
+      in 
+        skip ;
+      if  debug
+      then  
+        ( ( dcl   i : int  := 0;
+            while  i < shieldIdArray.length do  
+            ( let - = System.out.print(shieldIdArray(i))
+              in 
+                skip ;
+              if  i < shieldIdArray.length-1
+              then  
+                ( let - = System.out.print(new  String(","))
+                  in 
+                    skip 
+                ) ;
+              i := i+1
+            ) 
+          ) ;
+          let - = System.out.println(new  String([  ]))
+          in 
+            skip 
+        ) ;
+      return  WireController`getViaId(shieldIdArray)
+    ) 
+  ) 
+) ;
+
+public  getViaRefDes : [RefDes] ==> map  int  to  [Wire]
+getViaRefDes(refdes) == 
+( if  debug
+  then  
+    ( let - = System.out.println(new  String("WireController.getViaRefDes(")+refdes+new  String(")"))
+      in 
+        skip 
+    ) ;
+  ( dcl   wireIdArray : map  int  to  [Integer] := endpointCntl.getWireIdViaRefDesId(refdes.getId());
+    return  WireController`getViaId(wireIdArray)
+  ) 
+) ;
+
+public  getAllNames : [Aircraft] ==> [Enumeration]
+getAllNames(aircraft) == 
+( if  debug
+  then  
+    ( let - = System.out.println(new  String("WireController.getAllNames(")+aircraft+new  String(") from DB"))
+      in 
+        skip 
+    ) ;
+  ( dcl   nameList : [Vector] := nil  ,
+          connection : [Connection] := WireController`getToolkit().getConnection(),
+          querySet : [WiringDataQuerySet] := WireController`getToolkit().getQuerySet(),
+          query : [String] := nil  ;
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (SQLException,j2v_exception)) -> 
+          ( dcl   e : [SQLException] := j2v_exception;
+            exit  convertSQLException(e , query)
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( dcl   stmt : [Statement] := connection.createStatement(),
+              typeId : [Integer] := new  Integer(aircraft.getAcType().getAcTypeId()),
+              args : map  int  to  [Object] := {0 |-> typeId};
+        query := querySet.getQuery(WiringDataQuerySet`GET_COUNT_WIRE_NAMES , args);
+        ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+          let - = queryRS.next()
+          in 
+            skip ;
+          ( dcl   numWires : int  := queryRS.getInt(1);
+            nameList := new  Vector(numWires);
+            query := querySet.getQuery(WiringDataQuerySet`GET_ALL_WIRE_NAMES , args);
+            queryRS := stmt.executeQuery(query);
+            trap  j2v_break with  
+              cases  true  : 
+                (isofclass  (J2V_Break,j2v_break)) -> 
+                  skip 
+                
+              end  
+            in  
+              while  queryRS.next() do  
+              ( dcl   wireName : [String] := queryRS.getString(1);
+                let - = nameList.addElement(wireName)
+                in 
+                  skip 
+              ) ;
+            let - = queryRS.close()
+            in 
+              skip ;
+            let - = stmt.close()
+            in 
+              skip 
+          ) 
+        ) 
+      ) ;
+    return  nameList.elements()
+  ) 
+) ;
+
+public  getCurrentContextObject : () ==> [Object]
+getCurrentContextObject() == 
+( return  curWire
+) ;
+
+public  getViaId : map  int  to  [Integer] ==> map  int  to  [Wire]
+getViaId(wireIdArray) == 
+( if  debug
+  then  
+    ( let - = System.out.print(new  String("WireController.getViaId(["))
+      in 
+        skip ;
+      ( dcl   i : int  := 0;
+        while  i < wireIdArray.length do  
+        ( if  i < wireIdArray.length-1
+          then  
+            ( let - = System.out.print(wireIdArray(i)+new  String(","))
+              in 
+                skip 
+            ) 
+          else  
+            ( let - = System.out.print(wireIdArray(i))
+              in 
+                skip 
+            ) ;
+          i := i+1
+        ) 
+      ) ;
+      let - = System.out.print(new  String("])"))
+      in 
+        skip 
+    ) ;
+  ( dcl   wire : [Wire] := nil  ,
+          wireArray : map  int  to  [Wire] := {l_5 |-> nil  |l_5 in set  {0,...,wireIdArray.length-1}},
+          wiresToFind : [Vector] := new  Vector(wireIdArray.length),
+          numFound : int  := 0;
+    ( dcl   i : int  := 0;
+      while  i < wireIdArray.length do  
+      ( dcl   wireKey : [Integer] := wireIdArray(i);
+        wire := wireCache.get(wireKey);
+        if  wire = nil  
+        then  
+          ( let - = wiresToFind.addElement(wireKey)
+            in 
+              skip 
+          ) 
+        else  
+          ( wireArray := wireArray ++ {numFound |-> wire};
+            numFound := numFound+1
+          ) ;
+        i := i+1
+      ) 
+    ) ;
+    if  debug
+    then  
+      ( let - = System.out.println(new  String("Found ")+numFound+new  String(" of ")+wireIdArray.length+new  String(" in the cache"))
+        in 
+          skip 
+      ) ;
+    if  wiresToFind.size() > 0
+    then  
+      ( dcl   dbWires : map  int  to  [Wire] := getFromDbViaId(wiresToFind);
+        let - = System.arraycopy(dbWires , 0 , wireArray , numFound , dbWires.length)
+        in 
+          skip 
+      ) ;
+    return  wireArray
+  ) 
+) ;
+
+private  getFromDbViaId : [Vector] ==> map  int  to  [Wire]
+getFromDbViaId(wireIdList) == 
+( if  debug
+  then  
+    ( let - = System.out.println(new  String("WireController.getFromDbViaId(")+wireIdList+new  String(")"))
+      in 
+        skip 
+    ) ;
+  ( dcl   dbWires : map  int  to  [Wire] := {l_5 |-> nil  |l_5 in set  {0,...,wireIdList.size()-1}},
+          wireIdx : int  := 0,
+          connection : [Connection] := WireController`getToolkit().getConnection(),
+          querySet : [WiringDataQuerySet] := WireController`getToolkit().getQuerySet(),
+          query : [String] := nil  ,
+          wireIdListStr : [String] := genCommaSeparatedList(wireIdList.elements()),
+          args : map  int  to  [Object] := {0 |-> wireIdListStr};
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (SQLException,j2v_exception)) -> 
+          ( dcl   e : [SQLException] := j2v_exception;
+            exit  convertSQLException(e , query)
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( dcl   stmt : [Statement] := connection.createStatement();
+        query := querySet.getQuery(WiringDataQuerySet`GET_WIRE_VIA_ID , args);
+        ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+          trap  j2v_break with  
+            cases  true  : 
+              (isofclass  (J2V_Break,j2v_break)) -> 
+                skip 
+              
+            end  
+          in  
+            while  queryRS.next() do  
+            ( dcl   wireId : int  := queryRS.getInt(1),
+                    wire : [Wire] := new  Wire(wireId , queryRS.getInt(2) , queryRS.getInt(3) , queryRS.getString(4) , queryRS.getString(5) , queryRS.getString(6) , queryRS.getString(7) , queryRS.getString(8) , queryRS.getString(9) , queryRS.getString(10) , queryRS.getString(11) , queryRS.getString(12).equals(new  String("T")) , queryRS.getString(13).equals(new  String("T")));
+              if  debug
+              then  
+                ( let - = System.out.println(new  String("  found:")+wire)
+                  in 
+                    skip 
+                ) ;
+              let - = wireCache.put(new  Integer(wireId) , wire)
+              in 
+                skip ;
+              dbWires := dbWires ++ {wireIdx |-> wire};
+              wireIdx := wireIdx+1
+            ) ;
+          let - = queryRS.close()
+          in 
+            skip ;
+          let - = stmt.close()
+          in 
+            skip 
+        ) 
+      ) ;
+    return  dbWires
+  ) 
+) ;
+
+public  getViaWireGroup : [WireGroup] ==> map  int  to  [Wire]
+getViaWireGroup(group) == 
+( if  debug
+  then  
+    ( let - = System.out.println(new  String("WireGroupController.getViaWireGroup(")+group+new  String(") from DB"))
+      in 
+        skip 
+    ) ;
+  ( dcl   wireIdList : [Vector] := new  Vector(),
+          connection : [Connection] := WireController`getToolkit().getConnection(),
+          querySet : [WiringDataQuerySet] := WireController`getToolkit().getQuerySet(),
+          query : [String] := nil  ;
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (SQLException,j2v_exception)) -> 
+          ( dcl   e : [SQLException] := j2v_exception;
+            exit  convertSQLException(e , query)
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( dcl   stmt : [Statement] := connection.createStatement(),
+              acTypeId : [Integer] := new  Integer(group.getAcTypeId()),
+              effIdList : [String] := effectivityCntl.getEffIdSQLList(),
+              args : map  int  to  [Object] := {2 |-> effIdList , 1 |-> group.getName() , 0 |-> acTypeId};
+        query := querySet.getQuery(WiringDataQuerySet`GET_WIRE_ID_VIA_WIRE_GROUP , args);
+        ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+          trap  j2v_break with  
+            cases  true  : 
+              (isofclass  (J2V_Break,j2v_break)) -> 
+                skip 
+              
+            end  
+          in  
+            while  queryRS.next() do  
+            ( let - = wireIdList.addElement(new  Integer(queryRS.getInt(1)))
+              in 
+                skip 
+            ) ;
+          let - = queryRS.close()
+          in 
+            skip ;
+          let - = stmt.close()
+          in 
+            skip 
+        ) 
+      ) ;
+    ( dcl   wireIdArray : map  int  to  [Integer] := {l_17 |-> nil  |l_17 in set  {0,...,wireIdList.size()-1}};
+      let - = wireIdList.copyInto(wireIdArray)
+      in 
+        skip ;
+      return  WireController`getViaId(wireIdArray)
+    ) 
+  ) 
+) ;
+
+public  updateToNewContext : [ContextSet] ==> <VOID>
+updateToNewContext(contextChanges) == 
+( if  contextChanges.contains(ContextTypes`AIRCRAFT_TYPE) or  contextChanges.contains(ContextTypes`TAIL_NUMBER)
+  then  
+    ( let - = wireCache.removeAll()
+      in 
+        skip ;
+      curWire := nil  
+    ) ;
+  if  contextChanges.contains(ContextTypes`WIRE)
+  then  
+    ( dcl   newWireName : [String] := contextChanges.get(ContextTypes`WIRE);
+      if  newWireName = nil  
+      then  
+        ( curWire := nil  
+        ) 
+      else  
+        ( let - = wireCache.removeOld()
+          in 
+            skip ;
+          curWire := getViaName(aircraftCntl.getCurrentContextObject() , newWireName)(0);
+          ( dcl   group : [WireGroup] := wireGroupCntl.getViaWire(curWire);
+            let - = WireController`getViaWireGroup(group)
+            in 
+              skip 
+          ) 
+        ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  getViaName : [Aircraft] * [String] ==> map  int  to  [Wire]
+getViaName(aircraft, wireName) == 
+( if  debug
+  then  
+    ( let - = System.out.println(new  String("WireController.getViaName(")+aircraft+new  String(", ")+wireName+new  String(") from DB"))
+      in 
+        skip 
+    ) ;
+  ( dcl   wireIdList : [Vector] := new  Vector(),
+          connection : [Connection] := WireController`getToolkit().getConnection(),
+          querySet : [WiringDataQuerySet] := WireController`getToolkit().getQuerySet(),
+          query : [String] := nil  ;
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (SQLException,j2v_exception)) -> 
+          ( dcl   e : [SQLException] := j2v_exception;
+            exit  convertSQLException(e , query)
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( dcl   stmt : [Statement] := connection.createStatement(),
+              acTypeId : [Integer] := new  Integer(aircraft.getAcType().getAcTypeId()),
+              effIdList : [String] := effectivityCntl.getEffIdSQLList(),
+              args : map  int  to  [Object] := {2 |-> effIdList , 1 |-> wireName , 0 |-> acTypeId};
+        query := querySet.getQuery(WiringDataQuerySet`GET_WIRE_ID_VIA_NAME , args);
+        ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+          trap  j2v_break with  
+            cases  true  : 
+              (isofclass  (J2V_Break,j2v_break)) -> 
+                skip 
+              
+            end  
+          in  
+            while  queryRS.next() do  
+            ( let - = wireIdList.addElement(new  Integer(queryRS.getInt(1)))
+              in 
+                skip 
+            ) ;
+          let - = queryRS.close()
+          in 
+            skip ;
+          let - = stmt.close()
+          in 
+            skip 
+        ) 
+      ) ;
+    ( dcl   numWires : int  := wireIdList.size(),
+            wireIdArray : map  int  to  [Integer] := {l_18 |-> nil  |l_18 in set  {0,...,numWires-1}};
+      let - = wireIdList.copyInto(wireIdArray)
+      in 
+        skip ;
+      ( dcl   wireArray : map  int  to  [Wire] := WireController`getViaId(wireIdArray);
+        return  wireArray
+      ) 
+    ) 
+  ) 
+) ;
+
+public  getViaRefDesPin : [RefDes] * [String] ==> map  int  to  [Wire]
+getViaRefDesPin(refdes, pin) == 
+( if  debug
+  then  
+    ( let - = System.out.println(new  String("WireController.getViaRefDesPin(")+refdes+new  String(", ")+pin+new  String(")"))
+      in 
+        skip 
+    ) ;
+  ( dcl   wireArray : map  int  to  [Wire] := nil  ,
+          wireIdArray : map  int  to  [Integer] := endpointCntl.getWireIdViaRefDesIdPin(refdes.getId() , pin);
+    if  wireIdArray <> nil  
+    then  
+      ( wireArray := WireController`getViaId(wireIdArray)
+      ) ;
+    return  wireArray
+  ) 
+) ;
+
+WireController : [DataSourceToolkit] * [EffectivityController] * [AircraftController] * [WireEndpointController] * [WireGroupController] ==> WireController
+WireController(dsToolkit, effectivityController, aircraftController, endpointController, wireGroupController) == 
+( let - = WiringDataController(dsToolkit)
+  in 
+    skip ;
+  WireController`effectivityCntl := effectivityController;
+  WireController`aircraftCntl := aircraftController;
+  WireController`endpointCntl := endpointController;
+  WireController`wireGroupCntl := wireGroupController;
+  wireCache := new  ObjectCache(cacheSize)
+) ;
+
+instance variables 
+  private  wireCache : [ObjectCache] := nil  ;
+  private  curWire : [Wire] := nil  ;
+  private  aircraftCntl : [AircraftController] := nil  ;
+  private  effectivityCntl : [EffectivityController] := nil  ;
+  private  endpointCntl : [WireEndpointController] := nil  ;
+  private  wireGroupCntl : [WireGroupController] := nil  ;
+  private  static cacheSize : int  := 499
+  
+end  WireController

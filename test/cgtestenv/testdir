@@ -1,0 +1,341 @@
+#!/bin/bash
+
+if [ -n "$DEBUG_ON" ] ; then
+  set $DEBUG_ON
+fi
+
+if [ -n "$BASEDIR" ] ; then
+  :
+else
+  BASEDIR=/home/cg/cgtestenv
+fi
+
+export BASEDIR
+
+# If the platform is Linux change the path such that all the utility
+# programs (e.g. cp, test, cat) are found firstly on the local
+# filesystem.
+
+if [ $IFADOSTYPE = Linux ]; then 
+  PATH=/bin:/usr/bin:$PATH
+fi
+
+TESTFILE=$BASEDIR/testfile
+#TESTFILE=$BASEDIR/tf.pl
+RTPARSE=rtparse
+CURDIR=`pwd`
+SPEC=''
+FSH=`basename $0`
+RTIAST=rtinfo.ast
+CCDIR=CC-files
+TESTSPECSL=testspec.vdm
+TESTSPECPP=testspec.vdm
+
+
+########################
+# USAGE OF THE COMMAND #
+########################
+usage()
+{
+  echo >&2
+  echo "Usage: $FSH [-Cg | -Dy] [-DIPQ] [-r] [-sl | -pp] [-s dir] [-i | -sp] [-w] dir [testarg]" >&2
+  echo >&2
+  echo "       Runs test suites in directory dir." >&2
+  echo >&2
+  echo "       -Cg       Code generator test (default)." >&2
+  echo "       -Dy       Dynamic Semantics test." >&2
+  echo "       -DIPQ     dtc, pre, pos or inv checking during interpreting of specification." >&2
+  echo "       -dtc_on   Turn on Dynamic type check inside the dynamic specification." >&2
+  echo "       -inv_on   Turn on Invariant check inside the dynamic specification." >&2
+  echo "       -pre_on   Turn on Pre check inside the dynamic specification." >&2
+  echo "       -post_on  Turn on Post check inside the dynamic specification." >&2
+  echo "       -r        Collect run-time info." >&2
+  echo "       -sl       VDM-SL test suite (default)." >&2
+  echo "       -java     JAVA code generator mode." >&2
+  echo "       -cpp      CPP code generator mode (default)." >&2
+  echo "       -pp       VDM++ test suite." >&2
+  echo "       -i        Implementation test." >&2
+  echo "       -sp       Specification test (default)." >&2
+  echo "       -w        Copy generated files to directory $CCDIR" >&2
+  echo "       -s dir    Use specification located in dir." >&2
+  echo "                 Default dir: $SPEC" >&2
+  echo "       testarg   Runs only test case testarg." >&2
+  echo >&2
+  echo "       Example: `basename $0` -sl -Dy -i /home/test/CORE/expr/binaryexpr binary-01" >&2
+  echo >&2
+  echo "To turn on debug information, set the enviorment variable DEBUG_ON to -x" >&2
+  echo >&2
+  echo "To change root directory of the testenv. set BASEDIR to the directory" >&2
+  echo >&2
+  exit
+}
+
+###########################################
+# Test on the options of the command line #
+###########################################
+if test $# -eq 0 ; then
+  usage 
+fi
+
+D=""
+PP=""
+I="-sp"
+W=""
+OPTIONS=false
+
+GARG=SL
+TTYPE=VDM-SL
+PARSER=-sl
+# MODE=-cpp
+DTC=''
+BT=''
+RTINFO=''
+DESOURCE=.vdmde-sl
+TESTTYPE=-Cg
+IMPSPEC=-i
+DTC_ON=''
+INV_ON=''
+PRE_ON=''
+POST_ON=''
+PRIORITY_ON=''
+while test $# -gt 0 ; do
+  case $1 in
+    -Cg)     shift;;
+    -Dy)     TESTTYPE=$1
+             shift;;
+    -D | \
+    -P | \
+    -I | \
+    -Q)      DTC="$DTC $1"
+             shift;;
+    -dtc_on)  DTC_ON=-dtc_on
+             shift;;
+    -inv_on)  INV_ON=-inv_on
+             shift;;
+    -pre_on)  PRE_ON=-pre_on
+             shift;;
+    -post_on) POST_ON=-post_on
+             shift;;
+    -r)      RTINFO=-r
+             shift;;
+    -sl)     GARG=SL
+             TTYPE=VDM-SL
+             PARSER=-sl
+             DESOURCE=.vdmde-sl
+             shift;;
+    -java)   MODE=-java
+             shift;;
+    -cpp)    MODE=-cpp
+             shift;;
+    -pp)     GARG=PP
+             TTYPE=VDM++
+             PARSER=-pp
+             DESOURCE=.vdmde-pp
+             shift;;
+    -s)      SPEC=$2
+             shift; shift;;
+    -sp)     I=-sp
+             shift;;
+    -i)      I=-i
+             shift;;
+    -w)      W="-w $CCDIR"
+             shift;;
+    -priority)
+             PRIORITY_ON=-priority
+             shift;;
+    -*)      usage
+             exit;;
+    *)       break;;
+  esac
+done
+
+
+if [ "$TESTTYPE" = "-Dy" ]; then
+   if [ "$GARG" = "SL" ]; then
+        DESOURCE=.vdmde-dyn-sl
+   else
+        DESOURCE=.vdmde-dyn-pp
+   fi
+fi
+
+if [ "$SPEC" = "" -a "$I" = "-sp" ]; then
+	echo "-s option missing"
+	exit -1
+fi
+
+rm -rf trace
+
+echo "***************************************************************************" > trace
+echo "***************************************************************************"
+date >> trace
+date
+
+
+echo "Starting $TTYPE test suite" >> trace
+echo "Starting $TTYPE test suite"
+if test $# -gt 1 ; then
+        echo Running test case $2 in directory $1 >> trace
+        echo Running test case $2 in directory $1
+else
+        echo Running test suite in directory $1 >> trace
+        echo Running test suite in directory $1
+fi 
+
+if test "$DCT" = "-D" ; then
+        echo " + Dynamic type checking during interpreting of front-end.." >> trace
+        echo " + Dynamic type checking during interpreting of front-end.."
+fi
+
+if test "$RTINFO" = "-r" ; then
+        echo " + Collecting run-time info." >> trace
+        echo " + Collecting run-time info."
+fi
+
+if test "$I" = "-i" ; then
+        echo " - Implementation test." >> trace
+        echo " - Implementation test."
+fi
+
+
+echo "***************************************************************************" >> trace
+echo "***************************************************************************"
+
+echo > trace
+echo
+
+# We want to test the dynamic semantics, we must get the right
+# file .vdmde linked to the dynamic semantics.
+if [ "$TESTTYPE" = "-Dy" ] ; then
+   if [ "$GARG" = "SL" ]; then
+        DESOURCE=.vdmde-dyn-sl
+        TESTSPECSL=testspec.dyn.vdm
+   else
+        DESOURCE=.vdmde-dyn-pp
+        TESTSPECPP=testspec.dynpp.vdm
+   fi
+
+fi
+
+if [ ! -f ./external_cg.h ]; then 
+  cp -f $BASEDIR/external_cg.h . 
+  echo Copying external_cg.h 
+fi
+
+if test ! -f makeincl ; then
+        cp -f $BASEDIR/makeincl makeincl 
+fi
+if test ! -f testarg.dyn.incl ; then
+        cp -f $BASEDIR/testarg.dyn.incl testarg.dyn.incl
+fi
+
+if [ "$GARG" = "SL" ]; then
+    if test ! -f debug ; then
+        cp -f $BASEDIR/debug debug
+    fi
+else
+    if test ! -f debugpp ; then
+        cp -f $BASEDIR/debugpp debugpp
+    fi
+fi
+
+if test "$I" != "-i" ; then
+
+   (cd $SPEC; make $GARG )
+   
+   
+   if [ ! -f $SPEC/$DESOURCE ] ; then
+	echo "missing $SPEC/$DESOURCE, customize the one in ~cg/test"
+	echo "and place it in $SPEC"
+	exit -1
+   fi
+   [ -f .vdmde ] && rm -f .vdmde 
+   $BASEDIR/dotvdmdefilt $SPEC $SPEC/$DESOURCE .vdmde
+   
+   
+   if test "$TESTTYPE" = "-Dy"; then
+     if test "$GARG" = "SL" ; then
+        cp $BASEDIR/$TESTSPECSL testspec.dyn.vdm
+     else
+        cp $BASEDIR/$TESTSPECPP testspec.dyn.vdm
+     fi
+     if [ "$DTC_ON" = "-dtc_on" ] ; then
+        sed "s!SETTINGS\`DtcOff();!SETTINGS\`DtcOn();!" \
+        testspec.dyn.vdm > testspec.dyn.vdm.tmp
+        mv -f testspec.dyn.vdm.tmp testspec.dyn.vdm
+     fi
+     if [ "$INV_ON" = "-inv_on" ] ; then
+        sed "s!SETTINGS\`InvOff();!SETTINGS\`InvOn();!" \
+        testspec.dyn.vdm > testspec.dyn.vdm.tmp
+        mv -f testspec.dyn.vdm.tmp testspec.dyn.vdm
+     fi
+     if [ "$PRE_ON" = "-pre_on" ] ; then
+        sed "s!SETTINGS\`PreOff();!SETTINGS\`PreOn();!" \
+        testspec.dyn.vdm > testspec.dyn.vdm.tmp
+        mv -f testspec.dyn.vdm.tmp testspec.dyn.vdm
+     fi
+     if [ "$POST_ON" = "-post_on" ] ; then
+        sed "s!SETTINGS\`PostOff();!SETTINGS\`PostOn();!" \
+        testspec.dyn.vdm > testspec.dyn.vdm.tmp
+         mv -f testspec.dyn.vdm.tmp testspec.dyn.vdm
+
+     fi
+     if [ "$PRIORITY_ON" = "-priority" ] ; then
+        sed "s!SETTINGS\`PriorityBasedOff();!SETTINGS\`PriorityBasedOn();!" \
+        testspec.dyn.vdm > testspec.dyn.vdm.tmp
+         mv -f testspec.dyn.vdm.tmp testspec.dyn.vdm
+
+     fi
+   else
+        if  test "$GARG" = "SL" ; then
+           cp $BASEDIR/$TESTSPECSL testspec.vdm 
+           # hvis sl og cg
+        else
+        cp $BASEDIR/$TESTSPECPP testspec.vdm 
+        # pp => cgpp
+        fi
+   fi
+fi
+
+if test "$RTINFO" = "-r" ; then 
+   if test ! -f $RTIAST ; then
+       # creating the rtinfo.ast file
+       if [ "$TESTTYPE" = "-Dy" ]; then
+                testspecfile=testspec.dyn.vdm
+       else
+          testspecfile=testspec.vdm
+       fi
+       perl -e '
+         $skel=shift(@ARGV);
+	 $testspecfile=shift(@ARGV);
+         $arg=shift(@ARGV);
+         undef($/);         
+         $* =1; 
+         open(IN, "<$skel") || die ;
+         open(A, "<$arg") || die ;
+         $A = <A>;
+         $A =~ s/^[^r].*//g; 
+         $A =~ s/^r //g;
+         $A =~ s/\n/ /g;
+         $I = <IN>;
+         $I =~ s/SSS/$A/;
+         $I =~ s/RRR/$testspecfile/;
+         print $I;
+       ' $BASEDIR/$RTPARSE.skel $testspecfile $SPEC/$DESOURCE > rtparse.sh $RTIAST
+       chmod a+x rtparse.sh
+       nice rtparse.sh $RTIAST
+   fi
+fi
+
+     
+  ###########################################################################
+  # We call the testfile command for each file found with the .head extension
+  ###########################################################################
+      find $1 -type f -name \*.head -exec nice $TESTFILE $TESTTYPE $BT $DTC $PARSER $MODE $RTINFO $I $W $DTC_ON $INV_ON $PRE_ON $POST_ON $PRIORITY_ON '{}' $2 \;
+
+
+echo "***************************************************************************" >> trace
+echo Test ended: >> trace
+date >> trace
+echo "***************************************************************************"
+echo Test ended:
+date 

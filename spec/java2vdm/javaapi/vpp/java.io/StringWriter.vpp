@@ -1,0 +1,50 @@
+class JavaIoStringWriter is subclass of JavaIoWriter
+operations 
+public  close : () ==> ()
+close() == 
+is not yet specified ;
+
+public  flush : () ==> ()
+flush() == 
+is not yet specified ;
+
+public  write : int  ==> ()
+write(c) == 
+is not yet specified ;
+
+public  toString : () ==> JavaLangString
+toString() == 
+is not yet specified ;
+
+public  getBuffer : () ==> JavaLangStringBuffer
+getBuffer() == 
+is not yet specified ;
+
+public  JavaIoStringWriter : () ==> JavaIoStringWriter
+JavaIoStringWriter() == 
+( skip 
+) ;
+
+public  JavaIoStringWriter : int  ==> JavaIoStringWriter
+JavaIoStringWriter(initialSize) == 
+( skip 
+) ;
+
+public  write : JavaLangString ==> ()
+write(str) == 
+is not yet specified ;
+
+public  write : map  int  to  char  * int  * int  ==> ()
+write(cbuf, off, len__) == 
+is not yet specified ;
+
+public  JavaIoStringWriter : <NIL> ==> JavaIoStringWriter
+JavaIoStringWriter(-) == 
+isNil := true  ;
+
+public  write : JavaLangString * int  * int  ==> ()
+write(str, off, len__) == 
+is not yet specified ;
+
+
+end  JavaIoStringWriter

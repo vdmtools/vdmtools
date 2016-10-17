@@ -1,0 +1,57 @@
+-- Compiling a Lambda expression will result in a SEM`ExplFN record, which
+-- contains the name of the module in which the expressions belongs. This is,
+-- for example, used for finding the definition of functions, called within
+-- the lambda expression. 
+-- 
+-- If the instantiation part of a parameterized module is an expression, the
+-- expression is inserted as a global value in the module that is
+-- instantiated. Thus in the example below, a value called 'lessthan' will
+-- exists in the module A`binst. 
+-- 
+-- Unfortunately this means that the lambda expression will seem to belong to
+-- this module rather than the module in which it physically stands. Thus in
+-- the example the function 'f' will be found in the module A`binst rather
+-- than in the module A.
+
+module B
+
+parameters
+  types lessthan
+
+exports all
+
+definitions
+
+operations
+
+op : nat * nat ==> bool
+op(a,b) ==
+  return lessthan(a,b);
+
+f: nat * nat ==> bool
+f(x,y) ==
+  return false;
+
+end B
+
+module A
+
+instantiations
+
+binst as B(lessthan -> lambda a:nat ,b:nat & f(a,b)) all
+
+exports all
+
+definitions
+
+operations
+
+Test: () ==> bool
+Test() ==
+  return binst`op(1,2);
+
+f: nat * nat ==> bool
+f(x,y) ==
+  return true;
+
+end A

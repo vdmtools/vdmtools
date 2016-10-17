@@ -1,0 +1,53 @@
+--$Header: /home/vdmtools/cvsroot/toolbox/test-jp/test-by-SSlib/BookInstance.vpp,v 1.1 2005/11/25 07:05:38 vdmtools Exp $
+class 本実体クラス is subclass of 本クラス
+--責任
+--個々の本の情報を持つ物理的な概念としての「本」。
+--蔵書管理の対象。
+
+instance variables
+	貸出中 : bool := false;
+	public ID : seq of char;
+	public 本 : 本クラス;
+	貸出 : [貸出クラス] := nil;
+
+operations
+
+public 初期化する : seq of char * 本クラス ==> ()
+初期化する(あるID, ある本) ==
+	(
+	ID := あるID;
+	本 := ある本;
+	);
+
+public 貸し出す : 貸出クラス ==> 本実体クラス
+貸し出す(ある貸出) ==
+	(
+	self.貸出不可にする();
+	貸出 := ある貸出;
+	return self
+	);
+
+public 貸出を終わる : () ==> ()
+貸出を終わる() ==
+	(
+	貸出可能にする();
+	貸出 := nil
+	);
+
+public 貸出可能 : () ==> bool
+貸出可能() == return not 貸出中;
+
+public 借用者を得る : () ==> [利用者クラス]
+借用者を得る() ==
+	if 貸出 = nil then
+		return nil
+	else
+		return 貸出.借用者を得る();
+
+public 貸出可能にする : () ==> ()
+貸出可能にする() == 貸出中 := false;
+
+public 貸出不可にする : () ==> ()
+貸出不可にする() == 貸出中 := true;
+
+end 本実体クラス

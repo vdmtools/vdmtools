@@ -1,0 +1,549 @@
+class Main
+
+instance variables
+    workspace: VisualWorkSpace := new VisualWorkSpace() ;
+    view: SpecView := new SpecView();
+    clock: Clock := new Clock();
+    hwradar: HWPistesRadar := new HWPistesRadar();
+    radar: PistesRadar := new VisualPistesRadar();
+
+operations
+
+  Main: () ==> map MSAWTypes`ModeA to map MSAWTypes`Temps to  Obstacle 
+  Main() ==
+  ( def obstacles = self.CreateObstacles(obstacledata) in
+      workspace.Init(obstacles,view,radar);
+    hwradar.Init(clock,radar,view,pistesdata);
+    for i in [i | i in set dom pistesdata ] do
+    ( clock.Tick();
+      hwradar.RefreshPistes();
+      workspace.TraiterPistesRadar()
+    );
+    view.GetAlarms()
+    
+  );
+
+  CreateObstacles: set of ObstacleInfo ==> set of Obstacle 
+  CreateObstacles(oi_s) ==
+  ( dcl obstacles: set of Obstacle := {};
+    for all oi in set oi_s do
+     if is_OAInfo(oi) then 
+       def obstacle = new ObstacleArtificiel() in  
+       ( obstacle.Set(mk_(oi.x,oi.y),oi.r,oi.z);
+         obstacles := obstacles union {obstacle}
+       )
+     else 
+       def obstacle = new ZoneAeroport() in (
+         obstacle.Set(mk_(oi.x,oi.y),oi.r,oi.z,oi.rs);
+         obstacles := obstacles union {obstacle}
+       );
+     return obstacles
+   )
+
+types
+  ObstacleInfo = OAInfo | ZAInfo;
+
+  OAInfo :: x: int
+            y: int
+            r: real
+            z: nat;
+
+  ZAInfo :: x: int
+            y: int
+            r: real
+            z: nat
+            rs: real
+  --inv za == za.r >= rs
+
+values 
+
+  obstacledata : set of ObstacleInfo = {
+    mk_OAInfo(15,9,1,1000),
+    mk_OAInfo(13,12,0.5,9000),
+    mk_OAInfo(10,10,1,8000),
+    mk_OAInfo(20,20,1,8500),
+    mk_OAInfo(25,25,0.75,9000),
+    mk_ZAInfo(22,29,3,10000,2.5)
+  };
+
+  pistesdata = {
+    1 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 35,1 ),
+           1500 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 0,0 ),
+           8000 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,0 ),
+           500 ) },
+    2 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 34,1 ),
+           1400 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 1,1 ),
+           8050 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,1 ),
+           500 ) },
+    3 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 33,2 ),
+           1300 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 2,2 ),
+           8100 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,2 ),
+           500 ) },
+    4 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 32,2 ),
+           1200 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 3,3 ),
+           8150 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,3 ),
+           500 ) },
+    5 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 31,3 ),
+           1100 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 4,4 ),
+           8200 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,4 ),
+           500 ) },
+    6 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 30,3 ),
+           1000 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 5,5 ),
+           8250 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,5 ),
+           500 ) },
+    7 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 29,4 ),
+           900 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 6,6 ),
+           8300 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,6 ),
+           500 ) },
+    8 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 28,4 ),
+           850 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 7,7 ),
+           8350 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,7 ),
+           500 ) },
+    9 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 27,5 ),
+           800 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 8,8 ),
+           8400 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,8 ),
+           500 ) },
+    10 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 26,5 ),
+           750 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 9,9 ),
+           8450 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,9 ),
+           500 ) },
+    11 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 25,6 ),
+           700 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 10,10 ),
+           8500 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,10 ),
+           500 ) },
+    12 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 24,6 ),
+           700 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 11,11 ),
+           8550 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,11 ),
+           500 ) },
+    13 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 23,7 ),
+           700 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 12,12 ),
+           8600 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,12 ),
+           500 ) },
+    14 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 22,7 ),
+           700 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 13,13 ),
+           8650 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,13 ),
+           500 ) },
+    15 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 21,8 ),
+           700 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 14,14 ),
+           8700 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,14 ),
+           500 ) },
+    16 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 20,8 ),
+           700 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 15,15 ),
+           8750 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,15 ),
+           500 ) },
+    17 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 19,9 ),
+           700 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 16,16 ),
+           8800 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,16 ),
+           500 ) },
+    18 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 18,9 ),
+           700 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 17,17 ),
+           8850 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,17 ),
+           500 ) },
+    19 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 17,10 ),
+           680 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 18,18 ),
+           8900 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,18 ),
+           500 ) },
+    20 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 16,10 ),
+           660 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 19,19 ),
+           8950 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,19 ),
+           500 ) },
+    21 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 15,11 ),
+           640 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 20,20 ),
+           9000 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,20 ),
+           500 ) },
+    22 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 14,11 ),
+           620 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 21,21 ),
+           9050 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,21 ),
+           500 ) },
+    23 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 13,12 ),
+           600 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 22,22 ),
+           9100 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,22 ),
+           500 ) },
+    24 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 12,12 ),
+           580 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 23,23 ),
+           9150 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,23 ),
+           500 ) },
+    25 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 11,13 ),
+           560 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 24,24 ),
+           9200 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,24 ),
+           500 ) },
+    26 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 10,14 ),
+           540 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 25,25 ),
+           9250 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,25 ),
+           500 ) },
+    27 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 9,15 ),
+           520 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 26,26 ),
+           9300 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,26 ),
+           500 ) },
+    28 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 8,16 ),
+           500 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 27,27 ),
+           9350 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,27 ),
+           500 ) },
+    29 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 7,17 ),
+           480 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 28,28 ),
+           9400 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,28 ),
+           500 ) },
+    30 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 6,17 ),
+           450 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 29,29 ),
+           9450 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,29 ),
+           500 ) },
+    31 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 6,18 ),
+           420 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 30,30 ),
+           9500 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,30 ),
+           500 ) },
+    32 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 7,18 ),
+           420 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 31,31 ),
+           9550 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,31 ),
+           500 ) },
+    33 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 8,17 ),
+           400 ),
+      mk_MSAWTypes`ModeA( "diagonal_up" ) |-> 
+      mk_( mk_( 32,32 ),
+           9600 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,32 ),
+           500 ) },
+    34 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 9,16 ),
+           380 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,33 ),
+           500 ) },
+    35 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 10,16 ),
+           360 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,34 ),
+           500 ) },
+    36 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 11,16 ),
+           340 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,35 ),
+           500 ) },
+    37 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 12,15 ),
+           320 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,36 ),
+           500 ) },
+    38 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 13,15 ),
+           300 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,37 ),
+           500 ) },
+    39 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 14,15 ),
+           290 ),
+      mk_MSAWTypes`ModeA( "kl400" ) |-> 
+      mk_( mk_( 20,38 ),
+           500 ) },
+    40 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 15,15 ),
+           280 ) },
+    41 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 16,14 ),
+           270 ) },
+    42 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 17,14 ),
+           260 ) },
+    43 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 18,14 ),
+           250 ) },
+    44 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 19,14 ),
+           240 ) },
+    45 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 20,13 ),
+           230 ) },
+    46 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 21,13 ),
+           220 ) },
+    47 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 22,13 ),
+           210 ) },
+    48 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 23,12 ),
+           200 ) },
+    49 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 24,12 ),
+           190 ) },
+    50 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 25,12 ),
+           180 ) },
+    51 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 26,11 ),
+           170 ) },
+    52 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 27,11 ),
+           160 ) },
+    53 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 28,11 ),
+           150 ) },
+    54 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 29,10 ),
+           140 ) },
+    55 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 30,10 ),
+           130 ) },
+    56 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 31,9 ),
+           120 ) },
+    57 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 32,7 ),
+           110 ) },
+    58 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 33,6 ),
+           100 ) },
+    59 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 34,6 ),
+           100 ) },
+    60 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 35,6 ),
+           100 ) },
+    61 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 36,5 ),
+           100 ) },
+    62 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 37,4 ),
+           100 ) },
+    63 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 38,3 ),
+           100 ) },
+    64 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 39,2 ),
+           100 ) },
+    65 |-> 
+    { mk_MSAWTypes`ModeA( "descending" ) |-> 
+      mk_( mk_( 40,1 ),
+           100 ) } 
+  }
+
+
+end Main

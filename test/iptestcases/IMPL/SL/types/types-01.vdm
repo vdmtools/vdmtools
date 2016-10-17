@@ -1,0 +1,139 @@
+module B
+
+exports all
+
+definitions
+
+types
+
+  A = B | C | D;
+
+  B = B' | B_
+  inv b == if is_B_(b) then 
+             inv_B_(b)
+           else
+             inv_B'(b);
+
+  B' = bool | nat | char
+  inv b == if is_nat(b) then 
+             b > 10
+           else
+             true;
+
+  B_ :: nat 
+        nat
+  inv mk_B_(n1, n2) == n1 > n2;
+
+  C = real | <QUOTE>;
+
+  D = D1 | D1 | D3;
+  
+  D1 = seq of B'
+  inv s == forall e in set elems s & inv_B'(e);
+
+  D2 = set of nat
+  inv s == s <> {};
+
+  D3 = D1 * D2
+  inv mk_(d1, d2) == inv_D1(d1) and inv_D2(d2);
+
+  E = nat * nat
+operations
+
+Test: () ==> seq of (bool | A)
+Test() ==
+let a' : A = 10,
+    a_  = 11,
+    a'' = 'a',
+    a__ = true,
+    a'_ = mk_B_(10,20),
+    a_' = mk_B_(30,20),
+    s : D1 = [20,30,40],
+    s' = {1,2,3},
+    t : D1 * D2 = mk_([], {2}) in
+( dcl res : seq of bool;
+  res := [ inv_B'(a'), inv_B'(a_), inv_B'(a''), inv_B'(a__)];
+  res := res ^ [ inv_B(a'), inv_B(a_), inv_B(a''), inv_B(a__), 
+                 inv_B(a'_), inv_B(a_') ];
+  res := res ^ [inv_D1(s)];
+  res := res ^ [inv_D2(s')];
+  res := res ^ [inv_D3(t)];
+  res := res ^ f({30, 40, 50, 21, 32});
+  res := res ^ [g(true), g(10 + 20), op(mk_B_(10,20))];
+  res := res ^ [inv_B(20), inv_B(mk_B_(20,10)), inv_D1([20, 30, 40]),
+                inv_D1([20, 5, 40]), inv_D2({2}), 
+                inv_D3(mk_([23,24], {2})), inv_D3(mk_([3,24], {2})) ];
+
+  return res
+);
+
+  op: B_ ==> D2
+  op(mk_B_(n1, n2)) ==
+    return {n1, n2}
+
+functions 
+
+  f: D2 -> seq of B'
+  f(s) ==
+    if inv_D2(s) then
+      let e in set s be st forall e' in set s \ {e} & e' <= e in
+        [e] ^ f(s \ {e})
+    else
+      [];
+
+  g: B' -> C
+  g(b) ==
+    if not is_nat(b) then
+      10
+    else
+      b
+
+end B
+
+module A
+
+imports from B 
+   operations Test: () ==> seq of (bool | B`A)
+   types 
+  A = B`B | B`C | B`D;
+
+  B = B`B' | B`B_
+  inv b == if is_B`B_(b) then 
+             inv_B`B_(b)
+           else
+             inv_B`B'(b);
+
+  B' = bool | nat | char
+  inv b == if is_nat(b) then 
+             b > 10
+           else
+             true;
+
+  B_ :: nat 
+        nat
+  inv mk_B`B_(n1, n2) == n1 > n2;
+
+  C = real | <QUOTE>;
+
+  D = B`D1 | B`D1 | B`D3;
+  
+  D1 = seq of B`B'
+  inv s == forall e in set elems s & inv_B`B'(e);
+
+  D2 = set of nat
+  inv s == s <> {};
+
+  D3 = B`D1 * B`D2
+  inv mk_(d1, d2) == inv_B`D1(d1) and inv_B`D2(d2)
+
+
+exports all
+
+definitions
+operations
+
+Test: () ==> B`A
+Test() ==
+  B`Test()
+
+end A

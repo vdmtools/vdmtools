@@ -1,0 +1,85 @@
+class FunDefSlTest
+
+types
+
+  FunType = nat -> nat;
+
+  FunType1 = FunType -> bool
+  
+functions
+
+  FunDefSl3: set of rat -> bool
+  FunDefSl3(s) ==
+    pre_FunDefSl15(s);
+    
+  FunDefSl4[@A, @B](l: seq of @A, s: set of @B) r:  bool ==
+    len l = card s;
+
+  FunDefSl5[@A,@B,@C](n: nat, a: @A, f: (@A -> @B)) r: @B ==
+    if n = 0
+    then f(a)
+    else FunDefSl5[@A,@B,@C](n+1,a,f);
+
+  FunDefSl6(l: seq of nat,s: set of bool) r: bool ==
+    FunDefSl4[nat,bool](l,s);
+
+  FunDefSl7[@A] (a1,a2: @A,l1 ^ l2 : seq of nat) r : @A, s : bool ==
+    mk_(a1,a1=a2)
+    pre l1 <> []
+    post r = mk_(if 4 > 8 then a1 else a2, len l2 > 7);
+
+  FunDefSl8[@B] (b1, b2 : @B) r : bool ==
+    true
+  pre b1 <> b2
+  post pre_FunDefSl8[nat](3,5) and r <=> (b1 <> b2);
+
+  FunDefSl10(n: nat) r: nat ==
+    FunDefSl5[nat,nat,nat](1,4,FunDefSl10)
+  post r = 4;
+
+  FunDefSl11( a: nat) r: nat -> nat ==
+    lambda b : nat & a + b;
+
+  FunDefSl12[@Fun]: @Fun -> int
+  FunDefSl12(a)(b) ==
+    a+b;
+
+  FunDefSl13 () r : int ==
+    FunDefSl12[nat -> nat](1)(2);
+
+  FunDefSl15: set of rat -> nat1
+  FunDefSl15(s) ==
+    card s
+  pre let n = 7 in n;
+
+  FunDefSl18 (s: set of nat) r: set of nat ==
+    if s = {}
+    then let t = true in {t}
+    else {};
+
+  FunDefSl19: FunType1 -> bool
+  FunDefSl19(fun) ==
+   let localfn(a: nat) r: nat ==
+         a + 2
+   in
+     fun(localfn);
+
+  FunDefSl20(fun: FunType1) r: bool ==
+   let localfn: nat +> (nat * nat) -> bool
+       localfn(n1)(mk_(n2,n3)) ==
+         n1 <> n2
+   in
+     fun(localfn)
+     
+types
+
+  Vector = map nat to nat
+
+functions
+
+  FunDefSl22(op: (nat * nat -> nat))  r: (Vector * Vector -> Vector) ==
+     lambda mk_(v1,v2) : Vector * Vector & 
+	 	{ x |-> op(v1(x),v2(x)) | 
+			x in set (dom v1 inter dom v2) }
+
+end FunDefSlTest

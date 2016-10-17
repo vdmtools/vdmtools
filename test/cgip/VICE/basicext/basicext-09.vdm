@@ -1,0 +1,95 @@
+system Simple
+
+instance variables
+  static public a : A := new A();
+  static public b : B := new B();
+  -- define the first CPU with fixed priority scheduling and 22E6 MIPS
+  CPU1 : CPU := new CPU (<FP>, 44E6);
+  CPU2 : CPU := new CPU (<FP>, 44E6);
+  BUS1 : BUS := new BUS(<FCFS>,555,{CPU1,CPU2});
+
+  static public c : C := new C();
+ 
+operations
+  public Simple: () ==> Simple
+  Simple () ==
+    ( -- deploy a on CPU1
+      CPU1.deploy(a,"BT");
+      -- deploy b on CPU1
+      CPU1.deploy(b,"BT");
+      -- deploy c on CPU2
+      CPU2.deploy(c,"CT");
+    );
+
+end Simple
+class B
+
+instance variables
+
+protected binst : nat := 0;
+
+operations
+
+  IncB: () ==> ()
+  IncB() ==
+    cycles (10000) (binst := binst + 1);
+
+  public ReadBint: () ==> nat
+  ReadBint() == Simple`c.ReadBint();
+
+end B
+class C is subclass of B
+
+operations
+
+  async public DOITC: (map nat to nat) * nat ==> ()
+  DOITC (mapv,argc) ==
+    binst := binst * 2;
+
+  async public DOITC2: (map nat to nat) * nat ==> ()
+  DOITC2 (mapv,argc) ==
+    binst := binst + mapv(argc) + 89;
+
+  public ReadBint: () ==> nat
+  ReadBint() ==
+    return binst;
+
+sync 
+
+per ReadBint => #fin(DOITC) > 0 and #fin(DOITC2) > 0;
+
+end C
+
+
+class A is subclass of C
+
+operations
+  public DOIT: () ==> nat
+  DOIT () ==
+    (for i= 1 to 9 do skip;
+     ANOTHER();
+     return YETANOTHER(true,8);
+    );
+
+  async ANOTHER: () ==> ()
+  ANOTHER() ==
+    cycles (1000000000) (||(skip, skip, skip));
+
+  public YETANOTHER: bool * nat ==> nat
+  YETANOTHER (t,arg) ==
+    (SyncOp();
+     return if t then 6 + arg else 999);
+
+  public Test:() ==> nat
+  Test() ==
+    (Simple`c.DOITC2({3|-> 6},3);
+     Simple`c.DOITC({3|-> 6},3);
+     return Simple`b.ReadBint());
+  
+  SyncOp: () ==> ()
+  SyncOp() == skip;
+
+sync
+  per SyncOp => #req(ANOTHER) > 0 or #fin(C`DOITC) > 0
+
+end A

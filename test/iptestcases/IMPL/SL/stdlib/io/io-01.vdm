@@ -1,0 +1,91 @@
+module IO
+exports all
+definitions
+
+-- 	VDMTools STANDARD LIBRARY: INPUT/OUTPUT
+--      ---------------------------------------
+-- 
+-- Standard library for the VDMTools Interpreter. When the interpreter
+-- evaluates the preliminary functions/operations in this file,
+-- corresponding internal functions is called instead of issuing a run
+-- time error. Signatures should not be changed, as well as name of
+-- module (VDM-SL) or class (VDM++). Pre/post conditions is 
+-- fully user customisable. 
+-- Dont care's may NOT be used in the parameter lists.
+-- 
+-- Note VDM++: Polymorphic functions are protected. In order to call
+-- these functions  you should:
+-- 1: Either make the standard library class called IO superclass of all
+--    classes, or
+-- 2: Make a subclass of the standard library class and define
+--    an operation that calls the polymorphic function. This operation
+--    should then be called elsewhere in the specification. 
+
+-- The in/out functions  will return false if an error occurs. In this
+-- case an internal error string will be set (see 'ferror').
+
+types 
+
+filedirective = <start>|<append> 
+
+functions
+
+-- Write VDM value in ASCII format to std out:
+writeval[@p]: @p -> bool
+writeval(val)==
+  is not yet specified;
+
+-- Write VDM value in ASCII format to file.
+-- fdir = <start> will overwrite existing file,
+-- fdir = <append> will append output to the file (created if
+-- not existing).
+fwriteval[@p]:seq1 of char * @p * filedirective -> bool
+fwriteval(filename,val,fdir) ==
+  is not yet specified;
+
+-- Read VDM value in ASCII format from file
+freadval[@p]:seq1 of char -> bool * [@p]
+freadval(f) ==
+  is not yet specified
+  post let mk_(b,t) = RESULT in not b => t = nil;
+
+operations
+
+-- Write text to std out. Surrounding double quotes will be stripped,
+-- backslashed characters should be interpreted.
+echo: seq of char ==> bool
+echo(text) ==
+  fecho ("",text,nil);
+
+-- Write text to file like 'echo'
+fecho: seq of char * seq of char * [filedirective] ==> bool
+fecho (filename,text,fdir) ==
+  is not yet specified
+  pre filename = "" <=> fdir = nil;
+
+-- The in/out functions  will return false if an error occur. In this
+-- case an internal error string will be set. 'ferror' returns this
+-- string and set it to "".
+ferror:()  ==> seq of char
+ferror () ==
+  is not yet specified
+end IO
+module A
+imports from IO all
+exports all
+definitions
+operations
+
+  Test: () ==> seq of (real|seq of char|bool)
+  Test () ==
+  let fout = "io-01.testout" in
+  return [
+    IO`writeval[seq of real]([1,2.3456789]),
+    IO`fwriteval[seq of char](fout,"Hello World",<start>),
+    let mk_(b,s) = IO`freadval[seq of char](fout)  in
+    if b then s else IO`ferror(),
+    IO`echo("The VDM tools"),
+    IO`fecho(fout,"The VDM tools",<start>)
+    ]
+
+end A

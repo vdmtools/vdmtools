@@ -1,0 +1,11 @@
+#!/bin/bash
+
+IFS_BACKUP=$IFS
+IFS=$'\n'
+#export VDM_OBJECT_LOCATION=`cd;pwd`
+PWD=`pwd`
+#export VDM_SOURCE_LOCATION=${PWD%api/corba}
+export VDM_SOURCE_LOCATION=`cygpath -w ${PWD%api/corba}`examples/sort/
+IFS=$IFS_BACKUP
+
+./client_example-sl -ORBInitRef NameService=corbaloc:iiop:1.0@localhost:2809/NameService

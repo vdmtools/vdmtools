@@ -1,0 +1,50 @@
+class BundleSegmentNode is subclass of Object
+operations 
+public  toString : () ==> [String]
+toString() == 
+( dcl   outStr : [StringBuffer] := new  StringBuffer(new  String("BundleSegmentNode<BundleId:"));
+  let - = outStr.append(bundleNumber)
+  in 
+    skip ;
+  let - = outStr.append(new  String(",Node:"))
+  in 
+    skip ;
+  let - = outStr.append(getNodeName())
+  in 
+    skip ;
+  let - = outStr.append(new  String(">"))
+  in 
+    skip ;
+  return  outStr.toString()
+) ;
+
+public  getNodeId : () ==> int 
+getNodeId() == 
+( return  nodeId
+) ;
+
+public  getNodeName : () ==> [String]
+getNodeName() == 
+( dcl   outStr : [StringBuffer] := new  StringBuffer('N');
+  let - = outStr.append(nodeId)
+  in 
+    skip ;
+  return  outStr.toString()
+) ;
+
+public  getBundleNumber : () ==> [String]
+getBundleNumber() == 
+( return  bundleNumber
+) ;
+
+public  BundleSegmentNode : [String] * int  ==> BundleSegmentNode
+BundleSegmentNode(bundleNumber, nodeId) == 
+( BundleSegmentNode`bundleNumber := bundleNumber;
+  BundleSegmentNode`nodeId := nodeId
+) ;
+
+instance variables 
+  private  bundleNumber : [String];
+  private  nodeId : int 
+  
+end  BundleSegmentNode

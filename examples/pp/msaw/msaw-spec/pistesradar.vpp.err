@@ -1,0 +1,70 @@
+class PistesRadar is subclass of MSAWTypes
+
+   types
+      PisteInfo ::
+         position: Coordonnees
+         modeC : Pieds
+         vitesse : [KT]
+         alarmes : set of Alarme
+
+   instance variables
+      pistes: map ModeA to (map Temps to PisteInfo);
+   inv pistes == forall modea in set dom pistes &
+                   card dom pistes(modea) <= 2;
+   init pistes == pistes := {|->}
+
+   methods
+
+      Init (view: @View) == skip;
+
+      SetPosition (modeA: ModeA, temps: Temps, position: Coordonnees,
+                   modeC: Pieds)
+      == let piste := {temps |-> mk_PisteInfo (position, modeC, Nil, {})} in
+            if modeA in set dom pistes then 
+              let piste' = pistes(modeA) in
+                let t = LaPlusRecente (dom piste') in 
+                  pistes (modeA) := {t |-> piste'(t)} ++ piste
+            else pistes := pistes munion {modeA |-> piste}
+
+      SetVitesse (modeA: ModeA, temps: Temps, vitesse: KT)
+      pre modeA in set dom pistes and temps in set dom pistes (modeA)
+      == pistes (modeA)(temps).vitesse := vitesse;
+
+      SetAlarm (modeA: ModeA, obstacle: @Terrain|@Obstacle)
+      pre modeA in set dom pistes
+      == let t = LaPlusRecente (dom pistes (modeA)),
+                 alarme = TypedAlarm (obstacle) in
+           pistes (modeA)(t).alarmes := pistes (modeA)(t).alarmes union {alarme};
+
+      GetModeAs () value set of ModeA
+      == return dom pistes;
+
+      GetPositions (modeA: ModeA) value map Temps to (Coordonnees * Pieds)
+      pre modeA in set dom pistes
+      == let piste = pistes (modeA) in
+            return { t |-> mk_(piste(t).position, piste(t).modeC) | t in set
+dom piste };
+
+      GetVitesse (modeA: ModeA) value KT
+      pre {modeA in set dom pistes}
+      == let piste = pistes (modeA),
+             t = LaPlusRecente (dom piste) in
+            return piste(t).vitesse;
+
+      DelPiste (modeA: ModeA)
+      pre modeA in set dom pistes
+      == pistes := {modeA} <-: pistes
+
+   functions
+      TypedAlarm: @Terrain|@Obstacle -> Alarme
+      TypedAlarm (obstacle) ==
+         cases true:
+            (isofclass (Terrain, obstacle)) -> <terrain>,
+            (isofclass (ObstacleArtificiel, obstacle)) -> <obstacle_artificiel>,
+            (isofclass (ReliefParticulier, obstacle)) -> <relief_particulier>,
+            (isofclass (ZoneMilitaire, obstacle)) -> <zone_militair>,
+            (isofclass (ZoneAeroport, obstacle)) -> <zone_aeroport>,
+            others -> nil
+         end
+
+end PistesRadar

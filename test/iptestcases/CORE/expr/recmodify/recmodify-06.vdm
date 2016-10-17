@@ -1,0 +1,25 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> nat  
+Test () ==
+    return mu(mk_MyRec(3,6), i |-> 30).i
+
+
+types
+Abe:: real
+      char
+      i : nat;
+ReC:: j: seq of char
+      i : rat;
+C:: j : nat
+
+
+functions
+f: nat -> real
+f(n) ==
+  n
+
+end A

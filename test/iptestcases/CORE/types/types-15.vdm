@@ -1,0 +1,14 @@
+-- Test case based on bug report submitted by Dave Hastings@Boeing 11/07/01
+
+class A
+
+operations
+
+public Test: () ==> seq of char
+Test() ==
+  let s = mk_("a", "b")
+  in
+    return s.#1^s.#2
+
+end A
+

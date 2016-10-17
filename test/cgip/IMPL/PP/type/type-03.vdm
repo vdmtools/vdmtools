@@ -1,0 +1,51 @@
+class A
+
+types
+  T1 = nat;
+  T2 = nat1;
+  T3 = bool;
+  T4 = int;
+  T5 = rat;
+  T6 = real;
+  T7 = char;
+  T8 = <Q>;
+  T9 = <A> | <B> | <C> | <D>;
+  T10= set of nat;
+  T11= set of ( map T1 to T7 );
+  T12= seq1 of char;
+  T13= seq of ( set of real );
+  T14= bool * nat * char;
+  T15= bool * T14 * ( nat | char );
+  T16= [ nat ];
+  T17= char | [int];
+  T18= [set of T1];
+  
+  T19:: nat char (T8|T9);
+  T20:: a: nat
+        b: char
+        c: T10;
+  T21:: rec: T19;
+  
+  T22 = set of T20
+  
+instance variables
+  i : int :=1;
+
+end A
+
+class B is subclass of A
+
+operations
+
+  m1: T1 ==> [(T11)] | (T20 * T18)
+  m1(a)  ==
+    let s = { i | i in set {1,2,3,4,5,6,7,8} & i > a } in
+      return { { a |-> 'a' | a in set s } };
+
+public  Test: () ==> [T10 | (T22 | ([[[[[[[[(T11)]]]]]]]])) ]
+  Test()  ==
+  ( dcl t: set of (((((map T1 to char))))) := self.m1(1);
+    return t )
+
+
+end B

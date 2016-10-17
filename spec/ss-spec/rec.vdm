@@ -1,0 +1,515 @@
+\section{Recursive definitions}
+This module contains everything that is needed for the static checker to set 
+the framework for recursive PO. It contains functions to build the recursion 
+map, that will be used for generate warnings or errors and also will be later 
+used by the POG to generate the POs.
+
+\begin{vdm_al}
+module REC
+
+imports
+  from PAT all,
+  from ERR all,
+  from AS all,
+  from CHECK all,
+  from CI all,
+  from REP all,
+  from DEF all,
+  from ENV all,
+  from VCM all
+  
+  
+exports  
+  all
+  
+definitions
+
+
+functions
+
+\end{vdm_al}
+This functions do the transitive closure process while mantaining the trace of
+the recursive functions called. First the sets inside the \emph{FunctionInfo}
+are transformed in lists and then the transitive closure process begins. 
+
+\begin{vdm_al}  
+main_RecMap : map AS`Name to ENV`FunctionInfo -> map AS`Name to ENV`FunctionInfo
+main_RecMap(fnm) ==
+--   disting_recMap(trans_RecMap(recMapSet2Seq(fnm)),fnm);
+  createRecMap(createIndirectCallMap(createDirectCallMap(fnm)),fnm);
+
+createDirectCallMap : map AS`Name to ENV`FunctionInfo -> map AS`Name to set of AS`Name
+createDirectCallMap(fnm) ==
+   { x |-> fnm(x).rec | x in set dom fnm};
+
+createIndirectCallMap : map AS`Name to set of AS`Name -> map AS`Name to set of AS`Name
+createIndirectCallMap(dcm) ==
+  { nm |-> createIndirectCallMapAux(dcm(nm), dcm) | nm in set dom dcm };
+
+createIndirectCallMapAux : set of AS`Name * map AS`Name to set of AS`Name -> set of AS`Name
+createIndirectCallMapAux(s, dcm) ==
+  let res = dunion { dcm(nm) | nm in set s } union s
+  in if card s = card res
+     then res
+     else createIndirectCallMapAux(res, dcm);
+
+createRecMap : map AS`Name to set of AS`Name * map AS`Name to ENV`FunctionInfo -> map AS`Name to ENV`FunctionInfo
+createRecMap(icm,recmap) ==
+  { x |-> mk_ENV`FunctionInfo( dunion { if x = y or x in set icm(y) 
+ then {y} else {} | y in set recmap(x).rec },
+         recmap(x).meas, recmap(x).printPO) | x in set dom recmap };
+  
+  -- distinguish between direct recursion or mutual recursive definitions
+  -- in the end if the key is equal to the last element of the lists the head of the trace should be returned 
+  -- the head is either the key (direct recursion) or other function (mutual recursion)
+  disting_recMap : map AS`Name to set of seq of AS`Name * map AS`Name to ENV`FunctionInfo -> map AS`Name to ENV`FunctionInfo
+  disting_recMap(fnm,recmap) == 
+    { x |-> mk_ENV`FunctionInfo({ hd y | y in set fnm(x) & y(len y) = x }, recmap(x).meas ,recmap(x).printPO) | x in set dom fnm }
+  pre forall y in set rng fnm & y inter {[]} = {};
+  
+  -- transforms the recursion map {fname |-> {calledfns}} to {fname |-> {[fn1],..,[fnN]}}
+  recMapSet2Seq : map AS`Name to ENV`FunctionInfo -> map AS`Name to set of seq of AS`Name
+  recMapSet2Seq(fnm) == 
+    { x |-> { [y] | y in set fnm(x).rec } | x in set dom fnm};
+      
+\end{vdm_al}
+Make the transitive closure of a map but keeping the traces so the recursive functions can be identified.
+\begin{vdm_al} 
+  trans_RecMap : map AS`Name to set of seq of AS`Name -> map AS`Name to set of seq of AS`Name
+  trans_RecMap(recm) == 
+    let recm' = compose_RecMap(recm,recm)
+    in if recm = recm' then recm
+       else trans_RecMap(recm');
+
+\end{vdm_al}
+Auxiliary functions for map composition.
+\begin{vdm_al}     
+  compose_RecMap : (map AS`Name to set of seq of AS`Name) * (map AS`Name to set of seq of AS`Name) -> map AS`Name to set of seq of AS`Name
+  compose_RecMap(m,n) == 
+    { x |-> compose_auxRecMap(m(x),n) | x in set dom m};
+    
+  compose_auxRecMap : set of seq of AS`Name * (map AS`Name to set of seq of AS`Name) -> set of seq of AS`Name
+  compose_auxRecMap(trac,fnm) ==
+    dunion { compose_aux2RecMap(x,fnm) | x in set trac };
+ 
+  
+  compose_aux2RecMap : seq of AS`Name * (map AS`Name to set of seq of AS`Name) -> set of seq of AS`Name 
+  compose_aux2RecMap(trace,fnm) ==
+    let key = trace(len trace)
+    in if key in set dom fnm 
+      then { if {hd x} inter elems trace = {} then trace^[hd x] else trace | x in set fnm(key)  }
+      else { trace };
+
+
+\end{vdm_al}
+Finds all the applications on a function body. It really finds all identifiers but after they are 
+intersected with function names in order to keep only the functions.
+\begin{vdm_al} 
+operations
+getFuncAppFnDef : AS`FnDef * set of AS`Name ==> set of AS`Name
+getFuncAppFnDef(fnd,sn) ==
+  cases true:
+    (is_AS`ExplFnDef(fnd))    -> getFuncAppFnBody(fnd.body,sn),
+    (is_AS`ExtExplFnDef(fnd)) -> getFuncAppFnBody(fnd.body,sn),
+    others -> return {}
+  end;
+
+getFuncAppFnBody : AS`FnBody * set of AS`Name ==> set of AS`Name
+getFuncAppFnBody(mk_AS`FnBody(body,-),sn) ==
+  cases body:
+    <NOTYETSPEC> -> return {},
+#ifdef VDMPP
+    <SUBRESP>    -> return {},
+#endif VDMPP
+    others       -> getFuncAppExpr(body,sn)
+  end;
+  
+operations
+getFuncAppExpr : AS`Expr * set of AS`Name ==> set of AS`Name
+getFuncAppExpr(expr,sn) ==
+  cases expr :
+    mk_AS`DefExpr(-,-,-) -> getFuncAppDefExpr(expr,sn),
+    mk_AS`LetExpr(-,-,-) -> getFuncAppLetExpr(expr,sn),
+    mk_AS`LetBeSTExpr(-,-,-,-) -> getFuncAppLetBeSTExpr(expr,sn),
+    mk_AS`IfExpr(-,-,-,-,-) -> getFuncAppIfExpr(expr,sn),
+    mk_AS`CasesExpr(-,-,-,-) -> getFuncAppCasesExpr(expr,sn),
+    mk_AS`PrefixExpr (-,-,-) -> getFuncAppPrefixExpr(expr,sn),
+    mk_AS`BinaryExpr(-,-,-,-) -> getFuncAppBinaryExpr(expr,sn),
+    mk_AS`AllOrExistsExpr(-,bind,e,-) -> return getFuncAppExpr(e,sn) union 
+                                           dunion {getFuncAppMultBind(b,sn) | b in set elems bind},
+    mk_AS`ExistsUniqueExpr(bind,e,-) -> return getFuncAppExpr(e,sn) union getFuncAppBind(bind,sn),
+    mk_AS`SetEnumerationExpr(exprs,-) -> return dunion {getFuncAppExpr(e,sn) | e in set elems exprs},
+    mk_AS`SetComprehensionExpr(e1,bind,e2,-) 
+      -> if e2 = nil 
+         then return getFuncAppExpr(e1,sn)
+         else return getFuncAppExpr(e1,sn) union getFuncAppExpr(e2,sn) union 
+                                            dunion {getFuncAppMultBind(b,sn) | b in set elems bind},
+    mk_AS`SetRangeExpr(l,r,-) -> return getFuncAppExpr(l,sn) union getFuncAppExpr(r,sn),
+    mk_AS`SeqEnumerationExpr(seqe,-) -> return dunion {getFuncAppExpr(x,sn) | x in set elems seqe},
+    mk_AS`SeqComprehensionExpr(e1,bind,e2,-) 
+      -> if e2 = nil 
+         then return getFuncAppExpr(e1,sn)
+         else return getFuncAppExpr(e1,sn) union getFuncAppExpr(e2,sn) union getFuncAppBind(bind,sn),
+    mk_AS`SubSequenceExpr(e1,e2,e3,-) 
+      -> return getFuncAppExpr(e1,sn) union getFuncAppExpr(e2,sn) union getFuncAppExpr(e3,sn),
+    mk_AS`SeqModifyMapOverrideExpr(e1,e2,-)  -> return getFuncAppExpr(e1,sn) union getFuncAppExpr(e2,sn),
+    mk_AS`MapEnumerationExpr(els,-) -> return dunion {getFuncAppMaplet(e,sn) | e in set elems els},
+    mk_AS`MapComprehensionExpr(-,-,-,-) -> getFuncAppMapCampExpr(expr,sn),
+    mk_AS`TupleConstructorExpr(-,-) -> getFuncAppTupleConstructorExpr(expr,sn),
+    mk_AS`TupleSelectExpr(e,-,-) -> getFuncAppExpr(e,sn),
+    mk_AS`TypeJudgementExpr(e,-,-) -> getFuncAppExpr(e,sn),
+    mk_AS`NarrowExpr(e,-,-) -> getFuncAppExpr(e,sn),
+    mk_AS`PreConditionApplyExpr (-,seqe,-) -> return dunion { getFuncAppExpr(e,sn) | e in set elems seqe }, 
+    mk_AS`TokenConstructorExpr(e,-) -> getFuncAppExpr(e,sn), 
+    mk_AS`RecordConstructorExpr (-,fields,-) -> return  dunion { getFuncAppExpr(e,sn) | e in set elems fields },
+    mk_AS`RecordModifierExpr (e,mods,-) ->  return getFuncAppExpr(e,sn) union 
+                                       dunion {getFuncAppRecordModification(m,sn) | m in set elems mods},
+    mk_AS`ApplyExpr (-,-,-) -> getFuncAppApplyExpr(expr,sn),
+    mk_AS`FieldSelectExpr(rec,-,-) -> getFuncAppExpr(rec,sn),
+    mk_AS`LambdaExpr(tpbind,e,-,-) -> return getFuncAppExpr(e,sn) union 
+                                       dunion {getFuncAppBind(bind,sn) | bind in set elems tpbind},
+    mk_AS`IsExpr (-,e,-) -> getFuncAppExpr(e,sn),
+    mk_AS`BoolLit(-,-),
+    mk_AS`RealLit(-,-),
+    mk_AS`NumLit(-,-),
+    mk_AS`CharLit(-,-),
+    mk_AS`TextLit(-,-),
+    mk_AS`QuoteLit(-,-),
+    mk_AS`NilLit(-) -> return {},
+    mk_AS`Name(-,-) -> return {expr} \ sn,
+    mk_AS`UndefinedExpr(-) -> return {},
+    mk_AS`IotaExpr(bind,e,-) -> return getFuncAppExpr(e,sn) union getFuncAppBind(bind,sn),
+    mk_AS`FctTypeInstExpr(nm,-,-) -> return {nm},
+    mk_AS`BracketedExpr(e,-) -> getFuncAppExpr(e,sn),
+--    mk_AS`ExplFnDef(-,-,-,-,-,-,-,-,-,-,-) -> getFuncAppFnDef(e,sn),
+#ifdef VDMPP
+    mk_AS`NewExpr(-,exprs,-) -> return dunion { getFuncAppExpr(e,sn) | e in set elems exprs },
+    mk_AS`ThreadIdExpr(-) -> return {},
+    mk_AS`SelfExpr(-) -> return {},
+    mk_AS`SameClassExpr(-,-,-),
+    mk_AS`SameBaseClassExpr(-,-,-) -> return {},
+    mk_AS`IsOfClassExpr(-,-,-),
+    mk_AS`IsOfBaseClassExpr(-,-,-),
+    mk_AS`ActExpr(-,-),
+    mk_AS`FinExpr(-,-),
+    mk_AS`ActiveExpr(-,-),
+    mk_AS`WaitingExpr(-,-),
+    mk_AS`ReqExpr(-,-) -> return {},
+#ifdef VICE
+    mk_AS`CurTimeExpr(-) -> return {},	 
+#endif VICE
+#endif VDMPP
+    others -> return {}
+  end; 
+      
+operations 
+
+getFuncAppDefExpr: AS`DefExpr * set of AS`Name ==> set of AS`Name
+getFuncAppDefExpr(mk_AS`DefExpr(Def,InExpr,-),sn) ==
+ (dcl ids: set of AS`Name := {},
+       remids: set of AS`Name := sn;
+  for mk_(pb,expr) in Def do
+    def expids = getFuncAppExpr(expr,remids);
+        patids = getFuncAppPatternBind(pb)
+    in  
+     (ids := ids union expids;
+      remids := remids union patids);
+  return getFuncAppExpr(InExpr,remids) union ids
+ );
+
+functions 
+
+getFuncAppPatternBind : AS`PatternBind -> set of AS`Name
+getFuncAppPatternBind(pb) ==
+  cases pb:
+    mk_AS`SetBind(p,-,-)  -> dom PAT`ExtractPatternName(p),
+    mk_AS`TypeBind(p,-,-) -> dom PAT`ExtractPatternName(p),
+    others                -> dom PAT`ExtractPatternName(pb)
+  end;
+  
+operations
+getFuncAppLetExpr : AS`LetExpr * set of AS`Name ==> set of AS`Name
+getFuncAppLetExpr(mk_AS`LetExpr(localdef,body,-),sn) ==
+  def mk_(ids,remids) = getFuncAppLocalDef(localdef,sn) 
+  in return ids union getFuncAppExpr(body,remids); 
+
+getFuncAppLocalDef : seq of AS`LocalDef * set of AS`Name ==> set of AS`Name * set of AS`Name
+getFuncAppLocalDef(ldefs,sn) ==
+ (dcl ids: set of AS`Name := {},
+      remids: set of AS`Name := sn;
+  for ldef in ldefs do
+    cases ldef:
+      mk_AS`ValueDef(pat,-,val,-,-,-)        -> def expids = getFuncAppExpr(val,remids);
+                                                    patids = getFuncAppPatternBind(pat)
+                                                in  
+                                                 (ids := ids union expids;
+                                                  remids := remids union patids),
+      mk_AS`ExplFnDef(-,-,-,-,-,-,-,-,-,-,-) -> ids := ids union getFuncAppFnDef(ldef,sn),
+      others -> skip
+    end;
+  return mk_(ids,remids)
+ );
+    
+getFuncAppApplyExpr : AS`ApplyExpr * set of AS`Name ==> set of AS`Name
+getFuncAppApplyExpr(mk_AS`ApplyExpr(fct,arg,-),sn) ==
+  return getFuncAppExpr(fct,sn) union dunion {getFuncAppExpr(x,sn) | x in set elems arg};
+   
+getFuncAppIfExpr : AS`IfExpr * set of AS`Name ==> set of AS`Name
+getFuncAppIfExpr(mk_AS`IfExpr(test,cons,elsif,altn,-),sn) ==
+  return getFuncAppExpr(test,sn) 
+  union getFuncAppExpr(cons,sn)
+  union dunion {getFuncAppElseifExpr(els,sn) | els in set elems elsif}
+  union getFuncAppExpr(altn,sn);   
+  
+getFuncAppElseifExpr : AS`ElseifExpr * set of AS`Name ==> set of AS`Name
+getFuncAppElseifExpr(mk_AS`ElseifExpr(test,cons,-),sn) ==
+  return getFuncAppExpr(test,sn) union getFuncAppExpr(cons,sn);  
+
+getFuncAppBinaryExpr : AS`BinaryExpr * set of AS`Name ==> set of AS`Name
+getFuncAppBinaryExpr(mk_AS`BinaryExpr(left,-,right,-),sn) ==
+  return getFuncAppExpr(left,sn) union getFuncAppExpr(right,sn);
+ 
+getFuncAppTupleConstructorExpr : AS`TupleConstructorExpr * set of AS`Name ==> set of AS`Name
+getFuncAppTupleConstructorExpr(mk_AS`TupleConstructorExpr(fields,-),sn) ==
+  return dunion {getFuncAppExpr(field,sn) | field in set elems fields};
+
+getFuncAppPrefixExpr : AS`PrefixExpr * set of AS`Name ==> set of AS`Name
+getFuncAppPrefixExpr(mk_AS`PrefixExpr(-,arg,-),sn) ==
+  getFuncAppExpr(arg,sn);
+  
+getFuncAppCasesExpr : AS`CasesExpr * set of AS`Name ==> set of AS`Name
+getFuncAppCasesExpr(mk_AS`CasesExpr(sel,altns,Others,-),sn) ==
+ (dcl nms : set of AS`Name := {};
+  nms := nms union getFuncAppExpr(sel,sn);
+  nms := nms union dunion { getFuncAppCaseAltn(altn,sn) | altn in set elems altns };
+  if Others <> nil
+  then nms := nms union getFuncAppExpr(Others,sn);
+  return nms;
+ );
+  
+getFuncAppCaseAltn : AS`CaseAltn * set of AS`Name ==> set of AS`Name
+getFuncAppCaseAltn(mk_AS`CaseAltn(match,body,-),sn) ==
+ (dcl nms : set of AS`Name := {};
+  nms := nms union dunion {getFuncAppPattern(pat,sn) | pat in set elems match};
+  nms := nms union getFuncAppExpr(body,sn);
+  return nms;
+ );
+
+getFuncAppLetBeSTExpr : AS`LetBeSTExpr * set of AS`Name ==> set of AS`Name
+getFuncAppLetBeSTExpr(mk_AS`LetBeSTExpr(lhs,St,In,-),sn) ==
+ (dcl nms : set of AS`Name := {};
+  nms := nms union dunion {getFuncAppMultBind(bind,sn) | bind in set elems lhs};
+  if St <> nil
+  then nms := nms union getFuncAppExpr(St,sn);
+  nms := nms union getFuncAppExpr(In,sn);
+  return nms;
+ );
+
+getFuncAppMaplet : AS`Maplet * set of AS`Name ==> set of AS`Name
+getFuncAppMaplet(mk_AS`Maplet(mapdom,maprng,-),sn) ==
+  return getFuncAppExpr(mapdom,sn) union getFuncAppExpr(maprng,sn); 
+
+getFuncAppMapCampExpr : AS`MapComprehensionExpr * set of AS`Name ==> set of AS`Name
+getFuncAppMapCampExpr(mk_AS`MapComprehensionExpr(elem,bind,pred,-),sn) ==
+ (dcl nms : set of AS`Name := {};
+  nms := nms union getFuncAppMaplet(elem,sn);
+  nms := nms union dunion {getFuncAppMultBind(b,sn) | b in set elems bind};
+  if pred <> nil
+  then nms := nms union getFuncAppExpr(pred,sn);  
+  return nms;
+ );
+
+getFuncAppRecordModification : AS`RecordModification * set of AS`Name ==> set of AS`Name 
+getFuncAppRecordModification(mk_AS`RecordModification(-,new,-),sn) ==
+  getFuncAppExpr(new,sn);
+  
+getFuncAppBind : AS`Bind * set of AS`Name ==> set of AS`Name
+getFuncAppBind(bind,sn) ==
+  cases true:
+   (is_AS`SetBind(bind))  -> getFuncAppSetBind(bind,sn),
+   (is_AS`TypeBind(bind)) -> getFuncAppTypeBind(bind,sn)
+  end;
+
+getFuncAppSetBind : AS`SetBind * set of AS`Name ==> set of AS`Name
+getFuncAppSetBind(mk_AS`SetBind(pat,Set,-),sn) ==
+  return getFuncAppPattern(pat,sn) union getFuncAppExpr(Set,sn);
+
+getFuncAppTypeBind : AS`TypeBind * set of AS`Name ==> set of AS`Name
+getFuncAppTypeBind(mk_AS`TypeBind(pat,-,-),sn) ==
+  return getFuncAppPattern(pat,sn);
+
+getFuncAppSeqBind : AS`SeqBind * set of AS`Name ==> set of AS`Name
+getFuncAppSeqBind(mk_AS`SeqBind(pat,Seq,-),sn) ==
+  return getFuncAppPattern(pat,sn) union getFuncAppExpr(Seq,sn);
+  
+getFuncAppMultBind : AS`MultBind * set of AS`Name ==> set of AS`Name
+getFuncAppMultBind(bind,sn) == 
+  cases bind:
+    mk_AS`MultSetBind(pats,Set,-) -> return dunion {getFuncAppPattern(p,sn) | p in set elems pats} union getFuncAppExpr(Set,sn),
+    mk_AS`MultTypeBind(pats,-,-)  -> return dunion {getFuncAppPattern(p,sn) | p in set elems pats}
+  end;
+ 
+getFuncAppPattern : AS`Pattern * set of AS`Name ==> set of AS`Name
+getFuncAppPattern(pat,sn) == 
+  cases pat:
+    mk_AS`PatternName(-,-,-)        -> return {},
+    mk_AS`MatchVal(e,-)             -> getFuncAppExpr(e,sn),
+    mk_AS`SetEnumPattern(els,-)     -> return dunion {getFuncAppPattern(e,sn) | e in set elems els},
+    mk_AS`SetUnionPattern(l,r,-)    -> return getFuncAppPattern(l,sn) union getFuncAppPattern(r,sn),
+    mk_AS`SeqEnumPattern(els,-)     ->  return dunion {getFuncAppPattern(e,sn) | e in set elems els},
+    mk_AS`SeqConcPattern(l,r,-)     -> return getFuncAppPattern(l,sn) union getFuncAppPattern(r,sn),
+    mk_AS`MapletPattern(d,r,-)      -> return getFuncAppPattern(d,sn) union getFuncAppPattern(r,sn),
+    mk_AS`MapEnumPattern(mls,-)     ->  return dunion {getFuncAppPattern(e,sn) | e in set elems mls},
+    mk_AS`MapMergePattern(l,r,-)    -> return getFuncAppPattern(l,sn) union getFuncAppPattern(r,sn),
+    mk_AS`TuplePattern(fields,-)    -> return dunion {getFuncAppPattern(e,sn) | e in set elems fields},
+    mk_AS`RecordPattern(-,fields,-) -> return dunion {getFuncAppPattern(e,sn) | e in set elems fields},
+#ifdef VDMPP
+    mk_AS`ObjectPattern(-,fields,-) -> return dunion {getFuncAppPattern(e,sn) | e in set elems fields},
+    mk_AS`FieldPattern(-,p,-)       -> getFuncAppPattern(p,sn),
+#endif VDMPP
+    others -> return {} 
+  end;
+  
+\end{vdm_al}
+Verifies if an application is of a certain class/module.
+\begin{vdm_al} 
+functions 
+OtherClassApp : AS`Name * AS`Name -> bool
+OtherClassApp(clnm,fnm) ==
+  if len fnm.ids > 1 
+  then 
+    if fnm.ids(1) = clnm.ids(1) 
+    then false
+    else true
+  else false;
+
+operations
+
+\end{vdm_al}
+Removes the functions that can be identified as non recursive out of the recursion map.
+\begin{vdm_al} 
+
+removeNonRec : map AS`Name to ENV`FunctionInfo ==> map AS`Name to ENV`FunctionInfo
+removeNonRec(recmap) == 
+  let recmap' = { x |-> recmap(x) | x in set dom recmap & recmap(x).rec <> {}},
+      recmap'' = { x |-> mk_ENV`FunctionInfo({ y | y in set recmap'(x).rec & y in set dom recmap'},
+                                         recmap(x).meas,recmap(x).printPO)   | x in set dom recmap'} 
+  in if recmap'' = recmap then return recmap
+     else removeNonRec(recmap'');
+     
+\end{vdm_al}
+This function, builds the recursion map based on the functions definition of a class/module. 
+It first starts by finding out the functions applications in each function and then build a
+first version of the recMap. After this all the function calls that can't be found on this 
+class are searched and the same process is made until the map is closed. This is, elements
+in the range are all in the domain too. When this all process is finished, the definitly non
+recursive functions are removed and the transitive closure is made to find out the recursive 
+functions and then the cleaning is again made.
+\begin{vdm_al}      
+
+BuildRecMap : AS`Name * map AS`Name to AS`FnDef  ==> map AS`Name to ENV`FunctionInfo
+BuildRecMap(clnm,fnm) ==
+  ( dcl recMap : map AS`Name to ENV`FunctionInfo := {|->};
+    for all nm in set dom fnm 
+    do
+    (
+      def allfns' = dunion { dom x.fcts union dom x.polys | x in set rng 
+#ifdef VDMPP 
+      VCM`GetParseEnv()
+#endif VDMPP
+#ifdef VDMSL
+      VCM`GetModuleEnv()
+#endif VDMSL
+      };
+          allapps'= getFuncAppFnDef(fnm(nm),{});
+          allfns  = { DestroyCid(x) | x in set allfns'};
+          allapps = { DestroyCid(x) | x in set allapps' };
+          normout' = { x | x in set allapps & OtherClassApp(clnm,x)};
+          normout = normout' inter allfns;
+          inapps  = allapps \ normout;
+          normin = {NormalizeName(clnm,x) | x in set inapps} inter allfns
+        --  normin  = { DestroyCid(x) | x in set normin' },
+          --normout = { DestroyCid(x) | x in set outapps }      
+      in 
+        recMap := recMap ++ {mk_AS`Name(clnm.ids^nm.ids,CI`NilContextId) |->
+                              mk_ENV`FunctionInfo(normin union normout,
+                                                  if is_AS`ExplFnDef(fnm(nm))
+                                                  then fnm(nm).measu
+                                                  else nil,
+                                                  false)}; 
+    );
+    -- at this point recMap contains all functions associated with their calls of this class
+    -- what now is needed is to find the calls of functions that are mentioned that don't belong to this class.
+    recMap := recConstructMap(dunion {x.rec | x in set rng recMap} \ dom recMap ,dom recMap,recMap);
+    recMap := removeNonRec(recMap);
+    recMap := main_RecMap(recMap);
+    recMap := removeNonRec(recMap);
+    return recMap
+  
+  );
+
+\end{vdm_al}
+This function finds the function applications in functions that are not in the class currently beeing 
+type checked. The applications are found and added to the recMap so that the recursive functions can 
+be correctly identified
+\begin{vdm_al}
+
+recConstructMap : set of AS`Name * set of AS`Name * map AS`Name to ENV`FunctionInfo ==> map AS`Name to ENV`FunctionInfo
+recConstructMap(toVisit,visited,recMap) ==
+  if toVisit = {} 
+  then return recMap
+  else 
+    let x in set toVisit
+    in 
+      def xapps = GetAppsFn(x); --TODO: The names are not crossed with the whole functions excess names might be added here.
+          newvis = visited union {x}
+      in return recConstructMap(
+                 (toVisit union xapps.#1) \ newvis, 
+                 newvis, 
+                 recMap ++ {x |-> mk_ENV`FunctionInfo(xapps.#1,xapps.#2,false)} 
+                 );
+  
+\end{vdm_al}
+Normalize names is to transform a name, depending if it as a class/module on the name, then it remains the same.
+Otherwise the class/module name is appended to the name.
+\begin{vdm_al}  
+NormalizeName : AS`Name * AS`Name ==> AS`Name
+NormalizeName(clnm,mk_AS`Name(f,cid)) ==
+ if clnm.ids = [ f(i) | i in set inds f & i <= len clnm.ids] 
+ then return mk_AS`Name(f,cid)
+ else return mk_AS`Name(clnm.ids^f,cid);
+ 
+\end{vdm_al}
+Destroying the context is needed to use the set "belong" 
+\begin{vdm_al} 
+DestroyCid : AS`Name ==> AS`Name 
+DestroyCid(nm) ==
+  return mk_AS`Name(nm.ids,0);
+  
+\end{vdm_al}
+Gets the names that are in a functions definition. These names should be intersected with
+the whole function names in order to find out which ones are functions and the ones that 
+aren't.
+\begin{vdm_al}   
+GetAppsFn : AS`Name ==> (set of AS`Name) * [AS`Name]
+GetAppsFn(nm) ==
+  def f = VCM`GetFuncDefWOCtxt(nm)
+  in 
+    if f <> nil and is_AS`ExplFnDef(f)
+    then return mk_(getFuncAppFnDef(f,{}),f.measu) -- TODO: normalize names
+    else return mk_({},nil)
+#ifdef VDMPP
+--pre len nm.ids > 1
+#endif VDMPP
+;  
+  
+
+end REC
+
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[MostGeneralNumericType]
+{rtinfo.ast}[REC]
+\end{rtinfo}

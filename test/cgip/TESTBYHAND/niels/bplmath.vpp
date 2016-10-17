@@ -1,0 +1,189 @@
+class Math is subclass of Global
+
+values
+
+deg2radcoef : real = 0.017453292519943;
+rad2degcoef : real = 57.29577951308232;
+
+operations
+
+determinant: real * real * real * real ==> real
+determinant (x, y, z, w) ==
+  return x*w - y*z;
+
+sqrt: real ==> real 
+sqrt (x) ==
+  return x ** 0.5;
+
+deg2rad: real ==> real 
+deg2rad (x) ==
+  return x*deg2radcoef;
+
+sin: real ==> real 
+sin (x) ==
+  return new MATH().sin(deg2rad(x));
+--  let y = into2pi (x) in
+--  let z : real = if y <= 180 then y
+--                      else y-360 in
+--  return
+--  cases true:
+--    (z > -180 and z <= -135) -> -sintaylor (180+z),
+--    (z > -135 and z <= -45)  -> -costaylor (90+z),
+--    (z > -45 and z <= 45)    -> sintaylor (z),
+--    (z > 45 and z <= 135)    -> costaylor (90-z),
+--    (z > 135 and z <= 180)   -> sintaylor (180-z)
+--  end;
+
+cos: real ==> real 
+cos (x) ==
+  return new MATH().cos(deg2rad(x));
+--  let y = into2pi (x) in
+--  let z : real = if y <= 180 then y
+--                      else y-360 in
+--  return
+--  cases true:
+--    (z > -180 and z <= -135) -> -costaylor (180+z),
+--    (z > -135 and z <= -45)  -> sintaylor (90+z),
+--    (z > -45 and z <= 45)    -> costaylor (z),
+--    (z > 45 and z <= 135)    -> sintaylor (90-z),
+--    (z > 135 and z <= 180)   -> -costaylor (180-z)
+--  end;
+
+--sintaylor: real ==> real
+--sintaylor (x) ==
+--let coef = [ 1, -6, 120, -5040, 362880 ] in
+--( dcl xrad : real := deg2rad(x);
+--  dcl res : real := xrad;
+--  let x2 = xrad*xrad in
+--  for i = 2 to len coef do
+--  ( xrad := xrad * x2;
+--    res := res + xrad/coef(i) );
+--  return res
+--)
+--pre x > -180 and x <= 180;
+---- This is an implementation of a standard 9th order Taylor serie for sin in x=0.
+--
+--costaylor: real ==> real
+--costaylor (x) ==
+--let coef = [ 1, -2, 24, -720, 40320 ] in
+--( dcl x' : real := 1;
+--  dcl res : real := 1;
+--  let xrad = deg2rad(x) in
+--  let x2 = xrad*xrad in
+--  for i = 2 to len coef do
+--  ( x' := x' * x2;
+--    res := res + x'/coef(i) );
+--  return res
+--)
+--pre x > -180 and x <= 180;
+---- This is an implementation of a standard 9th order Taylor serie for cos in x=0.
+
+arcsin: real ==> real
+arcsin (x) ==
+  return new MATH().asin(x)
+--  return 90 - arccos (x)
+pre x >= -1 and x <= 1;
+-- This uses implicitely the approximated function MatlabMath`arccos 
+
+arccos:real ==> real
+arccos (x) ==
+  return new MATH().acos(x)
+--( dcl matlabmath : MatlabMath := new MatlabMath();
+--  return matlabmath.arccos (x)
+--)
+pre x >= -1 and x <= 1;
+-- This uses implicitely the approximated function MatlabMath`arccos 
+
+tan: real ==> real 
+tan (x) ==
+  return 1;
+-- Notice it always answers the value corresponding to x=45
+
+
+into2pi: real ==> real 
+into2pi (x) ==
+  return 
+    cases true:
+      (x >= 0 and x < 360) -> x,
+      (x >= 360)           -> let d = x/360 in
+                              x - floor(x)*360,
+      (x < 0)              -> let d = -x/360 in
+                              x + (floor(d)+1)*360
+    end;
+
+ceil : real ==> int
+ceil (x) ==
+  let z = floor (x) in
+  return if z < x
+         then z+1
+         else z;
+
+max: set of real ==> real
+max (s) ==
+  let x in set s be st forall y in set s & x >= y in
+  return x
+pre s <> {};
+
+min: set of real ==> real
+min (s) ==
+  let x in set s be st forall y in set s & x <= y in
+  return x
+pre s <> {};
+
+average: seq of real ==> real 
+average (s) ==
+( dcl res : real := 0;
+  if s <> []
+  then
+  ( for x in s do
+      res := res + x;
+    return res / len s )
+  else return res
+);
+
+
+polyCentroid: seq of (real * real) ==> real * (real * real)
+polyCentroid (corners) ==
+( dcl area : real := 0,
+      xCent : real := 0,
+      yCent : real := 0;
+  for i = 2 to len corners  do
+    let mk_(xi_1, yi_1) = corners(i-1),
+        mk_(xi, yi) = corners(i) in
+    let ai = xi_1 * yi - xi * yi_1 in
+    ( area := area + ai;
+      xCent := xCent + (xi + xi_1) * ai;
+      yCent := yCent + (yi + yi_1) * ai );
+  let mk_(x1, y1) = corners(1),
+      mk_(xn, yn) = corners(len corners) in
+  let a1 = xn * y1 - x1 * yn in
+  ( area := area + a1;
+    xCent := xCent + (xn + x1) * a1;
+    yCent := yCent + (yn + y1) * a1 );
+
+  let area_3 = 3 * area in
+  return mk_(area/2, mk_(xCent/area_3, yCent/area_3))
+)
+pre len corners > 2;
+
+polyArea: seq of (real * real) ==> real
+polyArea (corners) ==
+( dcl area : real := 0;
+  for i = 2 to len corners  do
+    let mk_(xi_1, yi_1) = corners(i-1),
+        mk_(xi, yi) = corners(i) in
+    let ai = xi_1 * yi - xi * yi_1 in
+    area := area + ai;
+  let mk_(x1, y1) = corners(1),
+      mk_(xn, yn) = corners(len corners) in
+  let a1 = xn * y1 - x1 * yn in
+  area := area + a1;
+  return area / 2
+)
+pre len corners > 2 ;
+
+epsilonSmall: real ==> bool 
+epsilonSmall (d) ==
+  return abs d < epsilonsize;
+
+end Math

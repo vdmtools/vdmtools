@@ -1,0 +1,14 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+return 
+let a = { false |-> true, 9.6 |-> 623},
+    b = [ i > 3.6 | i in set {3,6,2,1,46 } ]
+in
+ { "InMapApply" |-> 
+   [
+   ( let a : inmap nat to nat = { 3 |-> 4, 5 |-> 6}
+     in a)(let a = 3 in a)
+
+   ]
+}
+ 

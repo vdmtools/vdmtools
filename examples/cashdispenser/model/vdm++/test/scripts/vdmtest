@@ -1,0 +1,37 @@
+#!/bin/sh   
+
+## Runs a VDM test example for one argument file.
+
+## Output the argument to stdout (for redirect) and
+## "/dev/tty" (for user feedback)
+echo "VDM Test: '$1'" > /dev/tty
+echo "VDM Test: '$1'"
+
+MODELDIR=../..
+TESTDIR=..
+SPEC="$MODELDIR/Account.rtf $MODELDIR/Card.rtf $MODELDIR/CardHolder.rtf \
+      $MODELDIR/CentralResource.rtf $MODELDIR/Clock.rtf \
+      $MODELDIR/Letter.rtf $MODELDIR/Letterbox.rtf $MODELDIR/Till.rtf 
+      $TESTDIR/Event.rtf $TESTDIR/GetBalance.rtf \
+      $TESTDIR/InsertCard.rtf $TESTDIR/ReturnCard.rtf \
+      $TESTDIR/SendStatement.rtf $TESTDIR/System.rtf \
+      $TESTDIR/Test.rtf $TESTDIR/Validate.rtf $TESTDIR/Withdrawal.rtf \
+      $TESTDIR/IllegalCard.rtf"
+
+
+## Run the specification with argument while collecting
+## test coverage information, and write the result to an
+## output file.
+vppde -iDIPQ -R vdm.tc -O $1.res $1 $SPEC
+
+## Check for difference between result of execution
+## and expected result.
+diff -w $1.res $1.exp
+if test $? = 0 ; then
+  echo "SUCCESS: Result equals expected result" > /dev/tty
+  echo "SUCCESS: Result equals expected result"
+else
+  echo "FAILURE: Result differs from expected result" > /dev/tty
+  echo "FAILURE: Result differs from expected result"
+fi
+

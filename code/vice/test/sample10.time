@@ -1,0 +1,5 @@
+# Check that syntax error is spotted - missing instruction
+
+AddEnv 3;
+ 4;
+*   : nat   10;

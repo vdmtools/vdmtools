@@ -1,0 +1,907 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    This module provides functions generating code corresponding to
+%    modules.
+% $Id: mod_mod.vdm,v 1.36 2002/01/22 06:59:54 richard Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+%% Stuff relating to Java commented out to avoid type errors with SL
+%% version: many of the functions on which it depends are only
+%% available in the PP versions of the specs because they are inside
+%% ifdefs -- RM
+
+The module $MOD$ (MODule) contains functions generating code
+corresponding to a module.
+
+\begin{vdm_al}
+
+
+module MOD
+
+imports
+  from CGMAIN all,
+  from CPP all,
+  from AS all,
+  from REP all,
+  from CI all,
+  from BC all,
+  from CGAUX all,
+  from DS all,
+  from TD all,
+  from TYPE all,
+  from ENV all,
+  from FD
+    operations
+    --IncludeImplicit: () ==> CPP`CPPAS;
+    IncludeExternalCC: () ==> CPP`CPPAS;
+    --ContainsImplicitFct: () ==> bool;
+    --GetImplicitFcts: () ==> CPP`CPPAS
+
+    operations
+    GenFctDef: AS`FnDef * bool ==> CPP`CPPAS;
+    GenOpDef: AS`Name * AS`OpDef * FD`GenericStateDef * bool ==> CPP`CPPAS;
+    GenExpFctOpDecl: AS`Name * (AS`FnDef | AS`OpDef) *
+                     ([CPP`StorageClassSpecifier]|[CPP`Modifier]) * FD`GenericStateDef * AS`Module
+                     ==> CPP`CPPAS | seq of CPP`MemberDeclaration;
+    GenFctOpDecl : AS`Name * (AS`FnDef | AS`OpDef) *
+                   ([CPP`StorageClassSpecifier]|[CPP`Modifier]) * FD`GenericStateDef
+                   ==> CPP`CPPAS | seq of CPP`MemberDeclaration;
+    types
+      GenericStateDef = [AS`StateDef],
+
+  from SD
+    operations
+    GenStateDef: AS`StateDef  ==> CPP`CPPAS * seq of CPP`Stmt,
+
+--  from TD
+--    operations
+--               GenInvDecl: seq of AS`TypeDef ==> CPP`CPPAS;
+--               GenVDMLibInit: AS`Name * map AS`Name to AS`TypeDef ==>
+--                              seq of CPP`FunctionDefinition;
+--               GenInvDef: seq of AS`TypeDef ==> CPP`CPPAS | seq of CPP`MemberDeclaration,
+
+  from VD
+    operations
+    GenValDef: seq of AS`ValueDef ==>
+          ( seq of ( CPP`DeclSpecifier * CPP`Name ) ) * ( seq of CPP`Stmt ),
+
+  from TPGEN all
+
+--  from DS
+--    functions GiveLibName: () -> CPP`FileName
+
+
+
+
+exports
+  operations
+  GenModule: AS`Module ==> CPP`Files
+
+definitions
+
+\end{vdm_al}
+
+The overall strategies for code generation of modules are shown by an
+example containing two modules, {\tt M} and {\tt N}. Consider the
+module {\tt M}:
+
+\begin{quote}
+\begin{verbatim}
+module M
+
+exports
+  values step : int
+  operations GetSt: nat ==> nat
+
+definitions
+
+values
+  step : nat1 = 1;
+  offset = 10
+
+operations
+
+  GetSt: nat ==> nat
+  GetSt(n) ==
+    return n + offset
+
+end M
+\end{verbatim}
+\end{quote}
+
+The code corresponding to a VDM-SL module is divided into a `.h' and a
+`.cc' file. This is done such that all exported constructs are
+declared in the `.h' file and the rest is declared in the `.cc' file.
+All constructs are defined in the `.cc' file. The only exception to
+this, is that all definitions corresponding to type definitions are
+placed in the `.h' file, whether they are exported or not. The header
+file corresponding to module {\tt M}, {\tt M.h}, is shown below:
+
+\begin{quote}
+\begin{alltt}
+{#ifndef _M_h}
+{#define _M_h}
+
+{#include <math.h>}
+{#include "metaiv.h"}
+{#include "cg.h"}
+{#include "cg_aux.h"}
+
+extern Int vdm_M_step;
+
+void init_M();
+Int vdm_M_GetSt(Int);
+
+{#endif}
+\end{alltt}
+\end{quote}
+
+First, external definitions are included, then the interface to the
+module is present. The record tag corresponding to type {\tt A} is
+defined as an integer, {\tt vdm\_M\_A}. Exported values are declared
+as externals, and finally exported functions and operations are
+declared. Notice, that a function named {\tt
+  init\_M} has been declared. This function is used to initialize all
+values and state variables of the module.
+
+The implementation file, {\tt M.cc}:
+
+\begin{quote}
+\begin{alltt}
+{#include "M.h"}
+
+Int vdm_M_step;
+static Int vdm_M_offset;
+
+void init_M() \{
+  vdm_M_step = Int(1);
+  vdm_M_offset = Int(10);
+\}
+
+Int vdm_M_GetSt(Int vdm_M_a) \{
+  return vdm_M_a + vdm_M_offset;
+\}
+\end{alltt}
+\end{quote}
+
+The `.h' file is imported in the `.cc' file. All values and state
+variables are declared as C++ variables, which are made static for
+those which are not exported.  Next, non exported functions and
+operations are declared as static functions\footnote{All operations
+  are exported form module {\tt M}.}, and at last all functions and
+operations are defined as C++ functions.
+
+
+Next we turn our attention to the module {\tt N}, which imports and
+renames constructs from module {\tt M}:
+
+\begin{quote}
+\begin{verbatim}
+module N
+
+imports
+
+from M
+  operations GetSt: nat ==> nat renamed INC
+
+exports all
+
+definitions
+
+operations
+
+  SetAndGet: nat ==> nat
+  SetAndGet(n) ==
+  return INC(n)
+
+
+end N
+\end{verbatim}
+\end{quote}
+
+The header file of module {\tt N}, {\tt N.h}, is straightforward:
+
+\begin{quote}
+\begin{alltt}
+{#ifndef _N_h}
+{#define _N_h}
+
+{#include <math.h>}
+{#include "metaiv.h"}
+{#include "cg.h"}
+{#include "cg_aux.h"}
+{#include "M.h"}
+
+void init_N();
+Int vdm_N_SetAndGet(Int);
+
+{#endif}
+\end{alltt}
+\end{quote}
+
+Notice, that {\tt M.h} is included.
+
+The `.cc' file corresponding to module {\tt N}, {\tt N.cc}:
+
+\begin{quote}
+\begin{alltt}
+{#include "N.h"}
+
+{#define vdm_N_INC vdm_M_GetSt}
+
+void init_N() \{\}
+
+Int vdm_N_SetAndGet(Int vdm_n) \{
+  return vdm_N_INC(vdm_n);
+\}
+\end{alltt}
+\end{quote}
+
+Module {\tt N} renames the operation {\tt GetSt}, defined in module {\tt
+M}. This renaming is resolved by C++ macro definitions.
+
+The files ``{\tt math.h}'', ``{\tt metaiv.h}'', ``{\tt cg.h}'' and
+``{\tt cg\_aux.h}'' are included in each `.h' file (see section
+\ref{sec:import}). The difference between ``{\tt cg.h}'' and ``{\tt
+  cg\_aux.h}'' is that ``{\tt cg.h}'' contains a number of fixed code
+generator definitions whereas ``{\tt cg\_aux.h}'' contains auxiliary
+functions which are depending on the used C++ class library (in this
+case the Meta-IV Class Library).
+
+Finally we consider how to use the generated code. The user writes
+e.g.\ the following code:
+
+\begin{quote}
+\begin{alltt}
+{#include <fstream.h>}
+{#include "N.h"}
+{#include "M.h"}
+
+main ()
+\{
+  init_M();  // Initialize module M
+  init_N();  // Initialize module N
+  cout << "M`step: " << vdm_M_step.ascii() << "\\n";
+  cout << "M`GetSt(10): " << vdm_M_GetSt(Int(10)).ascii() << "\\n";
+  cout << "N`SetAndGet(20): " << vdm_N_SetAndGet(20).ascii() << "\\n";
+\}
+\end{alltt}
+\end{quote}
+
+Notice, that it is the users responsibility to initialize the modules
+(in the right order).
+
+The user code above executes to:
+
+\begin{quote}
+\begin{verbatim}
+M`step: 1
+M`GetSt(): 60
+N`SetAndGet(20): 81
+\end{verbatim}
+\end{quote}
+
+
+The operation $GenModule$ is the main operation in the module
+
+$MOD$ it generates a `.h' file and `.cc' file corresponding to
+the module to be translated. %For Java a `.java' file is generated.
+
+
+The operation {\em GenModule} checks if the module is or uses parameterised modules.
+The code generator does not support parameterised modules.
+
+\begin{vdm_al}
+operations
+
+  GenModule: AS`Module ==> CPP`Files
+  GenModule(md) ==
+  ( dcl files : CPP`Files := {};
+
+   ENV`InitEnv();
+   def - = ENV`ExpandModule(<POS>, md) in skip;
+
+   TPGEN`InitState(md.nm);           -- init the state of the typegenerator
+
+   let mk_AS`Module(nm,-,-,-) = md in
+      CGAUX`InitState(nm);
+    BC`ResetVarno();
+-- -- Java stuff
+--    if CPP`isJAVA() then
+--     (files := files union {GenJavaFile(md)};
+--      files := if (card CGAUX`UsedQuotes() > 0) then files union CGAUX`GenJavaQuoteFiles()
+--               else files;
+--      files := if FD`ContainsImplicitFct() then files union {GenJavaExternalFile(md)}
+--               else files;
+--     )
+--    else
+     (files := files union {GenHFile(md)};
+      files := files union {GenCCFile(md) };
+      files := files union TPGEN`GenAnonymFiles(md););
+
+    return files
+  );
+
+\end{vdm_al}
+
+The operation $GenHFile$ generates a `.h' file corresponding to one
+module. The `.h' file contains the following:
+
+
+\begin{itemize}
+\item Include preprocessors for imported modules and other interface
+  files used by the C++ code corresponding to the module.
+\item Definitions corresponding to (all) records defined in the
+  module.
+\item Declarations of functions corresponding to invariants on (all) types
+  defined in the module.
+\item Extern declarations of exported values.
+\item The declaration of exported  functions and their pre- and post
+  conditions.
+\item The declaration of exported operations and their pre- and post
+  conditions.
+\end{itemize}
+
+
+
+\begin{vdm_al}
+operations
+GenHFile: AS`Module ==> CPP`File
+GenHFile( md  ) ==
+  def mk_AS`Module(nm, intf, defs,-) = md;
+      mk_AS`Interface(imp_m, exp, -) = intf;
+      mk_AS`Definitions(type_m, vd_l, fn_m, op_m, sd, -, -) = defs;
+      id = CGAUX`GiveLastName(nm)
+  in
+   (dcl pp : CPP`Preprocessors := [],
+        --cpp: CPP`CPPAS := GenTypes(md),
+        cpp: CPP`CPPAS := GenTypes( nm, type_m, sd ),
+        vals  : [set of AS`Name] := nil,
+        efn_s : set of AS`Name := dom fn_m,
+        eop_s : set of AS`Name := dom op_m;
+    if exp <> nil
+    then
+      let mk_AS`ExportSig(-, val_m, efn_m, eop_m, -) = exp
+      in
+       (vals := dom val_m;
+        efn_s := RemPrePost(efn_m);
+        eop_s := RemPrePost(eop_m);
+       );
+
+    -- INCLUDES
+
+    pp := GenImports(dom imp_m);
+    pp := pp ^ TPGEN`GenModuleHIncludes();
+
+    -- GENERATE VALUES
+
+    if CGMAIN`OptionGenValues()
+    then
+     (cpp := cpp ^ GenExportedValues(vals, vd_l);
+      cpp := cpp ^ [ GenInitDecl(nm) ]
+     );
+
+    -- GENERATED TYPES
+
+    cpp := cpp ^ TPGEN`GenModuleHPart();
+
+    -- FUNCTION/OPERATION DECLARATIONS
+
+    if CGMAIN`OptionGenFctOps()
+    then
+      let fn'_m = { nm |-> fn_m(nm) | nm in set efn_s },
+          op'_m = { nm |-> op_m(nm) | nm in set eop_s }
+      in cpp := cpp ^ GenExpSigs(fn'_m munion op'_m, sd, md);
+
+    return BC`GenFile(nil, id ^ ".h", pp, cpp)
+   );
+\end{vdm_al}
+
+
+The function {\em RemPrePost} takes the export signature of functions
+and operations and generates a set of names of the exported functions
+and operations. The operation removes all pre and post functions from
+the export signature. Thus, if a function/operation has a pre or post
+function, and the function is exported, so is the pre and post
+function too.
+
+
+\begin{vdm_al}
+RemPrePost: (map AS`Name to (AS`FnType | AS`OpType)) | (map AS`Name to  [(AS`TypeVarList * AS`FnType)])
+             ==>  set of AS`Name
+RemPrePost(fnop_m) ==
+
+return { name | name in set dom fnop_m &
+                let mk_AS`Name([id],-) = name in
+                "pre_" <> id(1,...,4) and
+                "post_" <> id(1,...,5) }
+pre forall name in set dom fnop_m &
+           let mk_AS`Name(l,-) = name
+           in len l = 1;
+\end{vdm_al}
+
+
+The `.cc' file contains:
+
+\begin{itemize}
+\item An include preprocessor of the corresponding `.h' file.
+
+\item Macro definitions corresponding to renamed constructs.
+
+\item Static declarations of state variables and values, functions and
+  operations which are not exported.
+
+\item Declarations of values which are exported.
+
+\item An optional include preprocessor of a file containing
+  implementation of implicit functions and operations.
+
+\item Function definitions corresponding to explicit functions and
+  operations, invariants on type definitions and pre and post conditions.
+\end{itemize}
+
+\begin{vdm_al}
+
+  GenCCFile: AS`Module ==> CPP`File
+  GenCCFile(md) ==
+    def mk_AS`Module(nm, intf, defs,-) = md;
+        mk_AS`Interface(imp_m, exp, -) = intf;
+        mk_AS`Definitions(type_m, -, fn_m, op_m, sd, -, -) = defs;
+        id = CGAUX`GiveLastName(nm)
+    in
+    ( dcl pp : seq of CPP`Preprocessor := [BC`GenInclusion(id ^ ".h")],
+          cpp: CPP`CPPAS := GenStaticVars(sd),
+          efn_s : set of AS`Name := dom fn_m,
+          eop_s : set of AS`Name := dom op_m;
+
+      pp := pp ^ TPGEN`GenModuleCCIncludes();
+
+      if exp <> nil then
+        let mk_AS`ExportSig(-, -, efn_m, eop_m,-) = exp in
+        ( efn_s := dom efn_m;
+          eop_s := dom eop_m
+        );
+      pp := pp ^ GenRename(nm, imp_m);
+
+
+      -- GENERATE TYPES
+
+      cpp := cpp ^ TPGEN`GenModuleCCPart();
+
+
+      -- GENERATE FUNCTIONS AND OPERATIONS ...
+
+      if CGMAIN`OptionGenFctOps() then (
+        let fn'_m = { nm |-> fn_m(nm) | nm in set dom fn_m & not nm in set efn_s },
+            op'_m = { nm |-> op_m(nm) | nm in set dom op_m & not nm in set eop_s } in
+        cpp := cpp ^ GenLocalSigs(fn'_m munion op'_m, sd)
+      );
+
+
+      -- TYPE INVARIANT FUNCTIONS
+      if CGMAIN`OptionGenTpInv() then (
+        cpp := cpp ^ GenTypeInvFcts(type_m, sd)
+      );
+
+      -- INITIALISATION OF THE VDM LIB W.R.T to RECORDS
+      def fd = TD`GenVDMLibInit(nm, type_m, sd);
+      in
+       (if fd <> []
+        then cpp := cpp ^ fd;
+
+        -- MODULE INITAILIZATION FUNCTION
+        if CGMAIN`OptionGenFctOps()
+        then
+          def def_l = [GenInitFct(nm, fd <> [])] ^ GenFctDef(fn_m,sd) ^ GenOpDef(op_m,sd)
+          in
+            cpp := cpp ^ FD`IncludeExternalCC() ^  def_l;
+       );
+
+      return BC`GenFile(nil,CGAUX`GenFileExt(id), pp, cpp)
+    );
+
+\end{vdm_al}
+
+\subsection{Import and Renaming}
+\label{sec:import}
+
+The operation generates the inclusion of `.h' files of imported
+modules and ``standard files''. That is, if module $A$ imports from
+module $B$ and $C$, then $GenImports$ will generate the following
+preprocessors:
+
+\begin{quote}
+\begin{alltt}
+{#include <math.h>}    // Used by some expressions.
+{#include "metaiv.h"}  // The used C++ class library.
+{#include "cg.h"}      // Code generator definitions and
+                     // auxiliary functions.
+{#include "cg_aux.h"}  // Library dependent auxiliary functions.
+{#include "B.h"}       // Header file of module B.
+{#include "C.h"}       // Header file of module C.
+\end{alltt}
+\end{quote}
+
+Note: the surrounding {\tt \#ifndef .... \#endif} in `.h' files are
+generated by the code generator back-end.
+
+\begin{vdm_al}
+operations
+
+GenImports: set of AS`Name ==> CPP`Preprocessors
+GenImports(imp_s) ==
+ (dcl pp : seq of CPP`Preprocessor := [BC`GenSqIncl("math.h")];
+  pp := pp ^ [BC`GenInclusion(DS`GiveLibName())];
+  pp := pp ^ [BC`GenInclusion("cg.h")];
+  pp := pp ^ [BC`GenInclusion("cg_aux.h")];
+  for all nm in set imp_s do
+    def id = CGAUX`GiveLastName(nm)
+    in pp := pp ^ [BC`GenInclusion(id ^ ".h")];
+  return pp
+ );
+
+\end{vdm_al}
+
+The operation $GenRename$ generates a sequence of C++ preprocessors
+corresponding to renaming of imported constructs. If the function $f$
+e.g.\ is imported from module $A$ to module $B$, where it is renamed
+$g$, then $GenRename$ generates the following macro:
+
+\begin{quote}
+\begin{verbatim}
+#define vdm_B_g vdm_A_f
+\end{verbatim}
+\end{quote}
+
+if the construct is a Composite type the necessary defines to handled field select and
+the length of the record are also generated.
+
+\begin{vdm_al}
+GenRename: AS`Name * map AS`Name to [AS`ImportSig] ==> CPP`Preprocessors
+GenRename(curmod, imp_m) ==
+ (dcl pp : CPP`Preprocessors := [],
+      modid : AS`Id := "vdm_" ^ CGAUX`GiveLastName(curmod) ^ "_";
+  for all nm in set dom imp_m do
+    let isig = imp_m(nm)
+    in
+      if not isig = nil
+      then
+        def mk_AS`ImportSig(tp_m,-,-,-, ren_m,-) = isig;
+            imod = "vdm_" ^ CGAUX`GiveLastName(nm) ^ "_"
+        in
+          for all newnm in set dom ren_m do
+            def oldnm = ren_m(newnm);
+                newid = CGAUX`GiveLastName(newnm);
+                oldid = CGAUX`GiveLastName(oldnm);
+                newmac = modid ^ newid;
+                oldmac = imod ^ oldid
+            in
+             (pp := pp ^ [ BC`GenIdMacroDef(newmac, oldmac) ];
+              if oldnm in set dom tp_m
+              then
+                let td = tp_m(oldnm)
+                in
+                  if td <> nil
+                  then
+                    let mk_AS`TypeDef(-, tp, -,-, -) = td
+                    in
+                      if is_AS`CompositeType(tp)
+                      then
+                       (pp := pp ^ GenRenameRecord(nm, newnm, tp);
+                        pp := pp ^ GenRenameInv(nm, newnm, td)
+                       )
+                  else skip
+--                else
+--                  let lottp=TPGEN`LOT(mk_REP`TypeNameRep(oldnm)) in
+--                  if is_REP`CompositeTypeRep(lottp) then
+--                    ( pp := pp ^ GenRenameRecord(nm, newnm, lottp)
+--                     )
+
+            );
+    return pp
+  );
+\end{vdm_al}
+
+\begin{vdm_al}
+GenRenameRecord: AS`Name * AS`Name * AS`CompositeType ==> CPP`Preprocessors
+GenRenameRecord(oldmod, newnm, mk_AS`CompositeType(oldnm, field_l,-)) ==
+  let mk_AS`Name(oldid_l, cid) = oldnm,
+      mk_AS`Name(oldmod_l, -) = oldmod,
+      oldnm' = mk_AS`Name(oldmod_l ^ oldid_l, cid),
+      newlen = BC`GenLengthId(newnm),
+      oldlen = BC`GenLengthId(oldnm')
+  in
+   (dcl pp : CPP`Preprocessors := [BC`GenIdMacroDef(newlen, oldlen)];
+
+    for mk_AS`Field(sel, -, -, -) in field_l do
+      if sel <> nil
+      then
+        let newpos = BC`GenPosId(newnm, sel),
+            oldpos = BC`GenPosId(oldnm', sel)
+        in pp := pp ^ [BC`GenIdMacroDef(newpos, oldpos)];
+
+    pp := pp ^ def oldmodnm = CGAUX`GiveLastName(oldmod);
+                   oldtpnm = CGAUX`GiveLastName(oldnm);
+                   newmodnm = CGAUX`GiveCurCName();
+                   newtpnm = CGAUX`GiveLastName(newnm);
+                   oldname = "TYPE_" ^ oldmodnm ^ "_" ^ oldtpnm;
+                   newname = "TYPE_" ^ newmodnm ^ "_" ^ newtpnm
+               in [BC`GenIdMacroDef(newname, oldname)];
+    return pp;
+   );
+
+GenRenameInv: AS`Name * AS`Name * AS`TypeDef ==> CPP`Preprocessors
+GenRenameInv(oldmod, newnm, mk_AS`TypeDef(oldnm, -, Inv,-,-)) ==
+  if Inv = nil
+  then return []
+  else
+    let mk_AS`Name(oldid_l, cid) = BC`GivePrePostName(oldnm, "inv"),
+        mk_AS`Name(oldmod_l, -) = oldmod,
+        oldnm' = mk_AS`Name(oldmod_l ^ oldid_l, cid),
+        newnm' = BC`GivePrePostName(newnm, "inv")
+    in
+     def mk_CPP`Identifier(oldid,-) = BC`Rename(oldnm');
+         mk_CPP`Identifier(newid,-) = BC`Rename(newnm')
+     in return [BC`GenIdMacroDef(newid, oldid)];
+\end{vdm_al}
+
+\subsection{Type Definitions}
+
+The operation $GenTypes$ generates a tuple containing a sequence of
+C++ macro definitions corresponding to records and a sequence of
+function declarations corresponding to invariants on types defined in
+the module $nm$.
+
+\begin{vdm_al}
+GenTypes: AS`Name * map AS`Name to AS`TypeDef * [AS`StateDef] ==> CPP`CPPAS
+GenTypes( nm, type_m, sd ) ==
+ (dcl type_l: seq of AS`TypeDef := [];
+  if sd <> nil
+  then
+    let mk_AS`StateDef(tp, Inv, -, -) = sd
+    in type_l := [mk_AS`TypeDef(tp.name, tp, Inv, <DEFAULT_AS>, CI`NilContextId)];
+  for all tpnm in set dom type_m do
+    (type_l := type_l ^ [ type_m(tpnm) ];
+  def - = CGAUX`InsertGlobalName(tpnm) in skip;);
+  return DS`GenTypeDef(nm, type_l) ^ TD`GenInvDecl(type_l);
+ );
+\end{vdm_al}
+
+The operation $GenInvDef$ generates a sequence of function definitions
+corresponding to invariants on the type definitions in $type_m$.
+
+\begin{vdm_al}
+GenTypeInvFcts: map AS`Name to AS`TypeDef * [AS`StateDef] ==> CPP`CPPAS
+GenTypeInvFcts(type_m, sd) ==
+ (dcl type_l: seq of AS`TypeDef := [];
+  if sd <> nil
+  then
+    let mk_AS`StateDef(tp, Inv, -,-) = sd
+    in type_l := [mk_AS`TypeDef(tp.name, tp, Inv, <DEFAULT_AS>, CI`NilContextId)];
+  for all tpnm in set dom type_m do
+    type_l := type_l ^ [ type_m(tpnm) ];
+  return TD`GenInvDef(type_l));
+\end{vdm_al}
+
+\subsection{Value and State Definitions}
+
+
+Code corresponding to values and state variables are divided into two
+parts: C++ declarations and initialization statements. The
+declarations are divided into declarations corresponding to exported
+and private values/states. Only the declarations corresponding to
+values and state variables which are exported are placed in the `.h'
+file. The state $Sigma$ is used to hold initialization statements,
+$vi-l$, and non exported ({\tt static}) declarations. These state
+variables are updated through the code generation of the header file.
+
+\begin{vdm_al}
+
+state Sigma of
+  vi_l : seq of CPP`Stmt
+  idecl_l : seq of CPP`IdentDeclaration
+  init s == s = mk_Sigma([],[])
+end
+
+\end{vdm_al}
+
+The operation $GenExportedValues$ generates code corresponding to {\em
+  all\/} value definitions, and returns a sequence of ({\tt extern})
+declarations of the exported values. This operation updates both
+$vi-l$ and $idecl_l$.
+
+(Jojo: Skulle hedde GenValues)
+
+\begin{vdm_al}
+operations
+
+GenExportedValues: [set of AS`Name] * seq of AS`ValueDef ==> seq of CPP`IdentDeclaration
+GenExportedValues(nms, vd_l) ==
+  def mk_(decl_l,stmt_l) = VD`GenValDef(vd_l)
+  in
+   (dcl res_l : seq of CPP`IdentDeclaration := [];
+    idecl_l := [];
+    vi_l := if decl_l <> []
+            then stmt_l
+            else [];
+    if nms = nil
+    then
+      for mk_(dl, nm) in decl_l do
+       (idecl_l := idecl_l ^ [BC`GenIdentDecl([], [dl], nm, nil)];
+        def d_l = [BC`GenStorageClassSpecifier(<EXTERN>), dl]
+        in
+          res_l := res_l ^ [BC`GenIdentDecl([], d_l, nm, nil)]
+       )
+    else
+      def id_s = { BC`Rename(nm) | nm in set nms }
+      in
+        for mk_(dl, nm) in decl_l do
+          if nm in set id_s
+          then
+           (idecl_l := idecl_l ^ [BC`GenIdentDecl([], [dl], nm, nil)];
+             def d_l = [BC`GenStorageClassSpecifier(<EXTERN>), dl]
+             in res_l := res_l ^ [BC`GenIdentDecl([], d_l, nm, nil)]
+           )
+          else idecl_l := idecl_l ^ [BC`GenIdentDecl([], [BC`GenModifier(<STATIC>), dl], nm, nil)];
+    return res_l;
+   );
+\end{vdm_al}
+
+The operation $GenInitFct$ generates the initialization function of
+the module. This operation takes the name of the module as parameter
+and its type definitions. The initialization function of module $A$
+will take the form:
+
+\begin{quote}
+\begin{verbatim}
+void init_A() {
+  // initialization of values
+  // initialization of state variables
+  // initialization of the VDM library w.r.t. to Record tags.
+}
+\end{verbatim}
+\end{quote}
+
+\begin{vdm_al}
+GenInitFct: AS`Name * bool ==> CPP`FunctionDefinition
+GenInitFct(nm, genvdmlib) ==
+ (dcl rb_l : seq of CPP`Stmt := [];
+  if genvdmlib
+  then
+    def id_lib_init = BC`GenIdentifier("init_" ^ CGAUX`GiveLastName(nm) ^ "_VDMLib");
+        f_lib_init = BC`GenExpressionStmt(BC`GenFctCall(id_lib_init, []));
+    in rb_l := rb_l ^ [f_lib_init];
+  rb_l := rb_l ^ vi_l;
+  def ini = BC`GenBlock( rb_l );
+      id = BC`GenIdentifier("init_" ^ CGAUX`GiveLastName(nm));
+      ds_l = [BC`GenTypeSpecifier(BC`GenVoid())];
+      fdecl = BC`GenFctDecl(id, [])
+  in return BC`GenFctDef(ds_l, fdecl, nil, ini);
+ );
+\end{vdm_al}
+
+The operation $GenInitDecl$ generates the function declaration
+corresponding to the initialization function.
+
+\begin{vdm_al}
+GenInitDecl: AS`Name ==> CPP`IdentDeclaration
+GenInitDecl(nm) ==
+  def id = BC`GenIdentifier("init_" ^ CGAUX`GiveLastName(nm));
+      ds_l = [BC`GenTypeSpecifier(BC`GenVoid())]
+  in return BC`GenIdentDecl([], ds_l, BC`GenFctDecl(id, []), nil);
+\end{vdm_al}
+
+The operation $GenStaticVars$ returns a sequence of declatations of
+variables (values and state variables) which are not exported from the
+module. This operation updates the state variable $vi-l$,
+corresponding to the (optional) state definition $sd$.
+
+\begin{vdm_al}
+GenStaticVars: [AS`StateDef] ==> seq of CPP`IdentDeclaration
+GenStaticVars(sd) ==
+  if sd = nil
+  then return idecl_l
+  else
+    def mk_(d_l, initl) = SD`GenStateDef(sd)
+    in
+     (vi_l := vi_l ^ initl;
+      return idecl_l ^ d_l);
+\end{vdm_al}
+
+\subsection{Function and Operation Definitions}
+
+The operation $GenExpSigs$ generates function declarations
+corresponding to exported functions and operations. That is, the
+function declarations appearing in the `.h' file.
+
+\begin{vdm_al}
+GenExpSigs: map AS`Name to (AS`FnDef | AS`OpDef) * [AS` StateDef] * AS`Module ==> CPP`CPPAS
+GenExpSigs(def_m, sd, md) ==
+ (dcl cpp : CPP`CPPAS := [];
+  for all nm in set dom def_m do
+    cpp := cpp ^ FD`GenExpFctOpDecl(nm, def_m(nm), nil, sd, md);
+
+  if sd <> nil
+  then
+    let fn = GenInitStateFnDef(sd)
+    in
+      if fn <> nil
+      then cpp := cpp ^ FD`GenExpFctOpDecl(fn.nm, fn, nil, sd, md);
+
+  return cpp);
+\end{vdm_al}
+
+The operation $GenLocalSigs$ generates function declarations
+corresponding to functions and operations which are {\em not\/}
+exported from the module. That is, the {\tt static} functions in the
+`.cc' file.
+
+\begin{vdm_al}
+GenLocalSigs: map AS`Name to (AS`FnDef | AS`OpDef) * [AS`StateDef] ==> CPP`CPPAS
+GenLocalSigs(fn_m, sd) ==
+ (dcl cpp : CPP`CPPAS := [];
+  for all nm in set dom fn_m do
+    cpp := cpp ^ FD`GenFctOpDecl(nm, fn_m(nm), BC`GenModifier(<STATIC>), sd);
+  return cpp);
+\end{vdm_al}
+
+The operation $GenFctDef$ returns a sequence of C++ function
+definitions corresponding to the function definitions in $fn_m$.
+
+\begin{vdm_al}
+
+GenFctDef: map AS`Name to AS`FnDef * [AS`StateDef] ==> CPP`CPPAS
+GenFctDef(fn_m,sd) ==
+ (dcl cpp : CPP`CPPAS := [];
+  for all nm in set dom fn_m do
+    cpp := cpp ^ FD`GenFctDef(fn_m(nm),false); -- FIXME: DL MODULES??
+
+  if sd <> nil
+  then
+    let fn = GenInitStateFnDef(sd)
+    in
+      if fn <> nil
+      then cpp := cpp ^ FD`GenFctDef(fn,false);
+
+  return cpp);
+\end{vdm_al}
+
+The operation $GenOpDef$ returns a sequence of C++ function
+definitions corresponding to the operation definitions in $op_m$.
+
+\begin{vdm_al}
+
+GenOpDef: map AS`Name to AS`OpDef * [AS`StateDef] ==> CPP`CPPAS
+GenOpDef(op_m, sd) ==
+ (dcl cpp : CPP`CPPAS := [];
+  for all nm in set dom op_m do
+   (CGAUX`CurrentMethod(nm);
+    cpp := cpp ^ FD`GenOpDef(nm, op_m(nm), sd, false)
+   );
+  return cpp
+ );
+
+functions
+GenInitStateFnDef: AS`StateDef -> [AS`ExplFnDef]
+GenInitStateFnDef(mk_AS`StateDef(tp,-,Init,-)) ==
+  if Init <> nil
+  then
+    let mk_AS`CompositeType(name,-,-) = tp,
+        mk_AS`StateInit(pattern,expr,-) = Init,
+        inm = BC`GivePrePostName(name,"init"),
+        tfp = mk_AS`TotalFnType([tp],mk_AS`BooleanType(CI`NilContextId),CI`NilContextId),
+         body = mk_AS`FnBody(expr,CI`NilContextId)
+    in
+      mk_AS`ExplFnDef(inm,[],tfp,[[pattern]],body,nil,nil,<PUBLIC_AS>,false,nil,CI`NilContextId)
+  else nil;
+
+end MOD
+
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[GenExportedValues]
+{rtinfo.ast}[MOD]
+\end{rtinfo}

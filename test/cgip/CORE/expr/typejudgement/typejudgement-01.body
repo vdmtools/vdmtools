@@ -1,0 +1,14 @@
+class A
+
+types
+
+  Even = int
+  inv v == v mod 2 = 0;
+
+operations
+
+  public Test :() ==> bool
+  Test() ==
+   return is_(77,Even)
+
+end A

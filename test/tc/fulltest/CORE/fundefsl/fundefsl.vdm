@@ -1,0 +1,153 @@
+class FunDefSlTest
+
+types
+
+  FunType = nat -> nat -> bool;
+
+  FunType1 = bool -> nat -> FunType;
+
+  FunType2 = FunType -> bool
+  
+functions
+
+  FunDefSl1: nat -> nat -> bool
+  FunDefSl1(n)(m) ==
+    n < m;
+
+  FunDefSl2: nat * nat -> set of nat -> bool
+  FunDefSl2(n,m)(s1 union s2) ==
+    (n in set s1) or
+    (m in set s2);
+
+  FunDefSl3: nat * set of bool -> nat -> bool
+  FunDefSl3(n,s)(n) ==
+    n in set s;
+
+  FunDefSl4[@A, @B]: seq of @A * set of @B -> bool
+  FunDefSl4(l,s) ==
+    len l = card s;
+
+  FunDefSl5[@A,@B,@C]: nat * @A * (@A -> @B) -> @B
+  FunDefSl5(n,a,f) ==
+    if n = 0
+    then f(a)
+    else FunDefSl5[@A,@B,@C](n+1,a,f);
+
+  FunDefSl6: seq of nat * set of bool -> bool
+  FunDefSl6(l,s) ==
+    FunDefSl4[nat,bool](l,s);
+
+  FunDefSl7[@A] (a1,a2: @A,l1 ^ l2 : seq of nat) r : (@A * bool)
+  pre l1 <> []
+  post r = mk_(if 4 > 8 then a1 else a2, len l2 > 7);
+
+  FunDefSl8[@B] (b1, b2 : @B) r : bool
+  pre b1 <> b2
+  post pre_FunDefSl8[nat](3,5) and r <=> (b1 <> b2);
+
+  FunDefSl9: nat -> nat -> bool
+  FunDefSl9(n)(m) ==
+    n > m
+  post RESULT <=> (m <= n);
+
+  FunDefSl10: nat -> nat
+  FunDefSl10(n) ==
+    FunDefSl5[nat,nat,nat](1,4,FunDefSl10)
+  post RESULT = 4;
+
+  FunDefSl11: nat -> (nat -> nat)
+  FunDefSl11(a) ==
+    lambda b : nat & a + b;
+
+  FunDefSl12[@Fun]: @Fun -> int
+  FunDefSl12(a)(b) ==
+    a+b
+  pre a <> a
+  post true;
+
+  FunDefSl13: () -> int
+  FunDefSl13() ==
+    FunDefSl12[nat -> nat](1)(2);
+
+  FunDefSl14: nat -> nat -> nat
+  FunDefSl14(a) ==
+    lambda x : nat & 7;
+
+  FunDefSl15: set of rat -> nat1
+  FunDefSl15(s) ==
+    card s
+  pre let n = 7 in n;
+
+  FunDefSl16: FunType -> FunType
+  FunDefSl16(fun)(n1)(n2) ==
+    fun(n1)(n2);
+
+  FunDefSl17: FunType1 -> FunType1
+  FunDefSl17(fun1)(b)(n0)(n1)(n2) ==
+    b <=> fun1(b)(n0)(n1)(n2);
+
+  FunDefSl18: set of nat -> set of nat
+  FunDefSl18(s) ==
+    if s = {}
+    then let t = true in {t}
+    else {};
+
+  FunDefSl19: FunType2 -> bool
+  FunDefSl19(fun) ==
+   let localfn: nat +> nat -> bool
+       localfn(n1)(n2) ==
+         n1 <> n2
+   in
+     fun(localfn);
+
+  FunDefSl20: FunType2 -> bool
+  FunDefSl20(fun) ==
+   let localfn: nat +> (nat * nat) -> bool
+       localfn(n1)(mk_(n2,n3)) ==
+         n1 <> n2
+   in
+     fun(localfn);
+
+  FunDefSl21: nat -> (nat * nat) -> bool
+  FunDefSl21(a)(mk_(b,c)) ==
+    FunDefSl21(7)(mk_(6,5))      
+
+types
+
+  Vector = map nat to nat
+
+functions
+
+  FunDefSl22: (nat * nat -> nat)  ->  (Vector * Vector -> Vector)
+  FunDefSl22(op) == lambda mk_(v1,v2) : Vector * Vector & 
+		{ x |-> op(v1(x),v2(x)) | 
+			x in set (dom v1 inter dom v2) };
+
+  FunDefSl23: (nat * nat -> nat)  ->  (Vector * Vector -> Vector)
+  FunDefSl23(op) == 
+   FunDefSl22(op);
+
+
+types
+
+  A :: a: int
+       b: bool
+
+
+functions
+
+  FunDefSl24: nat -> nat
+  FunDefSl24(a) ==
+    if a=1
+    then a<6
+    else let n = nil in n;
+
+  FunDefSl25: A -> bool * seq of char
+  FunDefSl25(aa) ==
+    cases aa:
+      mk_A(1,true) -> mk_A(1,false),
+      mk_A(a,b) -> mk_(b,"test"),
+      others -> let one = 1 in mk_(one,one,one)
+    end
+
+end FunDefSlTest

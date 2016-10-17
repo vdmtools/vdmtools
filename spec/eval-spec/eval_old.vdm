@@ -1,0 +1,463 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Functions and Operations for the substitution of old names in 
+%    expresssions
+% $Id: eval_old.vdm,v 1.10 2001/02/19 12:24:34 paulm Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\chapter{Old Name Substitution}
+
+The module OLD contains all definitions related to the subsitution of old names.
+\begin{vdm_al}
+module OLD
+
+  imports 
+    from AS all,
+    from CI all,
+    from REP all
+
+  exports
+    functions
+     OldNameInExpr : AS`Expr -> AS`Expr
+
+definitions
+\end{vdm_al}
+
+\section{Patterns and Binds}
+
+\begin{vdm_al}
+functions
+
+OldNameInPattern : AS`PatternBind -> AS`PatternBind
+OldNameInPattern(pat) ==
+  cases pat:
+    mk_AS`PatternName(-,-,-)            -> pat,
+    mk_AS`MatchVal(val,cid)             -> mk_AS`MatchVal (OldNameInExpr (val),cid),
+    mk_AS`SetEnumPattern(els_l,cid)     -> def l = [ OldNameInPattern (els_l(i)) | i in set inds els_l ]
+                                           in mk_AS`SetEnumPattern (l,cid),
+    mk_AS`SetUnionPattern(lp,rp,cid)    -> mk_AS`SetUnionPattern(OldNameInPattern(lp), OldNameInPattern(rp), cid),
+    mk_AS`SeqEnumPattern(els_l,cid)     -> def l = [ OldNameInPattern (els_l(i)) | i in set inds els_l ]
+                                           in mk_AS`SeqEnumPattern (l,cid),
+    mk_AS`SeqConcPattern(lp,rp,cid)     -> mk_AS`SeqConcPattern(OldNameInPattern(lp), OldNameInPattern(rp), cid),
+    mk_AS`MapEnumPattern(mls_l,cid)     -> def l = [ OldNameInPattern (mls_l(i)) | i in set inds mls_l ]
+                                           in mk_AS`MapEnumPattern (l,cid),
+    mk_AS`MapMergePattern(lp,rp,cid)    -> mk_AS`MapMergePattern(OldNameInPattern(lp), OldNameInPattern(rp), cid),
+    mk_AS`MapletPattern(dp,rp,cid)      -> mk_AS`MapletPattern(OldNameInPattern(dp), OldNameInPattern(rp), cid),
+    mk_AS`RecordPattern(tag,fields,cid) -> def l = [ OldNameInPattern (fields(i)) | i in set inds fields ]
+                                           in mk_AS`RecordPattern (tag, l, cid),
+    mk_AS`TuplePattern(fields,cid)      -> def l = [ OldNameInPattern (fields(i)) | i in set inds fields ]
+                                           in mk_AS`TuplePattern (l, cid),
+#ifdef VDMPP
+    mk_AS`ObjectPattern(cls,fields,cid) -> def l = [ OldNameInPattern (fields(i)) | i in set inds fields ]
+                                           in mk_AS`ObjectPattern (cls, l, cid),
+    mk_AS`FieldPattern(nm,p,cid)        -> mk_AS`FieldPattern(nm, OldNameInPattern(p), cid),
+#endif VDMPP
+    mk_AS`SetBind(pat,set_e,cid)        -> mk_AS`SetBind(OldNameInPattern(pat), OldNameInExpr(set_e),cid),
+    mk_AS`TypeBind(pat,tp,cid)          -> mk_AS`TypeBind(OldNameInPattern(pat), tp, cid),
+    others                              -> undefined
+  end;
+\end{vdm_al}
+
+The operation $OldNameInPattern$ replaces the possible $OldName$ in a
+$MatchVal$ or $SetBind$ with a new $Name:  $. Patterns and binds are scanned
+recursively for match values and set binds.
+
+\begin{vdm_al}
+functions
+
+OldNameInBind : AS`Bind -> AS`Bind
+OldNameInBind (bind) ==
+  OldNameInPattern (bind);
+
+OldNameInMultBind : AS`MultBind -> AS`MultBind
+OldNameInMultBind (bind) ==
+  cases bind:
+    mk_AS`MultSetBind(pat,Set,cid) -> def p_l = [ OldNameInPattern (pat(i)) | i in set inds pat ]
+                                      in mk_AS`MultSetBind(p_l, OldNameInExpr(Set), cid),
+    mk_AS`MultTypeBind(pat,tp,cid) -> def p_l = [ OldNameInPattern (pat(i)) | i in set inds pat ]
+                                      in mk_AS`MultTypeBind(p_l, tp, cid),
+    others                         -> undefined
+  end;
+
+OldNameInMultBindSeq : seq of AS`MultBind -> seq of AS`MultBind
+OldNameInMultBindSeq (bind_l) ==
+  [ OldNameInMultBind(bind_l(i)) | i in set inds bind_l ];
+\end{vdm_al}
+
+\section{Expressions}
+
+\begin{vdm_al}
+functions
+
+OldNameInExpr : AS`Expr -> AS`Expr
+OldNameInExpr (expr) ==
+  cases true :
+    (is_AS`DefExpr(expr))                  -> OldNameInDefExpr(expr), 
+    (is_AS`LetExpr(expr))                  -> OldNameInLetExpr(expr), 
+    (is_AS`LetBeSTExpr(expr))              -> OldNameInLetBeSTExpr(expr), 
+    (is_AS`IfExpr(expr))                   -> OldNameInIfExpr(expr), 
+    (is_AS`CasesExpr(expr))                -> OldNameInCasesExpr(expr), 
+    (is_AS`PrefixExpr(expr))               -> OldNameInPrefixExpr(expr), 
+    (is_AS`BinaryExpr(expr))               -> OldNameInBinaryExpr(expr), 
+    (is_AS`AllOrExistsExpr(expr))          -> OldNameInAllOrExistsExpr(expr), 
+    (is_AS`ExistsUniqueExpr(expr))         -> OldNameInExistsUniqueExpr(expr), 
+    (is_AS`SetEnumerationExpr(expr))       -> OldNameInSetEnumerationExpr(expr), 
+    (is_AS`SetComprehensionExpr(expr))     -> OldNameInSetComprehensionExpr(expr), 
+    (is_AS`SetRangeExpr(expr))             -> OldNameInSetRangeExpr(expr), 
+    (is_AS`SeqEnumerationExpr(expr))       -> OldNameInSeqEnumerationExpr(expr), 
+    (is_AS`SeqComprehensionExpr(expr))     -> OldNameInSeqComprehensionExpr(expr), 
+    (is_AS`SubSequenceExpr(expr))          -> OldNameInSubSequenceExpr(expr), 
+    (is_AS`SeqModifyMapOverrideExpr(expr)) -> OldNameInSeqModifyMapOverrideExpr(expr), 
+    (is_AS`MapEnumerationExpr(expr))       -> OldNameInMapEnumerationExpr(expr), 
+    (is_AS`MapComprehensionExpr(expr))     -> OldNameInMapComprehensionExpr(expr), 
+    (is_AS`TupleConstructorExpr(expr))     -> OldNameInTupleConstructorExpr(expr), 
+    (is_AS`RecordConstructorExpr(expr))    -> OldNameInRecordConstructorExpr(expr), 
+    (is_AS`RecordModifierExpr(expr))       -> OldNameInRecordModifierExpr(expr), 
+    (is_AS`TokenConstructorExpr(expr))     -> OldNameInTokenConstructorExpr(expr),
+    (is_AS`ApplyExpr(expr))                -> OldNameInApplyExpr(expr), 
+    (is_AS`LambdaExpr(expr))               -> OldNameInLambdaExpr(expr),
+    (is_AS`FieldSelectExpr(expr))          -> OldNameInFieldSelectExpr(expr), 
+    (is_AS`FctTypeInstExpr(expr))          -> OldNameInFctTypeInstExpr(expr), 
+    (is_AS`IsExpr(expr))                   -> OldNameInIsExpr(expr), 
+    (is_AS`NarrowExpr(expr))               -> OldNameInNarrowExpr(expr), 
+    (is_AS`IotaExpr(expr))                 -> OldNameInIotaExpr(expr), 
+    (is_AS`UndefinedExpr(expr)),
+    (is_AS`Name(expr)),
+    (is_AS`BoolLit(expr)),
+    (is_AS`CharLit(expr)),
+    (is_AS`TextLit(expr)),
+    (is_AS`QuoteLit(expr)),
+    (is_AS`RealLit(expr)),
+    (is_AS`NumLit(expr)),
+    (is_AS`NilLit(expr))                   -> expr,
+    (is_AS`OldName(expr))                  -> OldNameInOldName(expr), 
+    (is_AS`BracketedExpr(expr))            -> OldNameInBracketedExpr(expr),
+    (is_AS`Macro(expr))                    -> expr,
+    others                                 -> undefined
+  end
+\end{vdm_al}
+
+The operation $OldNameInExpr$ is the entry point for the substitution, and
+the operation is called recursively by the other operations.
+
+\subsection{Local Binding Expressions}
+
+\begin{vdm_al}
+functions
+
+OldNameInDefExpr : AS`DefExpr -> AS`Expr
+OldNameInDefExpr (mk_AS`DefExpr(def_l, in_e, cid)) ==
+  def new_l = [ let mk_(pat_p, val_e) = def_l(i)
+                in mk_(OldNameInPattern (pat_p), OldNameInExpr (val_e)) | i in set inds def_l ]
+  in mk_AS`DefExpr (new_l, OldNameInExpr (in_e), cid);
+
+
+OldNameInLetExpr : AS`LetExpr -> AS`Expr
+OldNameInLetExpr (mk_AS`LetExpr(localdef, in_e, cid)) ==
+  def new_l = [ let ldef = localdef(i)
+                in
+                  cases ldef:
+                    mk_AS`ValueDef(pat,tp,val,access,static,cid) -> mk_AS`ValueDef(OldNameInPattern (pat),
+                                                                                   tp,
+                                                                                   OldNameInExpr(val),
+                                                                                   access,
+                                                                                   static,
+                                                                                   cid),
+                    others -> ldef
+                  end | i in set inds localdef ]
+  in mk_AS`LetExpr (new_l, OldNameInExpr (in_e),cid);
+
+OldNameInLetBeSTExpr : AS`LetBeSTExpr -> AS`Expr
+OldNameInLetBeSTExpr (mk_AS`LetBeSTExpr (lhs, st_e, in_e, cid)) ==
+  mk_AS`LetBeSTExpr (OldNameInMultBindSeq (lhs),
+                     if st_e = nil then nil else OldNameInExpr (st_e),
+                     OldNameInExpr (in_e),cid)
+\end{vdm_al}
+
+\subsection{Conditional Expressions}
+
+\begin{vdm_al}
+functions
+
+OldNameInElseifExpr : AS`ElseifExpr -> AS`ElseifExpr
+OldNameInElseifExpr(mk_AS`ElseifExpr (tst, cns, cid)) ==
+  mk_AS`ElseifExpr(OldNameInExpr (tst), OldNameInExpr (cns),cid);
+
+OldNameInIfExpr : AS`IfExpr -> AS`Expr
+OldNameInIfExpr (mk_AS`IfExpr( test_e, cons_e, elif, altn_e, cid)) ==
+  def new_l = [ OldNameInElseifExpr(elif(i)) | i in set inds elif ]
+  in mk_AS`IfExpr (OldNameInExpr (test_e),
+                   OldNameInExpr (cons_e),
+                   new_l,
+                   OldNameInExpr (altn_e),cid);
+
+OldNameInCaseAltn : AS`CaseAltn -> AS`CaseAltn
+OldNameInCaseAltn(mk_AS`CaseAltn (match, body, cid)) ==
+  def p_l = [ OldNameInPattern(match(i)) | i in set inds match ]
+  in mk_AS`CaseAltn (p_l, OldNameInExpr (body),cid);
+
+OldNameInCasesExpr : AS`CasesExpr -> AS`Expr
+OldNameInCasesExpr (mk_AS`CasesExpr (sel_e, altns_l, others_e, cid)) ==
+  def new_l = [ OldNameInCaseAltn(altns_l(i)) | i in set inds altns_l ]
+  in mk_AS`CasesExpr (OldNameInExpr (sel_e),
+                      new_l,
+                      if others_e = nil
+                      then nil
+                      else OldNameInExpr (others_e), cid);
+\end{vdm_al}
+
+\subsection{Unary Expressions}
+
+\begin{vdm_al}
+functions
+
+OldNameInPrefixExpr : AS`PrefixExpr -> AS`Expr
+OldNameInPrefixExpr (mk_AS`PrefixExpr (opr, arg_e, cid)) ==
+  mk_AS`PrefixExpr (opr, OldNameInExpr (arg_e), cid);
+
+\end{vdm_al}
+
+\subsection{Binary Expressions}
+
+\begin{vdm_al}
+functions
+
+OldNameInBinaryExpr : AS`BinaryExpr -> AS`Expr
+OldNameInBinaryExpr ( mk_AS`BinaryExpr(left_e, opr, right_e, cid)) ==
+  mk_AS`BinaryExpr (OldNameInExpr (left_e), opr, OldNameInExpr (right_e), cid);
+\end{vdm_al}
+
+\subsection{Quantified Expressions}
+
+\begin{vdm_al}
+functions
+
+OldNameInAllOrExistsExpr : AS`AllOrExistsExpr -> AS`Expr
+OldNameInAllOrExistsExpr (mk_AS`AllOrExistsExpr(quant, bind_l, pred_e, cid)) ==
+  mk_AS`AllOrExistsExpr (quant, OldNameInMultBindSeq (bind_l), OldNameInExpr (pred_e), cid);
+
+OldNameInExistsUniqueExpr : AS`ExistsUniqueExpr -> AS`Expr
+OldNameInExistsUniqueExpr (mk_AS`ExistsUniqueExpr (bind, pred_e, cid)) ==
+  mk_AS`ExistsUniqueExpr (OldNameInBind (bind), OldNameInExpr (pred_e), cid)
+\end{vdm_al}
+
+\subsection{Set Expressions}
+
+\begin{vdm_al}
+functions
+
+OldNameInSetEnumerationExpr : AS`SetEnumerationExpr -> AS`Expr
+OldNameInSetEnumerationExpr (mk_AS`SetEnumerationExpr (elm_le, cid)) ==
+  def new_l = [ OldNameInExpr (elm_le(i)) | i in set inds elm_le ]
+  in mk_AS`SetEnumerationExpr (new_l, cid);
+
+OldNameInSetComprehensionExpr : AS`SetComprehensionExpr -> AS`Expr
+OldNameInSetComprehensionExpr (mk_AS`SetComprehensionExpr (elem_e, bind_l, pred_e, cid)) ==
+  mk_AS`SetComprehensionExpr (OldNameInExpr (elem_e),
+                              OldNameInMultBindSeq (bind_l),
+                              OldNameInExpr (pred_e),cid);
+
+OldNameInSetRangeExpr : AS`SetRangeExpr -> AS`Expr
+OldNameInSetRangeExpr (mk_AS`SetRangeExpr (lb_e, ub_e, cid)) ==
+  mk_AS`SetRangeExpr (OldNameInExpr (lb_e), OldNameInExpr (ub_e), cid)
+\end{vdm_al}
+
+\subsection{Sequence Expressions}
+
+\begin{vdm_al}
+functions
+
+OldNameInSeqEnumerationExpr : AS`SeqEnumerationExpr -> AS`Expr
+OldNameInSeqEnumerationExpr (mk_AS`SeqEnumerationExpr (els_l,cid)) ==
+  def l = [ OldNameInExpr (els_l(i)) | i in set inds els_l ]
+  in mk_AS`SeqEnumerationExpr (l, cid);
+
+OldNameInSeqComprehensionExpr : AS`SeqComprehensionExpr -> AS`Expr
+OldNameInSeqComprehensionExpr (mk_AS`SeqComprehensionExpr (elem_e, bind, pred_e, cid)) ==
+  mk_AS`SeqComprehensionExpr (OldNameInExpr (elem_e),
+                              --OldNameInBind (bind),
+                              cases bind:
+                                mk_AS`SetBind(pat,set_e,cid) 
+                                 -> mk_AS`SetBind(OldNameInPattern(pat), OldNameInExpr(set_e),cid),
+                                mk_AS`SeqBind(pat,seq_e,cid) 
+                                 -> mk_AS`SeqBind(OldNameInPattern(pat), OldNameInExpr(seq_e),cid),
+                                others -> undefined
+                              end,
+                              OldNameInExpr (pred_e), cid);
+
+OldNameInSubSequenceExpr : AS`SubSequenceExpr -> AS`Expr
+OldNameInSubSequenceExpr (mk_AS`SubSequenceExpr (seq_e, from_e, to_e, cid)) ==
+  mk_AS`SubSequenceExpr (OldNameInExpr (seq_e),
+                         OldNameInExpr (from_e),
+                         OldNameInExpr (to_e), cid)
+\end{vdm_al}
+
+\subsection{Map Expressions}
+
+\begin{vdm_al}
+functions
+
+OldNameInSeqModifyMapOverrideExpr : AS`SeqModifyMapOverrideExpr -> AS`Expr
+OldNameInSeqModifyMapOverrideExpr (mk_AS`SeqModifyMapOverrideExpr (seqmap_e, map_e, cid)) ==
+  mk_AS`SeqModifyMapOverrideExpr (OldNameInExpr (seqmap_e), OldNameInExpr (map_e), cid);
+
+OldNameInMaplet : AS`Maplet -> AS`Expr
+OldNameInMaplet(mk_AS`Maplet(md, mr, cid)) ==
+  mk_AS`Maplet (OldNameInExpr (md), OldNameInExpr (mr), cid);
+
+OldNameInMapEnumerationExpr : AS`MapEnumerationExpr -> AS`Expr
+OldNameInMapEnumerationExpr (mk_AS`MapEnumerationExpr (els_l, cid)) ==
+  def m = [ OldNameInMaplet(els_l(i)) | i in set inds els_l ]
+  in mk_AS`MapEnumerationExpr (m, cid);
+
+OldNameInMapComprehensionExpr : AS`MapComprehensionExpr -> AS`Expr
+OldNameInMapComprehensionExpr (mk_AS`MapComprehensionExpr(elem, bind_l, pred_e, cid)) ==
+  mk_AS`MapComprehensionExpr (OldNameInMaplet(elem),
+                              OldNameInMultBindSeq (bind_l),
+                              OldNameInExpr (pred_e), cid);
+\end{vdm_al}
+
+\subsection{Tuple Constructor}
+
+\begin{vdm_al}
+functions
+
+OldNameInTupleConstructorExpr : AS`TupleConstructorExpr -> AS`Expr
+OldNameInTupleConstructorExpr (mk_AS`TupleConstructorExpr (fields_le, cid)) ==
+  def l = [ OldNameInExpr (fields_le(i)) | i in set inds fields_le ]
+  in mk_AS`TupleConstructorExpr (l, cid);
+\end{vdm_al}
+
+\subsection{Record Expressions}
+
+\begin{vdm_al}
+functions
+
+OldNameInRecordConstructorExpr : AS`RecordConstructorExpr -> AS`Expr
+OldNameInRecordConstructorExpr (mk_AS`RecordConstructorExpr (tag, fields_le, cid)) ==
+  def l = [ OldNameInExpr (fields_le(i)) | i in set inds fields_le ]
+  in mk_AS`RecordConstructorExpr (tag, l, cid);
+
+OldNameInRecordModification : AS`RecordModification -> AS`RecordModification
+OldNameInRecordModification(mk_AS`RecordModification (field, new, cid)) ==
+  mk_AS`RecordModification (field, OldNameInExpr (new), cid);
+
+OldNameInRecordModifierExpr : AS`RecordModifierExpr -> AS`Expr
+OldNameInRecordModifierExpr (mk_AS`RecordModifierExpr (rec_e, modifiers, cid)) ==
+  def m = [ OldNameInRecordModification(modifiers(i)) | i in set inds modifiers ]
+  in mk_AS`RecordModifierExpr (OldNameInExpr (rec_e), m, cid);
+\end{vdm_al}
+
+\subsection{Token Constructor}
+
+\begin{vdm_al}
+functions
+
+OldNameInTokenConstructorExpr : AS`TokenConstructorExpr -> AS`Expr
+OldNameInTokenConstructorExpr (mk_AS`TokenConstructorExpr (expr, cid)) ==
+  mk_AS`TokenConstructorExpr (OldNameInExpr (expr), cid)
+\end{vdm_al}
+
+\subsection{Apply Expressions}
+
+\begin{vdm_al}
+functions
+
+OldNameInApplyExpr : AS`ApplyExpr -> AS`Expr
+OldNameInApplyExpr (mk_AS`ApplyExpr (fct_e, arg_le, cid)) ==
+  def l = [ OldNameInExpr (arg_le(i)) | i in set inds arg_le ]
+  in mk_AS`ApplyExpr (OldNameInExpr (fct_e), l, cid);
+
+OldNameInFieldSelectExpr : AS`FieldSelectExpr -> AS`Expr
+OldNameInFieldSelectExpr (mk_AS`FieldSelectExpr (record_e, field, cid)) ==
+  mk_AS`FieldSelectExpr (OldNameInExpr(record_e), field, cid);
+
+OldNameInFctTypeInstExpr : AS`FctTypeInstExpr -> AS`Expr
+OldNameInFctTypeInstExpr (mk_AS`FctTypeInstExpr (polyfct, inst, cid)) ==
+  mk_AS`FctTypeInstExpr (OldNameInExpr(polyfct), inst, cid)
+\end{vdm_al}
+
+\subsection{Lambda Expression}
+
+\begin{vdm_al}
+functions
+
+OldNameInLambdaExpr : AS`LambdaExpr -> AS`Expr
+OldNameInLambdaExpr (mk_AS`LambdaExpr (tb_l, body_e, tp, cid)) ==
+  mk_AS`LambdaExpr (tb_l, OldNameInExpr (body_e), tp, cid)
+\end{vdm_al}
+
+\subsection{Is Expression}
+
+\begin{vdm_al}
+functions
+
+OldNameInIsExpr : AS`IsExpr -> AS`Expr
+OldNameInIsExpr (mk_AS`IsExpr (type, arg_e, cid)) ==
+  mk_AS`IsExpr (type, OldNameInExpr (arg_e), cid)
+\end{vdm_al}
+
+\subsection{Narrow Expression}
+
+\begin{vdm_al}
+functions
+
+OldNameInNarrowExpr : AS`NarrowExpr -> AS`Expr
+OldNameInNarrowExpr (mk_AS`NarrowExpr (expr, tp, cid)) ==
+  mk_AS`NarrowExpr (OldNameInExpr (expr), tp, cid)
+\end{vdm_al}
+
+\subsection{Old Names}
+
+\begin{vdm_al}
+functions
+
+OldNameInOldName : AS`OldName -> AS`Expr
+OldNameInOldName (mk_AS`OldName (id_l,cid)) ==
+  let id = id_l(len id_l)
+  in
+    let id' = id ^ "~"
+    in
+      mk_AS`Name ([ id' ],cid)
+\end{vdm_al}
+
+The operation $OldNameInOldName$ is used to substitute an $OldName$ with a
+new $Name:  $. A property of the parser is used to create a unique name: in
+the parser, we cannot use the hook symbol in a pattern as it is a reserved
+symbol. However, in the interpreter, we can use the hook symbol to create
+a unique name. The new name is equal to the identifier of the $OldName$,
+appended with the hook symbol.
+
+\subsection{Bracketed Expression}
+
+\begin{vdm_al}
+functions
+
+OldNameInBracketedExpr : AS`BracketedExpr -> AS`Expr
+OldNameInBracketedExpr (mk_AS`BracketedExpr (expr, cid)) ==
+  mk_AS`BracketedExpr (OldNameInExpr(expr), cid)
+\end{vdm_al}
+
+\subsection{Iota Expression}
+
+\begin{vdm_al}
+functions
+
+OldNameInIotaExpr : AS`IotaExpr -> AS`Expr
+OldNameInIotaExpr (mk_AS`IotaExpr (bind, pred_e,cid)) ==
+  mk_AS`IotaExpr (OldNameInBind (bind), OldNameInExpr (pred_e), cid)
+
+end OLD
+\end{vdm_al}
+
+\vspace{0.5cm}
+
+
+\begin{rtinfo}
+[OldNameInSeqModifyMapOverrideExpr]{rtinfo.ast}[OLD]
+\end{rtinfo}
+
+% Local Variables: 
+% mode: LaTeX
+% TeX-master: "dynsem"
+% End: 

@@ -1,0 +1,102 @@
+class HelpButtonPanel is subclass of JPanel
+operations 
+private  HelpButtonPanel : () ==> HelpButtonPanel
+HelpButtonPanel() == 
+( return  
+) ;
+
+public  HelpButtonPanel : [HelpFrame] ==> HelpButtonPanel
+HelpButtonPanel(helpFrame) == 
+( let - = setLayout(new  GridBagLayout())
+  in 
+    skip ;
+  constraints := new  GridBagConstraints();
+  constraints.fill := GridBagConstraints`HORIZONTAL;
+  constraints.gridx := 0;
+  constraints.gridy := GridBagConstraints`RELATIVE;
+  constraints.insets := new  Insets(3 , 3 , 3 , 3);
+  buttonGroup := new  ButtonGroup();
+  ( dcl   topicsHeader : [JLabel] := new  JLabel(new  String("Help Topics") , SwingConstants`CENTER);
+    let - = topicsHeader.setForeground(Color`black)
+    in 
+      skip ;
+    let - = add(topicsHeader , constraints)
+    in 
+      skip ;
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (MalformedURLException,j2v_exception)) -> 
+          ( dcl   dwdsException : [DWDSException] := new  DWDSException(),
+                  e : [MalformedURLException] := j2v_exception;
+            let - = dwdsException.addMessage(DWDSException`ErrorOpeningFileForInput , e.getMessage())
+            in 
+              skip ;
+            let - = errorLog.showExceptionMsgs(dwdsException)
+            in 
+              skip 
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( dcl   baseURL : [URL] := new  URL(new  String("file") , nil   , HELP_BASE_STRING);
+        let - = addHelpButton(new  String("Introduction") , new  URL(baseURL , new  String("Introduction.html")) , helpFrame)
+        in 
+          skip ;
+        let - = addHelpButton(new  String("Context View") , new  URL(baseURL , new  String("ContextView.html")) , helpFrame)
+        in 
+          skip ;
+        let - = addHelpButton(new  String("Wire Diagram View") , new  URL(baseURL , new  String("WireDiagramView.html")) , helpFrame)
+        in 
+          skip ;
+        let - = addHelpButton(new  String("Wire List View") , new  URL(baseURL , new  String("WireListView.html")) , helpFrame)
+        in 
+          skip ;
+        let - = addHelpButton(new  String("Pin List View") , new  URL(baseURL , new  String("PinListView.html")) , helpFrame)
+        in 
+          skip ;
+        let - = addHelpButton(new  String("Locator View") , new  URL(baseURL , new  String("LocatorView.html")) , helpFrame)
+        in 
+          skip ;
+        let - = addHelpButton(new  String("Pin Arrangement View") , new  URL(baseURL , new  String("PinArrangementView.html")) , helpFrame)
+        in 
+          skip ;
+        let - = addHelpButton(new  String("Parts List View") , new  URL(baseURL , new  String("PartsListView.html")) , helpFrame)
+        in 
+          skip ;
+        let - = addHelpButton(new  String("Retrofits View") , new  URL(baseURL , new  String("RetrofitsView.html")) , helpFrame)
+        in 
+          skip ;
+        let - = addHelpButton(new  String("Bundle View") , new  URL(baseURL , new  String("BundleView.html")) , helpFrame)
+        in 
+          skip ;
+        let - = addHelpButton(new  String("Properties File") , new  URL(baseURL , new  String("PropertiesFile.html")) , helpFrame)
+        in 
+          skip ;
+        let - = addHelpButton(new  String("Sample WI.properties") , new  URL(baseURL , new  String("SampleWIProperties.html")) , helpFrame)
+        in 
+          skip 
+      ) ;
+    return  
+  ) 
+) ;
+
+private  addHelpButton : [String] * [URL] * [HelpFrame] ==> <VOID>
+addHelpButton(buttonText, helpAddress, helpFrame) == 
+( dcl   helpButton : [HelpButton] := new  HelpButton(buttonText , helpAddress , helpFrame);
+  let - = HelpButtonPanel`add(helpButton , constraints)
+  in 
+    skip ;
+  let - = buttonGroup.add(helpButton)
+  in 
+    skip ;
+  return  
+) ;
+
+instance variables 
+  public  static HELP_BASE_STRING : [String] := DWDSProperties`getProperty(new  String("jar.filepath"))+new  String("/boeing/dwds/help/");
+  private  constraints : [GridBagConstraints];
+  private  buttonGroup : [ButtonGroup];
+  private  errorLog : [ExceptionsFrame] := ExceptionsFrame`getExceptionsFrame()
+  
+end  HelpButtonPanel

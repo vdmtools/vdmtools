@@ -1,0 +1,31 @@
+--$Id: TestCase.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $
+class TestCase
+--テストケースのスーパークラス
+
+instance variables
+
+	public テスト名: seq of char := "** 無名の回帰テスト **";
+
+operations
+public テスト１件実行: () ==> bool
+テスト１件実行() == 
+	(dcl	結果: bool;
+	準備する();
+	結果 := test();
+	後始末する();
+	return 結果);
+	
+public テスト名を得る: () ==> seq of char
+テスト名を得る() == return テスト名;
+
+protected test: () ==> bool
+test() == is subclass responsibility;
+
+protected 準備する: () ==> ()
+準備する() == return;
+
+protected 後始末する: () ==> ()
+後始末する() == return;
+
+end TestCase
+

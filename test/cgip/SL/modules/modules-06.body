@@ -1,0 +1,57 @@
+imports 
+from B all,
+from C all,
+from D all,
+from E all,
+from LAST
+   operations op: MyAType | nat ==> nat
+
+exports
+  types MyAType
+  functions f: MyAType -> nat
+  operations Test: () ==> nat
+
+definitions
+
+types
+  MyAType ::
+    a: nat
+
+functions
+
+  f: MyAType -> nat
+  f(mk_MyAType(i)) ==
+   i
+
+operations
+  Test:() ==> nat
+  Test() ==
+   LAST`op(mk_MyAType(117))
+
+end A
+
+module LAST
+
+imports from A
+  types MyAType
+  functions f: A`MyAType -> nat
+
+
+definitions
+
+operations
+
+  op: A`MyAType | nat==> nat
+  op(a) ==
+   return A`f(a);
+  
+  
+
+end LAST
+
+
+
+
+
+
+

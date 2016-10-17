@@ -1,0 +1,20 @@
+class B
+
+instance variables
+  m: map (int*int) to int := {|->};
+
+
+operations
+
+  op:  map (int*int) to int ==> ()
+  op (mp) ==
+    m := mp;
+
+public Test : () ==> seq of nat
+  Test() ==
+  ( op ({mk_(1,2) |-> 2});
+    self.op ({mk_(2,2) |-> 3});
+    return [ 1]
+  )
+
+end B

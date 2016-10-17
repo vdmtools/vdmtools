@@ -1,0 +1,348 @@
+/*
+#
+# Item Validator
+# $Id: gofo_itemValidator.vpp,v 1.1 2005/11/25 07:05:38 vdmtools Exp $
+#
+# 個々の項目をチェックするクラス
+# チェック項目を増やしたいときは GofoItemValidator のサブクラスを増やす
+# このクラスは将来的には項目辞書から自動生成する
+#
+*/
+class GofoItemValidator is subclass of  『問題領域共通定義』
+
+operations
+/*
+public GofoItemValidator : 「文字列」 ==> GofoItemValidator
+GofoItemValidator(spec) == is subclass responsibility;
+*/
+
+public isValid : [「項目」] ==> [GofoApplicationException]
+isValid(item) == return self.validate_priv(item);	
+/* チェックに失敗したら例外オブジェクト(GofoApplicationExceptionのサブクラスのインスタンス)
+*を返す。成功したときには nil を返す。
+*/
+
+public validate_priv : [GofoItemValidator`「項目」] ==> [GofoApplicationException]
+validate_priv(item) == is subclass responsibility;  
+  
+end GofoItemValidator
+------------------------------------------------------
+--数値範囲チェック
+class GofoRangeValidator is subclass of GofoItemValidator
+
+instance variables
+public 最小値 : real;
+public 最大値 : real;
+
+operations
+
+public GofoRangeValidator : real * real ==> GofoRangeValidator
+GofoRangeValidator(最小, 最大) ==
+	(
+	最小値 := 最小;
+	最大値 := 最大;
+	return self
+	);
+
+public validate_priv : [GofoItemValidator`「項目」]  ==>  [GofoApplicationException] 
+validate_priv(a数値) ==
+	if a数値 < 最小値 then
+		return new GofoApplicationException(9301, "最小値より小さい")
+	elseif a数値 > 最大値 then
+		return new GofoApplicationException(9302, "最大値より大きい")
+	else
+		return nil;
+  
+end GofoRangeValidator
+------------------------------------------------------
+--桁数チェック
+class GofoColLenValidator is subclass of GofoItemValidator
+
+instance variables
+public 最小桁数 : nat := 0;
+public 最大桁数 : nat;
+
+operations
+
+public GofoColLenValidator : nat * nat ==> GofoColLenValidator
+GofoColLenValidator(a最小桁数, a最大桁数) ==
+	(
+	最小桁数 := a最小桁数;
+	最大桁数 := a最大桁数;
+	return self
+	);
+	
+public validate_priv : [GofoItemValidator`「項目」]  ==>  [GofoApplicationException] 
+validate_priv(a項目) ==
+	if is_real(a項目) then
+		数validate_priv(a項目)
+	elseif is_(a項目, 「文字列」) then
+		文字列validate_priv(a項目)
+	else
+		return new GofoApplicationException(9000, "項目に桁数という概念がありません。");
+
+public 数validate_priv: real ==> [GofoApplicationException]
+数validate_priv(a項目) == 
+	let	a桁数 = Real`桁数(a項目)	in
+	if a桁数 < 最小桁数 then
+		return new GofoApplicationException(9001, "最小桁数より小さい")
+	elseif a桁数 > 最大桁数 then
+		return new GofoApplicationException(9002, "最大桁数より大きい")
+	else
+		return nil;
+
+public 文字列validate_priv : 「文字列」 ==> [GofoApplicationException]
+文字列validate_priv(a項目) ==
+	let	a桁数 = len a項目	in
+	if a桁数 < 最小桁数 then
+		return new GofoApplicationException(9003, "最小桁数より小さい")
+	elseif a桁数 > 最大桁数 then
+		return new GofoApplicationException(9004, "最大桁数より大きい")
+	else
+		return nil;
+ 
+end GofoColLenValidator
+------------------------------------------------------
+/*
+#
+# 文字種チェック
+#
+class Gofo_CharTypeValidator < GofoItemValidator
+  def Gofo_CharTypeValidator.getObj (spec)
+    if spec then
+      self.new (spec)
+    else
+      nil
+    end
+  end
+  def initialize (spec)
+    spec = "-?[0-9]+" if spec == "numeric"
+    @regexp = Regexp.new(spec, nil, $-K[0,1])
+    @spec = spec
+  end
+  #
+  def validate_priv (item)
+    if @regexp.match(item.to_s) then
+      # raise "文字種合致, #{item} == #{@spec}"
+    else
+      raise "文字種エラー, #{item} != #{@spec}"
+    end
+  end
+end
+*/
+------------------------------------------------------
+--区分チェック
+class GofoKubunValidator is subclass of GofoItemValidator
+
+instance variables
+public 項目集合 : set of GofoItemValidator`「項目」 := {};
+
+operations
+public GofoKubunValidator : set of GofoItemValidator`「項目」 ==> GofoKubunValidator
+GofoKubunValidator(a項目集合) ==
+	(
+	項目集合 := a項目集合;
+	return self
+	);
+	
+public validate_priv : [GofoItemValidator`「項目」]  ==>  [GofoApplicationException] 
+validate_priv(a項目) ==
+	if a項目 in set 項目集合 then
+		return nil
+	else
+		return new GofoApplicationException(9100, "該当する区分値がありません");
+
+end GofoKubunValidator
+------------------------------------------------------
+--必須項目チェック
+class GofoMandatoryValidator is subclass of GofoItemValidator
+
+operations
+public validate_priv : [GofoItemValidator`「項目」]  ==>  [GofoApplicationException] 
+validate_priv(a項目) ==
+	if a項目 <> nil then
+		return nil
+	else
+		return new GofoApplicationException(9200, "必須項目なし");
+		
+end GofoMandatoryValidator
+------------------------------------------------------
+/*
+#####
+#
+# 外字チェック
+# 注）ここで sjis aいは true を指定して validator を
+#     作成すると、いわゆる JIX X0208-1990 の漢字領域と
+#     英数字を受け入れ対象としてチェックする。
+#     それは文字としての正規表現では
+#     spec = "[\x20-\x7e]|[\x81-\x9f\xe0-\xef][\x40-\x7e\x80-\xfc]"
+#     で表される。このパターンで文字を取り除いて行き、文字が
+#     残ったら外字aいは不正文字がaと考えて例外を起こす
+#
+class Gofo_GaijiValidator < GofoItemValidator
+  def Gofo_GaijiValidator.getObj (spec)
+    if spec == "sjis" or spec == "TRUE" then
+      self.new (spec)
+    else
+      nil
+    end
+  end
+  #
+  def initialize (spec)
+    @spec = spec
+    if spec == "sjis" or spec == "TRUE" then
+      spec = "[\x20-\x7e]|[\x81-\x9f\xe0-\xef][\x40-\x7e\x80-\xfc]|[\xa1-\xdf]"
+      @spec = '[\x20-\x7e]|[\x81-\x9f\xe0-\xef][\x40-\x7e\x80-\xfc]|[\xa1-\xdf]'
+    end
+    @regexp = Regexp.new(spec, nil, 'n')
+  end
+  def validate_priv (item)
+    # puts item.to_s.gsub(@regexp, '')
+    if item.to_s.gsub(@regexp, '').length != 0 then
+      raise "文字コードエラー, #{item}, #{@spec}"
+    else
+      # raise "文字コードＯＫ, #{item}, #{@spec}"
+    end
+  end
+end
+------------------------------------------------------
+=begin  # 以下未完 XXX
+
+#
+# マスター参照チェック
+#   問い合わせたいマスターごとに MasterValidator のサブクラスを増やす
+#
+module RefMasters
+  Map = {
+    "顧客" => "KokyakuMasterValidator",
+    "銘柄" => "MeigaraMasterValidator",
+    "部店" => "ButenMasterValidator",
+    "金融機関" => "KinyuuKikanMasterValidator"
+  }
+end
+class MasterValidator < GofoItemValidator
+  @@refdbh = nil
+  #
+  def MasterValidator.getObj (ip, spec)
+    #
+    if spec then
+      sp = spec.split(',')
+      # puts "masterSpec=#{spec}"
+      # puts "class=#{RefMasters::Map[sp[0]]}"
+      # puts "#{ip.inFormat}, #{ip.refDsn}, #{ip.refDsnUser}, #{ip.refDsnPass}"
+      # 参照用の dbh を取得
+      if not @@refdbh then
+        # XXX reuse すべきだが ... 他のハンドルのエラーに巻き込まれないように
+        refdbh = InRecFactory.getRefDbh (ip.refFormat, ip.refDsn, ip.refDsnUser, ip.refDsnPass)
+        # puts "new dbh."
+      else
+        # puts "dbh reused."
+      end
+      #
+      begin
+        r = eval "#{RefMasters::Map[sp[0]]}.new (refdbh)", binding
+        sp.shift
+        r.setFields(sp)
+        r
+      rescue
+        raise "マスタ参照オブジェクト生成失敗, #{RefMasters::Map[sp[0]]}"
+      end
+    else
+      nil
+    end
+  end
+  #
+  def valid? (inRec)
+    # puts "validate.refdb field #{fieldName} for #{self.class}"
+    # p inRec
+    begin
+      self.validate_priv(inRec)
+    rescue Exception => e
+      puts "#{fieldName},#{$!}"
+    end
+  end
+  #
+  def setFields (fns)
+    # array of fields to evaluate
+    @fields = fns
+    # puts "FIELDS,#{@fields}"
+  end
+  #
+  attr_accessor :fields
+end
+class KokyakuMasterValidator < MasterValidator
+  def initialize (dbh)
+    # @tableHash = InCheck_TR1_TBL_CLIENT_HASH.new (dbh)
+    # @tableHash.cacheAll
+    # @tableHash = TR1_ClientChecker.new (dbh)
+  end
+  def validate_priv (inRec)
+    # puts "ClientToEval #{@fields[0]}, #{@fields[1]}"
+    dept_cd = eval "#{@fields[0]}", binding
+    client_cd = eval "#{@fields[1]}", binding
+    # puts "Client, dept=#{dept_cd}, client_cd=#{client_cd}"
+    r = @tableHash.search(TR1Param::COMPANY_JX, dept_cd, client_cd)
+    # r = @tableHash.search(dept_cd, client_cd)
+    if r then
+      raise "顧客マスターＯＫ, #{dept_cd}, #{client_cd}" if $DEBUG
+    else
+      raise "顧客マスターエラー, #{dept_cd}, #{client_cd}"
+    end
+  end
+end
+class ButenMasterValidator < MasterValidator
+  def initialize (dbh)
+    @tableHash = InCheck_TR1_TBL_DEPT_HASH.new (dbh)
+#    @tableHash.cacheAll
+    # @tableHash = TR1_DeptChecker.new (dbh)
+  end
+  def validate_priv (inRec)
+    dept_cd = eval "#{@fields[0]}", binding
+    # puts "Buten, dept=#{dept_cd}"
+    r = @tableHash.search(TR1Param::COMPANY_JX, dept_cd)
+    # r = @tableHash.search(dept_cd)
+    if r then
+      raise "部店マスターＯＫ, #{dept_cd}" if $DEBUG
+    else
+      raise "部店マスターエラー, #{dept_cd}"
+    end
+  end
+end
+class MeigaraMasterValidator < MasterValidator
+  def initialize (dbh)
+    @tableHash = InCheck_TR1_TBL_DO_STOCK_HASH.new (dbh)
+#    @tableHash.cacheAll
+    # @tableHash = TR1_DoStockChecker.new (dbh)
+  end
+  def validate_priv (inRec)
+    sec_cd = eval "#{@fields[0]}", binding
+    # puts "Meigara, sec=#{sec_cd}"
+    r = @tableHash.search(sec_cd)
+    if r then
+      raise "銘柄マスターＯＫ, #{sec_cd}" if $DEBUG
+    else
+      raise "銘柄マスターエラー, #{sec_cd}"
+    end
+  end
+end
+class KinyuuKikanMasterValidator < MasterValidator
+  def initialize (dbh)
+    @tableHash = InCheck_TR1_TBL_BANK_HASH.new(dbh)
+#    @tableHash.cacheAll
+    # @tableHash = TR1_BankChecker.new(dbh)
+  end
+  def validate_priv (inRec)
+    bank_cd = eval "#{@fields[0]}", binding
+    branch_cd = eval "#{@fields[1]}", binding
+    # puts "KinyuuKikan, bank=#{bank_cd}, branch=#{branch_cd}"
+    r = @tableHash.search(bank_cd, branch_cd)
+    if r then
+      raise "金融機関マスターＯＫ, #{bank_cd}, #{branch_cd}" if $DEBUG
+    else
+      raise "金融機関マスターエラー, #{bank_cd}, #{branch_cd}"
+    end
+  end
+end
+
+end
+*/

@@ -1,0 +1,181 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{vdm}\index{PistesRadar|ClassDef}
+{\small\sf class} $PistesRadar$  \kISO $\index{MSAWTypes|ClassOcc}MSAWTypes$
+\begin{typedef}\index{PisteInfo|TypeDef}
+\begin{record}{PisteInfo}position : Coordonnees\index{Coordonnees|TypeOcc}\\
+modeC : Pieds\index{Pieds|TypeOcc}\\
+vitesse : \Opt{KT\index{KT|TypeOcc}}\\
+alarmes : \setof{Alarme\index{Alarme|TypeOcc}}\\ 
+\end{record}
+\end{typedef}
+\begin{instvar}\index{pistes|InstVarDef}
+\vardcl{pistes}{ModeA\index{ModeA|TypeOcc} \Gmap \Lp Temps\index{Temps|TypeOcc} \Gmap PisteInfo\index{PisteInfo|TypeOcc} \Rp }
+\instinit{pistes}{\ass{pistes}{\Emptymap }
+}
+\end{instvar}
+\begin{methdef}\index{Init|MethodDef}
+\begin{method}{Init}
+\parms{initialization-information : \setof{\Token }, view :  @View}\\
+\Inys 
+\end{method}\index{SetPosition|MethodDef}
+\begin{method}{SetPosition}
+\parms{modeA : ModeA\index{ModeA|TypeOcc}, temps : Temps\index{Temps|TypeOcc}, position : Coordonnees\index{Coordonnees|TypeOcc}, modeC : Pieds\index{Pieds|TypeOcc}} \Fdef\\ \begin{letstmt}
+\patdef{piste}{\map{temps \Mapsto \reccons{\kw{mk-} PisteInfo\index{PisteInfo|TypeOcc}}{position,modeC,\Nil ,\set{}}}}
+\end{letstmt} \\
+\If modeA \In  \Dom pistes
+\Then \\
+\ass{pistes}{pistes \Override \map{modeA \Mapsto \fnapply{pistes}{modeA} \Override piste}}
+\Else \\
+\ass{pistes}{pistes \Mapmerge \map{modeA \Mapsto piste}}
+\Fi
+\end{method}\index{SetVitesse|MethodDef}
+\begin{method}{SetVitesse}
+\parms{modeA : ModeA\index{ModeA|TypeOcc}, temps : Temps\index{Temps|TypeOcc}, vitesse : KT\index{KT|TypeOcc}} \Fdef\\ \begin{letstmt}
+\patdef{ma}{\fnapply{pistes}{modeA}}
+\end{letstmt} \\
+\begin{letstmt}
+\patdef{\reccons{\kw{mk-} PisteInfo\index{PisteInfo|TypeOcc}}{p,m,-,a}}{\fnapply{ma}{temps}}
+\end{letstmt} \\
+\begin{letstmt}
+\patdef{newp}{\reccons{\kw{mk-} PisteInfo\index{PisteInfo|TypeOcc}}{p,m,vitesse,a}}
+\end{letstmt} \\
+\ass{pistes}{pistes \Override \map{modeA \Mapsto ma \Override \map{temps \Mapsto newp}}}
+\begin{precond}modeA \In  \Dom pistes \And temps \In  \Dom \fnapply{pistes}{modeA}
+\end{precond}
+\end{method}\index{SetAlarm|MethodDef}
+\begin{method}{SetAlarm}
+\parms{modeA : ModeA\index{ModeA|TypeOcc}, obstacle :  @Terrain |  @Obstacle} \Fdef\\ \begin{letstmt}
+\patdef{t}{\fnapply{LaPlusRecente}{ \Dom \fnapply{pistes}{modeA}}}
+\patdef{alarme}{\fnapply{TypedAlarm}{obstacle}}
+\end{letstmt} \\
+\begin{letstmt}
+\patdef{ma}{\fnapply{pistes}{modeA}}
+\end{letstmt} \\
+\begin{letstmt}
+\patdef{\reccons{\kw{mk-} PisteInfo\index{PisteInfo|TypeOcc}}{p,m,v,alarmes}}{\fnapply{ma}{t}}
+\end{letstmt} \\
+\begin{letstmt}
+\patdef{newp}{\reccons{\kw{mk-} PisteInfo\index{PisteInfo|TypeOcc}}{p,m,v,alarmes \Union \set{alarme}}}
+\end{letstmt} \\
+\ass{pistes}{pistes \Override \map{modeA \Mapsto ma \Override \map{t \Mapsto newp}}}
+\begin{precond}modeA \In  \Dom pistes
+\end{precond}
+\end{method}\index{GetModeAs|MethodDef}
+\begin{method}{GetModeAs}
+\parms{}\methvalue{\setof{ModeA\index{ModeA|TypeOcc}}} \Fdef\\ \return{ \Dom pistes}
+\end{method}\index{GetPositions|MethodDef}
+\begin{method}{GetPositions}
+\parms{modeA : ModeA\index{ModeA|TypeOcc}}\methvalue{Temps\index{Temps|TypeOcc} \Gmap \Lp Coordonnees\index{Coordonnees|TypeOcc} \X Pieds\index{Pieds|TypeOcc} \Rp } \Fdef\\ \begin{letstmt}
+\patdef{piste}{\fnapply{pistes}{modeA}}
+\end{letstmt} \\
+\return{\mapcomp{t \Mapsto \reccons{\kw{mk-}}{\fnapply{piste}{t}.position,\fnapply{piste}{t}.modeC}}{t \In  \\
+ \Dom piste}}
+\begin{precond}modeA \In  \Dom pistes
+\end{precond}
+\end{method}\index{GetVitesse|MethodDef}
+\begin{method}{GetVitesse}
+\parms{modeA : ModeA\index{ModeA|TypeOcc}}\methvalue{KT\index{KT|TypeOcc}} \Fdef\\ \begin{letstmt}
+\patdef{piste}{\fnapply{pistes}{modeA}}
+\patdef{t}{\fnapply{LaPlusRecente}{ \Dom piste}}
+\end{letstmt} \\
+\return{\fnapply{piste}{t}.vitesse}
+\begin{precond}modeA \In  \Dom pistes
+\end{precond}
+\end{method}\index{DelPiste|MethodDef}
+\begin{method}{DelPiste}
+\parms{modeA : ModeA\index{ModeA|TypeOcc}} \Fdef\\ \ass{pistes}{\set{modeA} \Dby pistes}
+\begin{precond}modeA \In  \Dom pistes
+\end{precond}
+\end{method}
+\end{methdef}
+\begin{funcdef}\index{TypedAlarm|FuncDef}
+\begin{fn}[e]{TypedAlarm}
+\signature{ @Terrain |  @Obstacle \To Alarme\index{Alarme|TypeOcc}}
+\parms{obstacle}
+\begin{Cases}{\True }
+\alt{\pex{\isofclass{Terrain}{obstacle}}}{\const{terrain}}
+\alt{\pex{\isofclass{ObstacleArtificiel}{obstacle}}}{\const{obstacle\_artificiel}}
+\alt{\pex{\isofclass{ReliefParticulier}{obstacle}}}{\const{relief\_particulier}}
+\alt{\pex{\isofclass{ZoneMilitaire}{obstacle}}}{\const{zone\_militair}}
+\alt{\pex{\isofclass{ZoneAeroport}{obstacle}}}{\const{zone\_aeroport}}
+\others{\Nil }
+\end{Cases}
+\end{fn}
+\end{funcdef}
+{\small\sf end} $PistesRadar$
+
+\end{vdm}

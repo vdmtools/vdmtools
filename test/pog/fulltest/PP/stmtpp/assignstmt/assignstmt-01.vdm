@@ -1,0 +1,41 @@
+class A
+end A
+class Super
+
+instance variables
+
+  protected a : nat;
+
+end Super
+class AssignStmtTest is subclass of Super
+
+types
+
+  B ::
+   x : nat
+   y : real;
+
+instance variables
+
+  protected a: nat;
+  b: nat;
+  c: A;
+  d: map nat to bool;
+  e: A;
+  f : B := mk_B(8,9);
+  inv a < b;
+  
+operations
+
+  Assign1() ==
+    a := 7;
+
+  Assign2() ==
+   d(5) := true;
+
+  Assign4(a1,a2:real) ==
+    (Super`a := a1;
+     b := a2);
+
+
+end AssignStmtTest

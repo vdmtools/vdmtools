@@ -1,0 +1,145 @@
+class Auxil is subclass of Global
+
+operations
+
+Counterclockwise: seq of Point2 ==> seq of Point2 
+Counterclockwise (corners) ==
+( dcl math : Math := new Math();
+  let corners' = [ corners(i).getCoord() | i in set inds corners ] in
+  if isCounterclockwise (corners')
+  then return corners
+  else return [hd corners] ^ ReverseCorners (tl corners)
+);
+
+isCounterclockwise: seq of (real * real) ==> bool
+isCounterclockwise (corners) ==
+( dcl math : Math := new Math();
+  return math.polyArea (corners) >= 0
+)
+pre len corners > 2;
+
+ReverseCorners: seq of Point2 ==> seq of Point2 
+ReverseCorners (corners) ==
+return [ corners (len corners - i + 1) | i in set inds corners ];
+
+
+extractDrivingBeadCrit: LayerGeom * BeadCriteria ==> BeadCrit 
+extractDrivingBeadCrit (lg, bcrit) ==
+  let mk_BeadCriteria (-,drivingcrit,-,specificcrit) = bcrit,
+      layerid = lg.getLayerId() in
+  let BeadCritSet = 
+    [ drivingcrit ] ^
+    (if layerid in set dom specificcrit
+     then let mk_SpecificBeadCrit(dcrit,-) = specificcrit(layerid) in
+          [ dcrit ]
+     else []) in
+  let MergedBeadCritSet = mergeBeadCrits (BeadCritSet) in
+  cases MergedBeadCritSet:
+    {bc} -> return bc,
+    others -> return new WallAngleMaxAreaBeadCrit()
+    -- Currently there is no exception case
+  end;
+         
+areMergeable: BeadCrit * BeadCrit ==> bool 
+areMergeable (bc1, bc2) ==
+  let bc1type = bc1.getCritType (),
+      bc2type = bc2.getCritType () in
+  return 
+    cases mk_(bc1type,bc2type):
+      mk_(<MaxAreaBeadCrit>,<WallAngleBeadCrit>),
+      mk_(<WallAngleBeadCrit>,<MaxAreaBeadCrit>),
+      mk_(<WallAngleMaxAreaBeadCrit>,<WallAngleBeadCrit>),
+      mk_(<WallAngleBeadCrit>,<WallAngleMaxAreaBeadCrit>),
+      mk_(<WallAngleMaxAreaBeadCrit>,<MaxAreaBeadCrit>),
+      mk_(<MaxAreaBeadCrit>,<WallAngleMaxAreaBeadCrit>) -> true,
+      mk_(a,a) -> true,
+      others   -> false
+    end;
+
+mergeBeadCrits: seq of BeadCrit ==> set of BeadCrit 
+mergeBeadCrits (BeadCritSet) ==
+( dcl MergeBeadCritSet : set of BeadCrit := {};
+  for x in BeadCritSet do
+    if exists y in set MergeBeadCritSet & areMergeable (x,y)
+    then let y in set MergeBeadCritSet be st areMergeable (x,y) in
+         MergeBeadCritSet := MergeBeadCritSet \ {y} union {doMergeBeadCrits(y,x)}
+    else MergeBeadCritSet := MergeBeadCritSet union {x};
+  return MergeBeadCritSet
+);
+
+doMergeBeadCrits: BeadCrit * BeadCrit ==> BeadCrit 
+doMergeBeadCrits (bc1, bc2) ==
+ cases mk_(mk_(bc1.getCritType(),bc1), mk_(bc2.getCritType(),bc2)):
+   mk_(mk_(<WallAngleBeadCrit>,bc1'), mk_(<MaxAreaBeadCrit>,bc2')),
+   mk_(mk_(<WallAngleMaxAreaBeadCrit>,bc1'), mk_(<MaxAreaBeadCrit>,bc2')) ->
+       ( dcl bc : WallAngleMaxAreaBeadCrit := new WallAngleMaxAreaBeadCrit();
+         bc.initFromBeadCrit (bc1', bc2');
+         return bc ),
+   mk_(mk_(<MaxAreaBeadCrit>,bc1'), mk_(<WallAngleBeadCrit>,bc2')),
+   mk_(mk_(<WallAngleMaxAreaBeadCrit>,bc1'), mk_(<WallAngleBeadCrit>,bc2')) ->
+       ( dcl bc : WallAngleMaxAreaBeadCrit := new WallAngleMaxAreaBeadCrit();
+         bc.initFromBeadCrit (bc2', bc1');
+         return bc ),
+   mk_(mk_(<WallAngleBeadCrit>,bc1'), mk_(<WallAngleMaxAreaBeadCrit>,bc2')),
+   mk_(mk_(<MaxAreaBeadCrit>,bc1'), mk_(<WallAngleMaxAreaBeadCrit>,bc2')),
+   mk_(mk_(<WallAngleMaxAreaBeadCrit>,bc1'), mk_(<WallAngleMaxAreaBeadCrit>,bc2')) ->
+       ( dcl bc : WallAngleMaxAreaBeadCrit := new WallAngleMaxAreaBeadCrit();
+         bc.initFromBeadCrit (bc2', bc2');
+         return bc ),
+   mk_(mk_(<MaxAreaBeadCrit>,bc1'), mk_(<MaxAreaBeadCrit>,bc2')) ->
+       ( dcl bc : MaxAreaBeadCrit := new MaxAreaBeadCrit();
+         bc.initFromBeadCrit (bc2');
+         return bc ),
+   others -> return new WallAngleMaxAreaBeadCrit()
+  end;
+
+-- doMergeBeadCrits should be extended with several if-branches handeling BeadType specific and BeadNumber specific criterias in the appropriate order.
+
+combineBeadCriteria: LayerId * BeadType * [BeadId] * BeadCriteria ==> seq of BeadCrit
+combineBeadCriteria (layerid, beadtype, beadid, bcrit) ==
+  let mk_BeadCriteria(-,dcrit,gencrit,speccrit) = bcrit in
+  let layeridcrit = if layerid in set dom speccrit
+                    then let mk_SpecificBeadCrit(drcrit,gncrit) = speccrit(layerid) in
+                         [drcrit] ^ gncrit
+                    else [],
+      beadtypecrit = if beadtype in set dom speccrit
+                     then let mk_SpecificBeadCrit(drcrit,gncrit) = speccrit(beadtype) in
+                          [drcrit] ^ gncrit
+                     else [],
+      beadidcrit = if beadid in set dom speccrit
+                   then let mk_SpecificBeadCrit(drcrit,gncrit) = speccrit(beadid) in
+                        [drcrit] ^ gncrit
+                   else [] in
+  return [dcrit] ^ layeridcrit ^ beadtypecrit ^ beadidcrit ^ gencrit;
+
+
+nat2string: nat ==> seq of char 
+nat2string (n) ==
+( dcl s: seq of char := [],
+      n' : nat := n;
+  while n' > 0 do
+    let b = n' mod 10,
+        r = n' div 10 in
+    ( s :=  [digit2char(b)] ^ s;
+      n' := r );
+  return s
+);
+
+digit2char: nat ==> char 
+digit2char (n) ==
+return 
+  cases n:
+    0 -> '0',
+    1 -> '1',
+    2 -> '2',
+    3 -> '3',
+    4 -> '4',
+    5 -> '5',
+    6 -> '6',
+    7 -> '7',
+    8 -> '8',
+    9 -> '9'
+  end;
+-- pre 0 <= n and n <= 9
+
+end Auxil

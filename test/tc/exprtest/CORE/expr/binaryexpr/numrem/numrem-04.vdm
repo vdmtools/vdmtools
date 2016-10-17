@@ -1,0 +1,14 @@
+class BinaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let t = true,
+      - = 3 rem t
+  in skip;
+
+------------------------------------------------------------------------------
+end BinaryTest

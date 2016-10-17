@@ -1,0 +1,166 @@
+class ObjectCache is subclass of Object
+operations 
+public  keys : () ==> [Enumeration]
+keys() == 
+( return  cache.keys()
+) ;
+
+public  size : () ==> int 
+size() == 
+( return  cache.size()
+) ;
+
+public  isEmpty : () ==> bool 
+isEmpty() == 
+( return  cache.isEmpty()
+) ;
+
+public  elements : () ==> [Enumeration]
+elements() == 
+( dcl   cachedObjs : [Vector] := new  Vector(cache.size()),
+        entryList : [Enumeration] := cache.elements();
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  entryList.hasMoreElements() do  
+    ( dcl   entry : [CacheEntry] := entryList.nextElement();
+      if  entry <> nil  
+      then  
+        ( let - = cachedObjs.add(entry.getCachedObject())
+          in 
+            skip 
+        ) 
+    ) ;
+  return  cachedObjs.elements()
+) ;
+
+public  removeAll : () ==> <VOID>
+removeAll() == 
+( let - = cache.clear()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  removeOld : () ==> <VOID>
+removeOld() == 
+( if  cache.size() >= cleanupCacheSize
+  then  
+    ( dcl   keys : map  int  to  [Object] := {l_4 |-> nil  |l_4 in set  {0,...,cache.size()-1}},
+            modTimes : map  int  to  int  := {l_8 |-> 0|l_8 in set  {0,...,cache.size()-1}},
+            keyList : [Enumeration] := cache.keys(),
+            medianTime : int  := 0,
+            idx : int  := 0;
+      trap  j2v_break with  
+        cases  true  : 
+          (isofclass  (J2V_Break,j2v_break)) -> 
+            skip 
+          
+        end  
+      in  
+        while  keyList.hasMoreElements() do  
+        ( dcl   key : [Object] := keyList.nextElement(),
+                entry : [CacheEntry] := cache.get(key),
+                modTime : int  := entry.getModTime();
+          modTimes := modTimes ++ {idx |-> modTime};
+          keys := keys ++ {idx |-> key};
+          def l_3 = medianTime
+          in medianTime := l_3+modTime;
+          idx := idx+1
+        ) ;
+      medianTime := medianTime/cache.size();
+      ( dcl   i : int  := cache.size()-1;
+        while  i >= 0 do  
+        ( if  modTimes(i) < medianTime
+          then  
+            ( let - = remove(keys(i))
+              in 
+                skip 
+            ) ;
+          i := i-1
+        ) 
+      ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  ObjectCache : int  ==> ObjectCache
+ObjectCache(cacheSize) == 
+( def l_6 = (cacheSize*cleanupLoadFactor);
+  l_1 = if  is_(l_6,real ) then  floor(l_6) else  l_6
+  in cleanupCacheSize := l_1;
+  cache := new  Hashtable(cacheSize)
+) ;
+
+public  get : [Object] ==> [Object]
+get(key) == 
+( dcl   obj : [Object] := nil  ,
+        entry : [CacheEntry] := cache.get(key);
+  if  entry <> nil  
+  then  
+    ( obj := entry.getCachedObject();
+      let - = entry.setModTime()
+      in 
+        skip 
+    ) ;
+  return  obj
+) ;
+
+public  remove : [Object] ==> [Object]
+remove(key) == 
+( dcl   obj : [Object] := nil  ,
+        entry : [CacheEntry] := cache.remove(key);
+  if  entry <> nil  
+  then  
+    ( obj := entry.getCachedObject()
+    ) ;
+  return  obj
+) ;
+
+public  contains : [Object] ==> bool 
+contains(cachedObject) == 
+( dcl   found : bool  := false  ,
+        entryList : [Enumeration] := cache.elements();
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  entryList.hasMoreElements() and  not  found do  
+    ( dcl   entry : [CacheEntry] := entryList.nextElement();
+      if  cachedObject = entry.getCachedObject()
+      then  
+        ( found := true  
+        ) 
+    ) ;
+  return  found
+) ;
+
+public  containsKey : [Object] ==> bool 
+containsKey(key) == 
+( return  cache.containsKey(key)
+) ;
+
+public  put : [Object] * [Object] ==> <VOID>
+put(key, cachedObject) == 
+( if  not  containsKey(key)
+  then  
+    ( let - = cache.put(key , new  CacheEntry(cachedObject))
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+instance variables 
+  private  cache : [Hashtable] := nil  ;
+  private  static cleanupLoadFactor : real  := 0.5;
+  private  cleanupCacheSize : int 
+  
+end  ObjectCache

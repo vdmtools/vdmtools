@@ -1,0 +1,22 @@
+class A
+instance variables
+	total:int := 0;
+	
+operations
+	public op: int * int ==> int
+		op(a, b) == ( total := total + a + b; return total; )
+		pre a < 3 post RESULT < 10
+		
+end A
+
+
+class UseA
+instance variables
+	obj:A := new A();
+	
+traces
+	T1: let x in set {1,2,3,4} in
+			let y in set {1,...,10} be st y < 5 in
+				obj.op(x,y){1,5}
+
+end UseA

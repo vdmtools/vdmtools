@@ -1,0 +1,46 @@
+class IOmlLiteral
+end IOmlLiteral
+
+class IOmlNumericLiteral is subclass of IOmlLiteral
+end IOmlNumericLiteral
+
+class IOmlRealLiteral is subclass of IOmlLiteral
+end IOmlRealLiteral
+
+class OmlRealLiteral is subclass of IOmlRealLiteral
+end OmlRealLiteral
+
+class Super
+functions
+	public f: IOmlRealLiteral -> seq of char
+		f(x) == "super";
+end Super
+class Super2 is subclass of Super
+
+end Super2
+class Sub is subclass of Super2
+functions
+	public f: IOmlNumericLiteral -> seq of char
+		f(x) == "sub";
+end Sub
+
+class Z
+functions
+	public Test: Super -> seq of char
+		Test(obj) == obj.f(new OmlRealLiteral());
+		
+end Z
+class A
+
+operations
+ 
+  public Test : () ==> seq of char
+  Test() ==
+    (dcl str : seq of char := "";
+     let z = new Z()
+     in
+       (str := z.Test(new Super());
+        str := str ^ z.Test(new Sub());
+        return str))
+
+end A

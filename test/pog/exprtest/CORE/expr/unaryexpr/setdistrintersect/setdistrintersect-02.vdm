@@ -1,0 +1,21 @@
+class UnaryTest
+types
+
+  A :: set of nat
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> set of (nat | bool | [A])
+TestOP() ==
+  let x = if 6 > 8
+          then {{1,true},{3,8.9},{nil}}
+          elseif 9 = 66
+          then {{4},{9}}
+          else {}
+  in return dinter x;
+
+------------------------------------------------------------------------------
+end UnaryTest

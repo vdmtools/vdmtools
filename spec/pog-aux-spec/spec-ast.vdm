@@ -1,0 +1,345 @@
+\section{Access to AST definitions}
+
+\begin{vdm_al}
+module SPEC_AST
+
+imports 
+
+  from PP_MEDIATOR all,
+
+  from AS all,
+  from CI all,
+  from REP all,
+  from ENV all,
+  from TYPE all
+
+exports all
+
+definitions
+
+types 
+
+string = seq of char;
+
+operations 
+
+  state SPEC of
+    currModName: [AS`Name] 
+    astci: [AS`AstCI]
+    defs: map [AS`Name] to seq of AS`Definitions
+--    typeDefs : seq of AS`Name
+--    fnDefs : seq of AS`Name
+    ast: [AS`Document | AS`Expr]
+  init s == s = mk_SPEC(nil,nil,{|->},nil)
+  end
+
+operations
+
+  setup : () ==> ()
+  setup () ==
+    (
+     currModName := nil;
+     defs := {|->};
+     ast  := nil
+--     typeDefs  := GetTypeDefNames(nil);
+--     fnDefs    := GetFnDefNames();
+    );
+
+--  GetNumberOfTypeDefs : () ==> nat
+--  GetNumberOfTypeDefs () == 
+--    return len typeDefs;
+
+--  GetNumberOfFnDefs : () ==> nat
+--  GetNumberOfFnDefs () == 
+--    return len fnDefs;
+
+--  GetTypeDefName : nat ==> string
+--  GetTypeDefName (index) ==
+--    return PP_MEDIATOR`PrintName(typeDefs(index));
+
+--  GetFnDefName : nat ==> string
+--  GetFnDefName (index) ==
+--    return PP_MEDIATOR`PrintName(fnDefs(index));
+
+  GetModuleName: () ==> [AS`Name]
+  GetModuleName() ==
+    return currModName;
+
+  GetDefs: [AS`Name] ==> seq of AS`Definitions
+  GetDefs(p_nm) ==
+  ( dcl l_defs: [seq of AS`Definitions] := nil;
+--#ifdef VICE
+--    if p_nm = nil or p_nm.ids = []
+--    then return []; 
+--#endif VICE
+    if p_nm in set dom defs
+    then
+      l_defs := defs(p_nm)
+    else
+    ( def l_asts = GetASTs()
+      in
+      ( 
+#ifdef VDMSL
+        l_defs := cases l_asts:
+                    -^-  -> if len l_asts > 0
+                            then
+                              let e = l_asts(1)
+                              in
+                                cases true:
+                                  (is_AS`Module(e))      -> let l_mod=GetModule(p_nm,l_asts)
+                                                            in [l_mod.defs],
+                                  (is_AS`DLModule(e))    -> nil,
+                                  (is_AS`Definitions(e)) -> l_asts
+                                end
+                            else l_asts,
+                    others -> nil
+                  end
+#endif VDMSL
+#ifdef VDMPP
+        let l_cls = GetModule(p_nm,l_asts)
+        in  if l_cls = nil
+            then l_defs := nil
+            else
+             (dcl Defs: AS`Definitions := mk_AS`Definitions({|->},[],{|->},{|->},[],[],nil,{|->},CI`NilContextId);
+              for clnm in l_cls.supercls do
+                def lldefs = GetDefs(clnm)
+                in if len lldefs > 0
+                   then        
+                     let ldefs = hd lldefs
+                     in
+                     ( Defs.typem    := Defs.typem    ++ ldefs.typem;
+                       Defs.valuem   := Defs.valuem   ^  ldefs.valuem;
+                       Defs.fnm      := Defs.fnm      ++ ldefs.fnm;
+                       Defs.opm      := Defs.opm      ++ ldefs.opm;
+                       Defs.instvars := Defs.instvars ^  ldefs.instvars;);
+              Defs.typem    := Defs.typem    ++ l_cls.defs.typem;
+              Defs.valuem   := Defs.valuem   ^  l_cls.defs.valuem;
+              Defs.fnm      := Defs.fnm      ++ l_cls.defs.fnm;
+              Defs.opm      := Defs.opm      ++ l_cls.defs.opm;
+              Defs.instvars := Defs.instvars ^  l_cls.defs.instvars;
+              l_defs:=[Defs])
+#endif VDMPP
+      );
+      if l_defs = nil
+      then l_defs := [];
+      defs := defs ++ {p_nm |-> l_defs}
+    );
+    return l_defs
+  );
+
+  GetTypeDefMap : () ==> map AS`Name to AS`TypeDef
+  GetTypeDefMap () ==
+    return GetTypeDefMap'(currModName);
+
+  GetTypeDefMap' : AS`Name ==> map AS`Name to AS`TypeDef
+  GetTypeDefMap' (mnm) ==
+    return merge {e.typem | e in set elems GetDefs(mnm)};
+
+#ifdef VDMSL
+  GetTypeDef: AS`Name ==> AS`TypeDef | AS`StateDef
+  GetTypeDef (nm) ==
+#endif VDMSL
+#ifdef VDMPP
+  GetTypeDef: AS`Name ==> AS`TypeDef
+  GetTypeDef (nm) ==
+#endif VDMPP
+    return
+      def mk_(l_mnm,l_tnm) = SplitName(nm);
+          l_defs' = GetDefs(l_mnm);
+          l_defs = merge {e.typem | e in set elems l_defs'}
+      in
+        if l_tnm in set dom l_defs
+        then l_defs(l_tnm)
+        else
+#ifdef VDMSL
+          if len l_defs' = 0 or l_defs'(1).State = nil
+          then undefined
+          else l_defs'(1).State
+#endif VDMSL
+#ifdef VDMPP
+          undefined
+#endif VDMPP
+  ;
+
+#ifdef VDMSL
+  GetStateDef: () ==> [AS`StateDef]
+  GetStateDef() ==
+    return GetStateDef'(currModName);
+    
+  GetStateDef': AS`Name ==> [AS`StateDef]
+  GetStateDef'(mnm) ==
+    def l_defs = GetDefs(mnm)
+    in if len l_defs = 0
+       then return nil
+       else return GetDefs(mnm)(1).State;
+#endif VDMSL
+
+  GetFnDefMap : AS`Name ==> map AS`Name to AS`FnDef
+  GetFnDefMap (modnm) ==
+    return merge {e.fnm | e in set elems GetDefs(modnm)};
+
+  GetFnDef: AS`Name ==> AS`FnDef
+  GetFnDef(nm) ==
+    return
+      def mk_(l_mnm,l_tnm) = SplitName(nm);
+          l_defs = merge {e.fnm | e in set elems GetDefs(l_mnm)}
+      in
+        l_defs(l_tnm);
+
+  GetOpDefMap : AS`Name ==> map AS`Name to AS`OpDef
+  GetOpDefMap (modnm) ==
+    return
+      merge {e.opm | e in set elems GetDefs(modnm)};
+
+  GetOpDef: AS`Name ==> AS`OpDef
+  GetOpDef(nm) ==
+    return
+      def mk_(l_mnm,l_tnm) = SplitName(nm);
+          l_defs = merge {e.opm | e in set elems GetDefs(l_mnm)}
+      in
+        l_defs(l_tnm);
+
+  GetValueDefSeq: () ==> seq of AS`ValueDef
+  GetValueDefSeq () ==
+    return
+      def l_defs = GetDefs(currModName)
+      in
+        --conc [l_defs(i).valuem | i in set {1,...,len l_defs}];
+        conc [l_defs(i).valuem | i in set inds l_defs];
+
+  GetTypeDefNames: [AS`Name] ==> seq of AS`Name
+  GetTypeDefNames (mnm) ==
+    let l_mnm = if mnm=nil
+                then currModName
+                else mnm
+    in
+      return SetToSeq[AS`Name](dom GetTypeDefMap'(l_mnm));
+
+  GetFnDefNames: [AS`Name] ==> seq of AS`Name
+  GetFnDefNames(mnm) ==
+    let l_mnm = if mnm=nil
+                then currModName
+                else mnm
+    in
+      return SetToSeq[AS`Name](dom GetFnDefMap(l_mnm));
+
+#ifdef VDMPP
+  GetInstVars : AS`Name ==> seq of AS`InstanceVarDef
+  GetInstVars (modnm) ==
+    return
+      def l_defs = GetDefs(modnm)
+      in conc [l_defs(i).instvars | i in set inds l_defs];
+
+#endif VDMPP
+
+  SplitName: AS`Name ==> [AS`Name] * AS`Name
+  SplitName(nm) ==
+--    return
+--      def l_mnm = if len nm.ids > 1
+--                  then mk_AS`Name([nm.ids(1)],CI`NilContextId)
+--                  else 
+--#ifdef VDMSL
+--                     GetCurrModName();
+--#endif VDMSL
+--#ifdef VDMPP
+--                    def - = ENV`LookUp(nm, false);
+--                        defcls = ENV`LookUpDefClass()
+--                    in
+--                      if defcls = nil
+--                      then GetCurrModName()
+--                      else defcls;
+--#endif VDMPP
+--          l_nm = if len nm.ids > 1
+--                 then mk_AS`Name([nm.ids(2)],CI`NilContextId)
+--                 else nm
+--      in
+--        mk_(l_mnm,l_nm);
+    if len nm.ids > 1
+    then
+      let l_mnm = mk_AS`Name([nm.ids(1)],CI`NilContextId),
+          l_nm = mk_AS`Name([nm.ids(2)],CI`NilContextId)
+      in return mk_(l_mnm,l_nm)
+    else
+#ifdef VDMSL
+      def l_mnm = GetCurrModName();
+#endif VDMSL
+#ifdef VDMPP
+      def l_mnm = def - = ENV`LookUp(nm, false);
+                      defcls = ENV`LookUpDefClass();
+                      curmod = GetCurrModName()
+                  in
+                    if defcls = nil
+                    then curmod
+                    else defcls;
+#endif VDMPP
+          l_nm = nm
+      in return mk_(l_mnm,l_nm);
+
+  GetCurrModName: () ==> [AS`Name]
+  GetCurrModName() ==
+    return currModName;
+
+  SetCurrModName: [AS`Name] ==> ()
+  SetCurrModName(nm) ==
+  (  currModName := nm;
+     ENV`InitEnv();
+#ifdef VDMSL
+     def - = ENV`ExpandModule(<POS>,GetModule(nm,GetASTs()))
+#endif VDMSL
+#ifdef VDMPP
+     def - = ENV`ExpandClass(<POS>,GetModule(nm,GetASTs()))  --  ENV`SetCurClass(nm) is called by ENV`ExpandClass
+#endif VDMPP
+     in skip
+  );
+
+  SetAst: AS`AstCI ==> ()
+  SetAst(p_ast) ==
+    astci := p_ast;
+
+  GetASTs: () ==> AS`Document | AS`Expr
+  GetASTs() ==
+    return astci.ast;
+
+  GetAST: () ==> AS`AstCI
+  GetAST() ==
+    return astci;
+
+functions
+
+--  GetAst: () -> AS`Module
+--  GetAst () == hd GetAst'().ast;
+
+-- Auxiliary	
+
+  SetToSeq[@Elem]: set of @Elem -> seq of @Elem
+  SetToSeq(s) ==
+    if s = {} then []
+    else let x in set s in SetToSeq[@Elem](s\{x})^[x];
+
+#ifdef VDMSL
+  GetModule: AS`Name * seq of (AS`Module | AS`DLModule) -> [AS`Module | AS`DLModule]
+#endif VDMSL
+#ifdef VDMPP
+  GetModule: AS`Name * seq1 of AS`Class -> [AS`Class]
+#endif VDMPP
+  GetModule(p_nm,p_mods) ==
+    let p_set = {l_mod | l_mod in set elems p_mods & l_mod.nm=p_nm}
+    in
+      if card p_set = 0 
+      then
+        nil
+      else
+--        let {l_mod} union - = p_set in l_mod; -- is not supported by CG
+        let l_mod in set p_set in l_mod;
+
+end SPEC_AST
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}
+{rtinfo.ast}[SPEC_AST]
+\end{rtinfo}
+
+
+

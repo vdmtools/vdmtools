@@ -1,0 +1,45 @@
+class PreferenceDataItem is subclass of Serializable
+operations 
+public  getKey : () ==> [String]
+getKey() == 
+( return  key
+) ;
+
+public  getData : () ==> [Object]
+getData() == 
+( return  data
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( return  key+new  String(":")+data
+) ;
+
+public  equals : [Object] ==> bool 
+equals(other) == 
+( if  not  (is_ (other,[PreferenceDataItem]))
+  then  
+    ( if  is_ (other,[String])
+      then  
+        ( return  key.equals(other)
+        ) 
+      else  
+        ( return  false  
+        ) 
+    ) ;
+  ( dcl   di : [PreferenceDataItem] := other;
+    return  key.equals(di.key)
+  ) 
+) ;
+
+public  PreferenceDataItem : [String] * [Serializable] ==> PreferenceDataItem
+PreferenceDataItem(key, data) == 
+( PreferenceDataItem`key := key;
+  PreferenceDataItem`data := data
+) ;
+
+instance variables 
+  private  key : [String];
+  private  data : [Object]
+  
+end  PreferenceDataItem

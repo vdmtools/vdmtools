@@ -1,0 +1,4 @@
+export BASEDIR=//hermes/home/jeppe/toolbox/cgtestenv
+export PATH=//c/jeppe/toolbox/rel62branch/build-optimize://hermes/home/jeppe/toolbox/cgtestenv:$PATH
+export CGTESTDIR=//hermes/home/jeppe/toolbox/releasebranch/cgtest
+export IFADOSTYPE=win32

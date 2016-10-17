@@ -1,0 +1,18 @@
+module OPTIONS
+ 
+imports
+  from CGMAIN all,
+  from AS all
+ 
+exports all
+ 
+ 
+definitions
+ 
+operations
+ 
+SetOptions : () ==> ()
+SetOptions() ==
+  CGMAIN`set_longs_option(true)
+ 
+end OPTIONS 

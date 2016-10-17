@@ -1,0 +1,34 @@
+class TokenStack is subclass of Object
+operations 
+public  pop : () ==> [RuleToken]
+pop() == 
+( return  tokenStack.pop()
+) ;
+
+public  empty : () ==> bool 
+empty() == 
+( return  tokenStack.empty()
+) ;
+
+public  removeAll : () ==> <VOID>
+removeAll() == 
+( let - = tokenStack.removeAllElements()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  TokenStack : () ==> TokenStack
+TokenStack() == 
+( tokenStack := new  Stack()
+) ;
+
+public  push : [RuleToken] ==> [RuleToken]
+push(token__) == 
+( return  tokenStack.push(token__)
+) ;
+
+instance variables 
+  private  tokenStack : [Stack] := nil  
+  
+end  TokenStack

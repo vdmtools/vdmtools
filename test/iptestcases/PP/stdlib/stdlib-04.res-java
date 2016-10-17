@@ -1,0 +1,1 @@
+[ "stdlib-04 string", "", mk_A`RecType(1,-1), mk_A`EmptyType(), mk_(1,2), [ 1, 2, 3 ], [  ], false, -1, 1000000, -0.1, 3.141592654, nil, <start>, 'a', mk_token("tok"), { 1 |-> 2, 3 |-> 4 }, { |-> }, { 1, 2 }, {  } ]

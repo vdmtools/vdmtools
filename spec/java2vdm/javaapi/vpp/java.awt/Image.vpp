@@ -1,0 +1,14 @@
+class JavaAwtImage is subclass of JavaLangObject
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaAwtImage" , <CLASS> , false  )
+operations 
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  JavaAwtImage : <NIL> ==> JavaAwtImage
+JavaAwtImage(-) == 
+isNil := true  ;
+
+
+end  JavaAwtImage

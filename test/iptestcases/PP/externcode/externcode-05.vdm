@@ -1,0 +1,34 @@
+-- This case used to test that changes to the class constructor are retained
+
+class A
+
+instance variables
+
+  i : nat
+
+operations
+
+public Test : () ==> nat
+Test() ==
+( dcl b5 : B5 := new B5();
+  return b5.GetI() + len b5.GetJ()
+);
+
+end A
+
+class B5
+
+instance variables
+
+  i : nat := 0;
+  j : seq of char := []
+
+operations
+
+public GetI : () ==> nat
+GetI() == return i;
+
+public GetJ : () ==> seq of char
+GetJ() == return j;
+
+end B5

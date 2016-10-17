@@ -1,0 +1,12 @@
+--$Header: /home/vdmtools/cvsroot/toolbox/test-jp/test-by-SSlib/User.vpp,v 1.1 2005/11/25 07:05:38 vdmtools Exp $
+class 一般利用者クラス is subclass of 利用者クラス
+--責任
+--蔵書を借りる主体であり、セキュリティ上の理由で、システムに登録されていなければならない。
+
+operations
+
+--職員かどうかを答える。
+public 職員 : () ==> bool
+職員() == return false;
+
+end 一般利用者クラス

@@ -1,0 +1,289 @@
+class SplashPanel is subclass of JPanel
+operations 
+public  dispose : () ==> <VOID>
+dispose() == 
+( let - = SplashPanel`setVisible(false  )
+  in 
+    skip ;
+  splashImage := nil  ;
+  statusFont := nil  ;
+  copyrightFont := nil  ;
+  versionFont := nil  ;
+  textColor := nil  ;
+  backgroundColor := nil  ;
+  return  <VOID>
+) ;
+
+public  getStatusText : () ==> [String]
+getStatusText() == 
+( return  statusText
+) ;
+
+public  paint : [Graphics] ==> <VOID>
+paint(g) == 
+( dcl   imageHeight : int  := 0;
+  if  winWidth > 2*BORDER_WIDTH
+  then  
+    ( if  splashImage <> nil  
+      then  
+        ( let - = g.drawImage(splashImage , BORDER_WIDTH , BORDER_WIDTH , nil  )
+          in 
+            skip ;
+          imageHeight := splashImage.getHeight(nil  )
+        ) ;
+      if  winHeight > imageHeight
+      then  
+        ( let - = g.setColor(backgroundColor)
+          in 
+            skip ;
+          let - = g.fillRect(BORDER_WIDTH , imageHeight+BORDER_WIDTH , winWidth-(2*BORDER_WIDTH) , winHeight-imageHeight-(2*BORDER_WIDTH))
+          in 
+            skip ;
+          let - = g.setColor(textColor)
+          in 
+            skip ;
+          if  statusText <> nil  
+          then  
+            ( let - = centerString(g , statusText , statusFont , statusPosnY)
+              in 
+                skip 
+            ) ;
+          if  copyrightText <> nil  
+          then  
+            ( dcl   curPosnY : int  := copyrightPosnY;
+              ( dcl   i : int  := 0;
+                while  i < copyrightText.length do  
+                ( curPosnY := centerString(g , copyrightText(i) , copyrightFont , curPosnY);
+                  i := i+1
+                ) 
+              ) 
+            ) ;
+          if  versionText <> nil  
+          then  
+            ( let - = centerString(g , versionText , versionFont , versionPosnY)
+              in 
+                skip 
+            ) 
+        ) ;
+      let - = g.setColor(Color`blue)
+      in 
+        skip ;
+      let - = g.setColor(SystemColor`control)
+      in 
+        skip ;
+      ( dcl   i : int  := 0;
+        while  i < BORDER_WIDTH do  
+        ( let - = g.drawLine(winWidth-i-1 , i , winWidth-i-1 , winHeight-i-1)
+          in 
+            skip ;
+          let - = g.drawLine(i , i , i , winHeight-i-1)
+          in 
+            skip ;
+          let - = g.drawLine(i , i , winWidth-i-1 , i)
+          in 
+            skip ;
+          i := i+1
+        ) 
+      ) ;
+      let - = g.drawLine(1 , winHeight-1 , 1 , winHeight-1)
+      in 
+        skip ;
+      let - = g.drawLine(winWidth-2 , winHeight-1 , winWidth-2 , winHeight-1)
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+public  update : [Graphics] ==> <VOID>
+update(g) == 
+( let - = paint(g)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  SplashPanel : [String] ==> SplashPanel
+SplashPanel(imageName) == 
+( let - = SplashPanel(imageName , nil   , nil   , nil   , nil   , nil   , nil   , nil   , nil   , nil  )
+  in 
+    skip 
+) ;
+
+public  setStatusText : [String] ==> <VOID>
+setStatusText(statusText) == 
+( if  statusPosnY >= 0
+  then  
+    ( SplashPanel`statusText := statusText
+    ) ;
+  return  <VOID>
+) ;
+
+private  centerString : [Graphics] * [String] * [Font] * int  ==> int 
+centerString(g, text, textFont, posnY) == 
+( let - = g.setFont(textFont)
+  in 
+    skip ;
+  ( dcl   fm : [FontMetrics] := getFontMetrics(textFont),
+          posnX : int  := (winWidth/2)-(fm.stringWidth(text)/2);
+    let - = g.drawString(text , posnX , posnY)
+    in 
+      skip ;
+    return  (posnY+fm.getHeight())
+  ) 
+) ;
+
+public  SplashPanel : [String] * [String] * map  int  to  [String] * [String] * [Dimension] ==> SplashPanel
+SplashPanel(imageName, statusText, copyrightText, versionText, splashBounds) == 
+( let - = SplashPanel(imageName , Color`white , Color`black , statusText , new  Font(new  String("Serif") , Font`BOLD , 10) , copyrightText , new  Font(new  String("Serif") , Font`BOLD , 12) , versionText , new  Font(new  String("Serif") , Font`BOLD , 12) , splashBounds)
+  in 
+    skip 
+) ;
+
+public  SplashPanel : [String] * [Color] * [Color] * [Font] * [String] * map  int  to  [String] * [String] * [Dimension] ==> SplashPanel
+SplashPanel(imageName, backgroundColor, textColor, textFont, statusText, copyrightText, versionText, splashBounds) == 
+( let - = SplashPanel(imageName , backgroundColor , textColor , statusText , textFont , copyrightText , textFont , versionText , textFont , splashBounds)
+  in 
+    skip 
+) ;
+
+public  SplashPanel : [String] * [Color] * [Color] * [String] * [Font] * map  int  to  [String] * [Font] * [String] * [Font] * [Dimension] ==> SplashPanel
+SplashPanel(imageName, backgroundColor, textColor, statusText, statusFont, copyrightText, copyrightFont, versionText, versionFont, splashBounds) == 
+( let - = JPanel()
+  in 
+    skip ;
+  SplashPanel`splashImage := nil  ;
+  SplashPanel`backgroundColor := backgroundColor;
+  SplashPanel`textColor := textColor;
+  SplashPanel`statusText := statusText;
+  SplashPanel`statusFont := statusFont;
+  SplashPanel`copyrightText := copyrightText;
+  SplashPanel`copyrightFont := copyrightFont;
+  SplashPanel`versionText := versionText;
+  SplashPanel`versionFont := versionFont;
+  SplashPanel`dbVersionText := dbVersionText;
+  ( dcl   toolkit : [Toolkit] := Toolkit`getDefaultToolkit();
+    trap  j2v_exception with  
+      cases  true  : 
+        (is_ (j2v_exception,[Exception])) -> 
+          ( dcl   e : [Exception] := j2v_exception;
+            splashImage := toolkit.createImage({l_4 |-> 0|l_4 in set  {0,...,0-1}})
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( dcl   DWDSJarFile : [String] := DWDSProperties`getProperty(new  String("jar.file")),
+              imageJar : [JarResources] := new  JarResources(DWDSJarFile),
+              mt : [MediaTracker] := new  MediaTracker(self  );
+        splashImage := imageJar.getImage(imageName);
+        let - = mt.addImage(splashImage , 0)
+        in 
+          skip ;
+        let - = mt.waitForID(0)
+        in 
+          skip 
+      ) ;
+    winWidth := splashImage.getWidth(nil  );
+    winHeight := splashImage.getHeight(nil  );
+    if  winWidth < 0 or  winHeight < 0
+    then  
+      ( splashImage := nil  ;
+        winWidth := 0;
+        winHeight := 0
+      ) ;
+    def l_5 = winWidth
+    in winWidth := l_5+2*BORDER_WIDTH;
+    def l_5 = winHeight
+    in winHeight := l_5+2*BORDER_WIDTH;
+    ( dcl   maxTextWidth : int  := 0;
+      if  statusText <> nil  
+      then  
+        ( dcl   statusFM : [FontMetrics] := getFontMetrics(statusFont),
+                textHeight : int  := statusFM.getHeight();
+          def l_10 = winHeight;
+          l_9 = (textHeight*1.5);
+          l_4 = if  is_(l_9,real ) then  floor(l_9) else  l_9;
+          l_2 = l_10+l_4;
+          l_1 = l_2-BORDER_WIDTH
+          in statusPosnY := l_1;
+          def l_5 = winHeight
+          in winHeight := l_5+textHeight*2;
+          if  splashImage = nil  
+          then  
+            ( maxTextWidth := statusFM.stringWidth(statusText)
+            ) 
+        ) ;
+      if  copyrightText <> nil  
+      then  
+        ( dcl   copyrightFM : [FontMetrics] := getFontMetrics(copyrightFont),
+                textHeight : int  := copyrightFM.getHeight();
+          def l_10 = winHeight;
+          l_9 = (textHeight*1.5);
+          l_4 = if  is_(l_9,real ) then  floor(l_9) else  l_9;
+          l_2 = l_10+l_4;
+          l_1 = l_2-BORDER_WIDTH
+          in copyrightPosnY := l_1;
+          def l_8 = winHeight
+          in winHeight := l_8+textHeight*(copyrightText.length+1);
+          if  splashImage = nil  
+          then  
+            ( ( dcl   i : int  := 0;
+                while  i < copyrightText.length do  
+                ( dcl   textWidth : int  := copyrightFM.stringWidth(copyrightText(i));
+                  if  textWidth > maxTextWidth
+                  then  
+                    ( maxTextWidth := textWidth
+                    ) ;
+                  i := i+1
+                ) 
+              ) 
+            ) 
+        ) ;
+      if  versionText <> nil  
+      then  
+        ( dcl   versionFM : [FontMetrics] := getFontMetrics(versionFont),
+                textHeight : int  := versionFM.getHeight();
+          def l_10 = winHeight;
+          l_9 = (textHeight*1.5);
+          l_4 = if  is_(l_9,real ) then  floor(l_9) else  l_9;
+          l_2 = l_10+l_4;
+          l_1 = l_2-BORDER_WIDTH
+          in versionPosnY := l_1;
+          def l_5 = winHeight
+          in winHeight := l_5+textHeight*2;
+          if  winWidth = 0 and  versionFM.stringWidth(versionText) > maxTextWidth
+          then  
+            ( maxTextWidth := versionFM.stringWidth(versionText)
+            ) 
+        ) ;
+      if  splashImage = nil  
+      then  
+        ( winWidth := maxTextWidth+2*BORDER_WIDTH+20
+        ) ;
+      let - = splashBounds.setSize(winWidth , winHeight)
+      in 
+        skip 
+    ) 
+  ) 
+) ;
+
+instance variables 
+  private  static BORDER_WIDTH : int  := 2;
+  private  splashImage : [Image];
+  private  backgroundColor : [Color];
+  private  textColor : [Color];
+  private  statusText : [String];
+  private  statusFont : [Font];
+  private  statusPosnY : int  := -1;
+  private  copyrightText : map  int  to  [String];
+  private  copyrightFont : [Font];
+  private  copyrightPosnY : int ;
+  private  versionText : [String];
+  private  versionFont : [Font];
+  private  dbVersionText : map  int  to  [String];
+  private  versionPosnY : int ;
+  private  winWidth : int ;
+  private  winHeight : int 
+  
+end  SplashPanel

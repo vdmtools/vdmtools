@@ -1,0 +1,54 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ( bool | map nat to nat | nat )  
+Test () ==
+(dcl x : nat,
+     y : nat, 
+     z : nat, 
+     a : nat,
+     d : nat := 0;
+
+ def b in set {1,2,3} = 1 in if true then x := 2;
+ def {e,f} in 
+        set (let g in set {{1,2},{1,4}} be st 4 not in set g in {g}) = 
+                (if true then {1,2} else {1,4}) in 
+                        for id = 1 to 10 by 1 do
+                                y := id;
+
+ def [e] in set Op() = [20-17] in z:=3;
+
+ def 7 in set {1,2,7} = 7 in let e in set {1,2,3,4} be st e=1 in a := e;
+
+ --def mk_(e,f) in set (def {i,j,k} in set {{10,20,30}} = {10,20,30} in 
+ --              {mk_(i,j),mk_(j,k),mk_(i,k)}) = mk_(20,10) in 
+ def mk_(e,f) in set (def s in set {{10,20,30}} = {10,20,30} in 
+               {mk_(i,j) | i,j in set s & i <> j}) = mk_(20,10) in 
+        (dcl a : nat := 5;        
+         a := a+1);
+
+ def mk_AA(e) in set ({mk_AA(10), mk_AA(20), mk_AA(30)}) = mk_AA(20) in 
+        while d < 50 do d := d+1;
+
+ return[x,y,z,a,d]
+
+)
+
+types
+AA :: a1 : int
+
+functions
+Op: () -> set of seq of nat
+Op () ==
+  {[10],[2],[3]}
+
+end A
+
+
+

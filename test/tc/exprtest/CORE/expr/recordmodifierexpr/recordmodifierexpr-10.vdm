@@ -1,0 +1,30 @@
+class  RecordModifierExprTest
+types
+
+A :: n: nat1
+     r : real
+     b : bool | <RED>;
+
+B :: n: real
+     b: [bool | map A to real]
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let A = "ABC",
+      - = let a:A in
+         mu(a, n |-> if false 
+                     then A
+                     else {9,8}, 
+               r |-> cases false:
+                       true -> A,
+                       others -> {9,8}
+                     end ) 
+  in skip;
+
+------------------------------------------------------------------------------
+end RecordModifierExprTest

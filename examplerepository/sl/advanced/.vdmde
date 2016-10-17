@@ -1,0 +1,14 @@
+r GuiDB.vdm
+r MapDB.vdm
+r gui.vdm
+i
+tc GUI
+tc GuiDB
+tc MapDB
+cg GUI
+cg GuiDB
+cg MapDB
+latex GuiDB.vdm
+latex MapDB.vdm
+latex gui.vdm
+quit

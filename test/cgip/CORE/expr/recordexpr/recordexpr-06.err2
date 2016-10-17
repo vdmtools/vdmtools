@@ -1,0 +1,9 @@
+ Error : Type of field number 1 is not compatible with its defined type in Reco
+rd-Constructor-Expr
+  act : bool
+  exp : nat
+m4tmp1, l. 9, c. 29:
+  Error : Type of field number 2 is not compatible with its defined type in Reco
+rd-Constructor-Expr
+  act : bool
+  exp : nat

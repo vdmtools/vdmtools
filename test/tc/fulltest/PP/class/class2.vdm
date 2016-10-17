@@ -1,0 +1,21 @@
+class A
+
+instance variables
+  v : seq of B := [];
+
+operations
+
+A_op : () ==> ()
+A_op() == v.B_Op()
+
+end A
+
+
+class B
+
+operations
+
+public B_Op : () ==> ()
+B_Op() == skip
+
+end B

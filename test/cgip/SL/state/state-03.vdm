@@ -1,0 +1,22 @@
+module A
+exports all
+definitions
+operations
+Inc: () ==> ()
+Inc() ==
+  i := i + 1;
+
+Test: () ==> seq of (int | bool)
+Test() ==
+( dcl res : seq of (int | bool) := [i];
+  Inc();
+  res := res ^ [i];
+  return res
+)
+
+state Sigma of
+  i : int
+  init s == s.i = 10
+end
+
+end A

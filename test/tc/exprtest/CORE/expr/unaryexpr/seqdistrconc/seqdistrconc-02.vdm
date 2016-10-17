@@ -1,0 +1,16 @@
+class UnaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let n = 7,
+      - = conc if 5 <> 0
+             then [[],[8]]
+             else n
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

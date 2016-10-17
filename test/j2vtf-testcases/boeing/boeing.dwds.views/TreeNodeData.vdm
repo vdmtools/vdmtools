@@ -1,0 +1,102 @@
+class TreeNodeData is subclass of Object
+operations 
+public  getType : () ==> [Object]
+getType() == 
+( return  nodeType
+) ;
+
+public  getValue : () ==> [String]
+getValue() == 
+( return  nodeValue
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( return  getValue()
+) ;
+
+public  TreeNodeData : () ==> TreeNodeData
+TreeNodeData() == 
+( nodeBaseValues := new  Vector();
+  branchIndex := 0;
+  isALabelNode := false  
+) ;
+
+public  getBaseValues : () ==> [Enumeration]
+getBaseValues() == 
+( return  nodeBaseValues.elements()
+) ;
+
+public  getBranchIndex : () ==> int 
+getBranchIndex() == 
+( return  branchIndex
+) ;
+
+public  clearBaseValues : () ==> <VOID>
+clearBaseValues() == 
+( let - = nodeBaseValues.removeAllElements()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  getIsALabelNode : () ==> bool 
+getIsALabelNode() == 
+( return  isALabelNode
+) ;
+
+public  setBranchIndex : int  ==> <VOID>
+setBranchIndex(myBranchIndex) == 
+( branchIndex := myBranchIndex;
+  return  
+) ;
+
+public  setIsALabelNode : bool  ==> <VOID>
+setIsALabelNode(isALabelNodeFlag) == 
+( isALabelNode := isALabelNodeFlag;
+  return  
+) ;
+
+public  setType : [Object] ==> <VOID>
+setType(type) == 
+( nodeType := type;
+  return  <VOID>
+) ;
+
+public  setValue : [String] ==> <VOID>
+setValue(newValue) == 
+( nodeValue := newValue;
+  return  <VOID>
+) ;
+
+public  addBaseValue : [String] ==> <VOID>
+addBaseValue(value__) == 
+( let - = nodeBaseValues.addElement(value__)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  TreeNodeData : [Object] * [String] ==> TreeNodeData
+TreeNodeData(type, value__) == 
+( let - = TreeNodeData()
+  in 
+    skip ;
+  let - = setValue(value__)
+  in 
+    skip ;
+  let - = setType(type)
+  in 
+    skip ;
+  branchIndex := 0;
+  isALabelNode := false  
+) ;
+
+instance variables 
+  private  nodeBaseValues : [Vector] := nil  ;
+  private  nodeValue : [String] := nil  ;
+  private  nodeType : [Object] := nil  ;
+  private  branchIndex : int ;
+  private  isALabelNode : bool 
+  
+end  TreeNodeData

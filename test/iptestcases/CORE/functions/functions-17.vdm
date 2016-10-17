@@ -1,0 +1,31 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+functions
+f1: nat -> nat
+f1(a) ==
+  1+a
+pre true;
+
+
+g: (int * int) -> int * int
+g(mk_(n1, n2)) ==
+  mk_(n1 + n2, n1- n2);
+
+
+h: set of nat -> set of nat
+h({a,b}) ==
+   {a-b, a+b};
+
+
+operations
+
+  public Test : () ==> seq of ( nat | int * int | set of nat )
+  Test () ==
+    let  localdef(n1, n2: nat, -: set of nat) res: nat
+                   pre n1 > n2
+                   post n1 + n2 = res
+    in return [ localdef(3,3,{6}) ]
+
+
+end A

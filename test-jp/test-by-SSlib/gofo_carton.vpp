@@ -1,0 +1,54 @@
+/*
+*
+* Carton Abstract Class
+* $Id: gofo_carton.vpp,v 1.1 2005/11/25 07:05:38 vdmtools Exp $
+*
+*　責任
+*	日付や発番者や帳簿列などの環境を保持する。
+*/
+class GofoCarton is subclass of 『問題領域共通定義』
+
+types
+public 「環境」 = map 「文字列」 to 「環境項目」;	--「環境項目」は『問題領域共通定義』で定義された項目でaこと。
+/*
+public 「環境」 ::
+	基準日 : 「日付」
+	発番者 : 『発番者』
+	帳簿列 : seq of GofoBook
+	;
+*/
+	
+instance variables
+public 環境 : [「環境」] := {|->};
+
+operations
+public GofoCarton : 「環境」 ==> GofoCarton
+GofoCarton(a環境) == 
+	(
+	環境 := a環境;
+	return self
+	);
+
+public 環境を得る : 「文字列」 ==> 「環境項目」
+環境を得る(a名前) == 
+	(
+	if a名前 not in set dom 環境 then
+		exit "GofoCarton: 環境獲得エラー: 「環境の名前」が一致せず、環境を獲得できません。";
+	return 環境(a名前)
+	);
+
+public 環境を設定する : 「環境」 ==> ()
+環境を設定する(a環境) == 環境 := 環境 ++ a環境;
+
+/*
+public 基準日を得る : () ==> 「日付」
+基準日を得る() == return 環境.基準日;
+
+public 発番者を得る : () ==> 『発番者』
+発番者を得る() == return 環境.発番者;
+
+public 帳簿列を得る : () ==> seq of 「帳簿」
+帳簿列を得る() == return 環境.帳簿列;
+*/
+
+end GofoCarton

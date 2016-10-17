@@ -1,0 +1,2053 @@
+%\latexpdf{\pdfcatalog{/PageMode /UseOutlines} openaction goto page 1 {/Fit}}{}
+%%
+%% Toolbox Test Automation  Manual
+%% PGL 2007
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PDF compatibility code. 
+
+\makeatletter
+\newif\ifpdflatex@
+\ifx\pdftexversion\@undefined
+\pdflatex@false
+%\message{Not using pdf}
+\else
+\pdflatex@true
+%\message{Using pdf}
+\fi
+
+\newcommand{\latexpdf}[2]{
+  \ifpdflatex@ #1
+  \else #2
+  \fi
+}
+
+\newcommand{\latexorpdf}[2]{
+  \ifpdflatex@ #2
+  \else #1
+  \fi
+}
+
+\makeatother
+
+\newcommand{\RuleTarget}[1]{\hypertarget{rule:#1}{}}
+\newcommand{\Ruledef}[2]
+{
+  \RuleTarget{#1}\Rule{#1}{#2}%
+  }
+\newcommand{\Ruleref}[1]{
+  \hyperlink{rule:#1}{#1}}
+
+\newcommand{\vdmsl}{VDM-SL}
+\newcommand{\vdmpp}{VDM++}
+
+#ifdef VDMSL       %%%%%%%%%%%%%%%%%%%%%%%%%%%% new command for VDM-SL 
+\newcommand{\vdmslpp}{VDM-SL}
+\newcommand{\vdmslppEm}{VDM-SL}
+\newcommand{\ToolboxName}{VDM-SL Toolbox}
+\newcommand{\Toolbox}{Toolbox}
+\newcommand{\toolbox}{Toolbox}
+\newcommand{\vdmde}{vdmde}
+\newcommand{\vdmgde}{vdmgde}
+\newcommand{\vdmhome}{vdmhome}
+\newcommand{\vdmdeNineteen}{vdmde}
+\newcommand{\vdmdeNineteenEl}{vdmde.el}
+\newcommand{\VdmSlPp}{\VdmSl}
+\newcommand{\vdmext}{vdm}
+#ifdef ENG
+\newcommand{\vdmModView}{\guicmd{Module View}}
+#endif ENG
+#ifdef JPN
+\newcommand{\vdmModView}{\guicmd{モジュールビュー}}
+#endif JPN
+#endif VDMSL   %%%%%%%%%%%%%%%%%%%%%%%%%%%%% new command for VDM-SL end
+#ifdef VDMPP   %%%%%%%%%%%%%%%%%%%%%%%%%%% new command for VDM++
+\newcommand{\vdmslpp}{VDM++}
+\newcommand{\vdmslppEm}{VDM++}
+\newcommand{\ToolboxName}{VDM++ Toolbox}
+\newcommand{\Toolbox}{Toolbox}
+\newcommand{\toolbox}{Toolbox}
+\newcommand{\vdmde}{vppde}
+\newcommand{\vdmgde}{vppgde}
+\newcommand{\vdmhome}{vpphome}
+\newcommand{\vdmdeNineteen}{vppde}
+\newcommand{\vdmdeNineteenEl}{vppde.el}
+\DeclareRobustCommand{\VdmSlPp}{VDM++-\VdmSl}
+\newcommand{\vdmext}{vpp}
+#endif VDMPP %%%%%%%%%%%%%%%%%%%%%%%%%% new vcommand for VDM++
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\pformat}{a4paper}
+
+\latexorpdf{
+\documentclass[\pformat,11pt]{article}
+}{
+% pdftex option is used by graphic[sx],hyperref,toolbox.sty
+\documentclass[\pformat,pdftex,11pt]{article}
+}
+
+\usepackage[dvipdfmx]{graphicx, color}
+
+% definition of VDM++, JavaCC, JJTree, JTB, ANTLR and SableCC for listings
+\usepackage{listings}
+\setcounter{topnumber}{3}
+\def\topfraction{1.0}
+\setcounter{bottomnumber}{3}
+\def\bottomfraction{1.0}
+\setcounter{totalnumber}{3}
+\def\textfraction{.1}
+\renewcommand{\floatpagefraction}{0.8}
+\usepackage{times}
+\usepackage{color}
+\include{customlangdef}
+% define the layout for listings
+\lstdefinestyle{tool}{basicstyle=\ttfamily,
+                         frame=trBL, 
+			 showstringspaces=false, 
+			 frameround=ffff, 
+			 framexleftmargin=0mm, 
+			 framexrightmargin=0mm}
+\lstdefinestyle{mystyle}{basicstyle=\small\ttfamily,
+                         frame=trBL, 
+%                         numbers=left, 
+%			 gobble=0, 
+			 showstringspaces=false, 
+%			 linewidth=\textwidth, 
+			 frameround=fttt, 
+			 aboveskip=5mm,
+			 belowskip=5mm,
+			 framexleftmargin=0mm, 
+			 framexrightmargin=0mm}
+%\lstdefinestyle{mystyle}{basicstyle=\sffamily\small,
+%			 frame=tb,
+%                         numbers=left,
+%			 gobble=0,
+%			 showstringspaces=false,
+%			 linewidth=345pt,
+%			 frameround=ffff,
+%			 framexleftmargin=8mm,
+%			 framexrightmargin=8mm,
+%			 framextopmargin=1mm,
+%			 framexbottommargin=1mm,
+%			 aboveskip=7mm,
+%			 belowskip=5mm,
+%			 xleftmargin=10mm,}
+
+\lstset{style=mystyle}
+\lstset{language=VDM++}
+%\lstset{alsolanguage=Java}
+% The command below enables you to escape into normal LaTeX mode inside your 
+% VDM chunks by starting with a `!�ｴ character and ending with a `▲�ｴ
+%\lstset{escapeinside=!▲}
+
+
+\usepackage{toolbox}
+\usepackage{vdmsl-2e}
+%\usepackage{vdm}
+\usepackage{makeidx}
+\usepackage{alltt}
+%\usepackage{epsfig}
+\usepackage{here}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{ifthen}
+% plainpages=false: avoid warning
+%   destination with the same identifier already exists
+%   but it do not seem to work a the first pages
+\latexorpdf{
+\usepackage[dvipdfm,bookmarks=true,bookmarksnumbered=true,colorlinks,plainpages=true]{hyperref}
+%\usepackage[dvipdfm,plainpages=true,colorlinks,linkcolor=black,citecolor=black,pagecolor=black, urlcolor=black]{hyperref}
+}{
+\usepackage[plainpages=true,colorlinks]{hyperref}
+}
+
+
+\usepackage{vpp}
+
+\newcommand{\Index}[1]{#1\index{#1}}
+
+%\usepackage{latexsym}
+%\usepackage{epsf}
+%\renewcommand{\vpp}{\small\tt}
+\newcommand{\tr}[1]{{\bf\underline{#1}}}
+\newcommand{\NL}{\mbox{}\\ \vspace*{-5mm}}
+
+
+\newcommand{\insertfig}[4]{ % Filename, epsheight, epswidth, caption,  label
+\begin{figure}[H]
+\begin{center}
+\includegraphics[width=#2]{#1} 
+\end{center}
+\caption{{\em #3}} #4
+\end{figure}
+}
+
+\newcommand{\insertfignw}[3]{ % Filename, caption,  label
+\begin{figure}[h]
+\begin{center}
+\includegraphics{#1} 
+\end{center}
+\caption{{\em #2}} #3
+\end{figure}
+}
+
+\newcommand{\insertfignwrot}[3]{ % Filename, caption,  label
+\begin{figure}[h]
+\begin{center}
+\scalebox{1}%
+{\rotatebox{270}{%
+\includegraphics{#1}}}
+\end{center}
+\caption{{\em #2}} #3
+\end{figure}
+}
+
+\makeindex
+
+
+\newcommand{\MYEQUIV}{$\equiv$}
+\newlength{\nonstandlen}
+\newcommand{\nonstandard}[1]{%
+}
+\newenvironment{TypeSemantics}{\begin{longtable}[r]{|p{3.5cm}|p{9cm}|}\hline%
+  Operator Name & Semantics Description \\ \hline\hline \endhead}% 
+  {\hline\end{longtable}}
+  
+%\renewcommand{\vdmpp}{{\small VDM}$^{++}$}
+
+\makeatletter
+% ------------- TOC manipulation ------------
+\def\docglbldepth{1}
+%\setcounter{secnumdepth}{\docglbldepth}
+%\setcounter{tocdepth}{\docglbldepth}
+\def\@pnumwidth{3.0em}
+% more space for for >10 subsections
+%\def\l@section{\@dottedtocline{1}{1.5em}{3.1em}}
+\def\l@subsection{\@dottedtocline{2}{1.5em}{2.8em}}
+%\def\l@subsubsection{\@dottedtocline{3}{4.3em}{3.6em}}
+%\def\l@paragraph{\@dottedtocline{4}{7.9em}{4.1em}}
+%\def\l@subparagraph{\@dottedtocline{5}{10em}{5em}}
+\makeatother
+
+\makeindex
+%\latexpdf{\pdfinfo{
+% /Title (The  VDM-SL Language)
+% /Author (The VDM Tool Group, The Institute of Applied Computer Science)
+%}}{}
+#ifdef VDMSL
+\newcommand{\vdmtoolsver}{v9.0.6}
+#endif VDMSL
+#ifdef VDMPP
+\newcommand{\vdmtoolsver}{v9.0.6}
+#endif VDMPP
+\newcommand{\Lit}[1]{`{\tt #1}\Quote}
+\newcommand{\Rule}[2]{
+  \begin{quote}\begin{tabbing}
+    #1\index{#1}\ \ \= = \ \ \= #2  ; %    Adds production rule to index
+    
+  \end{tabbing}\end{quote}
+  }
+\newcommand{\SeqPt}[1]{\{\ #1\ \}}
+\newcommand{\lfeed}{\\ \> \>}
+\newcommand{\dsepl}{\ $|$\ }
+\newcommand{\dsep}{\\ \> $|$ \>}
+\newcommand{\Lop}[1]{`{\sf #1}\Quote}
+\newcommand{\blankline}{\vspace{\baselineskip}}
+\newcommand{\Brack}[1]{(\ #1\ )}
+\newcommand{\nmk}{\footnotemark}
+\newcommand{\ntext}[1]{\footnotetext{{\bf Note: } #1}}
+\newlength{\kwlen}
+\newcommand{\Keyw}[1]{\settowidth{\kwlen}{\tt #1}\makebox[\kwlen][l]{\sf
+    #1}}
+\newcommand{\keyw}[1]{{\sf #1}}
+\newcommand{\id}[1]{{\tt #1}}
+\newcommand{\metaiv}[1]{\begin{alltt}\input{#1}\end{alltt}}
+
+\newcommand{\OptPt}[1]{[\ #1\ ]}
+\newcommand{\MAP}[2]{\kw{map }#1\kw{ to }#2}
+\newcommand{\INMAP}[2]{\kw{inmap }#1\kw{ to }#2}
+\newcommand{\SEQ}[1]{\kw{seq of }#1}
+\newcommand{\NSEQ}[1]{\kw{seq1 of }#1}
+\newcommand{\SET}[1]{\kw{set of }#1}
+\newcommand{\PROD}[2]{#1 * #2}
+\newcommand{\TO}[2]{$#1 \To #2$}
+\newcommand{\FUN}[2]{#1 \To #2}
+\newcommand{\PUBLIC}{\ifthenelse{\boolean{VDMpp}}{public\mbox{}}{\mbox{}}}
+\newcommand{\PRIVATE}{\ifthenelse{\boolean{VDMpp}}{private}{\mbox{}}}
+\newcommand{\PROTECTED}{\ifthenelse{\boolean{VDMpp}}{protected}{\mbox{}}}
+% definition of VDM++, JavaCC, JJTree, JTB, ANTLR and SableCC for listings
+\include{customlangdef}
+% define the layout for listings
+\lstdefinestyle{tool}{basicstyle=\ttfamily,
+                         frame=trBL, 
+			 showstringspaces=false, 
+			 frameround=ffff, 
+			 framexleftmargin=0mm, 
+			 framexrightmargin=0mm}
+\lstdefinestyle{mystyle}{basicstyle=\ttfamily,
+                         frame=trBL, 
+%                         numbers=left, 
+%			 gobble=0, 
+			 showstringspaces=false, 
+%			 linewidth=\textwidth, 
+			 frameround=ffff, 
+			 aboveskip=5mm,
+			 belowskip=5mm,
+			 framexleftmargin=0mm, 
+			 framexrightmargin=0mm}
+%\lstdefinestyle{mystyle}{basicstyle=\sffamily\small,
+%			 frame=tb,
+%                         numbers=left,
+%			 gobble=0,
+%			 showstringspaces=false,
+%			 linewidth=345pt,
+%			 frameround=ffff,
+%			 framexleftmargin=8mm,
+%			 framexrightmargin=8mm,
+%			 framextopmargin=1mm,
+%			 framexbottommargin=1mm,
+%			 aboveskip=7mm,
+%			 belowskip=5mm,
+%			 xleftmargin=10mm,}
+
+\lstset{style=mystyle}
+\lstset{language=VDM++}
+%\lstset{alsolanguage=Java}
+% The command below enables you to escape into normal LaTeX mode inside your 
+% VDM chunks by starting with a `?ｴ character and ending with a `｣ｴ
+\lstset{escapeinside=?｣}
+
+\begin{document}
+%\latexpdf{\pdfcatalog{/PageMode /UseOutlines} openaction goto page 1 {/Fit}}{}
+
+\vdmtoolsmanualcsk{The Integrity Checking: Using Proof Obligations}
+        {\vdmtoolsver}
+        {2016}
+        {\vdmslpp}
+        {1.0}
+
+
+\section{Introduction}
+
+A \vdmslpp\ model, even one that is type correct, may contain internal
+inconsistencies. For example, there may be potentially erroneous
+applications of partial operators, or there may be more subtle
+defects, such as failure of a function to maintain a data type
+invariant. Freedom from such defects is called ``integrity''. The
+Integrity Examiner in VDMTools helps users to check the integrity of
+models by automatically generating the checks (called ``proof
+obligations'') that have to be performed in order to ensure
+integrity. If all the proof obligations are shown to be satisfied by
+the model, then there is a guarantee that the VDM model is internally
+consistent \cite{Aichernig&97}. Checking proof obligations helps to
+identify many defects in models. However, it should be stressed that
+it does not guarantee that the model is fit for purpose; for example,
+it does not prove that the models is an accurate expression of system
+requirements.
+
+This document provides insight into the different kinds of proof
+obligation and into alternative techniques to gain confidence in the
+correctness of each kind of proof obligation.
+
+The most typical proof obligations involve checking the following: 
+\begin{itemize}
+\item data type invariants,
+\item pre-conditions,
+\item post-conditions,
+\item sequence bounds,
+\item mapping domains and
+\item in general application of partial operators.
+\end{itemize}
+
+How should proof obligations be checked? A range of techniques is
+available, including inspection, testing and proof. At the simplest
+level, the user may simply inspect the obligations and check them
+manually. In the case of many obligations this can be a very quick
+process, but may lack reliability. Proof obligations ay also be
+checked by testing, in which the statement of the obligation itself is
+used to suggest carefully selected tests that check for potential
+violations. These tests can form useful additions to the normal test
+set for the model and may be useful in regression testing. 
+
+Perhaps the most obvious way to check a proof obligation is by proving
+it using a VDM proof support system. Such a proof support system is
+not yet a standard feature of VDMTools, although experimental systems
+are under development in the research community. This document
+explains how users may instead prove parts of the proof obligations by
+a mapping to using Higher Order Logic~(HOL)~\cite{Gordon&93} or
+alternatively by doing manual proofs in the manner
+\cite{Bicarregui&94}.
+
+The user manual for VDMTools \cite{UserManPP} contains an explanation
+of the integrity checker. This manual provides further detail on the
+types of proof obligation generated by the integrity checker and
+offers advice on the ways in which they can be checked. For each
+different kind of proof obligation the manual provides:
+\begin{itemize}
+\item A brief explanation;
+%\item The general form of the proof obligation is provided;
+\item A small example; and
+\item Guidance on how one may gain more confidence in the
+correctness is provided.
+\end{itemize}
+
+The guidance here covers inspection, testing and, in some cases,
+example proofs written by hand using the classical VDM style
+\cite{Bicarregui&94,Jones90a}. This style is used because it is easier
+to comprehend for human beings than the typical automatic proofs
+produced by a theorem prover such as HOL~\cite{Gordon87}.
+
+The examples used in this manual are based mainly on functional
+models. This is because proof obligations for explicit operations with
+statements in the body are generated by the integrity examiner as
+predicates that that are required to hold at a particular point in the
+operation body. This contrasts with the obligations generated for
+functions and implicit operations; in these cases the context of the
+predicate is incorporated into the proof obligation. Explicit
+operations are treated in this different way because it is not
+possible to derive the appropriate context information automatically
+because of the presence of the presence of loops etc. For these
+obligations, the user needs to gain confidence manually that the
+predicate will not be violated in any possible execution of a body
+statement.
+ 
+Section~\ref{sec:pogcat} gives an overview of the different categories
+of proof obligation; the obligations in each category are then
+decribed in Scetions~\ref{sec:domainpos}
+to~\ref{sec:termpos}. Section~\ref{sec:proof} explains how proofs can
+be carried out using automated support by mapping to
+HOL~\cite{Vermolen07}.
+ 
+\section{Proof Obligation Categories}\label{sec:pogcat}
+
+The integrity checker in VDMTools distinguishes around 30 types of
+proof obligation for VDM++ models. Many of the obligations share
+similarities and can be proved in similar ways. Therefore, a
+categorization will be followed that was proposed and used in
+\cite{Agerholm&99b} as part of the PROSPER project. The following
+groups of proof obligations are distinguished:
+
+\begin{description}
+\item[Domain checking:] This group contains the obligations resulting
+     from the use of partial functions and partial operators. These
+     are mainly caused by the use of preconditions on functions or on
+     operators.
+\item[Subtype checking:] Proof obligations that are required due to
+     the use of subtypes, in particular the use of invariants and
+     union types.
+\item[Satisfiability of implicit definitions:] Proof obligations that
+     are the result of the use of implicit function/operation
+     definition style. For each of these, a proof has to be given that
+     the implicitly defined function can have a result for any valid input.
+\item[Termination:] For each recursive function a proof is required that it
+     will always terminate.
+\end{description}
+
+\section{Domain Checking Proof Obligations}
+\label{sec:domainpos} 
+
+\subsection{Function Applications}
+
+\begin{description}
+\item[Explanation:]
+Whenever a function or an operation that has a pre-condition is called it
+is the caller's responsibility to ensure that the pre-condition is
+satisfied at the calling point. 
+%\item[Form:] The proof obligation here will be of the general form: 
+%\begin{lstlisting}
+% ?\textit{context}｣  => pre_f(?\textit{arguments}｣)
+%\end{lstlisting}
+%where the \textit{context} typically have the form ``\texttt{forall id
+%: type}'' where \texttt{id} is bound to \texttt{type} for example in
+%the parameters to the function calling the function with a pre-condition. 
+\item[Example:]  \NL
+\begin{lstlisting}
+values
+
+  c1 : nat = 8
+
+functions
+
+Div: real * real -> real
+Div(a,b) ==
+  a / b
+pre b <> 0;
+
+Use: real -> real
+Use(a1) ==
+  let b1 = if a1 <= c1 then a1 else 0
+  in
+    Div(a1,b1)
+pre a1 <> 0 and a1 < c1
+\end{lstlisting}
+Here the application of the \texttt{Div} function will yield a proof
+obligation:
+\begin{lstlisting}
+(forall a1 : real &
+   a1 < c1 =>
+   (let b1 = (if a1 <= c1 then a1 else 0)
+    in
+      pre_Div(a1, b1)))
+\end{lstlisting}
+
+\item[Guidance:] \NL
+  \begin{description}
+  \item[Inspection:] This kind of proof obligation can be inspected
+  by checking manually whether the context of the function application
+  ensures that the pre-condition of the called function is
+  satisfied. In this example if the function \texttt{Use} did not have
+  a pre-condition itself \texttt{b1} could be defined using the
+  \texttt{else} clause and thus be 0. In essense the ``\texttt{else
+  0}'' part here is ``dead code'' because it can never be reached if
+  the pre-condition is not violated.
+  \item[Test:] Tests for this kind of proof obligation can improve
+       confidence in the correctness in the calling function if they
+       aim to violate the pre-condition of the function being
+       called. So in this case one would try to find arguments to the
+       \texttt{Use} function that satisfy both its type constraint and
+       its pre-condition (if any), but violate the pre-condition of
+       the \texttt{Div} function. If in this case the first
+       ``\texttt{a1 <> 0}'' was omitted from the pre-condition of
+       \texttt{Use} it would be possible to violate the pre-condition
+       of \texttt{Div} by the call \texttt{Use(0)}.
+  \item[Proof:] A manual proof of this proof obligation would take the
+  following form:
+\end{description}
+\end{description}
+%\begin{proof}
+%\From \texttt{a1} : real\\
+%\Infer \texttt{pre-Div(a1,b1)} \by Folding(A)\\
+%\end{proof}
+\begin{lstlisting}
+from
+1 from a1 : real
+1.1 from a1 <> 0 and a1 < c1
+1.1.1  a1 <> 0 ?\hfill and-E-R(1.1.h)｣
+1.1.2  a1 < c1 ?\hfill and-E-L(1.1.h)｣
+1.1.3  (if a1 <= c1 then a1 else 0) =  a1
+       ?\hfill cond-true(1.h,1.1.3)｣
+1.1.4  (if a1 <= c1 then a1 else 0) <> 0
+       ?\hfill =-subs-L(b)(1.h,1.1.1,1.1.3)｣
+1.1.5  (if a1 <= c1 then a1 else 0) : real 
+       ?\hfill type-inh-L(1.h,1.1.3)｣
+1.1.6  pre-Div(a1,(if a1 <= c1
+                   then a1 
+                   else 0)) ?\hfill fold(1.1.4)｣
+    infer (let b1 = if a1 <= c1 then a1 else 0
+           in
+             pre-Div(a1,b1) ?\hfill let(1.1.5,1.1.6)｣
+  infer a1 <> 0 and a1 < c1 =>
+        (let b1 = if a1 <= c1 then a1 else 0
+         in
+           pre-Div(a1,b1) ?\hfill =>-I(1.1)｣
+infer forall a1 : real & a1 <> 0 and a1 < c1 =>
+        (let b1 = if a1 <= c1 then a1 else 0
+         in
+           pre-Div(a1,b1) ?\hfill forall-I(1)｣
+\end{lstlisting}
+
+If, for example, one had forgotten the ``\texttt{a1 <> 0}'' part in the
+precondition this would be discovered in an automatic proof by this
+predicate appearing as a new sub-goal (which naturally could not be
+proved). If an interactive proof approach was used, the proof would come
+to a failing point as shown below:
+
+\begin{lstlisting}
+from
+1 from a1 : real
+1.1 from a1 < c1
+1.1.1  a1 <= c1 ?\hfill <to<=(1.1.h)｣
+1.1.2  (if a1 <= c1 then a1 else 0) =  a1
+       ?\hfill cond-true(1.h,1.1.1)｣
+1.1.3  a1 <> 0 ?\hfill /FAILS/｣
+1.1.4  (if a1 <= c1 then a1 else 0) <> 0
+       ?\hfill =-subs-L(b)(1.h,1.1.1,1.1.3)｣
+1.1.5  (if a1 <= c1 then a1 else 0) : real 
+       ?\hfill type-inh-L(1.h,1.1.3)｣
+1.1.6  pre-Div(a1,(if a1 <= c1
+                   then a1 
+                   else 0)) ?\hfill fold(1.1.4)｣
+    infer (let b1 = if a1 <= c1 then a1 else 0
+           in
+             pre-Div(a1,b1) ?\hfill let(1.1.5,1.1.6)｣
+  infer a1 < c1 =>
+        (let b1 = if a1 <= c1 then a1 else 0
+         in
+           pre-Div(a1,b1) ?\hfill =>-I(1.1)｣
+infer forall a1 : real & a1 < c1 =>
+        (let b1 = if a1 <= c1 then a1 else 0
+         in
+           pre-Div(a1,b1) ?\hfill forall-I(1)｣
+\end{lstlisting}
+
+\subsection{Mapping Application}
+
+\begin{description}
+\item[Explanation:] 
+Whenever a mapping is applied to a value it must be ensured that the
+value is present in the domain of the mapping. 
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+functions
+
+MapApply: (map bool to real) * bool -> real
+MapApply(m,a) ==
+  m(a)
+pre {true,false} = dom m
+\end{lstlisting}
+Here the application of the mapping \texttt{m} yields the following
+proof obligation:
+\begin{lstlisting}
+(forall m : (map bool to real), a : bool &
+   {true,false} = dom (m) => a in set dom (m))
+\end{lstlisting}
+Note that if the obvious pre-condition ``\texttt{a in set dom m}'' was
+used the integrity checker would not have generated a proof obligation
+at all, because it would be trivially found in the context.
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] When inspecting proof obligations for mapping
+  applications one needs to look for assurance of the existence of the
+  applied expression in the domain of the mapping. Typically this is
+  guranteed by either a pre-condition or a check in the context before
+  the mapping application of the form ``\texttt{a in set dom m}''.
+  \item[Test:] In deriving test cases for such proof obligations one
+  must search for cases where the application is not defined in the
+  domain of the mapping.
+  \item[Proof:] Proofs of this kind of obligations follow the same
+  style as presented above for function application. When automatic
+  proof support is available this kind of proof obligation can often
+  be proved entirely automatically.
+  \end{description}
+\end{description}
+
+\subsection{Sequence Application}
+
+\begin{description}
+\item[Explanation:] 
+Whenever a sequence is applied with an index value it must be ensured that the
+index is within the length of the sequence. 
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+functions
+
+MapApply: (seq of real) * nat1 -> real
+MapApply(s,i) ==
+  s(i)
+pre i in set {1,..., len s}
+\end{lstlisting}
+Here the application of the sequence \texttt{s} yield the following
+proof obligation:
+\begin{lstlisting}
+(forall s : (seq of real), i : nat1 &
+   i in set {1,...,len (s)} => i in set inds (s))
+\end{lstlisting}
+Note that if the pre-condition had been expressed in the natural way:
+``\texttt{i in set inds s}'' the proof obligation would not be
+generated at all, because it would be trivially be found in the context.
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] When inspecting proof obligations for sequence
+  applications one needs to look for assurance of the existence of the
+  indexed expression in the indices of the sequence. Typically this is
+  guranteed by either a pre-condition or a check in the context before
+  the sequence application of the form ``\texttt{i in set inds s}''.
+  \item[Test:] In deriving test cases for such proof obligations one
+  must seach for cases where the application is not defined in the
+  indices of the sequence.
+  \item[Proof:] Proofs of this kind of proof obligations follow the
+  same style as presented above for function application. When
+  automatic proof support is available this kind of proof obligations
+  can normally be proved entirely automatically.
+  \end{description}
+\end{description}
+
+\subsection{Non-empty Sequence}
+
+\begin{description}
+\item[Explanation:] 
+Some operators on sequences (i.e.\ \keyw{hd} and \keyw{tl}) are
+partial and when they are not defined for empty sequences this proof
+obligation will be generated.
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+functions
+
+NonEmptySeq: seq of nat -> nat
+NonEmptySeq(list) ==
+  if len list > 1
+  then hd list
+  else 0
+\end{lstlisting}
+Here the application of the \texttt{hd} sequence operation on the
+\texttt{list} parameter yield the following
+proof obligation:
+\begin{lstlisting}
+(forall list : seq of nat &
+   len (list) > 1 => list <> [])
+\end{lstlisting}
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] When inspecting proof obligations for non-empty
+  sequences one needs to check if the sequence potentially could be
+  empty. Typically this is
+  guranteed by either a pre-condition or a check in the context before
+  the sequence application of the form ``\texttt{list <> []}''.
+  \item[Test:] In deriving test cases for such proof obligations one
+  must seach for cases where the sequence is empty.
+  \item[Proof:] Proofs of this kind of proof obligations are typically
+  fairly straightforward. In this case the proof would look like:
+  \end{description}
+\end{description}
+
+\begin{lstlisting}
+from
+1 from list : seq of nat
+1.1 from len (list) > 1
+    infer list <> [] ?\hfill List-prop(1.1.h)｣
+  infer len (list) > 1 => list <> [] ?\hfill =>-I(1.1)｣
+infer (forall list : seq of nat &
+         len (list) > 1 => list <> []) ?\hfill forall-I(1)｣
+\end{lstlisting}
+
+\subsection{Sequence Modification}
+
+\begin{description}
+\item[Explanation:] Whenever a sequence modification expression is
+used there will be a proof obligation that ensures that the indices in
+the modifying part of the expression are indices of the sequence to be
+modified.
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+functions
+
+SeqMod: nat1 * real * seq of real -> seq of real
+SeqMod(ind,val,list) ==
+  list ++ {ind |-> val}
+pre ind in set inds list
+\end{lstlisting}
+Here the application of the sequence modification operation on the
+\texttt{list} parameter yield the following
+proof obligation:
+\begin{lstlisting}
+(forall ind : nat1, val : real, list : seq of real &
+   ind in set inds (list) =>
+      dom ({ind |-> val}) subset inds (list))
+\end{lstlisting}
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] When inspecting proof obligations for
+  sequence modifications one needs to check that the index to be
+  modified always will be an existing index in the sequence. Typically this is
+  guranteed by either a pre-condition or a check in the context before
+  the sequence application of the form ``\texttt{ind in set inds list}''.
+  \item[Test:] In deriving test cases for such proof obligations one
+  must seach for cases where the index does not already exist in the sequence.
+  \item[Proof:] Proofs of this kind of proof obligations are typically
+  fairly straightforward. In this case the proof would look like:
+  \end{description}
+\end{description}
+
+\begin{lstlisting}
+from
+1 from ind : nat1, val : real, list : seq of real
+1.1 from ind in set inds (list)
+1.1.1 {ind} = dom ({ind |-> val}) ?\hfill Dom-prop(1.1.h)｣
+    infer dom ({ind |-> val}) subset 
+          inds (list) ?\hfill subset-prop(1.1.h,1.1.1)｣
+  infer ind in set inds (list) =>
+        dom ({ind |-> val}) subset inds (list) ?\hfill =>-I(1.1)｣
+infer (forall ind : nat1, val : real, list : seq of real &
+          ind in set inds (list) =>
+          dom ({ind |-> val}) subset inds (list)) ?\hfill forall-I(1)｣
+\end{lstlisting}
+
+\subsection{Map Compatibility}
+
+\begin{description}
+\item[Explanation:] 
+Some operators on mappings (i.e.\ \texttt{munion} and \texttt{merge})
+require mappings to be compatible (i.e.\ whenever they have
+overlapping domain elements these map uniquely to the same range
+value). When these are present this proof obligation will be present. 
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+functions
+
+MUnion: (map nat to nat) * (map nat to nat) -> 
+         map nat to nat
+MUnion(m1,m2) ==
+  m1 munion m2
+pre forall a in set dom m1 inter dom m2 & m1(a) = m2(a)
+\end{lstlisting}
+Here the use of the \texttt{munion} operation on the
+\texttt{m1} and \texttt{m2} parameters yields the following
+proof obligations:
+\begin{lstlisting}
+(forall m1 : (map nat to nat), m2 : (map nat to nat) &
+   (forall a in set dom (m1) inter dom (m2) &
+      m1(a) = m2(a)) =>
+      (forall id_1 in set dom (m1), id_2 in set dom (m2) &
+         id_1 = id_2 => m1(id_1) = m2(id_2)))
+
+(forall m1 : (map nat to nat), m2 : (map nat to nat) &
+   (forall a in set dom (m1) inter dom (m2) &
+      a in set dom (m1)))
+
+(forall m1 : (map nat to nat), m2 : (map nat to nat) &
+   (forall a in set dom (m1) inter dom (m2) &
+      a in set dom (m2)))
+\end{lstlisting}
+where the last two are generated because of the two mapping
+applications in the pre-condition and both are trivially
+satisfied. The first one is more complicated because it needs to
+express that the mappings shall be compatible.
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] When inspecting proof obligations for
+  mapping compatibility one needs to check for overlapping domain
+  elements mapping to the same value in both mappings. Typically this is
+  guranteed by either not having any overlapping domain elements. This
+  is usually expressed in a pre-condition or a check in the context before
+  the merge of two mappings of the form ``\texttt{dom m1 inter dom m2 = \{\}}''.
+  \item[Test:] In deriving test cases for such proof obligations one
+  must seach for cases where there are domain elements that overlap in
+  a way such that they are not compatible.
+  \item[Proof:] Proofs of this kind of obligation can be complex. In this example the proof would look like:
+  \end{description}
+\end{description}
+
+\begin{lstlisting}
+from
+1 from m1 : (map nat to nat), m2 : (map nat to nat)
+1.1 from a in set dom (m1) inter dom (m2)
+1.1.1 from m1(a) = m2(a)
+1.1.2 from id_1 in set dom (m1), id_2 in set dom (m2)
+1.1.2.1 from id_1 = id_2
+        infer m1(id_1) = m2(id_2) ?\hfill =-subs(1.1.1h,1.1.2.1h)｣
+      infer id_1 = id_2 => 
+            m1(id_1) = m2(id_2) ?\hfill =>-I(1.1.2.1)｣
+      infer (forall id_1 in set dom (m1), 
+                    id_2 in set dom (m2) &
+               id_1 = id_2 => 
+               m1(id_1) = m2(id_2)) ?\hfill =forall-I(1.1.1)｣
+  infer m1(a) = m2(a) =>
+        (forall id_1 in set dom (m1), id_2 in set dom (m2) &
+           id_1 = id_2 => 
+           m1(id_1) = m2(id_2))) ?\hfill forall-I(1.1)｣
+infer (forall m1 : (map nat to nat), m2 : (map nat to nat) &
+         (forall a in set dom (m1) inter dom (m2) &
+            m1(a) = m2(a)) =>
+            (forall id_1 in set dom (m1),
+                    id_2 in set dom (m2) &
+               id_1 = id_2 => 
+               m1(id_1) = m2(id_2))) ?\hfill forall-I(1)｣
+\end{lstlisting}
+
+\subsection{Map Enumeration}
+
+\begin{description}
+\item[Explanation:] 
+Whenever a mapping enumeration expression is used with more than one
+maplet, it must be ensured
+that if the same domain value is used multiple times that it always
+maps to the same range value.
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+functions
+
+MapEnum: nat * bool * nat * bool -> map nat to bool
+MapEnum(n1,b1,n2,b2) ==
+  {n1 |-> b1, n2 |-> b2}
+pre n1 <> n2
+\end{lstlisting}
+Here the enumeration of more than one maplet yield the following
+proof obligation:
+\begin{lstlisting}
+(forall n1 : nat, b1 : bool, n2 : nat, b2 : bool &
+  n1 <> n2 =>
+  (forall m_3,m_4 in set {{n1 |-> b1},{n2 |-> b2}} &
+    (forall id_5 in set dom (m_3), id_6 in set dom (m_4) &
+       id_5 = id_6 => m_3(id_5) = m_4(id_6))))
+\end{lstlisting}
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] Inspecting mapping enumerations is typically not
+  a problem because the domain elements are typically very simple
+  expressions, normally constants.
+  \item[Test:] In deriving test cases for such proof obligations one
+  must seach for cases where there are domain elements that overlap.
+  \item[Proof:] If constants are used these proofs are very straithforward.
+  \end{description}
+\end{description}
+
+\subsection{Map Composition}
+
+\begin{description}
+\item[Explanation:] 
+Whenever map composition is used there will be a proof obligation
+ensuring that the range element of one mapping will belong to the
+domain of the composed mapping.
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+functions
+
+MCompo: (map nat to nat) * (map nat to nat) -> 
+         map nat to nat
+MCompo(m1,m2) ==
+  m1 comp m2
+pre rng m2 subset dom m1
+\end{lstlisting}
+Here the composition of two mappings yield the following
+proof obligation:
+\begin{lstlisting}
+(forall m1 : (map nat to nat), m2 : (map nat to nat) &
+   rng (m2) subset dom (m1) =>
+   rng (m2) subset dom (m1))
+\end{lstlisting}
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] Mapping composition is not often used in VDM
+  models. However, when it is employed, the user must check that the
+  range of the second mapping is a subset of the domain of the first
+  mapping. In other formalisms where relations are used frequently
+  such elements simply disappear from the resulting relation and thus
+  they do not have a similar limitation to the one from this kind of
+  proof obligation.
+  \item[Test:] In deriving test cases for such proof obligations one
+  must seach for cases where the range of the second mapping is not
+  contained in the domain of the first mapping.
+  \item[Proof:] The proof obligation produced here is trivially proved
+  correct. 
+  \end{description}
+\end{description}
+
+\subsection{Map Iteration}
+
+\begin{description}
+\item[Explanation:] 
+Whenever map iteration is used either the right hand side must be 0
+(an identity mapping of the domain of the argument map) or the right hand
+side is equal to 1 (the mapping unchanged) or the range of the mapping
+must be a subset of the domain of the mapping.
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+functions
+
+MIter: (map nat to nat) * nat -> map nat to nat
+MIter(m1,n) ==
+  m1 ** n
+pre rng m1 subset dom m1
+\end{lstlisting}
+Here the composition of the mapping and the natural number yield the following
+proof obligation:
+\begin{lstlisting}
+(forall m1 : (map nat to nat), n : nat &
+   rng (m1) subset dom (m1) =>
+   n = 0 or
+   n = 1 or
+   rng (m1) subset dom (m1))
+\end{lstlisting}
+As stated above if \texttt{n} is zero we would simply get an identity
+mapping over the domain of the argument mapping. If \texttt{n} is one
+then we just get the argument mapping. However, if \texttt{n} is
+larger than one we have the same limitation as presented for mapping
+composition above.
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] Mapping iteration is not often used in VDM
+  models, but when it is used, and one needs to inspect this kind of
+  proof obligation, it is necessary to check that the range of the 
+  mapping is a subset of the domain of the mapping. 
+  \item[Test:] In deriving test cases for such proof obligations one
+  must seach for cases where the range of the mapping is not
+  contained in the domain of the mapping.
+  \item[Proof:] In this example the pre-condition is slightly
+  stronger than necessary, so it would be trivially proved.
+  \end{description}
+\end{description}
+
+\subsection{Function Composition}
+
+\begin{description}
+\item[Explanation:] 
+Whenever function composition is used there will be a proof obligation
+ensuring that the resulting value of one function will belong to the
+domain of the composed function (i.e.\ satisfy the pre-condition).
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+functions
+
+FunComposition: (nat -> nat) * (nat -> nat) -> (nat -> nat)
+FunComposition(fun1,fun2) ==
+  fun1 comp fun2
+pre forall x : nat & pre_(fun2,x) => pre_(fun1,fun2(x))
+\end{lstlisting}
+Here the composition of the two functions yield the following
+proof obligation:
+\begin{lstlisting}
+(forall fun1 : (nat -> nat), fun2 : (nat -> nat) &
+   (forall x : nat & pre_(fun2,x) =>
+                     pre_(fun1,fun2(x))) 
+   =>
+   (forall xx_13 : nat & pre_(fun2,xx_13) =>
+                         pre_(fun1,fun2(xx_13))))
+\end{lstlisting}
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] Function composition is not often used in VDM
+  models, but when they are used and one needs to inspect this kind of
+  proof obligation one needs to check if the range of the second
+  function is a subset of the domain of the first function. In other
+  formalisms where relations are used frequently such elements simply
+  disappear from the resulting relation and thus they do not have a
+  similar limitation as the one from this kind of proof obligation.
+  \item[Test:] In deriving test cases for such proof obligations one
+  must seach for cases where the range of the second function is not
+  contained in the domain of the first function.
+  \item[Proof:] Because of the pre-condition the proof obligatio in
+  the example here is trivially proved.
+  \end{description}
+\end{description}
+
+\subsection{Function Iteration}
+
+\begin{description}
+\item[Explanation:] 
+Whenever map iteration is used either the right hand side must be 0
+(an identity mapping of the domain of the mapping) or the right hand
+side is equal to 1 (the mapping unchanged) or the range of the mapping
+must be a subset of the domain of the mapping.
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+functions
+
+FunIter: (nat -> nat) * nat -> (nat -> nat)
+FunIter(fun,n) ==
+  fun ** n
+pre forall x : nat & pre_(fun,x) => pre_(fun,fun(x))
+\end{lstlisting}
+Here the composition of the function and the natural number yield the following
+proof obligation:
+\begin{lstlisting}
+(forall fun : (nat -> nat), n : nat &
+   (forall x : nat & pre_(fun,x) =>
+                     pre_(fun,fun(x))) 
+   =>
+   n > 1 =>
+   (forall xx_7 : nat & pre_(fun,xx_7) =>
+                        pre_(fun,fun(xx_7))))
+\end{lstlisting}
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] Function iteration is not often used in VDM
+  models, but when they are used, and one needs to inspect this kind of
+  proof obligation, one needs to check if the range of the 
+  function is a subset of the domain of the function. 
+  \item[Test:] In deriving test cases for such proof obligations one
+  must seach for cases where the range of the function is not
+  contained in the domain of the function.
+  \item[Proof:] In this example with the pre-condition it would be 
+  trivially proved.
+  \end{description}
+\end{description}
+
+\subsection{Non-empty Set}
+
+\begin{description}
+\item[Explanation:] 
+Whenever a distributed set intersection operator is used there is a
+proof obligation that the argument set is non-empty.
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+functions
+
+DInter: set of set of nat -> set of nat
+DInter(ss) ==
+  dinter ss
+\end{lstlisting}
+Here the distributed intersection yields the following
+proof obligation:
+\begin{lstlisting}
+(forall ss : set of set of nat & ss <> {})
+\end{lstlisting}
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] When inspecting this kind of proof obligation
+  one simply needs to look for the possibility of the set of sets
+  being empty. That should be very easy to see.
+  \item[Test:] In deriving test cases for this kind of proof
+  obligation one simply needs to look for test cases that would yield
+  an empty set as argument to a \texttt{dinter} operator.
+  \item[Proof:] In this case the pre-condition guarding \texttt{ss}
+  from being empty is missing so it cannot be proved. If that was
+  included it would be trial to prove it. 
+  \end{description}
+\end{description}
+
+\subsection{Non-zeroness}
+
+\begin{description}
+\item[Explanation:]
+Some operators on numbers require one of the operands to be different
+from 0 (e.g.\ division). In these cases this proof obligation is used.
+%\item[Form:]
+%The proof obligation here will be of the general form: 
+%\begin{lstlisting}
+% ?\textit{context}｣  => a <> 0
+%\end{lstlisting}
+%where the \textit{context} typically have the form ``\texttt{forall id
+%: type}'' where \texttt{id} is bound to \texttt{type} for example in
+%the parameters to the function calling the function with a
+%pre-condition. \texttt{a} in a proof obligation like the one above
+%would be the second parameter of a division operator.
+\item[Example:]  \NL
+\begin{lstlisting}
+functions
+
+Div: real * real -> real
+Div(a,b) ==
+  a / b
+\end{lstlisting}
+Here a proof obligation will be generated:
+\begin{lstlisting}
+forall a : real, b : real & b <> 0
+\end{lstlisting}
+expressing that division by 0 is not defined. Note that in case a
+pre-condition with ``\texttt{b <> 0}'' is added, the proof obligation will
+be skipped entirely by the integrity checker, because it can see that
+the predicate to be proven is directly present in the context.
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] For this kind of proof obligations it tend to be
+  very easy to simply inspect a VDM model and see whether the context
+  will ensure that divide by zero does not occur.
+  \item[Test:] In order to gain further confidence one can try to
+  select test cases that potentially could give rise to a divide by
+  zero situation. In this case it would be easy for example with a
+  test case like \texttt{Div(7,0)}.
+  \item[Proof:] In this case it is trivial to see that a proof would
+  highlight the missing pre-condition right away.
+  \end{description}
+\end{description}
+
+\subsection{Tuple Selection}
+
+\begin{description}
+\item[Explanation:] Whenever a tuple selection expression is used
+there will be a proof obligation ensuring that the tuple contains at
+least as many components as the selected field number. Note that since
+the selector is a constant number this proof obligation only needs to
+be generated in the presence of union types of tuples. Otherwise the
+plain type checker will be able to statically detect violations.
+%\item[Form:] 
+\item[Example:] \NL
+\begin{lstlisting}
+types
+
+T1 = nat * bool;
+
+T2 = nat * bool * real
+
+functions
+
+Select: T1 | T2 -> nat
+Select(a) ==
+  a.#1
+\end{lstlisting}
+With a VDM model like this the tuple select expression will give rise
+to two proof obligations:
+\begin{lstlisting}
+(forall a : (T1 | T2) & 
+   is_(a,(nat * bool * real)) => 1 <= 3)
+
+forall a : (T1 | T2) & 
+   is_(a,(nat * bool)) => 1 <= 2)
+\end{lstlisting}
+in order to indicate that the selector must be smaller than or equal
+to the length of a possible tuple type.
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] In this case it is easy to see that both proof
+  obligations are satisfied simply by inspection.
+  \item[Test:] With a more complicated context for a tuple select
+  expression it could be worthwhile to try to make special tests that
+  would select an index higher than the length of a particular
+  possible tuple type.
+  \item[Proof:] In this case both proof obligations can be trivially proved.
+  \end{description}
+\end{description}
+
+\section{Subtype Checking Proof Obligations}
+\label{sec:subptypepos}
+
+\subsection{Subtype}
+
+\begin{description}
+\item[Explanation:] 
+In many different situations one type is expected and the type
+of the value provided overlaps with the expected type. In these
+cases proof obligations are needed to ensure that the value provided
+is indeed a subtype of the expected type.
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+functions
+
+SubType: real -> nat
+SubType(r) ==
+  r
+pre is_nat(r)
+\end{lstlisting}
+Since the natural numbers form a subset of the real numbers in VDM this
+gives rise to the following proof obligation:
+\begin{lstlisting}
+(forall r : real & is_nat(r) => is_nat(r))
+\end{lstlisting}
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] When inspecting subtype proof obligations one
+  needs to see if it is ensured that only values of the correct
+  subtype will be present. With the use of union types this proof
+  obligation will appear frequently, and it is easy to spot omissions
+  by plain inspection.
+  \item[Test:] In deriving tests for this kind of proof obligation one
+  needs to look for test cases where values outside the desired
+  subtype will reach the relevant point in the VDM model.
+  \item[Proof:] The proof of the proof obligation in the example here
+  is trivial but that will not always be the case with larger union
+  types. However, typically it is possible to use automatic proof
+  support for this kind of proof obligations.
+  \end{description}
+\end{description}
+
+\subsection{Invariants}
+
+\begin{description}
+\item[Explanation:] 
+Whenever a type has an invariant then all expressions that must belong to
+this type gives rise to this kind of proof obligation.
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+types
+
+Even = int
+inv e == e mod 2 = 0
+
+functions
+
+Next: Even -> Even
+Next(e) ==
+  e + 2
+\end{lstlisting}
+With this model the invariant will give rise to the following proof
+obligation:
+\begin{lstlisting}
+(forall e : Even & inv_Even(e + 2))
+\end{lstlisting}
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] When inspecting invariant proof obligations one
+  needs to see if it is ensured that only values satisfying the
+  invariant will be present. 
+  \item[Test:] In deriving tests for this kind of proof obligation one
+  needs to look for test cases that violates the invariant. Depending
+  upon the complexity of the invariant, and the number of types used in
+  the definition of the type that themselves have invariants, this can
+  require human insight and thus in the general case, it can be hard to
+  automate. 
+  \item[Proof:] The proof of the the proof obligation for the example
+  is trivial but depending upon the complexity of the invariants
+  involved this can be a complex task.
+  \end{description}
+\end{description}
+
+\subsection{Post Condition}
+
+\begin{description}
+\item[Explanation:] 
+When functions or operations are defined explicitly and in addition
+has a post-condition then the body of the function/operation should
+terminate in a situation that does not violate the
+post-condition. This property can easily be formulated for functions
+by inserting the body expression as a parameter to a call of the
+implicitly produced post-condition predicate. However, since there is
+no way to automatically transform a statement to an expression +
+information about the side effects the actual predicate is left out
+for operations.
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+operations
+
+OpPost: nat ==> nat
+OpPost(n) ==
+  (dcl sum : nat := 0;
+   for i = 1 to n do
+     sum := sum + i;
+   return sum)
+post 2 * RESULT = n * (n+1)
+\end{lstlisting}
+Here one would need to prove that given any natural number the
+\texttt{OpPost} operation will yield a result that satisfy the
+predicate in the post-condition. In the general case this would also
+need to take all possible states into account and the explicit body of
+the operation will have to live up to the state-changes documented in
+the post-condition predicate.
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] When inspecting this kind of proof obligation one
+  needs to consider whether the explicit body of the operation in all
+  cases will be able to ensure the post-condition provided. Note that
+  in the presence of concurrency this may be a bit tricky because
+  permission predicates are then necessary to ensure secure access to
+  critical regions.
+  \item[Test:] When tests needs to be derived in relation to this
+  proof obligation one needs to consider situations where the post
+  condition provided may be violated. From a practical perspective
+  the testing of this should be carried out when switching on
+  post-condition checking in the interpreter for VDMTools.
+  \item[Proof:] At present this cannot be proved because the proof
+  theory for the explicit operations is not provided in complete form
+  anywhere. 
+  \end{description}
+\end{description}
+
+\section{Satisfiability of Implicit Definitions Proof Obligations}
+\label{sec:satispos}
+
+\subsection{Satisfiability}
+
+\begin{description}
+\item[Explanation:] 
+For all functions and operations that are defined implicitly (with a
+post-condition) a satisfiability proof obligation is generated. This
+expresses that for all valid inputs from the input domains satisfying
+the pre-condition there must exist at least one resulting value
+satisfying the post-condition.
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+functions
+
+SatFun(n : nat) r : nat
+post n = 0 => r = 1 and
+     n <> 0 => r = n * (n + 1)
+\end{lstlisting}
+With an implicit definition such as this a general satisfiability
+proof obligation will be produced: 
+\begin{lstlisting}
+(forall n : nat &
+   (exists r : nat & post_SatFun(n, r)))
+\end{lstlisting}
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] When inspecting this kind of proof obligation one
+  needs to consider whether it always will be possible to find a
+  result that satisfy the post-condition. In particular in the
+  presence of invariants for the resulting type this can be a complex task.
+  \item[Test:] Testing this kind of proof obligations cannot be done
+  directly since no explicit function definition is present. Thus, one
+  can either gain increased confidence in running the post-condition
+  on its own. Alternatively one can derive an explicit version of the
+  function and test that with respect to its post-condition.
+  \item[Proof:] Proving this kind of proof obligations is complex to
+  automate, because that essentially requires deriving an algorithm
+  for the different possible values that can be given as input for the
+  function. For manual proofs it is recommended that meaningful names
+  are given to different parts of a post-condition in the VDM model in 
+  case that it is
+  large (spans over many lines). If this is done it is possible to
+  fold the different parts according to the names of the different
+  predicates and in this way it becomes more human readable. For the 
+  example here the proof would look like:
+  \end{description}
+\end{description}
+
+\begin{lstlisting}
+from
+1 from n : nat
+1.1 from n = 0
+1.1.1 exists r : nat & n = 0 => r = 1 ?\hfill exists-I(1.1.h)｣
+    infer (exists r : nat & n = 0 => r = 1 and
+                            n <> 0 => r = n * (n + 1)) 
+                         ?\hfill and-true-neutral-lemma(1.1.1)｣
+1.2 from n <> 0
+1.2.1 exists r : nat & n <> 0 => r = n * (n + 1) ?\hfill exists-I(1.1.h)｣
+    infer (exists r : nat & n = 0 => r = 1 and
+                            n <> 0 => r = n * (n + 1))
+                        ?\hfill and-true-neutral-lemma(1.2.1)｣
+1.3 (exists r : nat & n = 0 => r = = 1 and
+                      n <> 0 => r = n * (n + 1)) ?\hfill case(1.1,1.2)｣
+  infer (exists r : nat & post_SatFun(n, r)) ?\hfill fold(1.3)｣
+infer (forall n : nat &
+         (exists r : nat & post_SatFun(n, r))) ?\hfill forall-I(1)｣
+\end{lstlisting}
+
+\subsection{Exhaustive Matching in Cases Expression}
+
+\begin{description}
+\item[Explanation:] 
+Whenever a cases expression is used without an \texttt{others} clause there is
+a proof obligation that for all possible case values must match at
+least one of the pattern matching alternatives. 
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+functions
+
+AllCases: nat -> nat
+AllCases(n) ==
+  cases {n}:
+    {1}           -> 1,
+    {e} union {1} -> e
+  end
+\end{lstlisting}
+The cases expression inside \texttt{AllCases} yield the following
+proof obligation:
+\begin{lstlisting}
+(forall n : nat & {n} = {(1)} or
+   (exists {e} union {(1)} : set of nat &
+      {n} = {e} union {(1)}))
+\end{lstlisting}
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] When inspecting this kind of proof obligation one
+  needs to consider whether it always will be possible to match the
+  value against at least of of the case alternatives. If there is any
+  doubt that this may not always be the case it is recommended to
+  introduce an \texttt{others} clause.
+  \item[Test:] In deriving tests for this proof obligation one may
+  attempt to look for test cases that potentially may not match any of
+  the case alternatives.
+  \item[Proof:] With large case expressions the proof obligation being
+  generated becomes rather longwinded as well. This means that from a
+  human readability point of view it becomes more complex but
+  otherwise it is not too difficult to prove its correctness, assuming
+  that the case alternatives are not too exotic. In most cases such
+  case alternatives are used to match the different record
+  alternatives for a union type where each element of the union is
+  defined as a record type.
+  \end{description}
+\end{description}
+
+\subsection{State Invariants}
+
+\begin{description}
+\item[Explanation:] 
+Whenever a class or a superclass of that class has invariants over the
+instance variables it must be ensured that such invariants are always
+satisfied. Thus, whenever an assignment is made to an instance
+variable in such a class a proof obligation about respecting the
+invariant(s) is produced.
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+class A
+
+instance variables
+
+  a : nat := 8;
+  inv a < 10;
+
+operations
+
+InstInvOp: () ==> nat
+InstInvOp() ==
+  (if a < 10
+   then a := a + 1;
+   return a)
+
+end A
+\end{lstlisting}
+Here the assignment to an instance variable in a class that has an
+invariant as in class \texttt{A} a proof obligation stating that the
+state invariant must be preserved. No predicate expressing this is
+given.
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] When inspecting proof obligations of this nature
+  one needs to consider whether the context will ensure that the
+  invariants for the instance variables being assigned to will always
+  be satisfied. Note that multiple invariants can be defined over the
+  instance variables and all of these shall be satisfied whenever an
+  assignment is made to one of them. 
+  \item[Test:] When tests needs to be derived in relation to this
+  proof obligation one needs to consider situations where the
+  invariant for the instance variables may be violated. 
+  From a practical perspective
+  the testing of this should be carried out when switching on
+  both the dynamic type checking option as well as the invariant
+  checking option checking in the interpreter for VDMTools.
+  \item[Proof:] At present this cannot be proved because the proof
+  theory for the explicit operations is not provided in complete form
+  anywhere. 
+  \end{description}
+\end{description}
+
+\subsection{Exhaustive Function Patterns}
+
+\begin{description}
+\item[Explanation:] 
+Whenever a pattern that will not always match potential values is used
+in the parameter list of a function or an operation, it is a proof
+obligation that this matching always will succeed by either a
+pre-condition to the function/operation or a subtype of the argument
+type. 
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+types
+
+A ::
+  a : nat;
+
+B ::
+  a : nat;
+
+functions
+
+FunPat: A | B -> nat
+FunPat(mk_A(elem)) ==
+  elem
+\end{lstlisting}
+Here the pattern in the function parameter list yield a proof
+obligation as:
+\begin{lstlisting}
+(forall xx_1 : (A | B) &
+   (exists mk_A(elem) : (A | B) &
+       xx_1 = mk_A(elem)))
+\end{lstlisting}
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] When inspecting this kind of proof obligation one
+  needs to consider whether it always will be possible to match values
+  from the input type(s) against the pattern(s) in the formal parameter
+  declaration of the function/operation in question. 
+  \item[Test:] Testing whether this kind of proof obligation is
+  satisfied one needs to look for values from subtypes that will not
+  match the parameter pattern(s). 
+  \item[Proof:] For the example here it will not be possible to prove
+  the proof obligation because it will not match values from the
+  \texttt{B} type. In case this was taken care of in the pre-condition
+  (or in the function signature) this would be easy to prove.
+  \end{description}
+\end{description}
+
+\subsection{Non-emptiness of Let be such Binding}
+
+\begin{description}
+\item[Explanation:] Whenever a let-be-such-that expression or 
+statement is used it is a proof obligation to ensure that there exists
+at least one element in the collection that the choice must be
+conducted from.
+%\item[Form:] 
+\item[Example:] \NL
+\begin{lstlisting}
+functions
+
+Simple: () -> nat
+Simple() ==
+  let x in set {1,2}
+  in
+    x;
+
+Choose: (nat -> bool) -> nat
+Choose(p) ==
+  let r : nat be st pre_(p,r) and p(r)
+  in
+    r
+pre exists x : nat & pre_(p,x) and p(x) = true
+\end{lstlisting}
+With a VDM model like this the let-be expressions will give rise
+to two proof obligations:
+\begin{lstlisting}
+(forall p : (nat -> bool) &
+   (exists x : nat & pre_(p,x) and p(x) = true) 
+   =>
+   (exists r : nat & pre_(p,r) and p(r)))
+
+(exists x in set {1,2} & true)
+\end{lstlisting}
+derived from \texttt{Choose} and \texttt{Simple} respectively.
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] When inspecting this kind of proof obligation one
+  needs to consider whether it always will be possible to choose
+  values from a set or type. This could fail if either the set is
+  empty or the restricting predicate is false for all possible values
+  from the set/type.
+  \item[Test:] When test cases are derived for this kind of proof
+  obligations one need to look for ways of either getting an empty set
+  or how the restricting predicate can yield false for all set/type values.
+  \item[Proof:] Both of the proof obligations provided in the given
+  example are easy to prove. However in general it can be difficult to
+  prove this kind of proof obligations automatically when complex
+  predicates are used.
+  \end{description}
+\end{description}
+
+\subsection{Non-emptiness of Binding}
+
+\begin{description}
+\item[Explanation:] 
+Whenever a value is bound to a complex pattern it 
+is a proof obligation to ensure that it is possible to match the value
+against the pattern.
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+values
+
+[a] ^ l2 = if 6 > 8 then [] else [7,5,2]
+\end{lstlisting}
+This value definition gives rise to the following proof obligation: 
+\begin{lstlisting}
+(exists [a] ^ l2 : seq of nat1 &
+   [a] ^ l2 = (if 6 > 8 then [] else [7,5,2]))
+\end{lstlisting}
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] When inspecting a VDM model that gives rise to
+  this kind of proof obligation one needs to look for values that
+  cannot match the complex pattern.
+  \item[Test:] When tests needs to be derived in order to gain
+  confidence in the correctness of this kind of proof obligations one
+  needs to try to find possibilities for test values not matching a complex
+  pattern. 
+  \item[Proof:] In the example provided here the proof obligation
+  can be proved easily but if the test predicate could yield true it
+  would be impossible to prove it, because it would be invalid (i.e.\
+  the pattern cannot match an empty sequence).
+  \end{description}
+\end{description}
+
+\subsection{Unique Existence Binding}
+
+\begin{description}
+\item[Explanation:] 
+Whenever an iota expression or an exists unique expression is used
+there is a proof obligation to ensure that exactly one element satisfies
+the iota predicate.
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+functions
+
+Unique: set of nat -> nat
+Unique(s) ==
+  iota e in set s & forall e2 in set s & e <= e2
+pre s <> {}
+\end{lstlisting}
+The iota expression here will give rise
+to this proof obligation:
+\begin{lstlisting}
+(forall s : set of nat &
+   s <> {} =>
+   (exists1 e in set s &
+      (forall e2 in set s & e <= e2)))
+\end{lstlisting}
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] When inspecting a VDM model that gives rise to
+  this kind of proof obligation one needs to look for ways in which no
+  elements or more than one element satisfy a given predicate.
+  \item[Test:] When tests needs to be derived in order to gain
+  confidence in the correctness of this kind of proof obligations one
+  needs to try to find ways in which none or more than one value will
+  satisfy the predicate.
+  \item[Proof:] Proof obligations of this kind can be difficult to
+  prove. In this case the proof looks like:
+  \end{description}
+\end{description}
+
+\begin{lstlisting}
+from
+1 from  s : set of nat
+1.1 from s <> {}
+    infer (exists1 e in set s &
+             (forall e2 in set s & e <= e2)) ?\hfill total-order(1.1h)｣
+  infer s <> {} =>
+        (exists1 e in set s &
+           (forall e2 in set s & e <= e2)) ?\hfill =>-I(1.1)｣
+infer (forall s : set of nat &
+          s <> {} =>
+          (exists1 e in set s &
+             (forall e2 in set s & e <= e2))) ?\hfill forall-I(1)｣
+\end{lstlisting}
+
+\subsection{Finiteness of Set}
+
+\begin{description}
+\item[Explanation:] When set comprehensions are defined using a type 
+binding there will be a proof obligation ensuring that the resulting
+set will be finite.
+
+There are many ways of establishing that a set is finite. The
+obligation that is generated for a mapping comprehension takes the
+following approach. For a set comprehension
+
+\begin{lstlisting}
+{a | a : A & P(a)}
+\end{lstlisting}
+
+It is necessary to show that there is only a finite number of values
+of type A that satisfy the predicate P, hence there is only a finite
+number of values in the set. This is done by showing that the values
+can be counted, i.e. a mapping can be constructed from the natural
+numbers on to all those values of type A satisfying P, i.e. 
+\begin{lstlisting}
+exists m: map nat to A & 
+   forall a:A & P(a) => exists in set dom m & m(i)=a
+\end{lstlisting}
+Since mappings in VDM are finite, the existence of a counting mapping
+means that the set is finite.
+
+ %\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+functions
+
+FinSet: nat -> set of nat
+FinSet(max) ==
+  {x | x :nat & x <= max}
+\end{lstlisting}
+
+This would give rise of the following proof obligation:
+\begin{lstlisting}
+(forall max : nat &
+   (exists f_1 : map nat to nat &
+      (forall x : nat & x <= max 
+       =>
+      (exists i_2 in set dom (f_1) & f_1(i_2) = x))))
+\end{lstlisting}
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] For this kind of proof obligation one needs to
+  look for ensuring that either type type used only contains a finite
+  collection of elements or the predicate limits the resulting set so
+  it will indeed only contain a finite number of members.
+  \item[Test:] This cannot be tested at all because type bindings
+  cannot be interpreted.
+  \item[Proof:] The proof of finiteness conjectures can be challenging
+  because o fhte need to invent a suitable counting mapping. In the
+  example shown below, the counting mapping is very simple. Each
+  number \texttt{i} is simply mapped onto \texttt{i} up to the maximum value
+  \texttt{max}. The counting mapping is thus:
+\begin{lstlisting}
+{i |-> i | i:nat & i in set {0,...,max}}
+\end{lstlisting}
+  \end{description}
+\end{description}
+\begin{lstlisting}
+from
+1 from max : nat
+1.1 {0,...,max} : set of nat    ?\hfill interval-form(1.h1)｣
+1.2 {i |-> i | i:nat & i in set {0,...,max}} : map nat to nat 
+      ?\hfill Lemma iden-map-form (1.1)｣
+1.3 from x:nat
+1.3.1 from x <= max
+1.3.1.1    x in set {1,...,max} 
+                       ?\hfill interval-memb(1.3.h1,1.3.1.h1)｣
+1.3.1.2    dom {i |-> i | i in set {0,...,max}} = {1,...,max}
+                       ?\hfill ident-map-comp-dom-form(1.1)｣
+1.3.1.3    x in set dom {i |-> i | i in set {0,...,max}}
+                       ?\hfill =-subs-left(b)(1.1,1.3.1.2,1.3.1.1)｣
+1.3.1.4     {i |-> i | i in set {0,...,max}}(x) = x
+                       ?\hfill ident-apply(1.2,1.3.1.3)｣
+      infer exists i_2 in set dom {i |-> i 
+                                  | i in set {0,...,max}} & 
+              {i |-> i | i in set {0,...,max}}(i_2) = x
+                       ?\hfill exists-I(1.3.h1,1.3.1.4)｣
+    infer x <= max 
+          =>
+          (exists i_2 in set dom (f_1) & f_1(i_2) = x))
+                       ?\hfill =>-I(1.3.1)｣
+1.4 forall x : nat & x <= max 
+                     =>
+                     (exists i_2 in set dom (f_1) & 
+                         f_1(i_2) = x))
+                       ?\hfill forall-I(1.3)｣
+  infer (exists f_1 : map nat to nat &
+           (forall x : nat & x <= max 
+            =>
+           (exists i_2 in set dom (f_1) & f_1(i_2) = x)))
+                       ?\hfill exists-I(1.2,1.4)｣
+infer (forall max : nat &
+         (exists f_1 : map nat to nat &
+            (forall x : nat & x <= max 
+             =>
+            (exists i_2 in set dom (f_1) & f_1(i_2) = x))))
+                        ?\hfill forall-I(1)
+\end{lstlisting}
+
+\subsection{Finiteness of Map}
+
+\begin{description}
+\item[Explanation:] 
+When mapping comprehensions are defined using a type binding there will be
+a proof obligation ensuring that the resulting mapping will be
+finite. This proof obligation is approached in the same way as that
+for finiteness of sets; the mapping being analysed is treated as a set
+of maplets. The proof obligation requires us to show that we can construct a
+counting mapping for the maplets in the mapping being checked. For a
+mapping M of type \texttt{map A to B}, the type of the counting
+mapping \texttt{c} is therefore: 
+\begin{lstlisting}
+map nat to (map A to B)
+\end{lstlisting}
+If \texttt{m} is a mapping of the form:
+\begin{lstlisting}
+{f(x) |-> g(x) | x:A & P(x) } 
+\end{lstlisting}
+we have to show that there exists a counting mapping \texttt{c} such that 
+\begin{lstlisting}
+forall x:A & P(x) => 
+   exists i in set dom c & c(i) = {f(x) |-> g(x)}
+\end{lstlisting}
+%\item[Form:]
+\item[Example:] The following function constructs a mapping taking a
+  number to its successor:\NL
+\begin{lstlisting}
+functions
+
+FinMap: nat -> map nat to nat
+FinMap(max) ==
+  {x |-> x + 1 | x :nat & x <= max}
+\end{lstlisting}
+The generated proof obligation requires the existence of a suitable counting
+mapping \texttt{f\_1}:
+\begin{lstlisting}
+(forall max : nat &
+   (exists f_1 : map nat to map nat to nat1 &
+      (forall x : nat & x <= max 
+       =>
+      (exists i_2 in set dom (f_1) &
+         f_1(i_2) = {x |-> x + 1}))))
+\end{lstlisting}
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] For this kind of proof obligation one needs to
+  look for ensuring that either type type used only contains a finite
+  collection of elements or the predicate limits the resulting set so
+  it will indeed only contain a finite number of members.
+  \item[Test:] This cannot be tested at all because type bindings
+  cannot be interpreted.
+  \item[Proof:] Here the proof structure would be similar to that for
+  the finiteness of a set. A suitable counting mapping for this
+  example would would be the following: 
+\begin{lstlisting}
+{ i |-> {i |-> i+1} | i: nat & i in set {0,...,max}}
+\end{lstlisting}
+  \end{description}
+\end{description}
+The structure of a possible proof using this counting mapping is
+outlined below, where we only show the key lines in the proof. 
+\begin{lstlisting}
+from
+1 from max : nat
+1.1 {0,...,max} : set of nat   ?\hfill interval-form(1.h1)｣
+1.2 {i |-> {i |-> i+1} | i:nat & i in set {0,...,max}} :
+    map nat to nat1     ?\hfill Lemma (1.1)｣
+1.3 from x:nat
+1.3.1 from x <= max
+...
+1.3.1.4 {i |-> {i |-> i+1} | i in set {0,...,max}}(x) = 
+        {x |-> x+1}            ?\hfill ｣
+      infer exists i_2 in set 
+               dom {i |-> i | i in set {0,...,max}} & 
+              {i |-> {i |-> i+1} 
+              | i in set {0,...,max}}(i_2) = {x |-> x+1}
+                       ?\hfill exists-I(1.3.h1,1.3.1.4)｣
+    infer x <= max 
+          =>
+          (exists i_2 in set dom (f_1) & 
+              f_1(i_2) = {x |-> x+1}))  ?\hfill =>-I(1.3.1)｣
+1.4 forall x : nat & x <= max 
+                     =>
+                     (exists i_2 in set dom (f_1) & 
+                         f_1(i_2) = {x |-> x+1}))
+                       ?\hfill forall-I(1.3)｣
+  infer (exists f_1 : map nat to map nat to nat1 &
+           (forall x : nat & x <= max 
+            =>
+           (exists i_2 in set dom (f_1) &
+               f_1(i_2) = {x |-> x+1}))))
+                       ?\hfill exists-I(1.2,1.4)｣
+infer (forall max : nat &
+         (exists f_1 : map nat to map nat to nat1 &
+            (forall x : nat & x <= max 
+             =>
+            (exists i_2 in set dom (f_1) &
+               f_1(i_2) = {x |-> x + 1})))) ?\hfill forall-I(1)
+\end{lstlisting}
+
+
+\section{Termination Proof Obligations}
+\label{sec:termpos} 
+
+\subsection{Terminating While Loop}
+
+\begin{description}
+\item[Explanation:] Whenever a while loop is used inside the body of
+an operation there is the potential that this loop may not be
+terminating. Thus, in all such cases this proof obligation is used,
+although it is typically not needed in reactive systems where
+non-terminating threads are acceptable.
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+class A
+
+operations
+
+WhileOp: nat ==> nat
+WhileOp(n) ==
+  (dcl local : nat := n,
+       res   : nat := 1;
+   while local > 0 do
+    (local := local - 1;
+     res   := local * res) ;
+   return res)
+
+end A
+\end{lstlisting}
+This operation gives rise to two proof obligations. The first one is
+a subtype one (that \texttt{local} will still be a natural number when one is
+subtracted from it). Note that since it is inside an explicit
+operation the context is not provided explicitly:
+\begin{lstlisting}
+local - 1 > 0
+\end{lstlisting}
+The other one only state that one needs to prove that the while loop
+will terminate.
+\begin{lstlisting}
+?\textit{while loop terminating}｣
+\end{lstlisting}
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:] When inspecting a while loop for termination one
+  needs to check that the the code in the body of the loop ``gets closer
+  and closer'' to making the testing predicate false so the loop will be
+  left. It is also essential that the loop will reach this situation
+  in a finite number of steps. 
+  \item[Test:] When tests needs to be derived in relation to this
+  proof obligation one needs to consider situations where infinite
+  loops will appear. 
+  \item[Proof:] At present this cannot be proved because the proof
+  theory for the explicit operations is not provided in complete form
+  anywhere. 
+  \end{description}
+\end{description}
+
+\section{Proof of Proof Obligations}
+\label{sec:proof}
+
+
+The first tool support for proof of VDM, mural, was developed in the UK at the
+beginning of the 1990s~\cite{Jones&91b}. Mural was a generic proof
+support environmant that was instantiated with a range of proof
+theories for various kinds of proof task. Its VDM instantiation
+started form the informal rules given in \cite{Jones90a} and evolved
+into the more detailed proof theory given in
+\cite{Bicarregui&94}. Mural was \emph{not} an authomatic proof system,
+but an assistant for human-guided proofs and, as such it had a
+comparatively advanced graphical user interface for interactive proof
+construction. The mural tool is no longer in existence but inspiration
+from it was later on used in different interactive proof tools.
+
+In the mid-1990s, several steps were made towards the development of
+automatic proof support for VDMTools, using translations of VDM models
+to Isabelle, PVS and HOL
+\cite{Agerholm96,Agerholm&97a,Agerholm&97b,Agerholm&97d}. This
+inspired contributions to the European project
+PROSPER~\cite{Dennis&00,Agerholm&99b}. Here the proof support was
+based on a hol98 kernel which was improved during the project. The
+PROSPER version of the VDM-SL Toolbox supported both automatic proof
+construction using HOL ``behind the scenes'' as well as interactive
+proofs using a GUI in Java. This feature was, for example, used by
+RTRI (the Japanese Railway Technical Research
+Institute)~\cite{Terada01,Terada02,Terada&02,Terada03}.  Sadly, 
+the sources for the PROSPER extensions of VDMTools were lost in the
+transfer from IFAD to CSK.
+ 
+Some years later, a new attempt at providing automating proof support
+for VDM was made using a more recent version of
+HOL~\cite{Vermolen07}. This new work is seen as a part of the Overture
+project \cite{Overture07} and it is reconstructing automatic proof
+support from PROSPER by an automatic mapping from VDM++ models and
+proof obligations to HOL4 (the newest version of HOL).
+
+It is, however, worth noting that the nature of automatic theorem
+provers is to move a proof into very small steps based upon basic
+axioms for a language. Such small steps are typically combined into
+higher level tactics that can be used by a user. However, the level of
+deep understanding that the user gets from a automatic proof is quite
+limited. This is where the manual proof style shown in this document
+has an advantage. The style, known as ``natural deduction'', is
+intended for human readers. It is easy to follow and check the logical
+steps of the deduction process. For a machine, the number of small
+steps is not a problem but if one was to gain understanding from all
+these small steps the complexity of realistic proofs at that level
+would be way to complex for a human being to gain understanding
+from. So when an automatic prover needs assistance to complete a proof
+the user needs to understand how the different tactics built into the
+prover work, and this is the reason why a higher level of skill is
+required to conduct automatic proofs than to carry out tests of a
+formal abstract model of a system.
+
+Standard VDM proof rules are provided for a large part of the VDM-SL
+language in~\cite{Bicarregui&94}. Proof rules for the more advanced
+areas of VDM-SL in explored in~\cite{Larsen95}. No coherent and
+complete proof system that cover the entire VDM++ notation has been
+described anywhere although work towards this has been underway
+\cite{kent&93,Lano94,Lano94b,Lano&94}. Thus, more work is needed to be
+able to prove all proof obligations generated for VDM++. Initially it
+is advisable to do automatic proof for the subset of VDM++ supported
+by Overture. For the parts that are not supported by Overture the only
+opportunity is to carry out manual proofs. In case the parts are
+covered by some of the proof rules already published these can be
+used. However in case the part used is not covered by any of proof
+rules developed already it is necessary to develop new proof rules.
+
+%\section{Testing of Proof Obligations}\label{sec:test}
+
+%Another way to gain confidence in the correctness of proof obligations
+%is to dedicate tests focussed on particular proof obligations. We
+%believe that it should be possible to automate the generation of test
+%cases for at least some kind of proof obligations. This does not seem
+%to have been done before but we plan to carry out research enabling
+%this. 
+
+\newpage
+
+\bibliographystyle{iptes}
+\bibliography{dan}
+
+\end{document}
+
+\begin{description}
+\item[Explanation:] 
+%\item[Form:]
+\item[Example:] \NL
+\begin{lstlisting}
+\end{lstlisting}
+\begin{lstlisting}
+\end{lstlisting}
+\item[Guidance:]\NL
+  \begin{description}
+  \item[Inspection:]
+  \item[Test:]
+  \item[Proof:]
+  \end{description}
+\end{description}

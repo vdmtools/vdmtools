@@ -1,0 +1,1713 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Module providing functions generating code corresponding to 
+%    class definitions
+% $Id: mod_class.vdm,v 1.94 2006/03/15 07:53:31 vdmtools Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\section{Module CLASS - Code Generating VDM++ Class Definitions}
+\label{sec:class}
+
+The module $CLASS$ is the overall module in the VDM++ code generator
+front-end. The interface to $CLASS$ is the operation $GenClasses$,
+which generates a set of C++ files/Java files from a sequence of VDM++ classes.
+
+\vspace{1cm}
+
+\begin{vdm_al}
+
+module CLASS
+
+imports
+
+  from CONC all,
+  from CPP all,
+  from AS all,
+  from BC all,
+  from CGSTMT all,
+  from CGEXPR
+    operations CGExpr: AS`Expr * CGMAIN`VT ==> seq of CPP`Stmt,
+
+  from CGAUX all,
+
+  from FVD
+    operations
+      GenValues: AS`Name * seq of AS`ValueDef ==> map AS`Access to seq of CPP`MemberDeclaration;
+      GetIdeclL: () ==> seq of CPP`IdentDeclaration;
+      GetValInit: () ==> seq of CPP`Stmt;
+      AddUncaughtValInit: seq of CPP`Stmt ==> ();
+      GetUncaught: () ==> seq of CPP`Stmt,
+  from FD
+    operations 
+      GenFctDef: AS`FnDef * bool ==> CPP`CPPAS;
+      GenOpDef : AS`Name * AS`OpDef * FD`GenericStateDef * bool ==> CPP`CPPAS;
+      GenExceptionsHdr: () ==> seq of CPP`Identifier;
+      GenHiddenFctDecl: AS`Name * [AS`Type] ==> CPP`CPPAS;
+      ContainsImplicitFct: () ==> bool;
+      ContainsStaticImplicit: () ==> bool;
+      GetImplicitFcts: () ==> CPP`CPPAS;
+      IncludeExternalCC: () ==> CPP`CPPAS;
+      GenFctOpDecl: AS`Name * (AS`FnDef | AS`OpDef) * 
+           ([CPP`StorageClassSpecifier] | [CPP`Modifier]) * FD`GenericStateDef ==>   
+                                           CPP`CPPAS | seq of CPP`MemberDeclaration
+
+    types
+      GenericStateDef = [token]
+      inv g == g = nil,
+
+  from DS all,
+
+  from TD
+   operations 
+     GenInvDecl: CPP`Name * seq of AS`TypeDef ==> seq of CPP`MemberDeclaration;
+     GenInvDef: seq of AS`TypeDef ==> CPP`CPPAS | seq of CPP`MemberDeclaration,
+
+  from CGMAIN all,
+  from TPGEN all,
+  from CI all,
+
+  from REP all,
+  from UTIL all,
+  from VD 
+    operations
+      AreDefinedDirectly : seq of AS`ValueDef ==> bool
+
+exports 
+  operations 
+  GenClasses: AS`Document * set of AS`Name ==> CPP`Files;
+  GetPossibleInterfaces: set of AS`Class ==> set of AS`Name
+
+definitions
+
+\end{vdm_al}
+
+\noindent
+The code generation of VDM++ classes is illustrated using the
+following example. Consider the following class:
+
+\begin{quote}
+\begin{verbatim}
+class A
+
+instance variables 
+  i : nat;
+  j : nat;
+
+functions
+  F: nat * nat ->  nat
+  F(i,j) ==
+    i + j;
+
+operations
+  SetVal(a,b: nat) ==
+  ( i := a;
+    j := b
+  );
+
+  GetVal() value res: nat * nat ==
+    return mk_(i,j)
+
+end A
+\end{verbatim}
+\end{quote}
+
+
+\subsection{C++}
+The code representing a VDM++ class is divided into a `.h' file and a
+`.cc' file. This is done such that the C++ class declaration
+representing the VDM++ class is placed in the header file, and all
+definitions of C++ member functions are placed in the `.cc' file. In
+this way class {\tt A} can be represented by the code below. Finally
+the class {\tt vdmBase} is a virtual base of class {\tt vdm\_A}. This
+will only be the case for C++ classes which corresponds to root VDM++
+classes (VDM++ classes which have no base class). Note, that this
+implies that all generated C++ classes will be derived from {\tt
+  vdmBase}, and that classes having multiple base classes only will
+contain one instance of {\tt vdmBase}. The class {\tt vdmBase} is
+defined in {\tt cg\_aux.h}.
+
+\vspace{0.5cm}
+The file {\tt A.h}:
+
+\begin{quote}
+\begin{alltt}
+{#ifndef _A_h}
+{#define _A_h}
+{#include "metaiv.h"}
+{#include "cg.h"}
+{#include "cg_aux.h"}
+{#define VDM_A 1}
+
+class vdm_A  : public virtual vdmBase \{
+
+protected:
+  Int vdm_i;
+  Int vdm_j;
+  virtual Int vdm_F(Int,Int);
+
+public:
+  virtual void vdm_SetVal(Int, Int);
+  virtual Tuple vdm_GetVal();
+  vdm_A();
+  virtual ~vdm_A() \{\}
+\};
+
+{#endif}
+\end{alltt}
+\end{quote}
+
+First, external definitions are included, then a class representing
+{\tt A} is declared. In the class declaration it should be noticed
+that the instance variables are declared
+as protected members of the class. Protected members are only visible
+in there defining class and derived classes. In the same way, the
+functions and operations are declared public (public members forms the interface to C++
+classes). In addition the class contains a constructor and a
+dectructor, which also are made public, such that non-derived classes
+are able to make instances of the class {\tt A}. In addition, all C++
+member functions and the detructor are declared as virtual functions,
+which indicates that the functions can have different versions for
+different derived classes.
+
+\vspace{0.5cm}
+The file {\tt A.cc}
+
+\begin{quote}
+\begin{alltt}
+{#include "A.h"}
+
+vdm_A::vdm_A
+\{
+  // initialization
+\}
+
+Int vdm_A::vdm_F(Int v1, Int v2)
+\{
+  // Function body
+\}
+
+void vdm_A::vdm_SetVal(Int vdm_a, Int vdm_b) 
+\{
+  // Method body
+\}
+
+Tuple vdm_A::vdm_GetVal() 
+\{
+  // Method body
+\}
+\end{alltt}
+\end{quote}
+
+The file {\tt A.cc} is straightforward. It includes the header file,
+and defines the class constructor, member function and methods.
+
+\subsection{Java}
+
+\noindent
+The code representing a VDM++ class is stored into a '.java' file.
+First, external definitions are included, then a class representing
+{\tt A} is declared. 
+
+\subsubsection*{The Structure of a Generated Java class}
+
+Let us have a closer look at the structure of a Java class generated
+for a class in the \VDM\ specification. 
+
+The generated Java class contains:
+\begin{itemize}
+\item Java code implementing \VDM\ datatypes.
+\item Java code implementing \VDM\ values. 
+\item Java code implementing \VDM\ instance variables. 
+\item A static initializer.
+\item A constructor.
+\item Java methods implementing \VDM\ functions.
+\item Java methods implementing \VDM\ operations.
+\end{itemize}
+If the concurrency option is true, then the following additional code
+is generated:
+\begin{itemize}
+\item Java code implementing a permission predicate evaluator
+\item Java code implementing a sentinel
+\item Java code implementing a ``setSentinel'' method
+\end{itemize}
+
+Consider the resulting skeleton of a generated Java class, generated
+for a \VDM\ class definition, say {\tt A}: 
+
+\begin{quote}
+\begin{verbatim}
+public class A {
+
+  ...Implementation of VDM++ types...
+  ...Implementation of VDM++ values... 
+  ...Implementation of VDM++ instance variables... 
+
+  static {
+         ...Initialization of VDM++ values...
+         }
+
+  public A () { 
+      try { ...
+            Initialization of VDM++ instance variables...
+            ...
+          }
+      catch (Throwable e) { ...
+                          }
+  }
+
+  ...Implementation of VDM++ functions... 
+  ...Implementation of VDM++ operations... 
+};
+\end{verbatim}
+\end{quote}
+
+If the corresponding \VDM\ class is abstract, the generated Java class
+will also be declared as such.  
+
+Class {\tt A} above can be represented by the code below. 
+
+\vspace{0.5cm}
+The file {\tt A.java}
+
+\begin{quote}
+\begin{alltt}
+
+import jp.vdmtools.VDM.*;
+import java.util.*;
+
+
+public class A {
+
+  protected Integer i = null;
+  protected Integer j = null;
+
+  static {}
+
+  public A () {}
+
+  public Integer F (final Integer i_1, final Integer j_1) throws CGException{
+    return new Integer(i_1.intValue() + j_1.intValue());
+  }
+
+  public Tuple GetVal () throws CGException{    
+    Tuple rexpr_2 = new Tuple(2);
+    rexpr_2 = new Tuple(2);
+    rexpr_2.SetField(1, i);
+    rexpr_2.SetField(2, j);
+    return rexpr_2;
+  }
+
+  public void SetVal (final Integer a, final Integer b) throws CGException{
+    i = UTIL.NumberToInt(UTIL.clone(a));
+    j = UTIL.NumberToInt(UTIL.clone(b));
+  }
+};
+
+\end{alltt}
+\end{quote}
+
+\subsection{Overall Definitions}
+\label{sec:class:overall}
+
+The code generation of a VDM++ document (a sequence of class) is done
+by the operation $GenClasses$.
+
+%in the following steps:
+
+%\begin{enumerate}
+%\item Generate code corresponding to all classes defined in the VDM++
+%  document. 
+%During this process, classes modeling indexed inheritance
+%(to be code generated) are accumulated in a
+%global state (described below).
+%\item All classes modeling indexed inheritance, which are accumulated
+%  in the global state, are code generated and placed in their
+%  corresponding `.h' file.
+%\end{enumerate}
+
+%The operation $GenClasses$ formalizes the code generation of VDM++
+%classes. This operation takes one parameter:
+
+%\begin{itemize}
+%\item $cs-l$: The sequence of classes to be code generated.
+%--\item $dep-l$: A map from the name of a VDM++ class to a set of
+%--  VDM++ class names which the domain class depends on. 
+%--\item $mthd-m$: A map from the name of a VDM++ class to a set of
+%--  method names which is members of the domain class (including
+%--  methods which are defined in base classes of the domain class).
+%\end{itemize}
+
+\begin{vdm_al}
+
+operations
+
+  GenClasses: AS`Document * set of AS`Name ==> CPP`Files
+  GenClasses(cs_l, cl_nms) ==
+   (dcl files : CPP`Files := {};
+
+    -- Initialise the CG entry in the context information table.
+
+    CI`ResetCGTable();
+
+
+    -- initialize TPGEN
+
+    TPGEN`InitState(nil);
+
+--    -- Declare all types to TPGEN
+--
+--    for cs in cs_l do
+--    TPGEN`AddClassTypes(cs);
+ 
+
+
+    -- Preprocess the classes to generate the visiting order
+
+    CGAUX`InitState(nil); -- Needed both for abstract classes and also 
+                          -- for generating instance vars table
+
+    for cs in cs_l do
+     (
+      CGAUX`InitState(cs.nm);
+      CGAUX`AddSuperClasses(cs.supercls);
+      CGAUX`AddAbstractMethods(cs);
+     );
+    CGAUX`GenerateOrderedSupers();
+    CGAUX`ProcessMethodNames();
+
+    if CPP`isJAVA()
+    then CGAUX`ProcessAbstractMethods();
+
+    -- Declare all types to TPGEN
+
+    for cs in cs_l do
+      TPGEN`AddClassTypes(cs); -- should be after CGAUX`GenerateOrderedSupers();
+ 
+    -- Build up table of instance vars
+    for cs in cs_l do 
+      if cs.defs <> nil
+      then
+       (TPGEN`InitState(cs.nm);
+        CGAUX`InitState(cs.nm);
+        CGAUX`AddInstanceVars(cs.nm, cs.defs.instvars);
+        CGAUX`AddPackageName(cs.nm, cs.defs.valuem);
+       );
+
+    -- Init module for concurrency
+    
+
+    if (CGMAIN`get_conc_option())
+    then
+     (CONC`InitSpecState();
+      CONC`ExtractGlobalInformation(cs_l, cl_nms));
+
+    -- Generate the various files
+    for cs in cs_l do
+     (dcl hfile  : CPP`File,
+          ccfile : CPP`File;
+            
+      TPGEN`InitState(cs.nm);
+      CGAUX`InitState(cs.nm);
+      BC`ResetVarno();
+      if CPP`isCPP()
+      then
+       (hfile  := GenHFile(cs);
+        ccfile := GenCCFile(cs);
+        files := files union { ccfile, hfile };
+        files := files union TPGEN`GenAnonymFiles(cs)) 
+      else 
+        let id = hd cs.nm.ids
+        in 
+          if "JDK_" <> id(1, ..., 4) and "STUB_" <> id(1, ..., 5) and "JDKArrayOf_" <> id(1, ..., 11)
+          then
+           (files := files union {GenJavaFile(cs,CGMAIN`isInterface(cs.nm))};
+            if card CGAUX`UsedQuotes() > 0
+            then files := files union CGAUX`GenJavaQuoteFiles();
+            if FD`ContainsImplicitFct() and not CGMAIN`isInterface(cs.nm)
+            then files := files union {GenJavaExternalFile(cs)};
+           )
+     );
+
+    if CPP`isCPP()
+    then files := files union  DS`GenCGBase(cl_nms);
+
+    return files
+ );
+\end{vdm_al}
+
+\subsubsection{C++}
+The operation $GenHFile$ generates a `.h' file corresponding to one
+class definition. 
+%The generated file might be extended by $GenClasses$
+%with classes modeling behavioral and/or indexed inheritance.
+
+The function $GenHFile$ is to be extended to generated code which
+includes (`\#include') `.h' files for all VDM++ classes used by the
+class currently being code generated. This version of $GenHFile$ only
+generates code that includes the used C++ library and `.h' files for
+base classes. If the class structure to be code generated e.g.\ is a
+sub class of, say {\tt A}, the preprocessor part of the generated code
+will contain the following:
+
+\begin{quote}
+\begin{alltt}
+{#include "A.h"}
+{#include "metaiv.h"}
+\end{alltt}
+\end{quote}
+
+Note: the surrounding {\tt \#ifndef .... \#endif} in `.h' files are
+generated by the code generator back-end.
+
+\vspace{0.5cm}
+\begin{vdm_al}
+
+--(nm, inh, iVars, iInit, -, mthds, tps, fcts, vals,-,-,-,-,-) = cs in
+-- inh: seq, tps: map, vals: seq, fcts: map, oper: map, iVars:seq
+-- Missing:  iInit
+GenHFile: AS`Class ==> CPP`File
+GenHFile(cs) ==
+  def mk_AS`Class(nm,-,inh,defs,useslib,-) = cs;
+      head = GenHead(nm, inh, false)
+  in
+   (dcl pp_l : CPP`Preprocessors := [],
+        type_l: seq of AS`TypeDef := [],
+        access_m : AccessMemberDecl := {|->},
+        pro_l : seq of CPP`MemberDeclaration := [],
+        pub_l : seq of CPP`MemberDeclaration := GenLibMethods(nm),
+        cl_l : seq of CPP`MemberDeclaration := [],-- list of module classes
+        needinit : bool := false;
+
+    if defs <> nil
+    then
+      let mk_AS`Definitions(tps,vals,fcts,oper,iVars,-,-,-,-) = defs
+      in
+       (dcl new_vals : seq of AS`ValueDef := vals,
+            new_iVars : seq of AS`InstanceVarDef := [],
+            acs_vals_m : AccessMemberDecl := {|->};
+
+        for ivd in iVars do
+          if is_AS`InstAssignDef(ivd) and ivd.stat and ivd.ad.dclinit <> nil
+          then
+            let mk_AS`InstAssignDef(mk_AS`AssignDef(var, tp, dclinit, -), access, stat, cid) = ivd
+            in new_vals := new_vals ^ [mk_AS`ValueDef(mk_AS`PatternName(var, tp, var.cid),
+                                                         tp, dclinit, access, stat, cid)]
+          else new_iVars := new_iVars ^ [ivd];
+ 
+        acs_vals_m := FVD`GenValues(nm, new_vals);
+        access_m := MergeMemberDecl (acs_vals_m, access_m);
+        access_m := MergeMemberDecl (GenInstVars(new_iVars), access_m);
+          
+        needinit := new_vals <> [];
+        for all tp in set rng tps do
+         (type_l := type_l ^ [ tp ];
+          cases tp:
+            mk_AS`TypeDef(-,mk_AS`CompositeType(-,-,-),-,-,-)
+                -> needinit := true,
+            others -> skip
+          end;
+         );
+
+        def typedefs = DS`GenTypeDef(nm, type_l)
+        in
+          cases typedefs:
+            [mk_CPP`MemberSpecifier(-,-,-)] ^ - -> (pub_l := pub_l ^ [ hd typedefs ];
+                                                    cl_l := cl_l ^ tl typedefs),
+            others                              -> cl_l := cl_l ^ typedefs
+          end;
+
+        pub_l := pub_l ^ TD`GenInvDecl(BC`Rename(nm), type_l);
+
+        for all fnm in set dom fcts do
+	  def fctas = fcts(fnm);
+              acs_fct_m = {CGAUX`ExchangeDefAccess (fctas).access |-> FD`GenFctOpDecl(fnm,fcts(fnm),nil,nil)}
+          in access_m := MergeMemberDecl (acs_fct_m,access_m);
+
+        for all onm in set dom oper do
+          def opas = oper (onm);
+              acs_op_m = {CGAUX`ExchangeDefAccess (opas).access |-> FD`GenFctOpDecl (onm,oper(onm),nil,nil)}
+          in
+            (access_m := MergeMemberDecl (acs_op_m,access_m); 
+             if opas.constr and CGAUX`GetOpParms(opas) = []
+             then CGAUX`SetHasDefaultConstr(););
+
+        for all mk_(l_mn,l_acc,l_tp) in set CGAUX`GetUnhiddenNames(nm) do
+          if mu(l_mn, ids |-> [hd l_mn.ids]) <> nm
+          then 
+            def acs_m_m = { l_acc |-> FD`GenHiddenFctDecl(l_mn,l_tp) }
+            in access_m := MergeMemberDecl(acs_m_m, access_m);
+
+        if not CGAUX`GetHasDefaultConstr()
+        then pub_l := pub_l ^ GenConstructorDef(nm, inh = []);
+
+        def initid = BC`GenIdentifier("vdm_init_" ^ CGAUX`GiveLastName(nm));
+            fdecl = BC`GenFctDecl(initid, [])
+        in pub_l := pub_l ^ [BC`GenMemberSpec([BC`GenTypeSpecifier(BC`GenVoid())], fdecl)];
+
+        if exists e in set elems iVars & is_AS`InstanceInv(e)
+        then
+          def invid = BC`GenIdentifier("vdm_inv_" ^ CGAUX`GiveLastName(nm));
+              fdecl = BC`GenFctDecl(invid, [])
+          in pub_l := pub_l ^ [BC`GenMemberSpec([DS`GenBoolType()], fdecl)];
+       );
+
+      cl_l := cl_l ^ TPGEN`GenModuleHPart();
+      cl_l := cl_l ^ TPGEN`GenObjRefClass(nm, elems inh);
+
+                 -- generate ref class
+
+      if useslib <> nil
+      then pp_l := pp_l ^ [BC`GenInclusion("dlclass.h")];
+      pp_l := pp_l ^ GenInclusions(elems inh);
+      pp_l := pp_l ^ TPGEN`GenModuleHIncludes();
+      pp_l := pp_l ^ TPGEN`GenHIncludes(elems inh);
+
+      def initfriend = BC`GenIdentifier("init_" ^ CGAUX`GiveLastName(nm));
+          friend = if needinit
+                   then BC`GenClassFriend (initfriend)
+                   else [];
+          protected = BC`GenProtected(pro_l);
+          public = BC`GenPublic(pub_l);
+      in
+       (dcl dl_decl : seq of CPP`MemberList := [];
+        if useslib <> nil
+        then dl_decl := BC`GenCPPMemberList(nil,
+                         [BC`GenMemberSpec([BC`GenTypeSpecifier(
+                                                BC`GenIdentifier(TPGEN`DlClass_Name))],
+                                              BC`GenIndirection(TPGEN`GenDlMember()))]);
+        def cs_l = [BC`GenTypeSpecifier(
+                    BC`GenClassSpecifier(head, friend ^ public ^ dl_decl ^ protected ^
+                     BC`GenAccessMemberList (access_m)))]
+        in
+          def cpp_l = [BC`GenIdentDeclaration([],cs_l,nil)];
+              id = CGAUX`GiveLastName(nm)
+          in
+            return BC`GenFile2(nil, id ^ ".h", pp_l, cl_l ^ cpp_l, cs.cid)
+       );
+   );
+
+types
+
+  AccessMemberDecl = map AS`Access to seq of CPP`MemberDeclaration 
+
+operations
+
+  MergeMemberDecl: AccessMemberDecl * AccessMemberDecl ==> AccessMemberDecl
+  MergeMemberDecl (cur,orig) ==
+  ( dcl res : AccessMemberDecl := orig;
+    for all a in set dom cur do
+      let old = if a in set dom orig then orig (a) else [] in
+      res := res ++ {a|-> old ^ cur (a)};
+    return res);
+\end{vdm_al}
+
+The operation $GenInclusions$ generates the preprocessor part of the
+header file.  If a class \texttt{D} e.g.\ is a subclass of class {\tt A} and {\tt
+  B}, and contains a instance variable of class {\tt C} then the
+preprosessor part of the corresponding `.h' file will become:
+
+\begin{quote}
+\begin{alltt}
+{#include <math.h>}    // Used by some expressions.
+{#include "metaiv.h"}  // Depending on the used C++ class library.
+{#include "cg.h"}      // Code generator definitions.
+{#include "cg_aux.h"}  // If aux-fcts and class vdmBase are used.
+{#include "A.h"}
+{#incluce "B.h"}
+\end{alltt}
+\end{quote}
+
+And the corresponding `.cc' will include:
+\begin{quote}
+  \begin{alltt}
+    {#include "D.h"}
+    {#include "C.h"}
+  \end{alltt}
+\end{quote}
+
+Note, that the library for VDM types always is included. 
+
+\begin{vdm_al}
+
+  GenInclusions: set of AS`Name ==> CPP`Preprocessors
+  GenInclusions(name_s) ==
+  ( dcl incl : CPP`Preprocessors := [BC`GenSqIncl("math.h")];
+    incl := incl ^ [BC`GenInclusion(DS`GiveLibName())];
+    incl := incl ^ [BC`GenInclusion("cg.h")];
+    incl := incl ^ [BC`GenInclusion("cg_aux.h")];
+    incl := incl ^ [BC`GenInclusion("CGBase.h")];
+    for all nm in set name_s do
+      def id = CGAUX`GiveLastName(nm) in
+      incl := incl ^ [BC`GenInclusion(id^".h")];
+    return incl
+  );
+
+  GenLibMethods: AS`Name ==> seq of CPP`MemberDeclaration
+  GenLibMethods(nm) ==
+    def rnm = BC`Rename(nm);
+        cls = BC`Rename(nm);
+        obj = BC`GenIdentifier("ObjectRef") in
+    let getprefix_v = BC`PrefixClassName("Get",cls),
+        clid = BC`PrefixName("Get",rnm) in
+    def decl1 = BC`GenIndirection(BC`GenFctDecl(getprefix_v,[]));
+        decl2 = BC`GenFctDecl(BC`GenIdentifier("Self"),[]);
+        decl3 = BC`GenFctDecl(BC`GenIdentifier("vdm_GetId"),[]);
+        stmt1 = BC`GenReturnStmt(DS`GenThis());
+        stmt2 = BC`GenReturnStmt(BC`GenFctCall(obj,[BC`GenFctCall(clid,[])]));
+        stmt3 = BC`GenReturnStmt(BC`GiveMacroName(nm)) in
+    let this = [BC`GenFctDef([BC`GenTypeSpecifier(cls)],decl1,nil,stmt1)],
+        self = [BC`GenFctDef([BC`GenTypeSpecifier(obj)],decl2,nil,stmt2)],
+        getid = [BC`GenFctDef([BC`GenTypeSpecifier(BC`GenInt())],decl3,nil,stmt3)] in
+    return this ^ self ^ getid;
+\end{vdm_al}         
+
+The operation $GenCCFile$ generates a `.cc' file corresponding to one
+class definition. 
+
+\vspace{0.5cm}
+\begin{vdm_al}
+  GenCCFile: AS`Class ==> CPP`File
+  GenCCFile(cls) ==
+    let mk_AS`Class(nm, -,inh, defs,useslib, -) = cls in
+    def id = CGAUX`GiveLastName(nm) in
+    ( dcl pp_l  : CPP`Preprocessors,
+          cpp_l : CPP`CPPAS,
+          type_l: seq of AS`TypeDef := [];
+      pp_l := [ BC`GenInclusion(id ^ ".h") ];
+      pp_l := pp_l ^ TPGEN`GenModuleCCIncludes();
+      if defs <> nil then
+        let mk_AS`Definitions(tps,-,fcts,oper,iVars,-,-,-,-) = defs in
+        ( for all tp in set rng tps do
+            type_l := type_l ^ [tp];
+          cpp_l := GenStaticInstVarInit(iVars, nm);
+          cpp_l := cpp_l ^ GenClassInit(nm, type_l);
+          cpp_l := cpp_l ^ TD`GenInvDef(type_l);
+          if not CGAUX`GetHasDefaultConstr()
+          then 
+            cpp_l := cpp_l ^ GenConstructorDef_cc(nm, iVars, inh = [], useslib <> nil); 
+                                                  --Check empty seq!
+
+          def base_l = GenInitBaseVars(inh = []) ^ GenVarInits(iVars);
+              initid = BC`GenIdentifier("vdm_init_" ^ CGAUX`GiveLastName(nm));
+              fdecl = BC`GenFctDecl(BC`GenQualifiedName(BC`Rename(nm), initid), []);
+              fd = BC`GenFctDef ([BC`GenTypeSpecifier(BC`GenVoid())], fdecl,nil, BC`GenBlock(base_l))
+          in cpp_l := cpp_l ^ [fd];
+
+          cpp_l := cpp_l ^ GenInstanceInv(nm, iVars);
+
+          for all fnm in set dom fcts do
+            cpp_l := cpp_l ^ FD`GenFctDef(fcts(fnm), useslib<>nil);
+          for all onm in set dom oper do
+            (
+             CGAUX`CurrentMethod(onm);
+             cpp_l := cpp_l ^ FD`GenOpDef (onm, oper(onm),nil, useslib<>nil);
+            );
+         pp_l := pp_l ^ CGAUX`GenClassIncls();
+         pp_l := pp_l ^ FD`IncludeExternalCC() 
+        );
+      cpp_l := cpp_l ^ TPGEN`GenModuleCCPart();        
+      return BC`GenFile(nil, CGAUX`GenFileExt(id), pp_l, cpp_l)
+    );
+\end{vdm_al}
+
+The operation $GenCCFile$ generates a `.cc' file corresponding to one
+class definition. 
+
+The operation {\em GenClassInit} generates code 
+\begin{itemize}
+\item for generation of initiatilation of the {\em TagInfoMap} in the
+VDM library with the record tag defined in the given class.
+\item for initialisation of the static value variables.
+\end{itemize}
+The initialisation of the {\em TagInfoMap} will be done by generating
+a class {\em init\_<ClassName>}  with a constructor that does the
+initialisation work. A global object will be created for every init class.
+
+
+For value and type definitions in a class A:
+\begin{verbatim}
+types
+MyRec ::
+  a : nat
+  b :- [A]
+  c :- [A]
+  d : nat;
+
+values
+  mk_(a,b) = mk_(3,6)
+\end{verbatim}
+
+the corresponding initialisation code will be:
+
+\begin{verbatim}
+
+Int vdm_A::vdm_a;
+Int vdm_A::vdm_b;
+
+class init_A() {
+public:
+  init_A() {
+  DefRecInfoMap.SetDontCare(TYPE_TAG_A_MyRec, 2);
+  DefRecInfoMap.SetDontCare(TYPE_TAG_A_MyRec, 3);
+  DefRecInfoMap.SetSymTag(TYPE_TAG_A, "MyRec");
+
+  ... Pattern Match code.
+  vdm_A::vdm_a = 3;
+  vdm_A::vdm_b = 6;
+  }
+}
+
+init_A Init_A;
+\end{verbatim}
+
+\begin{vdm_al}
+GenClassInit: AS`Name * seq of AS`TypeDef ==> CPP`CPPAS
+GenClassInit(nm, tps) ==
+ (dcl body : seq of CPP`Stmt := [];
+  for mk_AS`TypeDef(-, type, -, -, -) in tps do 
+    if is_AS`CompositeType(type)
+    then let mk_AS`CompositeType(name, field_l,-) = type in
+         let tag = TPGEN`GenCompositeTypeTagId(name),
+             size = len field_l
+         in (body := body ^ [DS`GenNewTag(tag, size)]; 
+             body := body ^ [DS`GenSetSymTag(tag, name,nm)];
+             body := body ^ [DS`GenSetDontCare(tag, no) | 
+                             no in set inds field_l &
+                             field_l(no).dc ];
+             body := body ^ [DS`GenSetRecordTag(tag, name, nm)]
+            );
+  body := body ^ FVD`GetValInit();
+  if body <> []
+  then
+    def cpp_id = BC`GenIdentifier("init_"^CGAUX`GiveLastName(nm));
+        head = BC`GenClassHead(cpp_id, []);
+        fdecl = BC`GenFctDecl(cpp_id, []);
+        members = BC`GenPublic([BC`GenFctDef([], fdecl, nil, BC`GenBlock(body))]);
+        cs = BC`GenClassSpecifier(head, members);
+        cl_decl = BC`GenIdentDeclaration([],[BC`GenTypeSpecifier(cs)], nil);
+        ini_id = BC`GenIdentifier("Init_"^CGAUX`GiveLastName(nm));
+        ini_decl = BC`GenIdentDecl([], [BC`GenTypeSpecifier(cpp_id)], ini_id, nil)
+    in
+     -- Get Definition of value variables
+      def idecl_l = FVD`GetIdeclL()
+      in return idecl_l ^ [cl_decl, ini_decl]
+  else
+    return [];
+ );
+\end{vdm_al}
+
+\begin{vdm_al}
+GenStaticInstVarInit : seq of AS`InstanceVarDef * AS`Name ==> seq of CPP`Declaration
+GenStaticInstVarInit(p_ivds, p_clnm) ==
+( dcl l_result : seq of CPP`Declaration := [];
+  let l_staticVars = [ p_ivds(i) | i in set inds p_ivds
+                     & is_AS`InstAssignDef(p_ivds(i)) and p_ivds(i).stat and p_ivds(i).ad.dclinit = nil ]
+  in 
+    for mk_AS`InstAssignDef(l_ad, -, -, -) in l_staticVars do
+      def l_rtp = CGAUX`FromAS2RepType(l_ad.tp);
+          l_nm = BC`Rename(CGAUX`QualiName(p_clnm, l_ad.var));
+          l_vt = mk_CGMAIN`VT(l_nm,l_rtp);
+          l_cppinit = CGEXPR`CGExpr (l_ad.dclinit, l_vt)
+      in 
+      def l_initval = if len l_cppinit = 1 and 
+                         is_CPP`ExpressionStmt(hd l_cppinit) and
+                         is_CPP`AssignExpr((hd l_cppinit).expr)
+                      then BC`GenAsgnInit(((hd l_cppinit).expr).assignexpr)
+                      else nil;
+          l_declstmt = BC`GenDecl(DS`GenType(l_rtp), l_nm, l_initval)
+      in
+        l_result := l_result ^[l_declstmt.decl];
+
+    return l_result
+);      
+    
+\end{vdm_al}
+          
+          
+
+
+\subsubsection{Java}
+
+The operation $GenJavaFile$ generates a `.java' file corresponding to one
+class definition. The following local variables are used:
+\begin{description}
+\item[decl] Package and import declarations for the class being
+   generated (if any)
+\item[cpp\_l] Class initialization, type invariants (if any), class
+   constructor, functions and operations in the same order as they
+   occur in the VDM++ file
+\item[pr\_l] Local comparator, instance variables, class sentinel and
+   setSentinel method, procedural thread (if any), external
+   declaration (if any)
+\item[prtype\_l] Java type declarations. Type synonyms of the form A =
+   B are ignored, with references to A automatically referring to B
+   (or the transitive closure, if B is also a synonym). The exception
+   to this rule is a synonym of the form A = B | C. In this case, an
+   inner interface is defined representing A, then B and C implement
+   this interface. For record types, inner classes are defined in the
+   obvious way.
+\item[type\_l] VDM type definitions
+\item[fctdefcpp] unsorted Java function definitions - for each VDM
+   function, a Java function is generated, though this is in arbitrary
+   order. 
+\item[opdefcpp] unsorted Java operation definitions - for each VDM
+   operation, a Java function is generated, though this is in arbitrary
+   order. 
+\item[fcid] Used locally to store context id information for each function
+   or operation as it is code generated
+\item[cidtocpp] A map from context id to Java function
+   definitions, used to ensure that generated Java functions are in
+   the same order as the corresponding VDM function and operation
+   definitions appear in the VDM class.
+\item[evpp] Java implementation of permission predicate evaluator.
+\end{description}
+The boolean indicates whether a class or an interface should be generated.
+If it is true an interface is generated, otherwise a class is generated.
+\vspace{0.5cm}
+\begin{vdm_al}
+GenJavaFile: AS`Class * bool ==> CPP`File
+GenJavaFile(mk_AS`Class(nm, -, inh, defs,useslib, clcid), isInterface) ==
+  def id = CGAUX`GiveLastName(nm) in
+  ( dcl decl : CPP`PackageAndImportDeclarations,
+        cpp_l : seq of CPP`MemberDeclaration := [],
+        pr_l : seq of CPP`MemberDeclaration := [],
+        prtype_l : seq of CPP`MemberDeclaration := [],
+        type_l: seq of AS`TypeDef := [],
+        fctdefcpp: seq of CPP`MemberDeclaration:= [],
+        opdefcpp: seq of CPP`MemberDeclaration := [],
+        fcid: int,
+        cidtocpp : map int to seq of CPP`MemberDeclaration := {|->},
+        evpp : seq of CPP`MemberDeclaration := [];  
+
+    if isInterface and not IsPossibleInterface(mk_AS`Class(nm,false,inh,defs,useslib,clcid))
+    then error;
+
+    if CGMAIN`get_conc_option() 
+    then
+      (CONC`InitClassState( nm );	            
+       if not isInterface
+       then evpp := CONC`GenEvaluatePP( nm ));
+
+    if defs <> nil
+    then
+      let mk_AS`Definitions(tps,vals,fcts,oper,iVars,-,-,-,-) = defs
+      in
+      (-- Generate a local comparator member
+       -- to be used in set constructor expressions.
+       --if not CGMAIN`get_onlytypes_option() and 
+       --   not isInterface
+       --then pr_l := pr_l ^ DS`GenLocalComparator(nm);
+
+       for all tp in set rng tps do
+          type_l := type_l ^ [tp];
+          
+       if (not (CGMAIN`get_onlytypes_option()))
+       then
+         (-- FVD`GenValues works by side effect - the returned
+          -- value is not used, but the value declarations
+          -- generated are extracted in GenJavaClassInit
+          def - = FVD`GenValues(nm,vals)
+          in
+            skip;
+          if isInterface
+          then cpp_l := cpp_l ^ FVD`GetIdeclL() 
+          else
+            (pr_l := pr_l ^ GenInstVars(iVars);
+             cpp_l := cpp_l ^ GenJavaClassInit()));
+          
+       prtype_l := DS`GenTypeDef(nm,type_l);
+
+       if (CGMAIN`get_preandpost_option()) 
+       then cpp_l := cpp_l ^ TD`GenInvDef(type_l);
+
+       if (not (CGMAIN`get_onlytypes_option()))
+       then
+         (if not isInterface
+          then (cpp_l := cpp_l ^ [GenInstanceVarInit(nm, iVars)];
+                cpp_l := cpp_l ^ GenInstanceInv(nm, iVars));
+
+          for all fnm in set dom fcts do
+           (fcid := fcts(fnm).cid;
+            CGAUX`CurrentMethod(fnm); 
+            fctdefcpp := FD`GenFctDef(fcts(fnm), false);
+            if len fctdefcpp > 0 
+            then cidtocpp := cidtocpp munion {fcid|->fctdefcpp});
+
+          for all onm in set dom oper do
+           (fcid := oper(onm).cid;
+            CGAUX`CurrentMethod(onm);
+            opdefcpp := FD`GenOpDef(onm, oper(onm), nil, false);
+            if len opdefcpp > 0 
+            then cidtocpp := cidtocpp munion {fcid|->opdefcpp};);
+
+          if not isInterface and not CGAUX`GetHasDefaultConstr()
+          then cpp_l := cpp_l ^ GenJavaConstructorDef(nm,iVars);
+        
+          while card dom cidtocpp > 0 do
+            (let cid in set dom cidtocpp be st
+               forall fcid in set dom cidtocpp &
+                   def mk_(-,-,tst,-,-) = CI`GetFilePos(cid);
+                       mk_CI`TokenPos(-,ast_start,-,-,-) = tst;
+                       mk_(-,-,tst2,-,-) = CI`GetFilePos(fcid);
+                       mk_CI`TokenPos(-,ast_startf,-,-,-) = tst2      
+                   in ast_start <= ast_startf       
+             in (cpp_l := cpp_l ^ cidtocpp(cid);
+                 cidtocpp := {cid} <-: cidtocpp));
+         )
+      );
+     
+     if (CGMAIN`get_conc_option() and not isInterface) then
+     (pr_l := pr_l ^ CONC`GenLocalSentinel( nm, defs ) ^ evpp;
+      pr_l := pr_l ^ [CONC`GenSetSentinelMethod(nm)];
+
+      -- Procedural thread: There may be at most one  procedural thread 
+      if defs.threaddef <> nil
+      then 
+        (if is_AS`PerObl(defs.threaddef)
+         then pr_l := pr_l ^ CONC`GenPeriodicStartMethod(defs.threaddef)
+         else pr_l := pr_l ^ CONC`GenProceduralThread( defs.threaddef )
+        )
+      );
+
+     def impdecls = GenImportDeclarations();
+         pcknm = def pckop = CGMAIN`get_package_option()
+                 in
+                   if pckop = nil
+                   then nil
+                   else BC`GenPackageDeclaration(pckop)
+     in
+       decl := BC`GenPackageAndImportDeclarations(pcknm,impdecls);
+      
+     if FD`ContainsImplicitFct() and not isInterface
+     then
+      (dcl childArg : seq of CPP`Expr := [];
+       if not FD`ContainsStaticImplicit()
+       then childArg := [DS`GenThis()];
+       def ext_id = BC`GenIdentifier("external_" ^ CGAUX`GiveCurCName());
+           mk_CPP`DeclarationStmt(idcl,-) = 
+             BC`GenDecl(BC`GenTypeSpecifier(ext_id),
+                        BC`GenIdentifier("child"),
+                        BC`GenAsgnInit(BC`GenClassInstanceCreationExpr(ext_id, childArg)));
+           mk_CPP`IdentDeclaration(ds_l,[dl],-,-) = idcl;
+       in
+        (dcl statMod : seq of CPP`Modifier := [];
+         if FD`ContainsStaticImplicit()
+         then statMod := [BC`GenModifier(<STATIC>)];
+         -- External declaration is protected so that it can easily be
+         -- used by subclasses
+         pr_l := pr_l ^ [BC`GenIdentDeclaration([],statMod ^ [BC`GenModifier(<PROTECTED>)] ^ ds_l, [dl])];
+        );
+      );
+
+     def head = GenHead(nm, inh, isInterface);
+         cs_l = if isInterface
+                then [BC`GenTypeInterfaceSpecifier(head, prtype_l ^ pr_l ^ cpp_l)]
+                else [BC`GenTypeClassSpecifier(head, prtype_l ^ pr_l ^ cpp_l)];
+         new_cpp_l = [BC`GenIdentDeclaration([],cs_l,nil)]
+     in
+       return BC`GenFile(CGAUX`PackageToDir(CGMAIN`get_package_option()), id^".java", decl, new_cpp_l)
+   );
+\end{vdm_al}
+
+If the VDM++ class contains implicit functions/operations or
+functions/operations containg the clause "is not yet specified", the
+operation $GenJavaExternalFile$ generates an `external\_id.java' 
+file containg their implementation .
+
+\vspace{0.5cm}
+\begin{vdm_al}
+ GenJavaExternalFile: AS`Class ==> CPP`File
+ GenJavaExternalFile( cls  ) == 
+   def mk_AS`Class(nm, -, -, -,-, -) = cls;
+       id = CGAUX`GiveLastName(nm);
+       impdecls = GenImportDeclarations();
+       cpp_l = (def mk_CPP`DeclarationStmt(idcl,-) = 
+                     BC`GenDecl(BC`GenTypeSpecifier(
+		                BC`GenIdentifier(CGAUX`GiveCurCName())),
+                                BC`GenIdentifier("parent"),BC`GenAsgnInit(DS`GenNullExpr()))
+                in
+                  [idcl])
+               ^ GenConstructorExternalJavaDef()
+               ^ FD`GetImplicitFcts();
+       pcknm = def pckop = CGMAIN`get_package_option()
+               in
+                 if pckop = nil 
+                 then nil
+                 else BC`GenPackageDeclaration(pckop);
+       decl = BC`GenPackageAndImportDeclarations(pcknm,impdecls);
+       head = GenExternalClassHead();
+       cs_l = [BC`GenTypeSpecifier(BC`GenClassSpecifier(head, cpp_l)) ];
+       new_cpp_l = [BC`GenIdentDeclaration([],cs_l,nil)]
+   in
+     return BC`GenFile(CGAUX`PackageToDir(CGMAIN`get_package_option()), "external_"^id^".java", decl, new_cpp_l);
+
+\end{vdm_al}         
+
+The operation $GenImportDeclarations$ generates import declarations
+for a java class. These are as follows:
+\begin{itemize}
+\item The VDM library (always).
+\item The java.util.* package if using JDK types.
+\item The java2vdm javaapi if the j2v option is set.
+\end{itemize}
+
+\begin{vdm_al}
+
+  GenImportDeclarations: () ==> CPP`ImportDeclarations
+  GenImportDeclarations() ==
+  ( dcl impdecls : seq of CPP`ImportDeclaration := [];
+
+    CGAUX`InsertImport("jp.vdmtools.VDM.UTIL");
+
+    if CGMAIN`get_conc_option()
+    then
+      (CGAUX`InsertImport("jp.vdmtools.VDM.EvaluatePP");
+       CGAUX`InsertImport("jp.vdmtools.VDM.Sentinel"));
+
+    impdecls := impdecls ^ CGAUX`GenTypeImportDeclarations();
+--
+    if CGMAIN`get_j2v_option()
+    then impdecls := impdecls ^
+                     [BC`GenImportOnDemandDeclaration(CGAUX`GenPackageName(["jp", "vdmtools", "VDM", "jdk"]))];
+    return impdecls
+  );
+
+\end{vdm_al}         
+
+The operation {\em GenJavaClassInit} generates a static initializer
+for the Java class. Values (Class variables) can be initialized in a
+static initializer. 
+\begin{vdm_al}
+
+GenJavaClassInit: () ==> seq of CPP`MemberDeclaration
+GenJavaClassInit() ==
+  def l_ts       = BC`GenTypeSpecifier(BC`GenIdentifier("Throwable"));
+      l_ed       = BC`GenExceptionDeclaration([l_ts], BC`GenIdentifier("e"));
+      l_fc1      = BC`GenFctCall(BC`GenIdentifier("e.getMessage"), []);
+      l_fc2      = BC`GenFctCall(BC`GenIdentifier("System.out.println"), [l_fc1]);
+      l_fc3      = BC`GenFctCall(BC`GenIdentifier("e.printStackTrace"), [BC`GenIdentifier("System.out")]);
+      l_stmt     = BC`GenBlock([BC`GenExpressionStmt(l_fc3), BC`GenExpressionStmt(l_fc2)]);
+      l_handler  = BC`GenHandler(l_ed, l_stmt);
+      l_handlers = [l_handler];
+      l_caughtBody = FVD`GetValInit();
+      l_uncaughtBody = FVD`GetUncaught();
+      l_init  = if l_uncaughtBody = []
+                then []
+                else [BC`GenTryBlock(l_uncaughtBody, l_handlers, nil)];
+      cpp_id  = BC`GenIdentifier("static");
+      fdecl   = BC`GenStaticInitializerDecl(cpp_id);
+      idecl_l = FVD`GetIdeclL() ;
+      l_body  = l_caughtBody ^ l_init 
+  in
+    return idecl_l ^ (if (len l_body > 0) 
+                      then [BC`GenFctDef([], fdecl, nil, BC`GenBlock(l_body))]
+                      else []);
+\end{vdm_al}
+
+\subsection{Inheritance}
+
+The specifications in this subsection are used to generate the header
+of one C++ class/Java class, corresponding to a VDM++ class structure. 
+
+Now consider the class {\tt B}, which is derived from A:
+
+\begin{quote}
+\begin{alltt}
+class B is subclass of A
+  \(\vdots\)
+end B
+\end{alltt}
+\end{quote}
+
+
+The function $GenHead$ is the overall function in the generation of a
+class header.  It takes two parameters, one which holds the name of
+the class to be code generated, $nm$, and one which holds a sequence
+of inheritance descriptions, $inherit-l$. $GenHead$ returns a 
+$CPP`Class header$.
+
+The operation {\em GenInheritance} returns a list of classes, of those
+the generated class is a subclass. For Java, the list is expected only
+to have one element (on specification level). 
+
+\begin{vdm_al}
+operations
+
+  GenHead: AS`Name * seq of AS`Name * bool ==> CPP`ClassHead | CPP`InterfaceHead
+  GenHead(nm,inherit_l, isInterface) ==
+    def cnm = BC`Rename(nm);
+        base_l = GenInheritance(inherit_l)
+    in
+      if CPP`isCPP()
+      then return BC`GenClassHead(cnm,base_l)
+      else
+       (dcl ds : seq of CPP`Modifier,
+            concinterface_l : seq of CPP`PackageName := [];
+        if CGAUX`IsAbstract() and not isInterface
+        then ds := [BC`GenModifier(<PUBLIC>), BC`GenModifier(<ABSTRACT>)]
+        else ds := [BC`GenModifier(<PUBLIC>)];
+        if CGMAIN`get_conc_option()
+        then concinterface_l := CONC`GenConcInterface(nm);
+        def interface_l = GenInterfaceInheritance(inherit_l)
+        in
+          if isInterface
+          then return BC`GenJavaInterfaceHead([], ds, cnm, interface_l ^ concinterface_l, nil)
+          elseif len base_l <= 1
+          then return BC`GenJavaClassHead([], ds, cnm, base_l, interface_l ^ concinterface_l, nil)
+          else error;
+       );
+
+  GenInterfaceInheritance : seq of AS`Name ==> seq of CPP`PackageName
+  GenInterfaceInheritance(nms) ==
+    return [ BC`GenClass2Package(BC`Rename(nms(i))) |
+             i in set inds nms & CGMAIN`isInterface(nms(i))];
+
+  GenInheritance: seq of AS`Name ==> CPP`BaseSpec
+  GenInheritance(inh_l) ==
+  ( dcl bs : seq of CPP`BaseSpecifier := [];
+    for nm in inh_l do
+      def super = BC`Rename(nm) in
+        if CPP`isCPP()
+        then bs := bs ^ [ BC`GenAccVirBaseSpec(super) ]
+        elseif not CGMAIN`isInterface(nm)
+        then bs := bs ^ [ BC`GenClass2Package(super) ]
+        else skip;
+    if CPP`isCPP() then 
+       if bs = [] then
+        ( bs := [BC`GenAccVirBaseSpec( BC`GiveBaseName() )];
+          CGAUX`UseAuxFct()
+        );
+    return bs
+  );
+
+\end{vdm_al}
+
+\subsubsection{C++}
+The code corresponding to this class will be devided into the files
+{\tt B.h} and {\tt B.cc}. The interesting part is the declaration of
+the class representing {\tt B} in {\tt B.h}:
+
+\begin{quote}
+\begin{verbatim}
+class vdm_B : public virtual vdm_A {
+  // Member declarations.
+};
+\end{verbatim}
+\end{quote}
+
+The keyword {\tt virtual} states that {\tt vdm\_A} is a virtual
+base of {\tt vdm\_B}. That is, if the class {\tt vdm\_A}
+is a virtual base of class B more than once, then {\tt vdm\_A}
+will only be represented as one object. If class {\tt A} e.g.\ is a
+virtual base of both class {\tt B} and {\tt C}, which both are virtual
+base classes of class {\tt D}, then {\tt D} will only contain
+one object of class {\tt A}. Hence, class {\tt B} and {\tt C} shares
+the member variables in class {\tt A}. On the other hand, each base
+class not specified as virtual will have its own object representing
+it. A comprehensive discussion of virtual base classes vs. non virtual
+base classes can be found in \cite{Stroustrup91} and \cite{Gorlen&90}.
+
+
+\subsubsection{Java}
+
+On specification level multiple inheritance is not supported.
+
+The function {\em GenExternalClassHead} generates a class header for 
+an external class.
+
+A class B, which is derived from A will be code generated as follows:
+
+\begin{quote}
+\begin{verbatim}
+class B extends A{
+};
+\end{verbatim}
+\end{quote}
+
+\begin{vdm_al}
+
+functions
+
+--  GenInterfaceHead: AS`Name * seq of AS`Name -> CPP`InterfaceHead
+--  GenInterfaceHead(nm,inherit_l) ==
+--    let cnm = BC`Rename(nm),
+--        base_l = GenInheritance(inherit_l),
+--       ds = [<PUBLIC>] in
+--    BC`GenJavaInterfaceHead([], ds,cnm,base_l);
+
+  GenExternalClassHead: () -> CPP`ClassHead
+  GenExternalClassHead() ==
+    def id = BC`GenIdentifier("external_" ^ CGAUX`GiveCurCName());
+        ds = [BC`GenModifier(<PUBLIC>)]
+    in
+      BC`GenJavaClassHead([], ds, id, [], nil, nil)
+
+\end{vdm_al}
+
+\subsection{Constructor and Destructor}
+
+\subsubsection{C++}
+
+The operation $GenConstructorDef$ is an auxiliary function to
+$GenHFile$ and the operation $GenConstructorDef_cc$ is an auxiliary
+function to $GenCCFile$.  These functions are used to generate the
+function definition of the constructor and the destructor. 
+
+The constructor apply initialization expressions to instance variables and
+initializes member values.  
+
+Example:
+
+\begin{quote}
+\begin{verbatim}
+virtual ~vdm_A(){}
+
+vdm_A::vdm_A() {
+  base_s.Insert((Int) VDM_A); // (if A is a base class)
+  class_s.Insert((Int) VDM_A);
+  // initialization of member values.
+  // initialization of instance variables.
+}
+\end{verbatim}
+\end{quote}
+
+\begin{vdm_al}
+
+operations
+
+  GenConstructorDef: AS`Name * bool ==> seq of (CPP`FunctionDefinition|CPP`MemberSpecifier)
+  GenConstructorDef(nm, -) ==
+  ( CGAUX`CurrentMethod(nm);
+    def fnm = BC`Rename(nm);
+        destr = BC`GenFctDecl(BC`GenDest(fnm),[]);
+        stmt  = BC`GenBlock([]);
+        fdecl = BC`GenFctDecl(fnm, [])
+    in
+      return [BC`GenMemberSpec([],fdecl), BC`GenFctDef([BC`GenFctSpecifier(<VIRTUAL>)],destr, nil,stmt)]
+  );
+
+  GenConstructorDef_cc: AS`Name * seq of AS`InstanceVarDef * bool * bool
+              ==> seq of (CPP`FunctionDefinition|CPP`MemberSpecifier)
+  GenConstructorDef_cc(nm, -, -, isDlClass) ==
+    def fnm = BC`Rename(nm);
+        initid = BC`GenIdentifier("vdm_init_" ^ CGAUX`GiveLastName(nm));
+        base_l = [BC`GenExpressionStmt(BC`GenFctCall(initid, []))];
+    in
+     (dcl Dl_Init : seq of CPP`Stmt := [];
+      if isDlClass 
+      then Dl_Init := [GenDlInit(nm)];
+      def body  = BC`GenBlock(base_l ^ Dl_Init);
+          qname = BC`GenQualifiedName(fnm, fnm);
+          decl = BC`GenFctDecl(qname, [])
+      in
+        return [BC`GenFctDef([], decl, nil, body)];
+     );
+
+  GenInitBaseVars: bool ==> seq of CPP`Stmt
+  GenInitBaseVars(isBaseClass) ==
+    let arg_l = [ BC`GenFctCall(BC`GenIdentifier("vdm_GetId"),[]) ],
+        id = if isBaseClass
+             then BC`GenIdentifier("RegisterAsBase") 
+             else BC`GenIdentifier("RegisterAsDerived")
+    in
+      return [BC`GenExpressionStmt(BC`GenFctCall(id,arg_l))];
+
+  GenDlInit : AS`Name ==> CPP`Stmt
+  GenDlInit(nm) ==
+    return BC`GenAsgnStmt(TPGEN`GenDlMember(),
+                          BC`GenFctCall(BC`GenIdentifier("DlClass_new"),
+                                        [BC`GenStringLit(CGAUX`GiveLastName(nm))]));
+    
+\end{vdm_al}
+
+\subsubsection{Java}
+
+The operation $GenJavaConstructorDef$ is an auxiliary function to
+$GenJavaFile$ and the operation $GenConstructorExternalJavaDef$ is an auxiliary
+function to $GenJavaExternalFile$.  These functions are used to generate the
+constructors for the Java classes. 
+
+\begin{vdm_al}
+
+  GenJavaConstructorDef: AS`Name * seq of AS`InstanceVarDef ==> seq of CPP`FunctionDefinition
+  GenJavaConstructorDef(nm, -) ==
+    def fnm = BC`Rename(nm);
+        initfc = BC`GenFctCall(BC`GenIdentifier("vdm_init_" ^ CGAUX`GiveLastName(nm)), []);
+        body = BC`GenBlock([BC`GenExpressionStmt(initfc)]);
+        decl = BC`GenFctDecl (fnm, []);
+        excs = FD`GenExceptionsHdr()
+    in
+      return [BC`GenJavaFctDef ([],[BC`GenModifier(<PUBLIC>)], [], decl, excs, body)];
+
+  GenConstructorExternalJavaDef: () ==> seq of CPP`FunctionDefinition
+  GenConstructorExternalJavaDef() ==
+    def body1  = [BC`GenAsgnStmt(BC`GenIdentifier("parent"), BC`GenIdentifier("parent"^CGAUX`GiveCurCName()))];
+        body2 = [];
+        arg1 = BC`GenArgDecl([BC`GenTypeSpecifier(BC`GenIdentifier(CGAUX`GiveCurCName()))],
+                             BC`GenIdentifier("parent"^CGAUX`GiveCurCName()));
+        decl1 = BC`GenFctDecl(BC`GenIdentifier("external_"^CGAUX`GiveCurCName()), [arg1]);
+        decl2 = BC`GenFctDecl(BC`GenIdentifier("external_"^CGAUX`GiveCurCName()), [])
+    in
+      return [BC`GenJavaFctDef([],[BC`GenModifier(<PUBLIC>)],[], decl1, nil, BC`GenBlock(body1)),
+              BC`GenJavaFctDef([],[BC`GenModifier(<PUBLIC>)],[], decl2, nil, BC`GenBlock(body2))];
+
+\end{vdm_al}
+
+
+\subsection{Instance Variables}
+
+The operation $GenInstVars$ is an auxiliary function to $GenHFile$ and
+$GenJavaFile$ and It generates C++ member declarations/Java Ident
+declarations for the instance variables of a VDM++ class. 
+
+\begin{vdm_al}
+operations
+
+  GenInstVars: seq of AS`InstanceVarDef ==> AccessMemberDecl | 
+                                            seq of CPP`MemberDeclaration
+  GenInstVars(var_l) ==
+    if CPP`isCPP() then 
+      let var_l' = [CGAUX`ExchangeDefAccess (var_l (i))|i in set inds var_l ],
+          acs_s = {acs.access| acs in set elems var_l' & is_AS`InstAssignDef (acs)}
+      in
+        return {a|->[ GenInstVar(var_l'(i)) | i in set inds var_l' &
+                       let var = var_l'(i) in is_AS`InstAssignDef (var) and var.access = a]
+                     | a in set acs_s}
+    else
+      (dcl cidtocpp : map int to CPP`MemberDeclaration := {|->},
+           instvars : seq of CPP`MemberDeclaration := [];
+      for all i in set inds var_l do
+      (
+       if is_AS`InstAssignDef (var_l(i)) then
+        let mk_AS`InstAssignDef(-,-,-,cid) = var_l(i) in
+         cidtocpp := cidtocpp munion {cid|-> GenInstVar(var_l(i))}
+      );
+      while card dom cidtocpp > 0 do
+             (let cid in set dom cidtocpp be st
+                forall fcid in set dom cidtocpp &
+                def mk_(-,-,tst,-,-) = CI`GetFilePos(cid);
+                    mk_CI`TokenPos(-,ast_start,-,-,-) = tst;
+                    mk_(-,-,tst2,-,-) = CI`GetFilePos(fcid);
+                    mk_CI`TokenPos(-,ast_startf,-,-,-) = tst2      
+                in ast_start <= ast_startf       
+             in (instvars := instvars ^ [cidtocpp(cid)];
+                 cidtocpp := {cid} <-: cidtocpp));
+      return instvars;
+     );
+
+  GenInstVar: AS`InstAssignDef ==> CPP`MemberDeclaration
+  GenInstVar(mk_AS`InstAssignDef(mk_AS`AssignDef(nm,tp,ex,-), acc,stat,cid)) ==
+    def rtp = CGAUX`FromAS2RepType(tp);
+        var = --if CPP`isCPP() then 
+              BC`Rename(nm) 
+              -- Java branch commented out since it causes problems
+              -- when a method parameter has the same name as an
+              -- instance variable (instance var is erroneously renamed)
+              --else BC`Rename(CGAUX`InsertGlobalName(nm)) 
+    in
+      if CPP`isCPP()
+      then
+        def mk_CPP`DeclarationStmt(idcl,-) = hd DS`GenDecl(rtp,var,nil);
+            mk_CPP`IdentDeclaration(ds_l,[dl],-,-) = idcl;
+            mk_CPP`InitDeclarator(decl,-,-) = dl
+        in
+          if stat
+          then return BC`GenMemberSpec([BC`GenModifier(<STATIC>)] ^ ds_l, decl)
+          else return BC`GenMemberSpec(ds_l,decl)
+      else
+        ( dcl arg : [CPP`AsgnInit] := nil,
+              newarg : [CPP`AsgnInit] := arg,
+              inStaticInitializer : bool := false;
+          if stat
+             -- and
+             -- VD`AreDefinedDirectly([mk_AS`ValueDef(mk_AS`PatternName(nm, nm.cid), tp, ex, acc, stat, cid)])
+          then
+            def l_rtp = CGAUX`FromAS2RepType(tp);
+                --l_nm = BC`Rename(UTIL`QualiName(CGAUX`GiveCurCASName(), nm));
+                l_nm = BC`Rename(CGAUX`QualiName(CGAUX`GiveCurCASName(), nm));
+                l_vt = mk_CGMAIN`VT(l_nm,l_rtp);
+                l_expr = CGEXPR`CGExpr(ex, l_vt);
+                l_vd   = mk_AS`ValueDef(mk_AS`PatternName(nm, nil, nm.cid), tp, ex, acc, stat, cid)
+            in
+              if ( VD`AreDefinedDirectly([l_vd]) and
+                   not (len l_expr <> 1 or not is_CPP`ExpressionStmt(hd l_expr)))
+              then 
+                arg := BC`GenAsgnInit((hd l_expr).expr.assignexpr)
+              else 
+                (FVD`AddUncaughtValInit(l_expr);
+                 inStaticInitializer := true);
+          newarg := arg;
+          if newarg <> nil and is_AS`ApplyExpr(ex) and not inStaticInitializer
+          then
+            (def l_ts = BC`GenTypeSpecifier(BC`GenIdentifier("Throwable"));
+                 l_ed = BC`GenExceptionDeclaration([l_ts], BC`GenIdentifier("e"));
+                 l_fc1 = BC`GenFctCall(BC`GenIdentifier("e.getMessage"),[]);
+                 l_fc2 = BC`GenFctCall(BC`GenIdentifier("System.out.println"), [l_fc1]);
+                 l_stmt = BC`GenExpressionStmt(l_fc2);
+                 l_handlers = [BC`GenHandler(l_ed, l_stmt)];
+                 l_init = BC`GenTryBlock(DS`GenDecl(rtp, var, newarg), l_handlers, nil) 
+             in
+               FVD`AddUncaughtValInit([l_init]);
+             newarg := nil);
+          def mk_CPP`DeclarationStmt(idcl,-) = hd DS`GenDecl(rtp, var, newarg);
+              mk_CPP`IdentDeclaration(ds_l,[dl],-,-) = idcl;
+            -- use volatile instance variable if in concurrency mode
+          in
+           (dcl volMod : seq of CPP`Modifier := [],
+                statMod : seq of CPP`Modifier := [];
+            if (CGMAIN`get_conc_option()) 
+            then volMod := [BC`GenModifier(<VOLATILE>)];
+            if stat
+            then statMod := [BC`GenModifier(<STATIC>)];
+            def modifiers = [CGAUX`JavaAccess(acc)] ^ statMod ^ volMod
+            in
+              return BC`GenIdentDeclaration([], modifiers ^ ds_l, [dl])
+           );
+      );
+
+functions
+\end{vdm_al}
+
+Consider the  instance variable declaration: 
+
+\begin{quote}
+\begin{verbatim}
+class A
+instance variables
+  i: nat;
+  k: int := 4;
+  message: seq of char :=[];
+    inv len message <= 30;
+end A
+\end{verbatim}
+\end{quote}
+
+The corresponding member declarations generated by $GenInstVars$ will
+become:
+
+\subsubsection*{C++}
+\begin{quote}
+\begin{verbatim}
+Int vdm_i;
+Int vdm_j;
+\end{verbatim}
+\end{quote}
+
+\subsubsection*{Java}
+\begin{quote}
+\begin{verbatim}
+protected Integer i = null;
+protected Integer k = null;
+protected Sequence message  = null;
+\end{verbatim}
+\end{quote}
+
+\subsubsection*{Initialization}
+
+Instance variables are initialized when an object is created. Instance
+variables are therefor naturally initialized in the constructor methods.
+ 
+The function $GenVarInits$ generates a sequence of C++ statements/Java
+statements corresponding to the initialization statements of a class. This
+function takes one parameter to hold a sequence initialization
+statements to be code generated, $iInit-l$.
+
+\begin{vdm_al}
+operations
+  GenVarInits: seq of AS`InstanceVarDef ==> seq of CPP`Stmt
+  GenVarInits(iInit_l) ==
+    if iInit_l = []
+    then return []
+    else return conc [GenVarInit(iInit_l(i)) | i in set inds iInit_l 
+                & let ivd = iInit_l(i) in 
+	           (is_AS`InstAssignDef (ivd)) and
+	            let mk_AS`InstAssignDef(mk_AS`AssignDef(-,-,dclinit,-),-,stat,-) = ivd 
+                    in not stat and dclinit <> nil ];
+
+  GenVarInit: AS`InstAssignDef ==> seq of CPP`Stmt
+  GenVarInit(mk_AS`InstAssignDef (mk_AS`AssignDef(var,tp, dclinit,-), -, -, -)) ==
+   def varname = BC`Rename(CGAUX`InsertGlobalName(var));
+       tpe = CGAUX`FromAS2RepType(tp);
+       vt = mk_CGMAIN`VT(varname,tpe)
+   in
+     if CPP`isCPP()
+     then CGEXPR`CGExpr (dclinit, vt)
+     else
+       def stmts = CGEXPR`CGExpr (dclinit, vt)
+       in
+         if CGAUX`IsStringType(tpe)
+         then
+           cases stmts:
+             [mk_CPP`ExpressionStmt(mk_CPP`AssignExpr(-,
+                                                      mk_CPP`AssignOp(<ASEQUAL>, -),
+                                                      mk_CPP`ClassInstanceCreationExpr((DS`GenStringType().tp), -,
+                                                                                       [arg], -, -), -), -)]
+               -> let [mk_CPP`ExpressionStmt(ae, -)] = stmts,
+                      new_ae = mu (ae, assignexpr |-> arg)
+                  in return [BC`GenExpressionStmt(new_ae)],
+             others -> return stmts
+           end
+         else return stmts;
+
+\end{vdm_al}
+
+
+
+\subsection{Java Interfaces}
+
+Generation of Java interfaces proceeds in two ways:
+\begin{itemize}
+\item The code generator needs to provide an interface to allow
+possible interfaces to be selected.
+\item The code generator needs to generate properly those classes
+selected to be interfaces by the user.
+\end{itemize}. 
+The latter point has been dealt with in \texttt{GenClasses}. Here we
+specify the former.
+
+In general, deciding whether a class can be generated as an interface
+is not just a property of that class, since any superclasses of that
+class must also be generated as interfaces. Thus we have two separate
+notions:
+\begin{description}
+\item[Possible Interface] A class whose body satisfies the criteria
+for being an interface, and all of whose superclasses are also
+interfaces.
+\item[Candidate Interface] A class whose body satisfies the criteria
+for being an interface.
+\end{description}
+This separation is necessary to allow the user to see all possible
+candidate interfaces, at the GUI level.
+
+The function \texttt{IsCandidateInterface} specifies the criteria for
+a class to be a candidate interface.
+\begin{vdm_al}
+operations
+
+IsCandidateInterface : AS`Class ==> bool
+IsCandidateInterface(cl) ==
+  let defs = cl.defs in
+  if defs = nil
+  then return true
+  else let typem = defs.typem,
+           valuem = defs.valuem,
+           fnm = defs.fnm,
+           opm = defs.opm in
+  ( CGAUX`InitState(cl.nm);
+    return 
+      ((forall tpd in set rng typem & tpd.access = <PUBLIC_AS>) and
+       VD`AreDefinedDirectly(valuem) and
+       defs.instvars = [] and
+       defs.syncs = [] and
+       defs.threaddef = nil and
+       (forall fd in set rng fnm & CGAUX`IsAbstractFunction(fd)) and
+       (forall od in set rng opm & CGAUX`IsAbstractOperation(od) or
+                                   ( CGMAIN`get_j2v_option() and 
+                                     IsJ2VAbstractOp(od)
+                                   ))
+      )
+  );
+
+IsJ2VAbstractOp : AS`OpDef ==> bool
+IsJ2VAbstractOp(opdef) ==
+  return 
+    if is_AS`ExplOpDef(opdef) 
+    then opdef.body.body = <NOTYETSPEC> or ( opdef.constr and len opdef.parms = 0)
+    elseif is_AS`ExtExplOpDef(opdef)
+    then opdef.body.body = <NOTYETSPEC> or ( opdef.constr and len opdef.partps = 0)
+    else false;
+
+\end{vdm_al}
+
+The function \texttt{IsPossibleInterface} specifies the criteria for
+a class to be a possible interface.
+\begin{vdm_al}
+functions
+
+IsPossibleInterface : AS`Class -> bool
+IsPossibleInterface(cl) ==
+  IsCandidateInterface(cl) and
+  (forall sc in set elems cl.supercls & 
+     CGMAIN`isInterface(sc) or
+     ( CGMAIN`get_j2v_option() and sc = mk_AS`Name(["Nullable"], -1))
+  );
+
+\end{vdm_al}
+
+The collection of all possible interfaces for a given sequence of
+interfaces is yielded by \texttt{GetPossibleInterfaces}.
+\begin{vdm_al}
+operations
+
+GetPossibleInterfaces : set of AS`Class ==> set of AS`Name
+GetPossibleInterfaces(classes) ==
+( CPP`setmode(<JAVA>);
+  return { cl.nm | cl in set classes & IsPossibleInterface(cl)}
+);
+
+GenInstanceVarInit: AS`Name * seq of AS`InstanceVarDef ==> CPP`FunctionDefinition
+GenInstanceVarInit(nm, iVars) ==
+  (dcl Init_l : seq of CPP`Stmt := [],
+       body : CPP`Stmt;
+   if CGMAIN`get_conc_option()
+   then Init_l := Init_l ^ CONC`GenConstrExtensions(nm);
+   Init_l := Init_l ^ GenVarInits(iVars);
+   if Init_l <> []
+   then
+     let expdecl = BC`GenExceptionDeclaration(
+                               [BC`GenTypeSpecifier( BC`GenIdentifier("Exception"))],
+                                  BC`GenIdentifier("e")),
+         fctcall1 = BC`GenFctCall(BC`GenIdentifier("e.getMessage"),[]),
+         fctcall2 = BC`GenFctCall(BC`GenIdentifier("System.out.println"), [fctcall1]),
+         fctcall3 = BC`GenFctCall(BC`GenIdentifier("e.printStackTrace"), [BC`GenIdentifier("System.out")]),
+         stmt = BC`GenBlock([BC`GenExpressionStmt(fctcall3), BC`GenExpressionStmt(fctcall2)])
+     in
+       body := BC`GenTryBlock(Init_l, [BC`GenHandler(expdecl,stmt)], nil)
+   else body := BC`GenBlock([]);
+   return BC`GenJavaFctDef([],[BC`GenModifier(<PRIVATE>)],
+                       [BC`GenTypeSpecifier(BC`GenVoid())],
+                       BC`GenFctDecl(BC`GenIdentifier("vdm_init_"^ CGAUX`GiveLastName(nm)), []),
+                       nil, --FD`GenExceptionsHdr(),
+                       body);
+  );
+
+GenInstanceInv: AS`Name * seq of AS`InstanceVarDef ==> seq of CPP`FunctionDefinition
+GenInstanceInv(nm, iVars) ==
+  (dcl res : seq of CPP`FunctionDefinition := [];
+   if iVars <> []
+   then
+     (let expr_l = [ iVars(i).expr | i in set inds iVars & is_AS`InstanceInv(iVars(i)) ]
+      in if expr_l <> []
+         then
+           (dcl expr : AS`Expr := expr_l(len expr_l);
+            for idx = len expr_l -1 to 1 by -1 do 
+              let e = mk_AS`BinaryExpr(expr_l(idx), <AND>, expr, expr_l(idx).cid)
+              in expr := e;
+            CGAUX`CurrentRType(mk_REP`BooleanTypeRep());
+            def rs = mk_AS`ReturnStmt(expr, expr_l(1).cid);
+                body = BC`GenBlock(CGSTMT`GenStmt(rs, true))
+            in
+              if CPP`isCPP()
+              then res := res ^ [BC`GenFctDef([DS`GenBoolType()],
+                                              BC`GenFctDecl(BC`GenQualifiedName(BC`Rename(nm),
+                                                   BC`GenIdentifier("vdm_inv_"^ CGAUX`GiveLastName(nm))), []),
+                                              nil,
+                                              body)]
+              else res := res ^ [BC`GenJavaFctDef([],[BC`GenModifier(<PUBLIC>)],
+                                              [DS`GenBoolType()],
+                                              BC`GenFctDecl(BC`GenIdentifier("inv_"^ CGAUX`GiveLastName(nm)), []),
+                                              nil,
+                                              body)]
+           )
+     );
+   if res <> []
+   then CGAUX`SetHasInv();
+   return res;
+  ); 
+\end{vdm_al}
+
+\begin{vdm_al}
+end CLASS
+\end{vdm_al}
+

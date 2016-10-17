@@ -1,0 +1,19 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+
+public Test : () ==> set of ( seq of nat | set of nat )  
+Test () ==
+return
+{
+  { c | [c]^l in set {[1],[2],[3,4]} }
+}
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

@@ -1,0 +1,91 @@
+module BASE_BOM
+parameters 
+   types 
+     Pn
+
+exports all
+
+      
+definitions
+types
+  BOM = map Pn to set of Pn
+
+  inv bom == bom_well_def (bom)
+
+functions
+
+  aux_bom_well_def : Pn * map Pn to set of Pn * set of Pn -> bool
+  aux_bom_well_def (pn, bom, used) == 
+    forall spn in set bom(pn) &
+      not(spn in set used) and
+      aux_bom_well_def(spn, bom, {spn} union used);
+
+  bom_well_def : map Pn to set of Pn -> bool
+  bom_well_def (bom) ==
+    dunion(rng bom) subset dom bom and
+    forall pn in set dom bom &
+      aux_bom_well_def(pn, bom, {pn});
+  
+  empty_bom : () -> BOM
+  empty_bom() == { |-> };
+
+  explode : BOM * Pn -> set of Pn
+  explode (bom, pn) == 
+    bom(pn) union dunion {explode (bom,i) | i in set bom(pn)};
+
+  enter : BOM * Pn * set of Pn -> BOM
+  enter (bom, pn, spn) ==
+    bom munion {pn |-> spn}
+
+  pre pn not in set spn and pn not in set dom bom;
+
+  delete : BOM * Pn -> BOM
+  delete (bom, pn) ==
+    {pn} <-: bom
+
+  pre inv_BOM ({pn} <-: bom);
+
+  add : Pn * Pn * BOM -> BOM
+  add (compt, pn, bom) ==
+    bom ++ {pn |-> bom(pn) union {compt}}
+
+  pre pn in set dom bom and
+      compt in set dom bom and
+      not (pn in set explode(bom, compt));
+
+  erase : Pn * Pn * BOM -> BOM
+  erase (compt, pn, bom) ==
+    bom ++  {pn |-> bom(pn) \ {compt}}
+
+  pre pn in set dom bom
+
+end BASE_BOM
+
+module A
+
+instantiations
+    NatBom as BASE_BOM(Pn -> nat) all
+
+        
+definitions
+
+operations       
+Test: () ==> NatBom`BOM
+Test() ==
+     (dcl MyBom : NatBom`BOM ;
+  
+      MyBom := NatBom`empty_bom();
+      MyBom := NatBom`enter(MyBom,1,{});
+      MyBom := NatBom`enter(MyBom,2,{1});
+      MyBom := NatBom`enter(MyBom,3,{});
+      MyBom := NatBom`erase(1,1,MyBom);
+      MyBom := NatBom`erase(3,2,MyBom);
+      return(MyBom)
+     )
+      
+end A
+
+
+
+
+

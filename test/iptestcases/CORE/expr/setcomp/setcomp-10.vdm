@@ -1,0 +1,14 @@
+class A
+
+operations
+-- Test case to test optimization of set bindings in java cg
+public Test : () ==> set of set of nat
+Test() ==
+( let l = [9, 6, 3, -1, 2],
+      m = { 1 |-> 3, 2 |-> 4, 3 |-> 5}
+  in
+    return {{ x | x in set elems l}, { 2 * x | x in set dom m},
+            { x - 1 | x in set rng m}, { x + m(x) | x in set dom m}}
+)
+
+end A

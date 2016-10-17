@@ -1,0 +1,20 @@
+class CasesStmtTest
+
+operations
+
+  Cases: () ==> nat
+  Cases() ==
+    cases true:
+    true -> if 1=1
+         then let f = false in return f
+	 elseif 2=1
+	 then return [1,2,1]
+	 else return {1|->true},
+    others -> cases 4:
+           1 -> return not (2 >= 2),
+	   true -> return 34,
+	   others -> let n = nil in return n
+	 end
+    end;
+
+end CasesStmtTest

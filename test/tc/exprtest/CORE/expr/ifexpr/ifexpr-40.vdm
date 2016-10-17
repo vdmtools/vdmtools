@@ -1,0 +1,43 @@
+class IfExprTest
+functions
+
+  f : () -> inmap rat to nat
+  f() ==
+    {2 |-> 5}
+  pre true
+--  post true
+
+types
+
+  A :: a: int
+       b: bool
+
+values
+
+  v1 : A = mk_A(1,true);
+  n : real = 88
+    
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let t = true,
+      nn = nil,
+     - = let m:seq of char =
+        if n=1
+        then t
+	elseif n=2
+        then def a = {8} in a union {9}
+        elseif n=3
+        then let a = true in a
+        elseif n=4
+        then let a in set {0,...,5} in let m = {1|->'a'} in m(a)
+	else nn
+        in m 
+  in skip;
+
+------------------------------------------------------------------------------
+end IfExprTest

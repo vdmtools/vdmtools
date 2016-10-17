@@ -1,0 +1,34 @@
+class MainSort
+
+values
+  arr1 = [3,5,2,23,1,42,98,31];
+  arr2 = [3,1,2]
+  
+
+operations
+ 
+public  Test: () ==> seq of ((seq of int) | bool) 
+  Test () ==
+  ( dcl smach   : SortMachine := new SortMachine(),
+        dos     : Sorter := new DoSort(),
+        expls   : Sorter := new ExplSort(),
+        imps    : ImplSort := new ImplSort(),
+        mergs    : Sorter := new MergeSort (),
+        res : seq of int := [],     
+        res3 : seq of int := [],     
+        res2 : seq of int := [],  
+        res4 : seq of int := [],  
+        postcond : bool;
+    --smach.SetSort(mergs);
+    let --res4 = smach.GoSorting(arr2),
+    res = smach.SetAndSort(dos,arr1),
+    res2 = smach.SetAndSort(expls,arr2),        
+    --res3 = smach.SetAndSort(imps,arr2),
+    postcond = imps.post_ImplSorter(arr2,res3)            
+
+    in    
+
+    return [res,res2,res3,postcond]
+  );
+
+end MainSort

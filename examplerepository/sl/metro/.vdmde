@@ -1,0 +1,12 @@
+r metro.vdm
+i
+tc Metro1
+tc Metro1a
+tc Metro2
+tc Metro3
+cg Metro1
+cg Metro1a
+cg Metro2
+cg Metro3
+latex metro.vdm
+quit

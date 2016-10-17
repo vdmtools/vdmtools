@@ -1,0 +1,137 @@
+class BPL is subclass of Global
+
+instance variables
+
+  bpl_id : seq of char;
+  status : Status;
+  numberOfBeads : nat;
+  bpl : seq of Bead := [];
+  RST: RSTPoints;
+  QRV: QRV;
+  groove : Groove;
+  layers : seq of LayerGeom := [];
+  
+
+
+operations
+
+ -- createBeadPattern: GrooveParms ==> seq of Bead 
+ -- createBeadPattern (parms) ==
+ -- ( groove := createGroove (parms);
+ --   let rootbead = createRootBead() in
+ --   let layers = constructLayers (groove) in
+ -- --  let layers = ConstructLayerGeom(groove.RestrictedByBead (rootbead)) in
+ --   bpl := [rootbead] ^ conc [ ConstructBeads(layers(i)) | i in set inds layers ];
+ --   return bpl
+ -- );
+
+
+createRootBead: () ==> Bead
+createRootBead () ==
+  is subclass responsibility;
+
+createBeadPattern: RSTPoints * QRV ==> seq of Bead
+createBeadPattern (rst, qrv) ==
+  is not yet specified;
+
+createGroove: RSTPoints * QRV ==> Groove
+createGroove (rst, qrv) ==
+  is subclass responsibility;
+
+getGrooveCorners: () ==> seq of Point2 
+getGrooveCorners () ==
+  return groove.getArVertices ();
+
+getLayerCorners: () ==> seq of seq of Point2 
+getLayerCorners () ==
+  return [ layers(i).getVertices () | i in set inds layers ];
+
+
+constructLayers: LayerCriteria ==> seq of (LayerGeom * Error)
+constructLayers (lcrit) ==
+  let mk_LayerCriteria (-,drivingcrit,-,-) = lcrit in
+  let lgerr = drivingcrit.divide (groove.copy(), lcrit) in
+  let newlgerr = setLayerIds (lgerr) in
+  ( layers := extractLayers (newlgerr);
+    return newlgerr );
+
+setLayerIds: seq of (LayerGeom * Error) ==> seq of (LayerGeom * Error)
+setLayerIds (lgs) ==
+( dcl aux : Auxil := new Auxil();
+  dcl newlgs : seq of (LayerGeom * Error) := [];
+  for all i in set inds lgs do
+    let mk_(lg,err) = lgs(i) in
+    ( lg.setId (i);
+      let label = "Layer " ^ aux.nat2string(i) in
+      err.setLabel (label);
+      newlgs := newlgs ^ [mk_(lg,err)] );
+  return newlgs );
+
+extractLayers: seq of (LayerGeom * Error) ==> seq of LayerGeom
+extractLayers (lgs) ==
+  return [ let mk_(lg,-) = lgs(i) in lg | i in set inds lgs ];
+
+constructBeads: BeadCriteria ==> seq of (Bead * Error) 
+constructBeads (bcrit) ==
+( dcl aux : Auxil := new Auxil();
+  dcl bead_errors : seq of (Bead * Error) := [];
+  dcl firstbeadtype : <RootBead> | <FirstBead> := <RootBead>;
+  for lg in layers do
+    let drivingcrit = aux.extractDrivingBeadCrit (lg, bcrit) in
+    let bderrs = drivingcrit.divide (lg.copy(), bcrit, firstbeadtype) in
+    ( bead_errors := bead_errors ^ bderrs;
+      firstbeadtype := <FirstBead> );
+  -- numbering according to gravity.
+  setBeadIds (bead_errors);
+  bpl := extractBeads (bead_errors);
+  return bead_errors
+);
+
+setBeadIds (bds: seq of (Bead * Error)) ==
+( dcl aux : Auxil := new Auxil();
+  for all i in set inds bds do
+    let mk_(bd,err) = bds(i) in
+    ( bd.setId (i);
+      let label = "Bead " ^ aux.nat2string(i) in
+      err.setLabel (label) )
+);
+
+extractBeads: seq of (Bead * Error) ==> seq of Bead
+extractBeads (bds) ==
+  return [ let mk_(bd,-) = bds(i) in bd | i in set inds bds ];
+
+types
+
+GeometryClass = <TJoint> | <VJoint> | <Flange>;
+
+
+end BPL
+
+
+
+
+class TJointBPL is subclass of BPL
+
+operations
+
+createGroove: RSTPoints * QRV ==> Groove 
+createGroove (rst, qrv) ==
+( dcl gr: TJointGroove := new TJointGroove();
+  gr.initialise (rst,qrv);
+  groove := gr;
+  RST := rst.copy ();
+  QRV := qrv;
+  return groove
+);
+
+createRootBead: () ==> Bead
+createRootBead () ==
+  is not yet specified
+--  ==
+-- ( dcl bead : Bead := new Bead();
+--   bead.initialise (groove.getArVertices(), <RootBead>);
+--   bpl := [bead];
+--   return bead
+-- );
+
+end TJointBPL

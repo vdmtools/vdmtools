@@ -1,0 +1,108 @@
+  
+module A
+
+imports 
+
+from MAIN all
+
+exports all
+
+definitions
+
+values
+        NMAX : nat = 10
+
+operations
+
+
+Test: () ==> seq of nat
+Test() ==
+return
+        MAIN`SortSequence([10,2,4,3,5,45,287])               
+        
+
+end A
+
+module SORT
+
+parameters
+
+types ELEM
+
+values Max : ELEM
+
+functions LessEqual : ELEM * ELEM +> bool
+
+
+definitions
+
+functions
+
+  DoSort: seq of ELEM -> seq of ELEM
+  DoSort(l) ==
+    cases l:
+        [] ->     [],
+        others -> let sorted = DoSort (tl l) in
+                        InsertSorted (hd l, sorted)
+    end;
+
+  InsertSorted: ELEM * seq of ELEM -> seq of ELEM
+  InsertSorted(i,l) ==
+    cases true :
+      (l = [])           -> if LessEqual(i, Max) 
+                                then [i]
+                                else [],
+      others             -> if LessEqual(i, Max) 
+                                then if LessEqual(i, hd l) 
+                                        then [i] ^ l
+                                        else [hd l] ^ InsertSorted(i,tl l)
+                                else InsertSorted(hd l,tl l)
+    end
+
+
+end SORT
+
+
+
+module COMPARE
+
+exports all
+
+definitions
+
+functions
+
+NatLE: nat * nat -> bool
+NatLE(n1,n2) ==
+n1<=n2 
+
+end COMPARE
+
+
+
+module MAIN
+
+imports
+        from COMPARE all,
+        from A values NMAX : nat
+
+instantiations
+
+Nat10Sort as SORT(ELEM      -> nat,
+                  Max       -> A`NMAX,
+                  LessEqual -> COMPARE`NatLE) all
+
+
+exports all
+
+definitions
+
+functions
+
+SortSequence : seq of nat +> seq of nat
+SortSequence(l) ==
+        Nat10Sort`DoSort(l)
+
+end MAIN
+
+

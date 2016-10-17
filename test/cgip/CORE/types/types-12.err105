@@ -1,0 +1,5 @@
+IP: Dynamic type check is set. 
+
+types-12.arg, l. 39, c. 3:
+  Run-Time Error 202: Incompatible return type in function or operation application
+  actual value: RETURN_VAL

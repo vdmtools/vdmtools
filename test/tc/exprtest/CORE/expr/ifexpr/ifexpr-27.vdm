@@ -1,0 +1,45 @@
+class IfExprTest
+functions
+
+  f : () -> inmap rat to nat
+  f() ==
+    {2 |-> 5}
+  pre true
+--  post true
+
+types
+
+  A :: a: int
+       b: bool
+
+values
+
+  v1 : A = mk_A(1,true);
+  n : real = 88
+    
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let t = true,
+      nn = nil,
+     - = let m:<QUOTE> =
+        if n=1
+	then t
+	elseif n=55
+	then forall a in set {1,...,7} & true
+	elseif n=56
+	then exists a in set {1,...,7} & true
+	elseif n=57
+	then exists1 a in set {1,...,7} & true
+	elseif n=58
+	then iota a in set {1,...,7} & true
+	else nn
+        in m 
+  in skip;
+
+------------------------------------------------------------------------------
+end IfExprTest

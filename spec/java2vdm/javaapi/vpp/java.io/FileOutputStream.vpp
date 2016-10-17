@@ -1,0 +1,127 @@
+dlclass JavaIoFileOutputStream is subclass of JavaIoOutputStream
+uselib "j2vdll.so"
+--values 
+--  CLASS : JavaLangClass = new  JavaLangClass("JavaIoFileOutputStream" , <CLASS> , false  )
+operations 
+public  close : () ==> ()
+close() == 
+is not yet specified ;
+
+public  getFD : () ==> JavaIoFileDescriptor
+getFD() == 
+is not yet specified ;
+
+public  write : int  ==> ()
+write(b) == 
+( if writeInt(b) <> 0
+  then exit new JavaIoIOException()
+);
+
+private  writeInt : int  ==> int
+writeInt(b) == 
+is not yet specified ;
+
+protected  finalize : () ==> ()
+finalize() == 
+is not yet specified ;
+
+--public  getClass : () ==> JavaLangClass
+--getClass() == 
+--return  CLASS;
+
+--public  write1 : map  int  to  int  ==> ()
+--write1(b) == 
+----  is not yet specified ;
+--  JavaIoOutputStream`write1(b);
+
+--public  write2 : map  int  to  int  * int  * int  ==> ()
+--write2(b, off, len__) == 
+----  is not yet specified ;
+--  JavaIoOutputStream`write2(b, off, len__);
+
+--public  JavaIoFileOutputStream : <NIL> ==> JavaIoFileOutputStream
+--JavaIoFileOutputStream(-) == 
+--isNil := true  ;
+
+public  JavaIoFileOutputStream : JavaIoFile ==> JavaIoFileOutputStream
+JavaIoFileOutputStream(file) == 
+( FileOutputStream1(file.getPath())
+) ;
+
+public  JavaIoFileOutputStream : JavaLangString ==> JavaIoFileOutputStream
+JavaIoFileOutputStream(filename) == 
+( FileOutputStream1(filename)
+) ;
+
+private open : seq of char ==> int
+open(name) == 
+is not yet specified ;
+
+private openAppend : seq of char ==> int
+openAppend(name) == 
+is not yet specified ;
+
+public  JavaIoFileOutputStream : JavaLangString * bool  ==> JavaIoFileOutputStream
+JavaIoFileOutputStream(name, append) == 
+( FileOutputStream2(name, append)
+);
+
+public  JavaIoFileOutputStream : seq of char * bool  ==> JavaIoFileOutputStream
+JavaIoFileOutputStream(name, append) == 
+( FileOutputStream2'(name, append)
+);
+
+private  FileOutputStream1 : JavaLangString ==> ()
+FileOutputStream1(name) == 
+( if open(name.toSeqOfChar()) <> 0
+  then
+    exit
+      new JavaIoFileNotFoundException(name)
+  else
+    skip
+) ;
+
+private  FileOutputStream1' : seq of char ==> ()
+FileOutputStream1'(name) == 
+( if open(name) <> 0
+  then
+    exit
+      new JavaIoFileNotFoundException (new JavaLangString(name))
+  else
+    skip
+) ;
+
+private  FileOutputStream2 : JavaLangString * bool  ==> ()
+FileOutputStream2(name, append) == 
+( if append
+  then
+    if openAppend(name.toSeqOfChar()) <> 0
+    then
+      exit
+        new JavaIoFileNotFoundException(name)
+    else
+      skip
+  else
+    FileOutputStream1(name)
+) ;
+
+private  FileOutputStream2' : seq of char * bool  ==> ()
+FileOutputStream2'(name, append) == 
+( if append
+  then
+    if openAppend(name) <> 0
+    then
+      exit
+        new JavaIoFileNotFoundException(new JavaLangString(name))
+    else
+      skip
+  else
+    FileOutputStream1'(name)
+) ;
+
+public  JavaIoFileOutputStream : JavaIoFileDescriptor ==> JavaIoFileOutputStream
+JavaIoFileOutputStream(fdObj) == 
+is not yet specified;
+
+
+end  JavaIoFileOutputStream

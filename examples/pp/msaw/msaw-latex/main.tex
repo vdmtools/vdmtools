@@ -1,0 +1,92 @@
+\documentclass[11pt]{article}
+\usepackage{vpp}
+\usepackage{toolbox}
+\usepackage{makeidx}
+
+\newcommand{\ClassDef}[1]{{\small {\bf #1}}}
+\newcommand{\ClassOcc}[1]{{\small #1}}
+\newcommand{\TypeDef}[1]{{\bf #1}}
+\newcommand{\TypeOcc}[1]{{\it #1}}
+\newcommand{\FuncDef}[1]{{\bf #1}}
+\newcommand{\FuncOcc}[1]{#1}
+\newcommand{\MethodDef}[1]{{\bf #1}}
+\newcommand{\MethodOcc}[1]{#1}
+\newcommand{\InstVarDef}[1]{{\bf #1}}
+
+\makeindex
+
+\begin{document}
+\docdef{Specification of the MSAW Example}
+         {IFAD VDM Tool Group \\
+          The Institute of Applied Computer Science}
+         {\today}
+         {IFAD-VDM-49}
+         {Report}
+         {Draft}
+         {Internal}
+         {\copyright IFAD}
+         {\item[\mbox{}] \mbox{}}
+         {\mbox{}}
+
+\tableofcontents
+
+\pagebreak
+
+\section{Specification}
+
+\subsection{Clock}
+\input{clock.vpp.tex}
+\subsection{VisualDetecteur}
+\input{visualdetecteur.vpp.tex}
+\subsection{VisualObstacleArtificiel}
+\input{visualobstacleartificiel.vpp.tex}
+\subsection{VisualPistesRadar}
+\input{visualpistesradar.vpp.tex}
+\subsection{View}
+\input{view.vpp.tex}
+\subsection{BulletinMeteo}
+\input{bulletinmeteo.vpp.tex}
+\subsection{ZoneAeroport}
+\input{zoneaeroport.vpp.tex}
+\subsection{ZoneMilitaire}
+\input{zonemilitaire.vpp.tex}
+\subsection{ReliefParticulier}
+\input{reliefparticulier.vpp.tex}
+\subsection{ObstacleArtificiel}
+\input{obstacleartificiel.vpp.tex}
+\subsection{Obstacle}
+\input{obstacle.vpp.tex}
+\subsection{Terrain}
+\input{terrain.vpp.tex}
+\subsection{Vecteur3D}
+\input{vecteur3d.vpp.tex}
+\subsection{SegmentDePrediction}
+\input{segmentdeprediction.vpp.tex}
+\subsection{Cone}
+\input{cone.vpp.tex}
+\subsection{Cylindre}
+\input{cylindre.vpp.tex}
+\subsection{Polygone}
+\input{polygone.vpp.tex}
+\subsection{Parametres}
+\input{parametres.vpp.tex}
+\subsection{PistesRadar}
+\input{pistesradar.vpp.tex}
+\subsection{WorkSpace}
+\input{workspace.vpp.tex}
+\subsection{Detecteur}
+\input{detecteur.vpp.tex}
+\subsection{MSAWTypes}
+\input{msawtypes.vpp.tex}
+\subsection{VisualWorkSpace}
+\input{visualworkspace.vpp.tex}
+\subsection{VisualZoneAeroport}
+\input{visualzoneaeroport.vpp.tex}
+\subsection{VisualSegmentDePrediction}
+\input{visualsegmentdeprediction.vpp.tex}
+
+\newpage
+\addcontentsline{toc}{section}{Index}
+\printindex
+
+\end{document}

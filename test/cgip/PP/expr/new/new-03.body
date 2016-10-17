@@ -1,0 +1,15 @@
+class B
+
+operations
+
+
+  public Test :()==> seq of real
+  Test()  ==
+  ( dcl res: seq of real;
+    res := new A().Get();
+    return res
+  )
+
+end B
+
+    

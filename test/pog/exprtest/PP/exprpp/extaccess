@@ -1,0 +1,53 @@
+#! /bin/sh
+#
+# $Id: extaccess,v 1.2 1999/09/09 09:21:29 hanne Exp $
+#
+ 
+fdir=baseaccess
+
+st="[<EXPR>,let a:A = new A() in ZZZXXX_YYY]"
+st2="[<EXPR>,ZZZXXX_YYY]"
+tp="[<EXPR>,let a:ZZZXXX_YYY = 33 in a]"
+rc="[<EXPR>,let a:ZZZXXX_YYY = mk_ZZZXXX_YYY(47) in a]"
+
+function wr { 
+x=$3
+if [ $3 -lt 10 ] ; then
+       f=${fdir}1-0$3.arg
+    else if [ $3 -lt 100 ] ; then
+	    f=${fdir}1-$3.arg
+    else if [ $3 -lt 110 ] ; then
+      f=${fdir}2-0$[x-100].arg
+    else
+      f=${fdir}2-$[x-100].arg
+    fi
+    fi
+    fi
+    echo $f
+    echo "$6" | sed -e "s/ZZZ/$4$5/g" -e "s/XXX/$1/g" -e "s/YYY/$2/g"  > $f
+}
+
+for a in pub pro priv def ; do 
+   for p in "" A\` ; do
+       for t in iv  op\(33\)  f\(44\)  val ; do
+         for x in "" "self." ; do
+       
+	    n=$[n+1];
+	    wr $a $t $n "$x" "$p" "$st2"
+	 done
+	 n=$[n+1];
+	 wr $a $t $n "a." "$p" "$st"
+       done ; 
+   
+       n=$[n+1];
+       wr $a "typ" $n "" "$p" "$tp"
+
+       n=$[n+1];
+       wr $a "rec" $n "" "$p" "$rc"
+   done
+   n=$[n+1];
+   wr $a "val" $n "" A\`  "$st"
+done 
+
+
+

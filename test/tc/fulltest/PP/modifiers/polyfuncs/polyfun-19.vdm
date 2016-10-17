@@ -1,0 +1,20 @@
+ class A
+
+  functions
+
+    f[@tp] : seq of @tp -> nat
+    f(l) == len l
+    pre len l < 100
+end A
+
+class B 
+
+  operations
+
+  public Test : () ==> nat
+    Test() ==
+      if new A().pre_f[nat]([1])
+      then return 0
+      else return 1
+
+end B

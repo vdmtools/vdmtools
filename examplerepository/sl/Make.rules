@@ -1,0 +1,55 @@
+
+# This file is read by the subdirectory Makefile
+
+all: 	$(TARGETS)
+
+installupdir: $(TARGETS)
+	cp $^ ..
+
+.SUFFIXES: .dvi .vdm.tex .tex .ps
+
+# clean:
+# Remove LaTeX temp files and the files in $(TARGETS)
+# which we assume can be regenerated 
+# EXTRACLEAN may be defined in subdirectory Makefile for
+# additional files to be deleted. 
+clean: 
+	rm -f *.ilg *.ind *.aux *.log *.blg *.dvi *.bbl *.idx *.toc *.vdm.ps $(BASEFILE).ps *.stripped *.gz *.vdm.tex *.avdm.tex $(TARGETS) $(EXTRACLEAN) 
+
+%.vdm.tex: %.vdm
+	vdmde -Nlx $<
+
+%.avdm.tex: %.avdm
+	vdmde -Nl  $<
+
+%.dvi: %.vdm.tex
+	latex $<
+	latex $<
+	-bibtex $(patsubst %.vdm.tex,%.vdm,$<)
+	-[ -f $(patsubst %.vdm.tex,%.vdm.idx,$<) ] && makeindex $(patsubst %.vdm.tex,%.vdm.idx,$<)
+	latex $<
+	mv $(patsubst %.vdm.tex,%.vdm.dvi,$<) $@
+
+%.dvi: %.tex
+	latex $<
+	latex $<
+	-bibtex $(patsubst %.tex,%,$<)
+	-[ -f $(patsubst %.tex,%.idx,$<) ] && makeindex $(patsubst %.tex,%.idx,$<)
+	latex $<
+
+%.ps: %.dvi
+	dvips -Php -o $@ $<
+
+%.tar.gz:
+	tar -cvhf - $^ | gzip > $@
+
+
+%.ps.gz: %.ps
+	gzip -c < $< >$@
+
+%.ps.gz: %.ps.orig
+	gzip -c < $< >$@
+
+%.vdm.gz: %.vdm
+	gzip -c < $< >$@
+

@@ -1,0 +1,28 @@
+class A
+
+instance variables
+
+  b : B := new B();
+  
+types
+
+public  RecType:: i : int
+                  n : nat;
+
+operations
+
+public Test: () ==> RecType
+Test() ==
+  return b.Poly[RecType](mk_RecType(-9,7));
+  
+end A
+
+class B
+
+functions
+
+  public Poly[@T]: @T -> @T
+  Poly(t) ==
+    t;
+    
+end B

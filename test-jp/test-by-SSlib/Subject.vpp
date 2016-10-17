@@ -1,0 +1,18 @@
+--$Header: /home/vdmtools/cvsroot/toolbox/test-jp/test-by-SSlib/Subject.vpp,v 1.1 2005/11/25 07:05:38 vdmtools Exp $
+class 分野クラス
+--責任
+--本の分野を表す。
+
+instance variables
+
+public 分野名 : seq of char;
+
+operations
+
+public 初期化する : seq of char  ==> ()
+初期化する(ある分野名) ==
+	(
+	分野名 := ある分野名;
+	);
+
+end 分野クラス

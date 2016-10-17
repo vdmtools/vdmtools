@@ -1,0 +1,129 @@
+#------------------------------------------------------------------------------
+# This is a default setup file for the test environment. Edit it to your needs.
+# Except from paths, case do not matter.
+# For each description valid values are given in parenthesis
+#------------------------------------------------------------------------------
+
+
+# What should be run from this test environment. (TC (type checkker), IP (interpreter), 
+# CPP, Java, Api, Debug, parser, rose, metaiv, RTF)
+What-To-Run = api
+
+# Which language should be executed (SL, PP)
+Language = SL
+
+# What should be executed specifications and/or implementation (spec, impl)
+Run-Type = impl
+
+# How much progress information should be printed on standrad out during execution? 
+# (-1 means all, else the higher number the more output)
+Debug-Level = 3
+
+# How many test cases should be executed for each invocation of vdmde on
+# specification level? The larger the number, the faster overall test run,
+# but the longer it takes between results are output to the user.
+spec-job-size = 100
+
+# Should the generated files be keept after test execution (yes/no)
+keep = no
+
+# Should the generated files be keep after test execution in case of errors (yes/no)
+keep-when-error = yes
+
+# Should error messages be written onto stdout together with progress information
+show-errors-in-progress = yes
+
+# Dump profiling output (yes/no)
+enable-profiling = no
+
+#--------------------------------------------------------------------------------
+# Setup of wildcard variables
+#--------------------------------------------------------------------------------
+parser-SL = ~/toolbox/work/vdmde
+parser-PP = ~/toolbox/work/vppde
+
+interpreter-spec    = /local2/georg/work/vdmde
+interpreter-impl-sl = /local2/georg/work/vdmde
+interpreter-impl-pp = /local2/georg/work/vppde
+
+spec-compare        = /opt/toolbox/bin/vdmde
+sem-backend         = /opt/toolbox_main/bin/be_ip-sl
+
+extract-source-backend   = /opt/toolbox_main/bin/be_spec-sl
+
+code-generator-SL = ~/toolbox/work/vdmde
+code-generator-PP = ~/toolbox/work/vppde
+
+compiler       = /opt/gcc-2.95.2/bin/g++
+cflags = -I ~/toolbox/vice/linux -L ~/toolbox/vice/linux -lvdm -lCG -lm -Wall
+
+#--------------------------------------------------------------------------------
+#                            Type Checker Options
+#--------------------------------------------------------------------------------
+# Directory with test cases
+TC-test-case-dir = ~/toolbox/powertest/testenvs/tctestcases/
+
+# What should be executed pos or def? (pos,def)
+TC-Type = pos, def
+
+# Where is the type checker specification located?
+TC-spec-dir = ~/toolbox/vice/spec/ss-spec
+
+#--------------------------------------------------------------------------------
+#                            Interpreter options
+#--------------------------------------------------------------------------------
+# Directory with test cases
+IP-test-case-dir = ~/toolbox/testenvs/iptestcases/
+
+# Where is the type checker specification located?
+IP-spec-dir = ~/toolbox/spec/eval-spec/
+
+# What to run (dtcon,dtcoff)
+IP-Type = dtcon, dtcoff
+
+#--------------------------------------------------------------------------------
+#                            C++ Code Generator options
+#--------------------------------------------------------------------------------
+CPP-Test-case-dir = /local2/georg/work/testrun
+
+CPP-Spec-dir = ~/toolbox/vice/spec/cg-spec/
+
+#--------------------------------------------------------------------------------
+#                            Java Code generator options
+#--------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------
+#                            API options
+#--------------------------------------------------------------------------------
+api-test-case-dir = /local2/georg/work/testrun/SL/
+
+# api-gen-path has to be the directory where the powertest is started!!
+# no / at end for both paths!
+api-gen-path = /local2/georg/work/testrun/SL
+api-source-path = /local2/georg/work/testrun/SL
+
+api-sl-server=/home/georg/toolbox/work/vdmde
+api-pp-server=/home/georg/toolbox/work/vppde
+corba-init-args=
+server-init-args=
+
+#--------------------------------------------------------------------------------
+#                            Debugger options
+#--------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------
+#                            Parser options
+#--------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------
+#                            Rose Link options
+#--------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------
+#                            MetaIV options
+#--------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------
+#                            RTF prettyprinter options
+#--------------------------------------------------------------------------------
+

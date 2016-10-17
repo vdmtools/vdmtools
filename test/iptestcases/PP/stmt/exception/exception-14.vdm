@@ -1,0 +1,39 @@
+class A
+
+   instance variables
+
+     public v : int
+
+   operations
+
+     public Test : () ==> int
+            Test() ==
+              (dcl s : ServerTrapStmtTest := new ServerTrapStmtTest();
+               tixe{
+                 <z> |-> (v := 0;
+		 return 8)
+               } in
+                 (v := s.filter(-1);
+		  return 7))
+
+end A
+
+class ServerTrapStmtTest
+
+   types
+
+     public exception = <z>
+
+   operations
+
+     public filter : int ==> int
+            filter(i) ==
+              cases true:
+                (i < 0) -> exit <z>,
+                others  -> return i
+              end
+
+end ServerTrapStmtTest
+
+
+

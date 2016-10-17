@@ -1,0 +1,20 @@
+ class A
+
+  types
+
+    private T = nat
+    inv n == n <> 1
+
+end A
+
+class B
+
+  operations
+
+public Test : () ==> nat
+  Test() ==
+    if new A().inv_T(3)
+    then return 3
+    else return 0
+
+end B

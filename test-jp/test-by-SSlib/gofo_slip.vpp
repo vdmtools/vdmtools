@@ -1,0 +1,97 @@
+/*#######
+#
+# Slip Abstract Class
+# Gofo の伝票を表すクラス
+# $Id: gofo_slip.vpp,v 1.1 2005/11/25 07:05:38 vdmtools Exp $
+#
+require 'nqxml/treeparser'
+$KCODE = 's'
+
+####
+# GofoSlip クラス
+# 1. 暫定的に nqxml を使っている
+#    rexml を使おうとしたが UTF-8 相互変換が嫌いなので取りやめた
+# 2. 現時点ではスキーマチェックを行っていない。
+#    実際の商品化の際には何らかの意味チェックを行うべき
+# 3. 項目のキーは「用語辞書」に定義されているべきであり
+#    各項目の検証（validation）メソッドもまた辞書から生成されるべきである
+# 4. 入れ子になった Hash としてアクセス可能である
+# 5. 現在はどちらかといえば 入力伝票向けである、
+#    出力伝票向けのメソッドは別途定義する
+#    ... 基本的には hash に対する操作になるだけ
+class GofoSlip < Hash
+*/
+class GofoSlip is subclass of 『問題領域共通定義』
+
+/*  # 初期化
+  # 自分自身に XML の内容をセット
+  # 引数の xdoc は XML 文字列あるいは XML を格納したファイルオブジェクト
+  # eg.
+  #  GofoSlip.new("<?xml ...><tag attr=...>...</tag>")
+  #  GofoSlip.new(File.new("slip.xml"))
+  def initialize(xdoc)
+    begin
+      @prolog = []
+      @doc = NQXML::TreeParser.new(xdoc).document
+      @doc.prolog.each { | entity |
+	@prolog.push(entity) if entity.instance_of?(NQXML::XMLDecl)
+      }
+      @doc.rootNode.children.each { | node |
+	if node.entity.instance_of?(NQXML::Tag) then
+	    mktree(self, node)
+	end
+      }
+    rescue NQXML::ParserError => ex
+      puts "parser error on line #{ex.line()}," +
+        " col #{ex.column()}: #{$!}"
+    end
+  end
+  */
+
+  /*# 自分自身を整形式の XML として返す
+  # 項目の順番は一定していない(repeat 内の順番は保存される)
+  def exportXML
+    @prolog.collect { |e| e.to_s }
+  end
+  */
+
+  /*# node を受け取ってツリーを作る
+  # ツリーは hash の中に形成
+  def mktree (hash, node)
+    if node.entity.instance_of?(NQXML::Tag) then
+      if node.entity.name == 'leaf' then
+	hash[node.entity.attrs['key']] = node.entity.attrs['value']
+      elsif node.entity.name == 'sequence' then
+	tmph = {}
+	node.children.each { |ec|
+	  mktree(tmph, ec)
+	}
+	hash[node.entity.attrs['key']] = tmph
+      elsif node.entity.name == 'repeat' then
+	tmpa = []
+	node.children.each { |ec|
+	  if ec.entity.instance_of?(NQXML::Tag) then
+	    tmpa.push(mktree({}, ec))
+	  end
+	}
+	hash[node.entity.attrs['key']] = tmpa
+      end
+    end
+    hash
+  end
+  protected :mktree
+  */
+
+  /*# node の下で最初に現れる key を発見する(repeat の下に空があるとまずい)
+  # ## 今は廃止。代わりに repeat に key を与えるようにした
+  def getKey(node)
+    if node.entity.name == "sequence" or node.entity.name == "leaf" then
+      node.entity.attrs["key"]
+    else # repeat
+      getKey(node.children[0])
+    end
+  end
+  protected :getKey
+  */
+
+end GofoSlip

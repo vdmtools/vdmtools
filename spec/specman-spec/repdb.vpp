@@ -1,0 +1,767 @@
+\begin{vdm_al}
+
+class RepDatabase is subclass of ToolColleague
+
+instance variables
+  unit_m : UnitState := {|->};
+  file_m : FileState := {|->};
+  storeState: StateType := mk_({|->}, {|->});
+
+    -- storeState is used to save the current object state for 
+    -- files and modules in order to compute changes in the state, 
+    -- needed by the interface. 
+
+\end{vdm_al}
+
+$storeState$ is used to save the current object state for files and
+modules/classes in order to compute changes in the state, needed by
+the interface. 
+
+\begin{vdm_al}
+values
+
+  minFileId = 10;
+  predefFileIds = 
+    { <cmdLineFileId> |-> 1,
+      <cgFileId> |-> 2,
+      <tcFileId> |-> 3,
+      <tmpFileId> |-> 4,
+      <StdInFileId> |-> 5
+    }
+\end{vdm_al}
+
+
+\begin{vdm_al}
+  
+
+operations
+
+public RepDatabase: () ==> RepDatabase
+  RepDatabase() ==
+    (Init();
+     return self);
+
+public SetMediator: ToolMediator ==> ()
+  SetMediator (m) ==
+    mediator := m;
+
+public ClearAll: () ==> ()
+  ClearAll () ==
+  ( mediator.CallBack( mk_ProjectTypes`ClearAll());
+    RemTempFiles ();
+    unit_m  := {|->};
+    file_m  := {|->};
+    storeState := mk_({|->},{|->})
+   );
+\end{vdm_al}
+
+$ClearAll$ is called whenever the state is to be cleared, i.e. by
+change of project. 
+
+\begin{vdm_al}
+ 
+public GetFileId: FileName ==> FileId
+  GetFileId(nm)  ==
+   (dcl fid : FileId := 0;
+    Lock();
+    if nm in set dom file_m
+    then
+      let mk_(-,-,fileid,-) = file_m(nm)
+      in fid := fileid;
+    UnLock();
+    return fid);
+
+public GetIrregFileId: IrregFileIds ==> FileId 
+  GetIrregFileId(ireg)  ==
+    return predefFileIds (ireg);
+
+public GetFileName: FileId ==> [FileName] 
+  GetFileName(fileid) ==
+  (dcl filenm : [FileName] := nil;
+   Lock();
+   if fileid >= minFileId
+   then
+     for all fnm in set dom file_m do
+       cases file_m(fnm):
+         mk_(-,-,(fileid),-) -> filenm := fnm,
+         others -> skip
+        end
+   else
+     filenm := mk_FileName("");
+   UnLock();
+   return filenm);
+  
+public GetAllAsts: () ==> seq of AstVal 
+  GetAllAsts()  ==
+   (dcl asts : seq of AstVal := [];
+    Lock();
+    for all un in set rng unit_m do
+      def ena = un.IsEnabled() in 
+        if ena then 
+          def unAst = un.Get() in
+            asts := asts ^ [ unAst ];
+    UnLock();
+    return asts);
+
+public GetJavaAsts : () ==> seq of AstVal
+GetJavaAsts() ==
+ (dcl asts : seq of AstVal := [];
+  Lock();
+  for all md in set dom unit_m do
+    if isJava(md)
+    then
+      let un = unit_m(md)
+      in if un.IsEnabled()
+         then asts := asts ^ [un.Get()];
+  UnLock();
+  return asts);
+
+public GetVDMAsts : () ==> seq of AstVal
+GetVDMAsts() ==
+ (dcl asts : seq of AstVal := [];
+  Lock();
+  for all md in set dom unit_m do
+    if not isJava(md)
+    then let un = unit_m(md)
+         in if un.IsEnabled()
+            then asts := asts ^ [un.Get()];
+  UnLock();
+  return asts);
+
+public GetAST: ModuleName ==> [AstVal] 
+  GetAST (nm) ==
+   (dcl astval : [AstVal] := nil;
+    Lock();
+    if nm in set dom unit_m
+    then
+      let unit : VDMUnitElem = unit_m (nm)
+      in
+        astval := unit.Get ();
+    UnLock();
+    return astval)
+    pre nm in set dom unit_m;
+
+public GetFlatSpec: () ==> FlatSpec 
+  GetFlatSpec() ==
+   (Lock();
+    let { defmodname } = dom unit_m,
+        { defmodunit } = rng unit_m,
+        ast = defmodunit.Get()
+    in
+      let fs = mk_FlatSpec(defmodname,ast)
+      in
+       (UnLock();
+        return fs))
+  pre card dom unit_m = 1;
+
+public AddSetOfFiles: set of FileName ==> ()
+  AddSetOfFiles (files) ==
+   (dcl new_file_s : set of FileName := {};
+    Lock();
+    new_file_s := files \ dom file_m;
+    if new_file_s <> {}
+    then
+--      for all file in set files do
+--        if not file in set dom file_m 
+--        then
+      for all file in set new_file_s do
+         def fstat : FileStatus = new FileStatus()
+         in
+          (dcl fileid : nat1 := minFileId;
+           let fileid_s = { id | mk_(-,-,id,-) in set rng file_m }
+           in
+             while fileid in set fileid_s do
+               fileid := fileid + 1;
+           file_m := file_m munion {file |-> mk_({}, fstat, fileid, nil)};);
+      
+    UnLock();
+    if new_file_s <> {}
+    then mediator.CallBack(mk_AddFiles(new_file_s)));
+
+public RemoveSetOfFiles: set of FileName ==> bool 
+  RemoveSetOfFiles (files) ==
+   (dcl rfiles : set of FileName := {},
+        rmds   : set of ModuleName := {};
+    Lock();
+    for all file in set files do
+      if file in set dom file_m
+      then
+        let mk_(unitnm_s,-,-,-) = file_m (file)
+        in
+         (file_m := {file} <-: file_m;
+          let remmod_s = {u | u in set unitnm_s & 
+            (card {f | f in set dom file_m & let mk_(m_s,-,-,-) = file_m(f) in u in set m_s }) = 0}
+            --forall f in set dom file_m & let mk_(m_s,-,-,-) = file_m(f) in u not in set m_s
+          in
+            (unit_m := remmod_s <-: unit_m;
+             rmds := rmds union remmod_s;
+             rfiles := rfiles union {file}));
+    let parsedfiles_s = { f | f in set dom file_m & let mk_(mod_s,-,-,-) = file_m (f) in card mod_s > 0},
+        ok = parsedfiles_s = {}
+    in
+     (UnLock();
+      mediator.CallBack(mk_RemoveFiles(rfiles));
+      mediator.CallBack(mk_RemoveModules(rmds));
+--    def parsedfiles_s = self.ParsedFiles() 
+--    in
+--      return parsedfiles_s = {};
+      return ok));
+\end{vdm_al}
+
+$RemoveSetOfFiles$ will only remove the corresponding modules to the file if
+no other files refer to these modules. This is basicly for flat
+specifications.
+
+\begin{vdm_al}
+
+public SetFileTimestamp: FileName * nat ==> ()
+  SetFileTimestamp(f, t) ==
+   (dcl change : bool := false;
+    Lock();
+    if f in set dom file_m
+    then
+      let mk_(-,filestat,-,-) = file_m (f)
+      in
+        change := filestat.SetTimestamp (t);
+    UnLock();
+    if change
+    then mediator.CallBack (mk_RemoveFileChangedMark (f)));
+
+\end{vdm_al}
+
+The $SetFileTimestamp$ is called when a file is parsed and removes
+possibly a file-changed-mark in the interface.
+
+\begin{vdm_al}
+
+public GetFileTimestamp: FileName ==> nat 
+  GetFileTimestamp (f) ==
+   (dcl ts : nat := 0;
+    Lock();
+    if f in set dom file_m
+    then
+      let mk_(-,filestat,-,-) = file_m (f) in
+      ts := filestat.GetTimestamp ();
+    UnLock();
+    return ts);
+
+public FileModified: FileName ==> bool 
+  FileModified (f) ==
+   (dcl modified : bool := false;
+    Lock();
+    if f in set dom file_m
+    then
+      let mk_(-,filestat,-,-) = file_m (f)
+      in modified := filestat.IsModified();
+    UnLock();
+    return modified);
+
+public SetFileModified: FileName * UpdateSes ==> ()
+--  SetFileModified (f, ses) ==
+  SetFileModified (f, -) ==
+   (dcl changed : bool := false;
+    Lock();
+    if f in set dom file_m
+    then
+      let mk_(-,filestat,-,-) = file_m (f)
+      in
+       (filestat.SetModified();
+        changed := true;
+--        mediator.CallBack (mk_AddFileChangedMark (f));
+
+--        def mk_(disable,-) = filestat.SetStatus(<SYNTAXCHECK>,<NONE>) in
+--        if disable then
+--          def modules = self.ModulesInFile (f) in
+--          def chModStat = ses.DisableUnits (self,modules) in
+--          ( mediator.CallBack (mk_ChangedFileStatus (f));
+--            mediator.CallBack (mk_ChangedModuleStatus (chModStat))
+--          )
+      );
+     UnLock();
+     if changed
+     then mediator.CallBack (mk_AddFileChangedMark (f));
+   ); 
+
+\end{vdm_al}
+
+If a file in the project is modified on the file system,
+$SetFileModified$ is called (from Repository). Which action to be
+taken is not yet decided, but in any case is the file set as modified
+by the call to $filestat.SetModified$. Then a call back to add a
+file-changed mark is generated. Another possibility is to set syntax
+check status to $NONE$ and disable corresponding units. This is
+commented out in this version. 
+
+\begin{vdm_al}
+    
+  ---
+  --- Retrieve information for the modules and
+  --- files list boxes
+  ---
+functions
+
+isJava : ModuleName -> bool
+isJava(moduleName) ==
+  --moduleName.nm(1,...,5) = ".java"
+  moduleName.nm(1,...,5) = "java|"
+
+operations
+
+public JavaModules : () ==> set of ModuleName
+JavaModules() ==
+--  return { m | m in set dom unit_m & isJava(m) };
+ (Lock();
+  let mod_s = { m | m in set dom unit_m & isJava(m) }
+  in
+   (UnLock();
+    return mod_s));
+
+public VDMModules : () ==> set of ModuleName
+VDMModules() ==
+--  return { m | m in set dom unit_m & not isJava(m) };
+ (Lock();
+  let mod_s = { m | m in set dom unit_m & not isJava(m) }
+  in
+   (UnLock();
+    return mod_s));
+
+public AllModules: () ==> set of ModuleName 
+  AllModules () ==
+--    return dom unit_m;
+   (Lock();
+    let mod_s = dom unit_m
+    in
+     (UnLock();
+      return mod_s));
+
+public Files: () ==> set of FileName 
+  Files() ==
+--    return dom file_m;
+   (Lock();
+    let file_s = dom file_m
+    in
+     (UnLock();
+      return file_s));
+
+public ModulesInFile: FileName ==> set of ModuleName 
+  ModulesInFile (file) ==
+   (dcl mn_s : set of ModuleName := {};
+    Lock();
+    if file in set dom file_m
+    then
+      let mk_(mod_s,-,-,-) = file_m (file)
+      in mn_s := mod_s;
+    UnLock();
+    return mn_s);
+  
+public SetModulesInFile: FileName * set of ModuleName ==> ()
+  SetModulesInFile (nm, nm_s) ==
+   (Lock();
+    if nm in set dom file_m
+    then
+      let mk_(-,stat,file_id,tmpfile) = file_m (nm)
+      in
+        file_m := file_m ++ { nm |-> mk_(nm_s,stat,file_id,tmpfile) };
+    UnLock());
+  --- 
+  --- FileOfModule of module updated to handle 
+  --- modules distributed over a number of files 
+  --- (DefaultMod in case of flat specifications)
+  --- 
+
+public FileOfModule: ModuleName ==> set of FileName 
+  FileOfModule (mnm) ==
+   (dcl file_s : set of FileName := {};
+    Lock();
+    for all fnm in set dom file_m do
+      let mk_(mod_s,-,-,-) = file_m (fnm) in
+      if mnm in set mod_s then
+        file_s := file_s union {fnm};
+    UnLock();
+    return file_s);
+\end{vdm_al}
+$FileOfModule$ of module updated to handle modules distributed over a
+number of files (DefaultMod in case of flat specifications)
+
+\begin{vdm_al}
+  
+public ParsedFiles: () ==> set of FileName 
+  ParsedFiles () ==
+--    return { f | f in set dom file_m & let mk_(mod_s,-,-,-) = file_m (f) in card mod_s > 0};
+  (Lock();
+   let file_s = { f | f in set dom file_m & let mk_(mod_s,-,-,-) = file_m (f) in card mod_s > 0}
+   in
+    (UnLock();
+     return file_s));
+
+\end{vdm_al}
+
+\begin{vdm_al}
+
+  --  StoreState is called to save the current state of file and unit maps. This is 
+  --  done in order to detect changes in presence of files and modules. This 
+  --  information is used to the call-back to the interface.
+
+public  StoreState() ==
+ (Lock();
+  storeState := mk_(unit_m,file_m);
+  UnLock());
+
+\end{vdm_al}
+$StoreState$ is called to save the current state of file and unit maps. This is 
+done in order to detect changes in presence of files and modules. This 
+information is used to the call-back to the interface.
+
+\begin{vdm_al}
+
+  --  GenCallBack detects the change in the repositorys state concerning present
+  --  files and modules and generates corresponding call-back's to the interface.
+  --  It is called with a set of module names indicating that these module have
+  --  changed their status. After file and module call-backs are generated, the
+  --  call-back for module status is issued (this has to be done after the call-
+  --  back for modules).
+
+public GenCallBack : set of ModuleName ==> ()
+  GenCallBack(chModSt) ==
+   (dcl domOldUnit : set of ModuleName := {},
+        domOldFile : set of FileName := {},
+        domUnit : set of ModuleName := {},
+        domFile : set of FileName := {};
+
+    Lock();
+    def mk_(oldUnit_m, oldFile_m) = storeState
+    in
+     (domOldUnit := dom oldUnit_m;
+      domOldFile := dom oldFile_m);
+    domUnit := dom unit_m;
+    domFile := dom file_m;
+    UnLock();
+
+    let eqUnit = domOldUnit = domUnit,
+        eqFile = domOldFile = domFile
+    in
+      if not (eqUnit and eqFile)
+      then
+        if eqFile
+        then -- change in modules
+          def newMod = domUnit \ domOldUnit;
+              delMod = domOldUnit \ domUnit
+          in
+           (if newMod <> {}
+            then mediator.CallBack(mk_AddModules(newMod));
+            if delMod <> {}
+            then mediator.CallBack(mk_RemoveModules(delMod)))
+        else if eqUnit -- this can happen for a multifile flat specification
+        then
+          def newFile = domFile \ domOldFile;
+              delFile = domOldFile \ domFile
+          in
+           (if newFile <> {}
+            then mediator.CallBack(mk_AddFiles(newFile));
+            if delFile <> {}
+            then mediator.CallBack(mk_RemoveFiles(delFile)));
+    if chModSt <> {}
+    then mediator.CallBack( mk_ChangedModuleStatus( chModSt ) )
+  );
+\end{vdm_al}
+$GenCallBack$ detects the change in the repositorys state concerning
+present files and modules and generates corresponding call-back's to
+the interface.  It is called with a set of module names indicating
+that these module have changed their status. After file and module
+call-backs are generated, the call-back for module status is issued
+(this has to be done after the call- back for modules).
+
+
+\begin{vdm_al}
+
+--public UnitMerge: UnitState  ==> ()
+--  UnitMerge (el) ==
+--    unit_m := unit_m munion el;
+
+public UnitDomResBy: set of ModuleName ==> ()
+  UnitDomResBy (els) ==
+   (Lock();
+    unit_m := (els) <-: unit_m;
+    UnLock());
+
+--public FileMerge: FileState ==> ()
+--  FileMerge (el) ==
+--    file_m := file_m munion el;
+
+--public FileOverride: FileState ==> ()
+--  FileOverride (el) ==
+--    file_m := file_m ++ el;
+        
+--public GetFileState: () ==> FileState 
+--  GetFileState ()  ==
+--    return file_m;
+
+--public GetUnitState : () ==> UnitState 
+--  GetUnitState ()  ==
+--    return unit_m;
+
+--public UpdateFileState: FileState  ==> ()
+--  UpdateFileState (fs) ==
+--    file_m := fs;
+
+--public UpdateUnitState: UnitState  ==> ()
+--  UpdateUnitState (us) ==
+--    unit_m := us;
+
+--public DomFile: () ==> set of FileName 
+--  DomFile () ==
+--    return dom file_m;
+
+--public DomUnit: () ==> set of ModuleName 
+--  DomUnit ()  ==
+--    return dom unit_m;
+
+public GetFileStat: FileName ==> FileStat
+  GetFileStat(nm) ==
+   (Lock();
+    def mk_(-,stat,-,-) = file_m (nm)
+    in
+      let fs = stat.GetStatus()
+      in
+       (UnLock();
+        return fs));
+
+public GetFileStatSet: ModuleName ==> set of FileStat
+  GetFileStatSet(nm) ==
+   (dcl file_s : set of FileName := {};
+    Lock();
+    for all fnm in set dom file_m do
+      let mk_(mod_s,-,-,-) = file_m (fnm) in
+      if nm in set mod_s
+      then
+        file_s := file_s union {fnm};
+    let st_s = {let mk_(-,ref,-,-) = file_m(fl) in ref.GetStatus() | fl in set file_s }
+    in
+     (UnLock();
+      return st_s));
+
+public SetFileStatus: FileName * FileAction * Status ==> bool * bool
+  SetFileStatus(nm, action, stt) ==
+   (dcl stats : bool * bool := mk_(false, false);
+    Lock();
+    if nm in set dom file_m
+    then
+      def mk_(-,stat,-,-) = file_m (nm)
+      in
+        def filest : FileStatus = stat
+        in
+          stats := filest.SetStatus(action, stt);
+    UnLock();
+    return stats);
+
+public FileStatusAllowed: FileName * Action ==> bool
+  FileStatusAllowed(nm, kind) ==
+   (Lock();
+    let mk_(-,stat,-,-) = file_m (nm)
+    in
+      let allowed = stat.Allowed(kind)
+      in
+       (UnLock();
+        return allowed));
+
+public GetUnitStat: ModuleName ==> UnitStat
+  GetUnitStat(nm) ==
+   (Lock();
+    def unit : VDMUnitElem = unit_m (nm)
+    in
+      let us = unit.GetStatus ()
+      in
+       (UnLock();
+        return us));
+
+public SetUnitStatus: ModuleName * UnitAction * Status ==> bool
+  SetUnitStatus(nm, action, stt) ==
+   (dcl stat : bool := false;
+    Lock();
+    if nm in set dom unit_m
+    then
+      def unit : VDMUnitElem = unit_m (nm)
+      in stat := unit.SetStatus(action, stt);
+    UnLock();
+    return stat);
+
+public UnitStatusAllowed: ModuleName * Action ==> bool
+  UnitStatusAllowed(nm, kind) ==
+   (Lock();
+    def unit : VDMUnitElem = unit_m (nm)
+    in
+      let allowed = unit.Allowed(kind)
+      in
+       (UnLock();
+        return allowed));
+
+public GetMediator: () ==> ToolMediator 
+  GetMediator()  ==
+    return mediator;
+
+public DisableUnit: ModuleName ==> bool
+  DisableUnit(nm) ==
+   (Lock();
+    def unit : VDMUnitElem = unit_m (nm)
+    in
+      let stat = unit.Disable()
+      in
+       (UnLock();
+        return stat));
+
+public EnableUnit: ModuleName * AstVal * Status ==> bool
+  EnableUnit(nm, ast, sc) ==
+   (Lock();
+    if nm not in set dom unit_m
+    then
+      unit_m := unit_m munion { nm |-> new VDMUnitElem() };
+    (dcl unit : VDMUnitElem := unit_m (nm);
+     def changeSet = unit.Set(ast);
+         changeEnab = if sc = <OK>
+                      then unit.Enable()
+                      else false
+     in
+      (UnLock();
+       return changeSet or changeEnab)));
+
+\end{vdm_al}
+
+For the RTF parser we need a temporary file that will exist in the
+current project. When project is changed or the toolbox quit-ed,
+the temporary file must be removed from the file system.
+The RTF parser will call AddTempFile to get the temporary file
+name. This operation creates a new temporary file if one is not
+already in the file info map.
+In the GUI, the file opener must check if a temporary file
+exists and in that case, open this file instead of the original
+rtf file. This is achieved by calling GetTempFileName.
+
+\begin{vdm_al}
+
+public AddTempFile: FileName ==> TmpFileName
+  AddTempFile (filenm) ==
+   (--if filenm not in set dom file_m
+    --then
+    --  self.AddSetOfFiles ({filenm});
+    self.AddSetOfFiles ({filenm});
+    Lock();
+    def mk_(mod_s,fs,fid,tfile) = file_m (filenm)
+    in
+      let tmpfile = if tfile = nil
+                    then CreateTempFile ()
+                    else tfile
+      in
+       (file_m := file_m ++ {filenm |-> mk_(mod_s,fs,fid,tmpfile)};
+        UnLock();
+        return tmpfile)
+    );
+
+public GetTempFileName: FileName ==> TmpFileName
+  GetTempFileName (filenm) ==
+   (dcl tnm : TmpFileName := mk_FileName ("");
+    Lock();
+    if filenm in set dom file_m
+    then
+      let mk_(-,-,-,tmpfile) = file_m (filenm)
+      in
+        if tmpfile <> nil
+        then tnm := tmpfile;
+    UnLock();
+    return tnm);
+
+public GetRealFileName: TmpFileName ==> FileName
+  GetRealFileName (tfilenm) ==
+   (dcl rnm : FileName := mk_FileName ("");
+    Lock();
+    if tfilenm in set dom file_m
+    then rnm := tfilenm
+    else 
+      let realf_s = { rf | rf in set dom file_m & let mk_(-,-,-,tf) = file_m(rf) in tf = tfilenm }
+      in
+        if card realf_s = 1
+        then
+          let {real_name} = realf_s
+          in rnm := real_name;
+    UnLock();
+    return rnm);
+
+public RemTempFiles: () ==> ()
+  RemTempFiles () ==
+   (Lock();
+    for all fn in set dom file_m do
+      let mk_(-,-,-,tmpfile) = file_m (fn) in
+        if tmpfile <> nil
+        then self.RemoveTempFile (tmpfile);
+    UnLock());
+
+public CreateTempFile: () ==> TmpFileName
+  CreateTempFile () ==
+    is not yet specified;
+
+public RemoveTempFile: TmpFileName ==> ()
+  RemoveTempFile (tmpnm) ==
+    is not yet specified;
+
+\end{vdm_al}
+
+\begin{vdm_al}
+
+public SaveFiles: StateStore ==> bool 
+  SaveFiles(store) ==
+   (Lock();
+    let ok = store.WriteNames (dom file_m)
+    in
+     (UnLock();
+      return ok));
+
+functions
+
+IsJavaFile : FileName -> bool
+IsJavaFile(fn) ==
+  fn.nm(len fn.nm - 4,...,len fn.nm) = ".java";
+
+operations
+public LoadFiles: StateStore ==> bool 
+  LoadFiles(store) ==
+    def file_s = store.ReadNames () in
+      if file_s <> nil then
+      ( dcl vdm_file_l : seq of FileName := [],
+            java_file_l : seq of FileName := [];
+        for all f in set file_s do
+          if IsJavaFile(f)
+          then java_file_l := java_file_l ^[f]
+          else vdm_file_l := vdm_file_l ^ [f];
+        self.AddSetOfFiles (file_s);
+        def - = mediator.GetBaseTools().SyntaxCheck (vdm_file_l);
+            - = mediator.GetBaseTools().JavaSyntaxCheck(java_file_l) in
+        return true
+      )
+      else 
+        return false;
+
+public Init: () ==> ()
+  Init() == is not yet specified;
+
+public Finish: () ==> ()
+  Finish() == is not yet specified;
+
+public Lock: () ==> ()
+  Lock() == is not yet specified;
+
+public UnLock: () ==> ()
+  UnLock() == is not yet specified;
+
+public nameIsDefined: ModuleName | FileName ==> bool
+  nameIsDefined(nm)  ==
+   (Lock();
+    let ok = cases true:
+               (is_FileName(nm))   -> nm in set dom file_m,
+               (is_ModuleName(nm)) -> nm in set dom unit_m,
+               others              -> false
+             end
+    in
+     (UnLock();
+      return ok));
+
+end RepDatabase
+\end{vdm_al}

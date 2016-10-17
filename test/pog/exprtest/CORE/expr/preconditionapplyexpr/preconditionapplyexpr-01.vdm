@@ -1,0 +1,11 @@
+class A
+
+functions
+
+FunIter: (nat -> nat) * nat -> (nat -> nat)
+FunIter(fun,n) ==
+  fun ** n
+pre forall x : nat & pre_(fun,x) => pre_(fun,fun(x))
+
+
+end A

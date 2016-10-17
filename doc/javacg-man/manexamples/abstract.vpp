@@ -1,0 +1,35 @@
+class A
+
+instance variables
+  protected m : nat := 1
+
+operations
+
+public op : nat ==> nat
+op(n) == is subclass responsibility;
+
+functions
+
+public f : int -> int
+f(i) == is subclass responsibility
+
+end A
+
+class B is subclass of A
+
+operations
+
+public op : nat ==> nat
+op(n) ==
+  return m + n
+
+end B
+
+class C is subclass of B
+
+functions
+
+public f : int -> int
+f(i) == i + 1
+
+end C

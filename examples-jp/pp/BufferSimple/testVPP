@@ -1,0 +1,16 @@
+r main.vpp
+r buffer.vpp
+r consumer.vpp
+r producer.vpp
+r io.vpp
+r Integer.vpp
+tc main.vpp
+tc buffer.vpp
+tc consumer.vpp
+tc producer.vpp
+tc io.vpp
+tc Integer.vpp
+i
+cr t := new Main()
+d t.run()
+tcov write vdm.tc

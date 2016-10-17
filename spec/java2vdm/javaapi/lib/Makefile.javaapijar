@@ -1,0 +1,26 @@
+ifndef ANTHOME
+#ANTHOME = /opt/jakarta-ant-1.4.1
+ANTHOME = /usr/local/ant/current
+endif
+
+ANT = $(ANTHOME)/bin/ant
+
+javaapi.jar: dist/javaapi.jar
+
+ifeq ($(strip $(OSTYPE)),Darwin)
+ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.5)
+dist/javaapi.jar: build.xml
+	$(ANT) dist5
+else
+dist/javaapi.jar: build.xml
+	$(ANT) dist
+endif
+else
+dist/javaapi.jar: build.xml
+	$(ANT) dist
+endif
+
+clean: build.xml
+	$(ANT) clean
+
+cleanjavaapi: clean

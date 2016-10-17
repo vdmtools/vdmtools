@@ -1,0 +1,44 @@
+class WireEdge is subclass of DiagramEdge
+operations 
+public  getWire : () ==> [Wire]
+getWire() == 
+( return  WireEdge`wire
+) ;
+
+public  WireEdge : () ==> WireEdge
+WireEdge() == 
+( let - = DiagramEdge()
+  in 
+    skip ;
+  WireEdge`wire := nil  
+) ;
+
+public  WireEdge : int  * int  * int  * int  ==> WireEdge
+WireEdge(x, y, width, height) == 
+( let - = DiagramEdge(x , y , width , height)
+  in 
+    skip ;
+  WireEdge`wire := nil  
+) ;
+
+public  setWire : [Wire] ==> <VOID>
+setWire(wire) == 
+( WireEdge`wire := wire;
+  let - = WireEdge`setId(wire.toString())
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  WireEdge : [Wire] ==> WireEdge
+WireEdge(wire) == 
+( let - = DiagramEdge(wire.toString())
+  in 
+    skip ;
+  WireEdge`wire := wire
+) ;
+
+instance variables 
+  protected  wire : [Wire] := nil  
+  
+end  WireEdge

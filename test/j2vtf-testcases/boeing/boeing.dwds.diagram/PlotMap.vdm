@@ -1,0 +1,58 @@
+class PlotMap is subclass of Object
+operations 
+public  PlotMap : () ==> PlotMap
+PlotMap() == 
+( let - = PlotMap(0 , 0)
+  in 
+    skip ;
+  return  
+) ;
+
+public  getRows : () ==> int 
+getRows() == 
+( return  mapSize.height
+) ;
+
+public  PlotMap : int  * int  ==> PlotMap
+PlotMap(columns, rows) == 
+( mapSize := new  Dimension(0 , 0);
+  let - = createPlotMap(columns , rows)
+  in 
+    skip ;
+  return  
+) ;
+
+public  getColumns : () ==> int 
+getColumns() == 
+( return  mapSize.width
+) ;
+
+public  clearPlotMap : () ==> <VOID>
+clearPlotMap() == 
+( ( dcl   column : int  := 0;
+    while  column < mapSize.width do  
+    ( ( dcl   row : int  := 0;
+        while  row < mapSize.height do  
+        ( plotted(column) := plotted(column) ++ {row |-> false  };
+          row := row+1
+        ) 
+      ) ;
+      column := column+1
+    ) 
+  ) ;
+  return  
+) ;
+
+public  createPlotMap : int  * int  ==> <VOID>
+createPlotMap(columns, rows) == 
+( mapSize.width := Math.max(2 , columns);
+  mapSize.height := Math.max(2 , rows);
+  plotted := {l_5 |-> {l_4 |-> false  |l_4 in set  {0,...,mapSize.height-1}}|l_5 in set  {0,...,mapSize.width-1}};
+  return  
+) ;
+
+instance variables 
+  public  plotted : map  int  to  map  int  to  bool ;
+  private  mapSize : [Dimension]
+  
+end  PlotMap

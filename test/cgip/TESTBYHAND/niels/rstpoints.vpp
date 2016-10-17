@@ -1,0 +1,90 @@
+class RSTPoints is subclass of Global
+
+instance variables
+
+  R1 : Point2;
+  S1 : Point2;
+  T1 : Point2;
+  R2 : Point2;
+  S2 : Point2;
+  T2 : Point2;
+
+operations
+
+initialise: Point2 * Point2 * Point2 * Point2 * Point2 * Point2 ==> ()
+initialise (r1,s1,t1,r2,s2,t2) ==
+( R1 := r1.copy ();
+  S1 := s1.copy ();
+  T1 := t1.copy ();
+  R2 := r2.copy ();
+  S2 := s2.copy ();
+  T2 := t2.copy ()
+);
+
+create: Point2 * Point2 * Point2 * Point2 * Point2 * Point2 ==> RSTPoints
+create (r1,s1,t1,r2,s2,t2) ==
+( dcl rst: RSTPoints := new RSTPoints();
+  rst.initialise (r1,s1,t1,r2,s2,t2);
+  return rst
+);
+
+setR1: Point2 ==> ()
+setR1 (r1) ==
+  R1 := r1;
+
+setS1: Point2 ==> ()
+setS1 (s1) ==
+  S1 := s1;
+
+setT1: Point2 ==> ()
+setT1 (t1) ==
+  T1 := t1;
+
+setR2: Point2 ==> ()
+setR2 (r2) ==
+  R2 := r2;
+
+setS2: Point2 ==> ()
+setS2 (s2) ==
+  S2 := s2;
+
+setT2: Point2 ==> ()
+setT2 (t2) ==
+  T2 := t2;
+
+getRSTpoints: () ==> Point2 * Point2 * Point2 * Point2 * Point2 * Point2 
+getRSTpoints () ==
+  return mk_(R1,S1,T1,R2,S2,T2);
+
+getR1: () ==> Point2 
+getR1 () ==
+  return R1;
+
+getS1: () ==> Point2 
+getS1 () ==
+  return S1;
+
+getT1: () ==> Point2 
+getT1 () ==
+  return T1;
+
+getR2: () ==> Point2 
+getR2 () ==
+  return R2;
+
+getS2: () ==> Point2 
+getS2 () ==
+  return S2;
+
+getT2: () ==> Point2 
+getT2 () ==
+  return T2;
+
+copy: () ==> RSTPoints 
+copy () ==
+( dcl rst: RSTPoints := new RSTPoints();
+  rst.initialise (R1,S1,T1,R2,S2,T2);
+  return rst
+);
+
+end RSTPoints

@@ -1,0 +1,36 @@
+\subsection{AllT}
+すべてのテストケースを実行し、結果列を返す。
+
+\begin{vdm_al}
+class AllT
+
+values
+lg = new FTestLogger();
+
+functions
+static public run : () +> bool
+run() == 
+	let testcases =  [
+	  FSequenceT`run(),
+	  FSetT`run(),
+	  FCharT`run(),
+	  FRealT`run(),
+	  FFunctionT`run(),
+	  FMapT`run(),
+	  FHashtableT`run(),
+	  FIntegerT`run(),
+	  FNumberT`run(),
+	  FProductT`run(),
+	  FQueueT`run(),
+	  FCalendarT`run(),
+	  FBusinessTableT`run(),
+	  FJapaneseCalendarT`run()
+	] in
+	if forall i in set inds testcases & testcases(i) then
+		lg.Print ("全テストケースがOK") 
+	else
+		lg.Print ("誤りがあります。上の各テスト結果でNGが無いかチェックしてください。") ;
+
+end AllT
+\end{vdm_al}
+	

@@ -1,0 +1,201 @@
+%
+% $Id: radnavnewfake.tex,v 1.1 2005/11/21 05:04:09 vdmtools Exp $
+%
+
+\section{The new stuff}
+
+\begin{vdm_al}
+class CPU
+types public scheduleType = <FP> | <RM> | <DM> | <EDF>
+operations
+public CPU: scheduleType * nat ==> CPU
+CPU (-,-) == is not yet specified;
+public deploy: Task ==> ()
+deploy (-) == is not yet specified;
+public setPriority: seq of char * nat ==> ()
+setPriority (-,-) == is not yet specified
+end CPU
+
+class BUS
+types public busType = <CSMACD> | <TDMA>
+operations
+public BUS: busType * nat * set of seq of char ==> BUS
+BUS (-,-,-) == is not yet specified
+end BUS
+
+class RadNavSys
+
+instance variables
+  -- create an MMI class instance
+  static public mmi : MMI := new MMI();
+  -- define the first CPU with fixed priority scheduling and 22E6 MIPS performance
+  CPU1 : CPU := new CPU (<FP>, 22E6);
+
+  -- create an Radio class instance
+  static public radio : Radio := new Radio();
+  -- define the second CPU with fixed priority scheduling and 11E6 MIPS performance
+  CPU2 : CPU := new CPU (<FP>, 11E6);
+
+  -- create an Navigation class instance
+  static public navigation : Navigation := new Navigation();
+  -- define the third CPU with fixed priority scheduling and 113 MIPS performance
+  CPU3 : CPU := new CPU (<FP>, 113E6); 
+
+  -- create a communication bus that links the three CPU's together
+  BUS1 : BUS := new BUS (<CSMACD>, 72E3, {"CPU1", "CPU2", "CPU3"})
+
+operations
+  static public wait: () ==> ()
+  wait () == skip;
+
+  public RadNavSys: () ==> RadNavSys
+  RadNavSys () ==
+    ( -- deploy mmi on CPU1
+      CPU1.deploy(mmi);
+      CPU1.setPriority("HandleKeyPress",100);
+      CPU1.setPriority("UpdateScreen",90);
+      -- deploy radio on CPU2
+      CPU2.deploy(radio);
+      CPU2.setPriority("AdjustVolume",100);
+      CPU2.setPriority("DecodeTMC",90);
+      -- deploy navigation on CPU3
+      CPU3.deploy(navigation);
+      CPU3.setPriority("DatabaseLookup", 100);
+      CPU3.setPriority("DecodeTMC", 90) );
+
+  thread
+    skip
+
+  sync
+    per wait => mmi.cnt > 30
+
+end RadNavSys
+\end{vdm_al}
+
+\begin{vdm_al}
+class Task
+end Task
+
+class MMI
+ is subclass of Task
+
+instance variables
+  public cnt : nat := 0
+
+operations
+  public HandleKeyPress: nat ==> ()
+  HandleKeyPress (pn) ==
+    ( duration (1E5) cnt := cnt + 1;
+      cases (pn):
+        1 -> RadNavSys`radio.AdjustVolume(),
+        2 -> RadNavSys`navigation.DatabaseLookup()
+      end );
+
+  public UpdateScreen: nat ==> ()
+  UpdateScreen (-) ==
+    duration (5E5) skip;
+
+end MMI
+\end{vdm_al}
+
+\begin{vdm_al}
+class Radio
+ is subclass of Task
+
+operations
+  public AdjustVolume: () ==> ()
+  AdjustVolume () ==
+    ( duration (1E5) skip;
+      RadNavSys`mmi.UpdateScreen(1) );
+
+  public HandleTMC: () ==> ()
+  HandleTMC () ==
+    ( duration (1E6) skip;
+      RadNavSys`navigation.DecodeTMC() )
+
+end Radio
+\end{vdm_al}
+
+\begin{vdm_al}
+class Navigation
+ is subclass of Task
+
+operations
+  public DatabaseLookup: () ==> ()
+  DatabaseLookup () ==
+    ( duration (5E6) skip;
+      RadNavSys`mmi.UpdateScreen(2) );
+
+  public DecodeTMC: () ==> ()
+  DecodeTMC () ==
+    ( duration (5E6) skip;
+      RadNavSys`mmi.UpdateScreen(3) )
+
+end Navigation
+\end{vdm_al}
+
+\begin{vdm_al}
+class VolumeKnob
+
+operations
+  go: () ==> ()
+  go () ==
+    duration (0)
+      (while (true) do
+        RadNavSys`mmi.HandleKeyPress(1))
+
+thread
+  periodic (1000) (go)
+
+end VolumeKnob
+\end{vdm_al}
+
+\begin{vdm_al}
+class InsertAddress
+
+operations
+  go: () ==> ()
+  go () ==
+    duration (0)
+      (while (true) do
+        RadNavSys`mmi.HandleKeyPress(2))
+
+thread
+  periodic (1000) (go)
+
+end InsertAddress
+\end{vdm_al}
+
+\begin{vdm_al}
+class TransmitTMC
+
+operations
+  go: () ==> ()
+  go () ==
+    duration (0)
+      (while (true) do
+        RadNavSys`radio.HandleTMC())
+thread
+  periodic (1000) (go)
+
+end TransmitTMC
+\end{vdm_al}
+
+\begin{vdm_al}
+class World
+
+operations
+  public RunScenario1 : () ==> ()
+  RunScenario1 () ==
+    ( start(new RadNavSys());
+      startlist({new VolumeKnob(), new TransmitTMC()});
+      RadNavSys`wait() );
+
+  public RunScenario2 : () ==> ()
+  RunScenario2 () ==
+    ( start(new RadNavSys());
+      startlist({new InsertAddress(), new TransmitTMC()});
+      RadNavSys`wait() )
+
+end World
+\end{vdm_al}

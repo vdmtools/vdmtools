@@ -1,0 +1,901 @@
+Class Groove
+
+The Groove class pattern defines classes representing welding grooves. Class Groove is a virtuel container class defining the operations available on grooves.
+The Groove classes are used in two ways:
+ 1) To create the welding groove from the RST points and the QRV vector.
+ 2) To be continuesly ???reduced??? while creating welding layers from the groove. For this second use internal parameters will be updated and the consistence of parameters of the newly create groove may disappear.
+The container class Groove maintains a parameter, empty, used to describe whether the groove is empty or not. This is used for 2).
+
+
+\begin{vdm_al}
+class Groove is subclass of Global
+
+instance variables
+
+  empty : bool := true
+\end{vdm_al}
+
+Operation: build
+Arguments: an object (reference), ????
+Results: a sequence of Point2 object (references).
+Action: Creates a groove from the RST points and QRV parameters of parms, and returns its corners in counter-clockwise order.
+Is subclass responsibility.
+Precondition: None
+
+\begin{vdm_al}
+operations
+
+build: RSTPoints * QRV ==> seq of Point2
+build (rst, qrv) ==
+  is subclass responsibility;
+\end{vdm_al}
+
+Operation: create
+Arguments: an object (reference), ????
+Results: an object (reference) of class Groove.
+Action: Creates a groove from the RST points and QRV parameters of parms, and returns its object (reference).
+Is subclass responsibility.
+Precondition: None
+
+\begin{vdm_al}
+create: RSTPoints * QRV ==> Groove
+create (rst, qrv) ==
+  is subclass responsibility;
+\end{vdm_al}
+
+Operation: initialise
+Arguments: an object (reference), ????
+Results: an object (reference) of class Groove.
+Action: Initialises the current groove from the RST points and QRV parameters of parms.
+Is subclass responsibility.
+Precondition: None
+
+\begin{vdm_al}
+initialise (rst: RSTPoints, qrv: QRV) ==
+  is subclass responsibility;
+\end{vdm_al}
+
+Operation: IsEmpty
+Arguments: None
+Results: a boolean value
+Action: returns whether the groove is empty or not.
+Precondition: None
+
+\begin{vdm_al}
+IsEmpty: () ==> bool  
+IsEmpty () ==
+  return empty;
+\end{vdm_al}
+
+Operation: getHeight
+Arguments: None
+Results: A Height (real)
+Action: Returns the height of the groove.
+Is subclass responsible.
+Preconditions: The current object has been initialised.
+
+\begin{vdm_al}
+getHeight: () ==> Height
+getHeight () ==
+  is subclass responsibility;
+\end{vdm_al}
+
+Operation: getArea
+Arguments: None
+Results: An Area (real)
+Action: Returns the area of the groove.
+Is subclass responsible.
+Preconditions: The current object has been initialised.
+
+\begin{vdm_al}
+getArea: () ==> Area
+getArea () ==
+  is not yet specified;
+  -- is subclass responsibility;
+\end{vdm_al}
+
+Operation: setUpLayerGeomEnv
+Arguments: the welding direction of type WeldDirection
+Results: None
+Action: Initialises a number of global variables of the current groove that are used when layers are generated from the groove.
+Is subclass responsibility.
+Preconditions: That the current groove has been initialised.
+
+\begin{vdm_al}
+setUpLayerGeomEnv (dir: WeldDirection)  ==
+  is subclass responsibility;
+\end{vdm_al}
+
+Operation: getArVertices
+Arguments: None
+Results: a sequence of object (references) of class Point2
+Action: Returns the corner points of the current groove in counter-clockwise direction starting with the top corner on Plate1.
+Is subclass responsibility.
+Precondition: The current groove has been initialised.
+
+\begin{vdm_al}
+getArVertices: () ==> seq of Point2
+getArVertices () ==
+  is subclass responsibility;
+\end{vdm_al}
+
+Operation: getArCorners
+Arguments: None
+Results: a sequence of object (references) of class Point2
+Action: Returns the corner points of the current groove. The order of the points is not necessarily counter-clockwise.
+Is subclass responsibility.
+Precondition: The current groove has been initialised.
+
+\begin{vdm_al}
+getArCorners: () ==> seq of Point2
+getArCorners () ==
+  is subclass responsibility;
+\end{vdm_al}
+
+Operation: getPlate1Points
+Arguments: None
+Results: 
+Action: 
+Is subclass responsibility.
+Precondition: The current groove is initialised.
+
+\begin{vdm_al}
+getPlate1Points: () ==> Point2 * [Point2] * Point2
+getPlate1Points () ==
+  is subclass responsibility;
+\end{vdm_al}
+
+Operation: getPlate2Points
+Arguments: None
+Results: 
+Action: 
+Is subclass responsibility.
+Precondition: The current groove is initialised.
+
+\begin{vdm_al}
+getPlate2Points: () ==> Point2 * [Point2] * Point2
+getPlate2Points () ==
+  is subclass responsibility;
+\end{vdm_al}
+
+Operation: getEpsilon
+Arguments: None
+Results:
+Action:
+Is subclass responsibility.
+Precondition: The current groove is initialised.
+
+\begin{vdm_al}
+getEpsilon: () ==> Angle
+getEpsilon () ==
+  is subclass responsibility;
+\end{vdm_al}
+
+Operation: restrictByHeight
+Arguments: A height, layerh, and a sequence of object (references), lcrit, of class LayerCriteria.
+Results: An object (reference) of type LayerCriteria or an Error.
+Action: Creates a object of class LayerCriteria of height layerh starting from the bottom of the current groove and redraws it area from the groove.
+Is subclass responsibility.
+Preconditions: 
+
+\begin{vdm_al}
+restrictByHeight: Height * LayerCriteria ==> LayerGeom * Error
+restrictByHeight (layerh, lcrit) ==
+  is subclass responsibility;
+  -- An error could be given if subclass does not have this method.
+\end{vdm_al}
+
+Operation: restrictByHeight_SurfAngle
+Arguments: A height, layerh, and a sequence of object (references), lcrit, of class LayerCriteria. ????
+Results: An object (reference) of type LayerCriteria or an Error.
+Action: Creates a object of class LayerCriteria of height layerh starting from the bottom of the current groove and redraws it area from the groove. ????
+Is subclass responsibility.
+Preconditions: 
+
+\begin{vdm_al}
+restrictByHeight_SurfAngle: Height * LayerCriteria * Angle ==> LayerGeom * Error
+restrictByHeight_SurfAngle (layerh, lcrit, deltaphi) ==
+  is subclass responsibility;
+\end{vdm_al}
+
+Operation: makeEmpty
+Arguments: None
+Results: None
+Action: Changes the empty varible to true to signal that the groove is empty even though other variables may have values.
+Preconditions: None
+
+\begin{vdm_al}
+makeEmpty () ==
+( empty := true
+);
+\end{vdm_al}
+
+Operation: copy
+Arguments: None
+Results: An object (reference) of class Groove
+Action: Creates a object of class Groove and copies the instance variables (not temporare inst.vars.) of the current groove to the new and returns it.
+Is subclass responsibility
+Preconditions: The current groove has been initialised.
+
+\begin{vdm_al}
+copy: () ==> Groove
+copy () ==
+  is subclass responsibility;
+
+end Groove
+\end{vdm_al}
+
+
+Class TJointGroove
+
+The class TJointGroove is a concrete realisation of the class Groove. It represents the grooves of type T-Joint.
+It maintains two kinds of instance variables:
+ 1) variables that define the groove and that are copied when copying an object. These are:
+   - R1, S1, T1, R2, S2, T2: The RST points, of class Point2.
+   - epsilon: The ???groove surface angle???, of type Angle,
+     Af, Ab, Ar: ???the three areas???, of type Area,
+     LenLength: ???what???, of type Length,
+     WeldSize: ???welding size???, og type lenght,
+     These are the QRV parameters.
+   - A1, A2, B1, C1, C2, D1, D2: The corners of Ar and Ab, of class Point2.
+   - empty: the empty flag, of type bool,
+     jointtype: the type of the joint, of type TJointType (either <TJoint> or <SharpTJoint>).
+     Internal variables
+ 2) temporare variables that are only defined to make the computations (both creation and extraction of layers) easier (and more imperative), but also copied when copying an object of class TJointGroove. These are
+   - ls2: the line describing the surface of Plate2 (created from the points ???R2 and S2???),
+     lAr: the line describing the surface of the groove (connecting A1 and A2), both of class Line2
+ 3) temporare variables that are only defined to make the computations (both creation and extraction of layers) easier (and more imperative), not copied when copying an object of class TJointGroove. These are
+   - variables used while creating the groove:
+     E2, F2, G, H, P, of class Point2,
+     ls2, lt1, lPl1c, lAb, lAdep, of class Line2,
+     a, b, c, d, e, f, g, h, of class Vector2,
+     Ag, Atj, of type Area,
+   - variables used while extracting layers:
+     A1B1seg, B1C1seg, Sideseg, of class LineSegment2,
+     GhB, GhT, of class Point2,
+     Gh, of class Vector2.
+The type TJointType is a union type describing the two different kinds of TJoint groove: 
+ 1) TJoint: where both Plate1 and Plate2 are straight lines
+ 2) SharpTJoint: where Plate1 is sharpend in the point S1.
+
+\begin{vdm_al}
+class TJointGroove is subclass of Groove
+
+types
+
+TJointType = <TJoint> | <SharpTJoint>;
+
+instance variables
+
+  R1: Point2;
+  S1: Point2;
+  T1: Point2;
+  R2: Point2;
+  S2: Point2;
+  T2: Point2;
+  A1 : Point2 := new Point2();
+  A2 : Point2 := new Point2();
+  B1 : Point2 := new Point2();
+  C1 : Point2 := new Point2();
+  C2 : Point2 := new Point2();
+  D1 : Point2 := new Point2();
+  D2 : Point2 := new Point2();
+  
+  epsilon: Angle;
+  Ar: [Area];
+  Af: Area;
+  Ab: Area;
+  LenLength: [Length];
+  WeldSize: [Length];
+
+  jointtype : TJointType;
+
+  -- Temporare instance variables used for constructing the groove:
+  E2: Point2;
+  F2: Point2;
+  G: Point2;
+  H: Point2;
+  P: Point2;
+  ls1: Line2;
+  lt1: Line2;
+  lPl1c: Line2;
+  ls2: Line2;
+  lAb: Line2;
+  lAr: Line2;
+  lAdep: Line2;
+  a: Vector2;
+  b: Vector2;
+  c: Vector2;
+  d: Vector2;
+  e: Vector2;
+  f: Vector2;
+  g: Vector2;
+  h: Vector2;
+  Ag: Area;
+  Atj : Area;
+
+  -- Temporare instance variables used for constructing layers:
+  A1B1seg: LineSegment2;
+  B1C1seg: LineSegment2;
+  Sideseg: LineSegment2;
+  GhB: Point2;
+  GhT: Point2;
+  Surf_v: Vector2;
+  Wall_v: Vector2;
+  Gh: Vector2
+\end{vdm_al}
+
+Creating the groove from RST points and the QRV vector
+
+The strategy for building the TJoint groove from the RST points and the QRV vector is described here. Figure 1 shows how the variables are defined on the welding groove
+
+FIGURE 1
+
+The groove is created ???udføre??? the following steps
+ 1) ...
+
+
+
+Operation: build
+Arguments: an object (reference), ????
+Results: a sequence of Point2 object (references).
+Action: Creates a TJoint groove from the RST points and QRV parameters of parms following the strategy described above, and returns its corners in counter-clockwise order.
+Precondition: None
+
+\begin{vdm_al}
+operations
+
+build: RSTPoints * QRV ==> seq of Point2 
+build (rst, qrv) ==
+( dcl aux : Auxil := new Auxil();
+  initialise (rst,qrv);
+  let arverts = if jointtype = <TJoint>
+                then [ A1, C1, C2, A2 ]
+                else [ A1, B1, C1, C2, A2 ],
+      abverts = [ C1, D1, D2, C2 ] in
+  return aux.Counterclockwise(arverts)
+);
+\end{vdm_al}
+
+Operation: initialise
+Arguments: an object (reference), ????
+Results: None
+Action: Initialises the current TJoint groove from the RST points and QRV parameters of parms following the strategy described above.
+Precondition: None
+
+\begin{vdm_al}
+initialise: RSTPoints * QRV ==> ()
+initialise (rst, qrv) ==
+( dcl aux : Auxil := new Auxil();
+  setUpEnv (rst,qrv);
+  computeAandBPoints();
+  jointtype := getTJointType();
+  empty := false
+);
+\end{vdm_al}
+
+Operation: create
+Arguments: an object (reference), ????
+Results: An object (reference) of class TJointGroove.
+Action: Creates a TJoint groove from the RST points and QRV parameters of parms following the strategy described above, and returns it (its reference).
+Precondition: None
+
+\begin{vdm_al}
+create: RSTPoints * QRV ==> Groove 
+create (rst, qrv) ==
+( dcl tj : TJointGroove := new TJointGroove();
+  tj.initialise (rst,qrv);
+  return tj
+);
+\end{vdm_al}
+
+Operation: setInstVars
+Arguments: values to set instance variables: object (references) of class Point2, Angle, Area, Lenght, bool, TJointType, and object (references) of class Line2.
+Results: None
+Actions: Setting the instance variables that are set when copying a TJointGroove object.
+Preconditions: The current groove is initialised.
+
+\begin{vdm_al}
+setInstVars: Point2 * Point2 * Point2 * Point2 * Point2 * Point2 * 
+             Point2 * Point2 * Point2 * Point2 * Point2 * Point2 * Point2 * 
+             [Angle] * [Area] * [Area] * [Area] * [Length] * [Length] * 
+             bool * TJointType * Line2 * Line2 ==> ()
+setInstVars (r1,s1,t1,r2,s2,t2,a1,a2,b1,c1,c2,d1,d2,eps, af,ab,ar,ll,ws,emp,jt,ls2',lar) ==
+( R1 := r1.copy();
+  S1 := s1.copy();
+  T1 := t1.copy();
+  R2 := r2.copy();
+  S2 := s2.copy();
+  T2 := t2.copy();
+  A1 := a1.copy();
+  A2 := a2.copy();
+  B1 := b1.copy();
+  C1 := c1.copy();
+  C2 := c2.copy();
+  D1 := d1.copy();
+  D2 := d2.copy();
+  epsilon := eps;
+  Af := af;
+  Ab := ab;
+  Ar := ar;
+  LenLength := ll;
+  WeldSize := ws;
+  empty := emp;
+  jointtype := jt;
+  ls2 := ls2'.copy();
+  lAr := lar.copy();
+);
+\end{vdm_al}
+
+Operation: copy
+Arguments: None
+Results: an object (reference) of class TJointGroove
+Actions: Makes a value copy, not just a reference copy. Creates an object of class TJointGroove, copies the instance variables that should be copied (real copies of objects), and returns the object (reference).
+Preconditions: The current groove is initialised.
+
+\begin{vdm_al}
+copy: () ==> Groove 
+copy () ==
+( dcl newgroove : TJointGroove := new TJointGroove();
+  newgroove.setInstVars (R1,S1,T1,R2,S2,T2,A1,A2,B1,C1,C2,D1,D2,
+                         epsilon,Af, Ab, Ar, LenLength, WeldSize, empty, jointtype,
+                         ls2, lAr);
+  return newgroove
+);
+\end{vdm_al}
+
+Operation: IsEmpty
+Arguments: None
+Results: a boolean value
+Action: returns whether the groove is empty or not. If empty is false it checks the distance between A1 and C1 and between A2 and C2.
+Precondition: None
+
+\begin{vdm_al}
+IsEmpty: () ==> bool  
+IsEmpty () ==
+  return empty or
+         (A1.epsilonClose (C1) and A2.epsilonClose (C2));
+-- or
+--         (def b1a1 = new Vector2().createFromPoints (B1, A1);
+--              s1r1 = new Vector2().createFromPoints (S1, R1);
+--              c2a2 = new Vector2().createFromPoints (C2, A2);
+--              s2r2 = new Vector2().createFromPoints (S2, R2) in
+--          b1a1.sameDir (s1r1) and c2a1.sameDir (s2r2));
+\end{vdm_al}
+
+Operation: getHeight
+Arguments: None
+Results: A Height (real)
+Action: Returns the height of the groove. The height is defined as the maximum of the distances of the points C1 and C1 to the line lAr. (C1 and C2 are updated while extracting layers.
+Preconditions: The current object has been initialised.
+
+\begin{vdm_al}
+getHeight: () ==> Height 
+getHeight () ==
+( dcl math : Math := new Math();
+  let C1len = lAr.pointDistance (C1),
+      C2len = lAr.pointDistance (C2) in
+  return math.max ({C1len, C2len})
+);
+\end{vdm_al}
+
+Operation: getArea
+Arguments: None
+Results: An Area (real)
+Action: Returns the area of the groove.
+Preconditions: The current object has been initialised.
+
+\begin{vdm_al}
+getArea: () ==> Area 
+getArea () ==
+( dcl math : Math := new Math();
+  let corners = [ A1.getCoord(), B1.getCoord(), C1.getCoord(),
+                  C2.getCoord(), A2.getCoord() ] in
+  return math.polyArea (corners)
+);
+\end{vdm_al}
+
+Operation: getArVertices
+Arguments: None
+Results: a sequence of object (references) of class Point2
+Action: Returns the corner points of the current groove in counter-clockwise direction starting with the top corner on Plate1. If the groove is of type TJoint these are A1, C1, C2, A2. If it is of type SharpTJoint they are A1, B1, C1, C2, A2. They are returned in counter-clockwise direction, but always starting with point A1.
+Precondition: The current groove has been initialised.
+
+\begin{vdm_al}
+getArVertices: () ==> seq of Point2 
+getArVertices () ==
+( dcl aux : Auxil := new Auxil();
+  let arverts = if jointtype = <TJoint>
+                then [ A1, C1, C2, A2 ]
+                else [ A1, B1, C1, C2, A2 ] in
+  return aux.Counterclockwise(arverts)
+);
+\end{vdm_al}
+
+Operation: getArCorner
+Arguments: None
+Results: a sequence of object (references) of class Point2
+Action: Returns the corner points of the current groove. If the groove is of type TJoint these are A1, C1, C2, A2. If it is of type SharpTJoint they are A1, B1, C1, C2, A2. The order of the points is are described here, i.e. not necessarily counter-clockwise
+Precondition: The current groove has been initialised.
+
+\begin{vdm_al}
+getArCorners: () ==> seq of Point2 
+getArCorners () ==
+  if jointtype = <TJoint>
+  then return [ A1, C1, C2, A2 ]
+  else return [ A1, B1, C1, C2, A2 ];
+\end{vdm_al}
+
+Operation: getPlate1Points
+Arguments: None
+Results: 
+Action: 
+Precondition: The current groove is initialised.
+
+\begin{vdm_al}
+getPlate1Points: () ==> Point2 * [Point2] * Point2
+getPlate1Points () ==
+  return mk_(A1,
+             if jointtype = <TJoint> or B1 = C1 then nil else B1,
+             C1);
+\end{vdm_al}
+
+Operation: getPlate2Points
+Arguments: None
+Results: 
+Action: 
+Precondition: The current groove is initialised.
+
+\begin{vdm_al}
+getPlate2Points: () ==> Point2 * [Point2] * Point2
+getPlate2Points () ==
+  return mk_(A2,nil,C2);
+\end{vdm_al}
+
+Operation: getEpsilon
+Arguments: None
+Results:
+Action:
+Is subclass responsibility.
+Precondition: The current groove is initialised.
+
+\begin{vdm_al}
+getEpsilon: () ==> Angle 
+getEpsilon () ==
+  return epsilon;
+\end{vdm_al}
+
+Operation: setUpEnv
+Arguments: Arguments: an object (reference), ????
+Results: None
+Action: Sets the instance variables with the values given in parms.
+Preconditions: None
+
+\begin{vdm_al}
+setUpEnv: RSTPoints * QRV ==> ()
+setUpEnv (rst, qrv) ==
+  let mk_(r1,s1,t1,r2,s2,t2) = rst.getRSTpoints(),
+      eps = qrv.getEpsilon (),
+      af = qrv.getAf (),
+      ab = qrv.getAb (),
+      ar = qrv.getAr (),
+      ll = qrv.getLegLength (),
+      ws = qrv.getWeldSize () in
+  ( -- Setting up of instance variables:
+    R1 := r1;
+    S1 := s1;
+    T1 := t1;
+    R2 := r2;
+    S2 := s2;
+    T2 := t2;
+    epsilon := eps;
+    Af := af;
+    Ab := ab;
+    Ar := ar;
+    LenLength := ll;
+    WeldSize := ws;
+    -- geomdata := gd;
+
+    -- Setting up of temporare instance variables:
+    a := new Vector2().createFromPoints (S1, R1);
+    b := new Vector2().createFromPoints (S1, T1);
+    c := new Vector2().createFromPoints (S2, T2);
+    ls1 := new Line2().createFromPoints (S1, R1);
+    lt1 := new Line2().createFromPointVector (T1, a);
+    ls2 := new Line2().createFromPoints (S2, R2);
+    -- extractGeom
+    -- lPl1c := computelPl1c ()
+  );
+\end{vdm_al}
+
+Operation: getTJointType
+Arguments: None
+Results: a TJointType
+Action: Returns whether the current groove is a TJoint groove or a SharpTJoint groove. The test for this is whether the area Atj is 0 (i.e. it is smaller than epsilon).
+Preconditions: The current groove is initialised.
+
+\begin{vdm_al}
+getTJointType: () ==> TJointType 
+getTJointType () ==
+( dcl math : Math := new Math();
+  if math.epsilonSmall (Atj)
+  then return <TJoint>
+  else return <SharpTJoint>
+);
+\end{vdm_al}
+
+Operation: computeAandBPoints
+Arguments: None
+Results: None
+Action: Computes the points A1, A2, B1, C1, C2, D1, and D2 following the strategry described above. Additional operations are invoked for part-computations.
+The instance variables are modified by sideeffect:
+Modified: B1, C1, C2, H, d, e, f, g, lAr
+Preconditions: Method setUpEnv is invoked.
+
+\begin{vdm_al}
+computeAandBPoints () ==
+( 
+  C1 := T1.copy();
+  B1 := S1.copy();
+
+  C2 := T2.copy();
+  -- C2 := ls2.pointProjection (T1);
+  P := ls2.lineIntersect (ls1);
+
+  f := new Vector2().createFromPoints (C2, T1);
+
+  computeAg_tj ();
+  computeDPoints ();
+
+  d := c.minus().rotateTowards (90 - epsilon, f);
+-- rotateWRT (90 - epsilon, f);
+  e := d.normaliseWith (WeldSize);
+  g := c.rotateWRT (epsilon, f);
+  computelAr ();
+
+  lAr.initFromPointVector (H, g);
+  A1 := ls1.lineIntersect (lAr);
+  A2 := ls2.lineIntersect (lAr)
+);
+\end{vdm_al}
+
+Operation: computeDPoints
+Arguments: None
+Results: None
+Action: Computes the points D1 and D2. The variables are set by sideeffect.
+Preconditions: The variables Ab and f are set.
+Special Notes: The assumption that Ab is a rectangle is made in the computation of D1 and D2.
+
+\begin{vdm_al}
+computeDPoints () ==
+  let c2d2 = Ab / f.length() in
+  let C2D2 = c.normaliseWith (c2d2) in
+  ( D2 := C2.pointPlusVector (C2D2);
+    D1 := D2.pointPlusVector (f) );
+\end{vdm_al}
+
+Operation: computeAg_tj
+Arguments: None
+Results: None
+Action: Computes the areas Ag and Atj.
+Preconditions: The variables R1, S1, T1, T2, and P are set.
+
+\begin{vdm_al}
+computeAg_tj () ==
+( dcl math: Math := new Math();
+  let Ag_corners = [ T1.getCoord(), T2.getCoord(), P.getCoord(),  S1.getCoord() ] in
+  Ag := abs  (math.polyArea (Ag_corners));
+  let Atj_corners = [ R1.getCoord(), S1.getCoord(), T1.getCoord(), P.getCoord() ] in
+  Atj := abs (math.polyArea (Atj_corners))
+);
+\end{vdm_al}
+
+Operation: computelAr
+Arguments: None
+Results: None
+Action: Computes the point H and from that the line lAr. 
+The surface of the groove must be located such that the minimum distance from the backside of Ab to the surface is WeldSize. As described in the strategy for creating the groove this is the distance from D1 to the surface. In the general case this is ???rectangle??? distance, but it can also happen that the ???rectangle distance is locate inside Plate1. In this case the H is placed as the point on Plate1 that is in the distance WeldSize from D1. The determination of whether the point in the ???rectangle??? distance of WeldSize is made by ???
+placement of H is defined to be Figure 2 illustrates 
+
+\begin{vdm_al}
+computelAr () ==
+( dcl math : Math := new Math(),
+      H2 : Point2 := new Point2(),
+      le : Line2 := new Line2();
+  H := D1.pointPlusVector (e);  -- ???rectangle distance???
+--  le.initFromPointVector (D1, e);
+--  H2 := le.lineIntersect (ls1);
+--
+--  let H_area_corners = [ D1.getCoord(), T1.getCoord(), S2.getCoord, H.getCoord() ],
+--      H2_area_corners = [ D1.getCoord(), T1.getCoord(), S2.getCoord, H.getCoord() ] in
+--  let H_area = abs (math.polyArea (H_area_corners)),
+--      H2_area = abs (math.polyArea (H2_area_corners)) in
+--  if H_area < H2_area
+--  then H := H2;
+--
+  lAr := new Line2().createFromPointVector (H, g)
+);
+\end{vdm_al}
+
+Extracting layers from the groove.
+
+The strategy for extracting layers (i.e. objects of class LayerGeom) from the groove is described here. Firstly instance variables used for the computations are set up. Secondly a specific strategy defined by the layout criterias is used for extracting the layers.
+
+Operation: setUpLayerGeomEnv
+Arguments: a value of WeldDirection, dir.
+Results: None
+Action: Sets the variables used for the extraction of layers.
+Preconditions: The variables A1, A2, B1, C1, C2 are set.
+
+\begin{vdm_al}
+setUpLayerGeomEnv: WeldDirection ==> ()
+setUpLayerGeomEnv (dir) ==
+( A1B1seg := new LineSegment2().createFromPoints (A1,B1);
+  B1C1seg := new LineSegment2().createFromPoints (B1,C1);
+  Sideseg := new LineSegment2();
+  GhB := new Point2();
+  GhT := new Point2();
+  Gh := new Vector2();
+  Surf_v := new Vector2();
+  Wall_v := new Vector2();
+  cases dir:
+    <SurfaceDir> -> 
+      ( Sideseg.initFromPoints (A2,C2);
+        Surf_v.initFromPoints (A2,A1);
+        Wall_v.initFromPoints(S2,T2);
+        GhB := C2.copy();
+        GhT := lAr.pointProjection (GhB);
+        Gh.initFromPoints (GhB, GhT) ),
+    <Plate2Dir>  -> 
+      ( Sideseg.initFromPoints (A2,A1);
+        Surf_v.initFromPoints (A2,A1);
+        Wall_v.initFromPoints (A2,A1);
+        GhT := A1.copy();
+        GhB := ls2.pointProjection (GhT);
+        Gh.initFromPoints (GhB, GhT) )
+  end
+);
+\end{vdm_al}
+
+Operation: restrictByHeight
+Arguments: A height, layerh, and a sequence of object (references), lcrit, of class LayerCriteria.
+Results: An object (reference) of type LayerCriteria and an Error.
+Action: Creates a object of class LayerCriteria of height layerh starting from the bottom of the current groove and redraws its area from the groove.
+This strategy is only based on the maximum layer height.
+????
+Preconditions: 
+
+\begin{vdm_al}
+restrictByHeight: Height * LayerCriteria ==> LayerGeom * Error 
+restrictByHeight (layerh, lcrit) ==
+  restrictByHeight_SurfAngle (layerh, lcrit, 0);
+
+
+
+restrictByHeight_SurfAngle: Height * LayerCriteria * Angle ==> LayerGeom * Error 
+restrictByHeight_SurfAngle (layerh, lcrit, deltaphi) ==
+let mk_LayerCriteria (-,-,addcrit,-) = lcrit in
+( dcl layerTl : Line2 := new Line2();
+  dcl Ghlh : Vector2 := Gh.normaliseWith (layerh),
+      Ghsurf_v : Vector2;
+  dcl newGhB : Point2 := GhB.pointPlusVector (Ghlh),
+      Gbot1 : Point2,
+      Gbot2 : Point2;
+  dcl layergeom : LayerGeom := new LayerGeom(),
+      err : Error := new Error(),
+      plate1pts : Point2 * [Point2] * Point2,
+      plate2pts : Point2 * [Point2] * Point2;
+
+  -- Maybe there should be the possibility of rotating this vector???
+  -- For VJoints this is definitely a requirement.
+  Ghsurf_v := Surf_v.copy();
+  if deltaphi > 0
+  then Ghsurf_v := Ghsurf_v.rotateTowards (deltaphi, Wall_v)
+  elseif deltaphi < 0
+  then Ghsurf_v := Ghsurf_v.rotateAwayfrom (-deltaphi, Wall_v);
+  layerTl.initFromPointVector (newGhB, Ghsurf_v);
+
+  Gbot2 := layerTl.lineIntersect (Sideseg);
+  Sideseg.initFromPoints (A2,Gbot2);
+  plate2pts := mk_(Gbot2.copy(), nil, C2.copy());
+
+  if not B1C1seg.isEmpty()
+  then 
+  ( Gbot1 := layerTl.lineIntersect (B1C1seg);
+    if B1C1seg.pointWithinLineSeg (Gbot1)
+    then 
+    ( plate1pts := mk_(Gbot1.copy(), nil, C1.copy());
+      C1 := Gbot1;
+      B1C1seg.initFromPoints (B1,C1) )
+    else
+    ( Gbot1 := layerTl.lineIntersect (A1B1seg);
+      plate1pts := mk_(Gbot1.copy(), B1.copy(), C1.copy());
+      B1 := Gbot1;
+      C1 := B1;
+      B1C1seg.makeEmpty();
+      A1B1seg.initFromPoints (A1,B1);
+      if not A1B1seg.pointWithinLineSeg (Gbot1)
+      then err.addMessage("Layer is separated outside Plate1.") ) )
+  else
+  ( Gbot1 := layerTl.lineIntersect (A1B1seg);
+    plate1pts := mk_(Gbot1.copy(), nil, C1.copy());
+    B1 := Gbot1;
+    C1 := B1;
+    A1B1seg.initFromPoints (A1,B1) );
+  C2 := Gbot2;
+  GhB := newGhB;
+
+  layergeom.initialise (plate1pts, plate2pts);
+  for crit in addcrit do
+    if not crit.checkCriteria (layergeom)
+    then err.addMessage (crit.getError ());
+  return mk_(layergeom.copy(), err)
+);
+
+
+end TJointGroove
+\end{vdm_al}
+ -- computelPl1c () ==
+ --   if TJointType() = <TJoint>
+ --   then computeTJlPl1c ()
+ --   else computeSharpTJlPl1c ();
+ -- 
+ -- computeTJlPl1c () ==
+ --   let Vangle = if geomdata.getWG () = <Side1>
+ --                then geomdata.getV1 ()
+ --                else geomdata.getV2 () in
+ --   let o = b.rotate (Vangle, c) in
+ --   lPl1c := new Line2().createFromPointVector (T1, o);
+ -- 
+ -- computeSharpTJlPl1c () =
+ --   let Vangle = 90 - if geomdata.getWG () = <Side1>
+ --                     then geomdata.getV1 ()
+ --                     else geomdata.getV2 () in
+ --   let o = b.rotate (Vangle, c) in
+ --   lPl1c := new Line2().createFromPointVector (T1, o);
+ -- 
+
+
+ -- computeDPoints () ==
+ --   let ac = a.scalarProd (c) in
+ --   cases true:
+ --     (ac < 0) -> computeInsideArea (),
+ --     (ac = 0) -> computeRectArea (),
+ --     (ac > 0) -> computeOutsideArea ()
+ --   end;
+ -- 
+ -- computeInsideArea () ==
+ --   let J = ls2.lineIntersect (lPl1c) in
+ --   let b2j = B2.pointDist (J),
+ --       f_len = f.length () in
+ --   let Atmp = b2j * f_len / 2 in
+ --   let A = Ab + Atmp,
+ --       f2j = F2.pointDist (J) in
+ --   let d2j = math.sqrt ( (2 * A * f2j) / f_len),
+ --       d1d2 = math.sqrt ( (2 * A * f_len ) / f2j) in
+ --   let JD2 = c.normaliseWith (d2j),
+ --       D2D1 = f.normaliseWith (d1d2) in
+ --   ( D2 := J.pointPlusVector (JD2);
+ --     D1 := D2.pointPlusVector (D2D1) );
+ -- 
+ -- computeOutsideArea () ==
+ --   let J = ls2.lineIntersect (lPl1c) in
+ --   let b2j = B2.pointDist (J),
+ --       f_len = f.length () in
+ --   let A = b2j * f_len / 2 in
+ --   let Atmp = A - Ab,
+ --       f2j = F2.pointDist (J) in
+ --   let d2j = math.sqrt ( (2 * Atmp * f2j) / f_len)
+ --       d1d2 = math.sqrt ( (2 * Atmp * f_len) / f2j) in
+ --   let JD2 = e.minus.normaliseWith (d2j),
+ --       D2D1 = f.normaliseWith (d1d2) in
+ --   ( D2 := J.pointPlusVector (JD2);
+ --     D1 := D2.pointPlusVector (D2D1) );
+ -- 
+ -- computeRectArea () ==
+ --   let f_len = f.length() in
+ --   let f2d2 = Ab / f_len in
+ --   let F2D2 = b.normaliseWith (f2d2) in
+ --   ( D2 := F2.pointPlusVector (F2D2);
+ --     D1 := D2.pointPlusVector (f) );
+

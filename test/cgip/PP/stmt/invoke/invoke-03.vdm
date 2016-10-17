@@ -1,0 +1,64 @@
+class A
+
+instance variables
+  n : nat := 0;
+
+operations
+
+
+public  GetN: () ==> nat
+  GetN() ==
+    return n;
+
+public  SetN: nat ==> ()
+  SetN(v) ==
+    n := v;
+
+public  IncN: nat ==> A
+  IncN(n1) ==
+  ( dcl a : A := new A(); 
+    a.SetN(n1 + n);
+    return a );
+
+
+public  IncNM: nat * nat ==> A
+  IncNM(n1,n2) ==
+  ( dcl a : A := new A();
+    a.SetN(n + n1 + n2);
+    return a );
+
+
+public  SetReal: set of bool * real ==> real
+  SetReal(s1, rl) ==
+    let s2 = { b | b in set s1 & not b } in
+      return card s1 + rl + n
+
+end A
+class B
+
+functions 
+  f: real -> real
+  f(x) ==
+    abs floor x
+
+operations
+
+public Test : () ==> seq of nat 
+  Test() ==
+  ( dcl a   : A | nat:= new A ().IncN(floor 7.09).IncNM(3,let b = 1 in 1),
+        n   : nat | bool,
+        res : seq of nat;
+    n := a.IncN(f(-5)).IncN(if is_nat(a) then 7.8 else 8).GetN();
+    res := [n];
+    n := a.IncNM(2,3).IncNM(
+      cases n:
+        true -> false,
+        others -> 10
+      end, f(0)).GetN();
+    res := res ^ [n];
+    n := a.IncN(4).IncN(1).IncN(2).SetReal({},-1);
+    res := res ^ [n];
+    return res
+  )
+
+end B

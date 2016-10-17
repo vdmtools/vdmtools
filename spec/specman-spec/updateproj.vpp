@@ -1,0 +1,151 @@
+\begin{vdm_al}
+
+class UpdateProject is subclass of ToolColleague
+
+instance variables
+  projectname : [FileName] := nil;
+  rep : Repository;
+  repdb : RepDatabase;
+  dep : Dependency;
+
+  --- projectname is the name of the current repository
+  --- (nil if no repository is open)
+
+
+\end{vdm_al}
+
+$projectname$ is the name of the current repository ($nil$ if no
+repository is open).
+
+\begin{vdm_al}
+
+operations
+
+public   Init:Repository * RepDatabase * ToolMediator * Dependency ==> ()
+  Init (r, db, m, d) ==
+  ( rep := r;
+    repdb := db;
+    mediator := m;
+    dep := d
+  );
+
+        
+  ---
+  --- Open, Close and NewProject
+  --- 
+\end{vdm_al}
+
+\paragraph{Open, Close, Save and New Project}
+\mbox { }
+
+\begin{vdm_al}
+
+public   GetProjectName: () ==> [FileName] 
+  GetProjectName()  ==
+    return projectname;
+
+public   SaveAs : FileName ==> bool 
+  SaveAs (newname)  ==
+    def ok = self.SaveObjState(newname) in
+    ( if ok then 
+        self.UpdateProjName (newname);
+      return ok
+    );
+
+public   Open: FileName ==> bool 
+  Open (pnm)  ==
+    ( rep.ClearAll ();
+      def open_ok = self.LoadObjState(pnm) in
+      ( if open_ok then 
+        ( self.UpdateProjName (pnm);
+          mediator.GetBaseTools().UpdateToolbox() )
+        else
+        ( rep.ClearAll();
+          self.UpdateProjName (nil) );
+        return open_ok ));
+
+public   NewUnnamedProject: () ==> bool 
+  NewUnnamedProject()  == 
+    ( rep.ClearAll ();
+      self.UpdateProjName (nil);
+      mediator.GetBaseTools().UpdateToolbox();
+      return true );
+
+public   UpdateProjName : [FileName] ==> ()
+  UpdateProjName (newname) ==
+  ( if projectname <> newname then
+      mediator.CallBack( mk_ChangedProjName (projectname,newname));
+    projectname := newname
+  );
+
+\end{vdm_al}
+
+\paragraph{Save and Load of State}
+\mbox { }
+
+\begin{vdm_al}
+
+public   SaveObjState: FileName ==> bool 
+  SaveObjState(file)  ==
+  ( dcl store: StateStore := new StateStore(),
+        ok : bool;
+    ok := store.Open(file, <WRITE>);
+    if not ok then
+      return false;
+    def ok' = repdb.SaveFiles (store) in
+    ok := ok and ok';
+    store.Close();
+    rep.SetSavedFileState (ok);
+    return ok
+  );
+
+public   LoadObjState: FileName ==>  bool 
+  LoadObjState(file)  ==
+  ( dcl store: StateStore := new StateStore(),
+        ok : bool;
+    ok := store.Open(file, <READ>);
+    if not ok then
+      return false;
+    def ok' = repdb.LoadFiles (store) in
+    ok := ok and ok';
+    store.Close();
+    rep.SetSavedFileState (ok);
+    return ok
+  );
+
+
+
+end UpdateProject
+\end{vdm_al}
+
+\newpage
+\subsubsection{Project File Syntax, version 2}
+
+\begin{verbatim}
+  projectFile = prj_id, version, modules, files, session, dep_graph, tc_env;
+  prj_id      = 'ProjectFile' | 'ProjectFilePP';
+  version     = '2';
+  modules     = N, module{0..N}
+  module      = name, ast, mod_status;
+  mod_status  = tc_status, cg_status;
+
+  files       = N, file{0..N};
+  file        = name, mod_of_file, file_status, fileid;
+  mod_of_file = N, name{0..N};
+  file_status = sc_status, pp_status;
+
+\end{verbatim}
+
+
+\subsubsection{Project File Syntax, version 3}
+
+\begin{verbatim}
+
+  projectFile = prj_id, version, files;
+  prj_id      = 'ProjectFile' | 'ProjectFilePP';
+  version     = '3';
+
+  files       = N, file{0..N};
+  file        = name
+
+\end{verbatim}

@@ -1,0 +1,22 @@
+class B
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = let v1:A|B|int in samebaseclass(new C(),v1)
+  in skip;
+
+------------------------------------------------------------------------------
+end B
+
+class A is subclass of B
+end A
+
+class C is subclass of B
+end C
+
+class D is subclass of A,C
+end D

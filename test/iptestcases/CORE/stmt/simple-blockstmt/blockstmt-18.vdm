@@ -1,0 +1,13 @@
+class A
+
+operations
+public
+Test: () ==> nat
+Test() ==
+  (op(); return 1;);
+
+public
+op: () ==> ()
+op() == ();
+
+end A

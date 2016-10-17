@@ -1,0 +1,21 @@
+/*#
+# BankAccount 例外
+# $Id: BankAccount__Exception.vpp,v 1.1 2005/11/25 07:05:38 vdmtools Exp $
+*/
+
+class BankAccount_Exception is subclass of GofoApplicationException
+operations	
+public BankAccount_Exception : int * 「文字列」 ==> BankAccount_Exception
+BankAccount_Exception(a番号, a理由) ==
+	(
+	エラー番号 := a番号;
+	エラー理由 := a理由;
+	return self
+	);
+  /*
+  def initialize(where, reason)
+    @where = where;
+    @reason = reason;
+  end
+  */
+end BankAccount_Exception

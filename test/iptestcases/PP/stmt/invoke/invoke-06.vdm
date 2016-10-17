@@ -1,0 +1,84 @@
+class A
+
+instance variables
+  n : nat := 0;
+
+operations
+
+
+public  GetN: () ==> nat
+  GetN() ==
+    return n;
+
+public  SetN: nat ==> ()
+  SetN(v) ==
+    n := v;
+
+public  M20XXX: () ==> nat 
+  M20XXX()  ==
+    return n;
+
+public  InitA: () ==> ()
+  InitA() ==
+    n := n;
+
+public  Get: (<A>|<NAT>) ==> nat
+  Get(tp)  ==
+    return 2000
+
+end A
+
+class T20XXX
+
+instance variables
+  n: nat := 66;
+  a: A;
+
+operations
+public  InitA: () ==> ()
+  InitA() ==
+    a := new A();
+
+
+public  Get:  <A> | <NAT> ==> nat | A | <UNDEF> 
+  Get(tp) ==
+    cases tp:
+      <A> -> return a,
+      <NAT> -> return n,
+      others -> return <UNDEF>
+    end;
+
+
+public  GetN: () ==> nat
+  GetN()  ==
+    return 1000;
+
+
+public  SetN: nat ==> ()
+  SetN(x) ==
+    n := x
+
+end T20XXX
+
+class B
+
+instance variables
+  var: A | T20XXX | seq of char
+  
+operations
+
+
+public Test : () ==> nat
+  Test() ==
+  ( dcl n: nat;
+    var := new T20XXX();
+    var.InitA();
+    n := var.Get(<NAT>);
+    if n = 66 then
+    ( var := var.Get(<A>);
+      var.SetN(100);
+      n := var.GetN();
+      return n )
+    else return 1
+  )
+end B

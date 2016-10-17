@@ -1,0 +1,19 @@
+add                10;
+branch             11;
+call               12;
+cas                13;
+compare            14;
+div                15;
+fsqrt              16;
+logic              17;
+mul                18;
+neg                19;
+pop                20;
+push               21;
+return             22;
+sub                23;
+
+AddEnv             add + add;
+Addset             branch + 10;
+AllorExists        10 + call
+

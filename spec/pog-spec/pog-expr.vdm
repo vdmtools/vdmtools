@@ -1,0 +1,842 @@
+\section{Proof obligations generation for Expressions}
+
+\begin{vdm_al}
+module POG_EXPR
+
+imports
+  from ENV all,
+  from POGTP all,
+
+  from POG_DEF all,
+  from POG_PAT all,
+
+  from GEN_PO all,
+  from CHECK all,
+
+  from CI_AUX all,
+  from PURE_PAT all,
+  from CAST all,
+
+  from AS all,
+  from CI all,
+  from REP all
+
+exports
+  types
+    struct POG;
+
+  operations
+    pog_Expr: [AS`Expr] * POGTP`Context ==> POG;
+    pog_ExprList : seq of AS`Expr * POGTP`Context ==> POG;
+
+definitions
+
+\end{vdm_al}
+
+\section{Expressions}
+
+\begin{vdm_al}
+types
+  POG :: po : seq of POGTP`ProofObligation
+         fv : set of AS`Name;
+
+operations
+
+  pog_Expr: [AS`Expr] * POGTP`Context ==> POG
+  pog_Expr (expr,contxt) ==
+    if expr = nil then
+       return mk_POG([],{})
+    else
+    cases expr :
+    mk_AS`DefExpr(-,-,-)                  -> pog_DefExpr(expr,contxt),
+    mk_AS`LetExpr(-,-,-)                  -> pog_LetExpr(expr,contxt),
+    mk_AS`LetBeSTExpr(-,-,-,-)            -> pog_LetBeSTExpr(expr,contxt),
+    mk_AS`IfExpr(-,-,-,-,-)               -> pog_IfExpr(expr,contxt),
+    mk_AS`CasesExpr(-,-,-,-)              -> pog_CasesExpr(expr,contxt),
+    mk_AS`PrefixExpr (-,-,-)              -> pog_PrefixExpr(expr,contxt),
+    mk_AS`BinaryExpr(-,-,-,-)             -> pog_BinaryExpr(expr,contxt),
+    mk_AS`AllOrExistsExpr(-,-,-,-)        -> pog_AllOrExistsExpr(expr,contxt),
+    mk_AS`ExistsUniqueExpr(-,-,-)         -> pog_ExistsUniqueExpr(expr,contxt),
+    mk_AS`SetEnumerationExpr(-,-)         -> pog_SetEnumerationExpr(expr,contxt),
+    mk_AS`SetComprehensionExpr(-,-,-,-)   -> pog_SetComprehensionExpr(expr,contxt),
+    mk_AS`SetRangeExpr(-,-,-)             -> pog_SetRangeExpr(expr,contxt),
+    mk_AS`SeqEnumerationExpr(-,-)         -> pog_SeqEnumerationExpr(expr,contxt),
+    mk_AS`SeqComprehensionExpr(-,-,-,-)   -> pog_SeqComprehensionExpr(expr,contxt),
+    mk_AS`SubSequenceExpr(-,-,-,-)        -> pog_SubSequenceExpr(expr,contxt),
+    mk_AS`SeqModifyMapOverrideExpr(-,-,-) -> pog_SeqModifyMapOverrideExpr(expr,contxt),
+    mk_AS`MapEnumerationExpr(-,-)         -> pog_MapEnumerationExpr(expr,contxt),
+    mk_AS`MapComprehensionExpr(-,-,-,-)   -> pog_MapComprehensionExpr(expr,contxt),
+    mk_AS`TupleConstructorExpr(-,-)       -> pog_TupleConstructorExpr(expr,contxt),
+    mk_AS`TokenConstructorExpr(-,-)       -> pog_TokenConstructorExpr(expr,contxt),
+    mk_AS`RecordConstructorExpr (-,-,-)   -> pog_RecordConstructorExpr(expr,contxt),
+    mk_AS`RecordModifierExpr (-,-,-)      -> pog_RecordModifierExpr (expr,contxt),
+    mk_AS`ApplyExpr (-,-,-)               -> pog_ApplyExpr(expr,contxt),
+    mk_AS`PreConditionApplyExpr (-,-,-)   -> pog_PreConditionApplyExpr(expr,contxt),
+    mk_AS`FieldSelectExpr(-,-,-)          -> pog_FieldSelectExpr(expr,contxt),
+    mk_AS`TupleSelectExpr(-,-,-)          -> pog_TupleSelectExpr(expr,contxt),
+    mk_AS`LambdaExpr(-,-,-,-)             -> pog_LambdaExpr(expr,contxt),
+    mk_AS`IsExpr (-,-,-)                  -> pog_IsExpr (expr,contxt),
+    mk_AS`TypeJudgementExpr (-,-,-)       -> pog_TypeJudgementExpr (expr,contxt),
+    mk_AS`NarrowExpr (-,-,-)              -> pog_NarrowExpr (expr,contxt),
+    mk_AS`BoolLit(-,-),
+    mk_AS`RealLit(-,-),
+    mk_AS`NumLit(-,-),
+    mk_AS`CharLit(-,-),
+    mk_AS`TextLit(-,-),
+    mk_AS`QuoteLit(-,-),
+    mk_AS`NilLit(-)              -> pog_Literal(expr,contxt),
+    mk_AS`Name(-,-)              -> pog_NameExpr(expr,contxt),
+    mk_AS`OldName(-,-)           -> pog_OldName(expr,contxt),
+    mk_AS`UndefinedExpr(-)       -> pog_UndefinedExpr(expr,contxt),
+    mk_AS`IotaExpr(-,-,-)        -> pog_IotaExpr(expr,contxt),
+    mk_AS`FctTypeInstExpr(-,-,-) -> pog_FctTypeInstExpr(expr,contxt),
+    mk_AS`BracketedExpr(-,-)     -> pog_BracketedExpr(expr,contxt),
+#ifdef VDMPP
+    mk_AS`NewExpr(-,-,-)             -> pog_NewExpr(expr,contxt),
+    mk_AS`IsOfClassExpr(-,-,-)       -> pog_IsOfClassExpr(expr,contxt),
+    mk_AS`IsOfBaseClassExpr(-,-,-)   -> pog_IsOfBaseClassExpr(expr,contxt),
+    mk_AS`SelfExpr(-)                -> pog_SelfExpr(expr,contxt),
+    mk_AS`SameClassExpr(-,-,-)       -> pog_SameClassExpr(expr,contxt),
+    mk_AS`SameBaseClassExpr(-,-,-)   -> pog_SameBaseClassExpr(expr,contxt),
+    mk_AS`ActExpr(-,-),
+    mk_AS`FinExpr(-,-),
+    mk_AS`ActiveExpr(-,-),
+    mk_AS`WaitingExpr(-,-),
+    mk_AS`ReqExpr(-,-),
+    mk_AS`ThreadIdExpr(-),
+    mk_AS`GuardExpr(-,-)    ->  return mk_POG([],{}),
+#ifdef VICE
+    mk_AS`CurTimeExpr(-) ->      return mk_POG([],{}),
+#endif VICE
+#endif
+    others -> error
+    end;
+\end{vdm_al}
+
+For a some expression constructs
+proof obligations can only be generated
+by its components.
+For these we can often use the following function.
+
+\begin{vdm_al}
+  pog_ExprList : seq of AS`Expr * POGTP`Context ==> POG
+  pog_ExprList (exprs,contxt) ==
+    def pog_seq = [pog_Expr(exprs(i),contxt) | i in set inds exprs];
+        ------------------------------------------------------------
+        fv      = dunion {pog_seq(i).fv | i in set inds pog_seq};
+        po      = conc [pog_seq(i).po | i in set inds pog_seq]
+    in return mk_POG(po,fv);
+
+\end{vdm_al}
+
+\begin{vdm_al}
+  pog_DefExpr : AS`DefExpr * POGTP`Context ==> POG
+  pog_DefExpr (mk_AS`DefExpr(defs,in_e,cid),contxt) ==
+    def mk_(pog_defs,val_contxt) = POG_DEF`pog_PatternBindExprList(defs,cid,contxt);
+        pog_body = pog_Expr(in_e,val_contxt);
+        fv       = pog_defs.fv union (pog_body.fv \ pog_defs.pid);
+        po       = pog_defs.po ^ pog_body.po
+    in return  mk_POG(po,fv);
+
+  pog_LetExpr : AS`LetExpr * POGTP`Context ==> POG
+  pog_LetExpr (mk_AS`LetExpr(defs,body,-),contxt) ==
+    def ----------recursive PO generation --------------------------
+        mk_(pog_defs,val_contxt) = POG_DEF`pog_LocalDefList(defs,contxt);
+        pog_body = pog_Expr(body,val_contxt);
+        ------------------------------------------------------------
+        fv       = pog_defs.fv union (pog_body.fv \ pog_defs.pid);
+        po       = pog_defs.po ^ pog_body.po
+    in return mk_POG(po,fv);
+
+  pog_LetBeSTExpr : AS`LetBeSTExpr * POGTP`Context ==> POG
+  pog_LetBeSTExpr (mk_AS`LetBeSTExpr(bind,st_e,in_e,cid),contxt) ==
+    def ----------build contexts -----------------------------------
+        bd_contxt   = POGTP`Add2Context(bind,contxt);
+        st_e_contxt = POGTP`Add2Context(st_e,bd_contxt);
+        ----------recursive PO generation --------------------------
+        pog_bind = POG_PAT`pog_BindList(bind,contxt);
+        pog_st_e = pog_Expr(st_e,bd_contxt);
+        pog_in_e = pog_Expr(in_e,st_e_contxt);
+        -------------------------------------------------------------
+        fv           = pog_bind.fv union ((pog_st_e.fv union pog_in_e.fv) \ pog_bind.pid);
+        ----------subtype PO generation ----------------------------
+        pog_subtp_st = CHECK`SubtypeOfBoolean(st_e,fv,bd_contxt);
+        ----------special PO generation -----------------------------
+        pog_bind_cond = GEN_PO`VerifyLetBeSt(bind,st_e,cid,contxt);
+        -------------------------------------------------------------
+        po           = conc   [pog_subtp_st, pog_bind.po,pog_st_e.po,pog_in_e.po, pog_bind_cond]
+    in return mk_POG(po,fv);
+
+\end{vdm_al}
+
+\subsection{Conditional Expressions}
+
+\begin{vdm_al}
+  pog_IfExpr : AS`IfExpr * POGTP`Context ==> POG
+  pog_IfExpr (mk_AS`IfExpr(test,cons,elsif,altn,-),contxt) ==
+    def ----------build contexts -----------------------------------
+        tst_contxt     = POGTP`Add2Context(test,contxt);
+        not_tst_contxt = POGTP`Add2Context(mk_AS`PrefixExpr(<NOT>, test, CI`NilContextId), contxt);
+        contxt_lst     =  [not_tst_contxt] ^ BuildElseIfContext(elsif,not_tst_contxt);
+        ----------recursive PO generation --------------------------
+        pog_test  = pog_Expr(test,contxt);
+        pog_cons  = pog_Expr(cons,tst_contxt);
+        pog_elsif = [pog_ElseIfExpr(elsif(i),contxt_lst(i)) | i in set inds elsif];
+        pog_altn  = pog_Expr(altn,contxt_lst(len contxt_lst));
+        -------------------------------------------------------------
+        fv           = dunion {pog_test.fv,pog_cons.fv,pog_altn.fv}
+                        union
+                       dunion {pog_elsif(i).fv | i in set inds pog_elsif};
+        ----------subtype PO generation ----------------------------
+        pog_subtp_test = CHECK`SubtypeOfBoolean(test,fv,contxt);
+        -------------------------------------------------------------
+        po           = (conc [pog_subtp_test,pog_test.po,pog_cons.po])
+                      ^(conc [pog_elsif(i).po | i in set inds pog_elsif])
+                      ^pog_altn.po
+    in return mk_POG(po,fv);
+
+
+  pog_ElseIfExpr : AS`ElseifExpr * POGTP`Context ==> POG
+  pog_ElseIfExpr (mk_AS`ElseifExpr(test,cons,-),contxt) ==
+    def ----------build contexts -----------------------------------
+        tst_contxt = POGTP`Add2Context(test,contxt);
+        ----------recursive PO generation --------------------------
+        pog_test = pog_Expr(test,contxt);
+        pog_cons = pog_Expr(cons,tst_contxt);
+        -------------------------------------------------------------
+        fv       = dunion {pog_test.fv,pog_cons.fv};
+        ----------subtype PO generation ----------------------------
+        pog_subtp_test = CHECK`SubtypeOfBoolean(test,fv,contxt);
+        -------------------------------------------------------------
+        po           = conc   [pog_subtp_test,pog_test.po,pog_cons.po]
+    in return mk_POG(po,fv);
+
+  pog_CasesExpr : AS`CasesExpr * POGTP`Context ==> POG
+  pog_CasesExpr (mk_AS`CasesExpr(sel,altns,oth,cid),contxt) ==
+    def ----------recursive PO generation --------------------------
+        pog_sel   = pog_Expr(sel,contxt);
+        ---------- build altns contexts --------------------------------
+        altns_contxt = BuildCasesContext(sel,altns,pog_sel.fv,contxt);
+        oth_contxt   = hd altns_contxt(len altns_contxt);
+        ----------recursive PO generation --------------------------
+        pog_altns = [pog_CaseAltn(sel,altns(i),altns_contxt(i)) | i in set inds altns];
+        pog_oth   = pog_Expr(oth,oth_contxt);
+        -------------------------------------------------------------
+        fv        =  pog_sel.fv  union pog_oth.fv union
+                     dunion {pog_altns(i).fv | i in set inds pog_altns};
+        ----------special PO generation -----------------------------
+        pog_cases_cond = GEN_PO`VerifyCasesExpr(sel,altns,oth,fv,cid,contxt);
+        -------------------------------------------------------------
+        po           = pog_sel.po
+                      ^ conc [pog_altns(i).po | i in set inds pog_altns]
+                      ^ pog_oth.po ^ pog_cases_cond
+    in return mk_POG(po,fv);
+
+  pog_CaseAltn : AS`Expr * AS`CaseAltn * seq of POGTP`Context ==> POG
+  pog_CaseAltn (sel,mk_AS`CaseAltn(pats,expr,-),contxt_lst) ==
+    def ---------- build contexts --------------------------------
+        pats_contxt  = [POGTP`Add2Context(
+                          mk_AS`ValueDef(pats(i), nil, sel, <DEFAULT_AS>, false, CI`NilContextId),
+                          contxt_lst(i))
+                        | i in set inds pats];
+        ---------- recursive PO generation --------------------
+        pog_pats = [POG_PAT`pog_Pattern(pats(i),contxt_lst(i)) | i in set inds pats];
+        pog_expr = [pog_Expr(expr,pats_contxt(i)) | i in set inds pats_contxt];
+        -------------------------------------------------------
+        fv       = dunion {pog_pats(i).fv | i in set inds pog_pats} union
+                   dunion {pog_expr(i).fv | i in set inds pog_expr};
+        names    = fv union dunion {pog_pats(i).pid | i in set inds pog_pats};
+        ---------- subtype PO generation -------------------------
+        pog_subtp_pats = [CHECK`PatternSubtype(pats(i),sel,names,contxt_lst(i)) | i in set inds pats];
+        -------------------------------------------------------
+        po       = conc pog_subtp_pats
+                  ^ conc [pog_pats(i).po | i in set inds pog_pats]
+                  ^ conc [pog_expr(i).po | i in set inds pog_expr]
+    in return mk_POG(po,fv);
+
+\end{vdm_al}
+
+\subsection{Unary Expressions}
+
+\begin{vdm_al}
+  pog_PrefixExpr : AS`PrefixExpr * POGTP`Context ==> POG
+  pog_PrefixExpr (expr,contxt) ==
+    def ----------recursive PO generation -------------------------
+        pog_expr  = pog_Expr(expr.arg,contxt);
+        -----------------------------------------------------------
+        fv        = pog_expr.fv;
+        ----------subtype PO generation ---------------------------
+        pog_subtp = CHECK`PrefixOperatorSubtype(expr,fv,contxt);
+        ----------special PO generation ---------------------------
+        pog_opr_cond = GEN_PO`VerifyPrefixOperator(expr,fv,contxt);
+        -----------------------------------------------------------
+        po           = conc [pog_subtp,pog_expr.po,pog_opr_cond]
+    in return mk_POG(po,fv);
+
+\end{vdm_al}
+
+\subsection{Binary Expressions}
+
+\begin{vdm_al}
+
+  pog_BinaryExpr: AS`BinaryExpr * POGTP`Context ==> POG
+  pog_BinaryExpr(expr,contxt) ==
+    def ----------recursive PO generation --------------------------
+        pog_lhs    = pog_Expr(expr.left,contxt);
+        rhs_contxt = cases expr.opr:
+                       <IMPLY>,
+                       <AND>   -> POGTP`Add2Context(expr.left,contxt),
+                       <OR>    -> POGTP`Add2Context(mk_AS`PrefixExpr(<NOT>, expr.left, CI`NilContextId), contxt),
+                       others -> contxt
+                     end;
+        pog_rhs    = pog_Expr(expr.right,rhs_contxt);
+        -------------------------------------------------------------
+        fv         = pog_rhs.fv union pog_lhs.fv;
+        ----------subtype PO generation ----------------------------
+        pog_subtp  = CHECK`BinaryOperatorSubtype(expr,fv,contxt);
+        ----------special PO generation -----------------------------
+        pog_opr_cond = GEN_PO`VerifyBinaryOperator(expr,fv,contxt);
+        -------------------------------------------------------------
+        po         = conc[pog_subtp,pog_lhs.po,pog_rhs.po,pog_opr_cond]
+    in return mk_POG(po,fv);
+\end{vdm_al}
+
+\subsection{Quantified Expressions}
+
+\begin{vdm_al}
+--  pog_QuantExpr : AS`QuantExpr * POGTP`Context -> POG
+--  pog_QuantExpr(quant,contxt) ==
+--    cases quant:
+--      mk_AS`AllOrExistsExpr (-,-,-,-) -> pog_AllOrExistsExpr(quant,contxt),
+--      mk_AS`ExistsUniqueExpr(-,-,-)   -> pog_ExistsUniqueExpr(quant,contxt)
+--    end;
+
+  pog_AllOrExistsExpr : AS`AllOrExistsExpr * POGTP`Context ==> POG
+  pog_AllOrExistsExpr (mk_AS`AllOrExistsExpr (-,binds,pred,-),contxt) ==
+    def ----------build contexts -----------------------------------
+        bd_contxt      = POGTP`Add2Context(binds,contxt);
+        ----------recursive PO generation --------------------------
+        pog_bind       = POG_PAT`pog_BindList(binds,contxt);
+        pog_pred       = pog_Expr(pred,bd_contxt);
+        -------------------------------------------------------------
+        fv             = pog_bind.fv union (pog_pred.fv \ pog_bind.pid);
+        ----------subtype PO generation ----------------------------
+        pog_subtp_pred = CHECK`SubtypeOfBoolean(pred,fv,bd_contxt);
+        -------------------------------------------------------------
+        po             = conc [pog_subtp_pred,pog_bind.po,pog_pred.po]
+    in return mk_POG(po,fv);
+
+  pog_ExistsUniqueExpr : AS`ExistsUniqueExpr * POGTP`Context ==> POG
+  pog_ExistsUniqueExpr (mk_AS`ExistsUniqueExpr (bind,pred,-),contxt) ==
+    def ----------build contexts -----------------------------------
+        bd_contxt      = POGTP`Add2Context(bind,contxt);
+        ----------recursive PO generation --------------------------
+        pog_bind       = POG_PAT`pog_Bind(bind,contxt);
+        pog_pred       = pog_Expr(pred,bd_contxt);
+        -------------------------------------------------------------
+        fv             = pog_bind.fv union (pog_pred.fv \ pog_bind.pid);
+        ----------subtype PO generation ----------------------------
+        pog_subtp_pred = CHECK`SubtypeOfBoolean(pred,fv,bd_contxt);
+        -------------------------------------------------------------
+        po             = conc [pog_subtp_pred, pog_bind.po, pog_pred.po]
+    in return mk_POG(po,fv);
+
+\end{vdm_al}
+
+\subsection{Iota Expression}
+
+\begin{vdm_al}
+  pog_IotaExpr : AS`IotaExpr * POGTP`Context ==> POG
+  pog_IotaExpr(mk_AS`IotaExpr(bind, pred, cid),contxt) ==
+    def ----------build contexts -----------------------------------
+        bd_contxt      = POGTP`Add2Context(bind,contxt);
+        ----------recursive PO generation --------------------------
+        pog_bind       = POG_PAT`pog_Bind(bind,contxt);
+        pog_pred       = pog_Expr(pred,bd_contxt);
+        -------------------------------------------------------------
+        fv             = pog_bind.fv union (pog_pred.fv \ pog_bind.pid);
+        ----------subtype PO generation ----------------------------
+        pog_subtp_pred = CHECK`SubtypeOfBoolean(pred,fv,bd_contxt);
+        ----------special PO generation -----------------------------
+        pog_unique_cond = GEN_PO`VerifyExistsOne(bind,pred,cid,contxt);
+        -------------------------------------------------------------
+        po             = conc [pog_subtp_pred, pog_bind.po, pog_pred.po, pog_unique_cond]
+    in return mk_POG(po,fv);
+
+\end{vdm_al}
+
+\subsection{Set Expressions}
+
+\begin{vdm_al}
+
+  pog_SetEnumerationExpr : AS`SetEnumerationExpr * POGTP`Context ==> POG
+  pog_SetEnumerationExpr (mk_AS`SetEnumerationExpr(els,-),contxt) ==
+    pog_ExprList(els,contxt);
+
+  pog_SetComprehensionExpr : AS`SetComprehensionExpr * POGTP`Context ==> POG
+  pog_SetComprehensionExpr (mk_AS`SetComprehensionExpr(elem,binds,pred,cid),contxt) ==
+    def ----------build contexts -----------------------------------
+        bd_contxt      = POGTP`Add2Context(binds,contxt);
+        pred_contxt    = POGTP`Add2Context(pred,bd_contxt);
+        ----------recursive PO generation --------------------------
+        pog_bind       = POG_PAT`pog_BindList(binds,contxt);
+        pog_pred       = pog_Expr(pred,bd_contxt);
+        pog_elem       = pog_Expr(elem,pred_contxt);
+        -------------------------------------------------------------
+        fv             = pog_bind.fv union ((pog_elem.fv union pog_pred.fv) \ pog_bind.pid);
+        names          = fv union pog_bind.pid;
+        ----------subtype PO generation ----------------------------
+        pog_subtp_pred = CHECK`SubtypeOfBoolean(pred,names,bd_contxt);
+        ----------special PO generation -----------------------------
+        pog_fin_cond = GEN_PO`VerifyFiniteSet(elem,binds,pred,names,cid,contxt);
+        -------------------------------------------------------------
+        po           = conc [pog_subtp_pred, pog_bind.po, pog_elem.po, pog_pred.po, pog_fin_cond]
+    in return mk_POG(po,fv);
+
+  pog_SetRangeExpr : AS`SetRangeExpr * POGTP`Context ==> POG
+  pog_SetRangeExpr (mk_AS`SetRangeExpr(lb,ub,-),contxt) ==
+    def ----------recursive PO generation --------------------------
+        pog_lb    = pog_Expr(lb,contxt);
+        pog_ub    = pog_Expr(ub,contxt);
+        -------------------------------------------------------------
+        fv           = pog_lb.fv union pog_ub.fv;
+        ----------subtype PO generation ----------------------------
+        pog_subtp_lb = CHECK`SubtypeOfReal(lb,fv,contxt);
+        pog_subtp_ub = CHECK`SubtypeOfReal(ub,fv,contxt);
+        -------------------------------------------------------------
+        po           = conc [pog_subtp_lb, pog_subtp_ub, pog_lb.po, pog_ub.po]
+    in return mk_POG(po,fv);
+
+\end{vdm_al}
+
+\subsection{Sequence Expressions}
+
+\begin{vdm_al}
+
+  pog_SeqEnumerationExpr : AS`SeqEnumerationExpr * POGTP`Context ==> POG
+  pog_SeqEnumerationExpr (mk_AS`SeqEnumerationExpr(els,-),contxt) ==
+    pog_ExprList(els,contxt);
+
+  pog_SeqComprehensionExpr : AS`SeqComprehensionExpr * POGTP`Context ==> POG
+  pog_SeqComprehensionExpr (mk_AS`SeqComprehensionExpr(elem,bind,pred,-),contxt) ==
+    def ----------build contexts -----------------------------------
+        bd_contxt      = POGTP`Add2Context(bind,contxt);
+        pred_contxt    = POGTP`Add2Context(pred,bd_contxt);
+    in
+     (dcl pog_bind : POG_PAT`POG;
+        ----------recursive PO generation --------------------------
+      cases true:
+        (is_AS`SetBind(bind)) -> pog_bind := POG_PAT`pog_SetBind(bind,contxt),
+        (is_AS`SeqBind(bind)) -> pog_bind := POG_PAT`pog_SeqBind(bind,contxt),
+        others -> error
+      end;
+      def pog_pred       = pog_Expr(pred,bd_contxt);
+          pog_elem       = pog_Expr(elem,pred_contxt);
+          -------------------------------------------------------------
+          fv             = pog_bind.fv union ((pog_elem.fv union pog_pred.fv) \ pog_bind.pid);
+          ----------subtype PO generation ----------------------------
+      in
+       (dcl pog_subtp_real : seq of POGTP`ProofObligation := [];
+        if is_AS`SetBind(bind)
+        then pog_subtp_real := CHECK`SubtypeOfSetOfReal(bind.Set,fv,bd_contxt);
+        def pog_subtp_pred = CHECK`SubtypeOfBoolean(pred,fv,bd_contxt);
+            -------------------------------------------------------------
+            po             = conc [pog_subtp_real, pog_subtp_pred, pog_bind.po, pog_elem.po, pog_pred.po]
+        in return mk_POG(po,fv);
+       );
+     );
+
+  pog_SubSequenceExpr : AS`SubSequenceExpr * POGTP`Context ==> POG
+  pog_SubSequenceExpr (mk_AS`SubSequenceExpr(ss,p1,p2,-),contxt) ==
+    def ----------recursive PO generation --------------------------
+        pog_ss    = pog_Expr(ss,contxt);
+        pog_p1    = pog_Expr(p1,contxt);
+        pog_p2    = pog_Expr(p2,contxt);
+        -------------------------------------------------------------
+        fv           = dunion {pog_ss.fv,pog_p1.fv,pog_p2.fv};
+        ----------subtype PO generation ----------------------------
+        pog_subtp_ss = CHECK`SubtypeOfSeq(ss,contxt);
+        pog_subtp_p1 = CHECK`SubtypeOfReal(p1,fv,contxt);
+        pog_subtp_p2 = CHECK`SubtypeOfReal(p2,fv,contxt);
+        -------------------------------------------------------------
+        po           = conc [pog_subtp_ss, pog_subtp_p1, pog_subtp_p2, pog_ss.po, pog_p1.po, pog_p2.po]
+    in return mk_POG(po,fv);
+
+  pog_SeqModifyMapOverrideExpr : AS`SeqModifyMapOverrideExpr * POGTP`Context ==> POG
+  pog_SeqModifyMapOverrideExpr (mk_AS`SeqModifyMapOverrideExpr(lhs,rhs,cid),contxt) ==
+    def ----------recursive PO generation --------------------------
+        pog_lhs       = pog_Expr(lhs,contxt);
+        pog_rhs       = pog_Expr(rhs,contxt);
+        -------------------------------------------------------------
+        fv            = pog_lhs.fv union pog_rhs.fv;
+        ----------subtype PO generation ----------------------------
+        pog_subtp_lhs = CHECK`SubtypeOfSeqOrMap(lhs,contxt);
+        pog_subtp_rhs = CHECK`SubtypeOfMap(rhs,contxt);
+        ----------special PO generation -----------------------------
+        pog_dom_cond  = GEN_PO`VerifySeqModifyMapOverride(lhs,rhs,cid,contxt);
+        -------------------------------------------------------------
+        po            = conc [pog_subtp_lhs, pog_subtp_rhs, pog_lhs.po, pog_rhs.po, pog_dom_cond]
+    in return mk_POG(po,fv);
+
+\end{vdm_al}
+
+\subsection{Map Expressions}
+
+\begin{vdm_al}
+
+  pog_MapEnumerationExpr : AS`MapEnumerationExpr * POGTP`Context ==> POG
+  pog_MapEnumerationExpr (mk_AS`MapEnumerationExpr(els,cid),contxt) ==
+    def ----------recursive PO generation ------------------------
+        pog_els  = [pog_Maplet(els(i),contxt) | i in set inds els];
+        ----------------------------------------------------------
+        fv       = dunion {pog_els(i).fv | i in set inds pog_els};
+        ----------special PO generation --------------------------
+        pog_comp = GEN_PO`VerifySeqOfCompatibleMaps(els,fv,cid,contxt);
+        ----------------------------------------------------------
+        po       = conc [pog_els(i).po | i in set inds pog_els] ^ pog_comp
+    in return mk_POG(po,fv);
+
+  pog_Maplet: AS`Maplet * POGTP`Context ==> POG
+  pog_Maplet (mk_AS`Maplet(mdom,mrng,-),contxt) ==
+    def ----------recursive PO generation --------------------------
+        pog_mdom       = pog_Expr(mdom,contxt);
+        pog_mrng       = pog_Expr(mrng,contxt);
+        -------------------------------------------------------------
+        fv             = pog_mrng.fv union pog_mrng.fv;
+        po             = pog_mdom.po ^ pog_mrng.po
+    in return mk_POG(po,fv);
+
+  pog_MapComprehensionExpr : AS`MapComprehensionExpr * POGTP`Context ==> POG
+  pog_MapComprehensionExpr (mk_AS`MapComprehensionExpr(elem,binds,pred,cid),contxt) ==
+    def ----------build contexts -----------------------------------
+        bd_contxt      = POGTP`Add2Context(binds,contxt);
+        pred_contxt    = POGTP`Add2Context(pred,bd_contxt);
+        ----------recursive PO generation --------------------------
+        pog_bind       = POG_PAT`pog_BindList(binds,contxt);
+        pog_pred       = pog_Expr(pred,bd_contxt);
+        pog_elem       = pog_Maplet(elem,pred_contxt);
+        -------------------------------------------------------------
+        fv             = pog_bind.fv union ((pog_elem.fv union pog_pred.fv) \ pog_bind.pid);
+        names          = fv union pog_bind.pid;
+        ----------subtype PO generation ----------------------------
+        pog_subtp_pred = CHECK`SubtypeOfBoolean(pred,names,bd_contxt);
+        ----------special PO generation -----------------------------
+        pog_comp_cond  = GEN_PO`VerifyMapComp(elem,binds,pred,names,cid,contxt);
+        pog_fin_cond   = GEN_PO`VerifyFiniteMap(elem,binds,pred,names,cid,contxt);
+        -------------------------------------------------------------
+        po             = conc [pog_subtp_pred, pog_bind.po, pog_elem.po, pog_pred.po, pog_comp_cond, pog_fin_cond]
+    in return mk_POG(po,fv);
+\end{vdm_al}
+
+\subsection{Tuple Constructor}
+
+\begin{vdm_al}
+  pog_TupleConstructorExpr : AS`TupleConstructorExpr * POGTP`Context ==> POG
+  pog_TupleConstructorExpr (mk_AS`TupleConstructorExpr(fields,-),contxt) ==
+    pog_ExprList(fields,contxt);
+\end{vdm_al}
+
+\subsection{Token Constructor}
+
+\begin{vdm_al}
+  pog_TokenConstructorExpr: AS`TokenConstructorExpr * POGTP`Context ==> POG
+  pog_TokenConstructorExpr (mk_AS`TokenConstructorExpr(expr,-),contxt) ==
+    pog_Expr(expr,contxt);
+
+\end{vdm_al}
+
+\subsection{Record Expressions}
+
+\begin{vdm_al}
+
+  pog_RecordConstructorExpr: AS`RecordConstructorExpr * POGTP`Context ==> POG
+  pog_RecordConstructorExpr (mk_AS`RecordConstructorExpr(tag,fields,-),contxt) ==
+    def tp_reps = CI_AUX`LookUpFieldsFromTag(tag);
+        ----------recursive PO generation --------------------------
+        pog_flds = [pog_Expr(fields(i),contxt) | i in set inds fields];
+        -------------------------------------------------------------
+        fv       = dunion {pog_flds(i).fv | i in set inds pog_flds};
+        ----------subtype PO generation ----------------------------
+        pog_subtp_flds = [CHECK`SubtypeOfTypeRep(fields(i),tp_reps(i),fv,contxt) | i in set inds fields];
+        -------------------------------------------------------------
+        po       =  conc pog_subtp_flds ^ conc [pog_flds(i).po | i in set inds pog_flds]
+    in return mk_POG(po,fv);
+
+  pog_RecordModifierExpr : AS`RecordModifierExpr * POGTP`Context ==> POG
+  pog_RecordModifierExpr (mk_AS`RecordModifierExpr(rec,mods,cid),contxt) ==
+    def ----------recursive PO generation --------------------------
+        pog_rec  = pog_Expr(rec,contxt);
+        pog_mods = [pog_RecordModification(mods(i),contxt) | i in set inds mods];
+        -------------------------------------------------------------
+        fv       = pog_rec.fv union dunion {pog_mods(i).fv | i in set inds mods};
+        -------------------------------------------------------------
+        pog_subtp = CHECK`SubtypeRecordModifier(rec,mods,fv,cid,contxt);
+        -------------------------------------------------------------
+        po       = pog_subtp ^ pog_rec.po ^ conc [pog_mods(i).po | i in set inds mods]
+    in return mk_POG(po,fv);
+
+  pog_RecordModification : AS`RecordModification * POGTP`Context ==> POG
+  pog_RecordModification (mk_AS`RecordModification(-,new,-),contxt) ==
+    pog_Expr(new,contxt);
+
+  pog_FieldSelectExpr : AS`FieldSelectExpr * POGTP`Context ==> POG
+  pog_FieldSelectExpr (mk_AS`FieldSelectExpr(rec,nm,-),contxt) ==
+    def ----------recursive PO generation --------------------------
+        pog_rec   = pog_Expr(rec,contxt);
+        -------------------------------------------------------------
+        fv        = pog_rec.fv;
+        -------------------------------------------------------------
+        pog_subtp = CHECK`SubtypeForFieldSelect(rec,nm,fv,contxt);
+        -------------------------------------------------------------
+        po        = pog_subtp ^ pog_rec.po
+    in return mk_POG(po,fv);
+
+  pog_TupleSelectExpr : AS`TupleSelectExpr * POGTP`Context ==> POG
+  pog_TupleSelectExpr (mk_AS`TupleSelectExpr(tuple,num,cid),contxt) ==
+    def ----------recursive PO generation --------------------------
+        pog_tuple   = pog_Expr(tuple,contxt);
+        -------------------------------------------------------------
+        fv          = pog_tuple.fv;
+        -------------------------------------------------------------
+        pog_subtp_tuple = CHECK`SubtypeForTupleSelect(tuple,fv,contxt);
+        ----------special PO generation -----------------------------
+        pog_bound_cond  = GEN_PO`VerifyTupleBound(tuple,num,cid,contxt);
+        -------------------------------------------------------------
+        po          = conc [pog_subtp_tuple, pog_tuple.po,pog_bound_cond]
+    in return mk_POG(po,fv);
+
+--   pog_TupleSelectExpr : AS`TupleSelectExpr * POGTP`Context -> POG
+--   pog_TupleSelectExpr (mk_AS`TupleSelectExpr(tuple,num,cid),contxt) ==
+--     let ----------recursive PO generation --------------------------
+--         pog_tuple   = pog_Expr(tuple,contxt),
+--         pog_num     = pog_Expr(num,contxt),
+--         -------------------------------------------------------------
+--         fv          = pog_tuple.fv union pog_num.fv,
+--         -------------------------------------------------------------
+--         pog_subtp_tuple = CHECK`SubtypeForTupleSelect(tuple,fv,contxt),
+--         pog_subtp_num   = CHECK`SubtypeOfNat(num,fv,contxt),
+--         ----------special PO generation -----------------------------
+--         pog_bound_cond  = GEN_PO`VerifyTupleBound(tuple,num,cid,contxt),
+--         -------------------------------------------------------------
+--         po          = conc [pog_subtp_tuple,pog_subtp_num,
+--                             pog_tuple.po,pog_num.po,pog_bound_cond]
+--     in
+--         mk_POG(po,fv);
+
+\end{vdm_al}
+
+\subsection{Apply Expressions}
+
+\begin{vdm_al}
+  pog_FctTypeInstExpr: AS`FctTypeInstExpr * POGTP`Context ==> POG
+  pog_FctTypeInstExpr(mk_AS`FctTypeInstExpr(-,-,-),-) ==
+    return mk_POG([],{});
+
+  pog_ApplyExpr : AS`ApplyExpr * POGTP`Context ==> POG
+  pog_ApplyExpr (mk_AS`ApplyExpr(fct,arg,cid),contxt) ==
+    def ----------recursive PO generation --------------------------
+        pog_fct       = pog_Expr(fct,contxt);
+        pog_arg       = pog_ExprList(arg,contxt);
+        -------------------------------------------------------------
+        fv            = pog_fct.fv union pog_arg.fv;
+        ----------subtype PO generation ----------------------------
+        pog_subtp_app = CHECK`SubtypeForApplication(fct,arg,fv,contxt);
+        ----------special PO generation -----------------------------
+        pog_dom_cond  = GEN_PO`VerifyApplication(fct,arg,cid,contxt);
+        -- AUGUSTO -- measure PO generation
+        pog_measu = GEN_PO`VerifyRecApplication(fct,arg,cid,contxt);
+        -- END AUGUSTO
+        -------------------------------------------------------------
+        po            = conc [pog_subtp_app, pog_fct.po, pog_arg.po, pog_dom_cond, pog_measu]
+    in return mk_POG(po,fv);
+
+#ifdef VDMPP
+  pog_NewExpr : AS`NewExpr * POGTP`Context ==> POG
+  pog_NewExpr (mk_AS`NewExpr(cls,arg,cid),contxt) ==
+    def conm = mk_AS`Name(cls.ids^cls.ids,cls.cid);
+        ----------recursive PO generation --------------------------
+        pog_cls       = pog_NameExpr(cls,contxt);
+        pog_arg       = pog_ExprList(arg,contxt);
+        -------------------------------------------------------------
+        fv            = pog_arg.fv;
+        ----------subtype PO generation ----------------------------
+        pog_subtp_app = CHECK`SubtypeForNewExpr(conm,arg,fv,contxt);
+        ----------special PO generation -----------------------------
+--        pog_dom_cond  = GEN_PO`VerifyOperApplication(conm,arg,cid,contxt);
+        pog_dom_cond  = GEN_PO`VerifyApplication(conm,arg,cid,contxt);
+        -------------------------------------------------------------
+        po            = conc [pog_subtp_app, pog_cls.po, pog_arg.po, pog_dom_cond]
+    in return mk_POG(po,fv);
+
+  pog_SelfExpr : AS`SelfExpr * POGTP`Context ==> POG
+  pog_SelfExpr (mk_AS`SelfExpr(-),-) ==
+    return mk_POG([],{});
+
+  pog_IsOfClassExpr : AS`IsOfClassExpr * POGTP`Context ==> POG
+  pog_IsOfClassExpr (mk_AS`IsOfClassExpr(-,arg,-),contxt) ==
+    pog_Expr(arg,contxt);
+
+  pog_IsOfBaseClassExpr : AS`IsOfBaseClassExpr * POGTP`Context ==> POG
+  pog_IsOfBaseClassExpr (mk_AS`IsOfBaseClassExpr(-,arg,-),contxt) ==
+    pog_Expr(arg,contxt);
+
+  pog_SameClassExpr : AS`SameClassExpr * POGTP`Context ==> POG
+  pog_SameClassExpr (mk_AS`SameClassExpr(e1,e2,-),contxt) ==
+    pog_ExprList([e1,e2],contxt);
+
+  pog_SameBaseClassExpr : AS`SameBaseClassExpr * POGTP`Context ==> POG
+  pog_SameBaseClassExpr (mk_AS`SameBaseClassExpr(e1,e2,-),contxt) ==
+    pog_ExprList([e1,e2],contxt);
+#endif
+
+  pog_PreConditionApplyExpr : AS`PreConditionApplyExpr * POGTP`Context ==> POG
+  pog_PreConditionApplyExpr (mk_AS`PreConditionApplyExpr(fct,arg,-),contxt) ==
+    def ----------recursive PO generation --------------------------
+        pog_fct       = pog_Expr(fct,contxt);
+        pog_arg       = pog_ExprList(arg,contxt);
+        -------------------------------------------------------------
+        fv            = pog_fct.fv union pog_arg.fv;
+        ----------subtype PO generation ----------------------------
+        pog_subtp_app = CHECK`SubtypeForPreCondApplication(fct,arg,fv,contxt);
+        -------------------------------------------------------------
+        po            = conc [pog_subtp_app, pog_fct.po, pog_arg.po]
+    in return mk_POG(po,fv);
+
+  pog_UndefinedExpr : AS`UndefinedExpr * POGTP`Context ==> POG
+  pog_UndefinedExpr (mk_AS`UndefinedExpr(-),-) ==
+    return mk_POG([],{});
+
+\end{vdm_al}
+
+\subsection{Bracketed Expression}
+
+\begin{vdm_al}
+  pog_BracketedExpr : AS`BracketedExpr * POGTP`Context ==> POG
+  pog_BracketedExpr(mk_AS`BracketedExpr(expr,-),contxt) ==
+    pog_Expr(expr,contxt);
+\end{vdm_al}
+
+
+\subsection{Lambda Expression}
+
+\begin{vdm_al}
+  pog_LambdaExpr : AS`LambdaExpr * POGTP`Context ==> POG
+  pog_LambdaExpr (mk_AS`LambdaExpr(parm,body,-,-),contxt) ==
+    def ----------build contexts --------------------------------
+        parm_contxt = POGTP`AddList2Context(parm,contxt);
+        ----------recursive PO generation -----------------------
+        pog_parm = [POG_PAT`pog_TypeBind(parm(i),contxt) | i in set inds parm];
+        pog_body = pog_Expr(body,parm_contxt);
+        ----------------------------------------------------------
+        fv      = dunion {pog_parm(i).fv | i in set inds pog_parm} union pog_body.fv;
+        po      = conc   [pog_parm(i).po | i in set inds pog_parm] ^ pog_body.po
+    in return mk_POG(po,fv);
+
+\end{vdm_al}
+
+\subsection{Is Expression}
+
+\begin{vdm_al}
+  pog_IsExpr : AS`IsExpr * POGTP`Context ==> POG
+  pog_IsExpr (mk_AS`IsExpr(-,arg,-),contxt) ==
+    pog_Expr(arg,contxt);
+
+
+  pog_TypeJudgementExpr : AS`TypeJudgementExpr * POGTP`Context ==> POG
+  pog_TypeJudgementExpr (mk_AS`TypeJudgementExpr(arg,-,-),contxt) ==
+    pog_Expr(arg,contxt);
+
+\end{vdm_al}
+
+\subsection{Narrow Expression}
+
+\begin{vdm_al}
+  pog_NarrowExpr : AS`NarrowExpr * POGTP`Context ==> POG
+  pog_NarrowExpr (mk_AS`NarrowExpr(expr,type,-),contxt) ==
+--    pog_Expr(expr,contxt);
+    def pog_expr = pog_Expr(expr,contxt);
+        fv = pog_expr.fv;
+        pog_subtp = CHECK`SubtypeOf(expr,type,fv,contxt);
+        po = pog_subtp ^ pog_expr.po
+    in return mk_POG(po,fv);
+
+\end{vdm_al}
+
+\subsection{Names}
+
+\begin{vdm_al}
+  pog_NameExpr : AS`Name * POGTP`Context ==> POG
+  pog_NameExpr (nm,-) ==
+    return mk_POG([],{nm});
+
+\end{vdm_al}
+
+Note that old-names can only be used in the post context (i.e.\ in
+some kind of post-condition).
+
+\begin{vdm_al}
+
+  pog_OldName : AS`OldName * POGTP`Context ==> POG
+  pog_OldName (mk_AS`OldName(ids,cid),-) ==
+    return mk_POG([],{mk_AS`Name(ids,cid)});
+
+\end{vdm_al}
+
+\begin{vdm_al}
+  pog_Literal : AS`Literal * POGTP`Context ==> POG
+  pog_Literal (-,-) ==
+    return mk_POG([],{});
+
+  BuildElseIfContext : seq of AS`ElseifExpr * POGTP`Context ==> seq of POGTP`Context
+  BuildElseIfContext (elsif,contxt) ==
+    if elsif = []
+    then return []
+    else
+      def test     = (hd elsif).test;
+          not_test = mk_AS`PrefixExpr(<NOT>, test, CI`NilContextId);
+          ----------build contexts -----------------------------------
+          not_tst_contxt = POGTP`Add2Context(not_test,contxt);
+          tail_contxt    = BuildElseIfContext(tl elsif,not_tst_contxt)
+      in return [not_tst_contxt] ^ tail_contxt;
+
+  BuildCasesContext : AS`Expr * seq1 of AS`CaseAltn * set of AS`Name * POGTP`Context ==> seq1 of seq1 of POGTP`Context
+  BuildCasesContext (sel,altns,fv,contxt) ==
+    def head        = BuildOneCasesMatchContext(sel,(hd altns).match,fv,contxt);
+        last_contxt = head (len head);
+    in
+      if tl altns <> []
+      then return [head] ^ BuildCasesContext(sel,tl altns,fv,last_contxt)
+      else return [head] ^ [[last_contxt]];
+
+  BuildOneCasesMatchContext : AS`Expr * seq1 of AS`Pattern * set of AS`Name * POGTP`Context ==> seq1 of POGTP`Context
+  BuildOneCasesMatchContext (sel,pats,fv,contxt) ==
+    def ----- Get type of selector-----------------
+        sel_tp  =  CI_AUX`GetASType(sel);
+        -------------------------------------------
+        pat       = hd pats;
+        mk_(pure_pat,-,pid) = PURE_PAT`Pattern2PurePattern(pat,fv);
+        expr_pat = CAST`Pattern2Expr(pure_pat);
+        ----- Make type binding of pattern --------
+        pat_bind = mk_AS`MultTypeBind([pure_pat], sel_tp, CI`NilContextId);
+        -------------------------------------------
+        pred      = mk_AS`BinaryExpr(sel, <EQ>, expr_pat, CI`NilContextId);
+        match     = if pid = {}
+                    then pred
+                    else mk_AS`AllOrExistsExpr(<EXISTS>, [pat_bind], pred, CI`NilContextId);
+        not_match = mk_AS`PrefixExpr(<NOT>, match, CI`NilContextId);
+        ---------- build contexts ------------------
+        match_contxt     = POGTP`Add2Context(match,contxt);
+        not_match_contxt = POGTP`Add2Context(not_match,contxt);
+    in
+      if tl pats <> []
+      then return [match_contxt] ^ BuildOneCasesMatchContext(sel,tl pats,fv,not_match_contxt)
+      else return [match_contxt] ^ [not_match_contxt];
+
+end POG_EXPR
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[POG\_EXPR`BuildOneCasesMatchContext]
+{rtinfo.ast}[POG_EXPR]
+\end{rtinfo}

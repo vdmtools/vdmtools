@@ -1,0 +1,66 @@
+class StdLib
+types
+public String = seq of char;
+
+functions
+-----------------------------------------
+-- Convert @Elem to a String if supported
+-----------------------------------------
+public static ToString[@Elem]: @Elem -> String
+ToString(s) ==
+  cases true:
+    (is_int(s)) -> ToStringInt(s),
+    (is_nat(s)) -> ToStringInt(s),
+    (is_nat1(s)) -> ToStringInt(s),
+    (is_bool(s)) -> ToStringBool(s),
+    others -> undefined
+  end;
+-------------------------------------
+-- Convert a bool to a String
+-------------------------------------
+public static ToStringBool: bool -> String
+  ToStringBool (pval) ==
+    if pval then "true" else "false";
+
+-------------------------------------
+-- Convert a int to a String
+-------------------------------------
+public static ToStringInt : int | nat1 | nat -> String
+ToStringInt(val) ==
+  let result : int = val mod 10,
+      rest : int = val div 10
+  in if rest > 0 then
+       ToStringInt(rest) ^ GetStringFromNum(result)
+     else GetStringFromNum(result)
+pre val >= 0;
+    
+-------------------------------------
+-- Convert a int < 10 to a String
+-------------------------------------
+public static GetStringFromNum : int  -> String --| nat | real
+GetStringFromNum(val) ==
+(  cases val:
+     0 ->  "0",
+     1 ->  "1",
+     2 ->  "2",
+     3 ->  "3",
+     4 ->  "4",
+     5 ->  "5",
+     6 ->  "6",
+     7 ->  "7",
+     8 ->  "8",
+     9 ->  "9"
+  end)
+pre val < 10;
+
+
+-------------------------------------
+-- Convert set to a seq
+-------------------------------------
+public static SetToSeq[@Elem]: set of @Elem -> seq of @Elem
+SetToSeq(s) ==
+  if s = {} then []
+    else let x in set s in SetToSeq[@Elem](s\{x})^[x]
+
+
+end StdLib

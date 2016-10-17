@@ -1,0 +1,13 @@
+class UndefinedExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = undefined
+  in skip;
+
+------------------------------------------------------------------------------
+end UndefinedExprTest

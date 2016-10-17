@@ -1,0 +1,133 @@
+class JavaUtilLocale is subclass of JavaLangCloneable, JavaIoSerializable, JavaLangObject
+instance variables 
+  public  static ENGLISH : [JavaUtilLocale] := nil;
+  public  static FRENCH : [JavaUtilLocale] := nil;
+  public  static GERMAN : [JavaUtilLocale] := nil;
+  public  static ITALIAN : [JavaUtilLocale] := nil;
+  public  static JAPANESE : [JavaUtilLocale] := nil;
+  public  static KOREAN : [JavaUtilLocale] := nil;
+  public  static CHINESE : [JavaUtilLocale] := nil;
+  public  static SIMPLIFIED_CHINESE : [JavaUtilLocale] := nil;
+  public  static TRADITIONAL_CHINESE : [JavaUtilLocale] := nil;
+  public  static FRANCE : [JavaUtilLocale] := nil;
+  public  static GERMANY : [JavaUtilLocale] := nil;
+  public  static ITALY : [JavaUtilLocale] := nil;
+  public  static JAPAN : [JavaUtilLocale] := nil;
+  public  static KOREA : [JavaUtilLocale] := nil;
+  public  static CHINA : [JavaUtilLocale] := nil;
+  public  static PRC : [JavaUtilLocale] := nil;
+  public  static TAIWAN : [JavaUtilLocale] := nil;
+  public  static UK : [JavaUtilLocale] := nil;
+  public  static US : [JavaUtilLocale] := nil;
+  public  static CANADA : [JavaUtilLocale] := nil;
+  public  static CANADA_FRENCH : [JavaUtilLocale] := nil;
+  static serialVersionUID : int :=0
+operations 
+public  clone : () ==> JavaLangObject
+clone() == 
+is not yet specified ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+is not yet specified ;
+
+public  toString : () ==> JavaLangString
+toString() == 
+is not yet specified ;
+
+public  getCountry : () ==> JavaLangString
+getCountry() == 
+is not yet specified ;
+
+public  static getDefault : () ==> JavaUtilLocale
+getDefault() == 
+is not yet specified ;
+
+public  getVariant : () ==> JavaLangString
+getVariant() == 
+is not yet specified ;
+
+public  JavaUtilLocale : <NIL> ==> JavaUtilLocale
+JavaUtilLocale(-) == 
+isNil := true  ;
+
+public  getLanguage : () ==> JavaLangString
+getLanguage() == 
+is not yet specified ;
+
+public  equals : JavaLangObject ==> bool 
+equals(obj) == 
+is not yet specified ;
+
+public  getDisplayName : () ==> JavaLangString
+getDisplayName() == 
+is not yet specified ;
+
+public  getISO3Country : () ==> JavaLangString
+getISO3Country() == 
+is not yet specified ;
+
+public  getISO3Language : () ==> JavaLangString
+getISO3Language() == 
+is not yet specified ;
+
+public  static getISOCountries : () ==> map  int  to  JavaLangString
+getISOCountries() == 
+is not yet specified ;
+
+public  static getISOLanguages : () ==> map  int  to  JavaLangString
+getISOLanguages() == 
+is not yet specified ;
+
+public  getDisplayCountry : () ==> JavaLangString
+getDisplayCountry() == 
+is not yet specified ;
+
+public  getDisplayVariant : () ==> JavaLangString
+getDisplayVariant() == 
+is not yet specified ;
+
+public  getDisplayLanguage : () ==> JavaLangString
+getDisplayLanguage() == 
+is not yet specified ;
+
+public  static setDefault : JavaUtilLocale ==> ()
+setDefault(newLocale) == 
+is not yet specified ;
+
+public  static getAvailableLocales : () ==> map  int  to  JavaUtilLocale
+getAvailableLocales() == 
+is not yet specified ;
+
+public  getDisplayName : JavaUtilLocale ==> JavaLangString
+getDisplayName(inLocale) == 
+is not yet specified ;
+
+public  JavaUtilLocale : JavaLangString * JavaLangString ==> JavaUtilLocale
+JavaUtilLocale(language, country) == 
+( skip 
+) ;
+
+public  getDisplayCountry : JavaUtilLocale ==> JavaLangString
+getDisplayCountry(inLocale) == 
+is not yet specified ;
+
+public  getDisplayVariant : JavaUtilLocale ==> JavaLangString
+getDisplayVariant(inLocale) == 
+is not yet specified ;
+
+public  getDisplayLanguage : JavaUtilLocale ==> JavaLangString
+getDisplayLanguage(inLocale) == 
+is not yet specified ;
+
+static getLanguagesForCountry : JavaLangString ==> map  int  to  JavaLangString
+getLanguagesForCountry(country) == 
+is not yet specified ;
+
+public  JavaUtilLocale : JavaLangString * JavaLangString * JavaLangString ==> JavaUtilLocale
+JavaUtilLocale(language, country, variant) == 
+( skip 
+) ;
+
+
+end  JavaUtilLocale

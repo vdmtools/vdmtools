@@ -1,0 +1,108 @@
+%$ld$
+\subsection{Environmentタスク}
+
+\begin{vdm_al}
+class 『音量つまみ』
+  is subclass of EnvironmentTask
+
+operations
+  public 『音量つまみ』: EventDispatcher ==> 『音量つまみ』
+  『音量つまみ』 (ed) == AbstractTask("音量つまみ",ed);
+
+  イベントを処理する: Event ==> ()
+  イベントを処理する (pev) == duration (0) 入力イベントを追加する(pev.イベントを得る())
+  post forall pr in set dom 入力履歴写像 &
+         exists1 ps in set dom 出力履歴写像 &
+           pr = ps => 出力履歴写像(ps) - 入力履歴写像(pr) <= 1500;
+
+  信号を作る: () ==> ()
+  信号を作る () ==
+    duration (0)
+     ( dcl id : ID := IDを得る();
+       updateTime(1000);
+       出力イベントを追加する(id);
+       割込を起こさせる("キー押し下げ処理", id) );
+
+  public Run: () ==> ()
+  Run () == start(self)
+
+thread
+  periodic (1000,0,0,0) (信号を作る)
+  
+end 『音量つまみ』
+\end{vdm_al}
+
+\begin{rtinfo}
+[『音量つまみ』]{vdm.tc}[『音量つまみ』]
+\end{rtinfo}
+
+\begin{vdm_al}
+class 『住所入力』
+  is subclass of EnvironmentTask
+
+operations
+  public 『住所入力』: EventDispatcher ==> 『住所入力』
+  『住所入力』 (ed) == AbstractTask("住所入力",ed);
+
+  イベントを処理する: Event ==> ()
+  イベントを処理する (aEvent) == duration (0) 入力イベントを追加する(aEvent.イベントを得る())
+  post forall pr in set dom 入力履歴写像 &
+         exists1 ps in set dom 出力履歴写像 &
+           pr = ps => 出力履歴写像(ps) - 入力履歴写像(pr) <= 2000;
+
+  信号を作る: () ==> ()
+  信号を作る () ==
+    duration (0)
+      ( dcl id : ID := IDを得る();
+	updateTime(1000);
+        出力イベントを追加する(id);
+        割込を起こさせる("キー押し下げ処理", id) );
+
+  public Run: () ==> ()
+  Run () == start(self)
+
+thread
+  periodic (1000,0,0,0) (信号を作る)
+  
+end 『住所入力』
+\end{vdm_al}
+
+\begin{rtinfo}
+[『住所入力』]{vdm.tc}[『住所入力』]
+\end{rtinfo}
+
+\subsubsection{『交通情報送信』}
+\begin{vdm_al}
+class 『交通情報送信』
+  is subclass of EnvironmentTask
+
+operations
+  public 『交通情報送信』: EventDispatcher ==> 『交通情報送信』
+  『交通情報送信』 (ed) == AbstractTask("交通情報送信", ed);
+
+  イベントを処理する: Event ==> ()
+  イベントを処理する (pev) == duration (0) 入力イベントを追加する(pev.イベントを得る())
+  post forall pr in set dom 入力履歴写像 &
+         exists1 ps in set dom 出力履歴写像 &
+           pr = ps => 出力履歴写像(ps) - 入力履歴写像(pr) <= 100000;
+
+  信号を作る: () ==> ()
+  信号を作る () ==
+    duration (0)
+      ( dcl id : ID := IDを得る();
+	updateTime(1000);
+	出力イベントを追加する(id);
+        割込を起こさせる("交通情報を処理する", id) );
+
+  public Run: () ==> ()
+  Run () == start(self)
+
+thread
+  periodic (1000,0,0,0) (信号を作る)
+
+end 『交通情報送信』
+\end{vdm_al}
+
+\begin{rtinfo}
+[『交通情報送信』]{vdm.tc}[『交通情報送信』]
+\end{rtinfo}

@@ -1,0 +1,29 @@
+class JavaUtilEmptyEnumerator is subclass of JavaUtilEnumeration, JavaLangObject
+--values 
+--  CLASS : JavaLangClass = new  JavaLangClass("JavaUtilEmptyEnumerator" , <CLASS> , false  )
+operations 
+--public  getClass : () ==> JavaLangClass
+--getClass() == 
+--return  CLASS;
+
+public  nextElement : () ==> JavaLangObject
+nextElement() == 
+( exit  new  JavaUtilNoSuchElementException(new  JavaLangString("JavaUtilHashtable JavaUtilEnumerator"))
+) ;
+
+public JavaUtilEmptyEnumerator : () ==> JavaUtilEmptyEnumerator
+JavaUtilEmptyEnumerator() == 
+( skip 
+) ;
+
+public  hasMoreElements : () ==> bool 
+hasMoreElements() == 
+( return  false  
+) ;
+
+--public  JavaUtilEmptyEnumerator : <NIL> ==> JavaUtilEmptyEnumerator
+--JavaUtilEmptyEnumerator(-) == 
+--isNil := true  ;
+
+
+end  JavaUtilEmptyEnumerator

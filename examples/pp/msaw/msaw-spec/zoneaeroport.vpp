@@ -1,0 +1,25 @@
+class ZoneAeroport is subclass of Obstacle, Cylindre, Cone
+
+   instance variables
+      rayon_au_sol: MSAWTypes`NM;
+   inv rayon_au_sol < rayon and Cylindre`centre = Cone`centre 
+
+   operations
+      Intersection: SegmentDePrediction ==> bool
+      Intersection (segment_de_prediction) 
+      == def points_de_vecteur = segment_de_prediction.GetPoints () in
+            return (exists mk_(xy, z) in set points_de_vecteur &
+                       DansCylindre (xy, z, Cylindre`centre, rayon,
+                                     altitude_maximale) and
+		     not DansCone (xy, z, Cone`centre, rayon_au_sol, angle));
+
+      Set: MSAWTypes`Coordonnees * MSAWTypes`NM * MSAWTypes`Pieds * MSAWTypes`NM ==> ()
+      Set (centre', rayon', altitude_maximale', rayon_au_sol') ==
+      (  Cylindre`centre := centre';
+         Cone`centre := centre';
+         rayon := rayon';
+         altitude_maximale := altitude_maximale';
+         rayon_au_sol := rayon_au_sol'
+      )
+
+end ZoneAeroport

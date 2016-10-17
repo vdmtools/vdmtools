@@ -1,0 +1,17 @@
+class UnaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let t = true,
+      - = conc cases false:
+               true -> t,
+               others -> {9,8}
+           end 
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

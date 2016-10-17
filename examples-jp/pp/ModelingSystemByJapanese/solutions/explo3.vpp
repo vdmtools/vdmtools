@@ -1,0 +1,61 @@
+-- Explosives store controller 
+-- For Chapter 6 (Sets)
+-- Third version: for exercise 6.14
+
+types
+
+  Object :: class    : Class
+            position : Point
+            xlength  : nat
+            ylength  : nat; 
+
+  Class = <Expl> | <Fuse>;
+
+  Point :: x : nat
+           y : nat;
+
+  Store :: contents : set of Object
+           xbound   : nat
+           ybound   : nat
+  inv mk_Store(contents, xbound, ybound) ==
+
+  -- 1. objects fit within bounds of the store
+    (forall o in set contents & InBounds(o,xbound,ybound))
+    and 
+
+  -- 2. no two distinct objects overlap
+     not exists o1, o2 in set contents & o1 <> o2 and Overlap(o1,o2)
+
+
+functions
+  -- Auxiliary function for invariant
+
+  InBounds : Object * nat * nat -> bool
+  InBounds(o,xbound,ybound) == 
+    o.position.x + o.xlength <= xbound and 
+    o.position.y + o.ylength <= ybound;
+
+  SafeSpace: Object -> set of Point
+  SafeSpace(o) ==
+    {mk_Point(x,y) 
+    | x in set {Bottom(o.position.x),...,o.position.x + 10},
+      y in set {Bottom(o.position.y),...,o.position.y + 10}};
+
+  Bottom: nat -> nat
+  Bottom(n) ==
+    if n < 10
+    then 0
+    else n -10;
+
+  Overlap: Object * Object -> bool
+  Overlap(o1,o2) ==
+    Points(o1) inter Points(o2) <> {} or
+    (o1.class <> o2.class and
+     SafeSpace(o1) inter Points(o2) <> {}); 
+
+  Points: Object -> set of Point
+  Points(mk_Object(-,pos,xlen,ylen)) == 
+    {mk_Point(x,y) | x in set {pos.x ,..., pos.x + xlen},
+                     y in set {pos.y ,..., pos.y + ylen}};
+
+

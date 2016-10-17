@@ -1,0 +1,229 @@
+
+\begin{vdm_al}
+types
+
+  String = seq of char;
+  OBJ_Ref = nat;
+  ThreadId = nat;
+\end{vdm_al}
+
+A trace is an ordered sequence of trace events.
+
+\begin{vdm_al}
+Trace = seq of TraceEvent;
+\end{vdm_al}
+
+There are many different kinds of trace events:
+
+\begin{vdm_al}
+TraceEvent = ThreadSwapIn | ThreadSwapOut | DelayedThreadSwapIn |
+             OpRequest | OpActivate | OpCompleted | ThreadCreate |
+             ThreadKill |  MessageRequest | MessageActivate |
+             MessageCompleted | ReplyRequest | CPUdecl | BUSdecl |
+             DeployObj; 
+\end{vdm_al}
+
+A thread swap in event consists of the id of the thread being swapped
+in, the object reference owning the thread, the class name in
+which the thread is defined, the cpu where it is running, the 
+timing overhead of swapping in the thread and the time on that \texttt{CPU}.
+
+\begin{vdm_al}
+  ThreadSwapIn :: id       : ThreadId
+                  objref   : [OBJ_Ref]
+                  clnm     : String
+                  cpunm    : nat 
+                  overhead : nat
+                  time     : nat;
+\end{vdm_al}
+
+A delayed thread swap in has an extra field representing the delay.
+
+\begin{vdm_al}
+DelayedThreadSwapIn :: id       : ThreadId
+                       objref   : [OBJ_Ref]
+                       clnm     : String
+                       delay    : real
+                       cpunm    : nat
+                       overhead : nat
+                       time     : nat;
+\end{vdm_al}
+
+A thread swap out contains the same information as a thread swap in.
+
+\begin{vdm_al}
+ThreadSwapOut :: id       : ThreadId
+                 objref   : [OBJ_Ref]
+                 clnm     : String
+                 cpunm    : nat
+                 overhead : nat
+                 time     : nat;
+\end{vdm_al}
+
+An operation request contains the thread in which the request was made,
+the name of the operation, a reference
+to the object on which the request occurred, the name of the class
+which this object is an instance of, the cpu where it is running, the 
+arguments to the operation (if a special user option is set for storing
+this detailed level of information), whether it is an asynchonous operation
+and finally the time on that \texttt{CPU}.
+
+\begin{vdm_al}
+OpRequest :: id     : ThreadId
+             opname : String
+             objref : OBJ_Ref
+             clnm   : String
+             cpunm  : nat
+             args   : [seq of VAL]
+             async  : bool
+             time   : nat;
+\end{vdm_al}
+
+Operation activations and completions contain part of the information as
+operation requests (the result of the operation is only present if the 
+user have explicitly asked to get this information logged).
+
+\begin{vdm_al}
+OpActivate :: id     : ThreadId
+              opname : String
+              objref : OBJ_Ref
+              clnm   : String
+              cpunm  : nat
+              async  : bool
+              time   : nat;
+
+OpCompleted :: id     : ThreadId
+               opname : String
+               objref : OBJ_Ref
+               clnm   : String
+               cpunm  : nat
+               res    : [VAL]
+               async  : bool
+               time   : nat;
+\end{vdm_al}
+
+Trace events are also present whenever threads are being created and killed
+after completion. Note that the creating of a thread also contains information
+whether it is a periodic thread.
+
+\begin{vdm_al}
+ThreadCreate :: id     : ThreadId
+                period : bool
+                objref : [OBJ_Ref]
+                clnm   : [String] 
+                cpunm  : nat
+                time   : nat;
+
+ThreadKill :: id    : ThreadId
+              cpunm : nat
+              time  : nat;
+\end{vdm_al}
+
+A number of events appear whenever messages are sent between different CPUs.
+It follow the same request, activate and complete scheme as for the
+operations. However, for synchonyous operations there is a special reply
+request message event that is used to direct the result of executing 
+an operation on a different \texttt{CPU} to the right \texttt{CPU} and the
+right thread there as well. Otherwise the fields used below should be rather
+self-explanatory.
+
+\begin{vdm_al}
+MessageRequest ::
+  busid   : nat
+  fromcpu : nat
+  tocpu   : nat
+  msgid   : nat
+  callthr : ThreadId
+  opname  : String
+  objref  : [OBJ_Ref]
+  size    : nat
+  time    : nat;
+
+ReplyRequest ::
+  busid     : nat
+  fromcpu   : nat
+  tocpu     : nat
+  msgid     : nat
+  origmsgid : nat
+  callthr   : ThreadId
+  calleethr : ThreadId
+  size      : nat
+  time      : nat;
+
+MessageActivate ::
+  msgid : nat
+  time  : nat;
+
+MessageCompleted ::
+  msgid : nat
+  time  : nat;
+\end{vdm_al}
+
+Declaration of \texttt{CPU}'s and \texttt{BUS}'es are also logged 
+in the tracefile in order to be able to draw the overall system architecture.
+
+\begin{vdm_al}
+CPUdecl ::
+  id   : nat
+  name : String
+  expl : bool;
+  
+BUSdecl ::
+  id   : nat
+  topo : set of nat
+  name : String;
+
+DeployObj ::
+  objref : OBJ_Ref
+  cpunm  : nat
+  time   : nat
+\end{vdm_al}
+ 
+This concludes the definition of types needed for representation of
+trace files.
+
+To illustrate timed assertions, we show a couple of examples. A simple
+assertion could be that any thread which is delayed, has delay within
+some desired maximum. This is expressed by the function
+\texttt{MaximumDelay}.
+
+\begin{vdm_al}
+functions
+
+MaximumDelay: real * Trace -> bool
+MaximumDelay(maxDelay, trace) ==
+  forall ti in set elems trace &
+     is_DelayedThreadSwapIn(ti) => ti.delay <= maxDelay;
+\end{vdm_al}
+
+A slightly more complicated assertion relates to the time taken for an
+operation to be execute. We can specify that whenever a particular
+operation is activated, it completes execution within some specified
+period using the function \texttt{MaximumOpExecutionTime}.
+
+\begin{vdm_al}
+MaximumOpExecutionTime: String * real * Trace -> bool
+MaximumOpExecutionTime(opname, maxExecTime, trace) ==
+  forall i in set inds trace &
+     is_OpActivate(trace(i)) =>
+        trace(i).opname = opname =>
+           let opcompleteIndex = NextOpComplete(opname, i,
+                                                trace) in
+             trace(opcompleteIndex).time - trace(i).time <= maxExecTime;
+\end{vdm_al}
+
+\texttt{MaximumOpExecutionTime} uses the auxiliary function
+\texttt{NextOpComplete}. This finds the index of the operation
+completion corresponding to the operation activation that occurred at
+index \texttt{i}.
+
+\begin{vdm_al}
+NextOpComplete: String * nat * Trace -> nat
+NextOpComplete(opname, i, trace) ==
+  hd [ j | j in set inds trace
+         & j > i and
+           is_OpCompleted(trace(j)) and 
+           trace(j).opname = opname]
+pre exists j in set inds trace & is_OpCompleted(trace(j)) and
+                                 j > i and trace(j).opname = opname
+\end{vdm_al}

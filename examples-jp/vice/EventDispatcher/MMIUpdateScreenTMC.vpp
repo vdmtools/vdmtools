@@ -1,0 +1,22 @@
+\begin{vdm_al}
+class 『人機械界面交通情報画面更新』 is subclass of 『基本タスク』
+
+operations
+  public 『人機械界面交通情報画面更新』: 『事象処理者』 ==> 『人機械界面交通情報画面更新』
+  『人機械界面交通情報画面更新』 (a事象処理者) == 『基本タスク』("交通情報画面を更新する",a事象処理者);
+
+  -- we do not specify *what* the operation does
+  -- we only specify its execution time
+  private
+  画面を更新する: () ==> ()
+  画面を更新する () == duration (500) skip;
+
+  private
+  事象を処理する: 『事象』 ==> ()
+  事象を処理する (a事象) ==
+    ( 画面を更新する();
+    -- scenario finished. signal response back to the environment
+      割込を起こす("交通情報を送信する", a事象.事象IDを得る()) )
+
+end 『人機械界面交通情報画面更新』
+\end{vdm_al}

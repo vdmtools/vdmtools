@@ -1,0 +1,105 @@
+class VersionPanel is subclass of JPanel
+operations 
+public  update : [Graphics] ==> <VOID>
+update(g) == 
+( let - = paint(g)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  VersionPanel : [Font] * int  * int  ==> VersionPanel
+VersionPanel(versionFont, panelWidth, panelHeight) == 
+( VersionPanel`versionFont := versionFont;
+  VersionPanel`panelWidth := panelWidth;
+  VersionPanel`panelHeight := panelHeight;
+  ( dcl   versionFM : [FontMetrics] := getFontMetrics(versionFont);
+    let - = setBackground(Color`black)
+    in 
+      skip ;
+    textArea := new  JTextArea(new  String([  ]) , 3 , 30);
+    let - = textArea.setEditable(false  )
+    in 
+      skip ;
+    let - = textArea.setBackground(Color`black)
+    in 
+      skip ;
+    let - = textArea.setForeground(Color`white)
+    in 
+      skip ;
+    let - = textArea.setFont(versionFont)
+    in 
+      skip ;
+    ( dcl   scrollText : [JScrollPane] := new  JScrollPane(textArea);
+      let - = scrollText.setVerticalScrollBarPolicy(JScrollPane`VERTICAL_SCROLLBAR_ALWAYS)
+      in 
+        skip ;
+      let - = setPreferredSize(new  Dimension(panelWidth , panelHeight))
+      in 
+        skip ;
+      let - = add(scrollText)
+      in 
+        skip 
+    ) 
+  ) 
+) ;
+
+public  paintComponent : [Graphics] ==> <VOID>
+paintComponent(g) == 
+( let - = g.setColor(SystemColor`control)
+  in 
+    skip ;
+  ( dcl   i : int  := 0;
+    while  i < BORDER_WIDTH do  
+    ( let - = g.drawLine(panelWidth-i-1 , i , panelWidth-i-1 , panelHeight-i-1)
+      in 
+        skip ;
+      let - = g.drawLine(i , panelHeight-i-1 , panelWidth-i-1 , panelHeight-i-1)
+      in 
+        skip ;
+      let - = g.drawLine(i , i , i , panelHeight-i-1)
+      in 
+        skip ;
+      i := i+1
+    ) 
+  ) ;
+  let - = g.drawLine(1 , 0 , 1 , 0)
+  in 
+    skip ;
+  let - = g.drawLine(panelWidth-2 , 0 , panelWidth-2 , 0)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  setVersionText : map  int  to  [String] ==> <VOID>
+setVersionText(dbVersionText) == 
+( ( dcl   i : int  := 0;
+    while  i < dbVersionText.length do  
+    ( if  (i+1) = dbVersionText.length
+      then  
+        ( let - = textArea.append(dbVersionText(i))
+          in 
+            skip 
+        ) 
+      else  
+        ( let - = textArea.append(dbVersionText(i)+new  String("
+"))
+          in 
+            skip 
+        ) ;
+      i := i+1
+    ) 
+  ) ;
+  return  <VOID>
+) ;
+
+instance variables 
+  private  static BORDER_WIDTH : int  := 2;
+  private  textArea : [JTextArea];
+  private  static borderWidth : int  := 2;
+  versionFont : [Font];
+  panelWidth : int ;
+  panelHeight : int 
+  
+end  VersionPanel

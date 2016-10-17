@@ -1,0 +1,46 @@
+dlmodule B  
+  exports
+    functions
+      ExtCos : real -> real;
+      ExtSin : real -> real
+
+    uselib 
+      "libmath.so"
+end B
+
+module APPROX
+
+  exports 
+    all
+
+  definitions
+    values
+
+      ExtCos = { [0.5] |-> 0.877, [3.14] |-> -1.0 };
+      ExtSin = { [0.5] |-> 0.479, [3.14] |-> 0.0}
+
+end APPROX  
+
+module A
+  imports
+    from 
+      APPROX
+        values
+          ExtCos renamed CosValues,
+ 
+
+    from B
+      functions
+        ExtCos : real -> real renamed ExtCos;
+        ExtSin : real -> real
+   
+     definitions
+       functions
+
+         Test : () -> seq of real
+         Test () ==  [ExtCos(0.5), B`ExtSin(0.5), ExtCos(3.14)]
+
+end A
+    
+   
+

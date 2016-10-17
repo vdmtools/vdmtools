@@ -1,0 +1,20 @@
+-- Instantiating a polymorphic function with a class name.
+
+class A
+
+operations 
+
+public a4 : () ==> nat
+a4() == 
+  return g[B](new B());
+
+
+functions 
+
+public g[@A] : @A -> nat
+g(-) == is not yet specified;
+
+end A
+class B
+
+end B

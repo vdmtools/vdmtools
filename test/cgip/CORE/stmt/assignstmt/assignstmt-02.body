@@ -1,0 +1,6 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> map char to nat  
+Test () ==
+        (dcl a:map char to nat := {'a' |-> 4};
+         a('b') := 5;
+         return a)

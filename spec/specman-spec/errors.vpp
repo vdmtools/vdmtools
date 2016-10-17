@@ -1,0 +1,278 @@
+\begin{vdm_al}
+class Errors is subclass of ToolColleague
+
+instance variables
+protected  msgs      : seq of Message := [];
+protected  msgPtr    : int := 0;
+  msgStatus : int * int := mk_(0,0); --  #Errors * #Warnings
+  state     : ErrorState;
+
+
+--  The "state" instance variable contains the current state of the
+--  errors class.
+--  The current state is a subclass of ErrorState and defines the state 
+--  specific methods. Currently valid states are:
+
+--    ScriptErr
+--    PromptErr
+--    BatchErr
+--    NonPrintErr
+ 
+--  Change of state can either be on external demand or be under responsibility of
+--  the current state.
+
+
+\end{vdm_al}
+The $state$ instance variable contains the current state of the
+errors class.
+The current state is a subclass of ErrorState and defines the state 
+specific methods. Currently valid states are:
+
+\begin{itemize}
+\item ScriptErr
+\item  PromptErr
+\item  BatchErr
+\item  NonPrintErr
+\end{itemize}
+Change of state can either be on external demand or be under responsibility of
+the current state.
+
+When a user command is issued, $ClearAll$ should be called resetting the old
+sequence of errors. A user command is one or more tool commands. The tools
+can use the commands $Reset$, $AddMsg$  and $Done$. When the user command
+terminates, $AllDone$ should be called. It may show up that $Reset$
+is unnecessary. 
+
+\begin{vdm_al}
+
+operations
+
+--  When a user command is issued, ClearAll should be called resetting the old
+--  sequence of errors. A user command is one or more tool commands. The tools
+--  can use the commands Reset, AddMsg  and Done. When the user command
+--  terminates, AllDone should be called. It may show up that Resete
+--  is unnecessary. 
+
+--  InitState should be called before any operations on the state as soon
+--  it is known which state to start up in.
+
+public   InitState: ErrorState ==> ()
+  InitState(instate) ==
+    state := instate;
+\end{vdm_al}
+$InitState$ should be called before any operations on the state as soon
+it is known which state to start up in.
+
+\begin{vdm_al}
+
+--  ChangeState changes possibly the state depending on the current state and
+--  should be called when the "script" command is issued.
+
+public   ChangeState: () ==> ()
+  ChangeState() ==
+    state.ChangeState(self);
+\end{vdm_al}
+$ChangeState$ changes possibly the state depending on the current state and
+should be called when the "script" command is issued.
+
+\begin{vdm_al}
+
+--  SetNextState should only be called by the subclasses of ErrorState
+
+public   SetNextState: ErrorState ==> ()
+  SetNextState(newstate) ==
+    state := newstate;
+\end{vdm_al}
+$SetNextState$ should only be called by the subclasses of ErrorState
+
+\begin{vdm_al}
+
+--  ShowMsg prints out the current message, i.e. msgs(msgPtr).
+
+public   ShowMsg: () ==> ()
+  ShowMsg() ==
+    is subclass responsibility;    
+\end{vdm_al}
+$ShowMsg$ prints out the current message, i.e. $msgs(msgPtr)$.
+
+\begin{vdm_al}
+
+--  SetFilePosition indicates the position of error message msg
+
+
+public   SetFilePosition: ErrMsg | WarnMsg ==> ()
+  SetFilePosition(msg) ==
+    is subclass responsibility;    
+\end{vdm_al}
+$SetFilePosition$ indicates the position of error message msg
+
+\begin{vdm_al}
+
+public   ClearAll: () ==> ()
+  ClearAll() ==
+  ( msgs := [];
+    msgPtr := 0;
+    msgStatus := mk_(0,0);
+    self.EventClearAll()
+  );
+
+public   Reset:() ==> ()
+  Reset() ==
+    skip;
+
+public   AddMsg : Message ==> ()
+  AddMsg(ms) ==
+  def mk_(noErr,noWrn) = msgStatus in
+  ( msgs := msgs ^ [ms];
+    msgPtr := msgPtr+1;
+    if is_ErrMsg(ms) then
+      msgStatus := mk_(noErr+1,noWrn)
+    elseif is_WarnMsg(ms) then
+      msgStatus := mk_(noErr,noWrn+1);
+    state.AddMsg(self);
+    self.EventAddMsg(msgPtr,ms)
+  );
+
+public   AllDone: () ==> ()
+  AllDone() ==
+  ( if msgPtr > 0
+    then
+      msgPtr := 1;
+    state.AllDone(self);
+    self.EventAllDone()
+  );
+  
+public   Done: () ==> ()
+  Done() ==
+  def  mk_(noErr,noWrn) = msgStatus in
+  ( self.MakeStatus(noErr,noWrn);
+    msgStatus := mk_(0,0)
+  );
+
+--  MakeStatus creates the message that appears in the errors window after
+--  each file/module, i.e. counting errors and warnings (or ok).
+
+-- It should be decided whether the status message should be inserted or not
+-- in the sequence of messages "msgs". This could also be subclass responsibility.
+ 
+public   MakeStatus: int * int ==> ()
+  MakeStatus(noErr, noWrn )  ==
+    is subclass responsibility;    
+\end{vdm_al}
+$MakeStatus$ creates the message that appears in the errors window
+after each file/module, i.e. counting errors and warnings (or ok).
+
+It should be decided whether the status message should be inserted or
+not in the sequence of messages "msgs". This could also be subclass
+responsibility.
+
+\begin{vdm_al}
+
+public   SkipInfoMsg: <FORW> | <BACKW> ==> ()
+  SkipInfoMsg(dir) ==
+    let step = if dir = <FORW> then 1 else -1,
+        lenMsgs = len msgs in
+    while def ms = msgs(msgPtr) in is_InfoMsg(ms) do
+      def nextMsgPtr = msgPtr + step in
+      if nextMsgPtr <= lenMsgs or nextMsgPtr >= 1
+      then
+        msgPtr := nextMsgPtr;
+
+public   Next: () ==> ()
+  Next() ==
+    if msgPtr < len msgs then
+    ( msgPtr := msgPtr + 1;
+      self.SkipInfoMsg(<FORW>);
+      self.ShowMsg();
+      self.EventNext()
+    )
+    else
+      skip;
+
+public   Prev: () ==> ()
+  Prev() ==
+    if msgPtr > 1 then
+    ( msgPtr := msgPtr - 1;
+      self.SkipInfoMsg(<BACKW>);  
+      self.ShowMsg();
+      self.EventPrev()
+    )
+    else 
+      skip;
+
+public   First: () ==> ()
+  First() ==
+  if len msgs > 0 
+  then
+  ( msgPtr := 1;
+    self.SkipInfoMsg(<FORW>);
+    self.ShowMsg();
+    self.EventFirst()
+  );
+
+public   Last:() ==> ()
+  Last() ==
+  if len msgs > 0
+  then
+  ( msgPtr := len msgs;
+    self.SkipInfoMsg(<BACKW>);
+    self.ShowMsg();
+    self.EventLast()
+  );
+\end{vdm_al}
+The following three methods allows direct access to the errors held by
+the $Errors$ class.
+\begin{vdm_al}
+
+public   GetStatus : () ==> int * int
+  GetStatus() ==
+    return msgStatus;
+
+public   GetErrors : () ==> seq of Message 
+  GetErrors() ==
+    return [ msgs(i) | i in set inds msgs & is_ErrMsg(msgs(i)) ];
+
+public   GetWarnings : () ==> seq of Message 
+  GetWarnings() ==
+    return [ msgs(i) | i in set inds msgs & is_WarnMsg(msgs(i)) ];
+
+\end{vdm_al}    
+
+The following methods should notify the interface if necessary and 
+should be implemented in the subclass.
+
+\begin{vdm_al}
+
+-- The following methods should notify the interface if necessary and 
+-- should be implemented in the subclass.
+
+public   EventClearAll:() ==> ()
+  EventClearAll() ==
+    skip;
+
+public   EventAllDone: () ==> ()
+  EventAllDone() ==
+    skip;
+
+public   EventAddMsg: int * Message ==> ()
+  EventAddMsg(-,-) ==
+    skip;
+
+public   EventNext: () ==> ()
+  EventNext() ==
+    skip;
+
+public   EventPrev: () ==> ()
+  EventPrev() ==
+    skip;
+
+public   EventFirst: () ==> ()
+  EventFirst() ==
+   skip ;
+
+public   EventLast: () ==> ()
+  EventLast() ==
+    skip
+
+end Errors
+\end{vdm_al}

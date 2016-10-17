@@ -1,0 +1,10 @@
+class Configuration
+
+   values
+      public NoSuffication: real = 1/3;
+      public NoStarvation: real = 1/6;
+      -- public NumberOfForksNeededToEat: nat1 = 2;
+      public NumberOfPlaces: nat1 = 5
+
+end Configuration
+

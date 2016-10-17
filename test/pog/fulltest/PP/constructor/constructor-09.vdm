@@ -1,0 +1,12 @@
+class C
+
+instance variables
+
+ a : nat
+operations 
+
+public C(x : nat)re:C 
+  ext wr a: nat
+  post a = x
+
+end C

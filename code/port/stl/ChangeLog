@@ -1,0 +1,946 @@
+Sat Feb 8 1998  Michael Carr <mcarr@redstonecom.com>
+	stl_hash_map.h:70 : fixed typo with "typename T"
+	stl_iterator : test for (*stream) changed to stream->good()
+	for more portability.
+	stl_alloc.h : ROUND_UP changed to stl_round_up due to
+	conflicts with a macro of the same name defined in vxworks.h
+	
+Sat Feb 8 1998 Boris Fomitchev <fbp@metabyte.com>
+        separate compilation : removed completely
+
+Sat Feb 8 1998 Stephan Schaefer <schaefer@graphics.cs.uni-bonn.de>
+        stlcomp.h:508 : fixed typo # __GIVE_UP_WITH_STL(CW_18)
+
+Mon Feb 2 1998 eyal.ben-david@aks.com
+	* stlcomp.h : __STL_USE_NEW_STYLE_HEADERS disabled for Watcom
+	
+Mon Feb 2 1998 kabatek@chemie.uni-halle.de 
+	* stl_config.h : included isynonym.hpp for VAC++
+	  VAC++ separate compilation : removed
+
+Thu Jan 08 1998  Simon-Pierre Cadieux <cadieux@formatek.com>
+
+        * stl_alloc.h : 657 : added cast to (size_t) for __MAX_BYTES
+
+Thu Jan 08 1998   "Bjorn Fahller" <bjorn@algonet.se>
+
+	* auto_ptr.h : changed to be FDIS-conformant
+	
+Tue Jan 06 1998  Alexander Samoilov <spike@gambit.msk.su>
+
+        * stl_algobase.h : #include <stdlib.h> for SUNPro
+	
+Fri Dec 26 1997  Boris Fomitchev  <fbp@metabyte.com>
+	
+        * SGI STL version 3.0 changes merged in. 
+
+        * Fixed minor problems with VC++ 5.0/rope, OS390 config
+
+	* additional config switch introduced : __STL_BROKEN_USING_DIRECTIVE
+
+	* version 3.0 released
+
+Mon Oct 27 19:38:28 1997  Boris Fomitchev  <fbp@metabyte.com>
+	
+	* version 2.033 released
+	
+	* pair.h : fixed (back) gcc-2.7.2 constructor problem.
+
+Mon Oct 27 19:38:28 1997  Catherine Lung <clung@ca.ibm.com>
+	
+        * IBM OS/390 C/C++ 1.x - 2.x config provided.
+	
+Mon Oct 27 19:38:28 1997  Dave Abrahams <abrahams@motu.com>
+	
+        * CW configuretion updated. CW 2.x config provided.
+
+Fri Oct 10 12:38:28 1997  eyal.ben-david@aks.com
+
+	* Version 2.032 released.
+
+	* stlcomp.h __STL_USE_EXCEPTIONS made sensitive
+	  to Watcom C++ options
+
+Thu Oct  9 15:20:58 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Provided __STL_USE_NAMESPACES, __STL_BEGIN_NAMESPACE,
+	__STL_END_NAMESPACE, __STD macros for future SGI compatibility.
+
+Wed Oct  8 19:59:41 1997  Petr Ovchenkov  <ptr@formoza.ru>
+
+	* defalloc.h : deallocate() made safe for null pointer.
+
+Mon Oct  6 20:16:39 1997  Mark Elbrecht <snowball3@geocities.com>
+
+	* Some fixes for 16-bit compilation. Some Borland-specific fixes.
+
+Fri Oct  3 16:19:30 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* algobase.h - more conditional inlines (INLINE_LOOP) for Borland.
+
+Fri Oct  3 11:25:55 1997  Doni_Grande@ethyl.com (Doni Grande)
+
+	* PowerSoft C++ 2.0 README added.
+
+Fri Oct  3 10:39:55 1997  Nicolas BULTEAU <NBulteau@jouve.fr>
+
+	* stlcomp.h (for VC++) : warnings on truncated debug info
+	  suppressed
+
+Thu Oct  2 13:39:04 1997  Nico Josuttis <nico@bredex.de>
+
+	* auto_ptr copy constructor bug fixed.
+
+Mon Sep 29 15:09:34 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* 2.031 version released.
+	
+	* operators ->() for old-style reverse iterators guarded
+	  with __STL_ARROW_OPERATOR.
+
+Mon Sep 29 14:22:36 1997  Joe Buck  <jbuck@synopsys.com>
+
+	* function.h : fix for aCC. aCC configuration updated.
+
+Thu Sep 25 14:45:51 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* new-style headers - more robust handling. Put appropriate
+	test back into "configure". 
+
+	* __hashtble_const_iterator::operator++ - fixed decl for partial
+	spec.
+
+	* Member template code fixed for __STL_DEBUG case.
+
+Thu Sep 25 14:31:45 1997  Joe Buck  <jbuck@synopsys.com>
+
+	* deque(size_type n, const T& value) : explicit removed.
+	* Config fixes to aCC/SunPro 4.1.
+
+Tue Sep 23 18:15:17 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* allocator<T> : rebind/operator=() added
+
+	* HP aCC recognition section added.
+
+	* Partial specialization code fixed for modern HP aCC versions.
+
+Mon Sep 22 12:30:59 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* __STL_CLASS_PARTIAL_SPECIALIZATION : certain usages disabled for
+	 gcc snapshots to work around gcc bugs.
+
+	* stlcomp.h : configurations refined. No more config/stlconf.h.*
+
+Mon Sep 22 12:29:44 1997  Steven Youngs <steve@ncgraphics.co.uk>
+
+	* vector.h (allocate_and_copy) : worked around VC++ 5.0 bug
+
+Mon Sep 22 12:14:37 1997  Lo Russo Graziano <Graziano.LoRusso@CSELT.IT>
+
+	* stldebug.h (__in_range_aux) : worked around VC++ 5.0 bug
+
+Fri Sep 19 19:33:29 1997  Steven Youngs <steve@ncgraphics.co.uk>
+
+	* alloc.h: For VC++ : provided specialised debug form of malloc
+	to avoid "false" memory leaks when run with debug
+	CRT libraries.
+
+Thu Sep 18 12:05:19 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Additional switch __STL_NONTEMPL_BASE_MATCH_BUG added to 
+	  handle iterator hierarchy. "configure"/stlcomp.h changed
+	  accordingly.
+	
+	* __vector_iterator : added Ptr template param for consistency.
+
+Thu Sep 18 12:03:47 1997  Mark Elbrecht <snowball3@geocities.com>
+
+	* destroy() : worked around BC++ 4.52 bug
+	
+Thu Sep 18 12:00:45 1997  Dave Abrahams <abrahams@motu.com>
+
+	* __stl_assert : allow using default assert() mechanism
+
+Thu Sep 18 11:49:39 1997   Steven Youngs <steve@ncgraphics.co.uk>
+
+	* __stl_assert, __stl_verbose_assert : MFC-specific output
+	provided.
+	* ->() iterator operators allowed for VC++ 5.0
+	* vector.h : Provide and operator->() in __vector_iterator.
+	* algobase.h : destroy/construct : suppressed VC++ warnings, 
+	  workaround for MFC DEBUG_NEW provided.
+	
+Wed Sep 17 12:21:05 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* stl_config.h (__USING_NAMESPACE) : warning suppressed.
+
+	* type_traits<T*> : fixed typo.
+
+	* iterator.h - reverse_bidirectional_iterator::operator->() :
+	  added a cast.
+
+	* "configure" : test for broken typedefs refined.
+
+	* algobase.h : fixed typo for Borland <stdlib> inclusion.
+
+	* config/stlcomp.h.bc : fixed __STL_STATIC_TEMPLATE_DATA for
+	  Borland
+
+	* iterator.h - iterator hierarchy guarded with #if !defined
+	(__STL_BASE_MATCH_BUG) - caused ambiguity for BC 4.52.
+
+Tue Sep 16 20:20:45 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Version 2.03 released.
+
+Mon Sep 15 12:41:13 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Borland C++ 4.52 config provided.
+
+	* relative path is being used for explicit inclusion
+
+	* reverse_iterator fixed to use Pointer param for ->().
+
+Wed Sep 10 15:31:47 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* "typedef void ..." in iterator.h guarded with
+	__STL_CLASS_PARTIAL_SPECIALIZATION
+
+	* SGI 2.03 release changes.
+
+Mon Sep  1 12:44:58 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* introduced inheritance between iterator tags (CD2).
+	  Removed unneeded code.
+
+	* iterator.h - fixed <iostream> inclusion for CW.
+	  <ph_iterator.h> introduced for Plum Hall standard lib
+	  compatibility.
+
+Thu Aug 28 19:20:38 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Default __alloc bug with CC 4.0.1 fixed.
+
+Tue Aug 26 17:26:17 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Final HP aCC fixes (except rope).
+	 
+
+Mon Aug 25 14:09:39 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* SunPro 4.01 fixes for __median().
+
+	* Some portability fixes for Symantec C++, config
+	  updated.
+
+Fri Aug 22 12:00:40 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* mmemory.h guarded with __MWERKS__
+
+	* Final fixes for Metrowerks CW (abrahams@motu.com) 
+
+Thu Aug 21 12:53:39 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* __STL_NEW_HEADER_NAMES reworked - made internal
+
+Wed Aug 20 19:12:11 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Metrowerks CW portability fixes (abrahams@motu.com)
+	
+	* <utility> fixed to be compatible with MSVC++  
+
+	* rope bugfixes from SGI beta 
+
+Tue Aug 19 11:15:42 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* stldebug.h : __stl_error_report introduced for debug
+	  conveniency
+
+	* HP aCC "typename" fixes : alloc.h, sets/maps.
+
+	* rope.h, ropeimpl.h : guarded wchar_t , added specializations
+	  for __eos(char*/wchar_t*)
+
+	* deque.h : fixed EH bug in fill_initialize()
+
+	* tempbuf.h : added cast to free() param for SunPro CC 4.0.1 
+
+	* new-style headers fixed, added <slist> & <rope>
+
+	* stl_lock.h : typedefs put into std namespace
+
+Mon Aug 18 14:31:25 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* rope.h, ropeimpl.h : SGI 2.02 changes propagated.
+
+	* ropeimpl.h : fixed xlC/VAC++ problems with __ROPE_DEPTH.
+
+	* stl_config.h : __STRICT_ANSI__ now turns off __STL_LONG_LONG
+	  ( Johann Petrak <johann@ai.univie.ac.at> )
+
+	* algobase.h: added const versions for __STL_TRIVIAL_DESTRUCTOR_BUG
+          (Joost Kraaijeveld <100023.3267@CompuServe.COM>)
+	
+	* deque.h : operators == , < fixed to use public interface.
+
+	* xfunction.h : removed const mem_fun adaptors (in function.h
+	  already).
+
+	* function.h : SGI 2.02 changes propagated.
+
+Fri Aug  1 15:30:19 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* "configure" : added tests on trivial constructor/destructor
+	 bugs.
+
+	* VAC++ configuration enhanced ( WIN32THREADS),
+ 	  warnings on trivial destructors (<candyman@netcom.com>).
+
+	* Final (?) AIX fixes for separate compilation
+	(rope, Eugene Lazutkin <Eugene@carnac-graphics.com> )
+
+Wed Jul 30 19:10:24 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* fixed *.cpp files
+
+Tue Jul 29 11:04:52 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* function.h : fixed typedefs for HP aCC.
+
+	* configure : fixed test for __STL_BASE_TYPEDEF_BUG
+
+	* Solaris threads support added in.
+	
+Mon Jul 28 14:20:30 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* rope, slist - fixes for xlC. xlC configuration updated.
+	  Testsuite ported to xlC
+	  ( Eugene Lazutkin <Eugene@carnac-graphics.com>)
+
+	* Watcom 10.x confuguration added (
+	  Chris McKillop - cdmckill@novice.uwaterloo.ca)
+
+	* Symantec 7.5 configuration added (Evan Chu <evanc@his.com>).
+
+Sun Jul 27 16:32:16 1997  Boris P. Fomitchev  <fbp@mcst.ru>
+	
+	* swap() in debug mode changed to invalidate all iterators
+
+	* debug mode made thread-safe (to the same extent as in non-debug
+	  mode ).
+
+	* stl_lock.h introduced - standalone lock primitives made 
+	  from alloc.h ones.
+	
+
+Thu Jul 24 22:08:59 1997  Boris P. Fomitchev  <fbp@mcst.ru>
+
+	* SunPro 4.0.1 workarounds for pairs in function.h 
+	  (select1st, select2nd) added
+
+Thu Jul 24 16:17:33 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Fixed VAC++ problems in deque.h
+
+Wed Jul 23 18:36:40 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Fixed some nonportability in list.h & hashtable.h
+
+	* Separate template compilation support implemented
+
+Sun Jul 20 20:33:43 1997  Boris P. Fomitchev  <fbp@mcst.ru>
+
+	* stldebug.h : assertions fixed
+
+	* rope.h : #include <hashtable.h>changed to forward hash decl.
+
+	* rope.h : some portability fixes
+
+Sat Jul 19 22:06:23 1997  Boris P. Fomitchev  <fbp@mcst.ru>
+
+	* configure : test for separate template compilation added
+
+	* "configure" improved to detect static size array bug 
+
+	* debug_alloc enhanced to detect wild pointers, etc.
+
+Fri Jul 18 12:43:10 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Borland C++ configuration for __DEBUG fixed
+
+	* Version 2.0 released
+
+	* Final (hopefully) fixes for debug mode with exceptions.
+
+Tue Jul 15 15:25:41 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Fixed debug mode for bit_vector, swap_owners() fixed
+
+	* AIX xlC recognition improved
+
+	* Fixed deque::reallocate_map bug causing heap corruption
+
+Mon Jul 14 16:47:14 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Fixed debug mode for deque (suppressed checking within some
+	  deque methods ).
+
+	* Fixed deque::erase leaks.
+
+	* Added VAC++ portability & recognition (by "Ryszard Kabatek" 
+	 <kabatek@chemie.uni-halle.de>)
+
+Fri Jul 11 22:27:06 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* STL_WIN32THREADS : fixed initialization bug : reverted to SGI
+	 code (problem reported by John Stevenson-Hoare"
+	 <john.stevenson-hoare@ffei.co.uk> )
+
+Thu Jul 10 19:19:04 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Fixed deque::insert() EH bug (all range variants, for 
+	  case pos==start || pos == finish
+
+Mon Jul  7 12:52:06 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Fixed rb_tree::__rb_verify() bug in case of empty
+	  tree (David Abrahams <abrahams@motu.com>)
+	* Fixed hashtable::copy_from() EH bug (via making new_node()
+	  always assign next pointer ).
+
+Sun Jul  6 19:50:35 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Visual C++ 5.0 compatibility mode introduced 
+	 ( conditional reverse_iterator definition ).
+
+Fri Jul  4 17:03:32 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Fixed deque::push_front EH bug (caused leaks, reported
+	  by David Abrahams <abrahams@motu.com>).
+
+	* Bugfixes made in SGI STL v. 2.0.1 (Jun 30/97) propagated. 
+
+Mon Jun 30 10:50:44 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Added partial specializations for :
+	  swap() for containers,
+	  __type_traits< pair<T1,T2> >.
+
+	* Added  __array_copy/copy_backward/uninitialized_copy 
+	  algorithms for vector optimization in absence of partial
+	  specializations.
+
+	* Fixed __stable_partition_adaptive() bug.
+	
+	* Node creation methods of containers optimized via
+	  __type_traits.
+
+	* deque's BufSize parameter made functional for compilers with
+	  bugs.
+
+	* "configure" enhanced.
+	
+	* Ported SGI STL release June 13. See SGI documentation for
+	  new features description. Below are the most important ones:
+ 	   Exception safety (fbp: SGI approach differs from that used in
+	   previous adaptation).
+	   New container class: rope. A scalable string representation. 
+           New container class: slist. Singly linked lists. 
+           Member templates. 
+	   Reimplementation of deque, for higher performance. 
+           type_traits mechanism, which allows omission of null
+	   constructor and destructor calls.
+	   All adaptation extensions persist.
+
+Thu Jun 12 15:31:06 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Version 1.0 frozen.
+	
+	* "configure" fixed for Tandem NCC
+
+	* bvector.h : workaround for VC++-5.0 warning in operator <();
+	  added resize()/clear() methods (Jeff Greif <jmg@trivida.com>).
+
+	* set.h : workaround for VC++-5.0 bug in insert().
+	  fixed VC++5.0 configuration 
+	  (Lo Russo Graziano <Graziano.LoRusso@CSELT.IT>)
+	
+Wed Jun  4 12:08:41 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* alloc::reallocate() typo fixed
+
+	* Provided headers "queue.h" & functional.h ho avoid BC++ confusion.
+
+	* stack.h : simple_xx adaptors fixed
+
+	* Config default changed - enabling defalloc.h by default
+
+Tue Jun  3 15:58:12 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* stlcomp.h (John Maddock <John_Maddock@compuserve.com>) :
+	  auto enable thread safety and debugging features for BC++ 
+	  
+Mon Jun  2 13:30:18 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Borland C++ README provided.
+
+Sat May 31 10:05:43 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* old-style methods provided for default allocator
+	  for backwards compatibility
+
+Fri May 30 12:03:29 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Harri Heimo P Hakula <hhakula@cc.hut.fi> fixed  alloc.h
+	  typedefs/enums for ALPHA cxx v.5.5 & SGI CC 7.1
+
+	* bool.h : added inline definition of placement new for SunPro CC
+
+Tue May 27 20:59:54 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* <utility> fixed for MSVC++ 5.0. <xyyy> headers fixed.
+
+Sun May 25 11:33:45 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* VC++ README added.
+
+	* defalloc.h : allocator<T> use default alloc.
+
+	* alloc.h : fixed SGI deficiency of __STL_WIN32THREADS for
+	  multiple compilation units. 
+
+	* alloc.h : primitives and adaptors fixed so that adaptors
+ 	  can properly handle any CD2(or HP STL)-conformant custom
+	  allocators.
+
+	* reverted allocator policy for VC4.x-5.0. Fixed config bugs.
+	  Users may want to define _NOTHREADS explicitly to prevent
+	  windows.h inclusion in case _MT defined.
+	
+	
+Thu May 22 13:37:44 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* deque.h push_pack_protector refined
+
+	* added a set of <xmemory>, <xalgo>, etc. new-style headers
+	  to allow harmless VC5.0 compilation. VC4.x-5.0 default allocator
+	  made __new_alloc to prevent default "windows.h" inclusion.
+
+	* allocator<T> made CD2-conformant.
+	  Now it may be used standalone as well as container
+	  template parameter.
+
+	* alloc.h : miscellanous alloc classes member functions
+	  renamed : xxx -> __xxx to allow allocator<T> usage.
+ 	  xxx_template classes renamed : xxx to reduce unnecessary long
+	  symbols.
+	  debug_alloc adaptor used by simple_alloc when __STL_DEBUG set.
+
+Mon May 19 14:13:53 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* __default_initialize algorithms introduced.
+	  used by vector.h & algo.h
+
+	* reworked & completed debug utilities. 
+
+Wed May  7 18:01:04 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* functionx.h renamed to xfunction.h to avoid
+	  clobbering on DOS platforms.
+
+	* stldebug.h : error diagnistics refined
+
+	* algobase.h : iter_swap modified to use swap()
+
+Mon May  5 20:51:07 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Fixed config/stlcomp.h.* configuration #undefs.
+
+Sun May  4 18:04:42 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* alloc.h : fixed __STL_SGI_THREADS case for SGI C++
+ 	(Egor Elagin <elagin@selforg.usc.edu>)
+
+	* Visual C++ 5.0 final portability fixes
+	(Sean Donnelly <seando@microsoft.com>)
+
+	* Watcom C++ 11 portability fixes 
+	(Josh Levenberg <jlevenbe@math.berkeley.edu>)
+
+	* EH documentation updated. Dave Abrahams <abrahams@motu.com>
+
+Thu May  1 22:02:35 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Debugging iterators introduced for vector/list.
+	  New file stldebug.h added for debugging utilities.
+
+Wed Apr 23 15:08:08 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* algo.h : all iterators post-increments changed to
+	  pre-increment equivalent.
+
+	* EH documentation updated. Dave Abrahams <abrahams@motu.com>
+
+	* hashtable.h "Julian C. Cummings" <julianc@acl.lanl.gov>
+	  xlC portability fixes
+
+	* hash_set.h "Julian C. Cummings" <julianc@acl.lanl.gov>
+	  Fixed operator == compile bugs.
+
+	* alloc.h "Ralph Zeller" <zeller@indust.bwl.univie.ac.at>
+	  fixed declarations for gcc on AIX portability
+
+	* algo.h:143 Jeremy Grodberg <jgro@wellsfargo.com>Jeremy Grodberg
+	  <jgro@wellsfargo.com> 
+	  (n >= 0) changed to (n > 0) to suppress warnings
+
+Tue Apr 22 16:56:05 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Fixed configuration bugs in stlcomp.h.vc4x, 
+	  stlcomp.h.bc50.
+	* vector.h : fixed namespaces bug (__vector_base put
+	  into __STL_NAMESPACE ).
+	  fixed invalid use of size() after deallocating memory
+	  in vector::reserve().
+	* alloc.h : fixed __STL_USE_DEFALLOC case with namespaces.
+	
+Fri Apr 18 14:11:34 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* bit_vector iterators moved to global scope to fix
+	  SunPro CC link problems in complex cases.
+
+Wed Apr 16 12:35:15 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Final DEC CXX compatibility fixes. Now it works.
+
+	* all cleanup objects removed , reverted to catch/try
+	  blocks.
+
+	* temporary buffer handling reworked : __stl_tempbuf
+	  class introduced to allow for clean approach to
+	  temporary buffer cleanup.
+
+Mon Apr 14 16:34:13 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* SGI extensions moved back to function.h ( since they
+	  are documented to be there ).
+
+	* Cleanup objects refined, *_cleanup_anyway patterns
+	  introduced.
+
+	* alloc.h  : using typedef for oom_handler type to get
+	  DEC CXX compile it.
+
+	* hashtable.h : names of template parameters made uniform for
+	  compilers that require it (DEC CXX).
+
+Sun Apr 13 18:29:08 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Guarding #ifdefs for headers made uniform :
+	  __SGI_STL_XXX_H . All #includes guarded at the point of
+	  inclusion to reduce compilation time.
+
+	* Exception handling reworked via cleanup objects.
+	  Auxiliary header _cleanup.h with cleanup patterns
+	  introduced. No explicit try/catch blocks remain in code.
+
+	* tree.h - most of rb_tree methods moved to
+	  __rb_tree_base<Value,Alloc> to reduce code bloat.
+	  Fixed operator =() bug ( compare assigned).
+	
+Tue Apr 11 18:03:05 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Added DEC cxx portability/configure diagnostics.
+	
+
+Wed Apr  9 11:36:31 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* algo.h : fix for gcc cross-compiling 
+
+Tue Apr  8 11:38:43 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Merged exception-handling code contributed by
+	  Dave Abrahams <abrahams@motu.com>. The version
+	  guarantees no resources are leaked by the 
+	  library.
+
+Sun Apr  6 21:20:33 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Propagated regular SGI STL version update :
+ 	  bugfixes, improvements, VC++-5.0 portability.
+
+	* function.h : Provided pointer-to-member adaptors.
+
+	* functionx.h : extension file introduced.
+	  SGI function.h extensions moved there.
+	  void_function extensions added.
+          Constant versions for pointer-to-member adaptors 
+	  provided for some compilers that need it.
+	
+	* Testsuite updated : error1 test removed,
+	  added hash containers tests.
+
+	* "configure" bugs fixed. Many more feature tests introduced.
+	
+	* "STL-Compliant Collection" chapter updated:
+	  auto_ptr.h : auto_ptr implementation provided;
+	  ternary_function.h : updated to be portable. Pointer-to-member
+	  mem_fun2 extensions added.
+	
+Fri Mar 28 16:28:10 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* stlconf.h - final fixes for xlC.
+
+	* alloc.h - fixed _SGI_THREADS case for gcc.
+
+Sat Mar 22 14:50:58 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Fixed hash containers extra typedefs.
+
+Fri Mar 21 12:47:41 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Completed xlC workarounds for containers.
+	  xlC now works OK.
+
+	* alloc.h - added xlC workarounds
+
+Fri Mar 14 11:44:04 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* Added --enable-abbrevs configure option that
+	  enables use of abbreviated class names for
+	  linkers that have problems with too long symbols. 
+
+Thu Mar 13 16:36:30 1997  Boris Fomitchev  <fbp@mcst.ru>
+
+	* hash containers bugs fixed. Documentation updated.
+
+Wed Mar 12 11:42:59 1997  Boris P. Fomichev  <fbp@mcst.ru>
+
+	* Functional adaptors reworked to compile under SUN
+	  C++ 4.0.1 ( solution proposed by 
+	  "Martin Abernethy" <gma@paston.co.uk> ).
+	  Now C++ 4.0.1 compiles the whole STL, including hash
+	  containers.
+	* Fixed recognition section bug for VC++ 4.1.
+
+Sun Mar 9 19:08:07 1997  Boris P. Fomichev  <fbp@mcst.ru>
+
+	* Added "self" typedefs workaround for compilers
+	  requiring explicit template syntax (xlC)
+	 ( reported by mbrincho@msi.com )
+	  xlC now should work - added recognition.
+	
+	* SGI recognition improved.
+
+	* "configure" test set extended to recognize SUN C++ 4.1
+	  & AIX xlC specific (?) bugs.
+	  Added test & workaround for pair() problem with
+	  gcc & VC++
+	
+Wed Mar  5 12:29:20 1997  Boris P. Fomichev  <fbp@mcst.ru>
+
+	* Added support/recognition for SUN C++ 4.0.1.
+	  Function adaptors still don't work.
+
+	* Some typedefs re-arranged to get more portability
+	  (associative containers rep).
+
+	* Documentation updated.
+
+	* Additional components made available.
+
+Tue Mar  4 15:04:34 1997  Boris P. Fomichev  <fbp@mcst.ru>
+
+	* new-style headers <algorithm>, etc. added for more
+	  portability.
+
+Mon Mar  3 20:13:51 1997  Boris P. Fomichev  <fbp@mcst.ru>
+
+	* "configure" refined. Added user-defined options.
+
+	* Extended support for compilers supporting only complete types
+	  as default template arguments.
+	  Now they don't have to use workaround versions for all
+	  containers, istream_iterator, etc
+ 	  ( Borland, gcc-2.7.2 (big surprise!) ).
+
+	* Fixed namespaces bugs. Operators ==, < made all 
+	  one-template-param.
+
+	* testsuite with single/multiple targets made available.
+	  Makefiles for SUN CC, g++, Borland, Visual C++ created.
+
+Tue Feb 28 11:00:34 1997  Boris P. Fomichev  <fbp@mcst.ru>
+
+	* "configure" script introduced. Configuration
+ 	  redesigned.
+
+	* defalloc.h fixed to have uniform interface with other
+	  allocators.
+	
+Mon Feb 24 19:26:46 1997  Boris P. Fomichev  <fbp@mcst.ru>
+
+	* added explicit/typename keywords for appropriate
+	  compilers.
+
+	* added recognition/support for Cygnus gcc clones. 
+
+Fri Feb 21 13:53:00 1997  Boris P. Fomichev  <fbp@mcst.ru>
+
+	* min/max put to global namespace for Borland.
+	  Documentation updated.
+
+Thu Feb 20 15:08:20 1997  Boris P. Fomichev  <fbp@mcst.ru>
+
+	* stlport.zip fixed to contain only
+	  one version of the library ;).
+
+	* Restructured support for gcc ( static template
+	  members). "statics.h" removed, used key #define
+	  __PUT_INSTANCES_HERE instead. Appropriate definitions
+	  beautified.
+
+	* Changes recently made to original STL propagated.
+	  There were : minor bugfixes, addition of resize()
+ 	  and clear() methods to containers, random_sample()
+	  functions addition, revision of !=() templates 
+	  and the like ( one template parameter used ).
+
+Wed Feb 19 11:54:42 1997  Boris P. Fomichev  <fbp@mcst.ru>
+
+	* <all files> : added namespace support. Namespace-based
+	  workaround for default template param used.
+	  Defines added to make declarations less verbose.
+	  Copyright notices updated.
+	* bool.h : improved per-version recognition of
+ 	  Visual C++ (4.0, 4.1, 4.2) & Borland.
+	  Borland 5.0 ability ( altough incomplete )
+	  to handle default template param reflected. 
+	* pair.h : fixed constructor to satisfy VC++.
+	* container's ==() operators changed to
+	  get workaround of VC++ resolution bug.
+
+Tue Feb 11 12:06:43 1997  Boris P. Fomichev  <fbp@mcst.ru>
+
+	* Changes recently made to original STL propagated.
+	* stlport.zip now contains long filenames.
+	* diff against original was reversed - fixed. 
+
+Tue Feb 11 12:14:35 1997 by Lo Russo Graziano <Graziano.LoRusso@CSELT.STET.IT>
+	* vector.h - added resize() as WP requires;
+ 	* insert_aux fixed to avoid some subtle bug in some OSes-
+	  using a pointer ( for offset calculations)
+	  after freeing memory;
+	
+Tue Feb 11 12:14:35 1997 by  "Enno Rehling" <enno@uni-paderborn.de>
+
+	* bool.h - proper recognition of Visual C++ 4.0 added (no yvals.h)
+
+Wed Feb  5 16:24:30 1997  Boris P. Fomichev  <fbp@mcst.ru>
+
+	* Fixed bug with most containers' operator==(). 
+	  It has been made const and taking self, not super.
+	* function.h : added workaround for gcc bug resolving
+	  const T& in ptr_fun() calls.
+ 	* bool.h : added HAVE_CONST_UNIFICATION_BUG for this bug.
+	  added HAVE_UNUSED_REQUIRED_BUG for gcc (not used inside that far).
+	* bvector.h : reverted back to bit_vector from vector<bool>
+	  ( based on comp.std.c++ discussion )
+
+Mon Jan 27 19:23:40 1997  Boris P. Fomichev  <fbp@mcst.ru>
+
+        ** Porting SGI STL to SunPro C++ 4.1,4.2 & gcc-2.7.2
+	**
+	** Has been successfully tested on cygnus STL test suite (
+        ** ftp.cygnus.com/pub/g++/stl-examples.tgz, with additional
+        ** check for separate compilation & multiple units.
+	**
+	** GCC 2.7.2 works fine on sparc-solaris2.5, i386-solaris2.4,
+	** Linux (+/- frepo).
+	**
+        ** SunPro C++ 4.1 ( SC 4.0 set ) cannot properly handle Templates.DB
+        ** dependencies in case of multiple targets ( some tests lacks
+        ** certain dependencies and fail to link. Single file mode works. )
+	**
+	** C++ 4.2 works fine.
+        ** C++ 4.1 seems to have optimization errors ( coredump on
+	** 'nthelem1' test from the set. No problems with -g ;(.
+	** 
+	** Borland C++ 5.01 have problems compiling from command-line.
+	** The same problems arise when using Borland own STL.
+	** IDE compiler works fine.
+	**
+	
+	* algo.h  : added configuration define HAVE_RAND48.
+
+	* algobase.h : min & max definitios for Borland guarded by
+	  __MINMAX_DEFINED. No inclusion of <stdlib> needed.
+	
+        * alloc.h : Original functinality provided for gcc.
+	  __malloc_alloc_oom_handler changed to be static
+          template data member. ( I believe that was a bug).
+	  __default_alloc_template ported to gcc.
+	  gcc is no longer forced to __USE_MALLOC.
+          Instantiations for instance_no==0 provided in <statics.h> for gcc.
+
+        * bool.h : __NEED_BOOL for __SUNPRO_CC defined for versions up to
+          4.2 to reflect absence of 'bool'.
+          __NEED_BOOL setting for g++ changed - _G_HAVE_BOOL is not
+          a built-in definition and won't work.
+          auto-definitions of HAVE_TEMPLATE_PARAM_BUG &
+          HAVE_STATIC_TEMPLATE_DATA for gcc up to 2.7.2 added.
+	  Configuration for HAVE_WEAK_ATTRIBUTE added.
+	  Warning added for systems that must include <statics.h>
+	  Inappropriate place choosen since no configuration header
+          exist.
+
+        * bvector.h : defined as vector<bool> for compilers that support
+	  bool type. Added hook for defining Alloc for it.
+	  added friend declaration of iterator_category() &
+	  distance_type() to help gcc & the like in type unification
+
+	* deque.h : Original functinality provided for all compilers.
+	  Added syntax workarounds for gcc. Warnings suppressed.
+
+	* function.h : operator!= changed to take 2 types as parameters.
+	  Portability fixes for functions with default arguments.
+	
+	* hash_set.h, hash_map.h, multiset.h,set.h, map.h multimap.h, stack.h : 
+	  Original functionality provided for  all compilers. 
+	  Added workarounds for SunPro C++ 4.1 & gcc.
+
+	* hashtable.h : forward declarations synchronized for
+	  SunPro. Added syntax workarounds for gcc & Borland. 
+
+	* iterator.h : 	  Portability fixes for functions with default arguments.
+
+	* list.h : const_iterator bug fixed. Original functinality
+	  provided via __list__. Comparison of lists with different allocators made
+	  possible. Added syntax workarounds for gcc.
+
+ 	* pthread_alloc.h : ported to gcc. Not tested, although.
+
+        * statics.h : additional file created for compilers like g++-2.7.2
+          that doesn`t handle template static data members definitions.
+          This file is truly optional and not required for better compilers.
+
+        * tempbuf.h : get_temporary_buffer() : added cast to help SunPro
+          CC in type unification.
+        
+        * tree.h : nil_node & NIL changed to be static inline data members.
+          Helper template class __rb_tree_meta introduced to avoid problem
+          with multiple definition of non-template static data members when
+          linking multiple compilation units. Single template definition
+          of __rb_tree_meta<false>::nil_node provided in statics.h for g++ &
+          the like.
+	  iterator_category() & distance_type() fixed : functions
+          declared inline to avoid linker errors in multi-file case.
+	  node_count & key_compare initializers swapped to get rid of
+          compiler warnings. Added syntax workarounds for gcc & the like.
+        
+        * vector.h : Original functionality provided via __vector__.
+	  Added syntax workarounds for gcc. Comparison of vectors with 
+	  different allocators made possible.
+        
+

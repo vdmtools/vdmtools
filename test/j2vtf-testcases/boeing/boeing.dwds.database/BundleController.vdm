@@ -1,0 +1,126 @@
+class BundleController is subclass of WiringDataController
+operations 
+public  getViaId : int  ==> [Bundle]
+getViaId(bundleId) == 
+( dcl   bundle : [Bundle] := nil  ,
+        connection : [Connection] := BundleController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := BundleController`getToolkit().getQuerySet(),
+        query : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement(),
+            args : map  int  to  [Object] := {0 |-> new  Integer(bundleId)};
+      query := querySet.getQuery(WiringDataQuerySet`GET_BUNDLE_VIA_ID , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        if  queryRS.next()
+        then  
+          ( dcl   bundleNumber : [String] := queryRS.getString(1);
+            bundle := new  Bundle(bundleId , bundleNumber)
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  return  bundle
+) ;
+
+public  getWires : int  ==> map  int  to  [Wire]
+getWires(bundleId) == 
+( return  wireCntl.getViaBundleId(bundleId)
+) ;
+
+public  initialize : () ==> <VOID>
+initialize() == 
+( return  <VOID>
+) ;
+
+public  getCurrentContextObject : () ==> [Object]
+getCurrentContextObject() == 
+( return  curBundle
+) ;
+
+public  updateToNewContext : [ContextSet] ==> <VOID>
+updateToNewContext(contextChanges) == 
+( if  contextChanges.contains(ContextTypes`AIRCRAFT_TYPE) or  contextChanges.contains(ContextTypes`TAIL_NUMBER)
+  then  
+    ( curBundle := nil  
+    ) ;
+  if  contextChanges.contains(ContextTypes`BUNDLE)
+  then  
+    ( dcl   newBundleName : [String] := contextChanges.get(ContextTypes`BUNDLE);
+      if  newBundleName = nil  
+      then  
+        ( curBundle := nil  
+        ) 
+      else  
+        ( curBundle := getViaName(aircraftCntl.getCurrentContextObject() , newBundleName)
+        ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  getViaName : [Aircraft] * [String] ==> [Bundle]
+getViaName(aircraft, bundleName) == 
+( dcl   bundle : [Bundle] := nil  ,
+        connection : [Connection] := BundleController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := BundleController`getToolkit().getQuerySet(),
+        query : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement(),
+            acTypeId : [Integer] := new  Integer(aircraft.getAcType().getAcTypeId()),
+            args : map  int  to  [Object] := {1 |-> bundleName , 0 |-> acTypeId};
+      query := querySet.getQuery(WiringDataQuerySet`GET_BUNDLE_VIA_NAME , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        if  queryRS.next()
+        then  
+          ( dcl   bundleId : int  := queryRS.getInt(1),
+                  bundleNumber : [String] := queryRS.getString(2);
+            bundle := new  Bundle(bundleId , bundleNumber)
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  return  bundle
+) ;
+
+BundleController : [DataSourceToolkit] * [AircraftController] * [WireController] ==> BundleController
+BundleController(dsToolkit, aircraftController, wireController) == 
+( let - = WiringDataController(dsToolkit)
+  in 
+    skip ;
+  BundleController`aircraftCntl := aircraftController;
+  BundleController`wireCntl := wireController
+) ;
+
+instance variables 
+  private  aircraftCntl : [AircraftController] := nil  ;
+  private  wireCntl : [WireController] := nil  ;
+  private  curBundle : [Bundle] := nil  
+  
+end  BundleController

@@ -1,0 +1,115 @@
+/*
+テストグループ
+	Queueのテスト
+関連 UC
+	なし
+作成者
+佐原伸
+*/
+class QueueT is subclass of TestDriver
+functions
+public tests : () -> seq of TestCase
+tests () == 
+	[ 
+	new QueueT01(), new QueueT02(), 
+	new QueueT03()
+	];
+end QueueT
+
+/*
+シナリオID
+	待ち行列の基本関数を検査する。
+*/
+class QueueT01 is subclass of TestCase
+operations 
+public test: () ==> bool
+test() == 
+	let	q0 = Queue`empty[int](),
+		q1 = Queue`enQueue[int](1, q0),
+		q2 = Queue`enQueue[int](2, q1),
+		q3 = Queue`enQueue[int](3, q2),
+		[h] ^ tail = q3,
+		h1 = Queue`top[int](q3),
+		q4 = Queue`deQueue[int](q3),
+		q5 = Queue`deQueue[int](q4),
+		q6 = Queue`deQueue[int](q5),
+		h2 =  Queue`top[int](q6),
+		q7 = Queue`deQueue[int](q6)
+	in
+	return
+		q0 = [] and
+		q1 = [1] and
+		q2 = [1,2] and
+		q3 = [1,2,3] and
+		h = 1 and tail = [2,3] and
+		h1 = 1 and
+		q4 = [2,3] and
+		q5 = [3] and
+		q6 = [] and
+		h2 = nil and
+		q7 = [] and
+		Queue`isEmpty[int](q7) and
+		not Queue`isEmpty[int](q5) 
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "QueueT01:\t待ち行列の検査";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end QueueT01
+
+/*
+シナリオID
+	先頭と後続列を同時に得る関数を検査する。
+*/
+class QueueT02 is subclass of TestCase
+operations 
+public test: () ==> bool
+test() == 
+	let	q0 = Queue`empty[int](),
+		q1 = Queue`enQueue[int](1, q0),
+		q2 = Queue`enQueue[int](2, q1),
+		q3 = Queue`enQueue[int](3, q2),
+		[h] ^ tail = q3,	--情報隠蔽違反
+		h1 = Queue`top[int](q3),
+		q4 = Queue`deQueue[int](q3),
+		mk_(h2, q5) = Queue`topAndDeQueue[int](q3)
+	in
+	return
+		q0 = [] and
+		q1 = [1] and
+		q2 = [1,2] and
+		q3 = [1,2,3] and
+		h = 1 and tail =  [2,3] and
+		h1 = 1 and q4 = [2,3] and
+		h2 = 1 and q5 = [2, 3]
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "QueueT02:\t先頭と後続列を同時に得る";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end QueueT02
+
+/*
+シナリオID
+	Queue4Threadクラスを使って先頭と後続列を同時に得る関数を検査する。
+*/
+class QueueT03 is subclass of TestCase, Queue4Thread
+values
+qt = new Queue4Thread();
+
+operations 
+public test: () ==> bool
+test() == (
+	qt.Empty();
+	qt.EnQueue(mk_Thread(1,100));
+	qt.EnQueue(mk_Thread(2,200));
+	qt.EnQueue(mk_Thread(3,300));
+	return
+		qt.TopAndDeQueue() = 
+			mk_(mk_Thread(1,100), [mk_Thread(2,200), mk_Thread(3,300)]) 
+);
+protected 準備する: () ==> ()
+準備する() == テスト名 := "QueueT03:\tQueue4Threadクラスを使って先頭と後続列を同時に得る";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end QueueT03

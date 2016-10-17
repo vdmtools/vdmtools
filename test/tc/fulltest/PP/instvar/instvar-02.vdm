@@ -1,0 +1,12 @@
+class A
+
+instance variables
+
+public i1 : nat := 1;
+private i2 : nat := 1;
+protected i3: nat := 1;
+i4: nat := 1;
+inv i2;
+
+end A
+

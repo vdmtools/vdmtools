@@ -1,0 +1,28 @@
+#!/usr/bin/perl
+
+$outfile = ">asval.vdm";
+open outfile;
+$head = "modulehead";
+open head;
+
+while (<head>) {
+    print outfile ;
+}
+
+$i = 0;
+print outfile "ast = [";
+while($tmp = shift(@ARGV)){
+    if($i>0){  print outfile ",\n"; }
+    if(!system "vppde -ta $tmp"){
+        system "m4pp";
+        open TEMP, "<m4pp";
+        while (<TEMP>) { print outfile; }
+        print outfile "\n";
+        $i++;
+    }
+    else { 
+        print STDERR "Error while checking ", $tmp, "\n" };
+}
+print outfile "];\n";
+print outfile "mk_AS`AstCI(class_l,-,-) = hd ast;\n";
+print outfile "end ASVAL\n";

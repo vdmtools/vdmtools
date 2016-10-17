@@ -1,0 +1,47 @@
+class A
+
+operations
+
+public op : nat | bool ==> nat
+op(-) == return 1;
+
+public op : set of nat ==> nat
+op(-) == return 1;
+
+public op: nat * nat1 * char ==> bool
+op(-,-,-) == return false;
+
+end A
+
+
+class B
+
+operations
+
+public op : seq of nat ==> nat
+op(-) == return 1;
+
+public op : map nat to bool ==> nat | bool
+op(-) == return 1;
+
+public op : bool * map char to bool ==> nat | bool
+op(-,-) == return 1;
+
+end B
+
+class C is subclass of B
+
+end C
+
+class D
+
+operations
+
+myop : () ==> nat
+myop() ==
+  let c = new C()
+  in c.op({3|->true});
+
+end D
+
+

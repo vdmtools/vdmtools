@@ -1,0 +1,16 @@
+module A
+
+definitions
+
+state Sigma of
+a : nat
+end
+
+operations
+
+  Test: () ==> nat
+  Test() ==
+   (a := 8;
+    return a);
+
+end A

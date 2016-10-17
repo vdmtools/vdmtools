@@ -1,0 +1,573 @@
+\begin{vdm_al}
+class Repository is subclass of ToolColleague
+
+instance variables
+  repdb  : RepDatabase := new  RepDatabase();
+  cgrepos: CGRepository := new CGRepository ();
+  session: UpdateSes := new NoneSes();
+  status : StatusInfo := new StatusInfo();
+  project: UpdateProject := new UpdateProject();
+  depend : Dependency := new Dependency();
+  old_ses : SessionType;
+  -- true if current file configuration has been saved,
+  -- set to false when files are added or removed 
+  fileStateSaved : bool := true;
+  packagePrefix : seq of FileName := [];
+
+operations
+
+public SetMediator: ToolMediator ==> ()
+  SetMediator(m) ==
+  ( mediator := m;
+    repdb.SetMediator (m);
+    status.Init (self, repdb, m);
+    depend.Init (self);
+    project.Init (self, repdb, m, depend);
+  );
+
+public GetDependency: () ==> Dependency
+  GetDependency () ==
+    return depend;
+\end{vdm_al}
+
+\paragraph{Interface to the CGRepository}
+\mbox { }
+
+\begin{vdm_al}
+
+  ---
+  --- Interface to the CGRepository
+  --- 
+
+public WriteCGInfo: CGInfo ==> ()
+  WriteCGInfo (info) ==
+    cgrepos.WriteCGInfo(info);
+
+public GetCGInfo: () ==> CGInfo 
+  GetCGInfo ()  ==
+    cgrepos.GetCGInfo ();
+\end{vdm_al}
+
+\paragraph{Methods handling status and type of session}
+\mbox { }
+
+\begin{vdm_al}
+
+  ---
+  --- Methods handling status and values (asts)
+  --- 
+
+public Allowed: (ModuleName | FileName) *  Action ==> bool * seq of char 
+  Allowed (nm, kind) ==
+    def rt = status.Allowed (nm, kind) in
+    return rt;
+
+public IsSession: SessionType ==>  bool 
+  IsSession(q)  == 
+  def sestype = session.Type() in
+  return q = sestype;
+
+public SesType: () ==> SessionType 
+  SesType ()  ==
+    def stp = session.Type () in
+    return stp;
+
+public DisableSession: () ==> ()
+  DisableSession () ==
+  ( def sestype = session.Type () in
+    if sestype <> <NONE> and sestype <> <DISABLED> then
+      old_ses := sestype;
+    session := new NoneSes ();
+    session.Disable ()
+  );
+
+public EnableSession:() ==> ()
+  EnableSession () ==
+    session.Enable ();
+
+public OldSession: () ==> SessionType 
+  OldSession ()  ==
+    return old_ses;
+
+\end{vdm_al}
+
+The $DisableSession$, $EnableSession$ and $OldSession$ has to do with
+possible changing of session type in the same session. If all parsed
+files in the current project is going to be parsed again, it is
+possible to change the session type, and $DisableSession$ is called.
+The current session type is stored in $old_ses$ and the session is set
+to $NoneSes$ and is furthermore disabled. If the session type does not
+change ($OldSession$) by the parsing, $EnableSession$ is called.
+
+\begin{vdm_al}
+
+public SetSession: UpdateSes ==> ()
+  SetSession(sp) ==
+    session := sp;
+ 
+\end{vdm_al}
+$SetSession$ sets the current type of session. Is only called from
+$NoneSes$ class. 
+
+\begin{vdm_al}
+
+-- Status returns a tuple consisting of status for the module
+-- and status for the corresponding file. If called with a filename
+-- the status for module is nil. Run-time error if called with an 
+-- unknown name.
+
+public Status: (ModuleName | FileName) ==>  [UnitStat] * FileStat 
+  Status (nm)  ==
+    def rt = status.Status (nm) in
+    return rt;
+
+public GetStatus :() ==> StatusInfo 
+  GetStatus ()  ==
+    return status;
+
+\end{vdm_al}
+
+$Status$ returns a tuple consisting of status for the module
+and status for the corresponding file. If called with a filename
+the status for module is $nil$. Run-time error if called with an 
+unknown name.
+
+\begin{vdm_al}
+
+public IsAllTypeCorrect: () ==> bool 
+  IsAllTypeCorrect ()  ==
+    status.IsAllTypeCorrect ();
+
+public IsSyntaxCorrect: FileName ==> bool 
+  IsSyntaxCorrect (nm)  ==
+    status.IsSyntaxCorrect (nm);
+
+\end{vdm_al}
+
+\paragraph{Interface to Repository Database}
+\mbox { }
+
+\begin{vdm_al}
+
+operations
+
+public GetFileId: FileName ==> FileId
+  GetFileId(nm) ==
+    repdb.GetFileId (nm);
+
+public GetCmdLineFileId: () ==> FileId 
+  GetCmdLineFileId ()  ==
+    repdb.GetIrregFileId(<cmdLineFileId>);
+
+public GetCgFileId : () ==> FileId
+  GetCgFileId () ==
+    repdb.GetIrregFileId(<cgFileId>);
+
+public GetTcFileId: () ==> FileId 
+  GetTcFileId ()  == 
+    repdb.GetIrregFileId(<tcFileId>);
+
+public GetTmpFileId: () ==> FileId
+  GetTmpFileId() ==
+    repdb.GetIrregFileId(<tmpFileId>);
+
+public GetStdInFileId: () ==> FileId
+  GetStdInFileId() ==
+    repdb.GetIrregFileId(<StdInFileId>);
+
+public GetFileName: FileId ==> [FileName] 
+  GetFileName(fileid)  ==
+    repdb.GetFileName (fileid);
+  
+public GetAllAsts: () ==> seq of AstVal 
+  GetAllAsts()  ==
+    repdb.GetAllAsts ();
+
+public GetJavaAsts: () ==> seq of AstVal 
+  GetJavaAsts()  ==
+    repdb.GetJavaAsts ();
+
+public GetVDMAsts: () ==> seq of AstVal 
+  GetVDMAsts()  ==
+    repdb.GetVDMAsts ();
+
+public GetAST : ModuleName ==> [AstVal]   -- Only optional because of VC++
+  GetAST (nm)  ==   
+    --repdb.GetAST (status, nm);
+    repdb.GetAST (nm);
+
+public GetFlatSpec: () ==> FlatSpec 
+  GetFlatSpec() ==
+    repdb.GetFlatSpec ();
+
+public SetFileTimestamp: FileName * nat ==> ()
+  SetFileTimestamp (f, t) ==
+    repdb.SetFileTimestamp (f,t);
+
+public GetFileTimestamp: FileName ==> nat 
+  GetFileTimestamp (f)  ==
+    repdb.GetFileTimestamp (f);
+
+public FileModified: FileName ==> bool
+  FileModified (f) ==
+    repdb.FileModified (f);
+
+public SetFileModified : FileName ==> ()
+  SetFileModified (f) ==
+    repdb.SetFileModified (f,session);
+
+\end{vdm_al}
+
+\paragraph{Interface to Update methods}
+\mbox { }
+
+\begin{vdm_al}
+
+  --- UpdateSC updates the status concerning syntax, i.e. it sets the file status and
+  --- enable/disable corresponding modules. A flat specification is handled as a one
+  --- module specification. 
+
+public UpdateSC: FileName *  ((seq of Module)|FlatSpec) ==> ()
+  UpdateSC(nm, spec) ==
+  session.UpdateSC(self, repdb, nm, spec);
+
+public UpdateTC: ModuleName * [<POS>|<DEF>] ==> ()
+  UpdateTC(nm, tcType) ==
+  session.UpdateTC(repdb, nm,tcType);
+
+public UpdateCG: ModuleName * (<CPP>|<Java>) * Succes ==> ()
+  UpdateCG(nm, kind, suc) ==
+  session.UpdateCG(repdb, nm, kind, suc);
+
+public UpdatePP: FileName * Succes ==> ()
+  UpdatePP(nm, suc) ==
+  session.UpdatePP(repdb, nm, suc);
+
+public StateIsSaved : () ==> bool
+  StateIsSaved ()  ==
+    return fileStateSaved;
+
+public SetSavedFileState: bool ==> ()
+  SetSavedFileState (v) ==
+    fileStateSaved := v;
+
+  ---
+  --- Get, add and remove files
+  --- 
+
+public AddFiles: set of FileName ==> ()
+  AddFiles (files) ==
+  ( fileStateSaved := false;
+    repdb.AddSetOfFiles (files)
+  );
+
+  -- Called by rtf parser
+
+public AddTempFile: FileName  ==> TmpFileName
+  AddTempFile (fnm) ==
+    repdb.AddTempFile (fnm);
+
+  -- Called from file opener in GUI
+public GetTempFileName: FileName ==> TmpFileName
+  GetTempFileName (fnm) ==
+    repdb.GetTempFileName (fnm);
+
+public GetRealFileName: TmpFileName ==> FileName
+  GetRealFileName (tfnm) ==
+    repdb.GetRealFileName (tfnm);
+
+\end{vdm_al}
+
+The method {\em RemoveFiles} remove all the files in the repository by
+calling the method {\em RemoveSetOfFiles}, and furthermore, the
+dependency information is updated, the session type is set to none in
+case all files are removed, and the inheritance tree is updated.
+
+The $StateIsSaved$ method is called from the interface when the
+project is (re)configured. In version 2 of the ProjectFile (see class
+$StateStore$) this method calls $StateIsSaved$ in class
+$UpdateSession$. In version 3 of the ProjectFile only file names are
+stored in the project file, so instead the $FileStateIsSaved$ is
+called in the $UpdateSession$ class. In this case we are only
+interested in adding and removing of files. So we have different
+levels of change of state even that we are only subscribing to the
+change of files.  
+
+\begin{vdm_al}
+
+public RemoveFiles : set of FileName ==> ()
+  RemoveFiles (files) ==
+  ( dcl modules : set of ModuleName := {};
+    fileStateSaved := false;
+    if card files > 0
+    then 
+      ( --def repfiles = repdb.Files() in
+        for all file in set files do
+          def mods = repdb.ModulesInFile(file)
+          in modules := modules union mods;
+        depend.Remove(modules);
+        def nofiles = repdb.RemoveSetOfFiles(files)
+        in if nofiles
+           then def newses = new NoneSes() 
+                in session := newses;
+        --def ok = mediator.GetBaseTools().InhTree()
+        def - = mediator.GetBaseTools().InhTree()
+        in skip
+      )
+  );
+
+-- If the specifications are flat and there exists more files
+-- after removing the file "file" then the unitnm_s should not be
+-- deleted
+
+
+--  FileModified(nm_s: set of FileName) ==      
+--  def files = nm_s inter dom file_m in                
+--  def deffile_m = files <: file_m in          
+--  let modifiedMods = dunion { mod_s | mk_(mod_s,-) in set rng deffile_m},
+--      stat_s = { s | mk_(-,s) in set rng deffile_m } in
+--  ( for all stat in set stat_s do             
+--      def mk_(-,-) = stat.SetStatus(<SYNTAXCHECK>,<NONE>);
+--    def chm = self.DisableUnits(modifiedMods) in
+
+  --  ClearAll should only be called by the preliminary methods.
+
+public ClearAll: () ==> ()
+  ClearAll() ==
+  def baseTool = mediator.GetBaseTools() in
+  ( baseTool.InitToolbox();
+    cgrepos := new CGRepository();
+    session := new NoneSes();
+    repdb.ClearAll ();
+    depend.Init (self)
+  );
+
+  ---
+  --- Retrieve information for the modules and
+  --- files list boxes
+  ---
+
+public   AllModules: () ==> set of ModuleName
+  AllModules ()  ==
+    repdb.AllModules ();
+
+public VDMModules: () ==> set of ModuleName
+  VDMModules ()  ==
+    repdb.VDMModules ();
+
+public JavaModules: () ==> set of ModuleName
+  JavaModules ()  ==
+    repdb.JavaModules ();
+
+public   Files: () ==>  set of FileName 
+  Files() ==
+    repdb.Files ();
+
+public   ModulesInFile: FileName ==>  set of ModuleName 
+  ModulesInFile (file) ==
+    repdb.ModulesInFile (file);
+  
+  --- FileOfModule of module updated to handle 
+  --- modules distributed over a number of files 
+  --- (DefaultMod in case of flat specifications)
+
+public   FileOfModule: ModuleName  ==>  set of FileName 
+  FileOfModule (mnm)  ==
+    repdb.FileOfModule (mnm);
+
+public   ParsedFiles: () ==>  set of FileName 
+  ParsedFiles () ==
+    repdb.ParsedFiles ();
+
+public GetPackageOfFile : FileName * char ==> FileName
+GetPackageOfFile(file, sepChar) ==
+  let path = MakePath(file, sepChar),
+      packageFile = RemovePrefix(packagePrefix, path)
+  in 
+    return dirname(packageFile, sepChar);
+
+public GetFilesAndPackages : char ==> map FileName to set of (FileName * FileName)
+GetFilesAndPackages(sepChar) ==
+  let files = Files()
+  in
+    if files = {}
+    then return {|->}
+    elseif card files = 1
+    then 
+      let {f} = files,
+          p   = MakePath(f, sepChar),
+          bn  = basename(p)
+      in
+        return {mk_FileName("") |-> {mk_(bn,f)}}
+    else
+      let paths = { mk_(MakePath(f, sepChar), f) | f in set files},
+          prefix = CommonPrefix({ p | mk_(p,-) in set paths}),
+          packagePaths = { mk_(RemovePrefix(prefix, p),q) 
+                         | mk_(p,q) in set paths}
+      in
+      ( dcl packageMap : map FileName to set of (FileName * FileName) 
+                          := {|->};
+        packagePrefix := prefix;
+        for all mk_(p,q) in set packagePaths do
+          let package = dirname(p, sepChar),
+              file = basename(p),
+              properFile = if file = mk_FileName([])
+                           then q
+                           else file
+          in
+            if package in set dom packageMap
+            then
+              packageMap(package) := packageMap(package) union {mk_(properFile,q)}
+            else
+              packageMap(package) := {mk_(properFile,q)};
+        return packageMap
+      );
+
+functions
+
+public MakePath : FileName * char -> seq of FileName
+MakePath(fname, sepChar) ==
+  let rawname = fname.nm,
+      leadingSep = hd rawname = sepChar,
+      sepInds = (if leadingSep then [1] else [])
+                ^ [ i | i in set inds rawname & rawname(i) = sepChar]
+                ^ [len rawname + 1],
+      dirs = [ rawname(1,...,sepInds(1) - 1) ] ^
+             --[ rawname(sepInds(j) + 1,..., sepInds(j+1) - 1) | j in set {1,...,len sepInds - 1}]
+             [ rawname(sepInds(j) + 1,..., sepInds(j+1) - 1) | j in set inds sepInds & j < len sepInds ]
+  in
+    [ mk_FileName(dirs(i)) | i in set inds dirs & dirs(i) <> []];
+
+public CommonPrefix : set of seq of FileName -> seq of FileName
+CommonPrefix(paths) ==
+  if exists p in set paths & p = []
+  then []
+  else
+    let heads = { hd p | p in set paths }
+    in 
+      if card heads <> 1
+      then []
+      else 
+        let {p} = heads
+        in
+          [p] ^ CommonPrefix({tl p | p in set paths});
+
+public RemovePrefix : seq of FileName * seq of FileName -> seq of FileName
+RemovePrefix(pref, path) ==
+  if pref = [] or path = []
+  then path
+  elseif hd pref = hd path
+  then RemovePrefix(tl pref, tl path)
+  else path;
+
+public dirname : seq of FileName * char -> FileName
+dirname (dirs, sepChar) ==
+  if len dirs <= 1
+  then mk_FileName([])
+  else 
+    let restDir = dirname(tl dirs, sepChar)
+    in
+      mk_FileName((hd dirs).nm ^ [sepChar] ^ restDir.nm);
+
+public basename : seq of FileName -> FileName
+basename(dirs) ==
+  if dirs = []
+  then
+    mk_FileName([])
+  else
+    dirs(len dirs);
+
+
+
+
+      
+
+operations
+
+\end{vdm_al}
+
+\paragraph{Dependency information for list boxes}
+\mbox { }
+
+\begin{vdm_al}
+
+  --- Dependency information for list boxes
+
+public   GetSub :ModuleName ==> set of ModuleName 
+  GetSub (nm) ==
+    depend.GetSub (nm);
+
+public   GetSuper:ModuleName ==> set of ModuleName 
+  GetSuper (nm) ==
+    depend.GetSuper (nm);
+
+public   GetUsedBy :ModuleName ==> set of ModuleName
+  GetUsedBy (nm) ==
+    depend.GetUsedBy (nm);
+
+public   GetUses :ModuleName ==>  set of ModuleName 
+  GetUses (nm)  ==
+    depend.GetUses (nm);
+
+\end{vdm_al}
+
+\paragraph{Process information}
+\mbox { }
+
+\begin{vdm_al}
+public   IsCyclic : ModuleName ==>  bool 
+  IsCyclic (nm)  ==
+    depend.IsCyclic (nm);
+
+public   OrderOfProcess: ModuleName ==>  seq of set of ModuleName 
+  OrderOfProcess(nm)  ==
+    depend.OrderOfProcess (nm);
+
+\end{vdm_al}
+
+\paragraph{Open, Close, Save and New Project}
+\mbox { }
+
+\begin{vdm_al}
+
+  ---
+  --- Open, Close and NewProject
+  --- 
+
+public   GetProjectName : () ==>[FileName] 
+  GetProjectName()  ==
+    project.GetProjectName ();
+
+public   SaveAs :FileName ==> bool 
+  SaveAs(f)  ==
+    project.SaveAs (f);
+
+public   Open : FileName ==> bool 
+  Open (pnm)  ==
+    project.Open (pnm);
+
+public   NewUnnamedProject: () ==> bool 
+  NewUnnamedProject() == 
+    project.NewUnnamedProject ();
+
+public   SaveObjState: FileName ==> bool 
+  SaveObjState(file)  ==
+    project.SaveObjState (file);
+
+public   LoadObjState: FileName ==> bool 
+  LoadObjState(file)  ==
+    project.LoadObjState (file)
+
+
+--
+--
+--
+
+
+
+end Repository
+\end{vdm_al}
+
+
+
+

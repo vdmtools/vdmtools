@@ -1,0 +1,644 @@
+%\documentclass[11pt]{article}
+\documentclass[a4paper]{jsarticle}
+
+%\usepackage{multicol}
+%\usepackage{ifada4}
+\usepackage{ifad}
+\usepackage{vdmsl-2e}
+
+% How to print .dvi file on a4 paper: 
+% dvips -x 694 QuickRef.dvi -o QuickRef_a4.ps
+% 
+% For US Letter:
+%   The new teTeX seems to have changed the offset so we no
+%   longer needs to change the offset. 
+%   dvips -x659 -tletter QuickRef.dvi -o QuickRef_letter.ps
+%  Scaling 659 = 694 * 95%. 
+
+% $Id: QuickRef.tex,v 1.12 2006/02/24 06:04:43 vdmtools Exp $
+
+\newcommand{\keyw}[1]{{\sf #1}}
+\newcommand{\K}[1]{{\sf #1}}
+\newcommand{\id}[1]{{\it #1\/}}
+\newcommand{\rep}[2]{\AL{} #1 \AR$\!{}_{[\hbox{\tt#2}]}$}
+\newcommand{\AL}{$\langle\;$}
+\newcommand{\AR}[1]{$\rangle_{[\hbox{\tt#1}]}\;$}
+\newcommand{\ARX}[1]{$\rangle_{[[\hbox{\tt#1}]]}\;$}
+\newcommand{\lb}{{\tt\char`\{}}
+\newcommand{\rb}{{\tt\char`\}}}
+\newcommand{\lsb}{{\tt\char`\[}}
+\newcommand{\rsb}{{\tt\char`\]}}
+\newcommand{\lp}{{\tt(}}
+\newcommand{\rp}{{\tt)}}
+
+\newcommand{\backsl}{{\tt\char`\\}}
+\newcommand{\TTand}{{\tt\char`\& }}
+\newcommand{\TTor}{{\tt\char`\|}}
+\newcommand{\TTast}{{\tt\char`\*}}
+\newcommand{\RMor}{{$|$}}
+  
+\newcommand{\TTtilde}{{\tt\char'136}}
+\addtolength{\textheight}{4.5cm}
+\addtolength{\headheight}{-2cm}
+%\setlength{\textwidth}{39cm}
+\setlength{\textwidth}{25cm}
+%\setlength{\hoffset}{-1.5cm}
+\setlength{\hoffset}{-2.5cm}
+\setlength{\voffset}{-1.0cm}
+
+\setlength{\columnseprule}{0.2pt}
+\setlength{\columnsep}{3pc}
+
+\newlength{\secindent}
+
+\newenvironment{tabbingone}[0]{
+\begingroup
+  \parskip=0pt
+  \topsep=0pt
+  \partopsep=0pt
+  \begin{tabbing}
+    \hbox to7pt{}\=%First indent
+    \hbox to 7.2cm{}\=%Second indent
+    \kill
+    \+ % Use first indent
+    \kill
+}{
+  \end{tabbing}
+\endgroup}
+
+\parindent=0pt
+% \parskip=0.5cm
+\small
+
+\begin{document}
+
+\special{landscape}
+
+\pagestyle{empty}
+
+%\begin{multicols}{3}
+
+%{\Large\bf The IFAD VDM-SL Quick Reference}
+{\Large\bf The VDM-SL Quick Reference}
+
+\id{General Operators}
+\begin{tabbingone}
+  \id{expr} {\tt=} \id{expr} \> Equality   \\ % & $\keyw{bool} * \keyw{bool} \To \keyw{bool}$ \\
+  \id{expr} {\tt<>} \id{expr}\> Inequality \\ % & $\keyw{bool} * \keyw{bool} \To  \keyw{bool}$ \\ 
+\end{tabbingone}
+
+\id{Character, Quote, Token Operators}
+\\
+See \id{General Operators} \\
+  
+\id{Logical Operators} 
+\begin{tabbingone}
+
+  \K{not} \id{expr}\> Negation   \\ % & $\keyw{bool} \To \keyw{bool}$          \\
+  \id{expr} \K{and} \id{expr}\> Conjunction\\ % & $\keyw{bool} * \keyw{bool} \To \keyw{bool}$ \\
+  \id{expr} \K{or} \id{expr}\> Disjunction\\ % & $\keyw{bool} * \keyw{bool} \To \keyw{bool}$ \\
+  \id{expr} {\tt=>} \id{expr}\> Implication \\ % & $\keyw{bool} * \keyw{bool} \To \keyw{bool}$ \\
+  \id{expr} {\tt<=>} \id{expr}\> Biimplication \\ % & $\keyw{bool} * \keyw{bool} \To \keyw{bool}$ \\  
+  
+\end{tabbingone}
+
+\id{Numerical Operators} 
+\begin{tabbingone}
+
+  {\tt-} \id{expr}\> Unary minus \\%&{\tt real -> real}        \\
+  \K{abs} \id{expr}\> Absolute value \\%&{\tt real -> real}      \\
+  \K{floor} \id{expr}\> Floor  \\%&{\tt real -> int}      \\
+  \id{expr} {\tt+} \id{expr}\> Sum    \\%&{\tt real * real -> real}\\
+  \id{expr} {\tt-} \id{expr}\> Difference \\%&{\tt real * real -> real}\\
+  \id{expr} {\tt*} \id{expr}\> Product  \\%&{\tt real * real -> real}\\
+  \id{expr} {\tt/} \id{expr}\> Division \\%&{\tt real * real -> real}\\
+  \id{expr} \K{div} \id{expr}\> Integer division \\%&{\tt int * int -> int}\\
+  \id{expr} \K{rem} \id{expr}\> Remainder \\%&{\tt int * int -> nat}\\
+  \id{expr} \K{mod} \id{expr}\> Modulus   \\%&{\tt nat * nat -> nat}\\
+  \id{expr} {\tt**} \id{expr}\> Power \\%&{\tt real * real -> real}\\     
+  \id{expr} {\tt<} \id{expr}\> Less than \\%&{\tt real * real -> bool}\\       
+  \id{expr} {\tt>} \id{expr}\> Greater than \\%&{\tt real * real -> bool}\\       
+  \id{expr} {\tt<=} \id{expr}\> Less or equal \\%&{\tt real * real -> bool}\\       
+  \id{expr} {\tt>=} \id{expr}\> Greater or equal \\%&{\tt real * real -> bool}\\      
+\end{tabbingone}
+
+\id{Set Operators} 
+\begin{tabbingone}
+   \id{expr} \K{in} \K{set} \id{expr}\> Membership \\%& $A * \kw{set of A} \To \kw{bool}$\\
+   \id{expr} \K{not} \K{in} \K{set} \id{expr}\> Not membership \\%& $A * \kw{set of A} \To \kw{bool}$ \\
+   \id{expr} \K{union} \id{expr}\> Union \\%& $\kw{set of A} * \kw{set of A} \To \kw{set of A}$ \\ 
+   \id{expr} \K{inter} \id{expr}\> Intersection \\%& $\kw{set of A} * \setof{} \To \kw{set of A}$ \\
+   \id{expr} \backsl{} \id{expr}\> Difference \\%& $\kw{set of A} * \kw{set of A} \To \kw{set of A}$ \\
+   \id{expr} \K{subset} \id{expr}\> Subset     \\%& $\kw{set of A} * \kw{set of A} \To \kw{bool}$ \\
+   \id{expr} \K{psubset} \id{expr}\>Proper subset \\%& $\kw{set of A} * \kw{set of A} \To \kw{bool}$ \\
+   \K{card} \id{expr}\> Cardinality\\%& $\kw{set of A} \To \kw{nat}$ \\
+   \K{dunion} \id{expr}\> Distributed union\\%& $\kw{set of set of A} \To \kw{set of A}$ \\ 
+   \K{dinter} \id{expr}\>Distributed intersection\\%        &$\kw{set of set of A} \To \kw{set of A}$\\ 
+  \K{power} \id{expr}\>Finite power set\\%& $\kw{set of A} \To\kw{set of set of A}$\\
+\end{tabbingone}
+
+\id{Sequence Operators}
+\begin{tabbingone}
+      \K{hd} \id{expr}\> Head       \\%& \kw{seq of} $A \To A$ \\
+      \K{tl} \id{expr}\> Tail       \\%& \kw{seq of} $A \To$\kw{seq of} $A$\\
+      \K{len} \id{expr}\> Length     \\%& \kw{seq of} $A \To$ \kw{nat} \\
+      \K{elems} \id{expr}\> Elements   \\%& \kw{seq of} $A \To \kw{set of A}$   \\
+      \K{inds} \id{expr}\> Indexes \\%& \kw{seq of} $A \To \setof{\kw{nat}}$ \\ 
+      \id{expr} \TTtilde{} \id{expr}\> Concatenation\\%& \kw{seq of} $A *$\kw{seq of} $A \To$ \kw{seq of} $A$\\
+      \K{conc} \id{expr}\> Distributed concatenation\\%& \kw{seq of seq of} $A \To$ \kw{seq of} $A$\\
+      \id{expr} \lp \id{expr} \rp \> Sequence application \\ %&
+      \id{expr} {\tt++} \id{expr} \> Override \\
+
+    \end{tabbingone}
+    
+\id{Map Operators}
+\begin{tabbingone}
+
+      \K{dom} \id{expr}\> Domain    \\%& (\kw{map} $A$ \kw{to} $B) \To\kw{set of A}$ \\
+      \K{rng} \id{expr}\> Range  \\%& (\kw{map} $A$ \kw{to} $B) \To \kw{set of B}$ \\
+      \id{expr} \K{munion} \id{expr}\> Union     \\%& (\kw{map} $A$ \kw{to} $B) * ($ \kw{map} $A$ \kw{to} $B) \To  ($ \kw{map} $A$ \kw{to} $B)$\\
+      \id{expr} {\tt++} \id{expr}\> Override\\%& (\kw{map} $A$ \kw{to} $B) *($ \kw{map} $A$ \kw{to} $B) \To ($ \kw{map} $A$ \kw{to} $B)$\\
+      \K{merge} \id{expr}\> Distributed merge \\%& \kw{set of (map} $A$\kw{to} $B)$ $\To$ (\kw{map} $A$ \kw{to} $B)$\\
+      \id{expr} {\tt<:} \id{expr}\> Domain restrict to\\%& $\kw{set of A} * ($ \kw{map} $A$\kw{to} $B) \To ($ \kw{map} $A$ \kw{to} $B)$\\
+      \id{expr} {\tt<-:} \id{expr}\> Domain restrict by\\%& $\kw{set of A} * ($ \kw{map} $A$\kw{to} $B) \To ($ \kw{map} $A$ \kw{to} $B)$\\
+
+     \id{expr} {\tt:>} \id{expr}  \> Range restrict to \\ % &\TO{\PROD{(\MAP{A}{B})}{(\SET{A})}}{\MAP{A}{B}} \\
+     \id{expr} {\tt:->} \id{expr} \> Range restrict by \\ % & \TO{\PROD{(\MAP{A}{B})}{(\SET{A})}}{\MAP{A}{B}} \\
+     \id{expr} \lp \id{expr} \rp  \> Map apply \\ % & \TO{\PROD{(\MAP{A}{B})}{A}}{B} \\
+     \id{expr} \K{comp} \id{expr} \> Map composition \\ % & \TO{\PROD{(\MAP{B}{C})}{(\MAP{A}{B})}}{\MAP{A}{C}} \\
+     \id{expr} {\tt **} \id{expr}       \> Map iteration \\ % & \TO{\PROD{(\MAP{A}{B})}{\keyw{nat}}}{\MAP{A}{B}} \\
+     \K{inverse} \id{expr}     \> Map inverse \\ % & \TO{\MAP{A}{B}}{\MAP{B}{A}} \\
+   \end{tabbingone}
+   
+\id{stmt} =
+\begin{tabbingone}
+
+  \K{def} \AL \id{pattern bind} {\tt=} \id{expr} \ARX{;} \K{in} \id{stmt} \> def statement\\
+  \K{let} \AL \id{local definition} \AR{,} \K{in} \id{stmt} \> let statement\\
+  \K{let} \id{bind} [ \K{be st} \id{expr} ] \K{in} \id{stmt}\> let be statement\\
+  \id{state designator} {\tt:=} \id{expr} \> assign statement\\
+  \lp \{ \id{dcl stmt} \}   \AL \id{stmt} \ARX{;} \rp \> block statement\\
+  \K{for} \id{pattern} \K{in} [ \K{reverse} ] \id{expr} \K{do} \id{stmt} \> sequence for loop\\
+  \K{for} \K{all} \id{pattern} \K{in} \K{set} \id{expr} \K{do} \id{stmt}
+  \> set for loop\\
+  \K{for} \id{id} {\tt=} \id{expr} \K{to} \id{expr} [ \K{by} \id{expr} ] \K{do} \id{stmt} \> index for loop\\
+  {\tt||} \lp \AL \id{stmt} \AR{,} \rp \> nondetermistic statement \\
+  \K{while} \id{expr} \K{do} \id{stmt} \> while loop\\
+    
+  \id{id} \lp [\AL \id{expr} \AR{,}] \rp \> call statement\\
+  \K{if} \id{expr} \K{then} \id{stmt} [ \K{else} \id{stmt} ] \> if statement\\
+  \K{cases} \id{expr} : \AL \AL \id{pattern} \AR{,} {\tt ->} \id{stmt} \AR{,} \\
+  \hspace*{2cm} [ \K{others} {\tt ->} \id{stmt} ] \K{end} \> cases statement\\
+  \K{return} \id{stmt} \> return statement\\
+  \K{always} \id{stmt} \K{in} \id{stmt} \> always statement \\
+  \K{trap} \id{pattern bind} \K{with} \id{stmt} \K{in} \id{stmt} \> trap statement \\ 
+  \K{tixe} \lb \AL \id{pattern bind} {\tt|->} \id{stmt} \AR{,} \rb \> recursive trap statement \\
+  \K{exit} \id{expr} \> exit statement \\
+  \K{skip} \> identity statement \\
+  \K{error} \> error statement\\
+\end{tabbingone}
+
+\id{dcl stmt} = 
+\begin{tabbingone}
+  \K{dcl} \AL \id{id} : \id{type} [{\tt:=} \id{expr} ] \AR{,} {\tt;} \> dcl statement \\
+\end{tabbingone}
+
+\id{expr} =
+\begin{tabbingone}
+  \K{def} \AL \id{pattern bind} {\tt=} \id{expr} \ARX{;} \K{in} \id{expr} \> def expression\\
+  \K{let} \AL \id{local definition} \AR{,} \K{in} \id{expr} \> let expression\\
+  \K{let} \id{bind} [ \K{be st} \id{expr} ] \K{in} \id{expr}\> let be expression\\
+  \K{if} \id{expr} \K{then} \id{expr} \K{else} \id{expr} \> if expression\\
+  \K{cases} \id{expr} : \AL \AL \id{pattern} \AR{,} {\tt ->} \id{expr} \AR{,}\\
+  \hspace*{2cm} [, \K{others} {\tt ->} \id{expr} ] \K{end} \> cases expression\\
+  \K{forall} \AL \id{mult bind} \AR{,} \TTand{} \id{expr} \> forall quantifier\\
+  \K{exists} \AL \id{mult bind} \AR{,} \TTand{} \id{expr} \> exist quantifier\\
+  \K{exists1} \id{bind} \TTand \id{expr} \> exists unique quantifier\\
+  \lb [\AL \id{expr} \AR{,}] \rb \> set enumeration\\
+  \lb \id{expr} {\tt|} \AL \id{mult bind} \AR{,} [ \TTand{} \id{expr} ] \rb \> set comprehension\\
+  \lb \id{expr} \texttt{, ... ,} \id{expr} \rb \> set range\\
+  \lsb [\AL \id{expr} \AR{,}] \rsb \> sequence enumeration\\
+  \lsb \id{expr} {\tt|} \id{bind} [ \TTand{} \id{expr} ] \rsb \> sequence comprehension\\ 
+  \id{expr} \lp \id{expr} \texttt{, ... ,} \id{expr} \rp \> subsequence\\
+  \id{expr} \tt{++} \lb \AL \id{expr} {\tt|->} \id{expr} \AR{,} \rb \> sequence modifier\\
+  \lb \AL \id{expr} {\tt|->} \id{expr} \AR{,} \rb{} $|$ \lb {\tt|->} \rb \> map enumeration\\
+  \lb \id{expr} {\tt|->} \id{expr} {\tt|} \AL \id{mult bind} \AR{,}\\
+  \hspace*{3cm} [ \TTand{} \id{expr} ] \rb \> map comprehension\\
+  \K{mk\_}\lp \id{expr}{\tt,} \AL \id{expr} \AR{,} \rp \> tuple constructor\\
+  \K{mk\_}\id{id}\lp [\AL \id{expr} \AR{,}] \rp \> record constructor\\
+  \K{mu} \lp \id{expr} , \AL \id{id} {\tt|->} \id{expr} \AR{,} \rp \> record modifier\\
+  \id{expr} \lp [\AL \id{expr} \AR{,}] \rp \> apply expression\\
+  \id{expr} . \id{id} \> field select expression\\
+  \K{is\_} ( \id{basic type} $|$ \id{id} ) \lp \id{expr} \rp \> is expression\\
+  \K{undefined} \> undefined expression\\ 
+  \id{name} \lsb{} \AL{}\id{type}\AR{,} \rsb \> function type instatiation \\
+  \K{lambda} \AL \id{type bind} \AR{,} {\tt\TTand} \id{expr} \> lambda expression \\
+  \id{identifier} [ {\tt'} \id{identifier} ] \> name \\
+  \id{identifier} {\tt\char`~} \> old name \\
+  \lp \id{expr} \rp \> bracketed expression \\
+  \K{iota} \id{bind} {\tt\TTand} \id{expr} \> iota expression \\
+  % Symbolic literal. 
+\end{tabbingone}
+
+\begin{tabbingone}\-\kill
+  \id{pattern bind} = \id{pattern} $|$ \id{bind}  \\
+  \id{local definition} = \id{value definition} $|$ \id{function definition} \\
+  \id{value definition} = \id{pattern} [ : \id{type} ] {\tt=} \id{expr} \\
+\end{tabbingone}
+
+\id{bind} =
+\begin{tabbingone}
+  \id{pattern} \K{in} \K{set} \id{expr} \> set bind\\
+  \id{pattern} {\tt:} \id{type}         \> type bind \\
+\end{tabbingone}
+
+
+\id{mult bind} =
+\begin{tabbingone}
+  \AL \id{pattern} \AR{,} \K{in} \K{set} \id{expr} \> multiple set bind\\
+  \AL \id{pattern} \AR{,} {\tt:} \id{type}         \> multiple type bind\\
+\end{tabbingone}
+
+
+\id{pattern} =
+\begin{tabbingone}
+  \id{id} $|$ - \> pattern identifier\\
+  \lp \id{expr} \rp \> match value\\
+  \lb \AL \id{pattern} \AR{,} \rb $|$ \lb \rb \> set enumeration pattern\\
+  \id{pattern} \K{union} \id{pattern} \> set union pattern\\
+  \lsb \AL \id{pattern} \AR{,} \rsb $|$ \lsb \rsb \> sequence enumeration pattern\\
+  \id{pattern} \TTtilde{} \id{pattern} \> sequence concatination pattern\\
+  \K{mk\_}\lp \AL \id{pattern} \AR{,} \rp \> tuple pattern\\
+  \K{mk\_}\id{id} \lp \AL \id{pattern} \AR{,} \rp \> record pattern\\
+\end{tabbingone}
+
+
+\id{state designator} =
+\begin{tabbingone}
+  \id{id} \> identifier reference\\
+  \id{state designator} . \id{id} \> field reference\\
+  \id{state designator} \lp \id{expr} \rp \> map reference\\
+  \id{state designator} \lp \id{expr} \rp \> sequence reference\\
+\end{tabbingone}
+
+\vspace{2ex}
+
+The meaning of \AL\id{xx} \AR{{\em s\/}} is at least one occurrence of \id{xx},
+possibly more but then separated by the symbol {\em s\/} which is either empty
+or comma ``{\tt,}'' or semicolon ``{\tt;}''. \AL\id{xx} \ARX{{\em s\/}}
+means the same, except that {\em s\/} may follow the last occurence of
+\id{xx}. 
+
+The meaning of $[\id{xx}]$ is zero or one occurrence of \id{xx}.
+
+Definitions that span multiple lines are per default alternatives. 
+An exception to this rule are lines that are ended by comma ``,'',
+which imply a multiline sequential definition. Commas are also used
+to separate symbols where ambiguity would otherwise exist (cf.~the definition 
+of \id{module}). 
+
+%\end{multicols}
+%\newpage
+%\begin{multicols}{3}
+
+\id{document} = 
+\begin{tabbingone}
+  \AL \id{module} \RMor{} \id{dynamic link module} \AR{\ } \RMor{} \AL \id{definition block} \AR{\ } \\
+\end{tabbingone}
+  
+\begingroup
+  \parskip=0pt
+  \topsep=0pt
+  \partopsep=0pt
+\begin{tabbing}
+\id{module} = \=
+  \K{module}, \id{id},
+  \id{interface}, \\
+  \> \K{definitions} \AL \id{definition block} \AR{\ },
+  \K{end} \id{id}    \\
+\end{tabbing}
+\endgroup
+
+\id{interface} = 
+\begin{tabbingone}
+  {}[ \id{module parameters} ], \\
+  {}[ \id{import definition list} ], \\
+  {}[ \id{instantiation instance list} ], \\
+  \id{export definition}  \\
+\end{tabbingone}
+
+\begin{tabbingone}\-\kill
+\id{module parameters} = 
+  \K{parameters} \AL \id{parameter signature} \AR{\ } \\
+\end{tabbingone}
+
+\begingroup
+  \parskip=0pt
+  \topsep=0pt
+  \partopsep=0pt
+\begin{tabbing}
+\id{parameter signature}= \=
+  \K{types} \AL \id{id} \AR{,}   \\ 
+\>\K{values}  \AL \id{name list} {\tt:} type \ARX{;}           \\
+\>\K{functions} \AL \id{name list} {\tt:} function type \ARX{;}       \\
+\end{tabbing}
+\endgroup
+
+\begin{tabbingone}\-\kill
+\id{import definition list} =  \K{imports}
+  \AL{} \id{import definition} \AR{,}  \>  \\
+\end{tabbingone}
+
+\begin{tabbingone}\-\kill
+\id{import definition} =
+  \K{from} \id{id} ( \K{all} \RMor \AL \id{import signature} \AR{\ } ) \\
+\end{tabbingone}
+
+\id{import signature} = 
+\begin{tabbingone}
+  \K{types} \AL{} ( \id{name} \RMor{} \id{type definition} ) [ \K{renamed} \id{name} ] \ARX{;}  \> \\
+  \K{values} \AL{} \id{name} [ {\tt:} \id{type} ] [ \K{renamed} \id{name} ] \ARX{;}  \> \\
+  \K{functions} \AL{} \id{name} [ {\tt:} \id{function type} ] [ \K{renamed} \id{name} ] \ARX{;}  \> \\
+  \K{operations} \AL{} \id{name} [ {\tt:} \id{operation type} ] [ \K{renamed} \id{name} ] \ARX{;} \> \\
+\end{tabbingone}
+
+\begin{tabbingone}\-\kill
+\id{instantiation instance list} = 
+  \K{instantiations} \AL \id{instantiation instance} \AR{,} \> \\
+\end{tabbingone}
+
+\id{instantiation instance} = 
+\begin{tabbingone}
+  \id{id} \K{as} \lp{} [\id{substitutions}] \rp{}
+  ( \K{all} \RMor{} \AL \id{import signature} )\\
+\end{tabbingone}
+
+\begin{tabbingone}\-\kill
+\id{substitutions} = 
+  \AL \id{id} {\tt->} ( \id{basic type} \RMor{} \id{expression} ) \AR{,}  \\
+\end{tabbingone}
+
+\begin{tabbingone}\-\kill
+\id{export definition} =
+  \K{exports} ( \K{all} \RMor{} \AL \id{export signature} \AR{\ } )\\
+\end{tabbingone}
+
+\id{export signature} = 
+\begin{tabbingone}
+  \K{types} \AL [\K{struct}] \id{name} \ARX{;}   \> \\
+  \K{values} \AL \id{name list} {\tt:} \id{type} \ARX{;}  \> \\
+  \K{functions} \AL \id{name list} {\tt:} \id{function type} \ARX{;}  \> \\
+  \K{operations} \AL \id{name list} {\tt:} \id{operation type} \ARX{;}  \> \\
+\end{tabbingone}
+
+\id{dynamic link module} =
+\begin{tabbingone}
+  \K{dlmodule}, \id{id},
+  \id{dynamic link interface}, 
+  [\id{use signature}],
+  \K{end} \id{id}    \\
+\end{tabbingone}
+
+\id{dynamic link interface} = 
+\begin{tabbingone}
+  {}[ \id{dynamic link import definition list} ], 
+  \id{dynamic link export definition}  \\
+\end{tabbingone}
+
+\id{import definition list} = 
+\begin{tabbingone}
+ \K{imports}
+  \AL{} \id{dynamic link import definition} \AR{,}  \>  \\
+\end{tabbingone}
+
+\id{dynamic link import definition} =
+\begin{tabbingone}
+  \K{from} \id{id} \id{dynamic link import types signature} \\
+\end{tabbingone}
+
+\id{dynamic link import types signature} = 
+\begin{tabbingone}
+  \K{types} \AL{} \id{name} ] \ARX{;} \\
+\end{tabbingone}
+
+\id{dynamic link export definition} =
+\begin{tabbingone}
+  \K{exports} \AL \id{dynamic link export signature} \AR{\ } \\
+\end{tabbingone}
+
+\id{dynamic link export signature} = 
+\begin{tabbingone}
+  \K{values}  \AL \id{name list}, {\tt:}, type \ARX{;}           \\
+  \K{functions} \AL \id{name list}, {\tt:}, function type \ARX{;}  \\
+  \K{operations} \AL \id{name list} {\tt:} \id{operation type} \ARX{;}  \> \\
+\end{tabbingone}
+
+\begingroup
+  \parskip=0pt
+  \topsep=0pt
+  \partopsep=0pt
+\begin{tabbing}
+\id{definition block} = \=
+  \id{type definitions}  \\
+\>  \id{state definitions}  \\
+\>  \id{value definitions}  \\
+\>  \id{function definitions}  \\
+\>  \id{operation definitions} \\
+\end{tabbing}
+\endgroup
+
+\begin{tabbingone}\-\kill
+\id{type definitions} = 
+  \K{types} \AL \id{type definition} \ARX{;}         \\
+\end{tabbingone}
+
+\begingroup
+  \parskip=0pt
+  \topsep=0pt
+  \partopsep=0pt
+\begin{tabbing}
+\id{type definition} = \=
+  \id{id} {\tt=} \id{type} [ \id{invariant} ]  \\
+\>  \id{id} {\tt::} [ \AL [ \id{id} {\tt:} ] \id{type} \AR{\ } ] [ \id{invariant} ] \\
+%  \id{id} {\tt::} \id{field list} [ \id{invariant} ] \\
+\end{tabbing}
+\endgroup
+
+\id{type} = 
+\begin{tabbingone}
+  \lp{} \id{type} \rp   \RMor \> bracketed type \\
+  \K{bool} \RMor{} \K{nat} \RMor{} \K{nat1} \RMor{} 
+  \K{int} \RMor{} \K{rat} \RMor{} \K{real} \RMor{} \\
+  \K{char} \RMor{} \K{token}    \> basic type \\
+  {\tt<} \id{identifier} {\tt>}    \> quote type \\
+  \K{compose} \id{id} \K{of} [ \AL [ \id{id} {\tt:} ] \id{type} \AR{\ } ] \K{end} \> composite type \\
+%  \K{compose} \id{id} \K{of} \id{field list} \K{end}    \> composite type \\
+  \id{type} \TTor{} \AL \id{type} \AR{\TTor}         \> union type \\
+  \id{type} \TTast{} \AL \id{type} \AR{\TTast}       \> product type \\
+  \lsb{} \id{type} \rsb                                      \> optional type \\
+  \K{set of} \id{type}                                     \> set type \\
+  \K{seq of} \id{type}                                     \> seq0 type \\
+  \K{seq1 of} \id{type}                                    \> seq1 type \\
+  \K{map} \id{type} \K{to} \id{type}                       \> general map type \\
+  \K{inmap} \id{type} \K{to} \id{type}                     \> injective map type \\
+  \id{discretionary type} {\tt->} \id{type}                \> partial function type \\
+  \id{name}                                                \> type name \\
+  {\tt@} \id{id}                                           \> type variable \\
+\end{tabbingone}
+
+\id{function type} =
+\begin{tabbingone}
+  \id{discretionary type} {\tt->} \id{type}                \> partial function type \\
+  \id{discretionary type} {\tt+>} \id{type}                \> total function type \\
+\end{tabbingone}
+
+\begin{tabbingone}\-\kill
+\id{discretionary type} =
+  \id{type} \RMor{} \lp\rp  \\
+\end{tabbingone}
+
+\id{state definition} =
+\begin{tabbingone}
+  \K{state} \id{id} \K{of} [ \AL [ \id{id} {\tt:} ] \id{type} \AR{\ } ] 
+%  \K{state} \id{id} \K{of} \id{field list} \\
+  {}[\id{invariant}] [\id{initialization}] \K{end} \\
+\end{tabbingone}
+
+\begin{tabbingone}\-\kill
+\id{invariant} = 
+  \K{inv} \id{invariant initial function} \\
+\end{tabbingone}
+
+\begin{tabbingone}\-\kill
+\id{initialization} = 
+  \K{init} \id{invariant initial function} \\
+\end{tabbingone}
+
+\begin{tabbingone}\-\kill
+\id{invariant initial function} =
+  \id{pattern} {\tt==} \id{expr} \\
+\end{tabbingone}
+
+\begin{tabbingone}\-\kill
+\id{value definitions} =
+  \K{values} \AL \id{pattern} [ {\tt:} \id{type} ] {\tt=} \id{expr} \ARX{;} \\
+\end{tabbingone}
+
+\begin{tabbingone}\-\kill
+\id{function definitions} =  
+  \K{functions} \AL \id{function definition} \ARX{;}  \\
+\end{tabbingone}
+
+\id{function definition} = 
+\begin{tabbingone}
+  \id{explicit function definition} \RMor{}
+  \id{implicit function definition} \RMor{}\\
+  \id{extended explicit function definition}\\
+\end{tabbingone}
+
+\id{explicit function definition} =
+\begin{tabbingone}
+  \id{id} [ \id{type variable list} ] {\tt:} \id{function type} \\
+  \id{id} \id{parameters list} {\tt==} \id{expr} \\
+  {}[ \K{pre} \id{expr} ] 
+  {}[ \K{post} \id{expr} ]  \\
+\end{tabbingone}
+
+\id{implicit function definition} =
+\begin{tabbingone}
+  \id{id} [ \id{type variable list} ]
+  \id{parameter types}
+  \AL \id{id} {\tt:} \id{type} \AR{,} \\
+  {}[ \K{pre} \id{expr} ] 
+  \K{post} \id{expr}          \\
+\end{tabbingone}
+
+\id{extended explicit function definition} =
+\begin{tabbingone}
+  \id{id} [ \id{type variable list} ] 
+  \id{parameter types} {\tt==}  
+  \AL \id{id} {\tt:} \id{type} \AR{,} \\
+   \id{expr} \\
+  {}[ \K{pre} \id{expr} ] 
+  {}[ \K{post} \id{expr} ]  \\
+\end{tabbingone}
+
+\begin{tabbingone}\-\kill
+\id{type variable list} =
+  \lsb \AL{} \id{type variable identifier} \AR{,} \rsb  \\
+\end{tabbingone}
+
+\begin{tabbingone}\-\kill
+\id{parameters list} =
+  \AL \id{parameters} \AR{\ } \\
+\end{tabbingone}
+
+\begin{tabbingone}\-\kill
+\id{parameters} = 
+  \lp{} [ \id{pattern list} ] \rp   \\
+\end{tabbingone}
+
+\begin{tabbingone}\-\kill
+\id{parameter types} = 
+  \lp\ [\AL \id{pattern list}{\tt:}\id{type} \AR{,}] \rp \> \\
+\end{tabbingone}
+
+\id{operation definitions} =
+\begin{tabbingone}
+  \K{operations} \AL \id{operation definition} \ARX{;}  \\
+\end{tabbingone}
+
+\id{operation definition} =
+\begin{tabbingone}
+  \id{explicit operation definition} \RMor{}
+  \id{implicit operation definition} \RMor{} \\
+  \id{extended explicit operation definition} \\
+\end{tabbingone}
+
+\id{explicit operation definition} = 
+\begin{tabbingone}
+  \id{id} {\tt:} \id{discretionary type} {\tt==>} \id{discretionary type} \\
+  \id{id} \id{parameters} {\tt==} \id{statement} \\
+  {}[ \K{pre} \id{expr} ]
+  {}[ \K{post} \id{expr} ] \> \\
+\end{tabbingone}
+
+\id{implicit operation definition} = 
+\begin{tabbingone}
+  \id{id} \id{parameter types}
+  {}[ \AL\id{id} {\tt:} \id{type}\AR{,} ] \\
+  {}[ \id{externals} ]
+  {}[ \K{pre} \id{expr} ] 
+  \K{post} \id{expr},  \\
+  {}[ \id{exceptions} ] \\
+\end{tabbingone}
+
+\id{extended explicit operation definition} = 
+\begin{tabbingone}
+   \id{id} \id{parameter types} 
+  {}[ \AL\id{id} {\tt:} \id{type}\AR{,} ] {\tt==}\\
+  \id{statement} \\
+  {}[ \id{externals} ]
+  {}[ \K{pre} \id{expr} ] 
+  {}[ \K{post} \id{expr} ] {}[ \id{exceptions} ] \> \\
+\end{tabbingone}
+
+\begin{tabbingone}\-\kill
+\id{externals} = 
+  \K{ext} \AL \K{rd}\RMor\K{wr} \id{name list} [ {\tt:} \id{type} ] \AR{,}   \\
+\end{tabbingone}
+
+\begin{tabbingone}\-\kill
+\id{exceptions} = 
+  \K{errs} \AL \id{id} {\tt:} \id{expr} {\tt->} \id{expr} \AR{\ }  \\
+\end{tabbingone}
+
+%\end{multicols}
+
+\end{document}
+
+% Local Variables: 
+% fill-column: 300
+% End: 
+
+

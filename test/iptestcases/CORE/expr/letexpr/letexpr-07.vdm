@@ -1,0 +1,38 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+types
+
+  Even = nat
+  inv n == n mod 2 = 0
+
+operations
+
+
+
+---------------------------------------------------------------------
+----------------- LetExpr         -----------------------------------
+---------------------------------------------------------------------
+public Test : () ==> nat   
+Test () ==
+let a = 7
+in let b = 999,
+       f: nat +> nat
+       f(n) ==
+         a + n + b + c
+       pre a = 7
+   in let a = 100,
+          b = 100000,
+          c = 777
+      in
+        return if pre_f(37)
+               then f(a)
+               else 222;
+
+values
+
+  a : nat = 9;
+
+  c : int = -1106
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

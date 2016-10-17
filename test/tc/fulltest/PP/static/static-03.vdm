@@ -1,0 +1,22 @@
+class A
+
+operations
+
+public op:  () ==> ()
+op() ==
+  skip;
+
+public static op2 : () ==> ()
+op2() ==
+  op();
+
+public static op3 : () ==> nat
+op3() ==
+  return f2();
+
+functions
+
+public f2 : () -> nat
+f2() ==
+  1;
+end A

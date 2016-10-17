@@ -1,0 +1,15 @@
+class A
+
+operations
+public
+Test: () ==> seq of bool
+Test() ==
+  return [
+    let fn (n : nat) r : nat pre n < 5 post true
+    in pre_(fn, 8),
+    let fn (n : nat) r : nat pre n < 5 post true
+    in pre_fn(8)
+  ];
+
+end A
+

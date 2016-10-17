@@ -1,0 +1,256 @@
+--$Header: /home/vdmtools/cvsroot/toolbox/examples-jp/SSlib/test/DateT.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $
+/*
+テストグループ
+	Dateのテスト
+関連 UC
+	なし
+作成者
+	佐原伸
+*/
+class DateT is subclass of TestDriver
+functions
+tests : () -> seq of TestCase
+tests() == 
+	[ new DateT01(), new DateT02(), new DateT03(), 
+	new DateT04(),
+	new DateT05(), new DateT06(),new DateT07()
+	];
+end DateT
+
+/*
+シナリオID
+	曜日計算の検査
+親UseCase
+	なし
+内容
+	曜日計算の検査。
+*/
+class DateT01 is subclass of TestCase, CalendarDefinition
+operations 
+protected test: () ==> bool
+test() == 
+	let	jc = new JapaneseCalendar(),
+		d = jc.整数三つ組から日付を得る(2001,5,1)	,
+		d1 = jc.整数三つ組から日付を得る(2001,4,29),
+		d2 = jc.整数三つ組から日付を得る(2001,4,28)
+	in
+	return
+		d.曜日数を得る() = jc.曜日名から曜日数を求める(<火>) and
+		d.曜日名を得る() = <火> and
+		d1.曜日名を得る() = <日> and
+		d2.曜日名を得る() = <土> and
+		d.日曜日か？() = false and
+		d.土曜日か？() = false and
+		d.ウィークデイか？() = true and
+		d.休日か？() = false and 
+		d.平日か？() = true and
+		d.お休みか？()  = false
+	;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "DateT01:\t曜日計算の検査。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end DateT01
+
+/*
+シナリオID
+	日付の変換。
+親UseCase
+	なし
+内容
+	日付を変換する。
+*/
+class DateT02 is subclass of TestCase
+operations 
+protected test: () ==> bool
+test() == 
+	let	jc = new JapaneseCalendar(),
+		d = jc.整数三つ組から日付を得る(2001,5,1)		in
+	return
+		d.年月日の整数三つ組を得る() = mk_(2001,5,1) and
+		d.日付文字列を得る() = "20010501" and
+		d.asString() = "20010501" and
+		d.print() = "2001年05月01日"
+	;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "DateT02:\t日付を変換する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end DateT02
+
+/*
+シナリオID
+	休日数を得る。
+親UseCase
+	なし
+内容
+	休日数を得る。
+*/
+class DateT03 is subclass of TestCase
+operations 
+protected test: () ==> bool
+test() == 
+	let	jc = new JapaneseCalendar(),
+		d20000101 = jc.文字列から日付を得る("20000101"),
+		d0301 = jc.文字列から日付を得る("20010301"),
+		d0501 = jc.文字列から日付を得る("20010501"),
+		d0711 = jc.整数三つ組から日付を得る(2001,7,11)	in
+	return
+		d0301.休日数を得る(d0711)  = 24 and
+		d0501.開始日を含まない休日数を得る(d0711) = 13 and
+		d20000101.休日数を得る(d0711)  = 103
+	;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "DateT03:\t休日数を得る。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end DateT03
+
+/*
+シナリオID
+	日付計算。
+親UseCase
+	なし
+内容
+	日付計算を行う。
+*/
+class DateT04 is subclass of TestCase
+operations 
+protected test: () ==> bool
+test() == 
+	let	jc = new JapaneseCalendar(),
+		d20001231 = jc.整数三つ組から日付を得る(2000,12,31),
+		d1231 = jc.整数三つ組から日付を得る(2001,12,31),
+		d0626 = jc.整数三つ組から日付を得る(2001,6,26),
+		d0501 = jc.文字列から日付を得る("20010501"),
+		d0505 = jc.文字列から日付を得る("20010505"),
+		d0502 = jc.整数三つ組から日付を得る(2001,5,2)		in
+	return
+		d0502.平日を加算する(1).未来の平日を得る().日付文字列を得る() = "20010507" and
+		d0502.過去の平日を得る().平日を減算する(1).日付文字列を得る() = "20010501" and
+		d0501.過去の平日を得る().平日を減算する(1).日付文字列を得る() = "20010427" and
+		d0501.未来の平日を得る().日付文字列を得る() = "20010501" and
+		d0501.平日を加算する(2).日付文字列を得る() = "20010507" and
+		d0502.平日を減算する(2).日付文字列を得る() = "20010427" and
+		d1231.年始からの日数() = 365 and
+		d20001231.年始からの日数() = 366 and
+		d0501.指定曜日が何日あるか得る(d0626,<火>) = 9 and
+		jc.未来の平日を得る(d0505).日付文字列を得る() = "20010507" and
+		jc.未来の平日を得る(d0501).日付文字列を得る() = "20010501" and
+		jc.過去の平日を得る(d0501).日付文字列を得る() = "20010501" and
+		jc.過去の平日を得る(d0505).日付文字列を得る() = "20010502" 
+	;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "DateT04:\t日付計算を行う。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end DateT04
+
+/*
+シナリオID
+	日付の比較。
+親UseCase
+	なし
+内容
+	日付を比較する。
+*/
+class DateT05 is subclass of TestCase
+operations 
+protected test: () ==> bool
+test() == 
+	let	jc = new JapaneseCalendar(),
+		d0711 = jc.文字列から日付を得る("20010711")	in
+	(
+	jc.今日を設定する(jc.整数三つ組から日付を得る(2001, 3, 1));
+	let	d0301 = jc.今日()	in
+	return
+		d0711.＝(jc.整数三つ組から日付を得る(2001, 7, 11)) and
+		d0711.≠(jc.整数三つ組から日付を得る(2001, 7, 12)) and
+		jc.等しい(d0711,jc.整数三つ組から日付を得る(2001, 7, 11)) and
+		d0301.＜(d0711) and
+		jc.小さい(d0301, d0711) and
+		d0711.＞(d0301) and
+		jc.大きい(d0711,d0301) and
+		d0711.≧(d0711) and d0711.≧(d0301) and
+		jc.以上(d0711,d0711)  and jc.以上(d0711,d0301) and
+		d0711.≦(d0711) and d0301.≦(d0711) and
+		jc.以下(d0711,d0711) and jc.以下(d0301,d0711)
+	);
+protected 準備する: () ==> ()
+準備する() == テスト名 := "DateT05:\t日付を比較する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end DateT05
+
+/*
+シナリオID
+	指定曜日を得る。
+親UseCase
+	なし
+内容
+	指定曜日を得る。
+*/
+class DateT06 is subclass of TestCase, CalendarDefinition
+operations 
+protected test: () ==> bool
+test() == 
+	let	jc = new JapaneseCalendar(),
+		d10010301 = jc.文字列から日付を得る("10010301"),
+		d0711 = jc.文字列から日付を得る("20010711")	in
+	(
+	jc.今日を設定する(jc.整数三つ組から日付を得る(2001, 3, 1));
+	let	d0301 = jc.今日()		in
+	return
+		jc.月初指定曜日を得る(2000,3,<水>).年月日の整数三つ組を得る() = mk_( 2000,3,1 ) and
+		jc.月初指定曜日を得る(2001,7,<日>).年月日の整数三つ組を得る() = mk_( 2001,7,1 ) and
+		jc.月末指定曜日を得る(2000,2,<火>).年月日の整数三つ組を得る() = mk_( 2000,2,29 ) and
+		jc.月末指定曜日を得る(2001,7,<日>).年月日の整数三つ組を得る() = mk_( 2001,7,29 ) and
+		jc.第n指定曜日を得る(2001,7,5,<日>).年月日の整数三つ組を得る() = mk_( 2001,7,29 ) and
+		jc.第n指定曜日を得る(2001,7,6,<日>) = false and
+		jc.指定曜日が何日あるか得る(d0711,d0301,<日>)  = 19 and
+		jc.指定曜日が何日あるか得る(d0711,d10010301,<日>)  = 52196	
+	);
+protected 準備する: () ==> ()
+準備する() == テスト名 := "DateT06:\t指定曜日を得る。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end DateT06
+
+/*
+シナリオID
+	日付に関する照会
+親UseCase
+	なし
+内容
+	日付に関する照会
+親UseCase。
+*/
+class DateT07 is subclass of TestCase, CalendarDefinition
+operations 
+protected test: () ==> bool
+test() == 
+	let	jc = new JapaneseCalendar()	in
+	return
+		jc.閏年か？(2000) = true and
+		jc.閏年か？(2001) = false and
+		jc.閏年か？(1996) = true and
+		jc.閏年か？(1900) = false and
+		jc.閏年か？(1600) = true and
+		jc.日付文字列か？("sahara") = false and
+		jc.日付文字列か？("20010723") = true and
+		jc.日付文字列か？("20011232") = false and
+		jc.曜日は平日か？(<月>) = true and
+		jc.曜日は平日か？(<火>) = true and
+		jc.曜日は平日か？(<水>) = true and
+		jc.曜日は平日か？(<木>) = true and
+		jc.曜日は平日か？(<金>) = true and
+		jc.曜日は平日か？(<土>) = false and
+		jc.曜日は平日か？(<日>) = false and
+		jc.日付を文字列に変換する(jc.月末日を求める(2000,2)) = "20000229" and
+		jc.日付を文字列に変換する(jc.月末日を求める(2001,2)) = "20010228"
+	;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "DateT07:\t日付に関する照会。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end DateT07

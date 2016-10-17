@@ -1,0 +1,51 @@
+-- testing use of overloaded operation with multiple definitions
+
+class A is subclass of B
+
+operations
+
+public
+Test: () ==> nat
+Test() ==
+  return Op(true);
+
+public
+Test2: () ==> nat
+Test2() ==
+  return Op(7)
+
+end A
+
+class B is subclass of C
+
+operations
+
+public Op: () ==> nat
+Op() ==
+  return 7;
+
+public Op: nat * bool ==> nat
+Op(p,-) ==
+  return p + 8;
+
+public Op: nat ==> nat
+Op(n) ==
+  return n;
+  
+end B
+class C
+
+operations
+
+public Op: nat ==> nat
+Op(r) ==
+  return r div 5;
+
+public Op: nat * bool ==> nat
+Op(n,b) ==
+  is not yet specified;
+
+public Op: bool ==> nat
+Op(-) == return 1
+  
+end C

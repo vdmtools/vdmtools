@@ -1,0 +1,23 @@
+ class A
+
+  functions
+
+    protected f[@tp] : seq of @tp -> nat
+    f(l) == len l
+
+end A
+
+class B is subclass of A
+
+  functions
+
+    private  f[@tp] : seq of @tp -> nat
+    f(l) == card elems l
+
+  operations
+
+  public Test : () ==> nat
+    Test() ==
+      return f[nat]([0,0])
+
+end B

@@ -1,0 +1,105 @@
+class PinValue is subclass of ComparisonValue
+operations 
+public  toString : () ==> [String]
+toString() == 
+( return  ComparisonValue`toString()
+) ;
+
+public  getIntValue : () ==> int 
+getIntValue() == 
+( return  intSection
+) ;
+
+public  getStringValue : () ==> [String]
+getStringValue() == 
+( return  PinValue`stringSection
+) ;
+
+public  PinValue : [String] ==> PinValue
+PinValue(value__) == 
+( let - = ComparisonValue(value__)
+  in 
+    skip ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (NumberFormatException,j2v_exception)) -> 
+        ( dcl   charArray : map  int  to  char  := value__.toCharArray(),
+                position : int  := 0,
+                exception : [NumberFormatException] := j2v_exception;
+          trap  j2v_break with  
+            cases  true  : 
+              (isofclass  (J2V_Break,j2v_break)) -> 
+                skip 
+              
+            end  
+          in  
+            while  position < (card  dom  charArray) and  not  Character`isDigit(charArray(position)) do  
+            ( position := position+1
+            ) ;
+          if  position > 0
+          then  
+            ( intSection := Integer`parseInt(value__.substring(0 , position));
+              stringSection := value__.substring(position , (card  dom  value__)())
+            ) 
+          else  
+            ( intSection := Integer`MAX_VALUE;
+              stringSection := value__
+            ) 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( intSection := Integer`parseInt(value__.toString());
+      stringSection := new  String()
+    ) 
+) ;
+
+public  compareTo : [ComparisonValue] ==> int 
+compareTo(anotherPinValue) == 
+( dcl   returnValue : int  := 0;
+  if  is_ (anotherPinValue,[PinValue])
+  then  
+    ( dcl   testIntValue : int  := (def l_5 :  PinValue = (anotherPinValue)
+            in l_5).getIntValue(),
+            testStringValue : [String] := (def l_10 :  PinValue = (anotherPinValue)
+            in l_10).getStringValue();
+      if  PinValue`intSection < testIntValue
+      then  
+        ( returnValue := -1
+        ) 
+      else  
+        if  PinValue`intSection > testIntValue
+        then  
+          ( returnValue := 1
+          ) 
+        else  
+          if  PinValue`intSection = testIntValue
+          then  
+            ( if  PinValue`stringSection.compareTo(testStringValue) < 0
+              then  
+                ( returnValue := -1
+                ) 
+              else  
+                if  PinValue`stringSection.compareTo(testStringValue) > 0
+                then  
+                  ( returnValue := 1
+                  ) 
+                else  
+                  if  PinValue`stringSection.equals(testStringValue)
+                  then  
+                    ( returnValue := 0
+                    ) 
+            ) 
+    ) 
+  else  
+    ( returnValue := ComparisonValue`compareTo(anotherPinValue)
+    ) ;
+  return  returnValue
+) ;
+
+instance variables 
+  private  intSection : int ;
+  private  stringSection : [String]
+  
+end  PinValue

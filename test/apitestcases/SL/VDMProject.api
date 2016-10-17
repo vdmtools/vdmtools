@@ -1,0 +1,20 @@
+# positive testcases
+new project
+add file ($SOURCEPATH/test.vdm)
+save as ($GENPATH/test.prj)
+_exists file ($GENPATH/test.prj)
+get modules
+get files
+remove file ($SOURCEPATH/test.vdm)
+get files
+save
+_exists file ($GENPATH/test.prj)
+_delete file ($GENPATH/test.prj)
+
+# negative testcases
+new project
+open project (notexist.prj)
+add file (notexist.vdm)
+get files
+remove file (notexist.vdm)
+save

@@ -1,0 +1,49 @@
+class A
+
+types 
+  D = set of int
+  inv d == d<>{};
+  X:: real
+      k : int
+ 
+instance variables
+  i: nat;
+  k: int := 4;
+
+values
+  mk_(a,b) = mk_(3,6);
+  c : char = 'a';
+  d        = a + 1;        
+
+functions
+
+public  F: nat * nat -> (nat * nat)
+  F(i,j) == 
+    let x= mk_token(<HELLO>)
+    in mk_(i,j)
+
+operations
+
+  SetVal(a,b:nat) ==
+  ( i:= a;
+    k:= b;
+  );
+
+  m: nat * nat ==> nat * nat
+  m(i,j) ==
+    is not yet specified;
+
+  GetVal() res: nat * nat ==
+  return mk_(i,k)
+
+end A
+
+class B 
+
+operations
+
+public Test : () ==> seq of (nat | char)
+Test() ==
+let mk_(i,j) = new A().F(1,3) in
+return [i,j]
+end B

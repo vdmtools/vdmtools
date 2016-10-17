@@ -1,0 +1,122 @@
+\section{Pretty Print Mediator}
+
+\begin{vdm_al}
+module PP_MEDIATOR
+
+imports
+  from ENV all,
+  from SPEC_AST all,
+
+  from PP_TRA_DEF all,
+  from PP_TRA_EXPR all,
+  from PP_TRA_PO all,
+
+  from PP_TAR_DEF all,
+  from PP_TAR_EXPR all,
+  from PP_TAR_TYPE all,
+  from PP_TAR_PAT all,
+  from PP_TAR_PO all,
+
+  from POGTP all,
+
+  from AS all,
+  from CI all,
+  from REP all
+
+exports all
+
+definitions
+
+functions 
+
+trv_AstCI : AS`AstCI -> seq of char
+trv_AstCI(astci) == PP_TRA_DEF`trv_AstCI(astci);
+
+#ifdef VDMSL
+trv_Module : AS`Module -> seq of char
+trv_Module (md) == PP_TRA_DEF`trv_Module(md);
+#endif VDMSL
+#ifdef VDMPP
+trv_Class : AS`Class -> seq of char
+trv_Class (md) == PP_TRA_DEF`trv_Class(md);
+#endif VDMPP
+
+trv_Definitions : [AS`Name] -> seq of char
+trv_Definitions (mnm) ==
+    def tp_names   = SPEC_AST`GetTypeDefNames(mnm);
+        tpdefs     = List2SeparatorList(";\n\n",
+                      [PP_TRA_DEF`trv_TypeDef(SPEC_AST`GetTypeDef(tp_names(i))) 
+                       | i in set inds tp_names]);
+        fn_names   = SPEC_AST`GetFnDefNames(mnm);
+        fndefs     = List2SeparatorList(";\n\n",
+                      [PP_TRA_DEF`trv_FnDef(SPEC_AST`GetFnDef(fn_names(i)))
+                       | i in set inds fn_names]);
+        vals       = PP_TRA_DEF`trv_GlobalValueDef(SPEC_AST`GetValueDefSeq());
+        valdefs = List2SeparatorList(";\n\n",vals)
+    in 
+        (if tpdefs  = "" then "" else "\n\ntypes\n\n"^tpdefs)
+       ^(if fndefs  = "" then "" else "\n\nfunctions\n\n"^fndefs)
+       ^(if valdefs = "" then "" else "\n\nvalues\n\n"^valdefs);
+
+trv_TypeDef : AS`TypeDef -> seq of char
+trv_TypeDef (tpdef) == PP_TRA_DEF`trv_TypeDef (tpdef);
+
+trv_FnDef : AS`FnDef -> seq of char
+trv_FnDef(fndef) == PP_TRA_DEF`trv_FnDef(fndef);
+
+trv_GlobalValueDef : seq of AS`ValueDef -> seq of seq of char
+trv_GlobalValueDef(vals) == PP_TRA_DEF`trv_GlobalValueDef(vals);
+
+trv_Expr : [AS`Expr] -> seq of char
+trv_Expr (ex) ==
+  if ex<>nil then PP_TRA_EXPR`trv_Expr(ex)
+  else [];
+
+trv_NameName : AS`Name -> seq of char
+trv_NameName (nm) == PP_TRA_EXPR`trv_NameName(nm);
+
+trv_ProofObligation : POGTP`ProofObligation -> seq of char
+trv_ProofObligation (po) ==  PP_TRA_PO`trv_ProofObligation (po);
+
+PrintName : AS`Name -> seq of char 
+PrintName (name) ==
+    PP_TAR_PO`PrintName(name);
+
+PrintPOLocation : CI`ContextId -> seq of char
+PrintPOLocation (cid) == 
+    PP_TAR_PO`PrintPOLocation(cid);
+
+PrintPODueTo : POGTP`Classification 
+               * seq of AS`Name        -> seq of char
+PrintPODueTo (kind,source) ==  
+    PP_TAR_PO`PrintPODueTo(kind,source);
+
+PrintPOKind : POGTP`Classification -> seq of char
+PrintPOKind (kind) ==
+    PP_TAR_PO`PrintPOKind(kind);
+
+PrintPOLocContext : POGTP`LocContext -> seq of char
+PrintPOLocContext (loc) ==
+    PP_TAR_PO`PrintPOLocContext(loc);
+
+  List2SeparatorList : seq of char * seq of seq of char  -> seq of char 
+  List2SeparatorList (separator,ss) == 
+    if ss = [] then 
+      ""
+    else
+      let head = hd ss,
+          tail = if tl ss = [] then
+                   ""
+                 else 
+                   separator^List2SeparatorList(separator,tl ss)
+      in 
+          head^tail;   
+
+end PP_MEDIATOR
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[PP\_MEDIATOR`List2SeparatorList]
+{rtinfo.ast}[PP_MEDIATOR]
+\end{rtinfo}

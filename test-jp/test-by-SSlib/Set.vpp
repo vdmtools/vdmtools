@@ -1,0 +1,51 @@
+class Set	-- 集合
+/*
+責任
+	集合を表す。
+概要
+	集合演算であらかじめ定義された機能以外の機能を定義する。
+*/
+
+values
+
+	Rcsid = "$Id: Set.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $";
+	
+functions -- 関数定義。
+static public asSequence[@型]: set of @型 -> seq of @型
+asSequence(a集合) == VDMUtil`set2seq[@型](a集合)
+post
+	hasSameElems[@型](RESULT, a集合);
+
+-- 列が集合の要素を過不足無く含む事を表す述語(谷津さん作成）
+static public hasSameElems[@型] : (seq of @型) * (set of @型) -> bool
+hasSameElems(列,集合) == (elems 列 = 集合) and (len 列 = card 集合);
+
+--集合から要素数n個の組み合わせを得る。
+static public Combinations[@型] : nat1 -> set of @型 -> set of set of @型
+Combinations(n)(ある集合) ==
+	--{{a1,...,an} | a1 in set ある集合,..., an in set ある集合 & card {a1,...,an} = n}
+	{ ある要素 | ある要素 in set power ある集合 & card ある要素 = n};
+
+
+--関数fを集合に適用した結果の集合を返す。
+static public fmap[@型1,@型2]: (@型1 -> @型2) -> set of @型1 -> set of @型2
+fmap(関数)(集合) == {関数(s) | s in set 集合};
+
+--集合sの要素の合計を返す。重複した要素は加算されないので、注意が必要。
+static public Σ[@型]: set of @型 ->  @型
+Σ(集合) == Σ補助関数[@型](集合)(0)
+pre
+	is_(集合, set of int) or is_(集合, set of nat) or is_(集合, set of nat1) or
+ 	is_(集合, set of real) or is_(集合, set of rat);
+
+static Σ補助関数[@型] : set of @型 -> @型 -> @型
+Σ補助関数(集合)(合計) ==
+	cases 集合 :
+	({})	-> 合計,
+	{要素} union 残集合->
+		Σ補助関数[@型](残集合)(合計 + 要素)
+	end
+pre
+	pre_Σ[@型](集合);
+
+end Set

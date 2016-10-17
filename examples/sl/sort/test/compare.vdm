@@ -1,0 +1,15 @@
+module COM
+
+exports all
+
+definitions
+
+functions
+
+  Compare: bool +> seq of char
+  Compare(argcmp) ==
+    if argcmp
+    then "Ok"
+    else "Unexpected result appeared"
+
+end COM

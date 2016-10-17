@@ -1,0 +1,32 @@
+\begin{vdm_al}
+class Buffer
+--$Id: buffer.vpp,v 1.3 2005/11/10 07:15:56 vdmtools Exp $
+
+instance variables
+バッファ : [char] := nil;
+
+operations
+public Put: char ==> ()
+Put (item) ==
+	バッファ := item;
+
+public Get: () ==> char
+Get () ==
+	let 旧バッファ = バッファ 
+	in
+	( バッファ :=nil;
+	return 旧バッファ );
+
+/* このsyncが無いと、消費者はデータを取り損ねて、nilデータを読もうとする。 */
+sync
+	per Put => バッファ = nil;
+	per Get => バッファ <> nil;
+	mutex(Put, Get);
+/* */
+	
+end Buffer
+\end{vdm_al}
+
+\begin{rtinfo}
+[TotalxCoverage]{vdm.tc}[Buffer]
+\end{rtinfo}

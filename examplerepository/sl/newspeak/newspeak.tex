@@ -1,0 +1,27 @@
+\documentclass{article}
+\usepackage{a4}
+\usepackage{makeidx}
+\usepackage{vdmsl-2e}
+
+\newcommand{\StateDef}[1]{{\bf #1}}
+\newcommand{\TypeDef}[1]{{\bf #1}}
+\newcommand{\TypeOcc}[1]{{\it #1}}
+\newcommand{\FuncDef}[1]{{\bf #1}}
+\newcommand{\FuncOcc}[1]{#1}
+\newcommand{\ModDef}[1]{{\tiny #1}}
+
+\makeindex
+
+\begin{document}
+
+\title{Denotational Semantics of the programming language NewSpeak}
+\author{Submitted by Paul Mukherjee}
+\maketitle
+
+\begin{vdm}
+\input{newspeak.avdm}
+\end{vdm}
+
+\printindex
+\end{document}
+

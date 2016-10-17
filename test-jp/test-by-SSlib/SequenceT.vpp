@@ -1,0 +1,713 @@
+--$Header: /home/vdmtools/cvsroot/toolbox/examples-jp/SSlib/test/SequenceT.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $
+/*
+テストグループ
+	Sequenceのテスト
+関連 UC
+	なし
+作成者
+	佐原伸
+*/
+class SequenceT is subclass of TestDriver
+functions
+public tests : () -> seq of TestCase
+tests() == 
+	[ 
+	new SequenceT23(), new SequenceT24(),
+	new SequenceT19(), new SequenceT20(),
+	new SequenceT21(), new SequenceT22(),
+	new SequenceT01(), new SequenceT02(),
+	new SequenceT03(), new SequenceT04(),
+	new SequenceT05(), new SequenceT06(),
+	new SequenceT07(), new SequenceT08(),
+	new SequenceT09(), new SequenceT10(),
+	new SequenceT11(), new SequenceT12(),
+	new SequenceT13(), new SequenceT14(),
+	new SequenceT15(), new SequenceT16(),
+	new SequenceT17(), new SequenceT18()
+	];
+end SequenceT
+
+/*
+シナリオID
+	計算に関するシナリオ０１
+親UseCase
+	計算に関するシナリオ
+内容
+	整数の合計と、積を計算
+*/
+class SequenceT01 is subclass of TestCase
+operations 
+public test: () ==> bool
+test() == 
+	let	sq = new Sequence()	in
+       return (sq.Σ[int]([1,2,3,4,5,6,7,8,9]) = 45 and
+       sq.Σ[int]([]) = 0) and
+       Sequence`Π[int]([2, 3, 4]) = 24 and
+       Sequence`Π[int]([]) = 1
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT01:\t整数の合計と、積。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT01
+
+/*
+シナリオID
+	計算に関するシナリオ０2
+親UseCase
+	計算に関するシナリオ
+内容
+	実数の合計と、積を計算
+注意
+	実数の同値判定を行っているが、処理系の実装方法の変化により、同値が成り立たなくなる可能性がある。
+*/
+class SequenceT02 is subclass of TestCase
+operations 
+public test: () ==> bool
+test() == 
+	let	sq = new Sequence()	in
+	return sq.Σ[real]([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]) = 4.5 and
+	sq.Σ[real]([]) = 0.0 and
+	Sequence`Π[real]([2.0, 3.0, 4.0]) = 24.0 and
+	Sequence`Π[real]([]) = 1.0 and
+	Sequence`Π[real]([2.1, 3.2, 4.3]) = 2.1 * 3.2 * 4.3
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT02:\t実数の合計、積。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT02
+
+/*
+シナリオID
+	順序に関するシナリオ０1
+親UseCase
+	順序に関するシナリオ
+内容
+	全順序か判定。
+*/
+class SequenceT03 is subclass of TestCase
+operations 
+public test: () ==> bool
+test() == 
+	let	sq = new Sequence()	in
+	return sq.昇順か？[int]([1,2,4,4,7,8,8,8]) and
+	not sq.昇順か？[real]([1.0,2.0,3.0,1.5])
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT03:\t整数と実数の昇順。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT03
+
+/*
+シナリオID
+	順序に関するシナリオ０2
+親UseCase
+	順序に関するシナリオ
+内容
+	全順序で降順か判定。
+*/
+class SequenceT04 is subclass of TestCase
+operations 
+public test: () ==> bool
+test() == 
+	let	sq = new Sequence()	in
+	return 
+		sq.降順か？[int]([3,2,2,1,1]) and
+		Sequence`全順序降順か？[int] (lambda x : int, y : int & x < y)([3,2,2,1,1]) and
+		Sequence`全順序降順か？[int] (lambda x : int, y : int & x < y)([3,2,2,1,2]) = false
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT04:\t整数の降順。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT04
+
+/*
+シナリオID
+	順序に関するシナリオ０3
+親UseCase
+	順序に関するシナリオ
+内容
+	順序通りか？。
+*/
+class SequenceT05 is subclass of TestCase
+types
+	public テスト型 = int|seq of char|char;
+	public レコード型 ::
+		値 : int
+		文字列 : seq of char
+		文字 : char;
+operations 
+public  test: () ==> bool
+test() == 
+	let	sq = new Sequence(),
+		順序決定関数列 =
+			[(lambda x : int, y : int & x < y),
+			lambda x : seq of char, y : seq of char & String`小さい(x,y),
+			lambda x : char, y : char & Character`小さい(x,y)
+			],
+		順序決定関数 =
+			lambda x : レコード型, y :  レコード型 &
+				Sequence`順序通りか？[SequenceT05`テスト型]
+					(順序決定関数列)([x.値,x.文字列,x.文字])([y.値,y.文字列,y.文字])
+		in
+	return 
+		Sequence`sort[SequenceT05`レコード型](順序決定関数)
+			([mk_レコード型(10,"sahara",'c'),mk_レコード型(10,"sahara",'a')]) =
+			[mk_レコード型(10,"sahara",'a'),mk_レコード型(10,"sahara",'c')] and
+		sq.順序通りか？[SequenceT05`テスト型](順序決定関数列)([3,"123",'a'])([3,"123",'A']) = true and
+		sq.順序通りか？[SequenceT05`テスト型](順序決定関数列)([3,"123",'a'])([3,"123",'0']) = false and
+		sq.順序通りか？[int|seq of char|char](順序決定関数列)([])([]) = false and
+		sq.順序通りか？[int|seq of char|char](順序決定関数列)([])([3,"123",'0']) = true and
+		sq.順序通りか？[int|seq of char|char](順序決定関数列)([3,"123",'0'])([]) = false
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT05:\t順序通りか？。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT05
+
+/*
+シナリオID
+	順序に関するシナリオ０4
+親UseCase
+	順序に関するシナリオ
+内容
+	系列をマージする。
+*/
+class SequenceT06 is subclass of TestCase
+operations 
+public  test: () ==> bool
+test() == 
+	let	sq = new Sequence(),
+		順序決定関数1 = lambda x : int, y : int & x < y,
+		順序決定関数2 = lambda x : char, y : char & Character`小さい(x,y)		in
+	return
+		sq.マージする[int](順序決定関数1)([1,4,6])([2,3,4,5]) = [1,2,3,4,4,5,6] and
+		sq.マージする[char](順序決定関数2)("146")("2345") = "1234456" and
+		sq.マージする[char](順序決定関数2)("")("2345") = "2345" and
+		sq.マージする[char](順序決定関数2)("146")("") = "146"
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT06:\t系列をマージする。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT06
+
+/*
+シナリオID
+	列の操作シナリオ
+親UseCase
+	なし
+内容
+	列の操作する。
+*/
+class SequenceT07 is subclass of TestCase
+operations 
+public  test: () ==> bool
+test() == 
+	let	sq = new Sequence()		in
+	return
+		sq.take[int](2)([2,3,4,5]) = [2,3] and
+		sq.drop[char](5)("Shin Sahara") = "Sahara" and
+		sq.last[int]([1,2,3]) = 3 and
+		sq.filter[int](lambda x:int & x mod 2 = 0)([1,2,3,4,5,6]) = [2,4,6] and
+		Sequence`SubSeq[char](4)(3)("1234567890") = "456" and
+		Sequence`flatten[int]([[1,2,3], [3,4], [4,5,6]]) = [ 1,2,3,3,4,4,5,6 ]
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT07:\t列の操作する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT07
+
+/*
+シナリオID
+	ソートのシナリオ
+親UseCase
+	なし
+内容
+	ソートする。
+*/
+class SequenceT08 is subclass of TestCase
+operations 
+public  test: () ==> bool
+test() == 
+	return
+		Sequence`昇順Sort[int]([3,1,6,4,2,6,5]) = [1,2,3,4,5,6,6] and
+		Sequence`降順Sort[int]([3,1,6,4,2,6,5]) = [6,6,5,4,3,2,1] 
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT08:\tソートする。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT08
+
+/*
+シナリオID
+	compactのシナリオ
+親UseCase
+	なし
+内容
+	nil要素を削除する。
+*/
+class SequenceT09 is subclass of TestCase
+operations 
+public  test: () ==> bool
+test() == 
+	return
+		Sequence`compact[[int]]([3,1,6,4,nil,2,6,5,nil]) = [3,1,6,4,2,6,5] and
+		Sequence`compact[[int]]([nil,nil]) = [] and
+		Sequence`compact[[int]]([]) = [] 
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT09:\tnil要素を削除する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT09
+
+/*
+シナリオID
+	逆順のシナリオ
+親UseCase
+	なし
+内容
+	逆順の列を得る。。
+*/
+class SequenceT10 is subclass of TestCase
+operations 
+public  test: () ==> bool
+test() == 
+	return
+		Sequence`freverse[[int]]([3,1,6,4,nil,2,6,5,nil]) = [nil, 5, 6, 2, nil, 4, 6, 1, 3] and
+		Sequence`freverse[[int]]([]) = [] 
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT10:\t逆順の列を得る。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT10
+
+/*
+シナリオID
+	順列のシナリオ
+親UseCase
+	なし
+内容
+	順列を得る。
+*/
+class SequenceT11 is subclass of TestCase
+operations 
+public  test: () ==> bool
+test() == 
+	return
+		Sequence`Permutations[[int]]([1,2,3]) =
+			{ [ 1,2,3 ],
+			  [ 1,3,2 ],
+			  [ 2,1,3 ],
+			  [ 2,3,1 ],
+			  [ 3,1,2 ],
+			  [ 3,2,1 ] } and
+		Sequence`Permutations[[int]]([]) = {[]}
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT11:\t順列を得る。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT11
+
+/*
+シナリオID
+	列の検査シナリオ
+親UseCase
+	なし
+内容
+	列を検査する。
+*/
+class SequenceT12 is subclass of TestCase
+operations 
+public  test: () ==> bool
+test() == 
+	return
+		Sequence`isMember[int](2)([1,2,3,4,5,6]) and
+		Sequence`isMember[int](0)([1,2,3,4,5,6]) = false and
+		Sequence`isMember[int](6)([1,2,3,4,5,6]) and
+		Sequence`isAnyMember[int]([6])([1,2,3,4,5,6]) and
+		Sequence`isAnyMember[int]([0,7])([1,2,3,4,5,6]) = false and
+		Sequence`isAnyMember[int]([4,6])([1,2,3,4,5,6]) and
+		Sequence`isAnyMember[int]([])([1,2,3,4,5,6]) = false 
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT12:\t列を検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT12
+-------------------------------------------------------------
+/*
+シナリオID
+	fmapの検査シナリオ
+親UseCase
+	なし
+内容
+	fmapを検査する。
+*/
+class SequenceT13 is subclass of TestCase
+operations 
+public  test: () ==> bool
+test() == 
+	return
+		Sequence`fmap[int, int](lambda x:int & x mod 3)([1,2,3,4,5])  = [1, 2, 0, 1, 2] and
+		Sequence`fmap[seq of char, seq of char]
+			(Sequence`take[char](2))(["佐原伸", "酒匂寛"]) = ["佐原", "酒匂"]
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT13:\tfmapを検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT13
+-------------------------------------------------------------
+/*
+シナリオID
+	Indexの検査シナリオ
+親UseCase
+	なし
+内容
+	Indexを検査する。
+*/
+class SequenceT14 is subclass of TestCase
+operations 
+public  test: () ==> bool
+test() == 
+	let	index = Sequence`Index,
+		indexAll = Sequence`IndexAll
+	in
+	return
+		index[int](1)([1,2,3,4,5])  = 1 and
+		index[int](5)([1,2,3,4,5])  = 5 and
+		index[int](9)([1,2,3,4,5])  = 0 and
+		index[char]('b')(['a', 'b', 'c'])  = 2 and
+		index[char]('z')(['a', 'b', 'c'])  = 0 and
+		indexAll[int](9)([1,2,3,4,5]) = {} and
+		indexAll[int](9)([]) = {} and
+		indexAll[int](1)([1,2,3,4,1]) = {1,5} and
+		indexAll[int](1)([1,2,3,4,1,1]) = {1,5,6} 
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT14:\tIndexを検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT14
+-------------------------------------------------------------
+/*
+シナリオID
+	平均の検査シナリオ
+親UseCase
+	なし
+内容
+	「平均を得る」を検査する。
+*/
+class SequenceT15 is subclass of TestCase
+operations 
+public  test: () ==> bool
+test() == 
+	let	avg1 = Sequence`平均を得る[int],
+		avg2 = Sequence`平均を得る[real]
+	in
+	return
+		avg1([]) = nil and
+		avg1([1,2,3,4]) = (1+2+3+4) / 4 and
+		avg2([1.3, 2.4, 3.5]) = 7.2 / 3
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT15:\t「平均を得る」を検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT15
+-------------------------------------------------------------
+/*
+シナリオID
+	InsertAtの検査シナリオ
+親UseCase
+	なし
+内容
+	InsertAtを検査する。
+*/
+class SequenceT16 is subclass of TestCase
+operations 
+public  test: () ==> bool
+test() == 
+	let	ins1 = Sequence`InsertAt[int],
+		ins2 = Sequence`InsertAt[char]
+	in
+	return
+		ins1(1)(1)([2,3,4,5]) = [1,2,3,4,5] and
+		ins1(3)(3)([1,2,4,5]) = [1,2,3,4,5] and
+		ins1(3)(3)([1,2]) = [1,2,3] and
+		ins1(4)(3)([1,2]) = [1,2,3] and
+		ins1(5)(3)([1,2]) = [1,2,3] and
+		ins2(1)('1')("2345") = "12345" and
+		ins2(3)('3')("1245") = "12345" and
+		ins2(3)('3')("12") = "123"
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT16:\tInsertAtを検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT16
+-------------------------------------------------------------
+/*
+シナリオID
+	RemoveAtの検査シナリオ
+親UseCase
+	なし
+内容
+	RemoveAtを検査する。
+*/
+class SequenceT17 is subclass of TestCase
+operations 
+public  test: () ==> bool
+test() == 
+	let	rm1 = Sequence`RemoveAt[int],
+		rm2 = Sequence`RemoveAt[char]
+	in
+	return
+		rm1(1)([1,2,3,4,5]) = [2,3,4,5] and
+		rm1(3)([1,2,4,3]) = [1,2,3] and
+		rm1(3)([1,2]) = [1,2] and
+		rm1(4)([1,2]) = [1,2] and
+		rm1(5)([1,2]) = [1,2] and
+		rm2(1)("12345") = "2345" and
+		rm2(3)("1243") = "123" and
+		rm2(3)("12") = "12"
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT17:\tRemoveAtを検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT17
+-------------------------------------------------------------
+/*
+シナリオID
+	UpdateAtの検査シナリオ
+親UseCase
+	なし
+内容
+	UpdateAtを検査する。
+*/
+class SequenceT18 is subclass of TestCase
+operations 
+public  test: () ==> bool
+test() == 
+	let	up1 = Sequence`UpdateAt[int],
+		up2 = Sequence`UpdateAt[char]
+	in
+	return
+		up1(1)(10)([1,2,3,4,5]) = [10,2,3,4,5] and
+		up1(3)(40)([1,2,4,3]) = [1,2,40,3] and
+		up1(2)(30)([1,2]) = [1,30] and
+		up1(3)(30)([1,2]) = [1,2] and
+		up1(4)(30)([1,2]) = [1,2] and
+		up2(1)('a')("12345") = "a2345" and
+		up2(3)('b')("1243") = "12b3" and
+		up2(3)('c')("123") = "12c" and
+		up2(3)('c')("12") = "12"
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT18:\t UpdateAtを検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT18
+-------------------------------------------------------------
+/*
+シナリオID
+	各種の削除シナリオ
+親UseCase
+	なし
+内容
+	各種の削除を検査する。
+*/
+class SequenceT19 is subclass of TestCase
+operations 
+public  test: () ==> bool
+test() == 
+	let	removeDup = Sequence`RemoveDup[int],
+		removeMember = Sequence`RemoveMember[int],
+		removeMembers = Sequence`RemoveMembers[int]
+	in
+	return
+		removeDup([]) = [] and
+		removeDup([1,1,2,2,2,3,4,4,4,4]) = [1,2,3,4] and
+		removeDup([1,2,3,4]) = [1,2,3,4] and
+		removeMember(1)([]) = [] and
+		removeMember(1)([1,2,3]) = [2,3] and
+		removeMember(4)([1,2,3]) = [1,2,3] and
+		removeMembers([])([]) = [] and
+		removeMembers([])([1,2,3]) = [1,2,3] and
+		removeMembers([1,2,3])([]) = [] and
+		removeMembers([1,2,3])([1,2,3]) = [] and
+		removeMembers([1,4,5])([1,2,3,4]) = [2,3] 
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT19:\t 各種の削除を検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT19
+-------------------------------------------------------------
+/*
+シナリオID
+	Zipのシナリオ
+親UseCase
+	なし
+内容
+	Zip関連の関数を検査する。
+*/
+class SequenceT20 is subclass of TestCase
+operations 
+public  test: () ==> bool
+test() == 
+	let	zip = Sequence`Zip[int, char],
+		zip2 = Sequence`Zip2[int,char],
+		unzip = Sequence`Unzip[int, char]
+	in
+	return
+		zip([], []) = [] and
+		zip([1,2,3], ['a', 'b', 'c']) = [mk_(1, 'a'), mk_(2, 'b'), mk_(3, 'c')] and
+		zip([1,2], ['a', 'b', 'c']) = [mk_(1, 'a'), mk_(2, 'b')] and
+		zip([1,2,3], ['a', 'b']) = [mk_(1, 'a'), mk_(2, 'b')] and
+		zip2([])([]) = [] and
+		zip2([1,2,3])(['a', 'b', 'c']) = [mk_(1, 'a'), mk_(2, 'b'), mk_(3, 'c')] and
+		unzip([]) = mk_([], []) and
+		unzip([mk_(1, 'a'), mk_(2, 'b'), mk_(3, 'c')]) = mk_([1,2,3], ['a', 'b', 'c']) 
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT20:\t zip関連の関数を検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT20
+-------------------------------------------------------------
+/*
+シナリオID
+	Spanのシナリオ
+親UseCase
+	なし
+内容
+	Span関数を検査する。
+*/
+class SequenceT21 is subclass of TestCase
+operations 
+public  test: () ==> bool
+test() == 
+	let	span = Sequence`Span[int],
+		述語1 = lambda x : int & x mod 2 = 0,
+		述語2 = lambda x : int & x < 10
+ 	in
+	return
+		span(述語1)([]) = mk_([], []) and
+		span(述語1)([2,4,6,1,3]) = mk_([2,4,6], [1,3]) and
+		span(述語2)([1,2,3,4,5]) = mk_([1,2,3,4,5], []) and
+		span(述語2)([1,2,12,13,4,15]) = mk_([1,2], [12,13,4,15])
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT21:\t Span関数を検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT21
+-------------------------------------------------------------
+/*
+シナリオID
+	TakeWhile, DropWhileのシナリオ
+親UseCase
+	なし
+内容
+	TakeWhile, DropWhile関数を検査する。
+*/
+class SequenceT22 is subclass of TestCase
+operations 
+public  test: () ==> bool
+test() == 
+	let	takeWhile = Sequence`TakeWhile[int],
+		dropWhile = Sequence`DropWhile[int],
+		述語1 = lambda x : int & x mod 2 = 0
+ 	in
+	return
+		takeWhile(述語1)([]) = [] and
+		takeWhile(述語1)([2,4,6,8,1,3,5,2,4]) = [2,4,6,8] and
+		dropWhile(述語1)([]) = [] and
+		dropWhile(述語1)([2,4,6,8,1,2,3,4,5]) = [1,2,3,4,5] 
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT22:\t TakeWhile, DropWhile関数を検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT22
+-------------------------------------------------------------
+/*
+シナリオID
+	Foldlのシナリオ
+親UseCase
+	なし
+内容
+	Foldl関数を検査する。
+*/
+class SequenceT23 is subclass of TestCase
+functions
+public plus : int -> int -> int
+plus(a)(b) == a + b;
+
+public product : int -> int -> int
+product(a)(b) == a * b;
+
+public append : seq of char -> char -> seq of char
+append(s)(e) == s ^ [e];
+
+operations 
+public  test: () ==> bool
+test() == 
+	let	foldl = Sequence`Foldl[int, int],
+		f2 = Sequence`Foldl[seq of char, char]
+ 	in
+	return
+		foldl(plus)(0)([1,2,3]) = 6 and
+		foldl(product)(1)([2,3,4]) = 24 and
+		f2(append)([])("abc") = "abc" 
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT23:\t Foldl関数を検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT23
+-------------------------------------------------------------
+/*
+シナリオID
+	Foldrのシナリオ
+親UseCase
+	なし
+内容
+	Foldr関数を検査する。
+*/
+class SequenceT24 is subclass of TestCase
+functions
+public plus : int -> int -> int
+plus(a)(b) == a + b;
+
+public product : int -> int -> int
+product(a)(b) == a * b;
+operations 
+public  test: () ==> bool
+test() == 
+	let	removeAt = Sequence`RemoveAt[char],
+		foldr = Sequence`Foldr[int, int],
+		f3 = Sequence`Foldr[nat1, seq of char]
+ 	in
+	return
+		foldr(plus)(0)([1,2,3]) = 6 and
+		foldr(product)(1)([2,3,4]) = 24 and
+		f3(removeAt)("12345")([1,3,5]) = "24"
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "SequenceT24:\t Foldr関数を検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end SequenceT24

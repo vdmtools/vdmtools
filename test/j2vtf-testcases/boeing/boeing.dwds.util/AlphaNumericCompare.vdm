@@ -1,0 +1,137 @@
+class AlphaNumericCompare is subclass of Compare
+operations 
+public  compare : [Object] * [Object] ==> int 
+compare(a, b) == 
+( dcl   compareValue : int ,
+        aIntegerPrefix : int ,
+        bIntegerPrefix : int ,
+        aFirstKey : [String],
+        bFirstKey : [String],
+        aStringSuffix : [String],
+        bStringSuffix : [String],
+        aStr : [String] := a.toString(),
+        bStr : [String] := b.toString(),
+        idx : int ,
+        len__ : int ,
+        saveIdx : int ;
+  len__ := aStr.length();
+  idx := 0;
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  idx < len__ and  not  Character.isSpaceChar(aStr.charAt(idx)) do  
+    ( idx := idx+1
+    ) ;
+  aFirstKey := aStr.substring(0 , idx);
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  idx < len__ and  Character.isSpaceChar(aStr.charAt(idx)) do  
+    ( idx := idx+1
+    ) ;
+  saveIdx := idx;
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  idx < len__ and  Character.isDigit(aStr.charAt(idx)) do  
+    ( idx := idx+1
+    ) ;
+  if  idx = saveIdx
+  then  
+    ( aIntegerPrefix := Integer.MAX_VALUE;
+      aStringSuffix := aStr
+    ) 
+  else  
+    ( aIntegerPrefix := Integer.parseInt(aStr.substring(saveIdx , idx));
+      if  idx = len__
+      then  
+        ( aStringSuffix := new  String([  ])
+        ) 
+      else  
+        ( aStringSuffix := aStr.substring(idx)
+        ) 
+    ) ;
+  len__ := bStr.length();
+  idx := 0;
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  idx < len__ and  not  Character.isSpaceChar(bStr.charAt(idx)) do  
+    ( idx := idx+1
+    ) ;
+  bFirstKey := bStr.substring(0 , idx);
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  idx < len__ and  Character.isSpaceChar(bStr.charAt(idx)) do  
+    ( idx := idx+1
+    ) ;
+  saveIdx := idx;
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  idx < len__ and  Character.isDigit(bStr.charAt(idx)) do  
+    ( idx := idx+1
+    ) ;
+  if  idx = saveIdx
+  then  
+    ( bIntegerPrefix := Integer.MAX_VALUE;
+      bStringSuffix := bStr
+    ) 
+  else  
+    ( bIntegerPrefix := Integer.parseInt(bStr.substring(saveIdx , idx));
+      if  idx = len__
+      then  
+        ( bStringSuffix := new  String([  ])
+        ) 
+      else  
+        ( bStringSuffix := bStr.substring(idx)
+        ) 
+    ) ;
+  if  aFirstKey.equals(bFirstKey)
+  then  
+    ( if  aIntegerPrefix < bIntegerPrefix
+      then  
+        ( compareValue := -1
+        ) 
+      else  
+        if  aIntegerPrefix > bIntegerPrefix
+        then  
+          ( compareValue := 1
+          ) 
+        else  
+          ( compareValue := aStringSuffix.compareTo(bStringSuffix)
+          ) 
+    ) 
+  else  
+    ( compareValue := aFirstKey.compareTo(bFirstKey)
+    ) ;
+  return  compareValue
+) ;
+
+
+end  AlphaNumericCompare

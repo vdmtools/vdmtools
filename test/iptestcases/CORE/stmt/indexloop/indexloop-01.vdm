@@ -1,0 +1,19 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+public Test : () ==> seq of nat  
+Test () ==
+( dcl s : seq of nat := [];
+
+  for i = 1 to 10 do
+    s := s ^ [i];
+
+  return s
+)
+   
+end A

@@ -1,0 +1,57 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> map nat to (seq of ( real | <HELLO> | bool | <FALSE> | seq of char | nat) | nat | real )  
+Test () ==
+( dcl m : map nat to ( seq of ( real | <HELLO> | bool | <FALSE> | seq of char | nat) | nat | real ) ;
+  let a = (let b = 3 in b + 3 ),
+      (3) : int = if is_int(3)
+            then 3
+            else 1,
+      {b, c, -} : set of nat = { 3,1, 6},
+      [d, e ] : seq of ( <HELLO> | bool )= [ <HELLO> ] ^ [ false ],
+      mk_(f, g) : nat * nat = mk_(12, 14),
+      mk_AA(h, i ) : AA = mk_AA(15, 17)
+  in  let j = g + f
+      in  m:= { 1 |-> [ a, b,c,d, f, g, h, i, j ] };
+
+  let mk_(mk_(a,b), c) = mk_(mk_(false, true), <FALSE> )
+  in ( dcl d : nat := 3;
+       m := m ++ { 2 |-> [ a, b, c, d] } ); 
+
+  let [ [a,b], [c, d ] ] = [ [1, 6], [3,6] ] 
+  in m:= m ++ { 3 |-> [ a, b, c, d ] }; 
+
+  let [ {a }, b ] = [ {false}, "hello summer" ]
+  in while card dom m < 4 do
+     ( m := m ++ { 4 |-> [ a, b ] } );
+  
+  let mk_(a, b, c) = mk_(1, 3, { 3 |-> 3.6} ) 
+  in if dom c = {a}
+     then m := m ++ { 5 |-> b }
+     else m := m ++ { 5 |-> 35};
+
+  let s = [1,2,3] in
+    let s = s ^ s in m := m ++ { 1000 |-> s };
+
+  return m
+
+)
+
+
+
+
+
+types
+
+ AA ::
+  a : nat
+  b : nat
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

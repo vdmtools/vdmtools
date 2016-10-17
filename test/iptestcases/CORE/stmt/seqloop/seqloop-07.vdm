@@ -1,0 +1,26 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+public Test : () ==> seq of nat  
+Test () ==
+( dcl s : seq of nat := [];
+
+
+  let a = [mk_(1,2), mk_(3,4), mk_(5,6)] in
+  for mk_(c,b) : nat * nat in  a do
+    s := s ^ [c,b];
+
+  for i in reverse [i | i in set {10,...,20}] do
+    s := s ^ [i];
+  
+  return s
+)
+   
+end A

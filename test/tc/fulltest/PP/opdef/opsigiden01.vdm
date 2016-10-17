@@ -1,0 +1,33 @@
+class A
+
+operations
+protected op1: int ==> int
+op1(-) ==
+  return 1;
+
+protected op2: int * int ==> bool
+op2(a,b) ==
+  return a = b;
+
+protected op3: int ==> bool
+op3(a) ==
+  return a >= 0;
+
+end A
+
+class B is subclass of A
+
+operations
+op1: int ==> int
+op1(-) ==
+  return 1;
+
+op2: char * char ==> bool
+op2(a,b) ==
+  return a <> b;
+
+op3: int ==> char
+op3(-) ==
+  return 'a';
+
+end B

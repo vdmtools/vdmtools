@@ -1,0 +1,110 @@
+class PreferenceTable is subclass of Object
+operations 
+public  size : () ==> int 
+size() == 
+( return  items.size()
+) ;
+
+private  showItems : () ==> <VOID>
+showItems() == 
+( ( dcl   i : int  := 0;
+    while  i < items.size() do  
+    ( let - = System.out.println(items.elementAt(i).toString())
+      in 
+        skip ;
+      i := i+1
+    ) 
+  ) ;
+  return  <VOID>
+) ;
+
+public  writeToDisk : () ==> <VOID>
+writeToDisk() == 
+( dcl   fileOutStream : [FileOutputStream] := new  FileOutputStream(prefsFile),
+        outStream : [ObjectOutputStream] := new  ObjectOutputStream(fileOutStream);
+  let - = outStream.writeObject(items)
+  in 
+    skip ;
+  let - = outStream.close()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  remove : [String] ==> <VOID>
+remove(key) == 
+( dcl   item : [PreferenceDataItem] := new  PreferenceDataItem(key , nil  );
+  let - = items.removeElement(item)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  retrieve : [String] ==> [Object]
+retrieve(key) == 
+( dcl   item : [PreferenceDataItem] := new  PreferenceDataItem(key , nil  ),
+        index : int  := items.indexOf(item);
+  if  index >= 0
+  then  
+    ( return  (def l_7 :  PreferenceDataItem = (items.elementAt(index))
+      in l_7).getData()
+    ) 
+  else  
+    ( return  nil  
+    ) 
+) ;
+
+public  getPreferenceFilename : () ==> [String]
+getPreferenceFilename() == 
+( return  prefsFile.getPath()
+) ;
+
+public  PreferenceTable : [String] ==> PreferenceTable
+PreferenceTable(filename) == 
+( prefsFile := new  File(filename);
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (IOException,j2v_exception)) -> 
+        ( dcl   e : [IOException] := j2v_exception;
+          items := new  Vector()
+        ) ,
+      (isofclass  (ClassNotFoundException,j2v_exception)) -> 
+        ( dcl   e : [ClassNotFoundException] := j2v_exception;
+          items := new  Vector()
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   fileInStream : [FileInputStream] := new  FileInputStream(prefsFile),
+            inStream : [ObjectInputStream] := new  ObjectInputStream(fileInStream);
+      items := inStream.readObject();
+      let - = inStream.close()
+      in 
+        skip 
+    ) 
+) ;
+
+public  store : [String] * [Serializable] ==> <VOID>
+store(key, data) == 
+( dcl   item : [PreferenceDataItem] := new  PreferenceDataItem(key , data),
+        index : int  := items.indexOf(item);
+  if  index >= 0
+  then  
+    ( let - = items.setElementAt(item , index)
+      in 
+        skip 
+    ) 
+  else  
+    ( let - = items.addElement(item)
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+instance variables 
+  private  prefsFile : [File];
+  private  items : [Vector]
+  
+end  PreferenceTable

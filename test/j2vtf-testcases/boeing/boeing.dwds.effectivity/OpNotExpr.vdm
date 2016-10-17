@@ -1,0 +1,53 @@
+class OpNotExpr is subclass of OpUnaryExpr
+operations 
+public  OpNotExpr : () ==> OpNotExpr
+OpNotExpr() == 
+( skip 
+) ;
+
+public  OpNotExpr : [Expr] ==> OpNotExpr
+OpNotExpr(operandExpr) == 
+( let - = OpUnaryExpr(operandExpr)
+  in 
+    skip 
+) ;
+
+public  getOperatorString : () ==> [String]
+getOperatorString() == 
+( return  new  String("!")
+) ;
+
+public  evaluate : [ExpressionContext] ==> [Object]
+evaluate(context) == 
+( if  operandExpr = nil  
+  then  
+    ( dcl   ex : [DWDSException] := new  DWDSException();
+      let - = ex.addMessage(DWDSException`InvalidOperationException , OpNotExpr`getClass().getName()+new  String(": operand Expression is null"))
+      in 
+        skip ;
+      exit  ex
+    ) ;
+  ( dcl   results : [Boolean] := nil  ;
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (ClassCastException,j2v_exception)) -> 
+          ( dcl   ex : [DWDSException] := new  DWDSException(),
+                  cce : [ClassCastException] := j2v_exception;
+            let - = ex.addMessage(DWDSException`InvalidOperationException , OpNotExpr`getClass().getName()+new  String(": incompatible operand type:")+operandExpr.getClass().getName())
+            in 
+              skip ;
+            exit  ex
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( dcl   operandValue : [Boolean] := operandExpr.evaluate(context);
+        results := new  Boolean(not  operandValue.booleanValue())
+      ) ;
+    return  results
+  ) 
+) ;
+
+
+end  OpNotExpr

@@ -1,0 +1,13 @@
+class SetComprehensionExpr
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = {a | a :nat & a}
+  in skip;
+
+------------------------------------------------------------------------------
+end SetComprehensionExpr

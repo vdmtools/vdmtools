@@ -1,0 +1,21 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> E | <OK>
+Test () ==
+trap true with return <OK> in
+return mk_E(OpExit(),6);
+
+OpExit: () ==> nat
+OpExit() ==
+  exit true;
+
+types
+B :: ;
+C = compose D of
+     a: nat
+     b: bool
+    end;
+public E :: 
+  a : nat
+  b : nat
+inv e == e.a > e.b
+

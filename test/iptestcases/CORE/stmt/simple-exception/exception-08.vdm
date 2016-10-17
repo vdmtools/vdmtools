@@ -1,0 +1,16 @@
+class A
+
+operations
+public Test : () ==> nat
+Test() ==
+  tixe {
+    <OK> |-> exit <YES>,
+    <YES> |-> return 2
+   } in Test3();
+
+Test3: () ==> nat
+Test3() ==
+  (if true then (if true then exit <OK> else exit <YES>);
+   return 2)
+
+end A

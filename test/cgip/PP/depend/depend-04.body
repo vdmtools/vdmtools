@@ -1,0 +1,23 @@
+class A
+
+  types
+    A::;
+
+
+  operations
+
+  public Test : () ==> int
+  Test() == 
+    return 7
+
+end A
+
+class B
+
+  operations
+    
+    B : () ==> int
+    B() ==
+      return 5
+
+end B

@@ -1,0 +1,261 @@
+class TerminalBoardGraphic is subclass of RefDesNode
+operations 
+public  elementAt : int  ==> [String]
+elementAt(index) == 
+( return  pinList.elementAt(index)
+) ;
+
+private  getWireHeight : int  ==> int 
+getWireHeight(pinIndex) == 
+( dcl   wireHeight : int  := 0;
+  if  pinIndex > -1 and  pinIndex < pinList.size()
+  then  
+    ( dcl   wirePinHeight : [Integer];
+      ( dcl   idx : int  := 0;
+        while  idx <= pinIndex do  
+        ( wirePinHeight := PinHeight.elementAt(idx);
+          def l_6 = wireHeight
+          in wireHeight := l_6+wirePinHeight.intValue()-WireGraphic.SPREAD;
+          idx := idx+1
+        ) 
+      ) 
+    ) ;
+  return  wireHeight
+) ;
+
+public  initGraphicPins : () ==> <VOID>
+initGraphicPins() == 
+( ( dcl   pinIndex : int  := 0;
+    while  pinIndex < pinGraphics.size() do  
+    ( dcl   nextPin : [PinGraphic] := pinGraphics.elementAt(pinIndex),
+            pinName : [String] := nextPin.getName();
+      let - = containingCanvas.addMouseListener(nextPin)
+      in 
+        skip ;
+      let - = containingCanvas.addMouseMotionListener(nextPin)
+      in 
+        skip ;
+      let - = nextPin.setFont(pinFont)
+      in 
+        skip ;
+      ( dcl   yLocation : int  := getYConnectCoord(pinIndex)+(pinFontMetrics.getAscent()/4),
+              nameWidth : int  := pinFontMetrics.stringWidth(pinName),
+              xLocation : int  := getLocation().x+CAP_OFFSET+(CAP_WIDTH/2)-(nameWidth/2);
+        let - = nextPin.setBounds(xLocation , yLocation , nameWidth , pinFontMetrics.getHeight())
+        in 
+          skip 
+      ) ;
+      pinIndex := pinIndex+1
+    ) 
+  ) ;
+  return  
+) ;
+
+public  addPin : [String] ==> <VOID>
+addPin(pin) == 
+( let - = pinList.addElement(pin)
+  in 
+    skip ;
+  let - = pinGraphics.addElement(new  PinGraphic(pin , self  ))
+  in 
+    skip ;
+  ( dcl   currentSize : [Dimension] := getSize(),
+          newHeight : int  := currentSize.height+PIN_HEIGHT-WireGraphic.SPREAD;
+    let - = setSize(currentSize.width , newHeight)
+    in 
+      skip ;
+    let - = PinHeight.addElement(new  Integer(0))
+    in 
+      skip ;
+    return  
+  ) ;
+  return  <VOID>
+) ;
+
+protected  getYConnectCoord : int  ==> int 
+getYConnectCoord(pinIndex) == 
+( dcl   yLocation : int  := (getLocation()).y,
+        wirePinHeight : [Integer] := PinHeight.elementAt(pinIndex);
+  def l_32 = yLocation
+  in yLocation := l_32+TOP_HEIGHT+(PIN_HEIGHT*pinIndex)+(PIN_SPACING/2)+(pinFontMetrics.getAscent()/2)+(getWireHeight(pinIndex-1))+(wirePinHeight.intValue()/2);
+  return  yLocation
+) ;
+
+public  paint : [Graphics] ==> <VOID>
+paint(graphics) == 
+( let - = graphics.setColor(getForeground())
+  in 
+    skip ;
+  let - = paintLabel(graphics)
+  in 
+    skip ;
+  let - = paintFrame(graphics)
+  in 
+    skip ;
+  let - = paintTerminals(graphics)
+  in 
+    skip ;
+  let - = paintPinNames(graphics)
+  in 
+    skip ;
+  return  
+) ;
+
+public  TerminalBoardGraphic : () ==> TerminalBoardGraphic
+TerminalBoardGraphic() == 
+( let - = TerminalBoardGraphic(0 , 0)
+  in 
+    skip ;
+  return  
+) ;
+
+public  addWireAtPin : [String] ==> <VOID>
+addWireAtPin(pin) == 
+( dcl   currentSize : [Dimension] := getSize(),
+        newHeight : int  := currentSize.height+WireGraphic.SPREAD;
+  let - = setSize(currentSize.width , newHeight)
+  in 
+    skip ;
+  ( dcl   pinIndex : int  := pinList.indexOf(pin);
+    if  pinIndex > -1
+    then  
+      ( dcl   oldPinHeight : [Integer] := PinHeight.elementAt(pinIndex),
+              newPinHeight : int  := oldPinHeight.intValue()+WireGraphic.SPREAD;
+        let - = PinHeight.setElementAt(new  Integer(newPinHeight) , pinIndex)
+        in 
+          skip 
+      ) ;
+    return  
+  ) ;
+  return  <VOID>
+) ;
+
+public  paintFrame : [Graphics] ==> <VOID>
+paintFrame(graphics) == 
+( dcl   location : [Point] := getLocation(),
+        topY : int  := location.y+LABEL_HEIGHT+TOP_OFFSET,
+        bottomY : int  := location.y+getSize().height+TOP_OFFSET-BASE_HEIGHT;
+  let - = graphics.drawLine(location.x+CAP_OFFSET , topY , location.x+BASE_WIDTH-CAP_OFFSET , topY)
+  in 
+    skip ;
+  let - = graphics.drawLine(location.x+CAP_OFFSET , topY , location.x+CAP_OFFSET , bottomY+BASE_HEIGHT)
+  in 
+    skip ;
+  let - = graphics.drawLine(location.x+BASE_WIDTH-CAP_OFFSET , topY , location.x+BASE_WIDTH-CAP_OFFSET , bottomY)
+  in 
+    skip ;
+  let - = graphics.drawArc(location.x , bottomY , BASE_WIDTH/2 , BASE_HEIGHT , 0 , -180)
+  in 
+    skip ;
+  let - = graphics.drawArc(location.x+(BASE_WIDTH/2)+1 , bottomY , BASE_WIDTH/2 , BASE_HEIGHT , 0 , 180)
+  in 
+    skip ;
+  return  
+) ;
+
+protected  paintLabel : [Graphics] ==> <VOID>
+paintLabel(graphics) == 
+( if  refDes <> nil  
+  then  
+    ( dcl   location : [Point] := getLocation();
+      let - = graphics.setFont(labelFont)
+      in 
+        skip ;
+      ( dcl   textX : int  := location.x+(getSize().width/2)-(labelFontMetrics.stringWidth(refDes.displayName())/2);
+        let - = graphics.drawString(refDes.displayName() , textX , location.y+labelFontMetrics.getAscent())
+        in 
+          skip 
+      ) 
+    ) ;
+  return  
+) ;
+
+public  TerminalBoardGraphic : int  * int  ==> TerminalBoardGraphic
+TerminalBoardGraphic(x, y) == 
+( let - = RefDesNode(x , y , BASE_WIDTH , CAP_HEIGHT+BASE_HEIGHT)
+  in 
+    skip ;
+  let - = setNotifyOnMouseClick(true  )
+  in 
+    skip ;
+  let - = setNotifyOnMouseMotion(true  )
+  in 
+    skip ;
+  TOP_HEIGHT := CAP_HEIGHT+LABEL_HEIGHT;
+  pinFont := new  Font(new  String("Courier") , Font`PLAIN , 12);
+  pinFontMetrics := getFontMetrics(pinFont);
+  PIN_HEIGHT := pinFontMetrics.getHeight()+PIN_SPACING;
+  OVAL_HEIGHT := pinFontMetrics.getHeight()+6;
+  return  
+) ;
+
+protected  getYConnectCoord : [String] ==> int 
+getYConnectCoord(pinName) == 
+( dcl   index : int  := pinList.indexOf(pinName),
+        yLocation : int  := getYConnectCoord(index);
+  return  yLocation
+) ;
+
+public  paintTerminals : [Graphics] ==> <VOID>
+paintTerminals(graphics) == 
+( dcl   ovalY : int ,
+        connectX : int  := getXConnectCoord(Orientation.LEFT),
+        ovalWidth : int  := getXConnectCoord(Orientation.RIGHT)-connectX;
+  ( dcl   pinIndex : int  := 0;
+    while  pinIndex < pinList.size() do  
+    ( ovalY := getYConnectCoord(pinIndex)-(OVAL_HEIGHT/2);
+      skip ;
+      let - = graphics.drawRoundRect(connectX , ovalY , ovalWidth , OVAL_HEIGHT , OVAL_HEIGHT , OVAL_HEIGHT)
+      in 
+        skip ;
+      pinIndex := pinIndex+1
+    ) 
+  ) ;
+  return  
+) ;
+
+protected  getXConnectCoord : [Orientation] ==> int 
+getXConnectCoord(direction) == 
+( dcl   xLocation : int  := getLocation().x;
+  if  direction = Orientation.RIGHT
+  then  
+    ( def l_5 = xLocation
+      in xLocation := l_5+CAP_OFFSET+CAP_WIDTH
+    ) 
+  else  
+    ( def l_3 = xLocation
+      in xLocation := l_3+CAP_OFFSET
+    ) ;
+  return  xLocation
+) ;
+
+public  getConnectionPoint : [String] * [Orientation] ==> [Point]
+getConnectionPoint(pinName, direction) == 
+( dcl   returnLocation : [ConnectionPoint],
+        location : [Point] := getLocation(),
+        xLocation : int  := location.x,
+        yLocation : int  := location.y;
+  if  pinList.contains(pinName)
+  then  
+    ( xLocation := getXConnectCoord(direction);
+      yLocation := getYConnectCoord(pinName)
+    ) ;
+  return  new  Point(xLocation , yLocation)
+) ;
+
+instance variables 
+  private  pinFont : [Font] := nil  ;
+  private  pinFontMetrics : [FontMetrics] := nil  ;
+  protected  static CAP_WIDTH : int  := 40;
+  protected  static CAP_HEIGHT : int  := 10;
+  protected  static TOP_HEIGHT : int  := 0;
+  protected  static CAP_OFFSET : int  := 5;
+  private  static TOP_OFFSET : int  := 4;
+  protected  static CORNER_WIDTH : int  := CAP_WIDTH/3;
+  protected  static BASE_WIDTH : int  := CAP_WIDTH+(2*CAP_OFFSET);
+  protected  static BASE_HEIGHT : int  := BASE_WIDTH/6;
+  protected  static PIN_HEIGHT : int  := 0;
+  protected  static PIN_SPACING : int  := 10;
+  protected  static OVAL_HEIGHT : int  := 0
+  
+end  TerminalBoardGraphic

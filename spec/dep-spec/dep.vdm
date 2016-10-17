@@ -1,0 +1,808 @@
+%--------------------------------------------------------------------------------
+% $Id: dep.vdm,v 1.30 2006/03/15 07:53:32 vdmtools Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\section{Requirements}
+\label{sec:req}
+
+
+\section{Overall design}
+\label{sec:des}
+
+
+
+\section{The DEP module}
+
+\begin{vdm_al}
+
+-- $Id: dep.vdm,v 1.30 2006/03/15 07:53:32 vdmtools Exp $ 
+
+module DEP
+
+imports
+
+  from AS all,
+  from REP all,
+  from CI all
+    -- types TypeRep
+
+exports 
+
+operations
+  -- Called from Dependency class in specification manager
+  UpdateSC : seq of AS`Class ==> ();
+  Update:() ==> ();
+  AllSubClasses : AS`Name ==> set of AS`Name;
+  AllClients  : AS`Name ==> set of AS`Name;
+  IsCyclic : AS`Name ==> bool;
+  Remove : set of AS`Name ==> ();
+  ExportObjRef : () ==> map AS`Name to ObjRef;
+  ExportDepGraph : () ==> DependencyGraph;
+  ImportDepGraph : DependencyGraph ==> ();
+
+  -- Called from uml mapper
+  InheritanceGraph : () ==> Dependencies;
+  StatGraph : () ==> Associations;
+  CheckStatGraph : () ==> map AS`Name to set of AS`Name;
+  MkGraph : seq1 of AS`Class * set of seq of char ==> set of AS`Name
+
+functions
+  -- Called from Dependency class in specification manager
+  OrderOfProcess: AS`Name -> seq of set of AS`Name;
+  GetServers : AS`Name -> set of AS`Name;
+  GetClients : AS`Name -> set of AS`Name;
+  GetSuper : AS`Name -> set of AS`Name;
+  GetSub : AS`Name -> set of AS`Name;
+
+  -- Called from uml mapper
+  UnfoldType : AS`Type * AS`Name * set of AS`Name * set of AS`Name * int+> AS`Type;
+  Ancestors : AS`Name * Dependencies +> set of AS`Name
+
+types
+  struct ObjRef;
+  struct DependencyGraph;
+  struct Dependencies;
+  struct Associations;
+  struct Ref
+
+definitions
+
+values
+
+  MAX_LEVELS : int = 2  -- Max recursion level for UnfoldType
+
+state Sigma of
+  graph : DependencyGraph
+  objref: map AS`Name to ObjRef
+  -- map class name to map of object refs
+  init s == s = mk_Sigma(mk_DependencyGraph({|->},{|->},{|->}),
+                         {|->})
+end
+\end{vdm_al}
+
+%% objref description
+The \textit{objref} state variable is basically mapping type names
+into object references. Each class has its own entry in the
+map. Unqualified type names will be inserted in the map for the
+current class whereas qualified type names will be inserted in the map
+for the qualifier. This means that if both class \textit{B} and
+\texttt{C} use the type \textit{A`a} as an instance variable, the
+object references corresponding to \textit{A`a} will be inserted in
+the map for \textit{A} and computed only once. 
+
+\subsection{Types}
+
+\begin{vdm_al}
+
+types
+
+
+  DependencyGraph :: inh : Dependencies
+                     stat : Associations
+                     uses : Dependencies
+                   ;
+
+  Dependencies = map AS`Name to set of AS`Name;
+
+  Associations = map AS`Name to set of Ref;
+
+  Ref :: nm : AS`Name
+         tp : AS`Type  -- The type as constructed by the parser.
+         -- The unfolded representation of type tp. Constructed by calling
+         -- UnfoldType().
+         unf_tp : AS`Type
+         -- The name of the instance variable corresponding to this reference.
+         var_nm : AS`Name  
+         init_expr : [AS`Expr]
+         acc : AS`Access
+         stat : bool
+         ;
+  
+\end{vdm_al}
+The type information contained in the $Ref$ type is to be used in the
+UML mapping for determining the exact type of association.
+
+\begin{vdm_al}
+  ObjRef = map AS`Name to set of AS`Name
+  -- map a typename to set of object refs.
+\end{vdm_al}
+\textit{ObjRef} maps a name of a type to a set of object references.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Functions and operations}
+
+The $UpdateSC$ and \textit{Update} operations are the main entry
+points for creating and updating dependency information.
+\textit{UpdateSC} is called after syntax checking a file with a
+sequence of classes and updates only the inherit information. This is
+called from the Specification Manager.  \textit{Update} is called when
+the 'Dependency' window in the gui interface is opened.
+
+\begin{vdm_al}
+operations
+
+  UpdateSC : seq of AS`Class ==> ()
+  UpdateSC(c_l) ==
+    for c in c_l do
+      let mk_AS`Class(nm, -,super_l, -, -, -) = c in
+      graph.inh := UpdateInherit(nm, super_l, graph.inh);
+
+  Update:() ==> ()
+  Update() ==
+  for all c in set dom graph.inh do
+    def ast = GetAST (c);
+        mk_AS`Class(nm, -, -, defs,-,  -) = ast in
+    ( InitObjRef (nm);
+      ExpandClass(ast); -- Expand the type checker with class c.
+      if not defs = nil
+      --then let mk_AS`Definitions(-,-,-,-,inst_l,-,-,-,-,-) = defs
+      then let mk_AS`Definitions(-,-,-,-,inst_l,-,-,-,-) = defs
+        in graph.stat := UpdateStatAss(nm, inst_l, graph.stat,dom graph.inh)
+    );
+
+  InitObjRef : AS`Name ==> ()
+  InitObjRef(clnm) ==
+    objref := objref ++ {clnm |-> {|->}}
+
+\end{vdm_al}
+
+The next functions computes the order of type checking a class and its
+super classes. 
+\begin{vdm_al}
+
+functions
+OrderOfProcess: AS`Name -> seq of set of AS`Name
+OrderOfProcess(nm) ==
+( let supers = Super(nm)
+  in OrderOfProcess_Aux([{nm}], supers)
+);
+
+OrderOfProcess_Aux: seq of (set of AS`Name) * set of AS`Name
+                    -> seq of set of AS`Name
+OrderOfProcess_Aux(order, to_process) ==
+( if to_process = {}
+  then order
+  else 
+   let new_order = [ to_process ] ^ [ order(i)\to_process | i in set inds order],
+       supers = dunion { Super(sb) | sb in set to_process }
+   in OrderOfProcess_Aux(new_order, supers)
+);
+
+  UpdateInherit : AS`Name * seq of AS`Name * Dependencies -> Dependencies
+  UpdateInherit(c, super_l, g) ==
+    g ++ { c |-> { super_l(i) | i in set inds super_l} };
+
+
+  UpdateStatAss : AS`Name * seq of AS`InstanceVarDef * Associations * 
+                  set of AS`Name -> Associations
+  UpdateStatAss(c, inst_l, g,class_s) ==
+    let assigndefs = { mk_(iv.ad,iv.access,iv.stat) | iv in set elems inst_l 
+                                    & is_AS`InstAssignDef(iv)} in 
+  g ++ { c |->
+      dunion { {mk_Ref(obj_ref, tp, tp, var, expr, acc, stat)
+            | obj_ref in set GetObjRef(tp, c, class_s,{}) } 
+       | mk_(mk_AS`AssignDef(var,tp,expr,-),acc, stat) in set assigndefs }
+      }
+
+
+\end{vdm_al}
+
+\begin{vdm_al}
+operations
+
+  IsCyclic : AS`Name ==> bool
+  IsCyclic(v) ==
+    let inh = graph.inh,
+        nm = v
+    in
+    return v in set dunion { Ancestors(v',inh) | v' in set DFS({nm}, inh, {}) };
+
+\end{vdm_al}
+
+The operation $IsCyclic(v)$ returns whether vertex $v$ is part of a
+cycle in the graph inh or not.
+
+\begin{vdm_al}
+
+  AllSubClasses : AS`Name ==> set of AS`Name
+  AllSubClasses (nm) ==
+    let tn = nm in
+    return AllRelated (tn,graph.inh);
+\end{vdm_al}
+$AllSubClasses$ returns with all levels of subclasses to $nm$. This
+information can be used by the interface to update the status
+information. 
+
+\begin{vdm_al}
+
+  AllClients  : AS`Name ==> set of AS`Name
+  AllClients (nm) ==
+    let tn = nm,
+        stripped = StripTypeInfo (graph.stat) in
+    return AllRelated (tn,{tn}<-:stripped);
+\end{vdm_al}
+$AllClients$ returns with a set of clients in all levels to $nm$. This
+information can be used by the interface to update the status
+information.
+\begin{vdm_al}
+
+  ExportDepGraph : () ==> DependencyGraph
+  ExportDepGraph () ==
+    return graph;
+
+  ImportDepGraph : DependencyGraph ==> ()
+  ImportDepGraph (dg) ==
+    graph := dg;
+
+  ExportObjRef : () ==> map AS`Name to ObjRef
+  ExportObjRef () ==
+    return objref;
+
+functions
+
+--  Uses : AS`Name +> set of AS`Name
+--  Uses(nm) ==
+--    let g = UsesGraph(),
+---- for testing: g = StripTypeInfo(StatGraph()), 
+--        v = nm in
+--    Ancestors(v,g);
+--
+--
+--  UsedBy : AS`Name +> set of AS`Name
+--  UsedBy(nm) ==
+--    let g = UsesGraph(),
+-- -- for testing: g = Merge(StripTypeInfo(StatGraph()), InheritanceGraph()), 
+--        v = nm in
+--    { v' | v' in set dom g & v in set Ancestors(v',g) };    
+
+
+
+--  GetAllSuper : AS`Name -> set of AS`Name
+--  GetAllSuper(nm) ==
+--    AllAncestors(nm, InheritanceGraph());
+\end{vdm_al}
+
+$GetServers$ is similar to the ``Uses'' classes in the VDM++ Toolbox.
+\begin{vdm_al}
+  GetServers : AS`Name -> set of AS`Name
+  GetServers (nm) ==
+    def tn = nm;
+        stripped = StripTypeInfo (StatGraph ()) in
+    if tn in set dom stripped then
+      stripped (tn)
+    else
+      {};
+
+  GetSuper : AS`Name -> set of AS`Name
+  GetSuper (nm) ==
+    Super (nm);
+\end{vdm_al}
+$GetClients$ is similar to the ``UsedBy'' classes in the VDM++
+\begin{vdm_al}
+  GetClients : AS`Name -> set of AS`Name
+  GetClients (nm) ==
+    def tn = nm;
+        stripped = StripTypeInfo (StatGraph ()) in
+    {cl|cl in set dom stripped & tn in set stripped (cl)};
+
+  Super : AS`Name +> set of AS`Name
+  Super(nm) ==
+    def tn = nm;
+        inh = InheritanceGraph() in    
+    if tn in set dom inh
+    then inh(tn)
+    else {};
+
+  GetSub : AS`Name -> set of AS`Name
+  GetSub (nm) ==
+    def tn = nm;
+        g = InheritanceGraph() in 
+    {cl|cl in set dom g & tn in set g (cl)}
+
+--  CompleteGraph : () +> Dependencies
+--  CompleteGraph() ==
+--    MergeGraphs({InheritanceGraph(), 
+--                 StripTypeInfo(StatGraph()),
+--                 UsesGraph()})
+
+operations
+
+  Remove : set of AS`Name ==> ()
+  Remove (cl_s) ==
+    ( graph.inh := cl_s <-: graph.inh;
+      graph.stat := cl_s <-: graph.stat;
+    );
+
+\end{vdm_al}
+The following method, $MkGraph$, is only intended to be used to test
+the specification. It should not be called from elsewhere --- in stead
+$Update$ should be used for this purpose.  For the purpose of testing
+$MkGraph$ must be given the set of class names in $c\_l$ so that
+$LookUpType$ is not called for a simple class not yet in the graph
+$graph.stat$.
+\begin{vdm_al}
+
+  MkGraph : seq1 of AS`Class * set of seq of char ==> set of AS`Name
+  MkGraph(c_l, nm_s) ==
+    ( graph.stat := { MkName(nm) |-> {} | nm in set nm_s };
+      UpdateSC(c_l);
+      for  ast in c_l do
+  	let mk_AS`Class(nm, -, -, defs, -, -) = ast in
+  	( InitObjRef (nm);
+  	  if not defs = nil
+  	  --then let mk_AS`Definitions(-,-,-,-,inst_l,-,-,-,-,-) = defs
+  	  then let mk_AS`Definitions(-,-,-,-,inst_l,-,-,-,-) = defs
+  	    in graph.stat := UpdateStatAss(nm, inst_l, graph.stat,dom graph.inh)
+  	);
+    return {}
+    );
+
+
+
+  InheritanceGraph : () ==> Dependencies
+  InheritanceGraph() ==
+    return graph.inh;
+
+
+  StatGraph : () ==> Associations
+  StatGraph() ==
+    return graph.stat;
+
+  CheckStatGraph : () ==> map AS`Name to set of AS`Name
+  CheckStatGraph () ==
+  ( dcl res : map AS`Name to set of AS`Name := {|->};
+    for all cl in set dom graph.stat do
+    let ref_s = graph.stat(cl),
+        role_s = { r | mk_Ref(-,-,-,r,-,-,-) in set ref_s} in
+    if card role_s <> card ref_s then -- errors...
+      let role_m = { r |-> { c | mk_Ref(c,-,-,rn,-,-,-) in set ref_s & r = rn}
+                   | r in set role_s} in
+      res := res ++ { cl |-> { rr| rr in set dom role_m &
+                               card role_m(rr) > 1 }};
+    return res
+  )
+     
+
+--  UsesGraph : () ==> Dependencies
+--  UsesGraph() ==
+--    return graph.uses;
+
+\end{vdm_al}
+$GetObjRef(tp,clnm)$ recursively searches the abstract syntax tree
+representing $tp$ in order to find the set of all object references.
+
+If $GetObjRef$ finds a node of type $AS`TypeName$ in the AST
+$tp$ we have the following possibilities:
+\begin{itemize}
+\item We have seen the name before in the current recursive calling
+  sequence, i.e.\ a recursive type and no object reference.
+\item The name is in the set of class names and then an object
+  reference.
+\item The name is in the \textit{objref} map for the current class so
+  the object references has already been calculated.
+\item The name is qualified and in the map corresponding to the
+  qualifier meaning the object references has already been calculated.
+\item We look up the type name in the type checker. The identity means
+  that we conclude it is an object reference, otherwise we continue
+  with the looked up type and insert the result in \textit{objref}.
+\end{itemize}
+Note that we do not check the signatures or the returntypes of
+$AS`PartialFnType$ and $AS`TotalFnType$ to see if there is any object
+reference there. The reason for this is that we do not consider such
+an object reference to be of static nature. Further more the toolbox
+does not (currently) support function types.  
+\begin{vdm_al}  
+
+operations
+
+  GetObjRef : AS`Type * AS`Name * set of AS`Name * set of AS`Name ==> set of AS`Name
+  GetObjRef(tp, clnm, valid_cl_s,rtp_s) ==
+   (dcl res : set of AS`Name := {};
+    cases tp:
+      mk_AS`BooleanType(-),
+      mk_AS`NumericType(-,-),
+      mk_AS`TokenType(-),
+      mk_AS`CharType(-),
+      mk_AS`QuoteType(-,-) -> skip,
+      mk_AS`CompositeType(-,fl,-) -> 
+        res := dunion { GetObjRef(type,clnm,valid_cl_s,rtp_s) | mk_AS`Field(-,type,-,-) in set elems fl },
+      mk_AS`UnionType(ts,-),
+      mk_AS`ProductType(ts,-) -> 
+        res := dunion { GetObjRef(type,clnm,valid_cl_s,rtp_s) | type in set elems ts },
+      mk_AS`OptionalType(tp,-) -> res := GetObjRef(tp,clnm,valid_cl_s,rtp_s),
+      mk_AS`Set0Type(tt,-),
+      mk_AS`Set1Type(tt,-) -> res := GetObjRef(tt,clnm,valid_cl_s,rtp_s),
+      mk_AS`Seq0Type(tt,-),
+      mk_AS`Seq1Type(tt,-) -> res := GetObjRef(tt,clnm,valid_cl_s,rtp_s),
+      mk_AS`GeneralMap0Type(-,mrng,-),
+      mk_AS`GeneralMap1Type(-,mrng,-) -> res := GetObjRef(mrng,clnm,valid_cl_s,rtp_s),
+      mk_AS`InjectiveMap0Type(-,mrng,-),
+      mk_AS`InjectiveMap1Type(-,mrng,-) -> res := GetObjRef(mrng,clnm,valid_cl_s,rtp_s),
+      mk_AS`TypeName(nm,-) -> 
+        if nm in set rtp_s
+        then skip
+        else
+          if nm in set valid_cl_s 
+          then res := {nm} -- yes, this is an object reference.
+          else
+            let por = objref(clnm) in
+            if nm in set dom por
+            then res := por(nm) 
+            else 
+              let q = GetQName (nm),
+                  n = GetName (nm) in
+              if IsQName (nm) and q in set dom objref and let qpor = objref(q) in n in set dom qpor 
+              then res := objref(q)(n)
+              else def lut  = Rep2As(LookUpType(nm,clnm)) in 
+                if lut = tp
+                then res := {nm} 
+                else
+                  def pobj = GetObjRef(lut,clnm,valid_cl_s,rtp_s union {nm}) in
+                  res := InsertObjRef(clnm,nm,pobj),
+      mk_AS`PartialFnType(-,-,-) -> skip,
+      mk_AS`TotalFnType(-,-,-) -> skip,
+      mk_AS`TypeVar(-, -) -> skip,
+      mk_AS`BracketedType(tp,-) -> res := GetObjRef(tp,clnm,valid_cl_s,rtp_s)
+    end;
+    return res;
+   );
+
+  InsertObjRef: AS`Name * AS`Name * set of AS`Name ==> set of AS`Name
+  InsertObjRef (cl,tp, obj_s) ==
+  ( if IsQName(tp)
+    then
+      let q = GetQName (tp),
+          n = GetName (tp) in
+      ( if q not in set dom objref
+      then 
+        InitObjRef (q);
+      objref (q)(n) := obj_s
+      )
+    else 
+      objref(cl)(tp) := obj_s;
+    return obj_s
+  )  
+
+
+\end{vdm_al} 
+
+\begin{vdm_al}
+
+functions
+
+  IsQName: AS`Name +> bool
+  IsQName (n) ==
+    let mk_AS`Name (n_l,-) = n in
+    len n_l = 2;
+
+  GetQName: AS`Name +> AS`Name
+  GetQName (n) ==
+    let mk_AS`Name (n_l,cid) = n,
+        q = if len n_l = 2 then [hd n_l] else n_l in
+    mk_AS`Name(q,cid);
+
+  GetName: AS`Name +> AS`Name
+  GetName (n) ==
+    let mk_AS`Name (n_l,cid) = n,
+        nm = if len n_l = 2 then [n_l(2)] else n_l in
+    mk_AS`Name(nm,cid);
+
+  UnfoldType : AS`Type * AS`Name * set of AS`Name * set of AS`Name * int +> AS`Type
+  UnfoldType(tp, clnm, tpnm_s, vc_s, level) ==
+    if level > MAX_LEVELS then tp 
+    else 
+    cases tp:
+      mk_AS`BooleanType(-),
+      mk_AS`NumericType(-,-),
+      mk_AS`TokenType(-),
+      mk_AS`CharType(-),
+      mk_AS`QuoteType(-,-),
+      mk_AS`PartialFnType(-,-,-),
+      mk_AS`TotalFnType(-,-,-) -> tp,
+      mk_AS`CompositeType(nm,fl_l,cid) -> 
+        mk_AS`CompositeType(nm, 
+          [ let mk_AS`Field(flnm,fltp,dc,cid) = fl_l(i)
+             in mk_AS`Field(flnm,UnfoldType(fltp,clnm,tpnm_s, vc_s,level+1),dc,cid) 
+             | i in set inds fl_l ],cid),
+      mk_AS`UnionType(tp_l,cid) -> 
+        mk_AS`UnionType([ UnfoldType(tp_l(i),clnm,tpnm_s, vc_s,level+1) | i in set inds tp_l ], cid),
+      mk_AS`ProductType(tp_l,cid) -> 
+        mk_AS`ProductType([ UnfoldType(tp_l(i),clnm,tpnm_s, vc_s,level+1) | i in set inds tp_l ], cid),        
+      mk_AS`OptionalType(tp,cid) -> 
+        mk_AS`OptionalType(UnfoldType(tp,clnm,tpnm_s, vc_s,level+1), cid),
+      mk_AS`Set0Type(tp,cid) -> 
+        mk_AS`Set0Type(UnfoldType(tp,clnm,tpnm_s,vc_s,level+1), cid),
+      mk_AS`Set1Type(tp,cid) -> 
+        mk_AS`Set1Type(UnfoldType(tp,clnm,tpnm_s,vc_s,level+1), cid),
+      mk_AS`Seq0Type(tp,cid) -> 
+        mk_AS`Seq0Type(UnfoldType(tp,clnm,tpnm_s, vc_s,level+1), cid),
+      mk_AS`Seq1Type(tp, cid) -> 
+        mk_AS`Seq1Type(UnfoldType(tp,clnm,tpnm_s, vc_s,level+1), cid),
+      mk_AS`GeneralMap0Type(mdom,mrng,cid) -> 
+        mk_AS`GeneralMap0Type(UnfoldType(mdom,clnm,tpnm_s, vc_s,level+1),
+                             UnfoldType(mrng,clnm,tpnm_s, vc_s,level+1),
+                             cid),
+      mk_AS`GeneralMap1Type(mdom,mrng,cid) -> 
+        mk_AS`GeneralMap1Type(UnfoldType(mdom,clnm,tpnm_s, vc_s,level+1),
+                             UnfoldType(mrng,clnm,tpnm_s, vc_s,level+1),
+                             cid),
+      mk_AS`InjectiveMap0Type(mdom,mrng,cid) ->
+        mk_AS`InjectiveMap0Type(UnfoldType(mdom,clnm,tpnm_s, vc_s,level+1),
+                               UnfoldType(mrng,clnm,tpnm_s, vc_s,level+1),
+                               cid),
+      mk_AS`InjectiveMap1Type(mdom,mrng,cid) ->
+        mk_AS`InjectiveMap1Type(UnfoldType(mdom,clnm,tpnm_s, vc_s,level+1),
+                               UnfoldType(mrng,clnm,tpnm_s, vc_s,level+1),
+                               cid),
+      mk_AS`BracketedType(tp,cid) -> 
+        mk_AS`BracketedType(UnfoldType(tp,clnm,tpnm_s, vc_s,level+1), cid),
+      mk_AS`TypeVar(-, -) -> tp,
+      mk_AS`TypeName(nm,-) -> 
+        if nm in set tpnm_s -- Type definition is recursive
+           or nm in set vc_s -- valid classes
+        then tp 
+        else def lut = Rep2As(LookUpType(nm,clnm))
+             in cases lut:
+                  mk_AS`TypeName(nm,-) -> 
+                    if nm in set vc_s  -- this _is_ an object reference
+                    then tp
+                    else UnfoldType(lut, clnm, tpnm_s union {nm}, vc_s,level),
+                  others ->
+                    UnfoldType(lut, clnm, tpnm_s union {nm}, vc_s,level)
+                end
+
+--        if nm in set tpnm_s   -- Recursive type definition
+--           or nm in set vc_s  -- Object reference
+--        then tp
+--        else UnfoldType(Rep2As(LookUpType(nm,clnm)),
+--                        clnm, tpnm_s union {nm}, vc_s,level)
+    end;
+\end{vdm_al}
+$UnfoldType$ expands the AST $tp$ passed to it, such that all type
+definitions in $tp$ are expanded. If a certain type definition is
+recursive or if the type checker can not look up the type definition
+associated to a type name, this is signaled by inserting $AS`TypeName$
+in the unfolded AST. A recursive type definition is detected by
+recursively collecting all the type names encountered so far and use
+this to decide if a given type definition refers to it self.
+\begin{vdm_al}  
+  ResolveUnionRep : set of REP`TypeRep * bool * bool +> 
+                    seq of AS`Type * bool * bool
+  ResolveUnionRep(tps, isNil, isUnion) ==
+    if card tps <> 0
+    then let rtp in set tps
+    in cases rtp:
+      mk_REP`SeqTypeRep(tp) ->
+        if exists tp in set tps & is_REP`EmptySeqTypeRep(tp)
+        then let mk_(astp,nl,un) = ResolveUnionRep(tps \ {rtp, mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep())},
+                                                   isNil, isUnion)
+             in mk_([mk_AS`Seq0Type(Rep2As(tp), CI`NilContextId)] ^ astp, nl, un)
+        else let mk_(astp,nl,un) = ResolveUnionRep(tps \ {rtp}, isNil, isUnion)
+             in mk_([mk_AS`Seq1Type(Rep2As(tp), CI`NilContextId)] ^ astp, nl, un),
+      mk_REP`EmptySeqTypeRep(-) ->
+        let e in set tps be st is_REP`SeqTypeRep(e)
+        in let mk_(astp,nl,un) = ResolveUnionRep(tps \ {rtp, e}, isNil, isUnion)
+           in mk_([mk_AS`Seq0Type(Rep2As(e.elemtp), CI`NilContextId)] ^ astp, nl, un),
+
+      mk_REP`SetTypeRep(-),
+      mk_REP`GeneralMapTypeRep(-, -),
+      mk_REP`InjectiveMapTypeRep(-, -) ->
+        let mk_(astp,nl,un) = ResolveUnionRep(tps \ {rtp}, isNil, isUnion)
+        in mk_([Rep2As(rtp)] ^ astp, nl, un),
+
+      mk_REP`EmptySetTypeRep(-),
+      mk_REP`EmptyMapTypeRep(-,-) -> 
+        ResolveUnionRep(tps \ {rtp}, isNil, isUnion),
+
+      mk_REP`NilTypeRep() ->
+        ResolveUnionRep(tps \ {rtp}, true, isUnion),
+      others -> let mk_(astp,nl,un) = ResolveUnionRep(tps \ {rtp}, isNil, true)
+                in mk_([Rep2As(rtp)] ^ astp, nl, un) 
+      end
+    else mk_([], isNil, isUnion);
+    
+
+  Rep2As : REP`TypeRep +> AS`Type
+  Rep2As(rep) ==
+    cases rep:
+      mk_REP`BooleanTypeRep() -> mk_AS`BooleanType(CI`NilContextId),
+      mk_REP`NumericTypeRep (btp) -> mk_AS`NumericType(btp,CI`NilContextId),
+      mk_REP`TokenTypeRep() -> mk_AS`TokenType(CI`NilContextId),
+      mk_REP`CharTypeRep() -> mk_AS`CharType(CI`NilContextId),
+      mk_REP`QuoteTypeRep (mk_AS`Name(ids,-)) -> 
+        mk_AS`QuoteType(mk_AS`QuoteLit(hd ids,CI`NilContextId), CI`NilContextId),
+      mk_REP`CompositeTypeRep (asn,fl_l) -> 
+        mk_AS`CompositeType(asn, [ let mk_REP`FieldRep(flnm,fltp,dc) = fl_l(i)
+                                   in mk_AS`Field(flnm, Rep2As(fltp),dc, CI`NilContextId) 
+                                 | i in set inds fl_l ],
+                            CI`NilContextId),
+      mk_REP`UnionTypeRep (tps) ->
+        let mk_(astp, isNil, isUnion) = ResolveUnionRep(tps, false, false)
+        in if isNil and isUnion and len astp > 1
+           then mk_AS`OptionalType(mk_AS`UnionType(astp,CI`NilContextId), CI`NilContextId)
+           elseif isNil
+           then mk_AS`OptionalType(hd astp, CI`NilContextId)
+           elseif isUnion
+           then mk_AS`UnionType(astp, CI`NilContextId)
+           else hd astp,
+
+      mk_REP`ProductTypeRep(tp_l) ->
+        mk_AS`ProductType([ Rep2As(tp_l(i)) | i in set inds tp_l ], CI`NilContextId),
+      mk_REP`SetTypeRep(tp) -> mk_AS`Set1Type(Rep2As(tp), CI`NilContextId),
+      mk_REP`SeqTypeRep(tp) -> mk_AS`Seq1Type(Rep2As(tp), CI`NilContextId),
+      mk_REP`GeneralMapTypeRep (mdom,mrng) ->
+        mk_AS`GeneralMap1Type(Rep2As(mdom), Rep2As(mrng), CI`NilContextId),
+      mk_REP`InjectiveMapTypeRep (mdom,mrng) ->
+        mk_AS`InjectiveMap1Type(Rep2As(mdom),Rep2As(mrng), CI`NilContextId),
+      mk_REP`TypeNameRep (asnm) -> mk_AS`TypeName(asnm, CI`NilContextId),
+      mk_REP`PartialFnTypeRep(tp_l, fnrng) -> 
+        mk_AS`PartialFnType([ Rep2As(tp_l(i)) | i in set inds tp_l ], Rep2As(fnrng), CI`NilContextId),
+      mk_REP`TotalFnTypeRep(tp_l, fnrng) -> 
+        mk_AS`TotalFnType([ Rep2As(tp_l(i)) | i in set inds tp_l ], Rep2As(fnrng), CI`NilContextId),
+
+      mk_REP`ObjRefTypeRep (asn) -> mk_AS`TypeName(asn, CI`NilContextId),
+      mk_REP`TypeVarRep(asn) -> mk_AS`TypeVar(asn, CI`NilContextId),
+      mk_REP`InvTypeRep(-,tp,-) -> Rep2As(tp)
+    end;
+\end{vdm_al}  
+$Rep2As$ is used by $UnfoldType$ to translate a REP-type returned from
+the type checker into the the corresponding AS-type. This function
+will probably be easier to comprehend if the function $ENV`TransType$
+(translating an AS-type into a REP-type) is read concurrently.
+
+\begin{vdm_al}
+
+--operations
+--  LookUpType : AS`Name * AS`Name ==> REP`TypeRep
+--  LookUpType (nm,clnm) ==
+--    let lut = RepTypeFromName(nm, clnm)
+--    in if lut = nil or is_REP`AllTypeRep(lut)
+--       then return mk_REP`TypeNameRep(nm) -- Unable to resolve type definition
+--       else return lut;
+functions
+  LookUpType : AS`Name * AS`Name -> REP`TypeRep
+  LookUpType (nm,clnm) ==
+    let lut = RepTypeFromName(nm, clnm)
+    in if lut = nil or is_REP`AllTypeRep(lut)
+       then mk_REP`TypeNameRep(nm) -- Unable to resolve type definition
+       else lut;
+\end{vdm_al}  
+
+$LookUpType$ looks up the type name $nm$ by calling $RepTypeFromName$.
+If the type can not be looked up the function returns
+$REP`TypeNameRep(nm)$ thereby indicating that the type name could not
+be resolved. Otherwise the REP-type looked up by the type checker is
+returned.
+
+\begin{vdm_al}
+functions
+
+  RepTypeFromName (-: AS`Name, -: AS`Name) r: [REP`TypeRep]
+  post true or r = nil;
+
+\end{vdm_al}
+The function $RepTypeFromName$ will be hand implemented. The implemented
+function will request the type definition associated with $AS`Name$
+from the type checker. The first argument is the type name to be
+passed to the type checker. The second argument is the name of the
+class and is used to extract the AST from the repository in the
+Specification Manager. 
+
+\begin{vdm_al}
+operations
+  ExpandClass(-:AS`Class)   
+  post true;
+\end{vdm_al}
+
+The operation {\em ExpandClass} expands the type checker with class
+c. This is necessary, because later on we will use the LookUpTypeName
+function in the type checker. The operation will be hand implemented.
+
+\begin{vdm_al}
+functions  
+  StripTypeInfo : Associations +> Dependencies
+  StripTypeInfo(ass_m) ==
+    { nm |-> { r.nm | r in set ass_m(nm) } | nm in set dom ass_m };
+
+  MkName : seq of char +> AS`Name
+  MkName(ch) ==
+    mk_AS`Name([ch],CI`NilContextId);
+
+  Merge : Dependencies * Dependencies +> Dependencies
+  Merge(p, q) ==
+    { cl |-> Ancestors(cl, p) union Ancestors(cl, q) | 
+    cl in set (dom p union dom q) };
+
+  MergeGraphs : set of Dependencies +> Dependencies
+  MergeGraphs(g_s) ==
+    if g_s = {}
+    then {|->}
+    else let g in set g_s in
+    Merge(g, MergeGraphs(g_s \ {g}));
+
+
+--  AllAncestors : AS`Name * Dependencies -> set of AS`Name
+--  AllAncestors(v, g) ==
+--    let tn = v in
+--    DFS({tn}, g, {}) \ {tn};
+\end{vdm_al}    
+This function uses depth first search in order to determine all
+ancestors of vertex $v$. The function is used in $GetAllSuper(nm)$ to
+determine all super classes of a given class. In the same way it can
+be used to find the set of all classes implicitly used by a given
+class. 
+\begin{vdm_al}
+  
+  DFS : set of AS`Name * Dependencies * set of AS`Name -> set of AS`Name
+  DFS(vertex_s, g, visited) ==
+    if vertex_s = {} or vertex_s subset visited
+    then visited
+    else
+      let v in set vertex_s be st v not in set visited in
+        let visited' = DFS(Ancestors(v,g), g, visited union {v}) in
+          DFS(vertex_s \ {v}, g, visited');
+             
+
+  Ancestors : AS`Name * Dependencies +> set of AS`Name
+  Ancestors(v, g) ==
+    if v in set dom g
+    then g(v)
+    else {};
+    
+--  Servers : AS`Name * Associations +> set of Ref
+--  Servers(v ,g) ==
+--    if v in set dom g
+--    then g(v)
+--    else {};
+
+  AllRelated: AS`Name * Dependencies -> set of AS`Name
+  AllRelated (name,grph) ==
+    let g = {name}<-:grph in 
+    dunion { {subcl} union AllRelated (subcl,g) | subcl in set dom g & name in set g (subcl) }
+
+
+\end{vdm_al}
+
+$AllRelated$ finds all relations (subclasses and client classes) to 
+$name$ in $grph$. Cycles are excluded by restricting the map domain in
+$grph$ by $name$
+
+
+\begin{vdm_al}
+operations
+
+  GetAST : AS`Name ==> AS`Class
+  GetAST  (nm) ==
+  is not yet specified
+  -- extract AST from specification manager
+\end{vdm_al}
+
+\begin{vdm_al}
+end DEP
+  
+\end{vdm_al}
+
+
+
+
+

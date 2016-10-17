@@ -1,0 +1,17 @@
+class IfStmtTest
+
+operations
+
+  ErrorAction: char ==> bool
+  ErrorAction(-) ==
+    return true;
+
+  If17: () ==> int | bool
+  If17() ==
+    if true
+    then trap pat with ErrorAction (pat) in
+         exit
+    else trap pat with ErrorAction (pat) in
+         exit true;
+
+end IfStmtTest

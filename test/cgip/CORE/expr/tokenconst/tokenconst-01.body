@@ -1,0 +1,20 @@
+public Test :() ==> seq of token
+Test() ==
+  return 
+  [
+    mk_token(10),
+    mk_token(mk_token(20)),
+    mk_token(let a in set {1,23,4} be st a = 23 in a),
+    mk_token(if is_token(f(4)) then f(2) else f(0)),
+    mk_token(f(5) = f(5)),
+    let a = 3 in mk_token(a)
+  ];
+
+f: nat ==> nat | token
+f(n) ==
+  if n = 0 then
+    return n
+  else 
+    return mk_token(n)
+
+end A

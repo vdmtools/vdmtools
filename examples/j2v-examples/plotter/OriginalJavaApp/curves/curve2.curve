@@ -1,0 +1,8 @@
+arg*cos(2*PI*sin(arg))
+arg*sin(2*PI*sin(arg))
+0.
+0.
+15
+0
+10
+0.05

@@ -1,0 +1,13 @@
+"class A
+
+operations
+
+public Test : () ==> bool
+Test () ==
+ cases true :
+	true -> ( dcl x : nat := 12;
+		 return true and x > 3)
+	end;
+   
+end A
+"

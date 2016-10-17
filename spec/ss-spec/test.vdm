@@ -1,0 +1,48 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Functions used by the type checker test environment
+% $Id: test.vdm,v 1.24 2000/06/22 15:17:18 blackie Exp $
+% Implemented in: Specific only for implementation!
+%--------------------------------------------------------------------------------
+
+\begin{vdm_al}
+module TEST
+
+imports
+  from AS all,
+  from CI all,
+  from REP all,
+  from ENV all,
+  from ERR all,
+  from DEF all,
+  from VCM all,
+
+  from TYPE
+    types Ind = <POS> | <DEF>
+
+exports all
+  
+definitions
+
+operations
+go: AS`AstCI * TYPE`Ind ==> ERR`ErrType
+go(mk_AS`AstCI(mod_l, tllci, fidm), ind) ==
+ (-- Update the tokenlist, contextinfo table, and the fileidmap in the CI
+  -- module for modules 
+  CI`UpdateStateSigma (tllci,fidm);
+#ifdef VDMSL
+  for unit in mod_l do
+    VCM`UpdateModuleEnv(unit);
+  for unit in mod_l do
+    def - = DEF`wf_Module(ind,unit) in skip;
+#endif VDMSL
+#ifdef VDMPP
+  if not VCM`UpdateParseEnvWithAST(mod_l)
+  then return ERR`PrintErrors();
+  for unit in mod_l do
+    def - = DEF`wf_Class(ind,unit) in skip;
+#endif VDMPP
+  return ERR`PrintErrors());
+
+end TEST
+\end{vdm_al}

@@ -1,0 +1,28 @@
+class A
+
+
+types
+
+public
+Bla :: b : nat;  
+
+functions
+
+public
+idbla : Bla -> nat 
+idbla(x) ==
+  x.b;
+
+public
+foo : Bla -> Bla
+foo(mk_Bla(b)) == 
+  cases b:
+  0 -> mk_Bla(0),
+  others -> foo(mk_Bla(b-1))
+  end
+measure idbla;
+
+
+
+
+end A 

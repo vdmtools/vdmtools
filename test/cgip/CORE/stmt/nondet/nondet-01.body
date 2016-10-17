@@ -1,0 +1,11 @@
+public Test : () ==> seq of char
+Test() ==
+( dcl l : seq of char := [];
+  || ( l := l ^ ['a'],
+       l := l ^ ['b'],
+       l := l ^ ['c'],
+       l := l ^ ['d'] );
+  return l
+)
+
+end A

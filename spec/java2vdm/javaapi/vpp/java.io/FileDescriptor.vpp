@@ -1,0 +1,32 @@
+dlclass JavaIoFileDescriptor is subclass of JavaLangObject
+uselib "j2vdll.so"
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaIoOutputStream" , <CLASS> , false  )
+instance variables 
+--  public  static in__ : int; -- JavaIoFileDescriptor; -- := new JavaIoFileDescriptor(<NIL>);
+--  public  static out : int; -- JavaIoFileDescriptor; -- := new JavaIoFileDescriptor(<NIL>);
+--  public  static err : int; -- JavaIoFileDescriptor; -- := new JavaIoFileDescriptor(<NIL>)
+operations 
+public  valid : () ==> bool 
+valid() == 
+is not yet specified ;
+
+public  sync__ : () ==> ()
+sync__() == 
+is not yet specified ;
+
+public  JavaIoFileDescriptor : () ==> JavaIoFileDescriptor
+JavaIoFileDescriptor() == 
+( skip 
+) ;
+
+public  JavaIoFileDescriptor : <NIL> ==> JavaIoFileDescriptor
+JavaIoFileDescriptor(-) == 
+isNil := true  ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+
+end  JavaIoFileDescriptor

@@ -1,0 +1,67 @@
+-- This test case checks that non-identical return types in overloaded 
+-- operations are detected
+
+class A
+
+operations
+
+public op : bool ==> bool
+op(b) ==
+  return b;
+
+public op : nat ==> ()
+op(-) ==
+  skip;
+
+op2 : bool ==> bool
+op2(b) ==
+  return b;
+
+op2 : nat ==> ()
+op2(-) ==
+  skip;
+
+
+ATest1 : () ==> () -- error, wrong return type
+ATest1() ==
+  let v = true
+  in
+     op2(v);
+
+ATest2 : () ==> () -- error, cannot resolve call
+ATest2() ==
+  let v = if true then true else 1
+  in
+    op2(v);
+
+ATest3 : () ==> bool
+ATest3() ==
+  let v = true
+  in
+     return op2(v);
+
+end A
+
+class B
+
+operations
+
+Test1 : () ==> () -- error, wrong return type
+Test1() ==
+  let v = true
+  in
+    return new A().op(v);
+
+Test2 : () ==> () -- error, cannot resolve call
+Test2() ==
+  let v = if true then true else 1
+  in
+    return new A().op(v);
+
+Test3 : () ==> bool
+Test3() ==
+  let v = true
+  in
+    return new A().op(v);
+
+end B

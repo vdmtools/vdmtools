@@ -1,0 +1,24 @@
+class VDMEnumeration is subclass of JavaUtilEnumeration
+
+instance variables
+  data : set of JavaLangObject
+  
+operations
+
+public VDMEnumeration : set of JavaLangObject ==> VDMEnumeration
+VDMEnumeration(p_data) ==
+  data := p_data;
+
+public hasMoreElements : () ==> bool
+hasMoreElements() ==
+  return data <> {};
+
+public nextElement : () ==> JavaLangObject
+nextElement() ==
+  let obj in set data 
+  in
+  ( data := data \ {obj};
+    return obj
+  )
+
+end VDMEnumeration

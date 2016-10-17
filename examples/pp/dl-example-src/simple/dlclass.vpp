@@ -1,0 +1,62 @@
+dlclass Example
+
+  uselib "dlexample.so"
+
+operations
+public
+  f : nat ==> seq of nat
+  f(n) == is not yet specified
+   ;
+
+public
+  g : nat ==> seq of nat
+  g(m) == return f(m);
+
+public
+  n : () ==> Example
+  n() == return new Example()
+
+end Example
+
+dlclass Example2
+
+--  uselib "/home/erik/dlclass/dlexample.so"
+  uselib "dlexample.so"
+
+operations
+public
+  f : nat ==> seq of nat
+  f(n) == is not yet specified
+   ;
+
+public
+  g : nat ==> seq of nat
+  g(m) == return f(m);
+
+end Example2
+
+--====================--
+
+class Client
+
+instance variables
+  s : seq of Example := [] ;
+  myself : [ Client ] := nil
+
+operations
+
+public
+  f : nat ==> ()
+  f(n) == 
+    (s := [ new Example() | i in set {1,...,n} ];
+    myself := self
+    )
+    ;
+public
+  e : () ==> ()
+  e() == s := []
+  ;
+public
+  g : () ==> Example
+  g() == return new Example()
+end Client

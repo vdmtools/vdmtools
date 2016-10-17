@@ -1,0 +1,11 @@
+r rail.vdm
+i
+tc impl
+tc safe_req
+tc station
+cg impl
+cg safe_req
+cg station
+latex rail.vdm
+
+quit

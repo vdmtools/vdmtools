@@ -1,0 +1,47 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of (real | (char * char) | char| bool)  
+Test () ==
+( dcl l : seq of (real | (char * char) | char | bool);
+
+  let a in set let a_s = {1,2,3} in a_s be st a = 1 in 
+    l := conc [[a]];
+
+  -- Fejler!
+  let {b,a} in set {{1}, {34, false}, {mk_('a','b'), true}} be st b = 34 in
+    l := l ^ [a];
+
+  -- Fejler!
+  let {a,b} in set {{1}, {34, false}, {mk_('a','b'), true}} be st b = true in
+    l := l ^ [a];
+
+  let [a,b,c] in set {[38,0,0]} union {SetToSeq({-5.5, 4, 1.1})} be st 
+    if a < 10 then true else false in
+      let s = [a,b,c] in
+        l := l ^ s;
+
+  let s = {10, mk_('q','e'), mk_(1,2)} in 
+    let mk_(a,b) in set s be st let q = 'q' in a = q in
+      for r in SetToSeq({a,b}) do
+        l := l ^ [r];
+
+  return l
+)
+
+functions
+  SetToSeq: set of (real | char) -> seq of (real | char)
+  SetToSeq(r_s) ==
+    if r_s = {} then
+      []
+    else
+      let r in set r_s in
+        [r] ^ SetToSeq(r_s \ {r})
+
+end A

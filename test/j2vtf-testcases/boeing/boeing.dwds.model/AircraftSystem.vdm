@@ -1,0 +1,68 @@
+class AircraftSystem is subclass of Object
+operations 
+public  hashCode : () ==> int 
+hashCode() == 
+( return  AircraftSystem`getSystemId()
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( dcl   sb : [StringBuffer] := new  StringBuffer(128);
+  let - = sb.append(new  String("AircraftSystem<Id:"))
+  in 
+    skip ;
+  let - = sb.append(AircraftSystem`getSystemId())
+  in 
+    skip ;
+  let - = sb.append(new  String(",Number:"))
+  in 
+    skip ;
+  let - = sb.append(AircraftSystem`getSystemNumber())
+  in 
+    skip ;
+  let - = sb.append(new  String(",Name:"))
+  in 
+    skip ;
+  let - = sb.append(getSystemName())
+  in 
+    skip ;
+  let - = sb.append(new  String(">"))
+  in 
+    skip ;
+  return  sb.toString()
+) ;
+
+public  getSystemId : () ==> int 
+getSystemId() == 
+( return  systemId
+) ;
+
+public  getSystemName : () ==> [String]
+getSystemName() == 
+( return  systemName
+) ;
+
+public  getSystemNumber : () ==> [String]
+getSystemNumber() == 
+( return  systemNumber
+) ;
+
+public  equals : [Object] ==> bool 
+equals(obj) == 
+( return  (is_ (obj,[AircraftSystem]) and  AircraftSystem`getSystemId() = (def l_12 :  AircraftSystem = (obj)
+  in l_12).getSystemId())
+) ;
+
+public  AircraftSystem : int  * [String] * [String] ==> AircraftSystem
+AircraftSystem(systemId, systemNumber, systemName) == 
+( AircraftSystem`systemId := systemId;
+  AircraftSystem`systemNumber := systemNumber;
+  AircraftSystem`systemName := systemName
+) ;
+
+instance variables 
+  private  systemId : int ;
+  private  systemNumber : [String];
+  private  systemName : [String]
+  
+end  AircraftSystem

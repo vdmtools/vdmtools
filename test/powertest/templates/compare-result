@@ -1,0 +1,27 @@
+values
+  expectedResult = <<EXPECTED_RESULT>>;
+  actualResult = <<ACTUAL_RESULT>>;
+  epsilon = 10**-9
+
+types
+  cmptp = real | set of real | seq of real
+
+functions
+  Compare: () -> <OK>
+  Compare() ==
+    cases true:
+      (actualResult = expectedResult) -> <OK>,
+      (is_(expectedResult, cmptp) and 
+       is_(actualResult, cmptp) and
+       cmp (actualResult,expectedResult)) -> <OK>,
+      others -> undefined
+    end;
+
+  cmp: cmptp * cmptp -> bool
+  cmp (i,c) ==
+  cases mk_(i,c):
+    mk_( [i1]^ir,[c1]^cr ),
+    mk_( {i1} union ir,{c1} union cr ) -> cmp (i1,c1) and cmp (ir,cr),
+    mk_( i,c ) -> i=c or (is_real (i) and abs (i-c) < epsilon),
+    others -> undefined
+  end

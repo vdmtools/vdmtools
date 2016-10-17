@@ -1,0 +1,57 @@
+ class A
+
+  instance variables
+
+    n : nat := 0;
+    c : C := new C();
+
+  operations
+
+public    Init : nat * C ==> A
+    Init(mn,mc) ==
+      (n := mn;
+       c := mc.Init(n);
+       return self);
+
+public    GetN : () ==> nat
+    GetN() ==
+      return n;
+
+public    GetC : () ==> C
+    GetC() ==
+      return c;
+
+end A
+
+class C
+
+  instance variables
+
+    r : real := 10/3;
+
+  operations
+
+public    GetR : () ==> real
+    GetR() ==
+      return r;
+
+public    Init : real ==> C
+    Init(mr) ==
+      (r := mr;
+       return self)
+
+end C
+
+
+class B
+
+operations
+
+
+  public Test : () ==> nat
+  Test() ==
+     let a = new A().Init(3, new C().Init(1.5))
+     in let res = a.GetC().GetR()
+     in return res
+
+end B

@@ -1,0 +1,25 @@
+class A
+
+types
+
+public
+TypeA = int | B`TypeB
+
+operations
+
+public Test : () ==> nat
+Test () == test(mk_B`TypeB(1));
+
+test : TypeA ==> nat
+test (a) == return a.val ;
+
+end A
+
+class B
+
+types
+
+public
+TypeB :: val : int
+
+end B

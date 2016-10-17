@@ -1,0 +1,53 @@
+class C
+
+instance variables
+
+x : nat := 0;
+y : nat := 1;
+
+operations
+
+public C: nat * nat ==> C
+C(nx, ny) ==
+( x := nx; 
+  y := ny
+);
+
+public GetX : () ==> nat
+GetX() ==
+  return x;
+
+public GetY : () ==> nat
+GetY() ==
+  return y;
+
+end C
+
+class D is subclass of C
+
+instance variables
+
+z : nat
+
+operations
+
+public D : nat ==> D
+D(nz) ==
+( let - = C(2,3) in skip;
+  z := nz
+)
+
+end D
+
+class A
+
+operations
+
+public Test : () ==> nat * nat
+Test() ==
+( let d = new D(3)
+  in
+    return mk_(d.GetX(), d.GetY())
+)
+
+end A

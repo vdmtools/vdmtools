@@ -1,0 +1,18 @@
+public Test : () ==> nat | <NO_CATCH> | <TRAP>
+Test() ==
+  trap c with  return <NO_CATCH>
+  in 
+    always exit 8
+    in
+      Test2();
+
+Test2: () ==> nat | <TRAP>
+Test2() ==
+  (trap <UPS> with return <TRAP>
+  in (Test3();
+      return 1));
+
+Test3: () ==> nat
+Test3() ==  if true then exit else exit <UPS>
+
+end A

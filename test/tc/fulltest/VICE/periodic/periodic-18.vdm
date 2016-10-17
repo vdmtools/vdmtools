@@ -1,0 +1,291 @@
+class Timer
+
+
+instance variables
+  curTime : nat := 0;
+  active : bool := false;
+  nextAlarm : nat := 0;
+
+
+operations
+  public Alarm : nat ==> ()
+  Alarm(wakeup) ==
+  ( nextAlarm := wakeup;
+    Start();
+    WaitAlarm());
+
+  WaitAlarm : () ==> ()
+  WaitAlarm() == Stop();
+
+  public Interruption : () ==> ()
+  Interruption() ==
+	curTime := nextAlarm;
+
+  Start : () ==> ()
+  Start() ==
+    (active := true;
+     curTime := 0);
+
+  Stop : () ==> () 
+  Stop() ==
+    active := false;
+
+  IncTime: () ==> ()
+  IncTime() ==
+    if active
+    then curTime := curTime + 100;
+
+  sync
+
+    per WaitAlarm => curTime >= nextAlarm;
+    mutex(Start, Interruption, IncTime);
+
+thread
+  periodic(100,11,60,1)(IncTime)
+
+end Timer
+
+class Sensor
+
+instance variables
+
+missileTypes : MissileTypes := <None>; 
+missileValues : seq of MissileTypes := [<MissileA>,<MissileB>,<MissileC>];
+arrivalTimes : seq of nat := [1000,500,100];
+t : Timer := new Timer();
+
+types
+
+public MissileTypes = <MissileA> | <MissileB> | <MissileC> | <None>;
+
+operations
+
+public IsFinished : () ==> ()
+IsFinished() == skip;
+
+public GetDataSize : () ==> nat
+GetDataSize() == return len missileValues;
+
+public GetMissileType : () ==> MissileTypes
+GetMissileType() ==
+   let orgMissileTypes = missileTypes in
+   (missileTypes := <None>;
+    return orgMissileTypes);
+
+SetMissileType : MissileTypes ==> ()
+SetMissileType(newMissileType) ==
+  missileTypes := newMissileType;
+
+SkipNum : nat ==> ()
+SkipNum(n) ==
+( 
+  t.Alarm(n);
+);
+
+sync
+
+per GetMissileType => missileTypes <> <None>;
+mutex(SetMissileType, GetMissileType);
+per IsFinished => missileValues = [];
+
+thread
+
+( start(t);
+  while missileValues <> [] do
+  let mt = hd missileValues in
+  ( missileValues := tl missileValues;
+    SetMissileType(mt);
+    SkipNum(hd arrivalTimes);
+    arrivalTimes := tl arrivalTimes;
+  )
+
+)
+
+end Sensor
+
+
+
+class MissileDetector
+
+instance variables
+
+sensorRef : Sensor;
+timerRef : Timer;
+flareControlRef : FlareController;
+missileType : Sensor`MissileTypes := <None>;
+dataSize : nat;
+
+
+operations
+
+public Init : Sensor * FlareController * Timer ==> ()
+Init (newSensor, newFlareController, newTimer) ==
+  (sensorRef := newSensor;
+   dataSize := sensorRef.GetDataSize();
+   flareControlRef := newFlareController;
+   timerRef := newTimer);
+
+public GetDataSize : () ==> nat
+GetDataSize() == return dataSize;
+
+public IsFinished : () ==> ()
+IsFinished() == skip;
+
+Update : Sensor`MissileTypes ==> ()
+Update(newMissileType) ==
+  (missileType := newMissileType;
+   flareControlRef.MissileIsHere(missileType);
+   timerRef.Interruption();
+  );
+
+sync
+
+  per IsFinished => #fin(Update) = dataSize;
+
+thread
+
+  while true do
+    let newMissileType = sensorRef.GetMissileType() in
+    Update(newMissileType);
+  
+end MissileDetector
+
+
+class FlareController
+
+instance variables
+  missileDetectorRef : [MissileDetector] := nil;
+  currentMissileType : Sensor`MissileTypes := <None>;
+  currentStep : nat :=0;
+  timerRef : Timer;
+  Fresh : bool := false;
+  latestMissileTypes : Sensor`MissileTypes := <None>;
+  fs : seq of FlareType := [];
+  numberOfFreshValues : nat := 0;
+  dataSize : nat;
+
+types
+  Plan = seq of PlanStep;
+  public PlanStep = FlareType * nat;
+  public FlareType = <FlareOneA> | <FlareTwoA> | <FlareOneB> |
+                    <FlareTwoB> | <FlareOneC> | <FlareTwoC> | 
+                    <DoNothingA> | <DoNothingB> | <DoNothingC>;
+
+values
+  responseDB : map Sensor`MissileTypes to Plan = 
+    {<MissileA> |-> [ mk_(<FlareOneA>,1000), mk_(<FlareTwoA>,500),
+                      mk_(<DoNothingA>,100), mk_(<FlareOneA>,500)],
+     <MissileB> |-> [ mk_(<FlareTwoB>,700), mk_(<FlareTwoB>,700)],
+     <MissileC> |-> [ mk_(<FlareOneC>,400), mk_(<DoNothingC>,100)]
+    };
+
+  missilePriority : map Sensor`MissileTypes to nat
+                       = {<MissileA> |-> 1,
+                          <MissileB> |-> 2,
+                          <MissileC> |-> 3,
+                          <None> |-> 0}
+
+operations
+
+HigherPriority : Sensor`MissileTypes * 
+                 Sensor`MissileTypes ==> bool
+HigherPriority(latest, current) ==
+  return missilePriority(latest) > missilePriority(current);
+
+public Init : MissileDetector * Timer ==> ()
+Init(initMissileDetector, initTimer) ==
+  (missileDetectorRef := initMissileDetector;
+   dataSize := missileDetectorRef.GetDataSize();
+   timerRef := initTimer);
+
+public IsFinished : () ==> seq of FlareType
+IsFinished() == return fs;
+
+public MissileIsHere : Sensor`MissileTypes ==> ()
+MissileIsHere(newMissileTypes) ==
+  ( latestMissileTypes := newMissileTypes;
+    Fresh := true);
+
+StepAlgorithm : () ==> ()
+StepAlgorithm() ==
+  if missileDetectorRef <> nil
+  then (
+    if Fresh 
+    then ( 
+      Fresh := false;
+      CheckFreshData();
+    );
+    StepPlan()
+  );
+
+CheckFreshData : () ==> ()
+CheckFreshData() ==
+  (if HigherPriority(latestMissileTypes, 
+                     currentMissileType)
+   then StartPlan(latestMissileTypes);
+   latestMissileTypes := <None>;
+   numberOfFreshValues := numberOfFreshValues + 1;
+  );
+
+StartPlan : Sensor`MissileTypes ==> ()
+StartPlan(newMissileType) ==
+  (currentMissileType := newMissileType;
+   currentStep := 1
+  );
+
+ReleaseFlare : FlareType ==> ()
+ReleaseFlare(ps) ==
+  fs := fs ^[ps];
+
+StepPlan : () ==> ()
+StepPlan() ==
+  if currentStep <= len responseDB(currentMissileType)
+  then   
+    (let mk_(flare, -) = responseDB(currentMissileType)(currentStep)
+       in ReleaseFlare(flare);
+     currentStep := currentStep + 1
+    )
+  else (currentMissileType := <None>;
+        currentStep := 0
+       )
+
+sync
+  per IsFinished => numberOfFreshValues = dataSize and
+                    currentMissileType = <None>;
+  mutex(MissileIsHere, CheckFreshData);
+  per StepAlgorithm => Fresh = true or currentMissileType <> <None>;
+  
+thread
+  while true do
+  ( StepAlgorithm();
+    if currentMissileType <> <None>
+    then let mk_(-, delay_val) =
+           responseDB(currentMissileType)(currentStep-1)
+         in timerRef.Alarm(delay_val))
+
+end FlareController
+
+class A
+
+operations
+
+public Test : () ==> seq of FlareController`FlareType
+Test() ==
+( dcl sensor : Sensor := new Sensor(),
+      detector : MissileDetector := new MissileDetector(),
+      flareControl : FlareController := new FlareController(),
+      timer : Timer := new Timer();
+  start(timer);
+  detector.Init(sensor,flareControl,timer);
+  flareControl.Init(detector,timer);
+  start(sensor);
+  start(detector);
+  start(flareControl);
+  sensor.IsFinished();
+  detector.IsFinished();
+  flareControl.IsFinished()
+)
+
+end A
+
+

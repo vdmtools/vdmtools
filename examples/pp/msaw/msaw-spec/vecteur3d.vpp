@@ -1,0 +1,75 @@
+class Vecteur3D
+
+   instance variables
+      xy_queue: MSAWTypes`Coordonnees;
+      z_queue: MSAWTypes`Pieds;
+      xy_tete: MSAWTypes`Coordonnees;
+      z_tete: MSAWTypes`Pieds;
+
+   operations
+
+     GetPoints: () ==> set of (MSAWTypes`Coordonnees * MSAWTypes`Pieds)
+     GetPoints () ==
+       let mk_(x_tete, y_tete)  = xy_tete,
+           mk_(x_queue,y_queue) = xy_queue in 
+       let rico  = Rico(x_tete,x_queue,y_tete,y_queue),
+           ricoz = Ricoz(z_tete,z_queue,x_tete,x_queue,y_tete,y_queue) in
+       ( dcl points: set of (MSAWTypes`Coordonnees * MSAWTypes`Pieds) := {mk_(xy_tete,z_tete)},
+             y_old : real := y_queue,
+             y_final : real,
+             x : real := x_queue;
+         while (OuterTest(x,x_queue,x_tete)) do
+         ( dcl y : real := y_old;
+           y_final := rico * x + y_tete - (rico * x_tete);
+           
+           while (InnerTest(y,y_old,y_final)) do
+           ( dcl z : real;
+             if x_tete <> x_queue
+             then z := x - x_queue 
+             else z := y - y_queue;
+             z := z_queue + ricoz * z;
+             
+             points := points union {mk_(mk_(x,y),z)};
+
+             if y_old <= y_final
+             then y := y + 1
+             else y := y - 1
+           );
+           y_old := y_final;
+
+           if x_queue <= x_tete
+           then x := x + 1
+           else x := x -1
+         );
+         return points
+       )
+           
+  functions
+    Rico: real * real * real * real -> real
+    Rico(x_tete,x_queue,y_tete,y_queue) ==
+      if x_tete <> x_queue
+      then (y_tete - y_queue) / (x_tete-x_queue)
+      else 100;
+
+    Ricoz: real * real * real * real * real * real -> real
+    Ricoz(z_tete,z_queue,x_tete,x_queue,y_tete,y_queue) ==
+      if z_tete = z_queue
+      then 0
+      else
+        if x_tete <> x_queue
+        then (z_tete - z_queue) / (x_tete - x_queue)
+        else (z_tete - z_queue) / (y_tete - y_queue);
+
+   OuterTest: real * real * real -> bool
+   OuterTest(x,x_queue,x_tete) ==
+     if x_queue <= x_tete
+     then x <= x_tete
+     else x >= x_tete;
+
+   InnerTest: real * real * real -> bool
+   InnerTest(y,y_old,y_final) ==
+     if y_old <= y_final
+     then y <= y_final
+     else y >= y_final
+
+end Vecteur3D

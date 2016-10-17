@@ -1,0 +1,38 @@
+# .bashrc
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+	. /etc/bashrc
+fi
+
+# User specific aliases and functions
+
+export EDITOR=vim
+
+export http_proxy=http://255256:spitfire@133.166.197.100:8089
+export PATH=/sbin:/usr/sbin:$PATH:.
+
+export JDKHOME=/usr
+export ANTHOME=/usr
+#export PATH=$JDKHOME/bin:$ANTHOME/bin:$PATH
+
+export JAVACCHOME=/usr/local/javacc-5.0
+
+export QTVERSION=4
+#export QTDIR=/usr/lib/qt-3.3
+export QT3DIR=/usr/lib/qt-3.3
+export QT4DIR=/usr/lib/qt4
+#export QTDIR=$QT4DIR
+#export QTINCDIR=$QTDIR/include
+
+export CORBAHOME=/usr/local/omniORB
+export LD_LIBRARY_PATH=$CORBAHOME/lib:$LD_LIBRARY_PATH
+
+export OSTYPE=`uname`
+export YACC=bison
+
+export TBDIR=$HOME/toolbox/trunk
+export TBCODE=$TBDIR/code
+export LNCONF=$TBCODE/make_tools/lnconf
+export POWERTEST=$TBDIR/test/powertest/powertest
+export POWERTESTDIR=$HOME/powertest

@@ -1,0 +1,105 @@
+dlclass J2VUTIL
+uselib "j2vdll.so"
+operations
+  static
+  public Convert: seq1 of char * (int  | real | char | JavaLangObject )
+                         ==> [(int  | real | char | JavaLangObject)]
+  Convert(p_type,p_val) ==
+    cases p_type:
+      "JavaLangString" -> J2VUTIL`toString(p_val),
+      "char"   -> J2VUTIL`toChar(p_val),
+      "int"    -> J2VUTIL`toInt(p_val),
+      "real",
+      "double" -> J2VUTIL`toFloat(p_val),
+      others   -> error
+    end
+  pre
+    cases p_type:
+      "boolean",
+  --    "void",
+      "char",
+      "short",
+      "int",
+      "long",
+      "float",
+      "double",
+      "byte",
+      "JavaLangString"
+        -> true,
+      others
+        -> false
+    end;
+
+  static
+  public BitOp: int * (<AND> | <OR> | <EXCLOR>) * int ==> int
+  BitOp(p_left,p_op,p_right) ==
+    return new J2VUTIL().BitOp'(p_left,p_op,p_right);
+
+  private BitOp': int * (<AND> | <OR> | <EXCLOR>) * int ==> int
+  BitOp'(p_left,p_op,p_right) ==
+    is not yet specified;
+
+  static
+  public ConcatStr: JavaLangString * JavaLangString ==> JavaLangString
+  ConcatStr(p_str1,p_str2) ==
+  ( dcl l_res: JavaLangString := new JavaLangString([]);
+    if p_str2.IsNil() and not p_str1.IsNil()
+    then
+      l_res:=l_res.concat(p_str1)
+    elseif p_str1.IsNil() and not p_str2.IsNil()
+    then
+      l_res:=l_res.concat(p_str2)
+    else
+    ( l_res:=l_res.concat(p_str1);
+      l_res:=l_res.concat(p_str2)
+    );
+    return l_res
+  );
+
+  static
+  public toString : int  | real | char | JavaLangObject ==> JavaLangString
+  toString(p_val) ==
+    return
+      cases true:
+        (is_int (p_val)) -> let l_i:int=p_val in new JavaLangInteger(l_i).toString(),
+        (is_char(p_val)) -> let l_c:char=p_val in new JavaLangCharacter(l_c).toString(),
+        (isofclass(JavaLangObject, p_val)) ->
+          let l_o:JavaLangObject=p_val
+          in
+            if l_o.IsNil() then new JavaLangString("null")
+            else l_o.toString(),
+--        (is_real(p_val)) -> let l_f:real=p_val in new Float(p_val).toString(),
+        others -> undefined
+      end;    
+
+  static
+  public toChar : int  | real | char ==> char
+  toChar(p_val) ==
+    return
+      cases true:
+        (is_int (p_val)) -> let l_i:int=p_val in new JavaLangInteger(l_i).charValue(),
+        (is_char(p_val)) -> let l_c:char=p_val in l_c,
+        (is_real(p_val)) -> let l_f:real=p_val in toChar(floor(l_f))
+      end;    
+
+  static
+  public toInt : int  | real | char ==> int
+  toInt(p_val) ==
+    return
+      cases true:
+        (is_int (p_val)) -> let l_i:int=p_val in l_i,
+        (is_char(p_val)) -> let l_c:char=p_val in new JavaLangInteger(l_c).intValue(),
+        (is_real(p_val)) -> let l_f:real=p_val in floor(l_f) 
+      end;    
+
+  static
+  public toFloat : int  | real | char ==> real
+  toFloat(p_val) ==
+    return
+      cases true:
+        (is_int (p_val)) -> let l_i:int=p_val in l_i,
+        (is_char(p_val)) -> let l_c:int=p_val in new JavaLangInteger(l_c).intValue(),
+        (is_real(p_val)) -> let l_f:real=p_val in l_f
+      end;    
+
+end J2VUTIL

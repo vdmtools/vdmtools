@@ -1,0 +1,91 @@
+module A
+
+imports 
+
+from MAIN all
+
+exports all
+
+definitions
+
+operations
+
+
+Test: () ==> seq of ( bool | nat | nat1 | rat | real |  char | token )
+Test() ==
+return
+          MAIN`Value()
+
+values
+NatNumber  : nat   = 1;
+IntNumber  : int   = 2;
+Nat1Number : nat1  = 3;
+RatNumber  : rat   = 1.1;
+RealNumber : real  = 1.2;
+BoolNumber : bool  = false;
+CharExp    : char  = 'c';
+TokenExp   : token = mk_token(1)
+
+end A
+
+
+module VALUES
+
+parameters
+
+types  ELEM
+
+values VAL : ELEM
+
+
+definitions
+
+functions
+
+GetValue: () -> ELEM
+GetValue() ==
+        VAL
+
+
+end VALUES
+
+module MAIN
+
+imports 
+  from A all
+
+instantiations
+
+NatValue as VALUES( ELEM -> nat, VAL -> A`NatNumber) all,
+Nat1Value as VALUES( ELEM -> nat1, VAL -> A`Nat1Number) all,
+IntValue as VALUES( ELEM -> int, VAL -> A`IntNumber) all,
+RealValue as VALUES( ELEM -> real, VAL -> A`RealNumber) all,
+RatValue as VALUES( ELEM -> rat, VAL -> A`RatNumber) all,
+BoolValue as VALUES( ELEM -> bool, VAL -> A`BoolNumber) all,
+CharValue as VALUES( ELEM -> char, VAL -> A`CharExp) all,
+TokenValue as VALUES( ELEM -> token, VAL -> A`TokenExp) all
+
+
+exports all
+
+definitions
+
+functions
+
+Value : () +>  seq of ( nat | nat1 | rat | real |  char | token )
+Value() ==
+
+         [NatValue`GetValue(),
+          Nat1Value`GetValue(), 
+          IntValue`GetValue(),
+          RealValue`GetValue(),
+          RatValue`GetValue(),
+          BoolValue`GetValue(),
+          CharValue`GetValue(),
+          TokenValue`GetValue()] 
+
+
+
+end MAIN
+
+

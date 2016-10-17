@@ -1,0 +1,3 @@
+(dcl a : nat := 10,
+     a : bool := true;
+ return [a])

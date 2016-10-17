@@ -1,0 +1,259 @@
+class BundleSegmentInfo is subclass of Object
+operations 
+public  getBundles : () ==> [Enumeration]
+getBundles() == 
+( return  bundleTable.keys()
+) ;
+
+private  loadBSITable : () ==> <VOID>
+loadBSITable() == 
+( ( dcl   row : int  := 0;
+    while  row < (card  dom  bsiArray) do  
+    ( dcl   bundleNumber : [String] := bsiArray(row)(0),
+            biEntry : [BundleInfoEntry] := bundleTable.get(bundleNumber);
+      if  biEntry = nil  
+      then  
+        ( biEntry := new  BundleInfoEntry(bundleNumber);
+          let - = bundleTable.put(bundleNumber , biEntry)
+          in 
+            skip 
+        ) ;
+      ( dcl   node1Name : [String] := bsiArray(row)(1),
+              node1Type : [String] := bsiArray(row)(2),
+              node2Name : [String] := bsiArray(row)(3),
+              node2Type : [String] := bsiArray(row)(4),
+              node1Id : int  := getNodeId(node1Name , node1Type),
+              node2Id : int  := getNodeId(node2Name , node2Type);
+        let - = bundleSegments.addElement(new  BundleSegment(bundleNumber , Integer`toString(node1Id) , node1Type , Integer`toString(node2Id) , node2Type))
+        in 
+          skip ;
+        ( dcl   bundleNodeObject1 : [BNIEntry] := biEntry.getBNIEntry(node1Id , node1Type);
+          if  bundleNodeObject1 = nil  
+          then  
+            ( bundleNodeObject1 := new  BNIEntry(bundleNumber , node1Id , node1Type);
+              let - = biEntry.putBNIEntry(bundleNodeObject1)
+              in 
+                skip 
+            ) ;
+          ( dcl   bundleNodeObject2 : [BNIEntry] := biEntry.getBNIEntry(node2Id , node2Type);
+            if  bundleNodeObject2 = nil  
+            then  
+              ( bundleNodeObject2 := new  BNIEntry(bundleNumber , node2Id , node2Type);
+                let - = biEntry.putBNIEntry(bundleNodeObject2)
+                in 
+                  skip 
+              ) ;
+            let - = bundleNodeObject1.addConnection(bundleNodeObject2)
+            in 
+              skip ;
+            let - = bundleNodeObject2.addConnection(bundleNodeObject1)
+            in 
+              skip 
+          ) 
+        ) 
+      ) ;
+      row := row+1
+    ) 
+  ) ;
+  return  <VOID>
+) ;
+
+private  BundleSegmentInfo : () ==> BundleSegmentInfo
+BundleSegmentInfo() == 
+( bundleTable := new  Hashtable();
+  bundleSegments := new  Vector(250);
+  let - = loadBSITable()
+  in 
+    skip 
+) ;
+
+public  getBundleSegments : () ==> [Enumeration]
+getBundleSegments() == 
+( return  bundleSegments.elements()
+) ;
+
+public  static main : map  int  to  [String] ==> <VOID>
+main(args) == 
+( let - = printConnectors(new  String("64202") , 13)
+  in 
+    skip ;
+  let - = printConnectors(new  String("64202") , 8)
+  in 
+    skip ;
+  let - = printConnectors(new  String("64202") , 14)
+  in 
+    skip ;
+  let - = printConnectors(new  String("64202") , 1)
+  in 
+    skip ;
+  let - = printConnectors(new  String("52230") , 84)
+  in 
+    skip ;
+  let - = printConnectors(new  String("52230") , 57)
+  in 
+    skip ;
+  let - = printConnectors(new  String("52230") , 60)
+  in 
+    skip ;
+  let - = printConnectors(new  String("52230") , 37)
+  in 
+    skip ;
+  let - = printConnectors(new  String("52230") , 13)
+  in 
+    skip ;
+  let - = printConnectors(new  String("52230") , 1234)
+  in 
+    skip ;
+  ( dcl   bsi : [BundleSegmentInfo] := getBundleSegmentInfo(),
+          bsList : [Enumeration] := bsi.getBundleSegments();
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip 
+        
+      end  
+    in  
+      while  bsList.hasMoreElements() do  
+      ( dcl   bs : [BundleSegment] := bsList.nextElement();
+        let - = System`out.println(bs)
+        in 
+          skip 
+      ) ;
+    let - = System`exit__(0)
+    in 
+      skip 
+  ) ;
+  return  <VOID>
+) ;
+
+public  static getBundleSegmentInfo : () ==> [BundleSegmentInfo]
+getBundleSegmentInfo() == 
+( return  bsInfo
+) ;
+
+private  static printConnectors : [String] * int  ==> <VOID>
+printConnectors(bundleNumber, nodeId) == 
+( dcl   bsi : [BundleSegmentInfo] := getBundleSegmentInfo(),
+        connections : [Enumeration];
+  connections := bsi.getEndpointConnector(bundleNumber , nodeId);
+  let - = System`out.println(new  String("Connection for ")+bundleNumber+new  String("/N")+nodeId)
+  in 
+    skip ;
+  let - = System`out.println(new  String("==========================="))
+  in 
+    skip ;
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  connections.hasMoreElements() do  
+    ( dcl   obj : [Object] := connections.nextElement();
+      let - = System`out.print(new  String("    "))
+      in 
+        skip ;
+      if  is_ (obj,[RefDes])
+      then  
+        ( dcl   refdes : [RefDes] := obj;
+          let - = System`out.println(new  String("RefDes<Id:")+refdes.getId()+new  String(",Name:")+refdes.getName())
+          in 
+            skip 
+        ) 
+      else  
+        ( let - = System`out.println(obj)
+          in 
+            skip 
+        ) 
+    ) ;
+  let - = System`out.println()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  getBundleInfoEntry : [String] ==> [BundleInfoEntry]
+getBundleInfoEntry(bundleNumber) == 
+( return  bundleTable.get(bundleNumber)
+) ;
+
+private  getNodeId : [String] * [String] ==> int 
+getNodeId(nodeName, nodeType) == 
+( dcl   nodeId : int  := -1;
+  if  nodeType.equalsIgnoreCase(new  String("NODE"))
+  then  
+    ( trap  j2v_exception with  
+        cases  true  : 
+          (isofclass  (NumberFormatException,j2v_exception)) -> 
+            ( dcl   e : [NumberFormatException] := j2v_exception;
+              skip 
+            ) ,
+          others  -> 
+            exit  j2v_exception
+        end  
+      in  
+        ( nodeId := Integer`parseInt(nodeName.substring(1))
+        ) 
+    ) 
+  else  
+    ( dcl   refdes : [RefDes] := db.getRefDes(abdarAircraft , nodeName);
+      if  refdes <> nil  
+      then  
+        ( nodeId := refdes.getId()
+        ) 
+      else  
+        ( let - = System`out.println(new  String("
+
+Could not get Id for \\\"")+nodeName+new  String("\\\""))
+          in 
+            skip 
+        ) 
+    ) ;
+  return  nodeId
+) ;
+
+public  getEndpointConnector : [String] * int  ==> [Enumeration]
+getEndpointConnector(bundleNumber, nodeId) == 
+( dcl   connectionNodeList : [Vector] := new  Vector(),
+        bundleInfo : [BundleInfoEntry] := getBundleInfoEntry(bundleNumber),
+        bundleNodeInfo : [BNIEntry] := bundleInfo.getBNIEntry(nodeId , new  String("NODE"));
+  if  bundleNodeInfo <> nil  
+  then  
+    ( dcl   connectList : [Enumeration] := bundleNodeInfo.getConnections();
+      trap  j2v_break with  
+        cases  true  : 
+          (isofclass  (J2V_Break,j2v_break)) -> 
+            skip 
+          
+        end  
+      in  
+        while  connectList.hasMoreElements() do  
+        ( dcl   connectingNode : [BNIEntry] := connectList.nextElement(),
+                connectingNodeId : int  := connectingNode.getNodeId();
+          if  connectingNode.getNodeType().equals(new  String("NODE"))
+          then  
+            ( let - = connectionNodeList.addElement(new  BundleSegmentNode(bundleNumber , connectingNodeId))
+              in 
+                skip 
+            ) 
+          else  
+            ( let - = connectionNodeList.addElement(db.getRefDes(connectingNodeId))
+              in 
+                skip 
+            ) 
+        ) 
+    ) ;
+  return  connectionNodeList.elements()
+) ;
+
+instance variables 
+  private  static acTailNumber : [String] := new  String("760012");
+  private  db : [Database] := Database`getDatabase();
+  private  abdarAircraft : [Aircraft] := db.getAircraftByTailNumber(acTailNumber);
+  private  bundleTable : [Hashtable];
+  private  bundleSegments : [Vector];
+  private  static bsInfo : [BundleSegmentInfo] := new  BundleSegmentInfo();
+  private  bsiArray : map  int  to  map  int  to  [String] := {195 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N01") , 2 |-> new  String("REFDES") , 1 |-> new  String("WTU004") , 0 |-> new  String("64202")} , 194 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N05") , 2 |-> new  String("REFDES") , 1 |-> new  String("WTU003") , 0 |-> new  String("64202")} , 193 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N02") , 2 |-> new  String("REFDES") , 1 |-> new  String("WTU002") , 0 |-> new  String("64202")} , 192 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N17") , 2 |-> new  String("NODE") , 1 |-> new  String("N16") , 0 |-> new  String("64202")} , 191 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N16") , 2 |-> new  String("NODE") , 1 |-> new  String("N14") , 0 |-> new  String("64202")} , 190 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N15") , 2 |-> new  String("NODE") , 1 |-> new  String("N14") , 0 |-> new  String("64202")} , 189 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N13") , 2 |-> new  String("NODE") , 1 |-> new  String("N12") , 0 |-> new  String("64202")} , 188 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N12") , 2 |-> new  String("NODE") , 1 |-> new  String("N11") , 0 |-> new  String("64202")} , 187 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N14") , 2 |-> new  String("NODE") , 1 |-> new  String("N10") , 0 |-> new  String("64202")} , 186 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N11") , 2 |-> new  String("NODE") , 1 |-> new  String("N10") , 0 |-> new  String("64202")} , 185 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N10") , 2 |-> new  String("NODE") , 1 |-> new  String("N09") , 0 |-> new  String("64202")} , 184 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N09") , 2 |-> new  String("NODE") , 1 |-> new  String("N07") , 0 |-> new  String("64202")} , 183 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N08") , 2 |-> new  String("NODE") , 1 |-> new  String("N07") , 0 |-> new  String("64202")} , 182 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N06") , 2 |-> new  String("NODE") , 1 |-> new  String("N05") , 0 |-> new  String("64202")} , 181 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N05") , 2 |-> new  String("NODE") , 1 |-> new  String("N04") , 0 |-> new  String("64202")} , 180 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N07") , 2 |-> new  String("NODE") , 1 |-> new  String("N03") , 0 |-> new  String("64202")} , 179 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N04") , 2 |-> new  String("NODE") , 1 |-> new  String("N03") , 0 |-> new  String("64202")} , 178 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N03") , 2 |-> new  String("NODE") , 1 |-> new  String("N02") , 0 |-> new  String("64202")} , 177 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N02") , 2 |-> new  String("NODE") , 1 |-> new  String("N01") , 0 |-> new  String("64202")} , 176 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N13") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND9-U010") , 0 |-> new  String("64202")} , 175 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N06") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND9-U004") , 0 |-> new  String("64202")} , 174 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N13") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND4-U008") , 0 |-> new  String("64202")} , 173 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N06") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND2-U014") , 0 |-> new  String("64202")} , 172 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N13") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND2-U009") , 0 |-> new  String("64202")} , 171 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N13") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND2-U006") , 0 |-> new  String("64202")} , 170 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N16") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND10U013") , 0 |-> new  String("64202")} , 169 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N15") , 2 |-> new  String("REFDES") , 1 |-> new  String("61J-U083") , 0 |-> new  String("64202")} , 168 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N09") , 2 |-> new  String("REFDES") , 1 |-> new  String("52J-U131") , 0 |-> new  String("64202")} , 167 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N11") , 2 |-> new  String("REFDES") , 1 |-> new  String("52J-U130") , 0 |-> new  String("64202")} , 166 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N15") , 2 |-> new  String("REFDES") , 1 |-> new  String("52J-U129") , 0 |-> new  String("64202")} , 165 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N12") , 2 |-> new  String("REFDES") , 1 |-> new  String("52J-U093") , 0 |-> new  String("64202")} , 164 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N17") , 2 |-> new  String("REFDES") , 1 |-> new  String("52J-U091") , 0 |-> new  String("64202")} , 163 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N17") , 2 |-> new  String("REFDES") , 1 |-> new  String("52J-U040") , 0 |-> new  String("64202")} , 162 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N04") , 2 |-> new  String("REFDES") , 1 |-> new  String("46P-U001") , 0 |-> new  String("64202")} , 161 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N01") , 2 |-> new  String("REFDES") , 1 |-> new  String("31E-U011") , 0 |-> new  String("64202")} , 160 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N08") , 2 |-> new  String("REFDES") , 1 |-> new  String("16S-U027") , 0 |-> new  String("64202")} , 159 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N01") , 2 |-> new  String("REFDES") , 1 |-> new  String("WTN001") , 0 |-> new  String("52230")} , 158 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N09") , 2 |-> new  String("REFDES") , 1 |-> new  String("WTD003") , 0 |-> new  String("52230")} , 157 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N72") , 2 |-> new  String("REFDES") , 1 |-> new  String("WTB003") , 0 |-> new  String("52230")} , 156 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N25") , 2 |-> new  String("REFDES") , 1 |-> new  String("WTB001") , 0 |-> new  String("52230")} , 155 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N15") , 2 |-> new  String("REFDES") , 1 |-> new  String("WTA001") , 0 |-> new  String("52230")} , 154 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N84") , 2 |-> new  String("NODE") , 1 |-> new  String("N82") , 0 |-> new  String("52230")} , 153 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N83") , 2 |-> new  String("NODE") , 1 |-> new  String("N82") , 0 |-> new  String("52230")} , 152 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N82") , 2 |-> new  String("NODE") , 1 |-> new  String("N81") , 0 |-> new  String("52230")} , 151 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N80") , 2 |-> new  String("NODE") , 1 |-> new  String("N79") , 0 |-> new  String("52230")} , 150 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N79") , 2 |-> new  String("NODE") , 1 |-> new  String("N78") , 0 |-> new  String("52230")} , 149 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N81") , 2 |-> new  String("NODE") , 1 |-> new  String("N77") , 0 |-> new  String("52230")} , 148 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N78") , 2 |-> new  String("NODE") , 1 |-> new  String("N77") , 0 |-> new  String("52230")} , 147 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N76") , 2 |-> new  String("NODE") , 1 |-> new  String("N75") , 0 |-> new  String("52230")} , 146 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N75") , 2 |-> new  String("NODE") , 1 |-> new  String("N74") , 0 |-> new  String("52230")} , 145 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N77") , 2 |-> new  String("NODE") , 1 |-> new  String("N73") , 0 |-> new  String("52230")} , 144 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N74") , 2 |-> new  String("NODE") , 1 |-> new  String("N73") , 0 |-> new  String("52230")} , 143 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N73") , 2 |-> new  String("NODE") , 1 |-> new  String("N72") , 0 |-> new  String("52230")} , 142 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N71") , 2 |-> new  String("NODE") , 1 |-> new  String("N69") , 0 |-> new  String("52230")} , 141 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N70") , 2 |-> new  String("NODE") , 1 |-> new  String("N69") , 0 |-> new  String("52230")} , 140 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N72") , 2 |-> new  String("NODE") , 1 |-> new  String("N68") , 0 |-> new  String("52230")} , 139 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N69") , 2 |-> new  String("NODE") , 1 |-> new  String("N68") , 0 |-> new  String("52230")} , 138 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N68") , 2 |-> new  String("NODE") , 1 |-> new  String("N67") , 0 |-> new  String("52230")} , 137 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N67") , 2 |-> new  String("NODE") , 1 |-> new  String("N65") , 0 |-> new  String("52230")} , 136 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N66") , 2 |-> new  String("NODE") , 1 |-> new  String("N65") , 0 |-> new  String("52230")} , 135 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N64") , 2 |-> new  String("NODE") , 1 |-> new  String("N62") , 0 |-> new  String("52230")} , 134 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N63") , 2 |-> new  String("NODE") , 1 |-> new  String("N62") , 0 |-> new  String("52230")} , 133 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N65") , 2 |-> new  String("NODE") , 1 |-> new  String("N61") , 0 |-> new  String("52230")} , 132 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N62") , 2 |-> new  String("NODE") , 1 |-> new  String("N61") , 0 |-> new  String("52230")} , 131 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N60") , 2 |-> new  String("NODE") , 1 |-> new  String("N58") , 0 |-> new  String("52230")} , 130 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N59") , 2 |-> new  String("NODE") , 1 |-> new  String("N58") , 0 |-> new  String("52230")} , 129 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N58") , 2 |-> new  String("NODE") , 1 |-> new  String("N56") , 0 |-> new  String("52230")} , 128 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N57") , 2 |-> new  String("NODE") , 1 |-> new  String("N56") , 0 |-> new  String("52230")} , 127 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N61") , 2 |-> new  String("NODE") , 1 |-> new  String("N55") , 0 |-> new  String("52230")} , 126 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N56") , 2 |-> new  String("NODE") , 1 |-> new  String("N55") , 0 |-> new  String("52230")} , 125 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N55") , 2 |-> new  String("NODE") , 1 |-> new  String("N53") , 0 |-> new  String("52230")} , 124 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N54") , 2 |-> new  String("NODE") , 1 |-> new  String("N53") , 0 |-> new  String("52230")} , 123 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N53") , 2 |-> new  String("NODE") , 1 |-> new  String("N52") , 0 |-> new  String("52230")} , 122 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N52") , 2 |-> new  String("NODE") , 1 |-> new  String("N51") , 0 |-> new  String("52230")} , 121 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N51") , 2 |-> new  String("NODE") , 1 |-> new  String("N49") , 0 |-> new  String("52230")} , 120 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N50") , 2 |-> new  String("NODE") , 1 |-> new  String("N49") , 0 |-> new  String("52230")} , 119 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N47") , 2 |-> new  String("NODE") , 1 |-> new  String("N45") , 0 |-> new  String("52230")} , 118 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N46") , 2 |-> new  String("NODE") , 1 |-> new  String("N45") , 0 |-> new  String("52230")} , 117 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N45") , 2 |-> new  String("NODE") , 1 |-> new  String("N44") , 0 |-> new  String("52230")} , 116 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N48") , 2 |-> new  String("NODE") , 1 |-> new  String("N43") , 0 |-> new  String("52230")} , 115 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N44") , 2 |-> new  String("NODE") , 1 |-> new  String("N43") , 0 |-> new  String("52230")} , 114 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N43") , 2 |-> new  String("NODE") , 1 |-> new  String("N41") , 0 |-> new  String("52230")} , 113 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N42") , 2 |-> new  String("NODE") , 1 |-> new  String("N41") , 0 |-> new  String("52230")} , 112 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N40") , 2 |-> new  String("NODE") , 1 |-> new  String("N39") , 0 |-> new  String("52230")} , 111 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N41") , 2 |-> new  String("NODE") , 1 |-> new  String("N38") , 0 |-> new  String("52230")} , 110 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N39") , 2 |-> new  String("NODE") , 1 |-> new  String("N38") , 0 |-> new  String("52230")} , 109 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N36") , 2 |-> new  String("NODE") , 1 |-> new  String("N34") , 0 |-> new  String("52230")} , 108 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N35") , 2 |-> new  String("NODE") , 1 |-> new  String("N34") , 0 |-> new  String("52230")} , 107 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N34") , 2 |-> new  String("NODE") , 1 |-> new  String("N33") , 0 |-> new  String("52230")} , 106 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N38") , 2 |-> new  String("NODE") , 1 |-> new  String("N32") , 0 |-> new  String("52230")} , 105 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N37") , 2 |-> new  String("NODE") , 1 |-> new  String("N32") , 0 |-> new  String("52230")} , 104 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N33") , 2 |-> new  String("NODE") , 1 |-> new  String("N32") , 0 |-> new  String("52230")} , 103 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N32") , 2 |-> new  String("NODE") , 1 |-> new  String("N30") , 0 |-> new  String("52230")} , 102 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N31") , 2 |-> new  String("NODE") , 1 |-> new  String("N30") , 0 |-> new  String("52230")} , 101 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N30") , 2 |-> new  String("NODE") , 1 |-> new  String("N28") , 0 |-> new  String("52230")} , 100 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N29") , 2 |-> new  String("NODE") , 1 |-> new  String("N28") , 0 |-> new  String("52230")} , 99 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N27") , 2 |-> new  String("NODE") , 1 |-> new  String("N26") , 0 |-> new  String("52230")} , 98 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N26") , 2 |-> new  String("NODE") , 1 |-> new  String("N25") , 0 |-> new  String("52230")} , 97 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N28") , 2 |-> new  String("NODE") , 1 |-> new  String("N24") , 0 |-> new  String("52230")} , 96 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N25") , 2 |-> new  String("NODE") , 1 |-> new  String("N24") , 0 |-> new  String("52230")} , 95 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N23") , 2 |-> new  String("NODE") , 1 |-> new  String("N21") , 0 |-> new  String("52230")} , 94 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N22") , 2 |-> new  String("NODE") , 1 |-> new  String("N21") , 0 |-> new  String("52230")} , 93 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N24") , 2 |-> new  String("NODE") , 1 |-> new  String("N20") , 0 |-> new  String("52230")} , 92 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N21") , 2 |-> new  String("NODE") , 1 |-> new  String("N20") , 0 |-> new  String("52230")} , 91 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N19") , 2 |-> new  String("NODE") , 1 |-> new  String("N18") , 0 |-> new  String("52230")} , 90 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N18") , 2 |-> new  String("NODE") , 1 |-> new  String("N17") , 0 |-> new  String("52230")} , 89 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N20") , 2 |-> new  String("NODE") , 1 |-> new  String("N16") , 0 |-> new  String("52230")} , 88 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N17") , 2 |-> new  String("NODE") , 1 |-> new  String("N16") , 0 |-> new  String("52230")} , 87 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N16") , 2 |-> new  String("NODE") , 1 |-> new  String("N15") , 0 |-> new  String("52230")} , 86 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N49") , 2 |-> new  String("NODE") , 1 |-> new  String("N14") , 0 |-> new  String("52230")} , 85 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N15") , 2 |-> new  String("NODE") , 1 |-> new  String("N14") , 0 |-> new  String("52230")} , 84 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N14") , 2 |-> new  String("NODE") , 1 |-> new  String("N13") , 0 |-> new  String("52230")} , 83 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N12") , 2 |-> new  String("NODE") , 1 |-> new  String("N11") , 0 |-> new  String("52230")} , 82 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N13") , 2 |-> new  String("NODE") , 1 |-> new  String("N10") , 0 |-> new  String("52230")} , 81 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N11") , 2 |-> new  String("NODE") , 1 |-> new  String("N10") , 0 |-> new  String("52230")} , 80 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N10") , 2 |-> new  String("NODE") , 1 |-> new  String("N09") , 0 |-> new  String("52230")} , 79 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N09") , 2 |-> new  String("NODE") , 1 |-> new  String("N08") , 0 |-> new  String("52230")} , 78 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N08") , 2 |-> new  String("NODE") , 1 |-> new  String("N07") , 0 |-> new  String("52230")} , 77 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N07") , 2 |-> new  String("NODE") , 1 |-> new  String("N06") , 0 |-> new  String("52230")} , 76 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N06") , 2 |-> new  String("NODE") , 1 |-> new  String("N04") , 0 |-> new  String("52230")} , 75 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N05") , 2 |-> new  String("NODE") , 1 |-> new  String("N04") , 0 |-> new  String("52230")} , 74 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N04") , 2 |-> new  String("NODE") , 1 |-> new  String("N02") , 0 |-> new  String("52230")} , 73 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N03") , 2 |-> new  String("NODE") , 1 |-> new  String("N02") , 0 |-> new  String("52230")} , 72 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N02") , 2 |-> new  String("NODE") , 1 |-> new  String("N01") , 0 |-> new  String("52230")} , 71 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N11") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND9-D016") , 0 |-> new  String("52230")} , 70 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N07") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND9-D009") , 0 |-> new  String("52230")} , 69 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N57") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND9-B023") , 0 |-> new  String("52230")} , 68 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N70") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND9-B018") , 0 |-> new  String("52230")} , 67 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N35") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND9-B017") , 0 |-> new  String("52230")} , 66 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N66") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND9-B012") , 0 |-> new  String("52230")} , 65 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N57") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND9-B008") , 0 |-> new  String("52230")} , 64 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N71") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND9-B007") , 0 |-> new  String("52230")} , 63 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N22") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND9-B003") , 0 |-> new  String("52230")} , 62 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N76") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND9-A005") , 0 |-> new  String("52230")} , 61 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N46") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND2-B020") , 0 |-> new  String("52230")} , 60 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N36") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND2-B016") , 0 |-> new  String("52230")} , 59 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N66") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND2-B014") , 0 |-> new  String("52230")} , 58 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N57") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND2-B010") , 0 |-> new  String("52230")} , 57 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N76") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND2-A003") , 0 |-> new  String("52230")} , 56 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N03") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND10N014") , 0 |-> new  String("52230")} , 55 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N69") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND1-B019") , 0 |-> new  String("52230")} , 54 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N27") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND1-B015") , 0 |-> new  String("52230")} , 53 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N66") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND1-B013") , 0 |-> new  String("52230")} , 52 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N57") , 2 |-> new  String("REFDES") , 1 |-> new  String("GND1-B009") , 0 |-> new  String("52230")} , 51 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N06") , 2 |-> new  String("REFDES") , 1 |-> new  String("93P-D001") , 0 |-> new  String("52230")} , 50 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N64") , 2 |-> new  String("REFDES") , 1 |-> new  String("93P-B008F") , 0 |-> new  String("52230")} , 49 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N63") , 2 |-> new  String("REFDES") , 1 |-> new  String("93P-B008D") , 0 |-> new  String("52230")} , 48 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N64") , 2 |-> new  String("REFDES") , 1 |-> new  String("93P-B008B") , 0 |-> new  String("52230")} , 47 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N63") , 2 |-> new  String("REFDES") , 1 |-> new  String("93P-B008A") , 0 |-> new  String("52230")} , 46 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N60") , 2 |-> new  String("REFDES") , 1 |-> new  String("93P-B006F") , 0 |-> new  String("52230")} , 45 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N60") , 2 |-> new  String("REFDES") , 1 |-> new  String("93P-B006D") , 0 |-> new  String("52230")} , 44 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N59") , 2 |-> new  String("REFDES") , 1 |-> new  String("93P-B006B") , 0 |-> new  String("52230")} , 43 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N59") , 2 |-> new  String("REFDES") , 1 |-> new  String("93P-B006A") , 0 |-> new  String("52230")} , 42 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N78") , 2 |-> new  String("REFDES") , 1 |-> new  String("93P-B003") , 0 |-> new  String("52230")} , 41 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N79") , 2 |-> new  String("REFDES") , 1 |-> new  String("92P-B001C") , 0 |-> new  String("52230")} , 40 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N80") , 2 |-> new  String("REFDES") , 1 |-> new  String("92P-B001B") , 0 |-> new  String("52230")} , 39 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N80") , 2 |-> new  String("REFDES") , 1 |-> new  String("92P-B001A") , 0 |-> new  String("52230")} , 38 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N50") , 2 |-> new  String("REFDES") , 1 |-> new  String("83P-B017E") , 0 |-> new  String("52230")} , 37 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N48") , 2 |-> new  String("REFDES") , 1 |-> new  String("81P-B001") , 0 |-> new  String("52230")} , 36 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N48") , 2 |-> new  String("REFDES") , 1 |-> new  String("80P-B001") , 0 |-> new  String("52230")} , 35 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N47") , 2 |-> new  String("REFDES") , 1 |-> new  String("79P-B001B") , 0 |-> new  String("52230")} , 34 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N47") , 2 |-> new  String("REFDES") , 1 |-> new  String("79P-B001A") , 0 |-> new  String("52230")} , 33 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N31") , 2 |-> new  String("REFDES") , 1 |-> new  String("76P-B001B") , 0 |-> new  String("52230")} , 32 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N74") , 2 |-> new  String("REFDES") , 1 |-> new  String("75P-B002A") , 0 |-> new  String("52230")} , 31 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N81") , 2 |-> new  String("REFDES") , 1 |-> new  String("75P-B001A") , 0 |-> new  String("52230")} , 30 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N44") , 2 |-> new  String("REFDES") , 1 |-> new  String("74P-B001A") , 0 |-> new  String("52230")} , 29 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N08") , 2 |-> new  String("REFDES") , 1 |-> new  String("71P-D031A") , 0 |-> new  String("52230")} , 28 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N05") , 2 |-> new  String("REFDES") , 1 |-> new  String("71J-N019") , 0 |-> new  String("52230")} , 27 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N01") , 2 |-> new  String("REFDES") , 1 |-> new  String("71J-M036") , 0 |-> new  String("52230")} , 26 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N84") , 2 |-> new  String("REFDES") , 1 |-> new  String("67P-B001D") , 0 |-> new  String("52230")} , 25 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N84") , 2 |-> new  String("REFDES") , 1 |-> new  String("67P-B001C") , 0 |-> new  String("52230")} , 24 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N83") , 2 |-> new  String("REFDES") , 1 |-> new  String("67P-B001B") , 0 |-> new  String("52230")} , 23 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N83") , 2 |-> new  String("REFDES") , 1 |-> new  String("67P-B001A") , 0 |-> new  String("52230")} , 22 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N05") , 2 |-> new  String("REFDES") , 1 |-> new  String("67J-N004") , 0 |-> new  String("52230")} , 21 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N12") , 2 |-> new  String("REFDES") , 1 |-> new  String("65P-D002C") , 0 |-> new  String("52230")} , 20 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N12") , 2 |-> new  String("REFDES") , 1 |-> new  String("65P-D002B") , 0 |-> new  String("52230")} , 19 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N76") , 2 |-> new  String("REFDES") , 1 |-> new  String("64P-A005E") , 0 |-> new  String("52230")} , 18 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N13") , 2 |-> new  String("REFDES") , 1 |-> new  String("52P-D263") , 0 |-> new  String("52230")} , 17 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N13") , 2 |-> new  String("REFDES") , 1 |-> new  String("52P-D106") , 0 |-> new  String("52230")} , 16 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N51") , 2 |-> new  String("REFDES") , 1 |-> new  String("52P-B098") , 0 |-> new  String("52230")} , 15 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N52") , 2 |-> new  String("REFDES") , 1 |-> new  String("52P-B095") , 0 |-> new  String("52230")} , 14 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N50") , 2 |-> new  String("REFDES") , 1 |-> new  String("52P-B087") , 0 |-> new  String("52230")} , 13 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N03") , 2 |-> new  String("REFDES") , 1 |-> new  String("52J-N004") , 0 |-> new  String("52230")} , 12 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N67") , 2 |-> new  String("REFDES") , 1 |-> new  String("46P-B004") , 0 |-> new  String("52230")} , 11 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N54") , 2 |-> new  String("REFDES") , 1 |-> new  String("39E-B013") , 0 |-> new  String("52230")} , 10 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N54") , 2 |-> new  String("REFDES") , 1 |-> new  String("39E-B012") , 0 |-> new  String("52230")} , 9 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N39") , 2 |-> new  String("REFDES") , 1 |-> new  String("115P-B012") , 0 |-> new  String("52230")} , 8 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N40") , 2 |-> new  String("REFDES") , 1 |-> new  String("115P-B001K") , 0 |-> new  String("52230")} , 7 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N40") , 2 |-> new  String("REFDES") , 1 |-> new  String("115P-B001J") , 0 |-> new  String("52230")} , 6 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N33") , 2 |-> new  String("REFDES") , 1 |-> new  String("115P-B001C") , 0 |-> new  String("52230")} , 5 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N75") , 2 |-> new  String("REFDES") , 1 |-> new  String("107P-A048") , 0 |-> new  String("52230")} , 4 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N42") , 2 |-> new  String("REFDES") , 1 |-> new  String("103P-B001C") , 0 |-> new  String("52230")} , 3 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N42") , 2 |-> new  String("REFDES") , 1 |-> new  String("103P-B001B") , 0 |-> new  String("52230")} , 2 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N42") , 2 |-> new  String("REFDES") , 1 |-> new  String("103P-B001A") , 0 |-> new  String("52230")} , 1 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N23") , 2 |-> new  String("REFDES") , 1 |-> new  String("102P-B001B") , 0 |-> new  String("52230")} , 0 |-> {4 |-> new  String("NODE") , 3 |-> new  String("N23") , 2 |-> new  String("REFDES") , 1 |-> new  String("102P-B001A") , 0 |-> new  String("52230")}}
+  
+end  BundleSegmentInfo

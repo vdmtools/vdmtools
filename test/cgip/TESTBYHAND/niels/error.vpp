@@ -1,0 +1,24 @@
+class Error is subclass of Global
+
+instance variables
+
+  errmsg: seq of ErrorMessage := [];
+  label : ErrorMessage := [];
+
+operations 
+
+addMessage: ErrorMessage ==> ()
+addMessage (msg) ==
+  errmsg := errmsg ^ [msg];
+
+getMessages: () ==> seq of ErrorMessage 
+getMessages () ==
+  return if errmsg <> []
+         then [label] ^ errmsg
+         else [];
+
+setLabel: ErrorMessage ==> ()
+setLabel (lb) ==
+  label := lb ^ ":";
+
+end Error

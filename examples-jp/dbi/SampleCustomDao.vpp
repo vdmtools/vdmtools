@@ -1,0 +1,102 @@
+class SampleCustomDao is subclass of DBICustomDao
+
+operations
+public
+selectList1: () ==> seq of SampleBean
+selectList1() ==
+  (dcl sql : SQL := new SQL();
+   sql.選択項目列を追加する(["a.empid", "a.depid", "b.depid", "b.depnm"]);
+   sql.表名を追加する(mk_("employ", "a", [mk_("department", "b", [mk_("a.depid", <等しい>, "b.depid")])]));
+   def sqlstmt = sql.問い合わせ言語を取得する(false, 0);
+       - = new IO().echo(sqlstmt ^ "\n");
+       - = executeQuery(sqlstmt)
+   in 
+    (dcl res : seq of SampleBean := [];
+     while fetch() do
+       def l = getRecordSeq()
+       in
+         res := res ^ [new SampleBean(l(1), l(2), l(3), l(4))];
+     return res));
+
+public
+selectList2: () ==> seq of SampleBean
+selectList2() ==
+  (dcl sql : SQL := new SQL(),
+       subsql : SQL := new SQL(),
+       subsql2 : SQL := new SQL(),
+       subsql3 : SQL := new SQL();
+       subsql.選択項目を追加する("b.depnm");
+       subsql.表名を追加する(mk_("department", "b"));
+       subsql.AND条件を追加する(mk_("a.depid", <が>, "b.depid", <と等しい>));
+       subsql2.選択項目列を追加する(["c.empid", "c.depid"]);
+       subsql2.表名を追加する(mk_("employ", "c"));
+       subsql3.選択項目を追加する("d.empid");
+       subsql3.表名を追加する(mk_("employ", "d"));
+       sql.選択項目列を追加する(["a.empid", "a.depid", mk_(subsql, "depnm")]);
+       sql.表名を追加する(mk_(subsql2, "a"));
+       --sql.AND条件を追加する(mk_("a.empid", <が>, { "'" ^ id ^ "'" | id in set ids }, <の範囲内>));
+       sql.AND条件を追加する(mk_("a.empid", <が>, subsql3, <の範囲内>));
+   def sqlstmt = sql.問い合わせ言語を取得する(false, 0);
+       - = new IO().echo(sqlstmt ^ "\n");
+       - = executeQuery(sqlstmt)
+   in 
+    (dcl res : seq of SampleBean := [];
+     while fetch() do
+       def l = getRecordSeq()
+       in
+         res := res ^ [new SampleBean(l(1), l(2), nil, l(3))];
+     return res));
+     
+public
+selectList3: () ==> seq of Sample2Bean
+selectList3() ==
+  (dcl sql : SQL := new SQL();
+   sql.選択項目列を追加する(["depid", "jobcd"]);
+   sql.表名を追加する("employ");
+   sql.重複を除外する();
+   def sqlstmt = sql.問い合わせ言語を取得する(false, 0);
+       - = new IO().echo(sqlstmt ^ "\n");
+       - = executeQuery(sqlstmt)
+   in 
+    (dcl res : seq of Sample2Bean := [];
+     while fetch() do
+       def l = getRecordSeq()
+       in
+         res := res ^ [new Sample2Bean(l(1), l(2))];
+     return res));
+
+end SampleCustomDao
+
+class SampleBean
+
+instance variables
+public empid : seq of char := "";
+public depid1 : seq of char := "";
+public depid2 : [seq of char] := nil;
+public depnm : [seq of char] := nil;
+
+operations
+public
+SampleBean: seq of char * seq of char * [seq of char] * [seq of char] ==> SampleBean
+SampleBean(aEmpid, aDepid1, aDepid2, aDepnm) ==
+  (empid := aEmpid;
+   depid1 := aDepid1;
+   depid2 := aDepid2;
+   depnm := aDepnm);
+
+end SampleBean
+
+class Sample2Bean
+
+instance variables
+public depid : seq of char := "";
+public jobcd : seq of char := "";
+
+operations
+public
+Sample2Bean: seq of char * seq of char ==> Sample2Bean
+Sample2Bean(aDepid, aJobcd) ==
+  (depid := aDepid;
+   jobcd := aJobcd);
+
+end Sample2Bean

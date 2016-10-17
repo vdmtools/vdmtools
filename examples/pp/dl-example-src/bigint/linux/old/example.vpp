@@ -1,0 +1,58 @@
+dlclass BigInt
+
+uselib "example.so"
+
+operations
+
+public Init : nat ==> ()
+Init(n) ==
+( set(n);
+  return self
+);
+
+protected set : nat ==> ()
+set(n) ==
+  is not yet specified;
+
+public plus : BigInt ==> BigInt
+plus(i) ==
+  is not yet specified;
+
+public minus : BigInt ==> BigInt
+minus(i) ==
+  is not yet specified;
+
+public gt : BigInt ==> bool
+gt(i) ==
+  is not yet specified;
+
+end BigInt
+
+class BankAccount
+
+instance variables
+  name : seq of char;
+  number : nat;
+  balance : BigInt
+
+operations
+
+public Init : seq of char * nat ==> ()
+Init(nname, nnum) ==
+( name := nname;
+  number := nnum;
+  balance := new BigInt().Create(0);
+);
+
+public Deposit : BigInt ==> ()
+Deposit(bi) ==
+  balance := balance.plus(bi);
+
+public Withdraw : BigInt ==> ()
+Withdraw(bi) ==
+  balance := balance.minus(bi)
+pre balance.gt(bi)
+
+end BankAccount
+
+

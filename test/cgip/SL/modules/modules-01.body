@@ -1,0 +1,60 @@
+imports 
+
+from B values
+  b; a : int;
+  tok; l : seq1 of int,
+
+from C operations
+  op2: nat ==> ();
+  op3,
+
+-- Fejl i TC:
+--types Sigma:: s : set of nat,
+
+from D functions
+  f3; f2: set of nat * set of nat -> set of nat;
+  f1,
+
+from E types
+  C:: set of nat
+      set of nat;
+  D:: a : seq of nat
+      b : seq of token
+
+exports
+  operations 
+  Test: () ==> seq of (nat | token | bool | seq of ( nat | token ) | set of nat )
+
+definitions
+operations
+Test: () ==> seq of (nat | token | bool | seq of ( nat | token ) | set of nat )
+Test() ==
+( res := [B`a, B`b, B`tok, B`l];
+  for all i in set { i | i in set {50,...,65} & i mod 2 = 0 } do
+    C`op2(i);
+  let l = C`op3() in
+    let s = elems l in
+
+-- Fejl i TC:
+--      let c1 = C`pre_op3(mk_C`Sigma(s)),
+--          c2 = C`post_op3(l, mk_C`Sigma(s), mk_C`Sigma(s)) in
+        res := res ^ l ;--^ [c1, c2];
+
+
+  res := res ^ [ D`f1({2,34,5}, {34,8}), 
+                 D`f2({1,...,100}, {1, 100, 56}),
+                 D`f3({2,3}, {1,2,3})];
+
+  let c = mk_E`C({}, {}),
+      d = mk_E`D(B`l, [mk_token(1)]) in
+    res := res ^ [is_E`C(c), is_E`D(d), d.a, d.b];
+
+  return res
+)
+
+state Sigma of
+  res : seq of (real | token | bool | (seq of real) | (set of real))
+  init s == s = mk_Sigma([])
+end
+
+end A

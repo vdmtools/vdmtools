@@ -1,0 +1,19 @@
+ class A
+
+  functions
+
+    protected f : nat -> nat
+    f(n) ==
+      n + 1;
+
+end A
+
+class B
+
+  operations
+
+  public Test : () ==> nat
+    Test() ==
+      return new A().f(0)
+
+end B

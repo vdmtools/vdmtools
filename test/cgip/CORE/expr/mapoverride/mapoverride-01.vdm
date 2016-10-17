@@ -1,0 +1,41 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ( 
+                        set of (map (nat | bool) to
+                               (nat | map nat to nat | <OK>)) |
+                        map (real | nat | seq of nat | bool ) to
+                               (bool | seq of nat | map nat to nat | nat ))  
+Test () ==
+
+return 
+[ { a ++ b | a in set { {3 |-> 4, false |-> <OK>}, {|->} },
+	     b in set { {|->}, { 3 |-> 4, 6 |-> 3}, if true
+					  	    then {4 |-> {|->} }
+					            else let a in set {[ 3, [] ],{3|->1}} 
+                                                         in a 
+                      } 
+  },
+  ( let a = { 2.6 |-> true, [] |-> {|->} }
+    in a ) ++ let a = if nil <> nil
+		      then 7
+		      else { 3 |-> [] }
+	      in a,
+  ( if is_nat1(3)
+    then {3|->4}
+    else let a in set {[3,6],{3|->4}} in a ) ++ { 2 |-> 1},
+  ( { 3 |-> 6 } munion { 4 |-> 2} ) ++ { 3 |-> 3 },
+  { false |-> { true |-> [] }}(false) ++ { false |-> {|->} },
+  let a = { 3 |-> 10 }
+  in a ++ { 3 |-> 11 }
+]
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

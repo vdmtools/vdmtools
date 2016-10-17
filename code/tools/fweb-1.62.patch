@@ -1,0 +1,797 @@
+diff -ur fweb-1.62/Manual/fweb.texi fweb-1.62.new/Manual/fweb.texi
+--- fweb-1.62/Manual/fweb.texi	1998-09-25 21:02:29.000000000 +0900
++++ fweb-1.62.new/Manual/fweb.texi	2014-10-28 14:23:13.000000000 +0900
+@@ -1,5 +1,5 @@
+ \input texinfo   @c -*-texinfo-*-
+-@def@ifhtml{@doignore{ifhtml}}
++@comment @def@ifhtml{@doignore{ifhtml}}
+ @setfilename fweb.info
+ @settitle FWEB
+ 
+@@ -19,32 +19,36 @@
+ @Fprog{Ftangle}
+ @end macro
+ 
+-@macro ASP
+ @iftex
+-@tex`\hbox{\tt@@\char`\ }'@end tex
+-@end iftex
+-@ifinfo
+-@w{@samp{@@ }}@c
+-@end ifinfo
++@macro ASP
++@tex
++`\hbox{\tt@@\char`\ }'
++@end tex
+ @end macro
+-
+ @macro PI
+ @tex
+ $\pi$
+ @end tex
+-@ifinfo
+-@var{pi}@c
+-@end ifinfo
+ @end macro
+-
+ @macro EQUIV
+ @tex
+ $\equiv$
+ @end tex
++@end macro
++@end iftex
++
+ @ifinfo
++@macro ASP
++@w{@samp{@@ }}@c
++@end macro
++@macro PI
++@var{pi}@c
++@end macro
++@macro EQUIV
+ ==@c
+-@end ifinfo
+ @end macro
++@end ifinfo
++
+ 
+ 
+ @
+@@ -931,7 +935,7 @@
+ especially useful for @sc{Fortran} and @sc{Ratfor}, which have no predefined
+ preprocessor.  However, certain extensions such as variable numbers of arguments
+ make the @FWEB{} preprocessor sometimes useful even for C and C++.
+-@xref{Macros} and @ref{Preprocessing}.
++@xref{Macros}, and @ref{Preprocessing}.
+ 
+ @item
+ Many aspects of @FWEB{}'s behavior, default strings, etc. can be
+@@ -946,7 +950,7 @@
+ 
+ @chapter WEB CONCEPTS
+ 
+-The principle concepts of @sc{WEB} programming are laid out in Knuth's book,
++The principle concepts of @sc{web} programming are laid out in Knuth's book,
+ the reference to which was given in @ref{Intro}.  @FWEB{} follows most
+ conventions introduced by @sc{web} and @sc{Cweb}, except that the names
+ of some commands have been changed for consistency, symmetry, and/or
+@@ -1046,7 +1050,8 @@
+ to be contiguous in the source file.  This allows for great flexibility
+ in structuring the documentation of the code.
+ 
+-@subsubsection A simple example
++@comment @subsubsection A simple example
++@subsection A simple example
+ 
+ @cindex Example, of @FWEB{} file
+ A simple example of an @FWEB{} source file consisting of three sections is as
+@@ -1459,7 +1464,7 @@
+ 
+ @item
+ collects information about overloaded operators (@samp{@@v}) and
+-identifiers (@samp{@@W}).  @xref{ATv} and @ref{ATW_}.
++identifiers (@samp{@@W}).  @xref{ATv}, and @ref{ATW_}.
+ @end itemize
+ @end quotation
+ 
+@@ -2639,7 +2644,7 @@
+ @subsection @samp{-n9}:  Set global language to @sc{Fortran}--90
+ 
+ @findex -n9
+-@xref{Languages} and @ref{Fortran}; see also the discussion of @samp{-L}
++@xref{Languages}, and @ref{Fortran}; see also the discussion of @samp{-L}
+ in @ref{-L_}.
+ 
+ @node -nAT;, -n;, -n9, Options
+@@ -3054,7 +3059,7 @@
+ 
+ @subsection @samp{-r}:  Set global language to @sc{Ratfor}--77
+ 
+-@xref{Languages} and @ref{Ratfor}.  See also @ref{-L_}.
++@xref{Languages}, and @ref{Ratfor}.  See also @ref{-L_}.
+ @findex -r
+ 
+ @node -r9,-rg,-r,Options
+@@ -3062,7 +3067,7 @@
+ 
+ @subsection @samp{-r9}:  Set global language to @sc{Ratfor}--90
+ 
+-@xref{Languages} and @ref{Ratfor}.  See also @ref{-L_}.
++@xref{Languages}, and @ref{Ratfor}.  See also @ref{-L_}.
+ @findex -r9
+ 
+ @node -rg,-rk,-r9,Options
+@@ -4248,7 +4253,7 @@
+ The command @samp{@@c} is a shorthand for @samp{@@Lc}.  For a discussion
+ of language commands in limbo, see @ref{ATL_}.
+ 
+-@xref{Languages} and @ref{C}.
++@xref{Languages}, and @ref{C}.
+ 
+ @node ATcpp, ATD_, ATc, AT commands
+ @comment  node-name,  next,  previous,  up
+@@ -4259,7 +4264,7 @@
+ The command @samp{@@c++} is a shorthand for @samp{@@Lc++}.  For a discussion
+ of language commands in limbo, see @ref{ATL_}.
+ 
+-@xref{Languages} and @ref{Cpp}.
++@xref{Languages}, and @ref{Cpp}.
+ 
+ @node ATD_, ATd, ATcpp, AT commands
+ @comment  node-name,  next,  previous,  up
+@@ -4447,7 +4452,7 @@
+ This command behaves like @samp{@@i} if the command-line option
+ @samp{-i} is not used.  If it is used, then the contents of the included
+ file is not printed in the woven output.  
+-@xref{-i} and @ref{-i!}.
++@xref{-i}, and @ref{-i!}.
+ 
+ @node ATK_, ATk, ATI_, AT commands
+ @comment  node-name,  next,  previous,  up
+@@ -4871,7 +4876,7 @@
+ @subsection @samp{@@r}:  Set language to @sc{Ratfor}--77
+ 
+ @findex @@r
+-@xref{ATL_} and @ref{Languages}.
++@xref{ATL_}, and @ref{Languages}.
+ 
+ @node ATr9, ATu, ATr, AT commands
+ @comment  node-name,  next,  previous,  up
+@@ -4879,7 +4884,7 @@
+ @subsection @samp{@@r9}:  Set language to @sc{Ratfor}--90
+ 
+ @findex @@r9
+-@xref{ATL_} and @ref{Languages}.
++@xref{ATL_}, and @ref{Languages}.
+ 
+ @node ATu, ATv, ATr9, AT commands
+ @comment  node-name,  next,  previous,  up
+@@ -6507,7 +6512,7 @@
+ error results.)  In other words, in the language of C the effect is to
+ say @samp{@i{N}--}.
+ 
+-The two-argument form @samp{$DECR(@var{N,m})} executes the equivalent of
++The two-argument form @samp{$DECR(@var{N}, @var{m})} executes the equivalent of
+ @samp{@i{N} -= @i{m}}.
+ 
+ @node $DEFINE,$DO,$DECR,Built-in functions
+@@ -6848,7 +6853,7 @@
+ error results.)  In other words, in the language of C the effect is to
+ say @samp{@var{N}++}.
+ 
+-The two-argument form @samp{$INCR(@var{N,m})} executes the equivalent of
++The two-argument form @samp{$INCR(@var{N}, @var{m})} executes the equivalent of
+ @samp{@var{N} += @var{m}}.
+ 
+ @node $INPUT_LINE,$KEYWORD,$INCR,Built-in functions
+@@ -7915,7 +7920,7 @@
+ 
+ @item
+ The @samp{@@@{} command is very useful for beautifying very short
+-definitions of member functions such as constructors.  @xref{ATlb}
++definitions of member functions such as constructors.  @xref{ATlb}.
+ 
+ @item
+ Essentially, @FWEAVE{} has only one name space, global to the entire
+@@ -8196,7 +8201,7 @@
+ 
+ @subsection Special considerations for the @sc{verbatim} language
+ 
+-Unfortunately, the @sc{VERBATIM} language is not fully debugged.
++Unfortunately, the @sc{verbatim} language is not fully debugged.
+ Therefore, it is not recommended for general use.
+ (To be completed.)
+ 
+@@ -9024,7 +9029,7 @@
+ 
+ @code{\numberTeX} is on the verge of obsolescence.  Try to not use it;
+ never use it in conjunction with the package @code{fwebnum}.
+-@xref{Numbering}
++@xref{Numbering}.
+ 
+ @menu
+ * Page references::     Indexing by page numbers.
+@@ -11444,7 +11449,7 @@
+ Any option in @file{.fweb} that is intended to be processed @emph{after}
+ the command-line options should begin with @samp{&} rather than
+ @samp{-}.  (This is rarely necessary.)
+-@xref{Initialization}
++@xref{Initialization}.
+ 
+ @item
+ Put standard command-line options into @file{.fweb}.  Also put there
+@@ -11751,7 +11756,7 @@
+ The @samp{-nC} option has been added for @sc{Fortran} users; it kills
+ commented lines at a very early stage in the processing.  This can be
+ useful when converting existing codes to @FWEB{}.
+-@xref{-nC}
++@xref{-nC}.
+ 
+ @item
+ @sc{Fortran}-90 (@pxref{-n9}) now defaults to free-form syntax.
+@@ -11762,7 +11767,7 @@
+ @sc{Fortran}-90 examples will weave correctly without the annoyance of
+ explicitly terminating each statement with a semicolon.  (If you prefer
+ to put in the semicolons explicitly, use @samp{--n;} to turn off the
+-auto-insertion.) @xref{-n;}
++auto-insertion.) @xref{-n;}.
+ 
+ @item
+ The default meaning of the @samp{-k} option was changed; now both lower-
+@@ -11837,7 +11842,7 @@
+ statement labels on a separate line, which is useful when the labels are
+ relatively long.  (By default, @sc{Fortran} labels are placed on the
+ same line as the thing they are labeling, which looks good for short
+-labels.)  @xref{-ncolon}
++labels.)  @xref{-ncolon}.
+ 
+ @item
+ The preprocessor command @samp{@@#line} was added.  For C code, this
+@@ -12072,7 +12077,7 @@
+ 
+ @item 
+ @emph{Verbatim language.}  @samp{@@Lv} selects a language-independent format.
+-@xref{Verbatim}
++@xref{Verbatim}.
+ 
+ @item
+ @emph{Language-independent mode.}  The N mode inhibits pretty-printing,
+diff -ur fweb-1.62/Web/Makefile fweb-1.62.new/Web/Makefile
+--- fweb-1.62/Web/Makefile	1998-09-25 21:02:31.000000000 +0900
++++ fweb-1.62.new/Web/Makefile	2009-07-23 14:53:27.000000000 +0900
+@@ -590,17 +590,20 @@
+ 	test -d $(texdir) || mkdir -p $(texdir)
+ 	$(INSTALL_DATA) $(MANUAL)/fwebmac.sty $(texdir)/fwebmac.sty
+ 	$(INSTALL_DATA) $(MANUAL)/fweb.tex $(texdir)/fweb.tex
++	test -d $(mandir) || mkdir -p $(mandir)
+ 	$(INSTALL_DATA) $(MANUAL)/fweb.1 $(mandir)/fweb.$(manext)
++	test -d $(infodir) || mkdir -p $(infodir)
+ 	$(INSTALL_DATA) $(MANUAL)/fweb.info $(infodir)/fweb.info
+-	$(INSTALL_DATA) $(MANUAL)/fweb.info-1 $(infodir)/fweb.info-1
+-	$(INSTALL_DATA) $(MANUAL)/fweb.info-2 $(infodir)/fweb.info-2
+-	$(INSTALL_DATA) $(MANUAL)/fweb.info-3 $(infodir)/fweb.info-3
+-	$(INSTALL_DATA) $(MANUAL)/fweb.info-4 $(infodir)/fweb.info-4
+-	$(INSTALL_DATA) $(MANUAL)/fweb.info-5 $(infodir)/fweb.info-5
+-	$(INSTALL_DATA) $(MANUAL)/fweb.info-6 $(infodir)/fweb.info-6
+-	$(INSTALL_DATA) $(MANUAL)/fweb.info-7 $(infodir)/fweb.info-7
+-	$(INSTALL_DATA) $(MANUAL)/fweb.info-8 $(infodir)/fweb.info-8
+-	$(INSTALL_DATA) $(MANUAL)/fweb.info-9 $(infodir)/fweb.info-9
++	$(INSTALL_DATA) $(MANUAL)/fweb.info-* $(infodir)/.
++#	$(INSTALL_DATA) $(MANUAL)/fweb.info-1 $(infodir)/fweb.info-1
++#	$(INSTALL_DATA) $(MANUAL)/fweb.info-2 $(infodir)/fweb.info-2
++#	$(INSTALL_DATA) $(MANUAL)/fweb.info-3 $(infodir)/fweb.info-3
++#	$(INSTALL_DATA) $(MANUAL)/fweb.info-4 $(infodir)/fweb.info-4
++#	$(INSTALL_DATA) $(MANUAL)/fweb.info-5 $(infodir)/fweb.info-5
++#	$(INSTALL_DATA) $(MANUAL)/fweb.info-6 $(infodir)/fweb.info-6
++#	$(INSTALL_DATA) $(MANUAL)/fweb.info-7 $(infodir)/fweb.info-7
++#	$(INSTALL_DATA) $(MANUAL)/fweb.info-8 $(infodir)/fweb.info-8
++#	$(INSTALL_DATA) $(MANUAL)/fweb.info-9 $(infodir)/fweb.info-9
+ 	$(INSTALL_DATA) $(MANUAL)/fweb.texi $(texinfodir)/fweb.texi
+ 	@echo ""
+ 	@echo "DON'T FORGET TO RECORD THE PRESENCE OF fweb.info BY EDITING $(infodir)/dir."
+diff -ur fweb-1.62/Web/common.c fweb-1.62.new/Web/common.c
+--- fweb-1.62/Web/common.c	1998-09-25 21:02:48.000000000 +0900
++++ fweb-1.62.new/Web/common.c	2013-11-05 13:42:54.000000000 +0900
+@@ -1127,8 +1127,12 @@
+ 
+ 
+ {
++/*
+ init_buf(&sput_buf,10);
+ init_buf(&c_buf,10);
++*/
++init_buf(&sput_buf,50);
++init_buf(&c_buf,200);
+ }
+ 
+ ;
+@@ -3917,7 +3921,10 @@
+ }
+ #endif 
+ 
++/*
+ if((p= (void HUGE*)CALLOC(nunits,nsize))==NULL)
++*/
++if((p= (void HUGE*)CALLOC(nunits,nsize+1))==NULL)
+ {
+ FREE(byte_mem);
+ 
+@@ -3955,8 +3962,13 @@
+ void HUGE*p C0("Start of allocated area")
+ BUF_SIZE total_mem C1("Total bytes currently allocated")
+ {
++/*
+ printf("\"%s\": %c(%s x %s) = %c%s ",
+ (char*)why,c,commas(nunits),commas(nsize),c,commas(nbytes));
++*/
++printf("\"%s\": %c(%s ", (char*)why,c,commas(nunits));
++printf("x %s) ", commas(nsize));
++printf("= %c%s ",c,commas(nbytes));
+ ptr_range(p,nbytes);
+ printf("(%s total)\n",commas(total_mem));
+ free_buf(&c_buf);
+@@ -6835,7 +6847,7 @@
+ mmin= mem;
+ mmax= mmin+(sizeof_mem/sizeof(MEM)-1);
+ query_mode= YES;
+-CLR_PRINTF(ALWAYS,info,("Default memory allocation parameters:"));
++CLR_PRINTF(ALWAYS,info,("Default memory allocation parameters:\n"));
+ }
+ else
+ {
+@@ -6863,6 +6875,7 @@
+ (char*)m->abbrev,m->abbrev[1]?"":" ");
+ 
+ SET_COLOR(ordinary);
++/*
+ printf("x %d byte(s):\
+   min = %s, cur = %s [%s byte(s)], max = %s.\n",
+ m->bytes,
+@@ -6870,6 +6883,11 @@
+ commas(m->nunits),
+ commas((m->nunits)*(m->bytes)),
+ commas(m->max));
++*/
++printf("x %d byte(s): min = %s, ", m->bytes, commas(m->min));
++printf("cur = %s ", commas(m->nunits));
++printf("[%s byte(s)], ", commas((m->nunits)*(m->bytes)));
++printf("max = %s.\n", commas(m->max));
+ }
+ else
+ {
+@@ -7624,9 +7642,15 @@
+ SET_COLOR(info);
+ 
+ if(at_end)
++{
++/*
+ printf("\n Allocated maximum of %s bytes dynamically; \
+ ended with %s bytes.\n",
+ commas(max_mem),commas(total_mem));
++*/
++printf("\n Allocated maximum of %s bytes dynamically; ", commas(max_mem));
++printf("ended with %s bytes.\n", commas(total_mem));
++}
+ 
+ #if PRINT_AVAILABLE_MEMORY
+ printf(" Available memory: %s bytes.\n",commas(CORE_LEFT));
+@@ -7708,13 +7732,19 @@
+ }
+ 
+ 
++outer_char temp[50];
++outer_char temp1[100];
+ 
+ outer_char*
+ commas FCN((l))
+ unsigned long l C1("")
+ {
++/*
+ outer_char temp[50],*p;
+ outer_char temp1[100],*p1;
++*/
++outer_char *p;
++outer_char *p1;
+ int n0,n;
+ int len;
+ 
+diff -ur fweb-1.62/Web/common.web fweb-1.62.new/Web/common.web
+--- fweb-1.62/Web/common.web	1998-09-25 21:02:39.000000000 +0900
++++ fweb-1.62.new/Web/common.web	2013-11-05 13:43:50.000000000 +0900
+@@ -3200,7 +3200,10 @@
+ 		}
+ #endif /* |ANSI_CALLOC| */
+ 
++/*
+ if( (p=(void HUGE *)CALLOC(nunits,nsize)) == NULL)
++*/
++if( (p=(void HUGE *)CALLOC(nunits,nsize+1)) == NULL)
+ 	{
+ 	FREE(byte_mem); // Kludge to try to make it go out gracefully.
+ 
+@@ -3240,8 +3243,13 @@
+ 	void HUGE *p C0("Start of allocated area")@;
+ 	BUF_SIZE total_mem C1("Total bytes currently allocated")@;
+ {
++/*
+ printf("\"%s\": %c(%s x %s) = %c%s ",
+ 	    (char *)why, c, commas(nunits), commas(nsize), c, commas(nbytes));
++*/
++printf("\"%s\": %c(%s ", (char*)why,c,commas(nunits));
++printf("x %s) ", commas(nsize));
++printf("= %c%s ",c,commas(nbytes));
+ ptr_range(p,nbytes);
+ printf("(%s total)\n", commas(total_mem));
+ free_buf(&c_buf);
+@@ -7772,9 +7780,15 @@
+ SET_COLOR(info);
+ 
+ if(at_end) 
++{
++/*
+ 	printf("\n Allocated maximum of %s bytes dynamically; \
+ ended with %s bytes.\n", 
+ 	commas(max_mem), commas(total_mem));
++*/
++	printf("\n Allocated maximum of %s bytes dynamically; ", commas(max_mem));
++	printf("ended with %s bytes.\n", commas(total_mem));
++}
+ 
+ #if PRINT_AVAILABLE_MEMORY
+ 	printf(" Available memory: %s bytes.\n", commas(CORE_LEFT));
+@@ -7864,19 +7878,30 @@
+ @
+ @<Initialize static...@>=
+ {
++/*
+ init_buf(&sput_buf, 10);
+ init_buf(&c_buf, 10);
++*/
++init_buf(&sput_buf, 50);
++init_buf(&c_buf, 200);
+ }
+ 
+ @
+ @<Part 2@>=@[
+ 
++outer_char temp[50];
++outer_char temp1[100];
++
+ outer_char *
+ commas FCN((l))
+ 	unsigned long l C1("")@;
+ {
++/*
+ outer_char temp[50], *p;
+ outer_char temp1[100], *p1;
++*/
++outer_char *p;
++outer_char *p1;
+ int n0, n;
+ int len;
+ 
+@@ -8272,7 +8297,7 @@
+ 	mmin = mem;
+ 	mmax = mmin + (sizeof_mem/sizeof(MEM) - 1);
+ 	query_mode = YES;
+-	CLR_PRINTF(ALWAYS, info, ("Default memory allocation parameters:"));
++	CLR_PRINTF(ALWAYS, info, ("Default memory allocation parameters:\n"));
+ 	}
+ else
+ 	{ /* Abbreviation specified. */
+@@ -8300,6 +8325,7 @@
+ 			(char *)m->abbrev, m->abbrev[1] ? "" : " ");
+ 
+ 		SET_COLOR(ordinary);
++/*
+ 		printf("x %d byte(s):\
+   min = %s, cur = %s [%s byte(s)], max = %s.\n",
+ 			m->bytes, 
+@@ -8307,6 +8333,11 @@
+ 			commas(m->nunits), 
+ 			commas((m->nunits)*(m->bytes)),
+ 			commas(m->max));
++*/
++		printf("x %d byte(s): min = %s, ", m->bytes, commas(m->min));
++		printf("cur = %s ", commas(m->nunits));
++		printf("[%s byte(s)], ", commas((m->nunits)*(m->bytes)));
++		printf("max = %s.\n", commas(m->max));
+ 		}
+ else
+ 	{ /* Change setting. */
+fweb-1.62.new/Web のみに存在: config.h
+diff -ur fweb-1.62/Web/configure fweb-1.62.new/Web/configure
+--- fweb-1.62/Web/configure	1998-09-25 21:02:32.000000000 +0900
++++ fweb-1.62.new/Web/configure	2009-07-23 14:45:40.000000000 +0900
+@@ -1589,8 +1589,48 @@
+ EOF
+ 
+ fi
++echo $ac_n "checking for tputs in -lncurses""... $ac_c" 1>&6
++echo "configure:1594: checking for tputs in -lncurses" >&5
++ac_lib_var=`echo ncurses'_'tputs | sed 'y%./+-%__p_%'`
++if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
++  echo $ac_n "(cached) $ac_c" 1>&6
++else
++  ac_save_LIBS="$LIBS"
++LIBS="-lncurses  $LIBS"
++cat > conftest.$ac_ext <<EOF
++#line 1602 "configure"
++#include "confdefs.h"
++/* Override any gcc2 internal prototype to avoid an error.  */
++/* We use char because int might match the return type of a gcc2
++    builtin and then its argument prototype would still apply.  */
++char tputs();
++
++int main() {
++tputs()
++; return 0; }
++EOF
++if { (eval echo configure:1613: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest; then
++  rm -rf conftest*
++  eval "ac_cv_lib_$ac_lib_var=yes"
++else
++  echo "configure: failed program was:" >&5
++  cat conftest.$ac_ext >&5
++  rm -rf conftest*
++  eval "ac_cv_lib_$ac_lib_var=no"
++fi
++rm -f conftest*
++LIBS="$ac_save_LIBS"
++
++fi
++if eval "test \"`echo '$ac_cv_lib_'$ac_lib_var`\" = yes"; then
++  echo "$ac_t""yes" 1>&6
++  TERMCAP0=
++LIBS="$LIBS -lncurses"
++else
++  echo "$ac_t""no" 1>&6
++
+ echo $ac_n "checking for tputs in -ltermcap""... $ac_c" 1>&6
+-echo "configure:1594: checking for tputs in -ltermcap" >&5
++echo "configure:1634: checking for tputs in -ltermcap" >&5
+ ac_lib_var=`echo termcap'_'tputs | sed 'y%./+-%__p_%'`
+ if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
+   echo $ac_n "(cached) $ac_c" 1>&6
+@@ -1630,6 +1670,7 @@
+   echo "$ac_t""no" 1>&6
+ TERMCAP0=termcap0."$(O)"
+ fi
++fi
+ trap '' 1 2 15
+ cat > confcache <<\EOF
+ # This file is a shell script that caches the results of configure
+fweb-1.62.new/Web のみに存在: custom.h
+diff -ur fweb-1.62/Web/defaults.mk.in fweb-1.62.new/Web/defaults.mk.in
+--- fweb-1.62/Web/defaults.mk.in	1998-09-25 21:02:32.000000000 +0900
++++ fweb-1.62.new/Web/defaults.mk.in	2008-09-11 13:50:34.000000000 +0900
+@@ -139,7 +139,7 @@
+ 
+ # Top-level path for everything else (usually /usr/local)
+ prefix = @prefix@
+-doc_prefix = $(prefix)
++doc_prefix = $(prefix)/share
+ 
+ # Where the Unix man pages go:
+ manext = 1
+diff -ur fweb-1.62/Web/ftangle.c fweb-1.62.new/Web/ftangle.c
+--- fweb-1.62/Web/ftangle.c	1998-09-25 21:02:49.000000000 +0900
++++ fweb-1.62.new/Web/ftangle.c	2013-11-05 14:04:08.000000000 +0900
+@@ -777,7 +777,10 @@
+ 
+ int main FCN((ac,av))
+ int ac C0("Number of arguments.")
++/*
+ outer_char**av C1("Argument list.")
++*/
++char*av[] C1("Argument list.")
+ {
+ #if TIMING
+ ini_timer();
+@@ -785,7 +788,7 @@
+ #endif 
+ 
+ 
+-argc= ac;argv= av;
++argc= ac;argv= (outer_char**)av;
+ 
+ ini_program(tangle);
+ 
+diff -ur fweb-1.62/Web/ftangle.web fweb-1.62.new/Web/ftangle.web
+--- fweb-1.62/Web/ftangle.web	1998-09-25 21:02:40.000000000 +0900
++++ fweb-1.62.new/Web/ftangle.web	2013-11-05 14:04:38.000000000 +0900
+@@ -48,7 +48,10 @@
+ 
+ int main FCN((ac, av))
+ 	int ac C0("Number of arguments.")@;
++/*
+ 	outer_char **av C1("Argument list.")@;
++*/
++	char *av[] C1("Argument list.")@;
+ {
+ #if TIMING
+ 	ini_timer(); 
+@@ -56,7 +59,7 @@
+ #endif // |TIMING|
+ 
+ /* Remember the arguments to |main| in global variables. */
+-  argc = ac; @+ argv = av;
++  argc = ac; @+ argv = (outer_char**)av;
+ 
+   ini_program(tangle); // Set the |program| flag etc.; see \.{common.web}.
+ 
+diff -ur fweb-1.62/Web/fweave.c fweb-1.62.new/Web/fweave.c
+--- fweb-1.62/Web/fweave.c	1998-09-25 21:02:50.000000000 +0900
++++ fweb-1.62.new/Web/fweave.c	2013-11-05 14:22:49.000000000 +0900
+@@ -870,14 +870,17 @@
+ 
+ int main FCN((ac,av))
+ int ac C0("Number of command-line arguments.")
++/*
+ outer_char**av C1("Array of pointers to command-line arguments.")
++*/
++char*av[] C1("Array of pointers to command-line arguments.")
+ {
+ 
+ #if TIMING
+ ini_timer();
+ #endif 
+ 
+-argc= ac;argv= av;
++argc= ac;argv= (outer_char**)av;
+ 
+ ini_program(weave);
+ 
+@@ -5020,7 +5023,10 @@
+ 
+ struct
+ {
++/*
+ int never_defined:1,never_used:1,multiple_uses:1;
++*/
++int never_defined,never_used,multiple_uses;
+ }anomalies;
+ 
+ anomalies.never_defined= anomalies.never_used= anomalies.multiple_uses= NO;
+@@ -5111,8 +5117,7 @@
+ prn_id(p);
+ printf(">");;
+ set_color(color0.last);
+-printf(":  ");
+-printf((char*)msg);
++printf(":  %s", (char*)msg);
+ mark_harmless;
+ return YES;
+ }
+diff -ur fweb-1.62/Web/fweave.web fweb-1.62.new/Web/fweave.web
+--- fweb-1.62/Web/fweave.web	1998-09-25 21:02:41.000000000 +0900
++++ fweb-1.62.new/Web/fweave.web	2013-11-05 14:23:56.000000000 +0900
+@@ -58,14 +58,17 @@
+ 
+ int main FCN((ac, av))
+ 	int ac C0("Number of command-line arguments.")@;
++/*
+ 	outer_char **av C1("Array of pointers to command-line arguments.")@;
++*/
++	char *av[] C1("Array of pointers to command-line arguments.")@;
+ {
+ /* --- Various initializations --- */
+ #if TIMING
+ 	ini_timer(); /* Start timing the run. */
+ #endif // |TIMING|
+ 
+-argc=ac; @~ argv=av; /* Remember the arguments as global variables. */
++argc=ac; @~ argv=(outer_char**)av; /* Remember the arguments as global variables. */
+ 
+ ini_program(weave);
+ 
+@@ -1910,7 +1913,7 @@
+ 	goto dec; // Decimal constant.
+ }
+ 
+-@ Decimal (\.{1.0e-5}) or \FORTRAN\ Hollerith constant (|@R 3Habc|).
++@ Decimal (\.{1.0e-5}) or \FORTRAN\ Hollerith constant (|3Habc|).
+ 
+ @<Get a decimal...@>=
+ {
+@@ -4154,7 +4157,10 @@
+ 
+ struct
+ 	{
++/*
+ 	int never_defined:1, never_used:1, multiple_uses:1;
++*/
++	int never_defined, never_used, multiple_uses;
+ 	} anomalies;
+ 
+ anomalies.never_defined = anomalies.never_used = anomalies.multiple_uses = NO;
+@@ -4246,8 +4252,7 @@
+ prn_id(p); 
+ printf(">");;
+ set_color(color0.last);
+-printf(":  ");
+-printf((char *)msg);
++printf(":  %s", (char *)msg);
+ mark_harmless; 
+ return YES;
+ }
+diff -ur fweb-1.62/Web/ratfor.c fweb-1.62.new/Web/ratfor.c
+--- fweb-1.62/Web/ratfor.c	1998-09-25 21:02:52.000000000 +0900
++++ fweb-1.62.new/Web/ratfor.c	2008-09-11 13:51:02.000000000 +0900
+@@ -1830,7 +1830,7 @@
+ {
+ static outer_char brkset[3]= "*?";
+ 
+-char*strpbrk();
++/* char*strpbrk(); */
+ boolean found_abbrev;
+ 
+ 
+diff -ur fweb-1.62/Web/ratfor.web fweb-1.62.new/Web/ratfor.web
+--- fweb-1.62/Web/ratfor.web	1998-09-25 21:02:43.000000000 +0900
++++ fweb-1.62.new/Web/ratfor.web	2013-10-25 11:47:43.000000000 +0900
+@@ -1703,7 +1703,7 @@
+ @B
+ static outer_char brkset[3] = "*?"; /* Prototype list of possible characters to
+ 			be searched for in the command-line list. */
+-char *strpbrk();
++/* char *strpbrk(); */
+ boolean found_abbrev;
+ 
+ @b
+diff -ur fweb-1.62/Web/t_type.h fweb-1.62.new/Web/t_type.h
+--- fweb-1.62/Web/t_type.h	1998-09-25 21:02:47.000000000 +0900
++++ fweb-1.62.new/Web/t_type.h	2013-11-05 13:56:52.000000000 +0900
+@@ -50,7 +50,10 @@
+ SRTN ini_univ_tokens PROTO((LANGUAGE language0));
+ SRTN ins_ln_no PROTO((int delta));
+ boolean is_deferred PROTO((sixteen_bits cur_val));
++/*
+ int main PROTO((int ac,outer_char**av));
++*/
++int main PROTO((int ac,char*av[]));
+ SRTN mcheck0 PROTO((unsigned long n,CONST outer_char reason[]));
+ SRTN mcopy PROTO((CONST outer_char*s));
+ SRTN new_out PROTO((boolean scope,sixteen_bits a));
+diff -ur fweb-1.62/Web/t_type.web fweb-1.62.new/Web/t_type.web
+--- fweb-1.62/Web/t_type.web	1998-09-25 21:02:38.000000000 +0900
++++ fweb-1.62.new/Web/t_type.web	2013-11-05 13:57:14.000000000 +0900
+@@ -64,7 +64,10 @@
+ SRTN ini_univ_tokens PROTO((LANGUAGE language0));
+ SRTN ins_ln_no PROTO((int delta));
+ boolean is_deferred PROTO((sixteen_bits cur_val));
++/*
+ int main PROTO((int ac,outer_char **av));
++*/
++int main PROTO((int ac,char *av[]));
+ SRTN mcheck0 PROTO((unsigned long n,CONST outer_char reason[]));
+ SRTN mcopy PROTO((CONST outer_char *s));
+ SRTN new_out PROTO((boolean scope,sixteen_bits a));
+diff -ur fweb-1.62/Web/w_type.h fweb-1.62.new/Web/w_type.h
+--- fweb-1.62/Web/w_type.h	1998-09-25 21:02:47.000000000 +0900
++++ fweb-1.62.new/Web/w_type.h	2013-11-05 13:56:19.000000000 +0900
+@@ -46,7 +46,10 @@
+ SRTN init_op PROTO((eight_bits op_code,CONST outer_char op_name[],
+ int lang,CONST outer_char op_macro[],boolean overload,
+ eight_bits cat,CONST outer_char defn[]));
++/*
+ int main PROTO((int ac,outer_char**av));
++*/
++int main PROTO((int ac,char*av[]));
+ SRTN make_output PROTO((VOID));
+ outer_char*mktmp PROTO((outer_char*file_name,outer_char*ext));
+ int mod_check PROTO((name_pointer p));
+diff -ur fweb-1.62/Web/w_type.web fweb-1.62.new/Web/w_type.web
+--- fweb-1.62/Web/w_type.web	1998-09-25 21:02:38.000000000 +0900
++++ fweb-1.62.new/Web/w_type.web	2013-11-05 13:56:37.000000000 +0900
+@@ -59,7 +59,10 @@
+ SRTN init_op PROTO((eight_bits op_code,CONST outer_char op_name[],
+ 		int lang,CONST outer_char op_macro[],boolean overload,
+ 		eight_bits cat,CONST outer_char defn[]));
++/*
+ int main PROTO((int ac,outer_char **av));
++*/
++int main PROTO((int ac,char *av[]));
+ SRTN make_output PROTO((VOID));
+ outer_char *mktmp PROTO((outer_char *file_name, outer_char *ext));
+ int mod_check PROTO((name_pointer p));

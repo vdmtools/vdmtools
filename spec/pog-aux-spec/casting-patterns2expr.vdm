@@ -1,0 +1,133 @@
+\section{The CAST module}
+
+Casting patterns into expressions (values)
+Only works for patterns without 
+the "don't care" and the oldname pattern.
+
+
+\begin{vdm_al}
+module CAST
+
+imports  
+
+  from AS all,
+  from CI all,
+  from REP all
+
+exports 
+  functions
+    Pattern2Expr     : AS`Pattern     -> AS`Expr;
+    PatternName2Expr : AS`PatternName -> AS`Expr;
+
+
+definitions
+
+functions
+
+  Pattern2Expr : AS`Pattern -> AS`Expr
+  Pattern2Expr (pat) ==
+    cases pat:
+      mk_AS`PatternName(-,-,-)      -> PatternName2Expr(pat),
+      mk_AS`MatchVal(-,-)           -> MatchVal2Expr(pat),
+      mk_AS`SetEnumPattern (-,-)    -> SetEnumPattern2Expr(pat),
+      mk_AS`SetUnionPattern (-,-,-) -> SetUnionPattern2Expr(pat),
+      mk_AS`SeqEnumPattern (-,-)    -> SeqEnumPattern2Expr(pat),
+      mk_AS`SeqConcPattern (-,-,-)  -> SeqConcPattern2Expr(pat),
+      mk_AS`MapletPattern (-,-,-)   -> MapletPattern2Expr(pat),
+      mk_AS`MapEnumPattern (-,-)    -> MapEnumPattern2Expr(pat),
+      mk_AS`MapMergePattern (-,-,-) -> MapMergePattern2Expr(pat),
+      mk_AS`RecordPattern (-,-,-)   -> RecordPattern2Expr(pat),
+      mk_AS`TuplePattern (-,-)      -> TuplePattern2Expr(pat),
+#ifdef VDMPP
+      mk_AS`ObjectPattern (-,-,-)   -> ObjectPattern2Expr(pat),
+      mk_AS`FieldPattern (-,-,-)    -> FieldPattern2Expr(pat),
+#endif VDMPP
+      others -> undefined
+    end;
+
+  PatternName2Expr: AS`PatternName -> AS`Expr
+  PatternName2Expr (mk_AS`PatternName(nm,-,cid)) ==
+    cases nm:
+      mk_AS`Name(-,-)         -> mu (nm, cid |-> cid),
+      mk_AS`OldName(name,-)   -> mk_AS`Name(name,cid),
+      others                  -> undefined
+    end; 
+  -- Don't care patterns are not accepted
+
+  MatchVal2Expr: AS`MatchVal -> AS`Expr
+  MatchVal2Expr (mk_AS`MatchVal(val,cid)) ==
+    mk_AS`BracketedExpr(val,cid);    
+
+  SetEnumPattern2Expr: AS`SetEnumPattern -> AS`SetEnumerationExpr
+  SetEnumPattern2Expr (mk_AS`SetEnumPattern(els,cid)) ==
+    let expr_els = [Pattern2Expr(els(i)) | i in set inds els]
+    in mk_AS`SetEnumerationExpr(expr_els,cid);
+
+  SetUnionPattern2Expr: AS`SetUnionPattern -> AS`BinaryExpr
+  SetUnionPattern2Expr (mk_AS`SetUnionPattern(lp,rp,cid)) ==
+    let expr1 = Pattern2Expr(lp),
+        expr2 = Pattern2Expr(rp)
+    in mk_AS`BinaryExpr(expr1, <SETUNION>, expr2, cid);
+
+  SeqEnumPattern2Expr: AS`SeqEnumPattern -> AS`SeqEnumerationExpr
+  SeqEnumPattern2Expr (mk_AS`SeqEnumPattern(els,cid)) ==
+    let expr_els = [Pattern2Expr(els(i)) | i in set inds els]
+    in mk_AS`SeqEnumerationExpr(expr_els, cid);
+
+  SeqConcPattern2Expr: AS`SeqConcPattern ->  AS`BinaryExpr
+  SeqConcPattern2Expr (mk_AS`SeqConcPattern(lp,rp,cid)) ==
+    let expr1 = Pattern2Expr(lp),
+        expr2 = Pattern2Expr(rp)
+    in mk_AS`BinaryExpr(expr1, <SEQCONC>, expr2, cid);
+
+  MapletPattern2Expr: AS`MapletPattern -> AS`Maplet
+  MapletPattern2Expr (mk_AS`MapletPattern(dp,rp,cid)) ==
+    let expr1 = Pattern2Expr(dp),
+        expr2 = Pattern2Expr(rp)
+    in mk_AS`Maplet(expr1, expr2, cid);
+
+  MapEnumPattern2Expr: AS`MapEnumPattern -> AS`MapEnumerationExpr
+  MapEnumPattern2Expr (mk_AS`MapEnumPattern(mls,cid)) ==
+    let expr_mls = [Pattern2Expr(mls(i)) | i in set inds mls]
+    in mk_AS`MapEnumerationExpr(expr_mls, cid);
+
+  MapMergePattern2Expr: AS`MapMergePattern ->  AS`BinaryExpr
+  MapMergePattern2Expr (mk_AS`MapMergePattern(lp,rp,cid)) ==
+    let expr1 = Pattern2Expr(lp),
+        expr2 = Pattern2Expr(rp)
+    in mk_AS`BinaryExpr(expr1, <MAPMERGE>, expr2, cid);
+
+  RecordPattern2Expr: AS`RecordPattern -> AS`RecordConstructorExpr
+  RecordPattern2Expr (mk_AS`RecordPattern(nm,els,cid)) ==
+    let expr_els = [Pattern2Expr(els(i)) | i in set inds els]
+    in mk_AS`RecordConstructorExpr(nm, expr_els, cid);
+
+  TuplePattern2Expr: AS`TuplePattern -> AS`TupleConstructorExpr
+  TuplePattern2Expr (mk_AS`TuplePattern(els,cid)) ==
+    let expr_els = [Pattern2Expr(els(i)) | i in set inds els]
+    in mk_AS`TupleConstructorExpr(expr_els, cid);
+
+#ifdef VDMPP
+  ObjectPattern2Expr: AS`ObjectPattern -> AS`Expr
+  --ObjectPattern2Expr (mk_AS`ObjectPattern(nm,els,cid)) ==
+  ObjectPattern2Expr (-) == undefined;
+
+  FieldPattern2Expr: AS`FieldPattern -> AS`Expr
+  --FieldPattern2Expr (mk_AS`RecordPattern(nm,els,cid)) ==
+  FieldPattern2Expr (-) == undefined;
+#endif VDMPP
+
+end CAST
+\end{vdm_al}
+
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[CAST`trv\_SameBaseClassExpr]
+{rtinfo.ast}[CAST]
+\end{rtinfo}
+
+
+
+
+

@@ -1,0 +1,24 @@
+ class A
+
+  instance variables
+
+    n : nat := 0;
+
+  operations
+
+public    GetN : () ==> nat
+    GetN() ==
+      return n;
+
+end A
+
+class B
+
+operations
+
+  public Test : () ==> nat
+  Test() ==
+    return (let p = new A().GetN()
+            in  p) + 7
+
+end B

@@ -1,0 +1,14 @@
+class CasesStmtTest
+
+operations
+
+  Cases: () ==> bool
+  Cases() ==
+    cases true:
+    true ->  let a = [1] in return hd a > 9,
+    1 -> let a in set {1} in return a,
+    2 -> let a in set {1,2,3} be st a<3 in return a * 10001,
+    others -> def a = [1] in return hd a > 9
+    end;
+
+end CasesStmtTest

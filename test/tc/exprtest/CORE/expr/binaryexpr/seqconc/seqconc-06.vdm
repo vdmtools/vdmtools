@@ -1,0 +1,17 @@
+class BinaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = [1] ^
+         cases false:
+             true -> [true,'a'],
+             others -> {9,8}
+         end 
+  in skip;
+
+------------------------------------------------------------------------------
+end BinaryTest

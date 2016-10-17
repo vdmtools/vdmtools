@@ -1,0 +1,18 @@
+class JavaIoUnsupportedEncodingException is subclass of JavaIoIOException
+operations 
+public  JavaIoUnsupportedEncodingException : () ==> JavaIoUnsupportedEncodingException
+JavaIoUnsupportedEncodingException() == 
+( skip 
+) ;
+
+public  JavaIoUnsupportedEncodingException : <NIL> ==> JavaIoUnsupportedEncodingException
+JavaIoUnsupportedEncodingException(-) == 
+isNil := true  ;
+
+public  JavaIoUnsupportedEncodingException : JavaLangString ==> JavaIoUnsupportedEncodingException
+JavaIoUnsupportedEncodingException(s) == 
+( skip 
+) ;
+
+
+end  JavaIoUnsupportedEncodingException

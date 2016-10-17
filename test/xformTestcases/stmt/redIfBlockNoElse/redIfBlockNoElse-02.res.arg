@@ -1,0 +1,13 @@
+"class A
+
+operations
+
+public Test : () ==> bool  
+Test () ==
+( dcl a : bool;
+	( dcl b : bool := false;
+		( dcl c : bool := false;
+		return (2 > 1))));
+   
+end A
+"

@@ -1,0 +1,13 @@
+class  MapEnumerationExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = {|->}
+  in skip;
+
+------------------------------------------------------------------------------
+end MapEnumerationExprTest

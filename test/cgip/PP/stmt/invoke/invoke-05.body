@@ -1,0 +1,39 @@
+class A
+
+instance variables
+  n : nat := 0;
+
+operations
+
+
+  GetN: () ==> nat
+  GetN() ==
+    return n;
+
+  SetN: nat ==> ()
+  SetN(v) ==
+    n := v;
+
+
+public  M20XXX: () ==> nat
+  M20XXX() ==
+    return n
+
+end A
+
+class T20XXX
+
+end T20XXX
+
+class B
+
+instance variables
+  var: A | T20XXX | seq of char
+  
+operations
+
+public Test : () ==> nat
+  Test()  ==
+    var.M20XXX() 
+
+end B

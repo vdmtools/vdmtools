@@ -1,0 +1,29 @@
+class A
+
+operations
+
+public Test : () ==> seq of int
+Test () ==
+( dcl b:  C := new A (),
+      res : seq of int;
+  res := [ b.c(8) ];
+  return res
+)
+
+functions
+
+c: int -> int | map nat to nat
+c (i) ==
+  i
+
+types
+
+C = A | Rec;
+
+Rec::c: int | map nat to nat
+
+end A
+
+class B is subclass of A
+
+end B

@@ -1,0 +1,90 @@
+ThreadCreate -> id: 1 period: false objref: nil clnm: nil cpunm: 0 time: 0
+ThreadSwapIn -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 0
+CPUdecl ->  id: 1 expl: true sys: "Simple" name: "CPU1"
+CPUdecl ->  id: 2 expl: true sys: "Simple" name: "CPU2"
+DeployObj ->  objref: 1 clnm: "B" cpunm: 0 time: 0
+DeployObj ->  objref: 2 clnm: "B" cpunm: 0 time: 0
+DeployObj ->  objref: 3 clnm: "C" cpunm: 0 time: 0
+DeployObj ->  objref: 4 clnm: "C" cpunm: 0 time: 0
+BUSdecl ->  id: 1 topo: {2, 1} name: "BUS1"
+DeployObj ->  objref: 2 clnm: "B" cpunm: 1 time: 0
+DeployObj ->  objref: 4 clnm: "C" cpunm: 2 time: 0
+DeployObj ->  objref: 5 clnm: "Simple" cpunm: 0 time: 0
+DeployObj ->  objref: 6 clnm: "E" cpunm: 0 time: 0
+DeployObj ->  objref: 7 clnm: "D" cpunm: 0 time: 0
+DeployObj ->  objref: 8 clnm: "C" cpunm: 0 time: 0
+DeployObj ->  objref: 9 clnm: "B" cpunm: 0 time: 0
+DeployObj ->  objref: 10 clnm: "A" cpunm: 0 time: 0
+DeployObj ->  objref: 11 clnm: "A" cpunm: 0 time: 0
+DeployObj ->  objref: 12 clnm: "D" cpunm: 0 time: 0
+DeployObj ->  objref: 13 clnm: "E" cpunm: 0 time: 0
+OpRequest -> id: 1 opname: "A`Test" objref: 11 clnm: "A" cpunm: 0 async: false time: 6
+OpActivate -> id: 1 opname: "A`Test" objref: 11 clnm: "A" cpunm: 0 async: false time: 6
+OpRequest -> id: 1 opname: "C`TestC" objref: 4 clnm: "C" cpunm: 0 async: true time: 10
+MessageRequest -> busid: 0 fromcpu: 0 tocpu: 2 msgid: 1 callthr: 1 opname: "C`TestC" objref: 4 size: 80 time: 10
+OpRequest -> id: 1 opname: "B`TestB" objref: 2 clnm: "B" cpunm: 0 async: false time: 18
+MessageRequest -> busid: 0 fromcpu: 0 tocpu: 1 msgid: 2 callthr: 1 opname: "B`TestB" objref: 2 size: 144 time: 18
+MessageActivate -> msgid: 1 time: 18
+MessageCompleted -> msgid: 1 time: 18
+MessageActivate -> msgid: 2 time: 18
+MessageCompleted -> msgid: 2 time: 18
+ThreadCreate -> id: 2 period: false objref: 4 clnm: "C" cpunm: 2 time: 18
+ThreadSwapIn -> id: 2 objref: 4 clnm: "C" cpunm: 2 overhead: 2 time: 18
+OpActivate -> id: 2 opname: "C`TestC" objref: 4 clnm: "C" cpunm: 2 async: true time: 18
+OpCompleted -> id: 2 opname: "C`TestC" objref: 4 clnm: "C" cpunm: 2 async: true time: 18
+ThreadSwapOut -> id: 2 objref: 4 clnm: "C" cpunm: 2 overhead: 2 time: 18
+ThreadKill -> id: 2 cpunm: 2 time: 20
+ThreadCreate -> id: 3 period: false objref: 2 clnm: "B" cpunm: 1 time: 18
+ThreadSwapIn -> id: 3 objref: 2 clnm: "B" cpunm: 1 overhead: 2 time: 18
+OpActivate -> id: 3 opname: "B`TestB" objref: 2 clnm: "B" cpunm: 1 async: false time: 18
+OpRequest -> id: 3 opname: "D`OpD" objref: 12 clnm: "D" cpunm: 1 async: false time: 28
+MessageRequest -> busid: 0 fromcpu: 1 tocpu: 0 msgid: 3 callthr: 3 opname: "D`OpD" objref: 12 size: 72 time: 28
+MessageActivate -> msgid: 3 time: 28
+MessageCompleted -> msgid: 3 time: 28
+ThreadSwapOut -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 28
+ThreadCreate -> id: 4 period: false objref: 12 clnm: "D" cpunm: 0 time: 30
+ThreadSwapIn -> id: 4 objref: 12 clnm: "D" cpunm: 0 overhead: 2 time: 30
+OpActivate -> id: 4 opname: "D`OpD" objref: 12 clnm: "D" cpunm: 0 async: false time: 30
+OpCompleted -> id: 4 opname: "D`OpD" objref: 12 clnm: "D" cpunm: 0 async: false time: 36
+ReplyRequest -> busid: 0 fromcpu: 0 tocpu: 1 msgid: 4 origmsgid: 3 callthr: 3 calleethr: 4 size: 64 time: 36
+ThreadSwapOut -> id: 4 objref: 12 clnm: "D" cpunm: 0 overhead: 2 time: 36
+ThreadKill -> id: 4 cpunm: 0 time: 38
+MessageActivate -> msgid: 4 time: 36
+MessageCompleted -> msgid: 4 time: 36
+OpCompleted -> id: 3 opname: "B`TestB" objref: 2 clnm: "B" cpunm: 1 async: false time: 46
+ReplyRequest -> busid: 0 fromcpu: 1 tocpu: 0 msgid: 5 origmsgid: 2 callthr: 1 calleethr: 3 size: 64 time: 46
+ThreadSwapOut -> id: 3 objref: 2 clnm: "B" cpunm: 1 overhead: 2 time: 46
+ThreadKill -> id: 3 cpunm: 1 time: 48
+MessageActivate -> msgid: 5 time: 46
+MessageCompleted -> msgid: 5 time: 46
+ThreadSwapIn -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 46
+OpRequest -> id: 1 opname: "B`TestB" objref: 2 clnm: "B" cpunm: 0 async: false time: 56
+MessageRequest -> busid: 0 fromcpu: 0 tocpu: 1 msgid: 6 callthr: 1 opname: "B`TestB" objref: 2 size: 144 time: 56
+MessageActivate -> msgid: 6 time: 56
+MessageCompleted -> msgid: 6 time: 56
+ThreadCreate -> id: 5 period: false objref: 2 clnm: "B" cpunm: 1 time: 56
+ThreadSwapIn -> id: 5 objref: 2 clnm: "B" cpunm: 1 overhead: 2 time: 56
+OpActivate -> id: 5 opname: "B`TestB" objref: 2 clnm: "B" cpunm: 1 async: false time: 56
+OpRequest -> id: 5 opname: "E`OpE" objref: 13 clnm: "E" cpunm: 1 async: false time: 68
+MessageRequest -> busid: 0 fromcpu: 1 tocpu: 0 msgid: 7 callthr: 5 opname: "E`OpE" objref: 13 size: 72 time: 68
+MessageActivate -> msgid: 7 time: 68
+MessageCompleted -> msgid: 7 time: 68
+ThreadSwapOut -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 68
+ThreadCreate -> id: 6 period: false objref: 13 clnm: "E" cpunm: 0 time: 70
+ThreadSwapIn -> id: 6 objref: 13 clnm: "E" cpunm: 0 overhead: 2 time: 70
+OpActivate -> id: 6 opname: "E`OpE" objref: 13 clnm: "E" cpunm: 0 async: false time: 70
+OpCompleted -> id: 6 opname: "E`OpE" objref: 13 clnm: "E" cpunm: 0 async: false time: 76
+ReplyRequest -> busid: 0 fromcpu: 0 tocpu: 1 msgid: 8 origmsgid: 7 callthr: 5 calleethr: 6 size: 64 time: 76
+ThreadSwapOut -> id: 6 objref: 13 clnm: "E" cpunm: 0 overhead: 2 time: 76
+ThreadKill -> id: 6 cpunm: 0 time: 78
+MessageActivate -> msgid: 8 time: 76
+MessageCompleted -> msgid: 8 time: 76
+OpCompleted -> id: 5 opname: "B`TestB" objref: 2 clnm: "B" cpunm: 1 async: false time: 88
+ReplyRequest -> busid: 0 fromcpu: 1 tocpu: 0 msgid: 9 origmsgid: 6 callthr: 1 calleethr: 5 size: 64 time: 88
+ThreadSwapOut -> id: 5 objref: 2 clnm: "B" cpunm: 1 overhead: 2 time: 88
+ThreadKill -> id: 5 cpunm: 1 time: 90
+MessageActivate -> msgid: 9 time: 88
+MessageCompleted -> msgid: 9 time: 88
+ThreadSwapIn -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 88
+OpCompleted -> id: 1 opname: "A`Test" objref: 11 clnm: "A" cpunm: 0 async: false time: 98
+ThreadSwapOut -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 100

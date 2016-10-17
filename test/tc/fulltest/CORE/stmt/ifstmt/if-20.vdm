@@ -1,0 +1,14 @@
+class IfStmtTest
+
+operations
+
+
+  -- Tests an empty else part. This should generate an error both in pos and def.
+  -- Fri Sep  4 12:48:56 1998 -- Jesper K. Pedersen
+  If20: nat * nat  ==> bool
+  If20(a,b) ==
+    if a < b
+    then return false;
+ 
+        
+end IfStmtTest

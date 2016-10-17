@@ -1,0 +1,28 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of (nat | bool | real | char * char | char)  
+Test () ==
+  return 
+    let a in set let aa_s = {1,2,3} in aa_s be st a = 1 in 
+      conc [[a]] ^
+    let {b,a} in set {{1}, {false, 34}, {mk_('a','b'), true}} be st b = 34 in
+      [a] ^
+    let {a,b} in set {{1}, {false, 34}, {true, mk_('a','b')}} be st b = true in
+      [a] ^
+    let [a,b,c] in set {[38,0,0]} union {SetToSeq({-5.5, 4, 1.1})} be st 
+        if a < 10 then true else false in
+         let s = [a,b,c] in
+      s ^
+    let s = {10, mk_('q','e'), mk_(1,2)} in 
+        let mk_(a,b) in set s be st let q = 'q' in a = q in
+      SetToSeq({a,b})
+
+functions
+  SetToSeq: set of ( nat | real | char) -> seq of ( nat | real | char )
+  SetToSeq(r_s) ==
+    if r_s = {} then
+      []
+    else
+      let r in set r_s in
+        [r] ^ SetToSeq(r_s \ {r})
+
+end A

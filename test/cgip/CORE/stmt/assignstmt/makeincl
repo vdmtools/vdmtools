@@ -1,0 +1,46 @@
+
+CC  = g++
+CCC = g++
+
+ifeq ($(MODE),VDMPP)
+ifeq ($(OSTYPE),SunOS4)
+  TOOLBOXDIR = /usr/local/package/vdm++_toolbox
+endif
+ifeq ($(OSTYPE),SunOS5)
+  TOOLBOXDIR = /opt/vdm++_toolbox
+endif
+ifeq ($(OSTYPE),hpux_9)
+  TOOLBOXDIR = /opt/vdm++_toolbox
+endif
+ifeq ($(OSTYPE),Linux)
+  TOOLBOXDIR = /opt/vdm++_toolbox
+endif
+
+else
+## VDMSL test suites
+ifeq ($(OSTYPE),SunOS4)
+  TOOLBOXDIR = /usr/local/package/toolbox
+  LD = ld -o
+endif
+ifeq ($(OSTYPE),SunOS5)
+  TOOLBOXDIR = /opt/toolbox
+  LD = ld -G -o
+endif
+ifeq ($(OSTYPE),hpux_9)
+  TOOLBOXDIR = /opt/toolbox
+  LD = 
+endif
+ifeq ($(OSTYPE),Linux)
+  TOOLBOXDIR = /opt/toolbox
+  LD = 
+endif
+
+endif
+
+INCL    = -I$(TOOLBOXDIR)/cg/include
+LIB     = -L$(TOOLBOXDIR)/cg/lib -lvdm -lCG -lm
+
+
+OPTIONS = ${INCL} ${ICODE} ${LIB}
+EXE     = icode
+MAIN    = icode.cc DelUserClass.cc

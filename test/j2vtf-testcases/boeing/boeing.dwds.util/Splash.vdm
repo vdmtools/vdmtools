@@ -1,0 +1,122 @@
+class Splash is subclass of Runnable
+operations 
+public  run : () ==> <VOID>
+run() == 
+( trap  j2v_exception with  
+    cases  true  : 
+      (is_ (j2v_exception,[Exception])) -> 
+        ( dcl   e : [Exception] := j2v_exception;
+          skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( let - = setVisible(true  )
+      in 
+        skip ;
+      let - = splashThread.sleep(displayTime)
+      in 
+        skip ;
+      let - = Splash`dispose()
+      in 
+        skip ;
+      splashThread := nil  
+    ) ;
+  return  <VOID>
+) ;
+
+public  Splash : () ==> Splash
+Splash() == 
+( let - = Splash(nil   , 10000)
+  in 
+    skip 
+) ;
+
+public  dispose : () ==> <VOID>
+dispose() == 
+( let - = dwdsSplash.dispose()
+  in 
+    skip ;
+  let - = dummyFrame.dispose()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  setVisible : bool  ==> <VOID>
+setVisible(b) == 
+( let - = dwdsSplash.setVisible(b)
+  in 
+    skip ;
+  if  b
+  then  
+    ( let - = dwdsSplash.toFront()
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+public  Splash : [String] * int  ==> Splash
+Splash(initialStatusText, displayTime) == 
+( Splash`displayTime := displayTime;
+  dummyFrame := new  JFrame();
+  dwdsSplash := new  SplashScreen(dummyFrame , new  String("boeing/dwds/images/wi-logo.jpg") , Color`black , Color`white , initialStatusText , new  Font(new  String("Serif") , Font`BOLD , 10) , copyright , new  Font(new  String("Serif") , Font`PLAIN , 11) , new  String("Version: ")+Version`getVersion() , new  Font(new  String("SanSerif") , Font`BOLD , 12));
+  if  Splash`displayTime = 0
+  then  
+    ( let - = dwdsSplash.setVisible(true  )
+      in 
+        skip ;
+      let - = dwdsSplash.toFront()
+      in 
+        skip 
+    ) 
+  else  
+    ( splashThread := new  Thread(self  );
+      let - = splashThread.start__()
+      in 
+        skip 
+    ) 
+) ;
+
+public  Splash : map  int  to  [String] ==> Splash
+Splash(dbVersion) == 
+( let - = Splash(nil   , 2000)
+  in 
+    skip ;
+  let - = setVersionText(dbVersion)
+  in 
+    skip 
+) ;
+
+public  setStatusText : [String] ==> <VOID>
+setStatusText(statusText) == 
+( let - = dwdsSplash.setStatusText(statusText)
+  in 
+    skip ;
+  let - = dwdsSplash.toFront()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  setVersionText : map  int  to  [String] ==> <VOID>
+setVersionText(versionText) == 
+( let - = dwdsSplash.setVersionText(versionText)
+  in 
+    skip ;
+  let - = dwdsSplash.toFront()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+instance variables 
+  private  splashThread : [Thread];
+  private  dummyFrame : [JFrame];
+  private  dwdsSplash : [SplashScreen];
+  private  displayTime : int ;
+  private  copyright : map  int  to  [String] := {8 |-> new  String("by McDonnell Douglas Corporation.") , 7 |-> new  String("Copyright Unpublished - 1998-2000.  All rights reserved under the copyright laws") , 6 |-> new  String([  ]) , 5 |-> new  String("in writing by McDonnell Douglas Corporation.") , 4 |-> new  String("used by or disclosed to others for any purpose except as specifically authorized") , 3 |-> new  String("regardless of the form in which it exists, nor such data or information may be") , 2 |-> new  String("relating thereto, and in the information disclosed therein.  Neither the software,") , 1 |-> new  String("proprietary rights are included in this software, in the data or documentation") , 0 |-> new  String("McDonnell Douglas Corporation, a wholly owned subsidiary of The Boeing Company,")}
+  
+end  Splash

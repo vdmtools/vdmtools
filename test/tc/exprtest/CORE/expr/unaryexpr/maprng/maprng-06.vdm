@@ -1,0 +1,18 @@
+class UnaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let A = "ABC",
+      s = {8,9},
+      - = rng cases false:
+               true -> A,
+               others -> s
+           end 
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

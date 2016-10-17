@@ -1,0 +1,13 @@
+class ReturnStmtTest
+
+operations
+
+public Return1()
+                == return
+        post true;
+
+  Return4: () ==> ()
+  Return4() ==
+    return 
+
+end ReturnStmtTest

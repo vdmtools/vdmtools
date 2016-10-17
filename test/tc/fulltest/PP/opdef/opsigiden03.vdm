@@ -1,0 +1,33 @@
+class A
+
+operations
+protected op1(-: int) r: int ==
+  return 1
+post r = 1;
+
+protected op2(a: int, b: int) r: bool ==
+  return a = b
+post r = (a = b);
+
+protected op3(a: int) r: bool ==
+  return a >= 0
+post r = (a >= 0);
+
+end A
+
+class B is subclass of A
+
+operations
+op1(-: int) r: int ==
+  return 1
+post r = 1;
+
+op2(a: char, b: char) r: bool ==
+  return a <> b
+post r = (a <> b);
+
+op3(-: int) r: char ==
+  return 'a'
+post r = 'a';
+
+end B

@@ -1,0 +1,20 @@
+class test6
+
+functions
+
+static public test6: int -> int
+test6(i) == test6_1(i);
+
+static public test6_1: int -> int
+test6_1(i) == i * i;
+
+end test6
+
+class A
+
+operations
+
+public Test: () ==> int
+Test() == return test6`test6(1);
+
+end A

@@ -1,0 +1,234 @@
+/*
+ * Gofo の Book （帳簿）を表すクラス
+ * $Id: gofo_book.vpp,v 1.1 2005/11/25 07:05:38 vdmtools Exp $
+ *
+ *　責任：
+ *	現在着目しているBookの明細行（明細記録）１件を表し、明細行にアクセスするための操作群を持つ。
+ *	帳簿（仮想DB Gofo_DBで実現）全体も表し、帳簿全体にアクセスするための操作群も持つ。
+ *	帳簿への特殊なアクセスを行う操作の記述場所となる。
+ *
+ *　操作名に関する注意：
+ *	英語名の関数および操作は、GofoRの他の言語版との名前の互換性を維持するため存在する。
+ 
+ *　使用方法：
+ *	（１）型定義の方法
+ *		スーパークラス『問題領域共通定義』を定義し、その中で、下記のように型「帳簿」と「記録」と「キー」を、
+ *		本クラスのサブクラス（この例の場合、OrgとBook）で定義した型「帳簿」と「記録」と「キー」を使って定義する。
+ 
+ 		 public 「帳簿」 = 
+ 		 	Org | Book ;
+		 public 「記録」 = 
+			Org`「記録」 | Book`「記録」 | ...;
+		 public 「キー」 =
+			Org`「キー」 | Book`「キー」 | ...;
+
+ *	例えば本クラスのサブクラスBookクラスでの型定義は以下のようになる。
+ 
+		 public 「帳簿」 = Org | Book;
+		 public 「キー」 = 「文字列」;
+		 public 「記録」 ::
+			キー : 「キー」
+			名前 : 「文字列」
+			...
+		
+ *	（２）キー項目
+ *		いくつかの操作は、「記録」レコード中に「キー」型のキーという名前の項目があることを前提にしている。
+ *
+ *	（３）仮想DB(Gofo_DB)の定義
+ *		本クラスのサブクラス毎に、下記のような構成子を定義する。
+ 
+		 public サブクラス名 : Gofo_DB ==> サブクラス名
+		 サブクラス名(aDB) == 
+			(
+			DBを設定する(aDB);
+			return self
+			);
+	（４）インスタンスの生成方法
+		以下のようにインスタンスを生成する。
+		
+		dcl b : Book := new Book(new Gofo_DB())
+		
+	（５）レコードの追加
+		レコードの追加用に、以下のようなcreate操作を定義する。
+	
+		public create : 項目の型の羅列  ==> GofoBook
+		create(引数の羅列) == is subclass responsibility;
+			let	新ID = a発番者.発番する(発番桁数),
+				新記録 =
+					mk_サブクラス名`「記録」(
+						新ID,
+						項目1,
+						項目2,
+						...
+					)	in
+			(
+			挿入する(新記録);
+			return findByKeyValues(新ID)
+		);
+		
+ *　制約：
+ *	スーパークラス『問題領域共通定義』で合併型を使用するので、
+ *	Rose Linkの機能制約のためRoseのクラス図を生成できない。
+ *
+*/
+
+class GofoBook is subclass of 『問題領域共通定義』
+
+types
+public 「明細行群」 = Gofo_DB`「明細行群」;
+public 「選択基準」 = Gofo_DB`「選択基準」;	
+
+instance variables
+private DB : Gofo_DB;				--対応する仮想DB
+private 明細記録 :  [「記録」] := nil;		--帳簿の「今、着目している」明細行を表す。
+
+operations
+--構成子
+public GofoBook :  Gofo_DB * [「記録」]  ==> GofoBook
+GofoBook(aDB, a記録) == 
+	(
+	DBを設定する(aDB);
+	明細記録を設定する(a記録);
+	return self
+	);
+	
+--インスタンス変数の取り扱い
+public DBを設定する : Gofo_DB ==> ()
+DBを設定する(aDB) == DB := aDB;
+
+public DBを得る : () ==> Gofo_DB
+DBを得る() == return DB;
+
+public 明細記録を設定する : [「記録」] ==> ()
+明細記録を設定する(a記録) == 明細記録 := a記録;
+
+public 明細記録を得る : () ==> [「記録」]
+明細記録を得る() == return 明細記録;
+
+--以下は他の言語版のGofoに準拠した操作群である。
+
+--現在の明細行（明細記録）をクリアする
+public clear : () ==> ()
+clear() == 明細記録を設定する(nil);
+
+--同値判定
+--	操作名は、全角の＝であることに注意。
+public ＝ : 「帳簿」 ==> bool
+＝(a帳簿) == 
+	return 
+		self.明細記録を得る() = a帳簿.明細記録を得る();
+
+--aIDの明細行が存在するかを返す。
+public 存在する : 「キー」 ==> bool
+存在する(aキー) == return DBを得る().存在する(aキー);
+
+--条件に合う明細行（GofoBookクラスのインスタンス）の数を返す。
+public count : 「選択基準」 ==> nat
+count(選択基準) == return DBを得る().count(選択基準);
+
+--帳簿の総件数を返す
+public countAll : () ==> nat
+countAll() == return DBを得る().countAll();
+
+--現在の明細行を削除する
+public delete : () ==> ()
+delete() == DBを得る().delete(self);
+	
+--選択した明細行１件を設定した帳簿を返す。
+public fetch : () ==> 「帳簿」
+fetch() == 
+	let	a明細行 = DBを得る().fetch()
+	in
+	(
+	明細記録を設定する(a明細行);
+	return self
+	);
+
+
+--選択した明細行群を返す。
+public fetchAll : () ==> 「明細行群」
+fetchAll() == return  DBを得る().fetchAll();
+
+--全件を得る。
+--ただし、この段階ではデータは取り出されていない。fetch()またはfetchAll()で取り出す。
+public findAll : () ==> ()
+findAll() == DBを得る().findAll();
+	
+--指定されたIDを持つ明細行を設定した帳簿を返す。
+public findByKeyValues : 「キー」 ==> [「帳簿」]
+findByKeyValues(aキー) == 
+	let	a明細行 = DBを得る().findByKeyValues(aキー)
+	in
+	(
+	明細記録を設定する(a明細行);
+	return self
+	);
+
+--現在の明細行が空か判定する。
+public isEmpty : () ==> bool
+isEmpty() == return 明細記録を得る() = nil;
+
+--fetchするための検索を行う。
+public selectWhere : GofoBook`「選択基準」 ==> ()
+selectWhere(選択基準) == DBを得る().selectWhere(選択基準);
+
+--現在の明細行を更新する。
+public update : () ==> ()
+update() == DBを得る().update(self) ;
+
+--以下の操作は、他の言語版のGofoには存在しない。
+
+--ある関連の派生元から派生先の集合を得る。
+public selectThrough : Gofo_Relationship_Class * 「記録」 ==> set of (Gofo_Relationship * 「記録」)
+selectThrough(ある関連, ある派生元) == 
+	return DBを得る().selectThrough(ある関連, ある派生元);
+
+--ある関連の派生元から派生先へのリンク集合を得る。
+public selectLinkThrough : Gofo_Relationship_Class * 「記録」 ==> set of Gofo_Relationship
+selectLinkThrough(ある関連, ある派生元) == 
+	return DBを得る().selectLinkThrough(ある関連, ある派生元);
+
+public 選択する : 「選択基準」 ==> 「明細行群」
+選択する(選択基準) == return DBを得る().選択する(選択基準);
+
+public 挿入する : 「記録」==> ()
+挿入する(a記録) == DBを得る().挿入する(a記録);
+
+public 削除する : 「選択基準」 ==> ()
+削除する(選択基準) ==  DBを得る().削除する(選択基準);
+
+public 上書きする : 「記録」 * 「選択基準」 ==> ()
+上書きする(a明細行, 選択基準) ==  DBを得る().上書きする(a明細行, 選択基準);
+
+public 挿入済みである : 「明細行群」 ==> bool
+挿入済みである(挿入分) == return DBを得る().挿入済みである(挿入分);
+
+public 削除済みである : 「選択基準」 ==> bool
+削除済みである(選択基準) == return DBを得る().削除済みである(選択基準);
+
+public 上書き済みである : 「記録」 * 「選択基準」 ==> bool
+上書き済みである(a明細行, 選択基準) == return DBを得る().上書き済みである(a明細行, 選択基準);
+
+public 更新済みである : 「記録」 * 「記録」 ==> bool
+更新済みである(a旧明細行, a新明細行) == 
+	return DBを得る().更新済みである(a旧明細行, a新明細行);
+
+public 更新部分 : () ==> 「明細行群」
+更新部分() == return DBを得る().更新部分();
+
+public ロードする : 「明細行群」 ==> ()
+ロードする(記録群) ==  DBを得る().ロードする(記録群);
+
+public 確定する : () ==> ()
+確定する() ==  DBを得る().確定する();
+
+public 巻き戻す : () ==> ()
+巻き戻す() ==  DBを得る().巻き戻す();
+
+public 準備ＯＫ : () ==> bool
+準備ＯＫ() ==  DBを得る().準備ＯＫ();
+
+public 変化無し : () ==> bool
+変化無し() ==  DBを得る().変化無し();
+  
+end GofoBook

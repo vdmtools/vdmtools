@@ -1,0 +1,811 @@
+class Analyzer is subclass of GLOBAL
+-- when sending analysis. put timestamp on
+
+types
+
+--public AnalysisData  = seq of (nat * nat * nat);
+public Emergency = EventId * EmergencyType * nat; 
+public Tendency = nat;
+
+Buffer = seq of Data;
+AnalysisBuffer = seq of DeviceData; 
+
+values
+
+instance variables
+
+dataBuffer : Buffer := [];
+analysisBuffer : seq of DeviceData := [];
+
+batMonitor : [BatteryMonitor] := nil;
+busy : bool := false;
+transmitter : [Transmitter];
+hasBattery : bool := false;
+
+cprNr : CprNr := 0;
+curValue : nat := 0;
+oldValue : nat := 0;
+
+-- do we use these?
+eventid : [EventId];
+dataType : [DataType];
+
+operations
+
+public Analyzer: GLOBAL`DataType ==> Analyzer
+Analyzer(type) ==
+(
+    dataType := type; 
+);
+
+
+public setTransmitter : Transmitter ==> ()
+setTransmitter(tnsmt) ==
+(
+    transmitter := tnsmt;
+    start(transmitter);
+);
+
+public setBatteryMonitor : BatteryMonitor ==> ()
+setBatteryMonitor ( monitor ) ==
+(
+    batMonitor := monitor; 
+    hasBattery := true;   
+);
+
+async public addData : Data ==> ()
+addData(data) ==
+(
+    Printer`Out("Analyzer received data");
+    dataBuffer := dataBuffer ^ [data];
+    
+    --dataBuffer := dataBuffer ^ [mk_Data(1,100000,3,[mk_(1,2),mk_(2,3)])];
+    if len dataBuffer >0 then Printer`Out("Buffer not empty");
+    busy := true;
+
+);
+
+public isFinished: () ==> ()
+isFinished () == 
+(
+    Printer`Out("Analyzer is done");
+);
+
+done: () ==> ()
+    done() == skip;   
+    
+public sendAnalysis: () ==> ()
+sendAnalysis() ==
+    skip;
+    -- send to TX, which determines transmit and calls handleEvent;
+
+public getDataType: () ==> nat
+getDataType () ==
+    return dataType;
+
+public getData: () ==> Data 
+getData() == 
+(dcl result: Data := hd dataBuffer;
+    dataBuffer := tl dataBuffer;
+    return result;
+    
+   -- seperate buffer for processed stuff
+    --def mk_Data(evid, cpr, datatype, devicedata) = hd dataBuffer in
+    --    return mk_Data(evid, cpr, datatype, devicedata);   
+);    
+    
+    
+public setCprNr: CprNr ==> ()
+setCprNr(cpr) ==
+(
+    cprNr := cpr;
+);
+
+public doAnalysis: () ==> ()
+doAnalysis() ==
+cycles(5000)
+(
+  (if dataBuffer <> [] then
+    def data = getData() in 
+    (
+        if hasBattery then
+            batMonitor.drain(50);
+            
+        -- do analysis
+           
+        transmitter.transmit(mk_(time,mk_EmergencyData(1, data.cprnr, HEART_RATE_SPIKE, data.devicedata)));
+        busy := len dataBuffer > 0;
+        if(not busy) then
+            Printer`Out("analyzer not busy anymore");
+    )
+  ) 
+);
+
+thread
+    periodic(500, 100, 0, 0) (doAnalysis)
+    
+sync
+  -- addThreat and getThreat modify the same instance variables
+  -- therefore they need to be declared mutual exclusive
+   
+    mutex(addData,getData);  
+    per getData => len dataBuffer > 0;
+    per isFinished => not busy;
+        
+end Analyzer
+class BatteryMonitor is subclass of GLOBAL
+
+instance variables
+
+private maxBatteryLife : nat := 0;
+private batteryLife : nat := 0;
+
+operations
+
+public BatteryMonitor: nat ==> BatteryMonitor
+BatteryMonitor(maxBattery) == 
+(
+   maxBatteryLife := maxBattery;
+   batteryLife := maxBattery
+);
+
+public drain: nat ==> ()
+drain(drainVolume) == batteryLife := batteryLife - drainVolume;
+
+public getBatteryLife: () ==> nat
+getBatteryLife() == return batteryLife;
+
+public recharge: () ==> ()
+recharge() == batteryLife:= maxBatteryLife;
+
+sync
+
+mutex(drain);
+mutex(drain, getBatteryLife, recharge);
+
+per drain => batteryLife > 0
+
+end BatteryMonitor
+class Environment is subclass of GLOBAL
+
+types
+
+public inline  = EventData;
+public outline = ResultData;
+
+instance variables
+
+io : IO := new IO();
+
+inlines : seq of inline := [];
+outlines : seq of outline := [];
+devices: seq of MedicalDevice := [];
+pmus : seq of PMU := [];
+busy : bool := true;
+
+operations
+
+public Environment: seq of char ==> Environment
+Environment(filename) ==
+    def mk_(-,input)= io.freadval[seq of inline](filename) in
+        inlines := input;
+
+public createEvent: () ==> ()
+createEvent () ==
+  ( 
+  duration(10)
+  (
+   if len inlines > 0
+   then 
+   (        --duration(x) in RT model
+            dcl curtime : nat := time,
+                done : bool := false;
+                
+            Printer`Out("Input file has data. Processing");
+            while not done do
+            def mk_(timestamp, theEvent) = hd inlines in           
+            if timestamp <= curtime
+            then 
+            (
+            
+                cases theEvent:
+                    mk_Data(-,-,-,-) ->
+                    (
+                        for all device in set elems devices do
+                            if (device.getCprNr() = theEvent.cprnr and device.getDeviceType() = theEvent.datatype) then
+                            (
+                                Printer`Out("Env: Calling poll");                  
+                                device.poll(theEvent)
+                            )
+                    ),
+                    mk_Environment`RechargeEvent(-,-) ->
+                    (
+                        -- call recharge event handler thingy
+                       for all pmu in set elems pmus do
+                      if (pmu.PMUId = theEvent.cprnr) then
+                      (
+                                Printer`Out("Env: rechargeeeee");                  
+                                pmu.rechargeBattery();
+                       ) 
+                    ),
+                    others -> Printer`Out("Env: No match found!")
+                  end;
+                 
+                
+                  inlines := tl inlines;
+                  done := len inlines = 0;
+             )
+             else 
+                done := true    
+     )
+    else busy := false
+    )
+);    
+    
+public addMedicalDevice: MedicalDevice ==> ()
+addMedicalDevice(device) ==
+(
+    Printer`Out("Env: Medical device added");
+    devices := devices ^ [device];    
+);
+    
+public addPMU: PMU ==> ()
+addPMU(pmu) ==
+(
+    Printer`Out("Env: PMU added");
+    pmus := pmus ^ [pmu];    
+);    
+    
+public handleEvent: TimeStamp * Message  ==> ()
+handleEvent (t,msg) ==
+  (
+  Printer`Out("Env: HandleEvent called"); 
+  outlines := outlines ^ [mk_(t,msg)] 
+  );
+
+
+public isFinished : () ==> ()
+isFinished () == skip;
+
+done: () ==> ()
+    done() == skip;
+    
+
+public showResult: () ==> ()
+showResult () ==
+  def - = io.writeval[seq of outline](outlines) in skip;
+
+thread
+
+    periodic(1000, 10,900,0)(createEvent)
+
+sync
+
+mutex (handleEvent);
+per isFinished => not busy;
+    
+end Environment
+
+class GLOBAL
+
+types
+public CprNr = nat;
+public EventId = nat;
+public DataType = nat;
+public TimeStamp = nat;
+public HeartRateData = nat * TimeStamp;
+public WeightData = nat * TimeStamp;
+public DeviceData = HeartRateData | WeightData;
+
+public MessageType = nat; -- bliver denne brugt ?
+
+public ProximityEvent ::
+        eventid : nat
+        cprnr : nat;
+
+public Data ::
+        eventid : nat
+        cprnr : nat
+        datatype : nat
+        devicedata : seq of DeviceData;
+        
+public RechargeEvent ::
+        eventid : nat
+        cprnr : nat;
+        
+public Event = Data | ProximityEvent | RechargeEvent;
+public EventData =  TimeStamp * Event;
+
+public EmergencyType = <HeartFailure>;
+public Emergency = EventId * EmergencyType * CprNr * seq of nat * nat;
+public TransmitData = EventId * MessageType * CprNr * seq of nat * nat;
+
+public Tendency = nat;
+public BatteryDrain = nat;
+
+
+public ProximityData ::
+        priority : nat
+        cprnr : nat
+        datatype : nat
+        proximitydata : seq of DeviceData;
+        
+public EmergencyData ::
+        priority : nat
+        cprnr : nat
+        emergencytype : nat
+        emergencydata : seq of DeviceData; 
+
+
+
+
+public Message = ProximityData | EmergencyData;
+
+public ResultData = TimeStamp * Message;
+
+
+
+
+
+
+values
+  
+public HEART_FAILURE_MESSAGE = 1;
+public HEART_RATE_SPIKE = 2;
+public DATA_MESSAGE = 10;  
+
+public POLL_DRAIN = 1;
+public EMERGENCY_DRAIN = 10;
+public COMMUNICATION_DRAIN = 4;
+
+public HEARTRATE = 3;
+public TAKEMEDICINE = 2;
+public WEIGHT = 1;
+  
+    
+public drainVolume: map nat to nat =
+    { 1 |-> EMERGENCY_DRAIN,
+      2 |-> EMERGENCY_DRAIN,
+      10 |-> COMMUNICATION_DRAIN };
+
+
+
+instance variables
+
+operations
+    
+end GLOBAL
+
+class IO
+-- VDMTools STANDARD LIBRARY: INPUT/OUTPUT
+-- --------------------------------------------
+--
+
+types
+
+public
+filedirective = <start>|<append>
+
+functions
+
+-- Write VDM value in ASCII format to std out:
+public
+writeval[@p]: @p -> bool
+writeval(val)==
+    is not yet specified;
+    
+-- Write VDM value in ASCII format to file.
+-- fdir = <start> will overwrite existing file,
+-- fdir = <append> will append output to the file (created if
+-- not existing).
+public
+fwriteval[@p]:seq1 of char * @p * filedirective -> bool
+fwriteval(filename,val,fdir) ==
+    is not yet specified;
+
+-- Read VDM value in ASCII format from file
+public
+freadval[@p]:seq1 of char -> bool * [@p]
+freadval(f) ==
+is not yet specified
+post let mk_(b,t) = RESULT in not b => t = nil;
+
+operations
+
+-- Write text to std out. Surrounding double quotes will be
+-- stripped, backslashed characters should be interpreted.
+public
+echo: seq of char ==> bool
+echo(text) ==
+fecho ("",text,nil);
+
+public
+fecho: seq of char * seq of char * [filedirective] ==> bool
+fecho (filename,text,fdir) ==
+    is not yet specified
+    pre filename = "" <=> fdir = nil;
+    
+public
+ferror:() ==> seq of char
+ferror () ==
+    is not yet specified
+end IO
+
+class MedicalDevice is subclass of GLOBAL
+
+instance variables
+
+private cpr : CprNr := 0;
+private pmuref: PMU;
+private deviceType: DataType;
+
+operations
+
+public MedicalDevice: GLOBAL`CprNr * GLOBAL`DataType ==> MedicalDevice
+MedicalDevice(cprnr, theDeviceType) == 
+(
+    deviceType := theDeviceType;
+    cpr := cprnr
+);
+
+public getCprNr: () ==> CprNr
+getCprNr() == return cpr;
+
+public getDeviceType: () ==> DataType
+getDeviceType() == return deviceType;
+
+public setupMedicalDevice: PMU ==> ()
+setupMedicalDevice(pmu) == 
+(
+    Printer`Out("Medical device received PMU ref");
+    pmuref:=pmu
+);
+
+async public poll: Data ==> ()
+poll(data) ==
+(
+    Printer`Out("MDevice: poll data called");
+    pmuref.collectDeviceData(data);    
+);
+
+end MedicalDevice
+
+class PMU is subclass of GLOBAL
+
+instance variables
+    batMonitor : [BatteryMonitor] := nil;
+    public PMUId: nat;
+    mdCollectedData : seq of (Data) := [];
+    public mdDataPrio1 : seq of (Data) := [];
+    public mdDataPrio2 : seq of (Data) := [];
+    public mdDataPrio3 : seq of (Data) := [];
+    mdDataElement : seq of (Data) := [];
+    
+    --the transmitter this PMU is using.
+    private transmitter: Transmitter;    
+    --the Analyzer this PMU is analysing data from MD with.
+    public analyzer: map nat to Analyzer := {|->};
+
+operations
+
+public PMU: int ==> PMU
+  PMU(cprnr) ==
+    PMUId := cprnr
+  pre cprnr > 0;
+  
+public setBatteryMonitor : BatteryMonitor ==> ()
+  setBatteryMonitor ( monitor ) ==
+  (
+    batMonitor := monitor;
+  );
+
+public rechargeBattery: () ==> ()
+  rechargeBattery () ==
+  ( 
+    batMonitor.recharge();
+  );
+  
+public GetPMUId: () ==> nat
+  GetPMUId() ==
+    return PMUId;
+    
+-------------------------------------------------
+--addAnalyzer and addTransmitter
+--Adds Analyzer and Transmitter to the PMU 
+--and starts their threads.
+-------------------------------------------------
+public addAnalyzer: Analyzer ==> ()
+  addAnalyzer(mAnalyzer) ==
+    ( 
+       dcl m_AnalyzerId : nat := mAnalyzer.getDataType();
+       analyzer := analyzer munion {m_AnalyzerId |-> mAnalyzer };
+       -- set Cpr nr in analyzer
+       mAnalyzer.setCprNr(PMUId);
+       mAnalyzer.setBatteryMonitor(batMonitor);
+       --start(mAnalyzer);
+    );
+    
+public addTransmitter: Transmitter ==> ()
+  addTransmitter(tx) ==
+    ( 
+        transmitter:=tx;
+        transmitter.attachBattery(batMonitor);
+        
+        for all analyzerId in set dom analyzer do
+        (   
+            analyzer(analyzerId).setTransmitter(tx);
+            start (analyzer(analyzerId));
+        );
+        
+        start(tx)
+    );
+
+-----------------------------------------------------------
+--collectDeviceData
+--The incoming Dataelements are sorted i priority sequences 
+--as they are collected from the medical devices.
+-----------------------------------------------------------
+async public collectDeviceData : Data ==> ()
+  collectDeviceData(data) ==
+    ( Printer`Out("PMU: Collectdevice data called");
+      cases data.datatype: --HEARTRATE, TAKEMEDICIN, WEIGHT can't be used with cases
+        3 -> (mdDataPrio3 := mdDataPrio3 ^ [data];),
+        2 -> (mdDataPrio2 := mdDataPrio2 ^ [data];),
+        1 -> (mdDataPrio1 := mdDataPrio1 ^ [data];),
+        others -> Printer`Out("PMU: MD data not recognized")
+      end
+     );
+   
+------------------------------------------------------------------
+--getData
+--This function is used for getting the first element in a priority sequence.
+------------------------------------------------------------------
+public getData : (seq of (Data)) ==> Data
+  getData(priorityData) ==
+    ( dcl element : Data := hd priorityData;
+        cases element.datatype:
+          3 -> (mdDataPrio3 := tl priorityData), 
+          2 -> (mdDataPrio2 := tl priorityData),
+          1 -> (mdDataPrio1 := tl priorityData),
+          others -> Printer`Out("PMU: MD data not recognized")
+          end;
+      return element )
+
+pre priorityData <> [];
+
+public addDatToAna : nat * seq of (Data) ==> ()
+  addDatToAna(analyzerId, mdDataPrio)  ==
+    analyzer(analyzerId).addData(getData(mdDataPrio));
+    
+    
+--Data = EventId * DataType * seq of nat * nat;      
+--------------------------------------------------------
+--processData
+--This function is called by the thread.
+--------------------------------------------------------
+public processData: () ==> ()
+  processData() ==
+  (  Printer`Out("PMU: ProcessData");
+     ( for all analyzerId in set dom analyzer do
+         cases analyzerId:
+         3 -> ( Printer`Out("PMU: Heart Rate analyzer found... sending data");
+                 if (len mdDataPrio3 > 0)
+                    then (addDatToAna(HEARTRATE, mdDataPrio3))
+                ),
+         2 -> ( Printer`Out("PMU: Take Medicine analyzer found... sending data");
+                 if (len mdDataPrio3 = 0 and len mdDataPrio2 > 0)
+                    then (addDatToAna(TAKEMEDICINE, mdDataPrio2))
+               ),
+         1 -> ( Printer`Out("PMU: Weight analyzer found... sending data");
+                 if (len mdDataPrio3 = 0 and len mdDataPrio2 = 0 and len mdDataPrio1 > 0)
+                    then (addDatToAna(WEIGHT, mdDataPrio1))
+               ),
+         others -> Printer`Out("PMU: No analyzers attached.")
+         end;
+     )
+  );
+
+
+public isFinished : () ==> ()
+  isFinished () == (
+    for all analyzerId in set dom analyzer do
+    (   
+        analyzer(analyzerId).isFinished();
+        transmitter.isFinished()
+    )
+  );
+  
+
+sync
+
+mutex(collectDeviceData, getData);
+
+per isFinished => len mdDataPrio3 = 0 and len mdDataPrio2 = 0 and len mdDataPrio1 = 0;
+--permission predicate for collectDeviceData and getData
+per collectDeviceData => #fin(collectDeviceData) - #fin(getData) < 3000;
+per getData => #fin(getData) < #fin(collectDeviceData);
+per processData => len mdDataPrio3 > 0 or len mdDataPrio2 > 0 or len mdDataPrio1 > 0;
+
+thread
+    while true do processData();
+
+end PMU
+
+system PMUSystem
+
+instance variables
+
+-- create cpu's and busses
+-- 1 cpu per medicaldevice
+-- 1 cpu per PMU / Transmitter / Battery Monitor
+
+medicalDevice1CPU : CPU := new CPU (<FCFS>,1E6); -- md1
+medicalDevice2CPU : CPU := new CPU (<FCFS>,1E6); -- md2
+pmu1CPU : CPU := new CPU (<FCFS>,1E6); -- pmu1
+heartRateAnalyzerCPU : CPU := new CPU (<FCFS>,1E6); -- analyzer 1
+--dfdf : CPU := new CPU (<FP>,1E9);
+
+wiredBus : BUS := new BUS (<FCFS>,1E6,{heartRateAnalyzerCPU,pmu1CPU}); -- cpu3 on 2 busses
+wirelessBus : BUS := new BUS (<FCFS>,1E6,{medicalDevice1CPU,pmu1CPU});
+
+-- create medical devices
+public static medicalDevice0 : MedicalDevice := new MedicalDevice(2508821401, 3);
+
+
+-- create PMU's
+public static pmu0 : PMU := new PMU(2508821401);
+
+-- create analyzers
+public static analyzer0 : Analyzer := new Analyzer(3);
+public static batteryMonitor0 : BatteryMonitor := new BatteryMonitor(1000);
+public static transmitter0 : Transmitter := new Transmitter();
+
+operations 
+
+PMUSystem : () ==> PMUSystem
+PMUSystem() ==
+(
+    medicalDevice1CPU.deploy(medicalDevice0);
+    medicalDevice1CPU.setPriority(MedicalDevice`poll, 100);
+    
+    pmu1CPU.deploy(pmu0);
+    pmu1CPU.setPriority(PMU`collectDeviceData, 100);
+    pmu1CPU.deploy(transmitter0);
+    pmu1CPU.deploy(batteryMonitor0);
+    
+    heartRateAnalyzerCPU.deploy(analyzer0);
+    
+);
+
+end PMUSystem
+class Printer
+
+operations
+
+  public static Out: seq of char ==> ()
+  Out (pstr) ==
+    def - = new IO().echo(pstr ^ "\n") in skip;
+
+end Printer
+class Transmitter is subclass of GLOBAL
+
+instance variables
+
+private prioritizedBuffer : seq of TransmitData;
+private buffer : seq of TransmitData;
+private cpr : CprNr;
+private battery : BatteryMonitor;
+private busy : bool:=false;
+
+thread
+    while true do
+        (
+        --NewWorld`timerRef.WaitRelative(TimeStamp`stepLength);
+        sendMessage();
+        );
+
+operations
+
+public Transmitter: CprNr ==> Transmitter
+Transmitter(cprnr) == 
+(
+    cpr:=cprnr
+);
+
+sortByPriority: (TransmitData | Message | ResultData) * 
+                seq of (Message | ResultData) ==> 
+                seq of (Message | ResultData)
+sortByPriority(val, sorted) ==
+(
+    cases true:
+        (len sorted = 0) -> return [val],
+        (val.#2 <= (hd sorted).#2) -> return [val] ^ sorted,
+        others -> return [hd sorted] ^ sortByPriority(val, tl sorted)
+    end
+);
+
+public transmit: Message | ResultData ==> ()
+transmit(data) ==
+(
+    buffer := sortByPriority(data, buffer);
+    busy:= true;
+);
+
+private sendMessage: () ==> ()
+sendMessage() ==
+(
+    if busy then
+    (
+        dcl msg : TransmitData := hd prioritizedBuffer;
+        prioritizedBuffer := tl prioritizedBuffer;
+        --Environment'handleEvent(msg, NewWorld`timerRef.GetTime());
+        --battery drain based on message type
+        battery.drain(drainVolume(msg.#2));
+        busy:=len buffer > 0
+    )
+);
+
+public attachBattery: BatteryMonitor ==> ()
+attachBattery(theBattery) == battery:= theBattery;
+
+public isFinished: () ==> ()
+isFinished() == skip;
+
+
+sync
+
+mutex(transmit, sendMessage);
+
+per sendMessage => len prioritizedBuffer > 0;
+per isFinished => not busy;
+
+end Transmitter
+class NewWorld
+
+types
+
+instance variables
+
+public static env : [Environment] := nil;
+--public static testThread : [TestThread] := nil;
+--public static timerRef : TimeStamp := new TimeStamp(); --delete in real time model
+
+operations
+
+public NewWorld: () ==> NewWorld
+NewWorld() ==
+(
+    env := new Environment("testvalues.txt");
+    
+    -- add stuff to env
+    env.addMedicalDevice(PMUSystem`medicalDevice0);
+    PMUSystem`medicalDevice0.setupMedicalDevice(PMUSystem`pmu0);
+     
+    -- add stuff to system
+    PMUSystem`pmu0.setBatteryMonitor(PMUSystem`batteryMonitor0);   
+    PMUSystem`pmu0.addAnalyzer(PMUSystem`analyzer0);
+    PMUSystem`pmu0.addTransmitter(PMUSystem`transmitter0);
+    
+    env.addPMU(PMUSystem`pmu0);
+    
+    -- start threads
+    start(PMUSystem`pmu0);
+    
+);
+
+public Run: () ==> ()
+Run () == 
+  (
+  
+   start (env);
+   -- wait for the environment to handle all input
+   env.isFinished();
+   -- wait for others to be finished  
+   PMUSystem`pmu0.isFinished();
+   -- print the result
+   env.showResult())
+
+end NewWorld
+
+
+

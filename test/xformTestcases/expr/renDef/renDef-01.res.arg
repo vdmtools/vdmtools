@@ -1,0 +1,17 @@
+"class A
+
+types
+
+public T = (nat | seq of char);
+
+operations
+
+public Test : () ==> T
+Test () ==
+	(dcl x : nat := 2;
+	x := def z = x in 
+         z + 5;
+	return x);
+   
+end A
+"

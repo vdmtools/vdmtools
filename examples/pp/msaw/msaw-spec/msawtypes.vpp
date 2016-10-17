@@ -1,0 +1,42 @@
+class MSAWTypes
+
+   values
+      NMperCoordonnee: Coordonnee = 1;
+      Secondes: Temps = 1;
+      BalayageRadar: Duree = 10 * Secondes
+
+   types
+      Coordonnees = Coordonnee * Coordonnee;
+      Coordonnee = nat
+      inv c == c <= 32;
+      KT = nat * nat * nat;
+      Pieds = nat;
+      NM = real;
+      ModeA:: id: seq1 of char;
+      Alarme = [<terrain>|<obstacle_artificiel>|<relief_particulier>|
+                <zone_militair>|<zone_aeroport>];
+      Hpa = real;
+      StationMeteo :: id: seq1 of char;
+      Degrees = real
+         inv d == 0 <= d and d <= 360;
+      Temps = nat;
+      Duree = nat
+
+  types 
+    Data = map Temps to map ModeA to (Coordonnees * Coordonnee)
+
+   functions
+      PlusTard: Temps * Temps -> bool
+      PlusTard (t1, t2) == t1 > t2;
+
+      LaPlusRecente: set of Temps -> Temps
+      LaPlusRecente (ts) ==
+         let t in set ts be st not exists t' in set ts &
+                                      t <> t'  and PlusTard (t', t) in
+            t
+      pre ts <> {};
+
+      Distance: Coordonnees * StationMeteo -> NM
+      Distance (position, station) == undefined
+
+end MSAWTypes

@@ -1,0 +1,21 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+public Test : () ==> set of nat | <Ok>
+Test () ==
+trap true with return <Ok> in
+return 
+    { a+b| a in set OpExit(),b in set {1,2,3} & a <> 2};
+
+OpExit:() ==> set of nat
+OpExit() ==
+  exit true
+	
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

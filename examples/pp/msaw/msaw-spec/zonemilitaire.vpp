@@ -1,0 +1,23 @@
+class ZoneMilitaire is subclass of Obstacle, Polygone
+
+   instance variables
+      niveau_minimal: MSAWTypes`Pieds;
+      niveau_maximal: MSAWTypes`Pieds;
+      statut: <zone_active>|<zone_inactive>;
+   inv niveau_minimal < niveau_maximal
+
+   operations
+      SetStatut: <zone_active>|<zone_inactive> ==> ()
+      SetStatut (statut')
+      == statut := statut';
+
+      Intersection: SegmentDePrediction ==> bool
+      Intersection (segment_de_prediction)
+      == def points_de_vecteur = segment_de_prediction.GetPoints () in
+            return (statut = <zone_active> and
+                    exists mk_(xy, z) in set points_de_vecteur &
+                       DansPolygone (xy, sommets) and
+                       z >= niveau_minimal and
+                       z <= niveau_maximal)
+
+end ZoneMilitaire

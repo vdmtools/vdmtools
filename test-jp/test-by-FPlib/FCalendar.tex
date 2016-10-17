@@ -1,0 +1,142 @@
+% LaTeX 2e Document.
+% 
+% $Id: Calendar.tex,v 1.2 2006/01/10 10:46:35 vdmtools Exp $
+% 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PDF compatibility code. 
+\makeatletter
+\newif\ifpdflatex@
+\ifx\pdftexversion\@undefined
+\pdflatex@false
+%\message{Not using pdf}
+\else
+\pdflatex@true
+%\message{Using pdf}
+\fi
+
+\newcommand{\latexorpdf}[2]{
+  \ifpdflatex@ #2
+  \else #1
+  \fi
+}
+
+\newcommand{\pformat}{a4paper}
+
+\makeatother
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\latexorpdf{
+%\documentclass[\pformat,12pt]{article}
+%}{
+%\documentclass[\pformat,pdftex,12pt]{article}
+%}
+\documentclass[]{jarticle}
+
+\usepackage[dvips]{color}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{alltt}
+\usepackage{graphics}
+\usepackage{vpp}
+\usepackage{makeidx}
+\makeindex
+
+\definecolor{covered}{rgb}{0,0,0}      %black
+%\definecolor{not-covered}{gray}{0.5}   %gray for previewing
+%\definecolor{not-covered}{gray}{0.6}   %gray for printing
+\definecolor{not-covered}{rgb}{1,0,0}  %red
+
+\newcommand{\InstVarDef}[1]{{\bf #1}}
+\newcommand{\TypeDef}[1]{{\bf #1}}
+\newcommand{\TypeOcc}[1]{{\it #1}}
+\newcommand{\FuncDef}[1]{{\bf #1}}
+\newcommand{\FuncOcc}[1]{#1}
+\newcommand{\MethodDef}[1]{{\bf #1}}
+\newcommand{\MethodOcc}[1]{#1}
+\newcommand{\ClassDef}[1]{{\sf #1}}
+\newcommand{\ClassOcc}[1]{#1}
+\newcommand{\ModDef}[1]{{\sf #1}}
+\newcommand{\ModOcc}[1]{#1}
+
+%\nolinenumbering
+\linenumbering
+\setindent{outer}{\parindent}
+%\setindent{inner}{0.0em}
+
+\title{FCalendarライブラリ}
+\author{
+佐原伸\\
+ss@shinsahara.com\\
+}
+\date{2005年12月31日}
+
+\begin{document}
+\setlength{\baselineskip}{12pt plus .1pt}
+\tolerance 10000
+\maketitle
+
+\begin{abstract}
+\setlength{\baselineskip}{12pt plus .1pt}
+暦（カレンダー）に関わる関数を提供する、いわゆる日付計算のためのモジュールである。
+本モジュールは、グレゴリオ暦切替日（1582年10月15日）以後はグレゴリオ暦を、それより前（1582年10月4日以前）はユリウス暦の日付を使用する。
+各国でのグレゴリオ暦切替日は異なる（日本の場合1873年）ので、歴史上の暦計算は注意しなければならない。
+
+本モジュールは、暦日付を修正ユリウス日\footnote{後述。}で表しているため、
+その有効桁の範囲内（紀元前4294288353+1年から、4295646239年まで）で使うことができるはずである。
+もっとも、グレゴリオ暦は4909年に１日ずれる予定なので、実際にはこのあたりまでが有効であろう。
+少なくとも、グレゴリオ暦切替前日（1582年10月4日）から、2099年の秋分まではテストで確認している。
+3000年の春分以後は、秋分・秋分の計算は現在の天文観測計算の精度と誤差のため特定できないので、秋分・秋分の計算は3000年以降使えない。
+
+なお、本モジュールは、ユリウス暦の閏年の計算を紀元前と紀元後とで同一にすることができるよう、ユリウス暦の紀元前１年を0年または-0年と表し、紀元前4713年は-4712年と表す。すなわち、紀元前の年を表すときは、以下の式が成り立つ。
+\begin{verbatim}
+	本モジュールのユリウス暦の年 = ユリウス暦の年 + 1
+\end{verbatim}
+
+時刻に関わる計算はグリニッジ標準時を使用しているので、本クラスのサブクラスとして各国別・標準時別の暦クラスを作成し、\textbf{グリニッジ標準時との差}に相当する値を設定しなければならない。
+\end{abstract}
+%\vspace{-1cm}
+
+\subsection{用語の定義}
+ふなばただよし氏による用語の定義\footnote{http://www.funaba.org/}を参考に記述する。
+
+\subsubsection{暦日付}
+暦日付は、通常の年月日による日付である。
+
+\subsubsection{ユリウス日}
+紀元前4713年1月1日（ユリウス暦）正午（グリニッジ平均時）を暦元とした通日（経過日数）である。
+
+\subsubsection{修正ユリウス日}
+1858年11月17日（グレゴリオ暦）0時（協定世界時）を暦元とした通日（経過日数）である。もともとはユリウス日を暦の計算に用いていたが、桁数があふれないように修正したユリウス日である。
+
+\subsubsection{日付}
+本モジュールで日付という場合、修正ユリウス日を表すDate型（実体は実数型）の値を言う。
+
+\subsubsection{年日付（年間通算日）}
+年の中の序数によって指定される日付で、例えば、1月10日の年日付は10で、2月1日の年日付は32である。
+
+\subsubsection{実数年日付}
+整数部が年、小数点以下が\textbf{年日付 / 年間総日数}を表す形式の日付。日付計算の過程で使用するので、通常は気にする必要はない。
+例えば、暦日付2001年7月1日は、実数年日付では2001.5となる。
+
+\subsubsection{月日付（月間通算日）}
+月の中の序数によって指定される日付で、例えば、1月31日の月日付は31で、2月1日の月日付は1である。
+
+\subsection{謝辞}
+本モジュールの算法は、Nifty-Serve天文計算フォーラムの方々の助言を参考に実装した。
+また、HowManyDayOfWeekWithin2Days関数の算法は、山崎利治さんのアイデアによるものである。
+
+\subsection{歴史}
+本モジュールの最初の版はDigitalk Smalltalkで実装した。次に、VisualWorks（Smalltalkの本家）に移植し、その後関数型プログラミング言語Concurrent Cleanに移植し、最後にVDM++に移植した。
+本ライブラリーは、（SSLibと称するライブラリーに含まれる）オブジェクト指向で作成したVDM++版を、さらに関数型指向に移植したものである。
+なお、数多くのディスクトラブルを経て、Digitalk Smalltalk版とVisualWorks版は現存しない。もっとも、バックアップ用のディスクなどに残っている可能性はあるが、まだ確認していない。
+
+\include{test/Calendar.vpp}
+
+\include{test/CalendarT.vpp}
+
+%\newpage
+%\addcontentsline{toc}{section}{Index}
+%\printindex
+
+\end{document}

@@ -1,0 +1,141 @@
+class RetrofitController is subclass of Vector
+operations 
+public  getDbUrl : () ==> [String]
+getDbUrl() == 
+( return  dbURL
+) ;
+
+public  getDbType : () ==> [String]
+getDbType() == 
+( return  dbType
+) ;
+
+private  readDbUrl : () ==> [String]
+readDbUrl() == 
+( dcl   myURL : [String] := DWDSProperties`getProperty(new  String("retrofit.url"));
+  if  myURL = nil  
+  then  
+    ( myURL := new  String(".")
+    ) ;
+  return  myURL
+) ;
+
+private  readDbType : () ==> [String]
+readDbType() == 
+( dcl   myDbType : [String] := DWDSProperties`getProperty(new  String("retrofit.db"));
+  if  myDbType = nil  
+  then  
+    ( myDbType := DEFAULT_RETROFIT_TYPE
+    ) ;
+  return  myDbType
+) ;
+
+public  getDbDriver : () ==> [String]
+getDbDriver() == 
+( return  dbDriver
+) ;
+
+public  readDatabase : () ==> <VOID>
+readDatabase() == 
+( if  dbType.equals(new  String("flics"))
+  then  
+    ( retrofitDatabase := new  FlicsFileController()
+    ) 
+  else  
+    ( retrofitDatabase := new  RetrofitFileController()
+    ) ;
+  let - = retrofitDatabase.readData()
+  in 
+    skip ;
+  return  
+) ;
+
+private  readDbDriver : () ==> [String]
+readDbDriver() == 
+( dcl   myDbDriver : [String] := DWDSProperties`getProperty(new  String("retrofit.jdbc.driver"));
+  return  myDbDriver
+) ;
+
+private  RetrofitController : () ==> RetrofitController
+RetrofitController() == 
+( retrofitDatabase := nil  ;
+  dbDriver := readDbDriver();
+  dbType := readDbType().toLowerCase();
+  dbURL := readDbUrl();
+  return  
+) ;
+
+public  static getRetrofitController : () ==> [RetrofitController]
+getRetrofitController() == 
+( return  retrofitController
+) ;
+
+public  findRetrofitEntry : [Aircraft] ==> [RetrofitEntry]
+findRetrofitEntry(aircraft) == 
+( dcl   retrofitEntry : [RetrofitEntry] := nil  ;
+  if  aircraft <> nil  
+  then  
+    ( dcl   aircraftTypeMDS : [String] := aircraft.getAcType().getMDS(),
+            tailNumber : [String] := aircraft.getTailNumber();
+      ( dcl   idx : int  := 0;
+        while  idx < RetrofitController`size() and  retrofitEntry = nil   do  
+        ( dcl   nextEntry : [RetrofitEntry] := RetrofitController`elementAt(idx);
+          if  aircraftTypeMDS.equals(nextEntry.getAircraftType()) and  tailNumber.equals(nextEntry.getTailNumber())
+          then  
+            ( retrofitEntry := nextEntry
+            ) ;
+          idx := idx+1
+        ) 
+      ) 
+    ) ;
+  return  retrofitEntry
+) ;
+
+public  deleteRetrofitEntry : [Aircraft] ==> <VOID>
+deleteRetrofitEntry(aircraft) == 
+( dcl   retrofitEntry : [RetrofitEntry] := findRetrofitEntry(aircraft);
+  if  retrofitEntry <> nil  
+  then  
+    ( let - = RetrofitController`removeElement(retrofitEntry)
+      in 
+        skip 
+    ) ;
+  return  
+) ;
+
+public  addRetrofitEntry : [RetrofitEntry] ==> <VOID>
+addRetrofitEntry(retrofitEntry) == 
+( if  retrofitEntry <> nil  
+  then  
+    ( let - = RetrofitController`addElement(retrofitEntry)
+      in 
+        skip 
+    ) ;
+  return  
+) ;
+
+public  addRetrofit : [Aircraft] * [String] ==> <VOID>
+addRetrofit(aircraft, retrofit) == 
+( dcl   retrofitEntry : [RetrofitEntry] := findRetrofitEntry(aircraft);
+  if  retrofitEntry = nil  
+  then  
+    ( retrofitEntry := new  RetrofitEntry(aircraft);
+      let - = RetrofitController`addElement(retrofitEntry)
+      in 
+        skip 
+    ) ;
+  let - = retrofitEntry.addRetrofit(retrofit)
+  in 
+    skip ;
+  return  
+) ;
+
+instance variables 
+  private  static retrofitController : [RetrofitController] := new  RetrofitController();
+  public  static DEFAULT_RETROFIT_TYPE : [String] := new  String("wir");
+  private  dbDriver : [String];
+  private  dbType : [String];
+  private  dbURL : [String];
+  private  retrofitDatabase : [RetrofitDatabase]
+  
+end  RetrofitController

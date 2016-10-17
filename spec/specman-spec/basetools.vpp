@@ -1,0 +1,345 @@
+\begin{vdm_al}
+class BaseTools is subclass of ToolColleague 
+
+types
+  public EvalState = <BREAKPOINT>|<INTERRUPT>|<SUCCESS>|<ERROR>
+
+operations
+
+  ---
+  --- SetMediator MUST be called before any other methods in BaseTools
+  --- (is called in the initialisation statement of ToolMediator)
+  --- 
+
+public   SetMediator: ToolMediator ==> ()
+  SetMediator (m) ==
+    is not yet specified;
+
+
+public   SyntaxCheck: seq1 of FileName ==> bool
+  SyntaxCheck (fnm_l)  ==
+    is not yet specified;
+\end{vdm_al}
+
+$SyntaxCheck$ parses a seqence of $FileName$ and if successfully
+inserts the AST`s in the Repository. Special care has been taken
+concerning changing from flat to structured specifications and vice
+verca. If the user selects at least all parsed files in the current
+project for syntax checking (i.e.\ either by selecting all modules in
+the GUI or specify all corresponding files as arguments to the
+``read'' command), this is turned into a temporary disabling of the
+current ``session'' type. If the ``session'' type does not change, the
+type is just enabled again, otherwise a $Repository!ClearAll$ command
+is issued. This allows you to go from one session type to another if
+you just parse all files in one action (and of course edit your files
+properly). The type of the first file in the list will decide which
+session type to be used.
+
+\begin{vdm_al}
+public   TypeCheck: seq1 of ModuleName ==> bool
+  TypeCheck (mnm_l ) ==
+    is not yet specified;
+
+public    CodeGenerate: seq1 of ModuleName * (<JAVA>|<CPP>) * bool * bool * 
+                bool * bool * [seq of char] * bool * bool ==> bool
+  CodeGenerate (mnm_l,m, s, p, t, skt, package_name, cop, testcond) ==
+    is not yet specified;
+
+
+public   PrettyPrint: seq1 of FileName ==> bool
+  PrettyPrint (fnm_l ) ==
+    is not yet specified;
+
+public   ClassDepend: ModuleName ==> bool
+  ClassDepend (nm ) ==
+    is not yet specified;
+
+
+
+public   InhTree: () ==>  bool
+  InhTree() ==
+    is not yet specified;
+
+public   Depend: () ==> ()
+  Depend () ==
+    mediator.GetRepository().GetDependency().Depend();
+
+  -- ParseAndEvalExpr evaluates the expression(s) expr. The expression(s)
+  -- can either be contained in a file or a string (corresponding
+  -- to a ToolCommand). EvalExpr return bool and a sequence of 
+  -- the following elements:
+  --   semantic value (SEM`VAL) if ok
+  --   nil if a run-time error occur
+  -- The first field in the resulting tuple is true if
+  -- no syntax or run-time errors occur
+
+
+public   ParseAndEvalExprs: ToolCommand | FileName ==> bool * seq of [token]
+  ParseAndEvalExprs(expr)  ==
+    is not yet specified;
+\end{vdm_al}
+$ParseAndEvalExpr$ evaluates the expression(s) expr. The expression(s)
+can either be contained in a file or a string (corresponding to a
+$ToolCommand$). It returns bool and a sequence of the following
+elements: 
+\begin{itemize}
+\item semantic value (SEM`VAL) if ok,
+\item nil if a run-time error occur.
+\end{itemize}
+
+The first field in the resulting tuple is true if no syntax or
+run-time errors occur
+
+\begin{vdm_al}
+public   ParseAndDebugExprs: ToolCommand | FileName ==>  EvalState * seq of [token]
+  ParseAndDebugExprs(expr)  ==
+    is not yet specified;
+\end{vdm_al}
+$ParseAndDebugExprs$ is equivalent to $ParseAndEvalExprs$ the only
+difference being that the expression is debugged while being evaluated.
+It returns the state of the evaluation instead of a boolean value.
+
+\begin{vdm_al}
+
+  -- InitInterpreter initialises the interpreter with the AST's
+  -- currently in the repository
+
+public   InitInterpreter: () ==> bool
+  InitInterpreter() ==
+    is not yet specified;
+\end{vdm_al}
+$InitInterpreter$ initialises the interpreter with the AST's
+currently in the repository
+
+\begin{vdm_al}
+
+  -- ExecuteCommand executes the command line command 
+  -- contained in the paramater command. 
+  -- e.g. ExecuteCommand(mk_ToolCommand("print 10"))
+  -- ExecuteCommand return
+  --   * true if the mail loop shall continue at the current 
+  --     call back level (commands like print, read, modules etc.).
+  --   * false if the main loop must leave the current 
+  --     call back level (commands like cont, step, finish etc).
+
+public   ExecuteCommand: ToolCommand ==> bool
+  ExecuteCommand (command) ==
+    is not yet specified;
+\end{vdm_al}
+$ExecuteCommand$ executes the command line command 
+contained in the paramater command. 
+e.g. $ExecuteCommand(mk_ToolCommand("print 10"))$.
+$ExecuteCommand$ returns
+\begin{itemize}
+\item true, if the main loop shall continue at the current call back
+  level (commands like print, read, modules etc.).
+\item false, if the main loop must leave the current call back level
+  (commands like cont, step, finish etc).
+\end{itemize}
+
+The operation $SetBreakOnName$ is used to set a break point for a
+function or operation. The formal parameters correspond to the module
+(or class) in which the function or operation is located, and the name
+of the function or operation respectively.
+
+\begin{vdm_al}
+public SetBreakOnName : ModuleName * Name ==> nat
+SetBreakOnName(modnm, nm) ==
+  is not yet specified;
+\end{vdm_al}
+
+The operation $SetBreakOnPos$ is used to set a break point for a
+function or operation. The formal parameters correspond to the file
+in which the function or operation is located, and the line number
+and col number indicating the position in the file.
+
+\begin{vdm_al}
+public SetBreakOnPos : FileName * nat * nat ==> nat
+SetBreakOnPos(filenm, line, col) ==
+  is not yet specified;
+\end{vdm_al}
+
+The operation $DeleteBreakPoint$ is used to delete a break point.
+The formal parameter corresponds to the number of the breakpoint
+that was returned by SetBreakOnPos or by SetBreakOnName
+
+\begin{vdm_al}
+public DeleteBreakPoint : nat ==> ()
+DeleteBreakPoint(num) ==
+  is not yet specified;
+\end{vdm_al}
+
+
+The operations $DebugStep$, $DebugStepIn$, $DebugSingleStep$ and 
+$DebugContinue$ are used to perform a debugging step.
+They call STKM`EvalStep, EvalStepIn, EvalSingleStep and EvalContinue
+and convert the results to a seq of tokens.
+The bool value indicates if stepping was possible.
+
+\begin{vdm_al}
+public DebugStep : () ==> EvalState * [seq of token]
+DebugStep () ==
+  is not yet specified;
+
+public DebugStepIn : () ==> EvalState * [seq of token]
+DebugStepIn () ==
+  is not yet specified;
+
+public DebugSingleStep : () ==> EvalState * [seq of token]
+DebugSingleStep () ==
+  is not yet specified;
+
+public DebugContinue : () ==> EvalState * [seq of token]
+DebugContinue () ==
+  is not yet specified;
+
+\end{vdm_al}
+
+
+
+
+\begin{vdm_al}
+
+  --  InitToolbox is called from the repository when the Open or 
+  --  New commands are issued. Cleans up the toolbox.
+
+public   InitToolbox: () ==> ()
+  InitToolbox() ==
+    is not yet specified;
+\end{vdm_al}
+$InitToolbox$ is called from the repository when the Open or 
+New commands are issued. Cleans up the toolbox.
+\begin{vdm_al}
+
+public   SaveTypeCheckEnv : StateStore ==> bool
+  SaveTypeCheckEnv (s) ==
+    is not yet specified;
+
+
+public   LoadTypeCheckEnv: StateStore ==> bool
+  LoadTypeCheckEnv (s) ==
+    is not yet specified;
+\end{vdm_al}
+
+\begin{vdm_al}
+
+  --  UpdateToolbox is called from the repository when the Open or 
+  --  New commands are completed. UpdateToolbox are called after the 
+  --  the Repository is updated with respect to the new project
+
+public   UpdateToolbox: () ==> ()
+  UpdateToolbox() ==
+    is not yet specified;
+
+\end{vdm_al}
+$UpdateToolbox$ is called from the repository when the Open or 
+New commands are completed. UpdateToolbox are called after the 
+the Repository is updated with respect to the new project.
+
+\begin{vdm_al}
+
+public   CheckForModifiedFiles: () ==> ()
+  CheckForModifiedFiles () ==
+    is not yet specified;
+\end{vdm_al}
+
+\begin{vdm_al}
+public   SetPriorityFile: FileName ==> ()
+  SetPriorityFile(fn) ==
+    is not yet specified;
+\end{vdm_al}
+
+\begin{vdm_al}
+public   SetPrimarySchedulingAlgorithm : Name ==> ()
+  SetPrimarySchedulingAlgorithm(nm) ==
+    is not yet specified;
+\end{vdm_al}
+
+\begin{vdm_al}
+public   SetTimeFile : FileName ==> ()
+  SetTimeFile(fn) ==
+    is not yet specified;
+\end{vdm_al}
+
+$GetCurrentModule$, $PopModule$ and $PushModule$ are used
+to modify the Module-stack of the VDM-SL Toolbox.
+
+\begin{vdm_al}
+
+public GetCurrentModule: () ==> bool * [ModuleName]
+  GetCurrentModule() ==
+    is not yet specified;
+
+public PopModule: () ==> bool
+  PopModule() ==
+    is not yet specified;
+
+public PushModule: ModuleName ==> bool
+  PushModule(nm) ==
+    is not yet specified;
+
+public GetPossibleInterfaces : () ==> set of ModuleName
+  GetPossibleInterfaces() ==
+    is not yet specified;
+
+public ResetInterfaces : () ==> ()
+  ResetInterfaces() ==
+    is not yet specified;
+\end{vdm_al}
+
+\begin{vdm_al}
+public JavaSyntaxCheck : seq1 of FileName ==> bool
+JavaSyntaxCheck(-) ==
+  is not yet specified;
+
+public JavaTypeCheck: seq1 of ModuleName ==> bool
+JavaTypeCheck(-) ==
+  is not yet specified;
+
+public JavaGenerateVDM: seq1 of ModuleName
+                        * bool
+                        * bool
+                        * bool ==> bool
+JavaGenerateVDM(-,-,-,-) ==
+  is not yet specified;
+\end{vdm_al}
+
+\begin{vdm_al}
+public PogGenerate: seq1 of ModuleName ==> bool
+PogGenerate (-) ==
+    is not yet specified;
+
+public NewUnnamedProject: () ==> ()
+NewUnnamedProject() ==
+  is not yet specified;
+
+public LoadProject: FileName ==> ()
+LoadProject(-) ==
+  is not yet specified;
+
+public AddFiles: set of FileName ==> ()
+AddFiles(-) ==
+  is not yet specified;
+
+public RemoveFiles: set of FileName ==> ()
+RemoveFiles(-) ==
+  is not yet specified;
+
+public SaveProjectAs: FileName ==> bool
+SaveProjectAs(-) ==
+  is not yet specified;
+
+public SaveProject: FileName ==> bool
+SaveProject(-) ==
+  is not yet specified;
+
+public GetProjectName: () ==> [FileName]
+GetProjectName() ==
+  is not yet specified;
+
+\end{vdm_al}
+
+\begin{vdm_al}
+end BaseTools
+\end{vdm_al}
+

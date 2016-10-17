@@ -1,0 +1,11 @@
+# Check that comments can go anywhere
+
+AddEnv #a
+##########
+3#########
+#########
+;##
+Update######
+:###########
+nat#########
+3###########

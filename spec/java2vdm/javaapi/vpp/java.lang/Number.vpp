@@ -1,0 +1,33 @@
+dlclass JavaLangNumber is subclass of JavaIoSerializable
+uselib "j2vdll.so"
+operations 
+public  intValue : () ==> int 
+intValue() == 
+is not yet specified;
+
+public  byteValue : () ==> int 
+byteValue() == 
+is not yet specified ;
+
+public  longValue : () ==> int 
+longValue() == 
+is not yet specified;
+
+public  floatValue : () ==> real 
+floatValue() == 
+is not yet specified;
+
+public  shortValue : () ==> int 
+shortValue() == 
+is not yet specified ;
+
+public  JavaLangNumber : <NIL> ==> JavaLangNumber
+JavaLangNumber(-) == 
+isNil := true  ;
+
+public  doubleValue : () ==> real 
+doubleValue() == 
+is not yet specified;
+
+
+end  JavaLangNumber

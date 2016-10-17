@@ -1,0 +1,10 @@
+module A
+
+definitions 
+
+state St of
+  a : nat
+init s == s = mk_St(8)
+end
+  
+operations

@@ -1,0 +1,35 @@
+class JavaUtilZipZipFile is subclass of JavaLangObject
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaUtilZipZipFile" , <CLASS> , false  )
+
+operations 
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  JavaUtilZipZipFile : <NIL> ==> JavaUtilZipZipFile
+JavaUtilZipZipFile(-) == 
+isNil := true  ;
+
+public  JavaUtilZipZipFile : JavaLangString ==> JavaUtilZipZipFile
+JavaUtilZipZipFile(-) == 
+skip  ;
+
+public  close : () ==> ()
+close() == 
+skip  ;
+
+public entries : () ==> JavaUtilEnumeration
+entries() == 
+  return new JavaUtilEmptyEnumerator();
+
+public getEntry : JavaLangString ==> JavaUtilZipZipEntry
+getEntry(-) ==
+  is not yet specified;
+
+public getInputStream: JavaUtilZipZipEntry ==> JavaIoInputStream
+getInputStream(-) ==
+  is not yet specified;
+
+end JavaUtilZipZipFile

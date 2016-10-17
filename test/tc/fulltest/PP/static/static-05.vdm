@@ -1,0 +1,76 @@
+-- Check attempted static call to non-static members in a client
+
+class A
+
+values
+
+public val1 : nat = 1;
+public static val2: nat = 2;
+
+instance variables
+
+public i : nat := 0;
+public static j : nat := 1
+
+operations
+
+public  op1 : nat  ==> nat
+op1(-) ==
+  return 10;
+
+static public  op2 : nat  ==> nat
+op2(-) ==
+  return 10
+
+functions
+
+public  fn1 : nat  -> nat
+fn1(-) ==
+   10;
+
+static public  fn2 : nat  -> nat
+fn2(-) ==
+   10
+
+end A
+
+class B
+
+operations
+
+op1 : nat ==> nat
+op1(n) ==
+  A`op1(n);
+
+op2 : nat ==> nat
+op2(n) ==
+  A`op2(n);
+
+op3 : nat ==> nat
+op3(n) ==
+  return A`fn1(n);
+
+op4 : nat ==> nat
+op4(n) ==
+  return A`fn2(n);
+
+op5 : () ==> nat
+op5() ==
+  return A`i;
+
+op6 : () ==> nat
+op6() ==
+  return A`j;
+
+op7 : () ==> nat
+op7() ==
+  return A`val1;
+
+op8 : () ==> nat
+op8() ==
+  return A`val2;
+
+
+
+
+end B

@@ -1,0 +1,591 @@
+--$Header: /home/vdmtools/cvsroot/toolbox/examples-jp/SSlib/test/HashtableT.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $
+/*
+テストグループ
+	Hashtableのテスト
+関連 UC
+	なし
+作成者
+	佐原伸
+*/
+----------------------------------------------------
+class 『文字列』 is subclass of 『共通定義』
+
+instance variables
+public 内容 : 「文字列」;
+
+operations
+public hashCode : () ==> int
+hashCode() == 
+	let c = 内容を得る()  in
+	if c <> nil then
+		return len c mod 17
+	else
+		return -1;
+
+public equals : Object ==> bool
+equals(anObject) == 
+	if isofclass(『文字列』, anObject) then
+		return self.内容を得る() = anObject.内容を得る()
+	else
+		return false;
+
+public 『文字列』 : 「文字列」 ==> 『文字列』
+『文字列』(a文字列) ==
+	(
+	内容 := a文字列;
+	return self
+	);
+
+public 内容を得る : () ==> [「文字列」]
+内容を得る() == 
+	if isofclass(『文字列』, self) then 
+		return 内容
+	else
+		return nil;
+
+end 『文字列』
+----------------------------------------------------
+class 『int』 is subclass of 『共通定義』
+
+instance variables
+public 内容 : int;
+
+operations
+public hashCode : () ==> int
+hashCode() == return 内容を得る() mod 13;
+
+public equals : Object ==> bool
+equals(anObject) == 
+	if isofclass(『int』, anObject) then
+		return self.内容を得る() = anObject.内容を得る()
+	else
+		return false;
+
+public 『int』 : int ==> 『int』
+『int』(i) ==
+	(
+	内容 := i;
+	return self
+	);
+	
+public 内容を得る : () ==> [int]
+内容を得る() == 
+	if isofclass(『int』, self) then 
+		return 内容
+	else
+		return nil;
+
+end 『int』
+----------------------------------------------------
+class HashtableT is subclass of TestDriver
+functions
+public tests : () -> seq of TestCase
+tests() == 
+	[ 
+	new HashtableT52(), new HashtableT53(), new HashtableT54(),
+	new HashtableT55(), new HashtableT56(), new HashtableT57(),
+	new HashtableT01(), new HashtableT02(), new HashtableT03(),
+	new HashtableT04(), 
+	new HashtableT05(), new HashtableT06(),
+	new HashtableT07()	
+	];
+end HashtableT
+----------------------------------------------------
+/*
+シナリオID
+	構成子に関するシナリオ
+内容
+	構成子のテスト
+*/
+class HashtableT01 is subclass of TestCase, 『共通定義』
+operations 
+public test: () ==> bool
+test() == 
+	let	h1 = new Hashtable(),
+		k1 = new 『int』(1),
+		k2 = new 『int』(2),
+		k3 = new 『int』(3),
+		h2 =
+			new Hashtable({
+				k1 |-> new 『文字列』("佐原伸"), 
+				k2 |-> new 『文字列』("佐藤圭"), 
+				k3 |-> new 『文字列』("酒匂寛")
+			})
+	in
+	return 
+		h1.getBuckets() = { |-> } and
+		h2.get(k1).equals(new 『文字列』("佐原伸")) and
+		h2.get(k2).equals(new 『文字列』("佐藤圭")) and
+		h2.get(k3).equals(new 『文字列』("酒匂寛")) and
+		h2.get(new 『int』(1)).equals(new 『文字列』("佐原伸")) and
+		h2.get(new 『int』(2)).equals(new 『文字列』("佐藤圭")) and
+		h2.get(new 『int』(3)).equals(new 『文字列』("酒匂寛")) 
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "HashtableT01:\t構成子のテスト。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end HashtableT01
+---------------------------------------
+/*
+シナリオID
+	検索に関するシナリオ
+内容
+	検索のテスト
+*/
+class HashtableT02 is subclass of TestCase, 『共通定義』
+operations 
+public test: () ==> bool
+test() == 
+	let	h1 = 
+			new Hashtable({
+				new 『int』(1) |-> new 『文字列』("佐原伸"), 
+				new 『int』(2) |->new 『文字列』("佐藤圭"), 
+				new 『int』(3) |-> new 『文字列』("酒匂寛")
+			}),
+		h2 = 
+			new Hashtable({
+				new 『文字列』("a") |->new 『int』(1),  
+				new 『文字列』("b") |-> new 『int』(2), 
+				new 『文字列』("c") |-> new 『int』(3)
+			})
+	in
+	return 
+		h1.contains(new 『文字列』("佐原伸")) and
+		h1.contains(new 『文字列』("佐藤圭")) and
+		h1.contains(new 『文字列』("佐藤伸")) = false and
+		h1.containsKey(new 『int』(1)) and
+		h1.containsKey(new 『int』(4)) = false and
+		h2.contains(new 『int』(3)) and
+		h2.contains(new 『int』(7)) = false and
+		h2.containsKey(new 『文字列』("a")) and
+		h2.containsKey(new 『文字列』("d")) = false
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "HashtableT02:\t検索のテスト。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end HashtableT02
+---------------------------------------
+/*
+シナリオID
+	消去・削除に関するシナリオ
+内容
+	消去・削除のテスト
+*/
+class HashtableT03 is subclass of TestCase, 『共通定義』
+operations 
+public test: () ==> bool
+test() == 
+	let	h1 =
+			new Hashtable({
+				new 『int』(1) |-> new 『文字列』("佐原伸"), 
+				new 『int』(2) |->new 『文字列』("佐藤圭"), 
+				new 『int』(3) |-> new 『文字列』("酒匂寛")
+			}),
+		h2 = 
+			new Hashtable({
+				new 『文字列』("a") |->new 『int』(1),  
+				new 『文字列』("b") |-> new 『int』(2), 
+				new 『文字列』("c") |-> new 『int』(3)
+			}),
+		削除対象 = h2.remove(new 『文字列』("b"))
+	in
+	(
+	h1.clear();
+	return 
+		h1.getBuckets() = {|->} and
+		削除対象.equals(new 『int』(2)) and
+		h2.get(new 『文字列』("b")) = nil and
+		h2.contains(new 『int』(2)) = false and
+		h2.containsKey(new 『文字列』("b")) = false and
+		h2.remove(new 『文字列』("d")) = nil
+	)
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "HashtableT03:\t消去・削除のテスト。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end HashtableT03
+---------------------------------------
+/*
+シナリオID
+	put, getに関するシナリオ
+内容
+	put, getのテスト
+*/
+class HashtableT04 is subclass of TestCase, 『共通定義』
+operations 
+public test: () ==> bool
+test() == 
+	--let	h1 = new Hashtable(),
+	--	h2 = new Hashtable()
+	--in
+	(
+	dcl h1 : Hashtable := new Hashtable();
+	dcl h2 : Hashtable := new Hashtable();
+	h1.putAll({
+			new 『int』(1) |-> new 『文字列』("佐原伸"), 
+			new 『int』(2) |->new 『文字列』("佐藤圭"), 
+			new 『int』(14) |-> new 『文字列』("酒匂寛")
+	});
+	h2.put(new 『文字列』("a"), new 『int』(1));
+	h2.put(new 『文字列』("b"), new 『int』(2));
+	def c = new 『文字列』("c") in (
+		h2.put(c, new 『int』(4));
+		h2.put(c, new 『int』(3))
+	);
+	return
+		h1.get(new 『int』(1)).equals(new 『文字列』("佐原伸")) and
+		h1.get(new 『int』(2)).equals(new 『文字列』("佐藤圭")) and
+		h1.get(new 『int』(14)).equals(new 『文字列』("酒匂寛")) and
+		h1.get(new 『int』(4)) = nil and
+		h2.get(new 『文字列』("a")).equals(new 『int』(1)) and
+		h2.get(new 『文字列』("b")).equals(new 『int』(2)) and
+		h2.get(new 『文字列』("c")).equals(new 『int』(3)) and
+		h2.get(new 『文字列』("d")) = nil
+	)
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "HashtableT04:\tput, getのテスト。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end HashtableT04
+---------------------------------------
+/*
+シナリオID
+	情報の一括取りだしに関するシナリオ
+内容
+	情報の一括取りだしのテスト
+*/
+class HashtableT05 is subclass of TestCase, 『共通定義』
+operations 
+public test: () ==> bool
+test() == 
+	let	h1 = new Hashtable(),
+		h2 = new Hashtable(),
+		h1k1 = new 『int』(1),
+		h1k2 = new 『int』(2),
+		h1k3 = new 『int』(14),
+		h1v1 = new 『文字列』("佐原伸"),
+		h1v2 = new 『文字列』("佐藤圭"),
+		h1v3 = new 『文字列』("酒匂寛"),
+		h2k1 = new 『文字列』("a"),
+		h2k2 = new 『文字列』("b"),
+		h2k3 = new 『文字列』("c"),
+		h2v1 = new 『int』(1),
+		h2v2 = new 『int』(2),
+		h2v3 = new 『int』(18)
+		
+	in
+	(
+	h1.putAll({
+			h1k1 |-> h1v1, 
+			h1k2 |-> h1v2, 
+			h1k3 |-> h1v3
+	});
+	h2.put(h2k1, h2v1);
+	h2.put(h2k2, h2v2);
+	h2.put(h2k3, h2v3);
+	let	keySet1 = h1.keySet(),
+		valueSet1 = h1.valueSet(),
+		keySet2 = h2.keySet(),
+		valueSet2 = h2.valueSet()
+	in
+	return
+		keySet1 = {h1k1, h1k2, h1k3} and
+		valueSet1 = {h1v1, h1v2, h1v3} and
+		keySet2 = {h2k1, h2k2, h2k3} and
+		valueSet2 = {h2v1, h2v2, h2v3}
+	)
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "HashtableT05:\t情報の一括取りだしのテスト。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end HashtableT05
+---------------------------------------
+/*
+シナリオID
+	hashCodeの重複に関するシナリオ
+内容
+	hashCodeが重複する場合のテスト
+*/
+class HashtableT06 is subclass of TestCase, 『共通定義』
+operations 
+public test: () ==> bool
+test() == 
+	let	h1 = new Hashtable(),
+		h1k1 = new 『int』(1),
+		h1k2 = new 『int』(14),
+		h1k3 = new 『int』(16),
+		h1k4 = new 『int』(27),
+		h1v1 = new 『文字列』("a"),
+		h1v2 = new 『文字列』("b"),
+		h1v3 = new 『文字列』("c")
+	in
+	(
+	h1.putAll({
+			h1k1 |-> h1v1, 
+			h1k2 |-> h1v2, 
+			h1k3 |-> h1v3
+	});
+	let	- = h1.remove(new 『int』(14)) 
+	in
+	h1.put(h1k4, h1v3);
+	return
+		h1.keySet() = {h1k1, h1k3, h1k4} and
+		h1.valueSet() = {h1v1, h1v3, h1v3}
+	)
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "HashtableT06:\thashCodeが重複する場合のテスト。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end HashtableT06
+---------------------------------------
+/*
+シナリオID
+	sizeに関するシナリオ
+内容
+	sizeのテスト
+*/
+class HashtableT07 is subclass of TestCase, 『共通定義』
+operations 
+public test: () ==> bool
+test() == 
+	let	h1 = new Hashtable(),
+		h2 = new Hashtable(),
+		h1k1 = new 『int』(1),
+		h1k2 = new 『int』(14),
+		h1k3 = new 『int』(16),
+		h1v1 = new 『文字列』("a"),
+		h1v2 = new 『文字列』("b"),
+		h1v3 = new 『文字列』("c")
+	in
+	(
+	h1.putAll({
+			h1k1 |-> h1v1, 
+			h1k2 |-> h1v2, 
+			h1k3 |-> h1v3
+	});
+	h2.putAll({
+			h1k1 |-> h1v1, 
+			h1k2 |-> h1v2, 
+			h1k3 |-> h1v3
+	});
+	let	- = h1.remove(new 『int』(1)),
+		- = h1.remove(new 『int』(14)),
+		- = h1.remove(new 『int』(16)),
+		- = h2.remove(new 『int』(14))
+	in
+	return
+		h1.isEmpty() and
+		h1.size() = 0 and
+		h2.isEmpty() = false and
+		h2.size() = 2 
+		
+	)
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "HashtableT07:\tsizeのテスト。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end HashtableT07
+---------------------------------------
+/*
+シナリオID
+	関数型の検索に関するシナリオ
+内容
+	関数型の検索テスト
+*/
+class HashtableT52 is subclass of TestCase, 『共通定義』
+operations 
+public test: () ==> bool
+test() == 
+	let	aHashCode = lambda x : int & x mod 13,
+		p1 = Hashtable`PutAll[int, seq of char]({ |-> })(aHashCode)(
+				{1 |-> "佐原", 2 |-> "佐藤", 14 |-> "酒匂"}
+			),
+		c1 = Hashtable`Contains[int, seq of char](p1)
+	in
+	return
+		c1("佐原") and
+		c1("佐藤") and
+		c1("酒匂") and
+		c1("") = false
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "HashtableT52:\t関数型の検索テスト。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end HashtableT52
+---------------------------------------
+/*
+シナリオID
+	関数型の消去・削除に関するシナリオ
+内容
+	関数型の消去・削除テスト
+*/
+class HashtableT53 is subclass of TestCase, 『共通定義』
+operations 
+public test: () ==> bool
+test() == 
+	let	aHashCode1 = lambda x : int & x mod 13,
+		aHashCode2 = lambda x : seq of char & if x = "" then "" else Sequence`take[char](1)(x),
+		- = Hashtable`PutAll[int, seq of char]({ |-> })(aHashCode1)(
+				{1 |-> "佐原伸", 2 |-> "佐藤圭", 14 |-> "酒匂寛"}
+			),
+		h2 = Hashtable`PutAll[seq of char, int]({ |-> })(aHashCode2)(
+				{"a" |-> 1, "b" |-> 2, "c" |-> 3}
+			),
+		h3 = Hashtable`Clear[int, seq of char](),
+		削除後h2 = Hashtable`Remove[seq of char, int](h2)(aHashCode2)("b"),
+		c1 = Hashtable`Contains[seq of char, int](削除後h2),
+		ck1 = Hashtable`ContainsKey[seq of char, int](削除後h2)
+	in
+	(
+	return 
+		h3 = {|->} and
+		Hashtable`Get[seq of char, int](削除後h2)(aHashCode2)("b") = nil and
+		c1(2) = false and
+		c1(1) and
+		c1(3) and
+		ck1("b") = false and 
+		ck1("a") and
+		ck1("c") 
+	)
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "HashtableT53:\t関数型の消去・削除テスト。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end HashtableT53
+---------------------------------------
+/*
+シナリオID
+	関数型Put, Getに関するシナリオ
+内容
+	関数型Put, Getのテスト
+*/
+class HashtableT54 is subclass of TestCase, 『共通定義』
+operations 
+public test: () ==> bool
+test() == 
+	let	aHashCode = lambda x : int & x mod 13,
+		put = Hashtable`Put[int, seq of char],
+		p1 = put({ |-> })(aHashCode)(1)("佐原"),
+		p2 = put(p1)(aHashCode)(2)("ブッシュ"),
+		p3 = put(p2)(aHashCode)(2)("佐藤"),
+		p4 = put(p3)(aHashCode)(14)("酒匂"),
+		get = Hashtable`Get[int, seq of char](p4)
+	in
+	return
+		get(aHashCode)(1) = "佐原" and
+		get(aHashCode)(2) = "佐藤" and
+		get(aHashCode)(14) = "酒匂" and
+		get(aHashCode)(99) = nil
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "HashtableT54:\t関数型Put, Getのテスト。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end HashtableT54
+---------------------------------------
+/*
+シナリオID
+	関数型で情報を一括取りだしするシナリオ
+内容
+	関数型の情報を一括取りだしテスト
+*/
+class HashtableT55 is subclass of TestCase, 『共通定義』
+operations 
+public test: () ==> bool
+test() == 
+	let	aHashCode = lambda x : int & x mod 13,
+		put = Hashtable`Put[int, seq of char],
+		p1 = put({ |-> })(aHashCode)(1)("佐原"),
+		p2 = put(p1)(aHashCode)(2)("ブッシュ"),
+		p3 = put(p2)(aHashCode)(2)("佐藤"),
+		p4 = put(p3)(aHashCode)(14)("酒匂"),
+		k = Hashtable`KeySet[int, seq of char],
+		v = Hashtable`ValueSet[int, seq of char]
+	in
+	return
+		k(p1) = {1} and
+		v(p1) = {"佐原"} and
+		k(p2) = {1, 2} and
+		v(p2) = {"佐原", "ブッシュ"} and
+		k(p4) = {1,2,14} and
+		v(p4) = {"佐原", "佐藤", "酒匂"}
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "HashtableT55:\t関数型の情報を一括取りだしテスト。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end HashtableT55
+---------------------------------------
+/*
+シナリオID
+	関数型のhashCodeの重複に関するシナリオ
+内容
+	関数型でhashCodeが重複する場合のテスト
+*/
+class HashtableT56 is subclass of TestCase, 『共通定義』
+operations 
+public test: () ==> bool
+test() == 
+	let	aHashCode1 = lambda x : int & x mod 13,
+		h1 = Hashtable`PutAll[int, seq of char]({ |-> })(aHashCode1)(
+				{1 |-> "佐原伸", 2 |-> "佐藤圭", 14 |-> "酒匂寛", 27 |-> "西川典子"}
+			),
+		h2 = Hashtable`Remove[int, seq of char](h1)(aHashCode1)(14)
+	in
+	(
+	return
+		Hashtable`KeySet[int, seq of char](h2) = {1, 2, 27} and
+		Hashtable`ValueSet[int, seq of char](h2) = {"佐原伸",  "佐藤圭", "西川典子"}
+	)
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "HashtableT56:\t関数型でhashCodeが重複する場合のテスト。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end HashtableT56
+---------------------------------------
+/*
+シナリオID
+	関数型のSizeに関するシナリオ
+内容
+	関数型Sizeのテスト
+*/
+class HashtableT57 is subclass of TestCase, 『共通定義』
+operations 
+public test: () ==> bool
+test() == 
+	let	aHashCode1 = lambda x : int & x mod 13,
+		remove = Hashtable`Remove[int, seq of char],
+		h1 = Hashtable`PutAll[int, seq of char]({ |-> })(aHashCode1)(
+				{1 |-> "佐原伸", 2 |-> "佐藤圭", 14 |-> "酒匂寛"}
+			),
+		h2 = remove(h1)(aHashCode1)(1),
+		h3 = remove(h2)(aHashCode1)(2),
+		h4 = remove(h3)(aHashCode1)(14),
+		isempty = Hashtable`IsEmpty[int, seq of char],
+		size = Hashtable`Size[int, seq of char]
+	in
+	(
+	return
+		isempty(h4) and
+		size(h4) = 0 and
+		isempty(h3)  = false and
+		size(h3) = 1 and
+		size(h2) = 2 and
+		size(h1) = 3
+	)
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "HashtableT57:\t関数型Sizeのテスト。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end HashtableT57

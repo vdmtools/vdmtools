@@ -1,0 +1,21 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of nat  
+Test () ==
+  return let mk_(a,b) in set {1, mk_(1,2,7), mk_(2,3,4),mk_([5],{6})} be st f(a,b)+1>0.5 in
+          a
+
+functions
+
+f:(nat|seq of nat)*(nat|set of nat) -> (int | real)
+f(x,y) ==
+  cases [x,y]:
+  [[z],{v}],
+  [z,v] -> z+v+0.5,
+  others -> -1
+  end
+
+end A

@@ -1,0 +1,23 @@
+class DiningPhilosophers
+
+   instance variables
+      t: Table := new Table();
+
+   operations
+      Init: () ==> ()
+      Init() ==
+      (  dcl f: Fork,
+             p: Philosopher;
+         for i = 1 to Configuration`NumberOfPlaces do
+         (   f := new Fork();
+             t.AddFork(f)
+         );
+         for i = 1 to Configuration`NumberOfPlaces do
+         (   p := new Philosopher();
+             t.AddPhilosopher (p);
+             start(p);
+             p.SitDown (t)
+         )
+     )
+
+end DiningPhilosophers

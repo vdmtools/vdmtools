@@ -1,0 +1,40 @@
+class A
+
+operations
+public Test : () ==> int | seq of int 
+Test() ==
+  Example();
+
+DoCommand: () ==> seq of int
+DoCommand() ==
+( dcl l : seq of nat := [];
+  always TestSeq(l) in
+  ( l := [7];
+    return l )
+);
+
+SetToSeq: set of int ==> seq of int
+SetToSeq(s) ==
+  if s = {} then
+    exit <ERR>
+  else
+    let e in set s in 
+      return [e] ^ SetToSeq(s \ {e});
+
+TestSeq: seq of int ==> seq of int
+TestSeq(l) ==
+  if l = [] then
+    exit <ERR>
+  else if false
+  then exit mk_(1,1)
+  else 
+    return l;
+
+Example: () ==> int | seq of int
+Example() ==
+  tixe { 
+    <ERR> |-> exit 7,
+    mk_(t,t) |-> return t
+  } in DoCommand()
+
+end A

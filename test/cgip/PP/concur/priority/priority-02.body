@@ -1,0 +1,151 @@
+class Shared
+
+instance variables
+  waitset : seq of nat := [];
+  data : seq of seq of char := [];
+
+operations
+
+public wait : () ==> ()
+wait() ==
+  (AddToWaitSet(threadid);
+   Awake());
+
+public Insert : seq of char ==> ()
+Insert(ds) ==
+  data := data ^ [ds];
+
+AddToWaitSet : nat ==> ()
+AddToWaitSet(n) ==
+  waitset := waitset ^ [n];
+
+Awake : () ==> ()
+Awake() ==
+  skip;
+
+public notify : () ==> ()
+notify() ==
+  if waitset <> []
+  then waitset := tl waitset;
+
+public IsFinished : () ==> seq of seq of char
+IsFinished() == return data;
+
+public GetWait : () ==> ()
+GetWait() == skip;
+
+sync
+  mutex(AddToWaitSet,notify);
+  per Awake => threadid not in set elems waitset;
+  per IsFinished => #fin(notify) >= 16;
+  per GetWait => len waitset = 3;
+
+end Shared
+
+class B
+
+instance variables
+  s : Shared;
+  id : seq of char
+
+operations
+
+public Init : Shared * seq of char ==> ()
+Init(new_s, new_id) ==
+  ( s := new_s;
+    id := new_id);
+
+Op : () ==> ()
+Op() ==
+  (s.wait();
+   s.Insert(id);
+   s.notify())
+
+thread
+  (dcl i : nat := 0;
+   while i < 10 do
+   (Op();
+    i := i + 1
+   )
+  )
+
+end B
+
+class C
+
+instance variables
+  s : Shared;
+  id : seq of char
+
+operations
+
+public Init : Shared * seq of char ==> ()
+Init(new_s, new_id) ==
+  ( s := new_s;
+    id := new_id);
+
+Op : () ==> ()
+Op() ==
+  (s.wait();
+   s.Insert(id);
+   s.notify())
+
+thread
+  (dcl i : nat := 0;
+   while i < 10 do
+   (Op();
+    i := i + 1
+   )
+  )
+
+end C
+
+class D
+
+instance variables
+  s : Shared;
+  id : seq of char
+
+operations
+
+public Init : Shared * seq of char ==> ()
+Init(new_s, new_id) ==
+  ( s := new_s;
+    id := new_id);
+
+Op : () ==> ()
+Op() ==
+  (s.wait();
+   s.Insert(id);
+   s.notify())
+
+thread
+  (dcl i : nat := 0;
+   while i < 10 do
+   (Op();
+    i := i + 1
+   )
+  )
+
+end D
+
+class A
+
+operations
+
+public Test: () ==> seq of seq of char
+Test() ==
+  (dcl s : Shared := new Shared(),
+       b : B := new B(),
+       c : C := new C(),
+       d : D := new D();
+   b.Init(s,"b");
+   c.Init(s,"c");
+   d.Init(s,"d");
+   startlist({b,c,d});
+   s.GetWait();
+   s.notify();
+   s.IsFinished())
+
+end A  
+  

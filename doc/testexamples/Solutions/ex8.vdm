@@ -1,0 +1,113 @@
+\documentclass[a4paper,dvips]{article}
+\usepackage[dvips]{color}
+\usepackage{vdmsl-2e}
+\usepackage{longtable}
+\usepackage{alltt}
+\usepackage{makeidx}
+\usepackage{ifad}
+
+\definecolor{covered}{rgb}{0,0,0}      %black
+%\definecolor{not_covered}{gray}{0.5}   %gray for previewing
+\definecolor{not_covered}{gray}{0.6}   %gray for printing
+%\definecolor{not_covered}{rgb}{1,0,0}  %red
+
+\title{Exercise 8}
+\author{IFAD}
+\date{January 16, 1996}
+
+\begin{document}
+\maketitle
+
+\begin{vdm_al}
+
+types
+  
+  Bag = map Elem to nat;
+
+  Elem = <A> | <B> | <C> | <D> | <E> | <F> | <G>
+
+values
+    baga = {<A> |-> 3, <B> |-> 2, <C> |-> 4};
+    bagb = {<A> |-> 1, <C> |-> 5, <D> |-> 4, <E> |-> 1}
+
+functions
+
+  Empty:() -> Bag
+  Empty() ==
+    { |-> };
+
+  Add: Elem * Bag -> Bag
+  Add(e, b) ==
+    b ++ { e |-> Count(e, b) + 1 };
+
+  Remove: Elem * Bag -> Bag
+  Remove(e, b) ==
+    if b(e) = 1 
+    then {e} <-: b
+    else b ++ { e |-> Count(e, b) -1 }
+  pre e in set dom b;
+
+  Count: Elem * Bag -> nat
+  Count(e, b) ==
+    if e in set dom b
+    then b(e)
+    else 0;
+
+  In: Elem * Bag -> bool
+  In(e, b) ==
+    e in set dom b;
+
+  Join: Bag * Bag -> Bag
+  Join(b1, b2) ==
+    { e |-> max(Count(e, b1), Count(e, b2)) | 
+        e in set (dom b1 union dom b2) };
+
+  max: nat * nat -> nat
+  max(n1, n2)==
+    if n1 > n2 
+    then n1
+    else n2;
+
+
+
+  Union: Bag * Bag -> Bag
+  Union(b1, b2) ==
+    { e |-> Count(e, b1) + Count(e, b2) | 
+        e in set (dom b1 union dom b2) };
+
+  SubBag: Bag * Bag -> bool
+  SubBag(b1, b2) ==
+    forall e in set dom b1 & Count(e, b1) <= Count(e, b2);
+
+  Difference: Bag * Bag -> Bag
+  Difference(b1, b2) ==
+    let dif = { e |-> Count(e, b1) - Count(e, b2) | e in set dom b1 } in
+    { e |-> dif(e) | e in set dom dif & dif(e) > 0 };
+
+  Size: Bag -> nat
+  Size(b) ==
+    if b = {|->} 
+    then 0
+    else let e in set dom b in 
+         b(e) + Size({e} <-: b);
+
+  Intersection: Bag * Bag -> Bag
+  Intersection(b1, b2) ==
+    { e |-> min(Count(e, b1), Count(e, b2)) | 
+        e in set (dom b1 inter dom b2) };
+
+  min: nat * nat -> nat
+  min(n1, n2) ==
+    if n1 < n2
+    then n1
+    else n2;
+
+  SeqToBag: seq of Elem -> Bag
+  SeqToBag(el) ==
+    if el = []
+    then Empty()
+    else Add(hd el, SeqToBag(tl el))
+
+\end{vdm_al}
+\end{document}
+

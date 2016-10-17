@@ -1,0 +1,35 @@
+  
+module B
+
+parameters
+  types lessthan
+
+exports all
+
+definitions
+
+operations
+
+op : nat * nat ==> bool
+op(a,b) ==
+  return lessthan(a,b);
+
+end B
+
+module A
+
+instantiations
+
+binst as B(lessthan -> lambda a:nat ,b:nat & a < b) all
+
+exports all
+
+definitions
+
+operations
+
+Test: () ==> bool
+Test() ==
+  return binst`op(1,2);
+
+end A

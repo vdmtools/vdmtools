@@ -1,0 +1,3979 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Definition of the state of the dynamic semantic and all operations
+%    which acess state components.
+% $Id: eval_state.vdm,v 1.143 2006/05/26 01:36:56 vdmtools Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\chapter{State Definition and Modification}
+
+The module STATE defines the state and contains all operations
+which access or modifiy the state.
+\begin{vdm_al}
+module STATE
+
+  imports
+    from AS all,
+    from CI all,
+    from DEBUG all,
+    from DEBUGTP all,
+    from CMPL all,
+#ifdef VDMPP
+    from MANGLE all,
+    from SCHD all,
+    from UTIL all,
+    from SCHDTP all,
+#ifdef VICE
+    from CEXPR all,
+    from VC all,
+    from TIMEMAP all,
+    from TIMEPARSER all,
+    from TIMETRACE
+    operations
+     LogHistEvent: SCHDTP`ThreadId * AS`Name * AS`Name * INSTRTP`HistoryKind *
+                   SEM`OBJ_Ref * bool * [seq of SEM`VAL] ==> ();
+    AddBUS: [AS`Name] * set of [AS`Name] ==> ();
+    AddCPU: [AS`Name] * [AS`Name] * bool ==> (),
+#endif VICE
+#endif VDMPP
+    from CPAT all,
+    from AUX
+
+      functions
+#ifdef VDMSL
+        IsRealName : AS`Name -> bool;
+#endif VDMSL
+        SingleNameToString: AS`Name -> seq of char;
+        PreName : AS`Name -> AS`Name;
+        --ConstructName: AS`Id * CI`ContextId -> AS`Name;
+        ExtractName : AS`Name -> AS`Name;
+        ConstructDoubleName: AS`Name * AS`Name -> AS`Name;
+#ifdef VDMPP
+        MkEmptyBlkEnv : SEM`Permission -> SEM`BlkEnv;
+#endif VDMPP
+        IsNat : SEM`VAL -> bool;
+        IsNatOne : SEM`VAL -> bool;
+        IsInt : SEM`VAL -> bool;
+        IsReal : SEM`VAL -> bool;
+        IsRat : SEM`VAL -> bool;
+
+      operations
+#ifdef VDMSL
+        UniqueTagName : AS`Name ==> AS`Name;
+        IsConstructExported : AS`Name * AS`Name ==> bool;
+        IsTypeDef : AS`Name ==> bool * [AS`Type] * [AS`Invariant] * [AS`Name];
+        IsInDLDeclared : AS`Name * AS`Name ==> bool;
+        LookUpRename : AS`Name ==> bool * AS`Name;
+        ExtractTagName: AS`Name * set of AS`Name ==> [AS`Name] * bool;
+#endif VDMSL
+#ifdef VDMPP
+        IsTypeDef : AS`Name ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access];
+        ExtractTagName: AS`Name * set of AS`Name ==> [AS`Name] * bool;
+#endif VDMPP
+        LookUpRecSel : AS`Name ==> bool * [GLOBAL`RecSel],
+
+    from EXPR
+      operations
+#ifdef VDMSL
+        IsFunction : AS`Name * AS`Name ==> bool;
+        GetFunctionVal : AS`Name * AS`Name ==> SEM`VAL;
+        IsOperation : AS`Name * AS`Name ==> bool;
+        GetOperationVal : AS`Name *AS`Name ==> SEM`VAL;
+        IsPoly : AS`Name * AS`Name ==> bool;
+        GetPolyVal : AS`Name * AS`Name ==> SEM`VAL;
+        GetExtFnOpVal : AS`Name * AS`Name ==> bool * [SEM`VAL];
+        GetExtVal : AS`Name * AS`Name ==> bool * [SEM`VAL];
+        GetApproxVal : SEM`LOC * AS`Name * seq of SEM`VAL ==> SEM`VAL;
+        IsDefApproxVal : SEM`LOC * AS`Name ==> bool;
+#endif VDMSL
+        SubstTypeList : seq of AS`Type * AS`TypeVarList * seq of AS`Type ==> seq of AS`Type;
+        ConvertPolyToFn : SEM`ExplPOLY * seq of AS`Type ==> SEM`CompExplFN,
+
+#ifdef VDMPP
+    from CLASS
+      functions
+        ExtOpDom: AS`OpDef -> seq of AS`Type;
+        TransLocalHchy: AS`Name  -> map AS`Name to set of AS`Name
+
+      operations
+        GenInsMap: AS`Name ==> ();
+        TransHierarchy: () ==> ();
+        EvalInhStrct: () ==> ();
+        TransSyncs: AS`Document ==> ();
+        InitGV : seq of AS`ValueDef ==> GLOBAL`ValueMap,
+#endif VDMPP
+
+#ifdef VDMSL
+    from MOD
+      operations
+        TranslateModule : AS`Module ==> GLOBAL`SigmaMO;
+        TranslateDLModule : AS`DLModule ==> GLOBAL`SigmaIMO;
+        InitGS : [AS`StateDef] ==> GLOBAL`StateMap;
+        InitGV : seq of AS`ValueDef ==> GLOBAL`ValueMap,
+#endif VDMSL
+
+    from PAT all,
+    from REP all,
+    from SEM all,
+    from GLOBAL all,
+
+#ifdef VDMPP
+    from DEF all,
+#endif VDMPP
+
+    from SETTINGS
+      operations
+#ifdef VICE
+        GetDefaultCapacity: () ==> nat;
+#endif VICE
+        DTC : () ==> bool;
+        INV : () ==> bool,
+
+    from STKM all,
+    from INSTRTP all,
+    from INSTR all,
+    from RTERR all
+
+exports all
+
+definitions
+\end{vdm_al}
+
+To be able to evaluate expressions and statements, we have to maintain
+certain information available. This information is stored in the state used
+in the interpreter. This state is defined as:
+
+#ifdef VDMSL
+\begin{vdm_al}
+state Sigma of
+  mods : map AS`Name to GLOBAL`SigmaMO
+  imods : map AS`Name to GLOBAL`SigmaIMO
+  isTypeJudgement : bool
+
+init s == s = GetInitSigma()
+
+end
+\end{vdm_al}
+
+In this state, we maintain information for:
+
+\begin{itemize}
+\item An evaluation stack ($env-l$).
+\item A stack with old state values ($os$).
+\item A stack for type variable maps ($typeinst$).
+\item A map from module names to normal modules ($mods$).
+\item A map from module names to implementation modules ($imods$).
+\item A stack for the current module name ($cur-mod$).
+\item A flag to indicate that a new module is pushed ($pm$).
+\end{itemize}
+#endif VDMSL
+
+#ifdef VDMPP
+
+\begin{vdm_al}
+types
+
+  DLFactory ::
+  ;
+
+state Sigma of
+  initclstack : seq of AS`Name
+  obj_tab : GLOBAL`OBJ_tab      -- map SEM`OBJ_Ref to OBJ_Desc
+  classes : map AS`Name to GLOBAL`SigmaClass
+  hchy    : GLOBAL`Hierarchy
+  Init    : bool
+  d_objs  : map AS`Name to (SEM`OBJ_Ref * AS`Expr * seq of char)
+  d_objs_order : seq of AS`Name
+  InitPool: set of AS`Name
+  inhstrct: GLOBAL`InhStrct
+  abstracts: set of AS`Name
+  obj_ref_no: nat
+  clsnms : set of AS`Name
+  dlops   : map AS`Name to token
+  dlfactory: DLFactory
+  isTypeJudgement : bool
+inv s == s.abstracts subset dom s.classes and
+         forall nm in set dom s.classes &
+         len nm.ids = 1
+
+init s == s = GetInitSigma()
+
+end
+\end{vdm_al}
+
+In this state we maintain information for:
+\begin{itemize}
+\item A table of objects \emph{obj\_tab}
+
+\item A map from class names to the internal representation of
+  classes (\emph{classes}).
+
+\item A pool (\emph{InitPool}) to be used in the initialisation of the
+  classes. The stack contains the names of the classes that are to be
+  initialised because the current class is dependent of this class.
+
+\item The hierarchy table ({\em hchy}).
+\item The {\em Init} is true if the specification should it be
+  initialised. That is, it has not been initialised.
+
+  The value of Init is used by CheckGlobInv() (called by INSTR`InvOK)
+  to determine if CheckStateInvariant() is called.
+
+\item A table of objects created in the debugger by the user ({\em
+  d\_objs}). This
+  part of the state is only for the debugger. The table contains
+  \begin{itemize}
+  \item the semantic value,
+  \item the abstract syntax of the expression or statement that the
+    the variable was created with, and
+  \item the string of initialisation argument.
+  \end{itemize}
+  This abstract
+  syntax is used when initialising the specification, then the objects
+  are initialised with the same expressions/statements. The string of
+  the initialisation argument is used to write in the debugger what
+  the initialisation argument is.
+\item A sequence of names ({\emph d-objs-order}) which is the order
+  in which the user defined objects should be initialised. This
+  sequence of names should always be names which belongs to the domain
+  of {\emph d-objs}.
+\item inhstrct. This state contains for each class the inheritance
+  structure of the superclasses of the class. See the type definition
+  {\em GLOBAL`InhStrct} for a description the structure.
+\item $obj-ref-no$ is indicating the next reference number to be used
+  for objects.
+#ifdef VICE
+\item $tm$ a map representing the amount of time to increment for a
+  given instruction.
+#endif VICE
+\end{itemize}
+
+#endif VDMPP
+\texttt{isTypeJudgement} is used to indicate whether we are currently
+evaluating a type judgement expression when we perform a subtype
+check.
+
+\begin{vdm_al}
+functions
+  GetInitSigma : () -> Sigma
+  GetInitSigma() ==
+#ifdef VDMSL
+         mk_Sigma({ |-> },  -- mods
+                  { |-> },  -- imods
+                  false
+                 )
+#endif VDMSL
+#ifdef VDMPP
+         mk_Sigma(
+                  [],       -- initclstack
+                  { |-> },  -- obj_tab
+                  { |-> },  -- classes
+                  { |-> },  -- hchy
+                  true,     -- Init
+                  { |-> },  -- d_objs
+                  [],       -- d_objs_order
+                  {},       -- InitPool
+                  { |-> },  -- inhstrcts
+                  {},       -- abstracts
+                  0,        -- obj_ref_no
+                  {},       -- clsnms
+                  { |-> },  -- dlops
+                  mk_DLFactory(), -- DLFactory
+                  false
+                  )
+#endif VDMPP
+
+operations
+  Init_Sigma : bool ==> ()
+  Init_Sigma(ast_is_new) ==
+   (if ast_is_new
+    then
+     (Sigma := GetInitSigma();
+     )
+    else
+     (
+#ifdef VDMSL
+      -- mods(modname).gs is reset by InitializeGSGV
+      -- pmods unchanged
+      -- imods unchanged
+      skip; -- need one instruction in this block
+#endif VDMSL
+#ifdef VDMPP
+      initclstack := [];
+      Init_classes();
+      RemoveClassValues(); -- before clearing obj_tab.
+      obj_tab := --{|->};--
+                 {oref |-> RemoveHist(obj_tab(oref))
+                 | oref in set dom obj_tab};
+      RemoveStaticHist();
+      -- classes unchanged except history removed for static instances
+      -- hchy    unchanged
+      Init := true;
+      -- d_objs  unchanged
+      -- d_objs_order unchanged
+      -- InitPool unchanged
+      -- inhstrcts unchanged
+      -- abstracts unchanged (set during compilation by CMPL`FnDef2I)
+      -- obj_ref_no := 0;
+      -- clsnms unchanged (set by TranslateAST).
+#endif VDMPP
+     );
+   );
+
+\end{vdm_al}
+
+#ifdef VDMPP
+\section{Getting the obj\_tab elements}
+
+\begin{vdm_al}
+
+operations
+Get_obj_tab : () ==> GLOBAL`OBJ_tab * map AS`Name to GLOBAL`SigmaClass
+Get_obj_tab () ==
+  return mk_(obj_tab, classes );
+
+#ifdef VICE
+GetObjRefsOfClass: AS`Name ==> set of SEM`OBJ_Ref
+GetObjRefsOfClass(clnm) ==
+  return {obj_ref | obj_ref in set dom obj_tab & obj_tab(obj_ref).sem.tp = clnm};
+#endif VICE
+
+Lookup_obj_tab : SEM`OBJ_Ref ==> GLOBAL`OBJ_Desc
+Lookup_obj_tab (o) ==
+  return obj_tab(o)
+pre o in set dom obj_tab;
+
+LookupProcId : SEM`OBJ_Ref ==> [AS`Name]
+LookupProcId (o) ==
+  return obj_tab(o).procid
+pre o in set dom obj_tab;
+
+\end{vdm_al}
+
+#endif VDMPP
+
+#ifdef VDMSL
+\section{Document Translation}
+
+\begin{vdm_al}
+operations
+
+-- TranslateAST was formerly named OM_TranslateDocument.
+
+TranslateAST : AS`Document * bool ==> ()
+TranslateAST (doc_l, ast_is_new) ==
+  if ast_is_new
+  then
+    cases doc_l:
+      [mk_AS`Definitions(-,-,-,-,-,-,cid)] -> let mod_nm = mk_AS`Name(["DefaultMod"],cid),
+                                                  new_mod = mk_AS`Module(mod_nm, mk_AS`Interface({|->}, nil, cid),
+                                                                         hd doc_l, cid)
+                                              in
+                                               (
+                                                OM_TransInsertModule (new_mod);
+                                                STKM`PushEmptyEnv();
+                                                STKM`PushTypeInst({|->});
+                                                --OM_TransInsertModule (new_mod);
+                                                InitializeGlobalVal (mod_nm);
+                                                STKM`PopEnvL();
+                                                STKM`PopTypeInst()),
+      others ->  (for mod_sig in doc_l do
+                    OM_TransInsertModule (mod_sig);
+                  )
+    end;
+
+\end{vdm_al}
+
+The operation $OM-TranslateDocument$ translates a document into a number of
+module values. If the document consists of a single definitions block, this
+is first translated into a module, and then translated into a module value.
+Next, we initialize all the global values of the created module.
+
+Otherwise, the document consists of a number of module definitions. These
+are directly translated into module values. After the translation, all
+instantiations within the modules are handled, global values initialized,
+and the global values, created during the instantiation of modules, are
+initialized.
+
+\section{Module Instantiation}
+
+The operation $InstantiateModules$ instantiates all the modules in the
+module with name $mod-name$. If the module $mod-name$ is the result of an
+instantiation, $orig-name$ will be non-$\Nil$, and is the name of the
+parameterized module for $mod-name$. After a parameterized module is
+instantiated, we check whether or not the new module has instantiations
+itself. If so, we recursively call $InstantiateModules$.
+
+#endif VDMSL
+
+#ifdef VDMPP
+\section{Document Translation}
+
+\begin{vdm_al}
+operations
+
+-- TranslateAST was named ReadClassesAndInit
+
+TranslateAST: AS`Document * bool ==> ()
+--TranslateAST( cs, ast_is_new ) ==
+TranslateAST( cs, - ) ==
+(
+#ifdef VICE
+ dcl sys : map AS`Name to AS`Definitions := {|->};
+#endif VICE
+-- Hopefully Init does not need to be defined for these routines to work.
+  clsnms := {c.nm | c in set elems cs};
+-- a prepass to handle dlclasses first -- sets up STATE`dlops such
+-- that IsDLClass IsDLOp will return valid result.
+  for mk_AS`Class(nm,-,-,defs,useslib,-) in cs do
+    if useslib <> nil
+    then RegisterDLClass(nm, useslib, defs);
+
+  for mk_AS`Class(cnm,-,-,defs,-,-) in cs do
+    let opm = if defs = nil
+              then {|->}
+              else defs.opm
+    in
+      (classes(cnm) := DEF`EmptySigmaClass();
+       classes(cnm).defaultcons := exists opdef in set rng opm &
+                                   opdef.constr and CLASS`ExtOpDom(opdef) = []);
+
+  for c in cs do
+   (
+#ifdef VICE
+    if c.sys
+    then sys(c.nm) := c.defs;
+#endif VICE
+    classes:= classes ++ DEF`ReadClasses(c)
+   );
+  CLASS`TransHierarchy();
+
+  for mk_AS`Class(cls,-,supercls,defs,-,-) in cs do
+    let opm = if defs = nil
+              then {|->}
+              else defs.opm,
+        instvars = classes(cls).instvars
+    in
+      def cons = DEF`UpdateConstructors(cls,supercls,opm,instvars)
+      in
+        classes(cls).constructor := cons;
+
+  CLASS`EvalInhStrct();
+  CLASS`TransSyncs(cs);
+
+#ifdef VICE
+  if sys <> {|->}
+  then
+   (for all sysnm in set dom sys do
+      classes(sysnm).sys := true;
+    AddCPUAndBUSDefs(sys));
+#endif VICE
+);
+
+functions
+StaticInsts: seq of AS`InstanceVarDef +> set of AS`Name
+StaticInsts(instdefs) ==
+  dunion { if static then {var} else {}
+           | mk_AS`InstAssignDef(mk_AS`AssignDef(var,-,-,-),-,static,-) in set elems instdefs }
+\end{vdm_al}
+
+#ifdef VICE
+
+\section{Managing System Definitions}
+
+\begin{vdm_al}
+operations
+AddCPUAndBUSDefs: map AS`Name to AS`Definitions ==> ()
+AddCPUAndBUSDefs(sys_m) ==
+ (dcl busdecls : set of (AS`Name * [AS`Expr]) := {};
+  TIMETRACE`AddCPU(nil,nil,false);
+  for all sysnm in set dom sys_m do
+  let mk_AS`Definitions(-,-,-,opm,instvars,-,-,-,-) = sys_m(sysnm) in
+ (let mk_(-, -, instvars_tp) = DEF`TransInstVars(instvars) in
+      classes(sysnm).instvars_tp   := instvars_tp;
+  for assdef in instvars do
+    let mk_AS`AssignDef(var,tp,decl,-) = assdef.ad
+    in
+     (if is_AS`TypeName(tp)
+      then if tp.name.ids = ["CPU"]
+           then STKM`AddCPU(sysnm,var,decl)
+           elseif tp.name.ids = ["BUS"]
+           then busdecls := busdecls union {mk_(var,decl)}
+     );
+
+---
+  STKM`PushEmptyEnv();
+  STKM`PushBlkEnv(AUX`MkEmptyBlkEnv(<READ_WRITE>));
+  STKM`PushClNmCurObj(sysnm, sysnm);
+  def vls_def = GetVlsDef(sysnm);
+      vls_init = CLASS`InitGV(vls_def)
+  in classes(sysnm).vls_init := vls_init;
+---
+  InitStaticInsts(sysnm,instvars,false);
+---
+  STKM`PopClNmCurObj();
+  STKM`PopEnvL();
+---
+  classes(sysnm).sys := true;
+--  TIMETRACE`AddBUS(mk_AS`Name(["vBUS"],CI`NilContextId),
+--                   STKM`GetAllCPUs());
+  STKM`AddBUS(STKM`virtualbusid,nil);
+  for all mk_(var,decl) in set busdecls do
+    STKM`AddBUS(var,decl);
+
+  if sysnm in set dom opm and
+     is_AS`ExplOpDef(opm(sysnm)) and
+     is_AS`BlockStmt(opm(sysnm).body.body)
+  then let mk_AS`BlockStmt(-,stmts,-) = opm(sysnm).body.body
+       in
+         for stmt in stmts do
+           if is_AS`CallStmt(stmt) and
+              stmt.obj <> nil and
+              len stmt.args > 0
+           then if stmt.oprt = mk_AS`Name(["deploy"],CI`NilContextId)
+                then def instnm = hd stmt.args;
+                         fullnm = mk_AS`Name(sysnm.ids ^ instnm.ids,sysnm.cid);
+                         mk_(found,obj_ref) = LookUpStatic(fullnm)
+                     in
+                       if found
+                       then STKM`DeployInst(stmt.obj,obj_ref)
+                       else RTERR`InitError(RTERR`DEPLOYINST,instnm.cid,[])
+                elseif stmt.oprt = mk_AS`Name(["setPriority"],CI`NilContextId)
+                       and len stmt.args = 2
+                then let opnm = hd stmt.args,
+                         prio = (stmt.args(2)).val
+                     in
+                       STKM`AddPriorityEntry(stmt.obj,opnm,prio)
+                else RTERR`InitError(RTERR`ONLYDEPLOYORPRIO,stmt.cid,[])
+            ));
+\end{vdm_al}
+
+\section{Dealing with Dependencies for Permission Predicates}
+
+\begin{vdm_al}
+AddHistDeps: AS`Name * AS`Name * set of AS`Name * set of AS`Name ==> ()
+AddHistDeps(clsnm,opnm,deps,histdeps) ==
+  (classes(clsnm).depnms(opnm) := deps;
+   classes(clsnm).depops(opnm) := histdeps
+  );
+\end{vdm_al}
+#endif VICE
+#endif VDMPP
+
+The operation {\em TranslateAST} translates a set of classes to the
+internal state s.
+
+#ifdef VDMSL
+\section{Document Initialization}
+
+\begin{vdm_al}
+operations
+InitializeGlobalVal : AS`Name ==> ()
+InitializeGlobalVal (mod_name) ==
+ (dcl sigmamo : GLOBAL`SigmaMO := GetModule (mod_name);
+  if sigmamo.gv = nil
+  then
+   (STKM`PushModule (mod_name);
+    sigmamo.gv := MOD`InitGV (sigmamo.gv_init);
+    STKM`PopModule();
+    mods       := mods ++ { mod_name |-> sigmamo };
+   )
+ );
+\end{vdm_al}
+
+In the initialization of global values, we first initialize all the global
+values of imported and instantiated modules. After these modules are
+initialzed, we initialize the global values of the module, only if the
+global values are not yet initialized.
+
+The global values in an instantiated module are initialized in the same way
+as for non-instantiated modules.
+
+\begin{vdm_al}
+operations
+InstantiationGVInit : AS`Name ==> ()
+InstantiationGVInit (mod_name) ==
+ (dcl sigmamo : GLOBAL`SigmaMO := GetModule (mod_name);
+  if sigmamo.gv_inst <> []
+  then
+    let mk_AS`Name (id_l,cid) = mod_name
+    in
+     (STKM`PushModule (mk_AS`Name ( (id_l(1, ..., len id_l - 1)),cid));
+      sigmamo.gv := sigmamo.gv ++ MOD`InitGV (sigmamo.gv_inst);
+      mods       := mods ++ { mod_name |-> sigmamo };
+      STKM`PopModule()
+     )
+ );
+\end{vdm_al}
+
+The operation $InstantiationGVInit$ initializes the global values created
+during the instantiation of parameterized modules. The result of the
+initialization is added to the already initialized global values of the
+instantiated module.
+#endif VDMSL
+
+InitializeGSGV was formerly named InitializeGS
+\begin{vdm_al}
+operations
+
+InitializeGSGV : bool ==> ()
+InitializeGSGV (ast_is_new) ==
+(
+#ifdef VDMPP
+  -- since obj_tab has been cleared we must run Init_classes
+  -- again as values may contain class references.
+  let - = ast_is_new in skip;
+  Init_classes();
+#endif
+
+#ifdef VDMSL
+  -- Initialize global values for normal and parameterized modules.
+  -- Moved from TranslateAST (formerly OM_TranslateDocument).
+  if (ast_is_new) then (
+    -- only if ast_is_new == true we must init the the global values.
+    -- otherwise they still have their old values.
+    for all mod_name in set dom mods do
+      (CMPL`SetClMod(mod_name);
+       if not AUX`IsRealName (mod_name)
+       then InitializeGlobalVal (AUX`ExtractName(mod_name)));
+    for all mod_name in set dom mods do
+      (CMPL`SetClMod(mod_name);
+       if AUX`IsRealName (mod_name)
+       then InstantiationGVInit (mod_name)
+      );
+  );
+  -- Initialize global state of modules.
+  -- This must always happen
+  for all mod_name in set dom mods do
+    ( STKM`PushModule (mod_name);
+      def statemap = MOD`InitGS(mods(mod_name).gs_init)
+       in
+         (mods(mod_name).gs := statemap;
+          if not CheckStateInvariant()
+          then error;
+          STKM`PopModule()));
+#endif VDMSL
+
+);
+
+\end{vdm_al}
+
+#ifdef VDMSL
+The operation $InitializeGSGV$ initializes the global state of the users model.
+#endif VDMSL
+#ifdef VDMPP
+The operation $InitializeGSGV$ initializes the global state of the users model.
+#endif VDMPP
+
+#ifdef VDMSL
+\section{State Invariants}
+\begin{vdm_al}
+operations
+
+CheckStateInvariant: () ==> bool
+CheckStateInvariant() ==
+  if not SETTINGS`INV()
+  then return true
+  else
+    def mod_name = STKM`CurrentModule();
+        st_inv = GetModuleInvariant (mod_name)
+    in
+      if st_inv = nil
+      then return true
+      else
+        def mk_(name, id_l, -, -, pat, code) = st_inv;
+            gs = GetModuleState(mod_name);
+            val_lv = { i |-> gs(id_l(i)).val | i in set inds id_l };
+            name' = AUX`UniqueTagName (name);
+            env_s = PAT`PatternMatch (pat, mk_SEM`REC(name', val_lv, {|->}))
+        in
+              if env_s <> {}
+              then
+                let env in set env_s
+                in
+                 (STKM`PushOS();
+                  STKM`PushEmptyEnv();
+                  STKM`PushBlkEnv(env);
+                  def mk_(eval_state, resval) =
+                       DEBUG`EvalAuxProgram(code, "Invariant Check for " ^ AUX`SingleNameToString(name), false)
+                  in
+                   (STKM`PopEnvL( );
+                    STKM`PopOS();
+                    let body_v = if is_STKM`Success(eval_state)
+                                 then resval
+                                 else undefined
+                    in
+                     (if is_SEM`BOOL(body_v)
+                      then let mk_SEM`BOOL(b) = body_v in return b
+                      else error)
+                 ) )
+              else error;
+\end{vdm_al}
+
+This operation validates the current state invariant.
+
+\begin{vdm_al}
+operations
+GetModuleInvariant : AS`Name ==> [GLOBAL`StateInv]
+GetModuleInvariant (mod_name) ==
+  def sigmamo = STATE`GetModule (mod_name)
+  in return sigmamo.stateinv
+\end{vdm_al}
+The operation $GetModuleInvariant$ returns the state invariant of the current module.
+#endif VDMSL
+
+#ifdef VDMPP
+\section{Instance Invariants}
+\begin{vdm_al}
+CheckInstanceInvariant: () ==> bool
+CheckInstanceInvariant() ==
+  if not SETTINGS`INV()
+  then return true
+  else
+   (STKM`PushOS();
+    def mk_SEM`OBJ(-, inststrct,-) = STKM`GetCurObj()
+    in
+      for all cl in set dom inststrct do
+--        def Inv_cl_l = GetInstInv(cl)
+--        in
+--          for mk_AS`InstanceInv(expr,-,-) in Inv_cl_l do
+        def Inv_cl = GetInstInv(cl)
+        in
+          if Inv_cl <> []
+          then
+           (STKM`PushBlkEnv(AUX`MkEmptyBlkEnv(<READ_ONLY>));
+            STKM`PushClNmCurObj(cl,cl);
+            --def mk_(eval_state, resval) = DEBUG`EvalUninterruptedCmd(expr,[],[], "Check of Instance Invariant")
+            def mk_(eval_state, resval) = DEBUG`EvalAuxProgram(Inv_cl, "Check of Instance Invariant", false)
+            in
+             (--STKM`PopClNmCurObj();
+              --STKM`PopBlkEnv();
+              let expr_v = if is_STKM`Success(eval_state)
+                           then resval
+                           else undefined
+              in
+                if is_SEM`BOOL(expr_v)
+                then
+                  let mk_SEM`BOOL(b) = expr_v
+                  in
+                    if not b
+                    then
+                     (STKM`PopClNmCurObj();
+                      STKM`PopBlkEnv();
+                      STKM`PopOS();
+                      return false)
+                    else skip
+                elseif STKM`IsRuntimeErrorException(expr_v)
+                then
+                 (STKM`PushRuntimeErrorVal();
+                  return false)
+                else
+                 (RTERR`Error(RTERR`BOOL_EXPECTED, nil, nil, []);
+                  return false);
+              STKM`PopClNmCurObj();
+              STKM`PopBlkEnv();
+             );
+           );
+    STKM`PopOS();
+    return true
+   );
+\end{vdm_al}
+
+All invariants in the object (plus its superclasses) are transversed
+to check if they hold.
+
+\section{InitPool Operation}
+
+The next two operations {\em PushInitPool} and
+{\em PopInitPool} work on the pool {\em InitPool} by
+inserting and removing from the pool.
+
+\begin{vdm_al}
+operations
+PushInitPool: AS`Name ==> ()
+PushInitPool(nm) ==
+  InitPool := InitPool union {nm};
+\end{vdm_al}
+
+\begin{vdm_al}
+PopInitPool : AS`Name ==> ()
+PopInitPool(nm) ==
+  if nm in set InitPool
+  then InitPool := InitPool \ {nm}
+  else RTERR`Error(RTERR`INTERNAL_ERROR, nil, nil, []);
+\end{vdm_al}
+
+\section{Initialisation of the Sigma State}
+
+In the following it is assumed that the hierarchy state {\em hchy} has
+been updated. The initialisation of the {\em inst\_init\_val}, {\em
+  vls\_init}, and tps will be done so that the superclasses are
+initialised first. The {\em hchy} will be used to do this.
+
+The \emph{Sigma.classes} field is updated.
+
+\begin{vdm_al}
+operations
+Init_classes: () ==> ()
+Init_classes() ==
+ (Init := true;
+
+  for all nm in set dom classes do
+    SetClassInit(nm, false);
+
+  InitTheClasses(dom classes);
+  Init := false;
+ );
+
+#ifdef VICE
+StillInit: () ==> bool
+StillInit() ==
+  return Init;
+#endif VICE
+
+RemoveClassValues : () ==> ()
+RemoveClassValues() ==
+ (for all nm in set dom classes do
+   (classes(nm).vls_init  := { |-> };
+    classes(nm).statics  := { |-> })
+ );
+
+\end{vdm_al}
+
+The operation {\em InitTheClasses} initialises the the classes in the
+order of the inheritance dependency, thus the super classes are
+initialised first.  If one of the classes has associations
+(initialisation of instance varaibles or values) of an object of
+another class which has not yet been initialised, the call of
+initialisation is done in the operation {\em EvalNewStmt}. The pool
+  {\em InitPool} is used to check if there is a cyclic dependency
+  between the classes. Furthermore, each class in the state {\em
+    Sigma} has a field {\em isinit} describing if it has been initialised.
+
+\begin{vdm_al}
+InitTheClasses:  set of AS`Name ==> ()
+InitTheClasses(not_done) ==
+  if not_done <> {}
+  then
+    let nm in set not_done be st def s = GetAllSupers(nm) in s subset InitClasses()
+    in
+     (if not IsClassInit(nm)
+      then InitClassName(nm);
+      InitTheClasses(not_done \ {nm}));
+\end{vdm_al}
+
+
+It is assumed that the value definitions cannot contain references
+to instance variables. In the scope of the initialisation of instance
+variables it is legal to refer to values, both within the classes and
+values of super classes. Therefore, in the operation {\em InitClassName}
+we first initialises values and afterwards the instance variables are
+initialised. The local hierarchy is computed by the operation {\em
+  CLASS`TransLocalHchy}, the initialisation of the values by {\em
+  CLASS`InitClVls}, and the initialisation of the instance variables
+by the operation {\em CLASS`InitClInstVar}.
+
+The operation {\em InitClVls} initialises the values defined in the
+value definitions {\em vl\_def}.  The operation calls the auxiliary
+operation {\em GenInsMap}. This operation creates all the instance
+variables in the {\em classes} state. The instance variables are set
+to the {\em mk-UNDEF()} value. It is assumed that the value definition
+must not depend of the instance variables.  The strategy of the
+operation is to create a temporary object of the class and push it on
+the current object stack. The operation {\em GetVlsDef} computes
+values of the value definitions. The reason why we need to push the
+object on the stack is to create establish the right scope when
+comuting the value definition, that could depend on values from the
+super classes or of application of functions.
+
+The {\em InitClassName} checks that all the super classes of the class
+{\em nm} is initialised. If not the super classes that are
+initialised will be initialised, otherwise the class is
+initialised. The name of the class is inserted in the {\em InitPool},
+before it is initialised, and thus if there is a cyclic dependency of
+The initialisation of the class, the {\em InitPool} can be used to
+detect this (see {\em EvalNewStmt}).
+
+\begin{vdm_al}
+InitClassName: AS`Name ==> ()
+InitClassName(nm) ==
+ (if IsClassInit(nm) then return;
+  if IsSuperClassesInit(nm)
+  then
+   (SetClassInit(nm, true);
+    PushInitPool(nm);
+    let localhchy = CLASS`TransLocalHchy(nm)
+    in classes(nm) := mu(classes(nm), localhchy |-> localhchy);
+    def instvars = GetInstVars(nm)
+    in
+     (STKM`PushEmptyEnv();
+      STKM`PushEmptyEnv();
+      STKM`PushBlkEnv(AUX`MkEmptyBlkEnv(<READ_WRITE>));
+      CLASS`GenInsMap(nm);
+      def tmp_inst = GetInstInitVal(nm)
+      in
+        let tmp_obj = mk_SEM`OBJ(nm,tmp_inst,{|->})
+        in
+          def tmp_ref = STKM`MakeNewObj(tmp_obj,nil)
+          in
+           (STKM`PushCurObj(tmp_ref,nil,nil);
+            def vls_def = GetVlsDef(nm);
+                vls_init = CLASS`InitGV(vls_def)
+            in
+             (classes(nm).vls_init := vls_init;
+             );
+            STKM`ResetGuard(); -- PGL: It is not clear to me why
+            -- this reset is needed but it is!!!
+
+#ifdef VICE
+            if not classes(nm).sys
+            then
+#endif VICE
+              InitStaticInsts(nm,instvars,false);
+            STKM`PopCurObj();
+            STKM`PopEnvL();
+            STKM`PopEnvL();
+           );
+      SetClassInit(nm, true);
+      PopInitPool(nm);
+     )
+   )
+  else
+    def supers = { clnm | clnm in set GetAllSupers(nm) & not IsClassInit(clnm)}
+    in InitTheClasses(supers union {nm})
+ );
+\end{vdm_al}
+
+The InitStaticInsts operation initialises all the instance variables
+which are declared static. The last parameter is used to indicate whether we are in an init process without the AST having been changed.
+
+\begin{vdm_al}
+InitStaticInsts: AS`Name * (seq of AS`InstanceVarDef) * bool ==> ()
+InitStaticInsts(clsnm,instdef_l,ast_is_new) ==
+ (dcl already : bool := false;
+
+  PushInitClass(clsnm);
+  for instdef in instdef_l do
+    cases instdef:
+      mk_AS`InstAssignDef(mk_AS`AssignDef(var,-,-,-),access,stat,-) ->
+       (if var in set dom classes(clsnm).statics and ast_is_new
+        then already := true;
+        if stat and not already
+        then classes(clsnm).statics := classes(clsnm).statics ++ {var |-> mk_(mk_SEM`UNDEF(),access)}
+       ),
+      others -> skip
+    end;
+  for instdef in instdef_l do
+    cases instdef:
+      mk_AS`InstAssignDef(mk_AS`AssignDef(var,tp,dclinit,cid),access,stat,-) ->
+        if stat and not already
+        then
+          if dclinit = nil
+          then RTERR`InitError(RTERR`STATIC_IV_NO_VALUE,cid,[])
+          else
+            def mk_(eval_state, res) = DEBUG`EvalUninterruptedCmd(dclinit, [],[], "Init of Static Instances");
+                exp_v = if is_STKM`Success(eval_state)
+                        then res
+                        else undefined
+            in
+             (-- initialisation of static must not leave
+              -- values left on the evaluation stack
+
+              -- PGL: It looks as if these two lines are no
+              -- longer needed. Removing them get rid of a
+              -- problem with static instance variables
+
+              --if default
+              --then let - = STKM`Pop(1) in skip;
+              if SETTINGS`DTC()
+              then
+                if not SubType (exp_v, tp)
+                then RTERR`InitError(RTERR`TYPE_INCOMP,cid, [])
+                else skip;
+#ifdef VICE
+              if classes(clsnm).sys
+              then
+               (VC`AddInstDecl(clsnm,var,exp_v);
+                if exp_v in set dom obj_tab
+                then
+                  let instm = obj_tab(exp_v).sem.ins
+                  in
+                    for all clnm in set dom instm do
+                      for all instnm in set dom instm(clnm) do
+                        let val_v = (instm(clnm)(instnm)).#1
+                        in
+                          VC`LogInstVarChange(instnm,val_v,exp_v, STKM`GetCurThread());
+               );
+#endif VICE
+              classes(clsnm).statics := classes(clsnm).statics ++ {var |-> mk_(exp_v,access)};
+             ),
+      others -> skip
+    end;
+  PopInitClass();
+);
+
+PopInitClass: () ==> ()
+PopInitClass() ==
+  initclstack := tl initclstack
+pre initclstack <> [];
+
+PushInitClass: AS`Name ==> ()
+PushInitClass(clsnm) ==
+  initclstack := [clsnm] ^ initclstack;
+\end{vdm_al}
+
+The operation {\em IsSuperClassesInit} checks of all the supers classes
+of class {\em name} has been changed.
+
+\begin{vdm_al}
+IsSuperClassesInit: AS`Name ==> bool
+IsSuperClassesInit(name) ==
+  return forall nm in set GetAllSupers(name) & IsClassInit(nm);
+\end{vdm_al}
+#endif VDMPP
+
+#ifdef VDMSL
+\section{State Modification related to Modules}
+\begin{vdm_al}
+operations
+OM_TransInsertModule : (AS`Module|AS`DLModule) ==> ()
+OM_TransInsertModule (mod_sig) ==
+  let mod_name = mod_sig.nm
+  in
+   (CMPL`SetClMod(mod_name);
+    CMPL`ResetProgramTable(mod_name);
+
+    if (mod_name in set dom mods) or (mod_name in set dom imods)
+    then error
+    else
+      if is_AS`DLModule(mod_sig)
+      then
+       ( dcl sigmamo : GLOBAL`SigmaIMO := MOD`TranslateDLModule (mod_sig);
+         imods := imods ++ { mod_name |-> sigmamo} )
+      else
+       ( dcl sigmamo : GLOBAL`SigmaMO := MOD`TranslateModule (mod_sig);
+         mods := mods ++ { mod_name |-> sigmamo } )
+   );
+\end{vdm_al}
+
+The operation $OM-TransInsertModule$ translates a module definition into a
+module value, and adds the newly created value to the proper map, i.e.\ a
+parameterized module value is added to the map $pmods$, an implementation
+module value is added to the map $imods$ and all other
+module values are added to the map $mods$. An error is generated if the
+module name is already defined.
+
+\begin{vdm_al}
+operations
+
+GetModule : AS`Name ==> GLOBAL`SigmaMO | GLOBAL`SigmaIMO
+GetModule (mod_name) ==
+  cases true:
+    (mod_name in set dom mods)  -> return mods(mod_name),
+    (mod_name in set dom imods) -> return imods(mod_name),
+    others -> error
+  end;
+\end{vdm_al}
+
+
+\begin{vdm_al}
+operations
+
+IsEmptyMods : () ==> bool
+IsEmptyMods() ==
+  return mods = {|->}
+\end{vdm_al}
+This operation checks if an module is onto the module stack.
+
+\begin{vdm_al}
+operations
+
+PushModuleIfAny : () ==> ()
+PushModuleIfAny() ==
+  if card dom mods > 0
+  then
+    let mod_name in set dom mods
+    in STKM`PushModule(mod_name);
+
+\end{vdm_al}
+
+--\begin{vdm_al}
+--operations
+--
+--UpdateRenameAndImport : AS`Name * AS`Name * [AS`ImportSig] ==> ()
+--UpdateRenameAndImport (mod_name, new_name, imp) ==
+--  mods(mod_name).ren := mods(mod_name).ren ++ MOD`BuildRenameMap ({ new_name |-> imp });
+--\end{vdm_al}
+
+The operation $UpdateRenameAndImport$ updates the renamings of the
+instantiating module with the possible renamings, as defined in the
+instantiation.
+
+\begin{vdm_al}
+operations
+
+IsGlobalState : AS`Name * AS`Name ==> bool * [GLOBAL`State]
+IsGlobalState (loc_name, mod_name) ==
+  def gs = GetModuleState(mod_name)
+  in
+    if (loc_name in set dom gs)
+    then return mk_(true, gs(loc_name))
+    else return mk_(false, nil);
+\end{vdm_al}
+
+This operation returns true if the input identifier is defined in the
+domain of the current global state.
+
+\begin{vdm_al}
+operations
+
+GetGlobalState : AS`Name * AS`Name ==> GLOBAL`State
+GetGlobalState (loc_name, mod_name) ==
+  def gs = GetModuleState(mod_name)
+  in return gs(loc_name)
+\end{vdm_al}
+
+This operation returns the global state value and type for the input
+identifier.
+
+\begin{vdm_al}
+operations
+
+SetGlobalState : AS`Name * AS`Name * GLOBAL`State ==> ()
+SetGlobalState (loc_name, mod_name, s_val) ==
+  mods(mod_name).gs := mods(mod_name).gs ++ { loc_name |-> s_val };
+\end{vdm_al}
+
+This operation modifies the current global state. The input identifier is
+assigned the input state value and type.
+
+\begin{vdm_al}
+operations
+IsTheState: AS`Name * AS`Name ==> bool
+IsTheState (name, modnm) ==
+  def sigmamo = GetModule(modnm)
+  in
+    return name = sigmamo.stp_id
+\end{vdm_al}
+This operation return true if the name is equal to the name of the
+state
+
+\begin{vdm_al}
+operations
+GetTheState: AS`Name * AS`Name ==> SEM`REC
+GetTheState (-, modnm) ==
+  def sigmamo = GetModule(modnm);
+      name = sigmamo.stp_id;
+      mk_(-,namem,-,-) = sigmamo.recsel(name);
+      gs = sigmamo.gs;
+      nm = AUX`UniqueTagName(name);
+      v = { namem(varName) |-> gs(varName).val | varName in set dom namem }
+  in
+    return mk_SEM`REC(nm,v, {|->})
+\end{vdm_al}
+This operation return the entire global state of the module.
+
+\begin{vdm_al}
+operations
+SetTheState: AS`Name * AS`Name * SEM`REC ==> ()
+SetTheState (-,modnm,mk_SEM`REC(-,val,-)) ==
+  def sigmamo = GetModule(modnm);
+      name = sigmamo.stp_id;
+      mk_(-,namem,-,-) = sigmamo.recsel(name);
+      gs = sigmamo.gs
+  in
+    mods(modnm).gs := { varName |-> mu(gs(varName), val |-> val(namem(varName))) | varName in set dom namem }
+\end{vdm_al}
+
+\begin{vdm_al}
+operations
+GetCurrentState : AS`Name ==> GLOBAL`StateMap
+GetCurrentState (mod_name) ==
+  return GetModuleState(mod_name)
+\end{vdm_al}
+
+This operation returns the current global state map.
+
+\begin{vdm_al}
+operations
+GetModuleState : AS`Name ==> GLOBAL`StateMap
+GetModuleState (name) ==
+  def sigmamo = GetModule (name)
+  in return sigmamo.gs
+\end{vdm_al}
+
+This operation returns the global state for the given module name.
+
+\begin{vdm_al}
+operations
+
+IsGlobalVal : AS`Name * AS`Name ==> bool * [SEM`VAL]
+IsGlobalVal (loc_name, mod_name) ==
+  def sigmamo = GetModule (mod_name)
+  in
+    if sigmamo.gv <> nil and loc_name in set dom sigmamo.gv
+    then let mk_(val, -) = sigmamo.gv(loc_name)
+         in return mk_(true, val)
+    else return mk_(false, nil);
+\end{vdm_al}
+
+This operation returns true if the input identifier is defined in the
+domain of the global value map for the current module.
+
+#endif VDMSL
+
+#ifdef VDMPP
+
+The operation {\em SetInstanceVar} sets the value {\em val-v} to the
+instance variable identifier {\em nm}. All possible object references
+are incremented, and possible reference counters of the all oldvalue
+is decremented.
+
+\begin{vdm_al}
+SetInstanceVar: AS`Name * SEM`VAL * (bool * bool * [SEM`VAL] * [AS`Type] * [AS`Name] * [AS`Access]) ==> ()
+SetInstanceVar(nm, val_v, iios) ==
+  def mk_(isit,-,-,-,clnm,-) = iios;
+      mk_SEM`OBJ(-, inststrct,-) = STKM`GetCurObj();
+      the_ref = STKM`GetCurObjRef();
+      thename = AUX`ExtractName(nm)
+  in
+    if isit
+       and (clnm in set dom inststrct and thename in set dom inststrct(clnm)
+             or thename in set dom classes(clnm).statics)
+    then
+     (
+#ifdef VICE
+      VC`LogInstVarChange(nm,val_v,the_ref,STKM`GetCurThread());
+#endif VICE
+      if thename in set dom classes(clnm).statics
+      then
+        let mk_(-,access) = classes(clnm).statics(thename)
+        in  classes(clnm).statics := classes(clnm).statics ++ {thename |->  mk_(val_v,access)}
+      else
+        let mk_(-,access) = obj_tab(the_ref).sem.ins(clnm)(thename)
+         in
+          (
+#ifdef VICE
+           def opnms = SCHD`BlockedObjRef(the_ref);
+               deps = classes(clnm).depnms
+           in
+             if exists nm in set opnms inter dom deps & deps(nm) = <ALL> or thename in set deps(nm)
+             then SCHD`PotentialPerChange(the_ref);
+#endif VICE
+           obj_tab(the_ref).sem.ins(clnm)(thename) := mk_(val_v,access)
+          );
+     )
+    else RTERR`Error(RTERR`INIT_NOT_POSSIBLE, nil, nil, []);
+\end{vdm_al}
+
+\begin{vdm_al}
+operations
+  IsDLClass : AS`Name ==> bool
+  IsDLClass(n) ==
+    return n in set dom dlops;
+
+  InsertDLClass : AS`Name ==> ()
+  InsertDLClass(cl) ==
+    (dlops(cl) := mk_token(nil);
+    );
+
+  InsertDLOp : AS`Name * AS`Name ==> ()
+  InsertDLOp(cl, opnm) ==
+    (let clOp = AUX`ConstructDoubleName(cl,opnm) in
+       dlops(clOp) := mk_token(nil);
+    );
+
+  IsDLOp : AS`Name * AS`Name ==> bool
+  IsDLOp(cl, opnm) ==
+    (let clOp = AUX`ConstructDoubleName(cl,opnm) in
+       return clOp in set dom  dlops;
+    );
+
+  RegisterDLClass : AS`Name * AS`TextLit * [AS`Definitions] ==> ()
+  RegisterDLClass(clnm, -, defs) ==
+    (InsertDLClass(clnm);
+     if defs <> nil
+     then
+       let m = defs.fnm munion defs.opm
+       in
+         for all nm in set dom m do
+           if m(nm).body.body = <NOTYETSPEC>
+           then InsertDLOp(clnm, nm)
+    );
+
+\end{vdm_al}
+
+#endif VDMPP
+
+\begin{vdm_al}
+EvalFctTypeInstExpr: SEM`POLY * seq of AS`Type ==> SEM`VAL
+EvalFctTypeInstExpr (fct_v, inst) ==
+  cases true:
+    (is_SEM`ExplPOLY(fct_v)) -> def tm = STKM`HdTypeInst();
+                                    new_inst = ConvertTypeVarTypeList(inst, tm)
+                                in EXPR`ConvertPolyToFn(fct_v, new_inst),
+    others -> (RTERR`Error(RTERR`NO_POLY_FUNC, nil, nil, []);
+               return fct_v;)
+  end;
+
+#ifdef VDMPP
+EvalOverFctTypeInstExpr: SEM`OverOPFN * seq of AS`Type ==> SEM`VAL
+EvalOverFctTypeInstExpr (mk_SEM`OverOPFN(overload,objref), inst) ==
+  (def tm = STKM`HdTypeInst();
+       new_inst = ConvertTypeVarTypeList(inst, tm)
+   in
+     (dcl mnm_to_nm_s : map AS`Name to (set of AS`Name) := {|->},
+          nt_to_v : map (AS`Name * AS`Name) to SEM`VAL := {|->},
+          new_over : map (AS`Name * AS`Name) to ((seq of AS`Type) * AS`Access * [SEM`CompExplFN]) := {|->},
+          new_over2 : map (AS`Name * AS`Name) to ((seq of AS`Type) * AS`Access * [SEM`CompExplFN]) := {|->};
+      for all nt in set dom overload do
+        def mk_(overnm, clsnm) = nt;
+            mk_(tp_l, acc, v) = overload(nt);
+            mk_(found, mk_(opval,-)) = LookupAllFnsOpsPolys(clsnm, overnm)
+        in
+          if found
+          then
+            let tv_l = opval.tpparms
+            in
+              if len tv_l = len inst
+              then def tp_l' = EXPR`SubstTypeList(tp_l, tv_l, new_inst)
+                   in
+                     (new_over := new_over ++ { nt |-> mk_(tp_l', acc, v) };
+                      mnm_to_nm_s := mnm_to_nm_s ++ { overnm |-> if overnm in set dom mnm_to_nm_s
+                                                                 then mnm_to_nm_s(overnm) union {clsnm}
+                                                                 else {clsnm} };
+                      nt_to_v := nt_to_v munion { nt |-> opval });
+      for all mnm in set dom mnm_to_nm_s do
+        def nm_s = mnm_to_nm_s(mnm);
+            mk_(doesthere, child) = ExistsOneChild(nm_s, nm_s)
+        in if doesthere
+           then
+             let nt = mk_(mnm, child),
+                 mk_(tp_l, acc, -) = new_over(nt)
+             in new_over2 := new_over2 munion { nt |-> mk_(tp_l, acc, EXPR`ConvertPolyToFn(nt_to_v(nt), new_inst)) };
+      cases rng new_over2:
+        {} -> RTERR`ErrorVal(RTERR`NOOVERLOADED, nil, nil, []),
+        {r} -> return r.#3,
+        others -> return mk_SEM`OverOPFN(new_over2, objref)
+      end;)
+  );
+#endif VDMPP
+
+ConvertTypeVarTypeList: seq of AS`Type * map AS`TypeVar to AS`Type ==> seq of AS`Type
+ConvertTypeVarTypeList(tp_l, tm) ==
+  return [ ConvertTypeVarType(tp_l(idx), tm) | idx in set inds tp_l ];
+
+ConvertTypeVarType: AS`Type * map AS`TypeVar to AS`Type ==> AS`Type
+ConvertTypeVarType(type, tm) ==
+  cases type:
+    mk_AS`TypeVar(-,-) -> if type in set dom tm
+                          then return ConvertTypeVarType(tm(type), tm)
+                          else (RTERR`Error(RTERR`TYPE_UNKNOWN, nil, nil, []);
+                                return type;),
+    mk_AS`CompositeType(-, fields, -) -> def flds = [ mu(fields(i), type |-> ConvertTypeVarType(fields(i).type, tm))
+                                                      | i in set inds  fields ]
+                                         in return mu(type, fields |-> flds),
+    mk_AS`UnionType(tps, -) -> return mu(type, tps |-> ConvertTypeVarTypeList(tps, tm)),
+    mk_AS`ProductType(tps, -) -> return mu(type, tps |-> ConvertTypeVarTypeList(tps, tm)),
+    mk_AS`OptionalType(tp, -) -> return mu(type, tp |-> ConvertTypeVarType(tp, tm)),
+    mk_AS`BracketedType(tp, -) -> return mu(type, tp |-> ConvertTypeVarType(tp, tm)),
+    mk_AS`Set0Type(elemtp, -) -> return mu(type, elemtp |-> ConvertTypeVarType(elemtp, tm)),
+    mk_AS`Set1Type(elemtp, -) -> return mu(type, elemtp |-> ConvertTypeVarType(elemtp, tm)),
+    mk_AS`Seq0Type(elemtp, -) -> return mu(type, elemtp |-> ConvertTypeVarType(elemtp, tm)),
+    mk_AS`Seq1Type(elemtp, -) -> return mu(type, elemtp |-> ConvertTypeVarType(elemtp, tm)),
+    mk_AS`GeneralMap0Type(mapdom, maprng, -) -> return mu(type, mapdom |-> ConvertTypeVarType(mapdom, tm),
+                                                               maprng |-> ConvertTypeVarType(maprng, tm)),
+    mk_AS`GeneralMap1Type(mapdom, maprng, -) -> return mu(type, mapdom |-> ConvertTypeVarType(mapdom, tm),
+                                                               maprng |-> ConvertTypeVarType(maprng, tm)),
+    mk_AS`InjectiveMap0Type(mapdom, maprng, -) -> return mu(type, mapdom |-> ConvertTypeVarType(mapdom, tm),
+                                                                 maprng |-> ConvertTypeVarType(maprng, tm)),
+    mk_AS`InjectiveMap1Type(mapdom, maprng, -) -> return mu(type, mapdom |-> ConvertTypeVarType(mapdom, tm),
+                                                                 maprng |-> ConvertTypeVarType(maprng, tm)),
+    mk_AS`PartialFnType(fndom, fnrng, -) -> return mu(type, fndom |-> ConvertTypeVarTypeList(fndom, tm),
+                                                            fnrng |-> ConvertTypeVarType(fnrng, tm)),
+    mk_AS`TotalFnType(fndom, fnrng, -) -> return mu(type, fndom |-> ConvertTypeVarTypeList(fndom, tm),
+                                                          fnrng |-> ConvertTypeVarType(fnrng, tm)),
+    mk_AS`OpType(opdom, oprng, -) -> return mu(type, opdom |-> ConvertTypeVarTypeList(opdom, tm),
+                                                     oprng |-> ConvertTypeVarType(oprng, tm)),
+    mk_AS`TypeName(-,-) -> return type,
+    others -> return type
+  end;
+
+ConvertPattern: STKM`Pattern * map AS`TypeVar to AS`Type ==> STKM`Pattern
+ConvertPattern(pat, tm) ==
+  cases pat:
+    mk_STKM`PatternName(-,tp,-)       -> cases tp:
+                                           nil    -> return pat,
+                                           others -> return mu(pat, tp |-> ConvertTypeVarType(tp,tm))
+                                         end,
+    mk_STKM`MatchVal(-,-)             -> return pat,
+    mk_STKM`SetEnumPattern(els,-)     -> return mu(pat, els |-> [ ConvertPattern(els(i), tm) | i in set inds els ]),
+    mk_STKM`SetUnionPattern(lp, rp,-) -> return mu(pat, lp |-> ConvertPattern(lp, tm),
+                                                 rp |-> ConvertPattern(rp, tm)),
+    mk_STKM`SeqEnumPattern(els,-)     -> return mu(pat, els |-> [ ConvertPattern(els(i), tm) | i in set inds els ]),
+    mk_STKM`SeqConcPattern(lp, rp,-)  -> return mu(pat, lp |-> ConvertPattern(lp, tm),
+                                                 rp |-> ConvertPattern(rp, tm)),
+    mk_STKM`MapEnumPattern(mls,-)     -> return mu(pat, mls |-> [ ConvertPattern(mls(i), tm) | i in set inds mls ]),
+    mk_STKM`MapletPattern(dp,rp,-)    -> return mu(pat, dp |-> ConvertPattern(dp, tm),
+                                                 rp |-> ConvertPattern(rp, tm)),
+    mk_STKM`MapMergePattern(lp, rp,-) -> return mu(pat, lp |-> ConvertPattern(lp, tm),
+                                                 rp |-> ConvertPattern(rp, tm)),
+    mk_STKM`TuplePattern(flds,-)      -> return mu(pat, fields |-> [ ConvertPattern(flds(i), tm) | i in set inds flds ]),
+    mk_STKM`RecordPattern(-,flds,-)   -> return mu(pat, fields |-> [ ConvertPattern(flds(i), tm) | i in set inds flds ]),
+#ifdef VDMPP
+    mk_STKM`ObjectPattern(-,flds,-)   -> return mu(pat, fields |-> [ ConvertPattern(flds(i), tm) | i in set inds flds ]),
+    mk_STKM`FieldPattern(-,fp,-)      -> return mu(pat, pat |-> ConvertPattern(fp, tm)),
+#endif VDMPP
+    others -> error
+  end;
+\end{vdm_al}
+
+
+This function instantiates a semantic polymorphic function value, and
+returns a semantic function value.
+
+#ifdef VDMSL
+\begin{vdm_al}
+IsSubTypeName : SEM`VAL * AS`TypeName * bool ==> bool
+IsSubTypeName(val_v, mk_AS`TypeName(name_,cid),checkinv) ==
+  def mk_(-, name) = AUX`LookUpRename(name_)
+  in
+  cases AUX`IsTypeDef (name):
+    mk_(true,shape,Inv,-) ->
+     (dcl modulepushed : bool := false;
+      if AUX`IsRealName (name)
+      then
+       (STKM`PushModule (ExtractModule (name));
+        modulepushed := true);
+
+      if RealSubType(val_v, shape, checkinv)
+      then
+        if Inv <> nil and checkinv
+        then
+          def env_s = PAT`PatternMatch(CPAT`P2P(Inv.pat), val_v)
+          in
+            if env_s <> {}
+            then
+              let env in set env_s
+              in
+               (STKM`PushBlkEnv(env);
+                def mk_(eval_state, resval) = DEBUG`EvalAuxCmd(Inv.expr,[],[],
+                                           "Invariant check for type " ^ AUX`SingleNameToString(name))
+                in
+                 (STKM`PopBlkEnv();
+                  if modulepushed then STKM`PopModule();
+
+                  let Inv_v = if is_STKM`Success(eval_state)
+                              then resval
+                              else undefined
+                  in
+                    (if is_SEM`BOOL(Inv_v)
+                     then let mk_SEM`BOOL(b) = Inv_v
+                          in return b
+                     else RTERR`ErrorVal(RTERR`BOOL_EXPECTED, Inv_v, nil, []))))
+            else RTERR`ErrorVal(RTERR`EMPTY_ENV_S, val_v, mk_AS`TypeName(name,cid), [])
+        else (if modulepushed then STKM`PopModule();
+              return true)
+      else (if modulepushed then STKM`PopModule();
+            return false)
+     ),
+    others -> RTERR`ErrorVal(RTERR`TYPE_UNKNOWN, nil, nil, [])
+  end;
+\end{vdm_al}
+#endif VDMSL
+
+#ifdef VDMPP
+\begin{vdm_al}
+IsSubTypeName : SEM`VAL * AS`TypeName * bool ==> bool
+IsSubTypeName(val_v, mk_AS`TypeName(tp,-),checkinv) ==
+  def mk_(isinscope,type,Inv,defcl,access) = AUX`IsTypeDef(tp)
+  in
+    if not isinscope
+    then
+      if access = nil
+      then RTERR`ErrorVal(RTERR`TYPE_UNKNOWN, nil, nil, [])
+      else RTERR`ErrorVal(RTERR`TYPE_NOT_IN_SCOPE, nil, nil, [])
+    else
+     (if not RealSubType(val_v,type,checkinv)
+      then return false
+      else
+        if checkinv and Inv <> nil
+        then
+         (STKM`PushClNmCurObj(defcl,defcl);
+          def env_s = PAT`PatternMatch(CPAT`P2P(Inv.pat), val_v);
+              instr_pre  = [mk_INSTRTP`NEWPOSABSOBJ(defcl)];
+              instr_post = [mk_INSTRTP`NEWCOMPL(false)]
+          in
+           (STKM`PopClNmCurObj();
+            if env_s <> {}
+            then
+              let env in set env_s
+              in
+               (STKM`PushBlkEnv(env);
+                STKM`PushClNmCurObj(defcl,defcl);
+                def mk_(eval_state, resval) = DEBUG`EvalUninterruptedCmd(Inv.expr,
+                                                   instr_pre,
+                                                   instr_post, "Dynamic Type Check")
+                in
+                 (def - = STKM`Pop(1) in skip;
+                  STKM`PopClNmCurObj();
+                  STKM`PopBlkEnv();
+                  let Inv_v = if is_STKM`Success(eval_state)
+                              then resval
+                              else undefined
+                  in
+                   (if is_SEM`BOOL(Inv_v)
+                    then let mk_SEM`BOOL(b) = Inv_v
+                         in return b
+                    else RTERR`ErrorVal(RTERR`BOOL_EXPECTED, Inv_v, nil, [])))
+               )
+            else error
+           )
+         )
+        else
+          return true;
+     );
+\end{vdm_al}
+#endif VDMPP
+
+This operation is used in dynamic type checking, and is called by {\em
+  SubType} in case the input type is a type name. The input value is
+checked against the type definition of the type name, and a possible
+invariant check is made.
+Input variables:
+\begin{itemize}
+\item val\_v: A semantic value. {\em SubType} checks if it is a
+  subtype of the type {\em tp}.
+\item tp: An AS`Type, or in case we are evaluating a a lambda
+  expression an AllType, or in case we are evaluating the return type
+  of an operation the optional type {\em nil}.
+\end{itemize}
+
+\begin{vdm_al}
+operations
+
+SubType : SEM`VAL * GLOBAL`Type ==> bool
+SubType(val_v, tp) ==
+  if not SETTINGS`DTC() and not isTypeJudgement
+  then return true
+  else RealSubType(val_v,tp,SETTINGS`INV());
+
+SetTypeJudgement : () ==> ()
+SetTypeJudgement() ==
+  isTypeJudgement := true;
+
+UnsetTypeJudgement : () ==> ()
+UnsetTypeJudgement() ==
+  isTypeJudgement := false;
+
+RealSubType : SEM`VAL * GLOBAL`Type * bool ==> bool
+RealSubType(val_v, tp, checkinv) ==
+  if is_SEM`EXIT(val_v) or is_SEM`UNDEF(val_v)
+  then return true
+  else
+    cases tp:
+      mk_AS`TypeName(-,-)        -> IsSubTypeName(val_v, tp,checkinv),
+      mk_AS`BracketedType(btp,-) -> RealSubType(val_v, btp,checkinv),
+      mk_AS`OptionalType(ttp,-)  ->
+            return is_SEM`NIL(val_v) or RealSubType(val_v, ttp, checkinv),
+      mk_AS`UnionType(tp_l,-)    ->
+            return exists t in set elems tp_l & RealSubType(val_v, t, checkinv),
+      mk_AS`VoidType(-)          -> return is_SEM`CONT(val_v) or is_SEM`RETURN(val_v),
+      mk_AS`TokenType(-)         -> return is_SEM`TOKEN(val_v),
+      mk_AS`AllType(-)           -> return true,
+      mk_AS`BooleanType(-)       -> return is_SEM`BOOL(val_v),
+      mk_AS`NumericType(ttp,-)   ->
+            return cases val_v:
+                     mk_SEM`NUM(val) -> cases ttp:
+                                          <NATONE>  -> is_nat1(val),
+                                          <NAT>     -> is_nat(val),
+                                          <INTEGER> -> is_int(val),
+                                          <RAT>     -> is_rat(val),
+                                          <REAL>    -> is_real(val)
+                                        end,
+                     others -> false
+                   end,
+      mk_AS`CharType(-)          -> return is_SEM`CHAR(val_v),
+      mk_AS`QuoteType(mk_AS`QuoteLit(val,-),-) -> return cases val_v:
+                                                           mk_SEM`QUOTE((val)) -> true,
+                                                           others -> false
+                                                         end,
+      mk_AS`CompositeType(tag, fields_l,-) ->
+            cases val_v:
+              mk_SEM`REC (rtag, v, v_dc) ->
+                def mk_(the_tag, isinscope_tp) = AUX`ExtractTagName(tag, {});
+                    mk_(the_rtag, isinscope_val) = AUX`ExtractTagName(rtag, {})
+                in
+                  if isinscope_tp and isinscope_val
+                  then
+                    if (the_tag = the_rtag) and
+                       (card dom v + card dom v_dc = len fields_l)
+                    then return (forall i in set dom v &
+                                   RealSubType(v(i), fields_l(i).type, checkinv))
+                                and
+                                (forall i in set dom v_dc &
+                                   RealSubType(v_dc(i), fields_l(i).type, checkinv))
+                    else return false
+                  else
+                   (RTERR`Error(RTERR`TAG_UNKNOWN, nil, nil, []);
+                    return false),
+              others -> return false
+            end,
+      mk_AS`ProductType(tp_l,-) ->
+            cases val_v:
+              mk_SEM`TUPLE(v_tup) ->
+                --if (len v_tup >= 2) and (len tp_l >= 2) and (len v_tup = len tp_l)
+                if len v_tup = len tp_l
+                then
+                  return forall i in set inds v_tup & RealSubType(v_tup(i), tp_l(i), checkinv)
+                else return false,
+              others -> return false
+            end,
+      mk_AS`Set0Type(ttp,-),
+      mk_AS`Set1Type(ttp,-) ->
+            cases val_v:
+              mk_SEM`SET(v_set) -> return (is_AS`Set0Type(tp) or v_set <> {}) and
+                                           forall sval_v in set v_set &
+                                             RealSubType(sval_v, ttp, checkinv),
+              others -> return false
+            end,
+      mk_AS`Seq0Type(ttp,-),
+      mk_AS`Seq1Type(ttp,-) ->
+            cases val_v:
+              mk_SEM`SEQ(v_seq) -> return (is_AS`Seq0Type(tp) or v_seq <> []) and
+                                           forall i in set inds v_seq &
+                                             RealSubType(v_seq(i), ttp, checkinv),
+              others -> return false
+            end,
+      mk_AS`GeneralMap0Type(dtp,rtp,-),
+      mk_AS`GeneralMap1Type(dtp,rtp,-) ->
+            cases val_v:
+              mk_SEM`MAP(val) -> return (is_AS`GeneralMap0Type(tp) or val <> {|->}) and
+                                   forall dval_v in set dom val &
+                                     (RealSubType(dval_v, dtp, checkinv) and
+                                      RealSubType(val(dval_v), rtp, checkinv)),
+              others -> return false
+            end,
+      mk_AS`InjectiveMap0Type(dtp,rtp,-),
+      mk_AS`InjectiveMap1Type(dtp,rtp,-) ->
+            cases val_v:
+              mk_SEM`MAP(val) -> return (is_AS`InjectiveMap0Type(tp) or val <> {|->}) and
+                                  (card dom val = card rng val) and
+                                  forall dval_v in set dom val &
+                                    (RealSubType(dval_v, dtp, checkinv) and
+                                     RealSubType(val(dval_v), rtp, checkinv)),
+              others -> return false
+            end,
+#ifdef VDMPP
+      mk_GLOBAL`ObjRefType(nm)   ->
+            cases val_v:
+              mk_SEM`OBJ_Ref(-,nm_v) -> return (nm_v = nm) or IsSubClass(nm_v, nm),
+              others -> return false
+            end,
+#endif VDMPP
+      mk_AS`PartialFnType(-,-,-),
+      mk_AS`TotalFnType(-,-,-)   ->
+        cases val_v:
+          mk_SEM`CompExplFN(fl,-) -> let ffn = fl(1),
+                                         lfn = fl(len fl)
+                                     in
+                                       def ftp = INSTR`UpdateTypeInfo(ffn.tp, ffn.modName);
+                                           ltp = INSTR`UpdateTypeInfo(lfn.tp, lfn.modName);
+                                       in return SubTypeAS(mu(ftp, fnrng |-> ltp.fnrng), tp),
+          mk_SEM`ExplPOLY(-,ptp,-,-,-,-,modName,-,-) -> return SubTypeAS(INSTR`UpdateTypeInfo(ptp, modName), tp),
+          others -> return false
+        end,
+      mk_AS`OpType(-,-,-) -> 
+        cases val_v:
+          mk_SEM`ExplOP(otp,-,-,-,-,-,-,modName,-,-,-) ->
+             return SubTypeAS(INSTR`UpdateTypeInfo(otp, modName), tp),
+          others -> return false
+        end,
+      mk_AS`TypeVar(-,-)         -> def tm = STKM`HdTypeInst()
+                                    in
+                                      if tp in set dom tm
+                                      then RealSubType(val_v,tm(tp),checkinv)
+                                      else return false,
+      others                     -> return false
+    end;
+
+SubTypeAS: GLOBAL`Type * GLOBAL`Type ==> bool
+SubTypeAS(ltp, rtp) ==
+  if rtp = ltp 
+  then return true
+  else
+   (cases ltp:
+      mk_AS`BracketedType(btp,-) -> SubTypeAS(btp, rtp),
+      mk_AS`UnionType(ltp_l,-)   -> return forall t in set elems ltp_l & SubTypeAS(t, rtp),
+      mk_AS`TypeVar(-,-)         -> def tm = STKM`HdTypeInst()
+                                    in
+                                      if ltp in set dom tm
+                                      then SubTypeAS(tm(ltp), rtp)
+                                      else return false,
+      mk_AS`TypeName(-,-)        ->
+#ifdef VDMSL
+          def mk_(-, name) = AUX`LookUpRename(ltp.name)
+          in
+            cases AUX`IsTypeDef (name):
+              mk_(true,shape,-,-) -> return SubTypeAS(shape, rtp),
+              others -> (RTERR`Error(RTERR`TYPE_UNKNOWN, nil, nil, []);
+                         return false)
+            end,
+#endif VDMSL
+#ifdef VDMPP
+          def mk_(isinscope,type,-,-,access) = AUX`IsTypeDef(ltp.name)
+          in
+            if not isinscope
+            then
+             (if access = nil
+              then RTERR`Error(RTERR`TYPE_UNKNOWN, nil, nil, [])
+              else RTERR`Error(RTERR`TYPE_NOT_IN_SCOPE, nil, nil, []);
+              return false)
+            else
+              return SubTypeAS(type,rtp),
+#endif VDMPP
+      others -> skip
+    end;
+    cases rtp:
+      mk_AS`TypeName(-,-)        ->
+#ifdef VDMSL
+          def mk_(-, name) = AUX`LookUpRename(rtp.name)
+          in
+            cases AUX`IsTypeDef (name):
+              mk_(true,shape,-,-) -> return SubTypeAS(ltp, shape),
+              others -> (RTERR`Error(RTERR`TYPE_UNKNOWN, nil, nil, []);
+                         return false)
+            end,
+#endif VDMSL
+#ifdef VDMPP
+          def mk_(isinscope,type,-,-,access) = AUX`IsTypeDef(rtp.name)
+          in
+            if not isinscope
+            then
+             (if access = nil
+              then RTERR`Error(RTERR`TYPE_UNKNOWN, nil, nil, [])
+              else RTERR`Error(RTERR`TYPE_NOT_IN_SCOPE, nil, nil, []);
+              return false)
+            else
+              return SubTypeAS(ltp, type),
+#endif VDMPP
+      mk_AS`BracketedType(btp,-)  -> SubTypeAS(ltp, btp),
+      mk_AS`NumericType(<NATONE>,-)   -> cases ltp:
+                                           mk_AS`NumericType(<NATONE>,-) -> return true,
+                                           others -> return false
+                                         end,
+      mk_AS`NumericType(<NAT>,-)      -> cases ltp:
+                                           mk_AS`NumericType(<NATONE>,-),
+                                           mk_AS`NumericType(<NAT>,-)     -> return true,
+                                           others -> return false
+                                         end,
+      mk_AS`NumericType(<INTEGER>,-)  -> cases ltp:
+                                           mk_AS`NumericType(<NATONE>,-),
+                                           mk_AS`NumericType(<NAT>,-),
+                                           mk_AS`NumericType(<INTEGER>,-) -> return true,
+                                           others -> return false
+                                         end,
+      mk_AS`NumericType(<RAT>,-)      -> cases ltp:
+                                           mk_AS`NumericType(<NATONE>,-),
+                                           mk_AS`NumericType(<NAT>,-),
+                                           mk_AS`NumericType(<INTEGER>,-),
+                                           mk_AS`NumericType(<RAT>,-)     -> return true,
+                                           others -> return false
+                                         end,
+      mk_AS`NumericType(<REAL>,-)     -> cases ltp:
+                                           mk_AS`NumericType(<NATONE>,-),
+                                           mk_AS`NumericType(<NAT>,-),
+                                           mk_AS`NumericType(<INTEGER>,-),
+                                           mk_AS`NumericType(<RAT>,-),
+                                           mk_AS`NumericType(<REAL>,-)    -> return true,
+                                           others -> return false
+                                         end,
+      mk_AS`CompositeType(tag,-,-) ->
+                            cases ltp:
+                              mk_AS`CompositeType(rtag,-,-) ->
+                                 def mk_(the_tag, isinscope_tp) = AUX`ExtractTagName(tag, {});
+                                     mk_(the_rtag, isinscope_val) = AUX`ExtractTagName(rtag, {})
+                                 in
+                                   if isinscope_tp and isinscope_val
+                                   then return (the_tag = the_rtag)
+                                   else
+                                    (RTERR`Error(RTERR`TAG_UNKNOWN, nil, nil, []);
+                                     return false),
+                              others -> return false
+                            end,
+      mk_AS`UnionType(rtp_l,-) -> return exists t in set elems rtp_l & SubTypeAS(ltp, t),
+      mk_AS`ProductType(rtp_l,-) -> cases ltp:
+                                     mk_AS`ProductType(ltp_l,-) ->
+                                          if len ltp_l = len rtp_l
+                                          then
+                                            return forall i in set inds ltp_l & SubTypeAS(ltp_l(i), rtp_l(i))
+                                          else return false,
+                                     others -> return false
+                                   end,
+      mk_AS`OptionalType(rttp,-) -> return SubTypeAS(ltp, rttp),
+      mk_AS`Set0Type(ttp,-) -> cases ltp:
+                                 mk_AS`Set0Type(lttp,-),
+                                 mk_AS`Set1Type(lttp,-) -> return SubTypeAS(lttp, ttp),
+                                 others -> return false
+                               end,
+      mk_AS`Set1Type(ttp,-) -> cases ltp:
+                                 mk_AS`Set1Type(lttp,-) -> return SubTypeAS(lttp, ttp),
+                                 others -> return false
+                               end,
+      mk_AS`Seq0Type(ttp,-) -> cases ltp:
+                                 mk_AS`Seq0Type(lttp,-),
+                                 mk_AS`Seq1Type(lttp,-) -> return SubTypeAS(lttp, ttp),
+                                 others -> return false
+                               end,
+      mk_AS`Seq1Type(ttp,-) -> cases ltp:
+                                 mk_AS`Seq1Type(lttp,-) -> return SubTypeAS(lttp, ttp),
+                                 others -> return false
+                               end,
+      mk_AS`GeneralMap0Type(dtp,rtp,-) -> cases ltp:
+                                            mk_AS`GeneralMap0Type(ldtp,lrtp,-),
+                                            mk_AS`GeneralMap1Type(ldtp,lrtp,-),
+                                            mk_AS`InjectiveMap0Type(ldtp,lrtp,-),
+                                            mk_AS`InjectiveMap1Type(ldtp,lrtp,-) ->
+                                              return SubTypeAS(ldtp, dtp) and SubTypeAS(lrtp, rtp),
+                                            others -> return false
+                                          end,
+      mk_AS`GeneralMap1Type(dtp,rtp,-) -> cases ltp:
+                                            mk_AS`GeneralMap1Type(ldtp,lrtp,-),
+                                            mk_AS`InjectiveMap1Type(ldtp,lrtp,-) ->
+                                              return SubTypeAS(ldtp, dtp) and SubTypeAS(lrtp, rtp),
+                                            others -> return false
+                                          end,
+      mk_AS`InjectiveMap0Type(dtp,rtp,-) -> cases ltp:
+                                              mk_AS`InjectiveMap0Type(ldtp,lrtp,-),
+                                              mk_AS`InjectiveMap1Type(ldtp,lrtp,-) ->
+                                                return SubTypeAS(ldtp, dtp) and SubTypeAS(lrtp, rtp),
+                                              others -> return false
+                                            end,
+      mk_AS`InjectiveMap1Type(dtp,rtp,-) -> cases ltp:
+                                              mk_AS`InjectiveMap1Type(ldtp,lrtp,-) ->
+                                                return SubTypeAS(ldtp, dtp) and SubTypeAS(lrtp, rtp),
+                                              others -> return false
+                                            end,
+      mk_AS`PartialFnType(dtp,rtp,-) -> cases ltp:
+                                          mk_AS`PartialFnType(ldtp,lrtp,-) ->
+                                            if len ldtp = len dtp 
+                                            then
+                                              return SubTypeAS(lrtp, rtp) and
+                                                   forall i in set inds ldtp & SubTypeAS(ldtp(i), dtp(i))
+                                            else return false,
+                                          mk_AS`TotalFnType(ldtp,lrtp,-) ->
+                                            if len ldtp = len dtp 
+                                            then
+                                              return (is_AS`AllType(lrtp) or SubTypeAS(lrtp, rtp)) and
+                                                   forall i in set inds ldtp & SubTypeAS(ldtp(i), dtp(i))
+                                            else return false,
+                                          others -> return false
+                                        end,
+      mk_AS`TotalFnType(dtp,rtp,-)   -> cases ltp:
+                                          mk_AS`TotalFnType(ldtp,lrtp,-) ->
+                                            if len ldtp = len dtp 
+                                            then
+                                              return (is_AS`AllType(lrtp) or SubTypeAS(lrtp, rtp)) and
+                                                   forall i in set inds ldtp & SubTypeAS(ldtp(i), dtp(i))
+                                            else return false,
+                                          others -> return false
+                                        end,
+      mk_AS`OpType(dtp,rtp,-)        -> cases ltp:
+                                          mk_AS`OpType(ldtp,lrtp,-) ->
+                                            if len ldtp = len dtp 
+                                            then
+                                              return SubTypeAS(lrtp, rtp) and
+                                                   forall i in set inds ldtp & SubTypeAS(ldtp(i), dtp(i))
+                                            else return false,
+                                          others -> return false
+                                        end,
+      mk_AS`TypeVar(-,-)         -> def tm = STKM`HdTypeInst()
+                                    in
+                                        if rtp in set dom tm
+                                        then SubTypeAS(ltp, tm(rtp))
+                                        else return false,
+#ifdef VDMPP
+      mk_GLOBAL`ObjRefType(nm)   -> cases ltp:
+                                      mk_GLOBAL`ObjRefType(lnm) -> return (lnm = nm) or IsSubClass(lnm, nm),
+                                      others -> return false
+                                    end,
+#endif VDMPP
+      mk_AS`AllType(-)           -> return true,
+      others                     -> return false
+    end;
+   );
+\end{vdm_al}
+
+The operation $SubType$ is used in dynamic type checking. The operation
+returns true if the input value is of the same type as the input type. If
+the input type is a polymorphic type variable, the proper type is looked up
+in the first element of the type instantiation map.
+
+For the object reference types we only check if the object can be a
+subtype of the type {\em tp}. It is not checked if the instance
+variables in the object also are type correct. There are two reasons
+for this:
+
+\begin{itemize}
+\item The object can contain instance variables that are not yet
+  initialised, that is the semantic value for these are UNDEF(). This
+  can be the case if the object is instantiated with new, and the
+  there is no initialisation statement for the instance variabels of
+  the class.
+\item The instance variables will be checked anyway when they are
+  changed, because this can only be done in an assign statement.
+\end{itemize}
+
+\section{Names}
+
+#ifdef VDMSL
+\begin{vdm_al}
+operations
+
+LookUp : AS`Name ==> SEM`VAL
+LookUp (name) ==
+ (if not AUX`IsRealName (name) and not STKM`IsEmptyEnvL ()
+  then
+    cases STKM`IsLocalVal( name ):
+      mk_(true, res_v) -> if is_SEM`UNDEF (res_v)
+                          then RTERR`ErrorVal(RTERR`UNDEF_ENCOUNTERED, nil, nil, [])
+                          else return res_v,
+      others -> skip
+    end
+  else skip;
+
+  let loc_nm = AUX`ExtractName(name)
+  in
+   (dcl mod_nm : AS`Name := STKM`CurrentModule ();
+
+    if AUX`IsRealName(name) -- the name has a module prefix.
+    then
+     (mod_nm := ExtractModule(name);
+      if mod_nm in set dom mods
+      then
+        if not AUX`IsConstructExported (loc_nm, mod_nm)
+        then RTERR`ErrorVal(RTERR`CONSTRUCT_NOT_EXPORTED, nil, nil, [])
+        else skip -- to local search
+      elseif mod_nm in set dom imods -- dlmodule
+      then
+        if not AUX`IsInDLDeclared (loc_nm, mod_nm)
+        then RTERR`ErrorVal(RTERR`LIB_NOT_DECLARED, nil, nil, [])
+        else
+          cases EXPR`GetExtFnOpVal (loc_nm, mod_nm):
+            mk_(true, val) -> return val,
+            others -> cases EXPR`GetExtVal (loc_nm, mod_nm):
+                        mk_(true, val) -> return val,
+                        others -> RTERR`ErrorVal(RTERR`MOD_NOT_DEFINED, nil, nil, [])
+                      end
+          end
+      else RTERR`ErrorVal(RTERR`MOD_NOT_DEFINED, nil, nil, [])
+     );
+
+    if EXPR`IsFunction (loc_nm, mod_nm)
+    then EXPR`GetFunctionVal (loc_nm, mod_nm)
+    elseif EXPR`IsOperation (loc_nm, mod_nm)
+    then EXPR`GetOperationVal (loc_nm, mod_nm)
+    elseif EXPR`IsPoly (loc_nm, mod_nm)
+    then EXPR`GetPolyVal (loc_nm, mod_nm)
+    else
+      cases IsGlobalVal(loc_nm, mod_nm):
+        mk_(true,val) -> return val,
+        others -> if STKM`HdContext() <> <PURE>
+                  then
+                    cases IsGlobalState(loc_nm, mod_nm):
+                      mk_(true,mk_GLOBAL`State(val,-)) -> return val,
+                      others -> if IsTheState(name, mod_nm)
+                                then GetTheState(name, mod_nm)
+                                else skip
+                    end
+      end;
+    cases AUX`LookUpRename(name):
+      mk_(true,rec_nm) -> LookUp(rec_nm),
+      others -> RTERR`ErrorVal(RTERR`ID_UNKNOWN, nil, nil, [])
+    end;
+   )
+ );
+\end{vdm_al}
+
+The operation {\em LookUp} returns the value for a given name. First,
+a possible renaming is resolved. If the name is only a single
+identifier, we try to look up the value of the identifier in the
+current function application environment. If the input name also
+defines a module name, that module is pushed. Next, all other
+possibilities are checked.
+#endif VDMSL
+
+#ifdef VDMPP
+\begin{vdm_al}
+operations
+LookUp : AS`Name ==> SEM`VAL
+LookUp(mk_AS`Name(ids,cid)) ==
+ (dcl name : AS`Name := mk_AS`Name(ids,cid);
+  if len ids = 2
+  then
+    def clsnm = mk_AS`Name([ids(1)],CI`NilContextId);
+        memnm = mk_AS`Name([ids(2)],cid);
+        mk_(ok, ocl) = ExpandClassName(clsnm, STKM`GetCurCl(), {})
+    in
+      if ok
+      then name := AUX`ConstructDoubleName(ocl,memnm);
+
+  def mk_(isit, val) = STKM`IsLocalVal(name);
+      --mk_(isit_d_objs, val_obj) = IsDObjs(name)
+  in
+    if isit
+    then ReturnLookUp(val, RTERR`INTERNAL_ERROR)
+    else
+      if not STKM`HasCurObjRef()
+      then
+        def mk_(isit_d_objs, val_obj) = IsDObjs(name)
+        in
+        if isit_d_objs
+        --then return val_obj
+        then return ReturnLookUp(val_obj, RTERR`INTERNAL_ERROR)
+        else def mk_(-,staticval) = LookUpStatic(name)
+             in
+               if staticval = nil
+               then
+                 let mk_(cl, nm) = if len name.ids = 2
+                                   then mk_(mk_AS`Name([name.ids(1)],CI`NilContextId),
+                                            mk_AS`Name([name.ids(2)],name.cid))
+                                   elseif initclstack <> []
+                                   then mk_(hd initclstack, name)
+                                   else mk_(nil, nil)
+                 in
+                   if cl <> nil and cl in set dom classes and nm in set dom classes(cl).vls_init
+                   then return (classes(hd initclstack).vls_init(nm)).#1
+                   else RTERR`ErrorVal(RTERR`ID_UNKNOWN, nil, nil, [])
+               else return staticval
+      else
+--         def mk_(isit_inst, local_inst, val_inst,-,-,-) = IsInObjScope(name,nil);
+--             mk_(isit_d_objs, val_obj) = IsDObjs(name)
+--         in
+--           if isit_inst and local_inst
+--           then return ReturnLookUp(val_inst, RTERR`INSTVAR_NOT_IN_SCOPE)
+--           else
+--             def mk_(isit_val, local_val, val_val) = IsValue(name)
+--             in
+--               if isit_val and local_val
+--               then return ReturnLookUp(val_val, RTERR`VAL_NOT_IN_SCOPE)
+--               else
+--                 def mk_(isit_opfct, local_opfct, val_opfct) = LookOpFctPoly(name)
+--                 in
+--                   if isit_opfct and local_opfct
+--                   then ReturnLookUp(val_opfct, RTERR`OP_OR_FUN_NOT_IN_SCOPE)
+--                   else
+--                     def mk_(isstatic,staticval) = LookUpStatic(name)
+--                     in
+--                       cases true:
+--                         (isit_inst and
+--                          not isstatic)-> ReturnLookUp(val_inst, RTERR`INSTVAR_NOT_IN_SCOPE),
+--                         (isit_val)    -> ReturnLookUp(val_val,  RTERR`VAL_NOT_IN_SCOPE),
+--                         (isit_opfct)  -> ReturnLookUp(val_opfct,RTERR`OP_OR_FUN_NOT_IN_SCOPE),
+--                         (isit_d_objs) -> ReturnLookUp(val_obj,  RTERR`INTERNAL_ERROR),
+--                         (isstatic)    -> if staticval = nil
+--                                          then RTERR`ErrorVal(RTERR`STATIC_NOT_IN_SCOPE, nil, nil, [])
+--                                          else return staticval,
+--                         others        -> RTERR`ErrorVal(RTERR`NAME_UNKNOWN, nil, nil, [])
+--                       end
+        (def mk_(isit_opfct, -, val_opfct) = LookOpFctPoly(name)
+         in
+           if isit_opfct
+           then ReturnLookUp(val_opfct, RTERR`OP_OR_FUN_NOT_IN_SCOPE);
+
+         def mk_(isstatic,staticval) = LookUpStatic(name)
+         in
+          (if STKM`HdContext() <> <PURE>
+           then
+             def mk_(isit_inst, local_inst, val_inst,-,-,-) = IsInObjScope(name,nil);
+             in
+               if isit_inst and (local_inst or not isstatic)
+               then ReturnLookUp(val_inst, RTERR`INSTVAR_NOT_IN_SCOPE);
+           if isstatic
+           then
+             if staticval = nil
+             then RTERR`ErrorVal(RTERR`STATIC_NOT_IN_SCOPE, nil, nil, [])
+             else return staticval;
+          );
+
+         def mk_(isit_val, -, val_val) = IsValue(name)
+         in
+           if isit_val
+           then ReturnLookUp(val_val, RTERR`VAL_NOT_IN_SCOPE);
+
+         if STKM`HdContext() <> <PURE>
+         then
+           def mk_(isit_d_objs, val_obj) = IsDObjs(name)
+           in
+             if isit_d_objs
+             then ReturnLookUp(val_obj,  RTERR`INTERNAL_ERROR);
+
+         return RTERR`ErrorVal(RTERR`NAME_UNKNOWN, nil, nil, []);
+        );
+);
+\end{vdm_al}
+
+The operation {\em IsInObjScope} takes a {\em name} and returns
+indication if the {\em name} is an instance variable within the
+current scope, and if it is if the instance variable is defined within
+the current object or if it belongs to superclasses of the object.
+Lastly, the operation returns the semantics value of the instance
+variable, its type and class name where the instance variable is
+defined, if it exists within the scope.
+
+The operation {\em IsInObjScope} may also take a second parameter {\em
+  oldstate}, in this case this state is used to find the state of the
+  object. This option is used to evaluate an old name.
+
+The strategy of the operation is:
+\begin{itemize}
+\item If the name to look for is not qualified then look for the
+instance variable in the current class.
+\item Otherwise look find the class {\em classname} from where to
+from. It is either the qualification of the name or the current class.
+\item Look in the current object on the object list for all the
+instance variables that matches the name. Three cases can now occur:
+\begin{enumerate}
+\item None instance variables were found.
+\item Only one instance variable was found, and that is the one to
+return.
+\item Several instance variables were found. If the name is qualified
+and the class contains the instance variable, this instance variable
+should be returned. Otherwise it should be investigated if the
+instance variables are overwritten in a one-line hierarchy. This is
+investigated with the operation {\em ExistsOneChild}. If only one-line
+hierarchy exists the instance variable in the lowest part of the
+hierarchy is returned, otherwise a run-time error is produced.
+\end{enumerate}
+\end{itemize}
+
+\begin{vdm_al}
+IsInObjScope: AS`Name * [SEM`OBJ] ==> bool * bool * [SEM`VAL] * [AS`Type] * [AS`Name] * [AS`Access]
+IsInObjScope(name, oldstate) ==
+  if not STKM`HasCurCl()
+  then return mk_(false, false, nil, nil, nil, nil)
+  else
+    def mk_AS`Name(l^[-], cid) = name;
+        origcl = STKM`GetOrigCl();
+        thename = AUX`ExtractName(name);
+    in
+     (dcl clnm : AS`Name := STKM`GetCurCl(),
+          semobj : SEM`OBJ := STKM`GetCurObj();
+      if l <> []
+      --then clnm := AUX`ConstructName(hd l,cid);
+      then clnm := mk_AS`Name([hd l],cid);
+      if oldstate <> nil
+      then semobj := oldstate;
+      def statics = if clnm in set dom classes
+                    then classes(clnm).statics
+                    else {|->};
+          isstatic = thename in set dom statics
+                     and def mk_(isopfct,-,-) = LookStaticOpFctPoly(clnm,thename)
+                         in not isopfct;
+          mk_SEM`OBJ(-, istrct, - ) = semobj;
+      in
+        if not clnm in set dom istrct and not isstatic
+        then return mk_(false, false, nil, nil, nil, nil)
+        else
+         (if l = [] or isstatic
+          then
+            let local_inst = if clnm in set dom istrct
+                             then istrct(clnm)
+                             else statics
+            in
+              if thename in set dom local_inst
+              then
+                def mk_(v,access) = local_inst(thename);
+                    tp = GetInstVarsTp(clnm)(thename)
+                in
+                  if AccessOk(access, origcl, clnm)
+                  then
+                    if v = mk_SEM`UNDEF()
+                    then
+                      def nm = mk_AS`Name(clnm.ids ^ thename.ids, name.cid);
+                          mk_(-,v2) = LookUpStatic(nm)
+                      in
+                        if v2 = nil
+                        then return mk_(true, true, v, tp, clnm, access)
+                        else return mk_(true, true, v2, tp, clnm, access)
+                    else return mk_(true, true, v, tp, clnm, access)
+                  else return mk_(true, false, nil,tp, clnm, access);
+ 
+          let classname = if l <> []
+                          --then AUX`ConstructName(hd l,cid)
+                          then mk_AS`Name([hd l],cid)
+                          else clnm
+          in
+           (if not classname in set dom istrct
+            then return mk_(false, false, nil, nil, nil, nil)
+            else
+              def allsupers = GetAllSupers(classname) union {classname};
+                  inst_vls = { clname |-> istrct(clname) | clname in set allsupers &
+                                          thename in set dom istrct(clname)}
+              in
+                cases dom inst_vls:
+                  {}     -> return mk_(false, false, nil, nil, nil,nil),
+                  {cl}   -> def mk_(val,access) = inst_vls(cl)(thename);
+                                tp = GetInstVarsTp(cl)(thename)
+                            in
+                              if AccessOk(access,origcl,cl)
+                              then return mk_(true, false, val, tp, cl, access)
+                              else return mk_(true, false, nil, tp, cl, access),
+                  others ->(dcl res : bool * [AS`Name] := mk_(true, classname);
+                            if classname not in set dom inst_vls
+                            then 
+                              def rem_priv = {clnm | clnm in set dom inst_vls
+                                               & forall p in set rng inst_vls(clnm) & p.#2 <> <PRIVATE_AS>};
+                              in res := ExistsOneChild(rem_priv,dom inst_vls);
+                            cases res:
+                              mk_(true, cls) -> def mk_(val,access) = inst_vls(cls)(thename);
+                                                    tp = GetInstVarsTp(cls)(thename)
+                                                in if AccessOk(access,origcl,cls)
+                                                   then return mk_(true, false, val, tp, cls, access)
+                                                   else return mk_(true, false, nil, tp, cls, access),
+                              others -> RTERR`ErrorVal(RTERR`MULT_DEF,nil,nil, [])
+                            end;
+                           )
+                 end;
+           )
+         )
+   );
+\end{vdm_al}
+
+The operation {\em ExistsOneChild} takes two sets of class names where
+the first set have eliminated the use of private definitions and the
+other set contains all definition of the construct in its superclasses
+(thus the first set will always be a subset of the second one). The
+operation investigates if the classes inherit each other in one direct
+line, and if this is the case, the name of the subclass of them all is
+returned.
+
+\begin{vdm_al}
+ExistsOneChild: set of AS`Name * set of AS`Name==> bool * [AS`Name]
+ExistsOneChild(cl_s,full_s) ==
+  if exists cl in set cl_s & (cl_s \ {cl}) subset GetAllSupers(cl)
+  then
+    let priv_cls = full_s \ cl_s
+    in
+      if exists cl in set cl_s & forall priv in set priv_cls & cl not in set GetAllSupers(priv)
+      then
+        let cl in set cl_s be st (cl_s \ {cl}) subset GetAllSupers(cl) and
+                                 forall priv in set priv_cls & cl not in set GetAllSupers(priv)
+        in return mk_(true, cl)
+      else return mk_(false, nil)
+  else return mk_(false, nil);
+\end{vdm_al}
+
+The operation {\em IsValue} investigates if the name {\em nm} is a
+values within the current scope. The operation returns three values:
+\begin{itemize}
+\item boolean: is a value found.
+\item boolean: is the value local. By locally is meant is the value
+bottom class of the hierarchy of the current object, or is the class
+qualified in the name {\em nm}.
+\item semantic value of the value if it is found.
+\end{itemize}
+
+The dynamic semantics supports that values can be static.  That is,
+one can refer directly to class, without operating on an object.
+The strategy of the look up is more or less the same as in {\em
+IsInObjScope}, with the difference that we look in the initialised
+values for every class.
+
+\begin{vdm_al}
+IsValue: AS`Name ==> bool * bool * [SEM`VAL]
+IsValue(nm) ==
+  let mk_AS`Name(l^[-], cid) = nm
+  in
+    if l = [] and not STKM`HasCurCl()
+    then
+     (RTERR`Error(RTERR`ID_UNKNOWN, nil, nil, []);
+      return mk_(false,false,nil))
+    else
+      def origcl = STKM`GetOrigCl();
+          thename = AUX`ExtractName(nm)
+      in
+     (dcl classname : [AS`Name] := nil,
+          allsupers : set of AS`Name;
+      if l = []
+      then
+        def clnm = STKM`GetCurCl();
+            local_vls = GetVlsInit(clnm)
+        in
+         (if thename in set dom local_vls
+          then
+            let mk_(v,access) = local_vls(thename)
+            in
+              if AccessOk(access, origcl,clnm)
+              then return mk_(true,true,v)
+              else return mk_(true,false,nil)
+         );
+      if l <> []
+      then
+        --let cl = AUX`ConstructName(hd l,cid)
+        let cl = mk_AS`Name([hd l],cid)
+        in
+          if not STKM`HasCurCl()
+          then classname := cl
+          else def mk_(ok, ocl) = ExpandClassName(cl, STKM`GetCurCl(), {})
+               in if ok
+                  then classname := ocl
+                  else classname := cl;
+      if l = []
+      then allsupers := GetAllSupers(STKM`GetCurCl())
+      else allsupers := GetAllSupers(classname) union {classname};
+
+      def spcl_vls = { clname |-> GetVlsInit(clname) | clname in set allsupers &
+                          thename in set dom GetVlsInit(clname)}
+      in
+        cases dom spcl_vls:
+          {}     -> return mk_(false, false, nil),
+          {cl}   -> let mk_(val,access) = spcl_vls(cl)(thename)
+                    in
+                      if AccessOk(access,origcl,cl)
+                      then return mk_(true,true,val)
+                      else return mk_(true,false,nil),
+          others -> --def mk_(doesthere, cls) = if classname in set dom spcl_vls
+                    --                          then mk_(true,classname)
+                    --                          else
+                    --                            def rem_priv = {clnm | clnm in set dom spcl_vls
+                    --                                   & forall p in set rng spcl_vls(clnm) &
+                    --                                       p.#2 <> <PRIVATE_AS>};
+                    --                            in ExistsOneChild(rem_priv,dom spcl_vls)
+                   (dcl res : bool * [AS`Name] := mk_(true,classname);
+                    if classname not in set dom spcl_vls
+                    then
+                      def rem_priv = {clnm | clnm in set dom spcl_vls
+                                                       & forall p in set rng spcl_vls(clnm) &
+                                                           p.#2 <> <PRIVATE_AS>};
+                      in res := ExistsOneChild(rem_priv,dom spcl_vls);
+                    def mk_(doesthere, cls) = res
+                    in
+                      if doesthere
+                      then
+                        let mk_(val,access) = spcl_vls(cls)(thename)
+                        in if AccessOk(access,origcl,cls)
+                           then return mk_(true,true,val)
+                           else return mk_(true,false,nil)
+                       else RTERR`ErrorVal(RTERR`MULT_DEF,nil,nil, []))
+        end
+     );
+\end{vdm_al}
+
+The operation {\em LookOpFctPoly} looks for operations, functions and
+polymorphic functions. It takes as input the {\em name} of the
+operation or function, and it returns:
+\begin{itemize}
+\item a boolean: indicating if the function or operation was found.
+\item a boolean: indicating if the function or operation was found
+locally. By locally is meant in the first class in the search path of the
+current object.
+\item the semantic value if the function or operation was found. In
+case the function is found but access is not legal, because of the
+modifier on construct this value will be nil.
+\end{itemize}
+
+The strategy of operation is:
+\begin{itemize}
+\item Look first in the bottom of the object (if the name of the
+function/operation is not qualified).
+\item Otherwise look in hierarchy from either the qualification of the
+name or from the bottom of the object (objnm).
+\item There is now three cases:
+\begin{enumerate}
+\item Either the function/operation was not found in the hierarchy.
+\item There is only one function in the hierarchy, and that must be the one.
+\item There is several functions/operations in the hierarchy. If the
+operation/function name is qualified and if there exists a
+function/operation in that class we should choose that
+function/operation. Otherwise we should investigate if the operations
+found is in a direct hierarchy in which they are overwriting each
+other. This is investigated with the operation (ExistsOneChild). If
+this is the case we should choose the function lowest in the
+hierarchy. If it is not the case: the operations/functions are found
+in several hierarchy lines, and a dynamic run time error is generated.
+\end{enumerate}
+\end{itemize}
+
+For every function/operation found it is checked if the
+functions/operations are accessible w.r.t. the modifiers of the
+functions/operations. This is checked with the operations: {\em
+ModifOk} and {\em IsClientOk}. The operation {\em IsClientOk} checks
+the accessibility of the function/operation if the caller of the
+function/operation is a client. The {\em ModifOk} checks the
+accessibility of the function/operation if the caller is not a client
+(that is, it is within the current object).
+
+\begin{vdm_al}
+operations
+LookOpFctPoly: AS`Name ==> bool * bool * [SEM`VAL]
+LookOpFctPoly(name) ==
+  if not STKM`HasCurCl()
+  then return mk_(false, false,nil)
+  else
+    def thename = AUX`ExtractName(name);
+        clnm = STKM`GetCurCl();
+        objnm = STKM`GetCurObjName()
+    in
+      LookOpFctPoly'(clnm,objnm,name,thename);
+
+LookStaticOpFctPoly: AS`Name * AS`Name  ==> bool * bool * [SEM`VAL]
+LookStaticOpFctPoly(clnm, name) ==
+  LookOpFctPoly'(clnm,clnm,name,name);
+
+LookOpFctPoly': AS`Name * AS`Name * AS`Name * AS`Name ==> bool * bool * [SEM`VAL]
+LookOpFctPoly'(clnm,objnm,name,thename) ==
+  def mk_AS`Name(l^[-], cid) = name;
+      origcl =  STKM`GetOrigCl();
+      classname = if l <> []
+                  --then AUX`ConstructName(hd l,cid)
+                  then mk_AS`Name([hd l],cid)
+                  else objnm;
+  in
+   (dcl allclasses : set of AS`Name := {};
+    if l = []
+    then allclasses := GetAllSupers(objnm) union {objnm}
+    elseif classname in set GetAllSupers(clnm) or classname = clnm
+    then allclasses := GetAllSupers(classname) union {classname};
+    def opsfcts = { clname |-> def mk_(-,opfn_access) = LookupAllFnsOpsPolys(clname,thename)
+                               in opfn_access
+                  | clname in set allclasses & def mk_(found,-) = LookupAllFnsOpsPolys(clname,thename)
+                                                  in found };
+      overopfn = LookUpOverloaded(clnm,name,allclasses)
+  in
+    if overopfn = nil
+    then
+      cases dom opsfcts :
+        {}     -> return mk_(false, false, nil),
+        {cl}   -> let mk_(fnval,access) = opsfcts(cl)
+                  in
+                    if AccessOk(access, origcl, cl)
+                    then return mk_(true, true, fnval)
+                    else return mk_(true, false, nil),
+        others -> (dcl m : map (seq of AS`Type) to (set of AS`Name) := { |-> };
+                   for all clnm in set dom opsfcts do
+                     def mk_(fnval, access) = opsfcts(clnm);
+                         --tp_l = MANGLE`MethType2Seq(FindType(fnval))
+                         tp_l = ConvertTypeNameList(MANGLE`MethType2Seq(FindType(fnval)),{})
+                     in
+                       if AccessOk(access, origcl, clnm)
+                       then
+                         m := if tp_l in set dom m
+                              then m ++ { tp_l |-> m(tp_l) union {clnm} }
+                              else m ++ { tp_l |-> {clnm} };
+                   cases dom m:
+                     {}  -> return mk_(true, false, nil),
+                     {t} -> def mk_(doesthere, child) = ExistsOneChild(m(t), dom opsfcts)
+                            in
+                              if doesthere
+                              then return mk_(true, true, opsfcts(child).#1)
+                              else RTERR`ErrorVal(RTERR`MULT_DEF,nil,nil, []),
+                     others -> def newover = { mk_(name, clnm) |->
+                                 --mk_(MANGLE`MethType2Seq(FindType(opsfcts(clnm).#1)), opsfcts(clnm).#2, nil)
+                                 mk_(ConvertTypeNameList(MANGLE`MethType2Seq(FindType(opsfcts(clnm).#1)), {}),
+                                     opsfcts(clnm).#2, nil)
+                                        | clnm in set dom opsfcts &
+                                     AccessOk(opsfcts(clnm).#2, origcl, clnm) }
+                               in
+                                 if newover = { |-> }
+                                 then return mk_(true, false, nil)
+                                 else return mk_(true, true, mk_SEM`OverOPFN(newover, nil))
+                   end)
+      end
+    else -- overopfn <> nil
+      def newover = overopfn.overload ++
+                       { mk_(name, clnm) |->
+                         --mk_(MANGLE`MethType2Seq(FindType(opsfcts(clnm).#1)), opsfcts(clnm).#2, nil)
+                         mk_(ConvertTypeNameList(MANGLE`MethType2Seq(FindType(opsfcts(clnm).#1)), {}),
+                             opsfcts(clnm).#2, nil)
+                                | clnm in set dom opsfcts }
+      in
+        return mk_(true, true, mk_SEM`OverOPFN(newover, nil)));
+
+ConvertTypeNameList: seq of AS`Type * set of AS`Name ==> seq of AS`Type
+ConvertTypeNameList(tp_l, nm_s) ==
+  return [ ConvertTypeName(tp_l(idx), nm_s) | idx in set inds tp_l ];
+
+ConvertTypeName: AS`Type * set of AS`Name ==> AS`Type
+ConvertTypeName(type, nm_s) ==
+  cases type:
+    mk_AS`TypeName(tn,-) -> if IsAClass(tn)
+                            then return type
+                            else
+                              def mk_(isit,-,-,clnm,-) = AUX`IsTypeDef (tn)
+                              in 
+                                if isit
+                                then return mu(type, name |-> AUX`ConstructDoubleName(clnm, tn))
+                                else return type,
+    mk_AS`TypeVar(-,-) -> return type,
+    mk_AS`CompositeType(-, fields, -) -> def flds = [ mu(fields(i), type |-> ConvertTypeName(fields(i).type, nm_s))
+                                                      | i in set inds  fields ]
+                                         in return mu(type, fields |-> flds),
+    mk_AS`UnionType(tps, -) -> return mu(type, tps |-> ConvertTypeNameList(tps, nm_s)),
+    mk_AS`ProductType(tps, -) -> return mu(type, tps |-> ConvertTypeNameList(tps, nm_s)),
+    mk_AS`OptionalType(tp, -) -> return mu(type, tp |-> ConvertTypeName(tp, nm_s)),
+    mk_AS`BracketedType(tp, -) -> return mu(type, tp |-> ConvertTypeName(tp, nm_s)),
+    mk_AS`Set0Type(elemtp, -) -> return mu(type, elemtp |-> ConvertTypeName(elemtp, nm_s)),
+    mk_AS`Set1Type(elemtp, -) -> return mu(type, elemtp |-> ConvertTypeName(elemtp, nm_s)),
+    mk_AS`Seq0Type(elemtp, -) -> return mu(type, elemtp |-> ConvertTypeName(elemtp, nm_s)),
+    mk_AS`Seq1Type(elemtp, -) -> return mu(type, elemtp |-> ConvertTypeName(elemtp, nm_s)),
+    mk_AS`GeneralMap0Type(mapdom, maprng, -)   -> return mu(type, mapdom |-> ConvertTypeName(mapdom, nm_s),
+                                                                 maprng |-> ConvertTypeName(maprng, nm_s)),
+    mk_AS`GeneralMap1Type(mapdom, maprng, -)   -> return mu(type, mapdom |-> ConvertTypeName(mapdom, nm_s),
+                                                                 maprng |-> ConvertTypeName(maprng, nm_s)),
+    mk_AS`InjectiveMap0Type(mapdom, maprng, -) -> return mu(type, mapdom |-> ConvertTypeName(mapdom, nm_s),
+                                                                 maprng |-> ConvertTypeName(maprng, nm_s)),
+    mk_AS`InjectiveMap1Type(mapdom, maprng, -) -> return mu(type, mapdom |-> ConvertTypeName(mapdom, nm_s),
+                                                                 maprng |-> ConvertTypeName(maprng, nm_s)),
+    mk_AS`PartialFnType(fndom, fnrng, -) -> return mu(type, fndom |-> ConvertTypeNameList(fndom, nm_s),
+                                                            fnrng |-> ConvertTypeName(fnrng, nm_s)),
+    mk_AS`TotalFnType(fndom, fnrng, -) -> return mu(type, fndom |-> ConvertTypeNameList(fndom, nm_s),
+                                                          fnrng |-> ConvertTypeName(fnrng, nm_s)),
+    mk_AS`OpType(opdom, oprng, -) -> return mu(type, opdom |-> ConvertTypeNameList(opdom, nm_s),
+                                                     oprng |-> ConvertTypeName(oprng, nm_s)),
+    others -> return type
+  end;
+functions
+
+FindType: SEM`CompExplFN | SEM`ExplOP | SEM`ExplPOLY -> AS`FnType | AS`OpType
+FindType(fnval) ==
+  cases fnval:
+    mk_SEM`CompExplFN([mk_SEM`ExplFN(tp,-,-,-,-,-,-,-,-,-)]^-,-) -> tp,
+    mk_SEM`ExplOP(tp,-,-,-,-,-,-,-,-,-,-)                        -> tp,
+    mk_SEM`ExplPOLY(-,tp,-,-,-,-,-,-,-)                          -> tp
+  end;
+
+FindTypeDom: SEM`CompExplFN | SEM`ExplOP | SEM`ExplPOLY -> seq of AS`Type
+FindTypeDom(fnval) ==
+  let fnoptype = FindType(fnval)
+  in
+    cases fnoptype:
+      mk_AS`PartialFnType(fndom,-,-),
+      mk_AS`TotalFnType(fndom,-,-),
+      mk_AS`OpType(fndom,-,-)          -> fndom
+    end;
+\end{vdm_al}
+
+\begin{vdm_al}
+operations
+
+LookUpOverloaded: AS`Name * AS`Name * set of AS`Name ==> [SEM`OverOPFN]
+LookUpOverloaded(-,name,allclasses) ==
+ def overloads = {clname |-> LookUpOverInClass(clname,name) | clname in set allclasses} :-> {nil}
+ in
+   if overloads = {|->}
+   then return nil
+   else
+     (dcl over : map (AS`Name * AS`Name) to ((seq of AS`Type) * AS`Access * [SEM`CompExplFN]) := { |-> };
+      for all clnm in set dom overloads do
+        over := over ++ overloads(clnm).overload;
+      return mk_SEM`OverOPFN(over, nil))
+pre allclasses subset dom classes;
+
+LookUpOverInClass: AS`Name * AS`Name ==> [SEM`OverOPFN]
+LookUpOverInClass(clsnm,name) ==
+  let overloaded = classes(clsnm).overloaded
+  in
+    if name in set dom overloaded
+    then
+      let over = overloaded(name)
+      in
+       (dcl load: map (AS`Name * AS`Name) to ((seq of AS`Type) * AS`Access * [SEM`VAL]) := {|->};
+        for all arit in set dom over do
+          load := load ++ {mk_(nm,clsnm) |-> over(arit)(nm) | nm in set dom over(arit)};
+        return mk_SEM`OverOPFN(load,nil))
+    else return nil
+pre clsnm in set dom classes;
+\end{vdm_al}
+
+The LookUpStatic operation is used to look up statically declared
+constructs. In this case the argument name must always have two
+identifiers (where the first one is the name of th]e defining class and
+the second one is the construct which is defined statically).
+
+\begin{vdm_al}
+LookUpStatic: AS`Name ==> bool * [SEM`VAL]
+LookUpStatic(name) ==
+  if len name.ids = 2
+  then
+   --(dcl clsnm : AS`Name := AUX`ConstructName(name.ids(1),CI`NilContextId);
+   (dcl clsnm : AS`Name := mk_AS`Name([name.ids(1)],CI`NilContextId);
+    if STKM`HasCurCl()
+    then
+      def mk_(ok, ocl) = ExpandClassName(clsnm, STKM`GetCurCl(), {})
+      in if ok
+         then clsnm := ocl;
+    --let memnm = AUX`ConstructName(name.ids(2), CI`NilContextId)
+    let memnm = mk_AS`Name([name.ids(2)], CI`NilContextId)
+    in
+      if clsnm in set dom classes
+      then
+        def statmap = classes(clsnm).statics;
+            mk_(found, accessOk, val) = LookStaticOpFctPoly(clsnm,memnm)
+        in
+          if memnm in set dom statmap
+          then
+            def mk_(val,access) = statmap(memnm);
+                origcl = STKM`GetOrigCl()
+            in
+              if AccessOk(access, origcl,clsnm)
+#ifdef VICE
+              then return mk_(true, STKM`UpdateObjRef(val))
+#else
+#ifdef VDMPP
+              then return mk_(true, val)
+#endif VDMPP
+#endif VICE
+              else return mk_(true, nil)
+          elseif found
+          then
+            if accessOk
+            then return mk_(true, val)
+            else return mk_(true, nil)
+          elseif classes(clsnm).inhcon <> {}
+          then
+           (for all clnm in set classes(clsnm).inhcon do
+              def mk_(isit,val) = LookUpStatic(mk_AS`Name([(hd clnm.ids), hd tl name.ids], name.cid));
+              in
+                if isit
+                then return mk_(true, val);
+            return mk_(false, nil))
+          else return mk_(false, nil)
+      else RTERR`ErrorVal(RTERR`CLNM_NOT_DEFINED, nil, nil, [AUX`SingleNameToString(clsnm)])
+   )
+  else
+    def curcls = STKM`GetCurCl();
+        clsnm = if is_AS`Name(curcls)
+                then curcls
+                else hd initclstack
+    in LookUpStatic(AUX`ConstructDoubleName(clsnm,name));
+\end{vdm_al}
+
+\begin{vdm_al}
+ReturnLookUp: [SEM`VAL] * RTERR`ERR ==> SEM`VAL
+ReturnLookUp(val, errno) ==
+  cases val:
+    mk_SEM`UNDEF() -> RTERR`ErrorVal(RTERR`UNDEF_ENCOUNTERED, nil, nil, []),
+    nil            -> RTERR`ErrorVal(errno, nil, nil, []),
+    others         -> return val
+  end;
+\end{vdm_al}
+
+The operation {\em LookUp} returns the semantic value for given name.
+It searches first in the local values (block environment) then in the
+scope limited to only the object (that is, not is super classes).
+Following sequence is used: instance variables, values, methods and
+then functions. If the name is not in the local object scope, same
+order is used to search in the superclasses of the current object.
+If the name is not in this scope, it is investigated if the name is in
+the debugger objects {\em d\_objs}.
+
+The operation {\em IsDObjs} takes a name and returns an indication if
+the name is an object created by the user in the debugger, and if so,
+it return the semantic value of the object. The objects created by user
+in the debugger are stored in the state {\em d\_objs}.
+
+\begin{vdm_al}
+IsDObjs: AS`Name ==> bool * [SEM`VAL]
+IsDObjs(name) ==
+  return
+    cases d_objs:
+      {(name) |-> mk_(val, -, -)} munion - -> mk_(true, val),
+      others                               -> mk_(false, nil)
+    end;
+\end{vdm_al}
+
+\begin{vdm_al}
+GetPreCond: AS`Name * AS`Name ==> [SEM`CompExplFN]
+GetPreCond(clnm,fnnm) ==
+  if clnm in set dom classes
+  then
+    let prenm = AUX`PreName(fnnm),
+        explfns = classes(clnm).explfns
+    in
+      if prenm in set dom explfns
+      then return explfns(prenm)
+      else return nil
+  else return nil;
+\end{vdm_al}
+#endif VDMPP
+
+#ifdef VDMSL
+\begin{vdm_al}
+GetPreCond: AS`Name * AS`Name ==> [SEM`CompExplFN]
+GetPreCond(modnm,fnnm) ==
+  if modnm in set dom mods
+  then
+    let prenm = AUX`PreName(fnnm),
+        explfns = mods(modnm).explfns
+    in
+      if prenm in set dom explfns
+      then return explfns(prenm)
+      else return nil
+  else return nil;
+\end{vdm_al}
+
+If the input name is contained in the map with renamings for the current
+module, the original name is returned. Otherwise the input name is returned
+as result.
+
+\begin{vdm_al}
+operations
+ExtractModule : AS`Name ==> AS`Name
+ExtractModule (nm) ==
+  cases nm:
+    mk_AS`Name([-],-)          -> return STKM`CurrentModule (),
+    mk_AS`Name([mod_nm,-],cid) -> let new_name = mk_AS`Name([mod_nm], cid)
+                                  in
+                                    if new_name in set (dom mods union dom imods)
+                                    then return new_name
+                                    else
+                                     (RTERR`Error(RTERR`MOD_NOT_DEFINED, nil, nil, []);
+                                      error),
+    others                     -> (RTERR`Error(RTERR`MOD_NOT_DEFINED, nil, nil, []);
+                                   error)
+  end;
+\end{vdm_al}
+Get the module name of a qualified name.
+#endif
+
+
+\section{State Designators}
+
+\begin{vdm_al}
+operations
+EvalStateDesignator: STKM`StateDesignator * SEM`VAL ==> ()
+EvalStateDesignator (sd, val_v) ==
+  def mk_(scomp_v, index_l, glres, llres) = CheckMap(LookUpSD(sd));
+      id = hd index_l;
+      val = ModifyValue(scomp_v, tl index_l, val_v)
+  in
+    ModifyValueId(id, val, glres, llres)
+\end{vdm_al}
+
+This operation is used to evaluate a state designator. We first generate
+the current value and index sequence for the state designator. Next, the
+original value is modified, and the new value is saved.
+
+\begin{vdm_al}
+operations
+
+#ifdef VDMSL
+ModifyValueId : AS`Name * SEM`VAL * [bool * [GLOBAL`State]] * [bool * [SEM`ValTp]] ==> ()
+#endif VDMSL
+#ifdef VDMPP
+ModifyValueId : AS`Name * SEM`VAL * [bool * bool * [SEM`VAL] * [AS`Type] * [AS`Name] * [AS`Access]] *
+                                    [bool * [SEM`ValTp]] ==> ()
+#endif VDMPP
+ModifyValueId (id, val_v, glres, llres) ==
+  cases mk_(glres,llres):
+    mk_(nil, mk_(-,mk_SEM`ValTp(-,tp))) -> 
+                        if SETTINGS`DTC() and not SubType(val_v, tp)
+                        then RTERR`Error(RTERR`TYPE_INCOMP, nil, nil, [])
+                        else STKM`SetLocalState (id, mk_SEM`ValTp(val_v, tp)),
+#ifdef VDMSL
+    mk_(mk_(-,mk_GLOBAL`State(-,tp)), nil) -> 
+                        if SETTINGS`DTC() and not SubType(val_v, tp)
+                        then RTERR`Error(RTERR`TYPE_INCOMP, nil, nil, [])
+                        else SetGlobalState (id, STKM`CurrentModule(), mk_GLOBAL`State(val_v, tp))
+#endif VDMSL
+#ifdef VDMPP
+    mk_(mk_(-,-,-,type,-,-), nil) ->
+                        if SETTINGS`DTC() and not SubType(val_v, type)
+                        then RTERR`Error(RTERR`TYPE_INCOMP, nil, nil, [])
+                        else SetInstanceVar(id, val_v, glres),
+    others -> if is_SEM`OBJ_Ref(val_v) and val_v in set dom obj_tab
+              then skip
+              else RTERR`Error(RTERR`INTERNAL_ERROR, nil, nil, [])
+#endif VDMPP
+  end;
+\end{vdm_al}
+
+#ifdef VDMSL
+This operation saves the new value for the state designator in either the
+current local state, or the current global state.
+If the current global
+state is changed, we also validate the current state invariant.
+#endif VDMSL
+
+#ifdef VDMPP
+This operation modifies the value of a state designator in either the
+local state or instance variables. If an instance variable is changed,
+possible invariant is also validated.
+#endif VDMPP
+
+\begin{vdm_al}
+operations
+
+ModifyValue : SEM`VAL * seq of (AS`Name | SEM`VAL) * SEM`VAL ==> SEM`VAL
+ModifyValue(scomp_v, index_l, val_v) ==
+  cases mk_(scomp_v,index_l):
+    mk_(-,[]) -> return val_v,
+    mk_(mk_SEM`REC(tag, v, v_dc), [sel] ^ tl_index_l) ->
+           cases AUX`LookUpRecSel (tag):
+             mk_(true,mk_(-,pos,-,-)) ->
+                 if sel in set dom pos
+                 then
+                   def index = pos(sel);
+                       val = if index in set dom v then v(index) else v_dc(index);
+                       newval = ModifyValue(val, tl_index_l, val_v)
+                   in
+                     if index in set dom v
+                     then return mk_SEM`REC(tag, v ++ { index |-> newval}, v_dc)
+                     else return mk_SEM`REC(tag, v, v_dc ++ { index |-> newval})
+                 else RTERR`ErrorVal(RTERR`RECORD_FIELD_ID_UNKNOWN, nil, nil, []),
+             others -> RTERR`ErrorVal(RTERR`TAG_UNKNOWN, nil, nil, [])
+           end,
+    mk_(mk_SEM`MAP(map_v), [key] ^ tl_index_l) ->
+         if key in set dom map_v
+         then return mk_SEM`MAP(map_v ++ { key |-> ModifyValue(map_v(key), tl_index_l, val_v)})
+         elseif tl_index_l <> []
+         then RTERR`ErrorVal(RTERR`INDEXED_ASSIGN, nil, nil, [])
+         else return mk_SEM`MAP(map_v ++ { key |-> val_v }),
+    mk_(mk_SEM`SEQ(seq_v), [hd_index_l] ^ tl_index_l) ->
+         if AUX`IsNat(hd_index_l)
+         then
+           let mk_SEM`NUM(index) = hd_index_l
+           in
+             if index in set inds seq_v
+             then return mk_SEM`SEQ(seq_v ++ { index |-> ModifyValue(seq_v(index), tl_index_l, val_v)})
+             else RTERR`ErrorVal(RTERR`ILLEGAL_INDICES, nil, nil, [])
+         else RTERR`ErrorVal(RTERR`NAT_EXPECTED, nil, nil, []),
+#ifdef VDMPP
+    mk_(mk_SEM`OBJ_Ref(-,-),[-]^-) -> ModifyInstanceVar(scomp_v, index_l, val_v),
+#endif VDMPP
+    others -> RTERR`ErrorVal(RTERR`REF_UNKNOWN, nil, nil, [])
+  end;
+
+#ifdef VDMPP
+ModifyInstanceVar : SEM`OBJ_Ref * seq of (AS`Name | SEM`VAL) * SEM`VAL ==> SEM`OBJ_Ref
+ModifyInstanceVar(obj_ref, index_l, val_v) ==
+  def index = hd index_l
+  in
+    if is_AS`Name(index)
+    then
+      def obj_v = obj_tab(obj_ref);
+          obj = obj_v.sem;
+          clsnm = obj.tp;
+          insmap = obj.ins(clsnm)
+      in
+        if index in set dom insmap
+        then
+          let mk_(v,access) = insmap(index)
+          in
+            if access = <PUBLIC_AS>
+            then
+              def new_vm = insmap ++ {index |-> mk_(ModifyValue(v,tl index_l,val_v), access)};
+                  new_val = mu(obj, ins |-> obj.ins ++ {clsnm |-> new_vm});
+                  new_o = mu(obj_v, sem |-> new_val)
+              in
+               (obj_tab := obj_tab ++ {obj_ref |-> new_o};
+                if SETTINGS`INV()
+                then
+                 (STKM`PushEmptyEnv();
+                  STKM`PushCurObj(obj_ref, obj_ref.tp, STKM`GetCurCl());
+                  if not CheckGlobInv()
+                  then RTERR`Error(RTERR`INST_INV_BROKEN, nil, nil, []);
+                  STKM`PopCurObj();
+                  STKM`PopEnvL());
+                return obj_ref;)
+            else RTERR`ErrorVal(RTERR`NOT_IN_SCOPE, nil, nil, [])
+        else RTERR`ErrorVal(RTERR`REF_UNKNOWN, nil, nil, [])
+    else RTERR`ErrorVal(RTERR`REF_UNKNOWN, nil, nil, [])
+pre obj_ref in set dom obj_tab;
+#endif VDMPP
+\end{vdm_al}
+
+This operation is used to change the old value of the state designator. The
+index sequence is used to select the proper field in a record value, or the
+proper element in a sequence or map value.
+
+\begin{vdm_al}
+operations
+#ifdef VDMSL
+LookUpSD : STKM`StateDesignator ==> SEM`VAL * seq of (AS`Name | SEM`VAL) *
+                                    [ bool * [GLOBAL`State]] * [ bool * [SEM`ValTp]]
+#endif VDMSL
+#ifdef VDMPP
+LookUpSD : STKM`StateDesignator ==> SEM`VAL * seq of (AS`Name | SEM`VAL) *
+                                    [bool * bool * [SEM`VAL] * [AS`Type] * [AS`Name] * [AS`Access]] *
+                                    [ bool * [SEM`ValTp]]
+#endif VDMPP
+LookUpSD (sd) ==
+  cases sd:
+    mk_AS`Name(-,-) ->
+         (def ils = STKM`IsLocalState(sd)
+          in
+            cases ils:
+              mk_(true, nil)                     -> def - = RTERR`ErrorVal(RTERR`NOT_IN_SCOPE, nil, nil, [])
+                                                    in return mk_(mk_SEM`UNDEF(), [], nil, nil),
+              mk_(true, mk_SEM`ValTp(val,tp))    -> if is_SEM`UNDEF (val)
+                                                    then return mk_(CreateUndefVal(tp), [ sd ], nil, ils)
+                                                    else return mk_(val, [ sd ], nil, ils)
+            end;
+
+#ifdef VDMSL
+          def igs = IsGlobalState(sd, STKM`CurrentModule())
+          in
+            cases igs:
+              mk_(true, mk_GLOBAL`State(val,tp)) -> if is_SEM`UNDEF(val)
+                                                    then return mk_(CreateUndefVal(tp), [ sd ], igs, nil)
+                                                    else return mk_(val, [ sd ], igs, nil)
+            end;
+#endif VDMSL
+#ifdef VDMPP
+          def iios = IsInObjScope(sd,nil)
+          in 
+            cases iios:
+              mk_(true,-,val,type,-,-) -> if val = nil
+                                          then
+                                            def - = RTERR`ErrorVal(RTERR`INSTVAR_NOT_IN_SCOPE, nil, nil, [])
+                                            in return mk_(mk_SEM`UNDEF(), [], nil, nil)
+                                          else
+                                            if is_SEM`UNDEF(val)
+                                            then return mk_(CreateUndefVal(type), [ sd ], iios, nil)
+                                            else return mk_(val, [ sd ], iios, nil)
+            end;
+
+          def val = LookUp(sd)
+          in
+            if is_SEM`OBJ_Ref(val)
+            then return mk_(val, [sd], nil, nil);
+#endif VDMPP
+          def - = RTERR`ErrorVal(RTERR`STATE_DESIG_UNKNOWN, nil, nil, [])
+          in return mk_(mk_SEM`UNDEF(), [], nil, nil);
+         ),
+    mk_STKM`FieldRef(fsd, sel,-)    ->
+#ifdef VDMPP
+                                       if is_AS`SelfExpr(fsd)
+                                       then return LookUpSD(sel)
+                                       else
+#endif VDMPP
+                                       def mk_(scomp_v, index_l, gres, lres) = LookUpSD(fsd)
+                                       in return mk_(scomp_v, index_l ^ [ sel ], gres, lres),
+    mk_STKM`MapOrSeqRef(msd, arg,-) -> def mk_(scomp_v, index_l, gres, lres) = LookUpSD(msd)
+                                       in return mk_(scomp_v, index_l ^ [ arg ], gres, lres),
+    others -> error
+  end;
+
+CreateUndefVal: GLOBAL`Type ==> SEM`VAL
+CreateUndefVal(type) ==
+ (dcl tmp_type : GLOBAL`Type := type,
+      tag : AS`Name;
+  while is_AS`TypeName(tmp_type) do
+    def mk_AS`TypeName(tn,-) = tmp_type;
+#ifdef VDMSL
+        mk_(isit,the_type,-,-) = AUX`IsTypeDef (tn)
+#endif VDMSL
+#ifdef VDMPP
+        mk_(isit,the_type,-,-,-) = AUX`IsTypeDef (tn)
+#endif VDMPP
+    in
+      if isit
+      then 
+       (tmp_type := the_type;
+        tag := tn)
+      else
+        def - = RTERR`ErrorVal(RTERR`TYPE_NOT_IN_SCOPE, nil, nil, [])
+        in return mk_SEM`UNDEF();
+
+      if is_AS`CompositeType(tmp_type)
+      then
+        def mk_AS`CompositeType(-,fields_l,-) = tmp_type;
+            v = { i |-> mk_SEM`UNDEF() | i in set inds fields_l & not fields_l(i).dc};
+            v_dc = { i |-> mk_SEM`UNDEF() | i in set inds fields_l & not fields_l(i).dc};
+#ifdef VDMSL
+            --quotedtag = AUX`UniqueTagName(tag)
+            mk_(quotedtag,-) = AUX`ExtractTagName(tag, {})
+#endif VDMSL
+#ifdef VDMPP
+            mk_(quotedtag,-) = AUX`ExtractTagName(tag, {})
+#endif VDMSL
+        in
+          return mk_SEM`REC(quotedtag, v, v_dc)
+      else return mk_SEM`UNDEF();
+  );
+
+functions
+IsMapType: AS`Type +> bool
+IsMapType(tp) ==
+  cases tp:
+    mk_AS`GeneralMap0Type(-,-,-),
+    mk_AS`GeneralMap1Type(-,-,-),
+    mk_AS`InjectiveMap0Type(-,-,-),
+    mk_AS`InjectiveMap1Type(-,-,-) -> true,
+    mk_AS`UnionType(tps,-)         -> exists t in set elems tps & IsMapType(t),
+    mk_AS`OptionalType(t,-)        -> IsMapType(t),
+    mk_AS`BracketedType(t,-)       -> IsMapType(t),
+    others -> false
+  end;
+
+operations
+GetRngType: AS`Type ==> AS`Type
+GetRngType(tp) ==
+  cases tp:
+    mk_AS`GeneralMap0Type(-,t,-)   -> return t,
+    mk_AS`GeneralMap1Type(-,t,-)   -> return t,
+    mk_AS`InjectiveMap0Type(-,t,-) -> return t,
+    mk_AS`InjectiveMap1Type(-,t,-) -> return t,
+    mk_AS`UnionType(tps,-)         -> (let tp_l = conc [ cases tps(i):
+                                                          mk_AS`GeneralMap0Type(-,t,-)   -> [t],
+                                                          mk_AS`GeneralMap1Type(-,t,-)   -> [t],
+                                                          mk_AS`InjectiveMap0Type(-,t,-) -> [t],
+                                                          mk_AS`InjectiveMap1Type(-,t,-) -> [t],
+                                                          others -> []
+                                                        end | i in set inds tps ]
+                                      in
+                                      cases tp_l :
+                                        [] -> error,
+                                        [x] -> return x,
+                                        others -> return mk_AS`UnionType(tp_l, CI`NilContextId)
+                                      end),
+    mk_AS`OptionalType(t,-)       -> return GetRngType(t),
+    mk_AS`BracketedType(t,-)      -> return GetRngType(t),
+    others -> error
+  end;
+
+UpdateVal: SEM`VAL * AS`Type * seq of (AS`Name | SEM`VAL) ==> SEM`VAL
+UpdateVal(val, tp, index_l) ==
+  if IsMapType(tp) and index_l <> []
+  then
+    def maprng = GetRngType(tp);
+        key = hd index_l
+    in cases val :
+         mk_SEM`MAP(m) -> let v = if key in set dom m then m(key) else mk_SEM`UNDEF()
+                          in return mk_SEM`MAP(m ++ {key |-> UpdateVal(v, maprng, tl index_l)}),
+         mk_SEM`UNDEF() -> return mk_SEM`MAP({key |-> UpdateVal(mk_SEM`UNDEF(), maprng, tl index_l)}),
+         others -> return val
+       end
+  else return val;
+
+#ifdef VDMSL
+CheckMap: (SEM`VAL * seq of (AS`Name | SEM`VAL) * [bool * [GLOBAL`State]] * [bool * [SEM`ValTp]])
+          ==> (SEM`VAL * seq of (AS`Name | SEM`VAL) * [bool * [GLOBAL`State]] * [bool * [SEM`ValTp]])
+#endif VDMSL
+#ifdef VDMPP
+CheckMap: (SEM`VAL * seq of (AS`Name | SEM`VAL) *
+          [bool * bool * [SEM`VAL] * [AS`Type] * [AS`Name] * [AS`Access]] * [bool * [SEM`ValTp]])
+          ==> (SEM`VAL * seq of (AS`Name | SEM`VAL) *
+              [bool * bool * [SEM`VAL] * [AS`Type] * [AS`Name] * [AS`Access]] * [bool * [SEM`ValTp]])
+#endif VDMPP
+CheckMap(mk_(scomp_v, index_l, glres, llres)) ==
+  (if llres <> nil
+   then let mk_(isit, ls_var) = llres
+        in if isit
+           then let mk_SEM`ValTp(val, tp) = ls_var
+                in return mk_(UpdateVal(val, tp, tl index_l), index_l, glres, llres);
+#ifdef VDMSL
+   if glres <> nil
+   then let mk_(isit, gs_var) = glres
+        in if isit
+        then let mk_GLOBAL`State(val, tp) = gs_var
+             in return mk_(UpdateVal(val, tp, tl index_l), index_l, glres, llres);
+#endif VDMSL
+#ifdef VDMPP
+   if glres <> nil
+   then let mk_(isit, ok, val, type, -, -) = glres
+        in if isit and ok
+           then return mk_(UpdateVal(val, type, tl index_l), index_l, glres, llres);
+#endif VDMPP
+   return mk_(scomp_v, index_l, glres, llres));
+
+\end{vdm_al}
+
+This operation returns the old value for the input state designator. It
+also returns a sequence that denotes the path to the value of the state
+designator. This path is used to change the old value of the state
+designator with the new value.
+
+\begin{vdm_al}
+CheckGlobInv: () ==> bool
+CheckGlobInv() ==
+#ifdef VDMSL
+  return CheckStateInvariant();
+#endif VDMSL
+#ifdef VDMPP
+  return not Init => CheckInstanceInvariant();
+#endif VDMPP
+\end{vdm_al}
+
+In the evaluation of a block statement, we first initialize the local
+state defined by the block statement. Next, we merge the resulting local
+state map with the current local state. Then, we evaluate each of the
+statements in the block statement.
+
+\section{Auxiliaries Operations for the state}
+
+The operation {\em GetFirstCIDOfFctOp} investigates if the function
+named {\em name} exists and if so returns the first contextid the
+module/class in which the function is defined, and the local name,
+that is, without qualification.
+
+#ifdef VDMSL
+\begin{vdm_al}
+GetFirstCIDOfFctOp: AS`Name ==> bool * seq of char * [CI`ContextId] * [AS`Name] * [AS`Name]
+GetFirstCIDOfFctOp(name) ==
+ (dcl mod_nm : AS`Name;
+  if AUX`IsRealName(name)
+  then mod_nm := ExtractModule(name)
+  else mod_nm := STKM`CurrentModule();
+  if mod_nm in set dom mods
+  then
+    def loc_nm = AUX`ExtractName(name);
+    in
+     (dcl sem : STKM`SubProgramId;
+      if EXPR`IsFunction(loc_nm, mod_nm)
+      then sem := (hd (EXPR`GetFunctionVal(loc_nm, mod_nm).fl)).instr
+      elseif EXPR`IsOperation(loc_nm, mod_nm)
+      then sem := EXPR`GetOperationVal(loc_nm, mod_nm).instr
+      elseif EXPR`IsPoly(loc_nm, mod_nm)
+      then sem := EXPR`GetPolyVal(loc_nm, mod_nm).instr
+      else return mk_(false, "No such function or operation", nil, nil, nil);
+
+      -- find first CONTEXT command.
+      def instr = CMPL`GetProgram(mod_nm, sem)
+      in
+        for i = 1 to len instr do
+          if is_INSTRTP`CONTEXT(instr(i))
+          then return mk_(true, "", instr(i).cid, mod_nm, loc_nm);
+      return mk_(false, "Internal error", nil, nil, nil);
+     )
+  elseif mod_nm in set dom imods
+  then return mk_(false, "It is not possible to set breakpoints in a DL module", nil, nil,nil)
+  else return mk_(false,"No such function or operation", nil,nil,nil);
+ );
+\end{vdm_al}
+#endif VDMSL
+
+#ifdef VDMPP
+\begin{vdm_al}
+GetFirstCIDOfFctOp: AS`Name ==> bool * seq of char * [CI`ContextId] * [AS`Name] * [AS`Name]
+GetFirstCIDOfFctOp(mk_AS`Name(ids,ci)) ==
+  if len ids = 2
+  -- The name must be composed of a class name followed by a construct name
+  then
+    let clnm = mk_AS`Name([hd ids],ci),
+        opfn = mk_AS`Name([ids(2)],ci)
+    in
+      if clnm in set dom classes
+      then
+        let mk_GLOBAL`SigmaClass(-,-,-,-,-,-,-,explfns,explops,-,explpolys,-,-,-,-,-,-,-,-,-,-,
+#ifdef VICE
+             -,-,-,
+#endif VICE
+              -) = classes(clnm)
+        in
+         (dcl sem : STKM`SubProgramId;
+          if opfn in set dom explfns
+          then sem := let v = explfns(opfn)
+                      in (hd (v.fl)).instr
+          elseif opfn in set dom explops
+          then sem := explops(opfn).instr
+          elseif opfn in set dom explpolys
+          then sem := explpolys(opfn).instr
+          else return mk_(false, "No such method", nil, nil, nil);
+
+          -- find first CONTEXT command.
+          def instr = CMPL`GetProgram(clnm, sem)
+          in
+            for i = 1 to len instr do
+              if is_INSTRTP`CONTEXT(instr(i))
+              then return mk_(true, "", instr(i).cid, clnm, opfn);
+          return mk_(false, "Internal error", nil, nil, nil))
+      else return mk_(false, "No such class", nil,nil,nil)
+  else error
+pre len ids = 2;
+\end{vdm_al}
+#endif VDMPP
+
+#ifdef VDMSL
+\begin{vdm_al}
+operations
+
+GetDLModule : AS`Name ==> GLOBAL`SigmaIMO
+GetDLModule (mod_name) ==
+  if mod_name in set dom imods
+  then return imods(mod_name)
+  else error
+\end{vdm_al}
+
+The operation $GetDLModule$ returns the module value for the implementation
+module name. If the implementation module name does not exists, an error is
+generated.
+
+\begin{vdm_al}
+operations
+
+APPROXVal : SEM`LOC * seq of SEM`VAL ==> SEM`VAL
+APPROXVal (loc, arg_l) ==
+  let approx_mod = mk_AS`Name(["APPROX"], CI`NilContextId)
+  in
+    if EXPR`IsDefApproxVal(loc, approx_mod)
+    then
+      def res = EXPR`GetApproxVal(loc, approx_mod, arg_l)
+      in return res
+    else
+      return mk_SEM`CONT();
+end STATE
+\end{vdm_al}
+
+The operation is a simulation for the evaluation of the body related to an
+external defined function. The functions checks if an approximation module
+$APPROX$ exists and the $loc$\ is defined in it. The $APPROX$ module contains
+input - output mappings for
+the definitions of an implementation modules.
+The function $GetApproxVal$ looks up for the output value of a $loc$.
+#endif VDMSL
+
+#ifdef VDMPP
+\section{Operations Regarding Synchronisation}
+
+\begin{vdm_al}
+LookUpPermis: AS`Name ==> [STKM`SubProgram]
+LookUpPermis(nm) ==
+  let mk_AS`Name([clnm,opnm], cid) = nm,
+      perm_pred = classes(mk_AS`Name([clnm], cid)).perm_pred
+  in if mk_AS`Name([opnm], cid) in set dom perm_pred
+     then let pred =  perm_pred(mk_AS`Name([opnm], cid))
+          in if pred = []
+             then return nil
+             else return pred
+     else return nil
+pre len nm.ids = 2;
+
+SetPermission: AS`Name * AS`Name * STKM`SubProgram ==> ()
+SetPermission(clnm, opnm, code) ==
+  classes(clnm) := mu(classes(clnm), perm_pred |-> classes(clnm).perm_pred ++ {opnm |-> code});
+
+LookUpThread: AS`Name ==> [STKM`Thread]
+LookUpThread(clnm) ==
+  return classes(clnm).thread
+pre len clnm.ids = 1;
+
+#ifdef VICE
+SetPerThreadDef : AS`Name * AS`PerObl ==> ()
+SetPerThreadDef(clnm, perobl) ==
+  let mk_AS`PerObl(period, jitter, delay, offset, mtd, -) = perobl
+  in
+    def sp = CMPL`SetContext(perobl.cid, true) ^
+             [mk_INSTRTP`PUSHCONTEXT(<PTHREAD>),
+              mk_INSTRTP`PUSH([]),
+              mk_INSTRTP`CALLGUARD(false,mtd),
+              mk_INSTRTP`PPCALL(),
+              mk_INSTRTP`EOCL()]
+    in
+      classes(clnm) := mu(classes(clnm), thread |-> mk_STKM`PerThread(sp,period,jitter,delay,offset));
+
+SetSpoThreadDef : AS`Name * AS`SpoObl ==> ()
+SetSpoThreadDef(clnm, spoobl) ==
+  let mk_AS`SpoObl(delay, bound, offset, mtd, -) = spoobl
+  in
+    def sp = CMPL`SetContext(spoobl.cid, true) ^
+             [mk_INSTRTP`PUSHCONTEXT(<PTHREAD>),
+              mk_INSTRTP`PUSH([]),
+              mk_INSTRTP`CALLGUARD(false,mtd),
+              mk_INSTRTP`PPCALL(),
+              mk_INSTRTP`EOCL()]
+    in
+      classes(clnm) := mu(classes(clnm), thread |-> mk_STKM`SpoThread(sp,delay,bound,offset));
+#endif VICE
+
+SetThreadField: AS`Name * [STKM`Thread] ==> ()
+SetThreadField(clnm, threadfield) ==
+  classes(clnm) := mu(classes(clnm), thread |-> threadfield);
+
+SetThreadDef: AS`Name * [STKM`Thread] ==> ()
+SetThreadDef(clnm, thread) ==
+  classes(clnm) := mu(classes(clnm), thread |-> thread)
+pre len clnm.ids = 1;
+
+GetThreadDef : AS`Name ==> [STKM`Thread]
+GetThreadDef(clnm) ==
+  return classes(clnm).thread;
+
+\end{vdm_al}
+\section{Auxiliary Operations and Functions on the Sigma State}
+
+The operation {\em AddDObj} adds an entry in the table {\em d\_objs}.
+The {\em d\_objs} is a table of the objects created by user in the debugger.
+
+The operation {\em GetSemObjInTab} returns the semantic value of a
+reference of an object in the object table {\em obj-tab}.
+
+\begin{vdm_al}
+
+GetSemObjInTab: SEM`OBJ_Ref ==> SEM`OBJ
+GetSemObjInTab(nm) ==
+  return obj_tab(nm).sem
+pre nm in set dom obj_tab;
+
+\end{vdm_al}
+
+#ifdef VICE
+\begin{vdm_al}
+GetObjRefAndClFromThreadId : SCHDTP`ThreadId ==> SEM`OBJ_Ref * AS`Name
+GetObjRefAndClFromThreadId(threadid) ==
+  let obj_ref in set dom obj_tab be st obj_tab(obj_ref).threadid = threadid
+  in return (mk_(obj_ref, obj_tab(obj_ref).sem.tp));
+
+\end{vdm_al}
+#endif VICE
+
+The operation {\em GiveNextRefCountInTab} returns the next available
+reference number in the object table.
+
+\begin{vdm_al}
+GiveNextRefCountInTab: AS`Name ==> SEM`OBJ_Ref
+GiveNextRefCountInTab(clnm) ==
+  (obj_ref_no := obj_ref_no + 1;
+   return mk_SEM`OBJ_Ref(obj_ref_no,clnm));
+
+\end{vdm_al}
+
+The operation {\em MakeNewObj} creates a new object in the object table and returns an object reference.
+
+\begin{vdm_al}
+
+global_obj_tab_insert : SEM`OBJ * [token] ==> SEM`OBJ_Ref
+global_obj_tab_insert (semobj,dlclassp) ==
+  def ref = GiveNextRefCountInTab(semobj.tp)
+  in
+   (obj_tab := { ref |-> mk_GLOBAL`OBJ_Desc(1, semobj,nil,dlclassp,nil) } ++ obj_tab;
+    return ref;
+   );
+
+SetObjectThreadId : SEM`OBJ_Ref * SCHDTP`ThreadId ==> ()
+SetObjectThreadId(obj_ref, threadid) ==
+  obj_tab(obj_ref).threadid := threadid;
+
+\end{vdm_al}
+
+The operation {\em GetAllClassNms} returns the names of all classes of
+the current state.
+\begin{vdm_al}
+GetAllClassNms: () ==> set of AS`Name
+GetAllClassNms() ==
+  return dom classes;
+\end{vdm_al}
+
+The auxiliry operation $IsClientModifOk$ is used to check whether the
+use of a local identifier is a client or an inheritance one. The check
+is necessary to be able to distingush the situations where the
+protected access modifier is used. The modifier is all right is it is
+either public or if we have no sequence of calls (then it will always
+be ok when it is a local construct). Finally it is ok if the current
+scope and the calling scope follow the rules of the access modifier.
+
+The operation {\em IsClient} checks if a function/operation called
+from class {\em origcl} is a client of a object that contains the
+class {\em cloffct}. The strategy of the operation is that {\em
+origcl} is not a client to {\em cloffct} if they are in each other hierarchy.
+
+\begin{vdm_al}
+IsClient: AS`Name * AS`Name ==> bool
+IsClient(origcl, cloffct) ==
+  return not (origcl = cloffct or IsSubClass(cloffct, origcl) or IsSubClass(origcl, cloffct));
+
+IsSubClass: AS`Name * AS`Name ==> bool
+IsSubClass(origcl, cloffct) ==
+  return cloffct in set GetAllSupers(origcl);
+
+IsBaseClass: AS`Name ==> bool
+IsBaseClass(clnm) ==
+  return GetAllSupers(clnm) = {};
+
+\end{vdm_al}
+
+
+The operation {\em AccessOk} checks the accessibility of a
+function/operation in class {\em cloffct} with the assumption that the
+function/operation is called from class {\em origcl}.
+
+
+The modifier on the function/operation and the fact if the caller of
+the function/operation is client or not affects the accessibility of a function/operation.
+Four cases can occur:
+\begin{itemize}
+\item The accessibility is public. In this case the function or
+operation can be accessed no matter if the caller of the function is client or not.
+\item The caller of the function is a client and the modifier on the
+function/operation is protected or private. In this case the function cannot be accessed.
+\item The caller of the function is not a client, and the modifier on
+the function is private. In this the class of the caller of the
+function {\em origcl} should be placed in the same class as the
+definition of the function {\em cloffct}, {\bf or} the definition of
+the {\em cloffct} should be placed in a class that is a subclass to
+{\em cloffct}. The latter situation can only occur in the case where
+the function {\em cloffct} overwrites a function that is also
+defined in class {\em origcl}. An example of this represented in
+rep-61 in the test environment:
+\begin{verbatim}
+class A0
+
+class A is subclass of A0
+
+instance variables
+  a: int := 0;
+functions
+
+public  op1: () -> int
+  op1() ==
+    op3();
+
+  op3: () -> int
+  op3() ==
+     2;
+end A
+
+class B is subclass of A
+
+functions
+  op3: () -> int
+  op3() ==
+     1;
+
+  Test: () -> int
+  Test() ==
+    op1();
+
+end B
+\end{verbatim}
+In this case {\em op3} in class B is private, and it is in fact the
+one that should be called.
+\item The caller of the function is not a client and the modifier of the
+function is protected. In this case the definition of the definition
+of the function could be up in the hierarchy of the caller of the
+function {\em origcl} or it could be down in the hierarchy. In the
+latter case the previous example is also an example of this.
+\end{itemize}
+
+
+\begin{vdm_al}
+AccessOk: AS`Access * GLOBAL`OrigCl * AS`Name ==> bool
+AccessOk(access, origcl, cloffct) ==
+  if origcl = mk_GLOBAL`Start()
+  then return access = <PUBLIC_AS>
+  else
+    def isclient = IsClient(origcl, cloffct);
+        origsupers = GetAllSupers(origcl)
+--        cloffct_supers = GetAllSupers(cloffct)
+    in
+      cases true:
+        (access = <PUBLIC_AS> ) -> return true,
+--        (isclient and
+--          ((<PRIVATE_AS> = access) or
+--           (<DEFAULT_AS> = access) or
+--           (<PROTECTED_AS> = access))) -> return false,
+        (isclient and access in set {<PRIVATE_AS>, <DEFAULT_AS>, <PROTECTED_AS> }) -> return false,
+        (not isclient and access = <PRIVATE_AS> ) -> return ( origcl = cloffct or not (cloffct in set origsupers)),
+        (not isclient and access = <PROTECTED_AS> ) -> return true,
+        others -> return origcl = cloffct -- to keep the type checker silent.
+      end;
+--   return origcl = cloffct; -- to keep the type checker silent.
+
+#ifdef VICE
+GetCPUOfObjRef: SEM`OBJ_Ref ==> [AS`Name]
+GetCPUOfObjRef(objref) ==
+ let mk_GLOBAL`OBJ_Desc(-,-,-,-,procid) = obj_tab(objref)
+ in return procid
+pre objref in set dom obj_tab;
+
+SetCPUOfObjRef: AS`Name * SEM`OBJ_Ref ==> ()
+SetCPUOfObjRef(cpunm,objref) ==
+  obj_tab(objref).procid := cpunm
+pre objref in set dom obj_tab;
+#endif VICE
+\end{vdm_al}
+
+\begin{vdm_al}
+LookUpHistory: INSTRTP`HistoryKind * AS`Name ==> SEM`NUM
+LookUpHistory(kind,opnm) ==
+ (dcl realopnm : AS`Name := opnm;
+  if len (opnm.ids) = 1
+  then realopnm := mk_AS`Name([hd (STKM`GetCurCl().ids), hd opnm.ids],opnm.cid);
+
+  def the_ref = STKM`GetCurObjRef();
+  in
+    let hist_m = obj_tab(the_ref).sem.hist
+    in
+      if realopnm not in set dom hist_m
+      then def clnm = if len opnm.ids = 2
+                      then mu(opnm, ids |-> [hd (opnm.ids)])
+                      else the_ref.tp;
+               mnm = if len opnm.ids = 2
+                          then mu(opnm, ids |-> [(opnm.ids)(2)])
+                          else opnm
+           in
+             if IsStatic(clnm,mnm)
+             then return CounterCalc(kind,classes(clnm).statichist(opnm))
+             else def overnum = CalcOverload(kind,opnm,hist_m)
+                  in
+                    return mk_SEM`NUM(overnum)
+      else return CounterCalc(kind,hist_m(opnm)));
+
+CounterCalc: INSTRTP`HistoryKind * SEM`History ==> SEM`NUM
+CounterCalc(kind,mk_SEM`History(r,a,f)) ==
+  let v = cases kind:
+            mk_INSTRTP`req()     -> r,
+            mk_INSTRTP`act()     -> a,
+            mk_INSTRTP`fin()     -> f,
+            mk_INSTRTP`active()  -> a - f,
+            mk_INSTRTP`waiting() -> r - a
+          end
+  in
+    return mk_SEM`NUM(v);
+
+CalcOverload: INSTRTP`HistoryKind * AS`Name * map AS`Name to SEM`History ==> nat
+CalcOverload(kind,nm,histm) ==
+  (dcl res : nat := 0;
+   for all opnm in set dom histm do
+     if MANGLE`IsMangled(opnm)
+     then def mk_(realid,-,-) = MANGLE`UnMangle(opnm)
+          in
+            if realid = nm
+            then res := res + CounterCalc(kind,histm(opnm)).v;
+   return res);
+
+IsStatic: AS`Name * AS`Name ==> bool
+IsStatic(clnm,opnm) ==
+  return clnm in set dom classes and opnm in set dom classes(clnm).statics;
+
+RemoveStaticHist: () ==> ()
+RemoveStaticHist() ==
+  for all clnm in set dom classes do
+    classes(clnm).statichist := {nm |-> mk_SEM`History(0,0,0) | nm in set dom classes(clnm).statichist};
+
+  UpdateHistCount: AS`Name * INSTRTP`HistoryKind * [SEM`OBJ_Ref]
+#ifdef VICE
+                   * bool * [seq of SEM`VAL]
+#endif VICE
+                   ==> ()
+  UpdateHistCount(opnm,kind,objref
+#ifdef VICE
+                 ,async,vals
+#endif VICE
+                 ) ==
+    if objref in set dom obj_tab or STKM`GetObjLLen() <> 0
+    then
+     (dcl the_ref : [SEM`OBJ_Ref] := objref;
+      if objref not in set dom obj_tab
+      then the_ref := STKM`GetCurObjRef();
+      def clnm    = if len opnm.ids = 2
+                    then mu(opnm, ids |-> [hd (opnm.ids)])
+                    else the_ref.tp;
+          mnm = if len opnm.ids = 2
+                     then mu(opnm, ids |-> [(opnm.ids)(2)])
+                     else opnm
+      in
+       (dcl hist_m : map AS`Name to SEM`History;
+        if IsStatic(clnm,mnm)
+        then hist_m := classes(clnm).statichist
+        else hist_m := obj_tab(the_ref).sem.hist;
+        let new_hist = AddHist(opnm,hist_m,kind)
+        in
+#ifdef VICE
+         (TIMETRACE`LogHistEvent(SCHD`CurThreadId(), the_ref.tp,opnm, kind, the_ref,not async,vals);
+          def opnms = SCHD`BlockedObjRef(the_ref);
+              clnm = the_ref.tp;
+              depops = classes(clnm).depops;
+              --mnm = if len opnm.ids = 2
+              --      then mu(opnm, ids |-> [(opnm.ids)(2)])
+              --      else opnm
+          in
+            if exists nm in set opnms inter dom depops & mnm in set depops(nm)
+            then SCHD`PotentialPerChange(the_ref);
+#endif VICE
+          if IsStatic(clnm,mnm)
+          then classes(clnm).statichist := classes(clnm).statichist ++ {opnm |-> new_hist}
+          else obj_tab(the_ref).sem.hist := hist_m ++ {opnm |-> new_hist}
+#ifdef VICE
+         )
+#endif VICE
+       ))
+pre  kind in set {mk_INSTRTP`req(),mk_INSTRTP`act(),mk_INSTRTP`fin()};
+
+functions
+
+  AddHist: AS`Name * (map AS`Name to SEM`History) * INSTRTP`HistoryKind  +> SEM`History
+  AddHist(origopnm, hist_m, kind) ==
+    let opnm = origopnm
+    in
+      if opnm in set dom hist_m
+      then
+        let mk_SEM`History(r,a,f) = hist_m(opnm)
+        in
+          cases kind:
+            mk_INSTRTP`req() -> mk_SEM`History(r + 1,a,f),
+            mk_INSTRTP`act() -> mk_SEM`History(r,a + 1,f),
+            mk_INSTRTP`fin() -> mk_SEM`History(r,a,f + 1)
+          end
+      elseif kind = mk_INSTRTP`req()
+      then mk_SEM`History(1,0,0)
+      elseif true -- opnm.ids(1) = opnm.ids(2) -- A constructor is used
+      then mk_SEM`History(1,1,0)
+      else undefined -- internal error
+pre  kind in set {mk_INSTRTP`req(), mk_INSTRTP`act(), mk_INSTRTP`fin()};
+
+RemoveHist: GLOBAL`OBJ_Desc +> GLOBAL`OBJ_Desc
+RemoveHist(desc) ==
+  let mk_SEM`OBJ(tp,ins,-) = desc.sem,
+      undefinf = {nm |-> {id |-> mk_(mk_SEM`UNDEF(),ins(nm)(id).#2) | id in set dom ins(nm)} | nm in set dom ins},
+      obj = mk_SEM`OBJ(tp,undefinf,{|->})
+  in
+    mu(desc,sem |-> obj,threadid |-> nil);
+\end{vdm_al}
+
+The operation {\em LookupHchy} returns returns a boolean and the
+hierarhcy set for the class given by nm. The boolean indicates whether
+the name was a valid class.
+
+\begin{vdm_al}
+operations
+
+LookupHchy: AS`Name ==> bool * set of AS`Name
+LookupHchy(nm)  ==
+  if nm in set dom hchy
+  then return mk_(true, hchy(nm))
+  else return mk_(false, {});
+
+\end{vdm_al}
+
+The operation {\em SetHchy} sets the global hiearchy state {\em hchy} to {\em clhchy}.
+
+\begin{vdm_al}
+SetHchy: GLOBAL`Hierarchy ==> ()
+SetHchy(clhchy) ==
+  hchy := clhchy;
+\end{vdm_al}
+
+The operation {\em GetInhStrct} returns the inheritance structure {\em inhstrct} for a given class name:
+
+\begin{vdm_al}
+GetInhStrct: AS`Name ==> seq of set of AS`Name
+GetInhStrct(nm) ==
+  return inhstrct(nm);
+\end{vdm_al}
+
+The operation {\em SetInhStrct} returns the inheritance structure {\em inhstrct} for a given class name:
+
+\begin{vdm_al}
+SetInhStrct: GLOBAL`InhStrct ==> ()
+SetInhStrct(new_inhstrct) ==
+  inhstrct := new_inhstrct;
+\end{vdm_al}
+
+The operation {\em GetAllSupers} returns the names of all the classes that
+are superclasses of the class {\em nm}, that is also the superclasses
+that are several levels above the class {\em nm}.
+
+\begin{vdm_al}
+GetAllSupers: AS`Name ==> set of AS`Name
+GetAllSupers(nm) ==
+  if nm in set dom hchy
+  then return hchy(nm)
+--#ifdef VICE
+--  elseif nm in set dom taskidm
+--  then taskidm(nm)
+--#endif VICE
+  else RTERR`ErrorVal(RTERR`CLNM_NOT_DEFINED, nil, nil, [AUX`SingleNameToString(nm)]);
+
+AllSuperList: nat * seq of AS`Name ==> seq of AS`Name
+AllSuperList(index,supers) ==
+  if index = len supers + 1
+  then return supers
+  else def news = GetAllSupers(supers(index));
+           newlist = UTIL`set2seq[AS`Name]({nm | nm in set news \ elems supers})
+       in return AllSuperList(index + 1, supers ^ newlist)
+pre index in set inds supers union {len supers + 1};
+\end{vdm_al}
+
+\section{Auxiliary Functions and Operations on SigmaClass Data Type}
+
+The operation {\em GetClasses} returns the value of the state {\em classes}.
+
+\begin{vdm_al}
+operations
+
+GetClasses: () ==> map AS`Name to GLOBAL`SigmaClass
+GetClasses() ==
+  return classes;
+
+GetDefaultCons: AS`Name ==> bool
+GetDefaultCons(nm) ==
+  return classes(nm).defaultcons
+pre nm in set dom classes;
+
+AddAbstract: AS`Name ==> ()
+AddAbstract(clsid) ==
+  abstracts := abstracts union {clsid};
+
+CheckIfAbstractClass: AS`Name ==> bool
+CheckIfAbstractClass(name) ==
+  return name in set abstracts;
+\end{vdm_al}
+
+The operation {\em IsAClass} decides if the name {\em name} is a name of class.
+
+\begin{vdm_al}
+IsAClass: AS`Name ==> bool
+IsAClass(name) ==
+  --return name in set dom classes;
+  return name in set clsnms;
+\end{vdm_al}
+
+The operation {\em GetInhCon} returns classes that has been inherited.
+
+\begin{vdm_al}
+GetInhCon: AS`Name ==> GLOBAL`InhCon
+GetInhCon(nm) ==
+  return classes(nm).inhcon;
+\end{vdm_al}
+
+The operation {\em GetInstVars} returns a map of the instance variables names to its type.
+
+\begin{vdm_al}
+GetInstVars: AS`Name ==> seq of AS`InstAssignDef
+GetInstVars(nm) ==
+  return classes(nm).instvars;
+\end{vdm_al}
+
+\begin{vdm_al}
+GetInstVarsTp: AS`Name ==> map AS`Name to AS`Type
+GetInstVarsTp(nm) ==
+  return classes(nm).instvars_tp;
+\end{vdm_al}
+
+The operation {\em GetInstInv} returns the invariants expressions of the instance variables of class {\em nm}.
+\begin{vdm_al}
+GetInstInv: AS`Name ==> STKM`SubProgram -- seq of AS`InstanceInv -- 20130709
+GetInstInv(nm) ==
+  --return classes(nm).inst_inv;
+  return classes(nm).inst_inv.#2;
+\end{vdm_al}
+
+The operation {\em GetInstInitVal} returns the initial semantic values
+of the instance variables of the class named {\em name}
+
+\begin{vdm_al}
+GetInstInitVal: AS`Name ==> SEM`InsStrct
+GetInstInitVal(name) ==
+  return classes(name).inst_init_val;
+\end{vdm_al}
+
+The operation {\em SetInstInitVal} sets the initial semantics values of the instance variables of class {\em nm}.
+\begin{vdm_al}
+SetInstInitVal: AS`Name * SEM`InsStrct ==> ()
+SetInstInitVal(name, instval) ==
+  classes(name).inst_init_val := {nm |-> {inm |-> let mk_(v,a) = (instval(nm))(inm)
+                                                  in mk_(v,DEF`RealAccess(a,<INST>))
+                                          | inm in set dom instval(nm)}
+                                  | nm in set dom instval};
+\end{vdm_al}
+
+
+The operation {\em GetVlsDef} returns the value definitions contained in class {\em nm}.
+\begin{vdm_al}
+GetVlsDef: AS`Name ==> seq of AS`ValueDef
+GetVlsDef(nm) ==
+  return classes(nm).vls_def;
+\end{vdm_al}
+
+The operation {\em GetVlsInit} returns the semantic values of the values in the class {\em nm}.
+\begin{vdm_al}
+GetVlsInit: AS`Name ==> GLOBAL`ValueMap
+GetVlsInit(nm) ==
+  return classes(nm).vls_init;
+\end{vdm_al}
+
+The operation {\em GetAllOps} returns all the operatons in the class {\em name}
+\begin{vdm_al}
+GetAllOps: AS`Name ==> map AS`Name to SEM`ExplOP
+GetAllOps(name) ==
+  return classes(name).explops;
+\end{vdm_al}
+
+The operation {\em GetAllOpsNmsSupers} returns all the names of operations in the class
+{\em name} and in all its super classes.
+
+\begin{vdm_al}
+GetAllOpsNmsSupers: AS`Name  ==> set of AS`Name
+GetAllOpsNmsSupers(name) ==
+  return dom GetAllOps(name) union dunion {dom GetAllOps(nm) | nm in set GetAllSupers(name)};
+
+\end{vdm_al}
+
+The operation {\em LookupAllFnsOpsPolys} looks up a class and
+operation name and return the function/opration/poly. (Can somebody
+please find a nice type name for the rhs. function union type below.)
+
+{\em name}
+\begin{vdm_al}
+LookupAllFnsOpsPolys: AS`Name * AS`Name ==> bool * [ (SEM`CompExplFN  | SEM`ExplOP | SEM`ExplPOLY) * AS`Access ]
+LookupAllFnsOpsPolys(clnm, fnnm) ==
+  if clnm in set dom classes and fnnm in set dom classes(clnm).all_fns_ops_polys
+  then return mk_(true, classes(clnm).all_fns_ops_polys(fnnm))
+  else return mk_(false, nil);
+\end{vdm_al}
+
+
+The operation {\em GetLocalTps} returns all the types defined in the class {\em nm}.
+\begin{vdm_al}
+GetLocalTps: AS`Name ==> map AS`Name to AS`TypeDef
+GetLocalTps(nm) ==
+  return classes(nm).localtps;
+\end{vdm_al}
+
+The operation {\em GetRecSel} returns the record selector information
+of all the record types in class {\em nm}.
+\begin{vdm_al}
+GetRecSel: AS`Name ==> map AS`Name to GLOBAL`RecSel
+GetRecSel(nm) ==
+  return classes(nm).recsel
+pre nm in set dom classes;
+\end{vdm_al}
+
+
+The operation {\em GetLocalHchy} returns the local hierarchy of the
+class {\em nm}.
+
+\begin{vdm_al}
+GetLocalHchy: AS`Name ==> map AS`Name to set of AS`Name
+GetLocalHchy(nm) ==
+  return classes(nm).localhchy;
+\end{vdm_al}
+
+
+\begin{vdm_al}
+IsClassInit: AS`Name ==> bool
+IsClassInit(nm) ==
+  return nm in set dom classes => classes(nm).isinit;
+\end{vdm_al}
+
+\begin{vdm_al}
+ExpandClassName: AS`Name * GLOBAL`OrigCl * set of AS`Name ==> bool * AS`Name
+ExpandClassName(name, orgcl, nm_s) ==
+  if name in set nm_s
+  then return mk_(false, name)
+  else
+    if IsAClass(name)
+     then return mk_(true, name)
+    else
+     (dcl clsnm : AS`Name,
+          tpnm : AS`Name;
+      if len name.ids = 2
+      then
+        (clsnm := mk_AS`Name([name.ids(1)], name.cid);
+         tpnm := mk_AS`Name([name.ids(2)], name.cid);)
+      else
+        (if is_GLOBAL`Start(orgcl)
+         then return mk_(false, name);
+         clsnm := orgcl;
+         tpnm := name;);
+      def tdm : map AS`Name to AS`TypeDef = GetLocalTps(clsnm)
+      in
+        if (tpnm in set dom tdm) and is_AS`TypeName(tdm(tpnm).shape)
+        then return ExpandClassName(tdm(tpnm).shape.name, clsnm, nm_s union {name});
+      return mk_(false, name););
+\end{vdm_al}
+
+\begin{vdm_al}
+InitClasses: () ==> set of AS`Name
+InitClasses() ==
+  return { clnm | clnm in set dom classes & IsClassInit(clnm) };
+\end{vdm_al}
+
+\begin{vdm_al}
+SetClassInit: AS`Name * bool ==> ()
+SetClassInit(nm, val) ==
+  classes(nm).isinit := val;
+\end{vdm_al}
+
+This auxiliary operation {\em nm} computes the super classes names of
+a class {\em name}.
+
+\begin{vdm_al}
+GetSupers: AS`Name ==> set of AS`Name
+GetSupers(nm) ==
+  return classes(nm).inhcon;
+
+\end{vdm_al} This operation returns the constructor code for the given
+class. Because constructors can be overloaded the argument list of
+values is included as a parameter to find the right constructor to
+use.
+
+\begin{vdm_al}
+
+LookUpConstructor: AS`Name * seq of SEM`VAL ==> STKM`DebugCmd
+LookUpConstructor(nm,valL) ==
+  def constlocal = LookUpConstructorLocal(nm,valL)
+  in
+   (if constlocal <> nil
+    then return constlocal
+    else
+--      RTERR`ErrorVal(RTERR`NOCONSTRUCTOR,nil,nil, [])
+      def supers = GetAllSupers(nm);
+          conssup = {cl |-> LookUpConstructorLocal(cl,valL) | cl in set supers} :-> {nil}
+      in
+        cases dom conssup:
+          {}     -> RTERR`ErrorVal(RTERR`NOCONSTRUCTOR,nil,nil, []),
+          {cl}   -> return conssup(cl),
+          others -> def mk_(doesthere, child) = ExistsOneChild(dom conssup,dom conssup)
+                    in
+                      if doesthere
+                      then return conssup(child)
+                      else RTERR`ErrorVal(RTERR`MULT_DEF,nil,nil, [])
+        end;
+    )
+pre nm in set dom classes;
+
+LookUpConstructorLocal:  AS`Name * seq of SEM`VAL ==> [STKM`DebugCmd]
+LookUpConstructorLocal(nm,valL) ==
+  let consts = classes(nm).constructor
+  in
+    cases valL:
+      []     -> let mk_(code, acc) = consts([]) -- default constructor always exists
+                in
+                  if AccessOk(acc, STKM`GetPrevCl(), nm)
+                  then return code
+                  else (RTERR`Error(RTERR`NOT_IN_SCOPE, nil, nil, []);
+                        return nil),
+      others -> (for all typeL in set dom consts do
+                   if len typeL = len valL
+                   then
+                     if forall i in set inds valL & RealSubType(valL(i),typeL(i),false)
+                     then
+                       let mk_(code, acc) = consts(typeL)
+                       in
+                         if AccessOk(acc, STKM`GetPrevCl(), nm)
+                         then return code
+                         else (RTERR`Error(RTERR`NOT_IN_SCOPE, nil, nil, []);
+                               return nil);
+                 return nil)
+    end
+pre nm in set dom classes;
+
+AClass: AS`Name ==> bool
+AClass(nm) ==
+  return nm in set clsnms;
+\end{vdm_al}
+
+
+
+
+\begin{vdm_al}
+end STATE
+\end{vdm_al}
+#endif VDMPP
+
+\vspace{0.5cm}
+
+
+#ifdef RTINFO
+\begin{rtinfo}
+[UpdateRenamedAndImport]{rtinfo.ast}[STATE]
+\end{rtinfo}
+#endif RTINFO
+
+% Local Variables:
+% TeX-master: "dynsem"
+% End:

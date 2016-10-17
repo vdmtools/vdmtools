@@ -1,0 +1,53 @@
+class CasesExprTest
+	functions
+
+  f : () -> inmap rat to nat
+  f() ==
+    {2 |-> 5}
+  pre true
+--  post true
+
+types
+
+  A :: a: int
+       b: bool
+
+values
+
+  v1 : A = mk_A(1,true);
+  n : real = 88
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let t = true,
+      l = [8],
+      k = nil,
+      - = let m:real =
+        cases n:
+         1
+	   -> t
+	,
+         4
+           -> if true
+             then t
+             else l
+        ,
+         5
+           -> cases 8:
+               5.6 -> {1|->2},
+               [] ^ s -> k,
+               others -> f
+             end
+	,
+         others -> k
+        end
+        in m 
+  in skip;
+
+------------------------------------------------------------------------------
+end CasesExprTest

@@ -1,0 +1,173 @@
+% WHAT
+%    The main file of the documentation of the AST.
+% FILE
+%    $Source: /home/vdmtools/cvsroot/toolbox/spec/ast/astdoc.tex,v $
+% VERSION
+%    $Revision: 1.2 $
+% DATE
+%    $Date: 1998/03/30 11:01:31 $
+% FORMAT
+%    $State: Exp $
+% PROJECT
+%    Toolbox
+% STATUS
+%    Under development.
+% AUTHOR
+%    $Author: erik $
+% COPYRIGHT
+%    (C) 1997 IFAD, Denmark
+
+\documentclass[a4paper,dvips]{article}
+\usepackage[dvips]{color}
+\usepackage{vdmsl-2e}
+\usepackage{longtable}
+\usepackage{alltt}
+\usepackage{makeidx}
+\usepackage{ifad}
+\usepackage{epsfig}
+\usepackage{float}
+
+\definecolor{covered}{rgb}{0,0,0}      %black
+%\definecolor{not_covered}{gray}{0.5}   %gray for previewing
+\definecolor{not_covered}{gray}{0.6}   %gray for printing
+%\definecolor{not_covered}{rgb}{1,0,0}  %read
+
+
+\newcommand{\StateDef}[1]{{\bf #1}}
+\newcommand{\TypeDef}[1]{{\bf #1}}
+\newcommand{\TypeOcc}[1]{{\it #1}}
+\newcommand{\FuncDef}[1]{{\bf #1}}
+\newcommand{\FuncOcc}[1]{#1}
+\newcommand{\ModDef}[1]{{\tiny #1}}
+
+#ifdef VDMSL
+\newcommand{\VDMSLPP}{VDM-SL}
+#endif //VDMSL
+#ifdef VDMPP
+\newcommand{\VDMSLPP}{VDM++}
+#endif //VDMPP
+
+\floatstyle{plain}
+\restylefloat{figure}
+
+
+\def\insertfig#1#2#3#4{ % Filename, width, caption, label
+\begin{figure}[H]
+\begin{center}
+\epsfig{file=#1,width=#2}
+\end{center}
+\caption{#3} #4
+\end{figure} 
+} 
+
+
+
+\newcommand{\MCL}{Meta-IV Class Library}
+\newcommand{\TBW}{TO BE WRITTEN}
+
+\makeindex
+
+\begin{document}
+
+\special{!userdict begin /bop-hook{gsave 220 30 translate
+0 rotate /Times-Roman findfont 21 scalefont setfont
+0 0 moveto (CONFIDENTIAL) show grestore}def end}
+
+#ifdef VDMSL
+\docdef{The AST of the IFAD VDM-SL}
+{ The IFAD VDM Tool Group \\
+  The Institute of Applied Computer Science}
+{\today,}
+{IFAD-VDM-??}
+{Report}
+{Under Development}
+{Confidential}
+{}
+{\copyright IFAD}
+{\item[V1.0] First version.
+}
+{}
+#endif // VDMSL
+
+#ifdef VDMPP
+\docdef{The AST of the IFAD VDM++ Specification Language}
+       {IFAD VDM Tool Group \\
+       The Institute of Applied Computer Science}
+       {\today,}
+       {IFAD-VDM-??}
+       {Report}
+       {Under Development}
+       {Confidential}
+       {}
+       {\copyright IFAD}
+       {\item[V1.0] First version.}
+       {}
+#endif // VDMPP
+\renewcommand{\thepage}{\roman{page}}
+
+\tableofcontents
+\newpage
+\renewcommand{\thepage}{\arabic{page}}
+\setcounter{page}{1}
+
+\parskip12pt
+\parindent0pt
+
+\section{Introduction}
+
+This document contains the specification of the Abstract Syntax of the
+\VDMSLPP.
+
+\section{The Modules}
+
+The Abstract Syntax of \VDMSLPP\ is described in the following
+modules:
+
+\begin{description}
+\item[AS:] This is the main module of the specification of the
+  abstract syntax. 
+\item[CI:] This module contains the description of the context
+  information that can be attached on each node in the AST.
+\item[POS:] This module describes all the types related to the position
+  information.
+\item[REP:] This module describes the representation of the types as
+  they are handled in the type checker.
+\end{description}
+
+
+\section{Module AS}
+
+#ifdef VDMSL
+\input{common_as.vdmsl.tex}
+#endif //VDMSL
+
+#ifdef VDMPP
+\input{common_as.vdmpp.tex}
+#endif //VDMPP
+
+\input{contextinfo.vdm.tex}
+
+\section{Module REP}
+
+#ifdef VDMSL
+%\input{rep.vdmsl.tex}
+#endif //VDMSL
+
+
+#ifdef VDMPP
+%\input{rep.vdmpp.tex}
+#endif //VDMPP
+
+
+
+\bibliographystyle{iptes}
+\bibliography{/home/peter/bib/dan}
+
+\newpage
+\addcontentsline{toc}{section}{Index}
+\printindex
+
+\end{document}
+
+
+

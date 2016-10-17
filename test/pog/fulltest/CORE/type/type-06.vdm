@@ -1,0 +1,20 @@
+class A
+types
+
+  A2 = set of (nat -> nat);
+
+  B = inmap A2 to nat;
+
+  C = inmap (bool -> bool) to [bool];
+
+  D = nat * (bool -> bool) * token
+  inv mk_(a,b,c) == 
+    b(true) and a/a < 7;
+
+functions
+
+  f : A2| B | C +> bool | nat
+  f (a) ==
+   a(lambda x : bool & false) + a({})
+
+end A

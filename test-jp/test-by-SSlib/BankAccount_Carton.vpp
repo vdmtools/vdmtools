@@ -1,0 +1,30 @@
+/*#####
+#
+# BankAccount の Carton
+# $Id: BankAccount_Carton.vpp,v 1.1 2005/11/25 07:05:37 vdmtools Exp $
+
+### BankAccount Carton
+*/
+
+class BankAccount_Carton is subclass of GofoCarton
+
+end BankAccount_Carton
+---------------------------------
+class 『普通預金口座開設_Carton』 is subclass of BankAccount_Carton
+
+operations
+
+public book : () ==> 『普通預金口座帳簿』
+book() == return new 『普通預金口座帳簿』(new Gofo_DB());
+
+end 『普通預金口座開設_Carton』
+---------------------------------
+class 『定期預金設定_Carton』 is subclass of BankAccount_Carton
+
+operations
+
+public book : () ==> 『定期預金帳簿』
+book() == return new 『定期預金帳簿』(new Gofo_DB());
+
+end 『定期預金設定_Carton』
+---------------------------------

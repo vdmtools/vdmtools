@@ -1,0 +1,70 @@
+Note For Visual C++ Users
+
+----------------------------------------------------------------------------
+
+Known problems
+
+Compiling
+
+   * __STL_USE_EXCEPTIONS is being defined automatically if the compiler
+     defined _CPPUNWIND macro ("/GX" option). So you should not worry about
+     it.
+   * There were reports that Visual C++ 4.0 have problems with namespaces in
+     certain cases. If you ran into these problems, #define
+     __STL_NO_NAMESPACES in stlcomp.h.
+   * You may encounter problems with too long symbols when compiling with
+     debug information. To handle this, try defining __STL_USE_ABBREVS in
+     stlcomp.h.
+   * You may experience problems with default SGI node allocator. I had no
+     such problems, though. Default node allocator is quite fast, so
+     I wouldn't recommend disabling it without serious reason. However, if
+     it causes problems, define __STL_USE_MALLOC or __STL_USE_NEWALLOC to
+     get bare malloc()-based or new()-based default allocator.
+   * This version defines __STL_WIN32THREADS switch automatically if the
+     internal VC++ macro _MT is set. If your program is actually not
+     multi-threaded, you might want to define _NOTHREADS macro to avoid
+     synchronization overhead (and still using SGI node allocator. If you
+     wish to disable it completely, refer to previous note). Defining
+     _NOTHREADS could also save you lots of compilation time since
+     <windows.h> is not being included then.
+   * [ VC++ 5.0] You may encounter problems using new-style VC++ 5.0 headers
+     like <iostream>, <string> in mix with SGI STL. The problem is that
+     Microsoft defined reverse_iterator in a way that is not consistent with
+     SGI one. This adaptation provides MSVC++ 5.0 compatibility switch :
+     __STL_MSVC50_COMPATIBILITY. If defined, the definition of
+     reverse_iterator used that is compatible with other parts of VC++ 5.0
+     standard library. Note that, if you want your code to be portable, you
+     should avoid explicit usage of
+     reverse_iterator<Iterator,T,T&,T*,Distance>. To be even more portable,
+     never include <string>, too (not all compilers support that). You may
+     use SGI STL rope<charT,Alloc> class instead of basic_string then.
+   * [ VC++ 5.0] , This version allows use of new-style <iostream>, <string>
+     with SGI STL code. Note that using new-style system headers could lead
+     to nonportability, as not all compilers support that. Anyway, if you
+     want (or have to) use new-style <iostream> :
+        o You may have to edit relative (or set full) path to VC++ <Utility>
+          (currently ..\..\DevStudio\Include) in the
+          adaptation<ph_iterator.h>. Including MS version is necessary to
+          get streambuf iterators defined.
+        o In the whole project, use coherent set of headers : all new-style,
+          including SGI STL ones;
+   * You may also try SGI STL adapted for MSVC++ 5.0 specifically by Wayne
+     Ouchida. (Note that it doesn't provide debug support and other
+     extensions of this adaptation).
+
+----------------------------------------------------------------------------
+
+Migration notes
+
+You should experience no other problems migrating from VC++ STL to SGI STL.
+Default allocator<T> in this adaptation is fully functional.
+
+----------------------------------------------------------------------------
+
+Versions prior to 4.0
+
+Visual C++ older than 4.0 won't compile STL. You have to upgrade.
+
+----------------------------------------------------------------------------
+
+Last updated : September 1st, 1997.

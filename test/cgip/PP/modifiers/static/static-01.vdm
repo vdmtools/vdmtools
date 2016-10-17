@@ -1,0 +1,23 @@
+ class B
+
+types
+  
+  public B1 :: 
+   b2 : B2;
+
+  public B2 ::
+    n : nat;
+
+end B
+
+class A
+
+  operations
+
+public static Test : () ==> nat
+  Test() ==
+    let b = mk_B`B1(mk_B`B2(9))
+    in
+      return (mu(b,b2 |-> mk_B`B2(7))).b2.n
+
+end A

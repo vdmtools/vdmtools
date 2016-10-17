@@ -1,0 +1,14 @@
+class A
+
+operations
+
+public Test : () ==> bool
+Test () ==
+  def a : bool = true
+  in
+    return a
+    
+end A
+
+
+

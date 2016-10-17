@@ -1,0 +1,65 @@
+class ContextCellRenderer is subclass of JLabel, TableCellRenderer
+operations 
+public  ContextCellRenderer : () ==> ContextCellRenderer
+ContextCellRenderer() == 
+( let - = JLabel()
+  in 
+    skip ;
+  let - = setOpaque(true  )
+  in 
+    skip ;
+  context := ContextState`getContextState()
+) ;
+
+public  getTableCellRendererComponent : [JTable] * [Object] * bool  * bool  * int  * int  ==> [Component]
+getTableCellRendererComponent(table, value__, isSelected, hasFocus, row, column) == 
+( if  value__ = nil  
+  then  
+    ( let - = setText(new  String([  ]))
+      in 
+        skip ;
+      return  self  
+    ) ;
+  ( dcl   cellColor : [Color] := Color`white,
+          font : [Font] := new  Font(new  String("TimesRoman") , Font`PLAIN , 12),
+          valueStr : [String] := value__,
+          refDes : [RefDes] := context.getCurrentContextFieldObject(ContextTypes`REFDES),
+          pin : [String] := context.getCurrentContextFieldObject(ContextTypes`PIN),
+          wire : [Wire] := context.getCurrentContextFieldObject(ContextTypes`WIRE);
+    if  refDes <> nil   and  pin <> nil  
+    then  
+      ( dcl   refdesPinName : [String] := refDes.displayName()+new  String(" - ")+pin;
+        if  valueStr.equals(refdesPinName)
+        then  
+          ( cellColor := Color`cyan
+          ) 
+      ) 
+    else  
+      if  wire <> nil  
+      then  
+        ( dcl   wireName : [String] := wire.toString();
+          if  valueStr.equals(wireName)
+          then  
+            ( cellColor := Color`cyan
+            ) 
+        ) ;
+    let - = setForeground(Color`blue.darker())
+    in 
+      skip ;
+    let - = setText(value__)
+    in 
+      skip ;
+    let - = setFont(font)
+    in 
+      skip ;
+    let - = setBackground(cellColor)
+    in 
+      skip ;
+    return  self  
+  ) 
+) ;
+
+instance variables 
+  protected  context : [ContextState] := nil  
+  
+end  ContextCellRenderer

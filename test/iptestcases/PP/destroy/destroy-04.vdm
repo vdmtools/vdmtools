@@ -1,0 +1,34 @@
+ class A
+
+  instance variables
+
+    n : nat := 0;
+
+  operations
+
+public    Init : nat ==> A
+    Init(mn) ==
+      (n := mn;
+       return self);
+
+public    Clone : () ==> A
+    Clone() ==
+      return new A().Init(n);
+
+public    GetN : () ==> nat
+    GetN() ==
+      return n;
+
+end A
+
+
+class B
+
+operations
+
+  public Test : () ==> nat
+  Test() ==
+   return (let n = new A().Init(3).Clone().GetN()
+           in n) + 7
+
+end B

@@ -1,0 +1,16 @@
+module A
+exports all
+definitions
+operations
+Test: () ==> seq of [sigma|bool]
+Test () == return [
+  init_sigma(mk_sigma(1,2)) ]
+
+state sigma of
+	a: int
+	b: nat
+inv mk_sigma(a,b) == a<b
+init s == s = mk_sigma(1,2)
+end
+
+end A

@@ -1,0 +1,895 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Semantic value domain used by the dynamic semantic specification
+% $Id: eval_sem.vdm,v 1.32 2005/08/25 01:44:59 vdmtools Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\chapter{Semantic Value Domain}
+\label{ch:semvalues}
+
+In this chapter, we describe the module SEM, which contains the definitions 
+for the semantic value domain. The semantic value domain is used by the
+interpreter. The result of an evaluation function of the interpreter is a
+semantic value.
+
+\begin{vdm_al}
+module SEM
+
+  imports
+    from AS all,
+    from REP all,
+    from CI all,
+    from PAT all,
+    from STKM all,
+    from GLOBAL all,
+#ifdef VDMPP
+    from SCHDTP all,
+#ifdef VICE
+    from UTIL all,
+#endif VICE
+#endif VDMPP
+    from INSTRTP all,
+    from RTERR all
+
+  exports all
+
+definitions
+types
+\end{vdm_al}
+
+
+\section{Evaluation Stack}
+
+In the VDM-SL Interpreter, we use an environment based evaluation
+model. The complete evaluation stack is of type $ENVL$.
+
+\begin{vdm_al}
+  ENVL = seq of ENV;
+
+  ENV = seq of BlkEnv;
+\end{vdm_al}
+
+An $ENV$ is a function application environment, i.e.\ for each function
+application or operation call, we push a new function application
+environment onto the evaluation stack. After the function application or
+operation call is evaluated, the function application environment is popped
+from the evaluation stack, removing all bindings within the function
+application environment.
+
+\begin{vdm_al}
+  BlkEnv::
+    id_m: map AS`Name to ValTp
+    perm: Permission;
+\end{vdm_al}
+
+A block environment, $BlkEnv$, contains the bindings introduced by pattern
+matching, or the bindings of a closure environment. An environment can
+be either read-only or read/write.
+
+\begin{vdm_al}
+  ValTp::
+    val : VAL
+    tp  : [AS`Type];
+\end{vdm_al}
+
+The {\em ValTp} is a record of a sematnic value, and for the case of Read/Write
+variables, a type.
+
+\begin{vdm_al}
+  Permission = <READ_ONLY> | <READ_WRITE>;  
+\end{vdm_al}
+
+%#ifdef VDMPP
+%\section{Object Reference Environment}
+%
+%The object reference environment is a stack that contains temporary
+%object reference. The stack is used to ensure that temporary object
+%references are deleted properly.
+%
+%\begin{vdm_al}
+%  OBJENV = seq of ObjBlkEnv;
+%
+%  ObjBlkEnv = set of SEM`VAL;
+%
+%\end{vdm_al}
+%
+%It is implemented this way because the creation
+%and deletion of temporary object references scope follows the
+%environment stack. Actually, the access function to the environment
+%stack calls the corresponding access functions to the temporary object
+%reference stack. 
+%
+%#endif VDMPP
+
+\section{Semantic Values}
+
+\begin{vdm_al}
+VAL = BasicVal | FN | OP | POLY | SEQ | SET | MAP | TUPLE | 
+      REC | TOKEN | UNDEF | EXIT | CONT | RETURN 
+#ifdef VDMPP
+      | OBJ | OBJ_Ref | OverOPFN
+#endif VDMPP
+;
+\end{vdm_al}
+
+\subsection{Basic Values}
+
+\begin{vdm_al}
+BasicVal = BOOL | NUM | CHAR | QUOTE | NIL;
+\end{vdm_al}
+
+Basic values are booleans, $BOOL$, numerals, $NUM$, characters, $CHAR$,
+quotes, $QUOTE$, and the nil value, $NIL$.
+
+\begin{vdm_al}
+BOOL:: v : bool;
+
+NUM :: v : real;
+
+CHAR :: v : char;
+
+QUOTE :: v : seq of char;
+
+NIL:: ;
+\end{vdm_al}
+
+\subsection{Undefined Value}
+
+\begin{vdm_al}
+UNDEF :: ;
+\end{vdm_al}
+
+An undefined value, $UNDEF$, is assigned to an identifier if, when the
+identifier is introduced, it is not initialized.
+
+\subsection{Exception Handling Values}
+
+\begin{vdm_al}
+EXIT :: v : [VAL];
+\end{vdm_al}
+
+The exit value, $EXIT$, is used to signal that an exception occured within
+the evaluation of an operation call. If an exception is raised, an optional
+value can be given.
+
+\subsection{Return Values}
+
+\begin{vdm_al}
+CONT :: ;
+\end{vdm_al}
+
+The continue value, $CONT$, is used to signal that an operation call did
+not return a value.
+
+\begin{vdm_al}
+RETURN :: ;
+\end{vdm_al}
+This is used in loop statements or empty return statements.
+
+#ifdef VDMSL
+\begin{vdm_al}
+LOC :: v : AS`Name;
+
+--DLVAL :: v : LOC;
+\end{vdm_al}
+A external values is declared in an implementations module. The definition 
+is in the code to which the implementation module relates.
+The type $LOC$ should represent that the interpreter process uses the memory 
+location for accessing a function.
+The semantic domain applies the name instead of a memory address.
+#endif VDMSL
+
+\subsection{Non-Polymorphic Function Values}
+
+\begin{vdm_al}
+#ifdef VDMSL
+FN = CompExplFN | DLFN;
+#endif VDMSL
+#ifdef VDMPP
+FN = CompExplFN;
+#endif VDMPP
+\end{vdm_al}
+
+Function values can denote either explicit or implicit functions or an
+external function declared in an implementation module. These
+functions cannot be polymorphic.
+
+The semantic value of a function is basically the sequence of explicit
+function values which must be applied in the given order to the
+argument. The reason for it being a sequence is in order to capture
+compose operators. Thus in most cases the length of this sequence will
+be one.
+
+\begin{vdm_al}
+CompExplFN :: fl : seq1 of ExplFN
+              objref : [OBJ_Ref]        -- PP only
+;
+\end{vdm_al}
+
+An explicit function value contains the original type information in
+AS format; the actual patterns in stack-machine format (thus any match
+values which should not be used in the header of a function are
+replaced with don't care patterns); a pointer to the instruction code
+for the body (in case it is nil, the function should be understood as
+an identity function); a closure environment; a mapping with potential
+instatiations of a polymorphic function; fnName ????; the name of the
+module/class in which the function is defined; the names and the type
+of any result parameters (in case these are given); and finally an
+optional object reference ??
+
+\begin{vdm_al}
+
+ExplFN :: tp : AS`FnType
+          parms : seq of seq of STKM`Pattern
+          instr : [STKM`SubProgramId]
+          env : BlkEnv
+          tm : map AS`TypeVar to AS`Type
+          fnName  : [AS`Name]
+          modName : AS`Name
+          implicit : bool
+          objref : [OBJ_Ref]        -- PP only
+          access : AS`Access        -- PP only
+;
+\end{vdm_al}
+
+An explicit function value consists of the type of the function, $tp$,
+the parameters, $parms$, the body expression, $body$, the optional pre
+($fnpre$) and post ($fnpost$) conditions, a closure environment,
+$env$, containing the bindings for the free variables in the body
+expression, and a type variable map, $tm$. The type variable map is
+used to resolve the occurences of type variables within the body
+expression of the function.  $modName$ contains the name of the
+module, in which the expression is defined.  $fnName$ contains the
+name of the function. This information is used in the implementation
+to collect runtime information. (see the file rtinfo.cc).
+
+#ifdef VDMSL
+\begin{vdm_al}
+DLFN :: tp : AS`FnType
+        body : LOC
+        fnName  : AS`Name
+        modName : AS`Name;
+\end{vdm_al}
+
+An external function value consists of the function signature and the
+location in memory. $module$ is the name of the module, in which the
+function is defined.  $fnName$ contain the name of the function. This
+information is used in the omplementation to collect runtime
+information. (see the file rtinfo.cc)
+#endif VDMSL
+\subsection{Polymorphic Function Values}
+
+\begin{vdm_al}
+POLY = ExplPOLY;
+\end{vdm_al}
+
+Polymorphic function values can denote explicit or implicit functions.
+
+\begin{vdm_al}
+ExplPOLY :: tpparms : AS`TypeVarList
+            tp : AS`FnType
+            parms : seq of seq of STKM`Pattern
+            instr : STKM`SubProgramId
+            env : BlkEnv
+            fnName : [AS`Name]
+            modName : AS`Name
+            objref : [OBJ_Ref]             -- PP only
+            access : AS`Access             -- PP only
+;
+\end{vdm_al}
+
+An explicit polymorphic function value consists of a sequence of type
+variables, $tpparms$, the type of the function, $tp$, the parameters,
+$parms$, the body expression, $body$, the optional pre ($fnpre$) and
+post ($fnpost$) conditions, and a closure environment, $env$,
+containing the bindings for the free variables in the body expression.
+$fnName$ contain the name of the function. This information is used in
+the implementation to collect runtime information. (see the file
+rtinfo.cc).
+
+\begin{vdm_al}
+#ifdef VDMSL
+OP = ExplOP | DLOP;
+#endif VDMSL
+#ifdef VDMPP
+OP = ExplOP | OverOPFN;
+#endif VDMPP
+\end{vdm_al}
+
+Operation values denote either implicit or explicit operations or operations
+declared in an implementation module.
+
+\begin{vdm_al}
+ExplOP :: tp : AS`OpType
+          oppure : bool
+          sync : bool                    -- PP only
+          manglenm : [AS`Name]           -- PP only
+          parms : seq of STKM`Pattern
+          instr : STKM`SubProgramId
+          fnName : AS`Name
+          modName : AS`Name
+          implicit : bool
+          objref : [OBJ_Ref]             -- PP only
+          access : AS`Access             -- PP only  -- 0901
+;
+\end{vdm_al}
+
+An explicit operation value is defined in terms of the type of the
+operation, $tp$, the parameters, $parms$, the body of the operation,
+$body$, and the optional pre ($oppre$) and post ($oppost$) conditions.
+$module$ is the name of the module, in which the operation is defined.
+$fnName$ contains the name of the operation. This information is used in
+the implementation to collect runtime information. (see the file
+rtinfo.cc)
+
+#ifdef VDMSL
+\begin{vdm_al}
+DLOP  :: tp : AS`OpType
+         body : LOC
+         fnName : AS`Name
+         modName : AS`Name;
+\end{vdm_al}
+
+The value of an external operations consists of the operations type and
+the location in memeory. $module$ is the name of the module in which the
+operation is defined.
+$fnName$ contain the name of the function. This information is used in
+the omplementation to collect runtime information. (see the file
+rtinfo.cc) 
+#endif VDMSL
+
+#ifdef VDMPP
+The \texttt{OverOPFN} type represent the semantic value for an
+overloaded function/operation. It contains a mapping from pairs of
+operation name (normally mangled but need not be if we deal with
+inheritance and a class only have one version of the definition) and
+the class name in which it is defined. The corresponding range values
+represent the sequence of types needed to determine which of the
+actual overload operations/functions that should be used for a given
+application.
+
+\begin{vdm_al}
+OverOPFN ::
+  overload : map (AS`Name * AS`Name) to ((seq of AS`Type) * AS`Access * [CompExplFN])
+  objref : [OBJ_Ref];
+\end{vdm_al}
+
+The semantic value for an overloaded operation/function is a mapping
+from pairs of mangled name and class name to sequences of types. This
+information may be used to look up the proper semantic value depending
+on the actual parameter values.
+
+#endif VDMPP
+
+\subsection{Sequence Value}
+
+\begin{vdm_al}
+SEQ :: v : seq of VAL;
+\end{vdm_al}
+
+\subsection{Set Value}
+
+\begin{vdm_al}
+SET :: v : set of VAL;
+\end{vdm_al}
+
+\subsection{Map Value}
+
+\begin{vdm_al}
+MAP :: v : map VAL to VAL;
+\end{vdm_al}
+
+\subsection{Tuple Value}
+
+\begin{vdm_al}
+TUPLE :: v : seq of VAL;
+\end{vdm_al}
+
+\subsection{Record Value}
+
+Record values have a $tag$ and two mappings corresponding to the
+normal fields and the ``don't care'' fields. These two mappings go
+from the the index in the record type definition to the corresponding
+concrete value.
+
+#ifdef VDMSL
+\begin{vdm_al}
+REC :: tag : AS`Name
+       v : map nat to VAL
+       v_dc:- map nat to VAL;
+\end{vdm_al}
+#endif VDMSL
+
+#ifdef VDMPP
+\begin{vdm_al}
+REC :: tag : AS`Name
+       v : map nat to VAL
+       v_dc :- map nat to VAL
+inv mk_REC(tag,-,-) == let mk_AS`Name(ids,-) = tag
+                       in len ids = 2; 
+\end{vdm_al} 
+
+The invariant expresses that for record values the tag name should
+describe the class name where the type definition of the record is
+defined in addition with the real tag.
+#endif VDMPP
+
+In the implementation the semantic record is implemented like this
+
+\begin{verbatim}
+  SemRecord :: 
+    value   : vdmlib_Record(tag,size)
+    checked : bool
+\end{verbatim}
+
+The checked field is initialised to false when a semantic record is
+created and set true when it has been dynamic type checked, to avoid
+repeated dynamic type check of the same value. 
+
+The SemRecord is implemented by the SemRecTable class and SemRecord
+class. The ``checked'' field was previously part of the ``value''
+where it was implemented as a boolean in a class derived from a
+RecordVal class.  
+
+\subsection{Token Value}
+
+\begin{vdm_al}
+TOKEN :: v : VAL;
+\end{vdm_al}
+
+\subsection{Object Value}
+
+THis is in essense only used for VDM++ but in order to minimise the
+differences between VDM-SL and VDM++ it has been kept here.
+
+\begin{vdm_al}
+
+#ifdef VDMSL
+OBJ_Ref::;
+#endif VDMSL
+#ifdef VDMPP
+OBJ_Ref :: ref : nat
+           tp  : AS`Name;
+#endif VDMPP
+
+\end{vdm_al}
+
+#ifdef VDMSL
+The {\em OBJ\_Ref} type is only included in the SL version such that they can be used
+in the specification without to much ifdefs. Especially for the semantic
+value of the operations and functions.
+#endif VDMSL
+
+#ifdef VDMPP
+This value is a refence value to the ``real'' semantic value of an object.
+
+\begin{vdm_al}
+
+OBJ :: tp   : AS`Name
+       ins  : InsStrct
+       hist : map AS`Name to History
+inv obj == len obj.tp.ids = 1;
+
+InsStrct = map AS`Name to GLOBAL`ValueMap;
+
+History :: req : nat
+           act : nat
+           fin : nat;
+\end{vdm_al}
+
+The semantics value of an object contains information about
+
+\begin{itemize} 
+\item tp: the class name of which the object is an instance of, and
+\item ins: a map describing the values of the instance variable of the object.
+The map goes from class names to the value map.
+\end{itemize}
+
+\begin{figure}[H]
+\begin{footnotesize}
+\begin{verbatim}
+class A
+ instance variables
+    a: nat;
+    b: nat;
+    init a == skip; !!
+    init b == b := 1
+types
+   AType ::
+      f1 : nat
+methods
+   ma1 () value r: nat ==
+    (a:=434;
+     return a-b)
+
+end A
+
+     
+class B is subclass of A
+  instance variables
+    a: nat;
+    c: bool
+
+  methods
+    m1(i: nat) ==
+     a := i;
+
+    m2(i: nat) value r: bool ==
+     if a = i
+     then return true
+     else ( a := i;
+            return false )
+
+end B
+
+
+class C is subclass of A, B, --B[<YELLOW>], B[true], B[1], B[3, ..., 5]
+  instance variables
+    a: nat;
+    c: nat
+
+  inherit 
+    from B :: m1
+
+  methods mc1() value r: nat ==
+    ( a:= 1;
+      A`a := 2;
+      B`a := 3;
+      c:=self!A`ma1();
+      return a
+    )
+
+end C
+\end{verbatim}
+\end{footnotesize}
+\caption{An example of a class structure.}\label{ex}
+\end{figure}
+
+
+
+Note, that class A is inherited twice in the class C, both directly by
+C and by its superclass B. 
+
+An object of class C could have the following semantic value:
+
+\begin{figure}[H]
+\begin{footnotesize}
+\begin{verbatim}
+ mk_OBJ(
+  mk_AS`Name(["C"], nil),
+  mk_AS`Name(["C"], nil) |-> { mk_AS`Name(["a"], nil) |-> mk_SEM`NUM(2),
+                               mk_AS`Name(["b"], nil) |-> mk_SEM`NUM(3) },
+  mk_AS`Name(["B"], nil) |-> { mk_AS`Name(["a"], nil) |-> mk_SEM`NUM(45),
+                               mk_AS`Name(["c"], nil) |-> mk_SEM`BOOL(true) },
+  mk_AS`Name(["A"], nil) |-> { mk_AS`Name(["a"], nil) |-> mk_SEM`NUM(3),
+                               mk_AS`Name(["b"], nil) |-> mk_SEM`NUM(6) } )
+\end{verbatim}
+\end{footnotesize}
+\caption{An example of the semantic value of an object of class C.} \label{ex:obj}
+\end{figure}
+
+#endif
+
+\begin{vdm_al}
+
+functions
+
+  CompFN: ExplFN +> CompExplFN
+  CompFN(efn) ==
+    mk_CompExplFN([efn], nil);
+    
+  UpdateClosEnv: VAL * BlkEnv +> VAL
+  UpdateClosEnv(fnval,blkenv) ==
+    cases true:
+      (is_CompExplFN(fnval)) -> mk_CompExplFN([mu(fnval.fl(i),env |-> blkenv) | i in set inds fnval.fl], nil),
+      (is_ExplPOLY(fnval))   -> mu(fnval,env |-> blkenv),
+      others                 -> fnval
+    end;
+
+  -- This funciton is only used in the preconditions, and is thus not implemented.
+  IsSemValSeq: STKM`EvalStackItem +> bool
+  IsSemValSeq(item) ==
+    cases item:
+      [] -> true,
+--      [val] ^ val_l -> IsSemVal(val) and
+--                       forall v in set elems val_l & IsSemVal(v),
+      [-] ^ - -> forall v in set elems item & IsSemVal(v),
+      others -> false
+    end;
+    
+  IsSemVal: STKM`EvalStackItem -> bool
+  IsSemVal(val) ==
+    is_(val, VAL);
+
+VAL2Expr: VAL -> AS`Expr
+VAL2Expr(val) ==
+  cases val:
+    mk_BOOL(v)  -> mk_AS`BoolLit(v, CI`NilContextId),
+    mk_NUM(v)   -> mk_AS`RealLit(v, CI`NilContextId),
+    mk_CHAR(v)  -> mk_AS`CharLit(v, CI`NilContextId),
+    mk_QUOTE(v) -> mk_AS`QuoteLit(v, CI`NilContextId),
+    mk_NIL()    -> mk_AS`NilLit(CI`NilContextId),
+    mk_SET(v)   -> mk_AS`SetEnumerationExpr(VALSet2Expr(v), CI`NilContextId),
+    mk_SEQ(v)   -> mk_AS`SeqEnumerationExpr(VALSeq2Expr(v), CI`NilContextId),
+    mk_MAP(v)   -> mk_AS`MapEnumerationExpr(VALMap2Expr(v), CI`NilContextId),
+    mk_TUPLE(v) -> mk_AS`TupleConstructorExpr(VALSeq2Expr(v), CI`NilContextId),
+    mk_REC(tag,v,v_dc) -> let v_m = v munion v_dc,
+                              v_l = [ v_m(i) | i in set dom v_m ] in
+                              mk_AS`RecordConstructorExpr(tag, VALSeq2Expr(v_l), CI`NilContextId),
+    mk_TOKEN(v) -> mk_AS`TokenConstructorExpr(VAL2Expr(v), CI`NilContextId),
+#ifdef VDMPP
+    mk_OBJ_Ref(-,clnm) -> mk_AS`NewExpr(clnm, [], CI`NilContextId),
+#endif VDMPP
+    others -> undefined
+  end;
+
+VALSet2Expr: set of VAL -> seq of AS`Expr
+VALSet2Expr(val_s) ==
+  cases val_s:
+    {} -> [],
+    {val} -> [VAL2Expr(val)],
+    others ->let val in set val_s
+             in [VAL2Expr(val)] ^ VALSet2Expr(val_s \ {val})
+  end;
+
+VALSeq2Expr: seq of VAL -> seq of AS`Expr
+VALSeq2Expr(val_l) ==
+  cases val_l:
+    [] -> [],
+    [val] -> [VAL2Expr(val)],
+    others ->let [val] ^ l = val_l
+             in [VAL2Expr(val)] ^ VALSeq2Expr(l)
+  end;
+
+VALMap2Expr: map VAL to VAL -> seq of AS`Maplet
+VALMap2Expr(val_m) ==
+  let d : set of VAL = dom val_m
+  in
+    cases d:
+      {} -> [],
+      {val} -> [mk_AS`Maplet(VAL2Expr(val), VAL2Expr(val_m(val)), CI`NilContextId)],
+      others -> let val in set d
+                in [mk_AS`Maplet(VAL2Expr(val), VAL2Expr(val_m(val)), CI`NilContextId)] ^
+                   VALMap2Expr({val} <-: val_m)
+    end;
+
+#ifdef VICE
+operations
+
+  Size: VAL ==> nat
+  Size(val) ==
+   cases true: 
+    (is_BOOL(val))       -> return 1,
+    (is_NUM(val))        -> return 64,
+    (is_CHAR(val))       -> return 16,
+    (is_QUOTE(val))      -> return 8,
+    (is_NIL(val))        -> return 1,
+    (is_CompExplFN(val)) -> return SizeCompExplFN(val),
+    (is_ExplOP(val))     -> return SizeExplOP(val),
+    (is_ExplPOLY(val))   -> return SizeExplPOLY(val),
+    (is_SEQ(val))        -> return SizeValSeq(val.v),
+    (is_SET(val))        -> return SizeValSet(val.v),
+    (is_MAP(val))        -> return SizeValMap(val.v),
+    (is_TUPLE(val))      -> return SizeValSeq(val.v),
+    (is_REC(val))        -> return 16 + SizeNatValMap(val.v) + SizeNatValMap(val.v_dc),
+    (is_TOKEN(val))      -> return 8,
+    (is_UNDEF(val))      -> return 1,
+    (is_EXIT(val))       -> if val.v = nil
+                            then return 1
+                            else return 1 + Size(val.v), 
+    (is_CONT(val))       -> return 1,
+    (is_RETURN(val))     -> return 1, 
+    (is_OverOPFN(val))   -> return 16 + SizeOverload(val.overload), 
+    (is_OBJ(val))        -> return 8 + SizeInstStruct(val.ins) + SizeHist(val.hist),
+    (is_OBJ_Ref(val))    -> return 8
+   end;
+
+operations
+
+SizeCompExplFN: CompExplFN ==> nat
+SizeCompExplFN(val) ==
+  (dcl sum : nat := if val.objref = nil
+                    then 8
+                    else 16;
+   
+   for fn in val.fl do
+     sum := sum + SizeExplFN(fn);
+
+   return sum);
+  
+SizeExplFN: ExplFN ==> nat
+SizeExplFN(mk_ExplFN(-,-,-,env,tm,-,-,-,-,-)) ==
+  (dcl sum : nat := 128 + 16 * card dom env.id_m;
+   
+   sum := sum + 16 * card dom tm;
+
+   return sum);
+
+SizeExplOP: ExplOP ==> nat
+SizeExplOP(mk_ExplOP(-,-,-,-,-,-,-,-,-,-,-)) ==
+  (dcl sum : nat := 144;
+
+   return sum);
+
+SizeExplPOLY: ExplPOLY ==> nat
+SizeExplPOLY(mk_ExplPOLY(tvl,-,-,-,env,-,-,-,-)) ==
+  (dcl sum : nat := 128 + 16 * card dom env.id_m;
+   
+   sum := sum + 16 * len tvl;
+
+   return sum);
+
+SizeValSeq: seq of VAL ==> nat
+SizeValSeq(val_l) ==
+  (dcl sum : nat := 8;
+   
+   for val in val_l do
+     sum := sum + Size(val);
+
+   return sum);
+
+SizeValSet: set of VAL ==> nat
+SizeValSet(val_s) ==
+  (dcl sum : nat := 8;
+   
+   for all val in set val_s do
+     sum := sum + Size(val);
+
+   return sum);
+
+SizeValMap: map VAL to VAL ==> nat
+SizeValMap(val_m) ==
+  (dcl sum : nat := 8;
+   
+   for all d_val in set dom val_m do
+     sum := sum + Size(d_val) + Size(val_m(d_val));
+
+   return sum);
+
+SizeNatValMap: map nat to VAL ==> nat
+SizeNatValMap(val_m) ==
+  (dcl sum : nat := 8;
+   
+   for all val in set dom val_m do
+     sum := sum + 32 + Size(val_m(val));
+
+   return sum);
+
+SizeOverload: map (AS`Name * AS`Name) to ((seq of AS`Type) * AS`Access * [VAL]) ==> nat
+SizeOverload(over_m) ==
+  (dcl sum : nat := 8;
+   
+   for all nmpair in set dom over_m do
+     sum := sum + 32 + 16 * len (over_m(nmpair).#1);
+
+   return sum);
+
+SizeInstStruct: InsStrct ==> nat
+SizeInstStruct(ins_m) ==
+  (dcl sum : nat := 8;
+   
+   for all nm in set dom ins_m do
+     sum := sum + SizeValueMap(ins_m(nm));
+
+   return sum);
+
+SizeValueMap: GLOBAL`ValueMap ==> nat
+SizeValueMap(val_m) ==
+  (dcl sum : nat := 8;
+   
+   for all nm in set dom val_m do
+     let mk_(val,-) = val_m(nm)
+     in
+       sum := sum + 2 + Size(val);
+
+   return sum);
+  
+SizeHist: map AS`Name to History ==> nat
+SizeHist(hist_m) ==
+  (dcl sum : nat := 8;
+   
+   for all - in set dom hist_m do
+     sum := sum + 3 * 16;
+
+   return sum);
+  
+functions
+
+Val2String: VAL -> seq of char
+Val2String(val) ==
+   cases true: 
+    (is_BOOL(val))       -> if val.v then "true " else "false ",
+    (is_NUM(val))        -> Num2String(val.v),
+    (is_CHAR(val))       -> "'" ^ [val.v] ^ "'",
+    (is_QUOTE(val))      -> "<" ^ val.v ^ ">",
+    (is_NIL(val))        -> "nil ",
+    (is_CompExplFN(val)) -> "function value",
+    (is_ExplOP(val))     -> "operation value",
+    (is_ExplPOLY(val))   -> "polymorphic function value",
+    (is_SEQ(val))        -> "[ " ^ ValSeq2String(val.v) ^ " ]",
+    (is_SET(val))        -> "{ " ^ ValSet2String(val.v) ^ " }",
+    (is_MAP(val))        -> "{ " ^ ValMap2String(val.v) ^ " }",
+    (is_TUPLE(val))      -> "mk_( " ^ ValSeq2String(val.v) ^ " )",
+    (is_REC(val))        -> "mk_" ^ Ids2String(val.tag.ids) ^ "( " ^ 
+                            ValNatMap2String(val.v,val.v_dc) ^ " )",
+    (is_TOKEN(val))      -> "mk_token( " ^ Val2String(val.v) ^ " )",
+    (is_UNDEF(val))      -> "undefined ",
+    (is_EXIT(val))       -> "exit " ^ if val.v = nil 
+                                      then "" 
+                                      else "with " ^ Val2String(val.v), 
+    (is_CONT(val))       -> "Continue ",
+    (is_RETURN(val))     -> "Return ", 
+    (is_OverOPFN(val))   -> "Overloaded op/fn",
+    (is_OBJ(val))        -> "Object value",
+    (is_OBJ_Ref(val))    -> "objref" ^ Num2String(val.ref)
+   end;
+ 
+Num2String: real -> seq of char
+Num2String(r) ==
+  let sign = if r < 0 then "-" else ""
+  in
+    if is_int(r)
+    then sign ^ UTIL`itoa(abs r)
+    else let r1 = floor r,
+             r2 = 1E6 * (r - floor abs r)
+         in
+           sign ^ UTIL`itoa(abs r1) ^ "." ^ UTIL`itoa(floor abs r2); 
+
+ValSeq2String: seq of VAL -> seq of char
+ValSeq2String(v_l) ==
+  if v_l = []
+  then " "
+  else Val2String(hd v_l) ^
+       if len v_l = 1
+       then ""
+       else ", " ^ ValSeq2String(tl v_l);
+
+ValSet2String: set of VAL -> seq of char
+ValSet2String(v_s) ==
+  if v_s = {}
+  then " "
+  else let e in set v_s in
+         Val2String(e) ^ 
+         if card v_s = 1
+         then ""
+         else ", " ^ ValSet2String(v_s \ {e});
+
+ValNatMap2String: (map nat to VAL) * (map nat to VAL) -> seq of char
+ValNatMap2String(v_m1,v_m2) ==
+  if v_m1 = {|->} and v_m2 = {|->}
+  then " "
+  else let e = UTIL`minset(dom v_m1 union dom v_m2)
+       in
+         Val2String(if e in set dom v_m1 then v_m1(e) else v_m2(e)) ^ 
+         if card dom v_m1 + card dom v_m2 = 1
+         then ""
+         else ", " ^ ValNatMap2String({e} <-: v_m1, {e} <-: v_m2);
+
+ValMap2String: map VAL to VAL -> seq of char
+ValMap2String(v_m) ==
+  if v_m = {|->}
+  then " "
+  else let e in set dom v_m in
+         Val2String(e) ^ "|->" ^ Val2String(v_m(e)) ^ 
+         if card dom v_m = 1
+         then ""
+         else ", " ^ ValMap2String({e} <-: v_m);
+
+Ids2String : AS`Ids -> seq of char
+Ids2String(ids) ==
+  let bq : seq of char = [ '`' ] in
+  let first = hd ids, rest = tl ids in
+    if len ids = 1
+    then first
+    elseif len ids = 2
+    then first ^ bq ^ (hd rest)
+    else first ^ bq ^ (hd rest) ^ bq ^ (hd tl rest)
+  pre len ids in set {1,2,3};
+#endif VICE
+
+
+end SEM
+\end{vdm_al}
+
+

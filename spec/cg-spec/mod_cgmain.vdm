@@ -1,0 +1,312 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Main module of the Code Generator.
+% $Id: mod_cgmain.vdm,v 1.26 2001/11/09 08:08:28 paulm Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\section{Module CGMAIN - Code Generating VDM++ Specifications}
+
+The main module CGMAIN (Code Generator) contains the main function which
+describes the code generation of a complete specification.
+\vspace{1cm}
+
+\begin{vdm_al}
+
+module CGMAIN
+
+imports
+    from CPP all,
+    from AS all,
+    from BC all,
+#ifdef VDMSL
+    from MOD all,
+#endif VDMSL
+#ifdef VDMPP
+    from CLASS all,
+#endif VDMPP
+    from CGAUX all,
+    from REP all,
+    from CI all,
+    from TPGEN all,
+    from UTIL all
+
+exports all
+definitions
+
+\end{vdm_al}
+
+\subsection{Options}
+\subsubsection{C++}
+The following options may be set for the C++ codegenerator in a future version:
+\begin{enumerate}
+  \item Generate Values
+  \item Generate Functions and Operations
+  \item Generate Type invaraiants
+  \item Generate module/class functions
+\end{enumerate}
+
+\begin{vdm_al}
+operations
+
+  OptionGenValues: () ==> bool
+  OptionGenValues() == return true;
+
+  OptionGenFctOps: () ==> bool
+  OptionGenFctOps() == return true;
+
+  OptionGenTpInv: () ==> bool
+  OptionGenTpInv() == return true;
+
+  OptionGenInitFct: () ==> bool
+  OptionGenInitFct() == return true
+
+\end{vdm_al}
+
+\subsubsection{Java}
+The following options may be set for the Java codegenerator in the current version:
+\begin{enumerate}
+  \item Generate only Types
+  \item Generate Post and Pre Functions
+  \item Generate only skeletons
+  \item Generate small types for types and skeletons
+  \item A package may be specified.
+\end{enumerate}
+
+\begin{description}
+\item [skeleton option:] the state skeleton option is a boolean and if it is
+  true, only Java code skeletons are generated.
+\item [preandpost option:] the state preandpost option is a boolean and
+  if it is true, Java pre and post functions/operations and invariant
+  functions on types are generated.
+\item [onlytypes option:] the state onlytypes option is a boolean and
+  if it is true, only types are code generated.
+\item [smalltypes option:] the state smalltypes option is a boolean and
+  if it is true, int, boolean, double, character  types are code
+  generated instead of Integer,   Boolean, Double or Character. This
+  option implies that the skeleton option is true.
+\item [package option:] the state package option is an optional string
+  and if it is not nil, a package name has been specified for the
+  generated Java classes.
+\item [conc option:] generate code with concurrency constructs
+\item [testpreandpost option:] generates code which executes
+  operation/function preconditions on entry, and function
+  postconditions on exit. Implies preandpost option.
+\item [longs option:] For the Java code generator this causes integers
+  to be generated as Longs instead of Integers.
+\item [interfaces:] For the Java code generator, this represents those
+  classes which are to be code generated as interfaces instead of classes.
+\item [wchar:] Determines whether the C++ code generator generates
+char/string or wchar\_t/wstring.
+\end{description}
+
+\begin{vdm_al}
+state Main of
+  skeleton_option : bool
+  preandpost_option : bool
+  onlytypes_option : bool
+  smalltypes_option : bool
+  package_name: [CPP`PackageName]
+  conc_option : bool
+  testpreandpost_option : bool
+  longs_option : bool
+  interfaces : set of AS`Name
+  wchar : bool
+  j2v_option : bool
+
+  init m == m = mk_Main(false,true,false,false,nil,true,true, false, {}, true, false)
+--  init m == m = mk_Main(false,true,false,false,nil,true,true, true, {}, true, false) -- long
+end
+\end{vdm_al}
+
+\begin{vdm_al}
+
+operations
+
+get_skeleton_option: () ==> bool
+get_skeleton_option() ==
+return skeleton_option;
+
+get_conc_option: () ==> bool
+get_conc_option() ==
+return conc_option;
+
+get_onlytypes_option: () ==> bool
+get_onlytypes_option() ==
+return onlytypes_option;
+
+get_preandpost_option: () ==> bool
+get_preandpost_option() ==
+return preandpost_option;
+
+-- New option, determines whether calls to pre and post
+-- conditions should be inserted in operation/function bodies
+-- currently defaults to preandpost_option
+get_testpreandpost_option: () ==> bool
+get_testpreandpost_option() ==
+return testpreandpost_option;
+
+get_smalltypes_option: () ==> bool
+get_smalltypes_option() ==
+return smalltypes_option;
+
+get_package_option: () ==> [CPP`PackageName]
+get_package_option() ==
+return package_name;
+
+get_longs_option: () ==> bool
+get_longs_option() ==
+return longs_option;
+\end{vdm_al}
+The following option is to be implemented; it currently defaults to
+true iff we are generating Java. This option will probably be removed
+if only JDK libraries are used in the future.
+\begin{vdm_al}
+get_jdktypes_option: () ==> bool
+get_jdktypes_option() ==
+return CPP`isJAVA();
+
+set_skeleton_option: bool ==> ()
+set_skeleton_option(b) ==
+skeleton_option := b;
+
+set_conc_option: bool ==> ()
+set_conc_option(b) ==
+conc_option := b;
+
+set_onlytypes_option: bool ==> ()
+set_onlytypes_option(b) ==
+onlytypes_option := b;
+
+set_package_option: [seq of char] ==> ()
+set_package_option(ch_l) ==
+  if ch_l = nil
+  then package_name := nil
+  else package_name := CGAUX`GenPackageName(UTIL`split[char](ch_l, '.'));
+
+set_preandpost_option: bool ==> ()
+set_preandpost_option(b) ==
+preandpost_option := b;
+
+set_testpreandpost_option: bool ==> ()
+set_testpreandpost_option(b) ==
+testpreandpost_option := b;
+
+set_longs_option : bool ==> ()
+set_longs_option(b) ==
+longs_option := b;
+
+set_smalltypes_option: bool ==> ()
+set_smalltypes_option(b) ==
+(if (b = true) then
+   set_skeleton_option(b);
+ smalltypes_option := b;
+);
+\end{vdm_al}
+
+Note with \texttt{set\_interfaces} that no check is made here as to
+whether a VDM++ class can validly represent an interface. This is the
+caller's responsibility.
+\begin{vdm_al}
+set_interfaces : set of AS`Name ==> ()
+set_interfaces(ifs) ==
+  interfaces := ifs;
+
+get_interfaces : () ==> set of AS`Name
+get_interfaces() ==
+  return interfaces;
+
+isInterface : AS`Name ==> bool
+isInterface(clnm) ==
+  return clnm in set interfaces;
+
+get_wchar : () ==> bool
+get_wchar() ==
+  return wchar;
+
+set_wchar : bool ==> ()
+set_wchar(pWchar) ==
+  wchar := pWchar;
+
+get_j2v_option : () ==> bool
+get_j2v_option() ==
+  return j2v_option;
+
+set_j2v_option : bool ==> ()
+set_j2v_option(b) ==
+  j2v_option := b;
+
+\end{vdm_al}
+
+\subsection{The type VT}
+
+The type $VT$ is often used in the specification of the code
+generator. As it appears from the type definition the record contains
+a C++ expression and a data type described in the abstract syntax of VDM.
+The data type is often used because the type information is used
+extensively in ``every corner'' of the specification.
+
+
+\begin{vdm_al}
+
+types
+
+    VT ::
+       name : CPP`Expr
+       type : [REP`TypeRep]
+
+\end{vdm_al}
+
+\subsection{The cg operation}
+
+The operation $cg$ is the main operation of the specification of the
+code generator.
+\noindent
+The operation {\em cg} takes the Document of the classes
+that are to be code generated, and a set of names of the
+classes that are in the whole specification as input.
+
+\begin{vdm_al}
+operations
+#ifdef VDMPP
+  cg: AS`Document * set of AS`Name ==> CPP`Files
+  cg(doc_l, cl_nms) ==
+  (
+   return  CLASS`GenClasses(doc_l, cl_nms)
+  )
+#endif
+
+#ifdef VDMSL
+  cg: AS`Document * set of AS`Name ==> CPP`Files
+  cg(doc_l, -) ==
+  ( dcl mod_l  : seq of AS`Module := doc_l,
+        file_s : CPP`Files := {};
+
+    -- Initialise the CG entry in the context information table
+
+    CI`ResetCGTable();
+
+    TPGEN`InitState(nil);
+
+    if (len doc_l = 1) and is_AS`Definitions (hd doc_l) then
+      let mk_AS`Definitions(-,-,-,-,-,-,ci) = hd doc_l in
+        let nm = mk_AS`Name(["DefaultMod"], ci),
+            inf = mk_AS`Interface({|->}, nil, ci),
+            df  = hd doc_l in
+        mod_l := [ mk_AS`Module(nm, inf, df, ci) ];
+
+    -- ensure that all declared types are known to the typegenerator
+
+    for md in mod_l do
+      TPGEN`AddModuleTypes(md);
+
+    for md in mod_l do
+      file_s := file_s union MOD`GenModule(md);
+    return file_s
+  )
+#endif
+
+end CGMAIN
+
+\end{vdm_al}
+

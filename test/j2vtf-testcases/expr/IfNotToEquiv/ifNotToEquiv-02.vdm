@@ -1,0 +1,13 @@
+class A
+
+operations
+
+public Test : () ==> bool
+Test () ==
+( 
+	dcl a : bool := true;
+	dcl b : bool := false;
+	return (((not a) and (b)) or ((((a and not (b))))))
+)
+   
+end A

@@ -1,0 +1,13 @@
+class A
+
+operations
+
+public Test : () ==> bool
+Test () ==
+( 
+	for i in [1,2,3] do
+		(if 2 > 1 then if 1 > 2 then return false);
+	return true;
+)
+   
+end A

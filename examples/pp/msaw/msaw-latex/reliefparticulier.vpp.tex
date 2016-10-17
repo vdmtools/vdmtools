@@ -1,0 +1,32 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{vdm}\index{ReliefParticulier|ClassDef}
+{\small\sf class} $ReliefParticulier$  \kISO $\index{Obstacle|ClassOcc}Obstacle, \index{Polygone|ClassOcc}Polygone$
+\begin{instvar}\index{altitude-maximale|InstVarDef}
+\vardcl{altitude-maximale}{Pieds\index{Pieds|TypeOcc}}
+\end{instvar}
+\begin{methdef}\index{Intersection|MethodDef}
+\begin{method}{Intersection}
+\parms{segment-de-prediction :  @SegmentDePrediction}\methvalue{\Bool } \Fdef\\ \begin{defstmt}
+\eqdef{points-de-vecteur}{\invoke{segment-de-prediction}{\index{GetPoints|MethodOcc}
+\fnapply{GetPoints}{}}}
+\end{defstmt} \\
+\return{\pex{\exists{\reccons{\kw{mk-}}{xy,z} \In points-de-vecteur} \\
+{\fnapply{DansPolygone}{xy,sommets} \And  \\
+z \Le altitude-maximale}}}
+\end{method}
+\end{methdef}
+{\small\sf end} $ReliefParticulier$
+
+\end{vdm}

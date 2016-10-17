@@ -1,0 +1,45 @@
+This file describes how to check out the specification of the 
+code generator and run test suites at specification level.
+
+
+Creating a working directory
+----------------------------
+
+mkdir codegen
+cd codegen
+cvs co tb-cgspec
+ln -s cg-spec/Makefile
+make link
+
+Preprocessing the specification
+-------------------------------
+
+The specification is automatically preprocessed by the test
+environment whenever needed. However, make PP and make SL will
+preprocess VDM-SL and VDM++ versions of the specification,
+respectively.
+
+Making a complete document
+--------------------------
+
+make all # straightforward.dvi   # default
+make vdm++gen.dvi
+
+Making a complete document with test coverage
+----------------------------------------------
+
+Make symbolic link to the `rtinfo.ast' file generated from
+the test environment:
+
+ln -s <test>/rtinfo.ast
+make all  # straightforward.dvi   # default
+make vdm++gen.dvi
+
+Running test suites at specification level
+------------------------------------------
+
+mkdir test
+cd test
+~cg/test/testdir -s .. ~cg/test/CORE/expr/letexpr
+
+

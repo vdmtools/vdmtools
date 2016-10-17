@@ -1,0 +1,204 @@
+\section{The PURE-PAT Module}
+
+\begin{vdm_al}
+module PURE_PAT
+
+imports  
+
+  from FRESH all,
+
+  from AS all,
+  from CI all,
+  from REP all
+
+exports 
+  types
+    struct Identifiers;
+
+  functions
+    Pattern2PurePattern : AS`Pattern * Identifiers -> AS`Pattern * Identifiers * Identifiers;
+    BindList2PureBindList : AS`BindList * Identifiers -> AS`BindList * Identifiers * Identifiers;
+    Bind2PureBind : AS`Bind * Identifiers -> AS`Bind * Identifiers * Identifiers;
+definitions
+
+  types
+    Identifiers = set of AS`Name;
+
+functions
+
+  Pattern2PurePatternSeq : seq of AS`Pattern * Identifiers -> seq of AS`Pattern * Identifiers * Identifiers
+  Pattern2PurePatternSeq (pats,ids) == 
+    if pats = []
+    then mk_([],ids,{})
+    else
+      let mk_(pats_hd,ids_hd,pid_hd) = Pattern2PurePattern(hd pats,ids),
+          mk_(pats_tl,ids_tl,pid_tl) = Pattern2PurePatternSeq(tl pats,ids_hd) 
+      in mk_([pats_hd] ^ pats_tl, ids_tl, pid_hd union pid_tl);
+
+  Pattern2PurePattern : AS`Pattern * Identifiers -> AS`Pattern * Identifiers * Identifiers
+  Pattern2PurePattern (pat,ids) == 
+    cases pat:
+      mk_AS`PatternName(-,-,-)      -> PatternName2PurePattern(pat,ids),
+      mk_AS`MatchVal(-,-)           -> MatchVal2PurePattern(pat,ids),
+      mk_AS`SetEnumPattern (-,-)    -> SetEnumPattern2PurePattern(pat,ids),
+      mk_AS`SetUnionPattern (-,-,-) -> SetUnionPattern2PurePattern(pat,ids),
+      mk_AS`SeqEnumPattern (-,-)    -> SeqEnumPattern2PurePattern(pat,ids),
+      mk_AS`SeqConcPattern (-,-,-)  -> SeqConcPattern2PurePattern(pat,ids),
+      mk_AS`MapEnumPattern (-,-)    -> MapEnumPattern2PurePattern(pat,ids),
+      mk_AS`MapMergePattern (-,-,-) -> MapMergePattern2PurePattern(pat,ids),
+      mk_AS`MapletPattern (-,-,-)   -> MapletPattern2PurePattern(pat,ids),
+      mk_AS`RecordPattern (-,-,-)   -> RecordPattern2PurePattern(pat,ids),
+      mk_AS`TuplePattern (-,-)      -> TuplePattern2PurePattern(pat,ids),
+#ifdef VDMPP
+      mk_AS`ObjectPattern (-,-,-)   -> ObjectPattern2PurePattern(pat,ids),
+      mk_AS`FieldPattern (-,-,-)    -> FieldPattern2PurePattern(pat,ids),
+#endif VDMPP
+      others -> undefined
+    end;
+
+  PatternName2PurePattern : AS`PatternName * Identifiers -> AS`Pattern * Identifiers * Identifiers
+  PatternName2PurePattern (pat,ids) ==
+    if pat.nm = nil
+    then
+      let new_nm  =  FRESH`GetName("xx",ids),
+          new_pat =  mu(pat, nm |-> new_nm)
+      in mk_(new_pat,ids union {new_nm},{new_nm}) 
+    else mk_(pat,ids,{pat.nm});
+
+  MatchVal2PurePattern : AS`MatchVal * Identifiers -> AS`Pattern * Identifiers * Identifiers
+  MatchVal2PurePattern (pat,ids) ==
+    mk_(pat,ids,{});
+
+  SetEnumPattern2PurePattern : AS`SetEnumPattern * Identifiers -> AS`Pattern * Identifiers * Identifiers
+  SetEnumPattern2PurePattern (mk_AS`SetEnumPattern(els,cid),ids) ==
+    let mk_(pure_els,new_ids,pid) = Pattern2PurePatternSeq(els,ids),
+        pure_pat = mk_AS`SetEnumPattern(pure_els,cid)
+    in mk_(pure_pat,new_ids,pid);
+     
+  SetUnionPattern2PurePattern : AS`SetUnionPattern * Identifiers -> AS`Pattern * Identifiers * Identifiers
+  SetUnionPattern2PurePattern (mk_AS`SetUnionPattern(lp,rp,cid),ids) ==
+    let mk_(new_lp,ids_lp,pid_lp) = Pattern2PurePattern(lp,ids),
+        mk_(new_rp,ids_rp,pid_rp) = Pattern2PurePattern(rp,ids_lp),
+        new_pat            = mk_AS`SetUnionPattern(new_lp, new_rp, cid),
+        pid                = pid_lp union pid_rp
+    in mk_(new_pat,ids_rp,pid);
+
+  SeqEnumPattern2PurePattern : AS`SeqEnumPattern * Identifiers -> AS`Pattern * Identifiers * Identifiers
+  SeqEnumPattern2PurePattern (mk_AS`SeqEnumPattern(els,cid),ids) ==
+    let mk_(pure_els,new_ids,pid) = Pattern2PurePatternSeq(els,ids),
+        pure_pat              = mk_AS`SeqEnumPattern(pure_els,cid)
+    in mk_(pure_pat,new_ids,pid);
+
+  SeqConcPattern2PurePattern : AS`SeqConcPattern * Identifiers -> AS`Pattern * Identifiers * Identifiers
+  SeqConcPattern2PurePattern (mk_AS`SeqConcPattern(lp,rp,cid),ids) ==
+    let mk_(new_lp,ids_lp,pid_lp) = Pattern2PurePattern(lp,ids),
+        mk_(new_rp,ids_rp,pid_rp) = Pattern2PurePattern(rp,ids_lp),
+        new_pat            = mk_AS`SeqConcPattern(new_lp, new_rp, cid),
+        pid                = pid_lp union pid_rp
+    in mk_(new_pat,ids_rp,pid);
+
+  MapEnumPattern2PurePattern : AS`MapEnumPattern * Identifiers -> AS`Pattern * Identifiers * Identifiers
+  MapEnumPattern2PurePattern (mk_AS`MapEnumPattern(mls,cid),ids) ==
+    let mk_(pure_mls,new_ids,pid) = Pattern2PurePatternSeq(mls,ids),
+        pure_pat              = mk_AS`MapEnumPattern(pure_mls,cid)
+    in mk_(pure_pat,new_ids,pid);
+
+  MapMergePattern2PurePattern : AS`MapMergePattern * Identifiers -> AS`Pattern * Identifiers * Identifiers
+  MapMergePattern2PurePattern (mk_AS`MapMergePattern(lp,rp,cid),ids) ==
+    let mk_(new_lp,ids_lp,pid_lp) = Pattern2PurePattern(lp,ids),
+        mk_(new_rp,ids_rp,pid_rp) = Pattern2PurePattern(rp,ids_lp),
+        new_pat            = mk_AS`MapMergePattern(new_lp, new_rp, cid),
+        pid                = pid_lp union pid_rp
+    in mk_(new_pat,ids_rp,pid);
+
+  MapletPattern2PurePattern : AS`MapletPattern * Identifiers -> AS`Pattern * Identifiers * Identifiers
+  MapletPattern2PurePattern (mk_AS`MapletPattern(dp,rp,cid),ids) ==
+    let mk_(new_dp,ids_dp,pid_dp) = Pattern2PurePattern(dp,ids),
+        mk_(new_rp,ids_rp,pid_rp) = Pattern2PurePattern(rp,ids_dp),
+        new_pat            = mk_AS`MapletPattern(new_dp, new_rp, cid),
+        pid                = pid_dp union pid_rp
+    in mk_(new_pat,ids_rp,pid);
+
+  RecordPattern2PurePattern : AS`RecordPattern * Identifiers -> AS`Pattern * Identifiers * Identifiers
+  RecordPattern2PurePattern (mk_AS`RecordPattern(nm,els,cid),ids) ==
+    let mk_(pure_els,new_ids,pid) = Pattern2PurePatternSeq(els,ids),
+        pure_pat              = mk_AS`RecordPattern(nm,pure_els,cid)
+    in mk_(pure_pat,new_ids,pid);
+
+  TuplePattern2PurePattern : AS`TuplePattern * Identifiers -> AS`Pattern * Identifiers * Identifiers
+  TuplePattern2PurePattern (mk_AS`TuplePattern(els,cid),ids) ==
+    let mk_(pure_els,new_ids,pid) = Pattern2PurePatternSeq(els,ids),
+        pure_pat              = mk_AS`TuplePattern(pure_els,cid)
+    in mk_(pure_pat,new_ids,pid);
+
+#ifdef VDMPP
+  ObjectPattern2PurePattern : AS`ObjectPattern * Identifiers -> AS`Pattern * Identifiers * Identifiers
+  ObjectPattern2PurePattern (mk_AS`ObjectPattern(cls,fields,cid),ids) ==
+    let mk_(pure_fields,new_ids,pid) = Pattern2PurePatternSeq(fields,ids),
+        pure_pat              = mk_AS`ObjectPattern(cls,pure_fields,cid)
+    in mk_(pure_pat,new_ids,pid);
+
+  FieldPattern2PurePattern : AS`FieldPattern * Identifiers -> AS`Pattern * Identifiers * Identifiers
+  FieldPattern2PurePattern (mk_AS`FieldPattern(nm,pat,cid),ids) ==
+    let mk_(pure_pat,new_ids,pid) = Pattern2PurePattern(pat,ids),
+        new_pat            = mk_AS`FieldPattern(nm,pure_pat,cid)
+    in mk_(new_pat,new_ids,pid);
+#endif VDMPP
+
+  Bind2PureBind : AS`Bind * Identifiers -> AS`Bind * Identifiers * Identifiers
+  Bind2PureBind(bind,ids) ==
+    cases bind:
+      mk_AS`SetBind(-,-,-)  -> SetBind2PureSetBind(bind,ids),
+      mk_AS`TypeBind(-,-,-) -> TypeBind2PureTypeBind(bind,ids)
+    end;
+
+  SetBind2PureSetBind : AS`SetBind * Identifiers -> AS`SetBind * Identifiers * Identifiers
+  SetBind2PureSetBind(bind,ids) ==
+    let mk_(new_pat,new_ids,pid) = Pattern2PurePattern(bind.pat,ids),
+        new_bind             = mu(bind, pat |-> new_pat) 
+    in mk_(new_bind,new_ids,pid);
+
+  TypeBind2PureTypeBind : AS`TypeBind * Identifiers -> AS`TypeBind * Identifiers * Identifiers
+  TypeBind2PureTypeBind(bind,ids) ==
+    let mk_(new_pat,new_ids,pid) = Pattern2PurePattern(bind.pat,ids),
+        new_bind             = mu(bind, pat |-> new_pat) 
+    in mk_(new_bind,new_ids,pid); 
+
+  BindList2PureBindList : AS`BindList * Identifiers -> AS`BindList * Identifiers * Identifiers
+  BindList2PureBindList(binds,ids) ==
+    if binds = []
+    then mk_([],ids,{})
+    else
+      let mk_(binds_hd,ids_hd,pid_hd) = MultBind2PureMultBind(hd binds,ids),
+          mk_(binds_tl,ids_tl,pid_tl) = BindList2PureBindList(tl binds,ids_hd) 
+      in mk_([binds_hd]^binds_tl,ids_tl,pid_hd union pid_tl);
+
+  MultBind2PureMultBind : AS`MultBind * Identifiers -> AS`MultBind * Identifiers * Identifiers
+  MultBind2PureMultBind (mbinds,ids) ==
+    cases mbinds:
+      mk_AS`MultSetBind(-,-,-)  -> MultSetBind2PureMultSetBind(mbinds,ids),
+      mk_AS`MultTypeBind(-,-,-) -> MultTypeBind2PureMultTypeBind(mbinds,ids)
+    end;
+ 
+  MultSetBind2PureMultSetBind : AS`MultSetBind * Identifiers -> AS`MultSetBind * Identifiers * Identifiers
+  MultSetBind2PureMultSetBind (bind,ids) ==
+    let mk_(new_pat,new_ids,pid) = Pattern2PurePatternSeq(bind.pat,ids),
+        new_bind             = mu(bind, pat |-> new_pat) 
+    in mk_(new_bind,new_ids,pid);
+
+  MultTypeBind2PureMultTypeBind : AS`MultTypeBind * Identifiers -> AS`MultTypeBind * Identifiers * Identifiers
+  MultTypeBind2PureMultTypeBind (bind,ids) ==
+    let mk_(new_pat,new_ids,pid) = Pattern2PurePatternSeq(bind.pat,ids),
+        new_bind             = mu(bind, pat |-> new_pat) 
+    in mk_(new_bind,new_ids,pid);
+
+end PURE_PAT
+\end{vdm_al}
+
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[PURE\_PAT`MultTypeBind2PureMultTypeBind]
+{rtinfo.ast}[PURE_PAT]
+\end{rtinfo}
+

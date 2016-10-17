@@ -1,0 +1,23 @@
+class A
+
+operations
+public Test: () ==> seq of bool
+Test() == let a = {},
+              b = {1},
+              c = {1,2,3},
+              d = {1,2,3,4}
+          in return 
+[
+  a subset a,
+  a subset c,
+  b subset c,
+  c subset c,
+  d subset c,
+  a psubset a,
+  a psubset c,
+  b psubset c,
+  c psubset c,
+  d psubset c
+]
+
+end A

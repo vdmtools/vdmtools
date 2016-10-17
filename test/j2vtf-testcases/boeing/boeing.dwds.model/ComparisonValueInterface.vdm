@@ -1,0 +1,20 @@
+class ComparisonValueInterface
+operations 
+public  hashCode : () ==> int 
+hashCode() == 
+is subclass responsibility ;
+
+public  toString : () ==> [String]
+toString() == 
+is subclass responsibility ;
+
+public  equals : [ComparisonValueInterface] ==> bool 
+equals(anotherValue) == 
+is subclass responsibility ;
+
+public  compareTo : [ComparisonValueInterface] ==> int 
+compareTo(anotherValue) == 
+is subclass responsibility ;
+
+
+end  ComparisonValueInterface

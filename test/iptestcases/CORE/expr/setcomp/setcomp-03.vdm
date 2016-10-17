@@ -1,0 +1,35 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq  of set of ( nat * nat | nat | seq of ( nat | bool | seq of ( nat | bool ) ) )  
+Test () ==
+return 
+[ {a+b | a,[a,b] in set { 1,2,[2,1], [3,{6,7}],[{6,7},9] } },
+  { c+d| [c],mk_(d,c) in set {[{2,3}],[4],[5],4,5,mk_(6,4) } },
+  let a=true in
+  {e+f| e,[e,f] in set {1,if a then {a} else 5 ,[1,2]}},
+  { [g,h] | g,[h] in set {[1],[2],[true]}}, 
+  {mk_(i,j) | [mk_(7,{i},j),[[i]]] in set {1,2,[mk_(7,{1},2),[[1]]], 
+              [mk_(7,{1},2),[[2]]] } } 
+]  
+
+
+
+
+  
+
+  
+
+
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

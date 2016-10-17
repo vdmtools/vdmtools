@@ -1,0 +1,891 @@
+\section{Traversal of definitions}
+
+\begin{vdm_al}
+module POG_DEF
+
+imports
+
+  from POG_EXPR all,
+  from POG_STMT all,
+  from POG_PAT  all,
+
+  from POGTP  all,
+  from GEN_PO all,
+  from CHECK  all,
+
+
+  from AS all,
+  from CI all,
+  from REP all,
+  from AUX all,
+  from ENV all,
+
+  from SPEC_AST all
+
+exports
+  functions
+    pog_PatternBindExprList : seq of (AS`PatternBind * AS`Expr) * CI`ContextId
+                     * POGTP`Context -> POG_PAT`POG * POGTP`Context;
+    pog_PatternBindExpr : (AS`PatternBind * [AS`Expr]) * CI`ContextId * POGTP`Context -> POG_PAT`POG
+
+  operations
+    pog_LocalDefList : seq of AS`LocalDef * POGTP`Context ==> POG_PAT`POG * POGTP`Context;
+    pog_ValueDefList : seq of AS`ValueDef * POGTP`Context ==> POG_PAT`POG;
+    pog_FnDef : AS`FnDef * POGTP`Context * set of AS`Name ==> POG_PAT`POG;
+    pog_TypeDef : AS`TypeDef * POGTP`Context ==> seq of POGTP`ProofObligation;
+    pog_AstCI: AS`AstCI ==> seq of POGTP`ProofObligation;
+
+definitions
+
+\end{vdm_al}
+
+\section{Abstract syntax trees with context info}
+
+\begin{vdm_al}
+operations
+
+-- needs test for type annotation of ast
+pog_AstCI : AS`AstCI ==> seq of POGTP`ProofObligation
+pog_AstCI (mk_AS`AstCI(ast,-,-)) ==
+  def contxt  = POGTP`InitialContext();
+  in
+   (dcl pog_ast : seq of POGTP`ProofObligation;
+    cases ast:
+      -^-    -> pog_ast := pog_Document(ast,contxt),
+      others -> pog_ast := (POG_EXPR`pog_Expr(ast,contxt)).po
+    end;
+    InsertNumbers(pog_ast);
+   );
+
+\end{vdm_al}
+
+\section{Traversing documents}
+
+\begin{vdm_al}
+operations
+
+--  sameClassFunc : AS`Name * AS`Name ==> bool
+--  sameClassFunc(mk_AS`Name(cid,-),mk_AS`Name(fid,-)) ==
+--    return cid = [fid(1)];
+
+--  sameClass : AS`Name * AS`Name ==> bool
+--  sameClass(mk_AS`Name(a,-),mk_AS`Name(b,-)) ==
+--    if len a < len b
+--    then return forall i in set inds a & a(i) = b(i) and i < len a
+--    else return false;
+
+pog_Document : AS`Document * POGTP`Context ==> seq of POGTP`ProofObligation
+pog_Document (doc,contxt') ==
+ (dcl pog_doc: seq of POGTP`ProofObligation := [],
+--      finfo: map AS`Name to ENV`FunctionInfo := recMap_Document(doc,contxt'),
+      finfo : map AS`Name to ENV`FunctionInfo := ENV`getRecMap(),
+      -- uprec : map AS`Name to ENV`FunctionInfo:= REC`main_RecMap(finfo),
+      -- natb : nat := debugRec(uprec),
+      -- recmapmeas : map AS`Name to ENV`FunctionInfo := findMeas_Document(doc,uprec),
+      contxt : POGTP`Context := mu(contxt',recmap |-> finfo); --add context
+  for i = 1 to len doc do
+   (cases doc(i):
+#ifdef VDMSL
+      mk_AS`Definitions(-,-,-,-,-,-,-) -> (SPEC_AST`SetCurrModName(nil);
+                                           pog_doc:=pog_doc ^ pog_Definitions(doc(i),contxt)),
+      mk_AS`Module(-,-,-,-)            -> (SPEC_AST`SetCurrModName(doc(i).nm);
+                                           pog_doc:=pog_doc ^ pog_Module(doc(i),contxt)),
+      mk_AS`DLModule(-,-,-,-)          -> (SPEC_AST`SetCurrModName(doc(i).nm);
+                                           pog_doc:=pog_doc ^ pog_DLModule(doc(i),contxt))
+#endif VDMSL
+#ifdef VDMPP
+      mk_AS`Class(-,-,-,-,-,-)         -> (SPEC_AST`SetCurrModName(doc(i).nm);
+                                           pog_doc:=pog_doc ^ pog_Class(doc(i),contxt))
+#endif VDMPP
+    end
+      );
+  return pog_doc
+ );
+
+\end{vdm_al}
+
+\section{Traversing modules}
+
+\begin{vdm_al}
+
+functions
+
+#ifdef VDMSL
+pog_Module : AS`Module * POGTP`Context -> seq of POGTP`ProofObligation
+pog_Module (mk_AS`Module(-,-,defs,-),contxt) ==
+  if defs = nil
+  then []
+  else pog_Definitions(defs,contxt);
+
+pog_DLModule : AS`DLModule * POGTP`Context -> seq of POGTP`ProofObligation
+pog_DLModule (-,-) ==
+  [];
+#endif VDMSL
+#ifdef VDMPP
+pog_Class : AS`Class * POGTP`Context -> seq of POGTP`ProofObligation
+pog_Class (mk_AS`Class(-,-,-,defs,-,-),contxt) ==
+  if defs = nil
+  then []
+  else pog_Definitions(defs,contxt);
+#endif VDMPP
+\end{vdm_al}
+
+\section{Traversing definitions}
+
+\begin{vdm_al}
+
+  pog_Definitions : AS`Definitions * POGTP`Context -> seq of POGTP`ProofObligation
+#ifdef VDMSL
+  pog_Definitions(mk_AS`Definitions(typem,vals,fnm,opm,State,-,-),contxt) ==
+#endif VDMSL
+#ifdef VDMPP
+  pog_Definitions(mk_AS`Definitions(typem,vals,fnm,opm,instvars,syncs,-,-,-),contxt) ==
+#endif VDMPP
+    def
+        --------- Build context ---------------------------------------
+        vals_contxt = POGTP`UpdateLoc(<values>, mk_AS`Name([""],CI`NilContextId), contxt);
+#ifdef VDMPP
+        sync_contxt = POGTP`UpdateLoc(<synchronisation>, mk_AS`Name([""],CI`NilContextId), contxt);
+        sync_m = { syncs(i).spec |-> syncs(i).guard | i in set inds syncs & is_AS`Permission(syncs(i))};
+#endif VDMPP
+        --------- Enforce ordering on type and function definitions ---
+        type_seq = SetToSeq[AS`Name](dom typem);
+        fn_seq   = SetToSeq[AS`Name](dom fnm);
+        op_seq   = SetToSeq[AS`Name](dom opm);
+        ---------------------------------------------------------------
+        pog_type = [pog_TypeDef(typem(type_seq(i)),contxt) | i in set inds type_seq];
+        pog_fn   = [pog_FnDef(fnm(fn_seq(i)),contxt, {x.nm | x in set rng fnm} ) | i in set inds fn_seq];
+        pog_op   = [pog_OpDef(opm(op_seq(i)),
+#ifdef VDMPP
+                              if opm(op_seq(i)).nm in set dom sync_m
+                              then mk_POGTP`Context(
+                                     mk_POGTP`LocContext(<expression>, nil, opm(op_seq(i)).nm),
+                                     [sync_m(opm(op_seq(i)).nm)]
+                                     ,{|->})
+                              else
+#endif VDMPP
+                              contxt)
+                    | i in set inds op_seq];
+#ifdef VDMSL
+        --pog_state = if State = nil
+        --            then []
+        --            else pog_StateDef(State,contxt);
+        pog_state = pog_StateDef(State,contxt);
+#endif VDMSL
+#ifdef VDMPP
+        pog_state = conc [pog_InstanceVarDef(instvars(i),contxt) | i in set inds instvars];
+#endif VDMPP
+        pog_vals = pog_ValueDefList(vals,vals_contxt);
+#ifdef VDMPP
+        pog_syncs = pog_SyncDefs(sync_m,sync_contxt);
+#endif VDMPP
+        ---------------------------------------------------------------
+        po       =   (conc pog_type)
+                   ^ (conc [pog_fn(i).po   | i in set inds pog_fn])
+                   ^ (conc [pog_op(i).po   | i in set inds pog_op])
+                   ^ pog_state
+#ifdef VDMPP
+                   ^ pog_syncs
+#endif VDMPP
+                   ^ pog_vals.po
+    in
+        po
+ ; -- pre opm = {|->};
+
+\end{vdm_al}
+
+\section{Type definitions}
+
+\begin{vdm_al}
+
+#ifdef VDMPP
+  pog_InstanceVarDef: AS`InstanceVarDef * POGTP`Context -> seq of POGTP`ProofObligation
+  pog_InstanceVarDef (ivdef,contxt) ==
+    cases ivdef:
+      mk_AS`InstAssignDef(-,-,-,-) -> pog_InstAssignDef(ivdef,contxt),
+      mk_AS`InstanceInv(-,-,-)     -> pog_InstanceInv(ivdef,contxt)
+    end;
+
+  pog_InstAssignDef: AS`InstAssignDef * POGTP`Context -> seq of POGTP`ProofObligation
+  --pog_InstAssignDef (mk_AS`InstAssignDef(ad,acc,stat,-),contxt) ==
+  pog_InstAssignDef (mk_AS`InstAssignDef(ad,-,-,-),contxt) ==
+    def cls_nm      = SPEC_AST`GetModuleName();
+        var_nm      = mk_AS`Name(cls_nm.ids ^ ad.var.ids,CI`NilContextId);
+        new_contxt  = POGTP`UpdateLoc(<instanceVariables>,var_nm,contxt);
+        pog_ad      = POG_STMT`pog_AssignDef(ad,new_contxt)
+    in
+        pog_ad.po;
+
+  pog_InstanceInv: AS`InstanceInv * POGTP`Context -> seq of POGTP`ProofObligation
+  --pog_InstanceInv (mk_AS`InstanceInv(expr,acc,-),contxt) ==
+  pog_InstanceInv (mk_AS`InstanceInv(expr,-,-),contxt) ==
+    def cls_nm      = SPEC_AST`GetModuleName();
+        new_contxt  = POGTP`UpdateLoc(<instanceInvariant>,cls_nm,contxt);
+        pog_expr    = POG_EXPR`pog_Expr(expr,new_contxt)
+    in
+        pog_expr.po;
+#endif VDMPP
+
+operations
+#ifdef VDMSL
+  pog_StateDef : [AS`StateDef] * POGTP`Context ==> seq of POGTP`ProofObligation
+  pog_StateDef (State,contxt) ==
+    if State = nil
+    then return []
+    else
+      let mk_AS`StateDef(tp,Inv,Init,-) = State
+      in
+        def new_contxt = POGTP`UpdateLoc(<state>,tp.name,contxt);
+            pog_inv  = pog_Invariant(tp.name,tp,Inv,new_contxt);
+            pog_init = pog_StateInit(tp.name,tp,Init,new_contxt)
+        in return pog_inv ^ pog_init;
+
+  pog_StateInit : AS`Name * AS`CompositeType * [AS`StateInit] * POGTP`Context ==> seq of POGTP`ProofObligation
+  pog_StateInit (nm,tp,Init,contxt) ==
+    if Init = nil
+    then return []
+    else
+     let mk_AS`StateInit(pat,expr,-) = Init
+     in
+      def type_bind   = [mk_AS`MultTypeBind([pat], mk_AS`TypeName(nm,CI`NilContextId), CI`NilContextId)];
+          expr_contxt = POGTP`Add2Context(type_bind,contxt);
+          ----------------------------------------------------------
+          pog_pat     = POG_PAT`pog_Pattern(pat,contxt);
+          pog_expr    = POG_EXPR`pog_Expr(expr,expr_contxt);
+          ----------------------------------------------------------
+          fv          = pog_pat.fv union pog_expr.fv;
+          ------- special PO generation  ---------------------------
+          pog_match_cond =
+            if is_AS`PatternName(pat) or
+               (is_AS`CompositeType(tp) and
+                is_AS`RecordPattern(pat) and
+                forall i in set inds pat.fields & is_AS`PatternName(pat.fields(i)))
+            then []
+            else GEN_PO`VerifyPatMatch(nm,type_bind,nil,fv union pog_pat.pid,contxt);
+          ----------------------------------------------------------
+          po          = pog_pat.po ^ pog_expr.po ^ pog_match_cond
+      in return po;
+#endif VDMSL
+
+  pog_TypeDef : AS`TypeDef * POGTP`Context ==> seq of POGTP`ProofObligation
+  pog_TypeDef (mk_AS`TypeDef(nm,tp,fninv,-,-),contxt) ==
+    def new_contxt = POGTP`UpdateLoc(<types>,nm,contxt);
+        pog_fninv  = pog_Invariant(nm,tp,fninv,new_contxt)
+    in return pog_fninv;
+
+  pog_Invariant : AS`Name * AS`Type * [AS`Invariant] * POGTP`Context ==> seq of POGTP`ProofObligation
+  pog_Invariant (nm,tp,Inv,contxt) ==
+    if Inv = nil
+    then return []
+    else
+      let mk_AS`Invariant(pat,expr,-) = Inv
+      in
+        def type_bind   = [mk_AS`MultTypeBind([pat], mk_AS`TypeName(nm,CI`NilContextId), CI`NilContextId)];
+            expr_contxt = POGTP`Add2Context(type_bind,contxt);
+            ----------------------------------------------------------
+            pog_pat     = POG_PAT`pog_Pattern(pat,contxt);
+            pog_expr    = POG_EXPR`pog_Expr(expr,expr_contxt);
+            ----------------------------------------------------------
+            fv          = pog_pat.fv union pog_expr.fv;
+            ------- special PO generation  ---------------------------
+            pog_match_cond =
+              if is_AS`PatternName(pat) or
+                 (is_AS`CompositeType(tp) and
+                  is_AS`RecordPattern(pat) and
+                  forall i in set inds pat.fields & is_AS`PatternName(pat.fields(i))) or
+                 (is_AS`ProductType(tp) and
+                  is_AS`TuplePattern(pat) and
+                  forall i in set inds pat.fields & is_AS`PatternName(pat.fields(i)))
+              then []
+              else GEN_PO`VerifyPatMatch(nm,type_bind,nil,fv union pog_pat.pid,contxt);
+        ----------------------------------------------------------
+            po          = pog_pat.po ^ pog_expr.po ^ pog_match_cond
+        in return po;
+
+\end{vdm_al}
+
+\subsection{Traversing function definitions}
+
+\begin{vdm_al}
+operations
+  pog_FnDef : AS`FnDef * POGTP`Context * set of AS`Name ==> POG_PAT`POG
+  pog_FnDef(fndef,contxt,nms) ==
+    cases fndef:
+      mk_AS`ExplFnDef(-,-,-,-,-,-,-,-,-,-,-)    -> pog_ExplFunction(fndef,contxt,nms),
+      mk_AS`ImplFnDef(-,-,-,-,-,-,-,-,-)        -> pog_ImplFunction(fndef,contxt),
+      mk_AS`ExtExplFnDef(-,-,-,-,-,-,-,-,-,-,-) -> pog_ExtExplFunction(fndef,contxt)
+    end;
+
+  pog_ExplFunction : AS`ExplFnDef * POGTP`Context * set of AS`Name ==> POG_PAT`POG
+  pog_ExplFunction
+    --(mk_AS`ExplFnDef(nm,tpvarlst,fntype,parmlst,fnbody,fnpre,fnpost,-,-,measu,cid),contxt,nms) ==
+    (mk_AS`ExplFnDef(nm,-,fntype,parmlst,fnbody,fnpre,fnpost,-,-,-,cid),contxt,-) ==
+    def mk_(curry_fndoms,fnrng) = ExtractCurryTypes(fntype,len parmlst);
+        -------- extract binding lists for context -----------------------
+        parms_bdlst = [[let cid  = CI`NilContextId,
+                            pats = parmlst(j)(i),
+                            tp   = curry_fndoms(j)(i)
+                        in
+                            mk_AS`MultTypeBind([pats],tp,cid)
+                        | i in set inds parmlst(j)]
+                       | j in set inds parmlst];
+        ----------build result binding --------------------------------------
+        res_let     = if is_(fnbody.body, AS`NoBody)
+                      then
+                        let cid  = CI`NilContextId,
+                            pat  = mk_AS`PatternName(mk_AS`Name(["RESULT"],cid), nil, cid),
+                            tp   = fntype.fnrng
+                        in mk_AS`TypeBind(pat,tp,cid)
+                       else
+                         let cid  = CI`NilContextId,
+                             pat  = mk_AS`PatternName(mk_AS`Name(["RESULT"],cid), nil, cid),
+                             tp   = fntype.fnrng,
+                             val  = fnbody.body
+                         in mk_AS`ValueDef(pat,tp,val,<DEFAULT_AS>,false,cid);
+        ----------build contexts ------------------------------------------
+        new_contxt    = POGTP`UpdateLoc(<functions>,nm,contxt);
+        fnpre_contxt  = POGTP`AddList2Context(parms_bdlst,new_contxt);
+        fnbody_contxt = POGTP`Add2Context(fnpre,fnpre_contxt);
+        fnpost_contxt = POGTP`Add2Context(res_let,fnbody_contxt);
+        ----------recursive PO generation ---------------------------------
+        pog_parms     = POG_PAT`pog_BindList(conc parms_bdlst,new_contxt);
+        pog_fnbody    = pog_FnBody(fnbody,fnbody_contxt);
+        pog_fnpre     = POG_EXPR`pog_Expr(fnpre,fnpre_contxt);
+        pog_fnpost    = POG_EXPR`pog_Expr(fnpost,fnpost_contxt);
+        -------------------------------------------------------------------
+        fv            = dunion {pog_fnbody.fv,pog_fnpre.fv,pog_fnpost.fv};
+        pid           = {};
+        names         = fv union pog_parms.pid;
+        --calledfns     = fv inter nms,
+        ----------subtype PO generation ---------------------------------
+        pog_subtp_fnbody = CHECK`SubtypeOfFunction(fnbody.body,fnrng,names,fnbody_contxt);
+        pog_subtp_fnpre  = CHECK`SubtypeOfBoolean(fnpre,names,fnbody_contxt);
+        pog_subtp_fnpost = CHECK`SubtypeOfBoolean(fnpost,names,fnpost_contxt);
+        ----------special PO generation: verify post condition ------------
+        pog_post_cond  = GEN_PO`VerifyPost(nm,hd parms_bdlst,fnbody,fnpre,fnpost,names,cid,new_contxt);
+        pog_match_cond = if len parmlst = 1
+                         then GEN_PO`VerifyPatMatch(nm,hd parms_bdlst,fnpre,names,new_contxt)
+                         else GEN_PO`VerifyPatMatch(nm,conc parms_bdlst,nil,names,new_contxt);
+        -------------------------------------------------------------------
+        po           = conc [ pog_parms.po, pog_subtp_fnbody,
+                              pog_subtp_fnpre, pog_subtp_fnpost,
+                              pog_fnbody.po, pog_fnpre.po, pog_fnpost.po,
+                              pog_post_cond, pog_match_cond ]
+    in return mk_POG_PAT`POG(po,fv,pid)
+    pre --tl parmlst = [] and
+        -- tpvarlst = [] and
+        len (hd parmlst) = len fntype.fndom;
+
+  pog_ImplFunction : AS`ImplFnDef * POGTP`Context ==> POG_PAT`POG
+  pog_ImplFunction
+    (mk_AS`ImplFnDef(nm,tpvarlst,partps,resnmtps,fnpre,fnpost,-,-,cid),contxt) ==
+    def -------- extract binding lists for context -----------------------
+        parms_bdlst = [let cid  = partps(i).cid,
+                           pats = partps(i).pats,
+                           tp   = partps(i).tp
+                        in mk_AS`MultTypeBind(pats,tp,cid)
+                       | i in set inds partps];
+        res_bdlst   = [let cid  = resnmtps(i).cid,
+                           pats  = [mk_AS`PatternName(resnmtps(i).nm, nil, cid)],
+                           tp   = resnmtps(i).tp
+                       in mk_AS`MultTypeBind(pats,tp,cid)
+                      | i in set inds resnmtps];
+        ----------build contexts ------------------------------------------
+        new_contxt    = POGTP`UpdateLoc(<functions>,nm,contxt);
+        fnpre_contxt  = POGTP`Add2Context(parms_bdlst,new_contxt);
+        fnbody_contxt = POGTP`Add2Context(fnpre,fnpre_contxt);
+        fnpost_contxt = POGTP`Add2Context(res_bdlst,fnbody_contxt);
+        ----------recursive PO generation ---------------------------------
+        pog_parms     = POG_PAT`pog_BindList(parms_bdlst,new_contxt);
+        pog_fnpre     = POG_EXPR`pog_Expr(fnpre,fnpre_contxt);
+        pog_fnpost    = POG_EXPR`pog_Expr(fnpost,fnpost_contxt);
+        -------------------------------------------------------------------
+        fv            = pog_fnpre.fv union pog_fnpost.fv;
+        pid           = {};
+        ----------subtype PO generation ---------------------------------
+        pog_subtp_fnpre  = CHECK`SubtypeOfBoolean(fnpre,fv,fnpre_contxt);
+        pog_subtp_fnpost = CHECK`SubtypeOfBoolean(fnpost,fv,fnpost_contxt);
+        ----------special PO generation: verify post condition ------------
+        pog_sat_cond   = GEN_PO`VerifySat(nm,parms_bdlst,res_bdlst,[],fnpre,fv,cid,new_contxt);
+        pog_match_cond = GEN_PO`VerifyPatMatch(nm,parms_bdlst,fnpre,fv union pog_parms.pid,new_contxt);
+        -------------------------------------------------------------------
+        po            = conc [ pog_parms.po, pog_subtp_fnpre, pog_subtp_fnpost,
+                               pog_fnpre.po, pog_fnpost.po,
+                               pog_sat_cond, pog_match_cond ]
+    in return mk_POG_PAT`POG(po,fv,pid)
+    pre tpvarlst = [];
+
+  pog_ExtExplFunction : AS`ExtExplFnDef * POGTP`Context ==> POG_PAT`POG
+  pog_ExtExplFunction
+    --(mk_AS`ExtExplFnDef(nm,tv_l,partps,resnmtps,fnbody,fnpre,fnpost,acc,stat,-,cid),contxt) ==
+    (mk_AS`ExtExplFnDef(nm,-,partps,resnmtps,fnbody,fnpre,fnpost,-,-,-,cid),contxt) ==
+    def  -------- extract binding lists for context -----------------------
+        parms_bdlst = [let cid  = partps(i).cid,
+                           pats = partps(i).pats,
+                           tp   = partps(i).tp
+                        in mk_AS`MultTypeBind(pats,tp,cid)
+                       | i in set inds partps];
+        res_bdlst   = [let cid  = resnmtps(i).cid,
+                           pats  = [mk_AS`PatternName(resnmtps(i).nm, nil, cid)],
+                           tp   = resnmtps(i).tp
+                       in mk_AS`MultTypeBind(pats,tp,cid)
+                      | i in set inds resnmtps];
+        fnrng = if len resnmtps=1
+                then resnmtps(1).tp
+                else mk_AS`ProductType ( [resnmtps(i).tp | i in set inds resnmtps], CI`NilContextId );
+        ----------build contexts ------------------------------------------
+        new_contxt    = POGTP`UpdateLoc(<functions>,nm,contxt);
+        fnpre_contxt  = POGTP`Add2Context(parms_bdlst,new_contxt);
+        fnbody_contxt = POGTP`Add2Context(fnpre,fnpre_contxt);
+        fnpost_contxt = POGTP`Add2Context(res_bdlst,fnbody_contxt);
+        ----------recursive PO generation ---------------------------------
+        pog_parms     = POG_PAT`pog_BindList(parms_bdlst,new_contxt);
+        pog_fnpre     = POG_EXPR`pog_Expr(fnpre,fnpre_contxt);
+        pog_fnbody    = pog_FnBody(fnbody,fnbody_contxt);
+        pog_fnpost    = POG_EXPR`pog_Expr(fnpost,fnpost_contxt);
+        -------------------------------------------------------------------
+        fv            = dunion {pog_fnbody.fv,pog_fnpre.fv,pog_fnpost.fv};
+        pid           = {};
+        names         = fv union pog_parms.pid;
+        ----------subtype PO generation ---------------------------------
+        pog_subtp_fnbody = CHECK`SubtypeOfFunction(fnbody.body,fnrng,names,fnbody_contxt);
+        pog_subtp_fnpre  = CHECK`SubtypeOfBoolean(fnpre,fv,fnpre_contxt);
+        pog_subtp_fnpost = CHECK`SubtypeOfBoolean(fnpost,fv,fnpost_contxt);
+        ----------special PO generation: verify post condition ------------
+        pog_post_cond  = GEN_PO`VerifyPost(nm,parms_bdlst,fnbody,fnpre,fnpost,names,cid,new_contxt);
+        --pog_sat_cond   = GEN_PO`VerifySat(nm,parms_bdlst,res_bdlst,[],fnpre,fv,cid,new_contxt),
+        pog_match_cond = GEN_PO`VerifyPatMatch(nm,parms_bdlst,fnpre,fv union pog_parms.pid,new_contxt);
+        -------------------------------------------------------------------
+        po           = conc [pog_parms.po,pog_subtp_fnbody,
+                             pog_subtp_fnpre,pog_subtp_fnpost,
+                             pog_fnbody.po,pog_fnpre.po,pog_fnpost.po,
+                             pog_post_cond,pog_match_cond]
+
+    in return mk_POG_PAT`POG(po,fv,pid);
+
+  pog_FnBody: AS`FnBody * POGTP`Context ==> POG_EXPR`POG
+  pog_FnBody(mk_AS`FnBody(body,-),contxt) ==
+    if is_(body, AS`NoBody)
+    then return mk_POG_EXPR`POG([],{})
+    else POG_EXPR`pog_Expr(body,contxt);
+
+\end{vdm_al}
+
+\subsection{Traversing operation definitions}
+
+\begin{vdm_al}
+functions
+  pog_OpDef : AS`OpDef * POGTP`Context -> POG_PAT`POG
+  pog_OpDef(opdef,contxt) ==
+    cases opdef:
+      mk_AS`ExplOpDef(-,-,-,-,-,-,-,-,-,-,-,-) -> pog_ExplOperation(opdef,contxt),
+      mk_AS`ImplOpDef(-,-,-,-,-,-,-,-,-,-,-,-,-) -> pog_ImplOperation(opdef,contxt),
+      mk_AS`ExtExplOpDef(-,-,-,-,-,-,-,-,-,-,-,-,-,-) -> pog_ExtExplOperation(opdef,contxt)
+    end;
+
+  pog_ExplOperation : AS`ExplOpDef * POGTP`Context -> POG_PAT`POG
+  pog_ExplOperation(mk_AS`ExplOpDef(nm,-,-,optype,parms,opbody,oppre,oppost,-,-,-,cid),contxt) ==
+    def mk_(curry_opdoms,oprng) = mk_(optype.opdom,optype.oprng);
+        -------- extract binding lists for context -----------------------
+        parms_bdlst = [let cid  = CI`NilContextId,
+                           pats = parms(i),
+                           tp   = curry_opdoms(i)
+                        in mk_AS`MultTypeBind([pats],tp,cid)
+                        | i in set inds parms];
+        ----------build result binding --------------------------------------
+        --res_let = if oprng <> nil then
+        res_let = if is_AS`VoidType(oprng)
+                  then
+                    let  cid  = CI`NilContextId,
+                         pat  = mk_AS`PatternName( mk_AS`Name(["RESULT"],cid), nil, cid),
+                         tp   = oprng
+                    in [mk_AS`MultTypeBind([pat],tp,cid)]
+                  else [];
+        ----------build contexts ------------------------------------------
+#ifdef VDMSL
+        state'      = SPEC_AST`GetStateDef();
+        state_bdlst = if state' = nil
+                      then []
+                      else
+                        let oldst = mk_AS`Name(["oldSt"],CI`NilContextId),
+                            st'   = mk_AS`Name(["st"],CI`NilContextId)
+                        in  [ mk_AS`MultTypeBind ([mk_AS`PatternName(oldst,nil,CI`NilContextId)],
+                                                  state'.tp,
+                                                  state'.cid),
+                              mk_AS`MultTypeBind ([mk_AS`PatternName(st',nil,CI`NilContextId)],
+                                                  state'.tp,
+                                                  state'.cid)  ];
+        oldst_bdlist = if len state_bdlst = 0
+                       then []
+                       else [hd state_bdlst];
+        newst_bdlist = if len state_bdlst = 0
+                       then []
+                       else tl state_bdlst;
+#endif VDMSL
+#ifdef VDMPP
+        --state_bdlst  = [];
+        oldst_bdlist = [];
+        newst_bdlist = [];
+#endif VDMPP
+        new_contxt    = POGTP`UpdateLoc(<operations>,nm,contxt);
+        oppre_contxt  = POGTP`Add2Context(parms_bdlst ^ oldst_bdlist, new_contxt);
+        opbody_contxt = POGTP`Add2Context(oppre, oppre_contxt);
+        oppost_contxt = POGTP`Add2Context(newst_bdlist ^ res_let, opbody_contxt);
+        ----------recursive PO generation ---------------------------------
+        pog_parms     = POG_PAT`pog_BindList(parms_bdlst, new_contxt);
+        pog_opbody    = pog_OpBody(opbody, opbody_contxt);
+        pog_oppre     = POG_EXPR`pog_Expr(oppre, oppre_contxt);
+        pog_oppost    = POG_EXPR`pog_Expr(oppost, oppost_contxt);
+        -------------------------------------------------------------------
+        fv            = dunion {pog_opbody.fv, pog_oppre.fv, pog_oppost.fv};
+        pid           = {};
+        names         = fv union pog_parms.pid;
+        ----------subtype PO generation ---------------------------------
+        pog_subtp_opbody = CHECK`SubtypeOfOperation(opbody.body, oprng,names, nm, parms, opbody_contxt);
+        pog_subtp_oppre  = CHECK`SubtypeOfBoolean(oppre, names, oppre_contxt);
+        pog_subtp_oppost = CHECK`SubtypeOfBoolean(oppost, names, oppost_contxt);
+        ----------special PO generation: verify post condition ------------
+        pog_post_cond  = GEN_PO`VerifyOpPost(nm,parms_bdlst,opbody,oppre,oppost,names,cid,new_contxt);
+        pog_match_cond = GEN_PO`VerifyPatMatch(nm,parms_bdlst,oppre,names,new_contxt);
+        -------------------------------------------------------------------
+        po           = conc [ pog_parms.po, pog_subtp_opbody,
+                              pog_subtp_oppre, pog_subtp_oppost,
+                              pog_opbody.po, pog_oppre.po, pog_oppost.po,
+                              pog_post_cond, pog_match_cond ]
+    in mk_POG_PAT`POG(StripPO(po), fv, pid);
+
+  StripPO: seq of POGTP`ProofObligation -> seq of POGTP`ProofObligation
+  StripPO(pos) ==
+    [ mu(pos(i), po |-> pos(i).purepo, purepo |-> nil) | i in set inds pos ];
+
+--  StripContext: AS`Expr -> AS`Expr
+--  StripContext(p_e) ==
+--    let e'' = if is_AS`BracketedExpr(p_e)
+--              then p_e.expr
+--              else p_e,
+--        e'  = if is_AS`AllOrExistsExpr(e'')
+--              then e''.pred
+--              else e''
+--    in  if is_AS`BinaryExpr(e') and e'.opr = <IMPLY>
+--        then e'.right
+--        else e';
+
+  pog_ImplOperation : AS`ImplOpDef * POGTP`Context -> POG_PAT`POG
+  pog_ImplOperation(mk_AS`ImplOpDef(nm,-,-,partps,resnmtps,-,oppre,oppost,-,-,-,-,cid),contxt) ==
+    def -------- extract binding lists for context -----------------------
+        parms_bdlst = [let cid  = partps(i).cid,
+                           pats = partps(i).pats,
+                           tp   = partps(i).tp
+                       in mk_AS`MultTypeBind(pats,tp,cid)
+                       | i in set inds partps];
+        res_bdlst   = [let cid  = resnmtps(i).cid,
+                           pats  = [mk_AS`PatternName(resnmtps(i).nm, nil, cid)],
+                           tp   = resnmtps(i).tp
+                       in mk_AS`MultTypeBind(pats,tp,cid)
+                      | i in set inds resnmtps];
+#ifdef VDMSL
+        state'      = SPEC_AST`GetStateDef();
+        state_bdlst = if state' = nil
+                      then []
+                      else
+                        let oldst = mk_AS`Name(["oldSt"],CI`NilContextId),
+                            st'   = mk_AS`Name(["st"],CI`NilContextId)
+                        in  [ mk_AS`MultTypeBind ( [mk_AS`PatternName(oldst,nil,CI`NilContextId)],
+                                                   state'.tp,
+                                                   state'.cid),
+                              mk_AS`MultTypeBind ( [mk_AS`PatternName(st',nil,CI`NilContextId)],
+                                                   state'.tp,
+                                                   state'.cid)  ];
+        oldst_bdlist = if len state_bdlst = 0
+                       then []
+                       else [hd state_bdlst];
+        newst_bdlist = if len state_bdlst = 0
+                       then []
+                       else tl state_bdlst;
+#endif VDMSL
+#ifdef VDMPP
+        state_bdlst  = [];
+        oldst_bdlist = [];
+        newst_bdlist = [];
+#endif VDMPP
+        ----------build contexts ------------------------------------------
+        new_contxt    = POGTP`UpdateLoc(<operations>,nm,contxt);
+        oppre_contxt  = POGTP`Add2Context(parms_bdlst ^ oldst_bdlist,new_contxt);
+        opbody_contxt = POGTP`Add2Context(oppre,oppre_contxt);
+        oppost_contxt = POGTP`Add2Context(newst_bdlist ^ res_bdlst,opbody_contxt);
+        ----------recursive PO generation ---------------------------------
+        pog_parms     = POG_PAT`pog_BindList(parms_bdlst,new_contxt);
+        pog_oppre     = POG_EXPR`pog_Expr(oppre,oppre_contxt);
+        pog_oppost    = POG_EXPR`pog_Expr(oppost,oppost_contxt);
+        -------------------------------------------------------------------
+        fv            = pog_oppre.fv union pog_oppost.fv;
+        pid           = {};
+        ----------subtype PO generation ---------------------------------
+        pog_subtp_oppre  = CHECK`SubtypeOfBoolean(oppre,fv,oppre_contxt);
+        pog_subtp_oppost = CHECK`SubtypeOfBoolean(oppost,fv,oppost_contxt);
+        ----------special PO generation: verify post condition ------------
+        pog_sat_cond   = GEN_PO`VerifySat(nm,parms_bdlst,res_bdlst,state_bdlst,oppre,fv,cid,new_contxt);
+        pog_match_cond = GEN_PO`VerifyPatMatch(nm,parms_bdlst ^ oldst_bdlist,oppre,fv union pog_parms.pid,new_contxt);
+        -------------------------------------------------------------------
+        po            = conc [ pog_parms.po, pog_subtp_oppre, pog_subtp_oppost,
+                               pog_oppre.po, pog_oppost.po,
+                               pog_sat_cond, pog_match_cond ]
+    in
+        mk_POG_PAT`POG(po,fv,pid);
+
+  pog_ExtExplOperation : AS`ExtExplOpDef * POGTP`Context -> POG_PAT`POG
+  pog_ExtExplOperation(mk_AS`ExtExplOpDef(nm,-,-,partps,resnmtps,opbody,-,oppre,oppost,-,-,-,-,cid),contxt) ==
+    def -------- extract binding lists for context -----------------------
+        parms_bdlst = [let cid  = partps(i).cid,
+                           pats = partps(i).pats,
+                           tp   = partps(i).tp
+                       in mk_AS`MultTypeBind(pats,tp,cid)
+                       | i in set inds partps];
+        res_bdlst   = [let cid  = resnmtps(i).cid,
+                           pats  = [mk_AS`PatternName(resnmtps(i).nm, nil, cid)],
+                           tp   = resnmtps(i).tp
+                       in mk_AS`MultTypeBind(pats,tp,cid)
+                      | i in set inds resnmtps];
+#ifdef VDMSL
+        state'      = SPEC_AST`GetStateDef();
+        state_bdlst = if state' = nil
+                      then []
+                      else
+                        let oldst = mk_AS`Name(["oldSt"],CI`NilContextId),
+                            st'   = mk_AS`Name(["st"],CI`NilContextId)
+                        in [mk_AS`MultTypeBind([mk_AS`PatternName(oldst,nil,CI`NilContextId)], state'.tp, state'.cid),
+                            mk_AS`MultTypeBind([mk_AS`PatternName(st',nil,CI`NilContextId)], state'.tp, state'.cid)];
+        oldst_bdlist = if len state_bdlst = 0
+                       then []
+                       else [hd state_bdlst];
+        newst_bdlist = if len state_bdlst = 0
+                       then []
+                       else tl state_bdlst;
+#endif VDMSL
+#ifdef VDMPP
+        state_bdlst  = [];
+        oldst_bdlist = [];
+        newst_bdlist = [];
+#endif VDMPP
+        ----------build contexts ------------------------------------------
+        new_contxt    = POGTP`UpdateLoc(<operations>,nm,contxt);
+        oppre_contxt  = POGTP`Add2Context(parms_bdlst ^ oldst_bdlist,new_contxt);
+        opbody_contxt = POGTP`Add2Context(oppre,oppre_contxt);
+        oppost_contxt = POGTP`Add2Context(newst_bdlist ^ res_bdlst,opbody_contxt);
+        ----------recursive PO generation ---------------------------------
+        pog_parms     = POG_PAT`pog_BindList(parms_bdlst,new_contxt);
+        pog_oppre     = POG_EXPR`pog_Expr(oppre,oppre_contxt);
+        pog_opbody    = pog_OpBody(opbody,opbody_contxt);
+        pog_oppost    = POG_EXPR`pog_Expr(oppost,oppost_contxt);
+        -------------------------------------------------------------------
+        fv            = pog_oppre.fv union pog_oppost.fv;
+        pid           = {};
+        --names         = fv union pog_parms.pid;
+        ----------subtype PO generation ---------------------------------
+        pog_subtp_oppre  = CHECK`SubtypeOfBoolean(oppre,fv,oppre_contxt);
+        pog_subtp_oppost = CHECK`SubtypeOfBoolean(oppost,fv,oppost_contxt);
+        ----------special PO generation: verify post condition ------------
+        --pog_post_cond  = GEN_PO`VerifyOpPost(nm,parms_bdlst,opbody,oppre,oppost,names,cid,new_contxt);
+        pog_sat_cond   = GEN_PO`VerifySat(nm,parms_bdlst,res_bdlst,state_bdlst,oppre,fv,cid,new_contxt);
+        pog_match_cond = GEN_PO`VerifyPatMatch(nm,parms_bdlst ^ oldst_bdlist,oppre,fv union pog_parms.pid,new_contxt);
+        -------------------------------------------------------------------
+        po            = conc [ pog_parms.po, pog_subtp_oppre, pog_subtp_oppost,
+                               pog_opbody.po, pog_oppre.po, pog_oppost.po,
+                               pog_sat_cond, pog_match_cond]
+    in
+        mk_POG_PAT`POG(po,fv,pid);
+
+operations
+  pog_OpBody: AS`OpBody * POGTP`Context ==> POG_EXPR`POG
+  pog_OpBody(mk_AS`OpBody(body,-),contxt) ==
+    if is_(body, AS`NoBody)
+    then return mk_POG_EXPR`POG([],{}) -- undefined
+    else POG_STMT`pog_Stmt(body,contxt);
+\end{vdm_al}
+
+\subsection{Value definitions}
+
+\begin{vdm_al}
+  pog_ValueDef : AS`ValueDef * POGTP`Context ==> POG_PAT`POG
+  pog_ValueDef(mk_AS`ValueDef(pat,tp,val,-,-,cid),contxt) ==
+    def ----------recursive PO generation --------------------------------
+        pog_pat       = POG_PAT`pog_Pattern(pat,contxt);
+        pog_val       = POG_EXPR`pog_Expr(val,contxt);
+        -------------------------------------------------------------------
+        fv            = pog_pat.fv union (pog_val.fv \ pog_pat.pid);
+        pid           = pog_pat.pid;
+        names         = pid union fv;
+        ----------subtype PO generation --------------------------------
+        pog_subtp_pat = CHECK`PatternSubtypeOf(pat,tp,names,contxt);
+        pog_subtp_val = CHECK`SubtypeOf(val,tp,names,contxt);
+        pog_subtp     = CHECK`SubtypeOfPattern(val,pat,names,contxt);
+        ----------special PO generation: verify post condition ------------
+        pog_bind_cond =  if is_AS`PatternName(pat)
+                         then []
+                         elseif pog_subtp_pat = [] and
+                                pog_subtp_val = [] and
+                                pog_subtp = [] and
+                                (is_AS`RecordPattern(pat) or is_AS`TuplePattern(pat)) and
+                                forall i in set inds pat.fields & is_AS`PatternName(pat.fields(i))
+                         then []
+                         else GEN_PO`VerifyValueBinding(pat,tp,val,names,cid,contxt);
+        -------------------------------------------------------------------
+        po            = conc [ pog_subtp_pat,pog_subtp_val,pog_subtp,
+                               pog_pat.po,pog_val.po,pog_bind_cond ]
+    in return mk_POG_PAT`POG(po,fv,pid);
+
+
+  pog_ValueDefList : seq of AS`ValueDef * POGTP`Context ==> POG_PAT`POG
+  pog_ValueDefList (ldefs,contxt) ==
+    if ldefs = []
+    then return mk_POG_PAT`POG([],{},{})
+    else
+      def ----------recursive PO generation ----------------------------
+          head_contxt = if is_AS`PatternName((hd ldefs).pat) and (hd ldefs).pat.nm <> nil
+                        then POGTP`UpdateLoc(<values>, (hd ldefs).pat.nm, contxt)
+                        else contxt;
+          pog_head    = pog_ValueDef (hd ldefs,head_contxt);
+          pog_tail    = pog_ValueDefList(tl ldefs,contxt);
+          --------------------------------------------------------------
+          po          = pog_head.po ^ pog_tail.po;
+          fv          = pog_head.fv  union  (pog_tail.fv \ pog_head.pid);
+          pid         = {}
+      in return mk_POG_PAT`POG(po,fv,pid);
+\end{vdm_al}
+
+\subsection{Local value definitions}
+
+\begin{vdm_al}
+  pog_LocalDef : AS`LocalDef * POGTP`Context ==> POG_PAT`POG
+  pog_LocalDef(val,contxt) ==
+    cases val:
+      mk_AS`ValueDef(-,-,-,-,-,-) -> pog_ValueDef(val,contxt),
+      others                      -> pog_FnDef(val,contxt,{})
+    end;
+
+  pog_LocalDefList : seq of AS`LocalDef * POGTP`Context ==> POG_PAT`POG * POGTP`Context
+  pog_LocalDefList (ldefs,contxt) ==
+     if ldefs = []
+     then return mk_(mk_POG_PAT`POG([],{},{}),contxt)
+     else
+       def ----------build contexts -------------------------------------
+           head_contxt = POGTP`Add2Context(hd ldefs,contxt);
+           ----------recursive PO generation ----------------------------
+           pog_head    = pog_LocalDef (hd ldefs,contxt);
+           mk_(pog_tail,tail_contxt) = pog_LocalDefList(tl ldefs,head_contxt);
+           --------------------------------------------------------------
+           po          = pog_head.po ^ pog_tail.po;
+           fv          = pog_head.fv  union  (pog_tail.fv \ pog_head.pid);
+           pid         = {}
+       in return mk_(mk_POG_PAT`POG(po,fv,pid),tail_contxt);
+
+\end{vdm_al}
+
+\subsection{Pair of PatternBind and Expression}
+
+\begin{vdm_al}
+
+functions
+  pog_PatternBindExpr : (AS`PatternBind * [AS`Expr]) * CI`ContextId * POGTP`Context -> POG_PAT`POG
+  pog_PatternBindExpr(mk_(pb,val),cid,contxt) ==
+    def mk_(pat,tp,expr) = cases pb:
+                             mk_AS`TypeBind(p,t,-) -> mk_(p,t,nil),
+                             mk_AS`SetBind(p,e,-)  -> mk_(p,nil,e),
+                             others                -> mk_(pb,nil,nil)
+                           end;
+        ----------recursive PO generation ----------------------------
+        pog_expr      =  POG_EXPR`pog_Expr(expr,contxt);
+        pog_pat       =  POG_PAT`pog_Pattern(pat,contxt);
+        pog_val       =  POG_EXPR`pog_Expr(val,contxt);
+        -------------------------------------------------------------------
+        fv'           =  pog_pat.fv union (pog_expr.fv \ pog_pat.pid);
+        fv            =  fv'        union (pog_val.fv  \ pog_pat.pid);
+        pid           =  pog_pat.pid;
+        names         =  pid union fv;
+        ----------subtype PO generation ---------------------------------
+        pog_subtp_pat =  CHECK`PatternSubtypeOf(pat,tp,names,contxt);
+        --pog_subtp_val =  if val <> nil
+        --                 then CHECK`SubtypeOf(val,tp,names,contxt)
+        --                 else [];
+        pog_subtp_val =  CHECK`SubtypeOf(val,tp,names,contxt);
+        --pog_subtp     =  if val <> nil
+        --                 then CHECK`SubtypeOfPattern(val,pat,names,contxt)
+        --                 else [];
+        pog_subtp     =  CHECK`SubtypeOfPattern(val,pat,names,contxt);
+        ----------special PO generation: verify post condition ------------
+        pog_bind_cond =  if is_AS`PatternName(pat)
+                         then []
+                         elseif pog_subtp_pat = [] and
+                                pog_subtp_val = [] and
+                                pog_subtp = [] and
+                                (is_AS`RecordPattern(pat) or is_AS`TuplePattern(pat)) and
+                                forall i in set inds pat.fields & is_AS`PatternName(pat.fields(i))
+                         then []
+                         else GEN_PO`VerifyValueBinding(pat,tp,val,names,cid,contxt);
+        -------------------------------------------------------------------
+        po            = conc [ pog_subtp_pat, pog_subtp_val, pog_subtp,
+                               pog_pat.po, pog_expr.po, pog_val.po, pog_bind_cond ]
+    in mk_POG_PAT`POG(po,fv,pid);
+
+
+  pog_PatternBindExprList : seq of (AS`PatternBind * AS`Expr) * CI`ContextId * POGTP`Context
+                            -> POG_PAT`POG * POGTP`Context
+  pog_PatternBindExprList (ldefs,cid,contxt) ==
+     if ldefs = []
+     then mk_(mk_POG_PAT`POG([],{},{}),contxt)
+     else
+       let head_contxt = POGTP`Add2Context(hd ldefs,contxt),
+           pog_head    = pog_PatternBindExpr (hd ldefs,cid,contxt),
+           mk_(pog_tail,tail_contxt)
+                       = pog_PatternBindExprList(tl ldefs,cid,head_contxt),
+           po          = pog_head.po ^ pog_tail.po,
+           fv          = pog_head.fv  union  (pog_tail.fv \ pog_head.pid),
+           pid         = {}
+       in mk_(mk_POG_PAT`POG(po,fv,pid),tail_contxt);
+
+\end{vdm_al}
+
+#ifdef VDMPP
+\section{Permission Predicates}
+
+\begin{vdm_al}
+operations
+pog_SyncDefs: (map AS`Name to AS`Expr)  * POGTP`Context ==> seq of POGTP`ProofObligation
+pog_SyncDefs(sync_m,contxt) ==
+  def pogs = { POG_EXPR`pog_Expr(sync_m(id),contxt).po | id in set dom sync_m }
+  in return conc SetToSeq[seq of POGTP`ProofObligation](pogs);
+\end{vdm_al}
+#endif VDMPP
+
+\section{Auxillary local value definitions}
+
+\begin{vdm_al}
+functions
+  InsertNumbers : seq of POGTP`ProofObligation -> seq of POGTP`ProofObligation
+  InsertNumbers (polst) ==
+    [ mu(polst(i), no |-> i) | i in set inds polst ];
+
+  SetToSeq[@Elem]: set of @Elem -> seq of @Elem
+  SetToSeq(s) ==
+    if s = {}
+    then []
+    else let x in set s in SetToSeq[@Elem](s\{x}) ^ [x];
+
+  ExtractCurryTypes : AS`FnType * nat1 -> (seq of AS`DiscretionaryType) * AS`Type
+  ExtractCurryTypes (fntp,parm_num) ==
+    if parm_num = 1
+    then mk_([fntp.fndom],fntp.fnrng)
+    else
+      let mk_(fndom_lst,fnrng) = ExtractCurryTypes (fntp.fnrng, parm_num-1)
+      in mk_([fntp.fndom] ^ fndom_lst,fnrng)
+  pre parm_num > 1 => (is_AS`PartialFnType(fntp.fnrng) or is_AS`TotalFnType(fntp.fnrng));
+
+end POG_DEF
+\end{vdm_al}
+
+\newpage
+
+\begin{rtinfo}[POG\_DEF`pog\_PatternBindExprList]
+{rtinfo.ast}[POG_DEF]
+\end{rtinfo}
+

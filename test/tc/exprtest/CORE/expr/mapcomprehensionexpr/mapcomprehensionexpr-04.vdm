@@ -1,0 +1,13 @@
+class  MapComprehensionExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = {a |-> b | a in set {<RED>,<GREEN>},b:nat & a > b}
+  in skip;
+
+------------------------------------------------------------------------------
+end MapComprehensionExprTest

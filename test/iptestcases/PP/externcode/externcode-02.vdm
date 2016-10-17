@@ -1,0 +1,43 @@
+-- This test case checks that op1 which is kept in B2a.java is not written in
+-- B2b.java i.e. that the data structure is refreshed between different files
+
+class A
+
+instance variables
+
+  i : nat
+
+operations
+
+public Test : () ==> nat
+Test() ==
+( new B2a().op1();
+  new B2b().op2();
+  return 1
+);
+
+end A
+
+class B2a
+
+operations
+
+public op1 : () ==> ()
+op1() ==
+  skip
+
+end B2a
+
+class B2b
+
+operations
+
+public op2 : () ==> ()
+op2() ==
+  skip
+
+end B2b
+
+
+
+

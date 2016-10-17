@@ -1,0 +1,67 @@
+\documentclass[dvips,landscape,a4paper]{jarticle}
+
+\usepackage{vpp}
+\usepackage{longtable}
+\usepackage[dvips]{color}
+\definecolor{covered}{rgb}{0,0,0}
+\definecolor{not-covered}{rgb}{1,0,0}
+
+% \oddsidemargin=-7mm
+% \topmargin=-10pt
+% \headheight=6pt
+% \headsep=10pt
+% \textheight=24cm
+% \textwidth=17.4cm
+
+\oddsidemargin=0pt
+\topmargin=-14mm
+\headheight=6pt
+\headsep=10pt
+\textheight=17cm
+\textwidth=25cm
+
+\begin{document}
+
+\begin{vdm_al}
+class ¶YÒ
+--$Id: producer.vpp,v 1.2 2005/10/31 06:48:10 vdmtools Exp $
+values
+data = "saharaZ" ;
+
+instance variables
+b: Buffer;
+pos : nat := 0;
+
+operations
+public ¶YÒ : Buffer ==> ¶YÒ
+¶YÒ(aBuffer) ==
+	(
+	b := aBuffer;
+	return self
+	);
+	
+public €–Ú¶Y: () ==> char
+€–Ú¶Y() ==
+	(
+	pos := pos + 1;
+	let 
+		- = new IO().echo("Producer ThreadID=" ^ Integer`asString(threadid) ^ ", pos=" ^ 
+				Integer`asString(pos) ^ ", ProduceData=" ^ [data(pos)] ^ ",\n")
+	in
+	return data(pos)
+	);
+
+thread
+	--while true do
+	while pos < len data do -- ‚±‚ÌğŒ‚ª‚È‚¢‚ÆA‘¶İ‚µ‚È‚¢ˆÊ’u‚Ìƒf[ƒ^‚ğƒAƒNƒZƒX‚µ‚æ‚¤‚Æ‚·‚éB
+		b.Put (€–Ú¶Y());
+
+end ¶YÒ
+\end{vdm_al}
+
+\begin{rtinfo}
+[TotalxCoverage]{vdm.tc}[¶YÒ]
+\end{rtinfo}
+
+\end{document}
+

@@ -1,0 +1,7 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> nat  
+Test () ==
+
+         return iota x : nat & x * 2 = 4
+        
+end A

@@ -1,0 +1,37 @@
+module A
+
+exports all
+definitions
+
+operations
+
+g(n1, n2: nat, -: set of nat) res: nat
+pre n1 > n2
+post n1 + n2 = res;
+
+h([a,b]: seq of nat, mk_(d,c):  nat * nat ) res: nat * nat
+pre let q = mk_(b,a) in q = mk_(d,c)
+post let mk_(i,j) = res in i + j < a + b;
+
+h2({a,b}: set of nat) res : seq of nat
+pre if 10 in set {a,b} then a > b else a <= b
+post if 20 in set {a,b} union {res} then res = [20] else res = [30];
+
+h09([a,b]: seq of nat, mk_(d,c):  nat * nat ) res: nat * nat, r: seq of nat
+pre let q = mk_(b,a) in q = mk_(d,c)
+post (let mk_(i,j) = res in i + j < a + b) and [a,b] = r;
+
+
+g'(n1, n2: nat)
+post n1 + n2 = 10;
+
+Test: () ==> nat 
+Test () ==
+( g'(3,2);
+  if post_g' (5,5) then
+    return(10)
+  else 
+    return 23
+)
+
+end A

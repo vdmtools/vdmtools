@@ -1,0 +1,122 @@
+class IO
+
+-- 	VDMTools STANDARD LIBRARY: INPUT/OUTPUT
+--      ---------------------------------------
+-- 
+-- Standard library for the VDMTools Interpreter. When the interpreter
+-- evaluates the preliminary functions/operations in this file,
+-- corresponding internal functions is called instead of issuing a run
+-- time error. Signatures should not be changed, as well as name of
+-- module (VDM-SL) or class (VDM++). Pre/post conditions is 
+-- fully user customisable. 
+-- Dont care's may NOT be used in the parameter lists.
+--
+-- The in/out functions  will return false if an error occurs. In this
+-- case an internal error string will be set (see 'ferror').
+
+types
+ 
+public
+filedirective = <start>|<append> 
+
+functions
+
+-- Write VDM value in ASCII format to std out:
+public
+writeval[@p]: @p -> bool
+writeval(val)==
+  is not yet specified;
+
+-- Write VDM value in ASCII format to file.
+-- fdir = <start> will overwrite existing file,
+-- fdir = <append> will append output to the file (created if
+-- not existing).
+public
+fwriteval[@p]:seq1 of char * @p * filedirective -> bool
+fwriteval(filename,val,fdir) ==
+  is not yet specified;
+
+-- Read VDM value in ASCII format from file
+public
+freadval[@p]:seq1 of char -> bool * [@p]
+freadval(f) ==
+  is not yet specified
+  post let mk_(b,t) = RESULT in not b => t = nil;
+
+operations
+
+-- Write text to std out. Surrounding double quotes will be stripped,
+-- backslashed characters should be interpreted.
+public
+echo: seq of char ==> bool
+echo(text) ==
+  fecho ("",text,nil);
+
+-- Write text to file like 'echo'
+public
+fecho: seq of char * seq of char * [filedirective] ==> bool
+fecho (filename,text,fdir) ==
+  is not yet specified
+  pre filename = "" <=> fdir = nil;
+
+-- The in/out functions  will return false if an error occur. In this
+-- case an internal error string will be set. 'ferror' returns this
+-- string and set it to "".
+public
+ferror:()  ==> seq of char
+ferror () ==
+  is not yet specified
+end IO
+
+class A
+
+instance variables
+  i : nat := 1;
+  io : IO := new IO();
+
+types
+
+public  RecType:: n : nat
+                  i : int;
+
+public  EmptyType :: ;
+
+operations
+
+WriteVals : () ==> ()
+WriteVals() ==
+( dcl io : IO := new IO();
+  let - = io.writeval[seq of char]( "stdlib-01 string") in
+  let - = io.writeval[seq of char]( "") in
+  let - = io.writeval[A`RecType]( mk_RecType(1,-1)) in
+  let - = io.writeval[A`EmptyType]( mk_EmptyType()) in
+  let - = io.writeval[nat*nat]( mk_(1,2)) in
+  let - = io.writeval[seq of nat]( [1,2,3]) in
+  let - = io.writeval[seq of nat]( []) in
+  let - = io.writeval[bool]( false) in
+  let - = io.writeval[int]( -1) in
+  let - = io.writeval[int]( 1000000) in
+  let - = io.writeval[real]( -0.1) in
+  let - = io.writeval[real]( 3.141592654) in
+  let - = io.writeval[[nat]]( nil) in
+  let - = io.writeval[<start>]( <start>) in
+  let - = io.writeval[char]( 'a') in
+  let - = io.writeval[token]( mk_token("tok")) in
+  let - = io.writeval[map nat to nat]( {1|->2, 3|->4}) in
+  let - = io.writeval[map nat to nat]( {|->}) in
+  let - = io.writeval[set of nat]( {1,2}) in
+  let - = io.writeval[set of nat]( {}) in
+  skip
+);
+
+public Test : () ==> seq of char
+Test() ==
+( WriteVals();
+  return "ok";
+)
+
+end A
+
+class B
+
+end B

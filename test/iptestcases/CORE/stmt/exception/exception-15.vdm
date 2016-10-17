@@ -1,0 +1,15 @@
+class A
+
+operations
+public Test : () ==> int 
+Test() ==
+( dcl x : nat := 0;
+  always x := x + 1 in
+  if true
+  then x := 2
+  else exit "error";
+  return x
+)
+
+end A
+

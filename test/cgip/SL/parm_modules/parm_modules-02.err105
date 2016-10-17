@@ -1,0 +1,5 @@
+Run-time error expected when dynamic type checking and pre set:
+
+
+parm_modules-02.arg, l. 41, c. 7:
+  Run-Time Error 58: The pre-condition evaluated to false

@@ -1,0 +1,34 @@
+-- This case checks if java.lang code can be retained correctly
+
+class A
+
+instance variables
+
+  k : nat
+
+operations
+
+public Test : () ==> seq of char
+Test() ==
+( dcl b7 : B7a := new B7b();
+  return b7.GetClass()
+);
+
+end A
+
+class B7a
+
+operations
+
+public GetClass : () ==> seq of char
+GetClass() ==
+  return "B7a"
+
+end B7a
+
+class B7b is subclass of B7a
+
+end B7b
+
+
+

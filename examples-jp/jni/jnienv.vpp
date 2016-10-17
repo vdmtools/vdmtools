@@ -1,0 +1,638 @@
+dlclass JNIEnv
+
+uselib "jnienv.so"
+
+types
+public jboolean = bool;
+public jbyte    = int
+inv n == n <= 127 and n >= -128;
+public jchar    = char;
+public jshort   = int
+inv n == n <= 32767 and n >= -32768;
+public jint     = int
+inv n == n <= 2147483647 and n >= -2147483648;
+public jlong    = int;
+public jfloat   = real;
+public jdouble  = real;
+
+public jvalue   = jboolean | jbyte | jchar | jshort | jint | jlong | jfloat | jdouble | [jobject];
+
+public jsize    = jint;
+
+values
+public JNI_VERSION_1_1 = 0x00010001;
+public JNI_VERSION_1_2 = 0x00010002;
+public JNI_VERSION_1_4 = 0x00010004;
+public JNI_VERSION_1_6 = 0x00010006;
+
+public JNI_OK        =  0;  -- success
+public JNI_ERR       = -1;  -- unknown error
+public JNI_EDETACHED = -2;  -- thread detached from the VM
+public JNI_EVERSION  = -3;  -- JNI version error
+public JNI_ENOMEM    = -4;  -- not enough memory
+public JNI_EEXIST    = -5;  -- VM already created
+public JNI_EINVAL    = -6;  -- invalid arguments
+
+instance variables
+public static
+debug : bool := false;
+
+operations
+public
+CreateJavaVM: jint * seq of seq of char ==> jint
+CreateJavaVM(vesion, options) == is not yet specified;
+
+public
+DestroyJavaVM: () ==> jint
+DestroyJavaVM() == is not yet specified;
+
+public
+GetEnv: jint ==> jint
+GetEnv(version) == is not yet specified;
+
+public
+AttachCurrentThread: () ==> jint
+AttachCurrentThread() == is not yet specified;
+
+public
+IsJVMAttached: () ==> bool
+IsJVMAttached() == is not yet specified;
+
+public
+GetVersion: () ==> jint
+GetVersion() == is not yet specified;
+
+public
+GetVersionStr: () ==> seq of char
+GetVersionStr() ==
+  return VNtoVS(GetVersion());
+
+public
+GetTp: jobject ==> seq of char
+GetTp(obj) == is not yet specified;
+
+public
+GetFieldName: jfieldID ==> seq of char
+GetFieldName(obj) == is not yet specified;
+
+public
+GetMethodName: jmethodID ==> seq of char
+GetMethodName(obj) == is not yet specified;
+
+public
+FindClass: seq of char ==> jclass
+FindClass(nm) ==
+ (if debug then println("-- FindClass: " ^ nm);
+  def mk_(cls, exc) : [jclass] * [jthrowable] = FindClass_i(nm)
+  in
+    if exc <> nil
+    then exit exc
+    else return cls);
+
+private
+FindClass_i: seq of char ==> [jclass] * [jthrowable]
+FindClass_i(nm) == is not yet specified;
+
+public
+GetObjectClass: jobject ==> jclass
+GetObjectClass(obj) ==
+ (if debug then println("-- GetObjectClass: " ^ GetClassTp(obj));
+  def mk_(cls, exc) : [jclass] * [jthrowable] = GetObjectClass_i(obj)
+  in
+    if exc <> nil
+    then exit exc
+    else return cls);
+
+private
+GetObjectClass_i: jobject ==> [jclass] * [jthrowable]
+GetObjectClass_i(obj) == is not yet specified;
+
+public
+IsInstanceOf: jobject * jclass ==> jboolean
+IsInstanceOf(obj, cls) ==
+ (if debug then println("-- IsInstanceOf: " ^ GetClassTp(obj) ^ " " ^ GetClassTp(cls));
+  def mk_(b, exc) : [jboolean] * [jthrowable] = IsInstanceOf_i(obj, cls)
+  in
+    if exc <> nil
+    then exit exc
+    else return b);
+
+private
+IsInstanceOf_i: jobject * jclass ==> [jboolean] * [jthrowable]
+IsInstanceOf_i(obj, cls) == is not yet specified;
+
+public
+GetStaticFieldID: jclass * seq of char * seq of char ==> jfieldID
+GetStaticFieldID(cls, fldnm, sign) ==
+ (if debug then println("-- GetStaticFieldID: " ^ GetClassTp(cls) ^ "." ^ fldnm ^ " " ^ sign);
+  def mk_(fid, exc) : [jfieldID] * [jthrowable] = GetStaticFieldID_i(cls, fldnm, sign)
+  in
+    if exc <> nil
+    then exit exc
+    else return fid);
+
+private
+GetStaticFieldID_i: jclass * seq of char * seq of char ==> [jfieldID] * [jthrowable]
+GetStaticFieldID_i(cls, name, sign) == is not yet specified;
+
+public
+GetFieldID: jclass * seq of char * seq of char ==> jfieldID
+GetFieldID(cls, fldnm, sign) ==
+ (if debug then println("-- GetFieldID: " ^ GetClassTp(cls) ^ "." ^ fldnm ^ " " ^ sign);
+  def mk_(fid, exc) : [jfieldID] * [jthrowable] = GetFieldID_i(cls, fldnm, sign)
+  in
+    if exc <> nil
+    then exit exc
+    else return fid);
+
+private
+GetFieldID_i: jclass * seq of char * seq of char ==> [jfieldID] * [jthrowable]
+GetFieldID_i(cls, name, sign) == is not yet specified;
+
+public
+GetStaticField: jclass * jfieldID ==> jvalue
+GetStaticField(cls, fid) ==
+ (if debug then println("-- GetStaticField: " ^ GetClassTp(cls) ^ "." ^ GetFieldName(fid));
+  def mk_(val, exc) : [jvalue] * [jthrowable] = GetStaticField_i(cls, fid)
+  in
+    if exc <> nil
+    then exit exc
+    else return val);
+
+private
+GetStaticField_i: jclass * jfieldID ==> [jvalue] * [jthrowable]
+GetStaticField_i(cls, fid) == is not yet specified;
+
+public
+SetStaticField: jclass * jfieldID * jvalue ==> ()
+SetStaticField(cls, fid, val) ==
+ (if debug then println("-- SetStaticField: " ^ GetClassTp(cls) ^ "." ^ GetFieldName(fid));
+  def exc : [jthrowable] = SetStaticField_i(cls, fid, val)
+  in
+    if exc <> nil
+    then exit exc);
+
+private
+SetStaticField_i: jobject * jfieldID * jvalue ==> [jthrowable]
+SetStaticField_i(obj, fid, val) == is not yet specified;
+
+public
+GetField: jobject * jfieldID ==> jvalue
+GetField(obj, fid) ==
+ (if debug then println("-- GetField: " ^ GetClassTp(obj) ^ "." ^ GetFieldName(fid));
+  def mk_(val, exc) : [jvalue] * [jthrowable] = GetField_i(obj, fid)
+  in
+    if exc <> nil
+    then exit exc
+    else return val);
+
+private
+GetField_i: jobject * jfieldID ==> [jvalue] * [jthrowable]
+GetField_i(obj, fid) == is not yet specified;
+
+public
+SetField: jobject * jfieldID * jvalue ==> ()
+SetField(obj, fid, val) ==
+ (if debug then println("-- SetField: " ^ GetClassTp(obj) ^ "." ^ GetFieldName(fid));
+  def exc : [jthrowable] = SetField_i(obj, fid, val)
+  in
+    if exc <> nil
+    then exit exc);
+
+private
+SetField_i: jobject * jfieldID * jvalue ==> [jthrowable]
+SetField_i(obj, fid, val) == is not yet specified;
+
+public
+GetStaticMethodID: jclass * seq1 of char * seq1 of char ==> jmethodID
+GetStaticMethodID(cls, mthnm, sign) ==
+ (if debug then println("-- GetStaticMethodID: " ^ GetClassTp(cls) ^ "." ^ mthnm ^ " " ^ sign);
+  def mk_(mid, exc) : [jmethodID] * [jthrowable] = GetStaticMethodID_i(cls, mthnm, sign)
+  in
+    if exc <> nil
+    then exit exc
+    else return mid);
+
+private
+GetStaticMethodID_i: jclass * seq1 of char * seq1 of char ==> [jmethodID] * [jthrowable]
+GetStaticMethodID_i(cls, mthnm, sign) == is not yet specified;
+
+public
+GetMethodID: jclass * seq1 of char * seq1 of char ==> jmethodID
+GetMethodID(cls, mthnm, sign) ==
+ (if debug then println("-- GetMethodID: " ^ GetClassTp(cls) ^ "." ^ mthnm ^ " " ^ sign);
+  def mk_(mid, exc) : [jmethodID] * [jthrowable] = GetMethodID_i(cls, mthnm, sign)
+  in
+    if exc <> nil
+    then exit exc
+    else return mid);
+
+private
+GetMethodID_i: jclass * seq1 of char * seq1 of char ==> [jmethodID] * [jthrowable]
+GetMethodID_i(cls, mthnm, sign) == is not yet specified;
+
+public
+CallStaticMethod: jclass * jmethodID * seq of jvalue ==> jvalue
+CallStaticMethod(cls, mid, val) ==
+ (if debug then println("-- CallStaticMethod: " ^ GetClassTp(cls) ^ "." ^ GetMethodName(mid));
+  def mk_(res, exc) : [jvalue] * [jthrowable] = CallStaticMethod_i(cls, mid, val)
+  in
+    if exc <> nil
+    then exit exc
+    else return res);
+
+private
+CallStaticMethod_i: jclass * jmethodID * seq of jvalue ==> [jvalue] * [jthrowable]
+CallStaticMethod_i(cls, mid, val) == is not yet specified;
+
+public
+NewObject: jclass * jmethodID * seq of jvalue ==> jobject
+NewObject(cls, mid, val) ==
+ (if debug then println("-- NewObject: " ^ GetClassTp(cls) ^ " " ^ GetMethodName(mid));
+  def mk_(obj, exc) : [jobject] * [jthrowable] = NewObject_i(cls, mid, val)
+  in
+    if exc <> nil
+    then exit exc
+    else return obj);
+
+private
+NewObject_i: jclass * jmethodID * seq of jvalue ==> [jobject] * [jthrowable]
+NewObject_i(cls, mid, val) == is not yet specified;
+
+public
+CallMethod: jobject * jmethodID * seq of jvalue ==> jvalue
+CallMethod(obj, mid, val) ==
+ (if debug then println("-- CallMethod: " ^ GetClassTp(obj) ^ "." ^ GetMethodName(mid));
+  def mk_(res, exc) : [jvalue] * [jthrowable] = CallMethod_i(obj, mid, val)
+  in
+    if exc <> nil
+    then exit exc
+    else return res);
+
+private
+CallMethod_i: jobject * jmethodID * seq of jvalue ==> [jvalue] * [jthrowable]
+CallMethod_i(obj, mid, val) == is not yet specified;
+
+public
+NewObjectArray: jsize * seq of char ==> jobjectArray
+NewObjectArray(l, sign) == 
+ (if debug then println("-- NewObjectArray: " ^ sign);
+  def mk_(array, exc) : [jarray] * [jthrowable] = NewArray_i(l, "[" ^ sign )
+  in
+    if exc <> nil
+    then exit exc
+    else return narrow_(array, jobjectArray));
+
+public
+NewBooleanArray: jsize ==> jbooleanArray
+NewBooleanArray(l) ==
+ (if debug then println("-- NewBooleanArray: ");
+  def mk_(array, exc) : [jarray] * [jthrowable] = NewArray_i(l, "[Z")
+  in
+    if exc <> nil
+    then exit exc
+    else return narrow_(array, jbooleanArray));
+
+public
+NewByteArray: jsize ==> jbyteArray
+NewByteArray(l) ==
+ (if debug then println("-- NewByteArray: ");
+  def mk_(array, exc) : [jarray] * [jthrowable] = NewArray_i(l, "[B")
+  in
+    if exc <> nil
+    then exit exc
+    else return narrow_(array, jbyteArray));
+
+public
+NewCharArray: jsize ==> jcharArray
+NewCharArray(l) ==
+ (if debug then println("-- NewCharArray: ");
+  def mk_(array, exc) : [jarray] * [jthrowable] = NewArray_i(l, "[C")
+  in
+    if exc <> nil
+    then exit exc
+    else return narrow_(array, jcharArray));
+
+public
+NewShortArray: jsize ==> jshortArray
+NewShortArray(l) ==
+ (if debug then println("-- NewShortArray: ");
+  def mk_(array, exc) : [jarray] * [jthrowable] = NewArray_i(l, "[S")
+  in
+    if exc <> nil
+    then exit exc
+    else return narrow_(array, jshortArray));
+
+public
+NewIntArray: jsize ==> jintArray
+NewIntArray(l) ==
+ (if debug then println("-- NewIntArray: ");
+  def mk_(array, exc) : [jarray] * [jthrowable] = NewArray_i(l, "[I")
+  in
+    if exc <> nil
+    then exit exc
+    else return narrow_(array, jintArray));
+
+public
+NewLongArray: jsize ==> jlongArray
+NewLongArray(l) ==
+ (if debug then println("-- NewLongArray: ");
+  def mk_(array, exc) : [jarray] * [jthrowable] = NewArray_i(l, "[J")
+  in
+    if exc <> nil
+    then exit exc
+    else return narrow_(array, jlongArray));
+
+public
+NewFloatArray: jsize ==> jfloatArray
+NewFloatArray(l) ==
+ (if debug then println("-- NewFloatArray: ");
+  def mk_(array, exc) : [jarray] * [jthrowable] = NewArray_i(l, "[F")
+  in
+    if exc <> nil
+    then exit exc
+    else return narrow_(array, jfloatArray));
+
+public
+NewDoubleArray: jsize ==> jdoubleArray
+NewDoubleArray(l) ==
+ (if debug then println("-- NewDoubleArray: ");
+  def mk_(array, exc) : [jarray] * [jthrowable] = NewArray_i(l, "[D")
+  in
+    if exc <> nil
+    then exit exc
+    else return narrow_(array, jdoubleArray));
+
+private
+NewArray_i: jsize * seq of char ==> [jarray] * [jthrowable]
+NewArray_i(l, sign) == is not yet specified;
+
+public
+GetArrayLength: jarray ==> jsize
+GetArrayLength(array) ==
+ (if debug then println("-- GetArrayLength: ");
+  def mk_(size, exc) : [jsize] * [jthrowable] = GetArrayLength_i(array)
+  in
+    if exc <> nil
+    then exit exc
+    else return size);
+
+private
+GetArrayLength_i: jarray ==> [jsize] * [jthrowable]
+GetArrayLength_i(array) == is not yet specified;
+
+public
+GetArray: jarray ==> seq of jvalue
+GetArray(array) ==
+ (if debug then println("-- GetArray: ");
+  def mk_(val, exc) : [seq of jvalue] * [jthrowable] = GetArray_i(array)
+  in
+    if exc <> nil
+    then exit exc
+    else return val);
+
+private
+GetArray_i: jarray ==> [seq of jvalue] * [jthrowable]
+GetArray_i(array) == is not yet specified;
+
+public
+SetArray: jarray * seq of jvalue ==> ()
+SetArray(array, val) ==
+ (if debug then println("-- SetArray: ");
+  def exc : [jthrowable] = SetArray_i(array, val)
+  in
+    if exc <> nil
+    then exit exc);
+
+private
+SetArray_i: jarray * seq of jvalue ==> [jthrowable]
+SetArray_i(array, val) == is not yet specified;
+
+public
+NewString: seq of char ==> jstring
+NewString(str) == 
+ (if debug then println("-- NewString: " ^ str);
+  def mk_(jstr, exc) : [jstring] * [jthrowable] = NewString_i(str)
+  in
+    if exc <> nil
+    then exit exc
+    else return jstr);
+
+private
+NewString_i: seq of char ==> [jstring] * [jthrowable]
+NewString_i(str) == is not yet specified;
+
+public
+GetStringLength: jstring ==> jsize
+GetStringLength(jstr) ==
+ (if debug then println("-- GetStringLength: ");
+  def mk_(size, exc) : [jsize] * [jthrowable] = GetStringLength_i(jstr)
+  in
+    if exc <> nil
+    then exit exc
+    else return size);
+
+private
+GetStringLength_i: jstring ==> [jsize] * [jthrowable]
+GetStringLength_i(jstr) == is not yet specified;
+
+public
+GetStringChars: jstring ==> seq of char
+GetStringChars(jstr) ==
+ (if debug then println("-- GetStringChars: ");
+  def mk_(str, exc) : [seq of char] * [jthrowable] = GetStringChars_i(jstr)
+  in
+    if exc <> nil
+    then exit exc
+    else return str);
+
+private
+GetStringChars_i: jstring ==> [seq of char] * [jthrowable]
+GetStringChars_i(js) == is not yet specified;
+
+public
+GetClassTp: jobject | seq1 of char ==> seq1 of char
+GetClassTp(obj) ==
+  cases true:
+   (isofclass(jobject, obj)) -> let str = GetTp(obj)
+                                in
+                                  return cases str:
+                                           "L" ^ x ^ ";" -> x,
+                                           others        -> str
+                                         end,
+   others                    -> return obj
+  end;
+
+public
+println: seq of char | real | bool ==> ()
+println(x) ==
+  def ostr = cases true:
+               (is_(x, seq of char)) -> x,
+               (is_real(x))          -> VDMUtil`val2seq_of_char[real](x),
+               (is_bool(x))          -> VDMUtil`val2seq_of_char[bool](x)
+             end;
+      - = new IO().echo(ostr ^ "\n");
+  in skip;
+
+functions
+public
+VNtoVS: jint -> seq of char
+VNtoVS(vn) ==
+  cases vn:
+    (JNI_VERSION_1_1) -> "JNI_VERSION_1_1",
+    (JNI_VERSION_1_2) -> "JNI_VERSION_1_2",
+    (JNI_VERSION_1_4) -> "JNI_VERSION_1_4",
+    (JNI_VERSION_1_6) -> "JNI_VERSION_1_6",
+    others            -> undefined
+  end;
+
+end JNIEnv
+
+dlclass jfieldID
+uselib "jnienv.so"
+end jfieldID
+
+dlclass jmethodID
+uselib "jnienv.so"
+end jmethodID
+
+dlclass jobject
+uselib "jnienv.so"
+
+operations
+public
+toString: () ==> jstring
+toString() ==
+  def mk_(jstr, exc) :[jstring] * [jthrowable] = toString_i();
+  in
+    if exc <> nil
+    then exit exc
+    else return jstr;
+
+private
+toString_i: () ==> [jstring] * [jthrowable]
+toString_i() == is not yet specified;
+
+public
+equals: jobject ==> JNIEnv`jboolean
+equals(obj) ==
+  def mk_(b, exc) : [JNIEnv`jboolean] * [jthrowable] = equals_i(obj)
+  in
+    if exc <> nil
+    then exit exc
+    else return b;
+
+public
+equals_i: jobject ==> [JNIEnv`jboolean] * [jthrowable]
+equals_i(obj) == is not yet specified;
+
+public
+getClass: () ==> jclass
+getClass() ==
+  def mk_(res, exc) : [jclass] * [jthrowable] = getClass_i()
+  in
+    if exc <> nil
+    then exit exc
+    else return res;
+
+public
+getClass_i: () ==> [jclass] * [jthrowable]
+getClass_i() == is not yet specified;
+
+end jobject
+
+dlclass jclass is subclass of jobject
+uselib "jnienv.so"
+
+operations
+public
+getName: () ==> jstring
+getName() ==
+  def mk_(jstr, exc) :[jstring] * [jthrowable] = getName_i();
+  in
+    if exc <> nil
+    then exit exc
+    else return jstr;
+
+private
+getName_i: () ==> [jstring] * [jthrowable]
+getName_i() == is not yet specified;
+
+end jclass
+
+dlclass jthrowable is subclass of jobject
+uselib "jnienv.so"
+
+operations
+public
+getMessage: () ==> jstring
+getMessage() ==
+  def mk_(jstr, exc) :[jstring] * [jthrowable] = getMessage_i();
+  in
+    if exc <> nil
+    then exit exc
+    else return jstr;
+
+private
+getMessage_i: () ==> [jstring] * [jthrowable]
+getMessage_i() == is not yet specified;
+
+public
+getStackTrace: () ==> jobjectArray
+getStackTrace() ==
+  def mk_(res, exc) :[jobjectArray] * [jthrowable] = getStackTrace_i();
+  in
+    if exc <> nil
+    then exit exc
+    else return res;
+
+private
+getStackTrace_i: () ==> [jobjectArray] * [jthrowable]
+getStackTrace_i() == is not yet specified;
+
+end jthrowable
+
+dlclass jstring is subclass of jobject
+uselib "jnienv.so"
+end jstring
+
+dlclass jarray is subclass of jobject
+uselib "jnienv.so"
+end jarray
+
+dlclass jbooleanArray is subclass of jarray
+uselib "jnienv.so"
+end jbooleanArray
+
+dlclass jbyteArray is subclass of jarray
+uselib "jnienv.so"
+end jbyteArray
+
+dlclass jcharArray is subclass of jarray
+uselib "jnienv.so"
+end jcharArray
+
+dlclass jshortArray is subclass of jarray
+uselib "jnienv.so"
+end jshortArray
+
+dlclass jintArray is subclass of jarray
+uselib "jnienv.so"
+end jintArray
+
+dlclass jlongArray is subclass of jarray
+uselib "jnienv.so"
+end jlongArray
+
+dlclass jfloatArray is subclass of jarray
+uselib "jnienv.so"
+end jfloatArray
+
+dlclass jdoubleArray is subclass of jarray
+uselib "jnienv.so"
+end jdoubleArray
+
+dlclass jobjectArray is subclass of jarray
+uselib "jnienv.so"
+end jobjectArray
+

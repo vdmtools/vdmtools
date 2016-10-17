@@ -1,0 +1,12 @@
+"class A
+types 
+T = (real | seq of char);
+
+operations
+
+public Test : () ==> real  
+Test () ==
+	return (12 - 7) + 0;
+
+end A
+"

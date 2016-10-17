@@ -1,0 +1,22 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> set of ( bool | [nat] | char | <HELLO> | set of nat | seq of nat | map nat to nat )  
+Test () ==
+return 
+{ a | a in set {true, 3, 'c', <HELLO>, {3,6}, [4,7], {5 |-> 8}, nil } }
+  
+
+
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

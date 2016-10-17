@@ -1,0 +1,8 @@
+class Obstacle
+
+   operations
+      Intersection: SegmentDePrediction ==> bool
+      Intersection (segment_de_prediction) ==
+         is subclass responsibility
+
+end Obstacle

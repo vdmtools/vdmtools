@@ -1,0 +1,80 @@
+class Point2 is subclass of Global
+
+instance variables
+
+  x: real;
+  y: real;
+
+operations 
+
+getX: () ==> real 
+getX () ==
+  return x;
+
+getY: () ==> real 
+getY () ==
+  return y;
+
+getCoord: () ==> real * real 
+getCoord () ==
+  return mk_(x,y);
+
+initialise: real * real ==> ()
+initialise (xx, yy) ==
+( x := xx;
+  y := yy 
+);
+
+create: real * real ==> Point2 
+create (xx, yy) ==
+( dcl p: Point2 := new Point2();
+  p.initialise (xx,yy);
+  return p
+);
+
+pointDist: Point2 ==> Length 
+pointDist (p) ==
+( dcl math: Math := new Math();
+  let mk_(px,py) = p.getCoord() in
+  let xdist = px-x,
+      ydist = py-y in
+  return math.sqrt (xdist*xdist + ydist*ydist)
+);
+
+pointPlusVector: Vector2 ==> Point2 
+pointPlusVector (v) ==
+( dcl p : Point2 := new Point2();
+  let mk_(v1,v2) = v.getCoord() in
+  p.initialise (x+v1, y+v2);
+  return p
+);
+
+midPoint: Point2 ==> Point2 
+midPoint (p) ==
+( dcl mp : Point2 := new Point2();
+  let mk_(px,py) = p.getCoord() in
+  let mx = (x + px) / 2,
+      my = (y + py) / 2
+  in
+     mp.initialise (mx, my);
+  return mp
+);
+
+epsilonClose: Point2 ==> bool 
+epsilonClose (p) ==
+( dcl math: Math := new Math();
+  let mk_(p1,p2) = p.getCoord() in
+  let d1 = x-p1,
+      d2 = y-p2 in
+  let dist = math.sqrt (d1*d1 + d2*d2) in
+  return dist < epsilonsize
+);
+
+copy: () ==> Point2 
+copy () ==
+( dcl p : Point2 := new Point2();
+  p.initialise (x,y);
+  return p 
+);
+
+end Point2

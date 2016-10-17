@@ -1,0 +1,210 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Module dealing with error handling for the Static Semantics of VDM++
+% $Id: err.vdm,v 1.20 2005/10/25 05:00:23 vdmtools Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\section{Error Messages}
+
+The static semantics specification includes information of most of the
+error messages and warnings which the implemenation must issue to the
+user. This is in order to minimize the difference between
+specification and implementation and to be able to perform extensive
+testing of the specification. This functionality is taken care of by
+the ERR module.
+The interface of the ERR module can be seen from figure~\ref{err}.
+
+The error module is responsible for keeping track of the
+errors which are found during a static semantics check. It does
+not import any constructs, but it is used in all modules in the
+hierarchy except the TYPE module. 
+
+%\insertfig{err.ps}{13cm}{Interface for the ERR module}{\label{err}}
+
+\begin{vdm_al}
+module ERR
+
+imports
+  from ERRMSG all,
+  from AUX all,
+  from UTIL all,
+  from AS all,
+  from CI all,
+  from REP all
+
+exports types struct SeverityType;
+              struct ErrType;
+              struct ErrMsg;
+              struct AstNode
+         operations
+	 GenErr : AstNode * SeverityType * nat * seq of seq of char ==> ();
+	 PrintErrors : () ==> ErrType;
+	 ResetErrors: () ==> ()
+
+
+definitions
+
+  types
+    SeverityType   = <MESSAGE> | <WARNING> | <PROOFOBL> | <ERROR> | <TEST>;
+
+    ErrMsg         :: fid       : int
+                      line      : int
+                      col       : int
+                      err       : seq of char
+                      severity  : SeverityType;
+
+    ErrType   = seq of ErrMsg;
+    AstNode  = AS`SpecFile | AS`Definitions |
+               AS`StateDef | AS`StateInit | AS`TypeDef | AS`Invariant |
+               AS`BracketedType |
+               AS`BooleanType | AS`NumericType | AS`TokenType | AS`CharType |
+               AS`QuoteType | AS`VoidType |
+               AS`CompositeType | AS`Field | AS`UnionType |
+               AS`ProductType | AS`OptionalType | AS`Set0Type | AS`Set1Type |
+               AS`Seq0Type | AS`Seq1Type | AS`GeneralMap0Type | AS`GeneralMap1Type |
+               AS`InjectiveMap0Type | AS`InjectiveMap1Type | AS`TypeName |
+               AS`PartialFnType | AS`TotalFnType | AS`TypeVar |
+               AS`AllType | AS`ExplFnDef | AS`ImplFnDef | AS`ExtExplFnDef |
+               AS`NameType | AS`PatTypePair | AS`FnBody | AS`ExplOpDef |
+               AS`ImplOpDef | AS`ExtExplOpDef | AS`OpType | AS`ExtInf |
+               AS`OpBody | AS`ValueDef | AS`GuardExpr | AS`BracketedExpr |
+               AS`DefExpr | AS`LetExpr | AS`LetBeSTExpr | AS`IfExpr |
+               AS`ElseifExpr | AS`CasesExpr | AS`CaseAltn | AS`PrefixExpr |
+               AS`BinaryExpr | AS`AllOrExistsExpr |
+               AS`ExistsUniqueExpr | AS`IotaExpr | AS`SetEnumerationExpr |
+               AS`SetComprehensionExpr | AS`SetRangeExpr |
+               AS`SeqEnumerationExpr | AS`SeqComprehensionExpr |
+               AS`SubSequenceExpr | AS`SeqModifyMapOverrideExpr |
+               AS`MapEnumerationExpr | AS`Maplet |
+               AS`MapComprehensionExpr | AS`TupleConstructorExpr |
+               AS`TokenConstructorExpr | AS`RecordConstructorExpr |
+               AS`RecordModifierExpr | AS`RecordModification |
+               AS`FieldSelectExpr | AS`FctTypeInstExpr | AS`LambdaExpr |
+               AS`ApplyExpr | AS`IsExpr | AS`NarrowExpr | AS`UndefinedExpr|
+               AS`TupleSelectExpr | AS`TypeJudgementExpr |
+               AS`PreConditionApplyExpr | 
+               AS`Name | AS`OldName | AS`DefStmt | AS`LetStmt |
+               AS`LetBeSTStmt | AS`BlockStmt | AS`AssignDef |
+               AS`AtomicAssignStmt | AS`AssignStmt | AS`FieldRef |
+               AS`MapOrSeqRef | AS`SeqForLoopStmt | AS`SetForLoopStmt |
+               AS`IndexForLoopStmt | AS`WhileLoopStmt | AS`ReturnStmt |
+               AS`IfStmt | AS`ElseifStmt | AS`Error | AS`ErrorStmt |
+               AS`AlwaysStmt | AS`TrapStmt | AS`RecTrapStmt | AS`Trap |
+               AS`ExitStmt | AS`NonDetStmt | AS`CallStmt | AS`CallStmt |
+               AS`CasesStmt | AS`CasesStmtAltn | AS`IdentStmt |
+               AS`SpecificationStmt | AS`PatternName |
+               AS`MatchVal | AS`SetEnumPattern | AS`SetUnionPattern |
+               AS`SeqEnumPattern | AS`SeqConcPattern | AS`TuplePattern |
+               AS`MapEnumPattern | AS`MapMergePattern | AS`MapletPattern |
+               AS`RecordPattern | AS`SetBind | AS`TypeBind |
+               AS`MultSetBind | AS`MultTypeBind | AS`BoolLit | AS`NilLit |
+               AS`RealLit | AS`NumLit | AS`CharLit | AS`TextLit | AS`QuoteLit |
+               AS`AstCI | AS`LastRes  |
+               AS`TraceDefAltn | AS`TraceApplyExpr | AS`TraceBracketedExpr |
+               AS`QualifiedTrace | AS`LocalTraceBind | AS`LetTraceBind |
+               AS`LetBeTraceBind | AS`RepeatTrace | AS`RepeatFixed |
+               AS`RepeatInterval | AS`QualifiedRepeatTrace |
+#ifdef VDMPP
+               AS`Class  | AS`InstAssignDef | AS`InstanceInv |
+               AS`Permission | AS`Mutex | AS`PerObl | 
+               AS`SelfExpr | AS`ThreadIdExpr|
+               AS`NewExpr | AS`IsOfClassExpr | AS`IsOfBaseClassExpr |
+               AS`SameBaseClassExpr | AS`SameClassExpr | AS`ActExpr |
+               AS`FinExpr | AS`ActiveExpr | AS`WaitingExpr | AS`ReqExpr | 
+               AS`StartStmt | AS`StartListStmt 
+#endif VDMPP
+#ifdef VICE
+               | AS`DurationStmt | AS`CurTimeExpr
+#endif VICE
+#ifdef VDMSL
+               AS`Module | AS`Interface |
+               AS`ImportSig | AS`ExportSig |
+               AS`DLModule | AS`DLInterface |
+               AS`DLImportSig | AS`DLExportSig
+#endif VDMSL
+
+
+  state ERRState of
+    Errors: ErrType
+  init es == es = mk_ERRState([])
+  end
+  
+  operations
+
+    GenErr : AstNode * SeverityType * nat * seq of seq of char ==> ()
+    GenErr(node, SvTp,num,Txts) ==
+      def Txt = LookUpErrMsg(num,Txts);
+          errStr = "[" ^ UTIL`itoa(num) ^ "]";
+          Txt' = cases SvTp:
+                   <MESSAGE>  -> Txt,
+                   <WARNING>  -> "Warning" ^ errStr ^ " : " ^ Txt,
+                   <PROOFOBL> -> "Proof obligation" ^ errStr ^ " : " ^ Txt,
+                   <ERROR>    -> "Error" ^ errStr ^ " : " ^ Txt,
+                   <TEST>     -> "Test" ^ errStr ^ " : " ^ Txt
+                 end;
+          cid = node.cid
+      in
+       (dcl msg : ErrMsg;
+        if cid = CI`NilContextId
+        then msg := mk_ErrMsg(-1,- 1, -1, Txt', SvTp)
+        else def mk_(-, fid,-, astpos,-) = CI`GetFilePos(cid);
+                 pos_line = astpos.abs_line;
+                 pos_col = astpos.column
+             in msg := mk_ErrMsg(fid, pos_line, pos_col, Txt', SvTp);
+
+        if not exists i in set inds Errors & Errors(i) = msg
+        --then Errors := Errors ^ [msg]);
+        then
+          if Errors = []
+          then Errors := [msg]
+          elseif not IsOrdered(hd Errors, msg)
+          then Errors := [msg] ^ Errors
+          elseif IsOrdered(Errors(len Errors), msg)
+          then Errors := Errors ^ [msg]
+          else
+            let index = iota i in set (inds Errors) \ {len Errors} &
+                             IsOrdered(Errors(i), msg) and not IsOrdered(Errors(i+1), msg)
+            in Errors := Errors(1,...,index) ^ [msg] ^ Errors(index + 1,..., len Errors)
+        );
+
+    PrintErrors: () ==> ErrType
+    PrintErrors() ==
+      return Errors;
+
+    ResetErrors: () ==> ()
+    ResetErrors() ==
+      Errors := [];
+
+    LookUpErrMsg: nat * seq of seq of char ==> seq of char
+    LookUpErrMsg(num,Txts) ==
+      let err = ERRMSG`ErrMsg(num)
+      in UTIL`ReplacePercent(err,Txts);
+
+  functions  
+    IsOrdered: ErrMsg * ErrMsg -> bool
+    IsOrdered(mk_ErrMsg(fid,line,col,-,-),mk_ErrMsg(fid2,line2,col2,-,-)) ==
+      cases true:
+        (fid < fid2) -> true,
+        (fid > fid2) -> false,
+        others       -> cases true:
+                          (line < line2) -> true,
+                          (line > line2) -> false,
+                          others         -> cases true:
+                                              (col <= col2) -> true,
+                                              (col > col2) -> false
+                                            end
+                        end
+      end;
+
+end ERR
+\end{vdm_al}
+
+All user output from the static semantic checker is via the {\it
+GenErr} operation.
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[MotGeneralNumericType]
+{rtinfo.ast}[ERR]
+\end{rtinfo}

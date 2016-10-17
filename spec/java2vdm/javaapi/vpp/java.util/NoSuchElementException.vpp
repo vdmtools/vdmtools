@@ -1,0 +1,18 @@
+class JavaUtilNoSuchElementException is subclass of JavaLangRuntimeException
+operations 
+public  JavaUtilNoSuchElementException : () ==> JavaUtilNoSuchElementException
+JavaUtilNoSuchElementException() == 
+( let - = JavaLangRuntimeException() in skip  
+) ;
+
+public  JavaUtilNoSuchElementException : <NIL> ==> JavaUtilNoSuchElementException
+JavaUtilNoSuchElementException(-) == 
+isNil := true  ;
+
+public  JavaUtilNoSuchElementException : JavaLangString ==> JavaUtilNoSuchElementException
+JavaUtilNoSuchElementException(s) == 
+( let - = JavaLangRuntimeException(s) in skip  
+) ;
+
+
+end  JavaUtilNoSuchElementException

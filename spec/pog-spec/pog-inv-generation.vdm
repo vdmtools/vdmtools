@@ -1,0 +1,540 @@
+\section{Generation of proof obligations for invariants}
+
+\begin{vdm_al}
+module GEN_INV
+
+imports
+  from ENV all,
+  from POGTP all,
+
+  from GEN_PO all,
+  from CHECK    all,
+
+  from CI_AUX   all,
+  from FRESH    all,
+
+  from AS all,
+  from CI all,
+  from REP all
+
+exports
+  operations
+    GenInvariant : AS`Expr
+#ifdef VDMSL
+                 * AS`Type
+#endif VDMSL
+#ifdef VDMPP
+                 * (AS`Type | POGTP`ClassType)
+#endif VDMPP
+                 * AS`Type
+                 * set of (AS`Name * AS`Name)
+                 * set of AS`Name
+                 * CI`ContextId
+                 * POGTP`Context ==> seq of POGTP`ProofObligation--;
+
+--    GenSubOrSupertypeInvariant
+--                 : AS`Expr
+--                 * AS`Expr
+--                 * set of AS`Name
+--                 * CI`ContextId
+--                 * POGTP`Context -> seq of POGTP`ProofObligation
+
+definitions
+
+operations
+
+GenInvariant : AS`Expr
+#ifdef VDMSL
+             * AS`Type
+#endif VDMSL
+#ifdef VDMPP
+             * (AS`Type | POGTP`ClassType)
+#endif VDMPP
+             * AS`Type
+             * set of (AS`Name * AS`Name)
+             * set of AS`Name
+             * CI`ContextId
+             * POGTP`Context ==> seq of POGTP`ProofObligation
+GenInvariant (expr,type1,type2,marked,fv,cid,contxt) ==
+  let top_nm     = mk_AS`Name(["top"],CI`NilContextId),
+      bottom_nm  = mk_AS`Name(["bottom"],CI`NilContextId),
+      nilType_nm = mk_AS`Name(["nilType"],CI`NilContextId),
+      top        = mk_AS`TypeName(top_nm,CI`NilContextId),
+      bottom     = mk_AS`TypeName(bottom_nm,CI`NilContextId),
+#ifdef VICE
+      empty_nm   = mk_AS`Name([],CI`NilContextId),
+      empty      = mk_AS`TypeName(empty_nm,CI`NilContextId),
+#endif VICE
+      nilType    = mk_AS`TypeName(nilType_nm,CI`NilContextId)
+  in
+      cases mk_(type1,type2):
+        mk_(tp,tp)                         -> return [],
+        ---- type constants----------------------
+        mk_(-,(top)),
+#ifdef VICE
+        mk_(-,(empty)),
+#endif VICE
+        mk_(-,(bottom)),
+        mk_(-,(nilType)) -> return [],
+        ---- type names -------------------------
+        mk_((top),mk_AS`TypeName(nm2,-)),
+        mk_((bottom),mk_AS`TypeName(nm2,-)),
+        mk_((nilType),mk_AS`TypeName(nm2,-))       ->
+          let invOrGrd = CI_AUX`LookUpInvOrGroundType(nm2)
+          in
+              if is_AS`TypeName(invOrGrd) then
+                GEN_PO`VerifyInvariant(expr,invOrGrd,cid,contxt)
+              else
+                GenInvariant(expr,type1,invOrGrd,marked,fv,cid,contxt),
+#ifdef VDMPP
+        --mk_(mk_POGTP`ClassType(nm1),mk_AS`TypeName(nm2,-))       ->
+        mk_(mk_POGTP`ClassType(-),mk_AS`TypeName(nm2,-))       ->
+        let   invOrGrd2 = CI_AUX`LookUpInvOrGroundType(nm2)
+          in
+              if is_AS`TypeName(invOrGrd2) then
+                GEN_PO`VerifyInvariant(expr,invOrGrd2,cid,contxt)
+              else
+                return [],
+#endif VDMPP
+        mk_(mk_AS`TypeName(nm1,-),mk_AS`TypeName(nm2,-))       ->
+        let   grd_tp1   = CI_AUX`LookUpGroundType(nm1),
+              invOrGrd2 =
+#ifdef VICE
+                          if is_POGTP`ClassType(grd_tp1) and nm2.ids = []
+                              then <ANYOBJREF>
+                              else
+#endif VICE
+                              CI_AUX`LookUpInvOrGroundType(nm2)
+          in
+              if is_AS`TypeName(invOrGrd2) then
+                GEN_PO`VerifyInvariant(expr,invOrGrd2,cid,contxt)
+              else
+                if mk_(nm1,nm2) in set marked
+#ifdef VICE
+                   or invOrGrd2 = <ANYOBJREF>
+#endif VICE
+                then return []
+                else
+                  let new_marked = marked union {mk_(nm1,nm2)}
+                  in
+                      GenInvariant(expr,grd_tp1,invOrGrd2,new_marked,fv,cid,contxt),
+        mk_(-,mk_AS`TypeName(nm2,-))       ->
+#ifdef VDMPP
+          if CI_AUX`IsClassName(nm2)
+          then return []
+          else
+#endif
+          let invOrGrd = CI_AUX`LookUpInvOrGroundType(nm2)
+          in
+              if is_AS`TypeName(invOrGrd) then
+                GEN_PO`VerifyInvariant(expr,invOrGrd,cid,contxt)
+              else
+                GenInvariant(expr,type1,invOrGrd,marked,fv,cid,contxt),
+        mk_((nilType),mk_AS`OptionalType(-,-)) -> return [],
+        mk_((bottom),-)   -> return [],
+
+        mk_(tp1,mk_AS`OptionalType(tp2,-)) -> GenInvariantOptionRight(expr,tp1,tp2,marked,fv,cid,contxt),
+        mk_(tp1,mk_AS`UnionType(etps2,-))  -> GenInvariantUnionRight (expr,tp1,etps2,marked,fv,cid,contxt),
+
+        mk_((top),-),
+        mk_((nilType),-)  ->  return [], -- undefined,
+
+        mk_(mk_AS`TypeName(nm1,-),-)       ->
+#ifdef VDMPP
+          if CI_AUX`IsClassName(nm1)
+          then return []
+          else
+#endif VDMPP
+            let grd_tp = CI_AUX`LookUpGroundType(nm1)
+            in
+              GenInvariant(expr,grd_tp,type2,marked,fv,cid,contxt),
+        ---- basic types ------------------------
+        mk_(-,mk_AS`NumericType(<NATONE>,-)) ->
+          --GEN_PO`VerifyNonZeroNatOneInvariant(expr,expr.cid,contxt),
+          GEN_PO`VerifyNonZeroNatOneInvariant(expr,CI_AUX`GetCid(expr),contxt),
+        mk_(-,mk_AS`NumericType(-,-)),
+        mk_(-,mk_AS`BooleanType(-)),
+        mk_(-,mk_AS`TokenType(-)),
+        mk_(-,mk_AS`CharType(-)),
+        mk_(-,mk_AS`QuoteType(-,-))        -> return [],
+        ---- compound types ---------------------
+        mk_(mk_AS`ProductType(etps1,-),mk_AS`ProductType(etps2,-)) ->
+          GenInvariantProd (expr,etps1,etps2,marked,fv,cid,contxt),
+        mk_(mk_AS`CompositeType(tag,flds1,-),
+            mk_AS`CompositeType(tag,flds2,-)) ->
+          GenInvariantComp (tag,expr,flds1,flds2,marked,fv,cid,contxt),
+        mk_(mk_AS`OptionalType(tp1,-),tp2) ->
+          GenInvariantOptionLeft(expr,tp1,tp2,marked,fv,cid,contxt),
+-- moved up
+--        mk_(tp1,mk_AS`OptionalType(tp2,-)) ->
+--          GenInvariantOptionRight(expr,tp1,tp2,marked,fv,cid,contxt),
+        mk_(mk_AS`UnionType(etps1,-),mk_AS`UnionType(-,-))  ->
+          GenInvariantUnionBoth(expr,etps1,type2,marked,fv,cid,contxt),
+        mk_(mk_AS`UnionType(etps1,-),tp2)  ->
+          GenInvariantUnionLeft(expr,etps1,tp2,marked,fv,cid,contxt),
+-- moved up
+--        mk_(tp1,mk_AS`UnionType(etps2,-))  ->
+--          GenInvariantUnionRight (expr,tp1,etps2,marked,fv,cid,contxt),
+        mk_(mk_AS`Seq0Type(tp1,-),mk_AS`Seq0Type(tp2,-)),
+        mk_(mk_AS`Seq1Type(tp1,-),mk_AS`Seq0Type(tp2,-)),
+        mk_(mk_AS`Seq1Type(tp1,-),mk_AS`Seq1Type(tp2,-)) ->
+          GenInvariantSeq (expr,tp1,tp2,marked,fv,cid,contxt),
+        mk_(mk_AS`Seq0Type(tp1,-),mk_AS`Seq1Type(tp2,-)) ->
+          def pog_invar = GenInvariantSeq (expr,tp1,tp2,marked,fv,cid,contxt);
+              pog_seq1  = GEN_PO`VerifyNonEmptySeqInvariant(expr,contxt)
+          in
+              return pog_invar^pog_seq1,
+        mk_(mk_AS`Set0Type(tp1,-),mk_AS`Set0Type(tp2,-)),
+        mk_(mk_AS`Set0Type(tp1,-),mk_AS`Set1Type(tp2,-)),
+        mk_(mk_AS`Set1Type(tp1,-),mk_AS`Set0Type(tp2,-)),
+        mk_(mk_AS`Set1Type(tp1,-),mk_AS`Set1Type(tp2,-)) ->
+          GenInvariantSet (expr,tp1,tp2,marked,fv,cid,contxt),
+        mk_(mk_AS`GeneralMap0Type(domtp1,rngtp1,-), mk_AS`GeneralMap0Type(domtp2,rngtp2,-)),
+        mk_(mk_AS`GeneralMap0Type(domtp1,rngtp1,-), mk_AS`GeneralMap1Type(domtp2,rngtp2,-)),
+        mk_(mk_AS`GeneralMap1Type(domtp1,rngtp1,-), mk_AS`GeneralMap0Type(domtp2,rngtp2,-)),
+        mk_(mk_AS`GeneralMap1Type(domtp1,rngtp1,-), mk_AS`GeneralMap1Type(domtp2,rngtp2,-)),
+        mk_(mk_AS`InjectiveMap0Type(domtp1,rngtp1,-), mk_AS`GeneralMap0Type(domtp2,rngtp2,-)),
+        mk_(mk_AS`InjectiveMap0Type(domtp1,rngtp1,-), mk_AS`GeneralMap1Type(domtp2,rngtp2,-)),
+        mk_(mk_AS`InjectiveMap1Type(domtp1,rngtp1,-), mk_AS`GeneralMap0Type(domtp2,rngtp2,-)),
+        mk_(mk_AS`InjectiveMap1Type(domtp1,rngtp1,-), mk_AS`GeneralMap1Type(domtp2,rngtp2,-)),
+        mk_(mk_AS`InjectiveMap0Type(domtp1,rngtp1,-), mk_AS`InjectiveMap0Type(domtp2,rngtp2,-)),
+        mk_(mk_AS`InjectiveMap0Type(domtp1,rngtp1,-), mk_AS`InjectiveMap1Type(domtp2,rngtp2,-)),
+        mk_(mk_AS`InjectiveMap1Type(domtp1,rngtp1,-), mk_AS`InjectiveMap0Type(domtp2,rngtp2,-)),
+        mk_(mk_AS`InjectiveMap1Type(domtp1,rngtp1,-), mk_AS`InjectiveMap1Type(domtp2,rngtp2,-)) ->
+          GenInvariantMap (expr,domtp1,domtp2,rngtp1,rngtp2,marked,fv,cid,contxt),
+        mk_(mk_AS`GeneralMap0Type(domtp1,rngtp1,-), mk_AS`InjectiveMap0Type(domtp2,rngtp2,-)),
+        mk_(mk_AS`GeneralMap0Type(domtp1,rngtp1,-), mk_AS`InjectiveMap1Type(domtp2,rngtp2,-)),
+        mk_(mk_AS`GeneralMap1Type(domtp1,rngtp1,-), mk_AS`InjectiveMap0Type(domtp2,rngtp2,-)),
+        mk_(mk_AS`GeneralMap1Type(domtp1,rngtp1,-), mk_AS`InjectiveMap1Type(domtp2,rngtp2,-))   ->
+          def pog_invar = GenInvariantMap (expr,domtp1,domtp2,rngtp1,rngtp2,marked,fv,cid,contxt);
+              --pog_inmap = GEN_PO`VerifyMapInverseInvariant(expr,fv,expr.cid,contxt)
+              pog_inmap = GEN_PO`VerifyMapInverseInvariant(expr,fv,CI_AUX`GetCid(expr),contxt)
+          in
+              return pog_invar^pog_inmap,
+        mk_(mk_AS`PartialFnType(domtp1,rngtp1,-),mk_AS`PartialFnType(domtp2,rngtp2,-)),
+        mk_(mk_AS`TotalFnType(domtp1,rngtp1,-),mk_AS`PartialFnType(domtp2,rngtp2,-)),
+        mk_(mk_AS`TotalFnType(domtp1,rngtp1,-),mk_AS`TotalFnType(domtp2,rngtp2,-))    ->
+          GenInvariantFunc (expr,domtp1,domtp2,rngtp1,rngtp2,marked,fv,cid,contxt),
+        ---- types variables -------------------
+        mk_(mk_AS`TypeVar(-,-),-)         -> return [],
+        mk_(mk_AS`BracketedType(-,-),-)   -> return [],
+        others -> return []
+      end;
+
+
+--GenSubOrSupertypeInvariant
+--                 : AS`Expr
+--                 * AS`Expr
+--                 * set of AS`Name
+--                 * CI`ContextId
+--                 * POGTP`Context -> seq of POGTP`ProofObligation
+--GenSubOrSupertypeInvariant(expr1,expr2,fv,cid,contxt) ==
+--  let -------Build context ------------------
+--      empty_contxt = mu(contxt, expr |-> []),
+--      ----------------------------------------
+--      expr1_tp    = CI_AUX`GetTypeInfo(expr1),
+--      expr2_tp    = CI_AUX`GetTypeInfo(expr2),
+--      expr1_as_tp = CI_AUX`GetASType(expr1),
+--      expr2_as_tp = CI_AUX`GetASType(expr2),
+--      subtype1of2 = CHECK`IsBaseSubtype(expr1_tp,expr2_tp),
+--      subtype2of1 = CHECK`IsBaseSubtype(expr2_tp,expr1_tp),
+--      -----------------------------------------------
+--      pog_subtype1of2 = if subtype1of2 then
+--                          GenInvariant(expr1, expr1_as_tp, expr2_as_tp, {}, fv, cid, empty_contxt)
+--                        else
+--                          [],
+--      pog_subtype2of1 = if subtype2of1 then
+--                          GenInvariant(expr2, expr2_as_tp, expr1_as_tp, {}, fv, cid, empty_contxt)
+--                        else
+--                          [],
+--      ---------------------------------------
+--      po_lst = if subtype1of2 and pog_subtype1of2 = [] then
+--                 []
+--               elseif subtype2of1 and pog_subtype2of1 = [] then
+--                 []
+--               else
+--                 [[pog_subtype1of2(i).po | i in set inds pog_subtype1of2],
+--                  [pog_subtype2of1(i).po | i in set inds pog_subtype2of1]],
+--      po     = GEN_PO`VerifyDisjunctionOfConjuntionOfPo (po_lst,<Invariants>,cid,contxt)
+--  in
+--      po;
+operations
+GenInvariantSeq : AS`Expr
+             * AS`Type
+             * AS`Type
+             * set of (AS`Name * AS`Name)
+             * set of AS`Name
+             * CI`ContextId
+             * POGTP`Context ==> seq of POGTP`ProofObligation
+GenInvariantSeq (expr,type1,type2,marked,fv,cid,contxt) ==
+  if  CI_AUX`GetCid(expr) <> CI`NilContextId and is_REP`EmptySeqTypeRep(CI_AUX`GetTypeInfo(expr))
+  then return []
+  else
+    let ------ Get fresh name and pattern -----
+        fresh_x = FRESH`GetName("xx",fv),
+        pat_x   = mk_AS`PatternName(fresh_x,nil,CI`NilContextId),
+        -------Build context ------------------
+        in_set    =  mk_AS`MultSetBind([pat_x], mk_AS`PrefixExpr( <SEQELEMS>, expr, CI`NilContextId), CI`NilContextId),
+        bind_contxt = POGTP`Add2Context([in_set],contxt)
+    in
+        return GenInvariant(fresh_x,type1,type2,marked,{fresh_x},cid,bind_contxt);
+
+GenInvariantSet : AS`Expr
+             * AS`Type
+             * AS`Type
+             * set of (AS`Name * AS`Name)
+             * set of AS`Name
+             * CI`ContextId
+             * POGTP`Context ==> seq of POGTP`ProofObligation
+GenInvariantSet (expr,type1,type2,marked,fv,cid,contxt) ==
+  if CI_AUX`GetCid(expr) <> CI`NilContextId and is_REP`EmptySetTypeRep(CI_AUX`GetTypeInfo(expr))
+  then return []
+  else
+    let ------ Get fresh name and pattern -----
+        fresh_x = FRESH`GetName("xx",fv),
+        pat_x   = mk_AS`PatternName(fresh_x,nil,CI`NilContextId),
+        -------Build context ------------------
+        in_set    =  mk_AS`MultSetBind([pat_x], expr, CI`NilContextId),
+        bind_contxt = POGTP`Add2Context([in_set],contxt)
+    in
+        GenInvariant(fresh_x,type1,type2,marked,{fresh_x},cid,bind_contxt);
+
+GenInvariantMap : AS`Expr
+             * AS`Type
+             * AS`Type
+             * AS`Type
+             * AS`Type
+             * set of (AS`Name * AS`Name)
+             * set of AS`Name
+             * CI`ContextId
+             * POGTP`Context ==> seq of POGTP`ProofObligation
+GenInvariantMap (expr,domtp1,domtp2,rngtp1,rngtp2,marked,fv,cid,contxt) ==
+  if CI_AUX`GetCid(expr) <> CI`NilContextId and is_REP`EmptyMapTypeRep(CI_AUX`GetTypeInfo(expr))
+  then return []
+  else
+    let ------ Get fresh name and pattern -----
+        fresh_x = FRESH`GetName("xx",fv),
+        fresh_y = FRESH`GetName("yy",fv),
+        pat_x   = mk_AS`PatternName(fresh_x,nil,CI`NilContextId),
+        pat_y   = mk_AS`PatternName(fresh_y,nil,CI`NilContextId),
+        -------Build context ------------------
+        in_dom    =  mk_AS`MultSetBind([pat_x], mk_AS`PrefixExpr(<MAPDOM>, expr, CI`NilContextId), CI`NilContextId),
+        in_rng    =  mk_AS`MultSetBind([pat_y], mk_AS`PrefixExpr(<MAPRNG>, expr, CI`NilContextId), CI`NilContextId),
+        dom_contxt = POGTP`Add2Context([in_dom],contxt),
+        rng_contxt = POGTP`Add2Context([in_rng],contxt)
+        ---------------------------------------
+    in
+    def pog_dom = GenInvariant(fresh_x,domtp1,domtp2,marked,{fresh_x},cid,dom_contxt);
+        pog_rng = GenInvariant(fresh_y,rngtp1,rngtp2,marked,{fresh_y},cid,rng_contxt)
+    in
+      return pog_dom^pog_rng;
+
+GenInvariantProd : AS`Expr
+             * seq of AS`Type
+             * seq of AS`Type
+             * set of (AS`Name * AS`Name)
+             * set of AS`Name
+             * CI`ContextId
+             * POGTP`Context ==> seq of POGTP`ProofObligation
+GenInvariantProd (expr,tps1,tps2,marked,fv,cid,contxt) ==
+  let -------Build projections ------------------
+      entry_lst = [let num   = mk_AS`NumLit(i,CI`NilContextId),
+                       entry = mk_AS`TupleSelectExpr(expr,num,cid)
+                   in
+                       entry
+                  | i in set inds tps1]
+  in
+      ---------------------------------------
+  def pog_lst = [GenInvariant(entry_lst(i), tps1(i), tps2(i), marked, fv, cid, contxt) | i in set inds entry_lst]
+  in
+      return conc pog_lst
+pre len tps1 = len tps2;
+
+
+GenInvariantComp : AS`Name
+                 * AS`Expr
+                 * seq of AS`Field
+                 * seq of AS`Field
+                 * set of (AS`Name * AS`Name)
+                 * set of AS`Name
+                 * CI`ContextId
+                 * POGTP`Context ==> seq of POGTP`ProofObligation
+GenInvariantComp (tag,expr,flds1,flds2,marked,fv,cid,contxt) ==
+  let ------- Get fressh names     ---------------
+      fresh_lst = FRESH`GetNameList("pp",len flds1,fv),
+      ------- Build record pattern ---------------
+      pat_lst   = [mk_AS`PatternName(fresh_lst(i),nil,CI`NilContextId) | i in set inds fresh_lst],
+      rec_pat   = mk_AS`RecordPattern(tag,pat_lst,CI`NilContextId),
+      -------- Build context ---------------------
+      val_def    = mk_AS`ValueDef(rec_pat,nil,expr,<DEFAULT_AS>,false,CI`NilContextId),
+      new_contxt = POGTP`Add2Context(val_def,contxt),
+      --------------------------------------------
+      new_fv     =   fv union elems fresh_lst
+      --------------------------------------------
+  in
+  def pog_lst = [GenInvariant(fresh_lst(i), flds1(i).type, flds2(i).type, marked, new_fv, cid, new_contxt)
+                | i in set inds flds1]
+  in
+      return conc pog_lst
+pre len flds1 = len flds2;
+
+
+GenInvariantUnionBoth : AS`Expr
+             * seq of AS`Type
+             * AS`Type
+             * set of (AS`Name * AS`Name)
+             * set of AS`Name
+             * CI`ContextId
+             * POGTP`Context ==> seq of POGTP`ProofObligation
+GenInvariantUnionBoth (expr,tps1,tp2,marked,fv,cid,contxt) ==
+  let mk_AS`UnionType(tps2,-) = tp2
+  in
+     if forall i in set inds tps1 & is_AS`QuoteType(tps1(i)) and
+        forall i in set inds tps2 & is_AS`QuoteType(tps2(i)) and
+        elems tps1 subset elems tps2
+     then return []
+     else GenInvariantUnionLeft (expr,tps1,tp2,marked,fv,cid,contxt)
+pre  is_AS`UnionType(tp2);
+
+
+GenInvariantUnionLeft : AS`Expr
+             * seq of AS`Type
+             * AS`Type
+             * set of (AS`Name * AS`Name)
+             * set of AS`Name
+             * CI`ContextId
+             * POGTP`Context ==> seq of POGTP`ProofObligation
+GenInvariantUnionLeft (expr,tps1,tp2,marked,fv,cid,contxt) ==
+  let -------Build context ------------------
+      tp_judg_lst  = [mk_AS`TypeJudgementExpr(expr, tps1(i), CI`NilContextId) | i in set inds tps1],
+      judg_contxts = [POGTP`Add2Context(tp_judg_lst(i),contxt) | i in set inds tp_judg_lst]
+      ---------------------------------------
+  in
+  def pog_lst = [GenInvariant(expr, tps1(i), tp2, marked, fv, cid, judg_contxts(i)) | i in set inds tps1]
+  in
+      return conc pog_lst;
+
+GenInvariantUnionRight : AS`Expr
+#ifdef VDMSL
+             * AS`Type
+#endif VDMSL
+#ifdef VDMPP
+             * (AS`Type | POGTP`ClassType)
+#endif VDMPP
+             * seq of AS`Type
+             * set of (AS`Name * AS`Name)
+             * set of AS`Name
+             * CI`ContextId
+             * POGTP`Context ==> seq of POGTP`ProofObligation
+GenInvariantUnionRight (expr,tp1,tps2,marked,fv,cid,contxt) ==
+  let -------Build context ------------------
+      empty_contxt = mu(contxt, expr |-> []),
+      tp_judg_lst  = [mk_AS`TypeJudgementExpr(expr, tps2(i), CI`NilContextId)
+                      | i in set inds tps2 & CHECK`IsBaseSubtypeAS(tp1,tps2(i))]
+      ---------------------------------------
+  in
+  def pog_lst      = [GenInvariant(expr, tp1, tps2(i), marked, fv, cid, empty_contxt)
+                     | i in set inds tps2 & CHECK`IsBaseSubtypeAS(tp1,tps2(i))];
+      ---------------------------------------
+      extract_po_lst = [[pog_lst(i)(j).po | j in set inds pog_lst(i)] | i in set inds pog_lst];
+      prepend_judg   = if forall lst in set elems extract_po_lst & lst = []
+                       then []
+                       else [[tp_judg_lst(i)]^extract_po_lst(i) | i in set inds extract_po_lst];
+      ---------------------------------------
+      po = GEN_PO`VerifyDisjunctionOfConjuntionOfPo (prepend_judg,<Invariants>,cid,contxt)
+  in
+      return po;
+
+GenInvariantOptionLeft : AS`Expr
+#ifdef VDMSL
+             * AS`Type
+#endif VDMSL
+#ifdef VDMPP
+             * (AS`Type | POGTP`ClassType)
+#endif VDMPP
+             * AS`Type
+             * set of (AS`Name * AS`Name)
+             * set of AS`Name
+             * CI`ContextId
+             * POGTP`Context ==> seq of POGTP`ProofObligation
+GenInvariantOptionLeft(expr,tp1,tp2,marked,fv,cid,contxt) ==
+  let --------------------------------------
+      nilType = mk_AS`TypeName(mk_AS`Name(["nilType"],CI`NilContextId), CI`NilContextId),
+      as_nil  = mk_AS`NilLit(CI`NilContextId),
+      -------Build context ------------------
+      not_nil_judg    = mk_AS`BinaryExpr(expr, <NE>, as_nil, CI`NilContextId),
+      nil_judg        = mk_AS`BinaryExpr(expr, <EQ>, as_nil, CI`NilContextId),
+      not_nil_judg_contxt = POGTP`Add2Context(not_nil_judg,contxt),
+      nil_judg_contxt     = POGTP`Add2Context(nil_judg,contxt)
+      ---------------------------------------
+  in
+  def pog_not_nil = GenInvariant(expr,tp1,tp2,marked,fv,cid,not_nil_judg_contxt);
+      pog_nil     = GenInvariant(as_nil,nilType,tp2,marked,fv,cid,nil_judg_contxt)
+  in
+      return pog_not_nil^pog_nil;
+
+GenInvariantOptionRight : AS`Expr
+#ifdef VDMSL
+             * AS`Type
+#endif VDMSL
+#ifdef VDMPP
+             * (AS`Type | POGTP`ClassType)
+#endif VDMPP
+             * AS`Type
+             * set of (AS`Name * AS`Name)
+             * set of AS`Name
+             * CI`ContextId
+             * POGTP`Context ==> seq of POGTP`ProofObligation
+GenInvariantOptionRight(expr,tp1,tp2,marked,fv,cid,contxt) ==
+  let --------------------------------------
+      nilType = mk_AS`TypeName(mk_AS`Name(["nilType"],CI`NilContextId), CI`NilContextId),
+      -------Build context ------------------
+      not_nil_judg  = mk_AS`PrefixExpr(<NOT>, mk_AS`TypeJudgementExpr( expr, nilType, CI`NilContextId), CI`NilContextId),
+      not_nil_judg_contxt = POGTP`Add2Context(not_nil_judg,contxt)
+      ---------------------------------------
+  in
+  def pog_not_nil = GenInvariant(expr,tp1,tp2,marked,fv,cid,not_nil_judg_contxt)
+  in
+      return pog_not_nil;
+
+
+GenInvariantFunc : AS`Expr
+             * AS`DiscretionaryType
+             * AS`DiscretionaryType
+             * AS`Type
+             * AS`Type
+             * set of (AS`Name * AS`Name)
+             * set of AS`Name
+             * CI`ContextId
+             * POGTP`Context ==> seq of POGTP`ProofObligation
+GenInvariantFunc (expr,domtp1,domtp2,rngtp1,rngtp2,marked,fv,cid,contxt) ==
+  let ------ Get fresh name and pattern -----
+      fresh_x   = FRESH`GetName("xx",fv),
+      fresh_lst = FRESH`GetNameList("xx",len domtp1,fv),
+      pat_x     = mk_AS`PatternName(fresh_x,nil,CI`NilContextId),
+      pat_lst   = [mk_AS`PatternName(fresh_lst(i),nil,CI`NilContextId) | i in set inds fresh_lst],
+      ------ Build binding ------------------
+      bind_lst  = [[mk_AS`MultTypeBind([pat_x],domtp2(i),CI`NilContextId)] | i in set inds domtp2],
+      bind      = [mk_AS`MultTypeBind([pat_lst(i)],domtp1(i),CI`NilContextId) | i in set inds pat_lst],
+      ------ Build context ------------------
+      app_contxt = POGTP`Add2Context(bind,contxt),
+      lst_contxt = [POGTP`Add2Context(bind_lst(i),contxt) | i in set inds bind_lst],
+      ------ Build expression ---------------
+      app_expr   = mk_AS`ApplyExpr(expr, fresh_lst, CI`NilContextId)
+      ---------------------------------------
+  in
+  def pog_dom = [GenInvariant(fresh_x, domtp2(i), domtp1(i), marked, {fresh_x}, cid, lst_contxt(i)) | i in set inds domtp2];
+      pog_rng = GenInvariant(app_expr, rngtp1, rngtp2, marked, fv union elems fresh_lst, cid, app_contxt)
+  in
+      return (conc pog_dom) ^ pog_rng
+  pre len domtp1 = len domtp2;
+
+end GEN_INV
+\end{vdm_al}
+
+\newpage
+
+\begin{rtinfo}[GEN\_INV`GenInvariantOptionRight]
+{rtinfo.ast}[GEN_INV]
+\end{rtinfo}
+

@@ -1,0 +1,5 @@
+ZZZ`GenCPPAS(
+#include "vdm.ast"
+,
+#include "cgkind"
+)

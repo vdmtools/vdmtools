@@ -1,0 +1,76 @@
+--$Id: MapT.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $
+/*
+テストグループ
+	Mapのテスト
+作成者
+	佐原伸
+*/
+----------------------------------------------------
+class MapT is subclass of TestDriver
+functions
+public tests : () -> seq of TestCase
+tests() == 
+	[ 
+	new MapT01(), new MapT02()	
+	];
+end MapT
+----------------------------------------------------
+/*
+シナリオID
+	Getに関するシナリオ
+内容
+	Getのテスト
+*/
+class MapT01 is subclass of TestCase, 『共通定義』
+operations 
+public test: () ==> bool
+test() == 
+	let	m1 = {1 |-> "佐藤圭", 19 |-> "佐原伸", 20 |-> "酒匂寛"},
+		m2 = {"佐藤圭" |-> 1,  "佐原伸" |-> 19,  "酒匂寛" |-> 20},
+		get1 = Map`Get[int, seq of char],
+		get2 = Map`Get[seq of char, int]
+	in
+	return 
+		get1(m1)(19) = "佐原伸" and
+		get1(m1)(2) = nil and
+		get2(m2)("佐原伸") = 19 and
+		get2(m2)("A級戦犯小泉純一郎") = nil
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "MapT01:\tGetのテスト。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end MapT01
+----------------------------------------------------
+/*
+シナリオID
+	内容の検査に関するシナリオ
+内容
+	内容の検査に関するテスト
+*/
+class MapT02 is subclass of TestCase, 『共通定義』
+operations 
+public test: () ==> bool
+test() == 
+	let	m1 = {1 |-> "佐藤圭", 19 |-> "佐原伸", 20 |-> "酒匂寛"},
+		m2 = {"佐藤圭" |-> 1,  "佐原伸" |-> 19,  "酒匂寛" |-> 20},
+		c1 = Map`Contains[int, seq of char],
+		k1 = Map`ContainsKey[int, seq of char],
+		c2 = Map`Contains[seq of char, int],
+		k2 = Map`ContainsKey[seq of char, int]
+	in
+	return 
+		c1(m1)("佐藤圭") and c1(m1)("佐原伸") and c1(m1)("酒匂寛") and
+		c1(m1)("A級戦犯小泉純一郎") = false and
+		k1(m1)(1) and k1(m1)(19) and k1(m1)(20) and
+		not k1(m1)(99) and
+		c2(m2)(1) and c2(m2)(19) and c2(m2)(20) and
+		c2(m2)(30) = false and
+		k2(m2)("佐藤圭") and k2(m2)("佐原伸") and k2(m2)("酒匂寛") and
+		k2(m2)("A級戦犯小泉純一郎") = false
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "MapT02:\t内容の検査に関するテスト。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end MapT02

@@ -1,0 +1,7 @@
+This is a known bug which appears because a lambda expression is used
+inside a parameterised module. This can be fixed by running through the
+instruction code when the module is instantiated and change the Push
+instructions which contain an explicit function value produced by a 
+lambda expression to the name of the new module name for the module 
+(ie. replace the modName component from the name of the parameterised 
+module to the name of the instantiated module).

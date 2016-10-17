@@ -1,0 +1,30 @@
+class B
+
+instance variables
+
+  public static x : nat := 1
+
+operations
+
+public GetX : () ==> nat
+GetX() ==
+  return x;
+
+public SetX : nat ==> ()
+SetX(n) ==
+  x := n;
+
+end B
+class A
+
+operations
+
+public
+  Test:() ==> nat
+  Test () == 
+   let b1 = new B(),
+       b2 = new B()
+   in
+     (return B`x)
+
+end A

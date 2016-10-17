@@ -1,0 +1,31 @@
+class MainSort
+
+values
+  arr1 = [3,5,2,23,1,42,98,31];
+  arr2 = [3,1,2]
+  
+
+operations
+ 
+public  Test: () ==> seq of seq of (int | bool) 
+  Test () ==
+  ( dcl smach : SortMachine := new SortMachine (),
+        dos   : Sorter := new DoSorting (),
+        merg  : Sorter := new ExplSort ();
+    smach.InitSort(merg);
+    def res = smach.GoSorting(arr2);
+        res2 = smach.SetAndSort(dos,arr1);
+        b = self in
+    def a = b.InvokeSelf() in
+    let ibc = isofbaseclass(SortMachine,smach), -- true
+        ic  = isofclass(SortMachine,smach), -- true
+        sbc = samebaseclass(smach,merg),  -- false
+        sc  = sameclass(smach,merg) in  -- false
+    return [res,res2,[ibc,ic,sbc,sc]]
+  );
+
+  InvokeSelf: () ==> int 
+  InvokeSelf () ==
+    return 5
+
+end MainSort

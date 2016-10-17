@@ -1,0 +1,45 @@
+class AS
+
+types 
+
+
+public 
+Name :: ids : seq of seq of char;
+
+public
+OpDef :: nm : Name;
+
+end AS
+
+class A
+ 
+
+
+operations
+
+
+public 
+Test : () ==> map seq of seq of char to seq of seq of char
+Test() == 
+  (
+   dcl opmap : map AS`Name to AS`OpDef := {|->},
+   op : AS`OpDef := mk_AS`OpDef(mk_AS`Name(["a","e"]));
+   opmap := {MANGLE`Mangle(op.nm) |-> op};
+   return {e.ids |-> (opmap(e).nm).ids | e in set dom opmap};
+  );
+    
+
+
+
+end A
+
+
+class MANGLE
+
+operations
+
+public static 
+Mangle : AS`Name ==> AS`Name
+Mangle (n) == return mu(n , ids |-> (n.ids ++ {1 |-> "s"}));
+
+end MANGLE

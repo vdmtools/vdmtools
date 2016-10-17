@@ -1,0 +1,58 @@
+\subsection{FunctionT}
+FFunctionのテストを行う。
+
+\begin{vdm_al}
+--$Id $
+class FFunctionT
+functions
+static public run : () +> bool
+run() == 
+let	testcases = [ t1(), t2() ]
+in
+FTestDriver`run(testcases);
+\end{vdm_al}
+
+
+\subsubsection{Fwhile, Funtilを検査する}
+\begin{vdm_al}
+static t1 : () -> FTestDriver`TestCase
+t1() ==
+	
+	mk_FTestDriver`TestCase(
+	"FFunctionT01:\t Fwhile, Funtilを検査する",
+	let	f1 = lambda x : int & x * 2,
+		p1 = lambda x : int & x > 1000,
+		p11 = lambda x : int & x <= 1000,
+		f2 = lambda x : seq of char & x ^ "0",
+		p2 = lambda x : seq of char & len x > 9,
+		p21 = lambda x : seq of char & len x <= 9
+	in
+	FFunction`Fwhile[int](p11)(f1)(1) = 1024 and
+	FFunction`Fwhile[seq of char](p21)(f2)("123456") = "1234560000" and
+	FFunction`Funtil[int](p1)(f1)(1) = 1024 and
+	FFunction`Funtil[seq of char](p2)(f2)("123456") = "1234560000")
+	;
+\end{vdm_al}
+
+\subsubsection{Seqを検査する}
+\begin{vdm_al}
+static t2 : () -> FTestDriver`TestCase
+t2() ==
+	
+	mk_FTestDriver`TestCase(
+	"FFunctionT02:\t Seqを検査する",
+	let	f1 = lambda x : int & x * 2,
+		f2 = lambda x : int & x * 3,
+		f3 = lambda x : int & x ** 2,
+		関数列1 = [f1, f2, f3],
+		f10 = lambda x : seq of char & x ^ x,
+		f11 = FSequence`Take[char](10),
+		f12 = FSequence`Drop[char](4),
+		関数列2 = [f10, f11, f12]
+	in
+	FFunction`Seq[int](関数列1)(2) = (2 * 2 * 3) ** 2 and
+	FFunction`Seq[seq of char](関数列2)("12345678") = "567812")
+	;
+	
+end FFunctionT
+\end{vdm_al}

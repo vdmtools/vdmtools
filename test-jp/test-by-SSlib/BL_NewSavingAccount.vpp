@@ -1,0 +1,155 @@
+/*$Header: /home/vdmtools/cvsroot/toolbox/test-jp/test-by-SSlib/BL_NewSavingAccount.vpp,v 1.1 2005/11/25 07:05:37 vdmtools Exp $*/
+--------------------------------------------------------
+class 『定期預金設定』  is subclass of GofoBizLogic
+/* 
+目的
+　定期預金の設定を、インターネットから顧客が行う
+開始条件
+　インターネットからの顧客の申請
+アクター
+　顧客
+*/
+
+operations
+public check : 『定期預金設定伝票』 * 『定期預金設定_Carton』 ==> GofoBizLogicReturn
+check(ある伝票, あるカートン) ==
+	let	普通預金口座帳簿 = あるカートン.環境を得る("普通預金口座帳簿"),
+		顧客帳簿 = あるカートン.環境を得る("顧客帳簿"),
+		入出金記録帳簿 = あるカートン.環境を得る("入出金記録帳簿"),
+		定期預金帳簿 = あるカートン.環境を得る("定期預金帳簿"),
+		普通預金口座 = 普通預金口座帳簿.findByKeyValues(ある伝票.普通預金ID)
+	in
+	(
+	dcl 返値 : GofoBizLogicReturn := new GofoBizLogicReturn();
+	
+	返値 := 返値.putError(new 伝票IDValidator().isValid(ある伝票.伝票ID));
+	返値 := 返値.putError(new 顧客IDValidator().isValid(ある伝票.顧客ID));
+	返値 := 返値.putError(new 営業店IDValidator().isValid(ある伝票.担当営業店ID));
+	返値 := 返値.putError(new パスワードValidator().isValid(ある伝票.登録パスワード));
+	返値 := 返値.putError(new 識別子Validator().isValid(ある伝票.定期預金ID));
+	返値 := 返値.putError(new 識別子Validator().isValid(ある伝票.普通預金ID));
+	返値 := 返値.putError(new 金額Validator().isValid(ある伝票.設定額));
+	返値 := 返値.putError(new 数量Validator().isValid(ある伝票.日数));
+	返値 := 返値.putError(new 自動継続区分Validator().isValid(ある伝票.自動継続区分));
+	
+	--前件チェック
+	---マスターチェック
+	----顧客が存在する
+	if not 顧客帳簿.存在する(ある伝票.顧客ID) then
+		返値 := 返値.putError(new GofoApplicationException(10, "該当顧客が存在しない。"));
+	
+	----顧客の普通預金口座が存在する
+	if not 普通預金口座帳簿.存在する(ある伝票.普通預金ID) then
+		返値 := 返値.putError(new GofoApplicationException(11, "普通預金口座が存在しない。"))
+	else
+	
+	--業務ルールのチェック
+		---普通預金口座.残高 >= 設定額 >= 最低設定額
+		if not 『業務ルール』`振込可能(
+						普通預金口座.明細記録を得る().登録パスワード, ある伝票.登録パスワード, 
+						普通預金口座帳簿.普通預金残高(入出金記録帳簿, ある伝票.普通預金ID, ある伝票.発行時刻), 
+						ある伝票.設定額)  then
+			返値 := 返値.putError(new GofoApplicationException(12, "振込可能でない。"));
+	
+	if ある伝票.設定額 < 定期預金帳簿.最低設定額() then
+		返値 := 返値.putError(new GofoApplicationException(13, "最低設定額より少ない。"));
+		
+	return 返値
+	);
+
+public apply : 『定期預金設定伝票』 * 『定期預金設定_Carton』 ==> GofoBizLogicReturn
+apply(ある伝票, あるカートン) == 
+	let	普通預金口座帳簿 = あるカートン.環境を得る("普通預金口座帳簿"),
+		顧客帳簿 = あるカートン.環境を得る("顧客帳簿"),
+		入出金記録帳簿 = あるカートン.環境を得る("入出金記録帳簿"),
+		定期預金帳簿 = あるカートン.環境を得る("定期預金帳簿")
+	in
+	(
+	dcl 返値 : GofoBizLogicReturn := new GofoBizLogicReturn();
+	dcl ある入出金記録 : GofoBook;
+	dcl ある定期預金 : GofoBook;
+	dcl ある普通預金 : GofoBook;
+	dcl ある顧客 : GofoBook;
+	ある定期預金 := 
+		定期預金帳簿.create(
+			ある伝票.定期預金ID, 
+			ある伝票.普通預金ID, 
+			ある伝票.顧客ID,
+			ある伝票.発行時刻,
+			ある伝票.担当営業店ID,
+			ある伝票.登録パスワード,
+			ある伝票.設定額,
+			ある伝票.設定日,
+			ある伝票.発行時刻,
+			ある伝票.日数,
+			ある伝票.自動継続区分
+		);
+	ある普通預金 := 普通預金口座帳簿.findByKeyValues(ある伝票.普通預金ID);
+	ある入出金記録 := 
+		入出金記録帳簿.create(
+			ある伝票.伝票ID, 
+			ある伝票.発行時刻, 
+			ある伝票.設定額, 
+			ある普通預金, 
+			ある定期預金
+		) ;
+	ある顧客 := 顧客帳簿.findByKeyValues(ある伝票.顧客ID);
+	let	顧客明細 = ある顧客.明細記録を得る()
+	in
+	ある顧客.明細記録を設定する(mu(顧客明細, 定期預金口座ID集合 |-> 顧客明細.定期預金口座ID集合 union {ある伝票.定期預金ID}));
+	ある顧客.update();
+	-- 後件チェック
+	if not 入出金記録帳簿.入出金記録設定済(
+			ある伝票.伝票ID, ある伝票.発行時刻,  ある伝票.設定額, ある普通預金, ある定期預金) then
+		返値 := 返値.putError(new GofoApplicationException(2, "対応する入出金記録が存在しない。"));
+		
+	return 返値
+	)
+post
+	let	普通預金口座帳簿 = あるカートン.環境を得る("普通預金口座帳簿"),
+		顧客帳簿 = あるカートン.環境を得る("顧客帳簿"),
+		- = あるカートン.環境を得る("入出金記録帳簿"),
+		定期預金帳簿 = あるカートン.環境を得る("定期預金帳簿"),
+		普通預金ID = ある伝票.普通預金ID,
+		- = 普通預金口座帳簿.findByKeyValues(普通預金ID),
+		顧客ID = ある伝票.顧客ID,
+		顧客 = 顧客帳簿.findByKeyValues(ある伝票.顧客ID),
+		新定期預金ID = ある伝票.定期預金ID,	--本当は、ユニークな識別子を生成しなければならない。
+		担当営業店ID = ある伝票.担当営業店ID,
+		登録パスワード = ある伝票.登録パスワード,
+		--伝票ID = ある伝票.伝票ID,
+		設定額 = ある伝票.設定額,
+		設定日 = ある伝票.設定日,
+		処理時刻 = ある伝票.発行時刻,
+		日数 = ある伝票.日数,
+		自動継続区分 = ある伝票.自動継続区分,
+		- = 定期預金帳簿.findByKeyValues(新定期預金ID) 
+	in
+	--定期預金（ある伝票）が設定されている 
+	定期預金帳簿.定期預金設定済(
+		新定期預金ID, 普通預金ID, 顧客ID, 処理時刻, 担当営業店ID, 登録パスワード, 
+		設定額, 設定日, 処理時刻, 日数, 自動継続区分
+	) and
+	--　『顧客』と『定期預金』の関連が１対多であることが示されている
+	ある伝票.定期預金ID in set 顧客.明細記録を得る().定期預金口座ID集合
+	--普通預金口座.残高 = 普通預金口座.振込前残高 - 設定額 
+	--普通預金口座.残高(処理時刻) = 普通預金口座.通預金残高_pre(処理時刻) - 設定額 
+	;
+
+public export : 『定期預金設定伝票』 * 『定期預金設定_Carton』 ==> GofoBizLogicReturn
+export(ある伝票, あるカートン) == is not yet specified;
+  /*# 出力伝票生成
+  def export(s, c)
+    puts "普通預金口座開設：新規登録：export"
+  end
+  */
+
+public summaryExport : 『定期預金設定_Carton』 ==> GofoBizLogicReturn
+summaryExport(あるカートン) == is not yet specified;
+  /*# 集計出力伝票生成
+  def summaryExport(c)
+    puts "普通預金口座開設：新規登録：summaryExport"
+  end
+  */
+
+end  『定期預金設定』

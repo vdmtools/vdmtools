@@ -1,0 +1,48 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> map seq of char to seq of ( int | set of nat | map nat to ( nat | seq of nat ) | bool | real )  
+Test () ==
+return {
+"NUMPLUS" |-> 
+       [ +3,
+         + if true
+	   then -9.6
+	   else let a in set {{3}, 3} in a ],
+         
+"NUMMINS" |->         
+       [ - 3 ,
+         - f(6) ],
+	
+"NUMABS" |->
+       [ abs -3 ],
+
+"FLOOR" |->
+       [ floor f(4) ],
+
+"NOT" |->
+       [ not true ],
+
+"DUNION" |-> 
+      [ dunion { {1}, {2,4}, {3,4,6}} ],
+
+"MAPMERGE" |-> [ merge { { 3 |-> 4}, {5 |-> 6},{ 4 |-> 4, 6 |-> [9] } } ]
+ }
+
+functions
+
+f: int -> int | real
+f(a) ==
+  if a > 5 then -a
+  else -(a+0.5)
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

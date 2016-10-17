@@ -1,0 +1,35 @@
+ class A
+
+  instance variables
+
+    n : nat := 0;
+
+  operations
+
+public    Init : nat ==> A
+    Init(mn) ==
+      (n := mn;
+       return self);
+
+public    Equal : nat ==> bool
+    Equal(m) ==
+      return (m=n);
+
+end A
+
+
+class B
+
+operations
+
+
+  public Test : () ==> nat
+  Test() ==
+    (dcl i:nat := 0;
+     (while (not new A().Init(3).Equal(i))
+      do i := i + 1);
+    
+     return i * 8;
+    )
+
+end B

@@ -1,0 +1,30 @@
+class C
+
+types
+
+public VRecord :: v : int
+
+end C
+
+class B
+
+functions
+
+dummy : () -> nat
+dummy() == is not yet specified;
+
+public getV : seq of C`VRecord * nat1 -> int
+getV(vrecs, ind) == vrecs(ind).v
+pre ind <= len vrecs
+
+end B
+
+class A
+
+operations
+
+public Test : () ==> nat
+Test() ==
+  return 1
+
+end A

@@ -1,0 +1,23 @@
+class WWW
+
+  types
+
+    public URL = token;
+
+ operations
+
+    public FInd : () ==> seq of URL
+    FInd() ==
+        is not yet specified
+
+end WWW
+
+class WWW2 is subclass of WWW
+
+ operations
+
+   public FInd : () ==> seq of URL
+   FInd() ==
+       is not yet specified
+
+end WWW2

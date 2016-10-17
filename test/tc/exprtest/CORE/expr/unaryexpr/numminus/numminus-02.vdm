@@ -1,0 +1,16 @@
+class UnaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let n = nil,
+      - = -if true
+         then -7.8
+         else n
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

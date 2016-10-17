@@ -1,0 +1,57 @@
+%$ld$
+\subsection{The RadNav system -- top-level specification}
+
+\begin{vdm_al}
+class RadNavSys  is subclass of 『共通定義』
+
+instance variables
+  dispatch : EventDispatcher := new EventDispatcher();
+  appTasks : set of BasicTask := {};
+  mode : nat 
+
+operations
+  RadNavSys: nat ==> RadNavSys
+  RadNavSys (pi) ==
+   ( mode := pi;
+     cases (mode) :
+       1 -> ( addApplicationTask(new 『人機械界面キー押し下げ処理1』(dispatch));
+              addApplicationTask(new 『ラジオ音量調整』(dispatch));
+              addApplicationTask(new 『人機械界面画面更新』(dispatch));
+              addApplicationTask(new 『ラジオ交通情報処理』(dispatch));
+	      addApplicationTask(new 『ナビ交通情報解読』(dispatch)) ),
+       2 -> ( addApplicationTask(new 『人機械界面キー押し下げ処理2』(dispatch));
+              addApplicationTask(new 『ナビDB検索』(dispatch));
+              addApplicationTask(new 『人機械界面画面更新』(dispatch));
+              addApplicationTask(new 『ラジオ交通情報処理』(dispatch));
+     	      addApplicationTask(new 『ナビ交通情報解読』(dispatch)) )
+     end;
+     startlist(appTasks); start(dispatch) )
+   pre pi in set {1, 2};
+
+  addApplicationTask: BasicTask ==> ()
+  addApplicationTask (pbt) ==
+   ( appTasks := appTasks union {pbt};
+     dispatch.Register(pbt) );
+
+  addEnvironmentTask: EnvironmentTask ==> ()
+  addEnvironmentTask (pet) ==
+   ( dispatch.Register(pet);
+     pet.Run() );
+
+  public Run: () ==> ()
+  Run () ==
+   ( cases (mode):
+       1 -> ( addEnvironmentTask(new 『音量つまみ』(dispatch));
+              addEnvironmentTask(new 『交通情報送信』(dispatch)) ),
+       2 -> ( addEnvironmentTask(new 『住所入力』(dispatch));
+	   			addEnvironmentTask(new 『音量つまみ』(dispatch));
+              addEnvironmentTask(new 『交通情報送信』(dispatch)) )
+     end;
+     Logger`wait() )
+
+end RadNavSys
+\end{vdm_al}
+
+\begin{rtinfo}
+[RadNavSys]{vdm.tc}[RadNavSys]
+\end{rtinfo}

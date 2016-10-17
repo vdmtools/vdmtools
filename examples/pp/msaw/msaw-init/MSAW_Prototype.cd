@@ -1,0 +1,1024 @@
+Extern_References DEFINITIONS ::= BEGIN
+END
+
+Entities_Definitions DEFINITIONS ::= BEGIN
+base ::= SEQUENCE OF {
+	SEQUENCE {
+		items_count integer,
+		default_status bits,
+		default_layout integer,
+		default_ilayout integer,
+		page_width real,
+		page_heigth real,
+		no_frame boolean,
+		portrait boolean,
+		margin real,
+		languages SEQUENCE OF integer
+	}
+}
+meta_property ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string
+	}
+}
+template ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		language integer,
+		kind meta_entity,
+		content string
+	}
+}
+module ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		range integer,
+		layout integer,
+		status bits
+	}
+}
+class ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		derived boolean,
+		abstract boolean,
+		pixmap string,
+		constraint string,
+		status bits
+	}
+}
+association ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		derived boolean,
+		described_by oid,
+		status bits
+	}
+}
+role ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		agregate boolean,
+		i_multiplicity integer,
+		s_multiplicity string,
+		meta boolean,
+		key boolean,
+		class oid,
+		association oid,
+		status bits
+	}
+}
+qualifier ::= SEQUENCE OF {
+	SEQUENCE {
+		entity oid,
+		name string,
+		type oid
+	}
+}
+operation ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		abstract boolean,
+		meta boolean,
+		owner oid,
+		type oid,
+		range integer,
+		status bits
+	}
+}
+parameter ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		owner oid,
+		type oid,
+		range integer,
+		status bits
+	}
+}
+attribute ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		derived boolean,
+		meta boolean,
+		key boolean,
+		owner oid,
+		type oid,
+		range integer,
+		status bits
+	}
+}
+type ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		kind integer,
+		status bits
+	}
+}
+inheritance ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		ancestor oid,
+		discriminator oid,
+		repeated boolean,
+		subclasses SEQUENCE OF oid,
+		status bits
+	}
+}
+instance ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		range integer,
+		layout integer
+	}
+}
+id_class ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		class oid,
+		meta boolean
+	}
+}
+id_association ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		association oid,
+		described_by oid,
+		roles SEQUENCE OF oid
+	}
+}
+id_attribute ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		owner oid,
+		attribute oid,
+		value string
+	}
+}
+entity_position ::= SEQUENCE OF {
+	SEQUENCE {
+		entity oid,
+		module oid,
+		position SEQUENCE OF real
+	}
+}
+agregation_position ::= SEQUENCE OF {
+	SEQUENCE {
+		module oid,
+		roles SEQUENCE OF oid,
+		position SEQUENCE OF real
+	}
+}
+inheritance_position ::= SEQUENCE OF {
+	SEQUENCE {
+		inheritance oid,
+		module oid,
+		class oid,
+		position SEQUENCE OF real
+	}
+}
+template_link ::= SEQUENCE OF {
+	SEQUENCE {
+		entity oid,
+		templates SEQUENCE OF oid
+	}
+}
+module_layout ::= SEQUENCE OF {
+	SEQUENCE {
+		entity oid,
+		portrait boolean,
+		nb_w_pages integer,
+		nb_h_pages integer
+	}
+}
+note ::= SEQUENCE OF {
+	SEQUENCE {
+		entity oid,
+		name string,
+		content string
+	}
+}
+class ::= {
+{"9", "MSAWTypes", f, f, NULL, NULL, -1},
+{"22", "Vecteur3D", f, f, NULL, NULL, -1},
+{"23", "Terrain", f, f, NULL, NULL, -1},
+{"24", "Obstacle", f, f, NULL, NULL, -1},
+{"25", "ObstacleArtificiel", f, f, NULL, NULL, -1},
+{"26", "ReliefParticulier", f, f, NULL, NULL, -1},
+{"27", "ZoneMilitaire", f, f, NULL, NULL, -1},
+{"28", "ZoneAeroport", f, f, NULL, NULL, -1},
+{"29", "BulletinMeteo", f, f, NULL, NULL, -1},
+{"30", "VisualWorkSpace", f, f, NULL, NULL, -1},
+{"31", "Detecteur", f, f, NULL, NULL, -1},
+{"32", "View", f, f, NULL, NULL, -1},
+{"33", "VisualPistesRadar", f, f, NULL, NULL, -1},
+{"34", "VisualObstacleArtificiel", f, f, NULL, NULL, -1},
+{"35", "VisualDetecteur", f, f, NULL, NULL, -1},
+{"36", "Clock", f, f, NULL, NULL, -1},
+{"37", "VisualZoneAeroport", f, f, NULL, NULL, -1},
+{"38", "VisualSegmentDePrediction", f, f, NULL, NULL, -1},
+{"39", "WorkSpace", f, f, NULL, NULL, -1},
+{"40", "PistesRadar", f, f, NULL, NULL, -1},
+{"42", "Parametres", f, f, NULL, NULL, -1},
+{"43", "Polygone", f, f, NULL, NULL, -1},
+{"44", "Cylindre", f, f, NULL, NULL, -1},
+{"45", "Cone", f, f, NULL, NULL, -1},
+{"46", "SegmentDePrediction", f, f, NULL, NULL, -1}
+}
+type ::= {
+{"1", "integer", 4, -1},
+{"2", "boolean", 4, -1},
+{"3", "string", 4, -1},
+{"4", "void", 1, -1},
+{"5", "real", 4, -1},
+{"6", "character", 4, -1},
+{"7", "char", 4, -1},
+{"8", "unknown", 2, -1},
+{"10", "MSAWTypes`Coordonnees", 8, -1},
+{"11", "MSAWTypes`Coordonnee", 8, -1},
+{"12", "MSAWTypes`KT", 8, -1},
+{"13", "MSAWTypes`Pieds", 8, -1},
+{"14", "MSAWTypes`NM", 8, -1},
+{"15", "MSAWTypes`ModeA", 8, -1},
+{"16", "MSAWTypes`Alarme", 8, -1},
+{"17", "MSAWTypes`Hpa", 8, -1},
+{"18", "MSAWTypes`StationMeteo", 8, -1},
+{"19", "MSAWTypes`Degrees", 8, -1},
+{"20", "MSAWTypes`Temps", 8, -1},
+{"21", "MSAWTypes`Duree", 8, -1},
+{"41", "PistesRadar`PisteInfo", 8, -1},
+{"48", "Coordonnee", 8, -1},
+{"50", "Temps", 8, -1},
+{"52", "Duree", 8, -1},
+{"58", "set of Temps", 8, -1},
+{"61", "Coordonnees", 8, -1},
+{"63", "StationMeteo", 8, -1},
+{"64", "NM", 8, -1},
+{"67", "Pieds", 8, -1},
+{"71", "set of (Coordonnees * Pieds)", 8, -1},
+{"74", "map Coordonnees to Pieds", 8, -1},
+{"96", "<zone_active>|<zone_inactive>", 8, -1},
+{"110", "map StationMeteo to Coordonnees", 8, -1},
+{"112", "map Coordonnees to Hpa", 8, -1},
+{"116", "Hpa", 8, -1},
+{"128", "set of token", 8, -1},
+{"144", "@Terrain|@Obstacle", 8, -1},
+{"148", "ModeA", 8, -1},
+{"178", "set of ModeA", 8, -1},
+{"220", "map Temps to (Coordonnees * Pieds)", 8, -1},
+{"234", "set of @Obstacle", 8, -1},
+{"244", "set of (@Terrain|@Obstacle)", 8, -1},
+{"245", "seq of (@Terrain|@Obstacle)", 8, -1},
+{"248", "map ModeA to (map Temps to PisteInfo)", 8, -1},
+{"261", "KT", 8, -1},
+{"274", "Alarme", 8, -1},
+{"280", "set of Coordonnees", 8, -1},
+{"297", "Degrees", 8, -1},
+{"321", "Coordonnees * Pieds", 8, -1}
+}
+attribute ::= {
+{"47", "NMperCoordonnee", f, t, f, "9", "48", 0, -1},
+{"49", "Secondes", f, t, f, "9", "50", 0, -1},
+{"51", "BalayageRadar", f, t, f, "9", "52", 0, -1},
+{"65", "xy_queue", f, f, f, "22", "61", 0, -1},
+{"66", "z_queue", f, f, f, "22", "67", 0, -1},
+{"68", "xy_tete", f, f, f, "22", "61", 0, -1},
+{"69", "z_tete", f, f, f, "22", "67", 0, -1},
+{"73", "mosaique", f, f, f, "23", "74", 0, -1},
+{"88", "altitude_maximale", f, f, f, "26", "67", 0, -1},
+{"93", "niveau_minimal", f, f, f, "27", "67", 0, -1},
+{"94", "niveau_maximal", f, f, f, "27", "67", 0, -1},
+{"95", "statut", f, f, f, "27", "96", 0, -1},
+{"103", "rayon_au_sol", f, f, f, "28", "64", 0, -1},
+{"109", "position_de_station", f, f, f, "29", "110", 0, -1},
+{"111", "qnh_locale", f, f, f, "29", "112", 0, -1},
+{"233", "obstacles", f, f, f, "39", "234", 0, -1},
+{"247", "pistes", f, f, f, "40", "248", 0, -1},
+{"276", "VitesseMaximale", f, t, f, "42", "261", 0, -1},
+{"277", "DureeExtrapolation", f, t, f, "42", "52", 0, -1},
+{"279", "sommets", f, f, f, "43", "280", 0, -1},
+{"285", "centre", f, f, f, "44", "61", 0, -1},
+{"286", "rayon", f, f, f, "44", "64", 0, -1},
+{"287", "altitude_maximale", f, f, f, "44", "67", 0, -1},
+{"295", "centre", f, f, f, "45", "61", 0, -1},
+{"296", "angle", f, f, f, "45", "297", 0, -1},
+{"305", "modeA", f, f, f, "46", "148", 0, -1}
+}
+operation ::= {
+{"53", "PlusTard", f, t, "9", "2", 0, -1},
+{"56", "LaPlusRecente", f, t, "9", "50", 0, -1},
+{"59", "Distance", f, t, "9", "64", 0, -1},
+{"70", "GetPoints", f, f, "22", "71", 0, -1},
+{"75", "SetAltitude", f, f, "23", "4", 0, -1},
+{"78", "Intersection", f, f, "23", "2", 0, -1},
+{"81", "Intersection", f, f, "24", "2", 0, -1},
+{"84", "Intersection", f, f, "25", "2", 0, -1},
+{"89", "Intersection", f, f, "26", "2", 0, -1},
+{"97", "SetStatut", f, f, "27", "4", 0, -1},
+{"99", "Intersection", f, f, "27", "2", 0, -1},
+{"104", "Intersection", f, f, "28", "2", 0, -1},
+{"113", "SetQNH", f, f, "29", "4", 0, -1},
+{"117", "SetPosition", f, f, "29", "4", 0, -1},
+{"120", "GetQNH", f, f, "29", "116", 0, -1},
+{"126", "Init", f, f, "30", "4", 0, -1},
+{"130", "ReadObstacles", f, f, "30", "4", 0, -1},
+{"133", "TraiterPistesRadar", f, f, "30", "4", 0, -1},
+{"138", "Init", f, f, "31", "4", 0, -1},
+{"141", "CalculeRisque", f, f, "31", "4", 0, -1},
+{"146", "ShowAlarm", f, f, "32", "4", 0, -1},
+{"150", "ShowObstacleArtificiel", f, f, "32", "4", 0, -1},
+{"154", "ShowZoneAeroport", f, f, "32", "4", 0, -1},
+{"159", "ShowRadarData", f, f, "32", "4", 0, -1},
+{"163", "ShowSegmentDePrediction", f, f, "32", "4", 0, -1},
+{"165", "ShowTime", f, f, "32", "4", 0, -1},
+{"174", "Init", f, f, "33", "4", 0, -1},
+{"177", "GetModeAs", f, f, "33", "178", 0, -1},
+{"179", "SetPosition", f, f, "33", "4", 0, -1},
+{"184", "RefreshPistes", f, f, "33", "4", 0, -1},
+{"189", "Set", f, f, "34", "4", 0, -1},
+{"198", "Init", f, f, "35", "4", 0, -1},
+{"201", "CalculeRisque", f, f, "35", "4", 0, -1},
+{"205", "Now", f, f, "36", "50", 0, -1},
+{"210", "Set", f, f, "37", "4", 0, -1},
+{"217", "Set", f, f, "38", "4", 0, -1},
+{"238", "Init", f, f, "39", "4", 0, -1},
+{"239", "SetObstacle", f, f, "39", "4", 0, -1},
+{"241", "TraiterPistesRadar", f, f, "39", "4", 0, -1},
+{"242", "OrdreDeTraitement", f, t, "39", "245", 0, -1},
+{"249", "Init", f, f, "40", "4", 0, -1},
+{"252", "SetPosition", f, f, "40", "4", 0, -1},
+{"257", "SetVitesse", f, f, "40", "4", 0, -1},
+{"262", "SetAlarm", f, f, "40", "4", 0, -1},
+{"265", "GetModeAs", f, f, "40", "178", 0, -1},
+{"266", "GetPositions", f, f, "40", "220", 0, -1},
+{"268", "GetVitesse", f, f, "40", "261", 0, -1},
+{"270", "DelPiste", f, f, "40", "4", 0, -1},
+{"272", "TypedAlarm", f, t, "40", "274", 0, -1},
+{"281", "DansPolygone", f, t, "43", "2", 0, -1},
+{"288", "DansCylindre", f, t, "44", "2", 0, -1},
+{"298", "DansCone", f, t, "45", "2", 0, -1},
+{"306", "Set", f, f, "46", "4", 0, -1},
+{"310", "GetmodeA", f, f, "46", "148", 0, -1},
+{"311", "ModeC2Altitude", f, t, "46", "67", 0, -1},
+{"314", "PositionFuture", f, t, "46", "321", 0, -1}
+}
+parameter ::= {
+{"54", "t1", "53", "50", 0, -1},
+{"55", "t2", "53", "50", 0, -1},
+{"57", "ts", "56", "58", 0, -1},
+{"60", "position", "59", "61", 0, -1},
+{"62", "station", "59", "63", 0, -1},
+{"76", "coordonnees", "75", "61", 0, -1},
+{"77", "altitude", "75", "67", 0, -1},
+{"79", "segment_de_prediction", "78", "46", 0, -1},
+{"82", "segment_de_prediction", "81", "46", 0, -1},
+{"85", "segment_de_prediction", "84", "46", 0, -1},
+{"90", "segment_de_prediction", "89", "46", 0, -1},
+{"98", "statut'", "97", "96", 0, -1},
+{"100", "segment_de_prediction", "99", "46", 0, -1},
+{"105", "segment_de_prediction", "104", "46", 0, -1},
+{"114", "station", "113", "63", 0, -1},
+{"115", "qnh", "113", "116", 0, -1},
+{"118", "station", "117", "63", 0, -1},
+{"119", "position", "117", "61", 0, -1},
+{"121", "position", "120", "61", 0, -1},
+{"127", "obstacle_information", "126", "128", 0, -1},
+{"129", "flight_information", "126", "128", 0, -1},
+{"131", "obstacle_information", "130", "128", 0, -1},
+{"132", "view", "130", "32", 0, -1},
+{"139", "radar_information", "138", "40", 0, -1},
+{"140", "view", "138", "32", 0, -1},
+{"142", "segment_de_prediction", "141", "46", 0, -1},
+{"143", "obstacle", "141", "144", 0, -1},
+{"147", "modeA", "146", "148", 0, -1},
+{"149", "obstacle", "146", "24", 0, -1},
+{"151", "centre", "150", "61", 0, -1},
+{"152", "rayon", "150", "64", 0, -1},
+{"153", "altitude_maximale", "150", "67", 0, -1},
+{"155", "centre", "154", "61", 0, -1},
+{"156", "rayon", "154", "64", 0, -1},
+{"157", "altitude_maximale", "154", "67", 0, -1},
+{"158", "rayon_au_sol", "154", "64", 0, -1},
+{"160", "modeA", "159", "148", 0, -1},
+{"161", "position", "159", "61", 0, -1},
+{"162", "modeC", "159", "67", 0, -1},
+{"164", "xy_queue, xy_tete", "163", "61", 0, -1},
+{"166", "t", "165", "50", 0, -1},
+{"175", "initialization_information", "174", "128", 0, -1},
+{"176", "view", "174", "32", 0, -1},
+{"180", "modeA", "179", "148", 0, -1},
+{"181", "temps", "179", "50", 0, -1},
+{"182", "position", "179", "61", 0, -1},
+{"183", "modeC", "179", "67", 0, -1},
+{"190", "centre'", "189", "61", 0, -1},
+{"191", "rayon'", "189", "64", 0, -1},
+{"192", "altitude_maximale'", "189", "67", 0, -1},
+{"193", "view'", "189", "32", 0, -1},
+{"199", "radar_information", "198", "40", 0, -1},
+{"200", "view", "198", "32", 0, -1},
+{"202", "segment_de_prediction", "201", "46", 0, -1},
+{"203", "obstacle", "201", "144", 0, -1},
+{"211", "centre'", "210", "61", 0, -1},
+{"212", "rayon'", "210", "64", 0, -1},
+{"213", "altitude_maximale'", "210", "67", 0, -1},
+{"214", "rayon_au_sol'", "210", "64", 0, -1},
+{"215", "view'", "210", "32", 0, -1},
+{"218", "modeA'", "217", "148", 0, -1},
+{"219", "positions", "217", "220", 0, -1},
+{"221", "bulletin_meteo", "217", "29", 0, -1},
+{"222", "view'", "217", "32", 0, -1},
+{"240", "obstacle", "239", "24", 0, -1},
+{"243", "obstacles", "242", "244", 0, -1},
+{"250", "initialization_information", "249", "128", 0, -1},
+{"251", "view", "249", "32", 0, -1},
+{"253", "modeA", "252", "148", 0, -1},
+{"254", "temps", "252", "50", 0, -1},
+{"255", "position", "252", "61", 0, -1},
+{"256", "modeC", "252", "67", 0, -1},
+{"258", "modeA", "257", "148", 0, -1},
+{"259", "temps", "257", "50", 0, -1},
+{"260", "vitesse", "257", "261", 0, -1},
+{"263", "modeA", "262", "148", 0, -1},
+{"264", "obstacle", "262", "144", 0, -1},
+{"267", "modeA", "266", "148", 0, -1},
+{"269", "modeA", "268", "148", 0, -1},
+{"271", "modeA", "270", "148", 0, -1},
+{"273", "obstacle", "272", "144", 0, -1},
+{"282", "mk_(x, y)", "281", "61", 0, -1},
+{"283", "sommets", "281", "280", 0, -1},
+{"289", "mk_(x1, y1)", "288", "61", 0, -1},
+{"290", "z1", "288", "67", 0, -1},
+{"291", "mk_(x2, y2)", "288", "61", 0, -1},
+{"292", "rayon", "288", "64", 0, -1},
+{"293", "z2", "288", "67", 0, -1},
+{"299", "mk_(x1, y1)", "298", "61", 0, -1},
+{"300", "z1", "298", "67", 0, -1},
+{"301", "mk_(x2, y2)", "298", "61", 0, -1},
+{"302", "rayon_au_sol", "298", "64", 0, -1},
+{"303", "angle", "298", "297", 0, -1},
+{"307", "modeA'", "306", "148", 0, -1},
+{"308", "positions", "306", "220", 0, -1},
+{"309", "bulletin_meteo", "306", "29", 0, -1},
+{"312", "modeC", "311", "67", 0, -1},
+{"313", "qnh", "311", "116", 0, -1},
+{"315", "mk_(x_passe, y_passe)", "314", "61", 0, -1},
+{"316", "z_passe", "314", "67", 0, -1},
+{"317", "mk_(x_actuel, y_actuel)", "314", "61", 0, -1},
+{"318", "z_actuel", "314", "67", 0, -1},
+{"319", "d", "314", "52", 0, -1},
+{"320", "vitesse", "314", "261", 0, -1}
+}
+association ::= {
+{"123", "", f, NULL, -1},
+{"135", "", f, NULL, -1},
+{"168", "", f, NULL, -1},
+{"171", "", f, NULL, -1},
+{"186", "", f, NULL, -1},
+{"195", "", f, NULL, -1},
+{"207", "", f, NULL, -1},
+{"224", "", f, NULL, -1},
+{"227", "", f, NULL, -1},
+{"230", "", f, NULL, -1},
+{"235", "", f, NULL, -1}
+}
+role ::= {
+{"124", "view", f, 0, "1", f, f, "32", "123", -1},
+{"125", "", f, 0, "1", f, f, "30", "123", -1},
+{"136", "pistes_radar", f, 0, "1", f, f, "40", "135", -1},
+{"137", "", f, 0, "1", f, f, "31", "135", -1},
+{"169", "view", f, 0, "1", f, f, "32", "168", -1},
+{"170", "", f, 0, "1", f, f, "33", "168", -1},
+{"172", "clock", f, 0, "1", f, f, "36", "171", -1},
+{"173", "", f, 0, "1", f, f, "33", "171", -1},
+{"187", "view", f, 0, "1", f, f, "32", "186", -1},
+{"188", "", f, 0, "1", f, f, "34", "186", -1},
+{"196", "view", f, 0, "1", f, f, "32", "195", -1},
+{"197", "", f, 0, "1", f, f, "35", "195", -1},
+{"208", "view", f, 0, "1", f, f, "32", "207", -1},
+{"209", "", f, 0, "1", f, f, "37", "207", -1},
+{"225", "pistes_radar", f, 0, "1", f, f, "40", "224", -1},
+{"226", "", f, 0, "1", f, f, "39", "224", -1},
+{"228", "bulletin_meteo", f, 0, "1", f, f, "29", "227", -1},
+{"229", "", f, 0, "1", f, f, "39", "227", -1},
+{"231", "terrain", f, 0, "1", f, f, "23", "230", -1},
+{"232", "", f, 0, "1", f, f, "39", "230", -1},
+{"236", "detecteur", f, 0, "1", f, f, "31", "235", -1},
+{"237", "", f, 0, "1", f, f, "39", "235", -1}
+}
+inheritance ::= {
+{"72", "9", NULL, f, {"22"}, -1},
+{"80", "9", NULL, f, {"23"}, -1},
+{"83", "9", NULL, f, {"24"}, -1},
+{"86", "24", NULL, f, {"25"}, -1},
+{"87", "44", NULL, f, {"25"}, -1},
+{"91", "24", NULL, f, {"26"}, -1},
+{"92", "43", NULL, f, {"26"}, -1},
+{"101", "24", NULL, f, {"27"}, -1},
+{"102", "43", NULL, f, {"27"}, -1},
+{"106", "24", NULL, f, {"28"}, -1},
+{"107", "44", NULL, f, {"28"}, -1},
+{"108", "45", NULL, f, {"28"}, -1},
+{"122", "9", NULL, f, {"29"}, -1},
+{"134", "39", NULL, f, {"30"}, -1},
+{"145", "9", NULL, f, {"31"}, -1},
+{"167", "9", NULL, f, {"32"}, -1},
+{"185", "40", NULL, f, {"33"}, -1},
+{"194", "25", NULL, f, {"34"}, -1},
+{"204", "31", NULL, f, {"35"}, -1},
+{"206", "9", NULL, f, {"36"}, -1},
+{"216", "28", NULL, f, {"37"}, -1},
+{"223", "46", NULL, f, {"38"}, -1},
+{"246", "9", NULL, f, {"39"}, -1},
+{"275", "9", NULL, f, {"40"}, -1},
+{"278", "9", NULL, f, {"42"}, -1},
+{"284", "9", NULL, f, {"43"}, -1},
+{"294", "9", NULL, f, {"44"}, -1},
+{"304", "9", NULL, f, {"45"}, -1},
+{"322", "22", NULL, f, {"46"}, -1},
+{"323", "42", NULL, f, {"46"}, -1}
+}
+note ::= {
+{"9", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"22", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"23", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"23", "Initializations", "init mosaique == mosaique := {|->}"},
+{"24", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"25", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"26", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"27", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"27", "Invariants", "inv niveau_minimal, niveau_maximal == niveau_minimal < niveau_maximal"},
+{"28", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"28", "Invariants", "inv objectstate == rayon_au_sol < rayon and Cylindrecentre = Conecentre"},
+{"29", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"29", "Synchronization", "per GetQNH => \\#fin (SetQNH) >= 1"},
+{"29", "Invariants", "inv objectstate == position_de_station <> {|->}"},
+{"30", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"31", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"32", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"33", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"34", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"35", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"36", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"37", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"38", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"39", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"39", "Thread", "periodic (10)(TraiterPistesRadar)"},
+{"39", "Initializations", "init obstacles == obstacles := {}"},
+{"40", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"40", "Initializations", "init pistes == pistes := {|->}"},
+{"42", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"43", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"43", "Invariants", "inv sommets == card sommets >= 3"},
+{"44", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"45", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"45", "Invariants", "inv angle == angle <= 90"},
+{"46", "Created", "-- Created by The VDM++ Toolbox's pretty-printer V1.2
+-- (C)1994 Afrodite consortium."},
+{"10", "Type-definition", "Coordonnee * Coordonnee"},
+{"11", "Type-definition", "nat
+inv c == c <= 32"},
+{"12", "Type-definition", "nat * nat * nat"},
+{"13", "Type-definition", "nat"},
+{"14", "Type-definition", "real"},
+{"15", "Type-definition", "token"},
+{"16", "Type-definition", "[<terrain>|<obstacle_artificiel>|<relief_particulier>|<zone_militair>|<zone_aeroport>]"},
+{"17", "Type-definition", "real"},
+{"18", "Composite-type", "compose StationMeteo of
+   token
+end"},
+{"19", "Type-definition", "real
+inv d == 0 <= d and d <= 360"},
+{"20", "Type-definition", "nat"},
+{"21", "Type-definition", "nat"},
+{"41", "Composite-type", "compose PisteInfo of
+   position: Coordonnees
+   modeC: Pieds
+   vitesse: [KT]
+   alarmes: set of Alarme
+end"},
+{"47", "Value-expression", "1"},
+{"49", "Value-expression", "1"},
+{"51", "Value-expression", "10*Secondes"},
+{"276", "Value-expression", "mk_(100, 100, 100)"},
+{"277", "Value-expression", "20"},
+{"53", "Body", "t1 > t2"},
+{"56", "Precondition", "pre ts <> {}"},
+{"56", "Body", "let t in set ts be st not exists t' in set ts & t <> t' and PlusTard (t', t) in
+   t"},
+{"59", "Body", "undefined"},
+{"70", "Return-value", "points"},
+{"75", "Body", "mosaique := mosaique ++ {coordonnees |-> altitude}"},
+{"78", "Body", "def points_de_vecteur = segment_de_prediction!GetPoints () in
+   if points_de_vecteur = {}
+   then return false
+   else return (exists mk_(xy, z) in set points_de_vecteur & z <= 1)"},
+{"84", "Body", "def points_de_vecteur = segment_de_prediction!GetPoints () in
+   return (exists mk_(xy, z) in set points_de_vecteur & DansCylindre (xy, z, centre, rayon, altitude_maximale))"},
+{"89", "Body", "def points_de_vecteur = segment_de_prediction!GetPoints () in
+   return (exists mk_(xy, z) in set points_de_vecteur & DansPolygone (xy, sommets) and z <= altitude_maximale)"},
+{"97", "Body", "statut := statut'"},
+{"99", "Body", "def points_de_vecteur = segment_de_prediction!GetPoints () in
+   return (statut = <zone_active> and exists mk_(xy, z) in set points_de_vecteur & DansPolygone (xy, sommets) and z >= niveau_minimal and z <= niveau_maximal)"},
+{"104", "Body", "def points_de_vecteur = segment_de_prediction!GetPoints () in
+   return (exists mk_(xy, z) in set points_de_vecteur & DansCylindre (xy, z, Cylindrecentre, rayon, altitude_maximale) and not DansCone (xy, z, Conecentre, rayon_au_sol, angle))"},
+{"113", "Precondition", "pre station in set dom position_de_station"},
+{"113", "Body", "qnh_locale := qnh_locale ++ {position |-> qnh | position: Coordonnees & not exists station' in set dom position_de_station & Distance (position, station') < Distance (position, station)}"},
+{"117", "Body", "if station in set dom position_de_station
+then position_de_station := position_de_station ++ {station |-> position}
+else position_de_station (station) := position"},
+{"120", "Body", "return 1013.25"},
+{"126", "Body", "(  view := View!new;
+   pistes_radar := VisualPistesRadar!new;
+   pistes_radar!Init (flight_information, view);
+   bulletin_meteo := BulletinMeteo!new;
+   terrain := Terrain!new;
+   self!ReadObstacles (obstacle_information, view);
+   detecteur := VisualDetecteur!new;
+   detecteur!Init (pistes_radar, view)
+)"},
+{"133", "Body", "def modeAs = pistes_radar!GetModeAs () in
+   let obstacles = OrdreDeTraitement ({terrain} union obstacles) in
+      for all modeA in set modeAs do
+         def segment_de_prediction = VisualSegmentDePrediction!new;
+             positions = pistes_radar!GetPositions (modeA) in
+            if card dom positions >= 2
+            then (  segment_de_prediction!Set (modeA, positions, bulletin_meteo, view);
+                    for all i in set inds obstacles do
+                       detecteur!CalculeRisque (segment_de_prediction, obstacles (i))
+                 )
+            else skip"},
+{"141", "Body", "def modeA: ModeA = segment_de_prediction!GetmodeA ();
+    risque_detecte: boolean = obstacle!Intersection (segment_de_prediction) in
+   if risque_detecte
+   then pistes_radar!SetAlarm (modeA, obstacle)
+   else skip"},
+{"177", "Body", "(  self!RefreshPistes ();
+   def modeAs = self!PistesRadarGetModeAs () in
+      return modeAs
+)"},
+{"179", "Body", "(  view!ShowRadarData (modeA, position, modeC);
+   self!PistesRadarSetPosition (modeA, temps, position, modeC)
+)"},
+{"189", "Body", "(  centre := centre';
+   rayon := rayon';
+   altitude_maximale := altitude_maximale';
+   view := view';
+   view!ShowObstacleArtificiel (centre, rayon, altitude_maximale)
+)"},
+{"201", "Body", "def modeA: ModeA = segment_de_prediction!GetmodeA ();
+    risque_detecte: boolean = obstacle!Intersection (segment_de_prediction) in
+   if risque_detecte
+   then (  pistes_radar!SetAlarm (modeA, obstacle);
+           view!ShowAlarm (modeA, obstacle)
+        )
+   else skip"},
+{"210", "Body", "(  Cylindrecentre := centre';
+   Conecentre := centre';
+   rayon := rayon';
+   altitude_maximale := altitude_maximale';
+   rayon_au_sol := rayon_au_sol';
+   view := view';
+   view!ShowZoneAeroport (Cylindrecentre, rayon, altitude_maximale, rayon_au_sol)
+)"},
+{"217", "Precondition", "pre card dom positions >= 2"},
+{"217", "Body", "(  self!SegmentDePredictionSet (modeA', positions, bulletin_meteo);
+   view'!ShowSegmentDePrediction (xy_queue, xy_tete)
+)"},
+{"238", "Body", "(  pistes_radar := PistesRadar!new;
+   bulletin_meteo := BulletinMeteo!new;
+   terrain := Terrain!new;
+   detecteur := Detecteur!new;
+   topology [ post detecteur.pistes_radar = pistes_radar ]
+)"},
+{"239", "Body", "obstacles := obstacles union {obstacle}"},
+{"241", "Body", "def modeAs = pistes_radar!GetModeAs () in
+   let obstacles = OrdreDeTraitement ({terrain} union obstacles) in
+      for all modeA in set modeAs do
+         def segment_de_prediction = SegmentDePrediction!new;
+             positions = pistes_radar!GetPositions (modeA) in
+            if card dom positions >= 2
+            then (  segment_de_prediction!Set (modeA, positions, bulletin_meteo);
+                    for all i in set inds obstacles do
+                       detecteur!CalculeRisque (segment_de_prediction, obstacles (i))
+                 )
+            else skip"},
+{"242", "Body", "if obstacles = {}
+then []
+else let obstacle in set obstacles be st true in
+        [obstacle] ^ OrdreDeTraitement (obstacles\\{obstacle})"},
+{"252", "Body", "let piste = {temps |-> mk_PisteInfo(position, modeC, nil, {})} in
+   if modeA in set dom pistes
+   then pistes := pistes ++ {modeA |-> pistes (modeA) ++ piste}
+   else pistes := pistes merge {modeA |-> piste}"},
+{"257", "Precondition", "pre modeA in set dom pistes and temps in set dom pistes (modeA)"},
+{"257", "Body", "let ma = pistes (modeA) in
+   let mk_PisteInfo(p, m, -, a) = ma (temps) in
+      let newp = mk_PisteInfo(p, m, vitesse, a) in
+         pistes := pistes ++ {modeA |-> ma ++ {temps |-> newp}}"},
+{"262", "Precondition", "pre modeA in set dom pistes"},
+{"262", "Body", "let t = LaPlusRecente (dom pistes (modeA)),
+    alarme = TypedAlarm (obstacle) in
+   let ma = pistes (modeA) in
+      let mk_PisteInfo(p, m, v, alarmes) = ma (t) in
+         let newp = mk_PisteInfo(p, m, v, alarmes union {alarme}) in
+            pistes := pistes ++ {modeA |-> ma ++ {t |-> newp}}"},
+{"265", "Body", "return dom pistes"},
+{"266", "Precondition", "pre modeA in set dom pistes"},
+{"266", "Body", "let piste = pistes (modeA) in
+   return {t |-> mk_(piste (t).position, piste (t).modeC) | t in set dom piste & true}"},
+{"268", "Precondition", "pre modeA in set dom pistes"},
+{"268", "Body", "let piste = pistes (modeA),
+    t = LaPlusRecente (dom piste) in
+   return piste (t).vitesse"},
+{"270", "Precondition", "pre modeA in set dom pistes"},
+{"270", "Body", "pistes := {modeA} :> pistes"},
+{"272", "Body", "cases true:
+   isofclass (Terrain, obstacle) -> <terrain>,
+   isofclass (ObstacleArtificiel, obstacle) -> <obstacle_artificiel>,
+   isofclass (ReliefParticulier, obstacle) -> <relief_particulier>,
+   isofclass (ZoneMilitaire, obstacle) -> <zone_militair>,
+   isofclass (ZoneAeroport, obstacle) -> <zone_aeroport>,
+   others -> nil
+end"},
+{"281", "Body", "undefined"},
+{"288", "Body", "(abs (x1-x2)exp2+abs (y1-y2)exp2)exp0.5 <= rayon/NMperCoordonnee and z1 <= z2"},
+{"298", "Body", "(abs (x1-x2)exp2+abs (y1-y2)exp2)exp0.5 <= rayon_au_sol/NMperCoordonnee"},
+{"306", "Precondition", "pre card dom positions >= 2"},
+{"306", "Body", "let temps_actuel = LaPlusRecente (dom positions),
+    temps_passe = LaPlusRecente (dom positions\\{temps_actuel}),
+    mk_(xy_actuel, modeC_actuel) = positions (temps_actuel),
+    mk_(xy_passe, modeC_passe) = positions (temps_passe) in
+   def qnh_xy_actuel = bulletin_meteo!GetQNH (xy_actuel);
+       qnh_xy_passe = bulletin_meteo!GetQNH (xy_passe) in
+      let z_actuel = ModeC2Altitude (modeC_actuel, qnh_xy_actuel),
+          z_passe = ModeC2Altitude (modeC_passe, qnh_xy_passe),
+          mk_(xy_prevu, z_prevu) = PositionFuture (xy_passe, z_passe, xy_actuel, z_actuel, DureeExtrapolation, VitesseMaximale) in
+         (  modeA := modeA';
+            xy_queue := xy_actuel;
+            z_queue := z_actuel;
+            xy_tete := xy_prevu;
+            z_tete := z_prevu
+         )"},
+{"310", "Body", "return modeA"},
+{"311", "Body", "modeC-27.5*(1013.25-qnh)"},
+{"314", "Body", "let c = mk_(2*x_actuel-x_passe, 2*y_actuel-y_passe),
+    p = 2*z_actuel-z_passe in
+   mk_(c, p)"}
+}
+
+module ::= {
+{"323", "Inheritance View : 1", 1, 0, -1}
+}
+entity_position ::= {
+{"46", "323", {680, 228, 800, 248}},
+{"45", "323", {400, 60, 520, 80}},
+{"44", "323", {400, 102, 520, 122}},
+{"43", "323", {400, 144, 520, 164}},
+{"42", "323", {400, 228, 520, 248}},
+{"40", "323", {400, 270, 520, 290}},
+{"39", "323", {400, 312, 520, 332}},
+{"38", "323", {960, 228, 1080, 248}},
+{"37", "323", {960, 60, 1080, 80}},
+{"36", "323", {400, 354, 520, 374}},
+{"35", "323", {680, 438, 800, 458}},
+{"34", "323", {960, 102, 1080, 122}},
+{"33", "323", {680, 270, 800, 290}},
+{"32", "323", {400, 396, 520, 416}},
+{"31", "323", {400, 438, 520, 458}},
+{"30", "323", {680, 312, 800, 332}},
+{"29", "323", {400, 480, 520, 500}},
+{"28", "323", {680, 60, 800, 80}},
+{"27", "323", {680, 144, 800, 164}},
+{"26", "323", {680, 186, 800, 206}},
+{"25", "323", {680, 102, 800, 122}},
+{"24", "323", {400, 522, 520, 542}},
+{"23", "323", {400, 564, 520, 584}},
+{"22", "323", {400, 606, 520, 626}},
+{"9", "323", {120, 60, 240, 80}},
+}
+inheritance_position ::= {
+{"223", "323", "46", {800, 238, 870, 238}},
+{"223", "323", "38", {870, 238, 870, 238, 960, 238}},
+{"108", "323", "45", {520, 70, 590, 70}},
+{"108", "323", "28", {590, 70, 590, 70, 680, 70}},
+{"87", "323", "44", {520, 112, 590, 112}},
+{"87", "323", "25", {590, 112, 590, 112, 680, 112}},
+{"102", "323", "43", {520, 154, 590, 154}},
+{"102", "323", "27", {590, 154, 590, 154, 680, 154}},
+{"92", "323", "43", {520, 154, 590, 154}},
+{"92", "323", "26", {590, 154, 590, 196, 680, 196}},
+{"323", "323", "42", {520, 238, 590, 238}},
+{"323", "323", "46", {590, 238, 590, 238, 680, 238}},
+{"185", "323", "40", {520, 280, 590, 280}},
+{"185", "323", "33", {590, 280, 590, 280, 680, 280}},
+{"134", "323", "39", {520, 322, 590, 322}},
+{"134", "323", "30", {590, 322, 590, 322, 680, 322}},
+{"204", "323", "31", {520, 448, 590, 448}},
+{"204", "323", "35", {590, 448, 590, 448, 680, 448}},
+{"216", "323", "28", {800, 70, 870, 70}},
+{"216", "323", "37", {870, 70, 870, 70, 960, 70}},
+{"194", "323", "25", {800, 112, 870, 112}},
+{"194", "323", "34", {870, 112, 870, 112, 960, 112}},
+{"304", "323", "9", {240, 70, 310, 70}},
+{"304", "323", "45", {310, 70, 310, 70, 400, 70}},
+{"294", "323", "9", {240, 70, 310, 70}},
+{"294", "323", "44", {310, 70, 310, 112, 400, 112}},
+{"284", "323", "9", {240, 70, 310, 70}},
+{"284", "323", "43", {310, 70, 310, 154, 400, 154}},
+{"278", "323", "9", {240, 70, 310, 70}},
+{"278", "323", "42", {310, 70, 310, 238, 400, 238}},
+{"275", "323", "9", {240, 70, 310, 70}},
+{"275", "323", "40", {310, 70, 310, 280, 400, 280}},
+{"246", "323", "9", {240, 70, 310, 70}},
+{"246", "323", "39", {310, 70, 310, 322, 400, 322}},
+{"206", "323", "9", {240, 70, 310, 70}},
+{"206", "323", "36", {310, 70, 310, 364, 400, 364}},
+{"167", "323", "9", {240, 70, 310, 70}},
+{"167", "323", "32", {310, 70, 310, 406, 400, 406}},
+{"145", "323", "9", {240, 70, 310, 70}},
+{"145", "323", "31", {310, 70, 310, 448, 400, 448}},
+{"122", "323", "9", {240, 70, 310, 70}},
+{"122", "323", "29", {310, 70, 310, 490, 400, 490}},
+{"83", "323", "9", {240, 70, 310, 70}},
+{"83", "323", "24", {310, 70, 310, 532, 400, 532}},
+{"80", "323", "9", {240, 70, 310, 70}},
+{"80", "323", "23", {310, 70, 310, 574, 400, 574}},
+{"72", "323", "9", {240, 70, 310, 70}},
+{"72", "323", "22", {310, 70, 310, 616, 400, 616}},
+}
+module ::= {
+{"324", "Inheritance View : 2", 2, 0, -1}
+}
+entity_position ::= {
+{"46", "324", {400, 228, 520, 248}},
+{"44", "324", {120, 60, 240, 80}},
+{"28", "324", {400, 60, 520, 80}},
+{"27", "324", {400, 102, 520, 122}},
+{"26", "324", {400, 144, 520, 164}},
+{"25", "324", {400, 186, 520, 206}},
+{"24", "324", {120, 102, 240, 122}},
+{"22", "324", {120, 228, 240, 248}},
+}
+inheritance_position ::= {
+{"107", "324", "44", {240, 70, 310, 70}},
+{"107", "324", "28", {310, 70, 310, 70, 400, 70}},
+{"101", "324", "24", {240, 112, 310, 112}},
+{"101", "324", "27", {310, 112, 310, 112, 400, 112}},
+{"91", "324", "24", {240, 112, 310, 112}},
+{"91", "324", "26", {310, 112, 310, 154, 400, 154}},
+{"86", "324", "24", {240, 112, 310, 112}},
+{"86", "324", "25", {310, 112, 310, 196, 400, 196}},
+{"322", "324", "22", {240, 238, 310, 238}},
+{"322", "324", "46", {310, 238, 310, 238, 400, 238}},
+}
+module ::= {
+{"325", "Inheritance View : 3", 3, 0, -1}
+}
+entity_position ::= {
+{"28", "325", {400, 60, 520, 80}},
+{"24", "325", {120, 60, 240, 80}},
+}
+inheritance_position ::= {
+{"106", "325", "24", {240, 70, 310, 70}},
+{"106", "325", "28", {310, 70, 310, 70, 400, 70}},
+}
+module ::= {
+{"326", "Class SegmentDePrediction View", 4, 0, -1},
+{"327", "Class Cone View", 5, 0, -1},
+{"328", "Class Cylindre View", 6, 0, -1},
+{"329", "Class Polygone View", 7, 0, -1},
+{"330", "Class Parametres View", 8, 0, -1},
+{"331", "Class PistesRadar View", 9, 0, -1},
+{"332", "Class WorkSpace View", 10, 0, -1},
+{"333", "Class VisualSegmentDePrediction View", 11, 0, -1},
+{"334", "Class VisualZoneAeroport View", 12, 0, -1},
+{"335", "Class Clock View", 13, 0, -1},
+{"336", "Class VisualDetecteur View", 14, 0, -1},
+{"337", "Class VisualObstacleArtificiel View", 15, 0, -1},
+{"338", "Class VisualPistesRadar View", 16, 0, -1},
+{"339", "Class View View", 17, 0, -1},
+{"340", "Class Detecteur View", 18, 0, -1},
+{"341", "Class VisualWorkSpace View", 19, 0, -1},
+{"342", "Class BulletinMeteo View", 20, 0, -1},
+{"343", "Class ZoneAeroport View", 21, 0, -1},
+{"344", "Class ZoneMilitaire View", 22, 0, -1},
+{"345", "Class ReliefParticulier View", 23, 0, -1},
+{"346", "Class ObstacleArtificiel View", 24, 0, -1},
+{"347", "Class Obstacle View", 25, 0, -1},
+{"348", "Class Terrain View", 26, 0, -1},
+{"349", "Class Vecteur3D View", 27, 0, -1},
+{"350", "Class MSAWTypes View", 28, 0, -1} 
+}
+entity_position ::= {
+{"46", "326", {120, 60, 420, 160}},
+{"45", "327", {120, 60, 420, 130}},
+{"44", "328", {120, 60, 420, 145}},
+{"43", "329", {120, 60, 420, 115}},
+{"42", "330", {120, 60, 420, 115}},
+{"40", "331", {120, 60, 420, 235}},
+{"39", "331", {720, 60, 840, 95}},
+{"31", "331", {720, 105, 840, 140}},
+{"39", "332", {120, 60, 420, 325}},
+{"31", "332", {720, 60, 840, 95}},
+{"23", "332", {720, 105, 840, 140}},
+{"29", "332", {720, 150, 840, 185}},
+{"40", "332", {720, 195, 840, 230}},
+{"38", "333", {120, 60, 420, 100}},
+{"37", "334", {120, 60, 420, 145}},
+{"32", "334", {720, 60, 840, 95}},
+{"36", "335", {120, 60, 420, 145}},
+{"33", "335", {720, 60, 840, 95}},
+{"35", "336", {120, 60, 420, 145}},
+{"32", "336", {720, 60, 840, 95}},
+{"34", "337", {120, 60, 420, 145}},
+{"32", "337", {720, 60, 840, 95}},
+{"33", "338", {120, 60, 420, 205}},
+{"36", "338", {720, 60, 840, 95}},
+{"32", "338", {720, 105, 840, 140}},
+{"32", "339", {120, 60, 420, 385}},
+{"37", "339", {720, 60, 840, 95}},
+{"35", "339", {720, 105, 840, 140}},
+{"34", "339", {720, 150, 840, 185}},
+{"33", "339", {720, 195, 840, 230}},
+{"30", "339", {720, 240, 840, 275}},
+{"31", "340", {120, 60, 420, 205}},
+{"39", "340", {720, 60, 840, 95}},
+{"40", "340", {720, 105, 840, 140}},
+{"30", "341", {120, 60, 420, 145}},
+{"32", "341", {720, 60, 840, 95}},
+{"29", "342", {120, 60, 420, 160}},
+{"39", "342", {720, 60, 840, 95}},
+{"28", "343", {120, 60, 420, 115}},
+{"27", "344", {120, 60, 420, 160}},
+{"26", "345", {120, 60, 420, 115}},
+{"25", "346", {120, 60, 420, 100}},
+{"24", "347", {120, 60, 420, 100}},
+{"23", "348", {120, 60, 420, 145}},
+{"39", "348", {720, 60, 840, 95}},
+{"22", "349", {120, 60, 420, 160}},
+{"9", "350", {120, 60, 420, 175}}
+}
+entity_position ::= {
+{"224", "331", {420, 70, 570, 70, 570, 70, 720, 70}},
+{"135", "331", {420, 115, 570, 115, 570, 115, 720, 115}},
+{"235", "332", {720, 70, 570, 70, 570, 70, 420, 70}},
+{"230", "332", {720, 115, 570, 115, 570, 115, 420, 115}},
+{"227", "332", {720, 160, 570, 160, 570, 160, 420, 160}},
+{"224", "332", {720, 205, 570, 205, 570, 205, 420, 205}},
+{"207", "334", {720, 70, 570, 70, 570, 70, 420, 70}},
+{"171", "335", {420, 70, 570, 70, 570, 70, 720, 70}},
+{"195", "336", {720, 70, 570, 70, 570, 70, 420, 70}},
+{"186", "337", {720, 70, 570, 70, 570, 70, 420, 70}},
+{"171", "338", {720, 70, 570, 70, 570, 70, 420, 70}},
+{"168", "338", {720, 115, 570, 115, 570, 115, 420, 115}},
+{"207", "339", {420, 70, 570, 70, 570, 70, 720, 70}},
+{"195", "339", {420, 115, 570, 115, 570, 115, 720, 115}},
+{"186", "339", {420, 160, 570, 160, 570, 160, 720, 160}},
+{"168", "339", {420, 205, 570, 205, 570, 205, 720, 205}},
+{"123", "339", {420, 250, 570, 250, 570, 250, 720, 250}},
+{"235", "340", {420, 70, 570, 70, 570, 70, 720, 70}},
+{"135", "340", {720, 115, 570, 115, 570, 115, 420, 115}},
+{"123", "341", {720, 70, 570, 70, 570, 70, 420, 70}},
+{"227", "342", {420, 70, 570, 70, 570, 70, 720, 70}},
+{"230", "348", {420, 70, 570, 70, 570, 70, 720, 70}},
+}
+agregation_position ::= {
+}
+base ::= {
+{351, -1, 0, 0, 0, 0, f, f, 0,  NULL}
+}
+END

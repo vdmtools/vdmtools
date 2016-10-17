@@ -1,0 +1,22 @@
+dlmodule CYLIO
+  imports
+    from CYLINDER
+      types
+        CircCyl
+
+   exports
+     functions
+       ExtGetCylinder : () -> CYLINDER`CircCyl
+   
+     operations
+       ExtShowCircCylVol : CYLINDER`CircCyl * real ==> ()
+
+   uselib
+      "cylio.dll"
+
+end CYLIO
+
+
+
+
+

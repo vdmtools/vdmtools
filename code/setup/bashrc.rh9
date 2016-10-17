@@ -1,0 +1,40 @@
+# .bashrc
+
+# User specific aliases and functions
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+	. /etc/bashrc
+fi
+
+export EDITOR=vim
+
+#export http_proxy=http://<USER>:<PASS>@<SERVER>:<PORT>
+export http_proxy=http://133.166.197.100:8089
+export PATH=/sbin:/usr/sbin:${PATH}:.
+
+# for java, ant
+export JDKHOME=/usr/java/latest
+export ANTHOME=/usr/local/apache-ant-1.8.4
+export PATH=${JDKHOME}/bin:${ANTHOME}/bin:${PATH}
+
+export JAVACCHOME=/usr/local/javacc-5.0
+
+# tools version
+export TBVER=8.3.2
+
+# for Qt
+export QTVERSION=3
+export QTDIR=/usr/lib/qt-3.1
+
+# for omniORB
+export CORBAHOME=/usr/local/omniORB
+export LD_LIBRARY_PATH=${CORBAHOME}/lib:${LD_LIBRARY_PATH}
+
+# for VDM
+export OSTYPE=`uname`
+
+export TBDIR=${HOME}/vdmtools
+export POWERTEST=${TBDIR}/test/powertest/powertest
+export POWERTESTDIR=${HOME}/powertest
+export TESTDIR=${POWERTESTDIR}

@@ -1,0 +1,16 @@
+r main.rtf
+r buffer.rtf
+r consumer.rtf
+r producer.rtf
+r io.rtf
+r Integer.rtf
+tc main.rtf
+tc buffer.rtf
+tc consumer.rtf
+tc producer.rtf
+tc io.rtf
+tc Integer.rtf
+i
+cr t := new Main()
+d t.run()
+tcov write vdm.tc

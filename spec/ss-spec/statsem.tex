@@ -1,0 +1,286 @@
+\documentclass[a4paper,dvips]{article}
+\usepackage[dvips]{color}
+\usepackage{float}
+\usepackage{epsf}
+\usepackage{vdmsl-2e}
+\usepackage{longtable}
+\usepackage{alltt}
+\usepackage{makeidx}
+\usepackage{ifad}
+
+\definecolor{covered}{rgb}{0,0,0}      %black
+%\definecolor{not_covered}{gray}{0.5}   %gray for previewing
+\definecolor{not_covered}{gray}{0.6}   %gray for printing
+%\definecolor{not_covered}{rgb}{1,0,0}  %red
+
+\floatstyle{plain}
+\restylefloat{figure}
+
+\def\insertfig#1#2#3#4{ % Filename, epsfxsize, caption,  label
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\epsfxsize=#2
+\epsffile{#1}
+\end{center}
+\caption{#3} #4 
+\end{figure}
+}
+
+\newcommand{\StateDef}[1]{{\bf #1}}
+\newcommand{\TypeDef}[1]{{\bf #1}}
+\newcommand{\TypeOcc}[1]{{\it #1}}
+\newcommand{\FuncDef}[1]{{\bf #1}}
+\newcommand{\FuncOcc}[1]{#1}
+\newcommand{\NonFuncOcc}[1]{}
+\newcommand{\ModDef}[1]{}
+
+\newcommand{\vdmslpp}[2]{%
+#ifdef VDMSL
+#1
+#endif VDMSL
+#ifdef VDMPP
+#2
+#endif VDMPP
+}
+
+\def\vdmsl{VDM-SL}
+\def\vdmpp{VDM$^{++}$}
+
+#ifdef VDMSL
+\def\slpp{\vdmsl}
+\def\otherslpp{\vdmpp}
+#endif VDMSL
+#ifdef VDMPP
+\def\slpp{\vdmpp}
+\def\otherslpp{\vdmsl}
+#endif VDMPP
+
+\makeindex
+\begin{document}
+
+\special{!userdict begin /bop-hook{gsave 220 30 translate
+0 rotate /Times-Roman findfont 21 scalefont setfont
+0 0 moveto (CONFIDENTIAL) show grestore}def end}
+
+\docdef{Specification of the \slpp\ Static Semantics Checker}
+{VDMTools Group}
+{September, 2005}
+#ifdef VDMSL
+{VDMSL-3.8.7}
+#endif VDMSL
+#ifdef VDMPP
+{VDM++ 6.8.7}
+#endif VDMPP
+{Technical}
+{Intermediate}
+{Confidential}
+{}
+{\copyright\ Kyushu University}
+{\item[V1.0] First version
+ \item[V1.1] Exception handling and other parts of VDM-SL which were
+             not treated before have now been taken into account.
+ \item[V1.2] Implementation modules are now taken into
+   account. Well-formedness of parameterised modules has been
+   tightened up and some bugs have been fixed.
+ \item[V1.3] Prepared for December 1996 release.
+} {}
+\renewcommand{\thepage}{\roman{page}}
+
+\tableofcontents
+\newpage
+\mbox{}
+\newpage
+\renewcommand{\thepage}{\arabic{page}}
+\setcounter{page}{1}
+
+\section{Introduction}
+
+This document contains a specification of the static semantics of 
+CSK \slpp. The specification is
+written in CSK \vdmsl\ which corresponds to standard \vdmsl\
+ \cite{BSIVDM92b} with a simple modular
+extension as it is defined in \cite{deBruin93}\footnote{In this
+document only simple imports (with renaming of constructs) and exports
+are used.}. The specification is written in the executable
+subset of VDM-SL which is supported by an interpreter (and debugger)
+from the CSK VDM-SL Toolbox. Thus, this entire document is used in a
+{\tt web} like fashion (see e.g.\ \cite{Smith&91}). This also means
+that the specification (or to be more precise this
+document) have been tested with a test suite with approximately 1000
+test cases\footnote{In addition, the corresponding implementation of
+the \otherslpp{} type checker have been tested with the same test suite.}.
+The test suite itself (or the test module) is not included in this
+document, but interested readers can get more information about it
+from the authors.
+
+This document is ordered according to the modular ordering which have
+been chosen for the specification of the static semantics of \slpp.
+However, prior to the actual modules this introduction is followed by
+a section which gives an overview
+of the module structure. The purpose of this section is to
+introduce the chosen structuring and to enable the reader to find the
+appropriate module for answering any specific questions.
+
+\section{Module structure}
+
+In this section we provide an overview of the structure
+of the modules which are used in the static semantics for \slpp.
+
+A sketch of the module structure and their relationships are presented
+in figure~\ref{overview}. Parts of this figure will be used in the
+explanation of the individual modules in the following sections. In
+this section we will briefly explain the symbols which have been used and the
+structuring which have been chosen.
+
+All boxes indicates modules; the dotted module (AS)
+is not present in this document. AS contains the abstract syntax for
+\slpp.
+The arcs between the boxes
+indicates dependencies between the modules (in form of imports). A few
+minor dependencies which do not help in the understanding of the
+structuring have been omitted from figure~\ref{overview}, but these
+minor dependencies are explicitly mentioned in the text.
+
+Even though that there is a natural hierarchical order which is used
+in the figure, it can be seen that mutual dependencies between the
+modules occur. The three modules (AS, REP, and ERR) in the
+bottom of the figure are imported by all the other modules (except
+that ERR is not imported by the TYPE module).
+The module in the margin VCM
+is not considered to belong to the hierarchy at all because it
+simply is used to indicate the interface to
+the Version Control Manager. Thus, this module is not a part of the
+static semantics.
+
+\insertfig{overview.ps}{13cm}{Module overview}{\label{overview}} 
+
+In the following we will explain the overall role of each individual
+module in the hierarchical order.
+
+\begin{description}
+\item[DEF:] The main module checks the well-formedness of definitions
+     which can appear at top-level (i.e.\ in the definition of a class).
+     The DEF module simply exports its operation $wf-Type$ to the STMT
+     module and the PAT module (a minor dependency) to check the
+     well-formedness of locally used types. DEF mainly imports
+     constructs from the modules at the second level of the hierarchy
+     (STMT, EXPR and PAT), but it also uses a few constructs from the
+     third level modules TYPE and ENV.
+\item[STMT:] The statement module checks the well-formedness of
+     statements which can be used as body of method definitions. The
+     STMT module exports its top-level operation $wf-Stmt$ to
+     the DEF module. A minor dependency is also
+     present because $wf-Stmt$ is used by a single operation in the AUX
+     module. STMT imports constructs from the other second level
+     modules (EXPR and PAT), but it also import constructs from all
+     third level modules (TYPE, AUX and ENV).
+\item[EXPR:] The expression module checks the well-formedness of
+     expressions. The EXPR module exports its main operation $wf-Expr$ (and
+     a few other minor other constructs) to the DEF module and the STMT
+     module (a minor dependency is also present
+     because a pattern can contain an expression and thus one
+     operation in PAT uses $wf-Expr$). EXPR imports constructs from
+     PAT and all the third level modules (TYPE, AUX and ENV).
+\item[PAT:] The pattern module checks the well-formedness of patterns
+     and bindings. The PAT module exports its constructs to the DEF module
+     and the other second level modules (STMT and EXPR). PAT imports
+     constructs from all the third level modules (TYPE, AUX and
+     ENV). As explained above there is also a minor dependency to the EXPR
+     module.
+\item[TYPE:] The well-formedness classification module is called TYPE
+     because it is responsible for whether types are compatible with
+     each other depending upon whether possibly or definitely
+     well-formedness is being checked. No error messages are given
+     from this module's operations. If two types are not compatible
+     the calling operation will always be responsible for taking an
+     appropriate action. The TYPE module exports its main operation
+     $IsCompatible$ and the indication type $Ind$ (and a few other
+     operations used in AUX) to the DEF module, and all the second
+     level modules (STMT, EXPR and PAT) and to AUX. TYPE 
+     imports a few constructs from the other third level modules.
+\item[AUX:] This module simply contains a large number of auxiliary
+     functions. These functions are mainly
+     responsible for composing a collection of types
+     into a new type according to the specific rules which apply to
+     the specific construct. Thus, the functions in the AUX module are
+     responsible for manipulating the inferred types to derive new
+     inferred types depending upon the context in which they are used.
+     The AUX module exports its constructs to all the second level
+     modules (STMT, EXPR and PAT) and to the TYPE module. AUX
+     import constructs from its other level three modules (TYPE and
+     ENV). 
+\item[ENV:] The environment module is responsible for maintaining the
+     state of the static semantics (except for the error messages).
+     It mainly consists of operations to lookup identifiers, scope
+     manipulating operations and operations which expand the
+     definitions to initialize the state. The ENV module exports its
+     constructs to all the other modules from level 1 to 3 in the
+     hierarchy. ENV only imports constructs from the VCM module which
+     is not considered to belong to the hierarchy at all.   
+\item[REP:] The type representation module contains the type
+     definitions for the semantic domains which are used internally in
+     the static semantics to model the types from the abstract syntax
+     and the derived types. As mentioned above REP is imported by all
+     modules in the hierarchy and it does only import the AS module.
+\item[ERR:] The error module is responsible for keeping track of the
+     errors which are found during a static semantics check. It does
+     not import any constructs, but it is used in all modules in the
+     hierarchy except the TYPE module. 
+\item[VCM:] The Version Control Manager module is responsible for
+     illustrating the functionality which the static semantics needs
+     from the VCM tool. Thus, this is not a part of the static
+     semantics, but it indicates the interface which is needed from
+     the static semantics. VCM is only used in the ENV module and it
+     only imports the AS and the REP modules.
+\end{description}
+
+#ifdef VDMSL
+\input{def.vdmsl.tex}
+\input{stmt.vdmsl.tex}
+\input{expr.vdmsl.tex}
+\input{pat.vdmsl.tex}
+\input{type.vdmsl.tex}
+\input{tcaux.vdmsl.tex}
+\input{env.vdmsl.tex}
+\input{rep.vdmsl.tex}
+\input{err.vdmsl.tex}
+\input{vcm.vdmsl.tex}
+#endif VDMSL
+#ifdef VDMPP
+#ifdef VICE
+\input{def.vice.tex}
+\input{stmt.vice.tex}
+\input{expr.vice.tex}
+\input{pat.vice.tex}
+\input{type.vice.tex}
+\input{tcaux.vice.tex}
+\input{env.vice.tex}
+\input{rep.vice.tex}
+\input{err.vice.tex}
+\input{vcm.vice.tex}
+#else
+\input{def.vdmpp.tex}
+\input{stmt.vdmpp.tex}
+\input{expr.vdmpp.tex}
+\input{pat.vdmpp.tex}
+\input{type.vdmpp.tex}
+\input{tcaux.vdmpp.tex}
+\input{env.vdmpp.tex}
+\input{rep.vdmpp.tex}
+\input{err.vdmpp.tex}
+\input{vcm.vdmpp.tex}
+#endif VICE
+#endif VDMPP
+
+\newpage
+
+\bibliographystyle{newalpha}
+\bibliography{/Users/sahara/CVSCheckout/toolbox/doc/bib/ifad}
+
+\newpage
+\addcontentsline{toc}{section}{Index}
+\printindex
+
+\end{document}
+

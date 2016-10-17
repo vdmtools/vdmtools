@@ -1,0 +1,32 @@
+
+
+
+
+class A 
+
+
+operations
+
+
+public Test: () ==> nat
+Test() ==
+( dcl a : B := new B().m();
+  return 0 )
+
+
+end A
+
+
+class B
+
+
+operations
+
+
+public m: () ==> B
+m () ==
+return self
+
+
+
+end B

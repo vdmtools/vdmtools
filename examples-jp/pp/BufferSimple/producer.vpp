@@ -1,0 +1,42 @@
+\begin{vdm_al}
+class ¶YÒ
+--$Id: producer.vpp,v 1.3 2005/11/10 07:15:56 vdmtools Exp $
+values
+data = "saharaZ" ;
+
+instance variables
+b: Buffer;
+pos : nat := 0;
+
+operations
+public ¶YÒ : Buffer ==> ¶YÒ
+¶YÒ(aBuffer) ==
+	(
+	b := aBuffer;
+	return self
+	);
+	
+public €–Ú¶Y: () ==> char
+€–Ú¶Y() ==
+	(
+	pos := pos + 1;
+	let 
+		- = new IO().echo("Producer ThreadID=" ^ Integer`asString(threadid) ^ ", pos=" ^ 
+				Integer`asString(pos) ^ ", ProduceData=" ^ [data(pos)] ^ ",\n")
+	in
+	return data(pos)
+	);
+
+thread
+	--while true do
+	while pos < len data do -- ‚±‚ÌğŒ‚ª‚È‚¢‚ÆA‘¶İ‚µ‚È‚¢ˆÊ’u‚Ìƒf[ƒ^‚ğƒAƒNƒZƒX‚µ‚æ‚¤‚Æ‚·‚éB
+		b.Put (€–Ú¶Y());
+
+end ¶YÒ
+
+\end{vdm_al}
+
+\begin{rtinfo}
+[TotalxCoverage]{vdm.tc}[¶YÒ]
+\end{rtinfo}
+

@@ -1,0 +1,13 @@
+"class A
+
+operations
+
+public Test : () ==> nat  
+Test () ==
+ let n : nat = 5 in
+	( dcl x : bool := false;
+	 return 0 );
+   
+end A
+
+"

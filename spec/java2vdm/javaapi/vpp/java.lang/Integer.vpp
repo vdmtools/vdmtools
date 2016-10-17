@@ -1,0 +1,353 @@
+dlclass JavaLangInteger is subclass of JavaLangNumber, JavaLangComparable
+uselib "j2vdll.so"
+values
+  public CLASS : JavaLangClass=new JavaLangClass("JavaLangInteger", <CLASS>, false);
+  public  TYPE : JavaLangClass=new JavaLangClass("int", <CLASS>, true);
+  
+  public MIN_VALUE : int=-2147483648;
+--  public MAX_VALUE : int=2147483647;
+  public digits : map  int  to  char = {35 |-> 'z' , 34 |-> 'y' , 33 |-> 'x' , 32 |-> 'w' , 31 |-> 'v' , 30 |-> 'u' , 29 |-> 't' , 28 |-> 's' , 27 |-> 'r' , 26 |-> 'q' , 25 |-> 'p' , 24 |-> 'o' , 23 |-> 'n' , 22 |-> 'm' , 21 |-> 'l' , 20 |-> 'k' , 19 |-> 'j' , 18 |-> 'i' , 17 |-> 'h' , 16 |-> 'g' , 15 |-> 'f' , 14 |-> 'e' , 13 |-> 'd' , 12 |-> 'c' , 11 |-> 'b' , 10 |-> 'a' , 9 |-> '9' , 8 |-> '8' , 7 |-> '7' , 6 |-> '6' , 5 |-> '5' , 4 |-> '4' , 3 |-> '3' , 2 |-> '2' , 1 |-> '1' , 0 |-> '0'};
+  private radixTenTenths : map  int  to  char  = {99 |-> '9' , 98 |-> '9' , 97 |-> '9' , 96 |-> '9' , 95 |-> '9' , 94 |-> '9' , 93 |-> '9' , 92 |-> '9' , 91 |-> '9' , 90 |-> '9' , 89 |-> '8' , 88 |-> '8' , 87 |-> '8' , 86 |-> '8' , 85 |-> '8' , 84 |-> '8' , 83 |-> '8' , 82 |-> '8' , 81 |-> '8' , 80 |-> '8' , 79 |-> '7' , 78 |-> '7' , 77 |-> '7' , 76 |-> '7' , 75 |-> '7' , 74 |-> '7' , 73 |-> '7' , 72 |-> '7' , 71 |-> '7' , 70 |-> '7' , 69 |-> '6' , 68 |-> '6' , 67 |-> '6' , 66 |-> '6' , 65 |-> '6' , 64 |-> '6' , 63 |-> '6' , 62 |-> '6' , 61 |-> '6' , 60 |-> '6' , 59 |-> '5' , 58 |-> '5' , 57 |-> '5' , 56 |-> '5' , 55 |-> '5' , 54 |-> '5' , 53 |-> '5' , 52 |-> '5' , 51 |-> '5' , 50 |-> '5' , 49 |-> '4' , 48 |-> '4' , 47 |-> '4' , 46 |-> '4' , 45 |-> '4' , 44 |-> '4' , 43 |-> '4' , 42 |-> '4' , 41 |-> '4' , 40 |-> '4' , 39 |-> '3' , 38 |-> '3' , 37 |-> '3' , 36 |-> '3' , 35 |-> '3' , 34 |-> '3' , 33 |-> '3' , 32 |-> '3' , 31 |-> '3' , 30 |-> '3' , 29 |-> '2' , 28 |-> '2' , 27 |-> '2' , 26 |-> '2' , 25 |-> '2' , 24 |-> '2' , 23 |-> '2' , 22 |-> '2' , 21 |-> '2' , 20 |-> '2' , 19 |-> '1' , 18 |-> '1' , 17 |-> '1' , 16 |-> '1' , 15 |-> '1' , 14 |-> '1' , 13 |-> '1' , 12 |-> '1' , 11 |-> '1' , 10 |-> '1' , 9 |-> '0' , 8 |-> '0' , 7 |-> '0' , 6 |-> '0' , 5 |-> '0' , 4 |-> '0' , 3 |-> '0' , 2 |-> '0' , 1 |-> '0' , 0 |-> '0'};
+  private radixTenUnits : map  int  to  char  = {99 |-> '9' , 98 |-> '8' , 97 |-> '7' , 96 |-> '6' , 95 |-> '5' , 94 |-> '4' , 93 |-> '3' , 92 |-> '2' , 91 |-> '1' , 90 |-> '0' , 89 |-> '9' , 88 |-> '8' , 87 |-> '7' , 86 |-> '6' , 85 |-> '5' , 84 |-> '4' , 83 |-> '3' , 82 |-> '2' , 81 |-> '1' , 80 |-> '0' , 79 |-> '9' , 78 |-> '8' , 77 |-> '7' , 76 |-> '6' , 75 |-> '5' , 74 |-> '4' , 73 |-> '3' , 72 |-> '2' , 71 |-> '1' , 70 |-> '0' , 69 |-> '9' , 68 |-> '8' , 67 |-> '7' , 66 |-> '6' , 65 |-> '5' , 64 |-> '4' , 63 |-> '3' , 62 |-> '2' , 61 |-> '1' , 60 |-> '0' , 59 |-> '9' , 58 |-> '8' , 57 |-> '7' , 56 |-> '6' , 55 |-> '5' , 54 |-> '4' , 53 |-> '3' , 52 |-> '2' , 51 |-> '1' , 50 |-> '0' , 49 |-> '9' , 48 |-> '8' , 47 |-> '7' , 46 |-> '6' , 45 |-> '5' , 44 |-> '4' , 43 |-> '3' , 42 |-> '2' , 41 |-> '1' , 40 |-> '0' , 39 |-> '9' , 38 |-> '8' , 37 |-> '7' , 36 |-> '6' , 35 |-> '5' , 34 |-> '4' , 33 |-> '3' , 32 |-> '2' , 31 |-> '1' , 30 |-> '0' , 29 |-> '9' , 28 |-> '8' , 27 |-> '7' , 26 |-> '6' , 25 |-> '5' , 24 |-> '4' , 23 |-> '3' , 22 |-> '2' , 21 |-> '1' , 20 |-> '0' , 19 |-> '9' , 18 |-> '8' , 17 |-> '7' , 16 |-> '6' , 15 |-> '5' , 14 |-> '4' , 13 |-> '3' , 12 |-> '2' , 11 |-> '1' , 10 |-> '0' , 9 |-> '9' , 8 |-> '8' , 7 |-> '7' , 6 |-> '6' , 5 |-> '5' , 4 |-> '4' , 3 |-> '3' , 2 |-> '2' , 1 |-> '1' , 0 |-> '0'};
+--  private  value__ : int ;
+--  private  static serialVersionUID : int  := 0
+instance variables 
+--  public  static TYPE : JavaLangClass := new JavaLangClass("int", <CLASS>, true);
+  static public MAX_VALUE : int:=2147483647;
+
+operations 
+public  JavaLangInteger : ()  ==> JavaLangInteger
+JavaLangInteger() == 
+( skip 
+) ;
+
+public  JavaLangInteger : int  ==> JavaLangInteger
+JavaLangInteger(value__) == 
+( setValueInt(value__);
+) ;
+
+--
+-- For convinience
+--
+public  JavaLangInteger : char  ==> JavaLangInteger
+JavaLangInteger(value__) == 
+( setValueChar(value__);
+) ;
+
+public  JavaLangInteger : JavaLangString ==> JavaLangInteger
+JavaLangInteger(s) == 
+( setValueStr(s); 
+) ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+  return CLASS;
+--  return new JavaLangClass("JavaLangInteger", <CLASS>, false); -- CLASS;
+
+private  setValueInt : int  ==> ()
+setValueInt(value__) == 
+is not yet specified ;
+
+private  setValueChar : char  ==> ()
+setValueChar(value__) == 
+is not yet specified ;
+
+private  setValueStr : JavaLangString  ==> ()
+setValueStr(value__) == 
+is not yet specified ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+is not yet specified ;
+
+public  intValue : () ==> int 
+intValue() == 
+is not yet specified ;
+
+public  toString : () ==> JavaLangString
+toString() == 
+  return
+--    JavaLangInteger`toString'(intValue());
+--    JavaLangInteger`toString(intValue());
+    new JavaLangInteger().toString(intValue());
+
+public  byteValue : () ==> int 
+byteValue() == 
+is not yet specified ;
+
+public  longValue : () ==> int 
+longValue() == 
+is not yet specified ;
+
+--
+-- For convinience
+--
+public  charValue : () ==> char
+charValue() == 
+is not yet specified ;
+
+--static public toString' : int  ==> JavaLangString
+static public toString : int  ==> JavaLangString
+toString(ii) == 
+( dcl   i : int := ii,
+        buf : map  int  to  char  := {l_3 |-> ' '|l_3 in set  {0,...,12-1}},
+        negative : bool  := (i < 0),
+        charPos : int  := 12;
+  if  i = JavaLangInteger`MIN_VALUE
+  then  
+    ( return  new  JavaLangString("-2147483648")
+    ) ;
+  if  negative
+  then  
+    ( i := -i
+    ) ;
+  ( ( dcl   digit : int  := i mod  100;
+      def l_3 = charPos;
+      l_4 = l_3-1
+      in ( charPos := l_4;
+        def l_2 = charPos
+        in buf := buf ++ {l_2 |-> radixTenUnits(digit)}
+      ) ;
+      def l_3 = charPos;
+      l_4 = l_3-1
+      in ( charPos := l_4;
+        def l_2 = charPos
+        in buf := buf ++ {l_2 |-> radixTenTenths(digit)}
+      ) ;
+      i := floor(i/100)
+    ) 
+  ) ;
+  while  i <> 0 do  
+  ( dcl   digit : int  := i mod  100;
+    def l_3 = charPos;
+    l_4 = l_3-1
+    in ( charPos := l_4;
+      def l_2 = charPos
+      in buf := buf ++ {l_2 |-> radixTenUnits(digit)}
+    ) ;
+    def l_3 = charPos;
+    l_4 = l_3-1
+    in ( charPos := l_4;
+      def l_2 = charPos
+      in buf := buf ++ {l_2 |-> radixTenTenths(digit)}
+    ) ;
+    i := floor(i/100)
+  ) ;
+  if  buf(charPos) = '0'
+  then  
+    ( charPos := charPos+1
+    ) ;
+  if  negative
+  then  
+    ( def l_3 = charPos;
+      l_4 = l_3-1
+      in ( charPos := l_4;
+        def l_2 = charPos
+        in buf := buf ++ {l_2 |-> '-'}
+      ) 
+    ) ;
+  return  new  JavaLangString([buf(i)| i in set {charPos,...,12-1}])
+) ;
+
+public  floatValue : () ==> real 
+floatValue() == 
+is not yet specified ;
+
+public  shortValue : () ==> int 
+shortValue() == 
+is not yet specified ;
+
+public  doubleValue : () ==> real 
+doubleValue() == 
+  floatValue() ;
+
+public  static toString_ : int  * int  ==> JavaLangString
+toString_(i, radix) == 
+is not yet specified ;
+
+public  JavaLangInteger : <NIL> ==> JavaLangInteger
+JavaLangInteger(-) == 
+isNil := true  ;
+
+public  static toHexString : int  ==> JavaLangString
+toHexString(i) == 
+is not yet specified ;
+
+public  static decode : JavaLangString ==> JavaLangInteger
+decode(nm) == 
+is not yet specified ;
+
+public  equals : JavaLangObject ==> bool 
+equals(obj) == 
+( if  isofclass  (JavaLangInteger,obj)
+  then  
+    ( return  intValue() = (def l_7 :  JavaLangInteger = (obj)
+      in l_7).intValue()
+    ) ;
+  return  false  
+) ;
+
+public  static toOctalString : int  ==> JavaLangString
+toOctalString(i) == 
+is not yet specified ;
+
+--public  static toBinaryString : int  ==> JavaLangString
+--toBinaryString(i) == 
+--is not yet specified ;
+
+public  static valueOf : JavaLangString ==> JavaLangInteger
+valueOf(s) == 
+is not yet specified ;
+
+static
+public parseInt : JavaLangString ==> int 
+parseInt(s) == 
+( return  (new JavaLangInteger()).parseInt(s , 10)
+) ;
+
+public  compareTo : JavaLangObject ==> int 
+compareTo(o) == 
+( if isofclass(JavaLangInteger,o)
+  then
+    return compareToInt(o)
+  else
+    exit new JavaLangClassCastException()
+);
+
+--public  compareTo : JavaLangInteger ==> int 
+--compareTo(anotherInteger) == 
+--is not yet specified ;
+
+public  compareToInt : JavaLangInteger ==> int 
+compareToInt(anotherInteger) == 
+is not yet specified ;
+
+--public  static valueOf : JavaLangString * int  ==> JavaLangInteger
+--valueOf(s, radix) == 
+--is not yet specified ;
+
+public  static getInteger : JavaLangString ==> JavaLangInteger
+getInteger(nm) == 
+is not yet specified ;
+
+static
+public parseInt : JavaLangString * int  ==> int 
+parseInt(s, radix) == 
+( if  s.IsNil()
+  then  
+--    ( exit  new  JavaLangNumberFormatException(new  JavaLangString("null"))
+    ( exit  new  JavaLangNumberFormatException()
+    ) ;
+  if  radix < 2 -- JavaLangCharacter`MIN_RADIX
+  then  
+--    ( exit  new  JavaLangNumberFormatException(J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(new  JavaLangString("radix ") , J2VUTIL`Convert("JavaLangString" , radix)) , new  JavaLangString(" less than JavaLangCharacter.MIN_RADIX")))
+    ( dcl m: JavaLangString:=new  JavaLangString("radix ");
+      m:=m.concat((new JavaLangInteger(radix)).toString());
+      m:=m.concat(new  JavaLangString(" less than JavaLangCharacter.MIN_RADIX")); 
+      exit  new  JavaLangNumberFormatException(m)
+    ) ;
+  if  radix > 10 -- JavaLangCharacter`MAX_RADIX
+  then  
+--    ( exit  new  JavaLangNumberFormatException(J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(new  JavaLangString("radix ") , J2VUTIL`Convert("JavaLangString" , radix)) , new  JavaLangString(" greater than JavaLangCharacter.MAX_RADIX")))
+    ( dcl m: JavaLangString:=new  JavaLangString("radix ");
+      m:=m.concat((new JavaLangInteger(radix)).toString());
+      m:=m.concat(new  JavaLangString(" greater than JavaLangCharacter.MAX_RADIX"));
+      exit  new  JavaLangNumberFormatException(m)
+    ) ;
+  ( dcl   result : int  := 0,
+          negative : bool  := false  ,
+          i : int  := 0,
+          max : int  := s.length(),
+          limit : int ,
+          multmin : int ,
+          digit : int ;
+    if  max > 0
+    then  
+      ( if  s.charAt(0) = '-'
+        then  
+          ( negative := true  ;
+            limit := JavaLangInteger`MIN_VALUE;
+            i := i+1
+          ) 
+        else  
+          ( limit := -JavaLangInteger`MAX_VALUE
+          ) ;
+        multmin := floor(limit/radix);
+        if  i < max
+        then  
+          ( def l_6 = i;
+            l_5 = l_6
+            in ( i := l_6+1;
+              def l_3 = s.charAt(l_5);
+                l_1 = JavaLangCharacter`digit(l_3 , radix)
+--              l_1 = (new JavaLangCharacter()).digit(l_3 , radix)
+              in digit := l_1
+            ) ;
+            if  digit < 0
+            then  
+              ( exit  new  JavaLangNumberFormatException(s)
+              ) 
+            else  
+              ( result := -digit
+              ) 
+          ) ;
+          while  i < max do  
+          ( def l_6 = i;
+            l_5 = l_6
+            in ( i := l_6+1;
+              def l_3 = s.charAt(l_5);
+--              l_1 = JavaLangCharacter`digit(l_3 , radix)
+              l_1 = (new JavaLangCharacter()).digit(l_3 , radix)
+              in digit := l_1
+            ) ;
+            if  digit < 0
+            then  
+              ( exit  new  JavaLangNumberFormatException(s)
+              ) ;
+            if  result < multmin
+            then  
+              ( exit  new  JavaLangNumberFormatException(s)
+              ) ;
+            def l_3 = result
+            in result := l_3*radix;
+            if  result < limit+digit
+            then  
+              ( exit  new  JavaLangNumberFormatException(s)
+              ) ;
+            def l_3 = result
+            in result := l_3-digit
+          ) 
+      ) 
+    else  
+      ( exit  new  JavaLangNumberFormatException(s)
+      ) ;
+    if  negative
+    then  
+      ( if  i > 1
+        then  
+          ( return  result
+          ) 
+        else  
+          ( exit  new  JavaLangNumberFormatException(s)
+          ) 
+      ) 
+    else  
+      ( return  -result
+      ) 
+  ) 
+) ;
+
+public  static getInteger : JavaLangString * int  ==> JavaLangInteger
+getInteger(nm, val) == 
+is not yet specified ;
+
+public  static getInteger : JavaLangString * JavaLangInteger ==> JavaLangInteger
+getInteger(nm, val) == 
+is not yet specified ;
+
+--public  static getInt : JavaLangInteger ==> int
+--getInt(i) == 
+--is not yet specified ;
+--return i.intValue();
+
+end  JavaLangInteger

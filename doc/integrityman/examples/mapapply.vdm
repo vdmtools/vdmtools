@@ -1,0 +1,10 @@
+functions
+
+MapApply: (map bool to real) * bool -> real
+MapApply(m,a) ==
+  m(a)
+pre {true,false} = dom m
+
+--PO
+--(forall m : (map bool to real), a : bool &
+--   {true,false} = dom (m) => a in set dom (m))

@@ -1,0 +1,37 @@
+class B
+
+
+functions
+
+public f: nat -> real
+f(a) ==
+a+ 0.64
+
+
+end B
+
+class A
+
+
+types
+   Rec ::
+     entry1 : B
+     entry2 : nat;
+
+
+instance variables 
+  a1 : B := new B ();
+  a2 : Rec := mk_Rec(new B(), 3);
+
+operations
+public Test : () ==> real
+  Test() ==
+  ( dcl res : real;
+    a2.entry1 := a1;
+    a2.entry2 := 3;
+    res := a2.entry1.f(a2.entry2);
+    return res;
+  )
+
+end A
+

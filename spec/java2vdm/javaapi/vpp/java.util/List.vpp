@@ -1,0 +1,108 @@
+class JavaUtilList is subclass of JavaUtilCollection
+operations 
+JavaUtilList: <NIL> ==> JavaUtilList
+JavaUtilList(-) ==
+isNil:=true;
+
+public  get : int  ==> JavaLangObject
+get(index) == 
+is not yet specified;
+
+public  size : () ==> int 
+size() == 
+is not yet specified;
+
+public  clear : () ==> ()
+clear() == 
+is not yet specified;
+
+public  isEmpty : () ==> bool 
+isEmpty() == 
+is not yet specified;
+
+--public  remove : int  ==> JavaLangObject
+--remove(index) == 
+--is not yet specified;
+
+public  toArray : () ==> map  int  to  JavaLangObject
+toArray() == 
+is not yet specified;
+
+public  hashCode : () ==> int 
+hashCode() == 
+is not yet specified;
+
+public  iterator : () ==> JavaUtilIterator
+iterator() == 
+is not yet specified;
+
+public  subList : int  * int  ==> JavaUtilList
+subList(fromIndex, toIndex) == 
+is not yet specified;
+
+--public  add : JavaLangObject ==> bool 
+--add(o) == 
+--is not yet specified;
+
+--public  listIterator : () ==> JavaUtilListIterator
+--listIterator() == 
+--is not yet specified;
+
+--public  add : int  * JavaLangObject ==> ()
+--add(index, element) == 
+--is not yet specified;
+
+--public  listIterator : int  ==> JavaUtilListIterator
+--listIterator(index) == 
+--is not yet specified;
+
+public  equals : JavaLangObject ==> bool 
+equals(o) == 
+is not yet specified;
+
+--public  remove : JavaLangObject ==> bool 
+--remove(o) == 
+--is not yet specified;
+
+public  indexOf : JavaLangObject ==> int 
+indexOf(o) == 
+is not yet specified;
+
+public  set__ : int  * JavaLangObject ==> JavaLangObject
+set__(index, element) == 
+is not yet specified;
+
+public  contains : JavaLangObject ==> bool 
+contains(o) == 
+is not yet specified;
+
+public  addAll : JavaUtilCollection ==> bool 
+addAll(c) == 
+is not yet specified;
+
+public  lastIndexOf : JavaLangObject ==> int 
+lastIndexOf(o) == 
+is not yet specified;
+
+public  toArray : map  int  to  JavaLangObject ==> map  int  to  JavaLangObject
+toArray(a) == 
+is not yet specified;
+
+public  addAll : int  * JavaUtilCollection ==> bool 
+addAll(index, c) == 
+is not yet specified;
+
+public  removeAll : JavaUtilCollection ==> bool 
+removeAll(c) == 
+is not yet specified;
+
+public  retainAll : JavaUtilCollection ==> bool 
+retainAll(c) == 
+is not yet specified;
+
+public  containsAll : JavaUtilCollection ==> bool 
+containsAll(c) == 
+is not yet specified;
+
+
+end  JavaUtilList

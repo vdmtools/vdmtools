@@ -1,0 +1,4987 @@
+class A
+
+operations
+
+  Test: () ==> SSLInfo
+  Test() ==
+  ( dcl a: SSLInfo;
+    a := new SSLInfo();
+    return a
+  );
+end A
+
+--LINE 7 1
+class SSL
+types
+StringTp = seq of char; -- with some invariant
+Id = seq1 of char;       -- with some invariant
+Index = nat;            -- index into info table
+
+--LINE 22 1
+SSDir ::     
+     initssl : SSLItemList
+     mainssl : SSLItemList
+     images : map FileName to ImageFile
+
+--LINE 24 1
+infoindex : [SSLInfoIndex];
+
+--LINE 26 1
+ImageFile ::;
+FileName = StringVal;
+
+--LINE 32 1
+SSLItemList = seq of SSLItem;
+SSLItem =
+     ActionDefn |
+     Stmt |
+     SubClassDefn |
+
+--LINE 34 1
+VarDecl ;
+
+
+--LINE 42 1
+Literal =
+     BoolVal |
+
+--LINE 44 1
+Identifier |
+NatVal |
+NullVal |
+NumVal |
+StringVal |
+TimeVal ;
+
+--LINE 46 1
+NatVal ::
+
+--LINE 48 1
+val : nat
+info :- Index;
+
+--LINE 50 1
+NumVal ::
+
+--LINE 52 1
+val : real 
+info :- Index;
+
+--LINE 54 1
+BoolVal ::
+
+--LINE 56 1
+val : bool
+
+--LINE 58 1
+     info :- Index;
+TimeTp = nat;
+TimeVal ::
+     rel : bool    -- is the time relative or obsolute
+     val : TimeTp  -- milli seconds since 1970
+     info :- Index;
+StringVal ::
+     val : StringTp
+     info :- Index;
+Identifier ::
+     id : Id
+     info :- Index;
+NullVal :: 
+     info :- Index;
+
+--LINE 62 1
+Expr = 
+     ActionApp |
+     MapVal |
+     MenuVal |
+     MethodApp |
+     NewExpr |
+     Literal |
+     SetVal ;
+     
+MapValTp = seq of MapBindPair;   -- with invariant on domain values 
+MapBindPair = Literal * Expr;
+MapVal ::
+     val : MapValTp
+     info :- Index;
+
+MenuVal ::
+    image : [FileName]
+    text : StringVal
+    items : seq of MenuItem
+    info :- Index; 
+MenuItem = 
+    MenuVal | 
+    MenuSeparator | 
+    ActionMenuItem;
+ActionMenuItem ::
+    image : [FileName]
+    text : StringVal
+    action : Identifier
+    info :- Index;
+MenuSeparator ::
+    info :- Index;
+
+SetValTp = seq of Expr;
+SetVal ::
+
+--LINE 64 1
+val : SetValTp
+info :- Index;
+
+--LINE 72 1
+ArgBindMap  :: 
+
+--LINE 74 1
+val : seq of ArgBindPair
+info :- Index;
+
+--LINE 76 1
+ArgBindPair = Identifier * Expr;
+ArgList  :: 
+
+--LINE 78 1
+val : seq of  Expr
+info :- Index;
+
+--LINE 80 1
+Args = ArgList | ArgBindMap;
+AppExpr ::
+     name : Identifier  -- name of the action/method
+     args : Args
+     info :- Index;
+
+--LINE 84 1
+NewExpr ::
+
+--LINE 86 1
+     app : AppExpr
+     info :- Index;
+
+--LINE 90 1
+ActionApp :: 
+
+--LINE 92 1
+app : AppExpr
+info :- Index;
+
+--LINE 96 1
+MethodApp ::
+     var : Identifier       -- the object
+
+--LINE 98 1
+app : AppExpr
+info :- Index;
+
+--LINE 104 1
+TypeExpr ::
+     name : Identifier
+     con: CExprTp    -- Type Constraints
+     info :- Index;
+CExprTp = seq of AppExpr;
+
+--LINE 108 1
+ActionDefn ::
+     name : Identifier
+     argdecl : ArgDeclList
+     body : SSLItemList
+     info :- Index 
+inv atd == 
+     forall s in set elems atd.body &
+
+--LINE 110 1
+  is_AssignmentStmt(s) or
+  is_ExprStmt(s) or  
+  is_VarDecl(s) or
+
+--LINE 112 1
+       is_WaitStmt(s);
+
+ArgDeclList = seq of ArgDecl
+inv adl == len adl = 
+    card {i | mk_ArgDecl(i,-,-,-) in set elems adl };
+
+ArgDecl :: 
+     name : Identifier
+     type : TypeExpr
+     text : StringVal
+     info :- Index;
+
+--LINE 118 1
+Stmt =
+     AssignmentStmt |
+     ExprStmt |
+     TimeStmt |
+     WaitStmt ;
+AssignmentStmt ::
+     left : Identifier
+     val : Expr
+     info :- Index;
+ExprStmt ::
+     val : Expr
+     info :- Index;
+TimeStmt ::
+     val : TimeVal
+     info :- Index;
+WaitStmt ::
+
+--LINE 120 1
+val : TimeVal
+info :- Index;
+
+--LINE 126 1
+SubClassDefn ::
+     name : Identifier
+     app : AppExpr
+     info :- Index;
+
+--LINE 133 1
+VarDecl ::
+     left : Identifier
+     type : TypeExpr
+     val : [ Expr ]        -- optional initializer
+     info :- Index
+inv v == v.type.con = []
+
+--LINE 137 1
+end SSL
+
+--LINE 143 1
+class SSLInfoIndex
+instance variables
+index : seq of SSLInfo := []
+operations
+
+initObj : seq of SSLInfo ==> SSLInfoIndex
+initObj(l) == ( index :=l; return self);
+
+--LINE 147 1
+clear: () ==> ()
+clear() == ( index := [] );
+
+--LINE 153 1
+addInfo : [SSLInfo] ==> SSL`Index
+addInfo(info) ==
+(
+  if info = nil then return 0;
+  index := index ^[info];
+  return len index
+);
+
+--LINE 157 1
+getInfo : SSL`Index ==> [SSLInfo]
+getInfo(i) ==
+(
+  if i < 1 or i > len index then return nil
+  else return index(i)
+);
+
+--LINE 163 1
+getList : () ==> seq of SSLInfo
+getList() == (return index)
+
+--LINE 167 1
+end SSLInfoIndex
+
+--LINE 173 1
+class SSLInfo
+instance variables
+filename : SSL`FileName := mk_SSL`StringVal("unknown",0); 
+      -- name of the file
+lineBegin : nat := 0;      -- the line number
+lineEnd : nat := 0;         
+columnBegin : nat := 0;    -- the start of the construct
+columnEnd : nat := 0
+operations
+getFileName : () ==> SSL`FileName
+getFileName() == return filename;
+getLineBegin : () ==> nat
+getLineBegin() == return lineBegin;
+getColumnBegin : () ==> nat
+getColumnBegin() == return columnBegin;
+
+
+initObj: SSL`FileName * nat * nat * nat * nat ==> SSLInfo
+initObj(fn,lb,le,cb,ce) ==
+(
+  filename := fn;
+  lineBegin := lb;
+  lineEnd := le;
+  columnBegin := cb;
+  columnEnd := ce;
+  return self
+)
+end SSLInfo
+
+--LINE 28 1
+class SimObj is subclass of HasStateRef
+
+--LINE 32 1
+types
+ArgMap = map Id to ItemId
+
+--LINE 36 1
+instance variables
+-- unique id for this instance (set when added to state)
+id : [ItemId] := nil;
+-- the SSL class that this instance is created from
+parentclass : [ClassId] := nil;
+
+--LINE 42 1
+operations
+setId : ItemId ==> ()
+setId(i) ==id := i;
+getId : () ==> GlobalTypes`ItemId 
+getId() == return id;
+
+setClassId : ClassId ==> ()
+setClassId(p) == parentclass := p;
+getClassId : () ==> ClassId
+getClassId() == return parentclass;
+
+--LINE 48 1
+initObj : () ==> SimObj
+initObj() == return new SimObj();  --is subclass responsibility;
+
+--LINE 52 1
+initSimObj : ClassId * ItemId ==> SimObj
+initSimObj(c,i) ==
+(
+  parentclass := c;
+  id :=i;
+  return self
+);
+
+--LINE 58 1
+copyObj : () ==> SimObj
+copyObj() == return new SimObj(); --is subclass responsibility;
+
+--LINE 64 1
+newObj : ClassId * ArgMap * SessionState ==> SimObj
+newObj(-,-,-) == return new SimObj(); --is subclass responsibility;
+
+--LINE 70 1
+extrItems : set of ItemId ==> set of ItemId
+extrItems(-) == return {}; --is subclass responsibility;
+
+--LINE 74 1
+end SimObj
+
+--LINE 80 1
+class SimLocation is subclass of SimObj
+
+--LINE 84 1
+instance variables
+
+-- from the Location SSL constructor
+name : Name := "";            -- the name of the location
+image : FileName := "";           -- the image to show
+actions : set of ActionId := {};  -- the enabled actions
+atype : set of ClassId := {};     -- the agent classes allowed
+dtype : set of ClassId := {}      -- the agent classes to "drain"
+
+--LINE 88 1
+operations
+getName : () ==> Name
+getName() == return name;
+getImage : () ==> FileName
+getImage() == return image;
+getActions : () ==> set of ActionId
+getActions() == return actions;
+getAtype : () ==> set of ClassId
+getAtype() == return atype;
+getDtype : () ==> set of ClassId
+getDtype() == return dtype;
+
+--LINE 94 1
+initObj : Name * FileName * set of ActionId *
+          set of ClassId * set of ClassId ==> SimLocation 
+initObj(n,im,aids,atp,dtp) ==
+(
+   name := n;
+   image := im;
+   actions := aids;
+   atype := atp;
+   dtype := dtp;
+   return self
+);
+
+--LINE 98 1
+copyObj : () ==> SimObj 
+copyObj() ==
+(
+   let s : SimLocation =  
+            new SimLocation().initSimObj(getClassId(),getId()) in
+     s.initObj(name,image,actions,atype,dtype)
+);
+
+--LINE 102 1
+newObj : ClassId * ArgMap * SessionState ==> SimObj
+newObj(cid,m,state) ==
+(
+  let id = state.getNewLocationId() in
+  let n      : SimString = state.getItemObj(m("name")),
+      im     : SimString = state.getItemObj(m("image")),
+      aids   : SimSet    = state.getItemObj(m("actions")),
+      atp    : SimSet    = state.getItemObj(m("atype")),
+      dtp    : SimSet    = state.getItemObj(m("dtype"))
+  in
+  let s : SimLocation =  new SimLocation().initSimObj(cid,id) in
+    s.initObj(n.getVal(),
+              im.getVal(),
+              aids.getActionIds(),
+              atp.getClassIds(),
+              dtp.getClassIds())
+)
+pre {"name","image","actions","atype","dtype"} subset dom m;
+
+--LINE 106 1
+extrItems : Items ==> Items
+extrItems(-) ==
+(
+  return {}
+);
+
+--LINE 112 1
+genLocationDescr : () ==> SimEvent`LocationDescr
+genLocationDescr() ==
+(
+  return mk_SimEvent`LocationDescr(name,id)
+);
+
+--LINE 116 1
+genShowLocationEvent : () ==> SimEvents
+genShowLocationEvent() ==
+(
+  return [ mk_SimEvent`ShowLocation(name,image,actions) ]
+);
+
+--LINE 122 1
+genActorDisplayEvents : SimAgent ==> SimEvents
+genActorDisplayEvents(actor) ==
+(
+  dcl es : SimEvents := [];
+
+  -- set actors menu
+  es := es ^ actor.genSetMenuEvent();  -- is this the first time ???
+
+  -- display new Location
+  es := es ^ genShowLocationEvent();
+
+  -- add the agents/transport agents
+  for all a in set getState().getAgents() do
+    if a.getLocation() = id then
+      es := es ^ a.genAddAgentEvent(actor.getId(),[]);
+
+  -- add the resources
+  for all r in set getState().getResources() do
+    if r.getLocation() = id and r.getUnits() > 0 then
+      es := es ^ r.genAddResourceEvent(actor.getId(),[]);
+
+  return es
+);
+
+--LINE 128 1
+mayAgentEnterLocation : SimAgent ==> MsgList
+mayAgentEnterLocation(a) ==
+(
+  if getDefs().isSubClassOf(a.getClassId(),atype) then
+    return []
+  else
+    return errorMsg(2, "The agent named " ^ a.getName() ^ 
+                         " is not allowed to enter the location" ^
+                         " named " ^ name)
+);
+
+--LINE 131 1
+mayAgentLeaveLocation : SimAgent ==> MsgList
+mayAgentLeaveLocation(a) ==
+(
+  if isAgentDrainType(a) then
+    return errorMsg(2, "The agent named " ^ a.getName() ^ 
+                         " is not allowed to leave the location" ^
+                         " named " ^ name)
+  else
+    return []
+);
+
+
+--LINE 134 1
+isAgentDrainType : SimAgent ==> bool
+isAgentDrainType (a) ==
+(
+  return getDefs().isSubClassOf(a.getClassId(),dtype)
+);
+
+--LINE 143 1
+addAgent : AgentId * EvalMode ==> MsgList
+addAgent(aid,mode) ==
+(
+  let a = getState().getAgent(aid) in
+  (
+    -- check that agent is allocated by current state ???
+    --if not getState().isAllocated(id)  then
+    --  return errorMsg(7,"Agent " ^ name ^ " can not be moved");
+
+   if a.getLocation()<>nil then
+     return errorMsg(7,"Agent " ^ a.getName() ^ " can not be inserted to location " ^ name ^ ".");
+    
+    -- check that agent may be added to the location
+    let msgs = mayAgentEnterLocation(a) in
+    if msgs <> [] then return msgs;
+ 
+    -- stop the agent clock if a drain object
+    if isAgentDrainType(a) then
+      a.stopClock();
+
+    -- add the agent to the location 
+    -- (it might not be visible though)
+    a.setLocation(id);
+
+    -- handle event generation
+    if mode.events then
+    (
+      -- if agent is an actor then update his gui
+      if getSession().hasActor(aid) then 
+        getBroadCast().broadCastTo(
+          {aid},genActorDisplayEvents(a));
+
+      -- add agent to every body elses gui in the location
+      for all i in set getSession().getActorsInLocation(id)\{aid} do
+        getBroadCast().broadCastTo({i},a.genAddAgentEvent(i,[]))
+    )
+  );
+  return []
+);
+
+addAgents : set of AgentId * EvalMode ==> MsgList
+addAgents(aids,mode) ==
+(
+   dcl msgs : MsgList := [];
+   for all aid in set aids do
+     msgs := msgs ^ addAgent(aid,mode);
+   return msgs 
+);
+
+--LINE 149 1
+removeAgent : AgentId * EvalMode ==> MsgList
+removeAgent(aid,mode) ==
+(
+  let a = getState().getAgent(aid) in
+  (
+    --if not getState().isAllocated(aid)  then
+    --  return errorMsg(7,
+    --          "Agent " ^ name ^ " can not be moved " ^
+    --          "from the location "^name);
+
+    -- check that agent is allowed to leave 
+    let msgs = mayAgentLeaveLocation(a) in
+      if msgs <> [] then return msgs;
+
+    -- check that the agents is really in the location
+    if a.getLocation() <> id then
+     return 
+      errorMsg(1,
+        "Unable to remove agent named " ^a.getName() ^
+        " from the location "^name);
+
+    -- set location
+    a.setLocation(nil);   -- agent does not belong anywhere !!!???
+
+    -- generate events
+    if mode.events then
+    (
+       -- if actor then disable menu ???
+       if getSession().hasActor(a.getId()) then
+       (
+         skip  -- ??? henrik ???
+       );
+       getBroadCast().
+        broadCastLocation(id,{},a.genRemoveAgentEvent([]))
+    );
+    return []
+  )
+);
+
+removeAgents : set of AgentId * EvalMode ==> MsgList
+removeAgents(aids,mode) ==
+(
+   dcl msgs : MsgList := [];
+   for all aid in set aids do
+     msgs := msgs ^ removeAgent(aid,mode);
+   return msgs 
+);
+
+--LINE 158 1
+addResource : ResourceId* EvalMode ==> MsgList
+addResource(rid,mode) ==
+(
+  let r = getState().getResource(rid) in
+  (
+    if r.getLocation()<>nil then
+      return errorMsg(7,"Resource " ^ r.getName() ^ " can not be inserted to location " ^ name ^ ".");
+    
+    r.setLocation(id);
+    if mode.events then
+      getBroadCast().broadCastLocation(id,{},
+             r.genAddNonSelectedResourceEvent([]));
+  );
+  return []
+);
+
+addResources : set of ResourceId * EvalMode ==> MsgList
+addResources(rids,mode) ==
+(
+   dcl msgs : MsgList := [];
+   for all rid in set rids do
+     msgs := msgs ^ addResource(rid,mode);
+   return msgs 
+);
+
+--LINE 164 1
+removeResource : ResourceId * EvalMode ==> MsgList
+removeResource(rid,mode) ==
+(
+  let r = getState().getResource(rid) in
+  (
+    -- check that the agents is really in the location
+    if r.getLocation() <> id then
+     return 
+      errorMsg(1,
+        "Unable to remove resource named " ^r.getName() ^
+        " from the location "^name);
+    r.setLocation(nil);     -- resource belongs no where !!!
+    if mode.events then
+      getBroadCast().broadCastLocation
+          (id,{},r.genRemoveResourceEvent([]));
+  );
+  return []
+);
+
+removeResources : set of ResourceId * EvalMode ==> MsgList
+removeResources(rids,mode) ==
+(
+   dcl msgs : MsgList := [];
+   for all rid in set rids do
+     msgs := msgs ^ removeResource(rid,mode);
+   return msgs 
+);
+
+--LINE 168 1
+end SimLocation
+
+--LINE 174 1
+class SimIvdLocation is subclass of SimLocation
+
+--LINE 178 1
+types
+Beds = set of BedInfo;  -- bed information
+BedInfo ::
+  bed : nat                      -- the bed number
+  patient : IvdPatientId           -- the patient in the bed
+  agents : map nat to AgentId    -- agents next to bed
+  resources : map nat to ResourceId --resources next in bed
+  inv bi == dom bi.resources subset {1,...,maxResourceSlots} and
+          dom bi.agents subset {1,...,maxAgentSlots}
+
+--LINE 182 1
+values
+maxResourceSlots : nat = 3;
+maxAgentSlots : nat = 3
+
+--LINE 186 1
+instance variables
+-- from the IvdLocation SSL constructor
+beds : nat := 20;
+
+-- keep track of the agents in the location
+ivdInfo : Beds := {}
+
+--LINE 190 1
+operations
+getBeds : () ==> nat
+getBeds() == return beds;
+setIvdInfo : Beds ==> ()
+setIvdInfo(b) == (
+  ivdInfo:=b;
+);
+
+--LINE 198 1
+initObj : Name * FileName * nat * set of ActionId *
+          set of ClassId * set of ClassId ==> SimIvdLocation 
+initObj(n,im,b,aids,atp,dtp) ==
+(
+   name := n;
+   image := im;
+   beds := b;
+   actions := aids;
+   atype := atp;
+   dtype := dtp;
+   return self
+);
+
+--LINE 202 1
+copyObj : () ==> SimObj 
+copyObj() ==
+(
+   let s : SimIvdLocation = 
+            new SimIvdLocation().initSimObj(getClassId(),getId()) in (
+     s.initObj(name,image,beds,actions,atype,dtype).
+              setIvdInfo(ivdInfo);
+     return s
+   )
+);
+
+--LINE 206 1
+newObj : ClassId * ArgMap * SessionState ==> SimObj
+newObj(cid,m,state) ==
+(
+  let id = state.getNewLocationId() in
+  let n      : SimString = state.getItemObj(m("name")),
+      im     : SimString = state.getItemObj(m("image")),
+      b      : SimNum    = state.getItemObj(m("beds")),
+      aids   : SimSet    = state.getItemObj(m("actions")),
+      atp    : SimSet    = state.getItemObj(m("atype")),
+      dtp    : SimSet    = state.getItemObj(m("dtype"))
+  in
+  let s : SimIvdLocation = new SimIvdLocation().initSimObj(cid,id) in
+    s.initObj(n.getVal(),
+              im.getVal(),
+              b.getVal(),
+              aids.getActionIds(),
+              atp.getClassIds(),
+              dtp.getClassIds())
+)
+pre {"name","image","beds","actions","atype","dtype"} subset dom m;
+
+--LINE 210 1
+extrItems : Items ==> Items
+extrItems(-) ==
+(
+  return {}
+);
+
+--LINE 216 1
+genShowIVDLocationEvent : () ==> SimEvents
+genShowIVDLocationEvent() ==
+(
+  dcl es : SimEvents := [];
+  es := es ^ [
+    mk_SimEvent`ShowIVDLocation(name,image,beds,actions)];
+  return es
+);
+
+--LINE 222 1
+genActorDisplayEvents : SimAgent ==> SimEvents
+genActorDisplayEvents(actor) ==
+(
+  dcl es : SimEvents := [];
+
+  -- set actors menu
+  es := es ^ actor.genSetMenuEvent();  -- is this the first time ???
+
+  -- display new Location
+  es := es ^ genShowIVDLocationEvent();
+
+  -- add the IvdPatients
+  for all a in set getState().getIvdPatients() do
+    if a.getLocation() = id then
+      es := es ^ a.genAddIvdPatientEvent(actor.getId(),
+                   getPatientBedInfo(a.getId()).bed);
+
+  -- add the agents/transport agents (might be next to patient)
+  for all a in set getState().getAgents()
+                   \ getState().getIvdPatients() do
+    if a.getLocation() = id then
+      let p = getPatientUsesAgent(a.getId()),
+          options = if p = nil then [] 
+                    else 
+                      let mk_SimEvent`IVDPosInfo(b,s) = p in 
+                        [mk_SimEvent`IVDPosInfo(b,s)]
+      in
+      es := es ^ a.genAddAgentEvent(actor.getId(),options); 
+
+  -- add the resources (might be next to patient or both)
+  for all r in set getState().getResources() do
+    if r.getLocation() = id then
+    (
+      -- show the resource in free resources if more avaliable
+      if r.getUnits() > 0 then
+        es := es ^ r.genAddResourceEvent(actor.getId(),[]);
+
+      -- show resource next to patient 
+      for all mk_SimEvent`IVDPosInfo(bed,slot) in set 
+               getPatientUsesResource(r.getId()) do
+        es := es ^ r.genAttachResourceEvent(
+               mk_SimEvent`IVDPosInfo(bed,slot))
+    );
+
+  return es
+);
+
+--LINE 228 1
+getPatientUsesResource: ResourceId ==> set of SimEvent`IVDPosInfo
+getPatientUsesResource(rid) ==
+(
+  return { mk_SimEvent`IVDPosInfo(bed,slot) | 
+            mk_BedInfo(bed,-,-,resources) in set ivdInfo,
+            slot in set {1,...,maxResourceSlots} &
+            slot in set dom resources and  resources(slot) = rid}
+);
+
+
+--LINE 231 1
+
+getPatientUsesAgent: AgentId ==> [ SimEvent`IVDPosInfo ]
+getPatientUsesAgent(id) ==
+(
+  let s = { mk_SimEvent`IVDPosInfo(bed,slot) | 
+            mk_BedInfo(bed,-,agents,-) in set ivdInfo,
+            slot in set {1,...,maxAgentSlots} &
+            slot in set dom agents and id = agents(slot)}
+  in
+    if s = {} then return nil
+    else let p in set s in
+      return p
+);
+
+--LINE 234 1
+getPatientBedInfo: IvdPatientId ==> BedInfo
+getPatientBedInfo(id) ==
+(
+  let s = { bi | bi in set ivdInfo & bi.patient = id}
+  in
+    let p in set s in
+      return p
+);
+
+--LINE 237 1
+allocPatientBed: IvdPatientId ==> [nat]
+allocPatientBed(id) ==
+(
+  let free = 
+        {1,...,getBeds()}\
+        {bed | mk_BedInfo(bed,-,-,-) in set ivdInfo} in
+  if free = {} then 
+    return nil
+  else 
+    let b = minimum(free) in
+    (
+       ivdInfo := ivdInfo union {mk_BedInfo(b,id,{|->},{|->})};
+       return b
+    )
+);
+
+
+--LINE 240 1
+freePatientBed: IvdPatientId ==> ()
+freePatientBed(id) ==
+(
+  ivdInfo := { bi | bi in set ivdInfo & bi.patient <> id }
+);
+
+--LINE 248 1
+addAgent : AgentId * EvalMode ==> MsgList
+addAgent(aid,mode) ==
+(
+  dcl thebed:nat:=0;
+  let a = getState().getAgent(aid) in
+  (
+    -- if agent is a patient then insert bedpos info
+    if isofclass(SimIvdPatient,a) then
+      let bed = allocPatientBed(aid) in
+      (
+        if bed = nil then
+          return errorMsg(12,
+               "The location "^name ^ " is full - " ^
+               "there is no room for patient " ^ a.getName());
+        thebed:=bed
+      );
+    -- check that agent is allocated by current state ???
+    --if not getState().isAllocated(id)  then
+    --  return errorMsg(7,"Agent " ^ name ^ " can not be moved");
+
+   if a.getLocation()<>nil then
+     return errorMsg(7,"Agent " ^ a.getName() ^ " can not be inserted to location " ^ name ^ ".");
+    
+    -- check that agent may be added to the location
+    let msgs = mayAgentEnterLocation(a) in
+      if msgs <> [] then return msgs;
+ 
+    -- stop the agent clock if a drain object
+    if isAgentDrainType(a) then
+      a.stopClock();
+
+    -- add the agent to the location 
+    -- (it might not be visible though)
+    a.setLocation(id);
+
+    -- handle event generation
+    if mode.events then
+    (
+      -- if agent is an actor then update his gui
+      if getSession().hasActor(aid) then 
+        getBroadCast().broadCastTo(
+          {aid},genActorDisplayEvents(a));
+
+      -- add agent to every body elses gui in the location
+      if isofclass(SimIvdPatient,a) then
+        let ivda : SimIvdPatient = a in 
+          for all i in set getSession().
+                    getActorsInLocation(id)\{aid} do
+            getBroadCast().broadCastTo({i},
+                    ivda.genAddIvdPatientEvent(i,thebed))
+      else
+        for all i in set getSession().
+                    getActorsInLocation(id)\{aid} do
+          getBroadCast().broadCastTo({i},a.genAddAgentEvent(i,[]))
+    )
+  );
+  return []
+);
+
+--LINE 254 1
+removeAgent : AgentId * EvalMode ==> MsgList
+removeAgent(aid,mode) ==
+(
+  let a = getState().getAgent(aid) in
+  (
+    -- if agent is a patient then deallocated the bed position
+    if isofclass(SimIvdPatient,a) then
+      freePatientBed(aid);
+
+    -- remove Agent and do all the checking
+    return SimLocation`removeAgent(aid,mode)
+  )
+);
+
+--LINE 260 1
+attachAgent : AgentId * AgentId * EvalMode ==> MsgList
+attachAgent(aid,pid,mode) ==
+(
+  let a = getState().getAgent(aid),
+      p = getState().getAgent(pid)
+  in
+  (
+    -- check that aid and pid are both allocated
+    --if not getState().isAllocated(aid) or
+    --   not getState().isAllocated(pid)  
+    --then
+    --return errorMsg(7,
+    --          "Agent " ^ a.getName() ^" has no right to "^
+     --         "see the patient " ^  p.getName());
+
+    -- check that agent is in this location
+    if isofclass(SimIvdPatient,a) then
+      return errorMsg(7,
+              "Patient " ^ a.getName() ^" is trying see patient " ^
+              p.getName() ^ ".");
+
+    if id <> a.getLocation() then
+      return errorMsg(7,
+              "Agent " ^ a.getName() ^" is trying to perform an "^
+              "action in " ^ getName() ^ " all though its current " ^                   
+              " is " ^
+              getState().getLocation(p.getLocation()).getName());
+
+    -- check that the patient is in this location
+    if id <> p.getLocation() then
+      return errorMsg(7,
+              "Patient " ^ p.getName() ^" is not in the location "
+              ^ getName());
+
+    if getPatientUsesAgent(aid)<>nil then 
+       return errorMsg(7,
+              "Agent " ^ a.getName() ^
+              " is allready attached to a patient");
+
+    -- get hold of a bed slot for the agent
+    let bi = getPatientBedInfo(pid) in
+    (
+      if card dom bi.agents = maxAgentSlots then
+        return errorMsg(123,
+           "The area around the patient " ^ p.getName()^
+           " is to crawded - no room for " ^ a.getName());
+
+      let freeslot = minimum({1,...,maxAgentSlots}\ dom bi.agents) in
+      ( 
+        ivdInfo := ivdInfo\{bi} 
+                 union { mu(bi,agents |->bi.agents munion
+                                       {freeslot |-> aid})};
+        -- generate events
+        if mode.events then
+        (
+          if getSession().hasActor(aid) then
+          (
+            skip  -- ??? henrik ??? disable menu
+          );
+          -- update the displays
+          for all i in set getSession().getActorsInLocation(id) do
+            getBroadCast().broadCastTo({i},
+              a.genChangeAgentStateEvent(i,
+                [mk_SimEvent`IVDPosInfo(bi.bed,freeslot)]));
+        )
+      )
+    ) 
+  );
+  return []
+);
+
+--LINE 266 1
+detachAgent : AgentId * AgentId * EvalMode ==> MsgList
+detachAgent(aid,pid,mode) ==
+(
+  let a = getState().getAgent(aid),
+      p = getState().getAgent(pid)
+  in
+  (
+    -- check that aid and pid are both allocated
+    --if not getState().isAllocated(pid) or
+    --   not getState().isAllocated(pid)  
+   -- then
+    --return errorMsg(7,
+     --         "Agent " ^ a.getName() ^" has no right to "^
+     --         "leave the patient " ^  p.getName());
+
+    -- check that the patient is in this location
+    if id <> p.getLocation() then
+    return errorMsg(7,
+              "Patient " ^ p.getName() ^" is not in the location "
+              ^ getName());
+
+    -- check that agent is attached to the patient
+    let bi = getPatientBedInfo(pid) in
+    if aid not in set rng bi.agents then
+    return errorMsg(7,
+              "Agent " ^ a.getName() ^" is not currently seeing "^
+              "the patient " ^ p.getName() ^" in the location "^                   
+              getName());
+
+    -- remove the agent
+    let bi = getPatientBedInfo(pid) in
+    ( 
+      ivdInfo := ivdInfo\{bi} 
+               union { mu(bi, agents |-> (bi.agents :-> {aid})) };
+      -- generate events
+      if mode.events then
+      (
+        if getSession().hasActor(aid) then
+        (
+          skip  -- ??? henrik ??? enable menu
+        );
+        -- update the displays
+        for all i in set getSession().getActorsInLocation(id) do
+          getBroadCast().
+            broadCastTo({i},a.genChangeAgentStateEvent(i,[]));
+      )
+    ) 
+  );
+  return []
+);
+
+--LINE 290 1
+attachResource : ResourceId * AgentId * EvalMode ==> MsgList
+attachResource(rid, pid, mode) ==
+(
+  let r = getState().getResource(rid),
+      p = getState().getAgent(pid)
+  in
+  (
+    -- check that aid and pid are both allocated
+    --if not getState().isAllocated(rid) or
+    --   not getState().isAllocated(pid)  
+    --then
+    --return errorMsg(7,
+    --          "Resource " ^ r.getName() ^" can not be attached to "^
+    --          "the patient " ^  p.getName());
+
+    -- check that the resource is in this location
+    if id <> r.getLocation() then
+      return errorMsg(7,
+              "The resource " ^ r.getName() ^
+              " does not belong to the location " ^                   
+              getName());
+
+    -- check that the patient is in this location
+    if id <> p.getLocation() then
+    return errorMsg(7,
+              "Patient " ^ p.getName() ^" is not in the location "
+              ^ getName());
+
+    -- get hold of a bed slot for the resource
+    let bi = getPatientBedInfo(pid) in
+    if card dom bi.resources = maxResourceSlots then
+        return errorMsg(123,
+             "The area around the patient " ^ p.getName()^
+             " is to crawded - no room for " ^ r.getName())
+    else
+    let freeslot = minimum({1,...,maxResourceSlots}\
+                           dom bi.resources) 
+    in
+    ( 
+      ivdInfo := ivdInfo\{bi} 
+               union { mu(bi,resources |-> bi.resources munion
+                                       {freeslot |-> rid})};
+      -- generate events
+      if mode.events then
+      (
+        --dcl es : SimEvents := [];
+
+        -- if the resource is reusable and there is none left
+        -- remove it from the free pos
+        --if r.getReusable() and r.getUnits() = 1 then
+        --es := es ^ r.genRemoveResourceEvent(i,[]);
+        -- should not be handled here
+
+        -- add the resource from the patient
+       getBroadCast().broadCastLocation(id,{},
+           r.genAttachResourceEvent(
+              mk_SimEvent`IVDPosInfo(bi.bed,freeslot)));
+      )
+    ) 
+  );
+  return []
+);
+
+--LINE 296 1
+detachResource : ResourceId * AgentId * EvalMode ==> MsgList
+detachResource(rid,pid,mode) ==
+(
+  let r = getState().getResource(rid),
+      p = getState().getAgent(pid)
+  in
+  (
+    -- check that aid and pid are both allocated
+    --if not getState().isAllocated(rid) or
+    --   not getState().isAllocated(pid)  
+    --then
+    --return errorMsg(7,
+    --          "Resource " ^ r.getName() ^" can not be removed "^
+    --          "from the patient " ^  p.getName());
+
+    -- check that the resource is in this location
+    if id <> r.getLocation() then
+    return errorMsg(7,
+              "The resource " ^ r.getName() ^
+              " dos not belong to the location " ^
+              getName());
+
+    -- check that the patient is in this location
+    if id <> p.getLocation() then
+    return errorMsg(7,
+              "Patient " ^ p.getName() ^" is not in the location "
+              ^ getName());
+
+    -- remove the resource
+    let bi = getPatientBedInfo(pid) in(
+      if rid not in set rng bi.resources then
+        return errorMsg(7,
+                "Resource " ^ r.getName() ^" is not currently "^
+                "attached to the patient " ^ p.getName() ^
+                " in the location " ^ getName());
+      if {i | i in set dom bi.resources & 
+           bi.resources(i) = rid}={} then
+        return errorMsg(7,
+            "Resource " ^ r.getName() ^" is not attached to "^
+            " the patient " ^  p.getName() ^ ".");
+
+      let slot in set dom bi.resources be st 
+          bi.resources(slot) = rid in
+      ( 
+        ivdInfo := ivdInfo\{bi} 
+                 union { mu(bi, resources |-> (
+                  {slot} <-: bi.resources ))};
+        -- generate events
+        if mode.events then
+          -- remove reource from the patient
+          let es = r.genDetachResourceEvent(
+                         mk_SimEvent`IVDPosInfo(bi.bed,slot)) in
+            getBroadCast().broadCastLocation(id,{},es);
+      )
+    )
+  );
+  return []
+)
+
+--LINE 302 1
+end SimIvdLocation
+
+--LINE 308 1
+class SimPath is subclass of SimObj
+
+--LINE 312 1
+instance variables
+name : Name := "";
+image : FileName := "";
+lfrom : [LocationId] := nil;
+lto : [LocationId] := nil;
+distance : nat := 0;
+surfaces : set of ClassId := {} -- name of the surfaces
+
+--LINE 316 1
+operations
+getName : () ==> Name
+getName() == return name;
+getImage : () ==> FileName
+getImage() == return image;
+getFrom : () ==> LocationId
+getFrom() == return lfrom;
+getTo : () ==> LocationId
+getTo() == return lto;
+getDistance : () ==> nat
+getDistance() == return distance;
+getSurfaces : () ==> set of ClassId 
+getSurfaces() == return surfaces;
+
+--LINE 322 1
+initObj : Name * FileName * LocationId * LocationId * 
+          nat * set of ClassId ==> SimPath
+initObj(n,i,f,t,d,ss) ==
+(
+  name := n;
+  image := i;
+  lfrom := f;
+  lto := t;
+  distance := d;
+  surfaces := ss;
+  return self
+);
+
+--LINE 326 1
+copyObj : () ==> SimObj
+copyObj() ==
+(
+   let s : SimPath = new SimPath().initSimObj(getClassId(),getId()) in 
+     s.initObj(name,image,lfrom,lto,distance,surfaces)
+);
+
+--LINE 330 1
+newObj : ClassId * ArgMap * SessionState ==> SimObj
+newObj(cid,m,state) ==
+(
+  let id = state.getNewPathId() in
+  let n  : SimString = state.getItemObj(m("name")),
+      im : SimString = state.getItemObj(m("image")),
+      f  : LocationId                 = m("from"),
+      t  : LocationId                 = m("to"),
+      d  : SimNum    = state.getItemObj(m("distance")),
+      sur: SimSet    = state.getItemObj(m("surfaces"))
+  in
+  let s : SimPath = new SimPath().initSimObj(cid,id) in
+    s.initObj(n.getVal(),
+              im.getVal(),
+              f,t,
+              d.getVal(),
+              sur.getClassIds())
+)
+pre {"name","image","from","to","distance","surfaces"} subset dom m;
+
+--LINE 334 1
+extrItems : Items ==> Items
+extrItems(-) ==
+(
+  return {}
+);
+
+--LINE 340 1
+genShowPathEvent : LocationId * SimTransport ==> SimEvents
+genShowPathEvent(f,t) ==
+(  
+  return
+  [ mk_SimEvent`ShowPath(name,image,
+      [SimEvent`qGround, SimEvent`qMiddle, SimEvent`qSky]
+                                                   (t.getLevel()),
+      if f = lfrom then SimEvent`qRight 
+             else SimEvent`qLeft,
+      {})
+  ]
+);
+
+--LINE 344 1
+genAnimatePathEvent : SimTransport ==> SimEvents
+genAnimatePathEvent(t) ==
+(
+  return [mk_SimEvent`AnimatePath(calcPathTime(t))]
+);
+
+--LINE 348 1
+calcPathTime : SimTransport ==> nat
+calcPathTime(t) ==
+(
+  let maxspeed = maximum( rng (surfaces <: t.getSpeed())) in
+  if maxspeed = 0 then return 10 -- this is a problem
+  else return distance/maxspeed
+);
+
+--LINE 352 1
+end SimPath
+
+--LINE 358 1
+class SimAgent is subclass of SimObj
+
+--LINE 362 1
+instance variables
+
+  location : [WhereAmI] := nil;  -- current location
+
+  -- from constructor
+  name : Name := "";
+  image : FileName := "";
+  role : [SimRole] := nil;            -- role played by agent
+  transport : [SimTransport] := nil;  -- the means of transport
+
+--LINE 366 1
+operations
+getName : () ==> Name
+getName() == return name;
+getImage : () ==> FileName
+getImage() == return image;
+getRole : () ==> SimRole
+getRole() == return role;
+getTransport : () ==> SimTransport
+getTransport() == return transport;
+getLocation : () ==> [WhereAmI]
+getLocation() == return location;
+setLocation : [WhereAmI] ==> ()
+setLocation(l) == location := l;
+
+getInfo : () ==> AgentInfo
+getInfo() == return mk_AgentInfo(id,name);
+
+--LINE 372 1
+initObj : Name * FileName * SimRole * 
+          SimTransport ==> SimAgent
+initObj(n,i,r,t) ==
+(
+  name := n;
+  image := i;
+  role := r;
+  transport := t;
+  location := nil;
+  return self
+);
+
+--LINE 376 1
+copyObj : () ==> SimObj
+copyObj() ==
+(
+   let s : SimAgent = 
+      new SimAgent().initSimObj(getClassId(),getId()) in (
+     s.initObj(name,image,role,transport).setLocation(location);
+     return s;
+  );
+);
+
+--LINE 380 1
+newObj : ClassId * ArgMap * SessionState ==> SimObj
+newObj(cid,m,state) ==
+(
+  let id = state.getNewAgentId() in
+  let n   : SimString    = state.getItemObj(m("name")),
+      im  : SimString    = state.getItemObj(m("image")),
+      scr : SimClassId   = state.getItemObj(m("role")),
+      r   : SimRole      = state.getDefs().getCObj(scr.getVal()),
+      sct : SimClassId   = state.getItemObj(m("transport")),
+      t   : SimTransport = state.getDefs().getCObj(sct.getVal())
+  in
+  let s : SimAgent = new SimAgent().initSimObj(cid,id) in
+    s.initObj(n.getVal(),im.getVal(),r,t)
+)
+pre {"name","image","role","transport"} subset dom m;
+
+--LINE 384 1
+extrItems : Items ==> Items
+extrItems(-) ==
+(
+  return
+    if location<>nil then
+      { location }
+    else {}
+);
+
+--LINE 392 1
+genAddAgentEvent: AgentId * SimEvent`AgentOptions ==> SimEvents
+genAddAgentEvent(aid,options) ==
+(
+  return [mk_SimEvent`AddAgent(genAgentEvent(aid),options)]
+);
+
+--LINE 398 1
+genRemoveAgentEvent: SimEvent`AgentOptions ==> SimEvents
+genRemoveAgentEvent(options) ==
+(
+  return [mk_SimEvent`RemoveAgent(getId(),options)]
+);
+
+--LINE 404 1
+genChangeAgentStateEvent: AgentId * SimEvent`AgentOptions
+                          ==> SimEvents
+genChangeAgentStateEvent(aid,options) ==
+(
+  let mk_SimEvent`Agent(-,-,s,b,i) = genAgentEvent(aid) in
+  return [mk_SimEvent`ChangeAgentState(i,s,b,options)]
+);
+
+--LINE 410 1
+genChangeAgentBindingEvent: SimEvent`AgentBinding
+                          ==> SimEvents
+genChangeAgentBindingEvent(binding) ==
+(
+  return [mk_SimEvent`ChangeAgentBinding(id,binding)]
+);
+
+--LINE 416 1
+genAgentEvent : AgentId ==> SimEvent`Agent
+genAgentEvent(aid) ==
+(  
+  let state = getState().getSession().getItemState(aid,id),
+      ha = getState().getSession().hasActor(id),
+      bind = if ha then 
+               if aid = id then SimEvent`qThisActor
+               else SimEvent`qOtherActor
+             else SimEvent`qFree
+  in
+  return
+  mk_SimEvent`Agent(name,image,state,bind,id)
+);
+
+--LINE 420 1
+genSetMenuEvent : () ==> SimEvents
+genSetMenuEvent() ==
+(
+  getRole().getCommands().genSetMenuEvent();
+);
+
+--LINE 428 1
+startClock : () ==> ()
+startClock() == skip;
+
+--LINE 434 1
+stopClock : () ==> ()
+stopClock() == skip;
+
+--LINE 440 1
+hasRole : ClassId * EvalMode ==> MsgList
+hasRole(c,-) == 
+(
+  if getDefs().isSubClassOf(c,{role.getClassId()}) then return []
+  else return errorMsg(124,"The agent "^ getName()^ 
+             " does not play the following role: " ^ c.id)
+);
+
+--LINE 446 1
+performs : ActionId * EvalMode ==> MsgList
+performs(a,-) == 
+(
+  if a in set role.getPerforms() then return []
+  else return errorMsg(124,"The agent "^ getName()^ 
+             " does not perform the following action: " ^ a.id)
+);
+
+--LINE 452 1
+free : EvalMode ==> MsgList
+free(mode) == 
+(
+  if mode.events then
+    getSession().freeItem(id,mode);
+  return [];
+);
+
+--LINE 458 1
+move : LocationId * EvalMode ==> MsgList
+move(lid,mode) ==
+(
+  dcl path : [seq of PathId] := nil;
+
+  -- check if similar locations
+  if lid = location then return [];
+  
+  let lfrom = getState().getLocation(location),  
+      lto   = getState().getLocation(lid) in
+  (
+     --remember where we came from
+     dcl l  : LocationId := location;
+
+     -- check if there is a path between to and from
+     path := getState().getPathFromTo(location,lid,transport);
+     if path = nil then 
+       return errorMsg(8,
+                 "There is no path for agent "^ name ^ 
+                 " to follow from the location: " 
+                 ^ lfrom.getName()^ " to the location: " 
+                 ^ lto.getName());     
+
+     -- remove the agent from the from location
+     let msgs = lfrom.removeAgent(getId(),mode) in
+       if msgs <> [] then return msgs;
+
+     -- Animate what happens through the movement
+     if mode.events and getSession().hasActor(id) then
+     (
+        dcl es : SimEvents := [];
+        -- emulate what happens through the movement
+        for pid in path do 
+        (
+          let p = getState().getPath(pid) in
+          (
+            if l = p.getFrom() then 
+            (
+              es := es ^ p.genShowPathEvent(p.getFrom(),transport);
+              l := p.getTo()
+            )
+            else
+            ( 
+              es := es ^ p.genShowPathEvent(p.getTo(),transport);
+              l := p.getFrom()
+            );
+            es := es ^ p.genAnimatePathEvent(transport);
+            getBroadCast().broadCastTo({getId()},es);
+            -- wait for p.calcPathTime(transport) seconds
+            es := [];
+          )
+        )
+     ) else (
+       for pid in path do 
+        (
+          let p = getState().getPath(pid) in
+          (
+            skip -- wait for p.calcPathTime(transport) seconds
+          )
+        )
+
+     );
+
+     -- insert the agent into the to location
+     let msgs = lto.addAgent(id,mode) in
+       if msgs <> [] then return msgs  -- this would be a problem
+);
+  return []
+);
+
+--LINE 462 1
+end SimAgent
+
+--LINE 466 1
+--class SimTransportAgent is subclass of SimAgent
+
+--LINE 474 1
+class SimIvdPatient is subclass of SimAgent
+
+--LINE 478 1
+instance variables
+frontImage : FileName := "";    -- front image of IvdPatient
+backImage  : FileName := ""     -- back image of IvdPatient
+
+--LINE 482 1
+operations
+getFront : () ==> FileName
+getFront() == return frontImage;
+getBack : () ==> FileName
+getBack() == return backImage;
+
+--LINE 488 1
+initObj : Name * FileName * FileName * SimRole * 
+          SimTransport ==> SimIvdPatient
+initObj(n,fi,bi,r,t) ==
+(
+   name := n;
+   image := fi;
+   role := r;
+   transport := t;
+   frontImage := fi;
+   backImage := bi;
+   location:=nil;
+   return self
+);
+
+--LINE 492 1
+copyObj : () ==> SimObj
+copyObj() ==
+(
+  let s : SimIvdPatient = 
+       new SimIvdPatient().initSimObj(getClassId(),getId()) in(
+    s.initObj(name,frontImage,backImage,role,transport).
+        setLocation(location);
+    return s
+  )
+);
+
+--LINE 496 1
+newObj : ClassId * ArgMap * SessionState ==> SimObj
+newObj(cid,m,state) ==
+(
+  let id = state.getNewAgentId() in
+  let n  : SimString    = state.getItemObj(m("name")),
+      fi : SimString    = state.getItemObj(m("front")),
+      bi : SimString    = state.getItemObj(m("back")),
+      scr : SimClassId   = state.getItemObj(m("role")),
+      r   : SimRole      = state.getDefs().getCObj(scr.getVal()),
+      sct : SimClassId   = state.getItemObj(m("transport")),
+      t   : SimTransport = state.getDefs().getCObj(sct.getVal())
+  in
+  let s : SimIvdPatient = new SimIvdPatient().initSimObj(cid,id) in
+    s.initObj(n.getVal(),fi.getVal(),bi.getVal(),r,t)
+)
+pre {"name","front","back","role","transport"} subset dom m;
+
+--LINE 500 1
+extrItems : Items ==> Items
+extrItems(-) ==
+(
+  return
+    if location<>nil then
+      { location }
+    else {}
+);
+
+--LINE 506 1
+genAddIvdPatientEvent: AgentId * nat ==> SimEvents
+genAddIvdPatientEvent(aid,bed) ==
+(
+  return [mk_SimEvent`AddIvdPatient(genIvdPatientEvent(aid),bed)]
+);
+
+--LINE 510 1
+genIvdPatientEvent : AgentId ==> SimEvent`IvdPatient
+genIvdPatientEvent( aid ) ==
+(  
+  let state = getState().getSession().getItemState(aid,id) in
+  return
+  mk_SimEvent`IvdPatient(name,frontImage,backImage,state,id)
+);
+
+--LINE 516 1
+attachAgent : AgentId * EvalMode ==> MsgList
+attachAgent(aid,mode) ==
+(
+  let l = getState().getLocation(getLocation()) in
+  if isofclass(SimIvdLocation,l) then 
+    return let il : SimIvdLocation = l in
+             il.attachAgent(aid,id,mode)
+  else 
+    return errorMsg(11,
+         "Unable to attatch agent to the IvdPatient "^getName() ^
+         " - the agent is currently not in an IVD location")
+);
+
+--LINE 520 1
+detachAgent : AgentId * EvalMode ==> MsgList
+detachAgent(aid,mode) ==
+(
+  let l = getState().getLocation(getLocation()) in
+  if isofclass(SimIvdLocation,l) then 
+    return let il : SimIvdLocation = l in
+             il.detachAgent(aid,id,mode)
+  else 
+    return errorMsg(11,
+         "Unable to detatch agent from the IvdPatient "^getName() ^
+         " - the agent is currently not in an IVD Location");
+);
+
+--LINE 526 1
+attachResource : ResourceId * EvalMode ==> MsgList
+attachResource(rid,mode) ==
+(
+let l = getState().getLocation(getLocation()) in
+  if isofclass(SimIvdLocation,l) then 
+    return let il : SimIvdLocation = l in
+             il. attachResource(rid,id,mode)
+  else 
+    return errorMsg(11,
+         "Unable to attatch resource to the IvdPatient "^getName() ^
+         " - the agent is currently not in an IVD Location");       
+);
+
+--LINE 530 1
+detachResource : ResourceId * EvalMode ==> MsgList
+detachResource(rid,mode) ==
+(
+  let l = getState().getLocation(getLocation()) in
+  if isofclass(SimIvdLocation,l) then 
+    return let il : SimIvdLocation = l in
+             il. detachResource(rid,id,mode)
+  else 
+    return errorMsg(11,
+         "Unable to detatch resource from the IvdPatient "^getName() ^
+         " - the agent is currently not in an IVD Location");       
+
+);
+
+--LINE 536 1
+move : LocationId * EvalMode ==> MsgList
+move(-,-) ==
+(
+  return errorMsg(123,"IvdPatient cannot be moved")
+)
+
+--LINE 540 1
+end SimIvdPatient
+
+--LINE 544 1
+class SimSurface is subclass of SimObj
+
+--LINE 548 1
+instance variables
+name : Name := ""
+
+--LINE 552 1
+operations
+getName : () ==> Name
+getName() == return name
+
+--LINE 558 1
+operations
+initObj : Name ==> SimSurface
+initObj(n) ==
+(
+  name := n;
+  return self
+);
+
+--LINE 562 1
+copyObj : () ==> SimObj
+copyObj() ==
+(
+   let s : SimSurface =  
+            new SimSurface().initSimObj(getClassId(),getId()) in
+     s.initObj(name)
+);
+
+--LINE 566 1
+newObj : ClassId * ArgMap * SessionState ==> SimObj
+newObj(cid,m,state) ==
+(
+  let id = state.getNewValId() in
+  let n  : SimString = state.getItemObj(m("name"))
+  in
+  let s : SimSurface = new SimSurface().initSimObj(cid,id) in
+    s.initObj(n.getVal())
+)
+pre {"name"} subset dom m;
+
+--LINE 570 1
+extrItems : Items ==> Items
+extrItems(-) ==
+(
+  return {}
+)
+
+--LINE 574 1
+end SimSurface
+
+--LINE 580 1
+class SimResource is subclass of SimObj
+
+--LINE 584 1
+instance variables
+name : Name := "";
+image : FileName := "";
+reusable : bool := false;
+units : nat := 0;
+weight : nat := 0;   -- weight for one unit
+
+reservedUnits : nat := 0;     -- number of units reserved 
+location : [WhereAmI] := nil;  -- current location
+
+--LINE 588 1
+operations 
+getName : () ==> Name
+getName() == return name;
+getImage : () ==> FileName
+getImage() == return image;
+getReusable : () ==> bool
+getReusable() == return reusable;
+getUnits : () ==> nat
+getUnits() == return units;
+setUnits : nat ==> ()
+setUnits(u) == units := u;
+getReservedUnits : () ==> nat
+getReservedUnits() == return reservedUnits;
+setReservedUnits : nat ==> ()
+setReservedUnits(u) == reservedUnits := u;
+addReservedUnits : nat ==> ()
+addReservedUnits(u) == reservedUnits := reservedUnits + u;
+
+
+getWeight : () ==> nat
+getWeight() == return weight;
+
+getLocation : () ==> [WhereAmI]
+getLocation() == return location;
+setLocation : [WhereAmI] ==> ()
+setLocation(l) == location := l;
+
+--LINE 594 1
+operations
+initObj : Name * FileName * bool * nat * nat 
+           ==> SimResource
+initObj(n,i,r,u,w) ==
+(
+  name := n;
+  image := i;
+  reusable := r;
+  units := u;
+  weight := w;
+  location:=nil;
+  return self
+);
+
+--LINE 598 1
+copyObj : () ==> SimObj
+copyObj() ==
+(
+   let s : SimResource = 
+             new SimResource().initSimObj(getClassId(),getId()) in(
+     s.initObj(name,image,reusable,units,weight)
+               .setLocation(location);
+     return s
+   )
+);
+
+--LINE 602 1
+newObj : ClassId * ArgMap * SessionState ==> SimObj
+newObj(cid,m,state) ==
+(
+  let id = state.getNewResourceId() in
+  let n  : SimString = state.getItemObj(m("name")),
+      i  : SimString = state.getItemObj(m("image")),
+      r  : SimBool   = state.getItemObj(m("reusable")),
+      u  : SimNum    = state.getItemObj(m("units")),
+      w  : SimNum    = state.getItemObj(m("weight"))
+  in
+  let s : SimResource = new SimResource().initSimObj(cid,id) in
+    s.initObj(n.getVal(),i.getVal(),r.getVal(),u.getVal(),w.getVal())
+)
+pre {"name","image","reusable","units","weight"} subset dom m;
+
+--LINE 606 1
+extrItems : Items ==> Items
+extrItems(-) ==
+(
+  return
+    if location<>nil then
+      { location }
+    else {}
+);
+
+--LINE 610 1
+genAddResourceEvent : AgentId * SimEvent`ResourceOptions
+                   ==> SimEvents
+genAddResourceEvent(aid,ol) ==(
+  let state = getState().getSession().getItemState(aid,id) in
+  return [mk_SimEvent`AddResource(genResourceEvent(),state,id,ol)];
+);
+
+genAddNonSelectedResourceEvent : SimEvent`ResourceOptions
+                   ==> SimEvents
+genAddNonSelectedResourceEvent(ol) ==(
+  return [mk_SimEvent`AddResource(genResourceEvent(),
+            mk_SimEvent`NormalQ(),id,ol)];
+);
+
+genAttachResourceEvent : SimEvent`IVDPosInfo ==> SimEvents
+genAttachResourceEvent(pos) ==
+return [mk_SimEvent`AttachResource(id,pos)];
+
+genDetachResourceEvent : SimEvent`IVDPosInfo ==> SimEvents
+genDetachResourceEvent(pos) ==
+return [mk_SimEvent`DetachResource(id,pos)];
+
+genResourceEvent : () ==> SimEvent`Resource
+genResourceEvent() ==
+(
+  return mk_SimEvent`Resource(
+           name,image,reusable,units,weight)
+);
+
+genRemoveResourceEvent : SimEvent`ResourceOptions ==> SimEvents
+genRemoveResourceEvent(options) ==
+(
+  return [mk_SimEvent`RemoveResource(id,options)]
+);
+
+
+--LINE 616 1
+useUnits : nat * EvalMode ==> MsgList
+useUnits(count,mode) ==
+(
+  -- if in the silent run - check that there is resources enough
+  -- and allocated them
+  if not mode.events then
+  (
+    let freeunits = getUnits() - getReservedUnits() in 
+    if freeunits < count then
+      return errorMsg(7,
+              "There is not enought units of the resource " ^ 
+              getName() ^ ". Needed: " ^ nat2str(count) ^
+              " found only : " ^ nat2str(freeunits)); 
+
+    -- log in the state that count units are needed
+    -- this is used to allocated the needed resources 
+    -- before actual execution of the action
+    getState().allocNeededResource(getId(),count);
+
+    -- remove the units
+    setUnits(getUnits()-count);
+  ) 
+  else
+  (
+    -- remove count units (units are reserved before execution)
+    getState().allocNeededResource(getId(),count);
+    setReservedUnits(getReservedUnits()-count);
+    setUnits(getUnits()-count);
+
+    -- remove the resource from the displays if it is empty
+    if getUnits() = 0 then
+      let es = genRemoveResourceEvent([]) in
+        getBroadCast().broadCastLocation(getLocation(),{},es)
+  );
+  return []
+);
+
+--LINE 622 1
+release : EvalMode ==> MsgList
+release(mode) ==
+(
+  -- get the number of units of the resource used in this state
+  -- and hand them back if they are reusable
+  let inuse = getState().getResourceInUse(getId()),
+      current = getUnits()
+  in
+  (
+    -- log in the state that the given resource has been released
+    getState().deallocNeededResource(getId());
+
+    if getReusable() then
+    (
+      setUnits(current + inuse);
+      if mode.events then
+        if current = 0 and inuse > 0 then
+          let es = genAddNonSelectedResourceEvent([]) in
+            getBroadCast().broadCastLocation(getLocation(),{},es);
+    )
+  );
+  return []
+)
+
+--LINE 626 1
+end SimResource
+
+--LINE 630 1
+class SimTransport is subclass of SimObj
+
+--LINE 634 1
+types
+SpeedTable = map ClassId to nat  -- map SurfaceClasses to nat
+
+--LINE 638 1
+instance variables
+name : Name := "";
+speed : SpeedTable := {|->};
+level : nat := 1;         -- (1 ground,2 middle,3 sky)
+inv level in set {1,2,3}
+
+--LINE 642 1
+operations
+getName : () ==> Name
+getName() == return name;
+getSpeed : () ==> SpeedTable
+getSpeed() == return speed;
+getLevel : () ==> nat
+getLevel() == return level;
+
+--LINE 648 1
+initObj : Name * SpeedTable *nat ==> SimTransport
+initObj(n,s,l) ==
+(
+  name := n;
+  speed := s;
+  level := (l-1) mod 3 + 1;
+  return self
+); 
+
+--LINE 652 1
+copyObj : () ==> SimObj
+copyObj() ==
+(
+   let s : SimTransport =                
+            new SimTransport().initSimObj(getClassId(),getId()) in
+     s.initObj(name,speed,level)
+);
+
+--LINE 656 1
+newObj : ClassId * ArgMap * SessionState ==> SimObj
+newObj(cid,m,state) ==
+(
+  let id = state.getNewValId() in
+  let n  : SimString = state.getItemObj(m("name")),
+      tab  : SimMap  = state.getItemObj(m("speed")),
+      l = new SimNum().initObj(1)
+     -- l : SimNum    = state.getItemObj(m("level")) ???
+  in
+  let s : SimTransport = new SimTransport().initSimObj(cid,id) in
+    s.initObj(n.getVal(),tab.getSpeedTable(),l.getVal())
+)
+pre {"name","speed" } subset dom m;  -- ,"level" ???
+
+--LINE 660 1
+extrItems : Items ==> Items
+extrItems(-) ==
+(
+  return {}
+)
+
+--LINE 664 1
+end SimTransport
+
+--LINE 668 1
+class SimRole is subclass of SimObj
+
+--LINE 672 1
+types
+ActionSet = set of ActionId
+
+--LINE 676 1
+instance variables
+name : Name := "";
+performs : ActionSet := {};
+commands : [SimMenuVal] := nil
+
+--LINE 680 1
+operations
+getName : () ==> Name 
+getName() == return name;
+getPerforms : () ==> ActionSet 
+getPerforms() == return performs;
+getCommands : () ==> SimMenuVal 
+getCommands() == return commands;
+
+--LINE 686 1
+initObj : Name * ActionSet * SimMenuVal ==> SimRole
+initObj(n,p,m) ==
+(
+  name := n;
+  performs := p;
+  commands := m;
+  return self
+);
+
+--LINE 690 1
+copyObj : () ==> SimObj
+copyObj() ==
+(
+   let s : SimRole = new SimRole().initSimObj(getClassId(),getId()) in
+     s.initObj(name,performs,commands)
+);
+
+--LINE 694 1
+newObj : ClassId * ArgMap * SessionState ==> SimObj
+newObj(cid,m,state) ==
+(
+  let id = state.getNewValId() in
+  let n  : SimString  = state.getItemObj(m("name")),
+      p  : SimSet     = state.getItemObj(m("performs")),
+      l  : SimMenuVal = state.getItemObj(m("commands"))
+  in
+  let s : SimRole = new SimRole().initSimObj(cid,id) in
+    s.initObj(n.getVal(),p.getActionIds(),l)
+)
+pre {"name","performs","commands"} subset dom m;
+
+--LINE 698 1
+extrItems : Items ==> Items
+extrItems(-) ==
+(
+  return {}
+)
+
+--LINE 702 1
+end SimRole
+
+--LINE 752 1
+
+
+--LINE 7 1
+class SimBool is subclass of SimObj 
+instance variables
+  val : bool := false
+
+operations
+setVal : bool ==> ()
+setVal(b) == val := b;
+getVal : () ==> bool
+getVal() == return val;
+
+initObj : bool ==> SimBool
+initObj(b) ==
+(
+  val := b;
+  return self
+);
+
+copyObj : () ==> SimObj
+copyObj() == 
+(
+   let s : SimBool =  new SimBool().initSimObj(getClassId(),getId()) in
+    s.initObj(val)
+);
+extrItems : set of ItemId ==> set of ItemId
+extrItems(-) == return {};
+
+newObj : ClassId * ArgMap * SessionState ==> SimObj
+newObj(cid,m,state) ==
+(
+  let id = state.getNewValId() in
+  -- get the arguments
+  let v : SimBool = state.getItemObj(m("val")) in
+  let s : SimBool =  new SimBool().initSimObj(cid,id) in
+    s.initObj(v.getVal())
+) 
+pre {"val"} subset dom m
+
+end SimBool
+
+--LINE 11 1
+class SimNum is subclass of SimObj 
+instance variables
+  val : real := 0
+operations
+setVal : real ==> ()
+setVal(b) == val := b;
+getVal : () ==> real
+getVal() == return val;
+
+initObj : real ==> SimNum
+initObj(b) ==
+(
+  val := b;
+  return self
+);
+
+copyObj : () ==> SimObj
+copyObj() == 
+(
+   let s : SimNum =  new SimNum().initSimObj(getClassId(),getId()) in
+    s.initObj(val)
+);
+extrItems : set of ItemId ==> set of ItemId
+extrItems(-) == return {};
+
+newObj : ClassId * ArgMap * SessionState ==> SimObj
+newObj(cid,m,state) ==
+(
+  let id = state.getNewValId() in
+  -- get the arguments
+  let v : SimNum = state.getItemObj(m("val")) in
+  let s : SimNum =  new SimNum().initSimObj(cid,id) in
+    s.initObj(v.getVal())
+) pre {"val"} subset dom m
+end SimNum
+
+
+--LINE 15 1
+class SimString is subclass of  SimObj 
+instance variables
+  val : String := ""
+operations
+setVal : String ==> ()
+setVal(b) == val := b;
+getVal : () ==> String
+getVal() == return val;
+
+initObj : String ==> SimString
+initObj(b) ==
+(
+  val := b;
+  return self
+);
+
+copyObj : () ==> SimObj
+copyObj() == 
+(
+   let s : SimString =  
+     new SimString().initSimObj(getClassId(),getId()) in
+    s.initObj(val)
+);
+extrItems : set of ItemId ==> set of ItemId
+extrItems(-) == return {};
+
+newObj : ClassId * ArgMap * SessionState ==> SimObj
+newObj(cid,m,state) ==
+(
+  let id = state.getNewValId() in
+  -- get the arguments
+  let v : SimString = state.getItemObj(m("val")) in
+  let s : SimString =  new SimString().initSimObj(cid,id) in
+    s.initObj(v.getVal())
+) pre {"val"} subset dom m
+end SimString
+
+
+--LINE 19 1
+class SimActionId is subclass of  SimObj 
+instance variables
+  val : ActionId := mk_ActionId("")
+operations
+setVal : ActionId ==> ()
+setVal(b) == val := b;
+getVal : () ==> ActionId
+getVal() == return val;
+
+initObj : ActionId ==> SimActionId
+initObj(b) ==
+(
+  val := b;
+  return self
+);
+
+copyObj : () ==> SimObj
+copyObj() == 
+(
+  let s : SimActionId =  
+       new SimActionId().initSimObj(getClassId(),getId()) in
+    s.initObj(val)
+);
+extrItems : set of ItemId ==> set of ItemId
+extrItems(-) == return {};
+
+newObj : ClassId * ArgMap * SessionState ==> SimObj
+newObj(cid,m,state) ==
+(
+  let id = state.getNewValId() in
+  -- get the arguments
+  let v : SimActionId = state.getItemObj(m("val")) in
+  let s : SimActionId =  new SimActionId().initSimObj(cid,id) in
+    s.initObj(v.getVal())
+) pre {"val"} subset dom m
+end SimActionId
+
+--LINE 23 1
+class SimClassId is subclass of  SimObj 
+instance variables
+  val : ClassId := mk_ClassId("X")
+operations
+setVal : ClassId ==> ()
+setVal(b) == val := b;
+getVal : () ==> ClassId
+getVal() == return val;
+
+initObj : ClassId ==> SimClassId
+initObj(b) ==
+(
+  val := b;
+  return self
+);
+
+copyObj : () ==> SimObj
+copyObj() == 
+(
+   let s : SimClassId =  
+       new SimClassId().initSimObj(getClassId(),getId()) in
+    s.initObj(val)
+);
+extrItems : set of ItemId ==> set of ItemId
+extrItems(-) == return {};
+
+newObj : ClassId * ArgMap * SessionState ==> SimObj
+newObj(cid,m,state) ==
+(
+  let id = state.getNewValId() in
+  -- get the arguments
+  let v : SimClassId = state.getItemObj(m("val")) in
+  let s : SimClassId =  new SimClassId().initSimObj(cid,id) in
+    s.initObj(v.getVal())
+) pre {"val"} subset dom m
+end SimClassId
+
+--LINE 27 1
+class SimTime is subclass of  SimObj 
+instance variables
+  rel : bool := false;
+  val : TimeTp := 0
+operations
+setVal : bool * TimeTp ==> ()
+setVal(r,t) == (rel := r; val := t);
+getRel : () ==> bool
+getRel() == return rel;
+getTime : () ==> TimeTp
+getTime() == return val;
+
+initObj : bool * TimeTp ==> SimTime
+initObj(r,t) ==
+(
+  rel := r;
+  val := t;
+  return self
+);
+
+copyObj : () ==> SimObj
+copyObj() == 
+(
+   let s : SimTime =  new SimTime().initSimObj(getClassId(),getId()) in
+    s.initObj(rel,val)
+);
+extrItems : set of ItemId ==> set of ItemId
+extrItems(-) == return {};
+
+newObj : ClassId * ArgMap * SessionState ==> SimObj
+newObj(cid,m,state) ==
+(
+  let id = state.getNewValId() in
+  -- get the arguments
+  let r : SimBool = state.getItemObj(m("rel")),
+      v : SimNum  = state.getItemObj(m("val"))
+  in
+  let s : SimTime =  new SimTime().initSimObj(cid,id) in
+    s.initObj(r.getVal(),v.getVal())
+) pre {"rel","val"} subset dom m
+end SimTime
+
+--LINE 33 1
+class SimNull is subclass of  SimObj 
+operations
+initObj : () ==> SimObj
+initObj() ==
+(
+  return self
+);
+
+copyObj : () ==> SimObj
+copyObj() == 
+(
+   let s : SimNull =  new SimNull().initSimObj(getClassId(),getId()) in
+    s.initObj()
+);
+extrItems : set of ItemId ==> set of ItemId
+extrItems(-) == return {};
+
+newObj : ClassId * ArgMap * SessionState ==> SimObj
+newObj(cid,-,state) ==
+(
+  let id = state.getNewValId() in
+  let s : SimNull =  new SimNull().initSimObj(cid,id) in
+    s.initObj()
+)
+end SimNull
+
+
+--LINE 37 1
+class SimSet is subclass of  SimObj 
+instance variables
+  val : Items := {}
+operations
+setVal : Items ==> ()
+setVal(b) == val := b;
+getVal : () ==> Items
+getVal() == return val;
+
+initObj : Items ==> SimSet
+initObj(b) ==
+(
+  val := b;
+  return self
+);
+
+copyObj : () ==> SimObj
+copyObj() == 
+(
+   let s : SimSet =  new SimSet().initSimObj(getClassId(),getId()) in
+    s.initObj(val)
+);
+extrItems : Items ==> Items
+extrItems(-) == return val;
+
+newObj : ClassId * ArgMap * SessionState ==> SimObj
+newObj(cid,m,state) ==
+(
+  let id = state.getNewValId() in
+  -- get the arguments
+  let v : SimSet = state.getItemObj(m("val")) in
+  let s : SimSet =  new SimSet().initSimObj(cid,id) in
+    s.initObj(v.getVal())
+) pre {"val"} subset dom m;
+
+
+--LINE 43 1
+getClassIds: () ==> set of ClassId
+getClassIds() ==
+(
+   dcl cids : set of ClassId := {};
+   for all item in set val do
+     let c : SimClassId = getState().getItemObj(item) in
+     cids := cids union {c.getVal()};
+   return cids
+);
+
+--LINE 49 1
+getActionIds: () ==> set of ActionId
+getActionIds() ==
+(
+   dcl aids : set of ActionId := {};
+   for all item in set val do
+     let c : SimActionId = getState().getItemObj(item) in
+     aids := aids union {c.getVal()};
+   return aids
+)
+end SimSet
+
+--LINE 53 1
+class SimMap is subclass of  SimObj 
+types
+ItemMap = map ItemId to ItemId
+
+instance variables
+  val : ItemMap := {|->}
+operations
+setVal : ItemMap ==> ()
+setVal(b) == val := b;
+getVal : () ==> ItemMap
+getVal() == return val;
+
+initObj : ItemMap ==> SimMap
+initObj(b) ==
+(
+  val := b;
+  return self
+);
+
+copyObj : () ==> SimObj
+copyObj() == 
+(
+   let s : SimMap =  new SimMap().initSimObj(getClassId(),getId()) in
+    s.initObj(val)
+);
+extrItems : Items ==> Items
+extrItems(-) == return dom val union rng val;
+
+newObj : ClassId * ArgMap  * SessionState ==> SimObj
+newObj(cid,m,state) ==
+(
+  let id = state.getNewValId() in
+  -- get the arguments
+  let v : SimMap = state.getItemObj(m("val")) in
+  let s : SimMap =  new SimMap().initSimObj(cid,id) in
+    s.initObj(v.getVal())
+) pre {"val"} subset dom m;
+
+
+--LINE 59 1
+getSpeedTable: () ==> SimTransport`SpeedTable
+getSpeedTable() ==
+(
+   dcl tab : SimTransport`SpeedTable := {|->};
+   for all item in set dom val do
+     let c : SimClassId = getState().getItemObj(item),
+         v : SimNum = getState().getItemObj(val(item))in
+     tab := tab munion {c.getVal() |-> v.getVal()};
+   return tab
+);
+end SimMap
+
+--LINE 65 1
+class SimMenuVal is subclass of  SimObj
+
+--LINE 69 1
+instance variables
+ssl : [SSL`MenuVal] := nil
+
+--LINE 73 1
+operations
+initObj : SSL`MenuVal ==> SimMenuVal
+initObj(mv) ==
+(
+  ssl := mv;
+  return self
+);
+
+--LINE 77 1
+genSetMenuEvent : () ==> SimEvents
+genSetMenuEvent() ==
+(
+  return [ mk_SimEvent`SetMenu(genMenuEvent()) ]
+);
+
+--LINE 81 1
+genMenuEvent : () ==> SimEvent`Menu
+genMenuEvent() == genMenuEventAux(ssl);
+
+genMenuEventAux : SSL`MenuVal ==> SimEvent`Menu
+genMenuEventAux(mk_SSL`MenuVal(im,txt,itms,-)) ==
+(
+  dcl el : seq of SimEvent`MenuItem := [];
+  for i in itms do
+    el := el ^ 
+      cases i :
+        mk_SSL`MenuVal(-,-,-,-) -> 
+          [genMenuEventAux(i)],
+        mk_SSL`MenuSeparator(-) -> 
+          [mk_SimEvent`Separator()],
+        mk_SSL`ActionMenuItem(-,-,-,-) -> 
+          [genActionEvent(i)],
+        others -> [] -- error
+      end;
+  return mk_SimEvent`Menu(
+      if im=nil then nil else im.val,
+      txt.val,el)
+);
+
+
+--LINE 85 1
+genActionEvent : SSL`ActionMenuItem ==> SimEvent`Action
+genActionEvent(mk_SSL`ActionMenuItem(im,txt,id,-)) ==
+(
+  let aid = mk_ActionId(id.id),
+      ad = getSession().getDefs().getActionInfo(aid),
+      pl = [ mk_SimEvent`ActionParameter(ad.parms(i).text,
+              ad.parms(i).id, ad.parms(i).tp) | 
+             i in set inds ad.parms ] 
+  in 
+  return mk_SimEvent`Action(txt.val,aid,pl,
+      if im=nil then nil else im.val)
+)
+
+--LINE 90 1
+end SimMenuVal
+
+--LINE 11 1
+class SimEvent is subclass of NetTypes
+types
+  Event = SetMenu | ShowLocation | ShowIVDLocation |
+          AddIvdPatient |
+          AddAgent | RemoveAgent | ChangeAgentState |
+          ChangeAgentBinding |
+          ShowPath | AnimatePath | 
+          AddResource | RemoveResource | ShowMessage |
+          SetBCReceivers | SetTalkReceivers | SessionEvent |
+          SetTime | SetItemState | SetGUI |
+          AttachResource | DetachResource;
+
+--LINE 17 1
+SetMenu:: 
+    menu: Menu;
+
+--LINE 21 1
+  Menu::
+    image : [FileName]  -- optional icon
+    text : String       -- the menu text
+    items: seq of MenuItem;
+
+  MenuItem = Menu | Separator | Action;
+
+  Separator::;
+
+--LINE 25 1
+  Action::
+    text: seq of char
+    action: ActionId
+    pars: seq of ActionParameter
+    image: [FileName];
+
+--LINE 29 1
+  -- The ActionParameter type must also contain IvdPatient
+  -- specific parameters such as injuries, regions etc
+  ActionParameter ::
+    text : String
+    id : Id
+    tp : ActionParameterType;  
+
+  ActionParameterType = 
+      LocationQ | AgentQ | ResourceQ | IvdPatientQ;
+  LocationQ::;
+  AgentQ::;
+  ResourceQ::;
+  IvdPatientQ::;
+
+-- Constant parameter identifications
+values
+  qLocation = mk_LocationQ();
+  qAgent = mk_AgentQ();
+  qResource = mk_ResourceQ();
+  qIvdPatient = mk_IvdPatientQ();
+
+--LINE 35 1
+types
+  LocationDescr::
+    name: seq of char
+    id: ItemId;
+
+--LINE 39 1
+  ShowLocation::
+    name: seq of char
+    image: seq of char
+    actions: set of ActionId;
+
+--LINE 43 1
+  ShowIVDLocation::
+    name: seq of char
+    image: seq of char
+    beds: nat1
+    actions: set of ActionId;
+
+--LINE 47 1
+  ShowPath::
+    name: seq of char
+    image: seq of char
+    level: PathLevel
+    direction: PathDirection
+    actions: set of ActionId;
+
+  PathLevel = SkyQ | MiddleQ | GroundQ;
+  SkyQ::;
+  MiddleQ::;
+  GroundQ::;
+
+values
+  qSky = mk_SkyQ();
+  qMiddle = mk_MiddleQ();
+  qGround = mk_GroundQ();
+
+types
+  PathDirection = LeftQ | RightQ;
+  LeftQ::;
+  RightQ::;
+
+values
+  qLeft = mk_LeftQ();
+  qRight = mk_RightQ();
+
+--LINE 51 1
+types
+  AnimatePath::
+    duration: nat1; -- the duration of the animation
+
+--LINE 55 1
+  AddIvdPatient::
+    agent: IvdPatient
+    bedpos: nat1;
+
+  IvdPatient::
+    name: seq of char
+    front: seq of char
+    back: seq of char
+    state: ItemState
+    id: ItemId;
+
+--LINE 59 1
+  AddAgent::
+    agent: Agent
+    options: AgentOptions;
+
+  Agent::
+    name: seq of char
+    image: seq of char
+    state: ItemState
+    binding: AgentBinding
+    id: ItemId
+  inv agent == agent.binding = qOtherActor =>
+               agent.state in set {qDisabled,qActive};
+
+--LINE 65 1
+  ItemState = NormalQ | SelectedQ | DisabledQ |
+               ActiveQ;
+
+  NormalQ::;
+  SelectedQ::;
+  DisabledQ::;
+  ActiveQ::;
+
+values
+  qNormal = mk_NormalQ();
+  qSelected = mk_SelectedQ();
+  qDisabled = mk_DisabledQ();
+  qActive = mk_ActiveQ();
+
+--LINE 69 1
+types
+  SetItemState ::
+    item : ItemId
+    state : ItemState;
+
+--LINE 75 1
+types
+  AgentBinding = FreeQ | ThisActorQ | OtherActorQ;
+  FreeQ::;
+  ThisActorQ::;
+  OtherActorQ::;
+
+values
+  qFree = mk_FreeQ();
+  qThisActor = mk_ThisActorQ();
+  qOtherActor = mk_OtherActorQ();
+
+--LINE 79 1
+types
+  AgentOption = IVDPosInfo;
+  AgentOptions = seq of AgentOption;
+
+--LINE 83 1
+  IVDPosInfo::
+    bedpos: nat1
+    slot: nat1;
+
+  RemoveAgent::
+    agent: ItemId
+    options : AgentOptions;
+
+--LINE 87 1
+  ChangeAgentState::
+    agent: ItemId
+    state: ItemState
+    binding: AgentBinding
+    options: AgentOptions
+  inv e == e.binding = qOtherActor =>
+           e.state in set {qDisabled,qActive};
+
+--LINE 91 1
+  ChangeAgentBinding::
+    agent: ItemId
+    binding: AgentBinding;
+
+--LINE 97 1
+  AddResource::
+    resource: Resource
+    state: ItemState
+    id: ItemId
+    options : ResourceOptions;
+  Resource::
+    name: seq of char
+    image: seq of char
+    reusable: bool
+    units: nat1
+    size: nat;
+
+--LINE 100 1
+ ResourceOption = IVDPosInfo;
+ ResourceOptions = seq of ResourceOption;
+
+--LINE 103 1
+  RemoveResource::
+    id: ItemId
+    options : ResourceOptions;
+
+--LINE 107 1
+  AttachResource::
+    id: ItemId
+    options : IVDPosInfo;
+
+  DetachResource::
+    id: ItemId
+    options : IVDPosInfo;
+
+--LINE 127 1
+  MessageKind = TalkQ | TalkMobileQ | BroadcastQ;
+  TalkQ::;
+  TalkMobileQ::;
+  BroadcastQ::;
+
+values
+  qTalk = mk_TalkQ();
+  qTalkMobile = mk_TalkMobileQ();
+  qBroadcast = mk_BroadcastQ();
+
+types
+  ShowMessage::
+    kind: MessageKind
+    sender: seq of char
+    message: seq of char;
+
+--LINE 131 1
+  SetBCReceivers::
+    receivers: seq of (seq of char * ItemId);
+
+--LINE 135 1
+  SetTalkReceivers::
+    normalRec: seq of (seq of char * ItemId)
+    mobileRec: seq of (seq of char * ItemId);
+
+--LINE 139 1
+SessionEvent::
+  status : SessionStatus
+  msg : seq of char;
+  SessionStatus = StartQ | StopQ;
+  StartQ::;
+  StopQ::;
+
+values
+  qStart = mk_StartQ();
+  qStop = mk_StopQ();
+
+
+--LINE 143 1
+types
+SetTime ::
+  val : nat;  -- milli seconds since 1970
+
+--LINE 149 1
+SetGUI ::
+  options : GUIOptionList;
+GUIOptionList = seq of GUIOption;
+GUIOption = EnableGUI;
+EnableGUI :: bool             -- enable/disable gui
+
+--LINE 153 1
+end SimEvent
+
+--LINE 6 1
+class SSLEval is subclass of KernelTypes
+
+--LINE 10 1
+instance variables
+-- the list of messages produced through the evaluation
+msgs : MsgList := [];
+-- the session state used for the evaluation
+state : [SessionState] := nil;
+-- the evaluation mode
+mode : [EvalMode] := nil;
+-- the Session
+session : [Session] := nil;
+
+--LINE 14 1
+operations
+getEvalMode: () ==> EvalMode
+getEvalMode() == return mode;
+
+appendMsgs : MsgList ==> ()
+appendMsgs(m) == msgs := msgs ^ m;
+getMsgs: () ==> MsgList
+getMsgs() == return msgs;
+
+--LINE 18 1
+initObj : Session * SessionState ==> SSLEval
+initObj(ses,s) ==
+(
+  session := ses;
+  state := s;
+  msgs := [];
+  mode := mk_EvalMode(qFast,qNoEvents,qNoLog);
+  return self
+);
+
+--LINE 22 1
+operations
+getState: () ==> SessionState
+getState() == return state
+pre state <> nil;
+ 
+
+--LINE 28 1
+operations
+
+evalSSL : SSL`SSLItemList * SessionState * EvalMode ==> MsgList
+evalSSL(il,s,m) ==
+(
+  state := s;
+  msgs := [];
+  mode := m;
+  evalSSLItemList(il);
+  return msgs
+);
+
+--LINE 32 1
+evalSSLItemList : SSL`SSLItemList ==> ()
+evalSSLItemList(il) ==
+(
+  for i in il do
+  (  
+    evalSSLItem(i);
+    if msgs <> [] then return
+  )
+);
+
+--LINE 38 1
+evalExpr: SSL`Expr ==> [ItemId]
+evalExpr(e) ==
+( 
+  cases e : 
+    mk_SSL`BoolVal(v,-) -> newBoolVal(v),
+    mk_SSL`Identifier(id,-) ->
+      let n = id in
+      (
+         if getState().isVarId(n) then
+            getState().getVarVal(n)
+         elseif getState().getDefs().isClassId(n) then
+            newClassIdVal(mk_ClassId(n))
+         elseif getState().getDefs().isActionId(n) then
+            newActionIdVal(mk_ActionId(n))
+         else 
+            newActionIdVal(mk_ActionId(n))
+       ),
+    mk_SSL`NatVal(v,-),
+    mk_SSL`NumVal(v,-)    -> newNumVal(v),
+    mk_SSL`NullVal(-)     -> newNullVal(),
+    mk_SSL`StringVal(v,-) -> newStringVal(v),
+    mk_SSL`TimeVal(r,v,-) -> newTimeVal(r,v),
+    mk_SSL`ActionApp(-,-) -> (evalActionApp(e); return nil),
+    mk_SSL`MapVal(-,-)    -> newMapVal(e),
+    mk_SSL`MenuVal(-,-,-,-) -> newMenuVal(e),
+    mk_SSL`MethodApp(-,-,-)  -> evalMethodApp(e),
+    mk_SSL`NewExpr(-,-)   -> evalNewExpr(e),
+    mk_SSL`SetVal(-,-)    -> newSetVal(e) ,
+    others -> error
+  end
+);
+
+--LINE 44 1
+addSimObj : SimObj ==> ItemId
+addSimObj(o) ==(
+  let id=getState().addSimObj(o) in
+    if (getEvalMode().events) then
+      return session.getState().addNewItem(id,o)
+    else
+      return id
+);
+
+addNewItem : ItemId * SimObj ==> ItemId
+addNewItem(id,o) ==(
+  let - = getState().addNewItem(id,o) in
+    if (getEvalMode().events) then
+      return session.getState().addNewItem(id,o)
+    else
+      return id
+);
+
+newNumVal : real ==> ItemId
+newNumVal(v) ==
+let o = new SimNum().initObj(v) in
+(
+  o.setClassId(mk_ClassId("Number"));
+  addSimObj(o)
+);
+
+newClassIdVal : ClassId ==> ItemId
+newClassIdVal(v) ==
+let o = new SimClassId().initObj(v) in
+(
+  o.setClassId(mk_ClassId("ClassId"));
+  addSimObj(o)
+);
+
+newActionIdVal : ActionId ==> ItemId
+newActionIdVal(v) ==
+let o = new SimActionId().initObj(v) in
+(
+  o.setClassId(mk_ClassId("ActionId"));
+  addSimObj(o)
+);
+
+newMapVal : SSL`MapVal ==> ItemId
+newMapVal(e) == newMapVal2(evalMapVal(e));
+
+newMapVal2 : map ItemId to ItemId ==> ItemId
+newMapVal2(e) ==
+let o = new SimMap().initObj(e) in
+(
+  o.setClassId(mk_ClassId("Map"));
+  addSimObj(o)
+);
+
+newSetVal : SSL`SetVal ==> ItemId
+newSetVal(e) == newSetVal2(evalSetVal(e));
+
+newSetVal2 : set of ItemId ==> ItemId
+newSetVal2(e) ==
+let o = new SimSet().initObj(e) in
+(
+  o.setClassId(mk_ClassId("Set"));
+  addSimObj(o)
+);
+
+newMenuVal : SSL`MenuVal ==> ItemId
+newMenuVal(e) ==
+let o = new SimMenuVal().initObj(e) in
+(
+  o.setClassId(mk_ClassId("Menu"));
+  addSimObj(o)
+);
+
+newTimeVal : bool * SSL`TimeTp ==> ItemId
+newTimeVal(r,v) ==
+let o = new SimTime().initObj(r,v) in
+(
+  o.setClassId(mk_ClassId("Time"));
+  addSimObj(o)
+);
+
+newStringVal: String ==> ItemId
+newStringVal(v) ==
+let o = new SimString().initObj(v) in
+(
+  o.setClassId(mk_ClassId("String"));
+  addSimObj(o)
+);
+
+-- reuse null val ???
+newNullVal : () ==> ItemId
+newNullVal() ==
+let o = new SimNull().initObj() in
+(
+  o.setClassId(mk_ClassId("Null"));
+  addSimObj(o)
+);
+
+newBoolVal : bool ==> ItemId
+newBoolVal(b) ==
+let o = new SimBool().initObj(b) in
+(
+  o.setClassId(mk_ClassId("Bool"));
+  addSimObj(o)
+);
+
+--LINE 48 1
+evalActionApp: SSL`ActionApp ==> ()
+evalActionApp( mk_SSL`ActionApp(mk_SSL`AppExpr(n,args,-),-)) ==
+(
+  let ainfo = getState().getDefs().
+                getActionInfo(mk_ActionId(n.id)) in
+  (
+    getState().pushVars();
+    getState().addVars(evalArgs(args,ainfo.argnames));
+    evalSSLItemList(ainfo.ssl.body);
+    getState().popVars();
+  )
+);
+
+--LINE 54 1
+evalNewExpr: SSL`NewExpr ==> ItemId
+evalNewExpr( mk_SSL`NewExpr(mk_SSL`AppExpr(n,args,-),-)) ==
+(
+  let c = mk_ClassId(n.id),
+      cinfo = getState().getDefs().getClassInfo(c),
+      parms = cinfo.args ++ evalArgs(args,cinfo.argnames)
+  in
+  let obj = cinfo.objref.newObj(c,parms,getState()) in
+    return addNewItem(obj.getId(),obj)
+);
+
+
+--LINE 60 1
+evalMethodApp: SSL`MethodApp ==> [ItemId]
+evalMethodApp( mk_SSL`MethodApp(var,mk_SSL`AppExpr(met,args,-),-)) ==
+(
+  let o = getState().getVarObj(var.id),
+      m = getEvalMode(),
+      meth = met.id
+  in 
+  cases true :
+--???     (isofclass(SimTransportAgent,o)) -> 
+--        evalTransportAgentMethod(meth,o,args,m),
+    (isofclass(SimIvdPatient,o)) -> 
+       evalIvdPatientMethod(meth,o,args,m),
+    (isofclass(SimIvdLocation,o)) -> 
+       evalIvdLocationMethod(meth,o,args,m),
+    (isofclass(SimAgent,o)) -> 
+       evalAgentMethod(meth,o,args,m),
+    (isofclass(SimResource,o)) -> 
+       evalResourceMethod(meth,o,args,m),
+    others -> return nil
+  end;
+);
+
+--LINE 64 1
+evalAgentMethod : 
+  Name * SimAgent * SSL`Args * EvalMode ==> [ItemId]
+evalAgentMethod(meth,agent,args,m) ==
+(
+  cases meth :
+  "move" ->
+    let p = evalArgs(args,["to"]) in 
+    (appendMsgs(agent.move(p("to"),m)); return nil),
+  "free" ->
+    (appendMsgs(agent.free(m)); return nil),
+  "hasRole" ->
+    let p = evalArgs(args,["role"]) in 
+    let r : SimClassId = getState().getItemObj(p("role")) in
+    (appendMsgs(agent.hasRole(r.getVal(),m)); return nil),
+  "performs" -> 
+    let p = evalArgs(args,["action"]) in 
+    let a : SimActionId = getState().getItemObj(p("action")) in
+    (appendMsgs(agent.performs(a.getVal(),m));return nil),
+   others -> error
+  end
+); 
+
+--LINE 68 1
+evalIvdPatientMethod : 
+  Name * SimIvdPatient * SSL`Args * EvalMode ==> [ItemId]
+evalIvdPatientMethod(meth,agent,args,m) ==
+(
+  cases meth :
+  "move" ->
+    let p = evalArgs(args,["to"]) in 
+    (appendMsgs(agent.move(p("to"),m)); return nil),
+  "free" ->
+    (appendMsgs(agent.free(m)); return nil),
+  "hasRole" ->
+    let p = evalArgs(args,["role"]) in 
+    let r : SimClassId = getState().getItemObj(p("role")) in
+    (appendMsgs(agent.hasRole(r.getVal(),m)); return nil),
+  "performs" -> 
+    let p = evalArgs(args,["action"]) in 
+    let a : SimActionId = getState().getItemObj(p("action")) in
+    (appendMsgs(agent.performs(a.getVal(),m));return nil),
+  "attachAgent" -> 
+    let p = evalArgs(args,["agent"]) in 
+    (appendMsgs(agent.attachAgent(p("agent"),m));return nil),
+  "attachResource" -> 
+    let p = evalArgs(args,["resource"]) in 
+    (appendMsgs(agent.attachResource(p("resource"),m));
+     return nil),
+  "detachAgent" -> 
+    let p = evalArgs(args,["agent"]) in 
+    (appendMsgs(agent.detachAgent(p("agent"),m));return nil),
+  "detachResource" -> 
+    let p = evalArgs(args,["resource"]) in 
+    (appendMsgs(agent.detachResource(p("resource"),m));
+     return nil),
+  others -> error
+ end
+);
+
+
+--LINE 75 1
+evalLocationMethod : 
+   Name * SimLocation * SSL`Args * EvalMode 
+   ==> [ItemId]
+evalLocationMethod(meth,loc,args,m) ==
+(
+  cases meth :
+  "addAgents" -> 
+    let p = evalArgs(args,["agents"]) in 
+    let agents : SimSet = getState().getItemObj(p("agents")) in
+    (appendMsgs(loc.addAgents(agents.getVal(),m)); return nil),
+  "addAgent" -> 
+    let p = evalArgs(args,["agent"]) in 
+    (appendMsgs(loc.addAgent(p("agent"),m)); return nil),
+  "removeAgents" -> 
+    let p = evalArgs(args,["agents"]) in 
+    let agents : SimSet = getState().getItemObj(p("agents")) in
+    (appendMsgs(loc.removeAgents(agents.getVal(),m)); return nil),
+  "removeAgent" -> 
+    let p = evalArgs(args,["agent"]) in 
+    (appendMsgs(loc.removeAgent(p("agent"),m)); return nil),
+  "addResources" ->
+    let p = evalArgs(args,["resources"]) in 
+    let res : SimSet = getState().getItemObj(p("resources"))in
+    (appendMsgs(loc.addResources(res.getVal(),m)); return nil),
+  "addResource" ->
+    let p = evalArgs(args,["resource"]) in 
+    (appendMsgs(loc.addResource(p("resource"),m)); return nil) ,
+  "removeResources" ->
+    let p = evalArgs(args,["resources"]) in 
+    let res : SimSet = getState().getItemObj(p("resources"))in
+    (appendMsgs(loc.removeResources(res.getVal(),m)); return nil),
+  "removeResource" ->
+    let p = evalArgs(args,["resource"]) in 
+    (appendMsgs(loc.removeResource(p("resource"),m)); return nil),
+  others -> error
+  end
+);
+
+--LINE 79 1
+evalIvdLocationMethod : 
+   Name * SimIvdLocation * SSL`Args * EvalMode 
+   ==> [ItemId]
+evalIvdLocationMethod(meth,loc,args,m) ==
+(
+  cases meth :
+  "addAgents" -> 
+    let p = evalArgs(args,["agents"]) in 
+    let agents : SimSet = getState().getItemObj(p("agents")) in
+    (appendMsgs(loc.addAgents(agents.getVal(),m)); return nil),
+  "addAgent" -> 
+    let p = evalArgs(args,["agent"]) in 
+    (appendMsgs(loc.addAgent(p("agent"),m)); return nil),
+  "removeAgents" -> 
+    let p = evalArgs(args,["agents"]) in 
+    let agents : SimSet = getState().getItemObj(p("agents")) in
+    (appendMsgs(loc.removeAgents(agents.getVal(),m)); return nil),
+  "removeAgent" -> 
+    let p = evalArgs(args,["agent"]) in 
+    (appendMsgs(loc.removeAgent(p("agent"),m)); return nil),
+  "addResources" ->
+    let p = evalArgs(args,["resources"]) in 
+    let res : SimSet = getState().getItemObj(p("resources"))in
+    (appendMsgs(loc.addResources(res.getVal(),m)); return nil),
+  "addResource" ->
+    let p = evalArgs(args,["resource"]) in 
+    (appendMsgs(loc.addResource(p("resource"),m)); return nil) ,
+  "removeResources" ->
+    let p = evalArgs(args,["resources"]) in 
+    let res : SimSet = getState().getItemObj(p("resources"))in
+    (appendMsgs(loc.removeResources(res.getVal(),m)); return nil),
+  "removeResource" ->
+    let p = evalArgs(args,["resource"]) in 
+    (appendMsgs(loc.removeResource(p("resource"),m)); return nil),
+  others -> error
+  end
+);
+
+--LINE 83 1
+evalResourceMethod : 
+   Name * SimResource * SSL`Args * EvalMode 
+   ==> [ItemId]
+evalResourceMethod(meth,res,args,m) ==
+(
+  cases meth :
+  "useUnits" -> 
+    let p = evalArgs(args,["count"]) in 
+    let count : SimNum = getState().getItemObj(p("count")) in
+    (appendMsgs(res.useUnits(count.getVal(),m)); return nil),
+  "release" -> 
+    (appendMsgs(res.release(m)); return nil) ,
+  others -> error
+  end
+);
+
+--LINE 87 1
+evalMapVal: SSL`MapVal ==> map ItemId to ItemId
+evalMapVal(mk_SSL`MapVal(val,-)) ==
+(
+   dcl m : map ItemId to ItemId := {|->};
+   for mk_(l,e) in val do
+     let lv = evalExpr(l),
+         ev = evalExpr(e)
+     in
+     if lv in set dom m then
+
+--LINE 89 1
+       appendMsgs(errorRTMsg(123,
+
+--LINE 91 1
+         "Value already  exists in map domain",
+         l.info))        
+     else 
+       m := m munion {lv |-> ev};
+   return m
+);
+
+--LINE 95 1
+evalSetVal: SSL`SetVal ==> set of ItemId
+evalSetVal(mk_SSL`SetVal(val,-)) ==
+(
+   dcl s : set of ItemId := {};
+   for l in val do
+     s := s union {evalExpr(l)};
+   return s
+);
+
+--LINE 99 1
+evalSSLItem : SSL`SSLItem ==> ()
+evalSSLItem(i) ==
+( 
+  cases (true) :
+     (is_SSL`AssignmentStmt(i)) -> 
+       evalAssignmentStmt(i),
+     (is_SSL`ExprStmt(i)) -> 
+       evalExprStmt(i),
+     (is_SSL`TimeStmt(i)) -> 
+       evalTimeStmt(i),
+     (is_SSL`WaitStmt(i)) -> 
+       evalWaitStmt(i),
+     (is_SSL`ActionDefn(i)) -> 
+       evalActionDefn(i), 
+     (is_SSL`SubClassDefn(i)) -> 
+       evalSubClassDefn(i),
+     (is_SSL`VarDecl(i)) -> 
+       evalVarDecl(i),
+  others -> error
+  end
+);
+
+--LINE 103 1
+evalAssignmentStmt: SSL`AssignmentStmt ==> ()
+evalAssignmentStmt(mk_SSL`AssignmentStmt(id,e,-)) ==
+(
+    getState().setVar(id.id,evalExpr(e))
+);
+
+--LINE 109 1
+evalTimeStmt: SSL`TimeStmt ==> ()
+evalTimeStmt(mk_SSL`TimeStmt(-,-)) ==
+(
+  skip -- ???
+);
+
+--LINE 113 1
+evalExprStmt: SSL`ExprStmt ==> ()
+evalExprStmt(mk_SSL`ExprStmt(e,-)) ==
+( 
+  let -  = evalExpr(e) in
+  return
+);
+
+--LINE 119 1
+evalWaitStmt: SSL`WaitStmt ==> ()
+evalWaitStmt(mk_SSL`WaitStmt(mk_SSL`TimeVal(rel,val,-),-)) ==
+(
+  let waitmsecs = if rel then maximum({0,val})
+                  else maximum({0,
+                          val-getState().getSession().getTime()}) 
+  in
+  -- check the mode ???
+  skip -- wait for waitmsecs    
+);
+
+--LINE 123 1
+evalSubClassDefn : SSL`SubClassDefn ==> ()
+evalSubClassDefn(mk_SSL`SubClassDefn(newcl,ae,-)) ==
+(
+  let mk_SSL`AppExpr(cl,args,-) = ae,
+      cinfo = getState().getDefs().
+                    getClassInfo(mk_ClassId(cl.id)),
+      parms = evalArgs(args,cinfo.argnames)
+  in 
+    getState().getDefs().addSubClass(
+                                mk_ClassId(newcl.id),
+                                mk_ClassId(cl.id),
+                                cinfo.args ++ parms,
+                                cinfo.argnames,
+                                cinfo.objref)
+);
+
+--LINE 129 1
+evalArgs : SSL`Args * seq of Name ==> SimObj`ArgMap
+evalArgs(args,argnames) ==
+(
+  -- convert argument to map Name to Expr 
+  let as = 
+    if is_SSL`ArgBindMap(args) then
+      { id.id |-> e | mk_(id,e) in set elems args.val}
+    else 
+      { argnames(i) |-> args.val(i) | i in set inds argnames }
+  in
+  return { n |-> evalExpr(as(n)) | n in set dom as}  
+);
+
+--LINE 135 1
+evalActionParms : SessionState`VarMap * SSL`ArgDeclList
+                  * SessionState ==> MsgList
+evalActionParms(parms,args,s) ==
+(
+  dcl myMsgs : MsgList := [];
+  msgs := [];
+  mode := mk_EvalMode(qFast,qNoEvents,qNoLog);
+  s.addVars(parms);  -- add parms to instance vars
+
+  for mk_SSL`ArgDecl(id,mk_SSL`TypeExpr(ctype,-,-),-,-) in args
+  do
+    let cid=s.getVarObj(id.id).getClassId() in
+      if not s.getDefs().
+           isSubClassOf(cid,{mk_ClassId(ctype.id)}) then 
+        appendMsgs(errorMsg(12,"The object of type " ^ cid.id ^  
+             " should have been of type " ^ ctype.id ^ "."));
+  if msgs <> [] then(
+     myMsgs := msgs;
+     msgs := [];
+     return myMsgs
+  );
+
+  for mk_SSL`ArgDecl(id,mk_SSL`TypeExpr(-,con,-),-,-) in args
+  do
+  (
+    for appexpr in con do
+      let - = evalMethodApp(mk_SSL`MethodApp(id,appexpr,0)) in
+      skip;
+    if msgs <> [] then
+    (
+      myMsgs := errorMsg(12,"The object (" ^id.id ^ "): " ^ 
+       "must satisfy the following constraint(s)") ^ msgs; 
+      msgs := []
+    )
+  );
+  return myMsgs
+);
+
+--LINE 139 1
+evalVarDecl : SSL`VarDecl ==> ()
+evalVarDecl(mk_SSL`VarDecl(i,-,v,-)) ==
+(
+  let val = if v = nil then mk_SSL`NullVal(0) else v in
+    getState().setVar(i.id, evalExpr(val));
+);
+
+--LINE 145 1
+evalActionDefn : SSL`ActionDefn ==> ()
+evalActionDefn(ad) ==
+(
+   getState().getDefs().addActionDefn(ad); 
+);
+
+--LINE 149 1
+end SSLEval
+
+--LINE 22 1
+class Session is subclass of  
+                   KernelTypes  -- types related to the kernel
+                  
+                   
+
+--LINE 28 1
+instance variables
+  id : [SessionId] := nil;             -- session id from manager
+  title : Title := "";                 -- title to display for user
+  sesman : [SessionManager] := nil;    -- the session manager
+  sslfrom : [SSL`SSDir] := nil;        -- the SSDir to execute
+  sslto : [SSL`SSDir] := nil;          -- the SSDir for the result
+  state : [SessionState] := nil;       -- the state of the session
+  defs : [SessionDefs] := nil;         -- the definitions
+  broadcast : [BroadCast] := nil;
+  eval : [SSLEval] := nil;
+
+--LINE 32 1
+operations
+getId : () ==> SessionId
+getId() == return id;
+getTitle : () ==> Title
+getTitle() == return title;
+getManager : () ==> SessionManager
+getManager() == return sesman;
+getState : () ==> SessionState
+getState() == return state;
+getDefs : () ==> SessionDefs
+getDefs() == return defs;
+getEval : () ==> SSLEval
+getEval() == return eval;
+getBroadCast : () ==> BroadCast
+getBroadCast() == return broadcast;
+
+--LINE 38 1
+initObj : SessionManager * SessionId * Title * SSL`SSDir * SSL`SSDir
+          ==> ()
+initObj(s,i,t,sslf,sslt) == 
+(
+  sesman := s;
+  id := i; 
+  title := t; 
+  sslfrom := sslf; 
+  sslto := sslt;
+  state := nil ; -- new SessionState().initObj(self,mk_ThreadId(0));
+  eval := nil ; -- new SSLEval().initObj(getState());
+  broadcast := new BroadCast().initObj(self);
+  defs := nil; --new SessionDefs().initObj(self);
+);
+
+--LINE 44 1
+instance variables
+actors : map AgentId to ActorInfo := {|->};
+inv forall id in set dom actors & id = actors(id).id
+
+--LINE 50 1
+operations
+addActor : Name * AgentId ==> MsgList
+addActor(n,aid) == 
+(
+  if aid not in set state.getAgentIds() then
+    return errorMsg(2,
+               "Internal error : Unknown agent id given");
+
+  if not hasActor(aid) then
+    actors := actors munion {aid |-> mk_ActorInfo(aid,n)}
+  else 
+    return errorMsg(1,
+               "Agent is bound to the actor " ^ 
+               state.getAgent(aid).getName());
+  let a = getState().getAgent(aid),
+      lid = a.getLocation(),
+      loc = getState().getLocation(lid) in
+    if lid<>nil then
+    (
+      getBroadCast().broadCastTo(
+          {aid},loc.genActorDisplayEvents(a));
+      getBroadCast().broadCastLocation(lid,{aid},
+          a.genChangeAgentBindingEvent(mk_SimEvent`OtherActorQ()))
+    );
+
+  return []
+);
+
+--LINE 54 1
+removeActor : AgentId ==> ()
+removeActor(aid) ==
+(
+  actors := {aid} <-: actors;
+  deSelectAll(aid);
+  let a = getState().getAgent(aid),
+      lid = a.getLocation() in
+    if lid<>nil then
+      getBroadCast().broadCastLocation(lid,{aid},
+          a.genChangeAgentBindingEvent(mk_SimEvent`FreeQ()));
+);
+
+--LINE 58 1
+getActors: () ==> map AgentId to ActorInfo
+getActors() == return actors; 
+
+--LINE 62 1
+getActorIds: () ==> set of  AgentId
+getActorIds() == return dom actors;
+
+--LINE 68 1
+hasActor : AgentId ==> bool
+hasActor(aid) == return aid in set dom actors;
+
+--LINE 74 1
+listAgents : () ==> set of AgentInfo
+listAgents() == return { a.getInfo() | 
+                           a in set state.getAgents() &  
+                           a.getId() not in set dom actors };
+
+
+--LINE 80 1
+getActorsInLocation : LocationId ==> set of AgentId
+getActorsInLocation(lid) ==
+(
+  return
+  {i| i in set getActorIds() & 
+      getState().getAgent(i).getLocation() = lid }
+)
+
+--LINE 88 1
+instance variables
+tcount : nat := 0
+operations
+setTCount : nat ==> ()
+setTCount(n)== tcount := n;
+getTCount : () ==> nat
+getTCount()== return tcount;
+getNewTCount : () ==> nat
+getNewTCount()== ( tcount := tcount +1; return tcount)
+
+--LINE 93 1
+operations
+initSim : () ==> MsgList
+initSim() ==
+(
+  sslto := sslfrom;  -- save the contents of the from in to
+  state := new SessionState().initObj(self,mk_ThreadId(0));
+  eval  := new SSLEval().initObj(self,state);
+  defs  := new SessionDefs().initObj(self);
+
+  let msgs = getEval().evalSSL(
+    sslto.initssl,
+    state,
+    mk_EvalMode(qFast,qNoEvents,qLog))   
+  in
+    return msgs
+);
+
+--LINE 99 1
+startSim : real ==> MsgList
+startSim(f) ==
+(
+  startClock(f);
+  getBroadCast().broadCastAll({},
+   [mk_SimEvent`SetTime(getTime()),
+    mk_SimEvent`SessionEvent(
+        SimEvent`qStart,"Starting the session "^getTitle())
+   ]);
+  let msgs = getEval().evalSSL(
+    sslto.mainssl,
+    state,
+    mk_EvalMode(qSlow,qEvents,qLog))   
+  in
+    return msgs
+);
+
+--LINE 106 1
+stopSim:() ==> MsgList
+stopSim() ==
+(
+  -- notify all actors that actions aren't allowed
+  getBroadCast().broadCastAll({},
+    [mk_SimEvent`SessionEvent(SimEvent`qStop,
+                     "Stopping the session "^getTitle())]);
+  stopClock();
+  return []
+);
+
+--LINE 123 1
+activateAction : AgentId * ActionId * SessionState`VarMap 
+                 ==> MsgList
+
+activateAction(aid,action,parms) ==
+(
+  dcl astate : SessionState,          -- the state for the action
+      adef : SessionDefs`ActionInfo,  -- the action definition
+      refs : set of ItemId :={};      -- the referenced objects
+
+  adef  := defs.getActionInfo(action);
+
+
+--LINE 126 1
+  let tc = mk_ThreadId(getNewTCount()),
+      avars = (adef.vars <: getState().getVars()) ++ parms,
+      items = rng avars <: getState().getItems(),
+      quick = mk_EvalMode(qFast,qNoEvents,qNoLog),
+      slow = mk_EvalMode(qSlow,qEvents,qLog)
+  in 
+  (
+
+    -- allocate the selected objects for the action
+    allocate(aid,tc,rng parms, slow);
+
+    -- check that the arguments full fills the type constraints 
+    -- on the arguments 
+    let a : SimAgent = getState().getItemObj(aid),
+        msgs = a.performs(action,slow) in
+      if msgs <> [] then
+      (
+        free(tc,slow); 
+        return msgs;   
+      );
+    let msgs = getEval().
+              evalActionParms(parms,adef.ssl.argdecl,getState()) in
+      if msgs <> [] then
+      (
+        free(tc,slow); 
+        return msgs;   
+      );
+
+    astate := new SessionState().initObj(self,tc);
+
+    -- find the objects that might be changed by the action
+    -- we should make a copy of these
+    refs := dom items;
+    for all i in set dom items do
+      refs := refs union items(i).extrItems(refs);
+
+    -- prepare a state for the action to run
+    astate.setVars(avars);
+    astate.setItems(getState().getItems());
+    astate.addItems(makeItemMapCopy(
+      refs <: getState().getItems(),astate));
+
+    -- perform the evaluation in the constructed state
+    let msgs = getEval().evalSSL(
+      adef.ssl.body,
+      astate,
+      quick )
+     in
+       if msgs <> [] then 
+       (
+         free(tc,slow);   -- free the allocated objects 
+         return msgs
+        ) else skip;
+
+--LINE 129 1
+    let nres = astate.getRNeeded() in 
+    (
+      dcl msgs : MsgList := [];
+      astate := new SessionState().initObj(self,tc);
+      astate.setVars(avars);
+      astate.setItems(getState().getItems());
+
+      -- reserve the needed resources from the session
+      for all rid in set dom nres do
+        let res = getState().getResource(rid) in
+           res.addReservedUnits(nres(rid));
+
+      -- free the non Agent items
+      freeItems(tc,{i | i in set rng parms &
+           is_ResourceId(i)}, slow);--??
+
+      -- evaluate in separate thread
+      msgs := getEval().evalSSL(
+                          adef.ssl.body,
+                          astate,
+                          slow); 
+      -- hand back the reusable resources that hasn't been freed
+      for all rid in set dom nres do
+        msgs := msgs ^ getState().getResource(rid).release(slow);
+        
+      -- free the allocated objects
+      free(tc,slow); 
+
+      return msgs
+    )
+)
+); 
+
+--LINE 134 1
+makeItemMapCopy : SessionState`ItemMap * SessionState 
+                  ==> SessionState`ItemMap
+makeItemMapCopy(im,state) ==
+(
+   dcl cim : SessionState`ItemMap := {|->};
+   for all i in set dom im do
+     let cp = im(i).copyObj() in
+     (
+       cp.setState(state);
+       cim := cim munion {i |-> cp}
+     );
+   return cim
+);
+
+--LINE 140 1
+instance variables
+selected : map AgentId to set of ItemId := {|->}
+
+--LINE 146 1
+operations 
+
+selectItem : AgentId * SelectedItemId ==> MsgList
+selectItem(actor,item) ==
+(
+  if not isAllocated(item) and item not in set dunion rng selected then
+  (
+    let items = if actor in set dom selected then selected(actor)
+                else {}
+    in 
+      selected := selected ++ {actor |-> items union {item}};
+    getBroadCast().broadCastLocation(
+        state.getAgent(actor).getLocation(),
+        {actor}, 
+        genSetItemStateEvent(item,SimEvent`qDisabled));
+    getBroadCast().broadCastTo(
+        {actor}, 
+        genSetItemStateEvent(item,SimEvent`qSelected));
+    return []
+  ) else
+   return errorMsg(99,"Item selected by other actor");
+)
+pre hasActor(actor);
+
+--LINE 151 1
+deSelectItem : AgentId * SelectedItemId ==> ()
+deSelectItem(actor,item) ==
+(
+  selected := selected ++ {actor |-> selected(actor)\{item}};
+
+  getBroadCast().broadCastLocation(
+    state.getAgent(actor).getLocation(),
+    {actor},
+    genSetItemStateEvent(item,SimEvent`qNormal))    
+)
+pre actor in set dom selected and 
+    item in set selected(actor);
+
+--LINE 157 1
+deSelectAll : AgentId ==> ()
+deSelectAll(aid) ==
+(
+  if aid in set dom selected then
+    for all i in set selected(aid) do
+      deSelectItem(aid,i)
+);
+
+--LINE 163 1
+genSetItemStateEvent : ItemId * SimEvent`ItemState ==>
+                    SimEvents
+genSetItemStateEvent(item,s) ==
+(
+ return
+   cases (true) :
+    (is_ResourceId(item)),
+    (is_AgentId(item)) ->
+       [mk_SimEvent`SetItemState(item,s)],
+    others -> undefined
+    end
+);
+
+--LINE 169 1
+getItemState : [AgentId] * ItemId ==> SimEvent`ItemState
+getItemState(aid,id) ==
+(
+  return 
+  if id in set dunion rng selected then 
+    if aid in set dom selected and id in set selected(aid) then
+      SimEvent`qSelected
+    else
+      SimEvent`qDisabled
+  elseif id in set dunion rng allocated then 
+    SimEvent`qActive
+  else 
+    SimEvent`qNormal
+);
+
+--LINE 175 1
+instance variables
+allocated : map ThreadId to set of AgentId := {|->};
+
+--LINE 178 1
+inv dunion rng allocated inter dunion rng selected = {};  
+
+--LINE 182 1
+operations
+isAllocated : AgentId ==> bool
+isAllocated(id) == return id in set dunion rng allocated; 
+
+--LINE 188 1
+allocate : AgentId * ThreadId * set of ItemId * EvalMode ==> ()
+allocate(actor,tid,items, mode) ==
+(
+  let itms = { i | i in set items &
+                      is_AgentId(i) or is_ResourceId(i)} in
+  (
+    -- mark agents and resources as allocated
+    selected := {actor} <-: selected;
+    allocated := allocated ++ {tid |-> itms};
+
+    if mode.events then 
+      -- mark agents and resources as allocated
+      for all item in set itms do
+        getBroadCast().broadCastTo(
+          {actor},
+          genSetItemStateEvent(item,SimEvent`qDisabled))
+
+--LINE 190 1
+  )
+
+--LINE 192 1
+)
+pre actor in set dom selected and
+    { i | i in set items & is_AgentId(i) or is_ResourceId(i)}
+    subset selected(actor) and
+    items inter dunion rng allocated  = {};
+
+--LINE 198 1
+free : ThreadId* EvalMode ==> ()
+free(tid, mode) ==
+(
+  for all i in set allocated(tid) do
+    freeItemAux(tid, i, mode);
+  allocated := {tid} <-: allocated;
+)
+pre tid in set dom allocated;
+
+--LINE 204 1
+freeItemAux : ThreadId * ItemId * EvalMode ==> ()
+freeItemAux(tid, item, mode) ==
+(
+  if tid in set dom allocated and item in set allocated(tid) then
+  (
+    allocated := allocated ++ {tid |-> allocated(tid)\{item}};
+
+    if mode.events then
+      getBroadCast().broadCastLocation(
+        state.getAgent(item).getLocation(),{},
+        genSetItemStateEvent(item,SimEvent`qNormal))
+  )
+);
+
+--LINE 210 1
+freeItems : ThreadId * set of ItemId * EvalMode ==> ()
+freeItems(tid, items, mode) ==
+(
+  for all i in set items do
+    freeItemAux(tid,i,mode)
+);
+
+--LINE 216 1
+freeItem : ItemId * EvalMode ==> ()
+freeItem(item, mode) ==
+(
+  let tid = iota x in set dom allocated &
+       item in set allocated(x) in
+    freeItemAux(tid,item,mode)
+);
+
+--LINE 221 1
+instance variables
+-- the current time in the server
+currentTime : GlobalTypes`TimeTp := 0;
+-- set time factor ( ==1 real time, >1 faster, <1 slower)
+timeFactor: real := 1
+
+--LINE 225 1
+operations
+getTime : () ==> GlobalTypes`TimeTp
+getTime() == return currentTime;
+setTime : GlobalTypes`TimeTp ==> ()
+setTime(t) == currentTime := t;
+
+--LINE 231 1
+operations
+setTimeFactor : real ==> ()
+setTimeFactor(f) == ( timeFactor := f );
+
+--LINE 237 1
+startClock: real ==> ()
+startClock(f) == 
+(
+  setTimeFactor(f);
+  skip
+);
+
+--LINE 243 1
+stopClock: () ==> ()
+stopClock() == skip;
+
+
+--LINE 247 1
+end Session
+
+--LINE 7 1
+class NetTypes is subclass of GlobalTypes
+
+--LINE 13 1
+types
+SimEvents = seq of SimEvent`Event
+
+--LINE 18 1
+types
+SessionId :: 
+  id : nat;
+ActionId :: 
+  id : Name;
+
+--LINE 24 1
+SessionInfo ::
+  id : SessionId
+  title : Title
+  session : Session;
+
+--LINE 30 1
+ActorInfo ::
+  id :  AgentId   -- the id of the agent controlled by the actor
+  name : Name     -- the actors name
+;
+
+--LINE 36 1
+AgentInfo ::
+  id : AgentId
+  name : Name  -- name of the agent
+;
+
+--LINE 40 1
+end NetTypes
+
+--LINE 11 1
+class HasSessionRef is subclass of NetTypes
+
+instance variables
+session : [Session] := nil;
+
+operations
+setSession : Session ==> ()
+setSession(s) == session :=s;
+
+getSession : () ==> Session
+getSession() == return session;
+
+getDefs : () ==> SessionDefs
+getDefs() == return session.getDefs();
+
+getState : () ==> SessionState
+getState() == return session.getState();
+
+getBroadCast : () ==> BroadCast
+getBroadCast () == return session.getBroadCast();
+
+end HasSessionRef
+
+--LINE 15 1
+class HasStateRef is subclass of KernelTypes
+
+instance variables
+state : [SessionState] := nil
+
+operations
+setState : SessionState ==> ()
+setState(s) == state :=s;
+
+getState : () ==> SessionState
+getState() == return state;
+
+getSession : () ==> Session
+getSession() == return state.getSession();
+
+getDefs : () ==> SessionDefs
+getDefs() == return state.getSession().getDefs();
+
+getBroadCast : () ==> BroadCast
+getBroadCast () == return state.getSession().getBroadCast();
+
+end HasStateRef
+
+--LINE 23 1
+class SessionState is subclass of HasSessionRef
+
+--LINE 27 1
+types
+
+--LINE 30 1
+VarMap = map Id to ItemId;
+
+--LINE 33 1
+ItemMap = map ItemId to SimObj; 
+
+--LINE 36 1
+ResMap = map ResourceId to nat;
+
+--LINE 40 1
+instance variables
+-- unique id for this state
+myTCount : nat := 0;  
+
+-- next id to be given to object created
+myCount : nat := 0;   
+
+-- the agents allocated by this state 
+allocated : set of ItemId := {};
+
+-- resources needed, used in silent run of action
+rneeded : ResMap := {|->};
+
+-- the variable binding
+vars : VarMap := {|->};
+
+varstack : seq of VarMap := [];
+
+-- the items accessed from this state
+items : ItemMap := {|->};
+
+inv rng vars subset dom items
+
+--LINE 46 1
+operations
+copyObj: () ==> SessionState
+copyObj() ==
+(
+   dcl s : SessionState := new SessionState();
+   s.setMyTCount(myTCount);
+   s.setMyCount(myCount);
+   s.setAllocated(allocated);
+   s.setRNeeded(rneeded);
+   s.setVars(vars);
+   s.setItems(items);
+   return s
+);
+
+--LINE 50 1
+operations
+getTCount : () ==> nat
+getTCount() == return myTCount;
+setMyTCount : nat ==> ()
+setMyTCount(c) == myTCount := c;
+
+getNextCount : () ==> nat
+getNextCount() == (myCount := myCount +1; return myCount);
+setMyCount : nat ==> ()
+setMyCount(c) == myCount := c;
+
+getAllocated : () ==> set of ItemId
+getAllocated() == return allocated;
+setAllocated : set of ItemId ==> ()
+setAllocated(as) == allocated := as;
+addAllocated : set of ItemId ==> ()
+addAllocated(as) == allocated := as union as;
+isAllocated : ItemId ==> bool
+isAllocated(i) == return i in set allocated;
+
+-- check if an id is an identifier
+isVarId : Id ==> bool
+isVarId(id) == return id in set dom vars;
+
+getVars : () ==>  VarMap
+getVars() == return vars;
+setVars : VarMap ==> ()
+setVars(as) == vars := as;
+
+-- Variable
+setVar : Id * ItemId ==> ()
+setVar(id,item) == vars := vars ++ {id |-> item};
+getVarVal : Id ==>  ItemId
+getVarVal(id) ==  return vars(id);
+
+getVarObj : Id ==>  SimObj
+getVarObj(id) == return items(vars(id));
+
+getVarIds : () ==>  set of Id
+getVarIds() == return dom vars;
+
+addVars : VarMap ==> ()
+addVars(as) == vars := vars ++ as;
+
+-- Items
+setItem : ItemId * SimObj ==> ()
+setItem(id,item) == items := items ++ {id |-> item};
+getItemObj : ItemId ==>  SimObj
+getItemObj(id) == return items(id);
+getItems : () ==>  ItemMap
+getItems() == return items;
+getItemIds : () ==>  Items
+getItemIds() == return dom items;
+setItems : ItemMap ==> ()
+setItems(as) == items := as;
+addItems : ItemMap ==> ()
+addItems(as) == items := items ++ as;
+
+--LINE 54 1
+operations
+initObj : Session * ThreadId ==> SessionState
+initObj(s,tc) == 
+(
+  setSession(s);
+  myTCount := tc.id;
+  return self
+);
+
+
+--LINE 58 1
+pushVars : () ==> ()
+pushVars() == varstack := [ vars ] ^ varstack ;
+
+popVars : () ==> ()
+popVars() == (
+  vars := hd varstack;
+  varstack := tl varstack
+)
+pre len varstack > 0;
+
+--LINE 66 1
+addNewItem : ItemId * SimObj ==> ItemId
+addNewItem(id,obj) ==
+(
+    obj.setId(id);
+    obj.setState(self);
+    items := items munion { id |-> obj};
+    return id
+  )
+pre id not in set dom items;
+
+
+--LINE 72 1
+getNewValId: () ==> ValId
+getNewValId() == return mk_ValId(myTCount,getNextCount());
+
+addSimObj : SimObj ==> ItemId
+addSimObj(obj) ==
+(
+    addNewItem(getNewValId(),obj)
+);
+
+--LINE 78 1
+operations
+getNewAgentId: () ==> AgentId
+getNewAgentId() == return mk_AgentId(myTCount,getNextCount());
+  
+addAgent : SimAgent ==> AgentId
+addAgent(a) ==
+(
+  addNewItem(getNewAgentId(),a)
+);
+getAgent: AgentId ==> SimAgent
+getAgent(i) == return getItemObj(i);
+getAgents: () ==> set of SimAgent
+getAgents() == 
+  return {items(i) | i in set dom items & is_AgentId(i)};
+
+getAgentIds: () ==> set of AgentId
+getAgentIds() == return {i | i in set dom items & is_AgentId(i)};
+
+getIvdPatients: () ==> set of SimIvdPatient
+getIvdPatients() == 
+  return { a | a in set rng items & isofclass(SimIvdPatient,a)};
+
+--LINE 82 1
+operations
+getNewResourceId: () ==> ResourceId
+getNewResourceId() == return mk_ResourceId(myTCount,getNextCount());
+
+addResource : SimResource ==> ResourceId
+addResource(a) ==
+(
+  let id = mk_ResourceId(myTCount,getNextCount()) in
+  addNewItem(id,a)
+);
+getResource: ResourceId ==> SimResource
+getResource(i) == return items(i);
+getResources: () ==> set of SimResource
+getResources() == 
+  return { items(i) | i in set dom items & is_ResourceId(i)};
+
+
+--LINE 88 1
+operations
+getRNeeded : () ==> ResMap
+getRNeeded() == return rneeded;
+
+setRNeeded : ResMap ==> ()
+setRNeeded(r) == rneeded := r;
+
+allocNeededResource : ResourceId * nat ==> ()
+allocNeededResource(rid,c) ==
+(
+   let newc = if rid in set dom rneeded then rneeded(rid) + c
+              else c
+   in
+     rneeded := rneeded ++ { rid |-> newc}
+);
+
+deallocNeededResource : ResourceId ==> ()
+deallocNeededResource(rid) ==
+(
+  rneeded := {rid} <-: rneeded
+);
+
+getResourceInUse : ResourceId ==> nat
+getResourceInUse (rid) ==
+(
+   let c = if rid in set dom rneeded then rneeded(rid) else 0
+   in return c
+);
+
+--LINE 92 1
+operations 
+getNewLocationId: () ==> LocationId
+getNewLocationId() == return mk_LocationId(myTCount,getNextCount());
+
+addLocation : SimLocation ==> LocationId
+addLocation(a) ==
+(
+  addNewItem(getNewLocationId(),a)
+);
+getLocation : LocationId ==> SimLocation
+getLocation(lid) == return items(lid);
+
+--LINE 96 1
+operations
+getNewPathId: () ==> PathId
+getNewPathId() == return mk_PathId(myTCount,getNextCount());
+
+addPath : SimPath ==> PathId
+addPath(a) ==
+(
+  addNewItem(getNewPathId(),a)
+);
+getPath : PathId ==> SimPath
+getPath(id) == return items(id);
+
+getPaths: () ==> set of SimPath
+getPaths() == 
+  return {items(i) | i in set dom items & is_PathId(i)};
+
+
+--LINE 99 1
+types
+  distinfo::
+    dist:nat
+    lfrom:[LocationId]
+
+operations
+
+-- Dijstra's shortest path algoritm
+getPathFromTo : LocationId * LocationId * SimTransport
+                ==> [seq of PathId]
+getPathFromTo(f,t,trans) ==(
+  dcl paths: set of SimPath:=getPathsUsingTransport(trans);
+
+-- map from locations to distances including via 
+  dcl v:map LocationId to distinfo:={f |-> mk_distinfo(0,nil) };
+-- the locations currently under consideration
+  dcl workingset:set of LocationId:={f};
+-- the locations where the distance is known
+  dcl visited:set of LocationId:={};
+  while workingset<>{ } do
+-- find location with shortest distance
+    let a in set workingset be st
+        forall l in set workingset & v(a).dist <= v(l).dist in (
+-- the shortest path to this location has now been found
+      workingset:=workingset \ { a };
+      visited:= visited union { a };
+-- if this is the to location then we at finished
+      if t=a then (
+        dcl path : seq of PathId := [];
+        dcl loc:LocationId:=a;
+-- collect the path from - to
+        while loc<>f do(
+          path := [ (
+                     getPathFromToAux(
+                     loc, v(loc).lfrom,trans,paths)).getId()] ^ path;
+          loc := v(loc).lfrom;
+        );
+        return path
+      );
+-- find the locations ajendant to a and whos distance is still
+-- unknown 
+      let next={l.getFrom() | l in set paths & l.getTo()=a }
+            union {l.getTo() | l in set paths & l.getFrom()=a }\
+            visited in
+        for all l in set next do
+-- find distance via a
+          let newdist=v(a).dist +
+                getPathFromToAux(a,l,trans,paths).calcPathTime(trans) in
+            if l in set workingset then
+              if newdist< v(l).dist then
+-- if the location allready is under consideration and the new
+-- distance is smaller than the old, then use the new distance
+                v := v ++ { l |-> mk_distinfo(newdist,a) }
+              else
+                skip
+            else(
+-- if location is not under consideration, add it to the set
+-- with the new distance.
+              workingset := workingset union {l};
+              v := v munion { l |-> mk_distinfo(newdist,a) }
+           )
+    );
+-- there is no more locations under consideration and the to
+-- location has not been reached, then the to location is not
+-- reachable and there dos not exsist a path.
+  return nil;
+);
+
+-- returns the quickest path between two ajendant locations using a
+-- given transport
+getPathFromToAux : LocationId * LocationId * SimTransport *
+                set of SimPath==> SimPath
+getPathFromToAux(f,t,trans,paths) == (
+  let ps={p | p in set paths & (p.getTo()=t or p.getFrom()=t)
+      and (p.getTo()=f or p.getFrom()=f) } in
+    let p in set ps be st forall pa in set ps &
+        pa. calcPathTime(trans)>=p.calcPathTime(trans) in (
+      return p
+  )
+);
+
+-- returns the subset of paths that can be used with the given 
+-- transport
+getPathsUsingTransport : SimTransport ==> set of SimPath
+getPathsUsingTransport(trans) == (
+  return { p | p in set getPaths() & p.getSurfaces() inter
+           dom trans.getSpeed()<>{ } };
+);
+
+
+--LINE 102 1
+getConnectedTo : LocationId * SimTransport
+                ==> set of LocationId
+getConnectedTo(f,trans) == 
+(
+  dcl paths: set of SimPath:=getPathsUsingTransport(trans);
+  dcl workingset:set of LocationId:={f};
+  dcl visited:set of LocationId:={};
+  while workingset<>{ } do
+    let a in set workingset in 
+    (
+      workingset := workingset \ { a };
+      visited := visited union { a };
+      let next={l.getFrom() | l in set paths & l.getTo()=a }
+            union {l.getTo() | l in set paths & l.getFrom()=a }\
+            visited in
+        workingset := workingset union next
+    );
+  return visited;
+);
+
+
+--LINE 106 1
+end SessionState
+
+--LINE 112 1
+class SessionDefs is subclass of HasSessionRef
+
+--LINE 118 1
+operations 
+initObj : Session ==> SessionDefs
+initObj(s) == 
+(
+  setSession(s);
+  initBuildIn();
+  return self
+);
+
+--LINE 129 1
+types
+ArgOrder = seq of Name;
+
+ClassInfo ::
+  superclass : [ClassId]     -- name of parent class
+  args : SimObj`ArgMap       -- arguments for constructor
+  argnames : ArgOrder        -- the names of the arguments and the                 
+                             -- order
+  objref : [SimObj]          -- the object to use for creating
+                             -- new objects of the class
+  cobjref : [SimObj]        -- reference to completed instance
+
+instance variables
+classInfo : map ClassId to ClassInfo := {|->}
+
+-- the build in classes ????
+
+operations 
+getClassInfo : ClassId ==> ClassInfo
+getClassInfo(cid) == return classInfo(cid);
+
+getCObj : ClassId ==> SimObj
+getCObj(cid) == 
+(
+  let cinfo = classInfo(cid) in
+  (
+    if cinfo.cobjref = nil then
+    (
+      let cobj = cinfo.objref.newObj(cid,cinfo.args,
+                                     getSession().getState()),
+          newci = mu(cinfo, cobjref |-> cobj) in
+      (
+        classInfo := classInfo ++ { cid |-> newci};  
+        return newci.cobjref
+      )
+    ) else
+      return cinfo.cobjref
+  )  
+);
+
+-- check if Id is the name of a class
+isClassId : Id ==> bool
+isClassId(id) == return mk_ClassId(id) in set dom classInfo;
+
+-- add class 
+addSubClass : ClassId * [ClassId] * SimObj`ArgMap * 
+              ArgOrder * [SimObj] ==> ()
+addSubClass(c,p,args,order,obj) ==
+(
+   classInfo := classInfo munion { c |-> 
+                mk_ClassInfo(p,args,order,obj,nil)}
+);
+
+--LINE 132 1
+isSubClassOf : ClassId * set of ClassId ==> bool
+isSubClassOf(id,ids) ==
+(
+  return (getSupClasses(id) inter ids)<>{ }
+);
+
+getSupClasses: [ClassId] ==> set of ClassId
+getSupClasses(id) ==
+(
+  return
+  if id = nil then {} 
+  else {id} union getSupClasses(classInfo(id).superclass)
+);
+
+
+--LINE 138 1
+initBuildIn: () ==> ()
+initBuildIn() ==
+let e = getSession().getEval() in
+(
+  
+
+--LINE 142 1
+  addSubClass(
+    mk_ClassId("SimBase"),
+    nil,
+    {|->},
+    [],
+    nil);
+
+--LINE 150 1
+  addSubClass(
+    mk_ClassId("Agent"), 
+    mk_ClassId("SimBase"),
+    {
+     "name"      |-> e.newStringVal("Agent"),
+     "image"     |-> e.newStringVal("AGENT.GIF"),
+     "role"      |-> nil, 
+     "transport" |-> nil},
+    ["name","image","role","transport"],
+    new SimAgent());
+
+--LINE 154 1
+  addSubClass(
+    mk_ClassId("IvdLocation"), 
+    mk_ClassId("Location"),
+    {
+     "name"      |-> e.newStringVal("IvdLocation"),
+     "image"     |-> e.newStringVal("IVDLOCATION.GIF"),
+     "beds"      |-> e.newNumVal(20),
+     "actions"   |-> e.newSetVal2({}),
+     "atype"     |-> e.newSetVal2(
+                       {e.newClassIdVal(mk_ClassId("Agent"))}),
+     "dtype"     |-> e.newSetVal2({})},
+    ["name","image","beds","actions","atype","dtype"],
+    new SimIvdLocation());
+
+--LINE 158 1
+  addSubClass(
+    mk_ClassId("Surface"),
+    mk_ClassId("SimBase"),
+    {
+      "name" |-> e.newStringVal("Surface")
+    },
+    ["name"],
+    new SimSurface());
+
+--LINE 162 1
+  addSubClass(
+    mk_ClassId("Transport"), 
+    mk_ClassId("SimBase"),
+    {
+     "name"      |-> e.newStringVal("Transport"),
+     "speed"     |-> nil
+    },
+    ["name","speed"],
+    new SimTransport());
+
+--LINE 166 1
+  addSubClass(
+    mk_ClassId("Path"), 
+    mk_ClassId("SimBase"),
+    {
+     "name"      |-> e.newStringVal("Path"),
+     "image"     |-> e.newStringVal("PATH.GIF"),
+     "from"      |-> nil,
+     "to"        |-> nil,
+     "distance"  |-> e.newNumVal(100),
+     "surfaces"  |-> e.newSetVal2(
+                       {e.newClassIdVal(mk_ClassId("Surface"))}),
+     "atype"     |-> e.newSetVal2(
+                       {e.newClassIdVal(mk_ClassId("Agent"))})
+    },
+    ["name","image","from","to","distance","surfaces","atype"],
+    new SimPath());
+
+--LINE 170 1
+  addSubClass(
+    mk_ClassId("Role"), 
+    mk_ClassId("SimBase"),
+    {
+     "name"      |-> e.newStringVal("Role"),
+     "performs"  |-> e.newSetVal2({}),
+     "commands"  |-> e.newMenuVal(
+        mk_SSL`MenuVal(nil,mk_SSL`StringVal("",0),[],0))
+    },
+    ["name","performs","commands"],
+    new SimRole());
+
+--LINE 174 1
+-- TransportAgent ???
+addSubClass(
+    mk_ClassId("TransportAgent"), 
+    mk_ClassId("Agent"),
+    {
+     "name"      |-> e.newStringVal("IvdPatient"),
+     "image"     |-> e.newStringVal("IVDPATIENT.GIF"),
+     "role"      |-> nil, 
+     "transport" |-> nil},
+    ["name","image","role","transport"],
+    new SimAgent());
+
+
+--LINE 178 1
+  addSubClass(
+    mk_ClassId("Resource"), 
+    mk_ClassId("SimBase"),
+    {
+     "name"      |-> e.newStringVal("Resource"),
+     "image"     |-> e.newStringVal("RESOURCE.GIF"),
+     "reusable"  |-> e.newBoolVal(false), 
+     "units"     |-> e.newNumVal(1),
+     "weight"    |-> e.newNumVal(100)
+    },
+    ["name","image","reusbale","units","waight"],
+    new SimResource());
+
+--LINE 182 1
+-- IvdPatient ???
+  addSubClass(
+    mk_ClassId("IvdPatient"), 
+    mk_ClassId("Agent"),
+    {
+     "name"      |-> e.newStringVal("IvdPatient"),
+     "front"     |-> e.newStringVal("IVDPATIENTFRONT.GIF"),
+     "back"      |-> e.newStringVal("IVDPATIENTBACK.GIF"),
+     "role"      |-> nil, 
+     "transport" |-> nil},
+    ["name","front" ,"back","role","transport"],
+    new SimIvdPatient());
+
+
+--LINE 186 1
+  addSubClass(
+    mk_ClassId("Location"), 
+    mk_ClassId("SimBase"),
+    {
+     "name"      |-> e.newStringVal("Location"),
+     "image"     |-> e.newStringVal("LOCATION.GIF"),
+     "actions"   |-> e.newSetVal2({}),
+     "atype"     |-> e.newSetVal2(
+                       {e.newClassIdVal(mk_ClassId("Agent"))}),
+     "dtype"     |-> e.newSetVal2({})},
+    ["name","image","actions","atype","dtype"],
+    new SimLocation())
+)
+
+--LINE 194 1
+types
+ParmInfo ::
+  id : Id           -- the identifier
+  text : String     -- the text to display for the actor
+  tp : SimEvent`ActionParameterType -- the type of the parm
+;
+
+--LINE 197 1
+ActionInfo ::
+  ssl : SSL`ActionDefn  -- the ssl for the definition
+  vars : set of Id   -- the set of global variables referenced
+  parms : seq of ParmInfo
+  argnames : seq of Id;  -- the list of argument ids
+
+--LINE 201 1
+instance variables
+actions : map ActionId to ActionInfo := {|->}
+
+--LINE 205 1
+operations
+isActionId : Id ==> bool
+isActionId(id) == return mk_ActionId(id) in set dom actions;
+
+--extract the global variables from the action
+
+--LINE 211 1
+extrGlobalVars : SSL`SSLItemList * set of Id ==> set of Id
+extrGlobalVars (sl,vars) ==
+(
+  dcl ids : set of Id := {};
+  for i in sl do
+    ids := ids union 
+    cases i:
+      mk_SSL`AssignmentStmt(id,expr,-) ->
+        {id.id} union extrExprGlobalVars(expr,vars),
+      mk_SSL`ExprStmt(expr,-) ->
+        extrExprGlobalVars(expr,vars),
+      mk_SSL`VarDecl(id,-,expr,-) ->
+        {id.id} union 
+        if expr = nil then {} else extrExprGlobalVars(expr,vars),
+      others -> {}
+    end;     
+  return ids
+);
+extrExprGlobalVars : SSL`Expr * set of Id ==> set of Id
+extrExprGlobalVars (expr,vars) ==
+(
+   return
+   cases expr :
+     mk_SSL`MapVal(m,-) ->
+       dunion {extrExprGlobalVars(l,vars) union
+               extrExprGlobalVars(e,vars) 
+              | mk_(l,e) in set elems m},
+     mk_SSL`SetVal(s,-) ->
+       dunion {extrExprGlobalVars(e,vars) | e in set elems s},
+     mk_SSL`MethodApp(id,appexpr,-) ->
+       {id.id} union extrAppExprGlobalVars(appexpr,vars),
+     mk_SSL`NewExpr(appexpr,-) -> 
+       extrAppExprGlobalVars(appexpr,vars),
+     mk_SSL`Identifier(id,-) ->
+       if id in set vars then {id} else {},
+     others -> {}
+   end
+);
+extrAppExprGlobalVars : SSL`AppExpr * set of Id ==> set of Id
+extrAppExprGlobalVars(mk_SSL`AppExpr(-,args,-),vars) ==
+(
+  dcl ids : set of Id := {};
+  if is_SSL`ArgBindMap(args) then
+    for mk_(-,expr) in args.val  do
+      ids := ids union extrExprGlobalVars(expr,vars)
+  else 
+    for expr in args.val do
+      ids := ids union extrExprGlobalVars(expr,vars);
+  return ids
+);
+
+--LINE 217 1
+extrParmInfo : seq of SSL`ArgDecl  ==> seq of ParmInfo
+extrParmInfo(adl) == 
+(
+  dcl pl : seq of ParmInfo := [];
+  for mk_SSL`ArgDecl(id,mk_SSL`TypeExpr(cn,-,-),txt,-) in adl do
+    let  ci = mk_ClassId(cn.id),
+         etp = cases (true):
+               (isSubClassOf(ci,{mk_ClassId("Location")})) -> 
+                  SimEvent`qLocation,
+               (isSubClassOf(ci, {mk_ClassId("IvdPatient")})) -> 
+                  SimEvent`qIvdPatient,
+               (isSubClassOf(ci, {mk_ClassId("Agent")})) -> 
+                  SimEvent`qAgent,
+               (isSubClassOf(ci, {mk_ClassId("Resource")})) -> 
+                  SimEvent`qResource,
+               others -> undefined
+         end
+    in
+    pl := pl ^ [mk_ParmInfo(id.id,txt.val,etp)];
+  return pl
+);
+
+--LINE 223 1
+addActionDefn : SSL`ActionDefn ==> ()
+addActionDefn(defn) ==
+(
+   let vars = extrGlobalVars(defn.body,getState().getVarIds()),
+       parms = extrParmInfo(defn.argdecl),
+       argids = [ parms(i).id | i in set inds parms ] 
+   in
+     actions := actions munion
+                { mk_ActionId(defn.name.id) |-> 
+                      mk_ActionInfo(defn,vars,parms,argids)}
+);
+
+--LINE 229 1
+getActionInfo : ActionId ==> ActionInfo
+getActionInfo(aid) == return actions(aid)
+
+--LINE 233 1
+end SessionDefs
+
+--LINE 239 1
+class BroadCast is subclass of HasSessionRef
+
+--LINE 245 1
+instance variables
+queues : map AgentId to SimEvents := {|->}
+
+--LINE 251 1
+operations 
+initObj : Session ==> BroadCast
+initObj(s) == 
+(
+  setSession(s);
+  return self
+);
+
+--LINE 255 1
+getQueues : () ==> map AgentId to SimEvents
+getQueues() == return queues;
+
+--LINE 259 1
+broadCastTo : set of AgentId * SimEvents ==> ()
+broadCastTo(ids,events) ==
+(
+  broadCastToAux(ids, {}, events)
+);
+
+
+--LINE 263 1
+broadCastToAux : set of AgentId *   -- to include
+                 set of AgentId *   -- to exclude
+                 SimEvents  ==> ()
+broadCastToAux(ids,except,events) ==
+(
+  let actors = getSession().getActors() in
+    for all i in set (ids\except) inter dom actors do
+      -- notifyClient(i,events) ???
+      let es = if i in set dom queues then queues(i)
+               else []
+      in queues := queues ++ {i |-> es ^ events}
+
+);
+
+--LINE 269 1
+broadCastAll : set of AgentId * SimEvents ==> ()
+broadCastAll(except,events) ==
+(
+   broadCastToAux(dom getSession().getActors(),except,events)
+);
+
+--LINE 275 1
+broadCastLocation : LocationId * set of AgentId* 
+                    SimEvents ==> ()
+broadCastLocation(lid,except,events) ==
+(
+    broadCastToAux(getSession().getActorsInLocation(lid),                
+                    except,events)
+)
+
+--LINE 279 1
+end BroadCast
+
+--LINE 7 1
+class GlobalTypes
+
+--LINE 11 1
+types
+
+String = seq of char;
+Name = seq of char;
+Title = seq of char;
+Id = seq1 of char;
+ClassId :: id : Id;     -- class name
+VarId :: id : Id;     -- variable name
+TimeTp = nat;  -- seconds since 1 jan 1970
+FileName = String;
+
+--LINE 15 1
+ItemId = LocationId | PathId | AgentId | ResourceId |ValId;
+Items = set of ItemId;
+
+--LINE 18 1
+SelectedItemId = AgentId | ResourceId;
+
+--LINE 21 1
+WhereAmI  = LocationId;
+
+--LINE 24 1
+-- tag for location
+LocationId :: 
+  tid : nat
+  id : nat;
+-- tag for path
+PathId :: 
+  tid : nat
+  id : nat;
+-- tag for agent
+AgentId :: 
+  tid : nat
+  id : nat;
+IvdPatientId = AgentId;
+-- tag for resource
+ResourceId :: 
+  tid : nat
+  id : nat;
+-- tag for simple value
+ValId :: 
+  tid : nat
+  id : nat;
+
+ThreadId :: 
+  id : nat;
+
+--LINE 28 1
+operations
+
+minimum : set of nat ==> nat
+minimum(s) ==
+ let r in set s be st forall r2 in set s & r <= r2 in
+ return r
+pre s <> {};
+
+maximum : set of nat ==> nat
+maximum(s) ==
+ let r in set s be st forall r2 in set s & r >= r2 in
+ return r
+pre s <> {};
+
+--LINE 34 1
+types
+  Msg ::
+    num : nat
+    msg : seq of (char|nat);
+
+  RTMsg ::
+    num : nat
+    msg : seq of (char|nat)
+    info : nat;  -- pos info into parser InfoIndex
+
+MsgList = seq of (Msg|RTMsg);
+
+operations
+nat2str : nat ==> seq of char
+nat2str(n) == 
+(
+  dcl s : seq of char := "";
+  dcl count : nat := n;
+  if n=0 then return "0";
+  while count>0 do
+  (
+    s:=s ^
+      cases(count mod 10) :
+        0 -> "0",
+        1 -> "1",
+        2 -> "2",
+        3 -> "3",
+        4 -> "4",
+        5 -> "5",
+        6 -> "6",
+        7 -> "7",
+        8 -> "8",
+        9 -> "9",
+        others -> "" -- error
+      end;
+    count := count div 10;
+  );
+  return s
+);
+errorMsg : nat * seq of (char | nat ) ==> seq of Msg
+errorMsg(num,msg) == 
+(
+  return [mk_Msg(num,["Error: ",num, " : ",msg])];
+);
+
+errorRTMsg : nat * seq of (char | nat ) * SSL`Index ==> seq of RTMsg
+errorRTMsg(num,msg,ind) == 
+(
+  return [mk_RTMsg(num,["Runtime-Error: ",num, " : ",msg],ind)];
+);
+
+--LINE 38 1
+end GlobalTypes
+
+--LINE 7 1
+class KernelTypes is subclass of NetTypes
+
+--LINE 13 1
+values
+
+qFast : bool = true;   -- stop is not possible
+qSlow : bool = false;
+qEvents : bool = true;
+qNoEvents : bool = false;
+qLog : bool = true;
+qNoLog : bool = false
+
+types
+  EvalMode :: 
+    fast : bool      -- should we evaluate as fast as possible
+    events : bool    -- should event be generated
+    log : bool      -- should SSL be logged to the init file
+
+--LINE 17 1
+end KernelTypes
+
+--LINE 7 1
+class SessionManager is subclass of NetTypes
+
+--LINE 13 1
+instance variables
+  sessions : map SessionId to SessionInfo := {|->}
+
+--LINE 19 1
+instance variables
+count : nat := 0
+
+operations
+getSessionId : () ==> SessionId
+getSessionId() ==
+( count := count +1; return mk_SessionId(count))
+
+--LINE 38 1
+operations
+
+createSession : Title * SSL`SSDir * SSL`SSDir 
+                ==> [SessionInfo] * MsgList 
+createSession(t,sslfrom,sslto) ==
+(
+  let s = new Session(),
+      id = getSessionId() in
+  (    
+    -- parse sslfrom ???
+    -- parse sslto ???
+    
+    -- create the session
+    s.initObj(self,id,t,sslfrom,sslto); 
+    let si = mk_SessionInfo(id,t,s) in
+    (
+      sessions := sessions munion { id |-> si };
+      return mk_(si,[])
+    )
+  )
+);
+
+--LINE 44 1
+removeSession : SessionId ==> ()
+removeSession(id) ==
+(
+  sessions := {id} <-: sessions;
+);
+
+--LINE 50 1
+listSessions : () ==> set of Session`SessionInfo
+listSessions() ==
+(
+  return rng sessions
+)
+
+--LINE 54 1
+end SessionManager

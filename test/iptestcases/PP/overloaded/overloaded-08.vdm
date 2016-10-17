@@ -1,0 +1,58 @@
+-- testing use of overloaded operation with multiple definitions
+-- covering different parts of the unmangling functionality
+
+class A is subclass of D
+
+operations
+
+public
+Test: () ==> nat
+Test() ==
+  return F(7)
+
+end A
+
+class B is subclass of C
+
+functions
+
+public F: () -> seq of char -> nat
+F() == lambda cs : seq of char & 7;
+
+public F: nat +> seq of char -> nat
+F(p) == lambda cs: seq of char & p + 8;
+  
+end B
+class C
+
+functions
+
+public F: real -> seq of char -> nat
+F(r)(-) == r div 5;
+
+--operations
+
+--public F: set of (bool * nat1) * map <XXX> to [Comp] ==> nat
+public F: set of (bool * nat1) * map <XXX> to [Comp] -> nat
+F(-,-) ==
+  --return 77;
+  77;
+
+types
+
+public  Comp :: a1 : int
+                a2 : map bool to seq1 of char;
+	    
+end C
+class D is subclass of B, C
+
+operations
+
+F: token * inmap char to seq1 of set of map char to rat ==> real
+F(-,-) ==
+  return 9999;
+  
+end D
+ 
+
+

@@ -1,0 +1,18 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq1  of set of (nat*nat)  
+Test () ==
+return 
+[    { let a = mk_(a,b) in a | a,b in set let a = {1,2} in a union {2,4} }
+	
+]  
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

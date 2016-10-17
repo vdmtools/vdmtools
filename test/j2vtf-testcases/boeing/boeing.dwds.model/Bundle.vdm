@@ -1,0 +1,41 @@
+class Bundle is subclass of Object
+operations 
+public  getId : () ==> int 
+getId() == 
+( return  bundleId
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( return  bundleName
+) ;
+
+public  getAllParts : () ==> [Iterator]
+getAllParts() == 
+( return  mediator.getAllParts(self  )
+) ;
+
+public  getAllWires : () ==> map  int  to  [Wire]
+getAllWires() == 
+( return  mediator.getWire(self  )
+) ;
+
+public  equals : [Object] ==> bool 
+equals(obj) == 
+( return  (is_ (obj,[Bundle]) and  Bundle`bundleId = (def l_11 :  Bundle = (obj)
+  in l_11).getId())
+) ;
+
+public  Bundle : int  * [String] ==> Bundle
+Bundle(bundleId, bundleName) == 
+( Bundle`bundleId := bundleId;
+  Bundle`bundleName := bundleName;
+  Bundle`mediator := WiringDataMediator.getMediator()
+) ;
+
+instance variables 
+  private  bundleId : int ;
+  private  bundleName : [String];
+  private  mediator : [WiringDataMediator]
+  
+end  Bundle

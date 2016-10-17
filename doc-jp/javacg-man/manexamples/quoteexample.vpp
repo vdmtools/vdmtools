@@ -1,0 +1,47 @@
+class A
+
+operations
+
+public SetVal : nat ==> ()
+SetVal(n) == skip
+
+end A
+
+class B is subclass of A
+
+operations
+
+public SetVal : nat ==> ()
+SetVal(n) == skip
+
+end B
+
+class C is subclass of B
+
+operations
+
+public Test : () ==> ()
+Test() ==
+( self.SetVal(1);
+  self.B`SetVal(1);
+  self.A`SetVal(2)
+)
+
+end C
+
+class D
+
+instance variables
+  b : B := new B()
+
+operations
+
+public Test : () ==> ()
+Test() ==
+( b.SetVal(1);
+  b.B`SetVal(1);
+  b.A`SetVal(2)
+)
+
+end D
+

@@ -1,0 +1,54 @@
+class A
+
+values 
+
+m: MATH  = new MATH();
+public rec: R = mk_R(1,[1]);
+
+types
+public R::     int
+    j : seq of int;
+
+operations
+
+public Test : () ==>  set of map nat to nat--set of map ( nat * nat ) to ( nat * nat ) 
+Test() ==
+--return {{ mk_(i,j) |-> mk_(u(i),s) | s in set {7,5}} | i in set {2,3}, j in set {4,6}};
+return {{ i |-> s | s in set {4}} | i in set {23}};
+
+u: nat ==> nat
+u(n) == return m.clone(n)+10;
+
+end A
+
+class B
+end B
+
+class C
+
+operations
+
+test3: nat ==> A`R
+test3(n) == return A`rec;
+
+end C
+
+class MATH
+
+instance variables
+matrix: seq of seq of real := [];
+
+operations
+--ex: nat ==> nat
+--ex(n) == is not yet specified;
+
+public clone: nat ==> nat
+clone(n) == return n;
+
+setMatrix: seq of seq of real ==> ()
+setMatrix(m) == matrix := m;
+
+end MATH
+
+
+

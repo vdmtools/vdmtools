@@ -1,0 +1,154 @@
+class WireDiagramPanel is subclass of JPanel, Observer
+operations 
+public  refresh : () ==> <VOID>
+refresh() == 
+( let - = diagramPane.validate()
+  in 
+    skip ;
+  let - = diagramPane.repaint()
+  in 
+    skip ;
+  let - = statusPanel.validate()
+  in 
+    skip ;
+  let - = statusPanel.repaint()
+  in 
+    skip ;
+  let - = validate()
+  in 
+    skip ;
+  let - = repaint()
+  in 
+    skip ;
+  return  
+) ;
+
+public  updatePanel : () ==> <VOID>
+updatePanel() == 
+( dcl   curContext : [ContextSet] := context.getCurrentContext(),
+        currentRefDes : [RefDes] := context.getCurrentContextFieldObject(ContextTypes`REFDES),
+        currentPin : [String] := context.getCurrentContextFieldObject(ContextTypes`PIN),
+        currentWire : [Wire] := context.getCurrentContextFieldObject(ContextTypes`WIRE),
+        currentWireGroup : [String],
+        currentWireIsAShield : bool ;
+  if  currentWire = nil  
+  then  
+    ( currentWireGroup := nil  ;
+      currentWireIsAShield := contextWireIsAShield
+    ) 
+  else  
+    ( currentWireGroup := currentWire.getWireGroup().getName();
+      currentWireIsAShield := currentWire.isAShield()
+    ) ;
+  if  currentWireGroup <> contextWireGroup or  currentWireIsAShield <> contextWireIsAShield
+  then  
+    ( contextWireGroup := currentWireGroup;
+      contextWireIsAShield := currentWireIsAShield;
+      if  contextWire <> currentWire
+      then  
+        ( contextWire := currentWire
+        ) ;
+      let - = diagramCanvas.clear()
+      in 
+        skip ;
+      let - = diagramPane.invalidate()
+      in 
+        skip ;
+      let - = diagramCanvas.initialize(currentRefDes , currentPin , currentWire)
+      in 
+        skip ;
+      let - = diagramCanvas.paint(diagramCanvas.getGraphics())
+      in 
+        skip 
+    ) 
+  else  
+    if  currentRefDes <> nil   and  currentPin <> nil   and  currentWire <> nil   and  diagramCanvas.getGraphics() <> nil  
+    then  
+      ( let - = diagramCanvas.setContextRefDes(currentRefDes.getName())
+        in 
+          skip ;
+        let - = diagramCanvas.setContextPin(currentPin)
+        in 
+          skip ;
+        let - = diagramCanvas.setContextWire(currentWire.getName())
+        in 
+          skip ;
+        let - = diagramCanvas.paint(diagramCanvas.getGraphics())
+        in 
+          skip 
+      ) ;
+  if  statusPanel.isVisible()
+  then  
+    ( let - = statusPanel.displayWireInfo(currentWire)
+      in 
+        skip 
+    ) ;
+  let - = refresh()
+  in 
+    skip ;
+  return  
+) ;
+
+public  WireDiagramPanel : () ==> WireDiagramPanel
+WireDiagramPanel() == 
+( let - = JPanel()
+  in 
+    skip ;
+  let - = setBackground(Color`white)
+  in 
+    skip ;
+  context := ContextState`getContextState();
+  let - = setLayout(new  BorderLayout())
+  in 
+    skip ;
+  let - = context.addObserver(self  )
+  in 
+    skip ;
+  contextWire := nil  ;
+  contextWireGroup := nil  ;
+  contextWireIsAShield := false  ;
+  diagramCanvas := new  DiagramCanvas();
+  diagramPane := new  JScrollPane(diagramCanvas);
+  let - = diagramPane.getHorizontalScrollBar().setUnitIncrement(10)
+  in 
+    skip ;
+  let - = diagramPane.getVerticalScrollBar().setUnitIncrement(10)
+  in 
+    skip ;
+  statusPanel := new  StatusPanel(new  String("wire_diagram"));
+  let - = statusPanel.getDisplayProperties()
+  in 
+    skip ;
+  let - = add(diagramPane , BorderLayout`CENTER)
+  in 
+    skip ;
+  let - = add(statusPanel , BorderLayout`SOUTH)
+  in 
+    skip ;
+  let - = setPreferredSize(new  Dimension(600 , 500))
+  in 
+    skip ;
+  return  
+) ;
+
+public  update : [Observable] * [Object] ==> <VOID>
+update(o, contextChanges) == 
+( if  isShowing()
+  then  
+    ( let - = updatePanel()
+      in 
+        skip 
+    ) ;
+  return  
+) ;
+
+instance variables 
+  protected  context : [ContextState];
+  private  diagramCanvas : [DiagramCanvas] := nil  ;
+  private  diagramPane : [JScrollPane];
+  private  statusPanel : [StatusPanel];
+  private  contextWire : [Wire];
+  private  contextWireGroup : [String];
+  private  contextWireIsAShield : bool 
+  
+end  WireDiagramPanel

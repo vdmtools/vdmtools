@@ -1,0 +1,37 @@
+class IfExprTest
+functions
+
+  f : () -> inmap rat to nat
+  f() ==
+    {2 |-> 5}
+  pre true
+--  post true
+
+types
+
+  A :: a: int
+       b: bool
+
+values
+
+  v1 : A = mk_A(1,true);
+  n : real = 88
+    
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = if true 
+        then 7
+        elseif false
+        then true
+        elseif -9 > 9
+        then -9
+        else {}
+  in skip;
+
+------------------------------------------------------------------------------
+end IfExprTest

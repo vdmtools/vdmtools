@@ -1,0 +1,165 @@
+
+
+\begin{vdm_al}
+
+system main
+
+instance variables
+public static n1 : nr1 := new nr1();
+public static n2 : nr2 := new nr2();
+
+-- cpu for TPC
+cpu1 : CPU := new CPU (<FCFS>,1E6);
+-- cpu for APM
+cpu2 : CPU := new CPU (<FCFS>,1E6);
+-- bus to connect TPC and APM
+bus1 : BUS := new BUS (<FCFS>,1E3,{cpu1,cpu2});
+
+operations
+public main : () ==> main
+main() ==(
+	cpu1.deploy(n1);
+	cpu2.deploy(n2);
+);
+end main
+
+class World
+
+operations
+public begin : () ==> nat
+begin() == (
+	Logger`write("dette er en test");
+	main`n1.setn2(main`n2);
+	main`n2.setn1(main`n1);
+	start(main`n1);
+	start(main`n2);
+	main`n1.isFin();
+        return 1;
+);
+
+
+end World
+
+
+class nr1
+
+instance variables
+
+private n2 : nr2;
+private t : nat := 0;
+private done : bool := false;
+
+operations
+async public test: nat ==> ()
+test(t) == Logger`write2("This is async in nr 1",t,time);
+
+public run : () ==> ()
+run() == (
+	t := t + 10000;
+	n2.test(t);
+	if(t > 40000) then
+		done := true;
+);
+
+public setn2 : nr2 ==> ()
+setn2(n) == n2 := n;
+
+public isFin : () ==> ()
+isFin() == skip;
+
+thread
+while true do
+	run();
+--periodic (10000,1000,9000,0)(run)
+
+sync
+--per run =>(not done);
+per isFin => (done);
+
+end nr1
+
+
+class nr2
+
+instance variables
+private n1 : nr1;
+private t : nat := 0;
+
+operations
+async public test: nat ==> ()
+test(t) == Logger`write2("This is async in nr 2",t,time);
+
+public run : () ==> ()
+run() == (
+	t := t + 10000;
+	n1.test(t);
+);
+
+public setn1 : nr1 ==> ()
+setn1(n) == n1 := n;
+
+thread
+while true do
+	run();
+--periodic (10000,1000,9000,0)(run)
+sync
+--per run =>(t < time);
+
+end nr2
+
+
+class Logger
+
+types
+	public string = nat | seq of char;
+
+	public logType =  (string);	
+				
+
+instance variables 
+	public static log : seq of logType := [];
+
+operations
+	
+	public static write : logType ==> () 
+	write(o)== 	( 
+		duration(0)(	
+		log := log ^ [o] ^ ["\n"];
+		Logger`flush();
+		);
+	);
+	
+	public static write2 : logType * nat * nat ==> () 
+	write2(o, tr, ti)== 	( 
+		duration(0)(	
+		log := log ^ [o] ^ [tr] ^ [ti] ^ ["\n"];
+		Logger`flush();
+		);
+	);
+
+	public static flush : () ==> ()
+	flush()== (
+	--dcl io: IO := new IO();
+	-- def - = io.fwriteval[seq of logType]("logger.log",log,<start>) in 
+        skip;
+	);
+
+	public static printLog : () ==> seq of logType	
+	printLog() == return log;
+
+sync
+mutex(write);
+mutex(write2);
+mutex(write, write2);
+
+end Logger
+
+class A
+
+operations
+public Test: () ==> nat
+Test() ==
+  return new World().begin();
+
+end A
+\end{vdm_al}

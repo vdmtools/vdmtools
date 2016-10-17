@@ -1,0 +1,364 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    General settings which normaly belongs to the toolbox interface
+% $Id: eval_settings.vdm,v 1.11 2000/04/20 15:45:20 erik Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\chapter{Settings}
+
+This module define those settings which belongs to the interface, this is:
+\begin{enumerate}
+  \item Should dynamic type checking be done
+  \item Should pre conditions be evaluated
+  \item Should post conditions be evaluated
+\end{enumerate}
+
+\begin{vdm_al}
+module SETTINGS
+
+#ifdef VDMPP
+imports
+--#ifdef VICE
+--    from STKM 
+--    operations
+--      GetPrimaryAlgorithm : () ==> SCHDTP`PrimarySchedulerAlgorithm,
+--#endif VICE
+
+  from SCHDTP
+    types PrimarySchedulerAlgorithm = SCHDTP`PureCooperative 
+#ifdef VICE
+                            | SCHDTP`TimeSlice 
+#endif VICE
+                            | SCHDTP`InstrnumSlice;
+          PureCooperative :: ;
+#ifdef VICE
+          TimeSlice :: ;
+#endif VICE
+          InstrnumSlice :: ;
+#endif VDMPP
+
+exports
+  operations
+#ifdef VDMPP
+    GetMaxInstr: () ==> nat; -- these two are only used for PP
+    SetMaxInstr: nat ==> ();
+    GetTaskSwitch: () ==> nat;                                        
+    SetTaskSwitch: nat ==> ();
+#ifdef VICE
+    GetTimeSlice: () ==> nat;                                        
+    SetTimeSlice: nat ==> ();
+    GetTimeFactor: () ==> nat;
+    SetTimeFactor: nat ==> ();
+    GetDefaultCapacity: () ==> nat;     
+    SetDefaultCapacity: nat ==> ();
+    SetVirtualCPUCapacity: nat | <INFINITE> ==> ();
+    GetVirtualCPUCapacity: () ==> nat | <INFINITE>;
+    GetStepSize: () ==> nat1;     
+    SetStepSize: nat1 ==> ();
+    GetJitterMode: () ==> <Early> | <Random> | <Late>;
+    SetJitterMode: <Early> | <Random> | <Late>  ==> ();     
+#endif VICE
+    GetPrimaryAlgorithm : () ==> SCHDTP`PrimarySchedulerAlgorithm;
+    SetPrimaryAlgorithm : SCHDTP`PrimarySchedulerAlgorithm ==> ();
+    PriorityBasedOn : () ==> ();
+    PriorityBasedOff : () ==> ();
+    PriorityBased : () ==> bool;
+#endif VDMPP
+    DtcOn: () ==> ();
+    DtcOff: () ==> ();
+    PreOn: () ==> ();
+    PreOff: () ==> ();
+    PostOn: () ==> ();
+    PostOff: () ==> ();
+    InvOn: () ==> ();
+    InvOff: () ==> ();
+    RandomOn: int ==> ();
+    RandomOff: () ==> ();
+    CasesOn: () ==> ();
+    CasesOff: () ==> ();
+    MeasureOn: () ==> ();
+    MeasureOff: () ==> ();
+    DTC: () ==> bool;
+    PreCheck: () ==> bool;
+    PostCheck: () ==> bool;
+    INV: () ==> bool;
+    Random: () ==> int;
+    CasesCheck: () ==> bool;
+    Measure: () ==> bool;
+    RTErrExceptionOn: () ==> ();
+    RTErrExceptionOff: () ==> ();
+    RTErrException: () ==> bool;
+    AssertOn: () ==> ();
+    AssertOff: () ==> ();
+    Assertion: () ==> bool
+
+definitions
+
+state Settings of
+  dtc : bool
+  precheck : bool
+  postcheck : bool
+  invar : bool
+  random : int
+  casescheck : bool
+  measurecheck : bool
+  rterr_exception : bool
+  assertion : bool
+#ifdef VDMPP
+  maxinstr : nat
+#ifdef VICE
+  maxTime : nat
+  defaultcapacity : nat
+  virtualcpucapacity : nat | <INFINITE>
+  stepsize : nat1
+  jittermode: <Early> | <Random> | <Late>
+#endif VICE
+  priorityBased : bool
+  taskSwitch : nat
+  primaryAlgorithm : SCHDTP`PrimarySchedulerAlgorithm
+#ifdef VICE
+  timeFactor : nat
+#endif VICE
+#endif VDMPP
+#ifdef VICE
+init s == s = mk_Settings(false,false,false,false,-1,false,false,false,false,
+                  1000, 1000, 1E06,<INFINITE>,100,
+                  <Early>,false, 2, mk_SCHDTP`InstrnumSlice(),1) 
+#else
+#ifdef VDMSL
+init s == s = mk_Settings(false,false,false,false,-1,false,false,false,false) 
+#endif VDMSL
+#ifdef VDMPP
+init s == s = mk_Settings(false,false,false,false,-1,false,false,false,false,
+                  1000, false, 0, mk_SCHDTP`InstrnumSlice()) 
+#endif VDMPP
+#endif VICE
+end
+\end{vdm_al}
+Default no of the checks shall be set.
+
+The following operations set the state variabes
+\begin{vdm_al}
+operations
+
+DtcOn: () ==> ()
+DtcOn ()  ==
+  dtc := true;
+
+DtcOff: () ==> ()
+DtcOff () == 
+  dtc := false;
+  
+InvOn: () ==> ()
+InvOn ()  ==
+  invar := true;
+
+InvOff: () ==> ()
+InvOff () == 
+  invar := false;
+
+PreOn: () ==> ()
+PreOn () == 
+  precheck := true;
+
+
+PreOff: () ==> ()
+PreOff () == 
+  precheck := false;
+
+PostOn: () ==> ()
+PostOn ()==
+  postcheck := true;
+
+PostOff: () ==> ()
+PostOff () ==
+  postcheck := false;
+
+  RandomOn: int ==> ()
+  RandomOn(n) ==
+    random := n;
+
+  RandomOff: () ==> ()
+  RandomOff() ==
+    random := -1;
+
+CasesOn: () ==> ()
+CasesOn ()==
+  casescheck := true;
+
+CasesOff: () ==> ()
+CasesOff () ==
+  casescheck := false;
+
+MeasureOn: () ==> ()
+MeasureOn ()==
+  measurecheck := true;
+
+MeasureOff: () ==> ()
+MeasureOff () ==
+  measurecheck := false;
+
+RTErrExceptionOn: () ==> ()
+RTErrExceptionOn ()==
+  rterr_exception := true;
+
+RTErrExceptionOff: () ==> ()
+RTErrExceptionOff () ==
+  rterr_exception := false;
+
+RTErrException: () ==> bool
+RTErrException () ==
+  return rterr_exception;
+
+AssertOn: () ==> ()
+AssertOn ()==
+  assertion := true;
+
+AssertOff: () ==> ()
+AssertOff () ==
+  assertion := false;
+
+Assertion: () ==> bool
+Assertion () ==
+  return assertion;
+
+#ifdef VDMPP
+PriorityBasedOn : () ==> ()
+PriorityBasedOn() ==
+  priorityBased := true;
+
+PriorityBasedOff : () ==> ()
+PriorityBasedOff() ==
+  priorityBased := false;
+#endif VDMPP
+\end{vdm_al}
+
+These functions read the values of the state variables
+\begin{vdm_al}
+DTC: () ==> bool
+DTC () == return dtc;
+
+PreCheck: () ==> bool
+PreCheck () == return precheck;
+
+PostCheck: () ==> bool
+PostCheck () == return postcheck;
+
+INV: () ==> bool
+INV() == return invar;
+
+Random: () ==> int
+Random() ==
+  return random;
+
+CasesCheck: () ==> bool
+CasesCheck () == return casescheck;
+
+Measure: () ==> bool
+Measure() == return measurecheck;
+
+#ifdef VDMPP
+GetMaxInstr: () ==> nat
+GetMaxInstr() ==
+  return maxinstr;
+
+SetMaxInstr:nat ==> ()
+SetMaxInstr(no) ==
+  maxinstr := no;
+
+PriorityBased : () ==> bool
+PriorityBased() ==
+  return priorityBased;
+
+GetTaskSwitch: () ==> nat     
+GetTaskSwitch() ==            
+  return taskSwitch;          
+                              
+SetTaskSwitch: nat ==> ()     
+SetTaskSwitch(newTaskSwitch) ==
+  taskSwitch := newTaskSwitch; 
+#endif VDMPP
+
+#ifdef VICE
+GetTimeSlice: () ==> nat     
+GetTimeSlice() ==            
+  return maxTime;          
+                              
+SetTimeSlice: nat ==> ()     
+SetTimeSlice(newMaxTime) ==
+  maxTime := newMaxTime; 
+
+GetDefaultCapacity: () ==> nat     
+GetDefaultCapacity() ==            
+  return defaultcapacity;          
+                              
+SetDefaultCapacity: nat ==> ()     
+SetDefaultCapacity(capacity) ==
+  defaultcapacity := capacity; 
+
+GetVirtualCPUCapacity: () ==> nat | <INFINITE>    
+GetVirtualCPUCapacity() ==            
+  return virtualcpucapacity;          
+                              
+SetVirtualCPUCapacity: nat | <INFINITE> ==> ()     
+SetVirtualCPUCapacity(capacity) ==
+  virtualcpucapacity := capacity; 
+
+GetStepSize: () ==> nat1     
+GetStepSize() ==            
+  return stepsize;          
+                              
+SetStepSize: nat1 ==> ()     
+SetStepSize(step) ==
+  stepsize := step; 
+
+GetTimeFactor: () ==> nat     
+GetTimeFactor() ==            
+  return timeFactor;          
+                              
+SetTimeFactor: nat ==> ()     
+SetTimeFactor(newTimeFactor) ==
+  timeFactor := newTimeFactor;
+
+GetJitterMode: () ==> <Early> | <Random> | <Late>     
+GetJitterMode() ==            
+  return jittermode;          
+                              
+SetJitterMode: <Early> | <Random> | <Late>  ==> ()     
+SetJitterMode(newjittermode) ==
+  jittermode := newjittermode; 
+#endif VICE
+
+#ifdef VDMPP
+GetPrimaryAlgorithm : () ==> SCHDTP`PrimarySchedulerAlgorithm
+GetPrimaryAlgorithm() ==
+--#endif VDMPP
+--#ifdef VICE
+--  STKM`GetPrimaryAlgorithm();
+--#else
+--#ifdef VDMPP
+  return primaryAlgorithm;
+--#endif VDMPP
+--#endif VICE
+
+--#ifdef VDMPP
+SetPrimaryAlgorithm : SCHDTP`PrimarySchedulerAlgorithm ==> ()
+SetPrimaryAlgorithm(newPrimaryAlgorithm) ==
+  primaryAlgorithm := newPrimaryAlgorithm
+#endif VDMPP
+end SETTINGS
+\end{vdm_al}
+
+\vspace{0.5cm}
+
+#ifdef RTINFO
+\begin{rtinfo}
+{rtinfo.ast}[SETTINGS]
+\end{rtinfo}
+#endif RTINFO
+
+% Local Variables: 
+% mode: LaTeX
+% TeX-master: "dynsem"
+% End: 
+

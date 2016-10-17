@@ -1,0 +1,22 @@
+%$ld$
+
+\subsubsection{AbstractTask}
+event loopを実装するクラスである。
+\begin{vdm_al}
+class BasicTask
+  is subclass of AbstractTask
+
+operations
+  public BasicTask: seq of char * EventDispatcher ==> BasicTask
+  BasicTask (a名前, ed) == AbstractTask(a名前, ed);
+
+thread
+  while (true) do
+    イベントを処理する(イベントを得る())
+
+end BasicTask
+\end{vdm_al}
+
+\begin{rtinfo}
+[BasicTask]{vdm.tc}[BasicTask]
+\end{rtinfo}

@@ -1,0 +1,11 @@
+--$Header: /home/vdmtools/cvsroot/toolbox/test-jp/test-by-SSlib/Author.vpp,v 1.1 2005/11/25 07:05:37 vdmtools Exp $
+class 著者クラス is subclass of 人クラス
+--責任
+--本の著者の情報を持つ。
+
+instance variables
+
+public 著書 : [本クラス] := nil;
+
+end 著者クラス
+

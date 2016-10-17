@@ -1,0 +1,39 @@
+class J2VUTIL
+functions
+  public Covert: seq1 of char * (int  | real | char | String)
+                         +> [(int  | real | char | String)]
+  Covert(p_type,p_val) ==
+    is not yet specified
+  pre
+    cases p_type:
+      "boolean",
+  --    "void",
+      "char",
+      "short",
+      "int",
+      "long",
+      "float",
+      "double",
+      "byte",
+      "String"
+        -> true,
+      others
+        -> false
+    end;
+
+  public ConcatStr: [String] * [String] +> [String]
+  ConcatStr(p_str1,p_str2) ==
+    is not yet specified;
+--  ( dcl l_res: [String];
+--    if p_str2=nil
+--    then
+--      l_res:=p_str1
+--    elseif p_str1=nil
+--    then
+--      l_res:=p_str2 
+--    else
+--      l_res:=p_str1.concat(p_str2);
+--    return l_res
+--  );
+
+end J2VUTIL

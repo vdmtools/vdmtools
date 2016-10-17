@@ -1,0 +1,20 @@
+class JavaLangException is subclass of JavaLangThrowable
+operations 
+public  JavaLangException : () ==> JavaLangException
+JavaLangException() == 
+( let - =  JavaLangThrowable()
+  in skip 
+) ;
+
+public  JavaLangException : <NIL> ==> JavaLangException
+JavaLangException(-) == 
+isNil := true  ;
+
+public  JavaLangException : JavaLangString ==> JavaLangException
+JavaLangException(s) == 
+( let - =  JavaLangThrowable(s)
+  in skip 
+) ;
+
+
+end  JavaLangException

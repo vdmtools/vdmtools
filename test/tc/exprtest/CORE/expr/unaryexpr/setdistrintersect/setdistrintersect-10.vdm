@@ -1,0 +1,22 @@
+class UnaryTest
+types
+
+  A :: set of nat
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let A = "ABC",
+      n = 0,
+      - = dinter cases false:
+               true -> A,
+               others -> n
+           end 
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

@@ -1,0 +1,44 @@
+r AllT.vpp
+r FBusinessTable.vpp
+r FBusinessTableT.vpp
+r FCalendar.vpp
+r FCalendarT.vpp
+r FCharT.vpp
+r FCharacter.vpp
+r FFunction.vpp
+r FFunctionT.vpp
+r FHashtable.vpp
+r FHashtableT.vpp
+r FInteger.vpp
+r FIntegerT.vpp
+r FJapaneseCalendar.vpp
+r FJapaneseCalendarT.vpp
+r FMap.vpp
+r FMapT.vpp
+r FNumber.vpp
+r FNumberT.vpp
+r FProduct.vpp
+r FProductT.vpp
+r FQueue.vpp
+r FQueueT.vpp
+r FReal.vpp
+r FRealT.vpp
+r FSequence.vpp
+r FSequenceT.vpp
+r FSet.vpp
+r FSetT.vpp
+r FString.vpp
+r FStringT.vpp
+r FTestDriver.vpp
+r FTestLogger.vpp
+r io.vpp
+r ../test-by-SSlib/VDMUtil.vpp
+r ../test-by-SSlib/Character.vpp
+r ../test-by-SSlib/Sequence.vpp
+r ../test-by-SSlib/String.vpp
+tc * pos
+set profile
+set dtc
+set inv
+init
+d new AllT().run()

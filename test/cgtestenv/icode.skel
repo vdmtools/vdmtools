@@ -1,0 +1,10 @@
+#include "metaiv.h"
+#include "icode.h"
+
+int main() 
+{
+YYY // Must be placed at the start of the line
+  cout << ZZZ.ascii() << "\n";
+//  cout << ZZZ << "\n";
+  return 0; 
+}

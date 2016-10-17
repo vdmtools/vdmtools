@@ -1,0 +1,43 @@
+public Test : () ==> int | seq of int | <OK>
+Test() ==
+  tixe {mk_(t,b) |-> return 7,
+        <ERR2> |-> return <OK>}
+  in
+    Example();
+
+DoCommand: () ==> seq of int
+DoCommand() ==
+( dcl l : seq of nat := [];
+  always TestSeq(l) in
+  ( if SetToSeq({}) = []
+    then return [7,8]
+    else return l )
+);
+
+SetToSeq: set of int ==> seq of int
+SetToSeq(s) ==
+  if s = {} then
+    exit <ERR>
+  else
+    let e in set s in 
+      return [e] ^ SetToSeq(s \ {e});
+
+TestSeq: seq of int ==> seq of int
+TestSeq(l) ==
+  if l = [] then
+    exit <ERR2>
+  else if false
+  then exit mk_(1,1)
+  else if 1=0
+  then exit <ERR>
+  else
+    return l;
+
+Example: () ==> int | seq of int
+Example() ==
+  tixe { 
+    <ERR> |-> exit 7,
+    mk_(t,t) |-> return t
+  } in DoCommand()
+
+end A

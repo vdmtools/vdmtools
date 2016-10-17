@@ -1,0 +1,572 @@
+system FighterAircraft
+
+instance variables
+  -- cpu to deploy sensor 1 and 2
+  cpu1 : CPU := new CPU (<FCFS>,1E6);
+
+  -- cpu to deploy sensor 3 and 4
+  cpu2 : CPU := new CPU (<FCFS>,1E6);
+
+  -- cpu to deploy the MissileDetector
+  -- and the FlareControllers
+  cpu3 : CPU := new CPU (<FP>,1E9);
+
+  -- cpus for the flare dispenser groups
+  cpu4 : CPU := new CPU (<FCFS>,1E6);
+  cpu5 : CPU := new CPU (<FCFS>,1E6);
+  cpu6 : CPU := new CPU (<FCFS>,1E6);
+
+  -- bus to connect sensors 1 and 2 to the missile detector
+  bus1 : BUS := new BUS (<FCFS>,1E6,{cpu1,cpu3});
+
+  -- bus to connect sensors 3 and 4 to the missile detector
+  bus2 : BUS := new BUS (<FCFS>,1E6,{cpu2,cpu3});
+  
+  -- bus to connect flare controllers to the dispensers
+  bus3 : BUS := new BUS (<FCFS>,1E6,{cpu3,cpu4,cpu5,cpu6});
+
+  -- maintain a link to the detector
+  public static detector : MissileDetector := new MissileDetector();
+
+  public static sensor0 : Sensor := new Sensor(detector,0);
+  public static sensor1 : Sensor := new Sensor(detector,90);
+  public static sensor2 : Sensor := new Sensor(detector,180);
+  public static sensor3 : Sensor := new Sensor(detector,270);
+
+  public static controller0 : FlareController := new FlareController(0);
+  public static controller1 : FlareController := new FlareController(120);
+  public static controller2 : FlareController := new FlareController(240);
+
+  public static dispenser0 : FlareDispenser := new FlareDispenser(0);
+  public static dispenser1 : FlareDispenser := new FlareDispenser(30);
+  public static dispenser2 : FlareDispenser := new FlareDispenser(60);
+  public static dispenser3 : FlareDispenser := new FlareDispenser(90);
+
+  public static dispenser4 : FlareDispenser := new FlareDispenser(0);
+  public static dispenser5 : FlareDispenser := new FlareDispenser(30);
+  public static dispenser6 : FlareDispenser := new FlareDispenser(60);
+  public static dispenser7 : FlareDispenser := new FlareDispenser(90);
+
+  public static dispenser8 : FlareDispenser := new FlareDispenser(0);
+  public static dispenser9 : FlareDispenser := new FlareDispenser(30);
+  public static dispenser10 : FlareDispenser := new FlareDispenser(60);
+  public static dispenser11 : FlareDispenser := new FlareDispenser(90);
+
+operations
+  public FighterAircraft: Environment ==> FighterAircraft
+  FighterAircraft (env) ==
+   (   -- set-up the missile detector
+      cpu3.deploy(detector);
+      cpu3.setPriority(MissileDetector`addThreat,100);
+
+      -- set-up sensor 0 and 1
+      cpu1.deploy(sensor0);
+      cpu1.setPriority(Sensor`trip,100);
+      cpu1.deploy(sensor1);
+
+      -- set-up sensor 2 and 3
+      cpu2.deploy(sensor2);
+      cpu2.setPriority(Sensor`trip,100);
+      cpu2.deploy(sensor3);
+
+      -- add the first controller with four dispensers
+      cpu3.deploy(controller0);
+      cpu3.setPriority(FlareController`addThreat,80);
+      -- add the dispensers to the controller
+
+      cpu4.deploy(dispenser0);
+      cpu4.setPriority(FlareDispenser`addThreat,100);
+      cpu4.setPriority(FlareDispenser`evalQueue,80);
+      cpu4.deploy(dispenser1);
+      cpu4.deploy(dispenser2);
+      cpu4.deploy(dispenser3);
+
+      -- add the second controller with four dispensers
+      cpu3.deploy(controller1);
+      cpu3.setPriority(FlareController`addThreat,80);
+      cpu5.deploy(dispenser4);
+      cpu5.setPriority(FlareDispenser`addThreat,100);
+      cpu5.setPriority(FlareDispenser`evalQueue,80);
+      cpu5.deploy(dispenser5);
+      cpu5.deploy(dispenser6);
+      cpu5.deploy(dispenser7);
+
+      -- add the third controller with four dispensers
+      cpu3.deploy(controller2);
+      cpu3.setPriority(FlareController`addThreat,80);
+      cpu6.deploy(dispenser8);
+      cpu6.setPriority(FlareDispenser`addThreat,100);
+      cpu6.setPriority(FlareDispenser`evalQueue,80);
+      cpu6.deploy(dispenser9);
+      cpu6.deploy(dispenser10);
+      cpu6.deploy(dispenser11);
+
+     )
+
+end FighterAircraft
+class World
+
+instance variables
+  -- maintain a link to the environment
+  public static env : [Environment] := nil;
+
+operations
+  public World: () ==> World
+  World () ==
+   duration(0)
+   (  dcl controller : FlareController,
+      x : nat;
+      -- set-up the environment
+      env := new Environment("scenario.txt");
+      -- set-up the sensors
+      env.addSensor(FighterAircraft`sensor0);
+      env.addSensor(FighterAircraft`sensor1);
+      env.addSensor(FighterAircraft`sensor2);
+      env.addSensor(FighterAircraft`sensor3);
+
+      -- add the first controller with four dispensers
+      FighterAircraft`controller0.addDispenser(FighterAircraft`dispenser0);
+      FighterAircraft`controller0.addDispenser(FighterAircraft`dispenser1);
+      FighterAircraft`controller0.addDispenser(FighterAircraft`dispenser2);
+      FighterAircraft`controller0.addDispenser(FighterAircraft`dispenser3);
+      x := FighterAircraft`detector.addController(FighterAircraft`controller0);
+
+      -- add the second controller with four dispensers
+      FighterAircraft`controller1.addDispenser(FighterAircraft`dispenser4);
+      FighterAircraft`controller1.addDispenser(FighterAircraft`dispenser5);
+      FighterAircraft`controller1.addDispenser(FighterAircraft`dispenser6);
+      FighterAircraft`controller1.addDispenser(FighterAircraft`dispenser7);
+      x := FighterAircraft`detector.addController(FighterAircraft`controller1);
+ 
+      -- add the third controller with four dispensers
+      FighterAircraft`controller2.addDispenser(FighterAircraft`dispenser8);
+      FighterAircraft`controller2.addDispenser(FighterAircraft`dispenser9);
+      FighterAircraft`controller2.addDispenser(FighterAircraft`dispenser10);
+      FighterAircraft`controller2.addDispenser(FighterAircraft`dispenser11);
+      x := FighterAircraft`detector.addController(FighterAircraft`controller2);
+      
+      -- start the detector
+      start(FighterAircraft`detector) );
+
+  -- the run function blocks the user-interface thread
+  -- until all missiles in the file have been processed
+  public Run: () ==> seq of Environment`outline
+  Run () == 
+    ( -- start the environment
+      start (env);
+      -- wait for the environment to handle all input
+      env.isFinished();
+      -- wait for the missile detector to finish
+      FighterAircraft`detector.isFinished();
+      -- print the result
+      env.showResult())
+
+end World
+class FlareController
+  is subclass of GLOBAL
+
+instance variables
+  -- the left hand-side of the working angle
+  private aperture : Angle;
+
+  -- maintain a link to each dispenser
+  ranges : map nat to (Angle * Angle) := {|->};
+  dispensers : map nat to FlareDispenser := {|->};
+  inv dom ranges = dom dispensers;
+
+  -- the relevant events to be treated by this controller
+  threats : seq of (MissileType * Angle * nat) := [];
+
+  -- the status of the controller
+  busy : bool := false
+
+operations
+  public FlareController: Angle ==> FlareController
+  FlareController (papp) == aperture := papp;
+
+  public addDispenser: FlareDispenser ==> ()
+  addDispenser (pfldisp) ==
+    duration (0)
+    let angle = aperture + pfldisp.GetAngle() in
+      ( dcl id : nat := card dom ranges + 1;
+        atomic (
+          ranges := ranges munion {id |-> mk_(angle, DISPENSER_APERTURE)};
+          dispensers := dispensers munion {id |-> pfldisp});
+        start (pfldisp) );
+
+  -- get the left hand-side start point and opening angle
+  public getAperture: () ==> GLOBAL`Angle * GLOBAL`Angle
+  getAperture () == return mk_(aperture, FLARE_APERTURE);
+
+  -- addThreat is a helper function to modify the event
+  -- list. currently events are stored first come first served.
+  -- one could imagine using a time ordered sequence in stead
+  async public addThreat: MissileType * Angle * nat ==> ()
+  -- MAVE public addThreat: MissileType * Angle * nat ==> ()
+  addThreat (pmt,pa,pt) ==
+    ( threats := threats ^ [mk_ (pmt,pa,pt)];
+      busy := true );
+
+  -- getThreat is a local helper function to modify the event list
+  private getThreat: () ==> MissileType * Angle * nat
+  getThreat () ==
+    ( dcl res : MissileType * Angle * nat := hd threats;
+      threats := tl threats;
+      return res );
+
+  public isFinished: () ==> ()
+  isFinished () ==
+    for all id in set dom dispensers do
+      dispensers(id).isFinished();
+
+sync
+  -- addThreat and getThreat modify the same instance variables
+  -- therefore they need to be declared mutual exclusive
+  mutex (addThreat,getThreat);
+
+  -- getThreat is used as a 'blocking read' from the main
+  -- thread of control of the missile detector
+  per getThreat => len threats > 0;
+  per isFinished => not busy
+
+thread
+  -- the flare controller continuously processes sensor
+  -- events. getThread is automatically blocked if there
+  -- are no threats available
+  ( -- first start the dispenser threads
+    for all id in set dom dispensers do
+      start (dispensers(id));
+    -- now enter the event handling loop
+    while true do
+      ( def mk_ (pmt, pa, pt) = getThreat() in
+            for all id in set dom ranges do
+              def mk_(papplhs, pappsize) = ranges(id) in
+                if canObserve(pa, papplhs, pappsize)
+                then dispensers(id).addThreat(pmt,pt);
+        busy := len threats > 0 ) )
+
+end FlareController
+class FlareDispenser
+  is subclass of GLOBAL
+
+values
+  responseDB : map MissileType to Plan =
+    { <MissileA> |-> [ mk_(<FlareOneA>,900),
+                       mk_(<FlareTwoA>,500),
+                       mk_(<DoNothingA>,100),
+                       mk_(<FlareOneA>,500)],
+      <MissileB> |-> [ mk_(<FlareTwoB>,500),
+                       mk_(<FlareTwoB>,700)],
+      <MissileC> |-> [ mk_(<FlareOneC>,400),
+                       mk_(<DoNothingC>,100),
+                       mk_(<FlareTwoC>,400),
+                       mk_(<FlareOneC>,500)] };
+
+  missilePriority : map MissileType to nat =
+    { <MissileA> |-> 1,
+      <MissileB> |-> 2,
+      <MissileC> |-> 3 }
+
+types
+  public Plan = seq of PlanStep;
+
+  public PlanStep = FlareType * nat;
+
+instance variables
+  public curplan : Plan := [];
+  curprio        : nat := 0;
+  busy           : bool := false;
+  angle          : nat;
+
+operations
+
+  public FlareDispenser: nat ==> FlareDispenser
+  FlareDispenser(ang) ==
+    angle := ang;
+
+  public GetAngle: () ==> nat
+  GetAngle() ==
+    return angle;
+
+  async public addThreat: MissileType * nat ==> ()
+  -- MAVE public addThreat: MissileType * nat ==> ()
+  addThreat (pmt, ptime) ==
+    if missilePriority(pmt) > curprio
+    then ( dcl newplan : Plan :=  [],
+               newtime : nat := ptime;
+           -- construct an absolute time plan
+           for mk_(fltp, fltime) in responseDB(pmt) do
+             ( newplan := newplan ^ [mk_ (fltp, newtime)];
+               newtime := newtime + fltime );
+           -- immediately release the first action
+           def mk_(fltp, fltime) = hd newplan in
+             releaseFlare(fltp,fltime,time);
+           -- store the rest of the plan
+           curplan := tl newplan;
+           curprio := missilePriority(pmt);
+           busy := true );
+
+  async private evalQueue: () ==> ()
+  -- MAVE private evalQueue: () ==> ()
+  evalQueue () ==
+    duration (10)
+      ( if len curplan > 0
+        then ( dcl curtime : nat := time, done : bool := false;
+               while not done do
+                 ( dcl first : PlanStep := hd curplan,
+                       next : Plan := tl curplan;
+                   let mk_(fltp, fltime) = first in
+                     if fltime <= curtime
+                     then ( releaseFlare(fltp,fltime,curtime);
+                            curplan := next;
+                            if len next = 0
+                            then ( curprio := 0; done := true; busy := false ) )
+                     else done := true ) ) );
+
+  private releaseFlare: FlareType * nat * nat==> ()
+  releaseFlare (pfltp, pt1, pt2) == World`env.handleEvent(pfltp,pt1,pt2);
+
+  public isFinished: () ==> ()
+  isFinished () == skip
+
+sync
+  mutex (addThreat,evalQueue);
+  per isFinished => not busy
+
+thread
+  periodic (3000,10,2900,0) (evalQueue)
+
+end FlareDispenser
+class Sensor
+  is subclass of GLOBAL
+
+instance variables
+  -- the missile detector this sensor is connected to
+  private detector : MissileDetector;
+
+  -- the left hand-side of the viewing angle of the sensor
+  private aperture : Angle;
+
+operations
+  public Sensor: MissileDetector * Angle ==> Sensor
+  Sensor (pmd, psa) == ( detector := pmd; aperture := psa);
+
+  -- get the left hand-side start point and opening angle
+  public getAperture: () ==> GLOBAL`Angle * GLOBAL`Angle
+  getAperture () == return mk_ (aperture, SENSOR_APERTURE);
+
+  -- trip is called asynchronously from the environment to
+  -- signal an event. the sensor triggers if the event is
+  -- in the field of view. the event is stored in the
+  -- missile detector for further processing
+  async public trip: MissileType * Angle ==> ()
+  -- MAVE public trip: MissileType * Angle ==> ()
+  trip (pmt, pa) ==
+    -- log and time stamp the observed threat
+    detector.addThreat(pmt,pa,time)
+    pre canObserve(pa, aperture, SENSOR_APERTURE)
+
+end Sensor
+class GLOBAL
+
+values
+  public SENSOR_APERTURE = 90;
+  public FLARE_APERTURE = 120;
+  public DISPENSER_APERTURE = 30
+
+types
+  -- there are three different types of missiles
+  public MissileType = <MissileA> | <MissileB> | <MissileC>;
+
+  -- there are nine different flare types, three per missile
+  public FlareType =
+    <FlareOneA> | <FlareTwoA> | <DoNothingA> | 
+    <FlareOneB> | <FlareTwoB> | <DoNothingB> | 
+    <FlareOneC> | <FlareTwoC> | <DoNothingC>;
+
+  -- the angle at which the missile is incoming
+  public Angle = nat
+  inv num == num < 360
+
+operations
+  public canObserve: Angle * Angle * Angle ==> bool
+  canObserve (pangle, pleft, psize) ==
+    def pright = (pleft + psize) mod 360 in
+      if pright < pleft
+      -- check between [0,pright> and [pleft,360>
+      then return (pangle < pright or pangle >= pleft)
+      -- check between [pleft, pright>
+      else return (pangle >= pleft and pangle < pright);
+       
+  public getAperture: () ==> Angle * Angle
+  getAperture () == is subclass responsibility;
+
+end GLOBAL
+class Environment
+  is subclass of GLOBAL
+
+types
+  public inline = MissileType * Angle * nat;
+  public outline = FlareType * nat * nat
+
+instance variables
+  -- access to the VDMTools stdio
+-- io is only taken out in order to get the specification running.
+-- This should be kept inside in the final version!
+--  io : IO := new IO();
+
+  -- the input file to process
+  inlines : seq of inline := [];
+  busy : bool := true;
+
+  -- the output file to print
+  outlines : seq of outline := [];
+
+  -- maintain a link to all sensors
+  ranges : map nat to (Angle * Angle) := {|->};
+  sensors : map nat to Sensor := {|->};
+  inv dom ranges = dom sensors;
+
+operations
+  public Environment: seq of char ==> Environment
+  Environment (fname) ==
+-- io is only taken out in order to get the specification running.
+-- This should be kept inside in the final version!
+-- def mk_ (-,input) = io.freadval[seq of inline](fname) in
+--      inlines := input;
+     inlines := [ mk_ (<MissileA>,45,10000), mk_ (<MissileB>,270,30000) ];
+
+  public addSensor: Sensor ==> ()
+  addSensor (psens) ==
+    duration (0)
+    ( dcl id : nat := card dom ranges + 1;
+      atomic (
+       ranges := ranges munion {id |-> psens.getAperture()};
+       sensors := sensors munion {id |-> psens} 
+      )
+    );
+
+  private createSignal: () ==> ()
+  createSignal () ==
+    duration (10) 
+      ( if len inlines > 0
+        then ( dcl curtime : nat := time, done : bool := false;
+               while not done do
+                 def mk_ (pmt, pa, pt) = hd inlines in
+                   if pt <= curtime
+                   then ( for all id in set dom ranges do
+                            def mk_(papplhs,pappsize) = ranges(id) in
+                              if canObserve(pa,papplhs,pappsize)
+                              then sensors(id).trip(pmt,pa);
+                          inlines := tl inlines;
+                          done := len inlines = 0 )
+                   else done := true )
+        else busy := false );
+
+  public handleEvent: FlareType * nat * nat ==> ()
+  handleEvent (pfltp,pt1,pt2) ==
+    duration (10) 
+      ( outlines := outlines ^ [mk_ (pfltp, pt1, pt2)] );
+
+  public showResult: () ==> seq of outline --()
+  showResult () ==
+    return outlines; 
+-- io is only taken out in order to get the specification running.
+-- This should be kept inside in the final version!
+-- def - = io.writeval[seq of outline](outlines) in skip;
+
+  public isFinished : () ==> ()
+  isFinished () == skip
+
+sync
+  mutex (handleEvent);
+  per isFinished => not busy
+
+thread
+  periodic (5000,10,4900,0) (createSignal)
+
+end Environment
+class MissileDetector
+  is subclass of GLOBAL
+
+-- the primary task of the MissileDetector is to
+-- collect all sensor data and dispatch each event
+-- to the appropriate FlareController
+
+instance variables
+  -- maintain a link to each controller
+  ranges : map nat to (Angle * Angle) := {|->};
+  controllers : map nat to FlareController := {|->};
+  inv dom ranges = dom controllers;
+
+  -- collects the observations from all attached sensors
+  threats : seq of (MissileType * Angle * nat) := [];
+
+  -- status of the missile detector
+  busy : bool := false
+
+operations
+  -- addController is only used to instantiate the model
+  public addController: FlareController ==> nat
+  addController (pctrl) ==
+    duration (0)
+    ( dcl nid : nat := card dom ranges + 1;
+      atomic (
+        ranges := ranges munion {nid |-> pctrl.getAperture()};
+        controllers := controllers munion {nid |-> pctrl});
+      start (pctrl);
+      return 1 );
+
+  -- addThreat is a helper function to modify the event
+  -- list. currently events are stored first come first served.
+  -- one could imagine using a time ordered sequence in stead
+  async public addThreat: MissileType * Angle * nat ==> ()
+  -- MAVE public addThreat: MissileType * Angle * nat ==> ()
+  addThreat (pmt,pa,pt) == 
+    ( threats := threats ^ [mk_ (pmt,pa,pt)];
+      busy := true );
+
+  -- getThreat is a local helper function to modify the event list
+  private getThreat: () ==> MissileType * Angle * nat
+  getThreat () ==
+    ( dcl res : MissileType * Angle * nat := hd threats;
+      threats := tl threats;
+      return res );
+
+  public isFinished: () ==> ()
+  isFinished () ==
+    for all id in set dom controllers do
+      controllers(id).isFinished()
+
+sync
+  -- addThreat and getThreat modify the same instance variables
+  -- therefore they need to be declared mutual exclusive
+  mutex (addThreat,getThreat);
+
+  -- getThreat is used as a 'blocking read' from the main
+  -- thread of control of the missile detector
+  per getThreat => len threats > 0;
+  per isFinished => not busy
+
+thread
+  -- the missile detector continuously processes sensor
+  -- events. getThread is automatically blocked if there
+  -- are no threats available
+  while true do
+    ( def mk_ (pmt, pa, pt) = getThreat() in
+        for all id in set dom ranges do
+          def mk_(papplhs, pappsize) = ranges(id) in
+            if canObserve(pa, papplhs, pappsize)
+            then controllers(id).addThreat(pmt,pa,pt);
+      busy := len threats > 0 )
+
+end MissileDetector
+class A
+
+operations
+
+public Test:() ==> seq of Environment`outline
+Test() ==
+  new World().Run()
+
+end A

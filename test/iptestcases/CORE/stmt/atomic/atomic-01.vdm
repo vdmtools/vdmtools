@@ -1,0 +1,23 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+public Test :() ==> seq of char
+Test() ==
+  (dcl a : Even,
+       b : seq of char;
+
+   atomic (a := 8;
+           b := "test");
+   return if a = 8 then b else undefined);
+
+types
+
+  Even = nat
+  inv n == n mod 2 = 0;
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

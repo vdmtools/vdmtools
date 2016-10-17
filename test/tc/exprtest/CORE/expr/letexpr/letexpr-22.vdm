@@ -1,0 +1,38 @@
+class LetExprTest
+types
+
+  A :: selid : nat
+       sel2 : bool;
+
+  B :: sel1 : rat
+  inv b == b < 6
+  
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = let f [@A,@B]: map @A to @B * @A -> @B
+            f(m,a) == m(a)
+            pre a in set dom m,
+
+            g(a: nat, c:bool) r : nat
+            pre a > 10
+            post r>a,
+
+            h: nat -> bool
+            h(x) == true
+            pre x <> 0,
+
+            i(a: nat) r : bool ==
+               true
+            pre a<> 0
+          
+        in
+          true
+  in skip;
+
+------------------------------------------------------------------------------
+end LetExprTest

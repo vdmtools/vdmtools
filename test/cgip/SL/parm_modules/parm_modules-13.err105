@@ -1,0 +1,3 @@
+
+Bug: Wrong initialisation order. module PARM instantiated before module A
+was initialised.

@@ -1,0 +1,32 @@
+Test of Olivers specification
+============================
+
+call code generator with code generator option -e:
+
+vppde -j -e conc.vpp
+
+cp external_Output.javaorig external_Output.java
+cp external_ClockWithDisplay.javaorig external_ClockWithDisplay.java
+cp main.javaorig main.java
+
+javac -classpath .:/home/jojo/toolbox/spec/javalib/dk/ifad/toolbox/VDM/VDM.jar:/home/jojo/toolbox/spec/javalib/dk/ifad/toolbox/VDMCONC/VDMCONC.jar Timer.java Output.java ClockWithDisplay.java AlarmClock.java SafeAlarmClock.java Person.java World.java main.java
+
+java -classpath .:/home/jojo/toolbox/spec/javalib/dk/ifad/toolbox/VDM/VDM.jar:/home/jojo/toolbox/spec/javalib/dk/ifad/toolbox/VDMCONC/VDMCONC.jar main
+
+output: 
+Es funktioniert !!"Es funktioniert!"
+
+
+Setting alarm to  06:15
+Ah, I'm tired. Zzzzz... Zzzzz.... 
+Ring...
+Ring...
+Ring...
+Yawn... Already that late?
+
+rm *.class
+rm *.java
+rm *.default
+
+
+

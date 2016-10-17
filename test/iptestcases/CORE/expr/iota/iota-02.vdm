@@ -1,0 +1,28 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ((seq of char) | (set of nat) | nat )  
+Test () ==
+( return 
+
+  [iota {a,b} in set {{1,2}, 7, {2}, {2,3,4}, {3,6}} & a = 3 or b = 3, 
+   iota [a,b] in set let s = {1, "TE", [1,2]} in s 
+     & if [a] ^ [b] = "TE" then true else false,
+   (iota mk_A_([1],a) in set {mk_A_([1], 1), 1} union 
+    {mk_B(nil, 1), mk_A_(nil, 1), 1} & let t = a + 1 in t = 2).b,
+   let a = {1,2,3,4} in iota 2 in set a & true,
+   let a = {1,2,3,4} in iota 2 in set 
+     if card a = 1 then a else a \ {1} & true
+  ]
+)
+
+types
+  A_ :: a : [seq of nat ]
+        b : nat;
+
+  B :: a : [ nat ]
+       b : nat
+
+end A

@@ -1,0 +1,21 @@
+class LetExprTest
+types
+
+  A :: selid : nat
+       sel2 : bool;
+
+  B :: sel1 : rat
+  inv b == b < 6
+  
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = let a = b + 1, b : int = 5 in a + b
+  in skip;
+
+------------------------------------------------------------------------------
+end LetExprTest

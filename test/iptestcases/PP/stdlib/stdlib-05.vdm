@@ -1,0 +1,146 @@
+class MATH
+
+-- 	VDMTools STANDARD LIBRARY: MATH
+--      --------------------------------------------
+-- 
+-- Standard library for the VDMTools Interpreter. When the interpreter
+-- evaluates the preliminary functions/operations in this file,
+-- corresponding internal functions is called instead of issuing a run
+-- time error. Signatures should not be changed, as well as name of
+-- module (VDM-SL) or class (VDM++). Pre/post conditions is 
+-- fully user customisable. 
+-- Dont care's may NOT be used in the parameter lists.
+
+  functions
+public static
+    sin:real +> real
+    sin(v) ==
+    is not yet specified    
+    post abs RESULT <= 1;
+
+public static
+    cos:real +> real
+    cos(v) ==
+    is not yet specified
+    post abs RESULT <= 1;
+
+public static
+    tan:real -> real
+    tan(a) ==
+    is not yet specified
+    pre cos(a) <> 0;
+
+public static
+    cot:real -> real	
+    cot(a) ==
+    is not yet specified -- Could also be: 1/tan(r)
+    pre sin(a) <> 0;
+
+public static
+    asin:real -> real
+    asin(a) ==
+    is not yet specified
+    pre abs a <= 1;
+
+public static
+    acos:real -> real
+    acos(a) ==
+    is not yet specified
+    pre abs a <= 1;
+
+public static
+    atan:real +> real
+    atan(v) ==
+    is not yet specified;
+
+public static
+    acot:real +> real
+    acot(a) ==
+    atan(1/a)
+    pre a <> 0;
+
+public static
+    sqrt:real -> real
+    sqrt(a) ==
+    is not yet specified
+    pre a >= 0;
+
+  operations
+
+public static
+    srand:int ==> ()
+    srand(a) ==
+    let - = srand2(a) in skip
+    pre a >= 0;
+
+public static
+    rand:int ==> int
+    rand(a) ==
+    is not yet specified
+    pre a > 0;
+
+private static
+    srand2:int ==> int
+    srand2(a) ==
+    is not yet specified
+    pre a >= -1
+
+  functions
+
+public static
+    exp:real +> real
+    exp(a) ==
+    is not yet specified;
+
+public static
+    ln:real -> real
+    ln(a) ==
+    is not yet specified
+    pre a > 0;
+
+public static
+    log:real -> real
+    log(a) ==
+    is not yet specified
+    pre a > 0;
+
+public static
+    pi_f:() +> real
+    pi_f () ==
+    is not yet specified
+
+  values
+public
+    pi = 3.14159265358979323846
+
+ 
+end MATH
+
+class A
+
+instance variables
+b : int
+
+operations
+
+public Test : () ==> seq of real
+Test() ==
+  let m = new MATH() in
+  return [ m.sin(m.pi/2), m.cos(m.pi/2), m.tan(m.pi/4), m.cot(m.pi/4),
+           m.asin(1), m.acos(0), m.atan(1), m.acot(1), m.sqrt(2), m.pi_f(),
+           m.exp(1), m.ln(10), m.log(12345), rt()];
+
+public rt: () ==> int
+rt() ==
+(
+  let m = new MATH()
+  in
+  (
+    m.srand(1);
+    for i = 1 to 10001 do
+      b := m.rand(100000000);
+    return b;
+  )
+)
+
+end A

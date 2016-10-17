@@ -1,0 +1,109 @@
+-- Test correct behaviour for a periodic thread which blocks and
+-- whose next run time is reached.
+
+class Shared
+
+instance variables
+  waitset : seq of nat := [];
+
+operations
+
+public wait : () ==> ()
+wait() ==
+  (AddToWaitSet(threadid);
+   Awake());
+
+AddToWaitSet : nat ==> ()
+AddToWaitSet(n) ==
+  waitset := waitset ^ [n];
+
+Awake : () ==> ()
+Awake() ==
+  skip;
+
+public notify : () ==> ()
+notify() ==
+  if waitset <> []
+  then waitset := tl waitset;
+
+public GetWait : () ==> ()
+GetWait() == skip;
+
+sync
+  mutex(AddToWaitSet,notify);
+  per Awake => threadid not in set elems waitset;
+  per GetWait => len waitset = 1;
+
+end Shared
+
+class B
+
+instance variables
+
+  i : nat := 0;
+  s : Shared;
+
+operations
+
+  public  Init : Shared ==> B
+  Init(ns) ==
+    (s := ns;
+     return self);
+
+  op : () ==> ()
+  op() ==
+    ( s.wait();
+      i := i + 1;
+      s.notify());
+
+  public finished : () ==> nat
+  finished() == 
+    return i;
+
+sync
+
+  per finished => #fin(op) > 0;
+
+thread
+
+  periodic (1000,10,81,1)(op)
+
+end B
+
+class C
+
+instance variables
+
+  s : Shared;
+
+operations
+
+  public  Init : Shared ==> C
+  Init(ns) ==
+    (s := ns;
+     return self);
+
+  op : () ==> ()
+  op() ==
+    s.notify();
+
+thread
+
+  periodic (1200,21,1001,1)(op)
+
+end C
+
+class A
+
+operations
+
+public Test : () ==> nat
+Test() ==
+  ( dcl s : Shared := new Shared(),
+        b : B := new B().Init(s),
+        c : C := new C().Init(s);
+    startlist({b,c});
+    b.finished()
+  )
+
+end A

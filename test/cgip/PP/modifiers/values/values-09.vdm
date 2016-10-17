@@ -1,0 +1,13 @@
+ class B
+
+  values
+
+  v : nat = 5
+
+  operations
+
+public Test : () ==> nat
+  Test() ==
+    return v
+
+end B

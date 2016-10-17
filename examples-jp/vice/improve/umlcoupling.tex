@@ -1,0 +1,64 @@
+\subsection{Enhancement of the UML coupling for VDMTools}
+
+The ``Rose link'' was originally made to couple VDMTools with Rational Rose.
+Meanwhile, UML has developed substantially and is now an updated standard -
+version 2.0. It would be very advantageous for all users of VDMTools that
+wish to use VDM++ in conjunction with class diagrams from UML if this new
+standard would be adopted. The enhancements could for example include:
+
+\begin{itemize}
+\item Rather than being bound to Rational Rose only, the UML link could be
+implemented using XMI (the UML model interchange format) such that all UML
+tools, that support this exchange standard for UML models, could be used
+(including public domain tools). This would remove the current ``vendor
+lock-in'' to Rational Rose for VDMTools. This is in particular important
+for the real-time and embedded market, where I-Logix Rhapsody seems to
+have a much larger market penetration than Rational Rose. 
+
+\item The I-Logix company have produced a system engineering process called
+``Harmony'' that seem very appropriate for the development of embedded
+real-time systems. This method and the recently released SysML (the Systems
+Engineering modelling language, also from the OMG in collaboration with the
+International Council of Systems Engineers INCOSE) should be analysed further
+for better integration with VDMTools for the early phases of development. 
+
+\item As a minor point, support for packages and hierarchical classes
+in UML 2.0 could be taken into account in VDMTools. Similarly, state
+transition diagrams from UML could easily be imported into a VDM++ model,
+provided that asynchronous operation calls are supported in the language.
+\end{itemize}
+
+The round-trip engineering approach advocated by the existing VDMTools
+is still very worthwhile in the context of UML\,2.0. The new UML notation
+still has no agreed syntax (and semantics) for the specification of
+(for example) operations -- which is a natural fit with VDM++, as
+described for example in the VDM++ book \cite{vdmbook}. Do note however
+that Stephen Mellor is leading an OMG activity currently to define a (new)
+language for the creation of executable UML models, something that VDM++
+already provides but the majority of UML users is probably not aware of.
+To prevent OMG re-inventing the wheel once more (as they did with OCL),
+it is suggested that CSK, in collaboration with their academic partners,
+makes a case for acceptance of VDM++ as a suitable and already existing
+and industry proven solution for the specification of executable UML
+models. This should be actively pursued and pushed as soon as possible. \\
+
+OMG also promotes the Model Driven Architecture approach to systems
+analysis and design. While the coupling to UML already implements parts
+of that strategy, the current VDMTools implementation is not well-suited
+for this. It was just not designed with MDA in mind. The Overture open
+source initiative (\textit{http://www.overturetool.org}) attempts to
+solve part of this problem by providing access to a standardized XML
+format for the abstract syntax of VDM specifications. We suggest that
+the Overture effort is actively supported from within CSK. Overture is
+the ideal platform to get academic researchers involved in the
+development of new tools and ideas as proposed in this note. It can
+become a breading ground for new ideas and an excellent opportunity
+for community building. \\
+
+The above two paragraphs indicate that the current work on UML\,2.0
+and MDA is pretty much orthogonal to the improvements to VICE proposed
+in this note. These issues are not hampering each other but the
+relationship between VDM++, UML and MDA can certainly be strengthened
+by implementing the suggested language and tool improvements. In our
+opinion, it will also leverage the market potential for VDMTools.
+

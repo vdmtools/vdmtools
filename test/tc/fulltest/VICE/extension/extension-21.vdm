@@ -1,0 +1,34 @@
+system A
+instance variables
+	cpu1:CPU := new CPU(<FP>, 10e6);
+	cpu2:CPU := new CPU(<FCFS>, 10e6);
+	bus1:BUS := new BUS(<FCFS>, 10e6, {cpu1, cpu2});
+	iv:int := 0;
+	
+operations
+	public A: () ==> A
+	A() ==
+	(
+		cpu2.deploy(new B(123, 456), "Name");
+		cpu1.setPriority(B`op, 1);
+		duration (10) iv := iv + 1;
+		cycles (10) iv := iv * 2;
+	);
+	
+end A
+
+class B
+operations
+	public B: int * int ==> B
+		B(-,-) == return self;
+		
+	public op: int ==> ()
+		op(-) == return;
+		
+	public op: bool ==> bool
+		op(b) == return not b;
+		
+	public op: () ==> ()
+		op() == return;
+		
+end B

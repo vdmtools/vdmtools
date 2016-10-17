@@ -1,0 +1,18 @@
+class CasesStmtTest
+
+operations
+
+  Cases: () ==> nat
+  Cases() ==
+    cases true:
+    1 -> ( dcl a: nat := 0,
+               b: bool;
+	   dcl c: set of int;
+	   return ;
+	   return 8;
+	   return true ),
+    others -> ( let k = true in return not k;
+              return )
+    end;
+
+end CasesStmtTest

@@ -1,0 +1,1998 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Well-formedness of statements for the Static Semantics of VDM++
+% $Id: stmt.vdm,v 1.96 2001/11/22 09:03:07 sunesen Exp $
+% Implemented in: stmt.cc
+%--------------------------------------------------------------------------------
+
+\section{Statements}
+
+This section contains all well-formedness formulae which deals with
+the correctness of statements.
+The interface of the STMT module can be seen from figure~\ref{stmt}.
+
+The STMT module exports its top-level operation $wf-Stmt$ to
+the DEF module. There is also a minor dependency from the DEF module
+because the operation $wf-Type$ is imported.
+Another minor dependency is also
+present because $wf-Stmt$ is used by a single operation in the AUX
+module. STMT imports constructs from the other second level
+modules (EXPR and PAT), but it also import constructs from all
+third level modules (TYPE, AUX and ENV).
+
+%\insertfig{stmt.ps}{13cm}{Interface for the STMT module}{\label{stmt}} 
+
+\begin{vdm_al}
+module STMT
+
+imports
+
+  from ERR all,
+  from AS all,
+
+  from CI all,
+
+  from REP all,
+
+  from TYPE operations
+    IsCompatible: TYPE`Ind * REP`TypeRep * REP`TypeRep ==> bool;
+    types Ind = <POS> | <DEF>,
+
+  from ENV operations
+#ifdef VICE
+    NotStaticOk:() ==> ();
+    StaticRequired:() ==> ();
+#endif VICE
+    EnterScope : map AS`Name to (REP`TypeRep * nat1) ==> ();
+    LeaveScope : () ==> ();
+    UpdateScope : map AS`Name to (REP`TypeRep * nat1) ==> ();
+    EnterLocalScope : map AS`Name to (REP`TypeRep * nat1) ==> ();
+    LeaveLocalScope : () ==> ();
+    UpdateLocalScope : map AS`Name to (REP`TypeRep * nat1) ==> ();
+#ifdef VDMSL
+    LookUpState: AS`Name * bool * (<OLD>|<CUR>) ==> [REP`TypeRep];
+    LookUp: AS`Name * bool ==> [REP`TypeRep];
+#endif VDMSL
+#ifdef VDMPP
+    LookUpState: AS`Name * bool * (<OLD>|<CUR>) ==> [REP`TypeRep|ENV`AccessType];
+    LookUpInObject: AS`Name * AS`Name * bool * bool
+                  ==> [ENV`AccessType| set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep)];
+#endif VDMPP
+    UsedStateIds: set of AS`Name ==> set of AS`Name;
+#ifdef VDMPP
+    HasThread: AS`Name ==> bool;
+    GetCurClass: () ==> AS`Name;
+    CheckAccessCurClass: [ENV`AccessType |
+                          REP`TypeRep    | 
+                          ENV`TagRepElem |
+                          set of REP`TypeRep| set of (ENV`AccessOpTypeRep | 
+                                                      ENV`AccessFnTypeRep | 
+                                                      ENV`AccessPolyTypeRep)]
+               ==> [REP`TypeRep|ENV`TagRepElem  | 
+                  set of (REP`FnTypeRep | REP`OpTypeRep | REP`PolyTypeRep) ];
+#endif VDMPP
+    CheckOperationName: AS`Name ==> bool;
+#ifdef VDMSL
+    PushContext: <PURE>|<ALL>|<PRE>|<POST>|<PUREOP>|<IMPL>|<VALUE> ==> ();
+#endif VDMSL
+#ifdef VDMPP
+    LookUpOperationName : [AS`Name] * AS`Name * [AS`Expr] ==> set of ENV`AccessType;
+    PushContext: <PURE>|<ALL>|<PRE>|<POST>|<PUREOP>|<IMPL>|<VALUE>|<PERM>|<PTHREAD> ==> ();
+#endif VDMPP
+    PopContext: () ==> ();
+    SetExt: seq of AS`ExtInf * set of AS`Name ==> bool;
+    TransType: [AS`Name] * AS`Type ==> REP`TypeRep;
+
+    functions
+    PrintName : AS`Name -> seq of char
+
+#ifdef VDMPP
+  types
+
+    AccessType = ENV`AccessTypeRep | ENV`AccessFnTypeRep  | ENV`AccessPolyTypeRep
+		 | ENV`AccessOpTypeRep | ENV`AccessFieldRep;
+
+    AccessTypeRep;
+    AccessFnTypeRep;
+    AccessPolyTypeRep;
+    AccessOpTypeRep :: tp : REP`OpTypeRep
+                       a  : AS`Access
+                       stat : bool
+                       oppure : bool;
+    AccessFieldRep;
+    TagRepElem = seq of REP`FieldRep
+#endif VDMPP
+,
+
+  from DEF operations
+    wf_Type : TYPE`Ind * AS`Type ==> bool;
+    wf_Pred : TYPE`Ind * [AS`Expr] * (<PRE>|<POST>|<INV>|<INIT>|<EXCEP>) ==> bool * REP`TypeRep,
+
+  from AUX
+    operations
+      ExtractNumericType : REP`TypeRep ==> REP`TypeRep;
+      ExtractSetType : REP`TypeRep ==> REP`TypeRep;
+      ExtractSeqType : REP`TypeRep ==> REP`TypeRep;
+      ExtractMapType : REP`TypeRep ==> [REP`TypeRep];
+#ifdef VDMPP
+      ExtractObjRefType : REP`TypeRep ==> [REP`TypeRep];
+      ExtractSetObjRefType : REP`TypeRep ==> [REP`TypeRep];
+#endif VDMPP
+    functions
+    AlwaysType: REP`TypeRep * REP`TypeRep -> REP`TypeRep;
+    --ExtractExitTypeRep: REP`TypeRep -> [REP`TypeRep];
+    MostGeneralNumericType : set of REP`TypeRep -> REP`TypeRep;
+    UnmaskSetTypeForLoop: TYPE`Ind * REP`TypeRep -> [REP`TypeRep];
+    UnmaskSeqTypeForLoop: TYPE`Ind * REP`TypeRep -> [REP`TypeRep];
+    SplitMapType: [REP`TypeRep] -> [REP`TypeRep] * [REP`TypeRep];
+    MergeTypes : [REP`TypeRep | set of REP`TypeRep] * [REP`TypeRep | set of REP`TypeRep] -> REP`TypeRep;
+    RemoveUnitType: REP`TypeRep -> [REP`TypeRep],
+
+  from PAT operations
+    wf_MultiBindList: TYPE`Ind * seq of AS`MultBind * bool ==> [bool] * map AS`Name to (REP`TypeRep * nat1);
+    wf_Pattern: TYPE`Ind * AS`Pattern * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1);
+    wf_PatternBind: TYPE`Ind * AS`PatternBind * REP`TypeRep ==> [bool] * map AS`Name to (REP`TypeRep * nat1);
+    PatternBind2TypeRep : AS`PatternBind ==> REP`TypeRep,
+
+  from EXPR all
+exports operations
+
+  -- These operations are all used by the DEF module to control
+  -- the appropriate checking of the operations containing use of
+  -- exception handling statements.
+  wf_ImplOpBody: TYPE`Ind *  seq of AS`ExtInf * [AS`Expr] * AS`Expr * seq of AS`Error
+                 * map AS`Name to (REP`TypeRep * nat1) ==> bool;
+  SetOpContext: AS`Name ==> ();
+  AnyTraps: () ==> bool;
+  FullOpTest: bool ==> ();
+  wf_Stmt : TYPE`Ind * AS`Stmt * REP`TypeRep ==> bool * REP`TypeRep;
+#ifdef VDMPP
+  CheckOperationCall: TYPE`Ind * set of AS`Name * AS`Name * [AS`Expr] * seq of REP`TypeRep ==> 
+                      bool * [REP`TypeRep] * REP`TypeRep
+#endif
+
+definitions
+
+operations
+  
+  wf_Stmt : TYPE`Ind * AS`Stmt * REP`TypeRep ==> bool * REP`TypeRep 
+  wf_Stmt (i, stmt, exptp) ==
+    cases true:
+      (is_AS`DefStmt(stmt))           -> wf_DefStmt (i, stmt, exptp),
+      (is_AS`LetStmt (stmt))          -> wf_LetStmt (i, stmt, exptp),
+      (is_AS`LetBeSTStmt(stmt))       -> wf_LetBeSTStmt (i, stmt, exptp),
+      (is_AS`AssignStmt(stmt))        -> wf_AssignStmt (i, stmt, exptp),
+      (is_AS`AtomicAssignStmt(stmt))  -> wf_AtomicAssignStmt (i,stmt,exptp),
+      (is_AS`SeqForLoopStmt(stmt))    -> wf_SeqForLoopStmt (i, stmt, exptp),
+      (is_AS`SetForLoopStmt(stmt))    -> wf_SetForLoopStmt (i, stmt, exptp),
+      (is_AS`IndexForLoopStmt(stmt))  -> wf_IndexForLoopStmt (i, stmt, exptp),
+      (is_AS`WhileLoopStmt(stmt))     -> wf_WhileLoopStmt (i, stmt, exptp),
+      (is_AS`CallStmt(stmt))          -> wf_CallStmt (i, stmt, exptp),
+      (is_AS`ReturnStmt(stmt))        -> wf_ReturnStmt (i, stmt, exptp),
+      (is_AS`IfStmt(stmt))            -> wf_IfStmt (i, stmt, exptp),
+      (is_AS`CasesStmt(stmt))         -> wf_CasesStmt (i, stmt, exptp),
+      (is_AS`ErrorStmt(stmt))         -> wf_ErrorStmt (i, stmt, exptp),
+      (is_AS`AlwaysStmt(stmt))        -> wf_AlwaysStmt (i, stmt, exptp),
+      (is_AS`ExitStmt(stmt))          -> wf_ExitStmt (i, stmt, exptp),
+      (is_AS`TrapStmt(stmt))          -> wf_TrapStmt (i, stmt, exptp),
+      (is_AS`RecTrapStmt(stmt))       -> wf_RecTrapStmt (i, stmt, exptp),
+      (is_AS`BlockStmt(stmt))         -> wf_BlockStmt (i, stmt, exptp),
+      (is_AS`NonDetStmt(stmt))        -> wf_NonDetStmt (i, stmt, exptp),
+      (is_AS`SpecificationStmt(stmt)) -> wf_SpecificationStmt (i, stmt),
+      (is_AS`IdentStmt(stmt))         -> wf_IdentStmt (i, stmt, exptp),
+#ifdef VDMPP
+      (is_AS`StartStmt(stmt))         -> wf_StartStmt(i, stmt, exptp),
+      (is_AS`StartListStmt(stmt))     -> wf_StartListStmt(i, stmt, exptp),
+      (is_AS`StopStmt(stmt))          -> wf_StopStmt(i, stmt, exptp),
+      (is_AS`StopListStmt(stmt))      -> wf_StopListStmt(i, stmt, exptp),
+#ifdef VICE
+      (is_AS`DurationStmt(stmt))      -> wf_DurationStmt(i, stmt, exptp),
+      (is_AS`CycleStmt(stmt))         -> wf_CycleStmt(i, stmt, exptp),
+#endif VICE
+#endif VDMPP
+      others -> error
+    end;
+\end{vdm_al}
+
+\subsection{Local Binding Statements}
+
+\begin{vdm_al}
+
+    wf_DefStmt : TYPE`Ind * AS`DefStmt * REP`TypeRep ==> bool * REP`TypeRep 
+    wf_DefStmt (i, mk_AS`DefStmt(defs, in_s, cid), exptp) ==
+     (dcl used : set of AS`Name := {},
+          reswf : bool := true;
+
+      ENV`EnterScope({|->});
+      --let expargtp = mk_REP`AllTypeRep()
+      --in
+    --  EXTENDED POS CHECK:
+    --  Instead of REP`AllTypeRep one could look up the type of each patbind and use this.
+
+      for mk_(patbind,expr) in defs do
+        def expargtp = PAT`PatternBind2TypeRep(patbind);
+        in
+         (dcl cres : bool * REP`TypeRep;
+          if is_AS`ApplyExpr(expr) and is_AS`Name(expr.fct) and ENV`CheckOperationName(expr.fct)
+          -- be determined before this point, therefore the contextid of expr is given to call.
+          then cres := wf_Stmt(i,ApplyToCall(expr),expargtp)
+          else cres := EXPR`wf_Expr(i,expr,expargtp);
+          def mk_(wf_expr,tp) = cres;
+              mk_(wf_def,bd) = PAT`wf_PatternBind(i,patbind,tp)
+          in
+           (
+            for all stid in set ENV`UsedStateIds(dom bd) do
+              ------------------------------------------------------
+              -- Error message #18
+              -- The scope of the state component "%1" is now hidden
+              ------------------------------------------------------
+              ERR`GenErr(stid,<WARNING>,18,[ENV`PrintName(stid)]);
+            if wf_def <> true
+                  -----------------------------------
+                  -- Error message #302
+                  -- Pattern in Def-Stmt cannot match
+                  -----------------------------------
+            then (ERR`GenErr(expr,<ERROR>,302,[]);
+                  reswf := false);
+            if (is_REP`UnitTypeRep(tp)) and ((is_AS`PatternName(patbind)) or (is_AS`MatchVal(patbind)))
+                   ---------------------------------------------------------
+                   -- Error message #304
+                    -- Rhs of equal definition must return a value to pattern
+                   ---------------------------------------------------------
+            then ( ERR`GenErr(expr,<ERROR>,304,[]);
+                  reswf := false);
+            let overlap = dom bd inter used
+            in
+              for all nm in set overlap do
+                --------------------------------
+                -- Error message #303
+               -- "%1" is redefined in Def-Stmt
+               --------------------------------
+               ERR`GenErr(nm,<WARNING>,303,[ENV`PrintName(nm)]);
+            reswf := reswf and wf_expr;
+            used := used union dom bd;
+            ENV`UpdateScope(bd))); -- for loop ends here
+       def mk_(wf_s,stp) = wf_Stmt(i,in_s,exptp)
+       in
+         (ENV`LeaveScope();
+          CI`SetTypeInfo(cid, stp);
+          return mk_(reswf and wf_s,stp)));
+
+    ApplyToCall: AS`ApplyExpr ==> AS`CallStmt 
+    ApplyToCall(mk_AS`ApplyExpr(fct,args,cid)) ==
+      return mk_AS`CallStmt(nil,fct,args,cid);
+
+wf_LetStmt : TYPE`Ind * AS`LetStmt * REP`TypeRep ==> bool * REP`TypeRep 
+wf_LetStmt (i, mk_AS`LetStmt(defs, in_s, cid), exptp) ==
+ (ENV`EnterScope({|->});
+  def reswf : bool = EXPR`wf_LocalDefs(i,defs);
+      mk_(wf_s, stp) = wf_Stmt (i, in_s, exptp)
+  in
+   (ENV`LeaveScope();
+    CI`SetTypeInfo(cid, stp);
+    return mk_(reswf and wf_s, stp));
+ );
+
+wf_LetBeSTStmt : TYPE`Ind * AS`LetBeSTStmt * REP`TypeRep ==> bool * REP`TypeRep 
+wf_LetBeSTStmt (i, stmt, exptp) ==
+  def mk_AS`LetBeSTStmt(bind, St, In, cid) = stmt;
+      mk_(wf_sb, bd) = PAT`wf_MultiBindList (i, bind, true)
+  in
+   (dcl reswf : bool := true;
+    if wf_sb = nil or not wf_sb
+      --------------------------------------
+      -- Error message #305
+      -- Pattern in Let-Be-Stmt cannot match
+      --------------------------------------
+    then ERR`GenErr(stmt, <ERROR>,305,[]);  
+    ENV`EnterScope (bd);
+    for all stid in set ENV`UsedStateIds(dom bd) do
+      ------------------------------------------------------
+      -- Error message #18
+      -- The scope of the state component "%1" is now hidden
+      ------------------------------------------------------
+      ERR`GenErr(stid,<WARNING>,18,[ENV`PrintName(stid)]); 
+--    def btp_bool = mk_REP`BooleanTypeRep();
+--        mk_(wf_e, etp) = if St = nil
+--                         then mk_(true,nil)
+--                         else EXPR`wf_Expr (i, St, btp_bool);
+--        mk_(wf_st, sttp) = wf_Stmt (i, In, exptp);
+--        stcomp = if St = nil
+--                 then true
+--                 else TYPE`IsCompatible(i, etp, btp_bool)
+--    in
+--     (ENV`LeaveScope();
+--      if not stcomp
+--      then
+--        -------------------------------------------------
+--        -- Error message #231
+--        -- Predicate for "%1" is not a boolean expression
+--        -------------------------------------------------
+--        ERR`GenErr (St, <ERROR>,231,["Let-Be-Stmt"]);
+--      return mk_((wf_sb = true) and wf_st and wf_e and stcomp, sttp));
+    
+    if St <> nil
+    then
+      def btp_bool = mk_REP`BooleanTypeRep();
+          mk_(wf_e, etp) = EXPR`wf_Expr (i, St, btp_bool);
+          stcomp = TYPE`IsCompatible(i, etp, btp_bool)
+      in
+       (if not stcomp
+        then
+          -------------------------------------------------
+          -- Error message #231
+          -- Predicate for "%1" is not a boolean expression
+          -------------------------------------------------
+         ERR`GenErr (St, <ERROR>,231,["Let-Be-Stmt"]);
+        reswf := wf_e and stcomp);
+      
+    def mk_(wf_st, sttp) = wf_Stmt (i, In, exptp);
+    in
+     (ENV`LeaveScope();
+      CI`SetTypeInfo(cid, sttp);
+      return mk_((wf_sb = true) and wf_st and reswf, sttp));
+   );
+\end{vdm_al}
+
+\subsection{Block and Assignment Statements}
+
+\begin{vdm_al}
+
+  wf_BlockStmt : TYPE`Ind * AS`BlockStmt * REP`TypeRep ==> bool * REP`TypeRep 
+  wf_BlockStmt (i, mk_AS`BlockStmt(dcls,stmts,cid), exptp) ==
+    let exprettp = mk_REP`UnionTypeRep({ exptp, mk_REP`RetTypeRep(), mk_REP`UnitTypeRep()})
+    in
+     (dcl reswf : bool := true,
+          earlytp : [REP`TypeRep] := nil,
+          restp : REP`TypeRep := mk_REP`UnitTypeRep(),
+          used : set of AS`Name := {};
+      ENV`EnterScope({|->});
+      ENV`EnterLocalScope({|->});
+      for assdef in dcls do
+        def mk_(wf_dcl, dclbd) = wf_Dcl (i, assdef)
+        in
+         (ENV`UpdateScope(dclbd);
+          for all stid in set ENV`UsedStateIds(dom dclbd) do
+            ------------------------------------------------------
+            -- Error message #18
+            -- The scope of the state component "%1" is now hidden
+            ------------------------------------------------------
+            ERR`GenErr(stid, <WARNING>,18,[ENV`PrintName(stid)]); 
+          let overlap = dom dclbd inter used
+          in
+            for all nm in set overlap do
+              --------------------------------
+              -- Error message #451
+              -- "%1" is redefined in Block-Stmt
+              --------------------------------
+              ERR`GenErr(nm,<WARNING>,451,[ENV`PrintName(nm)]);
+          ENV`UpdateLocalScope(dclbd);
+          reswf := reswf and wf_dcl;
+          used := used union dom dclbd);
+      for index = 1 to len stmts - 1 do
+        def mk_(wf,tp) = wf_Stmt (i,stmts(index), exprettp)
+        in
+         (if not TYPE`IsCompatible(<POS>,mk_REP`UnitTypeRep(),tp)
+            ------------------------------------------------------
+            -- Error message #306
+            -- Block-Stmt will be terminated before last statement
+            ------------------------------------------------------
+          then
+           (ERR`GenErr(stmts(index), <WARNING>,306,[]);
+            if earlytp = nil
+            then
+              let newres = AUX`RemoveUnitType(restp)
+              in
+                if newres = nil
+                then earlytp := tp
+                else earlytp := AUX`MergeTypes(newres,tp));
+              reswf := reswf and wf;
+              if earlytp = nil
+              then restp := AUX`MergeTypes(restp,tp));
+
+       (dcl cres : bool * REP`TypeRep;
+        if stmts = []
+        then cres := mk_(true, mk_REP`UnitTypeRep())
+        else cres := wf_Stmt(i,stmts(len stmts),exptp);
+    
+        def mk_(wf,tp) = cres
+        in
+         (
+        ENV`LeaveLocalScope(); -- This also leave the other scope which have been entered
+        ENV`LeaveScope();
+        CI`SetTypeInfo(cid, tp);
+        return mk_(reswf and wf, if earlytp <> nil
+                                 then earlytp
+                                 else
+                                   let newres = AUX`RemoveUnitType(restp)
+                                   in
+                                     if newres = nil
+                                     then tp
+                                     else AUX`MergeTypes(newres,tp)))));
+
+  wf_Dcl: TYPE`Ind * AS`AssignDef ==> bool * map AS`Name to (REP`TypeRep * nat1)
+  wf_Dcl (i, mk_AS`AssignDef (var, tp, dclinit, -)) == 
+    def typewf = DEF`wf_Type(i,tp);
+        tp' = ENV`TransType(nil,tp);
+        --resbd = { var |-> tp'}
+        resbd = { var |-> mk_(tp', 1)}
+    in
+      if dclinit <> nil
+      then 
+--        def mk_(wf,itp) = if is_AS`ApplyExpr(dclinit) and
+--                             is_AS`Name(dclinit.fct) and
+--                               ENV`CheckOperationName(dclinit.fct)
+--                             -- See comment in wf_DefStmt
+--                           then wf_Stmt(i,ApplyToCall(dclinit),tp')
+--                           else EXPR`wf_Expr(i,dclinit,tp');
+--            icomp = TYPE`IsCompatible (i, itp, tp')
+       (dcl infer : bool * [REP`TypeRep];
+        if is_AS`ApplyExpr(dclinit) and is_AS`Name(dclinit.fct) and
+                               ENV`CheckOperationName(dclinit.fct)
+        -- See comment in wf_DefStmt
+        then infer := wf_Stmt(i,ApplyToCall(dclinit),tp')
+        else infer := EXPR`wf_Expr(i,dclinit,tp');
+        def mk_(wf,itp) = infer;
+            icomp = TYPE`IsCompatible (i, itp, tp')
+        in
+          if not icomp
+          then 
+            ------------------------------------------------------------
+            -- Error message #307
+            -- Initialization expression is not compatible with defining
+            -- type of "%1"
+            ------------------------------------------------------------
+           (ERR`GenErr (dclinit, <ERROR>,307,[ENV`PrintName(var)]) ;
+            return mk_(false, resbd))
+          else return mk_(wf and typewf, resbd))
+      else return mk_(typewf, resbd);
+
+  wf_AssignStmt : TYPE`Ind * AS`AssignStmt * REP`TypeRep ==> bool * REP`TypeRep
+  wf_AssignStmt (i, mk_AS`AssignStmt(lhs, rhs, cid), -) ==
+    def mk_(wf_sd, sd_tp) = wf_StateDesignator(i,lhs,false);
+    in
+     (dcl infer : bool * [REP`TypeRep];
+      if is_AS`ApplyExpr(rhs) and is_AS`Name(rhs.fct) and ENV`CheckOperationName(rhs.fct)
+      -- See comment in wf_DefStmt
+      then infer := wf_Stmt(i,ApplyToCall(rhs),sd_tp)
+      else infer := EXPR`wf_Expr(i,rhs,sd_tp);
+      let mk_(wf_s,s_tp) = infer
+      in
+       (dcl cmp : bool := true;
+#ifdef VDMPP
+        if is_AS`ApplyExpr(rhs) and
+           is_AS`FieldSelectExpr(rhs.fct) and
+           is_AS`Name(rhs.fct.nm)
+        then
+          def mk_(wf,tp) = EXPR`wf_Expr(i, rhs.fct.rec, mk_REP`AllTypeRep())
+          in
+	    if wf
+            then
+              def clstp = AUX`ExtractObjRefType(tp)
+              in
+                if is_REP`ObjRefTypeRep(clstp) and
+                   is_ENV`AccessOpTypeRep(ENV`LookUpInObject(clstp.nm, rhs.fct.nm,false,true))
+                then InsertOpCall(rhs.fct.nm);
+#endif VDMPP
+        if not wf_sd
+           --------------------------------------
+           -- Error message #308
+           -- State designator is not well-formed
+           --------------------------------------
+        then ERR`GenErr(lhs, <ERROR>,308,[])
+        else
+         (cmp := TYPE`IsCompatible (i, s_tp, sd_tp);
+          if not cmp 
+                     -----------------------------------------------------------
+                     -- Error message #309
+                     -- Rhs not compatible with defining type of state
+                     -- designator
+                     -----------------------------------------------------------
+                then ERR`GenErr (rhs, <ERROR>,309,[]));
+          CI`SetTypeInfo(cid, mk_REP`UnitTypeRep());
+          return mk_(wf_sd and wf_s and cmp, mk_REP`UnitTypeRep())));
+    -- QUESTION: Is it correct to use sd_tp ????
+
+  wf_AtomicAssignStmt: TYPE`Ind*AS`AtomicAssignStmt*REP`TypeRep==> bool * REP`TypeRep
+  wf_AtomicAssignStmt (i, mk_AS`AtomicAssignStmt(stmt_l, cid), exptp) ==
+    def wf_s = { def mk_(wf,-) = wf_AssignStmt(i,stmt_l (j),exptp) in wf | j in set inds stmt_l }
+    in
+     (CI`SetTypeInfo(cid, mk_REP`UnitTypeRep());
+      return mk_( false not in set wf_s, mk_REP`UnitTypeRep());
+     );
+
+  wf_StateDesignator : TYPE`Ind * AS`StateDesignator * bool  ==> bool * REP`TypeRep
+  wf_StateDesignator (i, sd, use) ==
+      cases sd:
+        mk_AS`MapOrSeqRef(var,expr,cid) -> def mk_(wf_v,v_tp) = wf_StateDesignator(i,var,use);
+	                                       expargtp = ExtractExpectedSDArgType(v_tp);
+                                               mk_(wf_e,e_tp) = EXPR`wf_Expr(i, expr, expargtp);
+                                               mk_(wf_comp, res_tp) = EXPR`CheckApply(i,v_tp,[e_tp], sd,true)
+                                           in
+                                             ( CI`SetTypeInfo(cid, res_tp);
+                                               return mk_(wf_e and wf_v and wf_comp, res_tp)),
+        mk_AS`FieldRef(var,sel,cid) -> def mk_(wf_v,v_tp) = wf_StateDesignator(i,var,use);
+                                           mk_(wf_sel,tp) = EXPR`CheckFieldSelect(i,v_tp,sel,true);
+                                           res_tp = if is_(tp, REP`TypeRep)
+                                                    then tp
+                                                    elseif card tp = 1
+                                                    then let {l_v} = tp
+                                                         in l_v
+                                                    else mk_REP`UnionTypeRep(tp) 
+                                       in
+                                         ( CI`SetTypeInfo(cid, res_tp);
+                                           CI`SetTypeInfo(sel.cid, res_tp);
+                                           return mk_(wf_v and wf_sel, res_tp)
+                                         ),
+        mk_AS`Name(-,cid) ->
+#ifdef VDMSL
+                             def tp = ENV`LookUpState(sd,use,<CUR>);
+#endif VDMSL
+#ifdef VDMPP
+                             def tp' = ENV`LookUpState(sd,use,<CUR>);
+                                 tp = ENV`CheckAccessCurClass (tp');
+#endif VDMPP
+                                 res_tp = if tp = nil 
+                                          then mk_REP`AllTypeRep()
+                                          else tp
+                             in
+                               ( CI`SetTypeInfo(cid, res_tp);
+                                 if tp = nil
+                                 then return mk_(false, res_tp)
+                                 else return mk_(true, res_tp)
+                               ),
+#ifdef VDMPP
+       mk_AS`SelfExpr(-)   -> return EXPR`wf_Expr(i, sd, mk_REP`AllTypeRep()),
+#endif VDMPP
+       mk_AS`NarrowRef(expr,type,cid) -> 
+                                      def rep_tp = ENV`TransType(nil,type);
+                                          mk_(wf,tp) = wf_StateDesignator(i,expr,use);
+                                          iscomp = TYPE`IsCompatible(i, rep_tp, tp);
+                                      in 
+                                        if not iscomp
+                                        then
+                                         (-------------------------------
+                                          -- Error message #446
+                                          -- Narrow-Expr will always be fail
+                                          -------------------------------
+                                          ERR`GenErr (sd,<ERROR>,446,[]);
+                                          return mk_(false, mk_REP`AllTypeRep()))
+                                        else
+                                         (CI`SetTypeInfo(cid, rep_tp);
+                                          return mk_(wf,rep_tp))
+       end;
+\end{vdm_al}
+
+The ExtractExpectedSDArgType auxiliary operation is used to extract the
+type of the expression inside the brackets of a state designator with
+a syntax like: sd(expr) (used on the left-hand-side of an assignment
+statement). If sd is a sequence it naturally must be a positive
+natural number. If sd is a mapping it must belong to the domain type
+of the mapping.
+
+\begin{vdm_al}
+operations
+  ExtractExpectedSDArgType: REP`TypeRep ==> REP`TypeRep
+  ExtractExpectedSDArgType(sd_tp) ==
+   (dcl seqtp : [REP`TypeRep] := nil,
+        maptp : [REP`TypeRep] := nil;
+    if is_REP`SeqTypeRep(sd_tp) or is_REP`UnionTypeRep(sd_tp) and
+                   exists tp in set sd_tp.tps & is_REP`SeqTypeRep(tp)
+    then seqtp := mk_REP`NumericTypeRep(<NATONE>);
+    if is_REP`GeneralMapTypeRep(sd_tp) or is_REP`InjectiveMapTypeRep(sd_tp) or is_REP`UnionTypeRep(sd_tp) and
+                   exists tp in set sd_tp.tps & is_REP`InjectiveMapTypeRep(tp) or is_REP`GeneralMapTypeRep(tp)
+    then
+      def mtp = AUX`ExtractMapType(sd_tp); -- will not be nil
+          mk_(domtp,-) = AUX`SplitMapType(mtp)
+      in maptp := domtp;
+    if seqtp = nil and maptp = nil
+    then return mk_REP`AllTypeRep()
+    elseif seqtp = nil
+    then return maptp
+    elseif maptp = nil
+    then return seqtp
+    else return AUX`MergeTypes(maptp,seqtp));
+\end{vdm_al}
+
+\subsection{Conditional Statements}
+
+\begin{vdm_al}
+operations
+        
+  wf_IfStmt : TYPE`Ind * AS`IfStmt * REP`TypeRep ==> bool * REP`TypeRep 
+  wf_IfStmt (i, stmt,exptp) ==
+    def mk_AS`IfStmt(test,cons,elsif,altn,cid) = stmt;
+        btp_bool = mk_REP`BooleanTypeRep();
+        -- if
+        mk_(wf_t, ttp) = EXPR`wf_Expr(i, test, btp_bool);
+        tcomp = TYPE`IsCompatible(i, ttp, btp_bool);
+    in
+     (dcl reswf : bool := wf_t and tcomp;
+      if not tcomp
+      then
+        -------------------------------------------------
+        -- Error message #115
+        -- Test expression in "%1" is not of boolean type
+        -------------------------------------------------
+        ERR`GenErr (test,<ERROR>,115,["If-Stmt"]);
+
+      -- then
+      def mk_(wf_c, ctp) = wf_Stmt(i, cons, exptp);
+          ccomp = TYPE`IsCompatible(<POS>,ctp,exptp);
+      in
+       (dcl restp : [REP`TypeRep] := ctp;
+        if not ccomp
+        then
+          -----------------------------------
+          -- Error message #116
+          -- then-part is not of correct type
+          -----------------------------------
+          ERR`GenErr(cons,<ERROR>,116,[]);
+        reswf := reswf and wf_c and ccomp;
+
+        -- elseif
+        if elsif <> []
+        then
+          def mk_(wf_e, etp) = wf_ElseIfStmts(i, elsif, exptp);
+          in
+           (reswf := reswf and wf_e;
+            restp := AUX`MergeTypes(restp, etp));
+
+        -- else
+        if altn = nil
+        then
+          if TYPE`IsCompatible(i,mk_REP`UnitTypeRep(),exptp)
+          then restp := AUX`MergeTypes(restp, mk_REP`UnitTypeRep())
+          else
+           (--------------------------------------------------------------------
+            -- Error message #310
+            -- operation may return without a value because of the empty
+            -- else-statement
+            --------------------------------------------------------------------
+            ERR`GenErr(stmt, <ERROR>,310,[]);
+            reswf := false)
+        else
+          def mk_(wf_a, atp) = wf_Stmt(i, altn, exptp);
+              ecomp = TYPE`IsCompatible(<POS>,atp,exptp)
+          in
+           (if not ecomp then
+              -----------------------------------
+              -- Error message #117
+              -- else-part is not of correct type
+              -----------------------------------
+              ERR`GenErr(altn,<ERROR>,117,[]);
+            reswf := reswf and wf_a and ecomp;
+            restp := AUX`MergeTypes(restp, atp));
+        CI`SetTypeInfo(cid, restp);
+        return mk_(reswf,restp);
+       );
+     );       
+
+    wf_ElseIfStmts : TYPE`Ind * seq1 of AS`ElseifStmt * REP`TypeRep ==> bool * REP`TypeRep 
+    wf_ElseIfStmts (i, else_l, exptp) ==
+      def mk_(wf_e,etp) = wf_ElseIfStmt(i,hd else_l, exptp)
+      in
+        if len else_l = 1
+        then return mk_(wf_e,etp)
+        else def mk_(wf_rest,restp) = wf_ElseIfStmts(i,tl else_l,exptp)
+             in
+               return mk_(wf_rest and wf_e, AUX`MergeTypes(etp,restp));
+
+    wf_ElseIfStmt : TYPE`Ind * AS`ElseifStmt * REP`TypeRep ==> bool * REP`TypeRep 
+    wf_ElseIfStmt (i, mk_AS`ElseifStmt(test, cons,-), exptp) ==
+      def btp_bool = mk_REP`BooleanTypeRep();
+          mk_(wf_t, ttp) = EXPR`wf_Expr(i, test, btp_bool);
+          mk_(wf_c, ctp) = wf_Stmt(i, cons, exptp);
+          ecomp = TYPE`IsCompatible(i, ttp, btp_bool);
+          ccomp = TYPE`IsCompatible(<POS>, ctp, exptp)
+      in
+        ( if not ecomp then
+            -------------------------------------------------
+            -- Error message #115
+            -- Test expression in "%1" is not of boolean type
+            -------------------------------------------------
+            ERR`GenErr (test,<ERROR>,115,["Else-If-Stmt"]);
+          if not ccomp then
+            -------------------------------------
+            -- Error message #118
+            -- elseif-part is not of correct type
+            -------------------------------------
+            ERR`GenErr(cons,<ERROR>,118,[]);
+          return mk_(wf_t and wf_c and ecomp and ccomp, ctp));
+
+  wf_CasesStmt : TYPE`Ind * AS`CasesStmt * REP`TypeRep ==> bool * REP`TypeRep 
+  wf_CasesStmt (i, mk_AS`CasesStmt(sel, altns, oth, cid), exptp) ==
+    -- QUESTION: How can we determine the expected type of sel ????
+    def mk_(wf_sel, seltp) = EXPR`wf_Expr (i, sel, mk_REP`AllTypeRep())
+    in
+     (dcl reswf : bool := true;
+      dcl restp : [REP`TypeRep] := nil;
+      for mk_AS`CasesStmtAltn(m,b,-) in altns do
+        def mk_(wf,tp) = wf_CasesStmtAltn (i, m, b, seltp, exptp)
+        in
+         (reswf := reswf and wf;
+          if tp <> nil
+          then restp := AUX`MergeTypes (restp, tp));
+
+      if oth <> nil
+      then
+        def mk_(wf, tp) = wf_Stmt (i, oth, exptp)
+        in
+         (if not TYPE`IsCompatible(<POS>, tp, exptp)
+          then
+            ---------------------------------------
+            -- Error message #119
+            -- others branch is not of correct type
+            ---------------------------------------
+           (ERR`GenErr(oth, <ERROR>,119,[]);
+            reswf := false);
+               reswf := reswf and wf;
+               restp := AUX`MergeTypes (restp, tp);
+         )--;
+      else
+        if i = <POS>
+        then restp := AUX`MergeTypes (restp, mk_REP`UnitTypeRep());
+
+      if restp = nil
+      then restp := mk_REP`UnitTypeRep();
+
+      CI`SetTypeInfo(cid, restp);
+      return mk_(wf_sel and reswf, restp);
+     );
+
+  wf_CasesStmtAltn : TYPE`Ind * seq1 of AS`Pattern * AS`Stmt * REP`TypeRep * REP`TypeRep
+                     ==> bool * [REP`TypeRep] 
+  wf_CasesStmtAltn (i, m_l, b, tp, exptp) ==
+   (dcl resbd:map AS`Name to (REP`TypeRep * nat1) := {|->};
+    dcl reswf:bool := true;
+    dcl onewf:bool := false;
+
+    for m in m_l do
+      def mk_(wf_p, bd) = PAT`wf_Pattern(i, m, tp) 
+      in
+       (onewf := onewf or (wf_p = true);
+        reswf := reswf and (wf_p = true);
+        --resbd := resbd ++ bd ++ {id |-> AUX`MergeTypes(resbd(id),bd(id)) | id in set dom resbd inter dom bd};
+        resbd := resbd ++ bd ++ {id |->
+               mk_(AUX`MergeTypes(resbd(id).#1,bd(id).#1), resbd(id).#2 + bd(id).#2) | id in set dom resbd inter dom bd};
+
+        ENV`EnterScope (bd);
+        def mk_(wf_s, -) = wf_Stmt (i, b,exptp)
+        in reswf := reswf and wf_s;
+        ENV`LeaveScope();
+       );
+
+    if onewf = true 
+    then
+     (ENV`EnterScope (resbd);
+      for all stid in set ENV`UsedStateIds(dom resbd) do
+        ------------------------------------------------------
+        -- Error message #18
+        -- The scope of the state component "%1" is now hidden
+        ------------------------------------------------------
+        ERR`GenErr(stid,<WARNING>,18,[ENV`PrintName(stid)]); 
+      def mk_(wf_s, stp) = wf_Stmt(i, b, exptp) 
+      in
+       (ENV`LeaveScope();
+        if not TYPE`IsCompatible(<POS>, stp, exptp)
+        then
+          ------------------------------------------
+          -- Error message #120
+          -- Case alternative is not of correct type
+          ------------------------------------------
+         (ERR`GenErr(b,<ERROR>,120,[]);
+          return mk_(false,exptp));
+        return mk_(reswf and wf_s, stp);
+       )
+     )
+    else
+      --------------------------
+      -- Error message #121
+      -- Pattern can never match
+      --------------------------
+     (ERR`GenErr (m_l(1),<ERROR>,121,[]);
+      return mk_(false, nil));
+   );
+\end{vdm_al}
+
+\subsection{Loop Statements}
+
+\begin{vdm_al}
+
+  wf_SeqForLoopStmt : TYPE`Ind * AS`SeqForLoopStmt * REP`TypeRep ==> bool * REP`TypeRep 
+  wf_SeqForLoopStmt (i, stmt, exptp) ==
+    def mk_AS`SeqForLoopStmt(cv,fseq,body,cid) = stmt;
+        seq_alltp = mk_REP`UnionTypeRep({mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()),
+                                         mk_REP`SeqTypeRep(mk_REP`AllTypeRep())});
+        mk_(wf_s, stp) = EXPR`wf_Expr (i, fseq, seq_alltp);
+      -- QUESTION: Is this correct ????
+        cmp = TYPE`IsCompatible (i, stp, seq_alltp);
+    in
+     (dcl stp' : [REP`TypeRep],
+          reswf : bool := wf_s and cmp,
+          match : [bool] := false,
+          --bd : map AS`Name to REP`TypeRep := {|->};
+          bd : map AS`Name to (REP`TypeRep * nat1) := {|->};
+      if cmp
+      then
+        stp' := AUX`UnmaskSeqTypeForLoop (i, AUX`ExtractSeqType (stp))
+      else
+       (-----------------------------------------
+        -- Error message #311
+        -- Seq-For-Loop-Stmt not used on sequence
+        -----------------------------------------
+        ERR`GenErr (fseq,<ERROR>,311,[]);
+        stp' := mk_REP`AllTypeRep());
+
+      if stp' = nil
+      then
+        ------------------------------------------------------------------
+        -- Error message #312
+        -- Pattern in Seq-For-Loop-Stmt cannot be matched to the empty
+        -- sequence
+        ------------------------------------------------------------------
+        (ERR`GenErr(stmt, <ERROR>,312,[]);
+         reswf := false)
+      else
+        def mk_(match', bd') = PAT`wf_PatternBind(i, cv, stp')
+        in
+         (match := match';
+          bd := bd ++ bd';
+          if match = false
+          then 
+            -------------------------------------------------
+            -- Error message #313
+            -- Pattern in Seq-For-Loop-Stmt cannot be matched
+            -------------------------------------------------
+            ERR`GenErr(stmt,<ERROR>,313,[]);
+          reswf := reswf and match <> nil);
+      ENV`EnterScope (bd);
+      for all stid in set ENV`UsedStateIds(dom bd) do
+        ------------------------------------------------------
+        -- Error message #18
+        -- The scope of the state component "%1" is now hidden
+        ------------------------------------------------------
+        ERR`GenErr(stid,<WARNING>,18,[ENV`PrintName(stid)]); 
+      def mk_(wf_stmt, stmttp) = wf_Stmt (i, body,exptp)
+      in
+       (ENV`LeaveScope();
+        CI`SetTypeInfo(cid, stmttp);
+        reswf := reswf and wf_stmt;
+        return mk_(reswf, if match = true
+                          then stmttp
+                          elseif match = nil
+                          then mk_REP`AllTypeRep()
+                          else mk_REP`UnitTypeRep())));
+
+  wf_SetForLoopStmt : TYPE`Ind * AS`SetForLoopStmt * REP`TypeRep ==> bool * REP`TypeRep 
+  wf_SetForLoopStmt (i, stmt, exptp) ==
+    def mk_AS`SetForLoopStmt(cv,fset,body,cid) = stmt;
+        set_alltp = mk_REP`UnionTypeRep({mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
+                                         mk_REP`SetTypeRep(mk_REP`AllTypeRep())});
+        mk_(wf_s, stp) = EXPR`wf_Expr (i, fset, set_alltp);
+        cmp = TYPE`IsCompatible (i, stp, set_alltp);
+    in
+     (dcl stp' : [REP`TypeRep],
+          reswf : bool := wf_s and cmp,
+          match : [bool] := false,
+          bd : map AS`Name to (REP`TypeRep * nat1) := {|->};
+
+      if cmp 
+      then
+        stp' := AUX`UnmaskSetTypeForLoop (i, AUX`ExtractSetType (stp))
+      else
+       (------------------------------------
+        -- Error message #314
+        -- Set-For-Loop-Stmt not used on set
+        ------------------------------------
+        ERR`GenErr (fset, <ERROR>,314,[]);
+        stp' :=mk_REP`AllTypeRep());
+
+      if stp' = nil
+      then 
+        --------------------------------------------------------------
+        -- Error message #315
+        -- Pattern in Set-For-Loop-Stmt cannot be matched to empty set
+        --------------------------------------------------------------
+       (ERR`GenErr(stmt,<ERROR>,315,[]);
+        reswf := false)
+      else
+        def mk_(match', bd') = PAT`wf_Pattern(i, cv, stp')
+        in
+         (match := match';
+          bd := bd ++ bd';
+          if match = false
+          then 
+            -------------------------------------------------
+            -- Error message #316
+            -- Pattern in Set-For-Loop-Stmt cannot be matched
+            -------------------------------------------------
+            ERR`GenErr(stmt,<ERROR>,316,[]);
+          reswf := reswf and match <> nil);
+
+      ENV`EnterScope (bd);
+      for all stid in set ENV`UsedStateIds(dom bd) do
+        ------------------------------------------------------
+        -- Error message #18
+        -- The scope of the state component "%1" is now hidden
+        ------------------------------------------------------
+        ERR`GenErr(stid,<WARNING>,18,[ENV`PrintName(stid)]); 
+      def mk_(wf_stmt, stmttp) = wf_Stmt (i, body, exptp)
+      in
+       (ENV`LeaveScope();
+        CI`SetTypeInfo(cid, stmttp);
+        reswf := reswf and wf_stmt;
+        return mk_(reswf, if match = true
+                          then stmttp
+                          elseif match = nil
+                          then mk_REP`AllTypeRep()
+                          else mk_REP`UnitTypeRep())));
+
+  wf_IndexForLoopStmt : TYPE`Ind * AS`IndexForLoopStmt * REP`TypeRep ==> bool * REP`TypeRep 
+  wf_IndexForLoopStmt (i, mk_AS`IndexForLoopStmt(nm,lb,ub,By,body,cid), exptp) == 
+    def btp_int = mk_REP`NumericTypeRep(<INTEGER>);
+        btp_natone = mk_REP`NumericTypeRep(<NATONE>);
+        mk_(wf_lb, lbtp) = EXPR`wf_Expr(i, lb, btp_int);
+        lbcomp = TYPE`IsCompatible(i,lbtp,btp_int);
+    in
+     (dcl reswf : bool := wf_lb and lbcomp,
+          numtp1 : REP`TypeRep := btp_int,
+          numtp2 : REP`TypeRep := btp_int;
+
+      if not lbcomp
+      then
+        --------------------------------------
+        -- Error message #317
+        -- Lower bound is not an integer value
+        --------------------------------------
+        ERR`GenErr (lb,<ERROR>,317,[])
+      else
+        numtp1 := AUX`ExtractNumericType(lbtp);
+     
+      def mk_(wf_ub, ubtp) = EXPR`wf_Expr(i, ub, btp_int);
+          ubcomp = TYPE`IsCompatible(i,ubtp,btp_int);
+      in
+       (if not ubcomp
+        then
+          --------------------------------------
+          -- Error message #318
+          -- Upper bound is not an integer value
+          --------------------------------------
+          ERR`GenErr (ub,<ERROR>,318,[]);
+        reswf := reswf and wf_ub and ubcomp);
+
+      -- QUESTION: for bycomp, shouldn't btp_int be btp_natone ????
+      if By <> nil
+      then
+        def mk_(wf_By, Bytp) = EXPR`wf_Expr(i, By, btp_natone);
+            bycomp = TYPE`IsCompatible(i,Bytp,btp_int)
+        in
+         (if not bycomp
+          then
+            ------------------------------------------
+            -- Error message #319
+            -- Step expression is not an integer value
+            ------------------------------------------
+            ERR`GenErr (By, <ERROR>,319,[])
+          else
+            numtp2 := AUX`ExtractNumericType(Bytp);
+          reswf := reswf and wf_By and bycomp);
+
+      let bd = {nm |-> mk_(AUX`MostGeneralNumericType({numtp1,numtp2}), 1)}
+      in
+       (ENV`EnterScope (bd);
+        for all stid in set ENV`UsedStateIds(dom bd) do
+          ------------------------------------------------------
+          -- Error message #18
+          -- The scope of the state component "%1" is now hidden
+          ------------------------------------------------------
+          ERR`GenErr(stid, <WARNING>,18,[ENV`PrintName(stid)]); 
+        def mk_(wf_s, stmttp) = wf_Stmt (i, body, exptp)
+        in
+         (ENV`LeaveScope();
+          reswf := reswf and wf_s;
+          CI`SetTypeInfo(cid, stmttp);
+          return mk_(reswf, stmttp))));
+      
+  wf_WhileLoopStmt : TYPE`Ind * AS`WhileLoopStmt * REP`TypeRep ==> bool * REP`TypeRep 
+  wf_WhileLoopStmt (i, mk_AS`WhileLoopStmt(expr,stmt,cid), exptp) ==
+    def btp_bool = mk_REP`BooleanTypeRep();
+        mk_(wf_e, etp) = EXPR`wf_Expr(i, expr, btp_bool);
+        mk_(wf_st, sttp) = wf_Stmt(i, stmt, exptp);
+        ecomp = TYPE`IsCompatible (i,etp,btp_bool)
+    in
+     (if not ecomp then
+        -------------------------------------------------
+        -- Error message #115
+        -- Test expression in "%1" is not of boolean type
+        -------------------------------------------------
+        ERR`GenErr (expr,<ERROR>,115,["While-Loop-Stmt"]);
+      CI`SetTypeInfo(cid, sttp);
+      return mk_(wf_e and wf_st and ecomp, sttp));
+\end{vdm_al}
+
+\subsection{Non-Deterministic Statements}
+
+\begin{vdm_al}
+  wf_NonDetStmt : TYPE`Ind * AS`NonDetStmt * REP`TypeRep ==> bool * REP`TypeRep
+  wf_NonDetStmt (i,mk_AS`NonDetStmt(stmt_l,cid), exptp) ==
+    (dcl reswf : bool := true;
+     dcl restp : REP`TypeRep := mk_REP`UnitTypeRep();
+     
+     for stmt in stmt_l do
+       def mk_(wf,tp) = wf_Stmt (i,stmt,exptp) in
+         ( reswf := reswf and wf;
+           restp := AUX`MergeTypes(restp,tp));
+       
+     CI`SetTypeInfo(cid, restp);
+     return mk_(reswf, restp));
+    
+\end{vdm_al}
+
+\subsection{Call and Return Statements}
+
+Note that the $wf-CallStmt$ ensures that operations used inside the
+scope of an operation body (and for all the trap handlers 
+surounding it) are registered by calling the $InsertOpCall$ 
+operation.
+
+\begin{vdm_al}
+
+#ifdef VDMSL
+   wf_CallStmt : TYPE`Ind * AS`CallStmt * REP`TypeRep ==> bool * REP`TypeRep 
+   wf_CallStmt (i, mk_AS`CallStmt(-, nm, args, cid),-) ==
+    (dcl wf:bool := true;
+     InsertOpCall(nm);
+    --  EXTENDED POS CHECK:
+    --  One could look up the expected type of each argument and use this instead
+    --  of REP`AllTypeRep.
+      def arg  = [EXPR`wf_Expr(i, args(j), mk_REP`AllTypeRep()) | j in set inds args];
+          etp  = [let mk_(-,tp) = arg(j) in tp | j in set inds arg];
+          nmtp = ENV`LookUp(nm, true)
+      in
+      (wf := (forall mk_(wf_a,-) in set elems arg & wf_a) and wf; -- not in loop
+       CI`SetTypeInfo(nm.cid, if nmtp = nil
+                              -- this is the case if the operation is unknown
+                              then mk_REP`AllTypeRep()
+			      else nmtp);
+       if is_REP`OpTypeRep(nmtp)
+         or is_REP`TotalFnTypeRep(nmtp)
+         or is_REP`PartialFnTypeRep(nmtp)
+       then
+         let Dom = if is_REP`OpTypeRep(nmtp)
+                      then nmtp.Dom
+                      else nmtp.fndom,
+             Rng = if is_REP`OpTypeRep(nmtp)
+                      then nmtp.Rng
+                      else nmtp.fnrng
+         in
+         (dcl cmp : bool := true;
+          CI`SetTypeInfo(cid, Rng);
+          if len Dom = len etp
+          then (for index= 1 to len Dom do
+                  cmp := cmp and TYPE`IsCompatible(i,etp(index),Dom(index));
+                if not cmp then
+                   -------------------------------------------------
+                   -- Error message #320
+                   -- Arguments do not match definition of operation
+                   -------------------------------------------------
+                 ( ERR`GenErr (nm, <ERROR>,320,[]);
+                   return mk_(false, Rng))
+                else
+                 return mk_(wf, Rng))
+                ---------------------------------------------------
+                -- Error message #275
+                -- Operation applied with wrong number of arguments
+                ---------------------------------------------------
+          else (ERR`GenErr(nm, <ERROR>,275,[]);
+                return mk_(false,Rng)))
+       else
+           --------------------------------
+           -- Error message #28
+           -- Operation "%1" is not defined
+           --------------------------------
+         ( ERR`GenErr (nm, <ERROR>,28,[ENV`PrintName(nm)]);
+           return mk_(false, mk_REP`UnitTypeRep()));
+      )
+    );
+#endif VDMSL
+
+#ifdef VDMPP
+  wf_CallStmt : TYPE`Ind * AS`CallStmt * REP`TypeRep ==> bool * REP`TypeRep 
+  wf_CallStmt (i, mk_AS`CallStmt(obj, nm, args, cid), -) ==
+   (dcl reswf : bool := true,
+        etp : seq of REP`TypeRep := [],
+        restp: REP`TypeRep,
+        nmtp: [REP`TypeRep] := nil;
+    InsertOpCall(nm);
+    if obj <> nil
+    then
+      def mk_(classes,wf) = CheckObjectRef(i,obj)
+      in
+       (reswf := reswf and wf; 
+#ifdef VICE
+        if nm.ids = ["setPriority"] and card classes = 1 and exists nm in set classes & nm.ids = ["CPU"]
+        then ENV`NotStaticOk(); 
+#endif VICE
+        for arg in args do
+          def mk_(wf,tp) = EXPR`wf_Expr(i, arg, mk_REP`AllTypeRep())
+          in
+           (reswf := wf and reswf;
+--          etp := etp ^ [if is_(tp,REP`TypeRep)
+--                        then tp
+--                        else mk_REP`UnionTypeRep(tp)]
+            etp := etp ^ [tp]
+           );
+#ifdef VICE
+        ENV`StaticRequired();
+#endif VICE
+        def mk_(wf,optp,rtp) = CheckOperationCall(i,classes,nm,obj,etp)
+        in
+         (restp := rtp;
+          nmtp :=  if optp <> nil
+                   then optp
+                   else mk_REP`AllTypeRep();
+          reswf := reswf and wf
+         )
+       )
+    else
+     (for arg in args do
+        def mk_(wf,tp) = EXPR`wf_Expr(i, arg, mk_REP`AllTypeRep())
+        in
+         (reswf := wf and reswf;
+          etp := etp ^ [tp]
+         );
+      def mk_(wf,optp,rtp) = CheckOperationCall(i,{ENV`GetCurClass()},nm,obj,etp)
+      in
+       (restp := rtp;
+        nmtp :=  if optp <> nil
+                 then optp
+                 else mk_REP`AllTypeRep();
+        reswf := reswf and wf
+       );
+     );
+    CI`SetTypeInfo(cid, restp);	
+    CI`SetTypeInfo(nm.cid, nmtp);
+    return mk_(reswf,restp);
+  );
+
+  CheckObjectRef: TYPE`Ind * AS`Expr ==> set of AS`Name  * bool
+  CheckObjectRef(i,obj) ==
+    let objtp = mk_REP`ObjRefTypeRep(mk_AS`Name([],CI`NilContextId)) in
+      def mk_(wf_obj, tp) = EXPR`wf_Expr(i, obj, objtp) in
+        cases AUX`ExtractObjRefType(tp):
+          mk_REP`ObjRefTypeRep(cls) -> return mk_({cls},wf_obj),
+          mk_REP`UnionTypeRep(utps) -> return mk_({cls.nm | cls in set utps},wf_obj),
+          nil -> (if wf_obj
+	          then ERR`GenErr(obj,<ERROR>,372,[]);
+ 		  return mk_({},false))
+        end;
+
+  CheckOperationCall: TYPE`Ind * set of AS`Name * AS`Name * [AS`Expr] * seq of REP`TypeRep ==> 
+                      bool * [REP`TypeRep] * REP`TypeRep
+  CheckOperationCall(i,classes,nm,objnm,etp) ==
+  ( dcl nmtp : [REP`TypeRep] := nil,
+        allwf : bool := true,
+        onewf : bool := false,
+        restp : [REP`TypeRep] := nil,
+        reswf : bool,
+
+        wng_parms : seq of AS`Name := [],
+        args_no_match : seq of AS`Name := [],
+        not_defined : seq of AS`Name := [],
+        err_kind : <ERROR> | <WARNING>;
+
+    for all cls in set classes do 
+    ( def optp' = ENV`LookUpOperationName(cls,nm,objnm)
+      in
+      -- Due to overloading, optp' could contain many different values,
+      -- therefore we treat the overloaded and simple cases separately
+      if card optp' > 1
+      then 
+        -- Algorithm is:
+        --   1. Get the set of REP types corresponding to the access types in optp' 
+        --   2. Find out if any of these matches the actual arguments in this call 
+        --   3. If there is a match, find the corresponding value in
+        --      optp' and use this in the same way as the simple case
+        let reptps = { b_tp.tp | b_tp in set optp'} in -- 1.
+        def mk_(opwf, opreptp) = EXPR`CheckOverloadedApply(i, reptps, etp, nm, true, false) -- 2.
+        in
+        ( if opwf
+          then 
+            let acctp = iota at in set optp' & at.tp = opreptp -- 3.
+            in
+             ( def access = ENV`CheckAccessCurClass(acctp) 
+               in
+                   if access = nil then
+                      ------------------------------
+                      -- Error message #368
+                      -- Access violation
+                      ------------------------------
+                      ( ERR`GenErr (nm,<ERROR>,368, if objnm = nil
+                                                    then [ENV`PrintName(nm)]
+                                                    else [ENV`PrintName (objnm)^"`"^ENV`PrintName(nm)]);  
+                        allwf := false;
+                      )
+                   else
+                     let mergedTps = MergeOpTypes(opreptp, nmtp, restp)
+                     in
+                        ( nmtp := mergedTps.#1;
+                          restp := mergedTps.#2
+                        )
+             )
+        )
+      elseif card optp' = 1
+      then 
+        def {opacc} = optp';
+            optp = ENV`CheckAccessCurClass (opacc)
+        in
+        if optp = nil then
+                    ------------------------------
+                    -- Error message #368
+                    -- Access violation
+                    ------------------------------
+                    ( ERR`GenErr (nm,<ERROR>,368, if objnm = nil
+                                                  then [ENV`PrintName(nm)]
+                                                  else [ENV`PrintName (objnm)^"`"^ENV`PrintName(nm)]);  
+                      allwf := false;
+                    )
+        elseif is_REP`OpTypeRep(optp)
+           or is_REP`TotalFnTypeRep(optp)  
+           or is_REP`PartialFnTypeRep(optp)  
+        then
+          let   Dom = if is_REP`OpTypeRep(optp)
+                      then optp.Dom
+                      else optp.fndom
+          in
+          ( let mergedTps = MergeOpTypes(optp, nmtp, restp)
+            in 
+            ( nmtp := mergedTps.#1;
+              restp := mergedTps.#2
+            );
+
+            if len Dom = len etp then
+            ( dcl cmp : bool := true;
+              for index= 1 to len Dom do
+                cmp := cmp and TYPE`IsCompatible(i,etp(index),Dom(index));
+              if cmp then
+                onewf := true
+              else
+              ( allwf := false;
+                args_no_match := args_no_match ^ [cls]
+              )
+            )
+            else (
+              allwf := false;
+              wng_parms := wng_parms ^ [cls];
+            )
+          )
+        else (
+          allwf := false;
+          -- Only add this class to those which are not defined if 
+          -- the identifier is not qualified. If it is qualified, then
+          -- an error message will be output when the name can not be resolved
+          if len nm.ids = 1
+          then
+            not_defined := not_defined ^ [cls]
+        )
+      else (
+        allwf := false;
+        -- Only add this class to those which are not defined if 
+        -- the identifier is not qualified. If it is qualified, then
+        -- an error message will be output when the name can not be resolved
+        if len nm.ids = 1
+        then
+          not_defined := not_defined ^ [cls]
+      )
+    );
+
+    if i = <POS>
+    then reswf := onewf
+    else reswf := allwf;
+
+    if reswf
+    then err_kind := <WARNING>
+    else err_kind := <ERROR>;
+    
+    for cls in args_no_match do
+      ----------------------------------------------------------------------
+      -- Error message #325
+      -- Arguments do not match definition of operation "%1" from class "%2"
+      ----------------------------------------------------------------------
+      ERR`GenErr (nm, err_kind,325,[ENV`PrintName(nm),ENV`PrintName(cls)]);
+    for cls in wng_parms do
+      -------------------------------------------------------------------------
+      -- Error message #326
+      -- Operation "%1" from class "%2" applied with wrong number of arguments
+      -------------------------------------------------------------------------
+      ERR`GenErr(nm, err_kind,326,[ENV`PrintName(nm),ENV`PrintName(cls)]);
+    for cls in not_defined do
+      --------------------------------------------------
+      -- Error message #327
+      -- The operation "%1" is not defined in class "%2"
+      --------------------------------------------------
+      ERR`GenErr (nm, err_kind,327,[ENV`PrintName(nm),ENV`PrintName(cls)]);
+
+    if restp = nil then
+      return mk_(reswf,nmtp,mk_REP`AllTypeRep())
+    else
+      return mk_(reswf,nmtp,restp)
+  );
+\end{vdm_al}
+
+\texttt{MergeOpTypes} is an auxiliary function used to merge the type
+representations of an operaton into those operations already
+processed.
+\begin{description}
+\item[\texttt{p\_optp}] The type of the operation to be merged
+\item[\texttt{p\_nmtp}] The argument types already processed
+\item[\texttt{p\_restp}] The result types already processed
+\end{description}
+
+\begin{vdm_al}
+functions
+
+MergeOpTypes : (REP`OpTypeRep | REP`FnTypeRep) * [REP`TypeRep] * [REP`TypeRep] -> REP`TypeRep * REP`TypeRep
+MergeOpTypes(p_optp, p_nmtp, p_restp) ==
+  if is_REP`OpTypeRep(p_optp)
+  then
+    let l_nmtp = if p_nmtp = nil
+                 then p_optp
+                 else AUX`MergeTypes(p_nmtp, p_optp),
+        l_restp = if p_restp = nil
+                  then p_optp.Rng
+                  else AUX`MergeTypes(p_restp, p_optp.Rng)
+    in
+      mk_(l_nmtp, l_restp)
+  else
+    MergeFnTypes(p_optp, p_nmtp, p_restp);
+
+MergeFnTypes : REP`FnTypeRep * [REP`TypeRep] * [REP`TypeRep] -> REP`TypeRep * REP`TypeRep
+MergeFnTypes(p_fntp, p_nmtp, p_restp) ==
+  let l_nmtp = if p_nmtp = nil
+               then p_fntp
+               else AUX`MergeTypes(p_nmtp, p_fntp),
+      l_restp = if p_restp = nil
+                then p_fntp.fnrng
+                else AUX`MergeTypes(p_restp, p_fntp.fnrng)
+  in
+    mk_(l_nmtp, l_restp);
+
+operations
+  
+#endif VDMPP
+
+  wf_ReturnStmt : TYPE`Ind * AS`ReturnStmt * REP`TypeRep ==> bool * REP`TypeRep 
+  wf_ReturnStmt (i, mk_AS`ReturnStmt(val, cid), exptp) ==
+    if val = nil then 
+      return mk_(true, mk_REP`RetTypeRep())
+    else
+      def mk_(wf,tp) = EXPR`wf_Expr(i, val, exptp)
+      in
+        (CI`SetTypeInfo(cid,tp);
+         return mk_(wf,tp));
+\end{vdm_al}
+
+\subsection{Exception Handling Statements}
+
+The static semantics of exception handling statements is complicated
+by the fact that we need somehow to analyse all the explicit
+operations twice. In the first round we are then able to construct
+information about how different operations may exit and most
+importantly with what type of values. This information is then used in
+the second processing of the explicit operations which have handler
+statements. In the specification here and in the DEF module this is
+simply done by calling $wf-Stmt$ twice and setting the global variable
+(in STMT) fullcheck. In the implementation there is no need to do a
+full type checking of all statements twice since essentially what is
+needed in the second iteration is to use the type information which
+have been derived in the first round and then analyse the pattern
+matching of the handler statements which these types in context and
+the extra information about exit types for the different operations.
+This also means that the test of the specification is modified such 
+that $wf-Operation$ is called for all operations in the test 
+specification in case the operation being tested contains a trap 
+handler. 
+
+\begin{vdm_al}
+
+   wf_AlwaysStmt : TYPE`Ind * AS`AlwaysStmt * REP`TypeRep ==> bool * REP`TypeRep
+   wf_AlwaysStmt (i,astmt,exptp) ==
+    (dcl reswf: bool := true;
+
+     def mk_AS`AlwaysStmt(Post,stmt,-) = astmt;
+         mk_(wfpost,tppost) = wf_Stmt(i,Post,exptp)
+     in
+      (InsertTrapId(stmt);
+       def mk_(wfstmt,tpstmt) = wf_Stmt(i,stmt,exptp)
+       in
+        (LeaveTrapId(stmt);
+         --commented out by PGL 18-03-08 because this does not work
+         -- appropriately. One would need either to collect exit 
+         -- information in the parser or do type checking across 
+         -- modules/classes in one go for this to work
+         --if fullcheck and ExtractRealExitTypeRep(tpstmt,stmt) = nil 
+               -----------------------------------------
+               -- Error message #328
+               -- Body of `always statement' cannot exit
+               -----------------------------------------
+         --then (ERR`GenErr(stmt, <WARNING>,328,[]);
+         --      reswf := true);
+         CI`SetTypeInfo(Post.cid, tppost);
+         CI`SetTypeInfo(stmt.cid, tpstmt);
+         return mk_(wfpost and wfstmt and reswf, AUX`AlwaysType(tppost,tpstmt)))));
+
+   wf_ExitStmt : TYPE`Ind * AS`ExitStmt * REP`TypeRep ==> bool * REP`TypeRep
+   wf_ExitStmt (i,mk_AS`ExitStmt(e,cid), -) ==
+     if e = nil
+     then (InsertExitType(mk_REP`UnitTypeRep());
+           CI`SetTypeInfo(cid, mk_REP`ExitTypeRep(mk_REP`UnitTypeRep()));
+           return mk_(true,mk_REP`ExitTypeRep(mk_REP`UnitTypeRep())))
+     else def mk_(wf,tp) = EXPR`wf_Expr(i,e,mk_REP`AllTypeRep())
+          -- QUESTION: Is this correct ????
+          in
+            (InsertExitType(tp);
+             CI`SetTypeInfo(cid, mk_REP`ExitTypeRep(tp));
+             return mk_(wf, mk_REP`ExitTypeRep(tp)));
+
+   wf_TrapStmt : TYPE`Ind * AS`TrapStmt * REP`TypeRep ==> bool * REP`TypeRep
+   wf_TrapStmt (i,mk_AS`TrapStmt(patbind,Post,stmt,cid),exptp) ==
+    (--dcl etp: [REP`TypeRep] := nil;
+     dcl reswf : bool := true;
+
+     InsertTrapId(stmt);
+     def mk_(wfstmt,tpstmt) = wf_Stmt(i,stmt,exptp)
+     in
+       (LeaveTrapId(stmt);
+-- if the check is not full then the type of the binding is not 
+-- yet precise and the post body cannot be properly checked hence
+-- if not fullcheck then don't do more.
+        if not fullcheck 
+        then def mk_(match,bd) = PAT`wf_PatternBind(<POS>,patbind, mk_REP`AllTypeRep())
+             in
+               (if match = false
+                   -------------------------------------------
+                   -- Error message #330
+                   -- Pattern in `trap statement' cannot match
+                   -------------------------------------------
+                then ERR`GenErr(stmt,<ERROR>,330,[]);
+                ENV`EnterScope(bd);
+                for all stid in set ENV`UsedStateIds(dom bd) 
+                do
+                  ------------------------------------------------------
+                  -- Error message #18
+                  -- The scope of the state component "%1" is now hidden
+                  ------------------------------------------------------
+                  ERR`GenErr(stid,<WARNING>,18,[ENV`PrintName(stid)]); 
+                def mk_(wfpost,tppost) = wf_Stmt(i,Post,exptp)
+                in
+                 (if not TYPE`IsCompatible(i, tppost, exptp)
+                     -------------------------------
+                     -- Error message #397
+                     -- Value is not type-compatible
+                     -------------------------------
+                  then ERR`GenErr(Post, <ERROR>,397,[]);
+                  ENV`LeaveScope();
+                  CI`SetTypeInfo(cid, AUX`MergeTypes(tppost,tpstmt));
+                  return mk_(wfstmt and wfpost,AUX`MergeTypes(tppost,tpstmt))));
+
+        --if fullcheck
+        --then (etp := ExtractRealExitTypeRep(tpstmt,stmt);
+        --      if etp = nil
+        --            ---------------------------------------
+        --            -- Error message #329
+        --            -- Body of `trap statement' cannot exit
+        --            ---------------------------------------
+        --      then (ERR`GenErr(stmt, <WARNING>,329,[]);
+        --            reswf := true));
+        def mk_(match,bd) = PAT`wf_PatternBind(<POS>,patbind,
+                                           --if etp = nil
+                                           --then 
+                                           mk_REP`AllTypeRep()
+                                           --else etp
+                                          )
+        in
+          (if match = false
+                -------------------------------------------
+                -- Error message #330
+                -- Pattern in `trap statement' cannot match
+                -------------------------------------------
+           then ERR`GenErr(stmt,<ERROR>,330,[]);
+           ENV`EnterScope(bd);
+           for all stid in set ENV`UsedStateIds(dom bd) 
+           do
+             ------------------------------------------------------
+             -- Error message #18
+             -- The scope of the state component "%1" is now hidden
+             ------------------------------------------------------
+             ERR`GenErr(stid,<WARNING>,18,[ENV`PrintName(stid)]); 
+           def mk_(wfpost,tppost) = wf_Stmt(i,Post,exptp)
+           in
+             (ENV`LeaveScope();
+              CI`SetTypeInfo(cid, AUX`MergeTypes(tppost,tpstmt));
+              return mk_(wfstmt and ((match = nil) or match)
+                         and wfpost and reswf, 
+                         AUX`MergeTypes(tpstmt,tppost))))));
+
+   wf_RecTrapStmt : TYPE`Ind * AS`RecTrapStmt * REP`TypeRep ==> bool * REP`TypeRep
+   wf_RecTrapStmt (i,mk_AS`RecTrapStmt(trap_l,stmt,cid), exptp) ==
+    (dcl reswf : bool := true;
+     dcl restp : REP`TypeRep := mk_REP`UnitTypeRep();
+     dcl etp: [REP`TypeRep] := nil;
+     
+     InsertTrapId(stmt);
+     def mk_(wfstmt,tpstmt) = wf_Stmt(i,stmt,exptp)
+     in
+       (LeaveTrapId(stmt);
+        --if fullcheck
+        --then (--commented out by PGL 18-03-08 because this does not work
+              -- appropriately. One would need either to collect exit 
+              -- information in the parser or do type checking across 
+              -- modules/classes in one go for this to work
+              --etp := ExtractRealExitTypeRep(tpstmt,stmt);
+              --if etp = nil
+                    ---------------------------------------
+                    -- Error message #329
+                    -- Body of `trap statement' cannot exit
+                    ---------------------------------------
+              --then (ERR`GenErr(stmt, <WARNING>,329,[]);
+              --      reswf := true));
+        -- 20100730
+        --if fullcheck
+        --then etp := ExtractRealExitTypeRep(tpstmt,stmt);
+        if etp = nil
+        then etp := mk_REP`AllTypeRep();
+        restp := tpstmt;
+        -- 20100730
+        (for mk_AS`Trap(match,trappost,-) in trap_l do
+           def mk_(wf,tp) = wf_TrapAltn(i, match, trappost, etp, exptp) 
+           in
+            (if not TYPE`IsCompatible(i, tp, exptp)
+                -------------------------------
+                -- Error message #397
+                -- Value is not type-compatible
+                -------------------------------
+             then ERR`GenErr(trappost, <ERROR>,397,[]);
+
+             reswf := reswf and wf;
+             if tp <> nil
+             then restp := AUX`MergeTypes (restp, tp)));
+
+          CI`SetTypeInfo(cid, restp);
+          return mk_(wfstmt and reswf,if restp <> mk_REP`UnitTypeRep()
+                                       then AUX`RemoveUnitType(restp)
+                                       else restp)));
+
+    wf_TrapAltn : TYPE`Ind * AS`PatternBind * AS`Stmt * REP`TypeRep * REP`TypeRep ==> bool * [REP`TypeRep] 
+    wf_TrapAltn (i, patbind, body, tp, exptp) ==
+      def mk_(wf_pb, bd) = PAT`wf_PatternBind(if tp = mk_REP`AllTypeRep()
+                                              then <POS>
+                                              else i, patbind, tp) in
+       if wf_pb = true then
+        ( ENV`EnterScope (bd);
+          for all stid in set ENV`UsedStateIds(dom bd) 
+          do
+            ------------------------------------------------------
+            -- Error message #18
+            -- The scope of the state component "%1" is now hidden
+            ------------------------------------------------------
+            ERR`GenErr(stid, <WARNING>,18,[ENV`PrintName(stid)]); 
+          def mk_(wf_s, stp) = wf_Stmt(i, body,exptp) in
+            ( ENV`LeaveScope();
+              return mk_(wf_s, stp)))
+       else 
+        ( if wf_pb = false then
+            --------------------------
+            -- Error message #121
+            -- Pattern can never match
+            --------------------------
+            ERR`GenErr (patbind, <WARNING>,121,[]);
+          return mk_(wf_pb=true,nil)
+        )
+
+state StmtSt of
+  fullcheck: bool         -- used to indicate whether it is 1. or 2. round
+  curop: [AS`Name]        -- indicate the current operation being checked
+  trapids: set of AS`Stmt -- used to contain the traps which currently
+                          -- are in scope such that operation calls inside
+                          -- them are added to trapopcalls (in the
+                          -- implementation the position of the trap
+                          -- handler can be used instead of the the
+                          -- entire body statement
+  traps: bool             -- indicate whether any traps have appeared inside
+                          -- the current operation
+  direxit: map AS`Name to REP`TypeRep
+                          -- mapping operation names to the type which
+                          -- they directly exit with values of
+  opcalls: map AS`Name to set of AS`Name
+                          -- mapping operation names to the set of
+                          -- operations called inside the operation
+  trapopcalls: map AS`Name * AS`Stmt to set of AS`Name
+                          -- Map a pair of operation name and trap handler
+                          -- (in the implementation this may simply be
+                          -- implemented with the position of the trap
+                          -- handler) to the set of operations which
+                          -- are called inside the body of that handler. 
+init s == s = mk_StmtSt(false,nil,{},false,{|->},{|->},{|->})
+end
+
+operations
+
+  SetOpContext: AS`Name ==> ()
+  SetOpContext(nm) ==
+    (curop := nm;
+     trapids := {};
+     traps := false);
+
+  AnyTraps: () ==> bool
+  AnyTraps() ==
+    return traps;
+
+  FullOpTest: bool ==> ()
+  FullOpTest(b) ==
+    fullcheck := b;
+
+  InsertExitType: REP`TypeRep ==> ()
+  InsertExitType(tp) ==
+    if curop in set dom direxit
+    then direxit := direxit ++ {curop |-> AUX`MergeTypes(direxit(curop),tp)}
+    else direxit := direxit munion {curop |-> tp};
+
+  InsertTrapId: AS`Stmt ==> ()
+  InsertTrapId(stmt) ==
+    (trapids := trapids union {stmt};
+     traps := true);
+
+  LeaveTrapId: AS`Stmt ==> ()
+  LeaveTrapId(stmt) ==
+    trapids := trapids \ {stmt};
+        
+  InsertOpCall: AS`Name ==> ()
+  InsertOpCall(opnm) ==
+   (trapopcalls := trapopcalls ++
+                   {mk_(curop,trapid) |-> if mk_(curop,trapid) in set dom trapopcalls
+                                          then trapopcalls(mk_(curop,trapid)) union {opnm}
+                                          else {opnm}
+                                          | trapid in set trapids};
+    opcalls := opcalls ++ {curop |-> if curop in set dom opcalls
+                                     then opcalls(curop) union {opnm}
+                                     else {opnm}});
+
+--  ExtractRealExitTypeRep: REP`TypeRep * AS`Stmt ==> [REP`TypeRep]
+--  ExtractRealExitTypeRep(tp,stmt) ==
+--    let etp = AUX`ExtractExitTypeRep(tp)
+--    in
+--      if mk_(curop,stmt) in set dom trapopcalls
+--      then def etp' = TransClosExit(trapopcalls(mk_(curop,stmt)),{})
+--           in
+--             return if etp = nil
+--                    then etp'
+--                    elseif etp' = nil
+--                    then etp
+--                    else AUX`MergeTypes(etp',etp)
+--      elseif curop in set dom opcalls
+--      then def etp' = TransClosExit(opcalls(curop),{})
+--           in
+--             return if etp = nil
+--                    then etp'
+--                    elseif etp' = nil
+--                    then etp
+--                    else AUX`MergeTypes(etp',etp)
+--      else return etp;
+
+  TransClosExit: set of AS`Name * set of AS`Name ==> [REP`TypeRep]
+  TransClosExit(nms, already) ==
+    if nms subset already
+    then return nil
+    else let nm in set nms
+         in
+           def tpnm = if nm in set dom direxit
+                      then direxit(nm)
+                      else nil;
+               nms' = if nm in set dom opcalls
+                      then opcalls(nm)\already
+                      else {};
+               resttp = TransClosExit(nms' union nms\ {nm},already union {nm})
+           in
+             return if tpnm = nil
+                    then resttp
+                    elseif resttp = nil
+                    then tpnm
+                    else AUX`MergeTypes(resttp,tpnm)
+  pre nms inter already = {};
+\end{vdm_al}
+
+\subsection{Specification Statement}
+
+The current version of the static semantics checking of the
+specification statement assumes that it cannot return any value.
+An issue needs to be raised for this because one could also imagine
+a dynamic semantics for this construct which returned a value when
+the return identifier for the method being checked was used as a free
+identifier in the post-condition of the specification statement.
+However, this would require more checking and it is not certain that
+this is the desired semantics in all cases (e.g. the return identifier may
+only get assigned a value for certain input values). It needs to be
+resolved what the intended dynamic semantics is for this construct.
+
+Because this issue still needs to be resolved no checkking of the
+external clause is performed currently. In general more context
+checkking ensuring that instance variables only are in scope inside
+methods and this will be done in a later version of the static
+semantics.
+
+\begin{vdm_al}
+wf_SpecificationStmt: TYPE`Ind * AS`SpecificationStmt ==> bool * REP`TypeRep
+wf_SpecificationStmt(i, stmt) ==
+  def mk_AS`SpecificationStmt(opext,oppre,oppost,excps,cid) = stmt;
+      wf_ext = ENV`SetExt(opext, {});
+      wf = wf_ImplOpBody(i,opext,oppre,oppost,excps,{|->})
+  in
+   (CI`SetTypeInfo(cid, mk_REP`UnitTypeRep());
+    return mk_(wf_ext and wf, mk_REP`UnitTypeRep()));
+
+wf_ImplOpBody: TYPE`Ind * seq of AS`ExtInf * [AS`Expr] * AS`Expr * seq of AS`Error *
+               map AS`Name to (REP`TypeRep * nat1) ==> bool
+wf_ImplOpBody(i,-,oppre,oppost,excps,valtp_bd) ==
+ (dcl wf : bool := true;
+  ENV`PushContext(<PRE>);
+  for err in excps do
+    def mk_(wf_pred, -) = DEF`wf_Pred(i, err.cond, <EXCEP>)
+    in
+      wf := wf and wf_pred;
+  def mk_(wf_pred, -) = DEF`wf_Pred(i, oppre, <PRE>)
+  in
+    wf := wf and wf_pred;
+  ENV`PopContext();
+  ENV`EnterScope(valtp_bd);
+  ENV`PushContext(<POST>);
+  for err in excps do
+    def mk_(wf_pred, -) = DEF`wf_Pred(i, err.action, <EXCEP>)
+    in
+      wf := wf and wf_pred;
+  def mk_(wf_pred, -) = DEF`wf_Pred(i, oppost, <POST>)
+  in
+    wf := wf and wf_pred;
+  ENV`PopContext();
+  ENV`LeaveScope();
+  return wf;
+ );
+  
+\end{vdm_al}
+
+#ifdef VDMPP
+\subsection{Start and StartList Statement}
+In {\it wf\_StartStmt} and {\it wf\_StartListStmt} it must be checked
+that the instance which is started is of an active class, which is a
+class with a thread-part.
+
+For {\it wf\_StartListStmt} it is currently only checked that the
+expression is a set type.
+
+\begin{vdm_al}
+    wf_StartStmt: TYPE`Ind * AS`StartStmt * REP`TypeRep ==> bool * REP`TypeRep
+    wf_StartStmt(i, mk_AS`StartStmt(inst,cid),-) ==
+      def objtp = mk_REP`ObjRefTypeRep(mk_AS`Name([],CI`NilContextId));
+          mk_(wf_obj,tp) = EXPR`wf_Expr(i,inst,objtp)
+      in
+      ( dcl reswf: bool := wf_obj;
+        if not TYPE`IsCompatible(i,tp,objtp) then
+          ----------------------------------------------------------------
+          -- Error message #331
+          -- Expression in start statement must return an object reference
+          ----------------------------------------------------------------
+        ( ERR`GenErr(inst, <ERROR>,331,[]);
+          reswf := false
+        ); 
+        cases AUX`ExtractObjRefType(tp):
+          mk_REP`ObjRefTypeRep(cls) -> reswf := CheckThread(i,{cls}) and reswf,
+          mk_REP`UnionTypeRep(utps) -> reswf := CheckThread(i,{cls.nm | cls in set utps}) and reswf,
+          others -> skip
+        end;
+        CI`SetTypeInfo(cid, mk_REP`UnitTypeRep());
+        return mk_(reswf, mk_REP`UnitTypeRep ())
+      );
+
+    wf_StartListStmt: TYPE`Ind * AS`StartListStmt * REP`TypeRep ==> bool * REP`TypeRep
+    wf_StartListStmt(i, mk_AS`StartListStmt (expr,cid),-) ==
+      def objtp = mk_REP`ObjRefTypeRep(mk_AS`Name([],CI`NilContextId));
+          ExpectedRhsType = mk_REP`SetTypeRep(objtp);
+          mk_(wf_obj, tp) = EXPR`wf_Expr(i,expr,ExpectedRhsType)
+      in
+      ( dcl reswf: bool := wf_obj;
+        if not TYPE`IsCompatible(i,tp,ExpectedRhsType) then
+          ----------------------------------------------------------------------
+          -- Error message #332
+          -- Expression in startlist statement must return a set of object
+          -- references
+          ----------------------------------------------------------------------
+        ( ERR`GenErr(expr,<ERROR>,332,[]);
+          reswf := false
+        ); 
+        cases AUX`ExtractSetObjRefType(tp):
+          mk_REP`ObjRefTypeRep(cls) -> reswf := CheckThread(i,{cls}) and reswf,
+          mk_REP`UnionTypeRep(utps) -> reswf := CheckThread(i,{cls.nm | cls in set utps}) and reswf,
+          others -> skip
+        end;
+        CI`SetTypeInfo(cid, mk_REP`UnitTypeRep());
+        return mk_(reswf, mk_REP`UnitTypeRep ())
+      );
+
+    CheckThread: TYPE`Ind * set of AS`Name ==> bool
+    CheckThread(i,classes) ==
+    ( dcl reswf : bool := true,
+          onewf : bool := false,
+          allwf : bool := true,
+          ncls : seq of AS`Name := [];
+      for all cls in set classes do 
+        if ENV`HasThread(cls) then
+          onewf := true
+        else
+        ( ncls := ncls ^ [cls];
+          allwf := false
+        );
+      reswf := if i = <POS> then onewf else allwf;
+      if not reswf then
+        for cls in ncls do
+          --------------------------------------
+          -- Error message #333
+          -- Class "%1" has no thread definition
+          --------------------------------------
+          ERR`GenErr(cls, <ERROR>,333,[ENV`PrintName(cls)]);
+      return reswf
+    );
+
+\end{vdm_al}
+
+\subsection{Stop and StopList Statement}
+In {\it wf\_StopStmt} and {\it wf\_StopListStmt} it must be checked
+that the instance which is started is of an active class, which is a
+class with a thread-part.
+
+For {\it wf\_StopListStmt} it is currently only checked that the
+expression is a set type.
+
+\begin{vdm_al}
+    wf_StopStmt: TYPE`Ind * AS`StopStmt * REP`TypeRep ==> bool * REP`TypeRep
+    wf_StopStmt(i, mk_AS`StopStmt(inst,cid),-) ==
+      def objtp = mk_REP`ObjRefTypeRep(mk_AS`Name([],CI`NilContextId));
+          mk_(wf_obj,tp) = EXPR`wf_Expr(i,inst,objtp)
+      in
+      ( dcl reswf: bool := wf_obj;
+        if not TYPE`IsCompatible(i,tp,objtp) then
+          ----------------------------------------------------------------
+          -- Error message #452
+          -- Expression in stop statement must return an object reference
+          ----------------------------------------------------------------
+        ( ERR`GenErr(inst, <ERROR>,452,[]);
+          reswf := false
+        ); 
+        cases AUX`ExtractObjRefType(tp):
+          mk_REP`ObjRefTypeRep(cls) -> reswf := CheckThread(i,{cls}) and reswf,
+          mk_REP`UnionTypeRep(utps) -> reswf := CheckThread(i,{cls.nm | cls in set utps}) and reswf,
+          others -> skip
+        end;
+        CI`SetTypeInfo(cid, mk_REP`UnitTypeRep());
+        return mk_(reswf, mk_REP`UnitTypeRep ());
+      );
+
+    wf_StopListStmt: TYPE`Ind * AS`StopListStmt * REP`TypeRep ==> bool * REP`TypeRep
+    wf_StopListStmt(i, mk_AS`StopListStmt (expr,cid),-) ==
+      def objtp = mk_REP`ObjRefTypeRep(mk_AS`Name([],CI`NilContextId));
+          ExpectedRhsType = mk_REP`SetTypeRep(objtp);
+          mk_(wf_obj, tp) = EXPR`wf_Expr(i,expr,ExpectedRhsType)
+      in
+      ( dcl reswf: bool := wf_obj;
+        if not TYPE`IsCompatible(i,tp,ExpectedRhsType) then
+          ----------------------------------------------------------------------
+          -- Error message #453
+          -- Expression in stoplist statement must return a set of object
+          -- references
+          ----------------------------------------------------------------------
+        ( ERR`GenErr(expr,<ERROR>,453,[]);
+          reswf := false
+        ); 
+        cases AUX`ExtractSetObjRefType(tp):
+          mk_REP`ObjRefTypeRep(cls) -> reswf := CheckThread(i,{cls}) and reswf,
+          mk_REP`UnionTypeRep(utps) -> reswf := CheckThread(i,{cls.nm | cls in set utps}) and reswf,
+          others -> skip
+        end;
+        CI`SetTypeInfo(cid, mk_REP`UnitTypeRep());
+        return mk_(reswf, mk_REP`UnitTypeRep ());
+      );
+\end{vdm_al}
+
+#endif VDMPP
+
+#ifdef VICE
+\section{Duration Statement}
+
+\begin{vdm_al}
+  wf_DurationStmt : TYPE`Ind * AS`DurationStmt * REP`TypeRep ==> bool * REP`TypeRep
+  wf_DurationStmt(i, mk_AS`DurationStmt(dur, stmt,-), exptp) ==
+    def mk_(wf_dur, -) = EXPR`wf_Expr(i,dur,mk_REP`NumericTypeRep(<NAT>))
+    in
+      --if not is_AS`RealLit(dur)
+      if not (is_AS`RealLit(dur) or is_AS`NumLit(dur)) or not wf_dur
+      then
+       (--------------------------------------
+        -- Error message #402
+        -- This must be a constant positive number
+        --------------------------------------
+        ERR`GenErr (dur,<ERROR>,402,[]);
+        return mk_(false, mk_REP`UnitTypeRep ())
+       )
+--      elseif dur.val < 0 -- can never actually happen, since value is a
+--                         -- numeric literal (no possibility for leading "-"
+--                         -- in the syntax)
+--      then
+--       (--------------------------------------
+--        -- Error message #371
+--        -- Duration is not a positive number
+--        --------------------------------------
+--        ERR`GenErr (dur,<ERROR>,371,[]);
+--        return mk_(false, mk_REP`UnitTypeRep ())
+--       )
+      else
+        return wf_Stmt(i, stmt, exptp);
+\end{vdm_al}
+
+\section{Cycle Statement}
+
+\begin{vdm_al}
+  wf_CycleStmt : TYPE`Ind * AS`CycleStmt * REP`TypeRep ==> bool * REP`TypeRep
+  wf_CycleStmt(i, mk_AS`CycleStmt(num, stmt,-), exptp) ==
+    --def mk_(wf_num, -) = EXPR`wf_Expr(i,num,mk_REP`NumericTypeRep(<INTEGER>))
+    def mk_(wf_num, -) = EXPR`wf_Expr(i,num,mk_REP`NumericTypeRep(<NAT>))
+    in
+      --if not is_AS`RealLit(num)
+      if not (is_AS`RealLit(num) or is_AS`NumLit(num)) or not wf_num
+      then
+       (--------------------------------------
+        -- Error message #402
+        -- This must be a constant positive number
+        --------------------------------------
+        ERR`GenErr (num,<ERROR>,402,[]);
+        return mk_(false, mk_REP`UnitTypeRep ())
+       )
+--      elseif num.val < 0 -- can never actually happen, since value is a
+--                         -- numeric literal (no possibility for leading "-"
+--                         -- in the syntax)
+--      then
+--       (--------------------------------------
+--        -- Error message #371
+--        -- Duration is not a positive number
+--        --------------------------------------
+--        ERR`GenErr (num,<ERROR>,371,[]);
+--        return mk_(false, mk_REP`UnitTypeRep ())
+--       )
+--      else
+--        let mk_(wf,tp) = wf_Stmt(i, stmt, exptp)
+--        in
+--          return mk_(wf and wf_num, tp);
+      else
+        return wf_Stmt(i, stmt, exptp);
+\end{vdm_al}
+#endif VICE
+
+\subsection{Identity and Error Statement} 
+
+\begin{vdm_al}
+
+wf_IdentStmt : TYPE`Ind * AS`IdentStmt * REP`TypeRep ==> bool * REP`TypeRep
+wf_IdentStmt(-,mk_AS`IdentStmt(cid),-) ==
+ (CI`SetTypeInfo(cid, mk_REP`UnitTypeRep());
+  return mk_(true, mk_REP`UnitTypeRep()));
+
+wf_ErrorStmt : TYPE`Ind * AS`ErrorStmt * REP`TypeRep ==> bool * REP`TypeRep
+wf_ErrorStmt (-,-,exptp) ==
+  return mk_(true, exptp);
+
+end STMT
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[MotGeneralNumericType]
+{rtinfo.ast}[STMT]
+\end{rtinfo}

@@ -1,0 +1,9 @@
+class A
+
+operations
+
+public static Test : () ==> nat
+Test() ==
+  return 1;
+
+end A

@@ -1,0 +1,20 @@
+class Object
+operations 
+public  toString : () ==> [String]
+toString() == 
+is not yet specified ;
+
+end  Object
+
+class String
+
+end String
+
+class WireGroup is subclass of Object
+operations 
+public  toString : () ==> [String]
+toString() == 
+( return  new String()
+) ;
+
+end  WireGroup

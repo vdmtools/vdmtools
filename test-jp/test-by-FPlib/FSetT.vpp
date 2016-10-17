@@ -1,0 +1,75 @@
+\subsection{FSetT}
+FSetのテストを行う。testcase2は、回帰テスト支援ライブラリのテストのため、意図的にfalseになるようにしている。
+\begin{vdm_al}
+--$Id: SetT.vpp,v 1.1 2005/10/31 02:09:59 vdmtools Exp $
+class FSetT is subclass of FSet
+
+functions
+static public run : () +> bool
+run() == 
+let	testcases = [ t1(), t2(), t3(), t4()]
+in
+FTestDriver`run(testcases);
+\end{vdm_al}
+
+\subsubsection{HasSameElemsを検査する}
+\begin{vdm_al}
+static t1 : () -> FTestDriver`TestCase
+t1() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSetT01:\t  Test HasSameElems",
+	HasSameElems[int](FSet`AsSequence[int]({1,2,3,4}),{1,2,3,4}) and
+	not HasSameElems[int](FSet`AsSequence[int]({1,2,3,4,5}),{1,2,3,4}) and
+	not HasSameElems[int]([1,2,3,4,4,5],{1,2,3,4})
+	)
+	;
+\end{vdm_al}
+
+\subsubsection{Combinationsを検査する}
+\begin{vdm_al}
+static t2 : () -> FTestDriver`TestCase
+t2() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSetT02:\t Test Combinations",
+	Combinations[int](2)({1,2,3}) = {{1,2},{1,3},{2,3}} and
+	Combinations[int](2)({1,2,3,4}) = 
+		{{1,2},{1,3},{1,4},{2,3},{2,4},{3,4}} and
+	Fmap[set of int, set of set of int](Combinations[int](2))({{1,2,3},{1,2,3,4}}) =
+		{{{1,2},{1,3},{2,3}},{{1,2},{1,3},{1,4},{2,3},{2,4},{3,4}}} and
+	Combinations[int](3)({1,2,3,4}) = {{1,2,3},{1,2,4},{1,3,4},{2,3,4}} and
+	Combinations[seq of char](2)({"Sahara","Sato","Sako","Yatsu","Nishikawa"}) =
+		{{"Sahara","Sato"},{"Sahara","Nishikawa"},{"Sahara","Yatsu"},
+		{"Sahara","Sako"},{"Sato","Nishikawa"},{"Sato","Yatsu"},
+		{"Sato","Sako"},{"Nishikawa","Yatsu"},{"Nishikawa","Sako"},
+		{"Yatsu","Sako"}}
+	)
+	;
+\end{vdm_al}
+
+\subsubsection{Fmapを検査する}
+\begin{vdm_al}
+static t3 : () -> FTestDriver`TestCase
+t3() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSetT03:\t Test Fmap",
+	Fmap[int, int](lambda x:int & x mod 3)({1,2,3,4,5})  = {0, 1, 2}
+	)
+	;
+\end{vdm_al}
+	
+\subsubsection{Fmapのエラーケースを検査する}
+\begin{vdm_al}
+static t4 : () -> FTestDriver`TestCase
+t4() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSetT04:\t Test error cases of Fmap",
+	(FSet`Fmap[int, int](lambda x:int & x mod 3)({1,2,3,4,5})  = {0, 1}) = false
+	)
+	;
+					
+end FSetT
+\end{vdm_al}

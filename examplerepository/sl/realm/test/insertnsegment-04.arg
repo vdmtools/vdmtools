@@ -1,0 +1,1 @@
+let p11:NPoint = mk_NPoint(5,1), p12:NPoint = mk_NPoint(6,0),  p13:NPoint = mk_NPoint(6,1) in let r5: Realm = mk_Realm({p10,p13},{mk_NSeg({p10,p13})}) in InsertNSegment(r5,mk_NSeg({p11,p12}))

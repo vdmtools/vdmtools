@@ -1,0 +1,40 @@
+Note For Borland C++ Users
+
+----------------------------------------------------------------------------
+
+Known problems
+
+Compiling
+
+   * You may encounter problems with too long symbols when compiling with
+     debug information. To handle this, try defining __STL_USE_ABBREVS in
+     stlcomp.h.
+   * If your program is multi-threaded, be sure to define macro
+     __STL_WIN32THREADS for proper synchronization (if you are using SGI
+     node allocator. If you are using new_alloc or malloc_alloc, you won't
+     need that).
+   * You may encounter problems using new-style BC++ 5.0 headers like
+     <iostream>, <string> in mix with SGI STL. For version 5.01, the
+     following should be done to avoid possible conflicts:
+        o copy the STL header bc/memory.h to memory.h (That is not done by
+          default, since it may introduce conflicts with C-style memory.h)
+        o copy the STL header bc/functional.h to functional.h (That is not
+          done by default, since it clobbers function.h on 8.3 systems)
+
+----------------------------------------------------------------------------
+
+Migration notes
+
+You should experience no other problems migrating from BC++ STL to SGI STL.
+Default allocator<T> in this adaptation should be fully functional.
+
+----------------------------------------------------------------------------
+
+Versions prior to 4.52
+
+Borland C++ versions older than 4.52 have not been tested. Probably it would
+work with 4.50-4.51.
+
+----------------------------------------------------------------------------
+
+Last updated : Sept 16, 1997.

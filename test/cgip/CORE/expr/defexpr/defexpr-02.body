@@ -1,0 +1,27 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of char  
+Test () ==
+( dcl c1 : char := 'a',
+      c2 : char := 'b',
+      s  : seq1 of char := "TEST";
+  return 
+
+    def {a,b} : set of char = {c1, c2} in 
+      [if a = 'a' then a else b, if b = 'b' then b else a] ^
+    def [a,b] : seq of (char | seq of char) = [c1, s] in (b ^ [a])  ^
+    def mk_(a,a) = mk_(s,s) in let s2 = a ^ a in a ^
+    def a = if c1 = 'a' then c2 else c1 in if a = c2 then [c1] else [c2] ^
+    def a : char = c2;
+       [c,d] = [c1, s] in [a,c] ^ d ^
+    def c1 = [c1] in c1 ^
+    def s = Op() in s ^
+    def s : seq of char = Op() in s
+)
+
+functions
+
+Op: () -> seq of char
+Op () ==
+  "-ok-"
+
+end A

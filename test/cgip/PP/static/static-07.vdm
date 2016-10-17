@@ -1,0 +1,73 @@
+class Ca
+
+instance variables
+  static public a : nat := 1;
+  static protected b : nat := 2;
+
+operations
+  static public opCa: () ==> nat
+  -- should yield 2
+  opCa () == return a + Ca`a;
+
+  static public opB: () ==> nat
+  -- should yield 6
+  opB () == return b + Ca`b + opCa();
+
+  public opC: () ==> nat
+  -- should yield 4
+  opC () == return a + Ca`a + Ca`opCa();
+
+  public opD: () ==> nat
+  -- should yield 16
+  opD () == return b + Ca`b + opB() + Ca`opB()
+
+functions
+
+  static public Inc: nat -> nat
+  Inc(n) ==
+   n + 1;
+
+end Ca
+
+class B is subclass of Ca
+
+values
+
+  default : nat = 1;
+
+functions
+
+  public static f : () -> nat
+  f() ==
+    default;
+
+operations
+  static public opE: () ==> nat
+  -- should yield 2
+  opE () == return a + Ca`a;
+
+  static public opF: () ==> nat
+  -- should yield  12
+  opF () == return b + B`b + opCa() + Ca`opB();
+
+  public opG: () ==> nat
+  -- should yield 22
+  opG () == return opE() + opC() + Ca`opD();
+
+  public opH: () ==> nat
+  -- should yield 42
+  opH () == return b + B`b + opD() + B`opG() 
+end B
+
+class A
+instance variables
+  anCa : Ca := new Ca();
+  anB : B := new B()
+
+operations
+  public Test: () ==> nat
+  -- should yield 106
+  Test () == return Ca`opCa() + Ca`opB() + anCa.opC() + anCa.opD() +
+                    B`opE() + B`opF() + anB.opG() + anB.opH() + 
+                    Ca`Inc(B`f())
+end A

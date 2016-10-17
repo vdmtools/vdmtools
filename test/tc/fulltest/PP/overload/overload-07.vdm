@@ -1,0 +1,41 @@
+-- This checks that if parameter type overlapping of overloaded functions 
+-- and operations occurs due to inheritance, this is detected when an 
+-- attempt to use the function is made in the common subclass.
+
+
+class A
+
+functions
+
+public fn : bool -> bool
+fn(b) ==
+   b ;
+
+public fn : A -> bool
+fn(-) ==
+  false;
+
+end A
+
+class B
+
+operations
+
+public fn : bool ==> bool
+fn(b) ==
+   return b ;
+
+public fn : A ==> bool
+fn(-) ==
+  return false;
+
+end B
+
+class C is subclass of A,B
+functions
+
+g : nat -> real
+g(n) ==
+  fn(n)
+
+end C

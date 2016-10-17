@@ -1,0 +1,79 @@
+class OpDefTest
+instance variables
+      a : nat := 7;
+      b : bool := true;
+inv b = true;
+
+operations
+
+  Op1(c,d: nat) r : nat ==
+  return d
+  pre c <> d
+  post d = r;
+
+  Op2(c,d: nat) r : nat, s : bool ==
+  return mk_(c,c<d)
+  ext rd a : nat
+  pre a <> c
+  post d = r;
+
+  Op3(c,d: nat) r : nat, s : nat, t : bool ==
+  return mk_(c,d,true)
+  ext rd a : nat
+  pre a <> c
+  post d = r
+  errs id1 : c = a -> r = a;
+
+  Op5(c,d: nat) r : nat ==
+  return c
+  ext rd a:nat
+  pre c <> d
+  post a~ = s;
+
+  Op6(e,f: int) r : nat ==
+  let t = true in return t
+  ext wr a : nat
+  pre a < e and a < f
+  post exists r1 in set {a,e,f} & r <> r1
+  errs ERR1: e > f -> r = 0
+       ERR2: a = f -> a~ = a + 1;
+
+  Op7(g: bool) r : rat ==
+  return if g then 1/2 else 1/4
+  ext rd b: bool
+  pre g = b
+  post if g then b~ = not b else r = 9
+  errs ERR1: r = 9 -> not b;
+
+  Op8(a: char) ==
+  skip
+  ext wr a: nat
+  pre a <> 7
+  post a~ = a + 7;
+
+  Op9() ==
+  skip
+  ext wr a, a: nat
+  post a~ = a + 1;
+
+  Op10() ==
+  skip
+  ext wr a: nat
+  post a;
+
+  Op11() ==
+  skip
+  ext rd a: real
+  post true;
+
+  Op12(t:nat) ==
+  skip
+  post t > 9
+  errs ERR1: t -> t = 8;
+
+  Op13(t:nat) ==
+  is not yet specified
+  post t > 9
+  errs ERR1: t <= 9 -> t = 8
+  
+end OpDefTest

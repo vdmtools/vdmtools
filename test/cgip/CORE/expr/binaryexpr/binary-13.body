@@ -1,0 +1,46 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of (bool | seq of (int * int * int * int)) 
+Test () ==
+let s1 = f(args),
+    s2 = g(args) in
+  return [exps=s1, s2=exps, s1, s2]
+
+values
+  args = [
+    mk_(14,3),
+    mk_(14,-3),
+    mk_(-14,3),
+    mk_(-14,-3)
+  ];
+
+  exps = [
+    mk_(2,4,2,4),
+    mk_(2,-4,-1,-5),
+    mk_(-2,-4,1,-5),
+    mk_(-2,4,-2,4)
+  ]
+
+functions
+
+f: seq of (int * int) -> seq of (int * int * int * int)
+f(s) ==
+  if s = [] then
+    [] 
+  else
+    let mk_(l,r) = hd s in
+      [ mk_(l rem r,
+            l div r,
+            l mod r,
+            floor (l/r)) ] ^ f(tl s);
+  
+g: seq of (int * int) -> seq of (int * int * int * int)
+g(s) ==
+  if s = [] then
+    [] 
+  else
+    let mk_(l,r) = hd s in
+      [ mk_(l rem r,
+            l div r,
+            l - r*floor(l/r),
+            floor (l/r)) ] ^ f(tl s)
+  

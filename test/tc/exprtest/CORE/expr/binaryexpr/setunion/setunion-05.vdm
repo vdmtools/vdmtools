@@ -1,0 +1,14 @@
+class BinaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let t = 'a',
+      - = {} union t
+  in skip;
+
+------------------------------------------------------------------------------
+end BinaryTest

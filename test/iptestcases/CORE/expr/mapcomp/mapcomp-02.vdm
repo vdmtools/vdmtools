@@ -1,0 +1,24 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of map int to int   
+Test () ==
+return 
+[ {2 |-> 5, 1 |-> 3 }, let a = 3*8, b=2 in { a + 1 |-> b *6 },
+  { a |-> (a + 1) div 2 | a in set {1,2,3,-4} }
+] 
+
+
+
+types
+
+ AD::
+  b : ( bool | nat )
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

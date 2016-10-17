@@ -1,0 +1,1145 @@
+% WHAT
+%    The main file of the documentation of the specification of 
+%    the code generator.
+% FILE
+%    $Source: /home/vdmtools/cvsroot/toolbox/spec/cg-spec/straightforward.tex,v $
+% VERSION
+%    $Revision: 1.24 $
+% DATE
+%    $Date: 2001/02/21 13:38:48 $
+% FORMAT
+%    $State: Exp $
+% PROJECT
+%    Afrodite - ESPRIT III programme, project no. 6500.
+% STATUS
+%    Under development.
+% AUTHOR
+%    $Author: paulm $
+% COPYRIGHT
+%    (C) 1993 IFAD, Denmark
+
+\documentclass[a4paper,dvips]{article}
+\usepackage[dvips]{color}
+\usepackage{vdmsl-2e}
+\usepackage{longtable}
+\usepackage{alltt}
+\usepackage{makeidx}
+\usepackage{ifad}
+
+\definecolor{covered}{rgb}{0,0,0}      %black
+%\definecolor{not_covered}{gray}{0.5}   %gray for previewing
+\definecolor{not_covered}{gray}{0.6}   %gray for printing
+% \definecolor{not_covered}{rgb}{1,0,0}  %read
+
+%\documentstyle[vdmsl_v1.1.31,alltt,makeidx,ifad,a4]{article}
+
+#ifdef VDMSL
+\newcommand{\VDM}{VDM-SL}
+#endif //VDMSL
+#ifdef VDMPP
+\newcommand{\VDM}{VDM++}
+#endif //VDMPP
+
+\newcommand{\StateDef}[1]{{\bf #1}}
+\newcommand{\TypeDef}[1]{{\bf #1}}
+\newcommand{\TypeOcc}[1]{{\it #1}}
+\newcommand{\FuncDef}[1]{{\bf #1}}
+\newcommand{\FuncOcc}[1]{#1}
+\newcommand{\ModDef}[1]{{\tiny #1}}
+
+
+\newcommand{\MCL}{Meta-IV Class Library}
+\newcommand{\TBW}{TO BE WRITTEN}
+\newcommand{\NYI}{Notice, that this function/operation is not fully
+  specified in order to capture a possible integration with another
+  library than \MCL{}.}
+\newcommand{\nfs}{{\em not fully specified\/}}
+
+\makeindex
+
+\begin{document}
+
+\special{!userdict begin /bop-hook{gsave 220 30 translate
+0 rotate /Times-Roman findfont 21 scalefont setfont
+0 0 moveto (CONFIDENTIAL) show grestore}def end}
+
+#ifdef VDMSL
+\docdef{Specification of the VDM-SL Code Generator}
+{ The IFAD VDM Tool Group \\
+  The Institute of Applied Computer Science}
+{\today,}
+{IFAD-VDM-12}
+{Report}
+{Released}
+{Confidential}
+{}
+{\copyright IFAD}
+{\item[V1.0] First version.
+\item [V1.1] Reducing the size and improving the readability
+  of the generated code mainly by reducing the number of
+  temporary variables. 
+\item [V1.2] A number bugs have been fixed. Dead code has been removed
+  and more test cases have been added to the test environment in order
+  to obtain full coverage.
+\item[V1.3] Major changes, in particular to the CPP module where
+context information has been added (to be ignorred by the code generator). } 
+{}
+#endif // VDMSL
+
+#ifdef VDMPP
+\docdef{Specification of the VDM++ Code Generator}
+         {IFAD VDM Tool Group \\
+          The Institute of Applied Computer Science}
+         {\today,}
+         {IFAD-VDM-29}
+         {Report}
+         {Released}
+         {Confidential}
+         {}
+         {\copyright IFAD}
+         {\item[V1.0] First version.
+	 \item[V1.3] Major changes, in particular to the CPP module where
+context information has been added (to be ignorred by the code generator).}
+         {}
+#endif // VDMPP
+\renewcommand{\thepage}{\roman{page}}
+
+\tableofcontents
+\newpage
+\renewcommand{\thepage}{\arabic{page}}
+\setcounter{page}{1}
+
+\parskip12pt
+\parindent0pt
+
+#ifdef VDMSL
+\section{Introduction}
+
+This document contains the specification of the VDM-SL code generator.
+In this version of the code generator the following constructs are
+not supported:
+
+\begin{itemize}
+\item Expressions:
+
+  \begin{itemize}
+  \item Lambda.
+  \item Compose, iterate and equality for functions.
+  \item Function type instantiation expression. However, the code
+    generator supports function type instantiation expression in
+    combination with apply expression, as in the following example:
+
+\begin{quote}
+\begin{verbatim}
+Test:() -> set of int
+Test() ==
+  ElemToSet[int](-1);
+
+ElemToSet[@elem]: @elem +> set of @elem
+ElemToSet(e) ==
+  {e}
+\end{verbatim}
+\end{quote}
+
+  \end{itemize}
+
+\item Statements: 
+
+  \begin{itemize}
+  \item `{\sf using}' in call statement.
+  \item AlwaysStmt.
+  \item ExitStmt.
+  \item TrapStmt.
+  \item RecTrapStmt.
+  \end{itemize}
+
+\item State designator:
+
+  \begin{itemize}
+  \item Field reference
+  \item Map reference
+  \item Sequence reference
+  \end{itemize}
+
+\item Type bind in:
+
+  \begin{itemize}
+  \item Let-be-st expression/statements.
+  \item Sequence, set and map comprehension expressions.
+  \item Iota and quantified expressions.
+  \end{itemize}
+
+\item Patterns:
+
+  \begin{itemize}
+  \item Set union pattern.
+  \item Sequence concatenation pattern.
+  \end{itemize}
+
+\item Local Function Definitions.
+
+\item Higher order function definitions.
+
+\item Function Values. 
+
+\end{itemize}
+
+However, the code generator are able to generate compilable code for
+specifications including the former constructs. But the execution of
+the code will result in a run-time error, if a branch containing a
+unsupported construct is executed. Consider the following function
+definition: 
+
+\begin{quote}
+\begin{verbatim}
+f: nat -> nat
+f(x) ==
+  if x <> 2 then
+    x
+  else
+    iota x : nat & x ** 2 = 4
+\end{verbatim}
+\end{quote}
+
+In this case {\tt f} can be code generated and compiled.  The compiled
+C++ code corresponding to {\tt f} will result in run-time error, if
+{\tt f} is applied with the value 2.
+
+Note, that the implementation of the code generator will give a
+warning whenever a unsupported construct is ``code generated''.
+
+
+\subsection{Semantical Differences Between the Generated Code, the
+  Interpreter, and ISO VDM-SL}
+
+\begin{itemize}
+\item Value Definitions: In order to execute the specification, it is
+  required by the interpreter and the code generator, that values must
+  be defined before they are used, in the order they are defined in a
+  module.
+
+\item Inconsistence between the scope rules used by the interpreter,
+  the code generator and ISO VDM-SL in let/define
+  expressions/statements. Consider the following expression:
+
+  \begin{verbatim}
+let a = 1 in
+  let a = 2,
+      b = a in
+    a + b
+  \end{verbatim}
+
+  The interpreter will evaluate this expression to 3, whereas the
+  generated code will evaluate the expression to 4. In the
+  generated code local values are ``visible'' at the level where they
+  are defined, in the order they are defined. In the interpreter local
+  values are not in the scope at the level where they defined. In ISO
+  VDM-SL local values may be used in any order at the level there they
+  are defined.
+
+\item Iota expression and unique existential expression: In the
+  interpreter and the generated code a true valued unique existential
+  expression implies that the corresponding iota expression can be
+  computed successfully. Consider the following expression:
+
+  \begin{verbatim}
+exists1 {a,b} in set {{1,2}} & a > b 
+  \end{verbatim}
+
+  In this case both {\sf true} and {\sf false} are legal solutions.
+  However, the corresponding iota expression has only a solution in
+  the case where {\tt a} $=2$ and {\tt b} $=1$. Thus, in the
+  interpreter and the generated code a unique existential expression
+  must evaluate to {\sf true} in order to find a solution to the
+  corresponding iota expression.
+
+\end{itemize}
+
+
+\section{Overall Structure}
+
+This section describes the {\bf design} of the specification, the {\bf
+strategy} used in the code generator, and the specification {\bf style}.
+
+\subsection{Design}
+
+The specification is divided into several modules:
+
+\begin{description} 
+
+\item[MOD:] (MOD is an abbreviation of MODule ). This module describes the generation of code of
+modules (Not fully specified).
+
+\item[CG:] (CG is an abbreviation of Code Generator). This module is
+  to be considered as the main module, it generates code corresponding
+  a whole specification.
+
+
+\item[FD: ] (FD is an abbreviation of Function Definitions ).
+  Providing functions generating code for function and operation
+  definitions.
+
+\item[EXPR: ] (EXPR is an abbreviation of EXPRession). Providing
+  functions generating code corresponding to expressions.
+
+\item[PM: ] (PM is an abbreviation of Pattern Matching). Providing
+  functions generating code of pattern match. 
+  
+\item[STMT: ] (STMT is an abbreviation of STateMenT). Providing
+  functions generating code corresponding to statements.
+
+\item[TD: ] (TD is an abbreviation of Type Definitions). Providing
+  functions generating code for type definitions.
+
+\item[SD: ] (SD is an abbreviation of State Definitions). Providing
+  functions generating code for state definitions.
+
+\item[VD: ] (VD is an abbreviation of Value Definitions). Providing
+  functions generating code for value definitions.
+
+\item[CPP:] (CPP is an abbreviation of C Plus Plus). Describing the
+  abstract syntax of C++.
+
+\item[BC: ] (BC is an abbreviation of Building C++). The construction
+  of part of an abstract tree of C++ is described in this module. The
+  main idea behind this module is divide the specification of the code
+  generator into parts of the same nature. This module also provides
+  functions for naming temporary variables and auxiliary functions.
+
+\item[AS: ] (AS is an abbreviation of Abstract Syntax). Describing the
+  abstract syntax of the VDM-SL/VDM++.
+
+\item[DS: ] (DS is an abbreviation of Data Structures). Providing
+  functions generating code corresponding to functions on VDM data
+  structures, for example providing a function which generates code
+  corresponding to a {\bf union} operation between two sets. That is,
+  the basic data type implementation is described in this module.
+
+\item[AUX:] (AUX is an abbreviation of AUXiliary). Provides auxiliary
+  functions and operations to the rest of the specification.
+
+\item[REP: ] Type Representations Module. Provides the type
+  definitions for the semantic domains which are used internally in
+  the static semantics to model the types from the abstract syntax and
+  the derived types.
+
+
+\end{description}
+
+
+\subsection{Strategy}
+
+\subsubsection{Scopes}
+
+In the generated code we use C++ scope to model VDM scope.  The idea
+is to use variables which are automatically created and destroyed
+inside blocks in C++. Whenever code is to be generated of a subtree of
+for example an expression it is assumed that variables appearing in
+that subexpression, which are not declared in that expression, are
+declared in an outer block. An example:
+
+\begin{quote}
+\begin{verbatim}
+fct: () -> nat
+fct() ==
+let a=2
+in let a=3,
+       b=4
+   in a+b
+\end{verbatim}
+\end{quote}
+
+Using the scope strategy the corresponding code looks like:
+
+\begin{quote}
+\begin{verbatim}
+int fct()
+{
+  int a = 2;
+  { int a = 3;
+    int b = 4;
+    return a+b;
+  }
+}
+\end{verbatim}
+\end{quote}
+
+An exception of this approach is the translation of local function
+definition in e.g.\ a {\em let expression}. In this case it is not
+possible to use the C++ scope to model the restrictive scope of the
+local function definition as C++ does not support local function
+declarations in function declarations. See sections \ref{fctdef} and
+\ref{expr} for a detailed description of the solution to this problem.
+
+
+\subsubsection{Temporary Variables}
+\label{tmpvar:sec}
+
+The example above also raises another question, namely, the use of
+temporary variables. In the example above the result of the function
+is returned inside the inner block. However, in some way we have to
+deal with the problem of when to return the result of an evaluation or
+when the result of the expression is be used in an outer block.
+
+In this second version of the specification we have chosen to reduce
+the use of temporary variables compared to the previous version.  Some
+expressions are allowed to return as C++ expressions(type CPP`Expr),
+that is, the code for these expressions are not automatically assigned
+to a temporary variable. Expressions which possibly can return as C++
+expressions, are:
+
+\begin{enumerate}
+\item Prefix expressions.
+\item Binary expressions.
+\item Names.
+\item Literals.
+\item Function applications.
+\item Bracketed expressions.
+\end{enumerate}
+
+As an example of this the specification
+
+\begin{quote}
+\begin{verbatim}
+f:() -> nat
+f() ==
+  3 + 4
+\end{verbatim}
+\end{quote}
+
+will have the corresponding code 
+\begin{quote}
+\begin{verbatim}
+int f()
+{
+  return 3 + 4;
+}
+\end{verbatim}
+\end{quote}
+
+The corresponding code of the first example using this approach looks
+like (since let expressions returns as C++ statements):
+
+\begin{quote}
+\begin{verbatim}
+int fct()
+{
+  int a=2;
+  int tmpRes;
+  { int a = 3;
+    int b = 4;
+    tmpRes = a+b;
+  }
+  return tmpRes;
+}
+\end{verbatim}
+\end{quote}
+
+In this case the temporary variable {\tt tmpRes} is declared outside
+the inner block, the result of the evaluation of the inner block is
+assigned to the temporary variable and the result is returned in the
+outer block. 
+
+Another approach to reduce the number of temporary variables is in
+function/operation definition.  If the arguments all are distinct
+names, they can be declared directly in the argument list of the
+function in the corresponding code. For instance, the specification
+
+\begin{quote}
+\begin{verbatim}
+f:nat * nat * nat -> nat
+f(a,b,c) ==
+  a + b + c
+
+\end{verbatim}
+\end{quote}
+has the code
+\begin{quote}
+\begin{verbatim}
+int f(int a, int b, int c)
+{
+  return a + b + c;
+}
+\end{verbatim}
+\end{quote}
+
+whereas the specification
+
+\begin{quote}
+\begin{verbatim}
+f:(nat * nat) * nat -> nat
+f(mk_(a,b),c) ==
+  a + b + c
+\end{verbatim}
+\end{quote}
+will be coded like
+\begin{quote}
+\begin{verbatim}
+int f( tuple var1, int var2)
+{
+  int a,b,c;
+  ... // Pattern match
+  return a + b + c;
+}
+\end{verbatim}
+\end{quote}
+
+\subsubsection{Type Information}\label{TI}
+
+One of the ambition of the code generator is that it should be easy to
+change the used basic data type implementation. In the first version
+the \MCL{} is used as part of the basic data type implementation. The
+\MCL{} is characterized by the fact that it offers the data type
+$Generic$ which models the union type of all types. Another
+characteristic of the \MCL{} is the construction of compound data
+types (sets, sequences, maps, products and composites), a compound
+data type can contain all types of values.  Facing these
+characteristics of the \MCL{} it could be a temptation to use the data
+type $Generic$ to model types which statically in the abstract
+syntax tree are not obviously known. Consider the example below:
+
+\begin{quote}
+\begin{verbatim}
+g: nat -> nat
+g(b) ==
+let a = f(b)
+in h(a)
+\end{verbatim}
+\end{quote}
+
+The data type of $a$ is not clear without looking up the signature
+of the function $f$, thus using the \MCL{} a possible translation of
+the let-expression could be:
+
+\begin{quote}
+\begin{verbatim}
+Generic a = f(b);
+return h(a);
+\end{verbatim}
+\end{quote}
+
+However, as we want to design the code generator so that it is easy to
+change the basic data type implementation and as we do not want to
+require that a new data type implementation should provide this kind
+of generic data types the point of view has been to infer the exact
+data type in each declaration.  Consider the example above and assume
+that the function $f$ has the signature:
+
+\begin{quote}
+\begin{verbatim}
+f: nat -> set of ( nat | seq of nat )
+\end{verbatim}
+\end{quote}
+
+The declaration of the variable $a$ should be the corresponding
+declaration of the data type:
+
+\begin{quote}
+\begin{verbatim}
+set of ( nat | seq of nat ) 
+\end{verbatim}
+\end{quote}
+
+in the current data type refinement. Using the \MCL the corresponding
+declaration is:
+
+\begin{quote}
+\begin{verbatim}
+Set a = f(b);
+\end{verbatim}
+\end{quote}
+
+The type information needed is supposed to be available in the
+abstract syntax tree of the specification to be translated. See
+section \ref{AS} for further information.
+
+In this second version of the specification type information is added
+to the abstract syntax tree for comprehensions and quantified
+expressions.  This type information concerns the names in the
+expressions. In the specification 
+
+\begin{quote}
+\begin{verbatim}
+{a+b | a,[a,b] in set { 1,2,[2,1], [3,{6,7}],[{6,7},9] } } 
+\end{verbatim}
+\end{quote}
+
+is the type for {\tt a} in {\tt a + b} integer. But the type for the
+first {\tt a} in the bindlist is a union type of integer and sequence,
+i.e. there exists an element in the set of the bindlist that never can
+match {\tt a} due to its type. This knowledge is used to remove
+never-matching elements from the set before the code for
+the comprehension is generated. As it apperars, this will certanly not
+reduce the size of the generated code(but the opposite), but the code
+will be more efficient.  
+
+\subsubsection{Pattern Match}
+
+In one of the first proposals a more interpreter like approach was
+described in the code generation of pattern match. In the code generating
+pattern match a temporary variable was used which was assigned to a
+map from identifiers names in the patterns to the values which the
+pattern identifiers was bound to. Consider the example below:
+
+\begin{quote}
+\begin{verbatim}
+cases {1, 2} :
+  { a, b } -> mk_(a, b),
+  others   -> 3
+end
+\end{verbatim}
+\end{quote}
+
+In the code corresponding to the pattern match of the set {\tt 1, 2}
+against the pattern {\tt a, b} the temporary variable, say $bind$, was
+e.g.\ assigned to: {\tt \{"a" |-> 2, "b" |-> 1\}}.  We have chosen not
+to follow this strategy, one of the reasons is that this does not seem
+to be a very efficient way. Instead we have chosen to ``fold out'' the
+generated code, so that there is no need of internal variables, the
+strategy chosen is to use the C++ scope to model binding of an
+identifier to a value. See also section \ref{PM}.
+
+
+\subsubsection{Library}
+
+In this second version of the specification the code generator
+auxillary library {\tt cg\_aux.cc } has been expanded with two
+functions that was code generated in the previous version. This
+strategy is an efficient way to reduce the size of the generated code
+and should be investigated further in the versions to come.  The two
+new functions are:
+
+\begin{description}
+\item[GenAllComb] This function is used by the comprehension
+  expressions.
+\item[Text2Seq ] This function inserts text literals from the abstract
+  syntax into a sequence. 
+\end{description}
+
+\subsubsection{The Use of Union Types}
+
+Consider the expression below:
+
+\begin{quote}
+\begin{verbatim}
+let v1 = f(),
+    v2 = g()
+in v1 = v2
+\end{verbatim}
+\end{quote}
+
+and assume that the signature of the functions are:
+
+\begin{quote}
+\begin{verbatim}
+f: () -> nat | set of nat | map of nat to nat
+g: () -> nat | set of nat
+\end{verbatim}
+\end{quote}
+
+In the current strategy used in the code generator the declarations of
+the variables corresponding to $v1$ and $v2$ correspond to the union
+type appearing in the signatures of the functions $g$ and $f$. The
+values assigned to the variables $v1$ and $v2$ are of the VDM union
+type. The implementation of the union type is described in the module
+$DS$ (see section \ref{DS}). One of the requirements to the
+implementation of the VDM types is, for example, that it should be
+possible to generate a C++ expression which compare any union value
+with some other value (which does not necessary is of union type).
+This restriction might not be easy to fulfill.
+
+
+\subsubsection{Naming Conventions}
+\label{renamevar}
+
+In several cases a variable in the specification will correspond to a
+variable in the generated code. The naming strategy used in the
+code generator has been to rename all these variables to:
+``vdm\_$module$\_$name$'', where $module$ is the name of the module in
+which $name$ is defined. If the function $f$ e.g.\ is defined in
+module $M$, then the C++ function corresponding to $f$ will be named
+``vdm\_M\_f''. The case where the user has named a variable with the
+name of a keyword in C++ does not raise a problem using this strategy.
+Another advantage of this strategy is that the rest of the name space
+for temporary variable names is available for the code generator. In
+addition the following names are used by the code generator:
+
+\begin{itemize}
+\item init\_$module$: A function initializing values and the state of
+  module $module$.
+\item vdm\_$name$\_$number$: A temporary variable used by the code
+  generator.
+\item length\_$module$\_$record$: A macro defining the number of
+  fields in the record $record$, defined in module $module$.
+\item pos\_$module$\_$record$\_$field$: A macro defining the position
+  (an integer) of the field selector $field$ in the record $record$,
+  defined in module $module$.
+\item vdm\_$module$\_implicit.cc: A file containing all user defined
+  implementations of implicit functions and operations in module $module$.
+\end{itemize}
+
+Underscores (`\_') and single quotes (`'') appearing in variables in
+the specification to be code generated will be exchanged with two
+under scores (`\_\_') and underscore-single-quote (`\_q'),
+respectively, in the generated C++ code.
+
+Flat specifications will be transrormed into the module $DefaultMod$,
+exporting all constructs (except the module state).
+
+
+
+\subsubsection{Enumeration of Temporary Variables}
+
+Consider the following VDM example of a set enumeration:
+
+\begin{quote}
+\begin{verbatim}
+a = if b = 3 
+    then { 1, 3, { 2, 3} }
+    else 4
+\end{verbatim}
+\end{quote}
+
+The type of $a$ will in this case be inferred to:
+
+\begin{quote}
+\begin{verbatim}
+nat | set of ( nat | set of nat )
+\end{verbatim}
+\end{quote}
+
+As it was explained in section \ref{tmpvar:sec} the variable
+corresponding to $a$, {\tt vdm\_a}, is not usable when it comes to
+evaluate the set enumeration. Thus, temporary variables have to be
+introduced, However, we have to ensure that no name clashes appear in
+a compound statement. Consider the pseudo code of the evaluation of
+the set enumeration below (the pseudo code style is described in
+section \ref{annospec:sec}):
+
+\begin{quote}
+\begin{verbatim}
+Generic vdm_a;
+{ Set tmpSetEnum                  \\ Temporary variable to contain the
+                                  \\ result of the result of the
+                                  \\ evaluation of "{ 1, 3, {2, 3} }"
+  { tmpSetEnum.Insert( (Int) 1 ); \\ evaluation of "a" and insertion
+                                  \\ in tmpSetEnum.
+    tmpSetEnum.Insert( (Int) 3 ); 
+    Set tmpSetEnum;               \\ Temporary variable to contain the
+                                  \\ result of evaluation of "{2, 3}"
+    .... Now, we have a name clash !!!!
+  }
+}
+\end{verbatim}
+\end{quote}
+
+As it appears from the example we need to ensure that all temporary
+variables are unique in a compound statement. We have chosen to
+enumerate the temporary variables straightforward\footnote{In the
+  examples of generated pseudo code the enumeration of the temporary
+  variables has not been shown}. See also section \ref{BC}.
+
+
+\subsection{Specification Style}
+
+The specification is described as a combination of imperative an
+functional parts. That is, operations and functions are used in
+combination.
+
+\subsubsection{Name Convention used in the specification of the Code Generator}
+
+Following name convention has been used in the specification:
+\begin{itemize}
+
+\item All local variable names start with a lower case letter. An
+  exception is when a variable clashes a key word. In this case the
+  variable will start with an upper case letter.
+
+\item For variables of type sequence, maps, sets, records, tuples and
+  VarName the name might have a postfix being a underscore
+  concatenated with the letter:
+\begin{description}
+\item[sequence: ] l.
+\item[map: ] m.
+\item[set: ] s.
+\item[record: ] r.
+\item[tuple: ] t.
+\item[VarName: ] v.
+\item[CPPAS: ] c
+\end{description}
+Underscores do not appear in variable names otherwise.
+
+\end{itemize}
+
+
+\subsubsection{Annotations to the specifications} 
+\label{annospec:sec}
+
+The specifications are annotated with VDM examples and corresponding
+examples of the corresponding ``pseudo code'' generated by the current
+specification. 
+
+Basically, the idea behind the ``pseudo code'' is to give the reader
+the overall structure/idea of the code generated by the specification
+in question. We think that the understanding of the meaning of the
+pseudo code examples are almost straightforward. However, some remarks
+on the understanding of some of the $features$ which is used in
+the pseudo language is listed below.
+
+An example of a cases expression:
+\begin{quote}
+\begin{verbatim}
+cases e:
+  { a, b, 1 } -> b1,
+  [1,b]       -> b2,
+  others -> e 
+end 
+\end{verbatim} 
+\end{quote}
+
+where {\bf b{\tt n}} and {\tt e} denotes some expressions, that is,
+these identifiers denote a kind of high-level macros in the VDM
+example.
+
+
+An example of ``pseudo code'' corresponding to the cases expression is
+listed below:
+
+\begin{small}
+\begin{verbatim}
+1  Generic tmpE;                // Declaration of a temporary variable to store 
+2                               // the result of the evaluation of the expression e
+3  ...CGExpr(e, tmpE);          // Code corresponding to the call CGGenExpr(e, tmpE)
+4  int succ = FALSE;            // boolean indicating if a pattern match has succeeded
+5
+6  //Pattern match of first branch:
+7  {
+8    Generic vdm_a;             // Declaration of variables corresponding to
+9    Generic vdm_b;             // the identifiers appearing in the pattern.
+10  ...GCPatternMatch( "{a, b, 1}", tmpE, {}, succ);
+                                // Code corresponding to the call 
+11                              // of CGPatternMatch("{a, b, 1}", tmpE, {}, succ )
+12  if ( succ )                 // if the pattern match of "{a,b,1}" against the value of e
+13                              // has succeeded
+14    {
+15      ...GCExpr(b1, resVar)   // Code corresponding to the evaluation of the expression b1,
+16                              // the identifier resVar is the variable in which the 
+17                              // result of the evaluation of the expression b1 should be stored.
+18    }
+19 }
+20
+21 if ( ! succ )                // No pattern match succeeded in the first guard
+22  {
+23    Generic vdm_b;            // Declaration of the variable corresponding to 
+24                              // the identifier appearing in the pattern.
+25    ...CGPatternMatch( "[1,b]", tmpE, {}, succ ) 
+                                // Code corresponding to the call
+26                              // of CGPatternMatch("[1,b]", tmpE, {}, succ )
+27  }
+28 if ( !succ )                 // Not pattern match succeeded, evaluate the others branch.
+29  {
+30    ...CGExpr(e, resVar )     // Code corresponding to the evaluation of the expression e.
+32  }
+\end{verbatim}
+\end{small}
+
+Normally, no line numbers will appear in the pseudo code.  In line 3,
+10, 15, 25 and 30 examples of a kind of macro call is shown. Three
+dots concatenated by some function call means that at the current
+place code corresponding to the code generated by calling the
+operation or function should be replaced.  In line 10 and 25 the
+sequences: {\tt "\{a, b, 1\}"} and {\tt "[1,b]"} appear, actually
+these are shorthands for the abstract syntax tree of the corresponding
+VDM patterns.
+
+In most of the pseudo codes we have used \MCL{}.
+#endif // VDMSL
+#ifdef VDMPP
+\section{Introduction}
+
+This document contains the first draft of the specification
+of the VDM++ part of the code generator front-end. In addition
+it describes the overall structure of the specification and
+the used strategies. 
+
+The specification in this document supports class definitions
+containing the following constructs:
+
+\begin{itemize}
+\item Inheritance:
+  \begin{itemize}
+  \item Representation.
+  \item Indexed.
+  \item Behavioral.
+  \end{itemize}
+\item Instance Variables ({\em invariants are not supported}).
+\item Explicit member function definitions.
+\item Value definitions.
+\item Full and preliminary method specifications.
+\item Statements:
+  \begin{itemize}
+  \item Invoke statements.
+  \item New statement.
+  \item Specification and Topology statements.
+  \end{itemize}
+\item Self Expressions
+ \end{itemize}
+
+
+
+\section{Overall Structure}
+
+The specification is divided into the following modules:
+
+\begin{description}
+\item[CLASS:] This module provides functions generating code
+  corresponding to VDM++ class definitions.
+
+\item[FVD:] This module provides functions generating code
+  corresponding to function and value definitions inside VDM++ class
+  definitions.
+
+\item[MD:] This module provides functions generating code
+  corresponding to method definitions, methods modeling behavioral
+  inheritance, and argument and type declarations/definitions.
+
+\item[STMT:] This module is defined [IFAD-CG-4]\footnote{This is a
+    doc. id.} bud is extended with functions generating code
+  corresponding to VDM++ statements. That is, {\em Call Statement\/}
+  has been changed into {\em Invoke Statement\/} and {\em New
+    Statement\/}, and where {\em Specification} and {\em Topology
+    Statements} have been added.
+
+\item[EXPR:] This module is defined [IFAD-CG-4] and is extended with
+  functions generation code corresponding to VDM++ expressions. That
+  is, {\em isOfBaseClass Expression},
+  {\em isOfClass Expression} and {\em Self Expression\/}. Note that
+  only {\em Self Expression\/} is supported in the first version of
+  the code generator.
+
+\item[TI:] This module provides operations keeping track of type
+  information collected by the type checker. This type information is
+  used to determine methods class membership and dependencies between
+  classes.
+
+\end{description}
+
+In addition to these modules, the specification uses of the modules
+$CPP$, $BC$, $AUX$, $DS$, $PM$, $VD$ and $VD$. These are all described
+in [IFAD-CG-4]. The VDM++ code generator uses the abstract syntax
+(module $AS$) and the type representation (module $REP$) described in
+\cite{Lassen&93a}.
+
+
+Strategies, such as temporary variables, renaming, specification
+style etc.\ used in this document will follow the same guidelines as
+described in [IFAD-CG-4]. Classes will be renamed using
+the following strings:
+
+\begin{itemize}
+\item {\em vdm\_\/} --- classes corresponding to VDM++ classes.
+
+\item {\em iclass\_index\_super\_\/} --- classes modeling indexed
+  inheritance from class {\em super\/} with the index {\em index\/}
+  (see section \ref{sec:class}).
+
+\end{itemize}
+
+
+%\subsection{The Meta-IV C++ Library}
+%
+%
+%The first version of the code generator will use the Meta-IV C++
+%Library. This raises two problems in the VDM++ part of the code
+%generator.
+%
+%In addition to the VDM-SL type set, VDM++ includes an object type,
+%which can be combined with the other types in the usual way. This
+%implies that the generated code can contain non Meta-IV objects which
+%might be inserted in e.g.\ a Meta-IV sequence. Unfortunately this is
+%not possible with out extending the Meta-IV library. The specification
+%in this document do not concern with this problem, and is to be
+%modified when the consequences to the code are clarified.
+%
+%Second, the way that indexed inheritance is modeled in the generated
+%code can not be compiled with version 2.2.2 of the GNU C++ compiler
+%(due to a bug). This bug has been fix in 2.5.8. The code generator
+%generates code which is supported by  version 2.5.8 of the GNU C++
+%compiler, and the Meta-IV library is to be ported to this version in
+%order to be used with the generated code.
+%
+%The remaining part of this document will not be concerned with the
+%former problems. This implies that parts of the specification are to
+%modified then the Meta-IV library is extended and ported to GNU C++
+%version 2.5.8.
+%
+
+\subsection{Run-Time Type Information}
+
+In order to code generate the expressions {\em isOfBaseClass} and {\em
+  isOfClass}, some run-time type information most be available (C++
+does not provide a standard way of doing such type inquires). However,
+the minimal information that a C++ class corresponding to a VDM++
+class need, are a unique identification of the class (e.g.\ the class
+name) and a unique identification of the root base classes (e.g.\ 
+their names). The information can be stored in a member
+variable in the class. The first version of the code generator will
+not support {\em isOfBaseClass} and {\em isOfClass} and run-time type
+information will therefore not be available for C++ classes generated
+by the specification in this document.
+
+Guidelines for adding run-time type information are described in
+\cite{Stroustrup91}. 
+#endif // VDMPP
+
+#ifdef VDMSL
+\section{Main Module CG}\label{CG}
+\input{mod_cgmain.vdmsl.tex}
+
+\section{Modules}
+\input{mod_mod.vdm.tex}
+
+\section{Function and Operation Definitions}
+\label{fctdef}
+\input{mod_fctdef.vdmsl.tex}
+
+
+\section{Expressions}\label{expr}
+\input{mod_expr.vdmsl.tex}
+
+
+\section{Pattern Match}\label{PM}
+\input{mod_patmat.vdm.tex}
+
+
+\section{Statements}
+\input{mod_stmt.vdmsl.tex}
+
+\section{State Definitions}
+\input{mod_statedef.vdm.tex}
+
+\section{Type Definitions}\label{TD}
+\input{mod_typedef.vdmsl.tex}
+
+\section{Type Generation}\label{TPGEN}
+\input{mod_tpgen.vdmsl.tex}
+
+\section{Value Definitions}
+\input{mod_valdef.vdmsl.tex}
+
+
+\appendix
+
+
+
+%\section{The Abstract Syntax of VDM}\label{AS}
+%%\input{asslt.vdm.tex}
+
+
+%\section{The Abstract Syntax of C++}
+%\input{mod_cppast.vdm.tex}
+
+
+\section{Module BC}
+
+This module provides functions for building the abstract syntax tree
+of C++.
+
+\input{mod_bcppast.vdmsl.tex}
+
+
+\section{Module DS}
+\label{DS}
+\input{mod_vdm_ds.vdmsl.tex}
+
+
+\section{Module AUX}
+\label{AUX}
+\input{mod_cgaux.vdmsl.tex}
+#endif // VDMSL
+
+#ifdef VDMPP
+%%%Specification.
+\input{mod_cgmain.vdmpp.tex}
+
+%%module CLASS
+\input{mod_class.vdm.tex}
+
+%%module FVD
+\input{mod_fvd.vdm.tex}
+
+\section{Operation and Function Definitions}\label{fctdef}
+\input{mod_fctdef.vdmpp.tex}
+
+
+\section{Expressions}\label{expr}
+\input{mod_expr.vdmpp.tex}
+
+
+\section{Pattern Match}\label{PM}
+\input{mod_patmat.vdm.tex}
+
+
+\section{Statements}
+\input{mod_stmt.vdmpp.tex}
+
+\section{Type Definitions}
+\label{TD}
+\input{mod_typedef.vdmpp.tex}
+
+\section{Type Generation}\label{TPGEN}
+\input{mod_tpgen.vdmpp.tex}
+
+
+\section{Value Definitions}
+\input{mod_valdef.vdmpp.tex}
+
+#ifdef VDMPP
+\section{Concurrency Constructs}
+
+\input{mod_conc.vdm.tex}
+#endif VDMPP
+
+\appendix
+
+%\section{The Definition of the Abstract Syntax of VDM}
+%\label{AS}
+%\input{common_as.vdmpp.tex}
+
+%\label{AS}
+%\input{rep.vdmpp.tex}
+
+%\section{The Definition of the Abstract Syntax of C++}
+#ifdef VDMSL
+\input{mod_cppast.vdmsl.tex}
+#elseif
+\input{mod_cppast.vdmpp.tex}
+#endif
+
+%\section{Building the Abstract Syntax Tree of C++}
+%This module provides functions for building the abstract syntax tree of C++. 
+\input{mod_bcppast.vdmpp.tex}
+
+%\section{Code Corresponding to Functions on VDM Data Structures}\label{DS}
+\input{mod_vdm_ds.vdmpp.tex}
+
+
+%\section{Auxiliary Module}\label{AUX}
+\input{mod_cgaux.vdmpp.tex}
+
+%%%module TI
+\input{mod_ti.vdm.tex}
+#endif // VDMPP
+
+
+\bibliographystyle{iptes}
+\bibliography{/home/peter/bib/dan}
+
+\newpage
+\addcontentsline{toc}{section}{Index}
+\printindex
+
+\end{document}
+
+
+

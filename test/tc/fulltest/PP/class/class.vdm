@@ -1,0 +1,137 @@
+class TMP
+
+types
+  public A = B * int
+  inv mk_(b,-) == f(b);
+
+  public B = int
+  inv b == b > 3
+
+functions
+  protected f: B -> bool
+  f(b) == b <> b
+
+end TMP
+
+class TMP2
+
+types
+  public A = B * set of int
+  inv a == f(a);
+
+  public B = int
+  inv b == b > 3
+
+functions
+  protected f: A -> bool
+  f(mk_(n,s)) == n in set s
+  
+end TMP2
+
+class TMP3
+
+types
+  public A = B * set of int
+  inv a == f(a);
+
+  public B = int
+  inv b == b > 3
+
+functions
+  f: A -> bool
+  f(mk_(n,s)) == n in set s;
+
+  g: A -> bool
+  g(mk_(n,{-} union s)) == n in set s
+
+  
+end TMP3
+
+class TMP4
+
+types
+  public A = B * set of int
+  inv a == a=a;
+
+  public B = int
+  inv b == b > 3
+
+functions
+  f: A -> bool
+  f(mk_(n,s)) == n in set s;
+
+  g: seq of A -> bool
+  g(a) == let mk_(-,-) = hd a in true
+  
+end TMP4
+
+class FuncTest
+ functions
+public
+    een: bool*nat*nat -> nat*nat
+    een(par1_in,par2_in,par3_in) == 
+       if par1_in then mk_(par2_in,par3_in) 
+       else mk_(par3_in,par2_in);
+
+public
+    twee(par_in:nat) par_out:nat
+       post par_out = 2*par_in
+   
+end FuncTest
+
+class Testje is subclass of FuncTest
+ instance variables
+    var1: nat := 0
+
+ operations
+public
+    testfunc(par_in:bool,d:nat,e:nat) ==
+       def mk_(a,b) = een(par_in,d,e);
+           c = if par_in then  twee(d)
+               else een(not par_in,d,e) in
+              var1 := a + b + c
+        
+end Testje
+
+class XX is subclass of Testje, NoClass
+end XX
+
+class Circular1 is subclass of Circular2
+end Circular1
+
+class Circular2 is subclass of Circular3,XX
+end Circular2
+
+class Circular3 is subclass of Circular1
+types 
+  public t = TMP
+end Circular3
+
+class AAA
+
+types
+protected  T1 = nat;
+protected  T7 = char;
+protected  T10= set of nat;
+protected  T11= set of ( map T1 to T7 );
+protected  T18= [set of T1];
+  
+protected  T20:: a: nat
+        b: char
+        c: T10;
+  
+instance variables
+  i : int :=1;
+
+end AAA
+
+class BBB is subclass of AAA
+
+operations
+
+  m1: T1 ==> [(T11)] | (T20 * T18)
+  m1(a)  ==
+    let s = { i | i in set {1,2,3,4,5,6,7,8} & i > a } in
+      return { { a |-> 'a' | a in set s } }
+
+end BBB

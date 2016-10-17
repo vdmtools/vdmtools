@@ -1,0 +1,48 @@
+/*
+$Id: NewtonT.vpp,v 1.2 2006/01/10 10:46:52 vdmtools Exp $
+テストグループ
+	Integerのテスト
+関連 UC
+	なし
+作成者
+佐原伸
+*/
+class NewtonT is subclass of TestDriver
+functions
+tests : () -> seq of TestCase
+tests () == 
+	[ 
+	new NewtonT01()
+	];
+end NewtonT
+-----------------------------------------------------
+/*
+
+シナリオID
+	利子を得る。
+親UseCase
+	なし
+内容
+	「利子を得る」を検査する。
+*/
+class NewtonT01 is subclass of TestCase
+values
+	誤差 = 10 ** -10;
+operations 
+protected test: () ==> bool
+test() == 
+	let	r = new Newton()		in
+	(
+	dcl w : real;
+--	for i = 1 to 100 do 
+--		w := r.利子を得る(2,10);
+	return
+		(r.利子を得る(2,10)  - 0.07177346254161253  < 誤差 
+		)
+	)
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "NewtonT01:\t「利子を得る」を検査する";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end NewtonT01

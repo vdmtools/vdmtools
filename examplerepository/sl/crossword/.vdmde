@@ -1,0 +1,6 @@
+r crossword.vdm
+i
+tc pos
+cg
+latex crossword.vdm
+quit

@@ -1,0 +1,17 @@
+class SeqForLoopTest
+
+operations
+
+  SeqForLoop1: () ==> nat1
+  SeqForLoop1() ==
+    for a in [1,4,9] do
+      return a;
+
+  SeqForLoop2: bool | seq of (nat * bool) ==> bool
+  SeqForLoop2(arg) ==
+    for mk_(a,-) in arg do
+     for b : bool in [true] do
+      let n = 5 in return (a = 9) and (n = 99) <=> b;
+   
+end SeqForLoopTest
+

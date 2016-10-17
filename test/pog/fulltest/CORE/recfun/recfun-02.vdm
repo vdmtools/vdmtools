@@ -1,0 +1,20 @@
+class A 
+
+
+functions
+
+id : nat -> nat 
+id(x) == x;
+
+even : nat -> bool
+even(n) == if n = 0 then true
+           else odd(n-1)
+measure id;
+           
+
+odd : nat -> bool
+odd(n) == if n = 0 then false
+          else even(n-1)
+measure id;
+
+end A

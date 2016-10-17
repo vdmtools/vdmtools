@@ -1,0 +1,17 @@
+class UnaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let A = "ABC",
+     - = floor cases false:
+               true -> A,
+               others -> {9,8}
+           end 
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

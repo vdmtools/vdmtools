@@ -1,0 +1,24 @@
+module A
+exports all
+definitions
+operations
+
+
+Test:() ==> seq of nat
+Test() ==
+  if post_Test([10, 11], mk_Sigma(10), mk_Sigma(11)) then
+  let old = n in
+    ( n := n + 1;
+      return [old, n] )
+  else
+    return [n, n+1]
+  post [n~, n~ + 1] = RESULT
+
+
+state Sigma of
+  n : nat
+  init s == s = mk_Sigma(10)
+end
+
+
+end A

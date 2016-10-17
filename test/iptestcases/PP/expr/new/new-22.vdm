@@ -1,0 +1,43 @@
+class C
+
+end C
+
+class D
+
+operations
+
+public op : () ==> ()
+op() ==
+  skip
+
+end D
+
+class B
+
+instance variables
+
+i1 : seq of C := [];
+i2 : D := new D()
+
+operations
+
+public B : C ==> B
+B(c) ==
+( 
+  i1 := i1 ^ [c];
+  i2.op()
+)
+
+end B
+
+class A
+
+operations
+
+public Test : () ==> nat
+Test() ==
+( dcl b : B := new B(new C());
+  return 1
+)
+
+end A

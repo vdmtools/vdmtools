@@ -1,0 +1,186 @@
+\section{Pattern Identifiers}
+
+\begin{vdm_al}
+module PID
+
+imports  
+
+  from AS all,
+  from CI all,
+  from REP all,
+
+  from CI_AUX all
+
+exports 
+  functions
+    Pattern2Pids     : AS`Pattern -> set of AS`PatternName;
+
+    NameInPattern : AS`Name * AS`Pattern -> bool;
+    NameInBindList : AS`Name * AS`BindList -> bool;
+    NameInBind : AS`Name * AS`Bind  -> bool;
+
+  operations 
+    Pattern2BindList : AS`Pattern ==> AS`BindList;
+
+definitions
+
+operations
+  Pattern2BindList : AS`Pattern ==> AS`BindList
+  Pattern2BindList (pat) ==
+    def pid_set = Pattern2Pids(pat);
+        pid_seq = SetToSeq[AS`PatternName](pid_set);
+        bd_lst  = [mk_AS`MultTypeBind([pid_seq(i)], CI_AUX`GetASType(pid_seq(i)), CI`NilContextId)
+                   | i in set inds pid_seq]
+    in return bd_lst;
+
+functions
+  Pattern2Pids : AS`Pattern -> set of AS`PatternName
+  Pattern2Pids (pat) == 
+    cases pat:
+      mk_AS`PatternName(-,-,-)      -> PatternName2Pids(pat),
+      mk_AS`MatchVal(-,-)           -> MatchVal2Pids(pat),
+      mk_AS`SetEnumPattern (-,-)    -> SetEnumPattern2Pids(pat),
+      mk_AS`SetUnionPattern (-,-,-) -> SetUnionPattern2Pids(pat),
+      mk_AS`SeqEnumPattern (-,-)    -> SeqEnumPattern2Pids(pat),
+      mk_AS`SeqConcPattern (-,-,-)  -> SeqConcPattern2Pids(pat),
+      mk_AS`MapletPattern (-,-,-)   -> MapletPattern2Pids(pat),
+      mk_AS`MapEnumPattern (-,-)    -> MapEnumPattern2Pids(pat),
+      mk_AS`MapMergePattern (-,-,-) -> MapMergePattern2Pids(pat),
+      mk_AS`RecordPattern (-,-,-)   -> RecordPattern2Pids(pat),
+      mk_AS`TuplePattern (-,-)      -> TuplePattern2Pids(pat),
+#ifdef VDMPP
+      mk_AS`ObjectPattern (-,-,-)   -> ObjectPattern2Pids(pat),
+      mk_AS`FieldPattern (-,-,-)    -> FieldPattern2Pids(pat),
+#endif VDMPP
+      others -> undefined
+    end;
+
+  PatternName2Pids: AS`PatternName -> set of AS`PatternName
+  PatternName2Pids (pat) ==
+    if pat.nm = nil then 
+      {} 
+    else 
+      {pat};
+
+  MatchVal2Pids: AS`MatchVal -> set of AS`PatternName
+  --MatchVal2Pids (mk_AS`MatchVal(val,-)) ==
+  MatchVal2Pids (mk_AS`MatchVal(-,-)) ==
+    {};
+
+  SetEnumPattern2Pids: AS`SetEnumPattern -> set of AS`PatternName
+  SetEnumPattern2Pids (mk_AS`SetEnumPattern(els,-)) ==
+    dunion {Pattern2Pids(els(i)) | i in set inds els};
+
+  SetUnionPattern2Pids: AS`SetUnionPattern -> set of AS`PatternName
+  SetUnionPattern2Pids (mk_AS`SetUnionPattern(lp,rp,-)) ==
+    Pattern2Pids(lp) union Pattern2Pids(rp);
+
+  SeqEnumPattern2Pids: AS`SeqEnumPattern -> set of AS`PatternName
+  SeqEnumPattern2Pids (mk_AS`SeqEnumPattern(els,-)) ==
+    dunion {Pattern2Pids(els(i)) | i in set inds els};
+
+  SeqConcPattern2Pids: AS`SeqConcPattern -> set of AS`PatternName
+  SeqConcPattern2Pids (mk_AS`SeqConcPattern(lp,rp,-)) ==
+    Pattern2Pids(lp) union Pattern2Pids(rp);
+
+  MapletPattern2Pids: AS`MapletPattern -> set of AS`PatternName
+  MapletPattern2Pids (mk_AS`MapletPattern(dp,rp,-)) ==
+    Pattern2Pids(dp) union Pattern2Pids(rp);
+
+  MapEnumPattern2Pids: AS`MapEnumPattern -> set of AS`PatternName
+  MapEnumPattern2Pids (mk_AS`MapEnumPattern(mls,-)) ==
+    dunion {Pattern2Pids(mls(i)) | i in set inds mls};
+
+  MapMergePattern2Pids: AS`MapMergePattern -> set of AS`PatternName
+  MapMergePattern2Pids (mk_AS`MapMergePattern(lp,rp,-)) ==
+    Pattern2Pids(lp) union  Pattern2Pids(rp);
+
+  RecordPattern2Pids: AS`RecordPattern -> set of AS`PatternName
+  RecordPattern2Pids (mk_AS`RecordPattern(-,els,-)) ==
+    dunion {Pattern2Pids(els(i)) | i in set inds els};
+
+  TuplePattern2Pids: AS`TuplePattern -> set of AS`PatternName
+  TuplePattern2Pids (mk_AS`TuplePattern(els,-)) ==
+    dunion {Pattern2Pids(els(i)) | i in set inds els};
+
+#ifdef VDMPP
+  ObjectPattern2Pids: AS`ObjectPattern -> set of AS`PatternName
+  ObjectPattern2Pids (mk_AS`ObjectPattern(-,fields,-)) ==
+    dunion {Pattern2Pids(fields(i)) | i in set inds fields};
+
+  FieldPattern2Pids: AS`FieldPattern -> set of AS`PatternName
+  FieldPattern2Pids (mk_AS`FieldPattern(-,pat,-)) ==
+    Pattern2Pids(pat);
+#endif VDMPP
+
+-- unused
+--  NameInPatternBind : AS`Name * AS`PatternBind -> bool
+--  NameInPatternBind (nm,patbind) ==
+--    cases patbind:
+--      mk_AS`SetBind(-,-,-),
+--      mk_AS`TypeBind(-,-,-) -> NameInBind(nm,patbind),
+--      others                -> NameInPattern(nm,patbind)
+--    end;
+
+  NameInPattern : AS`Name * AS`Pattern -> bool 
+  NameInPattern (nm,pat) ==
+      cases pat:
+        mk_AS`PatternName((nm),-,-)           -> true,
+        mk_AS`MatchVal(-,-)                   -> false,
+        mk_AS`SetUnionPattern (pat1,pat2,-), 
+        mk_AS`SeqConcPattern (pat1,pat2,-),
+        mk_AS`MapMergePattern (pat1,pat2,-)   -> NameInPatternSequence(nm,[pat1,pat2]),
+        mk_AS`SetEnumPattern (pats,-),    
+        mk_AS`SeqEnumPattern (pats,-),    
+        mk_AS`MapEnumPattern (pats,-),    
+        mk_AS`RecordPattern (-,pats,-),   
+        mk_AS`TuplePattern (pats,-)           -> NameInPatternSequence(nm,pats),
+        mk_AS`MapletPattern(dp,rp,-)          -> NameInPatternSequence(nm,[dp,rp]),
+        others -> false
+      end;
+
+  NameInPatternSequence: AS`Name * seq of AS`Pattern -> bool 
+  NameInPatternSequence (nm,pats) ==
+    true in set {NameInPattern(nm,pats(i)) | i in set inds pats};
+                  
+\end{vdm_al}
+
+\section{Search for name in binding}
+
+\begin{vdm_al}
+  NameInBind : AS`Name * AS`Bind  -> bool
+  NameInBind(nm,bind) ==
+    NameInPattern(nm,bind.pat);
+
+  NameInBindList : AS`Name * AS`BindList -> bool 
+  NameInBindList(nm,binds) ==
+    true in set {NameInMultBind(nm,binds(i)) | i in set inds binds};
+
+  NameInMultBind : AS`Name * AS`MultBind -> bool 
+  NameInMultBind (nm,mbind) ==
+    NameInPatternSequence(nm,mbind.pat);
+
+
+\end{vdm_al}
+
+\section{Auxiliary}
+
+\begin{vdm_al}
+
+ SetToSeq[@Elem]: set of @Elem -> seq of @Elem
+  SetToSeq(s) ==
+    if s = {} then []
+    else let x in set s in SetToSeq[@Elem](s\{x})^[x];
+end PID
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[MotGeneralNumericType]
+{rtinfo.ast}[PID]
+\end{rtinfo}
+
+
+
+
+

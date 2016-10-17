@@ -1,0 +1,274 @@
+class WiringDataMediator is subclass of Object
+operations 
+public  getWire : int  ==> [Wire]
+getWire(wireKey) == 
+( return  db.getWire(wireKey)
+) ;
+
+public  getRefDes : int  ==> [RefDes]
+getRefDes(refdesId) == 
+( return  db.getRefDes(refdesId)
+) ;
+
+public  static getMediator : () ==> [WiringDataMediator]
+getMediator() == 
+( if  mediator = nil  
+  then  
+    ( mediator := new  WiringDataMediator()
+    ) ;
+  return  mediator
+) ;
+
+public  getMate : [RefDes] ==> [RefDes]
+getMate(refdes) == 
+( return  db.getRefDesMate(refdes)
+) ;
+
+public  getWire : [Bundle] ==> map  int  to  [Wire]
+getWire(bundle) == 
+( return  db.getWire(bundle)
+) ;
+
+private  WiringDataMediator : () ==> WiringDataMediator
+WiringDataMediator() == 
+( db := Database`getDatabase();
+  refdesCompareMethod := HeapSort`decodeSortMethod(DWDSProperties`getProperty(new  String("RefDes.Default.Collating") , new  String("None")));
+  pinCompareMethod := HeapSort`decodeSortMethod(DWDSProperties`getProperty(new  String("Pin.Default.Collating") , new  String("None")));
+  wireCompareMethod := HeapSort`decodeSortMethod(DWDSProperties`getProperty(new  String("Wire.Default.Collating") , new  String("None")))
+) ;
+
+public  getAircraftSystem : int  ==> [AircraftSystem]
+getAircraftSystem(acSystemId) == 
+( return  db.getAircraftSystem(acSystemId)
+) ;
+
+public  getAllPins : [RefDes] ==> [Iterator]
+getAllPins(refdes) == 
+( dcl   pinArray : map  int  to  [String] := db.getPins(refdes);
+  let - = HeapSort`sort(pinArray , pinCompareMethod)
+  in 
+    skip ;
+  ( dcl   pinVector : [Vector] := new  Vector(pinArray.length);
+    ( dcl   i : int  := 0;
+      while  i < pinArray.length do  
+      ( let - = pinVector.addElement(pinArray(i))
+        in 
+          skip ;
+        i := i+1
+      ) 
+    ) ;
+    return  pinVector.iterator()
+  ) 
+) ;
+
+public  getWireGroup : [Wire] ==> [WireGroup]
+getWireGroup(wire) == 
+( return  db.getWireGroup(wire)
+) ;
+
+public  getAllParts : [Bundle] ==> [Iterator]
+getAllParts(bundle) == 
+( dcl   partArray : map  int  to  [Part] := db.getParts(bundle),
+        partVector : [Vector] := new  Vector(partArray.length);
+  ( dcl   i : int  := 0;
+    while  i < partArray.length do  
+    ( let - = partVector.addElement(partArray(i))
+      in 
+        skip ;
+      i := i+1
+    ) 
+  ) ;
+  return  partVector.iterator()
+) ;
+
+public  getAllParts : [RefDes] ==> [Iterator]
+getAllParts(refdes) == 
+( dcl   partArray : map  int  to  [Part] := db.getParts(refdes),
+        partVector : [Vector] := new  Vector(partArray.length);
+  ( dcl   i : int  := 0;
+    while  i < partArray.length do  
+    ( let - = partVector.addElement(partArray(i))
+      in 
+        skip ;
+      i := i+1
+    ) 
+  ) ;
+  return  partVector.iterator()
+) ;
+
+public  getAllShields : [Wire] ==> [Iterator]
+getAllShields(shieldedWire) == 
+( dcl   wireArray : map  int  to  [Wire] := db.getShieldWire(shieldedWire);
+  let - = HeapSort`sort(wireArray , wireCompareMethod)
+  in 
+    skip ;
+  ( dcl   wireVector : [Vector] := new  Vector(wireArray.length);
+    ( dcl   i : int  := 0;
+      while  i < wireArray.length do  
+      ( let - = wireVector.addElement(wireArray(i))
+        in 
+          skip ;
+        i := i+1
+      ) 
+    ) ;
+    return  wireVector.iterator()
+  ) 
+) ;
+
+public  getAllWires : [RefDes] ==> [Iterator]
+getAllWires(refdes) == 
+( dcl   wireArray : map  int  to  [Wire] := db.getWire(refdes);
+  let - = HeapSort`sort(wireArray , wireCompareMethod)
+  in 
+    skip ;
+  ( dcl   wireVector : [Vector] := new  Vector(wireArray.length);
+    ( dcl   i : int  := 0;
+      while  i < wireArray.length do  
+      ( let - = wireVector.addElement(wireArray(i))
+        in 
+          skip ;
+        i := i+1
+      ) 
+    ) ;
+    return  wireVector.iterator()
+  ) 
+) ;
+
+public  hasDrawingNotes : [Part] ==> bool 
+hasDrawingNotes(part) == 
+( return  db.hasDrawingNotes(part)
+) ;
+
+public  hasDrawingNotes : [Wire] ==> bool 
+hasDrawingNotes(wire) == 
+( return  db.hasDrawingNotes(wire)
+) ;
+
+public  getAllWires : [WireGroup] ==> [Iterator]
+getAllWires(group) == 
+( dcl   wireArray : map  int  to  [Wire] := db.getWire(group);
+  let - = HeapSort`sort(wireArray , wireCompareMethod)
+  in 
+    skip ;
+  ( dcl   wireVector : [Vector] := new  Vector(wireArray.length);
+    ( dcl   i : int  := 0;
+      while  i < wireArray.length do  
+      ( let - = wireVector.addElement(wireArray(i))
+        in 
+          skip ;
+        i := i+1
+      ) 
+    ) ;
+    return  wireVector.iterator()
+  ) 
+) ;
+
+public  getWireEndpoint1 : [Wire] ==> [WireEndpoint]
+getWireEndpoint1(wire) == 
+( return  db.getWireEndpoint1(wire)
+) ;
+
+public  getWireEndpoint2 : [Wire] ==> [WireEndpoint]
+getWireEndpoint2(wire) == 
+( return  db.getWireEndpoint2(wire)
+) ;
+
+private  static mergeNoteText : [Iterator] ==> [String]
+mergeNoteText(drawingNoteList) == 
+( dcl   noteText : [StringBuffer] := new  StringBuffer(1024),
+        lineSeparator : [String] := System.getProperty(new  String("line.separator"));
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  drawingNoteList.hasNext() do  
+    ( dcl   note : [DrawingNote] := drawingNoteList.next();
+      let - = noteText.append(note.noteText())
+      in 
+        skip ;
+      if  drawingNoteList.hasNext()
+      then  
+        ( let - = noteText.append(lineSeparator)
+          in 
+            skip ;
+          let - = noteText.append(lineSeparator)
+          in 
+            skip 
+        ) 
+    ) ;
+  return  noteText.toString()
+) ;
+
+public  getDrawingNotesText : [Part] ==> [String]
+getDrawingNotesText(part) == 
+( return  mergeNoteText(db.getDrawingNotes(part))
+) ;
+
+public  getDrawingNotesText : [Wire] ==> [String]
+getDrawingNotesText(wire) == 
+( return  mergeNoteText(db.getDrawingNotes(wire))
+) ;
+
+public  getWires : [RefDes] * [String] ==> map  int  to  [Wire]
+getWires(refdes, pin) == 
+( dcl   wireArray : map  int  to  [Wire] := db.getWire(refdes , pin);
+  if  wireArray <> nil  
+  then  
+    ( let - = HeapSort`sort(wireArray , wireCompareMethod)
+      in 
+        skip 
+    ) ;
+  return  wireArray
+) ;
+
+public  containsWire : [RefDes] * [Wire] ==> bool 
+containsWire(refdes, wire) == 
+( return  db.containsWire(refdes , wire)
+) ;
+
+public  containsPin : [RefDes] * [String] ==> bool 
+containsPin(refdes, pinName) == 
+( return  db.containsPin(refdes , pinName)
+) ;
+
+public  getPinPairs : [RefDes] * [String] ==> [Iterator]
+getPinPairs(refdes, pinName) == 
+( dcl   pinArray : map  int  to  [String] := db.getPinPairs(refdes , pinName),
+        pinVector : [Vector] := new  Vector(pinArray.length);
+  ( dcl   i : int  := 0;
+    while  i < pinArray.length do  
+    ( let - = pinVector.addElement(pinArray(i))
+      in 
+        skip ;
+      i := i+1
+    ) 
+  ) ;
+  return  pinVector.iterator()
+) ;
+
+public  containsWire : [RefDes] * [String] ==> bool 
+containsWire(refdes, wireName) == 
+( return  db.containsWire(refdes , wireName)
+) ;
+
+public  isFixedContactPin : [RefDes] * [String] ==> bool 
+isFixedContactPin(refdes, pinName) == 
+( return  db.isFixedContactPin(refdes , pinName)
+) ;
+
+public  getEffectivePreconditionIds : [Illustration] ==> [Set]
+getEffectivePreconditionIds(illustration) == 
+( return  db.getEffectivePreconditionIds(illustration)
+) ;
+
+instance variables 
+  private  static mediator : [WiringDataMediator] := nil  ;
+  private  db : [Database] := nil  ;
+  private  refdesCompareMethod : [Compare] := nil  ;
+  private  pinCompareMethod : [Compare] := nil  ;
+  private  wireCompareMethod : [Compare] := nil  
+  
+end  WiringDataMediator

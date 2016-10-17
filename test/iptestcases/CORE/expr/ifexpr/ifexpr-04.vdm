@@ -1,0 +1,20 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq  of ( set of nat | seq of nat | map nat to nat )  
+Test () ==
+return [ if true then {} else {1},
+         if true then [] else [1],
+         if true then { |-> } else { 1 |-> 2}]
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

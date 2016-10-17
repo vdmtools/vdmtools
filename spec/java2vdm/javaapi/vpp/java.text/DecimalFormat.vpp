@@ -1,0 +1,161 @@
+class JavaTextDecimalFormat is subclass of JavaTextNumberFormat
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaTextDecimalFormat" , <CLASS> , false  )
+instance variables 
+  static public currentSerialVersion : int := 2;
+  static public DOUBLE_INTEGER_DIGITS : int := 309;
+  static public DOUBLE_FRACTION_DIGITS : int := 340;
+  static serialVersionUID : int := 0
+operations 
+public  clone : () ==> JavaLangObject
+clone() == 
+is not yet specified ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  hashCode : () ==> int 
+hashCode() == 
+is not yet specified ;
+
+public  toPattern : () ==> JavaLangString
+toPattern() == 
+is not yet specified ;
+
+public  JavaTextDecimalFormat : () ==> JavaTextDecimalFormat
+JavaTextDecimalFormat() == 
+( skip 
+) ;
+
+public  getMultiplier : () ==> int 
+getMultiplier() == 
+is not yet specified ;
+
+public  equals : JavaLangObject ==> bool 
+equals(obj) == 
+is not yet specified ;
+
+public  setMultiplier : int  ==> ()
+setMultiplier(newValue) == 
+is not yet specified ;
+
+public  getGroupingSize : () ==> int 
+getGroupingSize() == 
+is not yet specified ;
+
+public  setGroupingSize : int  ==> ()
+setGroupingSize(newValue) == 
+is not yet specified ;
+
+public  getNegativePrefix : () ==> JavaLangString
+getNegativePrefix() == 
+is not yet specified ;
+
+public  getNegativeSuffix : () ==> JavaLangString
+getNegativeSuffix() == 
+is not yet specified ;
+
+public  getPositivePrefix : () ==> JavaLangString
+getPositivePrefix() == 
+is not yet specified ;
+
+public  getPositiveSuffix : () ==> JavaLangString
+getPositiveSuffix() == 
+is not yet specified ;
+
+public  JavaTextDecimalFormat : <NIL> ==> JavaTextDecimalFormat
+JavaTextDecimalFormat(-) == 
+isNil := true  ;
+
+public  toLocalizedPattern : () ==> JavaLangString
+toLocalizedPattern() == 
+is not yet specified ;
+
+public  applyPattern : JavaLangString ==> ()
+applyPattern(pattern) == 
+  skip;
+--  applyPattern( pattern, false );
+
+public  JavaTextDecimalFormat : JavaLangString ==> JavaTextDecimalFormat
+JavaTextDecimalFormat(pattern) == 
+( skip 
+) ;
+
+public  getDecimalFormatSymbols : () ==> JavaTextDecimalFormatSymbols
+getDecimalFormatSymbols() == 
+is not yet specified ;
+
+public  setMaximumIntegerDigits : int  ==> ()
+setMaximumIntegerDigits(newValue) == 
+is not yet specified ;
+
+public  setMinimumIntegerDigits : int  ==> ()
+setMinimumIntegerDigits(newValue) == 
+is not yet specified ;
+
+public  setMaximumFractionDigits : int  ==> ()
+setMaximumFractionDigits(newValue) == 
+is not yet specified ;
+
+public  setMinimumFractionDigits : int  ==> ()
+setMinimumFractionDigits(newValue) == 
+is not yet specified ;
+
+public  setNegativePrefix : JavaLangString ==> ()
+setNegativePrefix(newValue) == 
+is not yet specified ;
+
+public  setNegativeSuffix : JavaLangString ==> ()
+setNegativeSuffix(newValue) == 
+is not yet specified ;
+
+public  setPositivePrefix : JavaLangString ==> ()
+setPositivePrefix(newValue) == 
+is not yet specified ;
+
+public  setPositiveSuffix : JavaLangString ==> ()
+setPositiveSuffix(newValue) == 
+is not yet specified ;
+
+public  applyLocalizedPattern : JavaLangString ==> ()
+applyLocalizedPattern(pattern) == 
+is not yet specified ;
+
+public  isDecimalSeparatorAlwaysShown : () ==> bool 
+isDecimalSeparatorAlwaysShown() == 
+is not yet specified ;
+
+public  parse : JavaLangString * JavaTextParsePosition ==> JavaLangNumber
+parse(text, parsePosition) == 
+is not yet specified ;
+
+public  setDecimalSeparatorAlwaysShown : bool  ==> ()
+setDecimalSeparatorAlwaysShown(newValue) == 
+is not yet specified ;
+
+--public  format : int  * JavaLangStringBuffer * JavaTextFieldPosition ==> JavaLangStringBuffer
+--format(number, result, fieldPosition) == 
+--is not yet specified ;
+
+public  format'' : real  * JavaLangStringBuffer * JavaTextFieldPosition ==> JavaLangStringBuffer
+format''(num, result, fieldPosition) == 
+  return
+    let n=
+      if is_int(num)
+      then num
+      else floor(num)
+    in
+      new JavaLangStringBuffer(new JavaLangInteger(n).toString());
+
+public  JavaTextDecimalFormat : JavaLangString * JavaTextDecimalFormatSymbols ==> JavaTextDecimalFormat
+JavaTextDecimalFormat(pattern, symbols) == 
+( skip 
+) ;
+
+public  setDecimalFormatSymbols : JavaTextDecimalFormatSymbols ==> ()
+setDecimalFormatSymbols(newSymbols) == 
+is not yet specified ;
+
+
+end  JavaTextDecimalFormat

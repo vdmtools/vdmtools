@@ -1,0 +1,23 @@
+functions
+
+MUnion: (map nat to nat) * (map nat to nat) -> map nat to nat
+MUnion(m1,m2) ==
+  m1 munion m2
+pre forall a in set dom m1 inter dom m2 & m1(a) = m2(a)
+
+--PO1
+--(forall m1 : (map nat to nat), m2 : (map nat to nat) &
+--   (forall a in set dom (m1) inter dom (m2) &
+--      m1(a) = m2(a)) =>
+--      (forall id_1 in set dom (m1), id_2 in set dom (m2) &
+--          id_1 = id_2 => m1(id_1) = m2(id_2)))
+
+--PO2
+-- (forall m1 : (map nat to nat), m2 : (map nat to nat) &
+--    (forall a in set dom (m1) inter dom (m2) &
+--       a in set dom (m1)))
+
+--PO3
+-- (forall m1 : (map nat to nat), m2 : (map nat to nat) &
+--    (forall a in set dom (m1) inter dom (m2) &
+--       a in set dom (m2)))

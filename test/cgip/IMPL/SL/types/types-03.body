@@ -1,0 +1,25 @@
+functions
+
+Op: E -> nat
+Op(Parm) ==
+
+        let mk_(a,b) : E = Parm in a+b
+
+end B
+
+module A
+imports 
+        from B all
+
+definitions
+
+operations
+
+Test: () ==> nat
+Test() ==
+        (dcl Tmp : B`E := mk_(10,10);
+
+        return B`Op(Tmp)
+        )
+
+end A

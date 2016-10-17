@@ -1,0 +1,2 @@
+Is not compilable. This is due to a bug (#296) in type checker. The spec is
+not type correct, but the type checker does not catch the error.

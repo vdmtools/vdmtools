@@ -1,0 +1,48 @@
+class A
+
+operations
+public Test : () ==> int | seq of int | <OK>
+Test() ==
+  trap n:nat with if n = 7
+                  then return <OK>
+                  else exit n
+  in
+    Example();
+
+DoCommand: () ==> seq of int
+DoCommand() ==
+( dcl l : seq of nat := [];
+  always TestSeq(l) in
+  ( l := SetToSeq({-2,...,8});
+    return l )
+);
+
+SetToSeq: set of int ==> seq of int
+SetToSeq(s) ==
+  if s = {} then
+    exit <ERR>
+  else if s = {-99}
+  then exit mk_(1,1)
+  else 
+    let e in set s in 
+      return [e] ^ SetToSeq(s \ {e});
+
+TestSeq: seq of int ==> seq of int
+TestSeq(l) ==
+  if l = [] then
+    exit <ERR>
+  else
+    return l;
+
+Example: () ==> int | seq of int
+Example() ==
+  tixe { 
+--    e:<ERR> |-> return 7, -- exit 7, -- Endless loop
+    e:<ERR> |-> exit 7,
+    t : int * int |-> let mk_(t1, t2) = t 
+                      in if t1 = t2
+                         then return t1
+                         else exit t2
+  } in DoCommand()
+
+end A

@@ -1,0 +1,16 @@
+-- Test case which checks that overlapping types in operation parameters 
+-- are detected
+
+class A
+
+operations
+
+op : real ==> ()
+op(-) ==
+  skip;
+
+op : nat ==> ()
+op(-) ==
+  skip;
+
+end A

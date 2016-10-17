@@ -1,0 +1,21 @@
+class MyException is subclass of JavaLangException
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("MyException" , <CLASS> , false  )
+operations 
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  MyException : <NIL> ==> MyException
+MyException(-) == 
+isNil := true  ;
+
+public  MyException : JavaLangString ==> MyException
+MyException(str) == 
+( let - = JavaLangException(str)
+  in 
+    skip 
+) ;
+
+
+end  MyException

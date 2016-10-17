@@ -1,0 +1,63 @@
+class A
+
+instance variables 
+
+public  i    : nat;
+public  j    : nat;
+public  c    : char;
+public  d    : char;
+public  s  : seq of (nat | char)
+
+operations
+
+
+public  m1: nat * nat ==> nat * nat
+  m1(i,j) ==
+    is subclass responsibility;
+
+public  m2: char * char ==> char * char
+  m2(ch1, ch2) ==
+    is subclass responsibility;
+
+public  m3: () ==> ()
+  m3() ==
+    is subclass responsibility
+
+end A   
+
+class B is subclass of A
+
+operations
+
+public  m1: nat * nat ==> nat * nat
+  m1(i,j) ==
+  ( A`i := i;
+    A`j := j;
+    return mk_(A`i,A`j)
+  );
+
+public   m2: char * char ==> char * char 
+  m2(ch1, ch2) ==
+  ( c := ch1;
+    d := ch2;
+    return mk_(c,d)
+  );
+
+
+public   m3: () ==> ()
+  m3() ==
+    s := [i,j,c,d];
+
+
+  public Test : () ==> seq of (nat | char)
+  Test() ==
+  ( dcl res1 : nat * nat,
+        res2 : char * char;
+    res1 := self.m1(1,2);
+    res2 := self.m2('a','b');
+    self.m3();
+    let mk_(a,b) = res1,
+        mk_(ch1,ch2) = res2 in
+      return s ^ [a,b,ch1,ch2]
+  )
+end B

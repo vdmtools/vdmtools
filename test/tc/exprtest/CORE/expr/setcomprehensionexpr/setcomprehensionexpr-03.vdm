@@ -1,0 +1,13 @@
+class SetComprehensionExpr
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = {a | a ^ ([8]) in set {1,3,9}}
+  in skip;
+
+------------------------------------------------------------------------------
+end SetComprehensionExpr

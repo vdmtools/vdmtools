@@ -1,0 +1,16 @@
+class UnaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let t = true,
+      - = elems if false 
+             then t
+             else {9,8} 
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

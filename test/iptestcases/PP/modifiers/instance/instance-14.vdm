@@ -1,0 +1,27 @@
+ class A
+
+  instance variables
+
+    protected n : nat := 1;
+
+end A
+
+class C
+
+  instance variables
+
+    private n : nat := 0;
+
+end C
+
+
+class B is subclass of C
+
+  operations
+
+  public Test : () ==> nat
+    Test() ==
+      return n;
+    
+
+end B

@@ -1,0 +1,19 @@
+class A
+instance variables 
+	public iv:int := 1;
+  
+  obj2 : A;
+
+operations
+
+public static op: A ==> A
+	op(obj) == (obj.iv := 123; return obj);
+
+public Test: () ==> int * int
+Test() == 
+let obj = new A() in
+ (obj.iv := 456; 
+  obj2 := op(obj); 
+  return mk_(obj.iv,obj2.iv))
+
+end A

@@ -1,0 +1,191 @@
+Extern_References DEFINITIONS ::= BEGIN
+{1, "/opt/verilog/tools/default.sys"}
+END
+
+Entities_Definitions DEFINITIONS ::= BEGIN
+base ::= SEQUENCE OF {
+	SEQUENCE {
+		items_count integer,
+		setup boolean,
+		page_width real,
+		page_heigth real,
+		no_frame boolean,
+		portrait boolean,
+		margin real,
+		version string
+	}
+}
+domain ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string
+	}
+}
+type ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		pixmap string,
+		message string,
+		extension string
+	}
+}
+system ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		path string,
+		author string,
+		version string,
+		type oid,
+		domain SEQUENCE OF oid,
+		father oid
+	}
+}
+description ::= SEQUENCE OF {
+	SEQUENCE {
+		identity oid,
+		name string,
+		path string,
+		author string,
+		version string,
+		type oid,
+		domain SEQUENCE OF oid,
+		father oid
+	}
+}
+note ::= SEQUENCE OF {
+	SEQUENCE {
+		entity oid,
+		name string,
+		content string
+	}
+}
+base ::= {
+{353, f, 0, 0, f, f, 0, "
+%W%
+"}
+}
+domain ::= {
+{"346", "Documentation"},
+{"347", "Demo"}
+}
+system ::= {
+{"10", "VenusDemo", "", "", "", "1:30", NULL, NULL},
+{"11", "Data", "", "", "", "1:26", {"347", "1:5"}, "10"},
+{"12", "InitialSettings", "", "", "", "1:30", {"347"}, "10"},
+{"14", "Documentation", "", "", "", "1:30", {"346"}, "10"},
+{"16", "bin", "", "", "", "1:30", {"347"}, "10"},
+{"17", "hpux", "", "", "", "1:30", {"347"}, "16"},
+{"18", "sun4", "", "", "", "1:30", {"347"}, "16"},
+{"19", "lib", "", "", "", "1:30", {"347"}, "10"},
+{"20", "tcl", "", "", "", "1:30", NULL, "19"},
+{"21", "tk", "", "", "", "1:30", NULL, "19"},
+{"22", "demos", "", "", "", "1:30", NULL, "21"},
+{"23", "images", "", "", "", "1:30", NULL, "22"}
+}
+description ::= {
+{"26", "", "/home/henrik/afrodite/doc/venus/VenusDemo/README", "", "", "1:11", {"347"}, "10"},
+{"27", "", "/home/henrik/afrodite/doc/venus/VenusDemo/Data/eiffeltower.ob", "", "", "1:11", {"1:5"}, "11"},
+{"28", "", "~/afrodite/doc/venus/VenusDemo/Data/kl355.ob", "", "", "1:11", {"1:5"}, "11"},
+{"29", "", "/home/henrik/afrodite/doc/venus/VenusDemo/Data/orly.za", "", "", "1:11", {"1:4"}, "11"},
+{"30", "", "/home/henrik/afrodite/doc/venus/VenusDemo/Data/kl100.fl", "", "", "1:11", {"1:5"}, "11"},
+{"31", "", "/home/henrik/afrodite/doc/venus/VenusDemo/Data/kl200.fl", "", "", "1:11", {"1:5"}, "11"},
+{"32", "", "/home/henrik/afrodite/doc/venus/VenusDemo/Data/kl300.fl", "", "", "1:11", {"1:5"}, "11"},
+{"33", "", "/home/henrik/afrodite/doc/venus/VenusDemo/Data/kl355.fl", "", "", "1:11", {"1:5"}, "11"},
+{"34", "", "/home/henrik/afrodite/doc/venus/VenusDemo/Data/kl400.fl", "", "", "1:11", {"347", "1:5"}, "11"},
+{"35", "", "/home/henrik/afrodite/doc/venus/VenusDemo/Data/kl500.fl", "", "", "1:11", {"1:5"}, "11"},
+{"36", "", "/home/henrik/afrodite/doc/venus/VenusDemo/Data/descending.fl", "", "", "1:11", {"1:5"}, "11"},
+{"37", "", "/home/henrik/afrodite/doc/venus/VenusDemo/Data/diagonal_up.fl", "", "", "1:11", {"1:5"}, "11"},
+{"38", "", "/home/henrik/afrodite/doc/venus/VenusDemo/InitialSettings/omt_vdm_templates.cd", "", "", "1:7", NULL, "12"},
+{"39", "", "/home/henrik/afrodite/doc/venus/VenusDemo/InitialSettings/Lov", "", "", "1:8", NULL, "12"},
+{"40", "", "MSAW_Prototype.cd", "", "", "1:7", NULL, "12"},
+{"148", "", "/home/henrik/afrodite/doc/venus/VenusDemo/Makefile", "", "", "1:11", {"347"}, "10"},
+{"149", "", "/home/henrik/afrodite/doc/venus/VenusDemo/Documentation/DemoScript.ps", "", "", "1:14", {"346"}, "14"},
+{"150", "", "/home/henrik/afrodite/doc/venus/VenusDemo/Documentation/VPPManual.ps", "", "", "1:14", {"346"}, "14"},
+{"151", "", "/home/henrik/afrodite/doc/venus/VenusDemo/Documentation/CouplingModuleManual.ps", "", "", "1:14", {"346"}, "14"},
+{"152", "", "~/afrodite/doc/venus/VenusDemo/Documentation/CodeGeneratorManual.ps", "", "", "1:14", {"346"}, "14"},
+{"153", "", "/home/henrik/afrodite/doc/venus/VenusDemo/Documentation/MSAWDescription.ps", "", "", "1:14", {"346"}, "14"},
+{"154", "", "/home/henrik/afrodite/doc/venus/VenusDemo/Documentation/SlideAnnotations.ps", "", "", "1:14", {"346"}, "14"},
+{"155", "", "/home/henrik/afrodite/doc/venus/VenusDemo/Documentation/VenusSlides.ps", "", "", "1:14", {"346"}, "14"},
+{"264", "", "/home/henrik/afrodite/doc/venus/VenusDemo/bin/hpux/MSAW", "", "", "1:33", NULL, "17"},
+{"265", "", "/home/henrik/afrodite/doc/venus/VenusDemo/bin/hpux/wish", "", "", "1:33", NULL, "17"},
+{"266", "", "/home/henrik/afrodite/doc/venus/VenusDemo/bin/sun4/wish", "", "", "1:33", NULL, "18"},
+{"267", "", "/home/henrik/afrodite/doc/venus/VenusDemo/bin/sun4/MSAW", "", "", "1:33", NULL, "18"},
+{"268", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tcl/init.tcl", "", "", "1:8", NULL, "20"},
+{"269", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tcl/parray.tcl", "", "", "1:8", NULL, "20"},
+{"270", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tcl/tclIndex", "", "", "1:8", NULL, "20"},
+{"271", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/button.tcl", "", "", "1:8", NULL, "21"},
+{"272", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/dialog.tcl", "", "", "1:8", NULL, "21"},
+{"273", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/entry.tcl", "", "", "1:8", NULL, "21"},
+{"274", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/focus.tcl", "", "", "1:8", NULL, "21"},
+{"275", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/listbox.tcl", "", "", "1:8", NULL, "21"},
+{"276", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/menu.tcl", "", "", "1:8", NULL, "21"},
+{"277", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/obsolete.tcl", "", "", "1:8", NULL, "21"},
+{"278", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/optionMenu.tcl", "", "", "1:8", NULL, "21"},
+{"279", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/scale.tcl", "", "", "1:8", NULL, "21"},
+{"280", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/scrollbar.tcl", "", "", "1:8", NULL, "21"},
+{"281", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/tearoff.tcl", "", "", "1:8", NULL, "21"},
+{"282", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/text.tcl", "", "", "1:8", NULL, "21"},
+{"283", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/tk.tcl", "", "", "1:8", NULL, "21"},
+{"284", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/tkerror.tcl", "", "", "1:8", NULL, "21"},
+{"285", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/tclIndex", "", "", "1:8", NULL, "21"},
+{"286", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/prolog.ps", "", "", "1:8", NULL, "21"},
+{"287", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/images/face", "", "", "1:8", NULL, "23"},
+{"288", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/images/flagdown", "", "", "1:8", NULL, "23"},
+{"289", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/images/flagup", "", "", "1:8", NULL, "23"},
+{"290", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/images/grey.25", "", "", "1:8", NULL, "23"},
+{"291", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/images/grey.5", "", "", "1:8", NULL, "23"},
+{"292", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/images/letters", "", "", "1:8", NULL, "23"},
+{"293", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/images/noletters", "", "", "1:8", NULL, "23"},
+{"294", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/images/pattern", "", "", "1:8", NULL, "23"},
+{"295", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/images/teapot.ppm", "", "", "1:8", NULL, "23"},
+{"296", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/README", "", "", "1:8", NULL, "22"},
+{"297", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/browse", "", "", "1:8", NULL, "22"},
+{"298", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/hello", "", "", "1:8", NULL, "22"},
+{"299", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/ixset", "", "", "1:8", NULL, "22"},
+{"300", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/license.terms", "", "", "1:8", NULL, "22"},
+{"301", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkArrow.tcl", "", "", "1:8", NULL, "22"},
+{"302", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkBasic.tcl", "", "", "1:8", NULL, "22"},
+{"303", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkBitmaps.tcl", "", "", "1:8", NULL, "22"},
+{"304", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkButton.tcl", "", "", "1:8", NULL, "22"},
+{"305", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkCanvText.tcl", "", "", "1:8", NULL, "22"},
+{"306", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkCheck.tcl", "", "", "1:8", NULL, "22"},
+{"307", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkDialog.tcl", "", "", "1:8", NULL, "22"},
+{"308", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkEntry.tcl", "", "", "1:8", NULL, "22"},
+{"309", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkEntry2.tcl", "", "", "1:8", NULL, "22"},
+{"310", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkFloor.tcl", "", "", "1:8", NULL, "22"},
+{"311", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkForm.tcl", "", "", "1:8", NULL, "22"},
+{"312", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkHScale.tcl", "", "", "1:8", NULL, "22"},
+{"313", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkIcon.tcl", "", "", "1:8", NULL, "22"},
+{"314", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkItems.tcl", "", "", "1:8", NULL, "22"},
+{"315", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkLabel.tcl", "", "", "1:8", NULL, "22"},
+{"316", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkListbox.tcl", "", "", "1:8", NULL, "22"},
+{"317", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkListbox2.tcl", "", "", "1:8", NULL, "22"},
+{"318", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/rmt", "", "", "1:8", NULL, "22"},
+{"319", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkListbox3.tcl", "", "", "1:8", NULL, "22"},
+{"320", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkPlot.tcl", "", "", "1:8", NULL, "22"},
+{"321", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkPuzzle.tcl", "", "", "1:8", NULL, "22"},
+{"322", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkRadio.tcl", "", "", "1:8", NULL, "22"},
+{"323", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkRuler.tcl", "", "", "1:8", NULL, "22"},
+{"324", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkScroll.tcl", "", "", "1:8", NULL, "22"},
+{"325", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkSearch.tcl", "", "", "1:8", NULL, "22"},
+{"326", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkStyles.tcl", "", "", "1:8", NULL, "22"},
+{"327", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkTextBind.tcl", "", "", "1:8", NULL, "22"},
+{"328", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkTextWind.tcl", "", "", "1:8", NULL, "22"},
+{"329", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/mkVScale.tcl", "", "", "1:8", NULL, "22"},
+{"330", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/rolodex", "", "", "1:8", NULL, "22"},
+{"331", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/showVars.tcl", "", "", "1:8", NULL, "22"},
+{"332", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/square", "", "", "1:8", NULL, "22"},
+{"333", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/tclIndex", "", "", "1:8", NULL, "22"},
+{"334", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/tcolor", "", "", "1:8", NULL, "22"},
+{"335", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/timer", "", "", "1:8", NULL, "22"},
+{"336", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/tk/demos/widget", "", "", "1:8", NULL, "22"},
+{"337", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/paris.xbm", "", "", "1:36", {"1:5"}, "19"},
+{"338", "", "/home/henrik/afrodite/doc/venus/VenusDemo/lib/front", "", "", "1:11", {"1:5"}, "19"},
+{"342", "", "MSAW_Prototype.cd", "", "", "1:7", {"1:3"}, "10"},
+{"345", "", "MSAW_Prototype.sys", "", "", "1:30", {"1:3"}, "10"},
+{"351", "MAW_Prototype.cd_lib", "MSAW_Prototype.cd_lib", "", "", "1:8", {"1:3"}, "10"},
+{"353", "", "MSAW_Prototype.cd_lib", "", "", "1:8", {"1:3"}, "12"}
+}
+END

@@ -1,0 +1,61 @@
+class T2
+
+instance variables
+
+a : nat
+
+operations
+
+public Op: () ==> ()
+Op() ==
+  let - = mk_token(898888)
+  in skip;
+
+public Op: nat ==> nat
+Op(n) == return n;
+
+public Op2: () ==> ()
+Op2() == skip;
+
+public Op2: int ==> int
+Op2(n) == return n;
+
+sync
+
+per Op => #fin(Op2) > 7;
+
+per Op2 => #req(Op) > 0;
+
+end T2
+class Main
+
+instance variables
+
+public static myo : T2 := new T2();
+
+operations
+
+  public Test : () ==> nat
+  Test() ==
+       (myo.Op();
+        myo.Op();
+        myo.Op(79));
+
+thread
+
+(for i = 1 to 8 do
+   myo.Op2());
+
+end Main
+class A
+
+operations
+
+public Test: () ==> nat
+Test() ==
+  let minst = new Main()
+  in
+    (start(minst);
+     minst.Test())
+
+end A

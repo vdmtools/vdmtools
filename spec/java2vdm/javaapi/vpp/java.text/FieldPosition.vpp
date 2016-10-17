@@ -1,0 +1,74 @@
+class JavaTextFieldPosition is subclass of JavaLangObject
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaTextFieldPosition" , <CLASS> , false  )
+instance variables 
+  field : int  := 0;
+  endIndex : int  := 0;
+  beginIndex : int  := 0
+operations 
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  getField : () ==> int 
+getField() == 
+( return  field
+) ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+is not yet specified;
+--( return  J2VUTIL`BitOp(J2VUTIL`BitOp((l_4) , <OR> , (l_6)) , <OR> , endIndex)
+--);
+
+public  toString : () ==> JavaLangString
+toString() == 
+( return  J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(getClass().getName() , new  JavaLangString("[field=")) , J2VUTIL`Convert("JavaLangString" , field)) , new  JavaLangString(",beginIndex=")) , J2VUTIL`Convert("JavaLangString" , beginIndex)) , new  JavaLangString(",endIndex=")) , J2VUTIL`Convert("JavaLangString" , endIndex)) , J2VUTIL`Convert("JavaLangString" , ']'))
+) ;
+
+public  getEndIndex : () ==> int 
+getEndIndex() == 
+( return  endIndex
+) ;
+
+public  setEndIndex : int  ==> ()
+setEndIndex(ei) == 
+( endIndex := ei;
+  skip 
+) ;
+
+public  getBeginIndex : () ==> int 
+getBeginIndex() == 
+( return  beginIndex
+) ;
+
+public  JavaTextFieldPosition : int  ==> JavaTextFieldPosition
+JavaTextFieldPosition(field) == 
+( JavaTextFieldPosition`field := field
+) ;
+
+public  equals : JavaLangObject ==> bool 
+equals(obj) == 
+( if  obj.IsNil()
+  then  
+    return  false  ;
+  if  not  (isofclass  (JavaTextFieldPosition,obj))
+  then  
+    return  false  ;
+  ( dcl   other : JavaTextFieldPosition := obj;
+    return  (beginIndex = other.beginIndex and  endIndex = other.endIndex and  field = other.field)
+  ) 
+) ;
+
+public  setBeginIndex : int  ==> ()
+setBeginIndex(bi) == 
+( beginIndex := bi;
+  skip 
+) ;
+
+public  JavaTextFieldPosition : <NIL> ==> JavaTextFieldPosition
+JavaTextFieldPosition(-) == 
+isNil := true  ;
+
+
+end  JavaTextFieldPosition

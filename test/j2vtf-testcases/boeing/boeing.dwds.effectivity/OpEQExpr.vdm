@@ -1,0 +1,54 @@
+class OpEQExpr is subclass of OpBinaryExpr
+operations 
+public  OpEQExpr : () ==> OpEQExpr
+OpEQExpr() == 
+( skip 
+) ;
+
+public  getOperatorString : () ==> [String]
+getOperatorString() == 
+( return  new  String("==")
+) ;
+
+public  OpEQExpr : [Expr] * [Expr] ==> OpEQExpr
+OpEQExpr(leftExpr, rightExpr) == 
+( let - = OpBinaryExpr(leftExpr , rightExpr)
+  in 
+    skip 
+) ;
+
+public  evaluate : [ExpressionContext] ==> [Object]
+evaluate(context) == 
+( if  leftExpr = nil  
+  then  
+    ( dcl   ex : [DWDSException] := new  DWDSException();
+      let - = ex.addMessage(DWDSException`InvalidOperationException , OpEQExpr`getClass().getName()+new  String(": left Expression is null"))
+      in 
+        skip ;
+      exit  ex
+    ) ;
+  if  rightExpr = nil  
+  then  
+    ( dcl   ex : [DWDSException] := new  DWDSException();
+      let - = ex.addMessage(DWDSException`InvalidOperationException , OpEQExpr`getClass().getName()+new  String(": right Expression is null"))
+      in 
+        skip ;
+      exit  ex
+    ) ;
+  ( dcl   leftValue : [Object] := leftExpr.evaluate(context),
+          rightValue : [Object] := rightExpr.evaluate(context);
+    return  new  Boolean(leftValue.equals(rightValue))
+  ) 
+) ;
+
+public  comparisonResults : [Comparable] * [Comparable] ==> [Boolean]
+comparisonResults(leftValue, rightValue) == 
+( dcl   ex : [DWDSException] := new  DWDSException();
+  let - = ex.addMessage(DWDSException`InvalidOperationException , OpEQExpr`getClass().getName()+new  String(": invoking ComparisonResults() is invalid for this class."))
+  in 
+    skip ;
+  exit  ex
+) ;
+
+
+end  OpEQExpr

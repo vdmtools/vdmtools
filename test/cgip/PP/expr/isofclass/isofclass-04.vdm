@@ -1,0 +1,76 @@
+class B
+end B
+
+class C
+end C
+
+class D is subclass of B, C
+end D
+
+class E is subclass of C
+end E
+
+class A is subclass of D
+
+operations
+
+public Test : () ==> seq of bool
+Test() ==
+( dcl v1: A | B | int :=  new A(),
+      v2: D | E := new D (),
+      v3: B | C := new B (),
+      v4: C := new E (),
+      res: seq of bool;
+
+  res := [ 
+    isofclass(A, v1),
+    isofclass(B, v1),
+    isofclass(C, v1),
+    isofclass(D, v1),
+    isofclass(E, let v : E|A = if 1=1 then v1 else v4
+                 in v),
+
+    isofclass(A, v2),
+    isofclass(B, v2),
+    isofclass(C, v2),
+    isofclass(D, v2),
+    isofclass(E, v2),
+
+    isofclass(A, v3),
+    isofclass(B, v3),
+    isofclass(C, v3),
+    isofclass(D, v3),
+    isofclass(E, v3),
+
+    isofclass(A, v4),
+    isofclass(B, let v : (B | C) = v4 in v),
+    isofclass(C, v4),
+    isofclass(D, v4),
+    isofclass(E, v4)
+  ];
+
+  v1 := new B();
+  v4 := new C();
+  
+  res := res ^ [
+    isofclass(A, v1),
+    isofclass(B, v1),
+    isofclass(C, v1),
+    isofclass(D, v1),
+    isofclass(E, let v : C | B | E = if 1=1 then v4 else v4
+                 in v),
+
+    isofclass(A, v4),
+    isofclass(B, let v : B | C = v4 in v),
+    isofclass(C, v4),
+    isofclass(D, v4),
+    isofclass(E, v4)
+  ];
+
+
+  return res
+)
+
+end A
+
+

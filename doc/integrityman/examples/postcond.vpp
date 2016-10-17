@@ -1,0 +1,13 @@
+class A
+
+operations
+
+OpPost: nat ==> nat
+OpPost(n) ==
+  (dcl sum : nat := 0;
+   for i = 1 to n do
+     sum := sum + i;
+   return sum)
+post RESULT = n * (n+1) /2
+
+end A

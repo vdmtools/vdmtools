@@ -1,0 +1,4 @@
+req ->                 Op: A`Test  Obj: 4  Class: A  @ 2
+act ->                 Op: A`Test  Obj: 4  Class: A  @ 2
+fin ->                 Op: A`Test  Obj: 4  Class: A  @ 2
+ThreadSwapOut ->       ThreadId: 1  Obj: nil  Class: nil  @ 4

@@ -1,0 +1,243 @@
+class RefDes is subclass of Object
+operations 
+public  getId : () ==> int 
+getId() == 
+( return  refdesId
+) ;
+
+public  RefDes : int  ==> RefDes
+RefDes(refdesId) == 
+( let - = RefDes(refdesId , new  String([  ]) , new  String([  ]) , UNKNOWN)
+  in 
+    skip 
+) ;
+
+public  getMate : () ==> [RefDes]
+getMate() == 
+( return  mediator.getMate(self  )
+) ;
+
+public  getName : () ==> [String]
+getName() == 
+( return  name
+) ;
+
+public  getType : () ==> int 
+getType() == 
+( return  typeCode
+) ;
+
+public  hasAMate : () ==> bool 
+hasAMate() == 
+( return  mateId <> noMate
+) ;
+
+public  setType : int  ==> <VOID>
+setType(typeCode) == 
+( RefDes`typeCode := typeCode;
+  return  <VOID>
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( return  RefDes`getName()
+) ;
+
+public  getBranch : () ==> [String]
+getBranch() == 
+( return  branch
+) ;
+
+public  getMateId : () ==> int 
+getMateId() == 
+( return  mateId
+) ;
+
+public  getAllPins : () ==> [Iterator]
+getAllPins() == 
+( return  mediator.getAllPins(self  )
+) ;
+
+public  setMateId : int  ==> <VOID>
+setMateId(mateId) == 
+( RefDes`mateId := mateId;
+  return  <VOID>
+) ;
+
+public  displayName : () ==> [String]
+displayName() == 
+( if  RefDes`getBranch().length() = 0
+  then  
+    ( return  RefDes`getName()
+    ) 
+  else  
+    ( dcl   fullRefDesName : [StringBuffer] := new  StringBuffer(new  String("["));
+      let - = fullRefDesName.append(RefDes`getBranch())
+      in 
+        skip ;
+      let - = fullRefDesName.append(new  String("]"))
+      in 
+        skip ;
+      let - = fullRefDesName.append(RefDes`getName())
+      in 
+        skip ;
+      return  fullRefDesName.toString()
+    ) 
+) ;
+
+public  getAllParts : () ==> [Iterator]
+getAllParts() == 
+( return  mediator.getAllParts(self  )
+) ;
+
+public  getAllWires : () ==> [Iterator]
+getAllWires() == 
+( return  mediator.getAllWires(self  )
+) ;
+
+public  isDominantMate : () ==> bool 
+isDominantMate() == 
+( return  DominantMate
+) ;
+
+public  setDominantMate : bool  ==> <VOID>
+setDominantMate(IsDominantMate) == 
+( DominantMate := IsDominantMate;
+  return  <VOID>
+) ;
+
+public  setName : [String] ==> <VOID>
+setName(nameIn) == 
+( name := nameIn;
+  return  <VOID>
+) ;
+
+public  getWires : [String] ==> map  int  to  [Wire]
+getWires(connectionPoint) == 
+( return  mediator.getWires(self   , connectionPoint)
+) ;
+
+public  setBranch : [String] ==> <VOID>
+setBranch(branch_in) == 
+( branch := branch_in;
+  return  <VOID>
+) ;
+
+public  containsWire : [Wire] ==> bool 
+containsWire(wire) == 
+( return  mediator.containsWire(self   , wire)
+) ;
+
+public  containsPin : [String] ==> bool 
+containsPin(pinName) == 
+( return  mediator.containsPin(self   , pinName)
+) ;
+
+public  getPinPairs : [String] ==> [Iterator]
+getPinPairs(pinName) == 
+( return  mediator.getPinPairs(self   , pinName)
+) ;
+
+public  containsWire : [String] ==> bool 
+containsWire(wireName) == 
+( return  mediator.containsWire(self   , wireName)
+) ;
+
+public  getDiagramWires : [Vector] ==> [Vector]
+getDiagramWires(connectPins) == 
+( dcl   connectWires : [Vector] := new  Vector();
+  ( dcl   idx : int  := 0;
+    while  idx < connectPins.size() do  
+    ( trap  j2v_exception with  
+        cases  true  : 
+          (isofclass  (NullPointerException,j2v_exception)) -> 
+            ( dcl   nullPointerException : [NullPointerException] := j2v_exception;
+              skip 
+            ) ,
+          others  -> 
+            exit  j2v_exception
+        end  
+      in  
+        ( dcl   pinName : [String] := connectPins.elementAt(idx),
+                wireArray : map  int  to  [Wire] := getWires(pinName);
+          ( dcl   i : int  := 0;
+            while  i < wireArray.length do  
+            ( let - = connectWires.addElement(wireArray(i))
+              in 
+                skip ;
+              i := i+1
+            ) 
+          ) 
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  connectWires
+) ;
+
+public  static stripBranchCode : [String] ==> [String]
+stripBranchCode(nameIn) == 
+( dcl   nameOut : [String];
+  if  nameIn <> nil   and  nameIn.startsWith(new  String("["))
+  then  
+    ( dcl   bracketIdx : int  := nameIn.indexOf(']');
+      let - = Assert`that(bracketIdx >= 0)
+      in 
+        skip ;
+      nameOut := nameIn.substring(bracketIdx+1)
+    ) 
+  else  
+    ( nameOut := nameIn
+    ) ;
+  return  nameOut
+) ;
+
+public  isFixedContactPin : [String] ==> bool 
+isFixedContactPin(pinName) == 
+( return  mediator.isFixedContactPin(self   , pinName)
+) ;
+
+public  RefDes : int  * [String] * [String] * int  ==> RefDes
+RefDes(refdesId, name_in, branch_in, typeCode) == 
+( RefDes`refdesId := refdesId;
+  RefDes`name := name_in;
+  RefDes`branch := branch_in;
+  RefDes`typeCode := typeCode;
+  RefDes`mediator := WiringDataMediator`getMediator()
+) ;
+
+instance variables 
+  public  static BOOT_SPLICE : int  := -1;
+  public  static UNKNOWN : int  := 0;
+  public  static LRU_WRA : int  := 1;
+  public  static ATTENUATOR : int  := 2;
+  public  static PUMP : int  := 3;
+  public  static CIRCUIT_BREAKER : int  := 4;
+  public  static DIODE : int  := 5;
+  public  static LAMP : int  := 6;
+  public  static LIGHTNING_ARRESTER : int  := 7;
+  public  static FILTER : int  := 8;
+  public  static JACK : int  := 9;
+  public  static RELAY : int  := 10;
+  public  static SOLENOID : int  := 11;
+  public  static LOAD_CELL : int  := 12;
+  public  static TRANSDUCER : int  := 13;
+  public  static PLUG : int  := 14;
+  public  static RESISTOR : int  := 15;
+  public  static SWITCH : int  := 16;
+  public  static TRANSFORMER : int  := 17;
+  public  static TERMINAL_BOARD : int  := 18;
+  public  static SPLICE_SET : int  := 19;
+  public  static SOCKET : int  := 20;
+  public  static GROUND : int  := 21;
+  public  static WIRE_TIE : int  := 22;
+  private  static noMate : int  := -1;
+  private  refdesId : int ;
+  private  mateId : int  := noMate;
+  private  name : [String];
+  private  typeCode : int ;
+  private  branch : [String];
+  private  mediator : [WiringDataMediator];
+  private  DominantMate : bool  := false  
+  
+end  RefDes

@@ -1,0 +1,15 @@
+module ASVAL
+
+imports
+
+  from AS all,
+  from CI all,
+  from REP all
+
+
+definitions
+values
+
+ast = [];
+mk_AS`AstCI(class_l,-,-) = hd ast;
+end ASVAL

@@ -1,0 +1,27 @@
+-- This test used to check that record types (inner classes) can be
+-- correctly retained
+
+class A
+
+instance variables
+
+  i : nat
+
+operations
+
+public Test : () ==> nat
+Test() ==
+( dcl t : B3`T := mk_B3`T(1,"ab");
+  return 1
+);
+
+end A
+
+class B3
+
+types
+
+public T :: i : nat
+            j : seq of char
+
+end B3

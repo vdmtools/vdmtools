@@ -1,0 +1,44 @@
+class A
+
+instance variables
+  public r1 : real := 1;
+  public r2: real  := 2.2;
+
+
+operations
+
+  public initA: real * real ==> A
+  initA  (a,b) ==
+  ( r1 := a;
+    r2 := b;
+    return self);
+
+  public Get: () ==> seq of real
+  Get() ==
+    return [r1,r2];
+
+
+  public Set: real * real ==> ()
+  Set(v1,v2) ==
+  ( r1 := v1;
+    r2 := v2 )
+
+end A
+class B
+
+instance variables
+  s : set of A
+
+operations
+
+
+  public Test : () ==> seq of real
+  Test() ==
+  ( dcl r1  : seq of real,
+        r2  : seq of real;
+    def  a_val = new A() in
+      r1 := a_val.Get();
+    return r1;
+  )
+
+end B

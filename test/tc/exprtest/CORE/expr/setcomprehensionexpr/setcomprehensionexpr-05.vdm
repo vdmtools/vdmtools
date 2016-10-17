@@ -1,0 +1,13 @@
+class SetComprehensionExpr
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = {s1 | s1 union - in set {{},{1,7}}}
+  in skip;
+
+------------------------------------------------------------------------------
+end SetComprehensionExpr

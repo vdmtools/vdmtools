@@ -1,0 +1,45 @@
+\begin{vdm_al}
+class 食卓
+
+instance variables
+  フォーク : nat := 0;
+  客 : set of 哲学者 := {};
+  食べ終わった哲学者数 : nat := 0
+
+operations
+  public 食卓: nat ==> 食卓
+  食卓 (客数) ==
+    while フォーク < 客数 do
+      ( 客 := 客 union
+          {new 哲学者(self)};
+        フォーク := フォーク + 1 )
+    pre 客数 >= 2;
+
+  public フォークを取る: () ==> ()
+  フォークを取る () ==
+    duration (5)
+      フォーク := フォーク - 1;
+
+  public フォークを置く: () ==> ()
+  フォークを置く () ==
+    duration (5)
+      フォーク := フォーク + 1;
+
+  public 食べた: () ==> ()
+  食べた () == 食べ終わった哲学者数 := 食べ終わった哲学者数 + 1;
+
+  wait: () ==> ()
+  wait () == skip;
+
+  public 開始: () ==> ()
+  開始 () ==
+   ( startlist(客); wait() )
+
+sync
+   per フォークを取る => フォーク > 0;
+   per wait => 食べ終わった哲学者数 = card 客;
+   mutex(フォークを取る,フォークを置く);
+   mutex(食べた)
+
+end 食卓
+\end{vdm_al}

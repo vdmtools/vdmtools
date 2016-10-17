@@ -1,0 +1,3 @@
+class StringExpr is subclass of Expr
+
+end  StringExpr

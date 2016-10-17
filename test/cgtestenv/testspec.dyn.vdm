@@ -1,0 +1,64 @@
+module ZZZ
+
+imports
+  from DEBUG all,
+  from CMPL all,
+  from STKM all,
+  from INSTR all,
+  from SEM all,
+  from GLOBAL all,
+  from AS all,
+  from REP all,  
+  from CI all
+
+exports all
+
+definitions
+
+operations
+
+Interprete: AS`AstCI * AS`AstCI ==> SEM`VAL
+Interprete(mk_AS`AstCI(arg, tllci_expr, fidm_expr), 
+           mk_AS`AstCI(ast, tllci, fidm)) == 
+
+( 
+        SETTINGS`DtcOff(); -- Will be expanded by testfile
+        SETTINGS`PreOff(); -- Will be expanded by testfile
+        SETTINGS`InvOff(); -- Will be expanded by testfile
+        SETTINGS`PostOff(); -- Will be expanded by testfile
+        CI`UpdateStateSigma(tllci, fidm);
+        CI`UpdateStateSigma(tllci_expr, fidm_expr);
+
+        STKM`User_Init(ast, true); 
+        
+        let mk_(eval_state, res) = DEBUG`EvalDebug(arg, "Dummy String")
+        in (
+            cases eval_state:
+               mk_STKM`BreakPoint(),
+               mk_STKM`Interrupt() -> error,
+               mk_STKM`Success() -> return res,
+               mk_STKM`RuntimeError() -> return RTERR`GetError()
+            end;
+            
+            -- Comment out the preceding cases and comment in 
+            -- this to check if User_Init works with 'false' argument.
+            -- STKM`User_Init(ast, false); 
+            -- 
+            -- let mk_(eval_state2, res2) = DEBUG`EvalDebug(arg, "Dummy String")
+            -- in (
+            --    if (eval_state <> eval_state2 or
+            --        eval_state2 = mk_STKM`Success() and res <> res2) then
+            --    BadState`Error(); -- unknown operation
+            -- 
+            --    cases eval_state2:
+            --      mk_STKM`BreakPoint(),
+            --      mk_STKM`Interrupt() -> error,
+            --      mk_STKM`Success() -> return res,
+            --      mk_STKM`RuntimeError() -> return RTERR`GetError()
+            --    end;
+            -- )
+        ); 
+);
+
+
+end ZZZ

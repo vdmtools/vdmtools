@@ -1,0 +1,237 @@
+%!PS-Adobe-2.0 EPSF-2.0
+%%Title: /tmp/xfig-fig017928
+%%Creator: fig2dev Version 2.1.8 Patchlevel 0
+%%CreationDate: Thu Aug 10 11:40:36 1995
+%%For: kmh@idsun1 (Kirsten Mark Hansen,,,,,950401,)
+%%Orientation: Portrait
+%%BoundingBox: 0 0 369 133
+%%Pages: 0
+%%EndComments
+/$F2psDict 200 dict def 
+$F2psDict begin
+$F2psDict /mtrx matrix put
+/l {lineto} bind def
+/m {moveto} bind def
+/s {stroke} bind def
+/n {newpath} bind def
+/gs {gsave} bind def
+/gr {grestore} bind def
+/clp {closepath} bind def
+/graycol {dup dup currentrgbcolor 4 -2 roll mul 4 -2 roll mul
+4 -2 roll mul setrgbcolor} bind def
+/col-1 {} def
+/col0 {0 0 0 setrgbcolor} bind def
+/col1 {0 0 1 setrgbcolor} bind def
+/col2 {0 1 0 setrgbcolor} bind def
+/col3 {0 1 1 setrgbcolor} bind def
+/col4 {1 0 0 setrgbcolor} bind def
+/col5 {1 0 1 setrgbcolor} bind def
+/col6 {1 1 0 setrgbcolor} bind def
+/col7 {1 1 1 setrgbcolor} bind def
+/col8 {.68 .85 .9 setrgbcolor} bind def
+/col9 {0 .39 0 setrgbcolor} bind def
+/col10 {.65 .17 .17 setrgbcolor} bind def
+/col11 {1 .51 0 setrgbcolor} bind def
+/col12 {.63 .13 .94 setrgbcolor} bind def
+/col13 {1 .75 .8 setrgbcolor} bind def
+/col14 {.7 .13 .13 setrgbcolor} bind def
+/col15 {1 .84 0 setrgbcolor} bind def
+ /DrawEllipse {
+	/endangle exch def
+	/startangle exch def
+	/yrad exch def
+	/xrad exch def
+	/y exch def
+	/x exch def
+	/savematrix mtrx currentmatrix def
+	x y translate xrad yrad scale 0 0 1 startangle endangle arc
+	savematrix setmatrix
+	} def
+
+	end
+/$F2psBegin {$F2psDict begin /$F2psEnteredState save def} def
+/$F2psEnd {$F2psEnteredState restore end} def
+%%EndProlog
+
+$F2psBegin
+0 setlinecap 0 setlinejoin
+-13.0 238.0 translate 0.900 -0.900 scale
+0.500 setlinewidth
+% Polyline
+n 99 159 m 339 159 l gs col-1 s gr
+% Polyline
+n 339 154 m 339 164 l gs col-1 s gr
+% Polyline
+n 299 154 m 299 164 l gs col-1 s gr
+% Polyline
+n 259 154 m 259 164 l gs col-1 s gr
+% Polyline
+n 219 154 m 219 164 l gs col-1 s gr
+% Polyline
+n 179 154 m 179 164 l gs col-1 s gr
+% Polyline
+n 139 154 m 139 164 l gs col-1 s gr
+% Polyline
+n 99 154 m 99 164 l gs col-1 s gr
+% Polyline
+n 99 219 m 339 219 l gs col-1 s gr
+% Polyline
+n 339 214 m 339 224 l gs col-1 s gr
+% Polyline
+n 299 214 m 299 224 l gs col-1 s gr
+% Polyline
+n 259 214 m 259 224 l gs col-1 s gr
+% Polyline
+n 219 214 m 219 224 l gs col-1 s gr
+% Polyline
+n 179 214 m 179 224 l gs col-1 s gr
+% Polyline
+n 139 214 m 139 224 l gs col-1 s gr
+% Polyline
+n 99 214 m 99 224 l gs col-1 s gr
+% Polyline
+n 219 234 m 219 244 l gs col-1 s gr
+% Polyline
+n 219 239 m 239 239 l gs col-1 s gr
+% Polyline
+n 246 234 m 239 234 239 237 7 arcto 4 {pop} repeat 239 244 257 244 7 arcto 4 {pop} repeat 264 244 264 241 7 arcto 4 {pop} repeat 264 234 246 234 7 arcto 4 {pop} repeat clp gs col-1 s gr
+% Ellipse
+n 254 239 2 2 0 360 DrawEllipse gs 0.00 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 379 234 m 379 244 l gs col-1 s gr
+% Polyline
+n 379 239 m 399 239 l gs col-1 s gr
+% Polyline
+n 406 234 m 399 234 399 237 7 arcto 4 {pop} repeat 399 244 417 244 7 arcto 4 {pop} repeat 424 244 424 241 7 arcto 4 {pop} repeat 424 234 406 234 7 arcto 4 {pop} repeat clp gs col-1 s gr
+% Ellipse
+n 414 239 2 2 0 360 DrawEllipse gs 0.00 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 339 174 m 339 184 l gs col-1 s gr
+% Polyline
+n 339 179 m 359 179 l gs col-1 s gr
+% Polyline
+n 366 174 m 359 174 359 177 7 arcto 4 {pop} repeat 359 184 377 184 7 arcto 4 {pop} repeat 384 184 384 181 7 arcto 4 {pop} repeat 384 174 366 174 7 arcto 4 {pop} repeat clp gs col-1 s gr
+% Ellipse
+n 374 179 2 2 0 360 DrawEllipse gs 0.00 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 59 194 m 59 204 l gs col-1 s gr
+% Polyline
+n 59 199 m 39 199 l gs col-1 s gr
+% Polyline
+n 21 194 m 14 194 14 197 7 arcto 4 {pop} repeat 14 204 32 204 7 arcto 4 {pop} repeat 39 204 39 201 7 arcto 4 {pop} repeat 39 194 21 194 7 arcto 4 {pop} repeat clp gs col-1 s gr
+% Ellipse
+n 24 199 2 2 0 360 DrawEllipse gs 0.00 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 99 134 m 99 144 l gs col-1 s gr
+% Polyline
+n 99 139 m 79 139 l gs col-1 s gr
+% Polyline
+n 61 134 m 54 134 54 137 7 arcto 4 {pop} repeat 54 144 72 144 7 arcto 4 {pop} repeat 79 144 79 141 7 arcto 4 {pop} repeat 79 134 61 134 7 arcto 4 {pop} repeat clp gs col-1 s gr
+% Ellipse
+n 64 139 2 2 0 360 DrawEllipse gs 0.00 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 59 219 m 99 219 l gs col-1 s gr
+% Polyline
+n 59 214 m 59 224 l gs col-1 s gr
+% Polyline
+n 239 159 m 319 219 l gs col-1 s gr
+% Polyline
+n 339 219 m 379 219 l gs col-1 s gr
+% Polyline
+n 379 214 m 379 224 l gs col-1 s gr
+n 164 179 m 164 179 l gs col-1 s gr
+% Polyline
+n 164 179 m 169 179 l gs col-1 s gr
+2.000 setlinewidth
+% Polyline
+n 99 219 m 139 219 l gs col-1 s gr
+% Polyline
+n 179 159 m 219 159 l gs col-1 s gr
+0.500 setlinewidth
+n 246.600 155.800 m 239.000 159.000 l 244.200 152.600 l gs 2 setlinejoin col-1 s gr
+% Polyline
+n 239 159 m 279 129 l gs col-1 s gr
+% Polyline
+n 214 209 m 214 219 l  189 219 l  189 209 l  clp gs 0.65 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 194 149 m 194 159 l  169 159 l  169 149 l  clp gs 0.65 setgray fill gr
+gs col-1 s gr
+% Polyline
+n 199 159 m 119 219 l gs col-1 s gr
+	1 setlinecap [1 3.000000] 3.000000 setdash
+% Polyline
+n 59 219 m 59 209 l  139 199 l  159 199 l  219 199 l  219 229 l 
+ 159 249 l  59 249 l  59 244 l  clp gs col-1 s gr
+	[] 0 setdash 0 setlinecap
+% Polyline
+n 154 189 m 164 189 l gs col-1 s gr
+% Polyline
+n 274 189 m 284 189 l gs col-1 s gr
+	1 setlinecap [1 3.000000] 3.000000 setdash
+% Polyline
+n 99 159 m 99 149 l  124 139 l  339 139 l  339 169 l  329 179 l 
+ 339 189 l  379 214 l  379 229 l  364 239 l  299 239 l 
+ 299 209 l  254 179 l  99 179 l  clp gs col-1 s gr
+	[] 0 setdash 0 setlinecap
+n 289 199 m 289 199 l gs col-1 s gr
+2.000 setlinewidth
+% Polyline
+n 279 189 m 319 219 l  339 219 l gs col-1 s gr
+/Times-Roman findfont 11.00 scalefont setfont
+119 154 m 
+gs 1 -1 scale (1) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+159 154 m 
+gs 1 -1 scale (2) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+239 154 m 
+gs 1 -1 scale (4) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+279 154 m 
+gs 1 -1 scale (5) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+319 154 m 
+gs 1 -1 scale (6) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+79 234 m 
+gs 1 -1 scale (7) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+119 234 m 
+gs 1 -1 scale (8) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+159 234 m 
+gs 1 -1 scale (9) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+199 234 m 
+gs 1 -1 scale (10) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+239 234 m 
+gs 1 -1 scale (11) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+279 234 m 
+gs 1 -1 scale (12) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+319 234 m 
+gs 1 -1 scale (13) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+359 234 m 
+gs 1 -1 scale (14) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+284 129 m 
+gs 1 -1 scale (Manual operation) col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+109 264 m 
+gs 1 -1 scale (Time area) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+189 134 m 
+gs 1 -1 scale (Shunt area) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+209 154 m 
+gs 1 -1 scale (3) dup stringwidth pop 2 div neg 0 rmoveto  col-1 show gr
+$F2psEnd

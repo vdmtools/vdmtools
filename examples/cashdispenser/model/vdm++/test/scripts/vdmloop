@@ -1,0 +1,19 @@
+#!/bin/sh   
+
+## Runs a collection of VDM++ test examples for the sorting example.
+MODELDIR=../..
+TESTDIR=..
+SPEC="$MODELDIR/Account.rtf $MODELDIR/Card.rtf $MODELDIR/CardHolder.rtf \
+      $MODELDIR/CentralResource.rtf $MODELDIR/Clock.rtf \
+      $MODELDIR/Letter.rtf $MODELDIR/Letterbox.rtf $MODELDIR/Till.rtf 
+      $TESTDIR/Event.rtf $TESTDIR/GetBalance.rtf \
+      $TESTDIR/InsertCard.rtf $TESTDIR/ReturnCard.rtf \
+      $TESTDIR/SendStatement.rtf $TESTDIR/System.rtf \
+      $TESTDIR/Test.rtf $TESTDIR/Validate.rtf $TESTDIR/Withdrawal.rtf \
+      $TESTDIR/IllegalCard.rtf"
+
+## Generate the test coverage file vdm.tc
+vppde -p -R vdm.tc $SPEC
+
+## Find all argument files and run them on the specification.
+find . -type f -name \*.arg -exec vdmtest {} \;

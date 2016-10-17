@@ -1,0 +1,16 @@
+class A
+
+instance variables
+
+  n : nat := 0;
+
+operations
+
+public Test : () ==> nat
+Test() ==
+(duration(10)  n := 1;
+ n := n - 1;
+ duration(50)  n := n + 1;
+ return n)
+
+end A

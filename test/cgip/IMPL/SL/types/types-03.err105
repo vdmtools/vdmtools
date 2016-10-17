@@ -1,0 +1,6 @@
+Dynamic type check error expected:
+
+types-01.arg, l. 49, c. 14:
+  Run-Time Error 98: Incompatible types found in dynamic type check
+  actual value: mk_B_( 10,20 )
+  expected type: B`B_

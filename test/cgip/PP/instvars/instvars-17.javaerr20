@@ -1,0 +1,4 @@
+Type checking G ...
+instvars-17.arg, l. 26, c. 5:
+  Error : Unknown identifier a
+instvars-17.arg, l. 26, c. 7:

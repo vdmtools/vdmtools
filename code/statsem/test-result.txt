@@ -1,0 +1,5 @@
+This file describes which test cases did not work last time all test
+cases were checked.
+
+On December 9th, 1997 this file was moved to be maintained within the
+statsem test cases.

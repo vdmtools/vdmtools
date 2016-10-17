@@ -1,0 +1,217 @@
+class JavaIoOutputStreamWriter is subclass of JavaIoWriter
+--values 
+--  CLASS : JavaLangClass = new  JavaLangClass("JavaIoOutputStreamWriter" , <CLASS> , false  )
+instance variables 
+  private  ctb : CharToByteConverter;
+  private  out : JavaIoOutputStream;
+  private  static defaultByteBufferSize : int  := 80;
+  private  bb : map  int  to  int ;
+  private  nextByte : int  := 0;
+  private  nBytes : int  := 0
+operations 
+public  close : () ==> ()
+close() == 
+( ( --if  out.IsNil()
+    --then  
+    --  return  ;
+    flush();
+    out.close();
+--    out := new  JavaIoOutputStream(<NIL>);  Can not instantiate an abstract class!
+    bb := {|->};
+    ctb := new  CharToByteConverter(<NIL>) 
+  ) ;
+  skip 
+) ;
+
+public  flush : () ==> ()
+flush() == 
+( ( flushBuffer();
+    out.flush()
+  ) ;
+  skip 
+) ;
+
+public  write : int  ==> ()
+write(c) == 
+( dcl   cbuf : map  int  to  char  := {l_3 |-> ' '|l_3 in set  {0,...,1-1}};
+--  cbuf := cbuf ++ {0 |-> J2VUTIL`Convert("char" , c)};
+  cbuf := cbuf ++ {0 |-> (new JavaLangInteger(c)).charValue()};
+  writeICMIntInt(cbuf , 0 , 1);
+) ;
+
+--public  getClass : () ==> JavaLangClass
+--getClass() == 
+--return  CLASS;
+
+private  ensureOpen : () ==> ()
+ensureOpen() == 
+( --if  out.IsNil()
+  --then  
+  --  exit  new  JavaIoIOException(new  JavaLangString("Stream closed"));
+  skip
+) ;
+
+public flushBuffer : () ==> ()
+flushBuffer() == 
+( ( ensureOpen();
+--    trap  j2v_break with  
+--      cases  true  : 
+--        (isofclass  (J2V_Break,j2v_break)) -> 
+--          skip ,
+--        others  -> 
+--          exit  j2v_break
+--      end  
+--    in  
+--      while  true   do  
+--      ( trap  j2v_exception with  
+--          cases  true  : 
+--            (isofclass  (JavaLangConversionBufferFullException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+--              ( dcl   x : JavaLangConversionBufferFullException := j2v_exception;
+--                nextByte := ctb.nextByteIndex()
+--              ) ,
+--            others  -> 
+--              exit  j2v_exception
+--          end  
+--        in  
+--          ( def l_7 = nextByte
+--            in nextByte := l_7+ctb.flushAny(bb , nextByte , nBytes)
+--          ) ;
+--        if  nextByte = 0
+--        then  
+--          exit  new  J2V_Break();
+--        if  nextByte > 0
+--        then  
+--          ( out.write(bb , 0 , nextByte);
+--            nextByte := 0
+--          )
+--      ) 
+    out.write2(bb , 0 , nextByte);
+    nextByte := 0
+  ) ;
+) ;
+
+public  getEncoding : () ==> JavaLangString
+getEncoding() == 
+(
+--( if  not  ctb.IsNil()
+--    then  
+--      return  ctb.getCharacterEncoding()
+--    else  
+      return  new  JavaLangString(<NIL>)
+--  ) 
+) ;
+
+public  writeICMIntInt : map  int  to  char  * int  * int  ==> ()
+writeICMIntInt(cbuf, off, len__) == 
+( ( ensureOpen();
+    if  (off < 0) or  (off > (card  dom  cbuf)) or  (len__ < 0) or  ((off+len__) > (card  dom  cbuf)) or  ((off+len__) < 0)
+    then  
+      ( exit  new  JavaLangIndexOutOfBoundsException()
+      ) 
+    else  
+      if  len__ = 0
+      then  
+        ( return  
+        ) ;
+    ( dcl   ci : int  := off,
+            end__ : int  := off+len__,
+            bufferFlushed : bool  := false  ;
+--       while  ci < end__ do  
+--        ( dcl   bufferFull : bool  := false  ;
+--          trap  j2v_exception with  
+--            cases  true  : 
+--              (isofclass  (JavaLangConversionBufferFullException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+--                ( dcl   nci : int  := ctb.nextCharIndex(),
+--                        x : JavaLangConversionBufferFullException := j2v_exception;
+--                  if  (nci = ci) and  bufferFlushed
+--                  then  
+--                    ( exit  new  CharConversionException(new  JavaLangString("Output buffer too small"))
+--                    ) ;
+--                  ci := nci;
+--                  bufferFull := true  ;
+--                  nextByte := ctb.nextByteIndex()
+--                ) ,
+--              others  -> 
+--                exit  j2v_exception
+--            end  
+--          in  
+--            ( def l_10 = nextByte
+--              in nextByte := l_10+ctb.convertAny(cbuf , ci , end__ , bb , nextByte , nBytes);
+--              ci := end__
+--            ) ;
+--          if  (nextByte >= nBytes) or  bufferFull
+--          then  
+--            ( out.write(bb , 0 , nextByte);
+--              nextByte := 0;
+--              bufferFlushed := true  
+--            ) 
+--        ) 
+      flushBuffer();
+      if nBytes - nextByte < len__
+      then exit new JavaLangConversionBufferFullException()
+      else
+        (
+          bb:=bb ++ {i|->(J2VUTIL`toInt(cbuf(off+i-nextByte)))
+                     | i in set {nextByte,...,nextByte+len__-1}
+                    };
+          nextByte:=nextByte+len__
+        )
+    ) 
+  ) ;
+) ;
+
+public  writeStrIntInt : JavaLangString * int  * int  ==> ()
+writeStrIntInt(str, off, len__) == 
+( if  len__ < 0
+  then  
+    exit  new  JavaLangIndexOutOfBoundsException();
+  ( dcl   cbuf : map  int  to  char  := {l_4 |-> ' '|l_4 in set  {0,...,len__-1}};
+    str.getChars(off , off+len__ , cbuf , 0);
+    writeICMIntInt(cbuf , 0 , len__)
+  ) ;
+  skip 
+) ;
+
+public  JavaIoOutputStreamWriter : <NIL> ==> JavaIoOutputStreamWriter
+JavaIoOutputStreamWriter(-) == 
+isNil := true  ;
+
+public  JavaIoOutputStreamWriter : JavaIoOutputStream ==> JavaIoOutputStreamWriter
+JavaIoOutputStreamWriter(out) == 
+( let - = JavaIoOutputStreamWriter(out , new  CharToByteConverter(<NIL>))
+  in 
+    skip 
+) ;
+
+public  JavaIoOutputStreamWriter : JavaIoOutputStream * JavaLangString ==> JavaIoOutputStreamWriter
+JavaIoOutputStreamWriter(out, enc) == 
+( let - = JavaIoOutputStreamWriter(out , new  CharToByteConverter(<NIL>))
+  in 
+    skip 
+) ;
+
+private  JavaIoOutputStreamWriter : JavaIoOutputStream * CharToByteConverter ==> JavaIoOutputStreamWriter
+JavaIoOutputStreamWriter(out, ctb) == 
+( let - = JavaIoWriter(out)
+  in 
+    skip ;
+--  if  out.IsNil()
+--  then  
+--    exit  new  JavaLangNullPointerException(new  JavaLangString("out is null"));
+  JavaIoOutputStreamWriter`out := out;
+  JavaIoOutputStreamWriter`ctb := ctb;
+  bb := {l_3 |-> 0|l_3 in set  {0,...,defaultByteBufferSize-1}};
+  nBytes := defaultByteBufferSize
+) ;
+
+
+end  JavaIoOutputStreamWriter
+
+
+class CharToByteConverter is subclass of JavaLangObject
+operations 
+public  CharToByteConverter : <NIL> ==> CharToByteConverter
+CharToByteConverter(-) == 
+isNil := true  ;
+
+end  CharToByteConverter

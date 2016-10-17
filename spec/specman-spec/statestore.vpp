@@ -1,0 +1,114 @@
+\begin{vdm_al}
+class StateStore is subclass of ProjectTypes
+
+values
+  version = 3
+\end{vdm_al}
+$version$ identifies the current version of the project file.  This
+number is used to convert different repository versions (done in open
+project). 
+
+\begin{vdm_al}
+
+instance variables
+  content: prjFileType * vers * files;
+  format : prjFileFormat;
+  rw     : <read> | <write>
+
+types
+
+  prjFileType = <ProjectFile> | <ProjectFilePP>;
+  prjFileFormat = seq of (prjFileType | vers | int | FileName);
+  vers = int;
+  files = set of FileName
+
+operations
+
+public Open: FileName * (<READ> | <WRITE>) ==> bool
+  Open(fnm, tp) ==
+    is not yet specified;
+
+public Close: () ==> ()
+  Close() ==
+    is not yet specified;
+
+public WriteASTVal: AstVal | <NONE> ==> bool
+  WriteASTVal(val) ==
+    is not yet specified;
+
+public WriteName: FileName | ModuleName ==> bool
+  WriteName(nm) ==
+    is not yet specified;
+
+public WriteNames: set of (FileName | ModuleName) ==> bool 
+  WriteNames(nm_s)  ==
+  ( dcl ok : bool := self.WriteVal (card nm_s);
+    for all nm in set nm_s do
+      def ok' = self.WriteName (nm) in
+        ok := ok and ok';
+    return ok );
+
+public WriteSession: SessionType ==> bool
+  WriteSession(session) ==
+    is not yet specified;
+
+public WriteVal: int | bool ==> bool
+  WriteVal(val) ==
+    is not yet specified;
+
+public WriteStatus: Status ==> bool
+  WriteStatus(status) ==
+    is not yet specified;
+
+public WriteDep: DepGraph ==> bool
+  WriteDep (g) ==
+    is not yet specified;
+
+public WriteTCEnv: TCEnv ==> bool
+  WriteTCEnv (e) ==
+    is not yet specified;
+
+public ReadASTVal: () ==> [AstVal | <NONE>]
+  ReadASTVal() == 
+    is not yet specified;
+
+public ReadName: () ==> [FileName | ModuleName]
+  ReadName() ==
+    is not yet specified;
+
+public ReadNames: () ==> [set of (FileName | ModuleName)] 
+  ReadNames() ==
+  ( dcl nm_s : set of (FileName | ModuleName) := {};
+    def size = self.ReadVal() in
+      if is_nat(size) then
+        for i = 1 to size do
+          def nm = self.ReadName() in
+            if is_FileName (nm) or is_ModuleName (nm)
+            then nm_s := nm_s union {nm}
+            else return nil
+      else
+        return nil;
+    return nm_s );
+
+public ReadSession: () ==> [SessionType]
+  ReadSession() ==
+    is not yet specified;
+
+public ReadVal: () ==> [int | bool]
+  ReadVal() ==
+    is not yet specified;
+
+public ReadStatus: () ==>  [Status]
+  ReadStatus() ==
+    is not yet specified;
+
+public ReadDep: () ==> [DepGraph]
+  ReadDep () ==
+    is not yet specified;
+
+public ReadTCEnv: () ==> [TCEnv]
+  ReadTCEnv () ==
+    is not yet specified
+
+end StateStore
+\end{vdm_al}

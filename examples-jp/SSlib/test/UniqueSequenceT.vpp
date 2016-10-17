@@ -1,0 +1,56 @@
+/*
+$Id: UniqueSequenceT.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $
+テストグループ
+	『発番者』のテスト
+関連 UC
+	なし
+
+*/
+class 『発番者』T is subclass of TestDriver
+functions
+tests : () -> seq of TestCase
+tests () == 
+	[new 『発番者』T01()
+	];
+end 『発番者』T
+
+/*
+シナリオID
+	『発番者』単体の全機能テスト
+内容
+	番号を初期化し、発番する。
+*/
+class 『発番者』T01 is subclass of TestCase
+operations 
+protected test: () ==> bool
+test() == 
+	let	o = new 『発番者』()	in
+	return
+		(
+		o.発番する(1) = "1" and
+		o.発番する(1) = "2" and
+		o.発番する(1) = "3" and
+		o.発番する(1) = "4" and
+		o.発番する(1) = "5" and
+		o.発番する(1) = "6" and
+		o.発番する(1) = "7" and
+		o.発番する(1) = "8" and
+		o.発番する(1) = "9" and
+		o.発番する(1) = "1" and 
+		o.発番する(1) = "2" and
+		o.発番する(2) = "3" and
+		o.発番する(2) = "4" and
+		o.発番する(2) = "5" and
+		o.発番する(2) = "6" and
+		o.発番する(2) = "7" and
+		o.発番する(2) = "8" and
+		o.発番する(2) = "9" and
+		o.発番する(2) = "10" and 
+		o.発番する(2) = "11"
+		)
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := " 『発番者』T01:\t 『発番者』T01単体の全機能テスト。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end 『発番者』T01

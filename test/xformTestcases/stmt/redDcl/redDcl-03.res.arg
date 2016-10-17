@@ -1,0 +1,15 @@
+"class A
+
+types
+
+public T = (nat * nat);
+
+operations
+
+public Test : () ==> T
+Test() ==
+    	return def mk_(a,2) = mk_(1,2) in mk_(a,2);
+
+   
+end A
+"

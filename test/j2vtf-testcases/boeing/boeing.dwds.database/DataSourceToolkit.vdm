@@ -1,0 +1,91 @@
+class DataSourceToolkit is subclass of Object
+operations 
+protected  finalize : () ==> <VOID>
+finalize() == 
+( trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          skip 
+        ) ,
+      (isofclass  (Throwable,j2v_exception)) -> 
+        ( dcl   t : [Throwable] := j2v_exception;
+          skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( if  dataSourceConnection <> nil  
+      then  
+        ( let - = dataSourceConnection.close()
+          in 
+            skip ;
+          dataSourceConnection := nil  
+        ) ;
+      let - = Object`finalize()
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+public  static getToolkit : () ==> [DataSourceToolkit]
+getToolkit() == 
+( if  toolkit = nil  
+  then  
+    ( dcl   dataSourceType : [String] := DWDSProperties`getProperty(new  String("db.type") , new  String("unknown"));
+      if  dataSourceType.equalsIgnoreCase(new  String("MSAccess"))
+      then  
+        ( toolkit := AccessDataSourceToolkit`getToolkit()
+        ) 
+      else  
+        if  dataSourceType.equalsIgnoreCase(new  String("Oracle7")) or  dataSourceType.equalsIgnoreCase(new  String("Oracle8"))
+        then  
+          ( toolkit := OracleDataSourceToolkit`getToolkit()
+          ) 
+        else  
+          ( dcl   unknownPeer : [DWDSException] := new  DWDSException();
+            let - = unknownPeer.addMessage(DWDSException`UnknownDatabaseType , dataSourceType)
+            in 
+              skip ;
+            exit  unknownPeer
+          ) 
+    ) ;
+  return  toolkit
+) ;
+
+public  getQuerySet : () ==> [WiringDataQuerySet]
+getQuerySet() == 
+is subclass responsibility ;
+
+public  getConnection : () ==> [Connection]
+getConnection() == 
+( if  dataSourceConnection = nil  
+  then  
+    ( dataSourceConnection := makeConnection(jdbcDriverName , dbJdbcUrlName , dbUser , dbPassword)
+    ) ;
+  return  dataSourceConnection
+) ;
+
+protected  DataSourceToolkit : () ==> DataSourceToolkit
+DataSourceToolkit() == 
+( jdbcDriverName := DWDSProperties`getProperty(new  String("db.jdbc.driver") , new  String("unknown"));
+  dbJdbcUrlName := DWDSProperties`getProperty(new  String("db.jdbc.url") , new  String("unknown"));
+  dbUser := DWDSProperties`getProperty(new  String("db.userid") , new  String("unknown"));
+  dbPassword := DWDSProperties`getProperty(new  String("db.password") , new  String("unknown"))
+) ;
+
+protected  makeConnection : [String] * [String] * [String] * [String] ==> [Connection]
+makeConnection(jdbcDriverName, dbJdbcUrlName, userId, userPassword) == 
+is subclass responsibility ;
+
+instance variables 
+  private  static toolkit : [DataSourceToolkit] := nil  ;
+  private  dataSourceConnection : [Connection] := nil  ;
+  private  jdbcDriverName : [String];
+  private  dbJdbcUrlName : [String];
+  private  dbUser : [String];
+  private  dbPassword : [String]
+  
+end  DataSourceToolkit

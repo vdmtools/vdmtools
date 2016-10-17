@@ -1,0 +1,418 @@
+#! /usr/bin/perl 
+
+# $Id: lnconf,v 1.9 2005/01/19 05:01:28 vdmtools Exp $ 
+
+# -w
+
+# use strict; 
+
+use Getopt::Long; 
+use File::Basename; 
+
+my $save_dir = ".lnconf-old"; 
+
+# @options = @ARGV; 
+my $program = basename $0; 
+my ($opt_f, $opt_remove); 
+GetOptions ("-r" =>\$opt_remove,
+            "-x" => \$opt_fast, 
+            "-i" => \$opt_i,            
+            "-c" => \$opt_create,
+            "-h" => \$opt_help,
+            "-w" => \$opt_win,
+            ); 
+
+my $timestamp = ".lnconfstamp"; 
+
+foreach (@ARGV) {
+    $vars{$1} = $2 if (/(\w+)=(.*)/);
+}
+
+sub usage
+{
+    print STDERR <<"EO_USAGE"
+Usage: 
+$0  [-i VAR=VALUE ...] [-w VAR=value ...] | -c | -r 
+    -i : initialize .lnconf 
+         VAR can be BASEDIR LINKFILE OSTYPE
+    -c : check directory and create missing symlinks
+    -r : as -c but also remove unused links
+    -w : win32 option to create GNUmakefile in local directory
+         Must give VPATH=<path to unix shadow directory>
+EO_USAGE
+    ; 
+    exit; 
+}
+usage if (!$opt_remove && !$opt_i && !$opt_create || $opt_help); 
+
+my %known_links = ();
+
+my $errorcount; 
+
+sub backup_name
+{
+    my ($dir, $fn) = @_; 
+    my $number = 0; 
+    my $n; 
+    do {
+        $number++; 
+        $n = "$dir/$fn.~$number~"; 
+    } while -l $n || -e _; 
+    return $n; 
+}
+
+sub move_away 
+{
+    my $file = shift; 
+    my $text = shift; 
+    if (! -d $save_dir) { 
+        mkdir $save_dir, 0755  or die "Failed to created $save_dir\n"; 
+    }
+    my $newname = backup_name($save_dir,$file); 
+    if (!rename $file, $newname) {
+        warn "Failed to move '$file' to $newname\n"; 
+    } else {
+        warn "Moved $text'$file' to $newname\n"; 
+    }
+}
+
+sub print_message;
+sub getlineno; 
+sub warn_bad_link
+{
+    my ($src,$dest) = @_;
+    print_message "warning: missing target for $dest -> $src\n";
+}
+
+sub print_message
+{
+    my ($message) = @_; 
+    my $lineno = getlineno;
+    print STDERR "$program: [l. $lineno] $message"; 
+}
+
+sub link_file_to_x
+{
+    my ($src, $dest) = @_; 
+    
+    if (!defined($dest) || (-d $dest && ! -l $dest)) {
+        my $file = basename $src; 
+        $dest = defined($dest) ?  $dest."/".$file : $file; 
+    }
+    my $lineno = getlineno;
+
+    # print STDERR "file='$file' dest='$dest'\n"; 
+  again: {
+      if (-e $dest && ! -l $dest) {
+          if ($opt_remove) {
+              print_message "error: will not remove real file $dest\n"; 
+              # move_away $dest; 
+              $errorcount++;
+          } else {            
+              $errorcount++; 
+              print_message "can't symlink: $dest already exists.\n";
+          }
+      } elsif (-l $dest) {
+          { 
+              my $d = $dest; 
+              $d =~ s|^./||; 
+              $known_links{$d}++;
+              # print STDERR "Known: $d\n"; 
+          }
+          return if ($opt_fast); 
+          my $link = readlink $dest; 
+          if ($link ne $src) {
+              print_message
+                  "link has changed:\n\tnew: $dest -> $src\n\told: $dest -> $link.\n"; 
+              if ($opt_remove) {
+                  move_away $dest, 'wrong link '; 
+                  redo again; 
+              } else {
+                  $errorcount++; 
+              }
+          } else {
+              warn_bad_link($link, $dest) if ! -e $link;
+              # print "$0: ok: $dest -> $src\n" if 1||$verbose; 
+          }            
+      } else {
+          if (! -e $src) {
+              warn_bad_link($src, $dest);
+          } else {
+              print_message "adding: ln -s $src $dest\n";
+              symlink($src, $dest) or $errorcount++, print_message "error: symlink failed: $!\n";
+              $known_links{$dest}++;
+          }
+      }
+  }
+}
+
+sub link_files
+{
+    my @list = @_; 
+    my ($src, $dest); 
+    $dest = (@list >1) ? pop @list : undef; 
+    die "$0: destination $dest must be directory."
+        if @list>2 && ! -d $dest; 
+    foreach $src (@list) {
+        link_file_to_x $src, $dest; 
+    }
+}
+
+sub find_var
+{
+    my ($var) = @_;
+    if (exists $vars{$var}) {
+        return $vars{$var};
+    } else {
+        warn "Variable: $var is undefined\n";
+        return "";
+    }
+}
+        
+sub check_unused_links
+{
+    opendir D, "." or die "Failed to opendir .\n";
+    my @d = readdir(D);
+    closedir(D);
+    foreach (@d) {
+        print STDERR "Unknown-symlink: $_\n"
+            if -l $_ && (!exists $known_links{$_} &&
+                         !exists $known_links{"./".$_}); 
+    }
+}
+
+
+sub oscheck
+{
+    my ($t) = @_;
+    my $ostype = $vars{OSTYPE} || $ENV{"OSTYPE"}; 
+    foreach (split('\|', $t)) {
+        # print "compare($_,$ostype)\n"; 
+        return 1 if $_ eq $ostype;
+    }
+    return 0; 
+}
+# print "Check=", oscheck($ostype), "\n";
+
+my $lncfg = ".lnconf"; 
+
+sub readcfg
+{
+    my $lncfg = $lncfg; 
+    die "Use $0 -i BASEDIR=basedir to initialize the $lncfg config file\n"
+        unless -f $lncfg; 
+    open CFG, "<$lncfg" or die "Failed to open $lncfg\n"; 
+    print STDERR "$program: using: \n"; 
+    while (<CFG>) {        
+        if (/(\w+)=(.+)/) {
+	    if (defined $vars{$1}) {
+		print STDERR "\toverride $1=$vars{$1} (default '$2') \n"; 
+	    } else {
+		$vars{$1} = $2; 
+		print STDERR "\t$1='$2' \n"; 
+	    }
+        } else {
+            warn "$0: $lncfg: bad line ($.): $_\n"; 
+        }        
+    }
+    print STDERR "\n"; 
+}
+
+sub getlineno
+{
+    return $.;
+}
+
+sub readscript
+{
+    my $errors = 0; 
+    my $opt_linkfile = $vars{"LINKFILE"};
+    $vars{OSTYPE} = $ENV{OSTYPE} if !exists $vars{OSTYPE} && exists $ENV{OSTYPE};
+    open SCRIPT, "<$opt_linkfile"  or die "$0: open $opt_linkfile failed: $!\n";
+    while (<SCRIPT>) {
+        chomp; 
+
+        # Continuation lines: 
+        my $l; 
+        while (s/\\$// && defined($l=<SCRIPT>)) {
+            $_ .= $l;
+        }
+
+        next if (/^\s*(\#.*)?$/);
+
+        if (s/^((!?)oscheck\(([\w.|]+)\))?\s*//) {
+            my $not = defined($2) && $2 eq '!'; 
+            my $oscheck=$3;
+            if (defined($oscheck) && !($not xor oscheck($oscheck))) {
+                print "Skipping ($oscheck) $_\n" if $verbose; 
+                next; 
+            }
+        }
+
+        if (s/^checkdir//) {
+            my $bad = 0; 
+            foreach (split ' ', $_) {
+                my $d = find_var($_); 
+                $bad++, print STDERR "$0: error: \$$_ ($d) is not directory\n"
+                    if ! -d $d;
+            }
+            exit 2 if $bad;
+        } elsif (s/^ln//) {
+            print "Read $_;\n" if $verbose;
+            s/\$(\w+)/find_var($1)/eg;
+            # print "Line=$_\n";
+            my @list = ();
+            if (/[?{}*]/) {
+                @list = split ' ', `echo $_`; 
+                # glob $_; csh not installed on hera
+                # print "glob ($_)=@list\n"; 
+            } else {
+                @list = split(' ', $_);
+            }
+            print "link: @list\n" if $verbose;
+            link_files @list;
+        } elsif (s/^touch//) {
+            foreach (split(' ',$_)) {
+                unless (-e $_) {
+                    system('touch', $_)==0 or warn "$0: touch failed: $!";
+                    print STDERR "touch $_\n"; 
+                }
+            }
+        } elsif (/(\w+)\s*=\s*(\S+)/) {
+            $var = $1; 
+            ($val = $2) =~ s/\$(\w+)/find_var($1)/eg;
+            $vars{$var} = $val;
+            print "Assign $var = $val\n" if $verbose;
+        } elsif (s/^oldl\s+//) {
+            foreach (split(' ',$_)) {
+                if (-l $_) {
+                    if ($opt_remove) {
+                        move_away $_, 'unused link '; 
+                    } else {
+                        warn "Unused(link): $_\n";
+                    }
+                } elsif (-e $_) {
+                    if ($opt_remove) {
+                        warn "Removing $_, but it is not a symlink (line $.)\n"; 
+                        move_away $_; 
+                    } else {
+                        warn "Unused: but $_ is not a symlink (line $.)\n"; 
+                    }                    
+                }
+            }
+        } elsif (s/^oldf\s+//) {
+            foreach (split(' ',$_)) {
+                if (-f $_ && ! -l $_) {
+                    if ($opt_remove) {
+                        move_away $_, 'unused file '; 
+                    } else {
+                        warn "Unused(file) $_\n";
+                    }
+                } elsif (-e $_) {
+                    if ($opt_remove) {
+                        warn "Removing $_, but it is not a plain file (line $.)\n"; 
+                        move_away $_; 
+                    } else {
+                        warn "Unused: $_, but $_ is not a plain file (line $.)\n";
+                    }
+                }
+            }
+        } else {
+            warn "$0: did't understand line $.: $_\n";
+        }
+    }
+    
+    if ($errorcount==0) {
+        print STDERR "Updating timestamp file." if $verbose; 
+        open STAMP, ">$timestamp"  or die "Failed to open $timestamp.\n"; 
+        close STAMP; 
+    } else {
+        print STDERR "Errors detected. Not updating timestamp.\n"; 
+    }        
+}
+
+sub ArgsToVars
+{
+    foreach (@ARGV) {
+        if (/(\w+)=(.+)/) {
+            $vars{$1} = $2; 
+        } else {
+            warn "Garbage argument given: '$_'\n"; 
+        }
+    }
+}
+
+sub stamp_is_newer_p
+{
+    my $stamp = $vars{STAMP}; 
+    return 0  if  ! -f $vars{STAMP}; 
+    die "No linkfile: '$vars{LINKFILE}' found\n" if ! -f $vars{LINKFILE}; 
+    $timeLinkfile = (stat($vars{LINKFILE}))[9]; 
+    $timeStamp = (stat($vars{STAMP}))[9]; 
+    # print STDERR "lf=$timeLinkfile, st=$timeStamp\n"; 
+    return $timeStamp > $timeLinkfile; 
+}
+
+if ($opt_create && $opt_win) {
+    readcfg();
+    if (! stamp_is_newer_p()) {
+        die ("$program: Must run ",basename($0), 
+             " on Unix. Linkfile is newer than stampfile\n"); 
+    } else {
+        print STDERR "$program: Stampfile is up to date. No other checks on win32.\n"
+    }
+    exit; 
+}
+
+if ($opt_i && $opt_win) {
+    die "Options -i and -w can only be used on win32\n"
+        if $ENV{OSTYPE} ne "win32"; 
+    ArgsToVars; 
+    die "Must give VPATH=<path to unix shadow directory>\n" 
+        unless $vars{VPATH}; 
+    open GM, ">GNUmakefile" or die "Failed to open GNUmakefile for writing.\n"; 
+    print GM "VPATH=$vars{VPATH}\n"; 
+    print GM "include $vars{VPATH}/Makefile\n"; 
+    close GM; 
+    open INIENV, ">inienv" or die "Failed to open inienv for writing.\n"; 
+    print INIENV "PATH=$vars{VPATH}:\$PATH"; 
+    close INIENV; 
+    print STDERR "Now 'source inienv'\n"; 
+    # $vars{BASEDIR} = $vars{VPATH}; 
+
+    open CFG, ">$lncfg" or die "Failed to open $lncfg \n"; 
+    $vars{LINKFILE} = $vars{VPATH}."/links"     unless ($vars{LINKFILE}); 
+    $vars{STAMP} = $vars{VPATH}."/".$timestamp  unless ($vars{STAMP}); 
+    while (($k, $v) = each %vars) {
+        print CFG "$k=$v\n"; 
+    }
+    close CFG; 
+}
+
+if ($opt_i && !$opt_win) {
+    if (-f $lncfg) {
+        # readcfg();
+    }
+    open CFG, ">$lncfg" or die "Failed to open $lncfg \n"; 
+    ArgsToVars; 
+    unlink($lncfg), die "argument BASEDIR=basedir  must be given \n" 
+        unless $vars{"BASEDIR"}; 
+    $vars{LINKFILE} = $vars{BASEDIR}."/build/links"
+        unless ($vars{LINKFILE}); 
+    $tbd = $vars{BASEDIR};
+    $tbd =~ s/\/code//;
+    $vars{TOOLBOXDIR} = $tbd
+        unless ($vars{TOOLBOXDIR}); 
+    while (($k, $v) = each %vars) {
+        print CFG "$k=$v\n"; 
+    }
+    close CFG; 
+    readcfg();
+    readscript();
+
+} elsif (($opt_create || $opt_remove) && !$opt_win) {
+    readcfg();
+    readscript();
+    # check_unused_links(); 
+
+}     

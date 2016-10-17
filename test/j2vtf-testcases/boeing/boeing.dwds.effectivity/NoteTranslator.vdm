@@ -1,0 +1,8 @@
+class NoteTranslator
+operations 
+public  translateNote : [String] * int  * [PrintStream] ==> [String]
+translateNote(noteText, ruleLineNumber, errorOut) == 
+is subclass responsibility ;
+
+
+end  NoteTranslator

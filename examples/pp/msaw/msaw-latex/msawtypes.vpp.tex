@@ -1,0 +1,86 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{vdm}\index{MSAWTypes|ClassDef}
+{\small\sf class} $MSAWTypes$ 
+\begin{valuedef}\val{NMperCoordonnee}[Coordonnee\index{Coordonnee|TypeOcc}]{1}
+\val{Secondes}[Temps\index{Temps|TypeOcc}]{1}
+\val{BalayageRadar}[Duree\index{Duree|TypeOcc}]{10 \X Secondes}
+
+\end{valuedef}
+\begin{typedef}\index{Coordonnees|TypeDef}
+\type{Coordonnees}{Coordonnee\index{Coordonnee|TypeOcc} \X Coordonnee\index{Coordonnee|TypeOcc}}\index{Coordonnee|TypeDef}
+\type{Coordonnee}{\Nat }\index{KT|TypeDef}
+\type{KT}{\Nat  \X \Nat  \X \Nat }\index{Pieds|TypeDef}
+\type{Pieds}{\Nat }\index{NM|TypeDef}
+\type{NM}{\Real }\index{ModeA|TypeDef}
+\type{ModeA}{\Token }\index{Alarme|TypeDef}
+\type{Alarme}{\Opt{\const{terrain} | \const{obstacle\_artificiel} | \const{relief\_particulier} |  \\
+\const{zone\_militair} | \const{zone\_aeroport}}}\index{Hpa|TypeDef}
+\type{Hpa}{\Real }\index{StationMeteo|TypeDef}
+\begin{record}{StationMeteo} : \Token \\ 
+\end{record}\index{Degrees|TypeDef}
+\type{Degrees}{\Real }\index{Temps|TypeDef}
+\type{Temps}{\Nat }\index{Duree|TypeDef}
+\type{Duree}{\Nat }
+\end{typedef}
+\begin{funcdef}\index{PlusTard|FuncDef}
+\begin{fn}[e]{PlusTard}
+\signature{Temps\index{Temps|TypeOcc} \X Temps\index{Temps|TypeOcc} \To \Bool }
+\parms{t1, t2}
+t1 > t2
+\end{fn}\index{LaPlusRecente|FuncDef}
+\begin{fn}[e]{LaPlusRecente}
+\signature{\setof{Temps\index{Temps|TypeOcc}} \To Temps\index{Temps|TypeOcc}}
+\parms{ts}
+\Letbe t \In ts \Best  \Not \exists{t' \In ts} \\
+{t \Neq t' \And \fnapply{PlusTard}{t',t}} \Lin \\
+t
+\begin{precond}ts \Neq \set{}
+\end{precond}
+\end{fn}\index{Distance|FuncDef}
+\begin{fn}[e]{Distance}
+\signature{Coordonnees\index{Coordonnees|TypeOcc} \X StationMeteo\index{StationMeteo|TypeOcc} \To NM\index{NM|TypeOcc}}
+\parms{position, station}
+\Undefined 
+\end{fn}
+\end{funcdef}
+{\small\sf end} $MSAWTypes$
+
+\end{vdm}

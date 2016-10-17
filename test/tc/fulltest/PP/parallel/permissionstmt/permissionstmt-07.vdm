@@ -1,0 +1,14 @@
+class B
+functions
+	public f: int -> int
+		f(a) == a+1;
+
+operations
+	public doit: () ==> int
+		doit() == return 123;
+
+sync
+	per doit => #active(doit) > 0;
+	per f => #active(f) > 0
+
+end B

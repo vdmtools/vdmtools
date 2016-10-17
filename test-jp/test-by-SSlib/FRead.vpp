@@ -1,0 +1,13 @@
+class FRead
+
+values--値
+	Rcsid = "$Id: FRead.vpp,v 1.1 2005/11/25 07:05:38 vdmtools Exp $";	
+		
+functions
+static public 文字列を読み込む : seq of char -> seq1 of char
+文字列を読み込む(ファイル名) ==
+	let	mk_(ok, s) = new IO().freadval[seq of char](ファイル名)
+	in
+		if ok then s else ファイル名 ^ ":からの読み込みエラー";
+		
+end FRead

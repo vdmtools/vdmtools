@@ -1,0 +1,1404 @@
+######################################################################
+### This file describes the error messages of the static semantic
+### It is used to generate both the VDM-SL module and the 
+### C file.
+###
+### The syntax is very simple:
+### Lines starting with # and blank lines are ignored.
+### every second line is the number of the message, and every second line
+### is the message.
+######################################################################
+
+
+
+
+######################################################################
+###          Test for arguments -- primary for expressions
+######################################################################
+37
+状態構成要素 "%1" をここで使うことはできません
+#The state component "%1" must not be used here
+42
+"%1" をここで使うことはできません
+#"%1" cannot be used here
+43
+状態構成要素 "%1" は読込モードでしか使うことができません
+#The state component "%1" can only be used in read mode
+122
+単項演算子 '+' の右辺が、数型ではありません
+#Rhs of unary '+' is not a numeric type
+123
+単項演算子 '-' の右辺が、数型ではありません
+#Rhs of unary '-' is not a numeric type
+124
+'abs' の引数が数型ではありません
+#Argument of 'abs' is not a numeric type
+125
+'floor' の引数が数型ではありません
+#Argument to 'floor' is not a numeric type
+126
+'not'の引数がブール型ではありません
+#Argument to 'not' is not a boolean type
+127
+'card' の引数が集合型ではありません
+#Argument to 'card' is not a set type
+129
+'dunion' の引数が集合型の集合ではありません
+#Argument of 'dunion' is not a set of set type
+132
+'dinter'の引数が集合型の集合ではありません
+#Argument of 'dinter' is not a set of set type
+133
+'power' の引数が集合型ではありません
+#Argument to 'power' is not a set type
+134
+'len' の引数が列型ではありません
+#Argument of 'len' is not a sequence type
+136
+'conc' の引数が列型の列ではありません
+#Argument of 'conc' is not a sequence of sequences
+137
+'elems' の引数が列型ではありません
+#Argument of 'elems' is not a sequence type
+138
+'inds' の引数が列型ではありません
+#Argument of 'inds' is not a sequence type
+141
+'hd' の引数が列型ではありません
+#Argument of 'hd' is not a sequence type
+144
+'tl'の引数が列型ではありません
+#Argument of 'tl' is not a sequence type
+145
+'dom' の引数が写像型ではありません
+#Argument of 'dom' is not a map type
+146
+'rng' の引数が写像型ではありません
+#Argument of 'rng' is not a map type
+148
+'merge' の引数が写像型の集合ではありません
+#Argument of 'merge' is not a set of maps
+149
+逆写像演算の引数が単射(1対1)写像ではありません
+#Argument to Map-Inverse-Expr is not an injective map
+150
+'+' の左辺が数型ではありません
+#Lhs of '+' is not a numeric type
+151
+'+' の右辺が数型ではありません
+#Rhs of '+' is not a numeric type
+152
+'-' の左辺が数型ではありません
+#Lhs of '-' is not a numeric type
+153
+'-' の右辺が数型ではありません
+#Rhs of '-' is not a numeric type
+154
+'*' の左辺が数型ではありません
+#Lhs of '*' is not a numeric type
+155
+'*' の右辺が数型ではありません
+#Rhs of '*' is not a numeric type
+156
+'/'の左辺が数型ではありません
+#Lhs of '/' is not a numeric type
+157
+'/'の右辺が数型ではありません
+#Rhs of '/' is not a numeric type
+158
+'/' の右辺は0以外でなければなりません
+#Rhs of '/' must be non zero
+159
+'rem' の左辺が整数型ではありません
+#Lhs of 'rem' is not an integer type
+160
+'rem' の右辺が整数型ではありません
+#Rhs of 'rem' is not an integer type
+161
+'rem' の右辺は0以外でなければなりません
+#Rhs of 'rem' must be non zero
+162
+'mod' の左辺が整数型ではありません
+#Lhs of 'mod' is not an integer number type
+163
+'mod' の右辺が整数型ではありません
+#Rhs of 'mod' is not an integer number type
+164
+'mod' の右辺は0以外でなければなりません
+#Rhs of 'mod' must be non zero
+165
+'div' の左辺が整数型ではありません
+#Lhs of 'div' is not an integer type
+166
+'div' の右辺が整数型ではありません
+#Rhs of 'div' is not an integer type
+167
+'div' の右辺は0以外でなければなりません
+#Rhs of 'div' must be non zero
+168
+'**' の左辺は数型か写像型か関数型でなければなりません
+#Lhs of '**' is neither a numeric type, map type or function type
+169
+'**' の右辺が数型ではありません
+#Rhs of '**' is not a numeric type
+170
+"%1" の右辺は自然数でなければなりません
+#Rhs of "%1" must be a natural number
+171
+"%1" の右辺が2より大きければ、値域は定義域の部分集合でなけれななりません
+#If Rhs of "%1" is larger than 2 range must be a subset of domain
+172
+'<' の左辺が数型ではありません
+#Lhs of '<' is not a numeric type
+173
+'<' の右辺が数型ではありません
+#Rhs of '<' is not a numeric type
+174
+'<=' の左辺が数型ではありません
+#Lhs of '<=' is not a numeric type
+175
+'<=' の右辺が数型ではありません
+#Rhs of '<=' is not a numeric type
+176
+'>' の左辺が数型ではありません
+#Lhs of '>' is not a numeric type
+177
+'>' の右辺が数型ではありません
+#Rhs of '>' is not a numeric type
+178
+'>='  の左辺が数型ではありません
+#Lhs of '>=' is not a numeric type
+179
+'>='  の右辺が数型ではありません
+#Rhs of '>=' is not a numeric type
+180
+'and' の左辺がブール型ではありません
+#Lhs of 'and' is not a boolean type
+181
+'and' の右辺がブール型ではありません
+#Rhs of 'and' is not a boolean type
+182
+'or' の左辺がブール型ではありません
+#Lhs of 'or' is not a boolean type
+183
+'or' の右辺がブール型ではありません
+#Rhs of 'or' is not a boolean type
+184
+'=>' の左辺がブール型ではありません
+#Lhs of '=>' is not a boolean type
+185
+'=>' の右辺がブール型ではありません
+#Rhs of '=>' is not a boolean type
+186
+'<=>' 左辺がブール型ではありません
+#Lhs of '<=>' is not a boolean type
+187
+'<=>' 右辺がブール型ではありません
+#Rhs of '<=>' is not a boolean type
+188
+この等式は常にfalseになります
+#This equality will always be false
+189
+この等式は常にtrueになります
+#This inequality will always be true
+190
+'union' の左辺が集合型ではありません
+#Lhs of 'union' is not a set type
+191
+'union' の右辺が集合型ではありません
+#Rhs of 'union' is not a set type
+192
+'inter' の左辺が集合型ではありません
+#Lhs of 'inter' is not a set type
+193
+'inter' の右辺が集合型ではありません
+#Rhs of 'inter' is not a set type
+195
+'¥'の左辺が集合型ではありません
+#Lhs of 'set minus' is not a set type
+196
+'¥'の右辺が集合型ではありません
+#Rhs of 'set minus' is not a set type
+197
+'¥' 演算子が何の要素も削除しません
+#Set minus operation removes no elements
+198
+'subset' 左辺が集合型ではありません
+#Lhs of 'subset' is not a set type
+199
+'subset' 右辺が集合型ではありません
+#Rhs of 'subset' is not a set type
+200
+'psubset' の左辺が集合型ではありません
+#Lhs of 'psubset' is not a set type
+201
+'psubset' の右辺が集合型ではありません
+#Rhs of 'psubset'  is not a set type
+202
+'in set' の右辺が集合型ではありません
+#Rhs of 'in set' is not a set type
+204
+'not in set' の右辺が集合型ではありません
+#Rhs of 'not in set' is not a set type
+206
+'^' の左辺が列型ではありません
+#Lhs of '^' is not a sequence type
+207
+'^' の右辺が列型ではありません
+#Rhs of '^' is not a sequence type
+208
+'munion'の左辺が写像型ではありません
+#Lhs of 'munion' is not a map type
+209
+'munion'の右辺が写像型ではありません
+#Rhs of 'munion' is not a map type
+210
+'<:'の左辺が集合型ではありません
+#Lhs of '<:' is not a set type
+211
+'<:'の右辺が写像型ではありません
+#Rhs of '<:' is not a map type
+214
+'<-:'の左辺が集合型ではありません
+#Lhs of '<-:' is not a set type
+215
+'<-:'の右辺が写像型ではありません
+#Rhs of '<-:' is not a map type
+217
+'<-:'は写像から要素を削除しないでしょう
+#The '<-:' will never remove any elements from the map
+218
+':>'の左辺が写像型ではありません
+#Lhs of ':>' is not a map type
+219
+':>'の右辺が集合型ではありません
+#Rhs of ':>' is not a set type
+222
+':->'の左辺が写像型ではありません
+#Lhs of ':->' is not a map type
+223
+':->'の右辺が集合型ではありません
+#Rhs of ':->' is not a set type
+225
+':->'は写像から要素を削除しないでしょう
+#The ':->' will never remove any elements from the map
+226
+'comp'の左辺が、写像型か、引数が一つの関数型ではありません
+#Lhs of 'comp' is neither a map type nor a function type with one parameter
+227
+'comp'の右辺が、写像型か、引数が一つの関数型ではありません
+#Rhs of 'comp' is neither a map type nor a function type with one parameter
+228
+合成演算子の右辺の値域の型が、左辺の定義域の型と互換性がありません
+#Rhs range type is not compatible with lhs domain type in composition expression
+233
+iota式の述語が2つ以上の値で成立するかもしれません
+#More than one value can satisfy the predicate in the iota expression
+234
+集合範囲式の下限が実数型ではありません
+#Lower index of Set-Range-Expr is not of type real
+235
+集合範囲式の上限が実数型ではありません
+#Upper index of Set-Range-Expr is not of type real
+238
+下限が正の自然数ではありません
+#Lower index is not a positive natural number
+239
+上限が正の自然数ではありません
+#Upper index is not a positive natural number
+240
+右辺の式が写像型ではありません
+#Rhs expression is not a map type
+242
+空の修正が使われています
+#An empty modification is used
+244
+存在しない索引による修正が行われようとしています
+#Modification of non-existing index may be attempted
+245
+式が列か写像ではありません
+#Expression is neither a sequence nor a map type
+246
+列は正の自然数の索引でのみ修正できます
+#A sequence can only be modified with indices which are positive natural numbers
+247
+定義域の同じ値が、異なる値域の値を指しています
+#Same domain value may map to different range values
+###249
+###Wrong number of fields for "%1"
+297
+"%1"の項目数が合いません
+#Wrong number of fields for "%1"
+250
+%1番目の項目の型が、レコード構成子の定義と合いません
+#Type of field number %1 is not compatible with its defined type in Record-Constructor-Expr
+251
+項目"%1" の型が、定義された型と互換性がありません
+#Type of field "%1" is not compatible with its defined type
+253
+項目"%1"は、型 "%2"で定義されていません
+#Field with id "%1" is not defined in type "%2"
+258
+#右辺はレコード型ではありません
+##Rhs is not a composite type
+'mu' の最初の引数がレコード型ではありません
+#First argument of 'mu' is not a composite type
+259
+適用式は値を返さなければなりません
+#Apply-Expr must return a value
+260
+適用式で不変型が使われています
+#Invariant type used in Apply-Expr
+263
+式を適用できません
+#Expression cannot be applied
+264
+すべてのケースで、式を適用できません
+#Expression cannot be applied in all cases
+265
+指定された索引は、指定された列に存在しないかもしれません
+#Given index may not exist for the given sequence
+266
+列が、一つ以上の索引で適用されてます
+#Sequence is applied with more than one index
+267
+適用式にエラーがあります
+#Error in Apply-Expr
+268
+列の索引が自然数ではありません
+#Sequence index is not a natural number
+269
+指定された写像に、指定された定義域の要素は存在しないかもしれません
+#Given domain element may not exist for the given map
+270
+写像の定義域の型が正しくありません
+#Map domain type of incorrect type
+271
+一つ以上の値で、写像の適用をしています。
+#Map is applied with more than one value
+364
+組の選択の数値が大きすぎます
+#Tuple selector too large
+365
+組が期待されています
+#A tuple was expected
+392
+左辺の集合が空の時のみ、包含演算子（subset）がtrueになります
+#Subset will only be true if the Lhs set is empty
+437
+'reverse'の引数が列型ではありません
+#Argument of 'reverse' is not a sequence type
+441
+'^' の左辺の型が正しくありません
+#Lhs of '^' is not a correct type
+442
+'^' の右辺の型が正しくありません
+#Rhs of '^' is not a correct type
+443
+'union' の左辺の型が正しくありません
+#Lhs of 'union' is not a correct type
+444
+'union' の右辺の型が正しくありません
+#Rhs of 'union' is not a correct type
+######################################################################
+###                  Statement specific
+######################################################################
+306
+ブロック文が、最後の文の前で終わります
+#Block-Stmt will be terminated before last statement
+308
+状態指示子が良形ではありません
+#State designator is not well-formed
+309
+右辺が、状態指示子で定義された型と互換性がありません
+#Rhs not compatible with defining type of state designator
+310
+else文が無いので、操作が値を返さないかもしれません
+#operation may return without a value because of the empty else-statement
+311
+列forループ文が列に対して使われていません
+#Seq-For-Loop-Stmt not used on sequence
+312
+列forループ文のパターンは、空列とは一致しません
+#Pattern in Seq-For-Loop-Stmt cannot be matched to the empty sequence
+313
+列forループ文のパターンは、一致しません
+#Pattern in Seq-For-Loop-Stmt cannot be matched
+314
+集合forループ文が集合に対して使われていません
+#Set-For-Loop-Stmt not used on set
+315
+集合forループ文のパターンは、空集合とは一致しません
+#Pattern in Set-For-Loop-Stmt cannot be matched to empty set
+316
+集合forループ文のパターンは、一致しません
+#Pattern in Set-For-Loop-Stmt cannot be matched
+317
+下限が整数ではありません
+#Lower bound is not an integer value
+318
+上限が整数ではありません
+#Upper bound is not an integer value
+319
+ステップ幅を示す式が整数ではありません
+#Step expression is not an integer value
+328
+`always statement'の本文が存在しません
+#Body of `always statement' cannot exit
+329
+`trap statement'の本文が存在しません
+#Body of `trap statement' cannot exit
+330
+`trap statement'のパターンが一致しません
+#Pattern in `trap statement' cannot match
+337
+文に返値があってはいけません
+#Statement must not have a return value
+
+
+######################################################################
+###                      Class specific
+######################################################################
+1
+"%1" クラスが定義されていません
+#The class "%1" has not been pre-checked
+2
+継承が循環しています
+#Circular inheritance dependecy detected
+25
+インスタンス"%1"が初期化されていません
+#The instance "%1" is not initialized
+26
+#使っていないメッセージのようである by dr.k
+It is not allowed to mix declarative and trace synchronisation
+27
+ガードはブール式でなければなりません
+#Guard must be a boolean expression
+32
+durationは正の自然数でなければなりません
+#Duration must be a positive natural number
+35
+"%1"は"%2"のスーパークラスではありません
+#"%1" is not a superclass of class "%2"
+44
+インスタンス変数は"%1"クラスから見えないので、"%2"はここでは使えません
+#Instance variables are not visible from class "%1" so "%2" cannot be used here
+45
+"%1"はスーパークラスで重複して定義されています
+#"%1" is multiple defined in super classes
+106
+外部節中の"%1"の型は、状態定義中の正しい型ではありません
+#The type listed for "%1" in the external clause is not the correct type from the state definition
+107
+"%1"はこの外部節で重複して定義されています
+#"%1" is multiple used in this ext clause
+108
+"%1"はパラメータリストとこの外部節の両方で使われています
+#"%1" is used in both parameter list and in this ext clause
+284
+"%1"は定義されていないクラスです
+#"%1" is not an existing class
+285
+式はオブジェクト参照を返さなければなりません
+#Expression must return an object reference
+286
+式が、"%1"クラスのオブジェクト参照と互換性がありません
+#Expression is not compatible with object reference of class "%1"
+288
+act式は、許可述語の中でのみ許されています
+#Act-Expr only allowed in permission predicates
+289
+fin式は、許可述語の中でのみ許されています
+#Fin-Expr only allowed in permission predicates
+290
+waiting式は、許可述語の中でのみ許されています
+#Waiting-Expr only allowed in permission predicates
+291
+req式は、許可述語の中でのみ許されています
+#Req-Expr only allowed in permission predicates
+331
+start文中の式は、オブジェクト参照を返さなければなりません
+#Expression in start statement must return an object reference
+332
+startlist文中の式は、オブジェクト参照の集合を返さなければなりません
+#Expression in startlist statement must return a set of object references
+333
+"%1"クラスにスレッド定義はありません
+#Class "%1" has no thread definition
+334
+delay文の式が、正の自然数ではありません
+#Expression in Delay-Stmt is not a positive natural number
+335
+select文は手続きスレッド中でのみ使えます
+#Select statement is only allowed in procedural threads
+403
+CPUはシステムで定義されたクラスで、新たに定義することはできません
+#CPU is a predefined class
+404
+BUSはシステムで定義されたクラスで、新たに定義することはできません
+#BUS is a predefined class
+405
+CPUクラスの継承は許されていません
+#No inheritance from CPU is allowed
+406
+BUSクラスの継承は許されていません
+#No inheritance from BUS is allowed
+407
+"%1"システムの継承は許されていません
+#No inheritance from system "%1" is allowed
+408
+CPUのインスタンスは、systemクラスでのみ作成できます
+#Instances of CPU can only be made in a system class
+409
+BUSのインスタンスは、systemクラスでのみ作成できます
+#Instances of BUS can only be made in a system class
+410
+systemクラスのインスタンスは、"%1"では作れません
+#Instances of system classes cannot be made: "%1"
+
+######################################################################
+###                     Module specific
+######################################################################
+56
+"%1"はそれ自身のインスタンスを作成できません
+#The module "%1" cannot instantiate itself
+59
+"%1"はモジュール本体ですでに定義されています
+#"%1" is already defined in module body
+61
+"%1"操作はモジュールのパラメータとして使えません
+#Operation "%1" cannot be used as parameter to module
+63
+"%1"モジュール のインタフェースが見つからず、検査されません
+#The interface to module "%1" is not found and will not be tested
+74
+パラメータ化されていないモジュールは初期化できません
+#A non-parameterised module cannot be initialised
+75
+型は、一般の式でインスタンス化できません
+#A type cannot be instantiated with a general expression
+87
+"%1"は、一般の式でインスタンス化できません
+#"%1" cannot be instantiated with a general expression
+76
+値を型でインスタンス化できません
+#A value cannot be instantiated with a type
+79
+関数を型でインスタンス化できません
+#A function cannot be instantiated with a type
+81
+関数は関数でインスタンス化しなければなりません
+#A function must be instantiated with a function
+82
+インスタンス化された"%1"は、パラメータと互換性がありません
+#Instantiation of "%1" is not compatible with the parameter
+83
+"%1"は "%2"モジュールのパラメータではありません
+#"%1" is not a parameter to module "%2"
+85
+"%1"は、基本データ型でパラメータ化できません
+#"%1" cannot be instantiated with a basic type
+86
+"%1"はモジュールのパラメータではありません
+#"%1" is not a module parameter
+88
+"%1"はインスタンス化しなければなりません
+#"%1" must be instantiated
+105
+"%1"がパラメータリストと状態定義の両方に使われています
+#"%1" is used in both parameter list and in the state definition
+281
+すべての型変数がインスタンス化されなければなりません
+#All type variables must be instantiated
+344
+操作を、モジュールのパラメータとして使うことはできません
+#Operations cannot be used as parameters to modules
+
+######################################################################
+###   Import / export
+######################################################################
+###54
+###A parametrised module cannot be imported
+55
+"%1"型は、"%2"モジュールから輸出されていません
+#The type "%1" is not exported from module "%2"
+68
+値"%1"は、"%2"モジュールから輸出されていません
+#The value "%1" is not exported from module "%2"
+69
+"%1"関数 は、"%2"モジュールから輸出されていません
+#The function "%1" is not exported from module "%2"
+71
+"%1"操作は、"%2"モジュールから輸出されていません
+#The operation "%1" is not exported from module "%2"
+57
+"%1"型は"%2"に輸入されていません
+#The type "%1" is not imported in "%2"
+64
+パラメータ化モジュールが輸入できません
+#A paramaterised module cannot be imported
+###65
+###"%1" is multiple defined
+66
+"%2"は、このモジュールですでに使われているので、"%1"の名前を"%2"に変更はできません
+#"%1" cannot be renamed to "%2" because that name is already used in this module
+67
+輸入した型は、輸出した型と異なります
+#Imported type different from exported type
+70
+輸入した関数のシグネチャは、輸出した型と異なります
+#Imported function signature different from exported type
+72
+輸入した操作のシグネチャは、輸出した型と異なります
+#Imported operation signature different from exported type
+92
+"%1"は、正しくないシグネチャで輸出されました
+#"%1" is exported with wrong signature
+340
+モジュールは拡張できません
+#Module could not be expanded
+341
+状態の型が、同様の型定義と互換性がありません
+#Type of state not compatible with similar type definition
+342
+輸出されるすべての値は、型を付けるべきです
+#All values in export section should be typed
+343
+"%1"型はここでは輸出できません
+#The type "%1" cannot be exported here
+93
+"%1"の型変数リストは、正しくない型で輸出されました
+#Type variable list for "%1" exported with wrong types
+94
+輸入された型変数リストは、輸出されたものと異なります
+#Imported type variable list different from exported
+
+
+######################################################################
+###                      Types
+######################################################################
+3
+型名"%1"は無限です
+#Type name "%1" is infinite
+12
+"%1"関数の返値の型は、シグネチャと異なります
+#Return type of function for "%1" is different from signature
+19
+"%1"操作の返値の型は、シグネチャと異なります
+#Return type of operation for "%1" is different from signature
+###24
+###Initialization expression is not compatible with defining type of "%1"
+30
+式の評価結果は自然数にならなければなりません
+#Expression must evaluate to a natural number
+36
+"%1"の型情報がありません
+#Missing type information for "%1"
+38
+名前変更された型"%1"は、インターフェース部には使えません
+#The renamed type "%1" cannot be used in the interface part
+58
+型パラメータは、1回しか記述できません
+#Type parameter can only be mentioned once
+###78
+###Instantiation of "%1" is not compatible with the parameter
+97
+型定義"%1"は無視されます
+#Type definition "%1" is disregarded
+115
+"%1"の条件式はブール型ではありません
+#Test expression in "%1" is not of boolean type
+116
+then部が正しい型ではありません
+#then-part is not of correct type
+117
+else部が正しい型ではありません
+#else-part is not of correct type
+118
+elseif部が正しい型ではありません
+#elseif-part is not of correct type
+119
+others部が正しい型ではありません
+#others branch is not of correct type
+120
+caseの選択部が正しい型ではありません
+#Case alternative is not of correct type
+231
+"%1"の述語がブール式ではありません
+#Predicate for "%1" is not a boolean expression
+237
+式が列型ではありません
+#Expression is not a sequence type
+###255
+###Type of field "%1" is not compatible with its defined type
+256
+指定されたレコード修正子と互換性のある項目を持つレコード型"%1"がありません
+#None of the composite types "%1" have fields which are compatible with given field modifications
+276
+式がレコード型ではありません
+#Expression is not a composite type
+277
+式がレコード型またはオブジェクト参照型ではありません
+#Expression is not a composite type or an object reference type
+307
+初期化の式は、"%1"に定義されている型と互換性がありません
+#Initialization expression is not compatible with defining type of "%1"
+336
+条件式はブール型でなければなりません
+#Condition must be a boolean expression
+338
+"%1"は "%2"と互換性がありません
+#"%1" is not compatible with "%2"
+411
+active式は、許可述語の中でのみ許されています
+#Active-Expr only allowed in permission predicates
+447
+'?'を関数／操作の戻り値の型に使用するべきではありません
+#'?' must not be in function/operation return type
+
+######################################################################
+###                     Empty Sets/maps/seqs
+######################################################################
+128
+'dunion'は常に空集合を返します
+#The 'dunion' will always give an empty set
+130
+'dinter'の引数として空集合が与えられています
+#An empty set is given as argument to 'dinter'
+131
+'dinter'の結果が空集合になるかもしれません
+#Result of 'dinter' can be an empty set
+135
+'conc'の結果が空列になるかも知れません
+#Result of 'conc' can be an empty sequence
+139
+'hd'の引数が空列です
+#Argument of 'hd' is an empty sequence
+140
+'hd'の引数が空列になるかもしれません
+#Argument of 'hd' can be an empty sequence
+142
+'tl'の引数が空列です
+#Argument of 'tl' is an empty sequence
+143
+'tl'の引数が空列になるかもしれません
+#Argument of 'tl' can be an empty sequence
+147
+'merge'は常に空の写像を返します
+#'merge' will always give an empty map
+194
+この集合の共通部分は、常に空集合になります
+#This set intersection will always be equal to an empty set
+212
+空の写像に '<:'が使われています
+#An empty map is used with '<:'
+213
+'<:'は常に空の写像を返します
+#The '<:' will always yield an empty map
+216
+空の写像に '<-:'が使われています
+#An empty map is used with '<-:'
+220
+空の写像に ':>'が使われています
+#An empty map is used with ':>'
+221
+':>'は常に空の写像を返します
+#The ':>' will always yield an empty map
+224
+空の写像に':->'が使われています
+#An empty map is used with ':->'
+243
+空列は修正できません
+#An empty sequence cannot be modified
+261
+列が空かもしれません
+#Sequence may be empty
+262
+写像が空かもしれません
+#Map may be empty
+
+
+######################################################################
+###                      Misc
+######################################################################
+4
+選択子"%1"が多重定義されています
+#Selector "%1" is multiple defined
+7
+型変数"%1"は、ここでは許されていません
+#Type variable "%1" is not allowed here
+10
+"%1"関数のカリー化引数が多すぎます
+#There is too many Curried parameters in the function "%1"
+13
+カリー化関数は事後条件を持てません
+#A Curried function cannot have a post-condition
+77
+置換式に誤りがあります
+#Substitution expression is erroneous
+84
+置換型に誤りがあります
+#Substitution type is erroneous
+95
+状態名"%1"を無視します
+#State name "%1" is disregarded
+98
+関数"%1"のシグネチャを無視します
+#Ignoring function signature for "%1"
+99
+操作"%1"のシグネチャを無視します
+#Ignoring operation signature "%1"
+110
+"%1"は予約された接頭辞を含んでいます
+#"%1" contains a reserved prefix
+257
+修正は解析できません
+#Modifications cannot be analyzed
+292
+旧名称はこの文脈では使えません
+#Old names cannot be used in this context
+339
+存在しない構成要素を使おうとしています
+#You are trying to test a non-existing construct
+349
+式中で操作が呼ばれています
+#Operation call in expression
+355
+"%1"モジュールが見つかりません
+#The module "%1" cannot be found
+448
+事前／事後条件式中で操作が呼ばれています
+#Operation call in pre/post function
+
+######################################################################
+###                 Multilple definitions
+######################################################################
+9
+パラメータの識別子と"%1"の結果の識別子が重複しています
+#Parameter identifiers overlap the result identifiers for "%1"
+11
+関数"%2"のカリー化引数リスト中で、"%1"は複数回使われています
+#"%1" is used multiple times in the Curried argument list for the function "%2"
+18
+状態構成要素"%1"のスコープは隠されています
+#The scope of the state component "%1" is now hidden
+73
+"%1"は、多重定義されています
+#"%1" is multiple defined
+100
+"%1"は、多重定義されているので、同じ値を持たねばなりません
+#"%1" is multiple defined, and must have the same value
+102
+"%1"は、異なる2つの型に割り当てられています
+#"%1" is assigned to two different types
+103
+"%1"は多重定義で使うことはできません
+#"%1" cannot be used in multiple definitions
+112
+"%1"は、def式で再定義されています
+#"%1" is redefined in Def-Expr
+303
+"%1"がdef文で再定義されています
+#"%1" is redefined in Def-Stmt
+348
+項目"%1"は、1回以上修正されています
+#Field "%1" is modified more than once
+451
+"%1"がblock文で再定義されています
+#"%1" is redefined in Block-Stmt
+
+
+######################################################################
+###                    Undefined
+######################################################################
+5
+タグ"%1"は未定義です
+#Unknown tag "%1"
+6
+型名"%1"は未定義です
+#Type name "%1" is not defined
+28
+操作"%1"は未定義です
+#Operation "%1" is not defined
+29
+トレース"%1" は未定義です
+#Trace "%1" is not defined
+34
+"%1"は未定義です
+#Unknown identifier "%1"
+39
+型 "%1"は未定義です
+#Unknown type "%1"
+40
+状態参照"%1"は未定義です
+#Unknown state reference "%1"
+80
+置換名は未定義です
+#Substitution name is not defined
+###248
+###A composite type with tag "%1" is not defined
+254
+構成要素の型"%1"は、"%2"で定義されていません
+#Composite type "%1" is not defined in "%2".
+278
+無効な項目が選択されています
+#An invalid field is selected
+279
+項目"%1"は、 "%2"とタグ付けされたレコードとして定義されていません
+#The field "%1" is not defined for the record tagged with "%2"
+280
+項目"%1"は、"%2"クラスで定義されていません
+#The field "%1" is not defined in class "%2"
+287
+"%1"クラスは未定義です
+#Class "%1" is undefined
+296
+タグ"%1"の型は存在しません
+#There exists no type with tag "%1"
+89
+"%1はモジュール中で定義されていません
+#"%1" is not defined in module
+366
+多相識別子"%1"は未定義です
+#Unknown polymorphic identifier "%1"
+367
+多相関数"%1"を、レコード項目選択子として適用することはできません
+#Cannot apply polymorphic function "%1" to record field selector
+
+######################################################################
+###                    Unused
+######################################################################
+33
+"%1"は使われていません
+#"%1" is not used
+###47
+###The value "%1" is not used in module "%2"
+48
+状態構成要素"%1"は、モジュール"%2"中で使われていません
+#The state component "%1" is not used in module "%2"
+49
+"%1"型はモジュール"%2"中で使われていません
+#The type "%1" is not used in module "%2"
+50
+"%1"関数は、モジュール"%2"中で使われていません
+#The function "%1" is not used in module "%2"
+52
+操作"%1"はモジュール"%2"中で使われていません
+#The operation "%1" is not used in module "%2"
+53
+値"%1"はモジュール"%2"中で使われていません
+#The value "%1" is not used in module "%2"
+
+
+######################################################################
+###      Pre / Post / Inv / Init
+######################################################################
+8
+不変条件のパターンは、型名"%1"であってはいけません
+#Pattern in invariant must not be the type name "%1"
+22
+事前条件はブール式でなければなりません
+#Pre condition must be boolean expression
+14
+事後条件はブール式でなければなりません
+#Post condition must be boolean expression
+15
+不変条件はブール式でなければなりません
+#Invariant condition must be boolean expression
+16
+初期化条件はブール式でなければなりません
+#Initialisation condition must be boolean expression
+17
+例外条件はブール式でなければなりません
+#Exception condition must be boolean expression
+352
+不変条件のパターンは、型定義と異ならなければなりません
+#Invariant pattern is different from type definition
+
+######################################################################
+###           Patterns / Bindings
+######################################################################
+101
+値定義の右辺が一致しません
+#Rhs of value definition cannot match
+104
+パターンが一致しません
+#Pattern cannot match
+121
+パターンは決して一致しません
+#Pattern can never match
+111
+def式中のパターンが一致しません
+#Pattern in Def-Expr cannot match
+113
+let be式のパターンが一致しません
+#Pattern in Let-Be-Expr cannot match
+203
+この帰属チェックは、常にfalseになる
+#This membership check will always yield false
+205
+この非帰属チェックは、常にtrueになる
+#This not-membership check will always yield true
+229
+"%1" の束縛に誤りがあります
+#Binding for "%1" is erroneous
+230
+「すべての束縛が良形」ではない
+#Not all bindings are well-formed
+232
+このiota式には束縛できません
+#No binding is possible for this iota expression
+236
+列内包式中の束縛が、数値でない値か多重束縛を使っています
+#Binding in Seq-Comprh-Expr uses non-numeric values or multiple bindings
+282
+パラメーターリスト中で束縛できません
+#No binding is possible in the parameter list
+283
+is式は常にfalseになります
+#Is-Expr will always be false
+293
+集合束縛に空集合が使われています
+#An empty set is used in a set bind
+294
+式を定義する型が、束縛と一致しません
+#Type of defining expression is not compatible with binding
+295
+式の型が集合型ではありません
+#Type of expression is not a set type
+298
+項目"%1"は、名前またはdon’t careパターンのみと一致します
+#Field "%1" can only be matched with a name or don't care pattern
+299
+パターンの数と型の数が異なります
+#Number of patterns different than number of types
+300
+ラムダ式のパラメータで、パターン識別子が多重使用されています
+#Multiple use of pattern identifier in parameters to Lambda-Expr
+301
+%1"は、互換性のない型で、複数回束縛されています
+#"%1" is bound multiple times with incompatible types
+302
+def文のパターンが一致しません
+#Pattern in Def-Stmt cannot match
+304
+等式の右辺は、パターンに一致する値を返さなければなりません
+#Rhs of equal definition must return a value to pattern
+305
+let be文中のパターンが一致しません
+#Pattern in Let-Be-Stmt cannot match
+345
+状態の不変条件中のパターンが、状態名であってはなりません
+#Pattern in state invariant must not be the state name "%1"
+346
+状態の不変条件中のパターンが一致しません
+#Pattern in state invariant cannot match
+347
+状態の初期化で記述しているパターンが、状態名"%1"であってはなりません
+#Pattern in state initialisation must not be the state name "%1"
+446
+narrow式は常に失敗します
+#Narrow-Expr will always be fail
+462
+列束縛に空列が使われています
+#An empty seq is used in a seq bind
+
+######################################################################
+###                function/operation definition/call
+######################################################################
+272
+関数適用時のパラメータが正しい型ではありません
+#Function is not applied with parameters of the correct type
+274
+操作適用時のパラメータが正しい型ではありません
+#Operation is not applied with parameters of the correct type
+273
+関数適用時のパラメータ数が、関数定義と一致しません
+#Function applied with wrong number of parameters
+275
+操作適用時の引数の数が、操作定義と一致しません
+#Operation applied with wrong number of arguments
+320
+引数が操作定義と一致しません
+#Arguments do not match definition of operation
+325
+引数が、"%2"クラス の操作"%1"の定義と一致しません
+#Arguments do not match definition of operation "%1" from class "%2"
+326
+"%2"クラス の操作"%1"の引数の数が、操作定義と一致しません
+#Operation "%1" from class "%2" applied with wrong number of arguments 
+327
+操作"%1"は "%2"クラスで定義されていません
+#The operation "%1" is not defined in class "%2"
+373
+引数が、継承パス"%2"の"%1"クラスで定義されたオーバーライド操作の引数と一致しません
+#Argument does not match argument in overridden operation in class "%1" in inheritance path "%2"
+374
+引数の数が、継承パス"%2"の"%1"クラスで定義されたオーバーライド操作定義と一致しません
+#Number of arguments does not match overridden operation in class "%1" in inheritance path "%2"
+375
+返値の型が、継承パス"%2"の"%1"クラスで定義されたオーバーライド操作定義と一致しません
+#Return type does not match return type in overridden operation in class "%1" in inheritance path "%2"
+376
+引数が、継承パス"%2"の"%1"クラスで定義されたオーバーライド関数定義と一致しません
+#Argument does not match argument in overridden function in class "%1" in inheritance path "%2"
+377
+引数の数が、継承パス"%2"の"%1"クラスで定義されたオーバーライド関数定義と一致しません
+#Number of arguments does not match overridden function in class "%1" in inheritance path "%2"
+378
+返値の型が、継承パス"%2"の"%1"クラスで定義されたオーバーライド関数定義と一致しません
+#Return type does not match return type in overridden function in class "%1" in inheritance path "%2"
+438
+抽象関数／操作 "%1" は public か protected と定義しなければなりません
+#Abstract function/operation "%1" must be defined as public or protected
+439
+関数／操作 "%1" は実装されていなければなりません
+#Function/operation "%1" must be implemented
+
+######################################################################
+###    Errors regarding things, which is not part of standard vdmsl
+######################################################################
+350
+未定義式は、ISO標準VDM-SLでは使えません
+#Undefined-Expr is not supported in standard VDM-SL
+351
+モジュールは、ISO標準VDM-SLでは使えません
+#Modules are not supported by standard VDM-SL
+353
+陽関数の事後条件は、ISO標準VDM-SLでは使えません
+#Post conditions in explicit functions are not supported in standard VDM-SL
+354
+陽関操作の事後条件は、ISO標準VDM-SLでは使えません
+#Post conditions in explicit operations are not supported in standard VDM-SL
+356
+error文は、ISO標準VDM-SLでは使えません
+#Error-Stmt is not supported in standard VDM-SL
+
+######################################################################
+###    Error messages located in the code generator.
+######################################################################
+357
+"%1" は使えません
+#"%1" is not supported
+358
+このタイプの型再帰は使えません
+#This type of type recursion is not supported
+359
+型名"%1"は、未定義です
+#Unknown typename "%1"
+360
+DLモジュールは使えません
+#DL modules not supported
+361
+"%1"は使えないので、コード生成されません
+#"%1" is not supported and is not code generated
+362
+"%1"はスーパークラスの呼び出しとしてコード生成されます
+#"%1" is code generated as a call to super
+363
+"%1"が削除されています
+#"%1" is removed
+######################################################################
+### Error messages for access violation
+######################################################################
+368
+"%1"に対するアクセス違反です
+#Access violation for "%1"
+369
+"%1"でスコープが狭められています
+#Scope narrowed by "%1"
+370
+"%1"に対する init mapの型チェックは使えません
+#Typechecking of init map for "%1" not supported
+
+# Duration statement
+371
+durationが、正の数ではありません
+#Duration is not a positive number
+372
+オブジェクト指示子が、オブジェクト参照を示していません
+#Object designator does not refer to an object reference
+373
+'duration'の引数が数値型ではありません
+#Argument of 'duration' is not a numeric type
+399
+jitterは、非負の自然数でなければなりません
+#Jitter must evaluate to a non-negative natural number
+400
+distanceは、非負の自然数でなければなりません
+#Distance must evaluate to a non-negative natural number
+401
+offsetは、非負の自然数でなければなりません
+#Offset must evaluate to a non-negative natural number
+402
+これは正数定数でなければならない
+#This must be a constant positive number
+
+# Static members
+379
+staticクラス要素中で、self式は使えません
+#Can not use self expression in a static class member
+380
+staticクラス要素中で、非staticクラス要素"%1"の参照はできません
+#Can not refer to non-static class member "%1" in a static class member
+381
+非staticクラス要素中で、staticクラス要素"%1"の参照はできません
+#Can not refer to a static class member "%1" in a non-static class member
+
+# Overloading
+382
+オーバーロード操作のパラメータ型が、他の操作と重複しています
+#Parameter type of overloaded operation overlaps with another operation
+383
+オーバーロード関数と操作の返値の型が異なります
+#Return types of overloaded functions and operations are different
+384
+オーバーロード関数のパラメータ型が、他の関数と重複しています
+#Parameter type of overloaded function overlaps with another function
+385
+この引数の数と一致するオーバーロード関数または操作が存在しません
+#No overloaded function or operation with this number of arguments exists
+386
+これらの引数が一致するオーバーロード関数または操作が存在しません
+#No overloaded function or operation matches these arguments
+387
+これらの引数が一致するオーバーロード関数または操作が複数存在します
+#More than one overloaded function or operation matches these arguments
+
+# Constructors
+388
+このクラスとスーパークラスで、ただ一つだけ一致する構成子を見つけることができません
+#No unique matching constructor could be found in this class or its super classes
+389
+"%1"クラスのスコープ中で、デフォルトの構成子がありません
+#Default constructor is not in scope for class "%1"
+390
+構成子がｍ"%1"クラスの参照を返しません
+#Constructor does not return a reference to class "%1"
+391
+"%1"クラスは、static要素"%2"を持っていません
+#Class "%1" has no static member "%2"
+393
+構成子は、正しい返値型"%1"を持っていません
+#Constructor does not have correct return type: "%1"
+394
+クラス限定子"%1"は、オブジェクトクラスのサブクラスでなければなりません
+#Class qualifier "%1" must be a subclass of the object class
+395
+抽象クラス"%1"は、インスタンスを作ることができません
+#Abstract class "%1" can not be instantiated
+396
+レコード型は、限定子を持つことができません
+#Composite type can not have qualified field
+397
+値が型と互換性がありません
+#Value is not type-compatible 
+398
+トークン値が、期待されたものではありません
+#Token value was not expected
+432
+"%1"のような構成子はasync(非同期)として定義できません
+#Constructors like "%1" cannot be defined async
+440
+一致する構成子が"%1"クラスで定義されていません
+#Matching constructor is not defined locally in class "%1"
+445
+構成子はstatic(静的)として定義できません
+#Constructor cannot be defined static
+
+#Recursion and Measures
+412
+"%1"は再帰ですがmeasure句が定義されていません
+#"%1" is recursive but does not have a measure defined
+413
+"%1"とそのmeasure句が、同じ定義域を持っていません
+#"%1" and its measure do not have the same domain
+414
+"%1"のmeasure句の値域が自然数あるいは自然数の組ではありません
+#"%1" measure range is not nat or a tuple of nat
+415
+"%1"は"%2" と相互再帰ですが、"%2"はmeasure句を定義していません
+#"%1" is mutual recursive with %2 and %2 does not have measure defined
+416
+"%1"と"%2"のmeasure句は、同じ値域を持たなければなりません
+#The measures of "%1" and "%2" must to have the same range 
+417
+"%1"はmeasure句を持っていますが、再帰関数ではありません
+#"%1" has a measure but it is not recursive
+418
+タグ"%1"を持つ型がスコープ上に存在しません
+#There exists no type with tag "%1" that is visible
+419
+繰り返しパターンの上限は、下限より大きくなければなりません
+#Higher repeat pattern should be larger than lower repeat pattern
+420
+限定付き繰り返しtrace(qualified repeat trace)中のパターンが一致しません
+#Pattern in qualified repeat trace cannot match
+421
+traces句の中で、型束縛は使えません
+#A type binding cannot be used in traces
+449
+measure "%1" に高階関数は使用できません
+#measure "%1" must not be curry function
+450
+Measureの型引数は同じでなければなりません
+#Measure's type parameters must match functions's
+
+422
+"%1"はエラー422です
+#Error 422 "%1"
+423
+オーバーロード操作"%1"が許可述語の中で使われています
+#Overloaded operation "%1" used in permission guard
+424
+オーバーロード操作"%1"の許可述語です
+#Permission guard for overloaded operation "%1"
+425
+排他制御述語(mutex)が、オーバーロード操作"%1"を含んでいます
+#Mutex includes overloaded operation "%1"
+426
+"%1"に対して、多重に許可述語が定義されています
+#Multiple permission predicates are defined for "%1"
+427
+"%1"からスレッドが多重に継承されています
+#Multiple threads are inherited from "%1"
+428
+許可述語は、非ピュア操作にのみ定義できます
+#Permission predicates can only be defined for impure  operations
+429
+履歴カウンターは、"%1"のような関数には使えません
+#History counters cannot be used for functions like "%1"
+430
+構成子"%1"に許可述語を定義することはできません
+#Cannot put permission guard on constructor "%1"
+431
+履歴カウンターは"%1"のような構成子に使うことはできません
+#History counters cannot be used for constructors like "%1"
+433
+システムクラス"%1"は、他のクラスから継承することはできません
+#The system class "%1" cannot inherit from other classes
+434
+delay引数は、"%1"中のperiodより小さくなければなりません
+#Delay argument must be less than the period in "%1"
+435
+"%1"は定義されていません
+#%1 is not defined
+436
+非同期操作"%1"は値を返すことができません
+#Asynchronous operation %1 cannot return a value
+454
+Pure operation "%1" must return a value
+455
+Constructors like "%1" cannot be defined pure
+456
+Pure operation "%1" used in permission guard
+457
+History counters cannot be used for pure operation like "%1"
+458
+Function or pure operation "%1" used in thread
+459
+Pure operation cannot exit
+460
+Impure operation call "%1" in pure operation
+461
+Impure operation "%1" override pure operation 

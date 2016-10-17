@@ -1,0 +1,332 @@
+wm title . "MSAW prototype Model0"
+
+# scale used for the display
+set scale 15
+# maximum coordinate used in specification
+set max_coordinate 32
+# delay used for planes to replace themselves
+set delay 5
+# index to events in history
+set clock 0
+# pending indicates any pending inc_clock events
+set pending "false"
+# set the trace of messages
+set trace_log {}
+
+# make the commands menu with buttons
+frame .menu -relief raised -borderwidth 1
+button .menu.quit -text "Quit" -command exit -state normal
+button .menu.reset -text "Reset" -command do_reset -state disabled
+button .menu.stop -text "Stop" -command do_stop -state disabled
+button .menu.start -text "Start" -command do_start -state normal
+pack .menu -side top -fill x
+pack .menu.quit .menu.reset .menu.start .menu.stop \
+	-side left -fill both -expand yes
+
+# make the options menu with buttons
+frame .opt -relief raised -borderwidth 1
+checkbutton .opt.grid -text "Grid" \
+	-command {do_grid $grid .c $max_coordinate $scale}
+checkbutton .opt.map -text "Map" -command {do_map $map .c}
+checkbutton .opt.legend -text "Legend" -command {do_legend $legend .c}
+checkbutton .opt.trace -text "Trace" -command {do_trace $trace}
+label .opt.label -text "Delay:"
+scale .opt.delay -from 1 -to 10 -showvalue false  \
+		-orient horizontal -variable delay -command reset_delay
+	
+pack .opt -side top -fill x
+pack .opt.grid .opt.map .opt.legend .opt.trace \
+	-side left -fill both -expand yes
+pack .opt.label .opt.delay \
+	-side left -fill both 
+
+# create the main drawing area
+canvas .c -width [expr $max_coordinate*$scale] \
+	-height [expr $max_coordinate*$scale]
+pack .c -side bottom 
+
+# response to stop button (changed state of button is detected in main loop)
+proc do_stop {} {
+	global .menu.stop
+	.menu.stop configure -state disabled
+}
+
+# response to reset button (clean up and start)
+proc do_reset {} {
+	global clock .c 
+	.c delete alarm
+	after cancel inc_clock
+	set clock 0
+	do_start
+}
+
+# get a line from history of stdin
+proc getline line {
+	global infile
+	global history clock
+	upvar $line l
+	if {[info exists history($clock)]} {
+		set l $history($clock) 
+		if {[winfo exists .trace]} {
+			.trace.list see $clock
+			.trace.list selection clear 0 end
+			.trace.list selection set $clock
+		}
+	} else {
+		global trace_log
+		if {[gets $infile l] < 0} {
+			lappend trace_log "<EOF>"
+			return -1
+		}
+		lappend trace_log $l
+		if {[winfo exists .trace]} {
+			.trace.list insert end $l
+			.trace.list yview end
+			.trace.list selection clear 0 end
+			.trace.list selection set end
+		}
+	}
+	return 1
+}
+
+# response to start button (main loop)
+proc do_start {} {
+	global .menu.start .menu.stop .menu.reset \
+		clock delay history 
+	.menu.start configure -state disabled -text Continue
+	.menu.stop configure -state normal
+	.menu.reset configure -state disabled
+	
+	global infile
+	set infile [open "output.log"]
+
+	while { ([.menu.stop cget -state] != "disabled") && \
+		([getline line] >= 0) } {
+		set command [lindex $line 0]
+		switch -exact $command {
+		T: {
+			set history($clock) $line
+			do_delay [expr $delay]
+			tkwait variable clock
+			.c delete sp
+		}
+		OA: { eval make_oa .c [lrange $line 1 end] }
+		ZA: { eval make_za .c [lrange $line 1 end] }
+		SP: {
+			eval make_sp .c [lrange $line 1 end]
+			set history($clock) $line
+			do_delay [expr $delay/4]
+			tkwait variable clock
+		}
+		Alarm: {
+			eval show_alarm [lrange $line 1 end]
+			set history($clock) $line
+			do_delay [expr $delay/4]
+			tkwait variable clock
+			}
+		Radar: {
+			eval show_flight [lrange $line 1 end]
+			set history($clock) $line
+			do_delay [expr $delay/4]
+			tkwait variable clock
+			}
+		default { puts stderr "Unknown command: \"$line\"" }
+		}
+	}
+	if { [.menu.stop cget -state] == "disabled" } {
+		.menu.start configure -state normal
+	}
+	.menu.reset configure -state normal
+	.menu.stop configure -state disabled
+}
+
+# create a new object (Zone Aeroport)
+proc make_za { c x y range height range_sol} {
+	global scale
+	set width_cone [expr $range_sol*$scale]
+	set width_cyl [expr $range*$scale]
+	set width_zone [expr $width_cyl-$width_cone]
+	set width_marge [expr $width_zone/2]
+	set width_cone [expr $width_cone+$width_marge]
+	$c create oval [expr $x*$scale-$width_cone] \
+		[expr $y*$scale-$width_cone] \
+		[expr $x*$scale+$width_cone] [expr $y*$scale+$width_cone] \
+		-outline "" -outline yellow -width $width_zone
+	$c create text [expr $x*$scale] [expr $y*$scale] -text $height
+}
+
+# create a new object (Obstacle Artificiel)
+proc make_oa { c x y range height } {
+	global scale
+	set width [expr $range*$scale]
+	$c create oval [expr $x*$scale-$width] [expr $y*$scale-$width] \
+		[expr $x*$scale+$width] [expr $y*$scale+$width] \
+		-outline "" -fill yellow
+	$c create text [expr $x*$scale] [expr $y*$scale] -text $height
+}
+
+# create a new object (Obstacle Artificiel)
+proc make_sp { c xs ys xe ye} {
+	global scale
+	$c create line [expr $xs*$scale] [expr $ys*$scale] \
+		[expr $xe*$scale] [expr $ye*$scale] \
+		-width [expr $scale/5] -arrow last -tags sp
+}
+
+# create an alarm
+proc make_alarm { c x y } {
+	global scale
+	set width [expr $scale/6]
+	$c create oval \
+		[expr $x-$width] [expr $y-$width] \
+		[expr $x+$width] [expr $y+$width] \
+		-outline "" -fill red -tag alarm
+}
+
+# show an alarm (coordnates are already screen coordinates)
+proc show_alarm { flight } {
+	global flight_map 
+	if {[info exists flight_map($flight)]} {
+		set pos [.c coords $flight_map($flight)]
+		# create small dot to be left behind
+		make_alarm .c [expr ([lindex $pos 0]+[lindex $pos 2])/2] \
+			[expr ([lindex $pos 1]+[lindex $pos 3])/2]
+		# change the outline of the plane
+		.c itemconfigure $flight_map($flight) -outline red
+	} else {
+		puts stderr "Alarm for unknown flight: $flight"
+	}
+}
+
+# create a flight
+proc make_flight { c flight x y z } {
+	global scale
+	set width [expr $scale/2]
+	set id [$c create oval \
+		[expr $x*$scale-$width] [expr $y*$scale-$width] \
+		[expr $x*$scale+$width] [expr $y*$scale+$width] \
+		-outline "" -width [expr $scale/4] -fill green]
+	$c create text \
+		[expr $x*$scale+$width] [expr $y*$scale] \
+		-anchor w -text "$z\n$flight" -tags "t$id" 
+	return $id
+}
+
+# show position information (flight symbol, height and name)
+proc show_flight { flight x y z } {
+	global flight_map scale 
+	set width [expr $scale/2]
+	if {[info exists flight_map($flight)]} {
+		# flight existed so move it
+		.c coords $flight_map($flight) \
+			[expr $x*$scale-$width] [expr $y*$scale-$width] \
+			[expr $x*$scale+$width] [expr $y*$scale+$width]
+		.c itemconfigure $flight_map($flight) -outline ""
+		.c coords t$flight_map($flight) \
+			[expr $x*$scale+$width] [expr $y*$scale]
+		.c itemconfigure "t$flight_map($flight)" -text "$z\n$flight"
+	} else {
+		# new flight so create it
+		set flight_map($flight) [make_flight .c $flight $x $y $z]
+	}
+}
+
+# create a grid on the screen
+proc do_grid {status c max scale} {
+	if { $status == 1 } {
+		# Create the CAUTRA coordinate system
+		for {set i 1} {$i <= $max} {incr i 1} {
+			$c create line [expr $i*$scale] 0 \
+				[expr $i*$scale] [expr $max*$scale] \
+				-fill blue -tag grid
+			$c create text [expr $i*$scale] 0 \
+				-anchor ne -fill blue -text $i -tag grid
+		}
+		for {set i 1} {$i <= $max} {incr i 1} {
+			$c create line 0 [expr $i*$scale] \
+				[expr $max*$scale] [expr $i*$scale] \
+				-fill blue -tag grid
+			$c create text 0 [expr $i*$scale] \
+				-anchor sw -fill blue -text $i -tag grid
+		}
+		.c lower grid all
+		.c lower map all
+
+	} else { $c delete grid }
+}
+
+# Create the legend
+proc do_legend {status c} {
+	if { $status == 1} {
+		set x [$c cget -width]
+		set y [$c cget -height]
+		$c create window $x $y -anchor se -window $c.legend -tag legend
+		$c raise legend all
+	} else { $c delete legend }
+}
+
+# Create the background
+proc do_map {status c} {
+	if { $status == 1} {
+		$c create bitmap 0 0 -background white -foreground black \
+			-anchor nw -bitmap "@msaw-lib/cap.xbm" -tag map
+		$c lower map all
+	} else { $c delete map }
+}
+
+# Create the background
+proc do_trace {status} {
+	if { $status == 1} {
+		# prepare the message list
+		global trace_log
+		toplevel .trace
+		wm geometry .trace -20+20
+		listbox .trace.list -yscrollcommand {.trace.scroll set} \
+			-selectmode single
+		scrollbar .trace.scroll -command {.trace.list yview}
+		eval .trace.list insert end $trace_log
+		pack .trace.list -side left -fill both -expand yes 
+		pack .trace.scroll -side left -fill y
+	} else {
+		if {[winfo exists .trace]} {destroy .trace}
+	}
+}
+
+# increment the clock and reset the pending flag
+proc inc_clock {} {
+	global clock pending
+	set pending "false"
+	set clock [expr $clock+1]
+}
+
+# reset the delay value and cancel/restart any pending clock increments
+proc reset_delay {delay} {
+	global pending
+	if {$pending == "true"} {
+		after cancel inc_clock
+		after [expr round(exp($delay/3)*100)] inc_clock 
+	}
+}
+
+# increment the clock after a delay
+proc do_delay {delay} {
+	global pending
+	set pending "true"
+	after [expr round(exp($delay/3)*100)] inc_clock 
+}
+# prepare the legend
+canvas .c.legend -width [expr $max_coordinate*$scale/5] \
+	-height [expr ($max_coordinate+2)*$scale/7] \
+	-relief ridge -borderwidth 1 -background white
+.c.legend create text 5 [expr $scale/2] -text Legend -anchor nw
+make_oa .c.legend 1 2 0.5 6000
+.c.legend create text [expr 4*$scale] [expr 2*$scale] -text Object -anchor w
+make_alarm .c.legend $scale [expr 3*$scale]
+.c.legend create text [expr 4*$scale] [expr 3*$scale] -text Alarm -anchor w
+make_flight .c.legend "KL101" 1 4 7000
+.c.legend create text [expr 4*$scale] [expr 4*$scale] -text Flight -anchor w
+
+# set the default options
+.opt.map invoke
+#.opt.grid invoke
+#.opt.legend invoke

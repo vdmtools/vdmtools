@@ -1,0 +1,30 @@
+class A
+
+types
+public
+T :: a : nat
+     b : nat;
+
+public
+T2 :: ;
+
+public
+T3 :: a : nat;
+
+public
+TX = T2 | T3;
+
+operations
+public
+Test: () ==> nat
+Test() ==
+ (dcl x : nat := 0,
+      t : T := mk_T(1,2),
+      y : [nat] := nil,
+      t2 : TX := mk_T2();
+  
+  t2 := mk_T3(1);
+
+  return x;);
+
+end A

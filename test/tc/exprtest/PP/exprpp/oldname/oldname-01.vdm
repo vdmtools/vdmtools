@@ -1,0 +1,17 @@
+class OldNameTest
+instance variables
+
+a : nat
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = a~
+  in skip;
+
+------------------------------------------------------------------------------
+end OldNameTest

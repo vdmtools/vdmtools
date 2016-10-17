@@ -1,0 +1,32 @@
+mk_AS`AstCI(
+ mk_AS`ApplyExpr(
+  mk_AS`FieldSelectExpr(
+   mk_AS`NewExpr(mk_AS`Name([ "<<MODORCLASS>>" ], CI`CreateCid(5,1) ), [], CI`CreateCid(5,2)),
+   mk_AS`Name([ "<<OPERATION>>" ], CI`CreateCid(5,3)),
+   CI`CreateCid(5,4)),
+  [  ],
+  CI`CreateCid(5,5)),
+[
+ mk_CI`TokenContextInfo([],[]),
+ mk_CI`TokenContextInfo([],[]),
+ mk_CI`TokenContextInfo([],[]),
+ mk_CI`TokenContextInfo([],[]),
+ mk_CI`TokenContextInfo([
+  mk_CI`TokenInfo(284,"new",mk_CI`TokenPos(1,1,1,1,1),mk_CI`TokenPos(1,1,1,1,4)),
+  mk_CI`TokenInfo(427,"A",mk_CI`TokenPos(1,1,1,1,5),mk_CI`TokenPos(1,1,1,1,6)),
+  mk_CI`TokenInfo(40,"",mk_CI`TokenPos(1,1,1,1,6),mk_CI`TokenPos(1,1,1,1,7)),
+  mk_CI`TokenInfo(41,"",mk_CI`TokenPos(1,1,1,1,7),mk_CI`TokenPos(1,1,1,1,8)),
+  mk_CI`TokenInfo(46,"",mk_CI`TokenPos(1,1,1,1,8),mk_CI`TokenPos(1,1,1,1,9)),
+  mk_CI`TokenInfo(427,"Test",mk_CI`TokenPos(1,1,1,1,9),mk_CI`TokenPos(1,1,1,1,13)),
+  mk_CI`TokenInfo(40,"",mk_CI`TokenPos(1,1,1,1,13),mk_CI`TokenPos(1,1,1,1,14)),
+  mk_CI`TokenInfo(41,"",mk_CI`TokenPos(1,1,1,1,14),mk_CI`TokenPos(1,1,1,1,15))
+ ],[
+  mk_CI`ContextNodeInfo(mk_CI`TokenSpan(2,2,2), 0, nil, nil, 0, false, false),
+  mk_CI`ContextNodeInfo(mk_CI`TokenSpan(1,1,4), 0, nil, nil, 0, false, false),
+  mk_CI`ContextNodeInfo(mk_CI`TokenSpan(6,6,6), 0, nil, nil, 0, false, false),
+  mk_CI`ContextNodeInfo(mk_CI`TokenSpan(1,1,6), 0, nil, nil, 0, false, false),
+  mk_CI`ContextNodeInfo(mk_CI`TokenSpan(1,7,8), 0, nil, nil, 0, false, false)
+ ])
+],
+{ 5 |-> "stdin" }
+)

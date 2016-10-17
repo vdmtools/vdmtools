@@ -1,0 +1,600 @@
+\subsection{FCalendar}
+\index{くれこりおれき@グレゴリオ暦}
+グレゴリオ暦に関わる関数を定義する。
+
+\begin{vdm_al}
+class FCalendar
+
+types
+\end{vdm_al}
+
+使用する型は以下の通りである。
+Dateは、修正ユリウス日を表すので実数型である。
+DayOfWeekは、曜日計算が便利なように{0,...,6}の値を各曜日にふっていて、日曜日が0、土曜日が6である。
+\begin{vdm_al}
+public Date = real;
+public DayOfWeekName =  <Sun> | <Mon> | <Tue> | <Wed> | <Thu> | <Fri> | <Sat> ;
+public DayOfWeek = nat
+inv dayOfWeek == dayOfWeek <= 6;	-- {0,...,6}, 0 = Sunday
+\end{vdm_al}
+
+使用する値は以下の通り。
+diffJDandMJDはユリウス日(Julian Date)と修正ユリウス日(Modified Julian Date)の日数差である。
+reviseMonthsは、日付計算が便利なように使用する月数を意味する。
+\begin{vdm_al}
+values
+private diffJDandMJD = 2400000.5;
+private DayOfWeekSequence = [<Sun>, <Mon>,<Tue>,<Wed>,<Thu>,<Fri>,<Sat>];
+private daysInYear = 365.25;
+private monthsInYear = 12;
+private reviseMonths = 14;
+private daysInWeek = 7;
+private averageDaysInMonth = 30.6001;
+private yearsInCentury = 100;
+private constForDayCalc = 122.1;
+private constForYearCalc = 4800;
+private constForCenturyCalc = 32044.9;
+private theDayBeforeGregorianCalendar  = 2299160.0;	-- 4 Oct, 1582
+private theFirstDayOfGregorianCalendar  = 1582.78;	-- 15 Oct, 1582
+
+public max = FNumber`Max[real](FNumber`GT);
+public min = FNumber`Min[real](FNumber`GT);
+
+functions
+\end{vdm_al}
+
+DateFromIntは、(yyyy)(mm)(dd)で表した暦日付に対応する日付を返す。
+日ddは、(1,...,31)でなくてよい。0日は、前月末尾に補正され、12月32日は翌年1月1日に補正される。
+\begin{vdm_al}
+static public DateFromInt: int -> int -> rat  -> Date
+DateFromInt(yyyy)(mm)(dd) ==
+	let	[year,month] = 
+			if (mm > reviseMonths - monthsInYear) then
+				[yyyy + constForYearCalc , mm + 1]
+			else
+				[yyyy + constForYearCalc - 1 , mm + reviseMonths - 1],
+		aCentury = year div yearsInCentury,
+		constCentury =	
+			if (ConvToYear(yyyy, mm, dd) > theFirstDayOfGregorianCalendar) then
+				aCentury div 4 - aCentury - 32167.0
+			else
+				-32205.0,
+		halfDay = 0.5	
+	in
+	floor(daysInYear * year) + 
+		floor(averageDaysInMonth * month) + 
+		dd + constCentury - halfDay - diffJDandMJD;
+\end{vdm_al}
+
+GetLegalDateは、年月日を通常の値の範囲内に変換する。
+月tempMは、(1,...12)でなく、13以上や0や負数でもよい。
+例えば、13は翌年１月に補正され、0年は前年12月に補正される。
+日ddも、(1,...,31)でなくてよい。0日は、前月末尾に補正され、12月32日は翌年1月1日に補正される。
+\begin{vdm_al}
+static public GetLegalDate : int -> int -> int -> Date
+GetLegalDate(tmpY)(tempM)(dd) ==
+	let	mk_(yyyy, mm) = GetLegalMonth(tmpY)(tempM)
+	in
+	DateFromInt(yyyy)(mm)(dd);
+\end{vdm_al}
+
+GetLegalMonthは、年月を通常の値の範囲内に変換する。
+\begin{vdm_al}
+static public GetLegalMonth : int -> int -> int * int
+GetLegalMonth(tempY)(tempM) ==
+	let	y = 
+			if tempM <= 0 then
+				tempY + (tempM - 12) div monthsInYear
+			else
+				tempY + (tempM - 1) div monthsInYear,
+		m = FInteger`amod(tempM)(monthsInYear)
+	in
+	mk_(y, m);
+\end{vdm_al}
+
+Int3FromDateは、日付から三つ組み数(yyyy, mm, dd)で表した暦日付を得る。
+\begin{vdm_al}
+static public Int3FromDate: Date -> int * int * int
+Int3FromDate(aDate) == mk_(Year(aDate), Month(aDate), Day(aDate));
+\end{vdm_al}
+
+Yearは、日付から、その日付の属する年を得る。
+\begin{vdm_al}
+static public Year: Date -> int
+Year(aDate) ==
+	if MonthAux(aDate) < reviseMonths then
+		YearAux(aDate) - constForYearCalc
+	else
+		YearAux(aDate) - constForYearCalc + 1;
+\end{vdm_al}
+		
+Monthは、日付から、その日付の属する月を得る。
+\begin{vdm_al}
+static public Month: Date -> int
+Month(aDate) == 
+	if MonthAux(aDate) < reviseMonths then
+		MonthAux(aDate) - 1
+	else
+		MonthAux(aDate) - 13;
+\end{vdm_al}
+		
+Dayは、日付から、日を得る。
+\begin{vdm_al}
+static public Day: Date -> int
+Day(aDate) == DayInMonth(aDate);
+\end{vdm_al}
+
+DayInYearは、年日付を得る。
+\begin{vdm_al}
+static public DayInYear: Date -> int
+DayInYear(aDate) == 
+	let	firstDay = DateFromInt(Year(aDate))(1)(0)
+	in	Diff(aDate)(firstDay);
+\end{vdm_al}
+
+DayInMonthは、月日付けを得る。
+\begin{vdm_al}
+static public DayInMonth: Date -> int
+DayInMonth(aDate) == floor(DayInMonthAsReal(aDate));
+\end{vdm_al}
+
+DayInMonthAsRealは、実数の月日付けを得る。
+\begin{vdm_al}
+static DayInMonthAsReal: Date -> real
+DayInMonthAsReal(aDate) == 
+	YMDAUX(aDate) + constForDayCalc - floor(daysInYear * YearAux(aDate)) - 
+		floor(averageDaysInMonth * MonthAux(aDate)); 
+\end{vdm_al}
+
+MonthAuxは、日付計算上都合の良い月(4..15)を返す補助関数。
+\begin{vdm_al}
+static MonthAux: Date -> int
+MonthAux(aDate) ==
+	floor((YMDAUX(aDate) + constForDayCalc - 
+		floor(daysInYear * YearAux(aDate))) / averageDaysInMonth);
+\end{vdm_al}
+
+YMDAUXは、日付を年月日に変更するための補助関数。
+グレゴリオ暦切替前と、グレゴリオ暦切替後の考慮を行っている。
+\begin{vdm_al}
+static YMDAUX: Date -> real
+YMDAUX(aDate) == 
+	let	JD= MJD2JD(aDate),
+		aCentury =  floor((JD + constForCenturyCalc) / 36524.25)
+	in	
+		if JD > theDayBeforeGregorianCalendar then
+			JD + constForCenturyCalc + aCentury - aCentury div 4 + 0.5
+		else
+			JD + 32082.9 + 0.5;
+\end{vdm_al}
+
+YearAuxは、日付から日付計算に都合の良い補正をした年数を求めるための補助関数。
+\begin{vdm_al}
+static YearAux: Date -> int
+YearAux(aDate) == floor (YMDAUX(aDate) / daysInYear);
+\end{vdm_al}
+
+ConvToYearは、（整数三つ組の）暦日付を年\footnote{整数部が年、小数点以下が年の中での日付を表す形式で、修正ユリウス日ではない。}に変換する。
+例えば、ConvToYear(2001,7,1)は2001.5を返す。
+\begin{vdm_al}
+static public ConvToYear:  int * int * rat -> real
+ConvToYear(yyyy, mm, dd) == yyyy + (mm - 1) / monthsInYear + (floor(dd) - 1.0) / daysInYear;
+\end{vdm_al}
+
+MJD2JDは、修正ユリウス日をユリウス日に変換する。
+\begin{vdm_al}
+static public MJD2JD: Date -> real
+MJD2JD(aMJD) == aMJD + diffJDandMJD;
+\end{vdm_al}
+
+JD2MJDは、ユリウス日を修正ユリウス日すなわち日付に変換する。
+\begin{vdm_al}
+static public JD2MJD: real -> Date
+JD2MJD(aJD) == aJD - diffJDandMJD;
+\end{vdm_al}
+
+\subsubsection{計算関数群}
+
+Diffは、２つの日付d1, d2の差を得る。
+\begin{vdm_al}
+static public Diff: Date -> Date -> int
+Diff(d1)(d2) == floor(d1 - d2);
+\end{vdm_al}
+
+\subsubsection{照会関数群}
+
+IsLeapYearは、閏年であればtrue、平年であればfalseを返す。
+\begin{vdm_al}
+static public IsLeapYear: int -> bool
+IsLeapYear(yyyy) == yyyy mod 400 = 0 or (yyyy mod yearsInCentury <> 0 and yyyy mod 4 = 0);
+\end{vdm_al}
+
+GetDayOfWeekは、曜日数を得る。
+\begin{vdm_al}
+static public GetDayOfWeek : Date -> DayOfWeek
+GetDayOfWeek(d) == (floor(d) - 4) mod daysInWeek;
+\end{vdm_al}
+
+GetDayOfWeekNameは、曜日名を得る。
+\begin{vdm_al}
+static public GetDayOfWeekName : Date -> DayOfWeekName
+GetDayOfWeekName(d) == 
+	DayOfWeekSequence(GetDayOfWeek(d) + 1);
+\end{vdm_al}
+
+GetDayOfWeekFromNameは、曜日名から曜日数を求める。
+\begin{vdm_al}
+static public GetDayOfWeekFromName : DayOfWeekName -> DayOfWeek
+GetDayOfWeekFromName(dn) == FSequence`Index[DayOfWeekName](dn)(DayOfWeekSequence) - 1;
+\end{vdm_al}
+
+FirstDayOfWeekOfMonthは、指定したyyyy年m月の最初のdayOfWeekName曜日名の日付を得る。
+\begin{vdm_al}
+static public FirstDayOfWeekOfMonth : DayOfWeekName-> int -> int -> Date
+FirstDayOfWeekOfMonth(dayOfWeekName)(m)(yyyy) ==
+	let	dayOfWeek = GetDayOfWeekFromName(dayOfWeekName),
+		firstDayOfMonth = GetFirstDayOfMonth(m)(yyyy),
+		diff = dayOfWeek - GetDayOfWeek(firstDayOfMonth) in
+	cases true:
+		(diff = 0)	-> firstDayOfMonth,
+		(diff > 0)	-> firstDayOfMonth + diff,
+		(diff < 0)	-> firstDayOfMonth + ((daysInWeek + diff) mod daysInWeek)
+	end;
+\end{vdm_al}
+
+GetLastDayOfWeekOfMonthは、指定したyyyy年m月の最後のdayOfWeekName曜日名の日付を得る。
+
+指定された月の翌月の最初の指定曜日から７日前を返す。
+月が１２月の場合でも本クラスの関数はyyyy年13月をyyyy+1年1月と解釈するので、問題ない。
+\begin{vdm_al}
+static public GetLastDayOfWeekOfMonth : DayOfWeekName-> int -> int -> Date
+GetLastDayOfWeekOfMonth(dayOfWeekName)(m)(yyyy) == 
+	FirstDayOfWeekOfMonth(dayOfWeekName)(m+1)(yyyy) - daysInWeek;
+\end{vdm_al}
+
+GetNthDayOfWeekOfMonthは、指定されたyyyy年m月dayOfWeekName曜日名の、第n曜日を求める。
+第n曜日が存在しなければnilを返す。
+
+月初指定曜日の(n - 1) * ７日後を返す。
+\begin{vdm_al}
+static public GetNthDayOfWeekOfMonth : DayOfWeekName -> int -> int -> int -> [Date]
+GetNthDayOfWeekOfMonth(dayOfWeekName)(n)(m)(yyyy) ==
+	let	firstDayOfWeekOfMonth = FirstDayOfWeekOfMonth(dayOfWeekName)(m)(yyyy),
+		r = firstDayOfWeekOfMonth + (daysInWeek * (n - 1)) in
+	cases Month(r):
+		(m)		-> r,
+		others	-> nil
+	end;
+\end{vdm_al}
+
+GetFirstDayOfMonthは、指定したyyyy年m月の月初日を得る。
+\begin{vdm_al}
+static public GetFirstDayOfMonth : int -> int -> Date
+GetFirstDayOfMonth(m)(yyyy) == GetLegalDate(yyyy)(m)(1);
+\end{vdm_al}
+
+GetLastDayOfMonthは、指定したyyyy年m月の月末日を求める。
+
+翌月の月初日の１日前を返す。
+\begin{vdm_al}
+static public GetLastDayOfMonth : int -> int -> Date
+GetLastDayOfMonth(m)(yyyy) == GetLegalDate(yyyy)(m+1)(1) - 1;
+\end{vdm_al}
+
+IsSundayは、指定日が日曜日か否かを返す。
+\begin{vdm_al}
+static public IsSunday : Date -> bool
+IsSunday(d) == GetDayOfWeek(d) = 0;
+\end{vdm_al}
+
+IsSaturdayは、指定日が土曜日か否かを返す。
+\begin{vdm_al}
+static public IsSaturday : Date -> bool
+IsSaturday(d) == GetDayOfWeek(d) = 6;
+\end{vdm_al}
+
+IsWeekDayは、指定日がウィークデイか否かを返す。
+\begin{vdm_al}
+static public IsWeekDay : Date -> bool
+IsWeekDay(d) == GetDayOfWeek(d) in set {1,...,5};
+\end{vdm_al}
+
+IsDayOFWeekNameWeekDayは、指定したdayOfWeekName曜日名がウィークデイか否かを返す。
+\begin{vdm_al}
+static public IsDayOFWeekNameWeekDay : DayOfWeekName -> bool
+IsDayOFWeekNameWeekDay(dayOfWeekName) == dayOfWeekName not in set {<Sat>,<Sun>};
+\end{vdm_al}
+
+\subsubsection{指定された曜日が何日あるかを返す関数}
+
+HowManyDayOfWeekWithin2Daysは、指定されたdayOfWeekName曜日名が、
+指定された日付間（d1とd2の間）に何日あるかを返す。 
+d1とd2が指定された曜日であれば勘定に入れる。
+
+以下は、HowManyDayOfWeekWithin2Days関数の山崎利治さんによる段階的洗練を佐原が「翻訳」した記述である。
+
+前件は以下である。
+
+\begin{displaymath}
+type\ R = \{|rng [n \to n / 7 | n \in Int]|\} \mathnormal{（注）7で割った商の集合}
+\end{displaymath}
+\begin{displaymath}
+f, t \in Int, w \in R, 0 \le f \le t, 
+h: Int \to R \mathnormal{（注）環準同型（ring\ homomorphism）}
+\end{displaymath}
+
+後件は以下のようになる。
+
+\begin{displaymath}
+\exists S \in Int \bullet S = h^{-1}(w) \cap {f..t} \wedge 答え \equiv card(S)
+\end{displaymath}
+
+すなわち、整数系を環（ring）と見て、その商環（quotient ring）への準同型写像があり、その代数系上で後件（事後条件）を満たすプログラムを作るという問題に抽象化された。HowManyDayOfWeekWithin2Daysは、\textbf{7で割る}特殊な場合の実装であるということになる。
+\begin{verbatim}
+I = {f..t}
+d = t - f + 1 	-- = card(I)
+q = d / 7
+r = d \ 7 		--7で割った余り
+\end{verbatim}
+とすると、答えAに対して$q \le A \le q+1$が成り立つ。なぜなら、
+
+\begin{itemize}
+\item 任意の連続する７日間には、必ずw曜日がちょうど１日存在する。
+\item $card(I) = 7×q + r (0 \le r \textless 7)$であるから、Iには少なくともq個の連続する７日間が存在するが、q+1個は存在しない。
+\item 余りのr日間にw曜日が存在するかも知れない。
+\end{itemize}
+
+次に、
+\begin{verbatim}
+x ++ y = (x + y) \ 7
+x ┴ y = max(x - y, 0)
+\end{verbatim}
+として、
+\begin{verbatim}
+T = {h(f)..h(f) ++ (r ┴ 1)}
+\end{verbatim}
+を考える。Tは余りr日間の曜日に対応する（card(T) = r）。
+すると、
+\begin{verbatim}
+A ≡ if w∈T then q + 1 els q end
+\end{verbatim}
+ここで、
+\begin{verbatim}
+x minus y = if x ≧ y then x - y else x - y + 7 end
+\end{verbatim}
+とすれば、
+\begin{verbatim}
+w∈T ⇔ (w minus h(f)) + 1 ≦ r
+\end{verbatim}
+である。なぜならば
+\begin{verbatim}
+w∈T	⇔ {0..(r ┴ 1)}∋wﾕ = w minus h(f)
+	⇔ r ┴ 1 ≧ wﾕ
+	⇔ r ≧ (w minus h(f)) + 1
+\end{verbatim}
+従って、プログラムは以下のようになる。
+\begin{verbatim}
+A(f, t w)≡
+	let
+		d ≡ t - f + 1
+		q ≡ d / 7
+		r ≡ d \ 7
+		delta ≡ if (w minus h(f)) + 1 ≦ r then 1 els 0 end
+		x minus y ≡ if x ≧ y then x - y els x - y + 7 end
+	in
+		q + delta
+	end
+\end{verbatim}
+
+あとは、上記プログラムをVDM++に翻訳すればよい。
+
+\begin{vdm_al}
+static public HowManyDayOfWeekWithin2Days: DayOfWeekName -> Date -> Date -> int
+HowManyDayOfWeekWithin2Days(dayOfWeekName)(d1)(d2) ==
+	let	dayOfWeek = GetDayOfWeekFromName(dayOfWeekName),
+		f = min(d1)(d2),
+		t = max(d1)(d2),
+		days = Diff(t)(f) + 1,
+		q = days div daysInWeek,
+		r = days mod daysInWeek,
+		delta = if SubtractDayOfWeek(dayOfWeek)(GetDayOfWeek(f)) + 1 <= r then 1 else 0
+	in
+	q + delta;
+\end{vdm_al}
+
+SubtractDayOfWeekは、曜日数の減算を行う。
+\begin{vdm_al}
+static private SubtractDayOfWeek : int -> int -> int
+SubtractDayOfWeek(x)(y) == if x >= y then x - y else x - y + daysInWeek;
+\end{vdm_al}
+
+GetVernalEquinoxInGMTは、yyyy年のグリニッジ標準時の春分を得る。
+\begin{vdm_al}
+static public GetVernalEquinoxInGMT: int -> Date
+GetVernalEquinoxInGMT(yyyy) ==
+	let	y = yyyy / 1000.0	
+	in
+	JD2MJD(1721139.2855 + 365.2421376 * yyyy + y * y *  (0.067919 - 0.0027879 * y));
+\end{vdm_al}
+
+GetSummerSolsticeInGMTは、yyyy年のグリニッジ標準時の夏至を得る。
+\begin{vdm_al}
+static public GetSummerSolsticeInGMT: int -> Date
+GetSummerSolsticeInGMT(yyyy) ==
+	let	y = yyyy / 1000.0	
+	in
+	JD2MJD(1721233.2486 + 365.2417284 * yyyy - y * y * (0.053018 - 0.009332 * y));	
+\end{vdm_al}
+
+GetAutumnalEquinoxInGMTは、yyyy年のグリニッジ標準時の秋分を得る。
+\begin{vdm_al}
+static public GetAutumnalEquinoxInGMT: int -> Date
+GetAutumnalEquinoxInGMT(yyyy) ==
+	let	y = yyyy / 1000.0	
+	in
+	JD2MJD(1721325.6978 + 365.2425055 * yyyy - y * y * (0.126689 - 0.0019401 * y));
+\end{vdm_al}
+
+GetWinterSolsticeInGMTは、yyyy年のグリニッジ標準時の冬至を得る。
+\begin{vdm_al}
+static public GetWinterSolsticeInGMT: int -> Date
+GetWinterSolsticeInGMT(yyyy) ==
+	let	y = yyyy / 1000.0	
+	in
+	JD2MJD(1721414.392 + 365.2428898 * yyyy - y * y * (0.010965 - 0.0084855 * y));
+\end{vdm_al}
+
+GetDateInSTは、GMT基準の日付と、求めたい（日本標準時などの）標準時との差diff（単位=時間）を与えて、
+標準時基準の日付を得る。
+日本の場合、日本標準時 = GMT + 9時間。
+\begin{vdm_al}
+static public GetDateInST : rat -> Date -> Date
+GetDateInST(diff)(d) == floor(d + diff / 24);	
+\end{vdm_al}
+
+\subsubsection{休日に関わる照会関数群}
+以下は、休日の考慮をした機能である。
+
+GetHolidaysWithinDatesは、ある年の休日の集合を得るgetHolidays関数で決まる、２つの日付の間の休日の集合を返す。
+日曜日である休日も含むが、休日でない日曜日は含まない。
+\begin{vdm_al}
+static public GetHolidaysWithinDates : (int -> set of Date) -> Date -> Date -> set of Date
+GetHolidaysWithinDates(getHolidays)(d1)(d2) ==
+	let	date1 = min(d1)(d2),
+		date2 = max(d1)(d2),
+		setOfYear = {Year(date1),...,Year(date2)},
+		holidays = dunion {getHolidays(y) | y in set setOfYear}
+	in
+	{h | h in set holidays & d1<= h and h <= d2};
+\end{vdm_al}
+
+GetHolidaysWithinDatesNotSundayは、ある年の休日の集合を得るgetHolidays関数で決まる、
+２つの日付の間の日曜日を含まない休日の集合を返す。
+\begin{vdm_al}
+static public GetHolidaysWithinDatesNotSunday : (int -> set of Date) -> Date -> Date -> set of Date
+GetHolidaysWithinDatesNotSunday(getHolidays)(d1)(d2) ==
+	let	holidays = GetHolidaysWithinDates(getHolidays)(d1)(d2)	
+	in
+	{h | h in set holidays & not IsSunday(h)};
+\end{vdm_al}
+
+GetHolidaysWithinDatesAsSundayは、日曜日である休日の集合を返す。
+\begin{vdm_al}
+static public GetHolidaysWithinDatesAsSunday : (int -> set of Date) -> Date -> Date -> set of Date
+GetHolidaysWithinDatesAsSunday(getHolidays)(d1)(d2) == 
+	let	holidays = GetHolidaysWithinDates(getHolidays)(d1)(d2)	
+	in
+	{h | h in set holidays & IsSunday(h)};
+\end{vdm_al}
+
+GetNumberOfHolidaysWithinDatesは、２つの日付の間の休日数を返す。日曜日である休日も含むが、休日でない日曜日は含まない。
+\begin{vdm_al}
+static public GetNumberOfHolidaysWithinDates: (int -> set of Date) -> Date -> Date -> int
+GetNumberOfHolidaysWithinDates(getHolidays)(d1)(d2) == card GetHolidaysWithinDates(getHolidays)(d1)(d2);
+\end{vdm_al}
+
+GetNumberOfDayOffは、２つの日付の間の休日あるいは日曜日の数を返す（両端が該当日であれば含む）
+\begin{vdm_al}
+static public GetNumberOfDayOff: (int -> set of Date) -> Date -> Date -> int
+GetNumberOfDayOff(getHolidays)(d1)(d2) ==
+	let	date1 = min(d1)(d2),
+		date2 = max(d1)(d2),
+		numOfSunday = HowManyDayOfWeekWithin2Days(<Sun>)(d1)(d2)	
+	in
+	numOfSunday + card GetHolidaysWithinDatesNotSunday(getHolidays)(date1)(date2);
+\end{vdm_al}
+
+GetNumberOfDayOff1は、２つの日付の間の休日あるいは日曜日の数を返す（開始日を含まない）
+\begin{vdm_al}
+static public GetNumberOfDayOff1: (int -> set of Date) -> Date -> Date -> int
+GetNumberOfDayOff1(getHolidays)(d1)(d2) ==
+	let	date1 = min(d1)(d2),
+		date2 = max(d1)(d2)	
+	in
+	GetNumberOfDayOff(getHolidays)(date1 + 1)(date2);
+\end{vdm_al}
+
+
+\subsubsection{休日に関わる計算関数群}
+
+BusinessDateToFutureは、休日でない日付を返す（未来へ向かって探索する）。
+\begin{vdm_al}
+static public BusinessDateToFuture : (int -> set of Date) -> Date-> Date
+BusinessDateToFuture(getHolidays)(d) ==
+	cases  IsDayOff(getHolidays)(d) or IsSaturday(d):
+		(true)	-> BusinessDateToFuture(getHolidays)(d + 1),
+		others	-> d
+	end;
+\end{vdm_al}
+
+BusinessDateToPastは、休日でない日付を返す（過去へ向かって探索する）。
+\begin{vdm_al}
+static public BusinessDateToPast : (int -> set of Date) -> Date -> Date
+BusinessDateToPast(getHolidays)(d) ==
+	cases   IsDayOff(getHolidays)(d) or IsSaturday(d):
+		(true)	-> BusinessDateToPast(getHolidays)(d - 1),
+		others	-> d
+	end;
+\end{vdm_al}
+
+AddBusinessDaysは、与えられた平日dに、平日n日分を加算する。
+\begin{vdm_al}
+static public AddBusinessDays : (int -> set of Date) -> Date -> int -> Date
+AddBusinessDays(getHolidays)(d)(n) == 
+	AddBusinessDaysAux(getHolidays)(BusinessDateToFuture(getHolidays)(d))(n);
+\end{vdm_al}
+
+\begin{vdm_al}
+static public AddBusinessDaysAux : (int -> set of Date) -> Date -> int -> Date
+AddBusinessDaysAux(getHolidays)(d)(n) ==
+	cases IsDayOff(getHolidays)(d) or IsSaturday(d):
+		(true)	-> AddBusinessDaysAux(getHolidays)(d + 1)(n),
+		others	->
+			if n <= 0 then
+				d
+			else
+				AddBusinessDaysAux(getHolidays)(d + 1)(n - 1)
+	end;
+\end{vdm_al}
+
+SubtractBusinessDaysは、与えられた平日に、平日n日分を減算する。
+\begin{vdm_al}
+static public SubtractBusinessDays : (int -> set of Date) -> Date -> int -> Date
+SubtractBusinessDays(getHolidays)(d)(n) == 
+	SubtractBusinessDaysAux(getHolidays)(BusinessDateToPast(getHolidays)(d))(n);
+\end{vdm_al}
+
+\begin{vdm_al}
+static public SubtractBusinessDaysAux : (int -> set of Date) -> Date -> int -> Date
+SubtractBusinessDaysAux(getHolidays)(d)(n) ==
+	cases IsDayOff(getHolidays)(d) or IsSaturday(d):
+		(true)	-> SubtractBusinessDaysAux(getHolidays)(d - 1)(n),
+		others	->
+			if n <= 0 then
+				d
+			else
+				SubtractBusinessDaysAux(getHolidays)(d - 1)(n - 1)
+	end;
+\end{vdm_al}
+
+\subsubsection{休日に関わる検査関数群}
+
+IsHolidayは、指定した日dが休日か否かを返す。
+\begin{vdm_al}
+static public IsHoliday : (int -> set of Date) -> Date -> bool 
+IsHoliday(getHolidays)(d) == d in set getHolidays(Year(d));
+\end{vdm_al}
+
+IsDayOffは、指定した日dが休み（休日または日曜日）であるか否かを返す。
+\begin{vdm_al}	
+static public IsDayOff : (int -> set of Date) -> Date -> bool
+IsDayOff(getHolidays)(d) ==  IsSunday(d) or IsHoliday(getHolidays)(d);
+
+
+end FCalendar
+\end{vdm_al}
+
+
+\begin{rtinfo}
+[FCalendar]{vdm.tc}[FCalendar]
+\end{rtinfo}

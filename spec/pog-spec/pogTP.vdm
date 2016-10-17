@@ -1,0 +1,196 @@
+\section{Types for Proof Obligation Generation}
+
+\begin{vdm_al}
+module POGTP
+
+imports
+
+  from CI_AUX all,
+
+  from AS all,
+  from CI all,
+  from REP all,
+  from ENV all,
+
+  from SPEC_AST all
+
+exports all
+       
+definitions
+
+types 
+  
+#ifdef VDMPP
+  ClassType :: name : AS`Name;
+#endif VDMPP
+
+  Context :: loc  : LocContext
+             expr : seq of ExprContext
+             recmap : map AS`Name to ENV`FunctionInfo
+     --        measrng: map AS`Name to nat
+             ;
+
+  ExprContext =   AS`Expr 
+                | AS`BindList 
+	        | AS`Bind
+                | AS`SeqBind
+  	        | AS`PatternBind * AS`Expr
+                | AS`LocalDef; 
+
+  Classification =  
+     -- Numeric Operations   
+--       <Division> 
+--     | <IntDivision>
+--     | <Remainder>
+--     | <Modulus>
+     -- Set Operators
+--     | <DInter> 
+     -- Sequence Operators   
+--     | <SeqHead>    
+--     | <SeqTail>   
+     <SeqModification>    
+     | <SeqApplication>    
+     -- Map Operators   
+--     | <MapMerge>    
+--     | <MapDistributedMerge>    
+     | <MapApplication>    
+     | <MapComposition>    
+     | <MapIteration>    
+--     | <MapInverse>    
+     | <MapCompatible>    
+     -- Tuple Operators   
+     | <TupleSelect>    
+--     | <OperationApplication>    
+     -- Function Operators   
+     | <FunctionApplication>    
+     | <FuncComp>    
+     | <FuncIteration>    
+     -- Set Constructors
+--     | <SetComprehension>    
+     -- Sequence Constructors
+--     | <SeqComprehension>    
+     -- Map Constructors
+--     | <MapComprehension>    
+     | <MapEnumeration>  
+     | <MapCompatible>     
+     | <MapSetOfCompatible>
+     | <MapSeqOfCompatible>
+     -- Expressions
+     | <LetBeStExpr>    
+     | <CasesExpr>    
+     | <ExistsUnique>    
+     -- Types
+     | <Subtype>     
+     | <Invariants>
+--     | <FlatType>
+     -- Patterns Binding
+     | <ValueBinding>
+     | <PatternBinding>
+     -- Functions
+     | <FunctionPatterns>     
+     | <Satisfiability>
+     | <PostCondition>
+     -- Operations 
+--     | <OperationSat>
+     | <OpPostCondition>
+     -----------------
+     | <FiniteSet>
+     | <FiniteMap>
+     | <NonEndoIteration>
+     | <NonZero>
+     | <NonEmptySet>
+     | <NonEmptySeq>
+     ---Statements--------------
+     | <LetBeStStmt>    
+     | <CasesStmt>    
+     | <WhileLoopStmt>
+     | <StateInvariants>
+     ---AUGUSTO
+     | <RecursiveFunction>
+     ;
+
+
+
+  LocClassification =  <types>       |
+                       <functions>   |
+                       <operations>  |
+                       <state>       |
+                       <instanceVariables>  |
+                       <instanceInvariant>  |
+                       <values>      |
+                       <synchronisation> |
+                       <conjectures> |
+                       <expression>;   
+-- <expression> denotes that the specification consists
+-- of just one expression 
+
+  LocContext :: class : LocClassification
+                modName: [AS`Name]
+                name  :  [AS`Name];
+
+  ProofObligation :: no      : nat
+                     po      : [AS`Expr]
+                     purepo  : [AS`Expr]
+                     kind    : Classification
+                     source  : seq of AS`Name
+                     loc     : LocContext
+                     cid     : CI`ContextId;
+
+--  POG :: po : seq of ProofObligation
+--         fv : set of AS`Name;
+
+
+functions 
+
+IsBindList: ExprContext +> bool
+IsBindList(ec) ==
+  cases ec:
+    [-] ^ - -> forall i in set inds ec & is_AS`MultSetBind(ec(i)) or is_AS`MultTypeBind(ec(i)),
+    others -> false
+  end;
+  
+InitialContext: () -> Context 
+InitialContext () == 
+  mk_Context(mk_LocContext(<expression>, nil, mk_AS`Name(["SimpleSpecification"], CI`NilContextId)),
+             [],
+             {|->});
+
+
+UpdateSource : ProofObligation * seq of AS`Name -> ProofObligation 
+UpdateSource (po,src) ==
+  mu(po, source |-> src);
+
+UpdateLoc : LocClassification * AS`Name * Context -> Context
+UpdateLoc(locClass,locName,contxt) ==
+  mu(contxt, loc |-> mk_LocContext(locClass,SPEC_AST`GetCurrModName(),locName));
+
+Add2Context : [ExprContext] * Context -> Context 
+Add2Context (con,contxt) ==
+  if con = nil or con = []
+  then contxt
+  else mu(contxt, expr |-> [con] ^ contxt.expr);
+
+AddList2Context : seq of ExprContext * Context -> Context
+AddList2Context (cons,contxt) ==
+  if cons = []
+  then contxt
+  else
+    let hd_contxt = Add2Context(hd cons,contxt),
+        tl_contxt = AddList2Context(tl cons,hd_contxt)
+    in tl_contxt; 
+
+--AddPattern2Context : AS`Pattern * Context -> Context
+--AddPattern2Context (pat,contxt) ==
+--  let type = CI_AUX`GetASType(pat),
+--      bind = mk_AS`TypeBind(pat,type,CI`NilContextId) 
+--  in Add2Context(bind,contxt);
+
+end POGTP
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[POGTP`AddList2Context]
+{rtinfo.ast}[POGTP]
+\end{rtinfo}
+

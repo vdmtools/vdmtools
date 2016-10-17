@@ -1,0 +1,47 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Test interfaces for the test environment on the specificaiton level,
+%    and for the debugging on specification level.
+% $Id: test.vdm,v 1.3 2000/10/05 11:00:25 paulm Exp $
+% Implemented in: No where! This is a backdoor for testing.
+%--------------------------------------------------------------------------------
+
+\section{The Test backdoor}
+
+
+\begin{vdm_al}
+
+module TEST
+imports
+  from CGMAIN all,
+  from CPP all,
+  from AS all,
+  from REP all,
+  from CI all,
+  from VCM all,
+  from ENV all,
+  from OPTIONS
+    operations SetOptions: () ==> ()
+
+exports all
+
+definitions
+
+operations
+go: AS`AstCI * (<JAVA>|<CPP>) ==> CPP`Files
+go(mk_AS`AstCI(doc_l,tllci,fidm),cgkind) ==
+ (OPTIONS`SetOptions();
+  CI`UpdateStateSigma(tllci,fidm);
+#ifdef VDMSL
+  for index = 1 to len doc_l do
+    VCM`UpdateModuleEnv(doc_l(index));
+#endif VDMSL
+#ifdef VDMPP
+  def - = VCM`UpdateParseEnvWithAST(doc_l) in skip;
+#endif VDMPP
+  CPP`setmode(cgkind);
+  let asnames = { doc.nm | doc in set elems doc_l}
+  in return CGMAIN`cg(doc_l,asnames))
+end TEST
+\end{vdm_al}
+

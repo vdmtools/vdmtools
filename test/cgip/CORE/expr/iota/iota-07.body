@@ -1,0 +1,7 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> nat  
+Test () ==
+
+  return iota x in set if 1=2 then {1} else {} & true
+        
+end A

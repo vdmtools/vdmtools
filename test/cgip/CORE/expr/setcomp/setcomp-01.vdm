@@ -1,0 +1,55 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of (set of ( seq of char | set of ( nat | <HELLO> ) | nat | real | bool |
+                                 map seq of char to (nat * nat)  | seq of ( nat | seq of char )) |
+                        real | map nat to nat |
+                        seq of nat )  
+Test () ==
+return 
+[ { let c = <HELLO>
+    in { c, 3} | c in set {b | b in set {3,6} } & let d = 3
+                                                  in d + c > 3 },
+
+  { if is_nat(a)
+    then [a,b]
+    else [b, a] | [ a, b, 3] in set { [3,3,2], [mk_(3,3), 6, 3] } &
+                                       if is_nat(a) and is_nat(b)
+                                       then a+b >10
+                                       else false },
+
+  { [ a,b] | {a,b} in set { {3, 6},{"hello", "world"} } },
+                           
+
+  { b in set {<HELLO>, false} | b in set { true, <HELLO> } & 
+                                          if is_bool(b)
+                                          then b
+                                          else true },
+
+  { a | mk_AA( -, a) in set { mk_AA(3, 3), mk_AA(3,6) } & is_nat(a) },
+
+  { a+b | a, mk_(b, a) in set { 3, 6, mk_(9, 3) }  },
+
+  { a-b+c | [a], {b} in set { [32], { 3 } }, c in set {3,6} },
+
+  let i = {0,...,3},
+      j = {5,...,8} in
+    { i + j + p | i, j in set i, p in set j & i + j > p },
+
+  { a | a in set {1.2,1.3,1.4,4,'a'} & is_real(a)}
+
+]
+
+types 
+
+  AA ::
+   a : nat
+   b : nat
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

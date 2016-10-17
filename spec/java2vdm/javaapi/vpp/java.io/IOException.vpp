@@ -1,0 +1,17 @@
+class JavaIoIOException is subclass of JavaLangException
+operations 
+public  JavaIoIOException : () ==> JavaIoIOException
+JavaIoIOException() == 
+( skip 
+) ;
+
+public  JavaIoIOException : <NIL> ==> JavaIoIOException
+JavaIoIOException(-) == 
+isNil := true  ;
+
+public  JavaIoIOException : JavaLangString ==> JavaIoIOException
+JavaIoIOException(s) == 
+( let - =  JavaLangException(s) in skip
+) ;
+
+end  JavaIoIOException

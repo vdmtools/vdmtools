@@ -1,0 +1,63 @@
+#! /usr/bin/perl -w
+
+use strict; 
+use vars qw(%def $read_ok); 
+
+($def{$1} = $3 || '', shift) while ($ARGV[0] =~ m/-D([^=]*)(=(.*))?/); 
+
+$read_ok = 1;
+
+sub GetLine
+{
+  return ($read_ok = $read_ok && defined($_ = <>)); 
+}
+
+# forward declaration of recursive function
+
+sub ChaseEndif; 
+
+# the first argument determines if lines should be printed or not
+
+sub ChaseEndif 
+{
+  my ($print) = @_; 
+
+  while (GetLine() ) {
+
+    if (m/^\#ifdef\s+(\w*)/) {
+        ChaseEndif $print && defined $def{$1};
+        next;
+    }
+
+    if ($print && m/^\#define\s+(\w*)\s*(.*)/) {
+        warn "Warning: Redefinition of $1 line $.\n" if exists $def{$1}; 
+        $def{$1} = $2 || ''; 
+        next;
+    }
+
+    if (m/^\#else/) {
+        $print = ! $print;
+        next; 
+    }
+
+    if (m/^\#endif/) {
+        return;
+    }
+
+    if ($print) { 
+      my ($from,$to, $subst);
+      $subst = 
+        'while (($from,$to) = each %def) { s/\b$from\b/$to/g; } '; 
+      eval $subst; 
+      # print STDERR "$@: $subst\n"; 
+      print  ; 
+    }
+  }
+}
+
+ChaseEndif 1;
+
+
+
+
+

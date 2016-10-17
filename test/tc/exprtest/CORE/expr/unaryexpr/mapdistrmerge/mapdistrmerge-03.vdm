@@ -1,0 +1,15 @@
+class UnaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = merge if false
+              then {{9|->nil},{{} |-> 8}}
+              else -9
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

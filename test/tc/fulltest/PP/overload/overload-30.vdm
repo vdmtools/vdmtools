@@ -1,0 +1,27 @@
+-- overriding functions of two superclasses 
+class A1
+
+functions
+
+public g : bool -> nat
+g(-) == is not yet specified;
+
+end A1
+
+class A2 
+
+functions
+
+public g : bool -> nat
+g(-) ==  is not yet specified;
+
+end A2
+
+class A3 is subclass of A1,A2
+
+functions
+
+public g : bool -> nat
+g(-) ==  is not yet specified;
+
+end A3

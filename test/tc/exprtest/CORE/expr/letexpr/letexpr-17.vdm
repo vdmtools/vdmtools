@@ -1,0 +1,26 @@
+class LetExprTest
+types
+
+  A :: selid : nat
+       sel2 : bool;
+
+  B :: sel1 : rat
+  inv b == b < 6
+  
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let A = "ABC",
+      s = {8,9},
+     - = let a:nat = cases false:
+                       true -> A,
+                       others -> s
+                     end in a
+  in skip;
+
+------------------------------------------------------------------------------
+end LetExprTest

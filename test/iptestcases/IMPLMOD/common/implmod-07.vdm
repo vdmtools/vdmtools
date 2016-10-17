@@ -1,0 +1,46 @@
+dlmodule C 
+  exports
+    operations
+      Place : int * int ==> ();
+      Rotate : int * int * real ==> (int * int)
+
+    uselib 
+      "libio07.so"
+end C
+
+module APPROX
+
+  exports 
+    all
+
+  definitions
+    values
+      Rotate =  { [1,0,90.0] |-> mk_(0,1), [3,4,180.0] |-> mk_(-3,4)}
+
+end APPROX  
+
+module A
+  imports
+    from 
+      APPROX
+        values
+          Rotate,
+
+    from C
+      operations
+          Place : int * int ==> () renamed Place ;
+          Rotate : int * int * real ==> (int * int) renamed Rotate
+   
+     definitions
+       operations
+
+         Test : () ==> int * int
+         Test () ==  (
+           Place(1,2);
+           Rotate(1,0,90.0)
+         )
+
+end A
+    
+   
+

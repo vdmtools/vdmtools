@@ -1,0 +1,20 @@
+class A
+
+operations
+
+public
+Test: () ==> nat
+Test() ==
+  return B`f1(7);
+
+end A
+class B
+
+functions
+
+static public
+f1 : nat +> nat
+f1(n) ==
+  n;
+
+end B

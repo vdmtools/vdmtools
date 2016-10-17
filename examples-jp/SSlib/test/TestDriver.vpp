@@ -1,0 +1,35 @@
+--$Id: TestDriver.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $
+class TestDriver
+--テストを行うテストドライバーのスーパークラス
+
+functions
+
+--全テストケースを返す
+tests : () -> seq of TestCase
+tests() == is subclass responsibility;
+
+--テスト結果を確認
+public isOK: TestCase -> bool
+isOK(t) ==
+	if t.テスト１件実行() then
+		new TestLogger().成功した(t)
+	else
+		new TestLogger().失敗した(t);
+
+operations
+
+--あるテストケース列全部のテスト実行
+public run: () ==> bool
+run() ==
+	let	メッセージ = "あるテストケース列全部のテスト結果",
+		テストケース列 = tests()	,
+		結果 = [isOK(テストケース列(i)) | i in set inds テストケース列]
+		--結果 = new Sequence().fmap[TestCase,bool](isOK)(テストケース列)
+	in
+	if  forall i in set inds 結果 & 結果(i) then
+		return new TestLogger().全体が成功した(メッセージ)
+	else
+		return new TestLogger().全体が失敗した(メッセージ)
+	
+end TestDriver
+

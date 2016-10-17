@@ -1,0 +1,42 @@
+-- Check that the return type annotation of a constructor is properly checked
+-- Note that the body is always checked under the assumption that the 
+-- return type should be unit or object reference of the class type of the
+-- constructor - not matter what return type annotation is given.
+
+class C
+
+operations 
+
+C :() ==> C 
+C () == 
+ skip;
+
+C : nat ==> C 
+C (-) == 
+ return self;
+
+C : bool ==> C
+C (-) == 
+ return;
+
+C : <A> ==> C 
+C (-) == 
+ return new C();
+
+C : <B> ==> C 
+C (-) == 
+ let n = 7 in return n;
+
+C : <C> ==> nat
+C (-) == 
+  skip;
+
+C : <D> ==> nat
+C (-) == 
+ let n = 7 in return n;
+
+C : <E> ==> ()
+C (-) == 
+ skip;
+
+end C

@@ -1,0 +1,35 @@
+class JavaUtilEmptyIterator is subclass of JavaUtilIterator, JavaLangObject
+--values 
+--  CLASS : JavaLangClass = new  JavaLangClass("JavaUtilEmptyIterator" , <CLASS> , false  )
+operations 
+public  next : () ==> JavaLangObject
+next() == 
+( exit  new  JavaUtilNoSuchElementException(new  JavaLangString("JavaUtilHashtable JavaUtilIterator"))
+) ;
+
+public  remove : () ==> ()
+remove() == 
+( exit  new  JavaLangIllegalStateException(new  JavaLangString("JavaUtilHashtable JavaUtilIterator"));
+  skip 
+) ;
+
+public  hasNext : () ==> bool 
+hasNext() == 
+( return  false  
+) ;
+
+--public  getClass : () ==> JavaLangClass
+--getClass() == 
+--return  CLASS;
+
+public JavaUtilEmptyIterator : () ==> JavaUtilEmptyIterator
+JavaUtilEmptyIterator() == 
+( skip 
+) ;
+
+--public  JavaUtilEmptyIterator : <NIL> ==> JavaUtilEmptyIterator
+--JavaUtilEmptyIterator(-) == 
+--isNil := true  ;
+
+
+end  JavaUtilEmptyIterator

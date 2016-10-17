@@ -1,0 +1,342 @@
+/***
+*  * WHAT
+*  *    The CORBA IDL definition of the API of the VDM Toolbox. This file 
+*  *    is documented by several comments. Consult the Users Manual for   
+*  *    further details.                                                  
+*  * ID
+*  *    $Id: corba_api.idl,v 1.10 2006/04/28 01:07:32 vdmtools Exp $
+*  * PROJECT
+*  *    INFORMA and Toolbox
+*  * COPYRIGHT
+*  *    (C) Kyushu University
+***/
+
+#ifndef CORBA_API__IDL__
+#define CORBA_API__IDL__
+
+#include "metaiv_idl.idl"
+
+module ToolboxAPI {
+
+  typedef string ModuleName;
+  typedef sequence<ModuleName> ModuleList;
+  // Strings are used to represent the name of a module. Since this idl
+  // description describes the interface of both the VDM-SL Toolbox and
+  // the VDM++ Toolbox, a ModuleName refers to either a VDM-SL Module or
+  // a VDM++ class.
+  
+  typedef string ClassName;
+  typedef sequence<ClassName> ClassList;
+  // ClassName and ClassList are used in parts of the interface
+  // description which are specific for the VDM++ Toolbox. Examples of
+  // such are the methods Super() and Sub() of the interface
+  // VDMModuleRepos.
+  
+  typedef string FileName;
+  typedef sequence<FileName> FileList;
+  
+  struct Error{
+    FileName fname;
+    unsigned short line;
+    unsigned short col;
+    string msg;
+  };
+  
+  typedef sequence<Error> ErrorList;
+  
+  struct ModuleStatus{
+    // The status of a module is represented by the following four fields:
+    boolean SyntaxChecked;
+    boolean TypeChecked;
+    boolean CodeGenerated;
+    boolean PrettyPrinted;
+  };
+  
+  interface VDMErrors
+  // Used to access the errors and warnings of the most recent action.
+  // The state of this interface may be modified by VDMParser::Parse(),
+  // VDMTypeChecker::TypeCheck() and VDMCodeGenerator::GenerateCode()
+  {
+    readonly attribute unsigned short NumErr;
+    readonly attribute unsigned short NumWarn;
+    // The number of errors and warnings reported due to the most recent
+    // action.
+    
+    unsigned short GetErrors(out ErrorList err);
+    unsigned short GetWarnings(out ErrorList err);
+  };
+
+
+  interface VDMProject
+  {
+    void New();
+    void Open(in FileName name)
+      raises (APIError);
+    void Save()
+      raises (APIError);
+    void SaveAs(in FileName name)
+      raises (APIError);
+    unsigned short GetModules(out ModuleList modules);
+    unsigned short GetFiles(out FileList files);
+    void AddFile(in FileName name)
+      raises (APIError);
+    void RemoveFile(in FileName name)
+      raises (APIError);
+  };
+
+
+  interface VDMModuleRepos
+  // Use this interface to get detailed information of a given class or
+  // module.
+  {
+    unsigned short FilesOfModule(out FileList files, in ModuleName name)
+      raises (APIError);
+    // This method returns (in the argument files) a sequence of files
+    // associated to the module name passed to it. The sequence will
+    // only contain one element _unless_ the current project is a flat
+    // specification, in which case the module name 'DefaultMod' may
+    // consist of several files.
+
+    ModuleName GetCurrentModule ()
+      raises (APIError);
+    // returns the name of the module that is currently on top
+    // of the stack. Throws an Exception, if no specification
+    // is present
+
+    void PopModule ()
+      raises (APIError);
+    // pops the module that is currently on top of the stack
+    // Throws an Exception, if no module is on the stack
+
+    void PushModule (in ModuleName name)
+      raises (APIError);
+    // Pushes a module on top of the stack. Throws an Exception,
+    // if the specified module does not exist
+
+    void Status(out ModuleStatus state, in ModuleName name)
+      raises (APIError);
+    // sets argument "state" to the status of the module "name"
+  
+    //
+    // The following methods are specific for VDM++. If called with the
+    // VDM-SL Toolbox the methods will raise an exception.
+    // 
+    unsigned short SuperClasses(out ClassList classes, in ClassName name)
+      raises (APIError);
+    unsigned short SubClasses(out ClassList classes, in ClassName name)
+      raises (APIError);
+//    unsigned short Uses(out ClassList classes, in ClassName name)
+    unsigned short UsesOf(out ClassList classes, in ClassName name)
+      raises (APIError);
+    unsigned short UsedBy(out ClassList classes, in ClassName name)
+      raises (APIError);
+  };
+
+  interface VDMInterpreter
+  {
+    attribute boolean DynTypeCheck;
+    // Enable dynamic type check. Default value = false. 
+
+    attribute boolean DynInvCheck;
+    // Enable dynamic check of invariants. Default value = false.  If
+    // this attribute is set to true, the DynTypeCheck attribute is
+    // automatically set to true also.
+
+
+    attribute boolean DynPreCheck;
+    // Enable checking of pre conditions. Default value = false.
+
+    attribute boolean DynPostCheck;
+    // Enable checking of post conditions. Default value = false.
+
+    attribute boolean PPOfValues;
+    // Enable pretty printing of values. Default value = true.
+
+    attribute boolean Verbose;
+    // This attribute states whether the interaction with the
+    // Interpreter should be 'silent' or not. If Verbose is true, the
+    // result of all actions performed through the API will be echoed to
+    // the interpreter window.
+    // This attribute is false by default.
+
+    attribute boolean Debug;
+    // If set to true this attribute signals that breakpoints in the
+    // specification should be respected. Whenever a breakpoint is
+    // reached the evaluation is suspended and the user must interact
+    // with the graphical user interface of the Toolbox to do the actual
+    // debugging.  Default value = false.
+
+    void Initialize()
+      raises (APIError);
+  
+    VDM::VDMGeneric EvalExpression (in VDM::ClientID id, in string expr)
+      raises (APIError);
+    // Evaluates the expression of the string 'expr'. This corresponds
+    // to writing a command like 'p expr' in the interpreter. The result
+    // is returned as a VDM::Generic.  Notice that the result will be
+    // echoed to the interpreter window if Verbose=true.
+    // If a run-time error occurs an exception will be raised.
+
+    VDM::VDMGeneric Apply (in VDM::ClientID id, in string f, in VDM::VDMSequence arg)
+      raises (APIError);
+    // Applies the function or method f on the argument arg. The
+    // result is returned as a VDM::Generic, which can in turn be passed
+    // to other calls to Apply or inspected in more detail by the
+    // interfaces and methods provided in the VDM module.
+
+    void EvalCmd (in string cmd)
+      raises (APIError);
+    // Evaluates the command 'cmd' as if it was written directly to the
+    // interpreter. An exception is thrown if....TBD!
+
+    long SetBreakPointByPos (in string file, in long line, in long col)
+      raises (APIError);
+    // Used to set a breakpoint in a file at line:column
+
+
+    long SetBreakPointByName (in string mod, in string func)
+      raises (APIError);
+    // Used to set a breakpoint at a specific expression
+    // mod is the name of the module
+    // func is the name of the function
+
+    void DeleteBreakPoint (in long num)
+      raises (APIError);
+    // used to delete a breakpoint
+
+    VDM::VDMTuple StartDebugging (in VDM::ClientID id, in string expr)
+      raises (APIError);
+    // used to debug an expression
+    // returns a tuple value: The EvaluationState and the semantic value
+    // as a list of tokens
+
+    VDM::VDMTuple DebugStep (in VDM::ClientID id)
+      raises (APIError);
+    VDM::VDMTuple DebugStepIn (in VDM::ClientID id)
+      raises (APIError);
+    VDM::VDMTuple DebugSingleStep (in VDM::ClientID id)
+      raises (APIError);
+    VDM::VDMTuple DebugContinue (in VDM::ClientID id)
+      raises (APIError);
+    // used for stepping and continuing in the specification
+    // the methods return a Tuple, holding the Evaluation State
+    // (<BREAKPOINT>, <INTERRUPT>, <SUCCESS> or <ERROR>) and
+    // the result of the evaluation as a sequence of tokens
+    // (if operation was successful)
+    
+  };
+
+  interface VDMCodeGenerator
+  {
+    attribute boolean GeneratePosInfo;
+    // Default value = false;
+
+    enum LanguageType {CPP, JAVA};
+  
+    // Use the targetLang flag to set the target language of the
+    // Code generator. Currently supported languages
+    // are: C++ and Java, where Java is only supported by the
+    // VDM++ Toolbox
+
+    boolean GenerateCode(in ModuleName name, in LanguageType targetLang)
+      raises (APIError);
+
+    boolean GenerateCodeList(in ModuleList names, in LanguageType targetLang)
+      raises (APIError);
+  };
+
+  interface VDMParser
+  {
+    boolean Parse(in FileName name)
+      raises (APIError);
+    // returns true if the file 'name' was successfully
+    // parsed. Otherwise the state of the VDMErrors interface is
+    // modified.
+    // If FileName does not exist an exception is raised.
+
+    boolean ParseList(in FileList names)
+      raises (APIError);
+    // Returns true if all files in the FileList names was successfully
+    // parsed. Otherwise false is returned.  If unsuccessful the state
+    // of the VDMErrors interface is modified. Raises an exception if
+    // one of the files in the list do not exist.
+
+  };
+
+  interface VDMTypeChecker
+  {
+    attribute boolean DefTypeCheck;
+    // If set to true this attribute implies 'def' type check. If set to
+    // false the specification will be 'pos' type checked.
+
+    attribute boolean ExtendedTypeCheck;
+    // Default value = false;
+
+    boolean TypeCheck(in ModuleName name)
+      raises (APIError);
+    // Type checks the module 'name'. The return value is true if the
+    // type check succeeded.
+
+    boolean TypeCheckList(in ModuleList names)
+      raises (APIError);
+    // Returns true if all modules in the ModuleList names was
+    // successfully type checked. Otherwise false is returned.  If
+    // unsuccessful the errors reported can be accessed through the
+    // VDMErrors interface.
+  };
+
+  interface VDMPrettyPrinter
+  {
+    boolean PrettyPrint(in FileName name)
+      raises (APIError);
+
+    boolean PrettyPrintList(in FileList names)
+      raises (APIError);
+  };
+
+  enum ToolType {SL_TOOLBOX, PP_TOOLBOX};
+
+  interface VDMApplication
+  {
+    readonly attribute ToolType Tool;
+    // This attribute gives the type of tool, i.e. whether it is the
+    // VDM-SL Toolbox or the VDM++ Toolbox.
+
+    VDM::ClientID Register();
+    // This method is used to register a client in the server. The
+    // method returns a unique identification of the client, a VDM::ClientID.
+    // A client should register itself in the server before performing
+    // any calls towards the server.
+
+    void Unregister(in VDM::ClientID id);
+    // When the client terminates it should call Unregister() to tell
+    // the server to free any resources associated with the client.
+
+    VDMProject       GetProject();
+    VDMInterpreter   GetInterpreter();
+    VDMCodeGenerator GetCodeGenerator();
+    VDMParser        GetParser();
+    VDMTypeChecker   GetTypeChecker();
+    VDMPrettyPrinter GetPrettyPrinter();    
+    VDMErrors        GetErrorHandler();
+    VDMModuleRepos   GetModuleRepos();
+    VDM::VDMFactory  GetVDMFactory();
+
+    void PushTag(in VDM::ClientID id);
+    void DestroyTag(in VDM::ClientID id)
+      raises (APIError);
+    // These two functions frees the user from having to explicitly call
+    // destroy() on each object created by the VDM Toolbox during a
+    // session. A call to PushTag() will generate a unique tag and push
+    // it onto an internal tag stack. All objects created by the VDM
+    // Toolbox are tagged by the tag on top of the tag stack.
+
+    // Each call to DestroyTag() will pop the topmost tag of the tag
+    // stack and subsequently call destroy() on each object tagged with
+    // this value.
+
+  };
+
+}; // module ToolboxAPI
+
+#endif

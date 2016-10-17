@@ -1,0 +1,27 @@
+-- This test used to check that functions can be correctly retained
+
+class A
+
+instance variables
+
+  i : nat
+
+operations
+
+public Test : () ==> nat
+Test() ==
+( 
+  return new B4().f(1)
+);
+
+end A
+
+class B4
+
+functions
+
+public f : nat -> nat
+f (n) ==
+  n + 1
+
+end B4

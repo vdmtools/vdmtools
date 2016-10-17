@@ -1,0 +1,32 @@
+class A
+types
+
+public TString::
+  string : [seq of char]
+;
+
+operations
+
+public
+A: () ==> A
+A() == skip;
+
+public 
+test: seq of char
+  ==> A`TString
+test(k) ==
+  let l = mk_A`TString(k)
+  in return l;
+
+public 
+test: seq of char * seq of char 
+  ==> A`TString
+test(k,d)==
+  let l = k ^ d
+  in return mk_A`TString(l);
+
+public RunTest : () ==> A`TString
+RunTest() ==
+  return test("1234");
+
+end A

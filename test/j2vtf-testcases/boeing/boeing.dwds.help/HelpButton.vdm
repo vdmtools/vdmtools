@@ -1,0 +1,53 @@
+class HelpButton is subclass of JRadioButton, MouseListener
+operations 
+private  HelpButton : () ==> HelpButton
+HelpButton() == 
+( return  
+) ;
+
+public  mouseExited : [MouseEvent] ==> <VOID>
+mouseExited(mouseEvent) == 
+( return  
+) ;
+
+public  mouseClicked : [MouseEvent] ==> <VOID>
+mouseClicked(mouseEvent) == 
+( return  
+) ;
+
+public  mouseEntered : [MouseEvent] ==> <VOID>
+mouseEntered(mouseEvent) == 
+( return  
+) ;
+
+public  mousePressed : [MouseEvent] ==> <VOID>
+mousePressed(mouseEvent) == 
+( return  
+) ;
+
+public  mouseReleased : [MouseEvent] ==> <VOID>
+mouseReleased(mouseEvent) == 
+( let - = helpFrame.setHelpPage(helpAddress)
+  in 
+    skip ;
+  return  
+) ;
+
+public  HelpButton : [String] * [URL] * [HelpFrame] ==> HelpButton
+HelpButton(buttonText, helpAddress, helpFrame) == 
+( let - = JRadioButton(buttonText)
+  in 
+    skip ;
+  let - = addMouseListener(self  )
+  in 
+    skip ;
+  HelpButton`helpAddress := helpAddress;
+  HelpButton`helpFrame := helpFrame;
+  return  
+) ;
+
+instance variables 
+  private  helpAddress : [URL];
+  private  helpFrame : [HelpFrame]
+  
+end  HelpButton

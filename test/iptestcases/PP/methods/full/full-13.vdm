@@ -1,0 +1,51 @@
+class A
+
+values
+ mk_(a,b) = mk_(3,6);
+  c : char = 'a';
+public  d        = a + 1;
+
+instance variables 
+  i: nat;
+  j: nat;
+  message: seq of nat := [1,3,6]
+
+functions
+  F: nat * nat ->  nat
+  F(i,j) ==
+    i + j;
+
+  fct: (nat * nat) * nat ->nat
+  fct(mk_(a,b),c) == a + b + c;
+
+  fct1: nat * nat * nat ->nat
+  fct1(a,b,c) == a + b + c;
+
+
+operations
+  SetVal: nat * nat ==> ()
+  SetVal(a,b) ==
+  ( i := a;
+    j := b
+  );
+
+  public Test : () ==> nat
+  Test () ==
+  ( i := a;
+    return i;
+  );
+
+  GetVal: () ==> nat * nat
+  GetVal() ==
+    return mk_(i,j)
+
+end A
+
+class B
+operations
+public Test : () ==> nat
+Test ()  ==
+return A`d
+end B
+
+

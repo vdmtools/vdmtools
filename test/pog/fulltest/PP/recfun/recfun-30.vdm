@@ -1,0 +1,26 @@
+class A
+
+functions
+
+static public
+id : nat -> nat
+id(x) == x;
+
+
+static public 
+foo : nat -> nat 
+foo(x) == if x = 0 then 0 else B`goo(x-1)
+measure id;
+
+end A
+
+class B
+
+functions
+
+static public 
+goo : nat -> nat 
+goo(x) == if x=0 then 0 else A`foo(x-1)
+measure A`id;
+
+end B 

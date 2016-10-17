@@ -1,0 +1,37 @@
+class SpecificationStmtTest
+
+instance variables
+
+  inst1 : bool;
+  inst2 : nat
+  
+operations
+
+  SpecificationStmt1(arg1, arg2 : nat) res : real ==
+  ([ext rd inst1 : bool
+        wr inst2 : nat
+    pre inst1
+    post inst2 = inst2~ + arg1 and res = arg2 * 8.7];
+    return res);
+
+  SpecificationStmt2(arg : map bool to nat) res : nat ==
+  ([ext rd inst1 : nat
+    post res = arg(inst1)];
+    return res);
+
+  SpecificationStmt3(arg : bool) ==
+  [pre let n = 7 in n
+   post arg];
+
+  SpecificationStmt4() ==
+  [post if true then let n = 7 in n else false];
+
+  SpecificationStmt5() ==
+  [ext rd inst1 : nat
+   post inst1 = inst1~ and true]
+     
+end SpecificationStmtTest
+
+
+
+

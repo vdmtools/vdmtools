@@ -1,0 +1,9 @@
+class StringCompare is subclass of Compare
+operations 
+public  compare : [Object] * [Object] ==> int 
+compare(a, b) == 
+( return  a.toString().compareTo(b.toString())
+) ;
+
+
+end  StringCompare

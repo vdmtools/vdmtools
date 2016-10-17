@@ -1,0 +1,32 @@
+The $ErrorState$ class is the behavioral pattern "state" as described in 
+"Design Patterns". This class specifies the default behaviour for the
+state specific methods. 
+
+\begin{vdm_al}
+class ErrorState is subclass of ProjectTypes  
+
+--  The ErrorState class is the behavioral pattern "state" as described in 
+--  "Design Patterns". This class specifies the default behaviour for the
+--  state specific methods. 
+
+operations
+
+  
+public   ChangeState: Errors ==> ()
+  ChangeState(-) ==
+    skip;
+
+public   SetNextState: Errors * ErrorState ==> ()
+  SetNextState(err, estate) ==
+    err.SetNextState(estate);
+
+public   AddMsg: Errors ==> ()
+  AddMsg(-) ==
+    skip;
+    
+public   AllDone: Errors ==> ()
+  AllDone(-) ==
+    skip
+
+end ErrorState
+\end{vdm_al}

@@ -1,0 +1,96 @@
+-- This testcase generates an infinite loop at specification level by 
+-- initializing the global values InitializeGlobalVal
+-- Remark: The function InitGV has been changed at Implementation level
+-- it it to check what are the differences to specification
+
+module GET
+  imports 
+    from
+      CYLINDER
+        types
+         CircCyl :: rad : real
+                    height : real
+                    slope : real renamed CircCyl
+
+    exports
+      functions
+        GetCircCyl : () -> CYLINDER`CircCyl
+
+    
+  definitions
+    functions
+      GetCircCyl : () -> CircCyl
+      GetCircCyl() == mk_CircCyl(2.0, 2.0, 1.57) 
+
+end GET
+
+module DUMMY
+
+  exports 
+    functions
+    Dummy : real -> real
+   
+  definitions
+    functions
+      Dummy : real -> real
+      Dummy(r) == 1.0 * r
+
+end DUMMY     
+
+module CYLINDER
+
+   imports
+     from DUMMY
+       functions
+         Dummy : real -> real  renamed Dummy,
+
+    from GET
+      functions
+        GetCircCyl : () -> CircCyl renamed GetCircCyl
+ 
+   exports
+     types  
+       struct CircCyl
+ 
+     operations
+       CalcCircCyl : () ==> (CircCyl * real)      
+
+  definitions
+    types
+      CircCyl :: rad : real
+                 height : real
+                 slope : real
+
+    functions
+      CircCylVol : CircCyl -> real
+      CircCylVol(cyl) == let slope = cyl.slope in
+                   PI * cyl.rad * cyl.rad * cyl.height * Dummy(slope)
+
+    operations
+      CalcCircCyl : () ==> (CircCyl * real)
+      CalcCircCyl() == let cyl = GetCircCyl() in 
+                         let vol = CircCylVol(cyl) in
+                         (
+                            Dummy(vol);
+                             return(mk_(cyl, vol))
+                          )
+end CYLINDER
+
+module A
+  imports 
+    from CYLINDER
+ 
+      operations
+         CalcCircCyl : () ==> (CYLINDER`CircCyl * real) renamed CalcCircCyl
+
+      types
+        CircCyl :: rad : real
+                height : real
+                 slope : real renamed CircCyl
+  definitions
+    functions
+      Test : () -> seq of [(CircCyl* real)]
+      Test () == [CalcCircCyl()]
+end A
+
+

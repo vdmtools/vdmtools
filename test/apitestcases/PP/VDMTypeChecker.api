@@ -1,0 +1,17 @@
+# positive testcases
+new project
+parse ($SOURCEPATH/typeerr.vdm)
+typecheck pos (B)
+typecheck def (B)
+$M = get modules
+set full on
+typecheck pos ([$M])
+typecheck def ([$M])
+
+# negative testcases
+new project
+parse ($SOURCEPATH/typeerr.vdm)
+typecheck pos (DoesNotExistModule)
+typecheck pos ([Does, Not, Exist])
+set full off
+

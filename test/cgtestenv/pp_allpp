@@ -1,0 +1,23 @@
+#! /bin/bash
+
+if [ -n "$BASEDIR" ] ; then
+  :
+else
+  BASEDIR=/home/cg/cgtestenv
+fi
+
+if [ -n "$TESTDIR" ] ; then
+  :
+else
+  TESTDIR=/home/cg/test
+fi
+
+
+export BASEDIR
+td=$BASEDIR/latexdir
+
+rm -f *.trace
+
+$td -pp $TESTDIR/PP $TESTDIR/CORE $TESTDIR/IMPL/PP
+
+

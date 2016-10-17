@@ -1,0 +1,150 @@
+class JavaUtilDate is subclass of JavaIoSerializable, JavaLangCloneable, JavaLangComparable, JavaLangObject
+operations 
+public  JavaUtilDate : () ==> JavaUtilDate
+JavaUtilDate() == 
+( skip 
+) ;
+
+public  JavaUtilDate : int  ==> JavaUtilDate
+JavaUtilDate(date) == 
+( skip 
+) ;
+
+public  clone : () ==> JavaLangObject
+clone() == 
+is not yet specified ;
+
+public  getDay : () ==> int 
+getDay() == 
+is not yet specified ;
+
+public  getDate : () ==> int 
+getDate() == 
+is not yet specified ;
+
+public  getTime : () ==> int 
+getTime() == 
+is not yet specified ;
+
+public  getYear : () ==> int 
+getYear() == 
+is not yet specified ;
+
+public  getHours : () ==> int 
+getHours() == 
+is not yet specified ;
+
+public  getMonth : () ==> int 
+getMonth() == 
+is not yet specified ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+is not yet specified ;
+
+public  setDate : int  ==> ()
+setDate(date) == 
+is not yet specified ;
+
+public  setTime : int  ==> ()
+setTime(time) == 
+is not yet specified ;
+
+public  setYear : int  ==> ()
+setYear(year) == 
+is not yet specified ;
+
+public  toString : () ==> JavaLangString
+toString() == 
+is not yet specified ;
+
+public  JavaUtilDate : <NIL> ==> JavaUtilDate
+JavaUtilDate(-) == 
+isNil := true  ;
+
+public  JavaUtilDate : int  * int  * int  ==> JavaUtilDate
+JavaUtilDate(year, month, date) == 
+( skip 
+) ;
+
+public  setHours : int  ==> ()
+setHours(hours) == 
+is not yet specified ;
+
+public  setMonth : int  ==> ()
+setMonth(month) == 
+is not yet specified ;
+
+public  getMinutes : () ==> int 
+getMinutes() == 
+is not yet specified ;
+
+public  getSeconds : () ==> int 
+getSeconds() == 
+is not yet specified ;
+
+public  after : JavaUtilDate ==> bool 
+after(when) == 
+is not yet specified ;
+
+public  setMinutes : int  ==> ()
+setMinutes(minutes) == 
+is not yet specified ;
+
+public  setSeconds : int  ==> ()
+setSeconds(seconds) == 
+is not yet specified ;
+
+public  toGMTString : () ==> JavaLangString
+toGMTString() == 
+is not yet specified ;
+
+public  JavaUtilDate : JavaLangString ==> JavaUtilDate
+JavaUtilDate(s) == 
+( skip 
+) ;
+
+public  before : JavaUtilDate ==> bool 
+before(when) == 
+is not yet specified ;
+
+public  JavaUtilDate : int  * int  * int  * int  * int  ==> JavaUtilDate
+JavaUtilDate(year, month, date, hrs, min) == 
+( skip 
+) ;
+
+public  static parse : JavaLangString ==> int 
+parse(s) == 
+is not yet specified ;
+
+public  static UTC : int  * int  * int  * int  * int  * int  ==> int 
+UTC(year, month, date, hrs, min, sec) == 
+is not yet specified ;
+
+public  equals : JavaLangObject ==> bool 
+equals(obj) == 
+is not yet specified ;
+
+public  toLocaleString : () ==> JavaLangString
+toLocaleString() == 
+is not yet specified ;
+
+public  JavaUtilDate : int  * int  * int  * int  * int  * int  ==> JavaUtilDate
+JavaUtilDate(year, month, date, hrs, min, sec) == 
+( skip 
+) ;
+
+--public  compareTo : JavaUtilDate ==> int 
+--compareTo(anotherDate) == 
+--is not yet specified ;
+
+public  compareTo : JavaLangObject ==> int 
+compareTo(o) == 
+is not yet specified ;
+
+public  getTimezoneOffset : () ==> int 
+getTimezoneOffset() == 
+is not yet specified ;
+
+
+end  JavaUtilDate

@@ -1,0 +1,138 @@
+class JavaUtilEnumerator is subclass of JavaUtilEnumeration, JavaUtilIterator, JavaLangObject
+--values 
+--  CLASS : JavaLangClass = new  JavaLangClass("JavaUtilEnumerator" , <CLASS> , false  )
+instance variables 
+--  table : map  int  to  JavaUtilEntry := JavaUtilHashtable`this.table;
+  htable : JavaUtilHashtable;
+  index : int; -- := (card  dom  htable.table);
+  entry : JavaUtilHTEntry; -- := new  JavaUtilHTEntry(<NIL>);
+  lastReturned : JavaUtilHTEntry; -- := new  JavaUtilHTEntry(<NIL>);
+  type : int ;
+  iterator : bool ;
+  protected  expectedModCount : int; --  := htable.modCount
+operations 
+public  next : () ==> JavaLangObject
+next() == 
+( if  htable.modCount <> expectedModCount
+  then  
+    exit  new  JavaUtilConcurrentModificationException();
+  return  nextElement()
+) ;
+
+public  remove : () ==> ()
+remove() == 
+( if  not  iterator
+  then  
+    exit  new  JavaLangUnsupportedOperationException();
+  if  lastReturned.IsNil()
+  then  
+    exit  new  JavaLangIllegalStateException(new  JavaLangString("JavaUtilHashtable JavaUtilEnumerator"));
+  if  htable.modCount <> expectedModCount
+  then  
+    exit  new  JavaUtilConcurrentModificationException();
+  ( dcl   -- tab : map  int  to  JavaUtilEntry := JavaUtilHashtable`this.table,
+          idx : int  := (let i=lastReturned.hash in if i<0 then -i else i) mod  (card  dom  htable.table);
+    ( dcl   e : JavaUtilHTEntry := htable.table(idx),
+            prev : JavaUtilHTEntry := new  JavaUtilHTEntry(<NIL>);
+      while  not  e.IsNil() do  
+      ( if  e = lastReturned
+        then  
+          ( htable.modCount := htable.modCount+1;
+            expectedModCount := expectedModCount+1;
+            if  prev.IsNil()
+            then  
+              htable.table := htable.table ++ {idx |-> e.next}
+            else  
+              prev.next := e.next;
+            htable.count := htable.count-1;
+            lastReturned := new  JavaUtilHTEntry(<NIL>);
+            return  
+          ) ;
+        prev := e;
+        e := e.next
+      ) 
+    ) ;
+    exit  new  JavaUtilConcurrentModificationException()
+  ) ;
+  skip 
+) ;
+
+public  hasNext : () ==> bool 
+hasNext() == 
+( return  hasMoreElements()
+) ;
+
+--public  getClass : () ==> JavaLangClass
+--getClass() == 
+--return  CLASS;
+
+public  nextElement : () ==> JavaLangObject
+nextElement() == 
+( dcl   et : JavaUtilHTEntry := entry,
+--        t : map  int  to  JavaUtilEntry := table,
+        i : int  := index;
+  while  et.IsNil() and  i > 0 do  
+  ( def l_4 = i;
+    l_5 = l_4-1
+    in ( i := l_5;
+      def l_3 = i;
+      l_1 = htable.table(l_3)
+      in et := l_1
+    ) 
+  ) ;
+  entry := et;
+  index := i;
+  if  not  et.IsNil()
+  then  
+    ( lastReturned := entry;
+      def l_1 = lastReturned
+      in ( dcl   e : JavaUtilHTEntry := l_1;
+        entry := e.next;
+        return
+--          if  type = JavaUtilHashtable`KEYS
+          if  type = 0
+          then  e.key
+          else 
+--            (if  type = JavaUtilHashtable`VALUES then  e.value__ else  e)
+            (if  type = 1 then  e.value__ else  e)
+      ) 
+    ) ;
+  exit  new  JavaUtilNoSuchElementException(new  JavaLangString("JavaUtilHashtable JavaUtilEnumerator"))
+) ;
+
+public JavaUtilEnumerator : int  * bool * JavaUtilHashtable ==> JavaUtilEnumerator
+JavaUtilEnumerator(type, iterator, htable) == 
+( JavaUtilEnumerator`type := type;
+  JavaUtilEnumerator`iterator := iterator;
+  JavaUtilEnumerator`htable := htable;
+  index := card  dom htable.table;
+  entry := new  JavaUtilHTEntry(<NIL>);
+  lastReturned := new  JavaUtilHTEntry(<NIL>);
+  expectedModCount := htable.modCount;
+) ;
+
+public  JavaUtilEnumerator : <NIL> ==> JavaUtilEnumerator
+JavaUtilEnumerator(-) == 
+isNil := true  ;
+
+public  hasMoreElements : () ==> bool 
+hasMoreElements() == 
+( dcl   e : JavaUtilHTEntry := entry,
+--        t : map  int  to  JavaUtilEntry := table,
+        i : int  := index;
+  while  e.IsNil() and  i > 0 do  
+  ( def l_4 = i;
+    l_5 = l_4-1
+    in ( i := l_5;
+      def l_3 = i;
+      l_1 = htable.table(l_3)
+      in e := l_1
+    ) 
+  ) ;
+  entry := e;
+  index := i;
+  return  not  e.IsNil()
+) ;
+
+
+end  JavaUtilEnumerator

@@ -1,0 +1,24 @@
+# positive testcases
+new project
+parse ($SOURCEPATH/test.vdm)
+init
+get modules
+push module (B)
+$A = current module
+pop module
+$A = current module
+files of module ($A)
+status ($A)
+
+# negative testcases
+new project
+current module
+parse ($SOURCEPATH/test.vdm)
+init
+push module (NotExist)
+status (NotExist)
+files of module (NotExist)
+pop module
+pop module
+
+

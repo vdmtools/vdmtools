@@ -1,0 +1,65 @@
+class TrapStmtTest
+instance variables
+  a: nat1;
+  stid : bool;
+
+types
+
+  public A :: selid : nat
+       sel2 : bool
+
+operations
+
+  Trap1: () ==> nat
+  Trap1() ==
+  trap a with let a = 7 in return a + 8
+  in return 0;
+
+  Trap2: () ==> ()
+  Trap2() ==
+  trap a ^ b with exit 7
+  in
+    exit true;
+
+  Trap3: () ==> nat | bool
+  Trap3() ==
+  trap mk_(a,-) with
+         let mk_A(n,b) = mk_A(7,5) 
+         in 
+           if b
+           then return n
+           else return b
+  in
+    skip;
+
+  Trap4: () ==> nat
+  Trap4() ==
+  trap b union c with Trap3()
+  in
+    if true = false
+    then return 6
+    else exit 7;
+
+  Trap5: A * nat ==> nat | bool
+  Trap5(arg1, arg2) ==
+  trap mk_A(t,true) with exit 8
+  in
+  let mk_A(n,b) = arg1
+  in 
+    if b
+    then return n
+    else Trap2();
+
+  Trap6: nat * bool * seq of char ==> nat | bool
+  Trap6(n,b,l) ==
+    trap b with if b
+                then return 8
+		else let test = "test" in return test
+    in
+      Trap5(mk_A(4,false),9)
+
+end TrapStmtTest
+
+
+
+

@@ -1,0 +1,36 @@
+class A
+
+operations
+public
+Test: () ==> seq of nat
+Test() ==
+  return [
+    fn[int](5), 
+    fn2[int](5) ,
+    fn3[int](5) 
+  ];
+
+functions
+public
+fn[@X]: @X -> @X
+fn(x) ==
+  let f = lambda a : @X & a
+  in fnx[@X](f, x);
+
+public
+fn2[@X]: @X -> @X
+fn2(x) ==
+  let f: @X -> @X f(a) == a
+  in fnx[@X](f, x);
+
+public
+fn3[@X]: @X -> @X
+fn3(x) ==
+  let f (a: @X) res: @X == a
+  in fnx[@X](f, x);
+
+public
+fnx[@T]: (@T -> @T) * @T -> @T
+fnx(fn,t) == fn(t);
+
+end A

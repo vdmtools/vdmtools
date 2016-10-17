@@ -1,0 +1,57 @@
+imports 
+
+from B values
+  b renamed b; 
+  a : int renamed aa;
+  tok; l : seq1 of int,
+
+from C operations
+  op2: nat ==> () renamed OP2;
+  op3 renamed op3', 
+
+-- Fejl i TC:
+--types Sigma:: s : set of nat,
+
+from D functions
+  f3; f2: set of nat * set of nat -> set of nat renamed Df2;
+  f1 renamed f1,
+
+from E types
+  C:: set of nat
+      set of nat renamed C;
+  D:: a : seq of nat
+      b : seq of token renamed DD
+
+exports all
+definitions
+operations
+Test: () ==> seq of (real | token | bool | (seq of real) | (set of real))
+Test() ==
+( res := [aa, b, B`tok, B`l];
+  for all i in set { i | i in set {50,...,65} & i mod 2 = 0 } do
+    OP2(i);
+  let l = op3'() in
+    let s = elems l in
+
+-- Fejl i TC:
+--      let c1 = pre_op3'(mk_C`Sigma(s)),
+--          c2 = post_op3'(l, mk_C`Sigma(s), mk_C`Sigma(s)) in
+        res := res ^ l ;--^ [c1, c2];
+  res := res ^ [ f1({2,34,5}, {34,8}), 
+                 Df2({1,...,100}, {1, 100, 56}),
+                 D`f3({2,3}, {1,2,3})];
+
+  let c = mk_C({}, {}),
+      d = mk_DD(B`l, [mk_token(1)]) in
+    res := res ^ [is_C(c), is_DD(d), d.a, d.b];
+
+  return res
+)
+
+state Sigma of
+  res : seq of (real | token | bool | (seq of real) | (set of real))
+  init s == s = mk_Sigma([])
+end
+
+end A
+

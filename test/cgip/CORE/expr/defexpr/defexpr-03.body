@@ -1,0 +1,38 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ( aA | bool | map nat to nat | nat )  
+Test () ==
+(return
+
+ [
+ (def x in set {1,2,3} = 1 in mk_aA(x)).a1,
+
+  def {x,y} in set 
+      (let b in set {{1,2},{1,4}} be st 4 not in set b in {b}) = 
+           (if true then {1,2} else {1,4}) in is_nat(y),
+
+ def [x] in set Op() = [20-17] in {x|->x},
+
+ def 7 in set {1,2,7} = 7 in forall x in set {1,3,5} &  x mod 2 = 0,
+
+ def mk_(x,y) in set 
+      (def {x,y,z} in set {{10,20,30}} = {10,20,30} in {mk_(x,y),mk_(y,z),mk_(x,z)}) = 
+           mk_(20,10) in x+y,
+
+ def mk_aA(x) in set ({mk_aA(10), mk_aA(20), mk_aA(30)}) = mk_aA(20) in x
+ ]
+)
+
+types
+public aA :: a1 : int
+
+functions
+Op: () -> set of seq of nat
+Op () ==
+  {[10],[2],[3]}
+
+end A
+
+
+
+
+

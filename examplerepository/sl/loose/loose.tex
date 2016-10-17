@@ -1,0 +1,62 @@
+\documentclass[11pt]{article}
+\usepackage{a4}
+\usepackage{makeidx}
+\usepackage{vdmsl-2e}
+\usepackage{termref}
+\usepackage{longtable}
+
+\newcommand{\StateDef}[1]{{\bf #1}}
+\newcommand{\TypeDef}[1]{{\bf #1}}
+\newcommand{\TypeOcc}[1]{{\it #1}}
+\newcommand{\FuncDef}[1]{{\bf #1}}
+\newcommand{\FuncOcc}[1]{#1}
+\newcommand{\ModDef}[1]{{\tiny #1}}
+
+\makeindex
+%\documentstyle[a4,vdmsl,makeidx,termref,11pt,longtable]{article}
+
+\begin{document}
+
+\title{A Looseness Analysis Experiment}
+
+\author{Peter Gorm Larsen\\ IFAD}
+
+\maketitle
+
+\section{Introduction}
+
+This is an experiment which investigates the complexity of a looseness
+analysis tool for an interesting subset of VDM-SL. The subset is
+particularly interesting because it illustrates how
+underdeterminedness is combined with recursion in VDM-SL.
+
+This paper contains the full specification which have been processed
+by the IFAD VDM-SL Toolbox. However, nothing is written here about the
+context in which this is to be seen or the tests which have been
+carried out. For more information about that see \cite{Larsen94b}.
+Finally, it is worth noting here that no particular effort have been spent on
+ensuring that erroneous specifications yield something sensible. In
+particular this specification will yield bottom if just one of the
+models yield bottom.
+\newpage
+
+\tableofcontents
+
+\include{as.vdm}
+
+\include{expr.vdm}
+
+\include{pat.vdm}
+
+\include{env.vdm}
+
+\include{auxil.vdm}
+
+\bibliographystyle{newalpha}
+\bibliography{ifad}
+
+\newpage
+\addcontentsline{toc}{section}{Index}
+\printindex
+
+\end{document}

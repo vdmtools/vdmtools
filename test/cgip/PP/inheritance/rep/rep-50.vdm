@@ -1,0 +1,28 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class B
+
+types
+public  Enum = <a>;
+
+public  Rec :: e : Enum
+
+instance variables
+  a : A := new A()
+
+operations
+  public Test : () ==> nat
+  Test() == 
+    (a.goo(mk_Rec(<a>));
+     return 34
+    )
+
+end B
+
+class A 
+
+operations
+public  goo: B`Rec ==> ()
+  goo(-) == skip;
+
+end A
+

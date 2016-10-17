@@ -1,0 +1,69 @@
+class JavaUtilSet is subclass of JavaUtilCollection
+operations
+public 
+JavaUtilSet: <NIL> ==> JavaUtilSet
+JavaUtilSet(-) ==
+isNil:=true;
+
+--public  size : () ==> int 
+--size() == 
+--is not yet specified;
+
+public  clear : () ==> ()
+clear() == 
+is not yet specified;
+
+public  isEmpty : () ==> bool 
+isEmpty() == 
+is not yet specified;
+
+public  toArray : () ==> map  int  to  JavaLangObject
+toArray() == 
+is not yet specified;
+
+public  hashCode : () ==> int 
+hashCode() == 
+is not yet specified;
+
+public  iterator : () ==> JavaUtilIterator
+iterator() == 
+is not yet specified;
+
+public  add : JavaLangObject ==> bool 
+add(o) == 
+is not yet specified;
+
+public  equals : JavaLangObject ==> bool 
+equals(o) == 
+is not yet specified;
+
+--public  remove : JavaLangObject ==> bool 
+--remove(o) == 
+--is not yet specified;
+
+public  contains : JavaLangObject ==> bool 
+contains(o) == 
+is not yet specified;
+
+public  addAll : JavaUtilCollection ==> bool 
+addAll(c) == 
+is not yet specified;
+
+public  toArray : map  int  to  JavaLangObject ==> map  int  to  JavaLangObject
+toArray(a) == 
+is not yet specified;
+
+public  removeAll : JavaUtilCollection ==> bool 
+removeAll(c) == 
+is not yet specified;
+
+public  retainAll : JavaUtilCollection ==> bool 
+retainAll(c) == 
+is not yet specified;
+
+public  containsAll : JavaUtilCollection ==> bool 
+containsAll(c) == 
+is not yet specified;
+
+
+end  JavaUtilSet

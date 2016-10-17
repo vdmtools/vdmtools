@@ -1,0 +1,17 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+public Test : () ==> seq of char
+Test () ==
+(dcl s : seq of char := "Hi";
+ s(2) := 'H';
+ return s
+);
+   
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

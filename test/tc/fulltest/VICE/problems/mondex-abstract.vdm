@@ -1,0 +1,147 @@
+class AbPurseFunctional
+
+types
+	public AbPurse ::	balance : nat
+						lost : nat;
+	public PurseId = token;
+
+	public AbWorld :: 	authentic : set of PurseId
+						abPurses : map PurseId to AbPurse
+	inv mk_AbWorld(authentic, abPurses) ==
+		forall name in set dom abPurses & name in set authentic;
+
+
+
+functions
+-- Operation to return the value in the balance instance variable.
+public GetBalance: AbPurse -> nat
+GetBalance(p) == p.balance;
+
+-- Operation to return the value in the lost instance variable.
+public GetLost: AbPurse -> nat
+GetLost(p) == p.lost;
+
+-- Function to increase the balance variable by a given value.
+public IncreaseBalance: AbPurse * nat -> AbPurse
+IncreaseBalance(p, val) ==
+	mu(p, balance |-> val);
+
+-- Operation to increase the lost variable by a given value.
+public IncreaseLost: AbPurse * nat -> AbPurse
+IncreaseLost(p, val) ==
+	mu(p, lost |-> val);
+
+-- Operation to reduce the balance variable by a given value
+--
+-- Precondition : balance of purse is greater or equal to the given 
+--			value, as required by Security Property 4: 
+--			Sufficient Funds (pg. 12)
+public ReduceBalance: AbPurse * nat -> AbPurse
+ReduceBalance(p, val) ==
+	mu(p, balance |-> p.balance - val)
+pre p.balance >= val;
+
+-- Operation to return the total money in the purse.
+public GetTotal : AbPurse -> nat
+GetTotal(p) ==
+	p.balance + p.lost;
+
+
+newAbWorld : map PurseId to AbPurse -> AbWorld
+newAbWorld(auth) ==
+	mk_AbWorld({}, auth);												-- !!!!!!!!!!!!!!!
+
+-- Ignore operation, which models the option of doing nothing
+--
+-- Postcondition: states that all authentic purses in the world 
+--			remain unchanged (SP2: All Value Accounted (pg 
+--			12))
+public Ignore : AbWorld -> int
+Ignore(-) == 0;
+-- post w.authentic = authentic~ and										-- !!!!!!!!!!!!!!!!
+--      forall name in set dom abPurses & 
+-- 	abPurses~(name).GetBalance() = abPurses(name).GetBalance() and
+-- 	abPurses~(name).GetLost() = abPurses(name).GetLost();
+
+
+-- Transfer OK operation models a transfer of a value from one 
+-- purses' balance to the balance of another purse
+--
+-- Preconditions: - Purses must be unique, 
+--		  - purses must be authentic (SP3: Authentic Purses (pg 12)), 
+--		  - there must be sufficient funds in the 'from' purse (SP4: 	
+-- 			Sufficient Funds (pg 12)).
+-- Postconditions: - The total (balance + lost) of both purses involved in the 
+--			transfer must be unchanged (SP 2: All Value accounted (pg
+--			12)),
+--		   - No value must be created (SP1: No Value Creation (pg 11),
+--			as stated in footnote on pg 11 - the sum of the 'before' 
+--			balance must be greater or equal to the 'after' balance,
+--		   - All other purses remain unchanged.
+public TransferOk: AbWorld * PurseId * PurseId * nat -> AbWorld
+TransferOk(wrld, frm, too, val) == 
+(
+	let	newFrm = ReduceBalance(wrld.abPurses(frm),val),
+		newTo = IncreaseBalance(wrld.abPurses(too),val)
+	in
+		mk_AbWorld(wrld.authentic, wrld.abPurses ++ {frm |-> newFrm, too |-> newTo})
+)
+pre frm <> too and 
+    frm in set dom wrld.abPurses and 
+    too in set dom wrld.abPurses and
+    GetBalance(wrld.abPurses(frm)) >= val
+post (GetTotal(RESULT.abPurses(frm)) + GetTotal(RESULT.abPurses(too))) = 
+	 	(GetTotal(wrld.abPurses(frm)) + GetTotal(wrld.abPurses(too)))	and
+	(GetBalance(RESULT.abPurses(frm)) + GetBalance(RESULT.abPurses(too))) = 
+	 	(GetBalance(wrld.abPurses(frm)) + GetBalance(wrld.abPurses(too)))	and
+	 forall name in set (dom RESULT.abPurses) \ {frm, too} & 
+		(GetBalance(wrld.abPurses(name)) = GetBalance(RESULT.abPurses(name))) 
+		and (GetLost(wrld.abPurses(name)) = GetLost(RESULT.abPurses(name)));
+
+-- Transfer Lost operation models a failed transfer where a value is 
+-- moved from one purses' balance the lost variable of the same purse
+--
+-- Preconditions: - 'from' purses must be authentic (SP3: Authentic Purses (pg 
+--			12)), and 
+--		  - there must be sufficient funds in the 'from' purse (SP4: 
+--			Sufficient Funds (pg 12)).
+-- Postconditions: - The total (balance + lost) of the from purse must be un
+-- 		 	changed(SP 2: All Value accounted(pg 12)),
+--		   - No value must be created (SP1: No Value Creation (pg 11), 
+--			as stated in footnote on pg 11 - the 'before' balance must 
+--			be greater or equal to the 'after' balance,
+--		   - All other purses remain unchanged.
+public TransferLost: AbWorld * PurseId * PurseId * nat -> AbWorld
+TransferLost(wrld, frm, -, val) == 
+(
+	let
+		newFrm = ReduceBalance(wrld.abPurses(frm),val)
+	in
+		mk_AbWorld(wrld.authentic, wrld.abPurses ++ {frm |-> IncreaseLost(newFrm, val)})
+)
+pre frm in set dom wrld.abPurses and 
+    GetBalance(wrld.abPurses(frm)) >= val
+post GetTotal(RESULT.abPurses(frm)) = GetTotal(wrld.abPurses(frm)) and
+	 GetBalance(wrld.abPurses(frm)) >= GetBalance(RESULT.abPurses(frm)) and
+	 forall name in set (dom RESULT.abPurses) \ {frm} & 
+		GetBalance(wrld.abPurses(name)) = GetBalance(RESULT.abPurses(name)) and
+		GetLost(wrld.abPurses(name)) = GetLost(RESULT.abPurses(name));
+
+
+
+
+--instance variables
+--public purse1 : AbPurse := new AbPurse(20,0);
+--public purse2 : AbPurse := new AbPurse(10,0);
+--public purse3 : AbPurse := new AbPurse(0,0);
+--public purse4 : AbPurse := new AbPurse(50,0); 
+
+--public name1 : token := mk_token("1");
+--public name2 : token := mk_token("2");
+--public name3 : token := mk_token("3");
+--public name4 : token := mk_token("4");
+
+--public world : AbWorld := new AbWorld({name1 |-> purse1,  name2 |-> purse2,  
+--						name3 |-> purse3, name4 |-> purse4});
+
+end AbPurseFunctional

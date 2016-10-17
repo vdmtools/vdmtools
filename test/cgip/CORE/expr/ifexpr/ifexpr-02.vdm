@@ -1,0 +1,34 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ( int | char | int * int * set of int | int * bool | seq of int | set of int)  
+Test () ==
+return 
+[ f(1), f(5), f(11), f(12)  
+]
+
+functions
+
+f: nat -> nat | char | set of int | seq of int | (nat * nat * set of nat) |
+(nat*bool)
+f(a) ==
+  if a < 5
+  then [1]
+    elseif a < 10
+        then 'a'
+        elseif a = 11
+        then mk_(5,7,{9,0})
+        else let t = mk_TT(11, true) in mk_(t.a,t.b)
+
+types
+TT:: a: nat
+     b: bool
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

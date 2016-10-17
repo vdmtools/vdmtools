@@ -1,0 +1,61 @@
+class B 
+
+instance variables
+
+  i : nat := 0
+
+operations
+
+  protected op : () ==> ()
+  op() ==
+    i := i + 1;
+
+  public finished : () ==> nat
+  finished() == 
+    return i;
+
+sync
+
+  per finished => #fin(op) > 5
+
+thread
+
+  periodic (1000,1,1,1)(op)
+
+end B
+
+class D
+
+instance variables
+
+  i : nat := 0
+
+operations
+
+  protected opD : () ==> ()
+  opD() ==
+    i := i + 1;
+
+thread
+
+  periodic (1000,1,1,1)(opD)
+
+end D
+
+class C is subclass of B,D
+
+end C
+
+class A
+
+operations
+
+public Test : () ==> nat
+Test() ==
+  ( dcl c: C := new C();
+    start(c);
+    c.finished())
+
+end A
+
+

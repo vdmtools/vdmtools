@@ -1,0 +1,426 @@
+class CgmViewerPanel is subclass of JPanel, PrimListener, Observer, ActionListener
+operations 
+public  setSize : int  * int  ==> <VOID>
+setSize(width, height) == 
+( CgmViewerPanel`viewerWidth := width;
+  CgmViewerPanel`viewerHeight := height;
+  return  <VOID>
+) ;
+
+public  updatePanel : () ==> <VOID>
+updatePanel() == 
+( dcl   noGraphic : bool  := false  ,
+        repaint : bool  := false  ,
+        locatorId : [String] := nil  ,
+        cgmIllustration : [Illustration] := nil  ,
+        refDes : [RefDes] := nil  ,
+        db : [Database] := nil  ,
+        contextChange : [ContextSet] := context.getContextChanges();
+  db := Database`getDatabase();
+  if  (contextChange.get(ContextTypes`TAIL_NUMBER) <> nil  ) and  (isShowing())
+  then  
+    ( refDes := context.getCurrentContextFieldObject(ContextTypes`REFDES);
+      if  refDes <> nil  
+      then  
+        ( locatorId := db.getLocatorId(refDes);
+          if  locatorId <> nil  
+          then  
+            ( cgmIllustration := db.getIllustration(locatorId)
+            ) 
+        ) 
+    ) 
+  else  
+    if  ((contextChange.get(ContextTypes`REFDES) <> nil  ) or  (contextChange.get(ContextTypes`PIN) <> nil  )) and  (isShowing())
+    then  
+      ( refDes := context.getCurrentContextFieldObject(ContextTypes`REFDES);
+        locatorId := db.getLocatorId(refDes);
+        if  locatorId.equals(graphicName)
+        then  
+          ( dcl   oldRefDes : [String] := cgmMediator.getMatchString();
+            if  refDes.toString().equals(oldRefDes)
+            then  
+              ( let - = repaint()
+                in 
+                  skip 
+              ) 
+            else  
+              ( let - = cgmMediator.setMatchString(refDes.toString())
+                in 
+                  skip ;
+                let - = cgmViewer.fullRefresh()
+                in 
+                  skip 
+              ) ;
+            repaint := true  
+          ) 
+        else  
+          if  locatorId <> nil  
+          then  
+            ( cgmIllustration := db.getIllustration(locatorId)
+            ) 
+      ) 
+    else  
+      if  (contextChange.get(ContextTypes`GRAPHIC_ID) <> nil  ) and  (isShowing())
+      then  
+        ( locatorId := contextChange.get(ContextTypes`GRAPHIC_ID);
+          if  locatorId.equals(graphicName)
+          then  
+            ( let - = repaint()
+              in 
+                skip ;
+              repaint := true  
+            ) 
+          else  
+            ( cgmIllustration := context.getCurrentContextFieldObject(ContextTypes`GRAPHIC_ID)
+            ) 
+        ) ;
+  if  cgmIllustration <> nil  
+  then  
+    ( listOfSheets := db.getIllustrationSeries(cgmIllustration.getFigureNumber());
+      ( dcl   currentSheetNo : [String] := cgmIllustration.getSheetNumber();
+        if  listOfSheets.length > 1
+        then  
+          ( ( dcl   i : int  := 0;
+              while  i < listOfSheets.length do  
+              ( dcl   temp : [String] := listOfSheets(i).getSheetNumber();
+                if  temp.equals(currentSheetNo)
+                then  
+                  ( selected := i
+                  ) ;
+                i := i+1
+              ) 
+            ) ;
+            let - = mySheet.setSheets(listOfSheets.length , selected)
+            in 
+              skip ;
+            let - = sheetPanel.add(mySheet)
+            in 
+              skip ;
+            let - = add(sheetPanel , BorderLayout`NORTH)
+            in 
+              skip 
+          ) 
+        else  
+          ( let - = sheetPanel.remove(mySheet)
+            in 
+              skip ;
+            let - = remove(sheetPanel)
+            in 
+              skip 
+          ) ;
+        let - = validate()
+        in 
+          skip ;
+        if  refDes <> nil  
+        then  
+          ( let - = cgmMediator.setMatchString(refDes.toString())
+            in 
+              skip 
+          ) ;
+        graphicName := locatorId;
+        ( dcl   precondList : [Set] := cgmIllustration.getEffectivePreconditionIds();
+          let - = cgmViewer.addPrecondList(new  Vector(precondList))
+          in 
+            skip ;
+          ( dcl   inStream : [InputStream] := cgmIllustration.getCGMStream();
+            if  cgmIllustration.getOrientation() = Illustration`LANDSCAPE
+            then  
+              ( if  rotationSet = false  
+                then  
+                  ( dcl   angleRadians : real  := J2VUTIL`Convert("float" , ((Math.PI/180)*270));
+                    let - = cgmViewer.setRotation(angleRadians)
+                    in 
+                      skip ;
+                    rotationSet := true  
+                  ) 
+              ) 
+            else  
+              ( if  rotationSet = true  
+                then  
+                  ( dcl   angleRadians : real  := J2VUTIL`Convert("float" , ((Math.PI/180)*90));
+                    let - = cgmViewer.setRotation(angleRadians)
+                    in 
+                      skip ;
+                    rotationSet := false  
+                  ) 
+              ) ;
+            let - = cgmViewer.setGraphicStream(inStream)
+            in 
+              skip ;
+            let - = cgmViewer.setGraphicSize(new  Dimension(viewerWidth , viewerHeight))
+            in 
+              skip ;
+            ( dcl   ids : map  int  to  int  := cgmViewer.getPrimIds();
+              ( dcl   i : int  := 0;
+                while  i < ids.length do  
+                ( let - = cgmViewer.setPrimBehavioralAttributes(ids(i) , CgmViewer`PRE_SELECTABLE)
+                  in 
+                    skip ;
+                  i := i+1
+                ) 
+              ) ;
+              let - = cgmViewer.fullRefresh()
+              in 
+                skip 
+            ) 
+          ) 
+        ) 
+      ) 
+    ) 
+  else  
+    ( noGraphic := true  
+    ) ;
+  if  noGraphic and  not  repaint and  isShowing()
+  then  
+    ( let - = sheetPanel.remove(mySheet)
+      in 
+        skip ;
+      let - = remove(sheetPanel)
+      in 
+        skip ;
+      graphicName := new  String([  ]);
+      let - = cgmMediator.setMatchString(new  String([  ]))
+      in 
+        skip ;
+      let - = cgmViewer.clear()
+      in 
+        skip ;
+      let - = cgmViewer.setScale(J2VUTIL`Convert("float" , 1.5))
+      in 
+        skip ;
+      let - = validate()
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+public  primClicked : int  ==> <VOID>
+primClicked(id) == 
+( return  <VOID>
+) ;
+
+public  displaySheet : int  ==> <VOID>
+displaySheet(sheetNo) == 
+( dcl   inStream : [InputStream] := listOfSheets(sheetNo).getCGMStream();
+  if  listOfSheets(sheetNo).getOrientation() = Illustration`LANDSCAPE
+  then  
+    ( if  rotationSet = false  
+      then  
+        ( dcl   angleRadians : real  := J2VUTIL`Convert("float" , ((Math.PI/180)*270));
+          let - = cgmViewer.setRotation(angleRadians)
+          in 
+            skip ;
+          rotationSet := true  
+        ) 
+    ) 
+  else  
+    ( if  rotationSet = true  
+      then  
+        ( dcl   angleRadians : real  := J2VUTIL`Convert("float" , ((Math.PI/180)*90));
+          let - = cgmViewer.setRotation(angleRadians)
+          in 
+            skip ;
+          rotationSet := false  
+        ) 
+    ) ;
+  ( dcl   precondList : [Set] := listOfSheets(sheetNo).getEffectivePreconditionIds();
+    let - = cgmViewer.addPrecondList(new  Vector(precondList))
+    in 
+      skip ;
+    let - = cgmMediator.setCenterPosition(nil  )
+    in 
+      skip ;
+    let - = cgmViewer.setGraphicStream(inStream)
+    in 
+      skip ;
+    ( dcl   ids : map  int  to  int  := cgmViewer.getPrimIds();
+      ( dcl   i : int  := 0;
+        while  i < ids.length do  
+        ( let - = cgmViewer.setPrimBehavioralAttributes(ids(i) , CgmViewer`PRE_SELECTABLE)
+          in 
+            skip ;
+          i := i+1
+        ) 
+      ) ;
+      let - = cgmViewer.fullRefresh()
+      in 
+        skip ;
+      let - = cgmViewer.centerImage()
+      in 
+        skip ;
+      let - = mySheet.setLabel(selected)
+      in 
+        skip ;
+      let - = sheetPanel.validate()
+      in 
+        skip 
+    ) 
+  ) ;
+  return  <VOID>
+) ;
+
+public  primSelected : int  ==> <VOID>
+primSelected(id) == 
+( dcl   filename : [String] := cgmViewer.getPrimFilename(id);
+  if  not  filename.equals(new  String([  ]))
+  then  
+    ( dcl   cgmName : [String] := filename;
+      if  filename.endsWith(new  String(".cgm")) or  filename.endsWith(new  String(".CGM"))
+      then  
+        ( cgmName := filename.substring(0 , (filename.length()-4))
+        ) ;
+      ( dcl   contextUpdates : [ContextSet] := new  ContextSet();
+        let - = contextUpdates.put(ContextTypes`GRAPHIC_ID , cgmName)
+        in 
+          skip ;
+        let - = context.setCurrentContext(contextUpdates)
+        in 
+          skip 
+      ) 
+    ) 
+  else  
+    ( if  actionListenerList <> nil  
+      then  
+        ( dcl   bundle : [BundleSegment] := cgmViewer.getBundleSegment(id);
+          if  bundle <> nil  
+          then  
+            ( dcl   event : [ActionEvent] := new  ActionEvent(bundle , id , new  String("GRAPHIC"));
+              let - = actionListenerList.actionPerformed(event)
+              in 
+                skip 
+            ) 
+        ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  CgmViewerPanel : () ==> CgmViewerPanel
+CgmViewerPanel() == 
+( let - = JPanel()
+  in 
+    skip ;
+  let - = setLayout(new  BorderLayout())
+  in 
+    skip ;
+  context := ContextState`getContextState();
+  let - = context.addObserver(self  )
+  in 
+    skip ;
+  cgmViewer := new  CgmViewer();
+  viewerWidth := 480;
+  viewerHeight := 288;
+  let - = cgmViewer.setScale(J2VUTIL`Convert("float" , 1.5))
+  in 
+    skip ;
+  let - = cgmViewer.addPrimListener(self  )
+  in 
+    skip ;
+  let - = add(cgmViewer , BorderLayout`CENTER)
+  in 
+    skip ;
+  selected := 0;
+  mySheet := new  Sheet();
+  let - = mySheet.addActionListener(self  )
+  in 
+    skip ;
+  sheetPanel := new  JPanel(new  FlowLayout());
+  let - = sheetPanel.setBackground(Color`lightGray)
+  in 
+    skip ;
+  ( dcl   colorStr : [String] := DWDSProperties`getProperty(new  String("cgm.font_color") , new  String("0")),
+          temp : [String] := colorStr.trim(),
+          colorInt : [Integer] := Integer.decode(temp),
+          color : [Color] := new  Color(colorInt.intValue());
+    cgmMediator := new  CgmMediator();
+    let - = cgmMediator.setHighlightColor(color)
+    in 
+      skip ;
+    let - = cgmViewer.setMediator(cgmMediator)
+    in 
+      skip ;
+    let - = setPreferredSize(new  Dimension(viewerWidth , viewerHeight))
+    in 
+      skip 
+  ) 
+) ;
+
+public  primUnselected : int  ==> <VOID>
+primUnselected(id) == 
+( if  actionListenerList <> nil  
+  then  
+    ( dcl   bundle : [BundleSegment] := cgmViewer.getBundleSegment(id);
+      if  bundle <> nil  
+      then  
+        ( dcl   event : [ActionEvent] := new  ActionEvent(bundle , id , new  String("GRAPHIC"));
+          let - = actionListenerList.actionPerformed(event)
+          in 
+            skip 
+        ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  setScaleFactor : real  ==> <VOID>
+setScaleFactor(scaleFactor) == 
+( let - = cgmViewer.setScale(scaleFactor)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  actionPerformed : [ActionEvent] ==> <VOID>
+actionPerformed(event) == 
+( if  event.getActionCommand().equals(new  String("LEFT"))
+  then  
+    ( selected := (listOfSheets.length+selected-1) mod  listOfSheets.length;
+      let - = displaySheet(selected)
+      in 
+        skip 
+    ) 
+  else  
+    if  event.getActionCommand().equals(new  String("RIGHT"))
+    then  
+      ( selected := (selected+1) mod  listOfSheets.length;
+        let - = displaySheet(selected)
+        in 
+          skip 
+      ) ;
+  return  <VOID>
+) ;
+
+public  update : [Observable] * [Object] ==> <VOID>
+update(o, contextChanges) == 
+( let - = updatePanel()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  addActionListener : [ActionListener] ==> <VOID>
+addActionListener(listener) == 
+( actionListenerList := AWTEventMulticaster`add(actionListenerList , listener);
+  return  <VOID>
+) ;
+
+public  removeActionListener : [ActionListener] ==> <VOID>
+removeActionListener(listener) == 
+( actionListenerList := AWTEventMulticaster`remove(actionListenerList , listener);
+  return  <VOID>
+) ;
+
+instance variables 
+  protected  context : [ContextState] := nil  ;
+  viewerWidth : int ;
+  viewerHeight : int ;
+  graphicName : [String] := nil  ;
+  actionListenerList : [ActionListener] := nil  ;
+  rotationSet : bool  := false  ;
+  private  selected : int ;
+  private  mySheet : [Sheet];
+  private  sheetPanel : [JPanel];
+  private  listOfSheets : map  int  to  [Illustration];
+  private  cgmViewer : [CgmViewer];
+  private  cgmMediator : [CgmMediator]
+  
+end  CgmViewerPanel

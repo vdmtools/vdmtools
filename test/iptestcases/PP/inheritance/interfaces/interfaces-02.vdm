@@ -1,0 +1,34 @@
+class C
+
+values
+public classname : seq of char = "C"
+
+end C
+
+class D
+
+instance variables
+protected cn : seq of char := "D"
+
+
+end D
+
+class B is subclass of C, D
+
+operations
+
+public op1 : () ==> seq of char
+op1() ==
+  return classname ^ cn
+
+end B
+
+class A
+
+operations
+
+public Test : () ==> seq of char
+Test() ==
+  return new B().op1()
+
+end A

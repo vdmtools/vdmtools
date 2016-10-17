@@ -1,0 +1,42 @@
+module A
+
+imports 
+  from B
+   types 
+     MyRec ::
+        b : nat;
+   MyType
+
+
+definitions
+operations
+
+  Test: () ==> nat
+  Test() ==
+   return 3;
+    
+
+  op: B`MyType ==> B`MyType
+  op(b) ==
+        return b
+
+end A
+
+module B
+
+exports
+ types
+ struct  MyRec;
+ MyType
+
+
+definitions
+
+types
+
+  MyRec ::
+    b: nat;
+
+  MyType = nat
+
+end B

@@ -1,0 +1,17 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+---------------------------------------------------------------------
+----------------- LetExpr         -----------------------------------
+---------------------------------------------------------------------
+
+Test: () ==> nat   
+Test () ==
+return
+let 
+  f: nat -> nat 
+  f(n) ==
+    if n <= 1 then  
+      1
+    else
+      n * f(n div 2)
+in
+  f(10)

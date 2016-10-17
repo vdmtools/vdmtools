@@ -1,0 +1,36 @@
+#!/bin/sh
+
+# One can test a particular function by providing its name as an argument.
+
+# The solution to ex8 must be in the current directory and Test-Ex8
+# must be a subdirectory of the current directory.
+
+READPP=bin/readpp
+SPEC=$1
+TESTDIR=$2
+
+rm -f res
+rm -f m4pp
+rm -f trace
+
+echo > trace
+
+for arg in $TESTDIR/$3*-??.arg ; do
+
+echo Testing $SPEC with arguments in $arg .......
+{ echo Testing $SPEC with arguments in $arg .......
+} >> trace
+
+vdmde -iax $arg $SPEC 
+$READPP < m4pp > res
+cp res $arg.exp
+cat res >> trace
+echo >> trace
+
+rm -f res
+rm -f m4pp
+
+done
+
+echo Results were written in trace and in .exp files in $TESTDIR
+

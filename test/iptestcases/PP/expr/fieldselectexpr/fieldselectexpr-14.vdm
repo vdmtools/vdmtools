@@ -1,0 +1,152 @@
+class A
+
+operations
+public
+Test: () ==> seq of int
+Test() ==
+  return [ op1(3), op2(4), op3(5), op4(6), op5(7), op6(8), op7(9), op8(10), op9(11), op10(12), op11(13) ];
+
+public op1 : int ==> int
+op1(i) == (
+  dcl bean : [Bean] := new Bean();
+ 
+  if bean = nil
+  then return -1;
+
+  bean.flg := i;
+  return bean.flg;
+  );
+
+public op2 : int ==> int
+op2(i) == (
+  dcl bean : [Bean|Bean2] := new Bean();
+ 
+  if bean = nil
+  then return -1;
+
+  bean.flg := i;
+  return bean.flg;
+  );
+
+public op3 : int ==> int
+op3(i) == (
+  dcl bean : [Bean|X`T] := new Bean();
+ 
+  if bean = nil
+  then return -1;
+
+  bean.flg := i;
+  return bean.flg;
+  );
+
+public op4 : int ==> int
+op4(i) == (
+  dcl bean : [Bean|X`T|X`T2] := new Bean();
+ 
+  if bean = nil
+  then return -1;
+
+  bean.flg := i;
+  return bean.flg;
+  );
+
+public op5 : int ==> int
+op5(i) == (
+  dcl bean : [Bean|Bean2|X`T|X`T2] := new Bean();
+ 
+  if bean = nil
+  then return -1;
+
+  bean.flg := i;
+  return bean.flg;
+  );
+
+public op6 : int ==> int
+op6(i) == (
+  dcl bean : [Bean|X`T] := mk_X`T(0);
+ 
+  if bean = nil
+  then return -1;
+
+  bean.flg := i;
+  return bean.flg;
+  );
+
+public op7 : int ==> int
+op7(i) == (
+  dcl bean : [X`T] := mk_X`T(0);
+
+  if bean = nil
+  then return -1;
+
+  bean.flg := i;
+  return bean.flg;
+  );
+
+public op8 : int ==> int
+op8(i) == (
+  dcl bean : Bean := new Bean();
+ 
+  bean.flg := i;
+  return bean.flg;
+  );
+
+public op9 : int ==> int
+op9(i) == (
+  dcl bean : Bean | Bean2 := new Bean();
+ 
+  bean.flg := i;
+  return bean.flg;
+  );
+
+public op10 : int ==> int
+op10(i) == (
+  dcl bean : X`T := mk_X`T(0);
+ 
+  bean.flg := i;
+  return bean.flg;
+  );
+
+public op11 : int ==> int
+op11(i) == (
+  dcl bean : Bean | X`T := mk_X`T(0);
+ 
+  bean.flg := i;
+  return bean.flg;
+  );
+
+end A
+
+
+class Bean
+
+instance variables
+  public flg : [int] := nil;
+
+operations
+  public setFlg : int ==> ()
+  setFlg(a) == flg := a;
+
+end Bean
+
+class Bean2
+
+instance variables
+  public flg : [int] := nil;
+
+operations
+  public setFlg : int ==> ()
+  setFlg(a) == flg := a;
+
+end Bean2
+
+class X
+
+types
+public
+T :: flg : [int];
+
+public
+T2 :: flg : [int];
+
+end X

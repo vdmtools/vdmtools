@@ -1,0 +1,36 @@
+class Curve is subclass of Calculator
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("Curve" , <CLASS> , false  )
+instance variables 
+  programmX : JavaLangString := new  JavaLangString(<NIL>);
+  programmY : JavaLangString := new  JavaLangString(<NIL>)
+operations 
+public  x : real  ==> real 
+x(t) == 
+( return  calculate(programmX , t)
+) ;
+
+public  y : real  ==> real 
+y(t) == 
+( return  calculate(programmY , t)
+) ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  Curve : <NIL> ==> Curve
+Curve(-) == 
+isNil := true  ;
+
+public  Curve : JavaLangString * JavaLangString ==> Curve
+Curve(prgX, prgY) == 
+( let - = Calculator()
+  in 
+    skip ;
+  programmX := prgX;
+  programmY := prgY
+) ;
+
+
+end  Curve

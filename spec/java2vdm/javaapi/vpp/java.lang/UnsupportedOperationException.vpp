@@ -1,0 +1,20 @@
+class JavaLangUnsupportedOperationException is subclass of JavaLangRuntimeException
+operations 
+public  JavaLangUnsupportedOperationException : () ==> JavaLangUnsupportedOperationException
+JavaLangUnsupportedOperationException() == 
+( let - = JavaLangRuntimeException()
+  in skip 
+) ;
+
+public  JavaLangUnsupportedOperationException : <NIL> ==> JavaLangUnsupportedOperationException
+JavaLangUnsupportedOperationException(-) == 
+isNil := true  ;
+
+public  JavaLangUnsupportedOperationException : JavaLangString ==> JavaLangUnsupportedOperationException
+JavaLangUnsupportedOperationException(message) == 
+( let - = JavaLangRuntimeException(message)
+  in skip 
+) ;
+
+
+end  JavaLangUnsupportedOperationException

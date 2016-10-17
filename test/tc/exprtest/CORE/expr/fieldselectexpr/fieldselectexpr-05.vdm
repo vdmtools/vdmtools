@@ -1,0 +1,35 @@
+class FieldSelectExprTest
+types
+
+A :: n: nat1
+     r : real
+     b : bool | <RED>;
+
+B :: n: real
+     b: [bool | map A to real];
+
+C = seq of (A | B | D | Tree);
+
+D :: n : bool;
+
+Tree = nat | Tree;
+
+Node :: left : Tree
+        right: Tree;
+
+Args = Mapargs | Listargs;
+Mapargs :: val : map seq of char to nat;
+Listargs :: val : seq of nat
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = 7.n
+  in skip;
+
+------------------------------------------------------------------------------
+end FieldSelectExprTest

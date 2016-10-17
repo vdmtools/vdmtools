@@ -1,0 +1,25 @@
+class IsExprTest
+types
+
+  A :: a : nat
+       b : real | bool;
+
+  B::;
+  C = A|B;
+  myt = seq of int;
+
+  D = myt | C
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let n = 6,
+      - = is_bool(true and n)
+  in skip;
+
+------------------------------------------------------------------------------
+end IsExprTest

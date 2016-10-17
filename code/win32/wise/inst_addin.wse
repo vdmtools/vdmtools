@@ -1,0 +1,517 @@
+Document Type: WSE
+item: Global
+  Version=6.0
+  Title=Rose-VDM++ Link Installation
+  Flags=00000100
+  Split=1420
+  Languages=65 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+  Japanese Font Name=MS Gothic
+  Japanese Font Size=10
+  Progress Bar DLL=%_WISE_%\Progress\WIZ%_EXE_OS_TYPE_%.DLL
+  Start Gradient=0 0 255
+  End Gradient=0 0 0
+  Windows Flags=00000100000000010010110000001000
+  Log Pathname=%MAINDIR%\INSTALL.LOG
+  Message Font=MS Sans Serif
+  Font Size=8
+  Disk Filename=SETUP
+  Patch Flags=0000000000000001
+  Patch Threshold=85
+  Patch Memory=4000
+  FTP Cluster Size=20
+  Per-User Version ID=1
+  Dialogs Version=6
+  Variable Name1=_SYS_
+  Variable Default1=C:\WINNT\System32
+  Variable Flags1=00001000
+  Variable Name2=_WISE_
+  Variable Default2=C:\Program Files\Wise Installation System
+  Variable Flags2=00001000
+end
+item: Open/Close INSTALL.LOG
+  Flags=00000001
+end
+item: Check if File/Dir Exists
+  Pathname=%SYS%
+  Flags=10000100
+end
+item: Set Variable
+  Variable=SYS
+  Value=%WIN%
+end
+item: End Block
+end
+item: Set Variable
+  Variable=APPTITLE
+  Value=Rose-VDM++ Link
+  Flags=10000000
+end
+item: Set Variable
+  Variable=GROUP
+  Flags=10000000
+end
+item: Set Variable
+  Variable=DISABLED
+  Value=!
+end
+item: Set Variable
+  Variable=MAINDIR
+  Flags=10000000
+end
+item: Check Configuration
+  Flags=10111011
+end
+item: Get Registry Key Value
+  Variable=COMMON
+  Key=SOFTWARE\Microsoft\Windows\CurrentVersion
+  Default=C:\Program Files\Common Files
+  Value Name=CommonFilesDir
+  Flags=00000100
+end
+item: Get Registry Key Value
+  Variable=PROGRAM_FILES
+  Key=SOFTWARE\Microsoft\Windows\CurrentVersion
+  Default=C:\Program Files
+  Value Name=ProgramFilesDir
+  Flags=00000100
+end
+item: Set Variable
+  Variable=MAINDIR
+  Value=%PROGRAM_FILES%\%MAINDIR%
+  Flags=00001100
+end
+item: Set Variable
+  Variable=EXPLORER
+  Value=1
+end
+item: Else Statement
+end
+item: Set Variable
+  Variable=MAINDIR
+  Value=C:\%MAINDIR%
+  Flags=00001100
+end
+item: End Block
+end
+item: Set Variable
+  Variable=BACKUP
+  Value=%MAINDIR%\BACKUP
+  Flags=10000000
+end
+item: Set Variable
+  Variable=DOBACKUP
+  Value=B
+  Flags=10000000
+end
+item: Set Variable
+  Variable=COMPONENTS
+  Flags=10000000
+end
+item: Set Variable
+  Variable=BRANDING
+  Value=0
+end
+item: If/While Statement
+  Variable=BRANDING
+  Value=1
+end
+item: Read INI Value
+  Variable=NAME
+  Pathname=%INST%\CUSTDATA.INI
+  Section=Registration
+  Item=Name
+end
+item: Read INI Value
+  Variable=COMPANY
+  Pathname=%INST%\CUSTDATA.INI
+  Section=Registration
+  Item=Company
+end
+item: If/While Statement
+  Variable=NAME
+end
+item: Set Variable
+  Variable=DOBRAND
+  Value=1
+end
+item: End Block
+end
+item: End Block
+end
+item: Wizard Block
+  Direction Variable=DIRECTION
+  Display Variable=DISPLAY
+  Bitmap Pathname=%_WISE_%\DIALOGS\TEMPLATE\WIZARD.BMP
+  X Position=9
+  Y Position=10
+  Filler Color=8421440
+  Dialog=Select Program Manager Group
+  Dialog=Select Backup Directory
+  Dialog=Display Registration Information
+  Dialog=Get Registration Information
+  Variable=EXPLORER
+  Variable=DOBACKUP
+  Variable=DOBRAND
+  Variable=DOBRAND
+  Value=1
+  Value=A
+  Value=1
+  Value=1
+  Compare=0
+  Compare=1
+  Compare=0
+  Compare=1
+  Flags=00000011
+end
+item: Custom Dialog Set
+  Name=Start Installation
+  Display Variable=DISPLAY
+  item: Dialog
+    Title=Start Installation
+    Title French=Commencer l'installation
+    Title German=Installation beginnen
+    Title Portuguese=Iniciar Instalação
+    Title Spanish=Comenzar la Instalación
+    Title Italian=Avvia Installazione
+    Title Danish=Start installationen
+    Title Dutch=Start de installatie.
+    Title Norwegian=Start installeringen
+    Title Swedish=Starta installationen
+    Width=280
+    Height=224
+    Font Name=Helv
+    Font Size=8
+    item: Push Button
+      Rectangle=172 185 214 199
+      Variable=DIRECTION
+      Value=N
+      Create Flags=01010000000000010000000000000001
+      Text=&Next >
+      Text French=&Suivant>
+      Text German=&Weiter>
+      Text Portuguese=&Próximo>
+      Text Spanish=&Siguiente >
+      Text Italian=&Avanti >
+      Text Danish=&Næste>
+      Text Dutch=&Volgende>
+      Text Norwegian=&Neste>
+      Text Swedish=&Nästa >
+    end
+    item: Push Button
+      Rectangle=130 185 172 199
+      Variable=DIRECTION
+      Value=B
+      Create Flags=01010000000000010000000000000000
+      Text=< &Back
+      Text French=<&Retour
+      Text German=<&Zurück
+      Text Portuguese=<&Retornar
+      Text Spanish=<&Retroceder
+      Text Italian=< &Indietro
+      Text Danish=<&Tilbage
+      Text Dutch=<&Terug
+      Text Norwegian=<&Tilbake
+      Text Swedish=< &Tillbaka
+    end
+    item: Push Button
+      Rectangle=222 185 264 199
+      Action=3
+      Create Flags=01010000000000010000000000000000
+      Text=Cancel
+      Text French=Annuler
+      Text German=Abbrechen
+      Text Portuguese=Cancelar
+      Text Spanish=Cancelar
+      Text Italian=Annulla
+      Text Danish=Annuller
+      Text Dutch=Annuleren
+      Text Norwegian=Avbryt
+      Text Swedish=Avbryt
+    end
+    item: Static
+      Rectangle=9 177 263 178
+      Action=3
+      Create Flags=01010000000000000000000000000111
+    end
+    item: Static
+      Rectangle=90 10 260 70
+      Create Flags=01010000000000000000000000000000
+      Text=You are now ready to install %APPTITLE%.
+      Text=
+      Text=Press the Next button to begin the installation or the Back button to reenter the installation information.
+      Text French=Vous êtes maintenant prêt à installer %APPTITLE%
+      Text French=
+      Text French=Cliquez sur Suivant pour commencer l'installation ou Retour pour entrer à nouveau les informations d'installation
+      Text German=Sie sind jetzt zur Installation von %APPTITLE% bereit.
+      Text German=
+      Text German=Auf die Schaltfläche Weiter klicken, um mit dem Start der Installation zu beginnen, oder auf die Schaltfläche Zurück, um die Installationsinformationen nochmals aufzurufen.
+      Text Portuguese=Está agora pronto para instalar %APPTITLE%
+      Text Portuguese=
+      Text Portuguese=Pressione o botão Próximo para começar a instalação ou o botão Retornar para introduzir novamente a informação sobre a instalação
+      Text Spanish=Ahora estará listo para instalar %APPTITLE%.
+      Text Spanish=
+      Text Spanish=Pulse el botón de Próximo para comenzar la instalación o el botón Retroceder para volver a introducir la información sobre la instalación.
+      Text Italian=Sei pronto ad installare %APPTITLE%.
+      Text Italian=
+      Text Italian=Premi il tasto Avanti per iniziare l’installazione o il tasto Indietro per rientrare nuovamente nei dati sull’installazione
+      Text Danish=Du er nu klar til at installere %APPTITLE%.
+      Text Danish=
+      Text Danish=Klik på Næste for at starte installationen eller på Tilbage for at ændre installationsoplysningerne.
+      Text Dutch=U bent nu klaar om %APPTITLE% te installeren.
+      Text Dutch=
+      Text Dutch=Druk op Volgende om met de installatie te beginnen of op Terug om de installatie-informatie opnieuw in te voeren.
+      Text Norwegian=Du er nå klar til å installere %APPTITLE%
+      Text Norwegian=
+      Text Norwegian=Trykk på Neste-tasten for å starte installeringen, eller Tilbake-tasten for å taste inn installasjonsinformasjonen på nytt.
+      Text Swedish=Du är nu redo att installera %APPTITLE%.
+      Text Swedish=
+      Text Swedish=Tryck på Nästa för att starta installationen eller på Tillbaka för att skriva in installationsinformationen på nytt.
+    end
+  end
+end
+item: If/While Statement
+  Variable=DISPLAY
+  Value=Select Destination Directory
+end
+item: Set Variable
+  Variable=BACKUP
+  Value=%MAINDIR%\BACKUP
+end
+item: End Block
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=DOBACKUP
+  Value=A
+end
+item: Set Variable
+  Variable=BACKUPDIR
+  Value=%BACKUP%
+end
+item: End Block
+end
+item: If/While Statement
+  Variable=BRANDING
+  Value=1
+end
+item: If/While Statement
+  Variable=DOBRAND
+  Value=1
+end
+item: Edit INI File
+  Pathname=%INST%\CUSTDATA.INI
+  Settings=[Registration]
+  Settings=NAME=%NAME%
+  Settings=COMPANY=%COMPANY%
+  Settings=
+end
+item: End Block
+end
+item: End Block
+end
+item: Open/Close INSTALL.LOG
+end
+item: Check Disk Space
+  Component=COMPONENTS
+end
+item: Include Script
+  Pathname=%_WISE_%\INCLUDE\uninstal.wse
+end
+item: Set Variable
+  Variable=COMMON
+  Value=%COMMON%
+  Flags=00010100
+end
+item: Set Variable
+  Variable=MAINDIR
+  Value=%MAINDIR%
+  Flags=00010100
+end
+item: Check Configuration
+  Flags=10111011
+end
+item: Get Registry Key Value
+  Variable=STARTUPDIR
+  Key=Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders
+  Default=%WIN%\Start Menu\Programs\StartUp
+  Value Name=StartUp
+  Flags=00000010
+end
+item: Get Registry Key Value
+  Variable=DESKTOPDIR
+  Key=Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders
+  Default=%WIN%\Desktop
+  Value Name=Desktop
+  Flags=00000010
+end
+item: Get Registry Key Value
+  Variable=STARTMENUDIR
+  Key=Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders
+  Default=%WIN%\Start Menu
+  Value Name=Start Menu
+  Flags=00000010
+end
+item: Get Registry Key Value
+  Variable=GROUPDIR
+  Key=Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders
+  Default=%WIN%\Start Menu\Programs
+  Value Name=Programs
+  Flags=00000010
+end
+item: Get Registry Key Value
+  Variable=CSTARTUPDIR
+  Key=Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders
+  Default=%STARTUPDIR%
+  Value Name=Common Startup
+  Flags=00000100
+end
+item: Get Registry Key Value
+  Variable=CDESKTOPDIR
+  Key=Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders
+  Default=%DESKTOPDIR%
+  Value Name=Common Desktop
+  Flags=00000100
+end
+item: Get Registry Key Value
+  Variable=CSTARTMENUDIR
+  Key=Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders
+  Default=%STARTMENUDIR%
+  Value Name=Common Start Menu
+  Flags=00000100
+end
+item: Get Registry Key Value
+  Variable=CGROUPDIR
+  Key=Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders
+  Default=%GROUPDIR%
+  Value Name=Common Programs
+  Flags=00000100
+end
+item: Set Variable
+  Variable=CGROUP_SAVE
+  Value=%GROUP%
+end
+item: Set Variable
+  Variable=GROUP
+  Value=%GROUPDIR%\%GROUP%
+end
+item: Else Statement
+end
+item: End Block
+end
+item: Include Script
+  Pathname=instid-pp.wse
+end
+item: Get Registry Key Value
+  Variable=REAL_MAINDIR
+  Key=SOFTWARE\VDMTOOLS\%APPNAME%\%APPVER%
+  Default=unset
+  Value Name=ROOTDIR
+  Flags=00000100
+end
+item: If/While Statement
+  Variable=REAL_MAINDIR
+  Value=unset
+end
+item: Display Message
+  Title=Missing Registry Entry
+  Text=The registry HKEY_LOCAL_MACHINE\VDMTOOLS\%APPNAME%\%APPVER%\ROOTDIR does not exist.
+end
+item: Exit Installation
+end
+item: End Block
+end
+item: Get Registry Key Value
+  Variable=ROSE
+  Key=Software\Rational Software\Rose
+  Default=unset
+  Value Name=InstallDir
+  Flags=00000100
+end
+item: If/While Statement
+  Variable=ROSE
+  Value=unset
+  Flags=00000101
+end
+item: Edit Registry
+  Total Keys=10
+  item: Key
+    Key=SOFTWARE\Rational Software\Rose\AddIns\Rose-VDM++ Link
+    New Value=Yes
+    Value Name=Active
+    Root=2
+  end
+  item: Key
+    Key=SOFTWARE\Rational Software\Rose\AddIns\Rose-VDM++ Link
+    New Value=VDMTOOLS
+    Value Name=Company
+    Root=2
+  end
+  item: Key
+    Key=SOFTWARE\Rational Software\Rose\AddIns\Rose-VDM++ Link
+    New Value=Copyright © 1998
+    Value Name=Copyright
+    Root=2
+  end
+  item: Key
+    Key=SOFTWARE\Rational Software\Rose\AddIns\Rose-VDM++ Link
+    New Value=bool; char; int; nat; nat1; rat; real; token;
+    New Value=
+    Value Name=FundamentalTypes
+    Root=2
+  end
+  item: Key
+    Key=SOFTWARE\Rational Software\Rose\AddIns\Rose-VDM++ Link
+    New Value=Yes
+    Value Name=LanguageAddIn
+    Root=2
+  end
+  item: Key
+    Key=SOFTWARE\Rational Software\Rose\AddIns\Rose-VDM++ Link
+    New Value=1.0
+    Value Name=Version
+    Root=2
+  end
+  item: Key
+    Key=SOFTWARE\Rational Software\Rose\AddIns\Rose-VDM++ Link
+    New Value=VDM++
+    Value Name=ToolDisplayName
+    Root=2
+  end
+  item: Key
+    Key=SOFTWARE\Rational Software\Rose\AddIns\Rose-VDM++ Link
+    New Value=VDM++
+    Value Name=ToolName
+    Root=2
+  end
+  item: Key
+    Key=SOFTWARE\Rational Software\Rose\AddIns\Rose-VDM++ Link
+    New Value=VPPStereotypes.ini
+    Value Name=StereotypeCfgFile
+    Root=2
+  end
+  item: Key
+    Key=SOFTWARE\Rational Software\Rose\AddIns\Rose-VDM++ Link
+    New Value=%REAL_MAINDIR%\uml
+    New Value=
+    Value Name=InstallDir
+    Root=2
+  end
+end
+item: Else Statement
+end
+item: Display Message
+  Title=Note
+  Text=Rational Rose 98 is not installed. The Rose-VDM++ Addin will not be installed.
+end
+item: End Block
+end
+item: Self-Register OCXs/DLLs
+  Description=Updating System Configuration, Please Wait...
+end
+item: New Event
+  Name=Cancel
+end
+item: Include Script
+  Pathname=%_WISE_%\INCLUDE\rollback.wse
+end

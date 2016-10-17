@@ -1,0 +1,34 @@
+\subsection{FProductT}
+FProductのテストを行う。
+
+\begin{vdm_al}
+--$Id $
+
+class FProductT
+functions
+static public run : () +> bool
+run() == 
+let	testcases = [ t1()]
+in
+FTestDriver`run(testcases);
+\end{vdm_al}
+
+\subsubsection{Curry, Uncurryを検査する}
+\begin{vdm_al}
+static t1 : () -> FTestDriver`TestCase
+t1() ==
+	mk_FTestDriver`TestCase(
+	"FProductT01:\t Curry, Uncurryを検査する",
+	let	lt = String`小さい,
+		lt2 = lambda x : int, y : int & x < y
+	in
+	FProduct`Curry[seq of char, seq of char, bool](lt)("abc")("abcd") and
+	FProduct`Curry[seq of char, seq of char, bool](lt)("abcde")("abcd") = false and
+	FProduct`Curry[int, int, bool](lt2)(3)(4) and
+	FProduct`Uncurry[seq of char, seq of char, bool](FString`LT)("abc", "abcd") and
+	FProduct`Uncurry[seq of char, seq of char, bool](FString`LT)("abcde", "abcd") = false and
+	FProduct`Uncurry[seq of char, seq of char, bool](FString`LE)("3", "4"))
+	;
+
+end FProductT
+\end{vdm_al}

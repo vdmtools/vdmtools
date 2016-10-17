@@ -1,0 +1,27 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+------------------------------------------------------------------------------
+--------------------------------- Bracketed Expr -----------------------------
+------------------------------------------------------------------------------
+
+public Test : () ==> seq of ( int | seq of nat | set of nat )  
+Test () ==
+return
+[ ( let mk_(a, b) = mk_(3,6) 
+    in 65 div ( b div a ) ),
+  ( if false
+    then let a in set {3, [36]} in a
+    else [3, 6] ) ^ [ 3, 6],
+  ( { 3 |-> 6, 6 |-> 2} )( 6 ),
+  let a = nil
+  in dom ( merge {{ 6 |-> a } } )
+]
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

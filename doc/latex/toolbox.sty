@@ -1,0 +1,651 @@
+%$Id: toolbox.sty,v 1.17 2005/06/13 01:45:09 vdmtools Exp $
+% Written by:  Ole Bjerg Larsen,
+%              Rene Elmstroem
+% Copyright:   1990, 1991, 1992 IFAD
+% Copyright:   2005 CSK
+% Copyright:   2011, 2012 SCSK
+% Copyright:   2016 Kyushu University
+%
+% Modified by ETN 940210
+% 960521 ETN: Upgraded to LaTeX 2e and much cleanup.
+% Based on IFAD sty. Modified to use fancyheadings.sty 
+% $Date: 2005/06/13 01:45:09 $
+% 
+
+%% Identification
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{toolbox}[1998/10/05 Toolbox Style. V1.2]
+
+% The following macros define the headers and footers
+%
+%% Initial Code
+
+\RequirePackage{fancyhdr}
+\RequirePackage{graphicx}
+\RequirePackage{color}
+\RequirePackage{pifont}
+\RequirePackage{rotating}
+
+\def\copyToolboxLogo{\copy\ToolboxLogo}
+
+%% Decl. of options
+
+\DeclareOption{danish}{
+\def\dktext{}
+}
+
+\DeclareOption{pdftex}{
+  \DeclareGraphicsExtensions{.png,.pdf}
+  \def\copyToolboxLogo{\vbox to 0pt{\vss\resizebox{100pt}{!}{\includegraphics{vdmtools-logo.eps}}}}
+}
+
+\DeclareOption{a4paper}%
+{ \setlength{\headsep}{21mm}%
+  \setlength{\footskip}{26mm}%
+  \setlength{\oddsidemargin}{0.71cm}
+  \setlength{\evensidemargin}{0.71cm}
+  \newcommand{\boxlogo}{\boxlogoAfour} }
+
+\DeclareOption{letterpaper}%
+{ \setlength{\headsep}{12mm}%
+  \setlength{\footskip}{16mm}%
+  \setlength{\oddsidemargin}{0.91cm}
+  \setlength{\evensidemargin}{0.91cm}
+  \newcommand{\boxlogo}{\boxlogoLetter} }
+  
+%% Execution of options
+
+\ExecuteOptions{}        % Default option(s). 
+\ProcessOptions          % Execute options passed to us. 
+
+%% Package loading
+
+%% Main code. 
+
+% 
+
+
+% Set default paper sizes
+
+\setlength{\headheight}{11mm}
+\setlength{\topmargin}{-15.0mm}
+\setlength{\textheight}{21.1cm} % was 23cm
+\setlength{\textwidth}{14.5cm}
+
+\newbox\ToolboxLogo
+\setbox\ToolboxLogo=\hbox{\resizebox{100pt}{!}{\includegraphics{QU-logo.eps}}}
+\dp\ToolboxLogo=0pt
+\ht\ToolboxLogo=0pt
+
+\newcommand{\frontpageheadfoot}{
+  \lhead{}
+  \chead{}
+  \rhead{}
+  \lfoot{}
+  \cfoot{}
+  \rfoot{}
+  % In fancyhdr.sty, headrulewidth, footrulewidth are macros, not
+  % length parameters.  
+  \renewcommand{\headrulewidth}{0pt}
+  \renewcommand{\footrulewidth}{0pt}
+}
+
+\newcommand{\manualheadfoot}{
+  \lhead{\ifthenelse{\isodd{\value{page}}}{}{\mbox{}\rlap{\copyToolboxLogo}}}
+  \chead{}
+  \rhead{\ifthenelse{\isodd{\value{page}}}{\mbox{}\llap{\copyToolboxLogo}}}{}
+  \lfoot{\ifthenelse{\isodd{\value{page}}}{}{\rm\thepage}}
+  \cfoot{}
+  \rfoot{\ifthenelse{\isodd{\value{page}}}{\rm\thepage}{}}
+  \renewcommand{\headrulewidth}{1pt}
+  \renewcommand{\footrulewidth}{1pt}
+}
+
+  
+%%% These do not belong here. ETN.
+% macros for making some foreign language symbols
+% \newcommand{\AAA}{\"{a}}
+% \newcommand{\OOO}{\"{o}}
+% \newcommand{\UUU}{\"{u}}
+
+\newcommand{\VDMTools}{\textsf{\textbf{VDMTools}}}
+\DeclareFontFamily{OT1}{cmbig}{}
+\DeclareFontShape{OT1}{cmbig}{m}{n}{ <-> cmssbx10 }{}
+\newenvironment{HugeFont}%
+  {\fontfamily{phv}\fontseries{bx}\fontsize{52}{55}\selectfont}{}
+\newenvironment{TitleFont}%
+  {\fontfamily{phv}\fontseries{bx}\fontsize{22}{25}\selectfont}{}
+\newenvironment{IFADFont}%
+  {\fontfamily{phv}\fontseries{bx}\selectfont}{}
+\newenvironment{ManVerFont}%
+  {\fontfamily{phv}\fontseries{bx}\fontsize{17}{20}\selectfont}{}
+
+%
+% The wpindent environment can be used to typeset text with
+% the following layout:
+%
+%                                  \begin{wpindent}{0pt}{bla bla bla}
+% Label 1     bla bla ..... bla       \item[Label 1] bla bla ..... bla
+%             bla bla                                bla bla
+% bla bla bla bla bla ...             \item[bla bla bla] bla bla ...
+% label 3     bla bla ...             \item[label 3]     bla bla ...
+%                                  \end{wpindent}
+%
+% Each line of a paragraph following a label end at the right margin.
+%
+% Param 1: a number that define how much the label is indented.
+% Param 2: a text string that define the length of the labels.
+
+\newenvironment{wpindent}[2]%             
+               {\begin{list}{}{\renewcommand{\makelabel}[1]{##1\hfill}%
+                               \advance\parsep by -1ex%
+                               \settowidth{\labelwidth}{#2}%
+                               \settowidth{\leftmargin}{#2}%
+                               \advance\leftmargin by #1%
+                               \advance\leftmargin by \labelsep}}%
+               {\end{list}}
+
+
+
+%
+% \localinfo
+%
+% This macro can be used to specify author specific information.
+% It creates a macro \localinfotext that expands to the desired
+% text. It must be called BEFORE the \docdef macro.
+%
+\long\def\localinfo#1{
+  \long\def\localinfotext{#1}
+}
+
+%
+% Copy of maketitle from article.sty
+% Used to avoid a pagebreak when using report style
+%
+
+\def\maketitle{\par
+ \begingroup
+ \def\thefootnote{\fnsymbol{footnote}}
+ \def\@makefnmark{\hbox 
+ to 0pt{$^{\@thefnmark}$\hss}} 
+ \if@twocolumn 
+ \twocolumn[\@maketitle] 
+ \else \newpage
+ \global\@topnum\z@ \@maketitle \fi\thispagestyle{plain}\@thanks
+ \endgroup
+ \setcounter{footnote}{0}
+ \let\maketitle\relax
+ \let\@maketitle\relax
+ \gdef\@thanks{}\gdef\@author{}\gdef\@title{}\let\thanks\relax}
+\def\@maketitle{\newpage
+ \null
+ \vskip 2em \begin{center}
+ {\LARGE \@title \par} \vskip 1.5em {\large \lineskip .5em
+\begin{tabular}[t]{c}\@author 
+ \end{tabular}\par} 
+ \vskip 1em {\large \@date} \end{center}
+ \par
+ \vskip 1.5em} 
+
+
+
+%
+% \makeheader
+%
+% #1 A document title
+%
+% Converts #1 into a document header.
+% Newlines (\\), \vspace and size changing commands is removed
+% from #1. #1 is truncated and appended with \ldots if it is 
+% longer than one line.
+%
+\newbox\aabox                                % Global box for holding the header
+\newcommand{\makeheader}[1]{{
+   \renewcommand{\\}{}                       % Inhibit newline (\\)
+   \renewcommand{\vspace}[1]{}               % Inhibit \vspace
+                                             % Inhibit size changing
+   \renewcommand{\Huge}{}   \renewcommand{\normalsize}{}
+   \renewcommand{\huge}{}   \renewcommand{\small}{}
+   \renewcommand{\LARGE}{}  \renewcommand{\footnotesize}{}
+   \renewcommand{\Large}{}  \renewcommand{\scriptsize}{}
+   \renewcommand{\large}{}  \renewcommand{\tiny}{}
+   \parindent=0pt
+   \setbox\aabox=\hbox{\sl #1}               % Set title on one line
+   \ifdim\wd\aabox>\hsize                    % Is title longer than \hsize ?
+      \setbox\aabox=\hbox{\ldots}
+      \advance\hsize by -\wd\aabox           % Make room for \ldots
+      \pretolerance=10000                    % Inhibit hyphenation
+      \setbox\aabox=\vbox{\sl #1}            % Make paragraph
+      \vfuzz=\maxdimen                       % Inhibit underfull/overfull
+      \newbox\bbbox
+      \setbox\bbbox=\vsplit\aabox to 0mm\relax  % Remove all but the first line
+      \global\setbox\aabox=\hbox{\vtop{\unvbox\bbbox}\ldots}
+      \chead{\noindent\raisebox{8pt}{\copy\aabox}}
+   \else
+     \chead{\raisebox{8pt}{\sl #1}}
+   \fi
+}}
+
+
+
+%
+% \altheader
+%
+% Used for specifying an alternative header.
+% It must be called BEFORE the \docdef macro.
+%
+% #1 The header
+%
+\newcommand{\altheader}[1]{
+   \newcommand{\markaltheader}{\markboth{#1}{#1}}
+}
+
+
+%
+% Picture for manual frontpage.
+% Sets up vertical block including squares and IFAD in with on left side, and
+% IFAD and VDMTools logo on right side.
+
+\newcommand{\boxlogoAfour}{
+\setlength{\unitlength}{1mm}
+\begin{picture}(0,0)
+\linethickness{.3pt}
+\put(-27,12){\rule{21mm}{3mm}}
+\put(-27,5){\rule{7mm}{7mm}}
+\put(-13,5){\rule{7mm}{7mm}}
+\put(-20,-2){\rule{7mm}{7mm}}
+\put(-6,-2){\rule{7mm}{7mm}}
+\put(-27,-9){\rule{7mm}{7mm}}
+\put(-13,-9){\rule{7mm}{7mm}}
+\put(-27,-271){\rule{21mm}{263mm}}
+\put(133,-2){\resizebox{!}{20mm}{\IFADtext}}
+\put(139,-261){\resizebox{28mm}{!}{\includegraphics{vdmtools-logo.eps}}}
+\end{picture}
+}
+
+\newcommand{\boxlogoLetter}{
+\setlength{\unitlength}{1mm}
+\begin{picture}(0,0)
+\linethickness{.3pt}
+\put(-27,12){\rule{21mm}{3mm}}
+\put(-27,5){\rule{7mm}{7mm}}
+\put(-13,5){\rule{7mm}{7mm}}
+\put(-20,-2){\rule{7mm}{7mm}}
+\put(-6,-2){\rule{7mm}{7mm}}
+\put(-27,-9){\rule{7mm}{7mm}}
+\put(-13,-9){\rule{7mm}{7mm}}
+\put(-27,-253){\rule{21mm}{245mm}}
+\put(133,-2){\resizebox{!}{7mm}{\IFADtext}}
+\put(-20,-243){\begin{sideways}\resizebox{!}{7mm}{\textcolor{white}{\IFADtext}}\end{sideways}}
+\put(139,-143){\resizebox{38mm}{!}{\includegraphics{vdmtools-logo.eps}}}
+\end{picture}
+}
+
+\newcommand{\sidewaysifad}{
+\setlength{\unitlength}{1mm}
+\begin{picture}(17,40)
+\linethickness{.3pt}
+\put(7,0){\begin{sideways}\resizebox{!}{7mm}{\textbf{\IFADtext}}\end{sideways}}
+\end{picture}
+}
+
+
+\newcommand{\IFADtext}{
+  \hbox{\resizebox{200pt}{!}{\includegraphics{QUcover-logo.eps}}}
+}
+
+\newcommand{\VDMToolsVersion}{v9.0.6}
+
+%
+% \vdmtoolsmanual
+%
+% This macro expands into a front page and an information page.
+%
+% #1    Document Title
+% #2    Manual version
+\newcommand{\vdmtoolsmanualscsk}[3]{ 
+  \pagestyle{fancyplain}
+  \frontpageheadfoot
+  \renewcommand{\thepage}{} % Prevent pagenumbering on front page.
+                            % \thispagestyle cannot be used due to
+                            % a bug in LaTeX (it don't work with
+                            % article style).
+  \lhead{\boxlogo}
+
+  \vspace*{5cm}
+   \hfill \begin{HugeFont}VDMTools\end{HugeFont}
+
+  \vspace{6mm}
+  \hfill\rule{120mm}{1mm}
+
+  \vspace{10mm}
+  \hfill \begin{minipage}{12cm}\begin{flushright}\begin{TitleFont}{#1}\end{TitleFont}\end{flushright}\end{minipage}
+
+  \newpage
+  \thispagestyle{empty}
+  \pagestyle{fancyplain}
+  \lhead{}
+
+  \makeheader{#1}
+  \begin{tabular}{lll}
+  & \textsf{\textbf{How to contact:}} & \\[3ex]
+
+   & \href{http://fmvdm.org/}{http://fmvdm.org/} & VDM information web site(in Japanese) \\
+%   & \href{http://fmvdm.org/en/}{http://fmvdm.org/en/} & VDM information web site(in English) \\[3ex]
+%   
+   & \href{http://fmvdm.org/tools/vdmtools}{http://fmvdm.org/tools/vdmtools} & VDMTools web site(in Japanese) \\
+
+   & \href{mailto:inq@fmvdm.org}{inq@fmvdm.org} & Mail \\
+  \end{tabular}
+
+  \vspace{7cm}
+  \begin{tabular}{p{14cm}}
+  {\large \textit{{#1 #2}}}\\
+  \hspace{1cm} --- Revised for VDMTools \VDMToolsVersion \\[1ex]
+  {\large \copyright\ COPYRIGHT \the\year\ by Kyushu University} \\[1ex]
+
+  \small The software described in this document is furnished under a
+  license agreement. The software may be used or copied only under the
+  terms of the license agreement. \\[2ex]
+
+  \small This document is subject to change without notice.
+  \end{tabular}
+
+  \newpage
+  \manualheadfoot
+  \@ifundefined{markaltheader}{\makeheader{#1}}{\markaltheader}
+  \setcounter{page}{1}                     % Next page is page 1 (one).
+  \renewcommand{\thepage}{\arabic{page}}   % Number pages from now on.
+
+  \pagenumbering{roman}
+  \tableofcontents\ifthenelse{\isodd{\value{page}}}{\newpage\mbox{}}{}
+  \newpage
+  \pagenumbering{arabic}
+  \parskip2ex
+  \parindent0pt
+}
+
+
+%
+% \vdmtoolsmanual
+%
+% This macro expands into a front page and an information page.
+%
+% #1    Document Title
+% #2    Release notes (toolversion)
+% #3    Copyright (year)
+% #4    Tool Type (VDM-SL/VDM++)
+% #5    Manual version
+
+\newcommand{\vdmtoolsmanualcsk}[5]{ 
+  \pagestyle{fancyplain}
+  \frontpageheadfoot
+  \renewcommand{\thepage}{} % Prevent pagenumbering on front page.
+                            % \thispagestyle cannot be used due to
+                            % a bug in LaTeX (it don't work with
+                            % article style).
+  \lhead{\boxlogo}
+
+
+  \vspace*{5cm}
+   \hfill \begin{HugeFont}VDMTools\end{HugeFont}
+
+  \vspace{6mm}
+  \hfill\rule{120mm}{1mm}
+
+  % Manual title
+  \vspace{10mm}
+  \hfill \begin{minipage}{12cm}\begin{flushright}\begin{TitleFont}{#1}\end{TitleFont}\end{flushright}\end{minipage}
+
+  % Manual version
+  \vspace{3mm}
+  \hfill \begin{minipage}{10cm}\begin{flushright}\begin{ManVerFont}ver.{#5}\end{ManVerFont}\end{flushright}\end{minipage}
+  
+  \newpage
+  \thispagestyle{empty}
+  \pagestyle{fancyplain}
+  \lhead{}
+
+  \makeheader{#1}
+  \begin{tabular}{lll}
+  & \textsf{\textbf{How to contact:}} & \\[3ex]
+
+   & \href{http://fmvdm.org/}{http://fmvdm.org/} & VDM information web site(in Japanese) \\
+
+   & \href{http://fmvdm.org/tools/vdmtools}{http://fmvdm.org/tools/vdmtools} & VDMTools web site(in Japanese) \\
+
+   & \href{mailto:inq@fmvdm.org}{inq@fmvdm.org} & Mail \\
+  \end{tabular}
+
+  \vspace{7cm}
+  \begin{tabular}{p{14cm}}
+  {\large \textit{{#1 #5}}}\\
+  \hspace{1cm} --- Revised for VDMTools \VDMToolsVersion \\[1ex]
+  {\large \copyright\ COPYRIGHT {#3} by Kyushu University} \\[1ex]
+
+  \small The software described in this document is furnished under a
+  license agreement. The software may be used or copied only under the
+  terms of the license agreement. \\[2ex]
+
+  \small This document is subject to change without notice
+  \end{tabular}
+
+  \newpage
+  \manualheadfoot
+  \@ifundefined{markaltheader}{\makeheader{#1}}{\markaltheader}
+  \setcounter{page}{1}                     % Next page is page 1 (one).
+  \renewcommand{\thepage}{\arabic{page}}   % Number pages from now on.
+
+  \pagenumbering{roman}
+  \tableofcontents\ifthenelse{\isodd{\value{page}}}{\newpage\mbox{}}{}
+  \newpage
+  \pagenumbering{arabic}
+  \parskip2ex
+  \parindent0pt
+}
+
+
+%
+% \vdmtoolsdoc
+%
+% This macro expands into a front page and an information page.
+%
+% #1    Document Title
+% #2    Release notes (toolversion)
+% #3    Copyright (year)
+% #4    Tool Type (VDM-SL/VDM++)
+
+\newcommand{\vdmtoolsdoc}[5]{ 
+  \pagestyle{fancyplain}
+  \frontpageheadfoot
+  \renewcommand{\thepage}{} % Prevent pagenumbering on front page.
+                            % \thispagestyle cannot be used due to
+                            % a bug in LaTeX (it don't work with
+                            % article style).
+  \lhead{\boxlogo}
+
+
+  \vspace*{5cm}
+  \hfill \begin{HugeFont}VDMTools\raisebox{1ex}{\large\Pisymbol{psy}{226}}\end{HugeFont}
+
+  \vspace{6mm}
+  \hfill\rule{120mm}{1mm}
+
+  \vspace{10mm}
+  \hfill \begin{minipage}{12cm}\begin{flushright}\begin{TitleFont}{#1}\end{TitleFont}\end{flushright}\end{minipage}
+
+  \newpage
+  \thispagestyle{empty}
+  \pagestyle{fancyplain}
+  \lhead{}
+
+  \makeheader{#1}
+  \begin{tabular}{lll}
+  & \textsf{\textbf{How to contact:}} & \\[3ex]
+
+   & \href{http://fmvdm.org/}{http://fmvdm.org/} & VDM information web site(in Japanese) \\
+
+   & \href{http://fmvdm.org/tools/vdmtools}{http://fmvdm.org/tools/vdmtools} & VDMTools web site(in Japanese) \\
+
+   & \href{mailto:inq@fmvdm.org}{inq@fmvdm.org} & Mail \\
+  \end{tabular}
+
+  \vspace{7cm}
+  \begin{tabular}{p{14cm}}
+  {\large \textit{{#1}}} --- Revised for {#2}\\[1ex]
+  {\large \copyright\ COPYRIGHT {#3} by Kyushu University} \\[4ex]
+
+  \small The software described in this document is furnished under a
+  license agreement. The software may be used or copied only under the
+  terms of the license agreement. \\[2ex]
+
+  \small This document is subject to change without notice
+  \end{tabular}
+
+  \newpage
+  \manualheadfoot
+  \@ifundefined{markaltheader}{\makeheader{#1}}{\markaltheader}
+  \setcounter{page}{1}                     % Next page is page 1 (one).
+  \renewcommand{\thepage}{\arabic{page}}   % Number pages from now on.
+
+  \parskip2ex
+  \parindent0pt
+}
+
+
+
+%
+% \docdef
+%
+% This macro expands into a front page and an information page.
+%
+% #1    Document Title
+% #2    Author(s)
+% #3    Date
+% #4    Doc. Id.
+% #5    Doc. Type
+% #6    Status
+% #7    Availability
+% (#8    Bib. Ref. removed)
+% #8    Copyright
+% 
+% #9   Doc. Hist.
+% #10   Note
+
+%
+
+\newcommand{\docdef}[8]{ 
+  \thispagestyle{empty}     % No headers on this page.
+  \renewcommand{\thepage}{} % Prevent pagenumbering on front page.
+                            % \thispagestyle cannot be used due to
+                            % a bug in LaTeX (it don't work with
+                            % article style).
+  
+    \title{\vspace*{10mm}\Huge\bf #1} 
+  \author{}
+  \date{}
+  \maketitle
+  \vfill
+  \@ifundefined{localinfotext}{}{\localinfotext}
+  \begin{center}
+    \leavevmode
+    \resizebox{10cm}{!}{\includegraphics{vdmtools-logo.eps}}
+  \end{center}
+  \vspace*{3cm}
+  \begin{wpindent}{0pt}{\bf\@ifundefined{dktext}{Author:XXX}{Forfatter:XXX}}
+     \item[\bf\@ifundefined{dktext}{Author:}{Forfatter:}]   #2
+     \item[\bf\@ifundefined{dktext}{Date:}{Dato:}]     #3
+     \item[\bf\@ifundefined{dktext}{Doc.\ Id.:}{Dok.\ Id.:}] #4
+
+  \end{wpindent}
+  \vspace*{0cm}
+  
+
+  \newpage
+  \thispagestyle{empty}       % No headers on this page.
+  \pagestyle{fancyplain}      % Headings on the following pages
+  \@ifundefined{markaltheader}{\makeheader{#1}}{\markaltheader}
+  \newcommand{\docid}{#4}
+  \begin{wpindent}{0pt}{\bf Udbredelse:XXX}
+     \item[\bf Type:]         #5
+     \item[\bf Status:]       #6
+     \item[\bf\@ifundefined{dktext}{Availability:}{Udbredelse:}] #7
+     \item[\bf Copyright:]    #8
+  \end{wpindent}
+  \curdocdef
+}
+
+
+%
+% curdocdef
+% 
+% Used as a curried extension to docdef.
+% This is done to avoid the limitation of
+% a maximum of 9 parameters to a macro.
+%
+\newcommand{\curdocdef}[2]{
+  \vspace*{1cm}
+  \mbox{}\hrulefill\mbox{}
+
+  \noindent{\bf\@ifundefined{dktext}{Document History}{Dokument Historie}}
+
+  \begin{wpindent}{0pt}{V999.999}
+     #1
+  \end{wpindent}
+  \vspace*{1cm}
+  \mbox{}\hrulefill\mbox{}
+
+  \noindent{\bf Note:} #2
+
+  \newpage
+  \manualheadfoot
+  \setcounter{page}{1}                     % Next page is page 1 (one).
+  \renewcommand{\thepage}{\arabic{page}}   % Number pages from now on.
+}
+
+
+% Insert "End of Document" box on the last page
+% This is done by inserting it in the foot.
+\newcommand{\eod}{}         % Not end of document yet
+\AtEndDocument{
+  \vfill\par  % This makes sure EOD is not output twice. \clearpage
+              % gives 0 EOD's. \clearpage after renewcommand gives two
+              % EOD. WHY? /etn
+  \renewcommand{\eod}{\@ifundefined{dktext}{End of Document}{Slut p\aa{} Dokument}}%
+}
+
+
+%
+% \abs
+%
+% macro for writing abstracts
+%
+\long\def\abs#1{\begin{center}%
+                {\small\bf\@ifundefined{dktext}{Abstract}{Res\'u{}me}}\par%
+                \begin{minipage}[t]{0.75\textwidth}%
+                   \small #1
+                \end{minipage}%
+                \end{center}%
+                \par}
+
+
+%**********************************************************
+%
+% Bibliography support
+%
+%**********************************************************
+
+\newcommand{\bthisbibliography}[1]{
+  \@ifundefined{chapter}{\section{\@ifundefined{dktext}{References}{Litteratur}}}
+                        {\chapter{\@ifundefined{dktext}{References}{Litteratur}}}
+   \begin {list} {}
+     {\settowidth {\labelwidth} {[#1]XX}
+      \setlength {\leftmargin} {\labelwidth}
+      \addtolength{\leftmargin} {\labelsep}
+      \setlength {\parsep} {1ex}
+      \setlength {\itemsep} {2ex}
+     }
+  }
+\newcommand{\ethisbibliography}{\end{list}}
+\newcommand{\refitem}[2]
+  {\bibitem[#1]{#2}}

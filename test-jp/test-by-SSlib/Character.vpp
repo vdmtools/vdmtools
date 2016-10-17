@@ -1,0 +1,87 @@
+class Character
+/*
+作成者 = 佐原伸
+作成日 = 2001年  3月 16日 
+修正日 = 2004年 12月  6日 -- VDM++TesKに対応して変更
+責任
+	文字共通の振る舞いを表す。
+概要
+	すべての文字に共通な機能を定義する。
+*/
+
+values
+	英数文字列 = "0123456789aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ";
+	
+functions
+      
+  protected
+    branch : seq1 of char +> bool
+    branch(-) == true;
+    
+--変換関数群
+--数字を整数に変換する
+static public asDigit: char -> int | bool
+asDigit(c) ==
+	/*
+	cases c:
+		'0'	-> 0,
+		'1'	-> 1,
+		'2'	-> 2,
+		'3'	-> 3,
+		'4'	-> 4,
+		'5'	-> 5,
+		'6'	-> 6,
+		'7'	-> 7,
+		'8'	-> 8,
+		'9'	-> 9,
+		others	-> false
+	end;
+	*/
+	if isDigit(c) then
+		let s = [c] in
+		let mk_(-, i) = VDMUtil`seq_of_char2val[int](s) in i
+	else
+		false;
+
+--英数字の辞書順序を返す。英数字以外の文字の場合は256を返す。
+static public as辞書順序 : char -> int
+as辞書順序(c) ==
+	let	文字位置 = String`index(英数文字列,c),
+		不明文字の値 = 256	in
+	cases true:
+		(0 < 文字位置 and 文字位置 <= len 英数文字列)	-> 文字位置 - 1,
+		others								-> 不明文字の値
+	end;
+		
+
+--判定関数群
+--数字かどうか判定する。
+static public isDigit : char -> bool
+isDigit(c) == 
+	c in set {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
+
+static public 小さい: char * char -> bool
+小さい(c1,c2) == Character`＜(c1)(c2);
+
+static public ＜: char -> char -> bool
+＜(c1)(c2) == Character`as辞書順序(c1) < Character`as辞書順序(c2);
+
+static public 以下である : char * char -> bool
+以下である(c1, c2) == Character`≦(c1)(c2);
+
+static public ≦ : char -> char -> bool
+≦(c1)(c2) ==  Character`＜(c1)(c2) or c1 = c2;
+
+static public 大きい : char * char -> bool
+大きい(c1, c2) == Character`＞(c1)(c2);
+
+static public ＞ : char -> char -> bool
+＞(c1)(c2) == Character`＜(c2)(c1);
+
+static public 以上である : char * char -> bool
+以上である(c1, c2) == Character`≧(c1)(c2);
+
+static public ≧ : char -> char -> bool
+≧(c1)(c2) == not Character`＜(c1)(c2);
+			
+end Character

@@ -1,0 +1,915 @@
+class A
+
+operations
+public
+Test: () ==> bool 
+Test() ==
+  (dcl c : JDK_Calendar := JDK_Calendar`getInstance(),
+       year : nat := 2011,
+       month : nat := 11,
+       delta : nat := 1;
+   c.set(year, month, 11);
+   c.add(JDK_Calendar`YEAR, delta);
+   return 2012 = c.get(JDK_Calendar`YEAR));
+
+end A
+
+class VDMUtil
+
+-- 	VDMTools STANDARD LIBRARY: MiscUtils
+--      --------------------------------------------
+-- 
+-- Standard library for the VDMTools Interpreter. When the interpreter
+-- evaluates the preliminary functions/operations in this file,
+-- corresponding internal functions is called instead of issuing a run
+-- time error. Signatures should not be changed, as well as name of
+-- module (VDM-SL) or class (VDM++). Pre/post conditions is 
+-- fully user customisable. 
+-- Dont care's may NOT be used in the parameter lists.
+
+functions
+-- Converts a set argument into a sequence in non-deterministic order.
+static public
+set2seq[@T] : set of @T +> seq of @T
+set2seq(x) == is not yet specified;
+
+-- Returns a context information tuple which represents
+-- (file_name * line_num * column_num * module_name * fnop_name) of corresponding source text
+static public
+get_file_pos : () +> [ seq of char * nat * nat * seq of char * seq of char ]
+get_file_pos() == is not yet specified;
+
+-- (file_name * line_num * column_num * module_name * fnop_name) of corresponding source text
+static public
+P : () +> [ seq of char * nat * nat * seq of char * seq of char ]
+P() == is not yet specified;
+
+-- Converts a VDM value into a seq of char.
+static public
+val2seq_of_char[@T] : @T +> seq of char
+val2seq_of_char(x) == is not yet specified;
+
+-- Converts VDM value in ASCII format into a VDM value
+-- RESULT.#1 = false implies a conversion failure
+static public
+seq_of_char2val[@p]:seq1 of char -> bool * [@p]
+seq_of_char2val(s) ==
+  is not yet specified
+  post let mk_(b,t) = RESULT in not b => t = nil;
+
+-- Cast value 
+static public
+cast[@T1, @T2] : @T1 -> @T2
+cast(s) == is not yet specified
+  pre is_(s, @T2);
+
+-- Clone value 
+static public
+clone[@T] : @T -> @T
+clone(s) == is not yet specified;
+
+-- Get class name
+static public
+classname[@T] : @T -> [seq1 of char]
+classname(s) == is not yet specified;
+
+-- Convert a char into a UTF16 code value.
+static public
+char2code: char -> nat
+char2code(c) == is not yet specified;
+
+-- Convert a UTF16 code value into a char.
+static public
+code2char: nat -> char
+code2char(c) == is not yet specified;
+
+operations
+-- Get current time in miliseconds since Jan. 1, 1970
+static public
+current_time: () ==> nat
+current_time() == is not yet specified;
+end VDMUtil
+
+class IO
+
+-- 	VDMTools STANDARD LIBRARY: INPUT/OUTPUT
+--      --------------------------------------------
+-- 
+-- Standard library for the VDMTools Interpreter. When the interpreter
+-- evaluates the preliminary functions/operations in this file,
+-- corresponding internal functions is called instead of issuing a run
+-- time error. Signatures should not be changed, as well as name of
+-- module (VDM-SL) or class (VDM++). Pre/post conditions is 
+-- fully user customisable. 
+-- Dont care's may NOT be used in the parameter lists.
+--
+-- The in/out functions  will return false if an error occurs. In this
+-- case an internal error string will be set (see 'ferror').
+
+types
+ 
+public
+filedirective = <start>|<append> 
+
+functions
+
+-- Write VDM value in ASCII format to std out:
+public
+writeval[@p]: @p -> bool
+writeval(val)==
+  is not yet specified;
+
+-- Write VDM value in ASCII format to file.
+-- fdir = <start> will overwrite existing file,
+-- fdir = <append> will append output to the file (created if
+-- not existing).
+public
+fwriteval[@p]:seq1 of char * @p * filedirective -> bool
+fwriteval(filename,val,fdir) ==
+  is not yet specified;
+
+-- Read VDM value in ASCII format from file
+public
+freadval[@p]:seq1 of char -> bool * [@p]
+freadval(f) ==
+  is not yet specified
+  post let mk_(b,t) = RESULT in not b => t = nil;
+
+operations
+
+-- Write text to std out. Surrounding double quotes will be stripped,
+-- backslashed characters should be interpreted.
+public
+echo: seq of char ==> bool
+echo(text) ==
+  fecho ("",text,nil);
+
+-- Write text to file like 'echo'
+public
+fecho: seq of char * seq of char * [filedirective] ==> bool
+fecho (filename,text,fdir) ==
+  is not yet specified
+  pre filename = "" <=> fdir = nil;
+
+-- The in/out functions  will return false if an error occur. In this
+-- case an internal error string will be set. 'ferror' returns this
+-- string and set it to "".
+public
+ferror:()  ==> seq of char
+ferror () ==
+  is not yet specified
+end IO
+
+class JDK_Object
+
+operations
+  public clone : () ==> JDK_Object
+  clone() == return VDMUtil`clone[JDK_Object](self);
+
+end JDK_Object
+
+
+/*
+ *  Date, Calendar, Timestamp
+ */
+class JDK_Date is subclass of JDK_Object
+
+instance variables
+  protected fastTime : JDK_Long := new JDK_Long();
+
+operations
+  public JDK_Date : () ==> JDK_Date
+  JDK_Date() == fastTime := JDK_System`currentTimeMillis();
+  
+  public JDK_Date : JDK_Long ==> JDK_Date
+  JDK_Date(date) == fastTime := date;
+  
+  public JDK_Date : int ==> JDK_Date
+  JDK_Date(date) == fastTime := new JDK_Long(date);
+  
+  public toString : () ==> seq of char
+  toString() == return VDMUtil`val2seq_of_char[int](fastTime.valueOf());
+  
+  public getTime : () ==> JDK_Long
+  getTime() == return fastTime;
+  
+  public setTime : JDK_Long ==> ()
+  setTime(date) == fastTime := date;
+  
+  public before : JDK_Date ==> bool
+  before(when) == return fastTime.valueOf() < when.getTime().valueOf();
+  
+  public after : JDK_Date ==> bool
+  after(when) == return fastTime.valueOf() > when.getTime().valueOf();
+  
+  public equals : JDK_Object ==> bool
+  equals(obj) ==
+    return isofclass(JDK_Date, obj) and getTime().valueOf() = narrow_(obj, JDK_Date).getTime().valueOf();
+  
+  public compareTo : JDK_Date ==> int
+  compareTo(anotherDate) ==
+    def
+      thisTime = getTime().valueOf();
+      anotherTime = anotherDate.getTime().valueOf();
+    in
+      if thisTime < anotherTime then return -1
+      elseif thisTime = anotherTime then return 0
+      else return 1;
+  
+values
+--  JCGControl_package = "java.sql";
+  JCGControl_package = "java.util";
+
+end JDK_Date
+
+
+class JDK_Calendar is subclass of JDK_Object
+
+instance variables
+  public fields : seq of int := [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+  public time : JDK_Long := new JDK_Long(0);
+  inv
+    len fields = FIELD_COUNT;
+
+values
+  -- The field number is set to JDK plus 1.
+  -- It is because the sequence of VDM is 1 origin.
+  public static ERA = 1;
+  public static YEAR = 2;
+  -- MONTH field is 0 to 11.
+  public static MONTH = 3;
+  public static WEEK_OF_YEAR = 4;
+  public static WEEK_OF_MONTH = 5;
+  public static DATE = 6;
+  public static DAY_OF_MONTH = 6;
+  public static DAY_OF_YEAR = 7;
+  public static DAY_OF_WEEK = 8;
+  public static DAY_OF_WEEK_IN_MONTH = 9;
+  public static AM_PM = 10;
+  public static HOUR = 11;
+  public static HOUR_OF_DAY = 12;
+  public static MINUTE = 13;
+  public static SECOND = 14;
+  public static MILLISECOND = 15;
+  public static ZONE_OFFSET = 16;
+  public static DST_OFFSET = 17;
+  
+  public static FIELD_COUNT = 17;
+
+  public static SUNDAY = 1;
+  public static MONDAY = 2;
+  public static TUESDAY = 3;
+  public static WEDNESDAY = 4;
+  public static THURSDAY = 5;
+  public static FRIDAY = 6;
+  public static SATURDAY = 7;
+
+operations
+  public JDK_Calendar : () ==> JDK_Calendar
+  JDK_Calendar() == setTimeInMillis(JDK_System`currentTimeMillis());
+  
+  public getTime : () ==> JDK_Date
+  getTime() ==
+    return new JDK_Date(getTimeInMillis());
+
+  public setTime : JDK_Date ==> ()
+  setTime(date) == setTimeInMillis(date.getTime());
+
+  public get : int ==> int
+  get(field) == (
+    if field = DAY_OF_WEEK then (
+      return getDayOfWeek();
+    ) else (
+      return fields(field);
+    );
+  );
+  
+  public getTimeInMillis : () ==> JDK_Long
+  getTimeInMillis() == return time;
+
+  public setTimeInMillis : JDK_Long ==> ()
+  setTimeInMillis(millis) == time := millis;
+
+  public set : int * int ==> ()
+  set(field, value) == (
+    fields := fields ++ {field |-> value};
+    time := cnvMilliSecond();
+  );
+    
+  public set : int * int * int ==> ()
+  set(year, month, date) == (
+    fields := fields ++ {YEAR |-> year};
+    fields := fields ++ {MONTH |-> month};
+    fields := fields ++ {DATE |-> date};
+    time := cnvMilliSecond();
+  )
+  pre
+    month < 12 and
+    date <= 31;
+  
+  public set : int * int * int * int * int ==> ()
+  set(year, month, date, hourOfDay, minute) == (
+    fields := fields ++ {YEAR |-> year};
+    fields := fields ++ {MONTH |-> month};
+    fields := fields ++ {DATE |-> date};
+    fields := fields ++ {HOUR_OF_DAY |-> hourOfDay};
+    fields := fields ++ {MINUTE |-> minute};
+    time := cnvMilliSecond();
+  );
+    
+  public set : int * int * int * int * int * int ==> ()
+  set(year, month, date, hourOfDay, minute, second) == (
+    fields := fields ++ {YEAR |-> year};
+    fields := fields ++ {MONTH |-> month};
+    fields := fields ++ {DATE |-> date};
+    fields := fields ++ {HOUR_OF_DAY |-> hourOfDay};
+    fields := fields ++ {MINUTE |-> minute};
+    fields := fields ++ {SECOND |-> second};
+    time := cnvMilliSecond();
+  );
+    
+  public add : int * int ==> ()
+  add(field, amount) == (
+    set(field, fields(field) + amount);
+    time := cnvMilliSecond();
+  );
+
+  public static getInstance : () ==> JDK_Calendar
+  getInstance() == return new JDK_GregorianCalendar();
+  
+  protected getDayOfWeek : () ==> int
+  getDayOfWeek() ==
+    def
+      
+      nyear : int = if get(MONTH) < 3 then get(YEAR) - 1
+                    else get(YEAR);
+      nmonth : int = if get(MONTH) < 3 then get(MONTH) + 13
+                     else get(MONTH) + 2; -- add 2? or 1?
+      nday : int = get(DATE);
+      tnval : int = floor(365.25 * nyear) + floor(30.6 * nmonth) + floor(nyear / 400) + nday - floor(nyear / 100) - 429;
+      nval = tnval - floor(tnval / 7) * 7;
+    in
+      return
+        cases nval:
+          0 -> MONDAY, 
+          1 -> TUESDAY,
+          2 -> WEDNESDAY,
+          3 -> THURSDAY,
+          4 -> FRIDAY,
+          5 -> SATURDAY,
+          6 -> SUNDAY,
+          others -> -1 
+        end;
+  
+  public static getDaysFromBase : int * int * int ==> int
+  getDaysFromBase(nyear, nmonth, nday) ==
+    def
+      y : int = if nmonth <= 2 then nyear - 1
+                else nyear;
+      m : int = if nmonth <= 2 then nmonth + 12
+                else nmonth;
+      d : int = nday;
+      dy : int = 365 * (y - 1);
+      c : int = floor(y / 100);
+      dl : int = floor(y / 4) - c + floor(c / 4);
+      dm : int = floor((m * 979 - 1033) / 32);
+    in
+      return dy + dl + dm + d - 1;
+  
+  public static calcMilliSecond : int * int * int * int * int * int * int ==> int
+  calcMilliSecond(nyear, nmonth, nday, nhour, nmin, nsec, nmillsec) ==
+    def
+      baseTime : int = getDaysFromBase(1970, 1, 1);
+      cullTime : int = getDaysFromBase(nyear, nmonth, nday); -- nmonth = 1 to 12
+      millsec : int = (nhour * 3600 + nmin * 60 + nsec) * 1000 + nmillsec;
+      result : int = (cullTime - baseTime) * 24 * 3600 * 1000 + millsec;
+    in
+    -- Japan Standard Time (+9)
+    return result - 9 * 3600 * 1000;
+
+  public cnvMilliSecond : () ==> JDK_Long
+  cnvMilliSecond() == return new JDK_Long(calcMilliSecond(get(YEAR), get(MONTH)+1, get(DATE), get(HOUR), get(MINUTE), get(SECOND), get(MILLISECOND)));
+
+end JDK_Calendar
+
+
+class JDK_GregorianCalendar is subclass of JDK_Calendar
+
+operations
+  public JDK_GregorianCalendar : () ==> JDK_GregorianCalendar
+  JDK_GregorianCalendar() == setTimeInMillis(JDK_System`currentTimeMillis());
+end JDK_GregorianCalendar
+
+
+class JDK_Timestamp is subclass of JDK_Date
+
+instance variables
+  iTime : JDK_Long;
+
+operations
+  public JDK_Timestamp : JDK_Long ==> JDK_Timestamp
+  JDK_Timestamp(aTime) == setTime(aTime);
+  
+  public static valueOf : seq of char ==> JDK_Timestamp
+  valueOf(s) == return new JDK_Timestamp(new JDK_Long(s));
+  
+values
+  JCGControl_package = "java.sql";
+
+end JDK_Timestamp
+
+
+/*
+ *  Number
+ */
+class JDK_Number
+end JDK_Number
+
+
+class JDK_BigDecimal is subclass of JDK_Number
+
+values
+  public static ROUND_HALF_UP = 4;
+
+instance variables
+  value : seq of char := "";
+
+operations
+  public JDK_BigDecimal : seq of char ==> JDK_BigDecimal
+  JDK_BigDecimal(str) == value := str
+  pre
+    len [ x | x in set inds str & str(x) = '.' ] <= 1
+    and str(len str) <> '.';
+  
+  public JDK_BigDecimal : real ==> JDK_BigDecimal
+  JDK_BigDecimal(val) == value := real2string(val);
+
+  public toPlainString : () ==> seq of char
+  toPlainString() == return value;
+  
+  public equals : JDK_BigDecimal ==> bool
+  equals(a) == return self.toPlainString() = a.toPlainString();
+  
+  public add : JDK_BigDecimal ==> JDK_BigDecimal
+  add(augend) ==
+    return new JDK_BigDecimal(string2real(value) + string2real(augend.toPlainString()));
+
+  public subtract : JDK_BigDecimal ==> JDK_BigDecimal
+  subtract(subtrahend) ==
+    return new JDK_BigDecimal(string2real(value) - string2real(subtrahend.toPlainString()));
+  
+  public compareTo : JDK_BigDecimal ==> int
+  compareTo(val) ==
+    def
+      selfVal = string2real(value);
+      otherVal = string2real(val.toPlainString());
+    in
+      if selfVal < otherVal then return -1
+      elseif selfVal > otherVal then return 1
+      else return 0;
+
+  public doubleValue : () ==> real
+  doubleValue() == return string2real(value);
+    
+  public setScale : int * int ==> JDK_BigDecimal
+  setScale(newScale, roundingMode) ==
+    def
+      newValue = roundDown(newScale, self);
+    in
+      return round(newValue, newScale, roundingMode);
+    
+functions
+  string2real : seq of char -> real
+  string2real(str) ==
+    let mk_(-, r) = VDMUtil`seq_of_char2val[real](str) in r;
+
+  real2string : real -> seq of char
+  real2string(r) == VDMUtil`val2seq_of_char[real](r);
+
+  roundDown : int * JDK_BigDecimal -> JDK_BigDecimal
+  roundDown(scale, org) ==
+    let
+      orgString = org.toPlainString(),
+      periodPos = [ x | x in set inds orgString & orgString(x) = '.' ],
+      endPos = if len periodPos = 0 then len orgString
+               elseif len orgString >= (periodPos(1) + scale + 1) then periodPos(1) + scale + 1
+               else len orgString
+    in
+      new JDK_BigDecimal(orgString(1,...,endPos));
+
+  round : JDK_BigDecimal * int * int -> JDK_BigDecimal
+  round(org, scale, roundingMode) ==
+--    let
+--      orgString = org.toPlainString(),
+--      periodPos = [ x | x in set inds orgString & orgString(x) = '.' ],
+--      isShortScale = len periodPos = 0 or len orgString <= (periodPos(1) + scale),
+--      plusNum = if isShortScale then "0"
+--                else createPlusNum(orgString, ""),
+--      roundString = real2string(org.doubleValue() + string2real(plusNum)),
+--      resultString = if len roundString = 1 then roundString
+--                     elseif len roundString + 1 = len orgString then roundString  -- for tail number = 5
+--                     elseif isShortScale then roundString  -- for under scale
+--                     elseif roundString(len roundString - 1) = '.' then roundString(1,...,len roundString - 2)
+--                     else roundString(1,...,len roundString - 1)
+--    in
+      cases roundingMode:
+--        (JDK_RoundingMode`HALF_UP) -> new JDK_BigDecimal(resultString),
+        (JDK_RoundingMode`HALF_UP) -> new JDK_BigDecimal(roundHalfUp(org, scale)),
+        others -> undefined
+      end;
+
+  roundHalfUp : JDK_BigDecimal * int -> real
+  roundHalfUp(org, scale) ==
+    let
+      rval = abs(org.doubleValue()),
+      rval1 = rval + 5.0 * 10.0 ** (-1.0 * (scale + 1)),
+      rval2 = rval1 * 10.0 ** scale,
+      ival = floor(rval2),
+      rval3 = ival,
+      rval4 = rval3 * 10.0 ** (-1.0 * scale),
+      rval5 = if org.doubleValue() < 0.0 then rval4 * -1.0
+              else rval4
+    in
+      rval5;
+
+  createPlusNum : seq of char * seq of char -> seq of char
+  createPlusNum(orgString, result) ==
+    cases orgString:
+      [] -> result,
+      ['-'] ^ - -> createPlusNum(tl orgString, "-"),
+      ['.'] ^ - -> createPlusNum(tl orgString, result ^ "."),
+      [s] -> let - = s in createPlusNum(tl orgString, result ^ "5"),
+      others -> createPlusNum(tl orgString, result ^ "0")
+    end;
+
+end JDK_BigDecimal
+
+
+class JDK_Integer is subclass of JDK_Number
+
+operations
+  public static valueOf : seq of char ==> int
+  valueOf(a) ==
+    let
+      mk_(b, r) = VDMUtil`seq_of_char2val[int](a)
+    in
+      if b then return r
+      else exit new JDK_NumberFormatException();
+
+functions
+  public static toString : int -> seq of char
+  toString(s) == VDMUtil`val2seq_of_char[int](s);
+
+end JDK_Integer
+
+
+class JDK_Long is subclass of JDK_Number
+
+instance variables
+  value : int := 0;
+
+operations
+  public JDK_Long : int ==> JDK_Long
+  JDK_Long(i) == value := i;
+
+  public JDK_Long : seq of char ==> JDK_Long
+  JDK_Long(s) ==
+    let
+      mk_(b, r) = VDMUtil`seq_of_char2val[int](s)
+    in
+      if b then value := r
+      else exit new JDK_NumberFormatException();
+
+  public valueOf : () ==> int
+  valueOf() == return value;
+  
+  public toString : () ==> seq of char
+  toString() == return VDMUtil`val2seq_of_char[int](value);
+
+end JDK_Long
+
+
+class JDK_Short is subclass of JDK_Number
+end JDK_Short
+
+
+class JDK_RoundingMode
+
+values
+  public static HALF_UP : int = JDK_BigDecimal`ROUND_HALF_UP;
+
+end JDK_RoundingMode
+
+
+/*
+ *  Exception
+ */
+class JDK_Throwable
+end JDK_Throwable
+
+
+class JDK_Exception is subclass of JDK_Throwable
+end JDK_Exception
+
+
+class JDK_IOException is subclass of JDK_Exception
+end JDK_IOException
+
+
+class JDK_FileNotFoundException is subclass of JDK_IOException
+end JDK_FileNotFoundException
+
+
+class JDK_RuntimeException is subclass of JDK_Exception
+end JDK_RuntimeException
+
+
+class JDK_IllegalArgumentException is subclass of JDK_RuntimeException
+end JDK_IllegalArgumentException
+
+
+class JDK_NumberFormatException is subclass of JDK_IllegalArgumentException
+end JDK_NumberFormatException
+
+
+class JDK_ParseException is subclass of JDK_Exception
+end JDK_ParseException
+
+
+class JDK_JMSException is subclass of JDK_Exception
+end JDK_JMSException
+
+class JDK_InterruptedException is subclass of JDK_Exception
+end JDK_InterruptedException
+
+
+/*
+ *  process
+ */
+class JDK_ProcessBuilder
+
+instance variables
+  commands : seq of seq of char := [];
+
+operations
+  public JDK_ProcessBuilder : seq of seq of char ==> JDK_ProcessBuilder
+  JDK_ProcessBuilder(command) == commands := command;
+  
+  public start : () ==> JDK_Process
+  start() == return new JDK_Process();
+
+  public directory : JDK_File ==> JDK_ProcessBuilder
+  directory(-) == is not yet specified;
+  
+end JDK_ProcessBuilder
+
+
+class JDK_Process
+
+instance variables
+  -- for Test
+  public result : int := 0;
+
+operations
+  public waitFor : () ==> int
+  waitFor() == return result;
+  
+end JDK_Process
+
+
+/*
+ *  etcs
+ */
+class JDK_Arrays is subclass of JDK_Object
+
+functions
+public static
+asList: JDKArrayOf_String -> seq of seq of char
+asList(a) ==
+  is not yet specified;
+
+end JDK_Arrays
+
+
+class JDKArrayOf_String
+end JDKArrayOf_String
+
+
+class JDK_System is subclass of JDK_Object
+
+instance variables
+  public static out : JDK_PrintStream := new JDK_PrintStream();
+
+operations
+  public static currentTimeMillis : () ==> JDK_Long
+  currentTimeMillis() == return new JDK_Long(VDMUtil`current_time());
+
+end JDK_System
+
+
+class JDK_File is subclass of JDK_Object
+
+instance variables
+fileName : seq of char := "";
+
+operations
+public
+JDK_File: seq1 of char ==> JDK_File
+JDK_File(fnm) == fileName := fnm;
+
+public
+getName : () ==> seq of char
+getName() == return fileName;
+
+public
+delete : () ==> bool
+delete() ==
+  is not yet specified;
+
+public
+exists : () ==> bool
+exists() ==
+  is not yet specified;
+
+public
+isDirectory : () ==> bool
+isDirectory() ==
+  is not yet specified;
+
+public
+isFile : () ==> bool
+isFile() ==
+  is not yet specified;
+
+public
+mkdirs : () ==> bool
+mkdirs() ==
+  is not yet specified;
+
+public
+list : () ==> seq of seq of char
+list() ==
+  is not yet specified;
+
+public
+renameTo: JDK_File ==> bool
+renameTo(-) == 
+  is not yet specified;
+
+end JDK_File
+
+
+class JDK_BufferedWriter
+
+instance variables
+  out : JDK_FileWriter;
+
+operations
+  public JDK_BufferedWriter : JDK_FileWriter ==> JDK_BufferedWriter
+  JDK_BufferedWriter(aOut) == out := aOut;
+
+  public write : seq of char ==> ()
+  write(cbuf) ==
+    -- temporary
+    out.write(cbuf, 0, 0);
+
+  public newLine : () ==> ()
+  newLine() ==
+    -- temporary
+    out.write("\n", 0, 0);
+
+  public close : () ==> ()
+  close() == skip;
+
+end JDK_BufferedWriter
+
+
+class JDK_FileWriter
+
+instance variables
+  name : seq of char := "";
+
+operations
+  public JDK_FileWriter : seq of char ==> JDK_FileWriter
+  JDK_FileWriter(fileName) == name := fileName;
+
+  public write : seq of char * int * int ==> ()
+  write(cbuf, off, length) ==
+    def - = new IO().fecho(name, cbuf, <append>); - = off; - = length in skip;
+  
+end JDK_FileWriter
+
+class JDK_AbstractCsvListHandler
+end JDK_AbstractCsvListHandler
+
+class JDK_StringArrayListHandler is subclass of JDK_AbstractCsvListHandler
+end JDK_StringArrayListHandler
+
+class JDK_StringListListHandler is subclass of JDK_AbstractCsvListHandler
+end JDK_StringListListHandler
+
+
+class JDK_PrintStream
+/*
+operations
+  public static println : ? ==> ()
+  println(s) ==
+    def
+      val = if is_(s, seq of char) then s
+            else VDMUtil`val2seq_of_char[?](s);
+    in print(val ^ "\n");
+
+  public static print : ? ==> ()
+  print(s) ==
+    def
+      val = if is_(s, seq of char) then s
+            else VDMUtil`val2seq_of_char[?](s);
+      - = new IO().echo(val);
+    in skip;
+*/
+end JDK_PrintStream
+
+
+class JDK_PrintWriter
+
+operations
+  public write : seq of char ==> ()
+  write(s) == is not yet specified;
+  
+end JDK_PrintWriter
+
+class JDK_Runtime
+
+operations
+static public getRuntime : () ==> JDK_Runtime
+getRuntime() ==
+  return new JDK_Runtime();
+
+public exec: seq of char ==> JDK_Process
+exec(-) ==
+  return new JDK_Process();
+
+end JDK_Runtime
+
+class JDK_Writer
+
+operations
+public
+write: seq of char ==> ()
+write(s) == is not yet specified;
+
+public
+close: () ==> ()
+close() == is subclass responsibility;
+
+end JDK_Writer
+
+class JDK_OutputStreamWriter is subclass of JDK_Writer
+
+instance variables
+private stream : [JDK_OutputStream] := nil;
+private encoding : seq of char := "UTF-8";
+
+operations
+public
+JDK_OutputStreamWriter: JDK_OutputStream * seq of char ==> JDK_OutputStreamWriter
+JDK_OutputStreamWriter(os,enc) ==
+  (stream := os;
+   encoding := enc);
+
+public
+close: () ==> ()
+close() == skip;
+
+end JDK_OutputStreamWriter
+
+class JDK_OutputStream
+
+end JDK_OutputStream
+
+class JDK_FileOutputStream is subclass of JDK_OutputStream
+
+operations
+public
+JDK_FileOutputStream: seq of char ==> JDK_FileOutputStream
+JDK_FileOutputStream(-) == is not yet specified;
+
+end JDK_FileOutputStream
+
+class JDK_SimpleDateFormat
+
+instance variables
+private
+fm : seq of char := "";
+
+operations
+public
+JDK_SimpleDateFormat: seq of char ==> JDK_SimpleDateFormat
+JDK_SimpleDateFormat(f) == fm := f;
+
+public
+format: JDK_Date ==> seq of char
+format(-) == is not yet specified;
+
+end JDK_SimpleDateFormat
+

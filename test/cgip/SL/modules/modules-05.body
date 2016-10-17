@@ -1,0 +1,41 @@
+
+imports from LAST all,
+        from B all,
+        from C all,
+        from D all,
+        from E all
+
+definitions
+types
+  Enum = <a>;
+
+  Rec :: e : Enum
+
+
+operations
+  Test: () ==> nat
+  Test() == 
+   (LAST`goo(mk_Rec(<a>));
+    return 34;
+   )
+
+end A
+
+module LAST
+
+imports from A all
+
+exports all
+
+
+definitions
+types
+   mytype = nat
+
+
+operations
+  goo: A`Rec ==> ()
+  goo(-) == skip;
+
+end LAST
+

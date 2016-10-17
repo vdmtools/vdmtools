@@ -1,0 +1,408 @@
+r AbstractUser.vpp
+r AllT.vpp
+r Author.vpp
+r BL_NewAccount.vpp
+r BL_NewAccountT.vpp
+r BL_NewSavingAccount.vpp
+r BL_NewSavingAccountT.vpp
+r BankAccount_Carton.vpp
+r BankAccount_ItemValidator.vpp
+r BankAccount__Exception.vpp
+r Book.vpp
+r BookInstance.vpp
+r BusinessObject.vpp
+r Calendar.vpp
+r CalendarT.vpp
+r Character.vpp
+r CommonDefinition.vpp
+r CommonDefinitionForBankAccount.vpp
+r Date.vpp
+r DateT.vpp
+r DoubleListQueue.vpp
+r DoubleListQueueT.vpp
+r Function.vpp
+r FunctionT.vpp
+r Hashtable.vpp
+r HashtableT.vpp
+r Integer.vpp
+r IntegerT.vpp
+r JapaneseCalendar.vpp
+r LentOut.vpp
+r Libarian.vpp
+r Library.vpp
+r LibraryCalendar.vpp
+r LibraryT.vpp
+r Map.vpp
+r MapT.vpp
+r Newton.vpp
+r NewtonT.vpp
+r Number.vpp
+r NumberT.vpp
+r Object.vpp
+r Person.vpp
+r Product.vpp
+r ProductT.vpp
+r Queue.vpp
+r QueueT.vpp
+r Queue4Tread.vpp
+r Real.vpp
+r RealT.vpp
+r Rule.vpp
+r SBCalendar.vpp
+r SBCalendarT.vpp
+r Sequence.vpp
+r SequenceT.vpp
+r Set.vpp
+r SetT.vpp
+r Slip.vpp
+r String.vpp
+r StringT.vpp
+r Subject.vpp
+r Term.vpp
+r TermT.vpp
+r TestCase.vpp
+r TestDriver.vpp
+r TestLogger.vpp
+r Time.vpp
+r TimeT.vpp
+r UniqueSequence.vpp
+r UniqueSequenceT.vpp
+r User.vpp
+r VDMUtil.vpp
+r gofo_applicationException.vpp
+r gofo_bizLogic.vpp
+r gofo_bizLogicReturn.vpp
+r gofo_book.vpp
+r gofo_carton.vpp
+r gofo_db.vpp
+r gofo_exception.vpp
+r gofo_itemValidator.vpp
+r gofo_relationship.vpp
+r gofo_slip.vpp
+r io.vpp
+r math.vpp
+tc CalendarDefinition pos
+tc DoubleListQueue pos
+tc TestLogger pos
+tc TestDriver pos
+tc DoubleListQueueT pos
+tc 図書館貸出管理クラスT pos
+tc 『普通預金口座開設』T pos
+tc SBCalendarT pos
+tc HashtableT pos
+tc 『定期預金設定』T pos
+tc SequenceT pos
+tc FunctionT pos
+tc Character pos
+tc CalendarT pos
+tc TestCase pos
+tc DoubleListQueueT01 pos
+tc 図書館貸出管理クラスT06 pos
+tc 図書館貸出管理クラスT05 pos
+tc 図書館貸出管理クラスT04 pos
+tc 図書館貸出管理クラスT03 pos
+tc 図書館貸出管理クラスT02 pos
+tc 図書館貸出管理クラスT01 pos
+tc 『普通預金口座開設』T04 pos
+tc 『普通預金口座開設』T03 pos
+tc 『普通預金口座開設』T02 pos
+tc 『普通預金口座開設』T01 pos
+tc SBCalendarT06 pos
+tc SBCalendarT05 pos
+tc SBCalendarT04 pos
+tc SBCalendarT03 pos
+tc SBCalendarT02 pos
+tc SBCalendarT01 pos
+tc 『定期預金設定』T04 pos
+tc 『定期預金設定』T03 pos
+tc 『定期預金設定』T02 pos
+tc 『定期預金設定』T01 pos
+tc SequenceT24 pos
+tc SequenceT23 pos
+tc SequenceT22 pos
+tc SequenceT21 pos
+tc SequenceT20 pos
+tc SequenceT19 pos
+tc SequenceT18 pos
+tc SequenceT17 pos
+tc SequenceT16 pos
+tc SequenceT15 pos
+tc SequenceT14 pos
+tc SequenceT13 pos
+tc SequenceT12 pos
+tc SequenceT11 pos
+tc SequenceT10 pos
+tc SequenceT09 pos
+tc SequenceT08 pos
+tc SequenceT07 pos
+tc SequenceT06 pos
+tc SequenceT05 pos
+tc SequenceT04 pos
+tc SequenceT03 pos
+tc SequenceT02 pos
+tc SequenceT01 pos
+tc FunctionT02 pos
+tc FunctionT01 pos
+tc CalendarT12 pos
+tc CalendarT11 pos
+tc CalendarT10 pos
+tc CalendarT09 pos
+tc CalendarT07 pos
+tc CalendarT06 pos
+tc CalendarT05 pos
+tc CalendarT04 pos
+tc CalendarT03 pos
+tc CalendarT02 pos
+tc CalendarT01 pos
+tc ProductT01 pos
+tc IntegerT02 pos
+tc IntegerT01 pos
+tc StringT09 pos
+tc StringT08 pos
+tc StringT07 pos
+tc StringT06 pos
+tc StringT05 pos
+tc StringT04 pos
+tc StringT03 pos
+tc StringT02 pos
+tc StringT01 pos
+tc NumberT02 pos
+tc NumberT01 pos
+tc NewtonT01 pos
+tc 『発番者』T01 pos
+tc Sequence pos
+tc QueueT01 pos
+tc ProductT pos
+tc IntegerT pos
+tc Function pos
+tc Calendar pos
+tc IO pos
+tc JapaneseCalendar pos
+tc LibraryCalendar pos
+tc SBCalendar pos
+tc TimeT06 pos
+tc TimeT05 pos
+tc TimeT04 pos
+tc TimeT03 pos
+tc TimeT02 pos
+tc TimeT01 pos
+tc TermT01 pos
+tc StringT pos
+tc RealT08 pos
+tc MATH pos
+tc RealT07 pos
+tc RealT06 pos
+tc RealT05 pos
+tc RealT04 pos
+tc RealT03 pos
+tc RealT02 pos
+tc RealT01 pos
+tc Product pos
+tc NumberT pos
+tc NewtonT pos
+tc Integer pos
+tc DateT07 pos
+tc DateT06 pos
+tc DateT05 pos
+tc DateT04 pos
+tc DateT03 pos
+tc DateT02 pos
+tc DateT01 pos
+tc 図書館クラス pos
+tc 『発番者』T pos
+tc String pos
+tc SetT04 pos
+tc SetT03 pos
+tc SetT02 pos
+tc SetT01 pos
+tc QueueT pos
+tc Object pos
+tc 『共通定義』 pos
+tc HashtableT99 pos
+tc HashtableT57 pos
+tc HashtableT56 pos
+tc HashtableT55 pos
+tc HashtableT54 pos
+tc HashtableT53 pos
+tc HashtableT52 pos
+tc HashtableT07 pos
+tc HashtableT06 pos
+tc HashtableT05 pos
+tc HashtableT04 pos
+tc HashtableT03 pos
+tc HashtableT02 pos
+tc HashtableT01 pos
+tc 『問題領域共通定義』 pos
+tc GofoApplicationException pos
+tc Gofo_Relationship_Class pos
+tc BankAccount_Exception pos
+tc GofoBizLogicReturn pos
+tc Gofo_Relationship pos
+tc Gofo_DB_Primitive pos
+tc GofoItemValidator pos
+tc BankAccount_ItemValidator pos
+tc BankAccount_InvalidItemValidator pos
+tc GofoMandatoryValidator pos
+tc GofoColLenValidator pos
+tc GofoRangeValidator pos
+tc GofoKubunValidator pos
+tc 自動継続区分Validator pos
+tc 営業店IDValidator pos
+tc パスワードValidator pos
+tc Gofo_Exception pos
+tc 顧客IDValidator pos
+tc 伝票IDValidator pos
+tc 識別子Validator pos
+tc GofoBizLogic pos
+tc 金額Validator pos
+tc 数量Validator pos
+tc 『普通預金口座開設』 pos
+tc GofoCarton pos
+tc BankAccount_Carton pos
+tc 『普通預金口座開設_Carton』 pos
+tc 『定期預金設定_Carton』 pos
+tc Hashtable pos
+tc 『定期預金設定』 pos
+tc GofoSlip pos
+tc GofoBook pos
+tc 『業務ルール』 pos
+tc Gofo_DB pos
+tc Number pos
+tc Newton pos
+tc MapT02 pos
+tc MapT01 pos
+tc 貸出クラス pos
+tc 分野クラス pos
+tc 『発番者』 pos
+tc 『文字列』 pos
+tc 『int』 pos
+tc TimeT pos
+tc TermT pos
+tc RealT pos
+tc Queue pos
+tc DateT pos
+tc 本クラス pos
+tc 本実体クラス pos
+tc 人クラス pos
+tc 利用者クラス pos
+tc 一般利用者クラス pos
+tc 著者クラス pos
+tc 職員クラス pos
+tc 『税金』 pos
+tc 『期間』 pos
+tc 『帳簿』 pos
+tc 『入出金記録帳簿』 pos
+tc 『銀行口座帳簿』 pos
+tc 『普通預金口座帳簿』 pos
+tc 『自行口座帳簿』 pos
+tc 『定期預金帳簿』 pos
+tc 『他行口座帳簿』 pos
+tc 『営業店帳簿』 pos
+tc 『顧客帳簿』 pos
+tc 『伝票』 pos
+tc 『口座伝票』 pos
+tc 『普通預金口座開設伝票』 pos
+tc 『他行口座登録伝票』 pos
+tc 『定期預金伝票』 pos
+tc 『定期預金自動継続伝票』 pos
+tc 『定期預金満期処理伝票』 pos
+tc 『定期預金設定伝票』 pos
+tc 『定期預金訂正伝票』 pos
+tc 『定期預金取消伝票』 pos
+tc 『振込伝票』 pos
+tc 『他行口座からの振込伝票』 pos
+tc 『他行口座への振込伝票』 pos
+tc Time pos
+tc SetT pos
+tc Real pos
+tc MapT pos
+tc Date pos
+tc AllT pos
+tc Set pos
+tc Map pos
+i
+set ppr
+set sep
+set exception
+cr a := new AllT()
+d a.run()
+tcov write vdm.tc
+latex -r -N  AbstractUser.vpp
+latex -r -N  AllT.vpp
+latex -r -N  Author.vpp
+latex -r -N  BL_NewAccount.vpp
+latex -r -N  BL_NewAccountT.vpp
+latex -r -N  BL_NewSavingAccount.vpp
+latex -r -N  BL_NewSavingAccountT.vpp
+latex -r -N  BankAccount_Carton.vpp
+latex -r -N  BankAccount_ItemValidator.vpp
+latex -r -N  BankAccount__Exception.vpp
+latex -r -N  Book.vpp
+latex -r -N  BookInstance.vpp
+latex -r -N  BusinessObject.vpp
+latex -r -N  Calendar.vpp
+latex -r -N  CalendarT.vpp
+latex -r -N  Character.vpp
+latex -r -N  CommonDefinition.vpp
+latex -r -N  CommonDefinitionForBankAccount.vpp
+latex -r -N  Date.vpp
+latex -r -N  DateT.vpp
+latex -r -N  DoubleListQueue.vpp
+latex -r -N  DoubleListQueueT.vpp
+latex -r -N  Function.vpp
+latex -r -N  FunctionT.vpp
+latex -r -N  Hashtable.vpp
+latex -r -N  HashtableT.vpp
+latex -r -N  Integer.vpp
+latex -r -N  IntegerT.vpp
+latex -r -N  JapaneseCalendar.vpp
+latex -r -N  LentOut.vpp
+latex -r -N  Libarian.vpp
+latex -r -N  Library.vpp
+latex -r -N  LibraryCalendar.vpp
+latex -r -N  LibraryT.vpp
+latex -r -N  Map.vpp
+latex -r -N  MapT.vpp
+latex -r -N  Newton.vpp
+latex -r -N  NewtonT.vpp
+latex -r -N  Number.vpp
+latex -r -N  NumberT.vpp
+latex -r -N  Object
+latex -r -N  Person.vpp
+latex -r -N  Product.vpp
+latex -r -N  ProductT.vpp
+latex -r -N  Queue.vpp
+latex -r -N  QueueT.vpp
+latex -r -N  Real.vpp
+latex -r -N  RealT.vpp
+latex -r -N  Rule.vpp
+latex -r -N  SBCalendar.vpp
+latex -r -N  SBCalendarT.vpp
+latex -r -N  Sequence.vpp
+latex -r -N  SequenceT.vpp
+latex -r -N  Set.vpp
+latex -r -N  SetT.vpp
+latex -r -N  Slip.vpp
+latex -r -N  String.vpp
+latex -r -N  StringT.vpp
+latex -r -N  Subject.vpp
+latex -r -N  Term.vpp
+latex -r -N  TermT.vpp
+latex -r -N  TestCase.vpp
+latex -r -N  TestDriver.vpp
+latex -r -N  TestLogger.vpp
+latex -r -N  Time.vpp
+latex -r -N  TimeT.vpp
+latex -r -N  UniqueSequence.vpp
+latex -r -N  UniqueSequenceT.vpp
+latex -r -N  User.vpp
+latex -r -N  gofo_applicationException.vpp
+latex -r -N  gofo_bizLogic.vpp
+latex -r -N  gofo_bizLogicReturn.vpp
+latex -r -N  gofo_book.vpp
+latex -r -N  gofo_carton.vpp
+latex -r -N  gofo_db.vpp
+latex -r -N  gofo_exception.vpp
+latex -r -N  gofo_itemValidator.vpp
+latex -r -N  gofo_relationship.vpp
+latex -r -N  gofo_slip.vpp

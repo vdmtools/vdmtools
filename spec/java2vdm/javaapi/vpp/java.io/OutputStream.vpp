@@ -1,0 +1,66 @@
+class JavaIoOutputStream is subclass of JavaLangObject
+--uselib "j2vdll.so"
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaIoOutputStream" , <CLASS> , false  )
+operations 
+
+JavaIoOutputStream: <NIL> ==> JavaIoOutputStream
+JavaIoOutputStream(-) ==
+isNil:=true;
+
+public  close : () ==> ()
+close() == 
+( skip 
+) ;
+
+public  flush : () ==> ()
+flush() == 
+( skip 
+) ;
+
+public  write : int  ==> ()
+write(b) == 
+is not yet specified; 
+
+public  write1 : map  int  to  int  ==> ()
+write1(b) == 
+( write2(b , 0 , (card  dom  b));
+  skip 
+) ;
+
+public  write2 : map  int  to  int  * int  * int  ==> ()
+write2(b, off, len__) == 
+( if  b = {|->}
+  then  
+    ( exit  new  JavaLangNullPointerException()
+    ) 
+  else  
+    if  (off < 0) or  (off > (card  dom  b)) or  (len__ < 0) or  ((off+len__) > (card  dom  b)) or  ((off+len__) < 0)
+    then  
+      ( exit  new  JavaLangIndexOutOfBoundsException()
+      ) 
+    else  
+      if  len__ = 0
+      then  
+        ( return  
+        ) ;
+  ( dcl   i : int  := 0;
+    while  i < len__ do  
+    ( 
+      write(b(off+i));
+      i := i+1
+    ) 
+  ) ;
+  skip 
+) ;
+
+--public  JavaIoOutputStream : <NIL> ==> JavaIoOutputStream
+--JavaIoOutputStream(-) == 
+--isNil := true  ;
+
+--public  getClass : () ==> JavaLangClass
+--getClass() == 
+--return  CLASS;
+
+
+end  JavaIoOutputStream

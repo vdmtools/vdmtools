@@ -1,0 +1,20 @@
+class Expr is subclass of VisitorAcceptor, RuleToken
+operations 
+public  toPostfix : () ==> [String]
+toPostfix() == 
+is subclass responsibility ;
+
+public  doTask : [TokenStack] ==> <VOID>
+doTask(stack) == 
+is subclass responsibility ;
+
+public  accept : [ExprVisitor] ==> <VOID>
+accept(visitor) == 
+is subclass responsibility ;
+
+public  evaluate : [ExpressionContext] ==> [Object]
+evaluate(context) == 
+is subclass responsibility ;
+
+
+end  Expr

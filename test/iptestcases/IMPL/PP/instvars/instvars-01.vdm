@@ -1,0 +1,48 @@
+class A
+
+instance variables
+  b        : bool := true;
+  k        : nat  := 10;
+  j        : nat  := 20;
+  l        : nat  := 30;
+  m        : nat  := 40;
+  q        : <YES> | <NO> := <YES>;
+instance variables
+  n1 : nat1 :=1;
+  i  : int  :=-5;
+  ra : rat  := 1.25;
+  r  : real := -2.7;
+  ch : char := 'a';
+  i_s: ISet := {-1,8};
+  n_l: NSeq := [1,2];
+  c_m: CMap := {'q' |-> 25};
+  tup: bool * set of nat := mk_(false, {100});
+  rec: Rec  := mk_Rec(2, "Test");
+  uni: ISet | nat := 88;
+
+types
+  ISet = set of int;
+  NSeq = seq of nat;
+  CMap = map char to nat;
+  Rec  :: a : nat
+          b : seq1 of char;
+
+  StateType = bool * nat * nat * nat * nat * (<YES> | <NO>) * 
+              nat1 * int * rat * real * char *  ISet * NSeq * 
+              CMap * (bool * set of nat) * (nat * seq1 of char) * 
+              (ISet | nat)
+
+operations
+
+  
+public  Test:() ==> StateType
+  Test ()  ==
+    return mk_(b,k,j,l,m,q,n1,i,
+               ra,r,ch,i_s,n_l,c_m,tup,
+               mk_(rec.a, rec.b),uni)
+
+end A
+
+class B is subclass of A
+
+end B

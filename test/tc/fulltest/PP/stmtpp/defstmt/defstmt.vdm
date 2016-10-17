@@ -1,0 +1,39 @@
+class DefStmtTest
+
+types
+
+  public A :: selid : nat
+       sel2 : bool
+
+operations
+
+  Def1(arg : nat) dummy : nat ==
+  def a = 7 in return a + arg;
+
+  Def2() dummy : nat | bool ==
+  def b = true;
+      n = Def1(7)
+  in 
+    if b
+    then return n
+    else return b;
+
+  Def3() dummy : nat | bool ==
+  def mk_A(n,b) = mk_A(7,5) 
+  in 
+    if b
+    then return n
+    else return b;
+
+  Def4() dummy : nat ==
+  def mk_(a,b) = mk_(8,9) in return a;
+
+  Def5(arg1:A, arg2:nat) dummy : nat | bool ==
+  def mk_A(n,b) = arg1
+  in 
+    if b
+    then return n
+    else return b
+
+
+end DefStmtTest

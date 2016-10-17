@@ -1,0 +1,43 @@
+class C
+
+instance variables
+
+i : nat := 0;
+b : bool;
+
+operations
+
+  C: nat ==> C
+  C(n) ==
+    i := n;
+
+  public
+  C: nat * bool ==> C
+  C(n,b2) ==
+    (b := b2;
+     i := n);
+    
+public Get : () ==> nat
+Get() ==
+  return i;
+    
+public Get2 : () ==> bool
+Get2() ==
+  return b;
+  
+end C
+
+class B
+
+operations
+
+Op:() ==> nat * bool
+Op() ==
+  (let c = new C(5,true) in
+   return mk_(c.Get(),c.Get2()));
+
+public Test : () ==> nat * bool
+Test() ==
+  Op();
+  
+end B

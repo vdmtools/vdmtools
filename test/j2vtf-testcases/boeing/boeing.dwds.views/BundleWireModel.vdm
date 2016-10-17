@@ -1,0 +1,43 @@
+class BundleWireModel is subclass of WireTableModel
+operations 
+public  BundleWireModel : () ==> BundleWireModel
+BundleWireModel() == 
+( let - = WireTableModel()
+  in 
+    skip 
+) ;
+
+public  update : [Object] ==> bool 
+update(contextChanges) == 
+( dcl   changes : [ContextSet] := contextChanges;
+  if  changes.contains(ContextTypes`BUNDLE)
+  then  
+    ( return  true  
+    ) 
+  else  
+    ( return  false  
+    ) 
+) ;
+
+protected  getWiresToInclude : () ==> [Vector]
+getWiresToInclude() == 
+( dcl   wireList : [Vector] := new  Vector(),
+        curBundle : [Bundle] := context.getCurrentContextFieldObject(ContextTypes`BUNDLE);
+  if  curBundle <> nil  
+  then  
+    ( dcl   bundleWires : map  int  to  [Wire] := curBundle.getAllWires();
+      wireList := new  Vector(bundleWires.length);
+      ( dcl   i : int  := 0;
+        while  i < bundleWires.length do  
+        ( let - = wireList.addElement(bundleWires(i))
+          in 
+            skip ;
+          i := i+1
+        ) 
+      ) 
+    ) ;
+  return  wireList
+) ;
+
+
+end  BundleWireModel

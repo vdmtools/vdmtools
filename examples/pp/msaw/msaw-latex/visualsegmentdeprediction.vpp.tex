@@ -1,0 +1,28 @@
+
+
+
+
+
+
+
+
+
+
+
+\begin{vdm}\index{VisualSegmentDePrediction|ClassDef}
+{\small\sf class} $VisualSegmentDePrediction$  \kISO $\index{SegmentDePrediction|ClassOcc}SegmentDePrediction$
+\begin{methdef}\index{Set|MethodDef}
+\begin{method}{Set}
+\parms{modeA' : ModeA\index{ModeA|TypeOcc}, positions : Temps\index{Temps|TypeOcc} \Gmap \Lp Coordonnees\index{Coordonnees|TypeOcc} \X Pieds\index{Pieds|TypeOcc} \Rp , bulletin-meteo :  @BulletinMeteo, view' :  @View} \Fdef\\ \begin{blockstmt}
+\invoke{\self }{\index{SegmentDePrediction`Set|MethodOcc}
+\fnapply{SegmentDePrediction`Set}{modeA', positions, bulletin-meteo}} ; \\
+\invoke{view'}{\index{ShowSegmentDePrediction|MethodOcc}
+\fnapply{ShowSegmentDePrediction}{xy-queue, xy-tete}}
+\end{blockstmt}
+\begin{precond} \Card  \Dom positions \Ge 2
+\end{precond}
+\end{method}
+\end{methdef}
+{\small\sf end} $VisualSegmentDePrediction$
+
+\end{vdm}

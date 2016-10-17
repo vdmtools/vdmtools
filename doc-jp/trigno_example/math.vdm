@@ -1,0 +1,13 @@
+dlmodule MATH
+  exports
+    functions
+      ExtCos : real -> real;
+      ExtSin : real -> real  
+      
+   values   
+      ExtPI : real
+  
+   uselib
+      "math.dll" 
+
+end MATH

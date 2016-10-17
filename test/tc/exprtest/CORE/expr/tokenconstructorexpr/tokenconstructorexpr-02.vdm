@@ -1,0 +1,11 @@
+class TokenTest
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> bool
+TestOP() ==
+  return mk_token(8);
+
+------------------------------------------------------------------------------
+end TokenTest

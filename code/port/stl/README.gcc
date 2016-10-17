@@ -1,0 +1,104 @@
+Note for GCC users
+
+Last updated : Sept 29, 1997
+------------------------------------------------------------------------
+
+EGCS version
+
+The latest officially released gcc version is gcc-2.7.2. Althought it does
+work with the adaptation, it has poor template support compared to other
+modern compilers. You may want to use experimental gcc releases/snapshots
+from Cygnus "egcs" project. Based on gcc-2.8.0 development tree, it
+provides better template support than many modern commercial compilers do.
+It features full-blown default template parameters, partial template
+specialization and member template methods. EGCS also offers greatly
+improved EH support.
+
+DISCLAIMER: you should be prepared to any kind of bugs if using egcs
+snapshots, as with any alpha software. You may want to wait until EGCS
+release is out (it is due "real soon now").
+
+The rest of this README doesn't apply to EGCS - it has none of that
+problems.
+
+( Note : you may encounter problems compiling with some FSF 2.8.0 snapshots
+due to bugs in partial template specialization. Just #define
+__STL_PARTIAL_SPECIALIZATION_BUG then ) .
+
+Workaround strategy
+
+To address GCC inability to auto-instantiate static template data members,
+the following workaround introduced:
+
+Instantiations of required static data members provided in corresponing
+headers under #ifdef __PUT_STATIC_DATA_MEMBERS_HERE ( luckily, in this
+version of STL their amount doesn't depend on how many different
+instantiations you have ). You should #define
+__PUT_STATIC_DATA_MEMBERS_HERE in one of your compilation unit ( or specify
+it in CFLAGS for it ) before including any STL header. That should not
+affect 'good' compilers in any way.
+
+Moreover, gcc on platforms that use ELF object file format or GNU linker,
+will work without this hack. gcc's __attribute__((weak))__ used instead as
+workaround. That makes gcc usable in portable way with STL on many
+platforms ( Linux/Solaris/etc. ).
+
+------------------------------------------------------------------------
+
+Known problems
+
+Compiling
+
+See Migration notes.
+
+Linking
+
+When using __attribute__((weak))__ , you may run into linker errors like :
+'multiple definition of `global constructors keyed to
+__malloc_alloc_template<0>::oom_handler'.
+That indicates that you have defined some global objects in your source.
+gcc then produce a bug treating weak symbol declared in header as real
+global.
+The workaround is simple : just put some dummy global variable before
+including STL headers. That worked for me.
+Another way is to #define __STL_WEAK_ATTRIBUTE 0 in stlconf.h and use
+__PUT_STATIC_DATA_MEMBERS_HERE scheme described above.
+
+On some non-ELF systems (SunOS 4.x) "configure" sets __STL_WEAK_ATTRIBUTE.
+Unfortunately, this won't work unless you are using GNU linker. To justify
+this, #define __STL_WEAK_ATTRIBUTE 0 in stlconf.h and use
+__PUT_STATIC_DATA_MEMBERS_HERE scheme described above.
+
+You may have troubles getting _linker_ errors compiling complex cases
+without -frepo. If that problem occurs, try -frepo flag. This flag is
+generally preferred unless you are compiling really short examples. Be sure
+to supply -frepo switch on the link stage, too.
+
+------------------------------------------------------------------------
+
+Migration notes
+
+You may have to define operators ==() and <() on all classes you are using
+with most containers, even if they are not really used. That is the gcc
+bug. Another bug is that gcc won't find this operators defined in base
+class, you have to redefine them. Don't define any of !=(),>(),<=(),>=;()
+operators for your classes - gcc have bugs in resolution and report that as
+ambiguity with templates in function.h.
+
+If you use <string> from libg++ the described problem of the definition of
+!=, >, <= and >= occurs: something like: "ambiguous template instantiation
+in sinst.h" The concrete solution is to disable the definitions of those
+operators in g++-include/std/sinst.h (line 59):
+
+__DOB (==)
+//__DOB (!=)
+__DOB (>)
+//__DOB (>)
+//__DOB (<=)
+//__DOB (<=)
+//__DOB (>=)
+
+This would be a general fix due to gcc problems. The other possible
+solution is to #include <string> after STL headers.
+
+------------------------------------------------------------------------

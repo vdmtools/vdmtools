@@ -1,0 +1,19 @@
+class UnaryTest
+types
+
+  UnionType :: seq of UnionType;
+
+  EmptyType ::
+  
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = dunion {{1,true},{3,8.9},{nil}}
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

@@ -1,0 +1,171 @@
+\section{The J2VTYPE Module}
+
+\begin{vdm_al}
+module J2VTYPE
+
+imports
+  from AS all,
+  from CPP all,
+  from CI all,
+  from REP all,
+  from JSSREP all,
+  from J2VNS all,
+  from J2VBVDM all,
+  from J2VCLASS
+    values
+      v_null: AS`QuoteLit
+
+exports
+  operations
+    GetTypeForArray:  seq1 of CPP`DeclSpecifier ==> AS`Type;
+
+  functions
+    J2VType: CPP`TypeSpecifier +> AS`Type;
+    GetPureType: AS`Type +> AS`Type;
+    J2VSimpleTypeName: CPP`SimpleTypeName +> AS`Type;
+    J2VClassTypeName: CPP`PackageName | CPP`CompleteClassName +> AS`Name;
+    GetTypeAndNameForArray: AS`Type * CPP`Declarator +> CPP`Identifier * AS`Type;
+    GetDefaultVal: AS`Type +> AS`Expr;
+    GenArrayType: AS`Type +> AS`Type;
+
+definitions
+
+operations
+
+\end{vdm_al}
+
+The operation constructs AS`Type from a CPP`TypeSpecifier.
+If constructed type turns to be a AS`TypeName
+then the operation makes as optional type.
+
+\begin{vdm_al}
+
+functions
+  J2VType: CPP`TypeSpecifier +> AS`Type
+  J2VType(p_type) ==
+    let l_type' = J2VSimpleTypeName(p_type.tp),
+        l_type = l_type'
+    in l_type;
+
+  GetPureType: AS`Type +> AS`Type
+  GetPureType(p_type) ==
+    p_type;
+
+\end{vdm_al}
+
+The operation constructs AS`Type
+from the TypeSpecifier followed by a list of ArraySpecifiers.
+
+The operation is used to construct range type of an operation.
+
+\begin{vdm_al}
+
+operations
+  GetTypeForArray:  seq1 of CPP`DeclSpecifier ==> AS`Type
+  GetTypeForArray(p_decls) ==
+  ( dcl l_type: AS`Type := J2VType(hd p_decls);
+    for all i in set inds tl p_decls do
+      l_type := GenArrayType(l_type);
+    return l_type
+  )
+  pre is_CPP`TypeSpecifier(hd p_decls);
+
+functions
+
+\end{vdm_al}
+
+Returns VDM++ type name corresponding to the JAVA type \texttt{p\_type}
+
+\begin{vdm_al}
+
+  J2VSimpleTypeName: CPP`SimpleTypeName +> AS`Type
+  J2VSimpleTypeName(p_type) ==
+    cases true:
+      (is_CPP`Bool(p_type))   -> J2VBVDM`GenBasicType(<BOOLEAN>),
+      (is_CPP`Char(p_type))   -> J2VBVDM`GenBasicType(<CHAR>),
+      (is_CPP`Short(p_type))  -> J2VBVDM`GenBasicType(<INTEGER>),
+      (is_CPP`Int(p_type))    -> J2VBVDM`GenBasicType(<INTEGER>),
+      (is_CPP`Byte(p_type))   -> J2VBVDM`GenBasicType(<INTEGER>),
+      (is_CPP`Long(p_type))   -> J2VBVDM`GenBasicType(<INTEGER>),
+      (is_CPP`Float(p_type))  -> J2VBVDM`GenBasicType(<REAL>),
+      (is_CPP`Double(p_type)) -> J2VBVDM`GenBasicType(<REAL>),
+      others                  -> let p_tn=J2VClassTypeName(p_type)
+                                 in J2VBVDM`GenTypeName(p_tn)
+    end;
+
+\end{vdm_al}
+
+For the time being, returns pure class name skipping any qualifications.
+
+\begin{vdm_al}
+
+  J2VClassTypeName: CPP`PackageName | CPP`CompleteClassName +> AS`Name
+  J2VClassTypeName(p_name) == 
+    cases true:
+      (is_CPP`QualifiedPackageName(p_name))             -> J2VClassTypeName(p_name.id),
+      (is_CPP`SimplePackageName(p_name))                -> J2VNS`J2VClassName(p_name.id),
+      (is_CPP`Identifier(p_name)),
+      (is_CPP`ClassResScopeQualifiedClassName(p_name)),
+      (is_CPP`ResScopeQualifiedClassName(p_name))       -> J2VNS`J2VClassName(p_name),
+      others -> undefined
+    end;
+
+\end{vdm_al}
+
+Having a VDM++ type and a Java declarator the operation
+returns the Java identifier declared by the declarator
+and possibly the corrected VDM++ type
+(if an array was declared in Java).
+
+If the type of array elements is not a basic one, the operation make optional type.
+This is done to use nil as initial value for array elements.
+
+\begin{vdm_al}
+
+  GetTypeAndNameForArray:  AS`Type * CPP`Declarator +> CPP`Identifier * AS`Type
+  GetTypeAndNameForArray(p_type, p_decl) ==
+    cases true:
+      (is_CPP`ArrayDecl(p_decl)) -> GetTypeAndNameForArray(GenArrayType(p_type),p_decl.decl),
+      others -> mk_(p_decl, p_type)
+    end;
+
+\end{vdm_al}
+
+The function constructs AS`Type representing arrays of elements of p\_type type.
+
+\begin{vdm_al}
+
+GenArrayType: AS`Type +> AS`Type
+GenArrayType(p_type) ==
+-- J2VBVDM`GenSeq0Type(
+--  if is_(l_type,AS`Seq0Type) or is_(l_type,AS`BasicType)
+--  p_type);
+  J2VBVDM`GenGeneralMapType(J2VBVDM`GenBasicType(<INTEGER>),
+--    if is_(p_type,AS`GeneralMapType) or is_(p_type,AS`BasicType)
+--    then
+      p_type
+--    else
+--      J2VBVDM`GenOptionalType(p_type)
+  );
+  
+GetDefaultVal: AS`Type +> AS`Expr
+GetDefaultVal(p_type) ==
+  cases p_type:
+    mk_AS`BooleanType(-)        -> mk_AS`BoolLit(false,CI`NilContextId),
+    mk_AS`NumericType(l_type,-) -> cases l_type:
+                                     <NATONE>  ->  mk_AS`RealLit(1,CI`NilContextId),
+                                     <NAT>,
+                                     <INTEGER>,
+                                     <RAT>,
+                                     <REAL>    ->  mk_AS`RealLit(0,CI`NilContextId)
+                                   end,
+    mk_AS`CharType(-)           ->  mk_AS`CharLit(' ',CI`NilContextId),
+    others                      -> J2VBVDM`GenNewExpr(p_type.name,[J2VCLASS`v_null]) -- J2VBVDM`GenNilLit();
+  end;
+
+end J2VTYPE
+\end{vdm_al}
+
+\begin{rtinfo}
+{rtinfo.ast}[J2VTYPE]
+\end{rtinfo}

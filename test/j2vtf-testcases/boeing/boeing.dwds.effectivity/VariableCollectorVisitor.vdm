@@ -1,0 +1,138 @@
+class VariableCollectorVisitor is subclass of ExprVisitor
+operations 
+public  getCollectedNames : () ==> [Collection]
+getCollectedNames() == 
+( return  varNameMap.keySet()
+) ;
+
+public  clearCollectedNames : () ==> <VOID>
+clearCollectedNames() == 
+( let - = varNameMap.clear()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  VariableCollectorVisitor : () ==> VariableCollectorVisitor
+VariableCollectorVisitor() == 
+( varNameMap := new  HashMap()
+) ;
+
+public  getVariableType : [String] ==> [Class]
+getVariableType(varName) == 
+( return  varNameMap.get(varName)
+) ;
+
+public  visitStringExpr : [StringExpr] ==> <VOID>
+visitStringExpr(expr) == 
+( if  is_ (expr,[StringVariable])
+  then  
+    ( let - = addVariableName(expr)
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+private  addVariableName : [ExprVariable] ==> <VOID>
+addVariableName(variable) == 
+( dcl   variableName : [String] := variable.getVariableName(),
+        variableType : [Class] := determineVariableType(variable);
+  if  not  varNameMap.containsKey(variableName)
+  then  
+    ( let - = varNameMap.put(variableName , variableType)
+      in 
+        skip 
+    ) 
+  else  
+    ( if  not  variableType.equals(varNameMap.get(variableName))
+      then  
+        ( dcl   sb : [StringBuffer] := new  StringBuffer(128);
+          let - = sb.append(new  String("Duplicate Effectivity Variables -- Variable is '"))
+          in 
+            skip ;
+          let - = sb.append(variableName)
+          in 
+            skip ;
+          let - = sb.append(new  String("First Occurance Type is: "))
+          in 
+            skip ;
+          let - = sb.append(varNameMap.get(variableName).toString())
+          in 
+            skip ;
+          let - = sb.append(new  String(", Second Occurance Type is: "))
+          in 
+            skip ;
+          let - = sb.append(variableType)
+          in 
+            skip ;
+          ( dcl   e : [RuntimeException] := new  RuntimeException(sb.toString());
+            let - = System.err.println(e)
+            in 
+              skip ;
+            let - = e.printStackTrace(System.err)
+            in 
+              skip ;
+            exit  e
+          ) 
+        ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  visitBooleanExpr : [BooleanExpr] ==> <VOID>
+visitBooleanExpr(expr) == 
+( if  is_ (expr,[BooleanVariable])
+  then  
+    ( let - = addVariableName(expr)
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+public  visitIntegerExpr : [IntegerExpr] ==> <VOID>
+visitIntegerExpr(expr) == 
+( if  is_ (expr,[IntegerVariable])
+  then  
+    ( let - = addVariableName(expr)
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+private  determineVariableType : [ExprVariable] ==> [Class]
+determineVariableType(variable) == 
+( dcl   varType : [Class] := nil  ;
+  if  is_ (variable,[BooleanVariable])
+  then  
+    ( varType := new  Boolean(true  ).getClass()
+    ) 
+  else  
+    if  is_ (variable,[IntegerVariable])
+    then  
+      ( varType := new  Integer(0).getClass()
+      ) 
+    else  
+      if  is_ (variable,[StringVariable])
+      then  
+        ( varType := new  String().getClass()
+        ) 
+      else  
+        ( dcl   e : [RuntimeException] := new  RuntimeException(new  String("Unknown ExprVariable type: ")+variable.getVariableName());
+          let - = System.err.println(e)
+          in 
+            skip ;
+          let - = e.printStackTrace(System.err)
+          in 
+            skip ;
+          exit  e
+        ) ;
+  return  varType
+) ;
+
+instance variables 
+  private  varNameMap : [Map] := nil  
+  
+end  VariableCollectorVisitor

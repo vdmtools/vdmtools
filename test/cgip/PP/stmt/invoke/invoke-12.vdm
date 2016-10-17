@@ -1,0 +1,45 @@
+class A
+
+instance variables
+  n : nat := 0;
+
+operations
+
+
+public  GetN: () ==> nat
+  GetN() ==
+    return n;
+
+public  SetN: nat ==> ()
+  SetN(v) ==
+    n := v;
+
+
+public  IncN: nat ==> A
+  IncN(n1) ==
+  ( dcl a : A := new A();
+    a.SetN(n1 + n);
+    return a );
+
+end A
+class B
+
+functions 
+  f: real -> real
+  f(x) ==
+    abs floor x
+
+operations
+
+
+public Test : () ==> seq of nat
+  Test() ==
+  ( dcl a   : A := new A(),
+        res : seq of nat :=[],
+        m   : map nat to nat :={|->};
+    m(1) := a.IncN(3).GetN();
+    res := res ^ [m(1)];
+    return res
+  )
+
+end B

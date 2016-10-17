@@ -1,0 +1,34 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of (nat | bool | map nat to nat)  
+Test () ==
+ return [
+    let a = if 10 <> f(10) then mk_C(10) else mk_AA(20) in
+      mu(a, i |-> 30).i
+    ] ^
+
+    let rec = 
+      mu (if 1 > 2 
+        then mk_A(10,20,true) 
+        else mk_B(10,false), b |-> { |-> })
+    in 
+      [rec.n, rec.b]
+
+
+types
+AA:: i : nat;
+C:: j : nat;
+
+A :: n: nat1
+     r : real
+     b : bool | <RED>;
+
+B :: n: real
+     b: [bool | map A to real]
+
+
+functions
+f: nat -> nat
+f(n) ==
+  n
+
+end A

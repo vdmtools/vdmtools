@@ -1,0 +1,8 @@
+rep-01 fail
+
+    f1: set of nat * set of nat -> bool
+and 
+    f1: set of nat * set of nat -> set of nat
+
+are defined in class C and A, respectively. 
+Class B is subclass of A,C ==>  conflicting return type (in C++ code).

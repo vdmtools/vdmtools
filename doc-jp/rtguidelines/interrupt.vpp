@@ -1,0 +1,205 @@
+\begin{vdm_al}
+class InterruptSimulator
+
+instance variables
+
+ib         : InterruptBuffer;
+isFinished : bool := false;
+t          : Timer := new Timer()
+\end{vdm_al}
+
+An initialization operation is provided to allow initialization of the
+shared interrupt buffer.
+
+\begin{vdm_al}
+operations
+
+public Init : InterruptBuffer ==> ()
+Init(b) == ib := b;
+\end{vdm_al}
+
+\begin{figure}
+\begin{center}
+\includegraphics[width=\textwidth]{abstractinterrupts.jpg}
+\end{center}
+\caption{Class Diagram of Interrupt Model\label{fig:inter}}
+\end{figure}
+
+The \texttt{IsFinished} operation is a simple synchronization point
+with no functionality.
+
+\begin{vdm_al}
+public IsFinished : () ==> ()
+IsFinished() == skip
+
+sync
+  per IsFinished => isFinished
+\end{vdm_al}
+
+The simulation of interrupts occurs in the interrupt simulator's
+thread. There the simulator repeatedly waits for a random period, and
+then executes an interrupt.
+
+\begin{vdm_al}
+thread
+
+( start(t);
+  for count = 1 to 10 do
+  ( let del in set {1000,...,5000} in
+    ( t.Alarm(del);
+      ib.SetInterrupt(new Interrupt())
+    );
+    isFinished := true;
+  )
+)
+
+end InterruptSimulator
+\end{vdm_al}
+
+Since this is an abstract model, the nature of the interrupt is not
+elaborated. In real models, subclasses of the Interrupt class could be
+used to represent different kinds of interrupt. For instance a missile
+arrival interrupt in a counter measures system might consist of an
+identifier for the interrupt.
+
+\begin{vdm_al}
+class Interrupt
+end Interrupt
+\end{vdm_al}
+
+\subsection{The Interrupt Handler}
+
+The interrupt handler class shown here is a skeleton which illustrates
+how interrupts can be handled. Interrupts are communicated to the
+handler via the interrupt buffer that is shared with the interrupt
+simulator.
+
+\begin{vdm_al}
+class InterruptHandler
+
+instance variables
+
+ib : InterruptBuffer
+\end{vdm_al}
+
+The \texttt{Init} operation is used to initialize the ib instance variable.
+
+\begin{vdm_al}
+operations
+
+public Init : InterruptBuffer ==> ()
+Init(b) == ib := b;
+\end{vdm_al}
+
+\texttt{HandleInterrupt} is used to handle specific interrupts. Since
+this is just a skeleton class, its definition is left undefined. The
+key observation is that this operation blocks until an interrupt is
+available. This is made possible by accessing the public instance
+variable \texttt{interrupt} of \texttt{ib} in the permission
+predicate. This is necessary since operation calls are not allowed in
+permission predicates.
+
+\begin{vdm_al}
+HandleInterrupt : Interrupt ==> ()
+HandleInterrupt(interrupt) == is not yet specified;
+
+sync
+
+per HandleInterrupt => ib.interrupt <> nil
+\end{vdm_al}
+
+The interrupt handler thread then repeatedly handles interrupts as
+they become available.
+
+\begin{vdm_al}
+thread
+  while true do
+    HandleInterrupt(ib.GetInterrupt())
+
+end InterruptHandler
+\end{vdm_al}
+
+\subsection{The Interrupt Buffer}
+
+The interrupt buffer is used by the interrupt simulator and interrupt
+handler to communicate. It is a one-place buffer, storing an interrupt
+object or a \texttt{nil} value, in the instance variable interrupt.
+
+\begin{vdm_al}
+class InterruptBuffer
+
+instance variables
+  public interrupt : [Interrupt] := nil
+\end{vdm_al}
+
+Note that this instance variable is public since it must be readable
+from within the interrupt handler.
+
+The only operations available are get and set operations for this
+single instance variable.
+
+\begin{vdm_al}
+operations
+
+public SetInterrupt : Interrupt ==> ()
+SetInterrupt(ni) ==
+  interrupt := ni;
+
+public GetInterrupt : () ==> Interrupt
+GetInterrupt() ==
+  return interrupt
+
+end InterruptBuffer
+\end{vdm_al}
+
+\subsection{Other Classes}
+
+The remaining classes consist of the \texttt{NormalActivity} class and the
+\texttt{World} class.  
+
+The \texttt{NormalActivity} class is an abstract representation
+of the system's normal behaviour when interrupts are not being
+handled. Again, since this is an abstract model, no real activity is
+described.
+
+\begin{vdm_al}
+class NormalActivity
+
+operations
+
+PerformActivity : () ==> ()
+PerformActivity () == skip
+
+thread
+  while true do
+    PerformActivity();
+
+end NormalActivity
+\end{vdm_al}
+
+The \texttt{World} class creates the various objects in the system,
+connects the shared buffer between the interrupt simulator and the
+interrupt handler, and starts the threads.
+
+\begin{vdm_al}
+class World
+
+instance variables
+
+ism : InterruptSimulator := new InterruptSimulator();
+ih  : InterruptHandler := new InterruptHandler();
+na  : NormalActivity := new NormalActivity();
+b   : InterruptBuffer := new InterruptBuffer();
+
+operations
+
+public Run : () ==> ()
+Run() ==
+( ism.Init(b);
+  ih.Init(b);
+  startlist({ism,ih,na});
+  ism.IsFinished();
+)
+
+end World
+\end{vdm_al}

@@ -1,0 +1,19 @@
+class A
+
+operations
+
+public
+Test: () ==> nat
+Test() ==
+  return B`f1[nat](7);
+
+end A
+class B
+
+functions
+
+static public
+f1[@A](n: @A) res: @A
+post res =9+  n;
+
+end B

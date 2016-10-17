@@ -1,0 +1,129 @@
+#
+# WHAT
+#    Makefile for the code generated VDM-SL sort example.
+# ID
+#    $Id: Makefile,v 1.24 2005/12/21 06:41:45 vdmtools Exp $
+# PROJECT
+#    Toolbox
+# COPYRIGHT
+#    (C) 2016 Kyushu University
+#
+# REMEMBER to change the macro VDMHOME to fit to your directory
+# structure.
+#
+# Note that this version of the code generator must be used 
+# with egcs version 1.1
+#
+
+OSTYPE=$(shell uname)
+
+VDMHOME = ../..
+VDMDE   = $(VDMHOME)/bin/vdmde
+
+INCL    = -I $(VDMHOME)/cg/include
+
+ifeq ($(strip $(OSTYPE)),Darwin)
+OSV = $(shell uname -r)
+OSMV = $(word 1, $(subst ., ,$(strip $(OSV))))
+CCPATH = /usr/bin/
+ifeq ($(strip $(OSMV)),12) # 10.8
+CC      = $(CCPATH)clang++
+else
+ifeq ($(strip $(OSMV)),11) # 10.7
+CC      = $(CCPATH)clang++
+else
+ifeq ($(strip $(OSMV)),10) # 10.6
+CC      = $(CCPATH)g++
+else
+ifeq ($(strip $(OSMV)),9) # 10.5
+CC      = $(CCPATH)g++-4.2
+else
+ifeq ($(strip $(OSMV)),8) # 10.4
+CC      = $(CCPATH)g++-4.0
+else
+CC      = $(CCPATH)g++
+endif
+endif
+endif
+endif
+endif
+LIB     = -L$(VDMHOME)/cg/lib -lCG -lvdm -lm -liconv
+endif
+
+ifeq ($(strip $(OSTYPE)),Linux)
+CCPATH = /usr/bin/
+CC      = $(CCPATH)g++
+LIB     = -L$(VDMHOME)/cg/lib -lCG -lvdm -lm 
+endif
+
+ifeq ($(strip $(OSTYPE)),SunOS)
+CCPATH = /usr/sfw/bin/
+CC      = $(CCPATH)g++
+LIB     = -L$(VDMHOME)/cg/lib -L../../lib -lCG -lvdm -lm
+endif
+
+ifeq ($(strip $(OSTYPE)),FreeBSD)
+CCPATH = /usr/bin/
+CC      = $(CCPATH)g++
+LIB     = -L$(VDMHOME)/cg/lib -lCG -lvdm -lm -L/usr/local/lib -liconv
+endif
+
+CCFLAGS = -g -Wall
+
+OSTYPE2=$(word 1, $(subst _, ,$(strip $(OSTYPE))))
+ifeq ($(strip $(OSTYPE2)),CYGWIN)
+all: winmake
+else
+all: sort_ex
+endif
+
+winmake:
+	make -f Makefile.winnt
+
+sort_ex: sort.o sort_ex.o 
+	${CC}  $(CCFLAGS) -o sort_ex sort_ex.o sort.o ${LIB}
+
+sort_ex.o: sort_ex.cc
+	${CC}  $(CCFLAGS) -c -o sort_ex.o sort_ex.cc ${INCL} 
+
+#external_DefaultMod.cc
+sort.o: DefaultMod.h DefaultMod.cc 
+	${CC}  $(CCFLAGS) -c -o sort.o  DefaultMod.cc ${INCL} 
+
+DefaultMod.h DefaultMod.cc \
+DefaultMod_anonym.h DefaultMod_anonym.cc: sort.vdm
+	$(VDMDE) -c $^
+
+###########################################################
+#### Generation of postscript of the sort.tex document ####
+###########################################################
+
+SPECFILE = sort.vdm
+
+VDMLOOP = vdmloop
+
+GENFILES = sort.vdm.tex sort.vdm.log sort.vdm.aux sort.vdm.dvi \
+           sort.vdm.ps vdm.tc DefaultMod.h DefaultMod.cc \
+           DefaultMod_anonym.h DefaultMod_anonym.cc
+
+vdm.tc:
+	cd test; $(VDMLOOP)
+	cp -f test/$@ .
+
+%.tex: $(SPECFILE) vdm.tc
+	vdmde -lrNn $(SPECFILE)
+
+sort.vdm.ps: $(SPECFILE).tex
+	latex sort.vdm.tex
+	latex sort.vdm.tex
+	dvips sort.vdm.dvi -o
+
+###########################################################
+#### Clean                                             ####
+###########################################################
+
+clean: 
+	rm -f *~ *.o sort.o sort_ex.o sort_ex m4tag_rep
+	rm -f $(GENFILES)
+	rm -f *.cpp *.obj *.exe
+	cd test; rm -f vdm.tc *.res

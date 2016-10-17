@@ -1,0 +1,13 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ( set of nat | nat )  
+Test () ==
+return let mk_(a,b,c) in set {mk_(2,2,3), mk_(3,2,10), mk_(1,2)} 
+             be st c = 10 in 
+            [a,b,c] ^
+          let {a} in set {1, {{2}}, mk_(2,3)} in
+            [ a ] ^
+          let a in set {1,2,3,4} be st 
+            let b in set {2,4,5} be st b mod 2 = 0 and a + b >= 5 in true
+          in [a]
+
+end A

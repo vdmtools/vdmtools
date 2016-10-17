@@ -1,0 +1,33 @@
+module A
+   exports
+     types
+       typeA
+
+     functions
+       f1: nat -> nat;
+       f2: typeA -> nat
+
+   definitions
+     types 
+       typeA = nat
+       inv i == i > 0
+
+     functions
+       f1: nat -> nat
+       f1 (a) == a;
+
+       f2: typeA -> nat
+       f2 (b) == f1 (b)
+       pre b > 0
+end A
+
+module B
+  exports
+    types
+      typeB
+
+  definitions
+    types
+      typeB = nat
+      inv i == i < 42  
+end B

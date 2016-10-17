@@ -1,0 +1,176 @@
+class FieldTokenizer is subclass of Object
+operations 
+public  nextField : () ==> [String]
+nextField() == 
+( if  not  moreFieldsExist
+  then  
+    ( exit  new  NoSuchElementException()
+    ) 
+  else  
+    ( if  inStr.charAt(posn+1) = fieldDelimiter
+      then  
+        ( return  getDelimitedField()
+        ) 
+      else  
+        ( return  getUndelimitedField()
+        ) 
+    ) 
+) ;
+
+public  hasMoreFields : () ==> bool 
+hasMoreFields() == 
+( return  moreFieldsExist
+) ;
+
+private  getDelimitedField : () ==> [String]
+getDelimitedField() == 
+( dcl   inStrLength : int  := (card  dom  inStr)(),
+        field : [StringBuffer] := new  StringBuffer(inStrLength),
+        scanPosn : int  := posn+2,
+        subFieldStart : int  := scanPosn,
+        subFieldEnd : int  := subFieldStart,
+        delimiterSeen : bool  := false  ,
+        separatorFound : bool  := false  ,
+        previousWasDelimiter : bool  := false  ;
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  scanPosn < inStrLength and  not  separatorFound do  
+    ( dcl   curChar : char  := inStr.charAt(scanPosn);
+      if  delimiterSeen
+      then  
+        ( if  curChar = fieldSeparator
+          then  
+            ( separatorFound := true  
+            ) 
+          else  
+            if  curChar = fieldDelimiter
+            then  
+              ( delimiterSeen := false  ;
+                let - = field.append(inStr.substring(subFieldStart , scanPosn))
+                in 
+                  skip ;
+                subFieldStart := scanPosn+1;
+                subFieldEnd := subFieldStart
+              ) 
+            else  
+              ( previousWasDelimiter := false  
+              ) 
+        ) 
+      else  
+        ( if  curChar = fieldDelimiter
+          then  
+            ( delimiterSeen := true  ;
+              previousWasDelimiter := true  
+            ) 
+          else  
+            ( subFieldEnd := scanPosn+1
+            ) 
+        ) ;
+      scanPosn := scanPosn+1
+    ) ;
+  let - = field.append(inStr.substring(subFieldStart , subFieldEnd))
+  in 
+    skip ;
+  if  separatorFound
+  then  
+    ( trap  j2v_break with  
+        cases  true  : 
+          (isofclass  (J2V_Break,j2v_break)) -> 
+            skip 
+          
+        end  
+      in  
+        while  scanPosn < inStrLength and  Character`isWhitespace(inStr.charAt(scanPosn)) do  
+        ( scanPosn := scanPosn+1
+        ) ;
+      scanPosn := scanPosn-1;
+      if  scanPosn >= inStrLength
+      then  
+        ( moreFieldsExist := false  
+        ) 
+    ) 
+  else  
+    ( moreFieldsExist := false  
+    ) ;
+  posn := scanPosn;
+  return  field.toString()
+) ;
+
+private  getUndelimitedField : () ==> [String]
+getUndelimitedField() == 
+( dcl   inStrLength : int  := (card  dom  inStr)(),
+        field : [StringBuffer] := new  StringBuffer(inStrLength),
+        scanPosn : int  := posn,
+        separatorFound : bool  := false  ;
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  not  separatorFound and  scanPosn+1 < inStrLength do  
+    ( scanPosn := scanPosn+1;
+      if  inStr.charAt(scanPosn) = fieldSeparator
+      then  
+        ( separatorFound := true  
+        ) 
+      else  
+        ( let - = field.append(inStr.charAt(scanPosn))
+          in 
+            skip 
+        ) 
+    ) ;
+  if  not  separatorFound
+  then  
+    ( moreFieldsExist := false  
+    ) 
+  else  
+    ( trap  j2v_break with  
+        cases  true  : 
+          (isofclass  (J2V_Break,j2v_break)) -> 
+            skip 
+          
+        end  
+      in  
+        while  scanPosn+1 < inStrLength and  Character`isWhitespace(inStr.charAt(scanPosn+1)) do  
+        ( scanPosn := scanPosn+1
+        ) ;
+      if  scanPosn+1 >= inStrLength
+      then  
+        ( moreFieldsExist := false  
+        ) 
+    ) ;
+  posn := scanPosn;
+  return  field.toString().trim()
+) ;
+
+public  FieldTokenizer : [String] ==> FieldTokenizer
+FieldTokenizer(inStr) == 
+( let - = FieldTokenizer(inStr , '"' , ',')
+  in 
+    skip 
+) ;
+
+public  FieldTokenizer : [String] * char  * char  ==> FieldTokenizer
+FieldTokenizer(inStr, fieldDelimiter, fieldSeparator) == 
+( FieldTokenizer`inStr := inStr.trim();
+  FieldTokenizer`fieldDelimiter := fieldDelimiter;
+  FieldTokenizer`fieldSeparator := fieldSeparator;
+  FieldTokenizer`moreFieldsExist := (card  dom  inStr)() > 0;
+  FieldTokenizer`posn := -1
+) ;
+
+instance variables 
+  private  inStr : [String];
+  private  moreFieldsExist : bool ;
+  private  posn : int ;
+  private  fieldDelimiter : char ;
+  private  fieldSeparator : char 
+  
+end  FieldTokenizer

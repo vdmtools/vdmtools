@@ -1,0 +1,21 @@
+class A
+
+types
+public
+R :: a:int 
+     b:int 
+inv r == r.a < 10;
+
+R2 :: a:int 
+      b:int 
+inv r == r.a < 10;
+
+operations
+public t : int * int ==> bool
+t(i, j) ==inv_R(mk_R(i, j));
+
+public t2 : int * int ==> bool
+t2(i, j) ==inv_R(mk_R2(i, j));
+
+end A
+

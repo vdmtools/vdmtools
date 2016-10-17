@@ -1,0 +1,27 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+instance variables
+public  a: int := 0;
+functions
+
+public  op1: () -> int
+  op1() ==
+    op3();
+
+protected  op3: () -> int
+  op3() ==
+     is subclass responsibility
+end A
+
+class B is subclass of A
+
+functions
+protected  op3: () -> int
+  op3() ==
+     1;
+
+  public Test : () -> int
+  Test() ==
+    op1();
+
+end B

@@ -1,0 +1,41 @@
+##---------------------------------------------------------------
+##                    Make file for Linux
+##---------------------------------------------------------------
+
+#VDMLIB  = /opt/toolbox/cg/lib
+VDMLIB  = /local2/paulm/vice
+#INCL    = -I/opt/toolbox/cg/include
+INCL    = -I/local2/paulm/vice
+
+CC      = /opt/gcc-3.0.1/bin/g++
+LIB     =  -L$(VDMLIB) -lvdm -lm # -lstdc++ -lgcc 
+# -Wl,-Bstatic
+
+## Nothing below this line should be changed.
+
+all: libcylio.so libmath.so
+
+%.so:
+	${CC} -shared -fpic $(EXCEPTION) -v -o $@ $^ $(LIB)
+
+libcylio.so: cylio.o tcfcylio.o 
+
+cylio.o: cylio.cc
+	${CC} -c $(EXCEPTION) -fpic -o $@ $< ${INCL}
+
+tcfcylio.o: tcfcylio.cc
+	${CC} ${INCL} -c $(EXCEPTION) -fpic -o $@ $< 
+
+libmath.so: tcfmath.o
+
+tcfmath.o: tcfmath.cc
+	${CC} -c $(EXCEPTION) -fpic -o $@  $<  ${INCL}
+
+
+clean:
+	rm *.o *.so
+
+# target for debuging
+debug: cylio.o tcfcylio.o main.cc
+	${CC} -c main.cc -o main.o ${INCL}
+	${CC} -o debug cylio.o tcfcylio.o main.o $(LIB)

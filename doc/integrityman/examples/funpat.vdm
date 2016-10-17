@@ -1,0 +1,18 @@
+types
+
+A ::
+  a : nat;
+
+B ::
+  a : nat;
+
+functions
+
+FunPat: A | B -> nat
+FunPat(mk_A(elem)) ==
+  elem
+
+--PO
+--(forall xx_1 : (A | B) &
+--   (exists mk_A(elem) : (A | B) &
+--      xx_1 = mk_A(elem)))

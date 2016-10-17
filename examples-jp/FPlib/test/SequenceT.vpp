@@ -1,0 +1,471 @@
+\subsection{FSequenceT}
+FSequenceのテストを行う。
+
+\begin{vdm_al}
+--$Header: /home/vdmtools/cvsroot/toolbox/examples-jp/FPlib/test/SequenceT.vpp,v 1.1 2005/10/31 02:09:59 vdmtools Exp $
+class FSequenceT
+types
+public TestType = int|seq of char|char;
+public Record ::
+	v : int
+	str : seq of char
+	c : char;
+
+functions
+static public run : () +> bool
+run() == 
+let	testcases = 
+		[
+		t1(), t2() , t3() , t4() , t5() , t6() , t7() , t8(), t9(), t10(),
+		t11(), t12(), t13(), t14(), t15(), t16(), t17(), t18(), t19(), t20(),
+		t21(), t22(), t23(), t24()
+		]
+in
+FTestDriver`run(testcases);
+\end{vdm_al}
+
+\subsubsection{合計と積を検査する}
+\begin{vdm_al}
+static t1 : () -> FTestDriver`TestCase
+t1() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT01:\t 合計と積を検査する",
+	FSequence`Sum[int]([1,2,3,4,5,6,7,8,9]) = 45 and
+	FSequence`Sum[int]([]) = 0 and
+	FSequence`Prod[int]([2, 3, 4]) = 24 and
+	FSequence`Prod[int]([]) = 1and
+	FSequence`Sum[real]([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]) = 4.5 and
+	FSequence`Sum[real]([]) = 0.0 and
+	FSequence`Prod[real]([2.0, 3.0, 4.0]) = 24.0 and
+	FSequence`Prod[real]([]) = 1.0 and
+	FSequence`Prod[real]([2.1, 3.2, 4.3]) = 2.1 * 3.2 * 4.3)
+	;
+\end{vdm_al}
+
+\subsubsection{全順序昇順か？を検査する}
+\begin{vdm_al}
+static t2 : () -> FTestDriver`TestCase
+t2() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT02:\t 全順序昇順か？を検査する",
+	FSequence`IsAscending[int]([1,2,4,4,7,8,8,8]) and
+	not FSequence`IsAscending[real]([1.0,2.0,3.0,1.5]))
+	;
+\end{vdm_al}
+
+\subsubsection{全順序降順か？を検査する}
+\begin{vdm_al}
+static t3 : () -> FTestDriver`TestCase
+t3() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT03:\t 全順序降順か？を検査する",
+	FSequence`IsDescending[int]([3,2,2,1,1]) and
+	FSequence`IsDescendingInTotalOrder[int] (lambda x : int, y : int & x < y)([3,2,2,1,1]) and
+	FSequence`IsDescendingInTotalOrder[int] (lambda x : int, y : int & x < y)([3,2,2,1,2]) = false)
+	;
+\end{vdm_al}
+
+\subsubsection{順番になっているか？を検査する}
+\begin{vdm_al}
+static t4 : () -> FTestDriver`TestCase
+t4() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT04:\t 順番になっているか？を検査する",
+	let	sq = new FSequence(),
+		fs =
+			[(lambda x : int, y : int & x < y),
+			lambda x : seq of char, y : seq of char & FString`LT(x)(y),
+			lambda x : char, y : char & FCharacter`LT(x)(y)
+			],
+		f =
+			lambda x : Record, y : Record &
+				FSequence`IsOrdered[TestType]
+					(fs)([x.v,x.str,x.c])([y.v,y.str,y.c])
+	in
+	FSequence`Sort[Record](f)
+		([mk_Record(10,"sahara",'c'),mk_Record(10,"sahara",'a')]) =
+		[mk_Record(10,"sahara",'a'),mk_Record(10,"sahara",'c')] and
+	sq.IsOrdered[TestType](fs)([3,"123",'a'])([3,"123",'A']) = true and
+	sq.IsOrdered[TestType](fs)([3,"123",'a'])([3,"123",'0']) = false and
+	sq.IsOrdered[int|seq of char|char](fs)([])([]) = false and
+	sq.IsOrdered[int|seq of char|char](fs)([])([3,"123",'0']) = true and
+	sq.IsOrdered[int|seq of char|char](fs)([3,"123",'0'])([]) = false)
+	;
+\end{vdm_al}
+
+\subsubsection{マージを検査する}
+\begin{vdm_al}
+static t5 : () -> FTestDriver`TestCase
+t5() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT05:\t マージを検査する",
+	let	sq = new FSequence(),
+		f1 = lambda x : int, y : int & x < y,
+		f2 = lambda x : char, y : char & FCharacter`LT(x)(y)
+	in
+	sq.Merge[int](f1)([1,4,6])([2,3,4,5]) = [1,2,3,4,4,5,6] and
+	sq.Merge[char](f2)("146")("2345") = "1234456" and
+	sq.Merge[char](f2)("")("2345") = "2345" and
+	sq.Merge[char](f2)("146")("") = "146")
+	;
+\end{vdm_al}
+
+\subsubsection{文字列操作を検査する}
+\begin{vdm_al}
+static t6 : () -> FTestDriver`TestCase
+t6() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT06:\t 文字列操作を検査する",
+	let	sq = new FSequence()
+	in
+	sq.Take[int](2)([2,3,4,5]) = [2,3] and
+	sq.Drop[char](5)("Shin Sahara") = "Sahara" and
+	sq.Last[int]([1,2,3]) = 3 and
+	sq.Filter[int](lambda x:int & x mod 2 = 0)([1,2,3,4,5,6]) = [2,4,6] and
+	FSequence`SubSeq[char](4)(3)("1234567890") = "456" and
+	FSequence`Flatten[int]([[1,2,3], [3,4], [4,5,6]]) = [ 1,2,3,3,4,4,5,6 ])
+	;
+\end{vdm_al}
+
+\subsubsection{ソートを検査する}
+\begin{vdm_al}
+static t7 : () -> FTestDriver`TestCase
+t7() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT07:\t ソートを検査する",
+	FSequence`AscendingSort[int]([3,1,6,4,2,6,5]) = [1,2,3,4,5,6,6] and
+	FSequence`DescendingSort[int]([3,1,6,4,2,6,5]) = [6,6,5,4,3,2,1]) 
+	;
+\end{vdm_al}
+
+\subsubsection{空要素削除を検査する}
+\begin{vdm_al}
+static t8 : () -> FTestDriver`TestCase
+t8() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT08:\t 空要素削除を検査する",
+	FSequence`Compact[[int]]([3,1,6,4,nil,2,6,5,nil]) = [3,1,6,4,2,6,5] and
+	FSequence`Compact[[int]]([nil,nil]) = [] and
+	FSequence`Compact[[int]]([]) = []) 
+	;
+\end{vdm_al}
+
+\subsubsection{列の反転を検査する}
+\begin{vdm_al}
+static t9 : () -> FTestDriver`TestCase
+t9() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT09:\t 列の反転を検査する",
+	FSequence`Freverse[[int]]([3,1,6,4,nil,2,6,5,nil]) = [nil, 5, 6, 2, nil, 4, 6, 1, 3] and
+	FSequence`Freverse[[int]]([]) = [])
+	;
+\end{vdm_al}
+
+\subsubsection{順列を検査する}
+\begin{vdm_al}
+static t10 : () -> FTestDriver`TestCase
+t10() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT10:\t 順列を検査する",
+	FSequence`Permutations[[int]]([1,2,3]) =
+		{ [ 1,2,3 ],
+		  [ 1,3,2 ],
+		  [ 2,1,3 ],
+		  [ 2,3,1 ],
+		  [ 3,1,2 ],
+		  [ 3,2,1 ] } and
+	FSequence`Permutations[[int]]([1,2,2]) =
+		{ [ 1,2,2 ],
+		  [ 2,1,2 ],
+		  [ 2,2,1 ] } and
+	FSequence`Permutations[[bool]]([true, false]) =
+		{ [true, false],
+		  [false, true] } and
+	FSequence`Permutations[[int]]([]) = {[]} and
+	FSequence`IsPermutations[int]([1,2,3])([1,3,2]) and
+	FSequence`IsPermutations[int]([1,2,3])([2,1,3]) and
+	FSequence`IsPermutations[int]([1,2,3])([2,3,1]) and
+	FSequence`IsPermutations[int]([1,2,3])([3,1,2]) and
+	FSequence`IsPermutations[int]([1,2,3])([3,2,1]) and
+	FSequence`IsPermutations[int]([1,2,3])([3,2,2]) = false)
+	;
+\end{vdm_al}
+
+\subsubsection{列の要素か？を検査する}
+\begin{vdm_al}
+static t11 : () -> FTestDriver`TestCase
+t11() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT11:\t 列の要素か？を検査する",
+	FSequence`IsMember[int](2)([1,2,3,4,5,6]) and
+	FSequence`IsMember[int](0)([1,2,3,4,5,6]) = false and
+	FSequence`IsMember[int](6)([1,2,3,4,5,6]) and
+	FSequence`IsAnyMember[int]([6])([1,2,3,4,5,6]) and
+	FSequence`IsAnyMember[int]([0,7])([1,2,3,4,5,6]) = false and
+	FSequence`IsAnyMember[int]([4,6])([1,2,3,4,5,6]) and
+	FSequence`IsAnyMember[int]([])([1,2,3,4,5,6]) = false)
+	;
+\end{vdm_al}
+
+\subsubsection{Fmapを検査する}
+\begin{vdm_al}
+static t12 : () -> FTestDriver`TestCase
+t12() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT12:\t Fmapを検査する",
+	FSequence`Fmap[int, int](lambda x:int & x mod 3)([1,2,3,4,5])  = [1, 2, 0, 1, 2] and
+	FSequence`Fmap[seq of char, seq of char]
+		(FSequence`Take[char](2))(["Sahara", "Sakoh"]) = ["Sa", "Sa"])
+	;
+\end{vdm_al}
+
+\subsubsection{Index, IndexAllを検査する}
+\begin{vdm_al}
+static t13 : () -> FTestDriver`TestCase
+t13() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT13:\t Index, IndexAllを検査する",
+	let	index = FSequence`Index,
+		indexAll = FSequence`IndexAll
+	in
+	index[int](1)([1,2,3,4,5])  = 1 and
+	index[int](5)([1,2,3,4,5])  = 5 and
+	index[int](9)([1,2,3,4,5])  = 0 and
+	index[char]('b')(['a', 'b', 'c'])  = 2 and
+	index[char]('z')(['a', 'b', 'c'])  = 0 and
+	indexAll[int](9)([1,2,3,4,5]) = {} and
+	indexAll[int](9)([]) = {} and
+	indexAll[int](1)([1,2,3,4,1]) = {1,5} and
+	indexAll[int](1)([1,2,3,4,1,1]) = {1,5,6} )
+	;
+\end{vdm_al}
+
+\subsubsection{Averageを検査する}
+\begin{vdm_al}
+static t14 : () -> FTestDriver`TestCase
+t14() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT14:\t Averageを検査する",
+	let	avg1 = FSequence`Average[int],
+		avg2 = FSequence`Average[real]
+	in
+	avg1([]) = nil and
+	avg1([1,2,3,4]) = (1+2+3+4) / 4 and
+	avg2([1.3, 2.4, 3.5]) = 7.2 / 3)
+	;
+\end{vdm_al}
+
+\subsubsection{挿入を検査する}
+\begin{vdm_al}
+static t15 : () -> FTestDriver`TestCase
+t15() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT15:\t 挿入を検査する",
+	let	ins1 = FSequence`InsertAt[int],
+		ins2 = FSequence`InsertAt[char]
+	in
+	ins1(1)(1)([2,3,4,5]) = [1,2,3,4,5] and
+	ins1(3)(3)([1,2,4,5]) = [1,2,3,4,5] and
+	ins1(3)(3)([1,2]) = [1,2,3] and
+	ins1(4)(3)([1,2]) = [1,2,3] and
+	ins1(5)(3)([1,2]) = [1,2,3] and
+	ins2(1)('1')("2345") = "12345" and
+	ins2(3)('3')("1245") = "12345" and
+	ins2(3)('3')("12") = "123")
+	;
+\end{vdm_al}
+
+\subsubsection{削除を検査する}
+\begin{vdm_al}
+static t16 : () -> FTestDriver`TestCase
+t16() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT16:\t 削除を検査する",
+	let	rm1 = FSequence`RemoveAt[int],
+		rm2 = FSequence`RemoveAt[char]
+	in
+	rm1(1)([1,2,3,4,5]) = [2,3,4,5] and
+	rm1(3)([1,2,4,3]) = [1,2,3] and
+	rm1(3)([1,2]) = [1,2] and
+	rm1(4)([1,2]) = [1,2] and
+	rm1(5)([1,2]) = [1,2] and
+	rm2(1)("12345") = "2345" and
+	rm2(3)("1243") = "123" and
+	rm2(3)("12") = "12")
+	;
+\end{vdm_al}
+
+\subsubsection{更新を検査する}
+\begin{vdm_al}
+static t17 : () -> FTestDriver`TestCase
+t17() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT17:\t 更新を検査する",
+	let	up1 = FSequence`UpdateAt[int],
+		up2 = FSequence`UpdateAt[char]
+	in
+	up1(1)(10)([1,2,3,4,5]) = [10,2,3,4,5] and
+	up1(3)(40)([1,2,4,3]) = [1,2,40,3] and
+	up1(2)(30)([1,2]) = [1,30] and
+	up1(3)(30)([1,2]) = [1,2] and
+	up1(4)(30)([1,2]) = [1,2] and
+	up2(1)('a')("12345") = "a2345" and
+	up2(3)('b')("1243") = "12b3" and
+	up2(3)('c')("123") = "12c" and
+	up2(3)('c')("12") = "12")
+	;
+\end{vdm_al}
+
+\subsubsection{複数削除を検査する}
+\begin{vdm_al}
+static t18 : () -> FTestDriver`TestCase
+t18() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT18:\t 複数削除を検査する",
+	let	removeDup = FSequence`RemoveDup[int],
+		removeMember = FSequence`RemoveMember[int],
+		removeMembers = FSequence`RemoveMembers[int]
+	in
+	removeDup([]) = [] and
+	removeDup([1,1,2,2,2,3,4,4,4,4]) = [1,2,3,4] and
+	removeDup([1,2,3,4]) = [1,2,3,4] and
+	removeMember(1)([]) = [] and
+	removeMember(1)([1,2,3]) = [2,3] and
+	removeMember(4)([1,2,3]) = [1,2,3] and
+	removeMembers([])([]) = [] and
+	removeMembers([])([1,2,3]) = [1,2,3] and
+	removeMembers([1,2,3])([]) = [] and
+	removeMembers([1,2,3])([1,2,3]) = [] and
+	removeMembers([1,4,5])([1,2,3,4]) = [2,3]  and
+	removeMembers([1,4,5])([1,2,3,4,1,2,3,4,1]) = [2,3,1,2,3,4,1] )
+	;
+\end{vdm_al}
+
+\subsubsection{zipを検査する}
+\begin{vdm_al}
+static t19 : () -> FTestDriver`TestCase
+t19() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT19:\t zipを検査する",
+	let	zip = FSequence`Zip[int, char],
+		zip2 = FSequence`Zip2[int,char],
+		unzip = FSequence`Unzip[int, char]
+	in
+	zip([], []) = [] and
+	zip([1,2,3], ['a', 'b', 'c']) = [mk_(1, 'a'), mk_(2, 'b'), mk_(3, 'c')] and
+	zip([1,2], ['a', 'b', 'c']) = [mk_(1, 'a'), mk_(2, 'b')] and
+	zip([1,2,3], ['a', 'b']) = [mk_(1, 'a'), mk_(2, 'b')] and
+	zip2([])([]) = [] and
+	zip2([1,2,3])(['a', 'b', 'c']) = [mk_(1, 'a'), mk_(2, 'b'), mk_(3, 'c')] and
+	unzip([]) = mk_([], []) and
+	unzip([mk_(1, 'a'), mk_(2, 'b'), mk_(3, 'c')]) = mk_([1,2,3], ['a', 'b', 'c'])) 
+	;
+\end{vdm_al}
+
+\subsubsection{Spanを検査する}
+\begin{vdm_al}
+static t20 : () -> FTestDriver`TestCase
+t20() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT20:\t Spanを検査する",
+	let	span = FSequence`Span[int],
+		p1 = lambda x : int & x mod 2 = 0,
+		p2 = lambda x : int & x < 10
+ 	in
+	span(p1)([]) = mk_([], []) and
+	span(p1)([2,4,6,1,3]) = mk_([2,4,6], [1,3]) and
+	span(p2)([1,2,3,4,5]) = mk_([1,2,3,4,5], []) and
+	span(p2)([1,2,12,13,4,15]) = mk_([1,2], [12,13,4,15]))
+	;
+\end{vdm_al}
+
+\subsubsection{TakeWhile, DropWhileを検査する}
+\begin{vdm_al}
+static t21 : () -> FTestDriver`TestCase
+t21() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT21:\t TakeWhile, DropWhileを検査する",
+	let	TakeWhile = FSequence`TakeWhile[int],
+		DropWhile = FSequence`DropWhile[int],
+		p1 = lambda x : int & x mod 2 = 0
+ 	in
+	TakeWhile(p1)([]) = [] and
+	TakeWhile(p1)([2,4,6,8,1,3,5,2,4]) = [2,4,6,8] and
+	DropWhile(p1)([]) = [] and
+	DropWhile(p1)([2,4,6,8,1,2,3,4,5]) = [1,2,3,4,5] )
+	;
+\end{vdm_al}
+
+\subsubsection{Foldlを検査する}
+\begin{vdm_al}
+static t22 : () -> FTestDriver`TestCase
+t22() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT22:\t Foldlを検査する",
+	let	foldl = FSequence`Foldl[int, int],
+		f2 = FSequence`Foldl[seq of char, char],
+		plus = FSequence`Plus[int],
+		prod = FSequence`Product[int]
+ 	in
+	foldl(plus)(0)([1,2,3]) = 6 and
+	foldl(prod)(1)([2,3,4]) = 24 and
+	f2(FSequence`Append[char])([])("abc") = "abc") 
+	;
+\end{vdm_al}
+
+\subsubsection{Foldrを検査する}
+\begin{vdm_al}
+static t23 : () -> FTestDriver`TestCase
+t23() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT23:\t Foldrを検査する",
+	let	removeAt = FSequence`RemoveAt[char],
+		foldr = FSequence`Foldr[int, int],
+		f3 = FSequence`Foldr[nat1, seq of char],
+		plus = FSequence`Plus[int],
+		prod = FSequence`Product[int]
+ 	in
+	foldr(plus)(0)([1,2,3]) = 6 and
+	foldr(prod)(1)([2,3,4]) = 24 and
+	f3(removeAt)("12345")([1,3,5]) = "24")
+	;
+\end{vdm_al}
+
+\subsubsection{IsDupを検査する}
+\begin{vdm_al}
+static t24 : () -> FTestDriver`TestCase
+t24() ==
+	
+	mk_FTestDriver`TestCase(
+	"FSequenceT24:\t IsDupを検査する",
+	FSequence`IsDup[int]([1,2,3]) = false and
+	FSequence`IsDup[int]([1,2,2,3]) and
+	FSequence`IsDup[int]([]) = false and
+	FSequence`IsDup[int]([1,2,3,1]) )
+	;
+	
+end FSequenceT
+\end{vdm_al}

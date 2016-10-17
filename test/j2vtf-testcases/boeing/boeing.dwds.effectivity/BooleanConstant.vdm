@@ -1,0 +1,72 @@
+class BooleanConstant is subclass of BooleanExpr
+operations 
+public  toString : () ==> [String]
+toString() == 
+( return  if  (constValue = nil  ) then  new  String("null") else  constValue.toString().toUpperCase()
+) ;
+
+public  toPostfix : () ==> [String]
+toPostfix() == 
+( return  BooleanConstant`toString()
+) ;
+
+public  BooleanConstant : () ==> BooleanConstant
+BooleanConstant() == 
+( skip 
+) ;
+
+public  BooleanConstant : bool  ==> BooleanConstant
+BooleanConstant(constValue) == 
+( BooleanConstant`constValue := new  Boolean(constValue)
+) ;
+
+public  setConstantValue : bool  ==> <VOID>
+setConstantValue(constValue) == 
+( BooleanConstant`constValue := new  Boolean(constValue);
+  return  <VOID>
+) ;
+
+public  doTask : [TokenStack] ==> <VOID>
+doTask(stack) == 
+( let - = stack.push(self  )
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  accept : [ExprVisitor] ==> <VOID>
+accept(visitor) == 
+( let - = visitor.visitBooleanExpr(self  )
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  BooleanConstant : [Boolean] ==> BooleanConstant
+BooleanConstant(constValue) == 
+( BooleanConstant`constValue := constValue
+) ;
+
+public  setConstantValue : [Boolean] ==> <VOID>
+setConstantValue(constValue) == 
+( BooleanConstant`constValue := constValue;
+  return  <VOID>
+) ;
+
+public  evaluate : [ExpressionContext] ==> [Object]
+evaluate(context) == 
+( if  constValue = nil  
+  then  
+    ( dcl   ex : [DWDSException] := new  DWDSException();
+      let - = ex.addMessage(DWDSException`InvalidOperationException , BooleanConstant`getClass().getName()+new  String(" was not assigned a value before evaluation"))
+      in 
+        skip ;
+      exit  ex
+    ) ;
+  return  constValue
+) ;
+
+instance variables 
+  constValue : [Boolean] := nil  
+  
+end  BooleanConstant

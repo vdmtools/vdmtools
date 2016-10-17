@@ -1,0 +1,242 @@
+--$Heade$
+/*
+テストグループ
+	Timeのテスト
+関連 UC
+	なし
+作成者
+	佐原伸
+*/
+class TimeT is subclass of TestDriver
+functions
+tests : () -> seq of TestCase
+tests() == 
+	[ 
+	new TimeT06(), new TimeT05(), new TimeT04(),
+	new TimeT03(), new TimeT02(), new TimeT01()
+	];
+end TimeT
+----------------------------------------------------------
+/*
+シナリオID
+	構成子の検査
+親UseCase
+	なし
+内容
+	構成子の検査。
+*/
+class TimeT01 is subclass of TestCase, CalendarDefinition
+operations 
+protected test: () ==> bool
+test() == 
+	let	暦 = new JapaneseCalendar(),
+		d1 = 暦.整数三つ組から日付を得る(2003, 7, 30),
+		d3 = 暦.整数三つ組から日付を得る(2003, 8, 15),
+		t1 = new Time(暦, 2003, 7, 30, 14, 29, 30, 20),
+		t2 = new Time(暦, 2003, 8, 1) ,
+		t3 = new Time(d3)
+	in
+	return
+		t1.日付を得る().＝(d1) and 
+		t1.整数組とする(t1.時刻を得る()) = mk_(14, 29, 30, 20) and 
+		mk_(t1.時(), t1.分(), t1.秒()) = mk_(14, 29, 30) and
+		mk_(t2.年(), t2.月(), t2.日()) = mk_(2003, 8, 1) and 
+		t2.時刻を得る() = t2.整数とする(0, 0, 0, 0) and
+		t3.日付を得る().＝(d3) and 
+		t3.時刻を得る() = t2.整数とする(0, 0, 0, 0) 
+	;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "TimeT01:\t構成子の検査。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end TimeT01
+----------------------------------------------------------
+/*
+シナリオID
+	比較子の検査
+親UseCase
+	なし
+内容
+	比較子の検査。
+*/
+class TimeT02 is subclass of TestCase, CalendarDefinition
+operations 
+protected test: () ==> bool
+test() == 
+	let	暦 = new JapaneseCalendar(),
+		t1 = new Time(暦, 2003, 7, 30, 14, 29, 30, 0),
+		t2 = new Time(暦, 2003, 8, 1) ,
+		t4 = new Time(暦, 2003, 7, 30, 14, 29, 31, 0),
+		t5 = new Time(暦, 2003, 7, 30, 14, 29, 31, 0),
+		t6 = t1
+	in
+	return 
+		t1.＜(t2) and
+		t1.＜(t4) and
+		t1.≦(t2) and
+		t1.≦(t4) and
+		t2.＞(t1) and
+		t4.＞(t1) and
+		t2.≧(t1) and
+		t4.≧(t1) and
+		t4.＝(t5) and
+		t4.≠(t1) and
+		t4 <> t5 and
+		t1 = t6
+	;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "TimeT02:\t比較子の検査。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end TimeT02
+----------------------------------------------------------
+/*
+シナリオID
+	加算の検査
+親UseCase
+	なし
+内容
+	加算の検査。
+*/
+class TimeT03 is subclass of TestCase, CalendarDefinition
+operations 
+protected test: () ==> bool
+test() == 
+	let	暦 = new JapaneseCalendar(),
+		t = new Time(暦, 2003, 7, 30, 14, 29, 30, 0),
+		t1 = t.＋秒(20),
+		t2 = t.＋秒(30),
+		t3 = t.＋秒(50),
+		t4 = t.＋秒(90),
+		t5 = t.＋秒(150),
+		t6 = t.＋秒(3600),
+		t7 = t.＋分(30),
+		t8 = t.＋分(31),
+		t9 = t.＋分(40),
+		t10 = t.＋分(91),
+		t11 = t.＋分(1440),
+		t12 = t.＋(9, 30, 30, 123),
+		t13 = t.＋時(48),
+		t14 = t.＋(0, 0, 0, 0)
+	in
+	return 
+		t1.分() = 29 and t1.秒() = 50 and
+		t2.分() = 30 and t2.秒() = 0 and
+		t3.分() = 30 and t3.秒() = 20 and
+		t4.分() = 31 and t4.秒() = 0 and
+		t5.時() = 14 and t5.分() = 32 and t5.秒() = 0 and  
+		t6.時() = 15 and t6.分() = 29 and t6.秒() = 30 and  
+		t7.時() = 14 and t7.分() = 59 and
+		t8.時() = 15 and t8.分() = 0 and
+		t9.時() = 15 and t9.分() = 9 and
+		t10.時() = 16 and t10.分() = 0 and t10.秒() = 30 and
+		t11.年() = 2003 and t11.月() = 7 and t11.日() = 31 and t11.時() = 14 and t11.分() = 29 and t11.秒() = 30 and
+		t12.年() = 2003 and t12.月() = 7 and t12.日() = 31 and t12.時() = 0 and t12.分() = 0 and t12.秒() = 0 and t12.ミリ秒() = 123 and
+		t13.年() = 2003 and t13.月() = 8 and t13.日() = 1 and t13.時() = 14 and t13.分() = 29 and t13.秒() = 30 and t13.ミリ秒() = 0 and
+		t13.asString() = "20030801142930000" and
+		t13.print() = "2003年08月01日14時29分30秒000ミリ秒" and
+		t14.asString() = "20030730142930000"
+	;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "TimeT03:\t加算の検査。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end TimeT03
+----------------------------------------------------------
+/*
+シナリオID
+	減算の検査
+親UseCase
+	なし
+内容
+	減算の検査。
+*/
+class TimeT04 is subclass of TestCase, CalendarDefinition
+operations 
+protected test: () ==> bool
+test() == 
+	let	暦 = new JapaneseCalendar(),
+		t = new Time(暦, 2003, 7, 30, 14, 29, 30, 0),
+		t1 = t.－(14, 30, 30, 0) ,
+		t2 = t.－(38, 30, 30, 0) ,
+		t3 = t.＋(-38, -30, -30, 0),
+		t4 = t.＋(-0, -0, -0, -0)
+	in
+	return 
+		t1.整数組とする(t1.時刻を得る())  = mk_(23,59,0,0) and
+		t1.日付を得る().日付文字列を得る() = "20030729" and
+		t2.整数組とする(t2.時刻を得る())  = mk_(23,59,0,0) and
+		t2.日付を得る().日付文字列を得る() = "20030728" and
+		t3.整数組とする(t3.時刻を得る())  = mk_(23,59,0,0) and
+		t3.日付を得る().日付文字列を得る() = "20030728" and
+		t4.print() = "2003年07月30日14時29分30秒000ミリ秒"
+		
+	;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "TimeT04:\t減算の検査。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end TimeT04
+----------------------------------------------------------
+/*
+シナリオID
+	インスタンス変数設定の検査
+親UseCase
+	なし
+内容
+	インスタンス変数設定の検査。
+*/
+class TimeT05 is subclass of TestCase, CalendarDefinition
+operations 
+protected test: () ==> bool
+test() == 
+	let	暦 = new JapaneseCalendar(),
+		t1 = new Time(暦, 2003, 7, 30, 14, 29, 30, 0),
+		t2 = new Time(暦, 2003, 7, 30, 14, 29, 30, 0),
+		t3 = new Time(暦, 2003, 7, 30, 14, 29, 30, 0),
+		t4 = new Time(暦, 2003, 7, 30, 14, 29, 30, 0)
+	in
+	(
+	t1.時を設定する(15);
+	t2.分を設定する(19);
+	t3.秒を設定する(47);
+	t4.ミリ秒を設定する(789);
+	return 
+		t1.整数組とする(t1.時刻を得る())  = mk_(15, 29, 30, 0) and
+		t2.整数組とする(t2.時刻を得る())  = mk_(14, 19, 30, 0) and
+		t3.整数組とする(t3.時刻を得る())  = mk_(14, 29, 47, 0) and
+		t4.整数組とする(t4.時刻を得る())  = mk_(14, 29, 30, 789) and
+		t4.日付を得る().日付文字列を得る() = "20030730" 
+	)	
+	;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "TimeT05:\tインスタンス変数設定の検査。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end TimeT05
+----------------------------------------------------------
+/*
+シナリオID
+	現在日時をファイルから得る
+親UseCase
+	なし
+内容
+	現在日時をファイルから得ることの検査。
+*/
+class TimeT06 is subclass of TestCase, CalendarDefinition
+operations 
+protected test: () ==> bool
+test() == 
+	let	暦 = new SBCalendar()
+	in
+	(
+	return 
+		new Time(暦).＝(new Time(暦, 2001, 3, 1, 10, 11, 23, 456)) and
+		new Time(homedir ^ "/temp/BaseDay.txt", homedir ^ "/temp/Now2.txt", 暦).＝(new Time(暦, 2003, 10, 24, 12, 34, 56, 789))
+	)	
+	;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "TimeT06:\t現在日時をファイルから得ることの検査。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end TimeT06

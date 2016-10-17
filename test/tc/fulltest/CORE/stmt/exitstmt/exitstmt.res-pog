@@ -1,0 +1,12 @@
+[ mk_ERR`ErrMsg( 
+     10,
+     24,
+     9,
+     "Warning[33] : \"n\" is not used",
+     <WARNING> ),
+  mk_ERR`ErrMsg( 
+     10,
+     13,
+     12,
+     "Error[151] : Rhs of '+' is not a numeric type",
+     <ERROR> ) ]

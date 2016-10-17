@@ -1,0 +1,62 @@
+--$Header: /home/vdmtools/cvsroot/toolbox/examples-jp/pp/ModelingSystemByJapanese/examples/op-gate.vpp,v 1.1 2006/01/04 06:44:17 vdmtools Exp $
+-- 信頼されるゲートウェイ
+-- １０章の状態ベース版(状態ベース・モデル化) 
+
+types
+
+  文字列型 = seq of char
+  inv s == s <> [];  
+
+  メッセージ型 = 文字列型
+  inv m == len m <= 100;
+
+  分類型 = <高> | <低>;
+
+  カテゴリー型 = set of 文字列型;
+
+state 信頼されるゲートウェイ of
+  入力 : seq of メッセージ型
+  カテゴリー   : カテゴリー型
+  高ポート : seq of メッセージ型
+  低ポート : seq of メッセージ型
+init gate == gate = mk_信頼されるゲートウェイ([],{},[],[])  
+end
+
+functions
+
+-- 他の文字列中に部分文字列があるかチェックする
+
+  存在する？: 文字列型 * 文字列型 -> bool
+  存在する？(substr,str) ==
+    exists i,j in set inds str & substr = str(i,...,j);
+
+-- メッセージを分類する
+
+  分類する: メッセージ型 * カテゴリー型 -> 分類型
+  分類する(m,cat) ==
+    if exists hi in set cat & 存在する？(hi,m)
+    then <高>
+    else <低>;
+
+
+operations
+
+メッセージを処理する(m:メッセージ型)
+ext rd カテゴリー   : カテゴリー型
+    wr 高ポート : seq of メッセージ型
+    wr 低ポート : seq of メッセージ型
+post if 分類する(m,カテゴリー) = <高>
+     then 高ポート = [m]^高ポート~ and 低ポート = 低ポート~
+     else 高ポート = 高ポート~ and 低ポート = [m]^低ポート~;
+
+ゲートウェイ()
+ext  rd 入力 : seq of メッセージ型
+     rd カテゴリー   : カテゴリー型
+     wr 高ポート : seq of メッセージ型
+     wr 低ポート : seq of メッセージ型
+
+post 高ポート = [入力(i) | i in set inds 入力 & 
+                         分類する(入力(i),カテゴリー) = <高>]
+     and
+     低ポート = [入力(i) | i in set inds 入力 & 
+                         分類する(入力(i),カテゴリー) = <低>]

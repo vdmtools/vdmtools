@@ -1,0 +1,14 @@
+class A
+
+operations
+public Test: () ==> seq of bool
+Test() == let a = {1,'a',<SM>,"venus"},
+              b = power a
+          in return 
+[
+  forall x in set b & x subset a,
+  forall x in set b & x psubset a,
+  exists x in set b & not x psubset a
+]
+
+end A

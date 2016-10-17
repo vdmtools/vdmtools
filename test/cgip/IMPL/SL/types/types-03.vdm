@@ -1,0 +1,65 @@
+module B
+
+exports all
+
+definitions
+
+types
+
+  A = B | C | D;
+
+  B = B' | B_
+  inv b == if is_B_(b) then 
+             inv_B_(b)
+           else
+             inv_B'(b);
+
+  B' = bool | nat | char
+  inv b == if is_nat(b) then 
+             b > 10
+           else
+             true;
+
+  B_ :: nat 
+        nat
+  inv mk_B_(n1, n2) == n1 > n2;
+
+  C = real | <QUOTE>;
+
+  D = D1 | D1 | D3;
+  
+  D1 = seq of B'
+  inv s == forall e in set elems s & inv_B'(e);
+
+  D2 = set of nat
+  inv s == s <> {};
+
+  D3 = D1 * D2
+  inv mk_(d1, d2) == inv_D1(d1) and inv_D2(d2);
+
+  E = nat * nat
+functions
+
+Op: E -> nat
+Op(Parm) ==
+
+        let mk_(a,b) : E = Parm in a+b
+
+end B
+
+module A
+imports 
+        from B all
+
+definitions
+
+operations
+
+Test: () ==> nat
+Test() ==
+        (dcl Tmp : B`E := mk_(10,10);
+
+        return B`Op(Tmp)
+        )
+
+end A

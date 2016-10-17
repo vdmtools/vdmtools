@@ -1,0 +1,20 @@
+class JavaLangNullPointerException is subclass of JavaLangRuntimeException
+operations 
+public  JavaLangNullPointerException : () ==> JavaLangNullPointerException
+JavaLangNullPointerException() == 
+( let - = JavaLangRuntimeException()
+  in skip
+) ;
+
+public  JavaLangNullPointerException : <NIL> ==> JavaLangNullPointerException
+JavaLangNullPointerException(-) == 
+isNil := true  ;
+
+public  JavaLangNullPointerException : JavaLangString ==> JavaLangNullPointerException
+JavaLangNullPointerException(s) == 
+( let - = JavaLangRuntimeException(s)
+  in skip
+) ;
+
+
+end  JavaLangNullPointerException

@@ -1,0 +1,11 @@
+class A
+
+operations
+
+public Test : () ==> nat  
+Test () ==
+( dcl x : nat := (52 - 11);
+    return x
+)
+   
+end A

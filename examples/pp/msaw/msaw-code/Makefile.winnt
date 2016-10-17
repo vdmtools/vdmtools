@@ -1,0 +1,124 @@
+#
+# Windows NT nmake makefile for the MSAW executable (MSAW.exe)
+# for VC++ 5.0
+#
+
+TBDIR=c:/buildnt
+
+
+CPP = cl 
+CPPFLAGS = -nologo -c -GX -MT -I$(TBDIR)/cg/include
+LDFLAGS  = $(TBDIR)/cg/lib/CG.lib $(TBDIR)/cg/lib/vdm.lib
+
+COMPILE=$(CPP) $(CPPFLAGS)
+
+.SUFFIXES: .cc
+.cc.obj:
+	$(COMPILE) -Tp $<
+
+.obj.exe:
+	$(CPP) $(LDFLAGS) $**
+
+OBJS=WorkSpace.obj \
+	BulletinMeteo.obj \
+	Clock.obj \
+	Cone.obj \
+	Cylindre.obj \
+	Detecteur.obj \
+	MSAWTypes.obj \
+	Obstacle.obj \
+	ObstacleArtificiel.obj \
+	Parametres.obj \
+	PistesRadar.obj \
+	Polygone.obj \
+	ReliefParticulier.obj \
+	SegmentDePrediction.obj \
+	Terrain.obj \
+	Vecteur3D.obj \
+	ZoneAeroport.obj \
+	ZoneMilitaire.obj \
+        HWPistesRadar.obj \
+        TclTkView.obj \
+        SpecView.obj \
+        CGBase.obj
+
+VOBJS=	View.obj \
+	VisualDetecteur.obj \
+	VisualObstacleArtificiel.obj \
+	VisualPistesRadar.obj \
+	VisualSegmentDePrediction.obj \
+	VisualZoneAeroport.obj \
+	VisualWorkSpace.obj
+
+MSAW.exe :  MSAW.obj $(VOBJS) $(OBJS)
+MSAW.obj : MSAW.cc MSAW.h  VisualWorkSpace.h CGBase.h \
+ WorkSpace.h MSAWTypes.h VisualObstacleArtificiel.h VisualPistesRadar.h\
+ ObstacleArtificiel.h Cylindre.h Obstacle.h VisualZoneAeroport.h \
+ ZoneAeroport.h Cone.h View.h 
+
+clean:
+	rm *.obj MSAW.exe
+
+# Replace the following lines on a regular basis
+BulletinMeteo.obj : BulletinMeteo.cc BulletinMeteo.h  MSAWTypes.h CGBase.h
+Clock.obj : Clock.cc Clock.h MSAWTypes.h CGBase.h
+Cone.obj : Cone.cc Cone.h MSAWTypes.h  CGBase.h
+Cylindre.obj : Cylindre.cc Cylindre.h MSAWTypes.h  CGBase.h
+Detecteur.obj : Detecteur.cc Detecteur.h MSAWTypes.h Obstacle.h PistesRadar.h ObstacleArtificiel.h Cylindre.h ReliefParticulier.h \
+  Polygone.h Terrain.h ZoneAeroport.h Cone.h ZoneMilitaire.h SegmentDePrediction.h \
+  Parametres.h Vecteur3D.h CGBase.h
+MSAWTypes.obj : MSAWTypes.cc MSAWTypes.h  CGBase.h
+Obstacle.obj : Obstacle.cc Obstacle.h MSAWTypes.h  CGBase.h
+ObstacleArtificiel.obj : ObstacleArtificiel.cc ObstacleArtificiel.h \
+  Cylindre.h MSAWTypes.h Obstacle.h SegmentDePrediction.h Parametres.h Vecteur3D.h  CGBase.h
+Parametres.obj : Parametres.cc Parametres.h MSAWTypes.h  CGBase.h
+PistesRadar.obj : PistesRadar.cc PistesRadar.h MSAWTypes.h ObstacleArtificiel.h Cylindre.h Obstacle.h ReliefParticulier.h Polygone.h \
+  Terrain.h ZoneAeroport.h Cone.h ZoneMilitaire.h 
+Polygone.obj : Polygone.cc Polygone.h MSAWTypes.h  CGBase.h
+ReliefParticulier.obj : ReliefParticulier.cc ReliefParticulier.h \
+  Obstacle.h MSAWTypes.h Polygone.h SegmentDePrediction.h Parametres.h Vecteur3D.h  CGBase.h
+SegmentDePrediction.obj : SegmentDePrediction.cc SegmentDePrediction.h \
+  Parametres.h MSAWTypes.h Vecteur3D.h BulletinMeteo.h  CGBase.h
+Terrain.obj : Terrain.cc Terrain.h \
+  MSAWTypes.h SegmentDePrediction.h Parametres.h Vecteur3D.h  CGBase.h
+Vecteur3D.obj : Vecteur3D.cc Vecteur3D.h MSAWTypes.h  CGBase.h
+View.obj : View.cc View.h MSAWTypes.h CGBase.h
+VisualDetecteur.obj : VisualDetecteur.cc VisualDetecteur.h \
+  Detecteur.h MSAWTypes.h Obstacle.h PistesRadar.h ObstacleArtificiel.h Cylindre.h \
+  ReliefParticulier.h Polygone.h Terrain.h ZoneAeroport.h Cone.h ZoneMilitaire.h \
+  SegmentDePrediction.h Parametres.h Vecteur3D.h View.h VisualPistesRadar.h Clock.h \
+  VisualObstacleArtificiel.h VisualZoneAeroport.h VisualSegmentDePrediction.h \
+  BulletinMeteo.h CGBase.h
+VisualObstacleArtificiel.obj : VisualObstacleArtificiel.cc VisualObstacleArtificiel.h \
+  ObstacleArtificiel.h Cylindre.h \
+  MSAWTypes.h Obstacle.h View.h  CGBase.h
+VisualPistesRadar.obj : VisualPistesRadar.cc VisualPistesRadar.h \
+  Clock.h MSAWTypes.h PistesRadar.h ObstacleArtificiel.h Cylindre.h Obstacle.h \
+  ReliefParticulier.h Polygone.h Terrain.h ZoneAeroport.h Cone.h ZoneMilitaire.h \
+  View.h CGBase.h
+VisualSegmentDePrediction.obj : VisualSegmentDePrediction.cc VisualSegmentDePrediction.h \
+  BulletinMeteo.h MSAWTypes.h SegmentDePrediction.h \
+  Parametres.h Vecteur3D.h View.h  CGBase.h
+VisualWorkSpace.obj : VisualWorkSpace.cc VisualWorkSpace.h \
+  BulletinMeteo.h MSAWTypes.h PistesRadar.h ObstacleArtificiel.h Cylindre.h Obstacle.h \
+  ReliefParticulier.h Polygone.h Terrain.h ZoneAeroport.h Cone.h ZoneMilitaire.h \
+  View.h VisualDetecteur.h Detecteur.h SegmentDePrediction.h Parametres.h Vecteur3D.h \
+  VisualPistesRadar.h Clock.h VisualSegmentDePrediction.h WorkSpace.h \
+  VisualObstacleArtificiel.h  CGBase.h
+VisualZoneAeroport.obj : VisualZoneAeroport.cc VisualZoneAeroport.h \
+  View.h MSAWTypes.h ZoneAeroport.h Cone.h Cylindre.h Obstacle.h  CGBase.h
+WorkSpace.obj : WorkSpace.cc WorkSpace.h \
+  BulletinMeteo.h MSAWTypes.h Detecteur.h Obstacle.h PistesRadar.h ObstacleArtificiel.h \
+  Cylindre.h ReliefParticulier.h Polygone.h Terrain.h ZoneAeroport.h Cone.h ZoneMilitaire.h  CGBase.h\
+  SegmentDePrediction.h Parametres.h Vecteur3D.h 
+ZoneAeroport.obj : ZoneAeroport.cc ZoneAeroport.h \
+  Cone.h MSAWTypes.h Cylindre.h Obstacle.h SegmentDePrediction.h Parametres.h \
+  Vecteur3D.h  CGBase.h
+ZoneMilitaire.obj : ZoneMilitaire.cc ZoneMilitaire.h \
+  Obstacle.h MSAWTypes.h Polygone.h SegmentDePrediction.h Parametres.h Vecteur3D.h  CGBase.h
+HWPistesRadar.obj: HWPistesRadar.cc HWPistesRadar.h  CGBase.h MSAWTypes.h \
+                 Clock.h PistesRadar.h
+TclTkView.obj: TclTkView.cc TclTkView.h CGBase.h View.h MSAWTypes.h \
+  vdm_TclTkView_prelim.cc
+SpecView.obj: SpecView.cc SpecView.h CGBase.h View.h MSAWTypes.h Obstacle.h
+CGBase.obj: CGBase.cc CGBase.h

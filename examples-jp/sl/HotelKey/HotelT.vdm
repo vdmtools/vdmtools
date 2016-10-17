@@ -1,0 +1,215 @@
+\subsection{Hotelの回帰テストケース}
+module Hotelの回帰テストケース。
+
+t1(), t2(), ...などの各テストケースが返すTestDriver`TestCase型の2番目の引数は、trueを返す式でなければならない。
+
+\begin{vdm_al}
+module HotelT
+imports 
+   from TestDriver all,
+   from 『ホテル』 all
+
+definitions
+values
+チェックイン =『ホテル』`チェックイン;
+入る = 『ホテル』`入る;
+ホテル状態を得る = 『ホテル』`ホテル状態を得る;
+ホテル状態を設定する = 『ホテル』`ホテル状態を設定する;
+
+functions
+run : () +> bool
+run() == 
+let   testcases = [ t1(), t2(), t3(), t4(), t5(), t6()]
+in
+TestDriver`run(testcases);
+\end{vdm_al}
+
+\subsubsection{初めてのチェックイン}
+\begin{vdm_al}
+operations
+t1 : () ==> TestDriver`TestCase
+t1() ==
+   let
+      key1 = 1, key2 = 2, key3 = 3, 
+      room1 =   101, room2 = 102,
+      佐原 = mk_token("佐原"),
+      oldhotel = 
+         ホテル状態を設定する(
+            mk_『ホテル』`「フロント」({key1, key2, key3}, {room2 |-> key2}), 
+            {room1 |-> key1, room2 |-> key2},
+            {|->}
+         ),
+      - = チェックイン(佐原, room2),
+      hotel = ホテル状態を得る()
+   in
+   return
+      mk_TestDriver`TestCase(
+      "HotelT01:\t  初めてのチェックイン",
+      exists 新鍵  in set oldhotel.keys & 
+         新鍵 not in set oldhotel.フロント.発行済 and
+         let
+            新カード = mk_『ホテル』`「カード」(oldhotel.フロント.使用済(room2), 新鍵) in
+            hotel.フロント.発行済 = oldhotel.フロント.発行済 union {新鍵} and
+            hotel.フロント.使用済 = oldhotel.フロント.使用済 ++ {room2 |-> 新鍵} and
+            hotel.客 = oldhotel.客 munion {佐原 |->  {新カード}}
+   )
+   ;
+\end{vdm_al}
+
+\subsubsection{2回目以後のチェックイン}
+\begin{vdm_al}
+t2 : () ==> TestDriver`TestCase
+t2() ==
+   let
+      key1 = 1, key2 = 2, key3 = 3, 
+      room1 =   101, room2 = 102,
+      佐原 = mk_token("佐原"),
+      - = 
+         ホテル状態を設定する(
+            mk_『ホテル』`「フロント」({key1, key2, key3}, {room2 |-> key2}), 
+            {room1 |-> key1, room2 |-> key2},
+            {|->}
+         ),
+      - = チェックイン(佐原, room2),
+      oldhotel = ホテル状態を得る(),
+      - = チェックイン(佐原, room2),
+      hotel = ホテル状態を得る()
+   in
+   return
+      mk_TestDriver`TestCase(
+      "HotelT02:\t  2回目以後のチェックイン",
+      exists 新鍵  in set oldhotel.keys & 
+         新鍵 not in set oldhotel.フロント.発行済 and
+         let
+            新カード = mk_『ホテル』`「カード」(oldhotel.フロント.使用済(room2), 新鍵) in
+            hotel.フロント.発行済 = oldhotel.フロント.発行済 union {新鍵} and
+            hotel.フロント.使用済 = oldhotel.フロント.使用済 ++ {room2 |-> 新鍵} and
+            hotel.客 = oldhotel.客 ++ {佐原 |-> oldhotel.客(佐原) union {新カード}}
+   )
+   ;
+\end{vdm_al}
+
+\subsubsection{入る(第一鍵に一致）}
+\begin{vdm_al}
+t3 : () ==> TestDriver`TestCase
+t3() ==
+   let
+      key1 = 1, key2 = 2, key3 = 3, 
+      room1 =   101, room2 = 102,
+      佐原 = mk_token("佐原"),
+      - = 
+         ホテル状態を設定する(
+            mk_『ホテル』`「フロント」({key1, key2, key3}, {room2 |-> key2}), 
+            {room1 |-> key1, room2 |-> key2},
+            {|->}
+         ),
+      c = チェックイン(佐原, room2),
+      oldhotel = ホテル状態を得る(),
+      - =入る(room2, 佐原, c),
+      hotel = ホテル状態を得る()
+   in
+      return
+         mk_TestDriver`TestCase(
+         "HotelT03:\t  入る(第一鍵に一致）",
+         c in set hotel.客(佐原) and
+         (c.第一 = oldhotel.部屋の鍵(room2) and 
+            hotel.部屋の鍵 = oldhotel.部屋の鍵 ++ {room2 |-> c.第二} or
+         c.第二 = oldhotel.部屋の鍵(room2) and 
+            hotel.部屋の鍵 = oldhotel.部屋の鍵)
+   );
+\end{vdm_al}
+
+\subsubsection{入る(第二鍵に一致）}
+\begin{vdm_al}
+t4 : () ==> TestDriver`TestCase
+t4() ==
+   let
+      key1 = 1, key2 = 2, key3 = 3, 
+      room1 =   101, room2 = 102,
+      佐原 = mk_token("佐原"),
+      - = 
+         ホテル状態を設定する(
+            mk_『ホテル』`「フロント」({key1, key2, key3}, {room2 |-> key2}), 
+            {room1 |-> key1, room2 |-> key2},
+            {|->}
+         ),
+      c  = チェックイン(佐原, room2),
+      - =入る(room2, 佐原, c),
+      oldhotel = ホテル状態を得る(),
+      - = 入る(room2, 佐原, c),
+      hotel = ホテル状態を得る()
+   in
+      return
+         mk_TestDriver`TestCase(
+         "HotelT04:\t  入る(第二鍵に一致）",
+         c in set hotel.客(佐原) and
+         (c.第一 = oldhotel.部屋の鍵(room2) and 
+            hotel.部屋の鍵 = oldhotel.部屋の鍵 ++ {room2 |-> c.第二} or
+         c.第二 = oldhotel.部屋の鍵(room2) and 
+            hotel.部屋の鍵 = oldhotel.部屋の鍵)
+   );
+\end{vdm_al}
+
+\subsubsection{前の客のカードでは入れない。}
+\begin{vdm_al}
+t5 : () ==> TestDriver`TestCase
+t5() ==
+   let
+      key1 = 1, key2 = 2, key3 = 3, 
+      room1 =   101, room2 = 102,
+      佐原 = mk_token("佐原"),
+      酒匂 = mk_token("酒匂"),
+      - = 
+         ホテル状態を設定する(
+            mk_『ホテル』`「フロント」({key1, key2, key3}, {room2 |-> key2}), 
+            {room1 |-> key1, room2 |-> key2},
+            {|->}
+         ),
+      c  = チェックイン(佐原, room2),
+      - =入る(room2, 佐原, c),
+      c1  = チェックイン(酒匂, room2),
+      - = 入る(room2, 酒匂, c1),
+      - = ホテル状態を得る(),
+      err = 入る(room2, 佐原, c)
+   in
+      return
+         mk_TestDriver`TestCase(
+         "HotelT05:\t  前の客のカードでは入れない。",
+         not err
+   );
+\end{vdm_al}
+
+\subsubsection{自分自身でも、前のカードでは入れないが、新しいカードでは入れる。}
+\begin{vdm_al}
+t6 : () ==> TestDriver`TestCase
+t6() ==
+   let
+      key1 = 1, key2 = 2, key3 = 3, 
+      room1 =   101, room2 = 102,
+      佐原 = mk_token("佐原"),
+      - = 
+         ホテル状態を設定する(
+            mk_『ホテル』`「フロント」({key1, key2, key3}, {room2 |-> key2}), 
+            {room1 |-> key1, room2 |-> key2},
+            {|->}
+         ),
+      c  = チェックイン(佐原, room2),
+      - =入る(room2, 佐原, c),
+      c1  = チェックイン(佐原, room2),
+      - = 入る(room2, 佐原, c1),
+      - = ホテル状態を得る(),
+      oldcard = 入る(room2, 佐原, c),
+	  newcard = 入る(room2, 佐原, c1)
+   in
+      return
+         mk_TestDriver`TestCase(
+         "HotelT05:\t  自分自身でも、前のカードでは入れないが、新しいカードでは入れる。",
+         not oldcard and newcard
+   );
+
+end HotelT
+\end{vdm_al}
+      
+\begin{rtinfo}
+{vdm.tc}[HotelT]
+\end{rtinfo}

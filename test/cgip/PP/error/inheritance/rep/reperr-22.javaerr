@@ -1,0 +1,3 @@
+Type error in test case:
+rep-22.arg, l. 32, c. 16:
+  Error : C`m is not defined in scope

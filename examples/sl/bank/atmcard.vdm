@@ -1,0 +1,31 @@
+
+module ATMCard
+
+  imports
+    from BankAccount types digit = nat inv d == d < 10 
+                     functions digval renamed atmc_digval
+
+  exports all
+
+
+  definitions
+
+  types
+
+    digit = BankAccount`digit;
+
+    atmc:: cardnumber : seq1 of digit
+           expiry : digit * digit * digit * digit
+    inv mk_atmc(cardnumber, mk_(m1,m2,-,-)) ==
+        atmc_digval(m1) * 10 + atmc_digval(m2) <= 12 and
+        len cardnumber >= 8
+
+  functions
+
+    getCardnumber : atmc -> seq1 of digit
+    getCardnumber (atmc) ==
+      atmc.cardnumber
+
+
+
+end ATMCard

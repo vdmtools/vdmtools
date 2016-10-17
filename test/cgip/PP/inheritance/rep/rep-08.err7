@@ -1,0 +1,14 @@
+Cannot be compiled with g++ v2.6.2 and v2.6.3 due to a problem with
+the code generator. Consider the following inheritance scheme:
+
+    A
+   / \
+  C   D
+   \ /
+    B
+
+The problem is that the method SetVal is defined (virtual) in both
+class A, C and D. The C++ version of class B cannot be compiled
+because both SetVal in class C and D will redefine SetVal in class A.
+
+Note: This test case works with g++ 2.5.8

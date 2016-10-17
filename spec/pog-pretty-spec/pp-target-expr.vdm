@@ -1,0 +1,656 @@
+\section{Pretty print expressions}
+
+\begin{vdm_al}
+module PP_TAR_EXPR
+
+imports
+
+  from PP_TAR_DEF all, 
+  from PP_TAR_TYPE all, 
+  from PP_TAR_PAT all, 
+
+  from AS all,
+  from CI all,
+  from REP all
+
+exports all
+
+definitions
+
+types
+
+  Expr = BracketedExpr | DefExpr | LetExpr | LetBeSTExpr| IfExpr | CasesExpr | 
+         UnaryExpr | BinaryExpr | QuantExpr| IotaExpr |
+         SetEnumerationExpr | SetComprehensionExpr | SetRangeExpr |
+         SeqEnumerationExpr | SeqComprehensionExpr |
+         SubSequenceExpr | SeqModifyMapOverrideExpr |
+         MapEnumerationExpr | MapComprehensionExpr |
+         TupleConstructorExpr |
+         RecordConstructorExpr | RecordModifierExpr | 
+         FieldSelectExpr | 
+         TupleSelectExpr | 
+         ApplyExpr |
+         PreConditionApplyExpr |
+         IsExpr | TypeJudgementExpr |
+         NarrowExpr |
+         Literal | NameExpr | OldName | UndefinedExpr |
+         TokenConstructorExpr | FctTypeInstExpr | LambdaExpr |
+         NewExpr | IsOfClassExpr | IsOfBaseClassExpr | SelfExpr |
+         ActExpr | FinExpr | ActiveExpr | WaitingExpr | ReqExpr |
+         ThreadIdExpr | --GuardExpr |
+         SameClassExpr | SameBaseClassExpr
+         ;
+
+  BracketedExpr            = EXPR; 
+  DefExpr                  = EXPR; 
+  LetExpr                  = EXPR; 
+  LetBeSTExpr              = EXPR; 
+  IfExpr                   = EXPR;
+  ElseifExpr               = ELSEIFEXPR;
+  CasesExpr                = EXPR; 
+  CaseAltn                 = String;
+
+  UnaryExpr                = PrefixExpr;
+
+  PrefixExpr               = EXPR; 
+  BinaryExpr               = EXPR; 
+  QuantExpr                = AllOrExistsExpr | ExistsUniqueExpr;
+  AllOrExistsExpr          = EXPR;  
+  ExistsUniqueExpr         = EXPR;
+  IotaExpr                 = EXPR;
+  SetEnumerationExpr       = EXPR; 
+  SetComprehensionExpr     = EXPR; 
+  SetRangeExpr             = EXPR;
+  SeqEnumerationExpr       = EXPR; 
+  SeqComprehensionExpr     = EXPR;
+  SubSequenceExpr          = EXPR; 
+  SeqModifyMapOverrideExpr = EXPR;
+  MapEnumerationExpr       = EXPR; 
+  MapComprehensionExpr     = EXPR;
+  Maplet                   = EXPR;
+  TupleConstructorExpr     = EXPR;
+  RecordConstructorExpr    = EXPR; 
+  RecordModifierExpr       = EXPR;
+  RecordModification       = EXPR;
+  FieldSelectExpr          = EXPR; 
+  TupleSelectExpr          = EXPR; 
+  ApplyExpr                = EXPR;
+  PreConditionApplyExpr    = EXPR;
+  IsExpr                   = EXPR; 
+  TypeJudgementExpr        = EXPR; 
+  NarrowExpr               = EXPR; 
+  NameExpr                 = EXPR; 
+  NameName                 = Ids;
+  NameType                 = Ids;
+  OldName                  = EXPR; 
+  UndefinedExpr            = EXPR;
+  TokenConstructorExpr     = EXPR; 
+  FctTypeInstExpr          = EXPR; 
+  LambdaExpr               = EXPR;
+
+  Literal = BoolLit | NilLit | NumLit | RealLit | CharLit | TextLit | QuoteLit;
+
+  BoolLit                  = EXPR;
+  NilLit                   = EXPR;
+  RealLit                  = EXPR;
+  NumLit                   = EXPR;
+  CharLit                  = EXPR;
+  TextLit                  = EXPR;
+  QuoteLit                 = EXPR;
+
+  NewExpr                  = EXPR;
+  IsOfClassExpr            = EXPR;
+  IsOfBaseClassExpr        = EXPR;
+  SelfExpr                 = EXPR;
+  ActExpr                  = EXPR;
+  FinExpr                  = EXPR;
+  ActiveExpr               = EXPR;
+  WaitingExpr              = EXPR;
+  ReqExpr                  = EXPR;
+  ThreadIdExpr             = EXPR;
+  SameClassExpr            = EXPR;
+  SameBaseClassExpr        = EXPR;
+         
+  String  = seq of char;
+  op_name = String;
+
+  var_name = String;
+
+  EXPR = String;
+
+  ELSEIFEXPR :: test :  EXPR 
+                cons :  EXPR;
+
+
+  ALTN   = String;
+
+  Ids = seq of char;
+
+
+\end{vdm_al}
+
+\section{Let expressions}
+
+\begin{vdm_al}
+functions
+  tar_DefExpr : seq of (PP_TAR_PAT`PatternBind * Expr) * Expr * CI`ContextId -> DefExpr
+  tar_DefExpr (defs, in_e, -) == 
+    let pbes = [defs(i).#1 ^ " = " ^ defs(i).#2 | i in set inds defs]
+    in "(def " ^ List2SeparatorList(";",pbes) ^ "\n" ^ "in\n" ^ "    " ^ in_e ^ ")";
+
+  tar_LetExpr : seq of PP_TAR_DEF`LocalDef * Expr * CI`ContextId -> LetExpr 
+  tar_LetExpr(defs,expr,-) == 
+     "(let " ^ List2CommaList(defs) ^ "\n" ^ "in\n" ^ "    " ^ expr ^ ")";
+
+  tar_LetBeSTExpr : PP_TAR_PAT`BindList * [Expr] * Expr * CI`ContextId -> LetBeSTExpr 
+  tar_LetBeSTExpr(bind,st_e,in_e,-) ==
+     "let " ^ List2CommaList(bind) ^ (if st_e = nil then " " else " be st " ^ st_e ^ "\n") ^ "in  " ^ in_e;
+
+\end{vdm_al}
+
+\subsection{Conditional Expressions}
+
+\begin{vdm_al}
+  tar_IfExpr : Expr * Expr * seq of ElseifExpr * Expr * CI`ContextId -> IfExpr
+  tar_IfExpr(test,cons,elsif,altn,cid) ==
+     "(if " ^ test ^ " then\n" ^ cons ^ "\n"
+    ^ if elsif = []
+      then "else\n" ^ altn ^ ")"
+      else
+       (let head = hd elsif,
+           tail = tl elsif
+        in 
+           "else" ^ tar_IfExpr(head.test,head.cons,tail,altn,cid) ^ ")");
+
+  tar_ElseIfExpr : Expr * Expr * CI`ContextId -> ElseifExpr 
+  tar_ElseIfExpr (test,cons,-) ==
+    mk_ELSEIFEXPR(test,cons);
+
+  tar_CasesExpr : Expr * seq of CaseAltn * [Expr] * CI`ContextId -> CasesExpr 
+  tar_CasesExpr (sel,altns,oth,-) == 
+     "cases " ^ sel ^ ":\n"
+    ^ List2SeparatorList(",\n",altns)
+    ^ (if oth = nil then "" else ",\nothers -> " ^ oth)
+    ^ "\nend";
+
+
+  tar_CaseAltn : seq1 of PP_TAR_PAT`PATTERN * Expr * CI`ContextId -> CaseAltn
+  tar_CaseAltn (pats,expr,-) == 
+    List2CommaList(pats) ^ " -> " ^ expr;
+
+\end{vdm_al}
+
+\section{Unary expressions}
+
+\begin{vdm_al}
+
+  tar_PrefixExpr : AS`PrefixExpr * AS`UnaryOp * Expr * CI`ContextId -> PrefixExpr 
+  tar_PrefixExpr (-,op,expr,-) ==
+    let 
+    pp_op = 
+      cases op :
+        <NUMPLUS>            -> "+",
+        <NUMMINUS>           -> "-",
+        <NUMABS>             -> "abs",
+        <FLOOR>              -> "floor",
+        <NOT>                -> "not",
+        <SETCARD>            -> "card",
+        <SETDISTRUNION>      -> "dunion",
+        <SETDISTRINTERSECT>  -> "dinter",
+        <SETPOWER>           -> "power",
+        <SEQLEN>             -> "len",
+        <SEQDISTRCONC>       -> "conc",
+        <SEQELEMS>           -> "elems",
+        <SEQINDICES>         -> "inds",
+        <SEQTAIL>            -> "tl",
+        <SEQHEAD>            -> "hd",
+        <SEQREVERSE>         -> "reverse",
+        <MAPDOM>             -> "dom",
+        <MAPRNG>             -> "rng",
+        <MAPDISTRMERGE>      -> "merge",
+        <MAPINVERSE>         -> "inverse",
+        others -> undefined
+      end
+    in 
+       pp_op ^ " (" ^ expr ^ ")";
+
+\end{vdm_al}
+
+\section{Binary expressions}
+
+\begin{vdm_al}
+
+  tar_BinaryExpr: Expr * AS`BinaryOp * Expr * CI`ContextId -> BinaryExpr
+  tar_BinaryExpr(expr1,op,expr2,-) ==
+    let pp_op = 
+    cases op :
+      <NUMPLUS>      -> "+",
+      <NUMMINUS>     -> "-",
+      <NUMMULT>      -> "*",
+      <NUMDIV>       -> "/",
+      <NUMREM>       -> "rem",
+      <NUMMOD>       -> "mod",
+      <INTDIV>       -> "div",
+      <NUMEXP>       -> "**",
+      <NUMLT>        -> "<",
+      <NUMLE>        -> "<=", 
+      <NUMGT>        -> ">",
+      <NUMGE>        -> ">=",
+      <AND>          -> "and", --"and\n"
+      <OR>           -> "or",  --"or\n"
+      <IMPLY>        -> "=>",  --"=>\n"
+      <EQUIV>        -> "<=>",
+      <EQ>           -> "=",
+      <NE>           -> "<>",
+      <SETUNION>     -> "union",
+      <SETINTERSECT> -> "inter",
+      <SETMINUS>     -> "\\",
+      <SUBSET>       -> "subset",
+      <PROPERSUBSET> -> "psubset",
+      <INSET>        -> "in set",
+      <NOTINSET>     -> "not in set",
+      <SEQCONC>      -> "^",
+      <MAPMERGE>     -> "munion",
+      <MAPDOMRESTTO> -> "<:",
+      <MAPDOMRESTBY> -> "<-:",
+      <MAPRNGRESTTO> -> ":>",
+      <MAPRNGRESTBY> -> ":->",
+      <COMPOSE>      -> "comp",
+      mk_(<LEXORD>,n)-> "(LEX" ^ Nat2str(n) ^ " >)",
+      others -> undefined
+    end
+    in 
+      expr1 ^ " " ^ pp_op ^ " " ^ expr2;
+
+\end{vdm_al}
+
+\subsection{Quantified Expressions}
+
+\begin{vdm_al}
+
+  tar_AllOrExistsExpr : AS`AllOrExistsQuantifier * PP_TAR_PAT`BindList * Expr * CI`ContextId -> AllOrExistsExpr   
+  tar_AllOrExistsExpr (quant,mbindlist,pred,-) ==
+    let pp_quant =   
+          cases quant:
+            <ALL>    -> "forall ",
+            <EXISTS> -> "exists "
+          end
+    in 
+       --"(" ^ pp_quant ^ List2CommaList(mbindlist) ^ " &\n" ^ pred ^ ")";
+       "(" ^ pp_quant ^ List2CommaList(mbindlist) ^ " & " ^ pred ^ ")";
+
+  tar_ExistsUniqueExpr : PP_TAR_PAT`Bind * Expr * CI`ContextId -> ExistsUniqueExpr
+  tar_ExistsUniqueExpr (bd,pred,-) == 
+     --"(exists1 " ^ bd ^ " &\n" ^ pred ^ ")";
+     "(exists1 " ^ bd ^ " & " ^ pred ^ ")";
+
+\end{vdm_al}
+
+\subsection{Iota Expression}
+
+\begin{vdm_al}
+
+  tar_IotaExpr : PP_TAR_PAT`Bind * Expr * CI`ContextId -> IotaExpr 
+  tar_IotaExpr(bd,pred,-) ==
+     --"(iota " ^ bd ^ " &\n" ^ pred ^ ")";
+     "(iota " ^ bd ^ " & " ^ pred ^ ")";
+
+\end{vdm_al}
+
+\subsection{Set Expressions}
+
+\begin{vdm_al}
+  tar_SetEnumerationExpr : seq of Expr * CI`ContextId -> SetEnumerationExpr 
+  tar_SetEnumerationExpr (els,-) == 
+    "{" ^ List2SeparatorList(",",els) ^ "}";
+
+  tar_SetComprehensionExpr : Expr * PP_TAR_PAT`BindList * [Expr] * CI`ContextId -> SetComprehensionExpr 
+  tar_SetComprehensionExpr (elem,mbindlist,pred,-) ==
+     "{" ^ elem ^ " | " ^ List2CommaList(mbindlist) ^ (if pred = nil then "" else " & " ^ pred) ^ "}";
+
+  tar_SetRangeExpr : Expr * Expr * CI`ContextId -> SetRangeExpr
+  tar_SetRangeExpr (lb,ub,-) == 
+    "{" ^ lb ^ ",...," ^ ub ^ "}";
+
+\end{vdm_al}
+\subsection{Sequence Expressions}
+
+\begin{vdm_al}
+  tar_SeqEnumerationExpr : seq of Expr * CI`ContextId -> SeqEnumerationExpr
+  tar_SeqEnumerationExpr (els,-) ==
+    "[" ^ List2SeparatorList(",",els) ^ "]";
+
+  tar_SeqComprehensionExpr : Expr * PP_TAR_PAT`Bind * [Expr] * CI`ContextId -> SeqComprehensionExpr
+  tar_SeqComprehensionExpr (elem,bind,pred,-) ==
+    "[" ^ elem ^ " | " ^ bind ^ (if pred = nil then "" else " & " ^ pred) ^ "]";
+
+  tar_SubSequenceExpr : Expr * Expr * Expr * CI`ContextId -> SubSequenceExpr  
+  tar_SubSequenceExpr (sequence,frompos,topos,-) ==
+    sequence ^ "(" ^ frompos ^ ",...," ^ topos ^ ")";
+
+  tar_SeqModifyMapOverrideExpr : Expr * Expr * CI`ContextId -> SeqModifyMapOverrideExpr
+  tar_SeqModifyMapOverrideExpr (seqmap,mapexp,-) ==
+    seqmap ^ " ++ " ^ mapexp;    
+
+\end{vdm_al}
+
+\subsection{Map Expressions}
+
+\begin{vdm_al}
+  tar_MapEnumerationExpr : seq of Maplet * CI`ContextId -> MapEnumerationExpr
+  tar_MapEnumerationExpr (els,-) ==
+    if els = []
+    then "{|->}"
+    else "{" ^ List2SeparatorList(",",els) ^ "}";
+ 
+  tar_Maplet: Expr * Expr * CI`ContextId -> Maplet
+  tar_Maplet (mdom,mrng,-) ==
+    mdom ^ " |-> " ^ mrng;
+
+  tar_MapComprehensionExpr : Expr * PP_TAR_PAT`BindList * [Expr] * CI`ContextId -> MapComprehensionExpr
+  tar_MapComprehensionExpr (elem,mbindlist,pred,-) == 
+    "{" ^ elem ^ " | " ^ List2CommaList(mbindlist) ^ (if pred = nil then "" else " & " ^ pred) ^ "}";
+
+\end{vdm_al}
+
+\subsection{Tuple Constructor}
+
+\begin{vdm_al}
+  tar_TupleConstructorExpr : seq of Expr * CI`ContextId -> TupleConstructorExpr  
+  tar_TupleConstructorExpr (els,-) ==
+    "mk_(" ^ List2SeparatorList(",",els) ^ ")";
+
+\end{vdm_al}
+
+\subsection{Token Constructor} 
+
+\begin{vdm_al}
+  tar_TokenConstructorExpr: Expr * CI`ContextId -> TokenConstructorExpr
+  tar_TokenConstructorExpr(expr,-) == 
+    "mk_token(" ^ expr ^ ")";
+
+\end{vdm_al}
+
+\subsection{Record Expressions}
+
+\begin{vdm_al}
+
+  tar_RecordConstructorExpr: NameName * seq of Expr * CI`ContextId -> RecordConstructorExpr 
+  tar_RecordConstructorExpr (tag,fields,-) ==
+    "mk_" ^ tag ^ "(" ^ List2SeparatorList(",",fields) ^ ")";
+
+  tar_RecordModifierExpr: Expr * seq1 of RecordModification * CI`ContextId -> RecordModifierExpr
+  tar_RecordModifierExpr(rec,mods,-) ==
+    "mu(" ^ rec ^ "," ^ List2SeparatorList(",",mods) ^ ")";
+
+  tar_RecordModification: NameName * Expr * CI`ContextId -> RecordModification 
+  tar_RecordModification(field,new,-) ==
+    field^"|->"^new;
+
+  tar_FieldSelectExpr : AS`FieldSelectExpr * Expr * NameName * CI`ContextId -> Expr
+  tar_FieldSelectExpr (-,rec,field,-) ==
+    rec ^ "." ^ field;
+
+  tar_TupleSelectExpr : AS`TupleSelectExpr * Expr * Expr * CI`ContextId -> Expr
+  tar_TupleSelectExpr (-,tuple,num,-) ==
+    tuple ^ ".#" ^ num;
+
+\end{vdm_al}
+
+\subsection{Apply Expressions}
+
+\begin{vdm_al}  
+  tar_FctTypeInstExpr: NameName * seq of PP_TAR_TYPE`Type * CI`ContextId -> FctTypeInstExpr
+  tar_FctTypeInstExpr(polyfct,inst,-) ==
+    polyfct ^ "[" ^ List2CommaList(inst) ^ "]";
+
+  tar_LambdaExpr : seq of PP_TAR_PAT`TypeBind * Expr * CI`ContextId -> LambdaExpr
+  tar_LambdaExpr (parm,body,-) ==
+    "lambda " ^ List2CommaList(parm) ^ " & " ^ body;
+
+  tar_ApplyExpr : AS`ApplyExpr * Expr * seq of Expr * CI`ContextId -> ApplyExpr  
+  tar_ApplyExpr (-,fct,arg,-) ==
+    fct ^ "(" ^ List2CommaList(arg) ^ ")";
+
+  tar_PreConditionApplyExpr : AS`PreConditionApplyExpr * Expr * seq of Expr * CI`ContextId -> PreConditionApplyExpr  
+  tar_PreConditionApplyExpr (-,fct,arg,-) ==
+    "pre_(" ^ fct ^ "," ^ List2CommaList(arg) ^ ")";
+
+  tar_IsExpr : (PP_TAR_TYPE`BasicType | NameType) * Expr * CI`ContextId -> IsExpr
+  tar_IsExpr (type,arg,-) ==
+    "is_" ^ type ^ "(" ^ arg ^ ")";
+
+  tar_TypeJudgementExpr : Expr * PP_TAR_TYPE`Type * CI`ContextId -> IsExpr
+  tar_TypeJudgementExpr (expr,type,-) ==
+    "is_(" ^ expr ^ "," ^ type ^ ")";
+
+  tar_NarrowExpr : Expr * PP_TAR_TYPE`Type * CI`ContextId -> NarrowExpr
+  tar_NarrowExpr (expr,type,-) ==
+    "narrow_(" ^ expr ^ "," ^ type ^")";
+
+  tar_UndefinedExpr : CI`ContextId -> UndefinedExpr
+  tar_UndefinedExpr (-) ==
+    "undefined";
+
+\end{vdm_al}
+
+
+\subsection{Bracketed Expression}
+
+\begin{vdm_al}
+  tar_BracketedExpr : Expr * CI`ContextId -> BracketedExpr
+  tar_BracketedExpr(expr,-) ==
+    "(" ^ expr ^ ")";
+
+\end{vdm_al}
+
+\subsection{Names}
+
+\begin{vdm_al}
+  tar_NameExpr : Ids * CI`ContextId -> NameExpr 
+  tar_NameExpr (ids,-) ==
+    ids;
+
+  tar_NameName : Ids * CI`ContextId -> NameName 
+  tar_NameName (ids,-) == 
+    ids; 
+
+  tar_OldNameName : Ids * CI`ContextId -> NameName 
+  tar_OldNameName (ids,-) == 
+    ids^"~"; 
+
+  tar_NameType : Ids * CI`ContextId -> NameType 
+  tar_NameType (ids,-) ==
+    ids; 
+
+  tar_Ids: AS`Ids -> Ids
+  tar_Ids(ids) == 
+    if len ids = 1
+    then hd ids
+    else 
+      let head = hd ids,
+          tail = if tl ids = []
+                 then ""
+                 else "`" ^ tar_Ids(tl ids)
+      in
+          head ^ tail
+  pre ids <> [];
+
+\end{vdm_al}
+
+\subsection{Literals}
+
+\begin{vdm_al}
+  tar_BoolLit : bool * CI`ContextId -> BoolLit
+  tar_BoolLit (val,-) ==
+    if val = true
+    then "true"
+    else "false";
+
+  tar_CharLit : char * CI`ContextId -> CharLit
+  tar_CharLit (val,-) ==  
+    "'" ^ [val] ^ "'";    
+
+  tar_RealLit : real * CI`ContextId -> RealLit
+  tar_RealLit(val,-) ==  
+    let sign     = if val = abs val
+                   then ""
+                   else "-",
+        abs_val  = abs val,
+        mk_(x,y) = Real2str(abs_val),
+        deci     = if y = "" then  "" else "." ^ y
+    in 
+        sign ^ x ^ deci;    
+
+  tar_NumLit : real * CI`ContextId -> NumLit
+  tar_NumLit(val,-) ==  
+    let sign     = if val = abs val
+                   then ""
+                   else "-",
+        abs_val  = abs val,
+        mk_(x,-) = Real2str(abs_val)
+    in 
+        sign ^ x;    
+
+  tar_QuoteLit : seq of char * CI`ContextId -> QuoteLit
+  tar_QuoteLit(name,-) == 
+    "<" ^ name ^ ">";
+
+  tar_NilLit : CI`ContextId -> NilLit
+  tar_NilLit(-) == 
+    "nil";                
+
+  tar_TextLit : seq of char * CI`ContextId -> TextLit
+  tar_TextLit(str,-) == 
+    "\"" ^ str ^ "\"";
+
+\end{vdm_al}
+
+\subsection{VDM++ expressions}
+
+\begin{vdm_al}
+
+  tar_SelfExpr : CI`ContextId -> SelfExpr
+  tar_SelfExpr(-) == 
+    "self";
+
+  tar_ReqExpr: seq of Ids * CI`ContextId -> ReqExpr
+  tar_ReqExpr(idsl,-) ==
+    "#req(" ^ tar_IdList(idsl) ^ ")";
+
+  tar_ActExpr: seq of Ids * CI`ContextId -> ActExpr
+  tar_ActExpr(idsl,-) ==
+    "#act(" ^ tar_IdList(idsl) ^ ")";
+
+  tar_FinExpr: seq of Ids * CI`ContextId -> FinExpr
+  tar_FinExpr(idsl,-) ==
+    "#fin(" ^ tar_IdList(idsl) ^ ")";
+
+  tar_ActiveExpr: seq of Ids * CI`ContextId -> ActiveExpr
+  tar_ActiveExpr(idsl,-) ==
+    "#active(" ^ tar_IdList(idsl) ^ ")";
+
+  tar_WaitingExpr: seq of Ids * CI`ContextId -> WaitingExpr
+  tar_WaitingExpr(idsl,-) ==
+    "#waiting(" ^ tar_IdList(idsl) ^ ")";
+
+  tar_IdList : seq of Ids -> Ids
+  tar_IdList(idsl) ==
+    conc [ idsl(i) ^ (if i < len idsl then ", " else "") | i in set inds idsl ];
+
+  tar_NewExpr : Expr * CI`ContextId -> SelfExpr
+  tar_NewExpr(expr,-) == 
+    "new " ^ expr;
+
+  tar_IsOfClassExpr : NameType * Expr * CI`ContextId -> IsOfClassExpr
+  tar_IsOfClassExpr (class,arg,-) ==
+    "isofclass" ^ "(" ^ class ^ "," ^ arg ^ ")";
+
+  tar_IsOfBaseClassExpr : NameType * Expr * CI`ContextId -> IsOfBaseClassExpr
+  tar_IsOfBaseClassExpr (class,arg,-) ==
+    "isofbaseclass" ^ "(" ^ class ^ "," ^ arg ^ ")";
+
+  tar_SameClassExpr : Expr * Expr * CI`ContextId -> SameClassExpr
+  tar_SameClassExpr(expr1,expr2,-) ==
+    "sameclass" ^ "(" ^ expr1 ^ "," ^ expr2 ^ ")";
+
+  tar_SameBaseClassExpr : Expr * Expr * CI`ContextId -> SameBaseClassExpr
+  tar_SameBaseClassExpr(expr1,expr2,-) ==
+    "samebaseclass" ^ "(" ^ expr1 ^ "," ^ expr2 ^ ")";
+
+\end{vdm_al}
+
+\subsection{Auxiliary functions}
+
+\begin{vdm_al}
+
+
+  List2CommaList : seq of String -> String
+  List2CommaList (ss) == 
+    if ss = []
+    then ""
+    else
+      let head = hd ss,
+          tail = if tl ss = []
+                 then ""
+                 else ", " ^ List2CommaList(tl ss)
+      in 
+          head ^ tail;  
+
+  List2SeparatorList : String * seq of String -> String
+  List2SeparatorList (separator,ss) == 
+    if ss = []
+    then ""
+    else
+      let head = hd ss,
+          tail = if tl ss = []
+                 then ""
+                 else separator ^ List2SeparatorList(separator,tl ss)
+      in 
+          head ^ tail;   
+
+  Nat2str : nat -> String
+  Nat2str (n) == 
+    let d     = n div 10,
+        r     = n - 10 * d,
+        r_str = cases r:
+                  0 -> "0",
+                  1 -> "1",
+                  2 -> "2",
+                  3 -> "3",
+                  4 -> "4",
+                  5 -> "5",
+                  6 -> "6",
+                  7 -> "7",
+                  8 -> "8",
+                  9 -> "9"
+                end,
+        d_str = if d = 0 
+                then ""
+                else Nat2str(d)
+    in
+       d_str^r_str;
+
+   Real2str : real -> String * String
+   Real2str (x) ==
+     if is_nat(x)
+     then mk_(Nat2str(x),"")       
+     else 
+       let val            = Nat2str(floor x),
+           mk_(val1,val2) = Real2str(10*(x - floor x))
+       in 
+           mk_(val,val1^val2)
+   pre x >= 0;
+
+end PP_TAR_EXPR
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[PP\_TAR\_EXPR`tar\_SeqModifyMapOverrideExpr]
+{rtinfo.ast}[PP_TAR_EXPR]
+\end{rtinfo}
+
+
+
+

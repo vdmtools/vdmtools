@@ -1,0 +1,54 @@
+
+class IntSS
+
+operations
+public
+read: () ==> nat
+read() == is subclass responsibility;
+
+end IntSS
+
+class IntS is subclass of IntSS
+
+operations
+public
+read: seq of char ==> nat
+read(-) == is subclass responsibility;
+
+end IntS
+
+class IntC is subclass of IntS
+
+end IntC
+
+class SS is subclass of IntSS
+
+end SS
+
+class S is subclass of SS, IntS
+
+operations
+public
+read: () ==> nat
+read() == return 1;
+
+public
+read: seq of char ==> nat
+read(-) == return 1;
+
+end S
+
+class C is subclass of S, IntC
+
+end C
+
+class A
+
+operations
+public
+Test: () ==> nat
+Test() ==
+  let c = new C()
+  in return c.read();
+
+end A

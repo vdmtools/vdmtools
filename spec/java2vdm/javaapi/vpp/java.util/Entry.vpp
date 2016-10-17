@@ -1,0 +1,34 @@
+class JavaUtilEntry is subclass of JavaLangObject
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaUtilEntry" , <INTERFACE> , false  )
+operations 
+JavaUtilEntry: <NIL> ==> JavaUtilEntry
+JavaUtilEntry(-) ==
+isNil:=true;
+
+--public  getKey : () ==> JavaLangObject
+--getKey() == 
+--is not yet specified;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+--public  getValue : () ==> JavaLangObject
+--getValue() == 
+--is not yet specified;
+
+public  hashCode : () ==> int 
+hashCode() == 
+is not yet specified;
+
+public  equals : JavaLangObject ==> bool 
+equals(o) == 
+is not yet specified;
+
+--public  setValue : JavaLangObject ==> JavaLangObject
+--setValue(value__) == 
+--is not yet specified;
+
+
+end  JavaUtilEntry

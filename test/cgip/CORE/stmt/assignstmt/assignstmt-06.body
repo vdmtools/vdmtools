@@ -1,0 +1,6 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of (seq of nat)  
+Test () ==
+        (dcl  c: seq of seq of nat := [[1,3]];
+         c(1)(2) := 34;
+         return c)

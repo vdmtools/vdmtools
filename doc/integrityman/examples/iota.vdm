@@ -1,0 +1,12 @@
+functions
+
+Unique: set of nat -> nat
+Unique(s) ==
+  iota e in set s & forall e2 in set s & e <= e2
+pre s <> {}
+
+--PO
+--(forall s : set of nat & 
+--   s <> {} =>
+--   (exists1 e in set s &
+--      (forall e2 in set s & e <= e2)))

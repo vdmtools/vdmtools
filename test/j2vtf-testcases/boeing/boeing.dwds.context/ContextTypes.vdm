@@ -1,0 +1,113 @@
+class ContextTypes is subclass of Object
+operations 
+public  static last : () ==> [ContextTypes]
+last() == 
+( return  last
+) ;
+
+public  next : () ==> [ContextTypes]
+next() == 
+( return  ContextTypes`next
+) ;
+
+public  prev : () ==> [ContextTypes]
+prev() == 
+( return  ContextTypes`prev
+) ;
+
+public  static size : () ==> int 
+size() == 
+( return  upperBound
+) ;
+
+public  static first : () ==> [ContextTypes]
+first() == 
+( return  first
+) ;
+
+public  static elements : () ==> [Enumeration]
+elements() == 
+( dcl   instances : [Vector] := new  Vector(),
+        curr : [ContextTypes] := first;
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  curr <> nil   do  
+    ( let - = instances.add(curr)
+      in 
+        skip ;
+      curr := curr.next()
+    ) ;
+  return  instances.elements()
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( return  ContextTypes`id
+) ;
+
+public  static type : [String] ==> [ContextTypes]
+type(str) == 
+( dcl   foundType : [ContextTypes],
+        typeList : [Enumeration] := ContextTypes`elements();
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  typeList.hasMoreElements() do  
+    ( foundType := typeList.nextElement();
+      if  str.equalsIgnoreCase(foundType.toString())
+      then  
+        ( return  foundType
+        ) 
+    ) ;
+  return  nil  
+) ;
+
+private  ContextTypes : [String] * int  ==> ContextTypes
+ContextTypes(typeName, level) == 
+( ContextTypes`id := typeName;
+  ContextTypes`level := level;
+  def l_3 = upperBound;
+  l_2 = l_3
+  in ( upperBound := l_3+1;
+    ContextTypes`ord := l_2
+  ) ;
+  if  first = nil  
+  then  
+    ( first := self  
+    ) ;
+  if  last <> nil  
+  then  
+    ( ContextTypes`prev := last;
+      last.next := self  
+    ) ;
+  last := self  
+) ;
+
+instance variables 
+  private  id : [String];
+  public  ord : int ;
+  public  level : int ;
+  private  prev : [ContextTypes];
+  private  next : [ContextTypes];
+  private  static upperBound : int  := 0;
+  private  static first : [ContextTypes] := nil  ;
+  private  static last : [ContextTypes] := nil  ;
+  public  static REPAIR_ID : [ContextTypes] := new  ContextTypes(new  String("RepairID") , 1);
+  public  static AIRCRAFT_TYPE : [ContextTypes] := new  ContextTypes(new  String("AircraftType") , 2);
+  public  static TAIL_NUMBER : [ContextTypes] := new  ContextTypes(new  String("TailNumber") , 3);
+  public  static BUNDLE : [ContextTypes] := new  ContextTypes(new  String("Bundle") , 4);
+  public  static GRAPHIC_ID : [ContextTypes] := new  ContextTypes(new  String("GraphicID") , 5);
+  public  static REFDES : [ContextTypes] := new  ContextTypes(new  String("RefDes") , 5);
+  public  static WIRE : [ContextTypes] := new  ContextTypes(new  String("Wire") , 5);
+  public  static PIN : [ContextTypes] := new  ContextTypes(new  String("Pin") , 6)
+  
+end  ContextTypes

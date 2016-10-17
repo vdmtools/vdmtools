@@ -1,0 +1,53 @@
+class IfExprTest
+functions
+
+  f : () -> inmap rat to nat
+  f() ==
+    {2 |-> 5}
+  pre true
+--  post true
+
+types
+
+  A :: a: int
+       b: bool
+
+values
+
+  v1 : A = mk_A(1,true);
+  n : real = 88
+    
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let t = true,
+      nn = nil,
+      - = let m:char*bool =
+        if n=1
+	then t
+	elseif n=48
+	then {1 |-> "abc", 2 |-> mk_(2,true)} munion { |-> } 
+	elseif n=49
+	then {1 |-> "abc", 2 |-> mk_(2,true)} munion {1 |-> 8}
+	elseif n=50
+	then {1 |-> "abc", 2 |-> mk_(2,true)} ++ {1 |-> 8}
+	elseif n=51
+	then {1,2} <: {1 |-> "abc", 3 |-> mk_(2,true)}
+	elseif n=52
+	then {1,2} <-: {1 |-> "abc", 3 |-> mk_(2,true)}
+	elseif n=53
+	then {1 |-> "abc", 3 |-> mk_(2,true)} :> {1,2}
+	elseif n=54
+	then {1 |-> "abc", 3 |-> mk_(2,true)} :-> {1,2}
+	elseif n=70
+	then {8 |-> mk_(8,nil), true |-> 4.4, 2.2 |-> 6}
+	else nn
+        in m 
+  in skip;
+
+------------------------------------------------------------------------------
+end IfExprTest

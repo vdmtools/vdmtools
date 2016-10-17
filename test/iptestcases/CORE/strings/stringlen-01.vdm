@@ -1,0 +1,11 @@
+class A
+
+operations
+
+public Test : () ==> seq of ((int | seq1 of (char|int)) | bool) 
+Test () ==
+( dcl  bla : seq of char := "my piece of cake";
+  return [len bla]
+);
+
+end A

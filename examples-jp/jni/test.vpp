@@ -1,0 +1,282 @@
+class A
+
+operations
+public
+Test:() ==> bool
+Test() ==
+  trap <JNIERR> with return false
+  in
+   (def ok = createjvm();
+    in 
+      if not ok
+      then
+       (println("JVM creation failed");
+        return false;);
+     
+    --JNI`debug := true;
+    --JNIEnv`debug := true;
+
+    println("test1");
+    test1();
+    println("test2");
+    test2();
+    println("test3");
+    test3();
+    println("test4");
+    test4();
+    println("test5");
+    test5();
+    println("test6");
+    test6();
+    println("test7");
+    test7();
+    println("test8");
+    test8();
+    
+    return true;
+   );
+
+public
+createjvm: () ==> bool
+createjvm() ==
+  --let version = JNIEnv`JNI_VERSION_1_4, -- for java 1.5
+  let version = JNIEnv`JNI_VERSION_1_6,
+      options = [ "-Xmx128m", "-verbose:gc", "-Djava.class.path=./Hello.jar" ]
+  in
+   (def ok = JNI`CreateJavaVM(version, options);
+    in
+     (if ok
+      then
+        def v : seq of char = JNI`GetVersionStr();
+        in println("version: " ^ v);
+      return ok;));
+
+public
+test1: () ==> ()
+test1() ==
+  def cls = JNI`FindClass("jni/test/sample/Hello");
+  in (test11(cls);
+      test12(cls);
+      test13(cls);
+     );
+
+public
+test11: jclass ==> ()
+test11(cls) ==
+  def - = JNI`CallStaticMethod(cls, "main", [nil], "([Ljava/lang/String;)V");
+  in skip;
+
+public
+test12: jclass ==> ()
+test12(-) ==
+  JNI`CallStaticVoidMethod("jni/test/sample/Hello", "main", [nil], "([Ljava/lang/String;)V");
+
+public
+test13: jclass ==> ()
+test13(cls) ==
+  def res : int = JNI`CallStaticMethod(cls, "adds", [3,4], "(II)I");
+  in println("3 + 4 = " ^ VDMUtil`val2seq_of_char[int](res));
+
+public
+test2: () ==> ()
+test2() ==
+  def obj = JNI`NewObject("jni/test/sample/Hello", [], "()V");
+  in (
+      println("test21");
+      test21(obj);
+      println("test22");
+      test22(obj);
+      println("test23");
+      test23(obj);
+      println("test24");
+      test24(obj);
+      println("test25");
+      test25(obj);
+      println("test26");
+      test26(obj);
+      println("test27");
+      test27(obj);
+      println("test28");
+      test28(obj);
+     );
+
+public
+test21: jobject ==> ()
+test21(obj) ==
+  -- obj.sayHello()
+  JNI`CallVoidMethod(obj, "sayHello", [], "()V");
+
+public
+test22: jobject ==> ()
+test22(obj) ==
+  def res = JNI`CallMethod(obj, "add", [5,4], "(II)I");
+  in println("5 + 4 = " ^ VDMUtil`val2seq_of_char[int](res));
+
+public
+test23: jobject ==> ()
+test23(obj) ==
+  -- obj.echo(xxx)
+  def inarray = JNI`NewCharArray("Hello山");
+      resobj = JNI`CallMethod(obj, "echo", [inarray], "([C)[C");
+      str = JNI`GetCharArrayString(resobj);
+  in println(str);
+
+public
+test24: jobject ==> ()
+test24(obj) ==
+  def jstr = JNI`NewString("Hello山");
+      resobj = JNI`CallMethod(obj, "echo2", [jstr], "(Ljava/lang/String;)Ljava/lang/String;");
+      resstr = JNI`GetStringChars(resobj);
+  in println(resstr);
+
+public
+test25: jobject ==> ()
+test25(obj) == 
+ (def res = JNI`GetField(obj, "x", "I")
+  in println(res);
+  JNI`SetField(obj, "x", 99, "I");
+  def res = JNI`GetField(obj, "x", "I")
+  in println(res));
+
+public
+test26: jobject ==> ()
+test26(obj) == 
+  -- println(obj.getClass().getName())
+  def o = JNI`CallMethod(obj, "getClass", [], "()Ljava/lang/Class;");
+      jstr = JNI`CallMethod(o, "getName", [], "()Ljava/lang/String;");
+      str = JNI`GetStringChars(jstr);
+  in println("Class name: " ^ str);
+
+public
+test27: jobject ==> ()
+test27(obj) ==
+  trap exc : jthrowable
+  with
+   (println("exception!!");
+    if JNI`IsInstanceOf(exc, "jni/test/sample/SomeException")
+    then println("SomeException");
+    println(JNI`GetClassName(exc));
+    println(JNI`GetThrowableMessage(exc));
+    def ste = JNI`GetThrowableStackTraceElement(exc);
+        l = JNI`GetArrayLength(ste);
+    in
+     (println(VDMUtil`val2seq_of_char[int](l));
+      def ste_l : seq of jobject = JNI`GetObjectArray(ste);
+      in
+        for e in ste_l do
+          println(JNI`toString(e));
+      println(exc.toString()));
+   )
+  in
+   (def res : int = JNI`CallMethod(obj, "addex", [5,4], "(II)I");
+    in println("5 + 4 = " ^ VDMUtil`val2seq_of_char[int](res));
+    println("exception not raised - Error"));
+
+public
+test28: jobject ==> ()
+test28(obj) ==
+ (println(JNI`IsInstanceOf(obj, "Ljni/test/sample/Hello;"));
+  println(JNI`IsInstanceOf(obj, "Ljava/lang/String;")););
+
+public
+test3: () ==> ()
+test3() ==
+  def jstr = JNI`NewString("Print Test");
+  in SystemOutPrint(jstr);
+
+public
+test4: () ==> ()
+test4() ==
+  def o1 = JNI`NewBigDecimal("10.435");
+      o2 = JNI`NewBigDecimal("6.802");
+      o3 = JNI`CallMethod(o1, "add", [o2], "(Ljava/math/BigDecimal;)Ljava/math/BigDecimal;");
+      res = JNI`toVDMString(o3)
+  in
+   (println("10.435 + 6.802 = " ^ res);
+    def b1 = JNI`equals(o1, o2);
+        b2 = JNI`equals(o1, o1);
+    in
+     (println(b1);
+      println(b2)));
+
+public
+test5: () ==> ()
+test5() ==
+  def obj = JNI`NewDate();
+      res = JNI`toVDMString(obj);
+  in println(res);
+
+public
+test6: () ==> ()
+test6() ==
+  def - = JNI`FindClass("[[Ljava/lang/String;")
+  in println("find");
+
+public
+test7: () ==> ()
+test7() ==
+  trap exc : jthrowable
+  with
+   (println("not found -- OK.");
+    println(JNI`GetClassName(exc));
+    println(JNI`GetThrowableMessage(exc));
+    def ste = JNI`GetThrowableStackTraceElement(exc);
+    in println(JNI`GetArrayLength(ste));
+    println(exc.toString());
+   )
+  in
+   (def - = JNI`FindClass("abcdefg")
+    in println("find - Error"));
+
+public
+test8: () ==> ()
+test8() ==
+  trap exc : jthrowable
+  with
+   (println(JNI`GetClassName(exc));
+    println(JNI`GetThrowableMessage(exc));)
+  in
+  def c1 = JNI`FindClass("Ljava/util/Date;");
+      c2 = JNI`FindClass("Ljava/util/Date;");
+      c3 = JNI`FindClass("Ljava/lang/String;");
+      o1 = JNI`NewObject(c1, [], "()V");
+  in
+   (println("c1: " ^ JNI`GetClassName(c1));
+    println("c2: " ^ JNI`GetClassName(c2));
+    println("c3: " ^ JNI`GetClassName(c3));
+    println("o1: " ^ JNI`GetClassName(o1));
+    println(JNI`CallMethod(c1, "getName", [], "()Ljava/lang/String;"));
+    println(JNI`CallMethod(o1.getClass(), "getName", [], "()Ljava/lang/String;"));
+    println(JNI`equals(c1,c1));
+    println(JNI`equals(c1,c2));
+    println(JNI`equals(c1,c3)));
+
+public
+SystemOutPrint: jstring ==> ()
+SystemOutPrint(str) ==
+  def obj = JNI`GetStaticField("java/lang/System", "out", "Ljava/io/PrintStream;");
+  in JNI`CallVoidMethod(obj, "println", [str], "(Ljava/lang/String;)V");
+
+public
+println: seq of char | real | bool | jstring ==> ()
+println(x) ==
+  def ostr = cases true:
+               (is_(x, seq of char))   -> x,
+               (is_real(x))            -> NumToStr(x),
+               (is_bool(x))            -> BoolToStr(x),
+               (isofclass(jstring, x)) -> JNI`GetStringChars(x)
+             end;
+      - = new IO().echo(ostr ^ "\n");
+  in skip;
+
+public
+NumToStr: real ==> seq of char
+NumToStr(num) ==
+  return VDMUtil`val2seq_of_char[real](num);
+
+public
+BoolToStr: bool ==> seq of char
+BoolToStr(num) ==
+  return VDMUtil`val2seq_of_char[bool](num);
+
+end A

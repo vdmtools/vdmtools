@@ -1,0 +1,460 @@
+# $Id: Makefile.gencode,v 1.36 2005/11/10 02:39:16 vdmtools Exp $ 
+
+######################################################################
+# Generated dynsem files.
+######################################################################
+
+# target = gencode, gencodeclean
+
+gencode: stamp.subdirs dynsem_cg specman_cg umlspec_cg cgspec_cg \
+         stdlibspec_cg servman_cg java2vdm_cg jss_cg pog_cg pog_pretty_cg \
+         trans_cg
+
+gencodeclean:
+	rm -f stamp.subdirs 
+	rm -f *_cg_*.stamp *_cg.stamp
+	rm -f *_cg_*.script *_cg.script
+	rm -rf gencode*
+
+specclean:
+	cd speclink; \
+	rm -f cg-spec/errmsg.vdm java2vdm/j2verrmsg.vdm java2vdm/jsserrmsg.vdm; \
+	rm -f jss-spec/.vdmde-jss jss-spec/jsserrmsg.vdm pog-spec/errmsg.vdm; \
+	find . -name \*.vdmsl -print | xargs rm -rf; \
+	find . -name \*.vdmpp -print | xargs rm -rf; \
+	find . -name \*.vdmrt -print | xargs rm -rf; \
+	find . -name \*.vice -print | xargs rm -rf; \
+	find . -name \.vdmde-*-pp -print | xargs rm -rf; \
+	find . -name \.vdmde-*-sl -print | xargs rm -rf; \
+	find . -name \.vdmde-*-rt -print | xargs rm -rf; \
+	find . -name \.vdmde-*-vice -print | xargs rm -rf;
+	cd speclink/stdlib-spec; \
+        rm -f io.vdm math.vdm io.vpp math.vpp ioflat.vdm mathflat.vdm; \
+	rm -f VDMByteUtil.{vdm,vpp} VDMByteUtilflat.vdm; \
+	rm -f VDMUtil.{vdm,vpp} VDMUtilflat.vdm;
+	cd speclink/stdlib-spec/code/; \
+	rm -f pp/*_userimpl.* sl/*_userimpl.*
+
+dotfiles: .vdmde-dyn-sl .vdmde-dyn-pp .vdmde-dyn-rt \
+          .vdmde-specman-pp \
+	  .vdmde-uml-pp \
+	  .vdmde-cg-sl .vdmde-cg-pp .vdmde-cg-rt \
+	  .vdmde-stdlib-sl \
+          .vdmde-j2v-pp .vdmde-jss \
+	  .vdmde-pog-sl .vdmde-pog-pp .vdmde-pog-rt \
+          .vdmde-pog-pretty-sl
+
+.PRECIOUS: %-sl.cc %-pp.cc
+
+# stamp.subdirs
+dynsem_cg :  dynsem_cg_sl.stamp dynsem_cg_pp.stamp dynsem_cg_rt.stamp
+specman_cg:  specman_cg_pp.stamp
+umlspec_cg:  uml_cg_pp.stamp
+cgspec_cg:   cgspec_cg_sl.stamp cgspec_cg_pp.stamp cgspec_cg_rt.stamp
+stdlibspec_cg:   stdlibspec_cg_sl.stamp stdlibspec_cg_pp.stamp
+servman_cg: servman_cg.stamp
+trans_cg: trans_cg.stamp
+java2vdm_cg: java2vdm_cg.stamp
+jss_cg: jss_cg.stamp
+pog_cg:   pog_spec_cg_sl.stamp pog_spec_cg_pp.stamp pog_spec_cg_rt.stamp
+pog_pretty_cg:   pog_pretty_spec_cg_sl.stamp pog_pretty_spec_cg_pp.stamp pog_pretty_spec_cg_rt.stamp
+
+stamp.subdirs: FORCE
+	[ -d gencodesl ] || mkdir gencodesl
+	[ -d gencodepp ] || mkdir gencodepp
+	[ -d gencodert ] || mkdir gencodert
+	touch $@
+
+FORCE:
+
+ARG2L = perl -le 'for (@ARGV) { print };'
+
+ifndef CG_SL_CMD
+CG_SL_CMD = /usr/local/vdmsl/bin/vdmde
+endif
+ifndef CG_PP_CMD
+CG_PP_CMD = /usr/local/vdmpp/bin/vppde
+endif
+
+# Change to vpath .vdm $(VPATH)/eval-spec on windows
+vpath %.vdm speclink 
+vpath %.vpp speclink/specman-spec/spec
+vpath %.vdm speclink/uml-spec
+vpath %.vdmsl speclink
+vpath %.vdmpp speclink
+vpath %.vdm speclink/dep-spec
+vpath .vdmde-% speclink/ast speclink/cg-spec speclink/dep-spec speclink/eval-spec speclink/specman-spec speclink/ss-spec speclink/uml-spec speclink/stdlib-spec speclink/transforms-spec speclink/java2vdm speclink/jss-spec speclink/pog-spec speclink/pog-pretty-spec
+vpath %-pp.cc .
+vpath %-sl.cc .
+
+GEN_CG_SCRIPT := perl -e 'foreach (@ARGV) { print "cg $$_\n"; }' 
+DYNSEM_MODS_SL := INSTRTP DEBUGTP SCHDTP CI AS REP SEM GLOBAL MANGLE UTIL
+DYNSEM_MODS_PP := INSTRTP DEBUGTP SCHDTP CI AS REP SEM GLOBAL MANGLE UTIL
+DYNSEM_MODS_RT := INSTRTP DEBUGTP SCHDTP CI AS REP SEM GLOBAL MANGLE UTIL TIMEMAP TIMEPARSER TIMETRACETP VC
+
+.PHONY: FORCE $(DYNSEM_MODS_SL) $(DYNSEM_MODS_PP) $(DYNSEM_MODS_RT)
+
+speclink/eval-spec/.vdmde-dyn-sl \
+speclink/eval-spec/.vdmde-dyn-pp \
+speclink/eval-spec/.vdmde-dyn-rt \
+speclink/specman-spec/.vdmde-specman-pp \
+speclink/uml-spec/.vdmde-uml-pp \
+speclink/cg-spec/.vdmde-cg-sl \
+speclink/cg-spec/.vdmde-cg-pp \
+speclink/cg-spec/.vdmde-cg-rt \
+speclink/stdlib-spec/.vdmde-stdlib-pp \
+speclink/stdlib-spec/.vdmde-stdlib-sl \
+speclink/transforms-spec/.vdmde-trans-pp \
+speclink/java2vdm/.vdmde-j2v-pp \
+speclink/pog-spec/.vdmde-pog-sl \
+speclink/pog-spec/.vdmde-pog-pp \
+speclink/pog-spec/.vdmde-pog-rt \
+speclink/pog-pretty-spec/.vdmde-pog-pretty-sl \
+speclink/pog-pretty-spec/.vdmde-pog-pretty-pp \
+speclink/pog-pretty-spec/.vdmde-pog-pretty-rt \
+speclink/jss-spec/.vdmde-jss: FORCE
+	$(MAKE) -C $(@D) $(@F)
+
+dynsem_cg_sl.script: .vdmde-dyn-sl $(DYNSEM_MODS_SL)
+	cat $< > $@.tmp
+	$(GEN_CG_SCRIPT) $(filter-out $<, $^) >> $@.tmp
+	cmp -s $@ $@.tmp || mv $@.tmp $@
+
+dynsem_cg_pp.script: .vdmde-dyn-pp $(DYNSEM_MODS_PP)
+	cat $< > $@.tmp
+	$(GEN_CG_SCRIPT) $(filter-out $<, $^) >> $@.tmp
+	cmp -s $@ $@.tmp || mv $@.tmp $@
+
+dynsem_cg_rt.script: .vdmde-dyn-rt $(DYNSEM_MODS_RT)
+	cat $< > $@.tmp
+	$(GEN_CG_SCRIPT) $(filter-out $<, $^) >> $@.tmp
+	cmp -s $@ $@.tmp || mv $@.tmp $@
+
+dynsem_cg_sl.stamp: .vdmde-dyn-sl dynsem_cg_sl.script
+	cd gencodesl && \
+          $(ARG2L) 'script ../$(filter %.script, $^)' | $(CG_SL_CMD)
+	touch $@
+
+dynsem_cg_pp.stamp: .vdmde-dyn-pp dynsem_cg_pp.script
+	cat $? /dev/null > $@.tmp && mv $@.tmp $@.cmds
+	cd gencodepp && \
+          $(ARG2L) 'script ../$(filter %.script, $^)' | $(CG_SL_CMD)
+	touch $@
+
+dynsem_cg_rt.stamp: .vdmde-dyn-rt dynsem_cg_rt.script
+	cd gencodert && \
+          $(ARG2L) 'script ../$(filter %.script, $^)' | $(CG_SL_CMD)
+	touch $@
+
+CREATE_CG_CMDS = echo 'cg $(basename $@)' > $@; touch $@.stamp
+
+
+SPECMAN_CLASSES_PP = AST BaseTools BatchErr CGRepository ToolColleague \
+	Errors ErrorState FileStatus FlatSes Interface ToolMediator \
+	NoneSes NonPrintErr Options PromptErr ProjectTypes Repository \
+	ScriptErr StateStore StatusInfo StructSes ToolKit VDMUnitElem \
+	UnitStatus UpdateProject UpdateSes UMLTool RepDatabase Dependency
+
+.PHONY: $(SPECMAN_CLASSES_PP)
+
+
+specman_cg_pp.script: .vdmde-specman-pp $(SPECMAN_CLASSES_PP)
+	cat $< > $@.tmp
+	$(GEN_CG_SCRIPT) $(filter-out $<, $^) >> $@.tmp
+	cmp -s $@ $@.tmp || mv $@.tmp $@
+
+specman_cg_pp.stamp: .vdmde-specman-pp specman_cg_pp.script 
+	[ -d gencodespecman ] || mkdir gencodespecman
+	cd gencodespecman && \
+          $(ARG2L) 'script ../$(filter %.script, $^)' | $(CG_PP_CMD)
+	touch $@
+
+#############################
+# POG  Gencode
+##############################
+
+POG_MODULES_SL =\
+	CAST \
+	CI_AUX \
+	FRESH \
+	PID \
+	PURE_PAT\
+	REP2TYPE \
+	SPEC_AST  \
+	TYPE2REP \
+	CHECK\
+	CON_ENV\
+	GEN_INV\
+	GEN_PO\
+	POGTP\
+	POG_DEF\
+	POG_EXPR \
+	POG_STMT \
+	POG_MEDIATOR \
+	POG_PAT \
+
+.PHONY: $(POG_MODULES_SL)
+
+pog_spec_cg_sl.script: .vdmde-pog-sl $(POG_MODULES_SL)
+	cat $< > $@.tmp
+	$(GEN_CG_SCRIPT) $(filter-out $<, $^) >> $@.tmp
+	cmp -s $@ $@.tmp || mv $@.tmp $@
+
+pog_spec_cg_sl.stamp: .vdmde-pog-sl pog_spec_cg_sl.script
+	[ -d gencodesl ] || mkdir gencodesl
+	cd gencodesl && \
+          $(ARG2L) 'script ../$(filter %.script, $^)' | $(CG_SL_CMD)
+	touch $@
+
+pog_spec_cg_pp.script: .vdmde-pog-pp $(POG_MODULES_SL)
+	cat $< > $@.tmp
+	$(GEN_CG_SCRIPT) $(filter-out $<, $^) >> $@.tmp
+	cmp -s $@ $@.tmp || mv $@.tmp $@
+
+pog_spec_cg_pp.stamp: .vdmde-pog-pp pog_spec_cg_pp.script
+	[ -d gencodepp ] || mkdir gencodepp
+	cd gencodepp && \
+          $(ARG2L) 'script ../$(filter %.script, $^)' | $(CG_SL_CMD)
+	touch $@
+
+pog_spec_cg_rt.script: .vdmde-pog-rt $(POG_MODULES_SL)
+	cat $< > $@.tmp
+	$(GEN_CG_SCRIPT) $(filter-out $<, $^) >> $@.tmp
+	cmp -s $@ $@.tmp || mv $@.tmp $@
+
+pog_spec_cg_rt.stamp: .vdmde-pog-rt pog_spec_cg_rt.script
+	[ -d gencodert ] || mkdir gencodrte
+	cd gencodert && \
+          $(ARG2L) 'script ../$(filter %.script, $^)' | $(CG_SL_CMD)
+	touch $@
+
+##############################
+# Pretty print  Gencode
+##############################
+
+PP_MODULES_SL =\
+	PP_TRA_DEF\
+	PP_TRA_TYPE\
+	PP_TRA_EXPR \
+	PP_TRA_PAT \
+	PP_TRA_PO \
+	PP_TAR_DEF\
+	PP_TAR_TYPE\
+	PP_TAR_EXPR \
+	PP_TAR_PAT \
+	PP_TAR_PO \
+	PP_MEDIATOR \
+#	SPEC_AST  \
+
+.PHONY: $(PP_MODULES_SL)
+
+pog_pretty_spec_cg_sl.script: .vdmde-pog-pretty-sl $(PP_MODULES_SL)
+	cat $< > $@.tmp
+	$(GEN_CG_SCRIPT) $(filter-out $<, $^) >> $@.tmp
+	cmp -s $@ $@.tmp || mv $@.tmp $@
+
+pog_pretty_spec_cg_sl.stamp: .vdmde-pog-pretty-sl pog_pretty_spec_cg_sl.script
+	[ -d gencodesl ] || mkdir gencodesl
+	cd gencodesl && \
+          $(ARG2L) 'script ../$(filter %.script, $^)' | $(CG_SL_CMD)
+	touch $@
+
+pog_pretty_spec_cg_pp.script: .vdmde-pog-pretty-pp $(PP_MODULES_SL)
+	cat $< > $@.tmp
+	$(GEN_CG_SCRIPT) $(filter-out $<, $^) >> $@.tmp
+	cmp -s $@ $@.tmp || mv $@.tmp $@
+
+pog_pretty_spec_cg_pp.stamp: .vdmde-pog-pretty-pp pog_pretty_spec_cg_pp.script
+	[ -d gencodepp ] || mkdir gencodepp
+	cd gencodepp && \
+          $(ARG2L) 'script ../$(filter %.script, $^)' | $(CG_SL_CMD)
+	touch $@
+
+pog_pretty_spec_cg_rt.script: .vdmde-pog-pretty-rt $(PP_MODULES_SL)
+	cat $< > $@.tmp
+	$(GEN_CG_SCRIPT) $(filter-out $<, $^) >> $@.tmp
+	cmp -s $@ $@.tmp || mv $@.tmp $@
+
+pog_pretty_spec_cg_rt.stamp: .vdmde-pog-pretty-pp pog_pretty_spec_cg_rt.script
+	[ -d gencodert ] || mkdir gencodert
+	cd gencodert && \
+          $(ARG2L) 'script ../$(filter %.script, $^)' | $(CG_SL_CMD)
+	touch $@
+
+##############################
+# UML Gencode
+##############################
+
+UML_MODULES_SL = ASTMERGE AUML BUILD DEP MERGE UMLERR
+
+.PHONY: $(UML_MODULES_SL)
+
+uml_cg_pp.script: .vdmde-uml-pp $(UML_MODULES_SL)
+	cat $< > $@.tmp
+	$(GEN_CG_SCRIPT) $(filter-out $<, $^) >> $@.tmp
+	cmp -s $@ $@.tmp || mv $@.tmp $@
+
+uml_cg_pp.stamp: .vdmde-uml-pp uml_cg_pp.script 
+	[ -d gencodeuml ] || mkdir gencodeuml
+	cd gencodeuml && \
+          $(ARG2L) 'script ../$(filter %.script, $^)' | $(CG_SL_CMD)
+	touch $@
+
+
+# END UML GENCODE
+
+##############################
+# CG gencode
+##############################
+
+CG_MODULES_SL = CPP CGTYPES BC BCCI
+
+.PHONY: $(CG_MODULES_SL)
+
+cgspec_cg_sl.script: .vdmde-cg-sl $(CG_MODULES_SL)
+	cat $< > $@.tmp
+	$(GEN_CG_SCRIPT) $(filter-out $<, $^) >> $@.tmp
+	cmp -s $@ $@.tmp || mv $@.tmp $@
+
+cgspec_cg_pp.script: .vdmde-cg-pp $(CG_MODULES_SL)
+	cat $< > $@.tmp
+	$(GEN_CG_SCRIPT) $(filter-out $<, $^) >> $@.tmp
+	cmp -s $@ $@.tmp || mv $@.tmp $@
+
+cgspec_cg_rt.script: .vdmde-cg-rt $(CG_MODULES_SL)
+	cat $< > $@.tmp
+	$(GEN_CG_SCRIPT) $(filter-out $<, $^) >> $@.tmp
+	cmp -s $@ $@.tmp || mv $@.tmp $@
+
+
+cgspec_cg_pp.stamp: .vdmde-cg-pp cgspec_cg_pp.script 
+	cd gencodepp && \
+          $(ARG2L) 'script ../$(filter %.script, $^)' | $(CG_SL_CMD)
+	touch $@
+
+cgspec_cg_rt.stamp: .vdmde-cg-rt cgspec_cg_rt.script 
+	cd gencodert && \
+          $(ARG2L) 'script ../$(filter %.script, $^)' | $(CG_SL_CMD)
+	touch $@
+
+cgspec_cg_sl.stamp: .vdmde-cg-sl cgspec_cg_sl.script 
+	cd gencodesl && \
+          $(ARG2L) 'script ../$(filter %.script, $^)' | $(CG_SL_CMD)
+	touch $@
+
+# END UML GENCODE
+
+##############################
+# STDLIB gencode
+##############################
+
+STDLIB_MODULES_SL = IO MATH VDMUtil
+
+.PHONY: $(STDLIB_MODULES_SL)
+
+%-pp.cc: speclink/stdlib-spec/code/pp/%.cc
+	-ln -f -s $< $@
+
+%-sl.cc: speclink/stdlib-spec/code/sl/%.cc
+	-ln -f -s $< $@
+
+%.java: speclink/stdlib-spec/code/pp/%.java
+	-ln -f -s $< $@
+
+#stdlibspec_cg_pp.stamp: .vdmde-stdlib-pp IO_userimpl-pp.cc MATH_userimpl-pp.cc   IO.java MATH.java
+stdlibspec_cg_pp.stamp: .vdmde-stdlib-pp IO.java MATH.java VDMUtil.java
+	touch $@
+
+#stdlibspec_cg_sl.stamp: .vdmde-stdlib-sl IO_userimpl-sl.cc MATH_userimpl-sl.cc
+stdlibspec_cg_sl.stamp: .vdmde-stdlib-sl
+	touch $@
+
+UNAME = $(shell uname)
+REALOS = $(word 1, $(subst _, ,$(strip $(UNAME))))
+
+#ifeq ($(strip $(OSTYPE)), CYGWIN_NT)
+ifeq ($(strip $(REALOS)), CYGWIN)
+FILENM="$(shell cygpath -w speclink)/ast/ServiceManagerDesc.vdm"
+servman_cg.stamp: speclink/ast/ServiceManagerDesc.vdm
+	[ -d gencodesm ] || mkdir gencodesm
+	cd gencodesm && \
+	$(CG_SL_CMD) -c $(FILENM)
+	touch $@
+else
+servman_cg.stamp: speclink/ast/ServiceManagerDesc.vdm
+	[ -d gencodesm ] || mkdir gencodesm
+	cd gencodesm && \
+	$(CG_SL_CMD) -c ../$<
+	touch $@
+endif
+
+
+# END STDLIB GENCODE
+
+##############################
+# transform gencode
+##############################
+
+TRANS_MODULES = AEX ASX AX FEX FSX FX OPP SB STRIP XF
+
+.PHONY: $(TRANS_MODULES)
+
+trans_cg.script: .vdmde-trans-pp $(TRANS_MODULES)
+	cat $< > $@.tmp
+	$(GEN_CG_SCRIPT) $(filter-out $<, $^) >> $@.tmp
+	cmp -s $@ $@.tmp || mv $@.tmp $@
+
+trans_cg.stamp: .vdmde-trans-pp trans_cg.script
+	cd gencodepp && \
+          $(ARG2L) 'script ../$(filter %.script, $^)' | $(CG_SL_CMD)
+	touch $@
+
+# END trans GENCODE
+
+##############################
+# java2vdm gencode
+##############################
+
+JAVA2VDM_MODULES = J2VAUX J2VBVDM J2VCLASS J2VENV J2VEXPR J2VNS J2VOP \
+                   J2VSTMT J2VTYPE J2V J2VERR J2VERRMSG
+
+.PHONY: $(JAVA2VDM_MODULES)
+
+java2vdm_cg.script: .vdmde-j2v-pp $(JAVA2VDM_MODULES)
+	cat $< > $@.tmp
+	$(GEN_CG_SCRIPT) $(filter-out $<, $^) >> $@.tmp
+	cmp -s $@ $@.tmp || mv $@.tmp $@
+
+java2vdm_cg.stamp: .vdmde-j2v-pp java2vdm_cg.script
+	cd gencodepp && \
+          $(ARG2L) 'script ../$(filter %.script, $^)' | $(CG_SL_CMD)
+	touch $@
+
+# END java2vdm GENCODE
+
+##############################
+# jss gencode
+##############################
+
+JSS_MODULES = JSSAUX JSSDEF JSSENV JSSERRMSG JSSERR JSSEXPR JSSREP\
+              JSSSTMT JSSVCM1 JAVAERR
+
+.PHONY: $(JSS_MODULES)
+
+jss_cg.script: .vdmde-jss $(JSS_MODULES)
+	cat $< > $@.tmp
+	$(GEN_CG_SCRIPT) $(filter-out $<, $^) >> $@.tmp
+	cmp -s $@ $@.tmp || mv $@.tmp $@
+
+jss_cg.stamp: .vdmde-jss jss_cg.script
+	cd gencodepp && \
+          $(ARG2L) 'script ../$(filter %.script, $^)' | $(CG_SL_CMD)
+	touch $@
+
+-include Override.mak
+# END jss GENCODE
+
+# Local Variables:
+# mode: makefile
+# End:
+

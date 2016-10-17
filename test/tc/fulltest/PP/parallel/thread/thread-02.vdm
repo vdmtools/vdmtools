@@ -1,0 +1,38 @@
+class A
+operations
+	public op: () ==> ()
+		op() == return;
+		
+thread
+	op();
+	
+end A
+
+class A2
+operations
+	public op: () ==> ()
+		op() == return;
+		
+thread
+	op();
+	
+end A2
+class A3
+operations
+	public op: () ==> ()
+		op() == return;
+		
+thread
+	op();
+	
+end A3
+
+class B is subclass of A, A2, A3
+operations
+	public static doit: () ==> ()
+		doit() == return;
+
+thread
+	doit();
+
+end B

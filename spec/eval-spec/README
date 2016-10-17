@@ -1,0 +1,64 @@
+
+This file describes how to check out the specification of the 
+dynamic semantics and run test suites at specification level.
+
+Creating a working directory
+----------------------------
+
+mkdir dynsem
+cd dynsem
+cvs co tb-dynsem
+ln -s eval-spec/Makefile
+make link
+
+
+Preprocessing the specification
+-------------------------------
+
+The specification is automatically preprocessed by the test
+environment whenever needed. However, make PP and make SL will
+preprocess VDM-SL and VDM++ versions of the specification,
+respectively.
+
+Making a complete document
+--------------------------
+
+make dynsem.dvi    # default
+
+Running test suites at specification level
+------------------------------------------
+
+copy .vdmde-dym-sl (or .vdmde-dyn-pp) from ~cg/test into your statsem
+directory. 
+
+Edit and change your copy of .vdmde-dyn-sl.
+
+mkdir test
+cd test
+~cg/test/testdir -Dy -s .. ~cg/test/CORE/expr/letexpr
+
+####################################################################
+
+dynsem.dvi:
+
+  Generates .div file of dynamic semantic document
+  For including testcoverage information in the document, a copy of
+  "rtinfo.ast" must be in the working directory.
+
+dynsem.ps:
+
+  Generates postscript of dynamic semantic document
+  For including testcoverage information in the document, a copy of
+  "rtinfo.ast" must be in the working directory.
+
+dtc_off:
+
+  Performs preprocessing on modules of the dynamic semantic specification.
+  The option "dynamic type checking" is switched off!
+  Changes the extension of the modules from ".vdm" to ".vdmsl"
+
+dtc_on:
+
+  Performs preprocessing on modules of the dynamic semantic specification.
+  The option "dynamic type checking" is switched on!
+  Changes the extension of the modules from ".vdm" to ".vdmsl" 

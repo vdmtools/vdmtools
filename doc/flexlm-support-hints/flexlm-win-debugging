@@ -1,0 +1,35 @@
+Our first step should be to get the license server running
+correctly. 
+
+Then I have to ask you to answer these questions that assume you are
+running windows on your license server.
+
+  1. What operating system and version are you using 
+     (Window 4.0/2000 and service pack level, 
+
+  2. Check that the hostname in the license file is modified to the
+     correct one. If it wasn't please correct it and stop and start
+     the license daemon again. You can see the expected name in the 
+     c:\flexlm\Debug.log.
+
+  3. Send me the license file you use. 
+
+  4. send me a screendump of the Setup tab of FLEXlm License Manager
+     (Alt PrintScreen saves the window to the clipboard which you can
+     then paste into the Paint program and then save it to a file).
+
+  5. send me the output of c:\flexlm\Debug.log file which is created
+     after lmgrd has been Startet in the Control tab. If there is no 
+     Debug.log file please check the paths in the Setup tab. 
+
+  6. Press the Stop and Start button in the Control tab
+     and then press the Status button and tell me what it reports. 
+
+  7. open a Command Prompt window and enter
+     c:
+     cd flexlm
+     lmutil lmstat -a >lmstat.log
+     
+     And send me the lmstat.log file
+
+Thanks

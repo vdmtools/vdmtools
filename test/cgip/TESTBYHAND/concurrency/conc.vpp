@@ -1,0 +1,253 @@
+class Timer
+
+  instance variables
+    hour: nat := 0;
+    min: nat := 0;
+    sec: nat := 0
+  
+  operations
+    IncrementTime: () ==> ()
+    IncrementTime() == (
+       sec := sec + 1;
+       if sec = 60 then (sec := 0; min := min + 1);
+       if min = 60 then (min := 0; hour := hour + 1);
+       if hour = 24 then hour := 0;
+    );
+  
+    -- This is for use by threads other than the periodic thread
+    SetClock: nat * nat * nat ==> ()
+    SetClock(h,m,s) == ( 
+      hour := h;
+      min  := m;
+      sec  := s
+    );
+  
+  thread
+    periodic (1000) (IncrementTime)
+
+  sync 
+    mutex(IncrementTime, SetClock);
+   
+end Timer
+
+
+
+-- This class controls the functionality needed to drive the LCD display.
+-- LCD displays are "angesteuert" with a certain refresh rate (in the example 
+-- unrealistically only 5Hz). In a real design the refresh frequency would be
+-- generated from the Timer block by division. This is not done here 
+-- to keep the example simple.
+
+class ClockWithDisplay is subclass of Timer
+ 
+  operations
+    ResetClock: () ==> ()
+    ResetClock() == SetClock(12,0,0);
+
+    OutputHour: nat ==> ()
+    OutputHour(h) == 
+      is not yet specified;
+  
+    OutputMin: nat ==> ()
+    OutputMin(m) == 
+      is not yet specified;
+  
+    OutputSec: nat ==> ()
+    OutputSec(s) == 
+      is not yet specified;
+
+    Update: () ==> ()
+    Update() == 
+      is not yet specified;
+
+    RefreshDisplay: () ==> ()
+    RefreshDisplay() == (
+      OutputHour(hour);
+      OutputMin(min);
+      OutputSec(sec);
+      Update();
+    );
+  
+  thread
+    periodic (1000) (RefreshDisplay);
+   
+  sync 
+     mutex( IncrementTime, SetClock, ResetClock, RefreshDisplay);
+
+end ClockWithDisplay
+
+
+class AlarmClock is subclass of ClockWithDisplay
+
+  instance variables
+    alarm_hour: nat;
+    alarm_min: nat;
+    alarm_sec: nat;
+
+    alarmOn: bool := false;
+  
+  functions
+    TimeToSec: nat * nat * nat  -> nat
+    TimeToSec(hour,min,sec) == 
+      (hour*60 + min)*60 + sec;
+
+    TimeReached: nat * nat * nat * nat * nat *nat  -> bool
+    TimeReached(thour, tmin, tsec, ahour, amin, asec) == 
+      TimeToSec(thour, tmin, tsec) >= TimeToSec(ahour, amin, asec);
+
+  operations
+    SetAlarm: nat * nat ==> ()
+    SetAlarm(h, m) == (
+      alarm_hour := h;
+      alarm_min  := m;
+      alarm_sec  := 0;
+      alarmOn    := true
+    );
+    
+    WaitForRing: () ==> ()
+    WaitForRing() == (
+       dcl out : Output := new Output();
+       out.PrintStringNL("Ring...");
+       out.PrintStringNL("Ring...");
+       out.PrintStringNL("Ring...")
+    );
+  
+  sync
+    -- The permission predicate ensures, that test for the alarm is not
+    -- performed while the time changes or the alarm is changed.
+    -- This could trigger false alarms.
+    per WaitForRing =>     #active(SetClock, SetAlarm, ResetClock, IncrementTime) = 0
+                       and TimeReached(hour, min, sec, alarm_hour, alarm_min, alarm_sec)   -- Object State guard
+                       and alarmOn = true;                                                 -- Object State guard
+end AlarmClock
+
+
+-- This alarm clock is somewhat "esoteric" as it has the capability
+-- to distinguish between the persons (threads) operating it.
+-- The owner of the clock is the person who initially sets the clock.
+-- After this only the owner can make changes to time, and alarm.
+-- If someone else tries to set the clock, the request is ignored.
+-- If she tries to change the alarm she is blocked forever (as a fine,
+-- because we assume some malvolent intentions in this case).
+
+class SafeAlarmClock is subclass of AlarmClock
+
+  values
+    Undefined = -1;
+
+  instance variables
+    owner: nat := Undefined;  -- (!) musz man wohl eine ganze Zahl (Z) statt nat nehmen!!
+
+  operations
+
+  -- This operation is asnychronous, it does *not* inherit the PermPred from
+  -- the Timer base class.
+  SetClock: nat * nat * nat ==> ()
+  SetClock(h,m,s) == (
+    if (owner<>Undefined) and (threadid<>owner) then return;     -- (!)
+    if (owner = Undefined) then owner := threadid;
+    -- this call is still protected by the original permission predicates
+    Timer`SetClock(h,m,s)
+  )
+
+  sync
+    -- Again, this PermPred is superfluous. It shall stress the fact,
+    -- that SafeAlarmClock`SetClock can be called asynchronously.
+    per SetClock => true;
+
+    -- This specifies a PermPred for an operation from the base class.
+    per SetAlarm =>     #active(SetClock) = 0   -- to protect the OSG 
+                    and threadid = owner;
+
+end SafeAlarmClock
+
+
+class Person
+  instance variables
+    ac : AlarmClock;
+    out : Output := new Output();
+
+  operations
+    AssignClock: AlarmClock ==> ()
+    AssignClock( a ) == ac := a;
+ 
+  thread (
+    out.PrintStringNL("Setting alarm to  06:15");
+    ac.SetAlarm(6,15);
+
+    -- This models going to bed
+    out.PrintStringNL("Ah, I'm tired. Zzzzz... Zzzzz.... ");
+    ac.WaitForRing();
+
+    -- When we arrive here, the alarm has rung.
+    out.PrintStringNL("Yawn... Already that late?")
+   )
+end Person
+
+
+-- Here we simply create a normal Alarmclock,
+-- create a person waiting for it to ring.
+
+class World
+
+  instance variables
+     alarmClock : AlarmClock := new AlarmClock();
+     trillian   : Person     := new Person();
+     out  : Output     := new Output();
+
+  operations
+    Begin: () ==> seq of char
+    Begin() == (
+      alarmClock.SetClock(6,14,41);
+      trillian.AssignClock(alarmClock);
+      start(trillian);
+      out.PrintString("Es funktioniert !!");
+      return "Es funktioniert!"
+      
+    );
+
+end World
+
+
+
+class Output
+
+  operations
+
+    SetName: seq of char ==> ()
+    SetName(s) ==
+      is not yet specified;
+
+    PrintStringNL: seq of char ==> ()
+    PrintStringNL(s) ==
+      is not yet specified;
+  
+    PrintString: seq of char ==> ()
+    PrintString(s) ==
+      is not yet specified;
+  
+    PrintNat: nat ==> ()
+    PrintNat(n) ==
+      is not yet specified;
+  
+    PrintNL: () ==> ()     -- print new line character
+    PrintNL() ==
+      is not yet specified;
+
+
+    Yield: () ==> ()       
+    Yield() ==
+      is not yet specified;
+
+
+    Lock:()==>()
+    Lock() == skip;
+
+    Unlock:()==>()
+    Unlock() == skip;
+
+    sync
+     per Lock => #act(Lock) = #fin(Unlock) ;
+
+end Output
+

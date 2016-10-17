@@ -1,0 +1,41 @@
+--
+-- WHAT
+--    The SortMachine is the context class of the behavioral 
+--    pattern "Strategy". This is the class that uses the 
+--    different sorting algorithms.
+--
+-- COPYRIGHT
+--    (C) 2016 Kyushu University
+
+
+class SortMachine
+
+instance variables
+  srt: Sorter := new MergeSort();
+
+-- The instance variable ``srt'' is an object reference to the sorting
+-- algorithm currently in use. The initial sorting algorithm is MergeSort.
+
+-- Setting/changing which sorting algorithm to use. 
+
+operations
+
+  public SetSort: Sorter ==> ()
+  SetSort(s) ==
+    srt := s;
+
+-- Sorting with the sorting algorithm currently in use. 
+
+  public GoSorting: seq of int ==> seq of int  
+  GoSorting(arr) ==
+    return srt.Sort(arr);
+
+-- Set/change first the sorting algorithm and sort afterwards.
+
+  public SetAndSort: Sorter * seq of int ==> seq of int
+  SetAndSort(s, arr) ==
+  ( srt := s;
+    return srt.Sort(arr)
+  )
+
+end SortMachine

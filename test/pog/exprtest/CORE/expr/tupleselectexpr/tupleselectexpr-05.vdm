@@ -1,0 +1,24 @@
+class TupleSelectExprTest
+types
+
+t = int * char * bool
+inv tt == tt.#2 = 'c';
+
+ut = t1 | t2 | t3 | t4;
+t1 = int * int * int;
+t2 = int * int;
+t3 = int * int * int * int;
+t4 = int * int * bool
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = let a : ut = mk_(11,22,33) in a.#3
+  in skip;
+
+------------------------------------------------------------------------------
+end TupleSelectExprTest

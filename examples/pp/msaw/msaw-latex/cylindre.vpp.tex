@@ -1,0 +1,32 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{vdm}\index{Cylindre|ClassDef}
+{\small\sf class} $Cylindre$  \kISO $\index{MSAWTypes|ClassOcc}MSAWTypes$
+\begin{instvar}\index{centre|InstVarDef}
+\vardcl{centre}{Coordonnees\index{Coordonnees|TypeOcc}}\index{rayon|InstVarDef}
+\vardcl{rayon}{NM\index{NM|TypeOcc}}\index{altitude-maximale|InstVarDef}
+\vardcl{altitude-maximale}{Pieds\index{Pieds|TypeOcc}}
+\end{instvar}
+\begin{funcdef}\index{DansCylindre|FuncDef}
+\begin{fn}[e]{DansCylindre}
+\signature{Coordonnees\index{Coordonnees|TypeOcc} \X Pieds\index{Pieds|TypeOcc} \X Coordonnees\index{Coordonnees|TypeOcc} \X NM\index{NM|TypeOcc} \X Pieds\index{Pieds|TypeOcc} \To \Bool }
+\parms{\reccons{\kw{mk-}}{x1,y1}, z1, \reccons{\kw{mk-}}{x2,y2}, rayon, z2}
+\pex{ \Abs \pex{x1 \Minus x2} \Iterate 2 +  \Abs \pex{y1 \Minus y2} \Iterate 2} \Iterate 0.5 \Le rayon / NMperCoordonnee \And  \\
+z1 \Le z2
+\end{fn}
+\end{funcdef}
+{\small\sf end} $Cylindre$
+
+\end{vdm}

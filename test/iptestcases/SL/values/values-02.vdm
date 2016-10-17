@@ -1,0 +1,72 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+module VALUE3
+
+imports from VALUE2 all
+exports all
+definitions
+
+values
+
+  
+v1 : VALUE2`B = mk_VALUE2`B([mk_A(3, mk_VALUE2`B([]))])
+
+types
+
+  A ::
+   n : nat
+   b : VALUE2`B;
+
+
+ T2 = seq of A
+
+end VALUE3
+
+
+module VALUE2
+
+imports from VALUE3 all
+        
+exports all
+definitions
+
+values
+
+v2 : nat = 35
+
+types 
+  
+  B :: 
+    a : VALUE3`T2
+
+end VALUE2
+
+
+module A
+
+imports from VALUE3 all,   
+        from VALUE2 all
+exports all
+definitions
+
+operations 
+  Test: () ==> nat
+  Test () ==
+    return VALUE3`v1.a(1).n
+   
+
+end A
+
+
+
+
+
+
+
+
+
+
+
+
+
+

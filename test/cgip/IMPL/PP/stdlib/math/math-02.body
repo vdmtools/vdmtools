@@ -1,0 +1,12 @@
+class A
+operations
+
+public Test:() ==> seq of real
+Test () ==
+  def m : MATH = new MATH () in
+  return [
+    m.sin("A")
+    ]   
+
+end A
+    

@@ -1,0 +1,44 @@
+%--------------------------------------------------------------------------------
+% What
+%   Types used in the debug module.
+% $Id: debugTP.vdm,v 1.5 2000/05/09 10:33:02 blackie Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\begin{vdm_al}
+module DEBUGTP
+
+imports 
+  from AS all,
+  from CI all,
+  from REP all
+  
+
+exports all
+
+definitions
+
+types
+
+  BreakInfo = FnNameBreakInfo | PosBreakInfo;
+
+  FnNameBreakInfo ::
+    modcl  : AS`Name
+    name   : AS`Name
+    status : BreakStatus
+    cid    : CI`ContextId;
+
+  PosBreakInfo ::
+    fileName : seq of char
+    line     : nat
+    col      : nat
+    status   : BreakStatus
+    cid       : CI`ContextId;
+
+  BreakStatus = Disabled | Enabled;
+
+  Disabled :: ;
+  Enabled  :: ;
+
+end DEBUGTP
+\end{vdm_al}

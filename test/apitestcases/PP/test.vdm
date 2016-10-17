@@ -1,0 +1,24 @@
+class A
+
+types 
+
+public typeA = nat
+inv i == i > 0
+
+functions
+public f1: nat -> nat
+f1 (a) == a;
+
+public f2: typeA -> nat
+f2 (b) == f1 (b)
+pre b > 0
+
+end A
+
+class B
+
+types
+typeB = nat
+inv i == i < 42  
+
+end B

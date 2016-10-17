@@ -1,0 +1,18 @@
+class VisualPistesRadar is subclass of PistesRadar
+
+   instance variables
+      view: View
+
+   operations
+      Init: View ==> ()
+      Init (view') ==
+        view := view';
+
+      SetPosition: MSAWTypes`ModeA * MSAWTypes`Temps * MSAWTypes`Coordonnees * MSAWTypes`Pieds ==> ()
+      SetPosition (modeA, temps, position, modeC) ==
+      (  view.ShowRadarData (modeA, position, modeC);
+--         self.PistesRadar`SetPosition (modeA, temps, position, modeC)
+         SetPosition (modeA, temps, position, modeC)
+      );
+         
+end VisualPistesRadar

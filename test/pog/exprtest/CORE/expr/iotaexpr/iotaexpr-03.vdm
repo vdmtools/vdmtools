@@ -1,0 +1,13 @@
+class IotaExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = iota [a,b] in set {[1,2],[3,true]} & a < 3
+  in skip;
+
+------------------------------------------------------------------------------
+end IotaExprTest

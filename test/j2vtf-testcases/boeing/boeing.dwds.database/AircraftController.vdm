@@ -1,0 +1,196 @@
+class AircraftController is subclass of WiringDataController
+operations 
+public  initialize : () ==> <VOID>
+initialize() == 
+( dcl   acNameSource : [String] := DWDSProperties`getProperty(new  String("Aircraft.Identification") , new  String("TAIL_NUMBER"));
+  useTailNumber := acNameSource.equalsIgnoreCase(new  String("TAIL_NUMBER"));
+  return  <VOID>
+) ;
+
+public  getCurrentContextObject : () ==> [Object]
+getCurrentContextObject() == 
+( return  aircraft
+) ;
+
+public  getViaTailNumber : [String] ==> [Aircraft]
+getViaTailNumber(tailNumber) == 
+( dcl   ac : [Aircraft] := nil  ,
+        query : [String] := nil  ,
+        connection : [Connection] := AircraftController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := AircraftController`getToolkit().getQuerySet();
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement(),
+            queryId : int  := WiringDataQuerySet`GET_AC_VIA_TAIL_NUM,
+            args : map  int  to  [Object] := {0 |-> tailNumber};
+      query := querySet.getQuery(queryId , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  queryRS.next() do  
+          ( dcl   acTypeId : int  := queryRS.getInt(1),
+                  tailNum : [String] := queryRS.getString(2),
+                  cumNum : [String] := queryRS.getString(3),
+                  acName : [String] := if  useTailNumber then  tailNum else  cumNum;
+            ac := new  Aircraft(acTypeCntl.getViaId(acTypeId) , acName , tailNum , cumNum)
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  return  ac
+) ;
+
+public  getViaType : [AircraftType] ==> [Enumeration]
+getViaType(acType) == 
+( dcl   acList : [Vector] := new  Vector(25),
+        query : [String] := nil  ,
+        connection : [Connection] := AircraftController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := AircraftController`getToolkit().getQuerySet();
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement(),
+            typeId : [Integer] := new  Integer(acType.getAcTypeId()),
+            args : map  int  to  [Object] := {0 |-> typeId};
+      query := querySet.getQuery(WiringDataQuerySet`GET_AC_VIA_TYPE , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  queryRS.next() do  
+          ( dcl   tailNum : [String] := queryRS.getString(1),
+                  cumNum : [String] := queryRS.getString(2),
+                  acName : [String] := if  useTailNumber then  tailNum else  cumNum,
+                  ac : [Aircraft] := new  Aircraft(acType , acName , tailNum , cumNum);
+            let - = acList.addElement(ac)
+            in 
+              skip 
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  return  acList.elements()
+) ;
+
+public  updateToNewContext : [ContextSet] ==> <VOID>
+updateToNewContext(contextChanges) == 
+( if  contextChanges.contains(ContextTypes`AIRCRAFT_TYPE)
+  then  
+    ( aircraft := nil  
+    ) ;
+  if  contextChanges.contains(ContextTypes`TAIL_NUMBER)
+  then  
+    ( dcl   acName : [String] := contextChanges.get(ContextTypes`TAIL_NUMBER);
+      if  acName = nil  
+      then  
+        ( aircraft := nil  
+        ) 
+      else  
+        ( aircraft := getViaName(acTypeCntl.getCurrentContextObject() , acName)
+        ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  getViaName : [AircraftType] * [String] ==> [Aircraft]
+getViaName(acType, acName) == 
+( dcl   ac : [Aircraft] := nil  ,
+        query : [String] := nil  ,
+        connection : [Connection] := AircraftController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := AircraftController`getToolkit().getQuerySet();
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement();
+      if  useTailNumber
+      then  
+        ( dcl   queryId : int  := WiringDataQuerySet`GET_AC_VIA_TAIL_NUM,
+                args : map  int  to  [Object] := {0 |-> acName};
+          query := querySet.getQuery(queryId , args)
+        ) 
+      else  
+        ( dcl   queryId : int  := WiringDataQuerySet`GET_AC_VIA_CUM_NUM,
+                typeId : [Integer] := new  Integer(acType.getAcTypeId()),
+                args : map  int  to  [Object] := {1 |-> typeId , 0 |-> acName};
+          query := querySet.getQuery(queryId , args)
+        ) ;
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  queryRS.next() do  
+          ( dcl   acTypeId : int  := queryRS.getInt(1),
+                  tailNum : [String] := queryRS.getString(2),
+                  cumNum : [String] := queryRS.getString(3);
+            ac := new  Aircraft(acType , acName , tailNum , cumNum)
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  return  ac
+) ;
+
+AircraftController : [DataSourceToolkit] * [AircraftTypeController] ==> AircraftController
+AircraftController(dsToolkit, acTypeController) == 
+( let - = WiringDataController(dsToolkit)
+  in 
+    skip ;
+  AircraftController`acTypeCntl := acTypeController
+) ;
+
+instance variables 
+  private  useTailNumber : bool ;
+  private  aircraft : [Aircraft] := nil  ;
+  private  acTypeCntl : [AircraftTypeController] := nil  
+  
+end  AircraftController

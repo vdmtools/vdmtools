@@ -1,0 +1,323 @@
+\section{The J2VAUX Module}
+
+\begin{vdm_al}
+module J2VAUX
+
+imports
+from AS all,
+from CPP all,
+from CI all,
+from REP all,
+from JSSREP all,
+from J2VBVDM all,
+
+from J2VTYPE
+functions
+  J2VClassTypeName: CPP`PackageName |
+                    CPP`CompleteClassName
+                    +> AS`Name
+exports
+functions
+  ConvertFileName: CPP`File +> [seq1 of char];
+  ConvertFileName': CPP`Module +> [seq1 of char];
+  ExtractSupers: CPP`BaseSpec * [CPP`InterSpec] +> seq of AS`Name;
+  IsTempVarAssgn: AS`Stmt +> bool;
+  ExtractName: CPP`ClassSpecifier | CPP`InterfaceSpecifier
+               +> [CPP`Identifier];
+  ExtractModifiers: CPP`ClassSpecifier | CPP`InterfaceSpecifier
+                    +> CPP`Modifiers;
+  IsASExpr: AS`Expr | seq of AS`Stmt +> bool;
+  IsCPPName: CPP`Name | CPP`Expr +> bool;
+
+operations
+  TempVarsBeginBlock: () ==> ();
+  TempVarGetNext: seq of char ==> AS`Name;
+  TempVarsEndBlock: () ==> ()
+
+definitions
+
+values
+--  v_javaFileExtention: seq of char = "java";
+--  v_vdmppFileExt: seq of char = "vpp";
+--  v_extSeparator: char = '.';
+  v_packageSep: seq1 of char = ".";
+
+state TempVars of
+  next: seq of nat
+init next == next = mk_TempVars([])
+end
+
+functions
+
+\end{vdm_al}
+
+The function returns a prefix that will be used
+by JAVA2VDM++ backend as a directory name
+to form filenames for VDM++ classes.
+
+The prefix includes a package name defined in
+the p\_f file header (if any).
+
+If no package name is defined then the function
+returns mk\_token("nil")
+(sorry, but mk\_token("") actually produces mk\_token([])
+which j2vbe doesn't like.)
+
+\begin{vdm_al}
+ConvertFileName: CPP`File +> [seq1 of char]
+ConvertFileName(p_f) ==
+--  let
+--    suffix=[v_extSeparator] ^ v_vdmppFileExt,
+--    dotsIdx={i|i in set inds p_fn & p_fn(i)=v_extSeparator},
+--    fn =
+--      if dotsIdx = {} 
+--      then
+--        p_fn 
+--      else
+--        let i in set dotsIdx be st forall j in set dotsIdx & i>=j
+--        in  [p_fn(k)|k in set inds p_fn & k<i]
+--  in
+--    mk_token(fn ^ suffix);
+  let l_empty = nil
+  in
+    if p_f.h<>nil
+    then
+      if p_f.h.pd<>nil then GetFileName(p_f.h.pd.name)
+      else l_empty
+    else l_empty;
+
+ConvertFileName': CPP`Module +> [seq1 of char]
+ConvertFileName'(p_mod) ==
+  let l_empty = nil
+  in
+    if p_mod.header<>nil
+    then
+      if p_mod.header.pd<>nil then GetFileName(p_mod.header.pd.name)
+      else l_empty
+    else l_empty;
+
+\end{vdm_al}
+
+From a package name p\_pnm, the function produces 
+a sequence of chars which is the fully qualified package name,
+i.e. list of names separated by comma.
+
+\begin{vdm_al}
+GetFileName: CPP`PackageName +> seq1 of char
+GetFileName(p_pnm) ==
+  cases true:
+    (is_CPP`SimplePackageName(p_pnm))
+      -> p_pnm.id.id,
+    (is_CPP`QualifiedPackageName(p_pnm))
+      -> GetFileName(p_pnm.pn)^v_packageSep^p_pnm.id.id
+  end;
+
+\end{vdm_al}
+
+What about qualified package names. They are currently not taken into account!
+
+\begin{vdm_al}
+ExtractSupers: CPP`BaseSpec * [CPP`InterSpec] +> seq of AS`Name
+ExtractSupers(p_bs,p_is) ==
+  let l_base = if p_bs = []
+               then []
+	       else [J2VTYPE`J2VClassTypeName(p_bs(1))],
+      l_inter = if p_is = nil then []
+                else [J2VTYPE`J2VClassTypeName(p_is(i)) | i in set inds p_is]
+  in
+    l_base ^ l_inter;
+
+\end{vdm_al}
+
+\begin{vdm_al}
+ExtractName: CPP`ClassSpecifier | CPP`InterfaceSpecifier +> [CPP`Identifier]
+ExtractName(p_sp) ==
+  cases true:
+    (is_CPP`ClassSpecifier(p_sp)) -> p_sp.ch.name,
+    (is_CPP`InterfaceSpecifier(p_sp)) -> p_sp.ih.name
+  end;
+
+ExtractModifiers: CPP`ClassSpecifier | CPP`InterfaceSpecifier +> CPP`Modifiers
+ExtractModifiers(p_sp) ==
+  cases true:
+    (is_CPP`ClassSpecifier(p_sp)) -> p_sp.ch.m,
+    (is_CPP`InterfaceSpecifier(p_sp)) -> p_sp.ih.m
+  end;
+
+\end{vdm_al}
+
+The function returns true iff a statement p\_stmt is an
+assignment to a pattern name which has to be post processed in
+a real AS`DefStmt later on.
+
+\begin{vdm_al}
+
+IsTempVarAssgn: AS`Stmt +> bool
+IsTempVarAssgn(p_stmt) ==
+--  is_AS`LetStmt(p_stmt) and
+--  forall l_def in set elems p_stmt.localdef &
+--    ( is_AS`ValueDef(l_def) and
+--      is_AS`PatternName(l_def.pat) and
+--      is_AS`Name(l_def.pat.nm)
+--    ) and
+--  is_AS`IdentStmt(p_stmt.In)
+  is_AS`DefStmt(p_stmt) and
+  forall l_p in set {p| mk_(p, -) in set elems p_stmt.value} &
+    ( is_AS`PatternName(l_p) and is_AS`Name(l_p.nm)
+      or is_AS`TypeBind(l_p)
+    ) and
+  is_AS`IdentStmt(p_stmt.In);
+
+IsCPPName: CPP`Name | CPP`Expr +> bool
+IsCPPName(p_name) ==
+  cases true:
+    (is_CPP`Identifier(p_name)),
+    (is_CPP`QualifiedName(p_name)),
+    (is_CPP`QualifiedPackageName(p_name)),
+    (is_CPP`Destructor(p_name)),
+    (is_CPP`SimplePackageName(p_name)) ->
+      true,
+    others ->
+      false
+  end;
+
+IsASExpr: AS`Expr | seq of AS`Stmt +> bool
+IsASExpr(p_expr) ==
+--  is_(p_expr,AS`Expr)     Code generator does not like it!!!
+  cases true:
+    (is_AS`BracketedExpr(p_expr)),
+    (is_AS`DefExpr(p_expr)),
+    (is_AS`LetExpr(p_expr)),
+    (is_AS`LetBeSTExpr(p_expr)),
+    (is_AS`IfExpr(p_expr)),
+    (is_AS`CasesExpr(p_expr)),
+    (is_AS`PrefixExpr(p_expr)),
+    (is_AS`BinaryExpr(p_expr)),
+    (is_AS`AllOrExistsExpr(p_expr)),
+    (is_AS`ExistsUniqueExpr(p_expr)),
+    (is_AS`IotaExpr(p_expr)),
+    (is_AS`SetEnumerationExpr(p_expr)),
+    (is_AS`SetComprehensionExpr(p_expr)),
+    (is_AS`SetRangeExpr(p_expr)),
+    (is_AS`SeqEnumerationExpr(p_expr)),
+    (is_AS`SeqComprehensionExpr(p_expr)),
+    (is_AS`SubSequenceExpr(p_expr)),
+    (is_AS`SeqModifyMapOverrideExpr(p_expr)),
+    (is_AS`MapEnumerationExpr(p_expr)),
+    (is_AS`MapComprehensionExpr(p_expr)),
+    (is_AS`TupleConstructorExpr(p_expr)),
+    (is_AS`RecordConstructorExpr(p_expr)),
+    (is_AS`RecordModifierExpr(p_expr)),
+    (is_AS`FieldSelectExpr(p_expr)),
+    (is_AS`ApplyExpr(p_expr)),
+    (is_AS`IsExpr(p_expr)),
+--    (is_AS`Literal(p_expr)),
+    (is_AS`BoolLit(p_expr)),
+    (is_AS`NilLit(p_expr)),
+    (is_AS`RealLit(p_expr)),
+    (is_AS`NumLit(p_expr)),
+    (is_AS`CharLit(p_expr)),
+    (is_AS`TextLit(p_expr)),
+    (is_AS`QuoteLit(p_expr)),
+    (is_AS`Name(p_expr)),
+    (is_AS`OldName(p_expr)),
+    (is_AS`UndefinedExpr(p_expr)),
+    (is_AS`TupleSelectExpr(p_expr)),
+    (is_AS`TypeJudgementExpr(p_expr)),
+    (is_AS`PreConditionApplyExpr(p_expr)),
+    (is_AS`SelfExpr(p_expr)),
+    (is_AS`NewExpr(p_expr)),
+    (is_AS`IsOfClassExpr(p_expr)),
+    (is_AS`IsOfBaseClassExpr(p_expr)),
+    (is_AS`SameBaseClassExpr(p_expr)),
+    (is_AS`SameClassExpr(p_expr)),
+    (is_AS`ActExpr(p_expr)),
+    (is_AS`FinExpr(p_expr)),
+    (is_AS`ActiveExpr(p_expr)),
+    (is_AS`WaitingExpr(p_expr)),
+    (is_AS`ReqExpr(p_expr)),
+    (is_AS`ThreadIdExpr(p_expr)),
+    (is_AS`GuardExpr(p_expr)),  
+    (is_AS`TokenConstructorExpr(p_expr)),
+    (is_AS`FctTypeInstExpr(p_expr)),
+    (is_AS`LambdaExpr(p_expr)),
+    (is_AS`LastRes(p_expr)) ->
+      true,
+    others ->
+      false
+  end;
+
+operations
+
+\end{vdm_al}
+
+The operation initializes a new temp variables block.
+It resets the index of the next temp variable to one.
+
+\begin{vdm_al}
+TempVarsBeginBlock: () ==> ()
+TempVarsBeginBlock() ==
+  next := [1]^next;
+
+\end{vdm_al}
+
+The operation generates a new temp variable name
+using a prefix p\_prfx and the current block's
+index of the next temp variable, and, afterwards,
+increases the  index of the next temp variable by one.
+
+\begin{vdm_al}
+TempVarGetNext: seq of char ==> AS`Name
+TempVarGetNext(p_prfx) ==
+  def l_name="l_"^p_prfx^nat2str(hd next)
+  in (
+    next:=[1+(hd next)] ^ tl next; 
+    return J2VBVDM`GenName([l_name]))
+pre len next > 0;
+
+\end{vdm_al}
+
+The operation terminates the current temp variables block.
+
+\begin{vdm_al}
+TempVarsEndBlock: () ==> ()
+TempVarsEndBlock() ==
+  next:=tl next
+pre len next > 0;
+
+\end{vdm_al}
+
+The operation converts a natural number (or zero) p\_num
+to its textual presentation. (Probably there is a
+library function for that purpose).
+
+\begin{vdm_al}
+nat2str: nat ==> seq1 of char
+nat2str(p_num) == (
+  if p_num = 0
+  then
+    return "0"
+  else (
+    dcl l_str: seq of char := [];
+    dcl l_num: nat := p_num;
+
+    while l_num > 0 do (
+      let l_digit =
+        if l_num >=10
+        then l_num mod 10
+        else l_num
+      in
+	      l_str:= [
+          cases l_digit:
+            0 -> '0', 1 -> '1', 2 -> '2', 3 -> '3', 4 -> '4',
+            5 -> '5', 6 -> '6', 7 -> '7', 8 -> '8', 9 -> '9'
+		       end  ]^l_str;
+	    l_num:=floor(l_num/10) );
+    return l_str ) );
+
+end J2VAUX
+\end{vdm_al}
+
+\begin{rtinfo}
+{rtinfo.ast}[J2VAUX]
+\end{rtinfo}

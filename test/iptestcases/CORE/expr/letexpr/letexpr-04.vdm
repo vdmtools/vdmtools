@@ -1,0 +1,32 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+types
+
+  Even = nat
+  inv n == n mod 2 = 0
+
+operations
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+---------------------------------------------------------------------
+----------------- LetExpr         -----------------------------------
+---------------------------------------------------------------------
+
+public Test : () ==> seq of bool   
+Test () ==
+return
+[ let a = 1 in 
+    let a = 2, b = a in a=b,
+
+    let e = 3 in
+    let d = e, e = 4 in e<>d,
+
+    let f = 5 in
+    let g = f, f = 6, h = f in g<>f and h=f
+  ]
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

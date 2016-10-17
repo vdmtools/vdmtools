@@ -1,0 +1,123 @@
+class AircraftTypeController is subclass of WiringDataController
+operations 
+public  getViaId : int  ==> [AircraftType]
+getViaId(id) == 
+( return  acTypeCache.get(new  Integer(id))
+) ;
+
+public  initialize : () ==> <VOID>
+initialize() == 
+( dcl   connection : [Connection] := AircraftTypeController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := AircraftTypeController`getToolkit().getQuerySet(),
+        query : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement();
+      query := querySet.getQuery(WiringDataQuerySet`GET_ALL_AC_TYPES);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  queryRS.next() do  
+          ( dcl   acTypeId : int  := queryRS.getInt(1),
+                  customer : [String] := queryRS.getString(2),
+                  model : [String] := queryRS.getString(3),
+                  series : [String] := queryRS.getString(4),
+                  mds : [String] := queryRS.getString(5),
+                  type : [AircraftType] := new  AircraftType(acTypeId , customer , model , series , mds),
+                  typeId : [Integer] := new  Integer(acTypeId);
+            let - = acTypeCache.put(typeId , type)
+            in 
+              skip 
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  getAllTypes : () ==> [Enumeration]
+getAllTypes() == 
+( return  acTypeCache.elements()
+) ;
+
+public  getViaId : [Integer] ==> [AircraftType]
+getViaId(id) == 
+( return  acTypeCache.get(id)
+) ;
+
+public  getViaName : [String] ==> [AircraftType]
+getViaName(acTypeName) == 
+( dcl   type : [AircraftType] := nil  ,
+        found : bool  := false  ,
+        typeList : [Enumeration] := acTypeCache.elements();
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  typeList.hasMoreElements() and  not  found do  
+    ( dcl   curType : [AircraftType] := typeList.nextElement();
+      if  acTypeName.equals(curType.getMDS())
+      then  
+        ( type := curType;
+          found := true  
+        ) 
+    ) ;
+  return  type
+) ;
+
+public  getCurrentContextObject : () ==> [Object]
+getCurrentContextObject() == 
+( return  acType
+) ;
+
+public  updateToNewContext : [ContextSet] ==> <VOID>
+updateToNewContext(contextChanges) == 
+( if  contextChanges.contains(ContextTypes`AIRCRAFT_TYPE)
+  then  
+    ( dcl   acTypeName : [String] := contextChanges.get(ContextTypes`AIRCRAFT_TYPE);
+      if  acTypeName = nil  
+      then  
+        ( acType := nil  
+        ) 
+      else  
+        ( acType := getViaName(acTypeName)
+        ) 
+    ) ;
+  return  <VOID>
+) ;
+
+AircraftTypeController : [DataSourceToolkit] ==> AircraftTypeController
+AircraftTypeController(dsToolkit) == 
+( let - = WiringDataController(dsToolkit)
+  in 
+    skip ;
+  acTypeCache := new  ObjectCache(cacheSize)
+) ;
+
+instance variables 
+  private  acTypeCache : [ObjectCache] := nil  ;
+  private  acType : [AircraftType] := nil  ;
+  private  static cacheSize : int  := 23
+  
+end  AircraftTypeController

@@ -1,0 +1,80 @@
+class AircraftSystemController is subclass of WiringDataController
+operations 
+public  getViaId : int  ==> [AircraftSystem]
+getViaId(id) == 
+( return  acSystemCache.get(new  Integer(id))
+) ;
+
+public  initialize : () ==> <VOID>
+initialize() == 
+( dcl   connection : [Connection] := AircraftSystemController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := AircraftSystemController`getToolkit().getQuerySet(),
+        query : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement();
+      query := querySet.getQuery(WiringDataQuerySet`GET_ALL_AIRCRAFT_SYSTEMS);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  queryRS.next() do  
+          ( dcl   acSystemId : int  := queryRS.getInt(1),
+                  acSystemNumber : [String] := queryRS.getString(2),
+                  acSystemName : [String] := queryRS.getString(3),
+                  acSystem : [AircraftSystem] := new  AircraftSystem(acSystemId , acSystemNumber , acSystemName);
+            let - = acSystemCache.put(new  Integer(acSystemId) , acSystem)
+            in 
+              skip 
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  getViaId : [Integer] ==> [AircraftSystem]
+getViaId(id) == 
+( return  acSystemCache.get(id)
+) ;
+
+public  getCurrentContextObject : () ==> [Object]
+getCurrentContextObject() == 
+( return  nil  
+) ;
+
+public  updateToNewContext : [ContextSet] ==> <VOID>
+updateToNewContext(contextChanges) == 
+( return  <VOID>
+) ;
+
+AircraftSystemController : [DataSourceToolkit] ==> AircraftSystemController
+AircraftSystemController(dsToolkit) == 
+( let - = WiringDataController(dsToolkit)
+  in 
+    skip ;
+  acSystemCache := new  ObjectCache(cacheSize)
+) ;
+
+instance variables 
+  private  acSystemCache : [ObjectCache] := nil  ;
+  private  static cacheSize : int  := 180
+  
+end  AircraftSystemController

@@ -1,0 +1,20 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+public Test : () ==> Rec
+Test () ==
+(dcl s : Rec := mk_Rec("Hi");
+ s.a := "iH";
+ return s
+);
+   
+types
+
+public  Rec :: a : seq of char
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

@@ -1,0 +1,18 @@
+class DefExprTest
+types
+
+  A :: selid : nat
+       sel2 : bool
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = def a = 7 in a + 8
+  in skip;
+
+------------------------------------------------------------------------------
+end DefExprTest

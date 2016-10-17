@@ -1,0 +1,2938 @@
+\section{The J2VEXPR Module}
+
+
+\begin{vdm_al}
+module J2VEXPR
+imports
+from AS all,
+from CPP all,
+from CI all,
+from REP all,
+from JSSREP all,
+from J2VNS all,
+from J2VTYPE all,
+from JAVAERR all,
+from J2VERR all,
+from JSSENV
+  operations
+    DeduceMethodParaType: AS`Name * AS`Name * seq of JSSREP`TypeRep * nat1 ==> [AS`Name],
+from J2VBVDM
+  functions
+    GenIsOfClass: AS`Name * AS`Expr +> AS`IsOfClassExpr;
+    GenBinaryExpr:  AS`Expr * AS`BinaryOp * AS`Expr +> AS`BinaryExpr;
+    GenAssignStmt: AS`StateDesignator * AS`Expr +> AS`AssignStmt;
+    Id2Name: CPP`Identifier +> AS`Name;
+    GenApplyExpr: AS`Expr * seq of AS`Expr +> AS`ApplyExpr;
+    GenFieldRef: AS`StateDesignator * AS`Name +> AS`FieldRef;
+    GenMapOrSeqRef: AS`StateDesignator * AS`Expr +> AS`MapOrSeqRef;
+    GenFieldSelectExpr: AS`Expr * (AS`Name | AS`FctTypeInstExpr) +> AS`FieldSelectExpr;
+    GenConditionalExpr: AS`Expr * AS`Expr * AS`Expr +> AS`IfExpr;
+    GenSelfExpr: CPP`This +> AS`SelfExpr;
+    GenIsExpr: (AS`BasicType | AS`Name) * AS`Expr +> AS`IsExpr;
+    GenTypeJudgementExpr: AS`Expr * AS`Type +> AS`TypeJudgementExpr;
+    GenNewExpr: AS`Name * seq of AS`Expr +> AS`NewExpr;
+    GenLetStmt: seq of AS`LocalDef * AS`Stmt +> AS`LetStmt;
+    GenValueDef:  AS`Pattern * [AS`Type] * AS`Expr * AS`Access * bool +> AS`ValueDef;
+    GenDefStmt: seq of (AS`PatternBind * AS`Expr) * AS`Stmt +>  AS`DefStmt;
+    GenBlockStmt: seq of AS`AssignDef * seq of AS`Stmt +> AS`BlockStmt;
+    GenPatternName: [AS`Name] +> AS`PatternName;
+    GenIdentStmt: () +> AS`IdentStmt;
+    GenIfStmt:  AS`Expr * AS`Stmt * seq of AS`ElseifStmt * [AS`Stmt] +> AS`IfStmt;
+    GenRealLit: real +> AS`RealLit;
+    GenBracketedExpr: AS`Expr +> AS`BracketedExpr;
+    GenPrefixExpr: AS`UnaryOp * AS`Expr +> AS`PrefixExpr;
+    GenSetRangeExpr: AS`Expr * AS`Expr +> AS`SetRangeExpr;
+    GenMapComprehensionExpr: AS`Maplet * AS`BindList * [AS`Expr] +> AS`MapComprehensionExpr;
+    GenMaplet: AS`Expr * AS`Expr +> AS`Maplet;
+    GenMultSetBind: seq of AS`Pattern *  AS`Expr +> AS`MultSetBind;
+    GenSeqModifyMapOverrideExpr: AS`Expr * AS`Expr +> AS`SeqModifyMapOverrideExpr;
+    GenIfExpr: AS`Expr * AS`Expr * seq of AS`ElseifExpr * AS`Expr +> AS`Expr;
+    GenMapEnumerationExpr: seq of AS`Maplet +> AS`MapEnumerationExpr;
+    GenAssignDef: AS`Name * AS`Type * [AS`Expr] +> AS`AssignDef;
+    GenBasicType: <BOOLEAN> | <INTEGER> | <REAL> | <CHAR> +> AS`BasicType;
+    GenName: seq of AS`Id +> AS`Name;
+    GenNilLit: () +> AS`NilLit;
+    GenExitStmt: [AS`Expr] +> AS`ExitStmt;
+    GenXorExpr: AS`Expr * AS`Expr +> AS`Expr;
+    GenTypeBind: AS`Pattern * AS`Type +> AS`TypeBind;
+    GenDefExpr: (seq of (AS`PatternBind * AS`Expr)) * AS`Expr +> AS`DefExpr;
+    GenTypeName: AS`Name +> AS`TypeName;
+    GenTextLit: seq of char +> AS`TextLit;
+    GenCallStmt: [AS`Expr] * AS`Name * (seq of AS`Expr) +> AS`CallStmt;
+    GenQuoteLit: seq of char +> AS`QuoteLit,
+
+from J2VAUX
+  functions
+--    IsTempVarAssgn: AS`Stmt +> bool;
+    IsASExpr: AS`Expr | seq of AS`Stmt +> bool;
+    IsCPPName: CPP`Name | CPP`Expr +> bool;
+
+   operations
+    TempVarsBeginBlock: () ==> ();
+    TempVarGetNext: seq of char ==> AS`Name;
+    TempVarsEndBlock: () ==> (),
+
+from J2VSTMT
+  operations
+    ProcessStmts: seq of AS`Stmt ==> seq of AS`Stmt,
+
+from J2VCLASS
+  operations
+    GetName:  () ==> AS`Name;
+    GetSuper: () ==> [AS`Name]
+  values
+    v_null: AS`QuoteLit;
+    v_nullType: AS`QuoteType;
+    v_objectClassName: AS`Name;
+    v_IsNilOpNm: AS`Name,
+
+from J2VENV
+  values
+    v_J2VUTILnm:  seq1 of char;
+    v_ConvertOpNm:  seq1 of char;
+    v_ConcatStrOpNm:  seq1 of char;
+    v_BitOpNm: seq1 of char;
+    v_StringNm:  seq1 of char,
+
+from J2V
+  operations
+    MustSkipUnspecified: () ==> bool
+
+exports
+types
+  struct ExprContext
+operations
+  J2VExpr: CPP`Expr * [AS`Name] * [ExprContext] ==> seq of AS`Stmt;
+  J2VExpr': CPP`Expr * [AS`Name] * [ExprContext] ==> AS`Expr | seq of AS`Stmt;
+  J2VExpr'': CPP`Expr * [AS`Name] * [ExprContext] ==> AS`Expr | seq of AS`Stmt
+
+definitions
+
+\end{vdm_al}
+
+We introduce auxiliary information which might be needed to
+translate a particular node of CPPAS and
+which is gathered while translating hiers of this
+node.
+This information consists of:
+
+a scope resolution name,
+a state designator for the left hand side of assignment,
+a counter part of the state designator on the right hand side of assignment
+an indicator that this or super were encountered
+
+\begin{vdm_al}
+types
+  AuxInfo ::
+    scopeRes:  [AS`Name]
+    sd:        [AS`StateDesignator]
+    rhs:       [AS`Expr]
+    superThis: [<THIS>|<SUPER>]
+    isNil:     [<NIL>];
+
+\end{vdm_al}
+
+We introduce information which might be needed to 
+translate a particular node of CPPAS, but could only 
+be obtained before translation of the node takes place.
+This information consists of:
+
+a type which the expression value is expected to be of,
+a name of a class whose method call is under translation,
+a name of a method whose call is under translation.
+
+\begin{vdm_al}
+
+  ExprContext ::
+    type:      AS`Type
+    className: [AS`Name]
+    opName:    [AS`Name];
+
+operations
+\end{vdm_al}
+
+A Java expression could possibly be implemented in VDM++ like
+a sequence of statements with temporary variables
+holding intermediate results and
+a dedicated temporary variable with the expression value, e.g
+
+\begin{small}
+\begin{verbatim}
+    j + k++ + k++ 
+\end{verbatim}
+\end{small}
+
+could be translated  to
+
+\begin{small}
+\begin{verbatim}
+    t1:=k;   k:=k+1;  t2:=k;  k:=k+1;  t3:=j+t1+t2;
+\end{verbatim}
+\end{small}
+
+where \texttt{t1, t2, t3} are temporary variables and
+\texttt{t3} holds the value of the expression
+
+\subsection{Top level operations to translate an expression}
+
+There are three top level expression translation operations
+
+\begin{small}
+\begin{verbatim}
+  J2VExpr: CPP`Expr * [AS`Name] * [ExprContext] ==> seq of AS`Stmt;
+  J2VExpr': CPP`Expr * [AS`Name] * [ExprContext] ==> AS`Expr | seq of AS`Stmt;
+  J2VExpr'': CPP`Expr * [AS`Name] * [ExprContext] ==> AS`Expr | seq of AS`Stmt
+\end{verbatim}
+\end{small}
+
+For \texttt{J2VExpr'}, \texttt{p\_name} should be the name
+of a temporary variable where the caller intends to have
+the value of the expression.
+If  \texttt{J2VExpr'} has managed to produce just an expression
+(without auxiliary statements), the operation ignores
+\texttt{p\_name} parameter and returns the expression itself.
+
+If this is not the case, the caller receives the statements which calculate
+the expression value and store it into the temporary variable the caller provided.
+
+\texttt{J2VExpr} always  returns a list of statements.
+If the caller wants to have the expression value available to him,
+he has to provide a variable, not a temporary one, but a actual one 
+
+For instance in \texttt{ExpressionStmt}, you don't have to provide
+a variable, because, either \texttt{ExpressionStmt} knows
+where to put a value (like in \texttt{i=...;}, e.g.)
+or there is no need for that because the value is discarded
+(like in \texttt{operation();} ).
+
+Concerning temporary vs actual variables.
+The intention is to avoid necessity to have type information during
+translation. To achieve this we would use
+\texttt{def t=expr in ...} for a temporary variable "definition"
+where \texttt{t} is a \texttt{PatterName}.
+Thus, temporary variables are pattern names.
+
+During expression translation, wherever an assignment to a
+temporary variable is needed, \texttt{J2VExpr}  puts constructs
+
+\begin{small}
+\begin{verbatim}
+...    def t1=expr1 in skip;  ... def t2=expr2 in skip; ...
+\end{verbatim}
+\end{small}
+
+and, later on, some postprocessing is called which creates right
+def block nesting
+
+\begin{small}
+\begin{verbatim}
+... def  t1=expr1 in ( .... def t2=expr2 in  ( ... ) ....)  ....
+\end{verbatim}
+\end{small}
+
+\begin{formalparameters}
+\verb+p_expr: CPP`Expr+ & The abstract syntax tree for a Java
+                     expression to be translated
+                     to sequence of VDM++ statements.\\
+\verb+p_name: [AS`Name]+ & A temporary variable declared in a \texttt{dcl}
+                     in the VDM++ code
+                     which holds the result of the expression.\\
+\hline
+\end{formalparameters}
+\methodresult{seq of AS`Stmt}{VDM++ statements implementing the original JAVA expression.}
+
+If a value a function returns is not used then
+operation generates \texttt{ let - = a(...) in skip}.
+
+This is the case when \texttt{p\_name} is nil and \texttt{J2VExpr'}
+returns \texttt{AS`Expr}.
+
+\begin{vdm_al}
+
+J2VExpr: CPP`Expr * [AS`Name] * [ExprContext] ==> seq of AS`Stmt
+J2VExpr(p_expr,p_name,p_cntxt) ==
+( dcl l_res: seq of AS`Stmt;
+
+  J2VAUX`TempVarsBeginBlock();
+  l_res:=J2VExprVI(p_expr,p_name,p_cntxt);
+  J2VAUX`TempVarsEndBlock();
+  return l_res
+);
+
+J2VExprVI: CPP`Expr * [AS`Name] * [ExprContext] ==> seq of AS`Stmt
+J2VExprVI(p_expr,p_name,p_cntxt) ==
+  def l_expr = J2VExpr'(p_expr,nil,p_cntxt);
+      l_stmts = if not J2VAUX`IsASExpr(l_expr)
+                then l_expr
+                else [J2VBVDM`GenLetStmt(
+                       [J2VBVDM`GenValueDef(
+                         J2VBVDM`GenPatternName(nil),
+                         nil,
+                         l_expr,
+                         <NOT_INITIALISED_AS>,
+                         false)],                -- static 
+                       J2VBVDM`GenIdentStmt())]
+  in
+    return
+      if p_name<>nil
+      then l_stmts^[J2VBVDM`GenAssignStmt(p_name,l_expr)]
+      else l_stmts;
+
+\end{vdm_al}
+
+The operation \texttt{J2VExpr''} translates JAVA \texttt{p\_expr} to a VDM++ expression,
+or a sequence of statements.
+If the result is a sequence of statements, then 
+the expression value is stored in a variable \texttt{p\_name}
+(a real variable, not a pattern name).
+The client is responsible for declaring the variable.
+
+\begin{formalparameters}
+\verb+p_expr: CPP`Expr+ & The abstract syntax tree for a Java
+                     expression to be translated
+                     to sequence of VDM++ statements.\\
+\verb+p_name: [AS`Name]+ & A temporary variable declared in a \texttt{dcl}
+                     in the VDM++ code which holds the result
+                     of the expression if translation
+                     of original expression yields statements.\\
+\hline
+\end{formalparameters}
+\methodresult{seq of AS`Stmt}{VDM++ statements implementing the original JAVA expression.}
+
+\begin{vdm_al}
+
+J2VExpr'': CPP`Expr * [AS`Name] * [ExprContext] ==> AS`Expr | seq of AS`Stmt
+J2VExpr''(p_expr,p_name,p_cntxt) ==
+( dcl l_res: AS`Expr | seq of AS`Stmt;
+
+  J2VAUX`TempVarsBeginBlock();
+  l_res := J2VExprV(p_expr,p_name,p_cntxt);
+  J2VAUX`TempVarsEndBlock();
+  return l_res
+);
+
+J2VExprV: CPP`Expr * [AS`Name] * [ExprContext] ==> AS`Expr | seq of AS`Stmt
+J2VExprV(p_expr,p_name,p_cntxt) ==
+  def mk_(-,l_expr,l_stmts,-) = J2VExprExcl(p_expr,nil,p_cntxt)
+  in
+    return 
+      if l_stmts=[]
+      then l_expr
+      else
+        J2VSTMT`ProcessStmts
+          ( if p_name<>nil
+            then l_stmts^[J2VBVDM`GenAssignStmt(p_name,l_expr)]
+            else
+              l_stmts
+                ^[J2VBVDM`GenLetStmt
+                    ( [J2VBVDM`GenValueDef
+                        ( J2VBVDM`GenPatternName(nil),
+                          nil,
+                          l_expr,
+                          <NOT_INITIALISED_AS>,
+                          false)],                -- static 
+                      J2VBVDM`GenIdentStmt())]);
+
+\end{vdm_al}
+
+The operation \texttt{J2VExpr'} is called with \texttt{p\_tvar=nil}
+if a caller is sure that either the expression
+translation yields VDM++ expression,
+or the expression is used as an expression statement
+and is not a part of some outermost expression.
+
+\begin{formalparameters}
+\verb+p_expr: CPP`Expr+ & The abstract syntax tree for a Java
+                     expression to be translated
+                     to sequence of VDM++ statements.\\
+\verb+p_tvar: [AS`Name]+ & A temporary variable (a pattern name)
+                     which holds the result of the expression.\\
+\hline
+\end{formalparameters}
+\methodresult{seq of AS`Stmt}{VDM++ expression or statements
+                     implementing the original JAVA expression.}
+
+\begin{vdm_al}
+
+J2VExpr': CPP`Expr * [AS`Name] * [ExprContext] ==> AS`Expr | seq of AS`Stmt
+J2VExpr'(p_expr,p_tvar,p_cntxt) ==
+  return
+    def mk_(-,l_expr,-) = J2VExpr'''(p_expr,p_tvar,p_cntxt)
+    in l_expr;
+
+\end{vdm_al}
+
+\subsection{Auxiliary operation \texttt{J2VExprExcl}}
+
+The operation \texttt{J2VExprExcl} translates JAVA \texttt{p\_expr}
+to a VDM++ expression and a sequence of statements.
+If translation of \texttt{p\_expr} yields statements then 
+the expression value is assigned to the pattern name \texttt{p\_name}
+(if it is specified), or to some pattern name the operation generates
+(if \texttt{p\_name} equals to nil). The operation returns
+the pattern name \texttt{AS`Expr} holding the expression result
+and sequence of statements \texttt{seq of AS`Stmt} implementing
+the original expression.
+If translation of \texttt{p\_expr} has managed
+to yield an expression only then \texttt{p\_name} is ignored
+and the operation returns the result
+of translation (\texttt{AS`Expr}) and an empty sequence of statements.
+Besides \texttt{AS`Expr} and \texttt{seq of AS`Stmt},
+the operation returns auxiliary information \texttt{AuxInfo}
+a caller might use and definitions of auxiliary variables
+\texttt{seq of AS`AssignDef} used in the statements.
+The client is responsible for putting these
+definitions in a \texttt{AS`BlockStmt}.
+
+\begin{formalparameters}
+\verb+p_expr: CPP`Expr+ & The abstract syntax tree for a Java
+                     expression to be translated.\\
+\verb+p_name: [AS`Name]+ & A pattern name
+                     which holds the result of the expression.\\
+\hline
+\end{formalparameters}
+\methodresult{(seq of AS`AssignDef) * AS`Expr * seq of AS`Stmt * AuxInfo}
+{Definitions of auxiliary variables.
+VDM++ expression corresponding to the original JAVA expression, or
+a pattern name holding the result of the expression if translation
+yields statements.
+VDM++ statements implementing the original JAVA expression.
+An empty sequence if translation yields an expression.
+Auxiliary information a caller might use.}
+
+\begin{vdm_al}
+
+J2VExprExcl: CPP`Expr * [AS`Name] * [ExprContext] ==> (seq of AS`AssignDef) * AS`Expr * (seq of AS`Stmt) * AuxInfo
+J2VExprExcl(p_expr,p_name,p_cntxt) ==
+  def l_name = if p_name = nil 
+               then J2VAUX`TempVarGetNext([])
+               else p_name;
+      mk_(l_adefs,l_expr,l_aux) = J2VExpr'''(p_expr,l_name,p_cntxt)
+  in
+--      if not is_(l_expr,seq of AS`Stmt)
+      if J2VAUX`IsASExpr(l_expr)
+      then return mk_(l_adefs,l_expr,[],l_aux)
+      else return mk_(l_adefs,l_name,l_expr,l_aux);
+
+\end{vdm_al}
+
+\subsection{Generic operation \texttt{J2VExpr'''}}
+
+The operation \texttt{J2VExpr'''} calls a partucular
+translation operation depending on which node of JAVA
+abstract syntax is under translation.
+
+\begin{formalparameters}
+\verb+p_expr: CPP`Expr+ & The abstract syntax tree for a Java
+                     expression to be translated
+                     to sequence of VDM++ statements.\\
+\verb+p_name: [AS`Name]+ & A temporary variable declared in a \texttt{dcl}
+                     in the VDM++ code which holds the result
+                     of the expression if translation
+                     of original expression yields statements.\\
+\hline
+\end{formalparameters}
+\methodresult{(seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo}
+{See that of \texttt{J2VExprExcl}}.
+
+\begin{vdm_al}
+
+J2VExpr''': CPP`Expr * [AS`Name] * [ExprContext]
+            ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+J2VExpr'''(p_expr,p_name,p_cntxt) ==
+  return
+    cases true:
+      (is_CPP`ThrowExpression(p_expr))           -> J2VThrowExpression(p_expr,p_name,p_cntxt),
+      (is_CPP`AssignExpr(p_expr))                -> J2VAssignExpr(p_expr,p_name,p_cntxt),
+      (is_CPP`ConditionalExpr(p_expr))           -> J2VConditionalExpr(p_expr,p_name,p_cntxt),
+      (is_CPP`LogicalExpr(p_expr))               -> J2VLogicalExpr(p_expr,p_name,p_cntxt),
+      (is_CPP`EqualityExpr(p_expr))              -> J2VEqualityExpr(p_expr,p_name,p_cntxt),
+      (is_CPP`RelationalExpr(p_expr))            -> J2VRelationalExpr(p_expr,p_name,p_cntxt),
+      (is_CPP`BinExpr(p_expr))                   -> J2VBinExpr(p_expr,p_name,p_cntxt),
+      (is_CPP`UnaryOpExpr(p_expr))               -> J2VUnaryOpExpr(p_expr,p_name,p_cntxt),
+      (is_CPP`BracketedExpr(p_expr))             -> J2VBracketedExpr(p_expr,p_name,p_cntxt),
+      (is_CPP`FctCall(p_expr))                   -> J2VFctCall(p_expr,p_name,p_cntxt),
+      (is_CPP`ArrayApply(p_expr))                -> J2VArrayApply(p_expr,p_name,p_cntxt),
+      (is_CPP`PreInDecrementExpr(p_expr))        -> J2VPreInDecrementExpr(p_expr,p_name,p_cntxt),
+      (is_CPP`PostFixInDecrementExpr(p_expr))    -> J2VPostFixInDecrementExpr(p_expr,p_name,p_cntxt),
+      (is_CPP`ArrayInitializer(p_expr))          -> J2VArrayInitializer(p_expr,p_name,p_cntxt),
+      (is_CPP`ArrayCreationExpr(p_expr))         -> J2VArrayCreationExpr(p_expr,p_name,p_cntxt),
+      (is_CPP`ObjectMemberAccess(p_expr))        -> J2VObjectMemberAccess(p_expr,p_name,p_cntxt),
+      (is_CPP`CastExpr(p_expr))                  -> J2VCastExpr(p_expr,p_name,p_cntxt),
+--      (is_(p_expr,CPP`Name))
+      (J2VAUX`IsCPPName(p_expr))                 -> J2VName(p_expr,p_name,p_cntxt),
+      (is_CPP`Super(p_expr))                     -> J2VSuper(p_expr,p_name,p_cntxt),
+      (is_CPP`This(p_expr))                      -> J2VThis(p_expr,p_name,p_cntxt),
+      (is_CPP`ClassInstanceCreationExpr(p_expr)) -> J2VClassInstanceCreationExpr(p_expr,p_name,p_cntxt),
+      (is_CPP`BitExpr(p_expr))                   -> J2VBitExpr(p_expr,p_name,p_cntxt),
+      (is_CPP`NullLit(p_expr))                   -> J2VNull(p_expr,p_name,p_cntxt),
+      others                                     -> mk_([],J2VExprIV(p_expr,p_name,p_cntxt),GenEmptyAuxInfo())
+    end;
+
+J2VExprIV: CPP`Expr * [AS`Name] * [ExprContext] ==> AS`Expr | seq of AS`Stmt
+J2VExprIV(p_expr,p_name,p_cntxt) ==
+  return
+    cases true:
+  --    (is_(p_expr,CPP`Literal))                  -> J2VLiteral(p_expr,p_name),
+      (is_CPP`IntegerLit(p_expr))                -> mk_AS`RealLit(p_expr.val,CI`NilContextId),
+      (is_CPP`CharacterLit(p_expr))              -> mk_AS`CharLit(p_expr.val,CI`NilContextId),
+      (is_CPP`FloatingLit(p_expr))               -> mk_AS`RealLit(p_expr.val,CI`NilContextId),
+      (is_CPP`StringLit(p_expr))                 -> J2VStringLiteral(p_expr,p_name,p_cntxt),
+                                                     -- mk_AS`TextLit(p_expr.val,CI`NilContextId),
+      (is_CPP`BoolLit(p_expr))                   -> mk_AS`BoolLit(p_expr.val,CI`NilContextId),
+--      (is_CPP`NullLit(p_expr))                   -> J2VBVDM`GenNilLit(),
+      (is_CPP`ClassExpr(p_expr))                 -> J2VClassExpr(p_expr,p_name,p_cntxt),
+  --
+  --    They can not appear in JAVA (see invariant for CPP`Expr)!
+  --  
+  --    (is_CPP`AllocationTypeExpr(p_expr))        -> J2VAllocationTypeExpr(p_expr,p_name),
+  --    (is_CPP`AllocationNewTypeExpr(p_expr))     -> J2VAllocationNewTypeExpr(p_expr,p_name),
+  --    (is_CPP`ExplTypeConv(p_expr))              -> J2VExplTypeConv(p_expr,p_name),
+  --    (is_CPP`ScopeResIdentifier(p_expr))        -> J2VScopeResIdentifier(p_expr,p_name),
+  --    (is_CPP`ScopeResOpFctName(p_expr))         -> J2VScopeResOpFctName(p_expr,p_name),
+  --    (is_CPP`ScopeResQualifiedName(p_expr))     -> J2VScopeResQualifiedName(p_expr,p_name),
+      (is_CPP`TypeCompExpr(p_expr))              -> J2VTypeCompExpr(p_expr,p_name,p_cntxt),
+      (is_CPP`ShiftExpr(p_expr))                 -> J2VShiftExpr(p_expr,p_name,p_cntxt),
+      others -> undefined
+    end;
+
+\end{vdm_al}
+
+\subsection{Translation of \texttt{null}}
+
+\begin{vdm_al}
+
+J2VNull: CPP`Expr * [AS`Name] * [ExprContext]
+         ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+--J2VNull(p_expr,p_name,p_cntxt) ==
+J2VNull(-,-,p_cntxt) ==
+( dcl l_aux: AuxInfo := GenEmptyAuxInfo();
+  l_aux.isNil := <NIL>;
+  return
+    mk_([],
+        if p_cntxt = nil
+        then J2VBVDM`GenNilLit()
+        else
+          let l_type = p_cntxt.type
+          in
+            if is_AS`OptionalType(l_type)
+            then J2VBVDM`GenNilLit()
+--            J2VBVDM`GenNewExpr
+--              (let mk_AS`OptionalType(t,-)=l_type in t.name,[J2VCLASS`v_null])
+            elseif is_AS`GeneralMap0Type(l_type) or is_AS`GeneralMap1Type(l_type)
+            then J2VBVDM`GenMapEnumerationExpr([])
+            elseif is_AS`TypeName(l_type)
+            then J2VBVDM`GenNewExpr(J2VNS`GetNewJavaAPIClassName(l_type.name),[J2VCLASS`v_null])
+            else J2VBVDM`GenNilLit(), --undefined,
+        l_aux)
+);
+
+\end{vdm_al}
+
+\subsection{Translation of an assignment}
+
+The operation \texttt{J2VAssignExpr} translates a JAVA assignment to 
+the corresponding VDM++ assignment or a sequence of statements.
+The simple cases like \texttt{i=expression} will be translated in
+\texttt{i:=expression}.
+For  assignments with \texttt{+=,-=} etc, \texttt{i+=expr}
+it will be \texttt{def temp=i in i := temp + expression}
+We have to use a temporary variable because, in general case,
+the initial value of assignment's left hand could be changed
+inside expr.
+
+And finally, the general case \texttt{    j=...(i=i+=7)...}
+will look like
+\begin{small}
+\begin{verbatim}
+  ...
+  def t1 = ...;
+  t2 = i
+  in
+  ( i := t2+7;
+    def t3 = i
+    in
+    ( ...
+
+      in j := ...
+    ) 
+  ) ;
+\end{verbatim}
+\end{small}
+
+Assignment to an array element:
+\begin{small}
+\begin{verbatim}
+JAVA:
+  a[i++][k++]=expr
+  (i==0 ? a[1] : b[2])[0] = ...
+VDM++:
+  def t1=i in ( i:=i+1; def t2=k in ( k:=k+1; in a(t1):=a(t1)++{t2|->expr} ...))
+  (dcl tb=i=0; if tb then a(1)(0):=... else b(1)(0):=...)
+\end{verbatim}
+\end{small}
+
+Cases like 
+\begin{small}
+\begin{verbatim}
+int a,b; (true? a:b)=123
+\end{verbatim}
+\end{small}
+are not possible in JAVA, because it requires
+variable, field acces  or array access on the left hand side.
+
+ISSUE:
+So, what do we do with
+\begin{small}
+\begin{verbatim}
+(new A()).Test()[3]= ...
+\end{verbatim}
+\end{small}
+
+\begin{formalparameters}
+\verb+p_expr: CPP`AssignExpr+ & The abstract syntax tree for a Java
+                     assignment to be translated
+                     to sequence of VDM++ statements.\\
+\verb+p_name: [AS`Name]+ & A temporary variable (a pattern name)
+                     which holds the result of the assignment as an expression.\\
+\hline
+\end{formalparameters}
+\methodresult{(seq of AS`AssignDef) * (seq of AS`Stmt)}
+{VDM++ definitions of temporary variables used in statement(s)
+implementing the original JAVA expression and the statement(s) itself(theirselves).}
+
+\begin{vdm_al}
+J2VAssignExpr: CPP`AssignExpr * [AS`Name] * [ExprContext] ==> (seq of AS`AssignDef) * (seq of AS`Stmt) * AuxInfo
+--J2VAssignExpr(p_expr,p_name,p_cntxt) ==
+J2VAssignExpr(p_expr,p_name,-) ==
+--( dcl l_type: AS`Type :=TypeRep2Type(GetTypeInfo(p_expr.unary.cid),p_expr.unary.cid),
+( dcl l_type: AS`Type := TypeRep2Type(GetTypeInfo(GetCid(p_expr.unary)),GetCid(p_expr.unary)),
+      l_cntxt: ExprContext;
+  l_cntxt.type := l_type;
+  def mk_(l_adefs,l_expr,l_stmts,l_aux) = J2VAssignExpr'( p_expr.unary,
+                                                          p_expr.assignop,
+                                                          p_expr.assignexpr,
+                                                          [],
+                                                          p_name,
+                                                          l_cntxt);
+      mk_(l_adefs', l_stmts') = if p_name = nil and l_adefs <> []
+                                then mk_([], [J2VBVDM`GenBlockStmt(l_adefs,J2VSTMT`ProcessStmts(l_stmts))])
+                                else mk_(l_adefs,l_stmts)
+  in
+    return
+      mk_(l_adefs', l_stmts' ^ if p_name <> nil
+                               then [GenTempVarAssgn(p_name, l_expr)]
+                               else [],
+          l_aux)
+);
+
+\end{vdm_al}
+
+For left hand sides like
+\texttt{(cond1? (cond2? a[i]: b[j])[l] : c[k] )[0]=...},
+the idea is to construct nested if statements and,
+in parallel, construct corrected CPP`Expr repesenting the pure
+state designator of the left hand side void of any conditional
+and bracketed expressions.
+Then, from inside of nested ifs, the conventional translation
+of assignment takes place.
+
+\begin{small}
+\begin{verbatim}
+if cond1
+then
+  if cond2
+  then
+    a[i][l][0]:=...
+  else
+    b[i][l][0]:=...
+else
+  c[k][0]:=...;
+\end{verbatim}
+\end{small}
+
+So, we disintegrate CPP`Expr tree into seq of "simple" CPP`Expr void of
+conditional statements.
+We translate the conditional statements to if statements
+while we go deeper.
+When we reach a terminal node in the CPP`Expr tree,
+we reconstruct the pure left hand side and translate
+the right hand side.
+
+If \texttt{p\_name} is not nil (means that the expression value
+must be assigned to a temporary variable \texttt{p\_name}
+to be use in an outermost expression),
+we will construct \texttt{def} statement for \texttt{p\_name} like
+
+\begin{small}
+\begin{verbatim}
+def
+  p_name
+    = if cond1
+      then
+        if cond2
+        then a[i][l][0]
+        else b[i][l][0]
+      else c[k][0] in ...
+\end{verbatim}
+\end{small}
+
+For such cases, we must use a temporary variables to store
+values of conditions calculated in advance.
+Because, even if translation of a condition yields
+an expression, we can not mention it twice in VDM++ code
+(e.g. there could be some method call wich has side affects
+we don't want to track).
+
+LIMITATIONS:
+
+Translation of expr1 and expr2 of a conditional expression
+located on the left side of assignment can not yields statements!
+
+\texttt{(true ? a[i++] : b[j++])[0]}
+
+\texttt{J2VAssignExpr'} is introduced to
+translate the left hand side of a JAVA assignment
+to VDM++ assinment(s) possibly inserted into structure of nested
+\texttt{ifs} implementing the original JAVA assignment.
+
+\begin{formalparameters}
+\verb+p_unary: CPP`Expr+ & The abstract syntax tree for the
+                     assignment left hand side.\\
+\verb+p_op: CPP`AssignOp+ & The assignment operator.\\
+\verb+p_assignexpr: CPP`Expr+ & The abstract syntax tree for the
+                     assignment rignt hand side.\\
+\verb+p_lhs: seq of CPP`Expr+ & A list of JAVA abstract syntax nodes
+                     to be combined to form the left hand side tree void of
+                     conditional expressions.\\
+\verb+p_name: [AS`Name]+ & A pattern name
+                     which holds the result of the expression.\\
+\hline
+\end{formalparameters}
+\methodresult{(seq of AS`AssignDef) * AS`Expr * seq of AS`Stmt}
+{Definitions of auxiliary variables.
+VDM++ expression corresponding to the original JAVA expression, or
+a pattern name holding the result of the expression if translation
+yields statements.
+VDM++ statements implementing the original JAVA expression.
+An empty sequence if translation yields an expression.}
+
+\begin{vdm_al}
+J2VAssignExpr': CPP`Expr *
+                CPP`AssignOp * CPP`Expr *
+                seq of CPP`Expr * [AS`Name] * [ExprContext]
+                ==> (seq of AS`AssignDef) * AS`Expr * seq of AS`Stmt * AuxInfo
+J2VAssignExpr'(p_unary,p_op,p_assignexpr,p_lhs,p_name,p_cntxt) ==
+  return
+    cases true:
+      (is_CPP`ArrayApply(p_unary)) ->
+        J2VAssignExpr'(p_unary.array,p_op,p_assignexpr,[p_unary]^p_lhs,p_name,p_cntxt),
+      (is_CPP`ObjectMemberAccess(p_unary)) ->
+  --
+  --    Only super.i or this.i
+  --
+        J2VAssignExpr'
+          (p_unary.object,p_op,p_assignexpr,[p_unary]^p_lhs,p_name,p_cntxt),
+      (is_CPP`BracketedExpr(p_unary)) ->
+        J2VAssignExpr'(p_unary.expr,p_op,p_assignexpr,p_lhs,p_name,p_cntxt),
+      (is_CPP`ConditionalExpr(p_unary)) ->
+        LhsConditionalExpr(p_unary,p_op,p_assignexpr,p_lhs,p_name,p_cntxt),
+      others ->
+        J2VAssignExpr''
+          (AssembleExpr([p_unary]^p_lhs),p_op,p_assignexpr,p_cntxt)
+    end;
+
+\end{vdm_al}
+
+The operation recreates an abstract syntax tree for a left
+hand of an assignment from a list of
+\texttt{CPP`ArrayApply, CPP`ObjectMemberAccess, CPP`Expr} nodes
+
+\begin{vdm_al}
+AssembleExpr: seq1 of CPP`Expr ==> CPP`Expr
+AssembleExpr(p_exprs) ==
+( dcl l_expr1: CPP`Expr,
+      l_expr : CPP`Expr := hd p_exprs;
+  if len p_exprs > 1
+  then
+    for i = 2 to len p_exprs do
+    ( l_expr1 := p_exprs(i);
+      cases true:
+        (is_CPP`ObjectMemberAccess(l_expr1)) -> l_expr1.object:=l_expr,
+        (is_CPP`ArrayApply(l_expr1)) -> l_expr1.array:=l_expr,
+        others -> error
+      end;
+      l_expr := l_expr1
+   );
+  return l_expr
+); 
+
+\end{vdm_al}
+
+The operation traverses the left hand side of an assignment
+and constructs a structure of nested VDM++ if statements with
+a VDM++ assignment in each terminal branch.
+Each VDM++ assignment has the right side corresponding to the
+right side of the original JAVA assignment,
+and the left hand side corresponding to one of the possible variants
+of JAVA assignment's left hand side.
+
+\begin{formalparameters}
+\verb+p_unary: CPP`Expr+ & See \texttt{J2VAssignExpr'}.\\
+\verb+p_op: CPP`AssignOp+ & See \texttt{J2VAssignExpr'}.\\
+\verb+p_assignexpr: CPP`Expr+ & See \texttt{J2VAssignExpr'}.\\
+\verb+p_lhs: seq of CPP`Expr+ & See \texttt{J2VAssignExpr'}.\\
+\verb+p_name: [AS`Name]+ & See \texttt{J2VAssignExpr'}.\\
+\hline
+\end{formalparameters}
+\methodresult{(seq of AS`AssignDef) * AS`Expr * seq of AS`Stmt}
+{See \texttt{J2VAssignExpr'}.}
+
+\begin{vdm_al}
+LhsConditionalExpr: CPP`Expr * CPP`AssignOp * CPP`Expr * seq of CPP`Expr * [AS`Name] * [ExprContext]
+                     ==> (seq of AS`AssignDef) * AS`Expr * (seq of AS`Stmt) * AuxInfo
+LhsConditionalExpr(p_unary,p_op,p_assignexpr,p_lhs,p_name,p_cntxt) ==
+( 
+  def l_cons = p_unary.expr1;
+      l_altn = p_unary.expr2;
+      l_tcond = J2VAUX`TempVarGetNext([]);
+      l_cstmts = J2VExpr''(p_unary.cond,l_tcond,p_cntxt);
+      l_assgn = J2VBVDM`GenAssignStmt(l_tcond,l_cstmts);
+      l_adef = J2VBVDM`GenAssignDef(l_tcond,J2VBVDM`GenBasicType(<BOOLEAN>),nil);
+      l_cstmts' = if J2VAUX`IsASExpr(l_cstmts)
+                  then [l_assgn]
+                  else l_cstmts;
+      mk_(l_adefs,l_cexpr,l_cstmts'') = if p_name<>nil
+                                        then mk_([l_adef],l_tcond,l_cstmts')
+                                        else 
+                                          if J2VAUX`IsASExpr(l_cstmts)
+                                          then mk_([],l_cstmts,[])
+                                          else mk_([l_adef],l_tcond,l_cstmts');
+      mk_(l_adefs1,l_expr1,l_stmts1,-) = J2VAssignExpr'(l_cons,p_op,p_assignexpr,p_lhs,p_name,p_cntxt);
+      l_stmts1'=J2VSTMT`ProcessStmts(l_stmts1);
+      l_stmts1''= if len l_stmts1' > 1
+                  then J2VBVDM`GenBlockStmt([],l_stmts1')
+                  else hd l_stmts1';
+      mk_(l_adefs2,l_expr2,l_stmts2,-) = J2VAssignExpr'(l_altn,p_op,p_assignexpr,p_lhs,p_name,p_cntxt);
+      l_stmts2'=J2VSTMT`ProcessStmts(l_stmts2);
+      l_stmts2''= if len l_stmts2' > 1
+                  then J2VBVDM`GenBlockStmt([],l_stmts2')
+                  else hd l_stmts2'
+  in
+    return
+      mk_(l_adefs ^ l_adefs1 ^ l_adefs2,
+          J2VBVDM`GenIfExpr(l_cexpr,l_expr1,[],l_expr2),
+          l_cstmts'' ^ [J2VBVDM`GenIfStmt(l_cexpr,l_stmts1'',[],l_stmts2'')],
+          GenEmptyAuxInfo()
+          );
+);
+
+\end{vdm_al}
+
+The operation \texttt{J2VAssignExpr''} translates JAVA's assignment.
+
+\begin{formalparameters}
+\verb+p_unary: CPP`Expr+ & The leht hand side of assigment void of conditional nodes.\\
+\verb+p_op: CPP`AssignOp+ & See \texttt{J2VAssignExpr'}.\\
+\verb+p_assignexpr: CPP`Expr+ & See \texttt{J2VAssignExpr'}.\\
+\hline
+\end{formalparameters}
+\methodresult{(seq of AS`AssignDef) * AS`Expr * seq of AS`Stmt}
+{Definitions of auxiliary variables used in implementation of
+the original JAVA expression.
+A pattern name holding the result of the assignment as an expression.
+VDM++ statement(s) implementing the original JAVA assignment.}
+
+\begin{vdm_al}
+J2VAssignExpr'': CPP`Expr * CPP`AssignOp * CPP`Expr * [ExprContext]
+                 ==> (seq of AS`AssignDef) *
+                     AS`Expr * (seq of AS`Stmt) * AuxInfo
+J2VAssignExpr''(p_unary,p_op,p_assignexpr,p_cntxt) == (
+  def mk_CPP`AssignOp(l_op,-) = p_op;
+--      mk_(l_sd',l_adefs',l_rhs',lsdstmts,l_aux)=J2VAssignLhs(p_unary);
+      mk_(l_adefs',l_sdstmts2,l_aux) = J2VExpr'''(p_unary,nil,p_cntxt);
+      l_sd' = l_aux.sd;
+      l_rhs' = l_aux.rhs;
+--      l_sdstmts = if is_(l_sdstmts,AS`Expr) then  [] else l_sdstmts;
+      l_sdstmts = if J2VAUX`IsASExpr(l_sdstmts2) then  [] else l_sdstmts2;
+      l_isMapRef = is_AS`MapOrSeqRef(l_sd');
+      mk_(l_sd,l_rhs) = if l_isMapRef
+                        then mk_(l_sd'.var,l_rhs'.fct)
+                        else mk_(l_sd',l_rhs');
+--      l_issdstmts= len lsdstmts > 0;
+      l_vdmop = cases l_op: 
+                  <ASMULT>  -> <NUMMULT>,
+                  <ASDIV>   -> <NUMDIV>,
+                  <ASMOD>   -> <NUMMOD>,
+                  <ASPLUS>  -> <NUMPLUS>,
+                  <ASMINUS> -> <NUMMINUS>,
+                  <ASRIGHTSHIFT>,
+                  <ASLEFTSHIFT>, 
+                  <ASBITWISEAND>,
+                  <ASBITWISEEXOR>,
+                  <ASBITWISEINCLOR>,
+                  <ASUNSIGNEDRIGHTSHIFT> -> if J2V`MustSkipUnspecified()
+                                            then <NUMPLUS>
+                                            else undefined,
+                  others -> nil
+                end;
+      mk_(l_adefs,l_expr,l_stmts,-) = J2VExprExcl(p_assignexpr,nil,p_cntxt);
+      l_isStmts = len l_stmts > 0;
+      l_tidx = J2VAUX`TempVarGetNext([]);
+--
+--    For cases like a[i]=--i, if l_isStmts then
+--    we have to assign l_sd'.arg to a temp var and put this assignment
+--    before l_stmts !
+--
+      mk_(l_index,l_pre') = if l_isMapRef
+                            then
+                              if l_isStmts and l_isMapRef
+                              then mk_(l_tidx,[GenTempVarAssgn(l_tidx,l_sd'.arg)])
+                              else mk_(l_sd'.arg,[])
+                            else mk_(nil,[]);
+      l_tvar1=J2VAUX`TempVarGetNext([]);
+      l_pre = l_pre' ^
+--        if (l_isStmts and p_name<>nil) or   !!! p_name gone
+        if l_op <> <ASEQUAL>
+           -- ??? or l_isMapRef 
+        then l_sdstmts ^ [GenTempVarAssgn( l_tvar1, if l_isMapRef then l_rhs' else l_rhs)]
+        else
+--
+-- if ExpressionStmt (p_name=nil) we can't assign to tvar1 because rhs may be uninitialied!
+--
+             l_sdstmts^[];
+      l_res' = if l_op = <ASEQUAL>
+               then l_expr -- nil
+               else J2VBVDM`GenBinaryExpr(l_tvar1,  -- l_rhs
+                                          l_vdmop,
+                                          l_expr); --l_tvar2 ),
+      l_res'' = if l_isMapRef
+                then J2VBVDM`GenSeqModifyMapOverrideExpr(
+                               l_rhs,
+                               J2VBVDM`GenMapEnumerationExpr(
+                                 [J2VBVDM`GenMaplet(l_index, l_res')]))    -- ??? Should be l_res' instead of l_expr 
+                else l_res';
+      mk_(l_res, l_post) =
+--
+--      p_name<>nil (means p_expr is part of an outermost expression), hence,
+--      we assign the result expression to a temp var and then
+--      assign this temp var to p_name.
+--    
+--      This is done for cases when l_expr contains something like
+--      (new ClassName()).i
+--    
+--      If we don't do this, we will call 'new' twice!
+--
+--        if p_name <> nil
+--        then
+--          let l_tvar2=J2VAUX`TempVarGetNext([])
+--          in  mk_(l_tvar2, [GenTempVarAssgn(l_tvar2, l_res'')])
+--        else
+            mk_(l_res'', []);
+      l_postassgn =
+--
+--      p_name=nil means that p_expr is ExpressionStmt and won't be
+--      used as a part of an outermost expression
+--
+--        if p_name <> nil        !!! p_name gone
+--        then
+--          [GenTempVarAssgn(p_name, l_res)]
+--        else
+          []
+  in
+    return
+      mk_(l_adefs' ^ l_adefs,
+          l_rhs',
+          l_pre ^ l_stmts ^ l_post ^ [J2VBVDM`GenAssignStmt(l_sd, l_res)] ^ l_postassgn,
+          GenEmptyAuxInfo())
+)
+--pre ( is_(p_unary, CPP`Name)
+pre ( J2VAUX`IsCPPName(p_unary)
+      or is_CPP`ArrayApply(p_unary)
+      or is_CPP`ObjectMemberAccess(p_unary)
+    )
+--    and
+--      let mk_CPP`AssignOp(l_op,-)=p_op
+--      in l_op in set {<ASEQUAL>, <ASMULT>, <ASDIV>,
+--                      <ASMOD>, <ASPLUS>,
+--                      <ASMINUS>}              -- for the time being
+;
+
+\end{vdm_al}
+
+\subsection{Translation of a conditional expression}
+
+The operation \texttt{J2VConditionalExpr}
+translates Java's conditional expression
+to VDM++ expression.
+
+\begin{small}
+\begin{verbatim}
+JAVA:     i==10 ? expr_1 : expr_2
+VDM++:    if i=10 then expr_1 else expr_2
+\end{verbatim}
+\end{small}
+
+If translation of either expression expr1 or expr2
+yields statement, then the overall translation 
+will be constructed according to the following algorithm:
+
+Suppose translation of \texttt{expr\_i} yields
+
+\begin{small}
+\begin{verbatim}
+pre_i; def t_i=e_i_1 in skip; inter_i; def tres_i=e_i_2; post_i  
+\end{verbatim}
+\end{small}
+
+where \texttt{pre\_i, inter\_i, post\_i} are statements void of 
+pattern name definitions.
+Then we translate condition in
+
+\begin{small}
+\begin{verbatim}
+cond_pre; def tcond=... in skip; cond_post;
+\end{verbatim}
+\end{small}
+
+and the overall traslation will be
+
+\begin{small}
+\begin{verbatim}
+cond_pre; def tcond=... in skip; cond_post;
+if tb then pre_1 else pre_2;
+def t_1=e_1_1, t_2=e_2_1 in skip;
+if tb then inter_1 else inter_2;
+def tres_1=e_2_1, tres_2=e_2_2 in skip;
+\end{verbatim}
+\end{small}
+
+that is, we create if statement and search for a pattern name definition
+in translation of either branches. Statements from the first branch before 
+a pattern name definition go to \texttt{then} part, and those of the 
+second brach do to \texttt{else} part.
+If found statements turn to be empty then we
+put \texttt{skip} instead of them. The process ends when both branches are passed. 
+
+And finally,
+
+\begin{small}
+\begin{verbatim}
+def tres=if tb then tres=tres_1 else tres=tres_2 in skip;
+\end{verbatim}
+\end{small}
+
+Example:
+
+\begin{small}
+\begin{verbatim}
+JAVA: k=1 - (++a==0 ? 2 - ++k : 3 - l++); 
+VDM++:
+a:=a+1;
+def tb=a=0 in
+( if tb then k:=k+1 else skip;
+  def tk'=k, tl'=l in
+  ( if tb then skip else l:=l+1;
+    def tk=2-tk', tl=3-tl' in
+    ( def tres=if tb then tk else tl in
+        k=tres;
+    )
+  )
+) 
+\end{verbatim}
+\end{small}
+
+\begin{vdm_al}
+J2VConditionalExpr: CPP`ConditionalExpr * [AS`Name] * [ExprContext]
+                    ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+J2VConditionalExpr(p_expr,p_name,p_cntxt) ==
+  def mk_(l_cadefs,l_cexpr,l_cstmts,-) = J2VExprExcl(p_expr.cond,nil,p_cntxt);
+      l_isCstmts = len l_cstmts > 0;
+      mk_(l_adefs1,l_expr1,l_stmts1,-) = J2VExprExcl(p_expr.expr1,nil,p_cntxt);
+      l_is1stmts = len l_stmts1 > 0;
+      mk_(l_adefs2,l_expr2,l_stmts2,-) = J2VExprExcl(p_expr.expr2,nil,p_cntxt);
+      l_is2stmts = len l_stmts2 > 0;
+      l_expr = J2VBVDM`GenConditionalExpr(l_cexpr, l_expr1, l_expr2)
+  in
+    return
+      if not (l_isCstmts or l_is1stmts or l_is2stmts)
+      then mk_(l_cadefs ^ l_adefs1 ^ l_adefs2,l_expr,GenEmptyAuxInfo())
+      else
+        def l_tcond=J2VAUX`TempVarGetNext([]);
+            mk_(l_cexpr',l_cstmts') = if l_isCstmts
+                                      then mk_(l_cexpr,l_cstmts)
+--
+--              Although l_cexpr is expression, we have to assign it
+--              to a temp var for emergency cases like 'new Class()'
+--              inside l_cexpr.
+--
+                                      else mk_(l_tcond,l_cstmts ^ [GenTempVarAssgn(l_tcond,l_cexpr)])
+        in
+          mk_(l_cadefs ^ l_adefs1 ^ l_adefs2,
+              l_cstmts'
+              ^ MergeAlternatives(l_cexpr',l_expr1,l_stmts1,l_expr2,l_stmts2)
+              ^ [GenTempVarAssgn(p_name, J2VBVDM`GenIfExpr(l_tcond, l_expr1,[], l_expr2))],
+              GenEmptyAuxInfo())
+pre p_name <> nil;
+
+MergeAlternatives: AS`Expr * AS`Expr * seq of AS`Stmt * AS`Expr * seq of AS`Stmt ==> seq of AS`Stmt
+--MergeAlternatives(p_test,p_expr1,p_stmts1,p_expr2,p_stmts2) ==
+MergeAlternatives(p_test,-,p_stmts1,-,p_stmts2) ==
+( dcl l_stmts: seq of AS`Stmt := [],        -- the result
+      l_stmts1: seq of AS`Stmt := p_stmts1,
+      l_stmts2: seq of AS`Stmt := p_stmts2,
+      l_cons: seq of AS`Stmt := [], -- temporary accumulator for "then" branch
+      l_altn: seq of AS`Stmt := [], -- temporary accumulator for "else" branch
+      l_def: AS`DefStmt := J2VBVDM`GenDefStmt([],J2VBVDM`GenIdentStmt()),
+      l_if: AS`IfStmt := J2VBVDM`GenIfStmt(p_test, J2VBVDM`GenIdentStmt(), [], J2VBVDM`GenIdentStmt());
+  while len l_stmts1 > 0 or len l_stmts2 > 0 do
+  ( if len l_stmts1 > 0 and not is_AS`DefStmt(hd l_stmts1)
+    then
+    ( l_cons := l_cons ^ [hd l_stmts1];
+      l_stmts1 := tl l_stmts1
+    );
+    if len l_stmts2 > 0 and not is_AS`DefStmt(hd l_stmts2)
+    then
+    ( l_altn := l_altn ^ [hd l_stmts2];
+      l_stmts2 := tl l_stmts2
+    );
+--
+--  Either heads of both stmts are DefStmt, or one is DefStmt, and the other is empty
+--
+    if len l_stmts1 > 0 and is_AS`DefStmt(hd l_stmts1)
+       and (len l_stmts2 > 0 and is_AS`DefStmt(hd l_stmts2) or len l_stmts2 = 0)
+    then
+    ( l_def.value := l_def.value ^ (hd l_stmts1).value;
+      l_stmts1 := tl l_stmts1
+    );
+    if len l_stmts2>0 and is_AS`DefStmt(hd l_stmts2)
+       and (len l_stmts1>0 and is_AS`DefStmt(hd l_stmts1) or len l_stmts1=0)
+    then
+    ( l_def.value:=l_def.value^(hd l_stmts2).value;
+      l_stmts2:=tl l_stmts2
+    );
+--
+--  If it was a DefStmt constructed...
+--
+    if len l_def.value > 0
+    then
+    (
+      if len l_cons > 0
+      then
+        if len l_cons = 1
+        then l_if.cons := hd l_cons
+        else l_if.cons := J2VBVDM`GenBlockStmt([],l_cons);
+
+      if len l_altn > 0
+      then
+        if len l_altn = 1
+        then l_if.altn := hd l_altn
+        else l_if.altn := J2VBVDM`GenBlockStmt([],l_altn);
+--
+--    Construct merge statements fro the process part of stmts1 and stmts2
+--
+      let l_ifstmts = if len l_cons > 0 or len l_altn > 0 then [l_if]
+                      else []
+      in
+        l_stmts:=l_stmts^l_ifstmts^[l_def];
+--
+--    Reinitialized DefStmt and IfStmt variables
+--
+      l_def := J2VBVDM`GenDefStmt([],J2VBVDM`GenIdentStmt());
+      l_if := J2VBVDM`GenIfStmt(p_test, J2VBVDM`GenIdentStmt(), [], J2VBVDM`GenIdentStmt())
+    )
+  );
+  return l_stmts;
+)
+--pre is_(p_stmts1,seq of AS`Stmt) or is_(p_stmts2,seq of AS`Stmt);
+pre not (J2VAUX`IsASExpr(p_stmts1) and J2VAUX`IsASExpr(p_stmts2));
+
+\end{vdm_al}
+
+\subsection{Translation of a generic binary expression}
+
+The operation \texttt{GenericBinaryExpr} translates
+Java's generic binary expression to
+VDM++'s one.
+
+\begin{small}
+\begin{verbatim}
+JAVA: a binary_operator b
+VDM++: a vdm_binary_operator b
+\end{verbatim}
+\end{small}
+
+Several values of CPP abstract tree, although different,
+are binary expressions.
+These are CPP`LogicalExpr, CPP`BinaryExpr, CPP`EqualityExpr.
+That is why general operation is introduced to be used to
+translate each of them.
+
+The role of operation's parameters and return value is
+the same as that of \texttt{J2VExclExpr}.
+
+\begin{vdm_al}
+GenericBinaryExpr:  CPP`Expr * (AS`BinaryOp | <EXCLOR>) *
+                    CPP`Expr * [AS`Name] * [ExprContext] ==>
+                    (seq of AS`AssignDef) *
+                    (AS`Expr | seq of AS`Stmt) *
+                    AuxInfo
+GenericBinaryExpr(p_left,p_op,p_right,p_name,p_cntxt) ==
+( dcl l_stmts: AS`Expr | seq of AS`Stmt :=[],
+      l_l:     AS`Expr,
+      l_r:     AS`Expr,
+      l_lexpr':     AS`Expr,
+      l_rexpr':     AS`Expr,
+      --l_ltype: AS`Type:=TypeRep2Type(GetTypeInfo(p_left.cid),p_left.cid),
+      l_ltype: AS`Type:=TypeRep2Type(GetTypeInfo(GetCid(p_left)),GetCid(p_left)),
+      --l_rtype: AS`Type:=TypeRep2Type(GetTypeInfo(p_right.cid),p_right.cid),
+      l_rtype: AS`Type:=TypeRep2Type(GetTypeInfo(GetCid(p_right)),GetCid(p_right)),
+      l_lcntxt: ExprContext,
+      l_rcntxt: ExprContext;
+  l_lcntxt.type := l_ltype;
+  l_rcntxt.type := l_rtype;
+  if J2VCLASS`v_nullType = l_ltype
+  then l_lcntxt.type := l_rtype;
+  if J2VCLASS`v_nullType = l_rtype
+  then l_rcntxt.type := l_ltype;
+  def mk_(l_ladefs,l_lexpr,l_lstmts,l_laux) = J2VExprExcl(p_left,nil,l_lcntxt); -- p_cntxt),
+      mk_(l_radefs,l_rexpr,l_rstmts,l_raux) = J2VExprExcl(p_right,nil,l_rcntxt); -- p_cntxt),
+      l_lIsStmts = len l_lstmts > 0;
+      l_rIsStmts = len l_rstmts > 0;
+      l_isStr = IsString'(l_ltype) or IsString'(l_rtype); -- false
+      l_isArray = IsArray(l_ltype) or IsArray(l_rtype)
+  in
+  ( 
+--
+--    Take into account strings
+--
+    l_lexpr' := l_lexpr;
+    l_rexpr' := l_rexpr;
+    if p_op = <NUMPLUS>
+    then
+    ( if l_isStr and not IsString'(l_ltype)
+      then
+      ( l_lexpr' := GenConvertion2String(l_lexpr)
+      );
+      if l_isStr and not IsString'(l_rtype)
+      then
+      ( l_rexpr' := GenConvertion2String(l_rexpr)
+      )
+    );
+    if not (l_lIsStmts or l_rIsStmts)
+    then
+      l_stmts :=
+        ProcessPlusNil(l_lexpr',p_op,l_rexpr',l_isStr,l_isArray,l_laux,l_raux,p_cntxt)
+    else
+    (
+--
+--    Take into account statements from the left branch.
+--    If we have only an expression, introduce a temp var to hold it.
+--  
+      if not l_lIsStmts
+      then
+      ( l_l := J2VAUX`TempVarGetNext([]);
+        l_stmts := l_stmts ^ [GenTempVarAssgn(l_l, l_lexpr')]
+      )
+      else
+      ( l_l := l_lexpr';
+        l_stmts := l_stmts ^ l_lstmts
+      );
+--
+--    Take into account statements from the right branch.
+--    If we have only an expression, introduce a temp var to hold it.
+--    (seems we can live without this var)
+--
+      if not l_rIsStmts
+      then
+      ( l_r := l_rexpr';
+--      l_r := J2VAUX`TempVarGetNext([]);
+--      l_stmts:=l_stmts^[GenTempVarAssgn(l_r, l_rexpr')]
+      )
+      else
+      ( l_r := l_rexpr';
+        l_stmts := l_stmts ^ l_rstmts
+      );
+--
+--    Create a stetements for this BinExpr itself
+--
+      l_stmts := l_stmts ^
+        [ GenTempVarAssgn ( p_name, ProcessPlusNil(l_l,p_op,l_r,l_isStr,l_isArray,l_laux,l_raux,p_cntxt)) ];
+    );
+    return mk_(l_ladefs ^ l_radefs,l_stmts,GenEmptyAuxInfo())
+  )
+)
+pre p_name <> nil;
+
+GenConvertion2String: AS`Expr ==> AS`Expr
+GenConvertion2String(p_expr) ==
+( return 
+    J2VBVDM`GenApplyExpr
+      ( J2VBVDM`GenName([J2VENV`v_J2VUTILnm,J2VENV`v_ConvertOpNm]),
+  --
+  --      Just to test we assume that convertion function is in Object
+  --
+  --        ( J2VBVDM`GenName([J2VENV`v_ConvertOpNm]),
+        [J2VBVDM`GenTextLit(J2VENV`v_StringNm),p_expr] );
+);
+
+--
+--  Temporaryly
+--
+GetTypeInfo: CI`ContextId ==> JSSREP`TypeRep
+GetTypeInfo(p_cid) ==
+( dcl l_res: JSSREP`TypeRep:=mk_JSSREP`AllTypeRep();
+  def l_trep = CI`GetJSSTypeInfo(p_cid)
+  in
+    if l_trep <> nil
+    then l_res := l_trep
+    else
+      J2VERR`GenErr(p_cid,<ERROR>,2,[hd J2VCLASS`GetName().ids]);
+  return l_res
+);
+
+GetTypeRep: JSSREP`TypeRep ==> JSSREP`TypeRep
+GetTypeRep(p_trep) ==
+  return
+    if is_JSSREP`FieldTypeRep(p_trep)
+    then p_trep.type
+    else p_trep;
+
+IsString': AS`Type ==> bool
+IsString'(p_type) ==
+  return
+    is_AS`TypeName(p_type)
+    and (hd J2VNS`GetNewJavaAPIClassName(p_type.name).ids) = J2VENV`v_StringNm;
+
+IsArray: AS`Type ==> bool
+IsArray(p_type) ==
+  return is_AS`GeneralMap0Type(p_type) or is_AS`GeneralMap1Type(p_type);
+
+TypeRep2Type: JSSREP`TypeRep * CI`ContextId ==> AS`Type
+TypeRep2Type(p_trep,p_cid) ==
+( dcl l_type: [AS`Type];  
+  if is_JSSREP`FieldTypeRep(p_trep)
+  then
+    let l_dims = p_trep.array
+    in
+    ( l_type := TypeRep2Type(p_trep.type,p_cid);
+      for i = 1 to l_dims do
+        l_type := J2VTYPE`GenArrayType(l_type)
+    )
+  else
+  ( l_type :=
+      cases true:
+        (is_JSSREP`BoolTypeRep(p_trep)) -> J2VBVDM`GenBasicType(<BOOLEAN>),
+        (is_JSSREP`CharTypeRep(p_trep)) -> J2VBVDM`GenBasicType(<CHAR>),
+        (is_JSSREP`ByteTypeRep(p_trep)),
+        (is_JSSREP`ShortTypeRep(p_trep)),
+        (is_JSSREP`IntTypeRep(p_trep)),
+        (is_JSSREP`LongTypeRep(p_trep)) -> J2VBVDM`GenBasicType(<INTEGER>),
+        (is_JSSREP`FloatTypeRep(p_trep)),
+        (is_JSSREP`DoubleTypeRep(p_trep)) -> J2VBVDM`GenBasicType(<REAL>),
+        (is_JSSREP`StringTypeRep(p_trep)) -> J2VBVDM`GenTypeName(J2VBVDM`GenName([J2VENV`v_StringNm])),
+        (is_JSSREP`IntrfcTypeRep(p_trep)),
+        (is_JSSREP`ClassTypeRep(p_trep)) -> J2VBVDM`GenTypeName(p_trep.name),
+        (is_JSSREP`NullTypeRep(p_trep)) -> J2VCLASS`v_nullType,
+        (is_JSSREP`AllTypeRep(p_trep)) -> J2VBVDM`GenTypeName(J2VCLASS`v_objectClassName),
+        others ->  nil -- undefined
+  --      (is_JSSREP`MethodTypeRep(p_trep))
+  --      (is_JSSREP`AllTypeRep(p_trep))
+  --      (is_JSSREP`VoidTypeRep(p_trep))
+      end;
+    if l_type = nil
+    then
+    ( l_type := J2VBVDM`GenBasicType(<INTEGER>);
+      J2VERR`GenErr(p_cid,<ERROR>,2,[hd J2VCLASS`GetName().ids]);
+    )
+  );
+  return l_type
+);   
+
+
+ProcessPlusNil: AS`Expr * (AS`BinaryOp | <EXCLOR>)* AS`Expr * bool * bool *
+                AuxInfo * AuxInfo * [ExprContext] ==> AS`Expr
+ProcessPlusNil(p_left,p_op,p_right,p_isStr,p_isArray,p_laux,p_raux,p_cntxt) ==
+  if p_isStr and p_op = <NUMPLUS>
+  then
+    return
+      J2VBVDM`GenApplyExpr
+        ( J2VBVDM`GenName([J2VENV`v_J2VUTILnm,J2VENV`v_ConcatStrOpNm]),
+          [p_left,p_right] )
+  elseif not p_isArray
+         and p_op in set {<EQ>,<NE>}
+         and (p_laux.isNil = <NIL> or p_raux.isNil = <NIL>)
+  then
+    let l_object = if p_laux.isNil = <NIL> 
+                   then p_right
+                   else p_left,
+        l_expr' = J2VBVDM`GenApplyExpr( J2VBVDM`GenFieldSelectExpr ( l_object, J2VCLASS`v_IsNilOpNm ), [] ),
+        l_expr = if p_op = <EQ>
+                 then l_expr'
+                 else J2VBVDM`GenPrefixExpr(<NOT>,l_expr')
+    in
+      return l_expr
+  else
+    return
+      let l_type = if p_cntxt<>nil
+                   then p_cntxt.type
+                   else nil
+      in
+        if l_type <> nil
+--           and is_AS`BasicType(l_type)
+--           and let mk_AS`BasicType(l_t,-)=l_type in l_t=<INTEGER>
+           and is_AS`NumericType(l_type)
+           and let mk_AS`NumericType(l_t,-)=l_type in l_t=<INTEGER>
+           and (p_op in set {<AND>,<OR>,<EXCLOR>} )
+        then
+          J2VBVDM`GenApplyExpr
+            ( J2VBVDM`GenName([J2VENV`v_J2VUTILnm,J2VENV`v_BitOpNm]),
+              [p_left,BitOp2Lit(p_op),p_right] )
+        else
+          J2VBVDM`GenBinaryExpr(p_left,p_op,p_right); 
+
+GenTempVarAssgn: AS`Name * AS`Expr ==> AS`DefStmt
+GenTempVarAssgn(p_name, p_expr) ==
+  return
+    J2VBVDM`GenDefStmt( [mk_(J2VBVDM`GenPatternName(p_name),p_expr)], J2VBVDM`GenIdentStmt());
+
+GenTempTypedVarAssgn: AS`Name * AS`Type * AS`Expr ==> AS`DefStmt
+GenTempTypedVarAssgn(p_name,p_type,p_expr) ==
+  return
+    J2VBVDM`GenDefStmt([mk_(J2VBVDM`GenTypeBind (J2VBVDM`GenPatternName(p_name),p_type),p_expr)],
+                       J2VBVDM`GenIdentStmt());
+
+GenDefTypeBindExpr: AS`Name * AS`Type * AS`Expr * AS`Expr ==> AS`DefExpr
+GenDefTypeBindExpr(p_name,p_type,p_expr,p_in) ==
+  return
+    J2VBVDM`GenDefExpr( [mk_(J2VBVDM`GenTypeBind( J2VBVDM`GenPatternName(p_name),p_type),p_expr)], p_in);
+
+\end{vdm_al}
+
+\subsection{Translation of various binary expressions}
+
+The operation \texttt{J2VLogicalExpr} translates
+a logical expression.
+See the description for GenericBinaryExpr.
+
+\begin{vdm_al}
+J2VLogicalExpr: CPP`LogicalExpr * [AS`Name] * [ExprContext]
+                ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+J2VLogicalExpr(p_expr,p_name,p_cntxt) == 
+  let mk_CPP`LogOp(l_op,-) = p_expr.logop,
+      l_vmdOp = cases l_op:
+                  <OR>  -> <OR>, 
+                  <AND> -> <AND>
+                end
+  in
+    return GenericBinaryExpr(p_expr.left, l_vmdOp, p_expr.right, p_name, p_cntxt);
+
+\end{vdm_al}
+
+The operation \texttt{J2VBitExpr} translates a binary expression with
+integer bitwise or boolean logical operators
+(and, xor, and or).
+
+In case of boolean logical operators and and or,
+it just does the same as J2VLogicalExpr. See its description for details.
+
+An expression with the boolean logical operator xor
+is translated in
+
+\begin{small}
+\begin{verbatim}
+JAVA:
+   x^y
+VDM++:
+   def tx=x, ty=y in ...not x and y or x and not y ...
+\end{verbatim}
+\end{small}
+
+We have to use pattern names for values of \texttt{x} and \texttt{y}
+cause each of them is used twice in the result expression.
+
+TODO:
+
+Integer Bitwise Operators and, xor, and or
+
+\begin{vdm_al}
+
+J2VBitExpr: CPP`BitExpr  * [AS`Name] * [ExprContext]
+            ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+J2VBitExpr(p_expr,p_name,p_cntxt) == 
+  def 
+--    mk_CPP`BitOp(l_op,-)=p_expr.bitop,
+      l_vdmop = BitOp2vdmOp(p_expr.bitop);
+--
+--    TODO: find out which type of bit expr we have
+--    integer or boolean
+--    We handle only boolean for the time being!
+--
+      l_type = TypeRep2Type(GetTypeInfo(p_expr.cid),p_expr.cid)
+--    l_type = <BOOLEAN>
+  in
+    return
+--      if is_AS`BasicType(l_type)
+--         and let mk_AS`BasicType(l_t,-)=l_type in l_t=<BOOLEAN>
+      if is_AS`BooleanType(l_type) and l_vdmop=<EXCLOR>
+      then
+--        cases l_vdmop:
+--          <EXCLOR> ->
+            J2VXorExpr(p_expr,p_name,p_cntxt) --,
+--          <OR>,<AND>  ->
+--            GenericBinaryExpr
+--              ( p_expr.left,
+--                l_vdmop,
+--                p_expr.right,
+--                p_name,
+--                p_cntxt)
+--        end
+      else
+--
+--      Generate ApplyExpr
+--
+--        undefined;
+        GenericBinaryExpr(p_expr.left, l_vdmop, p_expr.right, p_name, p_cntxt);
+
+BitOp2vdmOp: CPP`BitOp ==> AS`BinaryOp | <EXCLOR>
+BitOp2vdmOp(p_op) ==
+  return
+    cases p_op.op:
+      <EXCLOR> -> <EXCLOR>,
+      <BITAND> -> <AND>,
+      <BITOR> ->  <OR>
+    end;
+
+BitOp2Lit: <AND> | <OR> | <EXCLOR> ==> AS`QuoteLit
+BitOp2Lit(p_op) ==
+  return
+    cases p_op:
+      <EXCLOR> -> J2VBVDM`GenQuoteLit("EXCLOR"),
+      <AND> -> J2VBVDM`GenQuoteLit("AND"),
+      <OR> ->  J2VBVDM`GenQuoteLit("OR")
+    end;
+
+
+J2VXorExpr: CPP`BitExpr  * [AS`Name] * [ExprContext]
+            ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+J2VXorExpr(p_expr,p_name,p_cntxt) == 
+( dcl l_stmts: seq of AS`Stmt:=[],
+      l_l: AS`Expr,
+      l_r: AS`Expr;
+  def mk_(l_ladefs,l_lexpr,l_lstmts,-) = J2VExprExcl(p_expr.left,nil,p_cntxt);
+      mk_(l_radefs,l_rexpr,l_rstmts,-) = J2VExprExcl(p_expr.right,nil,p_cntxt);
+      l_lIsStmts = len l_lstmts > 0;
+      l_rIsStmts = len l_rstmts > 0
+  in
+  ( if not l_lIsStmts
+    then
+    (
+      l_l:=J2VAUX`TempVarGetNext([]);
+      l_stmts:=l_stmts^[GenTempVarAssgn(l_l, l_lexpr)];
+    )
+    else
+    ( l_l:=l_lexpr;
+      l_stmts:=l_stmts^l_lstmts
+    );
+    if not l_rIsStmts
+    then (
+      l_r := J2VAUX`TempVarGetNext([]);
+      l_stmts:=l_stmts^[GenTempVarAssgn(l_r,l_rexpr)];
+    )
+    else
+    ( l_r := l_rexpr;
+      l_stmts:=l_stmts^l_rstmts
+    );
+    l_stmts:=l_stmts^[
+      GenTempVarAssgn
+        ( p_name,
+--          let mk_(-,l_oplit) = BitOp2vdmOp(p_expr.bitop)
+--          in
+--            if p_xb=<XOR>
+--            then
+              J2VBVDM`GenXorExpr(l_l,l_r)
+--            else 
+--              J2VBVDM`GenApplyExpr
+--                ( J2VBVDM`GenName([J2VENV`v_J2VUTILnm,J2VENV`v_BitOpNm]),
+--                  [l_l,l_oplit,l_r] )
+                  ) ];
+    return mk_(l_ladefs^l_radefs,l_stmts,GenEmptyAuxInfo())
+  )
+)
+pre p_name <> nil;
+
+\end{vdm_al}
+
+The operation \texttt{J2VEqualityExpr} translates
+JAVA's logical equality.
+See the description for GenericBinaryExpr.
+
+\begin{vdm_al}
+J2VEqualityExpr: CPP`EqualityExpr * [AS`Name] * [ExprContext]
+                 ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+J2VEqualityExpr(p_expr,p_name,p_cntxt) == 
+  let mk_CPP`EqOp(l_op,-) = p_expr.eqop,
+      l_vmdOp = cases l_op:
+                  <EQ>  -> <EQ>, 
+                  <NEQ>  -> <NE>
+                end
+  in
+    return GenericBinaryExpr(p_expr.left, l_vmdOp, p_expr.right, p_name, p_cntxt);
+
+\end{vdm_al}
+
+Translates Java's relational expression.
+See the description for GenericBinaryExpr.
+
+\begin{vdm_al}
+
+J2VRelationalExpr: CPP`RelationalExpr * [AS`Name] * [ExprContext]
+                   ==> (seq of AS`AssignDef) *
+                       (AS`Expr | seq of AS`Stmt) *
+                       AuxInfo
+J2VRelationalExpr(p_expr,p_name,p_cntxt) == 
+  let mk_CPP`RelOp(l_op,-) = p_expr.relop,
+      l_vmdOp = cases l_op:
+                  <LT>  -> <NUMLT>, 
+                  <GT>  -> <NUMGT>,
+                  <LEQ> -> <NUMLE>,
+                  <GEQ> -> <NUMGE>
+                end
+  in
+    return GenericBinaryExpr(p_expr.left, l_vmdOp, p_expr.right, p_name, p_cntxt);
+
+\end{vdm_al}
+
+The operation \texttt{J2VBinExpr} translates JAVA's binary expression.
+See the description for GenericBinaryExpr.
+
+\begin{vdm_al}
+J2VBinExpr: CPP`BinExpr  * [AS`Name] * [ExprContext]
+            ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+J2VBinExpr(p_expr,p_name,p_cntxt) == 
+  def mk_CPP`BinOp(l_op,-) = p_expr.binop;
+      l_vmdOp = cases l_op: 
+                  <MULT>  -> <NUMMULT>,
+                  <DIV>   -> <NUMDIV>,
+                  <MOD>   -> <NUMMOD>,
+                  <PLUS>  -> <NUMPLUS>,
+                  <MINUS> -> <NUMMINUS>,
+--                    <RIGHTSHIFT> ->
+--                    <LEFTSHIFT> -> 
+--                    <BITWISEAND> ->
+--                    <BITWISEEXOR> ->
+--                    <BITWISEINCLOR> ->
+--                    <UNSIGNEDRIGHTSHIFT> ->
+                  others -> if J2V`MustSkipUnspecified()
+                            then <NUMPLUS>
+                            else undefined
+                end
+  in
+    return GenericBinaryExpr(p_expr.left, l_vmdOp, p_expr.right, p_name, p_cntxt);
+
+\end{vdm_al}
+
+\subsection{Translation of type comparison}
+
+The operation \texttt{J2VTypeCompExpr} translates JAVA's \texttt{instanceof}
+relational expression
+to VDM++ \texttt{TypeJudgement} expression.
+
+\begin{small}
+\begin{verbatim}
+JAVA:
+   T i; int k[];
+   t instanceof T; k instanceof int[];
+VDM++:
+   dcl t: T, k: seq of int; is\_(t,T); is\_(k seq of int);
+\end{verbatim}
+\end{small}
+
+LIMITATION:
+
+Currently works only for ClassOrInterfaceType and
+doesn't for ArrayType!
+Because \texttt{p\_expr.right} is expression!!!
+
+\begin{vdm_al}
+J2VTypeCompExpr:  CPP`TypeCompExpr * [AS`Name] * [ExprContext]
+                  ==> AS`Expr | seq of AS`Stmt
+J2VTypeCompExpr(p_expr,p_name,p_cntxt) == 
+( dcl l_res: AS`Expr,
+      l_expr: AS`Expr := J2VExpr'(p_expr.left,p_name,p_cntxt),
+      l_type: AS`Type := let l_right=p_expr.right
+                         in
+                           cases true:
+                             (is_CPP`TypeName(l_right)) -> J2VTYPE`J2VType(hd l_right.tsp),
+--                             (is_(l_right,CPP`Expr)) ->
+                             others -> J2VTYPE`J2VSimpleTypeName(l_right)
+                           end;
+--
+--  Create an appropriate array 
+--
+      l_type := GetArrayType(l_type,p_expr.right.ad);
+--    if is_AS`OptionalType(l_type)
+--    then
+--      let mk_AS`OptionalType(l_t,-)=l_type
+--      in l_type:=l_t;
+      l_type := J2VTYPE`GetPureType(l_type);
+      l_res := if is_AS`TypeName(l_type)
+               then J2VBVDM`GenIsOfClass(l_type.name,l_expr)
+               else J2VBVDM`GenTypeJudgementExpr(l_expr,l_type);
+    return l_res
+);
+
+GetArrayType: AS`Type * [CPP`ArrayAbsDecl] ==> AS`Type
+GetArrayType(p_type,p_aad) ==
+  return
+    if p_aad=nil
+    then p_type
+    else J2VTYPE`GenArrayType(GetArrayType(p_type,p_aad.ad));
+
+\end{vdm_al}
+
+\subsection{Translation of a shift expression}
+
+\begin{vdm_al}
+
+J2VShiftExpr: CPP`ShiftExpr * [AS`Name] * [ExprContext] ==> AS`Expr | seq of AS`Stmt
+--J2VShiftExpr(p_expr,p_name,p_cntxt) == 
+J2VShiftExpr(-,-,-) == 
+--  is not yet specified;
+  return [];
+
+\end{vdm_al}
+
+\subsection{Translation of a cast expression}
+
+JAVA's cast expression converts, at run time, a value of one numeric type to
+a similar value of another numeric type;
+or confirms, at compile time, that the type of an expression is boolean;
+or checks, at run time, that a reference value refers to an object
+whose class is compatible with a specified reference type. 
+
+\begin{small}
+\begin{verbatim}
+JAVA:
+  i = (int)r;               run-time numeric value convertion
+  b = (Base)c;              run-time object convertion to a base class 
+  (Base[])cs                run-time objects convertion to a base class
+  (Class)null
+  (boolean)-1               compile time check (generates error)
+  (int [])k                 compile time check (generates error)
+  (boolean)(1+2>10)         compile time check (no error)
+  ...
+\end{verbatim}
+\end{small}
+
+\begin{small}
+\begin{verbatim}
+JAVA:
+  Class c=new Class(), Base b=c;
+  
+  (Super)c.i=(Super)c.i;
+  (Class)b.i=(Class)b.i;
+  ((Base)this).i=((Base)this).i;
+  return (Base)this
+VDM:
+  dcl c: Class:=new Class(), b:Base:=c;
+
+  c.Super`i:=c.Super`i;
+  !!!nothing appropriate:=(def t_c:Class=b in t_c).Class`i; 
+  Base`i:=Base`i
+  return self;
+
+JAVA: (Class)null
+VDM:  nil
+ 
+JAVA: double r=10.5; i=(int)r; short j=(short)r;
+VDM:  dcl r: double:=10.5, i: int:=floor(r); j: short:=floor(r);
+\end{verbatim}
+\end{small}
+
+WARNING:
+  Static semantics has to warn about an unexpected results due to
+  possible loss of precision.
+
+\begin{small}
+\begin{verbatim}
+JAVA
+  double r=10.5; i=(int)r; short j=(short)r;
+VDM 
+  dcl r: double:=10.5, i: int:=floor(r); j: short:=floor(r);
+\end{verbatim}
+\end{small}
+
+\begin{vdm_al}
+
+J2VCastExpr: CPP`CastExpr  * [AS`Name] * [ExprContext] ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+J2VCastExpr(p_expr,p_name,p_cntxt) == 
+  def l_typenm = p_expr.typenm;
+      l_tsp = if not is_CPP`TypeName(l_typenm)
+              then [mk_CPP`TypeSpecifier(l_typenm,CI`NilContextId)]
+              else p_expr.typenm.tsp;
+      l_cpptype = hd l_tsp;
+      l_type' = J2VTYPE`J2VType(hd l_tsp);
+--      l_type =
+--        if is_AS`OptionalType(l_type')
+--        then let mk_AS`OptionalType(l_t,-)=l_type' in l_t
+--        else l_type',
+      l_type = J2VTYPE`GetPureType(l_type');
+      l_isarray = (len l_tsp) > 1
+  in
+--    if is_AS`BasicType(l_type)
+--       and let mk_AS`BasicType(l_t,-)=l_type in l_t=<BOOLEAN>
+--       or (l_isarray and is_AS`BasicType(l_type))
+    if is_AS`BooleanType(l_type)
+       or (l_isarray and (is_AS`NumericType(l_type) or is_AS`TokenType(l_type) or is_AS`CharType(l_type)))
+    then 
+      J2VExpr'''(p_expr.expr,p_name,p_cntxt)
+    else
+      if is_CPP`Int(l_cpptype.tp) -- already not an array
+      then
+--        CastToInt(p_expr.expr,p_name,p_cntxt)
+        GeneralCast(p_expr.expr,p_name,l_cpptype.tp,p_cntxt)
+--      elseif not (is_AS`BasicType(l_type) or l_isarray)
+      elseif not (is_AS`BooleanType(l_type) or is_AS`NumericType(l_type) or is_AS`TokenType(l_type) or
+                  is_AS`CharType(l_type) or l_isarray)
+      then
+        CastToTypeName(p_expr.expr,p_name,l_type,p_cntxt)
+      else
+--
+--    Produce a call of J2VUTIL`CastType
+--
+--        error
+--        J2VExpr'''(p_expr.expr,p_name)  -- to produce skeleton
+        GeneralCast(p_expr.expr,p_name,l_cpptype.tp,p_cntxt)
+
+pre
+  p_name<>nil;
+--  and len p_expr.typenm.tsp > 0;
+
+GeneralCast: CPP`Expr  * [AS`Name] * CPP`SimpleTypeName * [ExprContext]
+             ==> (seq of AS`AssignDef) * 
+                 (AS`Expr | seq of AS`Stmt) *
+                 AuxInfo
+GeneralCast(p_expr,p_name,p_type,p_cntxt) ==
+  def mk_(l_adefs,l_expr,l_stmts,-) = J2VExprExcl(p_expr,nil,p_cntxt);
+      l_isStmts = len l_stmts > 0;
+--    l_tlit =
+--      J2VBVDM`GenTextLit(
+--        cases true:
+--          (is_CPP`Bool(p_type))   -> "boolean",
+--  --        (is_CPP`Void(p_type))   -> "void",
+--          (is_CPP`Char(p_type))   -> "char",
+--          (is_CPP`Short(p_type))  -> "short",
+--          (is_CPP`Int(p_type))    -> "int",
+--          (is_CPP`Long(p_type))   -> "long",
+--          (is_CPP`Float(p_type))  -> "float",
+--          (is_CPP`Double(p_type)) -> "double",
+--          (is_CPP`Byte(p_type))   -> "byte",
+--          others -> J2VENV`v_StringNm
+--        end
+--      );
+--    l_cast = 
+--      J2VBVDM`GenApplyExpr
+--        ( J2VBVDM`GenName([J2VENV`v_J2VUTILnm,J2VENV`v_ConvertOpNm]),
+--          [l_tlit,l_expr] );
+
+--
+--    Instead of generating a call to the general operation
+--    which returns union of all possible here types
+--    we generate a call to a specific operation
+--    returning the type which value is casted to
+--
+      l_castOpnm = cases true:
+                     (is_CPP`Bool(p_type))   -> "toBool",
+                     (is_CPP`Char(p_type))   -> "toChar",
+                     (is_CPP`Short(p_type))  -> "toShort",
+                     (is_CPP`Int(p_type))    -> "toInt",
+                     (is_CPP`Long(p_type))   -> "toLong",
+                     (is_CPP`Float(p_type))  -> "toFloat",
+                     (is_CPP`Double(p_type)) -> "toDouble",
+                     (is_CPP`Byte(p_type))   -> "toByte",
+                     others -> "toString"
+                   end;
+      l_cast = J2VBVDM`GenApplyExpr( J2VBVDM`GenName([J2VENV`v_J2VUTILnm,l_castOpnm]), [l_expr] );
+      l_res = if l_isStmts
+              then mk_(p_name,l_stmts^[GenTempVarAssgn(p_name,l_cast)] )
+              else l_cast
+  in
+    return
+      mk_(l_adefs,l_res,GenEmptyAuxInfo())
+pre
+  p_name<>nil
+  and not (is_CPP`Void(p_type)
+--           or is_CPP`CompleteClassName(p_type)
+           or is_CPP`QualifiedName(p_type)
+           or is_CPP`QualifiedPackageName(p_type))
+  and is_CPP`SimplePackageName(p_type) => p_type.id.id = J2VENV`v_StringNm
+  ;
+
+
+CastToInt: CPP`Expr  * [AS`Name] * [ExprContext] ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+CastToInt(p_expr,p_name,p_cntxt) ==
+  def mk_(l_adefs,l_expr,l_stmts,-) = J2VExprExcl(p_expr,nil,p_cntxt);
+      l_isStmts = len l_stmts > 0;
+      mk_(l_tvar,l_stmts') = if not l_isStmts
+                             then
+                               def t_v = J2VAUX`TempVarGetNext([])
+                               in mk_(t_v,l_stmts ^ [GenTempVarAssgn(t_v,l_expr)])
+                             else mk_(l_expr,l_stmts)
+  in
+    return
+      mk_(
+        l_adefs,
+        l_stmts'
+          ^ [GenTempVarAssgn(
+              p_name,
+              J2VBVDM`GenIfExpr(
+                J2VBVDM`GenIsExpr(J2VBVDM`GenBasicType(<REAL>),l_tvar),
+--                J2VBVDM`GenApplyExpr(J2VBVDM`GenName(["floor"]),[l_tvar]),
+                J2VBVDM`GenApplyExpr(mk_AS`Name(["floor"],CI`NilContextId),[l_tvar]),
+                [],
+                l_tvar))],
+        GenEmptyAuxInfo()
+      );
+
+--
+-- TODO: Differentiate between cast to subclass and superclass
+--
+
+CastToTypeName:  CPP`Expr * [AS`Name]  * AS`Type * [ExprContext]
+                 ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+--CastToTypeName(p_expr,p_name,p_type,p_cntxt) ==
+CastToTypeName(p_expr,p_name,p_type,-) ==
+( dcl l_cntxt: ExprContext;
+  l_cntxt.type := p_type;
+  def mk_(l_adefs,l_expr,l_aux') = J2VExpr'''(p_expr,p_name,l_cntxt)
+--    l_stmts=[GenTempTypedVarAssgn(p_name,p_type,l_expr)]
+  in
+    ( dcl l_aux: AuxInfo := l_aux';
+      l_aux.scopeRes :=
+--
+--      Always the leftmost (ClassTypeName) is taken!
+--
+--        if l_aux.scopeRes<>nil
+--        then
+--          J2VBVDM`GenName(p_type.name.ids^l_aux.scopeRes.ids)
+--        else
+          p_type.name;
+      return  
+        mk_(l_adefs,l_expr,l_aux)
+    )
+);
+
+\end{vdm_al}
+
+\subsection{Translation of an unary expression}
+
+\begin{vdm_al}
+
+J2VUnaryOpExpr: CPP`UnaryOpExpr * [AS`Name] * [ExprContext]
+                ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+J2VUnaryOpExpr(p_expr,p_name,p_cntxt) == 
+  def mk_(l_adefs,l_expr,l_stmts,-) = J2VExprExcl(p_expr.expr,nil,p_cntxt);
+      l_op = cases p_expr.op.val:
+               <PLUS> -> <NUMPLUS>,
+               <MINUS> -> <NUMMINUS>,
+               <NEG> -> <NOT>
+--               <COMPL> -> <...>  -- ~
+             end;
+      l_isStmts = len l_stmts > 0;
+      l_pre = if l_isStmts
+              then l_stmts
+              else []
+  in
+    return mk_(l_adefs,
+               if not l_isStmts
+               then J2VBVDM`GenPrefixExpr(l_op, l_expr)
+               else l_pre^[GenTempVarAssgn(p_name, J2VBVDM`GenPrefixExpr(l_op, l_expr))],
+               GenEmptyAuxInfo())
+pre p_name<>nil;
+
+--J2VLiteral: CPP`Literal * [AS`Name] ==> AS`Expr | seq of AS`Stmt
+--J2VLiteral(p_expr,p_name) ==
+--  return 
+--  cases true:
+--    (is_CPP`IntegerLit(p_expr))   -> mk_AS`RealLit(p_expr.val,CI`NilContextId),
+--    (is_CPP`CharacterLit(p_expr)) -> mk_AS`CharLit(p_expr.val,CI`NilContextId),
+--    (is_CPP`FloatingLit(p_expr))  -> mk_AS`RealLit(p_expr.val,CI`NilContextId),
+--    (is_CPP`StringLit(p_expr))
+--        -> J2VStringLiteral(p_expr,p_name), -- mk_AS`TextLit(p_expr.val,CI`NilContextId),
+--    (is_CPP`BoolLit(p_expr))      -> mk_AS`BoolLit(p_expr.val,CI`NilContextId),
+--    (is_CPP`NullLit(p_expr))      -> J2VBVDM`GenNilLit()
+--  end;
+
+\end{vdm_al}
+
+\subsection{Translation of a \texttt{String} literal}
+
+\begin{vdm_al}
+
+J2VStringLiteral: CPP`StringLit * [AS`Name] * [ExprContext] ==> AS`Expr
+--J2VStringLiteral(p_expr,p_name,p_cntxt) ==
+J2VStringLiteral(p_expr,-,-) ==
+  return J2VBVDM`GenNewExpr( J2VBVDM`GenName([J2VENV`v_StringNm]), [J2VBVDM`GenTextLit(p_expr.val)] );
+
+\end{vdm_al}
+
+\subsection{Translation of a \texttt{this}}
+
+\texttt{this} can appear in various contexts
+(e.g. \texttt{this.i} or \texttt{return this} ) that is why
+we produce information that is needed for all of
+them. This information includes VDM++ \texttt{self} expression,
+the class type name of a class is being translated and
+an indicator that \texttt{this} is encountered. The information is
+packed into a \texttt{AuxInfo} value.
+
+\begin{vdm_al}
+
+J2VThis: CPP`This  * [AS`Name] * [ExprContext] ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+--J2VThis(p_expr,p_name,p_cntxt) == 
+J2VThis(p_expr,-,-) == 
+  ( dcl l_aux: AuxInfo := GenEmptyAuxInfo();
+    l_aux.scopeRes := J2VCLASS`GetName();
+    l_aux.superThis := <THIS>;
+    return mk_([],J2VBVDM`GenSelfExpr(p_expr),l_aux)
+  );
+
+\end{vdm_al}
+
+\subsection{Translation of a \texttt{this}}
+
+The operation \texttt{J2VSuper} packs info about \texttt{super}
+(namely a name of the super class and an indicator that
+super was encountered) and returns it to the caller which
+has to decided what to do.
+
+\begin{vdm_al}
+
+J2VSuper: CPP`Super  * [AS`Name] * [ExprContext] ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+--J2VSuper(p_expr,p_name,p_cntxt) == 
+J2VSuper(-,-,-) == 
+  ( dcl l_aux: AuxInfo := GenEmptyAuxInfo();
+    l_aux.scopeRes := J2VCLASS`GetSuper();
+    l_aux.superThis := <SUPER>;
+    return mk_([],[],l_aux)
+  );
+
+\end{vdm_al}
+
+\subsection{Translation of a bracketed expression}
+
+The operation \texttt{J2VBracketedExpr} translates
+a bracketed expression straight forward.
+
+\begin{vdm_al}
+
+J2VBracketedExpr: CPP`BracketedExpr * [AS`Name] * [ExprContext]
+                  ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+J2VBracketedExpr(p_expr,p_name,p_cntxt) == 
+  def mk_(l_adefs,l_expr,l_stmts,l_aux) = J2VExprExcl(p_expr.expr,nil,p_cntxt);
+      l_isStmts = len l_stmts > 0;
+      l_res = if not l_isStmts
+              then J2VBVDM`GenBracketedExpr(l_expr)
+              else
+                if p_name <> nil
+                then l_stmts ^ [GenTempVarAssgn(p_name, l_expr)]
+                else undefined -- if translation yields statements, client must provide p_name
+  in return mk_(l_adefs,l_res,l_aux)
+pre p_name<>nil; 
+
+--
+-- They can not appear in JAVA (see invariant for CPP`Expr)!
+--
+--J2VAllocationTypeExpr: CPP`AllocationTypeExpr  * [AS`Name] ==> AS`Expr | seq of AS`Stmt
+--J2VAllocationTypeExpr(p_expr,p_name) == 
+--  error;
+--
+--J2VAllocationNewTypeExpr: CPP`AllocationNewTypeExpr  * [AS`Name] ==> AS`Expr | seq of AS`Stmt
+--J2VAllocationNewTypeExpr(p_expr,p_name) == 
+--  error;
+
+\end{vdm_al}
+
+\subsection{Translation of access to an array element}
+
+The operation \texttt{J2VArrayApply} translates access to an array element.
+
+\begin{small}
+\begin{verbatim}
+JAVA: a[1][2], a[i++][j++]
+\end{verbatim}
+\end{small}
+are translated in
+\begin{small}
+\begin{verbatim}
+VDM++: a(1)(2), def t1=i in (i:=i+1; def t2=j in (j:=j+1; def t3=a(t1)(t2) in ... ) )
+\end{verbatim}
+\end{small}
+
+\begin{vdm_al}
+J2VArrayApply: CPP`ArrayApply  * [AS`Name] * [ExprContext]
+               ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+J2VArrayApply(p_expr,p_name,p_cntxt) == 
+  def mk_(l_adefs,l_apply,l_stmts,l_aux) = J2VArrayApply'(p_expr,p_cntxt);
+      l_isStmts = len l_stmts > 0
+  in
+    return mk_(l_adefs,
+               if not l_isStmts
+               then l_apply
+               else l_stmts ^ if p_name<> nil
+                              then [GenTempVarAssgn(p_name, l_apply)]
+                              else [],
+               l_aux);
+-- pre p_name<>nil; J2VArrayApply could now be called from the left hand side also
+
+J2VArrayApply': CPP`Expr * [ExprContext] ==> (seq of AS`AssignDef) * AS`Expr * seq of AS`Stmt * AuxInfo
+J2VArrayApply'(p_expr,p_cntxt) ==
+  def mk_(l_adefs,l_expr,l_stmts,l_aux) = if is_CPP`ArrayApply(p_expr.array)
+                                          then J2VArrayApply'(p_expr.array,p_cntxt)
+                                          else
+--
+--    Could yield statements e.g. (true ? ll[i++]:jj[i])[i++]
+--
+                                               J2VExprExcl(p_expr.array,nil,p_cntxt);
+      l_isStmts = len l_stmts > 0;
+      mk_(l_adefsidx,l_eidx,l_sidx,-) = J2VExprExcl(p_expr.arg,nil,p_cntxt);
+      l_isIdxStmts = len l_sidx > 0;
+      l_vdmIdx = 
+--      J2VBVDM`GenBinaryExpr(
+        l_eidx;
+--        <NUMPLUS>,
+--        J2VBVDM`GenRealLit(1)),
+      l_apply=J2VBVDM`GenApplyExpr(l_expr,[l_vdmIdx])
+  in
+  ( dcl l_aux': AuxInfo := l_aux;
+    if l_aux.sd <> nil
+    then l_aux'.sd:=J2VBVDM`GenMapOrSeqRef(l_aux.sd,l_vdmIdx);
+    if l_aux.rhs <> nil
+    then l_aux'.rhs:=J2VBVDM`GenApplyExpr(l_aux.rhs,[l_vdmIdx]);
+    return
+      mk_(l_adefs ^ l_adefsidx,
+          l_apply,
+          if not (l_isStmts or l_isIdxStmts)
+          then []
+          else l_stmts^l_sidx,
+          l_aux')
+  );
+
+\end{vdm_al}
+
+\subsection{Translation of an array creation expression}
+
+The operation \texttt{J2VArrayCreationExpr} translates JAVA's
+
+\begin{small}
+\begin{verbatim}
+new Type[1][2] 
+\end{verbatim}
+\end{small}
+
+in  VDM++ like
+\begin{small}
+\begin{verbatim}
+{i1|->{i2|->default value| i2 in set {0,...,1-1}} | i1 in set {0,...,2-1}}}
+\end{verbatim}
+\end{small}
+
+For basic type, the following default values are use:
+  char          ' '
+  int, float     0
+  bool          false
+
+For class types, nil.
+
+TODO:
+
+int ii[]=new int[0];
+
+\begin{vdm_al}
+J2VArrayCreationExpr: CPP`ArrayCreationExpr  * [AS`Name] * [ExprContext]
+                      ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+J2VArrayCreationExpr(p_expr,p_name,p_cntxt) == 
+  return
+    def l_type = J2VTYPE`J2VSimpleTypeName(p_expr.type);
+        mk_(l_adefs,l_expr,l_stmts,l_aux) =
+              if p_expr.arrayInit=nil
+              then ArrayNewDecl(ArrayNewDecl2SeqOfExpr(p_expr.dimExpr),l_type,p_cntxt)
+              else
+                def l_tvar=J2VAUX`TempVarGetNext([]);
+                    mk_(l_a,l_e,-)=J2VArrayInitializer(p_expr.arrayInit,l_tvar,p_cntxt)
+                in
+--                  if not is_(l_e, seq of AS`Stmt)
+                  if J2VAUX`IsASExpr(l_e)
+                  then mk_(l_a,l_e,[],GenEmptyAuxInfo())
+                  else mk_(l_a,l_tvar,l_e,GenEmptyAuxInfo());
+      l_isStmts = len l_stmts > 0
+    in
+      mk_(l_adefs,
+          if len l_stmts > 0
+          then l_stmts^[GenTempVarAssgn(p_name, l_expr)]
+          else l_expr,
+          l_aux)
+pre p_name <> nil and (p_expr.arrayInit = nil => p_expr.dimExpr <> nil)
+--    and p_expr.arrayInit=nil -- for the time being
+;
+
+\end{vdm_al}
+
+The operation \texttt{ArrayNewDecl2SeqOfExpr} turns CPP`ArrayNewDecl to a 
+sequence of CPP`Expr.
+
+\begin{small}
+\begin{verbatim}
+new int[1][2][3] ==> [1,2,3]
+\end{verbatim}
+\end{small}
+
+\begin{vdm_al}
+ArrayNewDecl2SeqOfExpr: CPP`ArrayNewDecl ==> seq1 of CPP`Expr
+ArrayNewDecl2SeqOfExpr(p_adecl) ==
+  return
+--    if is_CPP`NewDeclarator(p_adecl.newdecl)
+    if p_adecl.newdecl <> nil and is_CPP`ArrayNewDecl(p_adecl.newdecl)
+    then ArrayNewDecl2SeqOfExpr(p_adecl.newdecl) ^ [p_adecl.expr]
+    else [p_adecl.expr]
+pre p_adecl.newdecl <> nil => is_CPP`ArrayNewDecl(p_adecl.newdecl);
+
+\end{vdm_al}
+
+The operation translates CPP`ArrayNewDecl value to the corresponding 
+MapComprehensionExpr expression plus auxiliary variables definitions
+and statements (possibly none).
+
+\begin{vdm_al}
+
+ArrayNewDecl: seq1 of CPP`Expr * AS`Type * [ExprContext]
+              ==> (seq of AS`AssignDef) * AS`Expr * seq of AS`Stmt * AuxInfo
+ArrayNewDecl(p_exprs,p_type,p_cntxt) ==
+( dcl l_cntxt: ExprContext;
+  l_cntxt.type := p_type;
+  l_cntxt.className := nil;
+  l_cntxt.opName := nil;
+  def mk_(l_adefs,l_args,l_stmts) = TranslateSeqOfExpr(p_exprs,p_cntxt);
+      l_expr = ArrayNewDecl'(l_args,p_type)
+  in
+    return mk_(l_adefs,l_expr,l_stmts,GenEmptyAuxInfo())
+);
+
+ArrayNewDecl': seq1 of AS`Expr * AS`Type ==> AS`Expr
+ArrayNewDecl'(p_exprs,p_type) ==
+  return
+    if len p_exprs > 1
+    then
+      def l_expr = ArrayNewDecl'(tl p_exprs, p_type);
+          l_hd = hd p_exprs;
+          l_tvar = J2VAUX`TempVarGetNext([])
+      in
+        J2VBVDM`GenMapComprehensionExpr(
+          J2VBVDM`GenMaplet(l_tvar, l_expr),
+          [J2VBVDM`GenMultSetBind(
+            [J2VBVDM`GenPatternName(l_tvar)],
+            J2VBVDM`GenSetRangeExpr(
+              J2VBVDM`GenRealLit(0),
+              J2VBVDM`GenBinaryExpr(l_hd,<NUMMINUS>,J2VBVDM`GenRealLit(1))))],
+          nil)
+    else
+      def l_expr = hd p_exprs;
+          l_val = J2VTYPE`GetDefaultVal(p_type);
+          l_tvar = J2VAUX`TempVarGetNext([])
+      in
+        J2VBVDM`GenMapComprehensionExpr(
+          J2VBVDM`GenMaplet(l_tvar, l_val),
+          [J2VBVDM`GenMultSetBind(
+            [J2VBVDM`GenPatternName(l_tvar)],
+            J2VBVDM`GenSetRangeExpr(
+              J2VBVDM`GenRealLit(0),
+              J2VBVDM`GenBinaryExpr(l_expr, <NUMMINUS>,J2VBVDM`GenRealLit(1))))],
+          nil);
+
+\end{vdm_al}
+
+\subsection{Translation of a method call}
+
+The operation \texttt{J2VFctCall} translates JAVA's 
+method call in VDM++'s one.
+
+\begin{vdm_al}
+J2VFctCall: CPP`FctCall  * [AS`Name] * [ExprContext] ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+J2VFctCall(p_expr,p_name,p_cntxt) ==
+( dcl l_res: AS`Expr | seq of AS`Stmt,
+      l_cntxt: ExprContext;
+  def mk_(l_adefs',l_apply',l_stmts',l_aux') = J2VExprExcl(p_expr.fct,nil,p_cntxt);
+      l_isStmts' = len l_stmts' > 0;
+      l_apply''= if l_aux'.superThis = nil then l_apply' else l_aux'.scopeRes;
+      mk_(l_clsnm,l_opnm) = if is_AS`Name(l_apply')
+                            then mk_(J2VCLASS`GetName(), l_apply')
+                            elseif is_CPP`QualifiedPackageName(p_expr.fct)
+                            then mk_(GetTypeRep(CI`GetJSSTypeInfo(p_expr.fct.pn.cid)).name, l_apply'.nm)
+                            elseif is_CPP`QualifiedName(p_expr.fct)
+                            then mk_(GetTypeRep(CI`GetJSSTypeInfo(GetCid(p_expr.fct.qcn))).name, l_apply'.nm)
+                            else undefined
+  in
+  ( l_cntxt.className := l_clsnm;
+    l_cntxt.opName := l_opnm;
+    def l_trep = CI`GetJSSTypeInfo(p_expr.cid)
+    in
+    def l_isVoid = if l_trep <> nil then is_JSSREP`VoidTypeRep(GetTypeRep(l_trep)) else true;
+        mk_(l_adefs,l_args,l_stmts)=TranslateSeqOfExpr(p_expr.arg,l_cntxt);
+        l_apply = J2VBVDM`GenApplyExpr(l_apply'',l_args);
+        l_stmts''=if l_isStmts' then l_stmts' else [];
+        l_post = if p_name <> nil and not l_isVoid
+                 then [GenTempVarAssgn(p_name, l_apply)]
+                 else []
+    in
+    ( if not l_isVoid
+      then
+        if len l_stmts = 0 and not l_isStmts'
+        then l_res := l_apply
+        else l_res := l_stmts'' ^ l_stmts ^ l_post
+      else
+      ( dcl l_obj: [AS`Expr], l_oprt: AS`Name;
+        cases true:
+          (is_AS`Name(l_apply''))            -> (l_obj := nil;
+                                                 l_oprt := l_apply''),
+          (is_AS`FieldSelectExpr(l_apply'')) -> (l_obj := l_apply''.rec;
+                                                 l_oprt := l_apply''.nm),
+          others -> error
+        end;
+        l_res := l_stmts'' ^ l_stmts ^ [J2VBVDM`GenCallStmt(l_obj,l_oprt,l_args)]
+      );
+
+      return mk_(l_adefs ^ l_adefs',l_res,GenEmptyAuxInfo())
+    )
+  )
+);
+
+--
+-- It can not occur in JAVA
+--
+--J2VExplTypeConv: CPP`ExplTypeConv  * [AS`Name] ==> AS`Expr | seq of AS`Stmt
+--J2VExplTypeConv(p_expr,p_name) == 
+--  error;
+
+\end{vdm_al}
+
+\subsection{Translation of access to an object member}
+
+The operation \texttt{J2VObjectMemberAccess}
+translates access to an object member.
+\begin{small}
+\begin{verbatim}
+JAVA:   a.b.c, this.a.b.c, (true ? a:b).i
+VDM++:  a.b.c, ClassName`a.b.c, (if true then a else b).i
+\end{verbatim}
+\end{small}
+
+In the second case, we can not just skip \texttt{this}.
+Emagine the following case:
+\begin{small}
+\begin{verbatim}
+void a(int i) { this.i=i; }
+\end{verbatim}
+\end{small}
+
+
+TODO: handle the case when evaluation of p\_expr.name yields statements!!!
+Is it possible???
+
+\begin{vdm_al}
+J2VObjectMemberAccess: CPP`ObjectMemberAccess  * [AS`Name] * [ExprContext]
+                       ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+J2VObjectMemberAccess(p_expr,p_name,p_cntxt) == 
+  def mk_(l_adefs,l_expr,l_stmts,l_aux)=J2VExprExcl(p_expr.object,nil,p_cntxt);
+      l_isStmts = len l_stmts > 0;
+      l_pre = if l_isStmts
+              then l_stmts
+              else [];
+      l_scope = l_aux.scopeRes;
+      mk_(-,l_member,-) = J2VName(p_expr.name,nil,p_cntxt);
+      l_trep = CI`GetJSSTypeInfo(GetCid(p_expr.object));
+      l_isArray = is_JSSREP`FieldTypeRep(l_trep) and l_trep.array > 0; -- true, -- for the time being
+      l_isLength = l_member = J2VBVDM`GenName(["length"]);
+      l_member' = if l_scope = nil
+                  then l_member
+                  else J2VBVDM`GenName(l_scope.ids^l_member.ids);
+      l_expr'= if l_isLength and l_isArray
+               then GenCardDom(l_expr)
+               else
+                 if l_aux.superThis<>nil 
+                 then l_member'
+                 else GenFieldSelectExpr(l_expr,l_member',l_scope);
+      l_post = if p_name <> nil
+               then [GenTempVarAssgn(p_name, l_expr')]
+               else []
+  in
+  ( dcl l_aux': AuxInfo := l_aux;
+    l_aux'.scopeRes := nil;
+    l_aux'.superThis := nil;
+    l_aux'.rhs := if l_aux.rhs <> nil
+                  then J2VBVDM`GenFieldSelectExpr(l_aux.rhs,l_member')
+                  else l_member';
+    l_aux'.sd := if l_aux.sd <> nil
+                 then J2VBVDM`GenFieldRef(l_aux.sd, l_member')
+                 else l_member';
+    return
+      mk_(l_adefs,
+          if not l_isStmts
+          then l_expr'
+          else l_pre^l_post,
+          l_aux')
+  );
+--pre p_name<>nil; ObjectMemberAccess could appear on the lhs of assignment
+
+\end{vdm_al}
+
+\subsection{Translation of pre increment and decrement expressions}
+
+Translation of \texttt{p\_expr.expr} can yield statements.
+
+e.g. --a[--i]
+
+\begin{vdm_al}
+J2VPreInDecrementExpr: CPP`PreInDecrementExpr * [AS`Name] * [ExprContext]
+                       ==> (seq of AS`AssignDef) *
+                           (AS`Expr | seq of AS`Stmt) *
+                           AuxInfo
+J2VPreInDecrementExpr(p_expr,p_name,p_cntxt) == 
+--  let mk_(l_sd',l_adefs',l_rhs',l_sdstmts,-)=J2VAssignLhs(p_expr.expr),
+  def mk_(l_adefs',l_sdstmts2,l_aux) = J2VExpr'''(p_expr.expr,nil,p_cntxt);
+      l_sd'=l_aux.sd;
+      l_rhs'=l_aux.rhs;
+--      l_sdstmts = if is_(l_sdstmts,AS`Expr) then  [] else l_sdstmts;
+      l_sdstmts = if J2VAUX`IsASExpr(l_sdstmts2) then  [] else l_sdstmts2;
+      l_isMapRef = is_AS`MapOrSeqRef(l_sd');
+      mk_(l_sd,l_rhs) =
+        if l_isMapRef
+        then mk_(l_sd'.var,l_rhs'.fct)
+        else mk_(l_sd',l_rhs');
+--      l_issdstmts= len l_sdstmts > 0,
+      l_op =
+        cases p_expr.op:
+          <PPLUS>  -> <NUMPLUS>,
+          <PMINUS> -> <NUMMINUS>
+        end;
+      l_tvar1=J2VAUX`TempVarGetNext([]);
+      l_pre = l_sdstmts
+                ^[GenTempVarAssgn
+                    (l_tvar1, if l_isMapRef then l_rhs' else l_rhs)];
+      l_res'' = J2VBVDM`GenBinaryExpr(l_tvar1,l_op,J2VBVDM`GenRealLit(1));
+      l_res'=
+        if l_isMapRef
+        then
+          J2VBVDM`GenSeqModifyMapOverrideExpr(
+            l_rhs,
+            J2VBVDM`GenMapEnumerationExpr(
+              [J2VBVDM`GenMaplet(l_sd'.arg,l_res'')]))
+        else
+          l_res'';
+      mk_(l_res,l_post) =
+        if p_name<>nil 
+        then
+--
+--   Hence, we have to assign l_res' twice (to l_sd and p_name).
+--   But l_res' has to be mentioned only once, so we need a new temp var
+--
+          def l_tvar2=J2VAUX`TempVarGetNext([])
+          in mk_(l_tvar2, [GenTempVarAssgn(l_tvar2, l_res')]) 
+        else mk_(l_res', []);
+     l_postassgn=
+        if p_name <> nil
+        then
+--          [GenTempVarAssgn(p_name, l_res)]
+          [GenTempVarAssgn(p_name, l_rhs')]
+        else
+          []
+  in
+    return
+      mk_(
+        l_adefs',
+        l_pre^l_post^[J2VBVDM`GenAssignStmt(l_sd,l_res)]^l_postassgn,
+        GenEmptyAuxInfo())
+pre
+--  (is_(p_expr.expr, CPP`Name)
+  ( J2VAUX`IsCPPName(p_expr.expr)
+    or is_CPP`ObjectMemberAccess(p_expr.expr)
+    or is_CPP`ArrayApply(p_expr.expr)
+-- JAVA does not allow  or is_(p_expr.expr, CPP`PreInDecrementExpr)
+  );
+
+\end{vdm_al}
+
+\subsection{Translation of post increment and decrement expressions}
+
+The operation \texttt{J2VPostFixInDecrementExpr}
+translates a JAVA post in/decrement expression
+to VDM++ statements.
+
+For variables
+\begin{small}
+\begin{verbatim}
+JAVA: ... i++ ...
+VDM:  ... def t=i in i:=i+1; ...
+\end{verbatim}
+\end{small}
+
+For array elements,
+\begin{small}
+\begin{verbatim}
+JAVA: ... a[i]++ ...  
+VDM:  ... def t=a[i] in a:=a++{i|->t+1}; ...
+\end{verbatim}
+\end{small}
+\begin{vdm_al}
+J2VPostFixInDecrementExpr: CPP`PostFixInDecrementExpr * [AS`Name] * [ExprContext]
+                           ==> (seq of AS`AssignDef) *
+                               (AS`Expr | seq of AS`Stmt) *
+                               AuxInfo
+J2VPostFixInDecrementExpr(p_expr,p_name,p_cntxt) ==
+--  let mk_(l_sd',l_adefs',l_rhs',l_sdstmts,-)=J2VAssignLhs(p_expr.expr),
+  def mk_(l_adefs',l_sdstmts2,l_aux) = J2VExpr'''(p_expr.expr,nil,p_cntxt);
+      l_sd' = l_aux.sd;
+      l_rhs' = l_aux.rhs;
+--      l_sdstmts = if is_(l_sdstmts,AS`Expr) then  [] else l_sdstmts;
+      l_sdstmts = if J2VAUX`IsASExpr(l_sdstmts2) then  [] else l_sdstmts2;
+      l_isMapRef = is_AS`MapOrSeqRef(l_sd');
+      mk_(l_sd,l_rhs) =
+        if l_isMapRef
+        then mk_(l_sd'.var,l_rhs'.fct)
+        else mk_(l_sd',l_rhs');
+--      l_issdstmts= len l_sdstmts > 0,
+      l_op =
+        cases p_expr.op:
+          <PPLUS>  -> <NUMPLUS>,
+          <PMINUS> -> <NUMMINUS>
+        end;
+      mk_(l_res', l_pre)=
+        if p_name <> nil
+        then
+          def l_tvar1 = J2VAUX`TempVarGetNext([])    -- value before change
+          in mk_(l_tvar1, [GenTempVarAssgn(l_tvar1,l_rhs')])
+        else
+          mk_(l_rhs', []);
+      l_post=
+        if p_name <> nil
+        then [GenTempVarAssgn(p_name,l_res')]
+        else [];
+      l_res'' = J2VBVDM`GenBinaryExpr(l_res',l_op,J2VBVDM`GenRealLit(1));
+      l_res=
+        if l_isMapRef
+        then
+          J2VBVDM`GenSeqModifyMapOverrideExpr(
+            l_rhs,
+            J2VBVDM`GenMapEnumerationExpr(
+              [J2VBVDM`GenMaplet(l_sd'.arg,l_res'')]))
+        else
+          l_res''
+  in
+    return
+      mk_(
+        l_adefs',
+        l_sdstmts^l_pre^l_post^[J2VBVDM`GenAssignStmt(l_sd,l_res)],
+        GenEmptyAuxInfo())
+pre --p_name<>nil   could be called from ExpressionStmt directly
+--  ( is_(p_expr.expr, CPP`Name)
+  ( J2VAUX`IsCPPName(p_expr.expr)
+    or is_CPP`ObjectMemberAccess(p_expr.expr)
+    or is_CPP`ArrayApply(p_expr.expr)
+--    or is_(p_expr.expr, CPP`PackageName)
+-- JAVA does not allow   or is_(p_expr.expr, CPP`PostFixInDecrementExpr)
+  );
+
+\end{vdm_al}
+
+The operation \texttt{J2VThrowExpression} translates JAVA's
+\texttt{throw} statement.
+Although the operation takes \texttt{CPP`ThrowExpression}
+as a parameter it is called in the context of a JAVA
+expression statement and does not have to assign its
+value to \texttt{p\_name}.
+
+\begin{vdm_al}
+J2VThrowExpression: CPP`ThrowExpression * [AS`Name] * [ExprContext]
+                    ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+--J2VThrowExpression(p_expr,p_name,p_cntxt) ==
+J2VThrowExpression(p_expr,-,p_cntxt) ==
+  def mk_(l_adefs,l_expr,l_stmts,-)=J2VExprExcl(p_expr.expr,nil,p_cntxt)
+  in
+    return mk_(l_adefs,l_stmts^[J2VBVDM`GenExitStmt(l_expr)],GenEmptyAuxInfo());
+--
+-- They can not occur in JAVA!?
+--
+--J2VScopeResIdentifier: CPP`ScopeResIdentifier  * [AS`Name]
+--                       ==> AS`Expr | seq of AS`Stmt
+--J2VScopeResIdentifier(p_expr,p_name) == 
+--  error;
+
+--J2VScopeResOpFctName: CPP`ScopeResOpFctName  * [AS`Name] ==>
+--                      AS`Expr | seq of AS`Stmt
+--J2VScopeResOpFctName(p_expr,p_name) == 
+--  error;
+
+--J2VScopeResQualifiedName: CPP`ScopeResQualifiedName  * [AS`Name] ==>
+--                          AS`Expr | seq of AS`Stmt
+--J2VScopeResQualifiedName(p_expr,p_name) == 
+--  error;
+
+\end{vdm_al}
+
+\subsection{Translation of an array initializer}
+
+The operation \texttt{J2VArrayInitializer}
+translates JAVA's array initializer.
+
+\begin{small}
+\begin{verbatim}
+JAVA: {{1,2},{3,4}}
+\end{verbatim}
+\end{small}
+is translated in
+\begin{small}
+\begin{verbatim}
+VDM++: {0|->{0|->1,1|->2},1|->{0|->3,1|->4}}
+\end{verbatim}
+\end{small}
+
+\begin{vdm_al}
+
+J2VArrayInitializer:  CPP`ArrayInitializer * [AS`Name] * [ExprContext]
+                      ==> (seq of AS`AssignDef) *
+                          (AS`Expr | seq of AS`Stmt) *
+                          AuxInfo
+J2VArrayInitializer(p_expr,p_name,p_cntxt) == (
+  dcl l_els : seq of AS`Maplet := [],
+--      l_els : seq of AS`Expr := [],
+      l_adefs : seq of AS`AssignDef := [],
+      l_stmts : seq of AS`Stmt := [],
+      l_cntxt : ExprContext := p_cntxt;
+--
+--  TODO:
+--  Replace loop by a recursion as in ArrayApply
+--  of use max ind of item which returns statements like in FctCall
+--  to be able to assign an item value to 
+--  tvar if translation of the rest items yields statements
+--
+  if p_expr.vi <> nil
+  then
+    for i = 1 to len p_expr.vi do
+    ( l_cntxt.type := p_cntxt.type.maprng;
+      def l_item = p_expr.vi(i);
+          mk_(l_a,l_e,l_s,-) =
+            if is_CPP`ArrayInitializer(l_item)
+            then
+              def l_tvar = J2VAUX`TempVarGetNext([]);
+                  mk_(l_adefs,l_expr,-) = J2VArrayInitializer(l_item,l_tvar,l_cntxt)
+              in
+--                if not is_(l_expr, seq of AS`Stmt)
+                if J2VAUX`IsASExpr(l_expr)
+                then mk_(l_adefs,l_expr,[],GenEmptyAuxInfo())
+                else mk_(l_adefs,l_tvar,l_expr,GenEmptyAuxInfo())
+            else J2VExprExcl(l_item,nil,l_cntxt)
+      in (
+  --      l_els := [l_e]^l_els;
+        l_els := [J2VBVDM`GenMaplet(J2VBVDM`GenRealLit(i-1),l_e)] ^ l_els;
+        l_adefs := l_adefs ^ l_a;
+        l_stmts := l_stmts ^ l_s)
+    );
+  return
+    let
+--    l_sexpr = J2VBVDM`GenSeqEnumerationExpr(l_els)     
+      l_sexpr = J2VBVDM`GenMapEnumerationExpr(l_els)     
+    in
+      mk_(
+        l_adefs,
+        if l_stmts=[]
+        then
+          l_sexpr
+        else
+          l_stmts^[GenTempVarAssgn(p_name, l_sexpr)],
+        GenEmptyAuxInfo()) )
+pre p_name<>nil and p_cntxt<>nil;
+
+\end{vdm_al}
+
+\subsection{Translation of an instance creation}
+
+The operation \texttt{J2VClassInstanceCreationExpr}
+translates JAVA's instance creation.
+
+\begin{small}
+\begin{verbatim}
+JAVA:  new ClassType() 
+VDM++: new ClassType() 
+\end{verbatim}
+\end{small}
+
+LIMITATIONS:
+!!!  No anonymous classes
+
+\begin{vdm_al}
+J2VClassInstanceCreationExpr: CPP`ClassInstanceCreationExpr * [AS`Name] * [ExprContext]
+                              ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+J2VClassInstanceCreationExpr(p_expr,p_name,-) == 
+( dcl l_cntxt: ExprContext,
+      l_tnm: AS`Name := J2VTYPE`J2VClassTypeName(p_expr.classtype);
+  l_cntxt.className := l_tnm;
+  l_cntxt.opName := l_cntxt.className;
+  def mk_(l_adefs, l_args, l_stmts) = TranslateSeqOfExpr(p_expr.arg, l_cntxt);
+      l_new = J2VBVDM`GenNewExpr (l_tnm, l_args);
+      l_tvar = if len l_stmts = 0
+               then nil
+               else
+                 if p_name = nil
+                 then J2VAUX`TempVarGetNext([])
+                 else p_name;
+      l_res = if l_tvar <> nil
+              then l_stmts ^ [GenTempVarAssgn(l_tvar, l_new)]
+              else l_new
+  in
+    return mk_(l_adefs, l_res, GenEmptyAuxInfo())
+)
+pre --len p_expr.arg = 0 and 
+    p_expr.ml = nil and         -- No anonymous classes
+    p_expr.somethingDotNew = nil;
+
+\end{vdm_al}
+
+The operation \texttt{TranslateSeqOfExpr} translates
+a sequence of JAVA expressions to
+sequence of VDM expressions plus auxiliary variables definitions
+and statements (possibly none).
+
+\begin{vdm_al}
+TranslateSeqOfExpr: seq of CPP`Expr * [ExprContext]
+                    ==> (seq of AS`AssignDef) *
+                        (seq of AS`Expr) *
+                        (seq of AS`Stmt)
+TranslateSeqOfExpr(p_exprs,p_cntxt) ==
+( dcl l_stmts: seq of AS`Stmt :=[],
+      l_exprs: seq of (AS`Expr * seq of AS`Stmt) := [],
+      l_adefs: seq of AS`AssignDef := [],
+      l_args:  seq of AS`Expr := [],
+      l_treps: seq of JSSREP`TypeRep :=[],
+      l_cntxt: ExprContext;
+  for i=1 to len p_exprs
+--  do  l_treps:=l_treps^[GetTypeRep(GetTypeInfo(p_exprs(i).cid))];
+  --do  l_treps:=l_treps^[GetTypeInfo(p_exprs(i).cid)];
+  do  l_treps := l_treps^[GetTypeInfo(GetCid(p_exprs(i)))];
+  for i = 1 to len p_exprs
+  do
+  ( l_cntxt.type:=
+--      if is_JSSREP`NullTypeRep(l_treps(i))
+      if is_JSSREP`NullTypeRep(GetTypeRep(l_treps(i)))
+      then
+        if p_cntxt.className <> nil and p_cntxt.opName <> nil
+        then
+          def l_tnm=
+                JSSENV`DeduceMethodParaType
+                ( p_cntxt.className,
+                  p_cntxt.opName,
+                  l_treps,
+                  i )
+          in
+            if l_tnm<>nil
+            then J2VBVDM`GenTypeName(l_tnm)
+            else p_cntxt.type                 -- report error !
+        else
+          p_cntxt.type
+      else
+        --TypeRep2Type(l_treps(i),p_exprs(i).cid);
+        TypeRep2Type(l_treps(i),GetCid(p_exprs(i)));
+    def mk_(l_adef,l_expr,l_stmts,l_aux)=J2VExprExcl(p_exprs(i),nil,l_cntxt);
+        l_scope = l_aux.scopeRes;
+        l_e = if l_scope = nil
+              then l_expr
+              else GenCastToClassName(l_expr,l_scope)
+    in
+    ( l_exprs := l_exprs ^ [mk_(l_e,l_stmts)]; l_adefs:=l_adefs^l_adef
+    );
+  );
+  --def l_set = {i | i in set inds l_exprs & def mk_(l_e,l_l) = l_exprs(i) in len l_l > 0};
+  def l_set = {i | i in set inds l_exprs & def mk_(-,l_l) = l_exprs(i) in len l_l > 0};
+      l_max = if l_set = {}
+              then 0 
+              else let e in set l_set be st forall i in set l_set & e >= i
+                   in e
+  in 
+    for i = 1 to len p_exprs do
+      let mk_(l_iexpr, l_istmts) = l_exprs(i),
+          l_isStmts = len l_istmts > 0
+      in 
+        if not l_isStmts
+        then
+          if i > l_max
+          then l_args := l_args^[l_iexpr]
+          else
+            def l_tvar = J2VAUX`TempVarGetNext([])
+            in (
+              l_args := l_args^[l_tvar];
+              l_stmts:=l_stmts^[GenTempVarAssgn(l_tvar, l_iexpr)] )
+        else (
+          l_args := l_args^[l_iexpr];
+          l_stmts:=l_stmts^l_istmts );
+
+  return mk_(l_adefs,l_args,l_stmts)
+);
+
+\end{vdm_al}
+
+\subsection{Translation of a name}
+
+A class expression is not translated for the time being
+
+\begin{vdm_al}
+
+J2VClassExpr: CPP`ClassExpr  * [AS`Name] * [ExprContext] ==> AS`Expr | seq of AS`Stmt
+--J2VClassExpr(p_expr,p_name,p_cntxt) == 
+J2VClassExpr(-,-,-) == 
+--  is not yet specified;
+  return [];
+
+\end{vdm_al}
+
+\subsection{Translation of a name}
+
+The operation \texttt{J2VName} translates a JAVA name.
+
+\begin{vdm_al}
+J2VName: CPP`Name * [AS`Name] * [ExprContext] ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+J2VName(p_expr,p_name,p_cntxt) == 
+  if is_CPP`QualifiedName(p_expr)
+  then
+    return J2VQualifiedName(p_expr,p_name,p_cntxt)
+  else
+    def
+      l_name =
+        cases true:
+          (is_CPP`Identifier(p_expr)) -> if J2VNS`IsClassName(p_expr)
+                                         then J2VNS`GetNewJavaAPIClassName(J2VBVDM`Id2Name(p_expr))
+                                         else J2VBVDM`Id2Name(p_expr),
+--        (is_(p_expr, CPP`PackageName)) ->
+          (is_CPP`SimplePackageName(p_expr)),
+          (is_CPP`QualifiedPackageName(p_expr))
+--            -> J2VNS`J2VPackageName(p_expr,false),
+                                        -> ProcessLength(p_expr,p_name),
+          others -> undefined
+        end;
+      l_sd = Name2StateDesignator(p_expr)
+    in
+    ( dcl l_aux: AuxInfo := GenEmptyAuxInfo();
+      l_aux.sd := l_sd;
+      l_aux.rhs := l_name;
+      return mk_([],l_name,l_aux)
+    )
+pre J2VAUX`IsCPPName(p_expr); -- is_(p_expr, CPP`Name);
+
+\end{vdm_al}
+
+The operation \texttt{J2VQualifiedName} translates a
+qualified name.
+
+\begin{vdm_al}
+
+J2VQualifiedName:  CPP`QualifiedName * [AS`Name] * [ExprContext]
+                   ==> (seq of AS`AssignDef) * (AS`Expr | seq of AS`Stmt) * AuxInfo
+J2VQualifiedName(p_expr,p_name,p_cntxt) ==
+  def mk_(l_adefs,l_expr,l_stmts,l_aux) = J2VExprExcl(p_expr.qcn,nil,p_cntxt);
+      l_isStmts = len l_stmts > 0;
+      l_pre = if l_isStmts
+              then l_stmts
+              else [];
+      l_scope = l_aux.scopeRes;
+      mk_(-,l_member,-) = J2VName(p_expr.id,nil,p_cntxt);
+      l_member' = if l_scope = nil
+                  then l_member
+                  else J2VBVDM`GenName(l_scope.ids^l_member.ids);
+      l_expr'= if l_aux.superThis <> nil 
+               then l_member'
+               else GenFieldSelectExpr(l_expr,l_member,l_scope);
+      l_post = if p_name <> nil
+               then [GenTempVarAssgn(p_name,l_expr')]
+               else []
+  in
+  ( dcl l_aux': AuxInfo := l_aux;
+    l_aux'.scopeRes := nil;
+    l_aux'.superThis := nil;
+    l_aux'.rhs := if l_aux.rhs <> nil
+                  then J2VBVDM`GenFieldSelectExpr(l_aux.rhs,l_member')
+                  else l_member';
+    l_aux'.sd := nil;
+    return mk_(l_adefs,
+               if not l_isStmts
+               then l_expr'
+               else l_pre ^ l_post,
+               l_aux')
+  );
+
+ProcessLength: CPP`Name * [AS`Name] ==> AS`Expr
+ProcessLength(p_expr,-) == 
+( 
+  return
+    if is_CPP`QualifiedPackageName(p_expr)
+    then
+      def l_trep = CI`GetJSSTypeInfo(p_expr.pn.cid);
+          l_isArray = is_JSSREP`FieldTypeRep(l_trep) and l_trep.array > 0 -- true -- for the time being
+      in
+        if l_isArray and p_expr.id.id = "length"
+        then GenCardDom(J2VNS`J2VPackageName(p_expr.pn,false))
+        else J2VNS`J2VPackageName(p_expr,false)
+    else
+      J2VNS`J2VPackageName(p_expr,false)
+);
+
+GenCardDom: AS`Expr ==> AS`Expr
+GenCardDom(p_expr) ==
+  return
+    J2VBVDM`GenBracketedExpr
+      ( J2VBVDM`GenPrefixExpr
+          (<SETCARD>,J2VBVDM`GenPrefixExpr(<MAPDOM>,p_expr)) );
+
+GenFieldSelectExpr: AS`Expr * AS`Name * [AS`Name] ==> AS`FieldSelectExpr
+GenFieldSelectExpr(p_rec,p_nm,p_scope) ==
+--
+-- TODO: Differentiate between cast to subclass and superclass
+--
+  return J2VBVDM`GenFieldSelectExpr(GenCastToClassName(p_rec,p_scope), p_nm);
+
+GenCastToClassName: AS`Expr * [AS`Name] ==> AS`Expr
+GenCastToClassName(p_expr,p_scope) ==
+  return
+    if p_scope = nil
+    then p_expr
+    else
+      def l_tvar = J2VAUX`TempVarGetNext([]);
+          l_t = J2VBVDM`GenTypeName(p_scope)
+      in
+        J2VBVDM`GenBracketedExpr(GenDefTypeBindExpr(l_tvar,l_t,p_expr,l_tvar));
+
+
+functions
+GetCid: CPP`Expr +> CI`ContextId
+GetCid(expr) ==
+  expr.cid;
+
+Name2StateDesignator: CPP`Name +> AS`StateDesignator
+Name2StateDesignator(p_expr) == 
+  cases true:
+    (is_CPP`Identifier(p_expr))           -> J2VBVDM`Id2Name(p_expr),
+--  (is_(p_expr, CPP`PackageName))
+    (is_CPP`SimplePackageName(p_expr)),
+    (is_CPP`QualifiedPackageName(p_expr)) -> J2VNS`J2VPackageName(p_expr,true),
+    others                                -> undefined
+  end
+pre J2VAUX`IsCPPName(p_expr); -- is_(p_expr, CPP`Name);
+
+GenEmptyAuxInfo: () +> AuxInfo
+GenEmptyAuxInfo() == mk_AuxInfo(nil,nil,nil,nil,nil)
+
+end J2VEXPR
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}
+{rtinfo.ast}[J2VEXPR]
+\end{rtinfo}

@@ -1,0 +1,206 @@
+\documentclass[a4paper,dvips]{article}
+\usepackage[dvips]{color}
+\usepackage{float}
+\usepackage{epsf}
+\usepackage{vdmsl-2e}
+\usepackage{longtable}
+\usepackage{alltt}
+\usepackage{makeidx}
+\usepackage{ifad}
+\usepackage{graphics}
+
+\definecolor{covered}{rgb}{0,0,0}
+\definecolor{not-covered}{rgb}{1,0,0}
+\definecolor{not_covered}{rgb}{1,0,0}
+%\definecolor{not_covered}{gray}{0.6}
+
+\input{macros.tex}
+
+\floatstyle{plain}
+\restylefloat{figure}
+
+\def\insertfig#1#2#3#4{ % Filename, epsfxsize, caption,  label
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\epsfxsize=#2
+\epsffile{#1}
+\end{center}
+\caption{#3} #4 
+\end{figure}
+}
+
+\newcommand{\evalstacktwo}[2]{%
+\begin{tabular}{|l|}%
+\mbox{} \\ \hline%
+\texttt{#1}\\ \hline%
+\texttt{#2}\\ \hline%
+\end{tabular}}
+
+\newcommand{\fctstacktwo}[4]{%
+\begin{tabular}{|l|l|}%
+\mbox{} & \mbox{} \\ \hline%
+\texttt{#1} & \texttt{#2}\\ \hline%
+\texttt{#3} & \texttt{#4}\\ \hline%
+\end{tabular}}
+
+\newcommand{\StateDef}[1]{{\bf #1}}
+\newcommand{\TypeDef}[1]{{\bf #1}}
+\newcommand{\TypeOcc}[1]{{\it #1}}
+\newcommand{\FuncDef}[1]{{\bf #1}}
+\newcommand{\FuncOcc}[1]{{#1}}
+\newcommand{\ModDef}[1]{{\tiny #1}}
+
+\newcommand{\LAM}{{\restoreLambda$\lambda$}}
+
+\newcommand{\id}[1]{\hbox{\it #1}}
+\newcommand{\keyw}[1]{\hbox{\sf #1}}
+\newcommand{\auth}[1]{{\sc #1}}
+
+
+\newcommand{\RM}[1]{{\bf Remark:} {\em #1}}
+
+
+\newcommand{\emptychapter}[1]{%
+ \chapter*{#1}
+ \markboth{#1}{#1}
+ \addcontentsline{toc}{chapter}{\protect\numberline{}{#1}}}
+
+\hyphenation{ex-cep-tion}
+\hyphenation{ex-cep-tions}
+\hyphenation{hand-ling}
+\hyphenation{hand-ler}
+\hyphenation{hand-lers}
+\hyphenation{mo-du-le}
+\hyphenation{mo-du-les}
+\newenvironment{outdatedDocumentation}{
+
+***** THE DOCUMENTATION BELOW IS OUTDATED *******
+
+}
+{
+
+***** THE DOCUMENTATION ABOVE IS OUTDATED *******
+
+}
+
+\newenvironment{updatedSection}[2]{
+
+******** The following has been updated on #1 by #2 ********
+
+}
+{
+
+******** End of updated documentation ****************
+
+}
+
+
+%\input{macros.tex}
+\makeindex
+
+\begin{document}
+\bibliographystyle{newalpha}
+
+\special{!userdict begin /bop-hook{gsave 220 30 translate
+0 rotate /Times-Roman findfont 21 scalefont setfont
+0 0 moveto (CONFIDENTIAL) show grestore}def end}
+
+\docdef{The Dynamic Semantics of VDM-SL}
+{ VDMTools Group}
+{\today}
+{VDM-SL 3.8.7}
+{Report}
+{Under Development}
+{Confidential}
+{}
+{\copyright Kyushu University}
+{\item[\mbox{}] \mbox{}}
+{}
+
+
+\pagenumbering{roman}
+\addtocounter{tocdepth}{1}
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+
+\parskip12pt
+\parindent0pt
+
+%\input{intro}                 % introduction
+
+\chapter{Introduction}
+
+The debugger for VDMTools is made using a stack machine approach. This
+document contains the formal VDM-SL description of this tool
+component. In order to better understand how to use this document to
+discover how some feature is treated we start of by providing some
+reading guidance.
+
+Chapter~\ref{sec:comp} starts of with the general compilation of
+constructs. This is followed by Section~\ref{sec:cexpr} to
+Section~\ref{sec:cpat} which describes how expressions, statements and
+patterns are compiled respectively. These sections are the place where
+the main explanatory description of the strategy chosen for the
+stack-machine based VDM interpreters. In order to fully understand the
+explanation one naturally also need to understand the way the stack
+machine itself is working and the instructions it is able to deal
+with. The stack-machine itself is described in
+Section~\ref{sec:stack}. The is followed by Section~\ref{sec:instr}
+which describes how the different instructions are executed.
+
+Section~\ref{ch:semvalues} contains the definitions for the semantics
+values.
+
+Finally Appendix~\ref{sec:as} is the common abstract syntax used for
+all VDMTools for VDM.
+
+\input{compile.vdmsl.tex}
+\input{cexpr.vdmsl.tex}
+\input{cstmt.vdmsl.tex}
+\input{cpat.vdmsl.tex}
+
+\input{stack-eval.vdmsl.tex}
+\input{instructionsTP.vdmsl.tex}
+\input{instructions.vdmsl.tex}
+
+\input{eval_sem.vdmsl.tex}
+\input{eval_global.vdmsl.tex}
+
+\input{eval_state.vdmsl.tex}
+\input{eval_mod.vdm.tex}
+\input{eval_def.vdmsl.tex}
+\input{eval_expr.vdmsl.tex}
+\input{eval_pat.vdmsl.tex}
+\input{eval_aux.vdmsl.tex}
+\input{eval_free.vdmsl.tex}
+\input{eval_old.vdm.tex}
+\input{rterr.vdmsl.tex}
+\input{debug.vdmsl.tex}
+\input{eval_settings.vdmsl.tex}
+
+\appendix
+\input{common_as.vdmsl.tex}
+\input{contextinfo.vdmsl.tex}
+
+% end of evaluate.tex
+
+
+\typeout{Bibliography}
+\restoreLambda
+\bibliography{string,dynsem}
+\useLambda
+\printindex
+\addcontentsline{toc}{section}{Index}
+\end{document}
+
+
+
+
+
+
+
+
+
+

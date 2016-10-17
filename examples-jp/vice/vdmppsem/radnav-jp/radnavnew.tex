@@ -1,0 +1,168 @@
+%
+% $Id: radnavnew.tex,v 1.3 2006/04/19 05:06:48 vdmtools Exp $
+%
+
+\section{The new stuff}
+
+\begin{alltt}
+system RadNavSys
+
+instance variables
+  -- create an 『人機械界面』 class instance
+  static public 人機械界面 : 『人機械界面』 := new 『人機械界面』();
+  -- define the first CPU with fixed priority scheduling and 22E6 MIPS performance
+  CPU1 : CPU := new CPU (CPU`FP, 22E6);
+
+  -- create an 『ラジオ』 class instance
+  static public ラジオ : 『ラジオ』 := new 『ラジオ』();
+  -- define the second CPU with fixed priority scheduling and 11E6 MIPS performance
+  CPU2 : CPU := new CPU (CPU`FP, 11E6);
+
+  -- create an 『ナビ』 class instance
+  static public ナビ : 『ナビ』 := new 『ナビ』();
+  -- define the third CPU with fixed priority scheduling and 113 MIPS performance
+  CPU3 : CPU := new CPU (CPU`FP, 113E6); 
+
+  -- create a communication bus that links the three CPU's together
+  BUS1 : BUS := new BUS (BUS`CSMACD, 72E3, {CPU1, CPU2, CPU3})
+
+operations
+  public RadNavSys: () ==> ()
+  RadNavSys ()
+    ( -- deploy 人機械界面 on CPU1
+      CPU1.deploy(人機械界面);
+      CPU1.setPriority(キー押し下げ処理,100);
+      CPU1.setPriority(画面を更新する,90);
+      -- deploy ラジオ on CPU2
+      CPU2.deploy(ラジオ);
+      CPU2.setPriority(音量を調整する,100);
+      CPU2.setPriority(交通情報を解読する,90);
+      -- deploy ナビ on CPU3
+      CPU3.deploy(ナビ);
+      CPU3.setPriority(DBを検索する, 100);
+      CPU3.setPriority(交通情報を解読する, 90)
+      -- starting the CPUs and BUS is implicit )
+
+  static public wait: () ==> ()
+  wait () == skip;
+
+  sync
+    per wait => 人機械界面.cnt > 30
+
+end RadNavSys
+\end{alltt}
+
+\begin{alltt}
+class 『人機械界面』
+
+instance variables
+  public cnt : nat := 0
+
+operations
+  async public キー押し下げ処理: nat ==> ()
+  キー押し下げ処理 (pn) ==
+    ( duration (1E5) cnt := cnt + 1;
+      cases (pn):
+        1 -> RadNavSys`ラジオ.音量を調整する(),
+        2 -> RadNavSys`ナビ.DBを検索する()
+      end );
+
+  async public 画面を更新する: nat ==> ()
+  画面を更新する (-) ==
+    duration (5E5) skip;
+
+end 『人機械界面』
+\end{alltt}
+
+\begin{alltt}
+class 『ラジオ』
+
+operations
+  async public 音量を調整する: () ==> ()
+  音量を調整する () ==
+    ( duration (1E5) skip;
+      RadNavSys`人機械界面.画面を更新する(1) );
+
+  async public 交通情報を処理する: () ==> ()
+  交通情報を処理する () ==
+    ( duration (1E6) skip;
+      RadNavSys`ナビ.交通情報を解読する() )
+
+end 『ラジオ』
+\end{alltt}
+
+\begin{alltt}
+class 『ナビ』
+
+operations
+  async public DBを検索する: () ==> ()
+  DBを検索する () ==
+    ( duration (5E6) skip;
+      RadNavSys`人機械界面.画面を更新する(2) )
+
+  async public 交通情報を解読する: () ==> ()
+  交通情報を解読する () ==
+    ( duration (5E6) skip;
+      RadNavSys`人機械界面.画面を更新する(3) )
+
+end 『ナビ』
+\end{alltt}
+
+\begin{alltt}
+class 『音量つまみ』
+
+thread
+  periodic (p,j,d,0)
+    duration (0)
+      while (true)
+        RadNavSys`人機械界面.キー押し下げ処理(1)
+
+end 『音量つまみ』
+\end{alltt}
+
+\begin{alltt}
+class 『住所入力』
+
+thread
+  periodic (p,j,d,0)
+    duration (0)
+      while (true)
+        RadNavSys`人機械界面.キー押し下げ処理(2)
+
+end 『住所入力』
+\end{alltt}
+
+\begin{alltt}
+class 『交通情報送信』
+
+thread
+  periodic (p,j,d,0)
+    duration (0)
+      while (true)
+        RadNavSys`ラジオ.交通情報を処理する()
+
+end 『交通情報送信』
+\end{alltt}
+
+\begin{alltt}
+class World
+
+operations
+  public RunScenario1 : () ==> ()
+  RunScenario1 () ==
+    ( start(new RadNavSys());
+      startlist({new 『音量つまみ』(), new 『交通情報送信』()});
+      RadNavSys`wait() );
+
+  public RunScenario2 : () ==> ()
+  RunScenario2 () ==
+    ( start(new RadNavSys());
+      startlist({new 『住所入力』(), new 『交通情報送信』()});
+      RadNavSys`wait() );
+
+end World
+\end{alltt}
+
+\begin{alltt}
+new World().RunScenario1()
+\end{alltt}

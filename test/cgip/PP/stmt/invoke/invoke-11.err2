@@ -1,0 +1,5 @@
+Bug in type checker: 284
+m4tmp1, l. 34, c. 13:
+  Error : Method is applied with wrong number of parameters
+m4tmp1, l. 35, c. 13:
+  Error : Method is applied with wrong number of parameters

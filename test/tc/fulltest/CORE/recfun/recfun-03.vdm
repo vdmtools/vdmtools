@@ -1,0 +1,12 @@
+class A 
+
+
+functions
+
+
+foo : nat -> nat 
+foo(x) == if x = 0 then 0 else f(x-1)
+measure id;
+           
+
+end A

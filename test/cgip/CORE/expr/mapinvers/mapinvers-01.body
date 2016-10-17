@@ -1,0 +1,17 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of map ( set of ( real | nat ) | real |
+			     seq of ( real | nat | char ) | nat  |
+			     bool ) to 
+			          ( set of ( real | nat ) | nat | bool |
+				    seq of char | real )  
+Test () ==
+return 
+[ inverse { 7.4 |-> 3.6, 3 |-> 1 },
+  inverse { i |-> 10+i | i in set {1, ..., 5}},
+  inverse { 1 |-> true, 2 |-> false},
+  inverse { a |-> "hello"^a | a in set {"world", "morning", "noon"}}
+]
+
+
+
+

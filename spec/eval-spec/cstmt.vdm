@@ -1,0 +1,705 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Compilation of statements into stack instructions
+% $Id: cstmt.vdm,v 1.23 2001/12/14 09:36:51 peter Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\chapter{Compilation of Statements}\label{sec:cstmt}
+
+This module specifies how ASTs representing statements
+are translated into the stack machine instructions defined in module
+{\em STKM}.
+
+\begin{vdm_al}
+module CSTMT
+
+imports
+  from AS all,
+  from CI all,
+  from SEM all,
+  from REP all,
+  from INSTRTP all,
+  from STKM all,
+  from CMPL all,
+  from CPAT all,
+  from CEXPR all,
+  from PAT all,
+  from IO all,
+  from GLOBAL all,
+#ifdef VDMPP
+  from SCHDTP all,
+#ifdef VICE
+  from TIME
+    operations
+      GetCompilingTime : () ==> bool;
+      MkBr : () ==> STKM`SubProgram;
+      MkCbr : () ==> STKM`SubProgram;
+      MkMatchPattern : () ==> STKM`SubProgram;
+    functions
+      S2Time : AS`Stmt -> STKM`SubProgram;
+      MkLoopBind : nat -> STKM`SubProgram;
+      MkRuntimeStartList : () -> STKM`SubProgram;
+      MkRuntimeStopList : () -> STKM`SubProgram,
+  from TIMEMAP
+    types Timemap,
+  from TIMEPARSER all,
+#endif VICE
+#endif VDMPP
+  from RTERR all
+
+exports
+  operations
+    S2I : AS`Stmt ==> STKM`SubProgram;
+    AddTrap: STKM`SubProgram * STKM`SubProgram ==> STKM`SubProgram
+
+definitions
+
+state TRAP of
+  trapno : nat
+init trapst == trapst = mk_TRAP(0)
+end
+
+operations
+
+  GetNewTrapNo: () ==> nat1
+  GetNewTrapNo() ==
+   (trapno := trapno + 1;
+    return trapno);
+
+  AddTrap: STKM`SubProgram * STKM`SubProgram ==> STKM`SubProgram
+  AddTrap(b_instr, handler) ==
+    -- If execution comes to this point, then no exception has
+    -- been raised, and we can therefore jump past the handler
+    -- instruction code. If on the other hand an exception has
+    -- been raised, then the stackmachine will search for the
+    -- HANDID instruction, and this way execution reaches the
+    -- handler instruction.
+    def hand_no = GetNewTrapNo();
+    in return [mk_INSTRTP`PUSHTH(hand_no)] ^ b_instr ^
+              [mk_INSTRTP`POPTH(), mk_INSTRTP`BR(len handler + 2),
+               mk_INSTRTP`HANDID(hand_no), mk_INSTRTP`POPTH()] ^ handler;
+
+  S2I : AS`Stmt ==> STKM`SubProgram
+  S2I(stmt) ==
+   (dcl res : seq of char * STKM`SubProgram;
+    cases true :
+      (is_AS`BlockStmt(stmt))        -> res := mk_("BlockStmt",        CompileBlockStmt(stmt)),
+      (is_AS`NonDetStmt(stmt))       -> res := mk_("NonDetStmt",       CompileNonDetStmt(stmt)),
+      (is_AS`AssertStmt(stmt))       -> res := mk_("AssertStmt",       CompileAssertStmt(stmt)),
+      (is_AS`DefStmt(stmt))          -> res := mk_("DefStmt",          CompileDefStmt(stmt)),
+      (is_AS`LetStmt(stmt))          -> res := mk_("LetStmt",          CompileLetStmt(stmt)),
+      (is_AS`LetBeSTStmt(stmt))      -> res := mk_("LetBeSTStmt",      CompileLetBeSTStmt(stmt)),
+      (is_AS`AssignStmt(stmt))       -> res := mk_("AssignStmt",       CompileAssignStmt(stmt)),
+      (is_AS`AtomicAssignStmt(stmt)) -> res := mk_("AtomicAssignStmt", CompileAtomicAssignStmt(stmt)),
+      (is_AS`SeqForLoopStmt(stmt))   -> res := mk_("SeqForLoopStmt",   CompileSeqForLoopStmt(stmt)),
+      (is_AS`SetForLoopStmt(stmt))   -> res := mk_("SetForLoopStmt",   CompileSetForLoopStmt(stmt)),
+      (is_AS`IndexForLoopStmt(stmt)) -> res := mk_("IndexForLoopStmt", CompileIndexForLoopStmt(stmt)),
+      (is_AS`WhileLoopStmt(stmt))    -> res := mk_("WhileLoopStmt",    CompileWhileLoopStmt(stmt)),
+      (is_AS`CallStmt(stmt))         -> res := mk_("CallStmt",         CompileCallStmt(stmt)),
+      (is_AS`ReturnStmt(stmt))       -> res := mk_("ReturnStmt",       CompileReturnStmt(stmt)),
+      (is_AS`IfStmt(stmt))           -> res := mk_("IfStmt",           CompileIfStmt(stmt)),
+      (is_AS`CasesStmt(stmt))        -> res := mk_("CasesStmt",        CompileCasesStmt(stmt)),
+      (is_AS`ErrorStmt(stmt))        -> res := mk_("ErrorStmt",        CompileErrorStmt(stmt)),
+      (is_AS`ExitStmt(stmt))         -> res := mk_("ExitStmt",         CompileExitStmt(stmt)),
+      (is_AS`AlwaysStmt(stmt))       -> res := mk_("AlwaysStmt",       CompileAlwaysStmt(stmt)),
+      (is_AS`TrapStmt(stmt))         -> res := mk_("TrapStmt",         CompileTrapStmt(stmt)),
+      (is_AS`RecTrapStmt(stmt))      -> res := mk_("RecTrapStmt",      CompileRecTrapStmt(stmt)),
+      (is_AS`IdentStmt(stmt))        -> res := mk_("IdentStmt",        [mk_INSTRTP`PUSH(mk_SEM`CONT())]),
+      (is_AS`SpecificationStmt(stmt))-> res := mk_("SpecificationStmt",[mk_INSTRTP`ERRINST(RTERR`SPEC_STMT)]),
+#ifdef VDMPP
+      (is_AS`StartStmt(stmt))        -> res := mk_("StartStmt",        CompileStartStmt(stmt)),
+      (is_AS`StartListStmt(stmt))    -> res := mk_("StartListStmt",    CompileStartListStmt(stmt)),
+      (is_AS`StopStmt(stmt))         -> res := mk_("StopStmt",         CompileStopStmt(stmt)),
+      (is_AS`StopListStmt(stmt))     -> res := mk_("StopListStmt",     CompileStopListStmt(stmt)),
+#ifdef VICE
+      (is_AS`DurationStmt(stmt))     -> res := mk_("DurationStmt",     CompileDurationStmt(stmt)),
+      (is_AS`CycleStmt(stmt))        -> res := mk_("CycleStmt",        CompileCycleStmt(stmt)),
+#endif VICE
+#endif VDMPP
+      others                         -> error
+    end;
+    let mk_(name,stmt_l) = res,
+        cid = stmt.cid
+    in
+     (dcl prog : STKM`SubProgram :=
+            CMPL`IStart(name, cid) ^ CMPL`SetContext(cid, true) ^ stmt_l ^ CMPL`IEnd(name);
+#ifdef VICE
+      if TIME`GetCompilingTime()
+      then prog := prog ^ TIME`S2Time(stmt);
+#endif VICE
+      return prog;
+     );
+   );
+\end{vdm_al}
+
+\section{Block Statement}
+
+\begin{vdm_al}
+  CompileBlockStmt: AS`BlockStmt ==> STKM`SubProgram
+  CompileBlockStmt(mk_AS`BlockStmt(dcl_l,stmt_l,-)) ==
+   (dcl sp_dcl : STKM`SubProgram := [],
+        sp : STKM`SubProgram := [];
+    for mk_AS`AssignDef(id,tp,Iinit,-) in dcl_l do
+     (if Iinit = nil
+      then sp_dcl := sp_dcl ^ [mk_INSTRTP`PUSH(mk_SEM`UNDEF())]
+      else sp_dcl := sp_dcl ^ CEXPR`E2I(Iinit) ^ [mk_INSTRTP`DTC(tp)];
+      sp_dcl := sp_dcl ^ [mk_INSTRTP`APPENDBLKENV(id,tp)]);
+    cases stmt_l:
+      []     -> sp := sp ^ [mk_INSTRTP`PUSH(mk_SEM`CONT())],
+      others -> (sp := S2I(stmt_l(len stmt_l));
+                 for stmt in reverse stmt_l(1,...,len stmt_l-1) do
+                   sp := CEXPR`ConcIfThenElse(S2I(stmt) ^ [mk_INSTRTP`ISCONT()],
+                                              [mk_INSTRTP`POP(1)] ^ sp,
+                                              []))
+    end;
+    return [mk_INSTRTP`EMPTYBLKENV(<READ_WRITE>)] ^ sp_dcl ^ sp ^ [mk_INSTRTP`POPBLKENV()];
+   );
+\end{vdm_al}
+
+\section{Nondeterministic Statement}
+
+The approach chosen to compile nondeterministic statements is that a
+sequence with all instruction code for all element statements is
+produced. This sequence is used to create a list of all the relative
+start positions of the different element statements. At the end of
+each of the element statements there is a jump back to a special
+non-determistic instruction. This non-deterministic instruction
+assumes that the evaluation stack first contains the value of the
+executed element statement and then a sequence of the element
+statement instruction code. In case the ramdom order is set by the
+user the sequence is permuted with respect to the given seed. Thus,
+the permutation is done before the special non-determistic instruction
+is reached.
+
+\begin{vdm_al}
+operations
+  CompileNonDetStmt: AS`NonDetStmt ==> STKM`SubProgram
+  CompileNonDetStmt(mk_AS`NonDetStmt(stmts,-)) ==
+    def sp_l = [ S2I(stmts(i)) | i in set inds stmts ];
+        reljumps = [0] ^ RelJumpLengths(0,sp_l)
+    in
+      return [ mk_INSTRTP`PUSH(reljumps(1,...,len reljumps -1)),
+               mk_INSTRTP`RANDOM(),
+               mk_INSTRTP`PUSH(mk_SEM`CONT()),
+               mk_INSTRTP`NONDETSTMT(),
+               mk_INSTRTP`BR(reljumps(len reljumps)) ] ^
+             conc [ sp_l(i) ^ [ mk_INSTRTP`BR(-reljumps(i+1) - 2) ] | i in set inds sp_l ];
+
+functions
+  RelJumpLengths: nat * seq of STKM`SubProgram -> seq of nat
+  RelJumpLengths(length,sp_l) ==
+    cases sp_l:
+      []             -> [],
+      [sp] ^ tl_sp_l -> let newlength = 1 + length + len sp
+                        in [newlength] ^ RelJumpLengths(newlength, tl_sp_l)
+    end;
+
+operations
+  CompileAssertStmt: AS`AssertStmt ==> STKM`SubProgram
+  CompileAssertStmt(mk_AS`AssertStmt(expr,-)) ==
+    def errMsg = CMPL`CompileRunTime(RTERR`EVAL_ASSERT_GIVES_FALSE, expr.cid);
+    in
+      return CEXPR`ConcIfThenElse([ mk_INSTRTP`ASSERT() ],
+                                  CEXPR`ConcIfThenElse(CEXPR`E2I(expr), [], errMsg),
+                                  []) ^
+             [ mk_INSTRTP`PUSH(mk_SEM`CONT()) ];
+\end{vdm_al}
+
+\section{Def Statement}
+
+\begin{vdm_al}
+operations
+  CompileDefStmt: AS`DefStmt ==> STKM`SubProgram
+  CompileDefStmt(mk_AS`DefStmt(def_l,In,-)) ==
+   (dcl def_sp : STKM`SubProgram := [];
+    for mk_(pb,expr) in def_l do
+      cases pb:
+        mk_AS`PatternName(nm,-,-) -> if nm = nil
+                                     then def_sp := def_sp ^ CEXPR`E2I(expr) ^ [mk_INSTRTP`POP(1)]
+                                     else def_sp := def_sp ^ CEXPR`E2I(expr) ^ [mk_INSTRTP`APPENDBLKENV(nm,nil)],
+        others                    -> def_sp := def_sp ^ CEXPR`E2I(expr) ^ CPAT`PB2I(pb) ^ [mk_INSTRTP`MATCHANDBIND()]
+      end;
+    return [mk_INSTRTP`EMPTYBLKENV(<READ_ONLY>)] ^ def_sp ^ S2I(In) ^ [mk_INSTRTP`POPBLKENV()];
+   );
+\end{vdm_al}
+
+\section{Let Statement}
+
+\begin{vdm_al}
+  CompileLetStmt: AS`LetStmt ==> STKM`SubProgram
+  CompileLetStmt(mk_AS`LetStmt(localdef, In,-)) ==
+   (dcl valdef : STKM`SubProgram := [];
+    for ldef in localdef do
+      cases true:
+        (is_AS`ValueDef(ldef))     -> let mk_AS`ValueDef(pat,tp,val,-,-,-) = ldef
+                                      in
+                                       (valdef := valdef ^ CEXPR`E2I(val) ^
+                                                   (if tp = nil then [] else [mk_INSTRTP`DTC(tp)]);
+                                        cases pat:
+                                          mk_AS`PatternName(nm,nil,-) ->
+                                               if nm = nil
+                                               then valdef := valdef ^ [mk_INSTRTP`POP(1)]
+                                               else valdef := valdef ^ [mk_INSTRTP`APPENDBLKENV(nm,nil)],
+                                          others -> valdef := valdef ^ CPAT`P2I(pat) ^ [mk_INSTRTP`MATCHANDBIND()]
+                                        end
+                                       ),
+        (is_AS`ExplFnDef(ldef)),
+        (is_AS`ImplFnDef(ldef)),
+        (is_AS`ExtExplFnDef(ldef)) -> def mk_(blkenv,b_m) = PAT`ConstructFN(CMPL`GetClMod(), ldef)
+                                      in valdef := valdef ^ [ mk_INSTRTP`CLOSENV(blkenv,b_m) ],
+        others                     -> error
+      end;
+    return [ mk_INSTRTP`EMPTYBLKENV(<READ_ONLY>) ] ^ valdef ^ S2I(In) ^ [ mk_INSTRTP`POPBLKENV() ]);
+\end{vdm_al}
+
+\section{Let be such that Expression}
+
+\begin{vdm_al}
+  CompileLetBeSTStmt: AS`LetBeSTStmt ==> STKM`SubProgram
+  CompileLetBeSTStmt(mk_AS`LetBeSTStmt(lhs,St,In,-)) ==
+    def prep_instr = CPAT`CompileMultBindL(lhs,<DONT_PARTITION>);
+    in
+     (dcl body_instr : STKM`SubProgram;
+      if St = nil
+      then body_instr := CEXPR`ConcIfThenElse([mk_INSTRTP`ISEMPTYSET(1)],
+                                              [mk_INSTRTP`ERRINST(RTERR`EMPTY_ENV_S)],
+                                              [mk_INSTRTP`SELBLKENV(1)] ^ S2I(In) ^ [mk_INSTRTP`POPBLKENV()])
+      else
+        def St_instr = [mk_INSTRTP`SELBLKENV(1)] ^ CEXPR`E2I(St);
+            St_succ = S2I(In) ^ [mk_INSTRTP`POPBLKENV(), mk_INSTRTP`PUSH(mk_SEM`BOOL(true))];
+            St_failed = [mk_INSTRTP`POPBLKENV(), mk_INSTRTP`PUSH(mk_SEM`BOOL(false))];
+            loop_instr = CEXPR`ConcIfThenElse([mk_INSTRTP`ISEMPTYSET(1)],
+                                              [mk_INSTRTP`ERRINST(RTERR`EMPTY_ENV_S)],
+                                              CEXPR`ConcIfThenElse(St_instr, St_succ, St_failed))
+        in body_instr := CEXPR`CombRepeatUntil(loop_instr);
+      let postt_instr = [mk_INSTRTP`REMSTACKELEM(2)]
+      in
+        return prep_instr ^ body_instr ^ postt_instr);
+\end{vdm_al}
+
+\section{Assign Statements}
+
+\begin{vdm_al}
+  CompileAssignStmt: AS`AssignStmt ==> STKM`SubProgram
+  CompileAssignStmt(mk_AS`AssignStmt(lhs,rhs,-)) ==
+    def rhs_instr = CEXPR`E2I(rhs);
+        lhs_instr = CMPL`SetContext(lhs.cid, false) ^ CPAT`SD2I(lhs);
+    in
+      return rhs_instr ^ CEXPR`ConcIfThenElse([mk_INSTRTP`ISCONT()],
+                                              [mk_INSTRTP`ERRINST(RTERR`OP_RETURNED_CONT)],
+                                              lhs_instr ^ [mk_INSTRTP`ASSIGNSD()]);
+\end{vdm_al}
+
+\section{AtomicAssign Statements}
+
+\begin{vdm_al}
+  CompileAtomicAssignStmt: AS`AtomicAssignStmt ==> STKM`SubProgram
+  CompileAtomicAssignStmt(mk_AS`AtomicAssignStmt(assstmtl,-)) ==
+    return conc [ let mk_AS`AssignStmt(lhs,rhs,cid) = assstmtl(i)
+                  in CMPL`SetContext(cid, true) ^ CEXPR`E2I(rhs) ^
+                     CMPL`SetContext(lhs.cid, false) ^ CPAT`SD2I(lhs) | i in set inds assstmtl ] ^
+           [mk_INSTRTP`ATOMIC(len assstmtl)];
+\end{vdm_al}
+
+\section{Loop Statements}
+
+\begin{vdm_al}
+  CompileSeqForLoopStmt: AS`SeqForLoopStmt ==> STKM`SubProgram
+  CompileSeqForLoopStmt(mk_AS`SeqForLoopStmt(cv,fseq,body,-)) ==
+    def prep_instr = CEXPR`E2I(fseq) ^ [mk_INSTRTP`SEQFOR(),mk_INSTRTP`PUSH(mk_SEM`CONT())];
+        bind_pat = [mk_INSTRTP`SELSEQELEM()] ^ CPAT`PB2I(cv) ^ [mk_INSTRTP`MATCHANDBIND()]
+#ifdef VICE
+                   ^ TIME`MkLoopBind(1)
+#endif VICE
+        ;
+        remove_last_res = [mk_INSTRTP`POP(1)];
+        loop_body = remove_last_res ^
+                    [mk_INSTRTP`EMPTYBLKENV(<READ_ONLY>)] ^ bind_pat ^ S2I(body) ^ [mk_INSTRTP`POPBLKENV()]
+#ifdef VICE
+                   ^ TIME`MkCbr()
+#endif VICE
+        ;
+        condition = CEXPR`ConcIfThenElse([mk_INSTRTP`ISCONT()],
+                                         [mk_INSTRTP`ISNOTEMPTYSEQ(2)],
+                                         [mk_INSTRTP`PUSH(mk_SEM`BOOL(false))]);
+        clean_up = [mk_INSTRTP`REMSTACKELEM(2)];
+    in
+      return prep_instr ^ CEXPR`CombWhileLoopWithCond(condition, loop_body) ^ clean_up;
+\end{vdm_al}
+
+\begin{vdm_al}
+  CompileSetForLoopStmt: AS`SetForLoopStmt ==> STKM`SubProgram
+  CompileSetForLoopStmt(mk_AS`SetForLoopStmt(cv,fset,body,ci)) ==
+    def new_cv = PAT`DoCarePattern(cv,mk_AS`Name(["1"], CI`NilContextId));
+        bind_l = [mk_AS`MultSetBind([new_cv],fset,ci)];
+        prep_instr = CPAT`CompileMultBindL(bind_l,<DO_PARTITION>) ^ [mk_INSTRTP`PUSH(mk_SEM`CONT())]
+#ifdef VICE
+                      ^ TIME`MkLoopBind(1)
+#endif VICE
+                    ;
+        remove_last_res = [mk_INSTRTP`POP(1)];
+        loop_body = remove_last_res ^
+                    [mk_INSTRTP`SELBLKENV(1)] ^ S2I(body) ^ [mk_INSTRTP`POPBLKENV()]
+#ifdef VICE
+                    ^ TIME`MkCbr()
+#endif VICE
+                      ;
+        condition = CEXPR`ConcIfThenElse([mk_INSTRTP`ISCONT()],
+                                         [mk_INSTRTP`ISNOTEMPTYSET(2)],
+                                         [mk_INSTRTP`PUSH(mk_SEM`BOOL(false))]);
+        clean_up = [mk_INSTRTP`REMSTACKELEM(2)];
+    in
+      return prep_instr ^ CEXPR`CombWhileLoopWithCond(condition, loop_body) ^ clean_up;
+\end{vdm_al}
+
+\begin{vdm_al}
+  CompileIndexForLoopStmt: AS`IndexForLoopStmt ==> STKM`SubProgram
+  CompileIndexForLoopStmt(mk_AS`IndexForLoopStmt(cv,lb_e,ub_e,by_e,body,-)) ==
+   (dcl step_e : STKM`SubProgram;
+    if by_e = nil
+    then step_e := [mk_INSTRTP`PUSH(mk_SEM`NUM(1))]
+    else step_e := CEXPR`E2I(by_e);
+    def prep_instr = step_e ^ CEXPR`E2I(ub_e) ^ CEXPR`E2I(lb_e) ^
+                     [mk_INSTRTP`VERIFYINDEXARGS(), mk_INSTRTP`PUSH(mk_SEM`CONT())];
+        --bindArgs = [mk_INSTRTP`COPYVAL(),      -- copy current counter value
+        --            mk_INSTRTP`PUSH(mk_STKM`PatternName(cv,nil,cv.cid)),
+        --            mk_INSTRTP`MATCHANDBIND()]
+        bindArgs = [mk_INSTRTP`COPYVAL(),      -- copy current counter value
+                    mk_INSTRTP`APPENDBLKENV(cv,nil)]
+#ifdef VICE
+                    ^ TIME`MkLoopBind(1)
+#endif VICE
+          ;
+        remove_last_res = [mk_INSTRTP`POP(1)];
+        loop_body = remove_last_res ^
+                    [mk_INSTRTP`EMPTYBLKENV(<READ_ONLY>)] ^ bindArgs ^ S2I(body) ^ [mk_INSTRTP`POPBLKENV()] ^
+                    [mk_INSTRTP`INCRCOUNTER()]
+#ifdef VICE
+                    ^ TIME`MkCbr()
+#endif VICE
+          ;
+        condition = CEXPR`ConcIfThenElse([mk_INSTRTP`ISCONT()],
+                                         [mk_INSTRTP`TESTCOUNTER()],
+                                         [mk_INSTRTP`PUSH(mk_SEM`BOOL(false))]);
+        clean_up = [mk_INSTRTP`REMSTACKELEM(2),  -- remove counter
+                    mk_INSTRTP`REMSTACKELEM(2),  -- remove limit
+                    mk_INSTRTP`REMSTACKELEM(2)]  -- remove step
+    in
+      return prep_instr ^ CEXPR`CombWhileLoopWithCond(condition, loop_body) ^ clean_up);
+\end{vdm_al}
+
+\begin{vdm_al}
+  CompileWhileLoopStmt: AS`WhileLoopStmt ==> STKM`SubProgram
+  CompileWhileLoopStmt(mk_AS`WhileLoopStmt(test,body,-)) ==
+    def prep_instr = [mk_INSTRTP`PUSH(mk_SEM`CONT())];
+        remove_last_res = [mk_INSTRTP`POP(1)];
+        loop_body = remove_last_res ^ S2I(body)
+#ifdef VICE
+                    ^ TIME`MkCbr()
+#endif VICE
+          ;
+        check = [mk_INSTRTP`COPYVAL(), mk_INSTRTP`ISCHECK(mk_AS`BooleanType(CI`NilContextId))];
+        condition = CEXPR`ConcIfThenElse([mk_INSTRTP`ISCONT()],
+                                         CEXPR`E2I(test) ^
+                                         CEXPR`ConcIfThenElse(check, [],
+                                                              [mk_INSTRTP`ERRINST(RTERR`LOOP_EXPR_NOT_AN_EXPR)]),
+                                         [mk_INSTRTP`PUSH(mk_SEM`BOOL(false))]);
+    in
+      return prep_instr ^ CEXPR`CombWhileLoopWithCond(condition, loop_body);
+\end{vdm_al}
+
+\section{Call Statement}
+
+The use of a state designator is NOT taken into account and we believe
+that it will not be taken into account at all. Thus, since the code
+generator does not support it and no of the examples in the examples
+repository uses it we recommend to get rid of it entirely in VDM-SL.
+
+\begin{vdm_al}
+#ifdef VDMSL
+  CompileCallStmt: AS`CallStmt ==> STKM`SubProgram
+  CompileCallStmt(mk_AS`CallStmt(-,oprt,args,-)) ==
+    def arg = conc [ CEXPR`E2I(args(i)) | i in set inds args ] ^ [mk_INSTRTP`PUSHLIST(len args)]
+    in
+      return CEXPR`E2I(oprt) ^ arg ^ CMPL`SetContext(oprt.cid, false) ^ [mk_INSTRTP`APPLY()];
+#endif VDMSL
+#ifdef VDMPP
+  CompileCallStmt: AS`CallStmt ==> STKM`SubProgram
+  CompileCallStmt(mk_AS`CallStmt(obj, oprt, args, -)) ==
+   (dcl objv : STKM`SubProgram := [];
+    if obj <> nil
+    then objv := CEXPR`E2I(obj);
+    def arg = conc [ CEXPR`E2I(args(i)) | i in set inds args ] ^ [mk_INSTRTP`PUSHLIST(len args)]
+    in
+      return objv ^ arg ^ [mk_INSTRTP`CALLGUARD(obj <> nil, oprt)] ^
+            CMPL`SetContext(oprt.cid, false) ^ [mk_INSTRTP`PPCALL()]);
+#endif VDMPP
+\end{vdm_al}
+
+\section{Return Statement}
+
+\begin{vdm_al}
+  CompileReturnStmt: AS`ReturnStmt ==> STKM`SubProgram
+  CompileReturnStmt(mk_AS`ReturnStmt(expr,-)) ==
+    cases expr:
+      nil    -> return [mk_INSTRTP`PUSH(mk_SEM`RETURN())],
+      others -> return CEXPR`E2I(expr)
+    end;
+\end{vdm_al}
+
+\section{If Statement}
+
+\begin{vdm_al}
+  CompileIfStmt: AS`IfStmt ==> STKM`SubProgram
+  CompileIfStmt(mk_AS`IfStmt(cond_e, cons_s, elif_l, altn_s, -)) ==
+    def cond_l = CEXPR`E2I(cond_e) ^
+                 [mk_INSTRTP`COPYVAL(), mk_INSTRTP`ISCHECK(mk_AS`BooleanType(CI`NilContextId))] ^
+                 CEXPR`ConcIfThenElse([],[], [mk_INSTRTP`ERRINST(RTERR`TEST_EXPR_NOT_AN_EXPR)]);
+        cons_l = S2I(cons_s)
+#ifdef VICE
+                 ^ TIME`MkCbr()
+#endif VICE
+    in
+      cases elif_l:
+        [] -> (dcl altn_l : STKM`SubProgram;
+               if altn_s <> nil
+               then altn_l := S2I(altn_s)
+#ifdef VICE
+                                                          ^ TIME`MkBr()
+#endif VICE
+               else altn_l := [mk_INSTRTP`PUSH(mk_SEM`CONT())];
+               return CEXPR`ConcIfThenElse(cond_l, cons_l, altn_l)),
+        [mk_AS`ElseifStmt(elif_cond, elif_s, elif_cid)] ^ tl_elif_l ->
+               def altn_l = CompileIfStmt(mk_AS`IfStmt(elif_cond, elif_s, tl_elif_l, altn_s, elif_cid))
+#ifdef VICE
+                           ^ TIME`MkCbr()
+#endif VICE
+               in return CEXPR`ConcIfThenElse(cond_l, cons_l, altn_l)
+      end;
+\end{vdm_al}
+
+\section{Cases Statement}
+
+\begin{vdm_al}
+  CompileCasesStmt : AS`CasesStmt ==> STKM`SubProgram
+  CompileCasesStmt( mk_AS`CasesStmt(sel,altns,others_s,-)) ==
+   (dcl sp: STKM`SubProgram;
+    if others_s = nil
+    then sp := [mk_INSTRTP`PUSH(mk_SEM`CONT())]
+    else sp := S2I(others_s)
+#ifdef VICE
+                               ^ TIME`MkBr()
+#endif VICE
+               ;
+        -- cases check disabled
+        --tsp : STKM`SubProgram := [mk_INSTRTP`SWAP()],
+        --err_sp : STKM`SubProgram := [mk_INSTRTP`ERRINST(RTERR`MULTIPLE_PATTERN)];
+    for mk_AS`CasesStmtAltn(match_lp,body_s,-) in reverse altns do
+      --def body_instr = [mk_INSTRTP`SELBLKENV(1), mk_INSTRTP`POP(1)] ^ S2I(body_s) ^ [mk_INSTRTP`POPBLKENV()]
+      def body_instr = [mk_INSTRTP`SELBLKENV(1)] ^ S2I(body_s) ^ [mk_INSTRTP`POPBLKENV(), mk_INSTRTP`REMSTACKELEM(2)]
+#ifdef VICE
+                         ^ TIME`MkCbr()
+#endif VICE
+          ;
+          onep = len match_lp = 1
+      in
+       (dcl lsp : STKM`SubProgram := if onep then sp else [mk_INSTRTP`PUSH(mk_SEM`BOOL(false))];
+        for pat in reverse match_lp do
+          def test_instr = [mk_INSTRTP`COPYVAL()] ^ CPAT`P2I(pat) ^ [mk_INSTRTP`TRYANYMATCH()]
+#ifdef VICE
+                             ^ TIME`MkMatchPattern()
+#endif VICE
+          in
+           (
+#ifdef VICE
+            lsp := lsp ^ TIME`MkBr();
+#endif VICE
+            -- cases check disabled
+            --lsp := CEXPR`ConcIfThenElse(test_instr,
+            --                            CEXPR`ConcIfThenElse([mk_INSTRTP`CASES()], [mk_INSTRTP`SWAP()] ^ tsp, []) ^
+            --                              (if onep then body_instr else [mk_INSTRTP`PUSH(mk_SEM`BOOL(true))]),
+            --                            lsp);
+            --tsp := CEXPR`ConcIfThenElse(test_instr, err_sp, tsp);
+            lsp := CEXPR`ConcIfThenElse(test_instr,
+                                        if onep
+                                        then body_instr
+                                        else [mk_INSTRTP`PUSH(mk_SEM`BOOL(true))],
+                                        lsp);
+           );
+        sp := lsp ^ (if onep then [] else CEXPR`ConcIfThenElse([], body_instr, sp));
+       );
+    return CEXPR`E2I(sel) ^ sp ^ [mk_INSTRTP`REMSTACKELEM(2)];
+   );
+\end{vdm_al}
+
+\section{Error Statement}
+
+\begin{vdm_al}
+  CompileErrorStmt: AS`ErrorStmt ==> STKM`SubProgram
+  CompileErrorStmt(-) ==
+    return [mk_INSTRTP`ERRINST(RTERR`ERROR_STATEMENT)];
+\end{vdm_al}
+
+\section{Exception Handling Statements}
+
+\section{Exit Statement}
+
+\begin{vdm_al}
+  CompileExitStmt: AS`ExitStmt ==> STKM`SubProgram
+  CompileExitStmt(mk_AS`ExitStmt(expr, cid)) ==
+    cases expr:
+      nil    -> return [ mk_INSTRTP`MKEXIT(true, cid), mk_INSTRTP`EXITVAL() ],
+      others -> return CEXPR`E2I(expr) ^ [ mk_INSTRTP`MKEXIT(false, cid), mk_INSTRTP`EXITVAL() ]
+    end;
+\end{vdm_al}
+
+\begin{vdm_al}
+  CompileAlwaysStmt: AS`AlwaysStmt ==> STKM`SubProgram
+  CompileAlwaysStmt(mk_AS`AlwaysStmt(Post,body,-)) ==
+    def b_instr = S2I(body);
+        p_instr = S2I(Post)
+    in
+      return -- I may get to this location in two ways:
+             -- 1) An exception was thrown in b_instr, and the top elm of the stack is thus an exit value.
+             -- 2) No exception, and the top element is thus an return value.
+
+             AddTrap(b_instr, []) ^ p_instr ^
+
+             -- If I get to this location, then no exception was thrown in p_instr.
+             -- If an exception was thrown, then the program counter would have been
+             -- moved to the trap handler for this exception.
+
+             --[mk_INSTRTP`POP(1)] ^ -- the result of p_instr
+             CEXPR`ConcIfThenElse([mk_INSTRTP`ISCONT()], [mk_INSTRTP`POP(1)], []) ^
+
+             -- Did b_instr raise an exception, if so, raise a new one, as we caught
+             -- the exception.
+             CEXPR`ConcIfThenElse([mk_INSTRTP`ISEXIT()], [mk_INSTRTP`EXITVAL()], []);
+\end{vdm_al}
+
+\begin{vdm_al}
+  CompileTrapStmt: AS`TrapStmt ==> STKM`SubProgram
+  CompileTrapStmt(mk_AS`TrapStmt(pb,Post,body,-)) ==
+    def b_instr = S2I(body);
+        bind_succ = [mk_INSTRTP`TRYANYMATCH()];
+        bind_fail = [mk_INSTRTP`POP(2), mk_INSTRTP`PUSH(mk_SEM`BOOL(false))];
+        p_instr = [mk_INSTRTP`SELBLKENV(1), mk_INSTRTP`POP(2)] ^ S2I(Post) ^ [mk_INSTRTP`POPBLKENV()];
+    in
+     (dcl pat_instr : STKM`SubProgram := [ mk_INSTRTP`REMEXITVAL() ];
+      cases pb:
+        mk_AS`TypeBind(pat,tp,-) -> pat_instr := pat_instr ^ [mk_INSTRTP`COPYVAL()] ^ CPAT`P2I(pat) ^
+                                                 [mk_INSTRTP`SWAP(), mk_INSTRTP`TYPEJUDGE(tp)],
+        mk_AS`SetBind(pat,Set,-) -> pat_instr := pat_instr ^ [mk_INSTRTP`COPYVAL()] ^ CPAT`P2I(pat) ^
+                                                 [mk_INSTRTP`SWAP()] ^ CEXPR`E2I(Set) ^ [mk_INSTRTP`BINOP(<INSET>)],
+        others                   -> pat_instr := pat_instr ^ CPAT`P2I(pb) ^ [mk_INSTRTP`PUSH(mk_SEM`BOOL(true))]
+      end;
+      let test_instr = CEXPR`ConcIfThenElse(pat_instr, bind_succ, bind_fail),
+          han_instr = CEXPR`ConcIfThenElse(test_instr, p_instr, [mk_INSTRTP`EXITVAL()]),
+          use_handler = CEXPR`ConcIfThenElse([mk_INSTRTP`ISNEEXIT()], han_instr, [mk_INSTRTP`EXITVAL()])
+      in return AddTrap(b_instr, use_handler);
+     );
+
+  CompileRecTrapStmt: AS`RecTrapStmt ==> STKM`SubProgram
+  CompileRecTrapStmt(mk_AS`RecTrapStmt(traps,body,-)) ==
+    def b_instr = S2I(body);
+        bind_succ = [mk_INSTRTP`TRYANYMATCH()];
+        bind_fail = [mk_INSTRTP`POP(2), mk_INSTRTP`PUSH(mk_SEM`BOOL(false))]
+    in
+     (dcl sp: STKM`SubProgram := [mk_INSTRTP`POPTH(), mk_INSTRTP`EXITVAL()];
+      -- This code is executed when no handler matches the exception.
+
+      for mk_AS`Trap(pb,Post,-) in reverse traps do
+        def p_instr = [mk_INSTRTP`SELBLKENV(1), mk_INSTRTP`POP(2)] ^ S2I(Post) ^ [mk_INSTRTP`POPBLKENV()];
+        in
+         (dcl pat_instr : STKM`SubProgram := [ mk_INSTRTP`REMEXITVAL() ];
+          cases pb:
+            mk_AS`TypeBind(pat,tp,-) -> pat_instr := pat_instr ^ [mk_INSTRTP`COPYVAL()] ^ CPAT`P2I(pat) ^
+                                                     [mk_INSTRTP`SWAP(), mk_INSTRTP`TYPEJUDGE(tp)],
+            mk_AS`SetBind(pat,Set,-) -> pat_instr := pat_instr ^ [mk_INSTRTP`COPYVAL()] ^ CPAT`P2I(pat) ^
+                                                     [mk_INSTRTP`SWAP()] ^ CEXPR`E2I(Set) ^ [mk_INSTRTP`BINOP(<INSET>)],
+           others                    -> pat_instr := pat_instr ^ CPAT`P2I(pb) ^ [mk_INSTRTP`PUSH(mk_SEM`BOOL(true))]
+          end;
+          let test_instr = CEXPR`ConcIfThenElse(pat_instr, bind_succ, bind_fail)
+          in sp := CEXPR`ConcIfThenElse(test_instr, p_instr, sp)
+         );
+
+      -- Tests if the exception contains a value, that is wether
+      -- the exception was called as 'exit val' or just as 'exit'
+      -- The loop is implicit. That is if a recursive exception is rasied, then
+      -- execution returns to the instruction mk_INSTRTP`HANDID(hand_no).
+      let loop_instr = CEXPR`ConcIfThenElse([mk_INSTRTP`ISNEEXIT()], sp, [mk_INSTRTP`POPTH(), mk_INSTRTP`EXITVAL()])
+      in
+        def hand_no = GetNewTrapNo();
+        in
+          return [mk_INSTRTP`PUSHTH(hand_no)] ^
+                 b_instr ^
+                 -- if I make it here then no exception has been rasied, and I can jump past
+                 -- the handler body. Just like for trap-statement (See above)
+                 [mk_INSTRTP`BR(len loop_instr + 1),
+                  mk_INSTRTP`HANDID(hand_no)] ^
+                 loop_instr ^
+                 [mk_INSTRTP`POPTH()]);
+\end{vdm_al}
+
+#ifdef VDMPP
+\section{Start and Start List Statements}
+
+\begin{vdm_al}
+  CompileStartStmt: AS`StartStmt ==> STKM`SubProgram
+  CompileStartStmt(mk_AS`StartStmt(expr,-)) ==
+    return CEXPR`E2I(expr) ^ [mk_INSTRTP`STARTLIST(false), mk_INSTRTP`PUSH(mk_SEM`CONT())];
+
+  CompileStartListStmt: AS`StartListStmt ==> STKM`SubProgram
+  CompileStartListStmt(mk_AS`StartListStmt(expr,-)) ==
+    return CEXPR`E2I(expr) ^
+#ifdef VICE
+           TIME`MkRuntimeStartList() ^
+#endif VICE
+           [mk_INSTRTP`STARTLIST(true), mk_INSTRTP`PUSH(mk_SEM`CONT())];
+\end{vdm_al}
+
+\section{Stop and Stop List Statements}
+
+\begin{vdm_al}
+  CompileStopStmt: AS`StopStmt ==> STKM`SubProgram
+  CompileStopStmt(mk_AS`StopStmt(expr,-)) ==
+    return CEXPR`E2I(expr) ^ [mk_INSTRTP`STOPLIST(false), mk_INSTRTP`PUSH(mk_SEM`CONT())];
+
+  CompileStopListStmt: AS`StopListStmt ==> STKM`SubProgram
+  CompileStopListStmt(mk_AS`StopListStmt(expr,-)) ==
+    return CEXPR`E2I(expr) ^
+#ifdef VICE
+           TIME`MkRuntimeStopList() ^
+#endif VICE
+           [mk_INSTRTP`STOPLIST(true), mk_INSTRTP`PUSH(mk_SEM`CONT())];
+\end{vdm_al}
+
+#ifdef VICE
+\section{Duration and Cycle Statements}
+
+\begin{vdm_al}
+  CompileDurationStmt : AS`DurationStmt ==> STKM`SubProgram
+  CompileDurationStmt(mk_AS`DurationStmt(num, stmt,-)) ==
+    if is_AS`RealLit(num) or is_AS`NumLit(num)
+    then return [mk_INSTRTP`PUSHDURATION()] ^ S2I(stmt) ^ [mk_INSTRTP`POPDURATION(num.val)]
+    else return [mk_INSTRTP`PUSHDURATION()] ^ S2I(stmt) ^ CEXPR`E2I(num) ^ [mk_INSTRTP`POPDURATION(nil)];
+
+  CompileCycleStmt : AS`CycleStmt ==> STKM`SubProgram
+  CompileCycleStmt(mk_AS`CycleStmt(num, stmt,-)) ==
+    if is_AS`RealLit(num) or is_AS`NumLit(num)
+    then return [mk_INSTRTP`PUSHCYCLE()] ^ S2I(stmt) ^ [mk_INSTRTP`POPCYCLE(num.val)]
+    else return [mk_INSTRTP`PUSHCYCLE()] ^ S2I(stmt) ^ CEXPR`E2I(num) ^ [mk_INSTRTP`POPCYCLE(nil)];
+\end{vdm_al}
+#endif VICE
+
+#endif VDMPP
+\begin{vdm_al}
+end CSTMT
+\end{vdm_al}
+\vspace{0.5cm}
+
+#ifdef RTINFO
+\begin{rtinfo}
+{rtinfo.ast}[CSTMT]
+\end{rtinfo}
+#endif RTINFO

@@ -1,0 +1,25 @@
+add omnipy.h
+
+//Must define Py_TYPE for Python 2.5 or older
+#ifndef Py_TYPE
+#define Py_TYPE(o) (((PyObject*)(o))->ob_type)
+#endif
+//Must define PyVarObject_HEAD_INIT for Python 2.5 or older
+#ifndef PyVarObject_HEAD_INIT
+#define PyVarObject_HEAD_INIT(type, size) \
+PyObject_HEAD_INIT(type) size,
+#endif
+/*
+//Must define PyModule_AddIntMacro for Python 2.5 or older
+#ifndef PyModule_AddIntMacro
+#define PyModule_AddIntMacro(m, c) PyModule_AddIntConstant(m, #c, c)
+#endif
+//Must define PyBytes_FromStringAndSize for Python 2.5 or older
+#ifndef PyBytes_FromStringAndSize
+#define PyBytes_FromStringAndSize PyString_FromStringAndSize
+#endif
+//Must define PyBytes_FromString for Python 2.5 or older
+#ifndef PyBytes_FromString
+#define PyBytes_FromString PyString_FromString
+#endif
+*/

@@ -1,0 +1,177 @@
+class PinViewerPanel is subclass of CgmViewer, Observer
+operations 
+public  setSize : int  * int  ==> <VOID>
+setSize(width, height) == 
+( PinViewerPanel`viewerWidth := width;
+  PinViewerPanel`viewerHeight := height;
+  return  <VOID>
+) ;
+
+public  updatePanel : () ==> <VOID>
+updatePanel() == 
+( dcl   noGraphic : bool  := false  ,
+        contextChange : [ContextSet] := context.getContextChanges();
+  if  ((contextChange.get(ContextTypes`REFDES) <> nil  ) or  (contextChange.get(ContextTypes`PIN) <> nil  )) and  (isShowing())
+  then  
+    ( dcl   refDes : [RefDes] := context.getCurrentContextFieldObject(ContextTypes`REFDES),
+            db : [Database] := Database`getDatabase(),
+            pinId : [String] := db.getPinArrangementId(refDes);
+      if  pinId.equals(graphicName)
+      then  
+        ( let - = repaint()
+          in 
+            skip 
+        ) 
+      else  
+        if  pinId <> nil  
+        then  
+          ( dcl   cgmIllustration : [Illustration] := db.getIllustration(pinId);
+            if  cgmIllustration <> nil  
+            then  
+              ( graphicName := pinId;
+                ( dcl   inStream : [InputStream] := cgmIllustration.getCGMStream();
+                  if  cgmIllustration.getOrientation() = Illustration`LANDSCAPE
+                  then  
+                    ( if  rotationSet = false  
+                      then  
+                        ( dcl   angleRadians : real  := J2VUTIL`Convert("float" , ((Math.PI/180)*270));
+                          let - = setRotation(angleRadians)
+                          in 
+                            skip ;
+                          rotationSet := true  
+                        ) 
+                    ) 
+                  else  
+                    ( if  rotationSet = true  
+                      then  
+                        ( dcl   angleRadians : real  := J2VUTIL`Convert("float" , ((Math.PI/180)*90));
+                          let - = setRotation(angleRadians)
+                          in 
+                            skip ;
+                          rotationSet := false  
+                        ) 
+                    ) ;
+                  let - = setGraphicStream(inStream)
+                  in 
+                    skip ;
+                  let - = setGraphicSize(new  Dimension(viewerWidth , viewerHeight))
+                  in 
+                    skip ;
+                  if  flipPinArrangement
+                  then  
+                    ( dcl   center : [RPoint] := getGraphicCenter();
+                      let - = setReflection(center , CgmViewer`Y_AXIS)
+                      in 
+                        skip 
+                    ) ;
+                  ( dcl   ids : map  int  to  int  := getPrimIds();
+                    ( dcl   i : int  := 0;
+                      while  i < (card  dom  ids) do  
+                      ( let - = setPrimBehavioralAttributes(ids(i) , CgmViewer`PRE_SELECTABLE)
+                        in 
+                          skip ;
+                        i := i+1
+                      ) 
+                    ) ;
+                    let - = fullRefresh()
+                    in 
+                      skip ;
+                    let - = centerImage()
+                    in 
+                      skip ;
+                    trap  j2v_exception with  
+                      cases  true  : 
+                        (isofclass  (IOException,j2v_exception)) -> 
+                          ( dcl   except : [IOException] := j2v_exception;
+                            skip 
+                          ) ,
+                        others  -> 
+                          exit  j2v_exception
+                      end  
+                    in  
+                      ( let - = inStream.close()
+                        in 
+                          skip 
+                      ) 
+                  ) 
+                ) 
+              ) 
+            else  
+              ( noGraphic := true  
+              ) 
+          ) 
+        else  
+          ( noGraphic := true  
+          ) ;
+      if  noGraphic
+      then  
+        ( graphicName := new  String([  ]);
+          let - = clear()
+          in 
+            skip ;
+          let - = setScale(J2VUTIL`Convert("float" , 1.5))
+          in 
+            skip ;
+          ( dcl   ids : map  int  to  int  := getPrimIds();
+            ( dcl   i : int  := 0;
+              while  i < (card  dom  ids) do  
+              ( let - = setPrimBehavioralAttributes(ids(i) , CgmViewer`PRE_SELECTABLE)
+                in 
+                  skip ;
+                i := i+1
+              ) 
+            ) ;
+            let - = fullRefresh()
+            in 
+              skip 
+          ) 
+        ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  PinViewerPanel : () ==> PinViewerPanel
+PinViewerPanel() == 
+( let - = CgmViewer()
+  in 
+    skip ;
+  context := ContextState`getContextState();
+  let - = context.addObserver(self  )
+  in 
+    skip ;
+  viewerWidth := 480;
+  viewerHeight := 288;
+  let - = setScale(J2VUTIL`Convert("float" , 1.5))
+  in 
+    skip ;
+  let - = setPreferredSize(new  Dimension(viewerWidth , viewerHeight))
+  in 
+    skip ;
+  ( dcl   flip : [String] := DWDSProperties`getProperty(new  String("cgm.flip_pin_arrangement") , new  String("true"));
+    if  flip.toLowerCase().equals(new  String("true"))
+    then  
+      ( flipPinArrangement := true  
+      ) 
+    else  
+      ( flipPinArrangement := false  
+      ) 
+  ) 
+) ;
+
+public  update : [Observable] * [Object] ==> <VOID>
+update(o, contextChanges) == 
+( let - = updatePanel()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+instance variables 
+  protected  context : [ContextState] := nil  ;
+  viewerWidth : int ;
+  viewerHeight : int ;
+  graphicName : [String] := nil  ;
+  rotationSet : bool  := false  ;
+  flipPinArrangement : bool  := false  
+  
+end  PinViewerPanel

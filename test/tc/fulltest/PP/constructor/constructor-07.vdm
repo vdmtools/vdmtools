@@ -1,0 +1,22 @@
+-- Check that combination of if-then and exit works
+
+class A
+
+instance variables
+
+n : nat := 0;
+
+operations
+
+public A : () ==> A
+A() ==
+( if n = 0
+  then exit 8
+);
+
+public A : seq1 of nat ==> A
+A(l) ==
+( n := hd l;
+)
+
+end A

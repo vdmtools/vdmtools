@@ -1,0 +1,18 @@
+class Object
+
+operations 
+
+protected clone : () ==> Object
+clone () == is not yet specified;
+
+end Object
+
+class A is subclass of Object 
+
+operations 
+
+public clone : () ==> Object
+clone () == is not yet specified;
+
+end A 
+

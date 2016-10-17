@@ -1,0 +1,13 @@
+class A
+instance variables 
+	public iv:int := 1;
+  
+operations
+
+public static op: A ==> A
+	op(obj) == (obj.iv := 123; return obj);
+
+public op2: A ==> A
+	op2(obj) == (obj.iv := 456; return obj)
+
+end A

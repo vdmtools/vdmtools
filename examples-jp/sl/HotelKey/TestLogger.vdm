@@ -1,0 +1,96 @@
+\subsection{TestLogger}
+テストのログを管理する関数を提供する。
+
+\begin{vdm_al}
+--$Id: TestLogger.vpp,v 1.1 2005/10/31 02:09:59 vdmtools Exp $
+module TestLogger
+imports 
+   from IO all,
+   from TestDriver 
+      types TestCase
+      functions GetTestName
+
+exports all
+
+definitions
+values
+historyFileName = "VDMTESTLOG.TXT";
+
+operations
+\end{vdm_al}
+
+Successは、成功メッセージをファイルに追加し、標準出力に表示し、trueを返す。
+
+\begin{vdm_al}
+Success: TestDriver`TestCase ==> bool
+Success(t) == 
+   let   message = TestDriver`GetTestName(t)^"\tOK.\n"
+   in (
+      Fprint (message);
+      Print(message);   
+      return true
+   );
+\end{vdm_al}
+
+Failureは、失敗メッセージをファイルに追加し、標準出力に表示し、falseを返す。
+
+\begin{vdm_al}
+Failure: TestDriver`TestCase ==> bool
+Failure(t) == 
+   let   message = TestDriver`GetTestName(t)^"\tNG.\n"
+   in (
+      Fprint (message);
+      Print (message);  
+      return false
+   );
+\end{vdm_al}
+
+SuccessAllは、全体成功メッセージをファイルに追加し、標準出力に表示し、trueを返す。
+
+\begin{vdm_al}
+SuccessAll : seq of char ==> bool
+SuccessAll(m) ==
+   let   message = m ^ "\tOK!!\n"
+   in (
+      Fprint (message);
+      Print (message);
+      return true
+   );
+\end{vdm_al}
+
+FailureAllは、全体失敗メッセージをファイルに追加し、標準出力に表示し、falseを返す。
+
+\begin{vdm_al}   
+FailureAll :  seq of char ==> bool
+FailureAll(m) ==
+   let   message = m ^ "\tNG!!\n"
+   in (
+      Fprint (message);
+      Print (message);
+      return false
+   );
+\end{vdm_al}
+
+Printは、標準出力に文字列を表示する。
+
+\begin{vdm_al}   
+Print : seq of char ==> ()
+Print (s) ==
+   def - = IO`echo(s) in skip;
+\end{vdm_al}
+
+Fprintは、現在ディレクトリの
+historyFileNameで示されるファイルに文字列を表示する。
+
+\begin{vdm_al}   
+operations
+Fprint : seq of char ==> ()
+Fprint (s) ==
+   def - =  IO`fecho(historyFileName,  s, <append>) in skip;
+
+end TestLogger
+\end{vdm_al}
+
+\begin{rtinfo}
+[TestLogger]{vdm.tc}[TestLogger]
+\end{rtinfo}

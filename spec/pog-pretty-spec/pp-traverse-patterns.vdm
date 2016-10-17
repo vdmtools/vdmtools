@@ -1,0 +1,183 @@
+\section{Traversal of patterns}
+
+\begin{vdm_al}
+module PP_TRA_PAT
+
+imports
+  from PP_TAR_DEF all,
+  from PP_TAR_TYPE all,
+  from PP_TAR_EXPR all,
+  from PP_TAR_PAT all,
+
+  from PP_TRA_EXPR all,
+  from PP_TRA_TYPE all,
+
+  from AS all,
+  from CI all,
+  from REP all
+
+exports
+  functions
+    trv_PatternBind : AS`PatternBind -> PP_TAR_PAT`PatternBind;
+    trv_Pattern : AS`Pattern -> PP_TAR_PAT`Pattern; 
+    trv_Bind : AS`Bind  -> PP_TAR_PAT`Bind;
+    trv_SetBind : AS`SetBind  -> PP_TAR_PAT`SetBind;
+    trv_TypeBind : AS`TypeBind  -> PP_TAR_PAT`TypeBind;
+    trv_SeqBind : AS`SeqBind  -> PP_TAR_PAT`SeqBind;
+    trv_BindList : AS`BindList -> PP_TAR_PAT`BindList;
+
+definitions
+
+\end{vdm_al}
+
+\section{Patterns and Bindings}
+
+\begin{vdm_al}
+
+
+functions
+
+  trv_PatternBind : AS`PatternBind -> PP_TAR_PAT`PatternBind 
+  trv_PatternBind (patbind) ==
+    cases patbind:
+      mk_AS`SetBind(-,-,-)  -> trv_SetBind(patbind),
+      mk_AS`TypeBind(-,-,-) -> trv_TypeBind(patbind),
+      others                -> trv_Pattern(patbind)
+    end;
+
+  trv_Pattern : AS`Pattern -> PP_TAR_PAT`Pattern 
+  trv_Pattern (pat) ==
+      cases pat:
+        mk_AS`PatternName(-,-,-)      -> trv_PatternName(pat),
+        mk_AS`MatchVal(-,-)           -> trv_MatchVal(pat),
+        mk_AS`SetEnumPattern (-,-)    -> trv_SetEnumPattern(pat),
+        mk_AS`SetUnionPattern (-,-,-) -> trv_SetUnionPattern(pat),
+        mk_AS`SeqEnumPattern (-,-)    -> trv_SeqEnumPattern(pat),
+        mk_AS`SeqConcPattern (-,-,-)  -> trv_SeqConcPattern(pat),
+        mk_AS`MapEnumPattern (-,-)    -> trv_MapEnumPattern(pat),
+        mk_AS`MapMergePattern (-,-,-) -> trv_MapMergePattern(pat),
+        mk_AS`RecordPattern (-,-,-)   -> trv_RecordPattern(pat),
+        mk_AS`TuplePattern (-,-)      -> trv_TuplePattern(pat),
+        mk_AS`MapletPattern (-,-,-)   -> trv_MapletPattern(pat),
+#ifdef VDMPP
+        mk_AS`ObjectPattern (-,-,-)   -> trv_ObjectPattern(pat),
+        mk_AS`FieldPattern (-,-,-)    -> trv_FieldPattern(pat),
+#endif VDMPP
+        others -> undefined
+      end;
+
+  trv_PatternName: AS`PatternName -> PP_TAR_PAT`PatternName
+  trv_PatternName (mk_AS`PatternName(nm,-,cid)) ==
+    let trv_nm = if nm = nil 
+                 then nil 
+                 else PP_TRA_EXPR`trv_NameExpr(nm)
+    in 
+        PP_TAR_PAT`tar_PatternName(trv_nm, cid);
+
+  trv_MatchVal: AS`MatchVal -> PP_TAR_PAT`MatchVal
+  trv_MatchVal (mk_AS`MatchVal(val,cid)) ==
+    PP_TAR_PAT`tar_MatchVal(PP_TRA_EXPR`trv_Expr(val), cid);
+
+  trv_SetEnumPattern: AS`SetEnumPattern -> PP_TAR_PAT`SetEnumPattern
+  trv_SetEnumPattern (mk_AS`SetEnumPattern(els, cid)) ==
+    PP_TAR_PAT`tar_SetEnumPattern([trv_Pattern(els(i)) | i in set inds els], cid);
+
+  trv_SetUnionPattern: AS`SetUnionPattern -> PP_TAR_PAT`SetUnionPattern
+  trv_SetUnionPattern (mk_AS`SetUnionPattern(lp,rp,cid)) ==
+    PP_TAR_PAT`tar_SetUnionPattern(trv_Pattern(lp), trv_Pattern(rp), cid);
+
+\end{vdm_al}
+
+Please note that an $AS`SeqEnumPattern$ can never be an empty sequence
+as the empty sequence is represented using $AS`MatchVal$.
+
+\begin{vdm_al}    
+  trv_SeqEnumPattern: AS`SeqEnumPattern -> PP_TAR_PAT`SeqEnumPattern
+  trv_SeqEnumPattern (mk_AS`SeqEnumPattern(els,cid)) ==
+    PP_TAR_PAT`tar_SeqEnumPattern([trv_Pattern(els(i)) | i in set inds els], cid);
+
+  trv_SeqConcPattern: AS`SeqConcPattern -> PP_TAR_PAT`SeqConcPattern
+  trv_SeqConcPattern (mk_AS`SeqConcPattern(lp,rp,cid)) ==
+    PP_TAR_PAT`tar_SeqConcPattern(trv_Pattern(lp), trv_Pattern(rp), cid);
+
+  trv_MapEnumPattern: AS`MapEnumPattern -> PP_TAR_PAT`MapEnumPattern
+  trv_MapEnumPattern (mk_AS`MapEnumPattern(mls,cid)) ==
+    PP_TAR_PAT`tar_MapEnumPattern([trv_Pattern(mls(i)) | i in set inds mls], cid);
+
+  trv_MapMergePattern: AS`MapMergePattern -> PP_TAR_PAT`MapMergePattern
+  trv_MapMergePattern (mk_AS`MapMergePattern(lp,rp,cid)) ==
+    PP_TAR_PAT`tar_MapMergePattern(trv_Pattern(lp), trv_Pattern(rp), cid);
+
+  trv_MapletPattern: AS`MapletPattern -> PP_TAR_PAT`MapletPattern
+  trv_MapletPattern (mk_AS`MapletPattern(dp,rp,cid)) ==
+    PP_TAR_PAT`tar_MapletPattern(trv_Pattern(dp), trv_Pattern(rp), cid);
+
+  trv_RecordPattern: AS`RecordPattern -> PP_TAR_PAT`RecordPattern
+  trv_RecordPattern (mk_AS`RecordPattern(nm,flds,cid)) ==
+    PP_TAR_PAT`tar_RecordPattern(PP_TRA_EXPR`trv_NameName(nm), [trv_Pattern(flds(i)) | i in set inds flds], cid);
+
+  trv_TuplePattern: AS`TuplePattern -> PP_TAR_PAT`TuplePattern
+  trv_TuplePattern (mk_AS`TuplePattern(flds,cid)) ==
+    PP_TAR_PAT`tar_TuplePattern([trv_Pattern(flds(i)) | i in set inds flds], cid);
+
+#ifdef VDMPP
+  trv_ObjectPattern: AS`ObjectPattern -> PP_TAR_PAT`ObjectPattern
+  trv_ObjectPattern (mk_AS`ObjectPattern(cls,flds,cid)) ==
+    PP_TAR_PAT`tar_ObjectPattern(PP_TRA_EXPR`trv_NameExpr(cls), [trv_Pattern(flds(i)) | i in set inds flds], cid);
+
+  trv_FieldPattern: AS`FieldPattern -> PP_TAR_PAT`FieldPattern
+  trv_FieldPattern (mk_AS`FieldPattern(nm,pat,cid)) ==
+    PP_TAR_PAT`tar_FieldPattern(PP_TRA_EXPR`trv_NameExpr(nm), trv_Pattern(pat), cid);
+#endif VDMPP
+\end{vdm_al}
+
+\subsection{Bindings}
+
+\begin{vdm_al}
+  trv_Bind : AS`Bind  -> PP_TAR_PAT`Bind
+  trv_Bind(bind) ==
+    cases bind:
+     mk_AS`SetBind(-,-,-) -> trv_SetBind(bind),
+     mk_AS`TypeBind(-,-,-) -> trv_TypeBind(bind)
+    end;
+
+  trv_SetBind : AS`SetBind  -> PP_TAR_PAT`SetBind
+  trv_SetBind(mk_AS`SetBind(pat,expr,cid)) ==
+    PP_TAR_PAT`tar_SetBind(trv_Pattern(pat), PP_TRA_EXPR`trv_Expr(expr), cid);
+
+  trv_SeqBind : AS`SeqBind  -> PP_TAR_PAT`SeqBind
+  trv_SeqBind(mk_AS`SeqBind(pat,expr,cid)) ==
+    PP_TAR_PAT`tar_SeqBind(trv_Pattern(pat), PP_TRA_EXPR`trv_Expr(expr), cid);
+
+  trv_TypeBind : AS`TypeBind  -> PP_TAR_PAT`TypeBind
+  trv_TypeBind(mk_AS`TypeBind(pat, tp, cid)) ==
+    PP_TAR_PAT`tar_TypeBind(trv_Pattern(pat), tp, PP_TRA_TYPE`trv_Type(tp), cid);
+
+  trv_BindList : AS`BindList -> PP_TAR_PAT`BindList
+  trv_BindList(binds) ==
+    PP_TAR_PAT`tar_BindList([trv_MultBind(binds(i)) | i in set inds binds]);
+
+  trv_MultBind : AS`MultBind -> PP_TAR_PAT`MultBind
+  trv_MultBind (mbinds) ==
+    cases mbinds:
+     mk_AS`MultSetBind(-,-,-)  -> trv_MultSetBind(mbinds),
+     mk_AS`MultTypeBind(-,-,-) -> trv_MultTypeBind(mbinds)
+    end;
+ 
+  trv_MultSetBind: AS`MultSetBind  -> PP_TAR_PAT`MultSetBind
+  trv_MultSetBind (mk_AS`MultSetBind(pats,expr,cid)) ==
+    PP_TAR_PAT`tar_MultSetBind([trv_Pattern(pats(i)) | i in set inds pats], PP_TRA_EXPR`trv_Expr(expr), cid);
+
+  trv_MultTypeBind: AS`MultTypeBind -> PP_TAR_PAT`MultTypeBind
+  trv_MultTypeBind (mk_AS`MultTypeBind(pats,tp,cid)) ==
+    PP_TAR_PAT`tar_MultTypeBind([trv_Pattern(pats(i)) | i in set inds pats], tp, PP_TRA_TYPE`trv_Type(tp), cid);
+
+end PP_TRA_PAT
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[PP\_TRA\_PAT`trv\_MultTypeBind]
+{rtinfo.ast}[PP_TRA_PAT]
+\end{rtinfo}
+

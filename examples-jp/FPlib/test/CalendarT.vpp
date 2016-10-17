@@ -1,0 +1,385 @@
+\subsection{FCalendarT}
+FCalendarのテストを行う。
+
+本テストは、以下のWWWページの暦計算結果によってもチェックした。
+\begin{verbatim}
+http://www.funaba.org/calendar-conversion.cgi
+\end{verbatim}
+
+また、テストデータのいくつかは、Edward M. Reingold, Nachum Dershowitz : Calendrical Calculations The Millennium Edition, Cambrudge University Press, 2001, ISBN 0-521-77752-6 を参考にした。
+
+\begin{vdm_al}
+--$Id $
+class FCalendarT is subclass of FCalendar
+functions
+static public run : () +> bool
+run() == 
+let	testcases = 
+		[ t1(), t2(), t3(), t4(), t5(), t6(), t7(), t8(), t9(), t10(),
+		  t11(), t12(), t13(), t14()
+		]
+in
+FTestDriver`run(testcases);
+\end{vdm_al}
+
+\subsubsection{DateFromInt, Int3FromDateを検査する}
+修正ユリウス日開始日（1858年11月17日0時）、グレゴリオ暦切替前日正午（1582年10月4日12時）、
+グレゴリオ暦初日正午（1582年10月15日12時）を確認することで、DateFromInt関数などをテストする。
+\begin{vdm_al}
+static t1 : () -> FTestDriver`TestCase
+t1() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT01:\t DateFromInt, Int3FromDateを検査する",
+	DateFromInt(1858)(11)(17) = 0 and
+	Int3FromDate(0) = mk_(1858, 11, 17) and
+	DateFromInt(1582)(10)(4.5) = JD2MJD(2299160) and
+	Int3FromDate(DateFromInt(1582)(10)(4.5)) = mk_(1582, 10, 4) and
+	DateFromInt(1582)(10)(15.5) = JD2MJD(2299161) and
+	Int3FromDate(DateFromInt(2004)(2)(28)) = mk_(2004, 2, 28) and
+	DateFromInt(2094)(7)(18) = 86076 and
+	DateFromInt(2038)(11)(10) = 65737 and
+	DateFromInt(1996)(2)(25) = 50138 and
+	DateFromInt(1648)(6)(10) = -76860 and
+	DateFromInt(1560)(2)(24) = -109099 and
+	DateFromInt(1436)(1)(25) = -154420 and
+	DateFromInt(1391)(6)(4) = -170726 and
+	DateFromInt(1096)(5)(18) = -278491 and
+	DateFromInt(1013)(4)(19) = -308836 and
+	DateFromInt(694)(11)(7) = -425149 and
+	DateFromInt(70)(9)(26) = -653107 and
+	DateFromInt(-168)(12)(8) = -739963 and
+	DateFromInt(-586)(7)(30) = -892769
+	);
+\end{vdm_al}
+
+\subsubsection{MJD2JD, JD2MJDを検査する}
+修正ユリウス日開始日（1858年11月17日0時）、グレゴリオ暦切替前日正午（1582年10月4日12時）、
+グレゴリオ暦初日正午（1582年10月15日12時）、ユリウス日起算開始日（紀元前4713年1月1日正午）を確認することで、MJD2JD関数などをテストする。
+ユリウス日は12時が起算時刻なので、DateFromInt(-4712, 1, 1.5)がユリウス日0になる。
+\begin{vdm_al}
+static t2 : () -> FTestDriver`TestCase
+t2() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT02:\t MJD2JD, JD2MJDを検査する",
+	DateFromInt(1582)(10)(4.5) = JD2MJD(2299160) and
+	DateFromInt(1582)(10)(15.5) = JD2MJD(2299161) and
+	MJD2JD(DateFromInt(-4712)(1)(1.5)) = 0 and
+	FCalendar`JD2MJD(0) = FCalendar`DateFromInt(-4712)(1)(1.5) and
+	DateFromInt(-586)(7)(30) = JD2MJD(1507231.5) and
+	DateFromInt(2094)(7)(18) = JD2MJD(2486076.5) 
+	);
+\end{vdm_al}
+
+\subsubsection{DayInYearを検査する}
+\begin{vdm_al}
+static t3 : () -> FTestDriver`TestCase
+t3() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT03:\t DayInYearを検査する",
+	DayInYear(DateFromInt(2000)(1)(1)) = 1 and
+	DayInYear(DateFromInt(2000)(2)(1)) = 32 and
+	DayInYear(DateFromInt(2000)(3)(1)) = 61 and
+	DayInYear(DateFromInt(2000)(12)(31)) = 366 and
+	DayInYear(DateFromInt(2001)(3)(1)) = 60 and
+	DayInYear(DateFromInt(2001)(12)(31)) = 365
+	);
+\end{vdm_al}
+	
+\subsubsection{日付の計算を検査する}
+\begin{vdm_al}
+static t4 : () -> FTestDriver`TestCase
+t4() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT04:\t 日付の計算を検査する",
+	let	d1 = DateFromInt(2000)(1)(1),
+		d2 = DateFromInt(2000)(3)(1)
+	in
+	Diff(d2)(d1) = 60 and
+	d1 + 60 = d2 and
+	Int3FromDate(d1 + 60) = mk_(2000, 3, 1)  and
+	d2 - 60 = d1 and
+	DateFromInt(2004)(2)(28) + 2  = DateFromInt(2004)(3)(1)  and
+	DateFromInt(2004)(3)(1) - 2 = DateFromInt(2004)(2)(28) and
+	DateFromInt(2094)(7)(18) = DateFromInt(-586)(7)(30) + 214193 + 764652
+	);
+\end{vdm_al}
+
+\subsubsection{閏年の判定を検査する}
+\begin{vdm_al}
+static t5 : () -> FTestDriver`TestCase
+t5() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT05:\t 閏年の判定を検査する",
+	IsLeapYear(1996) and
+	IsLeapYear(2000) and
+	IsLeapYear(2004) and
+	IsLeapYear(1900) = false and
+	IsLeapYear(2003) = false
+	);
+\end{vdm_al}
+
+\subsubsection{曜日に関する関数を検査する}
+\begin{vdm_al}
+static t6 : () -> FTestDriver`TestCase
+t6() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT06:\t 曜日に関する関数を検査する",
+	GetDayOfWeek(DateFromInt(2004)(3)(1)) = 1 and
+	GetDayOfWeek(DateFromInt(2004)(3)(2)) = 2 and
+	GetDayOfWeek(DateFromInt(2004)(3)(3)) = 3 and
+	GetDayOfWeek(DateFromInt(2004)(3)(4)) = 4 and
+	GetDayOfWeek(DateFromInt(2004)(3)(5)) = 5 and
+	GetDayOfWeek(DateFromInt(2004)(3)(6)) = 6 and
+	GetDayOfWeek(DateFromInt(2004)(3)(7)) = 0 and
+	GetDayOfWeek(DateFromInt(2004)(3)(8)) = 1 and
+	GetDayOfWeekName(DateFromInt(2004)(3)(1)) = <Mon> and
+	GetDayOfWeekName(DateFromInt(2004)(3)(2)) = <Tue> and
+	GetDayOfWeekName(DateFromInt(2004)(3)(3)) = <Wed> and
+	GetDayOfWeekName(DateFromInt(2004)(3)(4)) = <Thu> and
+	GetDayOfWeekName(DateFromInt(2004)(3)(5)) = <Fri> and
+	GetDayOfWeekName(DateFromInt(2004)(3)(6)) = <Sat> and
+	GetDayOfWeekName(DateFromInt(2004)(3)(7)) = <Sun> and
+	GetDayOfWeekName(DateFromInt(2004)(3)(8)) = <Mon> and
+	GetDayOfWeekName(DateFromInt(-586)(7)(30)) = <Sun> and
+	GetDayOfWeekName(DateFromInt(70)(9)(26)) = <Wed> and
+	GetDayOfWeekName(DateFromInt(2094)(7)(18)) = <Sun> and
+	GetDayOfWeekFromName(<Sun>) = 0 and
+	GetDayOfWeekFromName(<Mon>) = 1 and
+	GetDayOfWeekFromName(<Tue>) = 2 and
+	GetDayOfWeekFromName(<Wed>) = 3 and
+	GetDayOfWeekFromName(<Thu>) = 4 and
+	GetDayOfWeekFromName(<Fri>) = 5 and
+	GetDayOfWeekFromName(<Sat>) = 6 
+	);
+\end{vdm_al}
+
+\subsubsection{日付の大小を検査する}
+\begin{vdm_al}
+static t7 : () -> FTestDriver`TestCase
+t7() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT07:\t 日付の大小を検査する",
+	DateFromInt(2004)(3)(1) = DateFromInt(2004)(3)(1) and
+	DateFromInt(2004)(3)(1) <= DateFromInt(2004)(3)(1) and
+	DateFromInt(2004)(3)(1) >= DateFromInt(2004)(3)(1) and
+	DateFromInt(2004)(3)(1) > DateFromInt(2004)(2)(29) and
+	DateFromInt(2003)(12)(31) < DateFromInt(2004)(1)(1)
+	);
+\end{vdm_al}
+
+\subsubsection{指定曜日の日付獲得を検査する}
+\begin{vdm_al}
+static t8 : () -> FTestDriver`TestCase
+t8() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT08:\t 指定曜日の日付獲得を検査する",
+	FirstDayOfWeekOfMonth(<Sun>)(3)(2004) = DateFromInt(2004)(3)(7) and
+	FirstDayOfWeekOfMonth(<Mon>)(3)(2004) = DateFromInt(2004)(3)(1) and
+	FirstDayOfWeekOfMonth(<Tue>)(3)(2004) = DateFromInt(2004)(3)(2) and
+	FirstDayOfWeekOfMonth(<Wed>)(3)(2004) = DateFromInt(2004)(3)(3) and
+	FirstDayOfWeekOfMonth(<Thu>)(3)(2004) = DateFromInt(2004)(3)(4) and
+	FirstDayOfWeekOfMonth(<Fri>)(3)(2004) = DateFromInt(2004)(3)(5) and
+	FirstDayOfWeekOfMonth(<Sat>)(3)(2004) = DateFromInt(2004)(3)(6) and
+	GetLastDayOfWeekOfMonth(<Sun>)(2)(2004) = DateFromInt(2004)(2)(29) and
+	GetLastDayOfWeekOfMonth(<Sun>)(3)(2004) = DateFromInt(2004)(3)(28) and
+	GetLastDayOfWeekOfMonth(<Mon>)(3)(2004) = DateFromInt(2004)(3)(29) and
+	GetLastDayOfWeekOfMonth(<Tue>)(3)(2004) = DateFromInt(2004)(3)(30) and
+	GetLastDayOfWeekOfMonth(<Wed>)(3)(2004) = DateFromInt(2004)(3)(31) and
+	GetLastDayOfWeekOfMonth(<Thu>)(3)(2004) = DateFromInt(2004)(3)(25) and
+	GetLastDayOfWeekOfMonth(<Fri>)(3)(2004) = DateFromInt(2004)(3)(26) and
+	GetLastDayOfWeekOfMonth(<Sat>)(3)(2004) = DateFromInt(2004)(3)(27) and
+	GetNthDayOfWeekOfMonth(<Sun>)(5)(2)(2004) = DateFromInt(2004)(2)(29) and
+	GetNthDayOfWeekOfMonth(<Sun>)(6)(2)(2004) = nil and
+	GetNthDayOfWeekOfMonth(<Sat>)(5)(2)(2004) = nil and
+	GetNthDayOfWeekOfMonth(<Sun>)(2)(3)(2004) = DateFromInt(2004)(3)(14) and
+	GetNthDayOfWeekOfMonth(<Sun>)(3)(3)(2004) = DateFromInt(2004)(3)(21) and
+	GetNthDayOfWeekOfMonth(<Sun>)(4)(3)(2004) = GetLastDayOfWeekOfMonth(<Sun>)(3)(2004) and
+	GetNthDayOfWeekOfMonth(<Mon>)(2)(3)(2004) = DateFromInt(2004)(3)(8) and
+	GetNthDayOfWeekOfMonth(<Tue>)(3)(3)(2004) = DateFromInt(2004)(3)(16) and
+	GetNthDayOfWeekOfMonth(<Wed>)(4)(3)(2004) = DateFromInt(2004)(3)(24) and
+	GetNthDayOfWeekOfMonth(<Thu>)(5)(1)(2004) = DateFromInt(2004)(1)(29) and
+	GetNthDayOfWeekOfMonth(<Fri>)(5)(7)(2004) = DateFromInt(2004)(7)(30) and
+	GetNthDayOfWeekOfMonth(<Sat>)(5)(5)(2004) = DateFromInt(2004)(5)(29) 
+	);
+\end{vdm_al}
+
+\subsubsection{月初日、月末日、曜日の照会を検査する}
+\begin{vdm_al}
+static t9 : () -> FTestDriver`TestCase
+t9() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT09:\t 月初日、月末日、曜日の照会を検査する",
+	GetFirstDayOfMonth(3)(2004) = DateFromInt(2004)(3)(1) and
+	GetFirstDayOfMonth(4)(2004) = DateFromInt(2004)(4)(1) and
+	GetLastDayOfMonth(2)(2004) = DateFromInt(2004)(2)(29) and
+	GetLastDayOfMonth(8+6)(2003) = DateFromInt(2004)(2)(29) and
+	GetLastDayOfMonth(2)(2004) + 1 = GetFirstDayOfMonth(3)(2004) and
+	GetLastDayOfMonth(2)(2004) = GetFirstDayOfMonth(3)(2004) - 1 and
+	GetLastDayOfMonth(2)(2003) = DateFromInt(2003)(2)(28) and
+	GetLastDayOfMonth(2)(1900) = DateFromInt(1900)(2)(28) and
+	IsSunday(DateFromInt(2004)(3)(14)) and
+	IsSunday(DateFromInt(2004)(3)(15)) = false and
+	IsSaturday(DateFromInt(2004)(3)(13)) and
+	IsSaturday(DateFromInt(2004)(3)(14)) = false and
+	IsWeekDay(DateFromInt(2004)(3)(13)) = false and
+	IsWeekDay(DateFromInt(2004)(3)(14)) = false and
+	IsWeekDay(DateFromInt(2004)(3)(1)) and
+	IsWeekDay(DateFromInt(2004)(3)(2)) and
+	IsWeekDay(DateFromInt(2004)(3)(3)) and
+	IsWeekDay(DateFromInt(2004)(3)(4)) and
+	IsWeekDay(DateFromInt(2004)(3)(5)) and
+	IsDayOFWeekNameWeekDay(<Mon>) and
+	IsDayOFWeekNameWeekDay(<Tue>) and
+	IsDayOFWeekNameWeekDay(<Wed>) and
+	IsDayOFWeekNameWeekDay(<Thu>) and
+	IsDayOFWeekNameWeekDay(<Fri>) and
+	IsDayOFWeekNameWeekDay(<Sat>) = false and
+	IsDayOFWeekNameWeekDay(<Sun>) = false
+	);
+\end{vdm_al}
+
+\subsubsection{指定された曜日が何日あるかを検査する}
+\begin{vdm_al}
+static t10 : () -> FTestDriver`TestCase
+t10() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT10:\t 指定された曜日が何日あるかを検査する",
+	let	f = DateFromInt
+	in
+	HowManyDayOfWeekWithin2Days(<Sun>)(f(2001)(7)(11))(f(2001)(3)(1)) = 19 and
+	HowManyDayOfWeekWithin2Days(<Sun>)(f(2001)(7)(11))(f(1001)(3)(1)) = 52196 and
+	HowManyDayOfWeekWithin2Days(<Sun>)(f(2004)(1)(1))(f(2004)(3)(1)) = 9 and
+	HowManyDayOfWeekWithin2Days(<Mon>)(f(2004)(1)(1))(f(2004)(3)(1)) = 9 and
+	HowManyDayOfWeekWithin2Days(<Tue>)(f(2004)(1)(1))(f(2004)(3)(1)) = 8 and
+	HowManyDayOfWeekWithin2Days(<Wed>)(f(2004)(1)(1))(f(2004)(3)(1)) = 8 and
+	HowManyDayOfWeekWithin2Days(<Thu>)(f(2004)(1)(1))(f(2004)(3)(1)) = 9 and
+	HowManyDayOfWeekWithin2Days(<Fri>)(f(2004)(1)(1))(f(2004)(3)(1)) = 9 and
+	HowManyDayOfWeekWithin2Days(<Sat>)(f(2004)(1)(1))(f(2004)(3)(1)) = 9 and
+	HowManyDayOfWeekWithin2Days(<Sat>)(f(-586)(7)(30))(f(2094)(7)(18)) = ( 214193+764652) div 7 and
+	HowManyDayOfWeekWithin2Days(<Sun>)(f(-586)(7)(30))(f(2094)(7)(18)) = ( 214193+764652) div 7 + 1
+	);
+\end{vdm_al}
+
+\subsubsection{春分・夏至・秋分・冬至を検査する}
+グリニッジ標準時の春分などを求め、それを日本標準時(GMT+9)に変換して比較している。
+\begin{vdm_al}
+static t11 : () -> FTestDriver`TestCase
+t11() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT11:\t 春分・夏至・秋分・冬至を検査する",
+	let	f = DateFromInt,
+		diff = 9
+	in
+	GetDateInST(diff)(GetVernalEquinoxInGMT(2001)) = f(2001)(3)(20) and
+	GetDateInST(diff)(GetVernalEquinoxInGMT(2999)) = f(2999)(3)(20) and
+	GetDateInST(diff)(GetSummerSolsticeInGMT(2001)) = f(2001)(6)(21) and
+	GetDateInST(diff)(GetSummerSolsticeInGMT(2999)) = f(2999)(6)(20) and
+	GetDateInST(diff)(GetAutumnalEquinoxInGMT(2001)) = f(2001)(9)(23) and
+	GetDateInST(diff)(GetAutumnalEquinoxInGMT(2999)) = f(2999)(9)(22) and
+	GetDateInST(diff)(GetWinterSolsticeInGMT(2001)) = f(2001)(12)(22) and
+	GetDateInST(diff)(GetWinterSolsticeInGMT(2999)) = f(2999)(12)(22)
+	);
+\end{vdm_al}
+
+\subsubsection{{月末日を検査する}
+\begin{vdm_al}
+static t12 : () -> FTestDriver`TestCase
+t12() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT12:\t {月末日を検査する",
+	let	f = DateFromInt,
+		g = GetLastDayOfMonth
+	in
+	g(1)(2004) = f(2004)(1)(31) and
+	g(2)(2004) = f(2004)(2)(29) and
+	g(3)(2004) = f(2004)(3)(31) and
+	g(4)(2004) = f(2004)(4)(30) and
+	g(5)(2004) = f(2004)(5)(31) and
+	g(6)(2004) = f(2004)(6)(30) and
+	g(7)(2004) = f(2004)(7)(31) and
+	g(8)(2004) = f(2004)(8)(31) and
+	g(9)(2004) = f(2004)(9)(30) and
+	g(10)(2004) = f(2004)(10)(31) and
+	g(11)(2004) = f(2004)(11)(30) and
+	g(12)(2004) = f(2004)(12)(31) and
+	g(13)(2003) = f(2004)(1)(31) and
+	g(8+6)(2003) = f(2004)(2)(29) and
+	g(15)(2003) = f(2004)(3)(31) and
+	g(16)(2003) = f(2004)(4)(30) and
+	g(17)(2003) = f(2004)(5)(31) and
+	g(18)(2003) = f(2004)(6)(30) and
+	g(19)(2003) = f(2004)(7)(31) and
+	g(20)(2003) = f(2004)(8)(31) and
+	g(21)(2003) = f(2004)(9)(30) and
+	g(22)(2003) = f(2004)(10)(31) and
+	g(23)(2003) = f(2004)(11)(30) and
+	g(24)(2003) = f(2004)(12)(31) and
+	g(2)(2005) = f(2005)(2)(28)
+	);
+\end{vdm_al}
+
+\subsubsection{月日を日付として普通の範囲にできるかを検査する}
+\begin{vdm_al}
+static t13 : () -> FTestDriver`TestCase
+t13() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT`t13:\t 月日を日付として普通の範囲にできるかを検査する",
+	let	f = DateFromInt,
+		g = GetLegalDate
+	in
+		g(2004)(1)(1) = f(2004)(1)(1) and
+		g(2003)(12)(32) = f(2004)(1)(1) and
+		g(2003)(24)(32) = f(2005)(1)(1) and
+		g(2003)(13)(1) = f(2004)(1)(1) and
+		g(2004)(1)(32) = f(2004)(2)(1) and
+		g(2004)(2)(0) = f(2004)(1)(31) and
+		g(2004)(2)(28) = f(2004)(2)(28) and
+		g(2004)(2)(29) = f(2004)(2)(29) and
+		g(2004)(3)(0) = f(2004)(2)(29) and
+		g(2004)(3)(-1) = f(2004)(2)(28) and
+		g(2003)(2)(29) = f(2003)(3)(1) and
+		g(2004)(4)(1) = f(2004)(4)(1) and
+		g(2004)(0)(1) = f(2003)(12)(1) and
+		g(2004)(-1)(1) = f(2003)(11)(1) and
+		g(2004)(-10)(29) = f(2003)(3)(1) and
+		g(2004)(-10)(28) = f(2003)(2)(28) and
+		g(2004)(-11)(1) = f(2003)(1)(1) and
+		g(2004)(-12)(1) = f(2002)(12)(1) 
+	);
+\end{vdm_al}
+
+\subsubsection{「正則月を得る」を検査する}
+\begin{vdm_al}
+static t14 : () -> FTestDriver`TestCase
+t14() ==
+	mk_FTestDriver`TestCase(
+	"FCalendarT`t14:\t 「正則月を得る」を検査する",
+	let	g = GetLegalMonth
+	in
+		g(2004)(1) = mk_(2004, 1) and
+		g(2004)(2) = mk_(2004, 2) and
+		g(2004)(3) = mk_(2004, 3) and
+		g(2004)(4) = mk_(2004, 4) and
+		g(2004)(5) = mk_(2004, 5) and
+		g(2004)(6) = mk_(2004, 6) and
+		g(2004)(7) = mk_(2004, 7) and
+		g(2004)(8) = mk_(2004, 8) and
+		g(2004)(9) = mk_(2004, 9) and
+		g(2004)(10) = mk_(2004, 10) and
+		g(2004)(11) = mk_(2004, 11) and
+		g(2004)(12) = mk_(2004, 12) and
+		g(2004)(13) = mk_(2005, 1)  and
+		g(2004)(14) = mk_(2005, 2) and
+		g(2004)(24) = mk_(2005, 12) and
+		g(2004)(25) = mk_(2006, 1) and
+		g(2004)(0) = mk_(2003, 12) and
+		g(2004)(-1) = mk_(2003, 11) and
+		g(2004)(-10) = mk_(2003, 2) and
+		g(2004)(-11) = mk_(2003, 1) and
+		g(2004)(-12) = mk_(2002, 12) and
+		g(2004)(-13) = mk_(2002, 11)
+	);
+
+
+end FCalendarT
+\end{vdm_al}

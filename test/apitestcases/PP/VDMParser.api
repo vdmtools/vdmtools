@@ -1,0 +1,13 @@
+# positive test cases
+new project
+parse ($SOURCEPATH/test.vdm)
+init
+get modules
+new project
+parse ([$SOURCEPATH/test.vdm])
+init
+get modules
+
+# negative test cases
+parse (/not/exist/file)
+parse ([this, does, not, exist])

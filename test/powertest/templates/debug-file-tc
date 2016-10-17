@@ -1,0 +1,20 @@
+module go
+
+imports
+  from AS all,
+  from REP all,
+  from TEST all,
+  from ERR all,
+  from CI all,
+  from TYPE
+    types Ind = <POS> | <DEF>
+
+  exports all
+
+definitions 
+
+operations
+  go : () ==> ERR`ErrType
+  go() ==
+    TEST`go(<<AST>>,<<POSDEF>>)
+end go

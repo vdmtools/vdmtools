@@ -1,0 +1,9 @@
+\begin{vdm_al}
+class 『割込事象』 is subclass of 『事象』
+
+operations
+  public 『割込事象』: 「事象ID」 ==> 『割込事象』
+  『割込事象』 (a事象ID) == 『事象』(a事象ID)
+
+end 『割込事象』
+\end{vdm_al}

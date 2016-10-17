@@ -1,0 +1,68 @@
+package Gencode;
+
+import dk.ifad.toolbox.VDM.*;
+import java.lang.*;
+import java.util.Enumeration;
+
+
+
+public class external_MATH {
+
+  MATH parent = null;
+
+  public external_MATH (MATH parentMATH) { parent = parentMATH; }
+
+  Double impl_acos (final Double a) throws CGException  {
+    return new Double(Math.acos(a.doubleValue()));
+    //    UTIL.RunTime("Preliminary Operation acos has been called");
+    // return new Double(0);
+  }
+
+  Double impl_asin (final Double a) throws CGException  {
+    return new Double(Math.asin(a.doubleValue()));
+    // UTIL.RunTime("Preliminary Operation asin has been called");
+    //return new Double(0);
+  }
+
+  Double impl_atan (final Double a) throws CGException  {
+    return new Double(Math.atan(a.doubleValue()));    
+    //UTIL.RunTime("Preliminary Operation atan has been called");
+    //return new Double(0);
+  }
+
+  Double impl_cos (final Double a) throws CGException  {
+    return new Double(Math.cos(a.doubleValue()));
+    //UTIL.RunTime("Preliminary Operation cos has been called");
+    //return new Double(0);
+  }
+
+  Double impl_cot (final Double a) throws CGException  {
+    return new Double(Math.cos(a.doubleValue())/Math.sin(a.doubleValue()));
+    //UTIL.RunTime("Preliminary Operation cot has been called");
+    //return new Double(0);
+  }
+
+  Double impl_pi_uf () throws CGException{
+    return new Double(Math.PI);
+    //UTIL.RunTime("Preliminary Operation pi_uf has been called");
+    //return new Double(0);
+  }
+
+  Double impl_sin (final Double a) throws CGException  {
+    return new Double(Math.sin(a.doubleValue()));
+    //    UTIL.RunTime("Preliminary Operation sin has been called");
+    //return new Double(0);
+  }
+
+  Double impl_sqrt (final Double a) throws CGException  {
+    return new Double(Math.sqrt(a.doubleValue()));
+    // UTIL.RunTime("Preliminary Operation sqrt has been called");
+    //return new Double(0);
+  }
+
+  Double impl_tan (final Double a) throws CGException  {
+    return new Double(Math.tan(a.doubleValue()));
+    //UTIL.RunTime("Preliminary Operation tan has been called");
+    //return new Double(0);
+  }
+};

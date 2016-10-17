@@ -1,0 +1,20 @@
+-- Test case which checks that overlapping types in operation parameters 
+-- are detected
+
+class A
+
+operations
+
+op : real ==> nat
+op(-) ==
+  return 42;
+
+op : bool ==> nat
+op(-) ==
+  return 8;
+
+public Test: () ==> nat
+Test() ==
+  op(99999);
+
+end A

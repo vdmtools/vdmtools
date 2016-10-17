@@ -1,0 +1,13 @@
+class CasesStmtTest
+
+operations
+
+  Cases: () ==> ()
+  Cases() ==
+    cases {1 |-> 'a'}:
+      s1 union s2 -> return s1 / s2,
+      mk_(a,b,7) ->  return a + b
+    end;
+
+
+end CasesStmtTest

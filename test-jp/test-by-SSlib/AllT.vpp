@@ -1,0 +1,43 @@
+/*
+テストグループ
+	全テストケースのテスト
+作成者
+	佐原伸
+*/
+class AllT
+operations
+public run : () ==>bool
+run () == 
+(
+	let	テスト結果列 =
+		[
+			new TermT().run(),
+			new TimeT().run(),
+			new MapT().run(),
+			new HashtableT().run(),
+			new FunctionT().run(),
+			new DoubleListQueueT().run(),
+			new QueueT().run(),
+			new 『発番者』T().run(),
+			new RealT().run(), 
+			new SetT().run(),
+			new SequenceT().run(),
+			new StringT().run(),
+			new IntegerT().run(),
+			new NumberT().run(),
+			new CalendarT().run(),
+			new SBCalendarT().run(),
+			new DateT().run(),
+			new  『普通預金口座開設』T().run(),
+			new  『定期預金設定』T().run()
+			],
+		メッセージ = "全テストの結果"
+		
+	in
+	if   forall i in set inds テスト結果列 & テスト結果列(i) then
+		return new TestLogger().全体が成功した(メッセージ)
+	else
+		return new TestLogger().全体が失敗した(メッセージ)
+)	
+end AllT
+ 

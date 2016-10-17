@@ -1,0 +1,22 @@
+\begin{vdm_al}
+class 『ラジオ交通情報処理』 is subclass of 『基本タスク』
+
+operations
+  public 『ラジオ交通情報処理』: 『事象処理者』 ==> 『ラジオ交通情報処理』
+  『ラジオ交通情報処理』 (a事象処理者) == 『基本タスク』("交通情報を処理する",a事象処理者);
+
+  -- we do not specify *what* the operation does
+  -- we only specify its execution time
+  private
+  交通情報を処理する: () ==> ()
+  交通情報を処理する () == duration (1000) skip;
+
+  private
+  事象を処理する: 『事象』 ==> ()
+  事象を処理する (a事象) ==
+    ( 交通情報を処理する();
+      -- send message to the next task in this scenario
+      ネットワークに送る("交通情報を解読する", a事象.事象IDを得る()) )
+
+end 『ラジオ交通情報処理』
+\end{vdm_al}

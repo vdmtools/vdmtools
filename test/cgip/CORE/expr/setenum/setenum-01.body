@@ -1,0 +1,24 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of (set of ( char | 
+                                 seq of char | 
+                                 nat |
+                                 set of (nat | bool) |
+                                 bool |
+                                 seq of int |
+				 map seq of char to (nat * nat) ) | 
+			nat | seq of char | map nat to nat |
+			seq of nat )  
+Test () ==
+return 
+[ {},
+  { let a = 3,
+	b = false
+    in { a, b }, 
+    exists a in set { 3, 6 } & is_nat( a ),
+    [ i-3 | i in set {3, 2} ],
+    { 3 |-> 4, false |-> 3.6}(3),
+    'c' }
+]
+
+
+

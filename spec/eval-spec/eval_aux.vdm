@@ -1,0 +1,1141 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Exports auxiliary functions which are imported in other modules
+%    of the dynamic semantic.
+% $Id: eval_aux.vdm,v 1.40 2001/09/27 08:36:13 richard Exp $
+% Implemented in: libman.cc
+%--------------------------------------------------------------------------------
+\chapter{Auxiliary Functions and Operations}
+
+ The module AUX contains a collection of auxiliary functions and operations.
+\begin{vdm_al}
+module AUX
+        
+  imports 
+    from AS all,
+    from RTERR all,
+
+    from GLOBAL all,
+
+#ifdef VDMPP
+    from EXPR all,
+    from SCHDTP all,
+#endif VDMPP
+
+    from SEM all,
+
+    from STATE
+      operations
+
+#ifdef VDMSL
+        GetModule : AS`Name ==> GLOBAL`SigmaMO | GLOBAL`SigmaIMO;
+        GetDLModule : AS`Name ==> GLOBAL`SigmaIMO;
+        ExtractModule : AS`Name ==> AS`Name,
+#endif VDMSL
+#ifdef VDMPP
+        AccessOk: AS`Access * GLOBAL`OrigCl * AS`Name ==> bool;
+        ExistsOneChild: (set of AS`Name) * (set of AS`Name) ==> bool * [AS`Name];
+        GetRecSel: AS`Name ==> map AS`Name to GLOBAL`RecSel;
+        GetAllSupers: AS`Name ==> set of AS`Name;
+        GetLocalTps: AS`Name ==> map AS`Name to AS`TypeDef;
+        IsAClass: AS`Name ==> bool,
+#endif VDMPP
+
+    from PAT all,
+    from REP all,
+    from CI all,
+    from STKM all,
+    from INSTRTP all
+
+  exports
+    functions
+#ifdef VDMSL
+      IsRealName : AS`Name -> bool;
+      EqualNames : AS`Name * AS`Name -> bool;  
+      ExtractId : AS`Name -> AS`Id;
+#endif VDMSL
+      ExtractName : AS`Name -> AS`Name;
+      SingleNameToString: AS`Name -> seq of char;
+      PreName : AS`Name -> AS`Name;
+      PostName : AS`Name -> AS`Name;
+      InvName : AS`Name -> AS`Name;
+      InitName : AS`Name -> AS`Name;
+      Permute: seq of SEM`VAL -> set of seq of SEM`VAL;
+      --ConstructName: AS`Id * CI`ContextId -> AS`Name;
+      IsStmt: AS`Expr | AS`Stmt +> bool;
+      ConstructDoubleName: AS`Name * AS`Name -> AS`Name;
+      MkBlkEnv : AS`Name * SEM`VAL * [AS`Type] * SEM`Permission -> SEM`BlkEnv;
+      MkEmptyBlkEnv : SEM`Permission -> SEM`BlkEnv;
+      CombineBlkEnv : SEM`BlkEnv * SEM`BlkEnv -> SEM`BlkEnv;
+      MkBlkEnvFromIdMap : map AS`Name to SEM`VAL * SEM`Permission -> SEM`BlkEnv;
+      Ceiling : real -> int;
+      IsNat : SEM`VAL -> bool;
+      IsNatOne : SEM`VAL -> bool;
+      IsInt : SEM`VAL -> bool;
+      IsReal : SEM`VAL -> bool;
+      IsRat : SEM`VAL -> bool;
+      SetToSeq : set of SEM`VAL -> seq of SEM`VAL;
+      ClModNmInExpr : AS`Expr -> set of AS`Name;
+      ValSetToSeq : set of SEM`VAL -> seq of SEM`VAL;
+      DistrDirectProduct: set of set of SEM`BlkEnv -> set of set of SEM`BlkEnv;
+
+    operations
+      IsRecSel: AS`Name ==> bool;
+      LookUpRecSel : AS`Name ==> bool * [GLOBAL`RecSel];
+#ifdef VDMSL
+      UniqueTagName : AS`Name ==> AS`Name;
+      IsConstructExported : AS`Name * AS`Name ==> bool;
+      IsTypeDef : AS`Name ==> bool * [AS`Type] * [AS`Invariant] * [AS`Name];
+      LookUpRenRecSel : AS`Name ==> bool * [GLOBAL`RecSel] * [AS`Name] * [AS`Name];
+      IsDefinedInModule : AS`Name ==> bool;
+      IsTypeStructExported : AS`Name ==> bool;
+      IsInDLDeclared : AS`Name * AS`Name ==> bool;
+      LookUpRename : AS`Name ==> bool * AS`Name;
+#endif VDMSL
+      ExtractTagName: AS`Name * set of AS`Name ==> [AS`Name] * bool;
+#ifdef VDMPP
+      IsTypeDef : AS`Name ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access];
+#endif VDMPP
+      DistribCombineBlkEnv : set of SEM`BlkEnv ==> set of SEM`BlkEnv;
+      SeqOfSetOf2SetOfSeqOf : seq of set of (SEM`VAL | SEM`BlkEnv) ==> set of seq of (SEM`VAL | SEM`BlkEnv);
+
+definitions
+\end{vdm_al}
+
+\section{Environments}
+
+\begin{vdm_al}
+functions
+
+CombineBlkEnv : SEM`BlkEnv * SEM`BlkEnv -> SEM`BlkEnv
+CombineBlkEnv (mk_SEM`BlkEnv(env1,permission1), mk_SEM`BlkEnv(env2,permission2)) == 
+  if (permission1 <> permission2)
+  then undefined
+  else mk_SEM`BlkEnv(env1 ++ env2,permission1)
+\end{vdm_al}
+
+This function merges two block environments into a new block environment.
+If duplicate identifiers are bound, the binding is not overwritten.
+
+\begin{vdm_al}
+operations
+
+DistribCombineBlkEnv : set of SEM`BlkEnv ==> set of SEM`BlkEnv
+DistribCombineBlkEnv (blkenv_s) ==
+  cases blkenv_s:
+    {}, {-} -> return blkenv_s,
+    others -> let some_blkenv in set blkenv_s
+              in 
+                let permission : SEM`Permission = some_blkenv.perm,
+                    env_s = blkenv_s \ {some_blkenv}
+                in
+                 (dcl result_m : map AS`Name to SEM`ValTp := some_blkenv.id_m;
+                  --for all mk_SEM`BlkEnv(id_m,perm) in set env_s do
+                  for all mk_SEM`BlkEnv(id_m,-) in set env_s do
+                    --if perm <> permission
+                    --then error
+                    --else if exists id in set dom id_m & id in set dom result_m and id_m(id).val <> result_m(id).val
+                    if exists id in set dom id_m & id in set dom result_m and id_m(id).val <> result_m(id).val
+                    then return {}
+                    else result_m := result_m ++ id_m;
+                  return {mk_SEM`BlkEnv(result_m,permission)})
+  end;
+\end{vdm_al}
+
+The operation {\em DistribCombineBlkEnv} merges a set of block
+environments, in the following way: If there exists one binding of the
+same identifier to different values in the set then a empty set is
+returned, otherwise a set of one block environment is returned.
+
+\begin{vdm_al}
+functions
+
+MkBlkEnv : AS`Name * SEM`VAL * [AS`Type] * SEM`Permission -> SEM`BlkEnv
+MkBlkEnv (id, val_v, tp, perm ) ==
+  mk_SEM`BlkEnv( { id |-> mk_SEM`ValTp(val_v, tp)}, perm);
+
+MkBlkEnvFromIdMap : map AS`Name to SEM`VAL * SEM`Permission -> SEM`BlkEnv
+MkBlkEnvFromIdMap (id_m, perm) ==
+  let m = { id |-> mk_SEM`ValTp(id_m(id), nil) | id in set dom id_m }
+  in mk_SEM`BlkEnv(m, perm);
+
+\end{vdm_al}
+
+The result of this function is a block environment with only one binding.
+
+\begin{vdm_al}
+functions
+
+MkEmptyBlkEnv : SEM`Permission -> SEM`BlkEnv
+MkEmptyBlkEnv (perm) == mk_SEM`BlkEnv({|->}, perm);
+\end{vdm_al}
+
+This function returns an empty block environment.
+
+#ifdef VDMSL
+\section{Modules}
+
+\begin{vdm_al}
+operations
+
+IsTypeStructExported : AS`Name ==> bool
+IsTypeStructExported (-) ==
+  return true; -- done by Erik in optimisation of interpreter
+--let new_name = name in
+--  if IsRealName (new_name)
+---- repalce name by new_name bf: 28.09.1995 in the following lines
+--  then let sigmamo = STATE`GetModule (STATE`ExtractModule (new_name)),
+--           loc_name = ExtractName(new_name) in
+--         if sigmamo.exp = nil
+--         then return true
+--         else let exp_sig = sigmamo.exp in
+--                   return (exp_sig.tps(loc_name) <> nil)
+--              
+--  else return true
+\end{vdm_al}
+
+This operation returns $\True$ if the structure of a type is exported from
+the module, defined by the input name.
+
+\begin{vdm_al}
+operations
+
+IsConstructExported : AS`Name * AS`Name ==> bool
+IsConstructExported (loc_name, mod_name) ==
+  def sigmamo = STATE`GetModule (mod_name)
+  in
+    return cases sigmamo.exp:
+             nil -> true,
+             mk_AS`ExportSig(-,val,fns,ops,-) -> (loc_name in set dom val) or
+                                                 (loc_name in set dom fns) or
+                                                 (loc_name in set dom ops)
+           end;
+\end{vdm_al}
+
+The operation UniqueTagName transforms an $AS`Name$ into a unique record tag. 
+
+\begin{vdm_al}
+UniqueTagName : AS`Name ==> AS`Name
+UniqueTagName(tname) ==
+  cases tname:
+    mk_AS`Name ([id], cid) -> def mk_AS`Name ([mnm], -) = ExtractName(STKM`CurrentModule ())
+                              in return mk_AS`Name ([mnm,id], cid),
+    others -> return tname
+  end;
+
+ExtractTagName: AS`Name * set of AS`Name ==> [AS`Name] * bool
+ExtractTagName(name, -) ==
+--  if name in set nm_s
+--  then
+--   (RTERR`Error(RTERR`TAG_CYCLIC, nil, nil, []);
+--    return mk_(nil, false);)
+--  else
+--    def the_tag = UniqueTagName(name);
+--        mk_(rename, new_tag) = LookUpRename (the_tag);
+--    in
+--      if rename
+--      then ExtractTagName(new_tag, nm_s union {the_tag})
+--      else
+--        if IsDefinedInModule (the_tag) and IsTypeStructExported(the_tag)
+--        then return mk_(the_tag, true)
+--        else return mk_(nil, false);
+  def mk_(-, the_tag) = LookUpRename (UniqueTagName(name));
+  in
+    if IsDefinedInModule (the_tag) and IsTypeStructExported(the_tag)
+    then return mk_(the_tag, true)
+    else return mk_(nil, false);
+\end{vdm_al}
+#endif VDMSL
+
+#ifdef VDMPP
+The operation {\em ExtractTagName} investigates if a tag name {\em
+  name} is within the current scope. If it is the full tag name is
+returned, that is, the tag name qualified with the class name where
+the type definition of the tag is defined. Furthermore, a boolean is
+returned indicating if tag is defined within the current scope.
+
+The current class scope {\em clnm} is looked up (using {\em
+  STKM`GetCurCl}). If the tag name {\em name} is not qualified and
+  the tag name is defined in a type definition in the current class,
+  this class name is returned. Otherwise, the type definition of the
+  tag is searched in the superlasses of class that qualifies the the
+  tag name, or if tag name is not qualified, the superclasses of the
+  current class.
+
+  In case several type definitions occurs within the superclasses, it
+  is investigated if these classes are inherited in direct line, and
+  if they are the type definition in the first subclass is used.
+
+\begin{vdm_al}
+operations
+ExtractTagName: AS`Name * set of AS`Name ==> [AS`Name] * bool
+ExtractTagName(name, nm_s) ==
+  if name in set nm_s
+  then
+   (RTERR`Error(RTERR`TAG_CYCLIC, nil, nil, []);
+    return mk_(nil, false);)
+  else
+    let mk_AS`Name(l ^ [-], cid) = name,
+        thename = ExtractName(name)
+    in 
+     (dcl allsupers : set of AS`Name := {};
+      if l = []
+      then
+        if not STKM`HasCurCl()
+        then
+         (RTERR`Error(RTERR`TAG_UNKNOWN, nil, nil, []);
+          return mk_(nil, false))
+        else
+          def clnm = STKM`GetCurCl();
+--              tdm = STATE`GetLocalTps(clnm)
+          in
+           (
+--            if (thename in set dom tdm) and is_AS`TypeName(tdm(thename).shape)
+--            then return ExtractTagName(tdm(thename).shape.name, nm_s union {name});
+--  
+            def local_recsel = STATE`GetRecSel(clnm)
+            in
+              if thename in set dom local_recsel
+              then
+                let tagname = ConstructDoubleName(clnm, name)
+                in return mk_(tagname, true);
+--
+            allsupers := STATE`GetAllSupers(clnm);
+           )
+      else
+        let classname = mk_AS`Name(l, cid)
+        in
+--         (if STATE`IsAClass(classname)
+--          then
+--            def tdm = STATE`GetLocalTps(classname)
+--            in
+--              if (thename in set dom tdm) and is_AS`TypeName(tdm(thename).shape)
+--              then
+--                let mk_AS`TypeName(tn, -) = tdm(thename).shape,
+--                    mk_AS`Name(ids, cid2) = tn
+--                in
+--                  if len ids = 2
+--                  then
+--                    def cls = mk_AS`Name([ids(1)], cid2);
+--                        tnm = mk_AS`Name([ids(2)], cid2);
+--                        ntdm = STATE`GetLocalTps(cls)
+--                    in
+--                      if tnm in set dom ntdm
+--                      then
+--                        let mk_AS`TypeDef(-, -, -, acc, -) = ntdm(tnm)
+--                        in
+--                          if STATE`AccessOk(acc, classname, cls)
+--                          then return ExtractTagName(tn, nm_s union {name})
+--                          else return mk_(nil, false);
+          allsupers := STATE`GetAllSupers(classname) union {classname};
+--         );
+      def recsels = { clname |-> STATE`GetRecSel(clname) |
+                  clname in set allsupers & thename in set dom STATE`GetRecSel(clname) };
+          ltp = { clname |-> STATE`GetLocalTps(clname)(name) |
+                clname in set allsupers & name in set dom STATE`GetLocalTps(clname) }
+      in
+        cases dom recsels:
+          {}      -> --return mk_(nil, false),
+                     (if card dom ltp = 1
+                      then
+                        cases rng ltp:
+                          {mk_AS`TypeDef(-,mk_AS`TypeName(tnm,-),-,-,-)} -> return ExtractTagName(tnm, nm_s union {name}),
+                          others -> return mk_(nil, false)
+                        end
+                      else return mk_(nil, false)),
+          {cl}    -> let tag_name = ConstructDoubleName(cl, name),
+                        --mk_(-, acc) = recsels(cl)(thename)
+                        mk_(-,-,-,acc) = recsels(cl)(thename)
+                     in
+                       if STATE`AccessOk(acc, STKM`GetCurCl(), cl)
+                       then return mk_(tag_name, true)
+                       else return mk_(nil, false),
+          others -> if l <> [] and mk_AS`Name(l, cid) in set dom recsels
+                    --if classname in set dom recsels
+                    then return mk_(name, true)
+                    else
+                      def rem_priv = { clnm | clnm in set dom recsels
+                                        --& let mk_(-, acc) = recsels(clnm)(thename)
+                                        & let mk_(-,-,-,acc) = recsels(clnm)(thename)
+                                          in acc <> <PRIVATE_AS> and acc <> <NOT_INITIALISED_AS> };
+                          mk_(doesthere, child) = STATE`ExistsOneChild(rem_priv, dom recsels)
+                      in if doesthere
+                         then let tag_name = ConstructDoubleName(child, name),
+                                  --mk_(-, acc) = recsels(child)(thename)
+                                  mk_(-,-,-,acc) = recsels(child)(thename)
+                              in if STATE`AccessOk(acc, STKM`GetCurCl(), child)
+                                 then return mk_(tag_name, true)
+                                 else return mk_(nil, false)
+                          else return mk_(nil, false)
+        end;
+     );
+\end{vdm_al}
+#endif VDMPP
+
+\section{Types}
+
+This operation returns $\True$ if the input name is exported from the input
+module name.
+#ifdef VDMSL
+\begin{vdm_al}
+IsTypeDef : AS`Name ==> bool * [AS`Type] * [AS`Invariant] * [AS`Name]
+IsTypeDef (name) ==
+  --def sigmamo = STATE`GetModule (STATE`ExtractModule (name));
+  def mk_(-,the_name) = LookUpRename(name);
+      mod_name = STATE`ExtractModule (the_name);
+      sigmamo = STATE`GetModule (mod_name);
+      thename = ExtractName(name)
+  in
+    if thename in set dom sigmamo.tps
+    then
+      let mk_AS`TypeDef(-,shape,Inv,-,-) = sigmamo.tps(thename)
+      in return mk_(true,shape,Inv,mod_name)
+    else return mk_(false,nil,nil,nil);
+\end{vdm_al}
+
+This operation returns $\True$ if the input name denotes a type definition
+in the module, defined by the input name.
+#endif VDMSL
+
+#ifdef VDMPP
+
+The operation {\em IsTypeDef} computes if the the input name {\em
+  name} denotes a type definition within the scope of the current
+object, if it is the type definition of the name and the class name in
+which the type definition belongs are returned. Notice, that if the
+type is a composite type the {\em tagname} is modified such that it
+also describes which class it is defined in. This is done by the
+  auxiliary function {\em ExtComp}
+
+The strategy of the operation is similar to the one used in {\em ExtractTagName}. 
+
+\begin{vdm_al}
+IsTypeDef : AS`Name ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access]
+IsTypeDef (name) ==
+ (if STATE`IsAClass(name)
+  then
+    let type = mk_GLOBAL`ObjRefType(name)
+    in return mk_(true, type, nil, name,nil)
+  else
+    def mk_AS`Name(l^[-], cid) = name;
+      clnm = STKM`GetCurCl();
+      origcl = STKM`GetOrigCl();
+      objnm = STKM`GetCurObjName();
+      thename = ExtractName(name)
+    in
+     (if l = [] and not STKM`HasCurCl()
+      then RTERR`ErrorVal(RTERR`TYPE_UNKNOWN, nil, nil, []);
+
+      if l = []
+      then
+        def tps = STATE`GetLocalTps(clnm)
+        in
+         (if thename in set dom tps
+          then
+            def mk_AS`TypeDef(-,shape,Inv,access,-) = ExtComp(tps(thename), clnm);
+                scopeok = STATE`AccessOk(access,origcl,clnm)
+            in return mk_(scopeok,shape,Inv,clnm,access)
+         );
+     (dcl allsupers : set of AS`Name := {};
+      def classname = if l <> []
+                      --then ConstructName(hd l,cid)
+                      then mk_AS`Name([hd l],cid)
+                      else objnm;
+      in
+       (if l = []
+        then allsupers := STATE`GetAllSupers(clnm)
+        else allsupers := STATE`GetAllSupers(classname) union {classname};
+        def spcl_tps = {clname |-> STATE`GetLocalTps(clname) |
+                      clname in set allsupers & thename in set dom STATE`GetLocalTps(clname)}
+      in
+        cases dom spcl_tps:
+          {}     -> return mk_(false, nil, nil, nil,nil),
+          {cl}   -> def mk_AS`TypeDef(-,shape,Inv,access,-) = ExtComp(spcl_tps(cl)(thename),cl);
+                        scopeok = STATE`AccessOk(access, origcl,cl)
+                    in return mk_(scopeok,shape,Inv,cl,access),
+          others ->(dcl res : bool * AS`Name := mk_(true, classname);
+                    if classname not in set dom spcl_tps
+                    then
+                      def rem_priv = {clnm | clnm in set dom spcl_tps & 
+                                                 spcl_tps(clnm)(thename).access <> <PRIVATE_AS>};
+                      in res := STATE`ExistsOneChild(rem_priv,dom spcl_tps);
+                    let mk_(doesthere, cl) = res 
+                    in
+                      if doesthere
+                      then def mk_AS`TypeDef(-,shape,Inv,access,-) = ExtComp(spcl_tps(cl)(thename),cl);
+                               scopeok = STATE`AccessOk(access,origcl,cl)
+                           in return mk_(scopeok,shape,Inv,cl,access)
+                      else 
+                        RTERR`ErrorVal(RTERR`MULT_DEF, nil, nil, []))
+        end
+     )))
+);
+\end{vdm_al}
+  
+\begin{vdm_al}
+functions
+ExtComp: AS`TypeDef * AS`Name -> AS`TypeDef
+ExtComp(mk_AS`TypeDef(nm, shape,Inv,access,cid), clnm) ==
+  cases shape:
+    mk_AS`CompositeType(name, fields, cid2) -> let tag_name = ConstructDoubleName(clnm, name),
+                                                   new_shape = mk_AS`CompositeType(tag_name, fields, cid2)
+                                               in mk_AS`TypeDef(tag_name, new_shape, Inv, access, cid),
+    others                                  -> mk_AS`TypeDef(nm, shape, Inv, access, cid)
+  end;
+\end{vdm_al}
+
+\begin{vdm_al}
+operations
+IsRecSel: AS`Name ==> bool
+IsRecSel(nm) ==
+  def mk_AS`Name([cl,tag],cid) = nm;
+      --clname = ConstructName(cl,cid);
+      --tagname = ConstructName(tag,cid);
+      clname = mk_AS`Name([cl],cid);
+      tagname = mk_AS`Name([tag],cid);
+      recsel = STATE`GetRecSel(clname) 
+  in
+    return tagname in set dom recsel;
+\end{vdm_al}
+
+This operation returns {\em true} if the input name denotes a record selector
+in the class that of the qualified name, defined by the input name. In
+this case the position map of the field selectors are also returned.
+
+#endif VDMPP
+
+#ifdef VDMSL
+%\begin{vdm_al}
+%LookUpTypeDef : AS`Name ==> AS`TypeDef
+%LookUpTypeDef (name) ==
+%   def sigmamo = STATE`GetModule (STATE`ExtractModule (name)) in
+%    return sigmamo.tps(ExtractName(name))
+%\end{vdm_al}
+%
+%This operation returns the type definition for the input name from the
+%module, defined by the input name.
+
+\begin{vdm_al}
+operations
+
+IsRecSel : AS`Name ==> bool
+IsRecSel (name) ==
+  def rec_name = ExtractName(name);
+      sigmamo = STATE`GetModule (STATE`ExtractModule (name))
+  in
+    return (rec_name in set dom sigmamo.recsel)
+\end{vdm_al}
+
+This operation returns $\True$ if the input name denotes a record selector
+in the module, defined by the input name.
+
+The next two operations were added to deal with imports of renamed
+record types. RM, 27/9/01.
+
+\begin{vdm_al}
+operations
+
+--IsRenRecSel : AS`Name ==> bool
+--IsRenRecSel (name) ==
+--  def rec_name = ExtractName(name);
+--      sigmamo = STATE`GetModule (STATE`ExtractModule (name))
+--  in
+--    return (rec_name in set dom sigmamo.ren and IsRecSel(sigmamo.ren(rec_name)));
+
+LookUpRenRecSel : AS`Name ==> bool * [GLOBAL`RecSel] * [AS`Name] * [AS`Name]
+LookUpRenRecSel (name) ==
+  def rec_name = ExtractName(name);
+      sigmamo = STATE`GetModule (STATE`ExtractModule (name));
+  in
+    if rec_name in set dom sigmamo.ren and IsRecSel(sigmamo.ren(rec_name))
+    then
+      def real_name = sigmamo.ren(rec_name);
+          real_rec_name = ExtractName(real_name);
+          real_mod_name = STATE`ExtractModule (real_name);
+          real_sigmamo = STATE`GetModule (real_mod_name);
+          recsel = real_sigmamo.recsel(real_rec_name)
+      in return mk_(true, recsel, real_mod_name, real_rec_name)
+    else return mk_(false, nil, nil, nil);
+--pre IsRenRecSel (name);
+
+LookUpRename : AS`Name ==> bool * AS`Name
+LookUpRename (name) ==
+  def rec_name = ExtractName(name);
+      sigmamo = STATE`GetModule (STATE`ExtractModule (name));
+  in
+    if rec_name in set dom sigmamo.ren
+    then return mk_(true, sigmamo.ren(rec_name))
+    else return mk_(false, name);
+
+\end{vdm_al}
+
+
+\begin{vdm_al}
+operations
+
+LookUpRecSel : AS`Name ==> bool * [GLOBAL`RecSel]
+LookUpRecSel (name) ==
+  def rec_name = ExtractName(name);
+      sigmamo = STATE`GetModule (STATE`ExtractModule (name));
+  in
+    if rec_name in set dom sigmamo.recsel
+    then
+      def recsel = sigmamo.recsel(rec_name)
+      in return mk_(true, recsel)
+    else return mk_(false, nil);
+\end{vdm_al}
+
+
+This operation returns the record selector for the input name. The record
+selector is retrieved from the module defined by the input name.
+#endif VDMSL
+
+#ifdef VDMPP
+\begin{vdm_al}
+LookUpRecSel : AS`Name ==> bool * [GLOBAL`RecSel]
+LookUpRecSel(mk_AS`Name([cl, tagname],cid)) ==
+  --let clnm = ConstructName(cl,cid),
+  --    tgnm = ConstructName(tagname,cid)
+  let clnm = mk_AS`Name([cl],cid),
+      tgnm = mk_AS`Name([tagname],cid)
+  in def recmap = STATE`GetRecSel(clnm)
+     in if tgnm not in set dom recmap
+     then return mk_(false, nil)
+     else let recsel = recmap(tgnm)
+          in return mk_(true, recsel);
+\end{vdm_al}
+
+The operation {\em LookUpRecSel} returns the record selector
+information for the input name, which is assumed to be a tag name. A
+tag name should contain the class name where the type is defined and
+the tag. 
+
+#endif VDMPP
+
+\section{Mathematical Functions and Operations}
+
+\begin{vdm_al}
+functions
+
+Ceiling : real -> int
+Ceiling (val) ==
+  cases true:
+    (is_int(val)) -> val,
+    others        -> 1 + floor val
+  end
+\end{vdm_al}
+
+This function returns the ceiling of a real value, i.e.\ the nearest
+integer greater or equal to the input value.
+
+\begin{vdm_al}
+functions
+
+IsNat : SEM`VAL -> bool
+IsNat (val_v) ==
+  cases val_v:
+    mk_SEM`NUM(val) -> is_nat(val),
+    others          -> false
+  end
+\end{vdm_al}
+
+This function returns $\True$ if the input semantic numeric value denotes a natural number.
+
+\begin{vdm_al}
+functions
+
+IsNatOne : SEM`VAL -> bool
+IsNatOne (val_v) ==
+  cases val_v:
+    mk_SEM`NUM(val) -> is_nat1(val),
+    others          -> false
+  end
+\end{vdm_al}
+
+This function returns $\True$ if the input semantic numeric value denotes
+a natural number that is greater than 0.
+
+\begin{vdm_al}
+functions
+
+IsInt : SEM`VAL -> bool
+IsInt (val_v) ==
+  cases val_v:
+    mk_SEM`NUM(val) -> is_int(val),
+    others          -> false
+  end
+\end{vdm_al}
+
+This function returns $\True$ if the input semantic numeric value denotes an integer number.
+
+\begin{vdm_al}
+functions
+
+IsReal : SEM`VAL -> bool
+IsReal (val_v) ==
+  cases val_v:
+    mk_SEM`NUM(val) -> is_real(val),
+    others          -> false
+  end
+\end{vdm_al}
+
+This function returns $\True$ if the input semantic numeric value denotes a real number.
+
+\begin{vdm_al}
+functions
+IsRat : SEM`VAL -> bool
+IsRat (val_v) ==
+  cases val_v:
+    mk_SEM`NUM(val) -> is_rat(val),
+    others          -> false
+  end
+\end{vdm_al}
+
+This function returns $\True$ if the input semantic numeric value is a rational number.
+
+\begin{vdm_al}
+functions
+IsStmt: AS`Expr | AS`Stmt +> bool
+IsStmt(se) ==
+  is_AS`DefStmt(se) or
+  is_AS`LetStmt(se) or
+  is_AS`LetBeSTStmt(se) or
+  is_AS`AssignStmt(se) or
+  is_AS`SeqForLoopStmt(se) or
+  is_AS`SetForLoopStmt(se) or
+  is_AS`IndexForLoopStmt(se) or
+  is_AS`WhileLoopStmt(se) or
+  is_AS`CallStmt(se) or
+  is_AS`ReturnStmt(se) or
+  is_AS`IfStmt(se) or
+  is_AS`CasesStmt(se) or
+  is_AS`ErrorStmt(se) or
+  is_AS`ExitStmt(se) or
+  is_AS`AlwaysStmt(se) or
+  is_AS`TrapStmt(se) or
+  is_AS`RecTrapStmt(se) or
+  is_AS`BlockStmt(se) or
+  is_AS`NonDetStmt(se) or
+  is_AS`IdentStmt(se) or
+  is_AS`SpecificationStmt(se);
+\end{vdm_al}
+The $IsStmt$ function simply checks whether the argument is one of the statements. 
+
+\begin{vdm_al}
+
+RestSeqVal: seq of SEM`VAL * nat -> seq of SEM`VAL
+RestSeqVal(l,i) ==
+  [ l(j) | j in set (inds l \ { i }) ];
+
+Permute: seq of SEM`VAL -> set of seq of SEM`VAL
+Permute(l) ==
+  cases l:
+    [],
+    [-]    -> { l },
+    others -> dunion { { [ l(i) ] ^ j | j in set Permute(RestSeqVal(l, i))} | i in set inds l }
+  end
+\end{vdm_al}
+
+This operation returns the set with all permutations of the input sequence.
+
+\begin{vdm_al}
+--operations
+--
+--ValSetToSeq : set of SEM`VAL ==> seq of SEM`VAL
+--ValSetToSeq (set_sv) ==
+--( dcl res_lv : seq of SEM`VAL := [];
+--  for all val_v in set set_sv do
+--    res_lv := res_lv ^ [ val_v ];
+--  return res_lv
+--)
+
+functions
+  ValSetToSeq : set of SEM`VAL -> seq of SEM`VAL
+  ValSetToSeq (set_sv) ==
+    cases set_sv:
+      {}           -> [],
+      {v} union ss -> [v] ^ ValSetToSeq(ss)
+    end;
+
+\end{vdm_al}
+
+This function converts a set of semantic values into a sequence. This
+means that the sequence is ordered.
+
+\begin{vdm_al}
+functions
+
+SetToSeq : set of SEM`VAL -> seq of SEM`VAL
+SetToSeq (val_sv) ==
+  cases val_sv:
+    {} -> [],
+    others -> let elem in set val_sv be st Min(elem, val_sv)
+              in [ elem ] ^ SetToSeq (val_sv \ { elem })
+  end
+\end{vdm_al}
+
+This function converts the input set with semantic numeric values into a
+sorted sequence of semantic numeric values.
+
+\begin{vdm_al}
+operations
+
+SeqOfSetOf2SetOfSeqOf : seq of set of (SEM`VAL | SEM`BlkEnv) ==> set of seq of (SEM`VAL | SEM`BlkEnv)
+SeqOfSetOf2SetOfSeqOf(seq_ls) ==
+ (dcl res_s : set of seq of (SEM`VAL | SEM`BlkEnv) := { [] };
+  for tmp_s in seq_ls do 
+    res_s := dunion { { tmp_l ^ [ e ] | e in set tmp_s } | tmp_l in set res_s };
+  return res_s
+ );
+
+functions
+DistrDirectProduct: set of set of SEM`BlkEnv -> set of set of SEM`BlkEnv
+DistrDirectProduct(s) ==
+  cases s:
+    {}     -> { },
+    {e}    -> { {x} | x in set e },
+    others -> let {e} union sr = s
+              in
+                let ds = DistrDirectProduct(sr)
+                in { {x} union y | x in set e, y in set ds }
+  end;
+
+\end{vdm_al}
+
+This operation converts a sequence of sets into a set of sequences.
+
+\begin{vdm_al}
+functions
+
+Min : SEM`VAL * set of SEM`VAL -> bool
+Min (n_v, set_sv) ==
+  cases n_v:
+    mk_SEM`NUM(n) -> forall e_v in set set_sv & cases e_v:
+                                                  mk_SEM`NUM(e) -> n <= e,
+                                                  others        -> undefined
+                                                end,
+    others -> undefined
+  end
+\end{vdm_al}
+
+This operation return $\True$ if the semantic numeric value $n-v$ is less
+or equal to all the semantic numeric values in the input set.
+
+#ifdef VDMSL
+\begin{vdm_al}
+operations
+
+IsDefinedInModule : AS`Name ==> bool
+IsDefinedInModule (name) ==
+  def sigmamo = STATE`GetModule (STATE`ExtractModule (name));
+      tag_id  = ExtractId (name);
+      tagnames = { let mk_AS`TypeDef(-,mk_AS`CompositeType(tagname,-,-),-,-,-) = tp
+                   in tagname | tp in set rng sigmamo.tps &
+                                let mk_AS`TypeDef(-,shape,-,-,-) = tp
+                                in is_AS`CompositeType(shape) }
+  in
+    return mk_AS`Name([tag_id],name.cid) in set tagnames
+\end{vdm_al}
+#endif VDMSL
+
+\begin{vdm_al}
+functions
+
+PreName : AS`Name -> AS`Name
+PreName(mk_AS`Name(id_l, cid)) ==
+  --mk_AS`Name(["pre_" ^ hd id_l] ^ tl id_l, cid);
+  mk_AS`Name(id_l(1,...,len id_l -1) ^ ["pre_" ^ id_l(len id_l)],cid);
+\end{vdm_al}
+
+Extends the name of function or operation by an prefix "pre" , which relates
+to the pre-conditions.
+
+\begin{vdm_al}
+functions
+
+PostName : AS`Name -> AS`Name
+PostName(mk_AS`Name(id_l, cid)) ==
+  --mk_AS`Name(["post_" ^ hd id_l] ^ tl id_l, cid);
+  mk_AS`Name(id_l(1,...,len id_l -1) ^ ["post_" ^ id_l(len id_l)],cid);
+\end{vdm_al}
+
+Extends the name of function or operation by an prefix "post", which
+relates to the post-conditions.
+
+\begin{vdm_al}
+functions
+
+InvName : AS`Name -> AS`Name
+InvName(mk_AS`Name(id_l, cid)) ==
+  --mk_AS`Name(["inv_" ^ hd id_l] ^ tl id_l, cid);
+  mk_AS`Name(id_l(1,...,len id_l -1) ^ ["inv_" ^ id_l(len id_l)],cid);
+\end{vdm_al}
+
+Extends the name of function or operation by an prefix "inv", which
+relates to the type invariants.
+
+\begin{vdm_al}
+functions
+
+InitName : AS`Name -> AS`Name
+InitName(mk_AS`Name(id_l, cid)) ==
+  --mk_AS`Name(["init_" ^ hd id_l] ^ tl id_l, cid);
+  mk_AS`Name(id_l(1,...,len id_l -1) ^ ["init_" ^ id_l(len id_l)],cid);
+\end{vdm_al}
+
+Extends the name of function or operation by an prefix "init", which
+relates to the state initialization.
+
+\begin{vdm_al}
+functions
+#ifdef VDMSL
+
+ExtractId : AS`Name -> AS`Id
+ExtractId (mk_AS`Name (name,-)) ==
+  name(len name);
+#endif VDMSL
+
+ExtractName : AS`Name -> AS`Name
+ExtractName (mk_AS`Name(name, cid)) ==
+  let id = name(len name) in
+    mk_AS`Name([id], cid);
+
+\end{vdm_al}
+
+The following two functions are used to convert an AS`Name to a string. The
+first one takes a single variable with the name (either qualified or not),
+while the second one takes the module name as the first argument and the
+element name as the second argument. If the element name is qualified,
+then the invariant says that its module part should be equal to the module
+name given as the first argument.
+
+\begin{vdm_al}
+
+SingleNameToString: AS`Name -> seq of char
+SingleNameToString(mk_AS`Name(ids, -)) ==
+--  if len ids = 2
+--  then hd ids ^ "`" ^ hd tl ids
+--  else hd ids;
+  cases ids:
+    [clmod,name] -> clmod ^ "`" ^ name,
+    [name]       -> name,
+    others       -> undefined
+  end;
+
+--ConstructName: AS`Id * CI`ContextId -> AS`Name
+--ConstructName(id,cid) ==
+--  mk_AS`Name([id], cid);
+
+ConstructDoubleName: AS`Name * AS`Name -> AS`Name
+ConstructDoubleName(mk_AS`Name([clmod] ^ -, -), mk_AS`Name(- ^ [fnop], cid)) ==
+  mk_AS`Name([clmod, fnop], cid)
+
+\end{vdm_al}
+
+This function extracts the identifier name of a construct from the input
+name.
+
+#ifdef VDMSL
+
+\begin{vdm_al}
+functions
+IsRealName : AS`Name -> bool
+IsRealName (mk_AS`Name (name,-)) ==
+  len name > 1
+\end{vdm_al}
+
+This function returns $\True$ if the input name contains a reference to a
+module name, i.e.\ the number of identifiers in the input name is greater
+than 1.
+
+\begin{vdm_al}
+functions
+
+EqualNames : AS`Name * AS`Name -> bool
+EqualNames  (mk_AS`Name(name1,-), mk_AS`Name(name2,-)) ==
+  name1 = name2
+\end{vdm_al}
+
+This function returns $\True$ if the two input names are equal.
+
+\begin{vdm_al}
+operations
+IsInDLDeclared : AS`Name * AS`Name ==> bool
+IsInDLDeclared (loc_name, mod_name) ==
+  def sigmaimo = STATE`GetDLModule (mod_name) in    
+    let exp_sig = sigmaimo.exp in
+      return (loc_name in set dom exp_sig.val) or
+             (loc_name in set dom exp_sig.fns) or
+             (loc_name in set dom exp_sig.ops);
+\end{vdm_al}
+
+This operation returns $\True$ if the input name is exported from the input
+implementation module name.
+#endif VDMSL
+
+\begin{vdm_al}
+functions
+ClModNmInPatternBindList : seq of AS`PatternBind -> set of AS`Name
+ClModNmInPatternBindList(pat_l) ==
+  dunion { ClModNmInPatternBind(pat_l(i)) | i in set inds pat_l };
+
+ClModNmInPatternBind : AS`PatternBind -> set of AS`Name
+ClModNmInPatternBind(patb) ==
+  cases patb:
+    mk_AS`PatternName(-,-,-)        -> {},
+    mk_AS`MatchVal(val,-)           -> ClModNmInExpr(val),
+    mk_AS`SetEnumPattern(Elems,-)   -> dunion { ClModNmInPatternBind(Elems(i)) | i in set inds Elems },
+    mk_AS`SetUnionPattern(lp,rp,-)  -> ClModNmInPatternBind(lp) union ClModNmInPatternBind(rp),
+    mk_AS`SeqEnumPattern(els,-)     -> dunion { ClModNmInPatternBind(els(i)) | i in set inds els },
+    mk_AS`SeqConcPattern(lp,rp,-)   -> ClModNmInPatternBind(lp) union ClModNmInPatternBind(rp),
+    mk_AS`MapEnumPattern(mls,-)     -> dunion { ClModNmInPatternBind(mls(i).dp) union ClModNmInPatternBind(mls(i).rp)
+                                                | i in set inds mls },
+    mk_AS`MapMergePattern(lp,rp,-)  -> ClModNmInPatternBind(lp) union ClModNmInPatternBind(rp),
+    mk_AS`RecordPattern(-,fields,-) -> dunion { ClModNmInPatternBind(fields(i)) | i in set inds fields },
+    mk_AS`TuplePattern(fields,-)    -> dunion { ClModNmInPatternBind(fields(i)) | i in set inds fields },
+#ifdef VDMPP
+    mk_AS`ObjectPattern(-,fields,-) -> dunion { ClModNmInPatternBind(fields(i).pat) | i in set inds fields },
+#endif VDMPP
+    mk_AS`SetBind(pat,Set,-)        -> ClModNmInPatternBind(pat) union ClModNmInExpr(Set),
+    mk_AS`TypeBind(pat,-,-)         -> ClModNmInPatternBind(pat),
+    others                          -> undefined
+  end;
+ 
+ClModNmInMultBind : AS`MultBind -> set of AS`Name
+ClModNmInMultBind (bind) ==
+  cases bind:
+    mk_AS`MultSetBind(pat,Set,-)  -> dunion { ClModNmInPatternBind(pat(i)) | i in set inds pat } 
+                                     union ClModNmInExpr(Set),
+    mk_AS`MultTypeBind(pat,-,-)   -> dunion { ClModNmInPatternBind(pat(i)) | i in set inds pat },
+    others                        -> undefined
+  end;
+
+ClModNmInMultBindList : seq of AS`MultBind -> set of AS`Name
+ClModNmInMultBindList (bind_l) ==
+  dunion { ClModNmInMultBind(bind_l(i)) | i in set inds bind_l };
+
+ClModNmInExprList : seq of AS`Expr -> set of AS`Name
+ClModNmInExprList (expr_l) ==
+  dunion { ClModNmInExpr(expr_l(i)) | i in set inds expr_l };
+
+ClModNmInLocalDef : AS`LocalDef -> set of AS`Name
+ClModNmInLocalDef(localdef) ==
+  cases localdef:
+    mk_AS`ValueDef(pat,-,val,-,-,-) -> ClModNmInPatternBind(pat) union ClModNmInExpr(val),
+    mk_AS`ExplFnDef(-,-,-,parms,mk_AS`FnBody(body,-),fnpre,fnpost,-,-,-,-) ->
+          dunion { ClModNmInPatternBindList(parms(i)) | i in set inds parms }
+          union ( cases body:
+                    <NOTYETSPEC> -> {},
+#ifdef VDMPP
+                    <SUBRESP>    -> {},
+#endif VDMPP
+                    others       -> ClModNmInExpr(body)
+                  end )
+          union (if fnpre = nil then {} else ClModNmInExpr(fnpre))
+          union (if fnpost = nil then {} else ClModNmInExpr(fnpost)),
+    mk_AS`ImplFnDef(-,-,partps,-,fnpre,fnpost,-,-,-) ->
+          dunion { ClModNmInPatternBindList(partps(i).pats) | i in set inds partps }
+          union (if fnpre = nil then {} else ClModNmInExpr(fnpre))
+          union ClModNmInExpr(fnpost),
+    mk_AS`ExtExplFnDef(-,-,partps,-,mk_AS`FnBody(body,-),fnpre,fnpost,-,-,-,-) ->
+          dunion { ClModNmInPatternBindList(partps(i).pats) | i in set inds partps }
+          union ( cases body:
+                    <NOTYETSPEC> -> {},
+#ifdef VDMPP
+                    <SUBRESP>    -> {},
+#endif VDMPP
+                    others -> ClModNmInExpr(body)
+                  end )
+          union (if fnpre = nil then {} else ClModNmInExpr(fnpre))
+          union (if fnpost = nil then {} else ClModNmInExpr(fnpost))
+  end;
+
+ClModNmInElseifExprList : seq of AS`ElseifExpr -> set of AS`Name
+ClModNmInElseifExprList(elsif_l) ==
+  dunion { ClModNmInExpr(elsif_l(i).test) union ClModNmInExpr(elsif_l(i).cons) | i in set inds elsif_l };
+
+ClModNmInCaseAltnList : seq of AS`CaseAltn -> set of AS`Name
+ClModNmInCaseAltnList(altns) ==
+  dunion { ClModNmInPatternBindList(altns(i).match) union ClModNmInExpr(altns(i).body) | i in set inds altns };
+
+ClModNmInExpr : AS`Expr -> set of AS`Name
+ClModNmInExpr (e) ==
+  cases e :
+    mk_AS`Name(ids,cid)                                -> cases ids:
+                                                          [clmod,-] -> { mk_AS`Name([clmod],cid) },
+                                                          others    -> {}
+                                                        end,
+    mk_AS`DefExpr(Def,In,-)                          -> dunion { ClModNmInPatternBind(Def(i).#1)
+                                                                 union ClModNmInExpr(Def(i).#2) | i in set inds Def }
+                                                        union ClModNmInExpr(In),
+    mk_AS`LetExpr(localdef,body,-)                   -> dunion { ClModNmInLocalDef(localdef(i))
+                                                                 | i in set inds localdef }
+                                                        union ClModNmInExpr(body),
+    mk_AS`LetBeSTExpr(lhs,St,In,-)                   -> ClModNmInMultBindList(lhs) union
+                                                        (if St = nil then {} else ClModNmInExpr(St)) union
+                                                        ClModNmInExpr(In),
+    mk_AS`IfExpr(test,cons,elsif,altn,-)             -> ClModNmInExpr(test) union ClModNmInExpr(cons) union
+                                                        ClModNmInElseifExprList(elsif) union ClModNmInExpr(altn),
+    mk_AS`CasesExpr(sel,altns,Others,-)              -> ClModNmInExpr(sel) union ClModNmInCaseAltnList(altns) union
+                                                        (if Others = nil then {} else ClModNmInExpr(Others)),
+    mk_AS`PrefixExpr(-,arg,-)                        -> ClModNmInExpr(arg),
+    mk_AS`BinaryExpr(left,-,right,-)                 -> ClModNmInExpr(left) union ClModNmInExpr(right),
+    mk_AS`AllOrExistsExpr(-,bind,pred,-)             -> ClModNmInMultBindList(bind) union ClModNmInExpr(pred),
+    mk_AS`ExistsUniqueExpr(bind,pred,-)              -> ClModNmInPatternBind(bind) union ClModNmInExpr(pred),
+    mk_AS`IotaExpr(bind,pred,-)                      -> ClModNmInPatternBind(bind) union ClModNmInExpr(pred),
+    mk_AS`SetEnumerationExpr(els,-)                  -> ClModNmInExprList(els),
+    mk_AS`SetComprehensionExpr(elem,bind,pred,-)     -> ClModNmInExpr(elem) union ClModNmInMultBindList(bind) union
+                                                        (if pred = nil then {} else ClModNmInExpr(pred)),
+    mk_AS`SetRangeExpr(lb,ub,-)                      -> ClModNmInExpr(lb) union ClModNmInExpr(ub),
+    mk_AS`SeqEnumerationExpr(els,-)                  -> ClModNmInExprList(els),
+    mk_AS`SeqComprehensionExpr(elem,bind,pred,-)     -> ClModNmInExpr(elem) union ClModNmInPatternBind(bind) union
+                                                        (if pred = nil then {} else ClModNmInExpr(pred)),
+    mk_AS`SubSequenceExpr(sequence,frompos,topos,-)  -> ClModNmInExpr(sequence) union ClModNmInExpr(frompos) union
+                                                        ClModNmInExpr(topos),
+    mk_AS`SeqModifyMapOverrideExpr(seqmap,mapexp,-)  -> ClModNmInExpr(seqmap) union ClModNmInExpr(mapexp),
+    mk_AS`MapEnumerationExpr(els,-)                  -> dunion { ClModNmInExpr(els(i).mapdom) union
+                                                                 ClModNmInExpr(els(i).maprng) | i in set inds els },
+    mk_AS`MapComprehensionExpr(elem,bind,pred,-)     -> ClModNmInExpr(elem) union ClModNmInMultBindList(bind) union
+                                                        (if pred = nil then {} else ClModNmInExpr(pred)),
+    mk_AS`TupleConstructorExpr(fields,-)             -> ClModNmInExprList(fields),
+    mk_AS`RecordConstructorExpr(-,fields,-)          -> ClModNmInExprList(fields),
+    mk_AS`RecordModifierExpr(rec,modifiers,-)        -> ClModNmInExpr(rec) union
+                                                        dunion { ClModNmInExpr(modifiers(i).newexpr)
+                                                                 | i in set inds modifiers },
+    mk_AS`TokenConstructorExpr(field,-)              -> ClModNmInExpr(field),
+    mk_AS`TupleSelectExpr(tuple,-,-)                 -> ClModNmInExpr(tuple),
+    mk_AS`TypeJudgementExpr(expr,-,-)                -> ClModNmInExpr(expr),
+    mk_AS`PreConditionApplyExpr(fct,arg,-)           -> ClModNmInExpr(fct) union ClModNmInExprList(arg),
+    mk_AS`ApplyExpr(fct,arg,-)                       -> ClModNmInExpr(fct) union ClModNmInExprList(arg),
+    mk_AS`LambdaExpr(parm,body,-,-)                  -> ClModNmInPatternBindList(parm) union ClModNmInExpr(body),
+    mk_AS`FieldSelectExpr(rec,-,-)                   -> ClModNmInExpr(rec),
+    mk_AS`FctTypeInstExpr(-,-,-)                     -> {},
+    mk_AS`IsExpr(-,arg,-)                            -> ClModNmInExpr(arg),
+    mk_AS`NarrowExpr(expr,-,-)                       -> ClModNmInExpr(expr),
+    mk_AS`UndefinedExpr(-)                           -> {},
+    mk_AS`BracketedExpr(expr,-)                      -> ClModNmInExpr(expr),
+#ifdef VDMPP
+    mk_AS`IsOfClassExpr(-,arg,-)                     -> ClModNmInExpr(arg),
+    mk_AS`IsOfBaseClassExpr(-,arg,-)                 -> ClModNmInExpr(arg),
+    mk_AS`SameBaseClassExpr(expr1,expr2,-)           -> ClModNmInExpr(expr1) union ClModNmInExpr(expr2),
+    mk_AS`SameClassExpr(expr1,expr2,-)               -> ClModNmInExpr(expr1) union ClModNmInExpr(expr2),
+#endif VDMPP
+    others                                           -> {}
+  end;
+
+end AUX
+\end{vdm_al}
+
+\vspace{0.5cm}
+
+#ifdef RTINFO
+\begin{rtinfo}
+[SeqOfSetOf2SetOfSeqOf]{rtinfo.ast}[AUX]
+\end{rtinfo}
+#endif RTINFO
+
+% Local Variables: 
+% mode: LaTeX
+% TeX-master: "dynsem"
+% End: 
+

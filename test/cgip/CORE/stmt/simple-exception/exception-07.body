@@ -1,0 +1,19 @@
+public Test : () ==> nat
+Test() ==
+  trap <UPS> with return 1 in Test2();
+
+Test2: () ==> nat
+Test2() ==
+  tixe {
+    <OK> |-> return 1,
+    <YES> |-> return 2
+   } in Test3();
+
+Test3: () ==> nat
+Test3() ==
+  (if true then (if true then exit <UPS>
+                         else let m in set {<OK>,<YES>} in
+                              exit m);
+   return 2)
+
+end A

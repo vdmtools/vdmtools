@@ -1,0 +1,46 @@
+class A1
+
+operations
+
+public f : nat ==> nat
+f(n) == is subclass responsibility
+
+end A1
+
+class A2 is subclass of A1
+
+end A2
+
+class A3 is subclass of A2
+
+end A3
+
+class A4 is subclass of A3
+
+end A4
+
+class A5 is subclass of A4
+
+end A5
+
+class A6 is subclass of A5
+
+operations
+
+public f : nat ==> nat
+f(n) == return n+1
+
+
+
+end A6
+
+
+class B
+
+operations
+
+public Test : () ==> nat
+Test() ==
+  new A6().f(3)
+
+end B

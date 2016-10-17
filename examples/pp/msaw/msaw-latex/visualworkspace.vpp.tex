@@ -1,0 +1,92 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{vdm}\index{VisualWorkSpace|ClassDef}
+{\small\sf class} $VisualWorkSpace$  \kISO $\index{WorkSpace|ClassOcc}WorkSpace$
+\begin{instvar}\index{view|InstVarDef}
+\vardcl{view}{ @View}
+\end{instvar}
+\begin{methdef}\index{Init|MethodDef}
+\begin{method}{Init}
+\parms{obstacle-information : \setof{\Token }, flight-information : \setof{\Token }} \Fdef\\ \begin{blockstmt}
+\ass{view}{\new{View}} ; \\
+\ass{pistes-radar}{\new{VisualPistesRadar}} ; \\
+\invoke{pistes-radar}{\index{Init|MethodOcc}
+\fnapply{Init}{flight-information, view}} ; \\
+\ass{bulletin-meteo}{\new{BulletinMeteo}} ; \\
+\ass{terrain}{\new{Terrain}} ; \\
+\invoke{\self }{\index{ReadObstacles|MethodOcc}
+\fnapply{ReadObstacles}{obstacle-information, view}} ; \\
+\ass{detecteur}{\new{VisualDetecteur}} ; \\
+\invoke{detecteur}{\index{Init|MethodOcc}
+\fnapply{Init}{pistes-radar, view}}
+\end{blockstmt}
+\end{method}\index{ReadObstacles|MethodDef}
+\begin{method}{ReadObstacles}
+\parms{obstacle-information : \setof{\Token }, view :  @View}\\
+\Inys 
+\end{method}\index{TraiterPistesRadar|MethodDef}
+\begin{method}{TraiterPistesRadar}
+\parms{} \Fdef\\ \begin{defstmt}
+\eqdef{modeAs}{\invoke{pistes-radar}{\index{GetModeAs|MethodOcc}
+\fnapply{GetModeAs}{}}}
+\end{defstmt} \\
+\begin{letstmt}
+\patdef{obstacles}{\fnapply{OrdreDeTraitement}{\set{terrain} \Union obstacles}}
+\end{letstmt} \\
+\begin{setfor}{modeA}{modeAs}
+\begin{defstmt}
+\eqdef{segment-de-prediction}{\new{VisualSegmentDePrediction}}
+\eqdef{positions}{\invoke{pistes-radar}{\index{GetPositions|MethodOcc}
+\fnapply{GetPositions}{modeA}}}
+\end{defstmt} \\
+\If  \Card  \Dom positions \Ge 2
+\Then \\
+\begin{blockstmt}
+\invoke{segment-de-prediction}{\index{Set|MethodOcc}
+\fnapply{Set}{modeA, positions, bulletin-meteo, view}} ; \\
+\begin{setfor}{i}{ \Inds obstacles}
+\invoke{detecteur}{\index{CalculeRisque|MethodOcc}
+\fnapply{CalculeRisque}{segment-de-prediction, \fnapply{obstacles}{i}}}
+\end{setfor}
+\end{blockstmt}
+\Else \\
+\Skip 
+\Fi
+\end{setfor}
+\end{method}
+\end{methdef}
+{\small\sf end} $VisualWorkSpace$
+
+\end{vdm}

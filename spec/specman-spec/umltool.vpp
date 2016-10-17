@@ -1,0 +1,87 @@
+class UMLTool is subclass of ToolColleague
+
+types
+  public State = Modified | Deleted | Added | None | Unknown;
+
+  public Modified :: s : seq1 of char
+  inv m == m.s = "M";
+
+  public Deleted :: s : seq1 of char
+  inv d == d.s = "D";
+
+  public Added :: s : seq1 of char
+  inv a == a.s = "A";
+
+  public None :: s : seq1 of char
+  inv n == n.s = "-";
+
+  public Unknown :: s : seq1 of char
+  inv u == u.s = "?";
+
+operations
+
+public   SetMapperState: bool ==> bool
+  SetMapperState(ReportErr) ==
+    is not yet specified;
+
+public   ResetMapper: () ==> ()
+  ResetMapper() ==
+    is not yet specified;
+
+public   MapUML: map String to (bool * bool) ==> String
+  MapUML(GuiSettings) ==
+    is not yet specified;  
+
+public   SetModelNames: String * String ==> ()
+  SetModelNames(pname, fname) ==
+    is not yet specified;  
+
+public   GetModelName: () ==>  String
+  GetModelName() == 
+    is not yet specified;  
+
+public   GetClassStatus: () ==> map String to (State * State)
+  GetClassStatus() == 
+    is not yet specified;
+
+public   GetDefaultSettings: map String to (State * State) ==> map String to (bool * bool)
+  GetDefaultSettings(m) ==
+    is not yet specified;
+
+public   Diff: set of String ==> String
+  Diff(s) ==
+    is not yet specified;
+
+public   Conflicts: map String to (bool * bool) ==> bool
+  Conflicts(GuiSettings) ==
+    is not yet specified;
+    
+public   GetConflictMsg: () ==> String
+  GetConflictMsg() ==
+    is not yet specified;
+
+public   InitUMLMapper: () ==> bool
+  InitUMLMapper() ==
+    is not yet specified;
+
+public   TerminateUMLMapper: () ==> ()
+  TerminateUMLMapper() ==
+    is not yet specified;
+
+public   SetRTFTemplate: seq of char ==> ()
+  SetRTFTemplate(s) ==
+    is not yet specified;
+
+public   SetCharSet: seq of char ==> ()
+  SetCharSet(s) ==
+    is not yet specified;
+
+public   SetToolInterface: int ==> ()
+  SetToolInterface(s) ==
+    is not yet specified;
+
+public   SetNewFileType: int ==> ()
+  SetNewFileType(s) ==
+    is not yet specified;
+
+end UMLTool

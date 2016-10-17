@@ -1,0 +1,75 @@
+class VDMUtil
+
+-- 	VDMTools STANDARD LIBRARY: MiscUtils
+--      --------------------------------------------
+-- 
+-- Standard library for the VDMTools Interpreter. When the interpreter
+-- evaluates the preliminary functions/operations in this file,
+-- corresponding internal functions is called instead of issuing a run
+-- time error. Signatures should not be changed, as well as name of
+-- module (VDM-SL) or class (VDM++). Pre/post conditions is 
+-- fully user customisable. 
+-- Dont care's may NOT be used in the parameter lists.
+
+functions
+-- Converts a set argument into a sequence in non-deterministic order.
+static public
+set2seq[@T] : set of @T +> seq of @T
+set2seq(x) == is not yet specified;
+
+-- Returns a context information tuple which represents
+-- (file_name * line_num * column_num * module_name * fnop_name) of corresponding source text
+static public
+get_file_pos : () +> [ seq of char * nat * nat * seq of char * seq of char ]
+get_file_pos() == is not yet specified;
+
+-- (file_name * line_num * column_num * module_name * fnop_name) of corresponding source text
+static public
+P : () +> [ seq of char * nat * nat * seq of char * seq of char ]
+P() == is not yet specified;
+
+-- Converts a VDM value into a seq of char.
+static public
+val2seq_of_char[@T] : @T +> seq of char
+val2seq_of_char(x) == is not yet specified;
+
+-- Converts VDM value in ASCII format into a VDM value
+-- RESULT.#1 = false implies a conversion failure
+static public
+seq_of_char2val[@p]:seq1 of char -> bool * [@p]
+seq_of_char2val(s) ==
+  is not yet specified
+  post let mk_(b,t) = RESULT in not b => t = nil;
+
+-- Cast value 
+static public
+cast[@T1, @T2] : @T1 -> @T2
+cast(s) == is not yet specified
+  pre is_(s, @T2);
+
+-- Clone value 
+static public
+clone[@T] : @T -> @T
+clone(s) == is not yet specified;
+
+-- Get class name
+static public
+classname[@T] : @T -> [seq1 of char]
+classname(s) == is not yet specified;
+
+-- Convert a char into a UTF16 code value.
+static public
+char2code: char -> nat
+char2code(c) == is not yet specified;
+
+-- Convert a UTF16 code value into a char.
+static public
+code2char: nat -> char
+code2char(c) == is not yet specified;
+
+operations
+-- Get current time in miliseconds since Jan. 1, 1970
+static public
+current_time: () ==> nat
+current_time() == is not yet specified;
+end VDMUtil

@@ -1,0 +1,96 @@
+class DrawingNote is subclass of Object
+operations 
+public  getId : () ==> int 
+getId() == 
+( return  noteId
+) ;
+
+public  category : () ==> int 
+category() == 
+( return  category
+) ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+( return  noteId
+) ;
+
+public  mimeType : () ==> [String]
+mimeType() == 
+( return  mimeType
+) ;
+
+public  noteText : () ==> [String]
+noteText() == 
+( if  noteText = nil  
+  then  
+    ( noteText := Database`getDatabase().getDrawingNote(noteId)
+    ) ;
+  return  noteText
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( return  noteKey
+) ;
+
+public  equals : [Object] ==> bool 
+equals(obj) == 
+( return  (is_ (obj,[DrawingNote]) and  noteId = (def l_10 :  DrawingNote = (obj)
+  in l_10).getId())
+) ;
+
+public  static convertCategory : [String] ==> int 
+convertCategory(categoryName) == 
+( if  new  String("NOTE").equalsIgnoreCase(categoryName)
+  then  
+    ( return  NOTE
+    ) 
+  else  
+    if  new  String("INFO").equalsIgnoreCase(categoryName)
+    then  
+      ( return  INFO
+      ) 
+    else  
+      if  new  String("WARNING").equalsIgnoreCase(categoryName)
+      then  
+        ( return  WARNING
+        ) 
+      else  
+        if  new  String("CAUTION").equalsIgnoreCase(categoryName)
+        then  
+          ( return  CAUTION
+          ) 
+        else  
+          ( exit  new  IllegalArgumentException()
+          ) 
+) ;
+
+public  equals : [ComparisonValueInterface] ==> bool 
+equals(anotherValue) == 
+( return  (is_ (anotherValue,[DrawingNote]) and  noteId = (def l_10 :  DrawingNote = (anotherValue)
+  in l_10).getId())
+) ;
+
+public  DrawingNote : int  * int  * [String] * [String] ==> DrawingNote
+DrawingNote(noteId, category, noteKey, mimeType) == 
+( DrawingNote`noteId := noteId;
+  DrawingNote`category := category;
+  DrawingNote`noteKey := noteKey;
+  DrawingNote`mimeType := mimeType;
+  DrawingNote`noteText := nil  
+) ;
+
+instance variables 
+  public  static INFO : int  := 0;
+  public  static NOTE : int  := 1;
+  public  static WARNING : int  := 2;
+  public  static CAUTION : int  := 3;
+  private  noteId : int ;
+  private  noteKey : [String];
+  private  category : int ;
+  private  mimeType : [String];
+  private  noteText : [String];
+  private  mediator : [WiringDataMediator]
+  
+end  DrawingNote

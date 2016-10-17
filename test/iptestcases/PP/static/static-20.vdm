@@ -1,0 +1,65 @@
+
+class Object is subclass of AAA
+instance variables
+  public static NULL: AAA:=new AAA(7)  -- 2) !!! AAA() is not called
+operations
+  public Object: <NULL> ==> Object
+  Object(p) == let - = AAA() in skip;
+
+  public Object: () ==> Object
+  Object() == let - = AAA() in skip;
+end Object
+
+class PP is subclass of Object
+operations
+  public PP: <NULL> ==> PP
+  PP(p) == let - = Object() in skip;
+end PP
+
+class RR is subclass of Object
+operations
+  public RR: <NULL> ==> RR
+  RR(r) == let - = Object() in skip;
+end RR
+
+class A 
+operations
+  public  o : AAA ==> bool
+  o(p) == return if p.IsNil() then false else true;
+
+-- 3) !!! Run-Time Error 230: Name unknown  public  o : RR ==> bool
+--                                       o(r) == return false;
+
+public  Test : () ==> seq of bool
+Test() == 
+( dcl p: AAA := Object`NULL, t_p:AAA:=Object`NULL;
+  return
+    [ p.IsNil(),
+      new PP().IsNil(),
+      new PP(<NULL>).IsNil(),
+      p=Object`NULL,
+      p=t_p,
+      o(new PP()), -- !!! Run-Time Error 230: Name unknown   
+      o(p),
+      o(def t:AAA=Object`NULL in t),
+      isofclass(PP, t_p),
+      o(new PP(<NULL>))
+    ]; --, o(new RR())];
+);
+
+end  A
+
+class AAA 
+instance variables
+-- 1) !!! Endless loop  public static NULL: AAA:=new AAA();
+  protected isNil: bool :=false
+operations
+  public AAA: () ==> AAA
+  AAA() == isNil:=true;
+
+  public AAA: nat ==> AAA
+  AAA(n) == isNil:=true;
+  
+  public IsNil: () ==> bool
+  IsNil() == return isNil
+end AAA

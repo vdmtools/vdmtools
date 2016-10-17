@@ -1,0 +1,171 @@
+class ExpressionContext is subclass of Object
+operations 
+public  toString : () ==> [String]
+toString() == 
+( dcl   sb : [StringBuffer] := new  StringBuffer(256);
+  let - = sb.append(new  String("ExpressionContext[
+"))
+  in 
+    skip ;
+  if  parentContext <> nil  
+  then  
+    ( let - = sb.append(new  String("==Parent:
+"))
+      in 
+        skip ;
+      let - = sb.append(parentContext.toString())
+      in 
+        skip ;
+      let - = sb.append(new  String("
+==Current:
+"))
+      in 
+        skip 
+    ) ;
+  ( dcl   varNameList : [Iterator] := contextMap.keySet().iterator();
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip 
+        
+      end  
+    in  
+      while  varNameList.hasNext() do  
+      ( dcl   varName : [String] := varNameList.next();
+        let - = sb.append(new  String("  "))
+        in 
+          skip ;
+        let - = sb.append(varName)
+        in 
+          skip ;
+        let - = sb.append(new  String("["))
+        in 
+          skip ;
+        let - = sb.append(varTypeMap.get(varName))
+        in 
+          skip ;
+        let - = sb.append(new  String("] =>'"))
+        in 
+          skip ;
+        ( dcl   value__ : [Object] := lookup(varName);
+          let - = sb.append((if  value__ = nil   then  new  String("null") else  value__.toString()))
+          in 
+            skip ;
+          if  varNameList.hasNext()
+          then  
+            ( let - = sb.append(new  String("'
+"))
+              in 
+                skip 
+            ) 
+          else  
+            ( let - = sb.append(new  String("']"))
+              in 
+                skip 
+            ) 
+        ) 
+      ) ;
+    return  sb.toString()
+  ) 
+) ;
+
+public  removeAll : () ==> <VOID>
+removeAll() == 
+( let - = contextMap.clear()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  getParentContext : () ==> [ExpressionContext]
+getParentContext() == 
+( return  parentContext
+) ;
+
+public  getVariableNames : () ==> [Set]
+getVariableNames() == 
+( return  contextMap.keySet()
+) ;
+
+public  lookup : [String] ==> [Object]
+lookup(variableName) == 
+( dcl   value__ : [Object] := nil  ;
+  if  parentContext <> nil  
+  then  
+    ( value__ := parentContext.lookup(variableName)
+    ) ;
+  if  value__ = nil  
+  then  
+    ( value__ := contextMap.get(variableName)
+    ) ;
+  return  value__
+) ;
+
+public  ExpressionContext : () ==> ExpressionContext
+ExpressionContext() == 
+( let - = ExpressionContext(nil  )
+  in 
+    skip 
+) ;
+
+public  containsVariable : [String] ==> bool 
+containsVariable(variableName) == 
+( return  contextMap.containsKey(variableName)
+) ;
+
+public  assign : [String] * [Object] ==> <VOID>
+assign(variableName, value__) == 
+( if  not  contextMap.containsKey(variableName)
+  then  
+    ( dcl   errMsg : [String] := new  String("Effectivity Variable '")+variableName+new  String("' Not found."),
+            iae : [IllegalArgumentException] := new  IllegalArgumentException(errMsg);
+      let - = System`err.println(iae)
+      in 
+        skip ;
+      let - = iae.printStackTrace(System`err)
+      in 
+        skip ;
+      exit  iae
+    ) ;
+  ( dcl   varType : [Class] := varTypeMap.get(variableName);
+    if  not  (value__ = nil   or  varType.equals(value__.getClass()))
+    then  
+      ( dcl   errMsg : [String] := new  String("Incompatible Type for Effectivity Variable.
+'")+variableName+new  String("' is type '")+varType.getName()+new  String("', and attempting to assign a value of type '")+value__.getClass().getName()+new  String("'"),
+              iae : [IllegalArgumentException] := new  IllegalArgumentException(errMsg);
+        exit  iae
+      ) ;
+    let - = contextMap.put(variableName , value__)
+    in 
+      skip 
+  ) ;
+  return  <VOID>
+) ;
+
+public  loadVariable : [String] * [Class] ==> <VOID>
+loadVariable(variableName, variableType) == 
+( if  parentContext = nil   or  (not  parentContext.containsVariable(variableName))
+  then  
+    ( let - = varTypeMap.put(variableName , variableType)
+      in 
+        skip ;
+      let - = contextMap.put(variableName , nil  )
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+public  ExpressionContext : [ExpressionContext] ==> ExpressionContext
+ExpressionContext(parentContext) == 
+( ExpressionContext`parentContext := parentContext;
+  ExpressionContext`contextMap := new  HashMap();
+  ExpressionContext`varTypeMap := new  HashMap()
+) ;
+
+instance variables 
+  private  parentContext : [ExpressionContext];
+  private  contextMap : [Map];
+  private  varTypeMap : [Map]
+  
+end  ExpressionContext

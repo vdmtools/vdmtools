@@ -1,0 +1,40 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{vdm}\index{VisualZoneAeroport|ClassDef}
+{\small\sf class} $VisualZoneAeroport$  \kISO $\index{ZoneAeroport|ClassOcc}ZoneAeroport$
+\begin{instvar}\index{view|InstVarDef}
+\vardcl{view}{ @View}
+\end{instvar}
+\begin{methdef}\index{Set|MethodDef}
+\begin{method}{Set}
+\parms{centre' : Coordonnees\index{Coordonnees|TypeOcc}, rayon' : NM\index{NM|TypeOcc}, altitude-maximale' : Pieds\index{Pieds|TypeOcc}, rayon-au-sol' : NM\index{NM|TypeOcc}, view' :  @View} \Fdef\\ \begin{blockstmt}
+\ass{Cylindre`centre}{centre'} ; \\
+\ass{Cone`centre}{centre'} ; \\
+\ass{rayon}{rayon'} ; \\
+\ass{altitude-maximale}{altitude-maximale'} ; \\
+\ass{rayon-au-sol}{rayon-au-sol'} ; \\
+\ass{view}{view'} ; \\
+\invoke{view}{\index{ShowZoneAeroport|MethodOcc}
+\fnapply{ShowZoneAeroport}{Cylindre`centre, rayon, altitude-maximale, rayon-au-sol}}
+\end{blockstmt}
+\end{method}
+\end{methdef}
+{\small\sf end} $VisualZoneAeroport$
+
+\end{vdm}

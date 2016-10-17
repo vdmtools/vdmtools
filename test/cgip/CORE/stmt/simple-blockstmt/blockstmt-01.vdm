@@ -1,0 +1,8 @@
+class A
+
+operations
+
+public Test : () ==> seq of (nat | bool)
+Test() ==
+(return [1,2,3])
+end A

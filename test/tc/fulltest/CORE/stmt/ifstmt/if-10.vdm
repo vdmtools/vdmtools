@@ -1,0 +1,17 @@
+class IfStmtTest
+
+operations
+
+  If10: () ==> nat
+  If10() ==
+    if true
+    then ( dcl a: nat := 0,
+               b: bool;
+	   dcl c: set of int;
+	   return ;
+	   return 8;
+	  let t = true in  return t )
+    else ( let k = true in return not k;
+           SeqModify([1,2,3]) );
+
+end IfStmtTest

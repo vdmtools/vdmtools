@@ -1,0 +1,178 @@
+\subsection{Hotel}
+ホテルの状態を、状態変数Hotelで表す。
+
+発行済の「鍵」の集合（発行済）と、どの部屋にどの鍵が使用されたかの情報（使用済）は、フロントが管理している。
+どの部屋にどの鍵が対応しているかは、「部屋」から「鍵」への写像（部屋の鍵）が記録している。
+どの客がどのカードを持っているかは、「客」から 「カード」集合への写像（客）が記録している。
+新しい鍵の候補は、keysが持っている。
+
+参考文献\cite{DJ2006}では、新しい鍵を割り当てるために型束縛を使っているが、
+仕様を実行可能とするため、本仕様では、新しい鍵は1から9999までの値を取るようにして、
+集合束縛により実行が可能なようにした。
+この値を、あまり大きくすると、仕様実行の際、初期設定で時間がかかってしまう。
+
+もちろん、「鍵」や 「部屋」の型をnatにしているのは、実装のための指定ではない。
+型の詳細をまだ決めたくない場合、一般的にはtoken型を使うのだが、テストケースの記述が長くなるのを避けるため、便宜上、nat型を使っているだけである。
+
+\begin{vdm_al}
+module 『ホテル』
+definitions
+types
+「鍵」 = nat;
+ 「部屋」= nat;
+ 「客」=token;
+ 
+ 「カード」::
+   第一 : 「鍵」
+   第二 : 「鍵」;
+「フロント」 ::
+   発行済 : set of 「鍵」
+   使用済 : map 「部屋」 to 「鍵」
+   inv f == rng f.使用済 subset f.発行済;
+
+state Hotel of
+   フロント : 「フロント」
+   部屋の鍵 : map 「部屋」 to 「鍵」
+   客 : map 「客」 to set of 「カード」
+   keys : set of nat
+inv h ==
+   dom h.フロント.使用済 subset dom h.部屋の鍵 and
+   dunion {{c.第一, c.第二} | c in set dunion rng h.客} subset h.フロント.発行済
+init
+   h ==  
+      h = 
+         mk_Hotel(
+            mk_「フロント」({}, {|->}), 
+            {|->}, 
+            {|->},
+            {1,...,9999}
+         )
+end
+\end{vdm_al}
+
+\subsubsection{チェックイン}
+新しい鍵を持つ新カードを発行し、その鍵を発行済・使用済の情報に記録する。
+新カードの情報を、客写像に追加する。
+
+\begin{vdm_al}
+operations
+チェックイン :「客」* 「部屋」 ==>「カード」
+チェックイン(guest, room) == 
+   let   新鍵  in set keys be st 新鍵 not in set フロント.発行済 in
+   let
+      新カード = mk_「カード」(フロント.使用済(room), 新鍵) 
+   in (
+      フロント.発行済 := フロント.発行済 union {新鍵};
+      フロント.使用済 := フロント.使用済 ++ {room |-> 新鍵};
+      客 := 
+         if guest in set dom 客 then
+            客 ++ {guest |-> 客(guest) union {新カード}}
+         else
+            客 munion {guest |->  {新カード}};
+      return 新カード
+   )
+pre
+   room in set dom フロント.使用済
+post
+   exists 新鍵 in set keys & 
+      新鍵 not in set フロント~.発行済 and
+      let
+         新カード = mk_「カード」(フロント~.使用済(room), 新鍵) in
+         フロント.発行済 = フロント~.発行済 union {新鍵} and
+         フロント.使用済 = フロント~.使用済 ++ {room |-> 新鍵} and
+         if guest in set dom 客~ then
+            客 = 客~ ++ {guest |-> 客~(guest) union {新カード}}
+         else
+            客 = 客~ munion {guest |->  {新カード}};
+\end{vdm_al}
+
+\subsubsection{チェックイン陰仕様}
+\begin{vdm_al}
+チェックイン陰仕様 :「客」* 「部屋」 ==> ()
+チェックイン陰仕様(guest, room) == is not yet specified
+pre
+   room in set dom フロント.使用済
+post
+   exists 新鍵 :「鍵」 & 
+      新鍵 not in set フロント~.発行済 and
+      let
+         新カード = mk_「カード」(フロント~.使用済(room), 新鍵) in
+         フロント.発行済 = フロント~.発行済 union {新鍵} and
+         フロント.使用済 = フロント~.使用済 ++ {room |-> 新鍵} and
+         if guest in set dom 客~ then
+            客 = 客~ ++ {guest |-> 客~(guest) union {新カード}}
+         else
+            客 = 客~ munion {guest |->  {新カード}};
+\end{vdm_al}
+
+\subsubsection{入る}
+客が部屋にはいると、部屋の鍵がカードの第二の鍵になるので、前の客の鍵は使えなくなる。
+
+\begin{vdm_al}
+入る :「部屋」*「客」*「カード」==> bool
+入る(room, guest, c) == (
+   if c.第一 = 部屋の鍵(room) then (
+      部屋の鍵 := 部屋の鍵 ++ {room |-> c.第二};
+      return true
+      )
+   elseif c.第二 = 部屋の鍵(room) then
+      return true
+   else
+      return false
+   )
+pre
+   room in set dom 部屋の鍵 and guest in set dom 客 and
+   c in set 客(guest) 
+post
+   if c in set 客(guest) and
+      (c.第一 = 部屋の鍵~(room) and 部屋の鍵 = 部屋の鍵~ ++ {room |-> c.第二} or
+      c.第二 = 部屋の鍵~(room) and 部屋の鍵 = 部屋の鍵~ )
+   then
+      RESULT = true
+   else
+      RESULT = false
+   ;
+\end{vdm_al}
+
+\subsubsection{入る陰仕様}
+\begin{vdm_al}      
+入る陰仕様 :「部屋」*「客」 ==> bool
+入る陰仕様(room, guest) == is not yet specified
+pre
+   room in set dom 部屋の鍵 and guest in set dom 客 and
+   exists c in set 客(guest) & c.第一 = 部屋の鍵(room) or c.第二 = 部屋の鍵(room)
+post
+   if exists c in set 客(guest) &
+      c.第一 = 部屋の鍵~(room) and 部屋の鍵 = 部屋の鍵~ ++ {room |-> c.第二} or
+      c.第二 = 部屋の鍵~(room) and 部屋の鍵 = 部屋の鍵~
+   then
+      RESULT =  true
+   else
+      RESULT = false;
+\end{vdm_al}
+
+\subsubsection{ホテル状態を設定する}
+\begin{vdm_al}
+ホテル状態を設定する : 
+   「フロント」* map 「部屋」 to 「鍵」 * map 「客」 to set of 「カード」 ==> Hotel
+ホテル状態を設定する(aフロント, 部屋の鍵写像, 客写像) ==  (
+   atomic (
+      フロント := aフロント;
+      部屋の鍵 := 部屋の鍵写像;
+      客 := 客写像
+   );
+   return Hotel
+);
+\end{vdm_al}
+
+\subsubsection{ホテル状態を得る}
+\begin{vdm_al}
+ホテル状態を得る : () ==> Hotel
+ホテル状態を得る() == return Hotel;
+      
+end 『ホテル』
+\end{vdm_al}
+      
+\begin{rtinfo}
+{vdm.tc}[『ホテル』]
+\end{rtinfo}

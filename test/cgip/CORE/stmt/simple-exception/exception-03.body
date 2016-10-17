@@ -1,0 +1,15 @@
+public Test : () ==> nat | seq of char * <MISS_ME> | <OK>
+Test() ==
+  trap v with return mk_("Test",v)
+  in Test2();
+
+Test2: () ==> nat | <OK>
+Test2() ==
+  (trap <UPS> with return <OK>
+  in (Test3();
+      return 1));
+
+Test3: () ==> nat
+Test3() ==  exit <UPS>
+
+end A

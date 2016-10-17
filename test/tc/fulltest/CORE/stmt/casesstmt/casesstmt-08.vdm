@@ -1,0 +1,14 @@
+class CasesStmtTest
+
+operations
+
+  Cases: nat ==> nat
+  Cases(a) ==
+    cases a:
+      10 -> return 20,
+      others -> if a < 10
+                then return 10
+                else return 25
+    end;
+
+end CasesStmtTest

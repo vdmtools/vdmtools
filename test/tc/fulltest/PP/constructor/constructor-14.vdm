@@ -1,0 +1,10 @@
+class A
+
+operations
+public A: () ==> A
+A() == skip;
+
+public static A: nat ==> A
+A(-) == skip;
+
+end A

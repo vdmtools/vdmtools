@@ -1,0 +1,287 @@
+% LaTeX 2e Document.
+% 
+% $Id: TestDriverAll.tex,v 1.2 2006/01/10 10:46:35 vdmtools Exp $
+% 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PDF compatibility code. 
+\makeatletter
+\newif\ifpdflatex@
+\ifx\pdftexversion\@undefined
+\pdflatex@false
+%\message{Not using pdf}
+\else
+\pdflatex@true
+%\message{Using pdf}
+\fi
+
+\newcommand{\latexorpdf}[2]{
+  \ifpdflatex@ #2
+  \else #1
+  \fi
+}
+
+\newcommand{\pformat}{a4paper}
+
+\makeatother
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%\latexorpdf{
+%\documentclass[\pformat,12pt]{article}
+%}{
+%\documentclass[\pformat,pdftex,12pt]{article}
+%}
+\documentclass[twocolumn, sea-ss]{jarticle}
+
+\usepackage[dvips]{color}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{alltt}
+\usepackage{graphics}
+\usepackage{vpp}
+\usepackage{makeidx}
+\makeindex
+
+\definecolor{covered}{rgb}{0,0,0}      %black
+%\definecolor{not-covered}{gray}{0.5}   %gray for previewing
+%\definecolor{not-covered}{gray}{0.6}   %gray for printing
+\definecolor{not-covered}{rgb}{1,0,0}  %red
+
+\newcommand{\InstVarDef}[1]{{\bf #1}}
+\newcommand{\TypeDef}[1]{{\bf #1}}
+\newcommand{\TypeOcc}[1]{{\it #1}}
+\newcommand{\FuncDef}[1]{{\bf #1}}
+\newcommand{\FuncOcc}[1]{#1}
+\newcommand{\MethodDef}[1]{{\bf #1}}
+\newcommand{\MethodOcc}[1]{#1}
+\newcommand{\ClassDef}[1]{{\sf #1}}
+\newcommand{\ClassOcc}[1]{#1}
+\newcommand{\ModDef}[1]{{\sf #1}}
+\newcommand{\ModOcc}[1]{#1}
+
+%\nolinenumbering
+%\setindent{outer}{\parindent}
+%\setindent{inner}{0.0em}
+
+\title{VDM++関数型回帰テスト支援ライブラリ}
+\author{
+佐原伸\\
+日本フィッツ株式会社\\
+情報技術研究所\\
+TEL : 03-3623-4683\\
+shin.sahara@jfits.co.jp\\
+}
+\date{2005年6月8日～10日}
+
+\pagestyle{empty}
+\begin{document}
+\setlength{\baselineskip}{12pt plus .1pt}
+\tolerance 10000
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+\setlength{\baselineskip}{12pt plus .1pt}
+VDM++基本ライブラリ\cite{Sahara2004}の一つとして、回帰テスト支援ライブラリをオブジェクト指向によって作成した。
+しかし、上記開発を通して\textbf{関数型指向の仕様記述が優れている}ことが判明したため、回帰テスト支援ライブラリを、関数型プログラミングの技術を適用して再開発した。
+
+本稿では、このライブラリの実装を示し、オブジェクト指向版と比較して利点が大きいことを示す。
+\end{abstract}
+%\vspace{-1cm}
+
+\section{はじめに}
+証券会社向けパッケージソフトウェア（TradeOneシステム）の開発に際し、品質の向上と生産性向上を狙って、形式仕様記述言語VDM++\cite{IFAD}を使用し、要求仕様を定義した。
+ しかし、VDM++には、簡単な数学ライブラリと基本的なファイル入出力ライブラリがあるだけで、回帰テスト支援ライブラリなどの基本的なライブラリは皆無であり、いくつかのライブラリ群を構築した。
+
+この経験を通して、\textbf{関数型指向の仕様記述が優れている}ことが判明したため、回帰テスト支援ライブラリを、関数型プログラミング技術を用いて再開発し、オブジェクト指向版と比較した。
+
+結果として、回帰テストのためのテストケースの記述量が35.2\%減少し、ライブラリ自体の記述量も減少し単純化できた。
+
+以下、第２節にVDM++の概要を述べ、３節でライブラリの実装を示す。第４節でオブジェクト指向版との比較を示し、５節でまとめる。本稿で使用する数学記号の説明は6節に示した。
+
+\section{VDM++}
+VDM\cite{Jones}はIBMのウィーン研究所で1970年代中頃に開発されたモデルベースの形式手法である。その形式仕様記述言語VDM-SL\cite{Fitz}は1966年にISO標準（ISO/IEC 13817-1）になっている。
+
+VDM++は欧州連合のESPRIT計画AFRODITEプロジェクトで開発された、オブジェクト指向機能をVDM-SLに追加した形式仕様記述言語である。不変条件・事前条件・事後条件・陰仕様記述などの形式手法を支援する機能だけでなく、クラス・多重継承といったオブジェクト指向プログラミング、およびパターン・内包表記・型変数・高階関数などの関数型プログラミング機能\footnote{残念ながら、遅延評価方式でなく、先行評価方式である。}も持っている。
+
+今回使用したVDM++は、日本語の識別子と注釈の使用が可能であるが、本稿のように\LaTeX{}でVDM++ソースを書く場合は、清書する際に日本語がうまく表示できないので、VDM++ソースは英語の数学記号表現となっている。
+
+\section{ライブラリの実装}
+以下に、回帰テスト支援ライブラリ本体の\textbf{FTestDriver}クラス\footnote{関数型指向なので、クラスは単にモジュールと考えてよい。}と、ログ表示のための\textbf{FTestLogger}クラスを示し、次に、テスト対象となる\textbf{Set}クラスと、そのテストケースを記述した\textbf{SetT}を示す。
+
+\include{test/TestDriver.vpp}
+
+\include{test/TestLogger.vpp}
+
+\include{test/Set.vpp}
+
+\onecolumn
+\include{test/SetT.vpp}
+
+以下にオブジェクト指向版のSetTクラスの一部を示す。
+\begin{verbatim}
+テストグループ
+--Setのテスト
+class SetT is subclass of TestDriver
+functions
+tests : () -> seq of TestCase
+tests () == 
+  [
+    new SetT01(),
+    new SetT02(),
+    new SetT03()
+  ];
+end SetT
+----------------------------------------
+--列との比較と、列への変換。
+class SetT01 is subclass of TestCase
+operations 
+protected test: () ==> bool
+test() == 
+  return
+    Set`hasSameElems[int](Set`asSequence[int]({1,2,3,4}),{1,2,3,4}) ;
+end SetT01
+----------------------------------------
+--組み合わせを得る。
+class SetT02 is subclass of TestCase
+operations 
+protected test: () ==> bool
+test() == 
+  return
+    Set`Combinations[int](2)({1,2,3}) = {{1,2},{1,3},{2,3}} and
+    Set`Combinations[int](2)({1,2,3,4}) = {{1,2},{1,3},{1,4},{2,3},{2,4},{3,4}} and
+    Set`fmap[set of int, set of set of int](Set`Combinations[int](2))({{1,2,3},{1,2,3,4}}) =
+      {{{1,2},{1,3},{2,3}},{{1,2},{1,3},{1,4},{2,3},{2,4},{3,4}}} and
+    Set`Combinations[int](3)({1,2,3,4}) = {{1,2,3},{1,2,4},{1,3,4},{2,3,4}} and
+    Set`Combinations[seq of char](2)({"佐原","佐藤","酒匂","谷津","西川"})=
+      {{"佐原","佐藤"},{"佐原","西川"},{"佐原","谷津"},{"佐原","酒匂"},{"佐藤","西川"},
+      {"佐藤","谷津"},{"佐藤","酒匂"},{"西川","谷津"},{"西川","酒匂"},{"谷津","酒匂"} };
+end SetT02
+\end{verbatim}
+
+\twocolumn
+\section{関数型ライブラリとオブジェクト指向ライブラリの比較}
+回帰テスト支援ライブラリのオブジェクト指向版と、関数型指向の本ライブラリを比較した。
+
+下表は、両者の行数を比較したものである。
+
+\begin{center}
+\addtocounter{table}{1}
+\caption{表\thetable.関数型ライブラリとオブジェクト指向(OO)ライブラリの行数(DSI)\footnote{DSIはDistributed Software Instructionの略。注釈を除くソースコード中の命令数。本ライブラリの場合、ほぼ１命令=１行なので、行数に比例すると考えてよい。}比較}\\
+\begin{tabular}{| m{10zw} | r | r | r |}
+\hline
+\textbf{モジュール} & \textbf{関数型} & \textbf{OO} & 比率\\
+\hline
+\hline
+回帰テスト支援ライブラリ & 61 & 71 & 85.9\%\\
+\hline
+テストケース(FSetT, FSequenceT) & 289 & 546  & 53.9\%\\
+\hline
+\end{tabular}
+\end{center}
+
+回帰テスト支援ライブラリについての上記の差は、オブジェクト指向版がTestCaseをクラスとしているのに対し、関数型指向版はレコード型で定義していることにより、クラス定義の記述量分、オブジェクト指向版の方が行数が多い。
+
+テストケースの場合は、オブジェクト指向版がテストケース毎に１クラス定義しなければならないのに対し、関数型指向版は１レコード定義すればよいので２行で済む、という差が出ている。
+
+TradeOneシステムの開発に際しては、約3万行のテストケースを記述したが、上記比率を適用すると約1万6千行で済み、1万4千行削減できることになる。
+
+また、関数型指向版の方が、各関数の依存関係が少なく、理解しやすく、テストケースも作成しやすい。
+
+\section{まとめ}
+VDM++の回帰テスト支援ライブラリを、関数型指向で簡単に実装できることを示し、オブジェクト指向版と比較して、特にテストケースの記述量がかなり削減できることを示した。
+
+なお、本稿自体が回帰テスト支援ライブラリおよびテストケースのソースコードとなっていて、VDM++インタープリタによって実行し、コードカバレージを計測した結果を清書したものになっていることを付記しておく。
+
+\section{数学記号とその意味}
+
+\begin{center}
+\addtocounter{table}{1}
+\caption{表\thetable.数学記号とその意味}\\
+\begin{tabular}{| m{4zw} |m{8zw}|m{10zw}|}
+\hline
+%\begin{tabular}{|l|l|}\hline
+%\ldots$\Gmap$\ldots & {\tt map ... to ...} \kill
+数学記号 & ASCII表現 & 説明 \\
+\hline\hline
+%\endhead
+%\endfoot
+ $\Dot$            & {\tt\char'046} & 束縛と式の区切り記号 \\
+ $\X$              & {\tt *}    & 積\\
+ $\Le$            & {\tt <=}  & 以下\\
+ $\Ge$            & {\tt >=}  & 以上\\
+ $\Neq$            & {\tt <>} & 不等\\
+% $\Oto$            & {\tt ==>}  &    \\
+ $\To$             & {\tt ->}    & 関数の対応を示す記号\\
+ $\Implies$     & {\tt =>}    &  含意\\
+% $\Equiv$ & {\tt <=>}     &          \\
+% $\Mapsto$         & {\tt |->}   &    \\
+ $\Fdef$           & {\tt ==}    & 定義\\
+% $\Iterate$        & {\tt **}   &     \\
+ $\Override$       & {\tt ++}  & 列の更新 \\
+% $\Mapmerge$         & {\tt munion} &\\
+% $\Dto$            & {\tt <:}              &             \\
+% $\Rto$            & {\tt :>}              &            \\
+% $\Dby$            & {\tt <-:}            &              \\
+% $\Rby$            & {\tt :->}            &             \\
+% $\Psubset$         & {\tt psubset}    &                 \\
+ $\Subset$       & {\tt subset}        &  部分集合\\
+ $\Sconc$          & {\tt\char'136} &列の連接\\
+% $\Dinter$          & {\tt dinter}          &            \\
+% $\Dunion$          & {\tt dunion}         &             \\
+ $\Power$          & {\tt power}              & べき\\
+ \ldots$\Set$            & {\tt set of ...}      & 集合\\
+ \ldots$\Seq*$              & {\tt seq of ...}     & 列\\
+ \ldots$\Seq+$              & {\tt seq1 of ...}      & 要素数１以上の列\\
+% \ldots$\Gmap$\ldots           & {\tt map ... to ...}         &        \\
+% \ldots$\Bmap$\ldots           & {\tt inmap ... to ...}       &          \\
+ %$\Muop$           & {\tt mu}         &                  \\
+ $\Bool$           & {\tt bool}           & ブール型\\
+ $\Nat$            & {\tt nat}              &  自然数\\
+ $\Int$            & {\tt int}                & 整数\\
+ %$\Real$           & {\tt real}         &                \\
+ $\Not$            & {\tt not}              &  否定\\
+ $\Inter$          & {\tt inter}             & 共通部分\\
+ $\Union$          & {\tt union}          & 合併\\
+ $\In$             & {\tt in set}             & 帰属関係\\
+ $\Notin$          & {\tt not in set}        & 非帰属関係 \\
+ $\And$            & {\tt and}               &  連言\\
+ $\Or$             & {\tt or}                 &  選言\\
+ $\All$            & {\tt forall}              & 全称\\
+ %$\Exists$         & {\tt exists}          &             \\
+% $\Exists!$        & {\tt exists1}            &          \\
+ $\Lambdaop$       & {\tt lambda} & ラムダ\\
+% $\Iotaop$         & {\tt iota} &\\
+% $\ldots\Inverse$  & {\tt inverse ...} &\\
+% $\kWeave$         & {\tt w\_} &\\
+% $\kTraceset$      & {\tt t\_} &\\
+% $\kAlphabet$      & {\tt a\_} &\\
+\hline
+\end{tabular}
+\end{center}
+
+\section{謝辞}
+オブジェクト指向版の回帰テスト支援ライブラリは、最初に酒匂寛氏が作成し、筆者が一部修正した。本稿で使用したVDM++は、（株）CSKのVDMTools for VDM++を佐藤圭氏がMac OS Xに移植したものである。また、本稿の記述に用いた\LaTeX{}は、小川弘和氏のpTeX(sjis)+JMacros for MacOSX  Installer Packageを使用した。ここに謝意を表する。
+
+\begin{thebibliography}{9}
+
+\bibitem{Jones}
+Cliff Jones： Systematic Software Development using VDM, Prentice Hall International(1990)
+\bibitem{IFAD}
+IFAD： The IFAD VDM++ Language V6.8, IFAD(2001)
+\bibitem{Sahara2001}
+佐原伸：事務システムにおける形式仕様適用例, ソフトウェア技術者協会, ソフトウェア・シンポジウム(2001)
+\bibitem{Sahara2003}
+佐原伸：大規模事務処理システムにおける形式手法の適用経験, ソフトウェア技術者協会, ソフトウェア・シンポジウム(2003)
+\bibitem{Sahara2004}
+佐原伸：VDM++基本ライブラリの作成, ソフトウェア技術者協会, ソフトウェア・シンポジウム(2004)
+\bibitem{Fitz}
+ジョン・フィッツジェラルド，ピーター・ゴーム・ラーセン著, 荒木啓二郎，張漢明，荻野隆彦，佐原伸，染谷誠 訳：ソフトウェア開発のモデル化技法, 岩波書店(2003)
+
+\end{thebibliography}
+
+%\newpage
+%\addcontentsline{toc}{section}{Index}
+%\printindex
+
+\end{document}

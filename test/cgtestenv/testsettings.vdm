@@ -1,0 +1,17 @@
+module TESTSETTINGS
+
+imports
+
+from SETTINGS all
+
+exports all
+
+definitions
+
+operations
+
+Init : () ==> ()
+Init() ==
+  skip;
+
+end TESTSETTINGS 

@@ -1,0 +1,6 @@
+r graph-ed.vdm
+i
+tc pos
+cg
+latex graph-ed.vdm
+quit

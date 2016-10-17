@@ -1,0 +1,22 @@
+class View is subclass of JFrame
+operations 
+protected  updateView : () ==> <VOID>
+updateView() == 
+( return  <VOID>
+) ;
+
+public  View : [String] ==> View
+View(name) == 
+( let - = JFrame(name)
+  in 
+    skip ;
+  View`name := name;
+  let - = setBackground(Color`lightGray)
+  in 
+    skip 
+) ;
+
+instance variables 
+  private  name : [String]
+  
+end  View

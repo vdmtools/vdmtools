@@ -1,0 +1,80 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+
+--  A - C - E - F
+--    \   /
+--      D
+--
+-- B
+class A
+
+instance variables
+    d : char := 'd';
+
+
+functions 
+    f: () -> char
+    f () ==
+        'a'
+
+end A
+
+
+class C is subclass of A
+
+instance variables
+    public static c : char := 'c';
+
+end C
+
+class D is subclass of A
+
+instance variables
+public    c2 : char := 'd';
+
+
+end D
+
+class E is subclass of C, D
+
+operations
+
+   m: () ==> char  
+   m () ==
+        return c
+
+end E
+
+
+class F is subclass of E
+
+
+operations
+public   getc: () ==> char  
+   getc () ==
+     return E`c
+end F
+
+class B 
+
+operations 
+  public Test : () ==> char  
+  Test () ==
+     new F().getc()
+
+end B
+
+
+
+
+
+
+
+
+
+
+
+
+
+

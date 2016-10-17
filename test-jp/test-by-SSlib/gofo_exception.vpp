@@ -1,0 +1,29 @@
+/*#
+# Gofo 例外
+# $Id: gofo_exception.vpp,v 1.1 2005/11/25 07:05:38 vdmtools Exp $
+#
+class Gofo_Exception
+*/
+
+class Gofo_Exception is subclass of 『問題領域共通定義』
+
+instance variables
+public 発生エラー : [「文字列」]      := nil;
+
+operations
+
+static public 例外作成 : 「文字列」 ==> Gofo_Exception
+例外作成(aエラー内容) ==
+	let	a例外 = new Gofo_Exception(aエラー内容)	in
+	(
+	return a例外
+	);
+		
+public Gofo_Exception : 「文字列」 ==> Gofo_Exception
+Gofo_Exception(aエラー内容) == 
+	(
+	発生エラー := aエラー内容;
+	return self
+	);
+
+end Gofo_Exception

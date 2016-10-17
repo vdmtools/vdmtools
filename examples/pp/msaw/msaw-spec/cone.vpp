@@ -1,0 +1,14 @@
+class Cone
+
+   instance variables
+      centre: MSAWTypes`Coordonnees;
+      angle: MSAWTypes`Degrees := 0;
+   inv angle <= 90;
+
+   functions
+      DansCone: MSAWTypes`Coordonnees * MSAWTypes`Pieds * 
+                MSAWTypes`Coordonnees * MSAWTypes`NM * MSAWTypes`Degrees -> bool
+      DansCone (mk_(x1, y1), z1, mk_(x2, y2), rayon_au_sol, angle) ==
+         (abs(x1-x2)**2 + abs(y1-y2)**2)**0.5 <= rayon_au_sol/MSAWTypes`NMperCoordonnee
+
+end Cone

@@ -1,0 +1,96 @@
+class WorkSpace is subclass of Global
+
+types
+  GrooveType = <TJointGroove>;
+  BPLType = <TJointBPL>
+
+instance variables
+  bpl: BPL;
+
+operations
+
+-- createTJGrooveAndBead (parms: GrooveParms, groovetype: GrooveType) 
+--   value (seq of (real * real)) * (real * real) * ((real * real) * (real * real)) ==
+-- ( dcl groove : Groove,
+--       bead : Bead := new Bead();
+--   cases groovetype:
+--     <TJointGroove> -> groove := new TJointGroove()
+--   end;
+--   groove.initialise (parms);
+--   let ar_verts = groove.getArVertices() in
+--   ( bead.initialise (ar_verts, <RootBead>);
+--     let corner_seq = [ ar_verts(i).getCoord() | i in set inds ar_verts ],
+--         massmp = bead.getMassMidpoint().getCoord(),
+--         mk_VectorFrame(xcord, ycord) = bead.getBFframe() in
+--     let coordn = mk_(xcord.getCoord(), ycord.getCoord()) in
+--     return mk_(corner_seq, massmp, coordn) )
+-- );
+
+oldCreateTJointBPL: RSTPoints * QRV * BPLType ==> seq of ((seq of (real * real)) * (real * real) * ((real * real) * (real * real)))
+oldCreateTJointBPL (rst, qrv, bpltype) ==
+( dcl beads : seq of ((seq of (real * real)) * (real * real) * ((real * real) * (real * real))) := [];
+  cases bpltype:
+    <TJointBPL> -> bpl := new TJointBPL()
+  end;
+  let bead_l = bpl.createBeadPattern(rst, qrv) in
+  for bead in bead_l do
+  ( let ar_verts = bead.getVertices() in
+    let corner_seq = [ ar_verts(i).getCoord() | i in set inds ar_verts ],
+        massmp = bead.getMassMidpoint().getCoord(),
+        mk_VectorFrame(xcord, ycord) = bead.getBFframe() in
+    let coordn = mk_(xcord.getCoord(), ycord.getCoord()) in
+    beads := beads ^ [mk_(corner_seq, massmp, coordn)] );
+  return beads;
+);
+
+createTJointGroove: RSTPoints * QRV * BPLType ==> seq of (real * real) 
+createTJointGroove (rst, qrv, bpltype) ==
+( dcl groove : Groove;
+  cases bpltype:
+    <TJointBPL> -> bpl := new TJointBPL()
+  end;
+  groove := bpl.createGroove (rst, qrv);
+  let ar_verts = bpl.getGrooveCorners() in
+  let corner_seq = [ ar_verts(i).getCoord() | i in set inds ar_verts ] in
+  return corner_seq
+);
+
+--createTJointLG (crits: LayerCriteria) 
+createTJointLG: [LayerCrit] * LayerCrit * seq of LayerCrit * map LayerId to seq of LayerCrit ==>
+   seq of (seq of (real * real) * seq of ErrorMessage)
+createTJointLG (dircrit, maincrit, gencrits, speccrits) ==
+let crits = mk_LayerCriteria (dircrit,maincrit,gencrits,{|->}) in
+( dcl lgs : seq of (LayerGeom * Error) := [],
+      corners : seq of (seq of (real * real) * seq of ErrorMessage) := [];
+  lgs := bpl.constructLayers (crits);
+  for mk_(lg,err) in lgs do
+    let lgverts = lg.getVertices () in
+      corners := corners ^ [ mk_([ lgverts(i).getCoord() | i in set inds lgverts ], err.getMessages()) ];
+    return corners
+);
+
+
+--createTJointBPL (crits: BeadCriteria) 
+createTJointBPL: [BeadCrit] *  BeadCrit * seq of BeadCrit * map nat to (BeadCrit * seq of BeadCrit) ==>
+   seq of ((seq of (real * real)) * (real * real) * ((real * real) * (real * real)) * seq of ErrorMessage)
+createTJointBPL (dircrit, maincrit, gencrits, speccrit)  ==
+let speccrit' = { mk_LayerId(i) |-> let mk_(dc,spc) = speccrit(i) in mk_SpecificBeadCrit (dc,spc) |
+                  i in set dom speccrit } in
+let crits = mk_BeadCriteria(dircrit, maincrit, gencrits, speccrit') in
+( dcl beads : seq of (Bead * Error) := [],
+      bds : seq of ((seq of (real * real)) * (real * real) * ((real * real) * (real * real)) * seq of ErrorMessage) := [];
+  beads := bpl.constructBeads (crits);
+  for mk_(bead,err) in beads do
+  ( let ar_verts = bead.getVertices() in
+    let corner_seq = [ ar_verts(i).getCoord() | i in set inds ar_verts ],
+        massmp = bead.getMassMidpoint().getCoord(),
+        mk_VectorFrame(xcord, ycord) = bead.getBFframe() in
+    let coordn = mk_(xcord.getCoord(), ycord.getCoord()) in
+    bds := bds ^ [mk_(corner_seq, massmp, coordn, err.getMessages())] );
+  return bds
+);
+  
+
+
+
+end WorkSpace

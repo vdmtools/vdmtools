@@ -1,0 +1,29 @@
+/* $Id: Queue.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $ */
+-- ‘Ò‚¿s—ñ(Queue)
+class Queue
+
+functions
+static public empty[@Œ^] : () -> seq of @Œ^
+empty() == [];
+
+static public isEmpty[@Œ^] : seq of @Œ^ -> bool
+isEmpty(s) == s = [];
+	
+static public enQueue[@Œ^] : @Œ^ * seq of @Œ^ -> seq of @Œ^
+enQueue(‚ ‚é—v‘f, ‚ ‚é‘Ò‚¿s—ñ) == ‚ ‚é‘Ò‚¿s—ñ ^ [‚ ‚é—v‘f];
+
+static public deQueue[@Œ^] : seq of @Œ^ -> seq of @Œ^
+deQueue(‚ ‚é‘Ò‚¿s—ñ) == 
+	if ‚ ‚é‘Ò‚¿s—ñ = [] then
+		[]
+	else
+		tl ‚ ‚é‘Ò‚¿s—ñ;
+
+static public top[@Œ^] : seq of @Œ^ -> [@Œ^]
+top(‚ ‚é‘Ò‚¿s—ñ) == 
+	if ‚ ‚é‘Ò‚¿s—ñ = [] then
+		nil
+	else
+		hd ‚ ‚é‘Ò‚¿s—ñ;
+
+end Queue

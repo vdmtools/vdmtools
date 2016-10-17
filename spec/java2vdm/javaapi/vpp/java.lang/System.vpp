@@ -1,0 +1,261 @@
+class JavaLangSystem -- is subclass of JavaLangObject
+values 
+  dummy : <VOID> = initializeSystemClass();
+--  CLASS : JavaLangClass = new  JavaLangClass("JavaLangSystem" , <CLASS> , false  )
+instance variables 
+--  public  static in__ : JavaIoInputStream := nullInputStream();
+--  public  static out : JavaIoPrintStream := getOutStream(); -- new JavaIoPrintStream();
+--  public  static err : JavaIoPrintStream := getErrStream(); -- new JavaIoPrintStream();
+--  private  static security : SecurityManager := new  SecurityManager(<NIL>);
+  private  static props : JavaUtilProperties:= new JavaUtilProperties(<NIL>);
+
+  static public  out : JavaIoPrintStream := new  JavaIoPrintStream(new  JavaIoFileOutputStream("stdout", true) , true  );
+  static public  err : JavaIoPrintStream := new  JavaIoPrintStream(new  JavaIoFileOutputStream("stderr", true ), true  );
+--  public  err : JavaIoPrintStream := new  JavaIoPrintStream(new  JavaIoBufferedOutputStream(new  JavaIoFileOutputStream(new JavaLangString("stderr")) , 128) , true  );
+
+operations 
+
+--public  getClass : () ==> JavaLangClass
+--getClass() == 
+--return  CLASS;
+
+public  static gc : () ==> ()
+gc() == 
+is not yet specified ;
+
+public  JavaLangSystem : () ==> JavaLangSystem
+JavaLangSystem() == 
+( skip 
+) ;
+
+private  static checkIO : () ==> ()
+checkIO() == 
+is not yet specified ;
+
+public  static exit__ : int  ==> ()
+exit__(status) == 
+  let - = 1/0 in skip;
+
+--public  JavaLangSystem : <NIL> ==> JavaLangSystem
+--JavaLangSystem(-) == 
+--isNil := true  ;
+
+public  static load : JavaLangString ==> ()
+load(filename) == 
+is not yet specified ;
+
+public  static getProperties : () ==> JavaUtilProperties
+getProperties() == 
+  return props ;
+
+static getCallerClass : () ==> JavaLangClass
+getCallerClass() == 
+is not yet specified ;
+
+public  static getenv : JavaLangString ==> JavaLangString
+getenv(name) == 
+is not yet specified ;
+
+public  static runFinalization : () ==> ()
+runFinalization() == 
+is not yet specified ;
+
+public  static currentTimeMillis : () ==> int 
+currentTimeMillis() == 
+  return 0 ;
+
+--public  static getSecurityManager : () ==> SecurityManager
+--getSecurityManager() ==
+--is not yet specified ;
+
+--public  static setIn : JavaIoInputStream ==> ()
+--setIn(in__) == 
+--( checkIO();
+--  setIn0(in__);
+--  skip 
+--) ;
+
+public  static getProperty : JavaLangString ==> JavaLangString
+getProperty(key) == 
+--  return new JavaLangString(<NIL>);
+( if  key.IsNil()
+  then  
+    ( exit  new  JavaLangNullPointerException(new  JavaLangString("key can't be null"))
+    ) ;
+  if  key.equals(new  JavaLangString([  ]))
+  then  
+    ( exit  new  JavaLangIllegalArgumentException(new  JavaLangString("key can't be empty"))
+    ) ;
+--  if  not  security.IsNil()
+--  then  
+--    ( security.checkPropertyAccess(key)
+--    ) ;
+  return  props.getProperty(key)
+) ;
+
+public  static loadLibrary : JavaLangString ==> ()
+loadLibrary(libname) == 
+is not yet specified ;
+
+--public  static setErr : JavaIoPrintStream ==> ()
+--setErr(err) == 
+--( checkIO();
+--  setErr0(err);
+--  skip 
+--) ;
+
+--private  static setIn0 : JavaIoInputStream ==> ()
+--setIn0(in__) == 
+--is not yet specified ;
+
+--public  static setOut : JavaIoPrintStream ==> ()
+--setOut(out) == 
+--( checkIO();
+--  setOut0(out);
+--  skip 
+--) ;
+
+public  static runFinalizersOnExit : bool  ==> ()
+runFinalizersOnExit(value__) == 
+is not yet specified ;
+
+--private  static setErr0 : JavaIoPrintStream ==> ()
+--setErr0(err) == 
+--JavaIoPrintStream`err:=err;
+
+--private  static setOut0 : JavaIoPrintStream ==> ()
+--setOut0(out) == 
+--JavaIoPrintStream`out:=out;
+
+private  static initProperties : JavaUtilProperties ==> ()
+initProperties(p) ==
+( let - = p.put(new  JavaLangString("user.dir"), new  JavaLangString("./")) in skip;
+);
+
+private  static initializeSystemClass : () ==> <VOID>
+initializeSystemClass() == 
+(
+  props := new  JavaUtilProperties();
+  initProperties(props);
+--  (
+--    dcl
+--        fdIn : JavaIoFileInputStream := new  JavaIoFileInputStream(JavaIoFileDescriptor`in__),
+--        fdOut : JavaIoFileOutputStream := new  JavaIoFileOutputStream(new JavaLangString("stdout")), -- (JavaIoFileDescriptor`out),
+--        fdErr : JavaIoFileOutputStream := new  JavaIoFileOutputStream(new JavaLangString("stderr")); -- (JavaIoFileDescriptor`err),
+--      setIn0(new  JavaIoBufferedInputStream(fdIn));
+--      setOut0(new  JavaIoPrintStream(new  JavaIoBufferedOutputStream(fdOut , 128) , true  ));
+--      setErr0(new  JavaIoPrintStream(new  JavaIoBufferedOutputStream(fdErr , 128) , true  ))
+--      setOut0(new  JavaIoPrintStream(fdOut, true  ));
+--      setErr0(new  JavaIoPrintStream(fdErr, true  ));
+--        skip
+--  ) ;
+--  skip 
+  return <VOID>
+) ;
+
+private  static nullPrintStream : () ==> JavaIoPrintStream
+nullPrintStream() ==
+ return new JavaIoPrintStream(<NIL>);
+
+private static getOutStream : () ==> JavaIoPrintStream
+getOutStream () ==
+( let s=new JavaLangString("stdout"),
+      f=new  JavaIoFileOutputStream(s,true),
+      o=new  JavaIoPrintStream(f,true)
+  in
+    return o;
+);
+
+private  static getErrStream : () ==> JavaIoPrintStream
+getErrStream () ==
+( let s=new JavaLangString("stderr"),
+      f=new  JavaIoFileOutputStream(s,true),
+      o=new  JavaIoPrintStream(f,true)
+  in
+    return o;
+);
+
+public  static mapLibraryName : JavaLangString ==> JavaLangString
+mapLibraryName(libname) == 
+is not yet specified ;
+
+public  static identityHashCode : JavaLangObject ==> int 
+identityHashCode(x) == 
+is not yet specified ;
+
+--public  static setProperties : JavaUtilProperties ==> ()
+--setProperties(props) == 
+--( if  not  security.IsNil()
+--  then  
+--    ( security.checkPropertiesAccess()
+--    ) ;
+--  if  props.IsNil()
+--  then  
+--    ( props := new  JavaUtilProperties();
+--      let - = initProperties(props)
+--      in 
+--        skip 
+--    ) ;
+--  JavaLangSystem`props := props;
+-- skip 
+--) ;
+
+public  static getProperty : JavaLangString * JavaLangString ==> JavaLangString
+getProperty(key, def__) == 
+is not yet specified ;
+--( if  key.IsNil()
+--  then  
+--    ( exit  new  JavaLangNullPointerException(new  JavaLangString("key can't be null"))
+--    ) ;
+--  if  key.equals(new  JavaLangString([  ]))
+--  then  
+--    ( exit  new  JavaLangIllegalArgumentException(new  JavaLangString("key can't be empty"))
+--    ) ;
+--  if  not  security.IsNil()
+--  then  
+--    ( security.checkPropertyAccess(key)
+--    ) ;
+--  return  props.getProperty(key , def__)
+--) ;
+
+public  static setProperty : JavaLangString * JavaLangString ==> JavaLangString
+setProperty(key, value__) == 
+is not yet specified ;
+--( if  key.IsNil()
+--  then  
+--    ( exit  new  JavaLangNullPointerException(new  JavaLangString("key can't be null"))
+--    ) ;
+--  if  key.equals(new  JavaLangString([  ]))
+--  then  
+--    ( exit  new  JavaLangIllegalArgumentException(new  JavaLangString("key can't be empty"))
+--    ) ;
+--  if  not  security.IsNil()
+--  then  
+--   security.checkPermission(new  PropertyPermission(key , new  JavaLangString("write")));
+--  return  props.setProperty(key , value__)
+--) ;
+
+--public  static arraycopy : JavaLangObject * int  * JavaLangObject * int  * int  ==> ()
+--arraycopy(src, src_position, dst, dst_position, length) == 
+--is not yet specified ;
+
+--public  static setSecurityManager : SecurityManager ==> ()
+--setSecurityManager(s) == 
+--( trap  j2v_exception with  
+--    cases  true  : 
+--      (isofclass  (JavaLangException,j2v_exception) or  j2v_exception.IsNil()) -> 
+--        ( dcl   e : JavaLangException := j2v_exception;
+--          skip 
+--        ) ,
+--      others  -> 
+--        exit  j2v_exception
+--    end  
+--  in  
+--    ( s.checkPackageAccess(new  JavaLangString("java.lang"))
+--    ) ;
+--  setSecurityManager0(s);
+--  skip 
+--) ;
+
+
+end  JavaLangSystem

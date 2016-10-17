@@ -1,0 +1,97 @@
+dlclass JavaSqlDriverManager is subclass of JavaLangObject
+uselib "j2vdll.so"
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaSqlDriverManager" , <CLASS> , false  )
+--instance variables 
+--  static SET_LOG_PERMISSION : SQLPermission 
+operations 
+
+JavaSqlDriverManager: <NIL> ==> JavaSqlDriverManager
+JavaSqlDriverManager(-) ==
+isNil:=true;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+--public  static getDrivers : () ==> JavaUtilEnumeration
+--getDrivers() == 
+--is not yet specified ;
+
+static initialize : () ==> ()
+initialize() == 
+is not yet specified ;
+
+--public  static getLogStream : () ==> JavaIoPrintStream
+--getLogStream() == 
+--is not yet specified ;
+
+--public  static getLogWriter : () ==> JavaIoPrintWriter
+--getLogWriter() == 
+--is not yet specified ;
+
+--public  static getLoginTimeout : () ==> int 
+--getLoginTimeout() == 
+--is not yet specified ;
+
+--public  static println : JavaLangString ==> ()
+--println(message) == 
+--is not yet specified ;
+
+--public  static setLoginTimeout : int  ==> ()
+--setLoginTimeout(seconds) == 
+--is not yet specified ;
+
+--public  static getDriver : JavaLangString ==> Driver
+--getDriver(url) == 
+--is not yet specified ;
+
+--public  JavaSqlDriverManager : <NIL> ==> JavaSqlDriverManager
+--JavaSqlDriverManager(-) == 
+--isNil := true  ;
+
+public  static getConnection : JavaLangString ==> JavaSqlConnection
+getConnection(url) == 
+  return new JavaSqlDriverManager().getConnection'(url);
+
+private getConnection' : JavaLangString ==> JavaSqlConnection
+getConnection'(url) == 
+is not yet specified ;
+
+--public  static registerDriver : Driver ==> ()
+--registerDriver(driver) == 
+--is not yet specified ;
+
+--public  static deregisterDriver : Driver ==> ()
+--deregisterDriver(driver) == 
+--is not yet specified ;
+
+--public  static setLogStream : JavaIoPrintStream ==> ()
+--setLogStream(out) == 
+--is not yet specified ;
+
+--public  static setLogWriter : JavaIoPrintWriter ==> ()
+--setLogWriter(out) == 
+--is not yet specified ;
+
+--public  static getConnection : JavaLangString * JavaUtilProperties ==> JavaSqlConnection
+--getConnection(url, info) == 
+--is not yet specified ;
+
+public  static getConnection : JavaLangString * JavaLangString * JavaLangString ==> JavaSqlConnection
+getConnection(url, user, password) == 
+( let mk_(errCode,sqlState,reason,connect) = new JavaSqlDriverManager().getConnection'''(url, user, password)
+  in
+    if connect<>nil
+    then return connect
+    else
+      exit new JavaSqlSQLException(new JavaLangString(reason),new JavaLangString(sqlState),errCode)
+);
+
+private getConnection''' :
+  JavaLangString * JavaLangString * JavaLangString
+  ==> int * seq of char * seq of char * [SqlConnection]
+getConnection'''(url, user, password) == 
+is not yet specified ;
+
+end  JavaSqlDriverManager

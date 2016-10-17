@@ -1,0 +1,8 @@
+When dynamic type check:
+Initializing specification ...
+RETURN_VAL
+
+whileloop-01.arg, l. 16, c. 3:
+
+  Run-Time Error 202: Incompatible return type in function or operation application
+  actual value: + error 105 whileloop-01

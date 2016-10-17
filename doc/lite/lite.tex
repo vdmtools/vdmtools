@@ -1,0 +1,995 @@
+\documentclass[11pt]{article}
+\usepackage{toolbox,vdmsl-2e,alltt,graphics,makeidx}
+\usepackage{ifthen}
+\usepackage{verbatimfiles}
+\usepackage[dvips]{color}
+\usepackage{longtable}
+\usepackage{float}
+
+
+\newcommand{\vdmslpp}[2]{%
+#1
+}
+
+
+
+\newcommand{\Lit}[1]{`{\tt #1}\Quote}
+\newcommand{\Rule}[2]{
+  \begin{quote}\begin{tabbing}
+    #1\index{#1}\ \ \= = \ \ \= #2  ; %    Adds production rule to index
+    
+  \end{tabbing}\end{quote}
+  }
+\newcommand{\SeqPt}[1]{\{\ #1\ \}}
+\newcommand{\lfeed}{\\ \> \>}
+\newcommand{\dsepl}{\ $|$\ }
+\newcommand{\dsep}{\\ \> $|$ \>}
+\newcommand{\Lop}[1]{`{\sf #1}\Quote}
+\newcommand{\blankline}{\vspace{\baselineskip}}
+\newcommand{\Brack}[1]{(\ #1\ )}
+\newcommand{\nmk}{\footnotemark}
+\newcommand{\ntext}[1]{\footnotetext{{\bf Note: } #1}}
+\newlength{\kwlen}
+\newcommand{\Keyw}[1]{\settowidth{\kwlen}{\tt #1}\makebox[\kwlen][l]{\sf
+    #1}}
+\newcommand{\keyw}[1]{{\sf #1}}
+\newcommand{\id}[1]{{\tt #1}}
+\newcommand{\metaiv}[1]{\begin{alltt}\input{#1}\end{alltt}}
+
+\newcommand{\OptPt}[1]{[\ #1\ ]}
+\newcommand{\MAP}[2]{\kw{map }#1\kw{ to }#2}
+\newcommand{\INMAP}[2]{\kw{inmap }#1\kw{ to }#2}
+\newcommand{\SEQ}[1]{\kw{seq of }#1}
+\newcommand{\NSEQ}[1]{\kw{seq1 of }#1}
+\newcommand{\SET}[1]{\kw{set of }#1}
+\newcommand{\PROD}[2]{#1 * #2}
+\newcommand{\TO}[2]{$#1 \To #2$}
+\newcommand{\FUN}[2]{#1 \To #2}
+
+
+\newcommand{\MYEQUIV}{$\equiv$}
+\newlength{\nonstandlen}
+\newcommand{\nonstandard}[1]{%
+\setlength{\nonstandlen}{#1\baselineskip}%
+  \marginpar{\hspace*{-3mm}\raisebox{\nonstandlen}[0pt][0pt]{\fbox{{\footnotesize Non standard}}}}%
+}
+\newenvironment{TypeSemantics}{\begin{longtable}[r]{|p{3.5cm}|p{9cm}|}\hline%
+  Operator Name & Semantics Description \\ \hline\hline \endhead}% 
+  {\hline\end{longtable}}
+
+
+
+
+
+
+
+
+
+\makeindex
+
+\newcommand{\Index}[1]{#1\index{#1}}
+
+
+\parindent0mm
+
+\newcommand{\xfigpicture}[4]{
+\begin{figure}[hbt]
+\setlength{\unitlength}{1mm}
+\begin{center}
+\mbox{
+\begin{picture}(#1,#2)
+\put(0,0){\special{psfile=#3 hscale=70 vscale=55}}
+\end{picture} }
+\end{center}
+\caption{#4}
+\end{figure}
+}
+
+\newcommand{\dest}[1]{\hfill{\fbox{\bf#1}}}
+
+\begin{document}
+\docdef{The IFAD VDM-SL Lite Toolbox}
+         {The VDM Tool Group\\
+          IFAD}
+         {November, 1997}
+         {IFAD-VDM-55}
+         {Report}
+         {Draft}
+         {Confidential}
+         {\copyright IFAD 1997}
+         {\item[V1.0] First version.}
+
+\pagenumbering{roman}
+\tableofcontents
+%\newpage
+%\mbox{}
+\newpage
+\pagenumbering{arabic}
+\parskip2mm
+
+
+\newcommand{\lite}{{\em Lite Toolbox}}
+
+\section{Introduction} \label{introduction}
+
+This document describes the restrictions of the {\em IFAD VDM-SL Lite
+  Toolbox}, hereafter called the {\em Lite Toolbox}. This document
+serves as documentation of the Lite Toolbox for IFAD internally.
+
+
+The Lite Toolbox is a restricted version of the IFAD VDM-SL Toolbox.
+The restrictions are listed below:
+\begin{itemize}
+\item It only supports a subset of the VDM Specification Language. The
+  subset is described in Section~\ref{sec:subset}.
+\item There is a limit on specification size it can handle. This
+  restriction is described in Section~\ref{sec:size}.
+\item Restrictions on the tools:
+  \begin{itemize}
+    \item Interpreter: No restrictions.
+    \item Type Checker: The {\em def} option is not supported.
+    \item Code generator: Not supported.
+    \item Dynamic Link: Not supported.
+    \item Pretty Printer: Not supported.
+  \end{itemize}
+\end{itemize}
+
+\section{Limitation on Specification Size}\label{sec:size}
+
+The \lite\ only supports specifications with less than:
+\begin{itemize}
+\item 21 function definitions, and
+\item 11 implicit operation definitions.
+\end{itemize}
+
+
+If one parses a file that exceeds the limitations, the file is read
+and a warning is given. If this happens it will not be possible to
+interprete or type check the specification (error messages that the
+limititation has been exceeded are written to the log window).
+
+\section{The VDM-SL subset supported}\label{sec:subset}
+
+The supported subset of the VDM-SL is described in
+Appendix~\ref{subset_bnf}.
+
+Below is given a list of main constructs that are not supported:
+\begin{itemize}
+\item modules,
+\item explicit operations, extended explicit operations,
+\item all statements,
+\item extended explicit functions,
+\item expression as: iota, lambda, function type instantiations,
+  undefined, def, local definitions, floor, power, map inverse, rem,
+  mod, proper subset, num exp, compose, record modifier.
+\end{itemize}
+
+
+\appendix
+
+\section{The Syntax of the VDM-SL subset supported}\label{subset_bnf}
+
+
+\Rule{document}{
+   definition block, \SeqPt{definition block}
+  }
+
+
+\subsection{Definitions}
+
+\Rule{definition block}{
+  type definitions \dsep
+  state definition \dsep
+  value definitions \dsep
+  function definitions
+  \dsep
+  operation definitions
+  }
+
+
+\subsubsection{Type Definitions}
+\label{mathCSTypeDefs}
+
+\Rule{type definitions}{
+  \Lop{types}, type definition, \lfeed
+  \SeqPt{\Lit{;}, type definition}, \OptPt{\Lit{;}}
+  }%
+  \nonstandard{1}
+
+\Rule{type definition}{
+  identifier, \Lit{=}, type, \OptPt{invariant} \dsep
+  identifier, \Lit{::}, field list, \OptPt{invariant}
+  }
+
+\Rule{type}{
+  bracketed type \dsep
+  basic type \dsep
+  quote type \dsep
+  union type \dsep
+  product type \dsep
+  optional type \dsep
+  set type \dsep
+  seq type \dsep
+  map type \dsep
+  partial function type \dsep
+  type name
+  }
+
+\Rule{bracketed type}{
+  \Lit{(}, type, \Lit{)}
+  }
+
+\Rule{basic type}{
+  \Lop{bool} \dsepl
+  \Lop{nat} \dsepl
+  \Lop{nat1} \dsepl
+  \Lop{int} \dsepl
+  \Lop{real} \dsepl
+  \Lop{char} \dsepl
+  \Lop{token} 
+  }
+
+\Rule{quote type}{
+  quote literal
+  }
+
+
+\Rule{field list}{
+  \SeqPt{field}
+  }
+
+\Rule{field}{
+  \OptPt{identifier, \Lit{:}}, type
+  }
+
+\Rule{union type}{
+  type, \Lit{|}, type, \SeqPt{\Lit{|}, type}
+  }
+
+\Rule{product type}{
+  type, \Lit{*}, type, \SeqPt{\Lit{*}, type}
+  }
+
+\Rule{optional type}{
+  \Lit{[}, type, \Lit{]}
+  }
+
+\Rule{set type}{
+  \Lop{set of}, type
+  }
+
+\Rule{seq type}{
+  seq0 type 
+  }
+
+\Rule{seq0 type}{
+  \Lop{seq of}, type
+  }
+
+\Rule{seq1 type}{
+  \Lop{seq1 of}, type
+  }
+
+\Rule{map type}{
+  general map type
+  }
+
+\Rule{general map type}{
+  \Lop{map}, type, \Lop{to}, type
+  }
+
+
+\Rule{function type}{
+  partial function type 
+  }
+
+\Rule{partial function type}{
+  discretionary type, \Lit{->}, type
+  }
+
+\Rule{discretionary type}{
+  type \dsep
+  \Lit{(}, \Lit{)}
+  }
+
+\Rule{type name}{
+  name
+  }
+
+\subsubsection{The State Definition}
+
+\Rule{state definition}{
+  \Lop{state}, identifier, \Lop{of}, field list, \lfeed
+  \OptPt{invariant}, \OptPt{initialisation}, \Lop{end}, \OptPt{\Lit{;}}
+  }\nonstandard{1}
+\Rule{invariant}{
+  \Lop{inv}, invariant initial function
+  }
+
+\Rule{initialisation}{
+  \Lop{init}, invariant initial function
+  }
+
+\Rule{invariant initial function}{
+  pattern, \Lit{==}, expression
+  }
+
+
+\subsubsection{Function Definitions}\label{functiondef2}
+
+\Rule{function definitions}{
+  \Lop{functions}, function definition, \lfeed
+  \SeqPt{\Lit{;}, function definition}, \OptPt{\Lit{;}}
+  }
+  \nonstandard{1}
+
+\Rule{function definition}{
+  explicit function definition \dsep
+  implicit function definition
+  }%
+
+  \nonstandard{1}
+
+
+\Rule{explicit function definition}{
+  identifier,
+  \Lit{:}, function type, \lfeed
+  identifier, parameters list, \lfeed
+  \Lit{==}, expression, \lfeed
+  \OptPt{\Lop{pre}, expression}
+    , \lfeed \OptPt{\Lop{post}, expression}
+  }
+  \nonstandard{1}
+
+\Rule{implicit function definition}{
+  identifier, \OptPt{type variable \vdmslpp{list}{}}, \lfeed 
+  parameter types , identifier type pair list, \lfeed
+  \OptPt{\Lop{pre}, expression}, \lfeed
+  \Lop{post}, expression
+  }
+
+
+
+\Rule{identifier type pair}{
+  identifier, \Lit{:}, type
+  }
+
+\Rule{parameter types}{
+  \Lit{(}, \OptPt{pattern type pair list}, \Lit{)}
+  }
+
+\Rule{identifier type pair list}{
+  identifier, \Lit{:}, type, \lfeed
+  \SeqPt{\Lit{,}, identifier, \Lit{:}, type}
+}
+
+\Rule{pattern type pair list}{
+  pattern list, \Lit{:}, type, \SeqPt{\Lit{,}, pattern list,\Lit{:}, type}
+  }
+
+\Rule{parameters list}{
+  parameters
+  }
+
+\Rule{parameters}{
+  \Lit{(}, \OptPt{pattern list}, \Lit{)}
+  }
+
+
+
+
+\subsubsection{Operation Definitions}\label{op-def2}
+
+\Rule{operation definitions}{
+  \Lop{operations}, operation definition, \lfeed
+  \SeqPt{\Lit{;}, operation definition}, \OptPt{\Lit{;}}
+  }\nonstandard{1}
+
+\Rule{operation definition}{
+  implicit operation definition 
+  }\nonstandard{1}
+
+\Rule{implicit operation definition}{
+  identifier, parameter types,
+  \OptPt{identifier type pair list}, \lfeed
+  \OptPt{externals}, \lfeed
+  \OptPt{\Lop{pre}, expression}, \lfeed
+  \Lop{post}, expression, \lfeed
+  \OptPt{exceptions}
+  }
+
+
+\Rule{externals}{
+  \Lop{ext}, var information, \SeqPt{var information}
+  }
+
+\Rule{var information}{
+  mode, name list, \OptPt{\Lit{:}, type}
+  }
+
+\Rule{mode}{
+  \Lop{rd} \dsepl \Lop{wr}
+  }
+
+
+
+\subsection{Expressions}
+
+\Rule{expression list}{
+  expression, \SeqPt{\Lit{,}, expression}
+  }
+
+\Rule{expression}{
+  bracketed expression \dsep
+  let expression \dsep
+  let be expression \dsep
+  if expression \dsep
+  cases expression \dsep
+  unary expression \dsep
+  binary expression \dsep
+  quantified expression \dsep
+  set enumeration \dsep
+  set comprehension \dsep
+  set range expression \dsep
+  sequence enumeration \dsep
+  sequence comprehension \dsep
+  subsequence \dsep
+  map enumeration \dsep
+  map comprehension \dsep
+  tuple constructor \dsep
+  record constructor \dsep 
+  apply \dsep
+  field select \dsep
+  is expression \dsep
+  name \dsep
+  old name  \dsep
+  symbolic literal % \dsep
+%  input expression
+}%
+\nonstandard{4}
+%\marginpar{\vspace*{-53mm}\hspace*{-3mm}\fbox{{\footnotesize Non standard}}\vspace*{53mm}}%
+%\marginpar{\vspace*{-25mm}\hspace*{-3mm}\fbox{{\footnotesize Non standard}}\vspace*{25mm}}%
+%\marginpar{\vspace*{-23mm}\hspace*{-3mm}\fbox{{\footnotesize Non standard}}\vspace*{23mm}}
+
+
+\subsubsection{Bracketed Expressions}
+
+\Rule{bracketed expression}{
+  \Lit{(}, expression, \Lit{)}
+  }
+
+\subsubsection{Local Binding Expressions}
+
+\Rule{let expression}{
+  \Lop{let}, local definition,
+   \SeqPt{\Lit{,}, local definition}, \lfeed
+  \Lop{in}, expression
+  }
+
+\Rule{local definition}{
+  value definition 
+  }
+
+
+\Rule{let be expression}{
+  \Lop{let}, bind,
+  \OptPt{\Lop{be}, \Lop{st}, expression}, \Lop{in}, expression
+  }
+
+
+\subsubsection{Conditional Expressions}
+
+\Rule{if expression}{
+  \Lop{if}, expression, \Lop{then}, expression,
+  \SeqPt{elseif expression}, \lfeed
+  \Lop{else}, expression
+  }
+
+\Rule{elseif expression}{
+  \Lop{elseif}, expression, \Lop{then}, expression
+  }
+
+\Rule{cases expression}{
+  \Lop{cases}, expression, \Lit{:}, 
+  cases expression alternatives, \lfeed
+  \OptPt{\Lit{,}, others expression}, \Lop{end}
+  }
+
+\Rule{cases expression alternatives}{
+  cases expression alternative, \lfeed
+  \SeqPt{\Lit{,}, cases expression alternative}
+  }
+
+\Rule{cases expression alternative}{
+  pattern list, \Lit{->}, expression
+  }
+
+\Rule{others expression}{
+  \Lop{others}, \Lit{->}, expression
+  }
+
+\subsubsection{Unary Expressions}
+
+\Rule{unary expression}{
+  prefix expression
+  }
+
+\Rule{prefix expression}{
+  unary operator, expression
+  }
+
+\Rule{unary operator}{
+  unary plus \dsep
+  unary minus \dsep
+  arithmetic abs \dsep
+  not \dsep
+  set cardinality \dsep
+  finite power set \dsep
+  distributed set union \dsep
+  distributed set intersection \dsep
+  sequence head \dsep
+  sequence tail \dsep
+  sequence length \dsep
+  sequence elements \dsep
+  sequence indices \dsep
+  distributed sequence concatenation \dsep
+  map domain \dsep
+  map range \dsep
+  distributed map merge
+  }
+
+\Rule{unary plus}{
+  \Lit{+}
+  }
+
+\Rule{unary minus}{
+  \Lit{-}
+  }
+
+\Rule{arithmetic abs}{
+  \Lop{abs}
+  }
+
+\Rule{floor}{
+  \Lop{floor}
+  }
+
+\Rule{not}{
+  \Lop{not}
+  }
+
+\Rule{set cardinality}{
+  \Lop{card}
+  }
+
+
+\Rule{distributed set union}{
+  \Lop{dunion}
+  }
+
+\Rule{distributed set intersection}{
+  \Lop{dinter}
+  }
+
+\Rule{sequence head}{
+  \Lop{hd}
+  }
+
+\Rule{sequence tail}{
+  \Lop{tl}
+  }
+
+\Rule{sequence length}{
+  \Lop{len}
+  }
+
+\Rule{sequence elements}{
+  \Lop{elems}
+  }
+
+\Rule{sequence indices}{
+  \Lop{inds}
+  }
+
+\Rule{distributed sequence concatenation}{
+  \Lop{conc}
+  }
+
+\Rule{map domain}{
+  \Lop{dom}
+  }
+
+\Rule{map range}{
+  \Lop{rng}
+  }
+
+\Rule{distributed map merge}{
+  \Lop{merge}
+  }
+
+\Rule{map inverse}{
+  \Lop{inverse}, expression
+  }
+
+\subsubsection{Binary Expressions}
+
+\Rule{binary expression}{
+  expression, binary operator, expression
+  }
+
+\Rule{binary operator}{
+  arithmetic plus \dsep
+  arithmetic minus \dsep
+  arithmetic multiplication \dsep
+  arithmetic divide \dsep
+  arithmetic integer division \dsep
+  arithmetic mod \dsep
+  less than \dsep
+  less than or equal \dsep
+  greater than \dsep
+  greater than or equal \dsep
+  equal \dsep
+  not equal \dsep
+  or \dsep
+  and \dsep
+  imply \dsep
+  logical equivalence \dsep
+  in set \dsep
+  not in set \dsep
+  subset \dsep
+  set union \dsep
+  set difference \dsep
+  set intersection \dsep
+  sequence concatenate \dsep
+  map or sequence modify \dsep
+  map merge \dsep
+  map domain restrict to \dsep
+  map domain restrict by \dsep
+  map range restrict to \dsep
+  map range restrict by 
+}
+
+\Rule{arithmetic plus}{
+  \Lit{+}
+  }
+
+\Rule{arithmetic minus}{
+  \Lit{-}
+  }
+
+\Rule{arithmetic multiplication}{
+  \Lit{*}
+  }
+
+\Rule{arithmetic divide}{
+  \Lit{/}
+  }
+
+\Rule{arithmetic integer division}{
+  \Lop{div}
+  }
+
+
+\Rule{arithmetic mod}{
+  \Lop{mod}
+  }
+
+\Rule{less than}{
+  \Lit{<}
+  }
+
+\Rule{less than or equal}{
+  \Lit{<=}
+  }
+
+\Rule{greater than}{
+  \Lit{>}
+  }
+
+\Rule{greater than or equal}{
+  \Lit{>=}
+  }
+
+\Rule{equal}{
+  \Lit{=}
+  }
+
+\Rule{not equal}{
+  \Lit{<>}
+  }
+
+
+\Rule{or}{
+  \Lop{or}
+  }
+
+\Rule{and}{
+  \Lop{and}
+  }
+
+\Rule{imply}{
+  \Lit{=>}
+  }
+
+\Rule{logical equivalence}{
+  \Lit{<=>}
+  }
+
+\Rule{in set}{
+  \Lop{in set}
+  }
+
+\Rule{not in set}{
+  \Lop{not in set}
+  }
+
+\Rule{subset}{
+  \Lop{subset}
+  }
+
+\Rule{proper subset}{
+  \Lop{psubset}
+  }
+
+\Rule{set union}{
+  \Lop{union}
+  }
+
+\Rule{set difference}{
+  \Lit{\char'134}
+  }
+
+\Rule{set intersection}{
+  \Lop{inter}
+  }
+
+\Rule{sequence concatenate}{
+  \Lit{\char'136}
+  }
+
+\Rule{map or sequence modify}{
+  \Lit{++}
+  }
+
+\Rule{map merge}{
+  \Lop{munion}
+  }
+
+\Rule{map domain restrict to}{
+  \Lit{<:}
+  }
+
+\Rule{map domain restrict by}{
+  \Lit{<-:}
+  }
+
+\Rule{map range restrict to}{
+  \Lit{:>}
+  }
+
+\Rule{map range restrict by}{
+  \Lit{:->}
+  }
+
+\Rule{composition}{
+  \Lop{comp}
+  }
+
+\Rule{iterate}{
+  \Lit{**}
+  }
+
+\subsubsection{Quantified Expressions}
+
+\Rule{quantified expression}{
+  all expression \dsep
+  exists expression \dsep
+  exists unique expression
+  }
+
+\Rule{all expression}{
+  \Lop{forall}, bind list, \Lit{\&}, expression
+  }
+
+\Rule{exists expression}{
+  \Lop{exists}, bind list, \Lit{\&}, expression
+  }
+
+\Rule{exists unique expression}{
+  \Lop{exists1}, bind, \Lit{\&}, expression
+  }
+
+
+\subsubsection{Set Expressions}
+
+\Rule{set enumeration}{
+  \Lit{\{}, \OptPt{expression list}, \Lit{\}}
+  }
+
+\Rule{set comprehension}{
+  \Lit{\{}, expression, \Lit{|}, bind list, \OptPt{\Lit{\&}, expression},
+  \Lit{\}}
+  }
+
+\Rule{set range expression}{
+  \Lit{\{}, expression, \Lit{,}, \Lit{\Range}, \Lit{,}, expression,
+  \Lit{\}}
+  }
+
+\subsubsection{Sequence Expressions}
+
+\Rule{sequence enumeration}{
+  \Lit{[}, \OptPt{expression list}, \Lit{]}
+  }
+
+\Rule{sequence comprehension}{
+  \Lit{[}, expression, \Lit{|}, set bind, \OptPt{\Lit{\&}, expression},
+  \Lit{]}
+  }
+
+\Rule{subsequence}{
+  expression, \Lit{(}, expression, \Lit{,}, \Lit{\Range}, \Lit{,},
+  expression, \Lit{)} 
+  }
+
+\subsubsection{Map Expressions}
+
+\Rule{map enumeration}{
+  \Lit{\{}, maplet, \SeqPt{\Lit{,}, maplet}, \Lit{\}} \dsep
+  \Lit{\{}, \Lit{|->}, \Lit{\}}
+  }
+
+\Rule{maplet}{
+  expression, \Lit{|->}, expression
+  }
+
+\Rule{map comprehension}{
+  \Lit{\{}, maplet, \Lit{|}, bind list, \OptPt{\Lit{\&}, expression},
+  \Lit{\}}
+  }
+
+\subsubsection{The Tuple Constructor Expression}
+
+\Rule{tuple constructor}{
+  \Lit{mk\_}, \Lit{(}, expression, expression list, \Lit{)}
+  }
+
+\subsubsection{Record Expressions}
+
+\Rule{record constructor}{
+  \Lop{mk\_},\nmk name, \Lit{(}, \OptPt{expression list}, \Lit{)}
+  }
+\ntext{no delimiter is allowed}
+
+
+\Rule{record modification}{
+  identifier, \Lit{|->}, expression
+  }
+
+\subsubsection{Apply Expressions}
+
+\Rule{apply}{
+  expression, \Lit{(}, \OptPt{expression list}, \Lit{)}
+  }
+
+\Rule{field select}{
+  expression, \Lit{.}, identifier
+  }
+
+  
+\subsubsection{The Is Expression}
+
+\Rule{is expression}{
+  \Lit{is\_},\nmk name, \Lit{(}, expression, \Lit{)} \dsep
+  is basic type, \Lit{(}, expression, \Lit{)}
+  }
+\ntext{no delimiter is allowed}
+
+
+\subsubsection{Names}
+
+\Rule{name}{
+  identifier
+  }
+
+\Rule{name list}{
+  name, \SeqPt{\Lit{,}, name}
+  }
+
+\Rule{old name}{
+  identifier, \Lit{\char'176}
+  }
+
+
+
+\subsection{Patterns and Bindings}
+
+\subsubsection{Patterns}\label{patterns2}
+
+\Rule{pattern}{
+  pattern identifier \dsep
+  match value \dsep
+  set enum pattern \dsep
+  set union pattern \dsep
+  seq enum pattern \dsep
+  seq conc pattern \dsep
+  tuple pattern \dsep
+  record pattern
+  }
+
+\Rule{pattern identifier}{
+  identifier \dsepl \Lit{-}
+  }
+
+\Rule{match value}{
+  \Lit{(}, expression, \Lit{)} \dsep
+  symbolic literal
+  }
+
+\Rule{set enum pattern}{
+  \Lit{\{}, \OptPt{pattern list}, \Lit{\}}
+  }\nonstandard{1}
+
+\Rule{set union pattern}{
+  pattern, \Lit{union}, pattern
+  }
+
+\Rule{seq enum pattern}{
+  \Lit{[}, \OptPt{pattern list}, \Lit{]}
+  }\nonstandard{1}
+
+\Rule{seq conc pattern}{
+  pattern, \Lit{\char'136}, pattern
+  }
+
+\Rule{tuple pattern}{
+  \Lit{mk\_}, \Lit{(}, pattern, \Lit{,}, pattern list, \Lit{)}
+  } 
+
+\Rule{record pattern}{
+  \Lit{mk\_},\nmk name, \Lit{(}, \OptPt{pattern list}, \Lit{)}
+  }
+\ntext{no delimiter is allowed}
+
+\Rule{pattern list}{
+  pattern, \SeqPt{\Lit{,}, pattern}
+  }
+
+
+\subsubsection{Bindings}
+
+
+\Rule{bind}{
+  set bind \dsepl type bind
+  }
+
+\Rule{set bind}{
+  pattern, \Lop{in set}, expression
+  }
+
+\Rule{type bind}{
+  pattern, \Lit{:}, type
+  }
+
+\Rule{bind list}{
+  multiple bind, \SeqPt{\Lit{,}, multiple bind}
+  }
+
+\Rule{multiple bind}{
+  multiple set bind \dsep
+  multiple type bind
+  }
+
+\Rule{multiple set bind}{
+  pattern list, \Lop{in set}, expression
+  }
+
+\Rule{multiple type bind}{
+  pattern list, \Lit{:}, type
+  }
+
+
+
+
+
+\end{document}

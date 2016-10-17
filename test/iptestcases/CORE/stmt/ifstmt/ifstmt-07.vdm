@@ -1,0 +1,21 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+
+public Test : () ==> nat
+Test() ==
+ 
+(dcl s : nat := 0;
+ if true then s:=1 
+ elseif false then s:=2
+ else skip;
+return s)
+	
+   
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

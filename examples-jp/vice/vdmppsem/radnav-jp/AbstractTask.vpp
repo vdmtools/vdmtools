@@ -1,0 +1,56 @@
+%$ld$
+\subsection{Taskクラス}
+\subsubsection{AbstractTask}
+AbstractTaskはevent handleの基本機能を提供する抽象クラス。
+\begin{vdm_al}
+class AbstractTask is subclass of 『共通定義』
+
+instance variables
+  名前 : seq of char := [];
+  ネットワークイベント待ち行列 : seq of NetworkEvent :=[];
+  割込イベント待ち行列 : seq of InterruptEvent := [];
+  dispatcher : EventDispatcher
+
+operations
+  public AbstractTask: seq of char * EventDispatcher ==> AbstractTask
+  AbstractTask (a名前, ed) == atomic ( 名前 := a名前; dispatcher := ed; );
+
+  public 名前を得る: () ==> seq of char
+  名前を得る () == return 名前;
+
+  public イベントを設定する: Event ==> ()
+  イベントを設定する (aイベント) == 
+    if isofclass(NetworkEvent, aイベント)
+    then ネットワークイベント待ち行列 := Queue`enQueue[Event](aイベント, ネットワークイベント待ち行列) 
+    else 割込イベント待ち行列 := Queue`enQueue[Event](aイベント, 割込イベント待ち行列)  ;
+
+  protected イベントを得る: () ==> Event
+  イベントを得る () ==
+    if len 割込イベント待ち行列 > 0
+    then ( dcl 返値: Event := Queue`top[Event](割込イベント待ち行列);
+           割込イベント待ち行列 :=  Queue`deQueue[Event](割込イベント待ち行列) ;
+           return 返値 )
+    else ( dcl 返値: Event := Queue`top[Event](ネットワークイベント待ち行列);
+           ネットワークイベント待ち行列 :=  Queue`deQueue[Event](ネットワークイベント待ち行列);
+           return 返値 );
+
+  protected イベントを処理する: Event ==> ()
+  イベントを処理する (-) == is subclass responsibility;
+
+  protected メッセージを送る: seq of char * ID ==> ()
+  メッセージを送る (a名前, id) == dispatcher.SendNetwork(名前を得る(), a名前, id);
+
+  protected 割込を起こさせる: seq of char * ID ==> ()
+  割込を起こさせる (a名前, id) == dispatcher.SendInterrupt(名前を得る(), a名前, id)
+
+sync
+  mutex (イベントを設定する, イベントを得る);
+  per イベントを得る => 
+  	not (Queue`isEmpty[Event](ネットワークイベント待ち行列) and Queue`isEmpty[Event](割込イベント待ち行列))
+
+end AbstractTask
+\end{vdm_al}
+
+\begin{rtinfo}
+[AbstractTask]{vdm.tc}[AbstractTask]
+\end{rtinfo}

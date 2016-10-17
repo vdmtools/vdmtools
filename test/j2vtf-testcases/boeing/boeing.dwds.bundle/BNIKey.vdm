@@ -1,0 +1,53 @@
+class BNIKey is subclass of Object
+operations 
+public  hashCode : () ==> int 
+hashCode() == 
+( return  BNIKey`getNodeType().hashCode()+BNIKey`getNodeId()
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( dcl   outStr : [StringBuffer] := new  StringBuffer(new  String("BNIKey<NodeId:"));
+  let - = outStr.append(getNodeId())
+  in 
+    skip ;
+  let - = outStr.append(new  String(",Type:"))
+  in 
+    skip ;
+  let - = outStr.append(getNodeType())
+  in 
+    skip ;
+  let - = outStr.append(new  String(">"))
+  in 
+    skip ;
+  return  outStr.toString()
+) ;
+
+public  getNodeId : () ==> int 
+getNodeId() == 
+( return  nodeId
+) ;
+
+public  getNodeType : () ==> [String]
+getNodeType() == 
+( return  nodeType
+) ;
+
+public  equals : [Object] ==> bool 
+equals(entry) == 
+( return  (is_ (entry,[BNIKey]) and  getNodeId() = (def l_12 :  BNIKey = (entry)
+  in l_12).getNodeId() and  getNodeType().equals((def l_18 :  BNIKey = (entry)
+  in l_18).getNodeType()))
+) ;
+
+public  BNIKey : int  * [String] ==> BNIKey
+BNIKey(nodeId, nodeType) == 
+( BNIKey`nodeId := nodeId;
+  BNIKey`nodeType := nodeType
+) ;
+
+instance variables 
+  private  nodeId : int ;
+  private  nodeType : [String]
+  
+end  BNIKey

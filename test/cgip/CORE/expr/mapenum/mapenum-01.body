@@ -1,0 +1,27 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of (map ( nat | set of ( nat | bool ) | bool | map nat to nat |
+			      char | seq of nat | nat * nat ) to
+			     ( set of (<HELLO> | <WORLD> | nat ) |
+			       bool | <HELLO> | map bool to bool | nat ) )  
+Test () ==
+
+return 
+[ {|->},
+  { let a = 3, b = false
+    in {a, b} |-> let a = <HELLO>,
+                      b = <WORLD> in
+		   { a, b} },
+  { ( if is_int( 3 + 6 )
+      then 'h'
+      else false ) |-> exists a in set { false, 3 } & is_int( a ) },
+  { { 3 |-> 4} |-> {false |-> true } },
+  { inds [ 3,6,365] |-> card {3,634, 365} },
+  { 36 |-> 3},
+
+  { {|->} |-> 36, [] |-> false, mk_(3,6) |-> <HELLO>, mk_(3,6) |-> <HELLO> }
+]
+
+
+
+
+

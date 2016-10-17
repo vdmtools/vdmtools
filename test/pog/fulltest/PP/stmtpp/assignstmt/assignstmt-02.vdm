@@ -1,0 +1,23 @@
+class A
+end A
+class Super
+
+instance variables
+
+  protected a : nat;
+ inv a < 9;
+
+end Super
+class AssignStmtTest is subclass of Super
+
+
+instance variables
+
+  b: nat;
+  
+operations
+
+  Assign1() ==
+    a := 7;
+
+end AssignStmtTest

@@ -1,0 +1,38 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class Numbers
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public  Eval: () ==> seq1 of (real | seq1 of real)  
+Eval () ==
+  ( dcl A : real := 103.0 * (2**24) + 69.0*(2**16) + 35.0*(2**8) + 1,
+        B : real := 239.0 * (2**24) +  205.0*(2**16) + 171.0*(2**8) + 137,
+        C : real := 254 + 220*(2**8) + 186.0*(2**16) + 152.0*(2**24),
+        D : real := 118 + 84.0*(2**8) + 50.0*(2**16) + 16.0*(2**24),
+        F : real := 2.0 ** 37 + 1;
+    return [A, B, C, D, F] ^ 
+           [Convert_number_to_double_word (A)] ^
+           [Convert_number_to_double_word (B)] ^
+           [Convert_number_to_double_word (C)] ^
+           [Convert_number_to_double_word (D)] ^
+           [Convert_number_to_double_word (F)]
+  )
+ 
+functions
+ 
+  Convert_number_to_double_word: real -> seq1 of real
+  Convert_number_to_double_word(Nm) ==
+    let lsw : real = Nm mod  (2.0**32),
+        msw : real = Nm div (2.0**32) in
+      Convert_number_to_word(lsw) ^ Convert_number_to_word(msw);
+ 
+  Convert_number_to_word: real -> seq1 of real
+  Convert_number_to_word (r) ==
+    [r]
+ 
+ 
+end Numbers

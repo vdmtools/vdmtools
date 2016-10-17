@@ -1,0 +1,32 @@
+##---------------------------------------------------------------
+##                    Make file for Solaris 2
+##---------------------------------------------------------------
+VDMLIB  = /opt/toolbox/cg/lib
+INCL    = -I/opt/toolbox/cg/include
+
+## Compiler flags
+CC      = g++
+LIB     = -L$(VDMLIB)  -lvdm -lm  
+
+all: libcylio.so libmath.so
+
+%.so:
+	${CC} -shared -mimpure-text -v -o $@ -Wl,-B,symbolic $^  ${LIB}
+
+libcylio.so: cylio.o tcfcylio.o 
+
+cylio.o: cylio.cc
+	${CC} -c -fpic -o $@ $< ${INCL}
+
+tcfcylio.o: tcfcylio.cc
+	${CC} -c -fpic -o $@ $< ${INCL}
+
+libmath.so: tcfmath.o
+
+tcfmath.o: tcfmath.cc
+	${CC} -c -fpic -o $@  $<  ${INCL}
+
+
+clean:
+	rm *.o *.so
+

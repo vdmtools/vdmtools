@@ -1,0 +1,13 @@
+class IotaExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = iota x : nat & x = 3
+  in skip;
+
+------------------------------------------------------------------------------
+end IotaExprTest

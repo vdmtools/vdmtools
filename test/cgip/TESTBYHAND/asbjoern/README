@@ -1,0 +1,11 @@
+Test of Asbjørns specification
+============================
+
+~jojo/toolbox/linux/vppde -j -k avlspec.vdm++
+
+javac -classpath .:/home/jojo/toolbox/spec/test/metaivHenrik/dk/ifad/toolbox/VDM/VDM.jar *.java
+
+rm *.java
+rm *.class
+
+

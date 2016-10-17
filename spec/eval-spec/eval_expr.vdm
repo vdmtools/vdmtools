@@ -1,0 +1,1329 @@
+%----------------------------------------------------------------------
+% WHAT
+%    Functions and operations for evaluation of expressions 
+%    in the dynamic semantic 
+% $Id: eval_expr.vdm,v 1.81 2006/04/04 01:37:09 vdmtools Exp $
+% Implemented in: 
+%----------------------------------------------------------------------
+\chapter{Expressions}
+
+The module EXPR contains functions and operations related to the evaluation 
+of expressions.
+
+\begin{vdm_al}
+module EXPR
+  imports
+    from AS all,
+    from STKM all,
+    from RTERR all,
+    from INSTRTP all,
+#ifdef VDMPP
+    from SCHDTP all,
+#endif VDMPP
+    
+    from AUX
+      functions
+        Ceiling : real -> int;
+        IsNat : SEM`VAL -> bool;
+        IsInt : SEM`VAL -> bool;
+
+      operations 
+        IsRecSel : AS`Name ==> bool;
+        LookUpRecSel : AS`Name ==> bool * [GLOBAL`RecSel];
+#ifdef VDMSL
+        UniqueTagName : AS`Name ==> AS`Name;
+        IsTypeDef : AS`Name ==> bool * [AS`Type] * [AS`Invariant] * [AS`Name];
+        LookUpRenRecSel : AS`Name ==> bool * [GLOBAL`RecSel] * [AS`Name] * [AS`Name];
+        IsTypeStructExported : AS`Name ==> bool;
+#endif VDMSL
+        ExtractTagName: AS`Name * set of AS`Name ==> [AS`Name] * bool;
+#ifdef VDMPP
+        IsTypeDef : AS`Name ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access];
+#endif VDMPP
+        ,
+
+    from GLOBAL all,
+    from PAT
+      types
+        PARTITION = <DO_PARTITION> | <DONT_PARTITION>,
+
+    from REP all,
+    from CI all,
+    from SEM all,
+    
+#ifdef VICE
+    from TIMEPARSER all,
+    from TIMEMAP all,
+#endif VICE
+
+    from STATE all,
+    from SETTINGS
+      operations
+        DTC: () ==> bool
+                             
+  exports all
+
+definitions
+\end{vdm_al}
+
+\section{Set Range Expressions}
+
+\begin{vdm_al}
+operations
+
+EvalSetRangeExpr : SEM`VAL * SEM`VAL ==> SEM`VAL
+EvalSetRangeExpr (lb_v, ub_v) ==
+  cases false:
+    (is_SEM`NUM(lb_v)) -> RTERR`ErrorVal(RTERR`LOWER_BOUND_NOT_A_NUMBER,lb_v,nil, []),
+    (is_SEM`NUM(ub_v)) -> RTERR`ErrorVal(RTERR`UPPER_BOUND_NOT_A_NUMBER,ub_v,nil, []),
+    others             -> return mk_SEM`SET({ mk_SEM`NUM(e) | e in set { AUX`Ceiling(lb_v.v),...,floor ub_v.v }})
+  end;
+
+\end{vdm_al}
+
+This operation returns the set of semantic number values, ranging from a
+lower to an upper bound.
+
+\section{Sub Sequence Expressions}
+
+\begin{vdm_al}
+operations
+
+EvalSubSequenceExpr : SEM`VAL * SEM`VAL * SEM`VAL ==> SEM`VAL
+EvalSubSequenceExpr (seq_v, from_v, to_v) ==
+  cases false:
+    (is_SEM`SEQ(seq_v))  -> RTERR`ErrorVal(RTERR`SEQ_EXPECTED, seq_v, nil, []),
+    (is_SEM`NUM(from_v)) -> RTERR`ErrorVal(RTERR`INT_EXPECTED, from_v, nil, []),
+    (is_SEM`NUM(to_v))   -> RTERR`ErrorVal(RTERR`INT_EXPECTED, to_v, nil, []),
+    others               -> let Seq = seq_v.v,
+                                From = from_v.v,
+                                To = to_v.v
+                            in return mk_SEM`SEQ([ Seq(i) | i in set inds Seq & From <= i and i <= To ])
+  end;
+
+\end{vdm_al}
+
+This operation returns the semantic sequence value that contains all the
+elements from the input sequence with indices in a given range.
+
+\section{Modifying Mappings and Sequences}
+
+\begin{vdm_al}
+operations
+
+EvalSeqModifyMapOverrideExpr: SEM`VAL * SEM`VAL ==> SEM`VAL
+EvalSeqModifyMapOverrideExpr(seqmap_v, map_v) ==
+  cases true:
+    (is_SEM`MAP(map_v)) -> cases true:
+                             (is_SEM`MAP(seqmap_v)) -> EvalMapOverrideExpr(seqmap_v, map_v),
+                             (is_SEM`SEQ(seqmap_v)) -> EvalSeqModifyExpr(seqmap_v, map_v),
+                             --(is_SEM`TUPLE(seqmap_v)) -> EvalTupleModifyExpr(seqmap_v, map_v),
+                             others                 -> RTERR`ErrorVal(RTERR`MAP_OR_SEQ_EXPECTED,nil,nil,[])
+                           end,
+    others              -> RTERR`ErrorVal(RTERR`MAP_EXPECTED,nil,nil,[])
+  end;
+\end{vdm_al}
+
+This operation calls one of the operation $EvalMapOverrideExpr$ or
+$EvalSeqModifyExpr$, depending on the value of the first argument.
+
+\begin{vdm_al}
+functions
+
+EvalMapOverrideExpr : SEM`VAL * SEM`VAL -> SEM`VAL
+EvalMapOverrideExpr ( mk_SEM`MAP(op1), mk_SEM`MAP(op2)) ==
+  mk_SEM`MAP(op1 ++ op2)
+\end{vdm_al}
+
+The result of this operation is a semantic map value, that contains all the
+maplets of the second map, and those maplets from the first map, for which
+the domain element is not contained in the domain set of the second map.
+
+\begin{vdm_al}
+operations
+
+EvalSeqModifyExpr : SEM`VAL * SEM`VAL ==> SEM`VAL
+EvalSeqModifyExpr (mk_SEM`SEQ(seq_lv), mk_SEM`MAP(modifiers)) ==
+ (dcl res_lv : seq of SEM`VAL := seq_lv;
+  for all d_v in set dom modifiers do 
+    if AUX`IsInt(d_v)
+    then
+      let mk_SEM`NUM(d) = d_v
+      in
+        if (d >= 1 and d <= len seq_lv)
+        then res_lv := res_lv ++ { d |-> modifiers(d_v) }
+        else RTERR`ErrorVal(RTERR`ILLEGAL_INDICES,nil,nil,[])
+    else RTERR`ErrorVal(RTERR`INT_EXPECTED,nil,nil,[]);
+  return mk_SEM`SEQ(res_lv)
+ );
+
+-- experimental
+EvalTupleModifyExpr : SEM`VAL * SEM`VAL ==> SEM`VAL
+EvalTupleModifyExpr (mk_SEM`TUPLE(seq_lv), mk_SEM`MAP(modifiers)) ==
+ (dcl res_lv : seq of SEM`VAL := seq_lv;
+  for all d_v in set dom modifiers do 
+    if AUX`IsInt(d_v)
+    then
+      let mk_SEM`NUM(d) = d_v
+      in
+        if (d >= 1 and d <= len seq_lv)
+        then res_lv := res_lv ++ { d |-> modifiers(d_v) }
+        else RTERR`ErrorVal(RTERR`ILLEGAL_INDICES,nil,nil,[])
+    else RTERR`ErrorVal(RTERR`INT_EXPECTED,nil,nil,[]);
+  return mk_SEM`TUPLE(res_lv)
+ );
+\end{vdm_al}
+
+The result semantic sequence value of this operation is equal to the old
+input sequence value, but for every index from the domain of the modifier
+map, the corresponding element in the sequence value is replaced with the
+range value from the map. Checks are made to be sure that the domain
+elements are all natural numbers, and that the map is injective.
+
+
+\section{Record Expressions}
+
+#ifdef VDMSL
+The operation {\em ConstructSEMRecFields} is an auxiliary operation
+that computes a record semantic value.
+
+\begin{vdm_al}
+ConstructSEMRecFields: AS`Name * seq of SEM`VAL ==> SEM`VAL
+ConstructSEMRecFields(tag, val_l) ==
+  cases AUX`IsTypeDef(tag):
+    mk_(true,mk_AS`CompositeType(-,fl,-),-,-) ->
+              def v = { i |-> val_l(i) | i in set inds fl & not fl(i).dc };
+                  v_dc ={ i |-> val_l(i) | i in set inds fl & fl(i).dc };
+                  sem_tag = AUX`UniqueTagName(tag)
+              in return mk_SEM`REC(sem_tag, v, v_dc),
+    others -> if AUX`IsRecSel(tag)
+              then 
+                -- in this case the record is a local type defined by the compose
+                -- type definition. This can for example be done in a let expression.
+                def v = { i |-> val_l(i) | i in set inds val_l };
+                    v_dc = {|->};
+                    sem_tag = AUX`UniqueTagName(tag)
+                in return mk_SEM`REC(sem_tag, v, v_dc)
+              else RTERR`ErrorVal(RTERR`TYPE_NOT_IN_SCOPE,nil,nil, [])
+  end;
+\end{vdm_al}
+
+\begin{vdm_al}
+EvalRecordConstructorExpr: AS`Name * seq of SEM`VAL ==> SEM`VAL
+EvalRecordConstructorExpr (tag,val_l) ==
+  cases AUX`ExtractTagName(tag, {}):
+    mk_(the_tag, true) ->
+      def mk_(-, mk_(size, -, type_l,-)) = AUX`LookUpRecSel(the_tag)
+      in
+        if len val_l = size
+        then 
+          def res_v = ConstructSEMRecFields(the_tag,val_l)
+          in
+           (if SETTINGS`DTC() 
+            then 
+              cases AUX`IsTypeDef (the_tag):
+                mk_(true,-,-,-) -> -- now we know that the record tag name
+                                 -- also is the type definition name. (HC:961003)
+                       (if not STATE`SubType(res_v, mk_AS`TypeName(the_tag,tag.cid))
+                        then
+                          if STATE`RealSubType(res_v, mk_AS`TypeName(the_tag,the_tag.cid), false)
+                          then RTERR`ErrorVal(RTERR`TYPE_INV_BROKEN,nil,nil, [])
+                          else RTERR`ErrorVal(RTERR`TYPE_INCOMP,nil,nil, [])),
+                others -> -- no type definition is found
+                        let mk_SEM`REC(-, v, v_dc) = res_v
+                        in
+                          for i = 1 to len type_l do
+                            let val = if i in set dom v
+                                      then v(i)
+                                      else v_dc(i)
+                            in
+                              if not STATE`SubType(val,type_l(i))
+                              then RTERR`ErrorVal(RTERR`TYPE_INCOMP,nil,nil, [])
+              end;
+            return res_v;)
+        else RTERR`ErrorVal(RTERR`RECORD_SIZE_WRONG,nil,nil, []),
+    others -> RTERR`ErrorVal(RTERR`TAG_UNKNOWN,nil,nil, [])
+  end
+\end{vdm_al}
+
+In the evaluation of a record constructor expression, we first check if the
+structure of the type is available, i.e.\ if the type is defined outside of
+the current module, the structure must be exported with the
+type. Next, we check whether the type is a renamed imported record or
+not. If so, we go to the imported module and check the existence of
+the record type there, otherwise we check it locally. In both cases,
+we create the sequence with the field values, and check the number of
+fields and the type of each of the fields matches the definition. If
+everything is OK, the result of the operation is a semantic record
+value.
+#endif VDMSL
+
+#ifdef VDMPP
+The operation {\em EvalRecordConstructorExpr} evaluated record
+constructor expressions. Initially, it is investigated by the
+operation {\em AUX`ExtractTagName} if the tag {\em
+  tag} is in the current scope, and if it is the tag name is
+computed. The tag name {\em tagname} is the tag name qualified with
+the class name where type is defined. 
+
+The semantics values of the {\em fields} are then computed, and it is
+checked if the size of the record corresponds to the length of the
+fields. If dynamic type check the check is done in two ways depending
+if the type has a type definition, or not. The latter can be the case
+in case of an let expression of the following form:
+\begin{verbatim}
+     let e: compose A of a:int, b nat end = mk_A(-1,2)
+     in ....
+\end{verbatim}   
+
+\begin{vdm_al}
+EvalRecordConstructorExpr : AS`Name * seq of SEM`VAL ==> SEM`VAL
+EvalRecordConstructorExpr(tag,fields) ==
+  cases AUX`ExtractTagName(tag, {}):
+    mk_(the_tag, true) ->
+      def mk_(-, mk_(size, -, type_l, -)) = AUX`LookUpRecSel(the_tag)
+      in
+        if len fields = size
+        then
+          def res_v = ConstructSEMRecFields(the_tag, fields)
+          in
+           (if SETTINGS`DTC()
+            then
+              cases AUX`IsTypeDef(the_tag):
+                mk_(true,-,-,-,-) -> -- a typedefinition of the tag has been found and thus
+                                     -- we can check possible invariants
+                          (if not STATE`SubType(res_v, mk_AS`TypeName(the_tag,the_tag.cid))
+                           then
+                             if STATE`RealSubType(res_v, mk_AS`TypeName(the_tag,the_tag.cid), false)
+                             then RTERR`ErrorVal(RTERR`TYPE_INV_BROKEN, nil,nil,[])
+                             else RTERR`ErrorVal(RTERR`TYPE_INCOMP, res_v,nil,[])),
+                others -> let mk_SEM`REC(-, v, v_dc) = res_v
+                          in
+                            for i = 1 to len type_l do
+                              let val = if i in set dom v
+                                        then v(i)
+                                        else v_dc(i)
+                              in
+                                if not STATE`SubType(val, type_l(i))
+                                then RTERR`ErrorVal(RTERR`TYPE_INCOMP,res_v,nil,[])
+                   
+              end;
+            return res_v)
+        else
+          RTERR`ErrorVal(RTERR`RECORD_SIZE_WRONG,nil,nil,[]),
+    others -> RTERR`ErrorVal(RTERR`TAG_UNKNOWN,nil,nil,[])
+  end;
+\end{vdm_al}
+
+The operation {\em ConstructSEMRecFields} is an auxiliary operation
+that computes a record semantic value.
+\begin{vdm_al}
+ConstructSEMRecFields: AS`Name * seq of SEM`VAL ==> SEM`VAL
+ConstructSEMRecFields(sem_tag, val_l) ==
+  cases AUX`IsTypeDef(sem_tag):
+    mk_(true,mk_AS`CompositeType(-,fl,-),-,-,-) ->
+              def v = { i |-> val_l(i)  | i in set inds fl & not fl(i).dc };
+                  v_dc ={ i |-> val_l(i) | i in set inds fl & fl(i).dc }
+              in return mk_SEM`REC(sem_tag, v, v_dc),
+    others -> if AUX`IsRecSel(sem_tag)
+              then
+                -- in this case the record is a local type defined by the compose
+                -- type definition. This can for example be done in a let expression.
+                def v = { i |-> val_l(i) | i in set inds val_l };
+                    v_dc = {|->}
+                in return mk_SEM`REC(sem_tag, v, v_dc)
+              else RTERR`ErrorVal(RTERR`TYPE_NOT_IN_SCOPE,nil,nil, [])
+  end;
+\end{vdm_al}
+#endif VDMPP
+
+#ifdef VDMSL
+\begin{vdm_al}
+operations
+EvalRecordModifierExpr: SEM`VAL * (seq of AS`Name) * (seq of SEM`VAL) ==> SEM`VAL
+EvalRecordModifierExpr (rec_v,fid_l,val_l) ==
+  cases rec_v:
+    mk_SEM`REC(tag, v, v_dc) ->
+      if AUX`IsTypeStructExported (tag)
+      then
+        cases AUX`LookUpRecSel (tag):
+          mk_(true, mk_(-, pos, type_l, -)) ->
+             (dcl tmp_v : map nat to SEM`VAL := v,
+                  tmp_v_dc : map nat to SEM`VAL := v_dc;
+              for i = 1 to len fid_l do
+                let fid = fid_l(i),
+                    new_v = val_l(i)
+                in 
+                  if fid not in set dom pos
+                  then RTERR`ErrorVal(RTERR`RECORD_FIELD_ID_UNKNOWN,nil,nil, [])
+                  else
+                    let index = pos(fid)
+                    in
+                     (if index in set dom v
+                      then tmp_v := tmp_v ++ { index |-> new_v }
+                      else tmp_v_dc := tmp_v_dc ++ { index |-> new_v };
+                      if SETTINGS`DTC()
+                      then 
+                       ( -- Push the module of the record tag
+                        STKM`PushModule(STATE`ExtractModule(tag));
+                        if not STATE`SubType(new_v, type_l(index))
+                        then RTERR`ErrorVal(RTERR`TYPE_INCOMP,new_v,nil, []);
+                        STKM`PopModule();
+                       )
+                     );
+              let res_v = mk_SEM`REC(tag, tmp_v, tmp_v_dc)
+              in
+               (if SETTINGS`DTC()
+                then
+                  cases AUX`IsTypeDef(tag):
+                    mk_(true,-,-,-) -> -- We have information for possible invariant check
+                      if not STATE`SubType( res_v, mk_AS`TypeName(tag,tag.cid))
+                      then
+                        if STATE`RealSubType(res_v, mk_AS`TypeName(tag,tag.cid), false)
+                        then RTERR`ErrorVal(RTERR`TYPE_INV_BROKEN, nil,nil, [])
+                        else RTERR`ErrorVal(RTERR`TYPE_INCOMP,res_v,nil, []),
+                    others -> skip
+                  end;
+                return res_v)),
+          others -> RTERR`ErrorVal(RTERR`TAG_UNKNOWN,rec_v,nil, [])
+        end
+      else RTERR`ErrorVal(RTERR`TYPE_NOT_EXPORTED,nil,nil, []),
+    others -> RTERR`ErrorVal(RTERR`REC_EXPECTED,rec_v,nil, [])
+  end
+  pre len fid_l = len val_l;
+\end{vdm_al}
+
+In the evaluation of the record modifier expression, we first check if the
+type structure is available. If so, we retrieve the record selector for the
+record tag. For each of the modifications, we change the original record
+value. Checks are made to be sure that the field identifiers in the
+modification records are defined for the input record value. Also, we use
+dynamic type checking on the new values.
+#endif VDMSL
+
+#ifdef VDMPP
+The operatin {\em EvalRecordModifierExpr} evaluates record
+modification expressions. The semantic value of the record {\em rec-e}
+is first computed. It is computed if the tag {\em tag} of the record
+is within the current scope, and the full tag name {\em tagname} is
+computed. The full {\em tag name} is the tag name qualified with the
+class name where the record type is defined. For each of the
+modifications, we change the original record value. Checks are made to
+be sure that the field identifiers in the modification records are
+defined for the input record value. Also, we use dynamic type checking
+on the new values.
+
+\begin{vdm_al}
+EvalRecordModifierExpr : SEM`VAL * (seq of AS`Name) * (seq of SEM`VAL) ==> SEM`VAL
+EvalRecordModifierExpr(rec_v,fid_l,val_l) ==
+  cases rec_v:
+    mk_SEM`REC(tag, v, v_dc) -> 
+      def mk_(tagname, isinscope_tag) = AUX`ExtractTagName(tag, {})
+      in
+        if not isinscope_tag
+        then RTERR`ErrorVal(RTERR`TAG_UNKNOWN,rec_v,nil,[])
+        else
+          def mk_(-, mk_(-,pos,type_l,-)) = AUX`LookUpRecSel(tagname)
+          in
+           (dcl tmp_v : map nat to SEM`VAL := v,
+                tmp_v_dc : map nat to SEM`VAL := v_dc;
+            for i = 1 to len fid_l do
+              let fid = fid_l(i),
+                  new_v = val_l(i)
+              in
+                if fid not in set dom pos
+                then RTERR`ErrorVal(RTERR`RECORD_FIELD_ID_UNKNOWN,nil,nil,[])
+                else
+                  let index = pos(fid)
+                  in
+                   (if SETTINGS`DTC() -- 20140121
+                    then
+                      cases AUX`IsTypeDef(tagname):
+                        mk_(true,-,-,defcl,-) ->
+                         (STKM`PushClNmCurObj(defcl,defcl);
+                          if not STATE`SubType(new_v, type_l(index))
+                          then RTERR`ErrorVal(RTERR`TYPE_INCOMP,new_v,nil,[]);
+                          STKM`PopClNmCurObj()),
+                        others ->
+                          if not STATE`SubType(new_v, type_l(index))
+                          then RTERR`ErrorVal(RTERR`TYPE_INCOMP,new_v,nil,[])
+                      end;
+
+                    if index in set dom v
+                    then tmp_v := tmp_v ++ { index |-> new_v }
+                    else tmp_v_dc := tmp_v_dc ++ { index |-> new_v };);
+
+            let res_v = mk_SEM`REC(tagname, tmp_v, tmp_v_dc)
+            in 
+             (if SETTINGS`DTC()
+              then
+                cases AUX`IsTypeDef(tagname):
+                  mk_(true,-,-,defcl,-) ->  -- we have a type definition of the tag, and can check the invariant
+                   (STKM`PushClNmCurObj(defcl,defcl);
+                    if not STATE`SubType(res_v, mk_AS`TypeName(tagname,tagname.cid))
+                    then
+                      if STATE`RealSubType(res_v, mk_AS`TypeName(tagname,tagname.cid), false)
+                      then RTERR`ErrorVal(RTERR`TYPE_INV_BROKEN, nil,nil,[])
+                      else RTERR`ErrorVal(RTERR`TYPE_INCOMP,nil,nil,[]);
+                    STKM`PopClNmCurObj()),
+                  others ->  -- no type def info for the tag.
+                            for i = 1 to len type_l do
+                              let val = if i in set dom v
+                                        then tmp_v(i)
+                                        else tmp_v_dc(i)
+                              in
+                                if not STATE`SubType(val, type_l(i))
+                                then RTERR`ErrorVal(RTERR`TYPE_INCOMP,nil,nil,[])
+                end;
+              return res_v;
+             )
+           ),
+    others -> RTERR`ErrorVal(RTERR`REC_EXPECTED,rec_v,nil, [])
+  end;
+\end{vdm_al}
+#endif VDMPP
+
+\section{Sequence Application}
+
+\begin{vdm_al}
+operations
+
+EvalSeqApply : SEM`SEQ * seq of SEM`VAL ==> SEM`VAL
+EvalSeqApply (mk_SEM`SEQ(seq_v), arg_lv) ==
+--    cases arg_lv:
+--      [arg]  -> if AUX`IsNat(arg)
+--                then let mk_SEM`NUM(index) = arg
+--                     in
+--                       if index in set inds seq_v
+--                       then seq_v(index)
+--                       else RTERR`ErrorVal(RTERR`ILLEGAL_INDICES,nil,nil, [])
+--                else RTERR`ErrorVal(RTERR`NAT_EXPECTED,nil,nil, []),
+--      others -> RTERR`ErrorVal(RTERR`WRONG_NO_OF_ARGS,nil,nil, [])
+--    end;
+  cases arg_lv:
+    [arg] -> cases false:
+               (AUX`IsNat(arg)) -> return RTERR`ErrorVal(RTERR`NAT_EXPECTED,nil,nil, []),
+               others           -> let mk_SEM`NUM(index) = arg
+                                   in
+                                     if index in set inds seq_v
+                                     then return seq_v(index)
+                                     else return RTERR`ErrorVal(RTERR`ILLEGAL_INDICES,nil,nil, [])
+              end,
+    others -> return RTERR`ErrorVal(RTERR`WRONG_NO_OF_ARGS,nil,nil, [])
+  end;
+\end{vdm_al}
+
+The evaluation of a sequence application returns the value from the input
+sequence at the given index.
+
+\section{Map Application}
+
+\begin{vdm_al}
+operations
+
+EvalMapApply : SEM`MAP * seq of SEM`VAL ==> SEM`VAL
+EvalMapApply (mk_SEM`MAP(map_v), arg_lv) ==
+  cases arg_lv:
+    [arg]    -> cases false:
+                  (arg in set dom map_v) -> return RTERR`ErrorVal(RTERR`ARG_NOT_IN_DOM,nil,nil, []),
+                  others                 -> return map_v(arg)
+                end,
+    others   -> return RTERR`ErrorVal(RTERR`WRONG_NO_OF_ARGS,nil,nil, [])
+  end;
+\end{vdm_al}
+
+This operation returns the range value from the input map for a given
+domain value.
+
+\section{Field Select Expressions}
+
+\begin{vdm_al}
+operations
+
+EvalFieldSelectExpr: SEM`VAL * AS`Name ==> SEM`VAL
+EvalFieldSelectExpr (record_v, field) ==
+  cases true:
+      (is_SEM`REC(record_v))     -> EvalFieldRecordSelect(record_v,field),
+#ifdef VDMPP
+      (is_SEM`OBJ_Ref(record_v)) -> EvalFieldOBJRefSelect(record_v,field),
+      others -> RTERR`ErrorVal(RTERR`OBJ_RECORD_EXP,record_v,nil, [])
+#endif //VDMPP
+#ifdef VDMSL
+      others -> RTERR`ErrorVal(RTERR`REC_EXPECTED,record_v,nil, [])
+#endif //VDMSL
+  end;
+\end{vdm_al}
+
+#ifdef VDMPP
+The operation {\em EvalFieldOBJRefSelect} evaluates the field select
+expression of the field {\em field} of the semantic object reference
+{\em obj\_ref}.
+
+\begin{vdm_al}
+EvalFieldOBJRefSelect: SEM`OBJ_Ref * AS`Name ==> SEM`VAL
+EvalFieldOBJRefSelect(objref, field) ==
+  def res_v = STKM`EvalFieldOBJRefSelect(objref, field)
+  in
+    return 
+      cases true:
+        (is_SEM`ExplOP(res_v)),
+        (is_SEM`ExplPOLY(res_v))   -> mu(res_v, objref |-> objref),
+        (is_SEM`CompExplFN(res_v)) -> mu(res_v, objref |-> objref,
+                                                fl |-> let fl = res_v.fl
+                                                       in [ mu(fl(i), objref |-> objref) | i in set inds fl ]),
+        (is_SEM`OverOPFN(res_v))   -> mu(res_v, objref |-> objref),
+        others                     -> res_v
+      end;
+\end{vdm_al}
+#endif //VDMPP
+
+The operation {\em EvalFieldRecordSelect} evaluates the field
+selection {\em field} of the semantic record value {\em record\_v}.
+
+\begin{vdm_al}
+EvalFieldRecordSelect: SEM`REC * AS`Name ==> SEM`VAL
+EvalFieldRecordSelect(record_v, field) ==
+  let mk_SEM`REC(tag, v, v_dc) = record_v
+  in
+#ifdef VDMSL
+    if not AUX`IsTypeStructExported (tag)
+    then RTERR`ErrorVal(RTERR`TYPE_NOT_EXPORTED, nil, nil, [])
+    else
+       def mk_(isit,recsel) = AUX`LookUpRecSel (tag)
+       in
+         if isit
+         then
+           let mk_(-,pos,-,-) = recsel in
+#endif VDMSL
+#ifdef VDMPP
+    def mk_(tagname, isinscope_tag) = AUX`ExtractTagName(tag, {})
+    in if isinscope_tag
+       then def mk_(-,mk_(-,pos,-,-)) = AUX`LookUpRecSel (tagname)
+            in
+#endif VDMPP
+              if field in set dom pos
+              then if pos(field) in set dom v
+                   then return v(pos(field))
+                   else return v_dc(pos(field))
+              else RTERR`ErrorVal(RTERR`RECORD_FIELD_ID_UNKNOWN, nil, nil, [])
+       else RTERR`ErrorVal(RTERR`TAG_UNKNOWN, nil, nil, []);
+\end{vdm_al}
+
+This operation returns the value for the given field identifier of the
+input record value. If the type structure is not available, an error is
+generated.
+
+\begin{vdm_al}
+operations
+
+ConvertPolyToFn : SEM`ExplPOLY * seq of AS`Type ==> SEM`CompExplFN
+ConvertPolyToFn (mk_SEM`ExplPOLY(tpp, tp, parms, instr, env, fnName, modName, objref, access), type_l) ==
+  if len tpp = len type_l
+  then def fndom = [SubstType(tp.fndom(i), tpp, type_l) | i in set inds tp.fndom];
+           fnrng = SubstType(tp.fnrng, tpp, type_l);
+           tm    = { tpp(i) |-> type_l(i) | i in set inds tpp };
+           newtp = if is_AS`PartialFnType(tp)
+                   then mk_AS`PartialFnType(fndom, fnrng, CI`NilContextId)
+                   else mk_AS`TotalFnType(fndom, fnrng, CI`NilContextId)
+       in
+         return SEM`CompFN(mk_SEM`ExplFN(newtp, parms, instr, env, tm, fnName, modName,false,objref,access))
+  else RTERR`ErrorVal(RTERR`WRONG_NO_OF_ARGS, nil, nil, [])
+\end{vdm_al}
+
+This operation returns a semantic function value, in which all type
+variable identifiers in the type of the function are replaced with normal types.
+
+\begin{vdm_al}
+operations
+SubstTypeList : seq of AS`Type * AS`TypeVarList * seq of AS`Type ==> seq of AS`Type
+SubstTypeList(tp, tv_l, tp_l) ==
+  return [ SubstType(tp(index), tv_l, tp_l) | index in set inds tp ];
+
+SubstType : AS`Type * AS`TypeVarList * seq of AS`Type ==> AS`Type
+SubstType (tp, tv_l, tp_l) ==
+  cases tp:
+    mk_AS`BooleanType(-),
+    mk_AS`NumericType(-,-),
+    mk_AS`TokenType(-),
+    mk_AS`CharType(-),
+    mk_AS`VoidType(-),
+    mk_AS`QuoteType(-,-),
+    mk_AS`TypeName(-,-)                 -> return tp,
+    mk_AS`BracketedType(btp,cid)        -> return mk_AS`BracketedType(SubstType(btp, tv_l, tp_l),cid),
+    mk_AS`CompositeType(id,fields,cid)  ->
+                  def newf = [ let mk_AS`Field(sel, ftp, dc, cid2) = fields(i) 
+                               in mk_AS`Field(sel, SubstType(ftp, tv_l, tp_l), dc, cid2) | i in set inds fields ]
+                  in return mk_AS`CompositeType(id, newf,cid),
+    mk_AS`UnionType(utp_l,cid)          -> 
+                               return mk_AS`UnionType([ SubstType(utp_l(i), tv_l, tp_l) | i in set inds utp_l ],cid),
+    mk_AS`ProductType(ptp_l,cid)        ->
+                               return mk_AS`ProductType([ SubstType(ptp_l(i), tv_l, tp_l) | i in set inds ptp_l ],cid),
+    mk_AS`OptionalType(otp,cid)         -> return mk_AS`OptionalType(SubstType(otp, tv_l, tp_l),cid),
+    mk_AS`Set0Type(stp,cid)             -> return mk_AS`Set0Type(SubstType(stp, tv_l, tp_l),cid),
+    mk_AS`Set1Type(stp,cid)             -> return mk_AS`Set1Type(SubstType(stp, tv_l, tp_l),cid),
+    mk_AS`Seq0Type(stp,cid)             -> return mk_AS`Seq0Type(SubstType(stp, tv_l, tp_l),cid),
+    mk_AS`Seq1Type(stp,cid)             -> return mk_AS`Seq1Type(SubstType(stp, tv_l, tp_l),cid),
+    mk_AS`GeneralMap0Type(dtp,rtp,cid)   -> return mk_AS`GeneralMap0Type(SubstType(dtp, tv_l, tp_l),
+                                                                       SubstType(rtp, tv_l, tp_l),cid),
+    mk_AS`GeneralMap1Type(dtp,rtp,cid)   -> return mk_AS`GeneralMap1Type(SubstType(dtp, tv_l, tp_l),
+                                                                       SubstType(rtp, tv_l, tp_l),cid),
+    mk_AS`InjectiveMap0Type(dtp,rtp,cid) -> return mk_AS`InjectiveMap0Type(SubstType(dtp, tv_l, tp_l),
+                                                                         SubstType(rtp, tv_l, tp_l),cid),
+    mk_AS`InjectiveMap1Type(dtp,rtp,cid) -> return mk_AS`InjectiveMap1Type(SubstType(dtp, tv_l, tp_l),
+                                                                         SubstType(rtp, tv_l, tp_l),cid),
+    mk_AS`PartialFnType(dtp,rtp,cid)    ->
+                               return mk_AS`PartialFnType([SubstType(dtp(i), tv_l, tp_l) | i in set inds dtp],
+                                                          SubstType(rtp, tv_l, tp_l),cid),
+    mk_AS`TotalFnType(dtp,rtp,cid)      ->
+                               return mk_AS`TotalFnType([SubstType(dtp(i), tv_l, tp_l) | i in set inds dtp],
+                                                        SubstType(rtp, tv_l, tp_l),cid),
+    mk_AS`TypeVar(id,-)          -> if exists tv in set elems tv_l & tv.name = id
+                                    then return tp_l(let i in set inds tv_l be st tv_l(i).name = id in i)
+                                    else
+                                     (RTERR`Error(RTERR`TYPE_UNKNOWN, nil, nil, []);
+                                      return tp)
+  end;
+\end{vdm_al}
+
+This operation performs the actual substitution of the type variable
+identifiers with normal types.
+
+\section{Function or Operation Names}
+
+#ifdef VDMSL
+\begin{vdm_al}
+operations
+IsFunction : AS`Name * AS`Name ==> bool
+IsFunction (loc_name, mod_name) ==
+  def sigmamo = STATE`GetModule (mod_name)
+  in return loc_name in set dom sigmamo.explfns;
+\end{vdm_al}
+
+This operation returns true if the input identifier is defined in the
+domain of the explicit or implicit function maps of the current module.
+
+\begin{vdm_al}
+operations
+
+GetFunctionVal : AS`Name * AS`Name ==> SEM`VAL
+GetFunctionVal (loc_name, mod_name) ==
+  def sigmamo = STATE`GetModule (mod_name)
+  in return sigmamo.explfns(loc_name);
+\end{vdm_al}
+
+This operation returns the semantic function value for the input identifier.
+
+\begin{vdm_al}
+operations
+
+IsOperation : AS`Name * AS`Name ==> bool
+IsOperation (loc_name, mod_name) ==
+  def sigmamo = STATE`GetModule (mod_name)
+  in return loc_name in set dom sigmamo.explops;
+\end{vdm_al}
+
+This operation returns true if the input identifier is defined in the
+domain of the explicit or implicit operation maps of the current module.
+
+\begin{vdm_al}
+operations
+
+GetOperationVal : AS`Name * AS`Name ==> SEM`VAL
+GetOperationVal (loc_name, mod_name) ==
+  def sigmamo = STATE`GetModule (mod_name)
+  in return sigmamo.explops(loc_name);
+\end{vdm_al}
+
+This operation returns the semantic operation value for the input identifier.
+
+\begin{vdm_al}
+operations
+
+IsPoly : AS`Name * AS`Name ==> bool
+IsPoly (loc_name, mod_name) ==
+  def sigmamo = STATE`GetModule (mod_name)
+  in return loc_name in set dom sigmamo.explpolys;
+\end{vdm_al}
+
+This operation returns true if the input identifier is defined in the
+domain of the explicit or implicit polymorphic function maps of the current
+module.
+
+\begin{vdm_al}
+operations
+
+GetPolyVal : AS`Name * AS`Name ==> SEM`VAL
+GetPolyVal (loc_name, mod_name) ==
+  def sigmamo = STATE`GetModule (mod_name)
+  in return sigmamo.explpolys(loc_name);
+\end{vdm_al}
+
+This operation returns the semantic polymorphic function value for the
+input identifier.
+#endif VDMSL
+
+\section{Unary and Binary Expressions}
+
+\begin{vdm_al}
+operations
+
+EvalMapInverse : SEM`VAL ==> SEM`VAL
+EvalMapInverse(val_v) ==
+  cases val_v:
+    mk_SEM`MAP(map_v) -> if card dom map_v = card rng map_v
+                         then return mk_SEM`MAP({ map_v(d_v) |-> d_v | d_v in set dom map_v })
+                         else return RTERR`ErrorVal(RTERR`NO_INJECTIVE_MAP, val_v, nil, []),
+    others            -> return RTERR`ErrorVal(RTERR`MAP_EXPECTED, val_v, nil, [])
+  end;
+\end{vdm_al}
+
+This operation returns the inverse of the input map value, i.e.\ for all
+maplets in the map, domain and range are switched. To be able to do this,
+the map must be injective, i.e.\ the cardinality of the domain and range
+sets must be equal.
+
+\begin{vdm_al}
+operations
+
+EvalNumUnaryExpr : AS`UnaryOp * SEM`VAL ==> SEM`VAL
+EvalNumUnaryExpr (opr, op_v) ==
+  cases op_v:
+    mk_SEM`NUM(n) -> return cases opr:
+                              <NUMPLUS>  -> mk_SEM`NUM(+n),
+                              <NUMMINUS> -> mk_SEM`NUM(-n),
+                              <NUMABS>   -> if n < 0
+                                            then mk_SEM`NUM(-n)
+                                            else mk_SEM`NUM(n),
+                              <FLOOR>    -> mk_SEM`NUM(floor n)
+                            end,
+    others        -> return RTERR`ErrorVal(RTERR`NUM_EXPECTED, op_v, nil, [])
+  end;
+
+EvalNumBinaryExpr : SEM`VAL * AS`BinaryOp * SEM`VAL ==> SEM`VAL
+EvalNumBinaryExpr (op1_v, opr, op2_v) ==
+  cases false:
+    (is_SEM`NUM(op1_v)) -> RTERR`ErrorVal(RTERR`NUM_EXPECTED,op1_v,nil, []),
+    (is_SEM`NUM(op2_v)) -> RTERR`ErrorVal(RTERR`NUM_EXPECTED,op2_v,nil, []),
+    others              -> cases opr:
+                             <NUMPLUS>,
+                             <NUMMINUS>,
+                             <NUMMULT>,
+                             <NUMDIV>,
+                             <NUMGE>,
+                             <NUMGT>,
+                             <NUMLT>,
+                             <NUMLE>     -> EvalNumBinOp(op1_v, opr, op2_v),
+                             <INTDIV>    -> EvalIntDiv(op1_v, op2_v),
+                             <NUMREM>    -> EvalNumRem(op1_v, op2_v),
+                             <NUMMOD>    -> EvalNumMod(op1_v, op2_v)
+                           end
+  end;
+
+EvalNumBinOp : SEM`VAL * AS`BinaryOp * SEM`VAL ==> SEM`VAL
+EvalNumBinOp ( mk_SEM`NUM(n1), opr, mk_SEM`NUM(n2)) ==
+  cases opr:
+    <NUMPLUS>  -> return mk_SEM`NUM(n1 + n2),
+    <NUMMINUS> -> return mk_SEM`NUM(n1 - n2),
+    <NUMMULT>  -> return mk_SEM`NUM(n1 * n2),
+    <NUMDIV>   -> if n2 = 0
+                  then return RTERR`ErrorVal(RTERR`DIVISION_WITH_ZERO,nil,nil, [])
+                  else return mk_SEM`NUM(n1 / n2),
+    <NUMEXP>   -> if is_real(n2) and ((n1 > 0) or (n1 = 0 and n2 > 0) or (n1 < 0 and is_int(n2)))
+                  then return mk_SEM`NUM(n1 ** n2)
+                  else error,
+    <NUMGE>    -> return mk_SEM`BOOL(n1 >= n2),
+    <NUMGT>    -> return mk_SEM`BOOL(n1 > n2),
+    <NUMLE>    -> return mk_SEM`BOOL(n1 <= n2),
+    <NUMLT>    -> return mk_SEM`BOOL(n1 < n2),
+    others     -> return RTERR`ErrorVal(RTERR`OPERATOR_UNKNOWN,nil,nil, [])
+  end;
+
+EvalIntDiv : SEM`VAL * SEM`VAL ==> SEM`VAL
+EvalIntDiv (mk_SEM`NUM(n1), mk_SEM`NUM(n2)) ==
+  cases false:
+    (is_int(n1) and is_int(n2)) -> return RTERR`ErrorVal(RTERR`TWO_INT_EXPECTED,nil,nil, []),
+    (n2 <> 0)                   -> return RTERR`ErrorVal(RTERR`DIVISION_WITH_ZERO,nil,nil, []),
+    others                      -> return mk_SEM`NUM(n1 div n2)
+  end;
+
+EvalNumRem : SEM`VAL * SEM`VAL ==> SEM`VAL
+EvalNumRem (mk_SEM`NUM(n1), mk_SEM`NUM(n2)) ==
+  cases false:
+    (is_int(n1) and is_int(n2)) -> return RTERR`ErrorVal(RTERR`TWO_INT_EXPECTED,nil,nil, []),
+    (n2 <> 0)                   -> return RTERR`ErrorVal(RTERR`DIVISION_WITH_ZERO,nil,nil, []),
+    others                      -> return mk_SEM`NUM(n1 rem n2)
+  end;
+
+EvalNumMod : SEM`VAL * SEM`VAL ==> SEM`VAL
+EvalNumMod (mk_SEM`NUM(n1), mk_SEM`NUM(n2)) ==
+  cases false:
+    (is_int(n1) and is_int(n2)) -> return RTERR`ErrorVal(RTERR`TWO_INT_EXPECTED,nil,nil, []),
+    (n2 <> 0)                   -> return RTERR`ErrorVal(RTERR`DIVISION_WITH_ZERO,nil,nil, []),
+    others                      -> return mk_SEM`NUM(n1 -n2 * floor(n1/n2))
+  end;
+
+EvalLogUnaryExpr : AS`UnaryOp * SEM`VAL ==> SEM`VAL
+EvalLogUnaryExpr (opr, op_v) ==
+  cases op_v:
+    mk_SEM`BOOL(b) -> cases opr:
+                        <NOT>  -> return mk_SEM`BOOL(not b),
+                        others -> error
+                      end,
+    others         -> return RTERR`ErrorVal(RTERR`BOOL_EXPECTED,op_v,nil, [])
+  end;
+
+EvalEqNeBinaryExpr: SEM`VAL * AS`BinaryOp * SEM`VAL ==> SEM`VAL
+EvalEqNeBinaryExpr(op1_v, op, op2_v) ==
+  cases op:
+    <EQ>    -> cases op1_v:
+                 mk_SEM`UNDEF() -> return RTERR`ErrorVal(RTERR`UNDEF_ENCOUNTERED,op1_v,nil, []),
+                 others         -> return mk_SEM`BOOL(op1_v = op2_v)
+               end,
+    <NE>    -> cases op1_v:
+                 mk_SEM`UNDEF() -> return RTERR`ErrorVal(RTERR`UNDEF_ENCOUNTERED,op1_v,nil, []),
+                 others         -> return mk_SEM`BOOL(op1_v <> op2_v)
+               end,
+    <EQUIV> -> cases true:
+                 (is_SEM`BOOL(op1_v) and is_SEM`BOOL(op2_v)) -> return mk_SEM`BOOL(op1_v.v <=> op2_v.v),
+                 others -> return RTERR`ErrorVal(RTERR`TWO_BOOL_EXPECTED,op1_v,nil, [])
+               end,
+    others  -> return RTERR`ErrorVal(RTERR`OPERATOR_UNKNOWN,nil,nil, [])
+  end
+pre op in set {<NE>,<EQ>,<EQUIV>};
+
+EvalSetUnaryExpr : AS`UnaryOp * SEM`VAL ==> SEM`VAL
+EvalSetUnaryExpr (opr, op_v) ==
+  cases op_v:
+    mk_SEM`SET(op_sv) ->
+      cases opr:
+        <SETCARD>           -> return mk_SEM`NUM(card op_sv),
+        <SETPOWER>          -> if card op_sv >= 26
+                               then return RTERR`ErrorVal(RTERR`SET_TOO_BIG,op_v,nil, [])
+                               else let ps_sv = { mk_SEM`SET(sub) | sub in set power op_sv }
+                                    in return mk_SEM`SET(ps_sv),
+        <SETDISTRUNION>     -> if forall elm_v in set op_sv & is_SEM`SET(elm_v)
+                               then let tmp_ssv = { elm_v.v | elm_v in set op_sv }
+                                    in return mk_SEM`SET(dunion tmp_ssv)
+                               else return RTERR`ErrorVal(RTERR`ALL_SETS_EXPECTED,op_v,nil, []),
+        <SETDISTRINTERSECT> -> if card op_sv > 0 and forall elm_v in set op_sv & is_SEM`SET(elm_v)
+                                then let tmp_ssv = { elm_v.v | elm_v in set op_sv }
+                                    in return mk_SEM`SET(dinter tmp_ssv)
+                               else return RTERR`ErrorVal(RTERR`NONEMPTYSET_EXPECTED,op_v,nil, []),
+        others              -> return RTERR`ErrorVal(RTERR`OPERATOR_UNKNOWN,nil,nil, [])
+      end,
+    others -> return RTERR`ErrorVal(RTERR`SET_EXPECTED,op_v,nil, [])
+  end;
+
+EvalSetBinaryExpr : SEM`VAL * AS`BinaryOp * SEM`VAL ==> SEM`VAL
+EvalSetBinaryExpr (op1_v, opr, op2_v) ==
+  cases opr:
+    <NOTINSET>     -> EvalNotInSet(op1_v, op2_v),
+    <INSET>        -> EvalInSet(op1_v, op2_v),
+    <SETUNION>     -> EvalSetUnion(op1_v, op2_v),
+    <SETINTERSECT> -> EvalSetIntersect(op1_v, op2_v),
+    <SETMINUS>     -> EvalSetMinus(op1_v, op2_v),
+    <PROPERSUBSET> -> EvalProperSubSet(op1_v, op2_v),
+    <SUBSET>       -> EvalSubSet(op1_v, op2_v),
+    others         -> return RTERR`ErrorVal(RTERR`OPERATOR_UNKNOWN,nil,nil, [])
+  end;
+
+EvalInSet : SEM`VAL * SEM`VAL ==> SEM`VAL
+EvalInSet (op1_v, op2_v) ==
+  cases op2_v:
+    mk_SEM`SET(op2_sv) -> return mk_SEM`BOOL(op1_v in set op2_sv),
+    others             -> return RTERR`ErrorVal(RTERR`SET_EXPECTED,op2_v,nil, [])
+  end;
+
+EvalNotInSet : SEM`VAL * SEM`VAL ==> SEM`VAL
+EvalNotInSet (op1_v, op2_v) ==
+  cases op2_v:
+    mk_SEM`SET(op2_sv) -> return mk_SEM`BOOL(op1_v not in set op2_sv),
+    others             -> return RTERR`ErrorVal(RTERR`SET_EXPECTED,op2_v,nil, [])
+  end;
+
+EvalSetUnion : SEM`VAL * SEM`VAL ==> SEM`VAL
+EvalSetUnion (op1_v, op2_v) ==
+  cases true:
+    (is_SEM`SET(op1_v) and is_SEM`SET(op2_v)) -> return mk_SEM`SET(op1_v.v union op2_v.v),
+    others -> return RTERR`ErrorVal(RTERR`TWO_SET_EXPECTED,nil,nil, [])
+  end;
+
+EvalSetIntersect : SEM`VAL * SEM`VAL ==> SEM`VAL
+EvalSetIntersect (op1_v, op2_v) ==
+  cases true:
+    (is_SEM`SET(op1_v) and is_SEM`SET(op2_v)) -> return mk_SEM`SET(op1_v.v inter op2_v.v),
+    others -> return RTERR`ErrorVal(RTERR`TWO_SET_EXPECTED,nil,nil, [])
+  end;
+
+EvalSetMinus : SEM`VAL * SEM`VAL ==> SEM`VAL
+EvalSetMinus (op1_v, op2_v) ==
+  cases true:
+    (is_SEM`SET(op1_v) and is_SEM`SET(op2_v)) -> return mk_SEM`SET(op1_v.v \ op2_v.v),
+    others -> return RTERR`ErrorVal(RTERR`TWO_SET_EXPECTED,nil,nil, [])
+  end;
+
+EvalSubSet : SEM`VAL * SEM`VAL ==> SEM`VAL
+EvalSubSet (op1_v, op2_v) ==
+  cases true:
+    (is_SEM`SET(op1_v) and is_SEM`SET(op2_v)) -> return mk_SEM`BOOL(op1_v.v subset op2_v.v),
+    others -> return RTERR`ErrorVal(RTERR`TWO_SET_EXPECTED,nil,nil, [])
+  end;
+
+EvalProperSubSet : SEM`VAL * SEM`VAL ==> SEM`VAL
+EvalProperSubSet (op1_v, op2_v) ==
+  cases true:
+    (is_SEM`SET(op1_v) and is_SEM`SET(op2_v)) -> return mk_SEM`BOOL(op1_v.v psubset op2_v.v),
+    others -> return RTERR`ErrorVal(RTERR`TWO_SET_EXPECTED,nil,nil, [])
+  end;
+
+EvalSeqUnaryExpr : AS`UnaryOp * SEM`VAL ==> SEM`VAL
+EvalSeqUnaryExpr (opr, op_v) ==
+  cases op_v:
+    mk_SEM`SEQ(op_lv) ->
+      cases opr:
+        <SEQHEAD>      -> cases op_lv:
+                            []     -> return RTERR`ErrorVal(RTERR`ZERO_LENGTH_DETECTED,nil,nil, []),
+                            others -> return hd op_lv
+                          end,
+        <SEQTAIL>      -> cases op_lv:
+                            []     -> return RTERR`ErrorVal(RTERR`ZERO_LENGTH_DETECTED,nil,nil, []),
+                            others -> return mk_SEM`SEQ(tl op_lv)
+                          end,
+        <SEQLEN>       -> return mk_SEM`NUM(len op_lv),
+        <SEQELEMS>     -> return mk_SEM`SET(elems op_lv),
+        <SEQINDICES>   -> return mk_SEM`SET({ mk_SEM`NUM(i) | i in set inds op_lv }),
+        <SEQDISTRCONC> -> if forall elm_v in set elems op_lv & is_SEM`SEQ(elm_v)
+                          then
+                            let seq_llv = [ op_lv(i).v | i in set inds op_lv ]
+                            in return mk_SEM`SEQ(conc seq_llv)
+                          else return RTERR`ErrorVal(RTERR`ALL_SEQS_EXPECTED,op_v,nil, []),
+        <SEQREVERSE>   -> -- mk_SEM`SEQ(reverse op_lv),
+                          let seq_lv = [ op_lv(len op_lv - i) | i in set { 0,...,len op_lv - 1 } ]
+                          in return mk_SEM`SEQ(seq_lv),
+        others         -> return RTERR`ErrorVal(RTERR`OPERATOR_UNKNOWN,nil,nil, [])
+      end,
+    others -> return RTERR`ErrorVal(RTERR`SEQ_EXPECTED,nil,nil, [])
+  end;
+
+EvalSeqBinaryExpr : SEM`VAL * AS`BinaryOp * SEM`VAL ==> SEM`VAL
+EvalSeqBinaryExpr (op1_v, opr, op2_v) ==
+  cases opr:
+    <SEQCONC> -> cases false:
+                   (is_SEM`SEQ(op1_v) and is_SEM`SEQ(op2_v)) -> RTERR`ErrorVal(RTERR`TWO_SEQ_EXPECTED,nil,nil, []),
+                   others -> return mk_SEM`SEQ(op1_v.v ^ op2_v.v)
+                 end,
+    others    -> return RTERR`ErrorVal(RTERR`OPERATOR_UNKNOWN,nil,nil, [])
+  end;
+
+EvalMapUnaryExpr : AS`UnaryOp * SEM`VAL ==> SEM`VAL
+EvalMapUnaryExpr ( opr,op_v ) ==
+  cases opr:
+    <MAPDOM>        -> cases op_v:
+                         mk_SEM`MAP(map_v) -> return mk_SEM`SET(dom map_v),
+                         others            -> return RTERR`ErrorVal(RTERR`MAP_EXPECTED,nil,nil, [])
+                       end,
+    <MAPRNG>        -> cases op_v:
+                         mk_SEM`MAP(map_v) -> return mk_SEM`SET(rng map_v),
+                         others            -> return RTERR`ErrorVal(RTERR`MAP_EXPECTED,nil,nil, [])
+                       end,
+    <MAPDISTRMERGE> -> cases op_v:
+                         mk_SEM`SET(op_sv) -> if forall elm_v in set op_sv & is_SEM`MAP(elm_v)
+                                              then
+                                                let mapsops = { let mk_SEM`MAP(elm) = elm_v
+                                                                in elm | elm_v in set op_sv }
+                                                in
+                                                  if forall m1,m2 in set mapsops &
+                                                       m1 <> m2 => forall d in set (dom m1 inter dom m2) &
+                                                         m1(d) = m2(d)
+                                                  then return mk_SEM`MAP(merge mapsops)
+                                                  else return RTERR`ErrorVal(RTERR`MAP_MERGE_DOM_OVERLAP,nil,nil, [])
+                                              else return RTERR`ErrorVal(RTERR`ALL_MAPS_EXPECTED,nil,nil, []),
+                         others -> return RTERR`ErrorVal(RTERR`SET_EXPECTED,nil,nil, [])
+                       end,
+    <MAPINVERSE>    -> return EvalMapInverse(op_v)
+  end;
+
+EvalMapBinaryExpr : SEM`VAL * AS`BinaryOp * SEM`VAL ==> SEM`VAL
+EvalMapBinaryExpr ( op1_v ,opr,op2_v ) ==
+  cases opr:
+    <MAPMERGE>      -> cases false:
+                         (is_SEM`MAP(op1_v) and is_SEM`MAP(op2_v)) ->
+                                 RTERR`ErrorVal(RTERR`TWO_MAP_EXPECTED,nil,nil, []),
+                         others -> EvalMapMerge(op1_v, op2_v)
+                       end,
+    <MAPDOMRESTTO>  -> cases false:
+                         (is_SEM`SET(op1_v) and is_SEM`MAP(op2_v)) ->
+                                 RTERR`ErrorVal(RTERR`SET_AND_MAP_EXPECTED,nil,nil, []),
+                         others -> EvalMapDomRestTo(op1_v, op2_v)
+                       end,
+    <MAPDOMRESTBY>  -> cases false:
+                         (is_SEM`SET(op1_v) and is_SEM`MAP(op2_v)) ->
+                                 RTERR`ErrorVal(RTERR`SET_AND_MAP_EXPECTED,nil,nil, []),
+                         others -> EvalMapDomRestBy(op1_v, op2_v)
+                       end,
+    <MAPRNGRESTTO>  -> cases false:
+                         (is_SEM`MAP(op1_v) and is_SEM`SET(op2_v)) ->
+                                 RTERR`ErrorVal(RTERR`MAP_AND_SET_EXPECTED,nil,nil, []),
+                         others -> EvalMapRngRestTo(op1_v, op2_v)
+                       end,
+    <MAPRNGRESTBY>  -> cases false:
+                         (is_SEM`MAP(op1_v) and is_SEM`SET(op2_v)) ->
+                                 RTERR`ErrorVal(RTERR`MAP_AND_SET_EXPECTED,nil,nil, []),
+                         others -> EvalMapRngRestBy(op1_v, op2_v)
+                       end,
+    others          -> RTERR`ErrorVal(RTERR`OPERATOR_UNKNOWN,nil,nil, [])
+  end;
+
+EvalMapMerge : SEM`VAL * SEM`VAL ==> SEM`VAL
+EvalMapMerge (mk_SEM`MAP(op1), mk_SEM`MAP(op2)) ==
+  if forall d in set (dom op1 inter dom op2) & op1(d) = op2(d)
+  then return mk_SEM`MAP(op1 munion op2)
+  else return RTERR`ErrorVal(RTERR`DUPLICATES_NOT_EQUAL,nil,nil, []);
+
+functions
+
+EvalMapDomRestTo : SEM`VAL * SEM`VAL -> SEM`VAL
+EvalMapDomRestTo (mk_SEM`SET(op1_sv), mk_SEM`MAP(op2)) ==
+  mk_SEM`MAP(op1_sv <: op2);
+
+EvalMapDomRestBy : SEM`VAL * SEM`VAL -> SEM`VAL
+EvalMapDomRestBy (mk_SEM`SET(op1_sv), mk_SEM`MAP(op2)) ==
+  mk_SEM`MAP(op1_sv <-: op2);
+
+EvalMapRngRestTo : SEM`VAL * SEM`VAL -> SEM`VAL
+EvalMapRngRestTo (mk_SEM`MAP(op1), mk_SEM`SET(op2_sv)) ==
+  mk_SEM`MAP(op1 :> op2_sv);
+
+EvalMapRngRestBy : SEM`VAL * SEM`VAL -> SEM`VAL
+EvalMapRngRestBy (mk_SEM`MAP(op1), mk_SEM`SET(op2_sv)) ==
+  mk_SEM`MAP(op1 :-> op2_sv);
+
+operations
+
+EvalComposeExpr: SEM`VAL * SEM`VAL ==> SEM`VAL
+EvalComposeExpr(op1_v, op2_v) ==
+  cases true:
+    (is_SEM`CompExplFN(op1_v) and is_SEM`CompExplFN(op2_v)) -> EvalComposeFctExpr(op1_v, op2_v),
+    (is_SEM`MAP(op1_v) and is_SEM`MAP(op2_v))               -> EvalComposeMap(op1_v, op2_v),
+    others -> RTERR`ErrorVal(RTERR`TWO_FN_OR_MAP_EXPECTED,nil,nil, [])
+  end;
+
+EvalComposeMap: SEM`MAP* SEM`MAP ==> SEM`VAL
+EvalComposeMap(mk_SEM`MAP(map1_v), mk_SEM`MAP(map2_v)) ==
+  if rng map2_v subset dom map1_v
+  then return mk_SEM`MAP({ i |-> map1_v(map2_v(i)) | i in set dom map2_v })
+  else RTERR`ErrorVal(RTERR`NOT_RNG_DOM_SUBSET,nil,nil, []);
+\end{vdm_al}
+
+If both of the evaluated input expressions are explicit semantic function
+values, the operation $EvalComposeFctExpr$ is called. If either of the
+result values is an implicit semantic function value, an implicit semantic
+function value is returned. Otherwise, both values are map values, and the
+map composition is created, if the range of the seconds map value is a
+subset of the domain of the first set.
+
+
+\begin{vdm_al}
+functions
+
+EvalComposeFctExpr : SEM`CompExplFN * SEM`CompExplFN -> SEM`VAL
+EvalComposeFctExpr(mk_SEM`CompExplFN(fvl1,nil),mk_SEM`CompExplFN(fvl2,nil)) ==
+  mk_SEM`CompExplFN(fvl2 ^ fvl1,nil);
+\end{vdm_al}
+
+This operation returns the semantic function value for the function
+composition of two explicit functions. The domain type of the composit
+function is the domain type of the second function, and the range type is
+the range type of the first function. The body of the function is the
+following \keyw{let}-expression:
+\[ \Let x = g(y) \Lin f(x) \]
+where $f$ represents the first function, and $g$ the second function.
+
+\begin{vdm_al}
+operations
+
+EvalIterateExpr : SEM`VAL * SEM`VAL ==> SEM`VAL
+EvalIterateExpr (op1_v, op2_v) ==
+  cases true:
+    (is_SEM`NUM(op1_v))        -> if is_SEM`NUM(op2_v)
+                                  then EvalNumBinOp(op1_v, <NUMEXP>, op2_v)
+                                  else RTERR`ErrorVal(RTERR`NUM_EXPECTED,nil,nil, []),
+    (is_SEM`MAP(op1_v))        -> if AUX`IsNat(op2_v)
+                                  then IterateMap(op1_v, op2_v)
+                                  else RTERR`ErrorVal(RTERR`NAT_EXPECTED,nil,nil, []),
+    (is_SEM`CompExplFN(op1_v)) -> if AUX`IsNat(op2_v)
+                                  then IterateFct(op1_v, op2_v)
+                                  else RTERR`ErrorVal(RTERR`NAT_EXPECTED,nil,nil, []),
+    others                     -> RTERR`ErrorVal(RTERR`FN_OR_MAP_OR_NUM_EXPECTED,nil,nil, [])
+  end;
+\end{vdm_al}
+
+This operation returns the iteration of an expression with a number.
+Depending on the result of the evaluation of the expression, we call the
+correct operation.
+
+\begin{vdm_al}
+operations
+
+IterateFct : SEM`CompExplFN * SEM`VAL ==> SEM`VAL
+IterateFct (fn_v, mk_SEM`NUM(n)) ==
+  cases true:
+    (n = 0) -> return mk_SEM`CompExplFN([mu(fn_v.fl(i),instr |-> nil) | i in set inds fn_v.fl],nil),
+    (n = 1) -> return fn_v,
+    (n > 1) -> return mk_SEM`CompExplFN(conc [fn_v.fl| - in set {1,...,n}],nil),
+    others  -> return RTERR`ErrorVal(RTERR`NAT_EXPECTED,nil,nil, [])
+  end;
+\end{vdm_al}
+
+For function iteration, we return the identity function in case the number
+of iterations is 0. The identity function returns the input as result of
+the function. If the number of iterations is 1, we return the the input
+function as result. Otherwise, we use repeated function composition with
+the input function to create the proper function.
+
+\begin{vdm_al}
+operations
+
+IterateMap : SEM`VAL * SEM`NUM ==> SEM`VAL
+IterateMap (mk_SEM`MAP(map_v), mk_SEM`NUM(n)) ==
+--  cases true:
+--    (n >= 1 and (n >=2 => (rng map_v subset dom map_v)))
+--                    -> def mk_SEM`MAP(tmp_v) = IterateMap(mk_SEM`MAP(map_v), mk_SEM`NUM(n - 1))
+--                       in return mk_SEM`MAP({ i |-> map_v(tmp_v(i)) | i in set dom map_v }),
+--    (n = 0)    -> return mk_SEM`MAP({ i |-> i | i in set dom map_v }),
+--    others     -> RTERR`ErrorVal(RTERR`NAT_EXPECTED,nil,nil, [])
+--  end
+  cases true:
+    (n = 0)    -> return mk_SEM`MAP({ i |-> i | i in set dom map_v }),
+    (n = 1)    -> return mk_SEM`MAP(map_v),
+    (n > 1)    -> if rng map_v subset dom map_v
+                  then
+                    def mk_SEM`MAP(tmp_v) = IterateMap(mk_SEM`MAP(map_v), mk_SEM`NUM(n - 1))
+                    in return mk_SEM`MAP({ i |-> map_v(tmp_v(i)) | i in set dom map_v })
+                  else return RTERR`ErrorVal(RTERR`NOT_RNG_DOM_SUBSET,nil,nil, []),
+    others     -> return RTERR`ErrorVal(RTERR`NAT_EXPECTED,nil,nil, [])
+  end;
+\end{vdm_al}
+
+If the number of iterations is equal to 1, we return the input map as
+result. In case the number of iterations is equal to 0, the identity map is
+returned, i.e.\ the domain of the map is equal to the domain of the input
+map, and each element from the domain maps to itself. Otherwise, map
+iteration is equal to repeated map composition with the input map.
+
+#ifdef VDMSL
+\begin{vdm_al}
+operations
+
+IsExtFnOp : AS`Name * AS`Name ==> bool
+IsExtFnOp (id, mod_name) ==
+  def sigmaimo = STATE`GetDLModule (mod_name)
+  in return (id in set dom sigmaimo.extfns) or (id in set dom sigmaimo.extops)
+\end{vdm_al}
+
+This operation returns $true$ if the input identifier is defined in the
+domain of the external function map or of the external operation map of 
+the current module.
+
+\begin{vdm_al}
+operations
+
+GetExtFnOpVal : AS`Name * AS`Name ==> bool * [SEM`VAL]
+GetExtFnOpVal (loc_name, mod_name) ==
+  def sigmaimo = STATE`GetDLModule (mod_name)
+  in
+    if loc_name in set dom sigmaimo.extfns
+    then return mk_(true, sigmaimo.extfns(loc_name))
+    elseif loc_name in set dom sigmaimo.extops
+    then return mk_(true, sigmaimo.extops(loc_name))
+    else return mk_(false, nil);
+\end{vdm_al}
+
+This operation returns the semantic function or operation value for the input identifier.
+
+\begin{vdm_al}
+operations
+
+IsExtVal : AS`Name * AS`Name ==> bool
+IsExtVal (loc_name, mod_name) ==
+  def sigmaimo = STATE`GetDLModule (mod_name)
+  in return (loc_name in set dom sigmaimo.extv)
+\end{vdm_al}
+
+This operation returns true if the input identifier is defined in the
+domain of the value map for the current implementation module.
+
+\begin{vdm_al}
+operations
+
+GetExtVal : AS`Name * AS`Name ==> bool * [SEM`VAL]
+GetExtVal (loc_name, mod_name) ==
+  --return STATE`APPROXVal(mk_SEM`LOC(id), [])
+  def sigmaimo = STATE`GetDLModule (mod_name)
+  in
+    if loc_name in set dom sigmaimo.extv
+    then return mk_(true, STATE`APPROXVal(mk_SEM`LOC(loc_name), []))
+    else return mk_(false, nil);
+\end{vdm_al}
+
+This operation returns the value of the input identifier from the external 
+value map of the current module.
+
+\begin{vdm_al}
+operations
+EvalExtBody : SEM`LOC* seq of SEM`VAL ==> SEM`VAL
+EvalExtBody (loc, arg_l) ==
+  return STATE`APPROXVal(loc, arg_l)
+\end{vdm_al}
+
+The  is a simulation for the evaluation of the body related to an 
+external defined function. 
+
+\begin{vdm_al}
+operations
+
+IsDefApproxVal : SEM`LOC * AS`Name ==> bool
+IsDefApproxVal (mk_SEM`LOC(loc), mod_name) ==
+  def sigmamo = STATE`GetModule (mod_name)
+  in return (loc in set dom sigmamo.gv)
+\end{vdm_al}
+
+\begin{vdm_al}
+operations
+GetApproxVal : SEM`LOC * AS`Name * seq of SEM`VAL ==> SEM`VAL
+GetApproxVal (mk_SEM`LOC(loc), mod_name, arg_lv) ==
+def sigmamo = STATE`GetModule (mod_name) in
+  --let mk_(inout, access) = sigmamo.gv(loc),
+  let mk_(inout, -) = sigmamo.gv(loc),
+      args = mk_SEM`SEQ(arg_lv) in
+      if is_SEM`MAP(inout)
+      then let inout_v = inout.v in
+        (if args in set dom inout_v 
+        then return inout_v(args)
+        else error)
+      else error
+ 
+\end{vdm_al}
+The operation $GetApproxVAL$ retireves for a location a result value to a 
+certain argument. It reads in the module value of the APPROX-module first
+and checks if a value with the name of the location is defined.
+If the argument is defined in the domain of the value, which must be
+a map value, the range elment is returned as simulation value. Otherwise an
+error is raised.
+
+#endif VDMSL
+\begin{vdm_al}
+end EXPR
+\end{vdm_al}
+\vspace{0.5cm}
+
+#ifdef RTINFO
+\begin{rtinfo}
+[EvalSeqModifyMapOverrideExpr]{rtinfo.ast}[EXPR]
+\end{rtinfo}
+#endif RTINFO
+
+% Local Variables: 
+% mode: LaTeX
+% TeX-master: "dynsem"
+% End: 

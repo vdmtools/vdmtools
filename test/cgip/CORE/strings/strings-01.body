@@ -1,0 +1,30 @@
+functions
+
+f : seq of char -> seq of char
+f(s) == s;
+
+operations
+
+public Test : () ==> seq1 of ((int | seq1 of (char|int)) | bool) 
+Test () ==
+  ( dcl AA : seq of char := ['h','a','l','l','o','A','A'],
+        B : seq of char | seq of int := ['h','a','l','l','o','B'],
+        C : seq of (char|int) := "Setting alarm to 22:11",
+        D : seq of (char|int) := ['h','a','l','l','o', 'D'],
+        E : seq of char | seq of (char|int) := ['h','a','l','l','o', 'D'],    
+        F : seq of char | int := f("Setting alarm to 22:11"),    
+        G : seq of char | int := 7,
+        H : seq of char | int | seq of int := 7,
+        I : seq of char | int | seq of int := [7],
+        J : seq of char | int | seq of int := "Setting alarm to 22:11",
+        K : seq of char | int := [if true then 'u' else 'b'],
+        KK : seq of char := [if true then 'a' else 'b'],
+        L : seq of char | seq of int := [if true then 3 else 'b'];
+    return [AA, B, C, D, E, F, G, H, I, J, K, KK, L,
+            forall mk_(a,b) in set {mk_("hello",2),mk_([1,2,3,4,5],2),mk_([],3)} & len a = 5,
+            forall a in set {[2,'a'],['c'],"s"} & len a = 1,
+            J = K             
+           ]
+  )
+ 
+

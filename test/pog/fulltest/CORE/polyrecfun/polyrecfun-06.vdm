@@ -1,0 +1,15 @@
+class A
+
+functions
+meas[@A,@B] : (@A * @B) * nat -> nat
+meas(mk_(a,b),-) == 3;
+
+foo[@A,@B] : (@B * @A) * nat -> nat
+foo(mk_(a,b),-) == 
+  cases b:
+  0    -> 0,
+  others -> 1 + foo[@A,@B](mk_(a,b-1),9)
+  end
+measure meas;
+
+end A

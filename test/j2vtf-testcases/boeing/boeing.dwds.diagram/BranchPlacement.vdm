@@ -1,0 +1,368 @@
+class BranchPlacement is subclass of NodePlacement
+operations 
+public  packNodes : () ==> <VOID>
+packNodes() == 
+( dcl   minimumX : int  := graphLayout.getMinimumX(),
+        minimumY : int  := graphLayout.getMinimumY();
+  ( dcl   idx : int  := 0;
+    while  idx < graphLayout.size() do  
+    ( dcl   graphNode : [GraphNode] := graphLayout.elementAt(idx),
+            coordinates : [Point] := graphNode.getCoordinates();
+      def l_3 = coordinates.x
+      in coordinates.x := l_3-minimumX;
+      def l_3 = coordinates.y
+      in coordinates.y := l_3-minimumY;
+      let - = graphNode.setCoordinates(coordinates)
+      in 
+        skip ;
+      idx := idx+1
+    ) 
+  ) ;
+  let - = graphLayout.updatePlotMap()
+  in 
+    skip ;
+  ( dcl   plotMap : [PlotMap] := graphLayout.getPlotMap();
+    ( dcl   idx : int  := 0;
+      while  idx < graphLayout.size() do  
+      ( dcl   parentNode : [GraphNode] := graphLayout.elementAt(idx),
+              childNode : [GraphNode] := parentNode.getOnlyChild(),
+              parentRow : int  := parentNode.getRow();
+        if  childNode <> nil   and  not  plotMap.plotted(childNode.getColumn())(parentRow)
+        then  
+          ( dcl   childColumn : int  := childNode.getColumn();
+            plotMap.plotted(childColumn) := plotMap.plotted(childColumn) ++ {childNode.getRow() |-> false  };
+            plotMap.plotted(childColumn) := plotMap.plotted(childColumn) ++ {parentRow |-> true  };
+            let - = childNode.setRow(parentRow)
+            in 
+              skip 
+          ) ;
+        idx := idx+1
+      ) 
+    ) ;
+    ( dcl   maximumY : int  := graphLayout.getMaximumY();
+      let - = graphLayout.updatePlotMap()
+      in 
+        skip ;
+      ( dcl   row : int  := 0;
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  row < maximumY do  
+          ( if  graphLayout.mergeToRow(row)
+            then  
+              ( ( dcl   idx : int  := 0;
+                  while  idx < graphLayout.size() do  
+                  ( dcl   graphNode : [GraphNode] := graphLayout.elementAt(idx),
+                          coordinates : [Point] := graphNode.getCoordinates();
+                    if  coordinates.y > row
+                    then  
+                      ( coordinates.y := coordinates.y-1;
+                        let - = graphNode.setCoordinates(coordinates)
+                        in 
+                          skip 
+                      ) ;
+                    idx := idx+1
+                  ) 
+                ) ;
+                let - = graphLayout.updatePlotMap()
+                in 
+                  skip ;
+                maximumY := graphLayout.getMaximumY()
+              ) 
+            else  
+              ( row := row+1
+              ) 
+          ) ;
+        return  
+      ) 
+    ) 
+  ) ;
+  return  <VOID>
+) ;
+
+public  plotNodes : () ==> <VOID>
+plotNodes() == 
+( dcl   startIndex : int  := 0;
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  moreNodesToPlot() do  
+    ( let - = graphLayout.clearVisits()
+      in 
+        skip ;
+      let - = setColumns()
+      in 
+        skip ;
+      let - = setColumns(startIndex , nodePlotCount)
+      in 
+        skip ;
+      let - = graphLayout.clearVisits()
+      in 
+        skip ;
+      ( dcl   idx : int  := startIndex;
+        while  idx < nodePlotCount do  
+        ( dcl   graphNode : [GraphNode] := graphLayout.elementAt(idx);
+          if  not  graphNode.hasBeenVisited()
+          then  
+            ( let - = setRows(graphNode , getStartRow())
+              in 
+                skip 
+            ) ;
+          idx := idx+1
+        ) 
+      ) ;
+      startIndex := nodePlotCount
+    ) ;
+  return  
+) ;
+
+private  setColumns : () ==> <VOID>
+setColumns() == 
+( dcl   graphNode : [GraphNode] := selectNextNode();
+  let - = graphNode.setColumn(0)
+  in 
+    skip ;
+  let - = graphNode.setRoot(true  )
+  in 
+    skip ;
+  let - = graphNode.setVisited(true  )
+  in 
+    skip ;
+  let - = addNode(graphNode)
+  in 
+    skip ;
+  if  graphNode.getNode().hasAMate()
+  then  
+    ( dcl   nextRefDes : [RefDes] := graphNode.getNode().getRefDes();
+      let - = nextRefDes.setDominantMate(true  )
+      in 
+        skip ;
+      let - = nextRefDes.getMate().setDominantMate(false  )
+      in 
+        skip 
+    ) ;
+  ( dcl   parentList : [Vector] := new  Vector();
+    let - = parentList.addElement(graphNode)
+    in 
+      skip ;
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip 
+        
+      end  
+    in  
+      while  parentList <> nil   and  parentList.size() > 0 do  
+      ( dcl   parentNode : [GraphNode] := parentList.elementAt(0),
+              parentColumn : int  := parentNode.getColumn(),
+              connections : [Vector] := parentNode.getConnections();
+        ( dcl   idx : int  := 0;
+          while  idx < connections.size() do  
+          ( dcl   refDesNode : [RefDesNode] := connections.elementAt(idx),
+                  childNode : [GraphNode] := graphLayout.findGraphNode(refDesNode);
+            if  not  childNode.hasBeenVisited() and  graphLayout.indexOf(childNode) >= nodePlotCount
+            then  
+              ( dcl   myColumn : int  := childNode.getColumn(parentNode);
+                let - = childNode.setColumn(myColumn)
+                in 
+                  skip ;
+                let - = childNode.setVisited(true  )
+                in 
+                  skip ;
+                let - = addNode(childNode)
+                in 
+                  skip ;
+                if  myColumn < parentColumn
+                then  
+                  ( let - = childNode.setOrphan(true  )
+                    in 
+                      skip 
+                  ) ;
+                let - = parentList.addElement(childNode)
+                in 
+                  skip ;
+                if  refDesNode.hasAMate()
+                then  
+                  ( let - = setMateDominance(childNode , parentNode)
+                    in 
+                      skip 
+                  ) 
+              ) ;
+            idx := idx+1
+          ) 
+        ) ;
+        let - = parentList.removeElementAt(0)
+        in 
+          skip 
+      ) ;
+    return  
+  ) ;
+  return  <VOID>
+) ;
+
+private  getStartRow : () ==> int 
+getStartRow() == 
+( dcl   maximumRow : int  := -1;
+  ( dcl   idx : int  := 0;
+    while  idx < graphLayout.size() do  
+    ( dcl   graphNode : [GraphNode] := graphLayout.elementAt(idx);
+      maximumRow := Math.max(maximumRow , graphNode.getRow());
+      idx := idx+1
+    ) 
+  ) ;
+  return  maximumRow+1
+) ;
+
+private  setColumns : int  * int  ==> <VOID>
+setColumns(startIndex, endIndex) == 
+( ( dcl   idx : int  := startIndex;
+    while  idx < endIndex do  
+    ( dcl   graphNode : [GraphNode] := graphLayout.elementAt(idx);
+      if  graphNode.getNode().hasAMate()
+      then  
+        ( dcl   connections : [Vector] := graphNode.getConnections();
+          ( dcl   cnt : int  := 0;
+            while  cnt < connections.size() do  
+            ( dcl   nextRefDesNode : [RefDesNode] := connections.elementAt(cnt),
+                    nextGraphNode : [GraphNode] := graphLayout.findGraphNode(nextRefDesNode),
+                    leftConnection : bool  := nextGraphNode.connectOnLeft(graphNode),
+                    myColumn : int  := graphNode.getColumn(),
+                    nextColumn : int  := nextGraphNode.getColumn();
+              if  graphNode.connectOnSameSide(nextGraphNode)
+              then  
+                ( if  myColumn < nextColumn
+                  then  
+                    ( let - = moveBranchRight(graphNode , nextColumn-myColumn)
+                      in 
+                        skip 
+                    ) 
+                  else  
+                    if  myColumn > nextColumn
+                    then  
+                      ( let - = moveBranchRight(nextGraphNode , myColumn-nextColumn)
+                        in 
+                          skip 
+                      ) 
+                ) 
+              else  
+                if  leftConnection and  nextColumn >= myColumn
+                then  
+                  ( let - = moveBranchRight(graphNode , nextColumn-myColumn+1)
+                    in 
+                      skip 
+                  ) 
+                else  
+                  if  not  leftConnection and  nextColumn <= myColumn
+                  then  
+                    ( let - = moveBranchRight(nextGraphNode , myColumn-nextColumn+1)
+                      in 
+                        skip 
+                    ) ;
+              cnt := cnt+1
+            ) 
+          ) 
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  
+) ;
+
+private  addNode : [GraphNode] ==> <VOID>
+addNode(graphNode) == 
+( let - = graphLayout.removeElement(graphNode)
+  in 
+    skip ;
+  let - = graphLayout.insertElementAt(graphNode , nodePlotCount)
+  in 
+    skip ;
+  nodePlotCount := nodePlotCount+1;
+  return  
+) ;
+
+private  setRows : [GraphNode] * int  ==> int 
+setRows(graphNode, currentRow) == 
+( dcl   nextRow : int ,
+        maxRow : int  := currentRow,
+        myColumn : int  := graphNode.getColumn(),
+        connections : [Vector] := graphNode.getConnections();
+  let - = graphNode.setVisited(true  )
+  in 
+    skip ;
+  ( dcl   pass : int  := 0;
+    while  pass < 2 do  
+    ( ( dcl   idx : int  := 0;
+        while  idx < connections.size() do  
+        ( dcl   refDesNode : [RefDesNode] := connections.elementAt(idx),
+                childNode : [GraphNode] := graphLayout.findGraphNode(refDesNode),
+                childColumn : int  := childNode.getColumn();
+          if  not  childNode.hasBeenVisited() and  ((pass = 0 and  (myColumn < childColumn or  childNode.isARoot())) or  (pass = 1 and  myColumn > childColumn and  childNode.isAnOrphan()))
+          then  
+            ( nextRow := if  (childNode.isAnOrphan()) then  maxRow+1 else  maxRow;
+              maxRow := setRows(childNode , nextRow);
+              maxRow := maxRow+1
+            ) ;
+          idx := idx+1
+        ) 
+      ) ;
+      pass := pass+1
+    ) 
+  ) ;
+  if  currentRow <> maxRow
+  then  
+    ( maxRow := maxRow-1
+    ) ;
+  ( dcl   myRow : int  := (currentRow+maxRow)/2,
+          findingRow : bool  := graphNode.overlapNodeAt(new  Point(myColumn , myRow));
+    trap  j2v_break with  
+      cases  true  : 
+        (isofclass  (J2V_Break,j2v_break)) -> 
+          skip 
+        
+      end  
+    in  
+      while  findingRow do  
+      ( myRow := myRow+1;
+        maxRow := Math.max(maxRow , myRow);
+        findingRow := graphNode.overlapNodeAt(new  Point(myColumn , myRow))
+      ) ;
+    let - = graphNode.setRow(myRow)
+    in 
+      skip ;
+    return  maxRow
+  ) 
+) ;
+
+private  moveBranchRight : [GraphNode] * int  ==> <VOID>
+moveBranchRight(graphNode, adjustment) == 
+( dcl   connections : [Vector] := graphNode.getConnections(),
+        myColumn : int  := graphNode.getColumn();
+  ( dcl   idx : int  := 0;
+    while  idx < connections.size() do  
+    ( dcl   refDesNode : [RefDesNode] := connections.elementAt(idx),
+            childNode : [GraphNode] := graphLayout.findGraphNode(refDesNode);
+      if  myColumn < childNode.getColumn() and  (not  refDesNode.hasAMate() or  graphNode.connectOnLeft(childNode)) and  not  childNode.connectOnLeft(graphNode)
+      then  
+        ( let - = moveBranchRight(childNode , adjustment)
+          in 
+            skip 
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  let - = graphNode.setColumn(myColumn+adjustment)
+  in 
+    skip ;
+  return  
+) ;
+
+
+end  BranchPlacement

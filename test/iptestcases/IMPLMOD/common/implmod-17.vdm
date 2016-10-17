@@ -1,0 +1,62 @@
+dlmodule C
+  imports 
+    from A
+      types 
+      Point
+ 
+  exports
+    operations
+      Place : A`Point ==> ();
+      Rotate : A`Point * real ==> A`Point
+
+  uselib
+      ""
+end C
+
+module APPROX
+
+  exports 
+    all
+
+  definitions
+    values
+      Place = {[mk_(1,2)] |-> nil};
+      Rotate =  { [mk_(1,0),90.0] |-> mk_(0,1), [mk_(3,4),180.0] |-> mk_(-3,4)}
+
+end APPROX  
+
+module A
+  imports
+    from 
+      APPROX
+        values
+          Place;
+          Rotate,
+
+    from C
+      operations
+          Place : Point ==> () renamed Place ;
+          Rotate : Point * real ==> Point renamed Rotate
+
+    exports 
+      types
+        Point
+
+      operations
+        Test : () ==> Point
+
+     definitions
+       types
+         Point = int * int
+  
+       operations
+
+         Test : () ==> Point
+         Test () ==  
+         ( let dummy = Place(mk_(1,2)) in 
+           Rotate(mk_(1,0),90.0))
+
+end A
+    
+   
+

@@ -1,0 +1,33 @@
+#!/usr/bin/perl 
+
+# Intended use is to extract known bugs from file `all.trace'.
+# The script prints out everything between keyword `KNOWN BUG' 
+# and `***'.
+#
+# usage: getKnownBugs <file> or getKnownBugs < <file>
+#
+# Output goes to standard output
+#
+
+print "Output from $0 $ARGV[0]\n";
+system("date");
+system("pwd");
+$mline="~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n";
+    print $mline;
+KB:
+while (<>) {
+    if (/KNOWN BUG/) {
+	print;
+	while (<>){
+	    if (!/\*\*\*/) {
+		print;
+	    }
+	    else {
+		print $mline;
+		next KB;}
+	}
+    }
+}
+
+
+

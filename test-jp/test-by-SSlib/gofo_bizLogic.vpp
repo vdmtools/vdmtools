@@ -1,0 +1,39 @@
+/*######
+#
+# Business Logic Abstract Class
+# $Id: gofo_bizLogic.vpp,v 1.1 2005/11/25 07:05:38 vdmtools Exp $
+#
+
+#
+# 業務論理を記述するためのクラス
+# （注）今のところ、状態を持たせてはいけない
+*/
+class GofoBizLogic is subclass of 『問題領域共通定義』
+
+operations
+/*
+public check : GofoSlip * GofoCarton ==> GofoBizLogicReturn
+check(a伝票, aカートン) == is subclass responsibility;
+  # 入力伝票を検査する
+*/
+
+/*
+public apply : GofoSlip * GofoCarton ==> GofoBizLogicReturn
+apply(a伝票, aカートン) ==  is subclass responsibility;
+  # 入力伝票の情報に基き帳簿に記帳する
+*/
+
+/*  
+public export : GofoSlip * GofoCarton ==>GofoBizLogicReturn
+export(a伝票, aカートン) ==  is subclass responsibility;
+  # 必要ならば出力伝票を生成する
+*/
+
+/*
+public summaryExport : GofoCarton ==> GofoBizLogicReturn
+summaryExport(aカートン) ==  is subclass responsibility;
+  # 一連の入力伝票を処理した後に、まとめて行う必要のある処理を実行
+  # 必要ならば出力伝票を生成
+*/
+
+end GofoBizLogic

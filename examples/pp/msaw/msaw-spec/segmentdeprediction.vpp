@@ -1,0 +1,47 @@
+class SegmentDePrediction is subclass of Vecteur3D, Parametres
+
+   instance variables
+      modeA: MSAWTypes`ModeA
+
+   operations
+      Set: MSAWTypes`ModeA * map MSAWTypes`Temps to (MSAWTypes`Coordonnees * MSAWTypes`Pieds) * BulletinMeteo ==> ()
+      Set (modeA', positions, bulletin_meteo) ==
+        let  mst : MSAWTypes = new MSAWTypes(),
+             temps_actuel = mst.LaPlusRecente (dom positions),
+             temps_passe = mst.LaPlusRecente (dom positions \ {temps_actuel}),
+             mk_(xy_actuel, modeC_actuel) = positions (temps_actuel),
+             mk_(xy_passe, modeC_passe) = positions (temps_passe) in
+            def qnh_xy_actuel = bulletin_meteo.GetQNH (xy_actuel);
+                qnh_xy_passe = bulletin_meteo.GetQNH (xy_passe) in
+               let z_actuel = ModeC2Altitude (modeC_actuel, qnh_xy_actuel),
+                   z_passe = ModeC2Altitude (modeC_passe, qnh_xy_passe),
+                mk_(xy_prevu, z_prevu) =
+                   PositionFuture (xy_passe, z_passe, xy_actuel, z_actuel,
+                                   DureeExtrapolation, VitesseMaximale) in
+                (  modeA := modeA';
+                   xy_queue := xy_actuel;
+                   z_queue := z_actuel;
+                   xy_tete := xy_prevu;
+                   z_tete := z_prevu
+            )      
+      pre card dom positions >= 2;
+
+
+      GetmodeA: () ==> MSAWTypes`ModeA
+      GetmodeA ()
+      == return modeA
+
+   functions
+      ModeC2Altitude: MSAWTypes`Pieds * MSAWTypes`Hpa -> MSAWTypes`Pieds
+      ModeC2Altitude (modeC, qnh) ==
+         modeC - 27.5 * (1013.25 - qnh);
+
+      PositionFuture: MSAWTypes`Coordonnees * MSAWTypes`Pieds * MSAWTypes`Coordonnees * MSAWTypes`Pieds * MSAWTypes`Duree * MSAWTypes`KT ->
+                      MSAWTypes`Coordonnees * MSAWTypes`Pieds
+      PositionFuture (mk_(x_passe, y_passe), z_passe, mk_(x_actuel, y_actuel),
+                      z_actuel, d, vitesse) ==
+         let c = mk_(2*x_actuel - x_passe, 2*y_actuel - y_passe),
+             p = 2*z_actuel - z_passe in
+           mk_(c,p)
+
+end SegmentDePrediction

@@ -1,0 +1,921 @@
+module CI_AUX
+
+imports
+
+  from SPEC_AST all,
+  from POGTP all,
+
+  from AS all,
+  from CI all,
+  from REP all,
+  from ENV all,
+  from TYPE all,
+#ifdef VDMPP
+  from VCM all,
+  from MANGLE all,
+  from STMT all,
+#endif VDMPP
+  from REP2TYPE all,
+  from TYPE2REP all,
+
+  from PID all
+
+exports
+  functions
+
+    GetCid : (AS`Expr | AS`Pattern) +> CI`ContextId;
+    LookUpFieldsFromTag : AS`Name -> seq of REP`TypeRep;
+--    LookUpFieldsFromTag : AS`Name -> seq of AS`Type;
+#ifdef VDMSL
+    LookUpGroundType : AS`Name -> AS`Type;
+#endif VDMSL
+#ifdef VDMPP
+    LookUpGroundType : AS`Name -> AS`Type | POGTP`ClassType;
+#endif VDMPP
+    LookUpGroundTypeRep : AS`Name -> REP`TypeRep;
+    LookUpInvOrGroundType : AS`Name -> AS`Type;
+--    GetGroundTypeInfo : CI`ContextId -> AS`Type;
+    GetGroundTypeRepInfo : CI`ContextId -> REP`TypeRep;
+    HasMemberInvariant : AS`Name -> bool;
+#ifdef VDMPP
+    LookUpNames : set of REP`ObjRefTypeRep * AS`Name -> set of REP`TypeRep;
+    IsSubType: REP`TypeRep * REP`TypeRep * set of (REP`TypeNameRep * REP`TypeNameRep) -> bool;
+    NormaliseTypeName: REP`TypeRep -> REP`TypeRep;
+    IsClassName: AS`Name -> bool;
+    GetMemberNames: AS`Name -> set of AS`Name;
+    CheckOperationCall: set of AS`Name * AS`Name * [AS`Expr] * seq of REP`TypeRep -> bool * [REP`TypeRep] * REP`TypeRep;
+#endif VDMPP
+    GetMangledFnOpName: AS`Expr * seq of AS`Expr -> AS`Expr;
+    GetNameFromStateDesignator: AS`StateDesignator -> AS`Name;
+    IsNamePartOfState : AS`Name * [AS`Name] -> bool
+   operations
+    GetASType : (AS`Expr | AS`Pattern) ==> AS`Type;
+    LookUpInvOrGroundTypeRep : AS`Name ==> REP`TypeRep;
+#ifdef VDMSL
+    GetMemberNameDef :  AS`Name * [AS`Name] * [AS`Type] ==> AS`FnDef | AS`OpDef | <MAYBE> | <NO> | <NOT_FOUND>;
+#endif VDMSL
+#ifdef VDMPP
+    GetMemberNameDef :  AS`Name * [AS`Name] * [AS`Type]
+                    ==> AS`FnDef | AS`OpDef | AS`InstAssignDef | <MAYBE> | <NO> | <NOT_FOUND>;
+#endif VDMPP
+    HasInvariant : AS`Type ==> bool
+
+   types
+     struct FuncReturnInfo
+
+   functions
+     isFunctionName : seq of char -> bool;
+     getFuncReturnInfo : seq of char -> FuncReturnInfo;
+     isTypeName : seq of char -> bool;
+     getTypeDef : seq of char ->  AS`TypeDef;
+     isValueName : seq of char -> bool
+
+   operations
+    GetTypeInfo : (AS`Expr | AS`Pattern) ==> [REP`TypeRep]
+
+definitions
+
+functions
+
+GetCid : (AS`Expr | AS`Pattern) +> CI`ContextId
+GetCid (expr) ==
+  expr.cid;
+
+operations
+GetASType : (AS`Expr | AS`Pattern) ==> AS`Type
+GetASType (expr) ==
+#ifdef VDMSL
+  def tp_rep = CI`GetTypeInfo(GetCid(expr));
+      tp_as  = REP2TYPE`TypeRepToType(tp_rep, CI`NilContextId)
+  in return tp_as
+#endif VDMSL
+#ifdef VDMPP
+  def tp_rep' = CI`GetTypeInfo(GetCid(expr));
+  in
+   (dcl tp_rep : REP`TypeRep;
+    if is_REP`TypeNameRep(tp_rep')
+    then 
+      def clnm = StripClassName(tp_rep'.nm);
+          isclassname = VCM`IsClassName(clnm);
+      in
+        if isclassname
+        then tp_rep := mk_REP`TypeNameRep(clnm)
+        else tp_rep := tp_rep'
+    else tp_rep := tp_rep';
+    
+    def tp_as = REP2TYPE`TypeRepToType(tp_rep, CI`NilContextId)
+    in return tp_as;
+   )
+#endif VDMPP
+pre let cid = GetCid(expr)
+    in CI`IsAValidContextId(cid) and CI`HasTypeInfo(cid);
+
+functions
+GetGroundTypeRepInfo : CI`ContextId -> REP`TypeRep
+GetGroundTypeRepInfo (cid) ==
+  def tp = CI`GetTypeInfo(cid);
+      tp_grd = if is_REP`TypeNameRep(tp)
+               then LookUpGroundTypeRep(tp.nm)
+               else tp
+  in
+    tp_grd
+pre CI`IsAValidContextId(cid) and CI`HasTypeInfo(cid);
+
+operations
+HasInvariant : AS`Type ==> bool
+HasInvariant (type) ==
+  cases type:
+    mk_AS`TypeName(name,-) ->
+#ifdef VDMPP
+          if VCM`IsClassName(name)
+          then
+            def vars  = SPEC_AST`GetInstVars(name)
+            in return len [vars(i) | i in set inds vars & is_AS`InstanceInv(vars(i)) ] > 0
+          else
+#endif VDMPP
+            return SPEC_AST`GetTypeDef(name).Inv <> nil,
+    others                 -> return false
+  end;
+
+functions
+LookUpFieldsFromTag : AS`Name -> seq of REP`TypeRep
+LookUpFieldsFromTag(tag) ==
+#ifdef VDMSL
+  def fieldReps = ENV`LookUpTag(<POS>,tag,{})
+  in
+    if fieldReps = nil
+    then undefined
+    else
+      [let fldreps   = fieldReps.#2,
+           fldrep    = fldreps(i),
+           fldrep_tp = fldrep.tp
+--,
+--               fld_as_tp = REP2TYPE`TypeRepToType(fldrep_tp,CI`NilContextId)
+       in
+--         fld_as_tp
+         fldrep_tp
+          | i in set inds fieldReps.#2];
+#endif // VDMSL
+#ifdef VDMPP
+  def fieldReps = ENV`LookUpTag(<POS>,tag,{})
+  in
+    if fieldReps = nil
+    then undefined
+    else
+      let fld_reps = fieldReps.#2
+      in
+        if is_ENV`AccessFieldRep(fld_reps)
+        then
+          [ let acc_fldrep = fld_reps,
+                fldrep_tp  = acc_fldrep.tp(i).tp
+--,
+--                      fld_as_tp  = REP2TYPE`TypeRepToType(fldrep_tp,CI`NilContextId)
+            in
+--                      fld_as_tp
+              fldrep_tp
+                 | i in set inds fld_reps.tp]
+        else
+          [let fldrep    = fld_reps(i),
+               fldrep_tp = fldrep.tp
+--,
+--               fld_as_tp = REP2TYPE`TypeRepToType(fldrep_tp,CI`NilContextId)
+           in
+             fldrep_tp
+--             fld_as_tp
+             | i in set inds fld_reps];
+#endif // VDMPP
+
+
+--   LookUpFieldsFromTag : AS`Name -> seq of AS`Type
+--   LookUpFieldsFromTag(tag) ==
+--     let tprep = LookUpGroundTypeRep(tag),
+--         tp = SPEC_AST`GetTypeDef(tag),
+--         tps_lst  =
+-- #ifdef VDMSL
+--           if is_AS`StateDef(tp)
+--           then [tp.tp.fields(i).type | i in set inds tp.tp.fields]
+--           else
+-- #endif
+--             if is_REP`CompositeTypeRep(tprep)
+--             then [ REP2TYPE`TypeRepToType(tprep.fields(i).tp,CI`NilContextId) | i in set inds tprep.fields]
+--             else []
+--     in
+--          tps_lst;
+
+
+--    let tp = SPEC_AST`GetTypeDef(tag),
+--        comp_tp  =
+--#ifdef VDMSL
+--          if is_AS`StateDef(tp)
+--          then tp.tp
+--          else
+--#endif
+--            tp.shape,
+--        tps_lst  =
+--          if is_AS`CompositeType(comp_tp)
+--          then [comp_tp.fields(i).type | i in set inds comp_tp.fields]
+--          else []
+--    in
+--        tps_lst;
+
+
+#ifdef VDMSL
+LookUpGroundType : AS`Name -> AS`Type
+#endif VDMSL
+#ifdef VDMPP
+LookUpGroundType : AS`Name -> AS`Type | POGTP`ClassType
+#endif VDMPP
+LookUpGroundType (nm) ==
+  let tprep = LookUpGroundTypeRep(nm)
+  in
+#ifdef VDMPP
+    if is_REP`ObjRefTypeRep(tprep)
+    then mk_POGTP`ClassType(nm)
+    else
+#endif VDMPP
+      REP2TYPE`TypeRepToType(tprep,CI`NilContextId);
+--#ifdef VDMPP
+--    let nm' = StripClassName(nm)
+--    in  if VCM`IsClassName(nm')
+--        then mk_POGTP`ClassType(nm') -- mk_AS`TypeName(nm',CI`NilContextId)
+--        else
+--#endif
+--          let
+--              ty = SPEC_AST`GetTypeDef(nm).shape,
+--              tp = StripBracketedType(ty)
+--          in
+--              if is_AS`TypeName(tp) then
+--                 LookUpGroundType(tp.name)
+--              else
+--                 tp
+--  pre let tpmap = SPEC_AST`GetTypeDefMap()
+--      in
+--          nm in set dom tpmap
+--#ifdef VDMPP
+--          or VCM`IsClassName(nm)
+--#endif
+--  ;
+
+--GetGroundTypeInfo : CI`ContextId -> AS`Type
+--GetGroundTypeInfo (cid) ==
+--  def tp_rep = CI`GetTypeInfo(cid);
+--      tp     = REP2TYPE`TypeRepToType(tp_rep,cid);
+--      grd_tp = if is_AS`TypeName(tp)
+--#ifdef VDMPP
+--                  and not VCM`IsClassName(StripClassName(tp.name))
+--#endif VDMPP
+--               then LookUpGroundType(tp.name)
+--               else tp
+--  in
+--    grd_tp
+--pre CI`IsAValidContextId(cid) and CI`HasTypeInfo(cid);
+
+LookUpTypeName : AS`Name -> [REP`TypeRep]
+LookUpTypeName (nm) ==
+#ifdef VDMSL
+  def tp = ENV`LookUpTypeName (nm)
+  in tp
+#endif VDMSL
+#ifdef VDMPP
+  def tp = ENV`LookUpTypeName (nm,true)
+  in
+    if is_ENV`AccessTypeRep(tp)
+    then tp.tp
+    else tp
+#endif VDMPP
+  ;
+
+LookUpGroundTypeRep : AS`Name -> REP`TypeRep
+LookUpGroundTypeRep (nm) ==
+--#ifdef VDMPP
+--    let nm' = StripClassName(nm)
+--    in  if VCM`IsClassName(nm')
+--        then mk_REP`ObjRefTypeRep(nm')
+--        else
+--#endif
+    if nm.ids = ["bottom"] then
+       undefined
+    elseif nm.ids = ["top"] then
+       mk_REP`AllTypeRep()
+    elseif nm.ids = ["nilType"] then
+       mk_REP`NilTypeRep()
+    else
+        let tprep = LookUpTypeName(nm)
+        in  if is_REP`TypeNameRep(tprep)
+            then LookUpGroundTypeRep(tprep.nm)
+            elseif is_REP`InvTypeRep(tprep)
+            then
+              if is_REP`TypeNameRep(tprep.shape)
+              then LookUpGroundTypeRep(tprep.shape.nm)
+              else tprep.shape
+            else tprep
+--        let ty     = SPEC_AST`GetTypeDef(nm).shape,
+--            tp     = StripBracketedType(ty),
+--            grd_tp = if is_AS`TypeName(tp) then
+--                       LookUpGroundType(tp.name)
+--                     else
+--                       tp
+--        in
+--            TYPE2REP`TransType(grd_tp)
+--  pre let tpmap = SPEC_AST`GetTypeDefMap()
+--      in
+--          nm in set dom tpmap
+--#ifdef VDMPP
+--          or VCM`IsClassName(nm)
+--#endif
+  ;
+
+operations
+#ifdef VDMPP
+StripClassName : AS`Name ==> AS`Name
+StripClassName (nm) ==
+  if len nm.ids < 2
+  then return nm
+  else
+    let nm' = mk_AS`Name([nm.ids(2)],nm.cid)
+    in
+      if VCM`IsClassName(nm')
+      then return nm'
+      else return nm;
+#endif VDMPP
+
+LookUpInvOrGroundTypeRep : AS`Name ==> REP`TypeRep
+LookUpInvOrGroundTypeRep (nm) ==
+#ifdef VDMPP
+  def nm' = StripClassName(nm)
+  in
+    if VCM`IsClassName(nm')
+    then return mk_REP`ObjRefTypeRep(nm')
+    else
+#endif VDMPP
+      let tprep = LookUpTypeName(nm)
+      in
+        if is_REP`InvTypeRep(tprep)
+        then return mk_REP`TypeNameRep(nm)
+        elseif is_REP`TypeNameRep(tprep)
+        then LookUpInvOrGroundTypeRep(tprep.nm)
+        else return tprep;
+--          let tpdef  = SPEC_AST`GetTypeDef(nm),
+--              ty     = tpdef.shape,
+--              tp     = StripBracketedType(ty),
+--              grd_tp = if tpdef.Inv <> nil then
+--                         mk_AS`TypeName(nm,CI`NilContextId)
+--                       elseif is_AS`TypeName(tp) then
+--                         LookUpInvOrGroundTypeRep(tp.name)
+--                       else
+--                         tp
+--          in
+--              TYPE2REP`TransType(grd_tp)
+--  pre let tpmap = SPEC_AST`GetTypeDefMap()
+--      in
+--          nm in set dom tpmap;
+
+functions
+  LookUpInvOrGroundType : AS`Name -> AS`Type
+  LookUpInvOrGroundType (nm) ==
+    REP2TYPE`TypeRepToType(LookUpInvOrGroundTypeRep(nm),CI`NilContextId);
+--#ifdef VDMPP
+--    let nm' = StripClassName(nm)
+--    in  if VCM`IsClassName(nm')
+--        then mk_AS`TypeName(nm',CI`NilContextId)
+--        else
+--#endif
+--          let tpdef  = SPEC_AST`GetTypeDef(nm),
+--              ty     = tpdef.shape,
+--              tp     = StripBracketedType(ty),
+--              res_tp = if tpdef.Inv <> nil then
+--                         mk_AS`TypeName(nm,CI`NilContextId)
+--                       elseif is_AS`TypeName(tp) then
+--                         LookUpInvOrGroundType(tp.name)
+--                       else
+--                         tp
+--          in
+--              res_tp
+--  pre let tpmap = SPEC_AST`GetTypeDefMap()
+--      in
+--          nm in set dom tpmap
+--#ifdef VDMPP
+--          or VCM`IsClassName(nm)
+--#endif
+--  ;
+
+#ifdef VDMPP
+LookUpNames : set of REP`ObjRefTypeRep * AS`Name -> set of REP`TypeRep
+LookUpNames(objrefs, metnm) ==
+  def ---------- turn obj refs into class names -------------
+      classnms =  {ref.nm | ref in set objrefs};
+      ---------- look up metnm for each class in classnms -------
+      tps = dunion {ENV`LookUpOperationName(classnm, metnm, nil) | classnm in set classnms};
+      ---------- turn access types into type reps --------------
+      rep_tps = { if ENV`IsAccessType(tp)
+                  then tp.tp
+                  else tp | tp in set tps }
+  in
+    rep_tps;
+
+IsSubType: REP`TypeRep * REP`TypeRep * set of (REP`TypeNameRep * REP`TypeNameRep) -> bool
+IsSubType (TpR1, TpR2, assump) ==
+  TYPE`IsSubType (TpR1, TpR2, assump);
+
+NormaliseTypeName: REP`TypeRep -> REP`TypeRep
+NormaliseTypeName(p_tp) ==
+  ENV`NormaliseTypeName(p_tp);
+
+IsClassName: AS`Name -> bool
+IsClassName(p_nm) ==
+  VCM`IsClassName(p_nm);
+
+CheckOperationCall: set of AS`Name * AS`Name * [AS`Expr] * seq of REP`TypeRep -> bool * [REP`TypeRep] * REP`TypeRep
+CheckOperationCall(classes,nm,objnm,etp) ==
+  STMT`CheckOperationCall(<POS>,classes,nm,objnm,etp);
+
+#endif VDMPP
+
+GetMangledFnOpName: AS`Expr * seq of AS`Expr -> AS`Expr
+GetMangledFnOpName(fct,-) == fct;
+
+--#ifdef VDMSL
+--GetMangledFnOpName2: AS`Expr * seq of AS`Expr -> AS`Name
+--GetMangledFnOpName2(fct, -) ==
+--        cases fct:
+--          mk_AS`Name(-,-) -> fct,
+--          mk_AS`FctTypeInstExpr(polyfct,-,-) -> polyfct,
+--          others -> fct
+--        end;
+--#endif VDMSL
+
+#ifdef VDMPP
+--GetMangledFnOpName2: AS`Expr * seq of AS`Expr -> AS`Name
+--GetMangledFnOpName2(fct, args) ==
+--    def etp = [CI`GetTypeInfo(args(i).cid) | i in set inds args];
+--        nm' =  cases fct:
+--                 mk_AS`Name(-,-) -> fct,
+--                 mk_AS`FieldSelectExpr(rec, nm, -) ->
+--                   def ty = REP2TYPE`TypeRepToType(CI`GetTypeInfo(rec.cid), CI`NilContextId);
+--                       clnm = ty.name.ids(len ty.name.ids)
+--                   in
+--                       mk_AS`Name([clnm]^nm.ids,nm.cid),
+--                 mk_AS`FctTypeInstExpr(polyfct,-,-) -> polyfct,
+--                 others -> undefined
+--               end;
+--        mk_(modnm, nm) = SPEC_AST`SplitName(nm');
+--        mk_(-,fnoptprep,-) = -- STMT`CheckOperationCall(<POS>,{modnm},nm,nil,etp),
+--          if modnm = nm and len etp = 0
+--          then -- default constructor may be implicit so we can not use CheckOperationCall!
+--            mk_(nil,mk_REP`OpTypeRep([],mk_REP`TypeNameRep(modnm)),nil)
+--          else
+--            STMT`CheckOperationCall(<POS>,{modnm},nm,nil,etp);
+--        mnm = cases true:
+--                (is_REP`OpTypeRep(fnoptprep))        -> GetMangledOpName(nm,modnm,fnoptprep),
+--                (is_REP`PartialFnTypeRep(fnoptprep)),
+--                (is_REP`TotalFnTypeRep(fnoptprep))   -> GetMangledFnName(nm,modnm,fnoptprep)
+--              end
+----        Dom = -- if fnoptprep<>nil
+----              -- then
+----                    cases true:
+----                      (is_REP`OpTypeRep(fnoptprep)) -> fnoptprep.Dom,
+----                      (is_REP`PartialFnTypeRep(fnoptprep)),
+----                      (is_REP`TotalFnTypeRep(fnoptprep)) -> fnoptprep.fndom
+----                    end
+----              -- else  undefined
+----              ;
+----        tps = [REP2TYPE`TypeRepToType(Dom(i),CI`NilContextId)|i in set {1,...,len Dom}];
+----        mnm = MANGLE`Mangle(nm',tps)
+--    in
+--      mnm;
+
+--GetMangledFnName: AS`Name * AS`Name * REP`FnTypeRep -> AS`Name
+--GetMangledFnName(opfnnm,clsnm,rep) ==
+--  def fnm = SPEC_AST`GetFnDefMap(clsnm);
+--      fns = { nm|->fnm(nm) | nm in set dom fnm & let fndef = fnm(nm)
+--                                                 in OpFnDef2TypeRep(clsnm,fndef) = rep
+--                                                    and opfnnm = fndef.nm };
+--      mnm = if card dom fns = 0
+--            then opfnnm
+--            else let nm in set dom fns be st true in nm
+--  in
+--    mk_AS`Name(clsnm.ids^mnm.ids,CI`NilContextId)
+--pre not MANGLE`IsMangled(opfnnm);
+
+--GetMangledOpName: AS`Name * AS`Name * REP`OpTypeRep -> AS`Name
+--GetMangledOpName(opfnnm,clsnm,rep) ==
+--  def opm = SPEC_AST`GetOpDefMap(clsnm);
+--      ops = { nm|->opm(nm) | nm in set dom opm & let opdef = opm(nm)
+--                                                 in OpFnDef2TypeRep(clsnm,opdef) = rep
+--                                                    and opfnnm = opdef.nm };
+--      mnm = if card dom ops = 0
+--            then opfnnm
+--            else let nm in set dom ops be st true in nm
+--  in
+--    mk_AS`Name(clsnm.ids ^ mnm.ids,CI`NilContextId)
+--pre not MANGLE`IsMangled(opfnnm);
+
+--OpFnDef2TypeRep: AS`Name * (AS`FnDef|AS`OpDef) -> REP`TypeRep
+----OpFnDef2TypeRep: AS`Name * (AS`FnDef|AS`OpDef) -> REP`TypeRep
+--OpFnDef2TypeRep(-,fnopdef) ==
+--  ENV`NormaliseTypeName(TYPE2REP`TransType(cases true:
+--                                             (is_AS`ExplFnDef(fnopdef)),
+--                                             (is_AS`ImplFnDef(fnopdef)),
+--                                             (is_AS`ExtExplFnDef(fnopdef)) -> FnDef2FnType(fnopdef),
+--                                             (is_AS`ExplOpDef(fnopdef)),
+--                                             (is_AS`ImplOpDef(fnopdef)),
+--                                             (is_AS`ExtExplOpDef(fnopdef)) -> OpDef2OpType(fnopdef)
+--                                           end));
+
+--FnDef2FnType: AS`FnDef -> AS`FnType
+--FnDef2FnType(fndef) ==
+--  cases fndef:
+--    mk_AS`ExplFnDef(-,-,tp,-,-,-,-,-,-,-,-)             -> tp,
+--    mk_AS`ImplFnDef(-,-,partps,resnmtps,-,-,-,-,-),
+--    mk_AS`ExtExplFnDef(-,-,partps,resnmtps,-,-,-,-,-,-) -> let domtps = ENV`ConstructImplDomType(partps),
+--                                                               restp  = ENV`ConstructImplRngType(resnmtps)
+--                                                           in
+--                                                             mk_AS`PartialFnType(domtps,restp,CI`NilContextId)
+--  end;
+
+--OpDef2OpType: AS`OpDef -> AS`OpType
+--OpDef2OpType(opdef) ==
+--  cases opdef:
+--    mk_AS`ExplOpDef(-,-,tp,-,-,-,-,-,-,-,-)                   -> tp,
+--    mk_AS`ImplOpDef(-,-,partps,resnmtps,-,-,-,-,-,-,-,-),
+--    mk_AS`ExtExplOpDef(-,-,partps,resnmtps,-,-,-,-,-,-,-,-,-) -> let domtps = ENV`ConstructImplDomType(partps),
+--                                                                     restp  = ENV`ConstructImplRngType(resnmtps)
+--                                                                 in
+--                                                                   mk_AS`OpType(domtps,restp,CI`NilContextId)
+--  end;
+
+#endif VDMPP
+
+--GetMangledOpName: AS`Name * seq of AS`Expr -> AS`Name
+--GetMangledOpName(nm',args) ==
+--#ifdef VDMPP
+--  let mk_(modnm,nm) = SPEC_AST`SplitName(nm'),
+--      etp = [CI`GetTypeInfo(args(i).cid) | i in set {1,...,len args}],
+--      mk_(-,mk_REP`OpTypeRep(Dom,-),-) = STMT`CheckOperationCall(<POS>,{modnm},nm,nil,etp),
+--      tps = [REP2TYPE`TypeRepToType(Dom(i),CI`NilContextId)|i in set {1,...,len Dom}],
+--      mnm = MANGLE`Mangle(nm',tps)
+--  in
+--      mnm
+--#endif VDMPP
+--#ifdef VDMSL
+--    nm'
+--#endif VDMSL
+--  ;
+
+HasMemberInvariant : AS`Name -> bool
+HasMemberInvariant (p_clnm) ==
+  def l_defs = hd SPEC_AST`GetDefs(p_clnm)
+  in
+#ifdef VDMSL
+    l_defs.State <> nil and l_defs.State.Inv <> nil;
+#endif VDMSL
+#ifdef VDMPP
+    exists i in set inds l_defs.instvars & is_AS`InstanceInv(l_defs.instvars(i));
+#endif VDMPP
+
+#ifdef VDMPP
+  HasPreOrPost: AS`Name * AS`Name * (<FN>|<OP>) * (<PRE>|<POST>) -> bool
+  HasPreOrPost(clnm,opfnnm,fnorop,preorpost) ==
+    def l_asts = SPEC_AST`GetASTs();
+        l_cls=SPEC_AST`GetModule(clnm,l_asts);
+        l_supers=[clnm]^l_cls.supercls
+    in
+        exists i in set inds l_supers &
+          def l_defs = hd SPEC_AST`GetDefs(l_supers(i))
+          in
+              opfnnm in set dom (if fnorop=<FN> then l_defs.fnm else l_defs.opm)
+              and
+                (fnorop=<FN> and preorpost=<PRE> and l_defs.fnm(opfnnm).fnpre<>nil
+                 or fnorop=<FN> and preorpost=<POST> and l_defs.fnm(opfnnm).fnpost<>nil
+                 or fnorop=<OP> and preorpost=<PRE> and l_defs.opm(opfnnm).oppre<>nil
+                 or fnorop=<OP> and preorpost=<POST> and l_defs.opm(opfnnm).oppost<>nil);
+
+GetMemberNames: AS`Name -> set of AS`Name
+GetMemberNames(clnm) ==
+#ifdef VICE
+   if clnm.ids = ["CPU"]
+   then {mk_AS`Name(["setPriority"],CI`NilContextId),
+         mk_AS`Name(["CPU"],CI`NilContextId),
+         mk_AS`Name(["deploy"],CI`NilContextId)}
+   elseif clnm.ids = ["BUS"]
+   then {mk_AS`Name(["BUS"],CI`NilContextId)}
+   else
+#endif VICE
+    def l_defs   = hd SPEC_AST`GetDefs(clnm);
+        l_invs   = {mk_AS`Name(["inv_"^(hd nm.ids)],CI`NilContextId)
+                   | nm in set dom l_defs.typem & l_defs.typem(nm).Inv <> nil };
+        l_valnms = dunion {let val_nm_pats = PID`Pattern2Pids(l_defs.valuem(i).pat),
+                               val_nms = {pat.nm | pat in set val_nm_pats}
+                           in
+                               val_nms
+                          | i in set inds l_defs.valuem};
+        l_varnm  = {l_defs.instvars(i).ad.var
+                   | i in set inds l_defs.instvars &
+                     is_AS`InstAssignDef(l_defs.instvars(i))};
+        l_opnms  = dunion {
+                    let opnm     = if MANGLE`IsMangled(nm)
+                                   then MANGLE`GetUnmangledName(nm)
+                                   else nm,
+                        haspre   = HasPreOrPost(clnm,opnm,<OP>,<PRE>),
+                        haspost  = HasPreOrPost(clnm,opnm,<OP>,<POST>)
+                    in
+                        if haspre and -- l_defs.opm(nm).oppre <> nil and
+                           haspost -- l_defs.opm(nm).oppost <> nil
+                        then
+                          {opnm,
+                           mk_AS`Name(["pre_"^(hd opnm.ids)],CI`NilContextId),
+                           mk_AS`Name(["post_"^(hd opnm.ids)],CI`NilContextId)}
+                        elseif haspre then -- l_defs.opm(nm).oppre <> nil then
+                          {opnm,
+                           mk_AS`Name(["pre_"^(hd opnm.ids)],CI`NilContextId)}
+                        elseif haspost then -- l_defs.opm(nm).oppost <> nil then
+                          {opnm,
+                           mk_AS`Name(["post_"^(hd opnm.ids)],CI`NilContextId)}
+                        else
+                          {opnm}
+                   | nm in set dom l_defs.opm };
+        l_fnnms  = dunion {
+                    let fnnm = if MANGLE`IsMangled(nm)
+                               then MANGLE`GetUnmangledName(nm)
+                               else nm,
+                        haspre   = HasPreOrPost(clnm,fnnm,<FN>,<PRE>),
+                        haspost  = HasPreOrPost(clnm,fnnm,<FN>,<POST>)
+                    in
+                        if haspre and -- l_defs.fnm(nm).fnpre <> nil and
+                           haspost -- l_defs.fnm(nm).fnpost <> nil
+                        then
+                          {fnnm,
+                           mk_AS`Name(["pre_"^(hd fnnm.ids)],CI`NilContextId),
+                           mk_AS`Name(["post_"^(hd fnnm.ids)],CI`NilContextId)}
+                        elseif haspre then -- l_defs.fnm(nm).fnpre <> nil then
+                          {fnnm,
+                           mk_AS`Name(["pre_"^(hd fnnm.ids)],CI`NilContextId)}
+                        elseif haspost then -- l_defs.fnm(nm).fnpost <> nil then
+                          {fnnm,
+                           mk_AS`Name(["post_"^(hd fnnm.ids)],CI`NilContextId)}
+                        else
+                          {fnnm}
+                   | nm in set dom l_defs.fnm }
+    in
+        l_invs union l_valnms union l_varnm union l_opnms union l_fnnms
+  pre VCM`IsClassName(clnm);
+
+operations
+GetMemberNameDef : AS`Name * [AS`Name] * [AS`Type]
+                 ==> AS`FnDef | AS`OpDef | AS`InstAssignDef | <MAYBE> | <NO> | <NOT_FOUND>
+#ifdef VICE
+GetMemberNameDef (p_nm, p_clnm, p_tp) ==
+#else
+#ifdef VDMPP
+GetMemberNameDef (p_nm, p_clnm, -) ==
+#endif VDMPP
+#endif VICE
+#ifdef VICE
+  if p_nm = mk_AS`Name(["deploy"], CI`NilContextId ) and
+     p_clnm = mk_AS`Name(["CPU"], CI`NilContextId) and
+    (p_tp = mk_AS`OpType([mk_AS`TypeName(mk_AS`Name([],CI`NilContextId ), CI`NilContextId ),
+                          mk_AS`Seq1Type(mk_AS`CharType(CI`NilContextId), CI`NilContextId ) ],
+                         mk_AS`VoidType(CI`NilContextId),
+                         CI`NilContextId)) or
+    (p_tp = mk_AS`OpType([mk_AS`TypeName(mk_AS`Name([],CI`NilContextId), CI`NilContextId)],
+                         mk_AS`VoidType(CI`NilContextId),
+                         CI`NilContextId))
+  then return <NO>
+  elseif p_nm = mk_AS`Name(["setPriority"], CI`NilContextId) and
+         p_clnm = mk_AS`Name( [ "CPU" ], CI`NilContextId ) and
+         p_tp = mk_AS`OpType([mk_AS`TypeName(mk_AS`Name(["top"],CI`NilContextId), CI`NilContextId),
+                              mk_AS`NumericType( <NAT>, CI`NilContextId) ],
+                              mk_AS`VoidType(CI`NilContextId),
+                              CI`NilContextId )
+  then return <NO>
+  else
+#endif VICE
+    def --l_tps  = cases p_tp:
+        --           mk_AS`PartialFnType(-,-,-),
+        --           mk_AS`TotalFnType(-,-,-)    -> p_tp.fndom,
+        --           mk_AS`OpType(-,-,-)         -> p_tp.opdom,
+        --           others -> nil
+        --         end;
+        curmod = SPEC_AST`GetCurrModName();
+        l_clnm = if len p_nm.ids = 2
+                     ------------ Qualified member name ------------------------
+                 then mk_AS`Name([(p_nm.ids)(1)],p_nm.cid)
+                 elseif p_clnm <> nil
+                 then p_clnm
+                 else curmod;
+        l_stripnm = if len p_nm.ids = 2 then
+                      ------------ Qualified member name ------------------------
+                      mk_AS`Name([(p_nm.ids)(2)],p_nm.cid)
+                    else
+                     p_nm;
+        l_defs   = hd SPEC_AST`GetDefs(l_clnm)
+    in
+        if exists l_nm in set dom l_defs.fnm &
+          let l_fnnm =
+               if MANGLE`IsMangled(l_nm) then
+                 MANGLE`GetUnmangledName(l_nm)
+               else
+                 l_nm
+          in
+              l_stripnm = l_fnnm -- and tp okay
+        then
+          let l_nm in set dom l_defs.fnm be st
+              let l_fnnm =
+                    if MANGLE`IsMangled(l_nm) then
+                      MANGLE`GetUnmangledName(l_nm)
+                    else
+                      l_nm
+              in
+                 l_stripnm = l_fnnm
+          in
+              if l_defs.fnm(l_nm).fnpre <> nil then
+                if MANGLE`IsMangled(l_nm) then
+                  ---- if overloaded; we have not checked the type
+                  ---- so we don't know if we have the right def
+                  ---- but we know that one of the possible functions
+                  ---- has a precondition - so therefore
+                  return <MAYBE>
+                else
+                  return l_defs.fnm(l_nm)
+              else
+                return <NO>
+        elseif exists l_nm in set dom l_defs.opm &
+          let l_opnm = if MANGLE`IsMangled(l_nm)
+                       then MANGLE`GetUnmangledName(l_nm)
+                       else l_nm
+          in
+              l_stripnm = l_opnm
+        then
+          let l_nm in set dom l_defs.opm be st
+              let l_opnm = if MANGLE`IsMangled(l_nm)
+                           then MANGLE`GetUnmangledName(l_nm)
+                           else l_nm
+              in
+                 l_stripnm = l_opnm -- and tp okay
+          in
+              if l_defs.opm(l_nm).oppre <> nil then
+                if MANGLE`IsMangled(l_nm) then
+                  ---- if overloaded; we have not checked the type
+                  ---- so we don't know if we have the right def
+                  ---- but we know that one of the possible operations
+                  ---- has a precondition - so therefore
+                  return <MAYBE>
+                else
+                  return l_defs.opm(l_nm)
+              else
+                return <NO>
+        elseif exists l_i in set inds l_defs.instvars &
+          is_AS`InstAssignDef(l_defs.instvars(l_i)) and
+          l_stripnm = l_defs.instvars(l_i).ad.var
+        then
+          return <MAYBE>
+        elseif exists l_i in set inds l_defs.valuem &
+          let l_val_nm_pats = PID`Pattern2Pids(l_defs.valuem(l_i).pat),
+              l_val_nms = {l_pat.nm | l_pat in set l_val_nm_pats}
+          in
+              l_stripnm in set l_val_nms
+        then
+          return <MAYBE>
+        else
+          return <NOT_FOUND>;
+#endif VDMPP
+
+#ifdef VDMSL
+operations
+  GetMemberNameDef :  AS`Name * [AS`Name] * [AS`Type] ==> AS`FnDef | AS`OpDef | <MAYBE> | <NO> | <NOT_FOUND>
+  GetMemberNameDef (p_nm, p_clnm, -) ==
+   (dcl l_clnm : AS`Name;
+    if len p_nm.ids = 2
+    then
+      ------------ Qualified member name ------------------------
+      l_clnm := mk_AS`Name([(p_nm.ids)(1)],p_nm.cid)
+    elseif p_clnm <> nil
+    then l_clnm := p_clnm
+    else l_clnm := SPEC_AST`GetCurrModName();
+--    def l_clnm = if len p_nm.ids = 2 then
+--                     ------------ Qualified member name ------------------------
+--                     mk_AS`Name([(p_nm.ids)(1)],p_nm.cid)
+--                  elseif p_clnm <> nil then
+--                     p_clnm
+--                  else
+--                     SPEC_AST`GetCurrModName();
+    def l_defs   = hd SPEC_AST`GetDefs(l_clnm);
+        l_nm     = if len p_nm.ids = 2 then
+                     ------------ Qualified member name ------------------------
+                     mk_AS`Name([(p_nm.ids)(2)],p_nm.cid)
+                  else
+                     p_nm
+    in
+      if l_nm in set dom l_defs.fnm
+      then
+        if l_defs.fnm(l_nm).fnpre <> nil
+        then return l_defs.fnm(l_nm)
+        else return <NO>
+      elseif l_nm in set dom l_defs.opm
+      then
+        if l_defs.opm(l_nm).oppre <> nil
+        then return l_defs.opm(l_nm)
+        else return <NO>
+      elseif exists l_i in set inds l_defs.valuem &
+          let l_val_nm_pats = PID`Pattern2Pids(l_defs.valuem(l_i).pat),
+              l_val_nms     = {l_pat.nm | l_pat in set l_val_nm_pats}
+          in
+              p_nm in set l_val_nms
+      then return <MAYBE>
+      else return <NOT_FOUND>;
+   );
+#endif VDMSL
+
+functions
+  GetNameFromStateDesignator : AS`StateDesignator -> AS`Name
+  GetNameFromStateDesignator(sd) ==
+    cases sd:
+      mk_AS`Name(-,-) -> sd,
+      mk_AS`FieldRef(sd',-,-),
+      mk_AS`MapOrSeqRef(sd',-,-) -> GetNameFromStateDesignator(sd')
+    end;
+
+  IsNamePartOfState : AS`Name * [AS`Name] -> bool
+  IsNamePartOfState(nm,modnm) ==
+#ifdef VDMSL
+    def namesInState =
+          def State = SPEC_AST`GetStateDef'(modnm)
+          in  if State = nil
+              then {}
+              else { State.tp.fields(i).sel
+                   | i in set {1,...,len State.tp.fields}
+                   & State.tp.fields(i).sel<>nil }
+    in nm in set namesInState
+#endif VDMSL
+#ifdef VDMPP
+    def vars = SPEC_AST`GetInstVars(modnm)
+    in  exists i in set {1,...,len vars} & vars(i).ad.var = nm
+#endif VDMPP
+  ;
+  ------------------------------------------------------------
+
+  functions
+
+    StripBracketedType : AS`Type -> AS`Type
+    StripBracketedType (tp) ==
+      if is_AS`BracketedType(tp)
+      then StripBracketedType(tp.tp)
+      else tp;
+
+  ------------------------------------------------------------
+
+  types
+    FuncReturnInfo :: retnTp      : AS`Type
+                     hasPostCond : bool;
+  functions
+    isFunctionName : seq of char -> bool
+    isFunctionName (name) ==
+      def as_name     = mk_AS`Name([name],CI`NilContextId);
+          fnnames     = SPEC_AST`GetFnDefNames (nil)
+      in
+          as_name in set elems fnnames;
+
+    getFuncReturnInfo : seq of char -> FuncReturnInfo
+    getFuncReturnInfo (name) ==
+      def as_name     = mk_AS`Name([name],CI`NilContextId);
+          fndef       = SPEC_AST`GetFnDef(as_name);
+          hasPostCond = fndef.fnpost <> nil;
+          retnTp      = cases true:
+                          (is_AS`ExplFnDef(fndef))    -> fndef.tp.fnrng,
+                          (is_AS`ImplFnDef(fndef)),
+                          (is_AS`ExtExplFnDef(fndef)) -> undefined
+                        end
+      in
+          mk_FuncReturnInfo(retnTp,hasPostCond)
+    pre isFunctionName (name);
+
+    isTypeName : seq of char -> bool
+    isTypeName (name) ==
+      def as_name     = mk_AS`Name([name],CI`NilContextId);
+          tpnames     = SPEC_AST`GetTypeDefNames (nil)
+      in
+          as_name in set elems tpnames;
+
+    getTypeDef : seq of char ->  AS`TypeDef
+    getTypeDef (name) ==
+      def as_name = mk_AS`Name([name],CI`NilContextId);
+          tpdef   = SPEC_AST`GetTypeDef(as_name)
+      in
+          tpdef
+    pre isTypeName (name);
+
+    isValueName : seq of char -> bool
+    isValueName (name) ==
+      def as_name     = mk_AS`Name([name],CI`NilContextId);
+          value_defs  = SPEC_AST`GetValueDefSeq ();
+          pattern_names = dunion {PID`Pattern2Pids(value_defs(i).pat) | i in set inds value_defs}
+      in
+          mk_AS`PatternName(as_name,nil,CI`NilContextId)  in set pattern_names;
+
+  operations
+    GetTypeInfo : (AS`Expr | AS`Pattern) ==> [REP`TypeRep]
+    GetTypeInfo (expr) ==
+      CI`GetTypeInfo(GetCid(expr))
+
+end CI_AUX
+

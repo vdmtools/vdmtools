@@ -1,0 +1,78 @@
+class JavaUtilAbstractSet is subclass of JavaUtilAbstractCollection, JavaUtilSet
+--values 
+--  CLASS : JavaLangClass = new  JavaLangClass("JavaUtilAbstractSet" , <CLASS> , false  )
+operations 
+--public  getClass : () ==> JavaLangClass
+--getClass() == 
+--return  CLASS;
+
+public  hashCode : () ==> int 
+hashCode() == 
+is not yet specified;
+--( dcl   h : int  := 0,
+--        i : JavaUtilIterator := iterator();
+--  while  i.hasNext() do  
+--  ( dcl   obj : JavaLangObject := i.next();
+--    if  not  obj.IsNil()
+--    then  
+--      def l_4 = h
+--      in h := l_4+obj.hashCode()
+--  ) ;
+--  return  h
+--) ;
+
+--protected  JavaUtilAbstractSet : () ==> JavaUtilAbstractSet
+public  JavaUtilAbstractSet : () ==> JavaUtilAbstractSet
+JavaUtilAbstractSet() == 
+( skip 
+) ;
+
+public  equals : JavaLangObject ==> bool 
+equals(o) == 
+( if  o = self  
+  then  
+    return  true  ;
+  if  not  (isofclass  (JavaUtilAbstractSet,o))
+  then  
+    return  false  ;
+  ( dcl   c : JavaUtilAbstractSet := o;
+    if  c.size() <> size()
+    then  
+      return  false  ;
+    return  containsAll(c)
+  ) 
+) ;
+
+public  JavaUtilAbstractSet : <NIL> ==> JavaUtilAbstractSet
+JavaUtilAbstractSet(-) == 
+isNil := true  ;
+
+public  removeAll : JavaUtilCollection ==> bool 
+removeAll(c) ==
+is not yet specified;
+--( dcl   modified : bool  := false  ;
+--  if  size() > c.size()
+--  then  
+--    ( ( dcl   i : JavaUtilIterator := c.iterator();
+--        while  i.hasNext() do  
+--        ( def l_6 = modified
+--          in modified := l_6+remove(i.next())
+--        ) 
+--      ) 
+--    ) 
+--  else  
+--    ( ( dcl   i : JavaUtilIterator := iterator();
+--        while  i.hasNext() do  
+--        ( if  c.contains(i.next())
+--          then  
+--           ( i.remove();
+--              modified := true  
+--            ) 
+--        ) 
+--      ) 
+--    ) ;
+--  return  modified
+--) ;
+
+
+end  JavaUtilAbstractSet

@@ -1,0 +1,24 @@
+
+
+
+
+
+
+
+
+
+\begin{vdm}\index{ObstacleArtificiel|ClassDef}
+{\small\sf class} $ObstacleArtificiel$  \kISO $\index{Obstacle|ClassOcc}Obstacle, \index{Cylindre|ClassOcc}Cylindre$
+\begin{methdef}\index{Intersection|MethodDef}
+\begin{method}{Intersection}
+\parms{segment-de-prediction :  @SegmentDePrediction}\methvalue{\Bool } \Fdef\\ \begin{defstmt}
+\eqdef{points-de-vecteur}{\invoke{segment-de-prediction}{\index{GetPoints|MethodOcc}
+\fnapply{GetPoints}{}}}
+\end{defstmt} \\
+\return{\pex{\exists{\reccons{\kw{mk-}}{xy,z} \In points-de-vecteur} \\
+{\fnapply{DansCylindre}{xy,z,centre,rayon,altitude-maximale}}}}
+\end{method}
+\end{methdef}
+{\small\sf end} $ObstacleArtificiel$
+
+\end{vdm}

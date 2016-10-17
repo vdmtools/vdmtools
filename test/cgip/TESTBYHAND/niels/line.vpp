@@ -1,0 +1,383 @@
+Class Line2
+-----------
+
+This class is an advanced datatype representing lines in R2 with associated operations.
+
+
+The representation of Line2 is based on two different kinds of line representations: 
+  ax + by = c   (???name of representation???)
+and
+  (x,y) = (x0,y0) + t(k,n)    ( = p + tr )
+
+Line2 objects maintains both the coefficents a, b and c, and the point p (of class Point2) and ???retnings???vector r (of class Vector2).
+
+
+\begin{vdm_al}
+class Line2 is subclass of Global
+
+instance variables
+
+  a: real;
+  b: real;
+  c: real;
+  p : Point2;
+  r : Vector2
+
+\end{vdm_al}
+
+Operation: initFromPoints
+Arguments: two object references (x, y) of class Point2
+Results: None
+Action: Creates the ???retnings???vector r and the coefficients a, b and c from the Point2's x and y, and stores both coefficients, starting point and vector. x is regarded as starting point r as the xy vector.
+
+\begin{vdm_al}
+operations
+
+initFromPoints: Point2 * Point2 ==> ()
+initFromPoints (x,y) ==
+( dcl xy: Vector2 := new Vector2();
+  xy.initFromPoints (x,y);
+  def n = xy.crossVector() in
+  def mk_(n1,n2) = n.getCoord();
+      mk_(x1,x2) = x.getCoord() in
+  ( a := n1;
+    b := n2;
+    c := n1*x1 + n2*x2;
+    p := x.copy();
+    r := xy.copy() )
+);
+\end{vdm_al}
+
+Operation: initFromPointVector
+Arguments: an object reference of class Point2 (x) and one of class Vector2 (v).
+Results: None
+Action: Creates the coefficients a, b and c from the Point2 x and the Vector2 y, and stores both coefficients, point and vector.
+
+\begin{vdm_al}
+initFromPointVector: Point2 * Vector2 ==> ()
+initFromPointVector (x, v) ==
+  def n = v.crossVector() in
+  def mk_(n1,n2) = n.getCoord();
+      mk_(x1,x2) = x.getCoord() in
+  ( a := n1;
+    b := n2;
+    c := n1*x1 + n2*x2;
+    p := x.copy();
+    r := v.copy() );
+\end{vdm_al}
+
+Operation: createFromPoints
+Arguments: two object references (x, y) of class Point2
+Results: a reference to an object of class Line2
+Action: Creates a Line2 object from points x and y and returns its reference.
+
+\begin{vdm_al}
+createFromPoints: Point2 * Point2 ==> Line2 
+createFromPoints (x,y) ==
+( dcl l: Line2 := new Line2();
+  l.initFromPoints (x,y);
+  return l
+);
+\end{vdm_al}
+
+Operation: createFromPointVector
+Arguments:an object reference of class Point2 (x) and one of class Vector2 (v).
+Results: a reference to an object of class Line2
+Action: Creates a Line2 object from point x and vector y and returns its reference.
+
+\begin{vdm_al}
+createFromPointVector: Point2 * Vector2 ==> Line2 
+createFromPointVector (x, v) ==
+( dcl l: Line2 := new Line2();
+  l.initFromPointVector (x,v);
+  return l
+);
+\end{vdm_al}
+
+Operation: copy
+Arguments: None
+Results: a reference to an object of class Line2
+Action: Creates a Line2 object from Point2 p and Vector2 r of the current object and returns its reference.
+Preconditions: The current object has been initialised.
+
+\begin{vdm_al}
+copy: () ==> Line2 
+copy () ==
+( dcl l: Line2 := new Line2();
+  l.initFromPointVector (p,r);
+  return l
+);
+\end{vdm_al}
+
+Operation: getCoef
+Arguments: None
+Results: 3 reals
+Action: Returns the coefficients a, b and c of the current object.
+Preconditions: The current object has been initialised.
+
+\begin{vdm_al}
+getCoef: () ==> real * real * real 
+getCoef () ==
+  return mk_(a,b,c);
+\end{vdm_al}
+
+Operation: lineIntersect
+Arguments: an object reference (l) of class Line2
+Results: an object reference of class Point2
+Action: Computes the intersection point of the current line and line l using the formula:
+  line 1: a1 x + b1 y = c1
+  line 2: a2 x + b2 y = c2
+  intersection: (det / det, det / det)
+If the line are parallel an uninitialsed object (reference) is returned.
+Preconditions: The current object and l have been initialised.
+
+\begin{vdm_al}
+lineIntersect: Line2 ==> Point2 
+lineIntersect (l) ==  
+( dcl x: Point2 := new Point2();
+  dcl math: Math := new Math();
+  let mk_(al,bl,cl) = l.getCoef() in
+  let numer1 = math.determinant (c,cl,b,bl),
+      numer2 = math.determinant (a,al,c,cl),
+      denom = math.determinant (a,al,b,bl) in
+  if denom <> 0
+  then x.initialise (numer1/denom, numer2/denom);
+  return x
+);
+\end{vdm_al}
+
+Operation: pointProjection
+Arguments: an object (reference), x, of class Point2
+Results: an object (reference) of class Point2
+Action: Computes the ???rectangle??? projection of x on the current object. The ???rectangle??? projection of the vector px on vector is found using the formula:
+  proj = (px * r) / |r|^2
+and is used to construct the projection point.
+Precondition: The current object and x have been initialised.
+
+\begin{vdm_al}
+pointProjection: Point2 ==> Point2 
+pointProjection (x) ==
+( dcl px : Vector2 := new Vector2(),
+      proj : Vector2 := new Vector2(),
+      y : Point2 := new Point2();
+  px.initFromPoints (p, x);
+  proj := r.projection (px);
+  y := p.pointPlusVector (proj);
+  return y
+);
+\end{vdm_al}
+
+Operation: pointDistance
+Arguments: an object (reference), q, of class Point2
+Results: a length (real)
+Action: Computes the ???rectangle??? distance using the formula
+  (ax + by - c) / (a*a + b*b)
+Precondition: The current object and q have been initialised.
+
+\begin{vdm_al}
+pointDistance: Point2 ==> Length 
+pointDistance (q) ==
+( dcl math: Math := new Math();
+  let mk_(x,y) = q.getCoord() in
+  let numer = abs (a*x + b*y - c),
+      denom = math.sqrt (a*a + b*b) in
+  return numer / denom
+);
+\end{vdm_al}
+
+Operation: pointInEpsilonDist
+Arguments: an object (reference), q, of class Point2
+Results: a boolean value
+Action: Computes the ???rectangle??? distance between point q and the current object and the checks whether it is less than epsilonsize. This is used to test whether q is on the current line within a tolerance that allows ???
+Preconditions: The current object and q have been initialised.
+
+\begin{vdm_al}
+pointInEpsilonDist: Point2 ==> bool 
+pointInEpsilonDist (q) ==
+  def qdist = pointDistance (q) in
+  return qdist < epsilonsize;
+\end{vdm_al}
+
+
+\begin{vdm_al}
+pointWithinLine: Point2 ==> bool 
+pointWithinLine (q) ==
+  let mk_(p1,p2) = p.getCoord(),
+      mk_(r1,r2) = r.getCoord(),
+      mk_(q1,q2) = q.getCoord() in
+  ( dcl math : Math := new Math();
+    dcl t1 : [real],
+        t2 : [real];
+    if math.epsilonSmall (r1)
+    then t1 := nil
+    else t1 := (q1-p1)/r1;
+
+    if math.epsilonSmall (r2)
+    then t2 := nil
+    else t2 := (q2-p2)/r2;
+
+    let t = if t1 <> nil and t2 <> nil
+            then t1-t2
+            elseif t1 = nil
+            then t2
+            else t1 in
+    return math.epsilonSmall (t) );
+
+end Line2
+\end{vdm_al}
+
+
+
+Class LineSegment2
+------------------
+
+This class is an advanced datatype representing lines in R2 that are bounded by two points. It is a ???forfining??? of class Line2.
+
+LineSegment2 maintains an extra parameter, empty. This allows defining a LineSegment2 object to be empty without worring about the values of a, b, c, p and r.
+
+\begin{vdm_al}
+class LineSegment2 is subclass of Line2
+
+instance variables
+
+  empty : bool
+\end{vdm_al}
+
+Operation: initFromPoints
+Arguments: two object references (x, y) of class Point2
+Results: None
+Action: Creates the ???retnings???vector r and the coefficients a, b and c from the Point2's x and y, and stores both coefficients, starting point and vector. x is regarded as starting point r as the xy vector. Sets empty to true.
+
+\begin{vdm_al}
+operations
+
+initFromPoints: Point2 * Point2 ==> ()
+initFromPoints (x,y) ==
+( Line2`initFromPoints (x,y);
+  empty := false
+);
+\end{vdm_al}
+
+Operation: initFromPointVector
+Arguments: an object reference of class Point2 (x) and one of class Vector2 (v).
+Results: None
+Action: Creates the coefficients a, b and c from the Point2 x and the Vector2 y, and stores both coefficients, point and vector. Sets empty to true.
+
+\begin{vdm_al}
+initFromPointVector: Point2 * Vector2 ==> ()
+initFromPointVector (x, v) ==
+( Line2`initFromPointVector (x,v);
+  empty := false
+);
+\end{vdm_al}
+
+Operation: createFromPoints
+Arguments: two object references (x, y) of class Point2
+Results: a reference to an object of class LineSegment2
+Action: Creates a Line2 object from points x and y and returns its reference. Sets empty to true.
+
+\begin{vdm_al}
+createFromPoints: Point2 * Point2 ==> Line2 
+createFromPoints (x,y) ==
+( dcl l: LineSegment2 := new LineSegment2();
+  l.initFromPoints (x,y);
+  return l
+);
+\end{vdm_al}
+
+Operation: createFromPointVector
+Arguments:an object reference of class Point2 (x) and one of class Vector2 (v).
+Results: a reference to an object of class LineSegment2
+Action: Creates a Line2 object from point x and vector y and returns its reference. Sets empty to true.
+
+\begin{vdm_al}
+createFromPointVector: Point2 * Vector2 ==> Line2 
+createFromPointVector (x, v) ==
+( dcl l: LineSegment2 := new LineSegment2();
+  l.initFromPointVector (x,v);
+  return l
+);
+\end{vdm_al}
+
+Operation: copy
+Arguments: None
+Results: a reference to an object of class LineSegment2
+Action: Creates a LineSegment2 object from Point2 p and Vector2 r of the current object, and sets empty to the same value as empty of the current object. It returns the new object (reference).
+Preconditions: The current object has been initialised.
+
+\begin{vdm_al}
+copy: () ==> Line2 
+copy () ==
+( dcl l: LineSegment2 := new LineSegment2();
+  l.initFromPointVector (p,r);
+  l.setEmpty (empty);
+  return l
+);
+\end{vdm_al}
+
+Operation: getPoints
+Arguments: None
+Results: Two object (references) ot class Point2.
+Action: Returns the points bounding the current line. The second bounding point is computed from point p and the ???retnings??? vector r.
+Preconditions:
+
+\begin{vdm_al}
+getPoints: () ==> Point2 * Point2 
+getPoints () ==
+  return mk_(p, p.pointPlusVector (r));
+\end{vdm_al}
+
+
+
+\begin{vdm_al}
+makeEmpty () ==
+  empty := true;
+\end{vdm_al}
+
+
+
+\begin{vdm_al}
+isEmpty: () ==> bool 
+isEmpty () ==
+  return empty;
+\end{vdm_al}
+
+
+
+\begin{vdm_al}
+setEmpty: bool ==> ()
+setEmpty (e) ==
+  empty := e;
+\end{vdm_al}
+
+
+
+\begin{vdm_al}
+pointWithinLineSeg: Point2 ==> bool 
+pointWithinLineSeg (q) ==
+  let mk_(p1,p2) = p.getCoord(),
+      mk_(r1,r2) = r.getCoord(),
+      mk_(q1,q2) = q.getCoord() in
+  ( dcl math : Math := new Math();
+    dcl t1 : [real],
+        t2 : [real];
+    if math.epsilonSmall (r1)
+    then t1 := nil
+    else t1 := (q1-p1)/r1;
+
+    if math.epsilonSmall (r2)
+    then t2 := nil
+    else t2 := (q2-p2)/r2;
+
+    if t1 <> nil and t2 <> nil
+    then if math.epsilonSmall (t1-t2)
+         then return 0 <= t1 and t1 <= 1
+         else return false
+    elseif t1 = nil
+    then return 0 <= t2 and t2 <= 1
+    elseif t2 = nil
+    then return 0 <= t1 and t1 <= 1
+    else return false );
+
+end LineSegment2
+\end{vdm_al}

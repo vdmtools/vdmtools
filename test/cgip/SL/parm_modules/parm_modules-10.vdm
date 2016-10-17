@@ -1,0 +1,61 @@
+  
+module PAIRS
+
+parameters
+        types ELEM1, ELEM2
+
+exports all
+
+definitions
+
+functions
+CreatePair: ELEM1 * ELEM2 -> PAIR
+CreatePair(El1, El2) ==
+        mk_PAIR(El1, El2)
+
+types
+PAIR :: El1 : ELEM1
+        El2 : ELEM2
+
+end PAIRS
+
+module RELATIONS
+
+parameters
+        types ELEM1, ELEM2
+
+instantiations
+        REL_PAIR as PAIRS(ELEM1 -> ELEM1, ELEM2 -> ELEM2) all
+
+exports all
+
+definitions
+functions
+
+Test: ELEM1 * ELEM2 -> set of (ELEM1 | ELEM2)
+Test(n1,n2) ==
+        { n1, n2} union
+         let mk_REL_PAIR`PAIR(n3,n4) = REL_PAIR`CreatePair(n1,n2)
+         in {n3,n4}
+
+end RELATIONS
+
+module A
+
+instantiations
+        RelationNat as RELATIONS(ELEM1 -> nat, ELEM2 -> nat) all
+
+exports all
+
+definitions
+functions
+
+Test: () -> set of nat
+Test() ==
+        
+        RelationNat`Test(10,20)
+
+end A
+
+
+

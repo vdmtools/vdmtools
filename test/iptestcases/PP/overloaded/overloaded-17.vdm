@@ -1,0 +1,32 @@
+class S
+
+operations
+public
+op: () ==> nat
+op() == return 0;
+
+protected
+op: nat ==> nat
+op(n) == is subclass responsibility;
+
+end S
+
+class C is subclass of S
+
+operations
+public
+op: nat ==> nat
+op(n) == return n;
+
+end C
+
+class A
+
+operations
+public
+Test: () ==> nat
+Test() ==
+  let c = new C()
+  in return c.op();
+
+end A

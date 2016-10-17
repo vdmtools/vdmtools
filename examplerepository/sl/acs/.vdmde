@@ -1,0 +1,6 @@
+r acs.avdm
+tc pos
+i
+cg
+latex acs.avdm
+quit

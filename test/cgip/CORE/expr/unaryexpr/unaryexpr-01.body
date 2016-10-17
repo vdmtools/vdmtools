@@ -1,0 +1,81 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> map seq of char to seq of ( int | real | bool )  
+Test () ==
+(dcl rational : rat := 1;
+
+return {
+"NUMPLUS" |-> 
+       [ +3, 
+         + let a = 3.6
+	   in a,
+         + if true
+	   then -9.6
+	   else let a in set {{3}, 3} in a,
+         + card( inds [ 3, 6] ),
+         + (3 * 6),
+         let a = -6
+         in +a ],
+         
+"NUMMINS" |->         
+       [ - 3,
+	 -3.6,
+	 - let a = 0
+	   in a,
+         - if is_char('c')
+	   then -3.6
+	   else let a in set {false, 3} in a,
+	 - card {3, 6, 3},
+         - abs -3,
+         - (-11.6) ,
+         let a = if true 
+                 then 10
+                 else let a in set {{ 1 |-> 3}, 34} in a
+         in -a,
+         -rational ],
+	
+"NUMABS" |->
+       [ abs -3,
+	 abs let a = 6
+	     in a,
+         abs if true
+	     then -9.3
+	     else let a in set { [], 34} in a,
+         abs len [3, 6, 3],
+         abs ( 3 - 9 ),
+	 abs 3,
+         let a = if true 
+                 then 5
+                 else let a in set {{ 1 |-> 3}, 34} in a
+         in abs a,
+         abs rational ],
+
+"FLOOR" |->
+       [ floor -3.6,
+	 floor 3.6,
+	 floor let a = 3.6
+	       in a,
+         floor if 3>-6
+	       then 0
+	       else let a in set {{ 3|-> 3}, 34} in a,
+	 floor card {3, 6},
+	 floor (3/8),
+	 let a = 36,
+	     b = 12.6
+         in ( floor b )/3 ],
+
+"NOT" |->
+       [ not true,
+	 not false,
+         not let a = 3 > -6
+	     in a,
+         not if is_rat(13.3)
+             then 12.6>0
+             else 3<2,
+         not ( {} = {} ),
+         not is_real(3.0),
+         let a = if true 
+                 then false
+                 else let a in set {{ 1 |-> 3}, 3167} in a
+         in not a ] }
+)
+

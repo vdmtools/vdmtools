@@ -1,0 +1,75 @@
+module ZZZ
+
+imports from SEM all,
+        from GLOAL all,
+        from AS all,
+        from REP all,
+        from EXPR all,
+        from YYY all,
+        from SETTINGS all,
+        from CI all,
+        from TIMEMAP all,
+        from STATE
+          operations 
+               ReadClassesAndInit: seq of AS`ClassStructure ==> ();
+               InitializeGS         : ()          ==> ();
+               PushCurObj: SEM`OBJ ==> ();
+               PushAnInitObj: AS`Name ==> ();
+               EvalMethodInvoke: AS`MethodInvoke ==> SEM`VAL,
+        from PRIORITY all,
+        from CMPL all,
+        from TESTSETTINGS all
+
+
+exports all
+
+definitions
+
+operations
+
+Interprete: () ==> SEM`VAL | STKM`EvaluatorStatus
+Interprete() == 
+( 
+        SETTINGS`DtcOff(); -- Will be expanded by testfile
+        SETTINGS`PreOff(); -- Will be expanded by testfile
+        SETTINGS`InvOff(); -- Will be expanded by testfile
+        SETTINGS`PostOff(); -- Will be expanded by testfile
+        SETTINGS`PriorityBasedOff(); -- Will be expanded by testfile
+        SCHD`SetPriorityMap(SCHD`MakePriorityMap(PRIORITY`priorityFile));
+        let mk_AS`AstCI(ast, tllci, fidm) = 
+#include "vdm.ast"
+        ,
+        mk_AS`AstCI(arg, tllci_expr, fidm_expr) =
+#include "vdmtest.arg"
+in    (
+        CI`UpdateStateSigma(tllci, fidm);
+        CI`UpdateStateSigma(tllci_expr, fidm_expr);
+
+        CMPL`SetTM(TIMEMAPVAL`tm);
+        TESTSETTINGS`Init();
+        STKM`User_Init(ast, true); 
+        
+        let mk_(eval_state, res) = DEBUG`EvalDebug(arg, "Dummy String")
+        in cases eval_state:
+           mk_STKM`BreakPoint(),
+           mk_STKM`Interrupt() -> 
+            let cid = STKM`HeadCID(),
+                mk_(-, -, -, tokenpos, -) = CI`GetFilePos(cid),
+                mk_CI`TokenPos(sec, abs_line, sec_line, column) = tokenpos,
+                line = RTERR`Num2Str(abs_line),
+                column_s = RTERR`Num2Str(column) 
+            in let msg = "Line " ^ line ^ " column " ^ column_s ^ "\n"
+               in 
+                (let - = IO`fwriteval[seq of char]("debug.msg",msg,<start>)
+                 in
+                   return STKM`Persist()),
+           mk_STKM`Success() -> return res,
+           mk_STKM`RuntimeError() -> return RTERR`GetError()
+           end;
+      )
+);
+
+
+
+
+end ZZZ

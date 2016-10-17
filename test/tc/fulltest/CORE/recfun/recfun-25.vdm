@@ -1,0 +1,17 @@
+class A
+
+functions
+
+public 
+id : nat -> nat
+id(x) == x;
+
+
+foo : nat -> nat
+foo(x) == 
+  let x = x-1,
+      foo = x
+  in foo
+measure id;
+  
+end A

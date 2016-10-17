@@ -1,0 +1,554 @@
+%
+% $Id: radnav.tex,v 1.1 2005/11/21 05:04:09 vdmtools Exp $
+%
+
+\section{In-car Radio Navigation case-study}
+
+\subsection{Event classes}
+
+\begin{vdm_al}
+class Event
+
+instance variables
+  val : nat
+
+operations
+  public Event: nat ==> Event
+  Event (pv) == val := pv;
+
+  public getEvent: () ==> nat
+  getEvent () == return val
+
+end Event
+\end{vdm_al}
+
+\begin{vdm_al}
+class InterruptEvent
+  is subclass of Event
+
+operations
+  public InterruptEvent: nat ==> InterruptEvent
+  InterruptEvent (pne) == Event(pne)
+
+end InterruptEvent
+\end{vdm_al}
+
+\begin{vdm_al}
+class NetworkEvent
+  is subclass of Event
+
+operations
+  public NetworkEvent: nat ==> NetworkEvent
+  NetworkEvent (pne) == Event(pne)
+
+end NetworkEvent
+\end{vdm_al}
+
+\subsection{Task classes}
+
+\begin{vdm_al}
+class AbstractTask
+
+instance variables
+  name : seq of char := [];
+  events : seq of NetworkEvent := [];
+  interrupts : seq of InterruptEvent := [];
+  dispatcher : EventDispatcher
+
+operations
+  public AbstractTask: seq of char * EventDispatcher ==> AbstractTask
+  AbstractTask (pnm, ped) == atomic ( name := pnm; dispatcher := ped; );
+
+  public getName: () ==> seq of char
+  getName () == return name;
+
+  public setEvent: Event ==> ()
+  setEvent (pe) == 
+    if isofclass(NetworkEvent,pe)
+    then events := events ^ [pe]
+    else interrupts := interrupts ^ [pe];
+
+  protected getEvent: () ==> Event
+  getEvent () ==
+    if len interrupts > 0
+    then ( dcl res: Event := hd interrupts;
+           interrupts := tl interrupts;
+           return res )
+    else ( dcl res: Event := hd events;
+           events := tl events;
+           return res );
+
+  protected handleEvent: Event ==> ()
+  handleEvent (-) == is subclass responsibility;
+
+  protected sendMessage: seq of char * nat ==> ()
+  sendMessage (pnm, pid) == dispatcher.SendNetwork(getName(), pnm, pid);
+
+  protected raiseInterrupt: seq of char * nat ==> ()
+  raiseInterrupt (pnm, pid) == dispatcher.SendInterrupt(getName(), pnm, pid)
+
+sync
+  mutex (setEvent, getEvent);
+  per getEvent => len events > 0 or len interrupts > 0
+
+end AbstractTask
+\end{vdm_al}
+
+\begin{vdm_al}
+class BasicTask
+  is subclass of AbstractTask
+
+operations
+  public BasicTask: seq of char * EventDispatcher ==> BasicTask
+  BasicTask (pnm, ped) == AbstractTask(pnm, ped);
+
+thread
+  while (true) do
+    handleEvent(getEvent())
+
+end BasicTask
+\end{vdm_al}
+
+\begin{vdm_al}
+class EnvironmentTask
+  is subclass of AbstractTask
+
+instance variables
+  -- unique identifier for each generated event
+  static num : nat := 0;
+
+  -- administration for the event traces
+  protected outl : map nat to nat := {|->};
+  protected inl : map nat to nat := {|->}
+
+operations
+  public getNum: () ==> nat
+  getNum () ==
+    ( dcl res : nat := num;
+      num := num + 1;
+      return res );
+
+  public Run: () ==> ()
+  Run () == is subclass responsibility;
+
+  public updateTime: nat ==> ()
+  -- updateTime (delta) == mtime := mtime + delta;
+  updateTime (delta) == skip;
+
+  public logOutEvent: nat ==> ()
+  logOutEvent (pev) == outl := outl munion {pev |-> time};
+
+  public logInEvent: nat ==> ()
+  logInEvent (pev) == inl := inl munion {pev |-> time}
+
+sync
+  mutex (getNum);
+
+end EnvironmentTask
+\end{vdm_al}
+
+\subsection{Application tasks}
+
+\begin{vdm_al}
+class MMIHandleKeyPressOne
+  is subclass of BasicTask
+
+operations
+  public MMIHandleKeyPressOne: EventDispatcher ==> MMIHandleKeyPressOne
+  MMIHandleKeyPressOne (pde) ==  BasicTask("HandleKeyPress",pde);
+
+  public HandleKeyPress: () ==> ()
+  HandleKeyPress () == duration (100) skip;
+
+  handleEvent: Event ==> ()
+  handleEvent (pe) ==
+    ( HandleKeyPress();
+      sendMessage("AdjustVolume", pe.getEvent()) )
+
+end MMIHandleKeyPressOne
+\end{vdm_al}
+
+\begin{vdm_al}
+class MMIHandleKeyPressTwo
+  is subclass of BasicTask
+
+operations
+  public MMIHandleKeyPressTwo: EventDispatcher ==> MMIHandleKeyPressTwo
+  MMIHandleKeyPressTwo (pde) == BasicTask("HandleKeyPress",pde);
+
+  public HandleKeyPress: () ==> ()
+  HandleKeyPress () == duration (100) skip;
+
+  handleEvent: Event ==> ()
+  handleEvent (pe) ==
+    ( HandleKeyPress();
+      sendMessage("DatabaseLookup", pe.getEvent()) )
+
+end MMIHandleKeyPressTwo
+\end{vdm_al}
+
+\begin{vdm_al}
+class MMIUpdateScreen
+  is subclass of BasicTask
+
+operations
+  public MMIUpdateScreen: EventDispatcher ==> MMIUpdateScreen
+  MMIUpdateScreen (pde) == BasicTask("UpdateScreen",pde);
+
+  public UpdateScreen: () ==> ()
+  UpdateScreen () == duration (500) skip;
+
+  handleEvent: Event ==> ()
+  handleEvent (pe) ==
+    ( UpdateScreen();
+      raiseInterrupt("VolumeKnob", pe.getEvent()) )
+
+end MMIUpdateScreen
+\end{vdm_al}
+
+\begin{vdm_al}
+class RadioAdjustVolume
+  is subclass of BasicTask
+
+operations
+  public RadioAdjustVolume: EventDispatcher ==> RadioAdjustVolume
+  RadioAdjustVolume (pde) == BasicTask("AdjustVolume",pde);
+
+  public AdjustVolume: () ==> ()
+  AdjustVolume () == duration (100) skip;
+
+  handleEvent: Event ==> ()
+  handleEvent (pe) ==
+    ( AdjustVolume();
+      sendMessage("UpdateScreen", pe.getEvent()) )
+
+end RadioAdjustVolume
+\end{vdm_al}
+
+\begin{vdm_al}
+class RadioHandleTMC
+  is subclass of BasicTask
+
+operations
+  public RadioHandleTMC: EventDispatcher ==> RadioHandleTMC
+  RadioHandleTMC (pde) == BasicTask("HandleTMC",pde);
+
+  public HandleTMC: () ==> ()
+  HandleTMC () == duration (1000) skip;
+
+  handleEvent: Event ==> ()
+  handleEvent (pe) ==
+    ( HandleTMC();
+      sendMessage("DecodeTMC", pe.getEvent()) )
+
+end RadioHandleTMC
+\end{vdm_al}
+
+\begin{vdm_al}
+class NavigationDatabaseLookup
+  is subclass of BasicTask
+
+operations
+  public NavigationDatabaseLookup: EventDispatcher ==> NavigationDatabaseLookup
+  NavigationDatabaseLookup (pde) == BasicTask("DatabaseLookup",pde);
+
+  public DatabaseLookup: () ==> ()
+  DatabaseLookup() == duration (5000) skip;
+
+  handleEvent: Event ==> ()
+  handleEvent (pe) ==
+    ( DatabaseLookup();
+      sendMessage("UpdateScreen", pe.getEvent()) )
+
+end NavigationDatabaseLookup
+\end{vdm_al}
+
+\begin{vdm_al}
+class NavigationDecodeTMC
+  is subclass of BasicTask
+
+operations
+  public NavigationDecodeTMC: EventDispatcher ==> NavigationDecodeTMC
+  NavigationDecodeTMC (pde) == BasicTask("DecodeTMC",pde);
+
+  public DecodeTMC: () ==> ()
+  DecodeTMC () == duration (5000) skip;
+
+  handleEvent: Event ==> ()
+  handleEvent (pe) ==
+    ( DecodeTMC();
+      sendMessage("UpdateScreen", pe.getEvent()) )
+
+end NavigationDecodeTMC
+\end{vdm_al}
+
+\subsection{Environment tasks}
+
+\begin{vdm_al}
+class VolumeKnob
+  is subclass of EnvironmentTask
+
+operations
+  public VolumeKnob: EventDispatcher ==> VolumeKnob
+  VolumeKnob (ped) == AbstractTask("VolumeKnob",ped);
+
+  handleEvent: Event ==> ()
+  handleEvent (pev) == duration (0) logInEvent(pev.getEvent())
+  post forall pr in set dom inl &
+         exists1 ps in set dom outl &
+           pr = ps => outl(ps) - inl(pr) <= 1500;
+
+  createSignal: () ==> ()
+  createSignal () ==
+    duration (0)
+     ( dcl num : nat := getNum();
+       updateTime(1000);
+       logOutEvent(num);
+       raiseInterrupt("HandleKeyPress", num) );
+
+  public Run: () ==> ()
+  Run () == start(self)
+
+thread
+  periodic (1000) (createSignal)
+  
+end VolumeKnob
+\end{vdm_al}
+
+\begin{vdm_al}
+class InsertAddress
+  is subclass of EnvironmentTask
+
+operations
+  public InsertAddress: EventDispatcher ==> InsertAddress
+  InsertAddress (ped) == AbstractTask("InsertAddress",ped);
+
+  handleEvent: Event ==> ()
+  handleEvent (pev) == duration (0) logInEvent(pev.getEvent())
+  post forall pr in set dom inl &
+         exists1 ps in set dom outl &
+           pr = ps => outl(ps) - inl(pr) <= 2000;
+
+  createSignal: () ==> ()
+  createSignal () ==
+    duration (0)
+      ( dcl num : nat := getNum();
+	updateTime(1000);
+        logOutEvent(num);
+        raiseInterrupt("HandleKeyPress", num) );
+
+  public Run: () ==> ()
+  Run () == start(self)
+
+thread
+  periodic (1000) (createSignal)
+  
+end InsertAddress
+\end{vdm_al}
+
+\begin{vdm_al}
+class TransmitTMC
+  is subclass of EnvironmentTask
+
+operations
+  public TransmitTMC: EventDispatcher ==> TransmitTMC
+  TransmitTMC (ped) == AbstractTask("TransmitTMC", ped);
+
+  handleEvent: Event ==> ()
+  handleEvent (pev) == duration (0) logInEvent(pev.getEvent())
+  post forall pr in set dom inl &
+         exists1 ps in set dom outl &
+           pr = ps => outl(ps) - inl(pr) <= 100000;
+
+  createSignal: () ==> ()
+  createSignal () ==
+    duration (0)
+      ( dcl num : nat := getNum();
+	updateTime(1000);
+	logOutEvent(num);
+        raiseInterrupt("HandleTMC", num) );
+
+  public Run: () ==> ()
+  Run () == start(self)
+
+thread
+  periodic (1000) (createSignal)
+
+end TransmitTMC
+\end{vdm_al}
+
+\begin{vdm_al}
+class Logger
+
+types
+  string = seq of char
+
+instance variables
+  static io : IO := new IO();
+  static num : nat := 0;
+
+operations
+  public printNetworkEvent: seq of char * seq of char * nat ==> ()
+  printNetworkEvent (psrc, pdest, pid) ==
+    ( def - = io.writeval[seq of (seq of char | nat)]
+        (["network", psrc, pdest, pid, time]) in num := num + 1;
+      def - = io.fwriteval[seq of (seq of char | nat)]
+        ("mytrace.txt", ["network", psrc, pdest, pid, time], <append>) in skip );
+
+  public printInterruptEvent: seq of char * seq of char * nat ==> ()
+  printInterruptEvent (psrc, pdest, pid) ==
+    ( def - = io.writeval[seq of (seq of char | nat)]
+        (["interrupt", psrc, pdest, pid, time]) in num := num + 1;
+      def - = io.fwriteval[seq of (seq of char | nat)]
+        ("mytrace.txt", ["interrupt", psrc, pdest, pid, time], <append>) in skip );
+
+  static public wait: () ==> ()
+  wait () == skip
+    
+sync
+  per wait => num > 30
+
+end Logger
+\end{vdm_al}
+
+\subsection{Event dispatching}
+
+\begin{vdm_al}
+class AbstractTaskEvent
+
+instance variables
+  public abstask: AbstractTask;
+  public ev : Event
+
+operations
+  public AbstractTaskEvent: AbstractTask * Event ==> AbstractTaskEvent
+  AbstractTaskEvent (pat, pev) == (abstask := pat; ev := pev);
+
+  public getFields: () ==> AbstractTask * Event
+  getFields () == return mk_ (abstask, ev)
+
+end AbstractTaskEvent
+
+class EventDispatcher
+  is subclass of Logger
+
+instance variables
+  queues : map seq of char to AbstractTask := {|->};
+  -- messages : seq of (AbstractTask * Event) := [];
+  messages : seq of AbstractTaskEvent := [];
+  interrupts: seq of AbstractTaskEvent := []
+  -- interrupts: seq of (AbstractTask * Event) := []
+
+operations
+  public Register: AbstractTask ==> ()
+  Register (pat) ==
+    queues := queues munion { pat.getName() |-> pat }
+    pre pat.getName() not in set dom queues;
+
+  setEvent: AbstractTask * Event ==> ()
+  setEvent (pat, pe) == 
+    if isofclass(NetworkEvent,pe)
+    -- then messages := messages ^ [mk_(pat,pe)]
+    then messages := messages ^ [new AbstractTaskEvent(pat,pe)]
+    else interrupts := interrupts ^ [new AbstractTaskEvent(pat,pe)];
+    -- else interrupts := interrupts ^ [mk_(pat,pe)];
+
+  getEvent: () ==> AbstractTask * Event
+  getEvent () ==
+    if len interrupts > 0
+    -- then ( dcl res : AbstractTask * Event := hd interrupts;
+    --        interrupts := tl interrupts;
+    --        return res )
+    then ( dcl res : AbstractTaskEvent := hd interrupts;
+           interrupts := tl interrupts;
+           return res.getFields() )
+    -- else ( dcl res : AbstractTask * Event := hd messages;
+    --        messages := tl messages;
+    --        return res );
+    else ( dcl res : AbstractTaskEvent := hd messages;
+           messages := tl messages;
+           return res.getFields() );
+
+  public SendNetwork: seq of char * seq of char * nat ==> ()
+  SendNetwork (psrc, pdest, pid) ==
+    duration (0)
+     ( dcl pbt: BasicTask := queues(pdest);
+       printNetworkEvent(psrc, pdest, pid);
+       setEvent(pbt, new NetworkEvent(pid)) )
+    pre pdest in set dom queues;
+
+  public SendInterrupt: seq of char * seq of char * nat ==> ()
+  SendInterrupt (psrc, pdest, pid) ==
+    duration (0)
+     ( dcl pbt: BasicTask := queues(pdest);
+       printInterruptEvent(psrc, pdest, pid);
+       setEvent(pbt, new InterruptEvent(pid)) )
+    pre pdest in set dom queues;
+
+  handleEvent: AbstractTask * Event ==> ()
+  handleEvent (pat, pe) == pat.setEvent(pe)
+
+thread
+  duration (0)
+    while (true) do
+      def mk_ (pat,pe) = getEvent() in
+        handleEvent(pat,pe)
+
+sync
+  mutex(setEvent, getEvent);
+  per getEvent => len messages > 0 or len interrupts > 0
+
+end EventDispatcher
+\end{vdm_al}
+
+\subsection{The RadNav system -- top-level specification}
+
+\begin{vdm_al}
+class RadNavSys
+
+instance variables
+  dispatch : EventDispatcher := new EventDispatcher();
+  appTasks : set of BasicTask := {};
+  mode : nat 
+
+operations
+  RadNavSys: nat ==> RadNavSys
+  RadNavSys (pi) ==
+   ( mode := pi;
+     cases (mode) :
+       1 -> ( addApplicationTask(new MMIHandleKeyPressOne(dispatch));
+              addApplicationTask(new RadioAdjustVolume(dispatch));
+              addApplicationTask(new MMIUpdateScreen(dispatch));
+              addApplicationTask(new RadioHandleTMC(dispatch));
+	      addApplicationTask(new NavigationDecodeTMC(dispatch)) ),
+       2 -> ( addApplicationTask(new MMIHandleKeyPressTwo(dispatch));
+              addApplicationTask(new NavigationDatabaseLookup(dispatch));
+              addApplicationTask(new MMIUpdateScreen(dispatch));
+              addApplicationTask(new RadioHandleTMC(dispatch));
+     	      addApplicationTask(new NavigationDecodeTMC(dispatch)) )
+     end;
+     startlist(appTasks); start(dispatch) )
+   pre pi in set {1, 2};
+
+  addApplicationTask: BasicTask ==> ()
+  addApplicationTask (pbt) ==
+   ( appTasks := appTasks union {pbt};
+     dispatch.Register(pbt) );
+
+  addEnvironmentTask: EnvironmentTask ==> ()
+  addEnvironmentTask (pet) ==
+   ( dispatch.Register(pet);
+     pet.Run() );
+
+  public Run: () ==> ()
+  Run () ==
+   ( cases (mode):
+       1 -> ( addEnvironmentTask(new VolumeKnob(dispatch));
+              addEnvironmentTask(new TransmitTMC(dispatch)) ),
+       2 -> ( addEnvironmentTask(new InsertAddress(dispatch));
+              addEnvironmentTask(new TransmitTMC(dispatch)) )
+     end;
+     Logger`wait() )
+
+end RadNavSys
+\end{vdm_al}

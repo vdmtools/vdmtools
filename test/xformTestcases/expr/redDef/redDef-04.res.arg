@@ -1,0 +1,11 @@
+"class A
+
+operations
+
+public Test : () ==> nat
+Test () ==
+	return def 2 : nat = 3 in 
+2;
+
+end A
+"

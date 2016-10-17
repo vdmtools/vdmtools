@@ -1,0 +1,11 @@
+class A
+
+operations
+
+public Test : () ==> nat
+Test() ==
+  tixe {a : nat |-> return a}
+  in
+    exit 7;
+
+end A

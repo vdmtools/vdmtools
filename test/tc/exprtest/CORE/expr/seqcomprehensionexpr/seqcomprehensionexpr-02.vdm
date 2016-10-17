@@ -1,0 +1,13 @@
+class SeqComprehensionExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = [i | i in set {} & i <> true]
+  in skip;
+
+------------------------------------------------------------------------------
+end SeqComprehensionExprTest

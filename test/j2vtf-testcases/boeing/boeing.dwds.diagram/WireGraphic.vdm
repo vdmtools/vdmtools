@@ -1,0 +1,472 @@
+class WireGraphic is subclass of WireEdge
+operations 
+public  plot : () ==> <VOID>
+plot() == 
+( dcl   startPoint : [ConnectionPoint] := getOriginatingPoint(),
+        endPoint : [ConnectionPoint] := getTerminatingPoint(),
+        startLocation : [Point] := startPoint.getLocation(),
+        endLocation : [Point] := endPoint.getLocation();
+  if  (startLocation.y > endLocation.y) or  (startLocation.y = endLocation.y and  startLocation.x > endLocation.x)
+  then  
+    ( let - = plotWirePath(endPoint , startPoint)
+      in 
+        skip ;
+      let - = buildSegments(endPoint , startPoint)
+      in 
+        skip 
+    ) 
+  else  
+    ( let - = plotWirePath(startPoint , endPoint)
+      in 
+        skip ;
+      let - = buildSegments(startPoint , endPoint)
+      in 
+        skip 
+    ) ;
+  return  
+) ;
+
+public  contains : int  * int  ==> bool 
+contains(x, y) == 
+( dcl   liesWithin : bool  := false  ;
+  ( dcl   cnt : int  := 0;
+    while  cnt < segments(0).npoints-1 do  
+    ( dcl   xPoints : map  int  to  int  := {3 |-> segments(SEGMENT_COUNT-1).xpoints(cnt) , 2 |-> segments(SEGMENT_COUNT-1).xpoints(cnt+1) , 1 |-> segments(0).xpoints(cnt+1) , 0 |-> segments(0).xpoints(cnt)},
+            yPoints : map  int  to  int  := {3 |-> segments(SEGMENT_COUNT-1).ypoints(cnt) , 2 |-> segments(SEGMENT_COUNT-1).ypoints(cnt+1) , 1 |-> segments(0).ypoints(cnt+1) , 0 |-> segments(0).ypoints(cnt)},
+            polygon : [Polygon] := new  Polygon(xPoints , yPoints , 4);
+      if  polygon.contains(x , y)
+      then  
+        ( liesWithin := true  ;
+          exit  new  J2V_Break()
+        ) ;
+      cnt := cnt+1
+    ) 
+  ) ;
+  return  liesWithin
+) ;
+
+public  getBaseColor : () ==> [Color]
+getBaseColor() == 
+( return  baseColor
+) ;
+
+private  setBaseColor : () ==> <VOID>
+setBaseColor() == 
+( dcl   wire : [Wire] := getWire();
+  if  wire.isAShield() or  wire.isShielded()
+  then  
+    ( baseColor := SHIELD_COLOR
+    ) 
+  else  
+    ( baseColor := WIRE_COLOR
+    ) ;
+  return  
+) ;
+
+public  contains : [Point] ==> bool 
+contains(point) == 
+( return  contains(point.x , point.y)
+) ;
+
+public  paint : [Graphics] ==> <VOID>
+paint(graphics) == 
+( dcl   myColor : [Color] := getForeground(),
+        lineColors : map  int  to  [Color] := {l_5 |-> nil  |l_5 in set  {0,...,SEGMENT_COUNT-1}};
+  ( dcl   idx : int  := 0;
+    while  idx < SEGMENT_COUNT do  
+    ( lineColors := lineColors ++ {idx |-> myColor};
+      idx := idx+1
+    ) 
+  ) ;
+  if  getWire().isShielded() and  myColor = SHIELD_COLOR
+  then  
+    ( lineColors := lineColors ++ {SEGMENT_COUNT/2 |-> WIRE_COLOR}
+    ) ;
+  ( dcl   idx : int  := 0;
+    while  idx < SEGMENT_COUNT do  
+    ( let - = graphics.setColor(lineColors(idx))
+      in 
+        skip ;
+      let - = graphics.drawPolyline(segments(idx).xpoints , segments(idx).ypoints , segments(idx).npoints)
+      in 
+        skip ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  <VOID>
+) ;
+
+public  WireGraphic : [Wire] ==> WireGraphic
+WireGraphic(wire) == 
+( let - = WireEdge(0 , 0 , 0 , 0)
+  in 
+    skip ;
+  let - = setNotifyOnMouseClick(true  )
+  in 
+    skip ;
+  let - = setNotifyOnMouseMotion(true  )
+  in 
+    skip ;
+  let - = setWire(wire)
+  in 
+    skip ;
+  bends := new  Vector(7);
+  segments := {l_3 |-> nil  |l_3 in set  {0,...,SEGMENT_COUNT-1}};
+  let - = setBaseColor()
+  in 
+    skip ;
+  let - = setForeground(baseColor)
+  in 
+    skip ;
+  wireHighlighted := false  ;
+  wireSelected := false  
+) ;
+
+public  verifyEndpointLocations : () ==> <VOID>
+verifyEndpointLocations() == 
+( dcl   startLocation : [Point] := WireGraphic`originationPoint.getLocation(),
+        endLocation : [Point] := WireGraphic`terminationPoint.getLocation();
+  if  startLocation.x = 0 and  startLocation.y = 0
+  then  
+    ( dcl   refDesNode : [RefDesNode] := WireGraphic`originationPoint.getNode(),
+            pinName : [String] := WireGraphic`originationPoint.getConnectionId(),
+            wireOrientation : [Orientation] := WireGraphic`originationPoint.getOrientation(),
+            connectLocation : [Point] := refDesNode.getConnectionPoint(pinName , wireOrientation);
+      let - = originationPoint.setLocation(connectLocation)
+      in 
+        skip 
+    ) ;
+  if  endLocation.x = 0 and  endLocation.y = 0
+  then  
+    ( dcl   refDesNode : [RefDesNode] := WireGraphic`terminationPoint.getNode(),
+            pinName : [String] := WireGraphic`terminationPoint.getConnectionId(),
+            wireOrientation : [Orientation] := WireGraphic`terminationPoint.getOrientation(),
+            connectLocation : [Point] := refDesNode.getConnectionPoint(pinName , wireOrientation);
+      let - = terminationPoint.setLocation(connectLocation)
+      in 
+        skip 
+    ) ;
+  return  
+) ;
+
+public  mouseMoved : [MouseEvent] ==> <VOID>
+mouseMoved(event) == 
+( dcl   currentColor : [Color] := getForeground(),
+        nextColor : [Color];
+  if  contains(event.getX() , event.getY())
+  then  
+    ( wireHighlighted := true  ;
+      if  wireSelected or  currentColor = SELECT_COLOR
+      then  
+        ( nextColor := baseColor;
+          wireSelected := true  
+        ) 
+      else  
+        ( nextColor := HIGHLIGHT_COLOR
+        ) 
+    ) 
+  else  
+    if  wireHighlighted
+    then  
+      ( wireHighlighted := false  ;
+        if  wireSelected
+        then  
+          ( nextColor := SELECT_COLOR
+          ) 
+        else  
+          ( nextColor := baseColor
+          ) 
+      ) 
+    else  
+      ( nextColor := currentColor
+      ) ;
+  if  currentColor <> nextColor
+  then  
+    ( let - = setForeground(nextColor)
+      in 
+        skip ;
+      let - = paint(containingCanvas.getGraphics())
+      in 
+        skip 
+    ) ;
+  return  
+) ;
+
+public  mouseExited : [MouseEvent] ==> <VOID>
+mouseExited(event) == 
+( return  
+) ;
+
+public  mousePressed : [MouseEvent] ==> <VOID>
+mousePressed(event) == 
+( if  contains(event.getX() , event.getY())
+  then  
+    ( wireSelected := true  ;
+      ( dcl   myWire : [Wire] := getWire(),
+              context : [ContextState] := ContextState`getContextState(),
+              contextUpdates : [ContextSet] := new  ContextSet();
+        let - = contextUpdates.put(ContextTypes`WIRE , myWire.toString())
+        in 
+          skip ;
+        let - = context.setCurrentContext(contextUpdates)
+        in 
+          skip 
+      ) 
+    ) 
+  else  
+    ( wireSelected := false  
+    ) ;
+  return  
+) ;
+
+public  mouseReleased : [MouseEvent] ==> <VOID>
+mouseReleased(event) == 
+( return  
+) ;
+
+private  plotSpreadPoint : [ConnectionPoint] * bool  ==> [Point]
+plotSpreadPoint(referencePoint, invertIndex) == 
+( dcl   pointOnLine : [Point] := new  Point(referencePoint.getLocation().x , referencePoint.getLocation().y),
+        referenceNode : [RefDesNode] := referencePoint.getNode(),
+        edgeDirection : [Orientation] := referencePoint.getOrientation(),
+        nodePosition : [Position] := edgeDirection.positionOf(edgeDirection),
+        edgeCount : int  := referenceNode.getEdgeCount(nodePosition , referencePoint.getConnectionId()),
+        indexOfEdge : int  := referenceNode.getRelativeWireIndex(self   , nodePosition , referencePoint.getConnectionId() , invertIndex),
+        midPoint : int  := edgeCount/2;
+  if  edgeDirection = Orientation.UP
+  then  
+    ( def l_8 = pointOnLine.x
+      in pointOnLine.x := l_8+(indexOfEdge-midPoint)*SPREAD;
+      def l_3 = pointOnLine.y
+      in pointOnLine.y := l_3-SPREAD_OFFSET
+    ) 
+  else  
+    if  edgeDirection = Orientation.DOWN
+    then  
+      ( def l_8 = pointOnLine.x
+        in pointOnLine.x := l_8+(indexOfEdge-midPoint)*SPREAD;
+        def l_3 = pointOnLine.y
+        in pointOnLine.y := l_3+SPREAD_OFFSET
+      ) 
+    else  
+      if  edgeDirection = Orientation.LEFT
+      then  
+        ( def l_3 = pointOnLine.x
+          in pointOnLine.x := l_3-SPREAD_OFFSET;
+          def l_8 = pointOnLine.y
+          in pointOnLine.y := l_8+(indexOfEdge-midPoint)*SPREAD
+        ) 
+      else  
+        if  edgeDirection = Orientation.RIGHT
+        then  
+          ( def l_3 = pointOnLine.x
+            in pointOnLine.x := l_3+SPREAD_OFFSET;
+            def l_8 = pointOnLine.y
+            in pointOnLine.y := l_8+(indexOfEdge-midPoint)*SPREAD
+          ) ;
+  return  pointOnLine
+) ;
+
+private  plotOffsetPoint : [ConnectionPoint] * [Point] * bool  * bool  ==> [Point]
+plotOffsetPoint(referencePoint, spreadPoint, positionIncreasing, invertIndex) == 
+( dcl   pointOnLine : [Point] := new  Point(spreadPoint.x , spreadPoint.y),
+        referenceNode : [RefDesNode] := referencePoint.getNode(),
+        edgeDirection : [Orientation] := referencePoint.getOrientation(),
+        nodePosition : [Position] := edgeDirection.positionOf(edgeDirection),
+        edgeCount : int  := referenceNode.getEdgeCount(nodePosition),
+        indexOfEdge : int  := referenceNode.getAbsoluteWireIndex(self   , nodePosition , referencePoint.getConnectionId() , referenceNode , invertIndex),
+        pointIndex : int ;
+  if  positionIncreasing
+  then  
+    ( pointIndex := indexOfEdge
+    ) 
+  else  
+    ( pointIndex := edgeCount-(indexOfEdge+1)
+    ) ;
+  if  edgeDirection = Orientation.UP
+  then  
+    ( pointOnLine.x := spreadPoint.x;
+      pointOnLine.y := spreadPoint.y-(pointIndex*SPREAD)
+    ) 
+  else  
+    if  edgeDirection = Orientation.DOWN
+    then  
+      ( pointOnLine.x := spreadPoint.x;
+        pointOnLine.y := spreadPoint.y+(pointIndex*SPREAD)
+      ) 
+    else  
+      if  edgeDirection = Orientation.LEFT
+      then  
+        ( pointOnLine.x := spreadPoint.x-(pointIndex*SPREAD);
+          pointOnLine.y := spreadPoint.y
+        ) 
+      else  
+        if  edgeDirection = Orientation.RIGHT
+        then  
+          ( pointOnLine.x := spreadPoint.x+(pointIndex*SPREAD);
+            pointOnLine.y := spreadPoint.y
+          ) ;
+  return  pointOnLine
+) ;
+
+private  plotWirePath : [ConnectionPoint] * [ConnectionPoint] ==> <VOID>
+plotWirePath(startPoint, endPoint) == 
+( dcl   detourHeight : int  := getDetour(),
+        invertEndWireIndex : bool  := invertWireIndex(startPoint , endPoint),
+        firstPoint : [Point] := plotSpreadPoint(startPoint , false  ),
+        lastPoint : [Point] := plotSpreadPoint(endPoint , invertEndWireIndex),
+        nextToFirstPoint : [Point] := plotOffsetPoint(startPoint , firstPoint , (firstPoint.y > lastPoint.y) , false  ),
+        nextToLastPoint : [Point] := plotOffsetPoint(endPoint , lastPoint , (firstPoint.y <= lastPoint.y) , invertEndWireIndex);
+  let - = bends.insertElementAt(firstPoint , 0)
+  in 
+    skip ;
+  let - = bends.insertElementAt(nextToFirstPoint , 0)
+  in 
+    skip ;
+  ( dcl   startDirection : [Orientation] := startPoint.getOrientation(),
+          endDirection : [Orientation] := endPoint.getOrientation();
+    if  startDirection = Orientation.RIGHT and  endDirection = Orientation.RIGHT
+    then  
+      ( if  nextToFirstPoint.x < nextToLastPoint.x
+        then  
+          ( dcl   middlePoint : [Point] := new  Point(nextToLastPoint.x , nextToFirstPoint.y);
+            let - = bends.insertElementAt(middlePoint , 0)
+            in 
+              skip 
+          ) 
+        else  
+          if  nextToFirstPoint.x > nextToLastPoint.x
+          then  
+            ( dcl   middlePoint : [Point] := new  Point(nextToFirstPoint.x , nextToLastPoint.y);
+              let - = bends.insertElementAt(middlePoint , 0)
+              in 
+                skip 
+            ) 
+      ) 
+    else  
+      if  startDirection = Orientation.LEFT and  endDirection = Orientation.LEFT
+      then  
+        ( if  nextToFirstPoint.x > nextToLastPoint.x
+          then  
+            ( dcl   middlePoint : [Point] := new  Point(nextToLastPoint.x , nextToFirstPoint.y);
+              let - = bends.insertElementAt(middlePoint , 0)
+              in 
+                skip 
+            ) 
+          else  
+            if  nextToFirstPoint.x < nextToLastPoint.x
+            then  
+              ( dcl   middlePoint : [Point] := new  Point(nextToFirstPoint.x , nextToLastPoint.y);
+                let - = bends.insertElementAt(middlePoint , 0)
+                in 
+                  skip 
+              ) 
+        ) 
+      else  
+        if  detourHeight = 0
+        then  
+          ( dcl   moveHorizontally : bool  := moveHorizontal(startPoint , endPoint);
+            if  nextToFirstPoint.y <> nextToLastPoint.y and  moveHorizontally
+            then  
+              ( dcl   middlePoint : [Point] := new  Point(nextToLastPoint.x , nextToFirstPoint.y);
+                let - = bends.insertElementAt(middlePoint , 0)
+                in 
+                  skip 
+              ) 
+            else  
+              if  nextToFirstPoint.x <> nextToLastPoint.x and  not  moveHorizontally
+              then  
+                ( dcl   middlePoint : [Point] := new  Point(nextToFirstPoint.x , nextToLastPoint.y);
+                  let - = bends.insertElementAt(middlePoint , 0)
+                  in 
+                    skip 
+                ) 
+          ) 
+        else  
+          ( dcl   middleY : int  := detourHeight+nextToFirstPoint.y-startPoint.getLocation().y,
+                  middlePoint : [Point] := new  Point(nextToFirstPoint.x , middleY);
+            let - = bends.insertElementAt(middlePoint , 0)
+            in 
+              skip ;
+            ( dcl   nextToMiddlePoint : [Point] := new  Point(nextToLastPoint.x , middleY);
+              let - = bends.insertElementAt(nextToMiddlePoint , 0)
+              in 
+                skip 
+            ) 
+          ) ;
+    let - = bends.insertElementAt(nextToLastPoint , 0)
+    in 
+      skip ;
+    let - = bends.insertElementAt(lastPoint , 0)
+    in 
+      skip ;
+    return  
+  ) ;
+  return  <VOID>
+) ;
+
+private  buildSegments : [ConnectionPoint] * [ConnectionPoint] ==> <VOID>
+buildSegments(startingPoint, endingPoint) == 
+( dcl   bendIndex : int ,
+        numberOfPoints : int  := bends.size()+2,
+        xPoints : map  int  to  int  := {l_8 |-> 0|l_8 in set  {0,...,numberOfPoints-1}},
+        yPoints : map  int  to  int  := {l_11 |-> 0|l_11 in set  {0,...,numberOfPoints-1}};
+  xPoints := xPoints ++ {0 |-> startingPoint.getLocation().x};
+  yPoints := yPoints ++ {0 |-> startingPoint.getLocation().y};
+  ( dcl   idx : int  := 0;
+    while  idx < bends.size() do  
+    ( bendIndex := numberOfPoints-idx-3;
+      xPoints := xPoints ++ {idx+1 |-> (def l_12 :  Point = (bends.elementAt(bendIndex))
+      in l_12).getLocation().x};
+      yPoints := yPoints ++ {idx+1 |-> (def l_12 :  Point = (bends.elementAt(bendIndex))
+      in l_12).getLocation().y};
+      idx := idx+1
+    ) 
+  ) ;
+  xPoints := xPoints ++ {numberOfPoints-1 |-> endingPoint.getLocation().x};
+  yPoints := yPoints ++ {numberOfPoints-1 |-> endingPoint.getLocation().y};
+  segments := segments ++ {0 |-> new  Polygon(xPoints , yPoints , numberOfPoints)};
+  segments := segments ++ {1 |-> new  Polygon(xPoints , yPoints , numberOfPoints)};
+  segments := segments ++ {2 |-> new  Polygon(xPoints , yPoints , numberOfPoints)};
+  let - = segments(0).translate(-1 , -1)
+  in 
+    skip ;
+  let - = segments(2).translate(1 , 1)
+  in 
+    skip ;
+  segments(0).xpoints := segments(0).xpoints ++ {0 |-> segments(0).xpoints(0)+1};
+  segments(0).xpoints := segments(0).xpoints ++ {numberOfPoints-1 |-> segments(0).xpoints(numberOfPoints-1)+1};
+  segments(2).xpoints := segments(2).xpoints ++ {0 |-> segments(2).xpoints(0)-1};
+  segments(2).xpoints := segments(2).xpoints ++ {numberOfPoints-1 |-> segments(2).xpoints(numberOfPoints-1)-1};
+  return  
+) ;
+
+private  moveHorizontal : [ConnectionPoint] * [ConnectionPoint] ==> bool 
+moveHorizontal(startPoint, endPoint) == 
+( dcl   startNode : [RefDesNode] := startPoint.getNode(),
+        startDirection : [Orientation] := startPoint.getOrientation(),
+        startPosition : [Position] := startDirection.positionOf(startDirection),
+        startCount : int  := startNode.getEdgeCount(startPosition),
+        endNode : [RefDesNode] := endPoint.getNode(),
+        endDirection : [Orientation] := endPoint.getOrientation(),
+        endPosition : [Position] := endDirection.positionOf(endDirection),
+        endCount : int  := endNode.getEdgeCount(endPosition);
+  return  startCount < endCount
+) ;
+
+private  invertWireIndex : [ConnectionPoint] * [ConnectionPoint] ==> bool 
+invertWireIndex(startPoint, endPoint) == 
+( return  (startPoint.getOrientation() = endPoint.getOrientation())
+) ;
+
+instance variables 
+  public  static SPREAD : int  := 6;
+  public  static SPREAD_OFFSET : int  := 48;
+  public  static SEGMENT_COUNT : int  := 3;
+  private  bends : [Vector] := nil  ;
+  private  segments : map  int  to  [Polygon];
+  private  baseColor : [Color];
+  private  wireHighlighted : bool ;
+  private  wireSelected : bool 
+  
+end  WireGraphic

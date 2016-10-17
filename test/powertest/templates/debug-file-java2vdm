@@ -1,0 +1,24 @@
+module go
+
+imports
+  from CPP all,
+  from AS all,
+  from REP all,
+  from CI all,
+  from JSSREP all,
+--  from JSSERR all,
+  from JAVAERR all,
+  from TEST all
+
+exports all
+
+definitions 
+
+operations
+  go : () ==> AS`VdmFiles | JAVAERR`ErrType 
+  go() ==
+  ( CPP`setmode(<JAVA>);
+    return TEST`go(<<AST>>)
+  )
+
+end go

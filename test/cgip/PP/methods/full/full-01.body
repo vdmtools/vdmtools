@@ -1,0 +1,49 @@
+class A
+
+instance variables 
+
+  i   : real;
+  j   : real;
+  b1  : bool;
+  b2  : bool;
+  s   : set of (real | char | bool) := {};
+
+
+operations
+
+public  m1: real * real ==> real * real
+  m1(i,j) ==
+  ( A`i := i;
+    A`j := j;
+    return mk_(A`i,A`j)
+  )
+  pre i < j;
+
+public  m2: bool * bool ==> bool * bool
+  m2(a, b)  ==
+  ( b1 := a;
+    b2 := b;
+    return mk_(b1,b2)
+  )
+  pre a;
+
+
+  m3: () ==> ()
+  m3() == 
+   s := { i, j, b1, b2 }; 
+
+public Test : () ==> set of (real | bool) * set of (real | bool)
+  Test() ==
+  ( dcl res1 : real * real := self.m1(1,2),
+        res2 : bool * bool := self.m2(true,false);
+    self.m3();
+    let mk_(a,b) = res1,
+        mk_(c,d) = res2 in
+      return mk_( s, { a,b,c,d } )
+  )
+
+end A   
+
+class B is subclass of A
+
+end B

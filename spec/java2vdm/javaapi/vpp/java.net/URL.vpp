@@ -1,0 +1,7 @@
+class JavaNetURL is subclass of JavaLangObject
+
+operations
+public JavaNetURL : <NIL> ==> JavaNetURL
+JavaNetURL(-) == isNil:=true;
+
+end JavaNetURL

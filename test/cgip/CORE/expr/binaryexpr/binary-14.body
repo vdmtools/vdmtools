@@ -1,0 +1,11 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ( map int to int | inmap int to int ) 
+Test () ==
+(dcl mapinj : inmap nat to nat := { 1|-> 2, 3|->4};
+
+return [
+  (if 1=1 
+  then {1 |-> 2, 2 |-> 4, 4 |-> 1}
+  else let a in set {'a', {3|->6}} in a) ** 0,
+  mapinj ** 0 ]
+)

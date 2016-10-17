@@ -1,0 +1,41 @@
+class C
+
+operations
+
+public op1 : () ==> ()
+op1() ==
+  is subclass responsibility
+
+end C
+
+class D
+
+end D
+
+class B is subclass of D
+
+operations
+
+public op1 : () ==> ()
+op1() ==
+  skip;
+
+public op2 : () ==> nat
+op2() ==
+( op1();
+  return 1
+)
+
+end B
+
+class A
+
+operations
+
+public Test : () ==> nat
+Test() ==
+  let b = new B()
+  in b.op2()
+
+
+end A

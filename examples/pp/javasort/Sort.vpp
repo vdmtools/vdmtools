@@ -1,0 +1,26 @@
+class DoSort
+
+operations
+  public Sort: seq of int ==> seq of int
+  Sort(l) ==
+    return DoSorting(l)
+
+functions
+
+  protected DoSorting: seq of int -> seq of int
+  DoSorting(l) ==
+    if l = [] then
+      []
+    else
+      let sorted = DoSorting (tl l) in
+        InsertSorted (hd l, sorted);
+
+  private InsertSorted: int * seq of int -> seq of int
+  InsertSorted(i,l) ==
+    cases true :
+      (l = [])    -> [i],
+      (i <= hd l) -> [i] ^ l,
+      others      -> [hd l] ^ InsertSorted(i,tl l)
+    end
+
+end DoSort

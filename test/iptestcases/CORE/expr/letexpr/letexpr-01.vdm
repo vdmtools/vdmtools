@@ -1,0 +1,67 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+types
+
+  Even = nat
+  inv n == n mod 2 = 0
+
+operations
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+---------------------------------------------------------------------
+----------------- LetExpr         -----------------------------------
+---------------------------------------------------------------------
+
+public Test : () ==> seq of ( seq of (  nat * <FALSE> |
+                                  nat | set of nat | seq of nat | bool )  |
+                          set of ( nat * nat * nat | 
+                                   set of (  nat * nat * nat | nat ) ) |
+                          bool |
+                          set of real |
+                          int |
+                          real )  
+Test () ==
+return
+[ let a = mk_( 1, <FALSE> ),
+      mk_((3), b ) = mk_(3, 3),
+      {3, c, 2, <FALSE> } = { <FALSE>, 3, 2, { 2, 3} },
+      [ d, 3, <HELLO>, [] ] = [ [10], 3, <HELLO>, [] ],
+      mk_( e, f ) : bool * bool = mk_(false, true ),
+      mk_AA(g, h ) : AA = mk_AA( 3, 6 )
+  in [ a, b, c, d, e, f, g, h ],
+  let a'_' = mk_(1, 3, 3 )
+  in let b = { a'_', 3 }
+     in { a'_', b },
+  let a = { mk_(a,b) | a in set {3, false}, b in set {4, 3 }}
+  in forall mk_(f, s) in set a & is_nat(f) or is_bool(f),
+  let m = { a |-> b | a in set {4.5, 2.5}, b in set {3} }
+  in dom m,
+  let a' = 35,
+      aa_ = 20,
+      b = 3
+  in a' div 3 + aa_ + b,
+  let a = 3.6
+  in let a' = a in a'
+] ^
+let s = {6,7,9,1,3,-1} in let s = f(s) in s
+
+functions
+f: set of int -> seq of int
+f(s) ==
+  if s = {} then 
+    []
+  else
+    let e in set s be st forall e' in set s \ {e} & e' < e in
+      [e] ^ f(s \ {e})
+
+types
+
+AA ::
+  a : nat
+  b : nat
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

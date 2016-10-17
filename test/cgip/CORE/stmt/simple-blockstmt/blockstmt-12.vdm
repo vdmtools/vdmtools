@@ -1,0 +1,13 @@
+class A
+
+operations
+
+public Test : () ==> seq of (nat | bool)
+Test() ==
+trap mk_(<UPS>,val) with return [val] in Test2();
+
+Test2: () ==> seq of nat
+Test2() == 
+  ( if true then exit mk_(<UPS>,10);
+    return [1,2,3]);
+end A

@@ -1,0 +1,6 @@
+[ mk_Test`BeaconsMet( 
+     [ mk_Test`TIVD( 60 ) ],
+     [  ] ),
+  mk_Test`KLVstate( 
+     mk_Test`CabDisp( false,false,true ),
+     mk_Test`EmerBreak( false ) ) ]

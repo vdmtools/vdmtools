@@ -1,0 +1,3 @@
+#! /bin/bash
+zip -j ToolboxAPI Makefile Makefile.nm client_example.cc corba_client.{h,cc} corba_api.idl metaiv_idl.idl ../../port/fstream.h ../../port/iostream.h ../../port/strstream.h
+echo "Now copy the file ToolboxAPI.zip to the ftp site"

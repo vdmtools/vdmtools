@@ -1,0 +1,16 @@
+class A
+
+operations
+
+
+
+
+public Test : () ==> seq of (char | seq of char)
+Test () ==
+(dcl l : seq of (char|seq of char) := if true then "Hi" else "Hello";
+ l := l ^ [if true then "world" else "world"];
+return l)
+
+
+
+end A

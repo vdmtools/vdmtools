@@ -1,0 +1,89 @@
+#! /usr/bin/perl
+
+# WHAT
+#    This script is used to convert a file containing test settings
+#    into a VDM-SL module that can be used to test at the specification 
+#    level
+# VERSION
+#    $Revision: 1.3 $
+# DATE
+#    $Date: 2005/01/19 05:01:30 $
+# AUTHOR
+#    $Author: vdmtools $
+
+%keywords = ("maxinstr", "SETTINGS\`SetMaxInstr",
+             "taskswitch", "SETTINGS\`SetTaskSwitch",
+             "timeslice", "SETTINGS\`SetTimeSlice",
+             "primaryalgorithm", "SETTINGS\`SetPrimaryAlgorithm",
+             "timefactor", "SETTINGS\`SetTimeFactor");
+
+%arguments = ("purecooperative", "mk_SCHDTP\`PureCooperative()",
+              "timeslice",       "mk_SCHDTP\`TimeSlice()",
+              "instructionslice","mk_SCHDTP\`InstrnumSlice()");
+
+if ($#ARGV != 1)
+{
+        usage();
+        exit 1;
+}
+
+$input_file = $ARGV[0];
+$output_file = $ARGV[1];
+
+open(INPUT_FILE,$input_file) or die "Fatal Error: Unable to open $input_file";
+while($line=<INPUT_FILE>){
+    chop $line;
+    ($settingfield, $settingval) = ($line =~ /(\w+)\s+(\w+)/);
+    $settings{$settingfield} = $settingval;
+}
+close INPUT_FILE;
+
+output_settings();
+
+
+
+sub usage {
+
+    print "Usage: getsettings <inputfile> <outputfile>\n";
+}
+
+sub output_settings {
+    open(OUTPUT_FILE,">$output_file") or 
+                         die "Fatal Error: Unable to open $output_file";
+
+    print OUTPUT_FILE "module TESTSETTINGS\n\n";
+    print OUTPUT_FILE "imports\n\n";
+    print OUTPUT_FILE "from SETTINGS all\n\n";
+    print OUTPUT_FILE "exports all\n\n";
+    print OUTPUT_FILE "definitions\n\n";
+    print OUTPUT_FILE "operations\n\n";
+    print OUTPUT_FILE "Init : () ==> ()\n";
+    print OUTPUT_FILE "Init() ==\n";
+
+    @settings_keys = keys %settings;
+    if ($#settings_keys == -1) {
+        print OUTPUT_FILE "  skip";
+    }
+    else {
+        print OUTPUT_FILE "(\n";
+        foreach $key (keys %settings) {
+          print OUTPUT_FILE "  $keywords{$key}";
+          $val=$settings{$key};
+          $outputval="";
+          if ($arguments{$val}) {
+              $outputval=$arguments{$val};
+          }
+          else {
+              $outputval=$val;
+          }
+              
+          print OUTPUT_FILE "($outputval);\n";
+        }
+        print OUTPUT_FILE ")\n";
+    }
+
+
+    print OUTPUT_FILE "\nend TESTSETTINGS";
+
+    close OUTPUT_FILE;
+}

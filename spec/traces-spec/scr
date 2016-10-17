@@ -1,0 +1,5 @@
+! .vdmde-traces-pp
+tc EXPANDED pos
+tc TRTEST pos
+init
+d TRTEST`test2()

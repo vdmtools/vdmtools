@@ -1,0 +1,24 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of (nat | char)  
+Test () ==
+( return 
+    [ mu(mk_AA(10,20), i |-> let a = 3 in a).i,
+      mu(let a = mk_C('a') in a, j |-> if true then 'b' else 'c').j ] ^
+    let rec = mu((mk_B('a', 6, 9.3)), i |-> 3 + 4) in 
+      [rec.x, rec.j, rec.i] ^
+    mu(if 1=1 then mk_D([]) else false, g |-> [ i | i in set {60,...,65} ]).g
+)
+
+types
+AA:: i : nat
+    j : nat;
+
+B:: x : char
+    j : int
+    i : real;
+
+C:: j : char;
+
+D:: g : seq of int
+
+end A

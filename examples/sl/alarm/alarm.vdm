@@ -1,0 +1,36 @@
+-- This example is taken from the book called "Modelling Systems -
+-- Practical Tools and Techniques in Software Development" by
+-- John Fitzgerald and Peter Gorm Larsen from Cambridge University Press. 
+-- More definitions are present in the book but this is what is used
+-- in the VDM-SL language manual.
+
+types
+
+
+Period = token;
+ExpertId = token;
+Expert :: expertid : ExpertId
+          quali : set of Qualification
+inv ex == ex.quali <> {};
+Qualification = <Elec> | <Mech> | <Bio> | <Chem>;
+Alarm :: alarmtext : seq of char
+         quali : Qualification
+
+values
+
+p1: Period = mk_token("Monday day");
+eid2 : ExpertId = mk_token(145);
+e3 : Expert = mk_Expert(eid2, { <Mech>, <Chem> });
+a1 : Alarm = mk_Alarm("CO2 detected", <Chem>)
+
+functions
+
+occurs : seq1 of char * seq1 of char -> bool
+occurs (substr,str) ==
+  exists i,j in set inds str & substr = str(i,...,j);
+-- c.f. exists i,j:nat & substr = str(i,...,j);
+
+QualificationOK: set of Expert * Qualification -> bool
+QualificationOK(exs,reqquali) ==
+    exists ex in set exs & reqquali in set ex.quali
+

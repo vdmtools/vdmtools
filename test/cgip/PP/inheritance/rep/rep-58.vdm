@@ -1,0 +1,42 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+
+types
+
+public
+  UnionType = MyRec | YourRec;
+
+public
+  MyRec ::
+     a : nat
+     b : bool
+  inv myrec == myrec.a > 1;
+
+public
+  YourRec ::
+     c : seq of nat
+     d : set of bool;
+
+end A
+
+class B
+
+operations
+
+public Test : () ==> int
+Test () ==
+( 
+   return f(mk_A`YourRec([3],{true}))
+);
+
+functions
+
+  f: A`UnionType -> int
+  f(a) ==
+    if is_A`MyRec(a)
+    then a.a
+    else  hd (a.c)
+
+end B
+

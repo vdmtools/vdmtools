@@ -1,0 +1,85 @@
+class B
+instance variables
+  public    pub_iv:int := 12;
+  protected pro_iv:int := 13;
+  private   priv_iv:int:=14;
+	    def_iv:int := 15
+
+operations
+  public 
+    pub_op:int ==> int
+    pub_op(a) == return a
+    pre a > 11
+    post a > 1;
+
+  protected
+    pro_op:int ==> int
+    pro_op(a) == return a;
+
+  private
+    priv_op:int ==> int
+    priv_op(a) == return a;
+
+  --default
+    def_op:int ==> int
+    def_op(a) == return a
+
+functions
+  public 
+    pub_f:int +> int
+    pub_f(a) ==  a;
+
+  protected
+    pro_f:int +> int
+    pro_f(a) ==  a;
+
+  private
+    priv_f:int +> int
+    priv_f(a) ==  a;
+
+  --default
+    def_f:int +> int
+    def_f(a) ==  a
+
+values
+  public    pub_val : int = 21;
+  protected pro_val : int = 22;
+  private   priv_val : int = 23;
+	    def_val : int = 24;
+  protected mk_(pro_patval1,pro_patval2) : int*int = 
+            let  mk_(a,b) = if true then mk_(1,2) else
+	                    mk_(11,22) in mk_(b,a+b)
+
+types
+  public    pub_typ = int
+            inv t == t > 10;
+  protected pro_typ = int;
+  private   priv_typ = int;
+	    def_typ = int;
+
+  public    pub_rec::a:int;
+  protected pro_rec::a:int;
+  private   priv_rec::a:int;
+	    def_rec::a:int
+--------------------------
+operations
+end B
+
+class A is subclass of B
+operations
+private
+  TestA : () ==> seq of (pub_typ|pro_typ|pub_rec|pro_rec)
+  TestA () ==
+  return 
+  let pub_rec_val = mk_pub_rec (23),
+      pro_rec_val = mk_pro_rec (33) in
+      [ pub_iv,
+        pro_iv,
+        pub_op (pub_val),pub_f (pub_rec_val.a),
+	pro_op (pro_val),pro_f (pro_rec_val.a)
+      ] ;
+public
+  Test:() ==> seq of int
+  Test () == return TestA ()
+end A
+

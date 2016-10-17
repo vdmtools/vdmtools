@@ -1,0 +1,21 @@
+module TEST
+imports
+  from CPP all,
+--  from AS all,
+--  from REP all,
+  from CI all
+
+exports all
+
+definitions
+
+operations
+
+
+  go: CPP`Files ==> CPP`Files
+  go(files) ==
+   ( CPP`setmode(<JAVA>);
+     return files
+   )
+
+end TEST

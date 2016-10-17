@@ -1,0 +1,26 @@
+class BinaryTest
+values
+
+  v1 : map T2 to nat = {mk_T('a') |-> 2, mk_T1('r') |-> 5}
+  
+types
+
+  T :: char;
+
+  T1 :: char;
+  
+  T2 = T | T1
+  
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let n = 2,
+      - = n inter {true}
+  in skip;
+
+------------------------------------------------------------------------------
+end BinaryTest

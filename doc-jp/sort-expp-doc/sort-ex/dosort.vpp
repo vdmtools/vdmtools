@@ -1,0 +1,47 @@
+% WHAT
+%    The dosort algorithm. 
+% ID
+%    $Id: dosort.vpp,v 1.3 2006/04/07 04:37:19 vdmtools Exp $
+% PROJECT
+%    Toolbox
+% COPYRIGHT
+%    (C) Kyushu University
+
+
+\section{DoSortクラス}
+\begin{vdm_al}
+class DoSort is subclass of Sorter
+
+operations
+
+  public Sort: seq of int ==> seq of int
+  Sort(l) ==
+    return DoSorting(l)
+
+functions
+
+  DoSorting: seq of int -> seq of int
+  DoSorting(l) ==
+    if l = [] then
+      []
+    else
+      let sorted = DoSorting (tl l) in
+        InsertSorted (hd l, sorted);
+
+  InsertSorted: int * seq of int -> seq of int
+  InsertSorted(i,l) ==
+    cases true :
+      (l = [])    -> [i],
+      (i <= hd l) -> [i] ^ l,
+      others      -> [hd l] ^ InsertSorted(i,tl l)
+    end
+
+
+
+end DoSort 
+\end{vdm_al}
+
+{\em DoSort}クラスに対するテストカバレッジ情報の概要は下のテーブルにリストされている。
+テストカバレッジ情報は {\em sort.arg}ファイルを引数として生成される。
+
+

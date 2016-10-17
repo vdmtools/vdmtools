@@ -1,0 +1,29 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+-- Testing dont care for records.
+
+public Test : () ==> inmap nat to nat  
+Test () ==
+( if val1 = val2
+  then 
+      if map1(val2) = 34
+      then let mk_Rec1(a,b,c)=val1,
+               mk_Rec1(d,e, mk_(f,g))=val2
+           in return {a|->c, f |-> c}
+);
+  
+types 
+
+  Rec1 ::
+     a: nat
+     b: nat
+     c:- nat | nat * nat
+ 
+values
+
+  val1 = mk_Rec1(1,2,3);
+  val2 = mk_Rec1(1,2,6);
+
+  map1 = {val1 |-> 34};
+  
+
+end A

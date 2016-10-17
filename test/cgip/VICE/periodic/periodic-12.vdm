@@ -1,0 +1,87 @@
+-- Test case which checks that periodic threads can be swapped in and out
+-- when they block
+
+class Shared
+
+instance variables
+  waitset : seq of nat := [];
+
+operations
+
+public wait : () ==> ()
+wait() ==
+  (AddToWaitSet(threadid);
+   Awake());
+
+AddToWaitSet : nat ==> ()
+AddToWaitSet(n) ==
+  waitset := waitset ^ [n];
+
+Awake : () ==> ()
+Awake() ==
+  skip;
+
+public notify : () ==> ()
+notify() ==
+  if waitset <> []
+  then waitset := tl waitset;
+
+public GetWait : () ==> ()
+GetWait() == skip;
+
+sync
+  mutex(AddToWaitSet,notify);
+  per Awake => threadid not in set elems waitset;
+  per GetWait => #fin(AddToWaitSet) >= 1;
+
+end Shared
+
+class B
+
+instance variables
+
+  i : nat := 0;
+  s : Shared;
+
+operations
+
+  public  Init : Shared ==> B
+  Init(ns) ==
+    (s := ns;
+     return self);
+
+  op : () ==> ()
+  op() ==
+    ( s.wait();
+      i := i + 1;
+      s.notify());
+
+  public finished : () ==> nat
+  finished() == 
+    return i;
+
+sync
+
+  per finished => #fin(op) > 0;
+
+thread
+
+  periodic (1000,11,991,1)(op)
+
+end B
+
+class A
+
+operations
+
+public Test : () ==> nat
+Test() ==
+  ( dcl s : Shared := new Shared(),
+        b : B := new B().Init(s);
+    start(b);
+    s.GetWait();
+    s.notify();
+    b.finished()
+  )
+
+end A

@@ -1,0 +1,13 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> Colour  
+Test () ==
+( dcl colour :Colour := <RED>;
+  return colour
+);
+  
+types 
+public  Colour = <RED> | <BLUE> | <GREEN> | <BLACK> | <WHITE>
+  inv c == c = <RED>
+
+
+end A

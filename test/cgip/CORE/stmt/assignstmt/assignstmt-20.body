@@ -1,0 +1,33 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ( seq of nat | seq of nat | map nat to nat | set of nat )  
+Test () ==
+( dcl s : seq of nat := [],
+      s_m : seq of nat | map nat to nat := [],
+      m : map nat to nat := {|->},
+      st1 : set of nat := {},
+      st2 : set of nat | bool := {},  
+      res : seq of ( seq of nat | seq of nat | map nat to nat | set of nat ) := [];
+  s := s ^ [1];
+  s := s ^ [ let a = 35 in a ];
+  res := res ^ [s];
+  s_m := s_m ^ [3];
+  s_m := s_m ^ [4];
+  res := res ^ [s_m];
+  s_m := {1|->2};
+  s_m := s_m ++ { 100 |-> 200};
+  res := res ^ [s_m];
+  m := m ++ { 300 |-> 400};
+  m := m ++ { (let a =500 in a) |->
+              (let a = 700 in a) };
+  res := res ^ [m];
+  st1 := st1 union {3};
+  st1 := st1 union {let a = 255 in a};
+  res := res ^ [st1];
+
+  st2 := st2 union {6};
+  st2 := st2 union {7};
+
+  res := res ^ [st2];
+
+  return res;
+)

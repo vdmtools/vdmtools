@@ -1,0 +1,51 @@
+\begin{vdm_al}
+class Á”ïÒ
+--$Id: consumer.vpp,v 1.3 2005/11/10 07:15:56 vdmtools Exp $
+instance variables
+b : Buffer;
+producer : ¶YÒ;
+
+operations
+public Á”ïÒ : Buffer ==> Á”ïÒ
+Á”ïÒ(aBuffer) ==
+	(
+	b := aBuffer;
+	return self
+	);
+	
+€–ÚÁ”ï : seq of char ==> ()
+€–ÚÁ”ï(c) == 
+	let - = new IO().echo("ThreadID=" ^ Integer`asString(threadid) ^ ", ConsumeData=" ^ c ^ ",\n")
+	in
+	skip;
+	
+public doit : () ==> ()
+doit() ==
+	while true do (
+		let c = b.Get()
+		in
+		/* ‚±‚Ìif•¶‚ª‚È‚¢‚Ædeadlock”­¶*/
+		if c = 'Z' then
+			return
+		else
+		/* */
+			€–ÚÁ”ï([c]);
+	);
+
+public wait : () ==> ()
+wait() == skip;
+	
+sync
+	--mutex(€–ÚÁ”ï);
+	per wait => #fin(doit) > #act(wait);
+	
+thread
+	doit(); 
+
+end Á”ïÒ
+
+\end{vdm_al}
+
+\begin{rtinfo}
+[TotalxCoverage]{vdm.tc}[Á”ïÒ]
+\end{rtinfo}

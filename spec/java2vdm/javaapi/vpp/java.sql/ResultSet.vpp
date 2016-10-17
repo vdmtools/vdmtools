@@ -1,0 +1,540 @@
+class JavaSqlResultSet is subclass of JavaLangObject
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaSqlResultSet" , <INTERFACE> , false  )
+instance variables 
+  public  static FETCH_FORWARD : int :=1000;
+  public  static FETCH_REVERSE : int :=1001;
+  public  static FETCH_UNKNOWN : int :=1002;
+  public  static TYPE_FORWARD_ONLY : int :=1003;
+  public  static TYPE_SCROLL_INSENSITIVE : int :=1004;
+  public  static TYPE_SCROLL_SENSITIVE : int :=1005;
+  public  static CONCUR_READ_ONLY : int :=1007;
+  public  static CONCUR_UPDATABLE : int :=1008
+operations 
+
+JavaSqlResultSet: <NIL> ==> JavaSqlResultSet
+JavaSqlResultSet(-) ==
+isNil:=true;
+
+public  last : () ==> bool 
+last() == 
+is not yet specified;
+
+public  next : () ==> bool 
+next() == 
+is not yet specified;
+
+public  close : () ==> ()
+close() == 
+is not yet specified;
+
+public  first : () ==> bool 
+first() == 
+is not yet specified;
+
+public  getRow : () ==> int 
+getRow() == 
+is not yet specified;
+
+public  isLast : () ==> bool 
+isLast() == 
+is not yet specified;
+
+public  getInt : int  ==> int 
+getInt(columnIndex) == 
+is not yet specified;
+
+--public  getRef : int  ==> Ref
+--getRef(i) == 
+--is not yet specified;
+
+public  getType : () ==> int 
+getType() == 
+is not yet specified;
+
+public  isFirst : () ==> bool 
+isFirst() == 
+is not yet specified;
+
+public  wasNull : () ==> bool 
+wasNull() == 
+is not yet specified;
+
+--public  getBlob : int  ==> Blob
+--getBlob(i) == 
+--is not yet specified;
+
+public  getByte : int  ==> int 
+getByte(columnIndex) == 
+is not yet specified;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+--public  getClob : int  ==> Clob
+--getClob(i) == 
+--is not yet specified;
+
+--public  getDate : int  ==> JavaUtilDate
+--getDate(columnIndex) == 
+--is not yet specified;
+
+public  getLong : int  ==> int 
+getLong(columnIndex) == 
+is not yet specified;
+
+--public  getTime : int  ==> Time
+--getTime(columnIndex) == 
+--is not yet specified;
+
+public  previous : () ==> bool 
+previous() == 
+is not yet specified;
+
+public  absolute : int  ==> bool 
+absolute(row) == 
+is not yet specified;
+
+public  afterLast : () ==> ()
+afterLast() == 
+is not yet specified;
+
+public  deleteRow : () ==> ()
+deleteRow() == 
+is not yet specified;
+
+--public  getArray : int  ==> Array
+--getArray(i) == 
+--is not yet specified;
+
+public  getBytes : int  ==> map  int  to  int 
+getBytes(columnIndex) == 
+is not yet specified;
+
+public  getFloat : int  ==> real 
+getFloat(columnIndex) == 
+is not yet specified;
+
+public  getShort : int  ==> int 
+getShort(columnIndex) == 
+is not yet specified;
+
+public  insertRow : () ==> ()
+insertRow() == 
+is not yet specified;
+
+public  relative : int  ==> bool 
+relative(rows) == 
+is not yet specified;
+
+public  updateRow : () ==> ()
+updateRow() == 
+is not yet specified;
+
+public  getDouble : int  ==> real 
+getDouble(columnIndex) == 
+is not yet specified;
+
+--public  getObject : int  ==> JavaLangObject
+--getObject(columnIndex) == 
+--is not yet specified;
+
+public  getString : int  ==> JavaLangString
+getString(columnIndex) == 
+is not yet specified;
+
+public  refreshRow : () ==> ()
+refreshRow() == 
+is not yet specified;
+
+public  rowDeleted : () ==> bool 
+rowDeleted() == 
+is not yet specified;
+
+public  rowUpdated : () ==> bool 
+rowUpdated() == 
+is not yet specified;
+
+public  beforeFirst : () ==> ()
+beforeFirst() == 
+is not yet specified;
+
+public  getBoolean : int  ==> bool 
+getBoolean(columnIndex) == 
+is not yet specified;
+
+--public  getMetaData : () ==> ResultSetMetaData
+--getMetaData() == 
+--is not yet specified;
+
+--public  getWarnings : () ==> SQLWarning
+--getWarnings() == 
+--is not yet specified;
+
+public  isAfterLast : () ==> bool 
+isAfterLast() == 
+is not yet specified;
+
+public  rowInserted : () ==> bool 
+rowInserted() == 
+is not yet specified;
+
+public  updateNull : int  ==> ()
+updateNull(columnIndex) == 
+is not yet specified;
+
+public  getFetchSize : () ==> int 
+getFetchSize() == 
+is not yet specified;
+
+public  getStatement : () ==> JavaSqlStatement
+getStatement() == 
+is not yet specified;
+
+public  updateInt : int  * int  ==> ()
+updateInt(columnIndex, x) == 
+is not yet specified;
+
+public  clearWarnings : () ==> ()
+clearWarnings() == 
+is not yet specified;
+
+public  getCursorName : () ==> JavaLangString
+getCursorName() == 
+is not yet specified;
+
+--public  getTimestamp : int  ==> Timestamp
+--getTimestamp(columnIndex) == 
+--is not yet specified;
+
+public  isBeforeFirst : () ==> bool 
+isBeforeFirst() == 
+is not yet specified;
+
+public  setFetchSize : int  ==> ()
+setFetchSize(rows) == 
+is not yet specified;
+
+public  updateByte : int  * int  ==> ()
+updateByte(columnIndex, x) == 
+is not yet specified;
+
+public  updateLong : int  * int  ==> ()
+updateLong(columnIndex, x) == 
+is not yet specified;
+
+--public  getBigDecimal : int  ==> JavaMathBigDecimal
+--getBigDecimal(columnIndex) == 
+--is not yet specified;
+
+public  getConcurrency : () ==> int 
+getConcurrency() == 
+is not yet specified;
+
+public  getInt : JavaLangString ==> int 
+getInt(columnName) == 
+is not yet specified;
+
+--public  getRef : JavaLangString ==> Ref
+--getRef(colName) == 
+--is not yet specified;
+
+public  updateFloat : int  * real  ==> ()
+updateFloat(columnIndex, x) == 
+is not yet specified;
+
+public  updateShort : int  * int  ==> ()
+updateShort(columnIndex, x) == 
+is not yet specified;
+
+--public  getAsciiStream : int  ==> JavaIoInputStream
+--getAsciiStream(columnIndex) == 
+--is not yet specified;
+
+--public  getBlob : JavaLangString ==> Blob
+--getBlob(colName) == 
+--is not yet specified;
+
+public  getByte : JavaLangString ==> int 
+getByte(columnName) == 
+is not yet specified;
+
+--public  getClob : JavaLangString ==> Clob
+--getClob(colName) == 
+--is not yet specified;
+
+--public  getDate : JavaLangString ==> JavaUtilDate
+--getDate(columnName) == 
+--is not yet specified;
+
+public  getLong : JavaLangString ==> int 
+getLong(columnName) == 
+is not yet specified;
+
+--public  getTime : JavaLangString ==> Time
+--getTime(columnName) == 
+--is not yet specified;
+
+public  moveToInsertRow : () ==> ()
+moveToInsertRow() == 
+is not yet specified;
+
+public  updateDouble : int  * real  ==> ()
+updateDouble(columnIndex, x) == 
+is not yet specified;
+
+public  cancelRowUpdates : () ==> ()
+cancelRowUpdates() == 
+is not yet specified;
+
+--public  getArray : JavaLangString ==> Array
+--getArray(colName) == 
+--is not yet specified;
+
+--public  getBigDecimal : int  * int  ==> JavaMathBigDecimal
+--getBigDecimal(columnIndex, scale) == 
+--is not yet specified;
+
+--public  getBinaryStream : int  ==> JavaIoInputStream
+--getBinaryStream(columnIndex) == 
+--is not yet specified;
+
+public  getBytes : JavaLangString ==> map  int  to  int 
+getBytes(columnName) == 
+is not yet specified;
+
+public  getFloat : JavaLangString ==> real 
+getFloat(columnName) == 
+is not yet specified;
+
+--public  getObject : int  * JavaUtilMap ==> JavaLangObject
+--getObject(i, map__) == 
+--is not yet specified;
+
+public  getShort : JavaLangString ==> int 
+getShort(columnName) == 
+is not yet specified;
+
+public  moveToCurrentRow : () ==> ()
+moveToCurrentRow() == 
+is not yet specified;
+
+public  updateBoolean : int  * bool  ==> ()
+updateBoolean(columnIndex, x) == 
+is not yet specified;
+
+public  getDouble : JavaLangString ==> real 
+getDouble(columnName) == 
+is not yet specified;
+
+public  getFetchDirection : () ==> int 
+getFetchDirection() == 
+is not yet specified;
+
+public  getObject : JavaLangString ==> JavaLangObject
+getObject(columnName) == 
+is not yet specified;
+
+public  getString : JavaLangString ==> JavaLangString
+getString(columnName) == 
+is not yet specified;
+
+--public  getUnicodeStream : int  ==> JavaIoInputStream
+--getUnicodeStream(columnIndex) == 
+--is not yet specified;
+
+public  findColumn : JavaLangString ==> int 
+findColumn(columnName) == 
+is not yet specified;
+
+public  getBoolean : JavaLangString ==> bool 
+getBoolean(columnName) == 
+is not yet specified;
+
+public  setFetchDirection : int  ==> ()
+setFetchDirection(direction) == 
+is not yet specified;
+
+public  updateBytes : int  * map  int  to  int  ==> ()
+updateBytes(columnIndex, x) == 
+is not yet specified;
+
+--public  updateDate : int  * JavaUtilDate ==> ()
+--updateDate(columnIndex, x) == 
+--is not yet specified;
+
+public  updateNull : JavaLangString ==> ()
+updateNull(columnName) == 
+is not yet specified;
+
+--public  updateTime : int  * Time ==> ()
+--updateTime(columnIndex, x) == 
+--is not yet specified;
+
+--public  getCharacterStream : int  ==> JavaIoReader
+--getCharacterStream(columnIndex) == 
+--is not yet specified;
+
+--public  getDate : int  * Calendar ==> JavaUtilDate
+--getDate(columnIndex, cal) == 
+--is not yet specified;
+
+--public  getTime : int  * Calendar ==> Time
+--getTime(columnIndex, cal) == 
+--is not yet specified;
+
+public  updateInt : JavaLangString * int  ==> ()
+updateInt(columnName, x) == 
+is not yet specified;
+
+--public  getTimestamp : JavaLangString ==> Timestamp
+--getTimestamp(columnName) == 
+--is not yet specified;
+
+public  updateByte : JavaLangString * int  ==> ()
+updateByte(columnName, x) == 
+is not yet specified;
+
+public  updateLong : JavaLangString * int  ==> ()
+updateLong(columnName, x) == 
+is not yet specified;
+
+--public  getBigDecimal : JavaLangString ==> JavaMathBigDecimal
+--getBigDecimal(columnName) == 
+--is not yet specified;
+
+public  updateFloat : JavaLangString * real  ==> ()
+updateFloat(columnName, x) == 
+is not yet specified;
+
+public  updateShort : JavaLangString * int  ==> ()
+updateShort(columnName, x) == 
+is not yet specified;
+
+--public  getAsciiStream : JavaLangString ==> JavaIoInputStream
+--getAsciiStream(columnName) == 
+--is not yet specified;
+
+public  updateDouble : JavaLangString * real  ==> ()
+updateDouble(columnName, x) == 
+is not yet specified;
+
+public  updateObject : int  * JavaLangObject ==> ()
+updateObject(columnIndex, x) == 
+is not yet specified;
+
+public  updateString : int  * JavaLangString ==> ()
+updateString(columnIndex, x) == 
+is not yet specified;
+
+--public  getBigDecimal : JavaLangString * int  ==> JavaMathBigDecimal
+--getBigDecimal(columnName, scale) == 
+--is not yet specified;
+
+--public  getBinaryStream : JavaLangString ==> JavaIoInputStream
+--getBinaryStream(columnName) == 
+--is not yet specified;
+
+--public  getObject : JavaLangString * JavaUtilMap ==> JavaLangObject
+--getObject(colName, map__) == 
+--is not yet specified;
+
+public  updateBoolean : JavaLangString * bool  ==> ()
+updateBoolean(columnName, x) == 
+is not yet specified;
+
+--public  getTimestamp : int  * Calendar ==> Timestamp
+--getTimestamp(columnIndex, cal) == 
+--is not yet specified;
+
+--public  getUnicodeStream : JavaLangString ==> JavaIoInputStream
+--getUnicodeStream(columnName) == 
+--is not yet specified;
+
+--public  updateObject : int  * JavaLangObject * int  ==> ()
+--updateObject(columnIndex, x, scale) == 
+--is not yet specified;
+
+public  updateBytes : JavaLangString * map  int  to  int  ==> ()
+updateBytes(columnName, x) == 
+is not yet specified;
+
+--public  updateDate : JavaLangString * JavaUtilDate ==> ()
+--updateDate(columnName, x) == 
+--is not yet specified;
+
+--public  updateTime : JavaLangString * Time ==> ()
+--updateTime(columnName, x) == 
+--is not yet specified;
+
+--public  getCharacterStream : JavaLangString ==> JavaIoReader
+--getCharacterStream(columnName) == 
+--is not yet specified;
+
+--public  getDate : JavaLangString * Calendar ==> JavaUtilDate
+--getDate(columnName, cal) == 
+--is not yet specified;
+
+--public  getTime : JavaLangString * Calendar ==> Time
+--getTime(columnName, cal) == 
+--is not yet specified;
+
+--public  updateTimestamp : int  * Timestamp ==> ()
+--updateTimestamp(columnIndex, x) == 
+--is not yet specified;
+
+--public  updateObject : JavaLangString * JavaLangObject ==> ()
+--updateObject(columnName, x) == 
+--is not yet specified;
+
+public  updateString : JavaLangString * JavaLangString ==> ()
+updateString(columnName, x) == 
+is not yet specified;
+
+--public  updateBigDecimal : int  * JavaMathBigDecimal ==> ()
+--updateBigDecimal(columnIndex, x) == 
+--is not yet specified;
+
+--public  getTimestamp : JavaLangString * Calendar ==> Timestamp
+--getTimestamp(columnName, cal) == 
+--is not yet specified;
+
+--public  updateObject : JavaLangString * JavaLangObject * int  ==> ()
+--updateObject(columnName, x, scale) == 
+--is not yet specified;
+
+--public  updateCharacterStream : int  * JavaIoReader * int  ==> ()
+--updateCharacterStream(columnIndex, x, length) == 
+--is not yet specified;
+
+--public  updateAsciiStream : int  * JavaIoInputStream * int  ==> ()
+--updateAsciiStream(columnIndex, x, length) == 
+--is not yet specified;
+
+--public  updateBinaryStream : int  * JavaIoInputStream * int  ==> ()
+--updateBinaryStream(columnIndex, x, length) == 
+--is not yet specified;
+
+--public  updateTimestamp : JavaLangString * Timestamp ==> ()
+--updateTimestamp(columnName, x) == 
+--is not yet specified;
+
+--public  updateBigDecimal : JavaLangString * JavaMathBigDecimal ==> ()
+--updateBigDecimal(columnName, x) == 
+--is not yet specified;
+
+--public  updateCharacterStream : JavaLangString * JavaIoReader * int  ==> ()
+--updateCharacterStream(columnName, reader, length) == 
+--is not yet specified;
+
+--public  updateAsciiStream : JavaLangString * JavaIoInputStream * int  ==> ()
+--updateAsciiStream(columnName, x, length) == 
+--is not yet specified;
+
+--public  updateBinaryStream : JavaLangString * JavaIoInputStream * int  ==> ()
+--updateBinaryStream(columnName, x, length) == 
+--is not yet specified;
+
+
+end  JavaSqlResultSet

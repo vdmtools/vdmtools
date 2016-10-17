@@ -1,0 +1,10 @@
+class B
+
+operations
+
+  public Test :() ==> real
+  Test() ==
+    let a = new A().initA (5,8) in
+    return a.r1;
+      
+end B

@@ -1,0 +1,18 @@
+i
+cr p:=new Parser()
+cr x:=new JavaLangString("arg")
+cr y:=new JavaLangString("arg*arg")
+cr xprg:=p.parse(x)
+cr yprg:=p.parse(y)
+cr c:=new Curve(xprg,yprg)
+p [c.x(1), c.y(1)]
+p [c.x(2), c.y(2)]
+p [c.x(3), c.y(3)]
+cr x1:=new JavaLangString("sin(arg)")
+cr y1:=new JavaLangString("cos(arg*arg)")
+cr x1prg:=p.parse(x1)
+cr y1prg:=p.parse(y1)
+cr c1:=new Curve(x1prg,y1prg)
+p [c1.x(0),   c1.y(0)]
+p [c1.x(0.5), c1.y(0.5)]
+p [c1.x(1),   c1.y(1)]

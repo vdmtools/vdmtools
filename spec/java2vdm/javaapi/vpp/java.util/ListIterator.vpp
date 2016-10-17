@@ -1,0 +1,44 @@
+class JavaUtilListIterator is subclass of JavaUtilIterator
+operations 
+--JavaUtilListIterator: <NIL> ==> JavaUtilListIterator
+--JavaUtilListIterator(-) ==
+--isNil:=true;
+
+public  next : () ==> JavaLangObject
+next() == 
+is subclass responsibility;
+
+public  remove : () ==> ()
+remove() == 
+is subclass responsibility;
+
+public  hasNext : () ==> bool 
+hasNext() == 
+is subclass responsibility;
+
+public  previous : () ==> JavaLangObject
+previous() == 
+is subclass responsibility;
+
+public  nextIndex : () ==> int 
+nextIndex() == 
+is subclass responsibility;
+
+public  add : JavaLangObject ==> ()
+add(o) == 
+is subclass responsibility;
+
+public  hasPrevious : () ==> bool 
+hasPrevious() == 
+is subclass responsibility;
+
+public  previousIndex : () ==> int 
+previousIndex() == 
+is subclass responsibility;
+
+public  set__ : JavaLangObject ==> ()
+set__(o) == 
+is subclass responsibility;
+
+
+end  JavaUtilListIterator

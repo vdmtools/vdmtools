@@ -1,0 +1,6 @@
+r adt.vdm
+tc pos
+i
+cg
+latex adt.vdm
+quit

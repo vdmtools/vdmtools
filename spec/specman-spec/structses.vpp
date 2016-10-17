@@ -1,0 +1,108 @@
+\begin{vdm_al}
+class StructSes is subclass of UpdateSes
+
+operations
+
+public Type : () ==> ProjectTypes`SessionType 
+  Type()  ==
+  return <STRUCTURED>;
+
+public UpdateSC: Repository * RepDatabase * FileName * ((seq of Module)|FlatSpec) ==> ()
+  UpdateSC(rep, repdb, nm, spec) ==
+  ( dcl changedModStat : set of ModuleName := {};
+    let suc = if spec = [] then <ERROR> else <OK>
+    in
+     (repdb.AddSetOfFiles({nm});
+      repdb.StoreState();
+
+      def old_s = repdb.ModulesInFile(nm) in
+      def mk_(disable,changedStatus) = repdb.SetFileStatus(nm, <SYNTAXCHECK>, suc) in
+
+      ( dcl ast_m : map ModuleName to AstVal := {|->};
+        for mk_Module(mnm,ast) in reverse spec do
+	  if mnm in set dom ast_m then
+	    repdb.GetMediator().Log(mnm.nm ^ " multiple defined in file " ^ nm.nm)
+	  else
+	    ast_m := ast_m ++ { mnm |-> ast };
+        let new_s = dom ast_m in
+        ( if disable then
+            changedModStat := self.DisableUnits(repdb,old_s)
+          else (
+            def modules = repdb.AllModules () in
+            let multdefs = (new_s\old_s) inter modules in
+            if multdefs <> {} then 
+              self.MultDefMod(repdb,multdefs);
+            changedModStat := self.EnableUnits(repdb, ast_m);
+            repdb.UnitDomResBy (old_s \ new_s);
+            repdb.SetModulesInFile(nm, new_s);
+          );
+          let toremove = old_s\new_s in
+          if toremove <> {} then 
+            rep.GetDependency ().Remove (toremove);
+	  if (nm.nm(len nm.nm - 4,...,len nm.nm) <> ".java")
+          then
+          ( rep.GetDependency ().UpdateGraph (spec);
+            def subc = rep.GetDependency().GetAllSubClasses (new_s);
+                usedby = rep.GetDependency().GetAllUsedBy (new_s) in
+            def changedDepUnits = self.DependantUnits (repdb, (subc union usedby)\new_s)   in
+              changedModStat := changedModStat union changedDepUnits
+          )
+        );
+        repdb.GenCallBack(changedModStat);
+        if changedStatus then
+          repdb.GetMediator().CallBack( mk_ChangedFileStatus( nm ) )
+      )
+    )
+  );
+
+  --  EnableUnits is only called by structured specifications. It enables all 
+  --  units and sets the corresponding ast's. It returns with a set of module
+  --  names that have changed their status.
+
+public EnableUnits: RepDatabase * map ModuleName to AstVal ==> set of ModuleName 
+  EnableUnits(repdb, ast_m) ==
+  ( dcl changedMod_s : set of ModuleName := {};
+    for all un in set dom ast_m do
+        def change = repdb.EnableUnit(un, ast_m(un), <OK>)
+        in
+          if change
+          then changedMod_s := changedMod_s union { un };
+    return changedMod_s
+  );
+\end{vdm_al}
+
+$EnableUnits$ is only called by structured specifications. It enables all 
+units and sets the corresponding ast's. It returns with a set of module
+names that have changed their status.
+
+\begin{vdm_al}
+
+public MultDefMod: RepDatabase * set of ModuleName ==> ()
+  MultDefMod(repdb, md_s) ==
+    for all md in set md_s do
+      def fnm_s = repdb.FileOfModule(md) in
+      ( let fnm = 
+          cases fnm_s:
+            {nm} -> "in file " ^ nm.nm,
+            others -> "(no file information)"
+          end in
+          repdb.GetMediator().Log(md.nm ^ " " ^ fnm ^ " overwritten");
+        for all nm in set fnm_s do
+          let mod_s = repdb.ModulesInFile(nm)
+          in
+            repdb.SetModulesInFile(nm, mod_s \ {md});
+      );
+
+public DependantUnits: RepDatabase * set of ModuleName  ==> set of ModuleName 
+  DependantUnits (repdb, cl_s )  ==
+   (dcl changed : set of ModuleName := {};
+    for all cl in set cl_s do
+      def statusChanged = repdb.SetUnitStatus (cl, <TYPECHECK>, <NONE>)
+      in
+        if statusChanged
+        then changed := changed union {cl};
+    return changed);
+
+end StructSes
+
+\end{vdm_al}

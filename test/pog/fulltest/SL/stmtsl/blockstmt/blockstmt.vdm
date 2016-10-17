@@ -1,0 +1,25 @@
+module BlockStmtTest
+definitions
+
+state Sigma of
+      ext1 : nat
+      ext2 : bool
+inv mk_Sigma(-,b) == b = true
+init s == s = mk_Sigma(7,true)
+end
+
+operations
+  BlockStmt1: bool ==> nat1
+  BlockStmt1(b) ==
+    (dcl a: nat;
+
+     if b
+     then return 6;
+     a := 6;
+     return a;
+     return 4;
+     a := ext1 + 4)
+   pre ext2
+   post ext1~ = ext1 + 1;
+
+end BlockStmtTest     

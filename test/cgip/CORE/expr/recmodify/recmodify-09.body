@@ -1,0 +1,22 @@
+
+public Test : () ==> Person
+Test () ==
+    let rec = get() in
+     let urecord = mu(rec, adress |-> 34)
+      in return urecord
+ 
+
+
+
+types
+
+public Person ::
+  adress : nat
+
+
+functions
+get: () -> Person
+get() ==
+  mk_Person(3)
+
+end A

@@ -1,0 +1,18 @@
+class IfStmtTest
+
+operations
+
+  DoAlways: int ==> bool
+  DoAlways(i) ==
+    return i = 0;
+
+  If18: () ==> int | bool
+  If18() ==
+    if 2>1
+    then always DoAlways(1) in
+         let n = nil in return n
+    else trap pat with ErrorAction (pat) in
+         always DoAlways(1) in
+           let n = nil in return n;
+
+end IfStmtTest

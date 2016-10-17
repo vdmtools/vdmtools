@@ -1,0 +1,23 @@
+class A
+
+instance variables
+  b        : bool;
+  k        : nat;
+  j        : nat;
+public  l        : nat := 10;
+public  m        : nat := 20;
+  q        : <YES> | <NO>;
+
+
+operations
+
+public  Test: () ==> nat * nat 
+  Test() ==
+    return mk_(l,m)
+
+
+end A
+
+class B is subclass of A
+
+end B

@@ -1,0 +1,18 @@
+module A
+exports all
+definitions
+operations
+Test: () ==> seq of (int | bool)
+Test() ==
+( dcl res : seq of (int | bool) := [i];
+  res := res ^ [i];
+  return res
+)
+
+state Sigma of
+  i : int | bool
+  init s == s = true
+end
+
+end A
+

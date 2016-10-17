@@ -1,0 +1,2 @@
+Code executes to 2, because the variables are initialized in another
+order than in VDM++

@@ -1,0 +1,149 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ( bool | 
+                         set of (
+                                 nat | bool | <HELLO> | real | 
+                                 map nat to nat | 
+                                 set of ( nat | <FALSE> | <YES> |
+                                          set of (nat | set of nat) | bool )
+                                 )
+                        )  
+Test () ==
+
+return 
+[ <AB> in set { <AB>, <DC> },
+  3 in set if 1 = 2 then {3} else {},
+  ( let a = mk_(3,6)
+    in a ) in set { 2, 6, mk_(3,4) },
+  ( if 3 > 4
+    then 23
+    else false ) in set if true
+		        then { 23, false }
+			else let a in set {{ 23 |-> false }, {34}} in a,
+  {} in set let s : set of set of nat = { {} } in s,
+  {} in set if 1=1 then {} else {{}},
+  forall e in set { {}, {1,23}, 
+		    [], [1, 56], 
+		    { |->}, { 2 |-> 36},
+		    if true 
+		    then 35
+		    else 235,
+		    mk_(135, 56 ),
+		    mk_AA( 3, 6 ) } &
+         e in set { {}, {1,23}, 
+		    [], [1, 56], 
+		    { |->}, { 2 |-> 36},
+		    if true 
+		    then 35
+		    else 235,
+		    mk_(135, 56 ),
+		    mk_AA( 3, 6 ) },
+
+   let a = 6  in a not in set { 3, 6 },
+   ( if is_bool( false )
+     then 24
+     else false ) not in set ( if true
+			       then dom { 23 |-> 35, [] |-> 3 }
+			       else let a in set {false, {3}} in a ),
+   {} not in set let s : set of (nat | set of nat) = {35, {} } in s,
+   {} not in set let s : set of (nat | set of nat) = {35, {} } in s,
+   34 in set ( let a ={ 35, false } in a ),
+   let a : <YES> | bool = <YES> in a in set { false },
+
+   { 1, 3 } union { 3, 6 },
+   { 1, 3 } union { 4, 6 },
+   let s1 = {10,30}, s2 = {20,30} in
+       let s3 = s1 union s2 in
+        {s1,s2,s3},
+   let eset : set of nat  = {} in eset  union eset,
+   dunion { a union b | a in set { {3, 4 }, { false, true }, {} },
+			b in set { {3}, {}, if true 
+					    then { 3, 65 }
+					    else false } },
+   ( let a = if true
+	     then { <HELLO> }
+	     else { 34 |-> false } 
+     in a ) union dom { false |-> true },
+   let a = {3,6} in a union let eset : set of real = {} in eset,
+   
+   { 1.65 } inter { nil, 1.65 },
+   if 1=1 then {} else {1} inter if 1=2 then {1} else {},
+   { {3, <NO>, <YES> } inter {<YES>} } inter { {}, { <YES> }, <OK> },
+   ( let a = if is_nat1( 3.5 )
+             then <YES> 
+             else { 3, { |-> }, mk_AA(3, 6) } in a ) 
+     inter
+     { { |-> }, 6 },
+   dom { 3 |-> 56, false |-> 3.6 } inter if 3 in set {3,6} 
+				         then { {}, [], false } 
+				         else let a in set {<NO>, {false}} in a,
+
+   { 3, false, 6, 3.7 } \ { 3.7 },
+   (if 1=2 then {4} else { }) \ { 3, 6},
+   { a \ b | a, b in set { {23, false }, 
+			   {35,535, { {} }  }, 
+			   {<FALSE>, false}, 
+			   { {}, { {} } } } },
+   let a = { 1, <FALSE>}
+   in a \ if true
+	  then { 3, <FALSE> }
+	  else let a in set {9, {3,2}} in a,
+   ( if true 
+     then dom { a |-> b | a in set {35,632}, b in set {36 } }
+     else let a in set {3 in set { 3 }, {36,31}} in a ) \ { 35 },
+   ( {3 } union {36 } ) \ {<FALSE>, 3},
+   ( let a = { 2,6,356 },
+         b = {3, 6 }
+      in a \ b ) \ { 3, {} },
+   
+   
+   { 3,6 } psubset { 3, 6, 356 },
+   { 3, 6 } psubset { 3, 6 },
+   let eset : set of char = { } in eset psubset { {} },
+   ( let a = { 3, is_int(3) }
+     in a )  psubset { 3, true },
+   ( if let eset : set of set of set of nat = { } in eset psubset eset
+     then let a in set {mk_AA(3,6), {36}} in a
+     else { mk_AA(3, 5) } ) psubset { mk_AA(5, 6) },
+   ( if let eset : set of set of set of nat = { } in eset psubset eset
+     then let a in set {mk_AA(3,6), {36}} in a
+     else { mk_AA(3, 5) } ) psubset ( if let fset : set of set of set of nat = { } in fset psubset fset
+                                        then let a in set {mk_AA(3,6), {36}} in a
+                                        else { mk_AA(3, 5) }),
+   {1,2} psubset if 1=1
+                       then {1,2,3}
+                       else let a in set {'a', {36}} in a ,
+
+
+   dom { {2, 6} |-> {3,6} } psubset { {2,6}, {} },
+   let a = { 3, 4},
+       b = { 3, 6}
+   in a psubset b,
+   
+   { 3, <YES>, {|->} } subset { 3, 6 },
+   { 3, 6 } subset { 3, 6, 3 },
+   ({1,2,3} inter {6}) subset { 3, 6 },
+   ( let a = { 3, false, {3 |-> 4} }
+     in a ) subset { 3.0, false, {3.0 |-> 4.0} },
+   ( if { false = true } subset { 3 }
+     then let a in set {[ false, true ], {36}} in a
+     else { 3, 6 } ) subset {3} inter {4},
+   { 3, if true 
+	then { 3 }
+        else let a in set {9,{36}} in a } subset { 3.2 },
+   let a = { { a } union {b } | a, b in set { 3, 6, {<FALSE>}, <OK> } } 
+   in a subset { 3, false, <OK> },
+
+   ( if let eset : set of set of set of nat = { } in eset psubset eset
+     then let a in set {mk_AA(3,6), {36}} in a 
+     else { mk_AA(3, 5) } ) subset ( if let fset : set of set of set of nat = { } in fset psubset fset
+                                        then let a in set {mk_AA(3,6), {36}} in a
+                                        else { mk_AA(3, 5) }),
+
+    { mk_AA(3, 5) } subset ( if let fset : set of set of set of nat = { } in fset psubset fset
+                                        then let a in set {mk_AA(3,6), {36}} in a
+                                        else { mk_AA(3, 5) })]
+
+types
+  AA ::
+   a : int
+   b : int

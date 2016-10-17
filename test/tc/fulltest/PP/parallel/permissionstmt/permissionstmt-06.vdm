@@ -1,0 +1,15 @@
+class T
+
+operations
+
+public Op: () ==> ()
+Op() ==
+  let - = 9
+  in skip;
+
+sync
+
+  per Op => #active(Op) < 5;
+  per Op => #active(Op) = 5;
+
+end T

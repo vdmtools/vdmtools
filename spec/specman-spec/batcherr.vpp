@@ -1,0 +1,17 @@
+In the $BatchErr$ state all errors and warnings are printed out as
+soon as they occur. This state never changes.
+
+\begin{vdm_al}
+class BatchErr is subclass of ErrorState
+
+--  In the BatchErr state all errors and warnings are printed out as soon as they 
+--  occur. This state never changes.
+
+operations
+
+public AddMsg : Errors ==> ()
+  AddMsg(err) ==
+    err.ShowMsg()  
+
+end BatchErr
+\end{vdm_al}

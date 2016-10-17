@@ -1,0 +1,36 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of (nat|real)  
+Test () ==
+return [e( 1, 2),f( 1, 2), r(1)] 
+  
+functions
+e:nat* nat -> nat
+e(a,b) ==
+  (a + 2)*(b - 1);
+
+f: nat* nat -> nat
+f(a,b) ==
+  2 + a div (b+1);
+
+g: nat * nat -> real
+g(a,b) ==
+  if a > 1 then 1 else a/(b+1);
+
+h: nat -> bool
+h(a) == 
+  a > 7;
+
+p: nat -> nat
+p(a) ==
+  5*a + 4 - a * a + 6 div a;
+
+q: nat -> nat
+q(a) ==
+  5*a + 6 div a + 4 - a * a;
+
+r: nat -> nat
+r(a) ==
+  e( 1, a+2 ) + 7
+
+
+

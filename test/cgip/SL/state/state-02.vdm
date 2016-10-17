@@ -1,0 +1,84 @@
+module A
+exports all
+definitions
+operations
+ChangeState:() ==> ()
+ChangeState() ==
+( v1  := false;
+  v2  := 20;
+  v3  := 10;
+  v4  := 1;
+  v5  := v5 - 10;
+  v6  := -99.9;
+  v7  := mk_token(<TOKEN>);
+  v8  := 'b';
+  v9  := <NO>;
+--  v11 := mk_R();
+  v12 := mk_({}, mk_token(<HALLO>));
+  v13 := nil;
+  v14 := {1,2,3};
+  v15 := [];
+  v16 := [5,3,1];
+  v17 := {|->};
+  v18 := {mk_token(<K>) |-> 2}
+);
+
+Test: () ==> seq of ( bool | real | [token] | char | <YES> | <NO> | ((set of nat) * token) | seq of real | (map nat to token) | inmap token to nat )
+Test() ==
+( dcl res : seq of ( bool | real | [token] | char | <YES> | <NO> |
+                     ((set of nat) * token) | seq of real | 
+                     (map nat to token) | inmap token to nat ) :=
+  [ v1, v2, v3, v4, v5, v6, v7, v8, v9,
+--is_R(v10), is_token(v11),  
+    v12, v13,v14, v15, v16, v17, v18 ];
+  ChangeState();
+  res := res ^ 
+  [ v1, v2, v3, v4, v5, v6, v7, v8, v9, 
+--is_R(v10), is_token(v11),  
+    v12, v13,v14, v15, v16, v17, v18 ];
+  return res
+)
+
+state Sigma of
+  v1  : bool
+  v2  : nat1
+  v3  : nat
+  v4  : int
+  v5  : rat
+  v6  : real
+  v7  : token
+  v8  : char
+  v9  : <YES> | <NO>
+--  v10 : R
+--  v11 : R | token
+  v12 : (set of nat) * token
+  v13 : [token]
+  v14 : set of ([token] | nat)
+  v15 : seq of real
+  v16 : seq1 of nat
+  v17 : map nat to token
+  v18 : inmap token to nat
+  init s == s = mk_Sigma(true,
+                         10,
+                         0,
+                         -1,
+                         3.3,
+                         -9.8,
+                         mk_token({'q'}),
+                         'a',
+                         <YES>,
+                         --mk_R(),
+                         --mk_token(mk_R()),
+                         mk_({5,7}, mk_token(mk_(1,2))),
+                         mk_token(10),
+                         { mk_token(nil), 4 },
+                         [3.3, 4, -1],
+                         [1, 2, 3, 5],
+                         { 1 |-> mk_token(1), 1 |-> mk_token(1) },
+                         { mk_token(i) |-> i | i in set {40,...,45} }
+                        )                         
+end
+
+types R ::
+
+end A

@@ -1,0 +1,21 @@
+class TYPE
+types
+
+  A = compose Dummy of
+        a : nat
+      end
+  inv mk_Dummy(b) == b = 8;
+
+  B :: a : real
+       b : bool
+  inv m == m.b and m.a > 88;
+
+  C = A | B
+
+functions
+
+  f : C +> rat
+  f(n) ==
+   n.a
+
+end TYPE

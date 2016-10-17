@@ -1,0 +1,14 @@
+functions
+
+FunComposition: (nat -> nat) * (nat -> nat) -> (nat -> nat)
+FunComposition(fun1,fun2) ==
+  fun1 comp fun2
+pre forall x : nat & pre_(fun2,x) => pre_(fun1,fun2(x))
+
+--PO
+--(forall fun1 : (nat -> nat), fun2 : (nat -> nat) &
+--   (forall x : nat & pre_(fun2,x) =>
+--                     pre_(fun1,fun2(x))) 
+--   =>
+--   (forall xx_13 : nat & pre_(fun2,xx_13) =>
+--                         pre_(fun1,fun2(xx_13))))

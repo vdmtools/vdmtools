@@ -1,0 +1,36 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{vdm}\index{VisualObstacleArtificiel|ClassDef}
+{\small\sf class} $VisualObstacleArtificiel$  \kISO $\index{ObstacleArtificiel|ClassOcc}ObstacleArtificiel$
+\begin{instvar}\index{view|InstVarDef}
+\vardcl{view}{ @View}
+\end{instvar}
+\begin{methdef}\index{Set|MethodDef}
+\begin{method}{Set}
+\parms{centre' : Coordonnees\index{Coordonnees|TypeOcc}, rayon' : NM\index{NM|TypeOcc}, altitude-maximale' : Pieds\index{Pieds|TypeOcc}, view' :  @View} \Fdef\\ \begin{blockstmt}
+\ass{centre}{centre'} ; \\
+\ass{rayon}{rayon'} ; \\
+\ass{altitude-maximale}{altitude-maximale'} ; \\
+\ass{view}{view'} ; \\
+\invoke{view}{\index{ShowObstacleArtificiel|MethodOcc}
+\fnapply{ShowObstacleArtificiel}{centre, rayon, altitude-maximale}}
+\end{blockstmt}
+\end{method}
+\end{methdef}
+{\small\sf end} $VisualObstacleArtificiel$
+
+\end{vdm}

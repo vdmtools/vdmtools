@@ -1,0 +1,40 @@
+class B
+
+
+functions
+
+public f[@A,@B]: set of @A * @B -> nat
+f(as,b) ==
+ if is_bool(b)
+ then card as
+ else 8;
+
+
+end B
+
+class A
+
+
+types
+   Rec ::
+     entry1 : B
+     entry2 : set of nat;
+
+
+instance variables 
+  a1 : B := new B ();
+  a2 : Rec := mk_Rec(new B(), {3});
+
+operations
+
+  public Test : () ==> real
+  Test() ==
+  ( dcl res : real;
+    a2.entry1 := a1;
+    a2.entry2 := {3};
+    res := a2.entry1.f[nat,nat](a2.entry2,7);
+    return res;
+  )
+
+end A
+

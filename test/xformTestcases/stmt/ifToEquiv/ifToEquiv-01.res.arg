@@ -1,0 +1,13 @@
+"class A
+
+operations
+
+public Test : () ==> nat  
+Test () ==
+( dcl x : nat := 5;
+	if x > 2 <=> x < 1 
+        then return 1 
+        else return 2 ) ;
+   
+end A
+"

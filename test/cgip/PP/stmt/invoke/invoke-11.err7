@@ -1,0 +1,12 @@
+Name Clash between GetN in class A and T20XXX (conflict signatures) implies
+conflicts in the generated C++ code and JAVA.
+
+B.cc: In method `class Tuple vdm_B::vdm_Test()':
+B.cc:24: too many arguments for method `class Int vdm_A::vdm_GetN()'
+B.cc:41: too many arguments for method `class Int vdm_A::vdm_GetN()'
+
+B.java:47: Wrong number of arguments in method.
+        rhs_3 = ((A) o).GetN(new Integer(10));
+                            ^
+B.java:59: Wrong number of arguments in method.
+        rhs_9 = ((A) o).GetN(new Integer(20));

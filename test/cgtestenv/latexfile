@@ -1,0 +1,366 @@
+#!/bin/bash
+
+if [ -n "$DEBUG_ON" ] ; then
+  set $DEBUG_ON
+fi
+
+if [ -n "$BASEDIR" ] ; then
+  :
+else
+  echo BASEDIR not set!
+  exit
+fi
+
+###############
+# Definitions #
+###############
+if [ "$IFADOSTYPE" != "" ]; then
+  :
+else 
+  IFADOSTYPE=SunOS4
+fi
+export IFADOSTYPE
+
+VDMDE=vdmde
+VPPDE=vppde
+PARSE=""
+TESTVAL=testval
+COMP=comp
+PERL=perl
+LATEX=latex
+LATEXBODY=body.tex
+LATEXTEMP=temp.tex
+FILE_NAME=aa_aa
+PP=ast2pp
+PPPACKAGE=""
+SECTION=section*
+LATEXPROB=latex.err.tex
+VDMSLPROB=vdm.err.tex
+REF=n.tmp
+NUM=1
+BEGINVDMAL=$BASEDIR/begin_vdmal
+ENDVDMAL=$BASEDIR/end_vdmal
+RTITABLE=$BASEDIR/rtitable
+TESTCOVFILE=testcoveragefile.ts
+
+###############################################################
+## usage shell function                                      ##
+###############################################################
+
+FSH=`basename $0`
+
+usage()
+{
+  echo >&2
+  echo "Usage: $FSH [-sl | -pp] headerfile [testarg]" >&2
+  echo >&2
+  echo "       Runs test suites in directory dir." >&2
+  echo >&2
+  echo "       -sl        VDM-SL test suite (default)." >&2
+  echo "       -pp        VDM++ test suite." >&2
+  echo "       headerfile Your file.head" >&2
+  echo "       testarg    Runs only test case testarg." >&2
+  echo >&2
+  echo "       Example:  `basename $0` -sl ../letexpr-01.head" >&2
+  echo >&2
+  exit
+}
+
+######################################################################
+# Changes the name given in argument when this one has an underscore #
+#   (LaTeX doesn't like underscores without '\' before)              #
+######################################################################
+ch_name()
+{
+  FILE_NAME=`perl -e '$s = $ARGV[0]; $s =~ s/_/\\\\_/g; print $s ' $1`
+}
+
+###############################################################
+## mess shell function                                       ##
+###############################################################
+
+mess()
+{
+  case $1 in
+  
+  -m) echo "$2" >> trace
+      echo "$2"
+      ;;
+  *)  echo "UNEXPECTED RESULT: $1" >> trace
+      echo "UNEXPECTED RESULT: $1"  
+      ;;
+  esac
+}
+
+##########################
+# Bad use of the command #
+##########################
+if test $# -eq 0 ; then
+  usage 
+fi
+
+
+MODE=VDMSL
+BODY=""
+
+##########################################
+# Tests on the arguments of the function #
+##########################################
+while test $# -gt 0 ; do
+  case $1 in
+    -sl)   SL=true
+           MODE=VDMSL
+           PARSE=$VDMDE
+           TITLE="VDM-SL":
+           shift;;
+    -pp)   PARSE=$VPPDE
+           PPPACKAGE=",vpp"
+           SL=false
+           MODE=VDMPP
+           TITLE="VDM++"
+           shift;;
+    -body) BODY="true"
+           NUM=`grep [0-9] $REF`  # Reference of the pages  
+           SECTION=section
+           shift;;
+    -*)    usage
+           exit;;
+    *)     break;;
+  esac
+done
+
+
+
+
+if test -r $1 ; then
+        TESTDIR=`dirname $1`
+        TESTSUITE=$TESTDIR/`basename $1 .head`
+        HEADFILE=`basename $1`
+        ARGFILE=`basename $TESTSUITE`.arg
+        EARGFILE=`basename $TESTSUITE`.earg
+        CURDIR=`pwd`
+        STOP=false
+else
+        echo "$1 can not be found"
+        usage
+        exit 1
+fi
+
+###############################################################
+## testfile, main loop1                                      ##
+##  - form AST's for ALL testcases                           ##
+###############################################################
+
+if [ "$2" != "" ]; then
+        ARGS=$2.body
+else
+        ARGS=$TESTSUITE-??.body
+fi
+
+
+rm -f *-??.arg .vdmtest
+rm -f *-??.vdm
+
+mess -m "***************************************************************************"
+mess -m "Processing AST's for test suite $TESTSUITE"
+mess -m "***************************************************************************"
+
+if [ "$BODY" != "true" ]; then 
+        LATEXBODY=result.tex
+
+        ############
+        # PREAMBLE #
+        ############
+        echo "\documentclass{article}" > $LATEXBODY
+        echo "\usepackage{vdmsl-2e,longtable,color $PPPACKAGE}" >> $LATEXBODY
+        echo "\usepackage{makeidx}" >> $LATEXBODY
+        echo "\definecolor{covered}{rgb}{0,0,0}    %black" >> $LATEXBODY
+        echo "\definecolor{not_covered}{rgb}{1,0,0}%red" >> $LATEXBODY
+
+        echo "% a4 style" >> $LATEXBODY
+        echo "\oddsidemargin -0.4mm \evensidemargin -0.4mm" >> $LATEXBODY
+        echo "\topmargin -10.4mm \headheight 5mm \headsep 8mm" >> $LATEXBODY
+        echo "\textheight 230mm \textwidth 160mm" >> $LATEXBODY
+        echo "\parindent0mm" >> $LATEXBODY
+        echo "\makeindex" >> $LATEXBODY
+
+        ############
+        # DOCUMENT #    
+        ############
+        echo "\begin{document}" >> $LATEXBODY
+        echo "\title{$TITLE \LaTeX\ Test Results}" >> $LATEXBODY
+        echo "\author{IFAD}" >> $LATEXBODY
+        echo "\maketitle" >> $LATEXBODY
+        ch_name `basename $TESTSUITE`.head
+        echo "\\$SECTION{$FILE_NAME}" >> $LATEXBODY
+        fi
+
+
+##############################################
+# Generation of the body of the LaTeX script #
+##############################################
+ch_name `basename $TESTSUITE`
+NUM=`expr $NUM + 1`
+echo "\sub$SECTION{\index{$FILE_NAME} \label{$NUM} $FILE_NAME}" >> $LATEXBODY
+
+##################################################################
+# Loop which allows to include all the cases in the LaTeX script #
+##################################################################
+echo "Generating LaTeX for:"
+
+for arg in $ARGS ; do
+
+        if $STOP ; then
+          break
+        fi
+
+
+################################
+#        if test $# -eq 2 ; then
+#          # Test case has been parsed to testdir
+#          if test -r $TESTDIR/$2.body ; then
+#            arg=$TESTDIR/$2.body
+#            STOP=true
+#          else
+#            exit 1
+#          fi
+#        fi
+################################
+
+      ARGBASE=$TESTDIR/`basename $arg .body`
+      TESTCASE=`basename $ARGBASE`
+
+      mess -m "$TESTCASE"
+
+      if test -f $TESTSUITE.tail ; then
+        cat $BEGINVDMAL $TESTSUITE.head $arg  $TESTSUITE.tail $ENDVDMAL $RTITABLE> m4tmp1
+      else
+        cat $BEGINVDMAL $TESTSUITE.head $arg $ENDVDMAL $RTITABLE> m4tmp1
+      fi
+
+
+   ###########################################
+   # If we are performing a VDMSL test and the testspec is in VDM++ then
+   # transform the sepc
+   # The transformation is done by exchanging `class ID' with `module ID'
+   # and removing optional instanse variable declarations.
+   ###########################################
+
+     NOTSL=true
+      if $SL ; then
+        vdmde -p m4tmp1 >& /dev/null 
+	case $? in 
+	  0) cp -f m4tmp1 m4tmp
+             NOTSL=false
+             ;;
+          *) ;;
+          esac
+
+     ######################################################
+     # Translation of the script between VDM++ and VDM-Sl #
+     ######################################################
+
+     if $NOTSL  ; then
+        $PERL $BASEDIR/conv_pp2sl.pl < m4tmp1 > m4tmp
+     fi
+     else
+       cp m4tmp1 m4tmp
+
+     fi
+
+
+     #####################################################
+     # Generate test coverage file in testcoverage.ts
+     #####################################################
+
+     rm -f $TESTCOVFILE
+     if $SL ; then
+        $PARSE -R $TESTCOVFILE -i $TESTSUITE.arg m4tmp
+     else
+        ## Transform argument file to VDM++ format
+        cp -f $TESTSUITE.arg testsuite.arg.tmp
+        perl -nle 's/(\w+)`(\w+)/new $1 ().$2/; print' <testsuite.arg.tmp > testsuite.arg++
+        $PARSE -R $TESTCOVFILE -i testsuite.arg++ m4tmp
+     fi
+
+     #############################
+     # GENERATE LATEX
+     #############################
+
+
+        ch_name $TESTCASE
+        NUM=`expr $NUM + 1`
+        echo "\subsubsection*{\label{$NUM} $FILE_NAME}" >> $LATEXBODY
+
+#        $PARSE -lr m4tmp >& /dev/null
+        $PARSE -lr m4tmp >& /dev/null
+        if [ $? != 0 ] ; then
+                        echo "This test does not respect the $TITLE syntax."
+                        echo "This test does not respect the $TITLE syntax." >> $LATEXBODY
+                        echo "$FILE_NAME & \pageref{$NUM} \\\\ \hline" >> $VDMSLPROB
+                else 
+                        # we test if it is possible to LaTeX this file, so we enclose it in a LaTeX script
+                        ############
+                        # PREAMBLE #
+                        ############
+
+                        echo "\documentclass{article}" > $LATEXTEMP
+                        echo "\usepackage{vdmsl-2e,longtable,color$PPPACKAGE}" >> $LATEXTEMP
+                        echo "\definecolor{covered}{rgb}{0,0,0}  %black" >> $LATEXTEMP
+                        echo "\definecolor{not_covered}{rgb}{1,0,0} %red" >> $LATEXTEMP
+
+                        ############
+                        # DOCUMENT #
+                        ############
+
+                        echo "\begin{document}" >> $LATEXTEMP
+                        cat m4tmp.tex >> $LATEXTEMP
+                        echo "\end{document}" >> $LATEXTEMP
+                        LATEXFAILED_NAME=err-$TESTCASE.tex
+                        rm -f $LATEXFAILED_NAME 
+                        $LATEX "\\nonstopmode\\input{$LATEXTEMP}" > /dev/null
+                        if [ $? != 0 ]; then
+                                echo Saving $LATEXFAILED_NAME because $LATEX failed. 
+                                cp $LATEXTEMP $LATEXFAILED_NAME 
+                                echo "Error when running \LaTeX\ : the test-case is not included" >> $LATEXBODY      
+                                echo "$FILE_NAME & \pageref{$NUM} \\\\ \hline" >> $LATEXPROB
+                        else        
+                                #echo "     \begin{vdm}" >> $LATEXBODY
+                                echo "" >> $LATEXBODY                                
+                                cat m4tmp.tex >> $LATEXBODY
+                                #echo "     \end{vdm}" >> $LATEXBODY
+                                echo "" >> $LATEXBODY
+                        fi
+                fi
+
+        cp -f m4tmp $TESTCASE.arg
+        mv -f m4tmp $TESTCASE.vdm
+
+echo $NUM > $REF
+done
+
+if [ "$BODY" != "true" ]; then
+        echo "\printindex" >> $LATEXBODY
+        echo "\end{document}" >> $LATEXBODY
+        echo "Results in result.tex" 
+fi
+
+rm $LATEXTEMP
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+

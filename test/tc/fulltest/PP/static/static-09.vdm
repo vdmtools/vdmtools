@@ -1,0 +1,19 @@
+class A
+instance variables 
+	protected a:int := 1;
+  
+values
+	protected const:int = 123;
+	
+types
+	public T = int;
+
+operations
+
+public dop: T ==> ()
+	dop(i) == a := i;
+
+public static sop: T ==> ()
+	sop(x) == a := x;
+
+end A

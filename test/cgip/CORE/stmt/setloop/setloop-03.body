@@ -1,0 +1,21 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+public Test : () ==> seq of nat  
+Test () ==
+( dcl s : seq of nat;
+
+  for all i in set f(0) do
+    s := [i];
+
+  return s
+)
+
+functions 
+f: nat -> nat | set of nat
+f(n) ==
+  if n = 0 then
+    n
+  else
+    {1,...,n}
+
+end A

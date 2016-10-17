@@ -1,0 +1,18 @@
+class LetBeSTExprTest
+types
+
+  A :: selid : nat
+       sel2 : bool
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = let mk_(a,b):(nat * nat) | ((bool * bool) | (token * token)) in a
+  in skip;
+
+------------------------------------------------------------------------------
+end LetBeSTExprTest

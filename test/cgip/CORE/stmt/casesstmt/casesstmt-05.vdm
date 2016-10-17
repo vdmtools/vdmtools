@@ -1,0 +1,28 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+
+public Test : () ==> (bool | real)
+Test() ==
+( let a = f(3) in
+  cases a:
+    <RED> -> return 3
+  end
+)
+
+functions
+
+f: nat -> <RED> | <BLUE>
+f(a) ==
+<RED>
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

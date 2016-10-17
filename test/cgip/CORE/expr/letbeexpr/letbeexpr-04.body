@@ -1,0 +1,7 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> nat   
+Test () ==
+  return let mk_(a,b) in set {1, mk_(1,2), mk_(2,3,4)} be st a = 2 in
+          a
+
+end A

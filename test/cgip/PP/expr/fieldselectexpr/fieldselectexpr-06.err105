@@ -1,0 +1,5 @@
+When DTC set:
+fieldselectexpr-06.arg, l. 9, c. 3:
+  Run-Time Error 98: Incompatible types found in dynamic type check
+  actual value: [ FUNCTION_VAL ]
+  expected type: ( [] | seq1 of int )

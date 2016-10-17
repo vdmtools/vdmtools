@@ -1,0 +1,97 @@
+class JavaIoWriter is subclass of JavaLangObject
+values
+  CLASS : JavaLangClass = new  JavaLangClass("JavaIoWriter" , <CLASS> , false  )
+instance variables 
+  private  writeBuffer : map  int  to  char ;
+  private  writeBufferSize : int  := 80;
+--  protected  lock : JavaLangObject
+operations 
+public  JavaIoWriter : <NIL> ==> JavaIoWriter
+JavaIoWriter(-) == 
+isNil := true  ;
+
+public  close : () ==> ()
+close() == 
+is not yet specified;
+
+public  flush : () ==> ()
+flush() == 
+is not yet specified;
+
+protected  JavaIoWriter : () ==> JavaIoWriter
+JavaIoWriter() == 
+( -- JavaIoWriter`lock := self;
+  skip
+) ;
+
+public  write : int | map  int  to  char ==> ()
+write(a) ==
+  cases true:
+    (is_int(a)) -> writeInt(a),
+    others -> writeMIC(a)
+  end;
+
+public  writeInt : int  ==> ()
+writeInt(c) == 
+( (
+--    if  writeBuffer = {|->}
+--    then  
+--      ( writeBuffer := {l_3 |-> ' '|l_3 in set  {0,...,writeBufferSize-1}}
+--      ) ;
+----    writeBuffer := writeBuffer ++ {0 |-> J2VUTIL`Convert("char" , c)};
+--    writeBuffer := writeBuffer ++ {0 |-> c};
+    writeICMIntInt({0 |-> (new JavaLangInteger(c)).charValue()} , 0 , 1)
+  ) ;
+) ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  writeMIC : map  int  to  char  ==> ()
+writeMIC(cbuf) == 
+( writeICMIntInt(cbuf , 0 , (card  dom  cbuf));
+) ;
+
+public  writeICMIntInt : map  int  to  char  * int  * int  ==> ()
+writeICMIntInt(cbuf, off, len__) == 
+is not yet specified;
+
+public  writeStr : JavaLangString ==> ()
+writeStr(str) == 
+( writeStrIntInt(str , 0 , str.length());
+) ;
+
+protected  JavaIoWriter : JavaLangObject ==> JavaIoWriter
+JavaIoWriter(lock) == 
+( --if  lock.IsNil()
+  --then  
+  --  ( exit  new  JavaLangNullPointerException()
+  --  ) ;
+  --JavaIoWriter`lock := lock;
+  skip;
+) ;
+
+public  writeStrIntInt : JavaLangString * int  * int  ==> ()
+writeStrIntInt(str, off, len__) == 
+( ( dcl   cbuf : map  int  to  char ;
+--    if  len__ <= JavaIoWriter`writeBufferSize
+--    then  
+--      ( if  writeBuffer = {|->}
+--        then  
+--          ( writeBuffer := {l_3 |-> ' '|l_3 in set  {0,...,JavaIoWriter`writeBufferSize-1}}
+--          ) ;
+--        cbuf := writeBuffer
+--      ) 
+--    else  
+--      ( cbuf := {l_3 |-> ' '|l_3 in set  {0,...,len__-1}}
+--      ) ;
+----    str.getChars(off , (off+len__) , cbuf , 0);
+    cbuf:=str.substring(off , off+len__).toCharArray();
+    writeICMIntInt(cbuf , 0 , len__)
+  ) ;
+  skip 
+) ;
+
+
+end  JavaIoWriter

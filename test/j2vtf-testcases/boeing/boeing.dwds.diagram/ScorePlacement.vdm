@@ -1,0 +1,290 @@
+class ScorePlacement is subclass of NodePlacement
+operations 
+public  sortPins : () ==> <VOID>
+sortPins() == 
+( ( dcl   idx : int  := 0;
+    while  idx < graphLayout.size() do  
+    ( dcl   myNode : [RefDesNode] := (def l_7 :  GraphNode = (graphLayout.elementAt(idx))
+            in l_7).getNode();
+      let - = myNode.sortPinsByHeight()
+      in 
+        skip ;
+      let - = myNode.sortPinsByOrientation()
+      in 
+        skip ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  
+) ;
+
+public  packNodes : () ==> <VOID>
+packNodes() == 
+( dcl   rows : int  := plotMap.getRows(),
+        columns : int  := plotMap.getColumns(),
+        emptyRows : map  int  to  int  := {l_7 |-> 0|l_7 in set  {0,...,rows-1}};
+  emptyRows := emptyRows ++ {0 |-> 0};
+  let - = graphLayout.updatePlotMap()
+  in 
+    skip ;
+  ( dcl   yIndex : int  := 1;
+    while  yIndex < rows do  
+    ( emptyRows := emptyRows ++ {yIndex |-> emptyRows(yIndex-1)+1};
+      ( dcl   xIndex : int  := 0;
+        while  xIndex < columns and  (emptyRows(yIndex) <> emptyRows(yIndex-1)) do  
+        ( if  plotMap.plotted(xIndex)(yIndex-1)
+          then  
+            ( emptyRows := emptyRows ++ {yIndex |-> emptyRows(yIndex)-1}
+            ) ;
+          xIndex := xIndex+1
+        ) 
+      ) ;
+      yIndex := yIndex+1
+    ) 
+  ) ;
+  ( dcl   emptyColumns : map  int  to  int  := {l_12 |-> 0|l_12 in set  {0,...,columns-1}};
+    emptyColumns := emptyColumns ++ {0 |-> 0};
+    ( dcl   xIndex : int  := 1;
+      while  xIndex < columns do  
+      ( emptyColumns := emptyColumns ++ {xIndex |-> emptyColumns(xIndex-1)+1};
+        ( dcl   yIndex : int  := 0;
+          while  yIndex < rows and  (emptyColumns(xIndex) <> emptyColumns(xIndex-1)) do  
+          ( if  plotMap.plotted(xIndex-1)(yIndex)
+            then  
+              ( emptyColumns := emptyColumns ++ {xIndex |-> emptyColumns(xIndex)-1}
+              ) ;
+            yIndex := yIndex+1
+          ) 
+        ) ;
+        xIndex := xIndex+1
+      ) 
+    ) ;
+    ( dcl   xIndex : int  := 0;
+      while  xIndex < columns do  
+      ( ( dcl   yIndex : int  := 0;
+          while  yIndex < rows do  
+          ( plotMap.plotted(xIndex) := plotMap.plotted(xIndex) ++ {yIndex |-> false  };
+            yIndex := yIndex+1
+          ) 
+        ) ;
+        xIndex := xIndex+1
+      ) 
+    ) ;
+    ( dcl   idx : int  := 0;
+      while  idx < graphLayout.size() do  
+      ( dcl   node : [GraphNode] := graphLayout.elementAt(idx),
+              nodeLocation : [Point] := node.getCoordinates(),
+              deltaX : int  := emptyColumns(nodeLocation.x),
+              deltaY : int  := emptyRows(nodeLocation.y);
+        if  deltaX > 0 or  deltaY > 0
+        then  
+          ( dcl   newLocation : [Point] := new  Point(nodeLocation.x-deltaX , nodeLocation.y-deltaY);
+            let - = node.setCoordinates(newLocation)
+            in 
+              skip ;
+            plotMap.plotted(newLocation.x) := plotMap.plotted(newLocation.x) ++ {newLocation.y |-> true  }
+          ) 
+        else  
+          ( plotMap.plotted(nodeLocation.x) := plotMap.plotted(nodeLocation.x) ++ {nodeLocation.y |-> true  }
+          ) ;
+        idx := idx+1
+      ) 
+    ) ;
+    return  
+  ) ;
+  return  <VOID>
+) ;
+
+public  plotNodes : () ==> <VOID>
+plotNodes() == 
+( plotMap := graphLayout.getPlotMap();
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  moreNodesToPlot() do  
+    ( dcl   graphNode : [GraphNode] := selectNextNode();
+      let - = plotNode(graphNode)
+      in 
+        skip 
+    ) ;
+  ( dcl   idx : int  := 0;
+    while  idx < graphLayout.size() do  
+    ( dcl   childNode : [GraphNode] := graphLayout.elementAt(idx);
+      if  childNode.getNode().hasAMate()
+      then  
+        ( dcl   parentRefDes : [RefDesNode] := childNode.getConnections().elementAt(0),
+                parentNode : [GraphNode] := graphLayout.findGraphNode(parentRefDes);
+          let - = setMateDominance(childNode , parentNode)
+          in 
+            skip 
+        ) ;
+      idx := idx+1
+    ) 
+  ) ;
+  return  
+) ;
+
+private  getYOffset : int  * bool  ==> int 
+getYOffset(plotIndex, nextToBaseColumn) == 
+( dcl   yOffset : int  := plotIndex;
+  if  nextToBaseColumn and  plotIndex > 0
+  then  
+    ( yOffset := graphLayout.size();
+      ( dcl   idx : int  := 0;
+        while  idx < plotIndex do  
+        ( yOffset := (yOffset*2)/3;
+          idx := idx+1
+        ) 
+      ) 
+    ) ;
+  return  yOffset
+) ;
+
+private  plotNode : [GraphNode] ==> <VOID>
+plotNode(graphNode) == 
+( let - = graphLayout.removeElement(graphNode)
+  in 
+    skip ;
+  let - = graphLayout.insertElementAt(graphNode , nodePlotCount)
+  in 
+    skip ;
+  ( dcl   firstConnection : [Point] := getNodeConnection(graphNode , 1),
+          secondConnection : [Point] := getNodeConnection(graphNode , 2),
+          nodeLocation : [Point] := getNextLocation(firstConnection , secondConnection);
+    let - = graphNode.setCoordinates(nodeLocation)
+    in 
+      skip ;
+    plotMap.plotted(nodeLocation.x) := plotMap.plotted(nodeLocation.x) ++ {nodeLocation.y |-> true  };
+    nodePlotCount := nodePlotCount+1;
+    let - = graphNode.setPlotted(true  )
+    in 
+      skip ;
+    return  
+  ) ;
+  return  <VOID>
+) ;
+
+private  getNextLocation : [Point] * [Point] ==> [Point]
+getNextLocation(firstConnection, secondConnection) == 
+( dcl   nextLocation : [Point] := nil  ,
+        xLocation : int ,
+        yLocation : int ,
+        coordinatesFound : bool  := false  ;
+  if  graphLayout.size() < 2
+  then  
+    ( nextLocation := new  Point(0 , 0)
+    ) 
+  else  
+    if  firstConnection = nil  
+    then  
+      ( xLocation := graphLayout.size()-2;
+        yLocation := graphLayout.size()-2;
+        ( dcl   idx : int  := 0;
+          while  nextLocation = nil   do  
+          ( if  not  plotMap.plotted(xLocation-idx)(yLocation)
+            then  
+              ( nextLocation := new  Point(xLocation-idx , yLocation)
+              ) 
+            else  
+              if  not  plotMap.plotted(xLocation+idx+1)(yLocation)
+              then  
+                ( nextLocation := new  Point(xLocation+idx+1 , yLocation)
+                ) ;
+            idx := idx+1
+          ) 
+        ) 
+      ) 
+    else  
+      if  secondConnection = nil  
+      then  
+        ( dcl   yOffset : int ,
+                nextToBaseColumn : bool  := (firstConnection.x = graphLayout.size()-2);
+          xLocation := firstConnection.x+1;
+          yLocation := firstConnection.y;
+          ( dcl   idx : int  := 0;
+            while  nextLocation = nil   do  
+            ( yOffset := getYOffset(idx , nextToBaseColumn);
+              if  not  plotMap.plotted(xLocation)(yLocation+yOffset)
+              then  
+                ( nextLocation := new  Point(xLocation , yLocation+yOffset)
+                ) 
+              else  
+                if  not  plotMap.plotted(xLocation)(yLocation-yOffset)
+                then  
+                  ( nextLocation := new  Point(xLocation , yLocation-yOffset)
+                  ) ;
+              idx := idx+1
+            ) 
+          ) 
+        ) 
+      else  
+        ( dcl   plotDirection : int ;
+          xLocation := firstConnection.x+1;
+          yLocation := firstConnection.y;
+          if  secondConnection.y < firstConnection.y
+          then  
+            ( plotDirection := -1
+            ) 
+          else  
+            ( plotDirection := 1
+            ) ;
+          if  secondConnection.x <> firstConnection.x+1
+          then  
+            ( ( dcl   idx : int  := 0;
+                while  nextLocation = nil   do  
+                ( if  not  plotMap.plotted(xLocation)(yLocation+(idx*plotDirection))
+                  then  
+                    ( nextLocation := new  Point(xLocation , yLocation+(idx*plotDirection))
+                    ) ;
+                  idx := idx+1
+                ) 
+              ) 
+            ) 
+          else  
+            ( if  not  plotMap.plotted(secondConnection.x)(secondConnection.y+1)
+              then  
+                ( nextLocation := new  Point(secondConnection.x , secondConnection.y+1)
+                ) 
+              else  
+                if  not  plotMap.plotted(secondConnection.x)(secondConnection.y-1)
+                then  
+                  ( nextLocation := new  Point(secondConnection.x , secondConnection.y-1)
+                  ) 
+                else  
+                  ( xLocation := firstConnection.x-1;
+                    yLocation := firstConnection.y;
+                    ( dcl   idx : int  := 1;
+                      while  nextLocation = nil   do  
+                      ( if  not  plotMap.plotted(xLocation)(yLocation+(idx*plotDirection))
+                        then  
+                          ( nextLocation := new  Point(xLocation , yLocation+(idx*plotDirection))
+                          ) ;
+                        idx := idx+1
+                      ) 
+                    ) 
+                  ) 
+            ) 
+        ) ;
+  xLocation := 0;
+  while  xLocation < plotMap.getColumns() and  nextLocation = nil   do  
+  ( yLocation := 0;
+    while  yLocation < plotMap.getRows() and  nextLocation = nil   do  
+    ( if  not  plotMap.plotted(xLocation)(yLocation)
+      then  
+        ( nextLocation := new  Point(xLocation , yLocation)
+        ) ;
+      yLocation := yLocation+1
+    ) ;
+    xLocation := xLocation+1
+  ) ;
+  return  nextLocation
+) ;
+
+instance variables 
+  private  plotMap : [PlotMap]
+  
+end  ScorePlacement

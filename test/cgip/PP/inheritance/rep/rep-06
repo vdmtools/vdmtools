@@ -1,0 +1,25 @@
+
+functions
+  f: () -> <A>
+  f() ==
+    <A>
+
+end A
+
+class C
+
+functions
+  f: () -> <C>
+  f() ==
+    <C>
+
+end C
+
+class B is subclass of A,C
+
+methods 
+
+  Test() value r: <A> ==
+    return A`f()
+
+end B

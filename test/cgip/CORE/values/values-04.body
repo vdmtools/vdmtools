@@ -1,0 +1,32 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+   a = true;
+  b = 10;
+  c = -20;
+  d = 3.5;
+  e = d;
+  f = 'q';
+  g = <TEST>;
+  h = {a,b,c};
+  i = [g,h];
+  j = mk_(c,i);
+  k = mk_R(c,d,g)
+
+types
+  QT  = <TEST>;
+  SET = set of (bool | int);
+  SEQ = seq of (QT * SET);
+  TT  = int * SEQ;
+  R :: int real <TEST>;
+  TestType = seq of (bool | real | QT | SET | SEQ | TT | R)
+
+operations
+
+  public Test : () ==> seq of (bool | real | <TEST> | int | char | 
+    (set of (bool | int)) | seq of (<TEST> | set of (bool | int)) |
+    (int * seq of (<TEST> | set of (bool | int))))
+ 
+Test () ==
+    let mk_R(v1,v2,v3) = k in
+      return [a,b,c,d,e,f,g,h,i,j,v1,v2,v3]
+
+end A

@@ -1,0 +1,5 @@
+public Test : () ==> seq of char
+Test() ==
+error
+
+end A

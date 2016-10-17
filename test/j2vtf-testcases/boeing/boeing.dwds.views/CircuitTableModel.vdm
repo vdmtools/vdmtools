@@ -1,0 +1,75 @@
+class CircuitTableModel is subclass of WireTableModel
+operations 
+public  update : [Object] ==> bool 
+update(contextChanges) == 
+( dcl   performUpdate : bool  := false  ,
+        changes : [ContextSet] := contextChanges;
+  if  changes.contains(ContextTypes`WIRE)
+  then  
+    ( dcl   wire : [Wire] := context.getCurrentContextFieldObject(ContextTypes`WIRE);
+      if  wire = nil  
+      then  
+        ( performUpdate := true  ;
+          curWireGroup := nil  
+        ) 
+      else  
+        ( dcl   newWireGroup : [WireGroup] := wire.getWireGroup();
+          if  not  newWireGroup.equals(curWireGroup)
+          then  
+            ( performUpdate := true  ;
+              curWireGroup := newWireGroup
+            ) 
+        ) 
+    ) ;
+  return  performUpdate
+) ;
+
+public  CircuitTableModel : () ==> CircuitTableModel
+CircuitTableModel() == 
+( let - = WireTableModel()
+  in 
+    skip 
+) ;
+
+protected  getWiresToInclude : () ==> [Vector]
+getWiresToInclude() == 
+( dcl   wireList : [Vector] := new  Vector();
+  if  curWireGroup <> nil  
+  then  
+    ( dcl   wireGroupWires : [Iterator] := curWireGroup.getAllWires();
+      trap  j2v_break with  
+        cases  true  : 
+          (isofclass  (J2V_Break,j2v_break)) -> 
+            skip 
+          
+        end  
+      in  
+        while  wireGroupWires.hasNext() do  
+        ( let - = wireList.addElement(wireGroupWires.next())
+          in 
+            skip 
+        ) 
+    ) ;
+  return  wireList
+) ;
+
+protected  mergeVectors : [Vector] * [Vector] ==> <VOID>
+mergeVectors(dest, src) == 
+( ( dcl   i : int  := 0;
+    while  i < src.size() do  
+    ( if  dest.indexOf(src.elementAt(i)) < 0
+      then  
+        ( let - = dest.addElement(src.elementAt(i))
+          in 
+            skip 
+        ) ;
+      i := i+1
+    ) 
+  ) ;
+  return  <VOID>
+) ;
+
+instance variables 
+  private  curWireGroup : [WireGroup] := nil  
+  
+end  CircuitTableModel

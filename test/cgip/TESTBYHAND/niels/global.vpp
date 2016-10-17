@@ -1,0 +1,64 @@
+class Global
+
+types
+
+  BeadType = <RootBead> | <FirstBead> | <LastBead> | <IntermediateBead>;
+  Width = real;
+  Height = real;
+  Area = real;
+  Angle = real;
+  Ratio = real;
+  Length = real;
+  Depth = real;
+
+PrioCrit = <Height> | <Area> | <Width> | <HWRatio>;
+
+WeldDirection = <SurfaceDir> | <Plate2Dir>;
+
+BeadDirection = <FromPlate1> | <FromPlate2> | <FromSurface>;
+
+LayerCriteria ::
+  direction    : WeldDirLayerCrit
+  drivingcrit  : LayerCrit
+  generalcrit  : seq of LayerCrit
+  specificcrit : map LayerId to SpecificLayerCrit;
+
+SpecificLayerCrit :: ;
+
+BeadCriteria ::
+  direction    : DirectionBeadCrit
+  drivingcrit  : BeadCrit
+  generalcrit  : seq of BeadCrit
+  specificCrit : map (LayerId | BeadId | BeadType) to SpecificBeadCrit;
+
+SpecificBeadCrit ::
+  drivingcrit : [BeadCrit]
+  generalcrit  : seq of BeadCrit;
+
+Id = nat;
+BeadId :: lid: Id  -- LayerId
+          bid: Id;  -- bead no. within LayerId
+LayerId :: lid: Id;
+
+BeadCritType = <DirectionBeadCrit> | <MaxAreaBeadCrit> | <MinAreaBeadCrit> | 
+               <MaxHeightBeadCrit> | <MinHeightBeadCrit> | <MaxHWRatioBeadCrit> | 
+               <WallAngleBeadCrit> | <WallAngleMaxAreaBeadCrit>;
+
+VectorFrame ::
+  x : Vector2
+  y : Vector2;
+
+WeldSize = real;
+
+ErrorMessage = seq of char;
+
+--Error ::
+--  errmsg : seq of char;
+
+Status = <Approved> | <UnderDevelopment>;
+
+values
+ 
+epsilonsize = 0.001;
+
+end Global

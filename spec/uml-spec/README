@@ -1,0 +1,28 @@
+This file describes how to check out the specification of the 
+UML mapper and generate documentation.
+
+Creating a working directory
+----------------------------
+
+mkdir uml-mapper
+cd uml-mapper
+cvs co tb-umlspec
+ln -s uml-spec/Makefile
+make link
+
+
+Preprocessing the specification
+-------------------------------
+
+Mixed specifications are preprocessed into VDM++ specifications by
+'make PP' 
+
+Making a complete document
+--------------------------
+
+make PPTEX
+- or:
+make PPPS
+
+
+

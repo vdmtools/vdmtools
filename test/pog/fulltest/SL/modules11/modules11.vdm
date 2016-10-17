@@ -1,0 +1,92 @@
+module A
+
+exports
+  types
+    struct TA
+
+definitions
+
+types
+
+TA = nat
+
+end A
+
+module B
+
+imports 
+  from A
+   types TA = nat renamed TA
+
+exports
+  types struct TB
+
+definitions
+
+types
+
+  TB = TA * TA
+
+end B
+
+module C
+
+imports 
+  from A
+    types TA = nat, -- renamed TA,
+
+  from B
+    types TB = A`TA * A`TA renamed TB
+
+exports
+  functions
+    fC : TB +> nat
+
+definitions
+
+functions
+
+  fC: TB +> nat
+  fC(mk_(n1,n2)) ==
+   n1 + n2
+
+end C
+module D
+
+imports 
+from E
+functions FE: DD -> DD
+
+exports
+ types struct DD
+
+definitions
+
+types
+
+  DD = nat
+
+functions
+
+  FD: DD -> DD
+  FD(d) ==
+    E`FE(d)
+
+end D
+module E
+
+imports from D
+types DD = nat
+
+exports
+  functions FE: D`DD -> D`DD
+
+definitions
+
+functions
+
+  FE: D`DD -> D`DD
+  FE(d) ==
+   d + 1
+
+end E

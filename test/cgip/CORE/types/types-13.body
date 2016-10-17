@@ -1,0 +1,42 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+-- Testing quote types and union types composed of record types
+
+public Test : () ==> int
+Test () ==
+( g(mk_R1(1,2));
+  let a = if true then <hello> 
+          else <HELLO> in
+  if <HELLO> = a then
+  return 33
+  else
+  return 34
+);
+
+g: AA ==> ()
+g(a) ==
+( dcl c : R1 := mk_R1(1,1),
+      b : AAA := mk_R3(1,1),
+      d : R1 := mk_R1(1,1),
+      e : AA := d,
+      f : R1 := e;
+  skip;
+);
+
+f: R2 ==> AAAA
+f(a) ==
+( dcl c : R1 := mk_R1(1,1),
+      b : AAA := mk_R3(1,1),
+      d : R1 := mk_R1(1,1),
+      e : AA := d,
+      f : R1 := e;
+  return mk_R2(2,3);
+);
+
+h : <hello>|<hallo_hallo> ==> bool
+h(j) == if j = <hallo_hallo> then return true
+        else return false;
+
+i : <hello> ==> bool
+i(j) == return false;
+
+end A

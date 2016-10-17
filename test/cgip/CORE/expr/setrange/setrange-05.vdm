@@ -1,0 +1,17 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of (set of int| int)  
+Test () ==
+  return [f(4), f(6), {f(0),...,9}]
+
+functions
+f: int -> int | set of int
+f(n) ==
+  if n > 5
+  then {1,...,5}
+  else n
+
+end A

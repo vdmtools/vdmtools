@@ -1,0 +1,16 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of bool | nat  
+Test () ==
+return [ let a = mk_B()
+         in true,
+         let a : C = mk_D(3,true)
+         in a.b]
+
+
+types
+B :: ;
+C = compose D of
+     a: nat
+     b: bool
+    end
+

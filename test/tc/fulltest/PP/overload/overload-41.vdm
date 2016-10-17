@@ -1,0 +1,37 @@
+class A
+
+operations
+public
+Test: () ==> seq of bool
+Test() == return [ t0(), t(), t2(), t3() ];
+
+functions
+filter[@T]: seq of @T -> seq of @T
+filter(s) ==
+	[s(i) | i in set inds s & mod2(s(i))];
+
+filter[@T]: (@T -> bool) * seq of @T -> seq of @T
+filter (f,s) ==
+	[s(i) | i in set inds s & f(s(i))];
+
+static public filter[@T]: (@T -> bool) -> seq of @T -> seq of @T
+filter(f)(s) == [s(i) | i in set inds s & f(s(i))];
+
+mod2 : nat -> bool
+mod2(n) == n mod 2 = 0;
+
+public t0 : () -> bool
+t0() == filter[nat]([1,2,3,4,5,6]) = [2, 4, 6];
+
+public t : () -> bool
+t() == filter[nat](lambda x:nat & x mod 2 = 0, [1,2,3,4,5,6]) = [2, 4, 6];
+
+public t2 : () -> bool
+t2() == filter[int](lambda x:int & x > 0)([1,2,-3,4,5,-6]) = [1,2,4,5];
+
+public t3 : () -> bool
+t3() == filter[int](lambda x:int & x > 0)(
+			filter[int](lambda x:int & x mod 2 = 0)([1,2,-3,4,5,-6])
+		) = [2, 4]
+
+end A

@@ -1,0 +1,16 @@
+class A
+
+functions 
+
+public
+id : nat -> nat 
+id(n) == n;
+
+public
+nest : nat -> nat
+nest(n) == 
+  if n = 0 then 0
+  else nest(nest(n-1))
+measure id;
+
+end A

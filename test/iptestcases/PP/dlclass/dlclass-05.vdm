@@ -1,0 +1,37 @@
+class Super
+
+operations
+
+  public SuperOp: nat ==> nat
+  SuperOp(n) ==
+    return n;
+    
+end Super
+dlclass Example is subclass of Super
+
+uselib "dlclass_test1.so"
+
+-- Purpose of test: 
+-- test the use of operations from a DL's superclass
+
+operations
+public
+  ReturnList : seq of Example ==> seq of Example
+  ReturnList(s)
+     == is not yet specified
+
+end Example
+
+--====================--
+
+class A
+
+operations
+
+public
+  Test : () ==> nat
+  Test() == 
+     return new Example().SuperOp(8);
+
+end A
+

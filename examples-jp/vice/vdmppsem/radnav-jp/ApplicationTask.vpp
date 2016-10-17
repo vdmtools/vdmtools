@@ -1,0 +1,164 @@
+%$ld$
+\subsection{Applicationタスク}
+
+\begin{vdm_al}
+class 『人機械界面キー押し下げ処理1』
+  is subclass of BasicTask
+
+operations
+  public 『人機械界面キー押し下げ処理1』: EventDispatcher ==> 『人機械界面キー押し下げ処理1』
+  『人機械界面キー押し下げ処理1』 (ed) ==  BasicTask("キー押し下げ処理",ed);
+
+  public キー押し下げ処理: () ==> ()
+  キー押し下げ処理 () == duration (100) skip;
+
+  イベントを処理する: Event ==> ()
+  イベントを処理する (pe) ==
+    ( キー押し下げ処理();
+      メッセージを送る("音量を調整する", pe.イベントを得る()) )
+
+end 『人機械界面キー押し下げ処理1』
+\end{vdm_al}
+
+\begin{rtinfo}
+[『人機械界面キー押し下げ処理1』]{vdm.tc}[『人機械界面キー押し下げ処理1』]
+\end{rtinfo}
+
+
+\begin{vdm_al}
+class 『人機械界面キー押し下げ処理2』
+  is subclass of BasicTask
+
+operations
+  public 『人機械界面キー押し下げ処理2』: EventDispatcher ==> 『人機械界面キー押し下げ処理2』
+  『人機械界面キー押し下げ処理2』 (ed) == BasicTask("キー押し下げ処理",ed);
+
+  public   キー押し下げ処理: () ==> ()
+    キー押し下げ処理 () == duration (100) skip;
+
+  イベントを処理する: Event ==> ()
+  イベントを処理する (pe) ==
+    (   キー押し下げ処理();
+      メッセージを送る("DB検索", pe.イベントを得る()) )
+
+end 『人機械界面キー押し下げ処理2』
+\end{vdm_al}
+
+\begin{rtinfo}
+[『人機械界面キー押し下げ処理2』]{vdm.tc}[『人機械界面キー押し下げ処理2』]
+\end{rtinfo}
+
+\begin{vdm_al}
+class 『人機械界面画面更新』
+  is subclass of BasicTask
+
+operations
+  public 『人機械界面画面更新』: EventDispatcher ==> 『人機械界面画面更新』
+  『人機械界面画面更新』 (ed) == BasicTask("画面を更新する",ed);
+
+  public 画面を更新する: () ==> ()
+  画面を更新する () == duration (500) skip;
+
+  イベントを処理する: Event ==> ()
+  イベントを処理する (pe) ==
+    ( 画面を更新する();
+      割込を起こさせる("音量つまみ", pe.イベントを得る()) )
+
+end 『人機械界面画面更新』
+\end{vdm_al}
+
+\begin{rtinfo}
+[『人機械界面画面更新』]{vdm.tc}[『人機械界面画面更新』]
+\end{rtinfo}
+
+\begin{vdm_al}
+class 『ラジオ音量調整』
+  is subclass of BasicTask
+
+operations
+  public 『ラジオ音量調整』: EventDispatcher ==> 『ラジオ音量調整』
+  『ラジオ音量調整』 (ed) == BasicTask("音量を調整する",ed);
+
+  public 音量を調整する: () ==> ()
+  音量を調整する () == duration (100) skip;
+
+  イベントを処理する: Event ==> ()
+  イベントを処理する (pe) ==
+    ( 音量を調整する();
+      メッセージを送る("画面を更新する", pe.イベントを得る()) )
+
+end 『ラジオ音量調整』
+\end{vdm_al}
+
+\begin{rtinfo}
+[『ラジオ音量調整』]{vdm.tc}[『ラジオ音量調整』]
+\end{rtinfo}
+
+\begin{vdm_al}
+class 『ラジオ交通情報処理』
+  is subclass of BasicTask
+
+operations
+  public 『ラジオ交通情報処理』: EventDispatcher ==> 『ラジオ交通情報処理』
+  『ラジオ交通情報処理』 (ed) == BasicTask("交通情報を処理する",ed);
+
+  public 交通情報を処理する: () ==> ()
+  交通情報を処理する () == duration (1000) skip;
+
+  イベントを処理する: Event ==> ()
+  イベントを処理する (pe) ==
+    ( 交通情報を処理する();
+      メッセージを送る("交通情報を解読する", pe.イベントを得る()) )
+
+end 『ラジオ交通情報処理』
+\end{vdm_al}
+
+\begin{rtinfo}
+[『ラジオ交通情報処理』]{vdm.tc}[『ラジオ交通情報処理』]
+\end{rtinfo}
+
+\begin{vdm_al}
+class 『ナビDB検索』
+  is subclass of BasicTask
+
+operations
+  public 『ナビDB検索』: EventDispatcher ==> 『ナビDB検索』
+  『ナビDB検索』 (ed) == BasicTask("DB検索",ed);
+
+  public DBを検索する: () ==> ()
+  DBを検索する() == duration (5000) skip;
+
+  イベントを処理する: Event ==> ()
+  イベントを処理する (pe) ==
+    ( DBを検索する();
+      メッセージを送る("画面を更新する", pe.イベントを得る()) )
+
+end 『ナビDB検索』
+\end{vdm_al}
+
+\begin{rtinfo}
+[『ナビDB検索』]{vdm.tc}[『ナビDB検索』]
+\end{rtinfo}
+
+\begin{vdm_al}
+class 『ナビ交通情報解読』
+  is subclass of BasicTask
+
+operations
+  public 『ナビ交通情報解読』: EventDispatcher ==> 『ナビ交通情報解読』
+  『ナビ交通情報解読』 (ed) == BasicTask("交通情報を解読する",ed);
+
+  public 交通情報を解読する: () ==> ()
+  交通情報を解読する () == duration (5000) skip;
+
+  イベントを処理する: Event ==> ()
+  イベントを処理する (pe) ==
+    ( 交通情報を解読する();
+      メッセージを送る("画面を更新する", pe.イベントを得る()) )
+
+end 『ナビ交通情報解読』
+\end{vdm_al}
+
+\begin{rtinfo}
+[『ナビ交通情報解読』]{vdm.tc}[『ナビ交通情報解読』]
+\end{rtinfo}

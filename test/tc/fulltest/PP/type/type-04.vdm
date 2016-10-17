@@ -1,0 +1,8 @@
+class TYPE
+types
+
+  A = compose Dummy of
+        a : nat
+      end;
+
+end TYPE

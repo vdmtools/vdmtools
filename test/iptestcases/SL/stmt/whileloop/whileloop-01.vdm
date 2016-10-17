@@ -1,0 +1,26 @@
+module A
+
+exports all
+
+definitions
+
+state Sigma of
+  i : int
+  init s == s = mk_Sigma(1)
+end
+
+operations
+
+Test: () ==> int
+Test () == (
+  Test2();
+  return i
+);
+
+Test2: () ==> ()
+Test2 () == 
+   while (true) do (
+     i := i+1;
+     return
+   )
+end A   

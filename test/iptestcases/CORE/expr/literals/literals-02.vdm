@@ -1,0 +1,38 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ( int | real | bool | char | seq of char | <HELLO> )  
+Test () ==
+return 
+[ "Newline:", '\n',
+  "Esc_quote:", '\'',
+  "Esc_backslash:", '\\',
+  "Return:", '\r',
+  "Tab:", '\t',
+  "Formfeed:", '\f',
+--  "Escape:", '\e',
+--  "Alarm:", '\a',
+  "Hex 41 :",  '\x41',
+  "Control char A:", '\cA',
+  "Double qoute:", '"',
+  "Esc_double_quote:", '\"',
+  "Octal:", '\033',
+  "\"",
+  "\"Hello \n World",
+  "Hello \t \\ World"]
+
+
+
+
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

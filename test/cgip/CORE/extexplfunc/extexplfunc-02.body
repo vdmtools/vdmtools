@@ -1,0 +1,14 @@
+
+add: nat -> nat -> nat
+add(y)(z) ==
+  y+z;
+
+g(x: nat) res: nat ==
+  x;
+
+operations
+
+public Test () res: nat ==
+    return add(1)(2) + g(3)
+
+end A

@@ -1,0 +1,14 @@
+r cylinder.vdm
+r cylio.vdm
+r math.vdm
+i
+tc MATH
+tc CYLIO
+tc CYLINDER
+cg MATH
+cg CYLIO
+cg CYLINDER
+latex cylinder.vdm
+latex cylio.vdm
+latex math.vdm
+quit

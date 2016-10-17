@@ -1,0 +1,504 @@
+class JavaUtilHashtable is subclass of JavaUtilDictionary, JavaUtilMap, JavaLangCloneable, JavaIoSerializable
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaUtilHashtable" , <CLASS> , false  );
+instance variables 
+  public  static KEYS : int := 0;
+  public  static VALUES : int := 1;
+  public  static ENTRIES : int := 2;
+--  private  emptyEnumerator : JavaUtilEmptyEnumerator := new  JavaUtilEmptyEnumerator();
+--  private  emptyIterator : JavaUtilEmptyIterator := new  JavaUtilEmptyIterator();
+  public   table : map  int  to  JavaUtilHTEntry;
+  public   count : int := 0;
+  private  threshold : int ;
+  private  loadFactor : real ;
+  public   modCount : int  := 0;
+--  private  static serialVersionUID : int  := 0;
+--  private  keySet : JavaUtilSet := new  JavaUtilSet(<NIL>);
+--  private  entrySet : JavaUtilSet := new  JavaUtilSet(<NIL>);
+--  private  values__ : JavaUtilCollection := new  JavaUtilCollection(<NIL>);
+operations 
+public  keys : () ==> JavaUtilEnumeration
+keys() == 
+( return  getEnumeration(JavaUtilHashtable`KEYS)
+) ;
+
+public  size : () ==> int 
+size() == 
+( return  count
+) ;
+
+public  clear : () ==> ()
+clear() == 
+( -- dcl   tab : map  int  to  JavaUtilHTEntry := table;
+  modCount := modCount+1;
+  ( dcl   index : int  := (card  dom  table),
+          l_2 : bool ;
+    def l_3 = index;
+    l_4 = l_3-1
+    in ( index := l_4;
+      def l_2 = index;
+      l_1 = l_2 >= 0
+      in l_2 := l_1
+    ) ;
+    while  l_2 do  
+    ( table := table ++ {index |-> new JavaUtilHTEntry(<NIL>)};
+      def l_3 = index;
+      l_4 = l_3-1
+      in ( index := l_4;
+        def l_2 = index;
+        l_1 = l_2 >= 0
+        in l_2 := l_1
+      ) 
+    ) 
+  ) ;
+  count := 0;
+  skip 
+) ;
+
+public  clone : () ==> JavaLangObject
+clone() == 
+is not yet specified;
+--( trap  j2v_exception with  
+--    cases  true  : 
+--      (isofclass  (CloneNotSupportedException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+--        ( dcl   e : CloneNotSupportedException := j2v_exception;
+--          exit  new  InternalError()
+--        ) ,
+--      others  -> 
+--        exit  j2v_exception
+--    end  
+--  in  
+--    ( dcl   t : JavaUtilHashtable := JavaUtilDictionary`clone();
+--      t.table := {l_3 |-> new  JavaUtilHTEntry(<NIL>)|l_3 in set  {0,...,(card  dom  table)-1}};
+--     ( dcl   i : int  := (card  dom  table),
+--              l_3 : bool ;
+--        def l_3 = i;
+--        l_2 = l_3
+--        in ( i := l_3-1;
+--          def l_1 = l_2 > 0
+--          in l_3 := l_1
+--        ) ;
+--        while  l_3 do  
+--        ( t.table := t.table ++ {i |-> if  (table(i) <> {|->}) then  table(i).clone() else  {|->}};
+--          def l_3 = i;
+--          l_2 = l_3
+--          in ( i := l_3-1;
+--            def l_1 = l_2 > 0
+--            in l_3 := l_1
+--          ) 
+--        ) 
+--     ) ;
+----      t.keySet := new  JavaUtilSet(<NIL>);
+----      t.entrySet := new  JavaUtilSet(<NIL>);
+----      t.values__ := new  JavaUtilCollection(<NIL>);
+--      t.modCount := 0;
+--      return  t
+--    ) 
+--) ;
+
+public  keySet : () ==> JavaUtilSet
+keySet() == 
+is not yet specified;
+--( if  keySet.IsNil()
+--  then  
+--    keySet := Collections`synchronizedSet(new  KeySet() , self  );
+--  return  keySet
+--) ;
+
+protected  rehash : () ==> ()
+rehash() == 
+( dcl   oldCapacity : int  := (card  dom  table),
+--        oldMap : map  int  to  JavaUtilHTEntry := table,
+        newCapacity : int  := oldCapacity*2+1,
+        newMap : map  int  to  JavaUtilHTEntry := {l_10 |-> new  JavaUtilHTEntry(<NIL>)|l_10 in set  {0,...,newCapacity-1}};
+  modCount := modCount+1;
+  def l_6 = (newCapacity*loadFactor);
+  l_1 = if  is_(l_6,real ) then  floor(l_6) else  l_6
+  in threshold := l_1;
+  ( dcl   i : int  := oldCapacity,
+          l_11 : bool ;
+    def l_3 = i;
+    l_2 = l_3
+    in ( i := l_3-1;
+      def l_1 = l_2 > 0
+      in l_11 := l_1
+    ) ;
+    while  l_11 do  
+    ( ( dcl   old : JavaUtilHTEntry := table(i);
+        while  not  old.IsNil() do  
+        ( dcl   e : JavaUtilHTEntry := old;
+          old := old.next;
+          ( dcl   index : int  := (let i=e.hash in if i<0 then -i else i) mod  newCapacity;
+            e.next := newMap(index);
+            newMap := newMap ++ {index |-> e}
+          ) 
+        ) 
+      ) ;
+      def l_3 = i;
+      l_2 = l_3
+      in ( i := l_3-1;
+        def l_1 = l_2 > 0
+        in l_11 := l_1
+      ) 
+    ) 
+  ) ;
+  table := newMap;
+  skip 
+) ;
+
+public  isEmpty : () ==> bool 
+isEmpty() == 
+( return  count = 0
+) ;
+
+public  elements : () ==> JavaUtilEnumeration
+elements() == 
+( return  getEnumeration(JavaUtilHashtable`VALUES)
+) ;
+
+public  entrySet : () ==> JavaUtilSet
+entrySet() == 
+is not yet specified;
+--( if  entrySet.IsNil()
+--  then  
+--    entrySet := Collections`synchronizedSet(new  EntrySet() , self  );
+--  return  entrySet
+--) ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  hashCode : () ==> int 
+hashCode() == 
+( dcl   h : int  := 0;
+  return  h
+) ;
+
+public  toString : () ==> JavaLangString
+toString() == 
+( dcl   max : int  := size()-1,
+        buf : JavaLangStringBuffer := new  JavaLangStringBuffer();
+  let - = buf.append(new  JavaLangString("{"))
+  in 
+    skip ;
+  ( dcl   i : int  := 0;
+    while  i <= max do  
+    ( if  i < max
+      then  
+        let - = buf.append(new  JavaLangString(", "))
+        in 
+          skip ;
+      i := i+1
+    ) 
+  ) ;
+  let - = buf.append(new  JavaLangString("}"))
+  in 
+    skip ;
+  return  buf.toString()
+) ;
+
+public  values__ : () ==> JavaUtilCollection
+values__() == 
+is not yet specified;
+--( if  values__.IsNil()
+--  then  
+--    values__ := Collections`synchronizedCollection(new  ValueCollection() , self  );
+--  return  values__
+--) ;
+
+public  JavaUtilHashtable : () ==> JavaUtilHashtable
+JavaUtilHashtable() == 
+( let - = JavaUtilHashtable(11 , 1)
+  in 
+    skip 
+) ;
+
+public  JavaUtilHashtable : int  ==> JavaUtilHashtable
+JavaUtilHashtable(initialCapacity) == 
+( let - = JavaUtilHashtable(initialCapacity , 0.75)
+  in 
+    skip 
+) ;
+
+public  get : JavaLangObject ==> JavaLangObject
+get(key) == 
+( dcl --  tab : map  int  to  JavaUtilHTEntry := table,
+        hash : int  := key.hashCode(),
+        index : int  := (if hash <0 then -hash else hash) mod  (card  dom  table);
+  ( dcl   e : JavaUtilHTEntry := table(index);
+    while  not  e.IsNil() do  
+    ( if e.hash = hash and e.key.equals(key)
+      then
+        return  e.value__;
+      e := e.next
+    ) 
+  ) ;
+  return  JavaLangObject`NIL
+) ;
+
+public  putAll : JavaUtilMap ==> ()
+putAll(t) == 
+( skip 
+--	JavaUtilIterator i = t.entrySet().iterator();
+--	while (i.hasNext()) {
+--	    JavaUtilMap.JavaUtilEntry e = (JavaUtilMap.JavaUtilEntry) i.next();
+--	    put(e.getKey(), e.getValue());
+--	}
+
+) ;
+
+public  JavaUtilHashtable : int * real  ==> JavaUtilHashtable
+JavaUtilHashtable(initialCapacity_, loadFactor) == 
+( dcl initialCapacity: int := initialCapacity_;
+  if  initialCapacity < 0
+  then  
+    exit  new  JavaLangIllegalArgumentException(J2VUTIL`ConcatStr(new  JavaLangString("Illegal Capacity: ") , J2VUTIL`toString(initialCapacity)));
+  if  loadFactor <= 0 -- or  Float`isNaN(loadFactor)
+  then  
+    exit  new  JavaLangIllegalArgumentException(J2VUTIL`ConcatStr(new  JavaLangString("Illegal Load: ") , J2VUTIL`toString(loadFactor)));
+  if  initialCapacity = 0
+  then  
+    initialCapacity := 1;
+  JavaUtilHashtable`loadFactor := loadFactor;
+  table := {l_3 |-> new  JavaUtilHTEntry(<NIL>)|l_3 in set  {0,...,initialCapacity-1}};
+  def l_6 = (initialCapacity*loadFactor);
+  l_1 = if  is_(l_6,real ) then  floor(l_6) else  l_6
+  in threshold := l_1;
+  count := 0;
+  modCount := 0;
+) ;
+
+public  getIterator : int  ==> JavaUtilIterator
+getIterator(type) == 
+( dcl res: JavaUtilIterator;
+  if  count = 0
+  then  
+    ( res := new  JavaUtilEmptyIterator()
+    ) 
+  else  
+    ( res := new  JavaUtilEnumerator(type , true , self )
+    );
+  return res;
+) ;
+
+--public  JavaUtilHashtable : JavaUtilMap ==> JavaUtilHashtable
+--JavaUtilHashtable(t) == 
+----( let - = JavaUtilHashtable(Math`max(2*t.size() , 11) , 0.75)
+--( let - = JavaUtilHashtable(let l_s=2*t.size() in if l_s > 11 then l_s else 11 , 0.75)
+--  in 
+--    skip ;
+--  putAll(t)
+--) ;
+
+public  JavaUtilHashtable : <NIL> ==> JavaUtilHashtable
+JavaUtilHashtable(-) == 
+isNil := true  ;
+
+public  equals : JavaLangObject ==> bool 
+equals(o) == 
+( if  o = self  
+  then  
+    return  true  ;
+--  if  not  (isofclass  (JavaUtilMap,o))
+  if  not  (isofclass  (JavaUtilHashtable,o))
+  then  
+    return  false  ;
+  ( dcl   t : JavaUtilHashtable := o; -- t : JavaUtilMap := o;
+    if  t.size() <> size()
+    then  
+      return  false  ;
+    return  true  
+  ) 
+) ;
+
+public  remove : JavaLangObject ==> JavaLangObject
+remove(key) == 
+( dcl   -- tab : map  int  to  JavaUtilHTEntry := table,
+        hash : int  := key.hashCode(),
+        index : int  := (if hash<0 then -hash else hash) mod  (card  dom  table);
+  ( dcl   e : JavaUtilHTEntry := table(index),
+          prev : JavaUtilHTEntry := new  JavaUtilHTEntry(<NIL>);
+    while  not  e.IsNil() do  
+    ( modCount := modCount+1;
+      if  not  prev.IsNil()
+      then  
+        ( prev.next := e.next
+        ) 
+      else  
+        ( table := table ++ {index |-> e.next}
+        ) ;
+      count := count-1;
+      ( dcl   oldValue : JavaLangObject := e.value__;
+        e.value__ := JavaLangObject`NIL;
+        return  oldValue
+      ) ;
+      prev := e;
+      e := e.next
+    ) 
+  ) ;
+  return  JavaLangObject`NIL
+) ;
+
+private  getEnumeration : int  ==> JavaUtilEnumeration
+getEnumeration(type) == 
+( if  count = 0
+  then  
+    ( return  new  JavaUtilEmptyEnumerator() -- emptyEnumerator
+    ) 
+  else  
+    ( return  new  JavaUtilEnumerator(type , false, self  )
+    ) 
+) ;
+
+public  contains : JavaLangObject ==> bool 
+contains(value__) == 
+( if  value__.IsNil()
+  then  
+    ( exit  new  JavaLangNullPointerException()
+    ) ;
+  ( -- dcl   tab : map  int  to  JavaUtilHTEntry := table;
+    ( dcl   i : int  := (card  dom  table),
+            l_3 : bool ;
+      def l_3 = i;
+      l_2 = l_3
+      in ( i := l_3-1;
+        def l_1 = l_2 > 0
+        in l_3 := l_1
+      ) ;
+      while  l_3 do  
+      ( ( dcl   e : JavaUtilHTEntry := table(i);
+          while  not  e.IsNil() do  
+          ( if e.value__.equals(value__) then return  true;
+            e := e.next
+          ) 
+        ) ;
+        def l_3 = i;
+        l_2 = l_3
+        in ( i := l_3-1;
+          def l_1 = l_2 > 0
+          in l_3 := l_1
+        ) 
+      ) 
+    ) ;
+    return  false  
+  ) 
+) ;
+
+public  containsKey : JavaLangObject ==> bool 
+containsKey(key) == 
+( dcl   -- tab : map  int  to  JavaUtilHTEntry := table,
+        hash : int  := key.hashCode(),
+        index : int  := (if hash < 0 then -hash else hash) mod  (card  dom  table);
+  ( dcl   e : JavaUtilHTEntry := table(index);
+    while  not  e.IsNil() do  
+    ( if e.hash = hash and e.key.equals(key) then return  true;
+      e := e.next
+    ) 
+  ) ;
+  return  false  
+) ;
+
+public  put : JavaLangObject * JavaLangObject ==> JavaLangObject
+put(key, value__) == 
+( if  value__.IsNil()
+  then  
+    ( exit  new  JavaLangNullPointerException()
+    ) ;
+  ( dcl   -- tab : map  int  to  JavaUtilHTEntry := table,
+          hash : int  := key.hashCode(),
+--          index : int  := (J2VUTIL`BitOp(hash , <AND> , 0)) mod  (card  dom  tab);
+          index : int  := (if hash < 0 then -hash else hash) mod  (card  dom  table);
+    ( dcl   e : JavaUtilHTEntry := table(index);
+      while  not  e.IsNil() do  
+      ( dcl   old : JavaLangObject := e.value__;
+        if e.hash = hash and e.key.equals(key)
+        then
+        ( e.value__ := value__;
+          return  old;
+        );
+        e := e.next
+      ) 
+    ) ;
+    modCount := modCount+1;
+    if  count >= threshold
+    then  
+      ( rehash();
+--        tab := table;
+--        index := (J2VUTIL`BitOp(hash , <AND> , 0)) mod  (card  dom  tab)
+        index := (if hash < 0 then -hash else hash) mod  (card  dom  table)
+      ) ;
+    ( dcl   e : JavaUtilHTEntry := new  JavaUtilHTEntry(hash , key , value__ , table(index));
+      table := table ++ {index |-> e};
+      count := count+1;
+      return  JavaLangObject`NIL
+    ) 
+  ) 
+) ;
+
+public  containsValue : JavaLangObject ==> bool 
+containsValue(value__) == 
+( return  contains(value__)
+) ;
+
+--private  readObject : ObjectInputStream ==> ()
+--readObject(s) == 
+--( s.defaultReadObject();
+--  ( dcl   origlength : int  := s.readInt(),
+--          elements : int  := s.readInt();
+--    def l_12 = (elements*loadFactor);
+--    l_7 = if  is_(l_12,real ) then  floor(l_12) else  l_12;
+--    l_6 = l_7+(elements/20);
+--    l_5 = l_6+3
+--    in ( dcl   length : int  := l_5;
+--      if  length > elements and  (J2VUTIL`BitOp(length , <AND> , 1)) = 0
+--      then  
+--        length := length-1;
+--      if  origlength > 0 and  length > origlength
+--      then  
+--        length := origlength;
+--      table := {l_3 |-> new  JavaUtilHTEntry(<NIL>)|l_3 in set  {0,...,length-1}};
+--      count := 0;
+--      while  elements > 0 do  
+--      ( dcl   key : JavaLangObject := s.readObject(),
+--              value__ : JavaLangObject := s.readObject();
+--       let - = put(key , value__)
+--        in 
+--          skip ;
+--        elements := elements-1
+--      ) 
+--    ) 
+--  ) ;
+--  skip 
+--) ;
+
+--private  writeObject : ObjectOutputStream ==> ()
+--writeObject(s) == 
+--( s.defaultWriteObject();
+--  s.writeInt(table`length);
+--  s.writeInt(count);
+--  ( dcl   index : int  := table`length-1;
+--    while  index >= 0 do  
+--    ( dcl   entry : JavaUtilHTEntry := table(index);
+--      trap  j2v_break with  
+--        cases  true  : 
+--          (isofclass  (J2V_Break,j2v_break)) -> 
+--            skip ,
+--          others  -> 
+--            exit  j2v_break
+--        end  
+--      in  
+--        while  not  entry.IsNil() do  
+--        ( s.writeObject(entry.key);
+--          s.writeObject(entry.value__);
+--          entry := entry.next
+--        ) ;
+--      index := index-1
+--   ) 
+--  ) ;
+-- skip 
+--) ;
+
+
+end  JavaUtilHashtable
+

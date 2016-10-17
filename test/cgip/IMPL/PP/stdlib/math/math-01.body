@@ -1,0 +1,25 @@
+class A
+operations
+
+public Test:() ==> seq of real
+Test () ==
+  def m : MATH = new MATH () in
+  return [
+    m.sin(1),
+    m.cos(3.12),
+    MATH`pi,
+    m.tan(0.05),
+    m.cot (1.4),
+    m.asin(0.99),
+    m.acos(-0.87),
+    m.atan(34.1),
+    m.sqrt(2),
+    m.pi_f(),
+    m.asin(1.5),
+    m.acos(-1.89),
+    m.sqrt(-2.3),
+    m.cot(0)
+    ]   
+
+end A
+    

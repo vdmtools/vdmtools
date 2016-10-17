@@ -1,0 +1,18 @@
+class CasesStmtTest
+
+operations
+
+  Cases: () ==> seq of char | set of int
+  Cases() ==
+  ( dcl a: int := 0;
+    cases 1:
+    1 -> ( dcl a: bool;
+           let one = 1 in a := one;
+	   let t = true in a := t;
+	   return a ),
+    2 -> ( a := 1;
+           return ),
+    others -> skip
+    end);
+
+end CasesStmtTest

@@ -1,0 +1,297 @@
+class LayerGeom is subclass of Global
+
+instance variables
+
+  empty : bool := true;
+  layerid: [LayerId] := nil;
+  plate1pts : Point2 * [Point2] * Point2 * Vector2; -- := mk_(new Point2(), nil, new Point2(), new Vector2());
+  plate2pts : Point2 * [Point2] * Point2 * Vector2; -- := mk_(new Point2(), nil, new Point2(), new Vector2());
+
+  -- Temporare instance variables used for constructing beads.
+  Top1: Point2;
+  Top2: Point2;
+  Bot1: Point2;
+  Bot2: Point2;
+  Mid1: [Point2];
+  Mid2: [Point2];
+  Top_v: Vector2;
+  Bot_v: Vector2;
+  Pl1_v: Vector2;
+  Pl2_v: Vector2;
+  Top_l: Line2;
+  Bot_l: Line2
+
+operations
+
+initialise (pl1pts, pl2pts: Point2 * [Point2] * Point2) ==
+  let mk_(pl1t,pl1m,pl1b) = pl1pts,
+      mk_(pl2t,pl2m,pl2b) = pl2pts in
+  let pl1m' = if pl1m <> nil then pl1m.copy() else nil,
+      pl2m' = if pl2m <> nil then pl2m.copy() else nil in
+  ( dcl pl1v : Vector2 := new Vector2(),
+        pl2v : Vector2 := new Vector2();
+    if pl1m' <> nil
+    then let bm1dist = pl1b.pointDist (pl1m'),
+             mt1dist = pl1m'.pointDist (pl1t) in
+         if bm1dist >= mt1dist 
+         then pl1v.initFromPoints (pl1b, pl1m')
+         else pl1v.initFromPoints (pl1m', pl1t)
+    else pl1v.initFromPoints (pl1b, pl1t);
+    if pl2m' <> nil
+    then let bm2dist = pl2b.pointDist (pl2m'),
+             mt2dist = pl2m'.pointDist (pl2t) in
+         if bm2dist >= mt2dist 
+         then pl2v.initFromPoints (pl2b, pl2m')
+         else pl2v.initFromPoints (pl2m', pl2t)
+    else pl2v.initFromPoints (pl2b, pl2t);
+    plate1pts := mk_(pl1t.copy(), pl1m', pl1b.copy(), pl1v);
+    plate2pts := mk_(pl2t.copy(), pl2m', pl2b.copy(), pl2v);
+    empty := false );
+
+initFromGroove: Groove ==> ()
+initFromGroove (groove) ==
+  if not groove.IsEmpty()
+  then
+    let pl1pts = groove.getPlate1Points(),
+        pl2pts = groove.getPlate2Points() in
+    initialise (pl1pts, pl2pts)
+  else
+    makeEmpty();
+
+copy: () ==> LayerGeom 
+copy () ==
+( dcl lg: LayerGeom := new LayerGeom();
+  lg.setPlate1Points (plate1pts);
+  lg.setPlate2Points (plate2pts);
+  lg.setLayerId (layerid);
+  lg.setEmpty (empty);
+  return lg
+);
+
+setPlate1Points (pl1pts: Point2 * [Point2] * Point2 * Vector2) ==
+  let mk_(pl1t,pl1m,pl1b,pl1v) = pl1pts in
+  let pl1m' = if pl1m <> nil then pl1m.copy() else nil in
+  plate1pts := mk_(pl1t.copy(), pl1m', pl1b.copy(), pl1v.copy());
+
+setPlate2Points (pl2pts: Point2 * [Point2] * Point2 * Vector2) ==
+  let mk_(pl2t,pl2m,pl2b,pl2v) = pl2pts in
+  let pl2m' = if pl2m <> nil then pl2m.copy() else nil in
+  plate2pts := mk_(pl2t.copy(), pl2m', pl2b.copy(), pl2v.copy());
+
+getId: () ==> Id 
+getId () ==
+  return layerid.lid;
+
+setId: Id ==> ()
+setId (id) ==
+  layerid := mk_LayerId(id);
+
+getLayerId: () ==> [LayerId]
+getLayerId () ==
+  return layerid;
+
+setLayerId: [LayerId] ==> ()
+setLayerId (lid) ==
+  layerid := lid;
+
+getArea: () ==> Area 
+getArea () ==
+( dcl math : Math := new Math();
+  let verts = generateVertices () in
+  let corners = [ verts(i).getCoord() | i in set inds verts ] in
+  return abs math.polyArea (corners)
+);
+
+getHeight: () ==> Height 
+getHeight () ==
+( dcl math : Math := new Math();
+  let mk_(pl1t,-,pl1b,-) = plate1pts,
+      mk_(pl2t,-,pl2b,-) = plate2pts in
+  def topline = new Line2().createFromPoints (pl1t,pl2t) in
+  let dists = { topline.pointDistance (p) | p in set { pl1b, pl2b } } in
+  return math.max (dists)
+);
+
+getWidth: () ==> Width 
+getWidth () ==
+( dcl math : Math := new Math();
+  let mk_(pl1t,pl1m,pl1b,-) = plate1pts,
+      mk_(pl2t,pl2m,pl2b,-) = plate2pts in
+  let pl1midpoint = if pl1m <> nil
+                    then pl1m
+                    else pl1b.midPoint (pl1t),
+      pl2midpoint = if pl2m <> nil
+                    then pl2m
+                    else pl2b.midPoint (pl2t) in
+  return pl1midpoint.pointDist (pl2midpoint)
+);
+
+getHWRatio: () ==> Ratio 
+getHWRatio () ==
+  return getHeight() / getWidth();
+
+generateVertices: () ==> seq of Point2 
+generateVertices () ==
+  let mk_(pl1t,pl1m,pl1b,-) = plate1pts,
+      mk_(pl2t,pl2m,pl2b,-) = plate2pts in
+  return [ pl1t.copy() ] ^
+         (if pl1m <> nil then [ pl1m.copy() ] else []) ^
+         [ pl1b.copy() ] ^
+         (if pl2b <> pl1b then [ pl2b.copy() ] else []) ^
+         (if pl2m <> nil then [ pl2m.copy() ] else []) ^
+         [ pl2t.copy() ];
+
+getTopWidth: () ==> real 
+getTopWidth () ==
+  let mk_(pl1t,-,-,-) = plate1pts,
+      mk_(pl2t,-,-,-) = plate2pts in
+  return pl1t.pointDist (pl2t);
+
+getBottomWidth: () ==> real 
+getBottomWidth () ==
+  let mk_(-,-,pl1b,-) = plate1pts,
+      mk_(-,-,pl2b,-) = plate2pts in
+  return pl1b.pointDist (pl2b);
+
+getVertices: () ==> seq of Point2 
+getVertices () ==
+( dcl aux : Auxil := new Auxil();
+  return aux.Counterclockwise (generateVertices())
+);
+
+IsEmpty: () ==> bool 
+IsEmpty () ==
+  return empty;
+
+makeEmpty () ==
+( -- plate1pts := mk_(Point2.new, nil, Point2.new);
+  -- plate2pts := mk_(Point2.new, nil, Point2.new);
+  empty := true
+);
+
+setEmpty: bool ==> ()
+setEmpty (e) ==
+  empty := e;
+
+setUpBeadEnv: BeadDirection ==> ()
+setUpBeadEnv (dir) ==
+  let mk_(pl1t,pl1m,pl1b,pl1v) = plate1pts,
+      mk_(pl2t,pl2m,pl2b,pl2v) = plate2pts in
+  ( Top_v := new Vector2();
+    Bot_v := new Vector2();
+    Top_l := new Line2();
+    Bot_l := new Line2();
+    cases dir:
+      <FromPlate1> ->
+        ( Top1 := pl1t;
+          Top2 := pl2t;
+          Mid1 := pl1m;
+          Mid2 := pl2m;
+          Bot1 := pl1b;
+          Bot2 := pl2b;
+          Pl1_v := pl1v;
+          Pl2_v := pl2v),
+      <FromPlate2>,
+      <FromSurface> -> 
+        ( Top1 := pl2t;
+          Top2 := pl1t;
+          Mid1 := pl2m;
+          Mid2 := pl1m;
+          Bot1 := pl2b;
+          Bot2 := pl1b;
+          Pl1_v := pl2v;
+          Pl2_v := pl1v)
+    end;
+    -- Top_v.initFromPoints (Top1,Top2);
+    -- Bot_v.initFromPoints (Bot1,Bot2);
+    Top_l.initFromPoints (Top1,Top2);
+    Bot_l.initFromPoints (Bot1,Bot2)
+  );
+
+restrictByMaxArea: Width * BeadCriteria * BeadType ==> Bead * Error 
+restrictByMaxArea (beadw, bcrit, beadtype) ==
+  restrictByMaxArea_WallAngle (beadw, nil, bcrit, beadtype);
+
+
+restrictByMaxArea_WallAngle: Width * [Angle] * BeadCriteria * BeadType ==> Bead * Error
+restrictByMaxArea_WallAngle (beadw, wallangle, bcrit, beadtype) ==
+( dcl aux : Auxil := new Auxil();
+  dcl beadMid_v : Vector2,
+      beadWall_v : Vector2 := new Vector2(),
+      vect1 : Vector2,
+      vect2 : Vector2;
+  dcl newBot1 : Point2,
+      newTop1 : Point2,
+      newMid1 : Point2,
+      Mid1' : Point2,
+      Mid2' : Point2;
+  dcl beadNewWall_l : Line2 := new Line2();
+  dcl bead : Bead := new Bead(),
+      err : Error := new Error();
+
+  if Mid1 <> nil
+  then let bm1dist = Bot1.pointDist (Mid1),
+           mt1dist = Mid1.pointDist (Top1) in
+       if bm1dist >= mt1dist
+       then beadWall_v.initFromPoints (Bot1, Mid1)
+       else beadWall_v.initFromPoints (Mid1, Top1)
+  else beadWall_v.initFromPoints (Bot1, Top1);
+  vect1 := beadWall_v.copy(); -- make copy before beadWall_v is potentially modified by specific wallangle.
+
+  if Mid1 <> nil
+  then Mid1' := Mid1
+  else Mid1' := Bot1.midPoint (Top1);
+  if Mid2 <> nil
+  then Mid2' := Mid2
+  else Mid2' := Bot2.midPoint (Top2);
+  def Mid12_v = new Vector2().createFromPoints (Mid1',Mid2') in
+  beadMid_v := Mid12_v.normaliseWith (beadw);
+  newMid1  := Mid1'.pointPlusVector (beadMid_v);
+
+  if wallangle <> nil
+  then if wallangle >= 0
+       then beadWall_v := Pl1_v.rotateAwayfrom (wallangle, Pl2_v)
+       else beadWall_v := Pl1_v.rotateTowards (-wallangle, Pl2_v);
+--   let bisector = Pl1_v.midVectorNorm (Pl2_v) in
+--       beadWall_v := bisector.rotateTowards (wallangle, Pl1_v);
+  beadNewWall_l.initFromPointVector (newMid1, beadWall_v);
+  newTop1 := Top_l.lineIntersect (beadNewWall_l);
+  newBot1 := Bot_l.lineIntersect (beadNewWall_l);
+
+  vect2 := new Vector2().createFromPoints (Bot1, newBot1);
+  let beadverts = [ Top1.copy() ] ^
+                  (if Mid1 <> nil then [Mid1.copy()] else []) ^
+                  [ Bot1.copy(), newBot1.copy(), newTop1.copy() ] in
+  bead.initialise (beadverts, vect1, vect2, beadtype);
+
+--  let crits = drivingcrit.divideCriterias () ^ gencrit in
+  let crits = aux.combineBeadCriteria (layerid,beadtype,nil,bcrit) in
+  let errorset = { i | i in set inds crits & not crits(i).checkCriteria (bead) } in
+  for all i in set errorset do
+    err.addMessage (crits(i).getError ());
+
+  Top1 := newTop1;
+  Mid1 := nil;
+  Bot1 := newBot1;
+  -- Top_v.initFromPoints (Top1,Top2);
+  -- Bot_v.initFromPoints (Bot1,Bot2);
+  Top_l.initFromPoints (Top1,Top2);
+  Bot_l.initFromPoints (Bot1,Bot2);
+  plate1pts := mk_(Top1,Mid1,Bot1,Pl1_v);
+  plate2pts := mk_(Top2,Mid2,Bot2,Pl2_v);
+  
+  return mk_(bead, err)
+);
+
+-- Notice that extractBeadWallVectors returns the wall vectors, i.e. it is only to be used in connection with RootBeads and LastBeads.
+
+extractBeadWallVectors: () ==> Vector2 * Vector2 
+extractBeadWallVectors () ==
+  let mk_(pl1t,pl1m,pl1b,-) = plate1pts,
+      mk_(pl2t,pl2m,pl2b,-) = plate2pts in
+  def vect1 = new Vector2().createFromPoints (if pl1m = nil then pl1b else pl1m, pl1t);
+      vect2 = new Vector2().createFromPoints (if pl2m = nil then pl2b else pl2m, pl2t) in
+  return mk_(vect1, vect2);
+
+
+end LayerGeom

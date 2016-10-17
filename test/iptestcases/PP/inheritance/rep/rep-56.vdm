@@ -1,0 +1,84 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+-- This test case testes cyclic object references
+-- in between the instance variables, and set up
+-- in the initialisation phase.
+
+class B
+
+operations
+public Test : () ==> nat
+Test () ==
+( dcl i : A := new A();
+ return 3;
+)
+
+end B
+
+class A
+
+instance variables
+
+ ws : C := SetUpTopology()
+
+operations
+
+public SetUpTopology: () ==> C
+SetUpTopology() ==
+( dcl tmp: C := new C();
+  tmp.SetUpTopology();
+  return tmp;
+);
+
+
+end A
+
+class C
+
+instance variables
+
+   aah : AA := new AA ();
+   intcmd : D := new D();
+   
+operations
+
+public SetUpTopology: () ==> ()
+SetUpTopology() ==
+(
+  aah.SetSixDOfLink(intcmd);
+  intcmd.SetAAHLink(aah);
+)
+
+end C
+
+
+class AA
+
+instance variables
+  gripcmd : D ;
+
+operations
+
+public SetSixDOfLink: D ==> ()
+SetSixDOfLink(g) ==
+(
+  gripcmd := g;
+);
+
+   
+end AA
+
+class D
+
+
+instance variables
+  aah : AA;
+
+operations
+
+public SetAAHLink: AA ==> ()
+SetAAHLink (a) ==
+  aah := a;
+
+end D
+  
+

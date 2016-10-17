@@ -1,0 +1,55 @@
+system Simple
+
+instance variables
+  static public b1 : B := new B();
+  -- define the first CPU with fixed priority scheduling and 22E6 MIPS
+  CPU1 : CPU := new CPU (<FP>, 22E6);
+
+  static public b2 : B := new B();
+  -- define the second CPU with fixed priority scheduling and 11E6 MIPS
+  CPU2 : CPU := new CPU (<FP>, 11E6);
+
+  -- create a communication bus that links the three CPU's together
+  BUS1 : BUS := new BUS (<CSMACD>, 72E3, {CPU1, CPU2})
+
+operations
+  public Simple: () ==> Simple
+  Simple () ==
+    ( -- deploy b1 on CPU1
+      CPU1.deploy(b1,"BT");
+      -- deploy b2 on CPU2
+      CPU2.deploy(b2,"CT");
+    );
+
+end Simple
+class B
+
+instance variables
+
+static x : nat := 8; 
+operations
+
+  public  TestB: nat ==> nat
+  TestB (arg) ==
+    return x + arg;
+
+async public static SetX: nat ==> ()
+SetX(n) ==
+  x := n;
+
+sync
+
+per TestB => #fin (SetX) > #act (TestB)
+
+end B
+
+
+class A
+
+operations
+  public Test: () ==> nat
+  Test () ==
+    (Simple`b1.SetX(42);
+     return Simple`b2.TestB(0) + 8);
+
+end A

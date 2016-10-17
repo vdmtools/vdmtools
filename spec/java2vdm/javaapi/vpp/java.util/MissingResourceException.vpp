@@ -1,0 +1,21 @@
+class JavaUtilMissingResourceException is subclass of JavaLangRuntimeException
+operations 
+public  getKey : () ==> JavaLangString
+getKey() == 
+is not yet specified ;
+
+public  getClassName : () ==> JavaLangString
+getClassName() == 
+is not yet specified ;
+
+public  JavaUtilMissingResourceException : <NIL> ==> JavaUtilMissingResourceException
+JavaUtilMissingResourceException(-) == 
+isNil := true  ;
+
+public  JavaUtilMissingResourceException : JavaLangString * JavaLangString * JavaLangString ==> JavaUtilMissingResourceException
+JavaUtilMissingResourceException(s, className, key) == 
+( skip 
+) ;
+
+
+end  JavaUtilMissingResourceException

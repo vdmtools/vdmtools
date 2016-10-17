@@ -1,0 +1,22 @@
+\begin{vdm_al}
+class 『ラジオ音量調整』 is subclass of 『基本タスク』
+
+operations
+  public 『ラジオ音量調整』: 『事象処理者』 ==> 『ラジオ音量調整』
+  『ラジオ音量調整』 (a事象処理者) == 『基本タスク』("音量を調整する",a事象処理者);
+
+  -- we do not specify *what* the operation does
+  -- we only specify its execution time
+  private
+  音量を調整する: () ==> ()
+  音量を調整する () == duration (100) skip;
+
+  private
+  事象を処理する: 『事象』 ==> ()
+  事象を処理する (a事象) ==
+    ( 音量を調整する();
+      -- send message to next task in this scenario
+      ネットワークに送る("音量画面を更新する", a事象.事象IDを得る()) )
+
+end 『ラジオ音量調整』
+\end{vdm_al}

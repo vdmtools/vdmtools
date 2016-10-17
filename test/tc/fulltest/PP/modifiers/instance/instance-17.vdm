@@ -1,0 +1,123 @@
+ class A
+
+types
+
+  public tpA = nat;
+  tpB :: a : nat
+         r : real;
+  tpC = tpB;
+  tpD = tpC | tpA;
+
+instance variables
+
+  public n : nat;
+  private m: nat;
+  protected o:real;
+  private p : tpB;
+  private q : tpC;
+  private r : tpD;
+
+values
+  private v1 = 3;
+  public v2 = 3;
+  protected v3 = 3;
+  private mk_(t1,t2,t3) = mk_(1, 3.5, "a");
+  protected mk_(u1,u2,u3) = mk_(1, 3.5, "a");
+  public mk_(w1,w2,w3) = mk_(1, 3.5, "a");
+
+functions
+
+  public f1 : tpA -> nat
+  f1(n) == n + 1;
+
+  protected f2 : nat -> nat
+  f2(n) == n + 2;
+
+  private f3 : nat -> nat
+  f3(n) == n + 3;
+
+  public g1(n:nat) r : nat
+  pre n > 0
+  post r = n+1;
+
+  protected g2(n:nat) r : nat
+  pre n > 0
+  post r = n+1;
+
+  private g3(n:nat) r : nat
+  pre n > 0
+  post r = n+1;
+
+  public h1(n:nat) r : nat
+   == n + 1
+  pre n > 0
+  post r = n+1;
+
+  protected h2(n:nat) r : nat
+   == n + 1
+  pre n > 0
+  post r = n+1;
+
+  private h3(n:nat) r : nat
+   == n + 1
+  pre n > 0
+  post r = n+1
+
+operations
+  public setN : nat ==> ()
+  setN(n1) == n := n1;
+
+  private setM : nat ==> ()
+  setM(n1) == m := n1;
+
+  protected setO : nat ==> ()
+  setO(n1) == o := n1;
+
+  public imp1( r : nat) s : nat
+  ext rd n : nat
+  pre r > n
+  post s = r + n;
+
+  private imp2( r : nat) s : nat
+  ext rd n : nat
+  pre r > n
+  post s = r + n;
+
+  protected imp3( r : nat) s : nat
+  ext rd n : nat
+  pre r > n
+  post s = r + n;
+
+  public extimp1( r : nat) s : nat
+    == return r + n
+  ext rd n : nat
+  pre r > n
+  post s = r + n;
+
+  private extimp2( r : nat) s : nat
+    == return r + n
+  ext rd n : nat
+  pre r > n
+  post s = r + n;
+
+  protected extimp3( r : nat) s : nat
+    == return r + n
+  ext rd n : nat
+  pre r > n
+  post s = r + n
+
+
+end A
+class B 
+
+  instance variables
+    a : A := new A();
+
+operations
+
+  public Test: () ==> nat
+  Test() ==
+    (a.setN(7);
+     return a.n);
+
+end B

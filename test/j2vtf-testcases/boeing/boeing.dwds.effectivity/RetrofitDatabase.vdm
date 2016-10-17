@@ -1,0 +1,10 @@
+class RetrofitDatabase is subclass of Object
+operations 
+public  readData : () ==> <VOID>
+readData() == 
+is subclass responsibility ;
+
+instance variables 
+  protected  retrofitController : [RetrofitController] := RetrofitController.getRetrofitController()
+  
+end  RetrofitDatabase

@@ -1,0 +1,12 @@
+r alt_msmie.vdm  
+r msmie0.vdm     
+r msmie1.vdm     
+r msmie2.vdm
+i
+tc pos
+cg
+latex alt_msmie.vdm  
+latex  msmie0.vdm     
+latex msmie1.vdm
+latex msmie2.vdm
+quit

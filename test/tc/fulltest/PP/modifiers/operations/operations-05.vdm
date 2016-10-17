@@ -1,0 +1,19 @@
+ class A
+
+  operations
+
+    private Op1 : nat ==> nat
+    Op1(n) ==
+      return n+1;
+
+end A
+
+class B is subclass of A
+
+  operations
+
+public Test : () ==> nat
+  Test() ==
+    Op1(5)
+
+end B

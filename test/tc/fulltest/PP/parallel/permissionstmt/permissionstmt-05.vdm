@@ -1,0 +1,22 @@
+class T
+
+instance variables
+
+a : nat
+
+operations
+
+public Op: () ==> ()
+Op() ==
+  let - = 9
+  in skip;
+
+public Op: nat ==> nat
+Op(n) == return n;
+
+sync
+
+  per Op => #fin(Op) + #act(Op) + #req(Op) + #active(Op) + #waiting(Op) < 5;
+  mutex(Op)
+
+end T

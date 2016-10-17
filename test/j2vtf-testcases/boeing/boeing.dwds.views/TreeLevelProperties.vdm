@@ -1,0 +1,142 @@
+class TreeLevelProperties is subclass of Object
+operations 
+public  getType : () ==> [Object]
+getType() == 
+( return  type
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( dcl   outStr : [StringBuffer] := new  StringBuffer(new  String("["));
+  let - = outStr.append(getLevelIndex())
+  in 
+    skip ;
+  let - = outStr.append(new  String(", "))
+  in 
+    skip ;
+  let - = outStr.append(getType())
+  in 
+    skip ;
+  let - = outStr.append(new  String(", "))
+  in 
+    skip ;
+  if  getREPattern() = nil  
+  then  
+    ( let - = outStr.append(new  String("null"))
+      in 
+        skip 
+    ) 
+  else  
+    ( let - = outStr.append('/')
+      in 
+        skip ;
+      let - = outStr.append(getREPattern().getPattern())
+      in 
+        skip ;
+      let - = outStr.append('/')
+      in 
+        skip 
+    ) ;
+  let - = outStr.append(new  String(", "))
+  in 
+    skip ;
+  let - = outStr.append(isContext())
+  in 
+    skip ;
+  let - = outStr.append(new  String(", "))
+  in 
+    skip ;
+  let - = outStr.append(getSortMethod())
+  in 
+    skip ;
+  let - = outStr.append(new  String("]"))
+  in 
+    skip ;
+  return  outStr.toString()
+) ;
+
+public  isContext : () ==> bool 
+isContext() == 
+( return  contextFlag
+) ;
+
+public  getREPattern : () ==> [Pattern]
+getREPattern() == 
+( return  rePattern
+) ;
+
+public  getLevelIndex : () ==> int 
+getLevelIndex() == 
+( return  levelIndex
+) ;
+
+public  getSortMethod : () ==> [Compare]
+getSortMethod() == 
+( return  sortMethod
+) ;
+
+public  equals : [TreeLevelProperties] ==> bool 
+equals(that) == 
+( dcl   levelsEqual : bool ,
+        typesEqual : bool ,
+        patternsEqual : bool ,
+        flagsEqual : bool ,
+        sortsEqual : bool ;
+  levelsEqual := (TreeLevelProperties`levelIndex = that.levelIndex);
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (NullPointerException,j2v_exception)) -> 
+        ( dcl   e : [NullPointerException] := j2v_exception;
+          typesEqual := false  
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( typesEqual := (TreeLevelProperties`type = that.type or  TreeLevelProperties`type.equals(that.type))
+    ) ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (NullPointerException,j2v_exception)) -> 
+        ( dcl   e : [NullPointerException] := j2v_exception;
+          patternsEqual := false  
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( patternsEqual := (TreeLevelProperties`rePattern = that.rePattern or  TreeLevelProperties`rePattern.equals(that.rePattern))
+    ) ;
+  flagsEqual := (TreeLevelProperties`contextFlag = that.contextFlag);
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (NullPointerException,j2v_exception)) -> 
+        ( dcl   e : [NullPointerException] := j2v_exception;
+          sortsEqual := false  
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( sortsEqual := (TreeLevelProperties`sortMethod = that.sortMethod or  TreeLevelProperties`sortMethod.getClass().equals(that.sortMethod.getClass()))
+    ) ;
+  return  (self   = that) or  (levelsEqual and  typesEqual and  patternsEqual and  flagsEqual and  sortsEqual)
+) ;
+
+public  TreeLevelProperties : int  * [Object] * [Pattern] * bool  * [Compare] ==> TreeLevelProperties
+TreeLevelProperties(levelIndex, type, rePattern, isContext, sortMethod) == 
+( TreeLevelProperties`levelIndex := levelIndex;
+  TreeLevelProperties`type := type;
+  TreeLevelProperties`rePattern := rePattern;
+  TreeLevelProperties`contextFlag := isContext;
+  TreeLevelProperties`sortMethod := sortMethod
+) ;
+
+instance variables 
+  private  levelIndex : int ;
+  private  type : [Object];
+  private  rePattern : [Pattern];
+  private  contextFlag : bool ;
+  private  sortMethod : [Compare]
+  
+end  TreeLevelProperties

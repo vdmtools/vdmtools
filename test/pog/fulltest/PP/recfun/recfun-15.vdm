@@ -1,0 +1,40 @@
+class F
+
+functions
+
+public static 
+foo : nat -> nat 
+foo(n) == 
+  if n = 0 then 0
+  else G`goo(n-1);
+
+public static 
+id : nat -> nat
+id(x) == x;
+  
+end F
+
+class G
+
+functions
+
+public static
+goo : nat -> nat
+goo(n) == 
+  if n = 0 then 0 
+  else H`hoo(n-1);
+  
+end G
+
+class H
+
+functions
+
+public static
+hoo : nat -> nat
+hoo(n) ==
+  if n = 0 then 0
+  else F`foo(n-1);
+  
+end H
+

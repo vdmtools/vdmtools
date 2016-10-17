@@ -1,0 +1,39 @@
+-- This class is a wrapper class used to isolate the model
+-- of physical (hardware) pistes radar.
+
+-- The main purpose of this class is to update data in
+-- class PistesRadar.
+
+class HWPistesRadar
+
+  instance variables
+    clock: Clock;
+    radar: PistesRadar;
+    view: View;
+    data: MSAWTypes`Data
+
+  operations
+
+  Init: Clock * PistesRadar * View * MSAWTypes`Data ==> ()
+  Init(clock', radar', view', data') ==
+  ( clock := clock';
+    radar := radar';
+    view := view';
+    data := data'
+  );
+
+  RefreshPistes: () ==> ()
+  RefreshPistes() ==
+    def now = clock.Now() in
+    ( view.ShowTime(now);
+      if now in set dom data then
+        let modea_m = data(now) in
+          for all modea in set dom modea_m do
+            let mk_(xy,z) = modea_m(modea) in 
+             radar.SetPosition(modea,now,xy,z)
+    )
+
+  thread
+   periodic (MSAWTypes`BalayageRadar) (RefreshPistes)
+          
+end HWPistesRadar

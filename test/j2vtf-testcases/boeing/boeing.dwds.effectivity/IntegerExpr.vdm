@@ -1,0 +1,3 @@
+class IntegerExpr is subclass of Expr
+
+end  IntegerExpr

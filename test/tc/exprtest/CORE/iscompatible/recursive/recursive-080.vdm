@@ -1,0 +1,70 @@
+
+class Test
+
+types
+
+  A = nat * A | nat;
+ 
+  B = real * B | real;
+ 
+  C = nat | nat * (nat * C);
+ 
+  D = nat * nat | nat * (nat * D);
+ 
+  E = nat | set of (nat * (nat * E));
+ 
+  F = nat * nat | seq of (nat * (nat * F));
+ 
+  G = C | D;
+ 
+  H = E | F;
+ 
+  I = J | nat;
+ 
+  J = I | real
+
+functions
+
+Af: A -> A
+Af(x) ==
+  x;
+
+Bf: B -> B
+Bf(x) ==
+  x;
+
+Cf: C -> C
+Cf(x) ==
+  x;
+
+Df: D -> D
+Df(x) ==
+  x;
+
+Ef: E -> E
+Ef(x) ==
+  x;
+
+Ff: F -> F
+Ff(x) ==
+  x;
+
+Gf: G -> G
+Gf(x) ==
+  x;
+
+Hf: H -> H
+Hf(x) ==
+  x;
+
+If: I -> I
+If(x) ==
+  x;
+
+Jf: J -> J
+Jf(x) ==
+  x;
+HJ: H->J
+HJ(x) ==
+	Jf(x);
+end Test

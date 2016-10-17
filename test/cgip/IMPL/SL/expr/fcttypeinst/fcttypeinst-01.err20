@@ -1,0 +1,2 @@
+Error type checking testcase:
+Error : Type name 'Nat1' is infinite

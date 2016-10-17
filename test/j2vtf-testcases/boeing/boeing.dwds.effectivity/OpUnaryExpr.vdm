@@ -1,0 +1,100 @@
+class OpUnaryExpr is subclass of BooleanExpr
+operations 
+public  toString : () ==> [String]
+toString() == 
+( dcl   sb : [StringBuffer] := new  StringBuffer(128);
+  let - = sb.append('(')
+  in 
+    skip ;
+  let - = sb.append(getOperatorString())
+  in 
+    skip ;
+  let - = sb.append(' ')
+  in 
+    skip ;
+  let - = sb.append(if  operandExpr = nil   then  new  String("null") else  operandExpr.toString())
+  in 
+    skip ;
+  let - = sb.append(')')
+  in 
+    skip ;
+  return  sb.toString()
+) ;
+
+public  toPostfix : () ==> [String]
+toPostfix() == 
+( dcl   sb : [StringBuffer] := new  StringBuffer(128);
+  let - = sb.append(if  operandExpr = nil   then  new  String("null") else  operandExpr.toPostfix())
+  in 
+    skip ;
+  let - = sb.append(' ')
+  in 
+    skip ;
+  let - = sb.append(getOperatorString())
+  in 
+    skip ;
+  return  sb.toString()
+) ;
+
+public  OpUnaryExpr : () ==> OpUnaryExpr
+OpUnaryExpr() == 
+( skip 
+) ;
+
+public  getOperatorString : () ==> [String]
+getOperatorString() == 
+is subclass responsibility ;
+
+public  setOperand : [Expr] ==> <VOID>
+setOperand(operandExpr) == 
+( OpUnaryExpr`operandExpr := operandExpr;
+  return  <VOID>
+) ;
+
+public  OpUnaryExpr : [Expr] ==> OpUnaryExpr
+OpUnaryExpr(operandExpr) == 
+( OpUnaryExpr`operandExpr := operandExpr
+) ;
+
+public  doTask : [TokenStack] ==> <VOID>
+doTask(stack) == 
+( trap  j2v_exception with  
+    cases  true  : 
+      (is_ (j2v_exception,[Exception])) -> 
+        ( dcl   buildException : [DWDSException] := new  DWDSException(),
+                e : [Exception] := j2v_exception;
+          let - = buildException.addMessage(DWDSException`ErrorBuildingEffectivityRule , OpUnaryExpr`getClass().getName())
+          in 
+            skip ;
+          exit  buildException
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   opExpr : [Expr] := stack.pop();
+      let - = OpUnaryExpr`setOperand(opExpr)
+      in 
+        skip ;
+      let - = stack.push(self  )
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+public  accept : [ExprVisitor] ==> <VOID>
+accept(visitor) == 
+( let - = operandExpr.accept(visitor)
+  in 
+    skip ;
+  let - = visitor.visitBooleanExpr(self  )
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+instance variables 
+  protected  operandExpr : [Expr] := nil  
+  
+end  OpUnaryExpr

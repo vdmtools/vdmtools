@@ -1,0 +1,14 @@
+
+module Main
+
+   imports
+     from CGRel all
+
+  
+   definitions
+
+     values
+
+       r = CGRel`build_rel({mk_(<A>, <B>)})
+
+end Main

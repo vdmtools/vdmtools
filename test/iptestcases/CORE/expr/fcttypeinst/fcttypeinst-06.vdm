@@ -1,0 +1,28 @@
+class A
+
+operations
+public
+Test: () ==> nat
+Test() ==
+  return fn1[nat](2,3);
+
+functions
+public
+fn1[@T]: @T * @T -> @T
+fn1(n,m) ==
+  fn2[@T](fn3[@T],n,m);
+
+public
+fn2[@T]: (@T -> @T -> @T) * @T * @T -> @T
+fn2(f,n,m) ==
+  fn4[@T](f,n)(m);
+
+public
+fn3[@T]: @T -> @T -> @T
+fn3(n)(m) == n + m;
+
+public
+fn4[@T]: (@T -> @T -> @T) * @T -> (@T -> @T)
+fn4(f, n) == f(n);
+
+end A

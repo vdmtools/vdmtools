@@ -1,0 +1,194 @@
+--$Header: /home/vdmtools/cvsroot/toolbox/examples-jp/pp/ModelingSystemByJapanese/examples/modulespec.vpp,v 1.1 2006/01/04 06:44:17 vdmtools Exp $
+-- 第１１章（大規模なモデル化）追跡機例のモジュール化版
+-- このファイルはToolbox Liteで使うことはできず、
+-- IFAD VDM-SL Toolbox　v.3.7.6以降を必要とする。
+-- v.3.7.6では、本にあるparameters句などは廃止されているので、
+--型変数と高階関数を使うように変更した。
+
+module CTRS
+
+  exports all
+
+  definitions
+
+    types
+
+      コンテナ情報型 = map コンテナID型 to コンテナ型;
+
+      コンテナ型 :: 核分裂量 : real
+                   材料  : 材料型;
+
+      コンテナID型 = token;
+
+      材料型 = token
+
+end CTRS
+
+
+
+module PHS
+
+  imports from CTRS all
+  exports all
+
+  definitions
+
+    types
+
+    工程情報型 = map 工程ID型 to 工程型;
+
+    工程型 :: 内容物群          : set of CTRS`コンテナID型
+             期待する材料 : CTRS`材料型
+	     容量          : nat
+    inv 工程 == card 工程.内容物群 <= 工程.容量;
+
+    工程ID型 = token
+
+    functions
+
+      -- 追跡機型の不変条件のために定義する補助関数群
+      矛盾がない？: CTRS`コンテナ情報型 * 工程情報型 -> bool
+      矛盾がない？(あるコンテナ写像, ある工程写像) ==
+         forall 工程 in set rng ある工程写像 & 
+            工程.内容物群 subset dom あるコンテナ写像;
+
+      工程が区別されている？: 工程情報型 -> bool
+      工程が区別されている？(ある工程写像) ==
+         not exists ある工程1, ある工程2 in set dom ある工程写像 &
+            ある工程1 <> ある工程2 and 
+            ある工程写像(ある工程1).内容物群 inter ある工程写像(ある工程2).内容物群 <> {};
+	
+       材料が安全？: CTRS`コンテナ情報型 * 工程情報型 -> bool
+       材料が安全？(あるコンテナ写像, ある工程写像) ==                
+         forall 工程 in set rng ある工程写像 & 
+            forall コンテナID in set 工程.内容物群 &
+	       コンテナID in set dom あるコンテナ写像 and
+               あるコンテナ写像(コンテナID).材料 = 工程.期待する材料
+
+end PHS
+
+
+module TRACKER
+
+  imports from PHS all, 
+          from CTRS all
+
+  exports all
+
+  definitions
+
+    types
+
+      追跡機型 :: コンテナ写像 : CTRS`コンテナ情報型
+                 工程写像     : PHS`工程情報型
+      inv mk_追跡機型(コンテナ写像,工程写像) ==
+        PHS`矛盾がない？(コンテナ写像,工程写像) and
+        PHS`工程が区別されている？(工程写像) and
+        PHS` 材料が安全？(コンテナ写像,工程写像);
+
+    functions
+
+      -- 新しいコンテナを工場に持ち込む（写像和）
+      持ち込む : 追跡機型 * CTRS`コンテナID型 * real * CTRS`材料型 -> 追跡機型
+      持ち込む(ある追跡機, あるコンテナID, ある量, ある材料) == 
+         mk_追跡機型(ある追跡機.コンテナ写像 munion 
+                    {あるコンテナID |-> mk_CTRS`コンテナ型(ある量, ある材料)},
+                    ある追跡機.工程写像)
+      pre あるコンテナID not in set dom ある追跡機.コンテナ写像;
+
+      -- 移動の許可 (単純な論理型関数)
+
+      許可？: 追跡機型 * CTRS`コンテナID型 * PHS`工程ID型  ->  bool
+      許可？(mk_追跡機型(コンテナ写像, 工程写像), あるコンテナID, ある移動先) == 
+          あるコンテナID in set dom コンテナ写像 and
+          ある移動先 in set dom 工程写像 and 
+          card 工程写像(ある移動先).内容物群 < 工程写像(ある移動先).容量 and
+          コンテナ写像(あるコンテナID).材料 = 工程写像(ある移動先).期待する材料;
+
+      -- 与えられた工程にコンテナを割り当てる
+
+      割り当てる: 追跡機型 * CTRS`コンテナID型 * PHS`工程ID型 -> 追跡機型
+      割り当てる(mk_追跡機型(コンテナ写像, 工程写像), あるコンテナID, ある工程ID) ==
+         let 工程 = mk_PHS`工程型(工程写像(ある工程ID).内容物群 union {あるコンテナID},
+                                工程写像(ある工程ID).期待する材料,
+                                工程写像(ある工程ID).容量)
+         in
+           mk_追跡機型(コンテナ写像, 工程写像 ++ {ある工程ID |-> 工程})
+      pre 許可？(mk_追跡機型(コンテナ写像, 工程写像), あるコンテナID, ある工程ID);
+
+
+      -- 工程の内容物群からコンテナを削除する
+
+      除去する: 追跡機型 * CTRS`コンテナID型 * PHS`工程ID型 -> 追跡機型
+      除去する(mk_追跡機型(コンテナ写像, 工程写像), あるコンテナID, ある削除元) ==
+        let ある工程 = mk_PHS`工程型(工程写像(ある削除元).内容物群 \ {あるコンテナID},
+                               工程写像(ある削除元).期待する材料,
+                               工程写像(ある削除元).容量)
+        in
+          mk_追跡機型(コンテナ写像, 工程写像 ++ {ある削除元 |-> ある工程})
+      pre ある削除元 in set dom 工程写像 and 
+          あるコンテナID in set 工程写像(ある削除元).内容物群;
+
+      -- 工場からコンテナを削除する
+
+      削除する: 追跡機型 * CTRS`コンテナID型 * PHS`工程ID型  ->  追跡機型
+      削除する(ある追跡機, あるコンテナID, ある削除元) ==
+         mk_追跡機型({あるコンテナID} <-: ある追跡機.コンテナ写像,
+                    除去する(ある追跡機, あるコンテナID, ある削除元).工程写像)
+      pre pre_除去する(ある追跡機,あるコンテナID,ある削除元)
+    
+end TRACKER
+
+
+module SORT
+
+exports 
+
+ functions ソートする[@型] : (@型 * @型 -> bool) -> seq of @型 -> seq of @型
+
+definitions
+
+ functions
+
+--関数fで与えられた順序で、系列sの要素を昇順にクイックソートする。
+--型変数（@型）と高階関数（順序決定関数）を使用
+ソートする[@型] : (@型 * @型 -> bool) -> seq of @型 -> seq of @型
+ソートする(順序決定関数)(系列) ==
+	cases 系列:
+		[]	-> [],
+		[要素]^部分系列	-> 
+			ソートする[@型](順序決定関数)([部分系列(i) | i in set inds 部分系列 & 順序決定関数(部分系列(i),要素)]) ^
+			[要素] ^
+			ソートする[@型](順序決定関数)([部分系列(i) | i in set inds 部分系列 & not 順序決定関数(部分系列(i),要素)])
+	end;
+
+end SORT
+
+
+module ARRIVAL
+
+imports
+  from CTRS all,
+  from SORT
+  	functions ソートする[@型] : (@型 * @型 -> bool) -> seq of @型 -> seq of @型 renamed ソートする
+
+definitions
+
+ types
+
+  到着物列 = seq of CTRS`コンテナ型
+
+ functions
+  
+  高放射能: CTRS`コンテナ型 * CTRS`コンテナ型 -> bool
+  高放射能(あるコンテナ1, あるコンテナ2) == 
+    あるコンテナ1.核分裂量 >= あるコンテナ2.核分裂量;
+
+--CTRS`コンテナ型の順序を返す「高放射能」関数をパラメータとして、
+--「ソートする」関数に渡す
+
+  順序づける: 到着物列 -> 到着物列
+  順序づける(ある到着物列) == 
+    ソートする[CTRS`コンテナ型]( 高放射能)(ある到着物列)
+
+end ARRIVAL

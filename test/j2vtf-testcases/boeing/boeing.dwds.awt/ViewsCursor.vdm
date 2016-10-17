@@ -1,0 +1,48 @@
+class ViewsCursor is subclass of Object
+operations 
+private  ViewsCursor : () ==> ViewsCursor
+ViewsCursor() == 
+( return  
+) ;
+
+public  static setWaitState : () ==> <VOID>
+setWaitState() == 
+( let - = setCursor(WAIT_CURSOR)
+  in 
+    skip ;
+  return  
+) ;
+
+public  static setDefaultState : () ==> <VOID>
+setDefaultState() == 
+( let - = setCursor(DEFAULT_CURSOR)
+  in 
+    skip ;
+  return  
+) ;
+
+private  static setCursor : [Cursor] ==> <VOID>
+setCursor(cursor) == 
+( dcl   viewController : [ViewController] := ViewController`getController(),
+        views : [Enumeration] := viewController.getViews();
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  views.hasMoreElements() do  
+    ( dcl   view : [View] := views.nextElement();
+      let - = view.setCursor(cursor)
+      in 
+        skip 
+    ) ;
+  return  
+) ;
+
+instance variables 
+  private  static WAIT_CURSOR : [Cursor] := Cursor`getPredefinedCursor(Cursor`WAIT_CURSOR);
+  private  static DEFAULT_CURSOR : [Cursor] := Cursor`getPredefinedCursor(Cursor`DEFAULT_CURSOR)
+  
+end  ViewsCursor

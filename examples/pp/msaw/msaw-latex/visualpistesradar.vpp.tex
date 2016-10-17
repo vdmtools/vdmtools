@@ -1,0 +1,64 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\begin{vdm}\index{VisualPistesRadar|ClassDef}
+{\small\sf class} $VisualPistesRadar$  \kISO $\index{PistesRadar|ClassOcc}PistesRadar$
+\begin{instvar}\index{view|InstVarDef}
+\vardcl{view}{ @View}\index{clock|InstVarDef}
+\vardcl{clock}{ @Clock}
+\end{instvar}
+\begin{methdef}\index{Init|MethodDef}
+\begin{method}{Init}
+\parms{initialization-information : \setof{\Token }, view :  @View}\\
+\Inys 
+\end{method}\index{GetModeAs|MethodDef}
+\begin{method}{GetModeAs}
+\parms{}\methvalue{\setof{ModeA\index{ModeA|TypeOcc}}} \Fdef\\ \begin{blockstmt}
+\invoke{\self }{\index{RefreshPistes|MethodOcc}
+\fnapply{RefreshPistes}{}} ; \\
+\begin{defstmt}
+\eqdef{modeAs}{\invoke{\self }{\index{PistesRadar`GetModeAs|MethodOcc}
+\fnapply{PistesRadar`GetModeAs}{}}}
+\end{defstmt} \\
+\return{modeAs}
+\end{blockstmt}
+\end{method}\index{SetPosition|MethodDef}
+\begin{method}{SetPosition}
+\parms{modeA : ModeA\index{ModeA|TypeOcc}, temps : Temps\index{Temps|TypeOcc}, position : Coordonnees\index{Coordonnees|TypeOcc}, modeC : Pieds\index{Pieds|TypeOcc}} \Fdef\\ \begin{blockstmt}
+\invoke{view}{\index{ShowRadarData|MethodOcc}
+\fnapply{ShowRadarData}{modeA, position, modeC}} ; \\
+\invoke{\self }{\index{PistesRadar`SetPosition|MethodOcc}
+\fnapply{PistesRadar`SetPosition}{modeA, temps, position, modeC}}
+\end{blockstmt}
+\end{method}\index{RefreshPistes|MethodDef}
+\begin{method}{RefreshPistes}
+\parms{}\\
+\Inys 
+\end{method}
+\end{methdef}
+{\small\sf end} $VisualPistesRadar$
+
+\end{vdm}

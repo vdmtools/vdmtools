@@ -1,0 +1,12 @@
+m4tmp1, l. 30, c. 1:
+  Error : The type returned by the body statement is not compatible with the sig
+nature of Test
+  act : NoType
+  exp : Colour
+m4tmp1, l. 31, c. 16:
+  Error : Unknown identifier NoType
+m4tmp1, l. 31, c. 26:
+  Error : Initialization expression is not compatible with defining type of colo
+ur
+  act : <RED>
+  exp : NoType

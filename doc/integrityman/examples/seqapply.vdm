@@ -1,0 +1,10 @@
+functions
+
+MapApply: (seq of real) * nat1 -> real
+MapApply(s,i) ==
+  s(i)
+pre i in set {1,..., len s}
+
+--PO
+--(forall s : (seq of real), i : nat1 &
+--   i in set {1,...,len (s)} => i in set inds (s))

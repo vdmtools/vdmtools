@@ -1,0 +1,41 @@
+class WorkSpace
+
+   instance variables
+      pistes_radar: PistesRadar := new PistesRadar();
+      bulletin_meteo: BulletinMeteo := new BulletinMeteo();
+      terrain: Terrain := new Terrain();
+      obstacles: set of Obstacle := {};
+      detecteur: Detecteur := new Detecteur();
+
+   operations
+
+      SetObstacle: Obstacle ==> ()
+      SetObstacle (obstacle)
+      == obstacles := obstacles union {obstacle};
+
+      TraiterPistesRadar: () ==> ()
+      TraiterPistesRadar ()
+      == def modeAs = pistes_radar.GetModeAs () in
+            let obstacles = OrdreDeTraitement ({terrain} union obstacles) in
+               for all modeA in set modeAs do
+                  def segment_de_prediction = new SegmentDePrediction();
+                      positions = pistes_radar.GetPositions (modeA) in
+                      if card dom positions >= 2 then
+                      (  segment_de_prediction.Set (modeA, positions, bulletin_meteo);
+                         for all i in set inds obstacles do
+                            detecteur.CalculeRisque (segment_de_prediction,
+                                                     obstacles(i))
+                      )
+
+  thread
+     periodic (MSAWTypes`BalayageRadar) (TraiterPistesRadar)
+
+  functions
+     OrdreDeTraitement: set of (Terrain|Obstacle) -> seq of (Terrain|Obstacle)
+     OrdreDeTraitement (obstacles) ==
+        if obstacles = {}
+        then []
+        else let obstacle in set obstacles in
+                [obstacle] ^ OrdreDeTraitement (obstacles\{obstacle})
+
+end WorkSpace

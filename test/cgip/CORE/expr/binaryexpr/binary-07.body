@@ -1,0 +1,71 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ( [map int to int] ) 
+Test () ==
+
+return 
+[
+  -- map composition
+
+  { 2 |-> 8, 4 |-> 16 } comp { 1 |-> 2, 3 |-> 4 },
+  f(1) comp (f(2)),
+  let m1 = { 3 |-> 7, 1 |-> 19 } in m1 comp
+    (if len [1,23,4] = 3 then { 1 |-> 3, 5 |-> 1} else let a in set {nil, {1|->4}} in a),
+  let m1 = f(1),
+      m2 = f(2) in
+    (if is_bool(1=2) then m1 else let a in set {false, {3|->36}} in a ) comp m2,
+  let m1 = { a |-> a + 2 | a in set {-1,...,10} } in
+      m1 comp let m2 = { 25 |-> 10, 1 |-> -1, -7 |-> 5} in m2,
+  let m1 = { a |-> a + 2 | a in set {-1,...,10} } in
+      m1 comp let m2 = { a |-> a div 10 | a in set {30,...,100}} in m2,
+
+  -- map iteration
+  {1 |-> 2, 2 |-> 4, 4 |-> 1} ** 0,
+  {1 |-> 2, 2 |-> 4, 4 |-> 1} ** 1,
+  {1 |-> 2, 2 |-> 4, 4 |-> 1} ** 2,
+  {1 |-> 2, 2 |-> 4, 4 |-> 1} ** 2,
+  {1 |-> 2, 2 |-> 4, 4 |-> 1} ** 3,
+  {1 |-> 2, 2 |-> 4, 4 |-> 1} ** 4,
+  {1 |-> 2, 2 |-> 4, 4 |-> 1} ** 9,
+  {1 |-> 2, 2 |-> 4, 4 |-> 1} ** 13,
+  {1 |-> 2, 2 |-> 4, 4 |-> 8, 8 |-> 1} ** 25,
+
+  m ** 1,
+  m ** 2,
+  m comp m,
+  m ** 3,
+  m comp m comp m,
+  m ** 4,
+  m comp m comp m comp m,
+
+  g(5) ** (g(-5)),
+  let m = g(2) in m ** (if f(-5) <> 5 then 3 else let a in set {<ERR>,3} in a),
+  let m = g(7) in (m ** let a = 1 in a),
+  (if f(4) = 4 then g(4) else g(-4)) ** 32
+  
+
+]
+
+
+values 
+m : map int to int = {1 |-> 2, 2 |-> 4, 4 |-> 1}
+
+functions
+f: int -> int | map int to int
+f(n) ==
+  cases n:
+    1 -> { 2 |-> 8, 4 |-> 16 },
+    2 -> { 1 |-> 2, 3 |-> 4 },
+    others -> n
+  end;
+
+g: int -> int | map int to int
+g(n) ==
+  if n > 0 then
+    { i |-> i + 1 | i in set {0,...,n} } munion { n + 1 |-> 0 }
+  else
+    -n
+
+
+
+
+

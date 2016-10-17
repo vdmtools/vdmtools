@@ -1,0 +1,1749 @@
+\section{TransportPlan class}
+
+\begin{vdm_al}
+
+
+class TransportPlan
+
+instance variables
+  private id_token : nat;
+  private totalFee : real;
+  private totalDuration : nat;
+  private choice : TPC`Choice;
+  public routeList : seq of Section := [];
+  private routesTravled : seq of Section := [];
+  private departureTime : nat;
+
+inv len routeList > 0 => forall i in set inds routeList 
+  & i < len routeList => 
+  routeList(i).arrivalLocation = routeList(i+1).departureLocation;
+
+
+types
+
+public Section ::
+departureLocation : TPC`String
+arrivalLocation : TPC`String
+fee : real
+platform : TPC`String
+dur : nat
+id_route : nat
+inv r == len r.platform > 0 and
+			len r.arrivalLocation > 0 and
+			len r.departureLocation > 0 and
+			r.fee >= 0 ;
+
+public DTO ::
+	id_token : nat
+	routeList : seq of TransportPlan`Section
+	choice : TPC`Choice
+	depTime : nat;
+
+
+
+operations
+
+--Constructor
+public TransportPlan : TransportPlan`DTO ==> TransportPlan
+TransportPlan(dto) ==
+(
+	id_token := dto.id_token;
+	choice := dto.choice;
+	routeList := dto.routeList;
+	departureTime := dto.depTime;
+);
+
+
+public getNextRoute : () ==> [TransportPlan`Section]
+getNextRoute () == (
+	if len routeList > 0 then
+		return hd routeList
+	else
+		return nil;
+)
+pre len routeList > 0;
+
+public containsRoute: nat ==> bool
+containsRoute(id_route) == 
+return exists r in set elems routeList & r.id_route = id_route
+pre len routeList > 0;
+
+public addRoute: Section ==> ()
+addRoute(route) ==(
+ routeList := routeList^[route];
+ totalFee:= totalFee + route.fee
+)
+pre routeList(len routeList).arrivalLocation = route.departureLocation;
+
+public routeTraveled: () ==> ()
+routeTraveled () == (
+	routesTravled := routesTravled ^ [hd routeList];
+	routeList := tl routeList;
+	Logger`write(mk_Logger`RouteStatus("RouteStatus","RouteTraveled", id_token)); Logger`write(time);
+)
+pre len routeList > 0;
+
+public routesRemaining : () ==> nat
+routesRemaining() == ( return len routeList;);
+
+public getByValue : () ==> DTO
+getByValue()== return mk_TransportPlan`DTO(id_token, routeList, choice, departureTime);
+
+
+public getPlanAsNaviInput: () ==> TPC`NavigationInput
+getPlanAsNaviInput() ==(
+return mk_TPC`NavigationInput((hd routeList).departureLocation, (routeList(len routeList)).arrivalLocation, choice, id_token, departureTime )
+)
+pre len routeList > 0;
+
+public getTokenId: () ==> nat
+getTokenId() == return id_token;
+
+--debug
+public getRouteList: () ==> seq of Section
+getRouteList()==
+	return routeList;
+
+sync
+	--mutex(routeTraveled);
+	
+end TransportPlan
+\end{vdm_al}
+
+
+\section{CyberRail class}
+\begin{vdm_al}
+
+class GridReservation
+
+instance variables	
+--List of Reservation records containing all reservations for the specific section
+public reservations : SectionPlan := {|->};
+public curTime : nat := 0;
+private minDelta : nat := 50000;
+private noTrain : nat :=1;
+private periode : nat :=5000000;
+private maxDelay : nat :=minDelta * 2;
+private noInstances : nat := 1;
+--private io : IO := new IO();
+public routeList : set of Route := {}; 
+
+types
+public SectionId = nat;
+public TimeEntry = set of nat;
+public SectionPlan = map TransportPlan`Section to TimeEntry;	
+
+operations
+
+public GridReservation : () ==> GridReservation
+GridReservation() == return;
+
+public GridReservation : RailwayGrid`Grid * set of TransportPlan`Section ==> GridReservation
+GridReservation(staticgrid, sectionList) ==
+(
+	initializeReservations(sectionList);
+	calculateReservations(staticgrid);
+
+	return;
+);	
+
+public getRoutePlan : RailwayGrid`Grid * set of TransportPlan`Section ==> RailwayGrid`RoutePlan
+getRoutePlan(grid, segment) == (
+	initializeReservations(segment);
+	calculateReservations(grid);
+	return routeList;
+);
+
+
+private initializeReservations : set of TransportPlan`Section ==> ()
+initializeReservations(sectionList)==
+(
+	--Initialize all active sections in reservation list. 
+	for all sec in set sectionList do
+	(
+		reservations := reservations ++ {sec |-> {}};
+	);
+);
+
+private calculateReservations : RailwayGrid`Grid ==> ()
+calculateReservations(staticgrid)==
+(
+	dcl accomulateDuration : nat := 0;
+	dcl standInSection : TransportPlan`Section;
+	dcl iterations : nat := noInstances;
+	dcl tempgrid : seq of TransportPlan`Section;
+
+	while iterations > 0 do
+	(
+		for all gridsegment in set staticgrid do
+		(
+			curTime := 0;
+			accomulateDuration := 100000;
+			--def - = io.fwriteval[seq of TransportPlan`Section]("gridsegment.txt",gridsegment,<append>) in skip;
+			tempgrid := gridsegment;
+			while len tempgrid > 0 do
+			(
+				standInSection := hd tempgrid; 
+				
+				--def - = io.fwriteval[TransportPlan`Section]("inds.txt",standInSection,<append>) in skip;
+				
+				curTime := findFreeTimeSlot(standInSection, standInSection.dur, accomulateDuration);
+				accomulateDuration := curTime + standInSection.dur;
+				
+				if(len tempgrid = len gridsegment) then
+					routeList := routeList union {new Route(curTime,gridsegment)};
+								
+				--Reserve time for current section.
+				while curTime < accomulateDuration do
+				(
+					dcl temp : set of nat := reservations(standInSection) union {curTime};
+					reservations(standInSection) :=  temp;		
+					curTime := curTime + minDelta; --minDelta = lowest possible time resolution
+				);	
+
+				tempgrid := tl tempgrid;
+			);
+			
+		);
+		--def - = io.fwriteval[SectionPlan]("reservations.txt",reservations,<start>) in skip;
+		--def - = io.fwriteval[set of Route]("routeList.txt",routeList,<start>) in skip;
+		iterations := iterations - 1;
+	)
+);
+
+public getSectionPlan : () ==> SectionPlan
+getSectionPlan() == return reservations;
+
+private findFreeTimeSlot : TransportPlan`Section *  nat * nat==> nat
+findFreeTimeSlot(section, sectionDuration, minStartTime)==
+(
+	dcl tempRes : set of nat := reservations(section);
+	dcl freeSlot : nat :=minStartTime;
+	dcl next : nat := freeSlot;
+	dcl dur : nat := sectionDuration;
+	
+	while(dur > 0 ) do
+	(
+		if(next not in set tempRes) then
+		(
+			dur := dur - minDelta;
+			next := next + minDelta;
+		)
+		else
+		(
+			dur := sectionDuration;
+			freeSlot := next + minDelta;
+			next := freeSlot; --new starting point 
+		);
+	
+	);
+	return freeSlot;
+);
+
+public getRouteList : () ==> set of Route
+getRouteList() ==
+(
+	return routeList;
+)
+
+
+
+
+
+end GridReservation
+
+\end{vdm_al}
+
+\section{TokenDevice class}
+
+\begin{vdm_al}
+
+class TokenDevice
+
+instance variables
+
+  private id_token : nat := 1;
+  private transportPlan : [TransportPlan] := nil;
+  private q_Env_out : Environment;
+  private q_APM_out : ActivePlanManager;
+  private test : bool := false;
+
+
+operations
+ 
+ public TokenDevice : nat ==> TokenDevice
+  TokenDevice(id) == (id_token := id;);
+
+
+async public notifyPassenger : TransportPlan ==> ()
+notifyPassenger(TransPlan) ==
+(
+	transportPlan := TransPlan;
+	q_Env_out.respons( transportPlan, nil,time);
+	Logger`write(mk_Logger`TP("TransportPlan",transportPlan));	
+	test := true;
+);
+    
+
+async public requestTransportPlan : TPC`NavigationInput ==> ()
+  requestTransportPlan(NavInput) ==
+(
+  	q_APM_out.requestTransportPlan( mk_MessageTypes`REQUESTPLAN(NavInput, self));
+  	Logger`write("Request TP");
+);
+
+public getTokenId : () ==> nat
+  getTokenId() == return id_token;
+
+private routeTraveled : () ==> ()
+  routeTraveled() == (transportPlan.routeTraveled();
+)
+pre transportPlan.routesRemaining() > 0;
+
+
+public travel : () ==> ()
+travel () == skip;
+--(
+--		onTheRoad();
+--		if( transportPlan <> nil and transportPlan.routesRemaining() > 0 ) then(
+		--dcl t : TransportPlan`Route := (transportPlan.getNextRoute());
+--	routeTraveled();
+--	)
+--);
+
+public onTheRoad : () ==> ()
+onTheRoad () == skip;
+
+public isFinished : () ==> ()
+isFinished() == skip;
+
+public setEnv : Environment ==> ()
+setEnv(env) == q_Env_out := env;
+
+public setAPM : ActivePlanManager ==> ()
+setAPM(apm) == q_APM_out := apm;
+
+public isFin : () ==> ()
+isFin() == skip;
+
+
+sync
+
+per onTheRoad => (transportPlan <> nil) and (len transportPlan.routeList > 0);
+
+per isFinished => (transportPlan = nil) or (len transportPlan.routeList = 0);
+
+per isFin => (#fin(notifyPassenger) > 0);
+
+--mutex(requestTransportPlan);
+
+end TokenDevice
+
+\end{vdm_al}
+
+\section{Train}
+
+\begin{vdm_al}
+class Train
+
+instance variables
+private passengers : set of TransportPlan := {};
+private trainId : nat;
+private currentRoute : Route;
+--private tpc : TPC;
+private arrivalTime : nat := 0;
+private done : bool := false;
+private test : nat := 0;
+private state : State := <PreJourney>;
+private controller : Controller;
+
+types
+public State = <PreJourney>|<Journey>|<PostJourney>;
+
+operations
+
+public Train : nat * Route * Controller==> Train
+Train(tId, r, ctrl) == (trainId := tId;
+	currentRoute := r;
+	arrivalTime := r.getNextArrivalTime();
+	controller := ctrl;
+);
+
+--public setTPC : TPC ==> ()
+--setTPC(t) == tpc := t;
+
+public addPassenger : TokenDevice ==> ()
+addPassenger(passenger) ==(
+	passengers := passengers union {passenger};
+);
+
+public setRoute : Route ==> ()
+setRoute(r) == (
+	currentRoute := r;
+);
+
+public removePassenger : TransportPlan ==> ()
+removePassenger(passenger) == (
+	passengers := passengers \ {passenger};
+);
+
+public getTrainId : () ==> nat
+getTrainId() == return trainId;
+
+public getCurrentRoute : () ==> TransportPlan`Section
+getCurrentRoute() == return currentRoute.getSection();
+
+public passengerTravel : () ==> () 
+passengerTravel() == (
+	for all p in set passengers do
+		p.routeTraveled();
+);
+
+private travel : () ==> ()
+travel() == (
+	Logger`write("T");Logger`write(trainId);Logger`write(time);
+	test := test + 50000;
+	if state = <PreJourney> then(
+		if currentRoute.getDepartureTime() <= time then (
+			passengers := passengers union Station`getStation(currentRoute.departureLocation).getPassengers(self);
+			state := <Journey>;
+			passengerTravel();
+		);
+	)
+	else(
+	if arrivalTime <= time and not (arrivalTime = -1) then(
+		currentRoute.sectionTraveled();
+		arrivalTime := currentRoute.getNextArrivalTime();
+		--Logger`write("Arrived at station at time and new arival is");  Logger`write(time); Logger`write(arrivalTime); Logger`write(threadid);
+		if not (arrivalTime = -1 ) and controller.isRouteActive(currentRoute.getSection().id_route) then(
+			passengers := passengers union Station`getStation(currentRoute.getSection().departureLocation).getPassengers(self);
+		passengerTravel();
+		for all p in set passengers do (
+
+			if p.routesRemaining() = 0 then (
+				removePassenger(p);
+			)
+			else if not (p.getNextRoute().arrivalLocation = currentRoute.getSection().arrivalLocation) or not (controller.isRouteActive(currentRoute.getSection().id_route)) then (
+				removePassenger(p);
+				Station`getStation(currentRoute.departureLocation).addPassenger(p);
+			);
+		);
+		);
+		);
+	);
+		if(arrivalTime = -1 or not (controller.isRouteActive(currentRoute.getSection().id_route))) then(
+			done := true;
+			Logger`write("Train stopping");Logger`write(trainId);Logger`write(time);
+		);
+	);
+
+public isFinished : () ==> ()
+isFinished() == skip;
+
+sync
+per isFinished => (done = true);
+per travel => (arrivalTime < time and not done);
+--mutex(passengerTravel); 
+
+thread
+	while true do(
+		travel();
+	);
+
+
+end Train
+\end{vdm_al}
+
+\section{TPC class}
+
+\begin{vdm_al}
+
+
+class TPC
+
+instance variables
+
+private normalState : bool := true;
+private curtime : nat := 0;
+private railway : RailwayGrid;
+private q_APM_out : ActivePlanManager;
+private timeout : nat := 0;
+
+types
+
+public NavigationInput :: 
+departureLocation : String
+arrivalLocation : String
+transportChoice : Choice
+id_token : nat1
+departureTime : nat
+
+inv n == len n.departureLocation > 0 and
+	len n.arrivalLocation > 0 ;
+	
+public String = seq of char;
+public Choice = <Cheapest>|<Quickest>
+
+
+operations
+
+public TPC : () ==> TPC
+TPC() == (
+	railway := new RailwayGrid();
+	
+);
+
+public setAPM : ActivePlanManager ==> ()
+setAPM(apm) == q_APM_out := apm;
+
+public setRailwayGrid : RailwayGrid ==> ()
+setRailwayGrid(grid)== (
+	railway := grid;
+);
+
+public isFinished : () ==> ()
+isFinished () == skip;
+
+
+public calculateTransportPlan : NavigationInput ==> seq of TransportPlan`Section 
+calculateTransportPlan(navInput) ==
+(
+ dcl tempPlan : TransportPlan;
+ dcl tempSections : GridReservation`SectionPlan := railway.getSectionPlan();
+ dcl tempGrid : RailwayGrid`Grid := railway.getGrid();
+
+ def l = {r | r in set tempGrid & r(1).departureLocation = navInput.departureLocation 
+         and r(len r).arrivalLocation = navInput.arrivalLocation} in (
+ if card l > 0 then 
+ (
+ 	(dcl fastst : nat := 0;
+ 	dcl tempSeclist : seq of TransportPlan`Section := [];
+ 	dcl tmpList : seq of TransportPlan`Section;
+ 	dcl tmpSec : TransportPlan`Section;
+ 	dcl tmpTime : nat := 0;
+ 	dcl test : bool := false;
+ 	
+ 	for all seclist in set l do
+ 	(
+ 		test := true;
+ 		tmpTime := navInput.departureTime;
+ 		tmpList := seclist;
+ 		while len tmpList > 0 and test do 
+ 		(
+ 			tmpSec := hd tmpList;
+ 			tmpList := tl tmpList;
+ 			if not (exists t in set tempSections(tmpSec) & t > tmpTime) then(
+ 				test := false;
+ 			);
+ 			if test then(
+ 				tmpTime := findSmallest(tempSections(tmpSec), tmpTime) + tmpSec.dur;
+ 			);
+ 		);
+ 		
+ 		if( tmpTime < fastst or fastst = 0 and test = true) then (
+ 			fastst := tmpTime;
+ 			tempSeclist := seclist;
+ 		);
+ 	);
+ 	return tempSeclist;
+ );
+ );
+);
+return [];
+);
+--pre exists r in set railway.getRoutePlan() & r(1).departureLocation = navInput.departureLocation and r(len r).arrivalLocation = navInput.arrivalLocation;
+
+
+public setActiveRoute : nat ==> ()
+setActiveRoute(id_Route) == is not yet specified;
+
+
+private findCheapest : RailwayGrid`Grid ==> [seq of TransportPlan`Section]
+findCheapest(list) ==
+(
+	dcl sum : real := 0;
+	dcl cheap : real := 9999;
+	dcl rtn : seq of TransportPlan`Section := [];
+	
+	for all s in set list do
+	(
+		sum := 0;
+		for r in s do
+			sum := sum + r.fee;
+		if sum < cheap then
+		(
+			cheap := sum;
+			rtn := s;
+		);    
+	);
+	return rtn;
+);
+
+private findQuickest : RailwayGrid`Grid ==> [seq of TransportPlan`Section]
+findQuickest (list) == findCheapest(list);
+
+async public calcTransportPlan : MessageTypes`REQUESTPLAN ==> ()
+calcTransportPlan(msg)==(
+	let mk_MessageTypes`REQUESTPLAN(navi, tok) = msg in
+	(	
+		q_APM_out.returnTransportPlan( mk_MessageTypes`RETURNPLAN(mk_TransportPlan`DTO(navi.id_token,calculateTransportPlan(navi), navi.transportChoice, navi.departureTime),tok));
+	)
+);
+
+async public inactiveRoute : nat ==> ()
+inactiveRoute(routeid) ==
+(	
+		railway.setInactiveRoute(routeid);
+		q_APM_out.inactiveRoute(routeid);
+	
+);
+
+public setInactiveRoute : nat ==> ()
+setInactiveRoute(id_Route) == (
+skip;
+);
+
+functions 
+public findSmallest : set of nat * nat -> nat
+findSmallest(list, v) == 
+	let l  = {x | x in set list & x >= v} in(
+	hd [x | x in set l & forall y in set l & x <= y]
+	);
+
+end TPC
+\end{vdm_al}
+
+\section{CRSystem}
+
+\begin{vdm_al}
+system CRSystem
+
+instance variables
+
+-- cpu for TPC
+cpu1 : CPU := new CPU (<FCFS>,1E20);
+
+-- cpu for TokenDevice
+cpu3 : CPU := new CPU (<FCFS>,1E6);
+--cpu4 : CPU := new CPU (<FCFS>,1E6);
+--cpu5 : CPU := new CPU (<FCFS>,1E6);
+--cpu6 : CPU := new CPU (<FCFS>,1E6);
+--cpu7 : CPU := new CPU (<FCFS>,1E6);
+--cpu8 : CPU := new CPU (<FCFS>,1E6);
+--cpu9 : CPU := new CPU (<FCFS>,1E6);
+--cpu10 : CPU := new CPU (<FCFS>,1E6);
+--cpu11 : CPU := new CPU (<FCFS>,1E6);
+--cpu12 : CPU := new CPU (<FCFS>,1E6);
+--cpu13 : CPU := new CPU (<FCFS>,1E6);
+--cpu14 : CPU := new CPU (<FCFS>,1E6);
+--cpu15 : CPU := new CPU (<FCFS>,1E6);
+
+-- cpu for APM
+cpu2 : CPU := new CPU (<FCFS>,1E6);
+
+-- bus to connect TPC and APM
+bus1 : BUS := new BUS (<FCFS>,1E3,{cpu1,cpu2});
+
+-- bus to connect TokenDevice to APM
+bus2 : BUS := new BUS (<FCFS>,5,{cpu3,cpu2});
+--bus3 : BUS := new BUS (<FCFS>,5,{cpu4,cpu2});
+--bus4 : BUS := new BUS (<FCFS>,5,{cpu5,cpu2});
+--bus5 : BUS := new BUS (<FCFS>,5,{cpu6,cpu2});
+--bus6 : BUS := new BUS (<FCFS>,5,{cpu7,cpu2});
+--bus7 : BUS := new BUS (<FCFS>,5,{cpu8,cpu2});
+--bus8 : BUS := new BUS (<FCFS>,5,{cpu9,cpu2});
+--bus9 : BUS := new BUS (<FCFS>,5,{cpu10,cpu2});
+--bus10 : BUS := new BUS (<FCFS>,5,{cpu11,cpu2});
+--bus12 : BUS := new BUS (<FCFS>,5,{cpu12,cpu2});
+--bus13 : BUS := new BUS (<FCFS>,5,{cpu13,cpu2});
+--bus14 : BUS := new BUS (<FCFS>,5,{cpu14,cpu2});
+--bus15 : BUS := new BUS (<FCFS>,5,{cpu15,cpu2});
+  
+--bus to connect cb token device
+--bus3 : BUS := new BUS (<FCFS>,1E6,{cpu1, cpu3});
+
+public static tok1 : TokenDevice := new TokenDevice(1);
+--spublic static tok2 : TokenDevice := new TokenDevice(2);
+--public static tok3 : TokenDevice := new TokenDevice(3);
+--public static tok4 : TokenDevice := new TokenDevice(4);
+--public static tok5 : TokenDevice := new TokenDevice(5);
+--public static tok6 : TokenDevice := new TokenDevice(6);
+--public static tok7 : TokenDevice := new TokenDevice(7);
+--public static tok8 : TokenDevice := new TokenDevice(8);
+--public static tok9 : TokenDevice := new TokenDevice(9);
+--public static tok10 : TokenDevice := new TokenDevice(10);
+--public static tok11: TokenDevice := new TokenDevice(11);
+--public static tok12: TokenDevice := new TokenDevice(12);
+--public static tok13 : TokenDevice := new TokenDevice(13);
+public static cb : TPC := new TPC();
+public static apm : ActivePlanManager := new ActivePlanManager();
+public static grid :  RailwayGrid := new RailwayGrid();
+public static ctrl : Controller := new Controller();
+
+operations
+
+CRSystem : () ==> CRSystem
+CRSystem()==
+(
+	cpu1.deploy(ctrl);
+	cpu1.deploy(cb);
+	cpu2.deploy(apm);
+	cpu1.deploy(grid);
+	cpu3.deploy(tok1);
+	--cpu4.deploy(tok2);
+	--cpu5.deploy(tok3);
+	--cpu6.deploy(tok4);
+	--cpu7.deploy(tok5);
+	--cpu8.deploy(tok6);
+	--cpu9.deploy(tok7);
+	--cpu10.deploy(tok8);
+	--cpu11.deploy(tok9);
+	--cpu12.deploy(tok10);
+	--cpu13.deploy(tok11);
+	--cpu14.deploy(tok12);
+	--cpu15.deploy(tok13);
+
+)
+
+end CRSystem
+\end{vdm_al}
+
+\section{Types}
+
+\begin{vdm_al}
+
+class MessageTypes
+
+types
+
+--Message Types
+public REQUESTPLAN :: 
+		navi : TPC`NavigationInput 
+		tokdev : TokenDevice;
+public RETURNPLAN :: 
+		plan : TransportPlan`DTO 
+		tokdev : TokenDevice;
+public CALCPLAN :: 
+		navi : TPC`NavigationInput 
+		tokdev : TokenDevice;
+public INACTIVEROUTE :: 
+		routeid : nat;
+public ACTIVEROUTE :: 
+		routeid : nat;
+public ADDROUTE :: 
+		route : TransportPlan`Route;	 
+public REMOVEROUTE :: 
+		route : TransportPlan`Route;	 
+public STRATEGYINIT :: ;
+public STRATEGYEND :: ;
+public STRATEGYNOTIFY ::
+		routeid : nat;
+
+public MessageT = REQUESTPLAN | RETURNPLAN | CALCPLAN | 
+			INACTIVEROUTE | ACTIVEROUTE | ADDROUTE | REMOVEROUTE |
+			STRATEGYINIT | STRATEGYEND | STRATEGYNOTIFY;
+
+
+
+
+operations
+
+--public test : MessageT ==> seq of char
+--test (cmd) ==
+--(
+--	cases cmd:
+--		mk_MessageTypes`INACTIVEROUTE(-) -> return "inactiveroute",
+--		mk_MessageTypes`REQUESTPLAN(-) -> return "request"
+--	end;
+--	return "fail";
+--)
+
+	
+
+end MessageTypes
+
+
+\end{vdm_al}
+
+\section{Station}
+\begin{vdm_al}
+class Station
+instance variables
+private passengers : set of TransportPlan := {};
+private stationId : nat;
+private static stationList : set of Station := {};
+private name : TPC`String;
+operations
+
+public Station : nat * TPC`String ==> Station
+Station(id, sname) == (
+stationId := id;
+name := sname;
+);
+
+public addPassenger : TransportPlan ==> ()
+addPassenger(tp) == (
+
+	if tp.routesRemaining() > 0 then(
+		passengers := passengers union {tp};
+	);
+);
+
+public getName : () ==> TPC`String
+getName() == return name;
+
+public getPassengers : Train ==> set of TransportPlan
+getPassengers(t) == (
+	(
+		dcl rtnPassengers : set of TransportPlan := {};
+		for all p in set passengers	do (
+			if p.getNextRoute().arrivalLocation = t.getCurrentRoute().arrivalLocation then 
+			(
+				rtnPassengers := rtnPassengers union {p};
+				passengers := passengers \ {p};
+				Logger`write("adding passenger");
+			);
+		);
+		return rtnPassengers;
+	);
+);
+
+public getPas : () ==> set of TransportPlan
+getPas() == return passengers;
+
+public static getStation : TPC`String ==> [Station]
+getStation(sname) ==( 
+for all x in set stationList do(
+	if x.getName() = sname then(
+		return x;
+	);
+	
+);
+return nil;
+);
+
+public static getList : () ==> set of Station
+getList() == return stationList;
+
+public static addStation : Station ==> ()
+addStation(s) == stationList := stationList union {s};
+
+sync
+--mutex(addPassenger);
+--mutex(addPassenger, getPassengers);
+--mutex(getPassengers);
+end Station
+\end{vdm_al}
+
+\section{MessageQueue}
+
+\begin{vdm_al}
+class MessageQueue
+
+instance variables
+
+queue : seq of Message := [];
+size : nat := 0;
+
+
+types
+public String = seq of char;
+public FunctionType = <setInactive> | <setActive>; 
+public ParamType = nat | String;
+
+public Message::
+	funct : FunctionType
+	params : seq of ParamType
+
+operations
+
+--Constructor
+public MessageQueue : nat ==> MessageQueue
+MessageQueue(psize) ==
+	size := psize;
+
+
+public push: Message ==> ()
+push(message) ==
+	queue := queue ^ [message];
+
+public pop: () ==> Message
+pop() == (
+	let rtn_data = hd queue
+	in
+	(
+		queue := tl queue;
+		return rtn_data;
+	)
+);
+
+sync
+per push => #fin(push) - #fin(pop) < size; 	--ensure that there's space in the queue
+per pop => #fin(push) - #fin(pop) > 0;			--ensure that there's data in the queue
+mutex(pop,push);		--Only a single activation of pop at a time.
+--Have not testet if this sync is enough.	
+
+end MessageQueue
+\end{vdm_al}
+
+\section{Logger class}
+
+\begin{vdm_al}
+
+class Logger
+
+types
+	public logType =  (TPC`String | InactiveRoute | TP | RouteStatus | nat | set of Train | bool | set of TransportPlan | set of Station | TransportPlan);
+	
+	public InactiveRoute::
+				name:TPC`String
+				routeid : nat
+				curtime : nat;
+	
+	public TP::
+				name:TPC`String
+				tp: TransportPlan;
+				
+	public RouteStatus::
+				name:TPC`String
+				action:TPC`String
+				tokenId: nat;
+				
+
+instance variables 
+	public static log : seq of logType := [];
+
+operations
+	
+	public static write : logType ==> () 
+	write(o)== 	( 
+		duration(0)(	
+		log := log ^ [o] ^ ["\n"];
+		Logger`flush();
+		);
+	);
+
+	public static flush : () ==> ()
+	flush()== (
+	--dcl io: IO := new IO();
+	 --def - = io.fwriteval[seq of logType]("logger.log",log,<start>) in 
+        skip;
+	);
+
+	public static printLog : () ==> seq of logType	
+	printLog() == return log;
+
+sync
+mutex(write);
+
+end Logger
+
+\end{vdm_al}
+
+\section{ActivePlanManager class}
+\begin{vdm_al}
+
+class ActivePlanManager is subclass of Strategy
+
+
+instance variables
+
+private activeTokens : inmap TokenDevice to TransportPlan := {|->};
+inv forall x,y in set dom activeTokens &
+ x = y =>  activeTokens(x) = activeTokens(y);
+--Ensure only uniqu TokenDevice reside in the map.
+--Tests if 2 elements from domain is equal then (implication) they point
+--to the same entity. 
+
+private busy : bool := false;
+
+private CR: TPC; 
+
+private tokenDevices : set of TokenDevice;
+
+operations
+
+public setCR : TPC ==> ()
+setCR(cr) == CR := cr;
+
+public ActivePlanManager : ()  ==> ActivePlanManager
+  ActivePlanManager() == (skip;);
+
+
+	public isFinished : () ==> ()
+	isFinished () == skip;
+
+private addTransportPlan : TransportPlan * TokenDevice ==> ()
+  addTransportPlan(plan,tokenDevice) ==(	
+   activeTokens := activeTokens ++ {tokenDevice|-> plan};	
+	);	
+
+private removeTransportPlan : TransportPlan * TokenDevice ==> ()
+  removeTransportPlan(plan,tokenDevice) ==(
+  activeTokens := {tokenDevice} <-: activeTokens;  
+  --Restrict map to not contain a mapplet containing tokenDevice
+ );
+
+public getPlans : () ==> set of TransportPlan
+  getPlans() == return rng activeTokens;
+  
+
+async public inactiveRoute : nat ==> ()
+  inactiveRoute(id_route) ==
+  (
+		duration(50)
+		(
+		for all t in set rng activeTokens do
+		(
+
+			if t.containsRoute(id_route)
+			then
+			(
+				let p = inverse activeTokens in
+				CR.calcTransportPlan(mk_MessageTypes`REQUESTPLAN(t.getPlanAsNaviInput(),p(t)));
+			)
+ 	 	);
+		);
+	);
+
+async public returnTransportPlan :  MessageTypes`RETURNPLAN ==> ()
+returnTransportPlan(msg) ==
+(	
+	
+	let mk_MessageTypes`RETURNPLAN(dto, tok) = msg in
+	(		
+	let plan = new TransportPlan(dto) in (
+			addTransportPlan(plan, tok);
+			tok.notifyPassenger(plan);
+			Station`getStation(plan.getNextRoute().departureLocation).addPassenger(plan);
+		);
+	)
+);
+
+async public requestTransportPlan : MessageTypes`REQUESTPLAN ==> ()
+requestTransportPlan(msg) ==
+(
+	CR.calcTransportPlan(msg);
+);							
+
+
+
+--public requestTransportPlan : TPC`NavigationInput * TokenDevice ==> TransportPlan
+--requestTransportPlan(navIn, tok) == (
+--	 let dto = q_CR_out.calculateTransportPlan(navIn,tok) in (
+--		let plan = new TransportPlan(dto.routeList, dto.choice, dto.id_token) in (
+--		addTransportPlan(plan,tok);
+--		return plan;
+--		);
+--	)
+--
+--);
+
+end ActivePlanManager
+
+\end{vdm_al}
+
+\begin{vdm_al}
+
+class Route 
+
+instance variables
+public sections : seq of TransportPlan`Section;
+public traveledSections : seq of TransportPlan`Section;
+public departureTime : nat;
+public departureLocation : TPC`String; --REPLACE!!
+public arrivalLocation : TPC`String; --REPLACE!
+public totalDuration : nat;
+public arrivalTime : nat;
+
+
+
+operations
+
+--Constructor
+public Route : nat * seq of TransportPlan`Section ==>  Route
+Route(a_departureTime, a_sections)==
+(
+	sections := []; traveledSections := [];
+	totalDuration := 0;
+	sections := a_sections;
+	(dcl tempSections : seq of TransportPlan`Section := sections;
+	
+		while len tempSections > 0 do
+		(
+			totalDuration := totalDuration + (hd tempSections).dur;
+			tempSections := tl tempSections;
+		);
+	);
+	departureTime := a_departureTime;
+	departureLocation := (hd sections).departureLocation;
+	arrivalLocation := sections(len sections).arrivalLocation;
+);
+
+public Route : () ==> Route
+Route() == (sections := []; traveledSections := [];);
+
+public getLength : () ==> nat
+getLength() == return len sections;
+
+public getRouteLength : () ==> nat
+getRouteLength() == return len sections;
+
+public getSection : () ==> [TransportPlan`Section]
+getSection() == (
+	if len sections > 0 then
+		return hd sections
+	else
+		return nil;
+);
+
+public sectionTraveled : () ==> ()
+sectionTraveled() == (
+	traveledSections := traveledSections ^ [hd sections];
+	sections := tl sections;
+);
+	
+public getDuration : () ==> nat
+getDuration()==
+(
+	return totalDuration
+);
+
+public getNextArrivalTime : () ==> nat
+getNextArrivalTime() ==
+(
+	(
+	dcl x : nat :=  departureTime;
+	if len sections > 0 then (
+		for s in traveledSections do
+		(
+			x := x + s.dur;
+		);
+		
+		x := x + (hd sections).dur;
+		return x;	
+	);
+	return -1;
+	);
+);
+
+public getDepartureTime : () ==> nat
+getDepartureTime()==
+(
+	return departureTime;
+);
+
+public getDepartureLocation : () ==> TPC`String
+getDepartureLocation()==
+(
+	return departureLocation;
+);
+
+public getArrivalTime : () ==> nat
+getArrivalTime()==
+(
+	return departureTime + totalDuration
+);
+
+public getArrivalLocation : () ==> TPC`String
+getArrivalLocation()==
+(
+	return arrivalLocation;
+);
+	
+
+sync 
+--mutex (sectionTraveled);
+
+
+
+end Route
+
+\end{vdm_al}
+
+
+
+\section{Customer}
+
+\begin{vdm_al}
+class Environment
+
+types 
+
+public outline = [TransportPlan] * [nat] * nat;
+public inline = [TPC`NavigationInput] * [nat] * [nat] * nat;
+
+instance variables
+  public static tokenDevices : map nat to TokenDevice := {|->};
+private controller : Controller;
+--private io : IO := new IO();
+  private outfileName : seq of char := "";
+  protected  outlines : seq of outline := [];
+  protected  inlines : seq of inline := [];
+  protected  busy : bool := true;
+  private runtime : nat := 0;
+
+operations
+
+public Environment : () ==> Environment
+Environment()==(
+	tokenDevices :=  {0|-> new TokenDevice(0)};
+	inlines := [mk_(nil, 1, 6, 0), mk_(mk_TPC`NavigationInput("A","D",<Cheapest>,1,3000),1,nil,5000)];
+);
+
+public Environment : seq of char ==> Environment
+  Environment(fname) ==(
+   def input = [mk_(nil, 1, 6, 0),
+mk_(mk_TPC`NavigationInput("A","D",<Cheapest>,1,3000),1,nil,5000)] in     
+--def mk_ (-,input) = io.freadval[seq of inline](fname) in
+   inlines := input;
+	outfileName := "Results for " ^ fname;
+);
+
+public addController : Controller ==> ()
+addController (cr) == controller := cr;
+
+public addTokenDevice : TokenDevice ==> ()
+addTokenDevice(td) ==
+	--tokenDevices := td;
+	tokenDevices := tokenDevices munion { td.getTokenId() |-> td};
+
+public isFinished : () ==> ()
+		isFinished () == skip;
+
+public test : () ==> map nat to TokenDevice
+	test () == return tokenDevices;
+
+
+public stimulate : () ==> ()
+  stimulate() ==
+  (
+  	
+		duration(1) (
+	
+		if len inlines > 0
+		then( 
+				dcl curtime : nat := time,
+				done : bool := false; 
+				(
+				while not done do(
+					def mk_(nav,tid,route_id,t) = hd inlines in
+						if (t < time)
+						then ( 
+							if ( route_id = nil )
+							then (
+									tokenDevices(tid).requestTransportPlan(nav);)
+							else( controller.inactiveRoute(route_id); );
+								
+							reduceInline();
+							done := len inlines = 0;
+						)
+						else(
+							done :=  true;
+						)	
+					)
+				);
+			)
+			else(
+				busy := false;
+				)
+	);
+  );
+
+private isDone : () ==> ()
+isDone() == skip;	
+
+private reduceInline : () ==> ()
+reduceInline () == 
+	(if(len inlines > 0) then
+		inlines := tl inlines;
+	)
+	pre len inlines > 0;
+
+private inputStimuli : () ==> ()
+inputStimuli() == 
+	(
+		duration(1) (
+		runtime := runtime + 5000;
+		if len inlines > 0
+		then (
+			stimulate()
+			)
+		else (
+				busy := false;
+		);
+	);
+);
+
+ public respons : [TransportPlan] * [TransportPlan`Route] * nat ==> ()
+  respons(plan, route, t) ==
+  	(outlines := outlines ^ [mk_(plan,route,t)]);
+
+  public showResults : () ==> seq of outline
+  showResults() ==
+    return outlines;
+  --def - = io.fwriteval[seq of outline](outfileName,outlines,<start>) in skip;
+
+thread
+while busy do
+(
+	inputStimuli()
+);
+
+
+sync
+mutex(addTokenDevice);
+mutex(stimulate);
+mutex(reduceInline);
+mutex(respons);
+mutex(showResults);
+per isFinished => not busy; --Ensure interleaving in World
+per inputStimuli => runtime < time;
+
+end Environment
+
+\end{vdm_al}
+
+ 	\section{World2}
+
+\begin{vdm_al}
+class Controller
+
+instance variables
+
+private railwayGrid : RailwayGrid;
+private APM : ActivePlanManager;
+private trains : set of Train := {};
+private stations : set of Station := {};
+
+
+operations
+
+public setRailwayGrid : RailwayGrid ==> ()
+setRailwayGrid(grid) == (
+	railwayGrid := grid;
+);
+
+public initTrains : () ==> ()
+initTrains() == (
+	dcl i : nat := 0;
+	for all s in set railwayGrid.getRoutePlan() do
+	(
+		if(s.getLength() > 2) then (
+			trains := trains union {new Train(i,s, self)};
+			i := i + 1;
+		);
+	);
+	Logger`write(trains);
+);
+
+public startTrains : () ==> ()
+startTrains() == (
+	for all s in set trains do
+	(
+		start(s);
+	)
+);
+
+public initStations : () ==> ()
+initStations() == (
+	Station`addStation(new Station(0,"A"));
+	Station`addStation(new Station(1,"B"));
+	Station`addStation(new Station(2,"C"));
+	Station`addStation(new Station(3,"D"));
+	
+);
+
+public setAPM : ActivePlanManager ==> ()
+setAPM(apm) == (
+	APM := apm;
+);
+
+async public inactiveRoute : nat ==> ()
+inactiveRoute(routeid) ==
+(	
+		Logger`write("InactiveRoute Called");
+		railwayGrid.setInactiveRoute(routeid);
+		APM.inactiveRoute(routeid);
+	
+);
+
+public isRouteActive : nat ==> bool
+isRouteActive(id) == return railwayGrid.isRouteActive(id); 
+
+public isFinished : () ==> ()
+isFinished() == (
+	for all s in set trains do(
+		s.isFinished();
+	);
+);
+
+sync
+--mutex(isRouteActive);
+--mutex(inactiveRoute);
+--mutex(isRouteActive,inactiveRoute);
+
+end Controller
+\end{vdm_al}
+
+\section{Strategy class}
+\begin{vdm_al}
+
+class Strategy
+
+types
+
+
+operations
+
+strategyInit : () ==> ()
+strategyInit() == 
+is subclass responsibility;
+
+strategyNotify : () ==> ()
+strategyNotify() == 
+is subclass responsibility;
+
+strategyEnd : () ==> ()
+strategyEnd() == 
+is subclass responsibility;
+
+handleEvents : () ==> ()
+handleEvents() == 
+is subclass responsibility;
+
+
+
+end Strategy
+
+\end{vdm_al}
+
+\section{SNW class}
+\begin{vdm_al}
+
+
+class SNW is subclass of Strategy
+
+
+instance variables
+
+private state : State := <run>;
+
+types
+
+public State =  <run> | <halt>;
+
+operations
+
+
+
+
+strategyInit : () ==> ()
+strategyInit() == 
+(
+	state := <halt>
+);
+
+strategyNotify : () ==> ()
+strategyNotify() == is subclass responsibility;
+
+
+strategyEnd : () ==> ()
+strategyEnd() == 
+(
+	state := <run>;
+);
+
+handleEvents : ActivePlanManager ==> ()
+handleEvents(apm) == is subclass responsibility;
+
+
+end SNW
+
+\end{vdm_al}
+
+ 	\section{World2}
+
+\begin{vdm_al}
+class World2
+
+instance variables
+  protected env : [Environment] := nil;
+  --public static timeref : TimeStamp := new TimeStamp();
+
+operations
+
+
+  public World2 : () ==> World2
+  World2() ==
+	(
+		duration(0)(
+		env := new Environment();
+		env.addTokenDevice(CRSystem`tok1);
+		--envCustomer.addTokenDevice(CRSystem`tok2);
+		--envCustomer.addTokenDevice(CRSystem`tok3);
+		--envCustomer.addTokenDevice(CRSystem`tok4);
+		--envCustomer.addTokenDevice(CRSystem`tok5);
+		--envCustomer.addTokenDevice(CRSystem`tok6);
+		--envCustomer.addTokenDevice(CRSystem`tok7);
+		--envCustomer.addTokenDevice(CRSystem`tok8);
+		--envCustomer.addTokenDevice(CRSystem`tok9);
+		--envCustomer.addTokenDevice(CRSystem`tok10);
+		--envCustomer.addTokenDevice(CRSystem`tok11);
+		--envCustomer.addTokenDevice(CRSystem`tok12);
+		--envCustomer.addTokenDevice(CRSystem`tok13);
+
+		env.addController(CRSystem`ctrl);
+		CRSystem`cb.setAPM(CRSystem`apm);
+		CRSystem`cb.setRailwayGrid(CRSystem`grid);
+		CRSystem`apm.setCR(CRSystem`cb);
+		CRSystem`tok1.setAPM(CRSystem`apm);
+		CRSystem`tok1.setEnv(env);
+		CRSystem`ctrl.setAPM(CRSystem`apm);
+		CRSystem`ctrl.setRailwayGrid(CRSystem`grid);
+
+		--CRSystem`tok2.setQ_Env_out(envCustomer);
+		--CRSystem`tok2.setQ_APM_out(CRSystem`apm);
+
+		--CRSystem`tok3.setQ_Env_out(envCustomer);
+		--CRSystem`tok3.setQ_APM_out(CRSystem`apm);
+
+		--CRSystem`tok4.setQ_Env_out(envCustomer);
+		--CRSystem`tok4.setQ_APM_out(CRSystem`apm);
+
+		--CRSystem`tok5.setQ_Env_out(envCustomer);
+		--CRSystem`tok5.setQ_APM_out(CRSystem`apm);
+
+		--CRSystem`tok6.setQ_Env_out(envCustomer);
+		--CRSystem`tok6.setQ_APM_out(CRSystem`apm);
+		--CRSystem`tok7.setQ_Env_out(envCustomer);
+		--CRSystem`tok7.setQ_APM_out(CRSystem`apm);
+		--CRSystem`tok8.setQ_Env_out(envCustomer);
+		--CRSystem`tok8.setQ_APM_out(CRSystem`apm);
+		--CRSystem`tok9.setQ_Env_out(envCustomer);
+		--CRSystem`tok9.setQ_APM_out(CRSystem`apm);
+		--CRSystem`tok10.setQ_Env_out(envCustomer);
+		--CRSystem`tok10.setQ_APM_out(CRSystem`apm);
+		--CRSystem`tok11.setQ_Env_out(envCustomer);
+		--CRSystem`tok11.setQ_APM_out(CRSystem`apm);
+		--CRSystem`tok12.setQ_Env_out(envCustomer);
+		--CRSystem`tok12.setQ_APM_out(CRSystem`apm);		
+		--CRSystem`tok13.setQ_Env_out(envCustomer);
+		--CRSystem`tok13.setQ_APM_out(CRSystem`apm);
+);
+		
+	);
+
+	public test : () ==> TokenDevice
+	test () == return CRSystem`tok1;
+
+	public run : () ==>  seq of Logger`logType
+	run() == 	
+	(
+		dcl i : nat := 5;
+		duration(0)(
+		start(env);
+		CRSystem`ctrl.initTrains();
+		CRSystem`ctrl.initStations();
+		CRSystem`ctrl.startTrains();
+		
+		--start(CRSystem`apm);
+		--start(CRSystem`cb);
+		--start(CRSystem`tok1);
+		--start(CRSystem`tok2);
+		--start(CRSystem`tok3);
+		--start(CRSystem`tok4);
+		--start(CRSystem`tok5);
+		--start(CRSystem`tok6);
+		--start(CRSystem`tok7);
+		--start(CRSystem`tok8);
+		--start(CRSystem`tok9);
+		--start(CRSystem`tok10);
+		--start(CRSystem`tok11);
+		--start(CRSystem`tok12);
+		--start(CRSystem`tok13);
+
+		);
+		env.isFinished();
+		CRSystem`ctrl.isFinished();
+		--while i > 0 do
+		--(
+			--CRSystem`cb.isFinished();
+			--CRSystem`apm.isFinished();
+			--CRSystem`tok1.isFinished();
+			--CRSystem`tok1.isFinished();
+			--CRSystem`tok2.isFinished();
+			--CRSystem`tok3.isFinished();
+			--CRSystem`tok4.isFinished();
+			--CRSystem`tok5.isFinished();
+			--CRSystem`tok6.isFinished();
+			--CRSystem`tok7.isFinished();
+			--CRSystem`tok8.isFinished();
+			--CRSystem`tok9.isFinished();
+			--CRSystem`tok10.isFinished();
+			--CRSystem`tok11.isFinished();
+			--CRSystem`tok12.isFinished();
+			--CRSystem`tok13.isFinished();
+			
+		--	i := i - 1;
+		--);
+		
+	
+		
+		def res = env.showResults() in
+		return Logger`printLog();
+
+
+	);
+	
+	public test2 : TPC`NavigationInput ==> ()
+	test2(nav) == (
+		CRSystem`tok1.requestTransportPlan(nav);
+
+	)
+	
+end World2
+\end{vdm_al}
+
+\section{CyberRail class}
+\begin{vdm_al}
+
+class RailwayGrid
+
+instance variables
+
+private routeList : set of TransportPlan`Section; 
+private grid : Grid := {};
+private inactiveGrid : Grid := {};
+private inactiveRouteID : set of nat := {};
+--private io : IO := new IO();
+private routePlan : RoutePlan;
+private gridReservation : GridReservation := new GridReservation();
+
+types
+
+public String = seq of char;
+public Plan = seq of TransportPlan`Section;
+public GridSegment = seq of TransportPlan`Section;
+public Grid = set of GridSegment;
+public RoutePlan = set of Route;
+public Schedule = set of Plan;
+
+operations
+
+--Constructor	
+public RailwayGrid : () ==> RailwayGrid	
+RailwayGrid()==
+(	
+	duration(0)
+	(
+		dcl 	R1 : TransportPlan`Section := mk_TransportPlan`Section("A", "B", 42, "P1",200000, 1), 
+				R2 : TransportPlan`Section := mk_TransportPlan`Section("A", "C", 42, "P1", 200000, 2),
+				R3 : TransportPlan`Section := mk_TransportPlan`Section("B", "C", 99, "P1", 200000, 3),	
+				R4 : TransportPlan`Section := mk_TransportPlan`Section("B", "D", 42, "P1", 200000,4),
+				R5 : TransportPlan`Section := mk_TransportPlan`Section("B", "A", 42, "P1", 200000,5),	
+				R6 : TransportPlan`Section := mk_TransportPlan`Section("C", "D", 42, "P1", 200000,6),
+				R7 : TransportPlan`Section := mk_TransportPlan`Section("C", "A", 42, "P1", 200000,7),
+				R8 : TransportPlan`Section := mk_TransportPlan`Section("D", "B", 42, "P1", 200000,8),	
+				R9 : TransportPlan`Section := mk_TransportPlan`Section("D", "C", 42, "P1", 200000,9),
+				R10 : TransportPlan`Section := mk_TransportPlan`Section("C", "B", 99, "P1", 200000,10);
+		
+		routeList := {R1,R2,R3,R4,R5,R6,R7,R8,R9,R10}; 
+		grid := recAlgo({},[], "A") union recAlgo({},[], "B") union recAlgo({},[], "C") union recAlgo({},[], "D");	
+		--def - = io.fwriteval[Grid]("grid.txt",grid,<append>) in skip;
+		routePlan := gridReservation.getRoutePlan(grid,routeList)
+	);
+	return self;
+);
+public assignDepartures : () ==> ()
+assignDepartures() ==	
+(
+
+	dcl gr : GridReservation := new GridReservation(grid, routeList);
+	return;		
+);
+
+public getSectionPlan : () ==> GridReservation`SectionPlan
+getSectionPlan() == return gridReservation.getSectionPlan();
+
+private recAlgo : Grid * GridSegment * String ==> Grid
+recAlgo(grid, gridsegment, station) ==
+(
+	dcl grid_temp : Grid := grid;
+	for all r in set routeList  do
+	(
+		if( r.departureLocation = station and 	
+				not (exists p in set elems gridsegment & 
+				r.arrivalLocation = p.arrivalLocation or
+				r.arrivalLocation = p.departureLocation) )
+		then (
+					dcl temp : GridSegment :=  gridsegment ^ [r];
+					grid_temp := grid_temp union {temp};
+			 		grid_temp := recAlgo( grid_temp, temp, r.arrivalLocation);
+			  );
+	);
+ 	return grid_temp;
+);
+
+public getRoutePlan: () ==> RoutePlan
+getRoutePlan()==
+(
+	return routePlan;
+);
+
+public getGrid : () ==> Grid
+getGrid() == return grid;
+
+public isRouteActive : nat ==> bool
+isRouteActive(id) == (
+		if id in set inactiveRouteID then
+			return false
+		else
+			return true;
+);
+
+public setInactiveRoute : nat ==> ()
+setInactiveRoute(id)==
+(
+	duration(0) (
+	inactiveRouteID := inactiveRouteID union {id};
+	inactiveGrid := inactiveGrid union  {tp | tp in set grid & exists x in set elems tp & x.id_route = id};
+	grid := {x | x in set grid & id not in set {route.id_route | route in set elems x}}; 
+	);
+)
+pre exists x in set routeList & x.id_route = id;
+
+
+
+
+---------------------------------------------------------------------------------------------------------------
+public test : () ==> ()
+test()== 
+(
+	writef (recAlgo({},[], "A") union recAlgo({},[], "B") union recAlgo({},[], "C") union recAlgo({},[], "D") );
+);
+
+private writef : Grid ==> ()
+	writef(grid)==
+	(
+		--def - = io.fwriteval[Grid]("railway.txt",grid,<append>) in 
+                skip;
+	);
+
+sync
+--mutex (isRouteActive);
+	
+end RailwayGrid
+\end{vdm_al}
+
+\begin{vdm_al}
+class A
+
+operations
+
+  public Test:() ==> seq of Logger`logType
+  Test() ==
+    return new World2().run();
+
+end A
+\end{vdm_al}

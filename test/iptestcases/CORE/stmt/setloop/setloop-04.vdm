@@ -1,0 +1,21 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+public Test : () ==> seq of nat  
+Test () ==
+( dcl s : seq of nat;
+
+  for all mk_(a,1) in set {mk_(1,1), mk_(1,2)} do
+    s := [a];
+
+  return s
+)
+
+end A

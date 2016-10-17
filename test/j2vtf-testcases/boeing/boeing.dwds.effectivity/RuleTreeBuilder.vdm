@@ -1,0 +1,61 @@
+class RuleTreeBuilder is subclass of Object
+operations 
+public  RuleTreeBuilder : () ==> RuleTreeBuilder
+RuleTreeBuilder() == 
+( tokenStack := new  TokenStack()
+) ;
+
+public  buildTree : [String] ==> [BooleanExpr]
+buildTree(effRuleText) == 
+( dcl   ruleTree : [BooleanExpr] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (DWDSException,j2v_exception)) -> 
+        ( dcl   buildError : [DWDSException] := j2v_exception;
+          let - = buildError.addMessage(DWDSException`ErrorLoadingEffectivities , effRuleText)
+          in 
+            skip ;
+          exit  buildError
+        ) ,
+      (isofclass  (ClassCastException,j2v_exception)) -> 
+        ( dcl   buildError : [DWDSException] := new  DWDSException(),
+                e : [ClassCastException] := j2v_exception;
+          let - = buildError.addMessage(DWDSException`ErrorLoadingEffectivities , effRuleText)
+          in 
+            skip ;
+          exit  buildError
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   tokenizer : [RuleTokenizer] := new  RuleTokenizer(effRuleText);
+      trap  j2v_break with  
+        cases  true  : 
+          (isofclass  (J2V_Break,j2v_break)) -> 
+            skip 
+          
+        end  
+      in  
+        while  tokenizer.hasMoreTokens() do  
+        ( dcl   token__ : [RuleToken] := tokenizer.nextToken();
+          let - = token__.doTask(tokenStack)
+          in 
+            skip 
+        ) ;
+      ruleTree := tokenStack.pop();
+      if  not  tokenStack.empty()
+      then  
+        ( let - = tokenStack.removeAll()
+          in 
+            skip ;
+          exit  new  DWDSException()
+        ) 
+    ) ;
+  return  ruleTree
+) ;
+
+instance variables 
+  private  tokenStack : [TokenStack] := nil  
+  
+end  RuleTreeBuilder

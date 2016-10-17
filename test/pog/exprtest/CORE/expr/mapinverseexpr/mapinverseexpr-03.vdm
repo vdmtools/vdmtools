@@ -1,0 +1,15 @@
+class MapInverseExprTest
+
+types
+
+  T = inmap nat to set of bool
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: T ==> nat
+TestOP(t) ==
+  let x = (inverse t)({true})
+  in return x
+
+------------------------------------------------------------------------------
+end MapInverseExprTest

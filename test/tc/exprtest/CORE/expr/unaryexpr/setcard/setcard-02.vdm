@@ -1,0 +1,16 @@
+class UnaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let n = 7,
+      - = card if 7 = true
+             then {nil,8}
+             else n
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

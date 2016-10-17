@@ -1,0 +1,97 @@
+class Shared
+
+instance variables
+  waitset : set of nat := {};
+  ids : set of seq of char := {};
+  join_num : nat := 0;
+
+operations
+
+public SetJoin : nat ==> ()
+SetJoin(new_join) ==
+  join_num := new_join;
+
+public wait : seq of char ==> ()
+wait(id) ==
+  if id in set ids
+  then skip
+  else (AddToWaitSet(threadid);
+        Awake());
+
+AddToWaitSet : nat ==> ()
+AddToWaitSet(n) ==
+  waitset := waitset union {n};
+
+Awake : () ==> ()
+Awake() ==
+  skip;
+
+public notify : () ==> ()
+notify() ==
+  if waitset <> {}
+  then let arbitrary_process in set waitset
+       in waitset := waitset \ {arbitrary_process};
+
+public Init : set of seq of char ==> ()
+Init(new_ids) ==
+  ids := new_ids;
+
+public IsFinished : () ==> ()
+IsFinished() == skip;
+
+public join : () ==> ()
+join() == skip;
+
+sync
+  mutex(AddToWaitSet,notify);
+  per Awake => threadid not in set waitset;
+  per IsFinished => --#fin(notify) = #fin(wait) + 1 - card ids and 
+                    --#req(wait) = #fin(wait);
+                    #fin(wait) = 2;
+  per join => #act(wait) >= join_num;
+
+end Shared
+
+class B 
+
+instance variables
+  s : Shared;
+  id : seq of char
+
+operations
+
+public Init : Shared * seq of char ==> ()
+Init(new_s, new_id) ==
+  ( s := new_s;
+    id := new_id);
+
+Op : () ==> ()
+Op() ==
+  (s.wait(id);
+   s.join();
+   s.notify())
+
+thread
+  Op()
+
+end B
+
+  
+class A
+
+operations
+
+public Test : () ==> nat
+Test() ==
+  (dcl s : Shared := new Shared(),
+       b1 : B := new B(),
+       b2 : B := new B();
+   s.Init({"b2"});
+   b1.Init(s,"b1");
+   b2.Init(s,"b2");
+   start(b1);
+   start(b2);
+   s.IsFinished();
+   return 1)
+
+end A

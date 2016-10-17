@@ -1,0 +1,367 @@
+class DrawingNoteController is subclass of WiringDataController
+operations 
+public  initialize : () ==> <VOID>
+initialize() == 
+( return  <VOID>
+) ;
+
+public  getTextViaId : int  ==> [String]
+getTextViaId(noteId) == 
+( dcl   connection : [Connection] := DrawingNoteController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := DrawingNoteController`getToolkit().getQuerySet(),
+        query : [String] := nil  ,
+        noteBuffer : [StringBuffer] := new  StringBuffer(500);
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement(),
+            args : map  int  to  [Object] := {0 |-> new  Integer(noteId)};
+      query := querySet.getQuery(WiringDataQuerySet.GET_NOTE_TEXT_VIA_ID , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  queryRS.next() do  
+          ( let - = noteBuffer.append(queryRS.getString(1))
+            in 
+              skip 
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  return  noteBuffer.toString()
+) ;
+
+public  getCurrentContextObject : () ==> [Object]
+getCurrentContextObject() == 
+( return  nil  
+) ;
+
+public  getDrawingNotes : [Part] ==> [Iterator]
+getDrawingNotes(part) == 
+( dcl   noteList : [List] := new  Vector(),
+        partId : [Integer] := new  Integer(part.getId()),
+        noteIdArray : map  int  to  [Integer] := getDrawingNoteIds(part);
+  if  noteIdArray <> nil   and  noteIdArray.length > 0
+  then  
+    ( noteList := getNotesViaId(noteIdArray)
+    ) ;
+  return  noteList.iterator()
+) ;
+
+public  getDrawingNotes : [Wire] ==> [Iterator]
+getDrawingNotes(wire) == 
+( dcl   noteList : [List] := new  Vector(),
+        wireId : [Integer] := new  Integer(wire.getId()),
+        noteIdArray : map  int  to  [Integer] := getDrawingNoteIds(wire);
+  if  noteIdArray <> nil   and  noteIdArray.length > 0
+  then  
+    ( noteList := getNotesViaId(noteIdArray)
+    ) ;
+  return  noteList.iterator()
+) ;
+
+public  getDrawingNoteIds : [Part] ==> map  int  to  [Integer]
+getDrawingNoteIds(part) == 
+( dcl   noteIdArray : map  int  to  [Integer] := nil  ,
+        partId : [Integer] := new  Integer(part.getId());
+  noteIdArray := partNoteMappingCache.get(partId);
+  if  noteIdArray = nil  
+  then  
+    ( let - = loadNoteIdsViaPartId(partId)
+      in 
+        skip 
+    ) ;
+  noteIdArray := partNoteMappingCache.get(partId);
+  return  noteIdArray
+) ;
+
+public  getDrawingNoteIds : [Wire] ==> map  int  to  [Integer]
+getDrawingNoteIds(wire) == 
+( dcl   noteIdArray : map  int  to  [Integer] := nil  ,
+        wireId : [Integer] := new  Integer(wire.getId());
+  noteIdArray := wireNoteMappingCache.get(wireId);
+  if  noteIdArray = nil  
+  then  
+    ( let - = loadNoteIdsViaWireId(wireId)
+      in 
+        skip 
+    ) ;
+  noteIdArray := wireNoteMappingCache.get(wireId);
+  return  noteIdArray
+) ;
+
+public  getDrawingNoteIds : [Bundle] ==> map  int  to  [Integer]
+getDrawingNoteIds(bundle) == 
+( return  nil  
+) ;
+
+private  getNotesViaId : map  int  to  [Integer] ==> [List]
+getNotesViaId(noteIdArray) == 
+( if  debug
+  then  
+    ( let - = System.out.print(new  String("DrawingNoteController.getViaId(["))
+      in 
+        skip ;
+      ( dcl   i : int  := 0;
+        while  i < noteIdArray.length do  
+        ( if  i < noteIdArray.length-1
+          then  
+            ( let - = System.out.print(noteIdArray(i)+new  String(","))
+              in 
+                skip 
+            ) 
+          else  
+            ( let - = System.out.print(noteIdArray(i))
+              in 
+                skip 
+            ) ;
+          i := i+1
+        ) 
+      ) ;
+      let - = System.out.print(new  String("])  "))
+      in 
+        skip 
+    ) ;
+  ( dcl   note : [DrawingNote] := nil  ,
+          noteList : [Vector] := new  Vector(noteIdArray.length),
+          notesToLoad : [Vector] := new  Vector(noteIdArray.length),
+          numFound : int  := 0;
+    ( dcl   i : int  := 0;
+      while  i < noteIdArray.length do  
+      ( dcl   noteId : [Integer] := noteIdArray(i);
+        note := noteCache.get(noteId);
+        if  note = nil  
+        then  
+          ( let - = notesToLoad.add(noteId)
+            in 
+              skip 
+          ) 
+        else  
+          ( let - = noteList.add(note)
+            in 
+              skip ;
+            numFound := numFound+1
+          ) ;
+        i := i+1
+      ) 
+    ) ;
+    if  debug
+    then  
+      ( let - = System.out.println(new  String("Found ")+numFound+new  String(" of ")+noteIdArray.length+new  String(" in the cache"))
+        in 
+          skip 
+      ) ;
+    if  notesToLoad.size() > 0
+    then  
+      ( dcl   connection : [Connection] := DrawingNoteController`getToolkit().getConnection(),
+              querySet : [WiringDataQuerySet] := DrawingNoteController`getToolkit().getQuerySet(),
+              query : [String] := nil  ;
+        trap  j2v_exception with  
+          cases  true  : 
+            (isofclass  (SQLException,j2v_exception)) -> 
+              ( dcl   e : [SQLException] := j2v_exception;
+                exit  convertSQLException(e , query)
+              ) ,
+            others  -> 
+              exit  j2v_exception
+          end  
+        in  
+          ( dcl   stmt : [Statement] := connection.createStatement(),
+                  noteIdListString : [String] := genCommaSeparatedList(notesToLoad.elements()),
+                  args : map  int  to  [Object] := {0 |-> noteIdListString};
+            query := querySet.getQuery(WiringDataQuerySet.GET_DRAWING_NOTES , args);
+            ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+              trap  j2v_break with  
+                cases  true  : 
+                  (isofclass  (J2V_Break,j2v_break)) -> 
+                    skip 
+                  
+                end  
+              in  
+                while  queryRS.next() do  
+                ( dcl   noteId : int  := queryRS.getInt(1),
+                        noteKey : [String] := queryRS.getString(2),
+                        category : int  := DrawingNote`convertCategory(queryRS.getString(3)),
+                        mimeType : [String] := queryRS.getString(4);
+                  note := new  DrawingNote(noteId , category , noteKey , mimeType);
+                  let - = noteCache.put(new  Integer(noteId) , note)
+                  in 
+                    skip ;
+                  let - = noteList.add(note)
+                  in 
+                    skip ;
+                  numFound := numFound+1
+                ) ;
+              let - = queryRS.close()
+              in 
+                skip ;
+              let - = stmt.close()
+              in 
+                skip 
+            ) 
+          ) 
+      ) ;
+    return  noteList
+  ) 
+) ;
+
+private  loadNoteIdsViaPartId : [Integer] ==> <VOID>
+loadNoteIdsViaPartId(partId) == 
+( dcl   connection : [Connection] := DrawingNoteController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := DrawingNoteController`getToolkit().getQuerySet(),
+        query : [String] := nil  ,
+        noteList : [Vector] := new  Vector(3);
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement(),
+            args : map  int  to  [Object] := {0 |-> partId};
+      query := querySet.getQuery(WiringDataQuerySet.GET_PART_NOTE_IDS , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  queryRS.next() do  
+          ( let - = noteList.add(new  Integer(queryRS.getInt(1)))
+            in 
+              skip 
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip ;
+        ( dcl   noteIdArray : map  int  to  [Integer] := {l_12 |-> nil  |l_12 in set  {0,...,noteList.size()-1}};
+          let - = noteList.toArray(noteIdArray)
+          in 
+            skip ;
+          let - = partNoteMappingCache.put(partId , noteIdArray)
+          in 
+            skip 
+        ) 
+      ) 
+    ) ;
+  return  <VOID>
+) ;
+
+private  loadNoteIdsViaWireId : [Integer] ==> <VOID>
+loadNoteIdsViaWireId(wireId) == 
+( dcl   connection : [Connection] := DrawingNoteController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := DrawingNoteController`getToolkit().getQuerySet(),
+        query : [String] := nil  ,
+        noteList : [Vector] := new  Vector(3);
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement(),
+            args : map  int  to  [Object] := {0 |-> wireId};
+      query := querySet.getQuery(WiringDataQuerySet.GET_WIRE_NOTE_IDS , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  queryRS.next() do  
+          ( let - = noteList.add(new  Integer(queryRS.getInt(1)))
+            in 
+              skip 
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip ;
+        ( dcl   noteIdArray : map  int  to  [Integer] := {l_12 |-> nil  |l_12 in set  {0,...,noteList.size()-1}};
+          let - = noteList.toArray(noteIdArray)
+          in 
+            skip ;
+          let - = wireNoteMappingCache.put(wireId , noteIdArray)
+          in 
+            skip 
+        ) 
+      ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  updateToNewContext : [ContextSet] ==> <VOID>
+updateToNewContext(contextChanges) == 
+( if  contextChanges.contains(ContextTypes`AIRCRAFT_TYPE)
+  then  
+    ( let - = noteCache.removeAll()
+      in 
+        skip ;
+      let - = wireNoteMappingCache.removeAll()
+      in 
+        skip ;
+      let - = partNoteMappingCache.removeAll()
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+public  getDrawingNoteIds : [AircraftType] ==> map  int  to  [Integer]
+getDrawingNoteIds(type) == 
+( return  nil  
+) ;
+
+DrawingNoteController : [DataSourceToolkit] ==> DrawingNoteController
+DrawingNoteController(dsToolkit) == 
+( let - = WiringDataController(dsToolkit)
+  in 
+    skip ;
+  noteCache := new  ObjectCache(noteCacheSize);
+  wireNoteMappingCache := new  ObjectCache(wireNoteMappingCacheSize);
+  partNoteMappingCache := new  ObjectCache(partNoteMappingCacheSize)
+) ;
+
+instance variables 
+  private  noteCache : [ObjectCache] := nil  ;
+  private  wireNoteMappingCache : [ObjectCache] := nil  ;
+  private  partNoteMappingCache : [ObjectCache] := nil  ;
+  private  static noteCacheSize : int  := 113;
+  private  static wireNoteMappingCacheSize : int  := 401;
+  private  static partNoteMappingCacheSize : int  := 401
+  
+end  DrawingNoteController

@@ -1,0 +1,2 @@
+Known Bug (#295): Only on NT platform 
+Known error in Java: Code can't be compiled because a return is required.

@@ -1,0 +1,27 @@
+-- This test used to check that operations can be correctly retained
+
+class A
+
+instance variables
+
+  i : nat
+
+operations
+
+public Test : () ==> nat
+Test() ==
+( new B1().op1();
+  return 1
+);
+
+end A
+
+class B1
+
+operations
+
+public op1 : () ==> ()
+op1() ==
+  skip
+
+end B1

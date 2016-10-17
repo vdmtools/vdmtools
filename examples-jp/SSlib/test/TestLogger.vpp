@@ -1,0 +1,41 @@
+--$Id: TestLogger.vpp,v 1.2 2006/04/04 07:03:05 vdmtools Exp $
+class TestLogger
+--テストのログを管理する
+
+values
+
+履歴ファイル名 = "VDMTESTLOG.TXT"
+
+functions
+
+public 成功した: TestCase -> bool
+成功した(t) == 
+	let	メッセージ = t.テスト名を得る()^"\t OK.\n",
+		- = new IO().fecho(履歴ファイル名, メッセージ, <append>)	,
+		- = new IO().echo(メッセージ)		in
+	true;
+
+public 失敗した: TestCase -> bool
+失敗した(t) == 
+	let	メッセージ = t.テスト名を得る()^"\t NG.\n",
+		- = new IO().fecho(履歴ファイル名, メッセージ, <append>),
+		- = new IO().echo( メッセージ)		in
+	false;
+
+public 全体が成功した : seq of char -> bool
+全体が成功した(m) ==
+	let	メッセージ = m ^ "\t OK!!\n",
+		- = new IO().fecho(履歴ファイル名, メッセージ, <append>),
+		- = new IO().echo( メッセージ)
+	in
+	true;
+	
+public 全体が失敗した :  seq of char -> bool
+全体が失敗した(m) ==
+	let	メッセージ = m ^ "\t NG!!\n",
+		- = new IO().fecho(履歴ファイル名,  メッセージ, <append>),
+		- = new IO().echo( メッセージ)
+	in
+	false;
+
+end TestLogger

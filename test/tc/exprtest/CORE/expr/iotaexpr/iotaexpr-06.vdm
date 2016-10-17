@@ -1,0 +1,22 @@
+class IotaExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let A = "ABC",
+      f = false,
+      s =  {8,9},
+      - = iota a in set
+         if f
+         then A
+         else s & 
+         if f
+         then A
+         else s 
+  in skip;
+
+------------------------------------------------------------------------------
+end IotaExprTest

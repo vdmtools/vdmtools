@@ -1,0 +1,43 @@
+class RefDesEndpointInfo is subclass of Object
+operations 
+public  getAllPins : () ==> map  int  to  [String]
+getAllPins() == 
+( dcl   pins : map  int  to  [String] := {l_4 |-> nil  |l_4 in set  {0,...,refdesEndInfo.size()-1}},
+        pinsList : [Enumeration] := refdesEndInfo.keys(),
+        idx : int  := 0;
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  pinsList.hasMoreElements() do  
+    ( pins := pins ++ {idx |-> pinsList.nextElement()};
+      idx := idx+1
+    ) ;
+  return  pins
+) ;
+
+public  RefDesEndpointInfo : () ==> RefDesEndpointInfo
+RefDesEndpointInfo() == 
+( refdesEndInfo := new  Hashtable()
+) ;
+
+public  getPinInfo : [String] ==> map  int  to  [WireEndpoint]
+getPinInfo(pin) == 
+( return  refdesEndInfo.get(pin)
+) ;
+
+public  putPinInfo : [String] * map  int  to  [WireEndpoint] ==> <VOID>
+putPinInfo(pin, pinEndpoints) == 
+( let - = refdesEndInfo.put(pin , pinEndpoints)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+instance variables 
+  private  refdesEndInfo : [Hashtable]
+  
+end  RefDesEndpointInfo

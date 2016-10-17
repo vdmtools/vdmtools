@@ -1,0 +1,8 @@
+r realm.vdm
+r test.vdm
+i
+tc pos
+cg
+latex realm.vdm
+latex test.vdm
+quit

@@ -1,0 +1,304 @@
+class Time is subclass of CalendarDefinition
+/*
+責任
+	時間を表す。
+概要
+	私は時間あるいはアナリシス・パターンで言うところの時点であり、ある日付の時間を表す。
+	例えば2003年7月28日14時15分59秒を表す。
+*/
+
+values
+Rcsid = "$Id: Time.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $";
+public 日時間数 = 24;	--１日の時間数
+public 時分数 = 60;	--１時間の分数
+public 分秒数 = 60;	--１分の秒数
+public ミリ = 1000;		--ミリを通常の単位にするための倍数
+public 日ミリ秒数 = 日時間数 * 時分数 * 分秒数 * ミリ;	--１日=２４時間をミリ秒で表した数
+public 時ミリ秒数 = 時分数 * 分秒数 * ミリ;	--１時間をミリ秒で表した数
+private io = new IO();
+
+types
+public 「ミリ秒時刻」 = nat;	--１日の時刻を０時を0としたミリ秒単位で持つ。
+	
+instance variables
+/*　本来は、Javaのように日付・時間を合わせてミリ秒単位で持つべきだろうが、
+　　Dateは倍精度浮動小数点数で修正ユリウス日を持っているため、時間の精度は５分程度となる。
+　　このため、日付と時刻を分けて持つことにした。
+*/
+日付 : Date;
+時刻 : 「ミリ秒時刻」;
+	
+operations
+--構成子
+public Time : Calendar * int * int * int * nat * nat * nat  * nat ==> Time
+Time(暦, 年, 月, 日, 時, 分, 秒, ミリ秒) ==
+	(
+	日付 := 暦.整数三つ組から日付を得る(年, 月, 日);
+	時刻 := self.整数とする(時, 分, 秒, ミリ秒);
+	return self
+	);
+
+public Time : Calendar * int * int * int ==> Time
+Time(暦, 年, 月, 日) ==
+	(
+	日付 := 暦.整数三つ組から日付を得る(年, 月, 日);
+	時刻 := self.整数とする(0, 0, 0, 0);
+	return self
+	);
+	
+public Time : Date ==> Time
+Time(ある日付) ==
+	(
+	日付 := ある日付;
+	時刻 := self.整数とする(0, 0, 0, 0);
+	return self
+	);
+	
+--現在日時を求める単体テスト用関数。
+public Time: Calendar ==> Time
+Time(暦) == 
+	(
+	let	現在日時 = 現在日時を読み込む(homedir ^ "/temp/Today.txt", homedir ^ "/temp/Now.txt", 暦)
+	in
+	(
+	日付 := 現在日時.日付を得る();
+	時刻 := 現在日時.時刻を得る();
+	);
+	return self
+	);
+
+
+--現在日時を指定したファイルから読み込む単体テスト用関数。
+public Time: seq of char * seq of char * Calendar ==> Time
+Time(日付ファイル名, 時間ファイル名, 暦) ==
+	(
+	let	現在日時 = 現在日時を読み込む(日付ファイル名, 時間ファイル名, 暦)
+	in
+	(
+	日付 := 現在日時.日付を得る();
+	時刻 := 現在日時.時刻を得る();
+	);
+	return self
+	);
+		
+--現在日時をファイルから読み込む
+public 現在日時を読み込む : seq of char * seq of char * Calendar ==> [Time]
+現在日時を読み込む(日付ファイル名, 時間ファイル名, 暦) ==
+	let	mk_(結果, mk_(h, m, s, ms)) = io.freadval[int * int * int * int](時間ファイル名)
+	in
+	if 結果 then
+		let	d = 暦.ファイルから読み込む今日(日付ファイル名)	in
+		return new Time(暦, d.年(),  d.月(), d.日(), h, m, s, ms)
+	else
+		let	- = io.echo("Can't read Current Date-Time data file.")
+		in
+		return nil;
+
+--インスタンス変数操作
+
+public 日付を得る : () ==> Date
+日付を得る() == return 日付;	
+
+public 日付を設定する : Date ==> ()
+日付を設定する(ある日付) == 日付 := ある日付;
+
+public 時刻を得る : () ==> 「ミリ秒時刻」
+時刻を得る() == return 時刻;
+
+public 時刻を設定する : 「ミリ秒時刻」 ==> ()
+時刻を設定する(ある時刻) == 時刻 :=ある時刻;
+
+public 時: () ==> nat
+時() == 
+	let	mk_(時, -, -, -) = self.整数組とする(self.時刻を得る())
+	in
+	return 時;
+
+public 時を設定する : nat ==> ()
+時を設定する(ある時) ==
+	let	mk_(-, 分, 秒, ミリ秒) = self.整数組とする(self.時刻を得る())
+	in
+	self.時刻を設定する(整数とする(ある時, 分, 秒, ミリ秒));
+	
+public 分: () ==> nat
+分() == 
+	let	mk_(-, 分, -, -) = self.整数組とする(self.時刻を得る())
+	in
+	return 分;
+	
+public 分を設定する : nat ==> ()
+分を設定する(ある分) ==
+	let	mk_(時, -, 秒, ミリ秒) = self.整数組とする(self.時刻を得る())
+	in
+	self.時刻を設定する(整数とする(時, ある分, 秒, ミリ秒));
+		
+public 秒: () ==> nat
+秒() ==
+	let	mk_(-, -, 秒, -) = self.整数組とする(self.時刻を得る())
+	in
+	return 秒;
+	
+public 秒を設定する : nat ==> ()
+秒を設定する(ある秒) ==
+	let	mk_(時, 分, -, ミリ秒) = self.整数組とする(self.時刻を得る())
+	in
+	self.時刻を設定する(整数とする(時, 分, ある秒, ミリ秒));
+		
+public ミリ秒: () ==> nat
+ミリ秒() ==
+	let	mk_(-, -, -, ミリ秒) = self.整数組とする(self.時刻を得る())
+	in
+	return ミリ秒;
+	
+public ミリ秒を設定する : nat ==> ()
+ミリ秒を設定する(あるミリ秒) ==
+	let	mk_(時, 分, 秒, -) = self.整数組とする(self.時刻を得る())
+	in
+	self.時刻を設定する(整数とする(時, 分, 秒, あるミリ秒));
+	
+functions
+-- 属性獲得
+
+--時間から、その時間の属する暦を求める。
+public 暦 : () -> Calendar
+暦() == 日付を得る().暦();
+
+--時間から、その時間の属する年を求める。
+public 年: () -> int
+年() == self.日付を得る().暦().年(self.日付を得る());
+		
+--時間から、その時間の属する月を求める。
+public 月: () -> int
+月() == self.日付を得る().暦().月(self.日付を得る());
+		
+--時間から、日を求める。
+public 日: () -> int
+日() == self.日付を得る().暦().日(self.日付を得る());
+
+public 自然数として時刻を得る : () -> nat
+自然数として時刻を得る() == self.時刻を得る();
+
+----比較
+
+/*
+操作名
+	大小比較を行う関数群。
+引数
+	『Time』
+返値
+	真ならtrueを返し、そうでなければfalseを返す。
+内容
+	自身と与えられた『Time』の大小比較を行う。
+*/
+public ＜: Time -> bool
+＜(ある時間) == 
+	let	日付1 = floor self.日付を得る().修正ユリウス日獲得(),
+		日付2 = floor ある時間.日付を得る().修正ユリウス日獲得()
+	in
+	cases true :
+	(日付1 < 日付2)	-> true,
+	(日付1 = 日付2)	-> 
+		if self.自然数として時刻を得る() < ある時間.自然数として時刻を得る() then
+			true
+		else
+			false,
+	others		-> false
+	end;
+
+public ＞: Time -> bool
+＞(ある時間) == not (self.＜(ある時間) or self.＝(ある時間));
+
+public ≦: Time -> bool
+≦(ある時間) == not self.＞(ある時間);
+
+public ≧: Time -> bool
+≧(ある時間) == not self.＜(ある時間);
+
+--自身と与えられた時間が等しいか判定する。
+public ＝: Time  ->  bool
+＝(ある時間) == 
+	self.日付を得る().＝(ある時間.日付を得る()) and self.自然数として時刻を得る() = ある時間.自然数として時刻を得る();
+
+--自身と与えられた時間が等しくないか判定する。
+public ≠: Time ->  bool
+≠(ある時間) ==  not self.＝(ある時間);
+
+--変換
+
+public 整数とする : int * int * int * int -> int
+整数とする(時, 分, 秒, ミリ秒) ==((時 * 時分数 + 分) * 分秒数 + 秒) * ミリ + ミリ秒;
+
+public 整数組とする : 「ミリ秒時刻」 -> nat * nat * nat * nat
+整数組とする(ある時刻) ==
+	let	時分秒 = ある時刻 div ミリ,
+		ミリ秒 = ある時刻 mod ミリ,
+		時分 = 時分秒 div 分秒数,
+		秒 = 時分秒 mod 分秒数,
+		時 = 時分 div 時分数,
+		分 = 時分 mod 時分数
+	in
+	mk_(時, 分, 秒, ミリ秒);
+
+operations
+public asString : () ==> seq of char
+asString() == 
+	let	mk_(時, 分, 秒, ミリ秒) = self.整数組とする(self.時刻を得る())
+	in
+	return 
+		self.日付を得る().asString() ^ 
+		Integer`asString(時) ^
+		Integer`asString(分) ^
+		Integer`asString(秒) ^
+		Integer`asStringZ("009")(ミリ秒);
+
+public print : () ==> seq of char
+print() == 
+	let	mk_(時, 分, 秒, ミリ秒) = self.整数組とする(self.時刻を得る())
+	in
+	return 
+		self.日付を得る().print() ^ 
+		Integer`asString(時) ^ "時" ^
+		Integer`asString(分) ^ "分" ^
+		Integer`asString(秒) ^ "秒" ^
+		Integer`asStringZ("009")(ミリ秒) ^ "ミリ秒" ;
+
+----計算
+
+--ミリ秒を加算する
+public ＋ミリ秒 : int ==> Time
+＋ミリ秒(あるミリ秒) == 
+	let	ある時刻 = self.時刻を得る() + あるミリ秒,
+		繰上日数 = 
+			if ある時刻 >= 0 then
+				ある時刻 div 日ミリ秒数
+			else
+				ある時刻 div 日ミリ秒数 - 1,
+		新時刻 = ある時刻 mod 日ミリ秒数
+	in
+	(
+	dcl aTime : Time := new Time(self.暦(), self.年(), self.月(), self.日()) ;
+	aTime.時刻を設定する(新時刻);
+	aTime.日付を設定する(aTime.日付を得る().＋(繰上日数));
+	return aTime
+	);
+	
+public ＋秒 : int ==> Time
+＋秒(ある秒) == self.＋ミリ秒(ある秒 * ミリ);
+	
+public ＋分 : int ==> Time
+＋分(ある分) == self.＋ミリ秒(ある分 * 分秒数 * ミリ);
+	
+public ＋時 : int ==> Time
+＋時(ある時) == self.＋ミリ秒(ある時 * 時分数 * 分秒数 * ミリ);
+	
+public ＋: int * int * int * int ==> Time
+＋(時, 分, 秒, ミリ秒) == self.＋ミリ秒(整数とする(時, 分, 秒, ミリ秒));
+	
+--ミリ秒を減算する
+public －ミリ秒 : int ==> Time
+－ミリ秒(あるミリ秒) == return self.＋ミリ秒(-あるミリ秒);
+		
+public －: int * int * int * int  ==> Time
+－(時, 分, 秒, ミリ秒) == self.－ミリ秒(整数とする(時, 分, 秒, ミリ秒));
+		
+end Time

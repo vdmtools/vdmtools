@@ -1,0 +1,10 @@
+module A
+
+exports all
+
+definitions
+state Sigma of
+ i: int
+ j: int
+ r  : real
+end

@@ -1,0 +1,81 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+
+instance variables
+public  i  : int := 42;
+public  j  : int := 88;
+  public mp : map nat to char := {|->}
+
+functions
+
+public  f1: set of nat * set of nat -> set of nat
+  f1(s1,s2) ==
+    s1 union s1;
+
+public  f2: seq of nat * seq of char -> map nat to char
+  f2(dm_l,rg_l) ==
+    { dm_l(i) |-> rg_l(i)  | i in set inds dm_l }
+
+operations
+
+public  SetIJ(a,b: int) ==
+  ( i := a;
+    j := b )
+
+end A
+
+class C
+
+instance variables
+public  b1    : bool := true;
+public  b2    : bool := false;
+public  i     : int := 10;
+public  j     : int := 20;
+public  s1    : set of nat := {1,2};
+public  s2 : set of nat := {3,4};
+
+functions
+
+public  f1: set of nat * set of nat -> bool
+  f1(s1,s2) ==
+    s1 = s1;
+
+public  f3: set of nat * set of nat -> bool
+  f3(s1,s2) ==
+    s1 subset s2
+
+end C
+
+class B is subclass of A, C
+
+functions 
+
+public  f2: set of nat * set of nat -> set of nat
+  f2(s1,s2) ==
+    let l = card s1 in
+      let s = { e + l | e in set s2 } in
+         s inter s1
+
+instance variables
+  s1: set of nat := {};
+
+operations
+ 
+  public Test : () ==> seq of (int | (map nat to char) | (set of nat) | bool)  
+  Test () ==
+  let l1 = [1,2,3],
+      l2 = ['a','b','c'] in
+  ( mp := A`f2(l1,l2);
+    let i = C`i + C`j,
+        j = C`i - C`j in
+      self.SetIJ(i,j);
+    let s = f2(C`s1,s2) in
+      let ss = A`f1(s,s2) in
+        b1 := f3(s2,ss);
+    b2 := C`f1(s1,dom A`mp);
+    return [ A`i, A`j, mp, b1, b2, s1 ]
+  )
+
+end B

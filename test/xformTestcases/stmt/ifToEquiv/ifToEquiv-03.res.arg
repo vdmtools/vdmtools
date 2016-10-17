@@ -1,0 +1,16 @@
+"class A
+
+operations
+
+public Test : () ==> nat  
+Test () ==
+( if true <=> true 
+  then return 1 
+  else return 1;
+	
+ if false <=> true 
+ then return 1 
+ else return 1 );
+   
+end A
+"

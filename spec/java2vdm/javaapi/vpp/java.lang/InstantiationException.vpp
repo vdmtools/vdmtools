@@ -1,0 +1,18 @@
+class JavaLangInstantiationException is subclass of JavaLangException
+operations 
+public  JavaLangInstantiationException : () ==> JavaLangInstantiationException
+JavaLangInstantiationException() == 
+( skip 
+) ;
+
+public  JavaLangInstantiationException : <NIL> ==> JavaLangInstantiationException
+JavaLangInstantiationException(-) == 
+isNil := true  ;
+
+public  JavaLangInstantiationException : JavaLangString ==> JavaLangInstantiationException
+JavaLangInstantiationException(s) == 
+( skip 
+) ;
+
+
+end  JavaLangInstantiationException

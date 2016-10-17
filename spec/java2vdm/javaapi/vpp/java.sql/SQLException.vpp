@@ -1,0 +1,62 @@
+class JavaSqlSQLException is subclass of JavaLangException
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaSqlSQLException" , <CLASS> , false  )
+
+instance variables
+  reason: JavaLangString:=new JavaLangString(<NIL>);
+  SQLState: JavaLangString:=new JavaLangString(<NIL>);
+  vendorCode: int:=0;
+
+operations 
+
+public getReason : () ==> JavaLangString
+getReason() ==
+  return reason;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  getSQLState : () ==> JavaLangString
+getSQLState() == 
+  return SQLState ;
+
+public  JavaSqlSQLException : () ==> JavaSqlSQLException
+JavaSqlSQLException() == 
+ skip ;
+
+public  getErrorCode : () ==> int 
+getErrorCode() == 
+  return vendorCode ;
+
+public  getNextException : () ==> JavaSqlSQLException
+getNextException() == 
+is not yet specified ;
+
+public  JavaSqlSQLException : <NIL> ==> JavaSqlSQLException
+JavaSqlSQLException(-) == 
+isNil := true  ;
+
+public  JavaSqlSQLException : JavaLangString ==> JavaSqlSQLException
+JavaSqlSQLException(reason) == 
+ let - = JavaLangException(reason) in skip;
+
+public  JavaSqlSQLException : JavaLangString * JavaLangString ==> JavaSqlSQLException
+JavaSqlSQLException(reason, SQLState) == 
+( let - = JavaLangException(reason) in skip;
+  JavaSqlSQLException`SQLState:=SQLState;
+);
+
+public  setNextException : JavaSqlSQLException ==> ()
+setNextException(ex) == 
+is not yet specified ;
+
+public  JavaSqlSQLException : JavaLangString * JavaLangString * int  ==> JavaSqlSQLException
+JavaSqlSQLException(reason, SQLState, vendorCode) == 
+( let - = JavaLangException(reason) in skip;
+  JavaSqlSQLException`SQLState:=SQLState;
+  JavaSqlSQLException`vendorCode:=vendorCode;
+)
+
+
+end  JavaSqlSQLException

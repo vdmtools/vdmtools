@@ -1,0 +1,17 @@
+*.vdmsl
+*.vdmpp
+*.vice
+*.vdmsl.tex
+*.vdmpp.tex
+*.vice.tex
+*.vdm.tex
+*.dvi
+*.log
+*.idx
+*.aux
+*.toc
+*.ind
+*.blg
+*.bbl
+*.ilg
+.vdmde-*

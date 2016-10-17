@@ -1,0 +1,128 @@
+class ListPanel is subclass of JPanel, Observer
+operations 
+public  getListName : () ==> [String]
+getListName() == 
+( return  model.getListName()
+) ;
+
+public  setBundleParts : bool  ==> <VOID>
+setBundleParts(mode) == 
+( let - = model.setBundleParts(mode)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  updateToContext : () ==> <VOID>
+updateToContext() == 
+( dcl   context : [ContextState] := ContextState`getContextState(),
+        currentContext : [ContextSet] := context.getCurrentContext(),
+        doUpdate : bool  := model.update(currentContext);
+  if  doUpdate
+  then  
+    ( let - = model.getItems()
+      in 
+        skip ;
+      let - = model.fireTableDataChanged()
+      in 
+        skip 
+    ) ;
+  ( dcl   refDes : [RefDes] := context.getCurrentContextFieldObject(ContextTypes`REFDES),
+          pin : [String] := context.getCurrentContextFieldObject(ContextTypes`PIN);
+    if  (refDes <> nil  ) and  (pin <> nil  )
+    then  
+      ( dcl   point : [Point] := model.findCellWithRefDesPin(refDes.toString() , pin);
+        if  point <> nil  
+        then  
+          ( dcl   coordinates : [Rectangle] := list.getCellRect(point.x , point.y , true  );
+            let - = list.scrollRectToVisible(coordinates)
+            in 
+              skip 
+          ) 
+      ) ;
+    let - = repaint()
+    in 
+      skip 
+  ) ;
+  return  <VOID>
+) ;
+
+public  ListPanel : [WireTableModel] ==> ListPanel
+ListPanel(model) == 
+( ListPanel`model := model;
+  list := new  ListTable(model);
+  let - = setLayout(new  GridLayout(1 , 1))
+  in 
+    skip ;
+  let - = setBackground(Color`white)
+  in 
+    skip ;
+  let - = ContextState`getContextState().addObserver(self  )
+  in 
+    skip ;
+  let - = ListPanel`model.addTableModelListener(list)
+  in 
+    skip ;
+  let - = setPreferredSize(new  Dimension(list.getDefaultWidth() , 150))
+  in 
+    skip ;
+  ( dcl   scrollPane : [JScrollPane] := new  JScrollPane(list);
+    let - = add(scrollPane)
+    in 
+      skip 
+  ) 
+) ;
+
+public  update : [Observable] * [Object] ==> <VOID>
+update(observable, contextChanges) == 
+( if  isShowing()
+  then  
+    ( dcl   doUpdate : bool  := model.update(contextChanges);
+      if  doUpdate
+      then  
+        ( let - = model.getItems()
+          in 
+            skip ;
+          let - = model.fireTableDataChanged()
+          in 
+            skip 
+        ) ;
+      ( dcl   context : [ContextState] := ContextState`getContextState(),
+              refDes : [RefDes] := context.getCurrentContextFieldObject(ContextTypes`REFDES),
+              pin : [String] := context.getCurrentContextFieldObject(ContextTypes`PIN);
+        if  (refDes <> nil  ) and  (pin <> nil  )
+        then  
+          ( dcl   point : [Point] := model.findCellWithRefDesPin(refDes.toString() , pin);
+            if  point <> nil  
+            then  
+              ( dcl   coordinates : [Rectangle] := list.getCellRect(point.x , point.y , true  );
+                let - = list.scrollRectToVisible(coordinates)
+                in 
+                  skip 
+              ) 
+          ) ;
+        let - = repaint()
+        in 
+          skip 
+      ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  changeTableModel : [WireTableModel] ==> <VOID>
+changeTableModel(model) == 
+( ListPanel`model := model;
+  let - = list.setModel(model)
+  in 
+    skip ;
+  let - = list.initColumns()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+instance variables 
+  private  list : [ListTable] := nil  ;
+  private  model : [WireTableModel] := nil  
+  
+end  ListPanel

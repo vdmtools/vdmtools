@@ -1,0 +1,38 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+types
+
+  Even = nat
+  inv n == n mod 2 = 0
+
+operations
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+---------------------------------------------------------------------
+----------------- LetExpr         -----------------------------------
+---------------------------------------------------------------------
+
+public Test : () ==> nat   
+Test () ==
+return
+  let mk_(a, b) = if f(10) = 10 then
+                   mk_(10, 20)
+                 else if f(20) = 10 then
+                   mk_(9, 9)
+                 else
+                   mk_(f, f comp f)
+  in
+    if f(10) = 10 then
+      a + b
+    else
+      a(1) * a(2)
+
+functions
+f: nat -> real
+f(n) ==
+  n 
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

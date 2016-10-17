@@ -1,0 +1,46 @@
+\subsection{FSet}
+集合に関わる関数を提供する。
+集合演算であらかじめ定義された機能以外の機能を定義する。
+
+\begin{vdm_al}
+class FSet
+functions
+\end{vdm_al}
+
+AsSequenceは、集合からシーケンスに変換する。
+\begin{vdm_al}
+static public AsSequence[@T] : set of @T +> seq of @T
+AsSequence(aSet) ==
+	cases aSet :
+		{}		-> [],
+		{x} union xs	-> [x] ^ AsSequence[@T](xs)
+	end
+post
+	HasSameElems[@T](RESULT, aSet);
+\end{vdm_al}
+
+HasSameElemsは、列が集合の要素を過不足無く含む事を表す。
+\begin{vdm_al}
+static public HasSameElems[@T] : (seq of @T) * (set of @T) +> bool
+HasSameElems(s, aSet) == (elems s = aSet) and (len s = card aSet);
+\end{vdm_al}
+
+Combinationsは、集合から要素数n個の組み合わせを得る。
+\begin{vdm_al}
+static public Combinations[@T] : nat1 -> set of @T -> set of set of @T
+Combinations(n)(aSet) ==
+	{ e | e in set power aSet & card e = n};
+\end{vdm_al}
+
+Fmapは、関数fを集合に適用した結果の集合を返す。
+本関数は、通常の関数型言語のmap関数と同等であるが、mapはVDM++では予約語のため、Fmapと命名した。
+\begin{vdm_al}
+static public Fmap[@T1,@T2]: (@T1 -> @T2) -> set of @T1 -> set of @T2
+Fmap(f)(aSet) == {f(s) | s in set aSet};
+
+end FSet
+\end{vdm_al}
+
+\begin{rtinfo}
+[FSet]{vdm.tc}[FSet]
+\end{rtinfo}

@@ -1,0 +1,95 @@
+\section{The TYPE2REP Module}
+
+\begin{vdm_al}
+module TYPE2REP
+
+imports  
+
+  from POGTP all,
+
+  from AS all,
+  from CI all,
+  from ENV types FunctionInfo,
+  from REP all
+
+exports all
+
+
+definitions 
+
+functions
+
+#ifdef VDMSL
+  TransType: AS`Type -> REP`TypeRep
+#endif VDMSL
+#ifdef VDMPP
+  TransType: (AS`Type | POGTP`ClassType) -> REP`TypeRep
+#endif VDMPP
+  TransType(tp) ==
+    cases tp:
+      mk_AS`BooleanType(-) -> mk_REP`BooleanTypeRep(),
+      mk_AS`NumericType(t,-) -> mk_REP`NumericTypeRep(t),
+      mk_AS`TokenType(-) -> mk_REP`TokenTypeRep(),
+      mk_AS`CharType(-) -> mk_REP`CharTypeRep(),
+      mk_AS`VoidType(-) -> mk_REP`UnitTypeRep(),
+      mk_AS`QuoteType(mk_AS`QuoteLit(nm,-),-) ->
+         mk_REP`QuoteTypeRep(mk_AS`Name([nm],CI`NilContextId)),
+           -- Wouldn't it be better to use a new Name definition that is context 
+           -- independent and use this instead of AS`Name ????
+#ifdef VDMPP
+      mk_POGTP`ClassType(nm),            
+#endif VDMPP
+      mk_AS`TypeName(nm,-) -> mk_REP`TypeNameRep(nm),            
+      mk_AS`TypeVar(nm,-) ->  mk_REP`TypeVarRep(nm),
+      mk_AS`CompositeType(tag, fields, -) -> mk_REP`CompositeTypeRep(tag,TransFields(fields)),
+      mk_AS`UnionType(tplst,-) -> mk_REP`UnionTypeRep(FlattenUnion({TransType(tp) | tp in set elems tplst})),
+      --mk_AS`ProductType(tplst,-) -> mk_REP`ProductTypeRep([TransType(tplst(i)) | i in set inds tplst]),
+      mk_AS`ProductType(tplst,-) -> mk_REP`ProductTypeRep(TransTypeList(tplst)),
+      mk_AS`BracketedType(type,-) -> TransType(type),
+      mk_AS`OptionalType(type,-) -> mk_REP`UnionTypeRep(FlattenUnion({mk_REP`NilTypeRep(), TransType(type)})),
+      mk_AS`Set0Type(type, -) -> mk_REP`UnionTypeRep({mk_REP`EmptySetTypeRep(TransType(type)),
+                                                      mk_REP`SetTypeRep(TransType(type))}),
+      mk_AS`Set1Type(type, -) -> mk_REP`SetTypeRep(TransType(type)),
+      mk_AS`Seq0Type(type, -) -> mk_REP`UnionTypeRep({mk_REP`EmptySeqTypeRep(TransType(type)),
+                                                      mk_REP`SeqTypeRep(TransType(type))}),
+      mk_AS`Seq1Type(type, -) -> mk_REP`SeqTypeRep(TransType(type)),
+      mk_AS`GeneralMap0Type(d,r,-) -> mk_REP`UnionTypeRep({mk_REP`EmptyMapTypeRep(TransType(d),TransType(r)),
+                                                          mk_REP`GeneralMapTypeRep(TransType(d),TransType(r))}),
+      mk_AS`GeneralMap1Type(d,r,-) -> mk_REP`GeneralMapTypeRep(TransType(d),TransType(r)),
+      mk_AS`InjectiveMap0Type(d,r,-) -> mk_REP`UnionTypeRep({mk_REP`EmptyMapTypeRep(TransType(d),TransType(r)),
+                                                            mk_REP`InjectiveMapTypeRep(TransType(d),TransType(r))}),
+      mk_AS`InjectiveMap1Type(d,r,-) -> mk_REP`InjectiveMapTypeRep(TransType(d),TransType(r)),
+      mk_AS`OpType(d,r,-) -> mk_REP`OpTypeRep(TransTypeList(d), TransType(r)),
+      mk_AS`PartialFnType(tplst,tp,-) -> mk_REP`PartialFnTypeRep(TransTypeList(tplst), TransType(tp)),
+      mk_AS`TotalFnType(tplst,tp,-) -> mk_REP`TotalFnTypeRep(TransTypeList(tplst), TransType(tp))
+   end;
+
+  TransTypeList: seq of AS`Type -> seq of REP`TypeRep
+  TransTypeList (tplst) ==
+    [TransType(tplst(i)) | i in set inds tplst];
+
+  TransFields : seq of AS`Field -> seq of REP`FieldRep
+  TransFields(f_l) ==
+    [mk_REP`FieldRep(f_l(i).sel, TransType(f_l(i).type),f_l(i).dc) | i in set inds f_l];
+
+  FlattenUnion : set of REP`TypeRep -> set of REP`TypeRep
+  FlattenUnion(tps) ==
+    dunion {if is_REP`UnionTypeRep(tp)
+            then let mk_REP`UnionTypeRep(t_s) = tp
+                 in
+                   FlattenUnion(t_s)
+            else {tp}
+           | tp in set tps};
+end TYPE2REP
+\end{vdm_al}
+
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[TYPE2REP`MultTypeBind2PureMultTypeBind]
+{rtinfo.ast}[TYPE2REP]
+\end{rtinfo}
+
+
+
+

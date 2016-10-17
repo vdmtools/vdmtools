@@ -1,0 +1,29 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of (nat|real|bool)  
+Test () ==
+return [e( 1, 2), r(1), s(1),(3+4)-(3-56),(3+4)*(3-56),
+let a = 0, b = 5 in (a=3) and ( b/a=5) ,
+let a = 0, b = 5 in (a=0) or ( b/a=5) ] 
+  
+functions
+e:nat* real -> real
+e(a,b) ==
+  (a + 2)*(b - 1);
+
+r: nat -> nat
+r(a) ==
+  e( 1, a+2 ) + 7;
+
+s: real -> real
+s(a) ==
+  e( 1, a/3 ) + 7
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

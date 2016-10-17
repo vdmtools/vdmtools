@@ -1,0 +1,284 @@
+% WHAT
+%   The main file of the document describing the specification of 
+%   the VDM++ part of the Code Generator Front-End.
+%
+% FILE
+%    $Source: /home/vdmtools/cvsroot/toolbox/spec/cg-spec/vdm++cg.tex,v $
+% VERSION
+%    $Revision: 1.2 $
+% DATE
+%    $Date: 1999/05/03 08:43:47 $
+% FORMAT
+%    $State: Exp $
+% PROJECT
+%    Afrodite/IDERS
+% STATUS
+%    Under development.
+% AUTHOR
+%    $Author: jojo $
+% COPYRIGHT
+%    (C) 1993 IFAD, Denmark
+
+\documentclass[a4paper,dvips]{article}
+\usepackage[dvips]{color}
+\usepackage{vdmsl-2e}
+\usepackage{longtable}
+\usepackage{alltt}
+\usepackage{makeidx}
+\usepackage{ifad}
+
+\definecolor{covered}{rgb}{0,0,0}      %black
+%\definecolor{not_covered}{gray}{0.5}   %gray for previewing
+\definecolor{not_covered}{gray}{0.6}   %gray for printing
+%\definecolor{not_covered}{rgb}{1,0,0}  %read
+
+
+\newcommand{\StateDef}[1]{{\bf #1}}
+\newcommand{\TypeDef}[1]{{\bf #1}}
+\newcommand{\TypeOcc}[1]{{\it #1}}
+\newcommand{\FuncDef}[1]{{\bf #1}}
+\newcommand{\FuncOcc}[1]{#1}
+\newcommand{\ModDef}[1]{{\tiny #1}}
+
+\newcommand{\MCL}{Meta-IV Class Library }
+\newcommand{\vinput}[1]{
+\begin{verbatim}
+\input #1
+\end{verbatim}
+}
+
+\newcommand{\VDM}{VDM++}
+\newcommand{\nfs}{{\em not fully specified\/}}
+\newcommand{\TBW}{To be written}
+\newcommand{\NYI}{Notice, that this function/operation is not fully
+  specified in order to capture a possible integration with another
+  library than \MCL.}
+
+\makeindex
+\parindent 0pt
+\parskip 0pt
+
+\begin{document}
+
+
+\special{!userdict begin /bop-hook{gsave 220 30 translate
+0 rotate /Times-Roman findfont 21 scalefont setfont
+0 0 moveto (CONFIDENTIAL) show grestore}def end}
+
+\docdef{Specification of the VDM++ Code Generator}
+         {IFAD VDM Tool Group \\
+          The Institute of Applied Computer Science}
+         {\today,}
+         {IFAD-VDM-29}
+         {Report}
+         {Under Development}
+         {Confidential}
+         {}
+         {\copyright IFAD}
+         {\item[V1.0] First version.}
+         {}
+
+
+\tableofcontents
+\newpage
+
+
+\section{Introduction}
+
+This document contains the specification
+of the VDM++ part of the code generator front-end. In addition
+it describes the overall structure of the specification and
+the used strategies. 
+
+\section{Overall Structure}
+
+The specification is divided into the following modules:
+
+\begin{description}
+\item[AS: ] (AS is an abbreviation of Abstract Syntax). Describing the
+  abstract syntax of VDM++.
+
+\item[CI: ] (CI is an abbreviation of Context Information). 
+On every node in the Abstract Syntax Tree (AST) it is possible to
+attach context information, as for instance position information and
+type information.
+
+\item[CPP:] (CPP is an abbreviation of C Plus Plus). Describing the
+  abstract syntax of C++ and Java.
+
+\item[CGMAIN:] (CGMAIN is an abbreviation of Code Generator MAIN). This module is
+  to be considered as the main module, it generates code corresponding
+  a whole specification.
+
+\item[CLASS:] This module provides functions generating code
+  corresponding to VDM++ class definitions.
+
+\item[FVD:] This module provides functions generating code
+  corresponding to function and value definitions inside VDM++ class
+  definitions.
+
+\item[VD: ] (VD is an abbreviation of Value Definitions). Providing
+  functions generating code for value definitions.
+
+\item[FD: ] (FD is an abbreviation of Function Definitions ).
+  Providing functions generating code for function and operation
+  definitions.
+
+\item[TD: ] (TD is an abbreviation of Type Definitions). Providing
+  functions generating code for invariants on type definitions.
+
+\item[TPGEN: ] (TPGEN is an abbreviation of TyPe Generation). Providing
+  functions generating code for type definitions.
+
+\item[EXPR: ] (EXPR is an abbreviation of EXPRession). Providing
+  functions generating code corresponding to expressions (specified
+  for cases expressions, literals and name expressions).
+
+\item[STMT: ] (STMT is an abbreviation of STateMenT). Providing
+  functions generating code corresponding to statements (not
+  specified yet ).
+
+\item[PM: ] (PM is an abbreviation of Pattern Matching). Providing
+  functions generating code of pattern match. 
+  
+\item[BC: ] (BC is an abbreviation of Building C++). The construction
+  of part of an abstract tree of C++ is described in this module. The
+  main idea behind this module is divide the specification of the code
+  generator into parts of the same nature. This module also provides
+  functions for naming temporary variables and auxiliary functions.
+
+\item[DS: ] (DS is an abbreviation of Data Structures). Providing
+  functions generating code corresponding to functions on VDM data
+  structures, for example providing a function which generates code
+  corresponding to a {\bf union} operation between two sets. That is,
+  the basic data type implementation is described in this module.
+
+\item[CGAUX:] (CGAUX is an abbreviation of CodeGenerator AUXiliary). Provides auxiliary
+  functions and operations to the rest of the specification.
+
+\item[REP: ] (Type Representations Module). Provides the type
+  definitions for the semantic domains which are used internally in
+  the static semantics to model the types from the abstract syntax and
+  the derived types.
+
+\item[POS: ] (Position Information Module).  Provides the representation of the position information that 
+has been added to the abstract syntax, as defined in the AS module.
+
+\item[TI:] This module provides operations keeping track of type
+  information collected by the type checker. This type information is
+  used to determine methods class membership and dependencies between
+  classes.
+
+\end{description}
+
+%%%Specification.
+
+%%module AS
+\section{Module AS - VDM++ Abstract Syntax}
+\input{common_as.vdmpp.tex}
+\newpage
+
+%%module CI
+\input{contextinfo.vdm.tex}
+\newpage
+
+%%module CPP
+\input{mod_cppast.vdm.tex}
+\newpage
+
+%%module CGMAIN
+\input{mod_cgmain.vdmpp.tex}
+\newpage
+
+%%module CLASS
+\input{mod_class.vdm.tex}
+\newpage
+
+%%module FVD
+\input{mod_fvd.vdm.tex}
+\newpage
+
+%%module VD
+\input{mod_valdef.vdmpp.tex}
+\newpage
+
+%%module FD
+\input{mod_fctdef.vdmpp.tex}
+\newpage
+
+%%module TD
+\input{mod_typedef.vdmpp.tex}
+\newpage
+
+%%module TPGEN
+\input{mod_tpgen.vdmpp.tex}
+\newpage
+
+%module EXPR
+\input{mod_expr.vdmpp.tex}
+\newpage
+
+%module STMT
+\input{mod_stmt.vdmpp.tex}
+\newpage
+
+%module PM
+\input{mod_patmat.vdm.tex}
+\newpage
+
+%module BC
+\input{mod_bcppast.vdmpp.tex}
+\newpage
+
+%module DS
+\input{mod_vdm_ds.vdmpp.tex}
+\newpage
+
+%module CGAUX
+\input{mod_cgaux.vdmpp.tex}
+\newpage
+
+%module REP
+\input{rep.vdmpp.tex}
+\newpage
+
+%module POS
+\input{pos.vdmpp.tex}
+\newpage
+
+%module TI
+\input{mod_ti.vdm.tex}
+\newpage
+
+\end{document}
+
+%%module MD
+%%\input{mod_md.vdm.tex}
+
+
+
+\appendix
+
+%\section{The Definition of the Abstract Syntax of VDM}
+%\label{AS}
+%\input{mod_as.vdm.tex}
+
+%\label{AS}
+%\input{rep.vdmpp.tex}
+
+%\section{The Definition of the Abstract Syntax of C++}
+%\input{mod_cppast.vdm.tex}
+
+
+
+
+
+%%%module TI
+%\input{mod_ti.vdm.tex}
+
+
+%\newpage
+%\addcontentsline{toc}{section}{Index}
+%\printindex
+
+\end{document}

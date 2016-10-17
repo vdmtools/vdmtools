@@ -1,0 +1,71 @@
+class OpOrExpr is subclass of OpBinaryExpr
+operations 
+public  OpOrExpr : () ==> OpOrExpr
+OpOrExpr() == 
+( skip 
+) ;
+
+public  getOperatorString : () ==> [String]
+getOperatorString() == 
+( return  new  String("|")
+) ;
+
+public  OpOrExpr : [Expr] * [Expr] ==> OpOrExpr
+OpOrExpr(leftExpr, rightExpr) == 
+( let - = OpBinaryExpr(leftExpr , rightExpr)
+  in 
+    skip 
+) ;
+
+public  evaluate : [ExpressionContext] ==> [Object]
+evaluate(context) == 
+( if  leftExpr = nil  
+  then  
+    ( dcl   ex : [DWDSException] := new  DWDSException();
+      let - = ex.addMessage(DWDSException`InvalidOperationException , OpOrExpr`getClass().getName()+new  String(": left Expression is null"))
+      in 
+        skip ;
+      exit  ex
+    ) ;
+  if  rightExpr = nil  
+  then  
+    ( dcl   ex : [DWDSException] := new  DWDSException();
+      let - = ex.addMessage(DWDSException`InvalidOperationException , OpOrExpr`getClass().getName()+new  String(": right Expression is null"))
+      in 
+        skip ;
+      exit  ex
+    ) ;
+  ( dcl   results : [Boolean] := nil  ;
+    trap  j2v_exception with  
+      cases  true  : 
+        (isofclass  (ClassCastException,j2v_exception)) -> 
+          ( dcl   ex : [DWDSException] := new  DWDSException(),
+                  cce : [ClassCastException] := j2v_exception;
+            let - = ex.addMessage(DWDSException`InvalidOperationException , OpOrExpr`getClass().getName()+new  String(": incompatible operand types:")+new  String(" left:")+leftExpr.getClass().getName()+new  String(" right: ")+rightExpr.getClass().getName())
+            in 
+              skip ;
+            exit  ex
+          ) ,
+        others  -> 
+          exit  j2v_exception
+      end  
+    in  
+      ( dcl   leftValue : [Boolean] := leftExpr.evaluate(context),
+              rightValue : [Boolean] := rightExpr.evaluate(context);
+        results := new  Boolean(leftValue.booleanValue() or  rightValue.booleanValue())
+      ) ;
+    return  results
+  ) 
+) ;
+
+public  comparisonResults : [Comparable] * [Comparable] ==> [Boolean]
+comparisonResults(leftValue, rightValue) == 
+( dcl   ex : [DWDSException] := new  DWDSException();
+  let - = ex.addMessage(DWDSException`InvalidOperationException , OpOrExpr`getClass().getName()+new  String(": invoking ComparisonResults() is invalid for this class."))
+  in 
+    skip ;
+  exit  ex
+) ;
+
+
+end  OpOrExpr

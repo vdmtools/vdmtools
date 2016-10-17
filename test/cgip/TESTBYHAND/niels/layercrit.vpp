@@ -1,0 +1,354 @@
+class LayerCrit is subclass of Global
+
+operations
+
+checkCriteria: LayerGeom ==> bool
+checkCriteria (layer) ==
+  is subclass responsibility;
+
+checkCriteriaFromGroove: Groove ==> bool
+checkCriteriaFromGroove (groove) ==
+  is subclass responsibility;
+
+divide: Groove * LayerCriteria ==> seq of (LayerGeom * Error)
+divide (groove, crit) ==
+  is subclass responsibility;
+
+getMaxHeight: () ==> Height 
+getMaxHeight () ==
+  return 0;
+  -- Default action.
+  -- Probably an error should by given instead
+
+getDirection: () ==> WeldDirection 
+getDirection () ==
+  return <SurfaceDir>;
+  -- Default action.
+
+divideCriterias: () ==> seq of LayerCrit 
+divideCriterias () ==
+  return [self];
+  -- Default action.
+
+getError: () ==> ErrorMessage
+getError () ==
+  is subclass responsibility;
+
+end LayerCrit
+
+
+class WeldDirLayerCrit is subclass of LayerCrit
+
+instance variables
+
+  direct: WeldDirection := <SurfaceDir>;
+
+operations 
+
+initialise: WeldDirection ==> ()
+initialise (d) ==
+  direct := d;
+
+create: WeldDirection ==> WeldDirLayerCrit 
+create (d) ==
+( dcl lc : WeldDirLayerCrit := new WeldDirLayerCrit();
+  lc.initialise (d);
+  return lc
+);
+
+getDirection: () ==> WeldDirection 
+getDirection () ==
+  return direct;
+
+checkCriteria: LayerGeom ==> bool
+checkCriteria (layer) ==
+  is not yet specified;
+
+checkCriteriaFromGroove: Groove ==> bool
+checkCriteriaFromGroove (groove) ==
+  is not yet specified;
+
+divide: Groove * LayerCriteria ==> seq of (LayerGeom * Error)
+divide (groove, crits) ==
+  is not yet specified;
+
+getError: () ==> ErrorMessage 
+getError () ==
+  return "Layer direction criteria violated.";
+
+end WeldDirLayerCrit
+
+
+class MaxHeightLayerCrit is subclass of LayerCrit
+
+instance variables
+
+  maxheight : Height
+
+operations
+
+initialise: Height ==> ()
+initialise (h) ==
+  maxheight := h;
+
+create: Height ==> MaxHeightLayerCrit 
+create (h) ==
+( dcl lc : MaxHeightLayerCrit := new MaxHeightLayerCrit();
+  lc.initialise (h);
+  return lc
+);
+
+checkCriteria: LayerGeom ==> bool 
+checkCriteria (layer) ==
+  return layer.getHeight() <= maxheight;
+
+checkCriteriaFromGroove: Groove ==> bool 
+checkCriteriaFromGroove (groove) ==
+  return groove.getHeight() <= maxheight;
+
+divide: Groove * LayerCriteria ==> seq of (LayerGeom * Error) 
+divide (groove, crits) ==
+  let mk_LayerCriteria (dir, drivingcrit, gencrit, -) = crits in
+  ( dcl math : Math := new Math();
+    dcl layers : seq of (LayerGeom * Error) := [];
+    dcl layerh : Height,
+        crits' : seq of LayerCrit;
+  
+    groove.setUpLayerGeomEnv (dir.getDirection());
+    crits' := drivingcrit.divideCriterias() ^ gencrit;
+  
+    let gh = groove.getHeight (),
+        lmaxh = drivingcrit.getMaxHeight () in
+    let nooflayers = math.ceil (gh/lmaxh) in
+      layerh := gh / nooflayers;
+  
+    while not groove.IsEmpty() do
+      if forall i in set inds crits' & crits'(i).checkCriteriaFromGroove (groove)
+      then ( dcl lg : LayerGeom := new LayerGeom(),
+                 err : Error := new Error();
+             lg.initFromGroove(groove);
+             layers := layers ^ [mk_(lg,err)];
+             groove.makeEmpty() )
+      else let newlayer_err = groove.restrictByHeight(layerh, crits) in
+           layers := layers ^ [newlayer_err];
+  
+    return layers
+  );
+
+getMaxHeight: () ==> Height 
+getMaxHeight () ==
+  return maxheight;
+
+getError: () ==> ErrorMessage 
+getError () ==
+  return "Max height criteria violated.";
+
+end MaxHeightLayerCrit
+
+
+class MinHeightLayerCrit is subclass of LayerCrit
+
+instance variables
+
+  minheight : Height
+
+operations 
+
+initialise: Height ==> ()
+initialise (h) ==
+  minheight := h;
+
+create: Height ==> MinHeightLayerCrit 
+create (h) ==
+( dcl lc: MinHeightLayerCrit := new MinHeightLayerCrit();
+  lc.initialise (h);
+  return lc
+);
+
+checkCriteria: LayerGeom ==> bool 
+checkCriteria (layer) ==
+  return minheight <= layer.getHeight();
+
+checkCriteriaFromGroove: Groove ==> bool 
+checkCriteriaFromGroove (groove) ==
+  return minheight <= groove.getHeight();
+
+divide: Groove * LayerCriteria ==> seq of (LayerGeom * Error)
+divide (groove, crits) ==
+  is not yet specified;
+
+getMinHeight: () ==> Height 
+getMinHeight () ==
+  return minheight;
+
+getError: () ==> ErrorMessage 
+getError () ==
+  return "Min height criteria violated.";
+
+end MinHeightLayerCrit
+
+
+class MaxAreaLayerCrit is subclass of LayerCrit
+
+instance variables
+
+  maxarea : Area
+
+operations
+
+initialise: Area ==> ()
+initialise (a) ==
+  maxarea := a;
+
+create: Area ==> MaxAreaLayerCrit 
+create (a) ==
+( dcl lc : MaxAreaLayerCrit := new MaxAreaLayerCrit();
+  lc.initialise (a);
+  return lc
+);
+
+checkCriteria: LayerGeom ==> bool 
+checkCriteria (layer) ==
+  return layer.getArea() <= maxarea;
+
+checkCriteriaFromGroove: Groove ==> bool 
+checkCriteriaFromGroove (groove) ==
+  return groove.getArea() <= maxarea;
+
+divide: Groove * LayerCriteria ==> seq of (LayerGeom * Error)
+divide (groove, crits) ==
+  is not yet specified;
+
+getMaxArea: () ==> Area 
+getMaxArea () ==
+  return maxarea;
+
+getError: () ==> ErrorMessage 
+getError () ==
+  return "Max area criteria violated.";
+
+end MaxAreaLayerCrit
+
+
+class MinAreaLayerCrit is subclass of LayerCrit
+
+instance variables
+
+  minarea : Area
+
+operations
+
+initialise: Area ==> ()
+initialise (a) ==
+  minarea := a;
+
+create: Area ==> MinAreaLayerCrit 
+create (a) ==
+( dcl lc : MinAreaLayerCrit := new MinAreaLayerCrit();
+  lc.initialise (a);
+  return lc
+);
+
+checkCriteria: LayerGeom ==> bool 
+checkCriteria (layer) ==
+  return minarea <= layer.getArea();
+
+checkCriteriaFromGroove: Groove ==> bool 
+checkCriteriaFromGroove (groove) ==
+  return minarea <= groove.getArea();
+
+divide: Groove * LayerCriteria ==> seq of (LayerGeom * Error)
+divide (groove, crits) ==
+  is not yet specified;
+
+getMinArea: () ==> Area 
+getMinArea () ==
+  return minarea;
+
+getError: () ==> ErrorMessage 
+getError () ==
+  return "Min area criteria violated.";
+
+end MinAreaLayerCrit
+
+
+class SurfaceAngleMaxHeightLayerCrit is subclass of LayerCrit
+
+instance variables
+
+  surfaceangle : Angle;
+  maxheight : Height;
+
+operations
+
+initialise: Angle * Height ==> ()
+initialise (sa, mh) ==
+( surfaceangle := sa;
+  maxheight := mh
+);
+
+create: Angle * Height ==> SurfaceAngleMaxHeightLayerCrit 
+create (sa, mh) ==
+( dcl lc : SurfaceAngleMaxHeightLayerCrit := new SurfaceAngleMaxHeightLayerCrit();
+  lc.initialise (sa, mh);
+  return lc
+);
+
+checkCriteria: LayerGeom ==> bool 
+checkCriteria (layer) ==
+  return layer.getHeight() <= maxheight;
+
+checkCriteriaFromGroove: Groove ==> bool 
+checkCriteriaFromGroove (groove) ==
+  return groove.getHeight() <= maxheight;
+
+divide: Groove * LayerCriteria ==> seq of (LayerGeom * Error) 
+divide (groove, crits) ==
+  let mk_LayerCriteria (dir, drivingcrit, gencrit, -) = crits in
+  ( dcl math : Math := new Math();
+    dcl layers : seq of (LayerGeom * Error) := [];
+    dcl layerh : Height,
+        deltaphi : Angle,
+        actualdeltaphi : Angle,
+        crits' : seq of LayerCrit;
+  
+    groove.setUpLayerGeomEnv (dir.getDirection());
+    crits' := drivingcrit.divideCriterias() ^ gencrit;
+  
+    let gh = groove.getHeight (),
+        lmaxh = drivingcrit.getMaxHeight (),
+        epsilon = groove.getEpsilon () in
+    let nooflayers = math.ceil (gh/lmaxh) in
+    ( layerh := gh / nooflayers;
+      deltaphi := if nooflayers > 1
+                  then (epsilon - surfaceangle) / (nooflayers-1)
+                  else 0;
+      actualdeltaphi := epsilon - surfaceangle );
+  
+    while not groove.IsEmpty() do
+      if forall i in set inds crits' & crits'(i).checkCriteriaFromGroove (groove)
+      then ( dcl lg : LayerGeom := new LayerGeom(),
+                 err : Error := new Error();
+             lg.initFromGroove(groove);
+             layers := layers ^ [mk_(lg,err)];
+             groove.makeEmpty() )
+      else let newlayer_err = groove.restrictByHeight_SurfAngle(layerh, crits, actualdeltaphi) in
+           ( layers := layers ^ [newlayer_err];
+             actualdeltaphi := actualdeltaphi - deltaphi );
+  
+    return layers
+  );
+
+getSurfaceAngle: () ==> Angle 
+getSurfaceAngle () ==
+  return surfaceangle;
+
+getMaxHeight: () ==> Height 
+getMaxHeight () ==
+  return maxheight;
+
+getError: () ==> ErrorMessage 
+getError () ==
+  return "Surface Angle Max Height criteria violated.";
+
+end SurfaceAngleMaxHeightLayerCrit

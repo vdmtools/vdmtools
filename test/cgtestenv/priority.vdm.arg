@@ -1,0 +1,24 @@
+module PRIORITY
+
+imports
+  from SCHDTP all,
+  from STKM all,
+  from AS all,
+  from SEM all,
+  from GLOBAL all,
+  from CI all,
+  from REP all,
+  from INSTRTP all,
+  from PAT all,
+  from RTERR all
+
+exports all
+
+definitions
+
+values
+
+  priorityFile =
+#include "priority.arg"
+
+end PRIORITY

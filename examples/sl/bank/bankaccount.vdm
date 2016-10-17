@@ -1,0 +1,54 @@
+module BankAccount
+
+  exports types struct digit; struct account
+          -- struct is used here because in the current version of
+	  -- the code generator it nees to know the structure of
+	  -- such types
+          functions digval: digit -> nat;
+                    withdrawal: account * real -> account;
+                    deposit: account * real -> account;
+                    isPin: account * nat -> bool;
+                    requestWithdrawal: account * nat -> bool
+--  exports all
+
+  definitions
+
+  types
+
+  digit = nat
+  inv d == d < 10;
+
+  
+  account::  holder : seq1 of char
+             number : seq1 of digit
+             branchcode : seq1 of digit
+             balance: real
+             epin: nat
+  inv mk_account(-, number, branchcode,-,-) ==
+    len number = 8 and len branchcode = 6
+
+
+  functions
+
+    digval : digit -> nat
+    digval(d) == d;
+
+    deposit: account * real -> account
+    deposit(acc,r) == 
+      mu(acc,balance |-> acc.balance + r);
+
+    withdrawal : account * real -> account
+    withdrawal (acc,r) == 
+      mu(acc,balance |-> acc.balance - r);
+
+    isPin : account * nat -> bool
+    isPin(acc,ep) ==
+      ep = acc.epin;
+
+    requestWithdrawal : account * nat -> bool
+    requestWithdrawal (acc,amt) ==
+      acc.balance > amt
+
+end BankAccount
+
+

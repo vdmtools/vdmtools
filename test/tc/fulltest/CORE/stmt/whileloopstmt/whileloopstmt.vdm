@@ -1,0 +1,34 @@
+class WhileLoopTest
+
+operations
+
+  WhileLoop1: () ==>  map nat to bool
+  WhileLoop1() ==
+   (dcl tmp : nat := 1;
+    while tmp < 9 do
+      tmp := tmp + 1;
+    return {tmp |-> true});
+
+  WhileLoop2: bool | real ==> nat
+  WhileLoop2(arg) ==
+    while arg do
+      return 7;
+
+  WhileLoop3: () ==> ()
+  WhileLoop3() ==
+    let t = true
+    in
+    while 4 > t do
+     skip;
+
+  WhileLoop4: () ==> ()
+  WhileLoop4() ==
+    while true do
+      a := 7;
+
+  WhileLoop5: () ==> ()
+  WhileLoop5() ==
+    while 8 do
+      a := 7;
+
+end WhileLoopTest

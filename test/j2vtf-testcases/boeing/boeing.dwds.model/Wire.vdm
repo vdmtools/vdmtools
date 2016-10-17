@@ -1,0 +1,272 @@
+class Wire is subclass of ComparisonValueInterface
+operations 
+public  getId : () ==> int 
+getId() == 
+( return  wireId
+) ;
+
+public  getGage : () ==> [String]
+getGage() == 
+( return  gage
+) ;
+
+public  getName : () ==> [String]
+getName() == 
+( return  wireName
+) ;
+
+public  getType : () ==> [String]
+getType() == 
+( return  type
+) ;
+
+public  getColor : () ==> [String]
+getColor() == 
+( return  color
+) ;
+
+public  getPhase : () ==> [String]
+getPhase() == 
+( return  phase
+) ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+( return  Wire`toString().hashCode()
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( return  getName()
+) ;
+
+public  getBundle : () ==> [String]
+getBundle() == 
+( return  bundle
+) ;
+
+public  getLength : () ==> [String]
+getLength() == 
+( return  length
+) ;
+
+public  getSystem : () ==> [AircraftSystem]
+getSystem() == 
+( return  mediator.getAircraftSystem(acSystemId)
+) ;
+
+public  isAShield : () ==> bool 
+isAShield() == 
+( return  isAShield
+) ;
+
+public  isShielded : () ==> bool 
+isShielded() == 
+( return  isShielded
+) ;
+
+public  getAcTypeId : () ==> int 
+getAcTypeId() == 
+( return  acTypeId
+) ;
+
+public  getGroupName : () ==> [String]
+getGroupName() == 
+( return  groupName
+) ;
+
+public  getWireGroup : () ==> [WireGroup]
+getWireGroup() == 
+( return  mediator.getWireGroup(self  )
+) ;
+
+public  getAllShields : () ==> [Iterator]
+getAllShields() == 
+( if  isShielded
+  then  
+    ( return  mediator.getAllShields(self  )
+    ) 
+  else  
+    ( return  nil  
+    ) 
+) ;
+
+public  getEnd1RefDes : () ==> [RefDes]
+getEnd1RefDes() == 
+( return  mediator.getRefDes(mediator.getWireEndpoint1(self  ).getRefDesId())
+) ;
+
+public  getEnd2RefDes : () ==> [RefDes]
+getEnd2RefDes() == 
+( return  mediator.getRefDes(mediator.getWireEndpoint2(self  ).getRefDesId())
+) ;
+
+public  setIsAShield : bool  ==> <VOID>
+setIsAShield(isAShield) == 
+( Wire`isAShield := isAShield;
+  return  <VOID>
+) ;
+
+public  setIsShielded : bool  ==> <VOID>
+setIsShielded(isShielded) == 
+( Wire`isShielded := isShielded;
+  return  <VOID>
+) ;
+
+public  hasDrawingNotes : () ==> bool 
+hasDrawingNotes() == 
+( return  mediator.hasDrawingNotes(self  )
+) ;
+
+public  equals : [Object] ==> bool 
+equals(obj) == 
+( return  (is_ (obj,[Wire]) and  wireId = (def l_10 :  Wire = (obj)
+  in l_10).getId())
+) ;
+
+public  getEnd1RefDesPin : () ==> [String]
+getEnd1RefDesPin() == 
+( return  mediator.getWireEndpoint1(self  ).getPinName()
+) ;
+
+public  getEnd2RefDesPin : () ==> [String]
+getEnd2RefDesPin() == 
+( return  mediator.getWireEndpoint2(self  ).getPinName()
+) ;
+
+public  setGage : [String] ==> <VOID>
+setGage(newGage) == 
+( gage := if  (newGage = nil  ) then  nullString else  newGage;
+  return  <VOID>
+) ;
+
+public  setType : [String] ==> <VOID>
+setType(newType) == 
+( type := if  (newType = nil  ) then  nullString else  newType;
+  return  <VOID>
+) ;
+
+public  setColor : [String] ==> <VOID>
+setColor(newColor) == 
+( color := if  (newColor = nil  ) then  nullString else  newColor;
+  return  <VOID>
+) ;
+
+public  setPhase : [String] ==> <VOID>
+setPhase(phaseIn) == 
+( phase := if  (phaseIn = nil  ) then  nullString else  phaseIn;
+  return  <VOID>
+) ;
+
+public  getDrawingNotesText : () ==> [String]
+getDrawingNotesText() == 
+( return  mediator.getDrawingNotesText(self  )
+) ;
+
+public  setBundle : [String] ==> <VOID>
+setBundle(newBundle) == 
+( bundle := if  (newBundle = nil  ) then  nullString else  newBundle;
+  return  <VOID>
+) ;
+
+public  setLength : [String] ==> <VOID>
+setLength(newLength) == 
+( length := if  (newLength = nil  ) then  nullString else  newLength;
+  return  <VOID>
+) ;
+
+public  getEnd1RefDesPinType : () ==> int 
+getEnd1RefDesPinType() == 
+( return  mediator.getWireEndpoint1(self  ).getEndpointType()
+) ;
+
+public  getEnd2RefDesPinType : () ==> int 
+getEnd2RefDesPinType() == 
+( return  mediator.getWireEndpoint2(self  ).getEndpointType()
+) ;
+
+public  getEnd1RefDesTermCode : () ==> [String]
+getEnd1RefDesTermCode() == 
+( return  mediator.getWireEndpoint1(self  ).getWireTermCode()
+) ;
+
+public  getEnd2RefDesTermCode : () ==> [String]
+getEnd2RefDesTermCode() == 
+( return  mediator.getWireEndpoint2(self  ).getWireTermCode()
+) ;
+
+public  getEnd1FerruleTermCode : () ==> [String]
+getEnd1FerruleTermCode() == 
+( return  mediator.getWireEndpoint1(self  ).getFerruleTermCode()
+) ;
+
+public  getEnd1FerruleWireType : () ==> [String]
+getEnd1FerruleWireType() == 
+( return  mediator.getWireEndpoint1(self  ).getFerruleWireType()
+) ;
+
+public  getEnd2FerruleTermCode : () ==> [String]
+getEnd2FerruleTermCode() == 
+( return  mediator.getWireEndpoint2(self  ).getFerruleTermCode()
+) ;
+
+public  getEnd2FerruleWireType : () ==> [String]
+getEnd2FerruleWireType() == 
+( return  mediator.getWireEndpoint2(self  ).getFerruleWireType()
+) ;
+
+public  setGroupName : [String] ==> <VOID>
+setGroupName(newGroupName) == 
+( groupName := if  (newGroupName = nil  ) then  nullString else  newGroupName;
+  return  <VOID>
+) ;
+
+public  equals : [ComparisonValueInterface] ==> bool 
+equals(anotherValue) == 
+( return  (is_ (anotherValue,[Wire]) and  wireId = (def l_10 :  Wire = (anotherValue)
+  in l_10).getId())
+) ;
+
+public  compareTo : [ComparisonValueInterface] ==> int 
+compareTo(anotherValue) == 
+( return  (Wire`toString().compareTo(anotherValue.toString()))
+) ;
+
+public  Wire : int  * int  * int  * [String] * [String] * [String] * [String] * [String] * [String] * [String] * [String] * bool  * bool  ==> Wire
+Wire(wireId, acTypeId, acSystemId, wireName, color, type, gage, length, phase, groupName, bundle, isAShield, isShielded) == 
+( Wire`wireId := wireId;
+  Wire`acTypeId := acTypeId;
+  Wire`acSystemId := acSystemId;
+  Wire`wireName := wireName;
+  Wire`color := color;
+  Wire`type := type;
+  Wire`gage := gage;
+  Wire`length := length;
+  Wire`phase := phase;
+  Wire`groupName := groupName;
+  Wire`bundle := bundle;
+  Wire`isAShield := isAShield;
+  Wire`isShielded := isShielded;
+  Wire`mediator := WiringDataMediator`getMediator()
+) ;
+
+instance variables 
+  public  static NORMAL : int  := 0;
+  public  static BOOT_SPLICE : int  := 1;
+  private  static nullString : [String] := new  String([  ]);
+  private  acSystemId : int ;
+  private  mediator : [WiringDataMediator];
+  private  wireId : int ;
+  private  acTypeId : int ;
+  private  wireName : [String];
+  private  color : [String] := nullString;
+  private  type : [String] := nullString;
+  private  gage : [String] := nullString;
+  private  length : [String] := nullString;
+  private  phase : [String] := nullString;
+  private  groupName : [String] := nullString;
+  private  bundle : [String] := nullString;
+  private  isAShield : bool  := false  ;
+  private  isShielded : bool  := false  
+  
+end  Wire

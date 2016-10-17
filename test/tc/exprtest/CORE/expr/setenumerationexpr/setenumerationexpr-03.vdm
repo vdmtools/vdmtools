@@ -1,0 +1,14 @@
+class SetEunumertionTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let n = 5,
+      - = {if n then true else 7.8, {|->}}
+  in skip;
+
+------------------------------------------------------------------------------
+end SetEunumertionTest

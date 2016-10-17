@@ -1,0 +1,25 @@
+class AH64ParserTokenTypes
+instance variables 
+  public  static EOF : int  := 1;
+  public  static NULL_TREE_LOOKAHEAD : int  := 3;
+  public  static SEMICOLON : int  := 4;
+  public  static COMMA : int  := 5;
+  public  static EQUIP_ID : int  := 6;
+  public  static LITERAL_THRU : int  := 7;
+  public  static LITERAL_AND : int  := 8;
+  public  static LITERAL_UP : int  := 9;
+  public  static WS : int  := 10;
+  public  static EOL : int  := 11;
+  public  static SLASH : int  := 12;
+  public  static DASH : int  := 13;
+  public  static UNDERSCORE : int  := 14;
+  public  static LANGLE : int  := 15;
+  public  static RANGLE : int  := 16;
+  public  static KEYWORD : int  := 17;
+  public  static UNKNOWN : int  := 18;
+  public  static UNKNOWN_CHAR : int  := 19;
+  public  static DIGIT : int  := 20;
+  public  static ALPHA : int  := 21;
+  public  static VOCAB : int  := 22
+  
+end  AH64ParserTokenTypes

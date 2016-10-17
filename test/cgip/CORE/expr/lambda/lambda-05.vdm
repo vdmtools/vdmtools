@@ -1,0 +1,10 @@
+class A
+
+operations
+
+public Test :() ==> nat
+Test() ==
+  return   (lambda mk_(b,(6+5)) : (nat * nat) & b + 5)(mk_(0,11))
+
+   
+end A

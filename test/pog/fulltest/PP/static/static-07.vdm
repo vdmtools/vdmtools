@@ -1,0 +1,24 @@
+class A 
+
+operations 
+
+public static a : nat  ==> bool
+a(-) == is not yet specified;
+
+public static a : nat * bool ==> bool
+a(x,-) == 
+  return A`a(x);
+
+public static b : nat * bool ==> bool
+b(x,-) == 
+  A`a(x);
+
+public static c : nat * bool ==> bool
+c(x,-) == 
+  return a(x);
+
+public static d : nat * bool ==> bool
+d(x,-) == 
+  a(x);
+
+end A 

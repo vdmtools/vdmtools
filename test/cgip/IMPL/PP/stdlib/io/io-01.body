@@ -1,0 +1,16 @@
+class A is subclass of IO -- to get access to polymorph functions...
+operations
+
+public  Test: () ==> seq of (real|seq of char|bool)
+  Test () ==
+  let fout = "io-01.testout" in
+  return [
+    writeval[seq of real]([1,2.3456789]),
+    fwriteval[seq of char](fout,"Hello World",<start>),
+    let mk_(b,s) = freadval[seq of char](fout)  in
+    if b then s else ferror(),
+    echo("VDM tools"),
+    fecho(fout,"VDM tools",<start>)
+    ]
+
+end A

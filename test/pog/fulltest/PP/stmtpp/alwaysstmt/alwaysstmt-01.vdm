@@ -1,0 +1,46 @@
+class ClientTrapStmtTest
+
+   instance variables
+
+     public v : int
+
+   operations
+
+     public update : int ==> ()
+            update(i) ==
+              (dcl t : Test := new Test();
+               always (
+                 v := 0;
+		 skip)
+                 in
+                 (v := t.s.filter(i)))
+
+end ClientTrapStmtTest
+class Test
+instance variables
+
+ public s : ServerTrapStmtTest := new ServerTrapStmtTest()
+
+end Test
+
+class ServerTrapStmtTest
+
+   types
+
+     public exception = <a>
+
+   operations
+
+     public filter : int ==> int
+            filter(i) ==
+              cases true:
+                (i < 0) -> exit <a>,
+                others  -> if false
+		           then exit <b>
+			   else return i
+              end
+
+end ServerTrapStmtTest
+
+
+

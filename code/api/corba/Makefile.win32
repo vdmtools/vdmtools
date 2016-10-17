@@ -1,0 +1,76 @@
+#
+# This makefile is used to compile clients that uses the CORBA
+# interface of the VDM Toolbox.  
+# This file should be used with the GNU make on CYGWIN only.
+# 
+# Copyright Kyushu University
+#
+
+# NOTE:
+# The variable OMNIDIR must point to the installation directory of
+# omniORB, and TBDIR must point to the installation directory of the
+# VDM Toolbox
+#
+
+OMNIDIR = C:/omniORB-4.2.0
+OMNIBINDIR = $(OMNIDIR)/bin/x86_win32
+OMNILIBDIR = $(OMNIDIR)/lib/x86_win32
+OMNIINCDIR = $(OMNIDIR)/include
+OMNILIBS = omniORB420_rt.lib omnithread40_rt.lib omniDynamic420_rt.lib
+
+TBDIR = ../..
+CGLIBDIR = $(TBDIR)/cg/lib
+CGINCDIR = $(TBDIR)/cg/include
+
+CORBA_CPPFLAGS = -D__WIN32__ -D__x86__ -D__NT__ -D__OSVERSION__=4
+
+INCPATH = -I. -I$(OMNIINCDIR) -I$(CGINCDIR)
+
+LDFLAGS = /incremental:no /NODEFAULTLIB:LIBC.lib /LIBPATH:"$(OMNILIBDIR)" \
+	wsock32.lib advapi32.lib user32.lib \
+	$(CGLIBDIR)/vdm.lib $(OMNILIBS)
+
+CC = cl
+CFLAGS = /nologo /c /MD /W0 /EHsc $(DEBUG) $(CORBA_CPPFLAGS)
+
+LINK = link /nologo
+
+OMNIIDL = $(OMNIBINDIR)/omniidl
+OMNIIDLFLAGS = -bcxx -Wbs=SK.cc -WbBOA 
+
+all: client_example-pp.exe client_example-sl.exe
+
+CORBASRCS = corba_apiSK.cpp metaiv_idlSK.cpp corba_client.cpp \
+	corba_api.hh metaiv_idl.hh
+
+CORBAOBJS = corba_apiSK.obj metaiv_idlSK.obj corba_client.obj
+
+$(CORBAOBJS): $(CORBASRCS)
+
+%SK.cc: %.idl
+	$(OMNIIDL) $(OMNIIDLFLAGS) $^
+
+metaiv_idlSK.cc: metaiv_idl.idl
+	$(OMNIIDL) $(OMNIIDLFLAGS) metaiv_idl.idl
+
+%.obj: %.cpp
+	$(CC) $(CFLAGS) $(INCPATH) /Fo"$@" $<
+
+%.cpp: %.cc
+	cp -f $^ $@
+
+%.exe: %.obj $(CORBAOBJS)
+	$(LINK) /OUT:"$@" $^ $(LDFLAGS)
+
+%-pp.obj: %.cpp
+	$(CC) $(CFLAGS) $(INCPATH) -DVDMPP /Fo"$@" $<
+	
+%-sl.obj: %.cpp
+	$(CC) $(CFLAGS) $(INCPATH) -DVDMSL /Fo"$@" $<
+
+clean:
+	del *.obj client_example*.exe
+	del metaiv_idl.hh metaiv_idlSK.cc
+	del corba_api.hh corba_apiSK.cc
+	del *.pdb *.ilk *.opt
+

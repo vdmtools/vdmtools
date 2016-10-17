@@ -1,0 +1,22 @@
+class A
+
+  instance variables
+
+    public n : nat := 1;
+
+end A
+
+class B 
+
+instance variables
+
+  a : A := new A();
+
+  operations
+
+  public Test : () ==> nat
+    Test() ==
+      (a.n := 9;
+       return a.n);    
+
+end B

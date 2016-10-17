@@ -1,0 +1,17 @@
+class A
+
+functions
+meas[@A] : [@A] -> nat
+meas(a) ==  if a = nil then 0 else a;
+
+foo[@B] : [@B] -> nat
+foo(b) == 
+  cases b:
+  nil    -> 0,
+  0      -> 0,
+  others -> foo[@B](b-1)
+  end
+measure meas;
+
+
+end A

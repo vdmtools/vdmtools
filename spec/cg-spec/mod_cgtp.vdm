@@ -1,0 +1,26 @@
+%-----------------------------------------------------------------------------
+% WHAT
+%    Module providing types used in the C++ and Java code
+%    generators. The intention is that this module should be code
+%    generated. 
+% $Id: mod_cgtp.vdm,v 1.1 2000/10/17 09:51:51 paulm Exp $
+% Implemented in: CGTYPES[_anonym].{cc,h}
+%-----------------------------------------------------------------------------
+\begin{vdm_al}
+module CGTYPES
+
+exports all
+definitions
+
+types
+\end{vdm_al}
+
+The type \texttt{KeepCode} is used in the backend when reading
+existing Java files. It represents a portion of code from the original
+file that is to be retained in the newly generated file.
+\begin{vdm_al}
+KeepCode :: linenum : int
+            code : seq of char
+
+end CGTYPES
+\end{vdm_al}

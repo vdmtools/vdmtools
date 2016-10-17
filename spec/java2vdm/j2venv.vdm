@@ -1,0 +1,290 @@
+\section{The J2VENV Module}
+
+\begin{vdm_al}
+module J2VENV
+
+imports
+
+from CPP all,
+from AS all,
+from CI all,
+from JSSREP all,
+from J2VNS all,
+from J2VAUX all,
+from J2VBVDM all,
+from REP all
+
+exports
+values
+  v_J2VUTILnm:  seq1 of char;
+  v_ConvertOpNm:  seq1 of char;
+  v_ConcatStrOpNm:  seq1 of char;
+  v_BitOpNm: seq1 of char;
+  v_StringNm:  seq1 of char;
+  v_lang : CPP`QualifiedPackageName;
+  v_util : CPP`QualifiedPackageName;
+  v_io   : CPP`QualifiedPackageName;
+
+operations
+  AddHeaderInfo: [CPP`Header] ==> ();
+  AddPackageInfo: CPP`File ==> ();
+  GetPackageInfo: [CPP`PackageName] * (<PUBLIC_ONLY>|<ALL>) ==> set of CPP`Identifier;
+  CanBeImported: [CPP`PackageName] * CPP`Identifier ==> bool;
+  GetTypesOnDemand: CPP`PackageName ==> map [CPP`PackageName] to set of CPP`Identifier;
+  GetSingleTypeName: CPP`PackageName ==> map [CPP`PackageName] to set of CPP`Identifier
+--functions
+
+definitions
+
+values
+\end{vdm_al}
+
+Name of a static class that provides auxiliary operations, calls of which
+the translator inserts into VDM++ code.
+
+\begin{vdm_al}
+  v_J2VUTILnm:  seq1 of char = "J2VUTIL";
+
+\end{vdm_al}
+
+Name of an auxiliary operation that performs various kinds of
+convertions.
+
+\begin{vdm_al}
+  v_ConvertOpNm: seq1 of char = "Convert";
+
+\end{vdm_al}
+
+Name of a class representing JAVA's String.
+
+\begin{vdm_al}
+  v_StringNm: seq1 of char = "JavaLangString";
+\end{vdm_al}
+
+The contents of packages
+which are defined in JAVA files under translation and/or
+built-in packages.
+
+Information on a class inside a package includes only
+the class name and an indicator whether the class is
+declared public.
+
+\begin{vdm_al}
+
+  v_ConcatStrOpNm: seq1 of char = "ConcatStr";
+  v_BitOpNm: seq1 of char = "BitOp";
+
+  v_java : CPP`SimplePackageName
+    = mk_CPP`SimplePackageName(mk_CPP`Identifier("java",-1),-1);
+  v_lang : CPP`QualifiedPackageName
+    = mk_CPP`QualifiedPackageName(v_java, mk_CPP`Identifier("lang",-1),-1);
+  v_util : CPP`QualifiedPackageName
+    = mk_CPP`QualifiedPackageName(v_java, mk_CPP`Identifier("util",-1),-1);
+  v_io   : CPP`QualifiedPackageName
+    = mk_CPP`QualifiedPackageName(v_java, mk_CPP`Identifier("io",-1),-1);
+
+state J2VENVSt of
+  packages: map [CPP`PackageName] to set of (CPP`Identifier * bool)
+init s == s = mk_J2VENVSt
+( --let
+  --  l_java = mk_CPP`SimplePackageName(mk_CPP`Identifier("java",-1),-1),
+  --  l_lang = mk_CPP`QualifiedPackageName(l_java, mk_CPP`Identifier("lang",-1),-1),
+  --  l_util = mk_CPP`QualifiedPackageName(l_java, mk_CPP`Identifier("util",-1),-1),
+  --  l_io   = mk_CPP`QualifiedPackageName(l_java, mk_CPP`Identifier("io",-1),-1)
+  --in
+    { nil |-> {},
+      v_lang
+        |-> { mk_(mk_CPP`Identifier("Object",-1),true),
+              mk_(mk_CPP`Identifier("System",-1),true), 
+              mk_(mk_CPP`Identifier("String",-1),true), 
+              mk_(mk_CPP`Identifier("Integer",-1),true), 
+              mk_(mk_CPP`Identifier("Character",-1),true), 
+              mk_(mk_CPP`Identifier("Class",-1),true), 
+              mk_(mk_CPP`Identifier("StringBuffer",-1),true), 
+              mk_(mk_CPP`Identifier("Comparable",-1),true) }, 
+      v_util
+        |-> { mk_(mk_CPP`Identifier("Vector",-1),true),
+              mk_(mk_CPP`Identifier("Hashtable",-1),true), 
+              mk_(mk_CPP`Identifier("Observable",-1),true), 
+              mk_(mk_CPP`Identifier("Collection",-1),true), 
+              mk_(mk_CPP`Identifier("Collections",-1),true), 
+              mk_(mk_CPP`Identifier("Properties",-1),true), 
+              mk_(mk_CPP`Identifier("Enumeration",-1),true), 
+              mk_(mk_CPP`Identifier("Iterator",-1),true) }, 
+      v_io
+        |-> { mk_(mk_CPP`Identifier("Serializable",-1),true) }
+    }
+)                   -- built packages
+end
+
+operations
+
+\end{vdm_al}
+
+The operation extracts package and import declarations (if any)
+from a file header p\_header and
+invokes initialization of a name space for the compilation unit
+which contains the header p\_header.
+
+\begin{vdm_al}
+AddHeaderInfo: [CPP`Header] ==> ()
+AddHeaderInfo(p_header) == 
+  let mk_(l_pn, l_ims) = if p_header = nil
+                         then mk_(nil,[])
+                         else mk_(if p_header.pd <> nil
+                                  then p_header.pd.name
+                                  else nil,
+                                  p_header.ims)
+  in
+    J2VNS`Init(l_pn, l_ims);
+
+\end{vdm_al}
+
+The operation adds names of classes defined public in
+the file p\_file to the set of class names for a
+package which name is specified in package declaration
+in the file.
+
+If there is no package declaration in the file or
+no package name is specified, then 
+classes (even not public) are assigned to the unnamed package.
+
+\begin{vdm_al}
+AddPackageInfo: CPP`File ==> ()
+AddPackageInfo(p_file) == (
+  let l_pd = if p_file.h <> nil and p_file.h.pd <> nil
+             then p_file.h.pd
+             else nil,
+      l_pn = if l_pd <> nil
+             then GetPureName(l_pd.name)
+             else nil,
+      l_ds = (hd p_file.ast).ds,
+      l_cnms = elems [mk_(GetPureName(J2VAUX`ExtractName(l_ds(i).tp)),
+                      <PUBLIC> in set {l_m | mk_CPP`Modifier(l_m,-)
+                                         in set elems J2VAUX`ExtractModifiers(l_ds(i).tp) & true })
+                      --| i in set {1,...,len l_ds}],
+                      | i in set inds l_ds],
+      l_cnms' = if l_pn in set dom packages
+                then packages(l_pn)
+                else {}
+  in
+    packages := packages ++ { l_pn |-> l_cnms union l_cnms' }
+)
+pre
+  let l_ast = p_file.ast
+  in
+    len l_ast = 1 and
+    is_CPP`IdentDeclaration(hd l_ast) and
+    let l_ds = (hd l_ast).ds
+    in
+      forall l_d in set elems l_ds &
+        is_CPP`TypeSpecifier(l_d) and
+        (is_CPP`ClassSpecifier(l_d.tp) or is_CPP`InterfaceSpecifier(l_d.tp));
+
+\end{vdm_al}
+
+The operation returns a set of the class names defined in
+the package p\_nm.
+
+If \texttt{p\_p} equals \texttt{PUBLIC\_ONLY},
+only names of public clases are returned.
+
+\begin{vdm_al}
+GetPackageInfo: [CPP`PackageName] * (<PUBLIC_ONLY>|<ALL>) ==> set of CPP`Identifier
+GetPackageInfo(p_nm, p_p) ==
+  return {l_nm| mk_(l_nm,l_publ) in set packages(GetPureName(p_nm)) & p_p=<PUBLIC_ONLY> => l_publ};
+
+\end{vdm_al}
+
+The operation true iff class p\_cnm is included
+in package p\_pnm.
+
+\begin{vdm_al}
+CanBeImported: [CPP`PackageName] * CPP`Identifier ==> bool
+CanBeImported(p_pnm, p_cnm) ==
+  return mk_(GetPureName(p_cnm), true) in set packages(GetPureName(p_pnm));
+
+\end{vdm_al}
+
+The operation returns a name space
+consisting of the unnamed package with one class p\_pnm.id
+(if p\_pnm is a simple package name), or
+the package, whose fully qualified name is p\_pnm.pn, with a class type
+p\_pnm.id (if p\_pnm is a qualified package name).
+
+\begin{vdm_al}
+GetSingleTypeName: CPP`PackageName ==> map [CPP`PackageName] to set of CPP`Identifier
+GetSingleTypeName(p_pnm) ==
+  return
+    let l_ppnm=GetPureName(p_pnm),
+        mk_(l_pnm, l_cnm) =
+          cases true:
+            (is_CPP`SimplePackageName(l_ppnm))    -> mk_(nil, l_ppnm.id),
+            (is_CPP`QualifiedPackageName(l_ppnm)) -> mk_(l_ppnm.pn, l_ppnm.id)
+          end
+      in {l_pnm|->{l_cnm}}
+pre is_CPP`SimplePackageName(p_pnm) => CanBeImported(nil,p_pnm.id)  or
+    is_CPP`QualifiedPackageName(p_pnm) => CanBeImported(p_pnm.pn,p_pnm.id);
+
+\end{vdm_al}
+
+The operation returns a name space
+consisting of the package, whose fully qualified name is p\_pnm, with class types
+p\_pnm.id (if p\_pnm is a qualified package name).
+
+\begin{vdm_al}
+GetTypesOnDemand: CPP`PackageName ==> map [CPP`PackageName] to set of CPP`Identifier
+GetTypesOnDemand(p_patt) ==
+  def l_pnms = {l_nm |l_nm in set (dom packages)\{nil} & AreMatched(GetPureName(p_patt),l_nm)};
+      l_ns = {l_pnm |-> GetPackageInfo(l_pnm,<PUBLIC_ONLY>) | l_pnm in set l_pnms}
+  in return l_ns;
+
+functions
+
+\end{vdm_al}
+
+The function returns true, iff a candidate package name p\_cand
+is matched against a type on demand pattern p\_patt.
+
+\begin{vdm_al}
+AreMatched: CPP`PackageName * CPP`PackageName +> bool
+AreMatched(p_patt,p_cand) ==
+  let l_patt = GetPureName(p_patt),
+      l_cand = GetPureName(p_cand)
+  in
+    if is_CPP`QualifiedPackageName(l_patt) and is_CPP`QualifiedPackageName(l_cand)
+    then AreMatched(l_patt.pn, l_cand.pn) and l_patt.id = l_cand.id
+    elseif is_CPP`QualifiedPackageName(l_patt)
+    then AreMatched(l_patt.pn, l_cand) and false -- l_patt.id = l_cand.id
+    elseif is_CPP`QualifiedPackageName(l_cand)
+    then AreMatched(l_patt, l_cand.pn) and true -- l_patt.pn.id = l_cand.id
+    else
+  --
+  -- Both l_patt and l_cand are SimplePackageName
+  -- 
+      l_patt.id=l_cand.id;
+
+\end{vdm_al}
+
+The function returns a value of the same type and
+contents as p\_name, but void of context info.
+  
+\begin{vdm_al}
+GetPureName: [CPP`PackageName | CPP`Identifier] +> [CPP`PackageName | CPP`Identifier]
+GetPureName(p_name) ==
+  cases true:
+    (p_name = nil)                        -> nil,
+    (is_CPP`Identifier(p_name))           -> mk_CPP`Identifier(p_name.id, CI`NilContextId),
+    (is_CPP`SimplePackageName(p_name))    -> mk_CPP`SimplePackageName (GetPureName(p_name.id), CI`NilContextId),
+    (is_CPP`QualifiedPackageName(p_name)) -> mk_CPP`QualifiedPackageName (GetPureName(p_name.pn),
+                                                                          GetPureName(p_name.id),
+                                                                          CI`NilContextId)
+  end;
+
+end J2VENV
+
+\end{vdm_al}
+
+\begin{rtinfo}
+{rtinfo.ast}[J2VENV]
+\end{rtinfo}

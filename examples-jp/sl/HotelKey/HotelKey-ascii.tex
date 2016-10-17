@@ -1,0 +1,59 @@
+%\documentclass{llncs}
+\documentclass[]{jsarticle}
+
+%
+% $Id: improve.tex,v 1.1 2006/01/24 05:04:03 vdmtools Exp $
+%
+
+%
+% PREAMBLE
+%
+
+%\usepackage{a4wide}
+\usepackage{alltt}
+
+% language settings
+%\usepackage[english]{babel}
+
+% graphics includes
+\usepackage{epsfig}
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\hyphenation{}
+
+%
+% BEGIN DOCUMENT
+%
+
+\newenvironment{vpp}
+{\noindent \rule{\columnwidth}{0.5pt} \begin{alltt}}
+{\end{alltt} \rule{\columnwidth}{0.5pt}}
+
+\begin{document}
+
+% use empty page style
+\pagestyle{plain}
+
+\include{Title}
+
+%\institute{\pgldk \and \chessnl}
+%\date{\mbox{}}
+\maketitle
+
+\include{Abstract}
+\input{Hotel.vdm}
+\input{HotelT.vdm}
+\input{TestDriver.vdm}
+\input{TestLogger.vdm}
+
+\begin{thebibliography}{9}
+\bibliographystyle{jplain}
+\bibliography{/Users/sahara/CVSCheckout/Paper/sahara}
+
+\end{thebibliography}
+
+%\newpage
+%\addcontentsline{toc}{section}{Index}
+%\printindex
+
+\end{document}

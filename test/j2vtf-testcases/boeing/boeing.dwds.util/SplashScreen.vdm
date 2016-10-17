@@ -1,0 +1,116 @@
+class SplashScreen is subclass of JWindow
+operations 
+public  dispose : () ==> <VOID>
+dispose() == 
+( skip ;
+  let - = splashPanel.dispose()
+  in 
+    skip ;
+  let - = JWindow`dispose()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  getStatusText : () ==> [String]
+getStatusText() == 
+( return  splashPanel.getStatusText()
+) ;
+
+public  paint : [Graphics] ==> <VOID>
+paint(g) == 
+( let - = framePanel.paint(g)
+  in 
+    skip ;
+  let - = splashPanel.paint(g)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  update : [Graphics] ==> <VOID>
+update(g) == 
+( let - = paint(g)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  setStatusText : [String] ==> <VOID>
+setStatusText(statusText) == 
+( let - = splashPanel.setStatusText(statusText)
+  in 
+    skip ;
+  let - = repaint()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  setVersionText : map  int  to  [String] ==> <VOID>
+setVersionText(dbVersionText) == 
+( let - = versionPanel.setVersionText(dbVersionText)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  SplashScreen : [JFrame] * [String] ==> SplashScreen
+SplashScreen(parentFrame, imageName) == 
+( let - = SplashScreen(parentFrame , imageName , nil   , nil   , nil   , nil   , nil   , nil   , nil   , nil  )
+  in 
+    skip 
+) ;
+
+public  SplashScreen : [JFrame] * [String] * [String] * map  int  to  [String] * [String] ==> SplashScreen
+SplashScreen(parentFrame, imageName, statusText, copyrightText, versionText) == 
+( let - = SplashScreen(parentFrame , imageName , Color`white , Color`black , statusText , new  Font(new  String("Serif") , Font`BOLD , 10) , copyrightText , new  Font(new  String("Serif") , Font`BOLD , 12) , versionText , new  Font(new  String("Serif") , Font`BOLD , 12))
+  in 
+    skip 
+) ;
+
+public  SplashScreen : [JFrame] * [String] * [Color] * [Color] * [Font] * [String] * map  int  to  [String] * [String] ==> SplashScreen
+SplashScreen(parentFrame, imageName, backgroundColor, textColor, textFont, statusText, copyrightText, versionText) == 
+( let - = SplashScreen(parentFrame , imageName , backgroundColor , textColor , statusText , textFont , copyrightText , textFont , versionText , textFont)
+  in 
+    skip 
+) ;
+
+public  SplashScreen : [JFrame] * [String] * [Color] * [Color] * [String] * [Font] * map  int  to  [String] * [Font] * [String] * [Font] ==> SplashScreen
+SplashScreen(parentFrame, imageName, backgroundColor, textColor, statusText, statusFont, copyrightText, copyrightFont, versionText, versionFont) == 
+( let - = JWindow(parentFrame)
+  in 
+    skip ;
+  framePanel := new  JPanel(new  BorderLayout());
+  let - = framePanel.setBackground(backgroundColor)
+  in 
+    skip ;
+  splashBounds := new  Dimension(0 , 0);
+  splashPanel := new  SplashPanel(imageName , backgroundColor , textColor , statusText , statusFont , copyrightText , copyrightFont , versionText , versionFont , splashBounds);
+  let - = framePanel.add(splashPanel , BorderLayout`NORTH)
+  in 
+    skip ;
+  ( dcl   toolkit : [Toolkit] := Toolkit`getDefaultToolkit(),
+          versionFM : [FontMetrics] := getFontMetrics(versionFont),
+          textHeight : int  := versionFM.getHeight();
+    splashBounds.height := splashBounds.height+(textHeight*5);
+    versionPanel := new  VersionPanel(versionFont , splashBounds.width , (textHeight*5));
+    let - = framePanel.add(versionPanel , BorderLayout`SOUTH)
+    in 
+      skip ;
+    let - = setBounds((toolkit.getScreenSize().width/2)-(splashBounds.width/2) , (toolkit.getScreenSize().height/2)-(splashBounds.height/2) , splashBounds.width , splashBounds.height)
+    in 
+      skip ;
+    let - = getContentPane().add(framePanel)
+    in 
+      skip 
+  ) 
+) ;
+
+instance variables 
+  private  splashPanel : [SplashPanel];
+  private  versionPanel : [VersionPanel];
+  private  framePanel : [JPanel];
+  private  splashBounds : [Dimension]
+  
+end  SplashScreen

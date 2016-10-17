@@ -1,0 +1,57 @@
+\subsection{FNumber}
+整数、実数などに共通の、数に関わる関数を定義する。
+
+\begin{vdm_al}
+--"$Id"
+class FNumber
+functions 
+\end{vdm_al}
+
+\subsubsection{計算に関する関数群}
+
+IsComputableは、計算可能か否かを返す。
+\begin{vdm_al}
+static public IsComputable[@T]: @T -> bool
+IsComputable(n) ==
+	is_(n,int) or is_(n,nat) or is_(n,nat1) or is_(n,real) or is_(n,rat);
+\end{vdm_al}
+
+Minは、関数fで指定された順序で、n1, n2の最小値を返す。
+\begin{vdm_al}
+static public Min[@T] :( @T -> @T -> bool) -> @T -> @T -> @T
+Min(f)(n1)(n2) == if f(n1)(n2) then n2 else n1
+pre
+	IsComputable[@T](n1) and IsComputable[@T](n2);
+\end{vdm_al}
+	
+Maxは、関数fで指定された順序で、n1, n2の最大値を返す。
+\begin{vdm_al}
+static public Max[@T] : ( @T -> @T -> bool) -> @T -> @T -> @T
+Max(f)(n1)(n2) == if f(n1)(n2) then n1 else n2
+pre
+	IsComputable[@T](n1) and IsComputable[@T](n2);
+\end{vdm_al}
+
+\subsubsection{数の大小を判定する関数群}
+関数型の引数として使用する。
+\begin{vdm_al}
+static public LT: rat -> rat -> bool
+LT(c1)(c2) == c1 < c2;
+
+static public LE : rat -> rat -> bool
+LE(c1)(c2) ==  c1 <= c2;
+
+static public GT : rat -> rat -> bool
+GT(c1)(c2) == c1 > c2;
+
+static public GE : rat -> rat -> bool
+GE(c1)(c2) == c1 >= c2;
+
+end FNumber
+\end{vdm_al}
+
+
+
+\begin{rtinfo}
+[FNumber]{vdm.tc}[FNumber]
+\end{rtinfo}

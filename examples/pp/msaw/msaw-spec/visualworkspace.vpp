@@ -1,0 +1,33 @@
+class VisualWorkSpace is subclass of WorkSpace
+
+   instance variables
+      view: View
+
+   operations
+      Init: set of Obstacle * View * PistesRadar ==> ()
+      Init (obstacles', view', radar) ==
+      (  obstacles := obstacles';
+         view := view';
+         pistes_radar := radar;
+         pistes_radar.Init(view);
+         bulletin_meteo := new BulletinMeteo();
+         terrain := new Terrain();
+         detecteur := new VisualDetecteur();
+         detecteur.Init (pistes_radar, view)
+      );
+
+      TraiterPistesRadar: () ==> ()
+      TraiterPistesRadar () 
+      == def modeAs = pistes_radar.GetModeAs () in
+            let obstacles = OrdreDeTraitement ({terrain} union obstacles) in
+               for all modeA in set modeAs do
+                  def segment_de_prediction = new VisualSegmentDePrediction();
+                      positions = pistes_radar.GetPositions (modeA) in
+                      if card dom positions >= 2 then
+                      (  segment_de_prediction.Set (modeA, positions, bulletin_meteo,view);
+                         for all i in set inds obstacles do
+                            detecteur.CalculeRisque (segment_de_prediction,
+                                                     obstacles(i))
+                      )
+
+end VisualWorkSpace

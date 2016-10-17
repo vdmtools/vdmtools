@@ -1,0 +1,14 @@
+class SubSequenceExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let n = nil,
+      - = [8,{},{8,true},[]](n,...,6)
+  in skip;
+
+------------------------------------------------------------------------------
+end SubSequenceExprTest

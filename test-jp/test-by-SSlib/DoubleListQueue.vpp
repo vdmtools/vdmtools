@@ -1,0 +1,68 @@
+/* $Id: DoubleListQueue.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $
+ * ２つの列を使った待ち行列
+ * 使用方法：
+ *	最初に
+ * 		let Q0 = DoubleListQueue`empty[int]() in ...
+ *	などとして空の待ち行列を作る。
+ *	待ち行列への追加は
+ *		DoubleListQueue`enQueue[int](1, Q0)
+ *	とすればよい。
+*/
+
+class DoubleListQueue
+
+functions
+static public empty[@型] : () -> seq of @型 * seq of @型
+empty() == mk_([], []);
+
+static public isEmpty[@型] : (seq of @型 * seq of @型) -> bool
+isEmpty(s) == s = mk_([], []);
+
+static public enQueue[@型] : @型 * (seq of @型 * seq of @型) -> seq of @型 * seq of @型
+enQueue(ある要素, mk_(ある先頭列, ある後続列)) == mk_(ある先頭列, [ある要素] ^ ある後続列);
+
+static public deQueue[@型] : (seq of @型 * seq of @型) -> [seq of @型 * seq of @型]
+deQueue(mk_(ある先頭列, ある後続列)) == 
+	cases ある先頭列:
+		[-] ^ ある先頭列の残り	-> mk_(ある先頭列の残り, ある後続列),
+		[]	-> 
+			cases ある後続列:
+				[]		-> nil,
+				others	-> mk_(tl Sequence`freverse[@型](ある後続列), [])
+			end
+	end;
+
+static public top[@型] : (seq of @型 * seq of @型) -> [@型]
+top(mk_(ある先頭列, ある後続列)) == 
+	cases ある先頭列:
+		[先頭] ^ -	-> 先頭,
+		[]	-> 
+			cases ある後続列:
+				[]		-> nil,
+				others	-> hd Sequence`freverse[@型](ある後続列)
+			end
+	end;
+
+static public fromList[@型] : seq of @型 * (seq of @型 * seq of @型) -> seq of @型 * seq of @型
+fromList(ある列, 待ち行列) ==
+	cases ある列:
+		[]				-> 待ち行列,
+		[先頭] ^ 列の残り		-> fromList[@型](列の残り, enQueue[@型](先頭, 待ち行列))
+	end
+	measure fromListMeasure;
+
+static fromListMeasure[@T] : seq of @T *  (seq of @T * seq of @T) +> nat
+fromListMeasure(s, -) == len s;
+
+static public toList[@型] : (seq of @型 * seq of @型) -> seq of @型
+toList(ある待ち行列) ==
+	cases ある待ち行列:
+		(mk_([], []))	-> [],
+		待ち行列	-> [top[@型](待ち行列)] ^ toList[@型](deQueue[@型](待ち行列))
+	end
+measure toListMeasure;
+
+static toListMeasure[@T] :  (seq of @T * seq of @T) +> nat
+toListMeasure(mk_(s1, s2)) == len s1 + len s2;
+
+end DoubleListQueue

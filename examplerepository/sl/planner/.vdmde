@@ -1,0 +1,6 @@
+r planner.vdm
+i
+tc pos
+cg
+latex planner.vdm
+quit

@@ -1,0 +1,10 @@
+class InstVars
+
+instance variables
+  public i : nat;
+  private k : int := 4;
+  protected message : seq of char := [];
+  inv len message <= 30;
+  j : real := 1
+
+end InstVars

@@ -1,0 +1,16 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+  public Test : () ==> char
+  Test () ==
+    let mk_Rec(a,b) = let c = mk_Rec ({1|->'a'},[true]) in
+      mu (c,name |-> {1|->['b']}) in
+    return a(1)
+
+types
+
+  Rec :: name : map nat to char
+         name : seq of bool
+
+end A

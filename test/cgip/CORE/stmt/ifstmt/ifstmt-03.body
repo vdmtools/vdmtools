@@ -1,0 +1,13 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> nat  
+Test () ==
+( dcl b : bool := true;
+ if  b 
+ then if not b
+      then return 10
+      else skip
+ else return 20;
+ return 30
+)
+ 
+   

@@ -1,0 +1,32 @@
+class BulletinMeteo
+
+   instance variables
+      position_de_station: map MSAWTypes`StationMeteo to MSAWTypes`Coordonnees;
+      qnh_locale: map MSAWTypes`Coordonnees to MSAWTypes`Hpa;
+   inv position_de_station <> {|->}
+
+   operations
+      SetQNH: MSAWTypes`StationMeteo * MSAWTypes`Hpa ==> ()
+      SetQNH(station, qnh) ==
+        let mst = new MSAWTypes()
+        in qnh_locale := qnh_locale ++
+            { position |-> qnh | position: MSAWTypes`Coordonnees &
+                 not exists station' in set dom position_de_station &
+                        mst.Distance (position, station') <
+                        mst.Distance (position, station) }
+      pre station in set dom position_de_station;
+
+      SetPosition: MSAWTypes`StationMeteo * MSAWTypes`Coordonnees ==> ()
+      SetPosition (station, position) ==
+        position_de_station (station) := position;
+            
+      GetQNH: MSAWTypes`Coordonnees ==> MSAWTypes`Hpa                  
+      GetQNH (position)
+      == return 1013.25 
+         -- qnh_locale never gets instantiated
+         --return qnh_locale (position)
+
+   sync
+     per GetQNH => #fin (SetQNH) >= 1
+
+end BulletinMeteo

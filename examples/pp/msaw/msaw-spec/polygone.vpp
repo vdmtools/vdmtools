@@ -1,0 +1,12 @@
+class Polygone
+
+   instance variables
+      sommets: set of MSAWTypes`Coordonnees;
+   inv card sommets >= 3
+
+   functions
+      DansPolygone: MSAWTypes`Coordonnees * set of MSAWTypes`Coordonnees -> bool
+      DansPolygone (mk_(x, y), sommets) ==
+         undefined
+
+end Polygone

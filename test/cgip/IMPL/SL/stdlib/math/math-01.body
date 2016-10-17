@@ -1,0 +1,27 @@
+module A
+imports from MATH all
+exports all
+definitions
+operations
+
+Test:() ==> seq of real
+Test () ==
+  return [
+    MATH`sin(1),
+    MATH`cos(3.12),
+    MATH`pi,
+    MATH`tan(0.05),
+    MATH`cot (1.4),
+    MATH`asin(0.99),
+    MATH`acos(-0.87),
+    MATH`atan(34.1),
+    MATH`sqrt(2),
+    MATH`pi_f(),
+    MATH`asin(1.5),
+    MATH`acos(-1.89),
+    MATH`sqrt(-2.3),
+    MATH`cot(0)
+    ]   
+
+end A
+    

@@ -1,0 +1,6 @@
+#!/bin/sh
+
+rm -rf tmp
+mkdir tmp
+export CORBABIN=/usr/local/omniORB/bin
+$CORBABIN/omniNames -start -logdir ./tmp

@@ -1,0 +1,52 @@
+\subsection{職員クラス}
+貸出・返却を行う主体である。
+司書クラスは、貸出クラスのインスタンスの生成・管理を行う。
+\begin{vdm_al}	
+class 職員クラス is subclass of 利用者クラス
+values
+	- = "$Header: /home/vdmtools/cvsroot/toolbox/examples-jp/pp/library/Libarian.vpp,v 1.2 2005/11/22 07:47:00 vdmtools Exp $"
+	
+operations
+--インスタンス生成。
+public 貸出を作成する : Date * 利用者クラス * 本実体クラス ==> 貸出クラス
+貸出を作成する(ある貸出日, ある借用者, ある本実体) ==
+	(
+	dcl ある貸出 : 貸出クラス := new 貸出クラス();
+	ある貸出.初期化する(ある貸出日, ある借用者, ある本実体);
+	return ある貸出
+	);
+
+public 本を貸す : Date * 本実体クラス * 一般利用者クラス ==> 貸出クラス
+本を貸す(貸出日, ある本実体, ある利用者) ==
+	(
+	let	貸出 = ある利用者.借りる(貸出日, ある本実体, self) 	in
+	return 貸出
+	)
+pre
+	ある本実体 in set 図書館.蔵書 and
+	ある本実体.貸出可能() and
+	ある利用者 in set 図書館.利用者 and
+	ある利用者.借用可能(貸出日) and
+	図書館.貸出可能(ある利用者.借用数());
+
+public 本を返す : Date * 本実体クラス ==> 図書館クラス
+本を返す(返却日, 借用本) ==
+	(
+	借用本.借用者を得る().返す(返却日, 借用本);
+	return  図書館
+	)
+pre
+	借用本 in set 図書館.蔵書 and
+	借用本.貸出可能() = false and
+	借用本.借用者を得る() <> nil;
+
+--職員かどうかを答える。
+public 職員 : () ==> bool
+職員() == return true;
+
+end 職員クラス
+\end{vdm_al}
+
+\begin{rtinfo}
+[TotalxCoverage]{vdm.tc}[職員クラス]
+\end{rtinfo}

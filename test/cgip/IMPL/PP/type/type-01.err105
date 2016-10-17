@@ -1,0 +1,9 @@
+Run time expected when dtc is set:
+type-01.arg, l. 52, c. 16:
+  Run-Time Error 98: Incompatible types found in dynamic type check
+  actual value: [ { 1,2 },
+  { 1,2,3 },
+  'a',
+  't',
+  { 20 } ]
+  expected type: ( nil | T13 )

@@ -1,0 +1,13 @@
+class QuantExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = exists1 x in set {} & true
+  in skip;
+
+------------------------------------------------------------------------------
+end QuantExprTest

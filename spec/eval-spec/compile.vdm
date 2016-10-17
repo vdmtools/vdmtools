@@ -1,0 +1,606 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Specification of stack compiler
+% $Id: compile.vdm,v 1.19 2001/09/24 11:21:53 richard Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\chapter{The Overall Stack Machine Compiler} \label{sec:comp}
+
+This module specifies how ASTs representing top-level definitions such
+as functions and operations
+are translated into the stack machine instructions defined in module
+{\em STKM}.
+
+\section{Translating an AST to stack instructions}
+Since the core stack evaluator is naturally ``stack-based'', the
+sequence of stack instructions generated from the AST must be in {\em
+  Reverse Polish} notation.  The approach taken when translating the
+AST representation of expressions and statements is to traverse the
+abstract syntax tree in {\em Post-order}. That is:
+\begin{quote}
+  When generating instructions for a node in the tree, first genrate
+  instructions for all the childrens (in a fixed order, left to right
+  for instance), and finally generate the instruction(s) for the node
+  itself.
+\end{quote}
+In this way the simple expression $((3+4*2)*5)\; mod \; 5$ will give
+an instruction sequence like: {\tt [PUSH(3), PUSH(4), PUSH(2), MUL,
+  ADD, PUSH(5), MUL, PUSH(5), MOD]}.
+
+This strategy will be applied when translating VDM ASTs to stack
+instructions.
+
+\section{Looking Up Identifiers}
+When identifiers are present in expressions or statements, their
+immediate value must be looked up in the symbol table to evaluate the
+expression or statement. To make sure that identifiers are looked up
+at the right time during the evaluation, they are looked up simply by
+pushing the identifier name ({\em AS`Name}) onto the stack followed by
+the {\tt LOOKUP} instruction.  This instruction pops one item of the
+stack (the identifier), looks up its value, and pushes the result back
+onto the stack. For instance the expression $4*b+c$ will translate to
+these stack instructions {\tt[PUSH(4), PUSH('b'), LOOKUP, MUL,
+  PUSH('c'), LOOKUP, ADD]}.
+
+\section{Handling of Break Points, Position Information, Coverage
+  Information and Run Time Errors}
+To be able to handle break points, position information, coverage
+information and run time errors, the generated stack instruction
+sequence must be annotated with some kind of debug and/or coverage
+information. The applied solution must fulfill the following
+requirements:
+\begin{description}
+\item[Break Points:] It must be possible to suspend the evaluation at
+  a certain node of the abstract syntax tree such that the
+  stack instructions coresponding to the sub-tree(s) of this node is {\em
+    not} yet evaluated.
+
+  Furthermore it must be possible to model the {\em Step}, {\em Single
+    Step} and {\em Step In} functionality of the debugger. Notice that
+  a {\em Single Step} does not necessarily correspond to evalute one
+  single stack instruction. I.e.\ one {\em Single Step} may very well
+  involve the evaluation of several stack instructions.
+\item[Position information:] When the evaluation is suspended at a
+  break point the exact position must be reported to the user
+  interface.
+\item[Coverage information:] During evaluation coverage information
+  must be collected.
+\item[Run time errors:] When a run time error is discovered the exact
+  position of the VDM construct that caused the error must be
+  identified.
+\end{description}
+The following solution meets several of the above requirements; The
+generated instruction sequence will be annotated with context
+information using the (void) instruction $INSTRTP`CONTEXT$. Each context
+instruction is associated with a node of the AST by the unique context
+id ($CI`ContextId$) of the AST node. Context instructions are
+generated while traversing the AST, like all other instructions, but
+they are inserted in the instruction sequence in {\em pre-order} as
+opposed to the post-order insertion used to generate all other
+instructions.
+
+\subsection{Break Points}
+Based on the context instruction break points can be handled as
+follows. Whenever a context instruction is evaluated, it is tested if
+the context id of the instruction is in the set of active break
+points. If this is the case, the evaluation is suspended. Since
+context instructions are inserted in pre-order, the instructions
+resulting from the sub-trees of the AST node that suspended the
+evaluation is not yet evaluated.
+
+When the evaluation is suspended at a break point the exact file
+position is contained in the context information associated with the
+context instruction causing the suspension.
+
+A {\em Single Step} and {\em Step In} can then be evaluated by simply
+evaluating all stack instructions until the next context instruction
+is met. The {\em Step} debugger command has the effect of evaluating
+the entire sub-trees of the current AST node, so here it is not
+sufficient to simply evaluate until the next context instruction ---
+the evaluation must continue until the {\em right} context instruction
+is met\ldots. We will later see how the current idea can be extended
+to handle the {\em Step} command as well.
+
+\subsection{Coverage Information}
+If coverage information should be collected during evaluation, the
+evaluation of each $INSTRTP`CONTEXT$ instruction should simply update
+the coverage information of the context information related to the
+instruction.
+
+\subsection{Run Time Errors}
+
+\begin{outdatedDocumentation}
+\label{sec:run_time_error}
+If, during evaluation, a run time error occurs the position of the VDM
+construct that caused the error must be reported to the user. For
+example a {\em division by zero} run time error will result if the
+divisor of a division expression equals zero, and the position of the
+division expression must be reported. However, since context
+instructions are generated in pre-order, and since run time errors are
+not discovered until the instructions of sub-trees are fully
+evaluated, it is not simple how to locate the right context
+instruction, and thereby the right position of the AST node that
+caused the run time error.
+
+The problem is solved by maintaining a stack of context id's during
+evaluation. The stack instructions are extended with an instruction to
+pop a context id of the context stack $INSTRTP`POPCONTEXT$, and the
+instruction $INSTRTP`CONTEXT$ is extended to implicitly push its context
+id on the context stack. The instruction sequence must the be
+generated to ensure that during evaluation the top item of the context
+stack {\em always} refers to the AST node currently being evaluated.
+This can be achieved by generating $INSTRTP`CONTEXT$ instructions in
+pre-order and $INSTRTP`POPCONTEXT$ instructions in post-order. I.e.\ the
+instructions for any expression or statement should be surrounded by
+instructions that push, respectively pop, context information.
+
+Using this approach, whenever a run time error is detected, the
+position is contained on the top of the context stack.
+
+We saw previously that the {\em Step} debugger command could not be
+realized solely on top of the {\em INSTRTP`CONTEXT} instruction.
+However, with the additional {\em INSTRTP`POPCONTEXT} instruction this
+realization is simple. Each instruction to pop context information
+will contain the context id of the AST node it represents. With this
+information a {\em Step} can simply be realized by recording the
+context id of the the current {\em INSTRTP`CONTEXT} instruction and then
+evaluate stack instructions until an {\em INSTRTP`POPCONTEXT} with the
+right context id is met.
+\end{outdatedDocumentation}
+
+\begin{vdm_al}
+module CMPL
+
+imports
+  from AS all,
+  from CI all,
+  from REP all,
+  from INSTRTP all,
+  from SEM all,
+  from STKM all,
+  from PAT all,
+  from CEXPR all,
+  from CSTMT all,
+  from CPAT all,
+  from GLOBAL all,
+#ifdef VDMPP
+  from STATE all,
+  from SCHDTP all,
+#ifdef VICE
+ from TIMEPARSER all,
+ from TIMEMAP all,
+#endif VICE
+#endif VDMPP
+  from RTERR all
+
+exports all
+
+definitions
+
+types
+  ProgramTable = map AS`Name to ModuleProgramTable;
+
+  ModuleProgramTable :: tbl : seq of STKM`SubProgram
+                        old_id : STKM`SubProgramId;
+
+state sigma of
+  DebugInfo : bool
+  curr_cl_mod : [AS`Name]
+  program_table : ProgramTable
+#ifdef VICE
+  timem : TIMEMAP`Timemap
+#endif VICE
+init s == s = GetEmptyCompEnv() end
+
+
+operations
+
+GetEmptyCompEnv: () ==> sigma
+GetEmptyCompEnv() ==
+  return mk_sigma(true, nil, {|->}
+#ifdef VICE
+                       ,{|->}
+#endif VICE
+                      );
+
+SetEmptyCompEnv: () ==> ()
+SetEmptyCompEnv() ==
+  (DebugInfo := true;
+   --curr_cl_mod := nil;
+   --program_table := {|->};
+#ifdef VICE
+   --timem := {|->}
+#endif VICE
+  );
+
+\end{vdm_al}
+The field {\em curr\_cl\_mod} of the state {\em sigma} holds the name of
+the module or class currently being compiled. The operations {\em
+  GetClMod} and {\em SetClMod} are used to read or modify this state
+component.
+
+The state field {\em program\_table} is used to maintain a mapping
+from unique sub-program identifiers {\em SubProgramId} to instruction
+sequences {\em SubProgram}. During compilation all functions,
+operations and lambda expressions are inserted into this table by
+using the operation {\em InsertProgram} and retrieved again by calling
+{\em GetProgram}. {\em InsertProgram} is used internally in this
+module by the three main entry point operations {\em CompileFnOpDef},
+{\em CompilePrePostExpr} and {\em CompileLambdaBody}, while {\em
+GetProgram} is used outside this module, in particular by module
+{\em STKM}.
+
+\section{Compilation of Functions and Operations} \label{sec:CompileFnBody}
+
+The function {\em CompileFnOpDef} converts a function or operation
+definition into the corresponding instruction code. Furthermore the
+instruction sequence generated is inserted in the program table and
+the index for this entry is returned.
+
+\begin{vdm_al}
+  CompileFnOpDef : AS`FnDef | AS`OpDef ==> STKM`SubProgramId
+  CompileFnOpDef(fndef) ==
+   (dcl instr : STKM`SubProgram;
+    cases fndef:
+      mk_AS`ExplFnDef(nm,-,-,parms,body,fnpre,fnpost,-,-,-,-) ->
+                      instr := Mease2I(fndef) ^
+                               FnDef2I(fnpre, fnpost, body, [], nm, parms, <ParametersList>),
+      mk_AS`ExtExplFnDef(nm,-,partps,resnmtps,body,fnpre,fnpost,-,-,-,-) ->
+                      instr := Mease2I(fndef) ^
+                               FnDef2I(fnpre, fnpost, body, resnmtps, nm, partps, <ParameterTypes>),
+      mk_AS`ImplFnDef(-,-,-,-,-,-,-,-,cid) -> instr := ImplFnDef2I(cid),
+      mk_AS`ExplOpDef(nm,-,sync,-,parms,body,oppre,oppost,-,-,constr,-) ->
+                      instr := OpDef2I(oppre, oppost, body, [], nm, parms, constr, <Parameters>, sync),
+      mk_AS`ExtExplOpDef(nm,-,sync,partps,resnmtps,body,-,oppre,oppost,-,-,-,constr,-) ->
+                      instr := OpDef2I(oppre, oppost, body, resnmtps, nm, partps, constr, <ParameterTypes>, sync),
+      mk_AS`ImplOpDef(-,-,-,-,-,-,-,-,-,-,-,-,cid) -> instr := ImplOpDef2I(cid)
+    end;
+    return InsertProgram(GetClMod(), SetContext(fndef.cid, false) ^ instr ^ [mk_INSTRTP`RETURN()]));
+\end{vdm_al}
+
+The function {\em CompilePrePostExpr} is used to compile pre and post
+expressions into instructions {\em and} insert in the generated
+instruction sequence in the program table. The function returns the
+index of the table entry.
+
+\begin{vdm_al}
+  CompilePrePostExpr : AS`Expr ==> STKM`SubProgramId
+  CompilePrePostExpr(e) ==
+    def instr = CEXPR`E2I(e) ^ [mk_INSTRTP`RETURN()]
+    in
+      return InsertProgram(GetClMod(), instr);
+
+  Mease2I : AS`FnDef ==> STKM`SubProgram
+  Mease2I(fndef) ==
+   (dcl sp : STKM`SubProgram := [];
+    let measu = fndef.measu,
+        fnbody = fndef.body.body
+    in 
+      if measu <> nil and not is_(fnbody, AS`NoBody)
+      then
+       (dcl tsp : STKM`SubProgram := CEXPR`E2I(measu),
+            count : nat := 0;
+        cases fndef:
+          mk_AS`ExplFnDef(-,tpparms,-,parms,-,-,-,-,-,-,-) ->
+              (if tpparms <> []
+               then tsp := tsp ^ [ mk_INSTRTP`MEASURETPINST(tpparms) ];
+               tsp := tsp ^ [ mk_INSTRTP`COPYVAL() ];
+               for pat_l in parms do
+                 if pat_l <> []
+                 then 
+                  (tsp := tsp ^ conc [ CEXPR`E2I(CPAT`P2E(pat_l(i))) | i in set inds pat_l ];
+                   count := count + len pat_l);
+              ),
+          mk_AS`ExtExplFnDef(-,params,parml,-,-,-,-,-,-,-,-) ->
+              (if params <> []
+               then tsp := tsp ^ [ mk_INSTRTP`MEASURETPINST(params) ];
+               tsp := tsp ^ [ mk_INSTRTP`COPYVAL() ];
+               for mk_AS`PatTypePair(pat_l,-,-) in parml do
+                (tsp := tsp ^ conc [ CEXPR`E2I(CPAT`P2E(pat_l(i))) | i in set inds pat_l ];
+                 count := count + len pat_l);
+              )
+        end;
+        tsp := tsp ^ [ mk_INSTRTP`PUSHLIST(count) ];
+#ifdef VDMPP
+        tsp := tsp ^ [ mk_INSTRTP`GUARD(true) ];
+#endif VDMPP
+        tsp := tsp ^ SetContext(measu.cid, false)
+                   ^ [ mk_INSTRTP`APPLY(), mk_INSTRTP`MEASURECHECK(measu) ];
+        sp := CEXPR`ConcIfThenElse( [ mk_INSTRTP`MEASURE() ], tsp, [] );
+       );
+    return sp;
+   );
+\end{vdm_al}
+
+When lambda expressions are handled by the compiler, the instruction
+sequence for the lambda expression is inserted in a semantic function
+value which is later pushed onto the evaluation stack when the lambda
+function is applied. For this reason all lambda functions must also be
+inserted in the program table. The function {\em CompileLambdaBody}
+will translate the expression passed to it (the body of the lambda
+function) and insert the instruction sequence in the program table.
+
+\begin{vdm_al}
+
+  CompileLambdaBody : AS`Expr ==> STKM`SubProgramId
+  CompileLambdaBody(e) ==
+    def instr = CEXPR`E2I(e) ^ [mk_INSTRTP`RETURN()]
+    in
+      return InsertProgram(GetClMod(), instr);
+\end{vdm_al}
+
+The function {\em FnDef2I} compiles the pre- and postcondition and the
+definition of a function, being explicit or extended explicit.
+
+\begin{vdm_al}
+operations
+
+FnDef2I: [AS`Expr] * [AS`Expr] * AS`FnBody * seq of AS`NameType * AS`Name * (AS`ParametersList | AS`ParameterTypes)
+         * (<ParametersList> | <ParameterTypes> | <Parameters>) ==>  STKM`SubProgram
+FnDef2I(fnpre, fnpost, mk_AS`FnBody(body,-), resnmtps, fnname, parms, type) ==
+ (dcl i_body : STKM`SubProgram := [],
+      i_fnpre : STKM`SubProgram := PrePost2I(fnpre, true),
+      i_fnpost : STKM`SubProgram := [];
+
+  cases body:
+#ifdef VDMSL
+    <NOTYETSPEC> -> i_body := [mk_INSTRTP`NOBODY(RTERR`NOTYETSPECFCT,
+                                                      GetClMod(),fnname, MakeParmList(parms, type))],
+#endif VDMSL
+#ifdef VDMPP
+    <NOTYETSPEC> -> if STATE`IsDLClass(GetClMod())
+                    then i_body := [mk_INSTRTP`DLCALL(GetClMod(), fnname)]
+                    else i_body := [mk_INSTRTP`NOBODY(RTERR`NOTYETSPECFCT,
+                                                      GetClMod(),fnname, MakeParmList(parms, type))],
+    <SUBRESP>    -> (STATE`AddAbstract(GetClMod());
+                     i_body := [mk_INSTRTP`NOBODY(RTERR`SUBRESP, GetClMod(),fnname, MakeParmList(parms, type))];
+                    ),
+#endif VDMPP
+    others -> i_body := CEXPR`E2I(body)
+  end;
+  if fnpost <> nil
+  then let pr_i = [mk_INSTRTP`POSTENV(resnmtps, fnpost.cid)],
+           po_i = [mk_INSTRTP`POPBLKENV()]
+       in
+         i_fnpost := pr_i ^ PrePost2I(fnpost, false) ^ po_i;
+  return i_fnpre ^ i_body ^ i_fnpost
+ );
+
+functions
+  MakeParmList: (AS`ParametersList | AS`ParameterTypes | AS`Parameters) *
+                (<ParametersList> | <ParameterTypes> | <Parameters>) ->
+                AS`Parameters
+  MakeParmList(list,type) ==
+    cases type:
+      <Parameters>     -> list,
+      <ParametersList> -> if len list = 0
+                          then []
+                          else hd list,
+      others           -> conc [list(i).pats | i in set inds list]
+    end;
+
+\end{vdm_al}
+
+The function {\em PrePost2I} compiles pre and post conditions to instruction code.
+
+\begin{vdm_al}
+operations
+
+  PrePost2I: [AS`Expr] * bool ==> STKM`SubProgram
+  PrePost2I(cond, precond) ==
+    if cond = nil
+    then return []
+    else
+      def i_cond = CEXPR`E2I(cond);
+          prepost = if precond
+                    then [mk_INSTRTP`PRE()]
+                    else [mk_INSTRTP`POST()];
+      in
+       (dcl errMsg : STKM`SubProgram;
+        if precond
+        then errMsg := CompileRunTime(RTERR`EVAL_PRE_GIVES_FALSE, cond.cid)
+        else errMsg := CompileRunTime(RTERR`EVAL_POST_GIVES_FALSE, cond.cid);
+        return
+#ifdef VICE
+          [mk_INSTRTP`PUSHDURATION ()] ^
+#endif VICE
+          CEXPR`ConcIfThenElse(prepost, CEXPR`ConcIfThenElse(i_cond,[],errMsg), [])
+#ifdef VICE
+          ^ [mk_INSTRTP`POPDURATION (0)]
+#endif VICE
+          );
+\end{vdm_al}
+
+\begin{vdm_al}
+  ImplFnDef2I: CI`ContextId ==> STKM`SubProgram
+  ImplFnDef2I(cid) ==
+    return CompileRunTime(RTERR`IMPL_FN_APPLY, cid);
+\end{vdm_al}
+
+\begin{vdm_al}
+  OpDef2I: [AS`Expr] * [AS`Expr] * AS`OpBody * seq of AS`NameType *
+           AS`Name * (AS`Parameters | AS`ParameterTypes) * bool *
+           (<ParametersList> | <ParameterTypes> | <Parameters>) * bool
+           ==> STKM`SubProgram
+#ifdef VDMSL
+  OpDef2I(precond, postcond, mk_AS`OpBody(body,-), resnmtps, fnname, parms, -, type, -) ==
+#endif VDMSL
+#ifdef VDMPP
+  OpDef2I(precond, postcond, mk_AS`OpBody(body,-), resnmtps, fnname, parms, constr, type,-) ==
+#endif VDMPP
+   (dcl i_body : STKM`SubProgram := [],
+        i_fnpre : STKM`SubProgram := [],
+        i_fnpost: STKM`SubProgram := [];
+        
+#ifdef VDMPP
+    if body = <SUBRESP>
+    then STATE`AddAbstract(GetClMod());
+#endif VDMPP
+#ifdef VDMSL
+    cases body:
+      <NOTYETSPEC> -> i_body := [mk_INSTRTP`NOBODY(RTERR`NOTYETSPECOP,
+                                                      GetClMod(),fnname, MakeParmList(parms, type))],
+      others       -> i_body := CSTMT`S2I(body)
+    end;
+#endif VDMSL
+#ifdef VDMPP
+    cases body:
+      <NOTYETSPEC> -> if STATE`IsDLClass(GetClMod())
+                      then i_body := [mk_INSTRTP`DLCALL(GetClMod(), fnname)]
+                      else i_body := [mk_INSTRTP`NOBODY(RTERR`NOTYETSPECOP,
+                                              GetClMod(),fnname, MakeParmList(parms, type))],
+      <SUBRESP>    -> i_body := [mk_INSTRTP`NOBODY(RTERR`SUBRESP, GetClMod(), fnname, MakeParmList(parms, type))],
+      others       -> i_body := CSTMT`S2I(body) ^ (if constr
+                                                   then [mk_INSTRTP`POP(1),mk_INSTRTP`SELFEXPR()]
+                                                   else [])
+    end;
+#endif VDMPP
+    i_fnpre := PrePost2I(precond, true);
+    if postcond <> nil
+    then let pr_i = [mk_INSTRTP`POSTENV(resnmtps, postcond.cid)],
+             po_i = [mk_INSTRTP`POPBLKENV()]
+         in i_fnpost := pr_i ^ PrePost2I(postcond, false) ^ po_i;
+    return i_fnpre ^ i_body ^ i_fnpost
+   );
+\end{vdm_al}
+
+\begin{vdm_al}
+  ImplOpDef2I: CI`ContextId ==> STKM`SubProgram
+  ImplOpDef2I(cid) ==
+    CompileRunTime(RTERR`IMPL_OP_CALL, cid);
+\end{vdm_al}
+
+\section{Context Manipulation Operations}
+
+\begin{vdm_al}
+  SetContext : CI`ContextId * bool ==> STKM`SubProgram
+  SetContext(cid, isStmt) ==
+   (if cid <> CI`NilContextId
+    then skip; -- Temporarily since context is handled different by VDMTools it seems CI`SetBreakable(cid);
+
+    if DebugInfo
+    then return [mk_INSTRTP`CONTEXT(cid, isStmt)]
+    else return []);
+
+  SetDebugInfo : bool ==> ()
+  SetDebugInfo(b) ==
+    DebugInfo := b;
+
+  SetClMod : AS`Name ==> ()
+  SetClMod (nm) ==
+    curr_cl_mod := nm;
+
+  GetClMod : () ==> AS`Name
+  GetClMod() ==
+    return curr_cl_mod
+  pre curr_cl_mod <> nil;
+\end{vdm_al}
+
+The following operations are used by the stack instruction compiler.
+They are used to maintain a table of instruction sequences ({\em
+  STKM`SubProgram}) for each module or class of the specification. The
+table is (currently) a part of the state of this module. A semantic
+value for a function or operation will then contain an index to this
+program table instead of a copy of the instruction sequence.
+
+The operation {\em ResetProgramTable} resets the program table
+associated with the module passed to the operation.
+
+\begin{vdm_al}
+
+  ResetProgramTable : AS`Name ==> ()
+  ResetProgramTable (modnm) ==
+   (program_table := program_table ++ {modnm |-> mk_ModuleProgramTable([],0) };
+   );
+
+\end{vdm_al}
+The {\em InsertProgram} operation inserts the instruction sequence
+{\em instr} into the program table of module {\em modnm}. The index
+for this new entry is returned.
+
+\begin{vdm_al}
+  InsertProgram : AS`Name * STKM`SubProgram ==> STKM`SubProgramId
+  InsertProgram (modnm, instr) ==
+    let mk_ModuleProgramTable(tbl, id) = program_table(modnm)
+    in
+     (program_table := program_table ++ { modnm |-> mk_ModuleProgramTable(tbl ^ [instr], id+1) };
+      return id + 1;
+     );
+ 
+  GetProgram : AS`Name * STKM`SubProgramId ==> STKM`SubProgram
+  GetProgram (modnm, id) ==
+    let mk_ModuleProgramTable(tbl, -) = program_table(modnm)
+    in
+      if id > len tbl
+      then error
+      else return tbl(id);
+
+  CopyProgram: AS`Name * AS`Name ==> ()
+  CopyProgram(old,new) ==
+    program_table := program_table ++ {new |-> program_table(old)};
+\end{vdm_al}
+
+\section{internal debug-enabeling functions}
+
+\begin{vdm_al}
+functions
+
+  IStart: seq of char * CI`ContextId -> STKM`SubProgram
+#ifdef VICE
+  IStart(name, cid) ==
+    [mk_INSTRTP`ISTART(name, cid)];
+#else
+  IStart(-, -) ==
+    [];
+#endif VICE
+
+  IEnd : seq of char -> STKM`SubProgram
+#ifdef VICE
+  IEnd(name) ==
+  [mk_INSTRTP`IEND(name)];
+#else
+  IEnd(-) ==
+    [];
+#endif VICE
+
+\end{vdm_al}
+
+\section{Run Time Error functions}
+
+\begin{vdm_al}
+operations
+
+  CompileRunTime: RTERR`ERR * CI`ContextId ==> STKM`SubProgram
+  CompileRunTime(rterr,cid) ==
+    return SetContext(cid, false) ^ [mk_INSTRTP`ERRINST(rterr)];
+\end{vdm_al}
+
+#ifdef VICE
+\section{The Time map}
+\begin{vdm_al}
+operations
+
+  SetTM : TIMEMAP`Timemap ==> ()
+  SetTM (newtm) ==
+    timem := newtm;
+
+  GetTM : () ==> TIMEMAP`Timemap
+  GetTM () ==
+    return timem;
+\end{vdm_al}
+#endif VICE
+
+\begin{vdm_al}
+end CMPL
+
+
+\end{vdm_al}
+
+
+\vspace{0.5cm}
+
+#ifdef RTINFO
+\begin{rtinfo}
+{rtinfo.ast}[CMPL]
+\end{rtinfo}
+#endif RTINFO

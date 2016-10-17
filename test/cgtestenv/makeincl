@@ -1,0 +1,103 @@
+
+# $Id: makeincl,v 1.24 2000/08/04 13:09:54 paulm Exp $
+
+#CC = /opt/gcc-2.95.2/bin/g++ # For red-hat
+CC=/opt/egcs-1.1.2/bin/g++
+CCC = $(CC)
+JAVA = java
+JAVAC = javac
+CLASSPATH=.:/home/paulm/jstuff/javalib/dk/ifad/toolbox/VDM/VDM.jar:/home/paulm/jstuff/javalib/dk/ifad/toolbox/VDMCONC/VDMCONC.jar
+#CLASSPATH=.:/opt/jdk1.1.6v4a/lib/classes.zip:/home/jojo/toolbox/spec/test/metaiv/dk/ifad/toolbox/VDM/classes
+
+OPTIONS = ${INCL} ${ICODE} ${TESTLIB} -Wall
+EXE     = icode
+
+MAINJAVA = main
+CGBASE  = CGBase.o
+ifeq ($(MODE),VDMPP)
+MAIN    = icode.cc CGBase.cc
+CGBASEO = CGBase.o
+else 
+MAIN    = icode.cc
+CGBASEO = CGBase.o
+endif
+
+#LOCINSTALL=/local2/jeppe/toolbox/external-rel3.3.1-6.2.6/Local-install
+
+
+#if TBDIR is NOT defined, we use the installed include's and lib's
+ifndef TBDIR
+INCL    = -I$(TOOLBOXDIR)/cg/include -I$(BASEDIR)
+TESTLIB     = -L$(TOOLBOXDIR)/cg/lib -lvdm -lCG -lm 
+else
+INCL   = -I$(TBDIR) -I$(BASEDIR)
+TESTLIB    = -L$(TBDIR) -lvdm -lCG -lm 
+endif
+
+ifeq ($(IFADOSTYPE),win32)
+  LD =
+  CC = clxx -MT -GX -nologo
+  CCC = $(CC)
+  INCL    = -I$(TOOLBOXDIR)/cg/include -I$(BASEDIR)
+  TESTLIB     = $(TOOLBOXDIR)/cg/lib/vdm.lib  $(TOOLBOXDIR)/cg/lib//CG.lib $(SYSLIB)
+#  SYSLIB =  LIBCMT.LIB LIBCPMT.LIB
+endif
+
+ifeq ($(MODE),VDMPP)
+ifeq ($(IFADOSTYPE),win32)
+  TOOLBOXDIR=c:/toolbox-6.2.7
+endif
+ifeq ($(IFADOSTYPE),SunOS4)
+  TOOLBOXDIR = /usr/local/package/vdm++_toolbox
+endif
+ifeq ($(IFADOSTYPE),solaris2.6)
+  TOOLBOXDIR = /opt/vdm++_toolbox
+endif
+ifeq ($(IFADOSTYPE),hpux_10)
+  TOOLBOXDIR = /opt/vdm++_toolbox
+endif
+ifeq ($(IFADOSTYPE),Linux)
+  TOOLBOXDIR = /opt/toolbox_main
+endif
+ifeq ($(IFADOSTYPE),OSF1)
+  TOOLBOXDIR = /opt2/vdm++_toolbox
+  CC=cxx
+  CCC=cxx
+  LD=
+  OPTIONS+= -D__USE_STD_IOSTREAM -ptr ./cxx_repository -taso
+endif
+
+
+else
+
+## VDMSL test suites
+ifeq ($(IFADOSTYPE),win32)
+  TOOLBOXDIR=c:/toolbox-3.3.2
+endif
+
+ifeq ($(IFADOSTYPE),SunOS4)
+  TOOLBOXDIR = /usr/local/package/toolbox
+  LD = ld -o
+endif
+ifeq ($(IFADOSTYPE),solaris2.6)
+  TOOLBOXDIR = /opt/toolbox
+  LD = ${CXX} -shared -mimpure-text -Wl,-B,symbolic -v -o
+endif
+ifeq ($(IFADOSTYPE),hpux_10)
+  TOOLBOXDIR = /opt/toolbox
+  LD = 
+endif
+ifeq ($(IFADOSTYPE),Linux)
+  TOOLBOXDIR = $(LOCINSTALL)/vdm
+  LD = $(CCC) -shared -fpic -o
+endif
+ifeq ($(IFADOSTYPE),OSF1)
+  TOOLBOXDIR=/opt2/toolbox
+  CC=cxx
+  CCC=cxx
+  LD=
+  OPTIONS+= -ptr ./cxx_repository -taso
+endif
+
+
+endif

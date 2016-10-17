@@ -1,0 +1,31 @@
+ class A
+
+instance variables
+
+  protected n : nat := 7;
+
+operations
+
+  OpA: () ==> nat
+  OpA() ==
+    (n := n + 1;
+     return n);
+
+  public initA : nat ==> A
+  initA (x) == 
+  ( n := x;
+    return self
+  )
+
+end A
+class B is subclass of A
+
+operations
+
+public Test : () ==> nat
+  Test() ==
+    let a = new A().initA (6)
+   in
+      a.OpA();
+
+end B

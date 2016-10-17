@@ -1,0 +1,25 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+class B is subclass of D
+
+operations 
+  public Test : () ==> char  
+  Test () ==
+        return 'a'
+
+end B
+
+
+
+
+
+
+
+
+
+
+
+
+
+

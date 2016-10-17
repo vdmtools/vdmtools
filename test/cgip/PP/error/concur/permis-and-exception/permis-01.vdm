@@ -1,0 +1,74 @@
+class T
+
+instance variables
+
+  o : C;
+
+thread
+  o.Go();
+
+operations
+
+public
+  Init: C  ==> T
+  Init(myo) ==
+    (o := myo;
+     return self);
+
+end T
+
+class C
+
+instance variables
+
+  protected counter : nat := 0;
+  protected x: seq of char := "";
+
+operations
+
+public
+  ReadX: () ==> nat
+  ReadX() ==
+    return x;
+
+public
+  Go: () ==> ()
+  Go() ==
+    trap <UPS>
+    with x := x ^ " Got it"
+    in TryMe1();
+
+public
+  TryMe1: () ==> ()
+  TryMe1() ==
+    TryMe2();
+
+public
+  TryMe2: () ==> ()
+  TryMe2() ==
+    ( counter := counter +1;
+      exit <UPS>;
+    )
+sync
+
+  mutex(TryMe1);
+  mutex(TryMe2);
+
+  per ReadX => 
+      counter = 2;
+end C
+
+class Main
+
+operations
+  public
+  Test:() ==> seq of char
+  Test() ==
+  let myo = new C(),
+      t1 = new T().Init(myo),
+      t2 = new T().Init(myo)
+  in ( start(t1);
+       start(t2);
+       myo.ReadX());
+
+end Main

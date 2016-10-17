@@ -1,0 +1,12 @@
+[ mk_ERR`ErrMsg( 
+     10,
+     8,
+     10,
+     "Error[121] : Pattern can never match",
+     <ERROR> ),
+  mk_ERR`ErrMsg( 
+     10,
+     9,
+     7,
+     "Error[121] : Pattern can never match",
+     <ERROR> ) ]

@@ -1,0 +1,214 @@
+/***
+*  * WHAT
+*  *    The CORBA IDL definition of the VDM values it is possible to 
+*  *    pass between a client process and the VDM Toolbox.
+*  *    See the documentation supplied with the Toolbox for details
+*  *    on how to use the API and distributed VDM values.
+*  * ID
+*  *    $Id: metaiv_idl.idl,v 1.9 2005/05/27 00:28:34 vdmtools Exp $   
+*  * PROJECT
+*  *    INFORMA and Toolbox
+*  * COPYRIGHT
+*  *    (C) Kyushu University
+***/
+
+#ifndef METAIV_IDL__IDL__
+#define METAIV_IDL__IDL__
+
+// A unique identification of a client:
+
+module ToolboxAPI {
+  exception APIError { string msg; };
+};
+
+module VDM{
+  typedef short ClientID;
+  
+  typedef sequence<octet> bytes;
+  
+  exception VDMError { short err; };
+
+  interface VDMGeneric
+    {
+      string ToAscii();
+      boolean IsNil();
+      boolean IsChar();
+      boolean IsNumeric();
+      boolean IsQuote();
+      boolean IsTuple();
+      boolean IsRecord();
+      boolean IsSet();
+      boolean IsMap();
+      boolean IsText();
+      boolean IsToken();
+      boolean IsBool();
+      boolean IsSequence();
+      boolean IsObjectRef();
+
+      void Destroy()
+        raises (ToolboxAPI::APIError);
+      // Call this method to indicate to the server that you will not
+      // be using this object any more. If this was the last reference
+      // to the server object, the resources associated with it will
+      // be released.
+      
+      bytes GetCPPValue();
+      // Returns the binary representation of the MetaIV value. In
+      // this way, by linking the (C++) client application with the
+      // VDM library, it is possible to create a 'real' MetaIV value
+      // in the client. This allows for more efficient access when
+      // iterating through a large VDM value.
+
+      VDMGeneric Clone();
+      // This function returns a copy of the value held by the object
+      // on which this method is invoked.
+      
+    };
+
+  interface VDMSet;
+
+  interface VDMNumeric : VDMGeneric
+    {
+      double GetValue();
+    };
+
+  interface VDMBool : VDMGeneric
+    {
+      boolean GetValue();
+    };
+
+  interface VDMNil : VDMGeneric
+    { };
+
+  interface VDMQuote : VDMGeneric
+    {
+      string GetValue();
+    };
+
+  interface VDMChar : VDMGeneric
+    {
+      char GetValue();
+    };
+
+  interface VDMText : VDMGeneric
+    {
+      string GetValue();
+    };
+
+  interface VDMToken : VDMGeneric
+    {
+      string GetValue();
+    };
+
+  interface VDMMap : VDMGeneric
+    {
+      void Insert(in VDMGeneric key, in VDMGeneric val)
+        raises (VDMError);
+      void ImpModify(in VDMGeneric key, in VDMGeneric val);
+      VDMGeneric Apply(in VDMGeneric key)
+        raises (VDMError);
+      void ImpOverride(in VDMMap m);
+      unsigned long Size();
+      boolean IsEmpty();
+      VDMSet Dom();
+      VDMSet Rng();
+      boolean DomExists(in VDMGeneric g);
+      void RemElem(in VDMGeneric g)
+        raises (VDMError);
+      boolean First(out VDMGeneric g);
+      boolean Next(out VDMGeneric g);
+    };
+      
+
+  interface VDMSequence : VDMGeneric
+    {
+      VDMGeneric Index(in long i)
+        raises (VDMError);
+      VDMGeneric Hd() 
+        raises (VDMError);
+      VDMSequence Tl()
+        raises (VDMError);
+      void ImpTl()
+        raises (VDMError);
+      void RemElem(in long i)
+        raises (VDMError);
+      long Length();
+      boolean GetString(out string s);
+      boolean IsEmpty();
+      void ImpAppend(in VDMGeneric g)
+        raises (ToolboxAPI::APIError);
+      void ImpModify(in long i, in VDMGeneric g)
+        raises (VDMError, ToolboxAPI::APIError);
+      void ImpPrepend(in VDMGeneric g)
+        raises (ToolboxAPI::APIError);
+      void ImpConc(in VDMSequence s)
+        raises (ToolboxAPI::APIError);
+      VDMSet Elems();
+      boolean First(out VDMGeneric g);
+      boolean Next(out VDMGeneric g);
+    };
+
+
+  interface VDMSet : VDMGeneric
+    {
+      void Insert(in VDMGeneric g);
+      unsigned long Card();
+      boolean IsEmpty();
+      boolean InSet(in VDMGeneric g);
+      void ImpUnion(in VDMSet s);
+      void ImpIntersect(in VDMSet s);
+      VDMGeneric GetElem()
+        raises (VDMError);
+      void RemElem(in VDMGeneric g)
+        raises (VDMError);
+      boolean SubSet(in VDMSet s);
+      void ImpDiff(in VDMSet s);
+      boolean First(out VDMGeneric g);
+      boolean Next(out VDMGeneric g);
+    };
+
+
+  interface VDMRecord : VDMGeneric
+    {
+      void SetField(in unsigned long i, in VDMGeneric g)
+        raises (VDMError);
+      VDMGeneric GetField(in unsigned long i)
+        raises (VDMError);
+      string GetTag()
+        raises (ToolboxAPI::APIError);
+      boolean Is(in string tag);
+      unsigned long Length();
+    };
+
+  interface VDMTuple : VDMGeneric
+    {
+      void SetField(in unsigned long i, in VDMGeneric g)
+        raises (VDMError);
+      VDMGeneric GetField(in unsigned long i)
+        raises (VDMError);
+      unsigned long Length();
+    };
+
+interface VDMFactory{
+  VDM::VDMNumeric MkNumeric(in ClientID id, in double d);
+  VDM::VDMBool MkBool(in ClientID id, in boolean b);
+  VDM::VDMNil MkNil(in ClientID id);
+  VDM::VDMQuote MkQuote(in ClientID id, in string s);
+  VDM::VDMChar MkChar(in ClientID id, in char c);
+  VDM::VDMText MkText(in ClientID id, in string s);
+  VDM::VDMToken MkToken(in ClientID id, in string s);
+  VDM::VDMMap MkMap(in ClientID id);
+  VDM::VDMSequence MkSequence(in ClientID id);
+  VDM::VDMSet MkSet(in ClientID id);
+  //  VDM::Record MkRecord(in string tag, in unsigned long length)
+  //    raises (ToolboxAPI::APIError);
+  VDM::VDMTuple MkTuple(in ClientID id, in unsigned long length);
+
+  VDM::VDMGeneric FromCPPValue(in ClientID id, in bytes cppvalue);
+  // Converts a 'real' MetaIV value, in its binary representation, to
+  // a VDM::Generic. This function is the 'inverse' of GetCPPValue().
+};
+
+}; // module VDM
+
+#endif

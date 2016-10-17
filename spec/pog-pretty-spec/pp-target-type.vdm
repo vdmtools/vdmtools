@@ -1,0 +1,260 @@
+\section{Target of traversal of types}
+
+\begin{vdm_al}
+module PP_TAR_TYPE
+
+imports
+
+  from AS all,
+  from CI all,
+  from REP all
+
+exports all
+
+definitions
+
+types
+
+  Type = BasicType |
+         QuoteType | CompositeType | UnionType |
+         ProductType | OptionalType | SetType | SeqType | 
+         MapType | TypeName | FnType | BracketedType |
+         OpType | TypeVar | VoidType;
+
+  BasicType = BooleanType | NumericType | TokenType | CharType;
+
+  BooleanType      = TYPE;
+  NumericType      = TYPE;
+  TokenType        = TYPE;
+  CharType         = TYPE;
+  VoidType         = TYPE;
+  QuoteType        = TYPE; 
+  CompositeType    = TYPE; 
+  Field            = FIELD;
+  UnionType        = TYPE;
+  ProductType      = TYPE; 
+  OptionalType     = TYPE; 
+
+  SetType          = Set0Type | Set1Type;
+  Set0Type         = TYPE; 
+  Set1Type         = TYPE;
+
+  SeqType          = Seq0Type | Seq1Type; 
+  Seq0Type         = TYPE; 
+  Seq1Type         = TYPE;
+ 
+  MapType          = GeneralMap0Type | GeneralMap1Type | InjectiveMap0Type | InjectiveMap1Type; 
+  GeneralMap0Type   = TYPE; 
+  GeneralMap1Type   = TYPE; 
+  InjectiveMap0Type = TYPE; 
+  InjectiveMap1Type = TYPE; 
+
+  TypeName         = TYPE; 
+
+  FnType = PartialFnType | TotalFnType;            
+  PartialFnType    = TYPE; 
+  TotalFnType      = TYPE; 
+  OpType           = TYPE; 
+
+  DiscretionaryType = seq of Type; 
+
+  BracketedType    = TYPE;
+  TypeVar          = TYPE;  
+
+  String           = seq of char;
+  Ids              = String;
+
+  Name             = String;
+
+  TYPE  = String;
+
+  FIELD = String;
+
+\end{vdm_al}
+
+\section{Basic types}
+
+\begin{vdm_al}
+functions
+
+  tar_BooleanType: CI`ContextId -> BooleanType
+  tar_BooleanType(-) == 
+    "bool";
+ 
+  tar_NatOneType: CI`ContextId -> NumericType
+  tar_NatOneType(-) == 
+    "nat1";
+
+  tar_NatType: CI`ContextId -> NumericType
+  tar_NatType(-) == 
+    "nat";
+
+  tar_IntegerType: CI`ContextId -> NumericType
+  tar_IntegerType(-) == 
+    "int";
+
+  tar_RatType: CI`ContextId -> NumericType
+  tar_RatType(-) == 
+    "rat";
+
+  tar_RealType: CI`ContextId -> NumericType
+  tar_RealType(-) == 
+    "real";
+
+  tar_TokenType: CI`ContextId -> TokenType 
+  tar_TokenType(-) == 
+    "token";
+
+  tar_CharType: CI`ContextId -> CharType
+  tar_CharType(-) == 
+--    "char";
+    ['c','h','a','r']; -- just to avoid convertion to wchar_t
+  
+  tar_VoidType: CI`ContextId -> VoidType 
+  tar_VoidType(-) == 
+    "()";
+
+  tar_QuoteType: AS`QuoteLit * CI`ContextId -> QuoteType
+  tar_QuoteType(mk_AS`QuoteLit(str,-),-) == 
+    "<" ^ str ^ ">";
+\end{vdm_al}
+
+\section{Compound types}
+
+\begin{vdm_al}
+functions
+
+  tar_ProductType: seq of Type *  CI`ContextId -> ProductType   
+  tar_ProductType(stp,-) == 
+    "(" ^ List2SeparatorList(" * ",stp) ^ ")";
+
+  tar_UnionType: seq of Type *  CI`ContextId -> UnionType
+  tar_UnionType(stp,-) ==
+    "(" ^ List2SeparatorList(" | ",stp) ^ ")";
+
+  tar_CompositeType : Ids * seq of Field * CI`ContextId -> CompositeType  
+  tar_CompositeType(tag,flds,-) == 
+     "compose " ^ tag ^ " of " ^ List2SeparatorList("\n",flds) ^ "\nend";
+      
+  tar_OptionalType: Type *  CI`ContextId -> OptionalType
+  tar_OptionalType(elemtp,-) ==
+    "[" ^ elemtp ^ "]";
+
+  tar_Seq0Type: Type *  CI`ContextId -> Seq0Type
+  tar_Seq0Type(elemtp,-) == 
+    "seq of " ^ elemtp;
+
+  tar_Seq1Type: Type *  CI`ContextId -> Seq1Type
+  tar_Seq1Type(elemtp,-) ==
+    "seq1 of " ^ elemtp;
+
+  tar_BracketedType:  Type *  CI`ContextId -> BracketedType
+  tar_BracketedType(tp,-) == 
+    "("^tp^")";
+
+  tar_Set0Type: Type *  CI`ContextId -> Set0Type
+  tar_Set0Type(elemtp,-) ==
+    "set of " ^ elemtp;
+
+  tar_Set1Type: Type *  CI`ContextId -> Set1Type
+  tar_Set1Type(elemtp,-) ==
+    --"set1 of " ^ elemtp;
+    "set of " ^ elemtp;
+
+  tar_GeneralMap0Type: Type * Type *  CI`ContextId -> GeneralMap0Type 
+  tar_GeneralMap0Type(mapdom,maprng,-) == 
+    "map " ^ mapdom ^ " to " ^ maprng;
+
+  tar_GeneralMap1Type: Type * Type *  CI`ContextId -> GeneralMap1Type 
+  tar_GeneralMap1Type(mapdom,maprng,-) == 
+    --"map1 " ^ mapdom ^ " to " ^ maprng;
+    "map " ^ mapdom ^ " to " ^ maprng;
+
+  tar_InjectiveMap0Type: Type * Type *  CI`ContextId -> InjectiveMap0Type 
+  tar_InjectiveMap0Type(mapdom,maprng,-) ==
+    "inmap " ^ mapdom ^ " to " ^ maprng;
+
+  tar_InjectiveMap1Type: Type * Type *  CI`ContextId -> InjectiveMap1Type 
+  tar_InjectiveMap1Type(mapdom,maprng,-) ==
+    --"inmap1 " ^ mapdom ^ " to " ^ maprng;
+    "inmap " ^ mapdom ^ " to " ^ maprng;
+
+  tar_PartialFnType: seq of Type * Type *  CI`ContextId -> PartialFnType 
+  tar_PartialFnType(fndom,fnrng,-) ==
+    if fndom = []
+    then "() -> " ^ fnrng
+    else List2SeparatorList (" * ",fndom) ^ " -> " ^ fnrng;
+
+  tar_TotalFnType: seq of Type * Type *  CI`ContextId -> TotalFnType 
+  tar_TotalFnType(fndom,fnrng,-) == 
+    if fndom = []
+    then "() -> " ^ fnrng
+    else List2SeparatorList (" * ",fndom) ^ " +> " ^ fnrng;
+
+  tar_OpType: seq of Type * Type *  CI`ContextId -> OpType 
+  tar_OpType(opdom,oprng,-) == 
+    if opdom = []
+    then "() ==> " ^ oprng
+    else List2SeparatorList (" * ",opdom) ^ " ==> " ^ oprng;
+
+  tar_TypeName: Ids * CI`ContextId -> TypeName  
+  tar_TypeName(ids,-) ==
+    ids;
+
+  tar_TypeVar: Ids  * CI`ContextId -> TypeVar  
+  tar_TypeVar(ids,-) == 
+    "@" ^ ids;
+
+  tar_Name: Ids *  CI`ContextId -> Name
+  tar_Name(ids,-) == 
+    ids;
+
+  tar_Ids: AS`Ids -> Ids
+  tar_Ids(ids) == 
+    if len ids = 0
+    then "Anytype"
+    elseif len ids = 1
+    then hd ids
+    else 
+      let head = hd ids,
+          tail = if tl ids = []
+                 then ""
+                 else "`" ^ tar_Ids(tl ids)
+      in
+          head ^ tail;
+
+  tar_Field: [Ids] * Type * bool * CI`ContextId -> Field 
+  tar_Field(sel,tp,-,-) == 
+    if sel = nil
+    then tp
+    --else sel ^ " : " ^ tp;
+    else
+      let res : Field = sel ^ " : " ^ tp
+      in res;
+
+\end{vdm_al}
+
+\subsection{Auxiliary functions}
+
+\begin{vdm_al}
+
+  List2SeparatorList : String * seq of String -> String
+  List2SeparatorList (separator,ss) == 
+    if ss = []
+    then ""
+    else
+      let head = hd ss,
+          tail = if tl ss = []
+                 then ""
+                 else separator ^ List2SeparatorList(separator,tl ss)
+      in 
+          head ^ tail;   
+end PP_TAR_TYPE
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[MotGeneralNumericType]
+{rtinfo.ast}[PP_TAR_TYPE]
+\end{rtinfo}
+

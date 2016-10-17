@@ -1,0 +1,81 @@
+class WireEndpoint is subclass of Object
+operations 
+public  hashCode : () ==> int 
+hashCode() == 
+( return  endpointKey.hashCode()
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( return  endpointKey.getPinName()
+) ;
+
+public  getWireId : () ==> int 
+getWireId() == 
+( return  endpointKey.getWireId()
+) ;
+
+public  getPinName : () ==> [String]
+getPinName() == 
+( return  endpointKey.getPinName()
+) ;
+
+public  getRefDesId : () ==> int 
+getRefDesId() == 
+( return  endpointKey.getRefDesId()
+) ;
+
+public  getEndpointKey : () ==> [WireEndpointKey]
+getEndpointKey() == 
+( return  endpointKey
+) ;
+
+public  getEndpointType : () ==> int 
+getEndpointType() == 
+( return  endpointType
+) ;
+
+public  getWireTermCode : () ==> [String]
+getWireTermCode() == 
+( return  wireTermCode
+) ;
+
+public  equals : [Object] ==> bool 
+equals(obj) == 
+( if  (obj <> nil  ) and  (obj.getClass().equals(WireEndpoint`getClass()))
+  then  
+    ( return  endpointKey.equals((def l_6 :  WireEndpoint = (obj)
+      in l_6).getEndpointKey())
+    ) ;
+  return  false  
+) ;
+
+public  getFerruleTermCode : () ==> [String]
+getFerruleTermCode() == 
+( return  ferruleTermCode
+) ;
+
+public  getFerruleWireType : () ==> [String]
+getFerruleWireType() == 
+( return  ferruleWireType
+) ;
+
+public  WireEndpoint : int  * int  * [String] * int  * [String] * [String] * [String] ==> WireEndpoint
+WireEndpoint(refdesId, wireId, pinName, endpointType, wireTermCode, ferruleTermCode, ferruleWireType) == 
+( WireEndpoint`endpointKey := new  WireEndpointKey(refdesId , wireId , pinName);
+  WireEndpoint`endpointType := endpointType;
+  WireEndpoint`wireTermCode := wireTermCode;
+  WireEndpoint`ferruleTermCode := ferruleTermCode;
+  WireEndpoint`ferruleWireType := ferruleWireType
+) ;
+
+instance variables 
+  public  static NORMAL : int  := 0;
+  public  static BOOT_SPLICE : int  := 1;
+  private  endpointKey : [WireEndpointKey] := nil  ;
+  private  endpointType : int ;
+  private  wireTermCode : [String];
+  private  ferruleTermCode : [String];
+  private  ferruleWireType : [String]
+  
+end  WireEndpoint

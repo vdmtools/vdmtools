@@ -1,0 +1,30 @@
+-- testing use of overloaded operation with multiple definitions
+
+class A
+
+operations
+
+public
+Test: () ==> nat
+Test() ==
+  return new B().Op(7)
+
+end A
+
+class B
+
+operations
+
+public Op: () ==> nat
+Op() ==
+  return 7;
+
+public Op: nat ==> nat
+Op(p) ==
+  return p + 8;
+
+public Op: real ==> nat
+Op(n) ==
+  return n div 2;
+  
+end B

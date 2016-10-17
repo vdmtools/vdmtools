@@ -1,0 +1,27 @@
+ class A
+
+  types
+
+    public    T1 :: v : nat;
+    public    T2 :: r : real
+
+end A
+
+class B is subclass of A
+
+  types
+
+    T = T1 | T2;
+
+  operations
+
+    Op : () ==> T * T
+    Op() ==
+      return mk_(mk_T2(3.5), mk_T1(3));
+
+  public Test : () ==> nat
+    Test() ==
+      let - = Op()
+      in return 1
+
+end B

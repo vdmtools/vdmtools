@@ -1,0 +1,17 @@
+class ObstacleArtificiel is subclass of Obstacle, Cylindre
+
+   operations
+      Intersection: SegmentDePrediction ==> bool
+      Intersection (segment_de_prediction) 
+      == def points_de_vecteur = segment_de_prediction.GetPoints () in
+            return (exists mk_(xy, z) in set points_de_vecteur &
+                       DansCylindre (xy, z, centre, rayon, altitude_maximale));
+
+      Set: MSAWTypes`Coordonnees * MSAWTypes`NM * MSAWTypes`Pieds ==> ()
+      Set (centre', rayon', altitude_maximale') ==
+      (  centre := centre';
+         rayon := rayon';
+         altitude_maximale := altitude_maximale'
+      )
+
+end ObstacleArtificiel

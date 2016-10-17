@@ -1,0 +1,850 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Functions and operations for handling pattern mattching and bindings
+%    in the dynamic semantic
+% $Id: eval_pat.vdm,v 1.28 2001/02/19 12:24:34 paulm Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\chapter{Pattern and Binds}
+
+The module PAT contains all definition related to pattern and binds.
+
+\begin{vdm_al}
+module PAT
+
+  imports
+    from AS all,
+    from CI all,
+    from REP all,
+    from INSTRTP all,
+    from STATE all,
+    from DEBUG all,
+    from DEBUGTP all,
+    from UTIL all,
+    from AUX 
+      functions
+        Permute : seq of SEM`VAL -> set of seq of SEM`VAL;
+        MkBlkEnv : AS`Name * SEM`VAL * [AS`Type] * SEM`Permission -> SEM`BlkEnv;
+        MkEmptyBlkEnv : (SEM`Permission) -> SEM`BlkEnv;
+        CombineBlkEnv : SEM`BlkEnv * SEM`BlkEnv -> SEM`BlkEnv;
+        PreName : AS`Name -> AS`Name;
+        PostName : AS`Name -> AS`Name;
+        ValSetToSeq : set of SEM`VAL -> seq of SEM`VAL;
+        DistrDirectProduct: set of set of SEM`BlkEnv -> set of set of SEM`BlkEnv;
+
+      operations
+        ExtractTagName: AS`Name * set of AS`Name ==> [AS`Name] * bool;
+        DistribCombineBlkEnv : set of SEM`BlkEnv ==> set of SEM`BlkEnv,
+
+    from SEM all,
+    from DEF all,
+    from GLOBAL all,
+    from STKM all,
+    from CMPL all,
+    from CPAT all,
+
+#ifdef VDMPP
+    from EXPR all,
+    from SCHDTP all,
+#ifdef VICE
+    from TIMEPARSER all,
+    from TIMEMAP all,
+#endif VICE
+#endif VDMPP
+
+    from RTERR all
+
+  exports
+    functions
+      DoCarePattern : AS`PatternBind * AS`Name -> AS`PatternBind;
+      SelPattern : AS`Bind -> AS`Pattern;
+      GetExpr : AS`Pattern -> AS`Expr
+
+    operations
+      PatternMatch : STKM`Pattern * SEM`VAL ==> set of SEM`BlkEnv;
+      MatchLists : seq of STKM`Pattern * seq of SEM`VAL ==> set of SEM`BlkEnv;
+      ConstructFN : AS`Name * AS`FnDef ==> SEM`BlkEnv * map AS`Name to (AS`Expr | AS`NoBody);
+      EvalMultBindSeqAll : seq of STKM`Pattern * seq of SEM`VAL * PARTITION
+                           ==> set of SEM`BlkEnv | set of set of SEM`BlkEnv;
+      EvalMultBindSeq : seq of STKM`Pattern * seq of SEM`VAL * PARTITION ==> set of SEM`BlkEnv
+    types
+      struct PARTITION
+
+definitions
+types
+
+PARTITION = <DO_PARTITION> | <DONT_PARTITION>
+\end{vdm_al}
+This type is used to control where looseness shall apear.
+
+\section{Pattern Matching}
+
+\begin{vdm_al}
+operations
+
+PatternMatch : STKM`Pattern * SEM`VAL ==> set of SEM`BlkEnv
+PatternMatch (pat_p, val_v) ==
+  cases true :
+    (is_STKM`PatternName(pat_p))     -> MatchPatternName(pat_p, val_v),
+    (is_STKM`MatchVal(pat_p))        -> MatchMatchVal(pat_p, val_v),
+    (is_STKM`SetEnumPattern(pat_p))  -> MatchSetEnumPattern(pat_p, val_v),
+    (is_STKM`SetUnionPattern(pat_p)) -> MatchSetUnionPattern(pat_p, val_v),
+    (is_STKM`SeqEnumPattern(pat_p))  -> MatchSeqEnumPattern(pat_p, val_v),
+    (is_STKM`SeqConcPattern(pat_p))  -> MatchSeqConcPattern(pat_p, val_v),
+    (is_STKM`MapEnumPattern(pat_p))  -> MatchMapEnumPattern(pat_p, val_v),
+    (is_STKM`MapMergePattern(pat_p)) -> MatchMapMergePattern(pat_p, val_v),
+    (is_STKM`TuplePattern(pat_p))    -> MatchTuplePattern(pat_p, val_v),
+    (is_STKM`RecordPattern(pat_p))   -> MatchRecordPattern(pat_p, val_v),
+    (is_STKM`MapletPattern(pat_p))   -> MatchMapletPattern(pat_p, val_v),
+#ifdef VDMPP
+    (is_STKM`ObjectPattern(pat_p))   -> MatchObjectPattern(pat_p, val_v),
+#endif VDMPP
+    others -> error
+  end;
+\end{vdm_al}
+
+The operation $PatternMatch$ takes a pattern/bind and a semantic value
+as input, and returns the set with possible block environments. In
+each block environment the identifiers defined in the input
+pattern/bind are bound to the corresponding value from the input
+semantic value. An empty return set indicates no matching. A return
+set with an empty block environment means that the pattern matched,
+but that no binding were made.
+
+\begin{vdm_al}
+operations
+MatchPatternName : STKM`PatternName * SEM`VAL ==> set of SEM`BlkEnv
+MatchPatternName(mk_STKM`PatternName(nm,tp,-),val_v) ==
+  if tp <> nil and not STATE`RealSubType(val_v, tp, true)
+  then return {}
+  else
+    if nm = nil
+    then return { AUX`MkEmptyBlkEnv(<READ_ONLY>) } 
+    else return { AUX`MkBlkEnv(nm,val_v,nil,<READ_ONLY>) };
+
+MatchMatchVal : STKM`MatchVal * SEM`VAL ==> set of SEM`BlkEnv
+MatchMatchVal (mk_STKM`MatchVal(val,-),val_v) ==
+  cases val:
+    mk_SEM`CompExplFN([mk_SEM`ExplFN(-,-,instr,env,-,mk_AS`Name([],-),modName,-,-,-)],-) -> 
+        def prog = CMPL`GetProgram(modName, instr)
+        in
+         (
+#ifdef VDMPP
+          STKM`PushClNmCurObj(modName,modName);
+#endif VDMPP
+          STKM`PushBlkEnv(env);
+          def mk_(eval_state, resval) = DEBUG`EvalAuxProgram (prog, "Evaluate Matchval", false)
+          in
+           (STKM`PopBlkEnv();
+#ifdef VDMPP
+            STKM`PopClNmCurObj();
+#endif VDMPP
+            if is_STKM`Success(eval_state)
+            then
+              if resval = val_v
+              then return { AUX`MkEmptyBlkEnv(<READ_ONLY>) }
+              else return {}
+            else return {};
+           );
+         ),
+    others -> if val = val_v
+              then return { AUX`MkEmptyBlkEnv(<READ_ONLY>) }
+              else return {}
+  end;
+
+MatchSetEnumPattern : STKM`SetEnumPattern * SEM`VAL ==> set of SEM`BlkEnv
+MatchSetEnumPattern (mk_STKM`SetEnumPattern(elems_lp,-),val_v) ==
+  cases val_v:
+    mk_SEM`SET(val_sv)
+        -> if card val_sv = len elems_lp
+           then
+             let mv_s =  val_sv inter { e.val | e in set elems elems_lp &
+                                            is_STKM`MatchVal(e) and not is_SEM`CompExplFN(e.val) },
+                 elems_lp' = [ elems_lp(i) | i in set inds elems_lp &
+                        let e = elems_lp(i)
+                        in is_STKM`MatchVal(e) and not is_SEM`CompExplFN(e.val) => e.val not in set mv_s ],
+                 val_sv' = val_sv \ mv_s
+             in
+               cases elems_lp':
+                 []     -> return {AUX`MkEmptyBlkEnv(<READ_ONLY>)},
+                 [pat]  -> let {val} = val_sv'
+                           in return PatternMatch(pat, val),
+                 others -> def perm_slv = AUX`Permute(AUX`ValSetToSeq(val_sv'))
+                           in return dunion { MatchLists(elems_lp', tmp_lv) | tmp_lv in set perm_slv }
+               end
+           else return {},
+    others -> return {}
+  end;
+\end{vdm_al}
+
+This operation returns the set with all possible binding environments. We
+first create the set of all permutations of the input semantic value. Then,
+we return the distributed union of all matchings of the input pattern with
+the elements from the permutation.
+
+\begin{vdm_al}
+operations
+
+MatchSetUnionPattern : STKM`SetUnionPattern * SEM`VAL ==> set of SEM`BlkEnv
+MatchSetUnionPattern ( mk_STKM`SetUnionPattern(lp, rp,-), val_v) ==
+  cases val_v:
+    mk_SEM`SET(val_sv) ->
+       let swap_pat = not is_STKM`SetEnumPattern(lp) and is_STKM`SetEnumPattern(rp),
+           lp_p = if swap_pat then rp else lp,
+           rp_p = if swap_pat then lp else rp,
+           lp_is_set_enum_pattern = is_STKM`SetEnumPattern(lp_p),
+           rp_is_set_enum_pattern = is_STKM`SetEnumPattern(rp_p),
+           empty_not_allowed = card val_sv > 1 and
+                               not is_STKM`SetEnumPattern(lp_p) and
+                               not is_STKM`SetEnumPattern(rp_p)
+       in
+         (dcl envres_sl : set of SEM`BlkEnv := {},
+              already : set of set of SEM`VAL := {{}};
+          if not empty_not_allowed
+          then
+            def envl_s = PatternMatch(lp_p, mk_SEM`SET({}));
+            in
+              if envl_s <> {}
+              then
+                def envr_s = PatternMatch(rp_p, mk_SEM`SET(val_sv))
+                in
+                  if envr_s <> {}
+                  then
+                    envres_sl := envres_sl union
+                     dunion { AUX`DistribCombineBlkEnv({tmp1, tmp2}) | tmp1 in set envl_s, tmp2 in set envr_s };
+
+          for all e in set val_sv do
+            for all es in set already do
+              let setl_sv = es union {e}
+              in
+                (if not (lp_is_set_enum_pattern and card setl_sv >= len lp_p.els)
+                 then already := already union {setl_sv};
+                 if not (lp_is_set_enum_pattern and card setl_sv <> len lp_p.els)
+                 then
+                   let setr_sv = val_sv \ setl_sv
+                   in
+                     cases true:
+                       (empty_not_allowed and setr_sv = {}),
+                       (rp_is_set_enum_pattern and card setr_sv <> len rp_p.els) -> skip,
+                       others -> def envl_s = PatternMatch(lp_p, mk_SEM`SET(setl_sv));
+                                 in
+                                   if envl_s <> {}
+                                   then
+                                     def envr_s = PatternMatch(rp_p, mk_SEM`SET(setr_sv))
+                                     in
+                                       if envr_s <> {}
+                                       then envres_sl := envres_sl union
+                                         dunion { AUX`DistribCombineBlkEnv({tmp1, tmp2}) |
+                                                   tmp1 in set envl_s, tmp2 in set envr_s }
+                     end;
+                );
+          return envres_sl;
+         ),
+    others -> return {}
+  end;
+\end{vdm_al}
+
+In the case of a set union pattern, we first create all pairs of set
+values, for which the union is equal to the original input set value, but
+are still disjoint. For each pair, we create two sets of binding
+environments. These are merged, and inserted into the resulting set of
+binding environments after duplicate entries are removed.
+
+\begin{vdm_al}
+operations
+
+MatchSeqEnumPattern : STKM`SeqEnumPattern * SEM`VAL ==> set of SEM`BlkEnv
+MatchSeqEnumPattern ( mk_STKM`SeqEnumPattern(els_lp,-), val_v) ==
+  cases val_v:
+    mk_SEM`SEQ(val_lv) -> return MatchLists(els_lp, val_lv),
+    others -> return {}
+  end;
+\end{vdm_al}
+
+Here, we can directly create the set of binding environments, because the
+order in the sequence is important.
+
+\begin{vdm_al}
+operations
+
+MatchSeqConcPattern : STKM`SeqConcPattern * SEM`VAL ==> set of SEM`BlkEnv
+MatchSeqConcPattern ( mk_STKM`SeqConcPattern(lp_p, rp_p,-), val_v) ==
+  cases val_v: 
+    mk_SEM`SEQ(val_lv) ->
+      let lp_is_seq_enum_pattern = is_STKM`SeqEnumPattern(lp_p),
+          rp_is_seq_enum_pattern = is_STKM`SeqEnumPattern(rp_p),
+          lp_is_match_val_pattern = is_STKM`MatchVal(lp_p) and is_SEM`SEQ(lp_p.val),
+          rp_is_match_val_pattern = is_STKM`MatchVal(rp_p) and is_SEM`SEQ(rp_p.val),
+          len_val_lv = len val_lv
+      in
+       (dcl From : nat := 1,
+            To : nat := len_val_lv,
+            envres_sl : set of SEM`BlkEnv := {};
+        if lp_is_seq_enum_pattern
+        then
+          let len_lp_p = len lp_p.els
+          in
+            if len_val_lv < len_lp_p or is_STKM`SeqEnumPattern(rp_p) and len_val_lv <> (len_lp_p + len rp_p.els)
+            then return {}
+            else
+             (From := len_lp_p;
+              To := From)
+        elseif rp_is_seq_enum_pattern
+        then
+          let len_rp_p = len rp_p.els
+          in
+            if len_val_lv < len_rp_p
+            then return {}
+            else
+             (From := len_val_lv - len_rp_p;
+              To := From)
+        elseif lp_is_match_val_pattern
+        then
+          let len_lp_p = len lp_p.val.v
+          in
+            if len_val_lv < len_lp_p
+            then return {}
+            else
+             (From := len_lp_p;
+              To := From)
+        elseif rp_is_match_val_pattern
+        then
+          let len_rp_p = len rp_p.val.v
+          in
+            if len_val_lv < len_rp_p
+            then return {}
+            else
+             (From := len_val_lv - len_rp_p;
+              To := From)
+        else
+          if len_val_lv > 1
+          then To := len_val_lv -1;
+
+        if rp_is_seq_enum_pattern or rp_is_match_val_pattern
+        then
+          for i = From to To do
+           (def envr_sl = PatternMatch(rp_p, mk_SEM`SEQ(val_lv(i+1,...,len_val_lv)));
+            in
+              if envr_sl <> {}
+              then
+                def envl_sl = PatternMatch(lp_p, mk_SEM`SEQ(val_lv(1,...,i)));
+                in
+                  if envl_sl <> {}
+                  then
+                    def tmp_sl = dunion { AUX`DistribCombineBlkEnv({tmpl_l, tmpr_l}) |
+                                            tmpl_l in set envl_sl,
+                                            tmpr_l in set envr_sl }
+                    in
+                      envres_sl := envres_sl union tmp_sl)
+        else
+          if len_val_lv = 0
+          then
+            def envl_sl = PatternMatch(lp_p, mk_SEM`SEQ([]));
+                envr_sl = PatternMatch(rp_p, mk_SEM`SEQ([]));
+            in envres_sl := envres_sl union dunion { AUX`DistribCombineBlkEnv({tmpl_l, tmpr_l}) |
+                                                       tmpl_l in set envl_sl,
+                                                       tmpr_l in set envr_sl }
+          else
+            for i = From to To do
+             (def envl_sl = PatternMatch(lp_p, mk_SEM`SEQ(val_lv(1,...,i)));
+              in
+                if envl_sl <> {}
+                then
+                  def envr_sl = PatternMatch(rp_p, mk_SEM`SEQ(val_lv(i+1,...,len_val_lv)));
+                  in
+                    if envr_sl <> {}
+                    then
+                      def tmp_sl = dunion { AUX`DistribCombineBlkEnv({tmpl_l, tmpr_l}) |
+                                              tmpl_l in set envl_sl,
+                                              tmpr_l in set envr_sl }
+                      in
+                        envres_sl := envres_sl union tmp_sl);
+        return envres_sl;
+      ),
+    others -> return {}
+  end;
+\end{vdm_al}
+
+For sequence concatenation patterns, we first create the set of all
+possible pairs of sequences. Next, for each pair, the set of binding
+environments is created, and inserted into the result set. Duplicates are
+also stripped.
+
+\begin{vdm_al}
+operations
+MatchMapEnumPattern : STKM`MapEnumPattern * SEM`VAL ==> set of SEM`BlkEnv
+MatchMapEnumPattern (mk_STKM`MapEnumPattern(mls_lp,-),val_v) ==
+  cases val_v:
+    mk_SEM`MAP(val_mv) -> if card dom val_mv = len mls_lp
+                          then
+                             cases mls_lp:
+                               []     -> return {AUX`MkEmptyBlkEnv(<READ_ONLY>)},
+                               [pat]  -> return PatternMatch(pat, val_v),
+                               others -> def perm_slv = AUX`Permute(AUX`ValSetToSeq(dom val_mv));
+                                             perm_slv2 = { [ mk_SEM`MAP({ tmp_lv(i) |-> val_mv(tmp_lv(i)) })
+                                              | i in set inds tmp_lv ] | tmp_lv in set perm_slv }
+                                         in return dunion { MatchLists(mls_lp, tmp_lv) | tmp_lv in set perm_slv2 }
+                             end
+                          else return {},
+    others -> return {}
+  end;
+
+MatchMapletPattern : STKM`MapletPattern * SEM`VAL ==> set of SEM`BlkEnv
+MatchMapletPattern (mk_STKM`MapletPattern(dp_p, rp_p,-),val_v) ==
+  cases val_v:
+    mk_SEM`MAP(val_mv) -> cases val_mv:
+                            {|->}     -> return {},
+                            {d |-> r} -> return MatchLists([dp_p, rp_p], [d, r]),
+                            others    -> return {}
+                          end,
+    others -> return {}
+  end;
+
+MatchMapMergePattern : STKM`MapMergePattern * SEM`VAL ==> set of SEM`BlkEnv
+MatchMapMergePattern ( mk_STKM`MapMergePattern(lp, rp,-), val_v) ==
+  cases val_v:
+    mk_SEM`MAP(val_mv) ->
+       let val_sv = dom val_mv,
+           swap_pat = not is_STKM`MapEnumPattern(lp) and is_STKM`MapEnumPattern(rp),
+           lp_p = if swap_pat then rp else lp,
+           rp_p = if swap_pat then lp else rp,
+           lp_is_map_enum_pattern = is_STKM`MapEnumPattern(lp_p),
+           rp_is_map_enum_pattern = is_STKM`MapEnumPattern(rp_p),
+           empty_not_allowed = card val_sv > 1 and
+                               not is_STKM`MapEnumPattern(lp_p) and
+                               not is_STKM`MapEnumPattern(rp_p)
+       in
+        (dcl envres_sl : set of SEM`BlkEnv := {},
+             already : set of set of SEM`VAL := {{}};
+         if not empty_not_allowed
+         then
+           def envl_s = PatternMatch(lp_p, mk_SEM`MAP({|->}));
+           in
+             if envl_s <> {}
+            then
+               def envr_s = PatternMatch(rp_p, mk_SEM`MAP(val_mv))
+               in
+                 if envr_s <> {}
+                 then
+                  envres_sl := envres_sl union
+                     dunion { AUX`DistribCombineBlkEnv({tmp1, tmp2}) | tmp1 in set envl_s, tmp2 in set envr_s };
+
+         for all e in set val_sv do
+           for all es in set already do
+             let setl_sv = es union {e}
+             in
+              (if not (lp_is_map_enum_pattern and card setl_sv >= len lp_p.mls)
+               then already := already union {setl_sv};
+               if not (lp_is_map_enum_pattern and card setl_sv <> len lp_p.mls)
+               then
+                 let setr_sv = dom val_mv \ setl_sv
+                 in
+                   cases true:
+                     (empty_not_allowed and setr_sv = {}),
+                     (rp_is_map_enum_pattern and card setr_sv <> len rp_p.mls) -> skip,
+                     others -> def envl_s = PatternMatch(lp_p, mk_SEM`MAP(setl_sv <: val_mv));
+                               in
+                                 if envl_s <> {}
+                                 then
+                                   def envr_s = PatternMatch(rp_p, mk_SEM`MAP(setr_sv <: val_mv))
+                                   in
+                                     if envr_s <> {}
+                                     then envres_sl := envres_sl union
+                                                dunion { AUX`DistribCombineBlkEnv({tmp1, tmp2}) |
+                                                               tmp1 in set envl_s, tmp2 in set envr_s }
+                   end;
+              );
+         return envres_sl;
+        ),
+    others -> return {}
+  end;
+
+MatchTuplePattern : STKM`TuplePattern * SEM`VAL ==> set of SEM`BlkEnv
+MatchTuplePattern ( mk_STKM`TuplePattern(fields_lp,-), val_v) ==
+  cases val_v:
+    mk_SEM`TUPLE(val_lv) -> if len fields_lp = len val_lv
+                            then MatchLists(fields_lp, val_lv)
+                            else return {},
+    others               -> return {}
+  end;
+\end{vdm_al}
+
+We return the set of environments that is the result of the matching of the
+separate fields in the tuple value.
+
+\begin{vdm_al}
+operations
+
+MatchRecordPattern : STKM`RecordPattern * SEM`VAL ==> set of SEM`BlkEnv
+MatchRecordPattern (mk_STKM`RecordPattern(ptag,fields_lp,-),val_v) ==
+  cases val_v:
+    mk_SEM`REC(vtag, v, v_dc) ->
+         def mk_(vtagname, v_isit) = AUX`ExtractTagName(vtag, {});
+             mk_(ptagname, p_isit) = AUX`ExtractTagName(ptag, {})
+         in 
+           if not (v_isit and p_isit)
+           then
+            (RTERR`Error(RTERR`TAG_UNKNOWN, nil, nil, []);
+             return {};)
+           else 
+            if vtagname = ptagname
+            then
+              if exists i in set dom v_dc & not is_STKM`PatternName(fields_lp(i))
+              then
+               (RTERR`Error(RTERR`DC_NOT_PATTERN_NAME, nil, nil, []);
+                return {})
+              else
+                let val_lv = [ if i in set dom v then v(i) else v_dc(i) | i in set dom v union dom v_dc ]
+                in return MatchLists(fields_lp, val_lv)
+            else return {},
+    others -> return {}
+  end;
+\end{vdm_al}
+
+We return the set of environments that is the result of the matching of the
+separate fields in the record value. 
+
+#ifdef VDMPP
+\begin{vdm_al}
+MatchObjectPattern : STKM`ObjectPattern * SEM`VAL ==> set of SEM`BlkEnv
+MatchObjectPattern ( mk_STKM`ObjectPattern(cls, fields_lp,-), val_v) ==
+  cases val_v:
+    mk_SEM`OBJ_Ref(-,objnm) -> if STATE`IsAClass(cls) and
+                                  ((objnm = cls) or STATE`IsSubClass(objnm, cls))
+                               then
+                                (dcl pat_lp : seq of STKM`Pattern := [],
+                                     val_lv : seq of SEM`VAL := [];
+                                 for mk_STKM`FieldPattern(field, pat, -) in fields_lp do
+                                  (pat_lp := pat_lp ^ [pat];
+                                   val_lv := val_lv ^ [EXPR`EvalFieldOBJRefSelect(val_v, field)]);
+                                 return MatchLists(pat_lp, val_lv))
+                               else return {},
+    others -> return {}
+  end;
+\end{vdm_al}
+#endif VDMPP
+
+\begin{vdm_al}
+operations
+MatchLists : seq of STKM`Pattern * seq of SEM`VAL ==> set of SEM`BlkEnv
+MatchLists (els_lp, val_lv) ==
+  if len val_lv = len els_lp
+  then
+    let p_v_l = [ mk_(els_lp(i),val_lv(i)) | i in set inds els_lp & cases els_lp(i):
+                                                                      mk_STKM`PatternName(nil,-,-) -> false,
+                                                                      others -> true
+                                                                    end ]
+    in
+      cases p_v_l:
+        []         -> return {AUX`MkEmptyBlkEnv(<READ_ONLY>)},
+        [mk_(p,v)] -> return PatternMatch(p, v),
+        others -> def tmp_ss = { let mk_(p, v) = p_v_l(i)
+                                 in PatternMatch(p, v) | i in set inds p_v_l }
+                  in
+                  if {} not in set tmp_ss
+                    then
+                      def perm_s = AUX`DistrDirectProduct(tmp_ss)
+                      in
+                        cases perm_s:
+                          {}     -> return {},
+                          {e}    -> return AUX`DistribCombineBlkEnv(e),
+                          others -> return dunion ({AUX`DistribCombineBlkEnv(l) | l in set perm_s})
+                        end
+                    else return {}
+      end
+  else return {};
+\end{vdm_al}
+
+For each element from the input pattern sequence, we create a set of
+binding environments by matching the pattern with the corresponding element
+from the input value sequence. If all elements match, each set of
+environments from the sequence $tmp-ls$ is merged into a set with one
+single environment.
+
+\begin{vdm_al}
+operations
+
+EvalMultBindSeq : seq of STKM`Pattern * seq of SEM`VAL * PARTITION ==> set of SEM`BlkEnv
+EvalMultBindSeq (pat_lp, seq_lv, partition) ==
+  def s = EvalMultBindSeqAll (pat_lp, seq_lv, partition)
+  in
+    return if partition = <DO_PARTITION>
+           then let e in set s in e
+           else s;
+
+EvalMultBindSeqAll : seq of STKM`Pattern * seq of SEM`VAL * PARTITION
+                  ==> set of SEM`BlkEnv | set of set of SEM`BlkEnv
+EvalMultBindSeqAll (pat_lp, seq_lv, partition) ==
+  cases seq_lv:
+    []     -> return if partition = <DO_PARTITION>
+                     then {{}}
+                     else {},
+    [val]  -> cases val:
+                mk_SEM`SET(val_s) -> def pat = pat_lp(1);
+                                         env_ls = { PatternMatch(pat, v) | v in set val_s }
+                                     in 
+                                       if partition = <DO_PARTITION>
+                                       then return Partition(env_ls)
+                                       else return Collapse(env_ls),
+                others -> RTERR`ErrorVal(RTERR`SET_EXPECTED, nil, nil, []) 
+              end,
+    others -> if forall elm_v in set elems seq_lv & is_SEM`SET(elm_v)
+              then
+                let seq_lsv = [ seq_lv(i).v | i in set inds seq_lv ]
+                in
+                 (dcl env_ls : set of (set of SEM`BlkEnv) := {};
+                  for idx = 1 to len seq_lsv do
+                   (dcl tmp : set of (set of SEM`BlkEnv) := env_ls;
+                    env_ls := {};
+                    for all val in set seq_lsv(idx) do
+                      def env_s = PatternMatch(pat_lp(idx), val)
+                      in
+                        if env_s <> {}
+                        then 
+                          if idx = 1
+                          then env_ls := env_ls union {env_s}
+                          else
+                            for all s in set tmp do
+                              def newe_s = dunion { AUX`DistribCombineBlkEnv({e, env})
+                                                    | e in set s, env in set env_s }
+                              in 
+                                if newe_s <> {}
+                                then env_ls := env_ls union {newe_s});
+                            --env_ls := { dunion { AUX`DistribCombineBlkEnv({e, env}) | e in set s, env in set env_s }
+                            --         | s in set tmp });
+                  if partition = <DO_PARTITION>
+                  then return Partition(env_ls)
+                  else return Collapse(env_ls)
+                  )
+              else RTERR`ErrorVal(RTERR`SET_EXPECTED, nil, nil, [])
+  end;
+\end{vdm_al}
+
+This operation returns the set of all binding environments for multiple bindings.
+
+This operation returns the set of binding environments for the pattern and
+all the elements of the set expression.
+
+\section{Constructing Block environments for functions}
+
+\begin{vdm_al}
+operations
+  ConstructFN: AS`Name * AS`FnDef ==> SEM`BlkEnv * map AS`Name to (AS`Expr | AS`NoBody)
+  ConstructFN (clmodName, fndef) ==
+    cases true:
+      (is_AS`ExplFnDef(fndef))    -> ConstructExplFN(clmodName, fndef),
+      (is_AS`ExtExplFnDef(fndef)) -> ConstructExtExplFN(clmodName, fndef),
+      (is_AS`ImplFnDef(fndef))    -> ConstructImplFN(clmodName, fndef),
+      others -> error
+    end;
+ 
+  ConstructExplFN: AS`Name * AS`ExplFnDef ==> SEM`BlkEnv * map AS`Name to (AS`Expr | AS`NoBody)
+  ConstructExplFN (clmodName, fndef) ==
+    let mk_AS`ExplFnDef(nm,tpparms,-,-,body,fnpre,fnpost,-,-,-,-) = fndef
+    in
+     (dcl benv : SEM`BlkEnv := AUX`MkBlkEnv(nm, DEF`TransFN(clmodName, fndef), nil, <READ_ONLY>),
+          b_m : map AS`Name to (AS`Expr | AS`NoBody) := {nm |-> body.body},
+          mp : map AS`Name to (SEM`FN | SEM`ExplPOLY) := {|->};
+
+      if fnpre <> nil
+      then b_m := b_m munion {AUX`PreName(nm) |-> fnpre};
+      if fnpost <> nil
+      then b_m := b_m munion {AUX`PostName(nm) |-> fnpost};
+
+      if tpparms = []
+      then mp := DEF`CreatePrePostFns(clmodName, fndef, nm)
+      else mp := DEF`CreatePolyPrePostFns(clmodName, fndef, nm);
+      for all nm in set dom mp do
+        let v = mp(nm)
+        in benv := AUX`CombineBlkEnv(benv, AUX`MkBlkEnv(nm, v, nil, <READ_ONLY>));
+
+      return mk_(benv,b_m);
+     );
+
+  ConstructExtExplFN: AS`Name * AS`ExtExplFnDef ==> SEM`BlkEnv * map AS`Name to (AS`Expr | AS`NoBody)
+  ConstructExtExplFN (clmodName, fndef) ==
+    let mk_AS`ExtExplFnDef(nm,tpparms,-,-,body,fnpre,fnpost,-,-,-,-) = fndef
+    in
+     (dcl benv : SEM`BlkEnv := AUX`MkBlkEnv(nm, DEF`TransFN(clmodName, fndef), nil, <READ_ONLY>),
+          b_m : map AS`Name to (AS`Expr | AS`NoBody) := {nm |-> body.body},
+          mp : map AS`Name to (SEM`FN | SEM`ExplPOLY) := {|->};
+
+      if fnpre <> nil
+      then b_m := b_m munion {AUX`PreName(nm) |-> fnpre};
+      if fnpost <> nil
+      then b_m := b_m munion {AUX`PostName(nm) |-> fnpost};
+
+      if tpparms = []
+      then mp := DEF`CreatePrePostFns(clmodName, fndef, nm)
+      else mp := DEF`CreatePolyPrePostFns(clmodName, fndef, nm);
+
+      for all nm in set dom mp do
+        let v = mp(nm)
+        in benv := AUX`CombineBlkEnv(benv, AUX`MkBlkEnv(nm, v, nil, <READ_ONLY>));
+
+      return mk_(benv,b_m);
+    );
+
+  ConstructImplFN: AS`Name * AS`ImplFnDef ==> SEM`BlkEnv * map AS`Name to (AS`Expr | AS`NoBody)
+  ConstructImplFN (clmodName, fndef) ==
+    let mk_AS`ImplFnDef(nm,tpparms,-,-,fnpre,fnpost,-,-,-) = fndef
+    in
+     (dcl benv : SEM`BlkEnv := AUX`MkBlkEnv(nm, DEF`TransFN(clmodName, fndef), nil, <READ_ONLY>),
+          b_m : map AS`Name to (AS`Expr | AS`NoBody) := { nm |-> mk_AS`UndefinedExpr(CI`NilContextId) },
+          --b_m : map AS`Name to (AS`Expr | AS`NoBody) := { |-> },
+          mp : map AS`Name to (SEM`FN | SEM`ExplPOLY) := {|->};
+
+      if fnpre <> nil
+      then b_m := b_m munion {AUX`PreName(nm) |-> fnpre};
+      b_m := b_m munion {AUX`PostName(nm) |-> fnpost};
+
+      if tpparms = []
+      then mp := DEF`CreatePrePostFns(clmodName, fndef, nm)
+      else mp := DEF`CreatePolyPrePostFns(clmodName, fndef, nm);
+
+      for all nm in set dom mp do
+        let v = mp(nm)
+        in benv := AUX`CombineBlkEnv(benv, AUX`MkBlkEnv(nm, v, nil, <READ_ONLY>));
+
+      return mk_(benv,b_m);
+     );
+\end{vdm_al}
+
+This operation returns a semantic function value for a function definition.
+The closure environment is created with an initial set of identifiers
+($id-s$).
+
+We first create the closure environment for the body of the function, and
+then return a semantic (non-)polymorphic function value.
+
+\begin{vdm_al}
+functions
+
+  SelPattern : AS`Bind -> AS`Pattern
+  SelPattern (bind) ==
+    cases bind:
+      mk_AS`SetBind(pat,-,-)  -> pat,
+      mk_AS`TypeBind(pat,-,-) -> pat,
+      others                  -> undefined
+    end;
+\end{vdm_al}
+
+This function returns the pattern from a bind.
+
+\begin{vdm_al}
+
+  GetExpr : AS`Pattern -> AS`Expr
+  GetExpr (pat) ==
+    cases pat:
+      mk_AS`PatternName(nm,-,cid)      -> if nm = nil
+                                          then GetExpr(DoCarePattern(pat, mk_AS`Name(["1"],cid)))
+                                          else nm,
+      mk_AS`MatchVal(val,-)            -> val,
+      mk_AS`SetEnumPattern(els,cid)    -> let e_l = [ GetExpr(els(i)) | i in set inds els ]
+                                          in mk_AS`SetEnumerationExpr(e_l, cid),
+      mk_AS`SetUnionPattern(lp,rp,cid) -> mk_AS`BinaryExpr(GetExpr(lp), <SETUNION>, GetExpr(rp), cid),
+      mk_AS`SeqEnumPattern(els,cid)    -> let e_l = [ GetExpr(els(i)) | i in set inds els ]
+                                          in mk_AS`SeqEnumerationExpr(e_l, cid),
+      mk_AS`SeqConcPattern(lp,rp,cid)  -> mk_AS`BinaryExpr(GetExpr(lp), <SEQCONC>, GetExpr(rp), cid),
+      mk_AS`MapEnumPattern(mls,cid)    -> let e_l = [ GetExpr(mls(i)) | i in set inds mls ]
+                                          in mk_AS`MapEnumerationExpr(e_l, cid),
+      mk_AS`MapMergePattern(lp,rp,cid) -> mk_AS`BinaryExpr(GetExpr(lp), <MAPMERGE>, GetExpr(rp), cid),
+      mk_AS`MapletPattern(dp,rp,cid)   -> mk_AS`Maplet(GetExpr(dp), GetExpr(rp), cid),
+      mk_AS`RecordPattern(nm,p_l,cid)  -> let e_l = [ GetExpr(p_l(i)) | i in set inds p_l ]
+                                          in mk_AS`RecordConstructorExpr(nm, e_l, cid),
+      mk_AS`TuplePattern(p_l,cid)      -> let e_l = [ GetExpr(p_l(i)) | i in set inds p_l ]
+                                          in mk_AS`TupleConstructorExpr(e_l, cid),
+      others                           -> undefined
+    end;
+\end{vdm_al}
+
+This function generates an expression from a pattern.
+
+\begin{vdm_al}
+functions
+  Partition : set of set of SEM`BlkEnv -> set of set of SEM`BlkEnv
+  Partition (env_ls) ==
+    let env_ss = env_ls \ {{}}
+    in
+      if env_ss <> {}
+      then AUX`DistrDirectProduct(env_ss)
+      else {{}};
+
+  Collapse : set of set of SEM`BlkEnv -> set of SEM`BlkEnv
+  Collapse (env_ls) ==
+    dunion env_ls;
+\end{vdm_al}
+
+Theese two functions control where looseness apears.
+
+\begin{vdm_al}
+functions
+  NewBase : AS`Name * nat -> AS`Name
+  NewBase (mk_AS`Name(id, cid), n) ==
+    let str = UTIL`itoa(n)
+    in mk_AS`Name(id ^ [str] ^ ["_"], cid);
+\end{vdm_al}
+
+Based on the input identifier, and the input number, a new identifier is created.
+
+\begin{vdm_al}
+functions
+  DoCarePattern : AS`PatternBind * AS`Name -> AS`PatternBind
+  DoCarePattern (pat_p, id_base) ==
+  cases pat_p:
+    mk_AS`PatternName(nm,-,cid)      -> if nm = nil
+                                        then mk_AS`PatternName(id_base,nil,cid)
+                                        else pat_p,
+    mk_AS`MatchVal(-,-)              -> pat_p,
+    mk_AS`SetEnumPattern(els,cid)    -> let e_l = [ DoCarePattern(els(i), NewBase(id_base, i)) | i in set inds els ]
+                                        in mk_AS`SetEnumPattern(e_l,cid),
+    mk_AS`SetUnionPattern(lp,rp,cid) -> mk_AS`SetUnionPattern(DoCarePattern(lp, NewBase(id_base, 1)),
+                                                              DoCarePattern(rp, NewBase(id_base, 2)),
+                                                              cid),
+    mk_AS`SeqEnumPattern(els,cid)    -> let e_l = [ DoCarePattern(els(i), NewBase(id_base, i)) | i in set inds els ]
+                                        in mk_AS`SeqEnumPattern(e_l,cid),
+    mk_AS`SeqConcPattern(lp,rp,cid)  -> mk_AS`SeqConcPattern(DoCarePattern(lp, NewBase(id_base, 1)),
+                                                             DoCarePattern(rp, NewBase(id_base, 2)),
+                                                             cid),
+    mk_AS`MapEnumPattern(mls,cid)    -> let e_l = [ DoCarePattern(mls(i), NewBase(id_base, i)) | i in set inds mls ]
+                                        in mk_AS`MapEnumPattern(e_l,cid),
+    mk_AS`MapMergePattern(lp,rp,cid) -> mk_AS`MapMergePattern(DoCarePattern(lp, NewBase(id_base, 1)),
+                                                              DoCarePattern(rp, NewBase(id_base, 2)),
+                                                              cid),
+    mk_AS`MapletPattern(dp,rp,cid)   -> mk_AS`MapletPattern(DoCarePattern(dp, NewBase(id_base, 1)),
+                                                            DoCarePattern(rp, NewBase(id_base, 2)),
+                                                            cid),
+    mk_AS`RecordPattern(nm,p_l,cid)  -> let e_l = [ DoCarePattern(p_l(i), NewBase(id_base, i)) | i in set inds p_l ]
+                                        in mk_AS`RecordPattern(nm, e_l, cid),
+    mk_AS`TuplePattern(p_l,cid)      -> let e_l = [ DoCarePattern(p_l(i), NewBase(id_base, i)) | i in set inds p_l ]
+                                        in mk_AS`TuplePattern(e_l, cid),
+#ifdef VDMPP
+    mk_AS`ObjectPattern(cls,p_l,cid) -> let e_l = [ DoCarePattern(p_l(i), NewBase(id_base, i)) | i in set inds p_l ]
+                                        in mk_AS`ObjectPattern(cls, e_l, cid),
+    mk_AS`FieldPattern(nm,p,cid)     -> mk_AS`FieldPattern(nm, DoCarePattern(p, NewBase(id_base, 1)), cid),
+#endif VDMPP
+    mk_AS`SetBind(pat,Set,cid)       -> let new_pat = DoCarePattern(pat, NewBase(id_base, 1))
+                                        in mk_AS`SetBind(new_pat, Set, cid),
+    mk_AS`TypeBind(pat,tp,cid)       -> let new_pat = DoCarePattern(pat, NewBase(id_base, 1))
+                                        in mk_AS`TypeBind(new_pat, tp, cid),
+    others                           -> undefined
+ end;
+
+end PAT
+\end{vdm_al}
+
+This operation replaces all ``don't care'' patterns in the input pattern
+with unique pattern identifiers.
+
+\vspace{0.5cm}
+
+#ifdef RTINFO
+\begin{rtinfo}
+[MatchSetUnionPattern]{rtinfo.ast}[PAT]
+\end{rtinfo}
+#endif RTINFO
+
+% Local Variables: 
+% mode: LaTeX
+% TeX-master: "dynsem"
+% End: 

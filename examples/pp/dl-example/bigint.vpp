@@ -1,0 +1,83 @@
+dlclass BigInt
+
+--uselib "bigint_dl.so" -- Unix
+uselib "bigint_dl.dll"  -- Windows
+
+operations
+
+public Create : nat ==> BigInt
+Create(n) ==
+( SetVal(n);
+  return self
+);
+
+protected SetVal : nat ==> ()
+SetVal(n) ==
+  is not yet specified;
+
+public toString : () ==> seq of char
+toString() ==
+  is not yet specified;
+
+public plus : BigInt ==> BigInt
+plus(i) ==
+  is not yet specified;
+
+public minus : BigInt ==> BigInt
+minus(i) ==
+  is not yet specified;
+
+public gt : BigInt ==> bool
+gt(i) ==
+  is not yet specified;
+
+end BigInt
+
+class BankAccount
+
+instance variables
+  name : seq of char;
+  number : nat;
+  balance : BigInt
+
+operations
+
+public Init : seq of char * nat ==> ()
+Init(nname, nnum) ==
+( name := nname;
+  number := nnum;
+  balance := new BigInt().Create(nnum);
+);
+
+public Deposit : BigInt ==> ()
+Deposit(bi) ==
+  balance := balance.plus(bi);
+
+public Withdraw : BigInt ==> ()
+Withdraw(bi) ==
+  balance := balance.minus(bi)
+pre balance.gt(bi);
+
+public GetBalance : () ==> BigInt
+GetBalance() ==
+  return balance
+
+end BankAccount
+
+class A
+
+operations
+
+public Test : () ==> seq of char
+Test() ==
+( dcl b : BankAccount := new BankAccount();
+  dcl bi : BigInt := new BigInt().Create(400);
+  b.Init("customer", 100);
+
+  b.Deposit(bi);
+  return b.GetBalance().toString();
+)
+
+end A
+
+

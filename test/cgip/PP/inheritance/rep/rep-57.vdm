@@ -1,0 +1,53 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class C
+
+instance variables
+   var : int := 0;
+
+operations
+
+public SetVar: int ==> ()
+SetVar(val) ==
+   var := val;
+
+public GetVar: () ==> int
+GetVar() ==
+   return var;
+
+end C
+
+
+class A
+
+
+instance variables
+   
+   c : C := new C();
+
+operations
+
+public SetVar: int ==> ()
+SetVar(val) ==
+   c.SetVar(val);
+
+public GetVar: () ==> int
+GetVar() ==
+   return c.GetVar();
+
+end A
+
+class B
+
+operations
+
+public Test : () ==> int
+Test () ==
+( dcl a1 : A := new A(),
+      a2 : A := new A();
+  a1.SetVar(3);
+  return a1.GetVar() + a2.GetVar();
+)
+  
+
+end B
+

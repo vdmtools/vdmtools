@@ -1,0 +1,21 @@
+class CasesStmtTest
+
+operations
+
+  Cases: seq of bool ==> set of int
+  Cases(sb) ==
+    cases true:
+    true -> for a in sb do
+           return not sb,
+    1 -> for a in reverse sb do
+           return sb,
+    2 -> for all a in set sb do
+           skip,
+    3 -> for i=1 to 4 by 2 do
+           return sb(i) and true,
+    4 -> while true do
+           return,
+    others -> let n = 7 in return n
+    end;
+
+end CasesStmtTest

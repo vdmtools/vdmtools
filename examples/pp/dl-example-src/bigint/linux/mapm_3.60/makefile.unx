@@ -1,0 +1,146 @@
+#
+# Generic Unix makefile for MAPM library version >= 3.50
+#
+# Run this makefile from the source subdirectory with
+#   make -f makefile.unx
+#
+# Michael Ring
+# ringx004@tc.umn.edu
+#
+# 9 July 2000
+
+SHELL = /bin/sh
+CC = gcc
+
+CFLAGS = -Wall -O2
+LFLAGS = -s -static
+
+OBJS =	mapmhasn.o \
+	mapmhsin.o \
+	mapm_pow.o \
+	mapm_log.o \
+	mapm_exp.o \
+	mapmasin.o \
+	mapm_sin.o \
+	mapm5sin.o \
+	mapmrsin.o \
+	mapmsqrt.o \
+	mapmcbrt.o \
+	mapmgues.o \
+	mapmfact.o \
+	mapmipwr.o \
+	mapm_rnd.o \
+	mapmstck.o \
+	mapm_div.o \
+	mapm_mul.o \
+	mapmfmul.o \
+	mapm_fft.o \
+	mapm_add.o \
+	mapmistr.o \
+	mapm_set.o \
+	mapmutil.o \
+	mapmcnst.o
+
+all: lib_mapm.a calc primenum validate
+
+calc: lib_mapm.a calc.o
+	$(CC) $(LFLAGS) -o calc calc.o lib_mapm.a -lm
+
+primenum: lib_mapm.a primenum.o
+	$(CC) $(LFLAGS) -o primenum primenum.o lib_mapm.a -lm
+
+validate: lib_mapm.a validate.o
+	$(CC) $(LFLAGS) -o validate validate.o lib_mapm.a -lm
+
+lib_mapm.a: $(OBJS)
+	rm -f lib_mapm.a
+	ar rc lib_mapm.a $(OBJS)
+
+mapmhasn.o: mapmhasn.c
+	$(CC) -c $(CFLAGS) mapmhasn.c
+
+mapmhsin.o: mapmhsin.c
+	$(CC) -c $(CFLAGS) mapmhsin.c
+
+mapm_pow.o: mapm_pow.c
+	$(CC) -c $(CFLAGS) mapm_pow.c
+
+mapm_log.o: mapm_log.c
+	$(CC) -c $(CFLAGS) mapm_log.c
+
+mapm_exp.o: mapm_exp.c
+	$(CC) -c $(CFLAGS) mapm_exp.c
+
+mapmasin.o: mapmasin.c
+	$(CC) -c $(CFLAGS) mapmasin.c
+
+mapm_sin.o: mapm_sin.c
+	$(CC) -c $(CFLAGS) mapm_sin.c
+
+mapm5sin.o: mapm5sin.c
+	$(CC) -c $(CFLAGS) mapm5sin.c
+
+mapmrsin.o: mapmrsin.c
+	$(CC) -c $(CFLAGS) mapmrsin.c
+
+mapmsqrt.o: mapmsqrt.c
+	$(CC) -c $(CFLAGS) mapmsqrt.c
+
+mapmcbrt.o: mapmcbrt.c
+	$(CC) -c $(CFLAGS) mapmcbrt.c
+
+mapmgues.o: mapmgues.c
+	$(CC) -c $(CFLAGS) mapmgues.c
+
+mapmfact.o: mapmfact.c
+	$(CC) -c $(CFLAGS) mapmfact.c
+
+mapmipwr.o: mapmipwr.c
+	$(CC) -c $(CFLAGS) mapmipwr.c
+
+mapm_rnd.o: mapm_rnd.c
+	$(CC) -c $(CFLAGS) mapm_rnd.c
+
+mapmstck.o: mapmstck.c
+	$(CC) -c $(CFLAGS) mapmstck.c
+
+mapm_div.o: mapm_div.c
+	$(CC) -c $(CFLAGS) mapm_div.c
+
+mapm_mul.o: mapm_mul.c
+	$(CC) -c $(CFLAGS) mapm_mul.c
+
+mapmfmul.o: mapmfmul.c
+	$(CC) -c $(CFLAGS) mapmfmul.c
+
+mapm_fft.o: mapm_fft.c
+	$(CC) -c $(CFLAGS) mapm_fft.c
+
+mapm_add.o: mapm_add.c
+	$(CC) -c $(CFLAGS) mapm_add.c
+
+mapmistr.o: mapmistr.c
+	$(CC) -c $(CFLAGS) mapmistr.c
+
+mapm_set.o: mapm_set.c
+	$(CC) -c $(CFLAGS) mapm_set.c
+
+mapmutil.o: mapmutil.c
+	$(CC) -c $(CFLAGS) mapmutil.c
+
+mapmcnst.o: mapmcnst.c
+	$(CC) -c $(CFLAGS) mapmcnst.c
+
+calc.o: calc.c
+	$(CC) -c $(CFLAGS) calc.c
+
+primenum.o: primenum.c
+	$(CC) -c $(CFLAGS) primenum.c
+
+validate.o: validate.c
+	$(CC) -c $(CFLAGS) validate.c
+
+clean: 
+	rm -f *.o 
+	rm -f calc primenum validate
+

@@ -1,0 +1,41 @@
+class A
+
+functions
+protected fn1: (int -> int) -> int
+fn1(f) ==
+  f(1);
+
+protected fn2: (int -> int) * int -> bool
+fn2(f,a) ==
+  f(a) > 0;
+
+protected fn3: (char -> int) -> bool
+fn3(f) ==
+  f('a') >= 0;
+
+protected fn4: (char -> int) -> bool
+fn4(f) ==
+  f('a') >= 0;
+
+end A
+
+class B is subclass of A
+
+functions
+fn1: (int -> int) -> int
+fn1(f) ==
+  f(1);
+
+fn2: (char -> int) * int -> bool
+fn2(f,-) ==
+  f('a') > 0;
+
+fn3: (char -> char) -> bool
+fn3(f) ==
+  f('a') <> 'a';
+
+fn4: (char -> int) -> int
+fn4(f) ==
+  f('a');
+
+end B

@@ -1,0 +1,35 @@
+\begin{vdm_al}
+class 哲学者
+
+values
+	io = new IO();
+	asString =  Integer`asString;
+
+instance variables
+  a食卓 : 食卓;
+  回数 : nat := 2
+
+operations
+  public 哲学者 : 食卓 ==> 哲学者
+  哲学者 (p食卓) == a食卓 := p食卓;
+
+  考える: () ==> ()
+  考える () == skip;
+
+  食べる: () ==> ()
+  食べる () == 回数 := 回数 - 1;
+
+thread
+  ( while (回数 > 0) do
+      ( 考える();		
+	  	if io.echo("ThreadID=" ^ asString(threadid) ^ ", フォーク数pre=" ^ asString(a食卓.フォーク数()) ^ ",\n") then skip;
+        a食卓.フォークを取る();
+        a食卓.フォークを取る();
+		if io.echo("ThreadID=" ^ asString(threadid) ^ ", フォーク数post=" ^ asString(a食卓.フォーク数()) ^ ",\n") then skip;
+        食べる();
+        a食卓.フォークを置く();
+        a食卓.フォークを置く() );
+    a食卓. 食べた() )
+
+end 哲学者
+\end{vdm_al}

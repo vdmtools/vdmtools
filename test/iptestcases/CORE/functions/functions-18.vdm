@@ -1,0 +1,15 @@
+class A
+
+functions
+  
+public h1:real -> real
+h1(-) == is not yet specified;
+
+operations
+
+  public Test: () ==> real
+  Test () ==
+    return h1(8)
+
+
+end A

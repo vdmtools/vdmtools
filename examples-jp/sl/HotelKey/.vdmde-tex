@@ -1,0 +1,24 @@
+read Hotel.vdm
+read HotelT.vdm
+read TestDriver.vdm
+read TestLogger.vdm
+read io.vdm
+typecheck 『ホテル』 pos
+typecheck HotelT pos
+typecheck TestDriver pos
+typecheck TestLogger pos
+set dtc
+set inv
+set pre
+set post
+set ppr
+init
+debug HotelT`run()
+tcov write vdm.tc
+rtinfo vdm.tc
+latex -r Hotel.vdm
+latex -r HotelT.vdm
+latex -r TestDriver.vdm
+latex -r TestLogger.vdm
+system rm HotelKey.pdf
+system make

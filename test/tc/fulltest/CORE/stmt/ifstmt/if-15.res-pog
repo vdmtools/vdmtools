@@ -1,0 +1,36 @@
+[ mk_ERR`ErrMsg( 
+     10,
+     10,
+     17,
+     "Error[309] : Rhs not compatible with defining type of state designator",
+     <ERROR> ),
+  mk_ERR`ErrMsg( 
+     10,
+     14,
+     10,
+     "Error[118] : elseif-part is not of correct type",
+     <ERROR> ),
+  mk_ERR`ErrMsg( 
+     10,
+     9,
+     10,
+     "Error[116] : then-part is not of correct type",
+     <ERROR> ),
+  mk_ERR`ErrMsg( 
+     10,
+     16,
+     10,
+     "Error[117] : else-part is not of correct type",
+     <ERROR> ),
+  mk_ERR`ErrMsg( 
+     10,
+     7,
+     9,
+     "Warning[33] : \"a\" is not used",
+     <WARNING> ),
+  mk_ERR`ErrMsg( 
+     10,
+     5,
+     3,
+     "Error[19] : Return type of operation for \"If15\" is different from signature",
+     <ERROR> ) ]

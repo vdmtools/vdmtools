@@ -1,0 +1,77 @@
+\documentclass[dvips,landscape,a4paper]{jarticle}
+
+\usepackage{vpp}
+\usepackage{longtable}
+\usepackage[dvips]{color}
+\definecolor{covered}{rgb}{0,0,0}
+\definecolor{not-covered}{rgb}{1,0,0}
+
+% \oddsidemargin=-7mm
+% \topmargin=-10pt
+% \headheight=6pt
+% \headsep=10pt
+% \textheight=24cm
+% \textwidth=17.4cm
+
+\oddsidemargin=0pt
+\topmargin=-14mm
+\headheight=6pt
+\headsep=10pt
+\textheight=17cm
+\textwidth=25cm
+
+\begin{document}
+
+\begin{vdm_al}
+class Á”ïÒ
+--$Id: consumer.vpp,v 1.2 2005/10/31 06:48:10 vdmtools Exp $
+instance variables
+b : Buffer;
+producer : ¶YÒ;
+
+operations
+public Á”ïÒ : Buffer ==> Á”ïÒ
+Á”ïÒ(aBuffer) ==
+	(
+	b := aBuffer;
+	return self
+	);
+	
+€–ÚÁ”ï : seq of char ==> ()
+€–ÚÁ”ï(c) == 
+	let - = new IO().echo("ThreadID=" ^ Integer`asString(threadid) ^ ", ConsumeData=" ^ c ^ ",\n")
+	in
+	skip;
+	
+public doit : () ==> ()
+doit() ==
+	while true do (
+		let c = b.Get()
+		in
+		/* ‚±‚Ìif•¶‚ª‚È‚¢‚Ædeadlock”­¶*/
+		if c = 'Z' then
+			return
+		else
+		/* */
+			€–ÚÁ”ï([c]);
+	);
+
+public wait : () ==> ()
+wait() == skip;
+	
+sync
+	--mutex(€–ÚÁ”ï);
+	per wait => #fin(doit) > #act(wait);
+	
+thread
+	doit(); 
+
+end Á”ïÒ
+\end{vdm_al}
+
+\begin{rtinfo}
+[TotalxCoverage]{vdm.tc}[Á”ïÒ]
+\end{rtinfo}
+
+\end{document}
+

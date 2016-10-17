@@ -1,0 +1,30 @@
+class A
+
+values
+
+ public IQWR : nat = 0;
+ public IQRD : nat = 1;
+
+instance variables
+  static private qmap : map nat to seq of char :=
+    { IQWR |-> "<WR>",
+      IQRD |-> "<RD>" }
+
+operations
+
+
+
+public  Test: () ==> seq of char 
+  Test() ==
+    ( return qmap(IQWR)
+    )
+
+end A
+
+class B is subclass of A
+
+
+
+
+
+end B

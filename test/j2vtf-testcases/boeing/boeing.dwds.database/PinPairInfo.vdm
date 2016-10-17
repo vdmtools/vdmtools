@@ -1,0 +1,57 @@
+class PinPairInfo is subclass of Object
+operations 
+public  toString : () ==> [String]
+toString() == 
+( dcl   sb : [StringBuffer] := new  StringBuffer(35);
+  let - = sb.append(new  String("<Pairs=["))
+  in 
+    skip ;
+  ( dcl   pp : map  int  to  [String] := getPinPairs();
+    ( dcl   i : int  := 0;
+      while  i < pp.length do  
+      ( let - = sb.append(pp(i))
+        in 
+          skip ;
+        if  i < pp.length-1
+        then  
+          ( let - = sb.append(',')
+            in 
+              skip 
+          ) ;
+        i := i+1
+      ) 
+    ) ;
+    let - = sb.append(new  String("],IsFixed="))
+    in 
+      skip ;
+    let - = sb.append(isFixedContactPin())
+    in 
+      skip ;
+    let - = sb.append('>')
+    in 
+      skip ;
+    return  sb.toString()
+  ) 
+) ;
+
+public  getPinPairs : () ==> map  int  to  [String]
+getPinPairs() == 
+( return  pinPairs
+) ;
+
+public  isFixedContactPin : () ==> bool 
+isFixedContactPin() == 
+( return  isFixedContact
+) ;
+
+public  PinPairInfo : map  int  to  [String] * bool  ==> PinPairInfo
+PinPairInfo(pinPairs, isFixedContact) == 
+( PinPairInfo`pinPairs := pinPairs;
+  PinPairInfo`isFixedContact := isFixedContact
+) ;
+
+instance variables 
+  private  pinPairs : map  int  to  [String];
+  private  isFixedContact : bool 
+  
+end  PinPairInfo

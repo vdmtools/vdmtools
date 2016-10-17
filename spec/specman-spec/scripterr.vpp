@@ -1,0 +1,32 @@
+\begin{description}
+\item[Prestate:] $PromptErr$
+\item[Poststate:] $PromptErr$
+\end{description}
+
+If a script command is issued in the $PromptErr$ state, state changes
+to $ScriptErr$ allowing errors to printed out forthcoming. When the
+script command terminates, state changes back to $PromptErr$.
+
+\begin{vdm_al}
+class ScriptErr is subclass of ErrorState
+
+--  Prestate: PromptErr
+--  Poststate: PromptErr
+
+--  If a script command is issued in the PromptErr state, state changes to
+--  ScriptErr allowing errors to printed out forthcoming. When the script command
+--  terminates, state changes back to PromptErr. 
+
+operations
+
+public   AllDone : Errors ==> ()
+  AllDone(err) ==
+    def newstate = new PromptErr() in
+    self.SetNextState(err,newstate);
+
+public   AddMsg: Errors ==> ()
+  AddMsg(err) ==
+    err.ShowMsg()    
+
+end ScriptErr
+\end{vdm_al}

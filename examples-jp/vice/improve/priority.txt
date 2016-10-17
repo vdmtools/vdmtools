@@ -1,0 +1,12 @@
+VolumeKnob:10;
+InsertAddress:10;
+TransmitTMC:9;
+EventDispatcher:8;
+MMIHandleKeyPressOne:6;
+MMIHandleKeyPressTwo:6;
+MMIUpdateScreenVolume:5;
+MMIUpdateScreenAddress:5;
+MMIUpdateScreenTMC:4;
+RadioAdjustVolume:3;
+RadioHandleTMC:2;
+NavigationDecodeTMC:1

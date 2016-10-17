@@ -1,0 +1,201 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Module providing functions generating code corresponding to
+%    type definitions.
+% $Id: mod_typedef.vdm,v 1.34 2001/02/21 13:38:48 paulm Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\section{Module TD - Code Generating VDM++ Invariants on Type Definitions}
+
+This module defines functions which generate code corresponding to invariants on
+type definitions.
+
+\vspace{1cm}
+
+\begin{vdm_al}
+module TD
+
+imports
+   from CPP all,
+   from AS all,
+   from BC all,
+   from REP all,
+   from TPGEN all,
+   from CI all,
+   from DS all,
+   from FD all,
+   from CGAUX all
+
+exports
+    operations
+#ifdef VDMSL
+      GenInvDecl: seq of AS`TypeDef ==> CPP`CPPAS;
+#endif VDMSL
+#ifdef VDMPP
+      GenInvDecl: CPP`Name * seq of AS`TypeDef ==> seq of CPP`MemberDeclaration;
+#endif VDMPP
+      GenInvDef: seq of AS`TypeDef ==> CPP`CPPAS | seq of CPP`MemberDeclaration;
+#ifdef VDMSL
+      GenVDMLibInit: AS`Name * map AS`Name to AS`TypeDef * [AS`StateDef]
+                     ==> seq of CPP`FunctionDefinition
+#endif VDMSL
+
+definitions
+
+operations
+
+\end{vdm_al}
+
+The operations $GenInvDecl$ generates a sequence of function
+declarations corresponding to invariants on the type definitions in
+$td-l$.
+
+\begin{vdm_al}
+#ifdef VDMSL
+  GenInvDecl: seq of AS`TypeDef ==> CPP`CPPAS
+  GenInvDecl(td_l) ==
+#endif
+#ifdef VDMPP
+  GenInvDecl: CPP`Name * seq of AS`TypeDef ==> seq of CPP`MemberDeclaration
+  GenInvDecl(-, td_l) ==
+#endif
+#ifdef VDMSL
+  ( dcl cpp : CPP`CPPAS := [];
+#endif VDMSL
+#ifdef VDMPP
+  ( dcl cpp : seq of CPP`MemberDeclaration := [];
+#endif VDMPP
+    for mk_AS`TypeDef(tnm, shape, Inv, -, -) in td_l do
+      if Inv <> nil then
+#ifdef VDMSL
+        def ds_l = [DS`GenBoolType()];
+#endif VDMSL
+#ifdef VDMPP
+        --def ds_l = [BC`GenFctSpecifier(<VIRTUAL>), DS`GenBoolType()];
+        def ds_l = [BC`GenStorageClassSpecifier(<STATIC>), DS`GenBoolType()];
+#endif VDMPP
+            fnm = BC`GivePrePostNm(tnm, "inv");
+            argtp = TPGEN`Rep2CppTypeSpecifier(CGAUX`FromAS2RepType(shape), shape);
+            ref = BC`GenRefAbsDecl(nil, nil);
+            arg_decl = [BC`GenArgAbs( [BC`GenTypeSpecifier(<CONST>), argtp], ref)];
+            fndecl = BC`GenFctDecl(fnm, arg_decl)
+        in
+#ifdef VDMSL
+          cpp := cpp ^ [ BC`GenIdentDecl([], ds_l, fndecl, nil) ];
+#endif
+#ifdef VDMPP
+          cpp := cpp ^ [ BC`GenMemberSpec(ds_l, fndecl) ];
+#endif
+    return cpp
+  );
+\end{vdm_al}
+
+The operation $GenInvDef$ generates a sequence of function definitions
+corresponding to invariants on the type definitions in $td-l$.
+
+\begin{vdm_al}
+  GenInvDef: seq of AS`TypeDef ==> CPP`CPPAS | seq of CPP`MemberDeclaration
+  GenInvDef(td_l) ==
+  ( dcl cpp : CPP`CPPAS := [],
+        cidtocpp: map int to seq of CPP`Declaration := {|->},
+        java : seq of CPP`Declaration := [];
+    for mk_AS`TypeDef(tnm, shape, Inv, acc, tpcid) in td_l do
+      if Inv <> nil then
+        let mk_AS`Invariant(pat, expr, -) = Inv,
+            ci =  CI`NilContextId,
+            fnm = BC`GivePrePostName(tnm, "inv"),
+            ftp = mk_AS`TotalFnType([shape],mk_AS`BooleanType(ci),ci),
+            fnbd = mk_AS`FnBody(expr,ci),
+            fdef = mk_AS`ExplFnDef(fnm,[],ftp,[[pat]],fnbd,nil,nil,acc, true, nil, ci)
+        in
+          if CPP`isCPP()
+          then
+            cpp := cpp ^ FD`GenFctDef(fdef,false)
+          else
+            cidtocpp := cidtocpp munion {tpcid |-> FD`GenFctDef(fdef,false)};
+    if CPP`isCPP()
+    then return cpp
+    else ( while card dom cidtocpp > 0 do
+             (let cid in set dom cidtocpp be st
+                forall fcid in set dom cidtocpp &
+                  def mk_(-,-,tst,-,-) = CI`GetFilePos(cid);
+                      mk_CI`TokenPos(-,ast_start,-,-,-) = tst;
+                      mk_(-,-,tst2,-,-) = CI`GetFilePos(fcid);
+                      mk_CI`TokenPos(-,ast_startf,-,-,-) = tst2
+                  in ast_start <= ast_startf
+             in (java := java ^ cidtocpp(cid);
+                 cidtocpp := {cid} <-: cidtocpp));
+        return java;)
+  );
+
+#ifdef VDMPP
+
+end TD
+#endif VDMPP
+
+\end{vdm_al}
+
+#ifdef VDMSL
+
+\subsubsection{Initialisation of VDM Library}
+
+The operation {\em GenVDMLibInit} generates the function {\em
+init\_<ModuleName>\_VDMLib}. This function initialises the TagInfoMap of
+the VDM library with the record tags defined in the given module.
+
+For a type definition like:
+\begin{verbatim}
+MyRec ::
+  a : nat
+  b :- [A]
+  c :- [A]
+  d : nat;
+\end{verbatim}
+
+the corresponding initialisation function will look like:
+
+\begin{verbatim}
+void init_ModName_VDMLib()
+{
+  DefRecInfoMap.NewTag(TYPE_TAG_ModName_MyRec, 4);
+  DefRecInfoMap.SetDontCare(TYPE_TAG_ModName_MyRec, 2);
+  DefRecInfoMap.SetDontCare(TYPE_TAG_ModName_MyRec, 3);
+  DefRecInfoMap.SetSymTag(TYPE_TAG_ModName, "MyRec");
+}
+\end{verbatim}
+\begin{vdm_al}
+GenVDMLibInit: AS`Name * map AS`Name to AS`TypeDef * [AS`StateDef]
+               ==> seq of CPP`FunctionDefinition
+GenVDMLibInit(mnm, type_m, sd) ==
+  def ds_l = [BC`GenTypeSpecifier(BC`GenVoid())];
+      fct_id = BC`GenIdentifier("init_"^CGAUX`GiveLastName(mnm)^"_VDMLib");
+      fdecl = BC`GenFctDecl(fct_id, []);
+      type_s = { type | mk_AS`TypeDef(-, type, -, -, -) in set rng type_m &
+                         is_AS`CompositeType(type) } union
+                (if sd <> nil then {sd.tp} else {})
+  in
+   (dcl body : seq of CPP`Stmt := [];
+    for all mk_AS`CompositeType(name, field_l,-) in set type_s do
+      let tag = TPGEN`GenCompositeTypeTagId(name),
+          size = len field_l
+      in
+       (body := body ^ [DS`GenNewTag(tag, size)];
+        body := body ^ [DS`GenSetSymTag(tag, name,mnm)];
+        body := body ^ [DS`GenSetDontCare(tag, no) | no in set inds field_l & field_l(no).dc ];
+        body := body ^ [DS`GenSetRecordTag(tag, name, mnm)]
+       );
+   if body = []
+   then return []
+   else return [BC`GenFctDef(ds_l, fdecl, nil,  BC`GenBlock(body))];
+  );
+end TD
+
+\end{vdm_al}
+#endif VDMSL
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[GenTypeDef]
+{rtinfo.ast}[TD]
+\end{rtinfo}
+

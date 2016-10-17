@@ -1,0 +1,1289 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Provides functions for building abstract syntax tree of C++/Java.
+% $Id: mod_bcppast.vdm,v 1.91 2002/12/19 12:46:21 mikhail Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\section{Module BC - Building the Abstract Syntax Tree of C++/Java}
+This module provides functions for building the abstract syntax tree of C++.
+
+\vspace{1cm}
+\begin{vdm_al}
+
+module BCCI
+
+imports
+
+  from CPP all,
+  from AS all,
+  from CGAUX all,
+  from REP all,
+  from CI all,
+  from CGMAIN all
+
+exports all
+
+definitions
+
+  values
+
+  CGBasename: seq of char = "CGBase"
+
+functions
+
+\end{vdm_al}
+
+\subsection{Files}
+
+\begin{vdm_al}
+
+ GenFile: [seq of CPP`FileName] * CPP`FileName * [CPP`Header] * CPP`CPPAS * CI`ContextId -> CPP`File
+ GenFile(pcknm, nm, h, cppas, cid ) ==
+   mk_CPP`File( pcknm, nm, h, cppas, cid );
+\end{vdm_al}
+
+\subsection{Exceptions}
+
+\begin{vdm_al}
+GenTryBlock: seq of CPP`Stmt * seq of CPP`Handler * [CPP`CompoundStmt] * CI`ContextId -> CPP`TryBlock
+GenTryBlock(body,handlers,fin,cid) ==
+    mk_CPP`TryBlock(GenBlock(body,cid),handlers,fin,cid);
+
+GenHandler: (CPP`All|CPP`ExceptionDeclaration) * CPP`Stmt * CI`ContextId -> CPP`Handler
+GenHandler(exepdecl,stmt,cid) ==
+   mk_CPP`Handler(exepdecl,stmt,cid);
+
+GenExceptionDeclaration: seq of CPP`TypeSpecifier * [CPP`Declarator] * CI`ContextId -> CPP`ExceptionDeclaration
+GenExceptionDeclaration(ts,decl,cid) ==
+   mk_CPP`ExceptionDeclaration(ts,decl,cid);
+\end{vdm_al}
+
+\subsection{Function Definitions}
+
+\begin{vdm_al}
+--- join these functions
+
+GenFctDef: CPP`DeclSpecifiers * CPP`Declarator * [seq of CPP`SimpleTypeName] * [CPP`Stmt] * CI`ContextId
+           -> CPP`FunctionDefinition
+GenFctDef( ds, decl, excs, body, cid ) ==
+  let fctBody = if is_CPP`CompoundStmt(body)
+                then mk_CPP`FctBody(body, GetCid(body))
+                else mk_CPP`FctBody(GenBlock( [body], if body = nil then cid else GetCid(body)), cid)
+  in mk_CPP`FunctionDefinition([], ds, decl, nil, excs, [], fctBody, cid );
+
+GenJavaFctDef: CPP`AnnotationSpec * seq of CPP`Modifier * CPP`DeclSpecifiers * CPP`Declarator *
+               [seq of CPP`SimpleTypeName] * [CPP`Stmt] * CI`ContextId
+               -> CPP`FunctionDefinition
+GenJavaFctDef(annol, ms, ds, decl, excs, body, cid ) ==
+  let fctBody = if body = nil
+                then nil
+                elseif is_CPP`CompoundStmt(body)
+                then mk_CPP`FctBody(body,GetCid(body))
+                else mk_CPP`FctBody(GenBlock([body],GetCid(body)),cid)
+  in mk_CPP`FunctionDefinition(ms, ds, decl, nil, excs, annol, fctBody, cid);
+
+GenConstructorDef: CPP`AnnotationSpec * CPP`DeclSpecifiers * CPP`Declarator *
+                   [CPP`CtorInitializer] * CPP`Stmt * CI`ContextId
+                   -> CPP`FunctionDefinition
+GenConstructorDef(annol, ds, decl, ci, body,cid ) ==
+  let fctBody = if is_CPP`CompoundStmt(body)
+                then mk_CPP`FctBody(body,GetCid(body))
+                else mk_CPP`FctBody(GenBlock([body],GetCid(body)), GetCid(body))
+  in mk_CPP`FunctionDefinition([], ds, decl, ci, nil, annol, fctBody, cid);
+
+GenConstructorDecl: CPP`AnnotationSpec * seq of CPP`Modifier * CPP`Declarator *  CPP`Stmt * CI`ContextId
+                    -> CPP`FunctionDefinition
+GenConstructorDecl(annol, ms, decl, body, cid ) ==
+  let fctBody = if is_CPP`CompoundStmt(body)
+                then mk_CPP`FctBody(body,GetCid(body))
+                else mk_CPP`FctBody(GenBlock([body],GetCid(body)), GetCid(body))
+  in mk_CPP`FunctionDefinition(ms, [], decl,[], nil, annol, fctBody, cid );
+
+GenInitBase: CPP`Identifier * CPP`Identifier * CI`ContextId -> CPP`CtorInitializer
+GenInitBase(base,arg,cid) ==
+  [ mk_CPP`MemInitializer(base,[arg],cid) ];
+
+GenMemInitializer: CPP`Identifier * CPP`Exprs * CI`ContextId -> CPP`MemInitializer
+GenMemInitializer(id,el,cid) ==
+  mk_CPP`MemInitializer(id,el,cid);
+
+GenInitBaseN: (CPP`Identifier | CPP`CompleteClassName | CPP`TemplateClassName)
+              * seq of CPP`Expr * CI`ContextId -> CPP`CtorInitializer
+GenInitBaseN(base,arg,cid) ==
+  [ mk_CPP`MemInitializer(base,arg,cid) ];
+
+\end{vdm_al}
+
+\subsection{Declarations}
+
+\begin{vdm_al}
+
+GenInt: CI`ContextId -> CPP`Int
+GenInt(cid) == mk_CPP`Int(cid);
+
+GenBool: CI`ContextId -> CPP`Bool
+GenBool(cid) == mk_CPP`Bool(cid);
+
+GenLong: CI`ContextId -> CPP`Long
+GenLong (cid) ==
+  mk_CPP`Long(cid);
+
+GenUnsigned: CI`ContextId -> CPP`Unsigned
+GenUnsigned (cid) ==
+  mk_CPP`Unsigned(cid);
+
+GenDouble: CI`ContextId -> CPP`Double
+GenDouble(cid) == mk_CPP`Double(cid);
+
+GenVoid: CI`ContextId -> CPP`Void
+GenVoid(cid) ==
+  mk_CPP`Void(cid);
+
+\end{vdm_al}
+
+\subsection{Declarator}
+
+\begin{vdm_al}
+
+GenFriend : CI`ContextId -> CPP`Friend
+GenFriend (cid) == mk_CPP`Friend(cid);
+
+GenAsgnInit : CPP`Expr * CI`ContextId -> CPP`AsgnInit
+GenAsgnInit(e,cid) == mk_CPP`AsgnInit( e, cid );
+
+GenArgDecl: CPP`DeclSpecifiers * CPP`Declarator * CI`ContextId -> CPP`ArgDecl
+GenArgDecl(ds, decl, cid ) == mk_CPP`ArgDecl( ds, decl, cid );
+
+GenArgAbs: CPP`DeclSpecifiers  * [CPP`AbstractDeclarator] * CI`ContextId -> CPP`ArgAbsDecl
+GenArgAbs(ds,decl,cid) ==
+  mk_CPP`ArgAbsDecl(ds, decl,cid);
+
+GenFctDecl: CPP`Declarator * seq of CPP`ArgumentDeclaration * CI`ContextId -> CPP`FctDecl
+GenFctDecl(decl, argdecl, cid) ==
+  mk_CPP`FctDecl( decl, mk_CPP`ArgumentDeclarationList( argdecl, nil, if len argdecl = 0
+                                                                      then cid
+                                                                      else (hd argdecl).cid),
+                  nil, cid );
+
+GenStaticInitializerDecl: CPP`Declarator * CI`ContextId -> CPP`FctDecl
+GenStaticInitializerDecl(decl,cid) ==
+  mk_CPP`FctDecl( decl, nil, nil, cid );
+
+GenConstFctDecl: CPP`Declarator * seq of CPP`ArgumentDeclaration * CI`ContextId -> CPP`FctDecl
+GenConstFctDecl(decl, argdecl,cid) ==
+  mk_CPP`FctDecl( decl, mk_CPP`ArgumentDeclarationList( argdecl, nil, if len argdecl = 0
+                                                                      then cid
+                                                                      else (hd argdecl).cid),
+                  [<CONST>], cid );
+
+GenObjectInit: seq of CPP`Expr * CI`ContextId -> CPP`ObjectInit
+GenObjectInit( el, cid) ==
+  mk_CPP`ObjectInit( el, cid );
+
+GenIdentDeclaration: CPP`AnnotationSpec * CPP`DeclSpecifiers  * [ CPP`DeclaratorList ]
+                     * CI`ContextId -> CPP`IdentDeclaration
+GenIdentDeclaration(annol,ds_l,dl,cid) ==
+  mk_CPP`IdentDeclaration(ds_l,dl,annol,cid);
+
+GenIdentDecl: CPP`AnnotationSpec * CPP`DeclSpecifiers * CPP`Declarator * [CPP`Initializer]
+              * CI`ContextId -> CPP`IdentDeclaration
+GenIdentDecl(annol, ds_l, decl, ini, cid) ==
+  let idcl = [ mk_CPP`InitDeclarator(decl, ini, decl.cid) ]
+  in mk_CPP`IdentDeclaration(ds_l, idcl, annol, cid);
+
+GenInitDecl: CPP`Name * [CPP`Initializer] * CI`ContextId -> CPP`InitDeclarator
+GenInitDecl( name, initExpr, cid ) ==
+  mk_CPP`InitDeclarator( name, initExpr, cid );
+
+GenClassTypeDecl: CPP`Identifier * CI`ContextId -> CPP`IdentDeclaration
+GenClassTypeDecl(id,cid) ==
+  let ds = mk_CPP`TypeSpecifier(mk_CPP`ElaboratedTypeSpecifier(<CLASS>,id,cid),cid)
+  in mk_CPP`IdentDeclaration([ds],nil,[],cid);
+
+\end{vdm_al}
+
+\subsection{Class Declarations}
+
+The function $GenClassHead$ generates a ``normal'' class head on the
+form:
+
+\begin{quote}
+
+{\tt class} $cls$ : {\tt public} $base1$, {\tt public} $base2$, \ldots
+
+\end{quote}
+
+
+
+\begin{vdm_al}
+-- the next two functions should be joint!!!!!!!!!!!!
+
+GenClassHead: CPP`Identifier * CPP`BaseSpec * CI`ContextId -> CPP`ClassHead
+GenClassHead(cls, base_l, cid) ==
+    mk_CPP`ClassHead([], <CLASS>, cls, base_l, [], nil, [], cid);
+
+GenJavaClassHead: CPP`AnnotationSpec * seq of CPP`Modifier * CPP`Identifier * CPP`BaseSpec *
+                  [CPP`InterSpec] * [seq of CPP`Identifier] * CI`ContextId -> CPP`ClassHead
+GenJavaClassHead(anno_l, ms, cls, base_l, inter_l, tp_l, cid) ==
+    mk_CPP`ClassHead(ms, <CLASS>, cls, base_l, inter_l, tp_l, anno_l, cid);
+
+GenJavaInterfaceHead: CPP`AnnotationSpec * seq of CPP`Modifier * CPP`Identifier * CPP`InterSpec *
+                  [seq of CPP`Identifier] * CI`ContextId -> CPP`InterfaceHead
+GenJavaInterfaceHead(anno_l, ms, cls, inter_l, tp_l, cid) ==
+    mk_CPP`InterfaceHead(ms, cls, inter_l, tp_l, anno_l, cid);
+
+#ifdef VDMPP
+operations
+GenAccessMemberList: map AS`Access to seq of CPP`MemberDeclaration * CI`ContextId ==> seq of CPP`MemberList
+GenAccessMemberList (acs_m,cid) ==
+( dcl res : seq of CPP`MemberList := [];
+  for all acs in set dom acs_m do
+    res := res ^ GenCPPMemberList (CGAUX`ConvAsAccess2CPP (acs), acs_m (acs),cid);
+  return res
+)
+
+functions
+#endif VDMPP
+
+GenClassElaboratedType: CPP`Identifier * CI`ContextId -> CPP`ElaboratedTypeSpecifier
+GenClassElaboratedType (name,cid) ==
+  mk_CPP`ElaboratedTypeSpecifier(<CLASS>,name,cid);
+
+GenClassFriend: CPP`Identifier * CI`ContextId -> seq of CPP`MemberList
+GenClassFriend (name, cid ) ==
+  GenCPPMemberList (nil, [GenMemberSpec ([GenFriend (cid),
+                           mk_CPP`TypeSpecifier(GenClassElaboratedType (name,cid),cid)],nil,cid)],cid);
+
+GenCPPMemberList: [<PRIVATE>|<PROTECTED>|<PUBLIC>] * seq of CPP`MemberDeclaration * CI`ContextId ->
+                  seq of CPP`MemberList
+GenCPPMemberList (cppacc,md_l,cid) ==
+  cases cppacc:
+    <PRIVATE>   -> GenPrivate (md_l,cid),
+    <PROTECTED> -> GenProtected (md_l,cid),
+    <PUBLIC>    -> GenPublic (md_l,cid),
+    others      -> GenMemberList (md_l,cid)
+  end;
+
+-- the following four functions should be joint !!!!!!!!!!!!!!!!!!!
+-- The following 4 functions should be joint.
+
+  GenMemberList: seq of CPP`MemberDeclaration * CI`ContextId -> seq of CPP`MemberList
+  GenMemberList(md,cid) ==
+    if md <> []
+    then [mk_CPP`MemberList(nil,md,cid)]
+    else [];
+
+  GenProtected: seq of CPP`MemberDeclaration * CI`ContextId -> seq of CPP`MemberList
+  GenProtected(md,cid) ==
+    if md <> []
+    then [mk_CPP`MemberList(<PROTECTED>,md,cid)]
+    else [];
+
+  GenPublic: seq of CPP`MemberDeclaration * CI`ContextId -> seq of CPP`MemberList
+  GenPublic(md,cid) ==
+    if md <> []
+    then [mk_CPP`MemberList(<PUBLIC>,md,cid)]
+    else [];
+
+  GenPrivate: seq of CPP`MemberDeclaration * CI`ContextId -> seq of CPP`MemberList
+  GenPrivate(md,cid) ==
+    if md <> []
+    then [mk_CPP`MemberList(<PRIVATE>,md,cid)]
+    else [];
+
+  GenClassSpecifier: CPP`ClassHead * (seq of CPP`MemberList | seq of CPP`MemberDeclaration) * CI`ContextId
+                     -> CPP`ClassSpecifier
+  GenClassSpecifier(head,member_l,cid) ==
+    mk_CPP`ClassSpecifier(head,member_l,cid);
+
+  GenTypeClassSpecifier: CPP`ClassHead * (seq of CPP`MemberList | seq of CPP`MemberDeclaration) * CI`ContextId
+                         -> CPP`TypeSpecifier
+  GenTypeClassSpecifier(head,member_l,cid) ==
+    mk_CPP`TypeSpecifier(mk_CPP`ClassSpecifier(head,member_l,cid),cid);
+
+  GenTypeInterfaceSpecifier: CPP`InterfaceHead * seq of CPP`MemberDeclaration * CI`ContextId -> CPP`TypeSpecifier
+  GenTypeInterfaceSpecifier(head,member_l,cid) ==
+    mk_CPP`TypeSpecifier(mk_CPP`InterfaceSpecifier(head,member_l,cid),cid);
+
+  GenTypeSpecifier: (CPP`Identifier | CPP`Int | CPP`Void | CPP`Double |
+                     CPP`Long | CPP`Unsigned | CPP`EnumSpecifier |
+                     CPP`SimpleTypeName | CPP`ClassSpecifier | <CONST> | <REFERENCE> | CPP`Bool) * CI`ContextId
+                    -> CPP`TypeSpecifier
+  GenTypeSpecifier(nm,cid) ==
+    mk_CPP`TypeSpecifier(nm,cid);
+
+  GenFctSpecifier: <VIRTUAL> * CI`ContextId -> CPP`FctSpecifier
+  GenFctSpecifier(arg,cid) ==
+    mk_CPP`FctSpecifier(arg,cid);
+
+  GenStorageClassSpecifier: (<AUTO> | <REGISTER> | <STATIC> | <EXTERN>) * CI`ContextId -> CPP`StorageClassSpecifier
+  GenStorageClassSpecifier(arg,cid) ==
+    mk_CPP`StorageClassSpecifier(arg,cid);
+
+  GenInterfaceSpecifier: CPP`InterfaceHead * seq of CPP`MemberDeclaration * CI`ContextId -> CPP`InterfaceSpecifier
+  GenInterfaceSpecifier(head,member_l,cid) ==
+    mk_CPP`InterfaceSpecifier(head,member_l,cid);
+\end{vdm_al}
+
+
+\begin{vdm_al}
+  GenEnumSpec: [CPP`Identifier] * seq of CPP`Enumerator * CI`ContextId -> CPP`EnumSpecifier
+  GenEnumSpec(id, enum_l,cid) ==
+    mk_CPP`EnumSpecifier(id, enum_l,cid);
+
+  GenEnum: CPP`Identifier * CPP`Expr * CI`ContextId -> CPP`EnumDefaultAssgn
+  GenEnum(id, expr,cid) ==
+    mk_CPP`EnumDefaultAssgn(id, expr,cid);
+\end{vdm_al}
+
+\begin{vdm_al}
+  GenTypeDef : CI`ContextId -> CPP`TypeDef
+  GenTypeDef(cid) == mk_CPP`TypeDef(cid);
+
+  GenTypeDefName : CPP`Identifier * CI`ContextId -> CPP`TypeDefName
+  GenTypeDefName(id,cid) == mk_CPP`TypeDefName(id,cid);
+\end{vdm_al}
+
+\begin{vdm_al}
+  GenStaticMemberSpec: CPP`DeclSpecifiers * [CPP`Declarator] * CI`ContextId -> CPP`MemberSpecifier
+  GenStaticMemberSpec(ds_l, decl,cid) ==
+   let stat = mk_CPP`StorageClassSpecifier(<STATIC>,cid)
+   in
+    if decl = nil then
+      mk_CPP`MemberSpecifier( [stat]^ds_l, nil,cid)
+    else
+      let dps = mk_CPP`DeclPureSpec(decl, nil,cid) in
+        mk_CPP`MemberSpecifier([stat]^ds_l, [dps],cid);
+
+  GenMemberSpec: CPP`DeclSpecifiers * [CPP`Declarator] * CI`ContextId -> CPP`MemberSpecifier
+  GenMemberSpec(ds_l, decl,cid) ==
+    if decl = nil
+    then mk_CPP`MemberSpecifier(ds_l, nil,cid)
+    else
+      let dps = mk_CPP`DeclPureSpec(decl, nil,cid) in
+        mk_CPP`MemberSpecifier(ds_l, [dps],cid);
+
+  GenPureMemberSpec: CPP`DeclSpecifiers * CPP`Declarator * CI`ContextId -> CPP`MemberSpecifier
+  GenPureMemberSpec(ds,decl,cid) ==
+    let dps = mk_CPP`DeclPureSpec(decl,<PURE>,cid) in
+      mk_CPP`MemberSpecifier(ds,[dps],cid);
+
+  GenAccBaseSpec: CPP`Identifier * CI`ContextId -> CPP`AccCompleteClassSpecifier
+  GenAccBaseSpec(cls,cid) ==
+    mk_CPP`AccCompleteClassSpecifier(<PUBLIC>, nil, cls, cid);
+
+  GenAccTemplateBaseSpec: CPP`TemplateClassName * CI`ContextId -> CPP`AccCompleteClassSpecifier
+  GenAccTemplateBaseSpec(tcn,cid) ==
+    mk_CPP`AccCompleteClassSpecifier(<PUBLIC>, nil,tcn,cid);
+
+  GenAccVirBaseSpec: CPP`Identifier * CI`ContextId -> CPP`AccCompleteClassSpecifier
+  GenAccVirBaseSpec(cls,cid) ==
+    mk_CPP`AccCompleteClassSpecifier(<PUBLIC>, <VIRTUAL>, cls, cid);
+
+\end{vdm_al}
+
+\subsection{Statements}
+
+The function ``GenDecl'' is an example of a function which builds a
+special kind of declarations, namely declarations of one variable with
+some optional initialization expression.
+
+\begin{vdm_al}
+
+   GenDecl: CPP`DeclSpecifier * CPP`Name * [CPP`Initializer] * CI`ContextId -> CPP`DeclarationStmt
+   GenDecl( ds , name, initExpr,cid) ==
+     mk_CPP`DeclarationStmt(mk_CPP`IdentDeclaration([ds],
+                              [ mk_CPP`InitDeclarator( name, initExpr, name.cid ) ], [], cid), cid);
+
+   GenDeclStmt: CPP`Declaration * CI`ContextId -> CPP`DeclarationStmt
+   GenDeclStmt(decl,cid) ==
+     mk_CPP`DeclarationStmt(decl,cid);
+
+   GenDecls: CPP`DeclSpecifier * seq1 of CPP`Name * CI`ContextId -> CPP`DeclarationStmt
+   GenDecls(ds, nm_l,cid) ==
+     let decl_l = [mk_CPP`InitDeclarator(nm_l(i), nil, (nm_l(i)).cid) | i in set inds nm_l] in
+       mk_CPP`DeclarationStmt(mk_CPP`IdentDeclaration([ds], decl_l, [], cid),cid);
+
+#ifdef VDMPP
+   GenPtrDecl: CPP`DeclSpecifiers * CPP`Name * [CPP`Expr] * CI`ContextId -> CPP`DeclarationStmt
+   GenPtrDecl(ds, nm, initExpr,cid) ==
+     let initVal = if initExpr <> nil
+                   then mk_CPP`AsgnInit(initExpr,GetCid(initExpr))
+                   else nil in
+     mk_CPP`DeclarationStmt(
+       mk_CPP`IdentDeclaration( ds,
+                                [ mk_CPP`InitDeclarator(
+                                     mk_CPP`IndirectionDecl(nil,nm,nm.cid),
+                                     initVal,cid) ],[],cid),cid);
+#endif VDMPP
+
+    GenIndirection: CPP`Declarator * CI`ContextId -> CPP`IndirectionDecl
+    GenIndirection(decl,cid) ==
+      mk_CPP`IndirectionDecl(nil, decl, cid);
+
+    GenRef:CPP`Declarator * CI`ContextId -> CPP`RefDecl
+    GenRef(decl,cid) ==
+      mk_CPP`RefDecl(nil,decl,cid);
+
+    GenRefAbsDecl: [CPP`CVQualifierList] * [CPP`AbstractDeclarator] * CI`ContextId -> CPP`RefAbsDecl
+    GenRefAbsDecl(cvlist, decl,cid) ==
+      mk_CPP`RefAbsDecl(cvlist, decl,cid);
+
+   GenAsgnStmt: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Stmt
+   GenAsgnStmt(var, val, cid) ==
+    mk_CPP`ExpressionStmt(mk_CPP`AssignExpr(var, mk_CPP`AssignOp(<ASEQUAL>,cid), val, GetCid(var) ), cid);
+
+   GenAsgnMultStmt: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Stmt
+   GenAsgnMultStmt(var, val,cid) ==
+    mk_CPP`ExpressionStmt( mk_CPP`AssignExpr(var, mk_CPP`AssignOp(<ASMULT>,cid), val, GetCid(var)), cid );
+
+   GenEq: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+   GenEq(r,l,cid) ==
+    mk_CPP`EqualityExpr(r, mk_CPP`EqOp(<EQ>,cid), l,cid);
+
+   GenNeq: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+   GenNeq(r, l, cid) ==
+    mk_CPP`EqualityExpr(r, mk_CPP`EqOp(<NEQ>,cid), l,cid);
+
+operations
+   GenNewExpr: CPP`TypeSpecifier * CPP`Exprs * CI`ContextId ==> CPP`AllocationTypeExpr | CPP`ClassInstanceCreationExpr
+   GenNewExpr(ts, expr_l,cid) ==
+     if CPP`isCPP()
+     then return GenNewExprCPP(ts,expr_l,cid)
+     else return GenNewExprJava(ts,expr_l,cid);
+
+functions
+   GenNewExprCPP: CPP`TypeSpecifier * CPP`Exprs * CI`ContextId -> CPP`AllocationTypeExpr
+   GenNewExprCPP(ts, expr_l,cid) ==
+     let tn = mk_CPP`NewTypeName([ts], nil,cid) in
+       if expr_l = [] then
+         let ni = mk_CPP`NewInitializer(nil,cid) in
+           mk_CPP`AllocationTypeExpr(nil, [], tn, ni,cid)
+       else
+         let i_l = mk_CPP`InitializerList(expr_l,cid) in
+           let ni = mk_CPP`NewInitializer(i_l,cid) in
+             mk_CPP`AllocationTypeExpr(nil, [], tn, ni,cid);
+\end{vdm_al}
+
+Note that the second field of ClassInstanceCreationExpr always is set
+to nil using this operation. This is because this field is not needed
+by any of the code generators.
+
+\begin{vdm_al}
+
+   GenNewExprJava: CPP`TypeSpecifier * CPP`Exprs * CI`ContextId -> CPP`ClassInstanceCreationExpr
+   GenNewExprJava(ts, expr_l,cid) ==
+     mk_CPP`ClassInstanceCreationExpr(ts.tp,nil,expr_l,nil,cid)
+   pre is_(ts.tp,CPP`CompleteClassName);
+
+  GenDeleteStmt: CPP`Expr * CI`ContextId -> CPP`Stmt
+  GenDeleteStmt(expr,cid) ==
+    GenExpressionStmt(mk_CPP`DeallocationExpr(nil,expr,GetCid(expr)),cid);
+
+   GenIfStmt: CPP`Expr * CPP`Stmt * [CPP`Stmt] * CI`ContextId -> CPP`Stmt
+   GenIfStmt(cond, alt1, alt2,cid) ==
+    mk_CPP`IfStmt(cond, alt1, alt2,cid);
+
+   GenBlock: seq of CPP`Stmt * CI`ContextId -> CPP`Stmt
+   GenBlock(cpp_l,cid) == mk_CPP`CompoundStmt(cpp_l,cid);
+
+   GenExpressionStmt: [ CPP`Expr ] * CI`ContextId -> CPP`Stmt
+   GenExpressionStmt( e,cid ) == mk_CPP`ExpressionStmt( e,cid );
+
+   GenForStmt: [CPP`ExpressionStmt | CPP`DeclarationStmt] * [CPP`Expr] *
+               seq of CPP`Expr * CPP`Stmt * CI`ContextId -> CPP`ForStmt
+   GenForStmt(i, e1, e2_l, stmt,cid) ==
+     if i = nil then
+       mk_CPP`ForStmt([GenExpressionStmt(nil,cid)], e1, e2_l, stmt,cid)
+     else
+       mk_CPP`ForStmt([i], e1, e2_l, stmt,cid);
+
+   GenForEachStmt: CPP`DeclarationStmt * CPP`Expr * CPP`Stmt * CI`ContextId -> CPP`ForEachStmt
+   GenForEachStmt(e, expr, stmt,cid) == mk_CPP`ForEachStmt(e, expr, stmt, cid);
+
+   GenWhileStmt: CPP`Expr * CPP`Stmt * CI`ContextId -> CPP`WhileStmt
+   GenWhileStmt( e, s, cid ) == mk_CPP`WhileStmt( e, s, cid );
+
+   GenSwitchStmt: CPP`Expr * seq of (CPP`CaseStmt | CPP`DefaultStmt) * CI`ContextId -> CPP`Stmt
+   GenSwitchStmt(expr, stmtL,cid) ==
+    let l_groups = [mk_CPP`SwitchBlockStmtGrp(mk_CPP`SwitchLabels(stmtL(i),nil,cid), nil, cid) | i in set inds stmtL]
+    in
+     let l_block = mk_CPP`SwitchBlock(l_groups,nil,cid)
+     in
+       mk_CPP`SwitchStmt(expr,l_block,cid);
+
+  GenCaseStmt: CPP`Expr * CPP`Stmt * CI`ContextId -> CPP`CaseStmt
+  GenCaseStmt(expr, stmt, cid) ==
+    mk_CPP`CaseStmt(expr, stmt, cid);
+
+  GenBreakStmt: [CPP`Identifier] * CI`ContextId -> CPP`Break
+  GenBreakStmt(id,cid) == mk_CPP`Break(id,cid);
+
+  GenContinueStmt: [CPP`Identifier] * CI`ContextId -> CPP`Continue
+  GenContinueStmt(id,cid) == mk_CPP`Continue(id,cid);
+
+  GenDefaultStmt: CPP`Stmt * CI`ContextId -> CPP`DefaultStmt
+  GenDefaultStmt(stmt,cid) ==
+     mk_CPP`DefaultStmt(stmt,cid);
+
+operations
+  GenGenericReturnStmt: [CPP`Expr] * CI`ContextId ==> CPP`Stmt
+  GenGenericReturnStmt(e,cid) ==
+    if e = nil
+    then return mk_CPP`Return( nil, cid )
+    else return mk_CPP`Return(mk_CPP`CastExpr(mk_CPP`TypeName([GenGeneric(cid)], nil, cid), e, cid), cid);
+
+functions
+  GenReturnStmt: [CPP`Expr] * CI`ContextId -> CPP`Stmt
+  GenReturnStmt(e, cid) == mk_CPP`Return( e, cid );
+
+  GenFctCallObjMemAccStmt: CPP`Expr * seq of char * CPP`Exprs * CI`ContextId -> CPP`Stmt
+  GenFctCallObjMemAccStmt( obj, fname, par, cid ) ==
+    GenExpressionStmt(GenFctCall(mk_CPP`ObjectMemberAccess(obj, GenIdentifier(fname, cid), cid), par, cid ), cid );
+
+  GenInclStmt: CPP`FileName * CI`ContextId -> CPP`IncludeStmt
+  GenInclStmt(id,cid) ==
+    let incl = GenInclusion(id, cid)
+    in mk_CPP`IncludeStmt(incl, cid);
+
+\end{vdm_al}
+
+\subsection{Expressions}
+
+\begin{vdm_al}
+
+  GenLogAnd: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenLogAnd(e1, e2,cid) ==
+    mk_CPP`LogicalExpr( e1, mk_CPP`LogOp(<AND>,cid), e2, cid );
+
+  GenLogOr: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenLogOr( e1, e2,cid ) ==
+    mk_CPP`LogicalExpr( e1, mk_CPP`LogOp(<OR>,cid), e2, cid );
+
+  GenLeq: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenLeq( e1, e2, cid) ==
+    mk_CPP`RelationalExpr( e1, mk_CPP`RelOp(<LEQ>,cid), e2, cid );
+
+  GenGeq: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenGeq( e1, e2, cid) ==
+    mk_CPP`RelationalExpr( e1, mk_CPP`RelOp(<GEQ>, cid), e2, cid );
+
+  GenGt: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenGt( e1, e2, cid) ==
+    mk_CPP`RelationalExpr( e1, mk_CPP`RelOp(<GT>,cid), e2, cid );
+
+  GenLt: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenLt( e1, e2, cid) ==
+    mk_CPP`RelationalExpr( e1, mk_CPP`RelOp(<LT>, cid), e2, cid );
+
+  GenTypeComp: (CPP`Expr | CPP`TypeSpecifier) * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenTypeComp( e1, e2, cid) ==
+    let e1' = if is_CPP`TypeSpecifier(e1)
+              then mk_CPP`TypeName([e1], nil, cid)
+              else e1
+    in mk_CPP`TypeCompExpr( e1', mk_CPP`TcOp(<ISINSTANCEOF>, cid), e2, cid );
+
+  GenPostPlusPlus: CPP`Expr * CI`ContextId -> CPP`Expr
+  GenPostPlusPlus( e, cid ) ==
+    mk_CPP`PostFixInDecrementExpr( <PPLUS>, e, cid );
+
+  GenPostMinusMinus: CPP`Expr * CI`ContextId -> CPP`Expr
+  GenPostMinusMinus( e, cid ) ==
+    mk_CPP`PostFixInDecrementExpr( <PMINUS>, e, cid );
+
+operations
+  GenStringLit: seq of char  * CI`ContextId ==> CPP`StringLit | CPP`WStringLit
+  GenStringLit(n_l, cid) ==
+    if CGMAIN`get_wchar()
+    then return mk_CPP`WStringLit(n_l, cid)
+    else return mk_CPP`StringLit(n_l, cid);
+
+functions
+  GenIntegerLit: int * CI`ContextId -> CPP`IntegerLit
+  GenIntegerLit(n, cid) ==
+    mk_CPP`IntegerLit( n, cid );
+
+  GenBoolLit: bool * CI`ContextId -> CPP`BoolLit
+  GenBoolLit(b, cid) ==
+    mk_CPP`BoolLit(b,cid);
+
+  GenFloatingLit: real * CI`ContextId -> CPP`FloatingLit
+  GenFloatingLit( val, cid) ==
+    mk_CPP`FloatingLit( val,cid );
+
+operations
+  GenCharLit: char * CI`ContextId ==> CPP`CharacterLit | CPP`WCharacterLit
+  GenCharLit(ch,cid) ==
+    if CGMAIN`get_wchar()
+    then return mk_CPP`WCharacterLit( ch, cid )
+    else return mk_CPP`CharacterLit( ch, cid );
+
+functions
+  GenIndirectionExpr : CPP`Expr * CI`ContextId -> CPP`Expr
+  GenIndirectionExpr(e,cid) ==
+    mk_CPP`UnaryOpExpr(mk_CPP`UnaryOp(<INDIRECTION>, cid), e, cid);
+
+  GenNot: CPP`Expr * CI`ContextId -> CPP`Expr
+  GenNot(e, cid) ==
+    mk_CPP`UnaryOpExpr(mk_CPP`UnaryOp(<NEG>,cid), e, cid);
+
+  GenUnaryMinus: CPP`Expr * CI`ContextId -> CPP`Expr
+  GenUnaryMinus( e, cid ) ==
+    mk_CPP`UnaryOpExpr(mk_CPP`UnaryOp(<MINUS>, cid), e, cid );
+
+  GenPlus: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenPlus( e1, e2,cid ) ==
+    mk_CPP`BinExpr( e1, mk_CPP`BinOp(<PLUS>, cid), e2, cid );
+
+  GenMinus: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenMinus( e1, e2, cid ) ==
+    mk_CPP`BinExpr( e1, mk_CPP`BinOp(<MINUS>, cid), e2, cid );
+
+  GenMult: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenMult( e1, e2, cid ) ==
+    mk_CPP`BinExpr( e1, mk_CPP`BinOp(<MULT>, cid), e2, cid );
+
+
+  GenDiv: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenDiv( e1, e2, cid ) ==
+    mk_CPP`BinExpr( e1, mk_CPP`BinOp(<DIV>,cid), e2,cid );
+
+  GenMod: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenMod( e1, e2, cid ) ==
+    mk_CPP`BinExpr( e1, mk_CPP`BinOp(<MOD>, cid), e2, cid );
+
+  GenBitAnd: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenBitAnd(e1, e2, cid) ==
+    mk_CPP`BitExpr( e1, mk_CPP`BitOp(<BITAND>, cid), e2,cid );
+
+  GenLeftShift: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenLeftShift(e1, e2, cid) ==
+    mk_CPP`ShiftExpr( e1, mk_CPP`ShOp(<LEFTSHIFT>,cid), e2,cid );
+
+  GenFctCall: CPP`Expr * CPP`Exprs * CI`ContextId -> CPP`Expr
+  GenFctCall(e1, es, cid) ==
+    mk_CPP`FctCall(e1, es, cid);
+
+  GenGenericFctCall: CPP`Expr * CPP`Exprs * CI`ContextId -> CPP`Expr
+  GenGenericFctCall(e1, es, cid) ==
+    mk_CPP`FctCall(e1,
+                   [ mk_CPP`CastExpr(mk_CPP`TypeName([GenGeneric(cid)], nil,cid), es(i),cid) | i in set inds es ],
+                   cid);
+
+  GenObjectMemberAccess: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenObjectMemberAccess( e, n, cid) ==
+    mk_CPP`ObjectMemberAccess( e, n,cid);
+
+  GenFctCallObjMemAcc: CPP`Expr * seq of char * CPP`Exprs * CI`ContextId -> CPP`Expr
+  GenFctCallObjMemAcc( obj, fname, par, cid ) ==
+    GenFctCall( mk_CPP`ObjectMemberAccess(obj, GenIdentifier(fname,cid), cid), par, cid );
+
+  GenGenericFctCallObjMemAcc: CPP`Expr * seq of char * CPP`Exprs * CI`ContextId -> CPP`Expr
+  GenGenericFctCallObjMemAcc( obj, fname, par, cid ) ==
+    GenGenericFctCall( mk_CPP`ObjectMemberAccess(obj, GenIdentifier(fname,cid), cid), par, cid );
+
+#ifdef VDMPP
+  GenFctCallPtrToObjMemAcc: CPP`Expr * CPP`Expr * CPP`Exprs * CI`ContextId -> CPP`Expr
+  GenFctCallPtrToObjMemAcc(obj,fnm,parms,cid) ==
+    let acc = mk_CPP`PointerToObjectMemberAccess(obj,fnm,cid)
+    in GenFctCall(acc,parms,cid);
+
+  GenGenericFctCallPtrToObjMemAcc: CPP`Expr * CPP`Expr * CPP`Exprs * CI`ContextId -> CPP`Expr
+  GenGenericFctCallPtrToObjMemAcc(obj,fnm,parms,cid) ==
+    let acc = mk_CPP`PointerToObjectMemberAccess(obj,fnm,cid)
+    in GenGenericFctCall(acc,parms,cid);
+
+  GenPointerToObjectMemberAccess: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenPointerToObjectMemberAccess(obj, mem, cid) ==
+    mk_CPP`PointerToObjectMemberAccess(obj, mem, cid);
+#endif VDMPP
+
+  GenIdentifier: AS`Id * CI`ContextId -> CPP`Identifier
+  GenIdentifier( name,cid ) ==
+    mk_CPP`Identifier( name,cid );
+
+  GenCastExpr: CPP`TypeSpecifier * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenCastExpr(ts, e, cid) ==
+    cases e:
+      mk_CPP`CastExpr(-,expr,-) -> mk_CPP`CastExpr( mk_CPP`TypeName( [ts], nil, cid ), expr, cid ),
+      others                    -> mk_CPP`CastExpr( mk_CPP`TypeName( [ts], nil, cid ), e, cid )
+    end;
+
+  GenCastExpr2: seq1 of CPP`TypeSpecifier * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenCastExpr2(ts_l, e, cid) ==
+    mk_CPP`CastExpr( mk_CPP`TypeName( ts_l, nil, cid ), e, cid );
+
+#ifdef VDMPP
+  GenCastPtrExpr: CPP`TypeSpecifier * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenCastPtrExpr(ts, e, cid) ==
+    let ad = mk_CPP`IndirectionAbsDecl(nil,nil,cid)
+    in mk_CPP`CastExpr( mk_CPP`TypeName( [ts], ad,cid ), e,cid );
+#endif VDMPP
+
+  GenArrayApply: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenArrayApply(e1, e2,cid) ==
+    mk_CPP`ArrayApply(e1, e2, cid);
+
+  GenGenericArrayApply: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenGenericArrayApply(e1, e2,cid) ==
+    mk_CPP`ArrayApply(e1, GenCastExpr(GenGeneric(cid),e2,cid),cid);
+
+operations
+  --GenGeneric: CI`ContextId ==> CPP`DeclSpecifier
+  GenGeneric: CI`ContextId ==> CPP`TypeSpecifier
+  GenGeneric(cid) ==
+    if CPP`isCPP()
+    then return GenTypeSpecifier(GenClassName(GenIdentifier("Generic", cid), cid), cid)
+    else return GenTypeSpecifier(GenClassName(GenIdentifier("Object", cid), cid), cid);
+
+functions
+  GenAsgnExpr: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenAsgnExpr(e1, e2,cid) ==
+    mk_CPP`AssignExpr( e1, mk_CPP`AssignOp(<ASEQUAL>,cid), e2,cid );
+
+  GenAsgnPlusExpr: CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenAsgnPlusExpr(e1, e2,cid) ==
+    mk_CPP`AssignExpr( e1, mk_CPP`AssignOp(<ASPLUS>,cid), e2,cid );
+
+  GenCondExpr: CPP`Expr * CPP`Expr * CPP`Expr * CI`ContextId -> CPP`Expr
+  GenCondExpr( e1, e2, e3,cid) ==
+    mk_CPP`ConditionalExpr( e1, e2, e3, cid );
+
+  GenBracketedExpr: CPP`Expr * CI`ContextId -> CPP`Expr
+  GenBracketedExpr( e, cid ) ==
+    cases true:
+      (is_CPP`Identifier(e)),
+      (is_CPP`QualifiedPackageName(e)),
+      (is_CPP`SimplePackageName(e)),
+      (is_CPP`IntegerLit(e)),
+      (is_CPP`CharacterLit(e)),
+      (is_CPP`FloatingLit(e)),
+      (is_CPP`StringLit(e)),
+      (is_CPP`BoolLit(e)),
+      (is_CPP`NullLit(e)),
+      (is_CPP`WCharacterLit(e)),
+      (is_CPP`WStringLit(e))     -> e,
+      others                     ->mk_CPP`BracketedExpr( e, cid )
+    end;
+
+  GenThrowExpression: [CPP`Expr] * CI`ContextId -> CPP`Expr
+  GenThrowExpression(e, cid) ==
+    mk_CPP`ThrowExpression(e,cid);
+
+  GenArrayInitializer: [seq of (CPP`Expr | CPP`ArrayInitializer)] * CI`ContextId -> CPP`ArrayInitializer
+  GenArrayInitializer(vi,cid) ==
+    mk_CPP`ArrayInitializer(vi,cid);
+
+  GenArrayCreationExpr: CPP`SimpleTypeName * [CPP`ArrayNewDecl] * [CPP`ArrayNewDecl] *
+                        [CPP`ArrayInitializer] * CI`ContextId -> CPP`Expr
+  GenArrayCreationExpr(type, dimExpr, dim, arrayInit, cid) ==
+    mk_CPP`ArrayCreationExpr(type, dimExpr, dim, arrayInit, cid);
+\end{vdm_al}
+
+Note that the second field of ClassInstanceCreationExpr always is set
+to nil using this operation. This is because this field is not needed
+by any of the code generators.
+
+\begin{vdm_al}
+operations
+  GenClassInstanceCreationExpr: (CPP`CompleteClassName | CPP`PackageName | CPP`QualifiedName) * CPP`Exprs
+                                * CI`ContextId ==> CPP`Expr
+  GenClassInstanceCreationExpr(cn,es,cid) ==
+    if (CPP`isJAVA())
+    then
+      cases cn:
+        mk_CPP`Identifier("Boolean",-) ->
+          cases es:
+            [mk_CPP`BoolLit( true, bcid )] -> return GenObjectMemberAccess(cn, mk_CPP`Identifier("TRUE", bcid), cid),
+            [mk_CPP`BoolLit( false, bcid )] -> return GenObjectMemberAccess(cn, mk_CPP`Identifier("FALSE", bcid), cid),
+            others -> return GenFctCallObjMemAcc(cn, "valueOf", es, cid)
+          end,
+        mk_CPP`Identifier("Character",-),
+        mk_CPP`Identifier("Integer",-),
+        mk_CPP`Identifier("Long",-),
+        mk_CPP`Identifier("Double",-) -> return GenFctCallObjMemAcc(cn, "valueOf", es, cid),
+        others -> return mk_CPP`ClassInstanceCreationExpr(cn,nil,es,nil,cid)
+      end
+    else return mk_CPP`ClassInstanceCreationExpr(cn,nil,es,nil,cid);
+\end{vdm_al}
+
+Note that the second field of ClassInstanceCreationExpr always is set
+to nil using this operation. This is because this field is not needed
+by any of the code generators.
+
+\begin{vdm_al}
+functions
+  GenAnonymousClassExpr: CPP`CompleteClassName * seq of CPP`Expr * seq of CPP`MemberDeclaration * CI`ContextId
+                         -> CPP`Expr
+  GenAnonymousClassExpr(cn,es,ml,cid) ==
+    mk_CPP`ClassInstanceCreationExpr(cn,nil,es,ml,cid);
+
+\end{vdm_al}
+
+\subsection{Classes}
+
+\begin{vdm_al}
+  GenClassName: CPP`Name * CI`ContextId -> CPP`CompleteClassName
+  GenClassName(name,cid) ==
+    if is_CPP`Identifier(name)
+    then name
+    else mk_CPP`ResScopeQualifiedClassName(mk_CPP`ClassResScopeQualifiedClassName(name.qcn,name,cid),cid);
+
+  GenQualifiedName2: CPP`QualifiedClassName * CPP`Name * CI`ContextId -> CPP`QualifiedName
+  GenQualifiedName2(qnm,nm,cid) ==
+    mk_CPP`QualifiedName(qnm,nm,cid);
+
+  GenTemplateClassName: CPP`Identifier * seq of CPP`Identifier * CI`ContextId -> CPP`TemplateClassName
+  GenTemplateClassName(tnm,args,cid) ==
+    mk_CPP`TemplateClassName(
+            mk_CPP`TemplateName(tnm,tnm.cid),
+            [ mk_CPP`TypeName([mk_CPP`TypeSpecifier(args(i),cid)],nil,cid) | i in set inds args],
+            cid);
+
+  GenQualifiedName: (CPP`Identifier | CPP`Expr) * CPP`Name * CI`ContextId -> CPP`QualifiedName
+  GenQualifiedName(cnm,nm,cid) ==
+    cases nm:
+      mk_CPP`Identifier (-,-)        -> mk_CPP`QualifiedName(cnm,nm,cid),
+      mk_CPP`QualifiedName (-,nm2,-) -> mk_CPP`QualifiedName(cnm,nm2,cid),
+      others -> undefined
+    end;
+
+  GenDest: CPP`Identifier * CI`ContextId -> CPP`Destructor
+  GenDest(id,cid) ==
+    mk_CPP`Destructor(id,cid);
+\end{vdm_al}
+
+\subsection{Interfaces}
+
+\begin{vdm_al}
+  GenInterfaceHead: CPP`AnnotationSpec * seq of CPP`Modifier * CPP`Identifier  * CPP`InterSpec *
+                    [seq of CPP`Identifier] * CI`ContextId -> CPP`InterfaceHead
+  GenInterfaceHead(anno_l, ms, cls, interspec, tp_l, cid) ==
+    mk_CPP`InterfaceHead(ms, cls, interspec, tp_l, anno_l, cid);
+
+  GenModifier: CPP`ModifierAccess * CI`ContextId -> CPP`Modifier
+  GenModifier(ma,cid) ==
+    mk_CPP`Modifier(ma,cid);
+\end{vdm_al}
+
+\subsection{Preprocessor}
+
+\begin{vdm_al}
+  GenInclusion: CPP`FileName * CI`ContextId -> CPP`QuoteIncl
+  GenInclusion( fn, cid ) == mk_CPP`QuoteIncl( fn, cid );
+
+  GenSimplePackageName: seq of char * CI`ContextId -> CPP`PackageName
+  GenSimplePackageName(cs, cid) ==
+    mk_CPP`SimplePackageName(mk_CPP`Identifier(cs,cid),cid);
+
+  GenQualifiedPackageName: CPP`PackageName * seq of char * CI`ContextId -> CPP`QualifiedPackageName
+  GenQualifiedPackageName(pn, cs, cid) ==
+    mk_CPP`QualifiedPackageName(pn, mk_CPP`Identifier(cs, cid), cid);
+
+  GenImportOnDemandDeclaration: CPP`PackageName * CI`ContextId -> CPP`TypeImportOnDemandDeclaration
+  GenImportOnDemandDeclaration( fn, cid ) ==
+    mk_CPP`TypeImportOnDemandDeclaration( fn, cid );
+
+  GenPackageDeclaration: CPP`PackageName * CI`ContextId -> CPP`PackageDeclaration
+  GenPackageDeclaration( pnm, cid ) ==
+    mk_CPP`PackageDeclaration(pnm, cid);
+
+  GenPackageAndImportDeclarations: [CPP`PackageDeclaration] * CPP`ImportDeclarations * CI`ContextId
+                                   -> CPP`PackageAndImportDeclarations
+  GenPackageAndImportDeclarations(pd,impdecls,cid) ==
+    mk_CPP`PackageAndImportDeclarations(pd,impdecls,cid);
+
+  GenSingleTypeImportDeclaration: CPP`Identifier * CI`ContextId -> CPP`SingleTypeImportDeclaration
+  GenSingleTypeImportDeclaration( id, cid ) ==
+     mk_CPP`SingleTypeImportDeclaration(mk_CPP`SimplePackageName(id,id.cid),cid);
+
+  GenSqIncl: CPP`FileName * CI`ContextId -> CPP`SquareIncl
+  GenSqIncl(fn,cid) ==
+    mk_CPP`SquareIncl(fn,cid);
+
+  GenIdMacroDef: AS`Id * AS`Id * CI`ContextId -> CPP`IdMacroDef
+  GenIdMacroDef( id, ts,cid ) ==
+    mk_CPP`IdMacroDef( id, ts, cid );
+
+  GenPreIfNotDef : CPP`Identifier * CI`ContextId -> CPP`PreIfNotDef
+  GenPreIfNotDef(id,cid) ==
+    mk_CPP`PreIfNotDef(id,cid);
+
+  GenPreIf: CPP`Expr * CI`ContextId -> CPP`PreIf
+  GenPreIf(e,cid) ==
+    mk_CPP`PreIf(e,cid);
+
+  GenPreIfDef: CPP`Expr * CI`ContextId -> CPP`PreIfDef
+  GenPreIfDef(e,cid) ==
+    mk_CPP`PreIfDef(e,cid);
+
+  GenPreDefine: CPP`Identifier * CPP`Expr * CI`ContextId -> CPP`PreDefine
+  GenPreDefine(id,val,cid) ==
+    mk_CPP`PreDefine(id,val,cid);
+
+  GenPreEndIf: CPP`Expr * CI`ContextId -> CPP`PreEndIf
+  GenPreEndIf(e,cid) == mk_CPP`PreEndIf(e,cid);
+
+  GenPreMacro : CPP`Identifier * CI`ContextId -> CPP`PreMacro
+  GenPreMacro(id,cid) == mk_CPP`PreMacro(id,cid);
+\end{vdm_al}
+
+\subsection{Annotation}
+
+\begin{vdm_al}
+  GenAnnotation : CPP`Identifier * [seq of char] * CI`ContextId -> CPP`Annotation
+  GenAnnotation(cls, args, cid) == mk_CPP`Annotation(cls, args, cid);
+\end{vdm_al}
+
+\subsection{Temporary Names}
+
+The following two functions $GiveName$ and $Rename$ all returns a
+suitable name which is to be used as an identifier name. The function
+$GiveName$ is used to give name of temporary variables in the
+generated code, whereas the function $Rename$ gives a suitable name to
+a variable which corresponds to a variable in the specification. In
+Section \ref{renamevar} the renaming strategy of user defined
+variables is described.
+
+The temporary variables used in the generated code are numbered in
+succession, the next number is contained in the state $varno$. This
+number is reset for each module by a call to the operation
+$ResetVarno$.
+
+\begin{vdm_al}
+
+state Sigma of
+  varno : nat
+init s == s = mk_Sigma(0)
+end
+
+\end{vdm_al}
+
+The operation $GiveName$ gives the temporary variable names. These are numbered in succession.
+
+\begin{vdm_al}
+operations
+  GiveName: AS`Id ==> CPP`Identifier
+  GiveName(n) ==
+   (varno := varno + 1;
+     return GenIdentifier( n ^"_" ^ CGAUX`StringNumber( varno ), CI`NilContextId )
+    );
+
+  ResetVarno: () ==> ()
+  ResetVarno () ==
+    varno := 0
+
+\end{vdm_al}
+
+\begin{vdm_al}
+
+#ifdef VDMPP
+functions
+
+  PrefixClassName: AS`Id * CPP`Identifier -> CPP`Identifier
+  PrefixClassName(pr,nm) ==
+    PrefixName(pr,nm);
+
+  PrefixName: AS`Id * CPP`Identifier -> CPP`Identifier
+  PrefixName(pr,nm) ==
+    mk_CPP`Identifier(pr ^ "_" ^ nm.id,nm.cid);
+
+#endif VDMPP
+functions
+
+  AppendName: CPP`Identifier * AS`Id-> CPP`Identifier
+  AppendName(nm,pr) ==
+    mk_CPP`Identifier(nm.id ^ pr,nm.cid);
+
+operations
+  Rename: AS`Name | AS`OldName ==> CPP`Name | CPP`ObjectMemberAccess
+  Rename(nm) ==
+    if is_AS`OldName(nm)
+    then return RenameOld(nm)
+    else return Rename'(nm);
+
+  Rename': AS`Name ==> CPP`Name | CPP`ObjectMemberAccess
+  Rename'(nm) ==
+    let ids = nm.ids in
+#ifdef VDMSL
+    let l = len ids in
+      if l > 1 then
+        def i1 = CGAUX`CleanIdentifier(hd ids);
+            i2 = CGAUX`CleanIdentifier(ids(l)) in
+        if CPP`isCPP()
+        then return GenIdentifier("vdm_" ^ i1 ^ "_" ^ i2,nm.cid)
+        else return GenIdentifier(i2,nm.cid)
+      else
+        def md = CGAUX`GiveCurCName();
+            --num = if CPP`isJAVA() then CGAUX`FindScope(nm) else 0,
+            num = CGAUX`FindScope(nm);
+            id = CGAUX`CleanIdentifier(hd ids)
+        in
+          if CPP`isJAVA()
+          then if ((num = 0) or (num=-1) or (num=-2))
+               then return GenIdentifier(id,nm.cid)
+               else return GenIdentifier(id ^ "_" ^ CGAUX`StringNumber(num),nm.cid)
+          --else return GenIdentifier("vdm_" ^ md ^ "_" ^ id,nm.cid);
+          else if ((num = 0) or (num=-1) or (num=-2))
+               then return GenIdentifier("vdm_" ^ md ^ "_" ^ id,nm.cid)
+               else return GenIdentifier("vdm_" ^ md ^ "_" ^ id ^ "_" ^ CGAUX`StringNumber(num),nm.cid);
+#endif VDMSL
+#ifdef VDMPP
+--    cases ids:
+    let id = ids(len ids) in
+    if len ids = 1
+    then
+      if CPP`isCPP()
+--      then return MkPrefix(id)
+      then def num = CGAUX`FindScope(nm);
+               nid = MkPrefix(id)
+           in
+             if ((num = 0) or (num=-1) or (num=-2))
+             then return nid
+             else
+               let mk_CPP`Identifier(idx, cid) = nid
+               in return mk_CPP`Identifier(idx ^ "_" ^ CGAUX`StringNumber(num), cid)
+      else
+        def num = CGAUX`FindScope(nm)
+        in
+          if ((num = 0) or (num=-1) or (num=-2))
+          then return GenIdentifier(CGAUX`CleanIdentifier(id),nm.cid)
+          else return GenIdentifier(CGAUX`CleanIdentifier(id) ^ "_" ^ CGAUX`StringNumber(num),nm.cid)
+--      [cls^"::<"^ind^">", id], [cls^"::"^ind, id] ->
+    elseif len id = 2 and
+           exists j in set inds (hd ids) &
+             (hd ids)(j,...,j+1) = "::"
+    then let k = iota j in set inds (hd ids) &
+                   (hd ids)(j,...,j+1) = "::"
+         in
+         let cls = (hd ids)(1,...,k),
+             ind = if (hd ids)(k+2) = '<'
+                   then
+                     (hd ids)(k+3,...,len (hd ids) - 1)
+                   else
+                     (hd ids)(k+2,...,len (hd ids))
+         in
+         def ind' = CGAUX`CleanIdentifier(ind);
+             cls' = CGAUX`CleanIdentifier(cls);
+             icl = GenIdentifier("iclass_" ^ ind' ^ "_" ^ cls',nm.cid);
+             id' = MkPrefix(id)
+         in
+           return GenQualifiedName(icl,id',nm.cid)
+    elseif len ids = 2
+--      [cls,id] ->
+    then
+      let cls = hd ids
+      in
+      def cls' = MkPrefix(cls);
+          id'  = MkPrefix(id)
+      in
+       (CGAUX`IncludeClass(mk_AS`Name([cls], CI`NilContextId));
+        if CPP`isCPP()
+        then
+          return GenQualifiedName(cls',id',nm.cid)
+        --elseif TI`IsInstVar(nm)
+        elseif CGAUX`IsInstVar(nm)
+        then
+          return GenObjectMemberAccess(GenBracketedExpr(GenCastExpr(mk_CPP`TypeSpecifier(cls',nm.cid),
+                                                                    GenIdentifier("this",nm.cid),nm.cid),nm.cid),
+                                       id', nm.cid)
+        else
+          return GenQualifiedName(cls',id',nm.cid) --values and types
+       )
+    else error
+    pre len nm.ids <= 2;
+#endif VDMPP
+
+  Rename2: AS`Name | AS`OldName ==> CPP`Name
+  Rename2(nm) ==
+    if is_AS`OldName(nm)
+    then return RenameOld(nm)
+    else return Rename2'(nm);
+
+  Rename2': AS`Name ==> CPP`Name
+  Rename2'(nm) ==
+    let ids = nm.ids in
+#ifdef VDMSL
+    let l = len ids in
+      if l > 1 then
+        def i1 = CGAUX`CleanIdentifier(hd ids);
+            i2 = CGAUX`CleanIdentifier(ids(l)) in
+        if CPP`isJAVA() then return GenIdentifier(i2,nm.cid)
+        else return GenIdentifier("vdm_" ^ i1 ^ "_" ^  i2,nm.cid)
+      else
+        def md = CGAUX`GiveCurCName();
+            id = CGAUX`CleanIdentifier(hd ids) in
+          if CPP`isJAVA() then return GenIdentifier(id,nm.cid)
+          else return GenIdentifier("vdm_" ^ md ^ "_" ^ id,nm.cid);
+#endif VDMSL
+#ifdef VDMPP
+    cases ids:
+      [id] -> return MkPrefix(id),
+      [cls ^ "::<" ^ ind ^ ">", id], [cls ^ "::" ^ ind, id] ->
+        def ind' = CGAUX`CleanIdentifier(ind);
+            cls' = CGAUX`CleanIdentifier(cls);
+            icl = GenIdentifier("iclass_" ^ ind' ^ "_" ^ cls',nm.cid);
+            id' = MkPrefix(id)
+        in
+          return GenQualifiedName(icl,id',nm.cid),
+      [cls,id] ->
+        def cls' = MkPrefix(cls);
+            id'  = MkPrefix(id)
+        in
+         (CGAUX`IncludeClass(mk_AS`Name([cls], CI`NilContextId));
+          if CPP`isCPP() then return GenQualifiedName(cls',id',nm.cid)
+          else
+            if CGAUX`IsInstVar(nm)
+            then return GenObjectMemberAccess(GenBracketedExpr(GenCastExpr(mk_CPP`TypeSpecifier(cls',nm.cid),
+                                                                           GenIdentifier("this",nm.cid),nm.cid),
+                                                               nm.cid), id', nm.cid)
+            else return GenQualifiedName(cls',id',nm.cid)
+         ),
+      others -> error
+    end
+    pre len nm.ids <= 2;
+#endif VDMPP
+
+functions
+  RenameOld: AS`OldName -> CPP`Name
+  RenameOld(mk_AS`OldName(id_s, ti)) ==
+    let nm = mk_AS`Name(id_s, ti)
+    in
+      def mk_CPP`Identifier(id,-) = Rename(nm)
+      in GenIdentifier("_" ^ id,ti);
+
+operations
+#ifdef VDMSL
+  GenLengthId: AS`Name ==> AS`Id
+  GenLengthId(rec) ==
+    def rnm = CGAUX`GiveLastName(rec);
+    in
+     (dcl cnm : AS`Id;
+      def ids = rec.ids
+      in
+        if len ids  > 1
+        then cnm := CGAUX`CleanIdentifier(hd ids)
+        else cnm := CGAUX`GiveCurCName();
+    return "length_" ^ cnm ^ "_" ^ rnm);
+#endif VDMSL
+
+  GenLengthName: AS`Name ==> CPP`Name
+  GenLengthName(rec) ==
+#ifdef VDMSL
+    return GenIdentifier(GenLengthId(rec),rec.cid);
+#endif VDMSL
+#ifdef VDMPP
+   def s = "length_" ^ CGAUX`GiveLastName(rec) in
+     let id = GenIdentifier(s,rec.cid) in
+        cases Rename(rec):
+          mk_CPP`Identifier(-,-) -> return id,
+          mk_CPP`QualifiedName(cnm, -,-) -> return GenQualifiedName(cnm, id,rec.cid)
+        end;
+#endif VDMPP
+
+#ifdef VDMSL
+  GenPosId: AS`Name * AS`Name ==> AS`Id
+  GenPosId(rec, sel) ==
+    def rnm = CGAUX`GiveLastName(rec);
+        snm = CGAUX`GiveLastName(sel);
+    in
+     (dcl cnm : AS`Id;
+      def ids = rec.ids
+      in
+        if len ids  > 1
+        then cnm := CGAUX`CleanIdentifier(hd ids)
+        else cnm := CGAUX`GiveCurCName();
+      return "pos_" ^ cnm ^ "_" ^ rnm ^ "_" ^ snm);
+#endif VDMSL
+
+  GenPosName: AS`Name * AS`Name ==> CPP`Name
+  GenPosName(rec, sel) ==
+#ifdef VDMSL
+    return GenIdentifier(GenPosId(rec, sel),sel.cid);
+#endif VDMSL
+#ifdef VDMPP
+    def s = "pos_" ^ CGAUX`GiveLastName(rec) ^ "_" ^ CGAUX`GiveLastName(sel) in
+      let id = GenIdentifier(s,sel.cid) in
+        cases Rename(rec):
+          mk_CPP`Identifier(-,-) -> return id,
+          mk_CPP`QualifiedName(cnm, -,-) -> return GenQualifiedName(cnm, id,rec.cid)
+        end;
+#endif VDMPP
+
+#ifdef VDMPP
+  MkPrefix: AS`Id ==> CPP`Identifier
+  MkPrefix(id) ==
+    if CPP`isCPP()
+    then return GenIdentifier("vdm_" ^ CGAUX`CleanIdentifier(id), CI`NilContextId)
+    else return GenIdentifier(CGAUX`CleanIdentifier(id), CI`NilContextId);
+#endif VDMPP
+
+functions
+#ifdef VDMPP
+  GiveMacroName: AS`Name -> CPP`Identifier
+  GiveMacroName(nm) ==
+    def id = CGAUX`GiveLastName(nm)
+    in
+      GenIdentifier( "VDM_" ^ id,nm.cid  )
+    pre len nm.ids = 1;
+#endif VDMPP
+
+  GivePrePostNm: AS`Name * AS`Id -> CPP`Name
+  GivePrePostNm(nm, nmtp) ==
+    def id = CGAUX`GiveLastName(nm) in
+#ifdef VDMSL
+      def md = CGAUX`GiveCurCName() in
+        GenIdentifier( "vdm_" ^ md ^ "_" ^ nmtp ^ "_" ^ id,nm.cid  )
+#endif VDMSL
+#ifdef VDMPP
+      GenIdentifier( "vdm_" ^ nmtp ^ "_" ^ id ,nm.cid )
+#endif VDMPP
+  pre len nm.ids = 1;
+
+  GivePrePostName: AS`Name * AS`Id -> AS`Name
+  GivePrePostName(nm, nmtp) ==
+    let id = hd nm.ids in
+      mk_AS`Name([nmtp ^ "_" ^ id], nm.cid)
+  pre len nm.ids = 1;
+
+#ifdef VDMPP
+  GiveBaseName: () -> CPP`Identifier
+  GiveBaseName() == GenIdentifier( CGBasename,CI`NilContextId );
+#endif VDMPP
+
+  GiveExtFileName: AS`Id * AS`Id -> CPP`FileName
+  GiveExtFileName(cl,mthd) == CGAUX`GenFileExt(cl ^ "_" ^ mthd);
+
+  GenBlockComments: seq of seq of char * CI`ContextId -> CPP`BlockComments
+  GenBlockComments(txt_l, cid) == mk_CPP`BlockComments(txt_l, cid);
+
+  GenSingleLineComments: seq of char * CI`ContextId -> CPP`SingleLineComments
+  GenSingleLineComments(txt, cid) == mk_CPP`SingleLineComments(txt, cid);
+
+  GenTrailingComments: seq of char * CI`ContextId -> CPP`TrailingComments
+  GenTrailingComments(txt, cid) == mk_CPP`TrailingComments(txt, cid);
+
+  GenEndOfLineComments: seq of char * CI`ContextId -> CPP`EndOfLineComments
+  GenEndOfLineComments(txt, cid) == mk_CPP`EndOfLineComments(txt, cid);
+
+  GenDocComments: seq of seq of char * CI`ContextId -> CPP`DocComments
+  GenDocComments(txt_l, cid) == mk_CPP`DocComments(txt_l, cid);
+
+  GetCid: CPP`Expr | CPP`Stmt +> CI`ContextId
+  GetCid(expr) == expr.cid;
+
+end BCCI
+
+\end{vdm_al}
+
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[GenFctCallPtrToObjMemAcc]
+{rtinfo.ast}[BCCI]
+\end{rtinfo}
+
+
+
+

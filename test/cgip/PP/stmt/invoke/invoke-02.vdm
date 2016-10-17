@@ -1,0 +1,32 @@
+class A
+
+instance variables
+  n : nat := 0;
+
+operations
+
+
+public  GetN: () ==> nat
+  GetN() ==
+    return n;
+
+  SetN: nat ==> ()
+  SetN(v) ==
+    n := v
+end A
+
+class B
+
+instance variables
+  a: A;
+  b:nat
+
+operations
+  
+public Test : () ==> nat
+  Test()  ==
+  (  b:= a.GetN();
+     return b
+  )
+
+end B

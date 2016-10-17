@@ -1,0 +1,1 @@
+new Test().runTests([new InsertCard().Init(1,new Card().Create(123456,1,1)),new Validate().Init(1,123456),new Withdrawal().Init(1,500)])

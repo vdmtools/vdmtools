@@ -1,0 +1,15 @@
+functions
+
+AllCases: nat -> nat
+AllCases(n) ==
+  cases {n}:
+    {1}           -> 1,
+    {e} union {1} -> e
+  end
+
+--pre n > 0 and n < 2
+
+--PO
+--(forall n : nat & {n} = {(1)} or
+--   (exists {e} union {(1)} : set of nat &
+--      {n} = {e} union {(1)}))

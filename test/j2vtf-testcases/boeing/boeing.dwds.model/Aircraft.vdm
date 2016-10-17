@@ -1,0 +1,54 @@
+class Aircraft is subclass of Object
+operations 
+public  hashCode : () ==> int 
+hashCode() == 
+( return  acType.hashCode()+tailNumber.hashCode()
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( return  acName
+) ;
+
+public  getAcName : () ==> [String]
+getAcName() == 
+( return  acName
+) ;
+
+public  getAcType : () ==> [AircraftType]
+getAcType() == 
+( return  acType
+) ;
+
+public  getCUMNumber : () ==> [String]
+getCUMNumber() == 
+( return  cumNumber
+) ;
+
+public  getTailNumber : () ==> [String]
+getTailNumber() == 
+( return  tailNumber
+) ;
+
+public  equals : [Object] ==> bool 
+equals(obj) == 
+( return  (is_ (obj,[Aircraft]) and  acType.equals((def l_10 :  Aircraft = (obj)
+  in l_10).getAcType()) and  tailNumber.equals((def l_17 :  Aircraft = (obj)
+  in l_17).getTailNumber()))
+) ;
+
+public  Aircraft : [AircraftType] * [String] * [String] * [String] ==> Aircraft
+Aircraft(acType, acName, tailNumber, cumNumber) == 
+( Aircraft`acType := acType;
+  Aircraft`acName := acName;
+  Aircraft`tailNumber := tailNumber;
+  Aircraft`cumNumber := cumNumber
+) ;
+
+instance variables 
+  private  acType : [AircraftType];
+  private  acName : [String];
+  private  tailNumber : [String];
+  private  cumNumber : [String]
+  
+end  Aircraft

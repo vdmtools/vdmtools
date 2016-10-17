@@ -1,0 +1,37 @@
+public Test : () ==> <OK> | int | seq of int 
+Test() ==
+  trap <NEW> with return <OK>
+  in
+    Example();
+
+DoCommand: () ==> seq of int
+DoCommand() ==
+( dcl l : seq of nat := [];
+  always skip in
+    return conc [[7,7], TestSeq([]), [7,8]]
+);
+
+SetToSeq: set of int ==> seq of int
+SetToSeq(s) ==
+  if s = {} then
+    exit <ERR>
+  else
+    let e in set s in 
+      return [e] ^ SetToSeq(s \ {e});
+
+TestSeq: seq of int ==> seq of int
+TestSeq(l) ==
+  if l = [] then
+    exit <ERR2>
+  else
+    return l;
+
+Example: () ==> int | seq of int
+Example() ==
+  tixe { 
+    <ERR2> |-> exit 7,
+    mk_(t,t) |-> return t,
+    7 |-> exit <NEW>
+  } in DoCommand()
+
+end A

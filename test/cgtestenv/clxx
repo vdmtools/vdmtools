@@ -1,0 +1,41 @@
+#! /usr/bin/perl
+# Perl wrapper for the Microsoft cl compiler
+
+# print STDERR "Running $0: @ARGV\n"; 
+@A = @ARGV; 
+@ARGS = (); 
+while (@A > 0) {
+    $a = shift @A; 
+    if ($a eq '-o') {
+        $a = '-Fe'; 
+        $out = shift @A; 
+        $out =~ s/\.exe$//i; 
+        $exe = $out . ".";      # Avoid .exe in executable name
+        $a .= $exe; 
+    } 
+    elsif ($a =~ /\.cc$/) {
+        push @ARGS, '-Tp'; 
+    }
+    elsif ($a =~ s/\.o$/\.obj/) {
+        # Name was renamed from .o to .obj
+    }
+    elsif ($a eq '-g' || $a =~ /^-W.*$/) {
+        next; 
+    }
+    push @ARGS, $a; 
+}
+# print STDERR "ARGS=@ARGS\n"; 
+
+$ret = system 'cl', @ARGS;
+
+my $b = $ret & 255; 
+my $a = $ret >> 8; 
+if ($b != 0) {
+    # A signal stopped or terminated the child process.
+    exit 1 if $b == 127;        # Stopped by signal (in $a). 
+    exit 1;                     # Terminated by signal ($b & 127)
+} else {
+    # Child process exited with value $a. 
+    exit $a; 
+}
+

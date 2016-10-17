@@ -1,0 +1,1914 @@
+--------------------------------------------------------------------------------
+% WHAT
+%    Auxiliary functions for the Static Semantics of VDM++
+% $Id: tcaux.vdm,v 1.78 2005/03/11 03:09:16 vdmtools Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\section{Auxilary Functions}
+
+This module presented in this section
+simply contains a large number of auxiliary
+functions (and one operation). These functions are mainly
+responsible for composing a collection of types
+into a new type according to the specific rules which apply to
+the specific construct. Thus, the functions in the AUX module are
+responsible for manipulating the inferred types to derive new
+inferred types depending upon the context in which they are used.
+The interface of the AUX module can be seen from figure~\ref{aux}.
+
+The AUX module exports its constructs to all the second level
+modules (STMT, EXPR and PAT) and to the TYPE module. AUX
+import constructs from its other level three modules (TYPE and
+ENV). There is also a minor dependency to the STMT module (use of the
+$wf-Stmt$ operation) and the EXPR module (use of the $wf-Expr$
+operation).
+
+%\insertfig{tcaux.ps}{13cm}{Interface for the AUX module}{\label{aux}}
+
+\begin{vdm_al}
+module AUX
+
+imports
+
+  from AS all,
+
+  from CI all,
+
+  from REP all,
+
+  from TYPE operations
+    IsCompatible: TYPE`Ind * REP`TypeRep * REP`TypeRep ==> bool;
+    IsUnionRecursive: REP`TypeRep ==> bool;
+    IsOverlapping : REP`TypeRep * REP`TypeRep * set of (REP`TypeNameRep * REP`TypeNameRep) ==> bool
+    types Ind = <POS> | <DEF>,
+
+  from ENV operations
+#ifdef VDMSL
+    LookUpTypeName : AS`Name ==> [REP`TypeRep]
+#endif VDMSL
+#ifdef VDMPP
+    LookUpTypeName : AS`Name * bool ==> [REP`TypeRep|ENV`AccessType]
+
+  types
+
+    AccessType = ENV`AccessTypeRep | ENV`AccessFnTypeRep  | ENV`AccessPolyTypeRep
+                 | ENV`AccessOpTypeRep | ENV`AccessFieldRep;
+
+    AccessTypeRep;
+    AccessFnTypeRep;
+    AccessPolyTypeRep;
+    AccessOpTypeRep;
+    AccessFieldRep;
+    TagRepElem = seq of REP`FieldRep
+
+#endif VDMPP
+    functions
+#ifdef VDMPP
+    IsAccessType: [ENV`AccessType|REP`TypeRep|ENV`TagRepElem|
+                   set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep)|
+                   set of (REP`FnTypeRep | REP`OpTypeRep)] -> bool;
+    StripAccessType: [ENV`AccessType|REP`TypeRep|ENV`TagRepElem] -> [REP`TypeRep|seq of REP`FieldRep];
+#endif VDMPP
+
+#ifdef VDMSL
+    TransStateType : [AS`Name] * AS`StateDef -> REP`TypeRep
+#endif VDMSL
+
+exports
+  operations
+    IntersectTypeReps : REP`TypeRep * REP`TypeRep ==> REP`TypeRep;
+    IntersectTypes : REP`TypeRep * REP`TypeRep ==> [REP`TypeRep];
+    ExtractIntNumType : REP`TypeRep ==> REP`TypeRep;
+    ExtractNumericType : REP`TypeRep ==> REP`TypeRep;
+    ExtractSetType : REP`TypeRep ==> REP`TypeRep;
+    ExtractSeqType : REP`TypeRep ==> REP`TypeRep;
+    SetTypeMinus: REP`TypeRep * REP`TypeRep ==> [REP`TypeRep];
+    SetTypeInter: set of REP`TypeRep ==> REP`TypeRep;
+    RngSubTypeDom: set of REP`TypeRep ==> bool;
+    ExtractComposeType: TYPE`Ind * REP`TypeRep * REP`TypeRep ==> bool * REP`TypeRep * REP`TypeRep * REP`TypeRep;
+    ExtractFunType : REP`TypeRep ==> [REP`TypeRep];
+    ExtractMapType : REP`TypeRep ==> [REP`TypeRep];
+    ExtractCompositeType : REP`TypeRep ==> [REP`TypeRep];
+    ExtractProductType : REP`TypeRep * nat * (<EQ>|<GE>) ==> [REP`ProductTypeRep];
+    MapTypeMerge: set of [REP`TypeRep] ==> REP`TypeRep;
+    MapTypeDomRestrict: REP`TypeRep * [REP`TypeRep] ==> REP`TypeRep * (<OK> | <NOTOVERLAP> | <EMPTYMAP>);
+    MapTypeRngRestrict: [REP`TypeRep] * REP`TypeRep ==> REP`TypeRep * (<OK> | <NOTOVERLAP> | <EMPTYMAP>);
+    CanBeApplied: [REP`TypeRep] ==> bool * [REP`TypeRep];
+#ifdef VDMPP
+    ExtractObjRefType : REP`TypeRep ==> [REP`TypeRep];
+    ExtractSetObjRefType : REP`TypeRep ==> [REP`TypeRep];
+#endif VDMPP
+  functions
+  InstFn: (<VAR> | <PAR> | <REN>) * REP`TypeRep * map AS`Name to REP`TypeRep -> REP`TypeRep;
+  InstFnAS: (AS`Type | AS`TypeDef) * map AS`Name to AS`Type -> (AS`Type | AS`TypeDef);
+#ifdef VDMSL
+  RenameTag:REP`TypeRep * map AS`Name to AS`Name -> REP`TypeRep;
+  TypeUsedImplicitly: AS`Name * set of REP`TypeRep -> bool;
+#endif VDMSL
+  MergeNumericTypes : set of REP`TypeRep -> set of REP`TypeRep;
+  ExpandNumericTypes : set of REP`TypeRep -> set of REP`TypeRep;
+  MostGeneralNumericType : set of REP`TypeRep -> REP`TypeRep ;
+  MergeTypes : [REP`TypeRep | set of REP`TypeRep] * [REP`TypeRep | set of REP`TypeRep] -> REP`TypeRep;
+  RemoveUnitType: REP`TypeRep -> [REP`TypeRep];
+  RemoveEmptySetType: REP`TypeRep -> REP`TypeRep;
+  RemoveEmptySeqType: REP`TypeRep -> REP`TypeRep;
+  RemoveEmptyMapType: REP`TypeRep -> REP`TypeRep;
+  UnmaskSetType: TYPE`Ind * REP`TypeRep -> [REP`TypeRep];
+  UnmaskSetTypeForLoop: TYPE`Ind * REP`TypeRep -> [REP`TypeRep];
+  UnmaskSeqType: TYPE`Ind * REP`TypeRep -> [REP`TypeRep];
+  UnmaskSeqTypeForLoop: TYPE`Ind * REP`TypeRep -> [REP`TypeRep];
+  SplitMapType: [REP`TypeRep] -> [REP`TypeRep] * [REP`TypeRep];
+  UnmaskMapDomType : TYPE`Ind * REP`TypeRep -> [REP`TypeRep];
+  UnmaskMapRngType : TYPE`Ind * REP`TypeRep -> [REP`TypeRep];
+#ifdef VDMPP
+  QualifyTypeNames: REP`TypeRep * AS`Name -> REP`TypeRep;
+#endif VDMPP
+  SetTypeUnion: set of REP`TypeRep -> REP`TypeRep;
+  SeqTypeConc: set of REP`TypeRep -> REP`TypeRep;
+  SeqMapTypeModify: REP`TypeRep * REP`TypeRep * REP`TypeRep -> REP`TypeRep;
+  InverseMapType: [REP`TypeRep] -> REP`TypeRep;
+  MakePreType : REP`FnTypeRep -> REP`FnTypeRep;
+  MakePostType : REP`FnTypeRep -> REP`FnTypeRep;
+  MakePolyPreType : seq of REP`TypeVarRep * REP`FnTypeRep -> seq of REP`TypeVarRep * REP`FnTypeRep;
+  MakePolyPostType : seq of REP`TypeVarRep * REP`FnTypeRep -> seq of REP`TypeVarRep * REP`FnTypeRep;
+  MakeOpPreType : [AS`Name] * REP`OpTypeRep * [AS`StateDef] -> REP`TypeRep;
+  MakeOpPostType : [AS`Name] * REP`OpTypeRep * [AS`StateDef] -> REP`TypeRep;
+  AlwaysType: REP`TypeRep * REP`TypeRep -> REP`TypeRep;
+  ExtractExitTypeRep: REP`TypeRep -> [REP`TypeRep];
+  IsPrePostFn: AS`Name -> bool;
+  ExtName : AS`Name * AS`Name -> AS`Name;
+  SepName : AS`Name -> [AS`Name] * AS`Name;
+  Pre: AS`Name -> AS`Name;
+  Post: AS`Name -> AS`Name;
+  Inv: AS`Name -> AS`Name;
+  Init: AS`Name -> AS`Name;
+  ReservedPrefix : AS`Name -> bool;
+  IsEmptyName : AS`Name -> bool;
+
+definitions
+  values
+  natSubTypeSet = {mk_REP`NumericTypeRep(<NATONE>)};
+  intSubTypeSet = {mk_REP`NumericTypeRep(<NATONE>), mk_REP`NumericTypeRep(<NAT>)};
+  ratSubTypeSet = {mk_REP`NumericTypeRep(<NATONE>), mk_REP`NumericTypeRep(<NAT>),
+                   mk_REP`NumericTypeRep(<INTEGER>)};
+  realSubTypeSet = {mk_REP`NumericTypeRep(<NATONE>), mk_REP`NumericTypeRep(<NAT>),
+                    mk_REP`NumericTypeRep(<INTEGER>), mk_REP`NumericTypeRep(<RAT>)};
+
+  functions
+
+    TcauxLookUpTypeName: AS`Name -> [REP`TypeRep]
+    TcauxLookUpTypeName (nm) ==
+#ifdef VDMPP
+      def lok = ENV`LookUpTypeName (nm,true) in
+      if ENV`IsAccessType (lok) then ENV`StripAccessType(lok)
+      else lok;
+#endif VDMPP
+#ifdef VDMSL
+      def lok = ENV`LookUpTypeName (nm) in
+      lok;
+#endif VDMSL
+
+    MergeNumericTypes : set of REP`TypeRep -> set of REP`TypeRep
+    MergeNumericTypes (sttp) ==
+      if mk_REP`NumericTypeRep(<REAL>) in set sttp
+      then sttp \ realSubTypeSet
+      else if mk_REP`NumericTypeRep(<RAT>) in set sttp
+      then sttp \ ratSubTypeSet
+      else if mk_REP`NumericTypeRep(<INTEGER>) in set sttp
+      then sttp \ intSubTypeSet
+      else if mk_REP`NumericTypeRep(<NAT>) in set sttp
+      then sttp \ natSubTypeSet
+      else sttp;
+
+    ExpandNumericTypes : set of REP`TypeRep -> set of REP`TypeRep
+    ExpandNumericTypes (sttp) ==
+      if mk_REP`NumericTypeRep(<REAL>) in set sttp
+      then sttp union realSubTypeSet
+      else if mk_REP`NumericTypeRep(<RAT>) in set sttp
+      then sttp union ratSubTypeSet
+      else if mk_REP`NumericTypeRep(<INTEGER>) in set sttp
+      then sttp union intSubTypeSet
+      else if mk_REP`NumericTypeRep(<NAT>) in set sttp
+      then sttp union natSubTypeSet
+      else sttp;
+
+    MostGeneralNumericType : set of REP`TypeRep -> REP`TypeRep
+    MostGeneralNumericType (ntp) ==
+      cases ntp:
+        {e} -> e,
+        --ntp' -> let tp in set MergeNumericTypes (ntp' \ {mk_REP`AllTypeRep()}) in tp
+        others -> let tp in set MergeNumericTypes (ntp \ {mk_REP`AllTypeRep()}) in tp
+      end
+      pre forall tp in set ntp & is_REP`NumericTypeRep (tp) or is_REP`AllTypeRep (tp);
+\end{vdm_al}
+
+In the function $MergeTypes$ below the case where empty map types are
+combined with injective map types can never be reached. This is caused
+by the fact that injective maps only can be constructed by means of
+a type binding and $TransType$ transforms such a type into a union
+type of an empty map type and an injective map type. However, we
+have chosen to keep the case here anyway for documentation purpose.
+
+\begin{vdm_al}
+
+  MergeTypes : [REP`TypeRep | set of REP`TypeRep] * [REP`TypeRep | set of REP`TypeRep] -> REP`TypeRep
+  MergeTypes (l,r) ==
+    if is_(r, set of REP`TypeRep)
+    then
+      if is_(l, set of REP`TypeRep)
+      then MergeTypes(l union r,nil)
+      else MergeTypes(r,l)
+    else
+      if is_(l, set of REP`TypeRep)
+      then
+        if l = {}
+        then MergeTypes(nil,r)
+        else
+          let tp in set l
+          in
+            MergeTypes(l \ {tp}, MergeTypes(tp,r))
+      else
+        let r1tp = cases mk_(l,r) :
+--                     mk_(mk_REP`UnitTypeRep(),tp),
+--                     mk_(tp,mk_REP`UnitTypeRep()) -> {tp},
+                     mk_(nil,nil) -> {mk_REP`UnitTypeRep()}, -- Kim: why unit type on nil?
+                     mk_(nil,tp),mk_(tp,nil) -> {tp},
+                     mk_(mk_REP`SetTypeRep(s1), mk_REP`SetTypeRep(s2)) -> {mk_REP`SetTypeRep(MergeTypes(s1,s2))},
+                     mk_(mk_REP`SetTypeRep(s1), mk_REP`EmptySetTypeRep(s2)),
+                     mk_(mk_REP`EmptySetTypeRep(s2), mk_REP`SetTypeRep(s1)) ->
+                       {mk_REP`UnionTypeRep({mk_REP`SetTypeRep(s1), mk_REP`EmptySetTypeRep(s2)})},
+
+                     mk_(mk_REP`SeqTypeRep(s1), mk_REP`SeqTypeRep(s2)) -> {mk_REP`SeqTypeRep(MergeTypes(s1,s2))},
+                     mk_(mk_REP`SeqTypeRep(s1), mk_REP`EmptySeqTypeRep(s2)),
+                     mk_(mk_REP`EmptySeqTypeRep(s2), mk_REP`SeqTypeRep(s1)) ->
+                       {mk_REP`UnionTypeRep({mk_REP`SeqTypeRep(s1), mk_REP`EmptySeqTypeRep(s2)})},
+
+                     mk_(mk_REP`GeneralMapTypeRep(d1,r1), mk_REP`GeneralMapTypeRep(d2,r2)),
+                     mk_(mk_REP`InjectiveMapTypeRep(d1,r1), mk_REP`InjectiveMapTypeRep(d2,r2)),
+                     mk_(mk_REP`InjectiveMapTypeRep(d1,r1), mk_REP`GeneralMapTypeRep(d2,r2)),
+                     mk_(mk_REP`GeneralMapTypeRep(d1,r1), mk_REP`InjectiveMapTypeRep(d2,r2)) ->
+                       {mk_REP`GeneralMapTypeRep(MergeTypes(d1,d2), MergeTypes(r1,r2))},
+                     mk_(mk_REP`GeneralMapTypeRep(d1,r1), mk_REP`EmptyMapTypeRep(d2,r2)),
+                     mk_(mk_REP`EmptyMapTypeRep(d2,r2), mk_REP`GeneralMapTypeRep(d1,r1)) ->
+                       --{mk_REP`GeneralMapTypeRep(d1,r1)},
+                       {mk_REP`UnionTypeRep({mk_REP`GeneralMapTypeRep(d1,r1), mk_REP`EmptyMapTypeRep(d2,r2)})},
+                     mk_(mk_REP`InjectiveMapTypeRep(d1,r1), mk_REP`EmptyMapTypeRep(d2,r2)),
+                     mk_(mk_REP`EmptyMapTypeRep(d2,r2), mk_REP`InjectiveMapTypeRep(d1,r1)) ->
+                       --{mk_REP`InjectiveMapTypeRep(d1,r1)},
+                       {mk_REP`UnionTypeRep({mk_REP`InjectiveMapTypeRep(d1,r1), mk_REP`EmptyMapTypeRep(d2,r2)})},
+
+                     mk_(mk_REP`UnionTypeRep(ul), mk_REP`UnionTypeRep(ur)) -> ul union ur,
+                     mk_(mk_REP`UnionTypeRep(ul),-) -> ul union {r},
+                     mk_(-,mk_REP`UnionTypeRep(ur)) -> {l} union ur,
+                     mk_(mk_REP`ExitTypeRep(t1),mk_REP`ExitTypeRep(t2)) -> {mk_REP`ExitTypeRep(MergeTypes(t1,t2))},
+                     others -> {l,r}
+                   end
+        in
+          let restp = MergeNumericTypes(r1tp)
+          in
+            cases restp:
+              {}     -> undefined,
+              {e}    -> e,
+              others -> if mk_REP`AllTypeRep() in set restp
+                        then mk_REP`AllTypeRep()
+                        else mk_REP`UnionTypeRep(restp)
+            end;
+
+    RemoveUnitType: REP`TypeRep -> [REP`TypeRep]
+    RemoveUnitType(tp) ==
+      if is_REP`UnionTypeRep(tp)
+      then let mk_REP`UnionTypeRep(tp_s) = tp
+           in
+             mk_REP`UnionTypeRep({RemoveUnitType(t) | t in set tp_s}\{nil})
+      elseif is_REP`UnitTypeRep(tp)
+      then nil
+      else tp;
+
+    RemoveEmptySetType: REP`TypeRep -> REP`TypeRep
+    RemoveEmptySetType(tp) ==
+      if is_REP`UnionTypeRep(tp)
+      then let mk_REP`UnionTypeRep(tp_s) = tp
+           in
+             let tp_s2 = tp_s \ {mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep())}
+             in
+               if card tp_s2 = 1
+               then iota - in set tp_s2 & true
+               else mk_REP`UnionTypeRep(tp_s2)
+      else tp;
+
+    RemoveEmptySeqType: REP`TypeRep -> REP`TypeRep
+    RemoveEmptySeqType(tp) ==
+      if is_REP`UnionTypeRep(tp)
+      then let mk_REP`UnionTypeRep(tp_s) = tp
+           in
+             let tp_s2 = tp_s \ {mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep())}
+             in
+               if card tp_s2 = 1
+               then iota - in set tp_s2 & true
+               else mk_REP`UnionTypeRep(tp_s2)
+      else tp;
+
+    RemoveEmptyMapType: REP`TypeRep -> REP`TypeRep
+    RemoveEmptyMapType(tp) ==
+      if is_REP`UnionTypeRep(tp)
+      then let mk_REP`UnionTypeRep(tp_s) = tp
+           in
+             let tp_s2 = tp_s \ {mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(),mk_REP`AllTypeRep())}
+             in
+               if card tp_s2 = 1
+               then iota - in set tp_s2 & true
+               else mk_REP`UnionTypeRep(tp_s2)
+      else tp;
+
+operations
+  IntersectTypes : REP`TypeRep * REP`TypeRep ==> [REP`TypeRep]
+  IntersectTypes (l,r) ==
+   (dcl r1tp : set of REP`TypeRep;
+    cases mk_(l,r) :
+      mk_(mk_REP`AllTypeRep(),r) -> r1tp := {r},
+      mk_(l,mk_REP`AllTypeRep()) -> r1tp := {l},
+        -- REMARK: maybe this should disappear again!!!!
+      mk_(mk_REP`UnionTypeRep(usl), mk_REP`UnionTypeRep(usr)) ->
+        r1tp := ExpandNumericTypes(FlatternTypes(usl)) inter ExpandNumericTypes(FlatternTypes(usr)),
+      mk_(mk_REP`UnionTypeRep(usl), - ) ->
+        r1tp := ExpandNumericTypes(FlatternTypes(usl)) inter ExpandNumericTypes(FlatternTypes({r})),
+      mk_(-,mk_REP`UnionTypeRep(usr)) ->
+        r1tp := ExpandNumericTypes(FlatternTypes({l})) inter ExpandNumericTypes(FlatternTypes(usr)),
+      others ->
+        r1tp := ExpandNumericTypes(FlatternTypes({l})) inter ExpandNumericTypes(FlatternTypes({r}))
+    end;
+    let restp = MergeNumericTypes(r1tp)
+    in
+      cases restp:
+        {}  -> return nil,
+        {e} -> return e,
+        others -> return mk_REP`UnionTypeRep(restp)
+      end);
+\end{vdm_al}
+
+{\em IntersectTypeReps\/} makes a sort of "intelligent" intersection
+betweeen two {\em REP`TypeRep\/}, i.e.\ it also takes into account that
+{\em REP`AllTypeRep\/} can occur in the types.
+The calculation of the intersection is a bit peculiar in that
+it returns {\em REP`AllTypeRep\/} in case the intersection is
+empty.
+
+\begin{vdm_al}
+operations
+  IntersectTypeReps : REP`TypeRep * REP`TypeRep ==> REP`TypeRep
+  IntersectTypeReps(l,r) ==
+    let ltp = cases l:
+                 mk_REP`AllTypeRep() -> {},
+                 mk_REP`UnionTypeRep(usl) -> usl,
+                 others -> {l}
+               end,
+        rtp = cases r:
+                 mk_REP`AllTypeRep() -> {},
+                 mk_REP`UnionTypeRep(usr) -> usr,
+                 others -> {r}
+              end
+    in
+     (dcl restps : set of REP`TypeRep;
+      cases mk_(ltp,rtp):
+        mk_({},{}) -> restps := {mk_REP`AllTypeRep()},
+        mk_(l',{}) -> restps := l',
+        mk_({},r') -> restps := r',
+        others     -> def intertp = { IntersectTypeRepInner(tp1,tp2) | tp1 in set ltp, tp2 in set rtp }
+                      in
+                        if intertp = {}
+                        then restps := {mk_REP`AllTypeRep()}
+                        else restps := dunion intertp
+      end;
+      let restp = MergeNumericTypes(restps)
+      in
+        cases restp:
+          {} -> return l,
+          {e} -> return e,
+          others -> return mk_REP`UnionTypeRep(restp)
+        end);
+
+    IntersectTypeRepInner : REP`TypeRep * REP`TypeRep ==> set of REP`TypeRep
+    IntersectTypeRepInner (TpR1, TpR2) ==
+      cases mk_(TpR1,TpR2) :
+        mk_(t,t),
+        mk_(t, mk_REP`AllTypeRep()),
+        mk_(mk_REP`AllTypeRep(), t) -> return {t},
+
+        mk_(mk_REP`TypeNameRep (name1), mk_REP`TypeNameRep (name2)) ->
+          if TYPE`IsUnionRecursive(TpR2) or TYPE`IsUnionRecursive(TpR1)
+          then return {}
+          else let newtp1 = TcauxLookUpTypeName(name1),
+                   newtp2 = TcauxLookUpTypeName(name2) in
+                if newtp1 = nil or newtp2 = nil
+                then return {}
+                else return {IntersectTypeReps(newtp1,newtp2)},
+
+        mk_(mk_REP`TypeNameRep(name), -) ->
+          if TYPE`IsUnionRecursive(TpR1)
+          then return {}
+          else let newtp = TcauxLookUpTypeName(name)
+               in
+                 if newtp = nil
+                 then return {}
+                 else return {IntersectTypeReps(newtp, TpR2)},
+
+        mk_(-, mk_REP`TypeNameRep(name)) ->
+          if TYPE`IsUnionRecursive(TpR2)
+          then return {}
+          else let newtp = TcauxLookUpTypeName(name)
+               in
+                 if newtp = nil
+                 then return {}
+                 else return {IntersectTypeReps(TpR1, newtp)},
+
+        mk_(mk_REP`NumericTypeRep(-),mk_REP`NumericTypeRep(-)) ->
+           let NumTp1 = ExpandNumericTypes({TpR1}),
+               NumTp2 = ExpandNumericTypes({TpR2}) in
+           return NumTp1 inter NumTp2,
+
+        mk_(mk_REP`SetTypeRep(STp1),mk_REP`SetTypeRep(STp2)) ->
+          def intertp = IntersectTypeReps(STp1,STp2) in
+             return {mk_REP`SetTypeRep(intertp)},
+
+        mk_(mk_REP`SeqTypeRep(STp1),mk_REP`SeqTypeRep(STp2)) ->
+          def intertp = IntersectTypeReps(STp1,STp2) in
+             return {mk_REP`SeqTypeRep(intertp)},
+
+        mk_(mk_REP`ProductTypeRep(PTp1), mk_REP`ProductTypeRep(PTp2)) ->
+          if len PTp1 = len PTp2 and
+             forall i in set inds PTp1 & TYPE`IsCompatible(<POS>,PTp1(i),PTp2(i))
+          then
+             def intertps = [ IntersectTypeReps(PTp1(i),PTp2(i)) | i in set inds PTp1 ]
+             in
+                return {mk_REP`ProductTypeRep(intertps)}
+          else
+            return {},
+
+        mk_(mk_REP`CompositeTypeRep(LhsName,LhsFields),
+            mk_REP`CompositeTypeRep(RhsName,RhsFields)) ->
+          if LhsName = RhsName and
+             len LhsFields = len RhsFields
+          then
+             def intertps = [ IntersectTypeReps(LhsFields(i).tp,RhsFields(i).tp) | i in set inds LhsFields ]
+             in
+               return { mk_REP`CompositeTypeRep(LhsName,
+                        [ mk_REP`FieldRep(LhsFields(i).sel, intertps(i), LhsFields(i).dc)
+                         | i in set inds LhsFields ])
+                    }
+          else
+              return {},
+
+          mk_(mk_REP`PartialFnTypeRep(LhsDom, LhsRng),
+              mk_REP`PartialFnTypeRep(RhsDom, RhsRng)) ->
+           (dcl fndomtp : REP`DiscretionaryTypeRep | REP`AllTypeRep;
+            cases mk_(LhsDom,RhsDom):
+              mk_(mk_REP`AllTypeRep(),mk_REP`AllTypeRep()) -> fndomtp := mk_REP`AllTypeRep(),
+              mk_(domtp, mk_REP`AllTypeRep()),
+              mk_(mk_REP`AllTypeRep(), domtp) -> fndomtp := domtp,
+              mk_(ldom,rdom) -> if len ldom = len rdom
+                                then fndomtp := [ IntersectTypeReps(ldom(i),rdom(i)) | i in set inds ldom ]
+                                else fndomtp := mk_REP`AllTypeRep()
+            end;
+            def fnrngtp = IntersectTypeReps(LhsRng,RhsRng)
+            in return {mk_REP`PartialFnTypeRep(fndomtp,fnrngtp)}),
+
+          mk_(mk_REP`TotalFnTypeRep(LhsDom, LhsRng),
+              mk_REP`PartialFnTypeRep(RhsDom, RhsRng)) ->
+           (dcl fndomtp : REP`DiscretionaryTypeRep | REP`AllTypeRep;
+            cases mk_(LhsDom,RhsDom):
+              mk_(mk_REP`AllTypeRep(),mk_REP`AllTypeRep()) -> fndomtp := mk_REP`AllTypeRep(),
+              mk_(domtp, mk_REP`AllTypeRep()),
+              mk_(mk_REP`AllTypeRep(), domtp) -> fndomtp := domtp,
+              mk_(ldom,rdom) -> if len ldom = len rdom
+                                then fndomtp := [ IntersectTypeReps(ldom(i),rdom(i)) | i in set inds ldom ]
+                                else fndomtp := mk_REP`AllTypeRep()
+            end;
+            def fnrngtp = IntersectTypeReps(LhsRng,RhsRng)
+            in return {mk_REP`PartialFnTypeRep(fndomtp,fnrngtp)}),
+
+          mk_(mk_REP`PartialFnTypeRep(LhsDom, LhsRng),
+              mk_REP`TotalFnTypeRep(RhsDom, RhsRng)) ->
+           (dcl fndomtp : REP`DiscretionaryTypeRep | REP`AllTypeRep;
+            cases mk_(LhsDom,RhsDom):
+              mk_(mk_REP`AllTypeRep(),mk_REP`AllTypeRep()) -> fndomtp := mk_REP`AllTypeRep(),
+              mk_(domtp, mk_REP`AllTypeRep()),
+              mk_(mk_REP`AllTypeRep(), domtp) -> fndomtp := domtp,
+              mk_(ldom,rdom) -> if len ldom = len rdom
+                                then fndomtp := [ IntersectTypeReps(ldom(i),rdom(i)) | i in set inds ldom ]
+                                else fndomtp := mk_REP`AllTypeRep()
+            end;
+            def fnrngtp = IntersectTypeReps(LhsRng,RhsRng)
+            in return {mk_REP`PartialFnTypeRep(fndomtp,fnrngtp)}),
+
+          mk_(mk_REP`TotalFnTypeRep(LhsDom, LhsRng),
+              mk_REP`TotalFnTypeRep(RhsDom, RhsRng)) ->
+           (dcl fndomtp : REP`DiscretionaryTypeRep | REP`AllTypeRep;
+            cases mk_(LhsDom,RhsDom):
+              mk_(mk_REP`AllTypeRep(),mk_REP`AllTypeRep()) -> fndomtp := mk_REP`AllTypeRep(),
+              mk_(domtp, mk_REP`AllTypeRep()),
+              mk_(mk_REP`AllTypeRep(), domtp) -> fndomtp := domtp,
+              mk_(ldom,rdom) -> if len ldom = len rdom
+                                then fndomtp := [ IntersectTypeReps(ldom(i),rdom(i)) | i in set inds ldom ]
+                                else fndomtp := mk_REP`AllTypeRep()
+            end;
+            def fnrngtp = IntersectTypeReps(LhsRng,RhsRng)
+            in return {mk_REP`TotalFnTypeRep(fndomtp,fnrngtp)}),
+
+        mk_(mk_REP`GeneralMapTypeRep(LhsDom,LhsRng),
+            mk_REP`GeneralMapTypeRep(RhsDom,RhsRng)) ->
+          def domset = IntersectTypeReps(LhsDom,RhsDom);
+              rngset = IntersectTypeReps(LhsRng,RhsRng) in
+          return {mk_REP`GeneralMapTypeRep(domset,rngset)},
+
+        mk_(mk_REP`GeneralMapTypeRep(LhsDom,LhsRng),
+            mk_REP`InjectiveMapTypeRep(RhsDom,RhsRng)) ->
+          def domset = IntersectTypeReps(LhsDom,RhsDom);
+              rngset = IntersectTypeReps(LhsRng,RhsRng) in
+          return {mk_REP`InjectiveMapTypeRep(domset,rngset)},
+
+        mk_(mk_REP`InjectiveMapTypeRep(LhsDom,LhsRng),
+            mk_REP`GeneralMapTypeRep(RhsDom,RhsRng)) ->
+          def domset = IntersectTypeReps(LhsDom,RhsDom);
+              rngset = IntersectTypeReps(LhsRng,RhsRng) in
+          return {mk_REP`InjectiveMapTypeRep(domset,rngset)},
+
+        mk_(mk_REP`InjectiveMapTypeRep(LhsDom,LhsRng),
+            mk_REP`InjectiveMapTypeRep(RhsDom,RhsRng)) ->
+          def domset = IntersectTypeReps(LhsDom,RhsDom);
+              rngset = IntersectTypeReps(LhsRng,RhsRng) in
+          return {mk_REP`InjectiveMapTypeRep(domset,rngset)},
+
+        mk_(mk_REP`UnionTypeRep(Lhs), -) ->
+          return { IntersectTypeReps(tp,TpR2) | tp in set Lhs },
+
+        mk_(-, mk_REP`UnionTypeRep(Rhs)) ->
+          return { IntersectTypeReps(TpR1,tp) | tp in set Rhs },
+
+        others -> return {}
+      end;
+\end{vdm_al}
+
+The auxiliary function $FlatternTypes$ is needed to unfold types
+referred to by name when one wish to find out what the intersection of
+two types is.
+
+\begin{vdm_al}
+operations
+  FlatternTypes: set of REP`TypeRep ==> set of REP`TypeRep
+  FlatternTypes(tps) ==
+--    dunion { if is_REP`TypeNameRep(tp)
+--             then if TYPE`IsUnionRecursive(tp)
+--                  then {}
+--                  else let newtp = TcauxLookUpTypeName(tp.nm)
+--                       in
+--                         if newtp = nil
+--                         then {}
+--                         else if is_REP`UnionTypeRep(newtp)
+--                              then FlatternTypes(newtp.tps)
+--                              else {newtp}
+--             else {tp}
+--           | tp in set tps};
+   (dcl res : set of REP`TypeRep := {};
+    for all tp in set tps do
+      if is_REP`TypeNameRep(tp)
+      then
+       (if not TYPE`IsUnionRecursive(tp)
+        then let newtp = TcauxLookUpTypeName(tp.nm)
+             in
+               if newtp <> nil
+               then if is_REP`UnionTypeRep(newtp)
+                    then res := res union FlatternTypes(newtp.tps)
+                    else res := res union {newtp})
+      else res := res union {tp};
+    return res);
+
+  ExtractIntNumType : REP`TypeRep ==> REP`TypeRep
+  ExtractIntNumType (numtp) ==
+    if numtp = mk_REP`AllTypeRep()
+    then return mk_REP`NumericTypeRep(<INTEGER>)
+    else
+      def r1tp = ExtractNumericTypeInner(numtp) in
+        cases r1tp :
+          {mk_REP`NumericTypeRep(<REAL>)} -> return mk_REP`NumericTypeRep(<INTEGER>),
+          {mk_REP`NumericTypeRep(<RAT>)}  -> return mk_REP`NumericTypeRep(<INTEGER>),
+          {e} -> return e,
+          others -> error
+        end;
+
+  ExtractNumericType : REP`TypeRep ==> REP`TypeRep
+  ExtractNumericType (numtp) ==
+    if numtp = mk_REP`AllTypeRep()
+    then return mk_REP`NumericTypeRep(<REAL>)
+    else
+      def r1tp = ExtractNumericTypeInner(numtp) in
+        cases r1tp :
+          {}     -> return mk_REP`AllTypeRep (),
+          {e}    -> return e,
+          others -> error
+        end;
+
+  ExtractNumericTypeInner : REP`TypeRep ==> set of REP`TypeRep
+  ExtractNumericTypeInner (numtp) ==
+    cases numtp:
+      mk_REP`TypeNameRep(nm) -> if TYPE`IsUnionRecursive(numtp)
+                                then return {}
+                                else let tp = TcauxLookUpTypeName(nm)
+                                     in
+                                       if tp = nil
+                                       then return {}
+                                       else return ExtractNumericTypeInner(tp),
+      mk_REP`NumericTypeRep(-) -> return {numtp},
+      mk_REP`UnionTypeRep(Utp) -> def r1tp = dunion {ExtractNumericTypeInner(i) | i in set Utp}
+                                  in return MergeNumericTypes(r1tp),
+      mk_REP`InvTypeRep(-,tp,-) -> return ExtractNumericTypeInner(tp),
+      others -> return {}
+    end;
+
+functions
+  UnmaskSetType: TYPE`Ind * REP`TypeRep -> [REP`TypeRep]
+  UnmaskSetType (i, tp) ==
+    cases tp:
+    mk_REP`EmptySetTypeRep(-)  -> nil,
+    mk_REP`SetTypeRep(sttp)   -> sttp,
+    mk_REP`UnionTypeRep(utps) -> let t_s = {UnmaskSetType(i,utp) | utp in set utps}
+                                 in
+                                   let new_ts = t_s\{nil}
+                                   in
+                                     cases new_ts:
+                                       {} -> nil,
+                                       {e} -> e,
+                                       others -> mk_REP`UnionTypeRep(new_ts)
+                                      end,
+    mk_REP`AllTypeRep() -> mk_REP`AllTypeRep(),
+    others -> undefined
+  end;
+
+  UnmaskSetTypeForLoop: TYPE`Ind * REP`TypeRep -> [REP`TypeRep]
+  UnmaskSetTypeForLoop (i, tp) ==
+    cases tp:
+      mk_REP`EmptySetTypeRep(-)  -> nil,
+      mk_REP`SetTypeRep(sttp)   -> sttp,
+      mk_REP`UnionTypeRep(utps) -> let t_s = {UnmaskSetType(i,utp) | utp in set utps}
+                                   in
+                                     let new_ts = t_s\{nil}
+                                     in
+                                       cases new_ts:
+                                         {} -> nil,
+                                         {e} -> e,
+                                         others -> mk_REP`UnionTypeRep(new_ts)
+                                       end,
+      others -> undefined
+    end;
+operations
+  ExtractSetType : REP`TypeRep ==> REP`TypeRep
+  ExtractSetType (sttp) ==
+    def r1tp = ExtractSetTypeInner(sttp)
+    in
+      cases r1tp :
+        {}     -> return mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
+        {e}    -> return e,
+        others -> return mk_REP`UnionTypeRep(r1tp)
+      end;
+
+  ExtractSetTypeInner : REP`TypeRep ==> set of REP`TypeRep
+  ExtractSetTypeInner (sttp) ==
+    cases sttp:
+      mk_REP`TypeNameRep(nm) -> if TYPE`IsUnionRecursive(sttp)
+                                then return {}
+                                else
+                                  let tp = TcauxLookUpTypeName(nm)
+                                  in
+                                    if tp = nil
+                                    then return {}
+                                    else return ExtractSetTypeInner(tp),
+      mk_REP`InvTypeRep(-,tp,-) -> return ExtractSetTypeInner(tp),
+      --mk_REP`AllTypeRep() -> {mk_REP`SetTypeRep(mk_REP`AllTypeRep())},
+      mk_REP`TypeVarRep(-),
+      mk_REP`AllTypeRep() -> return {mk_REP`SetTypeRep(mk_REP`AllTypeRep()), mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep())},
+      mk_REP`SetTypeRep(-) -> return {sttp},
+      mk_REP`EmptySetTypeRep(-) -> return {sttp},
+      mk_REP`UnionTypeRep(utps) -> return dunion { ExtractSetTypeInner(utp) | utp in set utps},
+      others -> return {}
+    end;
+\end{vdm_al}
+
+\begin{vdm_al}
+functions
+  SetTypeUnion: set of REP`TypeRep -> REP`TypeRep --OK
+  SetTypeUnion (stp_s) ==
+    cases stp_s:
+      {}     -> mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
+      {tp}   -> tp,
+      others -> let ust = mk_REP`SetTypeRep(mk_REP`AllTypeRep()),
+                    est = mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep())
+                in
+                  let St1 in set stp_s
+                  in
+                    let St2 in set stp_s \ {St1}
+                    in
+                      let mk_(stop,newtp) = cases mk_(St1,St2) :
+                                              mk_((ust),-), mk_(-,(ust)) -> mk_(true,ust),
+                                              mk_((est),-), mk_(-,(est)) ->
+                                                mk_(true,mk_REP`UnionTypeRep({est,SetTypeUnion(stp_s \ {est})})),
+                                              mk_(mk_REP`SetTypeRep(sl), mk_REP`SetTypeRep(sr)) ->
+                                                mk_(false,mk_REP`SetTypeRep(MergeTypes(sl,sr))),
+                                              mk_(mk_REP`UnionTypeRep(utps), mk_REP`SetTypeRep(-)) ->
+                                                mk_(false,SetTypeUnion(utps union {St2})),
+                                              mk_(mk_REP`SetTypeRep(-), mk_REP`UnionTypeRep(utps)) ->
+                                                mk_(false,SetTypeUnion(utps union {St1})),
+                                              mk_(mk_REP`UnionTypeRep(ul), mk_REP`UnionTypeRep(ur)) ->
+                                                mk_(false,SetTypeUnion(ul union ur))
+                                            end
+                      in
+                        if stop or card stp_s = 2
+                        then newtp
+                        else SetTypeUnion({newtp} union stp_s \ {St1,St2})
+    end;
+
+operations
+  SetTypeInter: set of REP`TypeRep ==> REP`TypeRep --OK
+  SetTypeInter (stp_s) ==
+    cases stp_s:
+      {}     -> return mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
+      {tp}   -> return tp,
+      others ->
+      let ust = mk_REP`SetTypeRep(mk_REP`AllTypeRep()),
+          est = mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()) in
+      let St1 in set stp_s in
+      let St2 in set stp_s \ {St1}
+      in
+       (dcl newtp : REP`TypeRep;
+        cases mk_(St1,St2) :
+          mk_((est),-), mk_(-,(est)) -> newtp := est,
+          mk_((ust),St), mk_(St,(ust)) -> newtp := St,
+          mk_(mk_REP`SetTypeRep(sl), mk_REP`SetTypeRep(sr)) ->
+              def tp = IntersectTypes(sl,sr)
+              in
+                if tp = nil
+                then newtp := mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep())
+                else newtp := mk_REP`SetTypeRep(tp),
+          mk_(mk_REP`UnionTypeRep(utps), mk_REP`SetTypeRep(-)) ->
+            def s = {SetTypeInter({utp,St2}) | utp in set utps} \ {mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep())} -- XXXX
+            in
+              cases s:
+                {} -> newtp := mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
+                {tp} -> newtp := tp,
+                others -> newtp := mk_REP`UnionTypeRep(s)
+              end,
+          mk_(mk_REP`SetTypeRep(-), mk_REP`UnionTypeRep(utps)) ->
+            def s = {SetTypeInter({utp,St1})| utp in set utps} \ {mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep())} -- XXXX
+            in
+              cases s:
+                {} -> newtp := mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
+                {tp} -> newtp := tp,
+                others -> newtp := mk_REP`UnionTypeRep(s)
+              end,
+          mk_(mk_REP`UnionTypeRep(ul), mk_REP`UnionTypeRep(ur)) ->
+            def s = {SetTypeInter({ultp,urtp})
+                    | ultp in set ul \ {mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep())},
+                      urtp in set ur \ {mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep())}}
+            in
+              cases s:
+                {} -> newtp := mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
+                {tp} -> newtp := tp,
+                others -> newtp := mk_REP`UnionTypeRep(s)
+              end
+        end;
+        if card stp_s = 2
+        then return newtp
+        else return SetTypeInter({newtp} union stp_s \ {St1,St2}))
+    end;
+
+operations
+  SetTypeMinus: REP`TypeRep * REP`TypeRep ==> [REP`TypeRep]
+  SetTypeMinus (St1, St2) ==
+    let est = mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep())
+    in
+      if TYPE`IsOverlapping (St1,St2, {})
+      then
+        cases St1:
+          (est) -> return est,
+          mk_REP`SetTypeRep(-) -> return mk_REP`UnionTypeRep({St1,est}),
+          mk_REP`UnionTypeRep(utp) -> return mk_REP`UnionTypeRep(utp union {est}),
+          others -> error
+        end
+      else return nil;
+
+functions
+  UnmaskSeqType: TYPE`Ind * REP`TypeRep -> [REP`TypeRep]
+  UnmaskSeqType (i,tp) ==
+    cases tp:
+      mk_REP`AllTypeRep(),
+      mk_REP`TypeVarRep(-)      -> mk_REP`AllTypeRep(),
+      mk_REP`EmptySeqTypeRep(-) -> nil,
+      mk_REP`SeqTypeRep(sqtp)   -> sqtp,
+      mk_REP`UnionTypeRep(utps) -> let t_s = {UnmaskSeqType(i,utp) | utp in set utps}
+                                   in
+                                     --if i = <POS>
+                                     --then let new_ts = t_s\{nil}
+                                     --     in
+                                     --       cases new_ts:
+                                     --         {} -> nil,
+                                     --         {e} -> e,
+                                     --         others -> mk_REP`UnionTypeRep(new_ts)
+                                     --       end
+                                     --else if nil in set t_s
+                                     --     then nil
+                                     --     else cases t_s:
+                                     --            {} -> nil,
+                                     --            {e} -> e,
+                                     --            others -> mk_REP`UnionTypeRep(t_s)
+                                     --          end,
+                                     let new_ts = t_s\{nil}
+                                     in
+                                       cases new_ts:
+                                         {} -> nil,
+                                         {e} -> e,
+                                         others -> mk_REP`UnionTypeRep(new_ts)
+                                       end,
+      others -> undefined
+    end;
+
+  UnmaskSeqTypeForLoop: TYPE`Ind * REP`TypeRep -> [REP`TypeRep]
+  UnmaskSeqTypeForLoop(i,tp) ==
+    cases tp:
+      mk_REP`EmptySeqTypeRep(-)   -> nil,
+      mk_REP`SeqTypeRep(sqtp)    -> sqtp,
+      mk_REP`UnionTypeRep(utps)  -> let t_s = {UnmaskSeqType(i,utp) | utp in set utps}
+                                    in let new_ts = t_s\{nil}
+                                           in
+                                             cases new_ts:
+                                             {} -> nil,
+                                             {e} -> e,
+                                             others ->
+                                               mk_REP`UnionTypeRep(new_ts)
+                                             end,
+      others -> undefined
+    end;
+
+operations
+  ExtractSeqType : REP`TypeRep ==> REP`TypeRep
+  ExtractSeqType (sqtp) ==
+    def r1tp = ExtractSeqTypeInner(sqtp) in
+      cases r1tp :
+        {}     -> return mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()),
+        {e}    -> return e,
+        others -> return mk_REP`UnionTypeRep (r1tp)
+      end;
+
+  ExtractSeqTypeInner : REP`TypeRep ==> set of REP`TypeRep
+  ExtractSeqTypeInner (sqtp) ==
+    cases sqtp:
+      mk_REP`TypeNameRep(nm) -> if TYPE`IsUnionRecursive(sqtp)
+                                then return {}
+                                else let tp = TcauxLookUpTypeName(nm)
+                                     in
+                                       if tp = nil
+                                       then return {}
+                                       else return ExtractSeqTypeInner(tp),
+      mk_REP`TypeVarRep(-),
+      mk_REP`AllTypeRep() -> return {mk_REP`SeqTypeRep(mk_REP`AllTypeRep()), mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep())},
+      mk_REP`EmptySeqTypeRep(-) -> return {sqtp},
+      mk_REP`InvTypeRep(-,t,-)  -> return ExtractSeqTypeInner(t),
+      mk_REP`SeqTypeRep(-)      -> return {sqtp},
+      mk_REP`UnionTypeRep(Utp)  -> return dunion { ExtractSeqTypeInner(i) | i in set Utp},
+      others -> return {}
+    end;
+
+functions
+  SeqTypeConc: set of REP`TypeRep -> REP`TypeRep
+  SeqTypeConc (stp_s) ==
+    cases stp_s:
+      {}     -> mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()),
+      {tp}   -> tp,
+      others ->
+      let usq = mk_REP`SeqTypeRep(mk_REP`AllTypeRep()),
+          esq = mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()) in
+      let Sq1 in set stp_s in
+      let Sq2 in set stp_s \ {Sq1} in
+      let newtp =
+        cases mk_(Sq1,Sq2) :
+          mk_((usq),-), mk_(-,(usq))   -> usq,
+          mk_((esq),sl),
+          mk_(sl,(esq)) -> sl,
+          mk_(mk_REP`SeqTypeRep(sl), mk_REP`SeqTypeRep(sr)) -> mk_REP`SeqTypeRep(MergeTypes(sl,sr)),
+          mk_(mk_REP`UnionTypeRep(utps), mk_REP`SeqTypeRep(-)) -> SeqTypeConc(utps union {Sq2}),
+          mk_(mk_REP`SeqTypeRep(-), mk_REP`UnionTypeRep(utps)) -> SeqTypeConc(utps union {Sq1}),
+          mk_(mk_REP`UnionTypeRep(ul), mk_REP`UnionTypeRep(ur)) -> SeqTypeConc(ul union ur)
+        end
+      in
+        if card stp_s = 2
+        then newtp
+        else SeqTypeConc({newtp} union stp_s \ {Sq1,Sq2})
+    end;
+
+  SeqMapTypeModify: REP`TypeRep * REP`TypeRep * REP`TypeRep -> REP`TypeRep
+  SeqMapTypeModify(seqtp,maptp,modtp) ==
+    let Rng =
+       cases modtp:
+          mk_REP`GeneralMapTypeRep(-,r),
+          mk_REP`InjectiveMapTypeRep(-,r) -> r,
+          mk_REP`UnionTypeRep(utps) ->
+            let u1tp = {r | mk_REP`InjectiveMapTypeRep(-,r) in set utps} union
+                              {r | mk_REP`GeneralMapTypeRep(-,r) in set utps} in
+            let u2tp = MergeNumericTypes(u1tp) in
+              cases u2tp:
+                {} -> undefined,
+                {e} -> e,
+                others -> mk_REP`UnionTypeRep(u2tp)
+              end
+       end
+    in
+      let resseqtp = MergeTypes(seqtp,mk_REP`SeqTypeRep(Rng)),
+          resmaptp = MergeTypes(maptp,modtp)
+      in
+        MergeTypes(resseqtp,resmaptp);
+
+operations
+  RngSubTypeDom: set of REP`TypeRep ==> bool
+  RngSubTypeDom(tps) ==
+--    forall tp in set tps &
+--       cases tp:
+--        mk_REP`TypeNameRep(nm) ->
+--          if TYPE`IsUnionRecursive(tp)
+--          then true
+--          else let fntp = TcauxLookUpTypeName(nm)
+--               in
+--                 if fntp = nil
+--                 then true
+--                 else RngSubTypeDom({fntp}),
+--        mk_REP`AllTypeRep() -> true,
+--        mk_REP`InvTypeRep(-,t,-) -> RngSubTypeDom({t}),
+--        mk_REP`PartialFnTypeRep([d],r),
+--        mk_REP`TotalFnTypeRep([d],r),
+--        mk_REP`GeneralMapTypeRep(d,r),
+--        mk_REP`InjectiveMapTypeRep(d,r) -> TYPE`IsCompatible(<DEF>,r,d),
+--        mk_REP`UnionTypeRep(Utp) -> RngSubTypeDom(Utp),
+--        others -> true
+--       end;
+ (for all tp in set tps do
+   (dcl res : bool := true;
+    cases tp:
+      mk_REP`TypeNameRep(nm)          -> if not TYPE`IsUnionRecursive(tp)
+                                         then let fntp = TcauxLookUpTypeName(nm)
+                                              in
+                                                if fntp <> nil
+                                                then res := RngSubTypeDom({fntp}),
+      mk_REP`AllTypeRep()             -> skip,
+      mk_REP`InvTypeRep(-,t,-)        -> res := RngSubTypeDom({t}),
+      mk_REP`PartialFnTypeRep([d],r),
+      mk_REP`TotalFnTypeRep([d],r),
+      mk_REP`GeneralMapTypeRep(d,r),
+      mk_REP`InjectiveMapTypeRep(d,r) -> res := TYPE`IsCompatible(<DEF>,r,d),
+      mk_REP`UnionTypeRep(Utp)        -> res := RngSubTypeDom(Utp),
+      others                          -> skip
+    end;
+    if not res then return false);
+  return true);
+
+operations
+  ExtractComposeType: TYPE`Ind * REP`TypeRep * REP`TypeRep ==> bool * REP`TypeRep * REP`TypeRep * REP`TypeRep
+  ExtractComposeType(i,lhstp,rhstp) ==
+    def maptp1 = ExtractMapType(lhstp);
+        fntp1  = ExtractFunType(lhstp);
+        maptp2 = ExtractMapType(rhstp);
+        fntp2  = ExtractFunType(rhstp);
+        mk_(mdom1,mrng1) = SplitMapType(maptp1);
+        mk_(mdom2,mrng2) = SplitMapType(maptp2);
+        mk_(fdom1,frng1,tp1ok) = SplitFunType(fntp1);
+        mk_(fdom2,frng2,tp2ok) = SplitFunType(fntp2)
+      in
+       (dcl mcomp : bool,
+            fcomp : bool;
+        if mdom1 = nil
+        then mcomp := mrng2 = nil
+        elseif mrng2 = nil
+        then mcomp := true
+        else mcomp := TYPE`IsCompatible(i,mrng2,mdom1);
+        if fdom1 = nil
+        then fcomp := frng2 = nil
+        elseif frng2 = nil
+        then fcomp := true
+        else fcomp := TYPE`IsCompatible(i,frng2,fdom1);
+
+        def mtp   = if mdom2 = nil or mrng1 = nil
+                    then nil
+                    else mk_REP`GeneralMapTypeRep(mdom2,mrng1);
+            ftp   = if fdom2 = nil or frng1 = nil
+                    then nil
+                    else mk_REP`PartialFnTypeRep([fdom2],frng1);
+            rhsrngtp = if mrng2 = nil and frng2 = nil
+                       then mk_REP`AllTypeRep()
+                       else MergeTypes(frng2,mrng2);
+            lhsdomtp = if mdom1 = nil and fdom1 = nil
+                       then mk_REP`AllTypeRep()
+                       else MergeTypes(mdom1,fdom1)
+        in
+          return 
+          mk_(if i = <POS>
+              then (mcomp and (mtp <> nil or
+                              (maptp1 = mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep())) or
+                              (maptp2 = mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep())))) or
+                   (fcomp and ftp <> nil and (tp1ok or tp2ok))
+              else mcomp and fcomp and tp1ok and tp2ok,
+              cases {mtp,ftp}\ {nil} :
+                {} -> if maptp1 = mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep())
+                      then maptp1
+                      else mk_REP`UnionTypeRep(
+                              {mk_REP`GeneralMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep()),
+                               mk_REP`InjectiveMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep()),
+                               mk_REP`TotalFnTypeRep([mk_REP`AllTypeRep()], mk_REP`AllTypeRep()),
+                               mk_REP`PartialFnTypeRep([mk_REP`AllTypeRep()], mk_REP`AllTypeRep())}),
+               {t} -> t,
+               {t1,t2} -> MergeTypes(t1,t2)
+              end,
+              rhsrngtp,
+              lhsdomtp));
+
+functions
+  SplitMapType: [REP`TypeRep] -> [REP`TypeRep] * [REP`TypeRep]
+  SplitMapType(mtp) ==
+    cases mtp:
+      nil,mk_REP`EmptyMapTypeRep(-,-) -> mk_(nil,nil),
+      mk_REP`GeneralMapTypeRep(Dom,Rng) -> mk_(Dom,Rng),
+      mk_REP`InjectiveMapTypeRep(Dom,Rng) -> mk_(Dom,Rng),
+      mk_REP`UnionTypeRep(utps) ->
+            let d1tp = {u | mk_REP`InjectiveMapTypeRep(u,-) in set utps} union
+                       {u | mk_REP`GeneralMapTypeRep(u,-) in set utps},
+                r1tp = {u | mk_REP`InjectiveMapTypeRep(-,u) in set utps} union
+                       {u | mk_REP`GeneralMapTypeRep(-,u) in set utps}
+            in
+              let d2tp = MergeNumericTypes(d1tp),
+                  r2tp = MergeNumericTypes(r1tp)
+              in
+                let d = cases d2tp:
+                         {} -> undefined,
+                         {e} -> e,
+                         others -> mk_REP`UnionTypeRep(d2tp)
+                        end,
+                    r = cases r2tp:
+                         {} -> undefined,
+                         {e} -> e,
+                         others -> mk_REP`UnionTypeRep(r2tp)
+                        end
+                in
+                  mk_(d,r),
+      others -> undefined
+    end;
+
+  SplitFunType: [REP`TypeRep] -> [REP`TypeRep] * [REP`TypeRep] * bool
+  SplitFunType(ftp) ==
+    cases ftp:
+      nil -> mk_(nil,nil,true),
+      mk_REP`PartialFnTypeRep(Dom,Rng),
+      mk_REP`TotalFnTypeRep(Dom,Rng) ->
+           if len Dom = 1
+           then mk_(Dom(1),Rng,true)
+           else mk_(if len Dom = 0
+                    then mk_REP`AllTypeRep()
+                    else Dom(1),Rng,false),
+      mk_REP`UnionTypeRep(utps) ->
+            let d1tp = {u | mk_REP`TotalFnTypeRep(u,-) in set utps} union
+                       {u | mk_REP`PartialFnTypeRep(u,-) in set utps},
+                r1tp = {u | mk_REP`TotalFnTypeRep(-,u) in set utps} union
+                       {u | mk_REP`PartialFnTypeRep(-,u) in set utps}
+            in
+              let d2tp = MergeNumericTypes({tp_l(1)| tp_l in set d1tp & len tp_l = 1}),
+                  allok = forall tp_l in set d1tp & len tp_l = 1,
+                  r2tp = MergeNumericTypes(r1tp)
+              in
+                let d = cases d2tp:
+                         {} -> undefined,
+                         {e} -> e,
+                         others -> mk_REP`UnionTypeRep(d2tp)
+                        end,
+                    r = cases r2tp:
+                         {} -> undefined,
+                         {e} -> e,
+                         others -> mk_REP`UnionTypeRep(r2tp)
+                        end
+                in
+                  mk_(d,r,allok),
+      others -> undefined
+    end;
+
+operations
+    ExtractFunType : REP`TypeRep ==> [REP`TypeRep]
+    ExtractFunType (fntp) ==
+      def r1tp = ExtractFunTypeInner(fntp) in
+        cases r1tp :
+          {}     -> return nil,
+          {e}    -> return e,
+          others -> return mk_REP`UnionTypeRep(r1tp)
+        end;
+
+    ExtractFunTypeInner : REP`TypeRep ==> set of REP`TypeRep
+    ExtractFunTypeInner (fntp) ==
+      cases fntp:
+        mk_REP`TypeNameRep(nm) -> if TYPE`IsUnionRecursive(fntp)
+                                  then return {}
+                                  else let tp = TcauxLookUpTypeName(nm)
+                                       in
+                                         if tp = nil
+                                         then return {}
+                                         else return ExtractFunTypeInner(tp),
+        mk_REP`AllTypeRep() -> return {mk_REP`PartialFnTypeRep([mk_REP`AllTypeRep()], mk_REP`AllTypeRep())},
+        mk_REP`InvTypeRep(-,t,-) -> return ExtractFunTypeInner(t),
+        mk_REP`PartialFnTypeRep(-,-) -> return {fntp},
+        mk_REP`TotalFnTypeRep(-,-) -> return {fntp},
+        mk_REP`UnionTypeRep(Utp) -> return dunion { ExtractFunTypeInner(i) | i in set Utp},
+        others -> return {}
+      end;
+
+functions
+    UnmaskMapDomType: TYPE`Ind * REP`TypeRep -> [REP`TypeRep]
+    UnmaskMapDomType (i, tp) ==
+      cases tp:
+      --mk_REP`EmptyMapTypeRep(domtp,-) -> domtp,
+      mk_REP`EmptyMapTypeRep(-,-) -> nil,
+      mk_REP`GeneralMapTypeRep(domtp,-) -> domtp,
+      mk_REP`InjectiveMapTypeRep(domtp,-) -> domtp,
+      mk_REP`UnionTypeRep(utps) -> let t_s = {UnmaskMapDomType(i,utp) | utp in set utps}
+                                   in
+                                     let new_ts = t_s\{nil}
+                                     in
+                                       cases new_ts:
+                                         {} -> nil,
+                                         {e} -> e,
+                                         others -> mk_REP`UnionTypeRep(new_ts)
+                                        end,
+      mk_REP`AllTypeRep() -> mk_REP`AllTypeRep(),
+      others -> undefined
+      end;
+
+    UnmaskMapRngType: TYPE`Ind * REP`TypeRep -> [REP`TypeRep]
+    UnmaskMapRngType (i, tp) ==
+      cases tp:
+      --mk_REP`EmptyMapTypeRep(-,rngtp) -> rngtp,
+      mk_REP`EmptyMapTypeRep(-,-) -> nil,
+      mk_REP`GeneralMapTypeRep(-,rngtp) -> rngtp,
+      mk_REP`InjectiveMapTypeRep(-,rngtp) -> rngtp,
+      mk_REP`UnionTypeRep(utps) -> let t_s = {UnmaskMapRngType(i,utp) | utp in set utps}
+                                   in
+                                     let new_ts = t_s\{nil}
+                                     in
+                                       cases new_ts:
+                                         {} -> nil,
+                                         {e} -> e,
+                                         others -> mk_REP`UnionTypeRep(new_ts)
+                                        end,
+      mk_REP`AllTypeRep() -> mk_REP`AllTypeRep(),
+      others -> undefined
+      end;
+
+operations
+    ExtractMapType : REP`TypeRep ==> [REP`TypeRep]
+    ExtractMapType (mptp) ==
+      def r1tp = ExtractMapTypeInner(mptp) in
+        cases r1tp :
+          {}     -> return nil,
+          {e}    -> return e,
+          others -> return mk_REP`UnionTypeRep (r1tp)
+        end;
+
+    ExtractMapTypeInner : REP`TypeRep ==> set of REP`TypeRep
+    ExtractMapTypeInner (mptp) ==
+      cases mptp:
+        mk_REP`EmptyMapTypeRep(-,-) -> return {mptp},
+        mk_REP`TypeNameRep(nm) -> if TYPE`IsUnionRecursive(mptp)
+                                  then return {}
+                                  else let tp = TcauxLookUpTypeName(nm)
+                                       in
+                                         if tp = nil
+                                         then return {}
+                                         else return ExtractMapTypeInner(tp),
+        mk_REP`TypeVarRep(-),
+        mk_REP`AllTypeRep() -> return {mk_REP`GeneralMapTypeRep(mk_REP`AllTypeRep(),mk_REP`AllTypeRep()),
+                                mk_REP`InjectiveMapTypeRep(mk_REP`AllTypeRep(),mk_REP`AllTypeRep()),
+                                mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep())},
+        mk_REP`InvTypeRep(-,t,-) -> return ExtractMapTypeInner(t),
+        mk_REP`GeneralMapTypeRep(-,-) -> return {mptp},
+        mk_REP`InjectiveMapTypeRep(-,-) -> return {mptp},
+        mk_REP`UnionTypeRep(Utp) -> return dunion { ExtractMapTypeInner(i) | i in set Utp},
+        others -> return {}
+      end;
+
+  MapTypeMerge : set of [REP`TypeRep] ==> REP`TypeRep
+  MapTypeMerge (mtp_s) ==
+    cases mtp_s:
+      {},{nil} -> return mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep()),
+      {tp}     -> return tp,
+      others   ->
+      let emp = mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep()),
+          ump = mk_REP`GeneralMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep())
+      in
+      let Mt1 in set mtp_s in
+      let Mt2 in set mtp_s \ {Mt1} in
+      (dcl newtp : REP`TypeRep;
+      cases mk_(Mt1,Mt2):
+        mk_((ump),-), mk_(-,(ump))   -> newtp := ump,
+        mk_((emp),Mt), mk_(Mt,(emp)) -> newtp := Mt,
+        mk_(mk_REP`GeneralMapTypeRep(d1,r1),mk_REP`GeneralMapTypeRep(d2,r2)),
+        mk_(mk_REP`GeneralMapTypeRep(d1,r1),mk_REP`InjectiveMapTypeRep(d2,r2)),
+        mk_(mk_REP`InjectiveMapTypeRep(d1,r1),mk_REP`GeneralMapTypeRep(d2,r2)),
+        mk_(mk_REP`InjectiveMapTypeRep(d1,r1),mk_REP`InjectiveMapTypeRep(d2,r2)) ->
+          let dres = MergeTypes(d1,d2),
+              rres = MergeTypes(r1,r2) in
+            newtp := mk_REP`GeneralMapTypeRep(dres,rres),
+        mk_(mk_REP`UnionTypeRep(utps),mk_REP`GeneralMapTypeRep(-,-)),
+        mk_(mk_REP`UnionTypeRep(utps),mk_REP`InjectiveMapTypeRep(-,-)) -> newtp := MapTypeMerge(utps union {Mt2}),
+        mk_(mk_REP`GeneralMapTypeRep(-,-), mk_REP`UnionTypeRep(utps)),
+        mk_(mk_REP`InjectiveMapTypeRep(-,-), mk_REP`UnionTypeRep(utps)) -> newtp := MapTypeMerge(utps union {Mt1}),
+        mk_(mk_REP`UnionTypeRep(ul), mk_REP`UnionTypeRep(ur)) -> newtp := MapTypeMerge(ul union ur)
+      end;
+      if card mtp_s = 2
+      then if TYPE`IsCompatible(<POS>, newtp, emp)
+           then return newtp
+           else if is_REP`UnionTypeRep(newtp)
+                then let mk_REP`UnionTypeRep(tps) = newtp
+                     in return mk_REP`UnionTypeRep(tps union {emp})
+                else return mk_REP`UnionTypeRep({newtp} union {emp})
+      else return MapTypeMerge({newtp} union (mtp_s \ {Mt1,Mt2})))
+    end;
+\end{vdm_al}
+
+The functions $MapTypeDomRestrict$ and $MapTypeRngRestrict$ yield the
+expected map type from performing some kind of ``map restrict''
+operation. In addition it returns \const{OK} in the normal case,
+whereas it yields \const{NOTOVERLAP}
+if the restriction set and the
+domain (or range) of the map are disjoint and \const{EMPTYMAP} if an
+empty map is used. These situations are then
+reported as warnings in the corresponding expression functions where
+these functions are used.
+
+\begin{vdm_al}
+
+    MapTypeDomRestrict : REP`TypeRep * [REP`TypeRep] ==> REP`TypeRep * (<OK> | <NOTOVERLAP> | <EMPTYMAP>)
+    MapTypeDomRestrict (St, Mt) ==
+      let s1tp = cases St:
+                   mk_REP`EmptySetTypeRep(-) -> nil,
+                   mk_REP`SetTypeRep(s) -> s,
+                   mk_REP`UnionTypeRep(utps) ->
+                     let u1tp = {u | mk_REP`SetTypeRep(u) in set utps} in
+                     let u2tp = MergeNumericTypes(u1tp) in
+                       cases u2tp:
+                         {} -> undefined,
+                         {e} -> e,
+                         others -> mk_REP`UnionTypeRep(u2tp)
+                       end,
+                   others -> undefined
+                 end in
+      let m1tp = cases Mt:
+                   nil, mk_REP`EmptyMapTypeRep(-,-) -> nil,
+                   mk_REP`GeneralMapTypeRep(Dom,-) -> Dom,
+                   mk_REP`InjectiveMapTypeRep(Dom,-) -> Dom,
+                   mk_REP`UnionTypeRep(utps) ->
+                     let u1tp = {u | mk_REP`InjectiveMapTypeRep(u,-)
+                                     in set utps} union
+                                {u | mk_REP`GeneralMapTypeRep(u,-)
+                                     in set utps} in
+                     let u2tp = MergeNumericTypes(u1tp) in
+                       cases u2tp:
+                         {} -> undefined,
+                         {e} -> e,
+                         others -> mk_REP`UnionTypeRep(u2tp)
+                       end,
+                   others -> undefined
+                 end in
+        if m1tp = nil
+        then return mk_(Mt,<EMPTYMAP>)
+        elseif s1tp = nil or TYPE`IsOverlapping (s1tp,m1tp, {})
+        then
+          let emp = mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep()) in
+            cases Mt:
+              mk_REP`UnionTypeRep(u) -> return mk_(mk_REP`UnionTypeRep(u union {emp}),<OK>),
+              others                 -> return mk_(mk_REP`UnionTypeRep({Mt, emp}),<OK>)
+            end
+        else
+          return mk_(Mt,<NOTOVERLAP>);
+
+    MapTypeRngRestrict : [REP`TypeRep] * REP`TypeRep ==> REP`TypeRep * (<OK> | <NOTOVERLAP> | <EMPTYMAP>)
+    MapTypeRngRestrict (Mt, St) ==
+      let s1tp = cases St:
+                   mk_REP`EmptySetTypeRep(-) -> nil,
+                   mk_REP`SetTypeRep(s) -> s,
+                   mk_REP`UnionTypeRep(utps) ->
+                     let u1tp = {u | mk_REP`SetTypeRep(u) in set utps} in
+                     let u2tp = MergeNumericTypes(u1tp) in
+                       cases u2tp:
+                         {} -> undefined,
+                         {e} -> e,
+                         others -> mk_REP`UnionTypeRep(u2tp)
+                       end,
+                   others -> undefined
+                 end in
+      let m1tp = cases Mt:
+                   nil, mk_REP`EmptyMapTypeRep(-,-) -> nil,
+                   mk_REP`GeneralMapTypeRep(-,Rng) -> Rng,
+                   mk_REP`InjectiveMapTypeRep(-,Rng) -> Rng,
+                   mk_REP`UnionTypeRep(utps) ->
+                     let u1tp = {u | mk_REP`InjectiveMapTypeRep(-,u) in set utps} union
+                                {u | mk_REP`GeneralMapTypeRep(-,u) in set utps} in
+                     let u2tp = MergeNumericTypes(u1tp) in
+                       cases u2tp:
+                         {} -> undefined,
+                         {e} -> e,
+                         others -> mk_REP`UnionTypeRep(u2tp)
+                       end,
+                   others -> undefined
+                 end in
+        if m1tp = nil
+        then return mk_(Mt,<EMPTYMAP>)
+        elseif s1tp = nil or TYPE`IsOverlapping (s1tp,m1tp, {}) then
+          let emp = mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep()) in
+            cases Mt:
+              mk_REP`UnionTypeRep(u) -> return mk_(mk_REP`UnionTypeRep(u union {emp}),<OK>),
+              others                 -> return mk_(mk_REP`UnionTypeRep({Mt, emp}),<OK>)
+            end
+        else
+          return mk_(Mt,<NOTOVERLAP>);
+
+functions
+  InverseMapType: [REP`TypeRep] -> REP`TypeRep
+  InverseMapType(tp) ==
+    cases tp:
+      nil,
+      mk_REP`EmptyMapTypeRep(-,-) -> mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep()),
+      mk_REP`GeneralMapTypeRep(dtp,rtp) -> mk_REP`GeneralMapTypeRep(rtp,dtp),
+      mk_REP`InjectiveMapTypeRep(dtp,rtp) -> mk_REP`InjectiveMapTypeRep(rtp,dtp),
+      mk_REP`UnionTypeRep(utps) -> mk_REP`UnionTypeRep({InverseMapType(t) | t in set utps
+                            & is_REP`GeneralMapTypeRep(t) or
+                              is_REP`InjectiveMapTypeRep(t)}),
+      mk_REP`AllTypeRep() -> mk_REP`AllTypeRep()
+    end;
+
+operations
+    ExtractCompositeType : REP`TypeRep ==> [REP`TypeRep]
+    ExtractCompositeType (cptp) ==
+      def r1tp = ExtractCompositeTypeInner(cptp)
+      in
+        cases r1tp :
+          {}     -> return nil,
+          {e}    -> return e,
+          others -> return mk_REP`UnionTypeRep (r1tp)
+        end;
+
+    ExtractCompositeTypeInner : REP`TypeRep ==> set of REP`TypeRep
+    ExtractCompositeTypeInner (cptp) ==
+      cases cptp:
+        mk_REP`TypeNameRep(nm)       -> if TYPE`IsUnionRecursive(cptp)
+                                        then return {}
+                                        else let tp = TcauxLookUpTypeName(nm)
+                                             in
+                                               if tp = nil
+                                               then return {}
+                                               else return ExtractCompositeTypeInner(tp),
+        mk_REP`InvTypeRep(-,tp,-)    -> return ExtractCompositeTypeInner(tp),
+        mk_REP`AllTypeRep()          -> return {mk_REP`CompositeTypeRep(mk_AS`Name([],CI`NilContextId),[])},
+        -- NOTICE that no context information is provided for the AS`Name
+        mk_REP`CompositeTypeRep(-,-) -> return {cptp},
+        mk_REP`UnionTypeRep(Utp)     -> return dunion { ExtractCompositeTypeInner(i) | i in set Utp},
+        others -> return {}
+      end;
+
+    ExtractProductType : REP`TypeRep * nat * (<EQ>|<GE>) ==> [REP`ProductTypeRep]
+    ExtractProductType (tp, n, op) ==
+      def r1tp = ExtractProductTypeInner(tp,n,op)
+      in
+        cases r1tp :
+          {}     -> return nil,
+          {e}    -> return e,
+          others -> return mk_REP`ProductTypeRep(MakeOneProductTypeRep(r1tp))
+        end;
+
+    ExtractProductTypeInner : REP`TypeRep * nat * (<EQ>|<GE>) ==> set of REP`ProductTypeRep
+    ExtractProductTypeInner (tp,n,op) ==
+      cases tp:
+        mk_REP`TypeNameRep(nm)    -> if TYPE`IsUnionRecursive(tp)
+                                     then return {}
+                                     else let t = TcauxLookUpTypeName(nm)
+                                          in
+                                            if t = nil
+                                            then return {}
+                                            else return ExtractProductTypeInner(t,n,op),
+        mk_REP`InvTypeRep(-,tp,-) -> return ExtractProductTypeInner(tp,n,op),
+        mk_REP`AllTypeRep()       -> return {mk_REP`ProductTypeRep([mk_REP`AllTypeRep()| - in set {1,...,n}])},
+        mk_REP`ProductTypeRep(s)  -> if CompareProductLength (len s,n,op)
+                                     then return {tp}
+                                     else return {},
+        mk_REP`UnionTypeRep(Utp)  -> return dunion { ExtractProductTypeInner(i,n,op) | i in set Utp},
+        others -> return {}
+      end;
+
+functions
+    CompareProductLength : int * int * (<EQ>|<GE>) +> bool
+    CompareProductLength(s,n,op) ==
+      cases op:
+        <EQ> -> s = n,
+        <GE> -> true --s >= n
+      end;
+
+#ifdef VDMPP
+operations
+    ExtractSetObjRefType : REP`TypeRep ==> [REP`TypeRep]
+    ExtractSetObjRefType(stp) ==
+      cases ExtractSetType(stp):
+        mk_REP`SetTypeRep(rtp) -> return ExtractObjRefType(rtp),
+        mk_REP`UnionTypeRep(utps) ->
+          def utps2 = {ExtractObjRefType(rtp) | mk_REP`SetTypeRep(rtp) in set utps} \ {nil}
+          in
+            cases utps2:
+              {} -> return nil,
+              {e} -> return e,
+              others -> return mk_REP`UnionTypeRep(utps2)
+            end,
+        others -> return nil
+      end;
+
+    ExtractObjRefType : REP`TypeRep ==> [REP`TypeRep]
+    ExtractObjRefType(cptp) ==
+      def r1tp = ExtractObjectTypeInner(cptp)
+      in
+        cases r1tp:
+          {}     -> return nil,
+          {e}    -> return e,
+          others -> return mk_REP`UnionTypeRep (r1tp)
+        end;
+
+    ExtractObjectTypeInner : REP`TypeRep ==> set of REP`TypeRep
+    ExtractObjectTypeInner (cptp) ==
+      cases cptp:
+        mk_REP`TypeNameRep(nm) ->
+          if TYPE`IsUnionRecursive(cptp)
+          then return {}
+          else let tp = TcauxLookUpTypeName(nm)
+               in
+                 if tp = nil
+                 then return {}
+                 else return ExtractObjectTypeInner(tp),
+        mk_REP`InvTypeRep(-,tp,-) -> return ExtractObjectTypeInner(tp),
+        mk_REP`AllTypeRep() -> return {},
+        -- NOTICE that no context information is provided for the AS`Name
+        mk_REP`ObjRefTypeRep(-) -> return {cptp},
+        mk_REP`UnionTypeRep(Utp) -> return dunion { ExtractObjectTypeInner(i) | i in set Utp},
+        others -> return {}
+      end;
+#endif VDMPP
+
+functions
+    MakeOneProductTypeRep: set of REP`ProductTypeRep -> seq1 of REP`TypeRep
+    MakeOneProductTypeRep(prod_s) ==
+      let mk_REP`ProductTypeRep(l) in set prod_s
+      in
+        if card prod_s = 1
+        then l
+        else let restseq = MakeOneProductTypeRep(prod_s \ {mk_REP`ProductTypeRep(l)}) -- XXXX
+             in
+             let mx = if len restseq > len l then len restseq else len l in
+               [if i > len restseq
+                then l(i)
+                elseif i > len l
+                then restseq (i)
+                else MergeTypes(l(i),restseq(i))|i in set {1,...,mx}]
+    pre prod_s <> {};
+
+  InstFn: (<VAR> | <PAR> | <REN>) * REP`TypeRep * map AS`Name to REP`TypeRep -> REP`TypeRep
+  InstFn(kind,tp,bind) ==
+    cases tp:
+      mk_REP`AllTypeRep(),
+      mk_REP`UnitTypeRep(),
+      mk_REP`NilTypeRep(),
+      mk_REP`BooleanTypeRep(),
+      mk_REP`NumericTypeRep(-),
+      mk_REP`TokenTypeRep(),
+      mk_REP`CharTypeRep(),
+      mk_REP`QuoteTypeRep(-) -> tp,
+      mk_REP`InvTypeRep(name,t,i) -> mk_REP`InvTypeRep(name,InstFn(kind,t,bind),i),
+      mk_REP`TypeNameRep(nm) -> cases kind:
+                                  <PAR>,
+                                  <REN>  -> if nm in set dom bind
+                                            then bind(nm)
+                                            else tp,
+                                  others  -> tp
+                                end,
+      mk_REP`TypeVarRep(nm) -> cases kind:
+                                 <VAR>  -> if nm in set dom bind
+                                           then bind(nm)
+                                           else tp,
+                                 others  -> tp
+                               end,
+      mk_REP`TypeParRep(nm) -> cases kind:
+                                 <PAR>  -> if nm in set dom bind
+                                           then bind(nm)
+                                           else tp,
+                                 others  -> tp
+                               end,
+      mk_REP`CompositeTypeRep(tag, fields) -> let f_l = [mk_REP`FieldRep((fields(index)).sel,
+                                                                          InstFn(kind,(fields(index)).tp,bind),
+                                                                          (fields(index)).dc)
+                                                         | index in set inds fields]
+                                              in
+                                                mk_REP`CompositeTypeRep(tag,f_l),
+       mk_REP`UnionTypeRep(tp_s) -> mk_REP`UnionTypeRep({InstFn(kind,tp,bind) | tp in set tp_s}),
+       mk_REP`ProductTypeRep(tp_l) -> let l = [InstFn(kind,tp_l(index),bind) | index in set inds tp_l]
+                                      in
+                                        mk_REP`ProductTypeRep(l),
+       mk_REP`SetTypeRep(type) -> mk_REP`SetTypeRep(InstFn(kind,type,bind)),
+       mk_REP`EmptySetTypeRep(type) -> mk_REP`EmptySetTypeRep(InstFn(kind,type,bind)),
+       mk_REP`SeqTypeRep(type) -> mk_REP`SeqTypeRep(InstFn(kind,type,bind)),
+       mk_REP`EmptySeqTypeRep(type) -> mk_REP`EmptySeqTypeRep(InstFn(kind,type,bind)),
+       mk_REP`GeneralMapTypeRep(d,r) -> mk_REP`GeneralMapTypeRep(InstFn(kind,d,bind),InstFn(kind,r,bind)),
+       mk_REP`InjectiveMapTypeRep(d,r) -> mk_REP`InjectiveMapTypeRep(InstFn(kind,d,bind),InstFn(kind,r,bind)),
+       mk_REP`EmptyMapTypeRep(d,r) -> mk_REP`EmptyMapTypeRep(InstFn(kind,d,bind),InstFn(kind,r,bind)),
+       mk_REP`PartialFnTypeRep(tp_l, tp) -> let l = [InstFn(kind,tp_l(index),bind) | index in set inds tp_l]
+                                            in mk_REP`PartialFnTypeRep(l, InstFn(kind,tp,bind)),
+       mk_REP`TotalFnTypeRep(tp_l, tp) -> let l = [InstFn(kind,tp_l(index),bind) | index in set inds tp_l]
+                                          in mk_REP`TotalFnTypeRep(l, InstFn(kind,tp,bind)),
+       mk_REP`PolyTypeRep(vars,tp) -> mk_REP`PolyTypeRep(vars,InstFn(kind,tp,bind)),
+       mk_REP`OpTypeRep(tp_l, tp) -> let l = [InstFn(kind,tp_l(index),bind) | index in set inds tp_l]
+                                     in mk_REP`OpTypeRep(l, InstFn(kind,tp,bind)),
+       others -> undefined
+    end;
+
+  InstFnAS: (AS`Type | AS`TypeDef) * map AS`Name to AS`Type -> (AS`Type | AS`TypeDef)
+  InstFnAS(tpdef,bind) ==
+    cases tpdef:
+      mk_AS`TypeDef(nm,tp,Inv,acc,cid) -> let tp' = InstFnAS(tp,bind)
+                                          in mk_AS`TypeDef(nm,tp',Inv,acc,cid),
+      mk_AS`BooleanType(-),
+      mk_AS`NumericType(-,-),
+      mk_AS`TokenType(-),
+      mk_AS`CharType(-),
+      mk_AS`VoidType(-),
+      mk_AS`TypeVar(-,-),
+      mk_AS`QuoteType(-,-) -> tpdef,
+      mk_AS`BracketedType(t,cid) -> mk_AS`BracketedType(InstFnAS(t,bind),cid),
+      mk_AS`OptionalType(t,cid) -> mk_AS`OptionalType(InstFnAS(t,bind),cid),
+      mk_AS`TypeName(nm,-) -> if nm in set dom bind
+                              then bind(nm)
+                              else tpdef,
+      mk_AS`CompositeType(tag, fields, ctcid) -> let f_l = [mk_AS`Field((fields(index)).sel,
+                                                                        InstFnAS((fields(index)).type,bind),
+                                                                        (fields(index)).dc,
+                                                                        (fields(index)).cid)
+                                                           | index in set inds fields]
+                                                 in mk_AS`CompositeType(tag,f_l,ctcid),
+       mk_AS`UnionType(tp_l,cid) -> mk_AS`UnionType([InstFnAS(tp_l(index),bind) | index in set inds tp_l],cid),
+       mk_AS`ProductType(tp_l,cid) -> let l = [InstFnAS(tp_l(index),bind) | index in set inds tp_l]
+                                      in mk_AS`ProductType(l,cid),
+       mk_AS`Set0Type(type,cid) -> mk_AS`Set0Type(InstFnAS(type,bind),cid),
+       mk_AS`Set1Type(type,cid) -> mk_AS`Set1Type(InstFnAS(type,bind),cid),
+       mk_AS`Seq0Type(type,cid) -> mk_AS`Seq0Type(InstFnAS(type,bind),cid),
+       mk_AS`Seq1Type(type,cid) -> mk_AS`Seq1Type(InstFnAS(type,bind),cid),
+       mk_AS`GeneralMap0Type(d,r,cid) -> mk_AS`GeneralMap0Type(InstFnAS(d,bind),InstFnAS(r,bind),cid),
+       mk_AS`GeneralMap1Type(d,r,cid) -> mk_AS`GeneralMap1Type(InstFnAS(d,bind),InstFnAS(r,bind),cid),
+       mk_AS`InjectiveMap0Type(d,r,cid) -> mk_AS`InjectiveMap0Type(InstFnAS(d,bind),InstFnAS(r,bind),cid),
+       mk_AS`InjectiveMap1Type(d,r,cid) -> mk_AS`InjectiveMap1Type(InstFnAS(d,bind),InstFnAS(r,bind),cid),
+       mk_AS`OpType(tp_l,otp,cid) -> let l = [InstFnAS(tp_l(index),bind) | index in set inds tp_l]
+                                     in mk_AS`OpType(l, InstFnAS(otp,bind),cid),
+       mk_AS`PartialFnType(tp_l, tp, cid) -> let l = [InstFnAS(tp_l(index),bind) | index in set inds tp_l]
+                                             in mk_AS`PartialFnType(l, InstFnAS(tp,bind), cid),
+       mk_AS`TotalFnType(tp_l, tp, cid) -> let l = [InstFnAS(tp_l(index),bind) | index in set inds tp_l]
+                                           in mk_AS`TotalFnType(l, InstFnAS(tp,bind), cid),
+       others -> undefined
+    end;
+
+#ifdef VDMPP
+  QualifyTypeNames: REP`TypeRep * AS`Name -> REP`TypeRep
+  QualifyTypeNames(tp,nm) ==
+    cases tp:
+      mk_REP`InvTypeRep(name,shape,invar) -> mk_REP`InvTypeRep(name,QualifyTypeNames(shape,nm),invar),
+      mk_REP`CompositeTypeRep(tag,fields) ->
+        let newtag = ExtName(nm,tag),
+            newfields = [mu(fields(i), tp |-> QualifyTypeNames(fields(i).tp,nm)) |
+                         i in set inds fields] in
+          mk_REP`CompositeTypeRep(newtag,newfields),
+      mk_REP`UnionTypeRep(tps) -> mk_REP`UnionTypeRep({QualifyTypeNames(tp,nm) | tp in set tps}),
+      mk_REP`ProductTypeRep(tps) -> mk_REP`ProductTypeRep([QualifyTypeNames(tps(i),nm) | i in set inds tps]),
+      mk_REP`SetTypeRep(tp) -> mk_REP`SetTypeRep(QualifyTypeNames(tp,nm)),
+      mk_REP`SeqTypeRep(tp) -> mk_REP`SeqTypeRep(QualifyTypeNames(tp,nm)),
+      mk_REP`GeneralMapTypeRep(mapdom,maprng),
+      mk_REP`InjectiveMapTypeRep(mapdom,maprng) ->
+        let newdom = QualifyTypeNames(mapdom,nm),
+            newrng = QualifyTypeNames(maprng,nm) in
+          mu(tp, mapdom |-> newdom, maprng |-> newrng),
+      mk_REP`TypeVarRep(vnm) ->  mk_REP`TypeVarRep(ExtName(nm,vnm)),
+      mk_REP`TypeNameRep(tpnm) -> mk_REP`TypeNameRep(ExtName(nm,tpnm)),
+      mk_REP`PartialFnTypeRep(fndom,fnrng),
+      mk_REP`TotalFnTypeRep(fndom,fnrng) ->
+         let newdom = if is_REP`AllTypeRep(fndom) then fndom
+                      else [QualifyTypeNames(fndom(i),nm) | i in set inds fndom],
+             newrng = QualifyTypeNames(fnrng,nm) in
+           mu(tp, fndom |-> newdom, fnrng |-> newrng),
+      mk_REP`PolyTypeRep(vars,tp) ->
+         let newvars = [QualifyTypeNames(vars(i),nm) | i in set inds vars],
+             newtp = QualifyTypeNames(tp,nm) in
+           mk_REP`PolyTypeRep(newvars,newtp),
+      others -> tp
+    end;
+#endif VDMPP
+
+#ifdef VDMSL
+  RenameTag:REP`TypeRep * map AS`Name to AS`Name -> REP`TypeRep
+  RenameTag(tp,bind) ==
+    cases tp:
+      mk_REP`AllTypeRep(),
+      mk_REP`UnitTypeRep(),
+      mk_REP`NilTypeRep(),
+      mk_REP`EmptySetTypeRep(-),
+      mk_REP`EmptySeqTypeRep(-),
+      mk_REP`EmptyMapTypeRep(-,-),
+      mk_REP`BooleanTypeRep(),
+      mk_REP`NumericTypeRep(-),
+      mk_REP`TokenTypeRep(),
+      mk_REP`CharTypeRep(),
+      mk_REP`QuoteTypeRep(-),
+      mk_REP`InvTypeRep(-,-,-),
+      mk_REP`TypeVarRep(-),
+      mk_REP`TypeParRep(-),
+      mk_REP`TypeNameRep(-) ->
+        tp,
+      mk_REP`CompositeTypeRep(tag, fields) ->
+         let f_l = [mk_REP`FieldRep((fields(index)).sel,
+                                    RenameTag((fields(index)).tp,bind),
+                                    (fields(index)).dc)
+                   | index in set inds fields]
+         in
+           mk_REP`CompositeTypeRep(if tag in set dom bind
+                                   then bind(tag)
+                                   else tag,f_l),
+       mk_REP`UnionTypeRep(tp_s) ->
+          mk_REP`UnionTypeRep({RenameTag(tp,bind) | tp in set tp_s}),
+       mk_REP`ProductTypeRep(tp_l) ->
+          let l = [RenameTag(tp_l(index),bind) | index in set inds tp_l]
+          in
+            mk_REP`ProductTypeRep(l),
+       mk_REP`SetTypeRep(type) ->
+          mk_REP`SetTypeRep(RenameTag(type,bind)),
+       mk_REP`SeqTypeRep(type) ->
+          mk_REP`SeqTypeRep(RenameTag(type,bind)),
+       mk_REP`GeneralMapTypeRep(d,r) ->
+          mk_REP`GeneralMapTypeRep(RenameTag(d,bind),RenameTag(r,bind)),
+       mk_REP`InjectiveMapTypeRep(d,r) ->
+          mk_REP`InjectiveMapTypeRep(RenameTag(d,bind),RenameTag(r,bind)),
+       mk_REP`PartialFnTypeRep(tp_l, tp) ->
+          let l = if is_REP`AllTypeRep(tp_l)
+                  then mk_REP`AllTypeRep()
+                  else [RenameTag(tp_l(index),bind) | index in set inds tp_l]
+          in
+            mk_REP`PartialFnTypeRep(l, RenameTag(tp,bind)),
+       mk_REP`TotalFnTypeRep(tp_l, tp) ->
+          let l = if is_REP`AllTypeRep(tp_l)
+                  then mk_REP`AllTypeRep()
+                  else [RenameTag(tp_l(index),bind) | index in set inds tp_l]
+          in
+            mk_REP`TotalFnTypeRep(l, RenameTag(tp,bind)),
+       others -> undefined
+    end;
+
+  TypeUsedImplicitly: AS`Name * set of REP`TypeRep -> bool
+  TypeUsedImplicitly(nm,tps) ==
+    exists tp in set tps & ImplicitlyRec(nm,tp);
+
+  ImplicitlyRec: AS`Name * REP`TypeRep -> bool
+  ImplicitlyRec(nm,tp) ==
+    cases tp:
+      mk_REP`AllTypeRep(),
+      mk_REP`UnitTypeRep(),
+      mk_REP`NilTypeRep(),
+      mk_REP`EmptySetTypeRep(-),
+      mk_REP`EmptySeqTypeRep(-),
+      mk_REP`EmptyMapTypeRep(-,-),
+      mk_REP`BooleanTypeRep(),
+      mk_REP`NumericTypeRep(-),
+      mk_REP`TokenTypeRep(),
+      mk_REP`CharTypeRep(),
+      mk_REP`TypeVarRep(-),
+      mk_REP`TypeParRep(-),
+      mk_REP`QuoteTypeRep(-) -> false,
+      mk_REP`SetTypeRep(t),
+      mk_REP`SeqTypeRep(t),
+      mk_REP`InvTypeRep(-,t,-) -> ImplicitlyRec(nm, t),
+      mk_REP`TypeNameRep(nm2) -> nm = nm2,
+      mk_REP`CompositeTypeRep(-, fields) -> let t_s = {fields(index).tp | index in set inds fields}
+                                            in
+                                              exists t in set t_s & ImplicitlyRec(nm, t),
+      mk_REP`UnionTypeRep(t_s) -> exists t in set t_s & ImplicitlyRec(nm, t),
+      mk_REP`ProductTypeRep(t_l) -> exists t in set elems t_l & ImplicitlyRec(nm, t),
+      mk_REP`GeneralMapTypeRep(d,r),
+      mk_REP`InjectiveMapTypeRep(d,r) -> ImplicitlyRec(nm, d) or ImplicitlyRec(nm, r),
+      mk_REP`PartialFnTypeRep(tp_l, t),
+      --mk_REP`TotalFnTypeRep(tp_l, t) -> let t_s = if is_REP`AllTypeRep(tp_l)
+      --                                            then {}
+      --                                            else elems tp_l
+      --                                  in
+      --                                    exists t in set t_s & ImplicitlyRec(nm, t),
+      mk_REP`TotalFnTypeRep(tp_l, t) -> let tp_s = {t} union (if is_REP`AllTypeRep(tp_l)
+                                                              then {}
+                                                              else elems tp_l)
+                                        in
+                                          TypeUsedImplicitly(nm, tp_s),
+      others -> undefined
+    end;
+
+#endif VDMSL
+
+  AlwaysType: REP`TypeRep * REP`TypeRep -> REP`TypeRep
+  AlwaysType(tppost,tpstmt) ==
+    let etp = ExtractExitTypeRep(tppost)
+    in
+      if etp = nil
+      then tpstmt
+      elseif mk_REP`ExitTypeRep(etp) = tppost
+      then tppost
+      else MergeTypes(tpstmt,mk_REP`ExitTypeRep(etp));
+
+  ExtractExitTypeRep: REP`TypeRep -> [REP`TypeRep]
+  ExtractExitTypeRep(tp) ==
+    cases tp:
+      mk_REP`ExitTypeRep(etp) -> etp,
+--      mk_REP`TypeNameRep(nm) ->
+--          if TYPE`IsUnionRecursive(tp)
+--          then nil
+--          else let t = TcauxLookUpTypeName(nm)
+--               in
+--                 if t = nil
+--                 then nil
+--                 else ExtractExitTypeRep(t),
+--      mk_REP`InvTypeRep(-,tpï,-) -> ExtractExitTypeRep(tpï),
+--      mk_REP`AllTypeRep() -> mk_REP`ExitTypeRep(mk_REP`AllTypeRep()),
+      mk_REP`UnionTypeRep(Utp) ->
+          let s = {t | mk_REP`ExitTypeRep(t) in set Utp}
+          in
+            if card s = 0
+            then nil
+            elseif card s = 1
+            then let {etp} = s in etp
+            else mk_REP`UnionTypeRep(s),
+      others -> nil
+    end;
+
+operations
+  CanBeApplied: [REP`TypeRep] ==> bool * [REP`TypeRep]
+  CanBeApplied(tp) ==
+    cases tp :
+      mk_REP`SeqTypeRep(-),
+      mk_REP`GeneralMapTypeRep(-,-),
+      mk_REP`InjectiveMapTypeRep(-,-),
+      mk_REP`PartialFnTypeRep(-,-),
+      mk_REP`TotalFnTypeRep(-,-) -> return mk_(true,tp),
+      mk_REP`UnionTypeRep (utps) -> def pos_s = {CanBeApplied(t) | t in set utps}
+                                    in
+                                      if exists mk_(true,-) in set pos_s & true
+                                      then let tps = {tp| mk_(true,tp) in set pos_s}
+                                           in
+                                             cases tps:
+                                               {tp}   -> return mk_(true,tp),
+                                               others -> return mk_(true,mk_REP`UnionTypeRep(tps))
+                                             end
+                                      else return mk_(false,nil),
+      mk_REP`TypeNameRep(nm) -> if not TYPE`IsUnionRecursive(tp)
+                                then return CanBeApplied(TcauxLookUpTypeName(nm))
+                                else return mk_(false,nil),
+      mk_REP`InvTypeRep(-,t,-) -> return CanBeApplied(t),
+      others -> return mk_(false,nil)
+    end;
+
+functions
+  MakePreType : REP`FnTypeRep -> REP`FnTypeRep
+  MakePreType(fntp) ==
+    cases fntp:
+      mk_REP`TotalFnTypeRep(fndom,-)   -> mk_REP`TotalFnTypeRep(fndom,mk_REP`BooleanTypeRep()),
+      mk_REP`PartialFnTypeRep(fndom,-) -> mk_REP`TotalFnTypeRep(fndom,mk_REP`BooleanTypeRep())
+    end;
+
+  MakePostType : REP`FnTypeRep -> REP`FnTypeRep
+  MakePostType(fntp) ==
+    cases fntp:
+      mk_REP`TotalFnTypeRep(fndom,fnrng)   -> mk_REP`TotalFnTypeRep(fndom^[fnrng],mk_REP`BooleanTypeRep()),
+      mk_REP`PartialFnTypeRep(fndom,fnrng) -> mk_REP`TotalFnTypeRep(fndom^[fnrng],mk_REP`BooleanTypeRep())
+    end;
+
+  MakePolyPreType : seq of REP`TypeVarRep * REP`FnTypeRep -> seq of REP`TypeVarRep * REP`FnTypeRep
+  MakePolyPreType(tv_l,fntp) ==
+    let pretp = cases fntp:
+                  mk_REP`TotalFnTypeRep(fndom,-)   -> mk_REP`TotalFnTypeRep(fndom,mk_REP`BooleanTypeRep()),
+                  mk_REP`PartialFnTypeRep(fndom,-) -> mk_REP`TotalFnTypeRep(fndom,mk_REP`BooleanTypeRep())
+                end
+    in
+      mk_(tv_l,pretp);
+
+  MakePolyPostType : seq of REP`TypeVarRep * REP`FnTypeRep -> seq of REP`TypeVarRep * REP`FnTypeRep
+  MakePolyPostType(tv_l,fntp) ==
+    let posttp = cases fntp:
+                   mk_REP`TotalFnTypeRep(fndom,fnrng)   -> mk_REP`TotalFnTypeRep(fndom^[fnrng],mk_REP`BooleanTypeRep()),
+                   mk_REP`PartialFnTypeRep(fndom,fnrng) -> mk_REP`TotalFnTypeRep(fndom^[fnrng],mk_REP`BooleanTypeRep())
+                 end
+    in
+      mk_(tv_l,posttp);
+
+  MakeOpPreType : [AS`Name] * REP`OpTypeRep * [AS`StateDef] -> REP`TypeRep
+#ifdef VDMSL
+  MakeOpPreType(modid,mk_REP`OpTypeRep(Dom,-),stdef) ==
+    let domtp = if stdef = nil
+                then Dom
+                else let sttp = ENV`TransStateType(modid,stdef)
+                     in
+                       if Dom = []
+                       then [sttp]
+                       else Dom ^ [sttp],
+#endif VDMSL
+#ifdef VDMPP
+  MakeOpPreType(-,mk_REP`OpTypeRep(Dom,-),-) ==
+    let domtp = Dom,
+#endif VDMPP
+        rngtp = mk_REP`BooleanTypeRep()
+    in
+      mk_REP`TotalFnTypeRep(domtp,rngtp);
+
+  MakeOpPostType : [AS`Name] * REP`OpTypeRep * [AS`StateDef] -> REP`TypeRep
+#ifdef VDMSL
+  MakeOpPostType(modid,mk_REP`OpTypeRep(Dom,Rng),stdef) ==
+    let domtp = if stdef = nil
+                then Dom ^ if Rng = mk_REP`UnitTypeRep()
+                           then []
+                           else [Rng]
+                else let sttp = ENV`TransStateType(modid,stdef)
+                     in
+                       Dom ^ if Rng = mk_REP`UnitTypeRep()
+                             then [sttp,sttp]
+                             else [Rng,sttp,sttp],
+#endif VDMSL
+#ifdef VDMPP
+  MakeOpPostType(-,mk_REP`OpTypeRep(Dom,Rng),-) ==
+    let domtp = Dom ^ if Rng = mk_REP`UnitTypeRep()
+                      then []
+                      else [Rng],
+#endif VDMPP
+        rngtp = mk_REP`BooleanTypeRep()
+    in
+      mk_REP`TotalFnTypeRep(domtp,rngtp);
+
+--#endif VDMSL
+
+  IsPrePostFn: AS`Name -> bool
+  IsPrePostFn(mk_AS`Name(ids, -)) ==
+    let lastname = ids(len ids)
+    in lastname(1,...,4) = "pre_" or
+       lastname(1,...,5) = "post_";
+
+  ExtName : AS`Name * AS`Name -> AS`Name
+  ExtName(mk_AS`Name([modid],-),mk_AS`Name(ids,cid)) ==
+    --mk_AS`Name([modid]^ids,cid);
+    if len ids = 1
+    then mk_AS`Name([modid]^ids,cid)
+    else mk_AS`Name(ids,cid);
+        -- NOTICE that the contextid is taken from the second argument
+
+  SepName : AS`Name -> [AS`Name] * AS`Name
+  SepName(mk_AS`Name(ids,cid)) ==
+    cases ids:
+      [clmd,nm] -> mk_(mk_AS`Name([clmd],cid),mk_AS`Name([nm],cid)),
+      others    -> mk_(nil,mk_AS`Name(ids,cid))
+    end;
+
+  Pre: AS`Name -> AS`Name
+  Pre(mk_AS`Name(ids,cid)) ==
+    mk_AS`Name(ids(1,...,len ids -1) ^ ["pre_"^ids(len ids)],cid);
+        -- NOTICE that the contextid is taken from the argument
+
+  Post: AS`Name -> AS`Name
+  Post(mk_AS`Name(ids,cid)) ==
+    mk_AS`Name(ids(1,...,len ids -1) ^ ["post_"^ids(len ids)],cid);
+        -- NOTICE that the contextid is taken from the argument
+
+  Inv: AS`Name -> AS`Name
+  Inv(mk_AS`Name(ids,cid)) ==
+    mk_AS`Name(ids(1,...,len ids -1) ^ ["inv_"^ids(len ids)],cid);
+        -- NOTICE that the contextid is taken from the argument
+
+  Init: AS`Name -> AS`Name
+  Init(mk_AS`Name(ids,cid)) ==
+    mk_AS`Name(ids(1,...,len ids -1) ^ ["init_"^ids(len ids)],cid);
+        -- NOTICE that the contextid is taken from the argument
+
+  ReservedPrefix : AS`Name -> bool
+  ReservedPrefix(mk_AS`Name([id],-)) ==
+    (id(1,...,3) in set {"is_","mk_"}) or
+    (id(1,...,4) in set {"pre_","inv_"}) or
+    (id(1,...,5) in set {"post_","init_"});
+
+  IsEmptyName : AS`Name -> bool
+  IsEmptyName(mk_AS`Name(ids,-)) ==
+    ids = [];
+
+end AUX
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[MostGeneralNumericType]
+{rtinfo.ast}[AUX]
+\end{rtinfo}

@@ -1,0 +1,143 @@
+class ListTable is subclass of JTable, MouseListener, MouseMotionListener
+operations 
+public  initColumns : () ==> <VOID>
+initColumns() == 
+( dcl   column : [TableColumn] := nil  ,
+        wModel : [WireTableModel] := getModel(),
+        fractions : map  int  to  int  := wModel.getWidthFractions(),
+        columnTypes : map  int  to  [WireDataTypes] := wModel.getColumnTypes();
+  ( dcl   i : int  := 0;
+    while  i < columnTypes.length do  
+    ( column := getColumnModel().getColumn(i);
+      let - = column.setMinWidth(fractions(i))
+      in 
+        skip ;
+      let - = column.setPreferredWidth(fractions(i))
+      in 
+        skip ;
+      def l_7 = defaultWidth
+      in defaultWidth := l_7+fractions(i)+3;
+      if  columnTypes(i) = WireDataTypes`WIRE_END1_REF_DES_PIN or  columnTypes(i) = WireDataTypes`WIRE_END2_REF_DES_PIN or  columnTypes(i) = WireDataTypes`WIRE_NAME
+      then  
+        ( let - = column.setCellRenderer(new  ContextCellRenderer())
+          in 
+            skip 
+        ) 
+      else  
+        if  columnTypes(i) = WireDataTypes`DRAWING_NOTE
+        then  
+          ( let - = column.setCellRenderer(new  SelectableCellRenderer())
+            in 
+              skip 
+          ) ;
+      i := i+1
+    ) 
+  ) ;
+  return  <VOID>
+) ;
+
+public  getDefaultWidth : () ==> int 
+getDefaultWidth() == 
+( return  defaultWidth
+) ;
+
+public  ListTable : [TableModel] ==> ListTable
+ListTable(model) == 
+( let - = JTable(model)
+  in 
+    skip ;
+  let - = setCellSelectionEnabled(true  )
+  in 
+    skip ;
+  let - = setSelectionMode(ListSelectionModel`SINGLE_SELECTION)
+  in 
+    skip ;
+  let - = setAutoResizeMode(JTable`AUTO_RESIZE_OFF)
+  in 
+    skip ;
+  ( dcl   font : [Font] := new  Font(new  String("TimesRoman") , Font`PLAIN , 12);
+    let - = setFont(font)
+    in 
+      skip ;
+    let - = addMouseListener(self  )
+    in 
+      skip ;
+    let - = addMouseMotionListener(self  )
+    in 
+      skip ;
+    let - = initColumns()
+    in 
+      skip ;
+    let - = getTableHeader().setReorderingAllowed(false  )
+    in 
+      skip 
+  ) 
+) ;
+
+public  mouseMoved : [MouseEvent] ==> <VOID>
+mouseMoved(event) == 
+( dcl   mousePoint : [Point] := event.getPoint(),
+        col : int  := columnAtPoint(mousePoint);
+  if  col >= 0
+  then  
+    ( dcl   wModel : [WireTableModel] := getModel(),
+            columnTypes : map  int  to  [WireDataTypes] := wModel.getColumnTypes();
+      if  columnTypes(col) = WireDataTypes`WIRE_END1_REF_DES_PIN or  columnTypes(col) = WireDataTypes`WIRE_END2_REF_DES_PIN or  columnTypes(col) = WireDataTypes`WIRE_NAME or  columnTypes(col) = WireDataTypes`DRAWING_NOTE
+      then  
+        ( let - = setCursor(new  Cursor(Cursor`HAND_CURSOR))
+          in 
+            skip 
+        ) 
+      else  
+        ( let - = setCursor(new  Cursor(Cursor`DEFAULT_CURSOR))
+          in 
+            skip 
+        ) 
+    ) ;
+  return  <VOID>
+) ;
+
+public  mouseExited : [MouseEvent] ==> <VOID>
+mouseExited(event) == 
+( let - = setCursor(new  Cursor(Cursor`DEFAULT_CURSOR))
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  mouseClicked : [MouseEvent] ==> <VOID>
+mouseClicked(event) == 
+( dcl   mousePoint : [Point] := event.getPoint(),
+        col : int  := columnAtPoint(mousePoint),
+        row : int  := rowAtPoint(mousePoint),
+        wModel : [WireTableModel] := getModel();
+  let - = wModel.traverseCell(row , col)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  mouseDragged : [MouseEvent] ==> <VOID>
+mouseDragged(e) == 
+( return  <VOID>
+) ;
+
+public  mouseEntered : [MouseEvent] ==> <VOID>
+mouseEntered(event) == 
+( return  <VOID>
+) ;
+
+public  mousePressed : [MouseEvent] ==> <VOID>
+mousePressed(e) == 
+( return  <VOID>
+) ;
+
+public  mouseReleased : [MouseEvent] ==> <VOID>
+mouseReleased(e) == 
+( return  <VOID>
+) ;
+
+instance variables 
+  private  defaultWidth : int  := 0
+  
+end  ListTable

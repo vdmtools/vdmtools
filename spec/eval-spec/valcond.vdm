@@ -1,0 +1,428 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Format and support for time trace logging
+% $Id: valcond.vdm,v 1.1 2000/06/26 14:30:03 paulm Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\chapter{The VC Module}
+
+\section{Introduction}
+This module contains the specification of the treatment of
+validation conjectures over logfile traces. This
+file contains information about information stored during execution of
+a VICE model and the operations that can check validation conjectures
+over timed traces (and find counter examples whenever the conjectures 
+are invalid).
+
+\begin{vdm_al}
+
+module VC
+
+imports
+
+  from STKM all,
+
+  from GLOBAL all,
+
+  from CI all,
+
+  from SCHDTP all,
+
+  from AS all,
+
+  from SEM all,
+
+  from REP all,
+
+  from PAT all, 
+
+  from RTERR all,
+
+  from INSTRTP all,
+
+  from TIMETRACE all,
+
+  from TIMETRACETP all
+
+exports all
+
+definitions
+
+\end{vdm_al}
+
+A trace is a sequence of trace items. A trace item is a time stamped
+trace event, so the overall trace is almost monotonically increasing with
+respect to the time of events (the places where the order not will be 
+appropriate will be places where one CPU is ahead of a different CPU
+within the allowed time step size.
+
+\section{Types used for Collecting Trace Information}
+
+\begin{vdm_al}
+types
+
+ OpHistMap = map AS`Ids to OpHist;
+
+ OpHist ::
+    reqs : seq of Req
+    acts : seq of Act
+    fins : seq of Fin;
+
+  Req ::
+    tim   : nat
+    arg   : [seq of SEM`VAL]
+    thrid : nat;
+
+  Act ::
+    tim   : nat
+    thrid : nat;
+
+  Fin ::
+    tim    : nat
+    result : [SEM`VAL]
+    thrid  : nat;
+
+  InstVarHist = seq of InstVar;
+
+  InstVar ::
+    tim : nat
+    val : SEM`VAL
+    thrid : nat;
+\end{vdm_al}
+
+\section{Types for the Abstract Syntax of Validation Conjectures over Traces}
+
+\begin{vdm_al}
+  ValCond = DeadlineMet | Separate | SeparateReq | Periodic;
+
+  DeadlineMet ::
+    stimulus : EventExpr
+    cond     : [Pred]
+    react    : EventExpr
+    maxDelay : Time
+    match    : bool;
+
+  EventExpr = OpEvent | TransEvent;
+
+OpEvent ::
+  kind : INSTRTP`HistoryKind
+  opnm : AS`Name
+  args : [seq of [SEM`VAL]]; 
+  -- for args nil at the outhermost level indicates no arg constrains
+  -- for args nil at the innermost level indicate don't care args
+
+TransEvent ::
+  pred   : Pred;
+    
+  Pred ::
+    instvar : AS`Name
+    op      : <LT> | <GT> | <LTE> | <GTE> | <EQ>
+    num     : SEM`VAL;
+
+Separate ::	
+  stimu    : EventExpr
+  cond     : [Pred]
+  reac     : EventExpr
+  minDelay : Time
+  match    : bool;
+
+SeparateReq ::	
+  stimu    : EventExpr
+  cond     : [Pred]
+  reac     : EventExpr
+  minDelay : Time
+  match    : bool;
+
+Periodic ::
+  event  : EventExpr
+  period : Time
+  jitter : Time;
+
+Time = nat;
+
+Kind = <MIN> | <MAX>;
+\end{vdm_al}
+
+\section{The State of the VC Module}
+
+\begin{vdm_al}
+state VCState of
+  loginstvars : <ALL> | set of (AS`Name * AS`Name * AS`Name)
+  ophistmap : map AS`Name to OpHist
+  instvarhistmap : map AS`Name to InstVarHist
+  -- in instdecl the range are sysnm + instnm static public decl
+  instdecl : map SEM`OBJ_Ref to (AS`Name * AS`Name)
+init vcst == vcst = mk_VCState(<ALL>,{|->},{|->},{|->})
+end
+\end{vdm_al}
+
+\section{Operations for Collecting Trace Information}
+ 
+\begin{vdm_al}
+operations
+
+  InitState: () ==> ()
+  InitState() ==
+    (ophistmap := {|->};
+     instvarhistmap := {|->};
+     instdecl := {|->});
+
+  LogInstVarChange: AS`Name * SEM`VAL * SEM`OBJ_Ref * nat ==> ()
+  LogInstVarChange(instnm,val,objref,thrid) ==
+    if objref in set dom instdecl
+    then let mk_(sysnm,statinstnm) = instdecl(objref)
+         in
+           if (loginstvars = <ALL> or 
+               mk_(sysnm,statinstnm,instnm) in set loginstvars) and
+              val <> mk_SEM`UNDEF()
+           then def fullnm = CombineNms(sysnm,statinstnm,instnm);
+                    t      = STKM`GetTime();
+                    tlog   = mk_VC`InstVar(t,val,thrid) 
+                in
+                  (AddInstVarHist(fullnm,tlog);
+                   TIMETRACE`AddToLogfile(mk_TIMETRACETP`InstVarChange(fullnm,val,
+                                                             objref, t,thrid)));
+
+AddInstVarLog: <ALL> | (AS`Name * AS`Name * AS`Name) ==> ()
+AddInstVarLog(nametup) ==
+  if nametup = <ALL> or loginstvars = <ALL>
+  then loginstvars := <ALL>
+  else loginstvars := loginstvars union {nametup};
+
+  AddInstDecl: AS`Name * AS`Name * SEM`VAL ==> ()
+  AddInstDecl(sysnm,instnm,objref) ==
+    instdecl := instdecl ++ {objref |-> mk_(sysnm,instnm)};
+\end{vdm_al}
+
+\begin{vdm_al}
+AddOpReq: AS`Name * [seq of SEM`VAL] * nat * nat ==> ()
+AddOpReq(opnm,vall,thrid,time) ==
+  let req = mk_Req(time,vall,thrid)
+  in
+    if opnm in set dom ophistmap
+    then ophistmap(opnm).reqs := ophistmap(opnm).reqs ^ [req]
+    else ophistmap(opnm) := mk_OpHist([req],[],[]);
+
+AddOpAct: AS`Name * nat * nat ==> ()
+AddOpAct(opnm,thrid,time) ==
+  let act = mk_Act(time,thrid)
+  in
+    ophistmap(opnm).acts := ophistmap(opnm).acts ^ [act]
+pre opnm in set dom ophistmap;
+ 
+AddOpFin: AS`Name * [SEM`VAL] * nat * nat ==> ()
+AddOpFin(opnm,res,thrid,time) ==
+  let fin = mk_Fin(time,res,thrid)
+  in
+    ophistmap(opnm).fins := ophistmap(opnm).fins ^ [fin]
+pre opnm in set dom ophistmap;
+
+AddInstVarHist: AS`Name * InstVar ==> ()
+AddInstVarHist(nm,instvar) ==
+  instvarhistmap(nm) := if nm in set dom instvarhistmap
+                        then instvarhistmap(nm) ^ [instvar]
+                        else [instvar];
+\end{vdm_al}
+
+\section{Evaluation of Validation Conjectures over Traces}
+
+\begin{vdm_al}
+EvalValCond: ValCond ==> [nat * SCHDTP`ThreadId * [nat] * [SCHDTP`ThreadId]]
+EvalValCond(vc) == 
+  cases true:
+    (is_DeadlineMet(vc)) -> EvalDeadlineMet(vc),
+    (is_Separate(vc))    -> EvalSeparate(vc),
+    (is_SeparateReq(vc)) -> EvalSeparateReq(vc),
+    (is_Periodic(vc))    -> EvalPeriodic(vc)
+  end;
+
+EvalDeadlineMet: DeadlineMet ==> 
+                 [nat * SCHDTP`ThreadId * [nat] * [SCHDTP`ThreadId]]
+EvalDeadlineMet(mk_DeadlineMet(ev1,pred,ev2,max,match)) ==
+  if match
+  then MatchCheck(ev1,pred,ev2,max,<MAX>,false)
+  else AnyCheck(ev1,pred,ev2,max,<MAX>,false);
+
+MatchCheck: EventExpr * [Pred] * EventExpr * nat * Kind * bool ==>
+            [nat * SCHDTP`ThreadId * [nat] * [SCHDTP`ThreadId]]
+MatchCheck(ev1,pred,ev2,delay,kind,req) ==
+  def list1 = FindList(ev1);
+      list2 = FindList(ev2)
+  in
+    (for index = 1 to len list1 do
+      let t1 = list1(index).tim,
+          t2 = if index in set inds list2
+               then list2(index).tim 
+               else <INF>
+      in               
+        (if not PredSatisfied(pred,t1)
+         then skip
+         elseif t2 = <INF> and req
+         then return mk_(t1,list1(index).thrid,nil,nil)
+         elseif t2 <> <INF> and Violation(t1,t2,delay,kind)
+         then return mk_(t1,list1(index).thrid,t2,list2(index).thrid)
+        );
+     return nil);
+
+AnyCheck: EventExpr * [Pred] * EventExpr * nat * Kind * bool ==> 
+          [nat * SCHDTP`ThreadId * [nat] * [SCHDTP`ThreadId]]
+AnyCheck(ev1,pred,ev2,delay,kind,req) ==
+  def list1 = FindList(ev1);
+      list2 = FindList(ev2)
+  in
+    (for index1 = 1 to len list1 do
+      let t1 = list1(index1).tim
+      in               
+        (if not PredSatisfied(pred,t1)
+         then skip
+         else (dcl index2 : nat := 1,
+                   notfound : bool := true;
+               while index2 <= len list2 and notfound do
+                 let t2 = list2(index2).tim
+                 in
+                   (if t2 > t1
+                    then if Violation(t1,t2,delay,kind)
+                         then return mk_(t1,list1(index1).thrid,
+                                         t2,list2(index2).thrid)
+                         else notfound := false
+                    else index2 := index2 + 1);
+                if notfound and req
+                then return mk_(list1(index1).tim,list1(index1).thrid,nil,nil)
+               )
+          );
+   return nil); 
+
+functions
+
+Violation: Time * Time * Time * Kind +> bool
+Violation(t1,t2,delay,kind) ==
+  cases kind:
+    <MAX> -> t2 - t1 > delay,
+    <MIN> -> t2 - t1 < delay
+  end;
+
+operations
+
+EvalSeparate: Separate ==> [nat * SCHDTP`ThreadId * [nat] * [SCHDTP`ThreadId]]
+EvalSeparate(mk_Separate(stimu,cond,reac,minDelay,match)) ==
+  if match
+  then MatchCheck(stimu,cond,reac,minDelay,<MIN>,false)
+  else AnyCheck(stimu,cond,reac,minDelay,<MIN>,false);
+
+EvalSeparateReq: SeparateReq ==> 
+                 [nat * SCHDTP`ThreadId * [nat] * [SCHDTP`ThreadId]]
+EvalSeparateReq(mk_SeparateReq(stimu,cond,reac,minDelay,match)) ==
+  if match
+  then MatchCheck(stimu,cond,reac,minDelay,<MIN>,true)
+  else AnyCheck(stimu,cond,reac,minDelay,<MIN>,true);
+
+EvalPeriodic: Periodic ==> [nat * SCHDTP`ThreadId * [nat] * [SCHDTP`ThreadId]]
+EvalPeriodic(mk_Periodic(ev,peri,jit)) ==
+ (def list = FindList(ev)
+  in
+    if list <> []
+    then (dcl curtime : Time := (hd list).tim;
+          for index = 2 to len list do
+            let t2 = list(index).tim
+            in
+              (if t2 - curtime > peri - jit and t2 - curtime < peri + jit
+               then return mk_(list(index -1).tim,list(index-1).thrid,
+                               list(index).tim,list(index).thrid);
+               curtime := t2
+               )
+          );
+   return nil); 
+
+FindList: EventExpr ==> seq of (Req | Act | Fin | InstVar)
+FindList(ev) ==
+  if is_OpEvent(ev)
+  then if ev.opnm in set dom ophistmap
+       then let mk_OpHist(reqs,acts,fins) = ophistmap(ev.opnm),
+                l = if ev.kind = mk_INSTRTP`req()
+                    then reqs
+                    elseif ev.kind = mk_INSTRTP`act()
+                    then acts
+                    else fins
+            in
+              if ev.args = nil
+              then return l
+              else return [l(i) | i in set inds l & 
+                           MatchArg(ev.args,i,l(i),reqs)]
+       else return []
+  else let mk_TransEvent(pred) = ev
+       in
+         if pred.instvar in set dom instvarhistmap
+              then def hist = instvarhistmap(pred.instvar);
+                       mk_InstVar(-,firstv,-) = hd hist;
+                       initval = EvalOp(firstv,pred.op,pred.num)
+                    in
+                     (dcl res : seq of InstVar := [],
+                          curbool : bool := initval;
+                      for i = 2 to len hist do
+                        if EvalOp(hist(i).val,pred.op,pred.num) <> curbool
+                        then (curbool := not curbool;
+                              res := res ^ [hist(i)]);
+                      return res
+                     )
+              else return [];
+
+PredSatisfied: [Pred] * nat ==> bool
+PredSatisfied(pred,time) ==
+  if pred = nil
+  then return true
+  else let mk_Pred(var,op,num) = pred
+       in
+         if var in set dom instvarhistmap
+         then let hist = instvarhistmap(var),
+                  mk_InstVar(firstt,-,-) = hd hist
+              in
+                if time < firstt
+                then return false
+                else (for i = 2 to len hist do
+                        if hist(i-1).tim <= time and time < hist(i).tim
+                        then return EvalOp(hist(i-1).val,op,num);
+                      return EvalOp(hist(len hist).val,op,num)
+                     )
+         else return false;
+
+EvalOp: SEM`VAL * (<LT> | <GT> | <LTE> | <GTE> | <EQ>) * SEM`VAL ==> bool
+EvalOp(lhs,op,rhs) ==
+  let lhsv = lhs.v,
+      rhsv = rhs.v
+  in
+  return cases op:
+          <LT>  -> lhsv < rhsv,
+          <GT>  -> lhsv > rhsv,
+          <LTE> -> lhsv <= rhsv,
+          <GTE> -> lhsv >= rhsv,
+          <EQ>  -> lhsv = rhsv
+         end          
+
+functions
+
+CombineNms: AS`Name * AS`Name * AS`Name -> AS`Name
+CombineNms(sysnm,statinstnm,instnm) ==
+  mk_AS`Name([hd sysnm.ids,hd statinstnm.ids,hd instnm.ids],instnm.cid);
+
+MatchArg: seq of [SEM`VAL] * nat * (Req | Act | Fin) * seq of Req -> bool
+--MatchArg(arg,index,ev,reqs) ==
+MatchArg(arg,index,-,reqs) ==
+  let req = reqs(index),
+      reqargs = req.arg
+  in
+    len reqargs = len arg and
+    forall i in set inds arg &
+       arg(i) = nil or arg(i) = reqargs(i) 
+pre index in set inds reqs;
+
+end VC
+\end{vdm_al}
+
+\vspace{0.5cm}
+
+\begin{rtinfo}
+{rtinfo.ast}[VC]
+\end{rtinfo}
+
+

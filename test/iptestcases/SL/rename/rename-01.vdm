@@ -1,0 +1,28 @@
+module B
+
+exports all
+
+definitions
+functions
+
+  f: nat -> nat
+  f(n) ==
+    n + 1
+
+end B
+
+module A
+
+imports
+  from B
+  functions f: nat -> nat renamed g
+
+exports all
+
+definitions
+operations
+Test: () ==> nat
+Test() ==  
+        let g : nat = 42 in return g
+
+end A

@@ -1,0 +1,12 @@
+class UnaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+public Test : () ==> set of char  
+Test () ==
+return {'a',-1,+1};
+
+------------------------------------------------------------------------------
+end UnaryTest

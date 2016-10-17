@@ -1,0 +1,54 @@
+class A
+
+instance variables
+
+public i1 : nat := 1;
+private i2 : nat := 1;
+protected i3: nat := 1;
+i4: nat := 1;
+
+end A
+
+class B is subclass of A
+
+instance variables
+
+private i1 : nat := 2;
+private i2 : nat := 2;
+private i3: nat := 2;
+private i4: nat := 2;
+
+end B
+
+class C is subclass of A
+
+values
+
+private i1 : nat = 3;
+private i2 : nat = 3;
+private i3: nat = 3;
+private i4: nat = 3;
+
+end C
+
+class D is subclass of A
+
+instance variables
+
+public i1 : nat := 4;
+private i2 : nat := 4;
+protected i3: nat := 4;
+i4: nat := 4;
+
+end D
+
+class E is subclass of A
+
+instance variables
+
+public i1: nat := 5;
+public i2: nat := 5;
+public i3: nat := 5;
+public i4: nat := 5;
+
+end E

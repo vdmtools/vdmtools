@@ -1,0 +1,116 @@
+class PinListRow is subclass of Object
+operations 
+public  getEnd1 : () ==> [WireEndpoint]
+getEnd1() == 
+( return  ends(0)
+) ;
+
+public  getEnd2 : () ==> [WireEndpoint]
+getEnd2() == 
+( return  ends(1)
+) ;
+
+public  getWire : () ==> [Wire]
+getWire() == 
+( return  wire
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( return  pin1WireKey.toString()
+) ;
+
+public  PinListRow : [Wire] ==> PinListRow
+PinListRow(wire) == 
+( dcl   db : [Database] := Database`getDatabase();
+  PinListRow`wire := wire;
+  ends := ends ++ {0 |-> db.getWireEndpoint1(wire)};
+  ends := ends ++ {1 |-> db.getWireEndpoint2(wire)};
+  pin1WireKey := new  StringBuffer(25);
+  let - = pin1WireKey.append(wire.getEnd1RefDes().displayName())
+  in 
+    skip ;
+  let - = pin1WireKey.append(new  String("               "))
+  in 
+    skip ;
+  let - = pin1WireKey.setLength(15)
+  in 
+    skip ;
+  let - = pin1WireKey.append(ends(0).getPinName())
+  in 
+    skip ;
+  let - = pin1WireKey.append(new  String("          "))
+  in 
+    skip ;
+  let - = pin1WireKey.setLength(25)
+  in 
+    skip ;
+  let - = pin1WireKey.append(wire.getName())
+  in 
+    skip 
+) ;
+
+public  PinListRow : [RefDes] * [Wire] ==> PinListRow
+PinListRow(curRefDes, wire) == 
+( dcl   db : [Database] := Database`getDatabase();
+  PinListRow`wire := wire;
+  ends := ends ++ {0 |-> db.getWireEndpoint1(wire)};
+  if  ends(0).getRefDesId() = curRefDes.getId()
+  then  
+    ( ends := ends ++ {1 |-> db.getWireEndpoint2(wire)}
+    ) 
+  else  
+    ( ends := ends ++ {1 |-> ends(0)};
+      ends := ends ++ {0 |-> db.getWireEndpoint2(wire)}
+    ) ;
+  pin1WireKey := new  StringBuffer(25);
+  let - = pin1WireKey.append(ends(0).getPinName())
+  in 
+    skip ;
+  let - = pin1WireKey.append(new  String("               "))
+  in 
+    skip ;
+  let - = pin1WireKey.setLength(15)
+  in 
+    skip ;
+  let - = pin1WireKey.append(wire.getName())
+  in 
+    skip 
+) ;
+
+public  PinListRow : [PinListRow] * [Wire] ==> PinListRow
+PinListRow(pinListRow, wire) == 
+( dcl   db : [Database] := Database`getDatabase();
+  PinListRow`wire := wire;
+  ends := ends ++ {0 |-> pinListRow.getEnd2()};
+  ends := ends ++ {1 |-> pinListRow.getEnd1()};
+  pin1WireKey := new  StringBuffer(25);
+  let - = pin1WireKey.append(wire.getEnd2RefDes().displayName())
+  in 
+    skip ;
+  let - = pin1WireKey.append(new  String("               "))
+  in 
+    skip ;
+  let - = pin1WireKey.setLength(15)
+  in 
+    skip ;
+  let - = pin1WireKey.append(ends(0).getPinName())
+  in 
+    skip ;
+  let - = pin1WireKey.append(new  String("          "))
+  in 
+    skip ;
+  let - = pin1WireKey.setLength(25)
+  in 
+    skip ;
+  let - = pin1WireKey.append(wire.getName())
+  in 
+    skip 
+) ;
+
+instance variables 
+  private  wire : [Wire];
+  private  ends : map  int  to  [WireEndpoint] := {l_3 |-> nil  |l_3 in set  {0,...,2-1}};
+  private  pin1WireKey : [StringBuffer]
+  
+end  PinListRow

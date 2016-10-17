@@ -1,0 +1,17 @@
+ class A
+
+  values
+
+    private v : nat = 5
+
+end A
+
+class B is subclass of A
+
+  operations
+
+public Test : () ==> nat
+  Test() ==
+    return v
+
+end B

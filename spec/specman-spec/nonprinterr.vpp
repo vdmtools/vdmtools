@@ -1,0 +1,28 @@
+\begin{description}
+\item[Prestate:] $PromptErr$
+\item[Poststate:]$PromptErr$ 
+\end{description}
+
+When the first error occurs in the $PromptErr$ state, it is printed
+out and state changes to $NonPrintErr$. When the user command
+terminates, state changes back to $PromptErr$.
+
+\begin{vdm_al}
+class NonPrintErr is subclass of ErrorState
+
+--  Prestate: PromptErr
+--  Poststate: PromptErr
+
+--  When the first error occurs in the PromptErr state, it is printed out 
+--  and state changes to
+--  NonPrintErr. When the user command terminates, state changes back to PromptErr.
+
+operations
+
+public   AllDone: Errors ==> ()
+  AllDone(err) ==
+    def newstate = new PromptErr () in
+    self.SetNextState(err,newstate)
+
+end NonPrintErr
+\end{vdm_al}

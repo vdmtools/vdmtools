@@ -1,0 +1,221 @@
+
+Version:    6.3.b   
+tag:  HC_991103_RELEASE_63b
+Kommentar: Release with concurrency stack-interpreter. Internal release to
+           INFORMA. OSS, and VICE.
+
+Version: 3.3.2a
+tag:  jnj_991118_release_332a
+Comment: Beta release for VDM-SL on Solaris2.6 for Armand Puccetti. 
+
+Version: 6.3e
+tag:  jnj_991123_release_63e
+Comment: Internal bugfix release mainly for Informa/OSS. Code, spec, 
+         testcases was tagged.
+
+Version: 6.3f
+tag:  jnj_991126_release_63f
+Comment: Internal release, VICE/Informa. Fixed problems with un-initialised
+         pointers in interpreter on NT.
+
+Version: 6.3h
+tag: 
+Comment: Fixed bug for UML when 
+         operations/functions were added at UML level. 
+
+Version: 3.3.2/6.2.7
+tag:     jnj_991214_RELEASE_332_627
+Comment: External release with bug fix for debugger, new commands for
+         test coverage, first Linux RedHat 6.0 release, some UML improvements.
+	 Not released to HP, SunOS4.
+
+Version: 6.3j
+tag:     pm_20000111_release_63j
+Comment: First release with VICE Phase 2 Extensions
+
+Version: 6.3k
+tag:     pm_20000114_release_63k
+Comment: Release to VICE Project
+
+Version: 6.3l
+tag:     pm_20000128_release_63l
+Comment: Release to VICE Project
+
+Version: 6.3m
+tag:     pm_20000307_release_63m
+Comment: Release to VICE Project with TB112.2, TB112.3, TB112.4 & TB112.10
+
+Version: 6.3n
+tag:     pm_20000309_release_63n
+Comment: Fix to 6.3m relating to periodic threads
+
+Version: 6.3p
+tag:     pm_20000330_release_63p
+Comment: Release to VICE Project with TB112.1, TB112.5, TB112.6, TB112.7,
+         TB112.8 and TB28
+
+Version: 6.3q and 3.4q
+tag:     pm_20000503_release_63p34q
+Comment: Internal and beta releases
+
+Version: 6.3r
+tag:     pm_20000629_release_63r
+Comment: Release for VDM++ Course in Tokyo
+
+Version: 6.5a
+tag:     pm_20000817_release_65a
+Comment: Internal VDM++ release
+
+Version: 6.5b
+tag:     pm_20000825_release_65b
+Comment: Release to JFITS with type checker fixes
+
+Version: 6.5c
+tag:     pm_20000908_release_65c
+Comment: Release to JFITS/PGL with GUI fix, doesn't crash on JSF model
+
+Version: 6.5d and 3.5a
+tag:     pm_20000925_release_65d35a
+Comment: Release to JFITS with DL Classes
+
+Version: 6.5e and 3.5b
+tag:     pm_20001005_release_65e35b
+Comment: Fix to DL Classes (functions added), internal VDM-SL release
+
+Version: 6.6 and 3.6
+tag:     pm_20001031_release_6636
+Comment: Public release
+
+Version: 6.7.1
+tag:     pm_20001116_release_671
+Comment: Internal release (VDM++ and VICE) with fixes to interpreter
+         (exception handling and scope in field select expressions)
+
+Version: 6.7.2
+tag:     pm_20001124_release_672
+Comment: Internal release (VDM++ and VICE) with fixes to scheduler,
+         type checker and test coverage statistics.
+
+Version: 6.7.3
+tag:     pm_20010111_release_673
+Comment: Release (VDM++) to JFITS with fix for type checking of exception 
+         handlers
+
+Version: 6.7.4
+tag:     pm_20010504_release_674
+Comment: Release (VDM++) to Boeing with qtgui and java2vdm component
+
+Version: 6.7.5
+tag:     pm_20010530_release_675
+Comment: Release (VDM++) with semi-i18n support
+
+Version: 6.7.6
+tag:     pm_20010601_release_676
+Comment: Release (VDM++) with semi-i18n support (corrected - backslash.cc updated)
+
+Version: 6.7.7
+tag:     pm_20010612_release_677
+Comment: Release (VDM++) with i18n support
+
+Version: 6.7.8
+tag:     pm_20010625_release_678
+Comment: Release (VDM++) with i18n support (corrected - crash while syntax check)
+
+Version: 6.7.9
+tag:     pm_20010705_release_679
+Comment: Release (VDM++) with fix for fecho \n \t
+
+Version: 6.7.10
+tag:     pm_20010713_release_6710
+Comment: Release (VDM++) containing a number of fixes for JFITS
+
+Version: 6.7.11
+tag:     pm_20012013_release_6711
+Comment: Release (VDM++) containing further fixes for JFITS
+
+Version: 6.7.12
+tag:     ml_20010802_release_6712
+Comment: Release (VDM++) containing further fixes for JFITS and Boeing
+
+Version: 6.7.13
+tag:     ml_20010806_release_6713
+Comment: Release (VDM++) containing further fixes for JFITS(wrt RTF files)
+
+Version: 6.7.14
+tag:     pm_20010811_release_6714
+Comment: Release (VDM++) containing fixes to GUI and java code generator
+         (Note that the tag for vdmde.cc corresponds to the incorrect
+         version of the file; it should in fact be version 1.149 with
+         the following diff:
+
+paulm@Zeus cvs diff vdmde.cc
+Index: vdmde.cc
+===================================================================
+RCS file: /home/cvsrepos/toolbox/code/diverse/vdmde.cc,v
+retrieving revision 1.149
+diff -r1.149 vdmde.cc
+545c545
+<           package_name = Token(packageString);
+---
+>           package_name = Sequence(packageString);
+
+Version: 6.7.15
+tag:     ml_20010907_release_6715
+Comment: Release (VDM++) build after CVS crash.
+         It contains fixes wrt token and DL classes, missing {} in code
+         generating java if-then-else, string vs vector size/length and
+         substring/subList problem, parameters in the backtrace window,
+         deleting breakpoints. It uses 3.0.0beta3. It does not use
+         multithreading! It is not completely i18n compliant (unicode 
+         characters in class names are not correctly displayed).
+         There is no cursor displayed in the source window pointing
+         the current position during stepwise execution.
+
+Version: 6.7.16 and 3.7.1
+tag:     pm_20010918_release_6716_371
+Comment: Recovery after system crash; first version with qtgui for SL toolbox
+
+
+Version 6.7.17
+tag:     pm_20011006_release_6717
+Comment: Beta candidate containing further GUI fixes, plus extension to JavaCG
+
+Version 6.7.18
+tag:     ml_20011012_release_6718
+Comment: Another Beta candidate containing further fixes
+
+Version 6.7.19 and 3.7.2
+tag:     pm_20011024_release_6719_372
+Comment: Beta release
+
+Version 6.7.20
+tag:     pm_20011109_release_6720
+Comment: Beta release 2
+
+Version 6.7.21
+tag:     pm_20011119_release_6721
+Comment: Second attempt at beta release 2 (6.7.20 never release)
+
+Version 6.7.22
+tag:     ml_20011130_release_6722
+Comment: Yet another candidate for beta release 2
+
+Version 6.7.23
+tag:     ml_20011205_release_6723
+Comment: Final candidate (I hope :) ) for beta release 2
+
+Version 6.7.24
+tag:     ml_20020118_release_6724
+Comment: Beta release 2
+
+Version 6.7.25
+tag:     ml_20021231_release_6725
+Comment: Beta release 3 (fixes to latex pretty-printer and code generator)
+
+Version 6.7.26
+tag:     ml_20021231_release_6726_378
+Comment: Beta release 4 (fixes to latex pretty-printer, code generator, type checking of 'mod'(LhsAndRhsType of 'mod' is integer))
+
+Version 6.7.28
+tag:     ml_20040322_release_6728_379
+Comment: Beta release 5 (neccesary changes to build VICE version for Windows, Two more standard functions 'rand' and 'gettime' added, fix to the random generator settings in the interpreter options window, an expression can be used as the argument of the duration statement)

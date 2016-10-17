@@ -1,0 +1,22 @@
+ class A
+
+  types
+
+    protected T :: v : nat
+
+end A
+
+class B is subclass of A
+
+  operations
+
+    Op : () ==> T
+    Op() ==
+      return mk_T(3);
+
+  public Test : () ==> nat
+    Test() ==
+      let - = Op()
+      in return 1
+
+end B

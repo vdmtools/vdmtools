@@ -1,0 +1,18 @@
+class B
+
+instance variables
+  a: A;
+
+operations
+
+public Test : () ==> seq of real
+  Test()  ==
+  ( dcl res: seq of real;
+    a := new A();
+    start (a);
+    return a.Get();
+  )
+
+end B
+
+    

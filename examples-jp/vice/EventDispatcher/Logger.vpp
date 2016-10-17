@@ -1,0 +1,29 @@
+\begin{vdm_al}
+class 『ログ作成者』 is subclass of 『事象共通定義』
+
+instance variables
+  -- using the VDMTools standard IO library to create a trace file
+  private
+  static io : IO := new IO();
+  private
+  static mode : IO`filedirective := <start>
+
+operations
+  -- printNetworkEventネットワーク事象を表示する writes a time trace to the file mytrace.txt
+  -- this file can be used for application specific post analysis
+  public ネットワーク事象を表示する: 「タスク名」 * 「タスク名」 * 「事象ID」 ==> ()
+  ネットワーク事象を表示する (a元タスク名, a先タスク名, a事象ID) ==
+    def - = io.fwriteval[seq of (seq of char | 「タスク名」 | 「事象ID」 | nat)]
+      ("mytrace.txt", ["『ネットワーク事象』", a元タスク名, a先タスク名, a事象ID, time], mode)
+      in mode := <append>;
+
+  -- printInterruptEvent割込事象を表示する writes a time trace to the file mytrace.txt
+  -- this file can be used for application specific post analysis
+  public 割込事象を表示する: 「タスク名」 * 「タスク名」 * 「事象ID」 ==> ()
+  割込事象を表示する (a元タスク名, a先タスク名, a事象ID) ==
+    def - = io.fwriteval[seq of (seq of char | 「タスク名」 | 「事象ID」 | nat)]
+      ("mytrace.txt", ["『割込事象』", a元タスク名, a先タスク名, a事象ID, time], mode)
+      in mode := <append>;
+
+end 『ログ作成者』
+\end{vdm_al}

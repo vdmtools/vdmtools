@@ -1,0 +1,16 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+public Test : () ==> set of nat  
+Test () ==
+return 
+    { a| a in set {1,2,3} & a <> 2}
+	
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

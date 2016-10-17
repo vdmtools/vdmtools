@@ -1,0 +1,15 @@
+class IfStmtTest
+
+operations
+
+  If16: () ==> int
+  If16() ==
+    let f = false,
+        t = true
+    in
+    if true
+    then || ( return t,
+              return f )
+    else || ( return ,
+              return 8 );
+end IfStmtTest

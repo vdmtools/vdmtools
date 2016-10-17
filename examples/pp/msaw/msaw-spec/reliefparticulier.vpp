@@ -1,0 +1,14 @@
+class ReliefParticulier is subclass of Obstacle, Polygone
+
+   instance variables
+      altitude_maximale: MSAWTypes`Pieds
+
+   operations
+      Intersection: SegmentDePrediction ==> bool
+      Intersection (segment_de_prediction) ==
+        def points_de_vecteur = segment_de_prediction.GetPoints () in
+            return (exists mk_(xy, z) in set points_de_vecteur &
+                       DansPolygone (xy, sommets) and
+                       z <= altitude_maximale)
+
+end ReliefParticulier

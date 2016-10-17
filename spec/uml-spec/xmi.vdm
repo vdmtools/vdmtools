@@ -1,0 +1,204 @@
+module XMI
+
+exports all
+
+definitions
+
+types
+
+NotYet = token;
+
+String = seq of char;
+
+Attributes = map String to String;
+
+Document :: attrs      : Attributes
+            header     : Header
+            content    : Content
+            difference : [ Difference ]
+            extensions : [ Extensions ];
+
+--
+-- Header part --
+--
+
+Header :: attrs         : Attributes
+          documentation : [ Documentation ]
+          import        : [ Import ]
+          metametamodel : [ Metametamodel ]
+          metamodel     : [ Metamodel ]
+          model         : [ Model ];
+
+Documentation :: attrs                  : Attributes
+                 exporter               : [ Exporter ]
+                 exporterVersion        : [ ExporterVersion ]
+                 currentModelVersion    : [ CurrentModelVersion ]
+                 maxModelVersion        : [ MaxModelVersion ]
+                 currentModelProducer   : [ CurrentModelProducer ]
+                 sortedVersionHistories : [ SortedVersionHistories ];
+
+Exporter :: attrs : Attributes
+            text  : [ String ];
+
+ExporterVersion :: attrs : Attributes
+                   text  : [ String ];
+
+CurrentModelVersion :: attrs : Attributes
+                       text  : [ String ];
+
+MaxModelVersion :: attrs : Attributes
+                   text  : [ String ];
+
+CurrentModelProducer :: attrs : Attributes
+                        text  : [ String ];
+
+SortedVersionHistories :: attrs        : Attributes
+                          versionEntry : seq of VersionEntry;
+
+VersionEntry :: attrs : Attributes;
+
+Import :: attrs : Attributes
+          date  : [ String ];
+
+Metametamodel :: attrs : Attributes;
+
+Metamodel :: attrs : Attributes;
+
+Model :: attrs : Attributes;
+
+Extension :: attrs     : Attributes
+             extension : seq of NotYet;
+
+--
+-- Content --
+--
+
+Content :: attrs      : Attributes
+           model      : [ UMLModel ]
+           primitives : seq of UMLPrimitive
+           extensions : seq of Extension
+           diagram    : [ UMLDiagram ];
+
+Difference :: attrs : Attributes;
+
+Extensions :: attrs : Attributes;
+
+UMLModel :: attrs        : Attributes
+            modelElement : UMLModelElement
+            namespace    : UMLNamespace;
+
+UMLNamespace :: attrs        : Attributes
+                ownedElement : seq of ( UMLStereotype |
+                                        UMLPackage |
+                                        UMLInterface |
+                                        UMLGeneralization |
+                                        UMLAssociation |
+                                        UMLAssociationEnd |
+                                        UMLClass );
+
+UMLModelElement :: attrs        : Attributes
+                    namespace   : seq of UMLNamespace
+                    visibility  : [ String ]
+                    definition  : [ String ]
+                    stereotype  : seq of UMLStereotype
+                    taggedValue : seq of UMLTaggedValue
+                    constraint  : seq of UMLConstraint;
+
+UMLPrimitive :: attrs     : Attributes
+                primitive : seq of String;
+
+UMLDiagram :: attrs        : Attributes
+              modelElement : UMLModelElement
+              element      : seq of UMLDiagramElement;
+
+UMLDiagramElement :: attrs : Attributes;
+
+UMLStereotype :: attrs           : Attributes
+                 baseClass       : String
+                 extendedElement : seq of UMLModelElement;
+
+UMLPackage :: attrs        : Attributes
+              modelElement : UMLModelElement
+              namespace    : UMLNamespace;
+
+UMLInterface :: attrs        : Attributes
+                modelElement : UMLModelElement;
+
+UMLGeneralization :: attrs        : Attributes
+                     modelElement : UMLModelElement
+                     child        : [ UMLGeneralizableElement ]
+                     parent       : [ UMLGeneralizableElement ]
+                     flag         : [ bool ]; -- not in xmi spec
+
+UMLGeneralizableElement :: attrs          : Attributes
+                           generalization : seq of UMLGeneralization;
+
+UMLAssociation :: attrs        : Attributes
+                  modelElement : UMLModelElement
+                  connection   : seq of UMLAssociationEnd;
+
+UMLAssociationEnd :: attrs             : Attributes
+                     modelElement      : UMLModelElement
+                     feature           : UMLFeature
+                     structuralFeature : UMLStructuralFeature
+                     participant       : [ UMLClassifier ]
+                     association       : [ UMLAssociation ]
+                     visibility        : [ String ];
+                   
+UMLFeature :: attrs      : Attributes
+              owner      : [ UMLFeature ]
+              visibility : [ String ];
+
+UMLStructuralFeature :: attrs        : Attributes
+                        multiplicity : [ UMLMultiplicity ]
+                        type         : [ UMLClassifier ];
+
+UMLClassifier :: attrs   : Attributes
+                 feature : seq of ( UMLAttribute | UMLOperation );
+
+UMLClass :: attrs                : Attributes
+            modelElement         : UMLModelElement
+            namespace            : UMLNamespace
+            generalizableElement : UMLGeneralizableElement
+            classifier           : [ UMLClassifier ];
+
+UMLTaggedValue :: attrs        : Attributes
+                  modelElement : UMLModelElement;
+
+UMLConstraint :: attrs              : Attributes
+                 modelElement       : UMLModelElement
+                 body               : [ UMLBooleanExpression ]
+                 constrainedElement : [ NotYet ];
+
+UMLMultiplicity :: attrs : Attributes
+                   range : [ UMLMultiplicityRabge ];
+
+UMLMultiplicityRabge :: attrs : Attributes;
+
+UMLAttribute :: attrs             : Attributes
+                modelElement      : UMLModelElement
+                feature           : UMLFeature
+                structuralFeature : UMLStructuralFeature
+                initialValue      : [ UMLExpression ];
+
+UMLOperation :: attrs             : Attributes
+                modelElement      : UMLModelElement
+                feature           : UMLFeature
+                behavioralFeature : UMLBehavioralFeature;
+
+UMLBehavioralFeature :: attrs     : Attributes
+                        parameter : seq of UMLParameter;
+
+UMLParameter :: attrs             : Attributes
+                modelElement      : UMLModelElement
+                behavioralFeature : [ UMLBehavioralFeature ]
+                type              : [ UMLClassifier ]
+                defaultValue      : [ UMLExpression ];
+
+UMLExpression :: attrs : Attributes
+                 body : [ String ];
+
+UMLBooleanExpression :: attrs : Attributes
+                        body : [ String ];
+
+end XMI

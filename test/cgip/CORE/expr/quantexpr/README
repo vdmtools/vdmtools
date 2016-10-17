@@ -1,0 +1,15 @@
+quantexpr-03 is expected to evaluate to: UNEXPECTED RESULT!!
+
+quantexpr-03 should evaluate to (genarated code):
+  [ false, true, true, false, true, false, true, true ]
+
+whereas vdmde evaluates to:
+  [ false,true,false,true,true,false,true,true ]
+
+both are wrong results, which should have been:
+ [ false, true, true, true, true, false, true, true ]
+
+The errors corresponds to the expressions:
+  exists1 {a,b} in set {{1,2}, 7, {2}, {2,3,4}, {3,6}} & a = 3
+and
+  exists1 {a,b} in set {{1,2}, 7, {2}, {2,3,4}, {3,6}} & b = 3

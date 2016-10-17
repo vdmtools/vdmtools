@@ -1,0 +1,43 @@
+class A is subclass of C
+
+instance variables
+  state        : [B] := new B();
+  a : (int*real) | int := 2;   
+
+operations
+
+  public Test : () ==> real
+  Test() ==
+    (evalExpr();
+    return 1.2);
+
+  getState: () ==> B
+  getState() == return state
+  pre state <> nil;
+
+  evalExpr: () ==> () 
+  evalExpr() ==
+   (cases a:
+    2 -> let a=1 in
+         getState().changeState(),
+    others->error
+    end
+    );
+ 
+end A
+
+class B is subclass of C
+
+instance variables
+   id : int := 4;
+operations
+
+public changeState:() ==> ()
+changeState()==
+id := 3
+
+end B
+
+class C
+
+end C

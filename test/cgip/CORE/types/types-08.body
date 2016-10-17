@@ -1,0 +1,11 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> inmap nat to nat  
+Test () ==
+( dcl a : inmap nat to nat := {3 |-> 4};
+  return a
+);
+  
+types 
+  mymap = inmap nat to nat
+
+end A

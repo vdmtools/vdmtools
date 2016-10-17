@@ -1,0 +1,14 @@
+class VisualObstacleArtificiel is subclass of ObstacleArtificiel
+
+   instance variables
+      view: View
+
+   operations
+      Set: MSAWTypes`Coordonnees * MSAWTypes`NM * MSAWTypes`Pieds * View ==> ()
+      Set (centre', rayon', altitude_maximale', view') ==
+      (  self.ObstacleArtificiel`Set(centre',rayon',altitude_maximale');
+         view := view';
+         view.ShowObstacleArtificiel (centre, rayon, altitude_maximale)
+      )
+
+end VisualObstacleArtificiel

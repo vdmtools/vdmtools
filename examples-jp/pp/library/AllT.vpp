@@ -1,0 +1,14 @@
+\subsection{AllT}
+全テストケースのテスト
+\begin{vdm_al}	
+class AllT
+operations
+public run : () ==> seq of bool
+run () == 
+	return
+	[
+		new 図書館貸出管理クラスT().run()
+	]
+	;
+end AllT
+\end{vdm_al}

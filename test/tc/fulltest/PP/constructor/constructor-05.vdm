@@ -1,0 +1,26 @@
+-- Check that private default constructor can not be called
+class A
+
+instance variables
+
+n : nat := 0;
+
+operations
+
+A : () ==> A
+A() ==
+( n := 0;
+  return self
+)
+
+end A
+
+class B
+
+operations
+
+op : () ==> A
+op() ==
+  return new A()
+
+end B

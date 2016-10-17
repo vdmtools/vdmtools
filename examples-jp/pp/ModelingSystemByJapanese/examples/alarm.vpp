@@ -1,0 +1,94 @@
+--$Header: /home/vdmtools/cvsroot/toolbox/examples-jp/pp/ModelingSystemByJapanese/examples/alarm.vpp,v 1.1 2006/01/04 06:44:17 vdmtools Exp $
+-- 専門家呼出システム
+-- VDM-SL model Version 1.01
+-- Date: 21 August 1997
+-- Engineer: JSF
+--　翻訳：佐原伸
+--工場全体は、各期間とその時勤務している専門家の集合を関係づける計画を含む；
+--警報の構成要素は起こりえる警報を記録する。
+class 工場クラス
+types
+public 計画型 = map 期間型 to set of 専門家クラス
+inv 計画 ==
+	forall 専門家 in set rng 計画 & 
+		専門家 <> {} ;
+		
+public 期間型 = token;
+instance variables
+public 計画 : 計画型;
+public 警報集合   : set of 警報クラス;
+inv 
+	forall 警報 in set 警報集合 &
+		forall 期間 in set dom 計画 &
+			資格OK？(計画(期間),警報.資格を求める());
+operations
+static public 工場クラス : 計画型 * set of 警報クラス ==> 工場クラス
+工場クラス(ある計画, ある警報集合) ==	(	dcl ある工場 : 工場クラス := new 工場クラス();	計画 := ある計画;
+	警報集合 := ある警報集合;
+	return ある工場
+	);
+-- 与えられた期間に働いている専門家の数
+public 専門家の数: 期間型 ==> nat
+専門家の数(ある期間) ==
+	return
+		card self.計画(ある期間)
+pre	ある期間 in set dom self.計画;
+--与えられた専門家が働いている期間 
+public 専門家が働く期間: 専門家クラス ==> set of 期間型
+専門家が働く期間(ある専門家) ==
+	return		{期間| 期間 in set dom self.計画 & ある専門家 in set self.計画(期間)};
+-- 与えられた警報を取り扱うための正しい資格を持つ専門家を捜す
+/*
+public 専門家を捜す(ある警報:警報クラス,ある期間:期間型) 求める専門家: 専門家クラス
+pre
+	ある期間 in set dom self.計画 and
+	ある警報 in set self.警報集合
+post
+	求める専門家 in set self.計画(ある期間) and
+	ある警報.資格を求める() in set 求める専門家.資格を求める();
+*/public 専門家を捜す: 警報クラス * 期間型 ==> 専門家クラス
+専門家を捜す(ある警報, ある期間) ==
+	(
+	let 求める専門家 in set self.計画(ある期間) be st		ある警報.資格を求める() in set 求める専門家.資格を求める()
+	in
+	return 求める専門家
+	)
+pre
+	ある期間 in set dom self.計画 and
+	ある警報 in set self.警報集合
+post
+	RESULT in set self.計画(ある期間) and	ある警報.資格を求める() in set RESULT.資格を求める();
+functions
+-- 与えられた資格を持つ専門家が居るか判定する
+public 資格OK？: set of 専門家クラス * 専門家クラス`資格型 -> bool資格OK？(ある専門家集合,要求される資格) ==
+	exists ある専門家 in set ある専門家集合 & 要求される資格 in set ある専門家.資格を求める()
+end 工場クラス
+-------------------------------------
+class 専門家クラス --一意性は計画型の不変条件で保証される
+types
+public 資格型 = <電気> | <機械> | <生物> | <化学>;
+instance variables
+public 資格集合 : set of 資格型;
+inv
+	資格集合 <> {};
+operations
+static public 専門家クラス : set of 資格型 ==> 専門家クラス
+専門家クラス(ある資格集合) ==	(
+	dcl ある専門家 : 専門家クラス := new 専門家クラス();	資格集合 := ある資格集合;
+	return ある専門家
+	);
+public 資格を求める : () ==> set of 資格型
+資格を求める() == return 資格集合;
+end 専門家クラス
+-------------------------------------
+class 警報クラス
+instance variablespublic 警報文 : seq of char;
+public 資格 : 専門家クラス`資格型;
+operations
+static public 警報クラス :  seq of char * 専門家クラス`資格型 ==> 警報クラス
+警報クラス(ある警報文, ある資格) ==
+	(	dcl ある警報 : 警報クラス := new 警報クラス();
+	警報文 := ある警報文;	資格 := ある資格;	return ある警報	);	
+public 資格を求める : () ==> 専門家クラス`資格型
+資格を求める() == return 資格;
+end 警報クラス

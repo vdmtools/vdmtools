@@ -1,0 +1,23 @@
+class Object
+/*
+作成者 = 佐原伸
+作成日 = 2000年 8月 23日 
+責任
+	オブジェクト共通の振る舞いを表す。
+
+概要
+	すべてのオブジェクトに共通な機能を定義する。
+*/
+
+values
+	Rcsid = "$Id: Object.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $";
+	
+functions 
+
+public hashCode : () -> int
+hashCode() == is subclass responsibility;
+
+public equals : Object -> bool
+equals(aData) == is subclass responsibility;
+			
+end Object

@@ -1,0 +1,13 @@
+class BinaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = { 1 |-> 3} munion {true}
+  in skip;
+
+------------------------------------------------------------------------------
+end BinaryTest

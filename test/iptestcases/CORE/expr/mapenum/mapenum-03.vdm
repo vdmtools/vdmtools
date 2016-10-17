@@ -1,0 +1,18 @@
+-- This test case checks that a nil field in a Tuple does not cause a
+-- problem (originally lead to a NullPointerException)
+
+class A
+
+operations
+
+public Test : () ==> real
+Test() ==
+( dcl m : map nat * [nat] to (real * real);
+  m := { mk_(1,1) |-> mk_(2.0, 3.0)};
+  m := m ++ { mk_(2,nil) |-> mk_(3.0, 4.0)};
+  let mk_(a,b) = m(mk_(1,1))
+  in  return a + b;
+)
+
+end A
+

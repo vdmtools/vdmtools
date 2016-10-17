@@ -1,0 +1,90 @@
+class MATH
+
+-- 	VDMTools STANDARD LIBRARY: MATH
+--      -------------------------------
+-- 
+-- Standard library for the VDMTools Interpreter. When the interpreter
+-- evaluates the preliminary functions/operations in this file,
+-- corresponding internal functions is called instead of issuing a run
+-- time error. Signatures should not be changed, as well as name of
+-- module (VDM-SL) or class (VDM++). Pre/post conditions is 
+-- fully user customisable. 
+-- Dont care's may NOT be used in the parameter lists.
+
+  functions
+public
+    sin:real +> real
+    sin(v) ==
+    is not yet specified    
+    post abs RESULT <= 1;
+
+public
+    cos:real +> real
+    cos(v) ==
+    is not yet specified
+    post abs RESULT <= 1;
+
+public
+    tan:real -> real
+    tan(a) ==
+    is not yet specified
+    pre cos(a) <> 0;
+
+public
+    cot:real -> real	
+    cot(a) ==
+    is not yet specified -- Could also be: 1/tan(r)
+    pre sin(a) <> 0;
+
+public
+    asin:real -> real
+    asin(a) ==
+    is not yet specified
+    pre abs a <= 1;
+
+public
+    acos:real -> real
+    acos(a) ==
+    is not yet specified
+    pre abs a <= 1;
+
+public
+    atan:real +> real
+    atan(v) ==
+    is not yet specified;
+
+public
+    acot:real +> real
+    acot(a) ==
+    atan(1/a)
+    pre a <> 0;
+
+public
+    sqrt:real -> real
+    sqrt(a) ==
+    is not yet specified
+    pre a >= 0;
+
+public
+    pi_f:() +> real
+    pi_f () ==
+    is not yet specified
+
+  values
+public
+    pi = 3.14159265358979323846
+
+ 
+end MATH
+class A
+operations
+
+public Test:() ==> seq of real
+Test () ==
+  def m : MATH = new MATH () in
+  return [
+    m.sin("A")
+    ]   
+
+end A
+    

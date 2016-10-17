@@ -1,0 +1,80 @@
+% WHAT
+%    The main file of the specification of the static mapper from
+%    VDM++ to UML
+% FILE
+%    $Source: /home/vdmtools/cvsroot/toolbox/spec/uml-spec/mapper.tex,v $
+% VERSION
+%    $Revision: 1.2 $
+% DATE
+%    $Date: 1999/09/07 13:13:17 $
+% FORMAT
+%    $State: Exp $
+% PROJECT
+%    Afrodite - ESPRIT III programme, project no. 6500.
+% STATUS
+%    Under development.
+% AUTHOR
+%    $Author: paulm $
+% COPYRIGHT
+%    (C) 1993 IFAD, Denmark
+
+\documentclass[a4paper,dvips]{article}
+\usepackage[dvips]{color}
+\usepackage{vdmsl-2e}
+\usepackage{longtable}
+\usepackage{alltt}
+\usepackage{makeidx}
+\usepackage{ifad}
+
+\definecolor{covered}{rgb}{0,0,0}      %black
+%\definecolor{not_covered}{gray}{0.5}   %gray for previewing
+\definecolor{not_covered}{gray}{0.6}   %gray for printing
+%\definecolor{not_covered}{rgb}{1,0,0}  %read
+
+
+%\documentstyle[vdmsl_v1.1.31,alltt,makeidx,ifad,a4]{article}
+
+
+\newcommand{\StateDef}[1]{{\bf #1}}
+\newcommand{\TypeDef}[1]{{\bf #1}}
+\newcommand{\TypeOcc}[1]{{\it #1}}
+\newcommand{\FuncDef}[1]{{\bf #1}}
+\newcommand{\FuncOcc}[1]{#1}
+\newcommand{\ModDef}[1]{{\tiny #1}}
+
+
+\newcommand{\MCL}{Meta-IV Class Library}
+\newcommand{\TBW}{TO BE WRITTEN}
+\newcommand{\NYI}{Notice, that this function/operation is not fully
+  specified in order to capture a possible integration with another
+  library than \MCL{}.}
+\newcommand{\nfs}{{\em not fully specified\/}}
+\newcommand{\vpp}{VDM$^{++}$}
+\makeindex
+
+\begin{document}
+\section{Introduction}
+This module defines the abstract UML syntax as well as operations to
+build a vaule of this type.
+
+\section{Overall structure of the specification}
+In module $AUML$ the abstract UML syntax is defined, and in module
+$BUILD$ the operations for building the data structure are
+defined. $ERR$ holds two operations for generating warnings and
+errors. The associations between classes are determined from a
+dependency graph which is constructed by means of the module $DEP$
+documented in~\cite{depend}.
+\input{auml.vdm.tex}
+
+\input{build.vdm.tex}
+
+\input{error.vdm.tex}
+
+\input{ast-merge.vdm.tex}
+
+\bibliographystyle{iptes}
+\bibliography{/home/storm/bib/ole}
+
+\end{document}
+
+

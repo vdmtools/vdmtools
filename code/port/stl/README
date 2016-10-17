@@ -1,0 +1,123 @@
+*************************************************************
+*            STLport (adapted SGI STL) README file
+*                      VERSION 3.01
+*                Last updated : Feb 08, 1998.
+*************************************************************
+
+This package is build upon the SGI Standard Template Library (STL) 
+public distribution release 3.0 (Oct 28, 1997), which is:
+
+Copyright (c) 1994 Hewlett-Packard Company 
+
+Copyright (c) 1996,97 Silicon Graphics Computer Systems, Inc.
+
+That material is provided pursuant to the following permission notices:
+
+Permission to use, copy, modify, distribute and sell this software
+and its documentation for any purpose is hereby granted without fee,
+provided that the above copyright notice appear in all copies and
+that both that copyright notice and this permission notice appear
+in supporting documentation.  Hewlett-Packard Company makes no
+representations about the suitability of this software for any
+purpose.  It is provided "as is" without express or implied warranty.
+
+Permission to use, copy, modify, distribute and sell this software
+and its documentation for any purpose is hereby granted without fee,
+provided that the above copyright notice appear in all copies and
+that both that copyright notice and this permission notice appear
+in supporting documentation.  Silicon Graphics makes no
+representations about the suitability of this software for any
+purpose.  It is provided "as is" without express or implied warranty.
+
+This adaptation is
+Copyright (c) 1997 Moscow Center for SPARC Technology.
+
+Permission to use, copy, modify, distribute and sell this software
+and its documentation for any purpose is hereby granted without fee,
+provided that the above copyright notice appear in all copies and
+that both that copyright notice and this permission notice appear
+in supporting documentation.  Moscow Center for SPARC Technology makes no
+representations about the suitability of this software for any
+purpose.  It is provided "as is" without express or implied warranty.
+
+*************************************************************
+ 
+*************************************************************
+GETTING THE LIBRARY
+
+Look for the latest STLport release at : "http://www.metabyte.com/~fbp/stl/"
+
+*************************************************************
+
+*************************************************************
+ABSTRACT
+
+The main goal was to retain original ( as with default template
+parameters ) STL functionality for most compilers. 
+
+Added namespace support for appropriate compilers.
+Added debug mode support.
+
+See ChangeLog for details.
+
+*************************************************************
+TESTING SUMMARY
+
+STLport has been successfully tested using several test suites
+(check http://www.metabyte.com/~fbp/stl/testsuite.html)
+, with additional check for separate compilation & multiple units.
+STLport was reported to work with the following compilers:
+
+    GCC 2.7.2 (+/- frepo) on sparc-solaris2.5, i386-solaris2.4, linux-i386, 
+    some cross-platform configurations;
+    Cygnus version included in cygwin32 package works on Win95/NT
+    (auto-recognized);
+
+    SunPro C++ 4.0.1-4.2 (auto-recognized);
+
+    Borland C++ 4.52-5.02 (auto-recognized);
+
+    Visual C++ 4.x-5.0 (auto-recognized);
+
+    SGI MIPSpro C++ 4.x, 7.x (auto-recognized);
+
+    AIX xlC 3.1.4.0 (auto-recognized);
+
+    KAI C++ 3.1c (configuring is necessary);
+
+    DEC C++ V5.5-004 on OSF 3.2/4.0 (configuring is necessary);
+
+    Watcom C++ 10.x-11.0 (auto-recognized);
+    
+    Tandem NCC was reported to work (configuring is necessary); 
+    
+    Visual Age C++ 3.0 (auto-recognized); 
+
+    Symantec C++ 7.5 (auto-recognized); 
+
+    Metrowerks CodeWarrior Pro 1 (auto-recognized);
+
+    HP aCC 1.06 (auto-recognized);
+
+    PowerSoft's Power++ (auto-recognized)
+
+    OS 390 CC 1.x-2.x compilers (auto-recognized).
+
+*************************************************************
+KNOWN PROBLEMS
+
+Some compilers, altough supported, still have problems.
+Refer to README.<your compiler version> if appropriate.
+*************************************************************
+
+*************************************************************
+ACKNOWLEDGEMENTS
+
+Lots of appreciation goes to SGI STL development team (stl@sgi.com).
+Special thanks to :
+	Matt Austern <austern@mti.sgi.com>, for support of this effort;
+	Dave Abrahams <abrahams@motu.com>, for his exception-handling testsuite;
+	Cay Horstmann <cay@horstmann.com>, for STL debug approach example
+
+Thanks to all contributors who have submitted bug reports, patches and suggestions.
+*************************************************************

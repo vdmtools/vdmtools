@@ -1,0 +1,37 @@
+\begin{picture}(0,0)%
+\special{psfile=graph.pstex}%
+\end{picture}%
+\setlength{\unitlength}{0.01250000in}%
+%
+\begingroup\makeatletter\ifx\SetFigFont\undefined
+% extract first six characters in \fmtname
+\def\x#1#2#3#4#5#6#7\relax{\def\x{#1#2#3#4#5#6}}%
+\expandafter\x\fmtname xxxxxx\relax \def\y{splain}%
+\ifx\x\y   % LaTeX or SliTeX?
+\gdef\SetFigFont#1#2#3{%
+  \ifnum #1<17\tiny\else \ifnum #1<20\small\else
+  \ifnum #1<24\normalsize\else \ifnum #1<29\large\else
+  \ifnum #1<34\Large\else \ifnum #1<41\LARGE\else
+     \huge\fi\fi\fi\fi\fi\fi
+  \csname #3\endcsname}%
+\else
+\gdef\SetFigFont#1#2#3{\begingroup
+  \count@#1\relax \ifnum 25<\count@\count@25\fi
+  \def\x{\endgroup\@setsize\SetFigFont{#2pt}}%
+  \expandafter\x
+    \csname \romannumeral\the\count@ pt\expandafter\endcsname
+    \csname @\romannumeral\the\count@ pt\endcsname
+  \csname #3\endcsname}%
+\fi
+\fi\endgroup
+\begin{picture}(212,83)(74,478)
+\put( 75,480){\makebox(0,0)[lb]{\smash{\SetFigFont{11}{13.2}{rm}21}}}
+\put(155,480){\makebox(0,0)[lb]{\smash{\SetFigFont{11}{13.2}{rm}22}}}
+\put(215,480){\makebox(0,0)[lb]{\smash{\SetFigFont{11}{13.2}{rm}23}}}
+\put(275,480){\makebox(0,0)[lb]{\smash{\SetFigFont{11}{13.2}{rm}24}}}
+\put(275,550){\makebox(0,0)[lb]{\smash{\SetFigFont{11}{13.2}{rm}20}}}
+\put(215,550){\makebox(0,0)[lb]{\smash{\SetFigFont{11}{13.2}{rm}19}}}
+\put(155,550){\makebox(0,0)[lb]{\smash{\SetFigFont{11}{13.2}{rm}18}}}
+\put(115,530){\makebox(0,0)[lb]{\smash{\SetFigFont{11}{13.2}{rm}17}}}
+\put( 75,550){\makebox(0,0)[lb]{\smash{\SetFigFont{11}{13.2}{rm}16}}}
+\end{picture}

@@ -1,0 +1,33 @@
+module A
+
+exports all
+definitions
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+---------------------------------------------------------------------
+----------------- LetExpr         -----------------------------------
+---------------------------------------------------------------------
+
+Test: () ==> seq of (nat | bool)  
+Test () ==
+return
+let 
+  f: nat -> nat 
+  f(n) ==
+    2*n 
+  pre n > 2
+  post 2*n = RESULT
+in
+  let a : int = f(4),
+      b : int = f(5),
+    g: nat -> bool
+    g(n) ==
+      n > 3
+  in
+    [a, b, g(0)]
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

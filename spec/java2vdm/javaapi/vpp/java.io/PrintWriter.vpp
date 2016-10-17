@@ -1,0 +1,262 @@
+class JavaIoPrintWriter is subclass of JavaIoWriter
+instance variables 
+  protected  out : JavaIoWriter;
+  private autoFlush : bool := false;
+  private trouble : bool := false;
+  private lineSeparator : JavaLangString;
+operations 
+public  close : () ==> ()
+close() == 
+( if out.IsNil() then return;
+  trap  j2v_exception :  JavaLangException with  
+    cases  true  : 
+      (isofclass  (JavaIoIOException,j2v_exception) and not j2v_exception.IsNil()) -> 
+        ( trouble := true
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in    
+  (	out.close();
+		out := new JavaIoWriter(<NIL>);
+  )
+);
+
+public  flush : () ==> ()
+flush() == 
+(	trap  j2v_exception :  JavaLangException with  
+    cases  true  : 
+      (isofclass  (JavaIoIOException,j2v_exception) and not j2v_exception.IsNil()) -> 
+        ( trouble := true
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in    
+	( ensureOpen();
+    out.flush();
+  )
+);
+
+public  write : int | map  int  to  char ==> ()
+write(c) == 
+(	trap  j2v_exception :  JavaLangException with  
+    cases  true  : 
+      (isofclass  (JavaIoIOException,j2v_exception) and not j2v_exception.IsNil()) -> 
+        ( trouble := true
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in    
+	( ensureOpen();
+		out.write(c);
+  )
+);
+
+--public  write : map  int  to  char  ==> ()
+--write(buf) == 
+--is not yet specified ;
+
+public  println : () ==> ()
+println() == 
+  newLine();
+
+public  println : bool | char | int | real | (map  int  to  char ) | JavaLangObject  ==> ()
+println(x) == 
+( print(x);
+  println();
+);
+
+--public  println : char  ==> ()
+--println(x) == 
+--is not yet specified ;
+
+--public  println : int  ==> ()
+--println(x) == 
+--is not yet specified ;
+
+--public  println : real  ==> ()
+--println(x) == 
+--is not yet specified ;
+
+--public  println : map  int  to  char  ==> ()
+--println(x) == 
+--is not yet specified;
+
+--public  println : JavaLangObject ==> ()
+--println(x) == 
+--is not yet specified ;
+
+--public  println : JavaLangString ==> ()
+--println(x) == 
+--is not yet specified ;
+
+
+public  print : bool | char | int | real | (map  int  to  char ) | JavaLangObject ==> ()
+print(b) == 
+( cases true:
+    (is_bool(b)) ->
+      write(new JavaLangString(if b then "true" else "false")),
+    (is_char(b)) ->
+      (dcl c: char := b; write(JavaLangString`valueOf(c)) ),
+    (is_int(b)) ->
+      (dcl i: int := b; write((new JavaLangInteger(i)).toString()) ),
+    (is_real(b)) ->
+      (dcl r: real := b; write(JavaLangString`valueOf(r)) ),
+    (isofclass(JavaLangObject,b)) ->
+      ( if isofclass(JavaLangString,b)
+        then
+        ( dcl s:JavaLangString:=b;
+          if  s.IsNil()
+          then  
+            s := new  JavaLangString("null");
+          write(s);
+        )
+        else
+          def o: JavaLangObject = b in write(JavaLangString`valueOf(o))
+      ),
+    others ->
+      (dcl m: map  int  to  char:=b; write(m))
+  end
+) ;
+
+--public  print : bool  ==> ()
+--print(b) == 
+--  write(new JavaLangString(if b then "true" else "false"));
+
+--public  print : char  ==> ()
+--print(c) == 
+--  write(JavaLangString`valueOf(c));
+
+--public  print : int  ==> ()
+--print(l) == 
+--is not yet specified ;
+
+--public  print : real  ==> ()
+--print(d) == 
+--  write(JavaLangString`valueOf(d));
+
+--public  print : map  int  to  char  ==> ()
+--print(s) == 
+--  write(s) ;
+
+--public  print : JavaLangObject ==> ()
+--print(obj) == 
+--(	dcl s: JavaLangString;
+--  if isofclass(JavaLangString,obj)
+--  then
+--   if obj.IsNil()
+--    then
+--      s := new JavaLangString("null")
+--    else
+--      s := obj.toString()
+--	else
+--    s := obj.toString();
+--	write(s);
+--);
+
+--public  print : JavaLangString ==> ()
+--print(s) == 
+--is not yet specified ;
+
+
+protected  setError : () ==> ()
+setError() == 
+  trouble := true ;
+
+public  checkError : () ==> bool 
+checkError() == 
+(	if not out.IsNil()
+  then flush();
+	return trouble;
+);
+
+public  write : JavaLangString ==> ()
+write(s) == 
+  write(s, 0, s.length());
+
+public  write : map  int  to  char  * int  * int  ==> ()
+write(buf, off, len__) == 
+(	trap  j2v_exception :  JavaLangException with  
+    cases  true  : 
+      (isofclass  (JavaIoIOException,j2v_exception) and not j2v_exception.IsNil()) -> 
+        ( trouble := true
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in    
+	( ensureOpen();
+		out.writeICMIntInt(buf, off, len__);
+  )
+);
+
+public  JavaIoPrintWriter : <NIL> ==> JavaIoPrintWriter
+JavaIoPrintWriter(-) == 
+isNil := true  ;
+
+public  write : JavaLangString * int  * int  ==> ()
+write(s, off, len__) == 
+(	trap  j2v_exception :  JavaLangException with  
+    cases  true  : 
+      (isofclass  (JavaIoIOException,j2v_exception) and not j2v_exception.IsNil()) -> 
+        ( trouble := true
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in    
+	( ensureOpen();
+		out.writeStrIntInt(s , 0 , s.length());
+  )
+);
+
+private newLine: () ==> ()
+newLine() ==
+(	trap  j2v_exception :  JavaLangException with  
+    cases  true  : 
+      (isofclass  (JavaIoIOException,j2v_exception) and not j2v_exception.IsNil()) -> 
+        ( trouble := true
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in    
+	( ensureOpen();
+		out.writeStr(lineSeparator);
+    out.flush()
+  )
+);
+
+public  JavaIoPrintWriter : JavaIoWriter ==> JavaIoPrintWriter
+JavaIoPrintWriter(out) == 
+( let - = JavaIoPrintWriter(out, false) in skip;  
+) ;
+
+public  JavaIoPrintWriter : JavaIoWriter * bool  ==> JavaIoPrintWriter
+JavaIoPrintWriter(out, autoFlush) == 
+(	let - = JavaIoWriter(out) in skip;
+	JavaIoPrintWriter`out := out;
+	JavaIoPrintWriter`autoFlush := autoFlush;
+	lineSeparator := new JavaLangString("\n");
+) ;
+
+public  JavaIoPrintWriter : JavaIoOutputStream ==> JavaIoPrintWriter
+JavaIoPrintWriter(out) == 
+( let - = JavaIoPrintWriter(out, false) in skip; 
+) ;
+
+public  JavaIoPrintWriter : JavaIoOutputStream * bool  ==> JavaIoPrintWriter
+JavaIoPrintWriter(out, autoFlush) == 
+( let - = JavaIoPrintWriter(new JavaIoBufferedWriter(new JavaIoOutputStreamWriter(out)), false) in skip; 
+) ;
+
+
+private ensureOpen: () ==> ()
+ensureOpen() ==
+( if out.IsNil()
+	then exit new JavaIoIOException(new JavaLangString("Stream closed"))
+);
+
+end  JavaIoPrintWriter

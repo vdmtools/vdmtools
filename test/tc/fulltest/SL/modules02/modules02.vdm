@@ -1,0 +1,127 @@
+ 
+
+module A
+
+imports from B types X :: x : nat renamed X
+
+exports all
+
+definitions
+
+  functions
+
+    f : () -> X
+    f () ==
+      mk_X(1)
+
+end A
+
+module B
+
+exports all
+
+definitions
+
+  types
+
+    X :: x : nat;
+
+    Y = Z;
+  
+    Z = nat
+
+end B
+
+module C
+
+imports
+
+from A functions
+    f : () -> B`X,
+
+from B all
+
+exports all
+
+definitions
+
+types
+
+C = nat
+
+functions
+
+  g: B`X -> B`X
+  g(x) ==
+   x;
+
+  h: C -> C
+  h(x) == x
+
+end C
+module D
+
+imports from C
+    functions h: New -> New
+    types C renamed New
+
+exports all
+
+definitions
+
+functions 
+
+f : New -> New
+f(x) ==
+ C`h(x)
+
+end D
+module E
+
+imports 
+from B
+types Y = B`Z
+
+exports 
+functions
+f: B`Y -> B`Y
+
+definitions
+
+functions
+
+f: B`Y -> B`Y
+f(x) == x
+end E
+module F
+
+imports
+
+from E
+  functions
+  f: B`Y -> B`Y renamed f,
+
+from B
+  types
+  Y renamed YY;
+  Z
+
+exports
+
+  types MyB
+  functions
+  MyF : MyB -> YY
+
+definitions
+
+  types
+
+  MyB = YY
+  
+  functions
+
+  MyF: MyB -> YY
+  MyF(b) ==
+   f(b)
+
+end F

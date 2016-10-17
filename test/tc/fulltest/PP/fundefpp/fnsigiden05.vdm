@@ -1,0 +1,53 @@
+class A
+
+functions
+protected fn1: int +> int
+fn1(-) ==
+  1;
+
+protected fn2: int * int +> bool
+fn2(a,b) ==
+  a = b;
+
+protected fn3(-: int) r: int
+post r = 1;
+
+protected fn4(a: int, b: int) r: bool
+post r = (a = b);
+
+protected fn5(-: int) r: int ==
+  1
+post r = 1;
+
+protected fn6(a: int, b: int) r: bool ==
+  a = b
+post r = (a = b);
+
+end A
+
+class B is subclass of A
+
+functions
+fn1(-: char) r: int
+post r = 1;
+
+fn2(a: int, b: int, -: char) r: bool ==
+  a = b
+post r = (a = b);
+
+fn3(a: int) r: bool ==
+  a =1
+post r = (a = 1);
+
+fn4: int * char +> bool
+fn4(-,-) ==
+  true;
+
+fn5(a: int, b: int) r: bool
+post r = (a = b);
+
+fn6: int +> int
+fn6(-) ==
+  1;
+
+end B

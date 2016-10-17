@@ -1,0 +1,17 @@
+class A
+
+operations
+
+public Test : () ==> nat
+Test () ==
+( 
+	always 
+		(dcl y : nat := 1;
+		dcl x : nat := 10;
+		while x > 5 do
+			(if x > 5 then y := y + 1 else y := y - 1))
+	in (dcl x : nat := 3; x := 10);
+	return 3;
+);
+ 		
+end A

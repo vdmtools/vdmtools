@@ -1,0 +1,11 @@
+class CasesStmtTest
+operations
+
+
+  Cases2(b : nat) dummy : nat | bool ==
+    cases 6 - 9:
+      b -> return 8,
+      others -> return true
+    end;
+    
+end CasesStmtTest

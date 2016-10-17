@@ -1,0 +1,57 @@
+% WHAT
+%	The SortMachine is the context class of the behavioral 
+%	pattern "Strategy". This is the class that uses the 
+%	different sorting algorithms.
+% ID
+%    $Id: sortmachine.vpp,v 1.3 2006/04/07 04:37:19 vdmtools Exp $
+% PROJECT
+%    Toolbox
+% COPYRIGHT
+%    (C) Kyushu University
+
+
+\section{Sort Machineクラス}
+
+\begin{vdm_al}
+
+class SortMachine
+
+instance variables
+  srt: Sorter := new MergeSort();
+
+\end{vdm_al}
+
+インスタンス変数``srt''は現在使用中のソートアルゴリズムのオブジェクト参照となる。
+初期設定されるソートアルゴリズムは MergeSortである。
+
+使用するソートアルゴリズムの設定／変更。
+
+\begin{vdm_al}
+
+operations
+
+  public SetSort: Sorter ==> ()
+  SetSort(s) ==
+    srt := s;
+\end{vdm_al}
+
+現在設定されているソートアルゴリズムによるソート。
+
+\begin{vdm_al}
+  public GoSorting: seq of int ==> seq of int  
+  GoSorting(arr) ==
+    return srt.Sort(arr);
+\end{vdm_al}
+
+最初にソートアルゴリズムの設定／変更を行った後のソート。
+
+\begin{vdm_al}
+  public SetAndSort: Sorter * seq of int ==> seq of int
+  SetAndSort(s, arr) ==
+  ( srt := s;
+    return srt.Sort(arr)
+  )
+
+end SortMachine
+
+\end{vdm_al}

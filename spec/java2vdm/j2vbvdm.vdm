@@ -1,0 +1,367 @@
+\section{The J2VBVDM Class}
+
+\begin{vdm_al}
+module J2VBVDM
+imports
+  from AS all,
+  from CPP all,
+  from CI all,
+  from REP all,
+  from JSSREP all,
+  from J2VNS
+    functions
+      RenameKeyword: seq1 of char +> seq1 of char
+
+exports all
+		
+definitions
+
+functions
+
+  GenAlwaysStmt: AS`Stmt * AS`Stmt +> AS`AlwaysStmt
+  GenAlwaysStmt(p_stmt1,p_stmt2) == 
+    mk_AS`AlwaysStmt(p_stmt1,p_stmt2,CI`NilContextId);
+
+  GenTrap: AS`PatternBind * AS`Stmt * AS`Stmt +> AS`TrapStmt
+  GenTrap(p_patt,p_stmt1,p_stmt2) == 
+    mk_AS`TrapStmt(p_patt,p_stmt1,p_stmt2,CI`NilContextId);
+
+  GenMatchVal: AS`Expr +> AS`MatchVal
+  GenMatchVal(p_expr) == 
+    mk_AS`MatchVal(p_expr,CI`NilContextId);
+
+  GenIsOfClass: AS`Name * AS`Expr +> AS`IsOfClassExpr
+  GenIsOfClass(p_name,p_expr) == 
+    mk_AS`IsOfClassExpr(p_name,p_expr,CI`NilContextId);
+
+  GenCasesStmt: [AS`Expr] * seq1 of AS`CasesStmtAltn +> AS`CasesStmt
+  GenCasesStmt(p_expr,p_altns) == 
+--    if (p_altns(len(p_altns)).match = []) then
+--      let l_default = p_altns(len(p_altns)),
+--          l_cases = [ p_altns(i) | i in set inds p_altns & i < len p_altns ]
+--      in mk_AS`CasesStmt(p_expr,l_cases,l_default.body,CI`NilContextId)
+--    else
+      mk_AS`CasesStmt(p_expr,p_altns,nil,CI`NilContextId)
+  pre len p_altns > 0;
+
+  GenCasesStmtAltn: seq of AS`Pattern * AS`Stmt +> AS`CasesStmtAltn
+  GenCasesStmtAltn(p_patterns,p_stmt) ==
+    mk_AS`CasesStmtAltn(p_patterns,p_stmt,CI`NilContextId);
+
+  GenSpecFile: [AS`FileName] * AS`Document * CI`TokenContextInfo * [AS`TimeStamp] +> AS`SpecFile
+  GenSpecFile(p_name,p_vdm,p_tokenci,p_timestamp) ==
+    mk_AS`SpecFile(p_name,p_vdm,p_tokenci,p_timestamp);
+
+  GenClass: AS`Name * seq of AS`Name * [AS`Definitions] * CI`ContextId +> AS`Class
+  GenClass(p_cnm,p_supers,p_defs,p_cid) ==
+    mk_AS`Class(p_cnm,false,p_supers,p_defs,nil,p_cid);
+
+\end{vdm_al}
+
+\subsection{Generation of Operation}
+
+\begin{vdm_al}
+
+GenExplOpDef: AS`Name * AS`OpType * AS`Parameters * AS`OpBody * AS`Access * bool * bool * CI`ContextId +> AS`OpDef
+GenExplOpDef(p_n,p_type,p_params,p_body,p_acc,p_static,p_constr,p_cid) ==
+    mk_AS`ExplOpDef(
+      p_n,
+      false,
+      true,
+      p_type,
+      p_params,
+      p_body,
+      nil,         -- oppre
+      nil,         -- oppost
+      p_acc,
+      p_static,
+      p_constr,
+      p_cid);
+
+GenOpType: seq of AS`Type * AS`Type +> AS`OpType
+GenOpType(p_dom, p_rng) ==
+  mk_AS`OpType(p_dom, p_rng, CI`NilContextId);
+
+GenOpBody: AS`Stmt | <NOTYETSPEC> | <SUBRESP> +> AS`OpBody
+GenOpBody(p_stmt) ==
+  mk_AS`OpBody(p_stmt, CI`NilContextId);
+
+GenAccess: [CPP`Modifier] -> AS`Access
+GenAccess(p_m) ==
+  if p_m = nil then <DEFAULT_AS>
+  else
+    let mk_CPP`Modifier(l_m,-)=p_m
+    in
+      cases l_m:
+        (<PUBLIC>) -> <PUBLIC_AS>,
+        (<PROTECTED>) -> <PROTECTED_AS>,
+        (<PRIVATE>) -> <PRIVATE_AS>,
+        others -> <DEFAULT_AS>
+      end
+pre p_m<>nil =>
+      let mk_CPP`Modifier(l_m,-)=p_m
+      in l_m in set {<PUBLIC>, <PROTECTED>, <PRIVATE>}; 
+
+GenBasicType: <BOOLEAN> | <INTEGER> | <REAL> | <CHAR> +> AS`BasicType
+GenBasicType(p_type) ==
+  cases p_type:
+    <BOOLEAN> -> mk_AS`BooleanType(CI`NilContextId),
+    <CHAR>    -> mk_AS`CharType(CI`NilContextId),
+    others    -> mk_AS`NumericType(p_type,CI`NilContextId)
+  end;
+
+GenInt: () +> AS`BasicType
+GenInt() ==
+  mk_AS`NumericType(<INTEGER>, CI`NilContextId);
+
+GenQuoteType: AS`QuoteLit +> AS`QuoteType
+GenQuoteType(p_lit) ==
+  mk_AS`QuoteType(p_lit, -1); -- CI`NilContextId);
+
+GenInstAssignDef: AS`AssignDef * AS`Access * bool * CI`ContextId +> AS`InstAssignDef
+GenInstAssignDef(p_adef,p_acc,p_static,l_cid) ==
+  mk_AS`InstAssignDef(p_adef,p_acc,p_static,l_cid);
+
+GenAssignDef: AS`Name * AS`Type * [AS`Expr] +> AS`AssignDef
+GenAssignDef(p_id, p_tp, p_init) ==
+  mk_AS`AssignDef(p_id, p_tp, p_init, CI`NilContextId);
+
+\end{vdm_al}
+
+\subsection{Generation of Expressions}
+
+\begin{vdm_al}
+
+GenBinaryExpr:  AS`Expr * AS`BinaryOp * AS`Expr +> AS`BinaryExpr
+GenBinaryExpr(p_left, p_op, p_right) ==
+  mk_AS`BinaryExpr(p_left, p_op, p_right, CI`NilContextId);
+
+GenFieldSelectExpr: AS`Expr * (AS`Name | AS`FctTypeInstExpr) +>
+                    AS`FieldSelectExpr
+GenFieldSelectExpr(p_rec, p_nm) ==
+  mk_AS`FieldSelectExpr(p_rec, p_nm, CI`NilContextId);
+
+GenConditionalExpr: AS`Expr * AS`Expr * AS`Expr +> AS`IfExpr
+GenConditionalExpr(p_test, p_cons, p_altn) ==
+  mk_AS`IfExpr(p_test, p_cons, [], p_altn, CI`NilContextId);
+
+GenSelfExpr: CPP`This +> AS`SelfExpr
+GenSelfExpr(-) ==
+  mk_AS`SelfExpr(CI`NilContextId);
+
+GenIsExpr: (AS`BasicType | AS`Name) * AS`Expr +> AS`IsExpr
+GenIsExpr(p_type, p_expr) ==
+  mk_AS`IsExpr(p_type, p_expr, CI`NilContextId);
+
+GenTypeJudgementExpr: AS`Expr * AS`Type +> AS`TypeJudgementExpr
+GenTypeJudgementExpr(p_expr, p_type) ==
+  mk_AS`TypeJudgementExpr(p_expr, p_type, CI`NilContextId);
+
+GenNewExpr: AS`Name * seq of AS`Expr +> AS`NewExpr
+GenNewExpr(p_name, p_args) ==
+  mk_AS`NewExpr(p_name, p_args, CI`NilContextId);
+
+GenApplyExpr: AS`Expr * seq of AS`Expr +> AS`ApplyExpr
+GenApplyExpr(p_fct, p_arg) ==
+  mk_AS`ApplyExpr(p_fct, p_arg, CI`NilContextId);
+
+GenBracketedExpr: AS`Expr +> AS`BracketedExpr
+GenBracketedExpr(p_expr) ==
+  mk_AS`BracketedExpr(p_expr, CI`NilContextId);
+
+GenPrefixExpr: AS`UnaryOp * AS`Expr +> AS`PrefixExpr
+GenPrefixExpr(p_op, p_expr) ==
+  mk_AS`PrefixExpr(p_op, p_expr, CI`NilContextId);
+
+GenSeqEnumerationExpr: seq of AS`Expr +> AS`SeqEnumerationExpr
+GenSeqEnumerationExpr(p_exprs) ==
+  mk_AS`SeqEnumerationExpr(p_exprs, CI`NilContextId);
+
+GenSeqComprehensionExpr:  AS`Expr * (AS`SetBind | AS`SeqBind) * [AS`Expr] +> AS`SeqComprehensionExpr
+GenSeqComprehensionExpr(p_elem, p_bind, p_pred) ==
+  mk_AS`SeqComprehensionExpr(p_elem, p_bind, p_pred, CI`NilContextId);
+
+GenSetBind: AS`Pattern * AS`Expr +> AS`SetBind
+GenSetBind(p_pat, p_set) ==
+  mk_AS`SetBind(p_pat, p_set, CI`NilContextId);
+
+GenSetRangeExpr: AS`Expr * AS`Expr +> AS`SetRangeExpr
+GenSetRangeExpr(p_lb, p_ub) ==
+ mk_AS`SetRangeExpr(p_lb, p_ub, CI`NilContextId);
+
+GenNilLit: () +> AS`NilLit
+GenNilLit() == mk_AS`NilLit(CI`NilContextId);
+
+GenTextLit: seq of char +> AS`TextLit
+GenTextLit(p_val) ==
+  mk_AS`TextLit(p_val,CI`NilContextId);
+
+GenQuoteLit: seq of char +> AS`QuoteLit
+GenQuoteLit(p_val) ==
+  mk_AS`QuoteLit(p_val, -1); -- CI`NilContextId);
+
+GenBoolLit: bool +> AS`BoolLit
+GenBoolLit(p_val) ==
+  mk_AS`BoolLit(p_val,CI`NilContextId);
+
+GenName: seq of AS`Id +> AS`Name
+GenName(p_ids) ==
+  mk_AS`Name
+    --( [J2VNS`RenameKeyword(p_ids(i))|i in set {1,...,len p_ids}],
+    ( [J2VNS`RenameKeyword(p_ids(i))|i in set inds p_ids],
+      CI`NilContextId );
+--  mk_AS`Name(p_ids, CI`NilContextId);
+
+GenRealLit: real +> AS`RealLit
+GenRealLit(p_r) ==
+  mk_AS`RealLit(p_r,CI`NilContextId);
+
+GenNumLit: real +> AS`NumLit
+GenNumLit(p_r) ==
+  mk_AS`NumLit(p_r,CI`NilContextId);
+
+GenGeneralMapType: AS`Type * AS`Type +> AS`GeneralMap0Type
+GenGeneralMapType(p_mapdom, p_maprng) ==
+  mk_AS`GeneralMap0Type(p_mapdom, p_maprng, CI`NilContextId);
+
+GenMapComprehensionExpr:
+  AS`Maplet * AS`BindList * [AS`Expr] +> AS`MapComprehensionExpr
+GenMapComprehensionExpr(p_elem, p_bind, p_pred) == 
+  mk_AS`MapComprehensionExpr(p_elem, p_bind, p_pred, CI`NilContextId);
+
+GenMaplet: AS`Expr * AS`Expr +> AS`Maplet
+GenMaplet(p_mapdom, p_maprng) == 
+  mk_AS`Maplet(p_mapdom, p_maprng, CI`NilContextId);
+
+GenMultSetBind: seq of AS`Pattern *  AS`Expr +> AS`MultSetBind
+GenMultSetBind(p_pats, p_set) ==  
+  mk_AS`MultSetBind(p_pats, p_set, CI`NilContextId);
+
+GenSeqModifyMapOverrideExpr: AS`Expr * AS`Expr +> AS`SeqModifyMapOverrideExpr
+GenSeqModifyMapOverrideExpr(p_seqmap, p_mapexp) ==
+  mk_AS`SeqModifyMapOverrideExpr(p_seqmap, p_mapexp, CI`NilContextId);
+
+GenMapEnumerationExpr: seq of AS`Maplet +> AS`MapEnumerationExpr
+GenMapEnumerationExpr(p_els) ==
+  mk_AS`MapEnumerationExpr(p_els, CI`NilContextId);
+
+GenIfExpr: AS`Expr * AS`Expr * seq of AS`ElseifExpr * AS`Expr +>
+           AS`Expr
+GenIfExpr(p_test,p_cons,p_elsif,p_altn) ==
+  mk_AS`IfExpr(p_test,p_cons,p_elsif,p_altn,CI`NilContextId);
+  
+GenXorExpr: AS`Expr * AS`Expr +> AS`Expr
+GenXorExpr(p_left,p_right) ==
+  GenBinaryExpr
+    ( GenBinaryExpr(GenPrefixExpr(<NOT>,p_left),<AND>,p_right),
+      <OR>,
+      GenBinaryExpr(p_left,<AND>,GenPrefixExpr(<NOT>,p_right)));
+
+  GenDefExpr: (seq of (AS`PatternBind * AS`Expr)) * AS`Expr +> AS`DefExpr
+  GenDefExpr(p_def,p_in) ==
+    mk_AS`DefExpr(p_def,p_in,CI`NilContextId);
+
+\end{vdm_al}
+
+\subsection{Generation of Statements}
+
+\begin{vdm_al}
+
+  GenBlockStmt: seq of AS`AssignDef * seq of AS`Stmt +> AS`BlockStmt
+  GenBlockStmt(p_dcls,p_stmts) ==
+    mk_AS`BlockStmt(p_dcls,p_stmts,CI`NilContextId);
+ 
+  GenIfStmt: AS`Expr * AS`Stmt * seq of AS`ElseifStmt * [AS`Stmt] +> AS`IfStmt
+  GenIfStmt(p_test,p_then,p_elseif,p_altn) ==
+    mk_AS`IfStmt(p_test,p_then,p_elseif,p_altn,CI`NilContextId);
+
+  GenReturnStmt: [AS`Expr] +> AS`ReturnStmt
+  GenReturnStmt(p_expr) ==
+    mk_AS`ReturnStmt(p_expr,CI`NilContextId);
+
+  GenIdentStmt: () +> AS`IdentStmt
+  GenIdentStmt() ==
+    mk_AS`IdentStmt(CI`NilContextId);
+
+  GenAssignStmt: AS`StateDesignator * AS`Expr +> AS`AssignStmt
+  GenAssignStmt(p_state,p_expr) ==
+    mk_AS`AssignStmt(p_state,p_expr,CI`NilContextId);
+
+  GenWhileLoopStmt: AS`Expr * AS`Stmt +> AS`WhileLoopStmt
+  GenWhileLoopStmt(p_expr,p_stmt) ==
+    mk_AS`WhileLoopStmt(p_expr,p_stmt,CI`NilContextId);
+  
+  GenExitStmt: [AS`Expr] +> AS`ExitStmt
+  GenExitStmt(p_expr) ==
+    mk_AS`ExitStmt(p_expr,CI`NilContextId);
+
+  GenCallStmt: [AS`Expr] * AS`Name * (seq of AS`Expr) +> AS`CallStmt
+  GenCallStmt(p_obj,p_oprt,p_args) ==
+    mk_AS`CallStmt(p_obj,p_oprt,p_args,CI`NilContextId);
+
+\end{vdm_al}
+
+Currently Id2Name takes the context id from the Java parser
+directly. This is probably wrong but what should it be?
+
+\begin{vdm_al}
+  Id2Name: CPP`Identifier +> AS`Name
+  Id2Name(p_id) ==
+    mk_AS`Name([J2VNS`RenameKeyword(p_id.id)],p_id.cid);
+--  mk_AS`Name([p_id.id],p_id.cid);
+
+\end{vdm_al}
+
+Makes AS`Id from CPP`Identifier.
+
+\begin{vdm_al}
+  Id2ASId: CPP`Identifier +> AS`Id
+  Id2ASId(p_id) == p_id.id;
+
+  GenPatternName: [AS`Name] +> AS`PatternName
+  GenPatternName(p_name) ==
+    mk_AS`PatternName(p_name, nil, CI`NilContextId);
+
+  GenTypeName: AS`Name +> AS`TypeName
+  GenTypeName(p_name) ==
+    mk_AS`TypeName(p_name, CI`NilContextId);
+
+  GenSeq0Type: AS`Type +> AS`Seq0Type
+  GenSeq0Type(p_type) ==
+    mk_AS`Seq0Type(p_type, CI`NilContextId);
+   
+  GenFieldRef: AS`StateDesignator * AS`Name +> AS`FieldRef
+  GenFieldRef(p_sd, p_name) ==
+    mk_AS`FieldRef(p_sd, p_name, CI`NilContextId);
+
+  GenMapOrSeqRef: AS`StateDesignator * AS`Expr +> AS`MapOrSeqRef
+  GenMapOrSeqRef(p_sd, p_expr) ==
+    mk_AS`MapOrSeqRef(p_sd, p_expr, CI`NilContextId);
+
+  GenLetStmt: seq of AS`LocalDef * AS`Stmt +> AS`LetStmt
+  GenLetStmt(p_ldefs, p_stmt) ==
+    mk_AS`LetStmt(p_ldefs, p_stmt, CI`NilContextId);
+
+GenValueDef:  AS`Pattern * [AS`Type] * AS`Expr * AS`Access * bool +> AS`ValueDef
+GenValueDef(p_pat, p_type, p_val, p_acc, p_static) ==
+  mk_AS`ValueDef(p_pat, p_type, p_val, p_acc, p_static, CI`NilContextId);
+
+GenDefStmt: seq of (AS`PatternBind * AS`Expr) *
+            AS`Stmt +>  AS`DefStmt
+GenDefStmt(p_value, p_in) ==
+  mk_AS`DefStmt(p_value, p_in, CI`NilContextId);
+
+GenOptionalType: AS`Type +> AS`OptionalType
+GenOptionalType(p_type) ==
+  mk_AS`OptionalType(p_type,CI`NilContextId);
+
+GenTypeBind: AS`Pattern * AS`Type +> AS`TypeBind
+GenTypeBind(p_pat,p_tp) ==
+  mk_AS`TypeBind(p_pat,p_tp,CI`NilContextId);
+
+end J2VBVDM
+\end{vdm_al}
+
+\begin{rtinfo}
+{rtinfo.ast}[J2VBVDM]
+\end{rtinfo}

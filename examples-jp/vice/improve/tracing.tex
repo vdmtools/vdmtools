@@ -1,0 +1,26 @@
+\subsection{Increased flexibility for trace file contents}
+
+The trace files produced by the current version of the VICE VDMTools
+are not in a format that is appropriate for easy post-analysis because
+a proprietary ASCII format is used. The ``ShowVICE'' tool thus has to
+parse these trace events before they can be analysed. This
+can be solved if the ShowVICE functionality is built into VDMTools as
+suggested above. But, the contents of each trace event are still quite
+limited, e.g. the arguments for operations invoked are not presented in
+the trace file. The reason for that is simple and pragmatic; it would
+slow down the execution of the interpreter too much if all information
+available inside the interpreter was dumped with each trace event.
+
+Thus, the ideal solution would be to enable the user to select which
+information (s)he would like to trace during the simulation and under which
+circumstances it should do so. This could, for example, be implemented with
+a small scripting language enabling the user to configure the type and the
+amount of data to be logged in the trace file and thus be available for
+subsequent post-analysis (as a VDM value instead of a proprietary ASCII
+format). Some of the timing requirements for an embedded real-time system
+may otherwise not be expressible without this feature. An earlier draft of
+this note has already led to a significant improvement of VICE. The
+\verb+time+ keyword was added to the language, such that simulation
+wall clock is accessible from within the specification.
+
+

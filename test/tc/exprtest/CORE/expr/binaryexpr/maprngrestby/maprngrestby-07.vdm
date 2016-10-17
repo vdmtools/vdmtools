@@ -1,0 +1,17 @@
+class BinaryTest
+
+types
+
+  T = map (bool * nat) to (bool * nat)
+    
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = (if 9 < 7.9 then {|->} else {2 |-> true}) :-> 
+        (if 6 = 8 then {} else {false}) in skip;
+
+------------------------------------------------------------------------------
+end BinaryTest

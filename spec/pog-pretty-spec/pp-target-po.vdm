@@ -1,0 +1,188 @@
+\section{Proof Obligation Stringify}
+
+\begin{vdm_al}
+module PP_TAR_PO
+
+imports
+  from ENV all,
+  from PP_TAR_EXPR all,
+
+  from POGTP all,
+  from AS all,
+  from CI all,
+  from REP all
+
+exports all
+
+definitions
+values
+  PROOF_OBLIGATION_TXT: seq of char = "Integrity property"
+
+types
+
+  ProofObligation = seq of char;
+
+operations
+
+  tar_ProofObligation : nat
+                      * PP_TAR_EXPR`Expr
+                      * POGTP`Classification
+                      * seq of AS`Name
+                      * POGTP`LocContext
+                      * CI`ContextId          ==> ProofObligation
+  tar_ProofObligation (no,po,kind,source,loc,cid) ==
+    def number  =  "Integrity property" ^ " #" ^ Nat2str(no) ^ " :\n";
+        explain =  "In " ^ PrintPOLocContext(loc) ^ ", "
+                  ^ PrintPOLocation(cid) ^ ": "
+                  ^ PrintPODueTo(kind,source) ^ "\n";
+        line    = conc ["-" | - in set inds explain]
+    in return number ^ explain ^ line ^ "\n" ^ po;
+
+----- The following should be move to somewhere else ---------
+  PrintPOLocation : CI`ContextId ==> seq of char
+  PrintPOLocation (cid) ==
+    if not CI`IsAValidContextId(cid)
+    then return ", no cid"
+    else
+      def mk_(fnm,line,col) = CI`GetFileLineColPos(cid) -- CI`GetLocation(cid)
+      in return "file: " ^ fnm ^ " l. " ^ Nat2str(line) ^ " c. " ^ Nat2str(col);
+
+functions
+  PrintPOKind : POGTP`Classification -> seq of char
+  PrintPOKind (kind) ==
+    cases kind:
+      <SeqModification>        -> "sequence modification",
+      <SeqApplication>         -> "sequence application",
+--      <MapMerge>               -> "map merge",
+--      <MapDistributedMerge>    -> "distributed map merge",
+      <MapApplication>         -> "map application",
+      <MapComposition>         -> "map composition",
+      <MapIteration>           -> "map iteration",
+      <TupleSelect>            -> "tuple selection",
+      <FunctionApplication>    -> "function application",
+--      <OperationApplication>   -> "operation application",
+      <FuncComp>               -> "function composition",
+      <FuncIteration>          -> "function iteration",
+--      <SeqComprehension>       -> "sequence comprehension",
+--      <MapComprehension>       -> "map comprehension",
+      <MapEnumeration>         -> "map enumeration",
+      <MapCompatible>          -> "compatible maps",
+      <MapSetOfCompatible>     -> "map compatibility",
+      <MapSeqOfCompatible>     -> "map enumeration",
+      <LetBeStExpr>            -> "non-emptiness of let be such binding",
+      <CasesExpr>              -> "exhaustive matching in cases expression",
+      <ExistsUnique>           -> "unique existence binding",
+      <Subtype>                -> "subtype",
+      <Invariants>             -> "invariants",
+--      <FlatType>               -> "flatType",
+      <ValueBinding>           -> "non emptiness of binding",
+      <PatternBinding>         -> "pattern binding",
+      <FunctionPatterns>       -> "exhaustive function patterns",
+      <Satisfiability>         -> "satisfiability",
+      <PostCondition>          -> "post condition",
+      <OpPostCondition>          -> "post condition",
+--      <OperationSat>           -> "OperationSat",
+      <FiniteSet>              -> "finiteness of set",
+      <FiniteMap>              -> "finiteness of map",
+      <NonEndoIteration>       -> "iteration of non-endofunction",
+      <NonZero>                -> "non-zeroness",
+      <NonEmptySet>            -> "non-empty set",
+      <NonEmptySeq>            -> "non-empty sequence",
+--      <MapInverse>             -> "inverse map",
+--      <IntDivision>            -> "division",
+--      <Remainder>              -> "remainder",
+--      <Modulus>                -> "modulus",
+--      <DInter>                 -> "distributed intersection",
+--      <SeqHead>                -> "head of sequence",
+--      <SeqTail>                -> "tail of sequence",
+--      <SetComprehension>       -> "set comprehension",
+----
+      <LetBeStStmt>            -> "non-emptiness of let be such binding",
+      <CasesStmt>              -> "exhaustive matching in cases statement",
+      <WhileLoopStmt>          -> "terminating while loop",
+      <StateInvariants>        -> "state invariants",
+      <RecursiveFunction>      -> "recursive function",
+      others          -> undefined
+    end;
+
+  PrintPODueTo : POGTP`Classification * seq of AS`Name -> seq of char
+  PrintPODueTo (kind,source) ==
+    PrintPOKind(kind) ^ (if source = [] then "" else " from " ^ PrintNameList(source));
+
+  PrintPOLocClassification : POGTP`LocClassification -> seq of char
+  PrintPOLocClassification (classi) ==
+      cases classi:
+        <types>       -> "type",
+        <functions>   -> "function",
+        <operations>  -> "operation",
+        <state>       -> "state",
+        <instanceVariables> -> "instance variables",
+        <instanceInvariant> -> "instance invariant",
+        <values>      -> "value",
+        <conjectures> -> "conjecture",
+        <expression>  -> "expression",
+        others        -> undefined
+      end;
+
+  PrintPOLocContext : POGTP`LocContext -> seq of char
+  PrintPOLocContext (mk_POGTP`LocContext(classi,modnm,nm)) ==
+    let l_modnm = if modnm = nil
+                  then mk_AS`Name([""],CI`NilContextId)
+                  else modnm
+    in
+      PrintPOLocClassification(classi) ^ " " ^ PrintName(l_modnm) ^ " " ^ PrintName(nm);
+
+  PrintName : AS`Name -> seq of char
+  PrintName (mk_AS`Name(ids,cid)) ==
+    if len ids = 1
+    then hd ids
+    else
+      let head = hd ids,
+          tail = if tl ids = []
+                 then ""
+                 else "`" ^ PrintName(mk_AS`Name(tl ids,cid))
+      in
+          head ^ tail
+  pre ids <> [];
+
+  PrintNameList : seq of AS`Name -> seq of char
+  PrintNameList (lst) ==
+    let head = PrintName(hd lst),
+        tail = tl lst
+    in
+        if tail = []
+        then head
+        else head ^ " and " ^ PrintNameList(tail)
+  pre lst <> [];
+
+  Nat2str : nat -> seq of char
+  Nat2str (n) ==
+    let d     = n div 10,
+        r     = n - 10 * d,
+        r_str = cases r:
+                  0 -> "0",
+                  1 -> "1",
+                  2 -> "2",
+                  3 -> "3",
+                  4 -> "4",
+                  5 -> "5",
+                  6 -> "6",
+                  7 -> "7",
+                  8 -> "8",
+                  9 -> "9"
+                end,
+        d_str = if d = 0
+                then ""
+                else Nat2str(d)
+    in
+       d_str^r_str;
+
+end PP_TAR_PO
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[MotGeneralNumericType]
+{rtinfo.ast}[PP_TAR_PO]
+\end{rtinfo}
+

@@ -1,0 +1,6 @@
+r maa.vdm
+i
+tc pos
+cg
+latex maa.vdm
+quit

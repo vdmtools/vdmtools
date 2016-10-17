@@ -1,0 +1,17 @@
+ class B
+
+  types
+
+    T = nat 
+    inv n == n <> 1
+
+  operations
+
+
+  public Test : () ==> nat
+    Test() ==
+      if inv_T(3)
+      then return 3
+      else return 0
+
+end B

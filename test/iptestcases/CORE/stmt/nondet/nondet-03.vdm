@@ -1,0 +1,36 @@
+class A
+
+operations
+public
+Test: () ==> nat
+Test() ==
+  (|| (
+   return 2,
+   if true
+   then return 3
+   else return 4,
+   (if true
+   then return 3
+   else return 4),
+   if true 
+   then return 5,
+   let n : nat = 3
+   in
+     cases n:
+       1 -> return 1,
+       2 -> return 2
+     end,
+   let n : nat = 3
+   in
+     cases n:
+       1 -> return 1,
+       2 -> return 2,
+       default -> return 3
+     end,
+    (dcl n : nat := 20;
+     return n)
+  );
+  return 10;
+  )
+
+end A

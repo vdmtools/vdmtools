@@ -1,0 +1,273 @@
+module A
+
+exports all
+
+definitions
+
+functions
+
+  FunDef1: () -> nat1
+  FunDef1() ==
+    7;
+
+  FunDef2: bool -> bool
+  FunDef2(a,b) ==
+    true;
+
+  FunDef3: (nat * nat) -> nat
+  FunDef3(a) ==
+    let mk_(b,-) = a
+    in
+      b;
+
+  FunDef4: () -> nat
+  FunDef4() ==
+    let n = 4.8 in n;
+
+  FunDef5: nat -> nat
+  FunDef5(arg) ==
+    FunDef4()
+  pre arg > 7;
+
+  FunDef6: char -> seq of char
+  FunDef6(c) ==
+    [c| i in set {1,...,9}]
+  pre c < 9;
+
+  FunDef7() r : nat
+  pre 5 < 9
+  post r < 8;
+
+  FunDef8(a,b: nat) r : bool
+  pre a < b
+  post FunDef4() > b <=> r;
+
+  FunDef9(a,b : nat) r : nat
+  post r;
+
+  FunDef10(r: nat) r: nat
+  post true;
+
+  FunDef11() r : nat
+  post r;
+
+  FunDef12(a: nat) r : nat
+  pre if false then a else false
+  post r = a;
+
+  FunDef13: () -> nat1
+  FunDef13() ==
+    inst;
+
+  FunDef14(a : nat) r : nat
+  pre pre_FunDef12(a) and pre_FunDef6('c')
+  post post_FunDef11(a) and post_FunDef12(a,r);
+
+  FunDefSl1: nat -> nat -> bool
+  FunDefSl1(n)(m) ==
+    n < m;
+
+  FunDefSl2: nat * nat -> set of nat -> bool
+  FunDefSl2(n,m)(s1 union s2) ==
+    (n in set s1) or
+    (m in set s2);
+
+  FunDefSl3: nat * set of bool -> nat -> bool
+  FunDefSl3(n,s)(n) ==
+    n in set s;
+
+  FunDefSl4[@A, @B]: seq of @A * set of @B -> bool
+  FunDefSl4(l,s) ==
+    len l = card s;
+
+  FunDefSl5[@A,@B,@C]: nat * @A * (@A -> @B) -> @B
+  FunDefSl5(n,a,f) ==
+    if n = 0
+    then f(a)
+    else FunDefSl5[@A,@B,@C](n+1,a,f);
+
+  FunDefSl6: seq of nat * set of bool -> bool
+  FunDefSl6(l,s) ==
+    FunDefSl4[nat,bool](l,s);
+
+  FunDefSl7[@A] (a1,a2: @A,l1 ^ l2 : seq of nat) r : (@A * bool)
+  pre l1 <> []
+  post r = mk_(if 4 > 8 then a1 else a2, len l2 > 7);
+
+  FunDefSl8[@B] (b1, b2 : @B) r : bool
+  pre b1 <> 3
+  post pre_FunDefSl8[nat](3,5) and r <=> (b1 <> b2);
+
+  FunDefSl9: nat -> nat -> bool
+  FunDefSl9(n)(m) ==
+    n > m
+  post RESULT <=> (m <= n);
+
+  FunDefSl10: nat -> nat
+  FunDefSl10(n) ==
+    FunDefSl5[nat,nat,nat](1,4,FunDefSl10)
+  post RESULT = 4;
+
+  FunDefSl11: nat -> (nat -> nat)
+  FunDefSl11(a) ==
+    lambda b : nat & a + b
+    
+end A
+module B
+
+exports all
+
+definitions
+
+state Sigma of
+      a : nat
+      b : bool
+inv mk_Sigma(-,b) == b = true
+init s == s = mk_Sigma(7,true)
+end
+
+operations
+
+  Op1(c,d: nat) r : nat
+  pre c <> d
+  post d = r;
+
+  Op2(c,d: nat) r : nat
+  ext rd a : nat
+  pre a <> c
+  post d = r;
+
+  Op3(c,d: nat) r : nat
+  ext rd a : nat
+  pre a <> c
+  post d = r
+  errs id1 : c = a -> r = a;
+
+  Op4() r : nat
+  ext rd a : nat
+      rd b : bool
+  pre a > 8
+  post post_Op3(1,2,r,mk_Sigma(a,b),mk_Sigma(a,b))
+
+end B
+module C
+
+imports
+
+  from A functions
+    FunDefSl7;
+    FunDefSl5[@A,@B,@C]: nat * @A * (@A -> @B) -> @B renamed myfun;
+    FunDef1: () -> nat1,
+
+  from B operations
+    Op4: () ==> nat;
+    Op1
+
+exports
+  values
+  a : nat1
+  functions
+  newfn: () -> nat1
+
+definitions
+
+values
+
+  mk_(a,b) = mk_(8,7)
+
+functions
+
+  newfn : () -> nat1
+  newfn() ==
+   A`FunDef1() + b
+
+end C
+module D
+
+imports 
+from C all,
+
+from A functions
+  FunDef2: bool -> bool
+
+exports values
+  a : bool;
+  b : nat 
+
+definitions
+
+values
+
+  a = A`FunDef2(true)
+
+functions
+
+  f: nat1 -> nat1
+  f(n) ==
+   n + C`newfn()
+
+end D
+module E
+
+imports
+
+  from A functions
+    FunDefSl5[@A,@B,@C]: nat * @A * (@A -> @B) -> @B renamed myfun;
+    FunDef14
+
+exports all
+
+definitions
+
+functions
+
+f: nat -> nat
+f(n) ==
+  myfun[nat,nat,bool](n,n,f);
+
+g : nat -> bool
+g(n) ==
+  A`pre_FunDef14(n) and A`post_FunDef14(n,n)
+
+end E
+module F
+
+exports operations
+  Op1: nat * nat ==> nat;
+  Op2: nat * nat ==> nat;
+  Op4: () ==> nat
+--  state a, b
+
+definitions
+
+state Sigma of
+      a : nat
+      b : bool
+inv mk_Sigma(-,b) == b = true
+init s == s = mk_Sigma(7,true)
+end
+
+operations
+
+  Op1(c,d: nat) r : nat
+  pre c <> d
+  post d = r;
+
+  Op2(c,d: nat) r : nat
+  ext rd a : nat
+  pre a <> c
+  post d = r;
+
+  Op3(c,d: nat) r : nat
+  ext rd a : nat
+  pre a <> c
+  post d = r
+  errs id1 : c = a -> r = a;
+
+  Op4() r : nat
+  ext rd a : nat
+      rd b : bool
+  pre a > 8
+  post post_Op3(1,2,r,mk_Sigma(a,b),mk_Sigma(a,b))
+
+end F

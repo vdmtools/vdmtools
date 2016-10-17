@@ -1,0 +1,45 @@
+# .bashrc
+
+# Source global definitions
+if [ -f /etc/bashrc ]; then
+	. /etc/bashrc
+fi
+
+# User specific aliases and functions
+alias grep='grep --color=auto'
+
+export EDITOR=vim
+
+export PATH=/sbin:/usr/sbin:${PATH}:.
+
+export JDKHOME=/usr
+export ANTHOME=/usr
+
+export JAVACCHOME=/usr/local/javacc-5.0
+
+export PLATFORM=`uname -i`
+
+if [ "x86_64" = ${PLATFORM} ]; then
+    export USERLIBDIR=/usr/lib64
+else
+    export USERLIBDIR=/usr/lib
+fi
+
+export QTVERSION=4
+export QT3DIR=${USERLIBDIR}/qt-3.3
+export QT4DIR=${USERLIBDIR}/qt4
+
+export CORBAHOME=/usr/local/omniORB
+export LD_LIBRARY_PATH=${CORBAHOME}/lib:${LD_LIBRARY_PATH}
+
+export CXXLIB=${USERLIBDIR}/libstdc++.so.?
+
+export OSTYPE=`uname`
+export YACC=bison
+
+export TBDIR=${HOME}/vdmtools
+export TBCODE=${TBDIR}/code
+export LNCONF=${TBCODE}/make_tools/lnconf
+export POWERTEST=${TBDIR}/test/powertest/powertest
+export POWERTESTDIR=${HOME}/powertest
+export TESTDIR=${POWERTESTDIR}

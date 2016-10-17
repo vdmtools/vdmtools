@@ -1,0 +1,14 @@
+class A is subclass of IO
+operations
+
+public  Test: () ==> seq of (real|seq of char|bool)
+  Test () ==
+  let fout = "io-02.testout" in
+  return [
+    fwriteval[seq of char](fout,"Hello World",<start>),
+    fecho(fout," 2 + syntax error ",<append>),
+    let mk_(b,s) = freadval[seq of char](fout)  in
+    if b then s else ferror()
+    ]
+
+end A

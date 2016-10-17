@@ -1,0 +1,88 @@
+This directory contains example files for the DL Classes feature of
+the VDM++ Toolbox.
+
+The following files are provided:
+
+- bigint.vpp           - An example VDM++ specification using DL Classses
+- bigint_dl.cc         - Interface layer code for the example
+- bigint_dl.h          - Interface layer headers for the example
+- Makefile             - Unix Makefile for the example
+- cgex.cc              - Main code for driving the code generated example
+- BigInt_userdef.h     - Header for user defined code, for use with
+                         code generated example
+- BigInt_userimpl.cc   - User defined code, for use with code generated example
+- Makefile.win32       - Win32 Makefile for the example
+- mapm_3.60/m_apm.h    - Windows header file for MAPM library used in example
+- mapm_3.60/lib_mapm.a - Unix MAPM library
+- mapm_3.60/M_APM.H    - Windows header file for MAPM library used in example
+- mapm_3.60/mapm.lib   - Windows MAPM library
+
+
+INSTRUCTIONS
+============
+
+  To use DL Classes on Linux
+  --------------------------
+
+  1. Build the shared library:
+       make bigint_dl.so
+
+  2. Run the Toolbox:
+       vppde bigint.vpp
+
+  3. Initialize the Toolbox:
+       init
+
+  4. Execute expressions using DL Classes e.g.
+       d new A().Test()
+
+  To code generate using DL Classes on Linux
+  ------------------------------------------
+
+  1. Code generate the specification:
+       vppde -c bigint.vpp
+
+  2. Build the executable
+       make cgex
+
+  3. Run the executable
+       ./cgex
+
+  To use the user supplied implementation instead of the interface
+  layer, uncomment the lines in BigInt_userdef.h and the rerun steps 2
+  and 3 above.
+
+  To use DL Classes on Windows
+  ----------------------------
+
+  The makefile provided is for use with GNU make. This is available as
+  part of the cygwin tools (http://sourceware.cygwin.com).
+
+  1. Start up a cygwin window. 
+
+  2. Build the shared library
+       make -f Makefile.win32 bigint_dl.dll
+
+  3. In bigint.vpp, change the useslib line from bigint_dl.so to
+     bigint_dl.dll 
+
+  The follow steps 2-4 in "To use DL Classes on Linux".
+
+  To code generate using DL Classes on Windows
+  --------------------------------------------
+
+  1. Start up a cygwin window.
+
+  2. Code generate the specification
+       vppde -c bigint.vpp
+
+  3. Build the executable
+       make -f Makefile.win32 cgex.exe
+
+  4. Run the executable
+       ./cgex
+
+  To use the user supplied implementation instead of the interface
+  layer, uncomment the lines in BigInt_userdef.h and the rerun steps 3
+  and 4 above.
+

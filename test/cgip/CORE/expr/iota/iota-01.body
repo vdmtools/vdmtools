@@ -1,0 +1,6 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> nat  
+Test () ==
+  return iota x in set {1,2,3} & x rem 2 = 0
+
+end A

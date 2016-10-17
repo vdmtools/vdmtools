@@ -1,0 +1,41 @@
+class BundleInfoEntry is subclass of Object
+operations 
+public  getBNIEntries : () ==> [Enumeration]
+getBNIEntries() == 
+( return  bniNodes.elements()
+) ;
+
+public  getBundleNumber : () ==> [String]
+getBundleNumber() == 
+( return  bundleNumber
+) ;
+
+public  getBNIEntry : int  * [String] ==> [BNIEntry]
+getBNIEntry(nodeId, nodeType) == 
+( return  bniNodes.get(new  BNIKey(nodeId , nodeType))
+) ;
+
+public  putBNIEntry : [BNIEntry] ==> <VOID>
+putBNIEntry(bnie) == 
+( let - = bniNodes.put(bnie.getBNIKey() , bnie)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  BundleInfoEntry : [String] ==> BundleInfoEntry
+BundleInfoEntry(bundleNumber) == 
+( BundleInfoEntry`bundleNumber := bundleNumber;
+  BundleInfoEntry`bniNodes := new  Hashtable()
+) ;
+
+public  containsBNIEntry : int  * [String] ==> bool 
+containsBNIEntry(nodeId, nodeType) == 
+( return  bniNodes.containsKey(new  BNIKey(nodeId , nodeType))
+) ;
+
+instance variables 
+  private  bundleNumber : [String];
+  private  bniNodes : [Hashtable]
+  
+end  BundleInfoEntry

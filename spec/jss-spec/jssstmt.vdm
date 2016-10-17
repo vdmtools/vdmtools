@@ -1,0 +1,474 @@
+\section{The JSSSTMT Module}
+
+\begin{vdm_al}
+module JSSSTMT
+
+imports
+from AS all,
+from CI all,
+from REP all,
+
+from CPP all,
+from JSSAUX all,
+from JSSREP all,
+
+from JSSERR all,
+from JAVAERR all,
+
+from JSSEXPR
+operations
+  jwf_Expr: CPP`Expr ==> JSSREP`TypeRep * bool;
+  jwf_ExprList: seq of CPP`Expr ==> seq of JSSREP`TypeRep * bool;
+  jwf_ExpressionStmt: CPP`Expr ==> bool,
+
+from JSSDEF
+operations
+--  jwf_Identifier: CPP`Identifier ==> bool;
+  jwf_DeclSpecifierList: seq of CPP`DeclSpecifier ==> JSSREP`TypeRep * bool * int;
+--  jwf_TypeSpecifier: CPP`TypeSpecifier ==> JSSREP`TypeRep * bool;
+  jwf_ArgDecl: CPP`ArgDecl ==> AS`Name * JSSREP`FieldTypeRep * bool,
+from JSSENV
+operations
+  EnterLocalScope : map AS`Name to JSSREP`TypeRep ==> ();
+  Add2CurrentLocals: AS`Name * JSSREP`FieldTypeRep ==> bool;
+  LeaveLocalScope : () ==> ();
+  GetCurrentMethodReturnType: () ==> JSSREP`TypeRep;
+  WarnForVDMKeyword: seq1 of char * CI`ContextId ==> ()
+
+exports
+operations
+  jwf_Stmt: CPP`Stmt ==> bool
+
+definitions
+
+operations
+
+jwf_Stmt: CPP`Stmt ==> bool
+jwf_Stmt(p_stmt) ==
+  cases true:
+    (is_CPP`LabelStmt(p_stmt))        -> jwf_LabelStmt(p_stmt),
+    (is_CPP`ExpressionStmt(p_stmt))   -> jwf_ExpressionStmt(p_stmt),
+    (is_CPP`CompoundStmt(p_stmt))     -> jwf_CompoundStmt(p_stmt),
+    (is_CPP`IfStmt(p_stmt))           -> jwf_IfStmt(p_stmt),
+    (is_CPP`SwitchStmt(p_stmt))       -> jwf_SwitchStmt(p_stmt),
+    (is_CPP`WhileStmt(p_stmt))        -> jwf_WhileStmt(p_stmt),
+    (is_CPP`DoWhileStmt(p_stmt))      -> jwf_DoWhileStmt(p_stmt),
+    (is_CPP`ForStmt(p_stmt))          -> jwf_ForStmt(p_stmt),
+    (is_CPP`ForEachStmt(p_stmt))      -> jwf_ForEachStmt(p_stmt),
+    (is_CPP`Break(p_stmt))            -> jwf_BreakStmt(p_stmt),
+    (is_CPP`Continue(p_stmt))         -> jwf_ContinueStmt(p_stmt),
+    (is_CPP`Return(p_stmt))           -> jwf_ReturnStmt(p_stmt),
+    (is_CPP`DeclarationStmt(p_stmt))  -> jwf_DeclarationStmt(p_stmt),
+    (is_CPP`SynchronizedStmt(p_stmt)) -> jwf_SynchronizedStmt(p_stmt),
+    (is_CPP`TryBlock(p_stmt))         -> jwf_TryBlockStmt(p_stmt),
+    (is_CPP`EmptyStmt(p_stmt))        -> jwf_EmptyStmt(p_stmt)
+  end;
+\end{vdm_al}
+
+\subsection{The Label Statement}
+
+\begin{vdm_al}
+jwf_LabelStmt: CPP`LabelStmt ==> bool
+jwf_LabelStmt(p_stmt) ==
+  def l_bodywf = jwf_Stmt(p_stmt.stmt)
+  in
+    (JSSENV`WarnForVDMKeyword(p_stmt.id.id,p_stmt.id.cid);
+     return l_bodywf
+    );
+\end{vdm_al}
+
+\subsection{The Expression Statement}
+
+\begin{vdm_al}
+jwf_ExpressionStmt: CPP`ExpressionStmt ==> bool
+jwf_ExpressionStmt(p_stmt) ==
+  if p_stmt.expr = nil
+  then return true
+  else return JSSEXPR`jwf_ExpressionStmt(p_stmt.expr);
+\end{vdm_al}
+
+\subsection{The Compound Statement}
+
+\begin{vdm_al}
+jwf_CompoundStmt: CPP`CompoundStmt ==> bool
+jwf_CompoundStmt(p_stmt) ==
+  (dcl l_reswf : bool := true;
+   JSSENV`EnterLocalScope({|->});
+   for l_stmt in p_stmt.stms do
+     l_reswf := jwf_Stmt(l_stmt) and l_reswf;
+   JSSENV`LeaveLocalScope();
+   return l_reswf
+  );
+\end{vdm_al}
+
+\subsection{The If Statement}
+
+\begin{vdm_al}
+jwf_IfStmt: CPP`IfStmt ==> bool
+jwf_IfStmt(p_stmt) ==
+ (JSSENV`EnterLocalScope({|->});
+  def l_exprwf = JSSEXPR`jwf_Expr(p_stmt.expr).#2;
+      l_alt1wf = jwf_Stmt(p_stmt.alt1);
+  in
+    (dcl l_alt2wf : bool;
+     if p_stmt.alt2 = nil
+     then l_alt2wf := true
+     else l_alt2wf := jwf_Stmt(p_stmt.alt2);
+     JSSENV`LeaveLocalScope();
+     return l_exprwf and l_alt1wf and l_alt2wf
+    )
+ );
+\end{vdm_al}
+
+\subsection{The Switch Statement}
+
+\begin{vdm_al}
+jwf_SwitchStmt: CPP`SwitchStmt ==> bool
+jwf_SwitchStmt(p_stmt) ==
+  def l_wf_expr  = JSSEXPR`jwf_Expr(p_stmt.expr).#2;
+      l_wf_block = jwf_SwitchBlock(p_stmt.block)
+  in
+    return l_wf_expr and l_wf_block;
+\end{vdm_al}
+
+\begin{vdm_al}
+jwf_SwitchBlock: CPP`SwitchBlock ==> bool
+jwf_SwitchBlock(p_block) ==
+  (dcl l_reswf : bool := true;
+-- JR EnterLocalScope() ?
+   if p_block.labels <> nil and
+      p_block.labels.stmt.stmt = nil
+   then (l_reswf := false;
+         ------------------------------------------------------
+         -- Error message #1
+         -- Labels at end of switch statement are not supported
+         ------------------------------------------------------
+         JSSERR`GenErr(p_block.cid,<ERROR>,1,[])
+        );
+   let l_groups = p_block.groups
+   in
+     (for i=1 to len l_groups do
+        l_reswf := jwf_SwitchBlockStmtGrp(l_groups(i),i=len l_groups)
+                   and l_reswf;
+      return l_reswf
+     )
+  );
+\end{vdm_al}
+
+
+\begin{formalparameters}
+\verb+p_group: CPP`SwitchBlockStmtGrp+ & The abstract syntax tree for
+a swich block statement group.\\
+\verb+p_last: bool+ & An indication whether it is the last inside a
+switch statement. In that case only a warning should be generated if
+no break statement is used inside. \\
+\hline
+\end{formalparameters}
+\methodresult{bool}{Indication whether the swich block statement group satisfy
+the requirements to be translated from Java to VDM++.}
+
+\begin{vdm_al}
+jwf_SwitchBlockStmtGrp: CPP`SwitchBlockStmtGrp * bool ==> bool
+jwf_SwitchBlockStmtGrp(p_group,p_last) ==
+ (dcl l_reswf : bool := true;
+  let l_stms = p_group.stmt.stms,
+      l_last = l_stms(len l_stms)
+  in
+   (l_reswf := jwf_CompoundStmt(p_group.stmt);
+    if not is_CPP`Break(l_last) or l_last.id <> nil
+    then 
+      ------------------------------------------------------
+      -- Error message #2
+      -- Each case alternative should break at the end
+      ------------------------------------------------------
+     (JSSERR`GenErr(p_group.cid,if p_last
+                                then <WARNING>
+                                else <ERROR>,2,[]);
+      l_reswf := false
+     )
+   );
+  return l_reswf
+ );
+\end{vdm_al}
+
+\subsection{The While Statement}
+
+\begin{vdm_al}
+jwf_WhileStmt: CPP`WhileStmt ==> bool
+jwf_WhileStmt(p_stmt) ==
+  def l_exprwf = JSSEXPR`jwf_Expr(p_stmt.expr).#2;
+      l_bodywf = jwf_Stmt(p_stmt.stmt)
+  in
+    return l_exprwf and l_bodywf;
+\end{vdm_al}
+
+\subsection{The DoWhile Statement}
+
+\begin{vdm_al}
+jwf_DoWhileStmt: CPP`DoWhileStmt ==> bool
+jwf_DoWhileStmt(p_stmt) ==
+  def l_exprwf = JSSEXPR`jwf_Expr(p_stmt.expr).#2;
+      l_bodywf = jwf_Stmt(p_stmt.stmt)
+  in
+    return l_exprwf and l_bodywf;
+\end{vdm_al}
+
+\subsection{The For Statement}
+
+\begin{vdm_al}
+jwf_ForStmt: CPP`ForStmt ==> bool
+jwf_ForStmt(p_stmt) ==
+ (JSSENV`EnterLocalScope({|->});
+  def l_foriwf  = jwf_ForIndexPart(p_stmt.i);
+      l_expr2wf = JSSEXPR`jwf_ExprList(p_stmt.expr2).#2;
+      l_bodywf  = jwf_Stmt(p_stmt.stmt)
+  in
+    (dcl l_expr1wf : bool;
+     if p_stmt.expr1 = nil
+     then l_expr1wf := true
+     else l_expr1wf := JSSEXPR`jwf_Expr(p_stmt.expr1).#2;
+     JSSENV`LeaveLocalScope();
+     return l_foriwf and l_expr1wf and l_expr2wf and l_bodywf
+    )
+ );
+
+jwf_ForEachStmt: CPP`ForEachStmt ==> bool
+jwf_ForEachStmt(p_stmt) ==
+ (JSSENV`EnterLocalScope({|->});
+  def l_forwf = jwf_DeclarationStmt(p_stmt.e);
+      --mk_(l_tp, l_exprwf) = JSSEXPR`jwf_Expr(p_stmt.expr);
+      mk_(-, l_exprwf) = JSSEXPR`jwf_Expr(p_stmt.expr);
+      l_bodywf = jwf_Stmt(p_stmt.stmt);
+      --l_a = JSSAUX`ExtractType(l_tp)
+  in
+    (JSSENV`LeaveLocalScope();
+     --let typeok = if is_JSSREP`ClassTypeRep(l_a) or is_JSSREP`IntrfcTypeRep(l_a)
+     --             then
+     --               l_a.name = mk_AS`Name(["List"],CI`NilContextId) or
+     --               l_a.name = mk_AS`Name(["Set"],CI`NilContextId)
+     --             else
+     --               false
+     --in if not typeok
+     if true
+        then (------------------------------------------------------
+              -- Error message #18
+              -- For each statement is not supported
+              ------------------------------------------------------
+              JSSERR`GenErr(p_stmt.cid,<ERROR>,18,[]);
+              return false);
+     return l_forwf and l_exprwf and l_bodywf;
+    )
+ );
+
+jwf_ForIndexPart: seq of (CPP`ExpressionStmt | CPP`DeclarationStmt) ==> bool
+jwf_ForIndexPart(p_stmtL) ==
+ (dcl l_reswf : bool := true;
+  for l_stmt in p_stmtL do
+    if is_CPP`ExpressionStmt(l_stmt)
+    then l_reswf := jwf_ExpressionStmt(l_stmt) and l_reswf
+    else l_reswf := jwf_DeclarationStmt(l_stmt) and l_reswf;
+  return l_reswf
+ );
+\end{vdm_al}
+
+\subsection{The Break Statement}
+
+\begin{vdm_al}
+jwf_BreakStmt: CPP`Break ==> bool
+jwf_BreakStmt(p_stmt) ==
+  if p_stmt.id <> nil
+  then (------------------------------------------------------
+        -- Error message #3
+        -- Break to a specific label is not supported
+        ------------------------------------------------------
+        JSSERR`GenErr(p_stmt.cid,<ERROR>,3,[]);
+        return false
+       )
+  else return true;
+\end{vdm_al}
+
+\subsection{The Continue Statement}
+
+At the moment it is believed that continue statements must be limited
+such that no labels are used to jump to. Maybe it will be necessary to
+disallow the use of continue statements alltogether.
+
+\begin{vdm_al}
+jwf_ContinueStmt: CPP`Continue ==> bool
+jwf_ContinueStmt(p_stmt) ==
+  if p_stmt.id <> nil
+  then (------------------------------------------------------
+        -- Error message #4
+        -- Continue to a specific label is not supported
+        ------------------------------------------------------
+        JSSERR`GenErr(p_stmt.cid,<ERROR>,4,[]);
+        return false
+       )
+  else return true;
+\end{vdm_al}
+
+\subsection{The Return Statement}
+
+\begin{vdm_al}
+jwf_ReturnStmt: CPP`Return ==> bool
+jwf_ReturnStmt(p_stmt) ==
+  if p_stmt.expr = nil
+  then return true
+  else 
+   (CI`SetJSSTypeInfo(p_stmt.cid,JSSENV`GetCurrentMethodReturnType());
+    return JSSEXPR`jwf_Expr(p_stmt.expr).#2
+   );
+\end{vdm_al}
+
+\subsection{The Declaration Statement}
+
+Either
+  local variable declaration
+or
+  class or interface declaration
+
+\begin{vdm_al}
+jwf_DeclarationStmt: CPP`DeclarationStmt ==> bool
+jwf_DeclarationStmt(p_stmt) ==
+  let l_decl = p_stmt.decl
+  in
+    if is_CPP`IdentDeclaration(l_decl)
+    then jwf_LocalIdentDeclaration(l_decl)
+    else (------------------------------------------------------
+          -- Error message #5
+          -- Local function definitions are not supported
+          ------------------------------------------------------
+          JSSERR`GenErr(p_stmt.cid,<ERROR>,5,[]);
+          return false
+         );
+
+jwf_LocalIdentDeclaration: CPP`IdentDeclaration ==> bool
+jwf_LocalIdentDeclaration(p_id) ==
+  def mk_(l_dstr,l_dswf,-) = JSSDEF`jwf_DeclSpecifierList(p_id.ds);
+      l_ldlwf = jwf_LocalDeclaratorList(l_dstr,p_id.dl)
+  in
+    return l_dswf and l_ldlwf;
+
+jwf_LocalDeclaratorList: JSSREP`TypeRep * [CPP`DeclaratorList] ==> bool
+jwf_LocalDeclaratorList(p_tr,p_declL) ==
+ (dcl l_reswf : bool := true;
+  if p_declL <> nil
+  then
+    for l_id in p_declL do
+      l_reswf := jwf_LocalInitDeclarator(p_tr,l_id) and l_reswf;
+  return l_reswf
+ );
+
+jwf_LocalInitDeclarator: JSSREP`TypeRep * [CPP`InitDeclarator] ==> bool
+jwf_LocalInitDeclarator(p_tr,p_id) == 
+ (dcl l_namewf : bool := true,
+      l_decl : CPP`Declarator := p_id.decl,
+      l_array : nat := 0;
+  if p_id = nil
+  then return true
+  else 
+   (dcl l_iwf : bool;
+    if p_id.i = nil
+    then l_iwf := true
+    else l_iwf := JSSEXPR`jwf_Expr(p_id.i.expr).#2;
+    while not is_CPP`Identifier(l_decl) 
+    do
+     (l_decl := l_decl.decl;
+      l_array := l_array+1
+     );
+    def l_name = JSSAUX`Identifier2Name(l_decl);
+        l_tr = mk_JSSREP`FieldTypeRep(p_tr,l_array)
+    in
+     (JSSENV`WarnForVDMKeyword(hd l_name.ids,l_name.cid);
+      CI`SetJSSTypeInfo(l_decl.cid,l_tr);
+      l_namewf := JSSENV`Add2CurrentLocals(l_name,l_tr));
+    return l_iwf and l_namewf
+   )
+ );
+\end{vdm_al}
+
+\subsection{The Synchronized Statement}
+
+\begin{vdm_al}
+jwf_SynchronizedStmt: CPP`SynchronizedStmt ==> bool
+jwf_SynchronizedStmt(p_stmt) ==
+  def - = JSSEXPR`jwf_Expr(p_stmt.expr).#2;
+      - = jwf_CompoundStmt(p_stmt.block)
+  in
+    (------------------------------------------------------
+     -- Error message #14
+     -- Synchonized statements are not supported
+     ------------------------------------------------------
+     JSSERR`GenErr(p_stmt.cid,<ERROR>,14,[]);
+     return false
+    );
+\end{vdm_al}
+
+\subsection{The TryBlock Statement}
+
+ ExceptionDeclaration ::
+   tsl  : seq of TypeSpecifier
+   decl : [ Declarator | AbstractDeclarator ]
+   cid :- CI`ContextId;
+
+\begin{vdm_al}
+jwf_TryBlockStmt: CPP`TryBlock ==> bool
+jwf_TryBlockStmt(p_stmt) ==
+  def l_stmtwf = jwf_CompoundStmt(p_stmt.stmt);
+      l_hdlwf  = jwf_HandlerList(p_stmt.hdl);
+  in
+   (dcl l_finwf : bool;
+    if p_stmt.fin = nil
+    then l_finwf := true
+    else l_finwf := jwf_CompoundStmt(p_stmt.fin);
+    return l_stmtwf and l_hdlwf and l_finwf;
+   );
+
+jwf_HandlerList: seq of CPP`Handler ==> bool
+jwf_HandlerList(p_hdlL) ==
+( dcl l_reswf : bool := true;
+  for l_h in p_hdlL do
+    l_reswf := jwf_Handler(l_h) and l_reswf;
+  return l_reswf
+);
+
+jwf_Handler: CPP`Handler ==> bool
+jwf_Handler(p_h) ==
+(dcl l_wfed : bool := true,
+     l_stmtwf : bool := true;
+  JSSENV`EnterLocalScope({|->});
+--  if is_CPP`All(p_h.exepdecl) then internal-error else 
+  l_wfed := jwf_ExceptionDeclaration(p_h.exepdecl) and l_wfed;
+  l_stmtwf := jwf_Stmt(p_h.stmt) and l_stmtwf;
+  JSSENV`LeaveLocalScope();
+  return l_wfed and l_stmtwf
+);
+
+jwf_ExceptionDeclaration: CPP`ExceptionDeclaration ==> bool
+jwf_ExceptionDeclaration(p_ed) ==
+  def l_ad : CPP`ArgDecl = mk_CPP`ArgDecl(p_ed.tsl,p_ed.decl,p_ed.cid);
+      mk_(l_name,l_tr,l_wfdecl) = JSSDEF`jwf_ArgDecl(l_ad)
+  in
+    (JSSENV`WarnForVDMKeyword(hd l_name.ids,l_name.cid);
+     CI`SetJSSTypeInfo(p_ed.cid,l_tr);
+     def l_namewf = JSSENV`Add2CurrentLocals(l_name,l_tr)
+     in 
+       return l_wfdecl and l_namewf
+    );
+\end{vdm_al}
+
+\subsection{The Empty Statement}
+
+\begin{vdm_al}
+jwf_EmptyStmt: CPP`EmptyStmt ==> bool
+jwf_EmptyStmt(-) ==
+  return true;
+
+end JSSSTMT
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}{rtinfo.ast}[JSSSTMT]
+\end{rtinfo}
+

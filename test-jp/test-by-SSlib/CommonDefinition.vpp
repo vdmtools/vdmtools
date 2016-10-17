@@ -1,0 +1,34 @@
+class 『共通定義』 is subclass of Object
+/*
+作成者 = 佐原伸
+作成日 = 2002年 10月 30日 
+責任
+	事務処理共通の定義を表す。
+
+概要
+	事務処理共通の型などを定義する。
+*/
+
+values
+private Rcsid = "$Id: CommonDefinition.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $";
+public 文字列順	= lambda x : 「文字列」 , y : 「文字列」 & String`小さい(x,y);
+public 数値順	= lambda x : 「数値」, y : 「数値」 & x < y;
+public 日付順	= lambda x : 「日付」, y : 「日付」 & x.＜(y);
+public 金額順	= lambda x : 「金額」, y : 「金額」 & x < y;
+	
+types
+public 「識別子」 = 「文字列」;
+public 「数量」 = int;
+public 「数値」 = int;
+public Percent = real
+inv p == 0 <= p and p <= 100;-- 本当はrealなので0や100と比較してはいけないのだが、とりあえずの定義...
+public 「文字列」 = seq of char;
+public 「日付」 = Date;
+public 「時刻」 = Time;
+public 「金額」 = int;
+public 「金額非負」 = nat;
+public 「金額正」 = nat1;
+public 「金額2」 = real
+	inv 金額 == new Real().小数点以下n桁か？(金額,2) ;	--小数点以下２桁
+
+end 『共通定義』

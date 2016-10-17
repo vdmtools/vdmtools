@@ -1,0 +1,21 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+public Test : () ==> nat  
+Test () ==
+( dcl sum : nat := 0;
+  let S : set of nat = {1,2,3} in
+  	for all i in set S do
+     		sum := sum + i;
+  return sum;
+  
+)
+
+end A

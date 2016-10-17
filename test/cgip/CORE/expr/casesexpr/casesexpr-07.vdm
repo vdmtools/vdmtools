@@ -1,0 +1,20 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+
+public Test : () ==> nat 
+Test() ==
+return  
+    cases if true then 5 else mk_(1,2):
+       mk_(a,b) -> a,
+       b -> b
+    end
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

@@ -1,0 +1,20 @@
+module A
+imports from IO all
+exports all
+definitions
+operations
+
+  Test: () ==> seq of (real|seq of char|bool)
+  Test () ==
+  let fout = "io-03.testout" in
+  return [
+    IO`echo("IFAD VDM tools: echo"),
+    let b = IO`fecho(fout,"Hello World",<start>) in
+    b,
+    let b = IO`fecho(fout,"Hello World",nil) in
+    if not b then IO`ferror() else "",
+    IO`pre_fecho ("","Should be false",<append>),
+    IO`pre_fecho (fout,"Should be false too",nil)
+    ]
+
+end A

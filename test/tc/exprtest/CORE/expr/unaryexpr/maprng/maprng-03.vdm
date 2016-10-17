@@ -1,0 +1,15 @@
+class UnaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = rng if 9 = 8
+            then {1|->1}
+            else {}
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

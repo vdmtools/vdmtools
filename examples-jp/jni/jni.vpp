@@ -1,0 +1,310 @@
+class JNI
+
+instance variables
+private static jnienv : JNIEnv := new JNIEnv();
+public static debug : bool := false;
+
+operations
+public static
+CreateJavaVM: int * seq of seq1 of char ==> bool
+CreateJavaVM(version, options) ==
+  if not jnienv.IsJVMAttached()
+  then
+    def res : int = jnienv.CreateJavaVM(version, options);
+    in
+      cases res:
+        (JNIEnv`JNI_OK)     -> return true,
+        (JNIEnv`JNI_ERR),
+        (JNIEnv`JNI_EEXIST) -> (if jnienv.GetEnv(version) = 0
+                                then
+                                  if jnienv.AttachCurrentThread() = 0
+                                  then return true;
+                                return true;),
+        others              ->  return false
+      end
+  else return false;
+
+public static
+GetVersion: () ==> int
+GetVersion() ==
+  return jnienv.GetVersion();
+
+public static
+GetVersionStr: () ==> seq1 of char
+GetVersionStr() ==
+  return jnienv.GetVersionStr();
+
+public static
+FindClass: seq1 of char ==> jclass
+FindClass(clsnm) ==
+  return jnienv.FindClass(clsnm);
+
+public static
+GetStaticMethodID: jclass * seq1 of char * seq1 of char ==> jmethodID
+GetStaticMethodID(cls, mthdnm, sign) ==
+  return jnienv.GetStaticMethodID(cls, mthdnm, sign);
+
+public static
+CallStaticMethod: (jclass | seq1 of char) * seq1 of char * seq of JNIEnv`jvalue * seq1 of char ==> JNIEnv`jvalue
+CallStaticMethod(c, mthdnm, val, sign) ==
+  def cls = if isofclass(jclass, c)
+            then c
+            else FindClass(c);
+      mid : jmethodID = GetStaticMethodID(cls, mthdnm, sign);
+  in return jnienv.CallStaticMethod(cls, mid, val);
+
+public static
+CallStaticMethod: jclass * jmethodID * seq of JNIEnv`jvalue ==> JNIEnv`jvalue
+CallStaticMethod(cls, mid, val) ==
+  return jnienv.CallStaticMethod(cls, mid, val);
+
+public static
+CallStaticVoidMethod: (jclass | seq1 of char) * seq1 of char * seq of JNIEnv`jvalue * seq1 of char ==> ()
+CallStaticVoidMethod(c, mthdnm, val, sign) ==
+  def cls = if isofclass(jclass, c)
+            then c
+            else FindClass(c);
+      - = CallStaticMethod(cls, mthdnm, val, sign);
+  in skip;
+
+public static
+NewObject: (jclass | seq1 of char) * seq of JNIEnv`jvalue * seq1 of char ==> jobject
+NewObject(c, val, sign) ==
+  def cls = if isofclass(jclass, c)
+            then c
+            else FindClass(c);
+      mid : jmethodID = GetMethodID(cls, "<init>", sign); -- constructor
+  in return jnienv.NewObject(cls, mid, val);
+
+public static
+GetObjectClass: jobject ==> jclass
+GetObjectClass(obj) ==
+  return jnienv.GetObjectClass(obj);
+
+public static
+IsInstanceOf: jobject * (jclass | seq1 of char) ==> JNIEnv`jboolean
+IsInstanceOf(obj, c) ==
+  def cls = if isofclass(jclass, c)
+            then c
+            else FindClass(c);
+  in return jnienv.IsInstanceOf(obj, cls); 
+
+public static
+GetMethodID: jclass * seq1 of char * seq1 of char ==> jmethodID
+GetMethodID(cls, mthdnm, sign) ==
+  return jnienv.GetMethodID(cls, mthdnm, sign);
+
+public static
+CallMethod: jobject * jclass * seq1 of char * seq of JNIEnv`jvalue * seq1 of char ==> JNIEnv`jvalue
+CallMethod(obj, cls, mthdnm, val, sign) ==
+  def mid : jmethodID = GetMethodID(cls, mthdnm, sign);
+  in return jnienv.CallMethod(obj, mid, val);
+
+public static
+CallMethod: jobject * seq1 of char * seq of JNIEnv`jvalue * seq1 of char ==> JNIEnv`jvalue
+CallMethod(obj, mthdnm, val, sign) ==
+  def cls : jclass = GetObjectClass(obj);
+      mid : jmethodID = GetMethodID(cls, mthdnm, sign);
+  in return jnienv.CallMethod(obj, mid, val);
+
+public static
+CallMethod: jobject * jmethodID * seq of JNIEnv`jvalue ==> JNIEnv`jvalue
+CallMethod(obj, mid, val) ==
+  return jnienv.CallMethod(obj, mid, val);
+
+public static
+CallVoidMethod: jobject * seq1 of char * seq of JNIEnv`jvalue * seq1 of char ==> ()
+CallVoidMethod(obj, mthdnm, val, sign) ==
+  def - = CallMethod(obj, mthdnm, val, sign);
+  in skip;
+
+public static
+GetArrayLength: jarray ==> JNIEnv`jsize
+GetArrayLength(array) ==
+  return jnienv.GetArrayLength(array);
+
+public static
+GetArray: jarray ==> seq of JNIEnv`jvalue
+GetArray(array) ==
+  return jnienv.GetArray(array);
+
+public static
+SetArray: jarray * seq of JNIEnv`jvalue ==> ()
+SetArray(array, val) ==
+  jnienv.SetArray(array, val);
+
+public static
+GetObjectArray: jobjectArray ==> seq of jobject
+GetObjectArray(array) ==
+  def val = GetArray(array)
+  in return narrow_(val, seq of jobject);
+
+public static
+NewCharArray: seq of char ==> jcharArray
+NewCharArray(str) ==
+  def inarray : jcharArray = jnienv.NewCharArray(len str);
+  in
+   (SetArray(inarray, str);
+    return inarray);
+
+public static
+GetCharArrayString: jcharArray ==> seq of char
+GetCharArrayString(obj) ==
+  def val = GetArray(obj)
+  in return narrow_(val, seq of char);
+
+public static
+NewString: seq of char ==> jstring
+NewString(str) ==
+  return jnienv.NewString(str);
+
+public static
+GetStringLength: jstring ==> nat
+GetStringLength(jstr) ==
+  return jnienv.GetStringLength(jstr);
+
+public static
+GetStringChars: jstring ==> seq of char
+GetStringChars(jstr) ==
+  return jnienv.GetStringChars(jstr);
+
+public static
+GetStaticFieldID: (jclass | seq1 of char) * seq1 of char * seq1 of char ==> jfieldID
+GetStaticFieldID(c, fldnm, sign) ==
+  def cls : jclass = if isofclass(jclass, c)
+                     then c
+                     else FindClass(c);
+  in 
+    return jnienv.GetStaticFieldID(cls, fldnm, sign);
+
+public static
+GetStaticField: (jclass | seq1 of char) * seq1 of char * seq1 of char ==> JNIEnv`jvalue
+GetStaticField(c, fldnm, sign) ==
+  def cls : jclass = if isofclass(jclass, c)
+                     then c
+                     else FindClass(c);
+      fid : jfieldID = GetStaticFieldID(cls, fldnm, sign);
+  in
+  return jnienv.GetStaticField(cls, fid);
+
+public static
+SetStaticField: (jclass | seq1 of char) * seq1 of char * JNIEnv`jvalue * seq1 of char ==> ()
+SetStaticField(c, fldnm, val, sign) ==
+  def cls : jclass = if isofclass(jclass, c)
+                     then c
+                     else FindClass(c);
+      fid : jfieldID = GetStaticFieldID(cls, fldnm, sign);
+  in
+    jnienv.SetStaticField(cls, fid, val);
+
+public static
+GetFieldID: (jclass | seq1 of char) * seq1 of char * seq1 of char ==> jfieldID
+GetFieldID(c, fldnm, sign) ==
+  def cls : jclass = if isofclass(jclass, c)
+                     then c
+                     else FindClass(c);
+  in
+    return jnienv.GetFieldID(cls, fldnm, sign);
+
+public static
+GetField: jobject * jclass *  seq1 of char * seq1 of char ==> JNIEnv`jvalue
+GetField(obj, cls, fldnm, sign) ==
+  def fid : jfieldID = GetFieldID(cls, fldnm, sign);
+  in return jnienv.GetField(obj, fid);
+
+public static
+GetField: jobject * seq1 of char * seq1 of char ==> JNIEnv`jvalue
+GetField(obj, fldnm, sign) ==
+  def cls : jclass = GetObjectClass(obj);
+  in return GetField(obj, cls, fldnm, sign);
+
+public static
+SetField: jobject * jclass * seq1 of char * JNIEnv`jvalue * seq1 of char ==> ()
+SetField(obj, cls, fldnm, val, sign) ==
+  def fid : jfieldID = GetFieldID(cls, fldnm, sign);
+  in jnienv.SetField(obj, fid, val);
+
+public static
+SetField: jobject * seq1 of char * JNIEnv`jvalue * seq1 of char ==> ()
+SetField(obj, fldnm, val, sign) ==
+  def cls : jclass = GetObjectClass(obj);
+  in SetField(obj, cls, fldnm, val, sign);
+
+public static
+NewBigDecimal: seq1 of char | real ==> jobject
+NewBigDecimal(val) ==
+  def ini = cases true:
+              (is_real(val)) -> VDMUtil`val2seq_of_char[real](val),
+              others         -> val
+            end
+  in
+    return NewObject("java/math/BigDecimal", [JNI`NewString(ini)], "(Ljava/lang/String;)V");
+
+public static
+NewDate: () ==> jobject
+NewDate() ==
+  return NewObject("java/util/Date", [], "()V");
+
+public static
+equals: jobject * jobject ==> bool
+equals(obj1, obj2) ==
+  return CallMethod(obj1, "equals", [obj2], "(Ljava/lang/Object;)Z");
+
+public static
+toString: jobject ==> jstring
+toString(obj) ==
+  return CallMethod(obj, "toString", [], "()Ljava/lang/String;");
+
+public static
+toVDMString: jobject ==> seq of char
+toVDMString(obj) ==
+  return GetStringChars(toString(obj));
+
+public static
+GetClassTp: jobject | seq1 of char ==> seq1 of char
+GetClassTp(obj) == 
+  cases true:
+   (isofclass(jobject, obj)) -> let str = jnienv.GetTp(obj)
+                                in
+                                  return cases str:
+                                           "L" ^ x ^ ";" -> x,
+                                           others        -> str
+                                         end,
+   others                    -> return obj 
+  end;
+
+public static
+GetClassName: jobject ==> seq of char
+GetClassName(obj) ==
+--  def clso = JNI`CallMethod(obj, "getClass", [], "()Ljava/lang/Class;");
+--      jstr = JNI`CallMethod(clso, "getName", [], "()Ljava/lang/String;");
+--  in return JNI`GetStringChars(jstr);
+  return JNI`GetStringChars(obj.getClass().getName());
+  
+public static
+GetThrowableMessage: jthrowable ==> seq of char
+GetThrowableMessage(tobj) ==
+  --def jstr = JNI`CallMethod(tobj, "getMessage", [], "()Ljava/lang/String;");
+  def jstr = tobj.getMessage();
+  in return JNI`GetStringChars(jstr);
+
+public static
+GetThrowableStackTraceElement: jthrowable ==> jobjectArray
+GetThrowableStackTraceElement(tobj) ==
+  --def ste = JNI`CallMethod(tobj, "getStackTrace", [], "()[Ljava/lang/StackTraceElement;");
+  def ste = tobj.getStackTrace();
+  in return ste;
+
+public static
+println: seq of char | real | bool | jstring ==> ()
+println(x) ==
+  def ostr = cases true:
+               (isofclass(jstring, x)) -> JNI`GetStringChars(x),
+               (is_(x, seq of char))   -> x,
+               (is_real(x))            -> VDMUtil`val2seq_of_char[real](x),
+               (is_bool(x))            -> VDMUtil`val2seq_of_char[bool](x)
+             end;
+      - = new IO().echo(ostr ^ "\n");
+  in skip;
+
+end JNI

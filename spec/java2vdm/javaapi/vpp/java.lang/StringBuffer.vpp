@@ -1,0 +1,246 @@
+dlclass JavaLangStringBuffer is subclass of JavaLangObject
+uselib "j2vdll.so"
+values
+  public CLASS : JavaLangClass=new JavaLangClass("JavaLangString", <CLASS>, false);
+
+operations
+
+public JavaLangStringBuffer: <NIL> ==> JavaLangStringBuffer
+JavaLangStringBuffer(p) == isNil:=true;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+  return CLASS;
+
+public
+JavaLangStringBuffer : int | real | seq of char | JavaLangString ==> JavaLangStringBuffer
+JavaLangStringBuffer(arg) ==
+( dcl l_primitive: int | real | seq of char
+        := if isofclass(JavaLangString,arg)
+           then arg.toSeqOfChar()
+           else arg;
+  JavaLangStringBuffer'(l_primitive)
+);
+
+private
+JavaLangStringBuffer' : int | real | seq of char ==> ()
+JavaLangStringBuffer'(arg) ==
+is not yet specified;
+
+public
+JavaLangStringBuffer : char ==> JavaLangStringBuffer
+JavaLangStringBuffer(arg) ==
+( JavaLangStringBuffer'([]);
+  append(arg)
+);
+
+public
+append: char | seq of char | int | real | bool | JavaLangObject ==> JavaLangStringBuffer
+append(anything) ==
+( dcl l: int := 0,
+      l_primitive: char | seq of char | int | real | bool
+        := if isofclass(JavaLangObject,anything)
+           then anything.toString().toSeqOfChar()
+           else anything;
+  append'(l_primitive);
+);
+
+public
+append': char | seq of char | int | real | bool ==> JavaLangStringBuffer
+append'(anything) ==
+is not yet specified;
+
+public
+appendMICIntInt: map int to char * int * int ==> JavaLangStringBuffer
+appendMICIntInt(map__, start__, len__) ==
+  append([map__(i)|i in set {start__,...,start__+len__-1}])
+;
+
+public
+capacity: () ==> int
+capacity() ==
+is not yet specified;
+
+public
+charAt: int ==> char -- | JavaLangException
+charAt(charIndex) ==
+(	dcl e: JavaLangException := new JavaLangException();
+	dcl l_chars: seq of char := toSeqOfChar();
+	if (charIndex < 0 or charIndex >= length())
+  then
+  (
+--		e := new JavaLangIndexOutOfBoundsException();
+--		return e
+    exit e
+	)
+  else
+  (
+		return l_chars(charIndex+1)
+	)
+);
+
+public
+delete: int * int ==> JavaLangStringBuffer -- | JavaLangException
+delete(beginIndex,endIndex) ==
+(	dcl aux: JavaLangStringBuffer := self;
+	dcl e: JavaLangException := new JavaLangException();
+	dcl i: int := beginIndex;
+	dcl j: int := beginIndex;
+	if (beginIndex < 0 or beginIndex > length() or beginIndex > endIndex)
+  then
+  (
+--  	e := new StringIndexOutOfBoundsException();
+--		return e
+    exit e
+	)
+  else
+  (	while (j < endIndex)
+    do
+    (
+			aux := deleteCharAt'(i);
+			j := j + 1
+		);
+		return aux
+	)
+);
+
+public
+deleteCharAt: int ==> JavaLangStringBuffer -- | JavaLangException
+deleteCharAt(charIndex) ==
+(	dcl e: JavaLangException := new JavaLangException();
+	if (charIndex < 0 or charIndex >= length())
+  then
+  (
+--		e := new StringIndexOutOfBoundsException();
+--		return e
+    exit e
+	) else (
+		return deleteCharAt'(charIndex)
+	)
+);
+
+private
+deleteCharAt': int ==> JavaLangStringBuffer
+deleteCharAt'(charIndex) ==
+is not yet specified;
+
+public
+ensureCapacity: int ==> ()
+ensureCapacity(newLength) ==
+is not yet specified;
+
+public
+insert: int * (char | seq of char | int | real | bool  | JavaLangObject) ==> JavaLangStringBuffer -- | JavaLangException
+insert(offset,anything) ==
+(
+	dcl e: JavaLangException := new JavaLangException(),
+      l_primitive: char | seq of char | int | real | bool;
+	if (offset < 0 or offset > length())
+  then
+  (
+--		e:= new JavaLangIndexOutOfBoundsException();
+--		return e
+    exit e
+	) else (
+    l_primitive :=
+     if isofclass(JavaLangObject,anything)
+     then anything.toString().toSeqOfChar()
+     else anything;
+		return insert'(offset,anything)
+	)
+);
+
+private
+insert': int * (char | seq of char | int | real | bool) ==> JavaLangStringBuffer -- | JavaLangException
+insert'(offset,anything) ==
+is not yet specified;
+
+public
+length: () ==> int
+length() ==
+is not yet specified;
+
+public
+replace: int * int * (seq of char | JavaLangString) ==> JavaLangStringBuffer -- | JavaLangException
+replace(beginIndex,endIndex,aString) ==
+(
+	dcl e: JavaLangException := new JavaLangException();
+	if (beginIndex < 0 or beginIndex > length() or beginIndex > endIndex)
+  then
+  (
+--		e := new StringIndexOutOfBoundsException();
+--		return e
+    exit e
+	)
+  else
+  (
+		dcl donot_return: JavaLangStringBuffer := delete(beginIndex,endIndex);
+		insert(beginIndex,aString)
+	)
+);
+
+public
+reverse': () ==> JavaLangStringBuffer
+reverse'() == (
+	dcl l_chars: seq of char := reverseLchar(toSeqOfChar());
+	return replace(0,length(),l_chars)
+);
+
+public
+substring : int * int ==> JavaLangStringBuffer -- | JavaLangException
+substring(beginIndex,endIndex) ==
+( dcl e: JavaLangException := new JavaLangException();
+	if (beginIndex < 0)
+  then
+  (
+--		e := new StringIndexOutOfBoundsException();
+--		return e
+    exit e
+	) elseif (endIndex > length())
+  then
+  (
+--		e := new StringIndexOutOfBoundsException();
+--		return e
+    exit e
+	)
+  elseif (beginIndex > endIndex)
+  then
+  (
+--		e := new StringIndexOutOfBoundsException();
+--		return e
+    exit e
+	)
+  else
+  (
+		dcl l_chars: seq of char := toSeqOfChar();
+		l_chars := [ l_chars(x) | x in set inds(l_chars) & x > beginIndex and x <= endIndex];
+		return new JavaLangStringBuffer().JavaLangStringBuffer(l_chars)
+	)
+);
+
+public toString : () ==> JavaLangString
+toString () ==
+--is not yet specified;
+  return new JavaLangString(toSeqOfChar());
+
+public
+toSeqOfChar: () ==> seq of char
+toSeqOfChar() ==
+is not yet specified;
+
+functions
+
+private
+--reverseL[@x]: seq of @x -> seq of @x
+--reverseL(aList) ==
+--	if (aList) = [] then []
+--	else
+--		reverseL[@x](tl(aList)) ^ [hd(aList)];
+
+reverseLchar: seq of char -> seq of char
+reverseLchar(aList) ==
+	if (aList) = [] then []
+	else
+		reverseLchar(tl(aList)) ^ [hd(aList)];
+
+end JavaLangStringBuffer

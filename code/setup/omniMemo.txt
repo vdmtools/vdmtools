@@ -1,0 +1,36 @@
+1. configure failed on Cygwin64 (omniORB/omniORBpy)
+
+workaround:
+
+Add following entry 
+
+    x86_64:CYGWIN*:*)
+        echo ${UNAME_MACHINE}-pc-cygwin
+        exit 0 ;;
+
+in to bin/scripts/config.guess
+
+2. build failed on Cygwin/Cygwin64 (omniORB)
+
+workaround:
+
+Add following entry
+
+ifdef Cygwin
+  OMNIORB_ZIOP_LIB =  $(patsubst %,$(LibSearchPattern),omniZIOP$(OMNIORB_MAJOR_VERSION))
+  OMNIORB_DYNAMIC_LIB = $(patsubst %,$(LibSearchPattern),omniDynamic$(OMNIORB_MAJOR_VERSION))
+  EXTRA_LIBS += $(OMNIORB_ZIOP_LIB) $(OMNIORB_DYNAMIC_LIB)
+endif
+
+in to src/lib/omniORB/ziopdynamic/dir.mk
+
+3. build failed on Cygwin/Cygwin64 (omniORBpy)
+
+workaround:
+
+Do following 
+
+export PYVERSION=2.7
+
+before doing configure
+

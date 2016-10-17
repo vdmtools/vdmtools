@@ -1,0 +1,91 @@
+ThreadCreate -> id: 1 period: false objref: nil clnm: nil cpunm: 0 time: 0
+ThreadSwapIn -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 0
+CPUdecl ->  id: 1 expl: true sys: "TestSystem" name: "cpu1"
+DeployObj ->  objref: 1 clnm: "TT" cpunm: 0 time: 0
+DeployObj ->  objref: 2 clnm: "TT" cpunm: 0 time: 0
+DeployObj ->  objref: 3 clnm: "PP" cpunm: 0 time: 0
+DeployObj ->  objref: 4 clnm: "PP" cpunm: 0 time: 0
+InstVarChange ->  instnm: "TestSystem`test`pp" val: "objref4" objref: 2 time: 0 id: 1
+InstVarChange ->  instnm: "TestSystem`test`n" val: "1" objref: 2 time: 0 id: 1
+DeployObj ->  objref: 2 clnm: "TT" cpunm: 1 time: 0
+DeployObj ->  objref: 5 clnm: "TestSystem" cpunm: 0 time: 0
+DeployObj ->  objref: 6 clnm: "World" cpunm: 0 time: 0
+DeployObj ->  objref: 7 clnm: "TT" cpunm: 0 time: 0
+DeployObj ->  objref: 8 clnm: "PP" cpunm: 0 time: 0
+DeployObj ->  objref: 9 clnm: "A" cpunm: 0 time: 0
+DeployObj ->  objref: 10 clnm: "A" cpunm: 0 time: 0
+OpRequest -> id: 1 opname: "A`Test" objref: 10 clnm: "A" cpunm: 0 async: false time: 2
+OpActivate -> id: 1 opname: "A`Test" objref: 10 clnm: "A" cpunm: 0 async: false time: 2
+DeployObj ->  objref: 11 clnm: "World" cpunm: 0 time: 2
+OpRequest -> id: 1 opname: "World`Run" objref: 11 clnm: "World" cpunm: 0 async: false time: 4
+OpActivate -> id: 1 opname: "World`Run" objref: 11 clnm: "World" cpunm: 0 async: false time: 4
+ThreadCreate -> id: 2 period: true objref: 2 clnm: "TT" cpunm: 1 time: 0
+OpRequest -> id: 1 opname: "World`wait" objref: 11 clnm: "World" cpunm: 0 async: false time: 10
+OpActivate -> id: 1 opname: "World`wait" objref: 11 clnm: "World" cpunm: 0 async: false time: 10
+OpCompleted -> id: 1 opname: "World`wait" objref: 11 clnm: "World" cpunm: 0 async: false time: 32
+OpRequest -> id: 1 opname: "TT`getn" objref: 2 clnm: "TT" cpunm: 0 async: false time: 36
+MessageRequest -> busid: 0 fromcpu: 0 tocpu: 1 msgid: 1 callthr: 1 opname: "TT`getn" objref: 2 size: 8 time: 36
+MessageActivate -> msgid: 1 time: 36
+MessageCompleted -> msgid: 1 time: 36
+ThreadCreate -> id: 3 period: false objref: 2 clnm: "TT" cpunm: 1 time: 36
+ThreadSwapIn -> id: 3 objref: 2 clnm: "TT" cpunm: 1 overhead: 2 time: 36
+ThreadSwapOut -> id: 3 objref: 2 clnm: "TT" cpunm: 1 overhead: 2 time: 36
+ThreadSwapIn -> id: 2 objref: 2 clnm: "TT" cpunm: 1 overhead: 2 time: 38
+OpRequest -> id: 2 opname: "TT`thread_task" objref: 2 clnm: "TT" cpunm: 1 async: false time: 38
+OpActivate -> id: 2 opname: "TT`thread_task" objref: 2 clnm: "TT" cpunm: 1 async: false time: 38
+InstVarChange ->  instnm: "TestSystem`test`n" val: "2" objref: 2 time: 42 id: 2
+OpRequest -> id: 2 opname: "PP`op" objref: 4 clnm: "PP" cpunm: 1 async: false time: 48
+MessageRequest -> busid: 0 fromcpu: 1 tocpu: 0 msgid: 2 callthr: 2 opname: "PP`op" objref: 4 size: 8 time: 48
+MessageActivate -> msgid: 2 time: 48
+MessageCompleted -> msgid: 2 time: 48
+ThreadSwapOut -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 48
+ThreadCreate -> id: 4 period: false objref: 4 clnm: "PP" cpunm: 0 time: 50
+ThreadSwapIn -> id: 4 objref: 4 clnm: "PP" cpunm: 0 overhead: 2 time: 50
+OpActivate -> id: 4 opname: "PP`op" objref: 4 clnm: "PP" cpunm: 0 async: false time: 50
+OpRequest -> id: 4 opname: "PP`wait" objref: 4 clnm: "PP" cpunm: 0 async: false time: 50
+OpActivate -> id: 4 opname: "PP`wait" objref: 4 clnm: "PP" cpunm: 0 async: false time: 50
+OpCompleted -> id: 4 opname: "PP`wait" objref: 4 clnm: "PP" cpunm: 0 async: false time: 66
+OpCompleted -> id: 4 opname: "PP`op" objref: 4 clnm: "PP" cpunm: 0 async: false time: 68
+ThreadSwapOut -> id: 4 objref: 4 clnm: "PP" cpunm: 0 overhead: 2 time: 68
+ThreadKill -> id: 4 cpunm: 0 time: 70
+ReplyRequest -> busid: 0 fromcpu: 0 tocpu: 1 msgid: 3 origmsgid: 2 callthr: 2 calleethr: 4 size: 1 time: 68
+MessageActivate -> msgid: 3 time: 68
+MessageCompleted -> msgid: 3 time: 68
+OpCompleted -> id: 2 opname: "TT`thread_task" objref: 2 clnm: "TT" cpunm: 1 async: false time: 72
+ThreadSwapOut -> id: 2 objref: 2 clnm: "TT" cpunm: 1 overhead: 2 time: 72
+ThreadKill -> id: 2 cpunm: 1 time: 74
+ThreadCreate -> id: 5 period: true objref: 2 clnm: "TT" cpunm: 1 time: 2074
+DelayedThreadSwapIn -> id: 5 objref: 2 clnm: "TT" delay: 74 cpunm: 1 overhead: 2 time: 2074
+OpRequest -> id: 5 opname: "TT`thread_task" objref: 2 clnm: "TT" cpunm: 1 async: false time: 2074
+OpActivate -> id: 5 opname: "TT`thread_task" objref: 2 clnm: "TT" cpunm: 1 async: false time: 2074
+InstVarChange ->  instnm: "TestSystem`test`n" val: "3" objref: 2 time: 2078 id: 5
+OpRequest -> id: 5 opname: "PP`op" objref: 4 clnm: "PP" cpunm: 1 async: false time: 2084
+MessageRequest -> busid: 0 fromcpu: 1 tocpu: 0 msgid: 4 callthr: 5 opname: "PP`op" objref: 4 size: 8 time: 2084
+MessageActivate -> msgid: 4 time: 2084
+MessageCompleted -> msgid: 4 time: 2084
+ThreadCreate -> id: 6 period: false objref: 4 clnm: "PP" cpunm: 0 time: 2084
+ThreadSwapIn -> id: 6 objref: 4 clnm: "PP" cpunm: 0 overhead: 2 time: 2084
+OpActivate -> id: 6 opname: "PP`op" objref: 4 clnm: "PP" cpunm: 0 async: false time: 2084
+OpRequest -> id: 6 opname: "PP`wait" objref: 4 clnm: "PP" cpunm: 0 async: false time: 2084
+OpActivate -> id: 6 opname: "PP`wait" objref: 4 clnm: "PP" cpunm: 0 async: false time: 2084
+OpCompleted -> id: 6 opname: "PP`wait" objref: 4 clnm: "PP" cpunm: 0 async: false time: 2100
+OpCompleted -> id: 6 opname: "PP`op" objref: 4 clnm: "PP" cpunm: 0 async: false time: 2102
+ThreadSwapOut -> id: 6 objref: 4 clnm: "PP" cpunm: 0 overhead: 2 time: 2102
+ThreadKill -> id: 6 cpunm: 0 time: 2104
+ReplyRequest -> busid: 0 fromcpu: 0 tocpu: 1 msgid: 5 origmsgid: 4 callthr: 5 calleethr: 6 size: 1 time: 2102
+MessageActivate -> msgid: 5 time: 2102
+MessageCompleted -> msgid: 5 time: 2102
+OpCompleted -> id: 5 opname: "TT`thread_task" objref: 2 clnm: "TT" cpunm: 1 async: false time: 2106
+ThreadSwapOut -> id: 5 objref: 2 clnm: "TT" cpunm: 1 overhead: 2 time: 2106
+ThreadKill -> id: 5 cpunm: 1 time: 2108
+ThreadSwapIn -> id: 3 objref: 2 clnm: "TT" cpunm: 1 overhead: 2 time: 2108
+OpActivate -> id: 3 opname: "TT`getn" objref: 2 clnm: "TT" cpunm: 1 async: false time: 2108
+OpCompleted -> id: 3 opname: "TT`getn" objref: 2 clnm: "TT" cpunm: 1 async: false time: 2112
+ThreadSwapOut -> id: 3 objref: 2 clnm: "TT" cpunm: 1 overhead: 2 time: 2112
+ThreadKill -> id: 3 cpunm: 1 time: 2114
+ReplyRequest -> busid: 0 fromcpu: 1 tocpu: 0 msgid: 6 origmsgid: 1 callthr: 1 calleethr: 3 size: 64 time: 2112
+MessageActivate -> msgid: 6 time: 2112
+MessageCompleted -> msgid: 6 time: 2112
+ThreadSwapIn -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 2112
+OpCompleted -> id: 1 opname: "World`Run" objref: 11 clnm: "World" cpunm: 0 async: false time: 2116
+OpCompleted -> id: 1 opname: "A`Test" objref: 10 clnm: "A" cpunm: 0 async: false time: 2124

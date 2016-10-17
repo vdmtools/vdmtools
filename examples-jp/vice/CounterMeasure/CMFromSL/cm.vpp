@@ -1,0 +1,81 @@
+--$Id: cm.vpp,v 1.1 2005/11/02 06:59:25 vdmtools Exp $
+class CM
+
+types
+MissileInputs = seq of MissileType;
+MissileType = <MissileA> | <MissileB> | <MissileC> | <None>;
+Output = seq of OutputStep;
+OutputStep = FlareType * AbsTime;
+AbsTime = nat;
+FlareType = <FlareOneA> | <FlareTwoA> | <FlareOneB> |
+<FlareTwoB> | <FlareOneC> | <FlareTwoC> |
+<DoNothingA> | <DoNothingB> | <DoNothingC>;
+Plan = seq of (FlareType * Delay);
+Delay = nat;
+values
+responseDB : map MissileType to Plan =
+	{ <MissileA> |-> [ mk_(<FlareOneA>,900), mk_(<FlareTwoA>,500),
+	mk_(<DoNothingA>,100), mk_(<FlareOneA>,500)],
+	<MissileB> |-> [ mk_(<FlareTwoB>,500), mk_(<FlareTwoB>,700)],
+	<MissileC> |-> [ mk_(<FlareOneC>,400), mk_(<DoNothingC>,100),
+	mk_(<FlareTwoC>,400), mk_(<FlareOneC>,500)]
+	} ;
+missilePriority : map MissileType to nat =
+	{ <MissileA> |-> 1,
+	<MissileB> |-> 2,
+	<MissileC> |-> 3,
+	<None> |-> 0 };
+stepLength : nat = 100
+functions
+CounterMeasures: MissileInputs -> Output
+CounterMeasures(missileInputs) ==
+CM(missileInputs,[],<None>,0);
+CM: MissileInputs * Output * [MissileType] * nat -> Output
+CM( missileInputs, outputSoFar, lastMissile, curTime) ==
+if missileInputs = []
+then outputSoFar
+else let curMis = hd missileInputs
+in
+if missilePriority(curMis) > missilePriority(lastMissile)
+then let newOutput = InterruptPlan(curTime,outputSoFar,
+responseDB(curMis))
+in CM(tl missileInputs, newOutput, curMis,
+curTime + stepLength)
+else CM(tl missileInputs, outputSoFar, lastMissile,
+curTime + stepLength);
+InterruptPlan: nat * Output * Plan -> Output
+InterruptPlan(curTime,expOutput,plan) ==
+	LeavePrefixUnchanged(expOutput, curTime) ^
+	MakeOutputFromPlan(curTime, plan);
+
+LeavePrefixUnchanged: Output * nat -> Output
+LeavePrefixUnchanged(expOutput, curTime) ==
+[expOutput(i) | i in set inds expOutput
+& let mk_(-,t) = expOutput(i) in t <= curTime];
+
+MakeOutputFromResponse : nat * seq of Response -> Output
+MakeOutputFromResponse(curTime, response) ==
+let output = OutputAtTimeZero(response) in
+[let mk_(flare,t) = output(i)
+in
+mk_(flare,t+curTime)
+| i in set inds output];
+OutputAtTimeZero : seq of Response -> Output
+OutputAtTimeZero(response) ==
+let absTimes = RelativeToAbsoluteTimes(response) in
+let mk_(firstFlare,-) = hd absTimes in
+[mk_(firstFlare,0)] ^
+[ let mk_(-,t) = absTimes(i-1),
+mk_(f,-) = absTimes(i) in
+mk_(f,t) | i in set { 2,...,len absTimes } ];
+RelativeToAbsoluteTimes : seq of Response -> seq of (FlareType * nat)
+RelativeToAbsoluteTimes(ts) ==
+if ts = []
+then []
+else let mk_(f,t) = hd ts,
+ns = RelativeToAbsoluteTimes(tl ts) in
+[mk_(f,t)] ^ [ let mk_(nf, nt) = ns(i)
+in mk_(nf, nt + t)
+| i in set inds ns];
+
+end CM

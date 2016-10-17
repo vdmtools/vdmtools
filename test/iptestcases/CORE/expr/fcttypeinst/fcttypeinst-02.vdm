@@ -1,0 +1,60 @@
+class A
+
+operations
+public Test :() ==> seq of (  [nat] | char | ( set of ( 
+                                              [int] | char | real | <TT> | bool |
+                                              token | set of char | seq of char |
+                                              map nat to ( real | nat | seq of nat * token ) |
+                                              ( seq of nat * token )
+                                              )
+                                     )
+                    )
+Test() ==
+return 
+  [ -- Basic types
+    
+    ElemToSet[int](-1),
+    ElemToSet[nat](0),
+    ElemToSet[nat1](1),
+    ElemToSet[bool](true),
+    ElemToSet[char]('c'),
+    ElemToSet[<TT>](<TT>),
+    ElemToSet[token](mk_token(<TOKEN>)),
+    ElemToSet[token](mk_token(false)) union ElemToSet[bool](false),
+
+    -- Compound types
+
+    ElemToSet[set of char]({'a', 'b'}),
+    ElemToSet[seq of char]("HALLO"),
+    ElemToSet[map nat to real]({ i |-> i / 3 | i in set {23,...,30} }),
+    ElemToSet[seq of nat * token](mk_([2,7,9], mk_token({}))),
+    ElemToSet[set of nat | nat](10),
+    ElemToSet[[bool]](nil),
+
+    -- 
+
+    GetElem[real, nat1]([10.0, 2, 2.2, 7], 10),
+    GetElem[nat | char | seq of real, char]([[10], 'a'], 'a'),
+    GetElem[nat | char | seq of real, char]([[10], 'a'], 'b')
+  ]
+
+
+functions
+  ElemToSet[@elem]: @elem +> set of @elem
+  ElemToSet(e) ==
+    {e};
+
+  GetElem[@t1, @t2]: seq of @t1 * @t2 -> [@t1]
+  GetElem(l, e) ==
+    if e in set elems l then
+      let a in set elems l be st a = e in a
+    else
+      nil
+    
+
+types 
+
+  R:: nat char
+
+
+end A

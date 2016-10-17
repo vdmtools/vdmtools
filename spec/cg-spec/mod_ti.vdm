@@ -1,0 +1,98 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Module keeping track of type information collected by the 
+%    type checker.
+% $Id: mod_ti.vdm,v 1.14 2000/04/07 10:28:50 blackie Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\section{Module TI - Class Type Information}
+
+The module $TI$ is provides operations keeping track of type
+information collected by the type checker.
+
+\vspace{1cm}
+
+\begin{vdm_al}
+
+module TI
+
+imports
+  from AS all,
+  from REP all,
+  --from POS all,
+  from CI all
+  
+
+exports 
+  operations
+    IsMember: AS`Name * AS`Name ==> bool;
+    IsInstVar: AS`Name  ==> bool
+
+
+definitions
+
+\end{vdm_al}
+
+The state $Sigma$ contains the variable $method-m$, which is a map
+from a class name to the set of methods. These methods forms the
+interface to the class.
+
+
+\begin{vdm_al}
+
+operations
+
+  IsMember: AS`Name * AS`Name ==> bool
+  IsMember(mk_AS`Name([class],-),mk_AS`Name([method],-)) ==
+    return 
+           (class = "Point2" and method = "getX") or
+           (class = "Point2" and method = "copy") or
+           (class = "B" and method = "getelements") or
+           (class = "C" and method = "getInfo") or
+--           (class = "" and method = "") or
+--           (class = "" and method = "") or
+--           (class = "" and method = "") or
+--           (class = "" and method = "") or
+--           (class = "" and method = "") or
+--           (class = "" and method = "") or
+
+           (class ="A" and method = "M20XXX") or
+           ((class ="T20XXX" or class = "A") and method = "InitA") or
+           ((class ="T20XXX" or class = "A") and method = "Get") or
+           ((class ="T20XXX" or class = "A") and method = "GetN") or
+           ((class ="T20XXX" or class = "A") and method = "SetN") or
+           (class = "A" and method = "m2") or
+           (class = "A" and method = "SetObj") or
+           (class = "B" and method = "m2") or
+           (class = "B" and method = "m4") or
+	   (class = "A" and method = "m" ) or
+	   (class = "B" and method = "m" ) or
+	   (class = "A" and method = "IncNM" ) or
+	   (class = "A" and method = "IncN" ) or
+	   (class = "B" and method = "mymeth" ) or
+	   (class = "A" and method = "c" ) or
+	   (class = "B" and method = "c" ) or
+	   (class = "A" and method = "Set");
+
+  IsInstVar: AS`Name ==> bool
+  IsInstVar(nm) ==
+    if len nm.ids = 2 then
+          let ncls = (nm.ids)(1),
+              nnm  = (nm.ids)(len nm.ids) in
+         return   (ncls = "A" and nnm = "a") or
+                  (ncls = "A" and nnm = "j") or
+                  (ncls = "A" and nnm = "i") or
+                  (ncls = "A" and nnm = "s") or
+                  (ncls = "B" and nnm = "sq") or
+                  (ncls = "A" and nnm = "iva") or
+                  (ncls = "C" and nnm = "i") 
+    else return false;
+
+end TI
+\end{vdm_al}
+
+
+
+
+
+

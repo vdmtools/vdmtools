@@ -1,0 +1,92 @@
+class A
+
+operations
+public
+Test: () ==> seq of nat
+Test() ==
+  return [ op1(), op2(), op3(), op4(), op5(), op6(), op7() ];
+
+public
+op1: () ==> nat
+op1() ==
+  trap mk_(a, b) : nat * <ERR>
+  with
+    return a
+  in
+    if true
+    then exit mk_(3,<ERR>)
+    else return 1;
+
+public
+op2: () ==> nat
+op2() ==
+  trap x
+  with
+    cases mk_(true, x):
+      mk_((is_(x, nat * <ERR>)), mk_(a,b)) -> return a,
+      others -> exit x
+    end
+  in
+    if true
+    then exit mk_(3,<ERR>)
+    else return 1;
+
+public
+op3: () ==> nat
+op3() ==
+  trap mk_(a, b) in set { mk_(3,<ERR>) }
+  with
+    return a
+  in
+    if true
+    then exit mk_(3,<ERR>)
+    else return 1;
+
+public
+op4: () ==> nat
+op4() ==
+  trap x
+  with
+    cases mk_(true, x):
+      mk_((x in set { mk_(3,<ERR>) }), mk_(a,b)) -> return a,
+      others -> exit x
+    end
+  in
+    if true
+    then exit mk_(3,<ERR>)
+    else return 1;
+
+public
+op5: () ==> nat
+op5() ==
+  trap { a, b } : set of nat
+  with
+    return if a < b then a else b
+  in
+    if true
+    then exit { 3, 4 }
+    else return 1;
+
+public
+op6: () ==> nat
+op6() ==
+  trap { a |-> b } munion - : map nat to nat
+  with
+    return a
+  in
+    if true
+    then exit { 3 |-> 4 }
+    else return 1;
+
+public
+op7: () ==> nat
+op7() ==
+  trap [ a, b ] ^ - : seq of nat
+  with
+    return a
+  in
+    if true
+    then exit [ 3, 4 ]
+    else return 1;
+
+end A

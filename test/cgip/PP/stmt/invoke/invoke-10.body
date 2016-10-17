@@ -1,0 +1,63 @@
+class A
+
+instance variables
+  n : nat := 0;
+
+operations
+
+
+public  GetN: () ==> nat
+  GetN() ==
+    return n;
+
+public  SetN: nat ==> ()
+  SetN(v) ==
+    n := v;
+
+public  Inc: () ==> A
+  Inc() ==
+  ( dcl a : A := new A();
+    a.SetN(n + 1);
+    return a );
+
+public  IncN: nat ==> A
+  IncN(n1) ==
+  ( dcl a : A := new A();
+    a.SetN(n1 + n);
+    return a );
+
+public  IncNM: nat * nat ==> A
+  IncNM(n1,n2) ==
+  ( dcl a : A := new A();
+    a.SetN(n + n1 + n2);
+    return a );
+
+
+public  SetReal: set of bool * real ==> real
+  SetReal(s1, r1) ==
+    let s2 = { b | b in set s1 & not b } in
+      return card s2 + r1 + n
+
+end A
+class B is subclass of A
+
+operations
+
+public Test : () ==> seq of nat
+  Test() ==
+  ( dcl a   : A | B | <A>,
+        n   : nat,
+        res : seq of nat;
+    n := self.GetN();
+    res := [n];
+    a := self.IncNM(let a = 1 in a, if true then 2 else <Q>);
+    n := a.GetN();
+    res := res ^ [n];
+    n := self.SetReal({ a=b | a,b in set {1,2,3} },1+2);
+    res := res ^ [n];
+    n := self.SetReal({},n);
+    res := res ^ [n];
+    return res
+  )
+
+end B

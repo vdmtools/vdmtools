@@ -1,0 +1,41 @@
+-- Test case which checks that periodic threads block correctly on 
+-- permission predicates
+
+class B
+
+instance variables
+
+  i : nat := 0
+
+operations
+
+  op : () ==> ()
+  op() ==
+    i := i + 1;
+
+  public finished : () ==> nat
+  finished() == 
+    return i;
+
+sync
+
+  per finished => #fin(op) > 5;
+  per op => i < 10
+
+thread
+
+  periodic (1000,10,991,1)(op)
+
+end B
+
+class A
+
+operations
+
+public Test : () ==> nat
+Test() ==
+ (dcl b : B := new B();
+  start(b);
+  b.finished())
+
+end A

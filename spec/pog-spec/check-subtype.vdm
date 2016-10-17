@@ -1,0 +1,1793 @@
+\section{Check subtypes for Obligations}
+
+\begin{vdm_al}
+
+
+module CHECK
+
+imports
+  from ENV all,
+  from SPEC_AST all,
+  from POGTP all,
+  from GEN_PO all,
+  from GEN_INV all,
+
+  from PURE_PAT all,
+  from CAST all,
+  from FRESH all,
+
+  from TYPE2REP all,
+  from REP2TYPE all,
+
+  from CI_AUX all,
+  from AUX all,
+  from AS all,
+  from CI all,
+  from REP all
+
+exports all
+
+definitions
+
+types
+  TypeAbbrev = <Set>
+             | <Seq>
+             | <Map>
+             | <Func>
+             | <Oper>
+             | <Num>
+             | <SeqMap>
+             | <SeqFunc>
+             | <MapFunc>
+             | <FuncOper>
+             | <NumMap>
+             | <NumFunc>
+             | <NumMapFunc>
+             | <SeqMapFunc>
+             | <SeqMapFuncOper>
+             | <Other>;
+
+operations
+  SubtypeOfOperation: [AS`Stmt | AS`NoBody] * [AS`Type] * set of AS`Name * AS`Name * AS`Parameters * POGTP`Context
+                    ==> seq of POGTP`ProofObligation
+  SubtypeOfOperation(stmt,type,fv,opnm,parms,contxt) ==
+    if is_(stmt, AS`NoBody)
+    then return []
+    else
+      let expr = mk_AS`ApplyExpr(opnm,GEN_PO`Patterns2Exprs(parms),stmt.cid)
+      in SubtypeOf (expr,type,fv,contxt);
+
+  SubtypeOfFunction : [AS`Expr | AS`NoBody] * [AS`Type] * set of AS`Name * POGTP`Context
+                      ==> seq of POGTP`ProofObligation
+  SubtypeOfFunction (expr,type,fv,contxt) ==
+    if is_(expr, AS`NoBody)
+    then return []
+    else SubtypeOf (expr,type,fv,contxt);
+
+  SubtypeOf : [AS`Expr] * [AS`Type] * set of AS`Name * POGTP`Context ==> seq of POGTP`ProofObligation
+  SubtypeOf (expr,type,fv,contxt) ==
+     if expr = nil or type = nil
+     then return []
+     else
+       def expr_tp = CI_AUX`GetTypeInfo(expr)
+       in
+         if expr_tp = nil
+         then return []            -- E.g. in case of p.FnOpName(...)
+         else
+           if IsBaseAsSubtype(expr_tp,type)
+           then
+             def expr_as_tp = CI_AUX`GetASType(expr)
+             in
+               GEN_INV`GenInvariant (expr,expr_as_tp,type,{},fv,CI_AUX`GetCid(expr),contxt)
+           else
+             cases type:
+                mk_AS`NumericType(<NATONE>,-) -> let type2 = mk_AS`NumericType(<INTEGER>,CI`NilContextId)
+                                                 in
+                                                   if IsBaseAsSubtype(expr_tp,type2)
+                                                   then GEN_PO`VerifyPositveIntegerType(expr,contxt)
+                                                   else GEN_PO`VerifyType(expr,type,contxt),
+                mk_AS`NumericType(<NAT>,-)    -> let type2 = mk_AS`NumericType(<INTEGER>,CI`NilContextId)
+                                                 in
+                                                   if IsBaseAsSubtype(expr_tp,type2)
+                                                   --then GEN_PO`VerifyPositveIntegerType(expr,contxt)
+                                                   then GEN_PO`VerifyNonNegativeIntegerType(expr,contxt)
+                                                   else GEN_PO`VerifyType(expr,type,contxt),
+                others                        -> GEN_PO`VerifyType(expr,type,contxt)
+               end;
+
+  SubtypeOfTypeAbbrev : [AS`Expr] * TypeAbbrev * POGTP`Context ==> seq of POGTP`ProofObligation
+  SubtypeOfTypeAbbrev (expr,type,contxt) ==
+    if expr = nil
+    then return []
+    else
+      def tp1 = CI_AUX`GetTypeInfo(expr)
+      in
+        if IsBaseSubtypeTypeAbbrev(tp1,type)
+        then return []
+        else
+          let as_type = GetOverlap(tp1,type)
+          in GEN_PO`VerifyType(expr,as_type,contxt);
+
+  SubtypeOfTypeRep : AS`Expr * REP`TypeRep * set of AS`Name * POGTP`Context ==> seq of POGTP`ProofObligation
+  SubtypeOfTypeRep (expr,tp,fv,contxt) ==
+    def expr_tp = CI_AUX`GetTypeInfo(expr);
+        type    = REP2TYPE`TypeRepToType(tp,CI`NilContextId)
+    in
+      if IsBaseSubtype(expr_tp,tp) then
+         def expr_as_tp = CI_AUX`GetASType(expr)
+         in GEN_INV`GenInvariant (expr,expr_as_tp,type,{},fv,CI_AUX`GetCid(expr),contxt)
+      else
+        cases type:
+          mk_AS`NumericType(<NATONE>,-) -> let type2 = mk_AS`NumericType(<INTEGER>,CI`NilContextId)
+                                           in
+                                             if IsBaseAsSubtype(expr_tp,type2)
+                                             then GEN_PO`VerifyPositveIntegerType(expr,contxt)
+                                             else GEN_PO`VerifyType(expr,type,contxt),
+          mk_AS`NumericType(<NAT>,-)    -> let type2 = mk_AS`NumericType(<INTEGER>,CI`NilContextId)
+                                           in
+                                             if IsBaseAsSubtype(expr_tp,type2)
+                                             --then GEN_PO`VerifyPositveIntegerType(expr,contxt)
+                                             then GEN_PO`VerifyNonNegativeIntegerType(expr,contxt)
+                                             else GEN_PO`VerifyType(expr,type,contxt),
+          others                        -> GEN_PO`VerifyType(expr,type,contxt)
+        end;
+
+  Subtype : AS`Expr * AS`Type * AS`Type * set of AS`Name * POGTP`Context ==> seq of POGTP`ProofObligation
+  Subtype (expr,type1,type2,fv,contxt) ==
+    if IsBaseSubtypeAS(type1,type2)
+    then GEN_INV`GenInvariant(expr,type1,type2,{},fv,CI_AUX`GetCid(expr),contxt)
+    else
+      cases type2:
+         mk_AS`NumericType(<NATONE>,-) -> let type = mk_AS`NumericType(<INTEGER>,CI`NilContextId)
+                                          in
+                                            if IsBaseSubtypeAS(type1,type)
+                                            then GEN_PO`VerifyPositveIntegerType(expr,contxt)
+                                            else GEN_PO`VerifyType(expr,type2,contxt),
+         mk_AS`NumericType(<NAT>,-)    -> let type = mk_AS`NumericType(<INTEGER>,CI`NilContextId)
+                                          in
+                                            if IsBaseSubtypeAS(type1,type)
+                                            --then GEN_PO`VerifyPositveIntegerType(expr,contxt)
+                                            then GEN_PO`VerifyNonNegativeIntegerType(expr,contxt)
+                                            else GEN_PO`VerifyType(expr,type2,contxt),
+         others                        -> GEN_PO`VerifyType(expr,type2,contxt)
+      end;
+
+functions
+  SubtypeOfBoolean : [AS`Expr] * set of AS`Name * POGTP`Context -> seq of POGTP`ProofObligation
+  SubtypeOfBoolean (expr,fv,contxt) ==
+    SubtypeOf(expr, mk_AS`BooleanType(CI`NilContextId), fv, contxt);
+
+  SubtypeOfInteger : AS`Expr * set of AS`Name * POGTP`Context -> seq of POGTP`ProofObligation
+  SubtypeOfInteger (expr,fv,contxt) ==
+    SubtypeOf(expr, mk_AS`NumericType(<INTEGER>,CI`NilContextId), fv, contxt);
+
+  SubtypeOfNatOne : AS`Expr * set of AS`Name * POGTP`Context -> seq of POGTP`ProofObligation
+  SubtypeOfNatOne (expr,fv,contxt) ==
+    SubtypeOf(expr, mk_AS`NumericType(<NATONE>,CI`NilContextId), fv, contxt);
+
+  SubtypeOfNat : AS`Expr * set of AS`Name * POGTP`Context -> seq of POGTP`ProofObligation
+  SubtypeOfNat (expr,fv,contxt) ==
+    SubtypeOf(expr, mk_AS`NumericType(<NAT>,CI`NilContextId), fv, contxt);
+
+
+  SubtypeOfReal : AS`Expr * set of AS`Name * POGTP`Context -> seq of POGTP`ProofObligation
+  SubtypeOfReal (expr,fv,contxt) ==
+    SubtypeOf(expr, mk_AS`NumericType(<REAL>,CI`NilContextId), fv, contxt);
+
+  SubtypeOfSet : AS`Expr * POGTP`Context -> seq of POGTP`ProofObligation
+  SubtypeOfSet (expr,contxt) ==
+    SubtypeOfTypeAbbrev(expr,<Set>,contxt);
+
+  SubtypeOfSeq : AS`Expr * POGTP`Context -> seq of POGTP`ProofObligation
+  SubtypeOfSeq (expr,contxt) ==
+    SubtypeOfTypeAbbrev(expr,<Seq>,contxt);
+
+  SubtypeOfMap : AS`Expr * POGTP`Context -> seq of POGTP`ProofObligation
+  SubtypeOfMap (expr,contxt) ==
+    SubtypeOfTypeAbbrev(expr,<Map>,contxt);
+
+  SubtypeOfInMap : AS`Expr * set of AS`Name * POGTP`Context -> seq of POGTP`ProofObligation
+  SubtypeOfInMap (expr,fv,contxt) ==
+    SubtypeOf(
+      expr,
+      mk_AS`InjectiveMap0Type(
+        mk_AS`TypeName(mk_AS`Name(["top"],CI`NilContextId), CI`NilContextId),
+        mk_AS`TypeName(mk_AS`Name(["top"],CI`NilContextId), CI`NilContextId),
+        CI`NilContextId),
+      fv,
+      contxt);
+
+  SubtypeOfSeqOrMap : AS`Expr * POGTP`Context -> seq of POGTP`ProofObligation
+  SubtypeOfSeqOrMap (expr,contxt) ==
+    SubtypeOfTypeAbbrev(expr,<SeqMap>,contxt);
+
+operations
+  SubtypeOfSetOfMap : AS`Expr * POGTP`Context ==> seq of POGTP`ProofObligation
+  SubtypeOfSetOfMap (expr,contxt) ==
+    def expr_tp       = CI_AUX`GetGroundTypeRepInfo(CI_AUX`GetCid(expr));
+        elems_expr    = mk_AS`PrefixExpr(<SEQELEMS>, expr, CI`NilContextId);
+        ------- Build context ------------------------------------
+        set_judg   = mk_AS`TypeJudgementExpr(expr, TypeAbbrev2Type(<Set>), CI`NilContextId);
+        set_contxt = POGTP`Add2Context(set_judg,contxt);
+        ------- PO generation ------------------------------------
+        pog_set = SubtypeOfTypeAbbrev(expr,<Set>,contxt);
+        pog_map = if pog_set = [] then
+                    let elem_tp = if is_REP`UnionTypeRep(expr_tp) then
+                                    mk_REP`UnionTypeRep(
+                                      {tp.elemtp | tp in set expr_tp.tps &
+                                                     not is_REP`EmptySetTypeRep(tp)})
+                                  elseif is_REP`EmptySetTypeRep(expr_tp) then
+                                    mk_REP`AllTypeRep()
+                                  else
+                                    (expr_tp.elemtp)
+                     in
+                        if IsBaseSubtypeTypeAbbrev(elem_tp,<Map>)
+                        then []
+                        else GEN_PO`VerifyType(elems_expr,TypeAbbrev2Type(<Map>),contxt)
+                  else GEN_PO`VerifyType(elems_expr,TypeAbbrev2Type(<Map>),set_contxt);
+        -----------------------------------------------------------
+        po            = pog_set ^ pog_map
+    in return po;
+
+functions
+  SubtypeOfSetOfType : AS`Expr * AS`Expr * set of AS`Name * POGTP`Context -> seq of POGTP`ProofObligation
+  SubtypeOfSetOfType (elem,Set,fv,contxt) ==
+    def set_tp       = CI_AUX`GetTypeInfo(Set);
+        set_elem_tp  = GetSetOverlap(set_tp)
+    in
+        SubtypeOf(elem,set_elem_tp,fv,contxt);
+
+  SubtypeOfSetOfReal : AS`Expr * set of AS`Name * POGTP`Context -> seq of POGTP`ProofObligation
+  SubtypeOfSetOfReal (Set,fv,contxt) ==
+    let elem_tp        = mk_AS`NumericType(<REAL>,CI`NilContextId),
+        set_of_elem_tp = mk_AS`Set0Type(elem_tp,CI`NilContextId)
+    in
+        SubtypeOf(Set,set_of_elem_tp,fv,contxt);
+
+operations
+  PatternSubtypeOfSetOfType : AS`Pattern * AS`Expr * set of AS`Name * POGTP`Context
+                              ==> seq of POGTP`ProofObligation
+  PatternSubtypeOfSetOfType (pat,Set,fv,contxt) ==
+    def set_tp       = CI_AUX`GetTypeInfo(Set);
+        set_elem_tp  = GetSetOverlap(set_tp)
+    in
+      if set_elem_tp = <NO_OVERLAP>
+      then return []
+      else PatternSubtypeOf(pat,set_elem_tp,fv,contxt);
+
+functions
+  SubtypeForEquality : AS`Expr * AS`Expr * set of AS`Name * CI`ContextId * POGTP`Context
+                       -> seq of POGTP`ProofObligation
+  --SubtypeForEquality (expr1,expr2,fv,cid,contxt) ==
+  SubtypeForEquality (expr1,expr2,-,cid,contxt) ==
+    def expr1_tp    = CI_AUX`GetTypeInfo(expr1);
+        expr2_tp    = CI_AUX`GetTypeInfo(expr2);
+        subtype1of2 = IsBaseSubtype(expr1_tp,expr2_tp);
+        subtype2of1 = IsBaseSubtype(expr2_tp,expr1_tp)
+    in
+      if subtype1of2 or subtype2of1
+      then [] -- GEN_INV`GenSubOrSupertypeInvariant(expr1,expr2,fv,cid,contxt)
+      else GEN_PO`VerifySubtypeOrSupertype(expr1,expr2,cid,contxt);
+
+  SubtypeForAssign : AS`StateDesignator * AS`Expr * set of AS`Name * CI`ContextId * POGTP`Context
+                     -> seq of POGTP`ProofObligation
+  --SubtypeForAssign (lhs,rhs,fv,cid,contxt) ==
+  SubtypeForAssign (lhs,rhs,fv,-,contxt) ==
+    def lhs_tp    = CI_AUX`GetTypeInfo(lhs);
+        subtype2of1 = SubtypeOfTypeRep(rhs,lhs_tp,fv,contxt)
+    in
+      subtype2of1;
+
+  SubtypeForNewExpr : AS`Expr * seq of AS`Expr * set of AS`Name * POGTP`Context -> seq of POGTP`ProofObligation
+  SubtypeForNewExpr(fct,arg,fv,contxt) ==
+    SubtypeForApplication(fct,arg,fv,contxt);
+
+  SubtypeForCall : AS`Expr * seq of AS`Expr * set of AS`Name * POGTP`Context -> seq of POGTP`ProofObligation
+  SubtypeForCall(fct,arg,fv,contxt) ==
+    SubtypeForApplication(fct,arg,fv,contxt);
+
+operations
+  SubtypeForCall2 : AS`Expr * seq of AS`Expr * set of AS`Name * POGTP`Context ==> seq of POGTP`ProofObligation
+  SubtypeForCall2(fct',arg,fv,contxt) ==
+#ifdef VDMSL
+    def fct     = fct';
+        fct_tp  = CI_AUX`GetTypeInfo(fct);
+        tp_func = GetOperOverlap(fct_tp,len arg);
+        -------------------------------------------------
+        pog_subtp_fct = []; -- SubtypeOf(fct,tp_func,fv,contxt);
+        pog_subtp_arg = SubtypeForFuncApplicationArg(fct,arg,tp_func,fv,contxt);
+        -------------------------------------------------
+        po = pog_subtp_fct^pog_subtp_arg
+    in return po;
+#endif VDMSL
+#ifdef VDMPP
+   (dcl fct : AS`Expr;
+    cases fct':
+      mk_AS`Name(-,-) -> fct := fct',
+      mk_AS`FieldSelectExpr(rec,nm,-) ->
+            def ty = REP2TYPE`TypeRepToType(CI_AUX`GetTypeInfo(rec), CI`NilContextId);
+                clnm = ty.name.ids(len ty.name.ids)
+            in fct := mk_AS`Name([clnm] ^ nm.ids, fct'.cid)
+    end;
+    def mk_(modnm,nm) = SPEC_AST`SplitName(fct);
+        etp = [CI_AUX`GetTypeInfo(arg(i)) | i in set inds arg];
+        mk_(-,fct_tp,-) = if modnm = nm and len etp = 0
+                          then -- default constructor may be implicit so we can not use CheckOperationCall!
+                            mk_(nil,mk_REP`OpTypeRep([],mk_REP`TypeNameRep(modnm)),nil)
+                          else CI_AUX`CheckOperationCall({modnm},nm,nil,etp);
+        tp_func = GetOperOverlap(fct_tp,len arg);
+        -------------------------------------------------
+        pog_subtp_fct = []; -- SubtypeOf(fct,tp_func,fv,contxt);
+        pog_subtp_arg = SubtypeForFuncApplicationArg(fct,arg,tp_func,fv,contxt);
+        -------------------------------------------------
+        po = pog_subtp_fct^pog_subtp_arg
+    in return po;
+   );
+#endif VDMPP
+
+  SubtypeForApplication : AS`Expr * seq of AS`Expr  * set of AS`Name * POGTP`Context ==> seq of POGTP`ProofObligation
+  SubtypeForApplication(fct,arg,fv,contxt) ==
+  def tp     = GetTypeAbbrevArg(<SeqMapFuncOper>, fct, len arg);
+      fct_tp = CI_AUX`GetTypeInfo(fct)
+  in
+    cases tp:
+      <Other> -> return [],
+      <Map> -> def tp_map = GetOverlap(fct_tp,<Map>);
+                   -------------------------------------------------
+                   pog_subtp_fct = SubtypeOf(fct,tp_map,fv,contxt);
+                   pog_subtp_arg = SubtypeForMapApplicationArg(fct,arg,tp_map,fv,contxt);
+                   -------------------------------------------------
+                   po = pog_subtp_fct^pog_subtp_arg
+                in return po,
+      <Seq> -> def tp_seq = GetOverlap(fct_tp,<Seq>);
+                   -------------------------------------------------
+                   pog_subtp_fct = SubtypeOf(fct,tp_seq,fv,contxt);
+                   pog_subtp_arg = SubtypeForSeqApplicationArg(fct,arg,tp_seq,fv,contxt);
+                   -------------------------------------------------
+                   po = pog_subtp_fct^pog_subtp_arg
+               in return po,
+      <Func> -> def tp_func    = GetFuncOverlap(fct_tp,len arg);
+                   -------------------------------------------------
+#ifdef VDMSL
+                    pog_subtp_fct = SubtypeOf(fct,tp_func,fv,contxt);
+                    pog_subtp_arg = SubtypeForFuncApplicationArg(fct,arg,tp_func,fv,contxt);
+                    -------------------------------------------------
+                    po = pog_subtp_fct^pog_subtp_arg
+                 in return po,
+#endif VDMSL
+#ifdef VDMPP
+          -- HACK: the following test is put to avoid silly extra POs
+          -- due to overloaded methods.
+          -- It's a hack because it should be here until a better solution
+          -- for dealing with overloaded types (e.g. REP`OverloadedRepType
+          -- like in the interpreter). Currently, if a name refers to an overloaded
+          -- method the name is given the union type of the possible method types.
+          -- It's hack because, now perfectly sensible test dealing with union types
+          -- of methods arising from the use of union types of classes and function
+          -- types are no longer properly checked
+                 in
+                  (dcl pog_subtp_fct : seq of POGTP`ProofObligation := [];
+                   if not is_REP`UnionTypeRep(fct_tp)
+                   then pog_subtp_fct := SubtypeOf(fct,tp_func,fv,contxt);
+                   def pog_subtp_arg = SubtypeForFuncApplicationArg(fct,arg,tp_func,fv,contxt);
+                       -------------------------------------------------
+                       po = pog_subtp_fct^pog_subtp_arg
+                   in return po;
+                  ),
+#endif VDMPP
+      <Oper> -> def tp_func    = GetOperOverlap(fct_tp,len arg);
+                    -------------------------------------------------
+                    pog_subtp_fct = SubtypeOf(fct,tp_func,fv,contxt);
+                    pog_subtp_arg = SubtypeForFuncApplicationArg(fct,arg,tp_func,fv,contxt);
+                    -------------------------------------------------
+                    po = pog_subtp_fct^pog_subtp_arg
+                in return po,
+      <SeqMap> -> def pog_subtp_seq = SubtypeForSeqApplicationUnion(fct,arg,fv,contxt);
+                      pog_subtp_map = SubtypeForMapApplicationUnion(fct,arg,fv,contxt);
+                      -------------------------------------------------
+                      po = pog_subtp_seq^pog_subtp_map
+                  in return po,
+      <SeqFunc> -> def pog_subtp_seq  = SubtypeForSeqApplicationUnion(fct,arg,fv,contxt);
+                       pog_subtp_func = SubtypeForFuncApplicationUnion(fct,arg,fv,contxt);
+                       -------------------------------------------------
+                       po = pog_subtp_seq^pog_subtp_func
+                   in return po,
+      <MapFunc> -> def pog_subtp_map  = SubtypeForMapApplicationUnion(fct,arg,fv,contxt);
+                       pog_subtp_func = SubtypeForFuncApplicationUnion(fct,arg,fv,contxt);
+                       -------------------------------------------------
+                       po = pog_subtp_map^pog_subtp_func
+                   in return po,
+      <SeqMapFunc> -> def pog_subtp_seq  = SubtypeForSeqApplicationUnion(fct,arg,fv,contxt);
+                          pog_subtp_map  = SubtypeForMapApplicationUnion(fct,arg,fv,contxt);
+                          pog_subtp_func = SubtypeForFuncApplicationUnion(fct,arg,fv,contxt);
+                            -------------------------------------------------
+                          po = pog_subtp_seq^pog_subtp_map^pog_subtp_func
+                      in return po,
+      others       ->  error
+    end;
+
+  SubtypeForSeqApplicationUnion : AS`Expr * seq of AS`Expr * set of AS`Name * POGTP`Context
+                                  ==> seq of POGTP`ProofObligation
+  SubtypeForSeqApplicationUnion(fct,arg,fv,contxt) ==
+  def fct_tp = CI_AUX`GetTypeInfo(fct);
+      tp_seq = GetOverlap(fct_tp,<Seq>);
+      ------- Build context --------------------
+      seq_judgm  = mk_AS`TypeJudgementExpr(fct, tp_seq, CI`NilContextId);
+      seq_contxt = POGTP`Add2Context(seq_judgm,contxt);
+      ------- PO generation ----------------------------
+      pog_subtp_arg_seq = SubtypeForSeqApplicationArg(fct,arg,tp_seq,fv,seq_contxt)
+  in return pog_subtp_arg_seq;
+
+  SubtypeForMapApplicationUnion : AS`Expr * seq of AS`Expr * set of AS`Name * POGTP`Context
+                                  ==> seq of POGTP`ProofObligation
+  SubtypeForMapApplicationUnion(fct,arg,fv,contxt) ==
+  def fct_tp = CI_AUX`GetTypeInfo(fct);
+      tp_map = GetOverlap(fct_tp,<Map>);
+      ------- Build context --------------------
+      map_judgm  = mk_AS`TypeJudgementExpr(fct, tp_map, CI`NilContextId);
+      map_contxt = POGTP`Add2Context(map_judgm,contxt);
+      ------- PO generation ----------------------------
+      pog_subtp_arg_map = SubtypeForMapApplicationArg(fct,arg,tp_map,fv,map_contxt)
+  in return pog_subtp_arg_map;
+
+  SubtypeForFuncApplicationUnion : AS`Expr * seq of AS`Expr * set of AS`Name * POGTP`Context
+                                   ==> seq of POGTP`ProofObligation
+  SubtypeForFuncApplicationUnion(fct,arg,fv,contxt) ==
+  def fct_tp = CI_AUX`GetTypeInfo(fct);
+      tp_func = GetFuncOverlap(fct_tp,len arg)
+  in
+    def ------- Build context --------------------
+        func_judgm  = mk_AS`TypeJudgementExpr(fct, tp_func, CI`NilContextId);
+        func_contxt = POGTP`Add2Context(func_judgm,contxt);
+        ------- PO generation ----------------------------
+        pog_subtp_arg_func = SubtypeForFuncApplicationArg(fct,arg,tp_func,fv,func_contxt)
+    in return pog_subtp_arg_func;
+
+  -- Difficult: what type should we require of the argument
+  -- so that we will not get type POs on x - 1
+  -- (note: for x - 1 the inbounds PO x - 1 in set inds .. is generated)
+  -- The problem is the translation! What can we translate!
+  SubtypeForSeqApplicationArg : AS`Expr * seq of AS`Expr * AS`Type * set of AS`Name * POGTP`Context
+                                ==> seq of POGTP`ProofObligation
+  SubtypeForSeqApplicationArg (-,arg,-,fv,contxt) ==
+    def pog_tp_int = SubtypeOfInteger(hd arg,fv,contxt)
+    in
+      if pog_tp_int = []
+      then return []
+      else SubtypeOfNatOne(hd arg,fv,contxt)
+  pre  len arg = 1;
+
+  SubtypeForMapApplicationArg : AS`Expr * seq of AS`Expr * AS`Type * set of AS`Name * POGTP`Context
+                                ==> seq of POGTP`ProofObligation
+  SubtypeForMapApplicationArg (fct,arg,tp,fv,contxt) ==
+    if is_AS`UnionType(tp)
+    then
+      def mk_AS`UnionType(etps,-) = tp;
+          po = [def ------- Build context -------------------------
+                    map_judgm = mk_AS`TypeJudgementExpr(fct, etps(i), CI`NilContextId);
+                    map_contxt = POGTP`Add2Context(map_judgm,contxt)
+                in
+                    SubtypeForMapApplicationArg (fct,arg,etps(i),fv,map_contxt)
+                   | i in set inds etps]
+      in return conc po
+    else SubtypeOf(hd arg,tp.mapdom,fv,contxt)
+  pre  len arg = 1 and
+      (is_AS`GeneralMap0Type(tp) or is_AS`GeneralMap1Type(tp) or
+       is_AS`InjectiveMap0Type(tp) or is_AS`InjectiveMap1Type(tp) or
+       (is_AS`UnionType(tp) and
+        let mk_AS`UnionType(elemtps,-) = tp
+        in
+            forall etp in set elems elemtps &
+              (is_AS`GeneralMap0Type(etp) or is_AS`GeneralMap1Type(etp) or
+               is_AS`InjectiveMap0Type(etp) or is_AS`InjectiveMap1Type(etp))));
+
+  SubtypeForFuncApplicationArg : AS`Expr * seq of AS`Expr * AS`Type * set of AS`Name * POGTP`Context
+                                 ==> seq of POGTP`ProofObligation
+  SubtypeForFuncApplicationArg (fct,arg,tp,fv,contxt) ==
+    if is_AS`UnionType(tp) then
+      def mk_AS`UnionType(etps,-) = tp;
+          po = [let ------- Build context -------------------------
+                    func_judgm = mk_AS`TypeJudgementExpr(fct, etps(i), CI`NilContextId),
+                    func_contxt = POGTP`Add2Context(func_judgm,contxt)
+                in
+                    SubtypeForFuncApplicationArg
+                      (fct,arg,etps(i),fv,func_contxt)
+                   | i in set inds etps]
+      in
+#ifdef VDMPP
+          -- HACK: the following test is put to avoid silly extra POs
+          -- due to overloaded methods.
+          -- It's a hack because it should be here until a better solution
+          -- for dealing with overloaded types (e.g. REP`OverloadedRepType
+          -- like in the interpreter). Currently, if a name refers to an overloaded
+          -- method the name is given the union type of the possible method types.
+          -- It's hack because, now perfectly sensible test dealing with union types
+          -- of methods arising from the use of union types of classes and function
+          -- types are no longer properly checked
+          if exists i in set inds po & po(i) = []
+          then return []
+          else
+#endif //VDMPP
+            return conc po
+    else
+      def pog_arg_subtp = [SubtypeOf(arg(i), if is_AS`OpType(tp)
+                                             then tp.opdom(i)
+                                             else tp.fndom(i),
+                                     fv,
+                                     contxt)
+                           | i in set inds arg];
+          -----------------------------------------------------
+          po = conc pog_arg_subtp
+      in return po
+  pre ((is_AS`TotalFnType(tp) and len arg = len tp.fndom) or
+       (is_AS`OpType(tp) and len arg = len tp.opdom) or
+       (is_AS`PartialFnType(tp) and len arg = len tp.fndom))
+      or
+       (is_AS`UnionType(tp) and
+        let mk_AS`UnionType(elemtps,-) = tp
+        in
+            forall etp in set elems elemtps &
+              ((is_AS`TotalFnType(etp) and len arg = len etp.fndom) or
+               (is_AS`OpType(etp) and len arg = len etp.opdom) or
+               (is_AS`PartialFnType(etp) and len arg = len etp.fndom)));
+
+  SubtypeIteration: AS`Expr * AS`Expr * set of AS`Name * CI`ContextId * POGTP`Context
+                    ==> seq of POGTP`ProofObligation
+  SubtypeIteration(expr1,expr2,fv,cid,contxt) ==
+    def tp1_abbrev = GetTypeAbbrev(<NumMapFunc>,expr1);
+        expr1_tp   = CI_AUX`GetTypeInfo(expr1);
+        ------- Build context --------------------------------
+        gt_one_judgm = mk_AS`BinaryExpr(expr2, <NUMGT>, mk_AS`RealLit(1,CI`NilContextId), CI`NilContextId);
+        gt_one_contxt = POGTP`Add2Context(gt_one_judgm,contxt);
+        ------------------------------------------------------
+    in
+     (dcl po : seq of POGTP`ProofObligation := SubtypeOfNat(expr2,fv,contxt);
+      cases tp1_abbrev:
+        <Num>     -> skip,
+        <Map>     -> def ------- Build context ---------------------------
+                         tp_map     = GetOverlap(expr1_tp,<Map>)
+                     in po := po ^ MapRngSubtypeOfDomEndo(expr1,tp_map,fv,cid,gt_one_contxt),
+        <NumMap>  -> def ------- Build context ---------------------------
+                         tp_map     = GetOverlap(expr1_tp,<Map>);
+                         map_judgm  = mk_AS`TypeJudgementExpr(expr1, tp_map, CI`NilContextId);
+                         map_contxt = POGTP`Add2Context(map_judgm,gt_one_contxt);
+                         ------- PO generation ----------------------------
+                         pog_map = MapRngSubtypeOfDomEndo(expr1,tp_map,fv,cid,map_contxt);
+                         --------------------------------------------------
+                     in po := po ^ pog_map,
+        <Func>    -> def ------- Build context ---------------------------
+                         tp_func   = GetFuncOverlap(expr1_tp,1);
+                         ------- PO generation ----------------------------
+                     in
+                       if tp_func = <NO_OVERLAP>
+                       then po := po ^ GEN_PO`VerifyNonEndoIteration(expr2,contxt)
+                       else po := po ^ FuncRngSubtypeOfDomEndo(expr1,tp_func,fv,cid,gt_one_contxt),
+        <NumFunc> -> def ------- Build context ---------------------------
+                         tp_func    = GetFuncOverlap(expr1_tp,1);
+                         func_judgm  = mk_AS`TypeJudgementExpr(expr1, tp_func, CI`NilContextId);
+                         func_contxt = POGTP`Add2Context(func_judgm,gt_one_contxt);
+                         ------- PO generation ----------------------------
+                     in
+                       if tp_func = <NO_OVERLAP>
+                       then po := po ^ GEN_PO`VerifyNonEndoIteration(expr2,contxt)
+                       else po := po ^ FuncRngSubtypeOfDomEndo(expr1,tp_func,fv,cid,func_contxt),
+        <MapFunc>,
+        <NumMapFunc> -> def ------- Build context ---------------------------
+                            tp_map      = GetOverlap(expr1_tp,<Map>);
+                            tp_func     = GetFuncOverlap(expr1_tp,1);
+                            map_judgm   = mk_AS`TypeJudgementExpr(expr1, tp_map, CI`NilContextId);
+                            func_judgm  = mk_AS`TypeJudgementExpr(expr1, tp_func, CI`NilContextId);
+                            map_contxt  = POGTP`Add2Context(map_judgm,gt_one_contxt);
+                            func_contxt = POGTP`Add2Context(func_judgm,gt_one_contxt);
+                             ------- PO generation ----------------------------
+                            pog_map   = MapRngSubtypeOfDomEndo(expr1,tp_map,fv,cid,map_contxt);
+                         in
+                           if tp_func = <NO_OVERLAP>
+                           then po := po ^ pog_map ^ GEN_PO`VerifyNonEndoIteration(expr2,contxt)
+                           else po := po ^ pog_map ^ FuncRngSubtypeOfDomEndo(expr1,tp_func,fv,cid,func_contxt),
+            others -> error
+      end;
+      ------------------------------------------------------
+      return po;
+     );
+
+  FuncRngSubtypeOfDomEndo : AS`Expr * AS`Type * set of AS`Name * CI`ContextId * POGTP`Context
+                            ==> seq of POGTP`ProofObligation
+  FuncRngSubtypeOfDomEndo (fct,tp,fv,cid,contxt) ==
+    if is_AS`UnionType(tp)
+    then
+      def mk_AS`UnionType(etps,-) = tp;
+          po = [let ------- Build context -------------------------
+                    func_judgm = mk_AS`TypeJudgementExpr(fct, etps(i), CI`NilContextId),
+                    func_contxt = POGTP`Add2Context(func_judgm,contxt)
+                in FuncRngSubtypeOfDomEndo (fct,etps(i),fv,cid,func_contxt)
+                   | i in set inds etps]
+      in return conc po
+    else
+      let ---------------------------------------------
+          fndom = hd tp.fndom,
+          ----- Build argument binding --------------------
+          arg = FRESH`GetName("xx",fv),
+          pat = mk_AS`PatternName(arg,nil,CI`NilContextId),
+          bd  = [mk_AS`MultTypeBind([pat], fndom, CI`NilContextId)],
+          ---------------------------------------------
+          bd_contxt = POGTP`Add2Context(bd,contxt),
+          ----- Build conclusion for PO -------------
+          app_fct    = mk_AS`ApplyExpr(fct, [arg], cid)
+      in Subtype(app_fct,tp.fnrng,fndom,fv,bd_contxt)
+  pre ((is_AS`TotalFnType(tp) or
+        is_AS`PartialFnType(tp)) and len tp.fndom = 1)
+       or
+       (is_AS`UnionType(tp) and
+        let mk_AS`UnionType(elemtps,-) = tp
+        in
+            forall etp in set elems elemtps &
+              ((is_AS`TotalFnType(etp) or
+                is_AS`PartialFnType(etp)) and len etp.fndom = 1));
+
+  MapRngSubtypeOfDomEndo : AS`Expr * AS`Type * set of AS`Name * CI`ContextId * POGTP`Context
+                           ==> seq of POGTP`ProofObligation
+  MapRngSubtypeOfDomEndo (fct,tp,fv,cid,contxt) ==
+    if is_AS`UnionType(tp) then
+      def mk_AS`UnionType(etps,-) = tp;
+          po = conc [let ------- Build context -------------------------
+                         map_judgm = mk_AS`TypeJudgementExpr(fct, etps(i), CI`NilContextId),
+                         map_contxt = POGTP`Add2Context(map_judgm,contxt)
+                     in MapRngSubtypeOfDomEndo (fct,etps(i),fv,cid,map_contxt)
+                      | i in set inds etps]
+      in return po
+    else
+      let ---------------------------------------------
+          mdom = tp.mapdom,
+          ----- Build argument binding --------------------
+          arg = FRESH`GetName("xx",fv),
+          pat = mk_AS`PatternName(arg,nil,CI`NilContextId),
+          bd  = [mk_AS`MultTypeBind([pat], mdom, CI`NilContextId)],
+          ---------------------------------------------
+          bd_contxt = POGTP`Add2Context(bd,contxt),
+          ----- Build conclusion for PO -------------
+          app_fct    = mk_AS`ApplyExpr(fct, [arg], cid)
+    in Subtype(app_fct,tp.maprng,mdom,fv,bd_contxt)
+  pre
+      (is_AS`GeneralMap0Type(tp) or is_AS`GeneralMap1Type(tp) or
+       is_AS`InjectiveMap0Type(tp) or is_AS`InjectiveMap1Type(tp) or
+       (is_AS`UnionType(tp) and
+        let mk_AS`UnionType(elemtps,-) = tp
+        in
+            forall etp in set elems elemtps &
+              (is_AS`GeneralMap0Type(etp) or is_AS`GeneralMap1Type(etp) or
+               is_AS`InjectiveMap0Type(etp) or is_AS`InjectiveMap1Type(etp))));
+
+  SubtypeComposition : AS`Expr * AS`Expr * set of AS`Name * CI`ContextId * POGTP`Context
+                       ==> seq of POGTP`ProofObligation
+  SubtypeComposition (expr1,expr2,fv,cid,contxt) ==
+    def tp1_abbr = GetTypeAbbrevArg(<MapFunc>,expr1,1);
+        tp2_abbr = GetTypeAbbrev(<MapFunc>,expr2);
+        expr1_tp = CI_AUX`GetTypeInfo(expr1);
+        expr2_tp = CI_AUX`GetTypeInfo(expr2)
+    in
+        cases mk_(tp1_abbr,tp2_abbr):
+          mk_(<Map>,<Map>)   -> SubtypeMapComposition(expr1,expr2,fv,cid,contxt),
+          mk_(<Func>,<Func>) -> SubtypeFunctionComposition(expr1,expr2,fv,cid,contxt),
+          mk_(<MapFunc>,<MapFunc>) ->
+            def ------- Build context ---------------------------
+                tp_map1      = GetOverlap(expr1_tp,<Map>);
+                tp_map2      = GetOverlap(expr2_tp,<Map>);
+                tp_func1     = GetOverlap(expr1_tp,<Func>);
+                tp_func2     = GetOverlap(expr2_tp,<Func>);
+                map_judgm1   = mk_AS`TypeJudgementExpr(expr1, tp_map1, CI`NilContextId);
+                map_judgm2   = mk_AS`TypeJudgementExpr(expr2, tp_map2, CI`NilContextId);
+                func_judgm1  = mk_AS`TypeJudgementExpr(expr1, tp_func1, CI`NilContextId);
+                func_judgm2  = mk_AS`TypeJudgementExpr(expr2, tp_func2, CI`NilContextId);
+                map_contxt1  = POGTP`Add2Context(map_judgm1,contxt);
+                map_contxt2  = POGTP`Add2Context(map_judgm2,map_contxt1);
+                func_contxt1 = POGTP`Add2Context(func_judgm1,contxt);
+                func_contxt2 = POGTP`Add2Context(func_judgm2,func_contxt1);
+                ------- PO generation ----------------------------
+                pog_map  = SubtypeMapComposition(expr1,expr2,fv,cid,map_contxt2);
+                pog_func = SubtypeFunctionComposition(expr1,expr2,fv,cid,func_contxt2);
+                --------------------------------------------------
+                new_po   = pog_map ^ pog_func
+            in return new_po,
+          mk_(<Map>,<MapFunc>) ->
+            def ------- Build context ---------------------------
+                tp_map2      = GetOverlap(expr2_tp,<Map>);
+                map_judgm2   = mk_AS`TypeJudgementExpr(expr2, tp_map2, CI`NilContextId);
+                map_contxt2  = POGTP`Add2Context(map_judgm2,contxt);
+                ------- PO generation ----------------------------
+                pog_map  = SubtypeMapComposition(expr1,expr2,fv,cid,map_contxt2);
+                --------------------------------------------------
+                new_po   = pog_map
+            in return new_po,
+          mk_(<Func>,<MapFunc>) ->
+            let ------- Build context ---------------------------
+                tp_func2     = GetOverlap(expr2_tp,<Func>),
+                func_judgm2  = mk_AS`TypeJudgementExpr(expr2, tp_func2, CI`NilContextId),
+                func_contxt2 = POGTP`Add2Context(func_judgm2,contxt),
+                ------- PO generation ----------------------------
+                pog_func = SubtypeFunctionComposition(expr1,expr2,fv,cid,func_contxt2),
+                --------------------------------------------------
+                new_po   = pog_func
+            in return new_po,
+          mk_(<MapFunc>,<Map>) ->
+            def ------- Build context ---------------------------
+                tp_map1      = GetOverlap(expr1_tp,<Map>);
+                map_judgm1   = mk_AS`TypeJudgementExpr(expr1, tp_map1, CI`NilContextId);
+                map_contxt1  = POGTP`Add2Context(map_judgm1,contxt);
+                ------- PO generation ----------------------------
+                pog_map  = SubtypeMapComposition(expr1,expr2,fv,cid,map_contxt1);
+                --------------------------------------------------
+                new_po   = pog_map
+            in return new_po,
+          mk_(<MapFunc>,<Func>) ->
+            let ------- Build context ---------------------------
+                tp_func1     = GetOverlap(expr1_tp,<Func>),
+                func_judgm1  = mk_AS`TypeJudgementExpr(expr1, tp_func1, CI`NilContextId),
+                func_contxt1 = POGTP`Add2Context(func_judgm1,contxt),
+                ------- PO generation ----------------------------
+                pog_func = SubtypeFunctionComposition(expr1,expr2,fv,cid,func_contxt1),
+                --------------------------------------------------
+                new_po   = pog_func
+            in return new_po,
+          others ->
+            error --undefined
+        end;
+
+functions
+  SubtypeFunctionComposition : AS`Expr * AS`Expr * set of AS`Name * CI`ContextId * POGTP`Context
+                               -> seq of POGTP`ProofObligation
+  SubtypeFunctionComposition (expr1,expr2,fv,cid,contxt) ==
+    def tp1      = CI_AUX`GetTypeInfo(expr1);
+        tp2      = CI_AUX`GetTypeInfo(expr2);
+        tp1_func = GetFuncOverlap(tp1,1);
+        tp2_func = GetOverlap(tp2,<Func>);
+        ------------------------------------------------------
+        pog_subt = FuncRngSubtypeOfDom (expr1,tp1_func,expr2,tp2_func,fv,cid,contxt);
+        ------------------------------------------------------
+        po = pog_subt
+    in po;
+
+operations
+  FuncRngSubtypeOfDom : AS`Expr * AS`Type * AS`Expr * AS`Type * set of AS`Name * CI`ContextId * POGTP`Context
+                        ==> seq of POGTP`ProofObligation
+  FuncRngSubtypeOfDom (fct1,tp1,fct2,tp2,fv,cid,contxt) ==
+    if is_AS`UnionType(tp1) or is_AS`UnionType(tp2) then
+      def etps1 = if is_AS`UnionType(tp1)
+                  then let mk_AS`UnionType(etps,-) = tp1 in etps
+                  else [tp1];
+          etps2 = if is_AS`UnionType(tp2)
+                  then let mk_AS`UnionType(etps,-) = tp2 in etps
+                  else [tp2];
+          po    = [[let ------- Build context -------------------------
+                        func1_judgm = mk_AS`TypeJudgementExpr(fct1, etps1(i), CI`NilContextId),
+                        func2_judgm = mk_AS`TypeJudgementExpr(fct2, etps2(j), CI`NilContextId),
+                        func1_contxt = POGTP`Add2Context(func1_judgm,contxt),
+                        func2_contxt = POGTP`Add2Context(func2_judgm,func1_contxt)
+                    in
+                      FuncRngSubtypeOfDom (fct1,etps1(i),fct2,etps2(j),fv,cid,func2_contxt)
+                    | i in set inds etps1 & len etps1(i).fndom = 1]
+                   | j in set inds etps2 ]
+      in return conc conc po
+    else
+      let ---------------------------------------------
+          fndom = hd tp1.fndom,
+          fnrng = tp2.fnrng,
+          ----- Build argument binding --------------------
+          arg = FRESH`GetName("xx",fv),
+          pat = mk_AS`PatternName(arg,nil,CI`NilContextId),
+          bd  = [mk_AS`MultTypeBind([pat], fndom, CI`NilContextId)],
+          ---------------------------------------------
+          bd_contxt = POGTP`Add2Context(bd,contxt),
+          ----- Build conclusion for PO -------------
+          app_fct2  = mk_AS`ApplyExpr(fct2, [arg], cid)
+    in Subtype(app_fct2,fnrng,fndom,fv,bd_contxt)
+  pre
+      ((is_AS`TotalFnType(tp1) or
+        is_AS`PartialFnType(tp1)) and len tp1.fndom = 1)
+       or
+       (is_AS`UnionType(tp1) and
+        let mk_AS`UnionType(elemtps,-) = tp1
+        in
+            forall etp in set elems elemtps &
+              ((is_AS`TotalFnType(etp) or
+                is_AS`PartialFnType(etp)) and len etp.fndom = 1))
+      and
+       (is_AS`TotalFnType(tp2) or
+        is_AS`PartialFnType(tp2))
+       or
+       (is_AS`UnionType(tp2) and
+        let mk_AS`UnionType(elemtps,-) = tp2
+        in
+            forall etp in set elems elemtps &
+              ((is_AS`TotalFnType(etp) or
+                is_AS`PartialFnType(etp))));
+
+  SubtypeMapComposition : AS`Expr * AS`Expr * set of AS`Name * CI`ContextId * POGTP`Context
+                          ==> seq of POGTP`ProofObligation
+  SubtypeMapComposition (expr1,expr2,fv,cid,contxt) ==
+    def tp1      = CI_AUX`GetTypeInfo(expr1);
+        tp2      = CI_AUX`GetTypeInfo(expr2);
+        tp1_map = GetOverlap(tp1,<Map>);
+        tp2_map = GetOverlap(tp2,<Map>);
+        ------------------------------------------------------
+        pog_subt = MapRngSubtypeOfDom(expr1,tp1_map,expr2,tp2_map,fv,cid,contxt);
+        ------------------------------------------------------
+        po = pog_subt
+    in return po;
+
+  MapRngSubtypeOfDom : AS`Expr * AS`Type * AS`Expr * AS`Type * set of AS`Name * CI`ContextId * POGTP`Context
+                       ==> seq of POGTP`ProofObligation
+  MapRngSubtypeOfDom (fct1,tp1,fct2,tp2,fv,cid,contxt) ==
+    if is_AS`UnionType(tp1) or is_AS`UnionType(tp2) then
+      def etps1 = if is_AS`UnionType(tp1) then
+                    let mk_AS`UnionType(etps,-) = tp1 in etps
+                  else [tp1];
+          etps2 = if is_AS`UnionType(tp2) then
+                    let mk_AS`UnionType(etps,-) = tp2 in etps
+                  else [tp2];
+          po    = [[let ------- Build context -------------------------
+                        map1_judgm = mk_AS`TypeJudgementExpr(fct1, etps1(i), CI`NilContextId),
+                        map2_judgm = mk_AS`TypeJudgementExpr(fct2, etps2(j), CI`NilContextId),
+                        map1_contxt = POGTP`Add2Context(map1_judgm,contxt),
+                        map2_contxt = POGTP`Add2Context(map2_judgm,map1_contxt)
+                    in
+                        MapRngSubtypeOfDom (fct1,etps1(i),fct2,etps2(j),fv,cid,map2_contxt)
+                    | i in set inds etps1]
+                   | j in set inds etps2 ]
+      in return conc conc po
+    else
+      let ---------------------------------------------
+          mdom = tp1.mapdom,
+          mrng = tp2.maprng,
+          ----- Build argument binding --------------------
+          arg = FRESH`GetName("xx",fv),
+          pat = mk_AS`PatternName(arg,nil,CI`NilContextId),
+          bd  = [mk_AS`MultTypeBind([pat], mdom, CI`NilContextId)],
+          ---------------------------------------------
+          bd_contxt = POGTP`Add2Context(bd,contxt),
+          ----- Build conclusion for PO -------------
+          app_fct2  = mk_AS`ApplyExpr(fct2, [arg], cid)
+    in Subtype(app_fct2,mrng,mdom,fv,bd_contxt)
+  pre forall tp in set {tp1,tp2} &
+      (is_AS`GeneralMap0Type(tp) or is_AS`GeneralMap1Type(tp) or
+       is_AS`InjectiveMap0Type(tp) or is_AS`InjectiveMap1Type(tp) or
+       (is_AS`UnionType(tp) and
+        let mk_AS`UnionType(elemtps,-) = tp
+        in
+            forall etp in set elems elemtps &
+              (is_AS`GeneralMap0Type(etp) or is_AS`GeneralMap1Type(etp) or
+               is_AS`InjectiveMap0Type(etp) or is_AS`InjectiveMap1Type(etp))));
+
+  SubtypeForPreCondApplication : AS`Expr * seq of AS`Expr * set of AS`Name * POGTP`Context
+                                 ==> seq of POGTP`ProofObligation
+  SubtypeForPreCondApplication(fct,arg,fv,contxt) ==
+    def fct_tp  = CI_AUX`GetTypeInfo(fct);
+        func_tp = GetFuncOverlap(fct_tp,len arg);
+        ------------------------------------------
+        pog_fct_subtp = SubtypeOf(fct,func_tp,fv,contxt);
+        pog_arg_subtp = SubtypeForPreCond(fct,arg,func_tp,fv,contxt);
+        -----------------------------------------------------
+        po = pog_fct_subtp^pog_arg_subtp
+    in return po;
+
+  SubtypeForPreCond : AS`Expr * seq of AS`Expr * AS`Type * set of AS`Name * POGTP`Context
+                      ==> seq of POGTP`ProofObligation
+  SubtypeForPreCond (fct,arg,tp,fv,contxt) ==
+    if is_AS`UnionType(tp) then
+      def mk_AS`UnionType(etps,-) = tp;
+          po = [let ------- Build context -------------------------
+                    func_judgm = mk_AS`TypeJudgementExpr(fct, etps(i), CI`NilContextId),
+                    func_contxt = POGTP`Add2Context(func_judgm,contxt)
+                in
+                    SubtypeForPreCond (fct,arg,etps(i),fv,func_contxt)
+                   | i in set inds etps]
+      in return conc po
+    else
+      def pog_arg_subtp = [SubtypeOf(arg(i),tp.fndom(i),fv,contxt) | i in set inds arg];
+          -----------------------------------------------------
+          po = conc pog_arg_subtp
+      in return po
+  pre ((is_AS`TotalFnType(tp) or
+       is_AS`PartialFnType(tp)) and len arg = len tp.fndom)
+      or
+       (is_AS`UnionType(tp) and
+        let mk_AS`UnionType(elemtps,-) = tp
+        in
+            forall etp in set elems elemtps &
+              ((is_AS`TotalFnType(etp) or
+               is_AS`PartialFnType(etp)) and len arg = len etp.fndom));
+
+  SubtypeRecordModifier : AS`Expr * seq1 of AS`RecordModification * set of AS`Name * CI`ContextId * POGTP`Context
+                          ==> seq of POGTP`ProofObligation
+  SubtypeRecordModifier (rec,mods,fv,cid,contxt) ==
+    def rec_tp    = CI_AUX`GetTypeInfo(rec);
+        fld_sels  = {mods(i).field | i in set inds mods};
+        comp_tp   = GetComposeOverlapWithFieldSelectors(rec_tp,fld_sels);
+        mod_expr  = mk_AS`RecordModifierExpr(rec,mods,cid);
+        -----------------------------------------------------
+        pog_subtp_rec  = SubtypeOf(rec,comp_tp,fv,contxt);
+        pog_subtp_mod  = SubtypeOf(mod_expr,comp_tp,fv,contxt);
+        pog_subtp_mods = SubtypeRecordModifications(rec,mods,comp_tp,fv,contxt);
+        -----------------------------------------------------
+        po        = pog_subtp_rec^pog_subtp_mod^pog_subtp_mods
+    in return po;
+
+  SubtypeRecordModifications : AS`Expr * seq1 of AS`RecordModification * AS`Type * set of AS`Name * POGTP`Context
+                               ==> seq of POGTP`ProofObligation
+  SubtypeRecordModifications (rec,mods,tp,fv,contxt) ==
+    if is_AS`UnionType(tp) then
+      def mk_AS`UnionType(etps,-) = tp;
+          po = [let ------- Build context -------------------------
+                    rec_judgm = mk_AS`TypeJudgementExpr(rec, etps(i), CI`NilContextId),
+                    rec_contxt = POGTP`Add2Context(rec_judgm,contxt)
+                in
+                    SubtypeRecordModifications (rec,mods,etps(i),fv,rec_contxt)
+                   | i in set inds etps]
+      in return conc po
+    else
+      def get_match_type = [let fld in set elems tp.fields be st fld.sel = mods(i).field
+                            in  fld.type | i in set inds mods];
+          ----------------------------------------------------
+          pog_subtp_mods = [SubtypeOf(mods(i).newexpr,get_match_type(i),fv,contxt)
+                           | i in set inds mods];
+          -----------------------------------------------------
+          po = conc pog_subtp_mods
+      in return po
+  pre  is_AS`CompositeType(tp) or
+       (is_AS`UnionType(tp) and
+        let mk_AS`UnionType(elemtps,-) = tp
+        in
+          forall etp in set elems elemtps & is_AS`CompositeType(etp));
+
+functions
+#ifdef VDMSL
+  SubtypeForFieldSelect : AS`Expr * AS`Name * set of AS`Name * POGTP`Context
+                          -> seq of POGTP`ProofObligation
+#endif VDMSL
+#ifdef VDMPP
+  SubtypeForFieldSelect : AS`Expr * (AS`Name | AS`FctTypeInstExpr) * set of AS`Name * POGTP`Context
+                          -> seq of POGTP`ProofObligation
+#endif VDMPP
+  SubtypeForFieldSelect (rec,nm,fv,contxt) ==
+    def rec_tp   = CI_AUX`GetTypeInfo(rec);
+        rec_comp = GetComposeOverlap(nm,rec_tp)
+    in SubtypeOf(rec,rec_comp,fv,contxt);
+
+  SubtypeForTupleSelect : AS`Expr * set of AS`Name * POGTP`Context -> seq of POGTP`ProofObligation
+  SubtypeForTupleSelect (expr,fv,contxt) ==
+    def expr_tp  = CI_AUX`GetTypeInfo(expr);
+        tuple_tp = GetProdOverlap(expr_tp)
+    in SubtypeOf(expr,tuple_tp,fv,contxt);
+
+operations
+  PatternSubtypeOf : AS`Pattern * [AS`Type] * set of AS`Name * POGTP`Context
+                    ==> seq of POGTP`ProofObligation
+  PatternSubtypeOf (pat,type,fv,contxt) ==
+    if type = nil
+    then return []
+    else
+      def pat_tp     = CI_AUX`GetASType(pat);
+          pat_tp_rep = CI_AUX`GetTypeInfo(pat);
+          mk_(pure_pat,-,-) = PURE_PAT`Pattern2PurePattern(pat,fv);
+          pat_expr   = CAST`Pattern2Expr(pure_pat);
+          pat_bind   = [mk_AS`MultTypeBind([pure_pat], pat_tp, CI`NilContextId)];
+          pat_contxt = POGTP`Add2Context(pat_bind,contxt)
+      in
+         if IsBaseAsSubtype(pat_tp_rep,type)
+         then return []
+         else GEN_PO`VerifyType(pat_expr,type,pat_contxt);
+
+functions
+  SubtypeOfExpr : AS`Expr * AS`Expr * set of AS`Name * POGTP`Context -> seq of POGTP`ProofObligation
+  SubtypeOfExpr (expr1,expr2,fv,contxt) ==
+      def tp2     = CI_AUX`GetTypeInfo(expr2)
+      in SubtypeOfTypeRep(expr1,tp2,fv,contxt);
+
+operations
+  SubtypeOfPattern : [AS`Expr] * AS`Pattern * set of AS`Name * POGTP`Context
+                     ==> seq of POGTP`ProofObligation
+  SubtypeOfPattern(expr,pat,fv,contxt) ==
+    if expr = nil
+    then return []
+    else
+      def pat_tp = CI_AUX`GetTypeInfo(pat)
+      in SubtypeOfTypeRep(expr,pat_tp,fv,contxt);
+
+functions
+  PatternSubtype : AS`Pattern * AS`Expr * set of AS`Name * POGTP`Context  -> seq of POGTP`ProofObligation
+  PatternSubtype(pat,sel,fv,contxt) ==
+    def pat_tp     = CI_AUX`GetTypeInfo(pat);
+        sel_tp     = CI_AUX`GetTypeInfo(sel);
+        pat_as_tp  = REP2TYPE`TypeRepToType(pat_tp,CI`NilContextId);
+        sel_as_tp  = REP2TYPE`TypeRepToType(sel_tp,CI`NilContextId);
+        mk_(pure_pat,-,-) = PURE_PAT`Pattern2PurePattern(pat,fv);
+        pat_expr   = CAST`Pattern2Expr(pure_pat);
+        pat_bind   = [mk_AS`MultTypeBind([pure_pat], pat_as_tp, CI`NilContextId)];
+        pat_contxt = POGTP`Add2Context(pat_bind,contxt)
+    in
+      if IsBaseSubtype(pat_tp,sel_tp)
+      then []
+      else GEN_PO`VerifyType(pat_expr,sel_as_tp,pat_contxt);
+
+operations
+  PrefixOperatorSubtype : AS`PrefixExpr * set of AS`Name * POGTP`Context
+                          ==> seq of POGTP`ProofObligation
+  PrefixOperatorSubtype (mk_AS`PrefixExpr(op,unexpr,-),fv,contxt) ==
+    cases op :
+      <NUMPLUS>,
+      <NUMMINUS>,
+      <NUMABS>,
+      <FLOOR>              -> SubtypeOfReal(unexpr,fv,contxt),
+      <NOT>                -> SubtypeOfBoolean(unexpr,fv,contxt),
+      <SETCARD>,
+      <SETDISTRUNION>,
+      <SETDISTRINTERSECT>,
+      <SETPOWER>           -> SubtypeOfSet(unexpr,contxt),
+      <SEQLEN>,
+      <SEQDISTRCONC>,
+      <SEQELEMS>,
+      <SEQINDICES>,
+      <SEQTAIL>,
+      <SEQHEAD>,
+      <SEQREVERSE>         -> SubtypeOfSeq(unexpr,contxt),
+      <MAPDOM>,
+      <MAPRNG>             -> SubtypeOfMap(unexpr,contxt),
+      <MAPDISTRMERGE>      -> SubtypeOfSetOfMap(unexpr,contxt),
+      <MAPINVERSE>         -> SubtypeOfInMap(unexpr,fv,contxt),
+      others -> error --undefined
+    end;
+
+BinaryOperatorSubtype : AS`BinaryExpr * set of AS`Name * POGTP`Context ==> seq of POGTP`ProofObligation
+BinaryOperatorSubtype (mk_AS`BinaryExpr(expr1,op,expr2,cid),fv,contxt) ==
+ (dcl pog_subtp : (seq of POGTP`ProofObligation) * (seq of POGTP`ProofObligation) := mk_([],[]);
+  --def mk_(pog_subtp_lhs,pog_subtp_rhs) =
+    cases op :
+      <NUMPLUS>,
+      <NUMMINUS>,
+      <NUMMULT>,
+      <NUMDIV>       -> pog_subtp := mk_(SubtypeOfReal(expr1,fv,contxt), SubtypeOfReal(expr2,fv,contxt)),
+      <NUMREM>,
+      <NUMMOD>,
+      <INTDIV>       -> pog_subtp := mk_(SubtypeOfInteger(expr1,fv,contxt), SubtypeOfInteger(expr2,fv,contxt)),
+      <NUMEXP>       -> pog_subtp := mk_([], SubtypeIteration(expr1,expr2,fv,cid,contxt)),
+      <NUMLT>,
+      <NUMLE>,
+      <NUMGT>,
+      <NUMGE>        -> pog_subtp := mk_(SubtypeOfReal(expr1,fv,contxt), SubtypeOfReal(expr2,fv,contxt)),
+      <AND>,
+      <OR>,
+      <IMPLY>,
+      <EQUIV>        -> let contxt2 = POGTP`Add2Context(expr1,contxt)
+                        in pog_subtp := mk_(SubtypeOfBoolean(expr1,fv,contxt), SubtypeOfBoolean(expr2,fv,contxt2)),
+      <EQ>,
+      <NE>           -> pog_subtp := mk_([], SubtypeForEquality(expr1,expr2,fv,cid,contxt)),
+      <SETUNION>,
+      <SETINTERSECT>,
+      <SETMINUS>     -> pog_subtp := mk_(SubtypeOfSet(expr1,contxt), SubtypeOfSet(expr2,contxt)),
+      <SUBSET>,
+      <PROPERSUBSET> -> let pog_set1  = SubtypeOfSet(expr1,contxt),
+                            pog_set2  = SubtypeOfSet(expr2,contxt),
+                            pog_expr = SubtypeOfExpr(expr1,expr2,fv,contxt)
+                        in pog_subtp := mk_(pog_set1 ^ pog_set2 ^ pog_expr,[]),
+      <INSET>,
+      <NOTINSET>     -> pog_subtp := mk_(SubtypeOfSetOfType(expr1,expr2,fv,contxt), SubtypeOfSet(expr2,contxt)),
+      <SEQCONC>      -> pog_subtp := mk_(SubtypeOfSeq(expr1,contxt), SubtypeOfSeq(expr2,contxt)),
+      <MAPMERGE>     -> pog_subtp := mk_(SubtypeOfMap(expr1,contxt), SubtypeOfMap(expr2,contxt)),
+      <MAPDOMRESTTO>,
+      <MAPDOMRESTBY> -> pog_subtp := mk_(SubtypeOfSet(expr1,contxt), SubtypeOfMap(expr2,contxt)),
+      <MAPRNGRESTTO>,
+      <MAPRNGRESTBY> -> pog_subtp := mk_(SubtypeOfMap(expr1,contxt), SubtypeOfSet(expr2,contxt)),
+      <COMPOSE>      -> pog_subtp := mk_([], SubtypeComposition(expr1,expr2,fv,cid,contxt)),
+      others -> error --undefined
+    end;
+    -------------------------------------------------------------
+    def mk_(pog_subtp_lhs,pog_subtp_rhs) = pog_subtp;
+        po           = pog_subtp_lhs ^ pog_subtp_rhs
+    in return po;
+  );
+\end{vdm_al}
+
+\begin{vdm_al}
+functions
+  IsBaseAsSubtype : REP`TypeRep * AS`Type -> bool
+  IsBaseAsSubtype (tp1,tp2) ==
+    let tp2_rep = TYPE2REP`TransType(tp2)
+    in
+      IsSubtype(tp1,tp2_rep,{});
+
+#ifdef VDMSL
+  IsBaseSubtypeAS : AS`Type * AS`Type -> bool
+#endif VDMSL
+#ifdef VDMPP
+  IsBaseSubtypeAS : (AS`Type | POGTP`ClassType) * AS`Type -> bool
+#endif VDMPP
+  IsBaseSubtypeAS (tp1,tp2) ==
+    let tp1_rep = TYPE2REP`TransType(tp1),
+        tp2_rep = TYPE2REP`TransType(tp2)
+    in
+      IsSubtype(tp1_rep,tp2_rep,{});
+
+  IsBaseSubtype : REP`TypeRep * REP`TypeRep -> bool
+  IsBaseSubtype (tp1,tp2) ==
+    IsSubtype(tp1,tp2,{});
+
+  IsSubtypeNumericTypes: REP`NumericTypeRep * REP`NumericTypeRep -> bool
+  IsSubtypeNumericTypes (mk_REP`NumericTypeRep(tp1),mk_REP`NumericTypeRep(tp2)) ==
+    cases mk_(tp1,tp2):
+      mk_(tp,tp),
+      mk_(<NAT>,<NATONE>),
+      mk_(<NATONE>,<NAT>),
+      mk_(<NATONE>,<INTEGER>),
+      mk_(<NATONE>,<RAT>),
+      mk_(<NATONE>,<REAL>),
+      mk_(<NAT>,<INTEGER>),
+      mk_(<NAT>,<RAT>),
+      mk_(<NAT>,<REAL>),
+      mk_(<INTEGER>,<RAT>),
+      mk_(<INTEGER>,<REAL>),
+      mk_(<RAT>,<REAL>)      -> true,
+      others                 -> false
+    end;
+
+  IsSubtype : REP`TypeRep * REP`TypeRep * set of (REP`TypeNameRep * REP`TypeNameRep) -> bool
+  IsSubtype (tp1', tp2', assump) ==
+    let
+#ifdef VDMSL
+      tp1 = tp1',
+      tp2 = tp2'
+#endif VDMSL
+#ifdef VDMPP
+      tp1 = CI_AUX`NormaliseTypeName(tp1'),
+      tp2 = CI_AUX`NormaliseTypeName(tp2')
+#endif VDMPP
+    in
+      cases mk_(tp1,tp2):
+        mk_(tp,tp),
+        mk_(-, mk_REP`AllTypeRep()) -> true,
+        mk_(mk_REP`AllTypeRep(), -) -> false,
+        mk_(mk_REP`TypeNameRep(mk_AS`Name(["top"],-)), -) -> false,
+        mk_(mk_REP`TypeNameRep(mk_AS`Name(["bottom"],-)), -) -> true,
+        mk_(-,mk_REP`TypeNameRep(mk_AS`Name(["top"],-))),
+        mk_(-,mk_REP`TypeNameRep(mk_AS`Name([],-))) -> true,
+        mk_(-,mk_REP`TypeNameRep(mk_AS`Name(["bottom"],-))) -> false,
+#ifdef VDMPP
+        mk_(mk_REP`ObjRefTypeRep(nm1), mk_REP`ObjRefTypeRep(nm2)) ->
+          AUX`IsEmptyName(nm2) or CI_AUX`IsSubType(tp1,tp2,assump),
+#endif VDMPP
+        mk_(mk_REP`TypeNameRep(nm1), mk_REP`TypeNameRep(nm2)) ->
+          if mk_(tp1, tp2) in set assump then
+             true
+          else
+             let new_assump = assump union {mk_(tp1, tp2)},
+                 grd_tp1    = CI_AUX`LookUpGroundTypeRep(nm1),
+                 grd_tp2    =
+#ifdef VICE
+                              if is_REP`ObjRefTypeRep(grd_tp1) and
+                                 nm2.ids = []
+                              then <ANYOBJREF>
+                              else
+#endif VICE
+                                  CI_AUX`LookUpGroundTypeRep(nm2)
+             in
+#ifdef VICE
+                 grd_tp2 = <ANYOBJREF> or
+#endif VICE
+                 IsSubtype(grd_tp1,grd_tp2,new_assump),
+        mk_(mk_REP`TypeNameRep(nm1), -) -> let grd_tp1 = CI_AUX`LookUpGroundTypeRep(nm1)
+                                           in
+                                             IsSubtype(grd_tp1,tp2,assump),
+        mk_(-, mk_REP`TypeNameRep(nm2)) -> let grd_tp2 = CI_AUX`LookUpGroundTypeRep(nm2)
+                                           in
+                                             IsSubtype(tp1,grd_tp2,assump),
+        mk_(mk_REP`NumericTypeRep(-),mk_REP`NumericTypeRep(-)) -> IsSubtypeNumericTypes(tp1,tp2),
+        mk_(mk_REP`SetTypeRep(stp1),mk_REP`SetTypeRep(stp2)),
+        mk_(mk_REP`SeqTypeRep(stp1),mk_REP`SeqTypeRep(stp2)) -> IsSubtype(stp1,stp2,assump),
+        mk_(mk_REP`ProductTypeRep(ptp1),mk_REP`ProductTypeRep(ptp2)) ->
+          len ptp1 = len ptp2 and
+          forall i in set inds ptp1 & IsSubtype(ptp1(i),ptp2(i),assump),
+        mk_(mk_REP`CompositeTypeRep(tag,fields1),
+            mk_REP`CompositeTypeRep(tag,fields2)) -> len fields1 = len fields2 and
+                                                     forall i in set inds fields1 &
+                                                       IsSubtype(fields1(i).tp, fields2(i).tp,assump),
+       mk_(mk_REP`UnionTypeRep(etps1),-) -> forall tp in set etps1 & IsSubtype (tp,tp2,assump),
+       mk_(-,mk_REP`UnionTypeRep(etps2)) -> exists tp in set etps2 & IsSubtype(tp1,tp,assump),
+        mk_(mk_REP`PartialFnTypeRep(fndom1,fnrng1),
+            mk_REP`PartialFnTypeRep(fndom2,fnrng2)),
+        mk_(mk_REP`TotalFnTypeRep  (fndom1,fnrng1),
+            mk_REP`PartialFnTypeRep(fndom2,fnrng2)),
+        mk_(mk_REP`TotalFnTypeRep  (fndom1,fnrng1),
+            mk_REP`TotalFnTypeRep  (fndom2,fnrng2)) -> IsSubtype(fnrng1,fnrng2, assump) and
+                                                       len fndom1 = len fndom2 and
+                                                       forall i in set inds fndom2 &
+                                                         IsSubtype(fndom2(i),fndom1(i),assump),
+        mk_(mk_REP`GeneralMapTypeRep  (fndom1,fnrng1),
+            mk_REP`GeneralMapTypeRep  (fndom2,fnrng2)),
+        mk_(mk_REP`InjectiveMapTypeRep(fndom1,fnrng1),
+            mk_REP`GeneralMapTypeRep  (fndom2,fnrng2)),
+        mk_(mk_REP`GeneralMapTypeRep  (fndom2,fnrng2),
+            mk_REP`InjectiveMapTypeRep(fndom1,fnrng1)),
+        mk_(mk_REP`InjectiveMapTypeRep(fndom1,fnrng1),
+            mk_REP`InjectiveMapTypeRep(fndom2,fnrng2)) -> IsSubtype(fndom1,fndom2,assump) and
+                                                          IsSubtype(fnrng1,fnrng2,assump),
+        mk_(mk_REP`EmptyMapTypeRep(-,-),mk_REP`GeneralMapTypeRep(-,-)),
+        mk_(mk_REP`EmptyMapTypeRep(-,-),mk_REP`InjectiveMapTypeRep(-,-)) -> true,
+        mk_(mk_REP`EmptySetTypeRep(-),mk_REP`SetTypeRep(-)) -> true,
+        mk_(mk_REP`EmptySeqTypeRep(-),mk_REP`SeqTypeRep(-)) -> true,
+#ifdef VICE
+        mk_(mk_REP`OpTypeRep(-,-),mk_REP`AnyOpTypeRep()),
+        mk_(mk_REP`AnyOpTypeRep(),mk_REP`OpTypeRep(-,-)) -> true,
+        mk_(mk_REP`OpTypeRep(empobjref,-),
+            mk_REP`OpTypeRep(empnm,-)) -> hd empnm = mk_REP`TypeNameRep(mk_AS`Name([],CI`NilContextId)) and
+                                          hd empobjref = mk_REP`ObjRefTypeRep(mk_AS`Name([],CI`NilContextId)),
+#endif // VICE
+        others -> false
+      end;
+
+--#ifdef VDMPP
+--IsSubClassOf: AS`Name * AS`Name -> bool
+--IsSubClassOf(clnm1,clnm2) ==
+--  if clnm1 = clnm2
+--  then
+--    true
+--  else
+--    let l_defs = hd SPEC_AST`GetDefs(clnm1)
+--    in
+--      clnm2 in set elems l_defs.supercls
+--      or
+--      exists c in set elems l_defs.supercls & IsSubClassOf(c,clnm2)
+--pre VCM`IsClassName(clnm1) and VCM`IsClassName(clnm2)
+--#endif
+
+
+functions
+
+   IsBaseSubtypeTypeAbbrev : REP`TypeRep * TypeAbbrev -> bool
+   IsBaseSubtypeTypeAbbrev (tp1,tp2) ==
+      cases mk_(tp1,tp2):
+        mk_(mk_REP`AllTypeRep(), -)          -> false,
+        mk_(mk_REP`TypeNameRep(mk_AS`Name(["top"],-)), -)    -> false,
+        mk_(mk_REP`TypeNameRep(mk_AS`Name(["bottom"],-)), -) -> true,
+        mk_(mk_REP`TypeNameRep(nm1), -)      -> let grd_tp1 = CI_AUX`LookUpGroundTypeRep(nm1)
+                                                in
+                                                  IsBaseSubtypeTypeAbbrev(grd_tp1,tp2),
+        mk_(mk_REP`NumericTypeRep(-),-)      -> tp2 in set {<Num>,<NumMap>,<NumFunc>,<NumMapFunc>},
+        mk_(mk_REP`EmptySetTypeRep(-),<Set>),
+        mk_(mk_REP`SetTypeRep(-),<Set>)      -> true,
+        mk_(mk_REP`EmptySeqTypeRep(-),-),
+        mk_(mk_REP`SeqTypeRep(-),-)          -> tp2 in set {<Seq>,<SeqMap>,<SeqFunc>,<SeqMapFunc>},
+        mk_(mk_REP`UnionTypeRep(etps1),-)    -> forall tp in set etps1 & IsBaseSubtypeTypeAbbrev (tp,tp2),
+        mk_(mk_REP`PartialFnTypeRep(-,-),-),
+        mk_(mk_REP`TotalFnTypeRep  (-,-),-)  -> tp2 in set {<Func>,<MapFunc>,<SeqFunc>,
+                                                            <NumFunc>,<SeqMapFunc>,<NumMapFunc>},
+        mk_(mk_REP`GeneralMapTypeRep  (-,-),-),
+        mk_(mk_REP`InjectiveMapTypeRep(-,-),-),
+        mk_(mk_REP`EmptyMapTypeRep(-,-),-)      -> tp2 in set {<Map>,<MapFunc>,<SeqMap>,<NumMap>,
+                                                            <SeqMapFunc>,<NumMapFunc>},
+        others -> false
+      end;
+
+  TypeAbbrev2Type : TypeAbbrev -> AS`Type
+  TypeAbbrev2Type(type) ==
+    let top_nm    = mk_AS`Name(["top"],CI`NilContextId),
+        bottom_nm = mk_AS`Name(["bottom"],CI`NilContextId),
+        top       = mk_AS`TypeName(top_nm,CI`NilContextId),
+        bottom    = mk_AS`TypeName(bottom_nm,CI`NilContextId)
+    in
+      cases type:
+        <Set>        -> mk_AS`Set0Type(top,CI`NilContextId),
+        <Seq>        -> mk_AS`Seq0Type(top,CI`NilContextId),
+        <Map>        -> mk_AS`GeneralMap0Type(bottom, bottom, CI`NilContextId),
+        <Func>       -> mk_AS`UnionType([ mk_AS`PartialFnType([bottom], top, CI`NilContextId),
+                                          mk_AS`TotalFnType([bottom], top, CI`NilContextId) ],
+                                        CI`NilContextId),
+        <SeqMap>     -> mk_AS`UnionType([ mk_AS`Seq0Type(top,CI`NilContextId),
+                                          mk_AS`GeneralMap0Type(bottom, bottom, CI`NilContextId) ],
+                                        CI`NilContextId),
+        <SeqMapFunc> -> mk_AS`UnionType([ mk_AS`Seq0Type(top,CI`NilContextId),
+                                          mk_AS`GeneralMap0Type(bottom, bottom, CI`NilContextId),
+                                          mk_AS`PartialFnType([bottom], top, CI`NilContextId),
+                                          mk_AS`TotalFnType([bottom], top, CI`NilContextId) ],
+                                        CI`NilContextId),
+        others -> undefined
+      end;
+
+
+  GetTypeAbbrev : TypeAbbrev * (AS`Expr | AS`CallStmt) -> TypeAbbrev
+  GetTypeAbbrev (max_match,expr) ==
+    def tp_rep = CI_AUX`GetTypeInfo(expr)
+    in
+        GetTypeAbbrevFromTypeRep(max_match,tp_rep);
+
+  GetTypeAbbrevFromTypeRep : TypeAbbrev * REP`TypeRep -> TypeAbbrev
+  GetTypeAbbrevFromTypeRep (max_match,tp) ==
+    cases tp:
+      mk_REP`NumericTypeRep(-)        -> <Num>,
+      mk_REP`TypeNameRep(nm)          -> let grd_tp = CI_AUX`LookUpGroundTypeRep(nm)
+                                         in GetTypeAbbrevFromTypeRep(max_match,grd_tp),
+      mk_REP`EmptySetTypeRep(-),
+      mk_REP`SetTypeRep(-)            -> <Set>,
+      mk_REP`EmptySeqTypeRep(-),
+      mk_REP`SeqTypeRep(-)            -> <Seq>,
+      mk_REP`EmptyMapTypeRep(-,-),
+      mk_REP`GeneralMapTypeRep(-,-),
+      mk_REP`InjectiveMapTypeRep(-,-) -> <Map>,
+      mk_REP`PartialFnTypeRep(-,-),
+      mk_REP`TotalFnTypeRep(-,-)      -> <Func>,
+      mk_REP`OpTypeRep(-,-)           -> <Func>,
+      mk_REP`UnionTypeRep(tpset) -> let abbrev_set = {GetTypeAbbrevFromTypeRep(max_match,elem) | elem in set tpset}
+                                    in GetTypeAbbrevFromSet(max_match,abbrev_set),
+      others -> <Other>
+    end;
+
+
+  GetTypeAbbrevArg : TypeAbbrev * AS`Expr * nat -> TypeAbbrev
+  GetTypeAbbrevArg (max_match,expr,arg_num) ==
+    def tp_rep = CI_AUX`GetTypeInfo(expr)
+    in GetTypeAbbrevFromTypeRepArg(max_match,tp_rep,arg_num);
+
+  GetTypeAbbrevFromTypeRepArg : TypeAbbrev * REP`TypeRep * nat -> TypeAbbrev
+  GetTypeAbbrevFromTypeRepArg (max_match,tp,arg_num) ==
+    cases tp:
+      mk_REP`NumericTypeRep(-) -> <Num>,
+      mk_REP`TypeNameRep(nm) -> let grd_tp = CI_AUX`LookUpGroundTypeRep(nm)
+                                in
+                                  GetTypeAbbrevFromTypeRepArg(max_match,grd_tp,arg_num),
+      mk_REP`EmptySetTypeRep(-),
+      mk_REP`SetTypeRep(-) ->  <Set>,
+      mk_REP`EmptySeqTypeRep(-),
+      mk_REP`SeqTypeRep(-) -> if arg_num = 1
+                              then <Seq>
+                              else <Other>,
+      mk_REP`EmptyMapTypeRep(-,-),
+      mk_REP`GeneralMapTypeRep(-,-),
+      mk_REP`InjectiveMapTypeRep(-,-) -> if arg_num = 1
+                                         then <Map>
+                                         else <Other>,
+      mk_REP`PartialFnTypeRep(fndom,-),
+      mk_REP`TotalFnTypeRep(fndom,-)  -> if arg_num = len fndom
+                                         then <Func>
+                                         else <Other>,
+      mk_REP`UnionTypeRep(tpset) -> let abbrev_set = {GetTypeAbbrevFromTypeRepArg(max_match, elem, arg_num)
+                                                      | elem in set tpset}
+                                    in
+                                      GetTypeAbbrevFromSet(max_match,abbrev_set),
+      mk_REP`OpTypeRep(opdom,-) -> if arg_num = len opdom
+                                   then <Func>
+                                   else <Other>,
+      others -> <Other>
+    end;
+
+--  GetTypeAbbrevFromSet : TypeAbbrev * set of TypeAbbrev -> TypeAbbrev
+--  GetTypeAbbrevFromSet (max_match,abbrev_set) ==
+--    cases max_match:
+--      <SeqMapFunc> ->
+--        cases abbrev_set:
+--          {<Seq>,<Map>,<Func>} union - -> <SeqMapFunc>,
+--          {<Seq>,<Map>} union -        -> <SeqMap>,
+--          {<Seq>,<Func>} union -       -> <SeqFunc>,
+--          {<Map>,<Func>} union -       -> <MapFunc>,
+--          {<Seq>} union -              -> <Seq>,
+--          {<Map>} union -              -> <Map>,
+--          {<Func>} union -             -> <Func>,
+--          others -> undefined
+--        end,
+--      <NumMapFunc> ->
+--         cases abbrev_set:
+--           {<Num>,<Map>,<Func>} union - -> <NumMapFunc>,
+--           {<Map>,<Func>} union -       -> <MapFunc>,
+--           {<Num>,<Func>} union -       -> <NumFunc>,
+--           {<Num>,<Map>} union -        -> <NumMap>,
+--           {<Num>} union -              -> <Num>,
+--           {<Map>} union -              -> <Map>,
+--           {<Func>} union -             -> <Func>,
+--           others -> undefined
+--         end,
+--      <SeqMap>     ->
+--        cases abbrev_set:
+--          {<Seq>,<Map>} union -        -> <SeqMap>,
+--          {<Seq>} union -              -> <Seq>,
+--          {<Map>} union -              -> <Map>,
+--          others -> undefined
+--        end,
+--      others       -> undefined
+--    end;
+
+-- Rewritten to meet code generation!
+
+  GetTypeAbbrevFromSet : TypeAbbrev * set of TypeAbbrev -> TypeAbbrev
+  GetTypeAbbrevFromSet (max_match,abbrev_set) ==
+    cases max_match:
+      <SeqMapFuncOper> -> if <Seq> in set abbrev_set and
+                             <Map> in set abbrev_set and
+                             <Func> in set abbrev_set
+                          then <SeqMapFunc>
+                          elseif <Seq> in set abbrev_set and
+                                 <Map> in set abbrev_set
+                          then <SeqMap>
+                          elseif <Seq> in set abbrev_set and
+                                 <Func> in set abbrev_set
+                          then <SeqFunc>
+                          elseif <Map> in set abbrev_set and
+                                 <Func> in set abbrev_set
+                          then <MapFunc>
+                          elseif <Seq> in set abbrev_set
+                          then <Seq>
+                          elseif <Map> in set abbrev_set
+                          then <Map>
+                          elseif <Func> in set abbrev_set
+                          then <Func>
+                          elseif <Oper> in set abbrev_set
+                          then <Func>
+                          else <Other>,
+      <SeqMapFunc> -> if <Seq> in set abbrev_set and
+                         <Map> in set abbrev_set and
+                         <Func> in set abbrev_set
+                      then <SeqMapFunc>
+                      elseif <Seq> in set abbrev_set and
+                             <Map> in set abbrev_set
+                      then <SeqMap>
+                      elseif <Seq> in set abbrev_set and
+                             <Func> in set abbrev_set
+                      then <SeqFunc>
+                      elseif <Map> in set abbrev_set and
+                             <Func> in set abbrev_set
+                      then <MapFunc>
+                      elseif <Seq> in set abbrev_set
+                      then <Seq>
+                      elseif <Map> in set abbrev_set
+                      then <Map>
+                      elseif <Func> in set abbrev_set
+                      then <Func>
+                      else <Other>,
+      <NumMapFunc> -> if <Num> in set abbrev_set and
+                         <Map> in set abbrev_set and
+                         <Func> in set abbrev_set
+                      then <NumMapFunc>
+                      elseif <Map> in set abbrev_set and
+                             <Func> in set abbrev_set
+                      then <MapFunc>
+                      elseif <Num> in set abbrev_set and
+                             <Func> in set abbrev_set
+                      then <NumFunc>
+                      elseif <Num> in set abbrev_set and
+                             <Map> in set abbrev_set
+                      then <NumMap>
+                      elseif <Num> in set abbrev_set
+                      then <Num>
+                      elseif <Map> in set abbrev_set
+                      then <Map>
+                      elseif <Func> in set abbrev_set
+                      then <Func>
+                      else <Other>,
+      <SeqMap>     -> if <Seq> in set abbrev_set and
+                         <Map> in set abbrev_set
+                      then <SeqMap>
+                      elseif <Seq> in set abbrev_set
+                      then <Seq>
+                      elseif <Map> in set abbrev_set
+                      then <Map>
+                      else <Other>,
+      <MapFunc>     -> if <Map> in set abbrev_set and
+                          <Func> in set abbrev_set
+                       then <MapFunc>
+                       elseif <Map> in set abbrev_set
+                       then <Map>
+                       elseif <Func> in set abbrev_set
+                       then <Func>
+                       else <Other>,
+      <FuncOper>     -> if <Func> in set abbrev_set and
+                           <Oper> in set abbrev_set
+                        then <Func>  --  <FuncOper>
+                        elseif <Func> in set abbrev_set
+                        then <Func>
+                        elseif <Oper> in set abbrev_set
+                        then <Func>
+                        else <Other>,
+      others       -> undefined
+    end;
+
+  GetOverlap : REP`TypeRep * TypeAbbrev -> (AS`Type | <NO_OVERLAP>)
+  GetOverlap (tp1,tp2) ==
+    cases mk_(tp1,tp2):
+      mk_(mk_REP`AllTypeRep(), -)          -> TypeAbbrev2Type(tp2),
+      mk_(mk_REP`TypeNameRep(nm1), -)      -> let grd_tp1 = CI_AUX`LookUpGroundTypeRep(nm1)
+                                              in
+                                                GetOverlap(grd_tp1,tp2),
+      mk_(mk_REP`NumericTypeRep(btp),-)    -> if tp2 in set {<Num>,<NumMap>,<NumFunc>,<NumMapFunc>}
+                                              then mk_AS`NumericType(btp,CI`NilContextId)
+                                              else <NO_OVERLAP>,
+      mk_(mk_REP`EmptySetTypeRep(-),<Set>) -> TypeAbbrev2Type(<Set>),
+      mk_(mk_REP`SetTypeRep(-),<Set>)      -> REP2TYPE`TypeRepToType(tp1,CI`NilContextId),
+      mk_(mk_REP`EmptySeqTypeRep(-),-)     -> if tp2 in set {<Seq>,<SeqMap>,<SeqFunc>,<SeqMapFunc>}
+                                             then TypeAbbrev2Type(<Seq>)
+                                             else <NO_OVERLAP>,
+      mk_(mk_REP`SeqTypeRep(etp),-)        -> if tp2 in set {<Seq>,<SeqMap>,<SeqFunc>,<SeqMapFunc>}
+                                              then mk_AS`Seq0Type(REP2TYPE`TypeRepToType(etp,CI`NilContextId),
+                                                                  CI`NilContextId)
+                                              else <NO_OVERLAP>,
+      mk_(mk_REP`UnionTypeRep(etps),-)     -> let reduce_empty = FilterEmptyReps(etps),
+                                                  overlaps = {GetOverlap(tp,tp2) | tp in set reduce_empty},
+                                                  flatten = dunion {if is_AS`UnionType(tp)
+                                                                    then let mk_AS`UnionType(tps,-) = tp
+                                                                         in elems tps
+                                                                    else {tp}
+                                                                    | tp in set overlaps & tp <> <NO_OVERLAP>},
+                                                  as_eltps = SetToSeq[AS`Type](flatten)
+                                              in
+                                                if as_eltps = []
+                                                then <NO_OVERLAP>
+                                                elseif len as_eltps = 1
+                                                then hd as_eltps
+                                                else mk_AS`UnionType(as_eltps,CI`NilContextId),
+      mk_(mk_REP`PartialFnTypeRep(-,-),-) -> if tp2 in set {<Func>,<MapFunc>,<SeqFunc>,
+                                                                    <NumFunc>,<SeqMapFunc>,<NumMapFunc>}
+                                                     then REP2TYPE`TypeRepToType(tp1,CI`NilContextId)
+                                                     else <NO_OVERLAP>,
+      mk_(mk_REP`TotalFnTypeRep  (-,-),-) -> if tp2 in set {<Func>,<MapFunc>,<SeqFunc>,
+                                                                    <NumFunc>,<SeqMapFunc>,<NumMapFunc>}
+                                                     then REP2TYPE`TypeRepToType(tp1,CI`NilContextId)
+                                                     else <NO_OVERLAP>,
+      mk_(mk_REP`GeneralMapTypeRep  (-,-),-) -> if tp2 in set {<Map>,<MapFunc>,<SeqMap>,<NumMap>,
+                                                                     <SeqMapFunc>,<NumMapFunc>}
+                                                      then REP2TYPE`TypeRepToType(tp1,CI`NilContextId)
+                                                      else <NO_OVERLAP>,
+      mk_(mk_REP`InjectiveMapTypeRep(-,-),-) -> if tp2 in set {<Map>,<MapFunc>,<SeqMap>,<NumMap>,
+                                                                     <SeqMapFunc>,<NumMapFunc>}
+                                                      then REP2TYPE`TypeRepToType(tp1,CI`NilContextId)
+                                                      else <NO_OVERLAP>,
+      mk_(mk_REP`EmptyMapTypeRep(-,-),-)               -> if tp2 in set {<Map>,<MapFunc>,<SeqMap>,<NumMap>,
+                                                                      <SeqMapFunc>,<NumMapFunc>}
+                                                       then TypeAbbrev2Type(<Map>)
+                                                       else <NO_OVERLAP>,
+      others -> <NO_OVERLAP>
+    end;
+
+
+#ifdef VDMSL
+  GetComposeOverlap : AS`Name * REP`TypeRep -> AS`Type | <NO_OVERLAP>
+#endif VDMSL
+#ifdef VDMPP
+  GetComposeOverlap : (AS`Name | AS`FctTypeInstExpr) * REP`TypeRep -> AS`Type | <NO_OVERLAP>
+#endif VDMPP
+  GetComposeOverlap (nm,tp) ==
+    cases tp:
+      mk_REP`TypeNameRep(name)      -> let grd_tp = CI_AUX`LookUpGroundTypeRep(name)
+                                       in
+                                         GetComposeOverlap(nm,grd_tp),
+#ifdef VDMPP
+      mk_REP`ObjRefTypeRep(name)     ->
+        def mk_(-,nm') = SPEC_AST`SplitName(if is_AS`FctTypeInstExpr(nm)
+                                            then nm.polyfct
+                                            else nm)
+        in
+            if nm' in set CI_AUX`GetMemberNames(name)
+            then mk_AS`TypeName(name,CI`NilContextId)
+            else <NO_OVERLAP>,
+#endif
+      mk_REP`CompositeTypeRep(-,flds) -> if nm in set {flds(i).sel | i in set inds flds}
+                                         then REP2TYPE`TypeRepToType(tp,CI`NilContextId)
+                                         else <NO_OVERLAP>,
+      mk_REP`UnionTypeRep(etps) ->
+        let overlaps = {GetComposeOverlap(nm,tp) | tp in set etps},
+            flatten  = dunion {if is_AS`UnionType(tp) then
+                                 let mk_AS`UnionType(tps,-) = tp
+                                 in
+                                     elems tps
+                               else
+                                 {tp}
+                              | tp in set overlaps & tp <> <NO_OVERLAP>},
+            as_eltps = SetToSeq[AS`Type](flatten)
+        in
+           if as_eltps = [] then
+             <NO_OVERLAP>
+           elseif len as_eltps = 1 then
+             hd as_eltps
+           else
+             mk_AS`UnionType(as_eltps,CI`NilContextId),
+      others -> <NO_OVERLAP>
+    end;
+
+  GetComposeOverlapWithFieldSelectors : REP`TypeRep * set of AS`Name -> AS`Type | <NO_OVERLAP>
+  GetComposeOverlapWithFieldSelectors (tp,flds) ==
+    cases tp:
+      mk_REP`TypeNameRep(name)      ->
+        let grd_tp = CI_AUX`LookUpGroundTypeRep(name)
+        in
+           GetComposeOverlapWithFieldSelectors(grd_tp,flds),
+      mk_REP`CompositeTypeRep(-,fields) ->
+        if flds subset {fields(i).sel | i in set inds fields}
+        then REP2TYPE`TypeRepToType(tp,CI`NilContextId)
+        else <NO_OVERLAP>,
+      mk_REP`UnionTypeRep(etps) ->
+        let overlaps = {GetComposeOverlapWithFieldSelectors(tp,flds) | tp in set etps},
+            flatten  = dunion {if is_AS`UnionType(tp) then
+                                 let mk_AS`UnionType(tps,-) = tp
+                                 in
+                                     elems tps
+                               else {tp}
+                              | tp in set overlaps & tp <> <NO_OVERLAP>},
+            as_eltps = SetToSeq[AS`Type](flatten)
+        in
+           if as_eltps = []
+           then <NO_OVERLAP>
+           elseif len as_eltps = 1
+           then hd as_eltps
+           else mk_AS`UnionType(as_eltps,CI`NilContextId),
+      others -> <NO_OVERLAP>
+    end;
+
+  GetProdOverlap : REP`TypeRep -> AS`Type | <NO_OVERLAP>
+  GetProdOverlap (tp) ==
+    cases tp:
+      mk_REP`TypeNameRep(name)  -> let grd_tp = CI_AUX`LookUpGroundTypeRep(name)
+                                   in
+                                     GetProdOverlap(grd_tp),
+      mk_REP`ProductTypeRep(-)  -> REP2TYPE`TypeRepToType(tp,CI`NilContextId),
+      mk_REP`UnionTypeRep(etps) ->
+        let overlaps = {GetProdOverlap(tp) | tp in set etps},
+            flatten  = dunion {if is_AS`UnionType(tp)
+                               then
+                                 let mk_AS`UnionType(tps,-) = tp
+                                 in
+                                     elems tps
+                               else {tp}
+                              | tp in set overlaps & tp <> <NO_OVERLAP>},
+            as_eltps = SetToSeq[AS`Type](flatten)
+        in
+           if as_eltps = [] then
+             <NO_OVERLAP>
+           elseif len as_eltps = 1 then
+             hd as_eltps
+           else
+             mk_AS`UnionType(as_eltps,CI`NilContextId),
+      others -> <NO_OVERLAP>
+    end;
+
+#ifdef VDMSL
+  GetProdArities : AS`Type -> set of nat1
+#endif VDMSL
+#ifdef VDMPP
+  GetProdArities : AS`Type | POGTP`ClassType -> set of nat1
+#endif VDMPP
+  GetProdArities (tp) ==
+    cases tp:
+      mk_AS`TypeName(name,-)    -> let grd_tp = CI_AUX`LookUpGroundType(name)
+                                   in
+                                     GetProdArities(grd_tp),
+      mk_AS`ProductType(etps,-) -> {len etps},
+      mk_AS`UnionType(etps,-)   -> dunion {GetProdArities(etps(i)) | i in set inds etps},
+      others -> {}
+    end;
+
+  GetSetOverlap : REP`TypeRep -> AS`Type | <NO_OVERLAP>
+  GetSetOverlap (tp) ==
+    cases tp:
+      mk_REP`TypeNameRep(name)  -> let grd_tp = CI_AUX`LookUpGroundTypeRep(name)
+                                   in
+                                     GetSetOverlap(grd_tp),
+      mk_REP`EmptySetTypeRep(-) -> TypeAbbrev2Type(<Set>),
+      mk_REP`SetTypeRep(etp)    -> REP2TYPE`TypeRepToType(etp,CI`NilContextId),
+      mk_REP`UnionTypeRep(etps) ->
+-- multi bind for same set cause error at code generation
+--        let red_etps = if exists etp in set etps & is_REP`EmptySetTypeRep(etp),
+--                                 mk_REP`SetTypeRep(-) in set etps & true
+--                       then
+--                          {tp | tp in set etps &
+--                                not is_REP`EmptySetTypeRep(tp)}
+--                       else
+--                          etps,
+        let red_etps = {tp | tp in set etps &
+                                not is_REP`EmptySetTypeRep(tp)},
+            overlaps = {GetSetOverlap(tp) | tp in set red_etps},
+            flatten  = dunion {if is_AS`UnionType(tp) then
+                                 let mk_AS`UnionType(tps,-) = tp
+                                 in
+                                     elems tps
+                               else
+                                 {tp}
+                              | tp in set overlaps & tp <> <NO_OVERLAP>},
+            as_eltps = SetToSeq[AS`Type](flatten)
+        in
+           if as_eltps = [] then
+             <NO_OVERLAP>
+           elseif len as_eltps = 1 then
+             hd as_eltps
+           else
+             mk_AS`UnionType(as_eltps,CI`NilContextId),
+      others -> <NO_OVERLAP>
+    end;
+
+--  GetOperOverlap : REP`OpTypeRep * nat -> (AS`Type | <NO_OVERLAP>)
+--  GetOperOverlap (mk_REP`OpTypeRep(opdom,oprng),arg_num) ==
+--    if len opdom = arg_num then
+--       let as_opdom = [REP2TYPE`TypeRepToType(opdom(i),CI`NilContextId)
+--                       | i in set inds opdom],
+--           as_oprng =
+--              if is_REP`UnitTypeRep(oprng)
+--              then nil
+--              else REP2TYPE`TypeRepToType(oprng,CI`NilContextId)
+--       in
+--           mk_AS`OpType(as_opdom,as_oprng,CI`NilContextId)
+--    else
+--       <NO_OVERLAP>;
+
+  GetOperOverlap : REP`TypeRep * nat -> (AS`Type | <NO_OVERLAP>)
+  GetOperOverlap (tp,arg_num) ==
+    cases tp:
+      mk_REP`UnionTypeRep(etps)   ->
+        let overlaps = {GetOperOverlap(tp,arg_num) | tp in set etps},
+            flatten  = dunion {if is_AS`UnionType(tp)
+                               then
+                                 let mk_AS`UnionType(tps,-) = tp
+                                 in elems tps
+                               else
+                                 {tp}
+                              | tp in set overlaps & tp <> <NO_OVERLAP>},
+            as_eltps = SetToSeq[AS`Type](flatten)
+        in
+           cases as_eltps:
+             []     -> <NO_OVERLAP>,
+             [e]    -> e,
+             others -> mk_AS`UnionType(as_eltps,CI`NilContextId)
+           end,
+      mk_REP`OpTypeRep(fndom,-)  -> if len fndom = arg_num
+                                    then REP2TYPE`TypeRepToType(tp,CI`NilContextId)
+                                    else <NO_OVERLAP>,
+      others -> <NO_OVERLAP>
+    end;
+
+  GetFuncOverlap : REP`TypeRep * nat -> (AS`Type | <NO_OVERLAP>)
+  GetFuncOverlap (tp,arg_num) ==
+    cases tp:
+      mk_REP`TypeNameRep(nm)      -> let grd_tp = CI_AUX`LookUpGroundTypeRep(nm)
+                                     in
+                                       GetFuncOverlap(grd_tp,arg_num),
+      mk_REP`UnionTypeRep(etps)   ->
+        let overlaps = {GetFuncOverlap(tp,arg_num) | tp in set etps},
+            flatten  = dunion {if is_AS`UnionType(tp)
+                               then
+                                 let mk_AS`UnionType(tps,-) = tp
+                                 in elems tps
+                               else {tp}
+                              | tp in set overlaps & tp <> <NO_OVERLAP>},
+            as_eltps = SetToSeq[AS`Type](flatten)
+        in
+           cases as_eltps:
+             [] -> <NO_OVERLAP>,
+             [e] -> e,
+             others -> mk_AS`UnionType(as_eltps,CI`NilContextId)
+           end,
+      mk_REP`PartialFnTypeRep(fndom,-)  -> if len fndom = arg_num
+                                           then REP2TYPE`TypeRepToType(tp,CI`NilContextId)
+                                           else <NO_OVERLAP>,
+      mk_REP`TotalFnTypeRep(fndom,-)    -> if len fndom = arg_num
+                                           then REP2TYPE`TypeRepToType(tp,CI`NilContextId)
+                                           else <NO_OVERLAP>,
+      mk_REP`OpTypeRep(fndom,-)         -> if len fndom = arg_num
+                                           then REP2TYPE`TypeRepToType(tp,CI`NilContextId)
+                                           else <NO_OVERLAP>,
+      others -> <NO_OVERLAP>
+    end;
+
+  FilterEmptyReps : set of REP`TypeRep -> set of REP`TypeRep
+  FilterEmptyReps (tyset) ==
+    tyset \ { mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()),
+              mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
+              mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(),mk_REP`AllTypeRep()) };
+
+  SetToSeq[@Elem]: set of @Elem -> seq of @Elem
+  SetToSeq(s) ==
+    if s = {}
+    then []
+    else let x in set s in SetToSeq[@Elem](s \ {x}) ^ [x]
+
+end CHECK
+
+\end{vdm_al}
+
+\newpage
+
+\begin{rtinfo}[CHECK`GetComposeOverlapWithFieldSelectors]
+{rtinfo.ast}[CHECK]
+\end{rtinfo}
+

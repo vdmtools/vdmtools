@@ -1,0 +1,11 @@
+public Test : () ==> seq of nat  
+Test () ==
+( dcl s : seq of nat := [];
+
+  for i = 25 to 10 by 20 do
+    s := s ^ [i];
+
+  return s
+)
+   
+end A

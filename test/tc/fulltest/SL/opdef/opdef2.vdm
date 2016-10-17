@@ -1,0 +1,16 @@
+class OpDefTest
+state Sigma of
+      S1 : int 
+      b : bool
+      x : seq of nat
+inv mk_Sigma(-,b,-) == b = true
+init s == s = mk_Sigma(7,true,[])
+end
+
+operations
+
+extimplop(S1:int) r:int == 
+  ( S1 := 0; return S1 )
+post r < 10;
+
+end OpDefTest

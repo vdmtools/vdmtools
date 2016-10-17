@@ -1,0 +1,12 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of nat  
+Test () ==
+ let a = {2,3,6, 7}
+ in let a in set a be st a = 2 in
+    return [a]
+
+end A

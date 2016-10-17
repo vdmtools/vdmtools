@@ -1,0 +1,18 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+-- Testing dont care for records.
+
+public Test : () ==> int
+Test () ==
+( g(11);
+  return 34
+);
+
+g: int ==> ()
+g(a) ==
+( 
+  if a> 10
+  then return;
+  return;
+)
+
+end A

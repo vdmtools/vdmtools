@@ -1,0 +1,8 @@
+r bar.vdm
+i
+tc BAG
+tc BAR 
+cg BAG
+cg BAR 
+latex bar.vdm
+quit

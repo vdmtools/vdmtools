@@ -1,0 +1,144 @@
+class A
+
+types
+public
+FRUIT = <apple> | <蜜柑> | <檸檬> | <桃> | <葡萄>;
+
+instance variables
+private
+fdao : FruitDao;
+
+operations
+public
+Test: () ==> bool
+Test() ==
+   trap err with return false
+   in
+   ( 
+    dbiConnectionFactory`setDefaultDsn("testdb");
+    --dbiConnectionFactory`setDefaultDsn("oracle");
+
+    fdao := new FruitDao();
+
+    println("create table");
+    createFruit();
+    
+    println("insert 5 records");
+    insertFruit();
+
+    println("count number of records");
+    showCount();
+
+    println("show record with price = 100");
+    selectTest();
+
+    println("update 1 record");
+    updateFruit();
+
+    println("show record with price = 100");
+    selectTest();
+
+    println("delete 1 record");
+    deleteFruit();
+
+    println("show record with price = 100");
+    selectTest();
+
+    println("show record with price = 333");
+    selectTest2();
+
+    return true;
+   );
+
+public
+showCount: () ==> ()
+showCount() ==
+  def num = fdao.count();
+      io = new IO();
+      num = VDMUtil`val2seq_of_char[nat](num);
+      - = io.echo(num ^ " records inserted.\n")
+  in
+    skip;
+
+public
+createFruit: () ==> ()
+createFruit() ==
+  (trap e with skip in fdao.drop();
+   fdao.createTable());
+
+public
+insertFruit: () ==> ()
+insertFruit() ==
+  let fruits = [new FruitBean("apple", 100),
+                new FruitBean("蜜柑", 200),
+                new FruitBean("檸檬", 100),
+                new FruitBean("桃", 100),
+                new FruitBean("葡萄", 150)]
+  in 
+    (fdao.begin();
+     for f in fruits do
+       trap e with
+         (fdao.rollback();
+          exit e)
+       in
+         def - = fdao.insert(f) in skip;
+     --fdao.rollback());
+     fdao.commit());
+
+public
+updateFruit: () ==> ()
+updateFruit() ==
+  let setvals = ["price = '200'"],
+      where = "name = '檸檬'"
+  in
+   (fdao.begin();
+    trap e with
+      (fdao.rollback();
+       exit e)
+    in
+      def - = fdao.update(setvals, where) in skip;
+    fdao.commit());
+
+public
+deleteFruit: () ==> ()
+deleteFruit() ==
+  let where = "name = 'apple'"
+  in
+   (fdao.begin();
+    trap e with
+     (fdao.rollback();
+      exit e)
+    in
+      def - = fdao.delete(where) in skip;
+    fdao.commit());
+
+public
+selectTest: () ==> ()
+selectTest() ==
+  def fruits = fdao.selectList("price = 100")
+  in
+    showFruitBeans(fruits);
+
+public
+selectTest2: () ==> ()
+selectTest2() ==
+  def fruits = fdao.selectList("price = 333")
+  in
+    showFruitBeans(fruits);
+
+public
+showFruitBeans : seq of FruitBean ==> ()
+showFruitBeans(fruits) ==
+  for f in fruits do
+    let name = f.name,
+        price = VDMUtil`val2seq_of_char[nat](f.price)--
+    in
+      println(name ^ " " ^ price);
+      
+private
+println: seq of char ==> ()
+println(v) ==
+  def - = new IO().echo(v ^ "\n") in skip;
+
+end A
+

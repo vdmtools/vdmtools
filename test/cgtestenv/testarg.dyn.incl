@@ -1,0 +1,5 @@
+ZZZ`Interprete(
+#include "vdmtest.arg"
+,
+#include "vdm.ast"
+)

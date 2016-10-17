@@ -1,0 +1,155 @@
+class WaitNotify
+
+instance variables
+
+waitset : set of nat := {}
+
+operations
+
+public startup : () ==> ()
+startup() == notify();
+
+public wait : () ==> ()
+wait () ==
+( AddToWaitSet(threadid);
+  Awake()
+);
+
+AddToWaitSet : nat ==> ()
+AddToWaitSet(p) ==
+  waitset := waitset union {p};
+
+Awake : () ==> ()
+Awake() ==
+  skip;
+
+public notify : () ==> ()
+notify() ==
+  if waitset <> {}
+  then let p in set waitset in
+       waitset := waitset \ {p};
+
+sync
+
+  mutex(AddToWaitSet, notify);
+  per Awake => threadid not in set waitset;
+  per startup => #req(wait) > 2
+
+end WaitNotify
+
+class Shared
+
+instance variables
+
+data : seq of seq of char := []
+
+operations
+
+public put : seq of char ==> ()
+put(m) ==
+data := data ^ [m];
+
+public get : () ==> seq of seq of char
+get() ==
+  return data
+
+sync
+
+per get => #fin(put) > 9;
+per put => #fin(put) <= 10
+
+end Shared
+
+
+
+class B
+
+instance variables
+
+s : Shared;
+wn : WaitNotify;
+
+operations
+
+public Set : WaitNotify * Shared ==> ()
+Set(nwn, ns) == (wn := nwn; s := ns)
+
+thread
+
+while true do
+  (wn.wait();
+   s.put("B");
+   wn.notify())
+
+end B
+
+class C
+
+instance variables
+
+s : Shared;
+wn : WaitNotify;
+
+operations
+
+public Set : WaitNotify * Shared ==> ()
+Set(nwn, ns) == (wn := nwn; s := ns)
+
+thread
+
+while true do
+  (wn.wait();
+   s.put("C");
+   wn.notify())
+
+end C
+
+class D
+
+instance variables
+
+s : Shared;
+wn : WaitNotify;
+
+operations
+
+public Set : WaitNotify * Shared ==> ()
+Set(nwn, ns) == (wn := nwn; s := ns)
+
+thread
+
+while true do
+  (wn.wait();
+   s.put("D");
+   wn.notify())
+
+end D
+
+class A
+
+operations
+
+public Test : () ==> seq of seq of char
+Test() ==
+( dcl wn : WaitNotify := new WaitNotify(),
+      b : B := new B(),
+      c : C := new C(),
+      d : D := new D(),
+      s : Shared := new Shared();
+  b.Set(wn,s);
+  c.Set(wn,s);
+  d.Set(wn,s);
+  start(b);
+  start(c);
+  start(d);
+  wn.startup();
+  s.get())
+
+end A
+
+
+
+
+
+
+

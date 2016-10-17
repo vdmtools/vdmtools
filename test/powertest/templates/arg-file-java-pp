@@ -1,0 +1,29 @@
+import jp.vdmtools.VDM.UTIL;
+import jp.vdmtools.VDM.VDMSpecException;
+import java.io.*;
+
+public class TMAIN
+{
+  public static void main(String[] args) 
+  {
+    try 
+    {
+      <<CLASS>> obj = new <<CLASS>>();
+      System.out.println(UTIL.toString(((<<CLASS>>)(obj)).<<OP>>()));
+    }
+    catch (ClassCastException e) {
+      System.out.println("Run-Time Error: Another type was expected");
+      System.err.println(e.getMessage());
+      e.printStackTrace(System.err);
+    }               
+    catch (Exception e) {
+      if (e instanceof VDMSpecException)
+        System.out.println("exit " + UTIL.toString(((VDMSpecException)e).getValue()));   
+      else
+      { 
+        System.out.println(e.getMessage());
+        e.printStackTrace(System.err);
+      }
+    }               
+  }
+}

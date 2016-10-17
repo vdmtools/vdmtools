@@ -1,0 +1,43 @@
+#! /usr/bin/perl
+
+# use strict; 
+use Getopt::Long;
+
+#Does not work with Getopt v2.10 (val is changed to 1)
+#Getopt::Long::config(qw(bundling)); # So we can use -Dvar=val iso -D var=val 
+
+
+my ($opt_name, $opt_split, %opt_defines) = ('','', ());
+
+my $ok = GetOptions ('n=s' => \$opt_name,
+                     's' => \$opt_split,
+                     'D=s%' => \%opt_defines); 
+
+my $lastvar = ''; 
+while (defined($_ = <>)) {
+    my $num = (/^item: Global/ .. /^end/);
+    if ($num) {
+        next if /^\s+EXE Filename=/;
+        next if /^\s+Split=/;
+        if (/^\s+Variable Name(\d+)/) {
+            $lastvar = $1;
+        }
+        if ($num =~ m/E0/) {
+            print "  EXE Filename=$opt_name\r\n"
+                if ($opt_name);
+            print "  Split=1420\r\n"
+                if ($opt_split);
+            my ($k, $v); 
+            foreach $k (keys %opt_defines) {
+                $lastvar++;
+                print "  Variable Name$lastvar=$k\r\n";
+                print "  Variable Default$lastvar=$opt_defines{$k}\r\n";
+                print "  Variable Flags$lastvar=00001000\r\n";                
+            }
+        }
+        print; 
+    } else {
+        print;
+    }
+}
+            

@@ -1,0 +1,10 @@
+#! /usr/bin/perl
+
+BEGIN {binmode STDIN; binmode STDOUT; }; 
+
+while (defined ($_=<>)) {
+    s/\r?\n/\r\n/; 
+    print; 
+}
+
+# 

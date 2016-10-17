@@ -1,0 +1,67 @@
+\begin{vdm_al}
+class ToolKit is subclass of ProjectTypes
+
+instance variables
+  mediator: ToolMediator := new ToolMediator();
+
+\end{vdm_al}
+
+The $Init$ method sets up the standard set of basetools specified in 
+class BaseTools
+
+\begin{vdm_al}
+
+operations
+
+public   Init: Interface * Errors * Errors ==> ()
+  Init (interface, err, exprerr) ==
+     mediator.Init (interface,err,exprerr);
+
+public   GetErrors: () ==> Errors 
+  GetErrors () ==
+     mediator.GetErrors ();
+
+public   GetExprErrors: () ==> Errors 
+  GetExprErrors () ==
+     mediator.GetExprErrors ();
+
+public   GetOptions: () ==> Options 
+  GetOptions ()  ==
+     mediator.GetOptions ();
+
+public   GetInterface: () ==> Interface 
+  GetInterface ()  ==
+     mediator.GetInterface ();
+
+public   GetBaseTools: () ==> BaseTools 
+  GetBaseTools ()  ==
+     mediator.GetBaseTools ();
+
+public   GetRepository: () ==> Repository 
+  GetRepository ()  ==
+     mediator.GetRepository ();
+
+public   GetUMLTool: () ==> UMLTool 
+  GetUMLTool ()  ==
+    mediator.GetUMLTool ();
+
+  ---
+  --- Abut the Toolbox version and features
+  ---
+\end{vdm_al}
+About the Toolbox version and features.
+
+\begin{vdm_al}
+
+public   Version: () ==>  String 
+  Version ()  == 
+    mediator.Version ();
+
+public   Features: () ==>   seq of String 
+  Features ()  ==
+    mediator.Features ()
+
+
+end ToolKit
+
+\end{vdm_al}

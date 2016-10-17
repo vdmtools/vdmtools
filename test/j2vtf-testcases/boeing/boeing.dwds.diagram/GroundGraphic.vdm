@@ -1,0 +1,268 @@
+class GroundGraphic is subclass of RefDesNode
+operations 
+public  elementAt : int  ==> [String]
+elementAt(index) == 
+( return  pinList.elementAt(index)
+) ;
+
+public  GroundGraphic : () ==> GroundGraphic
+GroundGraphic() == 
+( let - = GroundGraphic(0 , 0)
+  in 
+    skip 
+) ;
+
+private  getWireHeight : int  ==> int 
+getWireHeight(PinIndex) == 
+( dcl   WireHeight : int  := 0;
+  if  PinIndex > -1 and  PinIndex < pinList.size()
+  then  
+    ( dcl   WirePinHeight : [Integer];
+      ( dcl   idx : int  := 0;
+        while  idx <= PinIndex do  
+        ( WirePinHeight := PinHeight.elementAt(idx);
+          def l_6 = WireHeight
+          in WireHeight := l_6+WirePinHeight.intValue()-WireGraphic.SPREAD;
+          idx := idx+1
+        ) 
+      ) 
+    ) ;
+  return  WireHeight
+) ;
+
+public  characterAscent : () ==> int 
+characterAscent() == 
+( return  pinFontMetrics.getAscent()
+) ;
+
+public  initGraphicPins : () ==> <VOID>
+initGraphicPins() == 
+( dcl   pinGraphics : [Vector] := getPinGraphics();
+  ( dcl   pinIndex : int  := 0;
+    while  pinIndex < pinGraphics.size() do  
+    ( dcl   nextPin : [PinGraphic] := pinGraphics.elementAt(pinIndex),
+            pinName : [String] := nextPin.getName();
+      let - = containingCanvas.addMouseListener(nextPin)
+      in 
+        skip ;
+      let - = containingCanvas.addMouseMotionListener(nextPin)
+      in 
+        skip ;
+      let - = nextPin.setFont(pinFont)
+      in 
+        skip ;
+      ( dcl   yLocation : int  := getYConnectCoord(pinIndex)-(characterAscent()/4)-3,
+              nameWidth : int  := widthOf(pinName),
+              xLocation : int  := getXConnectCoord();
+        let - = nextPin.setBounds(xLocation , yLocation , nameWidth , pinFontMetrics.getHeight())
+        in 
+          skip 
+      ) ;
+      pinIndex := pinIndex+1
+    ) 
+  ) ;
+  return  
+) ;
+
+public  GroundGraphic : int  * int  ==> GroundGraphic
+GroundGraphic(x, y) == 
+( let - = RefDesNode(x , y , BASE_WIDTH , 0)
+  in 
+    skip ;
+  let - = setNotifyOnMouseClick(true  )
+  in 
+    skip ;
+  let - = setNotifyOnMouseMotion(true  )
+  in 
+    skip ;
+  pinFont := new  Font(new  String("Courier") , Font`PLAIN , 10);
+  pinFontMetrics := getFontMetrics(pinFont);
+  PIN_HEIGHT := pinFontMetrics.getHeight()+PIN_SPACING;
+  TOP_HEIGHT := LABEL_HEIGHT+5
+) ;
+
+public  addPin : [String] ==> <VOID>
+addPin(pin) == 
+( let - = pinList.addElement(pin)
+  in 
+    skip ;
+  let - = pinGraphics.addElement(new  PinGraphic(pin , self  ))
+  in 
+    skip ;
+  ( dcl   currentSize : [Dimension] := getSize(),
+          newHeight : int  := currentSize.height+PIN_HEIGHT-WireGraphic.SPREAD,
+          newWidth : int  := Math.max(currentSize.width , BASE_WIDTH+labelFontMetrics.stringWidth(pin));
+    let - = setSize(newWidth , newHeight)
+    in 
+      skip ;
+    let - = PinHeight.addElement(new  Integer(0))
+    in 
+      skip 
+  ) ;
+  return  <VOID>
+) ;
+
+private  getXConnectCoord : () ==> int 
+getXConnectCoord() == 
+( dcl   XLocation : int  := getLocation().x+(BASE_WIDTH/2);
+  return  XLocation
+) ;
+
+protected  getYConnectCoord : int  ==> int 
+getYConnectCoord(PinIndex) == 
+( dcl   YLocation : int  := getLocation().y,
+        WirePinHeight : [Integer] := PinHeight.elementAt(PinIndex);
+  def l_23 = YLocation
+  in YLocation := l_23+(PIN_HEIGHT*PinIndex)+LABEL_HEIGHT+TOP_HEIGHT+(getWireHeight(PinIndex-1))+(WirePinHeight.intValue()/2);
+  return  YLocation
+) ;
+
+public  paint : [Graphics] ==> <VOID>
+paint(graphics) == 
+( let - = graphics.setColor(getForeground())
+  in 
+    skip ;
+  let - = paintLabel(graphics)
+  in 
+    skip ;
+  let - = paintPinSections(graphics)
+  in 
+    skip ;
+  let - = paintPinNames(graphics)
+  in 
+    skip ;
+  return  
+) ;
+
+public  widthOf : [String] ==> int 
+widthOf(string) == 
+( dcl   nameWidth : int  := pinFontMetrics.stringWidth(string);
+  return  nameWidth
+) ;
+
+private  getMiddleRectangle : int  ==> [Rectangle]
+getMiddleRectangle(PinIndex) == 
+( dcl   MyWidth : int  := BASE_WIDTH/3,
+        MyX : int  := getXConnectCoord()-(MyWidth/2)+(CIRCLE_DIAMETER/2),
+        MyY : int  := getYConnectCoord(PinIndex)+(2*RECTANGLE_HEIGHT)+(CIRCLE_DIAMETER/2),
+        rectangle : [Rectangle] := new  Rectangle(MyX , MyY , MyWidth , RECTANGLE_HEIGHT);
+  return  rectangle
+) ;
+
+private  getLargestRectangle : int  ==> [Rectangle]
+getLargestRectangle(PinIndex) == 
+( dcl   MyWidth : int  := BASE_WIDTH/2,
+        MyX : int  := getXConnectCoord()-(MyWidth/2)+(CIRCLE_DIAMETER/2),
+        MyY : int  := getYConnectCoord(PinIndex)+(CIRCLE_DIAMETER/2),
+        rectangle : [Rectangle] := new  Rectangle(MyX , MyY , MyWidth , RECTANGLE_HEIGHT);
+  return  rectangle
+) ;
+
+private  getSmallestRectangle : int  ==> [Rectangle]
+getSmallestRectangle(PinIndex) == 
+( dcl   MyWidth : int  := BASE_WIDTH*2/9,
+        MyX : int  := getXConnectCoord()-(MyWidth/2)+(CIRCLE_DIAMETER/2),
+        MyY : int  := getYConnectCoord(PinIndex)+(4*RECTANGLE_HEIGHT)+(CIRCLE_DIAMETER/2),
+        rectangle : [Rectangle] := new  Rectangle(MyX , MyY , MyWidth , RECTANGLE_HEIGHT);
+  return  rectangle
+) ;
+
+public  addWireAtPin : [String] ==> <VOID>
+addWireAtPin(pin) == 
+( dcl   currentSize : [Dimension] := getSize(),
+        newHeight : int  := currentSize.height+WireGraphic.SPREAD;
+  let - = setSize(currentSize.width , newHeight)
+  in 
+    skip ;
+  ( dcl   PinIndex : int  := pinList.indexOf(pin);
+    if  PinIndex > -1
+    then  
+      ( dcl   OldPinHeight : [Integer] := PinHeight.elementAt(PinIndex),
+              NewPinHeight : int  := OldPinHeight.intValue()+WireGraphic.SPREAD;
+        let - = PinHeight.setElementAt(new  Integer(NewPinHeight) , PinIndex)
+        in 
+          skip 
+      ) ;
+    return  
+  ) ;
+  return  <VOID>
+) ;
+
+protected  paintLabel : [Graphics] ==> <VOID>
+paintLabel(graphics) == 
+( dcl   location : [Point] := getLocation();
+  let - = graphics.setFont(labelFont)
+  in 
+    skip ;
+  ( dcl   centerOfNode : int  := (location.x+location.x+WIDTH)/2,
+          textOrigin : int  := centerOfNode+(BASE_WIDTH/2)-(labelFontMetrics.stringWidth(refDes.displayName())/2);
+    let - = graphics.drawString(refDes.displayName() , textOrigin , location.y+LABEL_HEIGHT)
+    in 
+      skip 
+  ) ;
+  return  <VOID>
+) ;
+
+protected  getYConnectCoord : [String] ==> int 
+getYConnectCoord(pinName) == 
+( dcl   index : int  := pinList.indexOf(pinName),
+        YLocation : int  := getYConnectCoord(index);
+  return  YLocation
+) ;
+
+public  paintPinSections : [Graphics] ==> <VOID>
+paintPinSections(graphics) == 
+( ( dcl   pinIndex : int  := 0;
+    while  pinIndex < pinList.size() do  
+    ( let - = graphics.fillOval(getXConnectCoord() , getYConnectCoord(pinIndex)-(CIRCLE_DIAMETER/2) , CIRCLE_DIAMETER , CIRCLE_DIAMETER)
+      in 
+        skip ;
+      ( dcl   SmallestRectangle : [Rectangle] := getSmallestRectangle(pinIndex),
+              MiddleRectangle : [Rectangle] := getMiddleRectangle(pinIndex),
+              LargestRectangle : [Rectangle] := getLargestRectangle(pinIndex);
+        let - = graphics.fillRect(SmallestRectangle.x , SmallestRectangle.y , SmallestRectangle.width , SmallestRectangle.height)
+        in 
+          skip ;
+        let - = graphics.fillRect(MiddleRectangle.x , MiddleRectangle.y , MiddleRectangle.width , MiddleRectangle.height)
+        in 
+          skip ;
+        let - = graphics.fillRect(LargestRectangle.x , LargestRectangle.y , LargestRectangle.width , LargestRectangle.height)
+        in 
+          skip 
+      ) ;
+      pinIndex := pinIndex+1
+    ) 
+  ) ;
+  return  
+) ;
+
+public  getConnectionPoint : [String] * [Orientation] ==> [Point]
+getConnectionPoint(pinName, direction) == 
+( dcl   location : [Point] := getLocation(),
+        xLocation : int  := getXConnectCoord(),
+        yLocation : int  := location.y;
+  if  pinList.contains(pinName)
+  then  
+    ( if  direction = Orientation.RIGHT
+      then  
+        ( def l_3 = xLocation
+          in xLocation := l_3+CIRCLE_DIAMETER
+        ) ;
+      yLocation := getYConnectCoord(pinName)
+    ) ;
+  ( dcl   returnLocation : [Point] := new  Point(xLocation , yLocation);
+    return  returnLocation
+  ) 
+) ;
+
+instance variables 
+  private  static CIRCLE_DIAMETER : int  := 6;
+  private  static BASE_WIDTH : int  := 36;
+  protected  static PIN_SPACING : int  := 24;
+  private  static RECTANGLE_HEIGHT : int  := 2;
+  protected  static PIN_HEIGHT : int ;
+  private  static TOP_HEIGHT : int ;
+  private  pinFont : [Font];
+  private  pinFontMetrics : [FontMetrics]
+  
+end  GroundGraphic

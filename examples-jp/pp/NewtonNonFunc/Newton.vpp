@@ -1,0 +1,70 @@
+\subsubsection {責任}
+	「利子を得る」関数の陰仕様と、ニュートン法による陽仕様。
+\subsubsection {注釈}
+	「導関数」や「ニュートン法で方程式を解く」操作は、関数を引数として渡さず、
+	「利子を得る」問題に特化している。
+\begin{vdm_al}
+class Newton
+
+values
+Rcsid = "$Id: Newton.vpp,v 1.1 2005/10/31 02:21:33 vdmtools Exp $";
+誤差 = 10 ** -10;
+変分 = 10 ** -5;	
+
+functions
+
+static 利子を得る陰仕様_数学版 : real * int -> real
+利子を得る陰仕様_数学版(倍数,年) == is not yet specified
+pre
+	倍数 > 1.0 and 年 > 0 
+post
+	倍数 > 1.0 and 年 > 0 and
+	exists1 利子 : real &
+		let 元利合計 = 元利合計倍数を得る(利子,年)
+		in 倍数 = 元利合計  and RESULT = 利子;
+		
+static 利子を得る陰仕様_計算機版 : real * int -> real
+利子を得る陰仕様_計算機版 (倍数,年数) ==
+	is not yet specified
+pre
+	倍数 > 1.0 and 年数 > 0 and 誤差 > 0
+post
+	倍数 > 1.0 and 年数 > 0 and 誤差 > 0 and
+	exists1 利子 : real & 
+		let	元利合計 = 元利合計倍数を得る(利子,年数)
+		in	abs (倍数 - 元利合計 ) < 誤差  and RESULT = 利子;
+\end{vdm_al}
+
+利子を得る陽仕様（ニュートン法を利用、関数プログラミング未使用）
+\begin{vdm_al}
+static public 利子を得る: real * int -> real
+利子を得る(倍数,年数) == ニュートン法で方程式を解く(倍数, 年数, 0);
+
+static public 元利合計倍数を得る : real * int -> real
+元利合計倍数を得る(利子,年) == (1 + 利子) ** 年
+pre
+	利子 >= 0 and 年 > 0;
+	
+static public 導関数 : real * int * real -> real
+導関数(倍数, 年数, 利子) == (差を求める(倍数, 年数, 利子+変分) - 差を求める(倍数, 年数, 利子)) / 変分 ;
+
+static public 差を求める : real * int * real -> real
+差を求める(倍数, 年数, 利子) == 倍数 - 元利合計倍数を得る(利子,年数);
+
+operations
+--方程式の解法のニュートン法
+static public ニュートン法で方程式を解く: real * int * real ==> real
+ニュートン法で方程式を解く(倍数, 年数, 利子初期値) ==
+	(
+	dcl 利子 : real := 利子初期値;
+	while not (abs(差を求める(倍数, 年数, 利子)) < 誤差) do
+		利子 := 利子 - (差を求める(倍数, 年数, 利子) / 導関数(倍数, 年数, 利子));
+	return 利子
+	);
+
+end Newton
+\end{vdm_al}
+
+\begin{rtinfo}
+[TotalxCoverage]{vdm.tc}[Newton]
+\end{rtinfo}

@@ -1,0 +1,13 @@
+class A
+
+operations
+
+public Test : () ==> nat  
+Test () ==
+( 
+	def n : nat = 5 in
+	( dcl x : bool := true;
+        if x then return 1 else return 0 )
+)
+   
+end A

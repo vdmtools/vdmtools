@@ -1,0 +1,40 @@
+Note for HP ANSI C++ Compiler users
+
+----------------------------------------------------------------------------
+
+Known problems
+
+aCC versions
+
+HP ANSI C++ Compiler should be considered a work in progress. Anyone who has
+aCC should be able to get patches from HP to bring it up to the current
+version. For reliable work, you must have at least version 1.06 (use
+"what" utility to determine actual version):
+
+> what aCC
+HP aC++ B3910B A.01.06
+HP aC++ B3910B A.01.01 Support Library
+
+Since even 1.06 still dumps core occasionally, you'll probably want to
+update to 1.07 soon.
+
+Configuring
+
+stlcomp.h provides recognition section usable with aCC 1.06. You should be
+able to use unconfigured STL distribution with it. If you are using more
+recent version, you might want to enable more features (see comments in
+stlcomp.h). Basically, "configure" script was reported to work with aCC.
+However, your aCC version might contain bugs (not showing in simple example)
+that could prevent your code from compiling. In this case, refer to
+stlcomp.h to figure out more reliable set of configuration switches.
+
+Compiling
+
+aCC requires typename keyword in many places other compilers don't. Also it
+uses initial template name lookup scheme different from that of most
+compilers (it's questionable whether CD2 require that, and it could be as
+well CD2 bug even if it does). This scheme effectively prevents any use of
+baseclass typedefs in method declaration, and (sometimes) use of inherited
+data members without explicit qualification.
+
+----------------------------------------------------------------------------

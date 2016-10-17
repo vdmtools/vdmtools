@@ -1,0 +1,10 @@
+encode utf8
+r dbi.vpp
+r dbidao.vpp
+r FruitBean.vpp
+r FruitDao.vpp
+r test.vpp
+r io.vpp
+r VDMUtil.vpp
+init
+d new A().Test()

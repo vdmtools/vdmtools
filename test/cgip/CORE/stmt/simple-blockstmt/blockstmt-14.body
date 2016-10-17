@@ -1,0 +1,2 @@
+(dcl a : nat;
+ return [a]);

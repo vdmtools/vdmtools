@@ -1,0 +1,44 @@
+class A
+
+
+operations
+
+public
+Test : () ==> nat
+Test () == return A`test(1).p1;
+
+
+
+public static
+test: nat ==> B`TypeD
+test(objref) ==
+( 
+  dcl res_v : B`TypeD;
+  res_v := mk_B`TypeA(2,true);
+  if is_B`TypeA(res_v) or 
+     is_B`TypeB(res_v)  
+  then res_v.p1 := objref;
+  return res_v;
+);
+
+
+end A
+
+class B
+
+types
+
+public
+TypeA :: p1 : int
+         p3 : bool;
+
+public 
+TypeB :: p1 : int
+         p6 : char;
+
+public 
+TypeD = TypeA | TypeB;
+
+
+
+end B

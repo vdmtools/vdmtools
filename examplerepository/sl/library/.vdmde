@@ -1,0 +1,6 @@
+r library.avdm
+i
+tc pos
+cg
+latex library.avdm
+quit

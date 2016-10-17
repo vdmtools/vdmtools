@@ -1,0 +1,21 @@
+-- This test will test what happends if the signatur in the C++ files
+-- is wrong (return int instead of Generic)
+dlmodule external
+  exports 
+    functions
+      test : bool -> bool
+    uselib "libimod-02.so"
+
+end external
+
+module A
+  imports
+    from external all
+
+
+  definitions
+  operations
+    Test : () ==> bool
+    Test () ==
+      return external`test(true)
+end A

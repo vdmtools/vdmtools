@@ -1,0 +1,17 @@
+class Main
+
+operations
+
+  public Test : () ==> seq of char
+  Test() ==
+    let myo = new C()
+    in
+      let t1 = new T().Init(myo,<fin>,<one>,"t1 "),
+          t2 = new T().Init(myo,<fin>,<list>,"t2 ")
+      in
+        (start(t1);
+         start(t2);
+         myo.FinList("Main ");
+         myo.ReadX());
+
+end Main

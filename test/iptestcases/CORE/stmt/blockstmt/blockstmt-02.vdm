@@ -1,0 +1,19 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+public Test : () ==> map nat to nat  
+Test () ==
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+( dcl a : nat := 0,
+      b : real := -3.9;
+  ( b := 3
+  );
+  return { a |-> b}
+)
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

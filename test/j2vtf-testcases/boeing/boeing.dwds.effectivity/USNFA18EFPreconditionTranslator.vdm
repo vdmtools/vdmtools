@@ -1,0 +1,42 @@
+class USNFA18EFPreconditionTranslator is subclass of NoteTranslator
+operations 
+public  translateNote : [String] * int  * [PrintStream] ==> [String]
+translateNote(noteText, lineNumber, errorOut) == 
+( dcl   convertedNote : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (ANTLRException,j2v_exception)) -> 
+        ( dcl   parseException : [ANTLRException] := j2v_exception;
+          let - = errorOut.println(new  String("Translation Error:"))
+          in 
+            skip ;
+          let - = errorOut.println(parseException)
+          in 
+            skip ;
+          let - = errorOut.println(noteText)
+          in 
+            skip ;
+          let - = errorOut.println()
+          in 
+            skip 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   lexer : [FA18PreconditionLexer] := new  FA18PreconditionLexer(new  StringReader(noteText)),
+            parser : [FA18PreconditionParser] := new  FA18PreconditionParser(lexer);
+      let - = lexer.setLine(lineNumber)
+      in 
+        skip ;
+      convertedNote := parser.preconditionRule();
+      if  convertedNote.length() = 0
+      then  
+        ( convertedNote := nil  
+        ) 
+    ) ;
+  return  convertedNote
+) ;
+
+
+end  USNFA18EFPreconditionTranslator

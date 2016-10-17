@@ -1,0 +1,272 @@
+class JavaUtilAbstractList is subclass of JavaUtilList  --, JavaUtilAbstractCollection
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaUtilAbstractList" , <CLASS> , false  )
+instance variables 
+  public  modCount : int  := 0
+operations 
+public  get : int  ==> JavaLangObject
+get(index) == 
+is subclass responsibility ;
+
+public  clear : () ==> ()
+clear() == 
+( removeRange(0 , size());
+) ;
+
+--public  remove : int  ==> JavaLangObject
+--remove(index) == 
+--( exit  new  JavaLangUnsupportedOperationException()
+--) ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+  return  CLASS;
+
+public  hashCode : () ==> int 
+hashCode() == 
+( dcl   hashCode : int  := 1,
+        i : JavaUtilIterator := iterator();
+  while  i.hasNext() do  
+  ( dcl   obj : JavaLangObject := i.next();
+    skip 
+  ) ;
+  return  hashCode
+) ;
+
+public  iterator : () ==> JavaUtilIterator
+iterator() == 
+( return  new  JavaUtilALItr(self)
+) ;
+
+--public  subList : int  * int  ==> JavaUtilList
+--subList(fromIndex, toIndex) == 
+--( return  new  SubList(self   , fromIndex , toIndex)
+--) ;
+
+public  add : JavaLangObject ==> bool 
+add(o) == 
+is subclass responsibility;
+--( addIntObj(size() , o);
+--  return  true  
+--) ;
+
+--protected  JavaUtilAbstractList : () ==> JavaUtilAbstractList
+--JavaUtilAbstractList() == 
+--( skip 
+--) ;
+
+public  listIterator : () ==> JavaUtilListIterator
+listIterator() == 
+( return  listIterator(0)
+) ;
+
+--public  addIntObj : int  * JavaLangObject ==> ()
+--addIntObj(index, element) == 
+--is subclass responsibility;
+--( exit  new  JavaLangUnsupportedOperationException();
+--) ;
+
+public  listIterator : int  ==> JavaUtilListIterator
+listIterator(index) == 
+( dcl s: JavaLangString := new  JavaLangString("Index: ");
+  s:=s.concat((new JavaLangInteger(index)).toString());
+  if  index < 0 or  index > size()
+  then  
+    exit  new  JavaLangIndexOutOfBoundsException(s);
+  return  new  JavaUtilALListItr(self,index)
+) ;
+
+public  equals : JavaLangObject ==> bool 
+equals(o) == 
+( if  not  (isofclass  (JavaUtilAbstractList,o))
+  then  
+    return  false  ;
+  ( dcl   e1 : JavaUtilListIterator := listIterator(),
+          e2 : JavaUtilListIterator := (def l_9 :  JavaUtilAbstractList = (o)
+          in l_9).listIterator();
+    while  e1.hasNext() and  e2.hasNext() do  
+    ( dcl   o1 : JavaLangObject := e1.next(),
+            o2 : JavaLangObject := e2.next();
+      return  false  
+    ) ;
+    return  not  (e1.hasNext() or  e2.hasNext())
+  ) 
+) ;
+
+protected  removeRange : int  * int  ==> ()
+removeRange(fromIndex, toIndex) == 
+( dcl   it : JavaUtilListIterator := listIterator(fromIndex);
+  ( dcl   i : int  := 0,
+          n : int  := toIndex-fromIndex;
+    while  i < n do  
+    ( let - = it.next()
+      in 
+        skip ;
+      it.remove();
+      i := i+1
+    ) 
+  ) ;
+  skip 
+) ;
+
+public  indexOf : JavaLangObject ==> int 
+indexOf(o) == 
+( dcl   e : JavaUtilListIterator := listIterator();
+  if  o.IsNil()
+  then  
+    ( while  e.hasNext() do  
+      ( if  e.next().IsNil()
+        then  
+          return  e.previousIndex()
+      ) 
+    ) 
+  else  
+    ( while  e.hasNext() do  
+      ( if  o.equals(e.next())
+        then  
+          return  e.previousIndex()
+      ) 
+    ) ;
+  return  -1
+) ;
+
+public  set__ : int  * JavaLangObject ==> JavaLangObject
+set__(index, element) == 
+( exit  new  JavaLangUnsupportedOperationException()
+) ;
+
+public  JavaUtilAbstractList : <NIL> ==> JavaUtilAbstractList
+JavaUtilAbstractList(-) == 
+isNil := true  ;
+
+public  lastIndexOf : JavaLangObject ==> int 
+lastIndexOf(o) == 
+( dcl   e : JavaUtilListIterator := listIterator(size());
+  if  o.IsNil()
+  then  
+    ( while  e.hasPrevious() do  
+      ( if  e.previous().IsNil()
+        then  
+          return  e.nextIndex()
+      ) 
+    ) 
+  else  
+    ( while  e.hasPrevious() do  
+      ( if  o.equals(e.previous())
+        then  
+          return  e.nextIndex()
+      ) 
+    ) ;
+  return  -1
+) ;
+
+--public  addAll : int  * JavaUtilCollection ==> bool 
+--addAll(idx, c) == 
+--( dcl   index: int:=idx, modified : bool  := false  ,
+--        e : JavaUtilIterator := c.iterator();
+--  while  e.hasNext() do  
+--  ( def l_3 = index;
+--    l_2 = l_3
+--    in ( index := l_3+1;
+--      addIntObj(l_2 , e.next())
+--    ) ;
+--    modified := true  
+--  ) ;
+--  return  modified
+--) ;
+
+
+end  JavaUtilAbstractList
+
+/* They are in separate files...
+
+class JavaUtilALItr is subclass of JavaUtilIterator
+instance variables
+	protected cursor : int := 0;
+	protected lastRet: int := -1;
+	protected expectedModCount : int;
+  protected al: JavaUtilAbstractList;
+
+operations
+public
+  JavaUtilALItr: JavaUtilAbstractList ==> JavaUtilALItr
+  JavaUtilALItr(al) ==
+  ( JavaUtilALItr`al:=al;
+  	expectedModCount := al.modCount
+  );
+
+public  hasNext : () ==> bool 
+hasNext() == 
+  return cursor <> al.size();
+
+public  next : () ==> JavaLangObject
+next() == 
+( dcl o : JavaLangObject :=al.get(cursor);
+  cursor:=cursor+1;
+  return o
+);
+
+--public  remove : () ==> ()
+--remove() == 
+--( if lastRet = -1
+--  then exit new JavaLangIllegalStateException();
+--
+--	al.remove(lastRet);
+--  if lastRet < cursor
+--  then cursor:=cursor-1;
+--  lastRet := -1;
+--	expectedModCount := al.modCount;
+--);
+
+end JavaUtilALItr
+
+class JavaUtilALListItr is subclass of JavaUtilALItr, JavaUtilListIterator
+
+operations
+public
+  JavaUtilALListItr: JavaUtilAbstractList * int ==> JavaUtilALItr
+	JavaUtilALListItr(al, index) ==
+  ( let - = JavaUtilALItr(al) in skip;
+	  cursor:= index
+  );
+
+	public hasPrevious: () ==> bool
+  hasPrevious() ==
+    return cursor <> 0;
+
+	public previous : () ==> JavaLangObject
+  previous() ==
+  (	cursor:=cursor-1;
+    ( dcl previous : JavaLangObject := al.get(cursor);
+		  lastRet := cursor;
+		  return previous;
+    )
+  );
+
+	public nextIndex: () ==> int
+	nextIndex() ==
+    return cursor;
+
+	public previousIndex : () ==> int
+	previousIndex() ==
+    return cursor-1;
+
+	public set__ : JavaLangObject ==> ()
+	set__(o) == 
+  ( if lastRet = -1
+    then exit new JavaLangIllegalStateException();
+
+		al.set__(lastRet, o);
+		expectedModCount := al.modCount
+  );
+
+--	public add: JavaLangObject ==> ()
+--	add(o) ==
+--  ( al.addIntObj(cursor, o);
+--    cursor:=cursor+1;
+--		lastRet := -1;
+--		expectedModCount := al.modCount;
+--  );
+
+end JavaUtilALListItr
+*/

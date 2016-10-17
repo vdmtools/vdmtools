@@ -1,0 +1,30 @@
+class SeqModifyMapOverrideExprTest
+	types
+
+  MyType :: nt : bool;
+
+   Name ::
+    a: seq of char
+    b: [nat];
+    
+ MyMap = map Name to MyType  
+
+ functions
+  h: Name -> Name
+  h(nm) ==
+   nm
+ 
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = (if 5 < 8
+         then {|->}
+         else []) ++ {1 |-> 1.9}
+  in skip;
+
+------------------------------------------------------------------------------
+end SeqModifyMapOverrideExprTest

@@ -1,0 +1,5 @@
+# Unknown instruction
+
+AddEnv 3;
+addset 4;
+*   : nat   10;

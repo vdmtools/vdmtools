@@ -1,0 +1,7 @@
+values
+
+[a] ^ l2 = if 6 > 8 then [] else [7,5,2]
+
+--PO
+--(exists [a] ^ l2 : seq of nat1 &
+--   [a] ^ l2 = (if 6 > 8 then [] else [7,5,2]))

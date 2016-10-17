@@ -1,0 +1,318 @@
+\section{Context Environment}
+
+\begin{vdm_al}
+
+module CON_ENV
+
+imports
+  from ENV all,
+  from SPEC_AST all,
+  from POGTP all,
+  from PID all,
+  from REP2TYPE all,
+  from CI_AUX all,
+
+  from AS all,
+  from CI all,
+#ifdef VDMPP
+  from MANGLE all,
+#endif VDMPP
+  from REP all
+
+exports
+  operations
+    HasPreCondition : (AS`Name | AS`FctTypeInstExpr) * AS`Type * POGTP`Context
+                       ==> AS`FnDef | AS`OpDef | <NO> | <MAYBE>;
+    FieldSelectExprHasPreCondition : (AS`Name | AS`FctTypeInstExpr) * AS`Name * AS`Type * POGTP`Context * [AS`Name]
+                                     ==> AS`FnDef | AS`OpDef | <NO> | <MAYBE>;
+
+definitions
+
+--functions
+
+
+-- HasPreCondition : AS`Name
+--                   * POGTP`Context -> AS`FnDef
+--                                    | <NO>
+--                                    | <MAYBE>
+-- HasPreCondition (name,contxt) ==
+--   cases hd name.ids:
+--     "pre_"^-,
+--     "inv_"^-     -> <NO>,
+--     others       ->
+--      let fnm   = SPEC_AST`GetFnDefMap(),
+--           vals  = SPEC_AST`GetValueDefSeq(),
+--           nm    = cases hd name.ids:
+--                     "post_"^ids -> mk_AS`Name([ids],CI`NilContextId),
+--                     others       -> name
+--                   end,
+--           local = FindFuncInContext(nm,contxt)
+--       in
+--           if local =  <NOT_FOUND> then
+--             if nm in set dom fnm then
+--               if fnm(nm).fnpre = nil then
+--                 <NO>
+--              else
+--                 fnm(nm)
+--             else
+--               FindFuncInValues(nm,vals)
+--           else
+--             local
+--   end;
+
+operations
+FieldSelectExprHasPreCondition : (AS`Name | AS`FctTypeInstExpr) * AS`Name * AS`Type * POGTP`Context * [AS`Name]
+                                 ==> AS`FnDef | AS`OpDef  | <NO> | <MAYBE>
+#ifdef VDMSL
+FieldSelectExprHasPreCondition (-,-,-,-,-) ==
+   return <MAYBE>;
+#endif VDMSL
+#ifdef VDMPP
+FieldSelectExprHasPreCondition (p_expr,p_clsnm,p_tp,p_contxt,clsnm) ==
+  cases p_expr:
+    mk_AS`FctTypeInstExpr(l_polyfct,-,-) -> return FieldSelectExprHasPreCondition (l_polyfct,p_clsnm,p_tp,p_contxt,clsnm),
+    mk_AS`Name(-,-) ->
+      let l_name  = p_expr,
+          l_match = hd l_name.ids
+      in
+        if l_match(1,...,4) = "pre_"
+        then return <NO>
+        elseif l_match(1,...,4) = "inv_"
+        then return <NO>
+        else
+          ------------ Qualified member name --------------------------
+         (dcl l_modnm : AS`Name := clsnm,
+              l_name' : AS`Name := l_name;
+          if clsnm = nil and len (l_name.ids) = 1
+          then
+            def mk_(modnm,name) = SPEC_AST`SplitName(l_name)
+            in
+             (l_modnm := modnm;
+              l_name' := name);
+
+          def l_nm    = if l_match(1,...,5) = "post_"
+                        then
+                          if len l_name.ids = 2
+                          then mk_AS`Name( [l_modnm,l_match(6,...,len l_match)], CI`NilContextId)
+                          else mk_AS`Name([l_match(6,...,len l_match)],CI`NilContextId)
+                        else l_name'
+          in
+            def l_def = CI_AUX`GetMemberNameDef(l_nm,p_clsnm,p_tp)
+            in
+              if l_def not in set {<NO>,<NOT_FOUND>}
+              then
+                if clsnm = nil
+                then return l_def
+                else return mu(l_def, nm |-> mu(l_def.nm, ids |-> clsnm.ids ^l_def.nm.ids))
+              else return <NO>
+        )
+  end;
+#endif VDMPP
+
+operations
+HasPreCondition : (AS`Name | AS`FctTypeInstExpr) * AS`Type * POGTP`Context ==> AS`FnDef | AS`OpDef  | <NO> | <MAYBE>
+HasPreCondition (p_expr,p_tp,p_contxt) ==
+  cases p_expr:
+    mk_AS`FctTypeInstExpr(l_polyfct,-,-) -> return HasPreCondition (l_polyfct,p_tp,p_contxt),
+    mk_AS`Name(-,-) ->
+      let l_name  = p_expr,
+          l_match = hd l_name.ids
+      in
+        if l_match(1,...,4) = "pre_"
+        then  return <NO>
+        elseif l_match(1,...,4) = "inv_"
+        then  return <NO>
+        elseif len l_name.ids = 2
+        then
+          ------------ Qualified member name --------------------------
+          def mk_(l_modnm,l_name') = SPEC_AST`SplitName(l_name);
+              l_nm    = if l_match(1,...,5) = "post_"
+                        then mk_AS`Name([l_modnm,l_match(6,...,len l_match)], CI`NilContextId)
+                        else l_name'
+          in
+            def l_def = CI_AUX`GetMemberNameDef(l_nm,nil,p_tp)
+            in
+              if l_def <> <NOT_FOUND>
+              then return l_def
+              else return <NO>
+        else
+          ------------ Unqualified member name ------------------------
+          def l_nm    = if l_match(1,...,5) = "post_"
+                        then  mk_AS`Name([l_match(6,...,len l_match)],CI`NilContextId)
+                        else l_name;
+              l_local = FindFuncInContext(l_nm,p_tp,p_contxt)
+          in
+            if l_local <> <NOT_FOUND>
+            then return l_local
+            else
+              def l_def = CI_AUX`GetMemberNameDef(l_nm,nil,p_tp)
+              in
+                if l_def <> <NOT_FOUND>
+                then return l_def
+                else
+                  ---- For VDMSL this should not happen. -------------
+                  ---- For VDMPP this covers default constructors. ---
+                  return <NO>
+  end;
+
+
+
+-- HasPreCondition2 : AS`Name
+--                   * POGTP`Context -> AS`FnDef | AS`OpDef
+--                                    | <NO>
+--                                    | <MAYBE>
+-- HasPreCondition2 (name,contxt) ==
+-- --  let match = hd name.ids
+--   def mk_(modnm,name') = SPEC_AST`SplitName(name),
+--       match = hd name'.ids
+--   in
+--     if match(1,...,4) = "pre_"  then
+--        <NO>
+--     elseif match(1,...,4) = "inv_" then
+--        <NO>
+--     else
+--       let fnm   = SPEC_AST`GetFnDefMap(modnm),
+--           opm   = SPEC_AST`GetOpDefMap(modnm),
+--           vals  = SPEC_AST`GetValueDefSeq(),
+--           nm    = if match(1,...,5) = "post_" then
+--                      mk_AS`Name(
+--                        [match(6,...,len match)],
+--                        CI`NilContextId)
+--                    else
+--                      name',
+--           local = FindFuncInContext(nm,contxt)
+--       in
+--         if local =  <NOT_FOUND> then
+--           let local' =
+--             if nm in set dom fnm then
+--               if fnm(nm).fnpre = nil then
+--                 <NO>
+--               else
+--                 fnm(nm)
+--             elseif nm in set dom opm then
+--               if opm(nm).oppre = nil then
+--                 <NO>
+--               else
+--                 opm(nm)
+-- #ifdef VDMPP
+--             elseif CI_AUX`IsClassName(name') then -- Default constructor does not have precondition
+--                 <NO>
+-- #endif
+--             else
+--               FindFuncInValues(nm,vals)
+--           in
+--             if local' =  <NOT_FOUND> and MANGLE`IsMangled(name)
+--             then
+--               let umangld = MANGLE`GetUnmangledName(name)
+--               in  HasPreCondition (umangld,contxt)
+--             else
+--               local'
+--           else
+--               local;
+
+FindFuncInContext : AS`Name * AS`Type * POGTP`Context ==> AS`FnDef | <NO> | <MAYBE> | <NOT_FOUND>
+FindFuncInContext (name,tp,contxt) ==
+  let env = contxt.expr
+  in
+    if env = []
+    then return <NOT_FOUND>
+    else
+      let head        = hd env,
+          tail_contxt = mu(contxt, expr |-> tl env)
+      in
+       (dcl search_head : AS`FnDef | <NO> | <MAYBE> | <NOT_FOUND>;
+        cases head:
+          mk_AS`TypeBind(-,-,-),
+          mk_AS`SetBind(-,-,-) -> if PID`NameInBind(name,head)
+                                  then search_head := <MAYBE>
+                                  else search_head := <NOT_FOUND>,
+          - ^ - ->  -- head is a list (a AS`BindList)
+                                  if PID`NameInBindList(name,head)
+                                  then search_head := <MAYBE>
+                                  else search_head := <NOT_FOUND>,
+          mk_AS`ValueDef(pat,-,expr,-,-,-) -> if PID`NameInPattern(name,pat)
+                                              then
+                                                if is_AS`PatternName(pat)
+                                                then
+                                                  cases expr:
+                                                    mk_AS`Name(-,-) -> search_head := HasPreCondition(expr,tp,tail_contxt),
+                                                    mk_AS`LambdaExpr(-,-,-,-) -> search_head := <NO>,
+                                                    others -> search_head := <MAYBE>
+                                                  end
+                                                else search_head := <MAYBE>
+                                              else search_head := <NOT_FOUND>,
+          mk_AS`ImplFnDef((name),-,-,-,fnpre,-,-,-,-),
+          mk_AS`ExplFnDef((name),-,-,-,-,fnpre,-,-,-,-,-),
+          mk_AS`ExtExplFnDef((name),-,-,-,-,fnpre,-,-,-,-,-) -> if fnpre = nil
+                                                                then search_head := <NO>
+                                                                else search_head := head,
+          mk_(pat,expr) -> -- AS`PatternBind * AS`Expr
+                                  cases pat:
+                                    mk_AS`TypeBind(-,-,-),
+                                    mk_AS`SetBind(-,-,-) -> if PID`NameInBind(name,pat)
+                                                            then search_head := <MAYBE>
+                                                            else search_head := <NOT_FOUND>,
+                                    others -> -- AS'Pattern
+                                                   if PID`NameInPattern(name,pat)
+                                                   then
+                                                     if is_AS`PatternName(pat)
+                                                     then
+                                                       cases expr:
+                                                         mk_AS`Name(-,-) -> search_head := HasPreCondition(expr,tp,tail_contxt),
+                                                         mk_AS`LambdaExpr(-,-,-,-) -> search_head := <NO>,
+                                                         others -> search_head := <MAYBE>
+                                                       end
+                                                     else search_head := <MAYBE>
+                                                    else search_head := <NOT_FOUND>
+                                  end,
+          others -> search_head := <NOT_FOUND>
+        end;
+        if search_head = <NOT_FOUND>
+        then FindFuncInContext(name,tp,tail_contxt)
+        else return search_head;
+       );
+
+
+-- FindFuncInValues : AS`Name
+--                  * seq of AS`ValueDef -> AS`FnDef
+--                                        | <NO>
+--                                        | <MAYBE>
+--                                        | <NOT_FOUND>
+-- FindFuncInValues (name,vals) ==
+--   let empty_contxt = POGTP`InitialContext() in
+--     if vals = [] then
+--       <NOT_FOUND>
+--     else
+--       let head       = hd vals,
+--           tail       = tl vals,
+--           check_head =
+--             let pat  = head.pat,
+--                 expr = head.val
+--             in
+--                 if PID`NameInPattern(name,pat) then
+--                   if is_AS`PatternName(pat) then
+--                     cases expr:
+--                       mk_AS`Name(-,-) ->
+--                         HasPreCondition(expr,empty_contxt),
+--                       mk_AS`LambdaExpr(-,-,-,-) -> <NO>,
+--                       others -> <MAYBE>
+--                     end
+--                   else
+--                     <MAYBE>
+--                 else
+--                   <NOT_FOUND>
+--       in
+--          if check_head = <NOT_FOUND> then
+--            FindFuncInValues(name,tail)
+--          else
+--            check_head;
+
+end CON_ENV
+
+\end{vdm_al}
+
+\newpage
+
+\begin{rtinfo}[CON\_ENV`FieldSelectExprHasPreCondition]
+{rtinfo.ast}[CON_ENV]
+\end{rtinfo}

@@ -1,0 +1,114 @@
+class BundleRefdesModel is subclass of WireTableModel
+operations 
+protected  getItems : () ==> map  int  to  map  int  to  [String]
+getItems() == 
+( dcl   currPin : [String] := nil  ,
+        currWire : [Wire] := nil  ,
+        wireList : map  int  to  [Wire] := nil  ;
+  if  columnTypes = nil  
+  then  
+    let - = getColumnInfo()
+    in 
+      skip ;
+  wires := getWiresToInclude();
+  ( dcl   j : int  := 0,
+          wireLen : int  := wires.size(),
+          pinListRows : map  int  to  [PinListRow] := {l_12 |-> nil  |l_12 in set  {0,...,wireLen*2-1}};
+    ( dcl   i : int  := 0;
+      while  i < wireLen do  
+      ( pinListRows := pinListRows ++ {j |-> new  PinListRow(wires.elementAt(i))};
+        pinListRows := pinListRows ++ {j+1 |-> new  PinListRow(pinListRows(j) , wires.elementAt(i))};
+        j := j+2;
+        i := i+1
+      ) 
+    ) ;
+    let - = HeapSort`sort(pinListRows , new  AlphaNumericCompare())
+    in 
+      skip ;
+    items := {l_3 |-> nil  |l_3 in set  {0,...,pinListRows.length-1}};
+    if  pinListRows.length > 0
+    then  
+      ( ( dcl   row : int  := 0;
+          while  row < pinListRows.length do  
+          ( items := items ++ {row |-> {l_5 |-> nil  |l_5 in set  {0,...,columnTypes.length-1}}};
+            ( dcl   col : int  := 0;
+              while  col < columnTypes.length do  
+              ( items(row) := items(row) ++ {col |-> WireDataTypes`decodeValue(columnTypes(col) , pinListRows(row).getWire() , pinListRows(row).getEnd1() , pinListRows(row).getEnd2())};
+                col := col+1
+              ) 
+            ) ;
+            row := row+1
+          ) 
+        ) 
+      ) ;
+    return  items
+  ) 
+) ;
+
+public  update : [Object] ==> bool 
+update(contextChanges) == 
+( dcl   changes : [ContextSet] := contextChanges;
+  if  changes.contains(ContextTypes`BUNDLE)
+  then  
+    ( return  true  
+    ) 
+  else  
+    ( return  false  
+    ) 
+) ;
+
+public  BundleRefdesModel : () ==> BundleRefdesModel
+BundleRefdesModel() == 
+( let - = WireTableModel()
+  in 
+    skip 
+) ;
+
+protected  getWiresToInclude : () ==> [Vector]
+getWiresToInclude() == 
+( dcl   wireList : [Vector] := new  Vector(),
+        curBundle : [Bundle] := context.getCurrentContextFieldObject(ContextTypes`BUNDLE);
+  if  curBundle <> nil  
+  then  
+    ( dcl   bundleWires : map  int  to  [Wire] := curBundle.getAllWires();
+      wireList := new  Vector(bundleWires.length);
+      ( dcl   i : int  := 0;
+        while  i < bundleWires.length do  
+        ( let - = wireList.addElement(bundleWires(i))
+          in 
+            skip ;
+          i := i+1
+        ) 
+      ) 
+    ) ;
+  return  wireList
+) ;
+
+public  findCellWithRefDesPin : [String] * [String] ==> [Point]
+findCellWithRefDesPin(refDesName, pin) == 
+( if  wires <> nil  
+  then  
+    ( dcl   wireLen : int  := wires.size()*2;
+      ( dcl   i : int  := 0;
+        while  i < wireLen do  
+        ( ( dcl   j : int  := 0;
+            while  j < columnTypes.length do  
+            ( if  columnTypes(j) = WireDataTypes`WIRE_END1_REF_DES_PIN or  columnTypes(j) = WireDataTypes`WIRE_END2_REF_DES_PIN
+              then  
+                ( if  items(i)(j).equals(refDesName+new  String(" - ")+pin)
+                  then  
+                    ( return  new  Point(i , j)
+                    ) 
+                ) ;
+              j := j+1
+            ) 
+          ) ;
+          i := i+1
+        ) 
+      ) 
+    ) ;
+  return  nil  
+) ;
+
+
+end  BundleRefdesModel

@@ -1,0 +1,192 @@
+module TRTEST
+
+imports
+  from AS all,
+  from REP all,
+  from CI all,
+  from AUX all,
+  from STKM all,
+  from GLOBAL all,
+  from SEM all,
+  from PAT all,
+  from CPAT all,
+  from SCHDTP all,
+  from RTERR all,
+  from DEBUGTP all,
+  from DEBUG all,
+  from INSTRTP all,
+  from EXPANDED all
+
+exports
+  all
+
+definitions
+
+values
+real0 = mk_AS`NumLit(0, CI`NilContextId);
+real1 = mk_AS`NumLit(1, CI`NilContextId);
+real2 = mk_AS`NumLit(2, CI`NilContextId);
+real3 = mk_AS`NumLit(3, CI`NilContextId);
+objnm = mk_AS`Name(["cls"], CI`NilContextId);
+opnm1 = mk_AS`Name(["op1"], CI`NilContextId);
+opnm2 = mk_AS`Name(["op2"], CI`NilContextId);
+x = mk_AS`Name(["x"], CI`NilContextId);
+y = mk_AS`Name(["y"], CI`NilContextId);
+z = mk_AS`Name(["z"], CI`NilContextId);
+set1 = mk_AS`SetEnumerationExpr( [ mk_AS`RealLit( 1, -1 ), mk_AS`RealLit( 2, -1 ), mk_AS`RealLit( 3, -1 ) ], -1 );
+set2 = mk_AS`SetEnumerationExpr( [ mk_AS`RealLit( 1, -1 ), mk_AS`RealLit( 3, -1 ), mk_AS`RealLit( 5, -1 ) ], -1 );
+pat1 = mk_AS`PatternName(x, nil, CI`NilContextId);
+pat2 = mk_AS`PatternName(y, nil, CI`NilContextId);
+msb1 = mk_AS`MultSetBind([pat1], set1, CI`NilContextId);
+msb2 = mk_AS`MultSetBind([pat2], set1, CI`NilContextId);
+msb12 = mk_AS`MultSetBind([pat1,pat2], set1, CI`NilContextId);
+#ifdef VDMSL
+app1 = mk_AS`TraceApplyExpr(opnm1, [], CI`NilContextId);
+app2 = mk_AS`TraceApplyExpr(opnm1, [x], CI`NilContextId);
+app3 = mk_AS`TraceApplyExpr(opnm1, [x,y], CI`NilContextId);
+app4 = mk_AS`TraceApplyExpr(opnm2, [x], CI`NilContextId);
+#endif VDMSL
+#ifdef VDMPP
+app1 = mk_AS`TraceApplyExpr(objnm, opnm1, [], CI`NilContextId);
+app2 = mk_AS`TraceApplyExpr(objnm, opnm1, [x], CI`NilContextId);
+app3 = mk_AS`TraceApplyExpr(objnm, opnm1, [x,y], CI`NilContextId);
+app4 = mk_AS`TraceApplyExpr(objnm, opnm2, [x], CI`NilContextId);
+#endif VDMPP
+ltb1 = mk_AS`LetTraceBind([msb1], CI`NilContextId);
+ltb2 = mk_AS`LetTraceBind([msb2], CI`NilContextId);
+ltb12 = mk_AS`LetTraceBind([msb12], CI`NilContextId);
+eq1 = mk_AS`BinaryExpr(x, <NE>, real2, CI`NilContextId);
+eq2 = mk_AS`BinaryExpr(y, <EQ>, real3, CI`NilContextId);
+lbtb1 = mk_AS`LetBeTraceBind([msb1], eq1, CI`NilContextId);
+lbtb2 = mk_AS`LetBeTraceBind([msb2], eq2, CI`NilContextId);
+lbtb12 = mk_AS`LetBeTraceBind([msb12], nil, CI`NilContextId);
+vd1 = mk_AS`ValueDef(pat1, nil, real2, <NOT_INITIALISED_AS>, true, CI`NilContextId);
+vd2 = mk_AS`ValueDef(pat2, nil, real3, <NOT_INITIALISED_AS>, true, CI`NilContextId);
+lotb1 = mk_AS`LocalTraceBind([vd1], CI`NilContextId);
+lotb2 = mk_AS`LocalTraceBind([vd2], CI`NilContextId);
+lotb12 = mk_AS`LocalTraceBind([vd1, vd2], CI`NilContextId);
+
+emptyenv = AUX`MkEmptyBlkEnv(<READ_ONLY>);
+
+operations
+
+test1: () ==> set of seq of AS`Expr
+test1() ==
+  let tdef_l = [ app1
+               ]
+  in
+    return EXPANDED`ExpandTraceDefList(tdef_l, {emptyenv});
+
+test2: () ==> set of seq of AS`Expr
+test2() ==
+  let tdef_l = [ mk_AS`QualifiedTrace([ltb1], app2, CI`NilContextId)
+               ]
+  in
+    return EXPANDED`ExpandTraceDefList(tdef_l, {emptyenv});
+
+test11: () ==> set of seq of AS`Expr
+test11() ==
+  let tdef_l = [ mk_AS`QualifiedTrace([lbtb1], app2, CI`NilContextId)
+               ]
+  in
+    return EXPANDED`ExpandTraceDefList(tdef_l, {emptyenv});
+
+test3: () ==> set of seq of AS`Expr
+test3() ==
+  let tdef_l = [ mk_AS`QualifiedTrace([ltb1,ltb2], app3, CI`NilContextId)
+               ]
+  in
+    return EXPANDED`ExpandTraceDefList(tdef_l, {emptyenv});
+
+test4: () ==> set of seq of AS`Expr
+test4() ==
+  let tdef_l = [ mk_AS`QualifiedTrace([ltb12], app3, CI`NilContextId)
+               ]
+  in
+    return EXPANDED`ExpandTraceDefList(tdef_l, {emptyenv});
+
+test12: () ==> set of seq of AS`Expr
+test12() ==
+  let tdef_l = [ mk_AS`QualifiedTrace([lotb1], app2, CI`NilContextId)
+               ]
+  in
+    return EXPANDED`ExpandTraceDefList(tdef_l, {emptyenv});
+
+test13: () ==> set of seq of AS`Expr
+test13() ==
+  let tdef_l = [ mk_AS`QualifiedTrace([lotb12], app3, CI`NilContextId)
+               ]
+  in
+    return EXPANDED`ExpandTraceDefList(tdef_l, {emptyenv});
+
+test14: () ==> set of seq of AS`Expr
+test14() ==
+  let tdef_l = [ mk_AS`QualifiedTrace([ltb1, lotb2], app3, CI`NilContextId)
+               ]
+  in
+    return EXPANDED`ExpandTraceDefList(tdef_l, {emptyenv});
+
+test15: () ==> set of seq of AS`Expr
+test15() ==
+  let tdef_l = [ mk_AS`QualifiedTrace([lotb1, ltb2], app3, CI`NilContextId)
+               ]
+  in
+    return EXPANDED`ExpandTraceDefList(tdef_l, {emptyenv});
+
+test16: () ==> set of seq of AS`Expr
+test16() ==
+  let tdef_l = [ mk_AS`QualifiedTrace([ltb1], mk_AS`TraceBracketedExpr([app2, app4], CI`NilContextId), CI`NilContextId)
+               ]
+  in
+    return EXPANDED`ExpandTraceDefList(tdef_l, {emptyenv});
+
+test17: () ==> set of seq of AS`Expr
+test17() ==
+  let tdef_l = [ mk_AS`QualifiedTrace([ltb1], mk_AS`TraceBracketedExpr([mk_AS`TraceDefAltn(app2, app4, CI`NilContextId)], CI`NilContextId), CI`NilContextId)
+               ]
+  in
+    return EXPANDED`ExpandTraceDefList(tdef_l, {emptyenv});
+
+test5: () ==> set of seq of AS`Expr
+test5() ==
+  let tdef_l = [ mk_AS`RepeatTrace(app1, <ANY>, CI`NilContextId)
+               ]
+  in
+    return EXPANDED`ExpandTraceDefList(tdef_l, {emptyenv});
+
+test6: () ==> set of seq of AS`Expr
+test6() ==
+  let tdef_l = [ mk_AS`RepeatTrace(app1, <ATLEASTONE>, CI`NilContextId)
+               ]
+  in
+    return EXPANDED`ExpandTraceDefList(tdef_l, {emptyenv});
+
+test7: () ==> set of seq of AS`Expr
+test7() ==
+  let tdef_l = [ mk_AS`RepeatTrace(app1, <POSSIBLY>, CI`NilContextId)
+               ]
+  in
+    return EXPANDED`ExpandTraceDefList(tdef_l, {emptyenv});
+
+test8: () ==> set of seq of AS`Expr
+test8() ==
+  let tdef_l = [ mk_AS`RepeatTrace(app1, mk_AS`RepeatFixed(real2, CI`NilContextId), CI`NilContextId)
+               ]
+  in
+    return EXPANDED`ExpandTraceDefList(tdef_l, {emptyenv});
+
+test9: () ==> set of seq of AS`Expr
+test9() ==
+  let tdef_l = [ mk_AS`RepeatTrace(app1, mk_AS`RepeatInterval(real1, real3, CI`NilContextId), CI`NilContextId)
+               ]
+  in
+    return EXPANDED`ExpandTraceDefList(tdef_l, {emptyenv});
+
+test10: () ==> set of seq of AS`Expr
+test10() ==
+  let tdef_l = [ mk_AS`RepeatTrace(app1, mk_AS`RepeatInterval(real0, real2, CI`NilContextId), CI`NilContextId)
+               ]
+  in
+    return EXPANDED`ExpandTraceDefList(tdef_l, {emptyenv});
+
+end TRTEST

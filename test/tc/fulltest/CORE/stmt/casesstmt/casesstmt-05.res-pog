@@ -1,0 +1,12 @@
+[ mk_ERR`ErrMsg( 
+     10,
+     8,
+     10,
+     "Error[153] : Rhs of '-' is not a numeric type",
+     <ERROR> ),
+  mk_ERR`ErrMsg( 
+     10,
+     8,
+     8,
+     "Error[121] : Pattern can never match",
+     <ERROR> ) ]

@@ -1,0 +1,29 @@
+\documentclass[a4paper]{article}
+%\usepackage[dvips]{color}
+\usepackage{color}
+\usepackage{vdmsl-2e}
+\usepackage{longtable}
+
+\definecolor{covered}{rgb}{0,0,0}      %black
+\definecolor{not_covered}{gray}{0.6}   %gray for printing
+%\definecolor{not_covered}{gray}{0.5}   %gray for previewing
+%\definecolor{not_covered}{rgb}{1,0,0}  %red
+
+\title{Exercise ??}
+\author{ ?? }
+
+\begin{document}
+\maketitle
+
+\begin{vdm_al}
+
+    ** write your specification here, 
+       indent definitions by at least two blank spaces **
+
+\end{vdm_al}
+
+\begin{rtinfo}{rtinfo.ast}[DefaultMod]
+\end{rtinfo}
+
+\end{document}
+

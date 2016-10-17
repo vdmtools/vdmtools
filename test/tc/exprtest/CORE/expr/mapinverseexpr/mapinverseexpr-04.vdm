@@ -1,0 +1,14 @@
+class MapInverseExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let n = 5,
+      - = inverse n
+  in skip;
+
+------------------------------------------------------------------------------
+end MapInverseExprTest

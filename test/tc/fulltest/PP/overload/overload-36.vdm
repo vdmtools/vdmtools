@@ -1,0 +1,31 @@
+class superWWW
+
+types
+
+   public A = token;
+
+end superWWW
+
+class WWW is subclass of superWWW
+
+  types
+
+    public URL = token;
+
+  operations
+
+    public Search : A ==> seq of URL
+    Search(-) ==
+        is not yet specified
+
+end WWW
+
+class WWW2 is subclass of WWW
+
+  operations
+
+    public Search : A ==> seq of URL
+    Search(-) ==
+        is not yet specified
+
+end WWW2

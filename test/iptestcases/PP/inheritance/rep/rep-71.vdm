@@ -1,0 +1,40 @@
+class C
+
+values
+
+public v : int = 99
+
+functions
+
+public readV : () -> int
+readV() == v
+
+end C
+
+class B is subclass of C
+
+values 
+
+public v : int = 100
+
+functions
+
+public readV : () -> int
+readV() == v
+
+end B
+
+class A
+
+functions
+
+public getV : C -> int
+getV(obj) == obj.v
+
+operations
+
+public Test : () ==> int * int * int * int
+Test() ==
+  return mk_(getV(new C()), getV(new B()), new B().readV(), new C().readV())
+
+end A

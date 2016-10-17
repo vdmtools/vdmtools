@@ -1,0 +1,104 @@
+\subsubsection {責任}
+	「利子を得る」関数の陰仕様と、ニュートン法による陽仕様。
+\subsubsection {注釈}
+	「導関数」や「ニュートン法で方程式を解く」操作は、関数を引数として渡す高階関数機能を利用している。
+\begin{vdm_al}
+class Newton
+
+values
+	Rcsid = "$Id: Newton.vpp,v 1.8 2005/06/15 08:01:00 shin Exp $";
+	誤差 = 1e-10;
+	変分 = 1e-5;	
+
+functions
+static public ＝ : real -> real -> bool
+＝(r1)(r2) == abs(r1 - r2) < 誤差;
+
+static 利子を得る陰仕様_数学版 : rat * int -> rat
+利子を得る陰仕様_数学版(倍数,年) == is not yet specified
+pre
+	倍数 > 1.0 and 年 > 0 
+post
+	倍数 > 1.0 and 年 > 0 and
+	exists1 利子 : rat &
+		let 元利合計 = 元利合計倍数を得る(利子,年)
+		in 倍数 = 元利合計  and RESULT = 利子;
+		
+static 利子を得る陰仕様_計算機版 : real * int -> real
+利子を得る陰仕様_計算機版 (倍数,年数) ==
+	is not yet specified
+pre
+	倍数 > 1.0 and 年数 > 0
+post
+	倍数 > 1.0 and 年数 > 0  and
+	RESULT in set  {利子 | 利子 : real & 
+		let	元利合計 = 元利合計倍数を得る(利子,年数)
+		in	＝(倍数)(元利合計)};
+\end{vdm_al}
+
+利子を得る陽仕様（ニュートン法を利用、関数プログラミング使用）
+\begin{vdm_al}
+static public 利子を得る: real * int -> real
+利子を得る(倍数,年数) ==
+	let	f = lambda 利子 : real & 倍数 - 元利合計倍数を得る(利子,年数)	in
+	ニュートン法で方程式を解く(f)(0);
+
+static public 元利合計倍数を得る : real * int -> real
+元利合計倍数を得る(利子,年) == (1 + 利子) ** 年
+pre
+	利子 >= 0 and 年 > 0;
+\end{vdm_al}
+
+平方根を求める陰仕様$\_$数学版
+\begin{vdm_al}
+static public root陰仕様数学版: rat -> rat
+root陰仕様数学版(x) == is not yet specified
+pre
+	x >= 0
+post
+	exists1 平方根 : rat & 平方根 ** 2 = x and 平方根 = RESULT;
+\end{vdm_al}
+
+平方根を求める陰仕様$\_$計算機版
+\begin{vdm_al}
+static public root陰仕様: real -> real
+root陰仕様(x) == is not yet specified
+pre
+	x >= 0
+post
+	RESULT in set {平方根 | 平方根 : real & ＝(平方根 ** 2)(x)};
+\end{vdm_al}
+
+平方根を求める陽仕様版
+\begin{vdm_al}
+static public root: real -> real
+root(x) ==
+	let	f = lambda y : real & y ** 2 - x	in
+	ニュートン法で方程式を解く(f)(x)
+pre
+	x >= 0;
+\end{vdm_al}
+
+方程式の解法のニュートン法
+\begin{vdm_al}
+static public ニュートン法で方程式を解く: (real -> real) -> real -> real
+ニュートン法で方程式を解く(f)(x) ==
+	let	終了条件 = lambda y : real &  abs(f(y)) < 誤差,
+		次の近似 = lambda y : real & y - (f(y) / 導関数(f)(y))	in
+	Funtil[real](終了条件)(次の近似)(x);
+
+static public 導関数 : (real -> real) ->real -> real
+導関数(f)(x) == (f(x+変分) - f(x)) / 変分 ;
+\end{vdm_al}
+
+ある条件ｐが真になるまで、初期値xに関数fを繰り返し適用する。
+\begin{vdm_al}
+static public Funtil[@型] : (@型 -> bool) -> (@型 -> @型) -> @型 -> @型
+Funtil(p)(f)(x) == if p(x) then x else Funtil[@型](p)(f)(f(x));
+	
+end Newton
+\end{vdm_al}
+
+\begin{rtinfo}
+[TotalxCoverage]{vdm.tc}[Newton]
+\end{rtinfo}

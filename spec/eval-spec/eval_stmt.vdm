@@ -1,0 +1,895 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Functions and operations for evaluation of statements in dynamic semantic
+% $Id: eval_stmt.vdm,v 1.44 2000/04/07 11:14:54 blackie Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\subsection{Statements}
+
+The module STMT contains all functions and operations related to the 
+evaluation of statements.
+
+\begin{vdm_al}
+module STMT
+  imports
+    from AS all,
+
+#ifdef VDMPP
+    from CLASS
+      operations
+        LookUpClassOfOp: AS`Name ==> AS`Name,
+#endif VDMPP
+
+   from AUX
+     functions
+#ifdef VDMSL
+        ExtractId : AS`Name -> AS`Id;
+#endif VDMSL
+        PermuteStmt: seq of AS`Stmt -> set of seq of AS`Stmt;
+#ifdef VDMPP
+--        ErrorFct: seq of char -> bool | set of AS`Name | AS`Name | GLOBAL`InhCon;
+        ExtractName : AS`Name -> AS`Name;
+#endif VDMPP
+        MkBlkEnv : AS`Name * SEM`VAL * [AS`Type] * SEM`Permission -> SEM`BlkEnv;
+        CombineBlkEnv : SEM`BlkEnv * SEM`BlkEnv -> SEM`BlkEnv;
+        MkEmptyBlkEnv : (SEM`Permission) -> SEM`BlkEnv
+
+     operations 
+        ErrorOp: seq of char ==> bool | SEM`VAL | set of AS`Name | 
+                 (bool * bool * [SEM`VAL] ) | AS`Name |
+                 (bool * bool * [SEM`VAL] * [SEM`VAL] * [AS`Name]) |
+                  set of SEM`BlkEnv | (bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name]) |
+                  GLOBAL`RecSel;
+        LookUpRecSel : AS`Name ==> bool * [GLOBAL`RecSel];
+        ReverseSeq : seq of SEM`VAL ==> seq of SEM`VAL;
+#ifdef VDMSL
+        IsDefinedInModule : AS`Name ==> bool;
+#endif VDMSL
+
+    from EXPR
+      operations
+        EvalExpr : AS`Expr ==> SEM`VAL;
+#ifdef VDMPP
+        ;
+        IsInObjScope: AS`Name * [SEM`OBJ] ==> bool * bool *[SEM`VAL] * [AS`Type] * [AS`Name]
+#endif VDMPP
+        ,
+
+    from FREE
+      functions 
+        IdentInPattern : AS`PatternBind -> set of AS`Name;
+
+    from GLOBAL all,
+
+    from PAT
+      operations
+        MatchLists : seq of AS`Pattern * seq of SEM`VAL ==> set of SEM`BlkEnv;
+        PatternMatch : AS`PatternBind * SEM`VAL ==> set of SEM`BlkEnv;
+        ConstructFN : AS`FnDef * set of AS`Name ==> SEM`BlkEnv;
+        EvalBind : AS`Bind * PAT`PARTITION ==> set of SEM`BlkEnv | set of (set of SEM`BlkEnv)
+      types
+        PARTITION = <DO_PARTITION> | <DONT_PARTITION>,
+
+    from REP all,
+    from CI all,
+    --from POS all,
+
+    from SEM all,
+
+    from STATE 
+      operations
+#ifdef VDMSL
+        GetModule : AS`Name ==> GLOBAL`SigmaMO | GLOBAL`SigmaIMO;
+#endif VDMSL
+        IsOpApply : AS`ApplyExpr ==> bool;
+        PopBlkEnv : () ==> ();
+        PushBlkEnv : SEM`BlkEnv ==> ();
+        EvalCallStmt : AS`CallStmt ==> SEM`VAL;
+        SubType : SEM`VAL * GLOBAL`Type ==> bool;
+        EvalBlockStmt : AS`BlockStmt ==> SEM`VAL;
+#ifdef VDMSL
+        ExtractModule : AS`Name ==> AS`Name;
+#endif VDMSL
+        EvalStateDesignator : AS`StateDesignator * SEM`VAL ==> ();
+#ifdef VDMSL
+        IsTheState: AS`Name ==> bool;
+        SetTheState: AS`Name * SEM`REC ==> ();
+#endif VDMSL
+#ifdef VDMPP
+        PushCurObj: SEM`OBJ_Ref ==> ();
+        PopCurObj: () ==> ();
+        LookUp : AS`Name ==> SEM`VAL;
+        ModifyValueId : AS`Name * SEM`VAL ==> ();
+        GetCurObj: () ==> SEM`OBJ;
+        SetInstanceVar: AS`Name * SEM`VAL ==> ();
+        GetSemObjInTab: SEM`OBJ_Ref ==> SEM`OBJ
+#endif VDMPP     
+      ,
+   from SETTINGS
+     operations
+       DTC : () ==> bool;
+       PreCheck: () ==> bool;
+       PostCheck: () ==> bool
+
+  exports
+    operations
+      EvalStmt : AS`Stmt ==> SEM`VAL;
+      EvalPost : [AS`Expr] ==> bool;
+      EvalPre : [AS`Expr] ==> bool;
+#ifdef VDMSL
+      SDValToState : AS`StateDesignator * AS`Name ==> GLOBAL`StateMap * AS`Name;
+      StateToSDVal : GLOBAL`StateMap * AS`Name ==> SEM`REC;
+#endif VDMSL
+      EvalAssignInit : AS`Expr ==> SEM`VAL
+
+definitions
+operations
+
+EvalStmt : AS`Stmt ==> SEM`VAL
+EvalStmt ( stmt) ==
+  cases true :
+  (is_AS`DefStmt(stmt))          -> EvalDefStmt(stmt),
+  (is_AS`LetStmt(stmt))          -> EvalLetStmt(stmt),
+  (is_AS`LetBeSTStmt(stmt))      -> EvalLetBeSTStmt(stmt),
+  (is_AS`AssignStmt(stmt))       -> EvalAssignStmt(stmt),
+  (is_AS`SeqForLoopStmt(stmt))   -> EvalSeqForLoopStmt(stmt),
+  (is_AS`SetForLoopStmt(stmt))   -> EvalSetForLoopStmt(stmt),
+  (is_AS`IndexForLoopStmt(stmt)) -> EvalIndexForLoopStmt(stmt),
+  (is_AS`WhileLoopStmt(stmt))    -> EvalWhileLoopStmt(stmt),
+  (is_AS`CallStmt(stmt))         -> STATE`EvalCallStmt(stmt),
+  (is_AS`ReturnStmt(stmt))       -> EvalReturnStmt(stmt),
+  (is_AS`IfStmt(stmt))           -> EvalIfStmt(stmt),
+  (is_AS`CasesStmt(stmt))        -> EvalCasesStmt(stmt),
+
+  (is_AS`ErrorStmt(stmt))        -> error,
+  (is_AS`ExitStmt(stmt))         -> EvalExitStmt(stmt),
+  (is_AS`AlwaysStmt(stmt))       -> EvalAlwaysStmt(stmt),
+  (is_AS`TrapStmt(stmt))         -> EvalTrapStmt(stmt),
+  (is_AS`RecTrapStmt(stmt))      -> EvalRecTrapStmt(stmt),
+  (is_AS`BlockStmt(stmt))        -> STATE`EvalBlockStmt(stmt),
+  (is_AS`NonDetStmt(stmt))       -> EvalNonDetStmt(stmt),
+  (is_AS`IdentStmt(stmt))        -> return mk_SEM`CONT(),
+  (is_AS`SpecificationStmt(stmt))-> AUX`ErrorOp("Cannot evaluate specification stmt"),
+  others                    -> error
+end;
+\end{vdm_al}
+
+The operation $EvalStmt$ is used to evaluate a statement. Based on the
+input statement, the proper evaluation operation is evaluated. Within these
+operations, we use calls to $EvalStmt$ to recursively evaluate statements.
+
+\subsubsection{Local Binding Statements}
+
+In the initialization of local state variables, on the right hand side of
+an assign statement, and in \keyw{def}-statements, we can only parse
+expressions, but we can also use operation calls. This operation returns
+$\True$ if the input expression is the application of an operation value.
+
+\begin{vdm_al}
+operations
+
+-- the operation EvalOpApply evaluates an ApplyExpr using EvalCall
+-- in order to maintain the exit status of the application. this is
+-- needed because the parser cannot see whether we have got a
+-- function or an operation application.
+
+EvalOpApply : AS`ApplyExpr ==> SEM`VAL
+EvalOpApply ( mk_AS`ApplyExpr(fct, arg, cid)) ==
+#ifdef VDMSL
+STATE`EvalCallStmt( mk_AS`CallStmt(fct, arg, nil, cid))
+#endif VDMSL
+#ifdef VDMPP
+STATE`EvalCallStmt( mk_AS`CallStmt(nil, fct, arg, cid))
+#endif VDMPP
+\end{vdm_al}
+
+This operation converts an operation application into an operation call.
+The result of the operation $EvalOpApply$ is the evaluated operation call.
+
+\begin{vdm_al}
+operations
+
+EvalDefStmt : AS`DefStmt ==> SEM`VAL
+EvalDefStmt ( mk_AS`DefStmt(value, In,-)) ==
+( dcl pat_lp : seq of AS`PatternBind := [],
+      val_lv : seq of SEM`VAL := [],
+      val_v : SEM`VAL;
+  for elm in value do
+    let mk_(patb, expr) = elm in
+    ( if is_AS`ApplyExpr(expr)
+      then if STATE`IsOpApply(expr)
+           then let tmp_v = EvalOpApply(expr) in
+                  if is_SEM`EXIT(tmp_v)
+                  then return tmp_v
+                  elseif is_SEM`CONT(tmp_v)
+                  then error
+                  else val_v := tmp_v
+           else val_v := EXPR`EvalExpr(expr)
+      else val_v := EXPR`EvalExpr(expr) ;
+      val_lv := val_lv ^ [ val_v ];
+      if is_AS`TypeBind(patb)
+      then let mk_AS`TypeBind(pat, tp,-) = patb in
+        if SETTINGS`DTC() and not STATE`SubType( val_v, tp ) 
+        then error
+        else pat_lp := pat_lp ^ [pat]
+      elseif is_AS`SetBind(patb) then
+        let mk_AS`SetBind(pat,set_e,-) = patb in
+          if SETTINGS`DTC() and
+            let set_v = EXPR`EvalExpr(set_e) in
+              not (is_SEM`SET(set_v) and val_v in set set_v.v)
+          then error
+          else pat_lp := pat_lp ^ [pat]
+      else pat_lp := pat_lp ^ [ patb ]
+    );
+  let env_s = PAT`MatchLists(pat_lp, val_lv) in
+    if env_s <> {}
+    then let env in set env_s in
+         ( STATE`PushBlkEnv(env);
+           let in_v = EvalStmt(In) in
+           ( STATE`PopBlkEnv( );
+             return in_v
+           )
+         )
+    else error
+)
+\end{vdm_al}
+
+For a \keyw{def}-statement, we first create the sequences with the patterns
+and with the evaluated expression/operation call for each pattern. Pattern
+matching is used to create the environment with the proper bindings. This
+environment is pushed onto the evaluation stack, before the body statement
+is evaluated. After the evaluation, this environment is removed from the
+evaluation stack.
+
+\begin{vdm_al}
+operations
+
+EvalLetStmt : AS`LetStmt ==> SEM`VAL
+EvalLetStmt ( mk_AS`LetStmt(localdef, In,-)) ==
+( dcl id_s   : set of AS`Name := {},
+      blkenv : SEM`BlkEnv := AUX`MkEmptyBlkEnv(<READ_ONLY>);
+
+  STATE`PushBlkEnv(blkenv);      
+
+  for elm in localdef do (
+    if is_AS`ExplFnDef(elm)
+    then (
+      id_s := id_s union { elm.nm };
+      blkenv := AUX`CombineBlkEnv(blkenv, PAT`ConstructFN(elm,id_s))
+    )
+    elseif is_AS`ImplFnDef(elm)
+    then (
+      id_s := id_s union { elm.nm };
+      blkenv := AUX`CombineBlkEnv(AUX`MkBlkEnv(elm.nm,mk_SEM`ImplFN(nil,nil),nil,<READ_ONLY>), blkenv)
+    )
+    else 
+      (
+      id_s := id_s union FREE`IdentInPattern(elm.pat);
+      let mk_AS`ValueDef(pat, tp, val,-) = elm in
+        ( let val_v = EXPR`EvalExpr(val) in
+          if (is_SEM`EXIT(val_v))
+          then return val_v
+          elseif SETTINGS`DTC() and tp <> nil and not STATE`SubType(val_v, tp)
+          then error
+          else let env_s = PAT`PatternMatch(pat, val_v) in
+          ( if env_s <> {}
+            then let env in set env_s in
+              blkenv := AUX`CombineBlkEnv(env,blkenv)
+            else error;
+          )
+        )
+    );
+    STATE`PopBlkEnv();
+    STATE`PushBlkEnv(blkenv);
+  );
+
+  let in_v = EvalStmt(In) in (
+    STATE`PopBlkEnv();
+    return in_v
+  )
+)
+\end{vdm_al}
+
+
+In the evaluation of a \keyw{let}-statement, we evaluate each pattern
+bind one at a time, and push the new binding onto the block environment
+stack, so that it can be used by other patterns. When all the bindings
+is evaluate the expression is evaluated in this scope.
+
+\begin{vdm_al}
+operations
+
+EvalLetBeSTStmt : AS`LetBeSTStmt ==> SEM`VAL
+EvalLetBeSTStmt ( mk_AS`LetBeSTStmt(lhs, st_e, in_e,-)) ==
+( dcl env_s : set of SEM`BlkEnv := {};
+    for all env in set PAT`EvalBind(lhs,<DONT_PARTITION>) do 
+    (
+      if st_e = nil
+      then env_s := env_s union { env }
+      else 
+      ( STATE`PushBlkEnv(env);
+        let st_v = EXPR`EvalExpr(st_e) in
+        ( if is_SEM`BOOL(st_v)
+          then let mk_SEM`BOOL(b) = st_v in
+            if b
+            then env_s := env_s union { env }
+            else skip
+          else error
+         );
+        STATE`PopBlkEnv( )
+      )
+  );
+  if env_s <> {}
+  then let env in set env_s in
+       ( STATE`PushBlkEnv(env) ;
+         let in_v = EvalStmt(in_e) in
+         ( STATE`PopBlkEnv();
+           return in_v
+         )
+       )
+  else error
+)
+\end{vdm_al}
+
+In the \keyw{let be}-statement, the pattern bind is evaluated, resulting in
+a set of environments. In each of these environments, we evaluate the
+possible constraint expression, and if this expression evaluates to true,
+the environment is stored, otherwise it is ignored. After all environments
+are processed, one of the stored environments is pushed onto the evaluation
+stack, and the body statement is evaluated. After this evaluation, the
+environment is removed from the evaluation stack.
+
+\subsubsection{Block and Assignment Statements}
+
+\begin{vdm_al}
+operations
+
+EvalAssignStmt : AS`AssignStmt ==> SEM`VAL
+EvalAssignStmt ( mk_AS`AssignStmt(lhs, rhs,-)) ==
+( dcl rhs_v : SEM`VAL;
+  if is_AS`ApplyExpr(rhs)
+  then if STATE`IsOpApply(rhs)
+       then let tmp_v = EvalOpApply(rhs) in
+              if is_SEM`EXIT(tmp_v)
+              then return tmp_v
+              elseif is_SEM`CONT(tmp_v)
+              then error
+              else rhs_v := tmp_v
+       else rhs_v := EXPR`EvalExpr(rhs)
+  else
+    rhs_v := EXPR`EvalExpr(rhs);
+#ifdef VDMSL
+    if is_AS`Name(lhs) and STATE`IsTheState(lhs)
+    then STATE`SetTheState(lhs,rhs_v)
+    else 
+#endif VDMSL
+      STATE`EvalStateDesignator(lhs, rhs_v);
+    return mk_SEM`CONT()
+)
+\end{vdm_al}
+
+In the evaluation of an assignment statement, we first evaluate the right
+hand side expression/operation call. Then, we evaluate the left hand side,
+a state designator, with the new value.
+
+
+
+\begin{vdm_al}
+operations
+
+EvalAssignInit : AS`Expr ==> SEM`VAL
+EvalAssignInit (expr) ==
+if is_AS`ApplyExpr(expr)
+then if STATE`IsOpApply(expr)
+     then let val_v = EvalOpApply(expr) in
+            if not is_SEM`CONT(val_v)
+            then return val_v
+            else error
+     else EXPR`EvalExpr(expr)
+else EXPR`EvalExpr(expr)
+\end{vdm_al}
+
+
+
+\subsubsection{Loop Statements}
+
+\begin{vdm_al}
+operations
+ 
+EvalSeqForLoopStmt : AS`SeqForLoopStmt ==> SEM`VAL
+EvalSeqForLoopStmt ( mk_AS`SeqForLoopStmt(cv, dirn, fseq, body,-)) ==
+( dcl res : SEM`VAL := mk_SEM`CONT(),
+      seq_lv : seq of SEM`VAL;
+  let seq_v = EXPR`EvalExpr(fseq) in
+    if is_SEM`SEQ(seq_v)
+    then let mk_SEM`SEQ(s_lv) = seq_v in
+         ( if dirn = <REVERSE>
+           then seq_lv := AUX`ReverseSeq(s_lv)
+           else seq_lv := s_lv;
+           for elm_v in seq_lv do 
+             let env_s = PAT`PatternMatch(cv, elm_v) in
+               if env_s <> {}
+               then let env in set env_s in
+                    ( STATE`PushBlkEnv(env) ;
+                      res := EvalStmt(body) ;
+                      STATE`PopBlkEnv() ;
+                      if not is_SEM`CONT(res)
+                      then return res
+                    )
+               else error;
+           return res
+         )
+    else error
+)
+\end{vdm_al}
+
+This operation evaluates for every element in the input sequence the body
+statement. Each element is matched with a pattern to create an environment
+in which the body statement must be evaluated.
+
+\begin{vdm_al}
+operations
+
+EvalSetForLoopStmt : AS`SetForLoopStmt ==> SEM`VAL
+EvalSetForLoopStmt ( mk_AS`SetForLoopStmt(cv, fset, body,-)) ==
+( dcl res : SEM`VAL := mk_SEM`CONT();
+  let set_v = EXPR`EvalExpr(fset) in
+    if is_SEM`SET(set_v)
+    then let mk_SEM`SET(set_sv) = set_v in
+         ( for all elm_v in set set_sv do 
+             let env_s = PAT`PatternMatch(cv, elm_v) in
+               if env_s <> {}
+               then let env in set env_s in
+                    ( STATE`PushBlkEnv(env) ;
+                      res := EvalStmt(body) ;
+                      STATE`PopBlkEnv() ;
+                      if not is_SEM`CONT(res)
+                      then return res
+                     )
+                else error;
+           return res
+         )
+    else error
+)
+\end{vdm_al}
+
+This operation evaluates for every element in the input set the body
+statement. Each element is matched with a pattern to create an environment
+in which the body statement must be evaluated.
+
+\begin{vdm_al}
+operations
+
+EvalIndexForLoopStmt : AS`IndexForLoopStmt ==> SEM`VAL
+EvalIndexForLoopStmt ( mk_AS`IndexForLoopStmt(cv, lb_e, ub_e, by_e, body,-)) ==
+( dcl res : SEM`VAL := mk_SEM`CONT();
+  let lb_v = EXPR`EvalExpr(lb_e),
+      ub_v = EXPR`EvalExpr(ub_e),
+      by_v = if by_e  = nil
+             then mk_SEM`NUM(1)
+             else EXPR`EvalExpr(by_e) in
+    if is_SEM`NUM(lb_v) and is_SEM`NUM(ub_v) and is_SEM`NUM(by_v)
+    then let mk_SEM`NUM(lb) = lb_v,
+             mk_SEM`NUM(ub) = ub_v,
+             mk_SEM`NUM(By) = by_v in
+           if is_int(lb) and is_int(ub) and is_int(By)
+           then if By = 0
+                then error
+                elseif ((lb <= ub) and By > 0) or ((lb >= ub) and By < 0)
+                then ( for i = lb to ub by By do 
+                       ( STATE`PushBlkEnv(AUX`MkBlkEnv(cv, mk_SEM`NUM(i), nil, <READ_ONLY>));
+                         res := EvalStmt(body);
+                         STATE`PopBlkEnv();
+                         if not is_SEM`CONT(res)
+                         then return res
+                       );
+                       return res
+                     )
+                else return res
+           else error
+    else error
+)
+\end{vdm_al}
+
+The body statement is evaluated in an environment in which a pattern is
+bound to a numeric value. This value ranges from the input lower and upper
+bounds, and for every possible value, the body statement is evaluated. The
+value increments with $by-e$ after each step.
+
+\begin{vdm_al}
+operations
+
+EvalWhileLoopStmt : AS`WhileLoopStmt ==> SEM`VAL
+EvalWhileLoopStmt ( mk_AS`WhileLoopStmt(test, body,-)) ==
+( dcl cont : bool,
+      res : SEM`VAL := mk_SEM`CONT();
+  let test_v = EXPR`EvalExpr(test) in
+    if is_SEM`BOOL(test_v)
+    then let mk_SEM`BOOL(b) = test_v in
+         ( cont := b;
+           while cont do 
+           ( res := EvalStmt(body) ;
+             if not is_SEM`CONT(res)
+             then return res;
+             let test_v = EXPR`EvalExpr(test) in
+               if is_SEM`BOOL(test_v)
+               then let mk_SEM`BOOL(b) = test_v in
+                      cont := b
+               else error
+           );
+           return res
+         )
+    else error
+)
+\end{vdm_al}
+
+The body statement is evaluated until the test expression $test$ evaluates
+to $\False$.
+
+\subsubsection{Non-Deterministic Sequences}
+
+\begin{vdm_al}
+operations
+
+EvalNonDetStmt : AS`NonDetStmt ==> SEM`VAL
+EvalNonDetStmt (mk_AS`NonDetStmt(stmts,-)) ==
+let stmt_l in set AUX`PermuteStmt(stmts) in
+( for stmt in stmt_l do
+    let res_v = EvalStmt(stmt) in
+      if not is_SEM`CONT(res_v)
+      then return res_v;
+  return mk_SEM`CONT()
+)
+\end{vdm_al}
+
+In the evaluation of a non-deterministic statement, we permutate the input
+sequence of statements. From this set of permutations, we select a single
+permutation, and evaluate all the statements in this sequence in order of
+appearence.
+
+#ifdef VDMSL
+\subsubsection{Call and Return Statements}
+
+The operation $SDValToState$ converts a state designator into a state
+map.  This state map will be used as the current global state. The
+operation also returns the tag name of the record value.
+
+\begin{vdm_al}
+operations
+
+SDValToState : AS`StateDesignator * AS`Name ==> GLOBAL`StateMap * AS`Name
+SDValToState (sd, op_name) ==
+let sd_val = EXPR`EvalExpr(SDtoExpr(sd)) in
+if is_SEM`REC (sd_val)
+then let mk_SEM`REC (tag, v, -) = sd_val in
+       if AUX`IsDefinedInModule (tag)
+       then if IsProperStateType (tag, op_name)
+            then let mk_(-, mk_(-, pos, tps)) = AUX`LookUpRecSel (tag) in
+                   ( dcl stm : GLOBAL`StateMap := { |-> };
+                     for all id in set dom pos do
+                       stm := stm ++ { id |-> mk_GLOBAL`State (v(pos(id)),
+                                                        tps(pos(id))) };
+                     return mk_(stm, tag)
+                   )
+              else error
+       else error
+else error
+\end{vdm_al}
+
+The function $SDtoExpr$ is an auxiliary function to $SDValToState$. It
+transforms an $AS`StateDesignator$ to an $AS`Expr$.
+
+\begin{vdm_al}
+functions
+
+SDtoExpr: AS`StateDesignator -> AS`Expr
+SDtoExpr(sd) ==
+  cases sd:
+    mk_AS`Name(-,-) -> sd,
+    mk_AS`FieldRef(var,sel,cid) -> 
+      mk_AS`FieldSelectExpr(SDtoExpr(var),sel,cid),
+    mk_AS`MapOrSeqRef(var,sel,cid) ->
+      mk_AS`ApplyExpr(SDtoExpr(var),[sel],cid),
+    others -> undefined
+  end
+\end{vdm_al}
+
+The operation $IsProperStateType$ validates the type of a state
+designator. If a state designator is used in an operation call, the
+type of the state designator must be equal to the type of the state in
+the defining module for the operation that is called.
+
+\begin{vdm_al}
+operations
+
+IsProperStateType : AS`Name * AS`Name ==> bool
+IsProperStateType (tp_id, op_name) ==
+let sigmamo = STATE`GetModule (STATE`ExtractModule (op_name)) in
+  if sigmamo.stp_id = nil
+  then return false
+  else return AUX`ExtractId(sigmamo.stp_id) = AUX`ExtractId(tp_id)
+\end{vdm_al}
+
+\begin{vdm_al}
+operations
+
+StateToSDVal : GLOBAL`StateMap * AS`Name ==> SEM`REC
+StateToSDVal (stm, sd_tag) ==
+let mk_(-, mk_(-, pos, -)) = AUX`LookUpRecSel (sd_tag) in
+  let pos' = inverse pos in
+    let v = { i |-> stm(pos'(i)).val | i in set dom pos' } in
+      return mk_SEM`REC (sd_tag, v, {|->})
+\end{vdm_al}
+
+This operation converts a state map into a record value. The tag name for
+the record value is the input name $sd-tag$.
+
+
+#endif VDMSL
+\begin{vdm_al}
+operations
+
+EvalPre : [AS`Expr] ==> bool
+EvalPre (Pre_e) ==
+if SETTINGS`PreCheck() 
+then if Pre_e <> nil 
+     then let Pre_v = EXPR`EvalExpr(Pre_e) in
+       if is_SEM`BOOL(Pre_v)
+       then let mk_SEM`BOOL(b) = Pre_v in
+              return b
+       else error
+     else return true
+else return true
+\end{vdm_al}
+
+This operation evaluates the pre condition of an operation or function. If
+no pre condition is defined, $\True$ is returned.
+
+
+\begin{vdm_al}
+operations
+
+EvalPost : [AS`Expr] ==> bool
+EvalPost (Post_e) ==
+if SETTINGS`PostCheck()
+then if Post_e <> nil
+     then let Post_v = EXPR`EvalExpr(Post_e) in
+       if is_SEM`BOOL(Post_v )
+       then let mk_SEM`BOOL(b) = Post_v in
+              return b
+       else error
+     else return true
+else return true
+\end{vdm_al}
+
+This operation evaluates the post condition of an operation or function. If
+no post condition is defined, $\True$ is returned.
+
+#ifdef VDMPP
+\subsubsection{Return Statements}
+#endif VDMPP
+
+\begin{vdm_al}
+operations
+
+EvalReturnStmt : AS`ReturnStmt ==> SEM`VAL | SEM`RETURN
+EvalReturnStmt( mk_AS`ReturnStmt(expr,-)) ==
+if expr = nil
+then return mk_SEM`RETURN()
+else 
+  return EXPR`EvalExpr(expr)
+
+#endif VDMPP
+
+\end{vdm_al}
+
+This operation returns the semantic value, resulting from the evaluation of
+the argument expression. If no argument expression is given, a semantic
+continue value is returned.
+
+\subsubsection{Conditional Statements}
+
+\begin{vdm_al}
+operations
+
+EvalIfStmt : AS`IfStmt ==> SEM`VAL
+EvalIfStmt ( mk_AS`IfStmt(test, cons, elif, altn,-)) ==
+let test_v = EXPR`EvalExpr(test) in
+  if is_SEM`BOOL(test_v)
+  then let mk_SEM`BOOL(b) = test_v in
+         if b
+         then EvalStmt(cons)
+         elseif elif <> []
+         then ( dcl elif_l : seq of AS`ElseifStmt := elif;
+                while elif_l <> [] do
+                ( let mk_AS`ElseifStmt(test, cons,-) = hd elif_l in
+                    let test_v = EXPR`EvalExpr(test) in
+                      if not is_SEM`BOOL(test_v)
+                      then error
+                      else let mk_SEM`BOOL(b) = test_v in
+                             if b
+                             then EvalStmt(cons);
+                  elif_l := tl elif_l
+                );
+                if altn = nil
+                then return mk_SEM`CONT()
+                else EvalStmt(altn)
+              )
+         else if altn = nil
+              then return mk_SEM`CONT()
+              else EvalStmt(altn)
+  else error
+\end{vdm_al}
+
+In the evaluation of the \keyw{if}-statement, we first evaluate the $test$
+expression. If this evaluates to true, we evaluate the $cons$ statement,
+and return the result.  Otherwise, we test for the presence of
+\keyw{elseif}-statements. If one or more are defined, we try these one at a
+time. If all of these test expressions evaluate to false, the result of the
+evaluation of the $altn$ statement is returned.
+
+\begin{vdm_al}
+operations
+
+EvalCasesStmt : AS`CasesStmt ==> SEM`VAL
+EvalCasesStmt ( mk_AS`CasesStmt(sel, altns, Others,-)) ==
+( dcl alt_l : seq of AS`CasesStmtAltn := altns,
+      pat_lp : seq of AS`Pattern,
+      cont : bool := true,
+      res : SEM`VAL;
+  let sel_v = EXPR`EvalExpr(sel) in
+  ( while alt_l <> [] and cont do 
+      let mk_AS`CasesStmtAltn(match_lp, body,-) = hd alt_l in
+      ( pat_lp := match_lp;
+        while pat_lp <> [] and cont do 
+          let pat_p = hd pat_lp in
+            let env_s = PAT`PatternMatch(pat_p, sel_v) in
+            ( if env_s <> {}
+              then let env in set env_s in
+                   ( STATE`PushBlkEnv(env);
+                     res := EvalStmt(body);
+                     STATE`PopBlkEnv();
+                     cont := false
+                   );
+              pat_lp := tl pat_lp
+            );
+        alt_l := tl alt_l
+      );
+    if not cont
+    then return res
+    elseif Others <> nil
+    then EvalStmt(Others)
+    else return mk_SEM`CONT()
+  )
+)
+
+\end{vdm_al}
+
+In the evaluation of the \keyw{case}-statement, we first evaluate the $sel$
+expression. Next, we try to match the resulting value with each of the
+defined patterns, and upon a matching, the corresponding statement is
+evaluated, and the result is returned. If no matching is found, the
+\keyw{others}-statement is evaluated.
+
+\subsubsection{Exception Handling Statements}
+
+\begin{vdm_al}
+operations
+
+EvalAlwaysStmt : AS`AlwaysStmt ==> SEM`VAL
+EvalAlwaysStmt( mk_AS`AlwaysStmt(Post, body,-)) ==
+let bval_v = EvalStmt(body),
+    pval_v = EvalStmt(Post) in
+  if not is_SEM`EXIT(pval_v)
+  then return bval_v
+  else return pval_v
+\end{vdm_al}
+
+In the evaluation of the \keyw{always}-statement, we evaluate both input
+statements. If the evaluation of the $Post$ statement returns a semantic
+exit value, this value is returned. Otherwise, the result of the evaluation
+of the other statement is returned.
+
+\begin{vdm_al}
+operations
+
+EvalTrapStmt : AS`TrapStmt ==> SEM`VAL
+EvalTrapStmt( mk_AS`TrapStmt(pat, Post, body,-)) ==
+let bval_v = EvalStmt(body) in
+  if is_SEM`EXIT(bval_v) and bval_v.v <> nil
+  then let env_s = PAT`PatternMatch(pat, bval_v.v) in
+         if env_s = {}
+         then return bval_v
+         else let env in set env_s in
+              ( STATE`PushBlkEnv(env);
+                let res = EvalStmt(Post) in
+                ( STATE`PopBlkEnv();
+                  return res
+                )
+              )
+  else return bval_v
+\end{vdm_al}
+
+In the evaluation of the \keyw{trap}-statement, we first evaluate the
+$body$ statement. If this evaluation does not return a semantic exit value,
+the result is returned. Otherwise, we match the return value with the
+pattern $pat$. If this does not match, the semantic exit value is returned.
+In case of a matching, we evaluate the $Post$ statement in the resulting
+environment, and the result is returned.
+
+\begin{vdm_al}
+operations
+
+EvalRecTrapStmt : AS`RecTrapStmt ==> SEM`VAL
+EvalRecTrapStmt( mk_AS`RecTrapStmt( traps, body,-)) ==
+( dcl match : bool,
+      trap_s : set of AS`Trap,
+      rval_v : SEM`VAL;
+  let bval_v = EvalStmt(body) in
+    if is_SEM`EXIT(bval_v) and bval_v.v <> nil
+    then ( rval_v := bval_v;
+           while true do
+           ( trap_s := elems traps;
+             match := false;
+             while trap_s <> {} and not match do
+               let trp in set trap_s in
+                 let mk_AS`Trap(pat_p, stmt,-) = trp in
+                   let env_s = PAT`PatternMatch(pat_p, rval_v.v) in
+                   ( if env_s <> {}
+                     then let env in set env_s in
+                          ( match := true;
+                            STATE`PushBlkEnv(env);
+                            let tmp_v = EvalStmt(stmt) in
+                            ( STATE`PopBlkEnv();
+                              if not is_SEM`EXIT(tmp_v) or tmp_v.v = nil
+                              then return tmp_v
+                              else rval_v := tmp_v
+                            )
+                          );
+                     trap_s := trap_s \ { trp }
+                   );
+             if not match
+             then return rval_v
+           )
+         )
+    else return bval_v
+)
+\end{vdm_al}
+
+In the evaluation of the \keyw{tixe}-statement, we first evaluate the
+$body$ statement. If this evaluation does not return a semantic exit value,
+the result is returned. Otherwise, we match the return value with each of
+the patterns in the $traps$ sequence. If this does not match for any of the
+patterns, the semantic exit value is returned.  In case of a matching, we
+evaluate the corresponding statement in the resulting environment. If an
+exception is raised in this evaluation, the matching starts all over.
+
+\begin{vdm_al}
+operations
+
+EvalExitStmt : AS`ExitStmt ==> SEM`VAL
+EvalExitStmt( mk_AS`ExitStmt(expr,-)) ==
+if expr = nil
+then return mk_SEM`EXIT(nil)
+else return mk_SEM`EXIT(EXPR`EvalExpr(expr))
+
+end STMT
+\end{vdm_al}
+
+This operation evaluates an \keyw{exit}-statement. If no argument
+expression is defined, an empty semantic exit value is returned. Otherwise,
+the value in the semantic exit value is the result of the evaluation of the
+argument expression.
+
+\vspace{0.5cm}
+
+#ifdef RTINFO
+\begin{rtinfo}
+[EvalIndexForLoopStmt]{rtinfo.ast}[STMT]
+\end{rtinfo}
+#endif RTINFO
+
+% Local Variables: 
+% mode: LaTeX
+% TeX-master: "dynsem"
+% End: 

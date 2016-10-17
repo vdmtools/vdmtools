@@ -1,0 +1,21 @@
+class A
+
+functions
+f: nat -> nat
+f(x) == x + 1;
+ 
+operations
+
+public Test : () ==> map nat to [nat]
+Test () ==
+( 
+	dcl m : map nat to [nat] := {l |-> nil | l in set {0,...,12}};
+	(dcl	 i : int := 0;
+	while i < 12 do
+	( m := m ++ {i |-> f(i)};
+	i := i + 1 )
+	);
+	return m
+)
+   
+end A

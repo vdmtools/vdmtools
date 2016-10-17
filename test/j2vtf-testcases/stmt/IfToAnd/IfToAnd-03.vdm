@@ -1,0 +1,18 @@
+class A
+
+operations
+
+public Test : () ==> bool
+Test () ==
+( 
+	dcl x : nat := 12;
+	(if x < 3 then return x > 3);
+	(((return false)))
+		
+)
+   
+end A
+
+class B
+types N = nat;
+end B

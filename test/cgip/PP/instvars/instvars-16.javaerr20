@@ -1,0 +1,4 @@
+  Error : Type of assignment expression is not compatible to defined type of ins
+tance variable
+  act : bool
+  exp : nat

@@ -1,0 +1,76 @@
+class AA    
+functions
+public
+f2[@p]: @p * int -> map int to @p
+f2(a,b) == {b |-> a}
+types
+public
+aa::f1:map nat to bool
+    q:int
+end AA
+
+class B
+functions
+public
+g[@p]: @p * int -> map int to @p
+g(a,b) == {b |-> a};
+public
+f0[@p]:@p -> bool
+f0(-) == true;
+public
+f1[@p]:@p*int -> map int to @p
+f1(a,b) == {b|->a}
+types
+public
+rr::f1:map nat to bool
+    q:int
+end B 
+
+class C is subclass of AA
+functions
+public
+f1[@p]:@p -> bool
+f1(-) == true;
+public
+f0:int -> bool
+f0(a) == a>8
+end C
+class FctTypeInstExprTest is subclass of AA
+types
+rr::f1:map nat to bool
+    q:int
+functions
+
+f0:int -> bool
+f0(a) == a > 10;
+
+f1[@p]: @p * int -> map int to @p
+f1(a,b) == {b |-> a};
+
+public f2[@p,@q]: @p * @q -> map @q to @p
+f2(a,b) == {b |-> a};
+
+f3[@p]: @p -> @p
+f3 (a) == a
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+public static TestOP: () ==> map int to int
+TestOP() ==
+  let m = f2[int,int](3,5) ++ f1[int](13,15)
+  in return m;
+
+------------------------------------------------------------------------------
+end FctTypeInstExprTest
+class A
+
+operations
+
+public Test: () ==>  map int to int
+Test() ==
+  FctTypeInstExprTest`TestOP()
+
+end A

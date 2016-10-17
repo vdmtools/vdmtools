@@ -1,0 +1,24 @@
+class TestThread
+operations 
+public TestThread: () ==> TestThread
+TestThread() == skip; --start(self);
+thread
+while true do let - = new IO().echo("hello") in skip
+end TestThread
+class Test
+operations
+public run: () ==> nat
+run() == (
+let t = new TestThread() in  start(t);
+return 42
+);
+end Test
+class A
+
+operations
+ 
+  public Test : () ==> nat
+  Test() ==
+    new Test().run();
+
+end A

@@ -1,0 +1,35 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> set of nat1   
+Test () ==
+return Primes1(40)
+
+
+functions 
+
+
+  Primes1: nat1 -> set of nat1
+  Primes1(n) ==
+     if n < 3
+     then {3}
+     else Prime({2},3,n);
+  
+  Prime: set of nat1 * nat1 * nat1 -> set of nat1
+  Prime(ps,m,n) ==
+     if m > n
+     then ps
+     else
+        if forall i in set ps & m mod i <> 0
+        then
+           Prime(ps union {m}, m+1,n)
+        else
+           Prime(ps,m+1,n)
+  -- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

@@ -1,0 +1,24 @@
+[ mk_ERR`ErrMsg( 
+     10,
+     8,
+     7,
+     "Warning[33] : \"a\" is not used",
+     <WARNING> ),
+  mk_ERR`ErrMsg( 
+     10,
+     9,
+     16,
+     "Warning[33] : \"s2\" is not used",
+     <WARNING> ),
+  mk_ERR`ErrMsg( 
+     10,
+     9,
+     7,
+     "Warning[33] : \"s1\" is not used",
+     <WARNING> ),
+  mk_ERR`ErrMsg( 
+     10,
+     9,
+     22,
+     "Error[120] : Case alternative is not of correct type",
+     <ERROR> ) ]

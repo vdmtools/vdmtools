@@ -1,0 +1,64 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+instance variables
+public  iva: nat :=1;
+  inv iva <> 0;
+
+values
+public
+  va = 1;
+
+types
+public 
+  reca  :: ;  
+
+operations
+
+public  SetInstVar: nat ==> ()
+  SetInstVar(n) ==
+    iva := n
+
+end A
+
+class C is subclass of A
+
+instance variables
+public  iva: nat
+
+operations
+public  SetInstVar: nat ==> ()
+  SetInstVar(n) ==
+    iva := n
+
+end C
+
+class D
+values
+public
+  vd = 1;
+
+types
+public
+  recd  :: ;  
+
+end D
+
+class B is subclass of C
+
+values
+public
+  vb = 1;
+
+operations
+  public Test : () ==> nat * nat * nat * nat * nat * nat 
+  Test () ==
+  ( self.SetInstVar(1);
+    self.A`SetInstVar(2);
+    let x1 = mk_reca(),
+        x2 = mk_A`reca(),
+        y = new D(),
+        z = mk_D`recd() in
+    return mk_(iva,va,A`iva,A`va,D`vd,y.vd)
+  )
+end B

@@ -1,0 +1,46 @@
+/*########
+#
+# application error abstract class
+# $Id: gofo_applicationException.vpp,v 1.1 2005/11/25 07:05:38 vdmtools Exp $
+#
+class Gofo_ApplicationError
+*/
+
+class GofoApplicationException is subclass of 『問題領域共通定義』
+
+instance variables
+public エラー番号 : int;
+public エラー理由 : 「文字列」 := "不明";
+
+operations	
+public GofoApplicationException : int * 「文字列」 ==> GofoApplicationException
+GofoApplicationException(a番号, a理由) ==
+	(
+	エラー番号 := a番号;
+	エラー理由 := a理由;
+	return self
+	);
+  /*
+  def initialize(where, reason)
+    @where = where;
+    @reason = reason;
+  end
+  */
+  
+public getErrorNo : () ==> int
+getErrorNo() == return  エラー番号;
+  /*
+  def code
+    return "ER-GENERIC";
+  end
+  */
+ 
+public getMessage : () ==> 「文字列」
+getMessage() == return エラー理由;
+  /*
+  def description
+    return "GENERIC ERROR";
+  end
+  */
+  
+end GofoApplicationException

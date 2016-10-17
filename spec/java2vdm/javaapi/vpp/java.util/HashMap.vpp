@@ -1,0 +1,585 @@
+class HMEntry is subclass of JavaUtilEntry, JavaLangObject
+
+instance variables
+	public hash : int;
+	public key: JavaLangObject;
+	public value__: JavaLangObject;
+	public next: HMEntry;
+
+operations 
+public  HMEntry : <NIL> ==> HMEntry
+HMEntry(-) == 
+isNil := true  ;
+
+public
+  HMEntry: int * JavaLangObject * JavaLangObject * HMEntry ==> HMEntry
+  HMEntry(hash, key, value__, next) ==
+  (   HMEntry`hash := hash;
+	    HMEntry`key := key;
+	    HMEntry`value__ := value__;
+	    HMEntry`next := next;
+	);
+
+	public clone: () ==> JavaLangObject
+	clone() ==
+	    return new HMEntry(hash,key,value__, if next.IsNil() then new HMEntry(<NIL>) else next.clone() );
+
+--	JavaUtilMap.JavaUtilEntry Ops 
+
+	public getKey: () ==> JavaLangObject
+	getKey() ==
+	    return key;
+
+	public getValue: () ==> JavaLangObject
+	getValue() ==
+	    return value__;
+
+	public setValue: JavaLangObject ==> JavaLangObject 
+	setValue(value__) ==
+  (   dcl oldValue: JavaLangObject := HMEntry`value__;
+	    HMEntry`value__ := value__;
+	    return oldValue;
+	);
+
+	public equals: JavaLangObject ==> bool
+	equals(o) ==
+  ( if not isofclass(HMEntry,o)
+    then return false;
+    ( dcl e : HMEntry := o;
+	    return
+        if key.IsNil()
+        then e.getKey().IsNil()
+        else key.equals(e.getKey())
+             and if value__.IsNil()
+                 then e.getValue().IsNil()
+                 else value__.equals(e.getValue())
+    )
+	);
+
+	public hashCode: () ==> int
+	hashCode() ==
+	    return if value__.IsNil() then 0 else value__.hashCode();
+
+	public toString: () ==> JavaLangString
+	toString() ==
+  ( dcl s: JavaLangString := key.toString();
+    s:=s.concat(new JavaLangString("="));
+    s:=s.concat(value__.toString());
+    return s
+  );
+
+end  HMEntry
+
+--class JavaUtilHashMap is subclass of JavaUtilAbstractMap, JavaUtilMap, JavaLangCloneable, JavaIoSerializable
+class JavaUtilHashMap is subclass of JavaLangObject, JavaUtilMap, JavaLangCloneable, JavaIoSerializable
+instance variables 
+    public table: map int to HMEntry;
+    public count: int :=0;
+    public threshold: int;
+    public loadFactor_: real;
+    public modCount: int := 0;
+    public  static KEYS: int := 0;
+    public static VALUES: int := 1;
+    public static ENTRIES: int := 2;
+
+    private static emptyHashIterator: EmptyHashIterator := new EmptyHashIterator();
+
+operations 
+public  size : () ==> int 
+size() == 
+return count;
+
+public  clear : () ==> ()
+clear() == 
+( modCount := modCount+1;
+  for i=(card dom table)-1 to 0 by -1
+  do table := table ++ {i |-> new HMEntry(<NIL>)};
+  count := 0;
+) ;
+
+public  clone : () ==> JavaLangObject
+clone() == 
+is not yet specified ;
+
+public  keySet : () ==> JavaUtilSet
+keySet() == 
+  return new HMKeySet(self);
+
+public getHashIterator: int ==> JavaUtilIterator
+getHashIterator(type) ==
+( return
+    if count = 0
+    then emptyHashIterator
+	  else new HashIterator(type, self);
+);
+
+public  JavaUtilHashMap : () ==> JavaUtilHashMap
+JavaUtilHashMap() == 
+( let - = JavaUtilHashMap(11, 0.75) in skip; 
+) ;
+
+public  isEmpty : () ==> bool 
+isEmpty() == 
+  return count = 0 ;
+
+public  JavaUtilHashMap : int  ==> JavaUtilHashMap
+JavaUtilHashMap(initialCapacity) == 
+( let - = JavaUtilHashMap(initialCapacity, 0.75) in skip; 
+) ;
+
+capacity : () ==> int 
+capacity() == 
+  return card dom table ;
+
+public  entrySet : () ==> JavaUtilSet
+entrySet() == 
+  return new HMEntrySet(self) ;
+
+public  values__ : () ==> JavaUtilCollection
+values__() == 
+is not yet specified ;
+
+public  JavaUtilHashMap : int  * real  ==> JavaUtilHashMap
+JavaUtilHashMap(initialCapacity_, loadFactor_) == 
+( dcl initialCapacity: int := initialCapacity_;
+  if initialCapacity < 0
+  then
+  ( dcl s: JavaLangString := new JavaLangString("Illegal Initial Capacity: ");
+    s:=s.concat(new JavaLangInteger(initialCapacity).toString());
+    exit new JavaLangIllegalArgumentException(s);
+  );
+	if loadFactor_ <= 0
+  then
+  ( dcl s: JavaLangString := new JavaLangString("Illegal Load factor: ");
+--    s.concat(new Float(initialCapacity).toString());
+    exit new JavaLangIllegalArgumentException(s);
+  );
+  if initialCapacity=0
+  then initialCapacity := 1;
+	JavaUtilHashMap`loadFactor_ := loadFactor_;
+	table := {i|->new HMEntry(<NIL>) | i in set {0,...,initialCapacity-1}};
+	threshold := floor(initialCapacity * loadFactor_);
+  count := 0;
+  modCount := 0;
+) ;
+
+loadFactor : () ==> real 
+loadFactor() == 
+  return loadFactor_ ;
+
+public  get : JavaLangObject ==> JavaLangObject
+get(key) == 
+( --dcl tab: map int to HMEntry := table;
+  if not key.IsNil()
+  then
+  ( dcl hash: int := key.hashCode(),
+        index: int := (if hash >=0 then hash else -hash) mod card dom table,
+        e: HMEntry := table(index);
+    while not e.IsNil()
+    do
+    ( if e.hash=hash and key.equals(e.key)
+      then return e.value__;
+      e := e.next
+    )
+	)
+  else
+  ( dcl e: HMEntry:= table(0);
+    while not e.IsNil()
+    do
+    ( if e.key.IsNil()
+      then return e.value__;
+      e := e.next
+    )
+  );
+	return JavaLangObject`NIL;
+);
+
+public  putAll : JavaUtilMap ==> ()
+putAll(t) == 
+is not yet specified ;
+
+public  JavaUtilHashMap : JavaUtilMap ==> JavaUtilHashMap
+JavaUtilHashMap(t) == 
+( skip 
+) ;
+
+public  JavaUtilHashMap : <NIL> ==> JavaUtilHashMap
+JavaUtilHashMap(-) == 
+isNil := true  ;
+
+public  remove : JavaLangObject ==> JavaLangObject
+remove(key) == 
+( if not key.IsNil()
+  then
+  ( dcl hash : int  := key.hashCode(),
+        index : int := (if hash < 0 then -hash else hash) mod  (card  dom  table);
+    ( dcl e : HMEntry := table(index),
+          prev : HMEntry := new  HMEntry(<NIL>);
+      while  not  e.IsNil() do  
+      ( if e.hash = hash and e.key.equals(key)
+        then
+        ( modCount := modCount+1;
+          if  not  prev.IsNil()
+          then prev.next := e.next
+          else table := table ++ {index |-> e.next};
+          count := count-1;
+          ( dcl   oldValue : JavaLangObject := e.value__;
+            e.value__ := JavaLangObject`NIL;
+            return  oldValue
+          ) ;
+        );
+        prev := e;
+        e := e.next
+      ) 
+    )
+  ) 
+  else
+  ( dcl e : HMEntry := table(0),
+        prev : HMEntry := new  HMEntry(<NIL>);
+    while  not  e.IsNil() do  
+    ( if e.key.IsNil()
+      then
+      ( modCount := modCount+1;
+        if  not  prev.IsNil()
+        then prev.next := e.next
+        else table := table ++ {0 |-> e.next};
+        count := count-1;
+        ( dcl   oldValue : JavaLangObject := e.value__;
+          e.value__ := JavaLangObject`NIL;
+          return  oldValue
+        ) ;
+      );
+      prev := e;
+      e := e.next
+    ) 
+  );
+  return JavaLangObject`NIL;
+);
+
+public  containsKey : JavaLangObject ==> bool 
+containsKey(key) == 
+( if not key.IsNil()
+  then
+  ( dcl hash: int  := key.hashCode(),
+        index: int := (if hash < 0 then -hash else hash) mod  (card  dom  table);
+    ( dcl   e : HMEntry := table(index);
+      while  not  e.IsNil() do  
+      ( if e.hash = hash and e.key.equals(key) then return  true;
+        e := e.next
+      )
+    )
+  )
+  else
+  ( dcl   e : HMEntry := table(0);
+    while  not  e.IsNil() do  
+    ( if e.key.IsNil()
+      then
+        return  true;
+      e := e.next
+    )
+  );
+	return false;
+);
+
+public  put : JavaLangObject * JavaLangObject ==> JavaLangObject
+put(key, value__) == 
+( dcl hash : int  := 0,
+      index : int  := 0;
+  if not key.IsNil()
+  then
+  ( hash  := key.hashCode();
+    index := (if hash < 0 then -hash else hash) mod  (card  dom  table);
+    ( dcl   e : HMEntry := table(index);
+      while  not  e.IsNil() do  
+      ( dcl   old : JavaLangObject := e.value__;
+        if e.hash = hash and e.key.equals(key)
+        then
+        ( e.value__ := value__;
+          return  old;
+        );
+        e := e.next
+      ) 
+    )
+  )
+  else
+  ( dcl   e : HMEntry := table(0);
+    while  not  e.IsNil() do  
+    ( if e.key.IsNil()
+      then
+      ( dcl   old : JavaLangObject := e.value__;
+        e.value__ := value__;
+        return  old;
+      );
+      e := e.next
+    )
+  );
+  modCount := modCount+1;
+  if  count >= threshold
+  then  
+    ( rehash();
+--    index := (J2VUTIL`BitOp(hash , <AND> , 0)) mod  (card  dom  table)
+--    tab := table;
+      index := (if hash < 0 then -hash else hash) mod  (card  dom  table)
+    ) ;
+-- Creates the new entry.
+	( dcl e: HMEntry := new HMEntry(hash, key, value__, table(index));
+	  table(index) := e;
+	  count:=count+1;
+	  return JavaLangObject`NIL
+  )
+);
+
+protected  rehash : () ==> ()
+rehash() == 
+( dcl   oldCapacity : int  := (card  dom  table),
+--      oldMap : map  int  to  HMEntry := table,
+        newCapacity : int  := oldCapacity*2+1,
+        newMap : map  int  to  HMEntry := {l_10 |-> new  HMEntry(<NIL>)|l_10 in set  {0,...,newCapacity-1}};
+  modCount := modCount+1;
+  def l_6 = (newCapacity*loadFactor_);
+  l_1 = if  is_(l_6,real ) then  floor(l_6) else  l_6
+  in threshold := l_1;
+  ( dcl   i : int  := oldCapacity,
+          l_11 : bool ;
+    def l_3 = i;
+    l_2 = l_3
+    in ( i := l_3-1;
+      def l_1 = l_2 > 0
+      in l_11 := l_1
+    ) ;
+    while  l_11 do  
+    ( ( dcl   old : HMEntry := table(i);
+        while  not  old.IsNil() do  
+        ( dcl   e : HMEntry := old;
+          old := old.next;
+          ( dcl   index : int  := (let i=e.hash in if i<0 then -i else i) mod  newCapacity;
+            e.next := newMap(index);
+            newMap := newMap ++ {index |-> e}
+          ) 
+        ) 
+      ) ;
+      def l_3 = i;
+      l_2 = l_3
+      in ( i := l_3-1;
+        def l_1 = l_2 > 0
+        in l_11 := l_1
+      ) 
+    ) 
+  ) ;
+  table := newMap;
+  skip 
+) ;
+
+public  containsValue : JavaLangObject ==> bool 
+containsValue(value__) == 
+( if  value__.IsNil()
+  then  
+    ( for i=(card dom table)-1 to 0 by -1
+      do
+      ( dcl   e : HMEntry := table(i);
+        while  not  e.IsNil()
+        do  
+        ( if e.value__.IsNil() then return  true;
+          e := e.next
+        ) 
+      )
+    )
+  else
+    ( for i=(card dom table)-1 to 0 by -1
+      do
+      ( dcl   e : HMEntry := table(i);
+        while  not  e.IsNil() do  
+        ( if value__.equals(e.value__) then return  true;
+          e := e.next
+        ) 
+      )
+    );
+	return false;
+) ;
+
+
+end  JavaUtilHashMap
+
+class HMKeySet is subclass of JavaUtilAbstractSet
+
+instance variables
+  hm: JavaUtilHashMap;
+
+operations
+public HMKeySet: JavaUtilHashMap ==> HMKeySet
+HMKeySet(hm) ==
+  HMKeySet`hm:=hm;
+
+public iterator : () ==> JavaUtilIterator
+iterator() ==
+  return hm.getHashIterator(JavaUtilHashMap`KEYS);
+
+public  size : () ==> int 
+size() == 
+( return  hm.count
+) ;
+
+public  contains : JavaLangObject ==> bool 
+contains(value__) == 
+  return hm.containsKey(value__);
+
+public  remove : JavaLangObject ==> bool
+remove(key) == 
+  return not hm.remove(key).IsNil();
+
+public  clear : () ==> ()
+clear() == 
+  hm.clear();
+
+end  HMKeySet
+
+class HMEntrySet is subclass of JavaUtilAbstractSet
+
+instance variables
+  hm: JavaUtilHashMap;
+
+operations
+public HMEntrySet: JavaUtilHashMap ==> HMEntrySet
+HMEntrySet(hm) ==
+  HMEntrySet`hm:=hm;
+
+public iterator : () ==> JavaUtilIterator
+iterator() ==
+  return hm.getHashIterator(JavaUtilHashMap`ENTRIES);
+
+public  size : () ==> int 
+size() == 
+( return  hm.count
+) ;
+
+public  contains : JavaLangObject ==> bool 
+contains(value__) == 
+  return hm.containsKey(value__);
+
+public  remove : JavaLangObject ==> bool
+remove(key) == 
+  return not hm.remove(key).IsNil();
+
+public  clear : () ==> ()
+clear() == 
+  hm.clear();
+
+end  HMEntrySet
+
+class EmptyHashIterator is subclass of JavaUtilIterator, JavaLangObject
+--values 
+--  CLASS : JavaLangClass = new  JavaLangClass("EmptyHashIterator" , <CLASS> , false  )
+operations 
+public  next : () ==> JavaLangObject
+next() == 
+( exit  new  JavaUtilNoSuchElementException(new  JavaLangString("JavaUtilHashMap JavaUtilIterator"))
+) ;
+
+public  remove : () ==> ()
+remove() == 
+( exit  new  JavaLangIllegalStateException(new  JavaLangString("JavaUtilHashMap JavaUtilIterator"));
+  skip 
+) ;
+
+public  hasNext : () ==> bool 
+hasNext() == 
+( return  false  
+) ;
+
+--public  getClass : () ==> JavaLangClass
+--getClass() == 
+--return  CLASS;
+
+public EmptyHashIterator : () ==> EmptyHashIterator
+EmptyHashIterator() == 
+( skip 
+) ;
+
+--public  EmptyHashIterator : <NIL> ==> EmptyHashIterator
+--JavaUtilEmptyIterator(-) == 
+--isNil := true  ;
+
+end  EmptyHashIterator
+
+class HashIterator is subclass of JavaUtilIterator, JavaLangObject 
+instance variables
+	hm: JavaUtilHashMap;
+	index: int;
+	entry: HMEntry := new HMEntry(<NIL>);
+	lastReturned: HMEntry := new HMEntry(<NIL>);
+	type: int;
+
+	private expectedModCount: int; -- = modCount;
+
+operations
+  	
+public HashIterator: int * JavaUtilHashMap ==> HashIterator
+HashIterator(type, hm) ==
+(	HashIterator`type := type;
+  HashIterator`hm := hm;
+  HashIterator`index := card dom hm.table;
+  expectedModCount:= hm.modCount;
+);
+
+public  hasNext : () ==> bool 
+hasNext() == 
+( dcl e:HMEntry := entry,
+	    i: int := index;
+  while e.IsNil() and i > 0
+  do
+  (	i:=i-1;
+    e:= hm.table(i);
+  );
+	entry := e;
+	index := i;
+	return not e.IsNil();
+);
+
+public  next : () ==> JavaLangObject
+next() == 
+( dcl et:HMEntry := entry,
+	    i: int := index;
+  while et.IsNil() and i > 0
+  do
+  (	i:=i-1;
+    et:= hm.table(i);
+  );
+  entry := et;
+	index := i;
+	if not et.IsNil()
+  then
+  ( dcl e: HMEntry;
+    lastReturned := entry;
+    e := lastReturned;
+		entry := e.next;
+  	return
+      if type = JavaUtilHashMap`KEYS
+      then e.key
+      else if type = JavaUtilHashMap`VALUES then e.value__ else e
+  );
+  exit new JavaUtilNoSuchElementException()
+);
+
+public  remove : () ==> ()
+remove() == 
+(	dcl idx: int := (if lastReturned.hash < 0 then -lastReturned.hash else lastReturned.hash) mod card dom hm.table,
+      e : HMEntry := hm.table(idx),
+          prev : HMEntry := new  HMEntry(<NIL>);
+  while  not  e.IsNil() do  
+  ( if e = lastReturned
+    then
+    ( hm.modCount := hm.modCount+1;
+      expectedModCount := expectedModCount+1;
+      if  not prev.IsNil()
+      then prev.next := e.next
+      else hm.table := hm.table ++ {idx |-> e.next};
+      hm.count := hm.count-1;
+      lastReturned := JavaLangObject`NIL;
+      return
+    );
+    prev := e;
+    e := e.next
+  ) 
+);
+
+end HashIterator

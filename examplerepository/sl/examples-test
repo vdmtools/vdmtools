@@ -1,0 +1,11 @@
+#! /usr/local/bin/bash
+
+# cd examplerepository/sl
+exec > $0.log 2>&1
+for d in * ; do
+  if [ -f $d/.vdmde ] ; then
+    (cd $d;
+    vdmde)
+  fi
+done
+

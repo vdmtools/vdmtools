@@ -1,0 +1,27 @@
+class A
+
+
+operations
+
+public
+Test : () ==> nat
+Test () == 
+    return if A`test(<A_A>) = <A_A>
+           then 9
+           else 5;
+
+public static
+test : B`TypeA ==> B`TypeA
+test (a) == return a;
+
+
+end A
+
+class B
+
+types
+
+public
+TypeA = <A_A>;
+
+end B

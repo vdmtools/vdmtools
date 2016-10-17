@@ -1,0 +1,1949 @@
+\section{Generation of Proof Obligations}
+
+\begin{vdm_al}
+module GEN_PO
+
+imports
+
+  from POGTP all,
+
+  from CI_AUX   all,
+  from CON_ENV  all,
+
+  from REP2TYPE all,
+
+  from FRESH    all,
+  from CHECK    all,
+  from CAST     all,
+  from PURE_PAT all,
+
+  from SPEC_AST all,
+  from VCM all,
+  from AS all,
+  from CI all,
+  from REP all,
+#ifdef VDMPP
+  from MANGLE all,
+#endif VDMPP
+  from DEF all, -- AUGUSTO
+  from ENV all
+
+exports all
+
+definitions
+
+functions
+
+ExtractParamsCtxt : seq of POGTP`ExprContext -> seq of AS`MultTypeBind
+ExtractParamsCtxt(ctxt) ==
+  if ctxt = []
+  then []
+  else
+    cases hd ctxt:
+      [h] ^ t -> if is_AS`MultTypeBind(h)
+                 then [h] ^ t
+                 else ExtractParamsCtxt(tl ctxt),
+      others  -> ExtractParamsCtxt(tl ctxt)
+    end;
+
+VerifyPatMatch : AS`Name * seq of AS`MultTypeBind * [AS`Expr] * set of AS`Name * POGTP`Context
+                 -> seq of POGTP`ProofObligation
+VerifyPatMatch(nm,bds,fnpre,fv,contxt) ==
+  if bds = []
+  then []
+  else
+    let ----- Flatten bindings ----------------------
+        flat_bds = conc [ [ mk_AS`MultTypeBind([bds(i).pat(j)], bds(i).tp, bds(i).cid)
+                            | j in set inds bds(i).pat ] | i in set inds bds ],
+        ----- Remove bindings to pattern names ------
+        pat_bds = [flat_bds(i) | i in set inds flat_bds &
+                    let pat    = hd flat_bds(i).pat,
+                        pat_tp = flat_bds(i).tp,
+                        tp     = if not is_AS`TypeName(pat_tp)
+                                 then pat_tp
+                                 else CI_AUX`LookUpGroundType(pat_tp.name)
+                    in
+                        not (is_AS`PatternName(pat) or
+                             (is_AS`CompositeType(tp) and
+                              is_AS`RecordPattern(pat) and
+                              forall i in set inds pat.fields &
+                                is_AS`PatternName(pat.fields(i))) or
+                             (is_AS`ProductType(tp) and
+                              is_AS`TuplePattern(pat) and
+                              forall i in set inds pat.fields &
+                                is_AS`PatternName(pat.fields(i))))]
+    in
+      if pat_bds = []
+      then []
+      else
+        let ----- Build binding -------------------------
+            free_bds      = if fnpre = nil
+                            then pat_bds
+                            else flat_bds,
+            fresh_nm_lst  = FRESH`GetNameList("xx",len free_bds,fv),
+            pat_lst       = [mk_AS`PatternName(fresh_nm_lst(i), nil, (hd free_bds(i).pat).cid)
+                             | i in set inds fresh_nm_lst],
+            fresh_bds     = [mk_AS`MultTypeBind([pat_lst(i)], free_bds(i).tp, free_bds(i).cid)
+                             | i in set inds free_bds],
+             ----- Build conclusion for PO --------------
+            matches     = [BuildVerifyMatch(fresh_nm_lst(i), free_bds(i).tp, hd free_bds(i).pat,
+                             fv union elems fresh_nm_lst)
+                           | i in set inds free_bds &
+                             not is_AS`PatternName(hd free_bds(i).pat)],
+            and_matches = BuildAndExprFromList(matches),
+            pred        = if fnpre = nil
+                          then and_matches
+                          else mk_AS`BinaryExpr(
+                                 mk_AS`ApplyExpr(AddPrefix("pre_",nm), fresh_nm_lst, CI`NilContextId),
+                                 <IMPLY>,
+                                 and_matches,
+                                 CI`NilContextId),
+            po_cond     = mk_AS`AllOrExistsExpr(<ALL>, fresh_bds, pred, CI`NilContextId),
+            ------ Build PO ---------- ------------------
+            po_expr = BuildPO(contxt.expr,po_cond),
+            new_po  = MakeProofObligation(po_expr, po_cond, <FunctionPatterns>, contxt.loc, nm.cid)
+        in [new_po];
+
+VerifySat : AS`Name * AS`BindList * AS`BindList * AS`BindList * [AS`Expr] * set of AS`Name * CI`ContextId
+          * POGTP`Context -> seq of POGTP`ProofObligation
+VerifySat (nm,parms_bd,res_bd,state_bd,fnpre,fv,cid,contxt) ==
+  let ---- make pure bindings -------------------
+      mk_(pure_parms_bd,parm_fv,-) = PURE_PAT`BindList2PureBindList(parms_bd,fv),
+      mk_(pure_res_bd,-,-) = PURE_PAT`BindList2PureBindList(res_bd,parm_fv),
+      mk_(pure_bothstates_bd,-,-) = PURE_PAT`BindList2PureBindList(state_bd,parm_fv),
+      pure_state_bd = if len pure_bothstates_bd > 0
+                      then tl pure_bothstates_bd
+                      else [],
+      pure_oldst_bd = if len pure_bothstates_bd > 0
+                      then [hd pure_bothstates_bd]
+                      else [],
+      ---- extract arguments from parameters ----
+      pat_parms  = conc [pure_parms_bd(i).pat | i in set inds pure_parms_bd],
+      pat_res    = conc [pure_res_bd(i).pat | i in set inds pure_res_bd],
+      oldst_res  = conc [pure_oldst_bd(i).pat | i in set inds pure_oldst_bd],
+      state_res  = conc [pure_state_bd(i).pat | i in set inds pure_state_bd],
+      expr_parms = [CAST`Pattern2Expr(pat_parms(i)) | i in set inds pat_parms],
+      expr_res   = [CAST`Pattern2Expr(pat_res(i)) | i in set inds pat_res],
+      expr_oldst = [CAST`Pattern2Expr(oldst_res(i)) | i in set inds oldst_res],
+      expr_state = [CAST`Pattern2Expr(state_res(i)) | i in set inds state_res],
+      ----- Build conclusion for PO --------------
+      app_post   = mk_AS`ApplyExpr(AddPrefix("post_",nm),
+                                   expr_parms ^ expr_res ^ expr_oldst ^ expr_state, CI`NilContextId),
+      res_exists = if len pure_res_bd + len pure_state_bd = 0
+                   then app_post
+                   else mk_AS`AllOrExistsExpr (<EXISTS>,
+                                               pure_res_bd ^ pure_state_bd, app_post, CI`NilContextId),
+      pred       = if fnpre = nil
+                   then res_exists
+                   else mk_AS`BinaryExpr(
+                          mk_AS`ApplyExpr(AddPrefix("pre_",nm), expr_parms ^ expr_oldst, CI`NilContextId),
+                          <IMPLY>,
+                          res_exists,
+                          CI`NilContextId),
+      po_cond    = if len pure_parms_bd + len pure_oldst_bd = 0
+                   then pred
+                   else mk_AS`AllOrExistsExpr(<ALL>, pure_parms_bd ^ pure_oldst_bd, pred, CI`NilContextId),
+      ------ Build PO ---------- ------------------
+      po_expr = BuildPO(contxt.expr,po_cond),
+      new_po  = if len pure_parms_bd + len pure_res_bd + len pure_state_bd = 0
+                then  []
+                else  [MakeProofObligation(po_expr, po_cond, <Satisfiability>, contxt.loc, cid)]
+  in new_po;
+
+VerifyPost : AS`Name * AS`BindList * AS`FnBody * [AS`Expr] * [AS`Expr] * set of AS`Name * CI`ContextId
+             * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyPost (nm,parms_bd,fnbody,fnpre,fnpost,fv,cid,contxt) ==
+  if fnpost = nil
+  then []
+  else
+    let ---- make pure bindings -------------------
+        mk_(pure_parms_bd,-,-)
+                   = PURE_PAT`BindList2PureBindList(parms_bd,fv),
+        ---- extract arguments form parameters ----
+        pat_parms  = conc [pure_parms_bd(i).pat | i in set inds pure_parms_bd],
+        expr_parms = [CAST`Pattern2Expr(pat_parms(i)) | i in set inds pat_parms],
+        body = if is_(fnbody.body, AS`NoBody)
+               then mk_AS`ApplyExpr(nm, expr_parms, CI`NilContextId)
+               else fnbody.body,
+        ----- Build conclusion for PO --------------
+        app_post   = mk_AS`ApplyExpr(AddPrefix("post_",nm), expr_parms^[body], CI`NilContextId),
+        pred       = if fnpre = nil
+                     then app_post
+                     else
+                       mk_AS`BinaryExpr(mk_AS`ApplyExpr(AddPrefix("pre_",nm), expr_parms, CI`NilContextId),
+                                        <IMPLY>,
+                                        app_post,
+                                        CI`NilContextId),
+        po_cond    = if pure_parms_bd = []
+                     then pred
+                     else mk_AS`AllOrExistsExpr(<ALL>, pure_parms_bd, pred, CI`NilContextId),
+      ------ Build PO ---------- ------------------
+      po_expr = BuildPO(contxt.expr,po_cond),
+      new_po  = MakeProofObligation(po_expr, po_cond, <PostCondition>, contxt.loc, cid)
+  in [new_po];
+
+VerifyValueBinding : AS`Pattern * [AS`Type] * [AS`Expr] * set of AS`Name * CI`ContextId * POGTP`Context
+                     -> seq of POGTP`ProofObligation
+VerifyValueBinding(pat,tp,val,fv,cid,contxt) ==
+  if is_AS`PatternName(pat) or val = nil
+  then []
+  else
+    def ---- extract arguments form parameters ----
+        mk_(pure_pat,-,-) = PURE_PAT`Pattern2PurePattern(pat,fv);
+        expr_pat = CAST`Pattern2Expr(pure_pat);
+        ----- Make type binding of pattern --------
+        type     = if tp <> nil
+                   then tp
+                   else CI_AUX`GetASType(pat);
+        pat_bind = mk_AS`MultTypeBind([pure_pat], type, CI`NilContextId);
+        ----- Build conclusion for PO -------------
+        pred     = mk_AS`BinaryExpr(expr_pat, <EQ>, val, CI`NilContextId);
+        po_cond  = mk_AS`AllOrExistsExpr(<EXISTS>, [pat_bind], pred, CI`NilContextId);
+        ------ Build PO ---------- ----------------
+        po_expr = BuildPO(contxt.expr,po_cond);
+        new_po  = MakeProofObligation(po_expr, po_cond, <ValueBinding>, contxt.loc, cid)
+    in [new_po];
+
+VerifyInvariant : AS`Expr * AS`Type * CI`ContextId * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyInvariant (expr,type,cid,contxt) ==
+  if not CI_AUX`HasInvariant(type) or
+     (is_AS`Name(expr) and
+      let ecl = contxt.expr,
+          mbl = conc [ecl(i) | i in set inds ecl & POGTP`IsBindList(ecl(i))]
+      in
+        exists mk_AS`MultTypeBind(bl,-,-) in set elems mbl &
+           exists mk_AS`PatternName(nm,nil,-) in set elems bl & nm = expr)
+  then []
+  else
+    let ---- get type name ------------------------
+        tpname = type.name,
+        ----- Build conclusion for PO -------------
+        po_cond = mk_AS`ApplyExpr(AddPrefix("inv_",tpname), [expr], CI`NilContextId),
+        ------ Build PO ---------- ----------------
+        po_expr = BuildPO(contxt.expr,po_cond),
+        new_po  = MakeProofObligation(po_expr, po_cond, <Invariants>, contxt.loc, cid),
+       new_po2 = POGTP`UpdateSource(new_po,[tpname])
+    in [new_po2];
+
+--------------------------------------------------------------------
+-- For VDMPP: Only checks at the first level, that is, fx. for a.x.y
+-- it is only checked if the object of a has an invariant, not if the
+-- a.x has one. All that is needed is to look in the type to determine
+-- the possible classes.
+--------------------------------------------------------------------
+VerifyStateInvariant : AS`StateDesignator * CI`ContextId * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyStateInvariant (lhs,cid,contxt) ==
+  cases lhs:
+    mk_AS`Name(-,-) -> def l_clnm = if len lhs.ids = 2
+                                    ---- Qualified member name ---------
+                                    then mk_AS`Name([(lhs.ids)(1)],lhs.cid)
+                                    else SPEC_AST`GetCurrModName()
+                       in
+                         if CI_AUX`HasMemberInvariant(l_clnm)
+                         then
+                           def ------ Build PO ---------- ----------------
+                               new_po  = MakeProofObligation(nil, nil, <StateInvariants>, contxt.loc, cid);
+                               new_po2 = POGTP`UpdateSource(new_po,[SPEC_AST`GetCurrModName()])
+                           in [new_po2]
+                         else [],
+    mk_AS`FieldRef(-,-,-),
+    mk_AS`MapOrSeqRef(-,-,-) -> VerifyStateInvariant (lhs.var, cid, contxt),
+    mk_AS`NarrowRef(-,-,-)   -> VerifyStateInvariant(lhs.var, CI_AUX`GetCid(lhs.var), contxt)
+  end;
+
+VerifyType : AS`Expr * AS`Type * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyType(expr,tp,contxt) ==
+  def ----- Build conclusion for PO -------------
+      po_cond    = cases tp:
+                     mk_AS`TypeName(name,-) ->
+                       def modnm = SPEC_AST`GetModuleName();
+                       in
+                       if name.ids = ["top"]
+                       then nil
+                       else
+                         def ex = if is_AS`Name(expr) and
+                                        len (expr.ids) = 1 and
+                                        not FindNameInContext(expr,contxt.expr)
+                                  then
+                                    if modnm = nil
+                                    then expr
+                                    else mu(expr, ids |-> [hd (modnm.ids), hd (expr.ids)])
+                                  else expr
+                         in
+#ifdef VDMPP
+                        if VCM`IsClassName(name)
+                        then mk_AS`IsOfClassExpr(name,ex,CI`NilContextId)
+                        else
+#endif VDMPP
+                        def qnm = if modnm = nil or len (name.ids) > 1
+                                  then name
+                                  else mu(name,ids |-> [hd (modnm.ids), hd (name.ids)])
+                        in
+                        mk_AS`IsExpr(qnm, ex, CI`NilContextId),
+                     mk_AS`BooleanType(-),
+                     mk_AS`NumericType(-,-),
+                     mk_AS`TokenType(-),
+                     mk_AS`CharType(-) -> mk_AS`IsExpr(tp, expr, CI`NilContextId),
+#ifdef VICE
+                     mk_AS`OpType(
+                       [ mk_AS`QuoteType(-,-),
+                         mk_AS`NumericType( <NATONE>, - ),
+                         mk_AS`Set0Type(mk_AS`TypeName( mk_AS`Name( [ "CPU" ], - ), - ), - ) ],
+                       mk_AS`TypeName( mk_AS`Name( [ "BUS" ], -), - ),
+                       - ) -> if is_AS`Name(expr) and expr.ids = ["BUS", "BUS"]
+                              then nil
+                              else mk_AS`TypeJudgementExpr(expr, tp, CI`NilContextId),
+#endif VICE
+                    others -> mk_AS`TypeJudgementExpr(expr, tp, CI`NilContextId)
+                   end
+  in
+    if po_cond <> nil
+    then
+      let ------ Build PO ---------- ----------------
+          po_expr = BuildPO(contxt.expr,po_cond),
+          new_po  = MakeProofObligation(po_expr, po_cond, <Subtype>, contxt.loc, CI_AUX`GetCid(expr))
+      in [new_po]
+    else [];
+
+VerifyPositveIntegerType : AS`Expr * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyPositveIntegerType (expr,contxt) ==
+  let ----- Build conclusion for PO -------------
+      po_cond    = mk_AS`BinaryExpr(expr, <NUMGT>, mk_AS`RealLit(0,CI`NilContextId), CI`NilContextId),
+      ------ Build PO ---------- ----------------
+      po_expr = BuildPO(contxt.expr,po_cond),
+      new_po  = MakeProofObligation(po_expr, po_cond, <Subtype>, contxt.loc, CI_AUX`GetCid(expr))
+  in [new_po];
+
+VerifyNonNegativeIntegerType : AS`Expr * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyNonNegativeIntegerType (expr,contxt) ==
+  let ----- Build conclusion for PO -------------
+      po_cond    = mk_AS`BinaryExpr(expr, <NUMGE>, mk_AS`RealLit(0,CI`NilContextId), CI`NilContextId),
+      ------ Build PO ---------- ----------------
+      po_expr = BuildPO(contxt.expr,po_cond),
+      new_po  = MakeProofObligation(po_expr, po_cond, <Subtype>, contxt.loc, CI_AUX`GetCid(expr))
+  in [new_po];
+
+VerifySubtypeOrSupertype : AS`Expr * AS`Expr * CI`ContextId * POGTP`Context -> seq of POGTP`ProofObligation
+VerifySubtypeOrSupertype (expr1,expr2,cid,contxt) ==
+  def expr1_tp = CI_AUX`GetASType(expr1);
+      expr2_tp = CI_AUX`GetASType(expr2);
+      ----- Build conclusion for PO -------------
+      subtype    = mk_AS`TypeJudgementExpr(expr1, expr2_tp, CI`NilContextId);
+      supertype  = mk_AS`TypeJudgementExpr(expr2, expr1_tp, CI`NilContextId);
+      po_cond    = mk_AS`BinaryExpr(subtype, <OR>, supertype, CI`NilContextId);
+      ------ Build PO --------------------------
+      po_expr = BuildPO(contxt.expr,po_cond);
+      new_po  = MakeProofObligation(po_expr, po_cond, <Subtype>, contxt.loc, cid)
+  in [new_po];
+
+VerifyLetBeSt : AS`BindList * [AS`Expr] * CI`ContextId * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyLetBeSt (bind,st_e,cid,contxt) ==
+  let ----- Build conclusion for PO -------------
+      pred     = if st_e = nil
+                 then mk_AS`BoolLit(true,CI`NilContextId)
+                 else st_e,
+      po_cond  = mk_AS`AllOrExistsExpr(<EXISTS>, bind, pred, CI`NilContextId),
+      ------ Build PO ---------- ----------------
+      po_expr = BuildPO(contxt.expr,po_cond),
+      new_po  = MakeProofObligation(po_expr, po_cond, <LetBeStExpr>, contxt.loc, cid)
+  in [new_po];
+
+VerifyCasesExpr : AS`Expr * seq of AS`CaseAltn * [AS`Expr] * set of AS`Name * CI`ContextId * POGTP`Context
+                  -> seq of POGTP`ProofObligation
+VerifyCasesExpr(sel,altns,oth,fv,cid,contxt) ==
+  if oth <> nil
+  then []
+  elseif exists alt in set elems altns &
+            exists pat in set elems alt.match & is_AS`PatternName(pat)
+  then []
+  else
+    def ----- Get type of selector-------------------------
+        sel_tp  =  CI_AUX`GetASType(sel);
+        ----- extract patterns  --------------------------
+        pats    = conc [altns(i).match | i in set inds altns];
+        ----- Build conclusion for PO ---------------------
+        exprlst = [BuildVerifyMatch(sel,sel_tp,pats(i),fv) | i in set inds pats];
+        po_cond = BuildOrExprFromList(exprlst);
+        ----- Build PO ----------------------------------
+        po_expr = BuildPO(contxt.expr,po_cond);
+        new_po  = MakeProofObligation(po_expr, po_cond, <CasesExpr>, contxt.loc, cid)
+    in [new_po]
+pre oth = nil => altns <> [];
+
+--VerifyCasesStmt : AS`Expr
+--                * seq of AS`CasesStmtAltn
+--                * [AS`Stmt]
+--                * set of AS`Name
+--                * CI`ContextId
+--                * POGTP`Context      -> seq of POGTP`ProofObligation
+--VerifyCasesStmt(sel,altns,oth,fv,cid,contxt) ==
+--  if oth <> nil then
+--    []
+--  else
+--    [ MakeProofObligation(
+--        nil,
+--        nil,
+--        <CasesStmt>,
+--        contxt.loc,
+--        cid)  ];
+
+VerifyWhileLoopStmt : AS`Expr * AS`Stmt * set of AS`Name * CI`ContextId * POGTP`Context
+                      -> seq of POGTP`ProofObligation
+--VerifyWhileLoopStmt(cond,body,fv,cid,contxt) ==
+VerifyWhileLoopStmt(-,-,-,cid,contxt) ==
+  [ MakeProofObligation(nil, nil, <WhileLoopStmt>, contxt.loc, cid) ];
+
+
+BuildVerifyMatch : AS`Expr * AS`Type * AS`Pattern * set of AS`Name -> AS`Expr
+BuildVerifyMatch(sel,tp,pat,fv) ==
+  let ---- convert pattern to expression ----
+      mk_(pure_pat,-,pid) = PURE_PAT`Pattern2PurePattern(pat,fv),
+      expr_pat = CAST`Pattern2Expr(pure_pat),
+      ----- Make type binding of pattern --------
+      pat_bind = mk_AS`MultTypeBind([pure_pat], tp, CI`NilContextId),
+      ----- Build conclusion for PO -------------
+      pred     = mk_AS`BinaryExpr(sel, <EQ>, expr_pat, CI`NilContextId),
+      expr     = if pid = {}
+                 then pred
+                 else mk_AS`AllOrExistsExpr(<EXISTS>, [pat_bind], pred, CI`NilContextId)
+   in expr;
+
+VerifyExistsOne : AS`Bind * AS`Expr * CI`ContextId * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyExistsOne(bind,pred,cid,contxt) ==
+  let ----- Build conclusion for PO -------------
+      po_cond    = mk_AS`ExistsUniqueExpr(bind, pred, CI`NilContextId),
+      ------ Build PO ---------- ----------------
+      po_expr = BuildPO(contxt.expr,po_cond),
+      new_po  = MakeProofObligation(po_expr, po_cond, <ExistsUnique>, contxt.loc, cid)
+  in [new_po];
+
+VerifyFiniteSet : AS`Expr * AS`BindList * [AS`Expr] * set of AS`Name * CI`ContextId * POGTP`Context
+                  -> seq of POGTP`ProofObligation
+VerifyFiniteSet(elem,bds,pred,fv,cid,contxt) ==
+  if not exists bd in set elems bds & is_AS`MultTypeBind(bd)
+  then []
+  else
+    let ----- Get type of set elememts --------------------
+        elem_tp = CI_AUX`GetASType(elem),
+        ----- Get fresh names ---------------------
+        fresh_f = FRESH`GetName("f",fv),
+        fresh_i = FRESH`GetName("i",fv union {fresh_f}),
+        ----- Make patterns ----------------------
+        fresh_f_pat = mk_AS`PatternName(fresh_f,nil,CI`NilContextId),
+        fresh_i_pat = mk_AS`PatternName(fresh_i,nil,CI`NilContextId),
+        ----- Build bindings ----------------------
+        i_in_dom   = mk_AS`MultSetBind([fresh_i_pat],
+                                       mk_AS`PrefixExpr( <MAPDOM>, fresh_f, CI`NilContextId),
+                                       CI`NilContextId),
+        map_f      = mk_AS`MultTypeBind([fresh_f_pat],
+                                        mk_AS`GeneralMap0Type(
+                                           mk_AS`NumericType(<NAT>,CI`NilContextId), elem_tp, CI`NilContextId),
+                                        CI`NilContextId),
+        ----- Build conclusion for PO --------------
+        f_i_eq_elem = mk_AS`BinaryExpr(mk_AS`ApplyExpr(fresh_f, [fresh_i], CI`NilContextId),
+                                       <EQ>,
+                                       elem,
+                                       CI`NilContextId),
+        exists_i_in_dom = mk_AS`AllOrExistsExpr(<EXISTS>, [i_in_dom], f_i_eq_elem, CI`NilContextId),
+        pred_imp    = if pred = nil then
+                        exists_i_in_dom
+                      else
+                        mk_AS`BinaryExpr(pred, <IMPLY>, exists_i_in_dom, CI`NilContextId),
+        forall_bds  = mk_AS`AllOrExistsExpr(<ALL>, bds, pred_imp, CI`NilContextId),
+        po_cond    = mk_AS`AllOrExistsExpr(<EXISTS>, [map_f], forall_bds, CI`NilContextId),
+        ------ Build PO ---------- ------------------
+        po_expr = BuildPO(contxt.expr,po_cond),
+        new_po  = MakeProofObligation(po_expr, po_cond, <FiniteSet>, contxt.loc, cid)
+    in [new_po];
+
+operations
+VerifyFiniteMap : AS`Maplet * AS`BindList * [AS`Expr] * set of AS`Name * CI`ContextId * POGTP`Context
+                  ==> seq of POGTP`ProofObligation
+VerifyFiniteMap(elem,bds,pred,fv,cid,contxt) ==
+  if not exists bd in set elems bds & is_AS`MultTypeBind(bd)
+  then return []
+  else
+    def ----- Get type of maplet elememts --------------------
+        mdom_tp   = CI_AUX`GetASType(elem.mapdom);
+        mrng_tp   = CI_AUX`GetASType(elem.maprng);
+        maplet_tp = mk_AS`GeneralMap0Type(mdom_tp, mrng_tp, CI`NilContextId);
+        ----- Get fresh names ---------------------
+        fresh_f = FRESH`GetName("f",fv);
+        fresh_i = FRESH`GetName("i",fv union {fresh_f});
+        ----- Make patterns ----------------------
+        fresh_f_pat = mk_AS`PatternName(fresh_f,nil,CI`NilContextId);
+        fresh_i_pat = mk_AS`PatternName(fresh_i,nil,CI`NilContextId);
+        ----- Build bindings ----------------------
+        i_in_dom   = mk_AS`MultSetBind([fresh_i_pat],
+                                       mk_AS`PrefixExpr(<MAPDOM>, fresh_f, CI`NilContextId),
+                                       CI`NilContextId);
+        map_f      = mk_AS`MultTypeBind([fresh_f_pat],
+                                        mk_AS`GeneralMap0Type(
+                                            mk_AS`NumericType(<NAT>,CI`NilContextId), maplet_tp, CI`NilContextId),
+                                      CI`NilContextId);
+        ----- Build conclusion for PO --------------
+        f_i_eq_elem = mk_AS`BinaryExpr(mk_AS`ApplyExpr(fresh_f, [fresh_i], CI`NilContextId),
+                                       <EQ>,
+                                       mk_AS`MapEnumerationExpr( [elem], CI`NilContextId),
+                                       CI`NilContextId);
+        exists_i_in_dom
+                      = mk_AS`AllOrExistsExpr(<EXISTS>, [i_in_dom], f_i_eq_elem, CI`NilContextId);
+        pred_imp    = if pred = nil
+                      then exists_i_in_dom
+                      else mk_AS`BinaryExpr(pred, <IMPLY>, exists_i_in_dom, CI`NilContextId);
+        forall_bds  = mk_AS`AllOrExistsExpr(<ALL>, bds, pred_imp, CI`NilContextId);
+        po_cond    = mk_AS`AllOrExistsExpr(<EXISTS>, [map_f], forall_bds, CI`NilContextId);
+        ------ Build PO ---------- ------------------
+        po_expr = BuildPO(contxt.expr,po_cond);
+        new_po  = MakeProofObligation(po_expr, po_cond, <FiniteMap>, contxt.loc, cid)
+    in return [new_po];
+
+functions
+VerifyMapComp : AS`Maplet * AS`BindList * [AS`Expr] * set of AS`Name * CI`ContextId * POGTP`Context
+                -> seq of POGTP`ProofObligation
+VerifyMapComp(elem,bds,pred,fv,cid,contxt) ==
+  if is_AS`Name(elem.mapdom)
+  then []
+  elseif isASLiteral(elem.maprng)
+  then []
+  else
+    let expr = mk_AS`SetComprehensionExpr(mk_AS`MapEnumerationExpr([elem],CI`NilContextId), bds, pred, cid)
+    in VerifySetOfCompatibleMaps(expr,fv,contxt);
+
+VerifySeqModifyMapOverride : AS`Expr * AS`Expr * CI`ContextId * POGTP`Context
+                             -> seq of POGTP`ProofObligation
+VerifySeqModifyMapOverride(lhs,rhs,cid,contxt) ==
+  def tp     = CHECK`GetTypeAbbrev(<SeqMap>,lhs);
+      tp_rep = CI_AUX`GetTypeInfo(lhs)
+  in
+    cases tp:
+      <Map> -> [],
+      <Seq> -> VerifySeqModify(lhs,rhs,cid,contxt),
+      <SeqMap> ->
+          let tp_seq     = CHECK`GetOverlap(tp_rep,<Seq>),
+              type_judgm = mk_AS`TypeJudgementExpr(lhs, tp_seq, CI`NilContextId),
+              new_contxt = POGTP`Add2Context(type_judgm,contxt)
+          in
+              VerifySeqModify(lhs,rhs,cid,new_contxt),
+      others -> []
+    end;
+
+VerifySeqModify : AS`Expr * AS`Expr * CI`ContextId * POGTP`Context -> seq of POGTP`ProofObligation
+VerifySeqModify (lhs,rhs,cid,contxt) ==
+  let ----- Build conclusion for PO -------------
+      po_cond    =  mk_AS`BinaryExpr(mk_AS`PrefixExpr( <MAPDOM>, rhs, CI`NilContextId),
+                                     <SUBSET>,
+                                     mk_AS`PrefixExpr(<SEQINDICES>, lhs, CI`NilContextId),
+                                     CI`NilContextId),
+      ------ Build PO ---------- ----------------
+      po_expr = BuildPO(contxt.expr,po_cond),
+      new_po  = MakeProofObligation(po_expr, po_cond, <SeqModification>, contxt.loc, cid)
+  in [new_po];
+
+VerifyNonEndoIteration : AS`Expr * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyNonEndoIteration (expr,contxt) ==
+  let ----- Build conclusion for PO -------------
+      po_cond    = mk_AS`BinaryExpr(expr, <NUMLE>, mk_AS`RealLit(1,CI`NilContextId), CI`NilContextId),
+      ------ Build PO ---------- ----------------
+      po_expr = BuildPO(contxt.expr,po_cond),
+      new_po  = MakeProofObligation(po_expr, po_cond, <NonEndoIteration>, contxt.loc, CI_AUX`GetCid(expr))
+  in [new_po];
+
+-- Should check for overlap with the emptySetType
+VerifyNonEmptySet : AS`Expr * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyNonEmptySet (expr,contxt) ==
+  def expr_tp = CI_AUX`GetTypeInfo(expr)
+  in
+    if is_REP`SetTypeRep(expr_tp)
+    then []
+    else
+      let ----- Build conclusion for PO -------------
+          po_cond = mk_AS`BinaryExpr(expr, <NE>, mk_AS`SetEnumerationExpr([], CI`NilContextId), CI`NilContextId),
+          ------ Build PO ---------- ----------------
+          po_expr = BuildPO(contxt.expr,po_cond),
+          new_po  = MakeProofObligation(po_expr, po_cond, <NonEmptySet>, contxt.loc, CI_AUX`GetCid(expr))
+      in [new_po];
+
+-- Should check for overlap with the emptySeqType
+VerifyNonEmptySeq : AS`Expr * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyNonEmptySeq (expr,contxt) ==
+  def expr_tp = CI_AUX`GetTypeInfo(expr)
+  in
+    if is_REP`SeqTypeRep(expr_tp)
+    then []
+    else
+      let ----- Build conclusion for PO -------------
+          po_cond    = mk_AS`BinaryExpr(expr,
+                                        <NE>,
+                                        mk_AS`SeqEnumerationExpr([], CI`NilContextId),
+                                        CI`NilContextId),
+          ------ Build PO ---------- ----------------
+          po_expr = BuildPO(contxt.expr,po_cond),
+          new_po  = MakeProofObligation(po_expr, po_cond, <NonEmptySeq>, contxt.loc, CI_AUX`GetCid(expr))
+      in [new_po];
+
+VerifyCompatibleMaps : AS`Expr * AS`Expr * set of AS`Name * CI`ContextId * POGTP`Context
+                       -> seq of POGTP`ProofObligation
+VerifyCompatibleMaps(expr1,expr2,fv,cid,contxt) ==
+  let ----- Get fresh variables ----------------
+      fresh_var1 = FRESH`GetName("id",fv),
+      fresh_var2 = FRESH`GetName("id",fv union {fresh_var1}),
+      ----- Make patterns ----------------------
+      pat1 = mk_AS`PatternName(fresh_var1,nil,CI`NilContextId),
+      pat2 = mk_AS`PatternName(fresh_var2,nil,CI`NilContextId),
+      ----- Make set bindings  -----------------
+      dom_expr1 = mk_AS`PrefixExpr(<MAPDOM>, expr1, CI`NilContextId),
+      dom_expr2 = mk_AS`PrefixExpr(<MAPDOM>, expr2, CI`NilContextId),
+      bind1 = mk_AS`MultSetBind([pat1],dom_expr1,CI`NilContextId),
+      bind2 = mk_AS`MultSetBind([pat2],dom_expr2,CI`NilContextId),
+      bdlst = [bind1,bind2],
+      ----- Build conclusion for PO ------------
+      var1Eqvar2 = mk_AS`BinaryExpr(fresh_var1, <EQ>, fresh_var2, CI`NilContextId),
+      map1       = mk_AS`ApplyExpr(expr1, [fresh_var1], CI`NilContextId),
+      map2       = mk_AS`ApplyExpr(expr2, [fresh_var2], CI`NilContextId),
+      map1Eqmap2 = mk_AS`BinaryExpr(map1, <EQ>, map2, CI`NilContextId),
+      pred       = mk_AS`BinaryExpr(var1Eqvar2, <IMPLY>, map1Eqmap2, CI`NilContextId),
+      po_cond    = mk_AS`AllOrExistsExpr(<ALL>, bdlst, pred, CI`NilContextId),
+      ------ Build PO ---------- ----------------
+      po_expr = BuildPO(contxt.expr,po_cond),
+      new_po  = MakeProofObligation(po_expr, po_cond, <MapCompatible>, contxt.loc, cid)
+  in [new_po];
+
+VerifySetOfCompatibleMaps : AS`Expr * set of AS`Name * POGTP`Context -> seq of POGTP`ProofObligation
+VerifySetOfCompatibleMaps(expr,fv,contxt) ==
+  let ----- Get fresh variables ----------------
+      fresh_map1 = FRESH`GetName("m",fv),
+      fresh_map2 = FRESH`GetName("m",fv union {fresh_map1}),
+      fresh_var1 = FRESH`GetName("id",fv),
+      fresh_var2 = FRESH`GetName("id",fv union {fresh_var1}),
+      ----- Make patterns ----------------------
+      pat_map1 = mk_AS`PatternName(fresh_map1,nil,CI`NilContextId),
+      pat_map2 = mk_AS`PatternName(fresh_map2,nil,CI`NilContextId),
+      pat_var1 = mk_AS`PatternName(fresh_var1,nil,CI`NilContextId),
+      pat_var2 = mk_AS`PatternName(fresh_var2,nil,CI`NilContextId),
+      ----- Make set bindings  -----------------
+      map_bdlst = [mk_AS`MultSetBind([pat_map1,pat_map2],expr,CI`NilContextId)],
+      dom_map1  = mk_AS`PrefixExpr(<MAPDOM>, fresh_map1, CI`NilContextId),
+      dom_map2  = mk_AS`PrefixExpr(<MAPDOM>, fresh_map2, CI`NilContextId),
+      bind1     = mk_AS`MultSetBind([pat_var1],dom_map1,CI`NilContextId),
+      bind2     = mk_AS`MultSetBind([pat_var2],dom_map2,CI`NilContextId),
+      bdlst     = [bind1,bind2],
+      ----- Build conclusion for PO ------------
+      var1Eqvar2 = mk_AS`BinaryExpr(fresh_var1, <EQ>, fresh_var2, CI`NilContextId),
+      map1       = mk_AS`ApplyExpr(fresh_map1, [fresh_var1], CI`NilContextId),
+      map2       = mk_AS`ApplyExpr(fresh_map2, [fresh_var2], CI`NilContextId),
+      map1Eqmap2 = mk_AS`BinaryExpr(map1, <EQ>, map2, CI`NilContextId),
+      pred       = mk_AS`BinaryExpr(var1Eqvar2, <IMPLY>, map1Eqmap2, CI`NilContextId),
+      po_cond    = mk_AS`AllOrExistsExpr(<ALL>,
+                                         map_bdlst,
+                                         mk_AS`AllOrExistsExpr(<ALL>, bdlst, pred, CI`NilContextId),
+                                         CI`NilContextId),
+      ------ Build PO ---------- ----------------
+      po_expr = BuildPO(contxt.expr,po_cond),
+      new_po  = MakeProofObligation(po_expr, po_cond, <MapSetOfCompatible>, contxt.loc, CI_AUX`GetCid(expr))
+  in [new_po];
+
+VerifySeqOfCompatibleMaps : seq of AS`Maplet * set of AS`Name * CI`ContextId * POGTP`Context
+                            -> seq of POGTP`ProofObligation
+VerifySeqOfCompatibleMaps(maplets,fv,cid,contxt) ==
+  if len maplets <= 1
+  then []
+  else
+    let lhss         = [maplets(i).mapdom | i in set inds maplets],
+        lhs_literals = {lhss(i) | i in set inds lhss & isASLiteral(lhss(i))}
+    in
+      if len lhss = card lhs_literals then
+         -------- left handsides are literals and occur at most once ------------
+           []
+      else
+        let ----- Get fresh variables --------------------
+            fresh_map1 = FRESH`GetName("m",fv),
+            fresh_map2 = FRESH`GetName("m",fv union {fresh_map1}),
+            fresh_var1 = FRESH`GetName("id",fv),
+            fresh_var2 = FRESH`GetName("id",fv union {fresh_var1}),
+            ----- Make patterns ---------------------------
+            pat_map1 = mk_AS`PatternName(fresh_map1,nil,CI`NilContextId),
+            pat_map2 = mk_AS`PatternName(fresh_map2,nil,CI`NilContextId),
+            pat_var1 = mk_AS`PatternName(fresh_var1,nil,CI`NilContextId),
+            pat_var2 = mk_AS`PatternName(fresh_var2,nil,CI`NilContextId),
+            ----- Make map enum from maplets ------------------
+            exprlst = [mk_AS`MapEnumerationExpr([maplets(i)],CI`NilContextId) | i in set inds maplets],
+            ----- Make set bindings  -----------------------
+            map_bdlst = [mk_AS`MultSetBind([pat_map1,pat_map2],
+                                           mk_AS`SetEnumerationExpr(exprlst, CI`NilContextId),
+                                           CI`NilContextId)],
+            dom_map1  = mk_AS`PrefixExpr(<MAPDOM>, fresh_map1, CI`NilContextId),
+            dom_map2  = mk_AS`PrefixExpr(<MAPDOM>, fresh_map2, CI`NilContextId),
+            bind1     = mk_AS`MultSetBind([pat_var1],dom_map1,CI`NilContextId),
+            bind2     = mk_AS`MultSetBind([pat_var2],dom_map2,CI`NilContextId),
+            bdlst     = [bind1,bind2],
+            ----- Build conclusion for PO -----------------
+            var1Eqvar2 = mk_AS`BinaryExpr(fresh_var1, <EQ>, fresh_var2, CI`NilContextId),
+            map1       = mk_AS`ApplyExpr(fresh_map1, [fresh_var1], CI`NilContextId),
+            map2       = mk_AS`ApplyExpr(fresh_map2, [fresh_var2], CI`NilContextId),
+            map1Eqmap2 = mk_AS`BinaryExpr(map1, <EQ>, map2, CI`NilContextId),
+            pred       = mk_AS`BinaryExpr(var1Eqvar2, <IMPLY>, map1Eqmap2, CI`NilContextId),
+            po_cond    = mk_AS`AllOrExistsExpr(<ALL>,
+                                               map_bdlst,
+                                               mk_AS`AllOrExistsExpr(<ALL>, bdlst, pred, CI`NilContextId),
+                                               CI`NilContextId),
+            ------ Build PO ---------- ----------------
+            po_expr = BuildPO(contxt.expr,po_cond),
+            new_po  = MakeProofObligation(po_expr, po_cond, <MapSeqOfCompatible>, contxt.loc, cid)
+        in [new_po];
+
+VerifyPrefixOperator : AS`PrefixExpr * set of AS`Name * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyPrefixOperator (mk_AS`PrefixExpr(op,expr,-),fv,contxt) ==
+  cases op :
+    <NUMPLUS>,
+    <NUMMINUS>,
+    <NUMABS>,
+    <FLOOR>,
+    <NOT>,
+    <SETCARD>,
+    <SETDISTRUNION>      -> [],
+    <SETDISTRINTERSECT>  -> VerifyNonEmptySet(expr,contxt),
+    <SETPOWER>,
+    <SEQLEN>,
+    <SEQDISTRCONC>,
+    <SEQELEMS>,
+    <SEQINDICES>         -> [],
+    <SEQTAIL>,
+    <SEQHEAD>            -> VerifyNonEmptySeq (expr,contxt),
+    <SEQREVERSE>         -> [],
+    <MAPDOM>,
+    <MAPRNG>,
+    <MAPINVERSE>         -> [],
+    <MAPDISTRMERGE>      -> VerifySetOfCompatibleMaps(expr,fv,contxt),
+    others -> undefined
+  end;
+
+VerifyMapInverseInvariant : AS`Expr * set of AS`Name * CI`ContextId * POGTP`Context
+                            -> seq of POGTP`ProofObligation
+VerifyMapInverseInvariant (expr,fv,cid,contxt) ==
+  let ----- Get fresh variables ----------------
+      fresh_var1 = FRESH`GetName("id",fv),
+      fresh_var2 = FRESH`GetName("id",fv union {fresh_var1}),
+      ----- Make patterns ----------------------
+      pat_var1 = mk_AS`PatternName(fresh_var1,nil,CI`NilContextId),
+      pat_var2 = mk_AS`PatternName(fresh_var2,nil,CI`NilContextId),
+      ----- Make set bindings  -----------------
+      map_bdlst = [mk_AS`MultSetBind([pat_var1,pat_var2],expr,CI`NilContextId)],
+      ----- Build conclusion for PO ------------
+      var1InEqvar2 = mk_AS`BinaryExpr(fresh_var1, <NE>, fresh_var2, CI`NilContextId),
+      map1         = mk_AS`ApplyExpr(expr, [fresh_var1], CI`NilContextId),
+      map2         = mk_AS`ApplyExpr(expr, [fresh_var2], CI`NilContextId),
+      map1InEqmap2 = mk_AS`BinaryExpr(map1, <NE>, map2, CI`NilContextId),
+      pred         = mk_AS`BinaryExpr(var1InEqvar2, <IMPLY>, map1InEqmap2, CI`NilContextId),
+      po_cond      = mk_AS`AllOrExistsExpr(<ALL>, map_bdlst, pred, CI`NilContextId),
+      ------ Build PO ---------- ----------------
+      po_expr = BuildPO(contxt.expr,po_cond),
+      new_po  = MakeProofObligation(po_expr, po_cond, <Invariants>, contxt.loc, cid)
+  in [new_po];
+
+VerifyNonZero : AS`Expr * CI`ContextId * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyNonZero(expr,cid,contxt) ==
+  let ----- Build conclusion for PO -------------
+      po_cond    = mk_AS`BinaryExpr(expr, <NE>, mk_AS`RealLit(0,CI`NilContextId), CI`NilContextId),
+      ------ simple check -----------------------
+      poCheck =  SimpleNonZeroCheck(expr,cid,contxt),
+      ------ Build PO ---------- ----------------
+      po = if poCheck
+           then []
+           else
+             let po_expr = BuildPO(contxt.expr,po_cond),
+                 new_po  = MakeProofObligation(po_expr, po_cond, <NonZero>, contxt.loc, cid)
+             in [new_po]
+  in po;
+
+VerifyIteration : AS`Expr * AS`Expr * set of AS`Name * CI`ContextId * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyIteration (lhs,rhs,fv,cid,contxt) ==
+  def tp = CHECK`GetTypeAbbrev(<NumMapFunc>,lhs);
+      lhs_tp = CI_AUX`GetTypeInfo(lhs)
+  in
+    cases tp:
+      <Num>    -> [],
+      <Map>    -> VerifyMapIteration(lhs,rhs,cid,contxt),
+      <NumMap> ->
+          let ------- Build context ---------------------------
+              tp_map     = CHECK`GetOverlap(lhs_tp,<Map>),
+              map_judgm   = mk_AS`TypeJudgementExpr(lhs, tp_map, CI`NilContextId),
+              map_contxt  = POGTP`Add2Context(map_judgm,contxt),
+              ------- PO generation ----------------------------
+              pog_map  = VerifyMapIteration(lhs,rhs,cid,map_contxt),
+              --------------------------------------------------
+              new_po   = pog_map
+          in
+              new_po,
+      <Func>   ->
+          let tp_func  = CHECK`GetFuncOverlap(lhs_tp,1),
+              ------- PO generation ----------------------------
+              pog_func = VerifyFunctionIteration(lhs,rhs,tp_func,fv,cid,contxt),
+              --------------------------------------------------
+              new_po   = pog_func
+          in
+              new_po,
+      <NumFunc> ->
+          let ------- Build context ---------------------------
+              tp_func    = CHECK`GetFuncOverlap(lhs_tp,1),
+              func_judgm  = mk_AS`TypeJudgementExpr(lhs, tp_func, CI`NilContextId),
+              func_contxt = POGTP`Add2Context(func_judgm,contxt),
+              ------- PO generation ----------------------------
+              pog_func = VerifyFunctionIteration(lhs,rhs,tp_func,fv,cid,func_contxt),
+              --------------------------------------------------
+              new_po   = pog_func
+          in
+              new_po,
+      <MapFunc>,
+      <NumMapFunc> ->
+          let ------- Build context ---------------------------
+              tp_map     = CHECK`GetOverlap(lhs_tp,<Map>),
+              tp_func    = CHECK`GetFuncOverlap(lhs_tp,1),
+              map_judgm   = mk_AS`TypeJudgementExpr(lhs, tp_map, CI`NilContextId),
+              func_judgm  = mk_AS`TypeJudgementExpr(lhs, tp_func, CI`NilContextId),
+              map_contxt  = POGTP`Add2Context(map_judgm,contxt),
+              func_contxt = POGTP`Add2Context(func_judgm,contxt),
+              ------- PO generation ----------------------------
+              pog_map  = VerifyMapIteration(lhs,rhs,cid,map_contxt),
+              pog_func = VerifyFunctionIteration(lhs,rhs,tp_func,fv,cid,func_contxt),
+              --------------------------------------------------
+              new_po   = pog_map^pog_func
+          in
+              new_po,
+      others -> undefined
+    end;
+
+VerifyMapIteration : AS`Expr * AS`Expr * CI`ContextId * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyMapIteration (lhs,rhs,cid,contxt) ==
+  let ----- Build conclusion for PO -------------
+      eq_zero     = mk_AS`BinaryExpr(rhs, <EQ>, mk_AS`RealLit(0,CI`NilContextId), CI`NilContextId),
+      eq_one      = mk_AS`BinaryExpr(rhs, <EQ>, mk_AS`RealLit(1,CI`NilContextId), CI`NilContextId),
+      rng_sub_dom = mk_AS`BinaryExpr(mk_AS`PrefixExpr(<MAPRNG>, lhs, CI`NilContextId),
+                                     <SUBSET>,
+                                     mk_AS`PrefixExpr(<MAPDOM>, lhs, CI`NilContextId),
+                                     CI`NilContextId),
+      po_cond     = mk_AS`BinaryExpr(eq_zero,
+                                     <OR>,
+                                     mk_AS`BinaryExpr(eq_one, <OR>, rng_sub_dom, CI`NilContextId),
+                                     CI`NilContextId),
+      ------ Build PO ---------------------------
+      po_expr = BuildPO(contxt.expr,po_cond),
+      new_po  = MakeProofObligation(po_expr, po_cond, <MapIteration>, contxt.loc, cid)
+  in [new_po];
+
+VerifyFunctionIteration : AS`Expr
+                        * AS`Expr
+                        * AS`Type
+                        * set of AS`Name
+                        * CI`ContextId
+                        * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyFunctionIteration(lhs,rhs,tp,fv,cid,contxt) ==
+  if is_AS`UnionType(tp) then
+     let mk_AS`UnionType(etps,-) = tp,
+         po = [let ------- Build context -------------------------
+                   func_judgm = mk_AS`TypeJudgementExpr(lhs, etps(i), CI`NilContextId),
+                    func_contxt = POGTP`Add2Context(func_judgm,contxt)
+                in
+                    VerifyFunctionIteration(lhs,rhs,etps(i),fv,cid,func_contxt)
+                   | i in set inds etps]
+      in
+          conc po
+  else
+    let gt_one_judgm = mk_AS`BinaryExpr(rhs, <NUMGT>, mk_AS`RealLit(1,CI`NilContextId), CI`NilContextId),
+        gt_one_contxt = POGTP`Add2Context(gt_one_judgm,contxt)
+    in
+        VerifyFunctionComposition
+          (lhs,lhs,tp,fv,<FuncIteration>,cid,gt_one_contxt)
+pre (is_AS`TotalFnType(tp) or
+     is_AS`PartialFnType(tp) or
+     (is_AS`UnionType(tp) and
+      let mk_AS`UnionType(elemtps,-) = tp
+      in
+          forall etp in set elems elemtps &
+           (is_AS`TotalFnType(etp) or
+            is_AS`PartialFnType(etp))));
+
+
+VerifyComposition : AS`Expr * AS`Expr * set of AS`Name * CI`ContextId * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyComposition(lhs,rhs,fv,cid,contxt) ==
+  def tp1 = CHECK`GetTypeAbbrevArg(<MapFunc>,lhs,1);
+      tp2 = CHECK`GetTypeAbbrev(<MapFunc>,rhs);
+      lhs_tp = CI_AUX`GetTypeInfo(lhs);
+      rhs_tp = CI_AUX`GetTypeInfo(rhs)
+  in
+    cases mk_(tp1,tp2):
+      mk_(<Map>,<Map>)   ->
+           VerifyMapComposition(lhs,rhs,cid,contxt),
+      mk_(<Func>,<Func>) ->
+           let tp_func2 = CHECK`GetOverlap(rhs_tp,<Func>)
+           in
+             VerifyFunctionComposition(lhs,rhs,tp_func2,fv,<FuncComp>,cid,contxt),
+      mk_(<MapFunc>,<MapFunc>) ->
+          let ------- Build context ---------------------------
+              tp_map1      = CHECK`GetOverlap(lhs_tp,<Map>),
+              tp_map2      = CHECK`GetOverlap(rhs_tp,<Map>),
+              tp_func1     = CHECK`GetOverlap(lhs_tp,<Func>),
+              tp_func2     = CHECK`GetOverlap(rhs_tp,<Func>),
+              map_judgm1   = mk_AS`TypeJudgementExpr(lhs, tp_map1, CI`NilContextId),
+              map_judgm2   = mk_AS`TypeJudgementExpr(rhs, tp_map2, CI`NilContextId),
+              func_judgm1  = mk_AS`TypeJudgementExpr(lhs, tp_func1, CI`NilContextId),
+              func_judgm2  = mk_AS`TypeJudgementExpr(rhs, tp_func2, CI`NilContextId),
+              map_contxt1  = POGTP`Add2Context(map_judgm1,contxt),
+              map_contxt2  = POGTP`Add2Context(map_judgm2,map_contxt1),
+              func_contxt1 = POGTP`Add2Context(func_judgm1,contxt),
+              func_contxt2 = POGTP`Add2Context(func_judgm2,func_contxt1),
+              ------- PO generation ----------------------------
+              pog_map  = VerifyMapComposition(lhs,rhs,cid,map_contxt2),
+              pog_func = VerifyFunctionComposition(lhs,rhs,tp_func2,fv,<FuncComp>,cid,func_contxt2),
+              --------------------------------------------------
+              new_po   = pog_map^pog_func
+          in
+              new_po,
+      mk_(<Map>,<MapFunc>) ->
+            let ------- Build context ---------------------------
+                tp_map2      = CHECK`GetOverlap(rhs_tp,<Map>),
+                map_judgm2   = mk_AS`TypeJudgementExpr(rhs, tp_map2, CI`NilContextId),
+                map_contxt2  = POGTP`Add2Context(map_judgm2,contxt),
+                ------- PO generation ----------------------------
+                pog_map  = VerifyMapComposition(lhs,rhs,cid,map_contxt2),
+                --------------------------------------------------
+                new_po   = pog_map
+            in
+                new_po,
+      mk_(<Func>,<MapFunc>) ->
+            let ------- Build context ---------------------------
+                tp_func2     = CHECK`GetOverlap(rhs_tp,<Func>),
+                func_judgm2  = mk_AS`TypeJudgementExpr(rhs, tp_func2, CI`NilContextId),
+                func_contxt2 = POGTP`Add2Context(func_judgm2,contxt),
+                ------- PO generation ----------------------------
+                pog_func = VerifyFunctionComposition(lhs,rhs,tp_func2,fv,<FuncComp>,cid,func_contxt2),
+                --------------------------------------------------
+                new_po   = pog_func
+            in
+                new_po,
+      mk_(<MapFunc>,<Map>) ->
+            let ------- Build context ---------------------------
+                tp_map1      = CHECK`GetOverlap(lhs_tp,<Map>),
+                map_judgm1   = mk_AS`TypeJudgementExpr(lhs, tp_map1, CI`NilContextId),
+                map_contxt1  = POGTP`Add2Context(map_judgm1,contxt),
+                ------- PO generation ----------------------------
+                pog_map  = VerifyMapComposition(lhs,rhs,cid,map_contxt1),
+                --------------------------------------------------
+                new_po   = pog_map
+            in
+                new_po,
+      mk_(<MapFunc>,<Func>) ->
+            let ------- Build context ---------------------------
+                tp_func1     = CHECK`GetOverlap(lhs_tp,<Func>),
+                tp_func2     = CHECK`GetOverlap(rhs_tp,<Func>),
+                func_judgm1  = mk_AS`TypeJudgementExpr(lhs, tp_func1, CI`NilContextId),
+                func_contxt1 = POGTP`Add2Context(func_judgm1,contxt),
+                ------- PO generation ----------------------------
+                pog_func = VerifyFunctionComposition(lhs,rhs,tp_func2,fv,<FuncComp>,cid,func_contxt1),
+                --------------------------------------------------
+                new_po   = pog_func
+            in
+                new_po,
+      others -> undefined
+    end;
+
+VerifyMapComposition : AS`Expr * AS`Expr * CI`ContextId * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyMapComposition(lhs,rhs,cid,contxt) ==
+  let ----- Build conclusion for PO -------------
+      po_cond =  mk_AS`BinaryExpr(mk_AS`PrefixExpr(<MAPRNG>, rhs, CI`NilContextId),
+                                  <SUBSET>,
+                                  mk_AS`PrefixExpr(<MAPDOM>, lhs, CI`NilContextId),
+                                  CI`NilContextId),
+      ------ Build PO ---------------------------
+      po_expr = BuildPO(contxt.expr,po_cond),
+      new_po  = MakeProofObligation(po_expr, po_cond, <MapComposition>, contxt.loc, cid)
+  in [new_po];
+
+VerifyFunctionComposition : AS`Expr
+                          * AS`Expr
+                          * AS`Type
+                          * set of AS`Name
+                          * POGTP`Classification
+                          * CI`ContextId
+                          * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyFunctionComposition(f1,f2,tp,fv,classi,cid,contxt) ==
+  if is_AS`UnionType(tp)
+  then
+     let mk_AS`UnionType(etps,-) = tp,
+         po = [let ------- Build context -------------------------
+                   func_judgm = mk_AS`TypeJudgementExpr(f2, etps(i), CI`NilContextId),
+                    func_contxt = POGTP`Add2Context(func_judgm,contxt)
+                in
+                    VerifyFunctionComposition
+                      (f1,f2,etps(i),fv,<FuncComp>,cid,func_contxt)
+                   | i in set inds etps]
+      in
+          conc po
+  else
+    def ----- Build argument binding --------------------
+        arg_lst   = FRESH`GetNameList("xx",len tp.fndom,fv);
+        pat_lst   = [mk_AS`PatternName(arg_lst(i), nil, CI`NilContextId) | i in set inds arg_lst];
+        fresh_bds = [mk_AS`MultTypeBind([pat_lst(i)], tp.fndom(i), CI`NilContextId) | i in set inds tp.fndom];
+        ----- Build conclusion for PO -------------
+        f2'  =  CI_AUX`GetMangledFnOpName(f2,arg_lst);
+        app_pre_f2 = cases f2:
+                       mk_AS`Name(-,-),
+                       mk_AS`FctTypeInstExpr(-,-,-) ->
+                         cases CON_ENV`HasPreCondition(f2',tp,contxt):
+                           <NO>    -> nil,
+                           <MAYBE> -> mk_AS`PreConditionApplyExpr(f2, arg_lst, CI`NilContextId),
+                           fndef   -> ApplyPreCondition(f2',fndef,arg_lst)
+                         end,
+                       mk_AS`LambdaExpr(-,-,-,-) -> nil,
+                       others -> mk_AS`PreConditionApplyExpr(f2, arg_lst, CI`NilContextId)
+                     end;
+        arg_app_f2 = mk_AS`ApplyExpr(f2, arg_lst, CI`NilContextId);
+        f1'  =  CI_AUX`GetMangledFnOpName(f1,[arg_app_f2]);
+        app_pre_f1 = cases f1:
+                       mk_AS`Name(-,-),
+                       mk_AS`FctTypeInstExpr(-,-,-) ->
+                         cases CON_ENV`HasPreCondition(f1',tp,contxt):
+                           <NO>    -> nil,
+                           <MAYBE> -> mk_AS`PreConditionApplyExpr(f1, [arg_app_f2], CI`NilContextId),
+                           fndef   -> ApplyPreCondition(f1',fndef,[arg_app_f2])
+                         end,
+                       mk_AS`LambdaExpr(-,-,-,-) -> nil,
+                       others -> mk_AS`PreConditionApplyExpr(f1, [arg_app_f2], CI`NilContextId)
+                     end;
+        pred       = if app_pre_f1 = nil
+                     then nil
+                     elseif app_pre_f2 = nil
+                     then app_pre_f1
+                     else mk_AS`BinaryExpr(app_pre_f2, <IMPLY>, app_pre_f1, CI`NilContextId);
+        po_cond    = if pred = nil
+                     then nil
+                     else mk_AS`AllOrExistsExpr(<ALL>, fresh_bds, pred, CI`NilContextId);
+        ------ Build PO ---------------------------
+        po_expr = if po_cond = nil then
+                    nil
+                  else
+                    BuildPO(contxt.expr,po_cond);
+        po  = if po_expr = nil then
+                []
+              else
+                let new_po  = MakeProofObligation(po_expr, po_cond, classi, contxt.loc, cid),
+                    sources =  (if app_pre_f1 <> nil and is_AS`Name(f1)
+                                then [f1]
+                                else [])
+                              ^(if app_pre_f2 <> nil and is_AS`Name(f2)
+                                then [f2]
+                                else []),
+                    new_po2 = POGTP`UpdateSource(new_po,sources)
+                in
+                    [new_po2]
+    in
+       po
+pre
+    (is_AS`TotalFnType(tp) or
+     is_AS`PartialFnType(tp) or
+     (is_AS`UnionType(tp) and
+      let mk_AS`UnionType(elemtps,-) = tp
+      in
+          forall etp in set elems elemtps &
+           (is_AS`TotalFnType(etp) or
+            is_AS`PartialFnType(etp))));
+
+VerifyBinaryOperator : AS`BinaryExpr * set of AS`Name * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyBinaryOperator (mk_AS`BinaryExpr(lhs,op,rhs,cid),fv,contxt) ==
+    cases op :
+      <NUMDIV>,
+      <NUMMOD>,
+      <INTDIV>       -> VerifyNonZero(rhs,cid,contxt),
+      <NUMEXP>       -> VerifyIteration(lhs,rhs,fv,cid,contxt),
+      <MAPMERGE>     -> VerifyCompatibleMaps(lhs,rhs,fv,cid,contxt),
+      <COMPOSE>      -> VerifyComposition(lhs,rhs,fv,cid,contxt),
+      -----------------------------------------------------------
+      <NUMPLUS>,
+      <NUMMINUS>,
+      <NUMMULT>,
+      <NUMREM>,
+      <NUMLT>,
+      <NUMLE>,
+      <NUMGT>,
+      <NUMGE>,
+      <AND>,
+      <OR>,
+      <IMPLY>,
+      <EQUIV>,
+      <EQ>,
+      <NE>,
+      <SETUNION>,
+      <SETINTERSECT>,
+      <SETMINUS>,
+      <SUBSET>,
+      <PROPERSUBSET>,
+      <INSET>,
+      <NOTINSET>,
+      <SEQCONC>,
+      <MAPDOMRESTTO>,
+      <MAPDOMRESTBY>,
+      <MAPRNGRESTTO>,
+      <MAPRNGRESTBY> -> [],
+      others -> undefined
+    end;
+
+#ifdef VDMPP
+VerifyCall : AS`CallStmt * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyCall(mk_AS`CallStmt(obj,fct,arg,cid),contxt) ==
+  def fct_tp  = CI_AUX`GetTypeInfo(fct);
+      tp_func = CHECK`GetFuncOverlap(fct_tp,len arg);
+      app_fct = if obj = nil
+                then fct
+                else mk_AS`FieldSelectExpr(obj,fct,cid)
+  in VerifyFuncApplication(app_fct,arg,tp_func,cid,contxt);
+#endif //VDMPP
+
+#ifdef VDMSL
+VerifyCall : AS`CallStmt * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyCall(mk_AS`CallStmt(-,fct,arg,cid),contxt) ==
+  def fct_tp  = CI_AUX`GetTypeInfo(fct);
+      tp_func = CHECK`GetFuncOverlap(fct_tp,len arg)
+  in VerifyFuncApplication(fct,arg,tp_func,cid,contxt);
+#endif //VDMSL
+
+-- START AUGUSTO --
+VerifyRecApplication : AS`Expr * seq of AS`Expr * CI`ContextId * POGTP`Context
+                       -> seq of POGTP`ProofObligation
+VerifyRecApplication(fct,arg,cid,contxt) ==
+  if is_AS`BracketedExpr(fct)
+  then VerifyRecApplication(fct.expr,arg,cid,contxt)
+  else
+    def tp = CHECK`GetTypeAbbrevArg(<SeqMapFuncOper>,fct,len arg);
+    in
+      cases tp :
+        <Func> ->  VerifyRecFunApplication(fct,arg,cid,contxt),
+        others -> []
+      end;
+
+VerifyAppRecursivity : AS`Name * AS`Name * map AS`Name to ENV`FunctionInfo -> bool
+VerifyAppRecursivity(fnm,appname,recmap) ==
+  fnm in set dom recmap and appname in set recmap(fnm).rec;
+
+Patterns2Exprs : seq of AS`Pattern -> seq of AS`Expr
+Patterns2Exprs(pat)==
+  [ cases pat(i):
+      mk_AS`PatternName(nm,-,-) -> if nm <> nil
+                                   then CAST`Pattern2Expr(pat(i))
+                                   else mk_AS`Name(["not def"], CI`NilContextId),
+      others                    -> CAST`Pattern2Expr(pat(i))
+    end | i in set inds pat ];
+
+GenerateTPO : AS`Name * AS`Name * AS`Name * seq of AS`Expr *  CI`ContextId * POGTP`Context -> [AS`Expr]
+GenerateTPO(-,m1,m2,arg,cid,ctxt) ==
+  def paramete = ExtractParamsCtxt(ctxt.expr); -- TODO: PATCH -- ATTENTION curried functions
+      arg_meas = conc [ Patterns2Exprs(paramete(i).pat) | i in set inds paramete ];
+      app_meas = mk_AS`ApplyExpr(m1, arg_meas, CI`NilContextId);
+      app_meas2 = if m1 = m2
+                  then mk_AS`ApplyExpr(m1,arg,cid)
+                  else mk_AS`ApplyExpr(m2,arg,cid);
+      tpm1 = ENV`LookUp(m1,false);
+      mk_(-,m1rng) = DEF`extractDomRng(tpm1);
+  in
+    cases m1rng:
+      mk_REP`ProductTypeRep(t) ->
+                mk_AS`BinaryExpr( app_meas, mk_(<LEXORD>,len t), app_meas2, CI`NilContextId),
+      others -> mk_AS`BinaryExpr( app_meas, <NUMGT>, app_meas2, CI`NilContextId)
+    end;
+
+VerifyRecFunApplication : AS`Expr * seq of AS`Expr * CI`ContextId *  POGTP`Context
+                          -> seq of POGTP`ProofObligation
+VerifyRecFunApplication(fct,arg,cid,contxt) ==
+  cases fct:
+    mk_AS`LambdaExpr(-,-,-,-) -> [],
+    mk_AS`Name(ids,-),
+    mk_AS`FctTypeInstExpr(mk_AS`Name(ids,-),-,-) ->
+       let ----- Build conclusion for PO -------------
+           --localfunc = contxt.loc.name,
+           recmap = contxt.recmap,
+           fname = mk_AS`Name(contxt.loc.modName.ids ^ contxt.loc.name.ids, CI`NilContextId),
+           --fname' = mk_AS`Name(fname.ids,0),
+           appname = if len ids = 1
+                     then mk_AS`Name(contxt.loc.modName.ids ^ ids, CI`NilContextId)
+                     else mk_AS`Name(ids, CI`NilContextId),
+           --makePO = VerifyAppRecursivity(fname',appname,recmap)
+           makePO = VerifyAppRecursivity(fname,appname,recmap)
+       in
+         if makePO = false
+         then []
+         --elseif (recmap(fname').printPO = false)
+         elseif (recmap(fname).printPO = false)
+         then []
+         else
+           --let po_cond = GenerateTPO(fname',recmap(fname').meas,recmap(appname).meas,arg,cid,contxt)
+           let po_cond = GenerateTPO(fname,recmap(fname).meas,recmap(appname).meas,arg,cid,contxt)
+           in
+             if po_cond = nil
+             then []
+             else
+               let ------ simple check -----------------------
+--                 poCheck = SimpleFuncApplicationCheck(fct,hd arg,po_cond,cid,contxt),
+                   --poCheck = SimpleFuncApplicationCheck(fct,fct,po_cond,cid,contxt),
+                   poCheck = FindConditionInContext(po_cond, nil, contxt.expr),
+                   ------ Build PO --------------------------
+                   po = if poCheck then
+                          []
+                        else
+                          let po_expr = BuildPO(contxt.expr,po_cond),
+                              new_po  = MakeProofObligation(po_expr,
+                                                            po_cond,
+                                                            <RecursiveFunction>,
+                                                            contxt.loc,
+                                                            cid),
+                              new_po2 = if is_AS`Name(fct)
+                                        then POGTP`UpdateSource(new_po,[fct])
+                                        else new_po
+                          in [new_po2]
+               in po,
+    others -> []
+  end;
+
+
+
+-- END AUGUSTO --
+VerifyApplication : AS`Expr * seq of AS`Expr * CI`ContextId * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyApplication(fct,arg,cid,contxt) ==
+if is_AS`BracketedExpr(fct) then
+   VerifyApplication(fct.expr,arg,cid,contxt)
+else
+  def tp = CHECK`GetTypeAbbrevArg(<SeqMapFuncOper>,fct,len arg);
+      fct_tp = CI_AUX`GetTypeInfo(fct)
+  in
+      cases tp:
+        <Other> -> [],
+        <Map> -> VerifyMapApplication(fct,arg,cid,contxt),
+        <Seq> -> VerifySeqApplication(fct,arg,cid,contxt),
+        <Func> -> let tp_func = CHECK`GetFuncOverlap(fct_tp,len arg)
+                  in
+                    VerifyFuncApplication(fct,arg,tp_func,cid,contxt),
+        <SeqMap> ->
+          let ------- Build context ---------------------------
+              tp_seq    = CHECK`GetOverlap(fct_tp,<Seq>),
+              tp_map    = CHECK`GetOverlap(fct_tp,<Map>),
+              seq_judgm = mk_AS`TypeJudgementExpr(fct, tp_seq, CI`NilContextId),
+              map_judgm = mk_AS`TypeJudgementExpr(fct, tp_map, CI`NilContextId),
+              seq_contxt = POGTP`Add2Context(seq_judgm,contxt),
+              map_contxt = POGTP`Add2Context(map_judgm,contxt),
+              ------- PO generation ----------------------------
+              pog_seq = VerifySeqApplication(fct,arg,cid,seq_contxt),
+              pog_map = VerifyMapApplication(fct,arg,cid,map_contxt),
+              --------------------------------------------------
+              new_po  = pog_seq^pog_map
+          in
+              new_po,
+        <SeqFunc> ->
+          let ------- Build context ---------------------------
+              tp_seq    = CHECK`GetOverlap(fct_tp,<Seq>),
+              tp_func   = CHECK`GetFuncOverlap(fct_tp,len arg),
+              seq_judgm   = mk_AS`TypeJudgementExpr(fct, tp_seq, CI`NilContextId),
+              func_judgm  = mk_AS`TypeJudgementExpr(fct, tp_func, CI`NilContextId),
+              seq_contxt  = POGTP`Add2Context(seq_judgm,contxt),
+              func_contxt = POGTP`Add2Context(func_judgm,contxt),
+              ------- PO generation ----------------------------
+              pog_seq  = VerifySeqApplication(fct,arg,cid,seq_contxt),
+              pog_func = VerifyFuncApplication(fct,arg,tp_func,cid,func_contxt),
+              --------------------------------------------------
+              new_po   = pog_seq^pog_func
+          in
+              new_po,
+        <MapFunc> ->
+          let ------- Build context ---------------------------
+              tp_map    = CHECK`GetOverlap(fct_tp,<Map>),
+              tp_func   = CHECK`GetFuncOverlap(fct_tp,len arg),
+              map_judgm   = mk_AS`TypeJudgementExpr(fct, tp_map, CI`NilContextId),
+              func_judgm  = mk_AS`TypeJudgementExpr(fct, tp_func, CI`NilContextId),
+              map_contxt  = POGTP`Add2Context(map_judgm,contxt),
+              func_contxt = POGTP`Add2Context(func_judgm,contxt),
+              ------- PO generation ----------------------------
+              pog_map  = VerifyMapApplication(fct,arg,cid,map_contxt),
+              pog_func = VerifyFuncApplication(fct,arg,tp_func,cid,func_contxt),
+              --------------------------------------------------
+              new_po   = pog_map^pog_func
+          in
+              new_po,
+        <SeqMapFunc> ->
+          let ------- Build context ---------------------------
+              tp_seq    = CHECK`GetOverlap(fct_tp,<Seq>),
+              tp_map    = CHECK`GetOverlap(fct_tp,<Map>),
+              tp_func   = CHECK`GetFuncOverlap(fct_tp,len arg),
+              seq_judgm   = mk_AS`TypeJudgementExpr(fct, tp_seq, CI`NilContextId),
+              map_judgm   = mk_AS`TypeJudgementExpr(fct, tp_map, CI`NilContextId),
+              func_judgm  = mk_AS`TypeJudgementExpr(fct, tp_func, CI`NilContextId),
+              seq_contxt  = POGTP`Add2Context(seq_judgm,contxt),
+              map_contxt  = POGTP`Add2Context(map_judgm,contxt),
+              func_contxt = POGTP`Add2Context(func_judgm,contxt),
+              ------- PO generation ----------------------------
+              pog_seq  = VerifySeqApplication(fct,arg,cid,seq_contxt),
+              pog_map  = VerifyMapApplication(fct,arg,cid,map_contxt),
+              pog_func = VerifyFuncApplication(fct,arg,tp_func,cid,func_contxt),
+              --------------------------------------------------
+              new_po   = pog_seq^pog_map^pog_func
+          in
+              new_po,
+        others ->
+          undefined
+      end;
+
+
+VerifySeqApplication : AS`Expr * seq of AS`Expr * CI`ContextId * POGTP`Context -> seq of POGTP`ProofObligation
+VerifySeqApplication(fct,arg,cid,contxt) ==
+  let ----- Build conclusion for PO -------------
+      arg_expr   = hd arg,
+      cond_arg   = if is_AS`BinaryExpr(arg_expr) or is_AS`PrefixExpr(arg_expr)  then
+                      --mk_AS`BracketedExpr(arg_expr,arg_expr.cid)
+                      mk_AS`BracketedExpr(arg_expr,CI_AUX`GetCid(arg_expr))
+                   else
+                      arg_expr,
+      po_cond    =  mk_AS`BinaryExpr(cond_arg,
+                                     <INSET>,
+                                     mk_AS`PrefixExpr(<SEQINDICES>, fct, CI`NilContextId),
+                                     CI`NilContextId),
+      po_cond2   =  mk_AS`BinaryExpr(arg_expr,
+                                     <INSET>,
+                                     mk_AS`PrefixExpr(<SEQINDICES>, fct, CI`NilContextId),
+                                     CI`NilContextId),
+      ------ simple check -----------------------
+      poCheck =  SimpleSequenceApplicationCheck(fct,hd arg,po_cond,po_cond2,cid,contxt),
+      ------ Build PO ---------- ----------------
+      po = if poCheck then
+             []
+            else
+              let po_expr = BuildPO(contxt.expr,po_cond),
+                  new_po  = MakeProofObligation(po_expr, po_cond, <SeqApplication>, contxt.loc, cid)
+              in
+                 [new_po]
+  in
+     po
+pre len arg = 1;
+
+VerifyMapApplication : AS`Expr * seq of AS`Expr * CI`ContextId * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyMapApplication(fct,arg,cid,contxt) ==
+  let ----- Build conclusion for PO ------------
+      arg_expr   = hd arg,
+      cond_arg   = if is_AS`BinaryExpr(arg_expr) or is_AS`PrefixExpr(arg_expr)  then
+                      --mk_AS`BracketedExpr(arg_expr,arg_expr.cid)
+                      mk_AS`BracketedExpr(arg_expr,CI_AUX`GetCid(arg_expr))
+                   else
+                      arg_expr,
+      po_cond    =  mk_AS`BinaryExpr(cond_arg,
+                                     <INSET>,
+                                     mk_AS`PrefixExpr(<MAPDOM>, fct, CI`NilContextId),
+                                     CI`NilContextId),
+      ------ simple check -----------------------
+      poCheck = SimpleMapApplicationCheck(fct,hd arg,po_cond,cid,contxt),
+      ------ Build PO --------------------------
+      po = if poCheck then
+             []
+            else
+              let po_expr = BuildPO(contxt.expr,po_cond),
+                  new_po  = MakeProofObligation(po_expr, po_cond, <MapApplication>, contxt.loc, cid)
+              in
+                 [new_po]
+  in
+     po
+pre len arg = 1;
+
+VerifyFieldSelectExprApplication : AS`FieldSelectExpr
+                                 * AS`Type
+                                 * seq of AS`Expr
+                                 * AS`Type
+                                 * CI`ContextId
+                                 * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyFieldSelectExprApplication(fct,rec_tp,arg,tp,cid,contxt) ==
+  if is_AS`UnionType(rec_tp)
+  then
+    let mk_AS`UnionType(etps,-) = rec_tp,
+        po = [let ------- Build context -------------------------
+                  func_judgm = mk_AS`TypeJudgementExpr(fct, etps(i), CI`NilContextId),
+                  func_contxt = POGTP`Add2Context(func_judgm,contxt)
+              in
+                VerifyFieldSelectExprApplication(fct,etps(i),arg,tp,cid,func_contxt)
+                | i in set inds etps]
+    in conc po
+  else
+    let po_cond = cases rec_tp:
+                    mk_AS`TypeName(name,-)     ->
+                      cases CON_ENV`FieldSelectExprHasPreCondition(fct.nm,name,tp,contxt,name):
+                        <NO>    -> nil,
+                        <MAYBE> -> mk_AS`PreConditionApplyExpr(fct, arg, CI`NilContextId),
+                        fndef   -> ApplyFieldSelectPreCondition(fct,fndef,arg)
+                       end,
+                    mk_AS`CompositeType(-,-,-) -> mk_AS`PreConditionApplyExpr(fct, arg, CI`NilContextId)
+                  end
+    in
+      if po_cond = nil
+      then []
+      else
+        let ------ simple check -----------------------
+--          poCheck = SimpleFuncApplicationCheck(fct,hd arg,po_cond,cid,contxt),
+            --poCheck = SimpleFuncApplicationCheck(fct,fct,po_cond,cid,contxt),
+            poCheck = FindConditionInContext(po_cond, nil, contxt.expr),
+            ------ Build PO --------------------------
+            po = if poCheck
+            then []
+            else
+              let po_expr = BuildPO(contxt.expr,po_cond),
+                  new_po  = MakeProofObligation(po_expr, po_cond, <FunctionApplication>, contxt.loc, cid),
+                  new_po2 = if is_AS`Name(fct.nm)
+                            then POGTP`UpdateSource(new_po,[fct.nm])
+                            else new_po
+              in [new_po2]
+        in po;
+
+VerifyFuncApplication : AS`Expr * seq of AS`Expr * AS`Type * CI`ContextId * POGTP`Context
+                        -> seq of POGTP`ProofObligation
+VerifyFuncApplication(fct,arg,tp,cid,contxt) ==
+  if is_AS`LambdaExpr(fct)
+  then []
+  elseif is_AS`FieldSelectExpr(fct)
+  then
+    def rec_tp_rep     = CI_AUX`GetTypeInfo(fct.rec);
+        rec_compose_tp = CHECK`GetComposeOverlap(fct.nm,rec_tp_rep)
+    in VerifyFieldSelectExprApplication(fct,rec_compose_tp,arg,tp,cid,contxt)
+  elseif is_AS`UnionType(tp)
+  then
+    let mk_AS`UnionType(etps,-) = tp,
+        po = [let ------- Build context -------------------------
+                  func_judgm = mk_AS`TypeJudgementExpr(fct, etps(i), CI`NilContextId),
+                   func_contxt = POGTP`Add2Context(func_judgm,contxt)
+               in
+                   VerifyFuncApplication(fct,arg,etps(i),cid,func_contxt)
+                  | i in set inds etps]
+    in conc po
+  else
+    let --mnm  =  CI_AUX`GetMangledFnOpName(fct,arg),
+        ----- Build conclusion for PO -------------
+        po_cond = cases fct:
+                    mk_AS`Name(-,-),
+                    mk_AS`FctTypeInstExpr(-,-,-) ->
+                      cases CON_ENV`HasPreCondition(fct,tp,contxt):
+                        <NO>    -> nil,
+                        <MAYBE> -> mk_AS`PreConditionApplyExpr(fct, arg, CI`NilContextId),
+                        fndef   -> ApplyPreCondition(fct,fndef,arg)
+                      end,
+                    mk_AS`LambdaExpr(-,-,-,-) -> nil,
+                    others -> mk_AS`PreConditionApplyExpr(fct, arg, CI`NilContextId)
+                  end
+
+    in
+      if po_cond = nil
+      then []
+      else
+        let ------ simple check -----------------------
+--          poCheck = SimpleFuncApplicationCheck(fct,hd arg,po_cond,cid,contxt),
+            --poCheck = SimpleFuncApplicationCheck(fct,fct,po_cond,cid,contxt),
+            poCheck = FindConditionInContext(po_cond, nil, contxt.expr),
+            ------ Build PO --------------------------
+            po = if poCheck
+                 then []
+                 else
+                   let po_expr = BuildPO(contxt.expr,po_cond),
+                       new_po  = MakeProofObligation(po_expr, po_cond, <FunctionApplication>,
+                                                     contxt.loc, cid),
+                       new_po2 = if is_AS`Name(fct)
+                                 then POGTP`UpdateSource(new_po,[fct])
+                                 else new_po
+                   in [new_po2]
+        in po
+pre (is_AS`TotalFnType(tp) or is_AS`PartialFnType(tp) or is_AS`OpType(tp) or
+     (is_AS`UnionType(tp) and
+      let mk_AS`UnionType(elemtps,-) = tp
+      in forall etp in set elems elemtps &
+           (is_AS`TotalFnType(etp) or is_AS`PartialFnType(etp) or is_AS`OpType(etp))));
+
+VerifyNonZeroNatOneInvariant : AS`Expr * CI`ContextId * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyNonZeroNatOneInvariant (expr,cid,contxt) ==
+  let ----- Build conclusion for PO -------------
+      po_cond    = mk_AS`BinaryExpr(expr, <NE>, mk_AS`RealLit(0,CI`NilContextId), CI`NilContextId),
+      ------ Build PO ---------- ----------------
+      po_expr = BuildPO(contxt.expr,po_cond),
+      new_po  = MakeProofObligation(po_expr, po_cond, <Invariants>, contxt.loc, cid)
+  in [new_po];
+
+
+--VerifyNonEmptySetInvariant : AS`Expr * POGTP`Context -> seq of POGTP`ProofObligation
+--VerifyNonEmptySetInvariant (expr,contxt) ==
+--  let ----- Build conclusion for PO -------------
+--      po_cond    = mk_AS`BinaryExpr(expr, <NE>, mk_AS`SetEnumerationExpr( [], CI`NilContextId), CI`NilContextId),
+      ------ Build PO ---------- ----------------
+--      po_expr = BuildPO(contxt.expr,po_cond),
+--      new_po  = MakeProofObligation(po_expr, po_cond, <Invariants>, contxt.loc, expr.cid)
+--  in
+--      [new_po];
+
+VerifyNonEmptySeqInvariant : AS`Expr * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyNonEmptySeqInvariant (expr,contxt) ==
+  let ----- Build conclusion for PO -------------
+      po_cond    = mk_AS`BinaryExpr(expr, <NE>, mk_AS`SeqEnumerationExpr( [], CI`NilContextId), CI`NilContextId),
+      ------ Build PO ---------- ----------------
+      po_expr = BuildPO(contxt.expr,po_cond),
+      new_po  = MakeProofObligation(po_expr, po_cond, <Invariants>, contxt.loc, CI_AUX`GetCid(expr))
+  in [new_po];
+
+
+VerifyTupleBound : AS`Expr * AS`Expr * CI`ContextId * POGTP`Context  -> seq of POGTP`ProofObligation
+VerifyTupleBound (expr,num,cid,contxt) ==
+  def expr_tp  = CI_AUX`GetTypeInfo(expr);
+      tuple_tp = CHECK`GetProdOverlap(expr_tp)
+  in
+    if is_AS`UnionType(tuple_tp)
+    then
+      let poss_bound = CHECK`GetProdArities(tuple_tp)
+      in
+        if card poss_bound = 1
+        then []
+        else VerifyTupleBoundUnion(expr,num,tuple_tp,cid,contxt)
+    else [];
+
+VerifyTupleBoundUnion : AS`Expr * AS`Expr * AS`Type * CI`ContextId * POGTP`Context
+                        -> seq of POGTP`ProofObligation
+VerifyTupleBoundUnion (expr,num,tp,cid,contxt) ==
+  let poss_bound = CHECK`GetProdArities(tp)
+  in
+    if is_AS`UnionType(tp) and card poss_bound > 1
+    then
+      let mk_AS`UnionType(etps,-) = tp,
+          po = [let ------- Build context -------------------------
+                    tup_judgm = mk_AS`TypeJudgementExpr(expr, etps(i), CI`NilContextId),
+                    tup_contxt = POGTP`Add2Context(tup_judgm,contxt)
+                in VerifyTupleBoundUnion(expr,num,etps(i),cid,tup_contxt)
+                  | i in set inds etps]
+      in conc po
+    else
+      let bound in set poss_bound
+      in
+        let ----- Build conclusion for PO -------------
+            po_cond =  mk_AS`BinaryExpr(num, <NUMLE>, mk_AS`RealLit(bound,CI`NilContextId), CI`NilContextId),
+            ------ Build PO ---------- ----------------
+            po_expr = BuildPO(contxt.expr,po_cond),
+            new_po  = MakeProofObligation(po_expr, po_cond, <TupleSelect>, contxt.loc, cid)
+        in [new_po]
+pre  is_AS`ProductType(tp) or
+     (is_AS`UnionType(tp) and
+      let mk_AS`UnionType(elemtps,-) = tp in
+        forall etp in set elems elemtps & is_AS`ProductType(etp));
+
+VerifyDisjunctionOfConjuntionOfPo : seq of seq of AS`Expr * POGTP`Classification * CI`ContextId
+                      * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyDisjunctionOfConjuntionOfPo(clauses,classif,cid,contxt) ==
+  let ----- Build conclusion for PO -------------
+      clause2expr = [BuildAndExprFromList(clauses(i)) | i in set inds clauses & clauses(i) <> []]
+  in
+    if clause2expr = []
+    then []
+    else
+      let po_cond    = BuildOrExprFromList(clause2expr),
+          ------ Build PO ---------- ----------------
+          po_expr = BuildPO(contxt.expr,po_cond),
+          new_po  = MakeProofObligation(po_expr, po_cond, classif, contxt.loc, cid)
+      in [new_po];
+
+\end{vdm_al}
+\subsection{Auxillary functions}
+\begin{vdm_al}
+
+functions
+
+BuildPO : seq of POGTP`ExprContext * AS`Expr -> AS`Expr
+BuildPO (context,concl) ==
+  if context = []
+  then concl
+  else
+    let head = hd context,
+        new_context = tl context,
+        new_concl
+             = cases head:
+                 mk_AS`TypeBind(pat,tp,cid) ->
+                   mk_AS`AllOrExistsExpr(<ALL>, [mk_AS`MultTypeBind([pat],tp,cid)], concl, CI`NilContextId),
+                 mk_AS`SetBind(pat,Set,cid) ->
+                   mk_AS`AllOrExistsExpr(<ALL>, [mk_AS`MultSetBind([pat],Set,cid)], concl, CI`NilContextId),
+--                 [mk_AS`MultSetBind([nm],exp,-)] ^ - ->
+--                   let locdef = mk_AS`ValueDef(nm,
+--                                               nil,
+--                                               exp,
+--                                               <PUBLIC_AS>,
+--                                               false,
+--                                               CI`NilContextId)
+--                   in
+--                     mk_AS`LetExpr([locdef],concl,CI`NilContextId),
+                 -^- ->  -- head is a list (a AS`BindList)
+                     mk_AS`AllOrExistsExpr(<ALL>, head, concl, CI`NilContextId),
+                 mk_AS`ValueDef(-,-,-,-,-,-),
+                 mk_AS`ImplFnDef(-,-,-,-,-,-,-,-,-),
+                 mk_AS`ExplFnDef(-,-,-,-,-,-,-,-,-,-,-),
+                 mk_AS`ExtExplFnDef(-,-,-,-,-,-,-,-,-,-,-) ->
+                   if is_AS`LetExpr(concl) then
+                     mu(concl,localdef |-> [head]^concl.localdef)
+                   else
+                     mk_AS`LetExpr([head],concl,CI`NilContextId),
+                 mk_(-,-) ->  -- AS`PatternBind * AS`Expr
+                   mk_AS`DefExpr([head],concl,CI`NilContextId),
+                 others -> -- Expression
+                   mk_AS`BinaryExpr(head, <IMPLY>, concl, CI`NilContextId)
+               end
+    in
+       BuildPO(new_context,new_concl);
+
+
+-- I guess this doesn't work
+-- with modules and renaming, etc....
+-- I have done like Berhard did (with invariants)
+AddPrefix : seq of char * AS`Name -> AS`Name
+AddPrefix (prefix,nm') ==
+  def mk_(modnm,nm) = SPEC_AST`SplitName(nm')
+  in  mk_AS`Name(modnm.ids^[prefix^(hd nm.ids)],nm'.cid);
+--  mu(nm, ids |-> [prefix^(hd nm.ids)]);
+
+MakeProofObligation : [AS`Expr] * [AS`Expr] * POGTP`Classification * POGTP`LocContext * CI`ContextId
+                      -> POGTP`ProofObligation
+MakeProofObligation (expr,cond,kind,loc,cid) ==
+  mk_POGTP`ProofObligation(1,expr,cond,kind,[],loc,cid);
+
+ApplyFieldSelectPreCondition : AS`FieldSelectExpr * (AS`FnDef | AS`OpDef) * seq of AS`Expr -> AS`Expr
+ApplyFieldSelectPreCondition (fct,fndef,args) ==
+  def ----- Handle special case: post cond with pre cond -----
+      mnm  = fndef.nm;
+#ifdef VDMSL
+      umnm = mnm;
+#endif VDMSL
+#ifdef VDMPP
+      umnm = if MANGLE`IsMangled(mnm)
+             then MANGLE`GetUnmangledName(mnm)
+             else mnm;
+#endif VDMPP
+      --mk_(modnm,-) = SPEC_AST`SplitName(mnm);
+      mk_(isOper,num_args) = cases fndef:
+                               mk_AS`ExplFnDef(-,-,-,parms,-,-,-,-,-,-,-)         -> mk_(false,len hd parms),
+                               mk_AS`ImplFnDef(-,-,partps,-,-,-,-,-,-),
+                               mk_AS`ExtExplFnDef(-,-,partps,-,-,-,-,-,-,-,-)     -> mk_(false,len partps),
+                               mk_AS`ExplOpDef(-,-,-,-,parms,-,-,-,-,-,-,-)         -> mk_(true,len parms),
+                               mk_AS`ImplOpDef(-,-,-,partps,-,-,-,-,-,-,-,-,-)      -> mk_(true,len partps),
+                               mk_AS`ExtExplOpDef(-,-,-,partps,-,-,-,-,-,-,-,-,-,-) -> mk_(true,len partps)
+                              end;
+      fct_args  = args(1,...,num_args);
+      state_arg = if not isOper
+                  then []
+                  else []
+--#ifdef VDMSL
+----
+----    TODO: generate state_arg as mk_MODNM`STATENM(a,..,b)
+----
+--#endif VDMSL
+--#ifdef VDMPP
+--        []
+--#endif VDMPP
+      ;
+      ---------------------------------------------------------
+      expr     = mk_AS`ApplyExpr(
+                   mk_AS`FieldSelectExpr(
+                     fct.rec,
+                     AddPrefix("pre_",umnm), -- fndef.nm),
+                     fct.cid),
+                   fct_args^state_arg,
+                   CI`NilContextId)
+  in expr;
+
+
+ApplyPreCondition : AS`Name * (AS`FnDef | AS`OpDef) * seq of AS`Expr -> AS`Expr
+ApplyPreCondition (-,fndef,args) ==
+  def ----- Handle special case: post cond with pre cond -----
+      mnm  = fndef.nm;
+#ifdef VDMSL
+      umnm = mnm;
+#endif VDMSL
+#ifdef VDMPP
+      umnm = if MANGLE`IsMangled(mnm)
+             then MANGLE`GetUnmangledName(mnm)
+             else mnm;
+#endif VDMPP
+      --mk_(modnm,-) = SPEC_AST`SplitName(mnm);
+      mk_(isOper,num_args) = cases fndef:
+                               mk_AS`ExplFnDef(-,-,-,parms,-,-,-,-,-,-,-)         -> mk_(false,len hd parms),
+                               mk_AS`ImplFnDef(-,-,partps,-,-,-,-,-,-),
+                               mk_AS`ExtExplFnDef(-,-,partps,-,-,-,-,-,-,-,-)     -> mk_(false,len partps),
+                               mk_AS`ExplOpDef(-,-,-,-,parms,-,-,-,-,-,-,-)         -> mk_(true,len parms),
+                               mk_AS`ImplOpDef(-,-,-,partps,-,-,-,-,-,-,-,-,-)      -> mk_(true,len partps),
+                               mk_AS`ExtExplOpDef(-,-,-,partps,-,-,-,-,-,-,-,-,-,-) -> mk_(true,len partps)
+                             end;
+      fct_args  = args(1,...,num_args);
+      state_arg = if not isOper
+                  then []
+                  else []
+--#ifdef VDMSL
+----
+----    TODO: generate state_arg as mk_MODNM`STATENM(a,..,b)
+----
+--#endif VDMSL
+--#ifdef VDMPP
+--        []
+--#endif VDMPP
+      ;
+      ---------------------------------------------------------
+      expr     = mk_AS`ApplyExpr(AddPrefix("pre_",umnm), fct_args ^ state_arg, CI`NilContextId)
+  in expr;
+
+-- ApplyPreCondition : AS`Name * (AS`FnDef | AS`OpDef) * seq of AS`Expr -> AS`Expr
+-- ApplyPreCondition (mnm,fndef,args) ==
+--   let ----- Handle special case: post cond with pre cond -----
+--       umnm = if MANGLE`IsMangled(mnm)
+--              then MANGLE`GetUnmangledName(mnm)
+--              else mnm,
+--       mk_(modnm,-) = SPEC_AST`SplitName(mnm),
+--       mk_(isOper,num_args)
+--            = cases fndef:
+--                    mk_AS`ExplFnDef(-,-,-,parms,-,-,-,-,-,-)
+--                     -> mk_(false,len hd parms),
+--                    mk_AS`ImplFnDef(-,-,partps,-,-,-,-,-,-),
+--                    mk_AS`ExtExplFnDef(-,-,partps,-,-,-,-,-,-,-,-)
+--                     -> mk_(false,len partps),
+--                    mk_AS`ExplOpDef(-,-,-,parms,-,-,-,-,-,-,-)
+--                     -> mk_(true,len parms),
+--                    mk_AS`ImplOpDef(-,-,partps,-,-,-,-,-,-,-,-,-)
+--                     -> mk_(true,len partps),
+--                    mk_AS`ExtExplOpDef(-,-,partps,-,-,-,-,-,-,-,-,-,-)
+--                     -> mk_(true,len partps)
+--                   end,
+--       fct_args  = args(1,...,num_args),
+--       state_arg
+--         = if not isOper
+--           then []
+--           else []
+-- --#ifdef VDMSL
+-- ----
+-- ----    TODO: generate state_arg as mk_MODNM`STATENM(a,..,b)
+-- ----
+-- --#endif VDMSL
+-- --#ifdef VDMPP
+-- --        []
+-- --#endif VDMPP
+--       ,
+--       ---------------------------------------------------------
+--       expr     = mk_AS`ApplyExpr(
+--                    AddPrefix("pre_",umnm), -- fndef.nm),
+--                    fct_args^state_arg,
+--                    CI`NilContextId)
+--   in
+--       expr;
+
+BuildOrExprFromList : seq of AS`Expr -> AS`Expr
+BuildOrExprFromList (exprlst) ==
+  let head = hd exprlst,
+      tail = tl exprlst,
+      expr = if tail = []
+             then head
+             else mk_AS`BinaryExpr(head, <OR>, BuildOrExprFromList(tail), CI`NilContextId)
+  in expr
+pre exprlst <> [];
+
+BuildAndExprFromList : seq of AS`Expr -> AS`Expr
+BuildAndExprFromList (exprlst) ==
+  let head = hd exprlst,
+      tail = tl exprlst,
+      expr = if tail = []
+             then head
+             else mk_AS`BinaryExpr(head, <AND>, BuildOrExprFromList(tail), CI`NilContextId)
+  in expr
+pre exprlst <> [];
+
+isASLiteral : AS`Expr -> bool
+isASLiteral (expr) ==
+  cases expr:
+    mk_AS`BoolLit(-,-),
+    mk_AS`NilLit(-),
+    mk_AS`RealLit(-,-),
+    mk_AS`NumLit(-,-),
+    mk_AS`CharLit(-,-),
+    mk_AS`TextLit(-,-),
+    mk_AS`QuoteLit(-,-) -> true,
+    others              -> false
+  end;
+
+SetToSeq[@Elem]: set of @Elem -> seq of @Elem
+SetToSeq(s) ==
+  if s = {} then []
+  else let x in set s in SetToSeq[@Elem](s\{x})^[x];
+
+functions
+
+----------------------------------------------------------
+-- simple check of map and sequence application
+----------------------------------------------------------
+
+SimpleNonZeroCheck : AS`Expr * CI`ContextId * POGTP`Context -> bool
+--SimpleNonZeroCheck(expr,cid,contxt) ==
+SimpleNonZeroCheck(expr,-,contxt) ==
+  if isASLiteral(expr)
+  then expr.val <> 0
+  elseif CI_AUX`GetTypeInfo(expr) =  mk_REP`NumericTypeRep(<NATONE>)
+  then true
+  else
+    let ----- Build expr to search for -----------
+      po_cond1   = mk_AS`BinaryExpr(expr, <NE>, mk_AS`RealLit(0,CI`NilContextId), CI`NilContextId),
+      po_cond2   = mk_AS`BinaryExpr(mk_AS`RealLit(0,CI`NilContextId), <NE>, expr, CI`NilContextId),
+      po_cond3   = mk_AS`PrefixExpr(<NOT>,
+                                    mk_AS`BinaryExpr( expr, <EQ>, mk_AS`RealLit(0,CI`NilContextId), CI`NilContextId),
+                                    CI`NilContextId),
+      po_cond4   = mk_AS`PrefixExpr(<NOT>,
+                                    mk_AS`BinaryExpr(mk_AS`RealLit(0,CI`NilContextId), <EQ>, expr, CI`NilContextId),
+                                    CI`NilContextId)
+    in ------ find condition in context ---------
+       ------ slightly inefficient running through the context four times!!!
+       FindConditionInContext(po_cond1,nil,contxt.expr) or
+       FindConditionInContext(po_cond2,nil,contxt.expr) or
+       FindConditionInContext(po_cond3,nil,contxt.expr) or
+       FindConditionInContext(po_cond4,nil,contxt.expr);
+
+SimpleMapApplicationCheck : AS`Expr * AS`Expr * AS`Expr * CI`ContextId * POGTP`Context -> bool
+--SimpleMapApplicationCheck(fct,arg,cond_expr,cid,contxt) ==
+SimpleMapApplicationCheck(fct,arg,cond_expr,-,contxt) ==
+  let ----- Build conclusion for PO -----------
+      cond_bind = if not is_AS`Name(arg)
+                  then nil
+                  else mk_AS`SetBind(mk_AS`PatternName(arg,nil,CI`NilContextId),
+                                     mk_AS`PrefixExpr(<MAPDOM>, fct, CI`NilContextId),
+                                     CI`NilContextId)
+   in ------ find condition in context ---------
+     FindConditionInContext(cond_expr,cond_bind,contxt.expr);
+
+
+SimpleSequenceApplicationCheck : AS`Expr * AS`Expr * AS`Expr * AS`Expr * CI`ContextId * POGTP`Context -> bool
+--SimpleSequenceApplicationCheck(fct,arg,cond_expr,cond_expr2,cid,contxt) ==
+SimpleSequenceApplicationCheck(fct,arg,cond_expr,cond_expr2,-,contxt) ==
+  let ----- Build conclusion for PO -----------
+      cond_bind = if not is_AS`Name(arg)
+                  then nil
+                  else mk_AS`SetBind(mk_AS`PatternName(arg,nil,CI`NilContextId),
+                                     mk_AS`PrefixExpr(<SEQINDICES>, fct, CI`NilContextId),
+                                     CI`NilContextId)
+  in ------ find condition in context ---------
+     FindConditionInContext(cond_expr,cond_bind,contxt.expr) or
+     FindConditionInContext(cond_expr2,nil,contxt.expr);
+
+--SimpleFuncApplicationCheck : AS`Expr * AS`Expr * AS`Expr * CI`ContextId * POGTP`Context -> bool
+--SimpleFuncApplicationCheck(-,-,cond_expr,-,contxt) ==
+--  FindConditionInContext(cond_expr,nil,contxt.expr);
+
+FindNameInContext: AS`Name * seq of POGTP`ExprContext -> bool
+FindNameInContext(name,context) ==
+  if context = []
+  then false
+  else let head = hd context,
+           rest = tl context,
+           found = cases head:
+             mk_AS`ValueDef(pat,-,-,-,-,-),
+             mk_AS`SetBind(pat,-,-),
+             mk_AS`TypeBind(pat,-,-) -> is_AS`PatternName(pat) and
+                                        pat.nm = name,
+             - ^ - -> --head is a AS`BindList
+                let nms = dunion{elems (head(i).pat) | i in set inds head}
+                in name in set {pat.nm | pat in set nms & is_AS`PatternName(pat)},
+             others -> false
+            end
+        in
+          found or FindNameInContext(name,rest);
+
+FindConditionInContext: AS`Expr * [AS`SetBind] * seq of POGTP`ExprContext -> bool
+FindConditionInContext(cond_expr,cond_bind,context) ==
+  if context = []
+  then false
+  else
+    let head  = hd context,
+        found = cases head:
+                  --mk_AS`TypeBind(pat,-,-)               -> nil,
+                  mk_AS`TypeBind(-,-,-) -> nil,
+                  mk_AS`SetBind(-,-,-)  -> if cond_bind = nil
+                                           then nil
+                                           elseif head = cond_bind
+                                           then true
+                                           else nil,
+                  -^- ->  -- head is a list (a AS`BindList)
+                         if cond_bind = nil
+                         then nil
+                         else
+                           let pat_bds = conc [[if is_AS`MultSetBind(head(i))
+                                                then mk_AS`SetBind(head(i).pat(j),
+                                                                   head(i).Set,
+                                                                   head(i).cid)
+                                                else nil
+                                                 | j in set inds head(i).pat ]
+                                                  | i in set inds head]
+                           in
+--                           if hd pat_bds = cond_bind then
+--                             if pat_bds = [] and hd pat_bds = cond_bind then
+                             if pat_bds <> [] and hd pat_bds = cond_bind
+                             then true
+                             else nil,
+                  mk_AS`ValueDef(-,-,-,-,-,-)               -> nil,
+                  mk_AS`ImplFnDef(-,-,-,-,-,-,-,-,-)        -> nil,
+                  mk_AS`ExplFnDef(-,-,-,-,-,-,-,-,-,-,-)    -> nil,
+                  mk_AS`ExtExplFnDef(-,-,-,-,-,-,-,-,-,-,-) -> nil,
+                  mk_(patBind,-) ->  -- AS`PatternBind * AS`Expr
+                      if cond_bind = nil
+                      then nil
+                      else
+                        cases patBind:
+                          mk_AS`TypeBind(-,-,-) -> nil,
+                          mk_AS`SetBind(-,-,-) -> if patBind = cond_bind
+                                                  then true
+                                                  else nil,
+                          others -> nil -- AS'Pattern
+                        end,
+                  others -> -- Expression
+                     FindExprInConjunction(cond_expr,head)
+                end
+    in
+      if found = nil
+      then false
+      elseif found = true
+      then true
+      else FindConditionInContext(cond_expr,cond_bind,tl context);
+
+FindExprInConjunction: AS`Expr * AS`Expr -> bool
+FindExprInConjunction(expr,conj) ==
+  if is_AS`BracketedExpr(conj)
+  then FindExprInConjunction(expr,conj.expr)
+  elseif not (is_AS`BinaryExpr(conj) and conj.opr = <AND>)
+  then expr = conj
+  else (FindExprInConjunction(expr,conj.left) or FindExprInConjunction(expr,conj.right));
+
+
+VerifyOpPost : AS`Name * AS`BindList * AS`OpBody * [AS`Expr] * [AS`Expr] * set of AS`Name * CI`ContextId
+             * POGTP`Context -> seq of POGTP`ProofObligation
+--VerifyOpPost (nm,parms_bd,fnbody,fnpre,fnpost,fv,cid,contxt) ==
+VerifyOpPost (-,-,-,-,fnpost,-,cid,contxt) ==
+  ----- Build conclusion for PO -------------
+  -- Don't know how to generate PO yet!!!
+  ------ Build PO ---------- ----------------
+  if fnpost<>nil
+  then [ MakeProofObligation(nil, nil, <OpPostCondition>, contxt.loc, cid) ]
+  else [];
+
+-----------
+
+--VerifyLetBeStStmt : AS`Bind
+VerifyLetBeStStmt : AS`BindList * [AS`Expr] * CI`ContextId * POGTP`Context -> seq of POGTP`ProofObligation
+VerifyLetBeStStmt (bind,st_e,cid,contxt) ==
+  let ----- Build conclusion for PO -------------
+      pred     = if st_e = nil
+                 then mk_AS`BoolLit(true,CI`NilContextId)
+                 else st_e,
+      po_cond  = mk_AS`AllOrExistsExpr(<EXISTS>, bind, pred, CI`NilContextId),
+      ------ Build PO ---------- ----------------
+--      po_expr = BuildPO(contxt.expr,po_cond),
+      new_po  = MakeProofObligation(nil, po_cond, <LetBeStStmt>, contxt.loc, cid)
+  in
+      [new_po];
+
+end GEN_PO
+
+\end{vdm_al}
+
+\newpage
+
+\begin{rtinfo}[GEN\_PO`VerifyDisjunctionOfConjuntionOfPo]
+{rtinfo.ast}[GEN_PO]
+\end{rtinfo}

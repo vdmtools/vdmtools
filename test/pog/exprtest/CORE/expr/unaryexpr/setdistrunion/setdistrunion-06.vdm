@@ -1,0 +1,19 @@
+class UnaryTest
+types
+
+  UnionType :: seq of UnionType;
+
+  EmptyType ::
+  
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = dunion{s1 inter s2 | s1, s2 in set {{2,3},{4,6},{true,5}}}
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

@@ -1,0 +1,13 @@
+class IotaExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = iota c : char | token & c and true
+  in skip;
+
+------------------------------------------------------------------------------
+end IotaExprTest

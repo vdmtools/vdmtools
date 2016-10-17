@@ -1,0 +1,23 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> nat  
+Test () ==
+ return 
+    let a = if 10 <> f(10) then 10 else mk_AA(10,10) in
+      let a' = mu(a, i |-> 20, j |-> 30) in
+        mu(if 1=2 then a' else f(10), j |-> a'.j + 1).i
+
+
+types
+AA:: i : nat
+    j : nat
+
+functions
+f: nat -> nat
+f(n) ==
+  n
+
+end A

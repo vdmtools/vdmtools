@@ -1,0 +1,169 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Definition of time map and support functions
+% $Id: timemap.vdm,v 1.2 2005/10/25 05:00:23 vdmtools Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\chapter{The TIMEMAP Module}
+
+\section{Introduction}
+
+This module provides support for the time map. 
+
+\begin{vdm_al}
+module TIMEMAP
+
+imports
+
+  from TIMEPARSER all,
+  from AS all,
+  from CI all,
+  from REP all
+
+exports
+  all
+
+definitions
+\end{vdm_al}
+
+We arbitrarily set the default duration of a time parser instruction
+to be 2 time units. Note that there is no particular motivation for
+this choice, and any natural would suffice (including 0).
+\begin{vdm_al}
+values
+
+  defaultDuration : nat = 2;
+
+
+\end{vdm_al}
+
+A time map is a map from (instruction,type) pairs to a natural
+number. The type is a parameter so that type specific timing behaviour
+(e.g. integer addition vs floating point addition) can be modeled. If
+it is not meaningful to assign such a type, then the value nil is
+used. 
+\begin{vdm_al}
+types
+
+  Timemap = map TIMEPARSER`Instruction * [REP`BasicTypeRep] to nat;
+\end{vdm_al}
+The type $Error$ represents a well-formedness error in a user-defined
+time file.
+\begin{vdm_al}
+  Error :: entry : TIMEPARSER`TimeEntry
+           reps : set of TIMEPARSER`TimeEntry;
+
+\end{vdm_al}
+Well-formedness of time files is checked using the function
+$wf_Timefile$. A time file is well formed if there exists no two
+entries in the time file with identical instructions and types, but
+different times.
+\begin{vdm_al}
+functions
+
+  wf_Timefile : TIMEPARSER`Timefile -> set of Error
+  wf_Timefile(tf) ==
+    let pos_errors =
+          { mk_Error(tf(i), 
+               { f | f in set elems tf(i+1,...,len tf) 
+                     &  f = mu(tf(i), cid |-> f.cid, time |-> f.time)})
+          | i in set inds tf } in
+    { e | e in set pos_errors & e.reps <> {}};
+
+\end{vdm_al}
+The function $MkTimeMap$ takes a well formed timefile and merges it
+with the default time map to generate a global time map that will be
+used by the interpreter in its timing calculations.
+\begin{vdm_al}
+  MkTimeMap : TIMEPARSER`Timefile -> Timemap
+  MkTimeMap (tf) ==
+     defaultTimemap() ++ 
+     {(if is_TIMEPARSER`SimpleEntry(entry)
+       then mk_(entry.instr, nil) 
+       else -- must be typed entry
+            mk_(entry.instr, entry.tp)) |-> entry.time
+      | entry in set elems tf} 
+  pre wf_Timefile(tf) = {};
+\end{vdm_al}
+The default time map simply maps each instruction with nil type to the
+default duration.
+\begin{vdm_al}
+  defaultTimemap : () -> Timemap
+  defaultTimemap() ==
+    {
+      mk_(mk_TIMEPARSER`AddEnv(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Addset(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`AllorExists(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Always(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Appendmap() , nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Appendseq(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Appendtup(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Apply(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`BindList(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`BlockStmt(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Br (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Call(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Cbr (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Exit(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Fieldsel (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Guard(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`History (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Iota(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Isexpr (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Isofbaseclass (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Isofclass (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`LambdaExpr(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`LetBeST(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Lookup (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Loop(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`MapInverse(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`MatchPattern(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Newobj (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`NonDet(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Pattern(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Polyinst (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`RecTrap(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Reccons (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Recmod (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Return(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Samebaseclass (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Sameclass (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Selfexpr (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Seqlen (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Seqmapover (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Setcard (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Setrng (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Start(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Stop(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Subseq (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Threadid (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Trap(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Tupsel (), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Update(), nil) |-> defaultDuration, 
+      mk_(mk_TIMEPARSER`Plus(), nil) |-> defaultDuration, 
+      mk_(mk_TIMEPARSER`Minus(), nil) |-> defaultDuration, 
+      mk_(mk_TIMEPARSER`Mult(), nil) |-> defaultDuration, 
+      mk_(mk_TIMEPARSER`Div(), nil) |-> defaultDuration, 
+      mk_(mk_TIMEPARSER`Rem(), nil) |-> defaultDuration, 
+      mk_(mk_TIMEPARSER`Mod(), nil) |-> defaultDuration, 
+      mk_(mk_TIMEPARSER`Intdiv(), nil) |-> defaultDuration, 
+      mk_(mk_TIMEPARSER`And(), nil) |-> defaultDuration, 
+      mk_(mk_TIMEPARSER`Or(), nil) |-> defaultDuration, 
+      mk_(mk_TIMEPARSER`Equal(), nil) |-> defaultDuration, 
+      mk_(mk_TIMEPARSER`GreaterThan(), nil) |-> defaultDuration, 
+      mk_(mk_TIMEPARSER`GreaterThanOrEqual(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Abs(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Floor(), nil) |-> defaultDuration,
+      mk_(mk_TIMEPARSER`Not(), nil) |-> defaultDuration
+    }
+
+end TIMEMAP
+\end{vdm_al}
+
+
+\vspace{0.5cm}
+
+\begin{rtinfo}
+{rtinfo.ast}[TIMEMAP]
+\end{rtinfo}

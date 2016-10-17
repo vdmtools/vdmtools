@@ -1,0 +1,111 @@
+dlmodule C 
+  exports
+    operations
+      Place : int * int ==> ();
+      Rotate : (int * int) * real ==> int * int
+
+    uselib 
+      "libio15.so"
+end C
+
+dlmodule B  
+  exports
+    functions
+      ExtCos : real -> real
+
+    operations
+      ExtSin : real ==> real
+
+    values
+      ExtPI : real
+
+    uselib 
+      "libmath.so"
+end B
+
+module APPROX
+
+  exports 
+    all
+
+  definitions
+    values
+      Place = {[1,2] |-> nil};
+      Rotate =  { [mk_(1,0),90.0] |-> mk_(0,1), 
+                  [mk_(3,4),180.0] |-> mk_(-3,4)};
+      ExtPI = { [] |-> 3.14159};
+      ExtCos = { [0.5] |-> 0.877, [3.14] |-> -1.0, [0.785] |-> 0.707};
+      ExtSin = { [0.5] |-> 0.479, [3.14] |-> 0.0, [0.785] |-> 0.707}
+ 
+end APPROX  
+
+module JOKER
+   
+  imports
+    from B
+      functions
+        ExtCos : real -> real
+
+      operations
+        ExtSin : real ==> real   
+  
+  exports
+    operations
+     Joke : real * real  ==> real;
+     Dummy : () ==> ()
+
+    definitions
+     operations 
+         Joke : real * real  ==> real
+         Joke(a,b) ==  if (a <b )
+                       then B`ExtSin(a)
+                       else return B`ExtCos(b);
+        
+         Dummy: () ==> ()
+         Dummy() == skip 
+end JOKER                      
+
+module A
+  imports
+    from 
+      APPROX
+        all,
+  
+    from C
+      operations
+          Place : int * int ==> () renamed Place ;
+          Rotate : (int * int) * real ==> int * int renamed Rotate,
+   
+    from B
+      functions
+        ExtCos : real -> real renamed MyCos
+
+      operations
+        ExtSin : real ==> real   
+   
+     values 
+        ExtPI : real renamed PI,
+
+     from JOKER
+      operations
+        Joke : real * real  ==> real renamed Joke
+       
+
+     definitions
+       operations
+
+         Test : () ==> seq of [real|int*int]
+         Test () ==  
+         ( dcl res: seq of [real|int*int];
+           res := [ PI, CircCyl_Vol(2.0, 2.0, 0.785), MyCos(0.785)];
+            let dummy = Place(1,2) in
+            res := res ^ [Joke(0.5, 3.14), Rotate(mk_(3,4),180.0)];
+            return res );
+ 
+         CircCyl_Vol : real * real * real ==> real
+         CircCyl_Vol (r, h, a) == let pi = PI in
+           return(pi * r * r * h * B`ExtSin(a))
+end A
+    
+   
+

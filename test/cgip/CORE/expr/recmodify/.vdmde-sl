@@ -1,0 +1,15 @@
+set tex
+r /home/hermes/henrik/codegen/spec/mod_bcppast.vdm
+r /home/hermes/henrik/codegen/spec/mod_cppast.vdm
+r /home/hermes/henrik/codegen/spec/mod_fctdef.vdm
+r /home/hermes/henrik/codegen/spec/mod_vdm_ds.vdm
+r /home/hermes/henrik/codegen/spec/mod_stmt.vdm
+r /home/hermes/henrik/codegen/spec/asppt.vdm
+r /home/hermes/henrik/codegen/spec/mod_ppstmt.vdm
+r /home/hermes/henrik/codegen/spec/mod_ppexpr.vdm
+r /home/hermes/henrik/codegen/spec/mod_md.vdm
+r /home/hermes/henrik/codegen/spec/mod_fvd.vdm
+r /home/hermes/henrik/codegen/spec/mod_aux.vdm
+r /home/hermes/henrik/codegen/spec/mod_cg.vdm
+r /home/hermes/henrik/codegen/spec/mod_symb.vdm
+r /home/hermes/henrik/codegen/spec/mod_class.vdm

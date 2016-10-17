@@ -1,0 +1,32 @@
+class LetBeSTStmtTest
+
+types
+
+  A :: selid : nat
+       sel2 : bool
+
+operations
+
+  LetBeST1: () ==> [nat | bool]
+  LetBeST1()  ==
+  let a in set {3,true,nil} in return a;
+
+  LetBeST2: () ==> nat
+  LetBeST2() ==
+    let x in set {} in return x;
+
+  LetBeST3: () ==> nat
+  LetBeST3() ==
+   let x in set if 7 = 6
+                then {}
+                else {8,9,7} in return x;
+
+  LetBeST4: () ==> bool
+  LetBeST4() ==
+    let y : bool | real be st y > 7 in return y and true;
+
+  LetBeST5: A * nat ==> nat
+  LetBeST5(arg1, arg2) ==
+    let b:bool be st b => false in if b then return 7 else return 5
+
+end LetBeSTStmtTest

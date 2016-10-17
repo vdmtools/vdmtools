@@ -1,0 +1,60 @@
+/* $Id: DoubleListQueue.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $
+ * ‚Q‚Â‚Ì—ñ‚ğg‚Á‚½‘Ò‚¿s—ñ
+ * g—p•û–@F
+ *	Å‰‚É
+ * 		let Q0 = DoubleListQueue`empty[int]() in ...
+ *	‚È‚Ç‚Æ‚µ‚Ä‹ó‚Ì‘Ò‚¿s—ñ‚ğì‚éB
+ *	‘Ò‚¿s—ñ‚Ö‚Ì’Ç‰Á‚Í
+ *		DoubleListQueue`enQueue(1, Q0)
+ *	‚Æ‚·‚ê‚Î‚æ‚¢B
+*/
+
+class DoubleListQueue
+
+functions
+static public empty[@Œ^] : () -> seq of @Œ^ * seq of @Œ^
+empty() == mk_([], []);
+
+static public isEmpty[@Œ^] : (seq of @Œ^ * seq of @Œ^) -> bool
+isEmpty(s) == s = mk_([], []);
+
+static public enQueue[@Œ^] : @Œ^ * (seq of @Œ^ * seq of @Œ^) -> seq of @Œ^ * seq of @Œ^
+enQueue(‚ ‚é—v‘f, mk_(‚ ‚éæ“ª—ñ, ‚ ‚éŒã‘±—ñ)) == mk_(‚ ‚éæ“ª—ñ, [‚ ‚é—v‘f] ^ ‚ ‚éŒã‘±—ñ);
+
+static public deQueue[@Œ^] : (seq of @Œ^ * seq of @Œ^) -> [seq of @Œ^ * seq of @Œ^]
+deQueue(mk_(‚ ‚éæ“ª—ñ, ‚ ‚éŒã‘±—ñ)) == 
+	cases ‚ ‚éæ“ª—ñ:
+		[-] ^ ‚ ‚éæ“ª—ñ‚Ìc‚è	-> mk_(‚ ‚éæ“ª—ñ‚Ìc‚è, ‚ ‚éŒã‘±—ñ),
+		[]	-> 
+			cases ‚ ‚éŒã‘±—ñ:
+				[]		-> nil,
+				others	-> mk_(tl Sequence`freverse[@Œ^](‚ ‚éŒã‘±—ñ), [])
+			end
+	end;
+
+static public top[@Œ^] : (seq of @Œ^ * seq of @Œ^) -> [@Œ^]
+top(mk_(‚ ‚éæ“ª—ñ, ‚ ‚éŒã‘±—ñ)) == 
+	cases ‚ ‚éæ“ª—ñ:
+		[æ“ª] ^ -	-> æ“ª,
+		[]	-> 
+			cases ‚ ‚éŒã‘±—ñ:
+				[]		-> nil,
+				others	-> hd Sequence`freverse[@Œ^](‚ ‚éŒã‘±—ñ)
+			end
+	end;
+
+static public fromList[@Œ^] : seq of @Œ^ * (seq of @Œ^ * seq of @Œ^) -> seq of @Œ^ * seq of @Œ^
+fromList(‚ ‚é—ñ, ‘Ò‚¿s—ñ) ==
+	cases ‚ ‚é—ñ:
+		[]				-> ‘Ò‚¿s—ñ,
+		[æ“ª] ^ —ñ‚Ìc‚è		-> fromList[@Œ^](—ñ‚Ìc‚è, enQueue[@Œ^](æ“ª, ‘Ò‚¿s—ñ))
+	end;
+
+static public toList[@Œ^] : (seq of @Œ^ * seq of @Œ^) -> seq of @Œ^
+toList(‚ ‚é‘Ò‚¿s—ñ) ==
+	cases ‚ ‚é‘Ò‚¿s—ñ:
+		(mk_([], []))	-> [],
+		‘Ò‚¿s—ñ	-> [top[@Œ^](‘Ò‚¿s—ñ)] ^ toList[@Œ^](deQueue[@Œ^](‘Ò‚¿s—ñ))
+	end;
+
+end DoubleListQueue

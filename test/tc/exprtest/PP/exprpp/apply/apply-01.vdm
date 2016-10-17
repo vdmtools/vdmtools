@@ -1,0 +1,56 @@
+class ApplyTest
+
+operations
+
+public  
+  Test1: nat ==> nat
+  Test1(n)  ==
+    if n > 0 then
+      return Test1(n-1)
+    else
+      return 0;
+
+public  Test2: char ==> int
+  Test2(x) ==
+    is not yet specified;
+  
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = Test1(10)
+  in skip;
+
+------------------------------------------------------------------------------
+end ApplyTest
+
+class X
+
+functions 
+
+public
+  Test1: nat -> nat
+  Test1(n) ==
+    10;
+
+operations
+
+public
+  CreateApplyTest: () ==> ApplyTest
+  CreateApplyTest() ==
+    is not yet specified;
+
+public
+  CreateApplyTest2: () ==> ApplyTest | nat
+  CreateApplyTest2() ==
+    is not yet specified;
+
+public
+  Test2: char ==> int
+  Test2(x) ==
+    is not yet specified;
+
+end X

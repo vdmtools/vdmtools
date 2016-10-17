@@ -1,0 +1,3 @@
+Run-Time Error 62: Can not evaluate 'undefined' expression
+In /export/home3/jeppe/toolbox/spec/codegen/mod_auxsl.vdm, l.348, c.15
+In FlattenUnionTypeRep

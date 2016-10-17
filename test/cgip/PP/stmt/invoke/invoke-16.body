@@ -1,0 +1,44 @@
+class A
+
+instance variables
+  n : nat := 0;
+
+operations
+
+
+  GetN: () ==> nat
+  GetN() ==
+    return n;
+
+  SetN: nat ==> ()
+  SetN(v) ==
+    n := v;
+
+
+public m2: () ==> bool
+m2()  ==
+return true;
+
+
+m1: B|A ==> bool
+m1( arg1) ==
+def my_bool : bool = arg1.m2()
+in return my_bool
+
+end A
+
+
+class B
+
+
+operations
+
+
+public Test : () ==> bool
+  Test() ==
+  ( dcl a : B | A | bool := new A();
+    a := a.m2();
+    return a
+  )
+
+end B

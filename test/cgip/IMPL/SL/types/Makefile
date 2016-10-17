@@ -1,0 +1,12 @@
+
+include makeincl
+
+types-01 \
+types-02 \
+types-03 : A.h A.cc B.cc B.h
+	cp -f A.h icode.h
+	${CC} -g -o $(EXE)  A.cc B.cc ${MAIN} ${OPTIONS}
+
+clean: 
+	rm -f *~ core *.o
+

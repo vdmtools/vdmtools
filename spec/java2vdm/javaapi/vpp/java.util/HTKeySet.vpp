@@ -1,0 +1,32 @@
+class JavaUtilHTKeySet is subclass of JavaUtilAbstractSet
+
+instance variables
+  ht: JavaUtilHashtable;
+
+operations
+public JavaUtilHTKeySet: JavaUtilHashtable ==> JavaUtilHTKeySet
+JavaUtilHTKeySet(ht) ==
+  JavaUtilHTKeySet`ht:=ht;
+
+public iterator : () ==> JavaUtilIterator
+iterator() ==
+  return ht.getIterator(0); -- ht.getIterator(KEYS);
+
+public  size : () ==> int 
+size() == 
+( return  ht.count
+) ;
+
+public  contains : JavaLangObject ==> bool 
+contains(value__) == 
+  return ht.containsKey(value__);
+
+public  remove : JavaLangObject ==> bool
+remove(key) == 
+  return not ht.remove(key).IsNil();
+
+public  clear : () ==> ()
+clear() == 
+  ht.clear();
+
+end  JavaUtilHTKeySet

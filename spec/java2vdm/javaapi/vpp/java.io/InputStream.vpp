@@ -1,0 +1,169 @@
+class JavaIoInputStream is subclass of JavaLangObject
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaIoInputStream" , <CLASS> , false  );
+  SKIP_BUFFER_SIZE : int  = 80;
+instance variables 
+--  private  static SKIP_BUFFER_SIZE : int  := 2048;
+--static
+--  private   skipBuffer : map  int  to  int 
+operations 
+public  read : () ==> int 
+read() == 
+is not yet specified;
+
+public  close : () ==> ()
+close() == 
+( skip 
+) ;
+
+public  mark : int  ==> ()
+mark(readlimit) == 
+( skip 
+) ;
+
+public  reset : () ==> ()
+reset() == 
+( exit  new  JavaIoIOException(new  JavaLangString("mark/reset not supported"));
+  skip 
+) ;
+
+public  skip__ : int  ==> int 
+skip__(n) == 
+( dcl   remaining : int  := n,
+        c : int := 0;
+  while  remaining > 0 and c >= 0 do  
+  ( dcl c: int;
+    c := read();
+    if  c >= 0
+    then  
+     remaining := remaining-1
+  ) ;
+  return  n-remaining
+);
+--( dcl   remaining : int  := n,
+--        nr : int ;
+--  if  skipBuffer = {|->}
+--  then  
+--    skipBuffer := {l_3 |-> 0|l_3 in set  {0,...,SKIP_BUFFER_SIZE-1}};
+--  ( dcl   localSkipBuffer : map  int  to  int  := skipBuffer;
+--    if  n <= 0
+--    then  
+--      ( return  0
+--      ) ;
+--    trap  j2v_break with  
+--      cases  true  : 
+--        (isofclass  (J2V_Break,j2v_break)) -> 
+--          skip ,
+--        others  -> 
+--          exit  j2v_break
+--      end  
+--    in  
+--      while  remaining > 0 do  
+--      ( def l_11 = localSkipBuffer;
+--        l_12 = 0;
+--        l_10 = if SKIP_BUFFER_SIZE < remaining then SKIP_BUFFER_SIZE else remaining;
+--        l_5 = if  is_(l_10,real ) then  floor(l_10) else  l_10;
+--        l_1 = read2(l_11 , l_12 , l_5)
+--        in nr := l_1;
+--        if  nr < 0
+--       then  
+--          ( exit  new  J2V_Break()
+--          ) ;
+--        def l_3 = remaining
+--        in remaining := l_3-nr
+--      ) ;
+--    return  n-remaining
+--  ) 
+--) ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  available : () ==> int 
+available() == 
+( return  0
+) ;
+
+public  read : map  int  to  int  ==> int 
+read(b) == 
+( return  readMIIIntInt(b , 0 , (card  dom  b))
+) ;
+
+public  markSupported : () ==> bool 
+markSupported() == 
+( return  false  
+) ;
+
+public  readMIIIntInt : map  int  to  int  * int  * int  ==> int 
+readMIIIntInt(b_, off, len__) == 
+  return undefined;
+
+public  readMIIIntInt' : map  int  to  int  * int  * int  ==> int * map  int  to  int
+readMIIIntInt'(b_, off, len__) == 
+( dcl b: map  int  to  int:=b_;
+  if  b = {|->}
+  then  
+    ( exit  new  JavaLangNullPointerException()
+    ) 
+  else  
+    if  (off < 0) or  (off > (card  dom  b)) or  (len__ < 0) or  ((off+len__) > (card  dom  b)) or  ((off+len__) < 0)
+    then  
+      ( exit  new  JavaLangIndexOutOfBoundsException()
+      ) 
+    else  
+      if  len__ = 0
+      then  
+        ( return  mk_(0,b)
+        ) ;
+  ( dcl   c : int  := read();
+    if  c = -1
+    then  
+      ( return  mk_(-1,b);
+      ) ;
+    b := b ++ {off |-> c};
+    ( dcl   i : int  := 1;
+--      trap  j2v_exception with  
+--        cases  true  : 
+--          (isofclass  (JavaIoIOException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+--            ( dcl   ee : JavaIoIOException := j2v_exception;
+--              skip 
+--            ) ,
+--          others  -> 
+--            exit  j2v_exception
+--        end  
+--      in  
+        ( -- if false then exit new JavaIoIOException();
+          trap  j2v_break with  
+            cases  true  : 
+              (isofclass  (J2V_Break,j2v_break)) -> 
+                skip ,
+              others  -> 
+                exit  j2v_break
+            end  
+          in  
+            ( while  i < len__ do  
+              ( c := read();
+                if  c = -1
+                then  
+                  ( exit  new  J2V_Break()
+                  ) ;
+                if  b <> {|->}
+                then  
+                  ( b := b ++ {off+i |-> c}
+                  ) ;
+                i := i+1
+              ) 
+            ) 
+        ) ;
+      return  mk_(i,b)
+    ) 
+  ) 
+) ;
+
+public  JavaIoInputStream : <NIL> ==> JavaIoInputStream
+JavaIoInputStream(-) == 
+isNil := true  ;
+
+
+end  JavaIoInputStream

@@ -1,0 +1,19 @@
+--$Header: /home/vdmtools/cvsroot/toolbox/examples-jp/pp/library/Person.vpp,v 1.1 2005/11/22 06:20:16 vdmtools Exp $
+class 人クラス
+--責任
+--人の情報を持つ抽象クラス。
+
+instance variables
+	public 名前 : seq of char;
+	public 電話番号 : seq of char;
+
+operations
+
+public 初期化する : seq of char * seq of char ==> ()
+初期化する(ある名前, ある電話番号) ==
+	(
+	名前 := ある名前;
+	電話番号:= ある電話番号;
+	);
+
+end 人クラス

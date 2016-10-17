@@ -1,0 +1,14 @@
+class A
+
+operations
+
+WhileOp: nat ==> nat
+WhileOp(n) ==
+  (dcl local : nat := n,
+       res   : nat := 1;
+   while local > 0 do
+    (local := local -1;
+     res   := local * res) ;
+   return res)
+
+end A

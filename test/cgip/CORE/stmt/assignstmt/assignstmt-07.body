@@ -1,0 +1,15 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+public Test : () ==> B  
+Test () ==
+        (dcl  a : B := mk_B(1, '[');
+         a.b := '<';
+         return a)
+
+types
+
+public  B :: 
+    a : nat
+    b : char
+
+  

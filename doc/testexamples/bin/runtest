@@ -1,0 +1,47 @@
+#!/bin/sh
+
+# One can test a particular function by providing its name as an argument.
+
+SPEC=$1
+TESTDIR=$2
+RTINFO=rtinfo.ast
+
+rm -f res
+rm -f m4pp
+rm -f trace
+
+echo > trace
+
+vdmde -pr $SPEC $RTINFO
+
+for arg in $TESTDIR/$3*-??.arg ; do
+
+echo Testing $SPEC with arguments in $arg ...
+{ echo Testing $SPEC with arguments in $arg ...
+} >> trace
+
+vdmde -ira $arg $RTINFO 
+diff m4pp $arg.exp
+if [ $? = 0 ] ; then
+  echo Result okay!
+  echo Result okay! >> trace
+else 
+  echo Unexpected result!
+  echo Unexpected result! >> trace
+  echo Result was:
+  echo Result was: >> trace
+  cat m4pp
+  cat m4pp >> trace
+  echo Expected result:
+  echo Expected result: >> trace
+  cat $arg.exp
+  cat $arg.exp >> trace
+fi
+
+echo >> trace
+
+rm -f m4pp m4pt
+
+done
+
+echo Have a look in the file trace

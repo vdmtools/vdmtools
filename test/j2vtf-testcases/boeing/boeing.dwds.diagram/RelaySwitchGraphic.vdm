@@ -1,0 +1,294 @@
+class RelaySwitchGraphic is subclass of RefDesNode
+operations 
+public  elementAt : int  ==> [String]
+elementAt(index) == 
+( return  pinList.elementAt(index)
+) ;
+
+private  getWireHeight : int  ==> int 
+getWireHeight(PinIndex) == 
+( dcl   WireHeight : int  := 0;
+  if  PinIndex > -1 and  PinIndex < pinList.size()
+  then  
+    ( dcl   WirePinHeight : [Integer];
+      ( dcl   idx : int  := 0;
+        while  idx <= PinIndex do  
+        ( WirePinHeight := PinHeight.elementAt(idx);
+          def l_6 = WireHeight
+          in WireHeight := l_6+WirePinHeight.intValue()-WireGraphic.SPREAD;
+          idx := idx+1
+        ) 
+      ) 
+    ) ;
+  return  WireHeight
+) ;
+
+public  characterAscent : () ==> int 
+characterAscent() == 
+( return  pinFontMetrics.getAscent()
+) ;
+
+public  initGraphicPins : () ==> <VOID>
+initGraphicPins() == 
+( dcl   fixedPinFound : bool  := false  ,
+        pinHeight : int  := pinFontMetrics.getHeight();
+  ( dcl   pinIndex : int  := 0;
+    while  pinIndex < pinGraphics.size() do  
+    ( dcl   nextPin : [PinGraphic] := pinGraphics.elementAt(pinIndex),
+            pinName : [String] := nextPin.getName();
+      let - = containingCanvas.addMouseListener(nextPin)
+      in 
+        skip ;
+      let - = containingCanvas.addMouseMotionListener(nextPin)
+      in 
+        skip ;
+      let - = nextPin.setFont(pinFont)
+      in 
+        skip ;
+      ( dcl   connectPoint : [Point] := getConnectionPoint(pinName , Orientation.LEFT);
+        def l_11 = connectPoint.x
+        in connectPoint.x := l_11+((PIN_WIDTH-widthOf(pinName))/2);
+        def l_6 = connectPoint.y
+        in connectPoint.y := l_6-WireGraphic.SEGMENT_COUNT+getFixedPinYOffset();
+        if  refDes.isFixedContactPin(pinName)
+        then  
+          ( def l_3 = connectPoint.y
+            in connectPoint.y := l_3-2;
+            fixedPinFound := true  
+          ) 
+        else  
+          if  fixedPinFound
+          then  
+            ( def l_5 = connectPoint.y
+              in connectPoint.y := l_5+pinHeight+PIN_WIDTH
+            ) ;
+        let - = nextPin.setBounds(connectPoint.x , connectPoint.y , widthOf(pinName) , pinHeight)
+        in 
+          skip 
+      ) ;
+      pinIndex := pinIndex+1
+    ) 
+  ) ;
+  return  
+) ;
+
+public  addPin : [String] ==> <VOID>
+addPin(pin) == 
+( let - = pinList.addElement(pin)
+  in 
+    skip ;
+  let - = pinGraphics.addElement(new  PinGraphic(pin , self  ))
+  in 
+    skip ;
+  ( dcl   currentSize : [Dimension] := getSize(),
+          newHeight : int  := currentSize.height+PIN_HEIGHT-WireGraphic.SPREAD;
+    let - = setSize(currentSize.width , newHeight)
+    in 
+      skip ;
+    let - = PinHeight.addElement(new  Integer(0))
+    in 
+      skip ;
+    return  
+  ) ;
+  return  <VOID>
+) ;
+
+protected  getYConnectCoord : int  ==> int 
+getYConnectCoord(pinIndex) == 
+( dcl   yLocation : int  := getLocation().y,
+        pinName : [String] := pinList.elementAt(pinIndex),
+        wirePinHeight : [Integer] := PinHeight.elementAt(pinIndex);
+  def l_26 = yLocation
+  in yLocation := l_26+TOP_HEIGHT+(PIN_HEIGHT*pinIndex)+(PIN_HEIGHT/2)+(getWireHeight(pinIndex-1))+(wirePinHeight.intValue()/2);
+  if  refDes.isFixedContactPin(pinName)
+  then  
+    ( def l_4 = yLocation
+      in yLocation := l_4+getFixedPinYOffset()
+    ) ;
+  return  yLocation
+) ;
+
+public  paint : [Graphics] ==> <VOID>
+paint(graphics) == 
+( let - = graphics.setColor(getForeground())
+  in 
+    skip ;
+  let - = paintLabel(graphics)
+  in 
+    skip ;
+  let - = paintPinSections(graphics)
+  in 
+    skip ;
+  let - = paintPinNames(graphics)
+  in 
+    skip ;
+  return  
+) ;
+
+public  widthOf : [String] ==> int 
+widthOf(string) == 
+( dcl   nameWidth : int  := pinFontMetrics.stringWidth(string);
+  return  nameWidth
+) ;
+
+public  RelaySwitchGraphic : () ==> RelaySwitchGraphic
+RelaySwitchGraphic() == 
+( let - = RelaySwitchGraphic(0 , 0)
+  in 
+    skip ;
+  return  
+) ;
+
+private  getFixedPinYOffset : () ==> int 
+getFixedPinYOffset() == 
+( return  (PIN_WIDTH-WireGraphic.SEGMENT_COUNT)/2
+) ;
+
+public  update : [Graphics] ==> <VOID>
+update(graphics) == 
+( let - = paint(graphics)
+  in 
+    skip ;
+  return  
+) ;
+
+public  RelaySwitchGraphic : int  * int  ==> RelaySwitchGraphic
+RelaySwitchGraphic(x, y) == 
+( let - = RefDesNode(x , y , SYMBOL_WIDTH , 2*SYMBOL_HEIGHT)
+  in 
+    skip ;
+  let - = setNotifyOnMouseClick(true  )
+  in 
+    skip ;
+  let - = setNotifyOnMouseMotion(true  )
+  in 
+    skip ;
+  TOP_HEIGHT := SYMBOL_HEIGHT+LABEL_HEIGHT;
+  pinFont := new  Font(new  String("Courier") , Font`PLAIN , 12);
+  pinFontMetrics := getFontMetrics(pinFont);
+  PIN_HEIGHT := pinFontMetrics.getHeight()+PIN_SPACING;
+  return  
+) ;
+
+public  addWireAtPin : [String] ==> <VOID>
+addWireAtPin(pin) == 
+( dcl   currentSize : [Dimension] := getSize(),
+        newHeight : int  := currentSize.height+WireGraphic.SPREAD;
+  let - = setSize(currentSize.width , newHeight)
+  in 
+    skip ;
+  ( dcl   PinIndex : int  := pinList.indexOf(pin);
+    if  PinIndex > -1
+    then  
+      ( dcl   OldPinHeight : [Integer] := PinHeight.elementAt(PinIndex),
+              NewPinHeight : int  := OldPinHeight.intValue()+WireGraphic.SPREAD;
+        let - = PinHeight.setElementAt(new  Integer(NewPinHeight) , PinIndex)
+        in 
+          skip 
+      ) ;
+    return  
+  ) ;
+  return  <VOID>
+) ;
+
+protected  paintLabel : [Graphics] ==> <VOID>
+paintLabel(graphics) == 
+( if  refDes <> nil  
+  then  
+    ( dcl   location : [Point] := getLocation();
+      let - = graphics.setFont(labelFont)
+      in 
+        skip ;
+      ( dcl   TextX : int  := location.x+(SYMBOL_WIDTH/2)-(labelFontMetrics.stringWidth(refDes.displayName())/2),
+              TextY : int  := location.y+labelFontMetrics.getAscent();
+        let - = graphics.drawString(refDes.displayName() , TextX , TextY)
+        in 
+          skip 
+      ) 
+    ) ;
+  return  <VOID>
+) ;
+
+protected  getYConnectCoord : [String] ==> int 
+getYConnectCoord(pinName) == 
+( dcl   index : int  := pinList.indexOf(pinName),
+        YLocation : int  := getYConnectCoord(index);
+  return  YLocation
+) ;
+
+public  paintPinSections : [Graphics] ==> <VOID>
+paintPinSections(graphics) == 
+( dcl   fixedPinFound : bool  := false  ;
+  ( dcl   pinIndex : int  := 0;
+    while  pinIndex < pinList.size() do  
+    ( dcl   pinName : [String] := elementAt(pinIndex),
+            pinPoint : [Point] := getConnectionPoint(pinName , Orientation.LEFT),
+            baseY : int  := pinPoint.y-WireGraphic.SEGMENT_COUNT;
+      if  refDes.isFixedContactPin(pinName)
+      then  
+        ( def l_4 = baseY
+          in baseY := l_4-getFixedPinYOffset();
+          let - = graphics.drawOval(pinPoint.x , baseY , PIN_WIDTH , PIN_WIDTH)
+          in 
+            skip ;
+          fixedPinFound := true  
+        ) 
+      else  
+        ( if  fixedPinFound
+          then  
+            ( dcl   xPoints : map  int  to  int  := {2 |-> pinPoint.x+PIN_WIDTH , 1 |-> pinPoint.x+(PIN_WIDTH/2) , 0 |-> pinPoint.x},
+                    yPoints : map  int  to  int  := {2 |-> baseY+PIN_WIDTH-ARROW_OFFSET , 1 |-> baseY-ARROW_OFFSET , 0 |-> baseY+PIN_WIDTH-ARROW_OFFSET};
+              let - = graphics.fillPolygon(new  Polygon(xPoints , yPoints , 3))
+              in 
+                skip 
+            ) 
+          else  
+            ( dcl   xPoints : map  int  to  int  := {2 |-> pinPoint.x+PIN_WIDTH , 1 |-> pinPoint.x+(PIN_WIDTH/2) , 0 |-> pinPoint.x},
+                    yPoints : map  int  to  int  := {2 |-> baseY+ARROW_OFFSET , 1 |-> baseY+PIN_WIDTH+ARROW_OFFSET , 0 |-> baseY+ARROW_OFFSET};
+              let - = graphics.fillPolygon(new  Polygon(xPoints , yPoints , 3))
+              in 
+                skip 
+            ) 
+        ) ;
+      pinIndex := pinIndex+1
+    ) 
+  ) ;
+  return  
+) ;
+
+public  getConnectionPoint : [String] * [Orientation] ==> [Point]
+getConnectionPoint(pinName, direction) == 
+( dcl   location : [Point] := getLocation(),
+        xLocation : int  := location.x,
+        yLocation : int  := location.y,
+        connectPosition : [Position] := if  (getEdgeCount(Position.LEFT) > 0) then  Position.LEFT else  Position.RIGHT;
+  if  pinList.contains(pinName)
+  then  
+    ( if  (connectPosition = Position.RIGHT and  getEdgeCount(Position.RIGHT , pinName) > 0) or  (connectPosition = Position.LEFT and  getEdgeCount(Position.LEFT , pinName) = 0)
+      then  
+        ( def l_3 = xLocation
+          in xLocation := l_3+COLUMN_WIDTH
+        ) ;
+      if  direction = Orientation.RIGHT
+      then  
+        ( def l_3 = xLocation
+          in xLocation := l_3+PIN_WIDTH
+        ) ;
+      yLocation := getYConnectCoord(pinName)
+    ) ;
+  return  new  Point(xLocation , yLocation)
+) ;
+
+instance variables 
+  private  pinFont : [Font] := nil  ;
+  private  pinFontMetrics : [FontMetrics] := nil  ;
+  protected  static SYMBOL_WIDTH : int  := 66;
+  protected  static SYMBOL_HEIGHT : int  := 10;
+  protected  static PIN_HEIGHT : int  := 0;
+  protected  static PIN_SPACING : int  := 24;
+  protected  static PIN_WIDTH : int  := 12;
+  protected  static TOP_HEIGHT : int  := 0;
+  protected  static ARROW_OFFSET : int  := 2;
+  private  static COLUMN_WIDTH : int  := SYMBOL_WIDTH-PIN_WIDTH-6
+  
+end  RelaySwitchGraphic

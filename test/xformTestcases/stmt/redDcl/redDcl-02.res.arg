@@ -1,0 +1,15 @@
+"class A
+
+types
+
+public T :: x : nat
+   y : seq of char; 
+
+operations
+
+public Test : () ==> T
+Test() ==
+    return mk_T(12, \"hi\");
+   
+end A
+"

@@ -1,0 +1,53 @@
+class Uml2Vdm
+types 
+ public String = seq of char;
+
+instance variables
+public cl : map String to seq of B :={|->};
+
+operations
+public AddError : String ==> ()
+AddError(s) == cl := cl ++ {s|-> new B()};
+
+public Test : String ==> ()
+Test(s) == let tp : C =new C(cl(s)) in tp.T(); 
+ 
+     
+end Uml2Vdm
+
+class B
+
+
+end B
+
+class C
+
+instance variables
+
+s : seq of B ;
+
+operations
+
+public C : seq of B ==> C
+C(se) == (s:= se;);
+
+
+public T : () ==> ()
+T() == skip;
+
+end C
+
+class TestCase
+operations
+public Test : () ==> ()
+Test () ==
+(
+  let u : Uml2Vdm = new Uml2Vdm()
+  in
+  (
+    u.AddError("H");
+    u.Test("H");
+
+  );
+);
+end TestCase

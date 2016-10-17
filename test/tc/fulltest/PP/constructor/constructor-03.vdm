@@ -1,0 +1,42 @@
+-- Check that ambiguous inherited constructor is captured
+class A
+
+instance variables
+
+n : nat := 0;
+
+operations
+
+public A : nat ==> A
+A(m) ==
+( n := m;
+  return self
+)
+
+end A
+
+class B is subclass of A,D
+
+end B
+
+class D 
+
+operations
+
+public D : nat ==> D
+D(-) ==
+  return self;
+
+end D
+
+
+
+class C
+
+operations
+
+op : () ==> A
+op() ==
+  return new B(3)
+
+end C

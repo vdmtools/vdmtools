@@ -1,0 +1,806 @@
+class JavaTextMessageFormat --is subclass of JavaTextFormat
+ values 
+   CLASS : JavaLangClass = new  JavaLangClass("JavaTextMessageFormat" , <CLASS> , false  )
+instance variables 
+  private  locale : JavaUtilLocale := new JavaUtilLocale(<NIL>); --  := JavaUtilLocale`getDefault();
+  private  pattern : JavaLangString := new  JavaLangString([  ]);
+  private  static MAX_ARGUMENTS : int  := 10;
+  private  formats : map  int  to  JavaTextFormat := {l_3 |-> new  JavaTextFormat(<NIL>)|l_3 in set  {0,...,MAX_ARGUMENTS-1}};
+  private  offsets : map  int  to  int  := {l_3 |-> 0|l_3 in set  {0,...,MAX_ARGUMENTS-1}};
+  private  argumentNumbers : map  int  to  int  := {l_3 |-> 0|l_3 in set  {0,...,MAX_ARGUMENTS-1}};
+  private  maxOffset : int  := -1;
+  private  static typeList : map  int  to  JavaLangString := {8 |-> new  JavaLangString("choice") , 7 |-> new  JavaLangString([  ]) , 6 |-> new  JavaLangString("time") , 5 |-> new  JavaLangString([  ]) , 4 |-> new  JavaLangString("date") , 3 |-> new  JavaLangString([  ]) , 2 |-> new  JavaLangString("number") , 1 |-> new  JavaLangString([  ]) , 0 |-> new  JavaLangString([  ])};
+  private  static modifierList : map  int  to  JavaLangString := {6 |-> new  JavaLangString("integer") , 5 |-> new  JavaLangString([  ]) , 4 |-> new  JavaLangString("percent") , 3 |-> new  JavaLangString([  ]) , 2 |-> new  JavaLangString("currency") , 1 |-> new  JavaLangString([  ]) , 0 |-> new  JavaLangString([  ])};
+  private  static dateModifierList : map  int  to  JavaLangString := {8 |-> new  JavaLangString("full") , 7 |-> new  JavaLangString([  ]) , 6 |-> new  JavaLangString("long") , 5 |-> new  JavaLangString([  ]) , 4 |-> new  JavaLangString("medium") , 3 |-> new  JavaLangString([  ]) , 2 |-> new  JavaLangString("short") , 1 |-> new  JavaLangString([  ]) , 0 |-> new  JavaLangString([  ])}
+operations 
+public  clone : () ==> JavaLangObject
+clone() == 
+is not yet specified;
+--( dcl   other : JavaTextMessageFormat := JavaTextFormat`clone();
+--  other.formats := formats.clone();
+--  ( dcl   i : int  := 0;
+--    while  i < formats.length do  
+--    ( if  not  formats(i).IsNil()
+--      then  
+--        other.formats(i) := formats(i).clone();
+--      def l_1 = i
+--      in i := l_1+1
+--    ) 
+--  ) ;
+--  def l_4 = offsets.clone();
+--  l_1 = if  is_(l_4,real ) then  floor(l_4) else  l_4
+--  in other.offsets := l_1;
+--  def l_4 = argumentNumbers`clone();
+--  l_1 = if  is_(l_4,real ) then  floor(l_4) else  l_4
+--  in other.argumentNumbers := l_1;
+--  return  other
+--) ;
+ 
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  hashCode : () ==> int 
+hashCode() == 
+( return  pattern.hashCode()
+) ;
+
+public  getLocale : () ==> JavaUtilLocale
+getLocale() == 
+( return  locale
+) ;
+
+public  toPattern : () ==> JavaLangString
+toPattern() == 
+is not yet specified;
+-- --( dcl   lastOffset : int  := 0,
+-- --        result : JavaLangStringBuffer := new  JavaLangStringBuffer();
+-- --  ( dcl   i : int  := 0;
+-- --    while  i <= maxOffset do  
+-- --    ( let - = copyAndFixQuotes(pattern , lastOffset , offsets(i) , result)
+-- --      in 
+-- --        skip ;
+-- --      lastOffset := offsets(i);
+-- --      let - = result.append('{')
+-- --      in 
+-- --        skip ;
+-- --      let - = result.append(argumentNumbers(i))
+-- --      in 
+-- --        skip ;
+-- --      if  formats(i).IsNil()
+-- --      then  
+-- --        ( skip 
+-- --        ) 
+-- --      else  
+-- --        if  isofclass  (JavaTextDecimalFormat,formats(i))
+-- --        then  
+-- --          ( if  formats(i).equals(l)
+-- --            then  
+-- --              ( let - = result.append(new  JavaLangString(",number"))
+-- --                in 
+-- --                  skip 
+-- --              ) 
+-- --            else  
+-- --              if  formats(i).equals(JavaTextNumberFormat`getCurrencyInstance(locale))
+-- --              then  
+-- --                ( let - = result.append(new  JavaLangString(",number,currency"))
+-- --                  in 
+-- --                    skip 
+-- --                ) 
+-- --              else  
+-- --                if  formats(i).equals(JavaTextNumberFormat`getPercentInstance(locale))
+-- --                then  
+-- --                  ( let - = result.append(new  JavaLangString(",number,percent"))
+-- --                    in 
+-- --                      skip 
+-- --                  ) 
+-- --                else  
+-- --                  if  formats(i).equals(getIntegerFormat(locale))
+-- --                  then  
+-- --                    ( let - = result.append(new  JavaLangString(",number,integer"))
+-- --                      in 
+-- --                        skip 
+-- --                    ) 
+-- --                  else  
+-- --                    ( let - = result.append(new  JavaLangString(",number,")+formats(i)`toPattern())
+-- --                      in 
+-- --                        skip 
+-- --                    ) 
+-- --          ) 
+-- --        else  
+-- --          if  isofclass  (JavaTextSimpleDateFormat,formats(i))
+-- --          then  
+-- --            ( if  formats(i).equals(JavaTextDateFormat`getDateInstance(JavaTextDateFormat`DEFAULT , locale))
+-- --              then  
+-- --                ( let - = result.append(new  JavaLangString(",date"))
+-- --                  in 
+-- --                    skip 
+-- --                ) 
+-- --              else  
+-- --                if  formats(i).equals(JavaTextDateFormat`getDateInstance(JavaTextDateFormat`SHORT , locale))
+-- --                then  
+-- --                  ( let - = result.append(new  JavaLangString(",date,short"))
+-- --                    in 
+-- --                      skip 
+-- --                  ) 
+-- --                else  
+-- --                  if  formats(i).equals(JavaTextDateFormat`getDateInstance(JavaTextDateFormat`DEFAULT , locale))
+-- --                  then  
+-- --                    ( let - = result.append(new  JavaLangString(",date,medium"))
+-- --                      in 
+-- --                        skip 
+-- --                    ) 
+-- --                  else  
+-- --                    if  formats(i).equals(JavaTextDateFormat`getDateInstance(JavaTextDateFormat`LONG , locale))
+-- --                    then  
+-- --                      ( let - = result.append(new  JavaLangString(",date,long"))
+-- --                        in 
+-- --                          skip 
+-- --                      ) 
+-- --                    else  
+-- --                      if  formats(i).equals(JavaTextDateFormat`getDateInstance(JavaTextDateFormat`FULL , locale))
+-- --                      then  
+-- --                        ( let - = result.append(new  JavaLangString(",date,full"))
+-- --                          in 
+-- --                            skip 
+-- --                        ) 
+-- --                      else  
+-- --                        if  formats(i).equals(JavaTextDateFormat`getTimeInstance(JavaTextDateFormat`DEFAULT , locale))
+-- --                        then  
+-- --                          ( let - = result.append(new  JavaLangString(",time"))
+-- --                            in 
+-- --                              skip 
+-- --                          ) 
+-- --                        else  
+-- --                          if  formats(i).equals(JavaTextDateFormat`getTimeInstance(JavaTextDateFormat`SHORT , locale))
+-- --                          then  
+-- --                            ( let - = result.append(new  JavaLangString(",time,short"))
+-- --                              in 
+-- --                                skip 
+-- --                            ) 
+-- --                          else  
+-- --                            if  formats(i).equals(JavaTextDateFormat`getTimeInstance(JavaTextDateFormat`DEFAULT , locale))
+-- --                            then  
+-- --                              ( let - = result.append(new  JavaLangString(",time,medium"))
+-- --                                in 
+-- --                                  skip 
+-- --                              ) 
+-- --                            else  
+-- --                              if  formats(i).equals(JavaTextDateFormat`getTimeInstance(JavaTextDateFormat`LONG , locale))
+-- --                              then  
+-- --                                ( let - = result.append(new  JavaLangString(",time,long"))
+-- --                                  in 
+-- --                                    skip 
+-- --                                ) 
+-- --                              else  
+-- --                                if  formats(i).equals(JavaTextDateFormat`getTimeInstance(JavaTextDateFormat`FULL , locale))
+-- --                                then  
+-- --                                  ( let - = result.append(new  JavaLangString(",time,full"))
+-- --                                    in 
+-- --                                      skip 
+-- --                                  ) 
+-- --                                else  
+-- --                                  ( let - = result.append(new  JavaLangString(",date,")+formats(i)`toPattern())
+-- --                                    in 
+-- --                                      skip 
+-- --                                  ) 
+-- --            ) 
+-- --          else  
+-- --            if  isofclass  (ChoiceFormat,formats(i))
+-- --            then  
+-- --              ( let - = result.append(new  JavaLangString(",choice,")+formats(i)`toPattern())
+-- --                in 
+-- --                  skip 
+-- --              ) 
+-- --            else  
+-- --              ( skip 
+-- --              ) ;
+-- --      let - = result.append('}')
+-- --      in 
+-- --        skip ;
+-- --      def l_1 = i
+-- --      in i := l_1+1
+-- --    ) 
+-- --  ) ;
+-- --  let - = copyAndFixQuotes(pattern , lastOffset , pattern.length() , result)
+-- --  in 
+-- --    skip ;
+-- --  return  result.toString()
+-- --) ;
+-- 
+public  getFormats : () ==> map  int  to  JavaTextFormat
+getFormats() == 
+is not yet specified;
+-- --( trap  j2v_exception :  JavaLangException with  
+-- --    cases  true  : 
+-- --      (isofclass  (JavaLangException,j2v_exception) or  j2v_exception.IsNil()) -> 
+-- --        ( dcl   e : JavaLangException := j2v_exception;
+-- --          return  formats
+-- --        ) ,
+-- --      others  -> 
+-- --        exit  j2v_exception
+-- --    end  
+-- --  in  
+-- --    ( return  formats.clone()      ! array's clone operaion is called !!!!!
+-- --    ) 
+-- --) ;
+-- 
+public  parse : JavaLangString ==> map  int  to  JavaLangObject
+parse(source) == 
+is not yet specified;
+-- --( dcl   status : JavaTextParsePosition := new  JavaTextParsePosition(0),
+-- --        result : map  int  to  JavaLangObject := parse(source , status);
+-- --  if  status.index = 0
+-- --  then  
+-- --    exit  new  JavaTextParseException(new  JavaLangString("JavaTextMessageFormat parse error!") , status.errorIndex);
+-- --  return  result
+-- --) ;
+-- 
+-- public  equals : JavaLangObject ==> bool 
+-- equals(obj) == 
+-- is not yet specified;
+-- --( if  self   = obj
+-- --  then  
+-- --    return  true  ;
+-- --  if  obj.IsNil() or  getClass() <> obj`getClass()
+-- --  then  
+-- --    return  false  ;
+-- --  ( dcl   other : JavaTextMessageFormat := obj;
+-- --    return  (J2VUTIL`BitOp(J2VUTIL`BitOp(J2VUTIL`BitOp(J2VUTIL`BitOp(maxOffset = other`maxOffset , <AND> , pattern.equals(other`pattern)) , <AND> , Utility`objectEquals(locale , other`locale)) , <AND> , Utility`arrayEquals(offsets , other`offsets)) , <AND> , Utility`arrayEquals(argumentNumbers , other`argumentNumbers)) and  Utility`arrayEquals(formats , other`formats))
+-- --  ) 
+-- --) ;
+-- 
+-- public  setLocale : JavaUtilLocale ==> ()
+-- setLocale(theLocale) == 
+-- ( locale := theLocale;
+-- ) ;
+-- 
+-- public  JavaTextMessageFormat : <NIL> ==> JavaTextMessageFormat
+-- JavaTextMessageFormat(-) == 
+-- isNil := true  ;
+-- 
+-- public  setFormat : int  * JavaTextFormat ==> ()
+-- setFormat(variable, newFormat) == 
+-- ( formats := formats ++ {variable |-> newFormat};
+-- ) ;
+-- 
+-- public  applyPattern : JavaLangString ==> ()
+-- applyPattern(newPattern) == 
+-- ( dcl   segments : map  int  to  JavaLangStringBuffer := {l_3 |-> new  JavaLangStringBuffer(<NIL>)|l_3 in set  {0,...,4-1}};
+--   ( dcl   i : int  := 0;
+--     while  i < card dom segments do  
+--     ( segments := segments ++ {i |-> new  JavaLangStringBuffer()};
+-- 	 def l_1 = i
+-- 	 in i := l_1+1
+--     ) 
+--   ) ;
+--   ( dcl   part : int  := 0,
+-- 	     formatNumber : int  := 0,
+-- 	     inQuote : bool  := false  ,
+-- 	     braceStack : int  := 0;
+--     maxOffset := -1;
+--     ( dcl   i : int  := 0;
+-- 	 while  i < newPattern.length() do  
+-- 	 ( dcl   ch : char  := newPattern.charAt(i);
+-- 	   if  part = 0
+-- 	   then  
+-- 	     ( if  ch = '''
+-- 	       then  
+-- 		 ( if  i+1 < newPattern.length() and  newPattern.charAt(i+1) = '''
+-- 		   then  
+-- 		     ( let - = segments(part).append(ch)
+-- 		       in 
+-- 			 skip ;
+-- 		       def l_1 = i
+-- 		       in i := l_1+1
+-- 		     ) 
+-- 		   else  
+-- 		     ( inQuote := not  inQuote
+-- 		     ) 
+-- 		 ) 
+-- 	       else  
+-- 		 if  ch = '{' and  not  inQuote
+-- 		 then  
+-- 		   ( part := 1
+-- 		   ) 
+-- 		 else  
+-- 		   ( let - = segments(part).append(ch)
+-- 		     in 
+-- 		       skip 
+-- 		   ) 
+-- 	     ) 
+-- 	   else  
+-- 	     if  inQuote
+-- 	     then  
+-- 	       ( let - = segments(part).append(ch)
+-- 		 in 
+-- 		   skip ;
+-- 		 if  ch = '''
+-- 		 then  
+-- 		   ( inQuote := false  
+-- 		   ) 
+-- 	       ) 
+-- 	     else  
+-- 	       ( trap  j2v_break with  
+-- 		   cases  true  : 
+-- 		     (isofclass  (J2V_Break,j2v_break)) -> 
+-- 		       skip 
+-- 		     
+-- 		   end  
+-- 		 in  
+-- 		   ( cases  ch: 
+-- 		       ',' -> 
+-- 			 ( if  part < 3
+-- 			   then  
+-- 			     def l_3 = part
+-- 			     in part := l_3+1
+-- 			   else  
+-- 			     let - = segments(part).append(ch)
+-- 			     in 
+-- 			       skip ;
+-- 			   exit  new  J2V_Break()
+-- 			 ) ,
+-- 		       '{' -> 
+-- 			 ( def l_1 = braceStack
+-- 			   in braceStack := l_1+1;
+-- 			   let - = segments(part).append(ch)
+-- 			   in 
+-- 			     skip ;
+-- 			   exit  new  J2V_Break()
+-- 			 ) ,
+-- 		       '}' -> 
+-- 			 ( if  braceStack = 0
+-- 			   then  
+-- 			     ( part := 0;
+-- 			       segments:=makeFormat(i , formatNumber , segments);
+-- 			       formatNumber := formatNumber+1
+-- 			     ) 
+-- 			   else  
+-- 			     ( def l_1 = braceStack
+-- 			       in braceStack := l_1-1;
+-- 			       let - = segments(part).append(ch)
+-- 			       in 
+-- 				 skip 
+-- 			     ) ;
+-- 			   exit  new  J2V_Break()
+-- 			 ) ,
+-- 		       ''' -> 
+-- 			 ( inQuote := true  ;
+-- 			   exit  new  J2V_Break()
+-- 			 ) ,
+-- 		       others  -> 
+-- 			 ( let - = segments(part).append(ch)
+-- 			   in 
+-- 			     skip ;
+-- 			   exit  new  J2V_Break()
+-- 			 ) 
+-- 		     end  
+-- 		   ) 
+-- 	       ) ;
+-- 	   def l_1 = i
+-- 	   in i := l_1+1
+-- 	 ) 
+--     ) ;
+--     if  braceStack = 0 and  part <> 0
+--     then  
+-- 	 ( maxOffset := -1;
+-- 	   exit  new  JavaLangIllegalArgumentException(new  JavaLangString("Unmatched braces in the pattern."))
+-- 	 ) ;
+--     pattern := segments(0).toString()
+--   )
+-- ) ;
+-- 
+-- public  JavaTextMessageFormat : JavaLangString ==> JavaTextMessageFormat
+-- JavaTextMessageFormat(pattern) == 
+-- ( applyPattern(pattern)
+-- ) ;
+-- 
+-- public  setFormats : map  int  to  JavaTextFormat ==> ()
+-- setFormats(newFormats) == 
+-- is not yet specified;
+-- --( trap  j2v_exception :  JavaLangException with  
+-- --    cases  true  : 
+-- --      (isofclass  (JavaLangException,j2v_exception) or  j2v_exception.IsNil()) -> 
+-- --        ( dcl   e : JavaLangException := j2v_exception;
+-- --          return  
+-- --        ) ,
+-- --      others  -> 
+-- --        exit  j2v_exception
+-- --    end  
+-- --  in  
+-- --    ( formats := newFormats.clone()
+-- --    ) ;
+-- --  skip 
+-- --) ;
+-- 
+-- getIntegerFormat : JavaUtilLocale ==> JavaTextNumberFormat
+-- getIntegerFormat(locale) == 
+-- is not yet specified;
+-- --( dcl   temp : JavaTextNumberFormat := JavaTextNumberFormat`getInstance(locale);
+-- --  if  isofclass  (JavaTextDecimalFormat,temp)
+-- --  then  
+-- --    ( dcl   temp2 : JavaTextDecimalFormat := temp;
+-- --     let - = temp2.setMaximumFractionDigits(0)
+-- --      in 
+-- --        skip ;
+-- --      let - = temp2.setDecimalSeparatorAlwaysShown(false  )
+-- --      in 
+-- --        skip ;
+-- --      let - = temp2.setParseIntegerOnly(true  )
+-- --      in 
+-- --        skip 
+-- --    ) ;
+-- --  return  temp
+-- --) ;
+-- 
+--public  static format : JavaLangString * map  int  to  JavaLangObject ==> JavaLangString
+--format(pattern, arguments) == 
+--( dcl   temp : JavaTextMessageFormat := new  JavaTextMessageFormat(pattern),
+--        sb: JavaLangStringBuffer := 
+--          temp.formatObjects(arguments, new  JavaLangStringBuffer() , 
+--                             new  JavaTextFieldPosition(0)),
+--        s : JavaLangString := sb.toString();
+--  return  s
+--) ;
+-- 
+-- public  parse : JavaLangString * JavaTextParsePosition ==> map  int  to  JavaLangObject
+-- parse(source, status) == 
+-- is not yet specified;
+-- --( dcl   empty : map  int  to  JavaLangObject := {|->};
+-- --  if  source.IsNil()
+-- --  then  
+-- --    return  empty;
+-- --  ( dcl   resultArray : map  int  to  JavaLangObject := {l_5 |-> new  JavaLangObject(<NIL>)|l_5 in set  {0,...,10-1}},
+-- --          patternOffset : int  := 0,
+-- --          sourceOffset : int  := status.index,
+-- --          tempStatus : JavaTextParsePosition := new  JavaTextParsePosition(0);
+-- --    ( dcl   i : int  := 0;
+-- --      while  i <= maxOffset do  
+-- --      ( dcl   len__ : int  := offsets(i)-patternOffset;
+-- --        if  len__ = 0 or  pattern`regionMatches(patternOffset , source , sourceOffset , len__)
+-- --        then  
+-- --          ( def l_3 = sourceOffset
+-- --            in sourceOffset := l_3+len__;
+-- --            def l_3 = patternOffset
+-- --            in patternOffset := l_3+len__
+-- --          ) 
+-- --        else  
+-- --          ( status.errorIndex := sourceOffset;
+-- --            return  {|->}
+-- --          ) ;
+-- --        if  formats(i).IsNil()
+-- --        then  
+-- --          ( dcl   tempLength : int  := if  (i <> maxOffset) then  offsets(i+1) else  pattern.length(),
+-- --                  next : int ;
+-- --            if  patternOffset >= tempLength
+-- --            then  
+-- --              ( next := source.length()
+-- --              ) 
+-- --            else  
+-- --              ( next := source`indexOf(pattern.substring(patternOffset , tempLength) , sourceOffset)
+-- --              ) ;
+-- --            if  next < 0
+-- --            then  
+-- --              ( status.errorIndex := sourceOffset;
+-- --                return  {|->}
+-- --              ) 
+-- --            else  
+-- --              ( dcl   strValue : JavaLangString := source.substring(sourceOffset , next);
+-- --                if  not  strValue.equals(new  JavaLangString("{")+argumentNumbers(i)+new  JavaLangString("}"))
+-- --                then  
+-- --                  resultArray := resultArray ++ {argumentNumbers(i) |-> source.substring(sourceOffset , next)};
+-- --                sourceOffset := next
+-- --              ) 
+-- --          ) 
+-- --        else  
+-- --          ( tempStatus`index := sourceOffset;
+-- --            resultArray := resultArray ++ {argumentNumbers(i) |-> formats(i).parseObject(source , tempStatus)};
+-- --            if  tempStatus`index = sourceOffset
+-- --            then  
+-- --              ( status.errorIndex := sourceOffset;
+-- --                return  {|->}
+-- --              ) ;
+-- --            sourceOffset := tempStatus`index
+-- --          ) ;
+-- --        def l_1 = i
+-- --        in i := l_1+1
+-- --      ) 
+-- --    ) ;
+-- --    ( dcl   len__ : int  := pattern.length()-patternOffset;
+-- --      if  len__ = 0 or  pattern`regionMatches(patternOffset , source , sourceOffset , len__)
+-- --      then  
+-- --        ( status.index := sourceOffset+len__
+-- --        ) 
+-- --      else  
+-- --        ( status.errorIndex := sourceOffset;
+-- --          return  {|->}
+-- --        ) ;
+-- --      return  resultArray
+-- --    ) 
+-- --  ) 
+-- --) ;
+-- 
+-- --private  readObject : ObjectInputStream ==> ()
+-- --readObject(in__) == 
+-- --( let - = in__`defaultReadObject()
+-- --  in 
+-- --    skip ;
+-- --  ( dcl   isValid : bool  := J2VUTIL`BitOp(J2VUTIL`BitOp(J2VUTIL`BitOp(maxOffset >= -1 , <AND> , maxOffset < MAX_ARGUMENTS) , <AND> , card dom formats = MAX_ARGUMENTS) , <AND> , offsets`length = MAX_ARGUMENTS) and  argumentNumbers`length = MAX_ARGUMENTS;
+-- --    if  isValid
+-- --    then  
+-- --      ( dcl   lastOffset : int  := pattern.length()+1;
+-- --        trap  j2v_break with  
+-- --          cases  true  : 
+-- --            (isofclass  (J2V_Break,j2v_break)) -> 
+-- --              skip ,
+-- --            others  -> 
+-- --              exit  j2v_break
+-- --          end  
+-- --        in  
+-- --          ( ( dcl   i : int  := maxOffset;
+-- --              while  i >= 0 do  
+-- --             ( if  (offsets(i) < 0) or  (offsets(i) > lastOffset)
+-- --                then  
+-- --                  ( isValid := false  ;
+-- --                    exit  new  J2V_Break()
+-- --                  ) 
+-- --                else  
+-- --                  ( lastOffset := offsets(i)
+-- --                  ) ;
+-- --                def l_1 = i
+-- --                in i := l_1-1
+-- --              ) 
+-- --            ) 
+-- --          ) 
+-- --      ) ;
+-- --    if  not  isValid
+-- --    then  
+-- --      ( exit  new  InvalidObjectException(new  JavaLangString("Could not reconstruct JavaTextMessageFormat from corrupt stream."))
+-- --      ) 
+-- --  ) ;
+-- --  skip 
+-- --) ;
+-- 
+-- --private  JavaTextMessageFormat : JavaLangString * JavaUtilLocale ==> JavaTextMessageFormat
+--public  JavaTextMessageFormat : JavaLangString * JavaUtilLocale ==> JavaTextMessageFormat
+--JavaTextMessageFormat(pattern, loc) == 
+--( -- locale := loc.clone();
+--  applyPattern(pattern)
+--) ;
+-- 
+private  static findKeyword : JavaLangString * map  int  to  JavaLangString ==> int 
+findKeyword(s_, list) == 
+( dcl s: JavaLangString := s_;
+  s := s.trim().toLowerCase();
+  ( dcl   i : int  := 0;
+    while  i < card dom list do  
+    ( if  s.equals(list(i))
+	 then  
+	   return  i;
+	 def l_1 = i
+	 in i := l_1+1
+    ) 
+  ) ;
+  return  -1
+) ;
+
+private  makeFormat : int  * int  * map  int  to  JavaLangStringBuffer ==> map  int  to  JavaLangStringBuffer
+makeFormat(position, offsetNumber, segments_) ==
+( dcl   argumentNumber : int ,
+	   segments : map  int  to  JavaLangStringBuffer := segments_,
+	   oldMaxOffset : int  := maxOffset;
+  trap  j2v_exception :  JavaLangException with  
+    cases  true  : 
+    (isofclass  (JavaLangException,j2v_exception) or  
+     j2v_exception.IsNil()) -> 
+	   ( dcl   e : JavaLangException := j2v_exception;
+	     exit  new  JavaLangIllegalArgumentException(new  JavaLangString("argument number too large at "))
+	   ) ,
+	 others  -> 
+	   exit  j2v_exception
+    end  
+  in  
+    ( argumentNumber := JavaLangInteger`parseInt(segments(1).toString());
+	 if  argumentNumber < 0 or  argumentNumber > 9
+	 then  
+	   ( exit  new  JavaLangNumberFormatException()
+	   ) ;
+	 maxOffset := offsetNumber;
+ 	 offsets := offsets ++ {offsetNumber |-> segments(0).length()};
+ 	 argumentNumbers := argumentNumbers ++ {offsetNumber |-> argumentNumber}
+     ) ;
+   ( dcl   newFormat : JavaTextFormat := new  JavaTextFormat(<NIL>);
+ 	   cases  findKeyword(segments(2).toString() , typeList): 
+ 	     0 -> 
+ 	       ( skip
+ 	       ) ,
+ 	     2, 1 -> 
+ 		     cases  findKeyword(segments(3).toString() , modifierList): 
+ 		       0 -> 
+ 			 ( newFormat := JavaTextNumberFormat`getInstance(locale);
+ 			 ) ,
+ --                    2, 1 -> 
+ --                      ( newFormat := JavaTextNumberFormat`getCurrencyInstance(locale);
+--                      ) ,
+--                    4, 3 -> 
+ --                      ( newFormat := JavaTextNumberFormat`getPercentInstance(locale);
+--                        exit  new  J2V_Break()
+--                      ) ,
+ --                    6, 5 -> 
+--                      ( newFormat := getIntegerFormat(locale);
+ --                      ) ,
+ 		       others  -> 
+ 			 ( newFormat := JavaTextNumberFormat`getInstance(locale);
+ 			   trap  j2v_exception :  JavaLangException with  
+ 			     cases  true  : 
+ 			       (isofclass  (JavaLangException,j2v_exception) or  j2v_exception.IsNil()) -> 
+ 				 ( dcl   e : JavaLangException := j2v_exception;
+ 				   maxOffset := oldMaxOffset;
+ 				   exit  new  JavaLangIllegalArgumentException(new  JavaLangString("Pattern incorrect or locale does not support formats, error at "))
+ 				 ) ,
+ 			       others  -> 
+ 				 exit  j2v_exception
+ 			     end  
+ 			   in  
+ 			     ( def df:JavaTextDecimalFormat=newFormat in df.applyPattern(segments(3).toString())
+ 			     ) ;
+ 			 ) 
+ 		     end,
+ 	     others  -> 
+ 	       ( maxOffset := oldMaxOffset;
+ 		 exit  new  JavaLangIllegalArgumentException(new  JavaLangString("unknown format type at "))
+ 	       ) 
+ 	   end;
+     formats := formats ++ {offsetNumber |-> newFormat};
+     segments(1) := new JavaLangStringBuffer(); -- segments(1).setLength(0);
+     segments(2) := new JavaLangStringBuffer(); -- segments(2).setLength(0);
+     segments(3) := new JavaLangStringBuffer(); -- segments(3).setLength(0)
+     return segments
+   ) ;
+ ) ;
+ 
+-- public  parseObject : JavaLangString * JavaTextParsePosition ==> JavaLangObject
+-- parseObject(text, status) == 
+-- is not yet specified;
+-- --( return  parse(text , status)
+-- --) ;
+-- 
+-- private  static copyAndFixQuotes : JavaLangString * int  * int  * JavaLangStringBuffer ==> ()
+-- copyAndFixQuotes(source, start__, end__, target) == 
+-- is not yet specified;
+-- --( ( dcl   i : int  := start__;
+-- --   while  i < end__ do  
+-- --    ( dcl   ch : char  := source.charAt(i);
+-- --      if  ch = '{'
+-- --      then  
+-- --        ( let - = target.append(new  JavaLangString("'{'"))
+-- --          in 
+-- --            skip 
+-- --        ) 
+-- --      else  
+-- --        if  ch = '}'
+-- --        then  
+-- --          ( let - = target.append(new  JavaLangString("'}'"))
+-- --            in 
+-- --              skip 
+-- --          ) 
+-- --        else  
+-- --          if  ch = '''
+-- --          then  
+-- --            ( let - = target.append(new  JavaLangString("''"))
+-- --              in 
+-- --                skip 
+-- --            ) 
+-- --          else  
+-- --            ( let - = target.append(ch)
+-- --              in 
+-- --                skip 
+-- --            ) ;
+-- --      def l_1 = i
+-- --      in i := l_1+1
+-- --    ) 
+-- --  ) ;
+-- --) ;
+-- 
+-- public  format' : JavaLangObject * JavaLangStringBuffer * JavaTextFieldPosition ==> JavaLangStringBuffer
+-- format'(source, result, ignore) == 
+-- is not yet specified;
+-- --( return  format(source , result , ignore , 0)
+-- --) ;
+-- 
+-- public  formatObjects : map  int  to  JavaLangObject * JavaLangStringBuffer * JavaTextFieldPosition ==> JavaLangStringBuffer
+-- formatObjects(source, result, ignore) == 
+-- ( return  formatObjects'(source , result , ignore , 0)
+-- ) ;
+-- 
+-- private  formatObjects' : map  int  to  JavaLangObject * JavaLangStringBuffer * JavaTextFieldPosition * int  ==> JavaLangStringBuffer
+-- formatObjects'(arguments, result, status, recursionProtection) == 
+-- ( dcl s:JavaLangString,
+-- 	 lastOffset : int  := 0;
+--   ( dcl   i : int  := 0;
+--     while  i <= maxOffset do  
+--     ( s := pattern.substring(lastOffset , offsets(i));
+-- 	 let - = result.append(s)
+-- 	 in 
+-- 	   skip ;
+-- 	 lastOffset := offsets(i);
+-- 	 ( dcl   argumentNumber : int  := argumentNumbers(i);
+-- 	   if  arguments={|->} or  argumentNumber >= card dom arguments
+-- 	   then  
+-- 	     ( dcl s : JavaLangString := new JavaLangString("{");
+-- 	       s:=s.concat(JavaLangString`valueOf(argumentNumber));
+-- 	       s:=s.concat(new JavaLangString("{"));
+-- 	       let - = result.append(s)
+-- 	       in 
+-- 		 skip 
+-- 	     ) ;
+-- 	   if  false  
+-- 	   then  
+-- 	     ( let - = result.append('D')
+-- 	       in 
+-- 		 skip 
+-- 	     ) 
+-- 	   else  
+-- 	     ( dcl   obj : JavaLangObject := arguments(argumentNumber),
+-- 		     arg : JavaLangString,
+-- 		     tryRecursion : bool  := false  ;
+-- 	       if  obj.IsNil()
+-- 	       then  
+-- 		 ( arg := new  JavaLangString("null")
+-- 		 ) 
+-- 	       else  
+-- 		 if  not  formats(i).IsNil()
+-- 		 then
+-- --                error
+-- 		   ( arg := formats(i).formatObject(obj);
+-- --                  tryRecursion := isofclass  (ChoiceFormat,formats(i))
+-- 		   ) 
+-- 		 else  
+-- 		   if  isofclass  (JavaLangNumber,obj)
+-- 		   then
+-- 		     arg := obj.toString()
+-- --                  ( arg := JavaTextNumberFormat`getInstance(locale).format(obj)
+-- --                  ) 
+-- 		   else  
+-- --                  if  isofclass  (JavaUtilDate,obj)
+-- --                  then  
+-- --                    ( arg := JavaTextDateFormat`getDateTimeInstance(JavaTextDateFormat`SHORT, JavaTextDateFormat`SHORT,locale).format(obj)
+-- --                    ) 
+-- --                  else  
+-- 		       if  isofclass  (JavaLangString,obj)
+-- 		       then  
+-- 			 ( arg := obj
+-- 			 ) 
+-- 		       else  
+-- 			 ( arg := obj.toString();
+-- 			   if  arg.IsNil()
+-- 			   then  
+-- 			     arg := new  JavaLangString("null")
+-- 			 ) ;
+-- 	       if  tryRecursion and  arg.indexOf('{') >= 0
+-- 	       then  
+-- 		 ( dcl   temp : JavaTextMessageFormat := new  JavaTextMessageFormat(arg , locale);
+-- 		   let - = temp.formatObjects'(arguments , result , status , recursionProtection)
+-- 		   in 
+-- 		     skip 
+-- 		 ) 
+-- 	       else  
+-- 		 ( let - = result.append(arg)
+-- 		   in 
+-- 		     skip 
+-- 		 ) 
+-- 	     ) 
+-- 	 ) ;
+-- 	 def l_1 = i
+-- 	 in i := l_1+1
+--     ) 
+--   ) ;
+--   s:=pattern.substring(lastOffset , pattern.length());
+--   let - = result.append(s)
+--   in 
+--     skip ;
+--   return  result
+-- ) ;
+-- 
+-- 
+end  JavaTextMessageFormat

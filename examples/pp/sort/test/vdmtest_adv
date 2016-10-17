@@ -1,0 +1,33 @@
+#!/bin/sh   
+
+## Runs a VDM test example for one argument file.
+
+## Output the argument to stdout (for redirect) and
+## "/dev/tty" (for user feedback)
+echo "VDM Test: '$1'" > /dev/tty
+echo "VDM Test: '$1'"
+
+SPEC="../dosort.vpp ../implsort.vpp ../sorter.vpp ../explsort.vpp \
+      ../mergesort.vpp ../sortmachine.vpp"
+
+## Run the specification with argument while collecting
+## test coverage information, and write the result to an
+## output file.
+vppde -i -R vdm.tc -O $1.res $1 $SPEC
+
+## Check for difference between result of execution
+## and expected result.
+diff -w $1.res $1.exp
+if test $? = 0 ; then
+  # Files are equal beside white spaces (excluding newline).
+  echo "SUCCESS: Result equals expected result xx" > /dev/tty
+  echo "SUCCESS: Result equals expected result xx"
+else
+  # Files are not equal. Use vdmde to see if they are in fact
+  # the same values.
+  rm -f cmparg
+  cat Compare.txt $1.res equal.txt $1.exp end.txt > cmparg
+  vppde -i -O vdmdiff cmparg compare.vpp > /dev/tty
+  cat vdmdiff
+fi
+

@@ -1,0 +1,39 @@
+class B
+
+functions
+
+public f[@A,@B]: set of @A * @B -> nat
+f(as,b) ==
+ if is_bool(b)
+ then card as
+ else 8;
+
+
+end B
+
+class C is subclass of B
+
+functions
+
+public f[@A,@B]: set of @A * @B -> nat
+f(as,b) ==
+ if is_bool(b)
+ then card as
+ else -8;
+
+end C
+
+class A
+
+operations
+
+  public Test : () ==> real
+  Test() ==
+  ( dcl res : real,
+        c : C := new C();
+    res := c.B`f[nat,nat]({1},1);
+    return res;
+  )
+
+end A
+

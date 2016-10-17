@@ -1,0 +1,14 @@
+class IndexForLoopTest
+
+instance variables
+
+  i : nat := 99999;
+
+operations
+
+  IndexForLoop1: () ==> ()
+  IndexForLoop1() ==
+    for i = 1 to 10 by 2 do
+      skip;
+      
+end IndexForLoopTest

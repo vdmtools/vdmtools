@@ -1,0 +1,238 @@
+/*
+$Id: RealT.vpp,v 1.3 2006/04/04 11:41:04 vdmtools Exp $
+テストグループ
+	Integerのテスト
+関連 UC
+	なし
+作成者
+佐原伸
+*/
+class RealT is subclass of TestDriver
+functions
+tests : () -> seq of TestCase
+tests () == 
+	[ 
+	new RealT01(), new RealT02(), new RealT03(), new RealT04(),
+	new RealT05(), new RealT06(), new RealT07(), new RealT08()
+	];
+end RealT
+-----------------------------------------------------
+/*
+シナリオID
+	利子を得る。
+親UseCase
+	なし
+内容
+	「利子を得る」を検査する。
+*/
+class RealT01 is subclass of TestCase
+values
+	誤差 = 10 ** -10;
+operations 
+protected test: () ==> bool
+test() == 
+	let	r = new Real()		in
+	return
+		Real`＝(r.利子を得る(2,10))(0.07177346254161253 )
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "RealT01:\t「利子を得る」を検査する";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end RealT01
+-----------------------------------------------------
+/*
+シナリオID
+	平方根を得る。
+親UseCase
+	なし
+内容
+	「平方根を得る」を検査する。
+*/
+class RealT02 is subclass of TestCase
+values
+	誤差 = 10 ** -10;
+operations 
+protected test: () ==> bool
+test() == 
+	let	r = new Real()		in
+	return
+		Real`＝(r.root(2))(1.414213562382246 )
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "RealT02:\t「平方根を得る」を検査する";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end RealT02
+-----------------------------------------------------
+/*
+シナリオID
+	小数点以下n桁か？。
+親UseCase
+	なし
+内容
+	「小数点以下n桁か？」と「小数点以下何桁か？」を検査する。
+*/
+class RealT03 is subclass of TestCase
+operations 
+protected test: () ==> bool
+test() == 
+	let	r = new Real()		in
+	return
+		r.小数点以下n桁か？(10.01,2)  and
+		not r.小数点以下n桁か？(10.01,3)  and
+		r.小数点以下n桁か？(10.012,3)  and
+		r.小数点以下n桁か？(10.0,0)  and
+		r.小数点以下n桁か？(10.011,2) = false  and
+		r.小数点以下n桁か？(10.1,0) = false and
+		r.小数点以下何桁か？(-1.2) = 1 and
+		r.小数点以下何桁か？(1.0) = 0 and
+		r.小数点以下何桁か？(1) = 0 and
+		r.小数点以下何桁か？(1.23) = 2
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "RealT03:\t「小数点以下n桁か？」と「小数点以下何桁か？」を検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end RealT03
+-----------------------------------------------------
+/*
+シナリオID
+	桁数を検査する。
+親UseCase
+	なし
+内容
+	「桁数」を検査する。
+*/
+class RealT04 is subclass of TestCase
+operations 
+protected test: () ==> bool
+test() == 
+	let	r = new Real()		in
+	return
+		r.桁数(0) = 1 and
+		r.桁数(1) = 1 and
+		r.桁数(9) = 1 and
+		r.桁数(10) = 2 and
+		r.桁数(99) = 2 and
+		r.桁数(100) = 3 and
+		r.桁数(0.1) = 3 and
+		r.桁数(9.1) = 3 and
+		r.桁数(10.1) = 4 and
+		r.桁数(10.123) = 6
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "RealT04:\t「桁数」を検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end RealT04
+-----------------------------------------------------
+/*
+シナリオID
+	四捨五入を検査する。
+親UseCase
+	なし
+内容
+	「小数点以下n桁で四捨五入する」を検査する。
+*/
+class RealT05 is subclass of TestCase
+operations 
+protected test: () ==> bool
+test() == 
+	return
+		Real`＝(Real`小数点以下n桁で四捨五入する(10.12345, 4))( 10.1235) and
+		Real`＝(Real`小数点以下n桁で四捨五入する(10.12345, 3))( 10.123 ) and
+		Real`＝(Real`小数点以下n桁で四捨五入する(10.12345, 2))( 10.12)  and
+		Real`＝(Real`小数点以下n桁で四捨五入する(10.125, 2) )( 10.13)  and
+		Real`＝(Real`小数点以下n桁で四捨五入する(10.14, 1))(  10.1)  and
+		Real`＝(Real`小数点以下n桁で四捨五入する(10.15, 1) )(  10.2)  and
+		Real`＝(Real`小数点以下n桁で四捨五入する(10.5, 0))( 11)  and
+		Real`＝(Real`小数点以下n桁で四捨五入する(10.4, 0) )( 10)  
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "RealT05:\t「小数点以下n桁で四捨五入する」を検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end RealT05
+-----------------------------------------------------
+/*
+シナリオID
+	実数が等しいかを検査する。
+親UseCase
+	なし
+内容
+	＝関数を検査する。
+*/
+class RealT06 is subclass of TestCase
+operations 
+protected test: () ==> bool
+test() == 
+	return
+		Real`＝(10.0123456788)(10.0123456789) = false and
+		Real`＝(10.01234567891)(10.01234567892) and
+		Real`＝(10.012345678801)(10.0123456789) 
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "RealT06:\t「実数が等しいか」を検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end RealT06
+-----------------------------------------------------
+/*
+シナリオID
+	x ** 2の積分を検査する。
+親UseCase
+	なし
+内容
+	x ** 2の積分を検査する。
+	まだ十分テストしていない。
+*/
+class RealT07 is subclass of TestCase
+operations 
+protected test: () ==> bool
+test() == 
+	let f1 = lambda x : real & x ** 2
+	in
+	return
+		Real`＝(Real`積分(f1)(10)(1)(2))(2.735) and
+		Real`＝(Real`積分(f1)(100)(1)(2))(2.37335) and
+		Real`＝(Real`積分(f1)(1000)(1)(2))(2.3373335)
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "RealT07:\tx ** 2の「積分」を検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end RealT07
+-----------------------------------------------------
+/*
+シナリオID
+	sinの積分を検査する。
+親UseCase
+	なし
+内容
+	sinの積分を検査する。
+	まだ十分テストしていない。
+*/
+class RealT08 is subclass of TestCase
+values
+pi = 3.141592653;
+math= new MATH()
+operations 
+protected test: () ==> bool
+test() == 
+	return
+		Real`＝(Real`積分(math.sin)(2)(0)(pi))(1.570796327889668)  and 
+		Real`＝(Real`積分(math.sin)(3)(0)(pi))(1.813799364923084)  and 
+		Real`＝(Real`積分(math.sin)(4)(0)(pi))(1.896118898439676)  and 
+		Real`＝(Real`積分(math.sin)(5)(0)(pi))(1.933765598488418)   and
+		Real`＝(Real`積分(new MATH().sin)(2000)(1)(pi))(1.540302158692269)
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "RealT08:\tsinの「積分」を検査する。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end RealT08
+
+
+
+

@@ -1,0 +1,11 @@
+class A
+  
+functions
+
+f: nat +> nat | bool
+f(x) ==
+  if x = 8
+  then 9
+  else f(x+9);
+    
+end A

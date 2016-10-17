@@ -1,0 +1,3 @@
+(dcl a : nat := 1,
+     b : nat := a+a;
+ return [a,b])

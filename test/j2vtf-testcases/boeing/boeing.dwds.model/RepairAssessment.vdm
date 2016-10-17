@@ -1,0 +1,72 @@
+class RepairAssessment is subclass of Object
+operations 
+public  isEmpty : () ==> bool 
+isEmpty() == 
+( return  (wireRepairList.size() = 0 and  systemRepairList.size() = 0)
+) ;
+
+public  getRepairId : () ==> [String]
+getRepairId() == 
+( return  repairId
+) ;
+
+public  removeAllRepairs : () ==> <VOID>
+removeAllRepairs() == 
+( let - = systemRepairList.removeAllElements()
+  in 
+    skip ;
+  let - = wireRepairList.removeAllElements()
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  getAllWireRepairs : () ==> [Enumeration]
+getAllWireRepairs() == 
+( return  wireRepairList.elements()
+) ;
+
+public  getAllSystemRepairs : () ==> [Enumeration]
+getAllSystemRepairs() == 
+( return  systemRepairList.elements()
+) ;
+
+public  RepairAssessment : [String] ==> RepairAssessment
+RepairAssessment(repairId) == 
+( RepairAssessment`repairId := repairId;
+  RepairAssessment`wireRepairList := new  Vector();
+  RepairAssessment`systemRepairList := new  Vector()
+) ;
+
+public  addWireRepair : [WireRepair] ==> <VOID>
+addWireRepair(wireRepair) == 
+( if  wireRepair.getBundleSegmentNumber() > highestBundleSegmentNumber
+  then  
+    ( highestBundleSegmentNumber := wireRepair.getBundleSegmentNumber()
+    ) ;
+  let - = wireRepairList.addElement(wireRepair)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+public  getHighestBundleSegmentNumber : () ==> int 
+getHighestBundleSegmentNumber() == 
+( return  highestBundleSegmentNumber
+) ;
+
+public  addSystemRepair : [SystemRepair] ==> <VOID>
+addSystemRepair(systemRepair) == 
+( let - = systemRepairList.addElement(systemRepair)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+instance variables 
+  private  repairId : [String];
+  private  highestBundleSegmentNumber : int  := 0;
+  private  wireRepairList : [Vector];
+  private  systemRepairList : [Vector]
+  
+end  RepairAssessment

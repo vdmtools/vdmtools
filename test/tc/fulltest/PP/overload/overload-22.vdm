@@ -1,0 +1,34 @@
+-- overriding/overloading virtual function by an operation.  
+class A1
+
+functions
+
+public f : nat -> nat
+f(n) == is subclass responsibility
+
+end A1
+
+class A2 is subclass of A1
+
+end A2
+
+class A3 is subclass of A2
+
+operations
+
+public f : nat ==> nat
+f(n) == return n + 1
+
+end A3
+
+
+class B
+
+operations
+
+public Test : () ==> nat
+Test() ==
+  let a = new A3() in
+  a.f(3)
+
+end B

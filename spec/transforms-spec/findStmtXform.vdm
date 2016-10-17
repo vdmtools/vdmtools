@@ -1,0 +1,337 @@
+\subsection{Finding VDM++ Statement Transformations}
+\label{sec:fsx}
+
+This module searches for possible transformations of statements. 
+
+The search is limited to the particular set of transformations
+represented by the parameter {\em p\_ids}, and the result takes the
+form of a mapping from transformation identifiers to another mapping
+which associates context identifiers with statements. Thus, for each
+possible transformation identifier the result indicates the positions
+in the abstract syntax tree at which that transformation can be
+applied (uniquely identified by the context identifiers) and, for each
+such position, the statement which would replace the one at that
+position if the transformation were applied there (except that if no
+suggested replacement is defined the position maps to the value {\em
+nil}).  
+
+Note that the domain of this result mapping is always equal to the
+set of transformations represented by the parameter {\em p\_ids}, so
+that transforms in the set for which no match is possible appear
+in the result mapped to the empty map.  
+
+Possible transformations are found by traversing the abstract syntax
+tree recursively, starting at the list of classes comprising the
+specification. When a node is reached at which a transformation is
+possible (the node corresponds to a kind of statement for which
+transformations are defined), the appropriate "local..." function is
+applied to determine if any of the available transformations are
+actually applicable at that node. The search also passes to the
+sub-nodes of that node. 
+
+It is therefore possible for the result of the search to indicate that
+several different transformations could be applied at the same node
+(because the local functions check all possible transformations at
+each appropriate node) and that one transformation could be applied to
+some node while another (possibly the same) transformation could be
+applied to a sub-node of that node. In an implementation we envisage
+the user would use the full result as a way of browsing the effects of
+applying different transformations and would be able to select which
+of the transformations found should actually be applied (with
+appropriate constraints on applying transformations at nodes and
+sub-nodes simultaneously). 
+
+\begin{vdm_al}
+module FSX
+
+imports
+  from JSSREP all,
+  from CI all,
+  from REP all,
+  from AS all,
+  from XF all
+
+exports all
+
+definitions
+
+types
+
+SXFResult = map XF`SXFId to map CI`ContextId to [AS`Stmt] ;
+
+functions
+
+
+-- local tests for transforms
+
+-- only test J matches a Def statement
+
+localSXFSDefStmt : AS`DefStmt * set of XF`SXFId -> SXFResult
+localSXFSDefStmt(p_stmt, p_ids) == 
+  if mk_XF`SXFId(11) in set p_ids and XF`isRenamingDefStmt(p_stmt)
+  then emptyXFStmt(p_ids) ++ { mk_XF`SXFId(11) |-> { p_stmt.cid |-> XF`getRenamingDefSXF(p_stmt) } }
+  else emptyXFStmt(p_ids) ;
+
+-- only test R matches a WhileLoop statement
+
+localSXFSWhileLoopStmt : AS`WhileLoopStmt * set of XF`SXFId -> SXFResult
+localSXFSWhileLoopStmt(p_stmt, p_ids) == 
+  if mk_XF`SXFId(1) in set p_ids and XF`whileIfTestTrue(p_stmt)
+  then emptyXFStmt(p_ids) ++ { mk_XF`SXFId(1) |-> { p_stmt.cid |-> XF`getWhileIfTestTrue(p_stmt) } }
+  else emptyXFStmt(p_ids) ;
+
+-- tests C, N and W match an If statement
+
+localSXFSIfStmt : AS`IfStmt * set of XF`SXFId -> SXFResult
+localSXFSIfStmt(p_stmt, p_ids) == 
+  let l_matchC = if mk_XF`SXFId(2) in set p_ids and XF`ifToCases(p_stmt, nil)
+               then emptyXFStmt(p_ids) ++ { mk_XF`SXFId(2) |-> { p_stmt.cid |-> XF`getIfToCasesXF(p_stmt) } }
+               else emptyXFStmt(p_ids),
+      l_matchN = if mk_XF`SXFId(3) in set p_ids and XF`ifToEquiv(p_stmt)
+               then emptyXFStmt(p_ids) ++ { mk_XF`SXFId(3) |-> { p_stmt.cid |-> XF`getIfToEquivXF(p_stmt) } }
+               else emptyXFStmt(p_ids),
+      l_matchW = if mk_XF`SXFId(4) in set p_ids and XF`nestedIfsNoElses(p_stmt)
+               then emptyXFStmt(p_ids) ++ { mk_XF`SXFId(4) |-> { p_stmt.cid |-> XF`getNestedIfsNoElsesXF(p_stmt) } }
+               else emptyXFStmt(p_ids)
+  in
+  mergeSXFList([l_matchC, l_matchN, l_matchW], p_ids) ;
+
+-- tests G, L (both), Q and U match a Block statement
+
+localSXFSBlockStmt : AS`BlockStmt * AS`Class * set of XF`SXFId -> SXFResult
+localSXFSBlockStmt(p_stmt, p_c, p_ids) == 
+  let l_matchG = if mk_XF`SXFId(5) in set p_ids and XF`isMapCompLoop(p_stmt, p_c)
+               then emptyXFStmt(p_ids) ++ { mk_XF`SXFId(5) |-> { p_stmt.cid |-> XF`getMapCompLoopXF(p_stmt, p_c) } }
+               else emptyXFStmt(p_ids),
+      l_matchL1 = if mk_XF`SXFId(6) in set p_ids and XF`ifTestTrue(p_stmt, p_c)
+               then emptyXFStmt(p_ids) ++ { mk_XF`SXFId(6) |-> { p_stmt.cid |-> XF`getIfTestTrueXF(p_stmt, p_c) } }
+               else emptyXFStmt(p_ids),
+      l_matchL2 = if mk_XF`SXFId(7) in set p_ids and XF`ifTestFalse(p_stmt, p_c)
+               then emptyXFStmt(p_ids) ++ { mk_XF`SXFId(7) |-> { p_stmt.cid |->  XF`getIfTestFalseXF(p_stmt, p_c) } }
+               else emptyXFStmt(p_ids),
+      l_matchQ = if mk_XF`SXFId(8) in set p_ids and XF`isRedundantIfBlock(p_stmt, p_c)
+               then emptyXFStmt(p_ids) ++ { mk_XF`SXFId(8) |-> { p_stmt.cid |-> XF`getRedundantIfBlockXF(p_stmt, p_c) } }
+               else emptyXFStmt(p_ids),
+      l_matchU = if mk_XF`SXFId(9) in set p_ids and XF`ifToAnd(p_stmt)
+               then emptyXFStmt(p_ids) ++ { mk_XF`SXFId(9) |-> { p_stmt.cid |-> XF`getIfToAndXF(p_stmt) } }
+               else emptyXFStmt(p_ids),
+      l_matchQ1 = if mk_XF`SXFId(10) in set p_ids and XF`isRedundantIfBlockNoElse(p_stmt, p_c)
+               then emptyXFStmt(p_ids) ++ { mk_XF`SXFId(10) |-> { p_stmt.cid |-> XF`getRedundantIfBlockXF(p_stmt, p_c) } } else emptyXFStmt(p_ids),
+      l_matchI = if mk_XF`SXFId(12) in set p_ids and XF`isRedundantDcl(p_stmt)
+               then emptyXFStmt(p_ids) ++ { mk_XF`SXFId(12) |-> { p_stmt.cid |-> XF`getRedundantDclXF(p_stmt) } }
+               else emptyXFStmt(p_ids)
+  in
+  mergeSXFList([l_matchG, l_matchL1, l_matchL2, l_matchQ, l_matchU, l_matchQ1, l_matchI], p_ids) ;
+
+-- search functions
+
+emptyXFStmt : set of XF`SXFId -> SXFResult
+emptyXFStmt(p_ids) == { b_id |-> { |-> } | b_id in set p_ids } ; 
+
+mergeSXFS : SXFResult * SXFResult -> SXFResult
+mergeSXFS(p_m1, p_m2) == { b_id |-> p_m1(b_id) ++ p_m2(b_id) | b_id in set dom p_m1 }
+pre dom p_m1 = dom p_m2 ; 
+
+mergeSXFList : seq of SXFResult * set of XF`SXFId -> SXFResult
+mergeSXFList(p_ml, p_ids) == 
+  if p_ml = [] 
+  then emptyXFStmt(p_ids)
+  else mergeSXFS( hd p_ml, mergeSXFList(tl p_ml, p_ids) )
+pre forall b_m in set elems p_ml & dom b_m = p_ids ; 
+
+sxfsClassList : seq of AS`Class * set of XF`SXFId -> SXFResult
+sxfsClassList(p_cl, p_ids) == 
+  if p_cl = [] 
+  then emptyXFStmt(p_ids)
+  else let l_hdXfs = sxfsClass(hd p_cl, p_ids), 
+           l_tlXfs = sxfsClassList(tl p_cl, p_ids) in
+  mergeSXFS(l_hdXfs, l_tlXfs) ;
+
+sxfsClass : AS`Class * set of XF`SXFId -> SXFResult
+sxfsClass(p_c, p_ids) == 
+  let l_defs = p_c.defs in 
+    if l_defs = nil 
+    then emptyXFStmt(p_ids) 
+    else sxfsDefinitions(l_defs, p_c, p_ids) ;
+
+sxfsDefinitions : AS`Definitions * AS`Class * set of XF`SXFId -> SXFResult
+sxfsDefinitions(p_defs, p_c, p_ids) == 
+  let l_opXfs = sxfsOps(p_defs.opm, p_c, p_ids),
+      l_threadXfs = sxfsThread(p_defs.threaddef, p_c, p_ids) in
+  mergeSXFS(l_opXfs, l_threadXfs) ;
+
+sxfsOps : map AS`Name to AS`OpDef * AS`Class * set of XF`SXFId -> SXFResult
+sxfsOps(p_opMap, p_c, p_ids) == 
+  if p_opMap = { |-> } 
+  then emptyXFStmt(p_ids) 
+  else let l_name in set dom p_opMap in 
+       let l_opXfs = sxfsOpDef(p_opMap(l_name), p_c, p_ids),
+           l_dsubXfs = sxfsOps({l_name} <-: p_opMap, p_c, p_ids) 
+       in  
+       mergeSXFS(l_opXfs, l_dsubXfs) ;
+
+sxfsOpDef : AS`OpDef * AS`Class * set of XF`SXFId -> SXFResult
+sxfsOpDef(p_opDef, p_c, p_ids) == 
+  if is_AS`ImplOpDef(p_opDef) 
+  then emptyXFStmt(p_ids) 
+  else sxfsOpBody(p_opDef.body, p_c, p_ids) ;
+
+sxfsOpBody : AS`OpBody * AS`Class * set of XF`SXFId -> SXFResult
+sxfsOpBody(p_opBody, p_c, p_ids) == 
+  let l_body = p_opBody.body in 
+    if l_body = <NOTYETSPEC> or l_body = <SUBRESP> 
+    then emptyXFStmt(p_ids) 
+    else sxfsStmt(l_body, p_c, p_ids) ;
+
+sxfsThread : [AS`ThreadDef] * AS`Class * set of XF`SXFId -> SXFResult
+sxfsThread(p_thread, p_c, p_ids) == 
+  if p_thread = nil or is_AS`PerObl(p_thread) 
+  then emptyXFStmt(p_ids) 
+  else sxfsStmt(p_thread, p_c, p_ids) ;
+
+sxfsStmtList : seq of AS`Stmt * AS`Class * set of XF`SXFId -> SXFResult
+sxfsStmtList(p_sl, p_c, p_ids) == 
+  if p_sl = [] 
+  then emptyXFStmt(p_ids)
+  else let l_hdXfs = sxfsStmt(hd p_sl, p_c, p_ids), 
+           l_tlXfs = sxfsStmtList(tl p_sl, p_c, p_ids) in
+  mergeSXFS(l_hdXfs, l_tlXfs) ;
+
+-- the lines commented out in the cases statement below correspond to types of statement 
+-- for which no transformations are (so far) defined
+
+sxfsStmt : AS`Stmt * AS`Class * set of XF`SXFId -> SXFResult
+sxfsStmt(p_stmt, p_c, p_ids) == cases true:
+      (is_AS`DefStmt(p_stmt)) -> sxfsDefStmt (p_stmt, p_c, p_ids),
+      (is_AS`LetStmt (p_stmt)) -> sxfsLetStmt (p_stmt, p_c, p_ids),
+      (is_AS`LetBeSTStmt(p_stmt)) -> sxfsLetBeSTStmt (p_stmt, p_c, p_ids),
+--      (is_AS`AssignStmt(p_stmt)) -> sxfsAssignStmt (p_stmt, p_c, p_ids),
+--      (is_AS`AtomicAssignStmt(p_stmt)) -> sxfsAtomicAssignStmt (p_stmt, p_c, p_ids),
+      (is_AS`SeqForLoopStmt(p_stmt)) -> sxfsSeqForLoopStmt (p_stmt, p_c, p_ids),
+      (is_AS`SetForLoopStmt(p_stmt)) -> sxfsSetForLoopStmt (p_stmt, p_c, p_ids),
+      (is_AS`IndexForLoopStmt(p_stmt)) -> sxfsIndexForLoopStmt (p_stmt, p_c, p_ids),
+      (is_AS`WhileLoopStmt(p_stmt)) -> sxfsWhileLoopStmt (p_stmt, p_c, p_ids),
+--      (is_AS`CallStmt(p_stmt)) -> sxfsCallStmt (p_stmt, p_c, p_ids),
+--      (is_AS`ReturnStmt(p_stmt)) -> sxfsReturnStmt (p_stmt, p_c, p_ids),
+      (is_AS`IfStmt(p_stmt)) -> sxfsIfStmt (p_stmt, p_c, p_ids),
+      (is_AS`CasesStmt(p_stmt)) -> sxfsCasesStmt (p_stmt, p_c, p_ids),
+--      (is_AS`ErrorStmt(p_stmt)) -> sxfsErrorStmt (p_stmt, p_c, p_ids),
+      (is_AS`AlwaysStmt(p_stmt)) -> sxfsAlwaysStmt (p_stmt, p_c, p_ids),
+--      (is_AS`ExitStmt(p_stmt)) -> sxfsExitStmt (p_stmt, p_c, p_ids),
+      (is_AS`TrapStmt(p_stmt)) -> sxfsTrapStmt (p_stmt, p_c, p_ids),
+      (is_AS`RecTrapStmt(p_stmt)) -> sxfsRecTrapStmt (p_stmt, p_c, p_ids),
+      (is_AS`BlockStmt(p_stmt)) -> sxfsBlockStmt (p_stmt, p_c, p_ids),
+      (is_AS`NonDetStmt(p_stmt)) -> sxfsNonDetStmt (p_stmt, p_c, p_ids),
+--      (is_AS`SpecificationStmt(p_stmt)) -> sxfsSpecificationStmt (p_stmt, p_c, p_ids),
+--      (is_AS`IdentStmt(p_stmt)) -> sxfsIdentStmt (p_stmt, p_c, p_ids),
+--      (is_AS`StartStmt(p_stmt)) -> sxfsStartStmt(p_stmt, p_c, p_ids),
+--      (is_AS`StartListStmt(p_stmt)) -> sxfsStartListStmt(p_stmt, p_c, p_ids),
+      others -> emptyXFStmt(p_ids)
+    end;
+
+-- no statement transform matches a Def statement directly so match its In
+
+sxfsDefStmt : AS`DefStmt * AS`Class * set of XF`SXFId -> SXFResult
+sxfsDefStmt(p_stmt, p_c, p_ids) == 
+  let l_localXfs = localSXFSDefStmt(p_stmt, p_ids),
+      l_subXfs = sxfsStmt(p_stmt.In, p_c, p_ids) in
+  mergeSXFS(l_localXfs, l_subXfs) ;
+
+-- no statement transform matches a Let statement directly so match its In
+
+sxfsLetStmt : AS`LetStmt * AS`Class * set of XF`SXFId -> SXFResult
+sxfsLetStmt(p_stmt, p_c, p_ids) == sxfsStmt(p_stmt.In, p_c, p_ids) ;
+
+-- no statement transform matches a LetBeST statement directly so match its In
+
+sxfsLetBeSTStmt : AS`LetBeSTStmt * AS`Class * set of XF`SXFId -> SXFResult
+sxfsLetBeSTStmt(p_stmt, p_c, p_ids) == sxfsStmt(p_stmt.In, p_c, p_ids) ;
+
+-- no statement transform matches a SeqForLoop statement directly so match its body
+
+sxfsSeqForLoopStmt : AS`SeqForLoopStmt * AS`Class * set of XF`SXFId -> SXFResult
+sxfsSeqForLoopStmt(p_stmt, p_c, p_ids) == sxfsStmt(p_stmt.body, p_c, p_ids) ;
+
+-- no statement transform matches a SetForLoop statement directly so match its body
+
+sxfsSetForLoopStmt : AS`SetForLoopStmt * AS`Class * set of XF`SXFId -> SXFResult
+sxfsSetForLoopStmt(p_stmt, p_c, p_ids) == sxfsStmt(p_stmt.body, p_c, p_ids) ;
+
+-- no statement transform matches an IndexForLoop statement directly so match its body
+
+sxfsIndexForLoopStmt : AS`IndexForLoopStmt * AS`Class * set of XF`SXFId -> SXFResult
+sxfsIndexForLoopStmt(p_stmt, p_c, p_ids) == sxfsStmt(p_stmt.body, p_c, p_ids) ;
+
+-- get transforms matching WhileLoop statement directly using localSXFSWhileLoopStmt; search for other transforms in body of loop
+
+sxfsWhileLoopStmt : AS`WhileLoopStmt * AS`Class * set of XF`SXFId -> SXFResult
+sxfsWhileLoopStmt(p_stmt, p_c, p_ids) == 
+  let l_localXfs = localSXFSWhileLoopStmt(p_stmt, p_ids),
+      l_subXfs = sxfsStmt(p_stmt.body, p_c, p_ids) in
+  mergeSXFS(l_localXfs, l_subXfs) ;
+
+-- get transforms matching If statement directly using localSXFSIfStmt; search for other transforms in cons, elsif and altn
+
+sxfsIfStmt : AS`IfStmt * AS`Class * set of XF`SXFId -> SXFResult
+sxfsIfStmt(p_stmt, p_c, p_ids) == 
+  let mk_AS`IfStmt(-, l_cons, l_elsif, l_altn, -) = p_stmt, 
+      l_elsifCons = [l_elsif(b_i).cons | b_i in set inds l_elsif ], 
+      l_consXFs = sxfsStmtList([l_cons] ^ l_elsifCons, p_c, p_ids), 
+      l_subXFs = if l_altn = nil then l_consXFs else
+        mergeSXFS(l_consXFs, 
+          sxfsStmt(l_altn, p_c, p_ids)) in 
+ mergeSXFS(localSXFSIfStmt(p_stmt, p_ids), l_subXFs ) ;
+
+-- no statement transform matches a Cases statement directly so match its altns and Others
+
+sxfsCasesStmt : AS`CasesStmt * AS`Class * set of XF`SXFId -> SXFResult
+sxfsCasesStmt(p_stmt, p_c, p_ids) == 
+  let l_altns = p_stmt.altns, 
+      l_others = p_stmt.Others, 
+      l_altnBodies = [l_altns(b_i).body | b_i in set inds l_altns ], 
+      l_altnXFs = sxfsStmtList(l_altnBodies, p_c, p_ids)
+      in 
+  if l_others = nil 
+  then l_altnXFs 
+  else mergeSXFS(l_altnXFs, sxfsStmt(l_others, p_c, p_ids)) ;
+
+-- no statement transform matches an Always statement directly so match Post and body
+
+sxfsAlwaysStmt : AS`AlwaysStmt * AS`Class * set of XF`SXFId -> SXFResult
+sxfsAlwaysStmt(p_stmt, p_c, p_ids) == 
+  mergeSXFS( sxfsStmt(p_stmt.Post, p_c, p_ids), 
+    sxfsStmt(p_stmt.body, p_c, p_ids)) ;
+
+-- no statement transform matches a Trap statement directly so match Post and body
+
+sxfsTrapStmt : AS`TrapStmt * AS`Class * set of XF`SXFId -> SXFResult
+sxfsTrapStmt(p_stmt, p_c, p_ids) == 
+  mergeSXFS( sxfsStmt(p_stmt.Post, p_c, p_ids), 
+    sxfsStmt(p_stmt.body, p_c, p_ids)) ;
+
+-- no statement transform matches a RecTrap statement directly so match its body and the trappost of each of its traps
+
+sxfsRecTrapStmt : AS`RecTrapStmt * AS`Class * set of XF`SXFId -> SXFResult
+sxfsRecTrapStmt(p_stmt, p_c, p_ids) == 
+  let l_traps = p_stmt.traps, 
+    l_trapposts = [l_traps(b_i).trappost | b_i in set inds l_traps ] in 
+  mergeSXFS( sxfsStmtList(l_trapposts, p_c, p_ids), 
+    sxfsStmt(p_stmt.body, p_c, p_ids)) ;
+
+-- get transforms matching Block statement directly using localSXFSBlockStmt; search for other transforms in stmts of block
+
+sxfsBlockStmt : AS`BlockStmt * AS`Class * set of XF`SXFId -> SXFResult
+sxfsBlockStmt(p_stmt, p_c, p_ids) == 
+  mergeSXFS(localSXFSBlockStmt(p_stmt, p_c, p_ids), 
+    sxfsStmtList(p_stmt.stmts, p_c, p_ids) ) ;
+
+-- no statement transform matches a NonDet statement directly so match all its stmts
+
+sxfsNonDetStmt : AS`NonDetStmt * AS`Class * set of XF`SXFId -> SXFResult
+sxfsNonDetStmt(p_stmt, p_c, p_ids) == sxfsStmtList(p_stmt.stmts, p_c, p_ids) ;
+
+end FSX
+\end{vdm_al}
+
+
+

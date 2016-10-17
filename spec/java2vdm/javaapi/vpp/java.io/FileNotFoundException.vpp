@@ -1,0 +1,18 @@
+class JavaIoFileNotFoundException is subclass of JavaIoIOException
+operations 
+public  JavaIoFileNotFoundException : () ==> JavaIoFileNotFoundException
+JavaIoFileNotFoundException() == 
+( let - = JavaIoIOException() in skip 
+) ;
+
+public  JavaIoFileNotFoundException : <NIL> ==> JavaIoFileNotFoundException
+JavaIoFileNotFoundException(-) == 
+isNil := true  ;
+
+public  JavaIoFileNotFoundException : JavaLangString ==> JavaIoFileNotFoundException
+JavaIoFileNotFoundException(s) == 
+( let - = JavaIoIOException(s) in skip 
+) ;
+
+
+end  JavaIoFileNotFoundException

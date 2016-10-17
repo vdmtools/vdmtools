@@ -1,0 +1,37 @@
+class EffectivityNote is subclass of Object
+operations 
+public  getNoteId : () ==> int 
+getNoteId() == 
+( return  noteId
+) ;
+
+public  EffectivityNote : [AircraftType] * int  * [BooleanExpr] ==> EffectivityNote
+EffectivityNote(aircraftType, noteId, ruleTree) == 
+( EffectivityNote`aircraftType := aircraftType;
+  EffectivityNote`noteId := noteId;
+  EffectivityNote`ruleTree := ruleTree
+) ;
+
+public  isActiveNote : [AircraftType] * [ExpressionContext] ==> bool 
+isActiveNote(aircraftType, context) == 
+( return  (EffectivityNote`aircraftType.equals(aircraftType) and  (def l_14 :  Boolean = (ruleTree.evaluate(context))
+  in l_14).booleanValue())
+) ;
+
+public  visitNoteExpressions : [AircraftType] * [ExprVisitor] ==> <VOID>
+visitNoteExpressions(aircraftType, visitor) == 
+( if  EffectivityNote`aircraftType.equals(aircraftType)
+  then  
+    ( let - = ruleTree.accept(visitor)
+      in 
+        skip 
+    ) ;
+  return  <VOID>
+) ;
+
+instance variables 
+  private  aircraftType : [AircraftType] := nil  ;
+  private  noteId : int ;
+  private  ruleTree : [BooleanExpr] := nil  
+  
+end  EffectivityNote

@@ -1,0 +1,45 @@
+This file describes how to check out the specification of the 
+static semantics and run test suites at specification level.
+
+Creating a working directory
+----------------------------
+
+mkdir statsem
+cd statsem
+cvs co tb-ss
+ln -s ss-spec/Makefile
+make link
+
+
+Preprocessing the specification
+-------------------------------
+
+The specification is automatically preprocessed by the test
+environment whenever needed. However, make vdmsl and make vdmpp will
+preprocess VDM-SL and VDM++ versions of the specification,
+respectively.
+
+Making a complete document (sssl.dvi)
+-------------------------------------
+
+make sssl.dvi   # default
+make sspp.dvi
+
+Running test suites at specification level
+------------------------------------------
+
+copy .vdmde-sl (or .vdmde-pp) from ~vdm/statsem into your statsem
+directory. 
+
+Edit and change your copy of .vdmde-sl.
+
+mkdir test
+cd test
+~vdm/test/testdir -spec .. ~vdm/test/exprtest/CORE/incompatible
+
+
+Linking errmsg files
+--------------------
+Three files need to be linked to this directory, for the test environment
+to work. The files is located in the code/errmsg directory:
+     errmsg.txt, replaceComments.pl, translateErr.pl

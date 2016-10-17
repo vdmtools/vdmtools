@@ -1,0 +1,5 @@
+# Extra time argument
+
+AddEnv 3;
+Addset 4;
+*   : nat   3 4;

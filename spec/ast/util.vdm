@@ -1,0 +1,113 @@
+\section{The UTIL Module}
+
+This module will eventually contain all the definitions which should
+be common for the different component specifications (as an
+alternative to having many copies of each).
+
+\begin{vdm_al}
+module UTIL
+
+exports all
+
+definitions
+
+values
+  CharToNum : inmap char to nat = { '0' |-> 0, '1' |-> 1, '2' |-> 2, '3' |-> 3, '4' |-> 4,
+                                   '5' |-> 5, '6' |-> 6, '7' |-> 7, '8' |-> 8, '9' |-> 9 };
+
+  NumToChar : inmap nat to char = inverse CharToNum;
+
+functions
+  set2seq[@tp] : set of @tp -> seq of @tp
+  set2seq(s) ==
+    cases s:
+      {}           -> [],
+      {v} union ss -> [v] ^ set2seq[@tp](ss)
+    end;
+
+  minset : set of real -> real
+  minset (p_s) ==
+    iota l_v in set p_s & forall e in set p_s \ {l_v} & l_v <= e
+  pre p_s <> {};
+\end{vdm_al}
+
+The \texttt{itoa} function simply translates a natural number to its
+corresponding sequence of characters. It came originally from the
+AUXIL module of the VDM Static Semantics.
+
+\begin{vdm_al}
+  itoa: nat -> seq of char
+  itoa(n) ==
+    let first = n div 10,
+        last  = n mod 10 
+    in
+      cases first:
+        0      -> "",
+        others -> itoa(first)
+      end ^ [NumToChar(last)];
+\end{vdm_al}
+
+The ReplacePercent operation is used to replace percentage characters
+(used as parameters to error messages) with the actual sequence of
+characters needed.
+\begin{vdm_al}
+operations
+  ReplacePercent: seq of char * seq of seq of char ==> seq of char
+  ReplacePercent(err,Txts) ==
+   (dcl percent: bool := false,
+    -- indicates wheter the preceding character is a percent character
+        res : seq of char := "", -- result
+        max : nat := 0; -- the maximum number found after a percent.
+    for ch in err do
+      cases ch:
+        '%'                                  -> if percent
+                                                then (percent := false;
+                                                      res := res ^ "%")
+                                                else percent := true,
+        '1','2','3','4','5','6','7','8','9'  -> if percent
+                                                then
+                                                  let num = CharToNum(ch)
+                                                  in
+                                                    if len(Txts) < num
+                                                    then error
+                                                    else
+                                                     (percent := false;
+                                                      if num > max
+                                                      then max := num;
+                                                      res := res ^ Txts(num))
+                                                else res := res ^ [ch],
+        others -> res := res ^ [ch]
+      end;
+    if len Txts > max
+    then error; -- more strings were given than used by percents.
+    return res);
+
+functions
+  String2Num: seq1 of char -> nat
+  String2Num(p_str) ==
+    cases p_str:
+      [c]      -> CharToNum(c),
+      l1 ^ [c] -> String2Num(l1) * 10 + CharToNum(c)
+    end
+  pre forall c in set elems p_str & c in set dom CharToNum;
+
+  split[@T]: seq of @T * @T -> seq of seq of @T
+  split(l,s) ==
+    cases l:
+      []              -> [],
+      [(s)] ^ l2      -> [[]] ^ split[@T](l2,s),
+      l1 ^ [(s)]      -> split[@T](l1,s) ^
+                           (cases l1:
+                              - ^ [(s)] -> [[]],
+                              others    -> []
+                            end),
+      l1 ^ [(s)] ^ l2 -> split[@T](l1,s) ^
+                           (cases l1:
+                              - ^ [(s)] -> [[]],
+                              others    -> []
+                            end) ^ split[@T](l2,s),
+      others          -> [l]
+    end;
+
+end UTIL
+\end{vdm_al}

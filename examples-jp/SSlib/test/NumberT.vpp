@@ -1,0 +1,69 @@
+/*
+テストグループ
+	Numberのテスト
+関連 UC
+	なし
+作成者
+佐原伸
+*/
+class NumberT is subclass of TestDriver
+
+functions
+tests : () -> seq of TestCase
+tests () == 
+	[ new NumberT01(),  new NumberT02()
+	];
+end NumberT
+
+/*
+シナリオID
+	計算に関するシナリオ０１
+親UseCase
+	計算に関するシナリオ
+内容
+	数値の小さい方と大きい方を計算
+*/
+class NumberT01 is subclass of TestCase
+operations 
+protected test: () ==> bool
+test() == 
+	return
+		(Number`min[int](lambda x:int, y:int & x > y)(-3)(4) = -3 and
+		Number`min[int](lambda x:int, y:int & x > y)(4)(-3) = -3 and
+		Number`min[nat](lambda x:nat, y:nat & x > y)(2)(10) = 2 and
+		Number`min[int](lambda x:int, y:int & x > y)(0)(0) = 0 and
+		Number`max[real](lambda x:real, y:real & x > y)(0.001)( -0.001) = 0.001 and
+		Number`max[real](lambda x:real, y:real & x > y)(-0.001)( 0.001) = 0.001 and
+		Number`max[real](lambda x:real, y:real & x > y)(0.0)(0.0) = 0.0)
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "NumberT01:\t整数の合計。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end NumberT01
+
+/*
+シナリオID
+	計算に関するシナリオ０１
+親UseCase
+	計算に関するシナリオ
+内容
+	計算可能かを判定
+*/
+class NumberT02 is subclass of TestCase
+operations 
+protected test: () ==> bool
+test() == 
+	return
+		 Number`isComputable[char]('a') = false and
+		 Number`isComputable[int](-9) = true and
+		 Number`isComputable[nat](0) = true and
+		 Number`isComputable[nat1](1) = true and
+		 Number`isComputable[real](1.234) = true and
+		 Number`isComputable[rat](1.234) = true
+;
+protected 準備する: () ==> ()
+準備する() == テスト名 := "NumberT02:\t計算可能かを判定。";
+protected 後始末する: () ==> ()
+後始末する() == return;
+end NumberT02

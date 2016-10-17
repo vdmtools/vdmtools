@@ -1,0 +1,12 @@
+public Test : () ==> seq of char
+Test () ==
+trap 9 with return "Hi"
+in
+  (dcl s : seq of char;
+   s := AnExit();
+   return s
+  );
+
+AnExit : () ==> seq of char
+AnExit() ==
+  exit 9;

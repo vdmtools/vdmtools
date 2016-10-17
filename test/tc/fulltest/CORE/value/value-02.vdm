@@ -1,0 +1,13 @@
+class A
+values
+        val:int = 0;
+       
+operations
+        public op() r:A ==
+        (
+                dcl a:A := new A();
+                a.val := 123;
+                return a;
+        )
+               
+end A 

@@ -1,0 +1,945 @@
+% WHAT
+
+%    The main file of the documentation of the specification of 
+%    the specification manager for the VDM-SL Toolbox
+% FILE
+%    $Source: /home/vdmtools/cvsroot/toolbox/spec/specman-spec/doc/manager.tex,v $
+% VERSION
+%    $Revision: 1.10 $
+% DATE
+%    $Date: 1997/08/18 13:47:14 $
+% FORMAT
+%    $State: Exp $
+% PROJECT
+%    Toolbox
+% STATUS
+%    Under development.
+% AUTHOR
+%    $Author: jeppe $
+% COPYRIGHT
+%    (C) 1995 IFAD, Denmark
+ 
+\documentclass[11pt]{article}
+\usepackage{vpp}
+%%\usepackage[dvips]{color}
+\usepackage{verbatimfiles,epsfig}
+\usepackage{makeidx}
+%%\usepackage{alltt}
+\usepackage{toolbox} 
+%%\usepackage{ifad} 
+
+%\definecolor{covered}{rgb}{0,0,0}      %black
+%%\definecolor{not_covered}{gray}{0.5}   %gray for previewing
+%\definecolor{not_covered}{gray}{0.6}   %gray for printing
+%%\definecolor{not_covered}{rgb}{1,0,0}  %read
+
+
+\newcommand{\InstVarDef}[1]{{\bf #1}}
+\newcommand{\TypeDef}[1]{{\bf #1}}
+\newcommand{\TypeOcc}[1]{{\it #1}}
+\newcommand{\FuncDef}[1]{{\bf #1}}
+\newcommand{\FuncOcc}[1]{#1}
+\newcommand{\MethodDef}[1]{{\bf #1}}
+\newcommand{\MethodOcc}[1]{#1}
+\newcommand{\ClassDef}[1]{{\sf #1}}
+\newcommand{\ClassOcc}[1]{#1}
+
+\def\insertfig#1#2#3#4{ % Filename, width, caption, label
+\begin{figure}
+\begin{center}
+\epsfig{file=#1,width=#2,angle=-90}
+\end{center}
+\caption{#3} \label{#4}
+\end{figure} 
+}
+
+%% \newcommand{\usecase}[11]{
+%%   \begin{description}
+%%   \item[Use Case no. ] 
+%%   \item[Introduction] 
+%%   \item[Type] 
+%%   \item[Relations] 
+%%   \item[Initialization] 
+%%   \item[Actors] 
+%%   \item[Preconditions] 
+%%   \item[Description] 
+%%   \item[Exeptions] 
+%%   \item[Postconditions] 
+%%   \end{description}     
+%% }
+
+\newcommand{\TBW}{TO BE WRITTEN}
+\newcommand{\vdmpp}{{\small VDM}$^{++}$\/}
+\newcommand{\vdmsl}{\small VDM-SL\/}
+\newcommand{\VDM}{\small VDM\/}
+\newcommand{\specman} {Specification Manager}
+
+\makeindex
+
+\begin{document}
+
+\special{!userdict begin /bop-hook{gsave 220 30 translate
+0 rotate /Times-Roman findfont 21 scalefont setfont
+0 0 moveto (CONFIDENTIAL) show grestore}def end}
+
+\docdef{Specification of the VDM-SL/VDM++ Toolbox Specification Manager}
+{Henrik Voss,\\
+ Jeppe Nyl\o{}kke J\o{}rgensen \\
+  The Institute of Applied Computer Science}
+{\today}
+{IFAD-VDM-28}
+{Report}
+{Under Development}
+{Confidential}
+{\copyright IFAD}
+{\item[V1.0] First version.
+ \item[V1.1] The version used in release 3.0 of the VDM-SL Toolbox.
+ \item[V1.2] Requirements added.
+ \item[V1.3] Updated to include specification manager for VDM++ as
+   well.
+ \item[V1.4] Pretty printed version.
+ \item[\mbox{}] \mbox{}}
+{\mbox{}}
+
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\renewcommand{\thepage}{\arabic{page}}
+\setcounter{page}{1}
+
+\parskip12pt
+\parindent0pt
+     
+\section{Introduction}
+
+
+This document describes the design and specification of the \vdmsl{}
+and \vdmpp{} Toolbox Specification Manager, written in \vdmpp{}.
+\TBW{}.
+
+\section{System Requirements}
+\label{sec:req}
+
+\subsection{General Description}
+\label{sec:reqtext}
+
+The motivation for the \specman{} is basically the introduction of the
+GUI (Graphical User Interface) to the IFAD \vdmsl{} Toolbox. With the
+GUI, two different interfaces are available for the toolbox, namely
+the GUI and the traditional ascii interface. The main purposes of the
+specification manager can be stated as:
+\begin{itemize}
+\item Keep track of the status for each module in the current project,
+\item Decide legal actions for each module depending on the status of
+  the module, 
+\item Take care of error handling,
+\item Form the interface to the internals of the toolbox,
+\item Save the project in its current status, making it possible to
+  quit the session and later restart at the same point.
+\end{itemize}
+
+The \specman{} should be viewed as an internal part of the toolbox
+that is not directly related to the end user. Instead, it is related
+to the developer of the toolbox. The functionality of the toolbox
+wanted by the developer should be accessed via the \specman{}. 
+
+It is not possible to foresee all possible requirements from the
+developer to the internals of the toolbox. Instead, the \specman{}
+should offer a suitable interface to the internals of the toolbox,
+eventually including a basic set of functions (parsing, type checking,
+code generation, pretty printing). It should also be possible to
+define different interfaces depending on the developers need (\vdmsl{}
+Toolbox, \vdmpp{} Toolbox, the Specification Animator). This could be
+stated as calling conventions or calling structure to the internals of
+the toolbox. 
+
+\subsection{Definitions} 
+\label{sec:def}
+Core definitions common to \vdmsl{} and \vdmpp{}:
+\begin{description}
+\item[Project:] Consists of one or more files containing
+  specification. 
+\item[File:] For \vdmsl{} a file can contain one or more modules in
+  case of a structured specification. In case of a flat specification,
+  a file contains one or more definitions blocks. For \vdmpp{} a file
+  contain one or more classes. Syntax checking and pretty printing are
+  performed at files.
+\item[Status:] Status for files concerns syntax checking and pretty
+  printing and status for modules/classes concerns type checking and code
+  generation. Status can be \texttt{None}(Action has not been
+  performed), \texttt{OK}(Action has been performed successfully) or
+  \texttt{Error}(Action has been performed with error).
+\end{description}
+
+Definitions specific to \vdmsl{}:
+\begin{description}
+\item[Module:] Contains the \vdmsl{} specification. In case of a flat
+  specification, this specification is turned into a single module
+  called ``DefaultMod''. Type checking and code generation is
+  performed on modules.
+\item[Session:] Describes the type of specification as either
+  \textit{flat} or \textit{structured}. Flat and structured
+  specifications cannot be parsed in the same session. 
+\end{description}
+
+Definitions specific to \vdmpp{}:
+\begin{description}
+\item[Class] Contains the \vdmpp{} specification. Type checking and
+  code generation is performed on classes.
+\end{description}
+
+\subsection{Static Requirements}
+\label{sec:statreq}
+
+The information that the \specman{} must contain and operate on is
+described as the \textit{state} of the \specman{}. This section
+describes the requirements to this state. 
+
+The core state should contain:
+\begin{enumerate}
+\item The project name,
+\item The names of files and modules in current project,
+\item Status for each file and module/class,
+\item AST for each module/class,
+\item Tag information for the code generator,
+\item Error and warning messages,
+\item Options,
+\item Dependency information (for \vdmsl{} this is imported modules
+  and for \vdmpp{} this is super and subclasses and uses and used by
+  classes).
+\end{enumerate}
+
+For the \vdmsl{} Toolbox furthermore:
+\begin{enumerate}
+\item Session type
+\end{enumerate}
+
+For the \vdmpp{} Toolbox furthermore:
+\begin{enumerate}
+\item State for the type checker.
+\end{enumerate}
+
+\subsection{Functional Requirements Stated as Use cases}
+\label{sec:requse}
+ 
+
+\paragraph{Actors}
+
+Two actors to the use cases were identified:
+\begin{description}
+\item[API:] The Application Program Interface, i.e. the user of
+  \specman{} from the interface. 
+\item[Toolbox:] The internal toolbox functionalities.
+\end{description}
+
+
+  \begin{description}
+  {\large \item[Use Case no. 1:] Handling commands to the Toolbox}
+\item[Introduction] \hfill\par This use case handles all possible
+  commands that can be given to the toolbox. This includes actions on
+  files and modules/classes, i.e. parsing and pretty printing of files
+  and type checking, code generation and
+  ``processing''\footnote{Syntax and type checking of a module/class and
+    modules/classes it depends on} of modules/classes.
+  \item[Type] Concrete
+  \item[Relations] Extends
+  \item[Initialisation] \hfill\par Activated by API
+  \item[Actors] \hfill\par API
+  \item[Preconditions] \hfill\par \specman{} must be instantiated. 
+  \item[Description] \hfill\par All issued commands are passed to the
+    Toolbox, i.e. both known and unknown commands.
+    Furthermore, the following commands should be handled:
+    \begin{itemize}
+    \item Syntax check and pretty printing of a sequence of files.
+    \item Type checking and code generation of a sequence of
+      modules/classes.
+    \item ``Processing'' a sequence of files. 
+    \end{itemize}
+    
+    Commands not covered by the above (e.g. commands dedicated to
+    special purposes) must be described in an \texttt{extends} use
+    case. 
+
+    It does not affect the funcional behaviour of the \specman{}
+    whether the issued command is correct or not, or whether the
+    command results in errors or not. Under all circumstances is the
+    command passed to the Toolbox, and the result is always
+    simply returned to the caller.
+  \item[Exeptions] \hfill\par
+    None.
+  \item[Postconditions] \hfill\par None.
+  \end{description}
+
+  \begin{description}
+  {\large \item[Use Case no. 2:] Extracting information from the \specman{} }
+\item[Introduction] \hfill\par This information concerns allowed
+  actions on files and modules/classes, which modules/classes a file contains,
+  extracting ASTs etc.
+  \item[Type] Concrete 
+  \item[Relations] None
+  \item[Initialisation] \hfill\par Activated by API or Toolbox
+  \item[Actors] \hfill\par API, Toolbox
+  \item[Preconditions] \hfill\par None
+  \item[Description] \hfill\par 
+    An actor can extract:
+    \begin{enumerate}
+    \item Allowed actions on files and modules/classes \textit{(Exception:
+        File/module/class for action is not defined)}, 
+    \item Compare session type (\vdmsl{} Toolbox only),
+    \item Status for a file or module\textit{(Exception: File/module/class
+        for status not defined)},
+    \item Get file name from file id and vice versa
+      \textit{(Exception: File id/name not defined)},defined files and
+      modules, correspondence between files and modules/classes
+      \textit{(Exception: Name not defined)},
+    \item ASTs,
+    \item Current project name\textit{(Exception: Project name has not
+        been set)},
+    \item Next, previous, first and last error/warning
+      \textit{(Exception: The requested error/warning is not defined)}
+      for the following commands: Syntax check, type check, code
+      generation and pretty printing.
+    \item the type checker state for the \vdmpp{} Toolbox.
+    \end{enumerate}
+  \item[Exeptions] \hfill\par \textit{File/module/class for action is not defined:}
+    Give message to log. \hfill\par
+    \textit{File/module/class for status is not defined:} Return nil, \hfill\par
+    \textit{File id/name not defined:} Return 0/nil, \hfill\par
+    \textit{Name not defined:} Return an empty set, \hfill\par
+    \textit{Project name has not been set:} Return nil, \hfill\par
+    \textit{The requested error/warning is not defined:} Ignore.
+  \item[Postconditions] \hfill\par None
+  \end{description}
+
+\begin{description}   
+{\large \item[Use Case no. 3:]  Updating the state of the \specman{}.}
+\item[Introduction]  \hfill\par When the Toolbox receives a command, this
+  command possibly will update the state of the \specman{}. This use
+  case describes these commands. 
+\item[Type] Concrete          
+\item[Relations] Extends
+\item[Initialization]  \hfill\par Activated by Toolbox.
+\item[Actors]  \hfill\par Toolbox       
+\item[Preconditions]  \hfill\par The API has issued the initial
+  command and the \specman{} has passed the command to the 
+  Toolbox. 
+\item[Description]  \hfill\par 
+  The state for the \specman{} must be updated with regards to:
+  \begin{enumerate}
+  \item Adding/removing of files,
+  \item Status for files and modules/classes,
+  \item ASTs and tag information for code generator,
+  \item Errors and warnings,
+  \item Options.
+  \item The type checker state (only for the \vdmpp{} Toolbox).
+  \end{enumerate}
+\item[Exeptions]   \hfill\par  
+\item[Postconditions]  \hfill\par Updated state for \specman{}.
+\end{description}      
+
+  \begin{description}
+  {\large \item[Use Case no. 4:] Project handling (New, Open, Save,
+    Save As)}
+  \item[Introduction]  \hfill\par This use case handles changing of project.
+  \item[Type] Concrete
+  \item[Relations] None
+  \item[Initialization]  \hfill\par Activated by API
+  \item[Actors]  \hfill\par API
+  \item[Preconditions]  \hfill\par None.
+  \item[Description] \hfill\par The actor should be able to explicit
+    set the name of current project, create a new project, save
+    current project and open a named project. Furthermore should the
+    actor be able to detect if there is unsaved changes in the current
+    project. 
+    \textit{(Exception: Project cannot be saved or loaded)}.  
+  \item[Exeptions]  \hfill\par
+    \textit{Project cannot be saved or loaded:} Give message to log 
+  \item[Postconditions]  \hfill\par None.
+  \end{description}
+
+  \begin{description}
+  {\large \item[Use Case no. 5:] Configuring the current project}
+  \item[Introduction]  \hfill\par This use case handles adding and removing of
+    files to the current project
+  \item[Type] Concrete
+  \item[Relations] None
+  \item[Initialization]  \hfill\par
+    Activated by API
+  \item[Actors]  \hfill\par
+    API
+  \item[Preconditions]  \hfill\par None.
+  \item[Description] \hfill\par Files should be added
+    \textit{(Exception: File exists)} or removed \textit{(Exception: File
+      does not exist)} from the current project.
+  \item[Exeptions]  \hfill\par
+    \textit{File exists:} Nothing should be done on the state. \hfill\par
+    \textit{File does not exist:} Nothing should be done on the state. 
+  \item[Postconditions]  \hfill\par None.
+  \end{description}
+
+\begin{description}   
+{\large \item[Use Case no. 6:] Commands for the Specification Animator to the
+  \vdmsl{} Toolbox }
+\item[Introduction]  \hfill\par This use case extends use case no. 1
+\item[Type] Concrete          
+\item[Relations] Extends use case no. 1     
+\item[Initialization] \hfill\par
+\item[Actors]  \hfill\par API      
+\item[Preconditions] \hfill\par 
+\item[Description] \hfill\par   
+  Commands needed by the Specification Animator that should be passed
+  via the \specman{} to the \vdmsl{} Toolbox. These commands include: 
+  \begin{enumerate}
+  \item \vdmsl{} expressions parsed to abstract syntax trees,
+  \item Semantic value converted to string,
+  \item Parsing and evaluation of a \vdmsl{} value to a semantic
+    value,
+  \item Extract defined functions and operations into a string,
+  \item Extract defined extended explicit operations and functions
+    into a map of ASTs, 
+  \item Comparing types.
+  \end{enumerate}
+\item[Exeptions]   \hfill\par   None.
+\item[Postconditions] \hfill\par None.
+\end{description}     
+
+\begin{description}
+{\large \item[Use Case no. 7:] Dependecy information for the \vdmpp{} Toolbox}
+\item[Introduction]  \hfill\par This use case deals with the
+  dependency information (super and subclasses, uses and used by). 
+\item[Type] Concrete
+\item[Relations] Extends use case no. 3
+\item[Initialization]  \hfill\par Activated by the \vdmpp{} Toolbox.
+\item[Actors]  \hfill\par Toolbox
+\item[Preconditions]  \hfill\par 
+\item[Description] \hfill\par Toolbox can insert dependency
+  information for each class in the \specman{}. \hfill\par 
+  Toolbox can extract either
+  dependency or inheritance information for a named class
+  \textit{(Exeption: Class does not exist)}.
+\item[Exeptions]  \hfill\par \textit{Class does not exist:} Return
+  empty information string.
+\item[Postconditions]  \hfill\par Possibly updated state for
+  dependency informatin. 
+\end{description}     
+
+\subsection{Document Requirements}
+\label{sec:docreq}
+
+\begin{description}
+\item[Developers Manual to \specman{}] This manual must describe how
+  the \specman {} is to be used by the developer. This includes the
+  creation, how to get access to the toolbox internals, how to add
+  extra functionalites. 
+\end{description}
+
+\insertfig{usecase.eps}{8cm}{Use case diagram for \specman{}}{fig:usecase}
+
+%%% \section{System Context Diagram}
+%%% \label{sec:context}
+%%% 
+%%% \insertfig{syscontext.eps}{3cm}{System Context Diagram}{}
+%%%
+
+
+\section{Class Structure}
+
+This section describes the overall {\bf design} of the Specification
+Manager and the structure of its specification. Furthermore the
+specification {\bf style} used is described in Section
+\ref{sec:style}.
+
+\subsection{Design}
+The overall ideas in the design of the \specman{} is the following:
+\begin{itemize}
+\item All calls to the internals of the Toolbox must go via the
+  \specman{}. The BaseTools class is designed for this purpose. 
+\item The \specman{} is to be used for both an ascii and graphical
+  user interface. The Interface and Errors classes are abstract in the
+  specification in order to make them independant of the kind of
+  interface. 
+\item The full functionality of the Toolbox can be accessed from the
+  ToolMediator class. A restricted access to the Toolbox should be
+  provided by the ToolKit class, forming an initial version API.
+\item The Repository contains the status information for the current
+  project in the Toolbox and is updated from the Toolbox. 
+\item The Options class contains the options for the Toolbox. 
+\end{itemize}
+
+The design can be seen in figure \ref{fig:speccontext}.
+
+\begin{figure}
+\begin{center}
+\epsfig{file=contextoverview.eps,width=13cm}
+\end{center}
+\caption{Context diagram and desing overview for \specman} \label{fig:speccontext}
+\end{figure} 
+
+%%\insertfig{toolkit.eps}{5cm}{Toolkit}{}
+%% \insertfig{context.eps}{5cm}{Context for the \specman{}.}{fig:context}
+%% \insertfig{topology.eps}{5cm}{Topology}{}
+
+\subsection{Specification Style}
+\label{sec:style}
+
+The specification is described as a combination of imperative and
+functional parts. That is, methods and functions are used in
+combination.
+
+Each class is described in a separate section by means of:
+\begin{itemize}
+\item An introduction to the class.
+\item An OMT class diagram giving the interface to the class. This
+  diagram will usually have been automatically generated by the
+  reverse \vdmpp{} to OMT generator.
+\item The \vdmpp{} specification of the class.
+\end{itemize}
+
+
+The following name convention are used in the specification:
+\begin{itemize}
+\item All class, type, function, value and method names starts with a
+  capital letter.
+\item All local variable names start with a lower case letter. An
+  exception is when a variable clashes a key word. In this case the
+  variable will start with an upper case letter.
+\item For variables of type sequence, maps, sets, records, tuples and
+  object reference the name might have a postfix being a underscore
+  concatenated with the letter:
+  \begin{description}
+  \item[sequence: ] l
+  \item[map: ] m
+  \item[set: ] s
+  \item[record: ] r
+  \item[tuple: ] t
+  \item[object reference: ] o
+  \end{description}
+
+  Underscores do not appear in variable names otherwise.
+
+\end{itemize}
+
+%%%%%%%%%%%
+%%
+%% The actual specification
+%%
+%%%%%%%%%%%
+
+\subsection{Toolkit}
+\label{sec:tkit}
+
+The classes in this section forms the coupling between the user, the
+internals of the \specman{} and the functionalities of the Toolbox.
+This is achived using the \textit{Mediator} behaviour pattern as
+described in \cite{DESIGNPAT95}. The Toolkit class is the public
+interface to the methods in the class ToolMediator. The
+\textit{intension} behind this is that not all methods in the
+ToolMediator class should be made public. Only methods that the user
+should be able to access should be defined in the Toolkit class. In
+\textit{reality} this is implemented in another way in order to reduce
+the number of methods. For each class that the ToolMediator refers to
+there is a method returning a reference to the actual class. All
+functionalities for the class can then be accessed by using this
+reference. This reduces the number of methods in the classes Toolkit
+and ToolMediator significantly, but on the other hand this makes all
+methods public. 
+
+\subsubsection{Class ToolKit}
+\insertfig{toolstotalview.eps}{12cm}{The ToolKit and ToolMediator
+  classes}{fig:toolstotal}
+
+The Toolkit class is the fundamental class in the Specification
+Manager in the sense that this class is the one that instantiates the
+rest of the \specman{}. This class forms the interface to the
+ToolMediator class. The Toolkit class must contain at least one
+initialization method in order to set up object references to the
+abstract classes as defined by the user (see section
+\ref{sec:using}) and instantiate the proper BaseTools class
+(\ref{sec:newcall}).  
+
+\input{toolkit.vpp.tex}
+
+\subsubsection{Class ToolMediator}
+The ToolMediator class is the central class in the \specman{}. This
+class contains references to the different ToolColleague subclasses
+and makes it possible for each class to access methods in other
+classes. The ToolMediator class must contain initialisation methods
+corresponding to initialisation methods in class Toolkit.  
+
+
+%% NOTE: Comments on call back to interface
+
+\input{mediator.vpp.tex}
+
+\subsubsection{Class ToolColleague}
+\insertfig{toolcollinherit.eps}{9cm}{ToolColleague inheritance and
+  associations for ToolMediator.}{fig:toolcoll}
+
+This class is superclass for all classes that need an object
+reference to the ToolMediator class as part of the instance variable. 
+
+\input{colleague.vpp.tex}
+
+
+%%%%%%%%%%%
+
+\subsection{Repository Interface}
+\label{sec:repos}
+
+The repository subsystem of the \specman{} contains information about
+status for files and modules/classes and the corresponding AST's.  The
+Repository class forms the interface to all repository related classes
+and instantiates the classes of the subsystem. The associations
+between the Repository class and the subsystem classes can be seen in
+figure \ref{fig:repass}. 
+
+\subsubsection{Class Repository}
+
+The primary role for the Repository class is to delegate the different
+repository calls to the prober subsystem class and in this way form a
+uniform interface to the caller independant of the subsystem
+structure.
+
+\insertfig{repositoryasso.eps}{17cm}{Associations for Repository class}{fig:repass}
+\insertfig{repositoryinterface.eps}{9cm}{Interface to Repository class}{fig:repinter}
+\input{repository.vpp.tex}
+
+\subsubsection{Class CGRepository}
+\input{cgrepos.vpp.tex}
+
+%%%%%%%%%%%
+
+\subsection{Database for Repository}
+
+The database for the repository is the class that contains the file
+and module/class status information as part of the object state. 
+
+\subsubsection{Class RepDatabase}
+
+The core data in the RepDatabase class is the two maps for file status
+and module/class status. These maps contain object references to the
+FileStatus and VDMUnitElem classes as can be seen from figure \ref{fig:repdb}
+
+%% \insertfig{repdatabaseview.eps}{9cm}{Associations for RepDatabase class}{}
+%% \insertfig{repdbclass.eps}{9cm}{Interface to RepDatabase class}{}
+\insertfig{repdatabasedetailview.eps}{12cm}{Associations and Interface
+  for database related classes.}{fig:repdb}
+%%\input{repdb.vpp.tex}
+\input{repdb.vpp.tex}
+\subsubsection{Class VDMUnitElem}
+\input{unit.vpp.tex}
+
+\subsubsection{Class UnitStatus}
+\input{unitstatus.vpp.tex}
+
+\subsubsection{Class AST}
+\input{ast.vpp.tex}
+
+\subsubsection{Class FileStatus}
+\input{filestatus.vpp.tex}
+
+%%%%%%%%%%%
+
+\subsection{Status Info for Files and Modules/Classes}
+
+The StatusInfo class extracts status and allowed actions for files and
+modules/classes. 
+
+\subsubsection{Class StatusInfo}
+\insertfig{statusinfointerface.eps}{3.5cm}{Interface to StatusInfo class}{fig:status}
+\input{statusinfo.vpp.tex}
+
+%%%%%%%%%%%
+
+\subsection{Project Handling}
+
+Project handling concerns creation of a new project and opening an
+existing project. Furthermore must it be possible to load and save the
+state of a project. 
+
+\subsubsection{Class UpdateProject}
+\insertfig{updateprojinterface.eps}{10cm}{Interface to UpdateProject
+  and StateStore classes.}{fig:update}
+\input{updateproj.vpp.tex}
+
+\subsubsection{Class StateStore}
+\input{statestore.vpp.tex}
+
+%%%%%%%%%%%
+
+\subsection{Session Handling}
+
+The session handling classes are a \textit{state} pattern
+(\cite{DESIGNPAT95}) with the UpdateSes as super class. This class
+contains methods common to all subclasses. Only the behaviour of the
+syntax checker depends on the type of session, i.e. whether it is a
+flat or structured specification. 
+
+\subsubsection{Class UpdateSes}
+\insertfig{updatesesinterface.eps}{10cm}{Interface and inheritance for
+  UpdateSes classes.}{fig:sess} 
+\input{updateses.vpp.tex}
+
+\subsubsection{Class NoneSes}
+\input{noneses.vpp.tex}
+
+\subsubsection{Class StructSes}
+\input{structses.vpp.tex}
+
+\subsubsection{Class FlatSes}
+\input{flatses.vpp.tex}
+
+%%%%%%%%%%%
+
+
+\subsection{Dependency Information}
+\label{sec:dep}
+
+The dependency information is defined in the \vdmsl{} module $DEP$,
+the ``Dependency Abstract Syntax''. The $Dependency$ is an abstract
+class interface to this module. 
+
+\subsubsection{Class Dependency}
+\insertfig{dependinterface.eps}{5cm}{Interface for Dependency class}{fig:dep}
+\input{depend.vpp.tex}
+
+
+%%%%%%%%%%%
+
+\subsection{BaseTools}
+
+The BaseTools and subclasses are the \specman{} interface to the
+internals of the \vdmsl{} and \vdmpp{} toolboxes. The BaseTools class
+defines the fundamental functionalites needed by the ascii and gui
+interface to the toolboxes. Enhanced functionalities for the
+Specification Animator is defined in the SABaseTools class. 
+
+\subsubsection{Class BaseTools}
+\insertfig{basetoolsinterface.eps}{8cm}{Interface and inheritance for
+ BaseTools  classes.}{fig:base} 
+\input{basetools.vpp.tex}
+
+
+%\subsubsection{Class SABaseTools}
+%\input{sabasetools.vpp.tex}
+
+
+
+%%%%%%%%%%%
+
+\subsection{Interface}
+
+The Interface class is an abstract class. It defines how to handle log
+and error messages and what to do when a call back is received.
+
+\subsubsection{Class Interface}
+\insertfig{interfaceinterface.eps}{2.5cm}{Interface for the Interface  class.}{fig:inter} 
+\input{interface.vpp.tex}
+
+
+%%%%%%%%%%%
+
+
+\subsection{Errors}
+
+The Errors class is an abstract class for errors arising from the
+internal tools in the toolbox (i.e. syntax checker, type checker
+etc.). It has an association to an ErrorState class, which is a
+\textit{state} pattern. The ErrorState subclasses defines the
+different ways of showing errors.
+
+\subsubsection{Class Errors}
+\insertfig{errorsinterface.eps}{11cm}{Interface and inheritance for
+  Errors and ErrorState classes.}{fig:errors}
+\input{errors.vpp.tex}
+
+\subsubsection{Class ErrorState}
+\input{errstate.vpp.tex}
+
+\subsubsection{Class BatchErr}
+\input{batcherr.vpp.tex} 
+
+\subsubsection{Class PromptErr}
+\input{prompterr.vpp.tex}
+
+\subsubsection{Class ScriptErr}
+\input{scripterr.vpp.tex}
+
+\subsubsection{Class NonPrintErr}
+\input{nonprinterr.vpp.tex}
+\insertfig{errorstate.eps}{7cm}{States for Errors class}{fig:state}
+ 
+%%%%%%%%%%%
+
+\subsection{Options}
+
+This class is not yet used. 
+
+\subsubsection{Class Options}
+\input{options.vpp.tex}
+
+%%%%%%%%%%%
+
+%%%%%%%%%%%
+
+
+\subsection{Global Types}
+
+In order to share types between classes a global superclass
+ProjectTypes is defined. Classes that need types from this class must
+be subclasses of ProjectTypes. In practise this means that all classes
+in the \specman{} are subclasses of ProjectTypes. 
+
+Some types are implemented different from the specification. This is
+types that are outside the specification, e.g. the AST. The
+\texttt{AstVal} is specified as a record containing a token but in the
+implementation the token is exchanged with the real AST record type.
+This can be done because the code generator only generates the first
+level of the type, i.e. a Record.
+
+\subsubsection{Class ProjectTypes}
+\input{ptypes.vpp.tex}
+
+\section{Using the Specification Manager in the Toolbox development}
+\label{sec:using}
+
+\subsection{Setting up the Specification Manager}
+\label{sec:setup}
+
+In order to make an instance of the Specification Manager, you must:
+\begin{enumerate}
+\item Define the abstract classes Errors and Interface.
+\item Instantiate a ToolKit class.
+\item Create an object reference to an Interface class.
+\item Instanciate two Errors classes and create two object references
+  to them.
+\item Create proper object reference to the initial state for each
+  Errors instance and call the Errors \texttt{InitState} method.
+\item Initialize the ToolKit instance with the Interface and Errors
+  object references.
+\end{enumerate}
+
+In the main program for the ascii interface, \texttt{vdmde.cc}, the
+instantiation part looks like:
+\begin{verbatim}
+  
+  // Set up the ToolKit
+  //  (we use the default settings of vdm_log and vdm_err)
+  toolkit = new vdm_ToolKit ();
+  ObjectRef TK (toolkit);
+  ObjectRef inf (new AsciiInterface ());
+
+  AsciiErrors * errs = new AsciiErrors();
+  ObjectRef ERRS (errs);
+
+  AsciiErrors * exprerrs = new AsciiErrors();
+  ObjectRef ExprERRS (exprerrs);
+
+  //  The Errors class must be initiated with a state.
+  //  This is PromptErr in case of Ascii interface,
+  //  and BatchErr in case of GUI or batch version.
+    
+  ObjectRef batch_state (new vdm_BatchErr());
+  errs->vdm_InitState(batch_state);
+  
+  exprerrs->vdm_InitState(batch_state);
+  toolkit->vdm_Init (inf,ERRS, ExprERRS);
+\end{verbatim}
+
+\subsection{Abstract classes}
+
+The \textbf{Interface} and \textbf{Errors} classes are abstract
+classes in the specification and it is the users responsibility to
+define the concrete subclasses as needed in the implementation. This
+way the \specman{} can be adapted to the different needs from e.g. an
+ascii interface or a graphical interface.  Only the \textit{delegated}
+methods needs to be defined.
+
+\subsubsection{Call back}
+
+The \specman{} generates call back calls to the Interface when parts
+of the Interface must be changed or updated. E.g. when a file is added
+or removed. The user must define which actions the Interface will
+take. 
+
+\subsection{Calling the \specman}
+\label{sec:call}
+
+The \specman{} is called either from the Toolbox or from the
+Interface. Calls from the Interface to the Toolbox should go through
+the \specman{}. In order to access the type definitions in class
+ProjectTypes auxiliary functions is defined in
+\texttt{projectval.h}. For each type \texttt{<type>} in class
+ProjectTypes there should be a \texttt{mk\_<type>}-function and a
+\texttt{Extract<type>}-function. If necessary there is also a
+\texttt{is\_<type>}-function. From \texttt{projectval.h}:
+
+\begin{verbatim}
+  Record mk_ToolCommand (String command);
+  bool is_ToolCommand(Record toolcom); 
+  String ExtractToolCommand (Record ToolCommand);
+\end{verbatim}
+
+\subsection{Adding new calls to Toolbox}
+\label{sec:newcall}
+ 
+Calls from the Interface to the Toolbox go via the BaseTools classes.
+These methods are defined as userimplinary methods and must be hand
+implemented. The convention is that the BaseTools methods just pass
+the call to a corresponding method in \texttt{tools.cc}. If needed, a
+new subclass to BaseTools can be defined. It must then be assured that
+the Toolkit class is initialised with this class (see also section
+\ref{sec:tkit}).
+  
+\appendix
+
+
+\section{Implementation of userimplinary methods}
+\label{sec:impuserimpl}
+
+\subsection{Class BaseTools}
+\label{sec:basetoolsuserimpl}
+\small
+\verbatimfile{../../../code/specman/code/BaseTools_userimpl.cc}
+
+
+%\subsection{Class SABaseTools}
+%\label{sec:sauserimpl}
+%\verbatimfile{../../../code/specman/code/SABaseTools_userimpl.cc}
+
+
+\subsection{Class Dependency}
+\label{sec:depuserimpl}
+
+\verbatimfile{../../../code/specman/code/Dependency_userimpl.cc}
+
+
+\subsection{Class StateStore}
+\label{sec:storeuserimpl}
+\verbatimfile{../../../code/specman/code/StateStore_userimpl.cc}
+
+
+\subsection{Class CGRepository}
+\label{sec:cguserimpl}
+\verbatimfile{../../../code/specman/code/CGRepository_userimpl.cc}
+
+
+\subsection{Class Options}
+\label{sec:optuserimpl}
+userimplinary methods is not yet implemented.
+
+\subsection{Class ToolMediator}
+\label{sec:meduserimpl}
+userimplinary methods is not yet implemented.
+
+\newpage
+
+\bibliographystyle{newalpha}
+%\bibliography{/home/peter/bib/dan}
+\bibliography{../../../doc/bib/ifad.bib}
+\newpage
+\addcontentsline{toc}{section}{Index}
+\printindex
+
+ 
+\end{document}

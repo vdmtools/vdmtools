@@ -1,0 +1,26 @@
+\begin{vdm_al}
+class Main
+--$Id: main.vpp,v 1.2 2005/11/10 07:15:56 vdmtools Exp $
+instance variables
+public b : Buffer := new Buffer();
+
+operations
+public run: () ==> ()
+run() ==
+	(
+	dcl 
+	prod: ¶YÒ := new ¶YÒ(b),
+	cons: Á”ïÒ := new Á”ïÒ(b);
+	start(prod);
+	start(cons);
+	cons.wait()
+	) 
+ end Main
+ 
+\end{vdm_al}
+
+\begin{rtinfo}
+[TotalxCoverage]{vdm.tc}[Main]
+\end{rtinfo}
+
+                                                         

@@ -1,0 +1,8 @@
+functions
+
+Div: real * real -> real
+Div(a,b) ==
+  a / b
+
+--PO
+--(forall a : real, b : real & b <> 0)

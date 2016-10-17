@@ -1,0 +1,53 @@
+class A
+
+values
+
+public v : nat = 1
+
+end A
+
+class B is subclass of A
+
+values
+
+protected v : nat = 2
+
+end B
+
+class C is subclass of B
+
+values
+
+private v : nat = 3
+
+end C
+
+class D
+
+values
+
+public v : nat = 1;
+public v : nat = 2; -- error
+
+end D
+
+class E
+
+values
+
+public v : nat = 1;
+
+instance variables
+
+public v : seq of nat := []
+
+functions
+
+public v : nat -> nat
+v(n) == n
+
+end E
+
+
+
+

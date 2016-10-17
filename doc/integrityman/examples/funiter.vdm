@@ -1,0 +1,12 @@
+functions
+
+MIter: (nat -> nat) * nat -> (nat -> nat)
+MIter(fun,n) ==
+  fun ** n
+pre forall x : nat & pre_(fun,x) => pre_(fun,fun(x))
+
+--PO
+--(forall fun : (nat -> nat), n : nat &
+--   n > 1 =>
+--   (forall xx_5 : nat & pre_(fun,xx_5) =>
+--                        pre_(fun,fun(xx_5))))

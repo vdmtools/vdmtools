@@ -1,0 +1,285 @@
+FSequenceT01:	 蜷郁ｨ医→遨阪ｒ讀懈渊縺吶ｋ	OK.
+FSequenceT02:	 全順序昇順か？を検査する	OK.
+FSequenceT03:	 全順序降順か？を検査する	OK.
+FSequenceT04:	 順番になっているか？を検査する	OK.
+FSequenceT05:	 マージを検査する	OK.
+FSequenceT06:	 文字列操作を検査する	OK.
+FSequenceT07:	 繧ｽ繝ｼ繝医ｒ讀懈渊縺吶ｋ	OK.
+FSequenceT08:	 空要素削除を検査する	OK.
+FSequenceT09:	 列の反転を検査する	OK.
+FSequenceT10:	 順列を検査する	OK.
+FSequenceT11:	 列の要素か？を検査する	OK.
+FSequenceT12:	 Fmap繧呈､懈渊縺吶ｋ	OK.
+FSequenceT13:	 Index, IndexAll繧呈､懈渊縺吶ｋ	OK.
+FSequenceT14:	 Average繧呈､懈渊縺吶ｋ	OK.
+FSequenceT15:	 謖ｿ蜈･繧呈､懈渊縺吶ｋ	OK.
+FSequenceT16:	 蜑企勁繧呈､懈渊縺吶ｋ	OK.
+FSequenceT17:	 譖ｴ譁ｰ繧呈､懈渊縺吶ｋ	OK.
+FSequenceT18:	 複数削除を検査する	OK.
+FSequenceT19:	 zip繧呈､懈渊縺吶ｋ	OK.
+FSequenceT20:	 Span繧呈､懈渊縺吶ｋ	OK.
+FSequenceT21:	 TakeWhile, DropWhile繧呈､懈渊縺吶ｋ	OK.
+FSequenceT22:	 Foldl繧呈､懈渊縺吶ｋ	OK.
+FSequenceT23:	 Foldr繧呈､懈渊縺吶ｋ	OK.
+FSequenceT24:	 IsDup繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FSetT01:	  Test HasSameElems	OK.
+FSetT02:	 Test Combinations	OK.
+FSetT03:	 Test Fmap	OK.
+FSetT04:	 Test error cases of Fmap	OK.
+Result-of-testcases.	OK!!
+FCharT01:	 謨ｰ蟄励ｒ謨ｴ謨ｰ縺ｫ螟画鋤	OK.
+FCharT02:	 文字の辞書順序を返す	OK.
+FCharT03:	 文字の大小を比較する	OK.
+Result-of-testcases.	OK!!
+FRealT01:	 {縲悟茜蟄舌ｒ蠕励ｋInterest縲阪ｒ讀懈渊縺吶ｋ	OK.
+FRealT02:	 縲悟ｹｳ譁ｹ譬ｹ繧貞ｾ励ｋRoot縲阪ｒ讀懈渊縺吶ｋ	OK.
+FRealT03:	 「小数点以下n桁か？tIsDecimalPlacesN」と「小数点以下何桁か？NumberOfDecimalPlaces」を検査する	OK.
+FRealT04:	 縲梧｡∵焚Figures縲阪ｒ讀懈渊縺吶ｋ	OK.
+FRealT05:	 「小数点以下n桁で四捨五入するRound」を検査する	OK.
+Result-of-testcases.	OK!!
+FFunctionT01:	 Fwhile, Funtil繧呈､懈渊縺吶ｋ	OK.
+FFunctionT02:	 Seq繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FMapT01:	 Get繧呈､懈渊縺吶ｋ	OK.
+FMapT01:	 Contains, ContainsKey繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FHashtableT01:	 Contains, PutAll繧呈､懈渊縺吶ｋ	OK.
+FHashtableT02:	 Clear, Remove, ContainsKey繧呈､懈渊縺吶ｋ	OK.
+FHashtableT03:	 Put, Get繧呈､懈渊縺吶ｋ	OK.
+FHashtableT04:	 KeySet, ValueSet繧呈､懈渊縺吶ｋ	OK.
+FHashtableT05:	 hashCodeが重複する場合を検査する	OK.
+FHashtableT06:	 Size繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FIntegerT`t1	 AsString, AsStringZ, AsChar繧呈､懈渊縺吶ｋ	OK.
+FIntegerT`t2:	 Gcd, Lcm繧呈､懈渊縺吶ｋ	OK.
+FIntegerT`t3:	 amod繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FNumberT01:	 Min, Max繧呈､懈渊縺吶ｋ	OK.
+FNumberT02:	 IsComputable繧呈､懈渊縺吶ｋ	OK.
+FNumberT03:	 GT, GE, LT, LE繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FProductT01:	 Curry, Uncurry繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FQueueT01:	 Empty, EnQueue, DeQueue, Top, FromList, ToList, IsEmpty繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FCalendarT01:	 DateFromInt, Int3FromDate繧呈､懈渊縺吶ｋ	OK.
+FCalendarT02:	 MJD2JD, JD2MJD繧呈､懈渊縺吶ｋ	OK.
+FCalendarT03:	 DayInYear繧呈､懈渊縺吶ｋ	OK.
+FCalendarT04:	 日付の計算を検査する	OK.
+FCalendarT05:	 髢丞ｹｴ縺ｮ蛻､螳壹ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT06:	 譖懈律縺ｫ髢｢縺吶ｋ髢｢謨ｰ繧呈､懈渊縺吶ｋ	OK.
+FCalendarT07:	 日付の大小を検査する	OK.
+FCalendarT08:	 指定曜日の日付獲得を検査する	OK.
+FCalendarT09:	 月初日、月末日、曜日の照会を検査する	OK.
+FCalendarT10:	 指定された曜日が何日あるかを検査する	OK.
+FCalendarT11:	 春分・夏至・秋分・冬至を検査する	OK.
+FCalendarT12:	 {譛域忰譌･繧呈､懈渊縺吶ｋ	OK.
+FCalendarT`t13:	 月日を日付として普通の範囲にできるかを検査する	OK.
+FCalendarT`t14:	 「正則月を得る」を検査する	OK.
+Result-of-testcases.	OK!!
+FBusinessTableT01:	 Find	OK.
+FBusinessTableT02:	 FindInRegularIntervalsTables	OK.
+Result-of-testcases.	OK!!
+FCalendarT`t1:	 縲隈etHolidaysWithinDays縲阪ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t2:	 縲隈etHolidaysWithinDatesNotSunday縲阪ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t3:	 縲隈etHolidaysWithinDatesAsSunday縲阪ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t4:	 縲隈etNumberOfHolidaysWithinDates縲阪ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t5:	 縲隈etNumberOfDayOff縲阪ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t6:	 縲隈etNumberOfDayOff1縲阪ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t7:	 休日を考慮した加減算(+-1)を検査する	OK.
+FCalendarT`t8:	 休日を考慮した加減算を検査する	OK.
+FCalendarT`t9:	 莨第律縺ｮ蛻､螳壹ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t10:	 「和暦日付文字列を得る」を検査する	OK.
+FCalendarT`t11:	 春分・夏至・秋分・冬至を検査する	OK.
+Result-of-testcases.	OK!!
+FSequenceT01:	 蜷郁ｨ医→遨阪ｒ讀懈渊縺吶ｋ	OK.
+FSequenceT02:	 全順序昇順か？を検査する	OK.
+FSequenceT03:	 全順序降順か？を検査する	OK.
+FSequenceT04:	 順番になっているか？を検査する	OK.
+FSequenceT05:	 マージを検査する	OK.
+FSequenceT06:	 文字列操作を検査する	OK.
+FSequenceT07:	 繧ｽ繝ｼ繝医ｒ讀懈渊縺吶ｋ	OK.
+FSequenceT08:	 空要素削除を検査する	OK.
+FSequenceT09:	 列の反転を検査する	OK.
+FSequenceT10:	 順列を検査する	OK.
+FSequenceT11:	 列の要素か？を検査する	OK.
+FSequenceT12:	 Fmap繧呈､懈渊縺吶ｋ	OK.
+FSequenceT13:	 Index, IndexAll繧呈､懈渊縺吶ｋ	OK.
+FSequenceT14:	 Average繧呈､懈渊縺吶ｋ	OK.
+FSequenceT15:	 謖ｿ蜈･繧呈､懈渊縺吶ｋ	OK.
+FSequenceT16:	 蜑企勁繧呈､懈渊縺吶ｋ	OK.
+FSequenceT17:	 譖ｴ譁ｰ繧呈､懈渊縺吶ｋ	OK.
+FSequenceT18:	 複数削除を検査する	OK.
+FSequenceT19:	 zip繧呈､懈渊縺吶ｋ	OK.
+FSequenceT20:	 Span繧呈､懈渊縺吶ｋ	OK.
+FSequenceT21:	 TakeWhile, DropWhile繧呈､懈渊縺吶ｋ	OK.
+FSequenceT22:	 Foldl繧呈､懈渊縺吶ｋ	OK.
+FSequenceT23:	 Foldr繧呈､懈渊縺吶ｋ	OK.
+FSequenceT24:	 IsDup繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FSetT01:	  Test HasSameElems	OK.
+FSetT02:	 Test Combinations	OK.
+FSetT03:	 Test Fmap	OK.
+FSetT04:	 Test error cases of Fmap	OK.
+Result-of-testcases.	OK!!
+FCharT01:	 謨ｰ蟄励ｒ謨ｴ謨ｰ縺ｫ螟画鋤	OK.
+FCharT02:	 文字の辞書順序を返す	OK.
+FCharT03:	 文字の大小を比較する	OK.
+Result-of-testcases.	OK!!
+FRealT01:	 {縲悟茜蟄舌ｒ蠕励ｋInterest縲阪ｒ讀懈渊縺吶ｋ	OK.
+FRealT02:	 縲悟ｹｳ譁ｹ譬ｹ繧貞ｾ励ｋRoot縲阪ｒ讀懈渊縺吶ｋ	OK.
+FRealT03:	 「小数点以下n桁か？tIsDecimalPlacesN」と「小数点以下何桁か？NumberOfDecimalPlaces」を検査する	OK.
+FRealT04:	 縲梧｡∵焚Figures縲阪ｒ讀懈渊縺吶ｋ	OK.
+FRealT05:	 「小数点以下n桁で四捨五入するRound」を検査する	OK.
+Result-of-testcases.	OK!!
+FFunctionT01:	 Fwhile, Funtil繧呈､懈渊縺吶ｋ	OK.
+FFunctionT02:	 Seq繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FMapT01:	 Get繧呈､懈渊縺吶ｋ	OK.
+FMapT01:	 Contains, ContainsKey繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FHashtableT01:	 Contains, PutAll繧呈､懈渊縺吶ｋ	OK.
+FHashtableT02:	 Clear, Remove, ContainsKey繧呈､懈渊縺吶ｋ	OK.
+FHashtableT03:	 Put, Get繧呈､懈渊縺吶ｋ	OK.
+FHashtableT04:	 KeySet, ValueSet繧呈､懈渊縺吶ｋ	OK.
+FHashtableT05:	 hashCodeが重複する場合を検査する	OK.
+FHashtableT06:	 Size繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FIntegerT`t1	 AsString, AsStringZ, AsChar繧呈､懈渊縺吶ｋ	OK.
+FIntegerT`t2:	 Gcd, Lcm繧呈､懈渊縺吶ｋ	OK.
+FIntegerT`t3:	 amod繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FNumberT01:	 Min, Max繧呈､懈渊縺吶ｋ	OK.
+FNumberT02:	 IsComputable繧呈､懈渊縺吶ｋ	OK.
+FNumberT03:	 GT, GE, LT, LE繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FProductT01:	 Curry, Uncurry繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FQueueT01:	 Empty, EnQueue, DeQueue, Top, FromList, ToList, IsEmpty繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FCalendarT01:	 DateFromInt, Int3FromDate繧呈､懈渊縺吶ｋ	OK.
+FCalendarT02:	 MJD2JD, JD2MJD繧呈､懈渊縺吶ｋ	OK.
+FCalendarT03:	 DayInYear繧呈､懈渊縺吶ｋ	OK.
+FCalendarT04:	 日付の計算を検査する	OK.
+FCalendarT05:	 髢丞ｹｴ縺ｮ蛻､螳壹ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT06:	 譖懈律縺ｫ髢｢縺吶ｋ髢｢謨ｰ繧呈､懈渊縺吶ｋ	OK.
+FCalendarT07:	 日付の大小を検査する	OK.
+FCalendarT08:	 指定曜日の日付獲得を検査する	OK.
+FCalendarT09:	 月初日、月末日、曜日の照会を検査する	OK.
+FCalendarT10:	 指定された曜日が何日あるかを検査する	OK.
+FCalendarT11:	 春分・夏至・秋分・冬至を検査する	OK.
+FCalendarT12:	 {譛域忰譌･繧呈､懈渊縺吶ｋ	OK.
+FCalendarT`t13:	 月日を日付として普通の範囲にできるかを検査する	OK.
+FCalendarT`t14:	 「正則月を得る」を検査する	OK.
+Result-of-testcases.	OK!!
+FBusinessTableT01:	 Find	OK.
+FBusinessTableT02:	 FindInRegularIntervalsTables	OK.
+Result-of-testcases.	OK!!
+FCalendarT`t1:	 縲隈etHolidaysWithinDays縲阪ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t2:	 縲隈etHolidaysWithinDatesNotSunday縲阪ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t3:	 縲隈etHolidaysWithinDatesAsSunday縲阪ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t4:	 縲隈etNumberOfHolidaysWithinDates縲阪ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t5:	 縲隈etNumberOfDayOff縲阪ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t6:	 縲隈etNumberOfDayOff1縲阪ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t7:	 休日を考慮した加減算(+-1)を検査する	OK.
+FCalendarT`t8:	 休日を考慮した加減算を検査する	OK.
+FCalendarT`t9:	 莨第律縺ｮ蛻､螳壹ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t10:	 「和暦日付文字列を得る」を検査する	OK.
+FCalendarT`t11:	 春分・夏至・秋分・冬至を検査する	OK.
+Result-of-testcases.	OK!!
+FSequenceT01:	 蜷郁ｨ医→遨阪ｒ讀懈渊縺吶ｋ	OK.
+FSequenceT02:	 全順序昇順か？を検査する	OK.
+FSequenceT03:	 全順序降順か？を検査する	OK.
+FSequenceT04:	 順番になっているか？を検査する	OK.
+FSequenceT05:	 マージを検査する	OK.
+FSequenceT06:	 文字列操作を検査する	OK.
+FSequenceT07:	 繧ｽ繝ｼ繝医ｒ讀懈渊縺吶ｋ	OK.
+FSequenceT08:	 空要素削除を検査する	OK.
+FSequenceT09:	 列の反転を検査する	OK.
+FSequenceT10:	 順列を検査する	OK.
+FSequenceT11:	 列の要素か？を検査する	OK.
+FSequenceT12:	 Fmap繧呈､懈渊縺吶ｋ	OK.
+FSequenceT13:	 Index, IndexAll繧呈､懈渊縺吶ｋ	OK.
+FSequenceT14:	 Average繧呈､懈渊縺吶ｋ	OK.
+FSequenceT15:	 謖ｿ蜈･繧呈､懈渊縺吶ｋ	OK.
+FSequenceT16:	 蜑企勁繧呈､懈渊縺吶ｋ	OK.
+FSequenceT17:	 譖ｴ譁ｰ繧呈､懈渊縺吶ｋ	OK.
+FSequenceT18:	 複数削除を検査する	OK.
+FSequenceT19:	 zip繧呈､懈渊縺吶ｋ	OK.
+FSequenceT20:	 Span繧呈､懈渊縺吶ｋ	OK.
+FSequenceT21:	 TakeWhile, DropWhile繧呈､懈渊縺吶ｋ	OK.
+FSequenceT22:	 Foldl繧呈､懈渊縺吶ｋ	OK.
+FSequenceT23:	 Foldr繧呈､懈渊縺吶ｋ	OK.
+FSequenceT24:	 IsDup繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FSetT01:	  Test HasSameElems	OK.
+FSetT02:	 Test Combinations	OK.
+FSetT03:	 Test Fmap	OK.
+FSetT04:	 Test error cases of Fmap	OK.
+Result-of-testcases.	OK!!
+FCharT01:	 謨ｰ蟄励ｒ謨ｴ謨ｰ縺ｫ螟画鋤	OK.
+FCharT02:	 文字の辞書順序を返す	OK.
+FCharT03:	 文字の大小を比較する	OK.
+Result-of-testcases.	OK!!
+FRealT01:	 {縲悟茜蟄舌ｒ蠕励ｋInterest縲阪ｒ讀懈渊縺吶ｋ	OK.
+FRealT02:	 縲悟ｹｳ譁ｹ譬ｹ繧貞ｾ励ｋRoot縲阪ｒ讀懈渊縺吶ｋ	OK.
+FRealT03:	 「小数点以下n桁か？tIsDecimalPlacesN」と「小数点以下何桁か？NumberOfDecimalPlaces」を検査する	OK.
+FRealT04:	 縲梧｡∵焚Figures縲阪ｒ讀懈渊縺吶ｋ	OK.
+FRealT05:	 「小数点以下n桁で四捨五入するRound」を検査する	OK.
+Result-of-testcases.	OK!!
+FFunctionT01:	 Fwhile, Funtil繧呈､懈渊縺吶ｋ	OK.
+FFunctionT02:	 Seq繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FMapT01:	 Get繧呈､懈渊縺吶ｋ	OK.
+FMapT01:	 Contains, ContainsKey繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FHashtableT01:	 Contains, PutAll繧呈､懈渊縺吶ｋ	OK.
+FHashtableT02:	 Clear, Remove, ContainsKey繧呈､懈渊縺吶ｋ	OK.
+FHashtableT03:	 Put, Get繧呈､懈渊縺吶ｋ	OK.
+FHashtableT04:	 KeySet, ValueSet繧呈､懈渊縺吶ｋ	OK.
+FHashtableT05:	 hashCodeが重複する場合を検査する	OK.
+FHashtableT06:	 Size繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FIntegerT`t1	 AsString, AsStringZ, AsChar繧呈､懈渊縺吶ｋ	OK.
+FIntegerT`t2:	 Gcd, Lcm繧呈､懈渊縺吶ｋ	OK.
+FIntegerT`t3:	 amod繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FNumberT01:	 Min, Max繧呈､懈渊縺吶ｋ	OK.
+FNumberT02:	 IsComputable繧呈､懈渊縺吶ｋ	OK.
+FNumberT03:	 GT, GE, LT, LE繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FProductT01:	 Curry, Uncurry繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FQueueT01:	 Empty, EnQueue, DeQueue, Top, FromList, ToList, IsEmpty繧呈､懈渊縺吶ｋ	OK.
+Result-of-testcases.	OK!!
+FCalendarT01:	 DateFromInt, Int3FromDate繧呈､懈渊縺吶ｋ	OK.
+FCalendarT02:	 MJD2JD, JD2MJD繧呈､懈渊縺吶ｋ	OK.
+FCalendarT03:	 DayInYear繧呈､懈渊縺吶ｋ	OK.
+FCalendarT04:	 日付の計算を検査する	OK.
+FCalendarT05:	 髢丞ｹｴ縺ｮ蛻､螳壹ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT06:	 譖懈律縺ｫ髢｢縺吶ｋ髢｢謨ｰ繧呈､懈渊縺吶ｋ	OK.
+FCalendarT07:	 日付の大小を検査する	OK.
+FCalendarT08:	 指定曜日の日付獲得を検査する	OK.
+FCalendarT09:	 月初日、月末日、曜日の照会を検査する	OK.
+FCalendarT10:	 指定された曜日が何日あるかを検査する	OK.
+FCalendarT11:	 春分・夏至・秋分・冬至を検査する	OK.
+FCalendarT12:	 {譛域忰譌･繧呈､懈渊縺吶ｋ	OK.
+FCalendarT`t13:	 月日を日付として普通の範囲にできるかを検査する	OK.
+FCalendarT`t14:	 「正則月を得る」を検査する	OK.
+Result-of-testcases.	OK!!
+FBusinessTableT01:	 Find	OK.
+FBusinessTableT02:	 FindInRegularIntervalsTables	OK.
+Result-of-testcases.	OK!!
+FCalendarT`t1:	 縲隈etHolidaysWithinDays縲阪ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t2:	 縲隈etHolidaysWithinDatesNotSunday縲阪ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t3:	 縲隈etHolidaysWithinDatesAsSunday縲阪ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t4:	 縲隈etNumberOfHolidaysWithinDates縲阪ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t5:	 縲隈etNumberOfDayOff縲阪ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t6:	 縲隈etNumberOfDayOff1縲阪ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t7:	 休日を考慮した加減算(+-1)を検査する	OK.
+FCalendarT`t8:	 休日を考慮した加減算を検査する	OK.
+FCalendarT`t9:	 莨第律縺ｮ蛻､螳壹ｒ讀懈渊縺吶ｋ	OK.
+FCalendarT`t10:	 「和暦日付文字列を得る」を検査する	OK.
+FCalendarT`t11:	 春分・夏至・秋分・冬至を検査する	OK.
+Result-of-testcases.	OK!!

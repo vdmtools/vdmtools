@@ -1,0 +1,11 @@
+class OpDefTest
+instance variables
+      S1 : int := 7;
+
+operations
+
+extimplop(S1:int) r:int == 
+  ( S1 := 0; return S1 )
+post r < 10;
+
+end OpDefTest

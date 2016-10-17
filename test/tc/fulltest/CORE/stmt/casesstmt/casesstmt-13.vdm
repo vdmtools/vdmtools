@@ -1,0 +1,58 @@
+class CasesStmtTest
+
+operations
+
+  Cases10: () ==> nat
+  Cases10() ==
+    cases true:
+    1 -> ( dcl a: nat := 0,
+               b: bool;
+	   dcl c: set of int;
+	   return ;
+	   return 8;
+	   let t = true in return t ),
+    others -> ( let k = true in return not k;
+              return )
+    end;
+
+  Cases12: seq of bool ==> set of int
+  Cases12(sb) ==
+    cases true:
+    true -> for a in sb do
+           return not sb,
+    1 -> for a in reverse sb do
+           return sb,
+    2 -> for all a in set sb do
+           skip,
+    3 -> for i=1 to 4 by 2 do
+           return sb(i) and true,
+    4 -> while true do
+           return,
+    others -> let n = 7 in return n
+    end;
+
+  Cases13: () ==> nat
+  Cases13() ==
+    cases true:
+    true -> if 1=1
+         then let f = false in return f
+	 elseif 2=1
+	 then return [1,2,1]
+	 else return {1|->true},
+    others -> cases 4:
+           1 -> return not (2 >= 2),
+	   true -> return 34,
+	   others -> let n = nil in  return n
+	 end
+    end;
+
+  Cases14: () ==> [bool | char]
+  Cases14() ==
+    cases n:
+    1 -> Cases10(1),
+    2 -> Cases10(),
+    3 -> Cases12({1,2,3}),
+    others -> Cases13([1,2])
+    end;
+
+end CasesStmtTest

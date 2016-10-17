@@ -1,0 +1,70 @@
+\begin{vdm_al}
+class UpdateSes is subclass of ProjectTypes 
+
+operations
+
+public Type: () ==>  ProjectTypes`SessionType 
+  Type() ==
+  is subclass responsibility;
+
+public UpdateSC: Repository * RepDatabase * FileName * ((seq of Module)|FlatSpec)  ==> ()
+  UpdateSC(rep, repdb, nm, spec) ==
+  is subclass responsibility;
+
+public UpdateTC: RepDatabase * ModuleName * [<POS>|<DEF>] ==> ()
+  UpdateTC(repdb, nm, tcType) ==
+    let stt = if tcType <> nil then tcType else <ERROR>,
+        changed = repdb.SetUnitStatus(nm, <TYPECHECK>, stt)
+    in
+      if changed
+      then repdb.GetMediator().CallBack( mk_ChangedModuleStatus( {nm} ) );
+
+public UpdateCG: RepDatabase * ModuleName * (<CPP>|<Java>) * Succes ==> ()
+  UpdateCG(rep, nm, kind, suc) ==
+    let stt = if suc then <OK> else <ERROR>,
+        changed = if kind = <CPP>
+                  then rep.SetUnitStatus(nm, <CG>, stt)
+                  else rep.SetUnitStatus(nm, <JCG>, stt)
+    in
+      if changed
+      then rep.GetMediator().CallBack( mk_ChangedModuleStatus( {nm} ));
+
+public UpdatePP: RepDatabase * FileName * Succes ==> ()
+  UpdatePP(rep, nm, suc) ==
+    let stt = if suc then <OK> else <ERROR>,
+        mk_(-, changedStatus) = rep.SetFileStatus(nm, <PP>, stt)
+    in
+      if changedStatus
+      then rep.GetMediator().CallBack( mk_ChangedFileStatus(nm));
+ 
+  --  DisableUnits is called both from flat and structured specifications. It
+  --  disables all units, and returns with a set of module names that have changed
+  --  their status.
+
+public DisableUnits: RepDatabase * set of ModuleName ==> set of ModuleName 
+  DisableUnits(rep, un_s)  ==
+   (dcl changedMod_s : set of ModuleName := {};
+    for all un in set un_s do
+      def changed = rep.DisableUnit(un)
+      in
+        if changed
+        then changedMod_s := changedMod_s union { un };
+    return changedMod_s);
+\end{vdm_al}
+
+$DisableUnits$ is called both from flat and structured specifications.
+It disables all units, and returns with a set of module names that
+have changed their status.
+
+\begin{vdm_al}
+
+public Disable: () ==> ()
+  Disable () ==
+    skip;
+
+public Enable: () ==> ()
+  Enable () ==
+    skip
+
+end UpdateSes
+\end{vdm_al}

@@ -1,0 +1,8 @@
+class Compare
+operations 
+public  compare : [Object] * [Object] ==> int 
+compare(a, b) == 
+is subclass responsibility ;
+
+
+end  Compare

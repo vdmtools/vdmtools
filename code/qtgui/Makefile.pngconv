@@ -1,0 +1,32 @@
+ifeq ($(strip $(QTVERSION)),4)
+QT4 = -DQT4
+endif
+
+ifndef QTDIR
+#QTDIR=/usr/local/qt
+QTDIR=/usr/local/Trolltech/Qt-4.8.7
+endif
+
+QTFLAGS = -I$(QTDIR)/include -DQT_THREAD_SUPPORT -DQT_ACCESSIBILITY_SUPPORT -DQT_SHARED $(QT4)
+ifeq ($(strip $(QTVERSION)),4)
+ifdef COCOA
+LDFLAGS = -F$(QTDIR)/lib/ -framework QtGui -framework QtCore -liconv
+else
+LDFLAGS = -L$(QTDIR)/lib -lQtGui -lQt3Support -lQtCore
+endif
+else
+LDFLAGS = -L$(QTDIR)/lib -lqt-mt -lqui
+endif
+CFLAGS = $(QTFLAGS)
+CXX = g++
+
+all: pngconv spconv
+
+% : %.cc
+	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ $<
+
+%.o : %.cc
+	$(CXX) $(CFLAGS) -o $@ -c $<
+
+clean:
+	rm -rf pngconv spconv

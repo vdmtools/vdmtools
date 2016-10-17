@@ -1,0 +1,51 @@
+\begin{vdm_al}
+class NoneSes is subclass of UpdateSes
+
+instance variables
+
+  disabled : bool := false;
+
+\end{vdm_al}
+
+The $disabled$ is dealing with change of session type in current
+project. Is set by $Disable$ and $Enable$ methods, called from the
+$Repository$. 
+
+\begin{vdm_al}
+operations
+
+public Type: () ==> ProjectTypes`SessionType 
+  Type()  ==
+  return if disabled then <DISABLED> else <NONE>;
+
+public Disable: () ==> ()
+  Disable () ==
+    disabled := true;
+
+public Enable: () ==> ()
+  Enable () ==
+    disabled := false;
+
+public UpdateSC: Repository * RepDatabase * FileName * ((seq of Module)|FlatSpec) ==> ()
+  UpdateSC(rep, rdb, nm, spec) ==
+    if spec <> []
+    then
+      (dcl nextses : FlatSes | StructSes := if is_FlatSpec(spec)
+                                            then new FlatSes()
+                                            else new StructSes ();
+       rep.SetSession(nextses);
+       rep.UpdateSC(nm,spec))
+    else 
+      (rdb.AddSetOfFiles ({nm});
+       def mod_s = rdb.ModulesInFile(nm) in
+       def mk_(-,changedFileStat) = rdb.SetFileStatus(nm, <SYNTAXCHECK>, <ERROR>)
+       in
+         def changedModStat = self.DisableUnits (rdb, mod_s)
+         in
+          (if changedFileStat
+           then rdb.GetMediator ().CallBack (mk_ChangedFileStatus (nm));
+           if changedModStat <> {}
+           then rdb.GenCallBack (changedModStat)));
+
+end NoneSes
+\end{vdm_al}

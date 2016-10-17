@@ -1,0 +1,24 @@
+class A
+
+functions
+
+public 
+id : nat -> nat
+id(x) == x;
+
+public
+foo : nat -> nat 
+foo(n) == 
+  if n = 0 then 0 
+  else let foo = [x | x in set {1,2,3}]
+       in foo(foo(1)-1)
+measure id;
+
+goo : nat -> nat 
+goo(n) == 
+  if n = 0 then 0 
+  else let goo = [x | x in set {1,2,3}]
+       in goo(goo(1)-1)
+measure id;
+
+end A

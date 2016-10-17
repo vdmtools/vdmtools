@@ -1,0 +1,57 @@
+Note for SUNPro C++ 4.1 users
+
+----------------------------------------------------------------------------
+
+Known problems
+
+Compiling
+
+C++ 4.1 have problems recognizing types nested in template classes when
+parsing declarations. For example , the following construct fails (suppose
+STL vector is a base type for derived_vector ):
+
+derived_vector<int> years;
+derived_vector<int>::iterator i;
+
+To work around this problem completely, you should repeat those typedefs
+from base class that you are going to use in any way:
+
+template <class T> class derived_vector : public vector<T> {
+typedef vector<T>::iterator iterator;
+...
+
+STL code itself is now free of this problem.
+
+C++ 4.1 may also suffer from optimization bugs when using exception
+handling. If your application doesn't use exceptions, you'd better use -noex
+option along with __STL_NO_EXCEPTIONS flag.
+
+Linking
+
+You may have troubles getting linker errors compiling multiple targets in
+one directory ( for example, running cygnus testsuite). That is a bug in
+handling Templates.DB dependencies. Known solutions are :
+
+a) for one-file tests, specify option -pto (one-file-mode) option to turn
+off database completely. Option -pts(single-file-mode) doesn't fix all
+problems.
+
+b) for complex projects, use separate Templates.DB directories for different
+targets.
+
+----------------------------------------------------------------------------
+
+Migration notes
+
+You should experience no other problems migrating from HP STL to SGI STL.
+
+----------------------------------------------------------------------------
+
+Versions prior to 4.1
+
+For info on SUNPro C++ 4.0.1, see README.sunpro401. SUNPro C++ older than
+4.0.1 won't compile STL. You had to upgrade.
+
+----------------------------------------------------------------------------
+
+Last updated : March 5, 1997.

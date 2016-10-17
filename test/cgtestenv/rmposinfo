@@ -1,0 +1,13 @@
+#! /usr/bin/perl
+# Next two lines make this script work on strange OS. 
+eval 'exec perl -S $0 ${1+"$@"}'
+  if $running_under_some_shell;
+
+$* = 1;
+undef $/;
+$data = <STDIN>;
+
+$data =~ s/,?\s*mk_unknown-4\([^)]*\)//g;
+$data =~ s/,?\s*mk_unknown-2\([^)]*\)//g;
+
+print $data;

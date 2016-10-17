@@ -1,0 +1,23 @@
+"class A
+
+types
+R :: m : map nat to [nat];
+
+functions
+f : nat -> nat
+f(x) == x + 1;
+
+ 
+operations
+
+public Test : () ==> map nat to [nat]
+Test() ==
+( dcl rec : R := mk_R({ l |-> nil | l in set {0, ..., 12} }),
+	i : int := 20,
+	j : nat;
+	rec.m := rec.m ++ { i |-> f(i) | i in set {12 + 1, ..., 20} & (20 - i) mod 2 = 0 };
+	j := 2;
+	return rec.m);
+   
+end A
+"

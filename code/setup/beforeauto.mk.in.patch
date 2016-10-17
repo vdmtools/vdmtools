@@ -1,0 +1,19 @@
+*** omniORB-4.1.4/mk/beforeauto.mk.in	2009-10-04 09:30:55.000000000 +0900
+--- beforeauto.mk.in.new	2009-10-04 10:21:03.000000000 +0900
+***************
+*** 1014,1019 ****
+--- 1013,1026 ----
+  
+  ###################
+  ifdef Darwin
++ ifdef SDK
++ CC              += -isysroot $(SDK) -arch i386 -arch ppc
++ CXX             += -isysroot $(SDK) -arch i386 -arch ppc
++ CPP             += -isysroot $(SDK) -arch i386 -arch ppc
++ CLINKOPTIONS    += -Wl,-syslibroot,$(SDK)
++ CXXLINKOPTIONS  += -Wl,-syslibroot,$(SDK)
++ endif
++ 
+  IMPORT_CPPFLAGS += -D__darwin__
+  
+  OMNITHREAD_POSIX_CPPFLAGS = -DPthreadDraftVersion=10 \

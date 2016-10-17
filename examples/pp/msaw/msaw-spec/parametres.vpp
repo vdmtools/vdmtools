@@ -1,0 +1,7 @@
+class Parametres
+
+   values
+      VitesseMaximale: MSAWTypes`KT = mk_(100, 100, 100);
+      DureeExtrapolation: MSAWTypes`Duree = 20
+
+end Parametres

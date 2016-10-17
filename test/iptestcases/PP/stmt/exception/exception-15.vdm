@@ -1,0 +1,83 @@
+class B
+
+instance variables
+protected n : nat;
+
+operations
+
+public B : nat ==> B
+B(pn) ==
+  n := pn;
+
+public getN : () ==> nat
+getN() ==
+  return n
+
+end B
+
+class C is subclass of B
+
+operations
+
+public C : nat ==> C
+C(n) ==
+( B(n)
+);
+
+public getN : () ==> nat
+getN() ==
+  return n + 1
+
+end C
+
+class A
+
+types
+
+Rec :: f : real
+
+operations
+
+public Test7: () ==> nat
+Test7() ==
+( dcl x : nat := 1,
+      i : nat := 0;
+  while i < 10 do
+    tixe {
+      r : Rec  |-> x:= floor r.f,
+      b : bool |-> exit mk_Rec(6.5),
+      n : nat  |-> x := n,
+      obj : B  |-> exit obj.getN()
+    } 
+    in
+    ( i := i + 1;
+      if i = 5
+      then exit new B(7);
+      
+    );
+  return x
+);
+
+public Test8: () ==> nat
+Test8() ==
+( dcl x : nat := -1,
+      s : seq of nat := [ i | i in set {1,...,10}];
+  for i in s do
+    tixe {
+      r : Rec  |-> x:= floor r.f,
+      b : bool |-> exit mk_Rec(6.5),
+      n : nat  |-> x := n,
+      obj : B  |-> exit obj.getN()
+    } 
+    in
+      if i = 5
+      then exit new C(7);
+  return x
+);
+
+public Test : () ==> seq of nat
+Test() ==
+  return [Test7(), Test8()]
+
+
+end A

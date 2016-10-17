@@ -1,0 +1,29 @@
+
+module Keypad
+
+  imports
+    from BankAccount all
+
+  exports all
+
+  definitions
+
+  state buffer of
+    data : seq of BankAccount`digit
+  end
+
+  operations
+
+    DataAvailable : () ==> bool
+    DataAvailable () ==
+      return(data <> []);
+
+    ReadData : () ==> seq of BankAccount`digit
+    ReadData () ==
+      return(data);
+
+    WriteData : seq of BankAccount`digit ==> ()
+    WriteData (d) ==
+      data := data^d
+
+end Keypad

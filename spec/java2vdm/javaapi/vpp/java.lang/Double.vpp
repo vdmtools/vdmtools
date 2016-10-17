@@ -1,0 +1,136 @@
+dlclass JavaLangDouble is subclass of JavaLangNumber, JavaLangComparable
+uselib "j2vdll.so"
+values 
+  public  CLASS : JavaLangClass = new JavaLangClass("JavaLangDouble", <CLASS>, false);
+  public  TYPE  : JavaLangClass = new JavaLangClass("double", <CLASS>, true);
+  public  POSITIVE_INFINITY : real =0;
+  public  NEGATIVE_INFINITY : real =0;
+  public  NaN : real =0;
+  public  MAX_VALUE : real = 1.79769313486231570e+308;
+  public  MIN_VALUE : real = 4.94065645841246544e-324;
+
+instance variables
+  v: real := 0;
+
+operations 
+public  isNaN : () ==> bool 
+isNaN() == 
+is not yet specified ;
+
+public  static isNaN : real  ==> bool 
+isNaN(v) == 
+is not yet specified ;
+
+public  JavaLangDouble : real  ==> JavaLangDouble
+JavaLangDouble(value__) == 
+( v := value__;
+  setValueReal(value__)
+) ;
+
+private  setValueReal : real  ==> ()
+setValueReal(value__) == 
+is not yet specified ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+is not yet specified ;
+
+public  intValue : () ==> int 
+intValue() == 
+is not yet specified ;
+
+public  toString : () ==> JavaLangString
+toString() == 
+return new JavaLangString(toSeqOfChar()) ;
+
+public  byteValue : () ==> int 
+byteValue() == 
+is not yet specified ;
+
+public  longValue : () ==> int 
+longValue() == 
+is not yet specified ;
+
+public  static toString : real  ==> JavaLangString
+toString(d) == 
+return new JavaLangString(new JavaLangDouble(d).toSeqOfChar());
+
+public toSeqOfChar : () ==> seq of char
+toSeqOfChar() ==
+is not yet specified ;
+
+public  floatValue : () ==> real 
+floatValue() == 
+is not yet specified ;
+
+public  isInfinite : () ==> bool 
+isInfinite() == 
+is not yet specified ;
+
+public  shortValue : () ==> int 
+shortValue() == 
+is not yet specified ;
+
+public  JavaLangDouble : <NIL> ==> JavaLangDouble
+JavaLangDouble(-) == 
+isNil := true  ;
+
+public  doubleValue : () ==> real 
+doubleValue() == 
+is not yet specified ;
+
+public  static isInfinite : real  ==> bool 
+isInfinite(v) == 
+is not yet specified ;
+
+public  JavaLangDouble : JavaLangString ==> JavaLangDouble
+JavaLangDouble(s) == 
+( setValueSeqOfChar(s.toSeqOfChar());
+  v := doubleValue();
+) ;
+
+private  setValueSeqOfChar : seq of char  ==> ()
+setValueSeqOfChar(value__) == 
+is not yet specified ;
+
+public  equals : JavaLangObject ==> bool 
+equals(obj) == 
+is not yet specified ;
+
+public  static valueOf : JavaLangString ==> JavaLangDouble
+valueOf(s) == 
+return new JavaLangDouble(new JavaLangDouble().parseDouble'(s.toSeqOfChar()));
+
+--public  compareTo : JavaLangDouble ==> int 
+--compareTo(anotherDouble) == 
+--is not yet specified ;
+
+public  compareTo : JavaLangObject ==> int 
+compareTo(o) == 
+is not yet specified ;
+
+public  static doubleToLongBits : real  ==> int 
+doubleToLongBits(value__) == 
+is not yet specified ;
+
+public  static longBitsToDouble : int  ==> real 
+longBitsToDouble(bits) == 
+is not yet specified ;
+
+public  static parseDouble : JavaLangString ==> real 
+parseDouble(s) == 
+ return new JavaLangDouble().parseDouble'(s.toSeqOfChar());
+
+private parseDouble' : seq of char  ==> real
+parseDouble'(s) == 
+is not yet specified ;
+
+public  static doubleToRawLongBits : real  ==> int 
+doubleToRawLongBits(value__) == 
+is not yet specified ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+  return CLASS;
+
+end  JavaLangDouble

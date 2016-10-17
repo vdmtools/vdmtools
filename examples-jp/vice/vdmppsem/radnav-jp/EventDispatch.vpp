@@ -1,0 +1,102 @@
+%$ld$
+\subsection{Event Dispatching}
+\subsubsection{AbstractTaskEvent}
+\begin{vdm_al}
+class AbstractTaskEvent  is subclass of 『共通定義』
+
+instance variables
+  public abstask: AbstractTask;
+  public ev : Event
+
+operations
+  public AbstractTaskEvent: AbstractTask * Event ==> AbstractTaskEvent
+  AbstractTaskEvent (pat, pev) == (abstask := pat; ev := pev);
+
+  public getFields: () ==> AbstractTask * Event
+  getFields () == return mk_ (abstask, ev)
+
+end AbstractTaskEvent
+\end{vdm_al}
+
+\begin{rtinfo}
+[AbstractTaskEvent]{vdm.tc}[AbstractTaskEvent]
+\end{rtinfo}
+
+\subsubsection{EventDispatcher}
+EventDispatcherは、システム中の全てのeventの調整をする。
+\begin{vdm_al}
+class EventDispatcher
+  is subclass of Logger
+
+instance variables
+  queues : map seq of char to AbstractTask := {|->};
+  -- messages : seq of (AbstractTask * Event) := [];
+  messages : seq of AbstractTaskEvent := [];
+  割込イベント待ち行列: seq of AbstractTaskEvent := []
+  -- 割込イベント待ち行列: seq of (AbstractTask * Event) := []
+
+operations
+  public Register: AbstractTask ==> ()
+  Register (pat) ==
+    queues := queues munion { pat.名前を得る() |-> pat }
+    pre pat.名前を得る() not in set dom queues;
+
+  イベントを設定する: AbstractTask * Event ==> ()
+  イベントを設定する (pat, pe) == 
+    if isofclass(NetworkEvent,pe)
+    -- then messages := messages ^ [mk_(pat,pe)]
+    then messages := messages ^ [new AbstractTaskEvent(pat,pe)]
+    else 割込イベント待ち行列 := 割込イベント待ち行列 ^ [new AbstractTaskEvent(pat,pe)];
+    -- else 割込イベント待ち行列 := 割込イベント待ち行列 ^ [mk_(pat,pe)];
+
+  イベントを得る: () ==> AbstractTask * Event
+  イベントを得る () ==
+    if len 割込イベント待ち行列 > 0
+    -- then ( dcl res : AbstractTask * Event := hd 割込イベント待ち行列;
+    --        割込イベント待ち行列 := tl 割込イベント待ち行列;
+    --        return res )
+    then ( dcl res : AbstractTaskEvent := hd 割込イベント待ち行列;
+           割込イベント待ち行列 := tl 割込イベント待ち行列;
+           return res.getFields() )
+    -- else ( dcl res : AbstractTask * Event := hd messages;
+    --        messages := tl messages;
+    --        return res );
+    else ( dcl res : AbstractTaskEvent := hd messages;
+           messages := tl messages;
+           return res.getFields() );
+
+  public SendNetwork: seq of char * seq of char * ID ==> ()
+  SendNetwork (送信者, 受信者, id) ==
+    duration (0)
+     ( dcl pbt: BasicTask := queues(受信者);
+       ネットワークイベントを表示する(送信者, 受信者, id);
+       イベントを設定する(pbt, new NetworkEvent(id)) )
+    pre 受信者 in set dom queues;
+
+  public SendInterrupt: seq of char * seq of char * ID ==> ()
+  SendInterrupt (送信者, 受信者, id) ==
+    duration (0)
+     ( dcl pbt: BasicTask := queues(受信者);
+       割込イベントを表示する(送信者, 受信者, id);
+       イベントを設定する(pbt, new InterruptEvent(id)) )
+    pre 受信者 in set dom queues;
+
+  イベントを処理する: AbstractTask * Event ==> ()
+  イベントを処理する (pat, pe) == pat.イベントを設定する(pe)
+
+thread
+  duration (0)
+    while (true) do
+      def mk_ (pat,pe) = イベントを得る() in
+        イベントを処理する(pat,pe)
+
+sync
+  mutex(イベントを設定する, イベントを得る);
+  per イベントを得る => len messages > 0 or len 割込イベント待ち行列 > 0
+
+end EventDispatcher
+\end{vdm_al}
+
+\begin{rtinfo}
+[EventDispatcher]{vdm.tc}[EventDispatcher]
+\end{rtinfo}

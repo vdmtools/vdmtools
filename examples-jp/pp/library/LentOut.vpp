@@ -1,0 +1,51 @@
+\subsection{貸出クラス}
+貸出行為を処理・管理する主体。
+\begin{vdm_al}	
+class 貸出クラス
+values
+	- = "$Header: /home/vdmtools/cvsroot/toolbox/examples-jp/pp/library/LentOut.vpp,v 1.3 2005/11/22 08:20:07 vdmtools Exp $"
+
+instance variables
+
+public 借用者 : 利用者クラス;
+public 本実体 : 本実体クラス;
+public 貸出日 : Date;
+public 返却日 : [Date] := nil;
+inv
+       if 返却日 <> nil then
+           self.貸出日.≦(返却日)
+       else
+           true
+
+operations
+
+public 初期化する : Date * 利用者クラス * 本実体クラス ==> ()
+初期化する(ある貸出日, ある借用者, ある本実体) ==
+	(
+	借用者 := ある借用者;
+	本実体 := ある本実体.貸し出す(self);
+	貸出日 := ある貸出日;
+	);
+
+public 貸出を終わる : Date * 本実体クラス ==> ()
+貸出を終わる(返却した日, 借用本) ==
+	(
+	借用本.貸出を終わる();
+	返却日 := 返却した日;
+	)
+pre
+	返却日 = nil;
+
+public 借用者を得る : () ==> [利用者クラス]
+借用者を得る() ==
+	if 返却日 <> nil then
+		return nil
+	else
+		return 借用者;
+
+end 貸出クラス
+\end{vdm_al}
+
+\begin{rtinfo}
+[TotalxCoverage]{vdm.tc}[貸出クラス]
+\end{rtinfo}

@@ -1,0 +1,80 @@
+\subsection{FBusinessTable}
+ビジネス上の規則に使用される表に関わる関数を提供する。
+
+\begin{vdm_al}
+class FBusinessTable
+values
+public MAXNUMBER = 2 ** 52;
+
+types
+\end{vdm_al}
+
+Entryは、lower <= key <= upperであれば、dataが対応することを示す表の要素である。
+表TableはEntryの列で表す。
+\begin{vdm_al}
+public Entry ::
+	lower : rat
+	upper : rat
+	data : rat ;
+
+public EntryTable = seq of Entry
+inv wEntryTable == 
+	forall i, j in set inds wEntryTable & 
+		下限より上限が大きい(wEntryTable(i).lower, wEntryTable(i).upper) and
+		j = i + 1 => 上限と次の行の下限は等しい(wEntryTable(i).upper, wEntryTable(j).lower);
+
+functions
+\end{vdm_al}
+
+Findは、表tableを検索して、keyに対応するdataを返す。
+対応する値がない場合はnilを返す。
+\begin{vdm_al}
+static public Find : EntryTable * rat -> [rat]
+Find(table, key) ==
+	if exists1 i in set inds table & table(i).lower < key and key <= table(i).upper then
+		let n in set inds table be st table(n).lower < key and key <= table(n).upper in
+		table(n).data
+	else
+		nil
+post
+	if exists1 i in set inds table & table(i).lower < key and key <= table(i).upper then
+		let n in set inds table be st table(n).lower < key and key <= table(n).upper in
+		RESULT = table(n).data
+	else
+		RESULT = nil;
+\end{vdm_al}
+
+FindInRegularIntervalsTablesは、一定間隔(interval)のunitを持つ表tableを検索して、keyに対応するunit数を返す。
+例えば、「売買代金1,000万円超の場合は、100万円まで毎に50円追加」という規則があった場合に、
+売買代金key=11300000の追加料金計算をするには、
+FindInRegularIntervalsTables(10000000, 50, 1000000, 11300000)とすれば100を返す。
+key < base ならば、0を返す。
+\begin{vdm_al}
+static public FindInRegularIntervalsTables : int * int * int * rat -> rat
+FindInRegularIntervalsTables(base, unit, interval, key) ==
+	let	x = key - base,
+		q = x div interval,
+		m = 
+			if (x mod interval) = 0 then
+				0
+			else
+				1
+	in
+	if x < 0 then
+		0
+	else
+		(q + m) * unit ;
+
+static public 下限より上限が大きい : rat * rat -> bool
+下限より上限が大きい(a下限, a上限) == a下限 < a上限;
+
+static public 上限と次の行の下限は等しい : rat * rat -> bool
+上限と次の行の下限は等しい(a下限, a上限) == a下限 = a上限;
+
+end FBusinessTable
+\end{vdm_al}
+
+
+\begin{rtinfo}
+[FBusinessTable]{vdm.tc}[FBusinessTable]
+\end{rtinfo}

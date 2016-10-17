@@ -1,0 +1,23 @@
+class VisualDetecteur is subclass of Detecteur
+
+   instance variables
+      view: View
+
+   operations
+      Init: PistesRadar * View ==> ()
+      Init(radar_information, view') ==
+      ( pistes_radar := radar_information;
+	view := view' 
+      );
+
+      CalculeRisque: SegmentDePrediction * (Terrain|Obstacle) ==> ()
+      CalculeRisque (segment_de_prediction, obstacle)
+      == def modeA: MSAWTypes`ModeA = segment_de_prediction.GetmodeA ();
+             risque_detecte: bool =
+                obstacle.Intersection (segment_de_prediction) in
+            if risque_detecte
+            then (  pistes_radar.SetAlarm (modeA, obstacle);
+                    view.ShowAlarm (modeA, obstacle)
+                 )
+
+end VisualDetecteur

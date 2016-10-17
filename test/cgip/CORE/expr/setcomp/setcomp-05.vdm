@@ -1,0 +1,31 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq  of set of (nat|char|seq of (nat|bool) )  
+Test () ==
+return 
+[   { a | a in set {1,'a',{2},[3],['b'],mk_(4,'c',[9],true)},
+          [a] in set {1,'a',[1],['a'],{2}} },
+  { [b,c] | b,c in set { 1,2,3,4,5,7,8,9 } }
+]  
+
+
+
+
+  
+
+  
+
+
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

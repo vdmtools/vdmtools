@@ -1,0 +1,13 @@
+class SetComprehensionExpr
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = {a|a in set {} & a < 7}
+  in skip;
+
+------------------------------------------------------------------------------
+end SetComprehensionExpr

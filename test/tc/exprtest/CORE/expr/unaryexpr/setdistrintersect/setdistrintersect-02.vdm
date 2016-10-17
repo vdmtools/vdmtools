@@ -1,0 +1,17 @@
+class UnaryTest
+types
+
+  A :: set of nat
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = dinter {}
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

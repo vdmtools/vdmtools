@@ -1,0 +1,26 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq  of set of (nat| bool| seq of (nat|bool) )  
+Test () ==
+return 
+[   { a | [a,a] in set { [1,1], [2,2], [4,1],3,5} },
+    { c | [c,b,c],b in set { [1,7,1], [2,7,2], [4,1,4],3,5,7,true} },
+  { d | [d,e,d],e in set { [1,7,1], [2,7,2], [4,1,4],3,5,7,true, [true,7,false]}},
+    { f | f,[f,f] in set { [[1],[true]], [[2],[2]], [2]} } ,
+  {g| g,[-,h] in set {[1,2],[3,4],1,true,[1,true]}, h in set {2,4} },
+    { a | a, [a], {a} in set { [1], 2,3,1,[2],[3],[4],{1},{2},{3},{2,1},[1,2],[3,4],
+                              4,5,6,[3,5,4],{5,4,7,1},[1,1]}  } ,
+  { i | i  in set { [1],[true] }, i in set {2 , [true], [1]} }
+]  
+
+
+
+
+  
+
+  
+
+
+
+
+
+

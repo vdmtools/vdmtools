@@ -1,0 +1,903 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Mapping from AS`Expr and AS`Statement to time increment instructions.
+% $Id: time.vdm,v 1.2 2005/10/25 05:00:23 vdmtools Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\chapter{The TIME Module}
+
+\section{Introduction}
+This module specifies how to increment the internal clock in the stack
+machine (STKM). The approach is based on estimating how long each
+construct in AS`Expr and AS`Statement would take to execute on some
+mythical target processor. The time for each such construct is
+subdivided into the time taken to execute the components of the
+construct, perhaps together with some overhead to execute the
+whole. The overhead may be dependent on the size of the construct
+and/or arguments, or some constant for the target processor, or
+both. The constants for the target processor are read from the time
+table specified in TIMEMAP.
+
+For example, the time taken to execute an assignment statement
+consists of the time taken to execute the right hand side expression,
+the time taken to update a memory location and the time taken to
+update the environment. The latter two will be constants for a given
+model, so are looked up in the time table.
+
+\begin{vdm_al}
+module TIME
+
+imports
+  from AS all,
+  from CI all,
+  from REP all,
+  from SEM all,
+  from STKM all,
+  from GLOBAL all,
+  from CMPL all,
+  from PAT all,
+  from RTERR all,
+  from INSTRTP all,
+  from TIMEPARSER all,
+  from TIMEMAP all,
+  from IO all,
+  from SCHDTP all
+
+exports
+  operations
+    SetCompilingTime : bool ==> ();
+    GetCompilingTime : () ==> bool;
+    MkCbr : () ==> STKM`SubProgram;
+    MkBr : () ==> STKM`SubProgram;
+    MkMatchPattern : () ==> STKM`SubProgram;
+    MkSetCompInsert : () ==> STKM`SubProgram;
+    MkSeqCompInsert : () ==> STKM`SubProgram;
+    MkMapCompInsert : () ==> STKM`SubProgram;
+    MkRuntimePrefixOp : AS`UnaryOp ==> STKM`SubProgram;
+    MkRuntimeBinaryOp : AS`BinaryOp ==> STKM`SubProgram;
+    MkRuntimeSetSeqMap : AS`SetRangeExpr | AS`SubSequenceExpr | AS`SeqModifyMapOverrideExpr ==> STKM`SubProgram;
+  functions
+    E2Time : AS`Expr -> STKM`SubProgram;
+    IsRuntimePrefixOp : AS`UnaryOp -> bool;
+    IsRuntimeBinaryOp : AS`BinaryOp -> bool;
+    S2Time : AS`Stmt -> STKM`SubProgram;
+    MkLoopBind : nat -> STKM`SubProgram;
+    MkRuntimeStartList : () -> STKM`SubProgram;
+    MkRuntimeStopList : () -> STKM`SubProgram
+
+definitions
+
+\end{vdm_al}
+
+\begin{vdm_al}
+state TS of
+  compilingTime : bool
+init ts == ts = mk_TS(true)
+end
+
+operations
+
+  SetCompilingTime : bool ==> ()
+  SetCompilingTime(newCompilingTime) ==
+    compilingTime := newCompilingTime;
+
+  GetCompilingTime : () ==> bool
+  GetCompilingTime() ==
+    return compilingTime;
+\end{vdm_al}
+
+\section{Expressions}
+We subdivide expressions according to the kind of expression
+given. Notice that for some expressions, the time taken to evaluate
+the expression depends on runtime values e.g. for a set range
+expression, the time taken to compute the actual set depends on the
+values determined at run time of the lower and upper bounds. The
+following expressions fall into this category:
+\begin{itemize}
+\item set distributed union
+\item set distributed intersect
+\item set power
+\item sequence distributed concatenation
+\item the elements of a sequence
+\item the indiciates of a sequence
+\item the tail of a sequence
+\item the domain and range of a map
+\item map distributed merge
+\item raising a number to a power
+\item set union and intersection
+\item set difference
+\item subset and proper subset
+\item set membership (and its negation)
+\item sequence concatenation
+\item map merge
+\item dom and range restriction for maps
+\item composition expressions
+\item set range expressions
+\item subsequence expressions
+\item sequence/map override expressions
+\item new expressions
+\end{itemize}
+
+In addition, if expressions and cases expressions are dealt with in
+CEXPR`CompileIfExpr and CEXPR`CompileCasesExpr respectively.
+
+\begin{vdm_al}
+
+functions
+
+  E2Time : AS`Expr -> STKM`SubProgram
+  E2Time(e) ==
+      cases true:
+       (is_AS`BracketedExpr(e))            -> E2Time(e.expr),
+       (is_AS`DefExpr(e))                  -> TimeDefExpr(e),
+       (is_AS`LetExpr(e))                  -> TimeLetExpr(e),
+       (is_AS`LetBeSTExpr(e))              -> TimeLetBeSTExpr(),
+       (is_AS`AllOrExistsExpr(e))          -> TimeAllOrExistsExpr(e),
+       (is_AS`ExistsUniqueExpr(e))         -> TimeExistsUniqueExpr(),
+       (is_AS`IotaExpr(e))                 -> TimeIotaExpr(),
+       (is_AS`ApplyExpr(e))                -> TimeApplyExpr(),
+       (is_AS`FieldSelectExpr(e))          -> TimeFieldSelectExpr(),
+       (is_AS`PrefixExpr(e))               -> TimePrefixExpr(e),
+       (is_AS`BinaryExpr(e))               -> TimeBinaryExpr(e),
+       (is_AS`SetEnumerationExpr(e))       -> TimeSetEnumExpr(e),
+       (is_AS`SeqEnumerationExpr(e))       -> TimeSeqEnumExpr(e),
+       (is_AS`MapEnumerationExpr(e))       -> TimeMapEnumExpr(e),
+       (is_AS`SetComprehensionExpr(e))     -> TimeSetComprehensionExpr(e),
+       (is_AS`SeqComprehensionExpr(e))     -> TimeSeqComprehensionExpr(),
+       (is_AS`MapComprehensionExpr(e))     -> TimeMapComprehensionExpr(e),
+       (is_AS`TupleConstructorExpr(e))     -> TimeTupleConstructorExpr(e),
+       (is_AS`RecordConstructorExpr(e))    -> TimeRecordConstructorExpr(e),
+       (is_AS`RecordModifierExpr(e))       -> TimeRecordModifierExpr(e),
+       (is_AS`LambdaExpr(e))               -> TimeLambdaExpr(e),
+       (is_AS`FctTypeInstExpr(e))          -> TimeFctTypeInstExpr(e),
+       (is_AS`IsExpr(e))                   -> TimeIsExpr(e),
+       (is_AS`NarrowExpr(e))               -> TimeNarrowExpr(e),
+       (is_AS`TupleSelectExpr(e))          -> TimeTupleSelectExpr(),
+       (is_AS`TypeJudgementExpr(e))        -> TimeTypeJudgementExpr(e),
+       (is_AS`Name(e))                     -> TimeNameLookUp(),
+       (is_AS`OldName(e))                  -> TimeNameLookUp(),
+       (is_AS`SelfExpr(e))                 -> TimeSelfExpr(),
+       (is_AS`NewExpr(e))                  -> TimeNewExpr(e),
+       (is_AS`IsOfClassExpr(e))            -> TimeIsOfClassExpr(),
+       (is_AS`IsOfBaseClassExpr(e))        -> TimeIsOfBaseClassExpr(),
+       (is_AS`SameBaseClassExpr(e))        -> TimeSameBaseClassExpr(),
+       (is_AS`SameClassExpr(e))            -> TimeSameClassExpr(),
+       (is_AS`ThreadIdExpr(e))             -> TimeThreadIdExpr(),
+       (is_AS`ActExpr(e))                  -> TimeHistoryExpr(),
+       (is_AS`FinExpr(e))                  -> TimeHistoryExpr(),
+       (is_AS`ActiveExpr(e))               -> TimeHistoryExpr(),
+       (is_AS`WaitingExpr(e))              -> TimeHistoryExpr(),
+       (is_AS`ReqExpr(e))                  -> TimeHistoryExpr(),
+       others                              -> []
+    end;
+\end{vdm_al}
+
+The time taken to evaluate a def expression is given by
+(number of bindings $\times$ overhead for each binding) $+$ time to
+eval rhs of each bind + time to eval body. Thus in $TimeDefExpr$ we
+just consider the overhead component. It is not meaningful to
+parametrize on type, so the nil entry in the time table is looked up.
+\begin{vdm_al}
+  TimeDefExpr : AS`DefExpr -> STKM`SubProgram
+  TimeDefExpr(mk_AS`DefExpr(def_l, -,-)) ==
+    let oh = TimeLookup(mk_TIMEPARSER`AddEnv(),nil)
+    in [mk_INSTRTP`INCRTIME(oh * len def_l)];
+\end{vdm_al}
+
+Let expressions are similar to def expressions. It is assumed that the
+definition on the RHS can be compiled statically, so the time taken to
+bind it is just the fixed overhead for binding.
+\begin{vdm_al}
+  TimeLetExpr : AS`LetExpr -> STKM`SubProgram
+  TimeLetExpr(mk_AS`LetExpr(def_l,-,-)) ==
+    let oh = TimeLookup(mk_TIMEPARSER`AddEnv(),nil)
+    in [mk_INSTRTP`INCRTIME(oh * len def_l)];
+
+\end{vdm_al}
+
+For let be st expressions we assume a different overhead on top of the
+binding overhead. This overhead relates to selection of a matching expression.
+
+\begin{vdm_al}
+  TimeLetBeSTExpr : ()-> STKM`SubProgram
+  TimeLetBeSTExpr() ==
+    let oh = TimeLookup(mk_TIMEPARSER`LetBeST(),nil)
+    in [mk_INSTRTP`INCRTIME(oh)];
+
+\end{vdm_al}
+
+For quantification expressions, the time taken depends on the overhead
+of a quantification expression and the number of bindings to be performed.
+\begin{vdm_al}
+  TimeAllOrExistsExpr : AS`AllOrExistsExpr -> STKM`SubProgram
+  TimeAllOrExistsExpr(mk_AS`AllOrExistsExpr(-,bind,-,-)) ==
+    let numbinds = len conc [bind(i).pat | i in set inds bind],
+        oh1 = TimeLookup(mk_TIMEPARSER`BindList(),nil),
+        oh2 = TimeLookup(mk_TIMEPARSER`AllorExists(),nil)
+    in [mk_INSTRTP`INCRTIME((oh1 * numbinds) + oh2)];
+
+\end{vdm_al}
+
+An exists unique expression is somewhat different because the time
+taken to check uniqueness is accounted for elsewhere.
+\begin{vdm_al}
+  TimeExistsUniqueExpr : () -> STKM`SubProgram
+  TimeExistsUniqueExpr() ==
+    let oh1 = TimeLookup(mk_TIMEPARSER`AddEnv(),nil),
+        oh2 = TimeLookup(mk_TIMEPARSER`AllorExists(),nil)
+    in [mk_INSTRTP`INCRTIME(oh1 + oh2)];
+\end{vdm_al}
+
+The time taken to execute an iota expression consists of the constant
+time for an iota expression, and the time to add a new identifier to
+the environment.
+\begin{vdm_al}
+  TimeIotaExpr : () -> STKM`SubProgram
+  TimeIotaExpr() ==
+    let oh1 = TimeLookup(mk_TIMEPARSER`AddEnv(),nil),
+        oh2 = TimeLookup(mk_TIMEPARSER`Iota(),nil)
+    in [mk_INSTRTP`INCRTIME(oh1 + oh2)];
+\end{vdm_al}
+
+The following expressions (apply expression, field select expression
+and map inverse expression) each take a fixed overhead given by the
+constant for the current model.
+\begin{vdm_al}
+  TimeApplyExpr : () -> STKM`SubProgram
+  TimeApplyExpr() ==
+    let oh = TimeLookup(mk_TIMEPARSER`Apply(),nil)
+    in [mk_INSTRTP`INCRTIME(oh)];
+
+  TimeFieldSelectExpr : () -> STKM`SubProgram
+  TimeFieldSelectExpr() ==
+    let oh = TimeLookup(mk_TIMEPARSER`Fieldsel(),nil)
+    in [mk_INSTRTP`INCRTIME(oh)];
+
+\end{vdm_al}
+
+The time taken for prefix operators is either a constant for a given
+model, or depends on runtime values (and is thus dealt with elsewhere).
+\begin{vdm_al}
+  TimePrefixExpr : AS`PrefixExpr -> STKM`SubProgram
+  TimePrefixExpr(e) ==
+    let time = cases e.opr:
+                 <NUMPLUS>   -> 0,
+                 <NUMMINUS>  -> TimeLookup(mk_TIMEPARSER`Minus(),GetType(e)),
+                 <NUMABS>    -> TimeLookup(mk_TIMEPARSER`Abs(),GetType(e)),
+                 <FLOOR>     -> TimeLookup(mk_TIMEPARSER`Floor(),GetType(e)),
+                 <NOT>       -> TimeLookup(mk_TIMEPARSER`Not(), nil),
+                 <SETCARD>   -> TimeLookup(mk_TIMEPARSER`Setcard(), nil),
+                 <SEQLEN>    -> TimeLookup(mk_TIMEPARSER`Seqlen(), nil),
+                 <SEQHEAD>   -> 0,
+                 <MAPINVERSE> -> TimeLookup(mk_TIMEPARSER`MapInverse(),nil),
+                 others      -> 0 -- determined at runtime
+               end
+    in
+      if time <> 0
+      then [mk_INSTRTP`INCRTIME(time)]
+      else [];
+
+\end{vdm_al}
+
+Similarly, the time taken for binary operators is either a constant for a given
+model, or depends on runtime values (and is thus dealt with elsewhere).
+\begin{vdm_al}
+TimeBinaryExpr : AS`BinaryExpr -> STKM`SubProgram
+TimeBinaryExpr(e) ==
+  let time =
+    cases e.opr:
+      <NUMPLUS>  -> TimeLookup(mk_TIMEPARSER`Plus(),GetType(e)),
+      <NUMMINUS> -> TimeLookup(mk_TIMEPARSER`Minus(),GetType(e)),
+      <NUMMULT>  -> TimeLookup(mk_TIMEPARSER`Mult(),GetType(e)),
+      <NUMDIV>   -> TimeLookup(mk_TIMEPARSER`Div(),GetType(e)),
+      <NUMREM>   -> TimeLookup(mk_TIMEPARSER`Rem(),GetType(e)),
+      <NUMMOD>   -> TimeLookup(mk_TIMEPARSER`Mod(),GetType(e)),
+      <INTDIV>   -> TimeLookup(mk_TIMEPARSER`Intdiv(),GetType(e)),
+      <NUMLT>    -> TimeLookup(mk_TIMEPARSER`GreaterThan(),GetType(e)),
+      <NUMLE>    -> TimeLookup(mk_TIMEPARSER`GreaterThanOrEqual(),GetType(e)),
+      <NUMGT>    -> TimeLookup(mk_TIMEPARSER`GreaterThan(),GetType(e)),
+      <NUMGE>    -> TimeLookup(mk_TIMEPARSER`GreaterThanOrEqual(),GetType(e)),
+      <AND>      -> TimeLookup(mk_TIMEPARSER`And(),nil),
+      <OR>       -> TimeLookup(mk_TIMEPARSER`Or(),nil),
+      <IMPLY>    -> TimeLookup(mk_TIMEPARSER`Or(),nil) +
+                    TimeLookup(mk_TIMEPARSER`Not(),nil),
+      <EQUIV>    -> TimeLookup(mk_TIMEPARSER`Equal(),GetType(e)),
+      <EQ>       -> TimeLookup(mk_TIMEPARSER`Equal(),GetType(e)),
+      <NE>       -> TimeLookup(mk_TIMEPARSER`Equal(),GetType(e)),
+      others     -> 0 -- determined at runtime
+      end in
+  if time <> 0
+  then [mk_INSTRTP`INCRTIME(time)]
+  else [];
+\end{vdm_al}
+For set, sequence and map enumerations, the time taken depends on a
+constance multiplied by the number of elements in the enumeration.
+\begin{vdm_al}
+TimeSetEnumExpr : AS`SetEnumerationExpr -> STKM`SubProgram
+TimeSetEnumExpr(mk_AS`SetEnumerationExpr(e,-)) ==
+  let oh = TimeLookup(mk_TIMEPARSER`Addset(),nil) in
+  [mk_INSTRTP`INCRTIME(oh * len e)];
+
+TimeSeqEnumExpr : AS`SeqEnumerationExpr -> STKM`SubProgram
+TimeSeqEnumExpr(mk_AS`SeqEnumerationExpr(e,-)) ==
+  let oh = TimeLookup(mk_TIMEPARSER`Appendseq(),nil) in
+  [mk_INSTRTP`INCRTIME(oh * len e)];
+
+TimeMapEnumExpr : AS`MapEnumerationExpr -> STKM`SubProgram
+TimeMapEnumExpr(mk_AS`MapEnumerationExpr(e,-)) ==
+  let oh = TimeLookup(mk_TIMEPARSER`Appendmap(),nil) in
+  [mk_INSTRTP`INCRTIME(oh * len e)];
+\end{vdm_al}
+
+For comprehension expressions, the time taken is handled both here and
+also in the corresponding function in CEXPR.
+\begin{vdm_al}
+TimeSetComprehensionExpr : AS`SetComprehensionExpr -> STKM`SubProgram
+TimeSetComprehensionExpr(mk_AS`SetComprehensionExpr(-,bind,-,-)) ==
+  let numbinds = len conc [bind(i).pat | i in set inds bind],
+      oh = TimeLookup(mk_TIMEPARSER`BindList(),nil) in
+  [mk_INSTRTP`INCRTIME(oh * numbinds)];
+
+TimeSeqComprehensionExpr : () -> STKM`SubProgram
+TimeSeqComprehensionExpr() ==
+  let oh = TimeLookup(mk_TIMEPARSER`BindList(),nil) in
+  [mk_INSTRTP`INCRTIME(oh)];
+
+TimeMapComprehensionExpr : AS`MapComprehensionExpr -> STKM`SubProgram
+TimeMapComprehensionExpr(mk_AS`MapComprehensionExpr(-,bind,-,-)) ==
+  let numbinds = len conc [bind(i).pat | i in set inds bind],
+      oh = TimeLookup(mk_TIMEPARSER`BindList(),nil) in
+  [mk_INSTRTP`INCRTIME(oh * numbinds)];
+\end{vdm_al}
+
+The time to construct records or tuples depends on the number of
+fields in the record or tuple.
+\begin{vdm_al}
+TimeTupleConstructorExpr : AS`TupleConstructorExpr -> STKM`SubProgram
+TimeTupleConstructorExpr(mk_AS`TupleConstructorExpr(fields,-)) ==
+  let oh = TimeLookup(mk_TIMEPARSER`Appendtup(),nil) in
+  [mk_INSTRTP`INCRTIME(oh * len fields)];
+
+TimeRecordConstructorExpr : AS`RecordConstructorExpr -> STKM`SubProgram
+TimeRecordConstructorExpr(mk_AS`RecordConstructorExpr(-,fields,-)) ==
+  let oh = TimeLookup(mk_TIMEPARSER`Reccons(),nil) in
+  [mk_INSTRTP`INCRTIME(oh * len fields)];
+\end{vdm_al}
+
+Modifying a record depends on the number of fields in the record that
+are to be modified.
+\begin{vdm_al}
+TimeRecordModifierExpr : AS`RecordModifierExpr -> STKM`SubProgram
+TimeRecordModifierExpr(mk_AS`RecordModifierExpr(-,mods,-)) ==
+  let oh = TimeLookup(mk_TIMEPARSER`Recmod(),nil) in
+  [mk_INSTRTP`INCRTIME(oh * len mods)];
+\end{vdm_al}
+
+A lambda expression requires time dependent on the number of
+parameters to the lambda expression (which are added to the
+environment) and a model dependent overhead of lambda expressions.
+\begin{vdm_al}
+TimeLambdaExpr : AS`LambdaExpr -> STKM`SubProgram
+TimeLambdaExpr(mk_AS`LambdaExpr(parm,-,-,-)) ==
+  let oh1 = TimeLookup(mk_TIMEPARSER`AddEnv(),nil),
+      oh2 = TimeLookup(mk_TIMEPARSER`LambdaExpr(),nil) in
+  [mk_INSTRTP`INCRTIME((oh1 * len parm) + oh2)];
+\end{vdm_al}
+
+To instantiate a function type, we require time for each of the
+arguments given.
+\begin{vdm_al}
+TimeFctTypeInstExpr : AS`FctTypeInstExpr -> STKM`SubProgram
+TimeFctTypeInstExpr(mk_AS`FctTypeInstExpr(-,inst,-)) ==
+  let oh = TimeLookup(mk_TIMEPARSER`Polyinst(),nil) in
+  [mk_INSTRTP`INCRTIME(oh * len inst)];
+\end{vdm_al}
+
+The time taken for an is expression depends on the type of the
+argument and the overhead for is expressions on the target model.
+\begin{vdm_al}
+TimeIsExpr : AS`IsExpr -> STKM`SubProgram
+TimeIsExpr(mk_AS`IsExpr(-,arg,-)) ==
+  let oh = TimeLookup(mk_TIMEPARSER`Isexpr(),GetType(arg)) in
+  [mk_INSTRTP`INCRTIME(oh)];
+\end{vdm_al}
+
+\begin{vdm_al}
+TimeNarrowExpr : AS`NarrowExpr -> STKM`SubProgram
+TimeNarrowExpr(mk_AS`NarrowExpr(expr,-,-)) ==
+  let oh = TimeLookup(mk_TIMEPARSER`Narrowexpr(),GetType(expr)) in
+  [mk_INSTRTP`INCRTIME(oh)];
+\end{vdm_al}
+
+To look up a component in a tuple requires a fixed overhead.
+\begin{vdm_al}
+TimeTupleSelectExpr : () -> STKM`SubProgram
+TimeTupleSelectExpr() ==
+  let oh = TimeLookup(mk_TIMEPARSER`Tupsel(),nil) in
+  [mk_INSTRTP`INCRTIME(oh)];
+\end{vdm_al}
+
+A type judgement is considered to be the same as an is expression.
+\begin{vdm_al}
+TimeTypeJudgementExpr : AS`TypeJudgementExpr -> STKM`SubProgram
+TimeTypeJudgementExpr(mk_AS`TypeJudgementExpr(e,-,-)) ==
+  let oh = TimeLookup(mk_TIMEPARSER`Isexpr(),GetType(e)) in
+  [mk_INSTRTP`INCRTIME(oh)];
+\end{vdm_al}
+
+To look up an identifier requires a fixed overhead for a particular
+model.
+\begin{vdm_al}
+TimeNameLookUp : () -> STKM`SubProgram
+TimeNameLookUp() ==
+  let oh = TimeLookup(mk_TIMEPARSER`Lookup(),nil) in
+  [mk_INSTRTP`INCRTIME(oh)];
+\end{vdm_al}
+
+For the following class-related expressions, the time taken to execute
+them will be a fixed overhead, specific to each kind of expression.
+\begin{vdm_al}
+TimeSelfExpr : () -> STKM`SubProgram
+TimeSelfExpr() ==
+  let oh = TimeLookup(mk_TIMEPARSER`Selfexpr(),nil) in
+  [mk_INSTRTP`INCRTIME(oh)];
+
+TimeNewExpr : AS`NewExpr -> STKM`SubProgram
+TimeNewExpr(mk_AS`NewExpr(nm,-,-)) ==
+    let  oh = TimeLookup(mk_TIMEPARSER`Newobj(),nil) in
+  [mk_INSTRTP`RUNTIME_INCRTIME_NEW(oh,nm)];
+
+TimeIsOfClassExpr : () -> STKM`SubProgram
+TimeIsOfClassExpr() ==
+  let oh = TimeLookup(mk_TIMEPARSER`Isofclass(),nil) in
+  [mk_INSTRTP`INCRTIME(oh)];
+
+TimeIsOfBaseClassExpr : () -> STKM`SubProgram
+TimeIsOfBaseClassExpr() ==
+  let oh = TimeLookup(mk_TIMEPARSER`Isofbaseclass(),nil) in
+  [mk_INSTRTP`INCRTIME(oh)];
+
+TimeSameBaseClassExpr : () -> STKM`SubProgram
+TimeSameBaseClassExpr() ==
+  let oh = TimeLookup(mk_TIMEPARSER`Samebaseclass(),nil) in
+  [mk_INSTRTP`INCRTIME(oh)];
+
+TimeSameClassExpr : () -> STKM`SubProgram
+TimeSameClassExpr() ==
+  let oh = TimeLookup(mk_TIMEPARSER`Sameclass(),nil) in
+  [mk_INSTRTP`INCRTIME(oh)];
+
+TimeThreadIdExpr : () -> STKM`SubProgram
+TimeThreadIdExpr() ==
+  let oh = TimeLookup(mk_TIMEPARSER`Threadid(),nil) in
+  [mk_INSTRTP`INCRTIME(oh)];
+\end{vdm_al}
+
+For history expressions, we have a fixed overhead regardless of the
+kind of history expression involved.
+\begin{vdm_al}
+  TimeHistoryExpr : () -> STKM`SubProgram
+  TimeHistoryExpr() ==
+    let oh = TimeLookup(mk_TIMEPARSER`History(),nil)
+    in [mk_INSTRTP`INCRTIME(oh)];
+\end{vdm_al}
+
+\section{Auxiliary Functions}
+The following functions are used in CEXPR to add time increment
+instructions for expressions not covered in the previous section.
+\begin{vdm_al}
+operations
+  MkCbr : () ==> STKM`SubProgram
+  MkCbr() ==
+    if not GetCompilingTime()
+    then return []
+    else
+      let oh = TimeLookup(mk_TIMEPARSER`Cbr(),nil)
+      in return [mk_INSTRTP`INCRTIME(oh)];
+
+  MkBr : () ==> STKM`SubProgram
+  MkBr() ==
+    if not GetCompilingTime()
+    then return []
+    else
+      let oh = TimeLookup(mk_TIMEPARSER`Br(),nil)
+      in return [mk_INSTRTP`INCRTIME(oh)];
+
+  MkMatchPattern : () ==> STKM`SubProgram
+  MkMatchPattern() ==
+    if not GetCompilingTime()
+    then return []
+    else
+      let oh = TimeLookup(mk_TIMEPARSER`MatchPattern(),nil)
+      in return [mk_INSTRTP`INCRTIME(oh)];
+
+  MkSetCompInsert : () ==> STKM`SubProgram
+  MkSetCompInsert() ==
+    if not GetCompilingTime()
+    then return []
+    else
+      let oh1 = TimeLookup(mk_TIMEPARSER`Addset(),nil),
+          oh2 = TimeLookup(mk_TIMEPARSER`Cbr(),nil)
+      in return [mk_INSTRTP`INCRTIME(oh1 + oh2)];
+
+  MkSeqCompInsert : () ==> STKM`SubProgram
+  MkSeqCompInsert() ==
+    if not GetCompilingTime()
+    then return []
+    else
+      let oh1 = TimeLookup(mk_TIMEPARSER`Appendseq(),nil),
+          oh2 = TimeLookup(mk_TIMEPARSER`Cbr(),nil)
+      in return [mk_INSTRTP`INCRTIME(oh1 + oh2)];
+
+  MkMapCompInsert : () ==> STKM`SubProgram
+  MkMapCompInsert() ==
+    if not GetCompilingTime()
+    then return []
+    else
+      let oh1 = TimeLookup(mk_TIMEPARSER`Appendmap(),nil),
+          oh2 = TimeLookup(mk_TIMEPARSER`Cbr(),nil)
+      in return [mk_INSTRTP`INCRTIME(oh1 + oh2)];
+\end{vdm_al}
+
+The function $TimeLookup$ looks up in the time map the time defined
+for a particular instruction and type. Note that for any instruction
+$i$, $mk\_(i,nil)$ should always be in the domain of the time map.
+\begin{vdm_al}
+functions
+  TimeLookup : TIMEPARSER`Instruction * [REP`BasicTypeRep] -> nat
+  TimeLookup(instr, tp) ==
+    def m = CMPL`GetTM()
+    in
+      if mk_(instr,tp) in set dom m
+      then m(mk_(instr,tp))
+      else m(mk_(instr,nil));
+\end{vdm_al}
+
+The function $GetType$ corresponds to a reference to the type checker
+in the actual tool. As this can not be replicated at the specification
+level, we merely return the default in all cases.
+\begin{vdm_al}
+  GetType : AS`Expr -> [REP`BasicTypeRep]
+  GetType(-) ==
+    nil;
+\end{vdm_al}
+
+\section{Runtime Instructions}
+
+As stated above, some expressions can only be resolved at runtime. For
+such expressions, special runtime increment instructions are defined
+in $INSTRTP$. In this section we provide support functions for such
+runtime instructions. These are used by CEXPR, since these runtime
+instructions have to be embedded within the instructions for the
+corresponding expressions, so that when they are executed, the runtime
+values of the arguments can be accessed on the evaluation stack.
+
+The function $IsRuntimePrefixOp$ returns true iff the time taken to
+evaluate the unary operator given depends on the argument to the
+operator.
+\begin{vdm_al}
+  IsRuntimePrefixOp : AS`UnaryOp -> bool
+  IsRuntimePrefixOp(op) ==
+    op in set
+     {<SETDISTRUNION>,
+      <SETDISTRINTERSECT>,
+      <SETPOWER>,
+      <SEQDISTRCONC>,
+      <SEQELEMS>,
+      <SEQINDICES>,
+      <SEQTAIL>,
+      <SEQREVERSE>,
+      <MAPDOM>,
+      <MAPRNG>,
+      <MAPDISTRMERGE>,
+      <MAPINVERSE> };
+\end{vdm_al}
+
+$MkRuntimePrefixOp$ is the companion to $IsRuntimePrefixOp$, and
+generates the appropriate runtime increment instruction for the unary
+operator given.
+\begin{vdm_al}
+operations
+  MkRuntimePrefixOp : AS`UnaryOp ==> STKM`SubProgram
+  MkRuntimePrefixOp(opr) ==
+    if not GetCompilingTime()
+    then return []
+    else
+      let oh = cases opr:
+                 <SETDISTRUNION> -> TimeLookup(mk_TIMEPARSER`Addset(),nil),
+                 <SETDISTRINTERSECT>,
+                 <SETPOWER>      -> TimeLookup(mk_TIMEPARSER`Addset(),nil),
+                 <SEQDISTRCONC>  -> TimeLookup(mk_TIMEPARSER`Appendseq(),nil),
+                 <SEQELEMS>      -> TimeLookup(mk_TIMEPARSER`Addset(),nil),
+                 <SEQINDICES>    -> TimeLookup(mk_TIMEPARSER`Addset(),nil),
+                 <SEQTAIL>       -> TimeLookup(mk_TIMEPARSER`Appendseq(),nil),
+                 <SEQREVERSE>    -> TimeLookup(mk_TIMEPARSER`Appendseq(),nil),
+                 <MAPDOM>        -> TimeLookup(mk_TIMEPARSER`Addset(),nil),
+                 <MAPRNG>        -> TimeLookup(mk_TIMEPARSER`Addset(),nil),
+                 <MAPDISTRMERGE> -> TimeLookup(mk_TIMEPARSER`Appendmap(),nil),
+                 <MAPINVERSE>    -> TimeLookup(mk_TIMEPARSER`Appendmap(),nil)
+               end
+      in return [mk_INSTRTP`RUNTIME_INCRTIME_PREF(opr,oh)]
+  pre IsRuntimePrefixOp(opr);
+\end{vdm_al}
+
+$IsRuntimeBinaryOp$ and $MkRuntimeBinaryOp$ are the binary
+counterparts for $IsRuntimePrefixOp$ and $MkRuntimePrefixOp$.
+\begin{vdm_al}
+functions
+IsRuntimeBinaryOp : AS`BinaryOp -> bool
+IsRuntimeBinaryOp(op) ==
+  op in set
+     {<NUMEXP>,
+      <SETUNION>,
+      <SETINTERSECT>,
+      <SETMINUS>,
+      <SUBSET>,
+      <PROPERSUBSET>,
+      <INSET>,
+      <NOTINSET>,
+      <SEQCONC>,
+      <MAPMERGE>,
+      <MAPDOMRESTTO>,
+      <MAPDOMRESTBY>,
+      <MAPRNGRESTTO>,
+      <MAPRNGRESTBY>,
+      <COMPOSE> };
+
+operations
+  MkRuntimeBinaryOp : AS`BinaryOp ==> STKM`SubProgram
+  MkRuntimeBinaryOp(opr) ==
+    if not GetCompilingTime()
+    then return []
+    else
+      let mk_(oh1,oh2) = cases opr:
+                           <NUMEXP>       -> mk_(TimeLookup(mk_TIMEPARSER`Mult(),nil),nil),
+                           <SETUNION>     -> mk_(TimeLookup(mk_TIMEPARSER`Addset(),nil),nil),
+                           <SETINTERSECT> -> mk_(TimeLookup(mk_TIMEPARSER`Addset(),nil),nil),
+                           <SETMINUS>     -> mk_(TimeLookup(mk_TIMEPARSER`Addset(),nil),nil),
+                           <SUBSET>       -> mk_(TimeLookup(mk_TIMEPARSER`Equal(),nil),nil),
+                           <PROPERSUBSET> -> mk_(TimeLookup(mk_TIMEPARSER`Equal(),nil),nil),
+                           <INSET>        -> mk_(TimeLookup(mk_TIMEPARSER`Equal(),nil),nil),
+                           <NOTINSET>     -> mk_(TimeLookup(mk_TIMEPARSER`Equal(),nil),nil),
+                           <SEQCONC>      -> mk_(TimeLookup(mk_TIMEPARSER`Appendseq(),nil),nil),
+                           <MAPMERGE>     -> mk_(TimeLookup(mk_TIMEPARSER`Appendmap(),nil),
+                                                 TimeLookup(mk_TIMEPARSER`Equal(),nil)),
+                           <MAPDOMRESTTO> -> mk_(TimeLookup(mk_TIMEPARSER`Appendmap(),nil),nil),
+                           <MAPDOMRESTBY> -> mk_(TimeLookup(mk_TIMEPARSER`Appendmap(),nil),
+                                                 TimeLookup(mk_TIMEPARSER`Equal(),nil)),
+                           <MAPRNGRESTTO> -> mk_(TimeLookup(mk_TIMEPARSER`Appendmap(),nil),
+                                                 TimeLookup(mk_TIMEPARSER`Equal(),nil)),
+                           <MAPRNGRESTBY> -> mk_(TimeLookup(mk_TIMEPARSER`Appendmap(),nil),
+                                                 TimeLookup(mk_TIMEPARSER`Equal(),nil)),
+                           <COMPOSE>      -> mk_(TimeLookup(mk_TIMEPARSER`Appendmap(),nil),nil)
+                         end
+      in return [mk_INSTRTP`RUNTIME_INCRTIME_BIN(opr,oh1,oh2)];
+\end{vdm_al}
+
+The function $MkRuntimeSetSeqMap$ generates a runtime increment
+instruction for set range expressions, subsequence expressions and
+seq/map modification expressions.
+\begin{vdm_al}
+operations
+  MkRuntimeSetSeqMap : AS`SetRangeExpr | AS`SubSequenceExpr | AS`SeqModifyMapOverrideExpr ==> STKM`SubProgram
+  MkRuntimeSetSeqMap(e) ==
+    if not GetCompilingTime()
+    then return []
+    else
+      let oh = cases true:
+                 (is_AS`SetRangeExpr(e))             -> TimeLookup(mk_TIMEPARSER`Addset(),nil),
+                 (is_AS`SubSequenceExpr(e))          -> TimeLookup(mk_TIMEPARSER`Subseq(),nil),
+                 (is_AS`SeqModifyMapOverrideExpr(e)) -> TimeLookup(mk_TIMEPARSER`Seqmapover(),nil)
+               end
+      in return [mk_INSTRTP`RUNTIME_INCRTIME_SETSEQMAP(oh)];
+\end{vdm_al}
+
+\section{Statements}
+The approach for statements is similar to expressions. A difference is
+that only the startlist statement needs to be resolved at runtime. The
+remainder can be resolved statically, though if and cases statements
+are dealt with directly in CSTMT rather than here.
+
+\begin{vdm_al}
+functions
+  S2Time : AS`Stmt -> STKM`SubProgram
+  S2Time(stmt) ==
+    cases true :
+      (is_AS`DefStmt(stmt))          -> TimeDefStmt(stmt),
+      (is_AS`LetStmt(stmt))          -> TimeLetStmt(stmt),
+      (is_AS`LetBeSTStmt(stmt))      -> TimeLetBeSTStmt(stmt),
+      (is_AS`AssignStmt(stmt))       -> TimeAssignStmt(stmt),
+      (is_AS`AtomicAssignStmt(stmt)) -> TimeAtomicAssignStmt(stmt),
+      (is_AS`SeqForLoopStmt(stmt))   -> TimeSeqForLoopStmt(stmt),
+      (is_AS`SetForLoopStmt(stmt))   -> TimeSetForLoopStmt(stmt),
+      (is_AS`IndexForLoopStmt(stmt)) -> TimeIndexForLoopStmt(stmt),
+      (is_AS`WhileLoopStmt(stmt))    -> TimeWhileLoopStmt(stmt),
+      (is_AS`CallStmt(stmt))         -> TimeCallStmt(stmt),
+      (is_AS`ReturnStmt(stmt))       -> TimeReturnStmt(stmt),
+      (is_AS`ExitStmt(stmt))         -> TimeExitStmt(stmt),
+      (is_AS`AlwaysStmt(stmt))       -> TimeAlwaysStmt(stmt),
+      (is_AS`TrapStmt(stmt))         -> TimeTrapStmt(stmt),
+      (is_AS`RecTrapStmt(stmt))      -> TimeRecTrapStmt(stmt),
+      (is_AS`StartStmt(stmt))        -> TimeStartStmt(stmt),
+      (is_AS`StopStmt(stmt))         -> TimeStopStmt(stmt),
+      (is_AS`BlockStmt(stmt))        -> TimeBlockStmt(stmt),
+      (is_AS`NonDetStmt(stmt))       -> TimeNonDetStmt(stmt),
+      (is_AS`DurationStmt(stmt))     -> [],
+      others                         -> []
+    end;
+\end{vdm_al}
+
+Statements for introducing local bindings are similar to the
+corresponding expressions, and need no further explanation.
+\begin{vdm_al}
+  TimeDefStmt : AS`DefStmt -> STKM`SubProgram
+  TimeDefStmt(mk_AS`DefStmt(def_l,-,-)) ==
+    let oh = TimeLookup(mk_TIMEPARSER`AddEnv(),nil)
+    in [mk_INSTRTP`INCRTIME(oh * len def_l)];
+
+  TimeLetStmt : AS`LetStmt -> STKM`SubProgram
+  TimeLetStmt(mk_AS`LetStmt(def_l,-,-)) ==
+    let oh = TimeLookup(mk_TIMEPARSER`AddEnv(),nil)
+    in [mk_INSTRTP`INCRTIME(oh * len def_l)];
+
+  TimeLetBeSTStmt : AS`LetBeSTStmt -> STKM`SubProgram
+  TimeLetBeSTStmt(-) ==
+    let oh = TimeLookup(mk_TIMEPARSER`LetBeST(),nil)
+    in [mk_INSTRTP`INCRTIME(oh)];
+\end{vdm_al}
+
+An assignment statement requires time to update memory and the
+environment. For an atomic assignment statement, this overhead is
+multiplied by the number of component assignments.
+\begin{vdm_al}
+  TimeAssignStmt : AS`AssignStmt -> STKM`SubProgram
+  TimeAssignStmt(-) ==
+    let oh1 = TimeLookup(mk_TIMEPARSER`AddEnv(),nil),
+        oh2 = TimeLookup(mk_TIMEPARSER`Update(),nil)
+    in [mk_INSTRTP`INCRTIME(oh1 + oh2)];
+
+  TimeAtomicAssignStmt : AS`AtomicAssignStmt -> STKM`SubProgram
+  TimeAtomicAssignStmt(mk_AS`AtomicAssignStmt(assstmtl,-)) ==
+    let oh1 = TimeLookup(mk_TIMEPARSER`AddEnv(),nil),
+        oh2 = TimeLookup(mk_TIMEPARSER`Update(),nil)
+    in [mk_INSTRTP`INCRTIME(len assstmtl * (oh1 + oh2))];
+
+\end{vdm_al}
+
+For loops, the time taken is a fixed overhead for the loop
+statement. In addition the time taken to bind the loop index
+identifier is accounted for directly in CSTMT by calls to
+$MkLoopBind$.
+\begin{vdm_al}
+  TimeSeqForLoopStmt : AS`SeqForLoopStmt -> STKM`SubProgram
+  TimeSeqForLoopStmt(-) ==
+    let oh = TimeLookup(mk_TIMEPARSER`Loop(),nil)
+    in [mk_INSTRTP`INCRTIME(oh)];
+
+  TimeSetForLoopStmt : AS`SetForLoopStmt -> STKM`SubProgram
+  TimeSetForLoopStmt(-) ==
+    let oh = TimeLookup(mk_TIMEPARSER`Loop(),nil)
+    in [mk_INSTRTP`INCRTIME(oh)];
+
+  TimeIndexForLoopStmt : AS`IndexForLoopStmt -> STKM`SubProgram
+  TimeIndexForLoopStmt(-) ==
+    let oh = TimeLookup(mk_TIMEPARSER`Loop(),nil)
+    in [mk_INSTRTP`INCRTIME(oh)];
+
+  TimeWhileLoopStmt : AS`WhileLoopStmt -> STKM`SubProgram
+  TimeWhileLoopStmt(-) ==
+    let oh = TimeLookup(mk_TIMEPARSER`Loop(),nil)
+    in [mk_INSTRTP`INCRTIME(oh)];
+
+  MkLoopBind : nat -> STKM`SubProgram
+  MkLoopBind(n) ==
+    let oh = TimeLookup(mk_TIMEPARSER`AddEnv(),nil)
+    in [mk_INSTRTP`INCRTIME(n * oh)];
+\end{vdm_al}
+
+For call and return statements, the time taken is a fixed overhead for a given model.
+\begin{vdm_al}
+  TimeCallStmt : AS`CallStmt -> STKM`SubProgram
+  TimeCallStmt(-) ==
+    let oh = TimeLookup(mk_TIMEPARSER`Call(),nil)
+    in [mk_INSTRTP`INCRTIME(oh)];
+
+  TimeReturnStmt : AS`ReturnStmt -> STKM`SubProgram
+  TimeReturnStmt(-) ==
+    let oh = TimeLookup(mk_TIMEPARSER`Return(),nil)
+    in [mk_INSTRTP`INCRTIME(oh)];
+\end{vdm_al}
+
+An exit statement corresponds in terms of timing to an unconditional branch.
+\begin{vdm_al}
+  TimeExitStmt : AS`ExitStmt -> STKM`SubProgram
+  TimeExitStmt(-) ==
+    let oh = TimeLookup(mk_TIMEPARSER`Br(),nil)
+    in [mk_INSTRTP`INCRTIME(oh)];
+
+\end{vdm_al}
+
+For exception handling, the time taken depends on fixed overheads for the model.
+\begin{vdm_al}
+  TimeAlwaysStmt : AS`AlwaysStmt -> STKM`SubProgram
+  TimeAlwaysStmt(-) ==
+    let oh = TimeLookup(mk_TIMEPARSER`Always(),nil)
+    in [mk_INSTRTP`INCRTIME(oh)];
+
+  TimeTrapStmt : AS`TrapStmt -> STKM`SubProgram
+  TimeTrapStmt(-) ==
+    let oh = TimeLookup(mk_TIMEPARSER`Trap(),nil)
+    in [mk_INSTRTP`INCRTIME(oh)];
+
+  TimeRecTrapStmt : AS`RecTrapStmt -> STKM`SubProgram
+  TimeRecTrapStmt(-) ==
+    let oh = TimeLookup(mk_TIMEPARSER`RecTrap(),nil)
+    in [mk_INSTRTP`INCRTIME(oh)];
+
+\end{vdm_al}
+
+To start a thread requires a fixed overhead for a given model.
+\begin{vdm_al}
+  TimeStartStmt : AS`StartStmt -> STKM`SubProgram
+  TimeStartStmt(-) ==
+    let oh = TimeLookup(mk_TIMEPARSER`Start(),nil)
+    in [mk_INSTRTP`INCRTIME(oh)];
+\end{vdm_al}
+
+To stopart a thread requires a fixed overhead for a given model.
+\begin{vdm_al}
+  TimeStopStmt : AS`StopStmt -> STKM`SubProgram
+  TimeStopStmt(-) ==
+    let oh = TimeLookup(mk_TIMEPARSER`Stop(),nil)
+    in [mk_INSTRTP`INCRTIME(oh)];
+\end{vdm_al}
+
+The time taken to execute a block statement consists of the fixed
+overhead for block statements, together with the time taken to add any
+new local state variables.
+\begin{vdm_al}
+  TimeBlockStmt : AS`BlockStmt -> STKM`SubProgram
+  TimeBlockStmt(mk_AS`BlockStmt(dcl_l, -,-)) ==
+    let oh1 = TimeLookup(mk_TIMEPARSER`AddEnv(),nil),
+        oh2 = TimeLookup(mk_TIMEPARSER`Update(),nil),
+        oh3 = TimeLookup(mk_TIMEPARSER`BlockStmt(),nil)
+    in [mk_INSTRTP`INCRTIME((len dcl_l * (oh1 + oh2)) + oh3)];
+\end{vdm_al}
+For a non-deterministic statement, the time taken is a fixed overhead.
+\begin{vdm_al}
+  TimeNonDetStmt : AS`NonDetStmt -> STKM`SubProgram
+  TimeNonDetStmt(-) ==
+    let oh = TimeLookup(mk_TIMEPARSER`NonDet(),nil)
+    in [mk_INSTRTP`INCRTIME(oh)];
+\end{vdm_al}
+
+The function $MkRuntimeStartList$ generates the runtime increment
+instruction which multiplies the overhead of starting a thread by the
+number of threads in the argument list.
+\begin{vdm_al}
+  MkRuntimeStartList : () -> STKM`SubProgram
+  MkRuntimeStartList() ==
+    let oh = TimeLookup(mk_TIMEPARSER`Start(),nil)
+    in [mk_INSTRTP`RUNTIME_INCRTIME_STARTLIST(oh)];
+\end{vdm_al}
+
+The function $MkRuntimeStopList$ generates the runtime increment
+instruction which multiplies the overhead of stopping a thread by the
+number of threads in the argument list.
+\begin{vdm_al}
+MkRuntimeStopList : () -> STKM`SubProgram
+MkRuntimeStopList() ==
+  let oh = TimeLookup(mk_TIMEPARSER`Stop(),nil) in
+      [mk_INSTRTP`RUNTIME_INCRTIME_STOPLIST(oh)];
+\end{vdm_al}
+\begin{vdm_al}
+end TIME
+\end{vdm_al}
+
+\vspace{0.5cm}
+
+\begin{rtinfo}
+{rtinfo.ast}[TIME]
+\end{rtinfo}
+

@@ -1,0 +1,29 @@
+class B
+
+instance variables
+
+x: nat
+
+operations
+
+op : () ==> ()
+op() == skip;
+
+static op2 : () ==> nat
+op2() ==
+ return x;
+
+static op3 : () ==> nat
+op3() ==
+ return f();
+
+static op4 : () ==> ()
+op4() ==
+ op();
+
+functions
+
+f : () -> nat
+f() == 1
+
+end B

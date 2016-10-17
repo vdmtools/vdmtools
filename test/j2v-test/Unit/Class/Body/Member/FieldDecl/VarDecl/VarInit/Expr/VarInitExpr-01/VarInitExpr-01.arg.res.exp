@@ -1,0 +1,6 @@
+[ mk_JAVAERR`ErrMsg( 
+     10,
+     4,
+     3,
+     "Error[1] : Initializer of instance variable 'A.j' is translated in VDM++ statements!\r",
+     <ERROR> ) ]

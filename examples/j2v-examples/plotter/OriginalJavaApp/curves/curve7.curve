@@ -1,0 +1,8 @@
+sqrt(abs(cos(2*arg)))*cos(arg)
+sqrt(abs(cos(arg)))*sin(arg)
+0.
+0.
+100
+0.
+2*PI
+0.01

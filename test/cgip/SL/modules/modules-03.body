@@ -1,0 +1,38 @@
+imports 
+
+from B types
+   Try renamed tries,
+
+from C operations
+  op2: nat ==> ();
+  op3,
+
+-- Fejl i TC:
+--types Sigma:: s : set of nat,
+
+from D functions
+  f3; f2: set of nat * set of nat -> set of nat;
+  f1,
+
+from E types
+  C:: set of nat
+      set of nat;
+  D:: a : seq of nat
+      b : seq of token
+
+exports
+  operations 
+  Test: () ==> nat 
+
+definitions
+operations
+Test: () ==> nat
+Test() ==
+        return(mk_tries(1,20).try1)
+
+
+end A
+
+
+
+

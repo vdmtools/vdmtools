@@ -1,0 +1,90 @@
+#
+# WHAT
+#    Windows CYGWIN GNU makefile for the code generated 
+#    VDM-SL sort example.
+# ID
+#    $Id: Makefile.winnt,v 1.14 2005/12/21 08:41:00 vdmtools Exp $
+# PROJECT
+#    Toolbox
+# COPYRIGHT
+#    (C) 2016 Kyushu University
+#
+#
+
+TBDIR = ../..
+WTBDIR = ../..
+
+#TBDIR = /cygdrive/c/Program Files/The VDM-SL Toolbox v2.8
+#WTBDIR = C:/Program Files/The VDM-SL Toolbox v2.8
+
+VDMDE = "$(TBDIR)/bin/vdmde.exe"
+
+CC = cl.exe
+LINK = link.exe
+
+CFLAGS = /nologo /c /MD /W0 /GD /EHsc /TP
+
+INCPATH = -I"$(WTBDIR)/cg/include"
+
+LDFLAGS = /nologo "$(WTBDIR)/cg/lib/CG.lib" "$(WTBDIR)/cg/lib/vdm.lib" user32.lib
+
+## CG Version Files
+
+CGSOURCES = DefaultMod.cpp DefaultMod.h DefaultMod_anonym.cpp DefaultMod_anonym.h
+
+CGOBJS = DefaultMod.obj
+
+CGFLAGS = /D CG
+
+sort_ex.exe: sort_ex.obj $(CGOBJS)
+
+sort_ex.obj: sort_ex.cpp DefaultMod.h
+
+DefaultMod.obj: DefaultMod.cpp DefaultMod.h DefaultMod_anonym.cpp \
+                DefaultMod_anonym.h DefaultMod_userdef.h \
+                DefaultMod_userimpl.cpp
+
+SPECFILES = sort.rtf
+
+$(CGSOURCES): $(SPECFILES)
+	$(VDMDE) -c $^
+
+all: sort_ex.exe
+
+#Rules
+
+%.obj: %.cpp
+	$(CC) $(CFLAGS) $(INCPATH) /Fo"$@" $<
+
+%.exe: %.obj
+	$(LINK) /OUT:$@ $^ $(LDFLAGS)
+
+%.cpp: %.cc
+	cp -f $^ $@
+
+%_userdef.h:
+	touch $@
+
+##############################################################
+#### Generation of test coverage of the sort.tex document ####
+##############################################################
+
+VDMLOOP = vdmloop
+
+GENFILES = sort.rtf.rtf vdm.tc
+
+vdm.tc:
+	cd test
+	$(VDMLOOP)
+	cd ..
+	cp test\$@ .\
+
+sort.rtf.rtf: $(SPECFILES) vdm.tc
+	"$(VDMDE)"  -lrNn $(SPECFILES)
+
+clean: 
+	rm -f *.obj DefaultMod.obj sort_ex.obj sort_ex.exe m4tag_rep
+	rm -f $(GENFILES) DefaultMod.h DefaultMod.cpp sort_ex.cpp
+	rm -f DefaultMod_userimpl.cpp
+	rm -f DefaultMod_anonym.cpp DefaultMod_anonym.h
+

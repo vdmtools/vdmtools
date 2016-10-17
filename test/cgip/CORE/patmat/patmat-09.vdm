@@ -1,0 +1,17 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+
+public Test : () ==> set of set of ( seq of nat | set of nat )  
+Test () ==
+return
+ {{ a | a^[10] in set {[3,10], [4,5]}},
+  { a | a union {1} in set {{2,1},2}}}
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

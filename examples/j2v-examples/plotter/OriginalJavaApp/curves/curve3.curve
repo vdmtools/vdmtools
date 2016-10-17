@@ -1,0 +1,8 @@
+arg*cos(4*arg-arg^2)
+arg*sin(4*arg-arg^2)
+0.
+0.
+15
+0
+8
+0.02

@@ -1,0 +1,12 @@
+{ mk_TEST`ProofObligationPP( 
+     [  ],
+     <CasesStmt>,
+     [  ],
+     mk_POGTP`LocContext( 
+        <operations>,
+        mk_AS`Name( 
+           [ "CasesStmtTest" ],
+           41943041 ),
+        mk_AS`Name( 
+           [ "Cases" ],
+           41943043 ) ) ) }

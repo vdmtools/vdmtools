@@ -1,0 +1,17 @@
+class A
+
+instance variables
+
+public i1 : nat := 1;
+private i2 : nat := 1;
+protected i3: nat := 1/i1;
+i4: nat := if true then 1 else Op(9);
+
+operations
+
+Op: nat ==> nat | bool
+Op(n) ==
+  def i1 = n in return i1
+
+end A
+

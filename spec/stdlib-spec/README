@@ -1,0 +1,11 @@
+Conventions for VDMTools standard libraries:
+
+1. Specification files for VDMSL (flat and module) and VDM++ are
+   generated from a single source file by a shell script,
+2. Source files has extension 'src',
+3. Comments starting with '-- VDM++:' are treated special:
+     - For VDMSL they are completely removed,
+     - For VDM++ everything after the ':' is left.
+   This is used for access modifiers,
+4. Class/module names are uppercase and file name is class/module
+   name in lowercase.

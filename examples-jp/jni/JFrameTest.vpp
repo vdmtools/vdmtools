@@ -1,0 +1,150 @@
+class JFrameTest
+
+operations
+public
+JFrameTest: () ==> JFrameTest
+JFrameTest() ==
+ (let version = JNIEnv`JNI_VERSION_1_6,
+      options = [ "-Xmx128m", "-verbose:gc", "-Djava.class.path=." ]
+  in
+    def - = JNI`CreateJavaVM(version, options) in skip;);
+
+public test: () ==> seq of char
+test() == (
+--  let
+--    clsString:int = JNI`FindClass("java/lang/String"),
+--    clsSystem:int = JNI`FindClass("java/lang/System")
+--  in
+--    return VDMUtil`val2seq_of_char[int](clsString) ^ " " ^ VDMUtil`val2seq_of_char[int](clsSystem)
+  def c1 = JNI`FindClass("java/lang/String");
+      c2 = JNI`FindClass("java/lang/System");
+  in
+    return JNI`GetClassName(c1) ^ " " ^ JNI`GetClassName(c2);
+);
+
+-- 重い処理を行い、所要時間(msec)を返す。16063msecぐらい
+public test2: () ==> int
+test2() == (
+  dcl total: seq of char := "",
+    s: int := System_currentTimeMillis();
+    for i = 1 to 1000 do (
+      def - = i in skip;  --   Warning[33] : "i"は使われていません
+        total := total ^ test() ^ "\n";
+    );
+    return System_currentTimeMillis() - s;  -- 所要時間を返す
+);
+
+-- バージョン番号をタプルで返す。(major, minor)  mk_(1,6)
+public GetVersion: () ==> int * int
+GetVersion() == let ver:int = JNI`GetVersion()
+  in return mk_(ver div 65536, ver mod 65536);
+
+public System_currentTimeMillis: () ==> int
+System_currentTimeMillis() == (
+  return JNI`CallStaticMethod("java/lang/System", "currentTimeMillis", [], "()J");
+);
+
+-- Thead.sleep(msec);
+public Thread_sleep: int ==> ()
+Thread_sleep(msec) == (
+  JNI`CallStaticVoidMethod("Ljava/lang/Thread;", "sleep", [msec], "(J)V");
+);
+
+-- JFrame frame = new JFrame();
+-- frame.setVisible(true);
+public JFrame_new: () ==> ()
+JFrame_new() == (
+--  dcl  clsJFrame:jclass := j.FindClass("Ljavax/swing/JFrame;"),
+--    objJFrame:jobject := j.NewObject(clsJFrame, "()V", []);
+--  def - = j.CallMethod(clsJFrame, "setVisible", "(Z)V", objJFrame, [true]) in skip;
+  trap exc : jthrowable
+  with
+    println(exc.getMessage())
+  in
+    def obj = JNI`NewObject("javax/swing/JFrame", [], "()V")
+    in JNI`CallVoidMethod(obj, "setVisible", [true], "(Z)V");
+);
+
+-- JFrame frame = new JFrame("ABC123日本語");
+-- frame.setSize(640, 480);
+-- frame.setVisible(true);
+public JFrame_new2: () ==> ()
+JFrame_new2() == (
+--  dcl  clsJFrame:jclass := j.FindClass("Ljavax/swing/JFrame;"),
+--    objJFrame:jobject := j.NewObject(clsJFrame, "(Ljava/lang/String;)V", [j.toJString("ABC123日本語")]);
+--  def - = j.CallMethod(clsJFrame, "setSize", "(II)V", objJFrame, [640, 480]) in skip;
+--  def - = j.CallMethod(clsJFrame, "setVisible", "(Z)V", objJFrame, [true]) in skip;
+
+  trap exc : jthrowable
+  with
+    println(exc.getMessage())
+  in
+    def jstr = JNI`NewString("ABC123日本語");
+        obj = JNI`NewObject("javax/swing/JFrame", [jstr], "(Ljava/lang/String;)V")
+    in
+     (JNI`CallVoidMethod(obj, "setSize", [640, 480], "(II)V");
+      JNI`CallVoidMethod(obj, "setVisible", [true], "(Z)V"));
+);
+
+-- // 等価なJavaのプログラム
+-- JFrame frame = new JFrame("スクロール可能なJTextArea");
+-- JTextArea area = new JTextArea();
+-- frame.getContextPane().add(new JScrollPane(area, 
+--      JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+--      JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED));
+-- frame.setSize(640, 480);
+-- frame.setVisible(true);
+public JFrame_new3: () ==> ()
+JFrame_new3() == (
+--  dcl  clsJFrame:jclass := j.FindClass("Ljavax/swing/JFrame;"),
+--    objJFrame:jobject := j.NewObject(clsJFrame, "(Ljava/lang/String;)V", [j.toJString("スクロール可能なJTextArea")]),
+--    clsJTextArea:jclass := j.FindClass("Ljavax/swing/JTextArea;"),
+--    objJTextArea:jobject := j.NewObject(clsJTextArea, "()V", []),
+--    objContentPane:jobject := j.CallMethod(clsJFrame, "getContentPane", "()Ljava/awt/Container;", objJFrame, []),
+--    clsJScrollPane:jclass := j.FindClass("Ljavax/swing/JScrollPane;"),
+--    objJScrollPane:jobject := j.NewObject(clsJScrollPane, "(Ljava/awt/Component;II)V", [objJTextArea, 20, 30]);
+--  def - = j.CallMethod4(objContentPane, "add", "(Ljava/awt/Component;)Ljava/awt/Component;", [objJScrollPane]) in skip;
+--  def - = j.CallMethod(clsJFrame, "setSize", "(II)V", objJFrame, [640, 480]) in skip;
+--  def - = j.CallMethod(clsJFrame, "setVisible", "(Z)V", objJFrame, [true]) in skip;
+
+  trap exc : jthrowable
+  with
+    println(exc.getMessage())
+  in
+    def jstr = JNI`NewString("スクロール可能なJTextArea");
+        ofr = JNI`NewObject("javax/swing/JFrame", [jstr], "(Ljava/lang/String;)V");
+        ot = JNI`NewObject("javax/swing/JTextArea", [], "()V");
+        ocp = JNI`CallMethod(ofr, "getContentPane", [], "()Ljava/awt/Container;");
+        osp = JNI`NewObject("javax/swing/JScrollPane", [ot, 20, 30], "(Ljava/awt/Component;II)V");
+        - = JNI`CallMethod(ocp, "add", [osp], "(Ljava/awt/Component;)Ljava/awt/Component;");
+    in
+     (JNI`CallVoidMethod(ofr, "setSize", [640, 480], "(II)V");
+      JNI`CallVoidMethod(ofr, "setVisible", [true], "(Z)V"));
+);
+
+public
+println: seq of char | real | bool | jstring ==> ()
+println(x) ==
+  def ostr = cases true:
+               (isofclass(jstring, x)) -> JNI`GetStringChars(x),
+               (is_(x, seq of char))   -> x,
+               (is_real(x))            -> VDMUtil`val2seq_of_char[real](x),
+               (is_bool(x))            -> VDMUtil`val2seq_of_char[bool](x)
+             end;
+      - = new IO().echo(ostr ^ "\n");
+  in skip;
+
+end JFrameTest
+/*
+Initializing specification ... done
+>> p new JavaInvokerTest().test()
+"JavaInvoker"
+>> p new JavaInvokerTest().GetVersion()
+mk_( 1, 6 )
+p new JavaInvokerTest().System_currentTimeMillis()
+p new JavaInvokerTest().Thread_sleep(5000)
+p new JavaInvokerTest().JFrame_new()
+p new JavaInvokerTest().JFrame_new2()
+p new JavaInvokerTest().JFrame_new3()
+p javax_swing_JFrame`test()
+*/

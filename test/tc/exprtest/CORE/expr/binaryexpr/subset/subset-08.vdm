@@ -1,0 +1,24 @@
+class BinaryTest
+
+
+------------------------------ Actual Test data ------------------------------
+types
+-----
+
+  Counter = nat1;
+  Counter_set = set of Counter;
+  Pid = token;
+  Pid_set = set of Pid;
+
+
+functions
+----------
+
+  test(active:Pid_set, gossip:map Counter to Pid_set) r:[bool]
+  
+  pre active subset (dom gossip)
+  post
+   r = true;
+
+------------------------------------------------------------------------------
+end BinaryTest

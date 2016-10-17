@@ -1,0 +1,23 @@
+-- overriding and overloading virtual function in subclass
+
+class A1
+
+functions
+
+public g : bool -> nat
+g(-) == is subclass responsibility; 
+
+
+end A1
+
+class A2 is subclass of A1
+
+functions 
+
+public g : bool -> nat
+g(-) ==  is not yet specified;
+
+public g : nat -> nat
+g(-) == is not yet specified;
+
+end A2

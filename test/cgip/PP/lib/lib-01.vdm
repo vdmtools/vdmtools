@@ -1,0 +1,163 @@
+class MainSort
+
+values
+  arr1 = [3,5,2,23,1,42,98,31];
+  arr2 = [3,1,2]
+  
+
+operations
+ 
+public  Test: () ==> seq of seq of (int | bool) 
+  Test () ==
+  ( dcl smach : SortMachine := new SortMachine (),
+        dos   : Sorter := new DoSorting (),
+        merg  : Sorter := new ExplSort ();
+    smach.InitSort(merg);
+    def res = smach.GoSorting(arr2);
+        res2 = smach.SetAndSort(dos,arr1);
+        b = self in
+    def a = b.InvokeSelf() in
+    let ibc = isofbaseclass(SortMachine,smach), -- true
+        ic  = isofclass(SortMachine,smach), -- true
+        sbc = samebaseclass(smach,merg),  -- false
+        sc  = sameclass(smach,merg) in  -- false
+    return [res,res2,[ibc,ic,sbc,sc]]
+  );
+
+  InvokeSelf: () ==> int 
+  InvokeSelf () ==
+    return 5
+
+end MainSort
+class Sorter
+
+--  The Sorter class is the behavioral pattern "Strategy". This class is the
+--  abstract class for all specifications of sorting operations. 
+
+operations
+
+public  Sort: seq of int ==> seq of int
+  Sort(arr)  ==
+    return arr
+
+end Sorter
+
+class ExplSort is subclass of Sorter
+
+operations
+
+public  Sort: seq of int ==> seq of int
+  Sort(l) ==
+    let r in set Permutations(l) be st IsOrdered(r) in 
+    return r
+
+functions
+
+  Permutations: seq of int -> set of seq of int
+  Permutations(l) ==
+    cases l:
+      [],[-] -> {l},
+      others -> dunion {{[l(i)]^j | 
+                         j in set Permutations(RestSeq(l,i))} | 
+                         i in set inds l}
+    end;
+
+  RestSeq: seq of int * nat -> seq of int
+  RestSeq(l,i) ==
+    [l(j) | j in set (inds l \ {i})];
+
+  IsOrdered: seq of int -> bool
+  IsOrdered(l) ==
+    forall i,j in set inds l & i > j => l(i) >= l(j)
+
+end ExplSort
+
+class MergeSort is subclass of Sorter
+
+operations
+public  Sort: seq of int ==> seq of int
+  Sort(l) ==
+    return MergeSorter(l)
+
+functions
+
+  MergeSorter: seq of real -> seq of real
+  MergeSorter(l) ==
+    cases l:
+      []      -> l,
+      [e]     -> l,
+      others  -> let l1^l2 in set {l} be st abs (len l1 - len l2) < 2
+                 in
+                   let l_l = MergeSorter(l1),
+                       l_r = MergeSorter(l2) in
+                    Merge(l_l, l_r)
+    end;
+
+  Merge: seq of int * seq of int -> seq of int
+  Merge(l1,l2) ==
+    cases mk_(l1,l2):
+      mk_([],l),mk_(l,[]) -> l,
+      others              -> if hd l1 <= hd l2 then 
+                               [hd l1] ^ Merge(tl l1, l2)
+                             else
+                               [hd l2] ^ Merge(l1, tl l2)
+    end
+
+
+
+end MergeSort
+
+class DoSorting is subclass of Sorter
+
+operations
+public  Sort: seq of int ==> seq of int
+  Sort(l) ==
+    return DoSort(l)
+
+functions
+
+  DoSort: seq of int -> seq of int
+  DoSort(l) ==
+    if l = [] then
+      []
+    else
+      let sorted = DoSort (tl l) in
+        InsertSorted (hd l, sorted);
+
+  InsertSorted: int * seq of int -> seq of int
+  InsertSorted(i,l) ==
+    cases true :
+      (l = [])    -> [i],
+      (i <= hd l) -> [i] ^ l,
+      others      -> [hd l] ^ InsertSorted(i,tl l)
+    end
+
+
+
+end DoSorting
+class SortMachine
+
+instance variables
+  srt: Sorter := new Sorter();
+
+
+ operations
+
+public  InitSort: Sorter ==> ()
+  InitSort(s) ==
+    srt := s;
+
+public  GoSorting: seq of int ==> seq of int
+  GoSorting(arr) == 
+    def r = srt.Sort(arr) in
+    return r;
+
+
+public  SetAndSort: Sorter * seq of int ==> seq of int
+  SetAndSort(s, arr) ==
+  ( srt := s;
+    def r = srt.Sort(arr) in
+    return r
+  )
+
+end SortMachine

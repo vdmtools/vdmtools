@@ -1,0 +1,8 @@
+r soccer.vdm
+i
+tc SOCCER_EXPL
+tc SOCCER_IMPL
+cg SOCCER_EXPL
+cg SOCCER_IMPL
+latex soccer.vdm
+quit

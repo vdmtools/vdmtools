@@ -1,0 +1,12 @@
+public Test : () ==> seq of nat  
+Test () ==
+( dcl s : seq of nat := [];
+
+  let a = if true then 'a' else 100 in
+  for i = if true then a else 100 to 100 by 1 do
+    s := s ^ [i];
+
+  return s
+)
+   
+end A

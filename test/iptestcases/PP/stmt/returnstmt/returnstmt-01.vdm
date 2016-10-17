@@ -1,0 +1,22 @@
+
+
+
+
+class A
+ 
+operations
+
+
+public Test: () ==> nat
+Test()  ==
+( dcl a : A := new A();
+  a.B();
+  return 0 );
+
+
+
+B: () ==> ()
+B() ==
+return
+
+end A

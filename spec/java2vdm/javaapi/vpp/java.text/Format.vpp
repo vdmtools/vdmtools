@@ -1,0 +1,58 @@
+class JavaTextFormat is subclass of JavaIoSerializable, JavaLangCloneable
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaTextFormat" , <CLASS> , false  )
+operations 
+public  clone : () ==> JavaLangObject
+clone() == 
+is not yet specified;
+--( trap  j2v_exception :  JavaLangException with  
+--    cases  true  : 
+--      (isofclass  (CloneNotSupportedException,j2v_exception) and  not  j2v_exception.IsNil()) -> 
+--        ( dcl   e : CloneNotSupportedException := j2v_exception;
+--          return  new  JavaLangObject(<NIL>)
+--        ) ,
+--      others  -> 
+--        exit  j2v_exception
+--    end  
+--  in  
+--    ( dcl   other : JavaTextFormat := JavaIoSerializable`clone();
+--      return  other
+--    ) 
+--) ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  JavaTextFormat : <NIL> ==> JavaTextFormat
+JavaTextFormat(-) == 
+isNil := true  ;
+
+public  formatObject : JavaLangObject ==> JavaLangString
+formatObject(obj) ==
+( dcl sb: JavaLangStringBuffer := format'(obj , new  JavaLangStringBuffer() , new  JavaTextFieldPosition(0));
+  return sb.toString()
+) ;
+
+public  parseObject : JavaLangString ==> JavaLangObject
+parseObject(source) == 
+is not yet specified;
+--( dcl   status : JavaTextParsePosition := new  JavaTextParsePosition(0),
+--        result : JavaLangObject := parseObject(source , status);
+--  if  status.index = 0
+--  then  
+--    ( exit  new  JavaTextParseException(new  JavaLangString("JavaTextFormat.parseObject(JavaLangString) failed") , status.errorIndex)
+--    ) ;
+--  return  result
+--) ;
+
+public  parseObject : JavaLangString * JavaTextParsePosition ==> JavaLangObject
+parseObject(source, status) == 
+is not yet specified;
+
+public  format' : JavaLangObject * JavaLangStringBuffer * JavaTextFieldPosition ==> JavaLangStringBuffer
+format'(obj, toAppendTo, pos) == 
+is not yet specified;
+
+
+end  JavaTextFormat

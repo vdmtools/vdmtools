@@ -1,0 +1,13 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ( real )  
+Test () ==
+return [ 3 ** 1.7 ]-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

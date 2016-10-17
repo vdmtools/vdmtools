@@ -1,0 +1,45 @@
+Note for DEC CXX users
+
+----------------------------------------------------------------------------
+
+Known problems
+
+Compiling
+
+DEC CXX require explicit template notation such as template_class<Param>
+where most others (conformant) accept just template_class (inside template
+method bodies, etc):
+
+template <class Param> class template_class {
+template_class foo() ; // error for DEC
+template_class<Param> foo() // OK
+.....
+}
+
+That is being worked around in this adaptation, but may cause problems when
+porting template code from other platforms. Use the same name of formal
+parameter : Param in all method's outside definitions.
+
+Linking
+
+Repository handling of this compiler is imperfect, so you may experience
+various problems on link stage. Linker problems problems are generally of
+two kinds : unresolved symbols and duplicate symbols. The latter problem was
+never reported to occur with DEC CXX. The problem with undefined symbols is
+also may require manual intervention. General rule is : if you get
+"unresolved symbol" errors, explicit instantiation will most likely help,
+for example:
+
+Unresolved:
+__alloc<0, 0>::allocate(unsigned long)
+__alloc<0, 0>::deallocate(void*, unsigned long) >
+
+To work around this problem, just instantiate __alloc<0,0> explicitly in
+some module:
+
+template class __alloc<0,0>;
+
+Another way to solve this problem may be use of -pts compiler option, but
+I'm not sure it works in all cases.
+
+----------------------------------------------------------------------------

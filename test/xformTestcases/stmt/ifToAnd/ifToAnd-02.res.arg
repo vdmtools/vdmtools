@@ -1,0 +1,15 @@
+"class A
+
+operations
+
+public Test : () ==> bool
+Test () ==
+( dcl x : nat := 12;
+	return x < 3 and x > 3 ); 
+   
+o1() b : bool
+pre true
+post false;
+
+end A
+"

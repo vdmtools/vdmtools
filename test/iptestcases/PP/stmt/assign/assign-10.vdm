@@ -1,0 +1,34 @@
+class A
+
+instance variables
+
+  b : B := new B();
+  
+operations
+
+public Test: () ==> real
+Test() ==
+  (b.a := new C();
+   return b.a.Get()); 
+end A
+
+class B
+instance variables
+
+  public a: C;
+
+end B
+class C
+
+instance variables
+
+c : nat := 9;
+
+operations
+
+public
+Get:() ==> nat
+Get() ==
+  return c;
+
+end C

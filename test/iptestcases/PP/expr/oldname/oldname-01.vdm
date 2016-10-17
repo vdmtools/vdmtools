@@ -1,0 +1,17 @@
+
+class A
+instance variables 
+  a1 : real := 3;
+  a2 : real := 6;
+
+operations
+
+  public Test : () ==> real
+  Test() ==
+  ( a1 := a1 + a2;
+    return a1;
+  )
+  post RESULT = a1~ + a2~
+
+end A
+

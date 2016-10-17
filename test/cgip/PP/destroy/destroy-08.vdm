@@ -1,0 +1,33 @@
+ class A
+
+  instance variables
+
+    n : nat := 0;
+
+  operations
+
+public    Init : nat ==> A
+    Init(mn) ==
+      (n := mn;
+       return self);
+
+public    GetN : () ==> nat
+    GetN() ==
+      return n;
+
+end A
+
+
+class B
+
+operations
+
+
+  public Test : () ==> nat
+  Test() ==
+     let v in set {1, new A().Init(3), new A().Init(5).GetN()}
+     in if isofclass(A,v)
+        then v.GetN()
+        else return v;
+
+end B

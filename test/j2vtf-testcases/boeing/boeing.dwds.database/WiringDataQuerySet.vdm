@@ -1,0 +1,71 @@
+class WiringDataQuerySet is subclass of Object
+operations 
+public  getQuery : int  ==> [String]
+getQuery(queryCode) == 
+is subclass responsibility ;
+
+WiringDataQuerySet : () ==> WiringDataQuerySet
+WiringDataQuerySet() == 
+( skip 
+) ;
+
+public  getQuery : int  * map  int  to  [Object] ==> [String]
+getQuery(queryCode, arguments) == 
+is subclass responsibility ;
+
+instance variables 
+  public  static GET_EFFECTIVITY_DATA : int  := 0;
+  public  static GET_ALL_AC_TYPES : int  := 1;
+  public  static GET_AC_VIA_TYPE : int  := 2;
+  public  static GET_AC_VIA_TAIL_NUM : int  := 3;
+  public  static GET_AC_VIA_CUM_NUM : int  := 4;
+  public  static GET_COUNT_REFDES_NAMES : int  := 5;
+  public  static GET_ALL_REFDES_NAMES : int  := 6;
+  public  static GET_ALL_REFDES_PINS : int  := 7;
+  public  static GET_REFDES_VIA_NAME : int  := 8;
+  public  static GET_REFDES_VIA_ID : int  := 9;
+  public  static GET_COUNT_WIRE_NAMES : int  := 10;
+  public  static GET_ALL_WIRE_NAMES : int  := 11;
+  public  static GET_WIRE_VIA_ID : int  := 12;
+  public  static GET_WIRE_ID_VIA_NAME : int  := 13;
+  public  static GET_WIRE_ID_VIA_REFDES : int  := 14;
+  public  static GET_WIRE_ID_VIA_WIRE_GROUP : int  := 15;
+  public  static GET_WIRE_ENDS_VIA_WIRE_ID : int  := 16;
+  public  static GET_WIRE_ENDS_VIA_REFDES_ID_PIN : int  := 17;
+  public  static GET_BOTH_WIRE_ENDS_VIA_REFDES_ID : int  := 18;
+  public  static GET_WIRE_ENDS_VIA_REFDES_ID_WIRE_ID : int  := 19;
+  public  static GET_WIRE_ENDS_VIA_REFDES_ID_WIRE : int  := 20;
+  public  static GET_SHIELD_WIRE_IDS_VIA_WIRE_ID : int  := 21;
+  public  static GET_PARTS_VIA_REFDES : int  := 22;
+  public  static GET_DRAWING_NOTES : int  := 23;
+  public  static GET_NOTE_TEXT_VIA_ID : int  := 24;
+  public  static GET_AIRCRAFT_TYPE_NOTE_IDS : int  := 25;
+  public  static GET_BUNDLE_NOTE_IDS : int  := 26;
+  public  static GET_WIRE_NOTE_IDS : int  := 27;
+  public  static GET_PART_NOTE_IDS : int  := 28;
+  public  static GET_LOCATOR_ID_VIA_REFDES : int  := 29;
+  public  static GET_PIN_ARRANGEMENT_ID_VIA_REFDES : int  := 30;
+  public  static GET_ILLUSTRATION_VIA_ID : int  := 31;
+  public  static GET_ILLUSTRATION_SERIES_VIA_FIGURE_NUMBER : int  := 32;
+  public  static GET_CGM_DATA_VIA_ILLUSTRATION_ID : int  := 33;
+  public  static GET_PIN_PAIRS_VIA_REFDES_PIN1 : int  := 34;
+  public  static GET_PIN_PAIRS_VIA_REFDES_PIN2 : int  := 35;
+  public  static GET_COMMON_PIN_VIA_REFDES_ID : int  := 36;
+  public  static GET_VERSION_VIA_ID : int  := 37;
+  public  static GET_ALL_AIRCRAFT_SYSTEMS : int  := 38;
+  public  static GET_SYSTEM_STATUS_VIA_REPAIR_ID : int  := 39;
+  public  static GET_WIRE_STATUS_VIA_REPAIR_ID : int  := 40;
+  public  static DELETE_STARTUP_DATA_VIA_REPAIR_ID : int  := 41;
+  public  static DELETE_SYSTEM_STATUS_VIA_REPAIR_ID : int  := 42;
+  public  static DELETE_WIRE_STATUS_VIA_REPAIR_ID : int  := 43;
+  public  static INSERT_STARTUP_DATA_VIA_REPAIR_ID : int  := 44;
+  public  static INSERT_SYSTEM_STATUS_VIA_REPAIR_ID : int  := 45;
+  public  static INSERT_WIRE_STATUS_VIA_REPAIR_ID : int  := 46;
+  public  static GET_WIRES_VIA_BUNDLE_ENDPOINTS : int  := 47;
+  public  static GET_WIRE_ID_VIA_BUNDLE_ID : int  := 48;
+  public  static GET_BUNDLE_VIA_NAME : int  := 49;
+  public  static GET_BUNDLE_VIA_ID : int  := 50;
+  public  static GET_PRECONDITION_VIA_ILLUSTRATION_ID : int  := 51;
+  public  static GET_PARTS_VIA_BUNDLE_ID : int  := 52
+  
+end  WiringDataQuerySet

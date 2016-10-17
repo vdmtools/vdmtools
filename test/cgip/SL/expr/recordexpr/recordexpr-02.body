@@ -1,0 +1,81 @@
+module A
+
+exports
+types struct Rec
+functions mkRec: int -> Rec
+definitions
+types
+
+  Rec:: i : int
+
+functions 
+
+  mkRec: int -> Rec
+  mkRec(i) ==
+    mk_Rec (i)
+
+end A
+
+module B
+
+imports
+  from A 
+    types Rec:: i : int renamed ARec
+    functions mkRec: int -> A`Rec renamed mkARec
+
+exports all
+definitions
+types
+
+  Rec:: r: real;
+  R = Rec | ARec
+
+functions
+
+ f: nat * nat * real -> R * R * R
+ f (i,j, k) ==
+   let r1 = mkARec (i),
+       r2 = mk_ARec (j),
+       r3 = mk_Rec (k) in
+     mk_(r1, r2, r3);
+
+ Execute: () -> seq1 of seq1 of (real | bool)
+ Execute () ==
+   let mk_(r1, r2, r3) = f (10,20,30) in
+     let mk_ARec (i)  = r1,
+         mk_ARec (j)  = r2,
+         mk_Rec (k)   = r3 in
+       [ [i,j,k], [r1.i, r2.i, r3.r],
+         [is_ARec (r1), is_ARec (r2), is_ARec (r3)],
+         [is_Rec (r1), is_Rec (r2), is_Rec (r3)] ] ^
+       [RecordTest ()]
+
+state Sigma of 
+  i: real
+  init s == s = mk_Sigma (50)
+end
+
+values
+  mk_ARec(j) = mkARec (60)
+
+operations
+
+ RecordTest: () ==> seq of real
+ RecordTest () ==
+ ( dcl rec1: ARec := mk_ARec (i),
+       rec2: ARec := mkARec (j),
+       rec3: Rec  := mk_Rec (70);
+   rec1.i := rec1.i + 1;
+   rec2.i := rec2.i + 1;
+   rec3.r := rec3.r + 1;
+   return [rec1.i, rec2.i, rec3.r] )
+       
+
+end B    
+
+
+
+
+
+
+

@@ -1,0 +1,333 @@
+<HTML>
+<HEAD>
+<TITLE>
+The VDM Java library
+</TITLE>
+</HEAD>
+
+<BODY>
+<p align="center"><img src="logo-javavdmlibrary.gif" width="300" height="60"></p>
+
+<hr> The package <a
+href="doc/Package-jp.vdmtools.VDM.html">jp.vdmtools.VDM</a>
+implements the Java VDM library. The library is documented using
+javadoc. Here we give some general additional information.
+
+<hr>
+<UL>
+<li><A HREF="#DT"><b>The Implementation of VDM Data Types</b></A>
+    <ul>
+    <LI><A HREF="#DTBasic">Basic Data Types</A>
+    <LI><A HREF="#DTCompound">Compound Data Types</A>
+    <li><A href="#GF">General functions on VDM types</a>
+    </ul>
+
+<LI><A HREF="#EH"><B>Error Handling</B></A>
+<LI><A HREF="#SI"><B>Still to be implemented</B></A>
+</ul>
+
+
+<hr>
+<H1><A NAME = "DT">The Implementation of VDM Data Types</A></FONT></H1>
+<P>
+
+All the classes in Java are subclasses of the <TT> java.lang.Object</TT> class and
+so are the Java classes, which implement the VDM datatypes.
+
+All the methods which insert elements into compound data types expect
+elements of type <TT>Object</TT>. However, since all classes are subclasses
+of the <TT>java.lang.Object</TT> class, this is no problem. 
+
+The type of elements returned by compound data types will always be <tt>Object</tt>. 
+These objects can however be explicitly casted to the original type if necessary.
+
+In this context, the  <tt>instanceof</tt> operator is of importance. 
+Look at the following
+example:
+<PRE>
+Object obj = St.GetElem();
+
+if (obj instanceof Sequence)  
+ {
+  Sequence Sq = (Sequence)obj
+  ...
+ }
+</PRE>
+The <tt>instanceof</tt> operator returns true if the
+object on the left-hand side is an instance of the class or
+implements the interface on the right-hand side. Otherwise it
+returns false.
+
+<p>
+
+We will now briefly describe, how the VDM Data Types have been
+implemented in Java.
+
+
+<hr>
+<H2 ALIGN=LEFT><A NAME = "DTBasic">Basic VDM Data Types</A></FONT></H2>
+<P>
+
+<H3> Float, Int, Boolean, Char Types</H3>
+
+The Java language package provides the following ``wrapper'' classes for the
+primitive VDM data types  float,  int,  boolean and 
+  char: Double, Integer, Boolean and Character respectively.  However, not all of
+the C++ functions on VDM types found in the VDM C++ library have direct
+equivalents in the Java classes.  Moreover, they can't just be added
+to a subclass, because these Java classes are final.
+The <tt>java.lang.Math</tt> class however does provide some of these functions, like
+for example <tt>pow</tt> or <tt>exp</tt>. 
+
+Another difference to C++ is, that Java does not allow method overloading.
+The following syntax is therefore necessary:
+
+<PRE>
+C++ style: -I,  Java style: I = new Integer(-(I.intValue()))
+C++ style: I1 - I2,   Java style: new Integer (I1.intValue() - I2.intValue())
+</PRE>
+
+<H3> Quote Type</H3>
+A VDM Quote is not equivalent to a Java String. 
+Therefore the class <tt>java.lang.String</tt> is not the right way to represent quotes.
+Just imagine you misspell a quote. The Java compiler will not detect this, because it is
+still a correct string.
+
+In the current implementation of the VDM java library, the Quote class contains a private
+variable holding a string.
+
+<H3> Token Type</H3> 
+
+The VDM token is represented by the Token class. It has a
+private variable of type Object, which holds the VDM value.
+
+<hr>
+<H2 ALIGN=LEFT><FONT FACE="arial,helvetica">
+    <A NAME = "DTCompound">Compound VDM Data Types</A></FONT></H2>
+
+In order to
+resemble the existing VDM C++ Library as much as possible, almost all
+the methods have the same name as their corresponding C++
+functions. Only the First and Next functions of the Set, Map and
+Sequence types have been replaced by an implementation typical for
+Java.  Java typically use the Enumeration interface in order to
+iterate through a set of values.
+The iterator method can be used in the following way:
+
+<PRE>
+    for (Enumeration e=Sq.iterator(); e.hasMoreElements();){
+      UTIL.printObject(e.nextElement());;
+    }
+</PRE>
+<H3>Product Type</H3> 
+
+The values of a product type are called tuples.
+The class, which models the VDM Tuple Type, is called Tuple and
+can be found in the file Tuple.java in the VDM package.  
+A tuple is essentially an
+array of fixed size. Therefore, the Tuple class has the following protected attribute:
+<PRE>
+Object[] t;
+</PRE>
+and the following constructor:
+<PRE>
+public Tuple(int i){
+    t = new Object[i];
+  }
+</PRE>
+ 
+<h3>The Composite Type</h3>
+
+The VDM Composite Type can be represented by Java's
+class mechanism. All record types defined in a VDM specification are
+code generated as subclasses of the Record class found in the VDM package.  
+Fields in a record become variables in the new class.
+
+<h3>The Union Type</h3>
+
+The VDM Union Type is supported by the Java <tt> Object</tt>. As a consequence, 
+Union Type definitions are ignored by the code generator. This
+has of course some disadvantages. Imagine the following type definition in VDM:
+
+<PRE>
+A = B | C
+Test: () ==> A
+</PRE>
+
+The Java code will ignore the type definition and the operation Test will return an
+<tt>Object</tt>. 
+
+<h3>Optional Type</h3>
+
+In order to support the VDM Optional Type, a Nil class has been implemented.
+It  can be found in the file Nil.java in this package. The class is a subclass of
+Object, but does not add any definitions.
+
+<h3>Function Type</h3>
+
+The VDM Function Type is not supported.
+
+<hr>
+<H2 ALIGN=LEFT><FONT FACE="arial,helvetica">
+    <A NAME = "GF"></A>General functions on VDM Data Types - <a href="jp.vdmtools.VDM.UTIL.html#_top_">The UTIL class</a></FONT></H2>
+
+The VDM C++ library provides some functions which are applicable to
+instances of all types and which therefore are defined in class
+Common.  As described above, the java.lang.Object class replaces the
+Common class.  The functionality found in the common class has
+therefore be implemented in an alternative way. The functions ascii,
+equals and clone have been added to an abstract class, called UTIL.  
+It is recommended to use the methods provided in the UTIL class.
+
+<DL>
+<DT>ascii
+<DD>The UTIL.ascii method has to be used in order to get a string containing an ASCII representation of a VDM
+value.
+The ascii
+method has been implemented as a static method in the class UTIL.
+Moreover, the ascii method has been added to the Java classes,
+which represent the VDM compound data types. It could however not be
+added to the Java classes, which represent the VDM basic data types.
+This is not possible because the Java wrapper classes
+for the primitive data types are final.
+
+<DT>equals <DD> The UTIL.equals method has to be used in order to
+compare two VDM values.  The equals method has been implemented as a
+static method in the class UTIL.  Note, that also the wrapper classes
+for the primitive data types provide an equals method and that equals
+methods have been added to the classes implementing compound data
+types. However, in order to compare two VDM
+values, use the UTIL.equals methods. 
+
+See the below example for an
+explanation: 
+
+<PRE> 
+Double d = new Double(2) 
+Integer i = new Integer(2)
+</PRE> 
+
+UTIL.equals(d,i) returns true, while d.equals(i) returns false.
+Therefore it is advised to use the UTIL.equals method to resemble VDM
+semantics.
+
+<DT>clone <DD> 
+We have decided to let the code generator take care of the
+cloning of objects. As a consequence, this library clones objects only
+in some rare cases.The only method which explicitly clones is the <tt>
+Tl()</tt> method. This is done in order to keep the whole sequence. The
+<tt>ImpTl</tt> method on the other hand replaces the sequence with its
+tail. In order to let the code generator take care of
+the cloning of objects, all objects should be clonable.  Primitive
+data types (Integer,Character,Double,Boolean) however can't be modified.
+Therefore it is not necessary to clone them.
+In C++  one writes 
+
+<PRE>
+Int b = a
+b = a + 1
+</PRE>
+
+which makes cloning necessary. 
+
+The corresponding Java code looks like:
+
+<PRE>
+Integer a = ..
+Integer b = new Integer(a.intValue());
+b= a.intValue() + 1;
+</pre>
+
+Thus, cloning is not necessary.
+
+In order to clone a compound data type, use the clone method:
+
+<PRE>
+Tuple T = ...
+Tuple cT = (Tuple)T.clone()
+</PRE>
+
+Use the UTIL.clone method in order to clone an "Object" of arbitrary type.
+
+The provided clone() method provides a "in-depth cloning", 
+
+The provided copy method implement a "surface cloning".(not implemented yet)
+</DL>
+
+The UTIL class provides in addition to the described methods some 
+oxiliary functions used by the generated code.
+
+<h4>How to write/read VDM values to/from the filesystem</h4>
+
+One can use the <TT>java.io.ObjectOutputStream</TT> and the <TT>java.io.ObjectInputStream</TT> classes to save values to the filesystem and later read them back.
+This is shown in the following example:
+
+<PRE>    
+    FileOutputStream ostream = new FileOutputStream("t.tmp");
+    ObjectOutputStream o = new ObjectOutputStream(ostream);
+    o.writeObject(Sq);
+    o.writeObject(I);
+    ostream.close();
+
+    FileInputStream istream = new FileInputStream("t.tmp");
+    ObjectInputStream i = new ObjectInputStream(istream);
+    Sq = (Sequence)i.readObject();         // or obj = i.readObject();
+    I = (Integer)i.readObject();           // or obj = i.readObject();
+    istream.close();
+</PRE>
+
+<hr>
+<H1><A NAME = "EH">Error Handling</A></FONT></H1>
+<P>
+
+The error handling of the VDM Java library
+is based on Javas exception handling mechanism.  When an error is
+detected by one of the library methods, an appropriate exception is
+thrown.  This is done by instantiating an exception object with a
+string describing the library method which detected the error.
+All the implemented errors are subclasses of the class <tt>VDM_ERROR</tt>, 
+which again is a subclass of the java.lang.Throwable class.
+Other errors are catched by the java.lang.Throwable class.
+
+<hr>
+<H1><A NAME = "SI">Still to be implemented</A></FONT></H1>
+<P>
+<ul> 
+<li> implement the copy method
+<li> Set, Map, Sequence inherit from Vector. Instead, a private variable should
+hide this information. This would make it impossible to use the Vector methods directly.
+<li> Is the Quote implementation appropriate when we have equivalent quotes in different
+VDM classes/modules?
+<li> Is the token implementation appropriate?
+<li> When using the iterator()
+method of a Map (Set), the elements are returned in the order they have been
+added to the Map (Set). This is however not the way, the VDM data type
+behaves. The keys of a VDM Map (elements of a set) are enumerated according to an internal
+order, independently of the order, in which the keys (elements) have been added to the map.
+<li>
+Improve the implementation of the VDM Union Types
+<li>
+Probably it would be more effective to implement the Map class as a
+subclass of the java.util.Hashtable. This can be done later without
+changing the interface of the Map class.
+<li>
+make the obj.ascii method function.....
+implement the ascii method of Record when code generating, remove "mk_" from the 
+UTIL.ascii method....
+<li>
+review private-public methods: Should it for example be allowed to use the equals methods
+of the tuple directly or should we force the developer to write UTIL.equals?
+</ul>
+</BODY>
+</HTML>
+
+
+
+
+
+
+
+
+
+
+

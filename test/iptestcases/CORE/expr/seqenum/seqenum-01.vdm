@@ -1,0 +1,29 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of (seq of ( nat | map nat to bool | bool | 
+			( nat * nat * nat * nat ) | nat ))  
+Test () ==
+return 
+[ [],
+  [ let a = 3,
+	b = false
+    in { a |-> b }, 
+    exists a in set { 3, 3.6 } & is_nat( a ),
+    mk_(3,6,3,2),
+    [ i | i in set {356,3,6,1}](3),
+    true ]
+]
+
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

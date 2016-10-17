@@ -1,0 +1,38 @@
+dlclass Example
+
+-- Purpose of test: 
+-- test external dlclass function.
+-- since a function is not callable from the outside
+-- we call 'f' from 'op'. 
+
+uselib "dlclass_test1.so"
+--  uselib "dlexample.dll"
+
+operations
+public
+  f : nat ==> seq of int
+  f(n) == is not yet specified
+
+operations
+public
+  op : nat ==> seq of int
+  op(1) == return f(1)
+   
+end Example
+
+--==============================--
+
+class A
+
+operations
+
+public
+  Test : () ==> seq of int
+  Test() == 
+    return 
+       let e = new Example() 
+       in 
+         e.op(3)
+
+end A
+

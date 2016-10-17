@@ -1,0 +1,42 @@
+class WireEndpointInfo is subclass of Object
+operations 
+public  getWireEnd1Info : () ==> [WireEndpoint]
+getWireEnd1Info() == 
+( return  wireEnds(0)
+) ;
+
+public  getWireEnd2Info : () ==> [WireEndpoint]
+getWireEnd2Info() == 
+( return  wireEnds(1)
+) ;
+
+public  getWireEndsInfo : () ==> map  int  to  [WireEndpoint]
+getWireEndsInfo() == 
+( return  wireEnds
+) ;
+
+public  setWireEnd1Info : [WireEndpoint] ==> <VOID>
+setWireEnd1Info(end__) == 
+( wireEnds := wireEnds ++ {0 |-> end__};
+  return  <VOID>
+) ;
+
+public  setWireEnd2Info : [WireEndpoint] ==> <VOID>
+setWireEnd2Info(end__) == 
+( wireEnds := wireEnds ++ {1 |-> end__};
+  return  <VOID>
+) ;
+
+public  WireEndpointInfo : [WireEndpoint] * [WireEndpoint] ==> WireEndpointInfo
+WireEndpointInfo(end1, end2) == 
+( let - = Assert`that(end1.getWireId() = end2.getWireId())
+  in 
+    skip ;
+  wireEnds := wireEnds ++ {0 |-> end1};
+  wireEnds := wireEnds ++ {1 |-> end2}
+) ;
+
+instance variables 
+  private  wireEnds : map  int  to  [WireEndpoint] := {l_3 |-> nil  |l_3 in set  {0,...,2-1}}
+  
+end  WireEndpointInfo

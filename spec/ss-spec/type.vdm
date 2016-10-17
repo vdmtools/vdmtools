@@ -1,0 +1,743 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Well-formedness Classification for the Static Semantics of VDM++
+% $Id: type.vdm,v 1.37 2001/10/05 12:13:31 mikhail Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\section{Well-formedness Classification}
+
+This static semantics operates with to classes of well-formed
+specifications. The distinction is between possible and definite
+well-formedness. Those specifications which cannot even pass the
+possible well-formedness test can be rejected as being well-formed.
+On the other hand those specifications which do pass the definitely
+well-formedness test can be accepted as being statically correct.
+Finally those specifications which pass the possible well-formedness
+test but fail the definitely well-formedness test are ``maybe''
+well-formed. There is a large number of specifications which belong to
+this gray area. This is an inherit property of a VDM-SL like language.
+
+The well-formedness classification module is called TYPE
+because it is responsible for whether types are compatible with
+each other depending upon whether possibly or definitely
+well-formedness is being checked. No error messages are given
+from this module's operations. If two types are not compatible
+the calling operation will always be responsible for taking an
+appropriate action.
+The interface of the TYPE module can be seen from figure~\ref{type}.
+
+The TYPE module exports its main operation
+$IsCompatible$ and the indication type $Ind$ (and a few other
+operations used in AUX) to the DEF module, and all the second
+level modules (STMT, EXPR and PAT) and to AUX. TYPE
+imports a few constructs from the other third level modules.
+
+%\insertfig{type.ps}{13cm}{Interface for the TYPE module}{\label{type}}
+
+\begin{vdm_al}
+module TYPE
+
+imports
+
+  from AS all,
+
+  from CI all,
+
+  from REP all,
+
+  from ENV operations
+#ifdef VDMSL
+    LookUpTypeName: AS`Name ==> [REP`TypeRep];
+    GetCurMod: () ==> AS`Name,
+#endif VDMSL
+#ifdef VDMPP
+    IsSubClass: AS`Name * AS`Name ==> bool;
+    LookUpTypeName: AS`Name * bool ==> [REP`TypeRep|ENV`AccessType];
+    CheckAccessCurClass: [ENV`AccessType |
+                          REP`TypeRep    |
+                          ENV`TagRepElem |
+                          set of REP`TypeRep| set of (ENV`AccessOpTypeRep |
+                                                      ENV`AccessFnTypeRep |
+                                                      ENV`AccessPolyTypeRep)]
+               ==> [REP`TypeRep|ENV`TagRepElem  |
+                  set of (REP`FnTypeRep | REP`OpTypeRep | REP`PolyTypeRep) ];
+    GetCurClass: () ==> AS`Name
+  functions
+    StripAccessType: [ENV`AccessType|REP`TypeRep|ENV`TagRepElem] -> [REP`TypeRep|seq of REP`FieldRep];
+
+  types
+
+    AccessType = ENV`AccessTypeRep | ENV`AccessFnTypeRep  | ENV`AccessPolyTypeRep
+                 | ENV`AccessOpTypeRep | ENV`AccessFieldRep;
+
+    AccessTypeRep;
+    AccessFnTypeRep;
+    AccessPolyTypeRep;
+    AccessOpTypeRep;
+    AccessFieldRep;
+    TagRepElem = seq of REP`FieldRep,
+#endif VDMPP
+
+  from AUX functions
+    MergeTypes : [REP`TypeRep | set of REP`TypeRep] * [REP`TypeRep | set of REP`TypeRep] -> REP`TypeRep;
+    ExtName : AS`Name * AS`Name -> AS`Name;
+    IsEmptyName : AS`Name -> bool
+
+exports
+  types
+    struct Ind
+  operations
+    IsCompatible: Ind * REP`TypeRep * REP`TypeRep ==> bool;
+    IsOverlapping : REP`TypeRep * REP`TypeRep * set of (REP`TypeNameRep * REP`TypeNameRep) ==> bool;
+    IsUnionRecursive: REP`TypeRep ==> bool;
+    IsOneValueType: Ind * REP`TypeRep ==> bool;
+    IsSubType: REP`TypeRep * REP`TypeRep * set of (REP`TypeNameRep * REP`TypeNameRep) ==> bool;
+    IsEquivalent: Ind * REP`TypeRep * REP`TypeRep ==> bool;
+    MeasureCheckOn: () ==> ();
+    MeasureCheckOff: () ==> ()
+
+definitions
+
+  types
+    Ind = <POS> | <DEF>
+
+  state TYPESt of
+    measureCheck : bool
+  init s == s = mk_TYPESt(false)
+  end
+
+\end{vdm_al}
+
+
+All functions checking well-formedness are called
+with a parameter of type {\it Ind}, indicating which well-formedness
+condition the current construct must be checked against.
+
+\begin{vdm_al}
+operations
+MeasureCheckOn: () ==> ()
+MeasureCheckOn() == (measureCheck := true);
+
+MeasureCheckOff: () ==> ()
+MeasureCheckOff() == (measureCheck := false);
+
+AuxIsUnionRec : REP`TypeRep * set of REP`TypeRep ==> bool
+AuxIsUnionRec (tp, union_types) ==
+  if tp in set union_types then
+    return true
+  else
+    cases tp:
+      mk_REP`TypeNameRep(nm)    ->
+#ifdef VDMSL
+               def newtp : [REP`TypeRep] = ENV`LookUpTypeName(nm)
+#endif VDMSL
+#ifdef VDMPP
+               def newtp : [REP`TypeRep] = ENV`StripAccessType (ENV`LookUpTypeName(nm,true))
+#endif VDMPP
+               in
+                 if newtp = nil
+                 then return false
+                 else return AuxIsUnionRec (newtp, union_types union {tp}),
+      mk_REP`InvTypeRep(-,t,-)  -> return AuxIsUnionRec(t,union_types),
+      mk_REP`UnionTypeRep(Utps) -> return exists utp in set Utps & AuxIsUnionRec (utp, union_types union {tp}),
+      others -> return false
+    end;
+
+IsUnionRecursive : REP`TypeRep ==> bool
+IsUnionRecursive (tp) ==
+  AuxIsUnionRec (tp, {})
+\end{vdm_al}
+
+Union recursive types are a special form of the more general concept
+of recursivly defined types. A type is said to be union recursive if
+it is not possible to say how many times it has been recursively
+applied in order to construct a given type value.
+
+
+\begin{vdm_al}
+  operations
+    IsCompatible: Ind * REP`TypeRep * REP`TypeRep ==> bool --OK
+    IsCompatible (i,TpR1, TpR2) ==
+      if TpR1 = TpR2
+      then return true
+      else
+        cases i :
+          <POS> -> IsOverlapping (TpR1, TpR2, {}),
+          <DEF> -> IsSubType (TpR1, TpR2, {})
+         end;
+
+  IsEmpty: Ind * REP`TypeRep ==> bool
+  IsEmpty(i, tp) ==
+    return IsEmptyAux(i, tp, {});
+
+  IsEmptyAux: Ind * REP`TypeRep * set of REP`TypeRep ==> bool
+  IsEmptyAux(i, tp, empty_tps) ==
+    if tp in set empty_tps
+    then return true
+    else let new_tps = empty_tps union {tp}
+         in
+           cases tp:
+             mk_REP`TypeNameRep(nm) ->
+                if IsUnionRecursive(tp)
+                then return i = <POS>
+              else
+#ifdef VDMSL
+                def newtp : [REP`TypeRep] = ENV`LookUpTypeName(nm)
+#endif VDMSL
+#ifdef VDMPP
+                def newtp: [REP`TypeRep] = ENV`StripAccessType (ENV`LookUpTypeName(nm,true))
+#endif VDMPP
+                in
+                  if newtp = nil
+                  then return false
+                  else IsEmptyAux(i, newtp, new_tps),
+             mk_REP`SeqTypeRep(t) ->
+                IsEmptyAux(i, t, new_tps),
+             mk_REP`UnionTypeRep(t_s) ->
+                return forall t in set t_s & IsEmptyAux(i, t, new_tps),
+             mk_REP`ProductTypeRep(t_l) ->
+                return exists t in set elems t_l & IsEmptyAux(i, t, new_tps),
+             mk_REP`CompositeTypeRep(-, f_l) ->
+                return exists mk_REP`FieldRep(-,t,-) in set elems f_l &
+                       IsEmptyAux(i,t,new_tps),
+             mk_REP`InvTypeRep(-,t,-) ->
+                return i = <POS> or IsEmptyAux(i,t,new_tps),
+             others -> return false
+           end
+
+--  functions
+--
+--  NegWfClass: Ind -> Ind
+--  NegWfClass(i) ==
+--    if i = <POS>
+--    then <DEF>
+--    else <POS>
+
+\end{vdm_al}
+
+
+The compatibility of two types depends on the well-formedness
+predicate. If a type is union recursive it has implications for its
+compatibility relation to other types as it cannot be expanded and
+therefore not checked against an other type. By always returning true
+for possible well-formedness and false for definite well-formedness
+when checking against a union recursive type we have chosen the same
+approach as in the standard.
+
+
+\begin{vdm_al}
+  operations
+
+    IsSubType: REP`TypeRep * REP`TypeRep * set of (REP`TypeNameRep * REP`TypeNameRep) ==> bool
+    IsSubType (TpR1, TpR2, assump) ==
+      if TpR1 = TpR2
+      then return true
+      else
+       (cases TpR1:
+          mk_REP`ExitTypeRep(-)    -> return true,
+          mk_REP`AllTypeRep()      -> return false,
+          mk_REP`InvTypeRep(-,t,-) -> return IsSubType(t,TpR2,assump),
+          mk_REP`UnionTypeRep(Lhs) -> return forall tp in set Lhs & IsSubType (tp, TpR2, assump),
+          mk_REP`TypeNameRep(name) ->
+            if is_REP`TypeNameRep(TpR2) and mk_(TpR1, TpR2) in set assump
+            then return true
+            elseif IsUnionRecursive(TpR1)
+            then return false
+            else
+#ifdef VDMSL
+            def newtp : [REP`TypeRep] = ENV`LookUpTypeName(name)
+#endif VDMSL
+#ifdef VDMPP
+            def newtp : [REP`TypeRep] = ENV`StripAccessType (ENV`LookUpTypeName(name,true))
+#endif VDMPP
+            in
+              if newtp = nil
+              then return false
+              else IsSubType(newtp, TpR2, assump union if is_REP`TypeNameRep(TpR2)
+                                                       then {mk_(TpR1, TpR2)} else {}),
+#ifdef VDMPP
+          mk_REP`OverTypeRep(Lhs)  -> return forall tp in set Lhs & IsSubType (tp, TpR2, assump),
+#endif VDMPP
+          others -> skip
+        end;
+
+        cases TpR2:
+          mk_REP`AllTypeRep()      -> return true,
+          mk_REP`InvTypeRep(-,-,-) -> return false,
+          mk_REP`TypeNameRep(name) ->
+            if IsUnionRecursive(TpR2)
+            then return false
+            else
+#ifdef VDMSL
+              def newtp : [REP`TypeRep] = ENV`LookUpTypeName(name)
+#endif VDMSL
+#ifdef VDMPP
+              def newtp : [REP`TypeRep] = ENV`StripAccessType (ENV`LookUpTypeName(name,true))
+#endif VDMPP
+              in
+                if newtp = nil
+                then return false
+                else IsSubType(TpR1, newtp, assump),
+          mk_REP`NumericTypeRep(BTp2) -> cases TpR1:
+                                           mk_REP`NumericTypeRep(BTp1) ->
+                                             cases BTp2:
+                                               <REAL>,
+                                               <RAT>     -> return true,
+                                               <INTEGER> -> let AllowedNumTypes = {<NATONE>,<NAT>}
+                                                            in return  BTp1 in set AllowedNumTypes,
+                                               <NAT>     -> return BTp1 = <NATONE>,
+                                               others -> return false
+                                             end,
+                                           others -> return false
+                                         end,
+          mk_REP`SetTypeRep(STp2) -> cases TpR1:
+                                        mk_REP`SetTypeRep(STp1) -> return IsSubType(STp1,STp2, assump),
+                                        others -> return false
+                                      end,
+          mk_REP`SeqTypeRep(STp2) -> cases TpR1:
+                                        mk_REP`SeqTypeRep(STp1) -> return IsSubType(STp1,STp2, assump),
+                                        others -> return false
+                                      end,
+          mk_REP`ProductTypeRep(PTp2) -> cases TpR1:
+                                           mk_REP`ProductTypeRep(PTp1) ->
+                                             if len PTp1 = len PTp2
+                                             then return forall i in set inds PTp1 & IsSubType(PTp1(i), PTp2(i), assump)
+                                             else return false,
+                                           others -> return false
+                                         end,
+          mk_REP`CompositeTypeRep(RhsName,RhsFields) ->
+                          cases TpR1:
+                            mk_REP`CompositeTypeRep(LhsName,LhsFields) ->
+                              if AUX`IsEmptyName(RhsName) and RhsFields = []
+                              then return true -- happens if a record have been multiple defined
+                              else
+                               (dcl lnm : AS`Name,
+                                    rnm : AS`Name; 
+                                if len LhsName.ids > 1
+                                then lnm := LhsName
+#ifdef VDMSL
+                                else lnm := AUX`ExtName(ENV`GetCurMod(), LhsName);
+#endif VDMSL
+#ifdef VDMPP
+                                else lnm := AUX`ExtName(ENV`GetCurClass(), LhsName);
+#endif VDMPP
+                                if len RhsName.ids > 1
+                                then rnm := RhsName
+#ifdef VDMSL
+                                else rnm := AUX`ExtName(ENV`GetCurMod(), RhsName);
+#endif VDMSL
+#ifdef VDMPP
+                                else rnm := AUX`ExtName(ENV`GetCurClass(), RhsName);
+#endif VDMPP
+                                def EqStr = lnm = rnm and len LhsFields = len RhsFields
+                                in if EqStr
+                                   then return forall i in set inds LhsFields &
+                                           IsSubType(LhsFields(i).tp, RhsFields(i).tp, assump)
+                                   else return false),
+                            others -> return false
+                          end,
+          mk_REP`PartialFnTypeRep(RhsDom, RhsRng) ->
+                         cases TpR1:
+                           mk_REP`PartialFnTypeRep(LhsDom, LhsRng),
+                           mk_REP`TotalFnTypeRep(LhsDom, LhsRng) ->
+                                 return 
+                                 IsSubType(LhsRng, RhsRng, assump) and
+                                 len LhsDom = len RhsDom and
+                                 forall index in set inds LhsDom &
+                                   IsSubType(LhsDom(index), RhsDom(index), assump),
+                           others -> return false
+                         end,
+          mk_REP`TotalFnTypeRep(RhsDom, RhsRng) ->
+                         cases TpR1:
+                           mk_REP`TotalFnTypeRep(LhsDom, LhsRng) ->
+                              return 
+                              IsSubType(LhsRng, RhsRng, assump) and
+                              len LhsDom = len RhsDom and
+                              forall index in set inds LhsDom &
+                                IsSubType(LhsDom(index), RhsDom(index), assump),
+                           others -> return false
+                         end,
+          mk_REP`GeneralMapTypeRep(RhsDom,RhsRng) ->
+                          cases TpR1:
+                            mk_REP`GeneralMapTypeRep(LhsDom,LhsRng),
+                            mk_REP`InjectiveMapTypeRep(LhsDom,LhsRng) ->
+                               return IsSubType(LhsDom, RhsDom, assump) and IsSubType(LhsRng, RhsRng, assump),
+                            others -> return false
+                          end,
+          mk_REP`InjectiveMapTypeRep(RhsDom,RhsRng) ->
+                          cases TpR1:
+                            mk_REP`InjectiveMapTypeRep(LhsDom,LhsRng) ->
+                               return IsSubType(LhsDom, RhsDom, assump) and IsSubType(LhsRng, RhsRng, assump),
+                            mk_REP`GeneralMapTypeRep(LhsDom,LhsRng) ->
+                               return IsSubType(LhsDom, RhsDom, assump) and
+                               IsSubType(LhsRng, RhsRng, assump) and
+                               IsOneValueType(<POS>,LhsDom),
+                            others -> return false
+                          end,
+          mk_REP`UnionTypeRep(Rhs) -> return exists tp in set Rhs & IsSubType(TpR1, tp, assump),
+          mk_REP`QuoteTypeRep(lit) -> cases TpR1:
+                                        mk_REP`QuoteTypeRep((lit) ) -> return true,
+                                        others -> return false
+                                      end,
+#ifdef VDMPP
+          mk_REP`ObjRefTypeRep(nm2) -> cases TpR1:
+                                         mk_REP`ObjRefTypeRep(nm1) ->
+                                           return AUX`IsEmptyName(nm2) or ENV`IsSubClass(nm1, nm2),
+                                         others -> return false
+                                       end,
+          mk_REP`OverTypeRep(Rhs) -> return exists tp in set Rhs & IsSubType(TpR1, tp, assump),
+#endif VDMPP
+          mk_REP`OpTypeRep(RhsDom, RhsRng) -> cases TpR1:
+                                                mk_REP`OpTypeRep(LhsDom, LhsRng) ->
+               return IsSubType(LhsRng,
+                           if is_REP`ExitTypeRep(RhsRng)
+                           then mk_REP`UnitTypeRep()
+                           else AUX`MergeTypes(RhsRng, mk_REP`ExitTypeRep(mk_REP`AllTypeRep())),
+                           assump) and
+                 len LhsDom = len RhsDom and
+                 forall index in set inds LhsDom &
+                    IsSubType(LhsDom(index), RhsDom(index), assump),
+                                                others -> return false
+                                              end,
+          mk_REP`TypeVarRep(-) -> cases TpR1:
+                                    mk_REP`TypeVarRep(-) -> return measureCheck, -- false,
+                                    others -> return false
+                                  end,
+          others -> return false
+        end;
+     )
+\end{vdm_al}
+
+
+The subtype relation is used when checking for possibly well-formedness.
+The assumption parameter has to do with recursive types. It has been
+proven that if in the process of checking if type t\_1 is a subtype of
+type t\_2 the situation occurs that you must check the same thing at a
+lower level (t\_1 being a subtype of t\_2) then this is actually the
+case and you need not to continue the unfolding.
+
+
+\begin{vdm_al}
+  operations
+    IsOverlapping : REP`TypeRep * REP`TypeRep * set of (REP`TypeNameRep * REP`TypeNameRep) ==> bool
+    IsOverlapping (TpR1, TpR2, assump) ==
+      if TpR1 = TpR2
+      then return true
+      else
+       (cases TpR1:
+          mk_REP`ExitTypeRep(-),
+          mk_REP`AllTypeRep() -> return true,
+          mk_REP`InvTypeRep(-,t,-) -> return IsOverlapping(t,TpR2,assump),
+          mk_REP`UnionTypeRep(Lhs) ->
+          let tps = Lhs \ {mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()),
+                           mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
+                           mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep())}
+          in
+            return TpR2 in set Lhs inter
+                          {mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()),
+                           mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
+                           mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep()),
+                           mk_REP`UnionTypeRep({mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()),
+                                                mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep())}),
+                           mk_REP`UnionTypeRep({mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()),
+                                                mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep())}),
+                           mk_REP`UnionTypeRep({mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
+                                                mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep())}),
+                           mk_REP`UnionTypeRep({mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()),
+                                                mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
+                                                mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep())})}
+                   or tps = {} -- 20100729
+                   or exists tp in set tps & IsOverlapping(tp, TpR2, assump),
+          mk_REP`TypeNameRep(name) ->
+            if is_REP`TypeNameRep (TpR2) and mk_(TpR1, TpR2) in set assump or mk_(TpR2, TpR1) in set assump
+            then return true
+            elseif IsUnionRecursive(TpR1)
+            then return true
+            else
+#ifdef VDMSL
+              def newtp : [REP`TypeRep] = ENV`LookUpTypeName(name)
+#endif VDMSL
+#ifdef VDMPP
+              def newtp : [REP`TypeRep] = ENV`StripAccessType (ENV`LookUpTypeName(name,true))
+#endif VDMPP
+              in
+                if newtp = nil
+                then return true
+                else IsOverlapping(newtp, TpR2, assump union if is_REP`TypeNameRep (TpR2)
+                                                             then {mk_(TpR1, TpR2), mk_(TpR2, TpR1)} else {}),
+#ifdef VDMPP
+          mk_REP`OverTypeRep(Lhs) -> return exists tp in set Lhs & IsOverlapping(tp, TpR2, assump),
+#endif VDMPP
+          mk_REP`TypeVarRep(-) -> return true,
+          mk_REP`PolyTypeRep(-,tp) -> return IsOverlapping(tp, TpR2, assump),
+          others -> skip
+        end;
+
+        cases TpR2:
+          mk_REP`AllTypeRep() -> return true,
+          mk_REP`TypeNameRep(name) ->
+            if IsUnionRecursive(TpR2)
+            then return true
+            else
+#ifdef VDMSL
+              def newtp : [REP`TypeRep] = ENV`LookUpTypeName(name)
+#endif VDMSL
+#ifdef VDMPP
+              def newtp : [REP`TypeRep] = ENV`StripAccessType (ENV`LookUpTypeName(name,true))
+#endif VDMPP
+              in
+                if newtp = nil
+                then return true
+                else IsOverlapping(TpR1, newtp, assump),
+          mk_REP`NumericTypeRep(-) -> return is_REP`NumericTypeRep(TpR1),
+          mk_REP`SetTypeRep(STp2) -> cases TpR1:
+                                       mk_REP`SetTypeRep(STp1) -> return IsOverlapping(STp1,STp2, assump),
+                                       others -> return false
+                                     end,
+          mk_REP`SeqTypeRep(STp2) -> cases TpR1:
+                                       mk_REP`SeqTypeRep(STp1) -> return IsOverlapping(STp1,STp2, assump),
+                                       others -> return false
+                                     end,
+          mk_REP`ProductTypeRep(PTp2) -> cases TpR1:
+                                           mk_REP`ProductTypeRep(PTp1) ->
+                                             if len PTp1 = len PTp2
+                                             then return forall i in set inds PTp1 &
+                                                    IsOverlapping(PTp1(i),PTp2(i), assump)
+                                             else return false,
+                                           others -> return false
+                                         end,
+          mk_REP`CompositeTypeRep(RhsName,RhsFields) ->
+                            cases TpR1:
+                              mk_REP`CompositeTypeRep(LhsName,LhsFields) ->
+                                         if AUX`IsEmptyName(RhsName) and RhsFields = []
+                                         then return true
+                                         else
+                                          (dcl lnm : AS`Name,
+                                               rnm : AS`Name;
+                                           if len LhsName.ids > 1
+                                           then lnm := LhsName
+#ifdef VDMSL
+                                           else lnm := AUX`ExtName(ENV`GetCurMod(), LhsName);
+#endif VDMSL
+#ifdef VDMPP
+                                           else lnm := AUX`ExtName(ENV`GetCurClass(), LhsName);
+#endif VDMPP
+                                           if len RhsName.ids > 1
+                                           then rnm := RhsName
+#ifdef VDMSL
+                                           else rnm := AUX`ExtName(ENV`GetCurMod(), RhsName);
+#endif VDMSL
+#ifdef VDMPP
+                                           else rnm := AUX`ExtName(ENV`GetCurClass(), RhsName);
+#endif VDMPP
+                                           def EqStr = lnm = rnm and len LhsFields = len RhsFields
+                                           in
+                                           if EqStr then
+                                             return forall i in set inds LhsFields &
+                                               IsOverlapping(LhsFields(i).tp, RhsFields(i).tp, assump)
+                                           else return false),
+                            others -> return false
+                          end,
+          mk_REP`PartialFnTypeRep(RhsDom, RhsRng),
+          mk_REP`TotalFnTypeRep(RhsDom, RhsRng) ->
+                           cases TpR1:
+                             mk_REP`PartialFnTypeRep(LhsDom, LhsRng),
+                             mk_REP`TotalFnTypeRep(LhsDom, LhsRng) ->
+                                    return IsOverlapping(LhsRng, RhsRng, assump) and
+                                    len LhsDom = len RhsDom and
+                                    forall index in set inds LhsDom &
+                                      IsOverlapping(LhsDom(index), RhsDom(index), assump),
+                           others -> return false
+                         end,
+          mk_REP`GeneralMapTypeRep(RhsDom,RhsRng),
+          mk_REP`InjectiveMapTypeRep(RhsDom,RhsRng) ->
+                           cases TpR1:
+                             mk_REP`GeneralMapTypeRep(LhsDom,LhsRng),
+                             mk_REP`InjectiveMapTypeRep(LhsDom,LhsRng) ->
+                                return IsOverlapping(LhsDom, RhsDom, assump) and IsOverlapping(LhsRng, RhsRng, assump),
+                           others -> return false
+                         end,
+          mk_REP`InvTypeRep(-,t,-) -> return IsOverlapping(TpR1,t, assump),
+          mk_REP`UnionTypeRep(Rhs) ->
+            return TpR2 in set Rhs inter
+                          {mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()),
+                           mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
+                           mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep()),
+                           mk_REP`UnionTypeRep({mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()),
+                                                mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep())}),
+                           mk_REP`UnionTypeRep({mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()),
+                                                mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep())}),
+                           mk_REP`UnionTypeRep({mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
+                                                mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep())}),
+                           mk_REP`UnionTypeRep({mk_REP`EmptySeqTypeRep(mk_REP`AllTypeRep()),
+                                                mk_REP`EmptySetTypeRep(mk_REP`AllTypeRep()),
+                                                mk_REP`EmptyMapTypeRep(mk_REP`AllTypeRep(), mk_REP`AllTypeRep())})}
+                   or
+                   exists tp in set Rhs & IsOverlapping (TpR1, tp, assump),
+#ifdef VDMPP
+          mk_REP`ObjRefTypeRep(nm2) -> cases TpR1:
+                                         mk_REP`ObjRefTypeRep(nm1) ->
+                                            return AUX`IsEmptyName(nm1) or AUX`IsEmptyName(nm2) or
+                                            ENV`IsSubClass(nm1, nm2) or ENV`IsSubClass(nm2, nm1),
+                                         others -> return false
+                                       end,
+          mk_REP`OverTypeRep(Rhs) -> return exists tp in set Rhs & IsOverlapping(TpR1, tp, assump),
+#endif VDMPP
+          mk_REP`OpTypeRep(RhsDom,RhsRng) -> cases TpR1:
+                                               mk_REP`OpTypeRep(LhsDom,LhsRng) ->
+                                                   return IsOverlapping(LhsRng,if is_REP`ExitTypeRep(RhsRng)
+                                                                        then mk_REP`UnitTypeRep()
+                                                                        else RhsRng, assump) and
+                                                   len LhsDom = len RhsDom and
+                                                   forall index in set inds LhsDom &
+                                                      IsOverlapping(LhsDom(index),RhsDom(index), assump),
+#ifdef VICE
+                                               mk_REP`AnyOpTypeRep() -> return true,
+#endif VICE
+                                             others -> return false
+                                           end,
+#ifdef VICE
+          mk_REP`AnyOpTypeRep() -> cases TpR1:
+                                      mk_REP`OpTypeRep(-,-) -> return true,
+                                      others -> return false
+                                    end,
+#endif VICE
+          mk_REP`ExitTypeRep(Rhs) -> cases TpR1:
+                                       mk_REP`ExitTypeRep(Lhs) -> return IsOverlapping(Lhs,Rhs,assump),
+                                       others -> return false
+                                     end,
+          mk_REP`TypeVarRep(-) -> return true,
+          mk_REP`PolyTypeRep(-,tp) -> IsOverlapping(TpR1, tp, assump),
+          others -> return false 
+        end;
+   );
+
+--  DistributedProducts: set of REP`TypeRep ==> [REP`TypeRep]
+--  DistributedProducts (t_s) ==
+--  ( dcl tp_l_m    : map nat to set of seq of REP`TypeRep := {|->};
+--    dcl prod_tp_s : set of REP`ProductTypeRep            := {};
+--
+--    let new_tps = FlatternUnion(t_s)
+--    in
+--    for all tp in set new_tps do
+--      if is_REP`ProductTypeRep(tp)
+--      then let mk_REP`ProductTypeRep(tp_l) = tp in
+--           tp_l_m := tp_l_m ++ {len tp_l |-> if len tp_l in set dom tp_l_m
+--                                             then tp_l_m(len tp_l) union {tp_l}
+--                                             else {tp_l}}
+--      else prod_tp_s := prod_tp_s union {tp};
+--
+--    if tp_l_m = {|->}
+--    then return nil;
+--
+--    for all i in set dom tp_l_m do
+--      if card(tp_l_m(i)) > 1
+--      then prod_tp_s := prod_tp_s union {MatchProducts(tp_l_m(i))}
+--      else prod_tp_s := prod_tp_s union {MakeType(tp_l_m(i))};
+--
+--    cases prod_tp_s:
+--      {tp}   -> return tp,
+--      others -> return mk_REP`UnionTypeRep(prod_tp_s)
+--    end ) ;
+
+--  MatchProducts: set of seq of REP`TypeRep ==> REP`ProductTypeRep
+--  MatchProducts (tp_l_s) ==
+--   (dcl tp_s_m : map nat to set of REP`TypeRep := {|->};
+--
+--    for all tp_l in set tp_l_s do
+--      tp_s_m := tp_s_m ++ {i |-> if i in set dom tp_s_m
+--                                 then tp_s_m(i) union {tp_l(i)}
+--                                 else {tp_l(i)}
+--                          | i in set inds tp_l};
+--
+--    return mk_REP`ProductTypeRep([MatchTypes(tp_s_m(i)) | i in set dom tp_s_m]) )
+--  pre forall tp_l1, tp_l2 in set tp_l_s & len tp_l1 = len tp_l2;
+
+  IsEquivalent: Ind * REP`TypeRep * REP`TypeRep ==> bool
+  IsEquivalent(-,tp1,tp2) ==
+    return IsSubType(tp1, tp2,{}) and IsSubType(tp2, tp1,{});
+
+  IsOneValueType: Ind * REP`TypeRep ==> bool
+  IsOneValueType(i, tp) ==
+    IsOneValueTypeAux(i, tp, {});
+
+  IsOneValueTypeAux: Ind * REP`TypeRep * set of REP`TypeRep ==> bool
+  IsOneValueTypeAux(i, tp, tps) ==
+    if tp in set tps
+    then return true
+    else
+      let new_tps = tps union {tp}
+      in
+        cases tp:
+          mk_REP`TypeNameRep(nm) -> if IsUnionRecursive(tp)
+                                    then return i = <POS>
+                                    else
+#ifdef VDMSL
+                                      def newtp : [REP`TypeRep] = ENV`LookUpTypeName(nm)
+#endif VDMSL
+#ifdef VDMPP
+                                      def newtp' : [REP`TypeRep | ENV`AccessType] = ENV`LookUpTypeName(nm,true);
+                                          newtp : [REP`TypeRep] = ENV`StripAccessType (newtp')
+#endif VDMPP
+                                      in
+                                        if newtp = nil
+#ifdef VDMPP
+                                           or ENV`CheckAccessCurClass (newtp') = nil
+#endif VDMPP
+                                        then return false
+                                        else IsOneValueTypeAux(i, newtp, new_tps),
+
+          mk_REP`InvTypeRep(-,t,-) -> return i = <POS> and not IsEmpty(i,t),
+          mk_REP`QuoteTypeRep(-) -> return true,
+          mk_REP`CompositeTypeRep(-, f_l) -> return forall mk_REP`FieldRep(-,t,-) in set elems f_l &
+                                                      IsOneValueTypeAux(i,t,new_tps),
+          mk_REP`UnionTypeRep(t_s) -> return exists t in set t_s & IsOneValueTypeAux(i, t, new_tps) and
+                                             forall t' in set t_s & IsEquivalent(i,t,t') or IsEmpty(i, t'),
+          mk_REP`ProductTypeRep(t_l) -> return forall t in set elems t_l & IsOneValueTypeAux(i, t, new_tps),
+          mk_REP`SetTypeRep(t),
+          mk_REP`SeqTypeRep(t) -> IsEmpty(i,t),
+--          mk_REP`PartialFnTypeRep(d,r), -- only in VDM-SL
+          mk_REP`GeneralMapTypeRep(d,r),
+          mk_REP`InjectiveMapTypeRep(d,r) -> return IsEmpty(i,d) or IsEmpty(i,r),
+          mk_REP`TotalFnTypeRep(d_l,r) -> return (forall d in set elems d_l & IsEmpty(i,d) or IsEmpty(i,r)) or
+                                                 (forall d in set elems d_l & IsOneValueTypeAux(i,d,new_tps) and
+                                                                              IsOneValueTypeAux(i,r,new_tps)),
+             -- 20100804
+          mk_REP`EmptySeqTypeRep(-),
+          mk_REP`EmptySetTypeRep(-),
+          mk_REP`EmptyMapTypeRep(-, -) -> return true,
+          mk_REP`BooleanTypeRep(),
+          mk_REP`NumericTypeRep(-),
+          mk_REP`TokenTypeRep(),
+          mk_REP`CharTypeRep() -> return false,
+
+          others -> return false
+        end
+
+--  functions
+
+--  MatchTypes: set of REP`TypeRep -> REP`TypeRep
+--  MatchTypes (t_s) ==
+--    let t_s' = MergeNumericTypes(t_s) in
+--    cases t_s':
+--      {tp}   -> tp,
+--      others -> mk_REP`UnionTypeRep(t_s')
+--    end
+--  pre t_s <> {};
+
+--   MakeType: set of seq of REP`TypeRep -> REP`TypeRep
+--  MakeType({tp_l}) ==
+--    if len tp_l = 1
+--    then hd tp_l
+--    else mk_REP`ProductTypeRep(tp_l)
+--  pre card tp_l_s = 1
+
+end TYPE
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[MotGeneralNumericType]
+{rtinfo.ast}[TYPE]
+\end{rtinfo}

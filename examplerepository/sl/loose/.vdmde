@@ -1,0 +1,15 @@
+r as.vdm
+r env.vdm
+r pat.vdm
+r auxil.vdm
+r expr.vdm
+i
+tc pos
+cg
+latex as.vdm
+latex env.vdm
+latex pat.vdm
+latex auxil.vdm
+latex expr.vdm
+
+quit

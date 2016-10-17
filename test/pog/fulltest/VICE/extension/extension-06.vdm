@@ -1,0 +1,78 @@
+system Simple
+
+instance variables
+  static public b : B := new B();
+  -- define the first CPU with fixed priority scheduling and 22E6 MIPS
+  CPU1 : CPU := new CPU (<FP>, 22E6);
+
+  static public c : C := new C();
+  -- define the second CPU with fixed priority scheduling and 11E6 MIPS
+  CPU2 : CPU := new CPU (<FP>, 11E6);
+
+  -- create a communication bus that links the three CPU's together
+  BUS1 : BUS := new BUS (<CSMACD>, 72E3, {CPU1, CPU2})
+
+operations
+  public Simple: () ==> Simple
+  Simple () ==
+    ( -- deploy b on CPU1
+      CPU1.deploy(b,"BT");
+      -- deploy c on CPU2
+      CPU2.deploy(c,"CT");
+    );
+
+end Simple
+class B
+
+instance variables
+
+binst : nat := 0;
+
+operations
+
+  public TestB: nat ==> nat
+  TestB (arg) ==
+    (Simple`c.TestC(6,self);
+     return TestB2(8) + arg + binst);
+
+  TestB2: nat ==> nat
+  TestB2(arg2) ==
+    return arg2 * 6;
+
+  IncBInst: () ==> ()
+  IncBInst() ==
+    binst := binst + 1;
+
+sync
+  per TestB2 => #fin(IncBInst) > 3
+
+thread
+  periodic (1000,10,700,0) 
+    (IncBInst)
+
+end B
+class C
+
+
+operations
+
+--async
+  public TestC: nat * B ==> ()
+  TestC (argc, b) ==
+   skip;
+
+--sync
+--mutex (TestC)
+end C
+
+
+class A
+
+operations
+  public Test: () ==> nat
+  Test () ==
+    (start(Simple`b);
+     Simple`c.TestC(99,Simple`b);
+     return 67 + Simple`b.TestB(1) + 888);
+
+end A

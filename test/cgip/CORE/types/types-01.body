@@ -1,0 +1,19 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of bool  
+Test () ==
+let a' = 10,
+    a  = 11,
+    a'' = 'a',
+    a__ = true,
+    a'_ = mk_B_(10,20),
+    a_' = mk_B_(30,20),
+    s = [20,30,40],
+    s' = {1,2,3},
+    t = mk_([], {2}) in
+( dcl res : seq of bool;
+  res := [ inv_B'(a'), inv_B'(a), inv_B'(a''), inv_B'(a__)];
+  res := res ^ [inv_D2(s')];
+  return res
+)
+
+end A

@@ -1,0 +1,82 @@
+
+class Test
+
+types
+
+  A = nat;
+ 
+  B = A * A | C | bool | rat;
+ 
+  C = real
+  inv c == c < 7;
+ 
+  D = inmap nat1 to G;
+ 
+  E = set of A;
+ 
+  F = seq of B;
+ 
+  G = seq1 of A;
+ 
+  H = map A to F;
+ 
+  I = [D];
+ 
+  J = ((<RED> | <YELLOW> | <GREEN>) | A) * A | real | bool;    
+
+  K = A * B * C * D * E * G * D * (<RED> * nat);
+ 
+  L = B * J * real * I * set of real * F * H * J
+functions
+
+Af: A -> A
+Af(x) ==
+  x;
+
+Bf: B -> B
+Bf(x) ==
+  x;
+
+Cf: C -> C
+Cf(x) ==
+  x;
+
+Df: D -> D
+Df(x) ==
+  x;
+
+Ef: E -> E
+Ef(x) ==
+  x;
+
+Ff: F -> F
+Ff(x) ==
+  x;
+
+Gf: G -> G
+Gf(x) ==
+  x;
+
+Hf: H -> H
+Hf(x) ==
+  x;
+
+If: I -> I
+If(x) ==
+  x;
+
+Jf: J -> J
+Jf(x) ==
+  x;
+
+Kf: K -> K
+Kf(x) ==
+  x;
+
+Lf: L -> L
+Lf(x) ==
+  x;
+EL: E->L
+EL(x) ==
+	Lf(x);
+end Test

@@ -1,0 +1,35 @@
+class AA
+
+end AA
+class A is subclass of AA
+
+operations
+
+public toClassInformation :   seq of IOmlDefinitionBlock ==>   nat
+
+toClassInformation(s) ==
+
+  let l : seq of OmlTypeDefinition = 
+      [ s(i) | i in set inds s & isofclass(OmlTypeDefinition,s(i))]
+
+  in
+
+  let k = conc [ l(i).getTypeList() | i in set inds l]
+
+  in
+
+  return 6;
+
+end A
+class IOmlDefinitionBlock
+
+end IOmlDefinitionBlock
+class OmlTypeDefinition is subclass of IOmlDefinitionBlock
+
+operations
+
+public getTypeList: () ==> seq of nat
+getTypeList() ==
+  is not yet specified;
+
+end OmlTypeDefinition

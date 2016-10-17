@@ -1,0 +1,24 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq  of ( set of nat | seq of nat )
+Test () ==
+return [ let x:bool|nat = true in 
+		if x then [1] else {1},
+	   let y:bool|nat = true in 	
+		if false then [1,2] 
+		elseif y then {1,2}
+		else [3] ]
+         
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

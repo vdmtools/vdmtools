@@ -1,0 +1,7 @@
+class A
+
+instance variables
+
+a: nat := 0;
+
+operations

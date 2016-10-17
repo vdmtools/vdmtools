@@ -1,0 +1,7 @@
+public Test : () ==> seq of char
+Test () ==
+(dcl s : seq of char := "Hi";
+ s(2) := 'H';
+ return s
+);
+   

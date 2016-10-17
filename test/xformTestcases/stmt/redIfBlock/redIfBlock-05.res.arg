@@ -1,0 +1,15 @@
+"class A
+types T = bool;
+operations
+
+public Test : () ==> bool  
+Test() ==
+( dcl b : seq of char;
+	(dcl b : bool := false;
+		( dcl b : T := true,
+		 c : bool := b;
+		return c);
+	return b));
+   
+end A
+"

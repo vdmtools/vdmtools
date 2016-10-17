@@ -1,0 +1,68 @@
+Test:() ==> ResTp
+Test() ==
+return 
+  [ -- Basic types
+    
+    ElemToSet[Int](-1),
+    ElemToSet[Nat](0),
+    ElemToSet[Nat1](1),
+    ElemToSet[Bool](true),
+    ElemToSet[Char]('c'),
+    ElemToSet[Q](<TT>),
+    ElemToSet[T](mk_token(<TOKEN>)),
+    ElemToSet[T](mk_token(false)) union ElemToSet[Bool](false),
+
+    -- Compound types
+
+    ElemToSet[Set]({1,2,3}),
+    ElemToSet[Seq]("HALLO"),
+    ElemToSet[Map]({ i |-> i * 2 | i in set {23,...,30} }),
+    ElemToSet[Prod](mk_([2,7,9], mk_token({}))),
+    let {mk_R(v1, v2)} = ElemToSet[R](mk_R(<TT>, {3,1,7})) in {v1, v2},
+    ElemToSet[set of Nat | Nat](10),
+    ElemToSet[[Bool]](nil),
+
+    -- 
+
+    GetElem[Real, Nat1]([10.0, 2, 2.2, 7], 10),
+    GetElem[nat | Char | seq of Real, char]([[10], 'a'], 'a'),
+    GetElem[Nat | char | seq of real, Char]([[10], 'a'], 'b')
+  ]
+
+
+functions
+  ElemToSet[@elem]: @elem +> set of @elem
+  ElemToSet(e) ==
+    {e} union {e};
+
+  GetElem[@t1, @t2]: seq of @t2 * @t1 -> [@t1]
+  GetElem(l, e) ==
+    if e in set elems l then
+      let a in set elems l be st a = e in a
+    else
+      nil
+    
+
+types 
+
+  ResTp = seq of (set of (resSet) | [Char | Real]);
+  resSet = Real | Bool | Char | Q | T | Set | Seq | Map | Prod;
+
+  Int = int;
+  Nat = nat;
+  Nat1 = Nat1;
+  Real = real;
+  Bool = bool;
+  Char = char;
+  Q = <TT>;
+  T = token;
+  
+  Set = set of Int;
+  Seq = seq of Char;
+  Map = map nat to nat;
+  Prod = seq of Nat * T;
+  R:: g: Q 
+      s: Set
+
+
+end A

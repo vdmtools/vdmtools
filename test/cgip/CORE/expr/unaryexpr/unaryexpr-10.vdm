@@ -1,0 +1,9 @@
+class A
+
+operations
+
+public Test: () ==> seq of nat
+Test() ==
+  return conc [[8,6],8];
+
+end A

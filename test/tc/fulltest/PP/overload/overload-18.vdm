@@ -1,0 +1,19 @@
+class A
+
+functions
+
+public v : nat * nat -> nat
+v(-,-) == 1;
+
+public v : nat -> nat
+v(-) == 1
+
+end A
+
+class C is subclass of A
+
+values
+
+private v : nat = 3
+
+end C

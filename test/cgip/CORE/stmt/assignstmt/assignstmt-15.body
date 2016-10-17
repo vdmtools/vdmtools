@@ -1,0 +1,20 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of (nat|bool)  
+Test () ==
+( dcl a : Arec := mk_Arec(101, mk_Brec(30), mk_Crec(mk_Brec(3))),
+      res : seq of nat :=[];
+
+ a.a3.c.b := 500;
+ res := res^[a.a3.c.b];
+ return res;
+)
+
+types
+
+Arec::a1:nat
+   a2:Brec
+   a3:Crec | bool;
+
+Brec::b:nat;
+   
+Crec::c: (nat| Brec)

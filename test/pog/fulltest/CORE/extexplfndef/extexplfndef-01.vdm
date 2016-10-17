@@ -1,0 +1,16 @@
+class A
+  
+functions
+    
+  FunDefSl4[@A, @B](l: seq of @A, s: set of @B) r:  bool ==
+    is not yet specified;
+
+  FunDefSl6(l: seq of nat,s: set of bool) r: bool ==
+    FunDefSl4[nat,bool](l,s);
+
+  FunDefSl7[@A] (a1,a2: @A,l1 ^ l2 : seq of nat) r : @A, s : bool ==
+    mk_(a1,a1=a2)
+    pre l1 <> []
+    post r = mk_(if 4 > 8 then a1 else a2, len l2 > 7);
+
+end A

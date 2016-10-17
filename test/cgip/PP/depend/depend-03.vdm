@@ -1,0 +1,45 @@
+class A
+
+  instance variables
+    bclass: B := new B ();
+
+  operations
+
+  public Test :()  ==> int
+  Test()  == 
+    def t = bclass.prev() in
+    return t;
+
+public  next: () ==> int
+  next()  ==
+    return 3;
+
+  prev : B ==> int
+  prev(b) ==
+    def bp = b.prev() in
+    return bp
+
+end A
+
+class B
+
+
+  operations
+
+    next: A ==> int
+    next(a) ==
+      def an = a.next() in
+      return an;
+
+ public   prev: () ==> int
+    prev() ==
+      return 5
+end B
+
+class C is subclass of A
+operations
+
+  first: () ==> int
+  first() ==
+    return 9
+end C

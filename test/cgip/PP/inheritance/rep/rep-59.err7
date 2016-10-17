@@ -1,0 +1,2 @@
+B.cc: In method `class type_ii2P vdm_B::vdm_Test()':
+B.cc:48: request for member `vdm_a' is ambiguous in multiple inheritance lattice

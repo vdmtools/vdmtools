@@ -1,0 +1,25 @@
+class IfStmtTest
+
+operations
+
+  ErrorAction: char ==> bool
+  ErrorAction(-) ==
+    return true;
+
+  DoAlways: int ==> bool
+  DoAlways(i) ==
+    return i = 0;
+
+  If19: () ==> bool
+  If19() ==
+    let one = 1
+    in
+    if true
+    then tixe
+         { <NOMEM> |-> return one,
+	   <BUSY>  |-> ErrorAction('a'),
+	   err     |-> return one}
+	 in DoAlways(2)
+    else let n = nil in return n;
+	   
+end IfStmtTest

@@ -1,0 +1,32 @@
+  
+module PARM
+
+parameters 
+
+values Val : nat
+
+exports all
+definitions
+functions
+
+ f: () -> nat
+ f () == Val
+
+end PARM
+module A
+
+instantiations
+
+PMOD as PARM(Val -> 10) all 
+
+exports all
+
+definitions
+
+values v : nat = PMOD`Val  
+
+functions
+Test: () -> nat 
+Test () == PMOD`Val        
+
+end A

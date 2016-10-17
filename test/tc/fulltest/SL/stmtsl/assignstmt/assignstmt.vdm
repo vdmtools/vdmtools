@@ -1,0 +1,51 @@
+module AssignStmtTest
+exports all
+definitions
+
+state ST of
+  a:nat
+  b: nat
+  d: map nat to bool
+  e : A
+end
+
+types
+  A :: sel1: int
+       sel2: seq1 of bool
+      
+operations
+
+  Assign1: () ==> ()
+  Assign1() ==
+    a := 7;
+
+  Assign2: () ==> ()
+  Assign2() ==
+   d(5) := true;
+
+  Assign3: () ==> ()
+  Assign3() ==
+    c := {|->}; 
+
+  Assign4: real * real ==> ()
+  Assign4(a1,a2) ==
+    (a := a1;
+     b := a2);
+
+  Assign5: () ==> ()
+  Assign5() ==
+   (dcl a: bool;
+
+    a := false);
+
+  Assign6: int ==> ()
+  Assign6(i) ==
+    (dcl c : int := i;
+     skip);
+
+  Assign7: int * bool ==> ()
+  Assign7(i,b) ==
+    (e.sel1 := i;
+     e.sel2(3) := b)
+     
+end AssignStmtTest

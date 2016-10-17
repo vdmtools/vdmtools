@@ -1,0 +1,76 @@
+class WireEndpointKey is subclass of Object
+operations 
+public  hashCode : () ==> int 
+hashCode() == 
+( return  hashValue
+) ;
+
+public  toString : () ==> [String]
+toString() == 
+( dcl   sb : [StringBuffer] := new  StringBuffer(25);
+  let - = sb.append(new  String("[RefId:"))
+  in 
+    skip ;
+  let - = sb.append(getRefDesId())
+  in 
+    skip ;
+  let - = sb.append(new  String(",WireId:"))
+  in 
+    skip ;
+  let - = sb.append(getWireId())
+  in 
+    skip ;
+  let - = sb.append(new  String(",Pin:"))
+  in 
+    skip ;
+  let - = sb.append(getPinName())
+  in 
+    skip ;
+  let - = sb.append(new  String("]"))
+  in 
+    skip ;
+  return  sb.toString()
+) ;
+
+public  getWireId : () ==> int 
+getWireId() == 
+( return  wireId
+) ;
+
+public  getPinName : () ==> [String]
+getPinName() == 
+( return  pinName
+) ;
+
+public  getRefDesId : () ==> int 
+getRefDesId() == 
+( return  refdesId
+) ;
+
+public  equals : [Object] ==> bool 
+equals(obj) == 
+( if  (obj <> nil  ) and  (obj.getClass().equals(WireEndpointKey`getClass()))
+  then  
+    ( return  ((refdesId = (def l_11 :  WireEndpointKey = (obj)
+      in l_11).getRefDesId()) and  (wireId = (def l_19 :  WireEndpointKey = (obj)
+      in l_19).getWireId()) and  (pinName.equals((def l_26 :  WireEndpointKey = (obj)
+      in l_26).getPinName())))
+    ) ;
+  return  false  
+) ;
+
+public  WireEndpointKey : int  * int  * [String] ==> WireEndpointKey
+WireEndpointKey(refdesId, wireId, pinName) == 
+( WireEndpointKey`refdesId := refdesId;
+  WireEndpointKey`wireId := wireId;
+  WireEndpointKey`pinName := pinName;
+  WireEndpointKey`hashValue := refdesId+wireId+pinName.hashCode()
+) ;
+
+instance variables 
+  private  refdesId : int ;
+  private  wireId : int ;
+  private  pinName : [String];
+  private  hashValue : int 
+  
+end  WireEndpointKey

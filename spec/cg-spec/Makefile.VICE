@@ -1,0 +1,187 @@
+
+CGDIR = ../cg-spec
+ASTDIR= ast
+LN = ln -sv 
+LATEXFILE = straightforward
+SL_LATEXFILE = $(LATEXFILE:%=%-vdmsl)
+PP_LATEXFILE = $(LATEXFILE:%=%-vdmpp)
+LATEX = latex
+RM = rm -f
+IFDEFFILT?=../../code/make_tools/ifdeffilt
+
+# Modules common for SL and PP code generators but mixed specifications
+MIXED = mod_fctdef.vdm mod_expr.vdm mod_stmt.vdm mod_typedef.vdm \
+        mod_valdef.vdm common_as.vdm mod_bcppast.vdm mod_vdm_ds.vdm \
+        mod_cgaux.vdm rep.vdm pos.vdm mod_tpgen.vdm mod_cgmain.vdm
+
+# Modules equal for SL and PP code generators
+EQUAL = mod_patmat.vdm mod_cppast.vdm contextinfo.vdm
+ 
+# Modules unique for the SL-Code Generator
+SLSPECS = mod_mod.vdm mod_statedef.vdm 
+
+# Modules unique for the PP-Code Generator
+PPSPECS = mod_fvd.vdm mod_class.vdm \
+          mod_ti.vdm mod_conc.vdm
+
+# Modules require-ring preprocessing
+SLMIXED =  $(MIXED:%.vdm=%.vdmsl)
+PPMIXED = $(MIXED:%.vdm=%.vdmpp)
+
+SLALL = $(SLSPECS) $(EQUAL) $(SLMIXED)
+PPALL = $(PPSPECS) $(EQUAL) $(PPMIXED)
+
+################################################################################
+# 
+# Main targets for SL and PP code generators. 
+#
+# Make links in current directory to specifications in sub-dirs and
+# create script files .vdmde-sl and .vdmde-pp:
+
+link: linkall DOT_VDMDESL DOT_VDMDEPP
+
+# Preprocessing vdm files:
+SL: $(SLALL)
+PP: $(PPALL)
+
+# Make documentation (.tex files) in dvi format:
+SLTEX all: $(SL_LATEXFILE).dvi
+PPTEX: $(PP_LATEXFILE).dvi
+
+# Make documentation  in ps format:
+SLPS: $(SL_LATEXFILE).ps 
+PPPS: $(PP_LATEXFILE).ps 
+
+#
+################################################################################
+
+linkall:
+	-$(LN) $(ASTDIR)/common_as.vdm
+	-$(LN) $(ASTDIR)/contextinfo.vdm
+	-$(LN) $(ASTDIR)/pos.vdm
+	-$(LN) $(ASTDIR)/rep.fig
+	-$(LN) $(ASTDIR)/rep.vdm
+	-$(LN) $(CGDIR)/mod_cgaux.vdm
+	-$(LN) $(CGDIR)/mod_bcppast.vdm
+	-$(LN) $(CGDIR)/mod_cgmain.vdm
+	-$(LN) $(CGDIR)/mod_class.vdm
+	-$(LN) $(CGDIR)/mod_conc.vdm
+	-$(LN) $(CGDIR)/mod_cppast.vdm
+	-$(LN) $(CGDIR)/mod_expr.vdm
+	-$(LN) $(CGDIR)/mod_fctdef.vdm
+	-$(LN) $(CGDIR)/mod_fvd.vdm
+	-$(LN) $(CGDIR)/mod_md.vdm 
+	-$(LN) $(CGDIR)/mod_mod.vdm
+	-$(LN) $(CGDIR)/mod_opdef.vdm
+	-$(LN) $(CGDIR)/mod_patmat.vdm
+	-$(LN) $(CGDIR)/mod_ppexpr.vdm 
+	-$(LN) $(CGDIR)/mod_statedef.vdm
+	-$(LN) $(CGDIR)/mod_stmt.vdm
+	-$(LN) $(CGDIR)/mod_ti.vdm
+	-$(LN) $(CGDIR)/mod_typedef.vdm
+	-$(LN) $(CGDIR)/mod_valdef.vdm
+	-$(LN) $(CGDIR)/mod_vdm_ds.vdm
+	-$(LN) $(CGDIR)/ppstmt.vdm
+	-$(LN) $(CGDIR)/mod_tpgen.vdm
+	-$(LN) $(CGDIR)/straightforward.tex
+	-$(LN) $(CGDIR)/vdm++gen.tex
+
+LATEX_SLSPECS = $(SLSPECS:%=%.tex) $(SLMIXED:%=%.tex) 
+LATEX_PPSPECS = $(PPSPECS:%=%.tex) $(PPMIXED:%=%.tex) 
+LATEX_EQUAL_SPECS = $(EQUAL:%=%.tex)
+# Latex generation command
+VDMDE = vdmde -lrN
+
+# Test coverage information file 
+RTINFO = rtinfo.ast
+
+$(LATEX_SLSPECS) $(LATEX_EQUAL_SPECS) $(LATEX_PPSPECS): %.tex: % $(RTINFO)
+	 $(VDMDE) $<
+	 cat $<.tex | sed -e's/\\color{not_covered}/\\color{not_covered}\\index{Uncovered Construct}/g' > $<.$$
+	 mv -f $<.$$ $<.tex
+
+$(RTINFO):
+	@echo "Make link to $(RTINFO) for test coverage information"
+
+# generating SL document as dvi - file
+$(SL_LATEXFILE).dvi: $(LATEX_SLSPECS) $(LATEX_EQUAL_SPECS) $(SL_LATEXFILE).tex
+	$(LATEX) $(SL_LATEXFILE)
+	bibtex $(SL_LATEXFILE)
+	makeindex $(SL_LATEXFILE).idx
+	$(LATEX) $(SL_LATEXFILE)
+	$(LATEX) $(SL_LATEXFILE)
+
+# generating PP document as dvi - file
+$(PP_LATEXFILE).dvi: $(LATEX_PPSPECS) $(LATEX_EQUAL_SPECS) $(PP_LATEXFILE).tex
+	$(LATEX) $(PP_LATEXFILE)
+	bibtex $(PP_LATEXFILE)
+	makeindex $(PP_LATEXFILE).idx
+	$(LATEX) $(PP_LATEXFILE)
+
+# generating document as postscript file
+$(SL_LATEXFILE).ps : $(SL_LATEXFILE).dvi
+	dvips $(SL_LATEXFILE) -o
+
+$(PP_LATEXFILE).ps : $(PP_LATEXFILE).dvi
+	dvips $(PP_LATEXFILE) -o
+
+#
+# Make .vdmde-sl for testing the SL specification
+#
+USER=`whoami`
+MPWD=$(shell pwd|sed -e "s .*$(USER) $(HOME) g")
+
+DOTSL = .vdmde-sl
+DOT_VDMDESL:
+	@perl -e "print \"system date\n\";" > $(DOTSL)
+	@echo "$(SLALL:%=r $(MPWD)/%)" | perl -p -e "s/(\.vdms?l? )/\1\n/g;" >> $(DOTSL)
+	@perl -e "print \"system date\n\";" >> $(DOTSL)
+                
+#
+# Make .vdmde-pp for testing the PP specification
+#
+
+DOTPP = .vdmde-pp
+DOT_VDMDEPP:
+	@perl -e "print \"system date\n\";" > $(DOTPP)
+	@echo "$(PPALL:%=r $(MPWD)/%)" | perl -p -e "s/(\.vdmp?p? )/\1\n/g;" >> $(DOTPP)
+	@perl -e "print \"system date\n\";" >> $(DOTPP)
+
+#
+# VDM-SL sources
+#
+
+$(SLMIXED): %.vdmsl: %.vdm
+	-chmod -f +w $@
+	$(IFDEFFILT) -DVDMSL -DTPINFO $< >$@	
+#	cpp -P -DVDMSL -DTPINFO $< $@
+	chmod a-w $@
+
+$(SL_LATEXFILE).tex: %-vdmsl.tex: %.tex
+	-chmod -f +w $@
+	$(IFDEFFILT) -DVDMSL -DTPINFO $< >$@	
+#	cpp -P -DVDMSL -DTPINFO $< $@
+	chmod a-w $@
+
+#
+# VDM++ sources
+#
+
+$(PPMIXED): %.vdmpp: %.vdm
+	-chmod -f +w $@
+	$(IFDEFFILT) -DVDMPP -DVICE -DTPINFO $< >$@	
+#	cpp -P -DVDMPP -DTPINFO $< $@
+	chmod a-w $@
+
+$(PP_LATEXFILE).tex: %-vdmpp.tex: %.tex
+	-chmod -f +w $@
+	$(IFDEFFILT) -DVDMPP -DVICE -DTPINFO $< >$@	
+#	cpp -P -DVDMPP -DTPINFO $< $@
+	chmod a-w $@
+
+RMEXT = aux log idx ind blg ps dvi bbl ilg toc tex
+
+clean:
+	$(RM) $(LATEX_SLSPECS) $(LATEX_PPSPECS) $(LATEX_EQUAL_SPECS) 
+	$(RM) *.vdmsl *.vdmpp $(DOTSL) $(DOTPP)
+	$(RM) $(RMEXT:%=$(SL_LATEXFILE).%) $(RMEXT:%=$(PP_LATEXFILE).%)

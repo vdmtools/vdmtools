@@ -1,0 +1,6 @@
+r dfdexample.vdm
+i
+tc pos
+cg
+latex dfdexample.vdm
+quit

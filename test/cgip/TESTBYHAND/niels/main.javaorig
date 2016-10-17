@@ -1,0 +1,63 @@
+import dk.ifad.toolbox.VDM.*;
+import java.io.*;
+import Gencode.*;
+
+public class main {
+  public static void main(String[] args){ 
+    try{
+      Point2 r1 = new Point2().create(new Double(6.0), new Double(10.0));
+      Point2 s1 = new Point2().create(new Double(4.5), new Double(5.5));
+      Point2 t1 = new Point2().create(new Double(2.0), new Double(3.0));
+      Point2 r2 = new Point2().create(new Double(10.0), new Double(2.0));
+      Point2 s2 = new Point2().create(new Double(6.0), new Double(2.0));
+      Point2 t2 = new Point2().create(new Double(2.0), new Double(2.0));
+      
+      Double eps = new Double(55.0);
+      Double Af = new Double(0.0);
+      Double Ab = new Double(3.0);
+      Double Ar = null;
+      Double ll = null;
+      Double ws = new Double(9.0);
+
+      RSTPoints rst = new RSTPoints().create(r1,s1,t1,r2,s2,t2);
+
+      QRV qrv = new QRV().create(eps,Ar,Af,Ab,ll,ws);
+
+      WorkSpace wsp = new WorkSpace();
+      Sequence res = new Sequence();
+      res = wsp.createTJointGroove(rst,qrv, new quotes.TJointBPL());
+
+      System.out.println("Test 1");          
+      System.out.println(UTIL.toString(res));          
+      System.out.println("\n");          
+
+
+      WeldDirLayerCrit dircrit = new WeldDirLayerCrit().create(new quotes.SurfaceDir());
+      SurfaceAngleMaxHeightLayerCrit maincrit = new SurfaceAngleMaxHeightLayerCrit().create(new Double(38),new Double(2));
+      Sequence gencrits = new Sequence();
+      Map speccrits = new Map();
+      res = wsp.createTJointLG(dircrit,maincrit,gencrits,speccrits);
+
+      System.out.println("Test 2");          
+      System.out.println(UTIL.toString(res));          
+      System.out.println("\n");          
+
+      DirectionBeadCrit dircrit2 = new DirectionBeadCrit().create(new quotes.FromPlate2());
+      WallAngleMaxAreaBeadCrit maincrit2 = new WallAngleMaxAreaBeadCrit().create (new Double(35.0),new Double (5.0));
+      Sequence gencrits2 = new Sequence();
+      Map speccrits2 = new Map();
+      Tuple t = new Tuple(2);
+      t.SetField(1,new WallAngleMaxAreaBeadCrit().create(new Double(0.0),new Double(4.8)));
+      t.SetField(2,new Sequence());
+      speccrits2.Insert(new Integer(2),t);
+      res = wsp.createTJointBPL(dircrit2,maincrit2,gencrits2,speccrits2);
+
+      System.out.println("Test 3");          
+      System.out.println(UTIL.toString(res));          
+      System.out.println("\n");          
+    }
+    catch (CGException e){
+      System.out.println(e.getMessage());
+    }
+  }
+}

@@ -1,0 +1,13 @@
+class SetRangeExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = {-9,...,9}
+  in skip;
+
+------------------------------------------------------------------------------
+end SetRangeExprTest

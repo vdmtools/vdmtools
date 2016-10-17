@@ -1,0 +1,104 @@
+##---------------------------------------------------------------
+##                    Make file for Windows 32bit
+##             This Makefile can only be used with GNU make
+##---------------------------------------------------------------
+
+TBDIR   = ../..
+WTBDIR  = ../..
+
+#TBDIR   = /cygdrive/c/Program Files/The VDM++ Toolbox v2.8
+#WTBDIR  = C:/Program Files/The VDM++ Toolbox v2.8
+
+VPPDE   = "$(TBDIR)/bin/vppde"
+
+CC      = cl.exe
+LINK    = link.exe
+
+CFLAGS  = /nologo /c /MD /W0 /EHsc /D "WIN32" /TP
+
+INCPATH = -I"$(WTBDIR)/cg/include"
+
+LDFLAGS = /nologo "$(WTBDIR)/cg/lib/CG.lib" "$(WTBDIR)/cg/lib/vdm.lib" user32.lib
+
+## CG Version Files
+
+CGSOURCES = DoSort.cpp DoSort.h DoSort_anonym.cpp DoSort_anonym.h \
+             ExplSort.cpp ExplSort.h ExplSort_anonym.cpp ExplSort_anonym.h \
+             ImplSort.cpp ImplSort.h ImplSort_anonym.cpp ImplSort_anonym.h \
+             MergeSort.cpp MergeSort.h MergeSort_anonym.cpp \
+             MergeSort_anonym.h Sorter.cpp Sorter.h Sorter_anonym.cpp \
+             Sorter_anonym.h SortMachine.cpp SortMachine.h \
+             SortMachine_anonym.cpp SortMachine_anonym.h CGBase.cpp CGBase.h
+
+CGOBJS = DoSort.obj ExplSort.obj ImplSort.obj MergeSort.obj \
+       SortMachine.obj Sorter.obj CGBase.obj
+
+CGFLAGS = /D CG #-DDEBUG
+
+sort_pp.exe: sort_pp.obj $(CGOBJS)
+
+sort_pp.obj: sort_pp.cpp SortMachine.h Sorter.h ExplSort.h \
+        ImplSort.h DoSort.h MergeSort.h
+DoSort.obj: DoSort.cpp DoSort.h DoSort_anonym.h DoSort_anonym.cpp \
+        CGBase.h Sorter.h DoSort_userdef.h
+ExplSort.obj: ExplSort.cpp ExplSort.h  ExplSort_anonym.h \
+        ExplSort_anonym.cpp CGBase.h Sorter.h ExplSort_userdef.h
+ImplSort.obj: ImplSort.cpp ImplSort.h ImplSort_anonym.h \
+        ImplSort_anonym.cpp CGBase.h Sorter.h ImplSort_userdef.h \
+        ImplSort_userimpl.cpp
+MergeSort.obj: MergeSort.cpp MergeSort.h MergeSort_anonym.h \
+        MergeSort_anonym.cpp CGBase.h Sorter.h MergeSort_userdef.h
+SortMachine.obj: SortMachine.cpp SortMachine.h \
+        SortMachine_anonym.h SortMachine_anonym.cpp CGBase.h \
+        Sorter.h MergeSort.h SortMachine_userdef.h
+Sorter.obj: Sorter.cpp Sorter.h CGBase.h
+CGBase.obj: CGBase.cpp CGBase.h
+
+SPECFILES = dosort.rtf explsort.rtf implsort.rtf mergesort.rtf \
+        sorter.rtf sortmachine.rtf
+
+$(CGSOURCES): $(SPECFILES)
+	$(VPPDE) -c -P $^
+
+all: sort_pp.exe
+
+## Rules
+
+%.obj: %.cpp
+	$(CC) $(CFLAGS) $(INCPATH) /Fo"$@" $<
+
+%.exe: %.obj
+	$(LINK) /OUT:$@ $^ $(LDFLAGS)
+
+%.cpp: %.cc
+	cp -f $^ $@
+
+%_userdef.h:
+	touch $@
+
+##############################################################
+#### Generation of test coverage of the sort.tex document ####
+##############################################################
+
+VDMLOOP = vdmloop
+
+GENFILES = dosort.rtf.rtf explsort.rtf.rtf implsort.rtf.rtf \
+        mergesort.rtf.rtf sorter.rtf.rtf sortmachine.rtf.rtf \
+        vdm.tc
+
+init:
+	cp mergesort.init mergesort.rtf
+
+vdm.tc:
+	cd test; $(VDMLOOP)
+	cp -f test/$@ .
+
+%.rtf.rtf: $(SPECFILES) vdm.tc
+	$(VPPDE) -lrNn $(SPECFILES)
+
+clean:
+	rm -f $(CGOBJS) sort_pp.obj cgexe.exe
+	rm -f *.cpp
+	rm -f $(CGSOURCES)
+	rm -f bigint_dl.lib bigint_dl.exp  bigint_dl.pdb
+

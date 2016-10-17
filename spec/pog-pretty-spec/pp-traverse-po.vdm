@@ -1,0 +1,50 @@
+\section{Traversal of proof obligations}
+
+\begin{vdm_al}
+module PP_TRA_PO
+
+imports
+  from ENV all,
+  from PP_TAR_EXPR all,
+  from PP_TAR_PO all,
+
+  from PP_TRA_EXPR all,
+
+  from POGTP all,
+--  from HOL all,
+  from AS all,
+  from CI all,
+  from REP all
+
+
+exports 
+  functions
+    trv_ProofObligation : POGTP`ProofObligation -> PP_TAR_PO`ProofObligation
+
+definitions
+
+functions
+
+  trv_ProofObligation : POGTP`ProofObligation -> PP_TAR_PO`ProofObligation
+  trv_ProofObligation 
+    (mk_POGTP`ProofObligation(no,po,-,kind,source,loc,cid)) == 
+    PP_TAR_PO`tar_ProofObligation(
+      no,
+      if po<>nil
+      then PP_TRA_EXPR`trv_Expr(po)
+      else nil,
+      kind,
+      source,
+      loc,
+      cid);
+
+
+end PP_TRA_PO
+\end{vdm_al}
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[MotGeneralNumericType]
+{rtinfo.ast}[PP_TRA_PO]
+\end{rtinfo}
+

@@ -1,0 +1,66 @@
+module C
+
+exports all
+definitions
+types
+
+  Rec:: i : int
+
+functions 
+
+  mkRec: int -> Rec
+  mkRec(i) ==
+    mk_Rec (i)
+
+end C
+
+module A
+
+imports
+  from C all
+
+exports all
+definitions
+values 
+  mk_C`Rec (i) = C`mkRec (10);
+  j = 20
+
+types
+
+  Rec:: r: real;
+  R = Rec | C`Rec
+
+functions
+
+ f: real -> R * R * R
+ f (k) ==
+   let r1 = C`mkRec (i),
+       r2 = mk_C`Rec (j),
+       r3 = mk_Rec (k) in
+     mk_(r1, r2, r3);
+
+ Test: () -> seq1 of seq1 of (real | bool)
+ Test () ==
+   let mk_(r1, r2, r3) = f (30) in
+     let mk_C`Rec (i) = r1,
+         mk_C`Rec (j) = r2,
+         mk_Rec (k)   = r3 in
+       [ [i,j,k], [r1.i, r2.i, r3.r],
+         [is_C`Rec (r1), is_C`Rec (r2), is_C`Rec (r3)],
+         [is_Rec (r1), is_Rec (r2), is_Rec (r3)] ] ^
+         [RecordTest ()]
+
+operations
+
+ RecordTest: () ==> seq of real
+ RecordTest () ==
+ ( dcl rec1: C`Rec := mk_C`Rec (50),
+       rec2: C`Rec := C`mkRec (60),
+       rec3: Rec   := mk_Rec (70);
+   rec1.i := rec1.i + 1;
+   rec2.i := rec2.i + 1;
+   rec3.r := rec3.r + 1;
+   return [rec1.i, rec2.i, rec3.r] )
+       
+
+end A    

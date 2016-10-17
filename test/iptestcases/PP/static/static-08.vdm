@@ -1,0 +1,27 @@
+class A
+
+operations
+
+public
+Test: () ==> nat
+Test() ==
+  B`op1(7);
+
+end A
+class B
+
+instance variables
+
+  x : nat := 1
+
+operations
+
+public GetX : () ==> nat
+GetX() ==
+  return 1;
+
+static public
+op1(n : nat) res : nat
+post res + x = n;
+
+end B

@@ -1,0 +1,12 @@
+"class A
+
+operations
+
+public Test : () ==> bool
+Test() ==
+( for all i in set {1, 2, 3} do
+		if 2 > 1 and 1 > 2 then return false;
+	return true);
+   
+end A
+"

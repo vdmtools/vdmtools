@@ -1,0 +1,35 @@
+dlclass Example
+
+uselib "dlclass_test1.so"
+
+-- Purpose of test: 
+-- test passing of object parameters and object return
+-- values. 
+-- the dlclass_test1.so returns both the actual parameters and 
+-- an externally created object instance. 
+
+operations
+public
+  ReturnList : seq of Example ==> seq of Example
+  ReturnList(s)
+     == is not yet specified
+
+end Example
+
+--====================--
+
+class A
+
+operations
+
+public
+  Test : () ==> seq of Example
+  Test() == 
+    (let e =  new Example(), 
+         s =  [ new Example(), new Example() ] in 
+       return  [e] ^ s ^ e.ReturnList(s);
+    )
+  ;
+
+end A
+

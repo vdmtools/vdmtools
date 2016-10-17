@@ -1,0 +1,17 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> set of set of (nat|set of nat)  
+Test () == 
+
+return power { {323425,456765,123456}, {1234,34556,745623}, 1243542,254335,254363 }
+
+ 
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

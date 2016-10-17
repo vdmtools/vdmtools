@@ -1,0 +1,832 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Functions and Operations related to free identifiers and closure
+%    environment of the dynamic semantic specification
+% $Id: eval_free.vdm,v 1.19 2001/02/19 12:24:34 paulm Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\chapter{Closure Environment Creation}
+
+The module FREE contains the definition related to the
+closure environment.
+
+\begin{vdm_al}
+module FREE
+  imports 
+    from AS all,
+    from RTERR all,  
+    from AUX
+      functions
+        MkBlkEnvFromIdMap : map AS`Name to SEM`VAL * SEM`Permission -> SEM`BlkEnv,
+
+     from PAT all,     
+     from REP all,
+     from CI all,
+     from STKM all,
+     from INSTRTP all,
+#ifdef VDMPP
+     from SCHDTP all,
+#endif VDMPP
+     from GLOBAL all,
+
+     from SEM all
+     
+  exports
+    functions
+      IdentInPattern : AS`PatternBind -> set of AS`Name
+    operations
+      FreeMapToBlkEnv : map AS`Name to SEM`VAL ==> SEM`BlkEnv;
+      FreeInExpr : AS`Expr * set of AS`Name ==> map AS`Name to SEM`VAL
+
+definitions
+--operations
+functions
+
+--
+-- get free id`s in a pattern
+--
+IdentInPattern : AS`PatternBind -> set of AS`Name
+IdentInPattern(pat) ==
+  cases pat:
+    mk_AS`PatternName(nm,-,-)       -> if nm = nil then {} else {nm},
+    mk_AS`MatchVal(-,-)             -> {},
+    mk_AS`SetEnumPattern(Elems,-)   -> dunion {IdentInPattern(Elems(p)) | p in set inds Elems},
+    mk_AS`SetUnionPattern(lp,rp,-)  -> IdentInPattern(lp) union IdentInPattern(rp),
+    mk_AS`SeqEnumPattern(els,-)     -> dunion {IdentInPattern(els(i)) | i in set inds els},
+    mk_AS`SeqConcPattern(lp,rp,-)   -> IdentInPattern(lp) union IdentInPattern(rp),
+    mk_AS`MapEnumPattern(mls,-)     -> dunion {IdentInPattern(mls(i)) | i in set inds mls},
+    mk_AS`MapMergePattern(lp,rp,-)  -> IdentInPattern(lp) union IdentInPattern(rp),
+    mk_AS`RecordPattern(-,fields,-) -> dunion {IdentInPattern(fields(i)) | i in set inds fields},
+    mk_AS`TuplePattern(fields,-)    -> dunion {IdentInPattern(fields(i)) | i in set inds fields},
+#ifdef VDMPP
+    mk_AS`ObjectPattern(-,fields,-) -> dunion {IdentInPattern(fields(i).pat) | i in set inds fields},
+#endif VDMPP
+    mk_AS`MapletPattern(dp,rp,-)    -> IdentInPattern(dp) union IdentInPattern(rp),
+    mk_AS`SetBind(-,-,-)            -> IdentInBind(pat),
+    mk_AS`TypeBind(-,-,-)           -> IdentInBind(pat),
+    others                          -> undefined
+  end
+\end{vdm_al}
+
+The operation $IdentInPattern$ is used to extract all the pattern
+identifiers from either a pattern or a bind.
+
+\begin{vdm_al}
+
+functions
+
+IdentInBind : AS`Bind -> set of AS`Name
+IdentInBind (bind) ==
+  cases bind:
+    mk_AS`SetBind(pat,-,-)  -> IdentInPattern(pat),
+    mk_AS`TypeBind(pat,-,-) -> IdentInPattern(pat),
+    others                  -> undefined
+  end;
+
+IdentInMultBind : AS`MultBind -> set of AS`Name
+IdentInMultBind (bind) ==
+  cases bind:
+    mk_AS`MultSetBind(pat,-,-)  -> dunion { IdentInPattern(pat(i)) | i in set inds pat },
+    mk_AS`MultTypeBind(pat,-,-) -> dunion { IdentInPattern(pat(i)) | i in set inds pat },
+    others                      -> undefined
+  end;
+
+IdentInMultBindSeq : seq of AS`MultBind -> set of AS`Name
+IdentInMultBindSeq (bind_l) ==
+  dunion { IdentInMultBind(bind_l(i)) | i in set inds bind_l };
+
+operations
+
+FreeInBind : AS`Bind * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInBind (bind, id_s) ==
+  cases bind: 
+    mk_AS`SetBind(-,Set,-) -> return FreeInExpr(Set, id_s),
+    mk_AS`TypeBind(-,-,-)  -> return { |-> },
+    others                 -> error
+  end;
+\end{vdm_al}
+
+The operation $FreeInBind$ returns the free variable mapping for the
+expression in a set bind, or an empty map otherwise.
+
+\begin{vdm_al}
+operations
+
+FreeInMultBindSeq : seq of AS`MultBind * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInMultBindSeq (bind_l, id_s) ==
+ (dcl newid_s : set of AS`Name := id_s,
+      res_m   : map AS`Name to SEM`VAL := { |-> };
+  for bind in bind_l do
+   (cases bind:
+      mk_AS`MultSetBind(-,Set,-)  -> def tmp_m = FreeInExpr(Set, newid_s)
+                                     in
+                                      (res_m := res_m munion tmp_m;
+                                       newid_s := newid_s union dom tmp_m
+                                       ),
+      mk_AS`MultTypeBind(-,-,-)   -> skip,
+      others                      -> error
+    end;
+    newid_s := newid_s union IdentInMultBind(bind);
+   );
+  return res_m;
+ );
+\end{vdm_al}
+
+The operation $FreeInMultBindSeq$ returns the free variable mapping for a
+sequence of multi binds.
+
+\section{Expressions}
+
+\begin{vdm_al}
+operations 
+
+--
+-- get free identifiers in expression, return a map of id to VAL
+-- the resulting map will be used in the environment of a closure
+--
+
+FreeInExpr : AS`Expr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInExpr (expr, id_s) ==
+  cases true :
+  (is_AS`DefExpr(expr))                  -> FreeInDefExpr(expr, id_s), 
+  (is_AS`LetExpr(expr))                  -> FreeInLetExpr(expr, id_s), 
+  (is_AS`LetBeSTExpr(expr))              -> FreeInLetBeSTExpr(expr, id_s), 
+  (is_AS`IfExpr(expr))                   -> FreeInIfExpr(expr, id_s), 
+  (is_AS`CasesExpr(expr))                -> FreeInCasesExpr(expr, id_s), 
+  (is_AS`PrefixExpr(expr))               -> FreeInPrefixExpr(expr, id_s), 
+  (is_AS`BinaryExpr(expr))               -> FreeInBinaryExpr(expr, id_s), 
+  (is_AS`AllOrExistsExpr(expr))          -> FreeInAllOrExistsExpr(expr, id_s), 
+  (is_AS`ExistsUniqueExpr(expr))         -> FreeInExistsUniqueExpr(expr, id_s), 
+  (is_AS`IotaExpr(expr))                 -> FreeInIotaExpr(expr, id_s), 
+  (is_AS`SetEnumerationExpr(expr))       -> FreeInSetEnumerationExpr(expr, id_s), 
+  (is_AS`SetComprehensionExpr(expr))     -> FreeInSetComprehensionExpr(expr, id_s), 
+  (is_AS`SetRangeExpr(expr))             -> FreeInSetRangeExpr(expr, id_s), 
+  (is_AS`SeqEnumerationExpr(expr))       -> FreeInSeqEnumerationExpr(expr, id_s), 
+  (is_AS`SeqComprehensionExpr(expr))     -> FreeInSeqComprehensionExpr(expr, id_s), 
+  (is_AS`SubSequenceExpr(expr))          -> FreeInSubSequenceExpr(expr, id_s), 
+  (is_AS`SeqModifyMapOverrideExpr(expr)) -> FreeInSeqModifyMapOverrideExpr(expr, id_s), 
+  (is_AS`MapEnumerationExpr(expr))       -> FreeInMapEnumerationExpr(expr, id_s), 
+  (is_AS`MapComprehensionExpr(expr))     -> FreeInMapComprehensionExpr(expr, id_s), 
+  (is_AS`TupleConstructorExpr(expr))     -> FreeInTupleConstructorExpr(expr, id_s), 
+  (is_AS`RecordConstructorExpr(expr))    -> FreeInRecordConstructorExpr(expr, id_s), 
+  (is_AS`RecordModifierExpr(expr))       -> FreeInRecordModifierExpr(expr, id_s), 
+  (is_AS`TokenConstructorExpr(expr))     -> FreeInTokenConstructorExpr(expr, id_s),
+  (is_AS`TupleSelectExpr(expr))          -> FreeInTupleSelectExpr(expr,id_s),
+  (is_AS`TypeJudgementExpr(expr))        -> FreeInTypeJudgementExpr(expr,id_s),
+  (is_AS`PreConditionApplyExpr(expr))    -> FreeInPreConditionApplyExpr(expr,id_s),
+  (is_AS`ApplyExpr(expr))                -> FreeInApplyExpr(expr, id_s), 
+  (is_AS`LambdaExpr(expr))               -> FreeInLambdaExpr(expr, id_s),
+  (is_AS`FieldSelectExpr(expr))          -> FreeInFieldSelectExpr(expr, id_s), 
+  (is_AS`FctTypeInstExpr(expr))          -> FreeInFctTypeInstExpr(expr, id_s), 
+  (is_AS`IsExpr(expr))                   -> FreeInIsExpr(expr, id_s), 
+  (is_AS`NarrowExpr(expr))               -> FreeInNarrowExpr(expr, id_s), 
+  (is_AS`BoolLit(expr)),
+  (is_AS`CharLit(expr)),
+  (is_AS`TextLit(expr)),
+  (is_AS`QuoteLit(expr)),
+  (is_AS`RealLit(expr)),
+  (is_AS`NumLit(expr)),
+  (is_AS`NilLit(expr))                   -> return { |-> }, 
+  (is_AS`Name(expr))                     -> FreeInName(expr, id_s),
+#ifdef VDMSL
+  (is_AS`OldName(expr))                  -> FreeInOldName(expr, id_s),
+#endif VDMSL
+  (is_AS`UndefinedExpr(expr))            -> return { |-> }, 
+  (is_AS`BracketedExpr(expr))            -> FreeInBracketedExpr(expr, id_s),
+  others                                 -> return { |-> }
+end
+\end{vdm_al}
+
+The operation $FreeInExpr$ is the entry point for the calculation of the
+free variable mapping. The other operations call this operation
+recursively. The resulting map of the operation must be converted to a
+block environment ($BlkEnv$) before it can be used.
+
+\subsection{Local Binding Expressions}
+
+\begin{vdm_al}
+operations
+
+FreeInDefExpr : AS`DefExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInDefExpr (mk_AS`DefExpr(Def,In,-), id_s) ==
+ (dcl res_m : map AS`Name to SEM`VAL := {|->},
+      newid_s : set of AS`Name := id_s;
+  for mk_(pat_p, val_e) in Def do
+   (res_m := res_m munion FreeInExpr(val_e, id_s);
+    newid_s := newid_s union IdentInPattern(pat_p)
+   );
+  newid_s := newid_s union dom res_m;
+  res_m := res_m munion FreeInExpr(In, newid_s);
+  return res_m
+ );
+
+FreeInLetExpr : AS`LetExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInLetExpr (mk_AS`LetExpr(localdef,body,-), id_s) ==
+ (dcl res_m : map AS`Name to SEM`VAL := {|->},
+      newid_s : set of AS`Name := id_s;
+  for ldef in localdef do
+    cases true :
+      (is_AS`ExplFnDef(ldef))    -> newid_s := newid_s union { ldef.nm },
+      (is_AS`ImplFnDef(ldef))    -> newid_s := newid_s union { ldef.nm },
+      (is_AS`ExtExplFnDef(ldef)) -> newid_s := newid_s union { ldef.nm },
+      (is_AS`ValueDef(ldef))     -> newid_s := newid_s union IdentInPattern(ldef.pat)
+    end;
+  for ldef in localdef do
+    cases true :
+      (is_AS`ExplFnDef(ldef))    -> def tmp_m = FreeInFnDef(ldef, newid_s) in
+                                    ( res_m := res_m munion tmp_m;
+                                      newid_s := newid_s union dom tmp_m
+                                    ),
+      (is_AS`ImplFnDef(ldef))    -> def tmp_m = FreeInFnDef(ldef, newid_s) in
+                                    ( res_m := res_m munion tmp_m;
+                                      newid_s := newid_s union dom tmp_m
+                                    ),
+      (is_AS`ExtExplFnDef(ldef)) -> def tmp_m = FreeInFnDef(ldef, newid_s) in
+                                    ( res_m := res_m munion tmp_m;
+                                      newid_s := newid_s union dom tmp_m
+                                    ),
+      (is_AS`ValueDef(ldef))     -> def tmp_m = FreeInExpr(ldef.val, newid_s) in
+                                    ( res_m := res_m munion tmp_m;
+                                      newid_s := newid_s union dom tmp_m
+                                    )
+    end;
+  res_m := res_m munion FreeInExpr(body, newid_s);
+  return res_m
+ );
+
+
+FreeInFnDef : AS`FnDef * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInFnDef (fn, id_s) ==
+( dcl res_m : map AS`Name to SEM`VAL,
+      newid_s : set of AS`Name := id_s;
+  cases fn:
+    mk_AS`ExplFnDef(-,-,-,parms,body,Pre_e,Post_e,-,-,-,-) ->
+       ( for pat_l in parms do
+           for pat in pat_l do
+             newid_s := newid_s union IdentInPattern(pat);
+         if body.body = <NOTYETSPEC>
+         then res_m := {|->}
+         else res_m := FreeInExpr(body.body, newid_s);
+         newid_s := newid_s union dom res_m;
+         def tmp_m = FreeInPreExpr(Pre_e, newid_s) in
+         ( res_m := res_m munion tmp_m;
+           newid_s := newid_s union dom tmp_m
+         );
+         def tmp_m = FreeInPostExpr(Post_e, newid_s) in
+           res_m := res_m munion tmp_m;
+         return res_m
+       ),
+    mk_AS`ImplFnDef(-,-,partps,-,Pre_e,Post_e,-,-,-) ->
+       ( for mk_AS`PatTypePair(pat_l,-,-) in partps do
+           for pat in pat_l do
+             newid_s := newid_s union IdentInPattern(pat);
+         res_m := FreeInPreExpr(Pre_e, newid_s);
+         newid_s := newid_s union dom res_m;
+         res_m := res_m munion FreeInPostExpr(Post_e, newid_s);
+         return res_m
+       ),
+    mk_AS`ExtExplFnDef(-,-,partps,-,body,Pre_e,Post_e,-,-,-,-) ->
+       ( for mk_AS`PatTypePair(pat_l,-,-) in partps do
+           for pat in pat_l do
+             newid_s := newid_s union IdentInPattern(pat);
+         if body.body = <NOTYETSPEC>
+         then res_m := {|->}
+         else res_m := FreeInExpr(body.body, newid_s);
+         res_m := res_m munion FreeInPreExpr(Pre_e, newid_s);
+         newid_s := newid_s union dom res_m;
+         res_m := res_m munion FreeInPostExpr(Post_e, newid_s);
+         return res_m
+       )
+  end;
+);
+
+FreeInPreExpr : [AS`Expr] * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInPreExpr (expr, id_s) ==
+  cases expr:
+    nil    -> return { |-> },
+    others -> return FreeInExpr(expr, id_s)
+  end;
+
+FreeInPostExpr : [AS`Expr] * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInPostExpr (expr, id_s) ==
+  cases expr:
+    nil    -> return { |-> },
+    others -> return FreeInExpr(expr, id_s)
+  end;
+
+FreeInLetBeSTExpr : AS`LetBeSTExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInLetBeSTExpr (mk_AS`LetBeSTExpr(lhs,St,In,-), id_s) ==
+  def patid_s = IdentInMultBindSeq(lhs);
+      expid_m = FreeInMultBindSeq(lhs, id_s);
+  in
+   (dcl stid_m : map AS`Name to SEM`VAL := { |-> };
+    if St <> nil
+    then stid_m := FreeInExpr(St, id_s union patid_s union dom expid_m);
+    def newid_s = dunion {id_s, dom expid_m, dom stid_m, patid_s};
+        tmp_m = FreeInExpr(In, newid_s);
+        res_m = merge {expid_m, stid_m, tmp_m}
+    in
+      return res_m);
+\end{vdm_al}
+
+\subsection{Conditional Expressions}
+
+\begin{vdm_al}
+operations
+
+FreeInIfExpr : AS`IfExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInIfExpr (mk_AS`IfExpr(test,cons,Elseif,altn,-), id_s) ==
+( dcl res_m : map AS`Name to SEM`VAL,
+      newid_s : set of AS`Name := id_s;
+  res_m := FreeInExpr(test, newid_s);
+  newid_s := newid_s union dom res_m;
+  def tmp_m = FreeInExpr(cons, newid_s) in
+  ( res_m := res_m munion tmp_m;
+    newid_s := newid_s union dom tmp_m
+  );
+  def tmp_m = FreeInElseifExpr(Elseif, newid_s) in
+  ( res_m := res_m munion tmp_m;
+    newid_s := newid_s union dom tmp_m
+  );
+  res_m := FreeInExpr(altn, newid_s);
+  return res_m
+);
+
+
+FreeInElseifExpr : seq of AS`ElseifExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInElseifExpr(elif_l, id_s) ==
+( dcl res_m : map AS`Name to SEM`VAL := { |-> },
+      newid_s : set of AS`Name := id_s;
+  for mk_AS`ElseifExpr(test_e, cons_e, -) in elif_l do
+  ( def tmp_m = FreeInExpr(test_e, newid_s) in
+    ( res_m := res_m munion tmp_m;
+      newid_s := newid_s union dom tmp_m
+    );
+    def tmp_m = FreeInExpr(cons_e, newid_s) in
+    ( res_m := res_m munion tmp_m;
+      newid_s := newid_s union dom tmp_m
+    )
+  );
+  return res_m
+);
+
+FreeInCasesExpr : AS`CasesExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInCasesExpr (mk_AS`CasesExpr(sel,altns,Others,-), id_s) ==
+( dcl alt_l : seq of AS`CaseAltn := altns, 
+      pat_lp : seq of AS`Pattern, 
+      newid_s : set of AS`Name := id_s, 
+      res_m : map AS`Name to SEM`VAL := {|->};
+  def sel_m = FreeInExpr(sel, newid_s) in
+  ( res_m := sel_m;
+    newid_s := newid_s union dom sel_m;
+    while alt_l <> [] do 
+      let mk_AS`CaseAltn(match_lp, body_e,-) = hd alt_l in
+      ( pat_lp := match_lp ;
+        while pat_lp <> [] do 
+        let pat_p = hd pat_lp in
+        ( newid_s := newid_s union IdentInPattern(pat_p);
+          pat_lp := tl pat_lp
+        );
+        def tmp_m = FreeInExpr(body_e, newid_s) in
+        ( res_m := res_m munion tmp_m;
+          newid_s := newid_s union dom tmp_m
+        );
+        alt_l := tl alt_l
+      );
+    if Others <> nil
+    then
+      def tmp_m = FreeInExpr (Others, newid_s) in
+        res_m := res_m munion tmp_m;
+    return res_m
+  )
+)
+\end{vdm_al}
+
+\subsection{Unary Expressions}
+
+\begin{vdm_al}
+operations
+
+FreeInPrefixExpr : AS`PrefixExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInPrefixExpr (mk_AS`PrefixExpr(-,arg,-), id_s) ==
+  FreeInExpr(arg, id_s);
+
+\end{vdm_al}
+
+\subsection{Quantified Expressions}
+
+\begin{vdm_al}
+operations
+
+FreeInBinaryExpr : AS`BinaryExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInBinaryExpr (mk_AS`BinaryExpr(left,-,right,-), id_s) ==
+  def tmp_m = FreeInExpr(left, id_s);
+      res_m = FreeInExpr(right, id_s union dom tmp_m)
+  in
+    return res_m munion tmp_m;
+
+FreeInAllOrExistsExpr : AS`AllOrExistsExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInAllOrExistsExpr (mk_AS`AllOrExistsExpr(-,bind,pred,-), id_s) ==
+( dcl res_m : map AS`Name to SEM`VAL,
+      newid_s : set of AS`Name;
+  res_m := FreeInMultBindSeq(bind, id_s);
+  newid_s := dunion { dom res_m, id_s, IdentInMultBindSeq(bind) };
+  res_m := res_m munion FreeInExpr(pred, newid_s);
+  return res_m
+);
+
+FreeInExistsUniqueExpr : AS`ExistsUniqueExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInExistsUniqueExpr (mk_AS`ExistsUniqueExpr(bind,pred,-), id_s) ==
+  def patid_s = IdentInBind(bind);
+      expid_m = FreeInBind(bind, id_s);
+      newid_s = dunion { id_s, patid_s, dom expid_m};
+      tmp_m = FreeInExpr(pred, newid_s);
+      res_m = expid_m munion tmp_m
+  in
+    return res_m
+\end{vdm_al}
+
+\subsection{Set Expressions}
+
+\begin{vdm_al}
+operations
+
+FreeInSetEnumerationExpr : AS`SetEnumerationExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInSetEnumerationExpr (mk_AS`SetEnumerationExpr(els,-), id_s) ==
+( dcl res_m : map AS`Name to SEM`VAL := {|->},
+      newid_s : set of AS`Name := id_s;
+  for elm_e in els do
+    def tmp_m = FreeInExpr(elm_e, newid_s) in
+    ( res_m := res_m munion tmp_m;
+      newid_s := newid_s union dom tmp_m
+    );
+  return res_m
+);
+
+
+FreeInSetComprehensionExpr : AS`SetComprehensionExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInSetComprehensionExpr (mk_AS`SetComprehensionExpr(elem,bind,pred,-),id_s) ==
+( dcl res_m : map AS`Name to SEM`VAL,
+      newid_s : set of AS`Name;
+  res_m := FreeInMultBindSeq(bind, id_s);
+  newid_s := dunion { id_s, dom res_m, IdentInMultBindSeq(bind) };
+  def tmp_m = FreeInExpr(elem, newid_s) in
+  ( res_m := res_m munion tmp_m;
+    newid_s := newid_s union dom tmp_m
+  );
+  if pred <> nil
+  then
+    res_m := res_m munion FreeInExpr(pred, newid_s);
+  return res_m
+);
+
+
+FreeInSetRangeExpr : AS`SetRangeExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInSetRangeExpr (mk_AS`SetRangeExpr(lb,ub,-), id_s) ==
+( dcl res_m : map AS`Name to SEM`VAL,
+      newid_s : set of AS`Name;
+  res_m := FreeInExpr(lb, id_s);
+  newid_s := id_s union dom res_m;
+  res_m := res_m munion FreeInExpr(ub, newid_s);
+  return res_m
+)
+\end{vdm_al}
+
+\subsection{Sequence Expressions}
+
+\begin{vdm_al}
+operations
+
+FreeInSeqEnumerationExpr : AS`SeqEnumerationExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInSeqEnumerationExpr (mk_AS`SeqEnumerationExpr(els,-), id_s) ==
+( dcl res_m : map AS`Name to SEM`VAL := {|->},
+      newid_s : set of AS`Name := id_s;
+  for elm in els do
+    def tmp_m = FreeInExpr(elm, newid_s) in
+    ( res_m := res_m munion tmp_m;
+      newid_s := newid_s union dom tmp_m
+    );
+  return res_m
+);
+
+FreeInSeqComprehensionExpr : AS`SeqComprehensionExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInSeqComprehensionExpr (mk_AS`SeqComprehensionExpr(elem,bind,pred,-), id_s) ==
+ (dcl res_m : map AS`Name to SEM`VAL,
+      newid_s : set of AS`Name;
+  --res_m := FreeInBind(bind, id_s);
+  cases bind:
+    mk_AS`SetBind(-,Set,-) -> res_m := FreeInExpr(Set, id_s),
+    mk_AS`SeqBind(-,Seq,-) -> res_m := FreeInExpr(Seq, id_s)
+  end;
+  newid_s := dunion { id_s, dom res_m, IdentInBind(bind) };
+  def tmp_m = FreeInExpr(elem, newid_s)
+  in
+   (res_m := res_m munion tmp_m;
+    newid_s := newid_s union dom tmp_m
+   );
+  if pred <> nil
+  then
+    res_m := res_m munion FreeInExpr(pred, newid_s);
+  return res_m
+);
+
+FreeInSubSequenceExpr : AS`SubSequenceExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInSubSequenceExpr (mk_AS`SubSequenceExpr(sequence,frompos,topos,-), id_s) ==
+( dcl res_m : map AS`Name to SEM`VAL := {|->},
+      newid_s : set of AS`Name := id_s;
+  def tmp_m = FreeInExpr(sequence, newid_s) in
+    ( res_m := res_m munion tmp_m;
+      newid_s := newid_s union dom tmp_m
+    );
+  def tmp_m = FreeInExpr(frompos, newid_s) in
+    ( res_m := res_m munion tmp_m;
+      newid_s := newid_s union dom tmp_m
+    );
+  res_m := res_m munion FreeInExpr(topos, newid_s);
+  return res_m
+);
+
+FreeInSeqModifyMapOverrideExpr : AS`SeqModifyMapOverrideExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInSeqModifyMapOverrideExpr (mk_AS`SeqModifyMapOverrideExpr(seqmap,mapexp,-), id_s) ==
+  def tmp_m = FreeInExpr(seqmap, id_s);
+      res_m = FreeInExpr(mapexp, id_s union dom tmp_m)
+  in
+    return res_m munion tmp_m;
+
+FreeInMapEnumerationExpr : AS`MapEnumerationExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInMapEnumerationExpr (mk_AS`MapEnumerationExpr(els,-), id_s) ==
+( dcl res_m : map AS`Name to SEM`VAL := {|->},
+      newid_s : set of AS`Name := id_s;
+  for mk_AS`Maplet(dom_e, rng_e, -) in els do
+  ( def tmp_m = FreeInExpr(dom_e, newid_s) in
+    ( res_m := res_m munion tmp_m;
+      newid_s := newid_s union dom tmp_m
+    );
+    def tmp_m = FreeInExpr(rng_e, newid_s) in
+    ( res_m := res_m munion tmp_m;
+      newid_s := newid_s union dom tmp_m
+    )
+  );
+  return res_m
+)
+\end{vdm_al}
+
+\subsection{Map Expressions}
+
+\begin{vdm_al}
+operations
+
+FreeInMapComprehensionExpr : AS`MapComprehensionExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInMapComprehensionExpr (mk_AS`MapComprehensionExpr(elem,bind,pred,-), id_s) ==
+( dcl res_m : map AS`Name to SEM`VAL,
+      newid_s : set of AS`Name;
+  res_m := FreeInMultBindSeq(bind, id_s);
+  newid_s := dunion { id_s, dom res_m, IdentInMultBindSeq(bind) };
+  let mk_AS`Maplet(dom_e, rng_e, -) = elem in
+  ( def tmp_m = FreeInExpr(dom_e, newid_s) in
+    ( res_m := res_m munion tmp_m;
+      newid_s := newid_s union dom tmp_m
+    );
+    def tmp_m = FreeInExpr(rng_e, newid_s) in
+    ( res_m := res_m munion tmp_m;
+      newid_s := newid_s union dom tmp_m
+    )
+  );
+  if pred <> nil
+  then
+    res_m := res_m munion FreeInExpr(pred, newid_s);
+  return res_m
+)
+\end{vdm_al}
+
+\subsection{Tuple Expressions}
+
+\begin{vdm_al}
+operations
+
+FreeInTupleConstructorExpr : AS`TupleConstructorExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInTupleConstructorExpr (mk_AS`TupleConstructorExpr(fields,-), id_s) ==
+ (dcl res_m : map AS`Name to SEM`VAL := {|->},
+      newid_s : set of AS`Name := id_s;
+  for elm in fields do
+    def tmp_m = FreeInExpr(elm, newid_s) in
+     (res_m := res_m munion tmp_m;
+      newid_s := newid_s union dom tmp_m
+     );
+  return res_m
+ );
+
+FreeInTupleSelectExpr : AS`TupleSelectExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInTupleSelectExpr (mk_AS`TupleSelectExpr (tuple,-,-), id_s) ==
+  FreeInExpr(tuple,id_s);
+\end{vdm_al}
+
+\subsection{Record Expressions}
+
+\begin{vdm_al}
+operations
+
+FreeInRecordConstructorExpr : AS`RecordConstructorExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInRecordConstructorExpr (mk_AS`RecordConstructorExpr(-,fields,-), id_s) ==
+( dcl res_m : map AS`Name to SEM`VAL := {|->},
+      newid_s : set of AS`Name := id_s;
+  for elm in fields do
+    def tmp_m = FreeInExpr(elm, newid_s) in
+     (res_m := res_m munion tmp_m;
+      newid_s := newid_s union dom tmp_m
+     );
+  return res_m
+);
+
+FreeInRecordModifierExpr : AS`RecordModifierExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInRecordModifierExpr (mk_AS`RecordModifierExpr(rec,modifiers,-), id_s) ==
+( dcl res_m : map AS`Name to SEM`VAL := FreeInExpr(rec, id_s),
+      newid_s : set of AS`Name;
+  newid_s := id_s union dom res_m;  -- pre tmp_m
+  for mk_AS`RecordModification(-, expr, -) in modifiers do
+    def tmp_m = FreeInExpr(expr, newid_s) in
+    ( res_m := res_m munion tmp_m;
+      newid_s := newid_s union dom tmp_m
+    );
+  return res_m
+)
+\end{vdm_al}
+
+\subsection{Token Constructor}
+
+\begin{vdm_al}
+operations
+
+FreeInTokenConstructorExpr : AS`TokenConstructorExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInTokenConstructorExpr (mk_AS`TokenConstructorExpr(field,-), id_s) ==
+  FreeInExpr(field, id_s)
+\end{vdm_al}
+
+\subsection{Apply Expressions}
+
+\begin{vdm_al}
+operations
+
+FreeInApplyExpr : AS`ApplyExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInApplyExpr (mk_AS`ApplyExpr(fct,arg,-), id_s) ==
+ (dcl res_m : map AS`Name to SEM`VAL := FreeInExpr(fct, id_s),
+      newid_s : set of AS`Name := id_s;
+  newid_s := newid_s union dom res_m;
+  for arg_e in arg do
+    def arg_m = FreeInExpr(arg_e, newid_s)
+    in
+     (res_m := res_m munion arg_m;
+      newid_s := newid_s union dom arg_m
+     );
+  return res_m
+ );
+
+FreeInFctTypeInstExpr : AS`FctTypeInstExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInFctTypeInstExpr (mk_AS`FctTypeInstExpr(polyfct,-,-), id_s) ==
+  FreeInExpr(polyfct, id_s);
+
+FreeInIsExpr : AS`IsExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInIsExpr (mk_AS`IsExpr(-,arg,-), id_s) ==
+  FreeInExpr (arg, id_s);
+
+FreeInNarrowExpr : AS`NarrowExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInNarrowExpr (mk_AS`NarrowExpr(expr,-,-), id_s) ==
+  FreeInExpr (expr, id_s);
+\end{vdm_al}
+
+\subsection{Lambda Expression}
+
+\begin{vdm_al}
+operations
+
+FreeInLambdaExpr : AS`LambdaExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInLambdaExpr (mk_AS`LambdaExpr(parm,body,-,-), id_s) ==
+  let newid_s = dunion { IdentInBind(parm(i)) | i in set inds parm }
+  in FreeInExpr(body, id_s union newid_s);
+\end{vdm_al}
+
+\subsection{Is Expression and Type Judgement}
+
+\begin{vdm_al}
+operations
+
+FreeInFieldSelectExpr : AS`FieldSelectExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInFieldSelectExpr (mk_AS`FieldSelectExpr(rec,-,-),id_s) ==
+  FreeInExpr(rec, id_s);
+
+FreeInTypeJudgementExpr : AS`TypeJudgementExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInTypeJudgementExpr (mk_AS`TypeJudgementExpr(expr,-,-), id_s) ==
+  FreeInExpr(expr, id_s);
+
+\end{vdm_al}
+
+\subsection{Pre-condition Apply expressions}
+
+\begin{vdm_al}
+FreeInPreConditionApplyExpr: AS`PreConditionApplyExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInPreConditionApplyExpr(mk_AS`PreConditionApplyExpr(fct,arg,-),id_s) ==
+ (dcl res_m : map AS`Name to SEM`VAL := FreeInExpr(fct,id_s),
+      newid_s : set of AS`Name := id_s union dom res_m;
+  for expr in arg do
+  ( def tmp_m = FreeInExpr(expr, newid_s) in
+    ( res_m := res_m munion tmp_m;
+      newid_s := newid_s union dom tmp_m
+    );
+  );
+  return res_m
+);
+\end{vdm_al}
+\subsection{Names}
+
+\begin{vdm_al}
+operations
+
+FreeInName : AS`Name * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInName ( name, id_s) ==
+  if name in set id_s
+  then return {|->}
+  else
+    def val = LookUpInTopEnv(name)
+    in
+      if val = nil
+      then return { |-> }
+      else return { name |-> val };
+
+#ifdef VDMSL
+FreeInOldName : AS`OldName * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInOldName (mk_AS`OldName(ids,cid), id_s) ==
+  let old_name = mk_AS`Name(ids,cid)
+  in
+    if old_name in set id_s
+    then return {|->}
+    else if STKM`IsOldState (old_name)
+         then return { old_name |-> STKM`GetOldStateVal(old_name) }
+         else error
+#endif VDMSL
+\end{vdm_al}
+
+\subsection{Bracketed Expression}
+
+\begin{vdm_al}
+operations
+
+FreeInBracketedExpr : AS`BracketedExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInBracketedExpr (mk_AS`BracketedExpr(expr,-), id_s) ==
+  FreeInExpr(expr, id_s)
+
+\end{vdm_al}
+
+\subsection{Iota Expression}
+
+\begin{vdm_al}
+operations
+
+FreeInIotaExpr : AS`IotaExpr * set of AS`Name ==> map AS`Name to SEM`VAL
+FreeInIotaExpr (mk_AS`IotaExpr(bind,pred,-), id_s) ==
+  def patid_s = IdentInBind(bind);
+      expid_m = FreeInBind(bind, id_s);
+      newid_s = dunion { id_s, patid_s, dom expid_m};
+      tmp_m = FreeInExpr(pred, newid_s);
+      res_m = expid_m munion tmp_m
+  in
+    return res_m
+\end{vdm_al}
+
+\section{Auxiliary Operations}
+
+\begin{vdm_al}
+operations
+
+---
+--- Convert a map of identifiers to values to a block environment
+---
+
+FreeMapToBlkEnv : map AS`Name to SEM`VAL ==> SEM`BlkEnv
+FreeMapToBlkEnv (id_m) ==
+  return AUX`MkBlkEnvFromIdMap(id_m, <READ_ONLY>);
+
+---
+--- Look up a identifier in the top environment only
+---
+
+LookUpInTopEnv : AS`Name ==> [SEM`VAL]
+LookUpInTopEnv (name) ==
+  def mk_(isit, res) = STKM`IsLocalVal(name)
+  in if isit
+     then return res
+     else return nil
+
+end FREE
+\end{vdm_al}
+
+\vspace{0.5cm}
+
+#ifdef RTINFO
+\begin{rtinfo}
+[FreeInSeqModifyMapOverrideExpr]{rtinfo.ast}[FREE]
+\end{rtinfo}
+#endif RTINFO
+ Local Variables: 
+% mode: LaTeX
+% TeX-master: "dynsem"
+% End: 

@@ -1,0 +1,18 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> set of nat  
+Test () ==
+  return {2,...,f(5)}
+
+functions 
+f: nat -> nat | <ERROR>
+f(n) ==
+  if n < 5 then
+    n
+  else 
+    <ERROR>
+
+end A

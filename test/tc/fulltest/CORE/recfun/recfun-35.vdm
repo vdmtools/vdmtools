@@ -1,0 +1,27 @@
+class A
+
+types
+
+public
+List :: 
+  head : nat 
+  tail : [List]
+
+functions
+
+
+
+public 
+id : List -> nat
+id(mk_List(h,t)) == 
+  1 + if t = nil then 0 else id(t);
+  
+
+public
+foo : List -> nat
+foo(mk_List(h,t)) ==
+  1+h + if t = nil then 0 else foo(t)
+measure id;
+
+
+end A 

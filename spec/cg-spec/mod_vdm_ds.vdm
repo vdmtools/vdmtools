@@ -1,0 +1,4416 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Module providing operations generating code corresponding to data refinement of
+%    vdm data types
+% $Id: mod_vdm_ds.vdm,v 1.149 2002/12/09 14:57:49 mikhail Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\section{Module DS - Code Corresponding to Functions on VDM Data Structures}
+
+The operations in the module {\tt DS} generate code of
+operations/functions on VDM data structures. This module makes up part
+of the data refinement. The Meta-IV Class Library/Java-VDM Library is used
+in the data refinement.
+
+
+It is the goal that by rewriting this module another data refinement
+using another library can be applied to the code generator.
+
+\vspace{1cm}
+
+\begin{vdm_al}
+module DS
+
+
+imports
+    from CPP all,
+    from BC all,
+    from AS all,
+    from CGMAIN all,
+    from REP all,
+    from CI all,
+    from TYPE all,
+    from CGAUX all,
+    from TPGEN all
+
+exports all
+
+definitions
+
+functions
+
+\end{vdm_al}
+
+\subsection{Main Functions/Operations}
+The function $GiveLibName$ gives the name of the header file which is
+to be included.
+
+\begin{vdm_al}
+  GiveLibName: () -> CPP`FileName
+  GiveLibName() == "metaiv.h"
+\end{vdm_al}
+
+The operation $GenType$ generates a typespecifier according to the
+abstract VDM type.
+
+\begin{vdm_al}
+operations
+
+  GenType: REP`TypeRep  ==> CPP`TypeSpecifier
+  GenType(type) ==
+    cases type:
+      mk_REP`BooleanTypeRep()          -> return GenBoolType(),
+      mk_REP`NumericTypeRep(<NATONE>),
+      mk_REP`NumericTypeRep(<NAT>),
+      mk_REP`NumericTypeRep(<INTEGER>) -> return GenIntType(),
+      mk_REP`NumericTypeRep(<RAT>),
+      mk_REP`NumericTypeRep(<REAL>)    -> return GenRealType(),
+      mk_REP`TokenTypeRep()            -> return GenTokenType(),
+      mk_REP`CharTypeRep()             -> return GenCharType(),
+      mk_REP`QuoteTypeRep( n )         -> return GenQuoteType(n),
+      mk_REP`UnionTypeRep(-)           -> if CGAUX`IsCompositeType(type)
+                                          then return GenRecordType(nil)
+                                          elseif CGAUX`IsProductType(type)
+                                          then return GenProductType()
+                                          elseif CGAUX`IsNumType(type)
+                                          then return GenNumType()
+#ifdef VDMPP
+                                          elseif CGAUX`IsObjRefType(type)
+                                          then return GenObjRefType(nil)
+#endif VDMPP
+                                          elseif CGAUX`IsSetType(type)
+                                          then return GenSetType()
+                                          elseif CGAUX`IsMapType(type)
+                                          then return GenMapType()
+                                          elseif CGAUX`IsSeqType(type)
+                                          then if CPP`isCPP() 
+                                               then return GenSeq0Type()
+                                               else
+                                                 if CGAUX`IsPossibleStringType(type) 
+                                                 then return GenStringType()
+                                                 else return GenSeq0Type()
+                                          elseif CGAUX`IsQuoteType(type) and CPP`isCPP()
+                                          then return GenQuoteType(nil)
+                                          else return BC`GenGeneric(),
+      mk_REP`ProductTypeRep(-)         -> return GenProductType(),
+      mk_REP`EmptySetTypeRep(-),
+      mk_REP`SetTypeRep(-)             -> return GenSetType(),
+      mk_REP`EmptySeqTypeRep(-),
+      mk_REP`SeqTypeRep(-)             -> if CPP`isCPP()
+                                          then return GenSeq0Type()
+                                          else
+                                            if CGAUX`IsStringType(type)
+                                            then return GenStringType()
+                                            else return GenSeq0Type(),
+      mk_REP`EmptyMapTypeRep(-,-),
+      mk_REP`GeneralMapTypeRep(-,-),
+      mk_REP`InjectiveMapTypeRep(-,-)   -> return GenMapType(),
+      mk_REP`CompositeTypeRep(nm, - )   -> return GenRecordType(nm),
+#ifdef VDMPP
+      mk_REP`ObjRefTypeRep(nm)          -> return GenObjRefType(nm),
+#endif VDMPP
+      mk_REP`AllTypeRep(),
+      mk_REP`PartialFnTypeRep(-, -),
+      mk_REP`TotalFnTypeRep(-, -),
+      mk_REP`NilTypeRep()               -> return BC`GenGeneric(),
+      mk_REP`UnitTypeRep()              -> return BC`GenTypeSpecifier(BC`GenVoid()),
+      mk_REP`TypeNameRep(nm)            -> if CPP`isCPP()
+                                           then return BC`GenGeneric()
+                                           else
+                                             if (len nm.ids > 1)
+                                             then if ((hd nm.ids) = CGAUX`GiveCurCName())
+                                                  then return BC`GenTypeSpecifier(BC`GenIdentifier(CGAUX`GiveLastName(nm)))
+                                                  else return BC`GenTypeSpecifier(BC`Rename(nm))
+                                             else return BC`GenTypeSpecifier(BC`GenIdentifier(CGAUX`GiveLastName(nm))),
+      mk_REP`InvTypeRep(-,shape,-)      -> return GenType(shape),
+      others                            -> return BC`GenGeneric()
+    end;
+
+\end{vdm_al}
+
+The operation $GenDecl$ generates a C++/Java declaration statement of the
+variable $name$ of type $type$. The variable will be initialised by
+the initialiser $initExpr$ if it is different from {\tt nil}.
+
+\begin{vdm_al}
+GenDecl: [ REP`TypeRep ] * CPP`Name * [ CPP`Initializer ] ==> seq1 of CPP`Stmt
+GenDecl(tp, name, initExpr) ==
+ (dcl type : [REP`TypeRep] := tp;
+  if tp <> nil
+  then type := CGAUX`RemoveNil(tp);
+  cases type:
+    mk_REP`BooleanTypeRep()          -> return GenBoolDecl(name,initExpr),
+    mk_REP`NumericTypeRep(<INTEGER>),
+    mk_REP`NumericTypeRep(<NAT>)     -> return GenIntDecl(name,initExpr),
+    mk_REP`NumericTypeRep(<NATONE>)  -> return GenNatOneDecl(name,initExpr),
+    mk_REP`NumericTypeRep(<RAT>),
+    mk_REP`NumericTypeRep(<REAL>)    -> return GenRealDecl(name,initExpr),
+    mk_REP`TokenTypeRep()            -> return GenTokenDecl(name, initExpr),
+    mk_REP`CharTypeRep()             -> return GenCharDecl(name,initExpr),
+
+    mk_REP`QuoteTypeRep(-),
+    mk_REP`UnionTypeRep(-)           -> if (CPP`isJAVA() and (initExpr = nil))
+                                        then return [BC`GenDecl(GenType(type), name, BC`GenAsgnInit(GenNullExpr()))]
+                                        else return [BC`GenDecl(GenType(type), name, initExpr)],
+    mk_REP`GeneralMapTypeRep(-,-),
+    mk_REP`InjectiveMapTypeRep(-,-)  -> return GenMapDecl(name,initExpr),
+    mk_REP`SetTypeRep(-)             -> return GenSetDecl(name, initExpr),
+    mk_REP`SeqTypeRep(-)             -> if CPP`isCPP()
+                                        then return GenSeqDecl(name, initExpr)
+                                        else if CGAUX`IsStringType(type)
+                                             then return GenStringDecl(name,initExpr)
+                                             else return GenSeqDecl(name,initExpr),
+    mk_REP`CompositeTypeRep(nm,-)    -> (
+#ifdef VDMPP
+                                         if len nm.ids = 2
+                                         then CGAUX`IncludeClass(CGAUX`GiveFirstName(nm));
+#endif VDMPP
+                                         return GenRecordDecl(nm, name, initExpr)),
+    mk_REP`ProductTypeRep( type_l )  -> return GenProductDecl(name, len type_l, initExpr),
+#ifdef VDMPP
+    mk_REP`ObjRefTypeRep(nm)         -> (CGAUX`IncludeClass(nm);
+                                         return GenObjRefDecl(nm,name,initExpr)),
+#endif VDMPP
+    mk_REP`EmptySetTypeRep(-)        -> if CPP`isCPP() 
+                                        then return [BC`GenDecl (GenSetType(), name, initExpr)]
+                                        else return GenSetDecl(name, initExpr),
+    mk_REP`EmptySeqTypeRep(-)        -> if CPP`isCPP()
+                                        then return [BC`GenDecl(GenSeq0Type(), name, initExpr)]
+                                        else return GenSeqDecl(name, initExpr),
+    mk_REP`EmptyMapTypeRep(-,-)      -> if CPP`isCPP()
+                                        then return [BC`GenDecl(GenMapType(), name, initExpr)]
+                                        else return GenMapDecl(name, initExpr),
+    mk_REP`OpTypeRep(-,Rng)          -> if CPP`isCPP()
+                                        then return GenGenericDecl(name,initExpr)
+                                        else return GenDecl(CGAUX`CleanFlatType(Rng),name,initExpr),
+
+    mk_REP`NilTypeRep(),
+    mk_REP`AllTypeRep(),
+    mk_REP`PartialFnTypeRep(-, -),
+    mk_REP`TotalFnTypeRep(-, -),
+    nil                              -> return GenGenericDecl(name,initExpr),
+    mk_REP`TypeNameRep(tagname)      -> if CPP`isCPP()
+                                        then return GenGenericDecl(name,initExpr)
+                                        else
+                                         (dcl tpname : CPP`Name;
+                                          if (len tagname.ids > 1)
+                                          then
+                                            if ((hd tagname.ids) = CGAUX`GiveCurCName())
+                                            then tpname := BC`GenIdentifier(CGAUX`GiveLastName(tagname))
+                                            else tpname := BC`Rename(tagname)
+                                          else tpname := BC`GenIdentifier(CGAUX`GiveLastName(tagname));
+		                          def ts = BC`GenTypeSpecifier(tpname);
+                                          in
+                                            if initExpr = nil
+                                            then return [BC`GenDecl(ts, name, BC`GenAsgnInit(GenNullExpr()))]
+                                            else return [BC`GenDecl(ts, name, initExpr)]),
+    mk_REP`InvTypeRep(-,shape,-)     -> return GenDecl(shape, name, initExpr),
+    others                           -> return GenGenericDecl(name,initExpr)
+  end;
+ );
+\end{vdm_al}
+
+The operation {\em GenDeclInit} is a variant of {\em GenDecl}: it generates a
+declaration statement and takes an expression which the variable {\em name} is
+initialised to.
+
+\begin{vdm_al}
+GenDeclInit: [ REP`TypeRep ] * CPP`Name * CPP`Expr ==> seq1 of CPP`Stmt
+GenDeclInit(type, name, initExpr) ==
+  if CPP`isCPP()
+  then
+    cases initExpr:
+      mk_CPP`FctCall(mk_CPP`Identifier(-,-),[],-)
+             -> cases initExpr.fct:
+                  mk_CPP`Identifier("vdm_" ^ -,-) 
+                    -> return GenDecl(type, name, BC`GenObjectInit([initExpr])),
+                  others -> return GenDecl(type, name, BC`GenAsgnInit(initExpr))
+                end,
+      others -> if type = nil
+                then return GenDecl(type, name, BC`GenObjectInit([initExpr]))
+                else
+                  cases mk_(true, initExpr):
+                    mk_((CGAUX`IsIntType(type)), mk_CPP`FctCall((GenImplIntType().tp),[arg],-)),
+                    mk_((CGAUX`IsRealType(type)), mk_CPP`FctCall((GenImplRealType().tp),[arg],-)),
+                    mk_((CGAUX`IsBoolType(type)), mk_CPP`FctCall((GenBoolType().tp),[arg],-))
+                         -> return GenDecl(type, name, BC`GenObjectInit([arg])),
+                    others -> return GenDecl(type, name, BC`GenObjectInit([initExpr]))
+                  end
+    end
+  else return GenDecl(type, name, BC`GenAsgnInit(initExpr));
+
+GenConstDeclInit: [ REP`TypeRep ] * CPP`Name * CPP`Expr ==> seq1 of CPP`Stmt
+GenConstDeclInit(tp, name, expr) ==
+ (dcl stmts : seq of CPP`Stmt := GenDeclInit(tp, name, expr);
+  cases stmts:
+    rest ^ [mk_CPP`DeclarationStmt(mk_CPP`IdentDeclaration([ds],-,-,-),-)]
+     -> stmts := rest ^ [ mu(stmts(len stmts),
+                          decl |-> mu( stmts(len stmts).decl,
+                                       ds |-> [ BC`GenTypeSpecifier(<CONST>), ds ] )) ],
+    others -> skip
+  end;
+  return stmts;
+);
+\end{vdm_al}
+
+The next operation $GenValDecl$ is an auxiliary operation which is
+used by $DeclValId$. The declaration statements computed by this
+operation has no Initializer parts.
+
+\begin{vdm_al}
+GenValDecl: REP`TypeRep * AS`Name ==> seq1 of CPP`Stmt
+GenValDecl( type, name ) ==
+  cases type:
+    mk_REP`CompositeTypeRep(nm, -) -> return [ BC`GenDecl( GenRecordType(nm), BC`Rename( name ), nil ) ],
+    mk_REP`ProductTypeRep(-)       -> return [ BC`GenDecl( GenProductType(), BC`Rename( name ), nil ) ],
+    others                         -> return GenDecl( type, BC`Rename( name ), nil )
+  end;
+\end{vdm_al}
+
+\begin{vdm_al}
+GenIsType: CPP`Expr * REP`TypeRep ==> CPP`Expr
+GenIsType(e, type) ==
+  def expr_c = GenAuxType(e,type)
+  in return GenBoolExpr(expr_c);
+
+GenIsUnionType: CPP`Expr * REP`UnionTypeRep  ==> CPP`Expr
+GenIsUnionType(e, mk_REP`UnionTypeRep (t_s)) ==
+ (dcl expr: CPP`Expr;
+  dcl test: bool := true;
+  dcl s: set of CPP`Expr := {};
+
+  for all t in set t_s do
+    def expr_c = GenAuxType(e,t)
+    in
+     (if expr_c not in set s
+      then
+       (s := s union {expr_c};
+        expr := if test
+                then expr_c
+                else
+                  if is_CPP`LogicalExpr(expr_c)
+                  then BC`GenLogOr( expr, BC`GenBracketedExpr(expr_c) )
+                  else BC`GenLogOr( expr, expr_c );
+       );
+       test := false
+     );
+  return expr
+ );
+\end{vdm_al}
+
+$GenAuxType$ is an auxilliary function for $GenIsType$ and $GenIsUnionType$.
+
+\begin{vdm_al}
+GenAuxType: CPP`Expr * REP`TypeRep ==> CPP`Expr
+GenAuxType( e, t ) ==
+  cases true:
+    (is_REP`BooleanTypeRep(t))   -> return GenIsBool(e),
+    (is_REP`NumericTypeRep(t))   -> cases t:
+                                      mk_REP`NumericTypeRep(<NAT>)     -> return GenIsNat(e),
+                                      mk_REP`NumericTypeRep(<NATONE>)  -> return GenIsNat1(e),
+                                      mk_REP`NumericTypeRep(<INTEGER>) -> return GenIsInt(e),
+                                      mk_REP`NumericTypeRep(<RAT>),
+                                      mk_REP`NumericTypeRep(<REAL>)    -> if CPP`isCPP()
+                                                                          then return BC`GenLogOr(GenIsInt(e), GenIsReal(e))
+                                                                          else return GenIsReal(e)
+                                    end,
+    (is_REP`TokenTypeRep(t))     -> return GenIsToken(e),
+    (is_REP`CharTypeRep(t))      -> return GenIsChar(e),
+
+    (is_REP`QuoteTypeRep(t))     -> return GenIsQuote( e, t),
+
+    (is_REP`TypeNameRep(t))      -> if CPP`isCPP()
+                                    then error
+                                    else return GenAuxType(e,CGAUX`ExpandTypeRep(t,{})),
+
+    (is_REP`CompositeTypeRep(t)) -> if CPP`isCPP()
+                                      then return GenIsThisRecord(t, e)
+                                    else return GenIsRecord(e),
+    (is_REP`ProductTypeRep(t))   -> return GenIsTuple(e),
+    (is_REP`SetTypeRep(t)),
+    (is_REP`EmptySetTypeRep(t))  -> return GenIsSet(e),
+    (is_REP`SeqTypeRep(t)),
+    (is_REP`EmptySeqTypeRep(t))  -> if CPP`isCPP()
+                                    then return GenIsSeq(e)
+                                    else if CGAUX`IsStringType(t)
+                                         then return GenIsString(e)
+                                         else return GenIsSeq(e),
+    (is_REP`GeneralMapTypeRep(t)),
+    (is_REP`InjectiveMapTypeRep(t)),
+    (is_REP`EmptyMapTypeRep(t))  -> return GenIsMap(e),
+    (is_REP`UnionTypeRep(t))     -> return GenIsUnionType(e, t),
+    (is_REP`NilTypeRep(t))       -> return GenIsNil(e),
+    (is_REP`InvTypeRep(t))       -> return GenAuxType(e, t.shape),
+#ifdef VDMPP
+    (is_REP`ObjRefTypeRep(t))    -> if CPP`isCPP()
+                                     then return BC`GenBracketedExpr(
+                                            BC`GenLogAnd(BC`GenFctCallObjMemAcc(e, "IsObjectRef", []),
+                                                       GenIsOfClassExpr(t.nm, GenCastType(t, e))))
+                                     else return BC`GenBracketedExpr(BC`GenTypeComp(BC`GenTypeSpecifier(BC`Rename(t.nm)), e)),
+#endif VDMPP
+    others -> error
+  end;
+\end{vdm_al}
+
+The operation $GenGetValue$ returns a C++ expression corresponding
+to value stored in the C++ variable named $name$.
+
+\begin{vdm_al}
+GenGetValue: CPP`Expr * [REP`TypeRep] ==> CPP`Expr
+GenGetValue( name, type ) ==
+  if type <> nil and is_CPP`ConditionalExpr(CGAUX`StripBracketedExpr(name))
+  then
+    let mk_CPP`ConditionalExpr(cond, expr1, expr2, -) = CGAUX`StripBracketedExpr(name)
+    in return BC`GenBracketedExpr(BC`GenCondExpr(cond, GenGetValue(expr1, type), GenGetValue(expr2, type)))
+  else
+  cases type:
+    mk_REP`BooleanTypeRep() ->
+        if CPP`isCPP()
+        then
+          let expr = CGAUX`StripBracketedExpr(name)
+          in
+         (cases expr:
+            mk_CPP`CastExpr(-,e,-) -> (cases true:
+                                        (is_CPP`UnaryOpExpr(e)),
+                                        (is_CPP`EqualityExpr(e)),
+                                        (is_CPP`RelationalExpr(e)),
+                                        (is_CPP`LogicalExpr(e))  -> return BC`GenBracketedExpr(e),
+                                        (is_CPP`FctCall(e)) ->
+                                                   if is_CPP`ObjectMemberAccess(e.fct) and
+                                                      is_CPP`Identifier(e.fct.name) and
+                                                      e.fct.name.id in set {"Is", "IsBool", "IsChar", "IsInt",
+                                                                            "IsReal", "IsToken", "IsTuple", "IsRecord",
+                                                                            "IsSet", "IsSequence", "IsMap",
+                                                                            "InSet", "SubSet", "PSubSet", "IsEmpty" }
+                                                   then return e
+                                                   elseif is_CPP`Identifier(e.fct) and
+                                                          e.fct.id in set {"CGUTIL::is_real", "CGUTIL::is_int",
+                                                                           "CGUTIL::is_nat", "CGUTIL::is_nat1" }
+                                                   then return e
+                                       end;
+                                       return BC`GenFctCallObjMemAcc(name, "GetValue", [])),
+            mk_CPP`UnaryOpExpr(mk_CPP`UnaryOp((<NEG>),-),e,-) -> return BC`GenNot(BC`GenBracketedExpr(GenGetValue(e,type))),
+            mk_CPP`FctCall(fct, arg, -) -> (if fct = GenBoolType().tp
+                                            then 
+                                              if is_CPP`BoolLit(hd arg)
+                                              then return hd arg
+                                              else return BC`GenBracketedExpr(hd arg)
+                                            else return BC`GenFctCallObjMemAcc(name, "GetValue", []))
+          end;
+          return BC`GenFctCallObjMemAcc(name, "GetValue", []))
+        else -- java
+          let name' = CGAUX`StripBracketedExpr(name) 
+          in
+          cases name':
+            mk_CPP`ClassInstanceCreationExpr((GenBoolType().tp), -, [e], -, -)
+                                     -> if is_CPP`FctCall(e)
+                                        then return e
+                                        else return BC`GenBracketedExpr(e),
+            mk_CPP`FctCall(mk_CPP`ObjectMemberAccess((GenBoolType().tp), mk_CPP`Identifier("valueOf", -), -),
+                           [e], -)   -> if is_CPP`FctCall(e)
+                                        then return e
+                                        else return BC`GenBracketedExpr(e),
+            mk_CPP`ObjectMemberAccess((GenBoolType().tp), mk_CPP`Identifier("TRUE", cid), -)
+                                           -> return mk_CPP`BoolLit(true, cid),
+            mk_CPP`ObjectMemberAccess((GenBoolType().tp), mk_CPP`Identifier("FALSE", cid), -)
+                                           -> return mk_CPP`BoolLit(false, cid),
+            others -> return BC`GenFctCallObjMemAcc(name, "booleanValue", [])
+           end, -- end of REP`BooleanTypeRep
+    mk_REP`NumericTypeRep(qtp) ->
+        if CPP`isCPP()
+        then
+          cases qtp:
+            <INTEGER>, <NAT>, <NATONE> ->
+                cases name: 
+                  mk_CPP`CastExpr(typenm,expr,-) ->
+                      if is_CPP`TypeName(typenm) and hd typenm.tsp = GenIntType() and
+                         is_CPP`FctCall(expr) and is_CPP`ObjectMemberAccess(expr.fct) and
+                         (expr.fct.name = BC`GenIdentifier("Length") or
+                         expr.fct.name = BC`GenIdentifier("Card"))
+                      then return expr
+                      else return BC`GenFctCallObjMemAcc(name, "GetValue", []),
+                  mk_CPP`FctCall((GenImplIntType().tp),arg,-) ->
+                      if is_CPP`IntegerLit(hd arg)
+                      then return hd arg
+                      else return BC`GenBracketedExpr(hd arg),
+                  mk_CPP`UnaryOpExpr(mk_CPP`UnaryOp(<MINUS>,-),
+                                     mk_CPP`FctCall((GenImplIntType().tp),arg,-),-) ->
+                      if is_CPP`IntegerLit(hd arg)
+                      then
+                        let mk_CPP`IntegerLit(val,cid) = hd arg
+                        in return mk_CPP`IntegerLit(-val, cid)
+                      else return BC`GenBracketedExpr(hd arg),
+                  others -> return BC`GenFctCallObjMemAcc(name, "GetValue", [])
+                end,
+            others -> return BC`GenFctCallObjMemAcc(name, "GetValue", [])
+          end
+        else -- java
+         (if CGAUX`IsIntType(type)
+          then
+            let name' = CGAUX`StripBracketedExpr(name) 
+            in
+              cases name':
+                mk_CPP`ClassInstanceCreationExpr((GenImplIntType().tp), -, [e], -, -)
+                                         -> return cases e:
+                                                     mk_CPP`FctCall(-,-,-) -> e,
+                                                     mk_CPP`IntegerLit(-,-) -> e,
+                                                     mk_CPP`QualifiedName(-,-,-) -> e,
+                                                     mk_CPP`UnaryOpExpr(mk_CPP`UnaryOp(<MINUS>,-),
+                                                                        mk_CPP`IntegerLit(val,cid),-) ->
+                                                                 mk_CPP`IntegerLit(-val, cid),
+                                                     others -> BC`GenBracketedExpr(e)
+                                                   end,
+                mk_CPP`FctCall(mk_CPP`ObjectMemberAccess((GenImplIntType().tp), mk_CPP`Identifier("valueOf", -), -),
+                               [e], -)   -> if is_CPP`FctCall(e)
+                                            then return e
+                                            else return BC`GenBracketedExpr(e),
+                others -> if CGMAIN`get_longs_option()
+                          then return BC`GenFctCallObjMemAcc(name, "longValue", [])
+                          else return BC`GenFctCallObjMemAcc(name, "intValue", [])
+              end
+          elseif CGAUX`IsRealType(type)
+          then
+            let name' = CGAUX`StripBracketedExpr(name) 
+            in
+              cases name':
+                mk_CPP`ClassInstanceCreationExpr((GenImplRealType().tp), -, [e], -, -)
+                                         -> if is_CPP`FctCall(e)
+                                            then return e
+                                            else return BC`GenBracketedExpr(e),
+                mk_CPP`ClassInstanceCreationExpr((GenImplIntType().tp), -, [e], -, -)
+                                         -> if is_CPP`FctCall(e)
+                                            then return BC`GenCastExpr(GenSmallRealType(), e)
+                                            else return BC`GenCastExpr(GenSmallRealType(), BC`GenBracketedExpr(e)),
+                mk_CPP`FctCall(mk_CPP`ObjectMemberAccess((GenImplRealType().tp), mk_CPP`Identifier("valueOf", -), -),
+                               [e], -)   -> if is_CPP`FctCall(e)
+                                            then return e
+                                            else return BC`GenBracketedExpr(e),
+                others -> return BC`GenFctCallObjMemAcc(name, "doubleValue", [])
+              end
+          else return BC`GenFctCallObjMemAcc(name, "GetValue", [])),
+    mk_REP`TokenTypeRep()            -> return BC`GenFctCallObjMemAcc(name, "GetValue", []),
+    mk_REP`CharTypeRep()             -> if CPP`isJAVA()
+                                        then return BC`GenFctCallObjMemAcc(name, "charValue", [])
+                                        else return BC`GenFctCallObjMemAcc(name, "GetValue", []),
+    mk_REP`QuoteTypeRep(-)           -> return BC`GenFctCallObjMemAcc(name, "GetValue", []),
+    mk_REP`CompositeTypeRep(-,-),
+    mk_REP`ProductTypeRep(-),
+    mk_REP`SetTypeRep(-),
+    mk_REP`SeqTypeRep(-),
+    mk_REP`GeneralMapTypeRep(-, -),
+    mk_REP`InjectiveMapTypeRep(-, -) -> return name,
+    mk_REP`TypeNameRep (-)           -> GenGetValue (name, type),
+    mk_REP`InvTypeRep (-,tp,-)       -> GenGetValue (name, tp),
+    mk_REP`UnionTypeRep (-)          -> if CPP`isCPP()
+                                        then BC`GenFctCallObjMemAcc(name, "GetValue", [])
+                                        else
+                                          if CGAUX`IsNumType(type)
+                                          then BC`GenFctCallObjMemAcc(name, "doubleValue", [])
+                                          else BC`GenFctCallObjMemAcc(name, "GetValue", []),
+    others                           -> return BC`GenFctCallObjMemAcc(name, "GetValue", [])
+  end;
+
+\end{vdm_al}
+
+The operation $GenValue$ returns a C++/Java expression which
+corresponds to the VDM value in $lit$.
+
+\begin{vdm_al}
+GenValue: AS`Literal * CGMAIN`VT ==> CPP`Expr
+GenValue(lit,  mk_CGMAIN`VT(-, type)) ==
+  cases true:
+   (is_AS`TextLit(lit))  -> if CPP`isCPP()
+                            then return GenTextLit(lit)
+                            else def expr = GenTextLit(lit)
+                                 in if CGAUX`IsStringType(type)
+                                    then return expr
+                                    else return BC`GenFctCall(BC`GenIdentifier("UTIL.ConvertToList"), [expr]),
+   (is_AS`BoolLit(lit))  -> return GenBoolLit(lit.val),
+   (is_AS`RealLit(lit))  ->(dcl tp : [REP`TypeRep];
+                            if CPP`isCPP()
+                            then tp := CI`GetTypeInfo(lit.cid)
+                            else tp := type;
+                            if CGAUX`IsRealType(tp)
+                            --then return GenRealLit(lit.val)
+                            then 
+                              if CPP`isJAVA() and is_int(lit.val)
+                              then return GenNumLit(lit.val)
+                              else return GenRealLit(lit.val)
+                            else if is_int(lit.val)
+                                 then return GenNumLit(lit.val)
+                                 else return GenRealLit(lit.val)),
+   (is_AS`NumLit(lit))   ->(dcl tp : [REP`TypeRep];
+                            if CPP`isCPP()
+                            then tp := CI`GetTypeInfo(lit.cid)
+                            else tp := type;
+                            if CGAUX`IsRealType(tp)
+                            then return GenRealLit(lit.val)
+                            else return GenNumLit(lit.val)),
+   (is_AS`CharLit(lit))  -> return GenCharLit(lit.val),
+   (is_AS`QuoteLit(lit)) -> return GenQuoteLit(lit.val),
+   (is_AS`NilLit(lit))   -> return GenNilLit()
+  end;
+\end{vdm_al}
+
+The next operations takes care of casting expressions to their appropriate types.
+
+\begin{vdm_al}
+GenCastType: REP`TypeRep * CPP`Expr ==> CPP`Expr
+GenCastType(type, e) ==
+  if CPP`isCPP()
+  then
+    let e' = CGAUX`StripCastExpr(e)
+    in return BC`GenCastExpr2([ BC`GenTypeSpecifier(<CONST>), GenType(type),
+                                BC`GenTypeSpecifier(<REFERENCE>) ], e')
+  else return BC`GenCastExpr(GenType(type), e);
+\end{vdm_al}
+
+\begin{vdm_al}
+GenGenericExpr: () ==> CPP`Expr
+GenGenericExpr() ==
+  if CPP`isCPP()
+  then return BC`GenFctCall(BC`GenGeneric().tp, [])
+  else return BC`GenClassInstanceCreationExpr(BC`GenGeneric().tp,[]);
+
+GenBoolExpr: [CPP`Expr] ==> CPP`Expr
+GenBoolExpr(expr) ==
+  let args = if expr = nil then [] else [expr]
+  in
+    if CPP`isCPP()
+    then return BC`GenFctCall(GenBoolType().tp, args)
+    else return BC`GenClassInstanceCreationExpr(GenBoolType().tp,args);
+
+GenIntExpr: [CPP`Expr] ==> CPP`Expr
+GenIntExpr(expr) ==
+  let args = if expr = nil then [] else [expr]
+  in
+    if CPP`isCPP()
+    then return BC`GenFctCall(GenImplIntType().tp, args)
+    else return BC`GenClassInstanceCreationExpr(GenImplIntType().tp,args);
+
+GenRealExpr: [CPP`Expr] ==> CPP`Expr
+GenRealExpr(expr) ==
+  let args = if expr = nil then [] else [expr]
+  in
+    if CPP`isCPP()
+    then return BC`GenFctCall(GenImplRealType().tp, args)
+    else return BC`GenClassInstanceCreationExpr(GenImplRealType().tp,args);
+
+GenCharExpr: [CPP`Expr] ==> CPP`Expr
+GenCharExpr(expr) ==
+  let args = if expr = nil then [] else [expr]
+  in
+    if CPP`isCPP()
+    then return BC`GenFctCall(GenCharType().tp, args)
+    else return BC`GenClassInstanceCreationExpr(GenCharType().tp,args);
+
+GenTokenExpr: [CPP`Expr] ==> CPP`Expr
+GenTokenExpr(expr) ==
+  let args = if expr = nil then [] else [expr]
+  in
+    if CPP`isCPP()
+    then return BC`GenFctCall(GenTokenType().tp, args)
+    else return BC`GenClassInstanceCreationExpr(GenTokenType().tp,args);
+
+GenProductExpr: [CPP`Expr] ==> CPP`Expr
+GenProductExpr(expr) ==
+  let args = if expr = nil then [] else [expr]
+  in
+    if CPP`isCPP()
+    then return BC`GenFctCall(GenProductType().tp, args)
+    else return BC`GenClassInstanceCreationExpr(GenProductType().tp,args);
+
+GenRecordExpr: [AS`Name] * [seq of CPP`Expr] ==> CPP`Expr
+GenRecordExpr(tag,exprs) ==
+  let args = if exprs = nil then [] else exprs
+  in
+    if CPP`isCPP()
+    then
+      if tag = nil
+      then GenEmptyRecordExpr(nil)
+      else
+        def rc = BC`GenFctCall(GenRecordType(tag).tp, [])
+        in return BC`GenFctCallObjMemAcc(rc, "Init", args)
+    else return BC`GenClassInstanceCreationExpr(GenRecordType(tag).tp,args);
+
+GenQuoteExpr: [AS`Name] ==> CPP`Expr
+GenQuoteExpr(nm) ==
+  if CPP`isCPP()
+  then return BC`GenFctCall(GenQuoteType(nm).tp, [])
+  else return BC`GenClassInstanceCreationExpr(GenQuoteType(nm).tp,[]);
+\end{vdm_al}
+
+\begin{vdm_al}
+RememberPid_m: map AS`Name to set of REP`TypeRep ==> ()
+RememberPid_m(pidm) ==
+  pid_m := pidm;
+
+DeletePid_m: () ==> ()
+DeletePid_m() ==
+  pid_m := {|->};
+
+DeclaredAs: CPP`Expr ==> [REP`TypeRep]
+DeclaredAs(e) ==
+ (dcl result : [REP`TypeRep] := nil;
+  cases true:
+    (is_CPP`Identifier(e)) -> for all tmp in set dom pid_m do
+                               (if (BC`Rename(tmp).id = e.id)
+                                then
+                                  let tp_s = pid_m(tmp)
+                                  in
+                                    cases tp_s:
+                                      {-} -> result := nil,
+                                      others -> result := mk_REP`UnionTypeRep(tp_s)
+                                    end
+                                else skip;),
+    others -> skip
+  end;
+  return result);
+
+GetIntVal : CPP`Expr ==> CPP`Expr
+GetIntVal (v) ==
+  cases v:
+    mk_CPP`ClassInstanceCreationExpr((GenImplIntType().tp),-,-,-,-) -> return v,
+    others -> if CGMAIN`get_longs_option()
+              then return BC`GenFctCall(BC`GenIdentifier("UTIL.NumberToLong"), [v])
+              else return BC`GenFctCall(BC`GenIdentifier("UTIL.NumberToInt"), [v])
+  end;
+
+GetRealVal : CPP`Expr ==> CPP`Expr
+GetRealVal (v) ==
+  cases v:
+    mk_CPP`ClassInstanceCreationExpr((GenImplRealType().tp),-,-,-,-) -> return v,
+    others -> return BC`GenFctCall(BC`GenIdentifier("UTIL.NumberToReal"), [v])
+  end;
+
+GetStringVal : CPP`Expr ==> CPP`Expr
+GetStringVal (v) ==
+  cases v:
+    mk_CPP`ClassInstanceCreationExpr((GenStringType().tp),-,-,-,-) -> return v,
+    others -> return BC`GenFctCall(BC`GenIdentifier("UTIL.ConvertToString"), [v])
+  end;
+
+GetListVal : CPP`Expr ==> CPP`Expr
+GetListVal (v) ==
+  cases v:
+    mk_CPP`ClassInstanceCreationExpr((GenImplSeq0Type().tp),-,-,-,-) -> return v,
+    others -> return BC`GenFctCall(BC`GenIdentifier("UTIL.ConvertToList"), [v])
+  end;
+
+GenExplicitCast: REP`TypeRep * CPP`Expr * [REP`TypeRep] ==> CPP`Expr
+GenExplicitCast(restp, e, tp) ==
+  let isnil = if is_CPP`Identifier(e)
+              then (BC`GenIdentifier("null") = e)
+              else false
+  in
+    if isnil
+    then return e
+    else
+--      def type = if (tp = nil)
+--                 then tp
+--                 else
+--                   def ptp = DeclaredAs(e)
+--                   in
+--                     if (ptp = nil)
+--                     then
+--                       cases tp:                        --- skal udvides!!!!!!!
+--                         mk_REP`OpTypeRep(-,Rng) -> CGAUX`CleanFlatType(Rng),
+--#ifdef VDMPP
+--                         mk_REP`OverTypeRep(tp_s) -> let rtp_s = { cases t:
+--                                                                     mk_REP`OpTypeRep(-,Rng)          -> Rng,
+--                                                                     mk_REP`PartialFnTypeRep(-,fnrng) -> fnrng,
+--                                                                     mk_REP`TotalFnTypeRep(-,fnrng)   -> fnrng,
+--                                                                     others                           -> undefined
+--                                                                   end | t in set tp_s }
+--                                                     in
+--                                                       cases rtp_s:
+--                                                         {}     -> undefined,
+--                                                         {e}    -> CGAUX`CleanFlatType(e),
+--                                                         others -> CGAUX`CleanFlatType(mk_REP`UnionTypeRep(rtp_s))
+--                                                       end,
+--#endif VDMPP
+--                         others -> CGAUX`CleanFlatType(tp)
+--                       end
+--                     else ptp;
+       (dcl restype : REP`TypeRep,
+            type : [REP`TypeRep] := nil;
+        cases restp:                        --- skal udvides!!!!!!!
+          mk_REP`OpTypeRep(-,Rng) -> restype := CGAUX`RemoveNil(CGAUX`CleanFlatType(Rng)),
+          mk_REP`TypeNameRep(-) -> if is_REP`UnionTypeRep(CGAUX`CleanFlatType(restp)) and
+                                       CGAUX`IsCompositeType(CGAUX`CleanFlatType(restp))
+                                   then restype := CGAUX`RemoveNil(restp)
+                                   else restype := CGAUX`RemoveNil(CGAUX`CleanFlatType(restp)),
+          others -> restype := CGAUX`RemoveNil(CGAUX`CleanFlatType(restp))
+        end;
+--
+        if tp <> nil
+        then
+          def ptp = DeclaredAs(e)
+          in
+            if (ptp = nil)
+            then
+              cases tp:                        --- skal udvides!!!!!!!
+                mk_REP`OpTypeRep(-,Rng) -> type := CGAUX`CleanFlatType(Rng),
+#ifdef VDMPP
+                mk_REP`OverTypeRep(tp_s) -> let rtp_s = { cases t:
+                                                            mk_REP`OpTypeRep(-,Rng)          -> Rng,
+                                                            mk_REP`PartialFnTypeRep(-,fnrng) -> fnrng,
+                                                            mk_REP`TotalFnTypeRep(-,fnrng)   -> fnrng,
+                                                            others                           -> undefined
+                                                          end | t in set tp_s }
+                                            in
+                                              cases rtp_s:
+                                                {}     -> error,
+                                                {e}    -> type := CGAUX`CleanFlatType(e),
+                                                others -> type := CGAUX`CleanFlatType(mk_REP`UnionTypeRep(rtp_s))
+                                              end,
+#endif VDMPP
+                others -> type := CGAUX`CleanFlatType(tp)
+              end
+            else type := ptp;
+--
+        if (type = nil)
+        then
+         (if CGAUX`IsRealType(restype)
+          then return GetRealVal(e)
+          elseif CGAUX`IsIntType(restype)
+          then (CGAUX`SetException(true);
+                return GetIntVal(e);)
+          elseif CGAUX`IsStringType(restype)
+          then return GetStringVal(e)
+          elseif CGAUX`IsSeqType(restype)
+          then if CGAUX`IsPossibleStringType(restype)
+               then return GetStringVal(e)
+               else return GetListVal(e)
+          elseif CGAUX`IsProductType(restype)
+          then return  BC`GenCastExpr(GenType(restype),e)
+          elseif not is_REP`UnionTypeRep(restype)
+          then return BC`GenCastExpr(GenType(restype),e)
+          elseif CGAUX`IsCompositeType(restype)
+          then return GenCastRecord(e, nil)
+          else return e)
+        else
+         (if (CGAUX`IsRealType(restype) and not CGAUX`IsRealType(type))
+          then
+             if CGAUX`IsIntExpr(e)
+             then return GenRealExpr(e.arg)
+             else return GetRealVal(e)
+           elseif (CGAUX`IsIntType(restype) and not CGAUX`IsIntType(type))
+           then (CGAUX`SetException(true);
+                 return GetIntVal(e);)
+           elseif (CGAUX`IsStringType(restype) and not (CGAUX`IsStringType(type) or is_REP`EmptySetTypeRep(type)))
+           then return GetStringVal(e)
+           elseif ((CGAUX`IsSeqType(restype) and not CGAUX`IsStringType(restype)) and
+                  ((not CGAUX`IsSeqType(type)) or CGAUX`IsStringType(type)))
+           then if CGAUX`IsStringType(type)
+                then return GetListVal(e)
+                else return BC`GenCastExpr(GenType(restype), e)
+           elseif (not CGAUX`AreOfSameType(restype,type))
+           then if (is_REP`UnionTypeRep(restype) or is_REP`UnitTypeRep(restype))
+                then if (CGAUX`IsStringType(type) and not CGAUX`IsPossibleStringType(restype))
+                     then return GetListVal(e)
+                     else if (CGAUX`IsPossibleStringType(restype) and (CGAUX`IsSeqType(type) and
+                             not CGAUX`IsPossibleStringType(type)))
+                          then return GetStringVal(e)
+                          else return e
+#ifdef VDMPP
+                elseif CGAUX`IsSubType(type, TPGEN`RemoveInvType(restype))
+                then return e
+#endif VDMPP
+                elseif GenType(type) = BC`GenGeneric()
+                then return BC`GenCastExpr(GenType(restype),e)
+                else return BC`GenCastExpr(GenType(restype),BC`GenBracketedExpr(BC`GenCastExpr(BC`GenGeneric(),e)))
+           else return e));
+\end{vdm_al}
+
+The next operation {\em GenEmptyValue} generates an empty value of a
+type, this is used when operation or function needs to return a value
+of specific type. The operation is used when generating run time
+errors for for example the {\em error} stmt. In this case we need to
+generate a return value, because of the VC++ 5.0 compiler.
+
+The value {\em nil} is returned in case of input of the type {\em
+REP`UnitTypeRep}. This means that the operation/method does not return anything.
+
+\begin{vdm_al}
+GenEmptyValue: REP`TypeRep ==> [CPP`Expr]
+GenEmptyValue(type) ==
+  if CPP`isCPP()
+  then
+    cases type:
+      mk_REP`BooleanTypeRep()          -> return GenBoolExpr(nil),
+      mk_REP`NumericTypeRep(<NATONE>),
+      mk_REP`NumericTypeRep(<NAT>),
+      mk_REP`NumericTypeRep(<INTEGER>) -> return GenIntExpr(nil),
+      mk_REP`NumericTypeRep(<RAT>),
+      mk_REP`NumericTypeRep(<REAL>)    -> return GenRealExpr(nil),
+      mk_REP`TokenTypeRep()            -> return GenTokenExpr(nil),
+      mk_REP`CharTypeRep()             -> return GenCharExpr(nil),
+      mk_REP`QuoteTypeRep(-)           -> return GenQuoteExpr(nil),
+#ifdef VDMSL
+      mk_REP`UnionTypeRep(-)           -> if CGAUX`IsCompositeType (type)
+                                          then return GenEmptyRecordExpr(nil)
+                                          elseif CGAUX`IsProductType(type)
+                                          then return GenProductExpr(nil)
+                                          else return GenGenericExpr(),
+#endif VDMSL
+#ifdef VDMPP
+      mk_REP`UnionTypeRep(tps)         -> if CGAUX`IsCompositeType (type)
+                                          then return BC`GenFctCall(GenRecordType(nil).tp, [])
+                                          elseif CGAUX`IsProductType(type)
+                                          then return BC`GenFctCall(GenProductType().tp, [])
+                                          elseif CGAUX`IsObjRefType(type)
+                                          then let mk_REP`ObjRefTypeRep(nm) in set tps
+                                               in return CallDefaultConstructor(nm)
+                                          else return GenGenericExpr(),
+#endif VDMPP
+      mk_REP`ProductTypeRep(-)         -> return GenProductExpr(nil),
+      mk_REP`EmptySetTypeRep(-),
+      mk_REP`SetTypeRep(-)             -> return GenEmptySetExpr(),
+      mk_REP`EmptySeqTypeRep(-),
+      mk_REP`SeqTypeRep(-)             -> return GenEmptySeqExpr(),
+      mk_REP`EmptyMapTypeRep(-,-),
+      mk_REP`GeneralMapTypeRep(-,-),
+      mk_REP`InjectiveMapTypeRep(-,-)  -> return GenEmptyMapExpr(),
+      mk_REP`CompositeTypeRep(-,-)     -> return GenEmptyRecordExpr(nil),
+
+#ifdef VDMPP
+      mk_REP`ObjRefTypeRep(nm)         -> return CallDefaultConstructor(nm),
+#endif VDMPP
+      mk_REP`AllTypeRep(),
+      mk_REP`PartialFnTypeRep(-,-),
+      mk_REP`TotalFnTypeRep(-,-),
+      mk_REP`NilTypeRep()              -> return GenGenericExpr(),
+      mk_REP`UnitTypeRep()             -> return nil,
+      mk_REP`InvTypeRep(-,shape,-)     -> return GenEmptyValue(shape),
+      others                           -> return GenGenericExpr()
+    end
+  else -- Java
+    cases type:
+      mk_REP`BooleanTypeRep()          -> return GenBoolLit(false),
+      mk_REP`NumericTypeRep(<NATONE>)  -> return GenNumLit(1),
+      mk_REP`NumericTypeRep(<NAT>),
+      mk_REP`NumericTypeRep(<INTEGER>) -> return GenNumLit(0),
+      mk_REP`NumericTypeRep(<RAT>),
+      mk_REP`NumericTypeRep(<REAL>)    -> return GenRealLit(0),
+      mk_REP`TokenTypeRep()            -> return GenTokenExpr(nil),
+      mk_REP`CharTypeRep()             -> return GenCharLit('?'),
+
+      mk_REP`QuoteTypeRep(n)           -> return GenQuoteExpr(n),
+#ifdef VDMSL
+      mk_REP`UnionTypeRep(-)           -> if CGAUX`IsCompositeType (type)
+                                          then return GenNilLit()
+                                          elseif CGAUX`IsProductType(type)
+                                          then return GenProductExpr(nil)
+                                          else return GenGenericExpr(),
+#endif VDMSL
+#ifdef VDMPP
+      mk_REP`UnionTypeRep(tps)         -> if CGAUX`IsCompositeType (type)
+                                          then return GenNilLit()
+                                          elseif CGAUX`IsProductType(type)
+                                          then return GenProductExpr(nil)
+                                          elseif CGAUX`IsObjRefType(type)
+                                          then let mk_REP`ObjRefTypeRep(nm) in set tps
+                                               in return CallDefaultConstructor(nm)
+                                          else return GenGenericExpr(),
+#endif VDMPP
+      mk_REP`ProductTypeRep(-)         -> return GenProductExpr(nil),
+      mk_REP`EmptySetTypeRep(-),
+      mk_REP`SetTypeRep(-)             -> return GenEmptySetExpr(),
+      mk_REP`EmptySeqTypeRep(-),
+      mk_REP`SeqTypeRep(-)             -> if CGAUX`IsStringType(type)
+                                          then return GenEmptyStringExpr()
+                                          else return GenEmptySeqExpr(),
+      mk_REP`EmptyMapTypeRep(-,-),
+      mk_REP`GeneralMapTypeRep(-,-),
+      mk_REP`InjectiveMapTypeRep(-,-)  -> return GenEmptyMapExpr(),
+      mk_REP`CompositeTypeRep(nm,-)    -> return GenEmptyRecordExpr(nm),
+#ifdef VDMPP
+      mk_REP`ObjRefTypeRep(nm)         -> if CGMAIN`isInterface(nm)
+                                          then return GenNilLit()
+                                          else return CallDefaultConstructor(nm),
+#endif VDMPP
+      mk_REP`AllTypeRep(),
+      mk_REP`PartialFnTypeRep(-,-),
+      mk_REP`TotalFnTypeRep(-,-),
+      mk_REP`NilTypeRep()              -> return GenNilLit(),
+      mk_REP`UnitTypeRep()             -> return nil,
+      mk_REP`TypeNameRep(-)            -> return GenNilLit(),
+      mk_REP`InvTypeRep(-,shape,-)     -> return GenEmptyValue(shape),
+      others                           -> return GenGenericExpr()
+    end;
+
+\end{vdm_al}
+
+\subsection{Type Definitions}
+
+When using the \MCL{} every tag in a record must correspond to an
+integer. In addition to this, the number of fields in the record is
+used to construct new records, and the fields in the record are indexed
+by using integers. Consider the following composite type definition:
+
+\begin{verbatim}
+R:: v1 : nat
+    v2 : token
+\end{verbatim}
+
+#ifdef VDMSL
+It is assumed that the record is defined in module A.
+#endif
+
+The code corresponding to type {\tt R} is the following C++
+definitions:
+
+#ifdef VDMSL
+\begin{itemize}
+\item A member variable defining the integer tag. This variable is
+  named {\tt vdm\_A\_R}.
+\item A member variable defining the number of fields in the record.
+  This variable is named {\tt length\_A\_R}.
+\item Member variables defining the position (index) of the fields in
+  the record. These variables are named {\tt pos\_A\_R\_v1} and {\tt
+    pos\_A\_R\_v2}.
+\end{itemize}
+
+#endif VDMSL
+
+#ifdef VDMPP
+\begin{itemize}
+\item A member variable defining the integer tag. This variable is
+  named {\tt vdm\_R}.
+\item A member variable defining the number of fields in the record.
+  This variable is named {\tt length\_R}.
+\item Member variables defining the position (index) of the fields in
+  the record. These variables are named {\tt pos\_R\_v1} and {\tt
+    pos\_R\_v2}.
+\end{itemize}
+
+#endif VDMPP
+
+
+#ifdef VDMSL
+The following variables corresponds to the type definition
+{\tt R} in module {\tt A}, and will be placed in {\tt A.h}:
+
+\begin{verbatim}
+enum {
+  vdm_A_R    = TAG_A_R, // A unique tag number
+  length_A_R = 2,
+  pos_A_R_v1 = 1,
+  pos_A_R_v2 = 2
+};
+\end{verbatim}
+#endif VDMSL
+
+#ifdef VDMPP
+The following variables corresponds to the type definition
+{\tt R} and will be members of class vdm\_A:
+
+\begin{verbatim}
+enum {
+  vdm_R  = TAG_A_R, // A unique tag number
+  length_R = 2,
+  pos_R_v1 = 1,
+  pos_R_v2 = 2
+};
+\end{verbatim}
+#endif VDMPP
+
+The operation $GenTypeDef$ generates the definitions corresponding to
+a sequence of type definitions. If the TYPEGEN is set the operations
+actually declares C++ types for the VDM types.
+
+\begin{vdm_al}
+operations
+
+#ifdef VDMSL
+GenTypeDef: AS`Name * seq of AS`TypeDef ==> CPP`CPPAS
+#endif VDMSL
+
+#ifdef VDMPP
+GenTypeDef: AS`Name * seq of AS`TypeDef ==> seq of CPP`MemberDeclaration
+#endif VDMPP
+
+GenTypeDef(-, td_l) ==
+  if CPP`isCPP()
+  then
+   (dcl enum_l : seq of CPP`Enumerator := [];
+#ifdef VDMSL
+    dcl s      : CPP`CPPAS              := [];
+#endif VDMSL
+#ifdef VDMPP
+    dcl s      : seq of CPP`MemberDeclaration := [];
+#endif VDMPP
+    for mk_AS`TypeDef(nm, type, -,-,-) in td_l do
+     (if is_AS`CompositeType(type)
+      then
+        let mk_AS`CompositeType(name, field_l, -) = type
+        in
+          def lid = BC`GenLengthName(name);
+              id = BC`Rename(name);
+              tag = TPGEN`GenCompositeTypeTagId(name);
+              num = BC`GenIdentifier(CGAUX`StringNumber(len field_l))
+          in
+           (dcl pos : nat1 := 1;
+            enum_l := enum_l ^ [ BC`GenEnum(id, tag) ];
+            enum_l := enum_l ^ [ BC`GenEnum(lid, num) ];
+            for mk_AS`Field(sel, -, -, -) in field_l do
+             (if sel <> nil
+              then
+                let pid = BC`GenPosName(name, sel),
+                    id = BC`GenIdentifier(CGAUX`StringNumber(pos))
+                in enum_l := enum_l ^ [ BC`GenEnum(pid, id) ];
+              pos := pos + 1
+             )
+           );
+      s := s ^ TPGEN`GenCppTypeDef(nm,type,nil)
+     );  -- end for
+
+    if enum_l <> []
+    then
+      let enumspec_l = [BC`GenTypeSpecifier(BC`GenEnumSpec(nil, enum_l))]
+      in
+#ifdef VDMSL
+      return [BC`GenIdentDeclaration([],enumspec_l, nil)] ^ s
+#endif VDMSL
+#ifdef VDMPP
+      return [BC`GenMemberSpec(enumspec_l, nil)] ^ s
+#endif VDMPP
+    else return s;
+   )
+  else  -- CPP`isJAVA()
+   (dcl cidtocpp : map int to seq of CPP`MemberDeclaration := {|->};
+    dcl s      : seq of CPP`MemberDeclaration := [];
+    for mk_AS`TypeDef(nm, type, -, -, -) in td_l do
+     (if is_AS`UnionType(type)
+      then
+        def rtp = CGAUX`FromAS2RepType(type)
+        in
+          if CGAUX`IsCompositeType(rtp)
+          then
+            let mk_AS`UnionType(typeseq,-) = type
+            in
+              for t in typeseq do
+                let mk_AS`TypeName(enm,-) = t
+                in
+                  for mk_AS`TypeDef(nm_i, type_i, -, -,-) in td_l do
+                    if enm = nm_i
+                    then
+                      if is_AS`UnionType(type_i)
+                      then TPGEN`AddUnionType(enm,nm)
+                      else TPGEN`AddRecordType(enm,nm)
+     );
+    for mk_AS`TypeDef(nm, type, -, acc, cid) in td_l do
+      cidtocpp := cidtocpp munion {cid|->TPGEN`GenCppTypeDef(nm,type,acc)};
+    while card dom cidtocpp > 0 do
+     (let cid in set dom cidtocpp be st
+                forall fcid in set dom cidtocpp &
+                def mk_(-,-,mk_CI`TokenPos(-,ast_start,-,-,-),-,-) = CI`GetFilePos(cid);
+                    mk_(-,-,mk_CI`TokenPos(-,ast_startf,-,-,-),-,-) = CI`GetFilePos(fcid)
+                in ast_start <= ast_startf
+      in (s := s ^ cidtocpp(cid);
+          cidtocpp := {cid} <-: cidtocpp)
+     );
+    --s := s ^ TPGEN`GenCppTypeDef(nm,type);
+    return s
+   );
+\end{vdm_al}
+
+\subsection{Operations on and Constructions of Types}
+
+\subsubsection{The Boolean Type}
+
+The operations below all performs operations on booleans or
+constructions of boolean.
+\begin{vdm_al}
+  GenBoolDecl: CPP`Name * [CPP`Initializer] ==> seq1 of CPP`Stmt
+  GenBoolDecl(name, initExpr) ==
+    if CPP`isJAVA() and (initExpr = nil)
+    then return [BC`GenDecl(GenBoolType(), name,BC`GenAsgnInit(GenNullExpr()))]
+    else return [BC`GenDecl(GenBoolType(), name, initExpr)];
+
+functions
+  GenSmallBoolType: () -> CPP`DeclSpecifier
+  GenSmallBoolType() ==
+    BC`GenTypeSpecifier( BC`GenBool() );
+
+operations
+  GenBoolType: () ==> CPP`DeclSpecifier
+  GenBoolType() ==
+    if CPP`isCPP()
+    then return BC`GenTypeSpecifier( BC`GenIdentifier("Bool") )
+    else return BC`GenTypeSpecifier( BC`GenIdentifier("Boolean") );
+
+  GenBoolLit: bool ==> CPP`Expr
+  GenBoolLit(val) ==
+    if CPP`isCPP()
+    then return GenBoolExpr(BC`GenBoolLit(val))
+    else
+      if CGMAIN`get_smalltypes_option()
+      then return BC`GenBoolLit(val)
+      else return GenBoolExpr(BC`GenBoolLit(val));
+
+  GenIsBool: CPP`Expr ==> CPP`Expr
+  GenIsBool( e ) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc( e, "IsBool", [ ] )
+    else return BC`GenBracketedExpr(BC`GenTypeComp( GenBoolType(), e));
+
+\end{vdm_al}
+
+
+\subsubsection{Natural Numbers}
+
+The operations below all performs operations on natural numbers or
+constructions of natural numbers.
+
+\begin{vdm_al}
+
+  GenNatOneDecl: CPP`Name * [CPP`Initializer] ==> seq1 of CPP`Stmt
+  GenNatOneDecl(name, initExpr) ==
+    if CPP`isJAVA() and (initExpr = nil)
+    then return [BC`GenDecl(GenIntType(), name, BC`GenAsgnInit(GenNullExpr()))]
+    else return [BC`GenDecl(GenIntType(), name, initExpr)];
+
+  GenNatType: () ==> CPP`DeclSpecifier
+  GenNatType() == GenIntType();
+
+  GenImplNatType: () ==> CPP`DeclSpecifier
+  GenImplNatType() == GenImplIntType();
+
+  GenIsNat: CPP`Expr ==> CPP`Expr
+  GenIsNat(e) ==
+    if CPP`isCPP()
+    then return BC`GenFctCall(BC`GenIdentifier("CGUTIL::is_nat"), [e])
+    else return BC`GenFctCall(BC`GenIdentifier("UTIL.IsNat"), [e]);
+
+  GenIsNat1: CPP`Expr ==> CPP`Expr
+  GenIsNat1(e) ==
+    if CPP`isCPP()
+    then return BC`GenFctCall(BC`GenIdentifier("CGUTIL::is_nat1"), [e])
+    else return BC`GenFctCall(BC`GenIdentifier("UTIL.IsNatOne"), [e]);
+
+  GenNumType: () ==> CPP`DeclSpecifier
+  GenNumType() ==
+    if CPP`isCPP()
+    then return BC`GenTypeSpecifier( BC`GenIdentifier("Real") )
+    else return BC`GenTypeSpecifier( BC`GenIdentifier("Number") );
+
+\end{vdm_al}
+\subsubsection{The Int Type}
+The operations below all performs operations on integers or
+constructions of integers.
+
+\begin{vdm_al}
+
+  GenIntDecl: CPP`Name * [CPP`Initializer] ==> seq1 of CPP`Stmt
+  GenIntDecl(name, initExpr) ==
+    if CPP`isJAVA() and (initExpr = nil)
+    then return [BC`GenDecl(GenIntType(), name, BC`GenAsgnInit(GenNullExpr()))]
+    else return [BC`GenDecl(GenIntType(), name, initExpr)];
+
+functions
+  GenSmallIntType: () -> CPP`DeclSpecifier
+  GenSmallIntType() ==
+    BC`GenTypeSpecifier( BC`GenInt() )
+
+operations
+  GenSmallNumType: () ==> CPP`DeclSpecifier
+  GenSmallNumType() ==
+    if CPP`isCPP()
+    then return BC`GenTypeSpecifier( BC`GenIdentifier("int") )
+    else
+      if CGMAIN`get_longs_option()
+      then return BC`GenTypeSpecifier( BC`GenIdentifier("long"))
+      else return BC`GenTypeSpecifier( BC`GenIdentifier("int"));
+
+  GenIntType: () ==> CPP`DeclSpecifier
+  GenIntType() ==
+    if CPP`isCPP()
+    then return BC`GenTypeSpecifier( BC`GenIdentifier("Int") )
+    else return BC`GenTypeSpecifier( BC`GenIdentifier("Number"));
+
+  GenImplIntType: () ==> CPP`DeclSpecifier
+  GenImplIntType() ==
+    if CPP`isCPP()
+    then return BC`GenTypeSpecifier( BC`GenIdentifier("Int") )
+    else
+      if CGMAIN`get_longs_option()
+      then return BC`GenTypeSpecifier( BC`GenIdentifier("Long"))
+      else return BC`GenTypeSpecifier( BC`GenIdentifier("Integer"));
+
+  GenIsInt: CPP`Expr ==> CPP`Expr
+  GenIsInt( e ) ==
+    if CPP`isCPP()
+    then return BC`GenFctCall(BC`GenIdentifier("CGUTIL::is_int"), [e])
+    else return BC`GenFctCall(BC`GenIdentifier("UTIL.IsInteger"), [e]);
+
+  GenNumLit: int ==> CPP`Expr
+  GenNumLit(val) ==
+    if CPP`isCPP()
+    then return GenIntExpr(BC`GenIntegerLit(val))
+    else
+      if CGMAIN`get_smalltypes_option()
+      then return BC`GenIntegerLit(val)
+      else return GenIntExpr(BC`GenIntegerLit(val));
+
+\end{vdm_al}
+
+\subsubsection{Rationale Numbers and Reals}
+
+The operations below all performs operations on rationale numbers/reals or
+constructions of rationale numbers/reals.
+
+\begin{vdm_al}
+
+  GenRealDecl: CPP`Name * [CPP`Initializer] ==> seq1 of CPP`Stmt
+  GenRealDecl(name, initExpr) ==
+    if CPP`isJAVA() and (initExpr = nil)
+    then return [BC`GenDecl(GenRealType(), name, BC`GenAsgnInit(GenNullExpr()))]
+    else return [BC`GenDecl(GenRealType(), name, initExpr)];
+
+  GenRatType: () ==> CPP`DeclSpecifier
+  GenRatType() == return GenRealType();
+
+  GenSmallRealType: () ==> CPP`DeclSpecifier
+  GenSmallRealType() ==
+    if CPP`isCPP()
+    then return BC`GenTypeSpecifier(BC`GenIdentifier("double"))
+    else return BC`GenTypeSpecifier(BC`GenIdentifier("double"));
+
+  GenRealType: () ==> CPP`DeclSpecifier
+  GenRealType() ==
+    if CPP`isCPP()
+    then return BC`GenTypeSpecifier(BC`GenIdentifier("Real"))
+    else return BC`GenTypeSpecifier(BC`GenIdentifier("Number"));
+
+  GenImplRealType: () ==> CPP`DeclSpecifier
+  GenImplRealType() ==
+    if CPP`isCPP()
+    then return BC`GenTypeSpecifier(BC`GenIdentifier("Real"))
+    else return BC`GenTypeSpecifier(BC`GenIdentifier("Double"));
+
+  GenRealLit: real ==> CPP`Expr
+  GenRealLit( val ) ==
+    if CPP`isCPP()
+    then return GenRealExpr(BC`GenFloatingLit(val))
+    else
+      if CGMAIN`get_smalltypes_option()
+      then return BC`GenFloatingLit(val)
+      else return GenRealExpr(BC`GenFloatingLit(val));
+
+  GenIsReal: CPP`Expr ==> CPP`Expr
+  GenIsReal( e ) ==
+    if CPP`isCPP()
+    then return BC`GenFctCall(BC`GenIdentifier("CGUTIL::is_real"), [e])
+    else return BC`GenFctCall(BC`GenIdentifier("UTIL.IsReal"), [e]);
+
+\end{vdm_al}
+
+\subsubsection{The Char Type}
+The operations below all performs operations on char type or constructions of char.
+
+\begin{vdm_al}
+  GenCharDecl: CPP`Name * [CPP`Initializer] ==> seq1 of CPP`Stmt
+  GenCharDecl(name, initExpr) ==
+    if CPP`isJAVA() and (initExpr = nil)
+    then return [BC`GenDecl(GenCharType(), name, BC`GenAsgnInit(GenNullExpr()))]
+    else return [BC`GenDecl(GenCharType(), name, initExpr)];
+
+  GenCharType: () ==> CPP`DeclSpecifier
+  GenCharType() ==
+    if CPP`isCPP()
+    then return BC`GenTypeSpecifier(BC`GenIdentifier("Char"))
+    else return BC`GenTypeSpecifier(BC`GenIdentifier("Character"));
+
+  GenCharLit: char ==> CPP`Expr
+  GenCharLit(val) ==
+    if CPP`isCPP()
+    then return BC`GenFctCall(GenCharType().tp, [BC`GenCharLit(val)])
+    else
+      if CGMAIN`get_smalltypes_option()
+      then return BC`GenCharLit(val)
+      else return GenCharExpr(BC`GenCharLit(val));
+
+  GenIsChar: CPP`Expr ==> CPP`Expr
+  GenIsChar( e ) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc(e, "IsChar", [ ])
+    else return BC`GenBracketedExpr(BC`GenTypeComp( GenCharType(), e));
+
+\end{vdm_al}
+
+\subsubsection{The Token Type}
+The operations below all performs operations on tokens or constructions of tokens.
+
+\begin{vdm_al}
+
+  GenTokenType: () ==> CPP`DeclSpecifier
+  GenTokenType() ==
+   (if CPP`isJAVA()
+    then CGAUX`InsertImport("jp.vdmtools.VDM.Token");
+    return BC`GenTypeSpecifier(BC`GenIdentifier("Token")););
+
+  GenIsToken: CPP`Expr ==> CPP`Expr
+  GenIsToken(e) ==
+    if CPP`isJAVA()
+    then return BC`GenBracketedExpr(BC`GenTypeComp(GenTokenType(), e))
+    else return BC`GenFctCallObjMemAcc(e, "IsToken", []);
+
+  GenTokenDecl: CPP`Name * [CPP`Initializer] ==> seq1 of CPP`Stmt
+  GenTokenDecl(nm, iexpr) ==
+    if CPP`isJAVA() and (iexpr = nil)
+    then return [BC`GenDecl(GenTokenType(), nm, BC`GenAsgnInit(GenNullExpr()))]
+    else return [BC`GenDecl(GenTokenType(), nm, iexpr)];
+
+  GenSetTokValExpr: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenSetTokValExpr(tok, elem) ==
+    return BC`GenFctCallObjMemAcc(tok, "SetValue", [elem]);
+\end{vdm_al}
+
+\subsubsection{The Quote Type}
+The operations below all performs operations on quotes or
+constructions of quotes.
+
+\begin{vdm_al}
+
+  GenQuoteType: [AS`Name] ==> CPP`DeclSpecifier
+  GenQuoteType(nm) ==
+    if CPP`isCPP()
+    then return BC`GenTypeSpecifier(BC`GenIdentifier("Quote"))
+    else return BC`GenTypeSpecifier(BC`GenIdentifier("quotes." ^ CGAUX`GiveLastName(nm)));
+
+  GenQuoteLit: seq of char ==> CPP`Expr
+  GenQuoteLit( ch_l ) ==
+    if CPP`isCPP()
+    then return BC`GenFctCall(GenQuoteType(nil).tp, [BC`GenStringLit(ch_l)])
+    else
+     (def - = CGAUX`InsertQuote(ch_l)
+      in return BC`GenClassInstanceCreationExpr(BC`GenIdentifier("quotes." ^ ch_l),[]));
+
+  GenIsQuote: CPP`Expr * REP`QuoteTypeRep  ==> CPP`Expr
+  GenIsQuote( e, mk_REP`QuoteTypeRep(nm)) ==
+    if CPP`isCPP()
+    then
+      let expr = CGAUX`StripBracketedAndCastExpr(e)
+      in return BC`GenBracketedExpr(BC`GenEq(expr, GenQuoteLit(hd nm.ids)))
+    else
+      def tp = BC`GenTypeSpecifier(BC`GenIdentifier("quotes."^CGAUX`GiveLastName(nm)))
+      in return BC`GenBracketedExpr(BC`GenTypeComp(tp, e));
+
+\end{vdm_al}
+
+\subsubsection{The Text Type}
+
+\begin{vdm_al}
+  GenTextLit: AS`TextLit ==> CPP`Expr
+  GenTextLit(mk_AS`TextLit(ch_l, -)) ==
+    return GenStringExpr(BC`GenStringLit(ch_l));
+\end{vdm_al}
+
+\subsubsection{The Composite Type}
+
+The operations below all performs operations on composite type or
+constructions of composite type.
+
+-- check ogs\"{u} om GiveCurCName er subclasse af hd nm.ids
+
+\begin{vdm_al}
+  GenRecordType: [AS`Name] ==> CPP`DeclSpecifier
+  GenRecordType(nm) ==
+    if CPP`isCPP()
+    then
+      if nm = nil
+      then return BC`GenTypeSpecifier(BC`GenIdentifier("Record"))
+      else return BC`GenTypeSpecifier(TPGEN`Name2CppTpId(nm))
+    else
+     (CGAUX`InsertImport("jp.vdmtools.VDM.Record");
+      if nm = nil
+      then return BC`GenTypeSpecifier(BC`GenIdentifier("Record"))
+      else
+        if (len nm.ids > 1)
+        then
+          if ((hd nm.ids) = CGAUX`GiveCurCName())
+          then return BC`GenTypeSpecifier(BC`GenIdentifier(CGAUX`GiveLastName(nm)))
+          else
+           (
+#ifdef VDMSL
+            def qnm = TPGEN`GenQName(nm)
+            in
+#endif VDMSL
+#ifdef VDMPP
+            def qnm = TPGEN`GenQualifiedTypeName(TPGEN`GenQName(nm))
+            in
+              if (qnm = nil)
+              then return BC`GenTypeSpecifier(BC`Rename(nm))
+              else
+#endif VDMPP
+                if (CGAUX`GiveFirstName(qnm) = CGAUX`GiveCurCASName())
+                then return BC`GenTypeSpecifier(BC`GenIdentifier(CGAUX`GiveLastName(nm)))
+                else return BC`GenTypeSpecifier(BC`Rename(qnm))
+           )
+        else ---- prefix record type with class name (important when superclass is code generated as interface or imported class)
+
+#ifdef VDMSL
+          def qnm = TPGEN`GenQName(nm);
+              firstname = CGAUX`GiveFirstName(qnm)
+          in
+            if (firstname <> CGAUX`GiveCurCASName())
+            then return BC`GenTypeSpecifier(BC`Rename(qnm))
+            else return BC`GenTypeSpecifier(BC`GenIdentifier(CGAUX`GiveLastName(nm)))
+#endif VDMSL
+#ifdef VDMPP
+          def qnm = TPGEN`GenQualifiedTypeName(TPGEN`GenQName(nm));
+              firstname =  if qnm <> nil then CGAUX`GiveFirstName(qnm) else nil
+          in -- error - type not found, f.eks. record types with compose of syntax (works on implementation level)
+            if (firstname <> nil)
+            then
+              if (firstname <> CGAUX`GiveCurCASName())
+              then return BC`GenTypeSpecifier(BC`Rename(qnm))
+              else return BC`GenTypeSpecifier(BC`GenIdentifier(CGAUX`GiveLastName(nm)))
+            else return BC`GenTypeSpecifier(BC`GenIdentifier(CGAUX`GiveLastName(nm)))
+#endif VDMPP
+     );
+
+  GenRecordDecl: [AS`Name] * CPP`Name * [CPP`Initializer] ==> seq1 of CPP`Stmt
+  GenRecordDecl(tagnm, rnm, initExpr) ==
+    if CPP`isCPP()
+    then return [BC`GenDecl(GenRecordType(tagnm), rnm, initExpr)]
+    else
+      if (initExpr = nil)
+      then return [BC`GenDecl(GenRecordType(tagnm), rnm, BC`GenAsgnInit(GenNullExpr()))]
+      else return [BC`GenDecl(GenRecordType(tagnm), rnm, initExpr)];
+
+  GenIsRecord: CPP`Expr ==> CPP`Expr
+  GenIsRecord(e) ==
+    if CPP`isJAVA()
+    then
+      let tp = BC`GenTypeSpecifier(BC`GenIdentifier("Record"))
+      in
+       (CGAUX`InsertImport("jp.vdmtools.VDM.Record");
+        return BC`GenBracketedExpr(BC`GenTypeComp(tp, e)))
+    else
+      return BC`GenFctCallObjMemAcc( e, "IsRecord", [] );
+
+  GenCastRecord: CPP`Expr * [AS`Name] ==> CPP`CastExpr
+  GenCastRecord(e,nm) ==
+    return BC`GenCastExpr(GenRecordType(nm), e);
+
+  GenCastRecordTypeForModify: CPP`Expr * [AS`Name] ==> CPP`CastExpr
+  GenCastRecordTypeForModify(e,nm) ==
+    if CPP`isCPP()
+    then return BC`GenCastExpr2([GenRecordType(nm), BC`GenTypeSpecifier(<REFERENCE>)],
+                                 BC`GenCastExpr2([BC`GenTypeSpecifier(BC`GenIdentifier("Common")),
+                                                    BC`GenTypeSpecifier(<REFERENCE>)], e))
+    else return BC`GenCastExpr(GenRecordType(nm), e);
+
+  GenEqTag: AS`Name * CPP`Expr ==> CPP`Expr
+  GenEqTag(tagnm, varExpr_v) ==
+    if CPP`isCPP()
+    then
+      def tag1 = BC`Rename(tagnm);
+          tag2 = GenGetTag(varExpr_v)
+      in return BC`GenEq(tag1, tag2)
+    else
+      def tp = BC`GenTypeSpecifier(BC`Rename(tagnm))
+      in return BC`GenBracketedExpr(BC`GenTypeComp(tp, varExpr_v));
+
+  GenRecGetField: CPP`Expr * CPP`Expr * REP`TypeRep ==> CPP`Expr
+  GenRecGetField(e, i, tp) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc(e,GenGetMethod(tp),[i])
+    else return BC`GenObjectMemberAccess(e,i);
+
+  GenRecGetFieldNm: CPP`Expr * REP`CompositeTypeRep * AS`Name ==> CPP`Expr
+  GenRecGetFieldNm(e, mk_REP`CompositeTypeRep(tagname, fields), fsname) ==
+    let pid = BC`GenPosName(tagname, fsname)
+    in
+      if CPP`isCPP()
+      then
+        if exists field in set elems fields & field.sel = fsname
+        then
+          let field = iota f in set elems fields & f.sel = fsname
+          in return BC`GenFctCallObjMemAcc(e, GenGetMethod(field.tp), [pid])
+        else return BC`GenFctCallObjMemAcc(e, "GetField", [pid])
+      else return BC`GenObjectMemberAccess(e,pid);
+
+  GenRecGetFieldNo: REP`CompositeTypeRep * AS`Name ==> CPP`Expr
+  GenRecGetFieldNo(mk_REP`CompositeTypeRep(tagnm, -), fsnm) ==
+    return BC`GenPosName(tagnm, fsnm);
+
+  GenGetMethod: REP`TypeRep ==> seq of char
+  GenGetMethod(tp') ==
+    def tp = CGAUX`CleanFlatType(tp')
+    in
+    cases true:
+      (CGAUX`IsBoolType(tp))      -> return "GetBool",
+      (CGAUX`IsNumType(tp))       -> if CGAUX`IsIntType(tp)
+                                     then return "GetInt"
+                                     else return "GetReal",
+      (CGAUX`IsCharType(tp))      -> return "GetChar",
+      (CGAUX`IsSetType(tp))       -> return "GetSet",
+      (CGAUX`IsSeqType(tp))       -> return "GetSequence",
+      (CGAUX`IsMapType(tp))       -> return "GetMap",
+      (CGAUX`IsCompositeType(tp)) -> return "GetRecord",
+      (CGAUX`IsProductType(tp))   -> return "GetTuple",
+      others                      -> return "GetField"
+   end;
+
+  GenIsThisRecord: REP`CompositeTypeRep * CPP`Expr ==> CPP`Expr
+  GenIsThisRecord(mk_REP`CompositeTypeRep(tagnm, -), name) ==
+    if CPP`isCPP()
+    then
+      def tag = BC`Rename(tagnm);
+          expr = CGAUX`StripBracketedAndCastExpr(name)
+      in return BC`GenFctCallObjMemAcc(expr, "Is", [tag])
+    else
+      def tp = BC`GenTypeSpecifier(BC`Rename(tagnm) )
+      in return BC`GenBracketedExpr(BC`GenTypeComp( tp, name));
+
+  GenRecSetField: CPP`Expr * CPP`Expr * CPP`Expr ==> CPP`Stmt
+  GenRecSetField( rec, field, elem ) ==
+    return BC`GenExpressionStmt(GenRecSetFieldExpr(rec, field, elem));
+
+  GenRecSetFieldonThis: CPP`Expr * CPP`Expr ==> CPP`Stmt
+  GenRecSetFieldonThis( field, elem ) ==
+    return BC`GenExpressionStmt(BC`GenFctCall(BC`GenIdentifier("SetField"), [field, elem]));
+
+  GenRecSetFieldExpr: CPP`Expr * CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenRecSetFieldExpr( rec, field, elem ) ==
+    return BC`GenFctCallObjMemAcc(rec, "SetField", [field, elem]);
+
+  GenGetTag: CPP`Expr ==> CPP`Expr
+  GenGetTag(e) ==
+    return BC`GenFctCallObjMemAcc(e, "GetTag", []);
+
+  GenRecLength: CPP`Expr ==> CPP`Expr
+  GenRecLength(e) ==
+    return BC`GenFctCallObjMemAcc(e, "Length", []);
+
+  GenEmptyRecordExpr: [AS`Name] ==> CPP`Expr
+  GenEmptyRecordExpr(nm) ==
+    def ts = GenRecordType(nm);
+    in
+      if CPP`isCPP()
+      then return BC`GenFctCall(ts.tp, [])
+      else return BC`GenClassInstanceCreationExpr(ts.tp, []);
+
+\end{vdm_al}
+
+\subsubsection{The Union Type}
+
+The operation below all performs operations on union type or constructions of union type.
+
+\begin{vdm_al}
+
+  GenGenericDecl: CPP`Name * [CPP`Initializer] ==> seq1 of CPP`Stmt
+  GenGenericDecl(name, initExpr) ==
+    let tp = BC`GenGeneric()
+    in
+      if CPP`isJAVA() and initExpr = nil
+      then return [BC`GenDecl(tp, name,BC`GenAsgnInit(GenNullExpr()))]
+      else return [BC`GenDecl(tp, name, initExpr)];
+
+\end{vdm_al}
+
+\subsubsection{The Product Type}
+
+The operations below all performs operations on product type or
+constructions of product type.
+
+\begin{vdm_al}
+
+  GenProductType: () ==> CPP`DeclSpecifier
+  GenProductType() ==
+   (if CPP`isJAVA()
+    then CGAUX`InsertImport("jp.vdmtools.VDM.Tuple");
+    return BC`GenTypeSpecifier( BC`GenIdentifier("Tuple") ););
+
+  GenCastProduct: CPP`Expr ==> CPP`Expr
+  GenCastProduct(e) ==
+    return BC`GenCastExpr( GenProductType(), e );
+
+  GenCastProductTypeForModify: CPP`Expr ==> CPP`Expr
+  GenCastProductTypeForModify(e) ==
+    if CPP`isCPP()
+    then return BC`GenCastExpr2([GenProductType(), BC`GenTypeSpecifier(<REFERENCE>)],
+                                   BC`GenCastExpr2([BC`GenTypeSpecifier(BC`GenIdentifier("Common")),
+                                                    BC`GenTypeSpecifier(<REFERENCE>)], e))
+    else return BC`GenCastExpr( GenProductType(), e );
+
+  GenProductDecl: CPP`Name * nat * [CPP`Initializer] ==> seq1 of CPP`Stmt
+  GenProductDecl(name, length, initExpr ) ==
+    if initExpr = nil
+    then
+      let arg = BC`GenIntegerLit(length)
+      in
+        if CPP`isCPP()
+        then return [BC`GenDecl(GenProductType(), name, BC`GenObjectInit([arg] ) )]
+        else
+          def ainit = BC`GenAsgnInit(GenProductExpr(arg))
+          in return [BC`GenDecl(GenProductType(), name, ainit)]
+    else return [BC`GenDecl(GenProductType(), name, initExpr)];
+
+  GenTupleLength: CPP`Expr ==> CPP`Expr
+  GenTupleLength( e ) ==
+    return BC`GenFctCallObjMemAcc(e, "Length", []);
+
+  GenTupSetField: CPP`Expr * CPP`Expr * CPP`Expr ==> CPP`Stmt
+  GenTupSetField( tup, field, elem ) ==
+    return BC`GenExpressionStmt(GenTupSetFieldExpr(tup, field, elem));
+
+  GenTupSetFieldExpr: CPP`Expr * CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenTupSetFieldExpr( tup, field, elem ) ==
+   (CGAUX`SetException(true);
+    return BC`GenFctCallObjMemAcc(tup, "SetField", [field, elem]););
+
+  GenTupGetField: CPP`Expr * CPP`Expr * REP`TypeRep *REP`TypeRep ==> CPP`Expr
+  GenTupGetField(e, i, tp, ptp) ==
+    if CPP`isCPP()
+    then
+      if CGAUX`IsNumType(tp) and tp <> ptp or CGAUX`IsCharType(tp)
+      then return GenCastType(tp, BC`GenFctCallObjMemAcc(e,"GetField",[i]))
+      else return BC`GenFctCallObjMemAcc(e,GenGetMethod(tp),[i])
+    else
+     (CGAUX`SetException(true);
+      return BC`GenFctCallObjMemAcc(e,"GetField",[i]););
+
+  GenIsTuple: CPP`Expr ==> CPP`Expr
+  GenIsTuple(e) ==
+    if CPP`isJAVA()
+    then return BC`GenBracketedExpr(BC`GenTypeComp(GenProductType(), e))
+    else return BC`GenFctCallObjMemAcc( e, "IsTuple", [] );
+
+\end{vdm_al}
+
+\subsubsection{The Optional Type}
+The operations below all performs operations on optional type or
+constructions of optional type.
+
+\begin{vdm_al}
+
+  GenNilLit: () ==> CPP`Expr
+  GenNilLit() ==
+    if CPP`isCPP()
+    then return BC`GenFctCall( BC`GenIdentifier("Nil"), [] )
+    else return GenNullExpr();
+
+  GenIsNil: CPP`Expr ==> CPP`Expr
+  GenIsNil(e) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc( e, "IsNil", [] )
+    else return BC`GenBracketedExpr(BC`GenEq(e, GenNullExpr()));
+
+\end{vdm_al}
+
+\subsubsection{The Set Type}\label{DSSet}
+The operations below all performs operations on set type or
+constructions of set type.
+
+If types from the Java Development Kit are used instead of the VDM
+Library, and a Tree-based implementation of Sets is used,
+then an inner \textit{Comparator} class must be defined.
+
+\begin{vdm_al}
+GenLocalComparator: AS`Name ==> seq of CPP`MemberDeclaration
+GenLocalComparator(-) ==
+  let compClass = "UTIL.VDMCompare",
+      initComparator = BC`GenAsgnInit(BC`GenClassInstanceCreationExpr(BC`GenIdentifier(compClass), [])),
+      pr_l = [ BC`GenIdentDeclaration([], [ BC`GenStorageClassSpecifier(<STATIC>),
+                                            BC`GenTypeSpecifier( BC`GenIdentifier(compClass))  ],
+                                      [ BC`GenInitDecl(  BC`GenIdentifier("vdmComp" ),
+                                      initComparator) ] )  ]
+  in return pr_l;
+-- (dcl pr_l : seq of CPP`MemberDeclaration := [],
+--      compClass: seq of char := "UTIL.VDMCompare";
+--
+--  let initComparator = BC`GenAsgnInit(BC`GenClassInstanceCreationExpr(BC`GenIdentifier(compClass), []))
+--  in
+--    pr_l:= pr_l ^ [ BC`GenIdentDeclaration([],
+--                     [ BC`GenStorageClassSpecifier(<STATIC>),
+--                       BC`GenTypeSpecifier( BC`GenIdentifier(compClass))  ],
+--                     [ BC`GenInitDecl(  BC`GenIdentifier("vdmComp" ),
+--                                        initComparator) ] )  ];
+--  return pr_l
+-- );
+\end{vdm_al}
+
+\begin{vdm_al}
+
+  GenSetType: () ==> CPP`DeclSpecifier
+  GenSetType() ==
+    if CPP`isJAVA()
+    then
+     (CGAUX`InsertImport("java.util.Set");
+      return BC`GenTypeSpecifier(BC`GenIdentifier("Set")))
+    else return BC`GenTypeSpecifier(BC`GenIdentifier("Set"));
+
+  GenImplSetType: () ==> CPP`DeclSpecifier
+  GenImplSetType() ==
+    if CPP`isJAVA()
+    then
+     (CGAUX`InsertImport("java.util.HashSet");
+      return BC`GenTypeSpecifier(BC`GenIdentifier("HashSet")))
+    else return BC`GenTypeSpecifier(BC`GenIdentifier("Set"));
+
+  GenDeclEmptySet: CPP`Name ==> seq1 of CPP`Stmt
+  GenDeclEmptySet(name) ==
+    if CPP`isJAVA()
+    then return [BC`GenDecl(GenSetType(), name, BC`GenAsgnInit(GenEmptySetExpr()))]
+    else return [BC`GenDecl(GenSetType(), name, nil)];
+
+  GenSetDecl: CPP`Name * [CPP`Initializer] ==> seq1 of CPP`Stmt
+  GenSetDecl(name, initExpr) ==
+    if CPP`isJAVA() and (initExpr = nil)
+    then return [BC`GenDecl(GenSetType(), name, BC`GenAsgnInit(GenEmptySetExpr()))]
+    --then return [BC`GenDecl(GenSetType(), name, BC`GenAsgnInit(GenNullExpr()))]
+    else return [BC`GenDecl(GenSetType(), name, initExpr)];
+
+  GenDeclSet: CPP`Name * [CPP`Expr] ==> seq1 of CPP`Stmt
+  GenDeclSet(name, ie) ==
+    if ie = nil
+    then GenDeclEmptySet(name)
+    else
+     (dcl initexpr : CPP`Initializer;
+      if CPP`isJAVA()
+      then initexpr := BC`GenAsgnInit(GenSetExpr(ie))
+      else initexpr := BC`GenObjectInit([CGAUX`StripBracketedAndCastExpr(ie)]);
+      return GenSetDecl(name, initexpr);
+     );
+
+  GenDeclCollection : CPP`Name * [CPP`Expr] ==> seq1 of CPP`Stmt
+  GenDeclCollection(name, ie) ==
+    let ts = BC`GenTypeSpecifier(BC`GenIdentifier("Collection"))
+    in
+     (CGAUX`InsertImport("java.util.Collection");
+      return [BC`GenDecl(ts, name, BC`GenAsgnInit(ie))]);
+
+  GenSetUnion: CPP`Expr * CPP`Expr ==> CPP`Stmt
+  GenSetUnion(e1, e2) ==
+    return BC`GenExpressionStmt(GenSetUnionExpr(e1, e2));
+
+  GenSetUnionExpr: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenSetUnionExpr(e1, e2) ==
+    if CPP`isCPP()
+    then return BC`GenFctCall( BC`GenObjectMemberAccess( e1, BC`GenIdentifier("ImpUnion")),[ e2 ] )
+    else return BC`GenFctCall( BC`GenObjectMemberAccess( e1, BC`GenIdentifier("addAll")),[ e2 ] );
+
+  GenCastSetType: CPP`Expr ==> CPP`Expr
+  GenCastSetType(e) ==
+    return BC`GenCastExpr( GenSetType(), e );
+
+  GenCastSetTypeForModify: CPP`Expr ==> CPP`Expr
+  GenCastSetTypeForModify(e) ==
+    if CPP`isCPP()
+    then return BC`GenCastExpr2([GenSetType(), BC`GenTypeSpecifier(<REFERENCE>)],
+                                   BC`GenCastExpr2([BC`GenTypeSpecifier(BC`GenIdentifier("Common")),
+                                                    BC`GenTypeSpecifier(<REFERENCE>)], e))
+    else return BC`GenCastExpr( GenSetType(), e );
+
+  GenIsSet: CPP`Expr ==> CPP`Expr
+  GenIsSet(e) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc( e, "IsSet", [] )
+    else return BC`GenBracketedExpr(BC`GenTypeComp( GenSetType(), e ));
+
+  GenSetIsEmpty: CPP`Expr ==> CPP`Expr
+  GenSetIsEmpty( e ) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc( e, "IsEmpty", [] )
+    else return BC`GenFctCallObjMemAcc( e, "isEmpty", [] );
+
+  GenCard_int: CPP`Expr ==> CPP`Expr
+  GenCard_int(e) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc( e, "Card", [] )
+    else return BC`GenFctCallObjMemAcc( e, "size", [] );
+
+  GenCard: CPP`Expr ==> CPP`Expr
+  GenCard(e) ==
+    return GenIntExpr(GenCard_int(e));
+
+  GenDUnion: CPP`Expr ==> CPP`Expr
+  GenDUnion(e) ==
+    return BC`GenFctCallObjMemAcc(e, "DUnion", []);
+
+  GenDInter: CPP`Expr ==> CPP`Expr
+  GenDInter(e) ==
+    return BC`GenFctCallObjMemAcc(e, "DInter", []);
+
+  GenPower: CPP`Expr ==> CPP`Expr
+  GenPower(e) ==
+    return BC`GenFctCallObjMemAcc(e, "Power", []);
+
+  GenUnion: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenUnion(e1, e2) ==
+    return BC`GenFctCall( BC`GenObjectMemberAccess( e1, BC`GenIdentifier("Union")),[ e2 ] );
+
+  GenInter: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenInter(e1, e2) ==
+    return BC`GenFctCall( BC`GenObjectMemberAccess( e1, BC`GenIdentifier("Inter")),[ e2 ] );
+
+  GenDiff: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenDiff(e1, e2) ==
+    return BC`GenFctCall( BC`GenObjectMemberAccess( e1, BC`GenIdentifier("Diff")),[ e2 ] );
+
+  GenPSubSet_Bool: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenPSubSet_Bool( e1, e2 ) ==
+    let fcall = BC`GenFctCallObjMemAcc( e1, "PSubSet", [e2] )
+    in return GenBoolExpr(fcall);
+
+  GenInterSect: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenInterSect(e1, e2) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc( e1, "ImpIntersect", [e2] )
+    else return BC`GenFctCallObjMemAcc( e1, "retainAll", [e2] );
+
+  GenInterSectStmt: CPP`Expr * CPP`Expr ==> CPP`Stmt
+  GenInterSectStmt( e1, e2) ==
+    return BC`GenExpressionStmt(GenInterSect(e1, e2));
+
+  GenSetMinus: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenSetMinus( e1, e2 ) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc( e1, "ImpDiff", [e2] )
+    else return BC`GenFctCallObjMemAcc( e1, "removeAll", [e2] );
+
+  GenSetMinusStmt: CPP`Expr * CPP`Expr ==> CPP`Stmt
+  GenSetMinusStmt( e1, e2 ) ==
+    return BC`GenExpressionStmt( GenSetMinus(e1,e2));
+
+  GenSubSet: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenSubSet( e1, e2 ) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc( e1, "SubSet", [e2] )
+    else return BC`GenFctCallObjMemAcc( e2, "containsAll", [e1] );
+
+  GenSubSet_Bool: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenSubSet_Bool( e1, e2 ) ==
+    def fcall = GenSubSet(e1,e2)
+    in
+      return GenBoolExpr(fcall);
+
+  GenEmptySetExpr: () ==> CPP`Expr
+  GenEmptySetExpr() ==
+    return GenSetExpr(nil);
+
+  GenSetExpr: [CPP`Expr] ==> CPP`Expr
+  GenSetExpr(ie) ==
+    let initexpr = if ie = nil then [] else [ie]
+    in
+      if CPP`isCPP()
+      then return BC`GenFctCall(GenImplSetType().tp, initexpr)
+      else return BC`GenClassInstanceCreationExpr(GenImplSetType().tp, initexpr);
+
+    -- No casting of the result needed!
+  GenSetGetElemExpr: CPP`Expr ==> CPP`Expr
+  GenSetGetElemExpr(e) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc( e, "GetElem", [] )
+    else
+     (CGAUX`SetException(true);
+      return BC`GenFctCallObjMemAcc( e, "iterator().next", [] ));
+\end{vdm_al}
+
+This function should be able to check if the expression $e2$ is in
+the set $e1$. There are no restriction on the type of the
+expression $e1$, thus, the type $e1$ can even be a union type.
+
+Using the \MCL{} this restriction does not give any problem as the union
+type is implemented as $Generic$.
+
+\begin{vdm_al}
+  GenInSet: CGMAIN`VT * CGMAIN`VT ==> CPP`Expr
+  GenInSet( v1, v2 ) ==
+    def fctcall = GenInSet_bool(v1,v2)
+    in return GenBoolExpr(fctcall);
+
+  GenNotInSet: CGMAIN`VT * CGMAIN`VT ==> CPP`Expr
+  GenNotInSet( v1, v2 ) ==
+    def fctcall = BC`GenNot(GenInSet_bool(v1,v2))
+    in return GenBoolExpr(fctcall);
+
+  GenInSet_bool: CGMAIN`VT * CGMAIN`VT ==> CPP`Expr
+  GenInSet_bool( mk_CGMAIN`VT(e1,tp1), mk_CGMAIN`VT(e2, tp2) ) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc(e2, "InSet", [e1])
+    else
+     (dcl newe1 : CPP`Expr := e1;
+      if CGAUX`IsSetType(tp2)
+      then
+        let elemtype = tp2.elemtp
+        in
+          if CGAUX`IsIntType(tp1) and CGAUX`IsPosNumType(elemtype) and not CGAUX`IsPosIntType(elemtype)
+          then newe1 := GenExplicitCast(elemtype, e1, nil);
+      return BC`GenFctCall(BC`GenIdentifier("UTIL.Contains"), [e2, newe1]));
+\end{vdm_al}
+
+The code generated by GenSetUnion corresponds to:
+\begin{verbatim}
+e1.ImpUnion(e2);
+\end{verbatim}
+
+\begin{vdm_al}
+
+  GenSetInsert: CPP`Expr * CPP`Expr ==> CPP`Stmt
+  GenSetInsert(e1, e2) ==
+    return BC`GenExpressionStmt(GenSetInsertExpr(e1,e2));
+
+  GenSetInsertExpr: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenSetInsertExpr(e1, e2) ==
+    if CPP`isCPP()
+    --then BC`GenFctCallObjMemAcc(e1, "Insert", [e2])
+    then
+      let e' = cases e2:
+                 mk_CPP`CastExpr(-,mk_CPP`ArrayApply(-,-,-),-) -> e2.expr,
+                 others -> e2
+               end
+      in BC`GenFctCallObjMemAcc(e1, "Insert", [e'])
+    else BC`GenFctCallObjMemAcc(e1, "add", [e2]);
+
+\end{vdm_al}
+
+The operation $GenIterSet$ generates code corresponding to the
+iteration through a set. The operation has four input parameters:
+
+\begin{description}
+
+\item{mk-CGMAIN`VT(mk-CGMAIN`VT(s, type)):} Is a tuple consisting of the
+  variable name ($s$) of the set to iterate through and the type of
+  the set expressed in the abstract syntax of VDM.
+
+\item{cond} Some boolean C++ expression. If the boolean expression is
+  false the iteration of the set is interrupted. The boolean
+  expression must not contain the variable name $e$.
+
+\item{mk-CGMAIN`VT(e, type):} Is a tuple consisting of a C++ name
+    $e$ which is assigned to new value in the set in each iteration,
+  the second field describes the type of the elements which is
+  contained in the set.
+
+\item{stmt:} A C++ statement which is to be executed in each iteration.
+
+\end{description}
+
+This module describes the data refinement using the Meta-IV Class
+Library. Iteration through a set, sequence and a map is usually
+implemented by using the functions $Next$ and $First$. Using these
+functions the element which is assigned to an value in the set (or
+sequence of map) has to be declared as a Generic variable.  As the
+type of the elements in the set is available as a parameter to the
+operation $GenIterSet$ it is possible to cast the Generic variable to
+the right type.
+
+Assume that $GenIterSet$ is called with the parameters as
+described below in a pseudo way:
+
+\begin{verbatim}
+GenIterSet( mk_CGMAIN`VT(s, set of seq of nat), tmp <> 0 ,
+            mk_CGMAIN`VT(e, seq of nat),  tmp := hd e / tmp)
+\end{verbatim}
+
+In this case the condition which must be true in each iteration is
+$tmp <> 0$. It is not possible to refer to the variable which is
+assigned to a new value within the set in the condition, that is, in
+the example it is possible to refer to the variable $e$ in the
+condition.
+
+The corresponding code generated by operation $GenIterSet$ is listed
+below:
+
+\begin{verbatim}
+Generic tmpe;
+for ( int bb = s.First( tmpe ); bb && tmp <> 0, bb = s.Next( tmpe ) )
+ { Sequence e(tmp_e);
+   tmp := hd e/ tmp;
+ }
+\end{verbatim}
+
+\begin{vdm_al}
+
+GenIterSet: CGMAIN`VT * [CPP`Expr] * CGMAIN`VT * seq of CPP`Stmt ==> seq of CPP`Stmt
+GenIterSet(mk_CGMAIN`VT(s, -), cond, mk_CGMAIN`VT(e, type), stmt) ==
+  if CPP`isCPP()
+  then
+    def bb_v = BC`GiveName ( "bb" );
+        tmpe_v = BC`GiveName( "tmpe" );
+        tmpSet_v = BC`GiveName( "tmpSet" );
+        first = BC`GenFctCallObjMemAcc(tmpSet_v, "First", [tmpe_v]);
+        decl = BC`GenDecl(GenSmallBoolType(), bb_v, BC`GenAsgnInit(first));
+        expr1 = if cond = nil
+                then bb_v
+                else BC`GenLogAnd( bb_v, cond );
+        ae = BC`GenAsgnExpr(bb_v, BC`GenFctCallObjMemAcc( tmpSet_v, "Next", [tmpe_v] ) );
+        stmt_l = GenConstDeclInit( type, e , tmpe_v ) ^ stmt
+    in
+     (dcl rb : seq of CPP`Stmt := [];
+      rb := rb ^ GenDeclSet(tmpSet_v, s);
+      rb := rb ^ [BC`GenDecl( BC`GenGeneric(), tmpe_v, nil )];
+      rb := rb ^ [BC`GenForStmt(decl, expr1, [ae], BC`GenBlock( stmt_l ) ) ];
+      return rb)
+  else
+    def bb_v = BC`GiveName ( "enm" );
+        tmpSet_v = BC`GiveName( "tmpSet" );
+        ai = BC`GenAsgnInit(BC`GenFctCallObjMemAcc(tmpSet_v, "iterator", []));
+        fcall = BC`GenFctCallObjMemAcc(bb_v,"next", []);
+        expr1 = let expr = BC`GenFctCallObjMemAcc(bb_v, "hasNext", [])
+                in if cond <> nil
+                   then BC`GenLogAnd( expr, cond )
+                   else expr;
+        decl = BC`GenTypeSpecifier(BC`GenIdentifier("Iterator"));
+        stmt_l = GenConstDeclInit(type, e, GenExplicitCast(type, fcall, nil)) ^ stmt
+    in
+     (dcl rb : seq of CPP`Stmt := [];
+      CGAUX`InsertImport("java.util.Iterator");
+      rb := rb ^ DS`GenDeclSet(tmpSet_v, s);
+      rb := rb ^ [BC`GenForStmt(BC`GenDecl(decl, bb_v, ai), expr1, [], BC`GenBlock( stmt_l ))];
+      return rb);
+\end{vdm_al}
+
+\subsubsection{The Sequence Type}
+The operations below all performs operations on sequence type or
+constructions of sequence type.
+
+\begin{vdm_al}
+
+  GenSeq0Type: () ==> CPP`DeclSpecifier
+  GenSeq0Type() ==
+    if CPP`isCPP()
+    then return BC`GenTypeSpecifier(BC`GenIdentifier("Sequence") )
+    else
+     (CGAUX`InsertImport("java.util.List");
+      return BC`GenTypeSpecifier(BC`GenIdentifier("List")));
+
+  GenImplSeq0Type: () ==> CPP`DeclSpecifier
+  GenImplSeq0Type() ==
+    if CPP`isCPP()
+    then return BC`GenTypeSpecifier(BC`GenIdentifier("Sequence") )
+    else
+     (CGAUX`InsertImport("java.util.ArrayList");
+      return BC`GenTypeSpecifier(BC`GenIdentifier("ArrayList")));
+
+  GenStringType: () ==> CPP`DeclSpecifier
+  GenStringType() ==
+    if CPP`isCPP()
+    then return BC`GenTypeSpecifier( BC`GenIdentifier("SEQ<Char>") )
+    else return BC`GenTypeSpecifier( BC`GenIdentifier("String") );
+
+  GenSeqApply: [REP`TypeRep] * CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenSeqApply(rtype, sq, i) ==
+    if CPP`isCPP()
+    then
+      --let fcall = BC`GenArrayApply(sq, i)
+      let i' = cases i:
+                 mk_CPP`FctCall(mk_CPP`ObjectMemberAccess(obj,(BC`GenIdentifier("GetValue")),-),-,-) -> obj,
+                 others -> i
+               end,
+          fcall = BC`GenArrayApply(sq, i')
+      in
+        if rtype <> nil
+        then return BC`GenCastExpr(GenType(rtype), fcall)
+        else return fcall
+    else
+     (dcl expr : CPP`Expr;
+      CGAUX`SetException(true);
+      if is_CPP`IntegerLit(i)
+      then expr := BC`GenIntegerLit(i.val - 1)
+      else expr := BC`GenMinus(i,BC`GenIntegerLit(1));
+      if CGMAIN`get_longs_option()
+      then expr := BC`GenCastExpr(BC`GenTypeSpecifier(BC`GenIdentifier("int")), expr);
+      def fcall = BC`GenFctCallObjMemAcc(sq,"get",[expr])
+      in
+        if rtype <> nil
+        then return GenExplicitCast(rtype, fcall,nil)
+        else return fcall);
+
+  GenSeqApplyString: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenSeqApplyString(sq, i) ==
+    let pos = if is_CPP`IntegerLit(i)
+              then BC`GenIntegerLit(i.val - 1)
+              else BC`GenMinus(i,BC`GenIntegerLit(1)),
+        fcall = BC`GenFctCallObjMemAcc(sq,"charAt",[pos])
+    in return GenCharExpr(fcall);
+
+  GenHd: REP`TypeRep * CPP`Expr ==> CPP`Expr
+  GenHd(rtype,e) ==
+    if CPP`isCPP()
+    then
+      def tp = GenType(rtype);
+          fcall = BC`GenFctCallObjMemAcc(e,"Hd",[])
+      in
+        if tp <> BC`GenGeneric()
+        then return BC`GenCastExpr(tp, fcall)
+        else return fcall
+    else
+     (CGAUX`SetException(true);
+      def fcall = BC`GenFctCallObjMemAcc(e,"get",[BC`GenIntegerLit(0)])
+      in return GenExplicitCast(rtype, fcall,nil););
+
+  GenTlString: CPP`Expr ==> CPP`Expr
+  GenTlString(e) ==
+    let fcall = BC`GenFctCallObjMemAcc(e,"substring",[BC`GenIntegerLit(1)])
+    in return fcall;
+
+  GenTl: CPP`Expr ==> CPP`Expr
+  GenTl(e) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc(e,"Tl",[])
+    else
+     (CGAUX`SetException(true);
+      let end_of_list = BC`GenFctCallObjMemAcc(e,"size",[]),
+          fcall = BC`GenFctCallObjMemAcc(e,"subList",[BC`GenIntegerLit(1), end_of_list])
+      in return GenSeqExpr(fcall));
+
+  GenReverseString: CPP`Expr ==> CPP`Expr
+  GenReverseString(e) ==
+    return BC`GenFctCall(BC`GenIdentifier("UTIL.ReverseString"), [e]);
+
+  GenReverse: CPP`Expr ==> CPP`Expr
+  GenReverse(e) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc(e,"Reverse",[])
+    else
+     (CGAUX`SetException(true);
+      let fcall = BC`GenFctCall(BC`GenIdentifier("UTIL.Reverse"), [e])
+      in return GenSeqExpr(fcall));
+
+  GenHdString: CPP`Expr ==> CPP`Expr
+  GenHdString(e) ==
+    let fcall = BC`GenFctCallObjMemAcc(e,"charAt",[BC`GenIntegerLit(0)])
+    in return GenCharExpr(fcall);
+
+  GenInds: CPP`Expr ==> CPP`Expr
+  GenInds(e) ==
+    return BC`GenFctCallObjMemAcc(e, "Inds", []);
+
+  GenDConc: CPP`Expr ==> CPP`Expr
+  GenDConc(e) ==
+    return BC`GenFctCallObjMemAcc(e, "DConc", []);
+
+  GenConc: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenConc(e1, e2) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc( e1, "Conc", [e2] )
+    else return BC`GenFctCallObjMemAcc( e1, "addAll", [e2] );
+
+  GenConcString: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenConcString(e1, e2) ==
+    cases e2:
+      mk_CPP`ClassInstanceCreationExpr((GenStringType().tp),-,[arg],-,-)
+             -> return BC`GenFctCallObjMemAcc( e1, "concat", [arg] ),
+      others -> return BC`GenFctCallObjMemAcc( e1, "concat", [e2] )
+    end;
+
+  GenLen: CPP`Expr ==> CPP`Expr
+  GenLen(e) ==
+    def fcall = GenLen_int(e)
+    in
+      return GenIntExpr(fcall);
+
+  GenLenString: CPP`Expr ==> CPP`Expr
+  GenLenString(e) ==
+    def fcall = GenLenString_int(e)
+    in return GenIntExpr(fcall);
+
+  GenLenString_int: CPP`Expr ==> CPP`Expr
+  GenLenString_int(e) ==
+    return if is_CPP`WStringLit(e)
+           then BC`GenIntegerLit(len e.val)
+           else BC`GenFctCallObjMemAcc(e, "length", []);
+
+  GenLen_int: CPP`Expr ==> CPP`Expr
+  GenLen_int(e) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc(e, "Length", [])
+    else return BC`GenFctCallObjMemAcc(e, "size", []);
+
+  GenCastSeq: CPP`Expr * [REP`TypeRep] ==> CPP`Expr
+  GenCastSeq(e, ttype) ==
+    if ttype = nil
+    then return BC`GenCastExpr(GenSeq0Type(), e)
+    else
+      if CGAUX`IsSeqType(ttype)
+      then return e
+      else return BC`GenCastExpr(GenSeq0Type(), e);
+
+  GenCastSeqTypeForModify: CPP`Expr ==> CPP`Expr
+  GenCastSeqTypeForModify(e) ==
+    if CPP`isCPP()
+    then return BC`GenCastExpr2([GenSeq0Type(), BC`GenTypeSpecifier(<REFERENCE>)],
+                                   BC`GenCastExpr2([BC`GenTypeSpecifier(BC`GenIdentifier("Common")),
+                                                    BC`GenTypeSpecifier(<REFERENCE>)], e))
+    else return BC`GenCastExpr( GenSeq0Type(), e );
+
+  GenCastString: CPP`Expr ==> CPP`Expr
+  GenCastString(e) ==
+    return BC`GenCastExpr(GenStringType(), e);
+
+  GenSubSequence: CPP`Expr * [REP`TypeRep] * CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenSubSequence(e, t, From, To) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc(e, "SubSequence", [From, To])
+    else
+      if t <> nil and CGAUX`IsStringType(t)
+      then return BC`GenFctCallObjMemAcc(e, "substring", [From, To])
+      else return GenSeqExpr(BC`GenFctCallObjMemAcc(e, "subList", [From, To]));
+
+  GenPermute: CPP`Expr ==> CPP`Expr
+  GenPermute(e) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc(e, "Permute", [])
+    else
+      let Permute_f = BC`GenIdentifier("UTIL.Permute")
+      in return BC`GenFctCall (Permute_f, [e]);
+
+  GenImpAppend: CPP`Expr * CPP`Expr ==> CPP`Stmt
+  GenImpAppend(s, e) ==
+    return BC`GenExpressionStmt( GenImpAppendExpr(s,e));
+
+  GenImpAppendExpr: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenImpAppendExpr(s, e) ==
+    if CPP`isCPP()
+    --then return BC`GenFctCallObjMemAcc( s, "ImpAppend", [ e ] )
+    then
+      let e' = cases e:
+                 mk_CPP`CastExpr(-,mk_CPP`ArrayApply(-,-,-),-) -> e.expr,
+                 others -> e
+               end
+      in return BC`GenFctCallObjMemAcc( s, "ImpAppend", [ e' ] )
+    else return BC`GenFctCallObjMemAcc( s, "add", [ e ] );
+
+  GenSeqModify: CPP`Expr * CPP`Expr * CPP`Expr ==> CPP`Stmt
+  GenSeqModify(s, e1, e2) ==
+    if CPP`isCPP()
+    then
+      def l_check = BC`GenFctCallObjMemAcc(s, "OutOfRange", [e1]);
+          l_else = BC`GenExpressionStmt(GenSeqModifyExpr(s,e1,e2));
+          l_then = CGAUX`RunTime("Illegal index in sequence modifier")
+      in return BC`GenIfStmt(l_check, l_then, l_else)
+    else return BC`GenExpressionStmt(GenSeqModifyExpr(s,e1,e2));
+
+  GenSeqModifyExpr: CPP`Expr * CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenSeqModifyExpr(s, e1, e2) ==
+    if CPP`isCPP()
+    then BC`GenFctCallObjMemAcc(s, "ImpModify", [e1, e2] )
+    else
+     (dcl expr : CPP`Expr := BC`GenMinus(e1,BC`GenIntegerLit(1));
+      CGAUX`SetException(true);
+      if CGMAIN`get_longs_option()
+      then expr := BC`GenCastExpr(BC`GenTypeSpecifier(BC`GenIdentifier("int")), expr);
+      return BC`GenFctCallObjMemAcc(s, "set", [expr, e2] ));
+
+  GenModify: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenModify(e1, e2) ==
+    return BC`GenFctCall( BC`GenObjectMemberAccess( e1, BC`GenIdentifier("SeqModify")),[ e2 ] );
+
+  GenIsSeq: CPP`Expr ==> CPP`Expr
+  GenIsSeq(e) ==
+    if CPP`isJAVA()
+    then return BC`GenBracketedExpr(BC`GenTypeComp(GenSeq0Type(), e))
+    else return BC`GenFctCallObjMemAcc( e, "IsSequence", [] );
+
+  GenIsString: CPP`Expr ==> CPP`Expr
+  GenIsString(e) ==
+    let tp = BC`GenTypeSpecifier(BC`GenIdentifier("String"))
+    in return BC`GenBracketedExpr(BC`GenTypeComp(tp, e));
+
+  GenSeqIsEmpty: CPP`Expr ==> CPP`Expr
+  GenSeqIsEmpty( e ) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc( e, "IsEmpty", [] )
+    else return BC`GenFctCallObjMemAcc( e, "isEmpty", [] );
+
+  GenDeclEmptySeq: CPP`Name ==> seq1 of CPP`Stmt
+  GenDeclEmptySeq(name) ==
+    if CPP`isCPP()
+    then return [BC`GenDecl(GenSeq0Type(), name, nil)]
+    else return [BC`GenDecl(GenSeq0Type(), name, BC`GenAsgnInit(GenEmptySeqExpr()))];
+
+  GenSeqDecl: CPP`Name * [CPP`Initializer] ==> seq1 of CPP`Stmt
+  GenSeqDecl(name, initExpr) ==
+    if CPP`isJAVA() and (initExpr = nil)
+    then return [BC`GenDecl(GenSeq0Type(), name, BC`GenAsgnInit(GenNullExpr()))]
+    else return [BC`GenDecl(GenSeq0Type(), name, initExpr)];
+
+  GenStringDecl: CPP`Name * [CPP`Initializer] ==> seq1 of CPP`Stmt
+  GenStringDecl(name, initExpr) ==
+    if initExpr = nil
+    then return [BC`GenDecl(GenStringType(), name, BC`GenAsgnInit(GenNullExpr()))]
+    else
+      cases initExpr:
+        mk_CPP`AsgnInit(mk_CPP`ClassInstanceCreationExpr((GenStringType().tp), -, arg, -, -), -) ->
+                cases arg:
+                  [] ->     return [BC`GenDecl(GenStringType(), name, BC`GenAsgnInit(BC`GenStringLit("")))],
+                  others -> return [BC`GenDecl(GenStringType(), name, BC`GenAsgnInit(hd arg))]
+                end,
+        others -> return [BC`GenDecl(GenStringType(), name, initExpr)]
+      end;
+
+  GenDeclSeq: CPP`Name * [CPP`Expr] ==> seq1 of CPP`Stmt
+  GenDeclSeq(name, ie) ==
+    if ie = nil
+    then GenDeclEmptySeq(name)
+    else
+     (dcl initexpr : CPP`Initializer;
+      if CPP`isJAVA()
+      then initexpr := BC`GenAsgnInit(GenSeqExpr(ie))
+      else initexpr := BC`GenObjectInit([CGAUX`StripBracketedAndCastExpr(ie)]);
+      return GenSeqDecl(name, initexpr);
+     );
+
+  GenSeqConc: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenSeqConc(e1, e2) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc( e1, "ImpConc", [e2] )
+    else return BC`GenFctCallObjMemAcc( e1, "addAll", [e2] );
+
+  GenSeqConcStmt: CPP`Expr * CPP`Expr ==> CPP`Stmt
+  GenSeqConcStmt(e1, e2) ==
+    return BC`GenExpressionStmt( GenSeqConc(e1,e2));
+
+  GenSeqElems: CPP`Expr ==> CPP`Expr
+  GenSeqElems( e ) ==
+    return BC`GenFctCallObjMemAcc( e, "Elems", [] );
+
+  GenEmptySeqExpr: () ==> CPP`Expr
+  GenEmptySeqExpr() ==
+    return GenSeqExpr(nil);
+
+  GenSeqExpr: [CPP`Expr] ==> CPP`Expr
+  GenSeqExpr(ie) ==
+    let initexpr = if ie = nil then [] else [ie]
+    in
+      if CPP`isCPP()
+      then return BC`GenFctCall(GenImplSeq0Type().tp, initexpr)
+      else return BC`GenClassInstanceCreationExpr(GenImplSeq0Type().tp, initexpr);
+
+  GenEmptyStringExpr: () ==> CPP`Expr
+  GenEmptyStringExpr() ==
+    return GenStringExpr(nil);
+
+  GenStringExpr: [CPP`Expr] ==> CPP`Expr
+  GenStringExpr(ie) ==
+    let initexpr = if ie = nil then [] else [ie]
+    in
+      if CPP`isCPP()
+      then return BC`GenFctCall(GenStringType().tp, initexpr)
+      else return BC`GenClassInstanceCreationExpr(GenStringType().tp, initexpr);
+\end{vdm_al}
+
+The operation below generates code corresponding to an iteration
+through a sequence. The overall idea of the operation is described for
+the similar operation sets $GenIterSet$, see section \ref{DSSet}.
+In addition to $GenIterSet$, $GenIterSeq$ takes the parameter $rev$
+which is used to indicate if the iteration through the sequence should
+be in reverse order. Consider the following function call:
+
+\begin{verbatim}
+GenIterSeq(mk_CGMAIN`VT(s, seq of nat), nil,  mk_CGMAIN`VT(e, nat)
+           tmp_l := tmp_l ^ [e])
+\end{verbatim}
+
+In this case {\tt s} will be iterated in reverse order. The
+corresponding pseudo code is listed below:
+
+\begin{verbatim}
+for (int i=s.Length(); i > 0; i--) {
+  Int e = s[i];
+  "tmp_l := tmp_l ^ [e]"
+}
+\end{verbatim}
+
+If $GenIterSeq$ is called with $rev=\mbox{\sf nil}$, the corresponding
+pseudo code will become:
+
+\begin{verbatim}
+Generic tmpe
+for (int i=s.First(tmpe); i; i=tmp.Next(tmpe)) {
+  Int e = tmpe;
+  "tmp_l := tmp_l ^ [e]"
+}
+\end{verbatim}
+
+Notice that this operation is always called with a nil
+condition. Therefore a part of this operation won't ever be covered.
+
+\begin{vdm_al}
+  GenIterSeq: CGMAIN`VT * [CPP`Expr] * CGMAIN`VT * seq of CPP`Stmt ==> seq of CPP`Stmt
+  GenIterSeq(mk_CGMAIN`VT(s, stype), cond, mk_CGMAIN`VT(e, type), stmt) ==
+    def tmpe_v = BC`GiveName("tmpe");
+        tmpSeq_v = BC`GiveName("tmpSeq")
+    in
+      if CPP`isCPP()
+      then
+        def bb_v = BC`GiveName ("bb");
+            ai = BC`GenAsgnInit(BC`GenFctCallObjMemAcc(tmpSeq_v, "First", [tmpe_v]));
+            first = BC`GenDecl(GenSmallBoolType(), bb_v, ai);
+            expr = if cond <> nil
+                   then BC`GenLogAnd(bb_v, cond)
+                   else bb_v;
+            next = [BC`GenAsgnExpr(bb_v, BC`GenFctCallObjMemAcc(tmpSeq_v, "Next", [tmpe_v]))];
+            stmt_l = DS`GenConstDeclInit(type, e, tmpe_v) ^ stmt;
+            rb_l = GenDeclSeq(tmpSeq_v, (s)) ^
+                   [BC`GenDecl(BC`GenGeneric(), tmpe_v, nil),
+                    BC`GenForStmt(first, expr, next, BC`GenBlock(stmt_l))];
+        in return rb_l
+      else
+        def bb_v = BC`GiveName ("enm");
+            ai = BC`GenAsgnInit(BC`GenFctCallObjMemAcc(tmpSeq_v, "iterator", []));
+            first = BC`GenDecl(BC`GenTypeSpecifier(BC`GenIdentifier("Iterator")), bb_v, ai);
+            expr = let hasNext = BC`GenFctCallObjMemAcc(bb_v, "hasNext", [])
+                    in if cond <> nil
+                       then BC`GenLogAnd(hasNext, cond)
+                       else hasNext;
+            fcall = BC`GenFctCallObjMemAcc(bb_v,"next", []);
+            stmt_l = GenConstDeclInit(type, e, GenExplicitCast(type, fcall, nil)) ^ stmt
+        in
+         (dcl s' : CPP`Expr := s;
+          if CGAUX`IsPossibleStringType(stype)
+          then s' := GenExplicitCast(mk_REP`SeqTypeRep(mk_REP`NumericTypeRep(<NAT>)),s,stype);
+          CGAUX`InsertImport("java.util.Iterator");
+          return GenDeclSeq(tmpSeq_v, (s')) ^ [BC`GenForStmt(first, expr, [], BC`GenBlock(stmt_l))]);
+\end{vdm_al}
+
+\subsubsection{The Map Type}
+
+The operations below all performs operations on map type or
+constructions of map type.
+
+\begin{vdm_al}
+
+  GenMapType: () ==> CPP`DeclSpecifier
+  GenMapType() ==
+    if CPP`isCPP()
+    then return BC`GenTypeSpecifier(BC`GenIdentifier("Map"))
+    else
+     (CGAUX`InsertImport("java.util.Map");
+      return BC`GenTypeSpecifier(BC`GenIdentifier("Map")));
+
+  GenImplMapType: () ==> CPP`DeclSpecifier
+  GenImplMapType() ==
+    if CPP`isCPP()
+    then return BC`GenTypeSpecifier(BC`GenIdentifier("Map"))
+    else
+     (CGAUX`InsertImport("java.util.HashMap");
+      return BC`GenTypeSpecifier(BC`GenIdentifier("HashMap")));
+
+  GenDom: CPP`Expr ==> CPP`Expr
+  GenDom(e) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc( e, "Dom", [] )
+    else return BC`GenFctCallObjMemAcc( e, "keySet", [] );
+
+ -- GenDMerge only used by Java CG
+
+  GenDMerge: CPP`Expr ==> CPP`Expr
+  GenDMerge(e) ==
+    return BC`GenFctCallObjMemAcc( BC`GenIdentifier("Map"), "DMerge", [e] );
+
+
+  GenRng: CPP`Expr ==> CPP`Expr
+  GenRng( e ) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc( e, "Rng", [] )
+    else return BC`GenFctCallObjMemAcc( e, "values", [] );
+
+
+  GenIsMap: CPP`Expr ==> CPP`Expr
+  GenIsMap( e ) ==
+    if CPP`isJAVA()
+    then return BC`GenBracketedExpr(BC`GenTypeComp(GenMapType(), e))
+    else return BC`GenFctCallObjMemAcc( e, "IsMap", [] );
+
+  GenMapIsEmpty: CPP`Expr ==> CPP`Expr
+  GenMapIsEmpty( e ) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc( e, "IsEmpty", [] )
+    else return BC`GenFctCallObjMemAcc( e, "isEmpty", [] );
+    
+  GenSize_int: CPP`Expr ==> CPP`Expr
+  GenSize_int(e) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc( e, "Size", [] )
+    else return BC`GenFctCallObjMemAcc( e, "size", [] );
+
+  GenSize: CPP`Expr ==> CPP`Expr
+  GenSize(e) ==
+    return GenIntExpr(GenSize_int(e));
+
+  GenMapDecl: CPP`Name * [CPP`Initializer] ==> seq1 of CPP`Stmt
+  GenMapDecl(name, initExpr) ==
+    if CPP`isJAVA() and (initExpr = nil)
+    then return [BC`GenDecl(GenMapType(), name, BC`GenAsgnInit(GenEmptyMapExpr()))]
+    --then return [BC`GenDecl(GenMapType(), name, BC`GenAsgnInit(GenNullExpr()))]
+    else return [BC`GenDecl(GenMapType(), name, initExpr)];
+
+  GenDeclMap: CPP`Name * [CPP`Expr] ==> seq1 of CPP`Stmt
+  GenDeclMap(name, ie) ==
+    if ie = nil
+    then GenDeclEmptyMap(nil, name)
+    else
+     (dcl initexpr : CPP`Initializer;
+      if CPP`isJAVA()
+      then initexpr := BC`GenAsgnInit(GenMapExpr(ie))
+      else initexpr := BC`GenObjectInit([CGAUX`StripBracketedAndCastExpr(ie)]);
+      return GenMapDecl(name, initexpr);
+     );
+
+\end{vdm_al}
+
+The operation $GenCastMap$ castes the expression $e$ to a $Map$ if it is necessary.
+
+\begin{vdm_al}
+  GenCastMap: CPP`Expr ==> CPP`Expr
+  GenCastMap(e) ==
+    return BC`GenCastExpr(GenMapType(), e);
+
+  GenCastMapTypeForModify: CPP`Expr ==> CPP`Expr
+  GenCastMapTypeForModify(e) ==
+    if CPP`isCPP()
+    then return BC`GenCastExpr2([GenMapType(), BC`GenTypeSpecifier(<REFERENCE>)],
+                                 BC`GenCastExpr2([BC`GenTypeSpecifier(BC`GenIdentifier("Common")),
+                                                  BC`GenTypeSpecifier(<REFERENCE>)], e))
+    else return BC`GenCastExpr( GenMapType(), e );
+
+  GenMapApply: CGMAIN`VT * CPP`Expr ==> CPP`Expr
+  GenMapApply(mk_CGMAIN`VT(e1, e1t), e2) ==
+   (CGAUX`SetException(true);
+    cases e1t:
+      mk_REP`GeneralMapTypeRep(-, mt),
+      mk_REP`InjectiveMapTypeRep(-, mt) ->
+         def tp = CGAUX`CleanFlatType(mt) in
+           if CPP`isCPP()
+           then return GenCastType(tp, BC`GenArrayApply(e1, e2))
+           else return GenExplicitCast(mt, BC`GenFctCallObjMemAcc(e1,"get",[e2]),nil),
+      nil ->
+           if CPP`isCPP()
+           then return BC`GenArrayApply(e1, e2)
+           else return BC`GenFctCallObjMemAcc(e1,"get",[e2]),
+      others -> error
+    end;
+   );
+
+  GenMapInsert: CPP`Expr * CPP`Expr * CPP`Expr ==> CPP`Stmt
+  GenMapInsert(m, e1, e2) ==
+    return BC`GenExpressionStmt(GenMapInsertExpr(m,e1,e2));
+
+  GenMapInsertExpr: CPP`Expr * CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenMapInsertExpr(m, e1, e2) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc( m, "Insert", [e1, e2] )
+    else
+     (CGAUX`SetException(true);
+      return BC`GenFctCallObjMemAcc( m, "put", [e1, e2] ));
+
+  GenMapImpModify: CPP`Expr * CPP`Expr * CPP`Expr ==> CPP`Stmt
+  GenMapImpModify(m, e1, e2) ==
+    return BC`GenExpressionStmt(GenMapImpModifyExpr(m,e1,e2));
+
+  GenMapImpModifyExpr: CPP`Expr * CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenMapImpModifyExpr(m, e1, e2) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc( m, "ImpModify", [e1, e2] )
+    else return BC`GenFctCallObjMemAcc( m, "put", [e1, e2] );
+
+  GenMapOverride: CPP`Expr * CPP`Expr ==> CPP`Stmt
+  GenMapOverride( m1, m2 ) ==
+    if CPP`isCPP()
+    then return BC`GenExpressionStmt( BC`GenFctCallObjMemAcc( m1, "ImpOverride", [m2] ) )
+    else return BC`GenExpressionStmt( BC`GenFctCallObjMemAcc( m1, "putAll", [m2] ) );
+
+ -- GenOverride: only used by the JAVA CG
+
+  GenOverride: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenOverride(e1, e2) ==
+    return BC`GenFctCall( BC`GenObjectMemberAccess( e1, BC`GenIdentifier("Override")), [ e2 ] );
+
+ -- GenInverse: only used by the JAVA CG
+
+  GenInverse: CPP`Expr ==> CPP`Expr
+  GenInverse(e) ==
+    return BC`GenFctCallObjMemAcc( e, "Inverse", [] );
+
+  GenDomExists: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenDomExists(m, e) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc(m, "DomExists", [e] )
+    else return BC`GenFctCallObjMemAcc(m, "containsKey", [e] );
+
+  -- It seems that GenRngExists: only used by the JAVA CG
+
+  GenRngExists: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenRngExists(m, e) ==
+    return BC`GenFctCallObjMemAcc(m, "containsValue", [e] );
+
+  GenDeclEmptyMap: [REP`TypeRep] * CPP`Name ==> seq1 of CPP`Stmt
+  GenDeclEmptyMap(-, name) ==
+    if CPP`isCPP()
+    then return [BC`GenDecl(GenMapType(), name, nil)]
+    else return [BC`GenDecl(GenMapType(), name, BC`GenAsgnInit(GenEmptyMapExpr()))];
+
+  GenEmptyMapExpr: () ==> CPP`Expr
+  GenEmptyMapExpr() ==
+    return GenMapExpr(nil);
+
+  GenMapExpr: [CPP`Expr] ==> CPP`Expr
+  GenMapExpr(ie) ==
+    let initexpr = if ie = nil then [] else [ie]
+    in
+      if CPP`isCPP()
+      then return BC`GenFctCall(GenImplMapType().tp, initexpr)
+      else return BC`GenClassInstanceCreationExpr(GenImplMapType().tp, initexpr);
+
+\end{vdm_al}
+
+The operation $GenMapMerge$ generates code which map merge
+$m1$ and $m2$, and updates $m1$ with the result.
+
+The generated code of $GenMapMerge$ is similar to the code in the
+interpreter of the function $EvalMapMerge$.
+
+\begin{vdm_al}
+
+  GenMapMerge: CGMAIN`VT * CGMAIN`VT* CGMAIN`VT ==> seq of CPP`Stmt
+  GenMapMerge(mk_CGMAIN`VT(var1, type1), mk_CGMAIN`VT(var2, type2), mk_CGMAIN`VT(resVar_v, -)) ==
+    if CPP`isCPP()
+    then
+      def m1 = BC`GiveName( "m1" );
+          m2 = BC`GiveName( "m2" );
+          rb = [ BC`GenDecl(GenMapType(), m1, BC`GenObjectInit([var1])),
+                 BC`GenDecl(GenMapType(), m2, BC`GenObjectInit([var2])),
+                 BC`GenIfStmt(BC`GenNot(BC`GenFctCallObjMemAcc( m1, "IsCompatible", [m2] )),
+                                  CGAUX`RunTime("Duplicate entries had different values" ), nil),
+                 GenMapOverride(m1,m2),
+                 BC`GenAsgnStmt(resVar_v, m1) ];
+      in return rb
+    else -- Java
+      def com_v = BC`GiveName( "com" );
+          allApplies_v = BC`GiveName( "all_applies" );
+          d_v = BC`GiveName( "d" );
+          m1 = BC`GiveName( "m1" );
+          m2 = BC`GiveName( "m2" );
+          inttp = GenSmallBoolType()
+      in
+       (dcl rb : seq of CPP`Stmt := [],
+            castVar1 : CPP`Expr := var1,
+            castVar2 : CPP`Expr := var2;
+        CGAUX`SetException(true);
+        if not CGAUX`IsMapType(CGAUX`CleanAndFlattenType(type1))
+        then castVar1 := GenCastMap(var1);
+        if not CGAUX`IsMapType(CGAUX`CleanAndFlattenType(type2))
+        then castVar2 := GenCastMap(var2);
+        def mapclone = GenMapExpr(castVar1)
+        in rb := rb ^ GenMapDecl(m1, BC`GenAsgnInit(mapclone)) ^
+                      GenMapDecl(m2, BC`GenAsgnInit(castVar2));
+        rb := rb ^ GenDeclSet(com_v, GenDom(m1));
+        rb := rb ^ [ GenInterSectStmt(com_v, GenDom(m2)) ];
+        rb := rb ^ [ BC`GenDecl(inttp, allApplies_v, BC`GenAsgnInit(BC`GenBoolLit(true))) ];
+        rb := rb ^ def eq = GenEqVal(BC`GenFctCallObjMemAcc(m1, "get", [d_v]),
+                                     BC`GenFctCallObjMemAcc(m2, "get", [d_v]));
+                       as2 = BC`GenAsgnStmt(allApplies_v, eq)
+                   in GenIterSet(mk_CGMAIN`VT(com_v, mk_REP`SetTypeRep(mk_REP`AllTypeRep())), allApplies_v,
+                                 mk_CGMAIN`VT(d_v, mk_REP`AllTypeRep()), [as2]);
+        rb := rb ^ [ BC`GenIfStmt(BC`GenNot(allApplies_v),
+                                  CGAUX`RunTime("Duplicate entries had different values" ), nil) ];
+        rb := rb ^ [ GenMapOverride(m1,m2)];
+        rb := rb ^ [ BC`GenAsgnStmt(resVar_v, m1) ];
+        return rb
+       );
+
+\end{vdm_al}
+
+The operation $GenMapRestToBy$ Generates code corresponding to map
+domain/range restrict to/by expressions.
+
+\begin{vdm_al}
+  GenMapRestToBy: CGMAIN`VT * CGMAIN`VT * CGMAIN`VT * AS`BinaryOp ==> CPP`Expr | seq of CPP`Stmt
+  GenMapRestToBy(mk_CGMAIN`VT(s, stp), mk_CGMAIN`VT(m, mtp), mk_CGMAIN`VT(resVar_v, -), opr) ==
+    if CPP`isCPP()
+    then
+     (dcl ss : CPP`Expr := s,
+          mm : CPP`Expr := m;
+      if not CGAUX`IsSetType(stp)
+      then ss := GenCastSetType(s);
+      if not CGAUX`IsMapType(mtp)
+      then mm := GenCastMap(m);
+      cases opr:
+        <MAPDOMRESTTO> -> return BC`GenFctCallObjMemAcc( mm, "DomRestrictedTo", [ ss ] ),
+        <MAPDOMRESTBY> -> return BC`GenFctCallObjMemAcc( mm, "DomRestrictedBy", [ ss ] ),
+        <MAPRNGRESTTO> -> return BC`GenFctCallObjMemAcc( mm, "RngRestrictedTo", [ ss ] ),
+        <MAPRNGRESTBY> -> return BC`GenFctCallObjMemAcc( mm, "RngRestrictedBy", [ ss ] ),
+        others -> error
+      end)
+    else
+      def tmpMap_v = BC`GiveName("tmpMap");
+          domM_v   = BC`GiveName("domM");
+          elm_v    = BC`GiveName("elm");
+          settp    = GenSetType();
+          maptp    = GenMapType();
+          ss       = if CGAUX`IsSetType(stp) then s else BC`GenCastExpr(settp, s);
+          mm       = if CGAUX`IsMapType(mtp) then m else BC`GenCastExpr(maptp, m);
+          rb_l     = GenDeclEmptyMap(nil,tmpMap_v) ^
+                     GenDeclSet(domM_v, GenDom(mm)) ^
+                     GenIterSet(mk_CGMAIN`VT(domM_v, mk_REP`SetTypeRep(mk_REP`AllTypeRep())), nil,
+                                mk_CGMAIN`VT(elm_v, mk_REP`AllTypeRep()),
+                               [GenMapRestrictStmt(ss, mm, elm_v, tmpMap_v, opr)]) ^
+                     [ BC`GenAsgnStmt(resVar_v, tmpMap_v)];
+      in return rb_l;
+
+  GenMapRestrictStmt: CPP`Expr * CPP`Expr * CPP`Expr * CPP`Expr * AS`BinaryOp  ==> CPP`Stmt
+  GenMapRestrictStmt(s, m, elm, tm, opr) ==
+    def mp = GenMapApply(mk_CGMAIN`VT(m, nil), elm);
+        stmt   = GenMapInsert(tm, elm, mp);
+        fcall1 = BC`GenFctCall(BC`GenIdentifier("UTIL.Contains"), [s, elm]);
+        fcall2 = BC`GenFctCall(BC`GenIdentifier("UTIL.Contains"), [s, mp]);
+        cond   = cases opr:
+                   <MAPDOMRESTTO> -> fcall1,
+                   <MAPDOMRESTBY> -> BC`GenNot(fcall1),
+                   <MAPRNGRESTTO> -> fcall2,
+                   <MAPRNGRESTBY> -> BC`GenNot(fcall2),
+                   others         -> undefined
+                 end;
+    in
+     (CGAUX`SetException(true);
+      return BC`GenIfStmt(cond, stmt, nil));
+\end{vdm_al}
+
+\subsubsection*{Map Composition Expression}
+
+In this section the code generation of map composition expressions are
+described. Consider the following map composition:
+
+\begin{verbatim}
+f(1) comp { 1 |-> 2, 3 |-> 4 }
+\end{verbatim}
+
+
+where the function {\tt f} is defined as:
+
+\begin{verbatim}
+f: nat -> nat | map nat to nat
+f(n) ==
+  if n = 10 then
+    n
+  else
+    { 2 |-> 8, 4 |-> 16 }
+\end{verbatim}
+
+The following pseudo code corresponds to the map composition above:
+
+\begin{verbatim}
+// The declaration and initialization of var1 and var2 is generated
+// by CGEXPR`CGBinaryExpr
+Generic var1;
+...CGEXPR`CGExpr("f(1)", CGMAIN`VT(var1, "Generic"));
+Map var2;
+...CGEXPR`CGExpr("{ 2 |-> 8, 4 |-> 16 }", CGMAIN`VT(var2, "Map"));
+// The following lines are generated by GenComposeExpr
+Map tmpRes;
+Map tmpMap1;
+if (var1.IsMap())
+  tmpMap1 = var1;
+else
+  RunTimeError("Two maps were expected in composition expression");
+Generic g;
+for (int cont=var2.First(g); cont; cont=var2.Next(g)) {
+  Generic elem = var2[g];
+  if (tmpMap1.DomExists(elem))
+    tmpRes.ImpModify(g, tmpMap1[elem]);
+  else
+    RunTimeError("The rang is not a subset of the domain in composition expression");
+}
+resVar_v = tmpRes;
+\end{verbatim}
+
+The operation $GenComposeExpr$ generates the code corresponding to map
+composition expressions.
+
+\begin{vdm_al}
+  GenComposeExpr: CGMAIN`VT  * CGMAIN`VT * CGMAIN`VT ==> seq of CPP`Stmt
+  GenComposeExpr(mk_CGMAIN`VT(v1, t1), mk_CGMAIN`VT(v2, t2), mk_CGMAIN`VT(res,-)) ==
+     (dcl rb_l : seq of CPP`Stmt := [],
+          tmpMap : CPP`Name := BC`GiveName("tmpMap"),
+          tmpMap1 : CPP`Expr := v1,
+          tmpMap2 : CPP`Expr := v2,
+          rti1 : CPP`Stmt := CGAUX`RunTime("Two maps were expected in composition expression");
+      rb_l := rb_l ^ GenDeclEmptyMap(nil,tmpMap);
+  
+      if not CGAUX`IsMapType(t1)
+      then
+       (dcl asgn : CPP`Stmt;
+        tmpMap1 := BC`GiveName("tmpMap1");
+        rb_l := rb_l ^ GenDeclEmptyMap(nil,tmpMap1);
+        if CPP`isJAVA()
+        then asgn := BC`GenAsgnStmt(tmpMap1, GenCastMap(v1))
+        else asgn := BC`GenAsgnStmt(tmpMap1, v1);
+        def cond = GenIsMap(v1)
+        in rb_l := rb_l ^ [BC`GenIfStmt(BC`GenNot(cond), rti1, nil)] ^ [asgn];);
+  
+      if not CGAUX`IsMapType(t2)
+      then
+       (dcl asgn : CPP`Stmt;
+        tmpMap2 := BC`GiveName("tmpMap2");
+        rb_l := rb_l ^ GenDeclEmptyMap(nil,tmpMap2);
+        if CPP`isJAVA()
+        then asgn := BC`GenAsgnStmt(tmpMap2, GenCastMap(v2))
+        else asgn := BC`GenAsgnStmt(tmpMap2, v2);
+        def cond = GenIsMap(v2);
+        in rb_l := rb_l ^ [BC`GenIfStmt(cond, asgn, rti1)]);
+  
+      def key = BC`GiveName("key");
+          elem = BC`GiveName("elem");
+          cond = BC`GenNot(GenDomExists(tmpMap1, elem));
+          st1 = GenMapImpModify(tmpMap, key, GenMapApply(mk_CGMAIN`VT(tmpMap1, nil), elem));
+          rti = CGAUX`RunTime("The range is not a subset of the domain in composition expression");
+          ifstmt = BC`GenIfStmt(cond, rti, nil)
+      in
+        let stmt = BC`GenBlock([ifstmt, st1])
+        in
+          rb_l := rb_l ^ GenIterMap(mk_CGMAIN`VT(tmpMap2, t2), nil, key, elem, stmt);
+      return rb_l ^ [BC`GenAsgnStmt(res, tmpMap)]
+     );
+\end{vdm_al}
+
+\subsubsection*{Map  Iteration Expression}
+
+The operation $GenMapIteration$ generates code corresponding to a map
+iteration expression. Consider the VDM expression:
+
+\begin{verbatim}
+{1 |-> 2, 2 |-> 4, 4 |-> 1} ** 0
+{1 |-> 2, 2 |-> 4, 4 |-> 1} ** 1
+{1 |-> 2, 2 |-> 4, 4 |-> 1} ** 2
+\end{verbatim}
+
+The corresponding results are:
+
+\begin{verbatim}
+{ 1 |-> 1,2 |-> 2,4 |-> 4 }
+{ 1 |-> 2,2 |-> 4,4 |-> 1 }
+{ 1 |-> 4,2 |-> 1,4 |-> 2 }
+\end{verbatim}
+
+The following pseudo code corresponds to the general map iteration
+expression ({\tt m ** n}):
+
+\begin{verbatim}
+// Note: the declaration and initialization of var1 and var2
+// is not generated by GenMapIteration
+Generic var1;
+...CGEXPR`CGExpr(m, CGMAIN`VT(var1, "Generic");
+Generic var2;
+...CGEXPR`CGExpr(n, CGMAIN`VT(var2, "Generic");
+// The following lines are generated by GenMapIteration
+Map tmpMap = var1;
+int n;
+if (var2.IsInt())
+  n = ((Int) var2).GetValue();
+else
+  RunTimeError("A 'nat' was expected in map iteration expression");
+Map mm (tmpMap);
+if (n < 0)
+  RunTimeError("A 'nat' was expected in map iteration expression");
+else if (n == 0) {
+  ...GenIterMap(CGMAIN`VT(mm, "Map"), nil, key, nil,
+                tmpMap.ImpModify(key, key));
+}
+else  {
+  for (int count=1; count < n; count++) {
+    Map mm2 (tmpMap);
+    ...GenIterMap(CGMAIN`VT(mm, "Map"), nil, key, elem,
+                  tmpMap.ImpModify(key, mm2[elem]));
+  }
+}
+resVar = tmpMap;
+\end{verbatim}
+
+
+
+\begin{vdm_al}
+  GenMapIteration: CGMAIN`VT * CGMAIN`VT * CGMAIN`VT ==> seq1 of CPP`Stmt
+  GenMapIteration(mk_CGMAIN`VT(v1, t1), mk_CGMAIN`VT(v2, t2), mk_CGMAIN`VT(resVar, -)) ==
+    def tmpMap : CPP`Name = BC`GiveName("tmpMap");
+        n : CPP`Name = BC`GiveName("n")
+    in
+     (dcl rb_l : seq of CPP`Stmt := [];
+      if CPP`isCPP()
+      then rb_l := GenMapDecl(tmpMap, BC`GenAsgnInit(v1))
+      else
+       (dcl cast : CPP`Expr := v1;
+        if not CGAUX`IsMapType(CGAUX`CleanAndFlattenType(t1))
+        then cast := GenCastMap(v1);
+        def mapclone = GenMapExpr(cast)
+        in rb_l := GenMapDecl(tmpMap, BC`GenAsgnInit(mapclone)));
+
+      if CGAUX`IsIntType(t2)
+      --then rb_l := rb_l ^ [BC`GenDecl(GenSmallIntType(), n, BC`GenAsgnInit(GenGetValue(v2, t2)))]
+      then rb_l := rb_l ^ [BC`GenDecl(GenSmallNumType(), n, BC`GenAsgnInit(GenGetValue(v2, t2)))]
+      else
+        def cond = GenIsInt(v2);
+            rti = CGAUX`RunTime("A 'nat' was expected in map iteration expression");
+            ifstmt = BC`GenIfStmt(BC`GenNot(cond), rti, nil);
+            val = GenGetValue(BC`GenCastExpr(GenIntType(), v2), mk_REP`NumericTypeRep(<INTEGER>))
+        in
+          --rb_l := rb_l ^ [ifstmt, BC`GenDecl(GenSmallIntType(), n, BC`GenAsgnInit(val))];
+          rb_l := rb_l ^ [ifstmt, BC`GenDecl(GenSmallNumType(), n, BC`GenAsgnInit(val))];
+      rb_l := rb_l ^ GenMapIterIfPart(n, tmpMap, t1);
+      rb_l := rb_l ^ [BC`GenAsgnStmt(resVar, tmpMap)];
+      return rb_l
+     );
+
+  GenMapIterIfPart: CPP`Name * CPP`Name * [REP`TypeRep] ==> seq1 of CPP`Stmt
+  GenMapIterIfPart(n, tmpMap, t1) ==
+    def il = BC`GenIntegerLit(0);
+        mm = BC`GiveName("mm");
+        mm2 = BC`GiveName("mm2");
+        --gmt = GenMapType();
+        c1 = BC`GenLt(n, il);
+        c2 = BC`GenEq(n, il);
+        key = BC`GiveName("key");
+        elem = BC`GiveName("elem");
+        count = BC`GiveName("count");
+        ai = BC`GenAsgnInit(BC`GenIntegerLit(1));
+        mapp = GenMapApply(mk_CGMAIN`VT(mm2, nil), elem);
+        st1 = GenMapImpModify(tmpMap, key, key);
+        st2 = GenMapImpModify(tmpMap, key, mapp);
+        --idcl = BC`GenDecl(GenSmallIntType(), count, ai);
+        idcl = BC`GenDecl(GenSmallNumType(), count, ai);
+        stop = BC`GenLt(count, n);
+        inc = BC`GenPostPlusPlus(count);
+        vt2 = mk_CGMAIN`VT(mm, t1);
+    in
+     (dcl ai' : CPP`AsgnInit;
+      if CPP`isCPP()
+      then ai' := BC`GenAsgnInit(tmpMap)
+      else ai' := BC`GenAsgnInit(GenMapExpr(tmpMap));
+      def st1' = BC`GenBlock(GenIterMap(vt2, nil, key, nil, st1));
+          dm = GenMapDecl (mm, ai');
+          dm2 = GenMapDecl (mm2, ai');
+          st2_l = GenIterMap(vt2, nil, key, elem, st2);
+          rti = CGAUX`RunTime("A 'nat' was expected in map iteration expression");
+          ifstmt = BC`GenIfStmt( c1, rti, nil)
+      in
+       (dcl stmt : CPP`Stmt := BC`GenForStmt(idcl, stop, [inc], BC`GenBlock (dm2 ^ st2_l));
+        if CPP`isCPP()
+        then stmt := BC`GenBlock (dm ^ [stmt])
+        else stmt := BC`GenBlock ([stmt]);
+        stmt := BC`GenIfStmt(c2, st1', stmt);
+        return dm ^ [ifstmt, stmt]);
+     );
+
+\end{vdm_al}
+
+The operation below generates code corresponding to an iteration
+through a map. The overall idea of the operation is described for the
+similar operation sets $GenIterSet$, see Section \ref{DSSet}. Assume
+that $GenIterMap$ is called with the parameters as described below in
+a pseudo way:
+
+\begin{verbatim}
+GenIterMap( mk_CGMAIN`VT(m, map char to nat), nil,
+            key, elem, s.ImpAppend("mk_(key, elem)"))
+\end{verbatim}
+
+The corresponding code generated by operation $GenIterMap$ is
+listed below:
+
+\begin{verbatim}
+Generic tmpk;
+for ( int bb = m.First(tmpk); bb, bb = s.Next(tmpk) )
+  { Char key(tmpk);
+    Int elem(m[tmpk]);
+    s.ImpAppend("mk_(key, elem)");
+  }
+}
+\end{verbatim}
+
+
+The operation $GenIterMap$ has five parameters:
+
+\begin{itemize}
+\item $mk-CGMAIN`VT(m, tp)$: The $CG`VT$ corresponding to the map to be
+  iterated through.
+\item $cond$: A optional boolean (int) C++ expression, which specifies
+  a stop condition.
+\item $key$: An optional C++ name, which will be declared and assigned
+  to the key of the iteration. $key$ should be {\sf nil} if the key is
+  not used in $stmt$.
+\item $elem$: An optional C++ name, which will be declared and assigned
+  to the element corresponding to the key of the iteration. $elem$
+  should be {\sl nil} if the element is not used in $stmt$.
+\item $stmt$: A C++ statement which is executed in each iteration.
+\end{itemize}
+
+Notice that like $GenIterSeq$ this operation is called in the entire specification
+with a condition always equals to true. Therefore a part of this operation won't
+be covered.
+
+\begin{vdm_al}
+  GenIterMap: CGMAIN`VT * [CPP`Name] * [CPP`Name] * [CPP`Expr] * CPP`Stmt ==> seq of CPP`Stmt
+  GenIterMap(mk_CGMAIN`VT(m, tp), cond, key, elem, stmt) ==
+    def tmpe_v = BC`GiveName("tmpe");
+        tmpMap_v = BC`GiveName("tmpMap");
+        mk_(dtp, rtp) = FindMapDomRng(tp)
+    in
+      if CPP`isCPP()
+      then 
+        def bb_v = BC`GiveName ("bb");
+            expr1 = if cond = nil
+                    then bb_v
+                    else BC`GenLogAnd(bb_v, cond);
+            fcall1 = BC`GenFctCallObjMemAcc(tmpMap_v, "First", [tmpe_v]);
+            fcall2 = BC`GenFctCallObjMemAcc(tmpMap_v, "Next", [tmpe_v]);
+            i = BC`GenDecl(GenSmallBoolType(), bb_v, BC`GenAsgnInit(fcall1));
+            e2 = BC`GenAsgnExpr(bb_v, fcall2)
+        in
+         (dcl stmt_l : seq of CPP`Stmt := [];
+          if key <> nil
+          --then stmt_l := GenDecl(dtp, key, BC`GenAsgnInit(tmpe_v));
+          then stmt_l := GenDecl(dtp, key, BC`GenObjectInit([tmpe_v]));
+          if elem <> nil
+          then
+            def el = GenMapApply(mk_CGMAIN`VT(tmpMap_v, nil), key)
+            --in stmt_l := stmt_l ^ GenDecl(rtp, elem, BC`GenAsgnInit(el));
+            in stmt_l := stmt_l ^ GenDecl(rtp, elem, BC`GenObjectInit([el]));
+          stmt_l := stmt_l ^ [stmt];
+          return GenDeclMap(tmpMap_v, m) ^
+                 [ BC`GenDecl(BC`GenGeneric(), tmpe_v, nil),
+                   BC`GenForStmt(i, expr1, [e2], BC`GenBlock(stmt_l)) ])
+      else
+        def bb_v = BC`GiveName ( "enm" );
+            untyped_key = BC`GiveName("dom")
+        in
+          let ai = BC`GenAsgnInit(BC`GenFctCallObjMemAcc(BC`GenFctCallObjMemAcc(tmpMap_v, "keySet",[]), "iterator", [])),
+              decl = BC`GenDecl(BC`GenTypeSpecifier(BC`GenIdentifier("Iterator")), bb_v, ai),
+              expr1 = let temp = BC`GenFctCallObjMemAcc(bb_v, "hasNext", [])
+                      in if cond <> nil
+                         then BC`GenLogAnd( temp, cond )
+                         else temp,
+              fcall = BC`GenFctCallObjMemAcc(bb_v,"next", [])
+          in 
+           (dcl stmt_l : seq of CPP`Stmt := [];
+            stmt_l := GenDecl(nil, untyped_key, BC`GenAsgnInit(fcall));
+            if key <> nil
+            then stmt_l := stmt_l ^ GenDecl(dtp, key, BC`GenAsgnInit(GenExplicitCast(dtp, untyped_key, nil)));
+            if elem <> nil
+            then def el = GenMapApply(mk_CGMAIN`VT(tmpMap_v, nil), untyped_key)
+                 in
+                   stmt_l := stmt_l ^ GenDecl(rtp, elem, BC`GenAsgnInit(GenExplicitCast(rtp, el, nil)));
+            stmt_l := stmt_l ^ [stmt];
+  
+            CGAUX`InsertImport("java.util.Iterator"); 
+            return GenDeclMap(tmpMap_v, m) ^
+                     [ BC`GenForStmt( decl, expr1, [], BC`GenBlock(stmt_l) ) ]);
+
+  FindMapDomRng: REP`TypeRep ==> [REP`TypeRep] * [REP`TypeRep]
+  FindMapDomRng(type) ==
+    cases type:
+      mk_REP`InvTypeRep(-,shape,-) -> return FindMapDomRng(shape),
+      mk_REP`GeneralMapTypeRep(mapdom, maprng),
+      mk_REP`InjectiveMapTypeRep(mapdom, maprng) -> return mk_(CGAUX`CleanFlatType(mapdom),
+                                                               CGAUX`CleanFlatType(maprng)),
+      mk_REP`UnionTypeRep(tps) ->
+        def t_s = {CGAUX`CleanFlatType(t) | t in set tps} in
+        let t in set t_s be st CGAUX`IsMapType(t) in
+          if not exists tp in set t_s \ {t} & CGAUX`IsMapType(tp)
+          then return FindMapDomRng(t)
+          else return mk_(nil,nil),
+      others -> return mk_(nil,nil)
+    end;
+
+
+  GenNullExpr: () ==> CPP`Expr
+  GenNullExpr() ==
+    return BC`GenIdentifier("null");
+
+
+\end{vdm_al}
+
+
+The operation \texttt{GenSuper} is used by the Java code generator to
+generate a reference to the current class's superclass.
+\begin{vdm_al}
+  GenSuper : () ==> CPP`Identifier
+  GenSuper() ==
+   (CGAUX`SetUsesSuper();
+    return BC`GenIdentifier("super"));
+
+  GenThis : () ==> CPP`Identifier
+  GenThis() ==
+    if CGAUX`IsStatic()
+    then return BC`GenIdentifier(CGAUX`GiveCurCName())
+    else return BC`GenIdentifier("this");
+\end{vdm_al}
+
+\begin{vdm_al}
+  GenEqVal: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenEqVal(e1,e2) ==
+    if CPP`isCPP()
+    then return BC`GenEq(e1, e2)
+    else return BC`GenFctCall(BC`GenIdentifier("UTIL.equals"), [e1, e2]);
+
+  GenNeqVal: CPP`Expr * CPP`Expr ==> CPP`Expr
+  GenNeqVal(e1,e2) ==
+    if CPP`isCPP()
+    then return BC`GenNeq(e1, e2)
+    else return BC`GenNot(BC`GenFctCall(BC`GenIdentifier("UTIL.equals"), [e1, e2]));
+\end{vdm_al}
+
+#ifdef VDMPP
+\subsubsection{The Class Type}
+
+The specifications in this subsection generates constructs
+corresponding to class types.
+
+\begin{vdm_al}
+-- should be joint
+  GenIsClass: CPP`Expr ==> CPP`Expr
+  GenIsClass(e) ==
+    return BC`GenFctCallObjMemAcc(e, "IsObjectRef", [] );
+
+  GenIsThisClass: AS`Name * CPP`Expr ==> CPP`Expr
+  GenIsThisClass(nm, e) ==
+    def tp = BC`GenTypeSpecifier(BC`Rename(nm))
+    in return BC`GenBracketedExpr(BC`GenTypeComp(tp,e));
+
+  GenIsClasses: set of AS`Name * CPP`Expr ==> CPP`Expr
+  GenIsClasses(nm_s, e) ==
+   (dcl expr: CPP`Expr;
+    dcl test: bool := true;
+
+    for all nm in set nm_s do
+      def tp = BC`GenTypeSpecifier(BC`Rename(nm));
+          expr_c = BC`GenBracketedExpr(BC`GenTypeComp(tp, e))
+      in
+       (expr := if test
+                then expr_c
+                else BC`GenLogOr( expr, expr_c);
+        test := false);
+    return expr);
+
+  GenMyClass: CPP`Expr ==> CPP`Expr
+  GenMyClass(e) ==
+    if CPP`isCPP()
+    then return BC`GenFctCallObjMemAcc(e, "MyObjectId", [])
+    else return BC`GenFctCallObjMemAcc(e, "getClass", []);
+
+  GenMyBaseClass: CPP`Expr ==> CPP`Expr
+  GenMyBaseClass(e) ==
+    return BC`GenFctCallObjMemAcc(e, "getBaseClass", []);
+
+  GenObjRefType: [AS`Name] ==> CPP`DeclSpecifier
+  GenObjRefType(nm) ==
+    if CPP`isCPP()
+    then return BC`GenTypeSpecifier(BC`GenIdentifier("ObjectRef"))
+    else
+      if (nm <> nil)
+      then return BC`GenTypeSpecifier(BC`GenIdentifier(CGAUX`GiveLastName(nm)))
+      else return BC`GenTypeSpecifier(BC`GenIdentifier("Object"));
+\end{vdm_al}
+
+The operation $GenObjRefDecl$ generates a declaration statement
+corresponding to an instance of a generated C++ class.  This operation
+takes one parameter. The C++ object $obj$ is an instance of type
+ObjectRef.
+
+If $GenObjRefDecl$ is applied with the C++ object {\tt obj} then the
+resulting declaration statement will become:
+
+\begin{quote}
+\begin{verbatim}
+ObjectRef obj;
+\end{verbatim}
+\end{quote}
+
+Note, that the object {\tt obj}'s reference will be {\tt NULL} ({\tt
+  0L}) after the declaration. The reference can only be set using the
+{\tt new} (VDM++) expression.
+
+
+\begin{vdm_al}
+  GenObjRefDecl: [AS`Name] * CPP`Name * [CPP`Initializer] ==> seq1 of CPP`Stmt
+  GenObjRefDecl(nm,obj,initExpr) ==
+    if CPP`isCPP()
+    then
+      def ds    = GenObjRefType(nm)
+      in return [BC`GenDecl(ds, obj, initExpr)]
+    else
+      def cname = GenObjRefType(nm)
+      in
+        if initExpr = nil
+        then
+          def ainit =  BC`GenAsgnInit(GenNullExpr())
+          in return [BC`GenDecl(cname, obj, ainit)]
+        else return [BC`GenDecl(cname, obj, initExpr)];
+
+\end{vdm_al}
+
+The operation $CallDefaultConstructor$ generates an ObjectRef constructor call.
+This operation takes the name of the VDM++ class which should be
+newed, $nm$, as parameter.  If $CallDefaultConstructor$ is applied with the
+VDM++ class name {\tt A}, then the resulting expression will generated:
+
+\begin{quote}
+\begin{verbatim}
+ObjectRef(new vdm_A());
+\end{verbatim}
+\end{quote}
+
+\begin{vdm_al}
+  CallDefaultConstructor: AS`Name ==> CPP`Expr
+  CallDefaultConstructor(nm) ==
+    def cls = BC`GenTypeSpecifier(BC`Rename(nm));
+        alloc = BC`GenNewExpr(cls, [])
+    in
+      if CPP`isCPP()
+      then
+        def ds = TPGEN`Id2CppGTpId(TPGEN`GenObjRefType(mk_REP`ObjRefTypeRep(nm), {}))
+        in
+         (CGAUX`IncludeClass(nm);
+          return BC`GenFctCall(ds, [alloc]))
+      else return alloc;
+
+  CallConstructor: AS`Name * CPP`Exprs ==> CPP`Expr
+  CallConstructor(nm, p_argL) ==
+    def cls = BC`GenTypeSpecifier(BC`Rename(nm));
+        alloc = BC`GenNewExpr(cls, p_argL)
+    in
+      if CPP`isCPP()
+      then
+        def ds = TPGEN`Id2CppGTpId(TPGEN`GenObjRefType(mk_REP`ObjRefTypeRep(nm), {}))
+        in
+         (CGAUX`IncludeClass(nm);
+          return BC`GenFctCall(ds, [alloc]))
+      else return alloc;
+
+\end{vdm_al}
+
+
+The operation $CastToClassPtr$ transforms a {\tt ObjectRef} object to a pointer
+to a generated C++ class. This operation takes two parameters, one
+which hold the name of the VDM++ class, $cls$, and one which hold the
+object, $expr$. If $cls$ is the class {\tt A} and $expr$ is the object
+{\tt obj} the the corresponding code will become:
+
+\begin{quote}
+\begin{verbatim}
+ObjGet_vdm_A (obj)
+\end{verbatim}
+\end{quote}
+
+The function {\tt ObjGet\_vdm\_A} is generated in the file {\tt CGBase.h}.
+
+Note, that the function call {\tt ObjGet\_vdm\_A} will imply a run-time error
+if {\tt obj}'s reference pointer is {\tt NULL} ({\tt 0L}).
+
+\begin{vdm_al}
+  CastToClassPtr: AS`Name * CPP`Expr ==> CPP`Expr
+  CastToClassPtr(cls, expr) ==
+    if CPP`isCPP()
+    then
+     (if cls = CGAUX`GiveCurCASName()
+      then
+        cases expr:
+          mk_CPP`FctCall(mk_CPP`Identifier("Self",-),-,-),
+          mk_CPP`Identifier("this",-)  -> return GenThis()
+        end;
+
+      def id = BC`Rename(cls);
+          clid = BC`PrefixName("ObjGet",id);
+          fct = BC`GenFctCall(clid,[expr])
+      in
+       (CGAUX`IncludeClass(cls);
+        return fct)
+     )
+    else
+     (CGAUX`IncludeClass(cls);
+      return BC`GenCastExpr( GenObjRefType(cls), expr ));
+\end{vdm_al}
+
+The operation $GenIsOfClass$ generates code which decides wheter the
+object {\tt obj} refers to an object of the VDM++ class {\tt
+  class}. $GenIsOfClass$ generates e.g.\ the following code:
+
+\begin{quote}
+\begin{verbatim}
+res = obj.IsOfClass(VDM_A);
+\end{verbatim}
+\end{quote}
+
+\begin{vdm_al}
+  GenIsOfClass: AS`Name * CPP`Expr * CPP`Name ==> CPP`Stmt
+  GenIsOfClass(class, obj, res) ==
+    def fcall = GenIsOfClassExpr(class, obj)
+    in return BC`GenAsgnStmt(res, fcall);
+\end{vdm_al}
+
+\begin{vdm_al}
+  GenIsOfClassExpr: AS`Name * CPP`Expr  ==> CPP`Expr
+  GenIsOfClassExpr(class, obj ) ==
+    if CPP`isCPP()
+    then
+      let mc = BC`GiveMacroName(class),
+          fct = "IsOfClass",
+          fcall = BC`GenFctCallObjMemAcc(obj,fct,[mc])
+      in
+       (CGAUX`IncludeClass(class);
+        return fcall)
+    else
+      def mc = BC`GenTypeSpecifier(BC`GenIdentifier(CGAUX`GiveLastName(class)));
+          fcall = BC`GenTypeComp(mc, obj)
+      in
+       (CGAUX`IncludeClass(class);
+        return GenBoolExpr(fcall));
+\end{vdm_al}
+
+
+The operation $GenIsOfBaseClass$ is similar to $GenIsOfClass$ execpt
+it generates the following code:
+
+\begin{quote}
+\begin{verbatim}
+res = obj.IsOfBaseClass(VDM_A);
+\end{verbatim}
+\end{quote}
+
+\begin{vdm_al}
+  GenIsOfBaseClass: AS`Name * CPP`Expr * CPP`Name ==> CPP`Stmt
+  GenIsOfBaseClass(class, obj, res) ==
+    def fcall = GenIsOfBaseClassExpr(class,obj)
+    in return BC`GenAsgnStmt(res, fcall);
+\end{vdm_al}
+
+\begin{vdm_al}
+  GenIsOfBaseClassExpr: AS`Name * CPP`Expr ==> CPP`Expr
+  GenIsOfBaseClassExpr(class, obj) ==
+    if CPP`isCPP()
+    then
+      let mc  = BC`GiveMacroName(class),
+          fct = "IsOfBaseClass",
+          fcall = BC`GenFctCallObjMemAcc(obj,fct,[mc])
+      in
+       (CGAUX`IncludeClass(class);
+        return fcall)
+    else
+      def mc  = BC`GenIdentifier(CGAUX`GiveLastName(class));
+          expr1 = BC`GenTypeComp(BC`GenTypeSpecifier(mc), obj);
+          expr2 = BC`GenFctCallObjMemAcc(BC`GenIdentifier("UTIL"),"isbaseclass",
+                                        [BC`GenQualifiedName(mc,BC`GenIdentifier("class"))]);
+          fcall = BC`GenLogAnd(expr1,expr2)
+      in
+       (CGAUX`IncludeClass(class);
+        return GenBoolExpr(fcall));
+
+\end{vdm_al}
+
+
+The operation $GenSameBaseClass$ is similar to $GenIsOfClass$ execpt
+it generates the following code:
+
+\begin{quote}
+\begin{verbatim}
+res = obj1.SameBaseClass(obj2);
+\end{verbatim}
+\end{quote}
+
+\begin{vdm_al}
+  GenSameBaseClass: CPP`Expr * CPP`Expr * CPP`Name * bool ==> CPP`Stmt
+  GenSameBaseClass(obj1, obj2, res, areObjectRefs) ==
+    def fcall = GenSameBaseClassExpr(obj1, obj2, areObjectRefs)
+    in return BC`GenAsgnStmt(res, fcall);
+\end{vdm_al}
+
+\begin{vdm_al}
+  GenSameBaseClassExpr: CPP`Expr * CPP`Expr * bool ==> CPP`Expr
+  GenSameBaseClassExpr(obj1, obj2, -) ==
+    if CPP`isCPP()
+    then
+      let fct = "SameBaseClass",
+          fcall = BC`GenFctCallObjMemAcc(obj1,fct,[obj2])
+      in return fcall
+    else
+      let fcall = BC`GenFctCall(BC`GenIdentifier("UTIL.samebaseclass"), [obj1,obj2])
+      in return GenBoolExpr(fcall);
+
+\end{vdm_al}
+
+The operation $GenInvokeExpr$ generates a method invocation of a C++
+{\tt Class} object. This operation takes four parameters:
+
+\begin{itemize}
+\item $nm$: The name of the VDM++ class in which the method to be
+  invoked is a member.
+\item $obj$: The object in which the method to be invoked is a member.
+\item $mthd$: The method to be invoked.
+\item $parms$: The actual parameters.
+\end{itemize}
+
+The VDM++ method invocation:
+
+\begin{quote}
+{\tt a.m1()}
+\end{quote}
+
+If it is assumed that {\tt a} is a object reference of class {\tt A},
+the $GenInvokeExpr$ will generate the following C++ expression:
+
+\begin{quote}
+{\tt ObjGet\_vdm\_A(vdm\_a)->vdm\_m1()}
+\end{quote}
+
+Note, the C++ variable {\tt vdm\_a} is an instance of {\tt Class} and
+that {\tt vdm\_a} contains a pointer to an instance of {\tt vdm\_A}.
+{\tt vdm\_A} is the generated C++ class corresponding to the type
+information in $ti$.
+
+\begin{vdm_al}
+
+  GenInvokeExpr: REP`ObjRefTypeRep * CPP`Expr * CPP`Name * CPP`Exprs ==> CPP`Expr
+  GenInvokeExpr(mk_REP`ObjRefTypeRep(nm),obj,mthd,parms) ==
+    if CPP`isCPP()
+    then
+      def cnm = BC`Rename(nm);
+          clid = BC`PrefixName("ObjGet",cnm);
+          fct = BC`GenFctCall(clid,[obj])
+      in
+        return BC`GenGenericFctCallPtrToObjMemAcc(fct,mthd,parms)
+    else
+      let fct = BC`GenObjectMemberAccess(obj,mthd)
+      in
+        return BC`GenFctCall(fct,parms);
+\end{vdm_al}
+
+
+The operation $GenCGBase$ generates the files {\tt CGBase.h} and {\tt
+CGBase.cc} in which the class {\tt CGBase} is defined. In these files are
+also defined a function for each VDM++ class that returns a pointer to
+the class from an object reference.
+
+If the VDM++ classes {\tt A}, {\tt B} and {\tt C} has been code
+generated, then following implementation of {\tt  CGBase.h}
+will be generated by GenCGBase:
+
+\begin{alltt}
+{#include "cg.h"}
+{class A;}
+{class B;}
+{class C;}
+\end{alltt}
+\begin{verbatim}
+class CGBase : public vdmBase
+{
+private:
+  virtual bool has_cg_base() const { return true; }
+public:
+  virtual vdm_A * Get_vdm_A() { return 0; }
+  virtual vdm_B * Get_vdm_B() { return 0; }
+  virtual vdm_C * Get_vdm_C() { return 0; }
+  virtual ~CGBase() { }
+};
+vdm_A * ObjGet_vdm_A(const ObjectRef& obj)
+vdm_B * ObjGet_vdm_B(const ObjectRef& obj)
+vdm_C * ObjGet_vdm_C(const ObjectRef& obj)
+
+enum {VDM_A, VDM_B, VDM_C};
+
+\end{verbatim}
+
+And the following implementation of \texttt{CGBase.cc} will be
+generated by GenCGBase:
+\begin{alltt}
+{#include "metaiv.h"}
+{#include "CGBase.h"}
+\end{alltt}
+\begin{verbatim}
+vdm_A * ObjGet_vdm_A(const ObjectRef& obj)
+{  vdmBase*p = obj.GetRef();
+   return p ? ((CGBase*)p)->Get_vdm_A() : 0;
+}
+vdm_B * ObjGet_vdm_B(const ObjectRef& obj)
+{  vdmBase*p = obj.GetRef();
+return p ? ((CGBase*)p)->Get_vdm_B() : 0;
+}
+vdm_C * ObjGet_vdm_C(const ObjectRef& obj)
+{  vdmBase*p = obj.GetRef();
+return p ? ((CGBase*)p)->Get_vdm_C() : 0;
+}
+\end{verbatim}
+
+\begin{vdm_al}
+
+  operations
+
+  GenCGBase: set of AS`Name ==> set of CPP`File
+  GenCGBase(cl_nms) ==
+  ( dcl cppas     : CPP`CPPAS := [],
+        --cppascc   : CPP`CPPAS := [],
+        pp        : CPP`Preprocessors := [ BC`GenInclusion("cg.h") ],
+        ppcc      : CPP`Preprocessors := [ BC`GenInclusion("metaiv.h") ] ^ [ BC`GenInclusion(BC`CGBasename^".h") ],
+        forward   : seq of CPP`Declaration := [],
+        enum      : seq of CPP`Enumerator := [],
+        cgbaseclass_l : seq of CPP`MemberDeclaration := [],
+-- removed by LTO ???       functionsDecl_l : seq of CPP`Stmt := [],
+-- removed by LTO ???       functions_l : seq of CPP`Stmt := [];
+        functionsDecl_l : CPP`CPPAS := [],
+        functions_l : CPP`CPPAS := [];
+    for all nm in set cl_nms do
+      def mk_(cgbase_l,objrefDecl_l,objref_l) = GenGet(nm);
+          --lnm_v = CGAUX`GiveLastName(nm)
+      in
+       (forward := forward ^ [BC`GenClassTypeDecl(BC`Rename(nm))];
+        enum := enum ^ [BC`GiveMacroName(nm)];
+        cgbaseclass_l := cgbaseclass_l ^ cgbase_l;
+        functionsDecl_l := functionsDecl_l ^ objrefDecl_l;
+        functions_l := functions_l ^ objref_l);
+    let cgbase = BC`GenIdentifier(BC`CGBasename),
+        hascg_v = BC`GenIdentifier("has_cg_base"),
+        bl = GenSmallBoolType(),
+        tr = BC`GenIdentifier("true"),
+        dstmt = BC`GenBlock([]),
+        acchead = BC`GenAccBaseSpec(BC`GenIdentifier("vdmBase")),
+        head = BC`GenClassHead(cgbase,[acchead]),
+        public = BC`GenPublic(cgbaseclass_l),
+        destr = BC`GenFctDecl(BC`GenDest(cgbase),[]),
+        cgfct = BC`GenConstFctDecl(hascg_v,[]),
+        rtst = BC`GenReturnStmt(tr),
+        rttp = [BC`GenFctSpecifier(<VIRTUAL>)]^[bl],
+        fdef = BC`GenFctDef(rttp,cgfct,nil,rtst),
+        private = BC`GenPrivate([fdef]),
+        cldef = BC`GenTypeSpecifier(BC`GenClassSpecifier(head,private ^ public))
+    in
+     (cgbaseclass_l := cgbaseclass_l ^ [BC`GenFctDef([BC`GenFctSpecifier(<VIRTUAL>)],destr,nil,dstmt)];
+      cppas := forward ^ [BC`GenIdentDeclaration([],[cldef],nil)]);
+    cppas := cppas ^ functionsDecl_l;
+    cppas := cppas ^ [BC`GenIdentDeclaration([],[BC`GenTypeSpecifier(BC`GenEnumSpec(nil,enum))],nil)];
+    return { BC`GenFile(nil,BC`CGBasename ^ ".h",pp,cppas),
+             BC`GenFile(nil,CGAUX`GenFileExt(BC`CGBasename),ppcc,functions_l) }
+  );
+
+\end{vdm_al}
+
+The operation $GenGet$ is an auxiliary operation
+to $GenCGBase$.
+
+\begin{vdm_al}
+
+-- removed by LTO???  GenGet: AS`Name ==> seq of CPP`MemberDeclaration * seq of CPP`MemberDeclaration * seq of CPP`MemberDeclaration
+  GenGet: AS`Name ==> seq of CPP`MemberDeclaration * seq of CPP`IdentDeclaration * seq of CPP`FunctionDefinition
+  GenGet(nm) ==
+    def rnm = BC`Rename(nm);
+        cls = rnm;
+        zerolit_v = BC`GenIntegerLit( 0 );
+        p_v = BC`GenIdentifier("p");
+        obj_v = BC`GenIdentifier("obj");
+        cgbase_v = BC`GenIdentifier(BC`CGBasename);
+        classnm_v = [BC`GenTypeSpecifier(BC`GenIdentifier("vdmBase"))];
+        clid = BC`PrefixName("Get",rnm);
+        ifstmt = BC`GenIfStmt(BC`GenNot(BC`GenFctCallObjMemAcc(obj_v, "IsInitialized", [])),
+                              CGAUX`RunTime("Identifier is undefined/not initialized"), nil);
+        cobj = [BC`GenTypeSpecifier(<CONST>), BC`GenTypeSpecifier(BC`GenIdentifier("ObjectRef"))];
+        gref = BC`GenFctCallObjMemAcc(obj_v,"GetRef",[]);
+        basedecl = BC`GenPtrDecl(classnm_v,p_v,gref);
+        getprefix_v = BC`PrefixClassName("Get",cls);
+        objpre = BC`PrefixClassName("ObjGet",cls);
+        castexpr = BC`GenCastPtrExpr(BC`GenTypeSpecifier(cgbase_v),p_v);
+        cond2 = BC`GenGenericFctCallPtrToObjMemAcc(castexpr,clid,[]);
+        returncond = BC`GenReturnStmt(BC`GenBracketedExpr(BC`GenCondExpr(p_v,cond2,zerolit_v)));
+        stmt2 = BC`GenBlock([ifstmt, basedecl, returncond]);
+        stmt1 = BC`GenReturnStmt(zerolit_v);
+        args = BC`GenArgDecl(cobj,BC`GenRef(obj_v));
+        decl1 = BC`GenIndirection(BC`GenFctDecl(getprefix_v,[]));
+        decl2 = BC`GenIndirection(BC`GenFctDecl(objpre,[args]));
+        cgbase = [BC`GenFctDef([BC`GenFctSpecifier(<VIRTUAL>)] ^
+                 [BC`GenTypeSpecifier(cls)],decl1,nil,stmt1)]; -- seq of FunctionDefinition
+        objrefDecl = [BC`GenIdentDecl([], [BC`GenTypeSpecifier(cls)],decl2,nil)];        -- seq of IdentDeclaration
+        objref = [BC`GenFctDef([BC`GenTypeSpecifier(cls)],decl2,nil,stmt2)] -- seq of FunctionDefinition
+    in
+      return mk_(cgbase,objrefDecl,objref);
+
+\end{vdm_al}
+
+#endif VDMPP
+
+\subsection{Operations on data types}
+
+
+\subsubsection{Modification of Sequence or Map}
+
+\begin{vdm_al}
+  GenSeqOrMapImpModify: CGMAIN`VT * CPP`Expr * REP`TypeRep * CPP`Expr ==> CPP`Stmt
+  GenSeqOrMapImpModify(mk_CGMAIN`VT(m, mt), e1, e1_tp, e2) ==
+   (dcl new_e1 : CPP`Expr := e1;
+    if CGAUX`IsIntType(e1_tp) and CPP`isJAVA()
+    then new_e1 := BC`GenFctCallObjMemAcc( BC`GenCastExpr( GenIntType(), e1), "intValue", [] );
+    cases true:
+      (CGAUX`IsMapType(mt)) -> GenMapImpModify(m, e1, e2),
+      (CGAUX`IsSeqType(mt)) -> if CPP`isCPP()
+                               then GenSeqModify(m, new_e1, e2)
+                               else
+                                 if CGAUX`IsStringType(mt)
+                                 then
+                                  (dcl e1_int : CPP`Expr := e1;
+                                   if not CGAUX`IsIntType(e1_tp)
+                                   then e1_int := BC`GenCastExpr(GenIntType(), e1);
+                                   def e1_index = BC`GenFctCallObjMemAcc(e1_int, "intValue", []);
+                                       lhs = BC`GenFctCallObjMemAcc(m, "substring",
+                                                [BC`GenIntegerLit(0), BC`GenMinus(e1_index, BC`GenIntegerLit(1))]);
+                                       rhs = BC`GenFctCallObjMemAcc(m, "substring", [e1_index])
+                                   in return BC`GenAsgnStmt(m, BC`GenPlus(lhs, BC`GenPlus(e2, rhs))))
+                                 else GenSeqModify(m, new_e1, e2),
+      others -> def cond_m = GenIsMap(m);
+                    castmap = GenCastMap(m);
+                    cond_s = GenIsSeq(m);
+                    castseq = GenCastSeq(m, mt);
+                in
+                 (dcl alt_m : CPP`Stmt,
+                      alt_s : CPP`Stmt;
+                  if CPP`isJAVA()
+                  then
+                   (alt_m := GenMapImpModify(castmap, e1, e2);
+                    alt_s := GenSeqModify(castseq, new_e1, e2))
+                  else
+                   (alt_m := BC`GenAsgnStmt(m, GenMapImpModifyExpr(castmap, e1, e2));
+                    alt_s := BC`GenAsgnStmt(m, GenSeqModifyExpr(castseq, new_e1, e2)));
+                  def alt_rre = CGAUX`RunTime("Sequence or Map expected in Map or Sequence State Designator");
+                      ifstmt1 = BC`GenIfStmt(BC`GenNot(cond_s), alt_rre, nil);
+                      if1 = BC`GenBlock([ifstmt1, alt_s])
+                  in return BC`GenIfStmt(cond_m, alt_m, if1))
+    end;
+   );
+\end{vdm_al}
+
+\subsubsection{Binary Operations}
+
+It is assumed that the \MCL{} library provides following overloaded operations:
+\begin{verbatim}
+unary -,
+binary +, -, *,  and /
+\end{verbatim}
+
+For the following operations the same principal of code generation apply:
+Consider the VDM example below:
+
+\begin{verbatim}
+( if a>b
+  then 3.6
+  else 9 ) + ( if b>c
+               then 3.1
+               else 7 )
+\end{verbatim}
+
+Both the right and the left hand side of the plus operations are
+expressions of union type. It is known dynamically (by the \MCL{}) if
+the expressions are of type Integer or Reals.  The corresponding
+pseudo code is therefore:
+
+\begin{verbatim}
+Generic rhs;
+...CGExpr( "if a>b then 3.6 else 9", mk_CGMAIN`VT( rhs, "Generic" ) );
+Generic lhs;
+...CGExpr( "if a>b then 3.6 else 9", mk_CGMAIN`VT( lhs, "Generic" ) );
+resVar = (Real) rhs + (Real) lhs;
+\end{verbatim}
+
+
+\begin{vdm_al}
+-- x + y Sum,  Type: real * real -> real
+
+  GenIntResult : CGMAIN`VT ==> CPP`Expr
+  GenIntResult(mk_CGMAIN`VT(expr, tp)) ==
+    if CGAUX`IsIntType(tp)
+    then return GenIntExpr(expr)
+    else return GenRealExpr(expr);
+
+  GenPlus: CGMAIN`VT * CGMAIN`VT  * [CGMAIN`VT]==> CPP`Expr
+  GenPlus(mk_CGMAIN`VT(var1, type1), mk_CGMAIN`VT(var2, type2), result) ==
+    if CPP`isCPP()
+    then
+     (dcl v1 : CPP`Expr := var1,
+          v2 : CPP`Expr := var2;
+      if not CGAUX`IsNumType(type1)
+      then v1 := BC`GenCastExpr(GenRealType(), var1);
+      if not CGAUX`IsNumType(type2)
+      then v2 := BC`GenCastExpr(GenRealType(), var2);
+      return BC`GenPlus(v1, v2))
+    else
+      def mk_CGMAIN`VT(-,restp) = result;
+      in
+       (dcl v1 : CPP`Expr,
+            v2 : CPP`Expr;
+        if CGAUX`IsNumType(type1)
+        then v1 := GenGetValue(var1, type1)
+        else
+          def cast = BC`GenCastExpr(GenNumType(), var1)
+          in if CGAUX`IsIntType(restp)
+             then v1 := GenGetValue(cast, restp)
+             else v1 := GenGetValue(cast, mk_REP`NumericTypeRep(<REAL>));
+        if CGAUX`IsNumType(type2)
+        then v2 := GenGetValue(var2, type2)
+        else
+          def cast = BC`GenCastExpr(GenNumType(), var2)
+          in if CGAUX`IsIntType(restp)
+             then v2 := GenGetValue(cast, restp)
+             else v2 := GenGetValue(cast, mk_REP`NumericTypeRep(<REAL>));
+        def pexpr = BC`GenPlus(v1, v2);
+        in
+         (dcl cast : CPP`Expr := pexpr;
+          if CPP`isJAVA() and CGAUX`IsIntType(restp) and
+                     ( not CGAUX`IsIntType(type1) or not CGAUX`IsIntType(type2) )
+          --then cast := BC`GenCastExpr(GenSmallIntType(), BC`GenBracketedExpr(pexpr));
+          then cast := BC`GenCastExpr(GenSmallNumType(), BC`GenBracketedExpr(pexpr));
+          return GenIntResult(mk_CGMAIN`VT(cast, restp)));
+       );
+\end{vdm_al}
+
+-- x - y Difference,  Type: real * real -> real
+
+\begin{vdm_al}
+  GenMinus: CGMAIN`VT * CGMAIN`VT  * [CGMAIN`VT] ==> CPP`Expr
+  GenMinus(mk_CGMAIN`VT(var1, type1), mk_CGMAIN`VT(var2, type2), result) ==
+    if CPP`isCPP()
+    then
+     (dcl v1 : CPP`Expr := var1,
+          v2 : CPP`Expr := var2;
+      if not CGAUX`IsNumType(type1)
+      then v1 := BC`GenCastExpr(GenRealType(), var1);
+      if not CGAUX`IsNumType(type2)
+      then v2 := BC`GenCastExpr(GenRealType(), var2);
+      return BC`GenMinus(v1, v2))
+    else
+      def mk_CGMAIN`VT(-,restp) = result;
+      in
+       (dcl v1 : CPP`Expr,
+            v2 : CPP`Expr;
+        if CGAUX`IsNumType(type1)
+        then v1 := GenGetValue(var1, type1)
+        else
+          def cast = BC`GenCastExpr(GenNumType(), var1)
+          in if CGAUX`IsIntType(restp)
+             then v1 := GenGetValue(cast, restp)
+             else v1 := GenGetValue(cast, mk_REP`NumericTypeRep(<REAL>));
+        if CGAUX`IsNumType(type2)
+        then v2 := GenGetValue(var2, type2)
+        else
+          def cast = BC`GenCastExpr(GenNumType(), var2)
+          in if CGAUX`IsIntType(restp)
+             then v2 := GenGetValue(cast, restp)
+             else v2 := GenGetValue(cast, mk_REP`NumericTypeRep(<REAL>));
+        def pexpr = BC`GenMinus(v1, v2);
+        in
+         (dcl cast : CPP`Expr := pexpr;
+          if CPP`isJAVA() and CGAUX`IsIntType(restp) and
+                     ( not CGAUX`IsIntType(type1) or not CGAUX`IsIntType(type2) )
+          --then cast := BC`GenCastExpr(GenSmallIntType(), BC`GenBracketedExpr(pexpr));
+          then cast := BC`GenCastExpr(GenSmallNumType(), BC`GenBracketedExpr(pexpr));
+          return GenIntResult(mk_CGMAIN`VT(cast, restp)));
+       );
+
+-- x * y Product,  Type: real * real -> real
+
+GenMult: CGMAIN`VT * CGMAIN`VT * [CGMAIN`VT] ==> CPP`Expr
+GenMult(mk_CGMAIN`VT(var1, type1), mk_CGMAIN`VT(var2, type2 ), result) ==
+  if CPP`isCPP()
+  then
+   (dcl v1 : CPP`Expr := var1,
+        v2 : CPP`Expr := var2;
+    if not CGAUX`IsNumType(type1)
+    then v1 := BC`GenCastExpr(GenRealType(), var1);
+    if not CGAUX`IsNumType(type2)
+    then v2 := BC`GenCastExpr(GenRealType(), var2);
+    return BC`GenMult(v1, v2))
+  else
+    def mk_CGMAIN`VT(-,restp) = result;
+    in
+     (dcl v1 : CPP`Expr,
+          v2 : CPP`Expr;
+      if CGAUX`IsNumType(type1)
+      then v1 := GenGetValue(var1, type1)
+      else
+        def cast = BC`GenCastExpr(GenNumType(), var1)
+        in if CGAUX`IsIntType(restp)
+           then v1 := GenGetValue(cast, restp)
+           else v1 := GenGetValue(cast, mk_REP`NumericTypeRep(<REAL>));
+      if CGAUX`IsNumType(type2)
+      then v2 := GenGetValue(var2, type2)
+      else
+        def cast = BC`GenCastExpr(GenNumType(), var2)
+        in if CGAUX`IsIntType(restp)
+           then v2 := GenGetValue(cast, restp)
+           else v2 := GenGetValue(cast, mk_REP`NumericTypeRep(<REAL>));
+      def pexpr = BC`GenMult(v1, v2);
+      in
+       (dcl cast : CPP`Expr := pexpr;
+        if CGAUX`IsIntType(restp) and ( not CGAUX`IsIntType(type1) or not CGAUX`IsIntType(type2) )
+        --then cast := BC`GenCastExpr(GenSmallIntType(), BC`GenBracketedExpr(pexpr));
+        then cast := BC`GenCastExpr(GenSmallNumType(), BC`GenBracketedExpr(pexpr));
+        return GenIntResult(mk_CGMAIN`VT(cast, restp)));
+     );
+
+-- x / y Divison,  Type: real * real -> real
+
+GenNumDiv: CGMAIN`VT * CGMAIN`VT * [CGMAIN`VT] ==> CPP`Expr
+GenNumDiv(mk_CGMAIN`VT(var1, type1), mk_CGMAIN`VT(var2, type2), -) ==
+  if CPP`isCPP()
+  then
+   (dcl v1 : CPP`Expr := var1,
+        v2 : CPP`Expr := var2;
+    if not CGAUX`IsNumType(type1)
+    then v1 := BC`GenCastExpr(GenRealType(), var1);
+    if not CGAUX`IsNumType(type2)
+    then v2 := BC`GenCastExpr(GenRealType(), var2);
+    return BC`GenDiv(v1, v2))
+  else
+   (dcl va1 : CPP`Expr := var1,
+        va2 : CPP`Expr := var2;
+    if not CGAUX`IsNumType(type1)
+    then va1 := BC`GenCastExpr(GenNumType(), var1);
+    if not CGAUX`IsNumType(type2)
+    then va2 := BC`GenCastExpr(GenNumType(), var2);
+    def v1 = GenGetValue(va1, mk_REP`NumericTypeRep(<REAL>));
+        v2 = GenGetValue(va2, mk_REP`NumericTypeRep(<REAL>))
+    in
+      return GenRealExpr(BC`GenDiv(v1, v2));
+   );
+types
+
+  OpType = <NUMREM> | <NUMMOD> | <INTDIV> | <NUMLT> | <NUMLE> | <NUMGT> | <NUMGE>
+
+
+operations
+
+-- x rem y Remainder Type: int * int -> int
+
+GenIntVal : CGMAIN`VT ==> CPP`Expr
+GenIntVal(mk_CGMAIN`VT(v, tp)) ==
+  if CGAUX`IsIntType(tp)
+  then return v
+  elseif CGAUX`IsNumType(tp)
+  then
+    let e = BC`GenFctCallObjMemAcc(v, "intValue", [])
+    in return GenIntExpr(e)
+  else return GetIntVal(v);
+
+GenNumRem: CGMAIN`VT  * CGMAIN`VT ==> CPP`Expr
+GenNumRem(mk_CGMAIN`VT(var1, type1), mk_CGMAIN`VT(var2, type2)) ==
+  if CPP`isCPP()
+  then
+   (dcl v1 : CPP`Expr := var1,
+        v2 : CPP`Expr := var2;
+    if not CGAUX`IsIntType(type1)
+    then v1 := BC`GenCastExpr(GenIntType(), var1);
+    if not CGAUX`IsIntType(type2)
+    then v2 := BC`GenCastExpr(GenIntType(), var2);
+    return BC`GenCastExpr(GenImplIntType(), BC`GenMod(v1, v2)))
+  else
+   (dcl etp1 : CPP`Expr := var1,
+        etp2 : CPP`Expr := var2;
+    if not CGAUX`IsNumType(type1)
+    then etp1 := BC`GenCastExpr( GenNumType(), var1);
+    if not CGAUX`IsNumType(type2)
+    then etp2 := BC`GenCastExpr( GenNumType(), var2);
+    def ee1 = GenIntVal(mk_CGMAIN`VT(etp1, type1));
+        ee2 = GenIntVal(mk_CGMAIN`VT(etp2, type2));
+        e1 = GenGetValue(ee1, mk_REP`NumericTypeRep(<INTEGER>));
+        e2 = GenGetValue(ee2, mk_REP`NumericTypeRep(<INTEGER>))
+    in
+     (if (not CGAUX`IsIntType(type2) or not CGAUX`IsIntType(type1))
+      then CGAUX`SetException(true);
+      return GenIntExpr(BC`GenMod(e1,e2)););
+   );
+-- x mod y Modulus Type: int * int -> int
+
+GenNumMod: CGMAIN`VT * CGMAIN`VT * CGMAIN`VT ==> CPP`Expr
+GenNumMod(mk_CGMAIN`VT(var1, type1), mk_CGMAIN`VT(var2, type2), mk_CGMAIN`VT(-,restype)) ==
+  if CPP`isCPP()
+  then
+   (dcl e1 : CPP`Expr := var1,
+        e2 : CPP`Expr := var2;
+    if not CGAUX`IsNumType(type1)
+    then e1 := BC`GenCastExpr(GenIntType(), var1);
+    if not CGAUX`IsNumType(type2)
+    then e2 := BC`GenCastExpr(GenIntType(), var2);
+    def de = BC`GenDiv (e1,e2);
+        quotient = BC`GenFctCallObjMemAcc (de, "Floor", []);
+    in return BC`GenMinus(e1, BC`GenMult (e2, GenIntExpr(quotient))))
+  else
+   (dcl etp1 : CPP`Expr := var1,
+        etp2 : CPP`Expr := var2;
+    if not CGAUX`IsNumType(type1)
+    then etp1 := BC`GenCastExpr( GenNumType(), var1);
+    if not CGAUX`IsNumType(type2)
+    then etp2 := BC`GenCastExpr( GenNumType(), var2);
+    def ee1 = GenIntVal(mk_CGMAIN`VT(etp1, type1));
+        ee2 = GenIntVal(mk_CGMAIN`VT(etp2, type2));
+        e1r = GenGetValue( ee1, mk_REP`NumericTypeRep(<REAL>) );
+        e2r = GenGetValue( ee2, mk_REP`NumericTypeRep(<REAL>) );
+        e1 = GenGetValue( ee1, mk_REP`NumericTypeRep(<INTEGER>) );
+        e2 = GenGetValue( ee2, mk_REP`NumericTypeRep(<INTEGER>) );
+        de = BC`GenDiv (e1r, e2r);
+        fl = BC`GenFctCall (BC`GenIdentifier ("Math.floor"), [de]);
+        pexpr = BC`GenMinus(e1, BC`GenMult (e2, BC`GenCastExpr(GenSmallNumType(), fl)))
+    in
+     (if (not CGAUX`IsIntType(type2) or not CGAUX`IsIntType(type1))
+      then CGAUX`SetException(true);
+      return GenIntResult(mk_CGMAIN`VT(pexpr, restype)));
+   );
+
+-- x div y Integer division Type: int * int -> int
+
+GenIntDiv: CGMAIN`VT * CGMAIN`VT * CGMAIN`VT ==> CPP`Expr
+GenIntDiv(mk_CGMAIN`VT(var1, type1), mk_CGMAIN`VT(var2, type2), mk_CGMAIN`VT(-,restype)) ==
+  if CPP`isCPP()
+  then
+   (dcl e1 : CPP`Expr := var1,
+        e2 : CPP`Expr := var2;
+    if not CGAUX`IsNumType(type1)
+    then e1 := BC`GenCastExpr(GenIntType(), var1);
+    if not CGAUX`IsNumType(type2)
+    then e2 := BC`GenCastExpr(GenIntType(), var2);
+    return GenIntExpr(BC`GenDiv(e1, e2)))
+  else
+   (dcl etp1 : CPP`Expr := var1,
+        etp2 : CPP`Expr := var2;
+    if not CGAUX`IsNumType(type1)
+    then etp1 := BC`GenCastExpr(GenNumType(), var1);
+    if not CGAUX`IsNumType(type2)
+    then etp2 := BC`GenCastExpr(GenNumType(), var2);
+    def ee1 = GenIntVal(mk_CGMAIN`VT(etp1, type1));
+        ee2 = GenIntVal(mk_CGMAIN`VT(etp2, type2));
+        e1 = GenGetValue(ee1, mk_REP`NumericTypeRep(<INTEGER>));
+        e2 = GenGetValue(ee2, mk_REP`NumericTypeRep(<INTEGER>));
+        pexpr = BC`GenDiv(e1,e2)
+    in
+     (if (not CGAUX`IsIntType(type2) or not CGAUX`IsIntType(type1))
+      then CGAUX`SetException(true);
+      if CGAUX`IsIntType(restype)
+      then return GenIntExpr(pexpr)
+      elseif CGAUX`IsRealType(restype)
+      then return GenRealExpr(pexpr)
+      else return GenIntExpr(pexpr)
+     );
+   );
+
+GenNumLT: CGMAIN`VT * CGMAIN`VT ==> CPP`Expr
+GenNumLT(vt1, vt2) ==
+  return GenNumOp(vt1, vt2, <NUMLT>);
+
+GenNumLE: CGMAIN`VT * CGMAIN`VT ==> CPP`Expr
+GenNumLE(vt1, vt2) ==
+  return GenNumOp(vt1, vt2, <NUMLE>);
+
+GenNumGT: CGMAIN`VT * CGMAIN`VT ==> CPP`Expr
+GenNumGT(vt1, vt2) ==
+  return GenNumOp(vt1, vt2, <NUMGT>);
+
+GenNumGE: CGMAIN`VT * CGMAIN`VT ==> CPP`Expr
+GenNumGE(vt1, vt2) ==
+  return GenNumOp(vt1, vt2, <NUMGE>);
+
+GenNumOp: CGMAIN`VT  * CGMAIN`VT * OpType ==> CPP`Expr
+GenNumOp(mk_CGMAIN`VT(var1, type1), mk_CGMAIN`VT(var2, type2), tp) ==
+ (dcl expr1 : CPP`Expr := var1,
+      expr2 : CPP`Expr := var2,
+      fc1 : CPP`Expr,
+      fc2 : CPP`Expr,
+      br1 : CPP`Expr,
+      br2 : CPP`Expr;
+  if not CGAUX`IsNumType(type1)
+  then expr1 := BC`GenCastExpr(GenNumType(), var1);
+  if not CGAUX`IsNumType(type2)
+  then expr2 := BC`GenCastExpr(GenNumType(), var2);
+  if CGAUX`IsNumType(type1)
+  then fc1 := GenGetValue(expr1, type1)
+  else fc1 := GenGetValue(expr1, mk_REP`NumericTypeRep(<REAL>));
+  if CGAUX`IsNumType(type2)
+  then fc2 := GenGetValue(expr2, type2)
+  else fc2 := GenGetValue(expr2, mk_REP`NumericTypeRep(<REAL>));
+  if is_CPP`IntegerLit(fc1) or is_CPP`FloatingLit(fc1) or is_CPP`FctCall(fc1)
+  then br1 := fc1
+  else br1 := BC`GenBracketedExpr(fc1);
+  if is_CPP`IntegerLit(fc2) or is_CPP`FloatingLit(fc2) or is_CPP`FctCall(fc2)
+  then br2 := fc2
+  else br2 := BC`GenBracketedExpr(fc2);
+  def r = cases tp:
+            <NUMLT> -> BC`GenLt(br1, br2),
+            <NUMLE> -> BC`GenLeq(br1, br2),
+            <NUMGT> -> BC`GenGt(br1, br2),
+            <NUMGE> -> BC`GenGeq(br1, br2),
+            others  -> undefined
+          end
+  in return GenBoolExpr(r);
+ );
+
+\end{vdm_al}
+
+The translation strategy of $GenExp$ corresponds to the translation
+strategy used in the $GenExp$ operation.
+
+-- x**y Power Type: real * real -> real
+
+\begin{vdm_al}
+GenExp: CGMAIN`VT * CGMAIN`VT * CGMAIN`VT ==> CPP`Stmt
+GenExp(mk_CGMAIN`VT(var1, type1), mk_CGMAIN`VT(var2, type2), mk_CGMAIN`VT(resVar_v, restp)) ==
+  if CPP`isCPP()
+  then
+    def lhsReal = BC`GenCastExpr( GenRealType(), var1 );
+        lhsInt  = BC`GenCastExpr( GenIntType(), var1 );
+        rhsReal = BC`GenCastExpr( GenRealType(), var2 );
+        rhsInt  = BC`GenCastExpr( GenIntType(), var2 );
+        eRealReal = BC`GenAsgnExpr( resVar_v, BC`GenFctCallObjMemAcc( lhsReal, "Exp", [rhsReal] ) );
+        eRealInt  = BC`GenAsgnExpr( resVar_v, BC`GenFctCallObjMemAcc( lhsReal, "Exp", [rhsInt] ) );
+        eIntReal  = BC`GenAsgnExpr( resVar_v, BC`GenFctCallObjMemAcc( lhsInt, "Exp", [rhsReal] ) );
+        eIntInt   = BC`GenAsgnExpr( resVar_v, BC`GenFctCallObjMemAcc( lhsInt, "Exp", [rhsInt] ) );
+        rhsIsReal = GenIsReal( var2 );
+        lhsIsReal = GenIsReal( var1 )
+    in
+      cases true:
+        ( not ( is_REP`UnionTypeRep( type1 ) or is_REP`UnionTypeRep( type2) ) ) ->
+           return BC`GenAsgnStmt( resVar_v, BC`GenFctCallObjMemAcc( var1, "Exp", [var2] ) ),
+        ( is_REP`UnionTypeRep( type1 ) and is_REP`UnionTypeRep( type2 ) ) ->
+             return BC`GenExpressionStmt(
+                    BC`GenBracketedExpr(BC`GenCondExpr( rhsIsReal,
+                                    BC`GenBracketedExpr( BC`GenCondExpr( lhsIsReal, eRealReal, eRealInt ) ),
+                                    BC`GenBracketedExpr( BC`GenCondExpr( lhsIsReal, eIntReal, eIntInt ) ) ) )),
+        ( is_REP`UnionTypeRep( type1 ) and not is_REP`UnionTypeRep( type2 ) ) ->
+          return BC`GenExpressionStmt(
+                 BC`GenBracketedExpr(BC`GenCondExpr( lhsIsReal,
+                                 BC`GenAsgnExpr( resVar_v, BC`GenFctCallObjMemAcc( lhsReal, "Exp", [var2] ) ),
+                                 BC`GenAsgnExpr( resVar_v, BC`GenFctCallObjMemAcc( lhsInt, "Exp", [var2] ) ) ) )),
+        ( not is_REP`UnionTypeRep( type1 ) and is_REP`UnionTypeRep( type2 ) ) ->
+          return BC`GenExpressionStmt(
+                 BC`GenBracketedExpr(BC`GenCondExpr( rhsIsReal,
+                                 BC`GenAsgnExpr( resVar_v, BC`GenFctCallObjMemAcc( var1, "Exp", [rhsReal] ) ),
+                                 BC`GenAsgnExpr( resVar_v, BC`GenFctCallObjMemAcc( var1, "Exp", [rhsInt] ) ) ) )),
+        others -> return undefined
+      end
+  else
+   (dcl ee1 : CPP`Expr := var1,
+        ee2 : CPP`Expr := var2;
+    if not CGAUX`IsNumType(type1)
+    then ee1 := BC`GenCastExpr(GenNumType(), var1);
+    if not CGAUX`IsNumType(type2)
+    then ee2 := BC`GenCastExpr(GenNumType(), var2);
+    def e1 = GenGetValue(ee1, mk_REP`NumericTypeRep(<REAL>));
+        e2 = GenGetValue(ee2, mk_REP`NumericTypeRep(<REAL>));
+        fctcall = BC`GenFctCall(BC`GenIdentifier("Math.pow"), [e1,e2]);
+        pexpr = BC`GenCastExpr(GenSmallNumType(), fctcall);
+    in
+     (dcl cast : CPP`Expr;
+      if CGAUX`IsIntType(restp)
+      then cast := GenIntExpr(pexpr)
+      elseif CGAUX`IsRealType(restp)
+      then cast := GenRealExpr(fctcall)
+      elseif CGAUX`IsIntType(type1) and CGAUX`IsIntType(type2)
+      then cast := GenIntExpr(pexpr)
+      else cast := GenRealExpr(fctcall);
+      return BC`GenAsgnStmt(resVar_v, cast));
+   );
+
+\end{vdm_al}
+
+The operation $GenEq$ is required to be able to compare any kind
+of type values. This requirement might not be easy to fulfill for all
+implementations of the VDM data type, and it might lead to
+restrictions on the union type, for example, so that all types in a
+union are records. Using the \MCL{} library it is always possible to compare any type  of values.
+
+-- x = y Equal,  Type: real * real -> bool
+
+\begin{vdm_al}
+GenEq: CGMAIN`VT * CGMAIN`VT ==> CPP`Expr
+GenEq( mk_CGMAIN`VT( var1, tp1), mk_CGMAIN`VT(var2, tp2) ) ==
+  if CPP`isCPP()
+  then
+   (dcl expr : CPP`Expr;
+    if CGAUX`IsNumType(tp1) and CGAUX`IsNumType(tp2)
+    then expr := BC`GenEq(GenGetValue(var1,tp1), GenGetValue(var2,tp2))
+    else expr := BC`GenEq(var1, var2);
+    return GenBoolExpr(expr))
+  else
+   (dcl expr : CPP`Expr;
+    if CGAUX`IsNumType(tp1) and CGAUX`IsNumType(tp2)
+    then expr := BC`GenEq(GenGetValue(var1,tp1), GenGetValue(var2,tp2))
+    else expr := BC`GenFctCall(BC`GenIdentifier("UTIL.equals"), [var1,var2]);
+    return GenBoolExpr(expr));
+
+-- x <> y Not equal,  Type: real * real -> bool
+
+GenNeq: CGMAIN`VT * CGMAIN`VT ==> CPP`Expr
+GenNeq( mk_CGMAIN`VT( var1, tp1), mk_CGMAIN`VT(var2, tp2) ) ==
+  if CPP`isCPP()
+  then
+   (dcl expr : CPP`Expr;
+    if CGAUX`IsNumType(tp1) and CGAUX`IsNumType(tp2)
+    then expr := BC`GenNot(BC`GenEq(GenGetValue(var1,tp1), GenGetValue(var2,tp2)))
+    else expr := BC`GenNot(BC`GenEq(var1, var2));
+    return GenBoolExpr(expr))
+  else
+   (dcl expr : CPP`Expr;
+    if CGAUX`IsNumType(tp1) and CGAUX`IsNumType(tp2)
+    then expr := BC`GenNot(BC`GenEq(GenGetValue(var1,tp1), GenGetValue(var2,tp2)))
+    else expr := BC`GenNot(BC`GenFctCall(BC`GenIdentifier("UTIL.equals"), [var1,var2]));
+    return GenBoolExpr(expr));
+
+\end{vdm_al}
+
+\subsubsection{Unary Operations}
+
+\begin{vdm_al}
+
+-- +x Unary Plus,  Type: real -> real
+
+UnaryPlus: CGMAIN`VT * CGMAIN`VT ==> CPP`Expr
+UnaryPlus( mk_CGMAIN`VT( resVar_v, restp ), mk_CGMAIN`VT( arg, type ) ) ==
+  cases true:
+    (is_REP`UnionTypeRep(type)) ->
+        -- do simple cast
+         if CPP`isCPP()
+         then
+           if CGAUX`IsNumType(type)
+           then return arg
+           else if CGAUX`IsIntType(restp)
+                then return BC`GenCastExpr(GenIntType(), arg)
+                else return BC`GenCastExpr(GenRealType(), arg)
+        else
+         (dcl cast : CPP`Expr := arg;
+          if not CGAUX`IsNumType(type)
+          then cast := BC`GenCastExpr(GenNumType(),arg);
+          def fctcall = if CGAUX`IsIntType(restp)
+                        then BC`GenFctCallObjMemAcc(cast, "intValue", [])
+                        else BC`GenFctCallObjMemAcc(cast, "doubleValue", [])
+           in
+             if CGAUX`IsRealType(restp)
+             then GenRealExpr(fctcall)
+             elseif CGAUX`IsIntType(restp)
+             then GenIntExpr(fctcall)
+             else
+               def realasgn = BC`GenAsgnExpr( resVar_v, GenRealExpr(fctcall) );
+                   intasgn  = BC`GenAsgnExpr( resVar_v, GenIntExpr(fctcall) )
+               in
+                 return BC`GenBracketedExpr(BC`GenCondExpr( GenIsReal( arg ),realasgn,intasgn ))
+         ),
+     (is_REP`NumericTypeRep(type)) ->
+        -- the variable is already a numerical type
+         return arg ,
+   others -> error
+end;
+\end{vdm_al}
+
+\begin{vdm_al}
+-- +x Unary Minus,  Type: real -> real
+
+UnaryMinus: CGMAIN`VT * CGMAIN`VT ==> CPP`Expr
+UnaryMinus( mk_CGMAIN`VT( resVar_v, restype), mk_CGMAIN`VT( arg, type ) ) ==
+cases true:
+ (is_REP`UnionTypeRep( type ) ) ->
+   if CPP`isCPP()
+   then
+       if CGAUX`IsNumType(type)
+       then return BC`GenUnaryMinus(arg)
+       else if CGAUX`IsIntType(restype)
+            then return BC`GenUnaryMinus(BC`GenCastExpr(GenIntType(), arg))
+            else return BC`GenUnaryMinus(BC`GenCastExpr(GenRealType(), arg))
+    else
+     (dcl cast : CPP`Expr := arg;
+      if not CGAUX`IsNumType(type)
+      then cast := BC`GenCastExpr(GenNumType(),arg);
+      def fctcall = if CGAUX`IsIntType(restype)
+                      then BC`GenUnaryMinus(BC`GenFctCallObjMemAcc(cast, "intValue", []))
+                      else BC`GenUnaryMinus(BC`GenFctCallObjMemAcc(cast, "doubleValue", []))
+        in
+          if CGAUX`IsRealType(restype)
+          then return GenRealExpr(fctcall)
+          elseif CGAUX`IsIntType(restype)
+          then return GenIntExpr(fctcall)
+          else
+            def realasgn = BC`GenAsgnExpr( resVar_v, GenRealExpr(fctcall) );
+                intasgn  = BC`GenAsgnExpr( resVar_v, GenIntExpr(fctcall) )
+            in
+              return BC`GenBracketedExpr(BC`GenCondExpr( GenIsReal( arg ), realasgn, intasgn ))
+     ),
+ (is_REP`NumericTypeRep(type)) ->
+  -- the variable is already a numerical type
+                if CPP`isCPP() then
+                   return BC`GenUnaryMinus( arg )
+                else
+                   if CGAUX`IsRealType(type)
+                   then GenRealExpr(BC`GenUnaryMinus(GenGetValue(arg,type)))
+                   else GenIntExpr(BC`GenUnaryMinus(GenGetValue(arg,type))),
+        others -> error
+end;
+\end{vdm_al}
+
+It is not assumed that the \MCL{} provides an $abs$ unary operation.
+The corresponding pseudo code is listed below:
+
+\begin{verbatim}
+Generic tmpArg;
+...CGEXPR`CGExpr( "a", mk_CGMAIN`VT( tmpArg, "Generic" ) )
+if tmpArg.IsReal()
+   { double tmp = ( Real (tmpArg)).GetValue();
+     if ( tmp < 0 )
+        resVar_v = Real (- tmp )
+     else
+        resVar_v = Real ( tmp )
+   }
+else
+   { int tmp = (Int (tmpArg).GetValue() );
+     if ( tmp < 0 )
+        resVar_v = Int ( - tmp )
+     else
+        resVar_v = Int ( tmp )
+   }
+\end{verbatim}
+
+\begin{vdm_al}
+
+-- abs x Unary Abs,  Type: real -> real
+
+-- lav seq of stmt om til seq eller bare CPP\"{u}STMT
+
+  UnaryAbs: CGMAIN`VT * CGMAIN`VT ==> seq of CPP`Stmt
+  UnaryAbs( mk_CGMAIN`VT(resVar_v, type), mk_CGMAIN`VT( arg, argType ) ) ==
+    if CPP`isCPP()
+    then
+      let e = CGAUX`StripBracketedExpr(arg),
+          fcall = if CGAUX`IsIntType(type)
+                  then BC`GenFctCall(BC`GenIdentifier("CGUTIL::IAbs"), [e])
+                  else BC`GenFctCall(BC`GenIdentifier("CGUTIL::RAbs"), [e])
+      in
+        return [ BC`GenAsgnStmt( resVar_v, fcall ) ]
+    else
+     (dcl fctcall : CPP`Expr;
+      if CGAUX`IsNumType( argType )
+      then fctcall := GenGetValue(arg, argType)
+      else fctcall := GenGetValue(BC`GenCastExpr(GenNumType(), arg), mk_REP`NumericTypeRep(<REAL>));
+      def abscall =  BC`GenFctCall(BC`GenIdentifier("Math.abs"), [fctcall])
+      in
+        if CGAUX`IsIntType(type)
+        then
+          if is_REP`UnionTypeRep( argType )
+          then return [BC`GenAsgnStmt( resVar_v, GenIntExpr(BC`GenCastExpr(GenSmallNumType(),abscall)))]
+          else return [BC`GenAsgnStmt( resVar_v, GenIntExpr(abscall))]
+        else return [BC`GenAsgnStmt( resVar_v, GenRealExpr(abscall))];
+     );
+\end{vdm_al}
+
+It is not assumed that the \MCL{} provides an $floor$ unary operation.
+The corresponding pseudo code is listed below:
+
+\begin{verbatim}
+Generic tmpArg;
+...CGEXPR`CGExpr( "a", mk_CGMAIN`VT( tmpArg, "Generic" ) )
+if (tmpArg.IsReal ()) {
+  double tmp = (Real (tmpArg)).GetValue();
+  resVar_v = Int((int) floor (tmp));
+}
+else
+   resVar_v = tmpArg
+\end{verbatim}
+
+\begin{vdm_al}
+
+-- floor x Floor,  Type: real -> int
+
+  UnaryFloor: CGMAIN`VT * CGMAIN`VT ==> seq of CPP`Stmt
+  UnaryFloor( mk_CGMAIN`VT(resVar_v, restp), mk_CGMAIN`VT( arg, argtp) ) ==
+    if CPP`isCPP()
+    then
+     (dcl cast : CPP`Expr := arg;
+      if not CGAUX`IsRealType(argtp)
+      then cast := BC`GenCastExpr(GenRealType(), arg);
+      return [ BC`GenAsgnStmt(resVar_v, BC`GenFctCallObjMemAcc(cast, "Floor", [])) ])
+    else
+     (dcl ee1 : CPP`Expr := arg;
+      if not CGAUX`IsNumType(argtp)
+      then ee1 := BC`GenCastExpr(GenNumType(), arg);
+      def e1 = GenGetValue(ee1, mk_REP`NumericTypeRep(<REAL>));
+          floorapply = BC`GenFctCall(BC`GenIdentifier("Math.floor"), [e1]);
+          --getint = BC`GenCastExpr(GenSmallIntType(), floorapply);
+          getint = BC`GenCastExpr(GenSmallNumType(), floorapply);
+      in
+       (dcl res_e : CPP`Expr;
+        if CGAUX`IsRealType(restp)
+        then res_e := GenRealExpr(getint)
+        else res_e := GenIntExpr(getint);
+        return [ BC`GenAsgnStmt(resVar_v, res_e) ];) 
+     );
+\end{vdm_al}
+
+\subsubsection{Functions on Record Info Map (C++)}
+
+The operations {\em GenNewTag}, {\em GenSetDontCare} and {\em
+GenSetSymTag} generate the corresponding functions on the {\em
+DefRecInfoMap} in the VDM library.
+
+\begin{vdm_al}
+  GenNewTag: CPP`Expr * nat ==> CPP`Stmt
+  GenNewTag(tag, length) ==
+    let id = BC`GenFctCall(BC`GenIdentifier("VDMGetDefaultRecInfoMap"),[]),
+        cpp_len = BC`GenIntegerLit(length),
+        expr = BC`GenFctCallObjMemAcc( id, "NewTag", [tag, cpp_len] )
+    in return BC`GenExpressionStmt(expr);
+
+  GenSetDontCare: CPP`Expr * nat1 ==> CPP`Stmt
+  GenSetDontCare(tag, field_no) ==
+    let id = BC`GenFctCall(BC`GenIdentifier("VDMGetDefaultRecInfoMap"),[]),
+        cpp_no = BC`GenIntegerLit(field_no),
+        expr = BC`GenFctCallObjMemAcc( id, "SetDontCare", [tag, cpp_no] )
+    in return BC`GenExpressionStmt(expr);
+
+  GenSetSymTag: CPP`Expr * AS`Name * AS`Name ==> CPP`Stmt
+  GenSetSymTag(tag, tagname, modname) ==
+    def id = BC`GenFctCall(BC`GenIdentifier("VDMGetDefaultRecInfoMap"),[]);
+       tname = CGAUX`GiveLastName(tagname);
+       mname = CGAUX`GiveLastName(modname);
+       cpp_tagname = BC`GenStringLit(mname ^ "`" ^ tname);
+       expr = BC`GenFctCallObjMemAcc( id, "SetSymTag", [tag, cpp_tagname] )
+    in return BC`GenExpressionStmt(expr);
+
+  GenSetRecordTag: CPP`Expr * AS`Name * AS`Name ==> CPP`Stmt
+  GenSetRecordTag(tag, tagname, modname) ==
+    def tname = CGAUX`GiveLastName(tagname);
+        mname = CGAUX`GiveLastName(modname);
+        cpp_tagname = BC`GenStringLit(mname ^ "`" ^ tname);
+        expr = BC`GenFctCall(BC`GenIdentifier("AddRecordTag"), [cpp_tagname, tag])
+    in return BC`GenExpressionStmt(expr);
+
+\end{vdm_al}
+
+\subsection{The Module State}
+
+Used by the Java Code Generator in $GenExplicitCast$.
+
+\begin{vdm_al}
+state Aux of
+  pid_m : map AS`Name to set of REP`TypeRep
+init s == s = mk_Aux({|->})
+end
+
+operations
+
+  GenCppCharType : () ==> seq of char
+  GenCppCharType() ==
+    if CGMAIN`get_wchar()
+    then return "wchar_t"
+    else return "char";
+
+  RemoveIntCast : CPP`Expr ==> CPP`Expr
+  RemoveIntCast(e) ==
+    if CPP`isCPP()
+    then if is_CPP`CastExpr(e)
+         then return BC`GenBracketedExpr(e.expr)
+         else return e
+    else if is_CPP`FctCall(e) and is_CPP`Identifier(e.fct) and e.fct.id = "UTIL.NumberToInt"
+         then return BC`GenBracketedExpr(hd e.arg)
+         else return e;
+
+end DS
+\end{vdm_al}
+
+
+\subsection{Test Coverage}
+
+\begin{rtinfo}[GenDefaultArgAbsDecl]
+{rtinfo.ast}[DS]
+\end{rtinfo}

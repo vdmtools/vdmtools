@@ -1,0 +1,9 @@
+public Test: () ==> real
+Test() ==
+  (a := 27;
+   return a); 
+
+instance variables
+
+  a: real := 7.4;
+  inv a < 20;

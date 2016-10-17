@@ -1,0 +1,159 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    
+% $Id: auml.vdm,v 1.19 2001/04/30 15:22:48 paulm Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+
+\section{The abstract UML syntax}
+The constructs of \vpp\ which has a corresponding UML-part are
+translated into an abstract UML syntax, ready to be mapped directly to
+the UML level, i.e.\ dealt with by the back-end. Constructs from
+\vpp\ which are not supported in UML (type definitions,
+synchronization, threads, etc.) are inserted into the UML
+representation simply as their abstract \vpp\ representation. These
+parts need further processing in the backend, pretty printing in ASCII
+for instance.
+
+\begin{vdm_al}
+module AUML
+
+imports
+  from AS all,
+  from REP all,
+  from CI all
+
+
+
+exports all
+
+
+definitions
+
+types
+
+  Model :: classes : Classes
+           inheritance : Inheritance
+           associations : Associations 
+--  inv mk_Model(c_s,i_s,-) ==
+--    forall c, c' in set c_s & 
+--      c.name = c'.name => c=c' and
+--    forall i in set i_s & 
+--      i.name <> i.super 
+  ;
+-- Invariant commented out due to erroneous code generation
+-- Only temporarily!!!
+
+  Classes = map Name to Class;
+
+  Inheritance = map Name to set of Name;
+
+  Associations = map Name to UniAssoc;
+
+  RoseId = seq of char;
+
+
+  Class :: inst : InstanceVars
+           val  : ValuesDef
+           meth : CommonSign
+           func : CommonSign
+           abstract :- bool
+           id :- [RoseId]
+           ;
+\end{vdm_al}
+Note that the $abstract$ flag is not used to distinguish models; this is 
+because it is not meaningful to update a VDM class to make it abstract at 
+the moment (abstractness is a structural property i.e a class is abstract
+if there are any methods or functions specified as "is subclass
+responsibility"). 
+
+\begin{vdm_al}
+  InstanceVars = map Name to ValDef;
+
+  ValuesDef = map AS`Pattern to ValDef;
+
+  ValDef :: tp   : [AS`Type]
+            expr : [AS`Expr]
+            acc  : Access
+            stat : bool
+            id :- [RoseId];
+
+  CommonSign = map Name to Signature;
+
+  UniAssoc = map Name to Role;
+
+  Access = <PUBLIC> | <PRIVATE> | <PROTECTED>;
+  
+\end{vdm_al}
+Note that a separate ``Access'' type is defined here, since at the
+VDM++ level we have DEFAULT\_AS access which has no counterpart at the
+UML level, and similarly at the UML level we have
+ImplementationAccess. In both cases we consider these extra modes to
+correspond to private, but to ensure that equivalent models are not
+incorrectly distinguised, we need to have a common representation at
+the AUML level. That is, if we just used AS`Access here, the mapper
+would consider a default instance variable (VDM++) and a private
+assocation to represent a difference, which is clearly not the
+intended semantics of the mapper.
+
+Functions and operations are mapped into the abstract UML syntax by
+transforming their signatures into a signature in accordance with the
+UML syntax. 
+\begin{vdm_al}
+
+
+  Signature :: param      : seq of PatType
+               --returntype : [AS`Type]
+               returntype : AS`Type
+               kind       :- <EXPL> | <IMPL> | <EXT>
+               fntype     :- [<PARTIAL> | <TOTAL>]
+               precond    : [AS`Expr]
+               postcond   : [AS`Expr]
+               acc        : Access
+               stat     :- bool
+               id         :- [RoseId]
+            ;
+
+  PatType :: pat : AS`Pattern
+             tp : AS`Type;
+
+\end{vdm_al} 
+Note here that the static field is not used for equality testing as it
+does not exist at the UML level. 
+
+We use $AS`Pattern$ to represent the parameters of the function or
+operation regardless of whether the function is implicitly or
+explicitly defined. In the latter case the function type ($AS`FnType$)
+and parameters ($AS`Parameters$) of the explicit function or operation
+must be converted (paired) into the right representation.
+\begin{vdm_al}
+               
+  Role :: server  : Name
+          cd      : Cardinality
+          quali   : [AS`Type]
+          initval :- [AS`Expr]
+          tp      :- [AS`Type]
+          unftp   :- [AS`Type]
+          role_t  : RoleType
+          acc     : Access
+          stat  : bool
+          id      :- [RoseId];
+
+
+  RoleType = <ORDERED> | <AGGREGATION> | <NORMAL>;
+
+  Cardinality = <ONE> | <MANY> | <ONE_TO_MANY> | <ZERO_ONE> | <UNKNOWN>;
+
+  Name = seq of char;
+\end{vdm_al}
+The record $Role$ holds the necessary information for a role on an
+association. The two don't care fields, $initval$ and $tp$ are used to
+hold the initialization expression of the instance variable and the
+{\em folded} type definition if the instance variable.
+\begin{vdm_al}
+end AUML
+\end{vdm_al}
+
+
+
+            

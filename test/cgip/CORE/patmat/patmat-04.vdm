@@ -1,0 +1,42 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq  of ( set of ( nat | nat * nat | set of nat  )  )  
+Test () ==
+return 
+[ { 1 | [] in set { [] } },
+  { a | [a] in set { [mk_(3,56)] } },
+  { 3 | [ 3 ] in set { [3] } },
+  { {a,b} | [{a,b}] in set { [{3,9}] } },
+  { {a,b} | [mk_(a,b)] in set {[mk_(36,35)]} },
+  { mk_(a,b) | [mk_A_'(a,b) ] in set {[mk_A_'(25, 93)] } },
+  { a + b + c | [ a, b, c], a in set { [3,6,1], 3,false } } ]
+
+
+
+types
+
+ A_'::
+  a : nat
+  b : nat
+
+
+
+
+  
+
+  
+
+
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

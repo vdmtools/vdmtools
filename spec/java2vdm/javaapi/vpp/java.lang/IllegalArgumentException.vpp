@@ -1,0 +1,20 @@
+class JavaLangIllegalArgumentException is subclass of JavaLangRuntimeException
+operations 
+public  JavaLangIllegalArgumentException : () ==> JavaLangIllegalArgumentException
+JavaLangIllegalArgumentException() == 
+( let - =  JavaLangRuntimeException()
+  in skip 
+) ;
+
+public  JavaLangIllegalArgumentException : <NIL> ==> JavaLangIllegalArgumentException
+JavaLangIllegalArgumentException(-) == 
+isNil := true  ;
+
+public  JavaLangIllegalArgumentException : JavaLangString ==> JavaLangIllegalArgumentException
+JavaLangIllegalArgumentException(s) == 
+( let - =  JavaLangRuntimeException(s)
+  in skip  
+) ;
+
+
+end  JavaLangIllegalArgumentException

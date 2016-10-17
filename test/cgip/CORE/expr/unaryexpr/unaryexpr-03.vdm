@@ -1,0 +1,81 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> map seq of char to seq of ( <OK> | nat | set of ( nat | <YES> | map nat to nat | bool) | seq of nat )  
+Test () ==
+return {
+ "SEQHD" |-> let a = [1,2,3] in
+      [ hd a + hd tl a + a(3)],
+ "SEQLEN" |->
+      [  len [ 3 ], 
+         len [],
+         len let a = [3, 3]     
+             in a,
+         len if f(10) = <ERROR>
+             then  [ 3, 4 ]
+             else let a in set {3, [3]} in a,
+         len [ i  | i in set {3, 6,4} ],
+         len ( ['a'] ^ ['b'] ) ],
+  "SEQDISTRCONC" |->
+      [
+         let a = if 1=1 then [ [3], [4] ] else let a in set {1,[3]} in a in conc a,
+         if 1=2 then let a in set {1, [36]} in a else conc [ [], [ 3] ],
+         conc [ [] ],
+         conc let a = [ [ 3, 365] ]
+              in a,
+         conc if true
+               then [ [3], []]
+               else let a in set { false, [[]]} in a,
+         conc [ if true
+                 then [ 3 ]
+                 else let a in set {4, [336]} in a, [ 7 ] ] ,
+         conc g()
+      ],
+  "SEQELEMS" |->
+      [  
+         if 1=2 then let a in set {2,{3}} in a else elems [ 1, 3, 4 ],
+         elems [ ],
+         elems if true
+               then [ 3 ]
+               else let a in set {false,[3]} in a,
+         elems let a = [3,false, <YES>, {|->} ]
+               in a,
+         elems if is_rat(3.5)
+               then [ i| i in set {3, 56 } ]
+               else let a in set {{[]}, [3]} in a,
+         elems [ i | i in set {3,523} ],
+         elems ([3,35] ^ []) ],
+
+   "SEQINDICES" |-> 
+        [
+         if 'a' = 'b' then 1 else inds [ ],
+         inds [ 1, 3, 3],
+         inds if true
+              then [ 1, 3]
+              else let a in set {9,[36]} in a,
+
+         tl if 1=1 then [3, 4, 5] else let a in set {1, [3]} in a,
+         if 1=2 then 1 else tl [3],
+         hd if 1=2 then let a in set {1, [3]} in a else hd hd [[[3]]],
+         if 1=1 then hd [ 3, 4] else <OK> ]
+       }
+
+functions
+f: nat -> nat | <ERROR>
+f(n) ==
+  if n = 10 then
+    <ERROR>
+  else
+    n;
+
+g: () -> seq of seq of nat
+g () ==
+[ [1], [2], [3]]
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

@@ -1,0 +1,660 @@
+class BeadCrit is subclass of Global
+
+operations
+
+checkCriteria: Bead ==> bool
+checkCriteria (bead) ==
+  is subclass responsibility;
+
+checkCriteriaFromLayerGeom: LayerGeom ==> bool
+checkCriteriaFromLayerGeom (layerg) ==
+  is subclass responsibility;
+
+divide: LayerGeom * BeadCriteria * BeadType ==> seq of (Bead * Error) 
+divide (layerg, crits, beadtp) ==
+  return [];
+--  return mk_Error ("Method divide is not implemented for this object. ");
+  -- Default action.
+
+divideCriterias: () ==> seq of BeadCrit 
+divideCriterias () ==
+  return [self];
+  -- Default action.
+
+isMergeable: BeadCrit ==> bool 
+isMergeable (bc) ==
+  return false;
+  -- Default action
+  -- is subclass responsibility
+
+mergeBeadCrits: BeadCrit ==> BeadCrit 
+mergeBeadCrits (bc) ==
+  return bc;
+  -- Default action
+  -- is subclass responsibility
+
+getDirection: () ==> BeadDirection 
+getDirection () ==
+  return <FromPlate1>;
+  -- Default action
+  -- is subclass responsibility
+
+getMaxArea: () ==> Area 
+getMaxArea () ==
+  return 0;
+  -- Default action
+  -- is subclass responsibility
+
+getMinArea: () ==> Area 
+getMinArea () ==
+  return 0;
+  -- Default action
+  -- is subclass responsibility
+
+getMaxHeight: () ==> Height 
+getMaxHeight () ==
+  return 0;
+  -- Default action
+  -- is subclass responsibility
+
+getMinHeight: () ==> Height 
+getMinHeight () ==
+  return 0;
+  -- Default action
+  -- is subclass responsibility
+
+getMaxHWRatio: () ==> Ratio 
+getMaxHWRatio () ==
+  return 0;
+  -- Default action
+  -- is subclass responsibility
+
+getWallAngle: () ==> Angle 
+getWallAngle () ==
+  return 0;
+  -- Default action
+  -- is subclass responsibility
+
+getCritType: () ==> BeadCritType
+getCritType () ==
+  is subclass responsibility;
+
+getError: () ==> ErrorMessage 
+getError () ==
+  is subclass responsibility;
+
+end BeadCrit
+
+
+class DirectionBeadCrit is subclass of BeadCrit
+
+instance variables
+
+  direct: BeadDirection := <FromPlate1>;
+
+operations
+
+initialise: BeadDirection ==> ()
+initialise (dir) ==
+  direct := dir;
+
+create: BeadDirection ==> DirectionBeadCrit 
+create (dir) ==
+( dcl bc: DirectionBeadCrit := new DirectionBeadCrit();
+  bc.initialise (dir);
+  return bc
+);
+
+checkCriteria: Bead ==> bool 
+checkCriteria (bead) ==
+  return true;
+
+checkCriteriaFromLayerGeom: LayerGeom ==> bool
+checkCriteriaFromLayerGeom (layerg) ==
+  is not yet specified;
+
+getDirection: () ==> BeadDirection 
+getDirection () ==
+  return direct;
+
+getCritType: () ==> BeadCritType 
+getCritType () ==
+  return <DirectionBeadCrit>;
+
+getError: () ==> ErrorMessage 
+getError () ==
+  return "Bead direction criteria violated.";
+
+end DirectionBeadCrit
+
+
+class MaxAreaBeadCrit is subclass of BeadCrit
+
+instance variables
+
+  maxarea: Area;
+
+  rootbeadcreated: bool := false;
+  -- Used to distinguish root bead from last beads.
+
+operations
+
+initialise: Area ==> ()
+initialise (ma) ==
+  maxarea := ma;
+
+create: Area ==> MaxAreaBeadCrit 
+create (ma) ==
+( dcl bc: MaxAreaBeadCrit := new MaxAreaBeadCrit();
+  bc.initialise (ma);
+  return bc
+);
+
+initFromBeadCrit: BeadCrit ==> ()
+initFromBeadCrit (bc) ==
+  initialise (bc.getMaxArea());
+
+createFromBeadCrit: BeadCrit ==> MaxAreaBeadCrit
+createFromBeadCrit (bc1) ==
+( dcl bc: MaxAreaBeadCrit := new MaxAreaBeadCrit();
+  bc.initialise (bc1.getMaxArea());
+  return bc
+);
+
+isMergeable: BeadCrit ==> bool 
+isMergeable (bc) ==
+  return sameclass (self, bc) or isofclass (MaxAreaBeadCrit, bc);
+
+mergeBeadCrits: BeadCrit ==> BeadCrit 
+mergeBeadCrits (bc) ==
+  if sameclass (self, bc)
+  then
+    return if bc.getMaxArea() <= maxarea
+           then bc
+           else self
+  else return self;
+
+getMaxArea: () ==> Area 
+getMaxArea () ==
+  return maxarea;
+
+getCritType: () ==> BeadCritType 
+getCritType () ==
+  return <MaxAreaBeadCrit>;
+
+divide: LayerGeom * BeadCriteria * BeadType ==> seq of (Bead * Error) 
+divide (layerg, crits, beadtp) ==
+  let mk_BeadCriteria (dir, drivingcrit, gencrit, -) = crits in
+  ( dcl math : Math := new Math();
+    dcl beads : seq of (Bead * Error) := [];
+    dcl beadw: Width,
+        crits' : seq of BeadCrit;
+    dcl firstbeadcreated : bool := false;
+  
+    layerg.setUpBeadEnv (dir.getDirection());
+    crits' := drivingcrit.divideCriterias () ^ gencrit;
+
+    let midwidth = math.average([layerg.getTopWidth(), layerg.getBottomWidth()]),
+        layerh = layerg.getHeight () in
+    let maxbeadw = maxarea / layerh in
+    let bw_mbw = math.ceil (midwidth/maxbeadw) in
+    let noofbeads = if bw_mbw < 1
+                    then 1
+                    else bw_mbw in
+    beadw := midwidth / noofbeads;
+
+    while not layerg.IsEmpty () do
+      if forall i in set inds crits' & crits'(i).checkCriteriaFromLayerGeom (layerg)
+      then ( dcl bead : Bead := new Bead(),
+                 err : Error := new Error();
+             if not rootbeadcreated
+             then ( bead.initFromLayerGeom (layerg,<RootBead>);
+                    rootbeadcreated := true )
+             else bead.initFromLayerGeom (layerg,<LastBead>);
+             beads := beads ^ [mk_(bead,err)];
+             layerg.makeEmpty () )
+      else ( dcl newbeaderr : Bead * Error;
+             if not firstbeadcreated
+             then newbeaderr := layerg.restrictByMaxArea (beadw, crits, beadtp)
+             else newbeaderr := layerg.restrictByMaxArea (beadw, crits, <IntermediateBead>);
+
+             beads := beads ^ [newbeaderr] );
+
+    return beads
+  );
+
+checkCriteria: Bead ==> bool 
+checkCriteria (bead) ==
+  return bead.getArea () <= maxarea;
+
+checkCriteriaFromLayerGeom: LayerGeom ==> bool 
+checkCriteriaFromLayerGeom (layerg) ==
+  return layerg.getArea () <= maxarea;
+
+getError: () ==> ErrorMessage 
+getError () ==
+  return "Max area criteria violated.";
+
+end MaxAreaBeadCrit
+
+
+class MinAreaBeadCrit is subclass of BeadCrit
+
+instance variables
+
+  minarea: Area
+
+operations
+
+initialise: Area ==> ()
+initialise (ma) ==
+  minarea := ma;
+
+create: Area ==> MinAreaBeadCrit 
+create (ma) ==
+( dcl bc: MinAreaBeadCrit := new MinAreaBeadCrit();
+  bc.initialise (ma);
+  return bc
+);
+
+isMergeable: BeadCrit ==> bool 
+isMergeable (bc) ==
+  return sameclass (self, bc) or isofclass (MinAreaBeadCrit, bc);
+
+mergeBeadCrits: BeadCrit ==> BeadCrit 
+mergeBeadCrits (bc) ==
+  if sameclass (self, bc)
+  then
+    return if bc.getMinArea() >= minarea
+           then bc
+           else self
+  else return self;
+
+getMinArea: () ==> Area 
+getMinArea () ==
+  return minarea;
+
+getCritType: () ==> BeadCritType 
+getCritType () ==
+  return <MinAreaBeadCrit>;
+
+divide: LayerGeom * BeadCriteria * BeadType ==> seq of (Bead * Error) 
+divide (layerg, crits, beadtp) ==
+  return [];
+  --  return mk_Error ("divide is not defined for Min Area Bead Criteria. ");
+
+checkCriteria: Bead ==> bool 
+checkCriteria (bead) ==
+  return minarea <= bead.getArea();
+
+checkCriteriaFromLayerGeom: LayerGeom ==> bool 
+checkCriteriaFromLayerGeom (layerg) ==
+  return minarea <= layerg.getArea ();
+
+getError: () ==> ErrorMessage 
+getError () ==
+  return "Min area criteria violated.";
+
+end MinAreaBeadCrit
+
+
+class MaxHeightBeadCrit is subclass of BeadCrit
+
+instance variables
+
+  maxheight: Height
+
+operations
+
+initialise: Height ==> ()
+initialise (mh) ==
+  maxheight := mh;
+
+create: Height ==> MaxHeightBeadCrit 
+create (mh) ==
+( dcl bc : MaxHeightBeadCrit := new MaxHeightBeadCrit();
+  bc.initialise (mh);
+  return bc
+);
+
+isMergeable: BeadCrit ==> bool 
+isMergeable (bc) ==
+  return sameclass (self, bc) or isofclass (MaxHeightBeadCrit, bc);
+
+mergeBeadCrits: BeadCrit ==> BeadCrit 
+mergeBeadCrits (bc) ==
+  if sameclass (self, bc)
+  then
+    return if bc.getMaxHeight() <= maxheight
+           then bc
+           else self
+  else return self;
+
+getMaxHeight: () ==> Height 
+getMaxHeight () ==
+  return maxheight;
+
+getCritType: () ==> BeadCritType 
+getCritType () ==
+  return <MaxHeightBeadCrit>;
+
+divide: LayerGeom * BeadCriteria * BeadType ==> seq of (Bead * Error) 
+divide (layerg, crits, beadtp) ==
+  return [];
+  -- return mk_Error ("divide is not defined for Max Height Bead Criteria. ");
+
+checkCriteria: Bead ==> bool 
+checkCriteria (bead) ==
+  return bead.getHeight() <= maxheight;
+
+checkCriteriaFromLayerGeom: LayerGeom ==> bool 
+checkCriteriaFromLayerGeom (layerg) ==
+  return layerg.getHeight () <= maxheight;
+
+getError: () ==> ErrorMessage 
+getError () ==
+  return "Max height criteria violated.";
+
+end MaxHeightBeadCrit
+
+
+class MinHeightBeadCrit is subclass of BeadCrit
+
+instance variables
+
+  minheight: Height
+
+operations
+
+initialise: Height ==> ()
+initialise (mh) ==
+  minheight := mh;
+
+create: Height ==> MinHeightBeadCrit 
+create (mh) ==
+( dcl bc : MinHeightBeadCrit := new MinHeightBeadCrit();
+  bc.initialise (mh);
+  return bc
+);
+
+isMergeable: BeadCrit ==> bool 
+isMergeable (bc) ==
+  return sameclass (self, bc) or isofclass (MinHeightBeadCrit, bc);
+
+mergeBeadCrits: BeadCrit ==> BeadCrit 
+mergeBeadCrits (bc) ==
+  if sameclass (self, bc)
+  then
+    return if bc.getMinHeight() >= minheight
+           then bc
+           else self
+  else return self;
+
+getMinHeight: () ==> Height 
+getMinHeight () ==
+  return minheight;
+
+getCritType: () ==> BeadCritType 
+getCritType () ==
+  return <MinHeightBeadCrit>;
+
+divide: LayerGeom * BeadCriteria * BeadType ==> seq of (Bead * Error) 
+divide (layerg, crits, beadtp) ==
+  return [];
+  -- return mk_Error ("divide is not defined for Min Height Bead Criteria. ");
+
+checkCriteria: Bead ==> bool 
+checkCriteria (bead) ==
+  return minheight <= bead.getHeight();
+
+checkCriteriaFromLayerGeom: LayerGeom ==> bool 
+checkCriteriaFromLayerGeom (layerg) ==
+  return minheight <= layerg.getHeight ();
+
+getError: () ==> ErrorMessage 
+getError () ==
+  return "Min height criteria violated.";
+
+end MinHeightBeadCrit
+
+
+class MaxHWRatioBeadCrit is subclass of BeadCrit
+
+instance variables
+
+  maxhwratio: Ratio
+
+operations
+
+initialise: Ratio ==> ()
+initialise (hwr) ==
+  maxhwratio := hwr;
+
+create: Ratio ==> MaxHWRatioBeadCrit 
+create (hwr) ==
+( dcl bc : MaxHWRatioBeadCrit := new MaxHWRatioBeadCrit();
+  bc.initialise (hwr);
+  return bc
+);
+
+isMergeable: BeadCrit ==> bool 
+isMergeable (bc) ==
+  return sameclass (self, bc) or isofclass (MaxHWRatioBeadCrit, bc);
+
+mergeBeadCrits: BeadCrit ==> BeadCrit 
+mergeBeadCrits (bc) ==
+  if sameclass (self, bc)
+  then
+    return if bc.getMaxHWRatio() <= maxhwratio
+           then bc
+           else self
+  else return self;
+
+getMaxHWRatio: () ==> Ratio 
+getMaxHWRatio () ==
+  return maxhwratio;
+
+getCritType: () ==> BeadCritType 
+getCritType () ==
+  return <MaxHWRatioBeadCrit>;
+
+divide: LayerGeom * BeadCriteria * BeadType ==> seq of (Bead * Error) 
+divide (layerg, crits, beadtp) ==
+  return [];
+  -- return mk_Error ("divide is not defined for Max HW-Ratio  Bead Criteria. ");
+
+checkCriteria: Bead ==> bool 
+checkCriteria (bead) ==
+  return bead.getHWRatio() <= maxhwratio;
+
+checkCriteriaFromLayerGeom: LayerGeom ==> bool 
+checkCriteriaFromLayerGeom (layerg) ==
+  return layerg.getHWRatio() <= maxhwratio;
+
+getError: () ==> ErrorMessage 
+getError () ==
+   return "Max HWRatio criteria violated.";
+
+end MaxHWRatioBeadCrit
+
+
+class WallAngleBeadCrit is subclass of BeadCrit
+
+instance variables
+
+  wallangle: Angle
+
+operations 
+
+initialise: Ratio ==> ()
+initialise (wa) ==
+  wallangle := wa;
+
+create: Ratio ==> WallAngleBeadCrit 
+create (wa) ==
+( dcl bc : WallAngleBeadCrit := new WallAngleBeadCrit();
+  bc.initialise (wa);
+  return bc
+);
+
+initFromBeadCrit: BeadCrit ==> ()
+initFromBeadCrit (bc) ==
+  initialise (bc.getWallAngle());
+
+createFromBeadCrit: BeadCrit ==> WallAngleBeadCrit
+createFromBeadCrit (bc1) ==
+( dcl bc: WallAngleBeadCrit := new WallAngleBeadCrit();
+  bc.initialise (bc1.getWallAngle());
+  return bc
+);
+
+isMergeable: BeadCrit ==> bool 
+isMergeable (bc) ==
+  return sameclass (self, bc) or isofclass (WallAngleBeadCrit, bc);
+
+getWallAngle: () ==> Angle 
+getWallAngle () ==
+  return wallangle;
+
+getCritType: () ==> BeadCritType 
+getCritType () ==
+  return <WallAngleBeadCrit>;
+
+divide: LayerGeom * BeadCriteria * BeadType ==> seq of (Bead * Error) 
+divide (layerg, crits, beadtp) ==
+  return [];
+
+checkCriteria: Bead ==> bool 
+checkCriteria (bead) ==
+  return true;
+
+checkCriteriaFromLayerGeom: LayerGeom ==> bool 
+checkCriteriaFromLayerGeom (layerg) ==
+  return true;
+
+getError: () ==> ErrorMessage 
+getError () ==
+   return "Wall Angle criteria violated.";
+
+end WallAngleBeadCrit
+
+
+class WallAngleMaxAreaBeadCrit is subclass of BeadCrit
+
+instance variables
+
+  wallangle: Angle;
+
+  maxarea: Area;
+
+  rootbeadcreated: bool := false;
+  -- Used to distinguish root bead from last beads.
+
+
+operations
+
+initialise: Angle * Area ==> ()
+initialise (wa, ma) ==
+( maxarea := ma;
+  wallangle := wa
+);
+
+create: Angle * Area ==> WallAngleMaxAreaBeadCrit 
+create (wa, ma) ==
+( dcl bc : WallAngleMaxAreaBeadCrit := new WallAngleMaxAreaBeadCrit();
+  bc.initialise (wa, ma);
+  return bc
+);
+
+initFromBeadCrit: BeadCrit * BeadCrit ==> ()
+initFromBeadCrit (wabc, mabc) ==
+  initialise (wabc.getWallAngle(), mabc.getMaxArea());
+
+createFromBeadCrit: BeadCrit * BeadCrit ==> WallAngleMaxAreaBeadCrit 
+createFromBeadCrit (wabc, mabc) ==
+( dcl bc : WallAngleMaxAreaBeadCrit := new WallAngleMaxAreaBeadCrit();
+  bc.initialise (wabc.getWallAngle(), mabc.getMaxArea());
+  return bc
+);
+
+isMergeable : BeadCrit ==> bool
+isMergeable (bc) ==
+  return sameclass (self, bc) or isofclass (WallAngleBeadCrit, bc) or
+         isofclass (MaxAreaBeadCrit, bc);
+
+mergeBeadCrits: BeadCrit ==> BeadCrit 
+mergeBeadCrits (bc) ==
+  if sameclass (self, bc)
+  then
+    return if bc.getMaxArea() <= maxarea
+           then bc
+           else self
+  else return self;
+-- Notice that wallangle can be different for bc and self????
+
+getMaxArea: () ==> Area
+getMaxArea () ==
+  return maxarea;
+
+getWallAngle: () ==> Angle
+getWallAngle () ==
+  return wallangle;
+
+getCritType: () ==> BeadCritType 
+getCritType () ==
+  return <WallAngleMaxAreaBeadCrit>;
+
+divide: LayerGeom * BeadCriteria * BeadType ==> seq of (Bead * Error) 
+divide (layerg, crits, beadtp) ==
+  let mk_BeadCriteria (dir, drivingcrit, gencrit, -) = crits in
+  ( dcl math : Math := new Math();
+    dcl beads : seq of (Bead * Error) := [];
+    dcl beadw: Width,
+        crits' : seq of BeadCrit;
+    dcl firstbeadcreated : bool := false;
+  
+    layerg.setUpBeadEnv (dir.getDirection());
+    crits' := drivingcrit.divideCriterias () ^ gencrit;
+
+    let midwidth = math.average([layerg.getTopWidth(), layerg.getBottomWidth()]),
+        layerh = layerg.getHeight () in
+    let maxbeadw = maxarea / layerh in
+    let bw_mbw = math.ceil (midwidth/maxbeadw) in
+    let noofbeads = if bw_mbw < 1
+                    then 1
+                    else bw_mbw in
+    beadw := midwidth / noofbeads;
+
+    while not layerg.IsEmpty () do
+      if forall i in set inds crits' & crits'(i).checkCriteriaFromLayerGeom (layerg)
+      then ( dcl bead : Bead := new Bead(),
+                 err : Error := new Error();
+             if not rootbeadcreated
+             then ( bead.initFromLayerGeom (layerg,<RootBead>);
+                    rootbeadcreated := true )
+             else bead.initFromLayerGeom (layerg,<LastBead>);
+             beads := beads ^ [mk_(bead,err)];
+             layerg.makeEmpty () )
+      else ( dcl newbeaderr : Bead * Error;
+             if not firstbeadcreated
+             then newbeaderr := layerg.restrictByMaxArea_WallAngle (beadw, wallangle, crits, beadtp)
+             else newbeaderr := layerg.restrictByMaxArea_WallAngle (beadw, wallangle, crits, <IntermediateBead>);
+
+             beads := beads ^ [newbeaderr] );
+
+    return beads
+  );
+
+checkCriteria: Bead ==> bool 
+checkCriteria (bead) ==
+  return bead.getArea() <= maxarea;
+
+checkCriteriaFromLayerGeom: LayerGeom ==> bool 
+checkCriteriaFromLayerGeom (layerg) ==
+  return layerg.getArea() <= maxarea;
+
+getError: () ==> ErrorMessage 
+getError () ==
+  return "Wall Angle Max Area criteria violated.";
+
+end WallAngleMaxAreaBeadCrit

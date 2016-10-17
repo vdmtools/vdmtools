@@ -1,0 +1,31 @@
+module m1
+exports all
+definitions
+operations
+
+f0: () ==> int
+f0 () == return 10;
+
+f2: int ==> int
+f2 (a) == return a - 10
+end m1
+
+
+module A
+imports
+  from m1
+    operations
+      f0: () ==> int renamed f0;
+      f2: int ==> int renamed f2
+exports all
+definitions
+operations
+
+f1 : () ==> int
+f1() == return 1;
+
+Test: () ==> seq1 of int
+Test() ==
+	let h = f0 in
+	return [f1(),h(),f1(),f2(20)]
+end A

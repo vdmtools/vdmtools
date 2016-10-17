@@ -1,0 +1,33 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> nat  
+Test () ==
+let a = 
+    cases f(10):
+      0 -> 10,
+      5 -> mk_ReC("Hello",8.6),
+      10 -> mk_C(10),
+      others -> mk_Abe(4,'s',20) 
+    end 
+  in
+    return mu(a, i |-> 30).i
+
+
+types
+Abe:: real
+      char
+      i : nat;
+ReC:: j: seq of char
+      i : rat;
+C:: j : nat
+
+
+functions
+f: nat -> real
+f(n) ==
+  n
+
+end A

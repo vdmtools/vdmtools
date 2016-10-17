@@ -1,0 +1,49 @@
+##
+# DELUXE-USR-LOCAL-BIN-INSERT
+# (do not remove this comment)
+##
+echo $PATH | grep -q -s "/usr/local/bin"
+if [ $? -eq 1 ] ; then
+    PATH=$PATH:/usr/local/bin
+    export PATH
+fi
+
+export CLICOLOR=1
+export EDITOR=vim
+
+export PATH=/usr/local/bin:/sbin:/usr/sbin:$PATH:$HOME/bin:.
+
+# C environment
+export MACOSX_DEPLOYMENT_TARGET=10.5
+export SDK=/Developer/SDKs/MacOSX10.5.sdk
+export ARCH="-arch i386 -arch ppc"
+
+export CC=gcc-4.2
+export CXX=g++-4.2
+export GCC=$CC
+
+# java environment
+export JDKHOME=/usr
+export ANTHOME=/usr
+export JAVACCHOME=/usr/local/javacc-5.0
+#export PATH=$JDKHOME/bin:$ANTHOME/bin:$JAVACCHOME/bin:$PATH
+
+#export QTVERSION=3
+export QTVERSION=4
+export QT3DIR=/usr/local/qt
+export QT4DIR=/usr/local/qt4
+export DYLD_LIBRARY_PATH=$QT3DIR/lib:$QT4DIR/lib:$DYLD_LIBRARY_PATH
+export COCOA=1
+
+export CORBADIR=/usr/local/omniORB
+export DYLD_LIBRARY_PATH=$CORBADIR/lib:$DYLD_LIBRARY_PATH
+
+export OSTYPE=`uname`
+export YACC=bison
+
+export TBDIR=/Users/drk/toolbox/trunk
+export TBCODE=$TBDIR/code
+export LNCONF=$TBCODE/make_tools/lnconf
+export POWERTEST=$TBDIR/test/powertest/powertest
+export POWERTESTDIR=$HOME/powertest
+

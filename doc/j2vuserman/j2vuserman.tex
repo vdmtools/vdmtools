@@ -1,0 +1,4871 @@
+% LaTeX 2e Document.
+% 
+% $Id: j2vuserman.tex,v 1.25 2006/04/19 10:56:48 vdmtools Exp $
+% 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PDF compatibility code. 
+\makeatletter
+\newif\ifpdflatex@
+\ifx\pdftexversion\@undefined
+\pdflatex@false
+%\message{Not using pdf}
+\else
+\pdflatex@true
+%\message{Using pdf}
+\fi
+
+\newcommand{\latexorpdf}[2]{
+  \ifpdflatex@ #2
+  \else #1
+  \fi
+}
+
+#ifdef A4Format
+\newcommand{\pformat}{a4paper}
+#endif A4Format
+#ifdef LetterFormat
+\newcommand{\pformat}{letterpaper}
+#endif LetterFormat
+
+\makeatother
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\latexorpdf{
+\documentclass[\pformat,12pt]{article}
+}{
+\documentclass[\pformat,pdftex,12pt]{article}
+}
+
+\usepackage[dvipdfmx]{graphicx, color}
+\usepackage[dvipdfm,bookmarks=true,bookmarksnumbered=true,colorlinks,plainpages=true]{hyperref}
+
+\usepackage{toolbox}
+\usepackage{vdmsl-2e}
+\usepackage{alltt}
+%\usepackage{graphics}
+\usepackage{makeidx}
+%\usepackage{palatino}
+\usepackage{ifthen}
+\usepackage{verbatim}
+
+\usepackage{vpp}
+
+\graphicspath{{figures/}}
+\def\seename{$\Rightarrow$}
+
+% Ueki change start
+%\usepackage[dvipdfm,bookmarks=true,bookmarksnumbered=true,colorlinks,plainpages=true]{hyperref}
+% Ueki change end
+
+% Ueki delete start
+%\latexorpdf{
+%\usepackage[plainpages=true,colorlinks,linkcolor=black,citecolor=black,pagecolor=black, urlcolor=black]{hyperref}
+%}{
+%\usepackage[plainpages=true,colorlinks]{hyperref}
+%}
+% Ueki delete end
+
+\makeindex
+
+\def\vdmsl{{\small VDM-SL}}
+\def\vdmpp{{\small VDM}++}
+\newcommand{\vdmslpp}{VDM++}
+\newcommand{\vdmslppEm}{VDM++}
+\newcommand{\ToolboxName}{VDM++ Toolbox}
+\newcommand{\Toolbox}{Toolbox}
+\newcommand{\toolbox}{Toolbox}
+\newcommand{\vdmde}{vppde}
+\newcommand{\vdmgde}{vppgde}
+\newcommand{\vdmhome}{vpphome}
+\newcommand{\vdmdeNineteen}{vppde-19}
+\newcommand{\vdmdeNineteenEl}{vppde-19.el}
+\DeclareRobustCommand{\VdmSlPp}{VDM++-\VdmSl}
+\newcommand{\vdmext}{vpp}
+\newcommand{\vdmtoolsver}{v9.0.6}
+\newcommand{\cg}{\vdmslpp\ to C++ Code Generator}
+
+\newcommand{\JAVA}{Java}
+\newcommand{\tjTov}{the \JAVA\ to VDM++ translator}
+\newcommand{\TjTov}{The \JAVA\ to VDM++ Translator}
+\newcommand{\VDM}{VDM++}
+\newcommand{\jTov}{\JAVA\ to VDM++ Translator}
+
+
+
+\newcommand{\subsubsubsection}[1]{\paragraph{#1}\mbox{}\\}
+
+
+% The use of VDMSL/VDMPP ifdef's have basicly been exchanged with the
+% use of LaTeX ifthenelse's.  For this two LaTeX boolean value VDMSL and
+% VDMpp have been defined  (Lowercase p's are used to avoid conflict with
+% the VDMPP environment variable.  The typical use are:
+%   \ifthenelse{\boolean{VDMsl}}{vdmsl-text}{vdmpp-text}
+%   \ifthenelse{\boolean{VDMsl}}{vdmsl-text}{}
+%   \ifthenelse{\boolean{VDMpp}}{vdmpp-text}{}
+% The advantage of this as opposed to ifdef's is that within a general
+% paragraph specific VDM-SL and VDM++ parts can be distinguished without
+% problematic empty lines.
+% 
+% The values are initialised such that exactly one of the values is true
+% and the other is false.  This should hopefully avoid strange behaviour
+% due to possible preprossing errors.  The default case is VDM-SL.
+\newboolean{VDMsl}
+\setboolean{VDMsl}{true}
+\newboolean{VDMpp}
+\setboolean{VDMpp}{false}
+\setboolean{VDMpp}{true}
+\setboolean{VDMsl}{false}
+
+\newcommand{\AfterInit}[1]{}
+%Initialisation must be performed before
+%  {\tt #1} can be called.}
+
+% This macro can be used in `description' lists where
+% the item given to `meti' is put on its own line,
+% thereby giving proper (nicer) identation to the
+% explanation.
+\newcommand{\meti}[1]{\item[#1]\mbox{}\\}
+
+\newcommand{\Index}[1]{#1\index{#1}}
+
+\newcommand{\Lit}[1]{`#1\Quote}
+\newcommand{\Rule}[2]{
+  \begin{quote}\begin{tabbing}
+    #1\ \ \= = \ \ \= #2  ; %    Adds production rule to index
+  \end{tabbing}\end{quote}
+  }
+\newcommand{\SeqPt}[1]{\{\ #1\ \}}
+\newcommand{\lfeed}{\\ \> \>}
+\newcommand{\OptPt}[1]{[\ #1\ ]}
+\newcommand{\dsepl}{\ $|$\ }
+\newcommand{\dsep}{\\ \> $|$ \>}
+\newcommand{\Lop}[1]{\Lit{\kw{#1}}}
+\newcommand{\Sig}[1]{\Lit{{\tt #1}}}
+\newcommand{\blankline}{\vspace{\baselineskip}}
+\newcommand{\Brack}[1]{(\ #1\ )}
+\newcommand{\nmk}{\footnotemark}
+\newcommand{\ntext}[1]{\footnotetext{{\bf Note: } #1}}
+
+\usepackage[]{color}
+\usepackage{longtable}
+\usepackage{float}
+\definecolor{covered}{rgb}{0,0,0}     %black
+\definecolor{not_covered}{gray}{0.5}  %gray
+
+%\restylefloat{figure}
+\setcounter{topnumber}{3}
+\def\topfraction{1.0}
+\setcounter{bottomnumber}{3}
+\def\bottomfraction{1.0}
+\setcounter{totalnumber}{3}
+\def\textfraction{.1}
+
+
+\parindent0mm
+
+\newlength{\keywwidth}
+
+\newcommand{\xfigpicture}[4]{
+\begin{figure}[hbt]
+\setlength{\unitlength}{1mm}
+\begin{center}
+\mbox{
+\begin{picture}(#1,#2)
+\put(0,0){\special{psfile=#3 hscale=70 vscale=55}}
+\end{picture} }
+\end{center}
+\caption{#4}
+\end{figure}
+}
+
+%\newcommand{\qq}{\marginpar{\bf ???}}
+\newcommand{\aaa}{\tt }
+\newcommand{\cmd}{\tt }
+\newcommand{\guicmd}[1]{{\sf #1}}
+\newcommand{\keyw}[1]{{\sf #1}}
+%\newcommand{\id}[1]{%
+%  \settowidth{\keywwidth}{\tt #1}%
+%  \protect\makebox[\keywwidth][l]{{\it #1}}}
+%\nolinenumbering
+
+\begin{document}
+\vdmtoolsmanualcsk{The Java to \vdmslpp\ User Manual}
+       {\vdmtoolsver}
+       {2016}
+       {\vdmslpp}
+       {1.0}
+ 
+
+\section{Introduction} \label{sec:introduction}
+
+This manual gives an introduction to the Java to \vdmslpp\ feature
+of \VDMTools. This feature can be used for reverse
+engineering existing legacy Java applications to VDM++. At the VDM++
+level different kinds of analysis may then be conducted and new
+features specified and forward engineered.
+
+The Java to \vdmslpp\ translator is an add-on feature to the
+\ToolboxName{}. This manual is an extension to the {\em User Manual
+  for the VDM++ Toolbox} \cite{UserManPP-CSK}. In general it is
+intended that the standard \texttt{javac} should always be invoked on
+a collection of Java files 
+before they are included in a project with \VDMTools. If Java code
+which cannot be accepted by \texttt{javac} is provided \VDMTools\ may
+not behave correctly.
+
+This manual starts by explaining how to include Java classes in a
+project file in the \ToolboxName{}. This is followed by an overview of the
+options for the Java to VDM++ translator, which include the ability to
+apply a set of transformations to the generated \vdmslpp\ which
+convert certain parts of it to equivalent but more abstract
+forms. More details of this feature can be found in Section~\ref{xforms}.
+
+Section~\ref{limitations} describes the different limitations for \tjTov{}.
+This includes all the different situations which should be
+avoided in order to automatically produce an equivalent VDM++ model
+for a collection of Java source files.
+
+Section~\ref{sec:translation}  gives specific details of the
+translation process and also describes some of the design decisions
+made when developing the \jTov{}, including the name conventions
+used. This section should be studied intensively before using \tjTov\ 
+professionally.
+
+Finally, Section~\ref{javaapi} describes the subset of \JAVA\ API
+which is available at the \VDM\ level. 
+
+\section{Including Java Classes in a Project}
+
+Before your Java source files can be automatically translated to VDM++
+using the translator described in this manual you need to include all
+the files you would like to have translated into a \VDMTools\
+project. 
+
+To do this, first start up the \ToolboxName{} (details of how to do
+this can be found in the general User Manual for the VDM++
+Toolbox \cite{UserManPP-CSK}), then press the 
+\raisebox{-0.4mm}{\includegraphics[width=0.03\textwidth]{plus}}  
+(\guicmd{Add Files}) button on the (\guicmd{Project Operations})
+toolbar (or if you prefer you can select the action \guicmd{Add File
+  to Project} on the \guicmd{Project} menu). The dialog box shown
+in Figure~\ref{fig:addJavaFiles} will then appear. 
+
+\begin{figure}[tbh]
+\begin{center}
+\mbox{}
+\resizebox{11cm}{!}{\includegraphics{addJavaFiles}}
+\caption{Adding Files to a Project\label{fig:addJavaFiles}}
+\end{center}
+\end{figure}
+
+As an example, select the five {\tt .java} files in the 
+{\tt \vdmhome/java2vdm/examples/sort} directory from the
+\Toolbox\ distribution by holding down the {\cmd Ctrl} key and
+clicking the left-hand mouse button on each of the 
+files in turn. Then press the ``Open'' button. The files will then
+be included in the project and will appear in the \guicmd{Project View}
+of the \guicmd{Manager} in the main \Toolbox\ window as
+shown in Figure~\ref{fig:addedJavaFiles}. You can also add a single
+file to a project by double clicking the left-hand mouse button on it
+(but note that this also closes the dialog box so it is not an
+efficient way of adding a number of files), and you can also mark a
+list of files at the same time by selecting the first and last files
+in the list (in either order), holding down the {\cmd Shift} key while
+making the second selection. 
+
+\begin{figure}[tbh]
+\begin{center}
+\resizebox{8cm}{!}{\includegraphics{addedJavaFiles}}
+\caption{Manager after Addition of Files}\label{fig:addedJavaFiles}
+\end{center}
+\end{figure}
+
+It is important here to note that it is also necessary to include some
+Java API skeletons in the project. These define functionality
+equivalent to the standard Java API classes except that in general
+they only include the signatures of methods because this information
+is all that is required in order to perform the necessary checks on
+your Java project files. These files are located in the {\tt
+  \vdmhome/java2vdm/javaapi/java} directory, and the particular files
+required for this application are shown in
+Figure~\ref{fig:javaLibFiles}. Add these to the 
+project in the same way.
+
+\begin{figure}[tbh]
+\begin{center}
+\resizebox{8cm}{!}{\includegraphics{javaLibFiles}}
+\caption{The Java API Skeletons Needed}\label{fig:javaLibFiles}
+\end{center}
+\end{figure}
+
+Next you need to syntax check all your Java files, including the Java
+API skeleton files. 
+
+To do this, select all the files in the \guicmd{Project View} 
+of the \guicmd{Manager}, then press the 
+\raisebox{-0.7mm}{\includegraphics[width=0.03\textwidth]{syntaxcheck}}  
+(\guicmd{Syntax Check}) button on the (\guicmd{Class Operations})
+toolbar. (Selecting the containing level folders and
+applying the syntax check operation to those  has the same effect --
+this applies the syntax check operation to each of the  files in the folders.) 
+Notice that at this point the \guicmd{Log Window} opens automatically
+(if it is not already open) and displays a message informing you of
+the success or failure of the check for each file. In addition, if
+syntax errors are discovered the \guicmd{Error List} is
+also au\-to\-matically invoked and the \guicmd{Source Window} is
+automatically opened. See the general User Manual for the VDM++
+Toolbox \cite{UserManPP-CSK} for information about the \guicmd{Error List}
+and the \guicmd{Source Window} and about using the \guicmd{External
+  Editor} to correct errors.
+
+The next step is to ``type check'' your files, that is to check that
+they only use the subset of Java 
+that can be translated to VDM++ (see Section~\ref{limitations} for a
+description of the current limitations). However, this is not
+necessary for the Java API skeleton files because these do not need to
+be translated and syntax checking gives enough context information to
+allow you to check and translate the Java files from your own
+application successfully. So just select the folder containing the
+application files and invoke the type checker by pressing the 
+\raisebox{-1.0mm}{\includegraphics[width=0.03\textwidth]{typecheck}}
+(\guicmd{Type Check}) button on the (\guicmd{Class Operations})
+toolbar. 
+
+Note that after Java files have been successfully syntax checked the
+names of the classes defined in those files are listed in the
+\guicmd{Java View} in the \guicmd{Class View} of the
+\guicmd{Manager}. You can select individual classes here to which you
+want to apply Toolbox operations (i.e.\ instead of applying the
+operations to all the classes in a file as is done in the
+\guicmd{Project View}). You can also see the current status of each of
+the individual Java classes in the project. 
+
+Figure~\ref{fig:javaView} shows the current state of the \guicmd{Java
+  View}. The symbol
+\raisebox{-0.7mm}{\includegraphics[width=0.03\textwidth]{syntaxcheckdone}}
+in the \guicmd{Syntax} column next to each class indicates that it has
+  been syntax checked successfully, and the symbol
+\raisebox{-1.0mm}{\includegraphics[width=0.03\textwidth]{typecheckdone}}
+  in the \guicmd{Type} column next to the classes belonging to the
+  example application indicate that these have also been successfully
+  type checked. In case the syntax or type check was unsuccessful, the
+  symbols 
+\raisebox{-0.7mm}{\includegraphics[width=0.03\textwidth]{syntaxcheckerror}}
+  respectively
+\raisebox{-1.0mm}{\includegraphics[width=0.03\textwidth]{typecheckerror}}
+are shown in the appropriate columns instead. In addition, if a source
+  file is edited the symbol
+\raisebox{-0.7mm}{\includegraphics[width=0.03\textwidth]{syntaxcheckmodified}}
+  (this is the symbol 
+\raisebox{-0.7mm}{\includegraphics[width=0.03\textwidth]{syntaxcheckdone}}
+with a red triangle superimposed)
+is shown in the \guicmd{Syntax} column to indicate that there is an
+  inconsistency between the version of the file 
+currently in the \Toolbox\ and the version on the file system. The
+file must be syntax checked (and type checked) again before proceeding.
+
+\begin{figure}[tbh]
+\begin{center}
+\resizebox{8cm}{!}{\includegraphics{javaView}}
+\caption{The Java View}\label{fig:javaView}
+\end{center}
+\end{figure}
+
+Once your files/classes have passed the syntax and type checks, they
+are ready to be translated to VDM++. Select the five classes belonging
+to the example application (you do not need to translate the Java API
+skeleton classes but you will later need to load VDM++ equivalents of
+these which are also supplied with the Toolbox), then press the
+\raisebox{-0.8mm}{\includegraphics[width=0.03\textwidth]{java2vdm}}
+button to translate them to VDM++. The symbol 
+\raisebox{-1.0mm}{\includegraphics[width=0.03\textwidth]{java2vdmdone}}
+appears in the \guicmd{VDM} column of the \guicmd{Java View} next to
+each of the selected classes to indicate that it was translated
+successfully~(see Figure~\ref{fig:translationDone}). In case of failure,
+the symbol  
+\raisebox{-1.0mm}{\includegraphics[width=0.03\textwidth]{java2vdmerror}}
+is shown instead.
+
+\begin{figure}[tbh]
+\begin{center}
+\resizebox{8cm}{!}{\includegraphics{translationDone}}
+\caption{The Java View after Translation}\label{fig:translationDone}
+\end{center}
+\end{figure}
+
+This generates five {\tt .vpp} files, one for each class. These can be
+seen by returning to the \guicmd{Project View}~(see
+Figure~\ref{fig:vdmFiles}). 
+
+\begin{figure}[tbh]
+\begin{center}
+\resizebox{8cm}{!}{\includegraphics{vdmFiles}}
+\caption{The Generated VDM++ Files}\label{fig:vdmFiles}
+\end{center}
+\end{figure}
+
+You have now finished with the Java files and we recommend that you
+remove them from the project -- select them all and press the 
+\raisebox{-0.8mm}{\includegraphics[width=0.03\textwidth]{minus}}
+(\guicmd{Remove Files}) button on the \guicmd{Project Operations}
+toolbar.
+
+The final step is to add the VDM++ files which correspond to the Java
+API skeletons used with the Java files. These can be found in the {\tt
+  \vdmhome/java2vdm/javaapi/vpp} directory, but since a lot of files are
+required we recommend that to save time you add the contents of all
+the appropriate subdirectories rather than the individual files. These
+subdirectories are shown in Figure~\ref{fig:vdmApiFiles}. 
+
+\begin{figure}[tbh]
+\begin{center}
+\resizebox{8cm}{!}{\includegraphics{vdmApiFiles}}
+\caption{The VDM++ API Files}\label{fig:vdmApiFiles}
+\end{center}
+\end{figure}
+
+In fact these files also contain only skeletons of the appropriate
+classes in general, the main functionality being provided through the
+dynamic link facility of the Toolbox (see \cite{DLMan-CSK} for
+details). Thus the bodies of the methods in the skeleton classes
+appear in general as \textsf{is not yet specified} and the
+functionality is linked in as executable C++ code. In order to access
+this code (so that, for example, you can use the interpreter to debug
+your specification), you need to make sure the Toolbox knows where to
+find it. In fact it is contained in the file {\tt
+  \vdmhome/bin/j2vdll.so}, so you should either add this full 
+path name to your global path or include the directory {\tt
+  \vdmhome/java2vdm/javaapi} in the list of directories referenced by the
+environment variable {\tt VDM\_DYNLIB}. (Alternatively you can copy
+the file {\tt \vdmhome/bin/j2vdll.so} to the current directory.)
+
+You now have a set of VDM++ files which correspond to your original
+Java application and you can interact with these as with any other
+VDM++ project. See the User Manual for the VDM++ Toolbox
+\cite{UserManPP-CSK} for details.
+
+
+\section{Options to the Translation}
+
+The Java to VDM++ translator has two options which can be set in the 
+\guicmd{Java to VDM++} panel of the \guicmd{Project Options} window, 
+which is displayed by pressing the
+\raisebox{-1.0mm}{\includegraphics[width=0.03\textwidth]{projectoptions}} 
+(\guicmd{Project Options}) button on the (\guicmd{Project Operations})
+toolbar. This is shown in Figure~\ref{fig:j2voptions}.
+
+\begin{figure}[tbh]
+\begin{center}
+\resizebox{12.5cm}{!}{\includegraphics{j2vOptions}}
+\caption{Setting Options for the Java to VDM++ Translator\label{fig:j2voptions}}
+\end{center}
+\end{figure}
+
+The possible options are as follows:
+\begin{description}
+\item[Generate stubs only:]
+If this option is selected it means that the translator will only
+produce VDM++ code for class members and method signatures and will
+use the ``is not yet specified'' construct for the VDM++ operation
+bodies; 
+% \item[Automatic renaming:]
+% If this option is selected all occurrences of identifiers in Java
+% which have the same names as VDM++ keywords will be automatically
+% renamed by adding a suffix of two underscore symbols; 
+% \item[Generate accessor functions:] This option is not yet implemented
+% in the Java to VDM++ translator.
+\item[Apply VDM++ transformations] If this option is selected the
+  VDM++ which is generated by the translator is also passed through a
+  series of transformations which convert certain parts of the
+  specification to equivalent but more abstract forms. This feature is
+  described in more detail in Section~\ref{xforms}. 
+\end{description}
+
+\section{Limitations}\label{limitations}
+
+This section explains the current limitations on the Java to VDM++
+translator and also includes recommendations on how your Java
+source files should be modified before using the translator.
+
+\subsection{Scope Differences between Java and VDM++}
+
+The scope rules for Java and VDM++ are not identical. Thus, there are
+a number of limitations for the Java to VDM++ translator which are
+related to this difference. In general it is worth noting here that
+the default modifier in Java is package. In VDM++ the default modifier
+is private and no semantic package structure is present. Thus, when
+the Java to VDM++ translator translates all default modifiers to
+default modifiers in VDM++ there is a semantic difference. This gives
+less visibility than in Java, but this reflects the differences in
+scoping for the two languages. A number of limitations related
+to scope issues are presented below.
+
+\subsubsection{Class Names}
+
+Class names in Java are considered as being local to packages, which
+means that it is possible in a Java program to have two classes with
+the same name provided they belong to different packages. In VDM++,
+however,  the notion of packages is purely syntactic: class
+names are effectively globally visible and there cannot be two classes
+with the same name in the same project, even if they belong to
+different packages. Thus, if two Java classes have the same name, one
+of these must be renamed before translation to VDM++.
+
+\subsubsection{Name Conflicts}
+
+In Java there are less restrictions on the overloading of names than
+in VDM++ so that, for example, in Java it is possible to have an instance
+variable and a method with the same name in the same class  whereas in
+VDM++ this causes an error.  
+
+\begin{small}
+\begin{verbatim}
+class B
+{
+  public int b() { return 0 };
+}
+class A extends B
+{ 
+  b: int:=0;
+}
+\end{verbatim}
+\end{small}
+
+\begin{small}
+\begin{verbatim}
+class B
+
+operations
+  public b : ()  ==> int
+  b() == ( return 0);
+
+end B
+
+class A is subclass of B
+
+instance variables
+  b: int:=0;        -- Error: "b" is multiple defined in super classes
+
+end  A
+\end{verbatim}
+\end{small}
+
+In general, the restriction in VDM++ is that there should never be two
+different constructs with the same name visible in the same scope and
+the Java should generally respect this. Of course the visibility of
+constructs can be determined by the access modifiers so that it is
+possible for a construct in a subclass to have the same name as a
+private construct in a superclass as in the following example:
+
+\begin{small}
+\begin{verbatim}
+class B
+{
+  private int b() { return 0 };
+}
+class A extends B
+{ 
+  b: int:=0;
+}
+\end{verbatim}
+\end{small}
+
+\subsubsection{The scope of a class member}
+
+In Java, the fact that the default modifier is package means that
+subclasses can reference declarations from superclasses if no explicit
+modifiers are included as in the following example where
+\texttt{super.i} references the declaration of i in class B: 
+
+\begin{small}
+\begin{verbatim}
+class B
+{
+  int i=1;
+}
+
+class A extends B {
+  int j=0;
+
+  void a() { j = super.i; }
+}
+\end{verbatim}
+\end{small}
+
+In VDM++, however, declarations are by default assumed to be private,
+so that the direct analogue of the above in VDM++:
+
+\begin{small}
+\begin{verbatim}
+class B
+instance variables 
+  i : int  := 1;
+  
+end  B
+
+class A is subclass of B
+instance variables 
+  j : int:=0;
+
+operations
+
+a: () ==> ()
+a() == 
+  j:= B`i;  -- Error: Access violation for "B`i"
+
+end  A
+\end{verbatim}
+\end{small}
+
+would yield a compile-time error stating that the instance variable B`i is
+not in scope in class A. This can be fixed easily by adding a
+protected or public modifier to the declaration of i in class B and
+the translator currently issues a warning and asks the user to specify
+these access modifiers explicitly\footnote{The translation could be
+  modified to automatically generate public or protected modifiers by
+  default in such situations.}.
+
+\subsubsection{Access to instance variables of a subclass}
+
+In Java selection of class attributes is determined at compile time,
+whereas it is determined at run-time in VDM++. This means that there
+is a slight difference in semantics between Java sources and
+translated VDM++ descriptions in a few cases. This can be an issue when
+class attributes are redefined by a subclass and instances of both the
+superclass and the subclass are intermixed as in the following
+example in which an instance of the subclass is assigned to a variable
+representing the superclass:
+
+\begin{small}
+\begin{verbatim}
+class S {int i=0;}
+class T extends S {int i=1;}
+class A {
+  void a() {
+    T t=new T();
+    JavaLangSystem.out.println(t.i);  
+    S s=new S();
+    JavaLangSystem.out.println(s.i);  
+    s=t;
+    JavaLangSystem.out.println(s.i);  
+  }
+}
+\end{verbatim}
+\end{small}
+
+The result of evaluating the above will be that the sequence of
+numbers 1, 0, 0 will be printed out. Note that the the scope rules of
+Java cause the last number to be 0 since the value of s is fixed at
+compile time.
+
+Compare this with the following VDM++ specification of the ``same''
+example: 
+
+\begin{small}
+\begin{verbatim}
+class S
+instance variables
+  public i:int:=0
+end  S
+
+class T is subclass of S
+instance variables
+  public i:int:=1
+end  T
+
+class A
+operations
+public Test: () ==> seq of int
+Test() == (
+  dcl t:T:=new T(),
+      s:S:=new S(),
+      res: seq of int:=[];
+      res:=res^[t.i];
+      res:=res^[s.i];
+      s:=t;
+      res:=res^[s.i];
+  return res
+)
+
+end A
+\end{verbatim}
+\end{small}
+
+Here the result of calling the Test operation is a sequence of 1, 0, 1
+because in VDM++ the third value is determined at run-time rather
+than at compile time as done in Java. Care should therefore be taken
+to avoid such situations in the Java code\footnote{A future version
+  of the type checker (applied statically to the Java source code)
+  will detect this kind of problem and produce a warning, but this is 
+not yet implemented.}.
+
+\subsection{Restrictions on Statements with Side Effects}
+
+In Java expressions can have side effects. For example, the expression
+\texttt{i++} returns the value of \texttt{i} and as a side-effect also
+increments \texttt{i} by 1. Such an expression therefore effectively
+corresponds to a sequence of VDM++ statements. However, the syntax of
+VDM++ does not allow sequences of statements to occur at arbitrary
+positions within a specification, which imposes certain constraints on
+the Java to VDM++ translator. We present these below.
+
+\subsubsection{Initialization of class or instance variables}
+
+In Java it is possible to use expressions which have side effects on
+the right-hand side of initialisation expressions in a class
+declaration as in the following example:
+
+\begin{small}
+\begin{verbatim}
+class A {
+int i=1;
+int j=i++;
+static int k=1;
+static int l=k++;
+}
+\end{verbatim}
+\end{small}
+
+In the translator, however, we require that only expressions without
+side effects can be used in initialisation expressions\footnote{In
+  some special cases, including this example in fact, it would
+  actually be possible to make a translation so it may be possible to
+  relax this restriction in the future.}.
+
+\subsubsection{Conditional Expressions on the Left-hand side of Assignments}
+
+In Java it is possible to use a conditional expression on the
+left-hand side of an assignment statement and this is supported by the
+Java to VDM++ translator. However, in Java the alternatives in the
+conditional statement can involve expressions with side effects as in
+the following example:
+
+\begin{small}
+\begin{verbatim}
+(i==0 ? a[i++] : b)[0] = ...
+\end{verbatim}
+\end{small}
+
+These are not supported by the translator, which requires that it must
+be possible to translate the alternatives to VDM++ expressions not
+sequences of VDM++ statements\footnote{Again in some special cases it
+  would be possible to make a translation so it may be possible to
+  relax this restriction in the future.}.
+
+\subsubsection{JavaLangObject Member Access}
+
+JavaLangObject member access expressions which involve expressions with side
+effects, for example:
+
+\begin{small}
+\begin{verbatim}
+... a[i++].b[i++] ...
+\end{verbatim}
+\end{small}
+
+also cannot in general be translated to VDM++ and are not currently
+accepted by the translator in any form\footnote{Again simple forms
+  could be translated so this restriction could possibly be relaxed in
+  the future.}.
+
+\subsection{Language Construct Differences}
+
+In a number of areas the syntactic and semantic differences
+between Java and VDM++ cause problems with translation. We discuss
+these areas below.
+
+\subsubsection{Java vs.\ VDM++ Keywords}
+
+Some of the keywords in VDM++ are not keywords in Java (e.g.\ len,
+value, is\_bool) which means they can be used as the names of classes,
+instance variables, functions, etc.\ in Java. These should be renamed
+before translation.
+
+\subsubsection{Assignment to Function Parameters}
+
+In Java, it is possible to assign a value to a parameter of a function
+within the body of the same function, as, for example, in:
+
+\begin{small}
+\begin{verbatim}
+int f(int i) { ...; i=1; ...; }
+\end{verbatim}
+\end{small}
+
+In VDM++, this is not possible so functions which include such
+assignments cannot be translated. 
+
+\subsubsection{Using Assignment to new Instances as an Expression}
+
+In Java the assignment statement
+
+\begin{small}
+\begin{verbatim}
+a1 = new A();
+\end{verbatim}
+\end{small}
+
+returns the value a1 which represents a new object of class A and this
+assignment statement can therefore be used to interact directly with
+that object as in the following example:
+
+\begin{small}
+\begin{verbatim}
+(a1 = new A()).i = 1;
+\end{verbatim}
+\end{small}
+
+% class A {public int i; public A a() {... return ...}}
+
+In VDM++ this notation is not allowed (because the assignment does not
+return a1 as a result so the field reference .i is not being applied
+to an object). Expressions of this form therefore cannot be
+translated. They should instead be written as a sequence of statements
+in which the assignment is factored out, as in:
+
+\begin{small}
+\begin{verbatim}
+a1 = new A();
+a1.i = 1;
+\end{verbatim}
+\end{small}
+
+
+\subsubsection{Numeric Types}
+
+In Java, the numeric types `int', `long' and `real' are considered as
+being distinguishable, so that, for example, with the following
+definitions 
+
+\begin{small}
+\begin{verbatim}
+class A
+operations
+
+public class A 
+{
+  int o(int i) {return 0;}
+  int o(long i) {return 1;}
+  int o(real i) {return 2;}
+}
+\end{verbatim}
+\end{small}
+
+the evaluation of the expression o(j) will yield 0 if j is of type
+`int', 1 if j is of type `long', and 2 if j is of type `real'. In
+VDM++, however, there is no type `long' (it is effectively equivalent
+to `int') and the type `int' is a subtype of the type `real' so that
+if j is of type `int' it is also of type `real'. In translating the
+above example, therefore, the second function would override the first 
+(because both `int' and `long' translate to `int') and would also
+cause a conflict with the third when applied to integer arguments
+(because the fact that `int' is a subtype of `real' means that the
+third function can be applied to values of type `int' as well as
+values of type `real'). Overloading functions in Java in such a way
+that distinguishing between them relies on the distinctions between
+numeric types should therefore be avoided.
+
+\subsubsection{Type Conversions}
+
+In Java, the type definition associated with a particular value can
+cause a calculated value to change in order to conform to the declared
+type, whereas in VDM++ such an inconsistency between the actual type
+and the declared type would give rise to an error. For example, in the 
+following Java code
+
+\begin{small}
+\begin{verbatim}
+int j = 5;
+int i = j/2;
+\end{verbatim}
+\end{small}
+
+the value of i becomes 2 and not 2.5 because i is declared to be an
+integer. 
+
+In a similar way, Java also does explicit conversion of the actual
+parameters of methods. For example, an operation `op' which is defined
+to take a string as an argument can be called with a character `A' as
+that parameter: the character `A' is in fact converted to the string
+``A''. 
+
+\begin{small}
+\begin{verbatim}
+... op(JavaLangString str) {...}
+...
+
+op('A')
+\end{verbatim}
+\end{small}
+
+\TjTov\ translates the Java code precisely as written and does not
+simulate such implicit type conversions, which means that the
+specification generated would contain type errors (in the first
+example a run-time type error would arise when trying to assign a real
+value to an integer variable, whereas the second example would give a
+static type error because a string should be a sequence of characters
+and not just a single character). Implicit type conversions should
+therefore not be used in the Java code.
+
+\subsubsection{Inner Classes}
+
+In Java it is possible to nest class definitions using inner classes
+as in the following example: 
+
+\begin{small}
+\begin{verbatim}
+class WithDeepNesting{
+ boolean toBe;
+ WithDeepNesting(boolean b) { toBe = b;}
+ class Nested {
+  boolean theQuestion;
+  class DeeplyNested {
+   DeeplyNested(){
+    Nested.this.theQuestion
+          = WithDeepNesting.this.toBe || !WithDeepNesting.this.toBe; }}}}
+\end{verbatim}
+\end{small}
+
+This example also includes examples of the use of the qualified
+\texttt{this}, which allows an inner class to reference definitions
+belonging to one of its containing classes -- the keyword
+\texttt{this} is prefixed with the name of the appropriate containing
+class. 
+
+VDM++ does not support inner classes, nor the qualified \texttt{this},
+so neither of these is supported by the Java to VDM++
+translator\footnote{It might be possible to support these
+  at some stage in the future, for instance by converting the inner
+  classes to normal classes and automatically renaming them and
+  their attributes where appropriate, but this requires further
+  investigation.}.
+
+
+\subsubsection{Implicit use of Qualified \texttt{this}}
+
+The \texttt{this} keyword can also be used implicitly. Semantically
+the use of a class name in a field access expression is equivalent to
+an implicit use of the \texttt{this} construct. For example an
+expression of the form \texttt{ClassName.super.Identifier}
+semantically means \texttt{((NameOfSuperClass)ClassName.this).Identifier}. This
+implicit use of \texttt{this} is not supported by the
+Java to VDM++ translator.
+
+\subsubsection{Anonymous Classes}
+
+Anonymous classes in Java have no counterpart in VDM++ and are not
+supported by the Java to VDM++ translator\footnote{It would be fairly
+  easy to support these if inner classes can be supported: the translator
+  could simply allocate an arbitrary name to the anonymous class and
+  then treat it in the same way as an inner class.}. 
+
+\subsubsection{\texttt{label}, \texttt{break} and \texttt{continue}}
+
+Using \texttt{label:}, \texttt{break label}, \texttt{continue
+  label} and \texttt{continue} in Java effectively corresponds to
+  using GOTO's -- the flow of control is interrupted and transferred
+  to another point. This is not supported in VDM++ so these constructs
+  cannot be translated.
+
+The use of \texttt{break} alone (i.e.\ with no label) to leave a loop
+is supported, however, though this is done using exception handling
+which means that the VDM++ generated looks quite different from the
+Java source code. We therefore recommend that \texttt{break} should
+not be used to exit from loops.
+
+\subsubsection{\texttt{switch} without Alternative Breaks}
+
+In Java it is not necessary to put \texttt{break} between alternatives
+in a \texttt{switch} statement, so that the following is valid:
+
+\begin{small}
+\begin{verbatim}
+  oneOrTwo=0;
+  switch(i) {
+    case 1:
+      secondAlternative=false;
+    case 2:
+      secondAlternative=true;
+    break;
+  }
+\end{verbatim}
+\end{small}
+
+However, if \texttt{switch(1)} is evaluated \texttt{secondAlternative} will have
+the value true -- since
+there is no break between the cases the execution will continue to the
+final \texttt{break}. This means that both \texttt{switch(1)} and \texttt{switch(2)}
+have the same effect with respect to \texttt{secondAlternative}, namely
+\texttt{secondAlternative=true} and, so the line
+\texttt{secondAlternative=false} is entirely redundant and
+we could achieve the same effect
+as the above by writing the following instead:
+
+\begin{small}
+\begin{verbatim}
+  oneOrTwo=0;
+
+  switch(i) {
+    case 1:
+    case 2:
+      secondAlternative=true;
+    break;
+  }
+\end{verbatim}
+\end{small}
+
+In the translator we insist that this second form is used and we
+reject switch statements in which there is some code between the case
+alternatives but no \texttt{break} at the end of that code. Switch
+statements in which the alternatives are separated by breaks are fully
+supported, however, so that, for example, the following is allowed:
+
+\begin{small}
+\begin{verbatim}
+  one=0;
+  two=0;
+
+  switch(i) {
+    case 1:
+      one=1;
+    break;
+    case 2:
+      two=1;
+    break;
+  }
+\end{verbatim}
+\end{small}
+
+
+\subsection{Unsupported Concepts}
+
+In this subsection we present a few concepts where Java and VDM++ are
+compatible but which have not yet been incorporated into the Java to
+VDM++ translator. 
+
+\subsubsection{Concurrency}
+
+The concurrency concepts in Java with the wait and notify mechanisms
+are similar to the notions for concurrency found in VDM++. However,
+currently the Java to VDM++ translator does not provide support
+for any of the concurrency features of Java including the
+synchronized statement.
+
+\subsubsection{Unicode Characters}
+
+In Java it is possible to write arbitrary Unicode identifiers. This is
+not yet supported by the Java parser built into \VDMTools.
+
+\newpage
+\section{Details of the \JAVA\ to \vdmslpp\ Translation}\label{sec:translation}
+
+This section explains how individual elements of a \JAVA\ program are
+translated to \vdmslpp.
+
+\subsection{Built-in Types}\label{types}
+
+The various kinds of integers in Java are all translated to the type
+`int' in VDM++, and the various kinds of real numbers are all
+translated to the type `real'. Characters and booleans are translated
+to the types `char' and `bool' respectively. These transformations are
+summarised in the table in Figure~\ref{fig:typexfs}.
+
+\begin{figure}[htbp]
+  \begin{center}
+\begin{longtable}{|l|l|}
+\hline
+  \JAVA\   & \VDM\ \\ \hline \hline
+  byte   & int \\ \hline
+  short  & int \\ \hline
+  int    & int \\ \hline
+  long   & int \\ \hline
+  float  & real \\ \hline
+  double & real \\ \hline
+  char  & char \\ \hline
+  boolean  & bool \\ \hline
+\end{longtable}    
+    \caption{Transformations of Built-in Types}
+    \label{fig:typexfs}
+  \end{center}
+\end{figure}
+
+\subsection{Literals}\label{literals}
+
+Literal values belonging to the boolean, character and numeric types
+all have exact counterparts in VDM++ so are translated
+verbatim. JavaLangString literals are translated to equivalent values
+belonging to the VDM++ class JavaLangString since the JavaLangString class in
+Java belongs to the API~(see Section~\ref{names}). Some
+examples of the translation of literals are given in
+the table in Figure~\ref{fig:litxfs}.  
+
+\begin{figure}[htbp]
+  \begin{center}
+\begin{longtable}{|l|l|l|}
+\hline
+Type &  \JAVA\   & \VDM\ \\ \hline \hline
+  boolean   & true, false  & true, false   \\ \hline
+  char      & 'A', 'B', ...    & 'A', 'B', ...  \\ \hline
+  long/int/short/byte  & 255, -12, ...  & 255, -12, ...    \\ \hline
+  float/double  & 1.1, 1e-5, ...  & 1.1, 1e-5, ...  \\ \hline
+  JavaLangString    & "abc..."  & new JavaLangString("abc...") \\ \hline
+\end{longtable}    
+    \caption{Transformations of Literals}
+    \label{fig:litxfs}
+  \end{center}
+\end{figure}
+
+
+
+\subsection{Names}\label{names}
+
+Names in \JAVA\ are translated to the same names in \vdmslpp\ with the
+following two exceptions:
+
+\begin{enumerate}
+\item where the name coincides with a \VDM\ keyword two underscores
+  are appended to the name in \VDM. Thus, for example, a Java method
+  named `bool' would become a method named `bool\_\_' in VDM++. 
+\item where the name represents a class which is part of the \JAVA\
+  API, the VDM++ name is prefixed by the (Java) package name in which
+  the class is defined. Thus, for example, the Java class JavaLangObject
+  becomes the class JavaLangObject in VDM++. 
+\end{enumerate}
+
+The reason for the second property is that when we translate a Java
+class to VDM++ we add some extra functionality, for instance to
+simulate the \texttt{null} value (see Section~\ref{null}). If we then
+want to translate our VDM++ back to Java we must generate Java code
+which corresponds to this added functionality because it is not
+included in the Java API classes, and this would give us two Java
+classes with the same name, the one already in the Java API and the
+one generated by translating the extended version of this from VDM++
+back to Java.  
+
+\subsection{Arrays}\label{arrays}
+
+An array in Java is translated to a map in VDM++, and accessing and
+modifying values in an array are written in terms of map application
+and map override. Some examples illustrating this are given in
+the table in Figure~\ref{fig:arrayxfs}. 
+\newpage
+\begin{figure}[htbp]
+  \begin{center}
+\begin{longtable}{|l|l|}
+\hline
+  \JAVA\   & \VDM\ \\ \hline \hline
+  \texttt{Type a[]}   & \texttt{map int to Type} \\ \hline
+  \texttt{... = a[0]}   & \texttt{... := a(0)} \\ \hline
+  \texttt{a[0]=...}   & \texttt{a:=a++\{0|->...\}} \\ \hline
+\end{longtable}    
+    \caption{Transformations of Arrays}
+    \label{fig:arrayxfs}
+  \end{center}
+\end{figure}
+
+Note that an array can be used as an instance of
+\texttt{java.lang.JavaLangObject} in Java but if this is done the
+VDM++ generated by the translator will contain a type error due to
+mismatching of types. Arrays should therefore not be used in this way
+in Java. 
+
+\subsection{Classes}\label{class}
+
+A \JAVA\ class is translated to a \VDM\ class of the same name, and
+the various elements of the class are translated as explained in the
+following subsections.
+
+\subsubsection{Methods and Members}\label{methods}
+
+Methods become operations while members become instance variables,
+with static methods and members becoming static operations and 
+instance variables. Methods whose result type is \texttt{void}
+become operations with no result in VDM++. This is illustrated in
+the following example:  
+
+\begin{small}
+\begin{verbatim}
+class A                            class A is subclass of JavaLangObject
+{                                  instance variables
+  int i = 0;                         i: int := 0;
+  static int s = 1;                  static s : int := 1;
+                                   operations
+  int method(int)                    method : int ==> int
+    { return i; }                      ( return i );
+  static int smethod(int)            static smethod : int ==> int
+    { return i; }                      ( return i );
+  void op()                          op : () ==> ()
+    {...}                              (  ...  );
+  static int op1 (int j)             static op1 : int ==> int
+    {...}                              (  ...  );
+}                                    end A
+\end{verbatim}
+\end{small}
+
+Note that in \JAVA\ a variable which is not explicitly initialised has
+a value by default whereas in \VDM\ it is undefined. This can lead to
+run-time errors in VDM++ so care should be taken to ensure that
+instance variables in Java are initialised correctly where appropriate.
+
+
+\subsubsection{Inheritance}\label{inheritance}
+
+In \JAVA{}, a class can inherit from other classes by extension or by
+implementation. VDM++ only supports a single form of inheritance,
+however, namely subclassing. Both forms of inheritance in Java are 
+therefore translated to subclassing in VDM++. Thus, for example, the
+inheritance clause \texttt{class A extends B implements C,D} becomes
+\texttt{class A is subclass of B, C, D} in VDM++.
+
+Java classes which have no explicit inheritance clause are assumed to
+inherit implicitly from java.lang.JavaLangObject. The translator makes this
+dependency explicit, so that in \VDM\ such a class explicitly inherits
+from JavaLangObject, the VDM++ counterpart of
+\texttt{java.lang.JavaLangObject}. The example in Section~\ref{methods}
+illustrates this.
+
+Note that the fact that both extension and implementation in Java are
+translated to subclasses in VDM++ can cause a problem if the VDM++ is
+translated naively back to Java since VDM++ subclasses are by default
+translated to extension in Java. The manual for the VDM++ to Java Coce
+Generator~\cite{CGJavaManPP-CSK} explains how to avoid this problem. 
+
+\subsubsection{Modifiers of a Class}
+
+Modifiers of a \JAVA\ class (e.g.\ abstract, final) have no
+counterpart in VDM++ and are all ignored by the translator. 
+
+\subsubsection{Access modifiers}
+
+Access modifiers are translated directly from Java to VDM++ as shown
+in the table in Figure~\ref{fig:accessxfs}. Note, however, that in Java the absence
+of a modifier indicates that the construct can be accessed by any
+class in the same package, whereas in VDM++ a construct with no access
+modifier is assumed to be private. Omitting access modifiers in Java
+can thus give rise to access violation errors when type checking the
+translated VDM++. 
+
+\begin{figure}[htbp]
+  \begin{center}
+\begin{longtable}{|l|l|}
+\hline
+  \JAVA\   & \VDM\ \\ \hline \hline
+  no modifier         & no modifier        \\ \hline
+  \texttt{public}     & \texttt{public}    \\ \hline
+  \texttt{protected}  & \texttt{protected} \\ \hline
+  \texttt{private}  & \texttt{private} \\ \hline
+\end{longtable}    
+    \caption{Transformations of Access Modifiers}
+    \label{fig:accessxfs}
+  \end{center}
+\end{figure}
+
+
+\subsubsection{Static initialisers}
+
+Static initialisers are supported by the translator although they have
+no direct counterpart in VDM++. To implement these, the Java code for
+all static initialisers in a class is collected together and
+translated into the body of a static operation called
+\texttt{j2v\_staticInitializer}. This operation takes no inputs and
+its result is the special VDM++ quote value \texttt{<VOID>}. In
+addition, a static instance variable called \texttt{dummy} is added to
+the VDM++ class, the type of which is this same quote value
+\texttt{<VOID>}, and the operation \texttt{j2v\_staticInitializer} is
+defined as the initialisation of this variable. Thus, when the VDM++
+class is initialised, the operation \texttt{j2v\_staticInitializer} is
+invoked and simulates the effects of the original static initialisers
+in the Java class. 
+
+The following example illustrates this.
+
+\begin{small}
+\begin{verbatim}
+                      instance variables
+static int i=1;         static i : int  := 1;
+static int j=2;         static j : int  := 2;
+static int k=3;         static k : int  := 3;
+
+static {
+  i=k+j;
+}
+
+int l;                  l : int ;
+                        
+static {                static dummy : <VOID> := j2v_staticInitializer()
+  j=i+k;              
+}                     operations
+                        static j2v_staticInitializer : () ==> <VOID>
+                          j2v_staticInitializer() ==
+                          ( i := k+j;
+                            ( j := i+k
+                            ) ;
+                            return  <VOID>
+                          ) ;
+\end{verbatim}
+\end{small}
+
+
+
+\subsubsection{Getting information about a class}\label{getclass}
+
+In \JAVA\ every class inherits from \texttt{java.lang.JavaLangObject}.
+This includes the method \texttt{getClass} which returns an instance
+of \texttt{java.lang.Class}, and this in turn provides functionality
+for obtaining various information about the class, e.g.\ the class
+name, whether the class represents an interface type or a primitive
+Java type, etc. 
+
+The translator simulates part of this functionality using the class
+\texttt{JavaLangClass} which is defined as follows:
+
+\begin{small}
+\begin{verbatim}
+
+class JavaLangClass ...
+types
+  CLASS ::
+    name : seq of char
+    cori : <CLASS> | <INTERFACE>
+    isPrim : bool
+
+instance variables
+  private val : JavaLangClass`CLASS;
+
+operations 
+
+public  JavaLangClass :  seq1 of char * 
+             (<CLASS> | <INTERFACE>) * bool ==> JavaLangClass
+JavaLangClass(name, cori, prim) == 
+( val.name := name;
+  val.isPrim := prim;
+  val.cori := cori;
+);
+
+public  getName : () ==> JavaLangString
+getName() == 
+  return new JavaLangString(val.name);
+
+public  isArray : () ==> bool 
+isArray() == 
+  return false;
+
+public  toString : () ==> JavaLangString
+toString() == 
+( dcl
+    str: seq of char :=
+      if isInterface()
+      then "interface "
+      else 
+        if isPrimitive()
+        then ""
+        else "class ";
+  str:=str^getName().toSeqOfChar();
+ return new JavaLang(str)
+);
+
+public  isInterface : () ==> bool 
+isInterface() == 
+  return val.cori=<INTERFACE>;
+
+public  isPrimitive : () ==> bool 
+isPrimitive() == 
+  return val.isPrim;
+
+...
+
+end JavaLangClass
+
+\end{verbatim}
+\end{small}
+
+A constant \texttt{CLASS}, whose value is an appropriate instance of
+this class, together with a (public) method \texttt{getClass} which
+returns the value of this constant, are then added to each generated
+\VDM\ class. This is illustrated by the example below. 
+
+\begin{small}
+\begin{verbatim}
+class A ...
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("A", <CLASS>, false)
+...
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+end A
+\end{verbatim}
+\end{small}
+
+\subsection{Interfaces}\label{interface}
+
+Interfaces in Java are translated to classes in VDM++. However, only
+the signatures of the methods in a Java interface are given, while in
+VDM++ a method must always have a body. The translator therefore sets
+the bodies of methods in Java interfaces to \texttt{is not yet
+  specified} in VDM++. 
+
+It might seem more natural to use \texttt{is subclass responsibility}
+  here instead of \texttt{is not yet specified}. However, this does
+  not work because of the way the value \texttt{null} is
+  translated~(see Section~\ref{null}). To see this, consider the
+  following Java example in which the value \texttt{null} is used in
+  conjunction with objects of an interface type:
+
+\begin{small}
+\begin{verbatim}
+interface IFace {...}
+...
+IFace iface = null;
+\end{verbatim}
+\end{small}
+
+In this case the translator would translate \texttt{null} to
+\texttt{new IFace(<NIL>)} as explained in 
+Section~\ref{null}, which includes an instantiation of the class
+\texttt{IFace}. This means that the class \texttt{IFace} cannot be
+abstract (otherwise this instantiation does not make sense), and thus
+that we cannot use \texttt{is subclass responsibility} to represent
+the bodies of interface methods.
+
+Recall also that translating an interface class from Java to VDM++ and
+then re-translating the VDM++ back to Java can cause problems. See the
+discussion at the end of Section~\ref{inheritance} for details.
+
+
+\subsection{\texttt{null}}\label{null}
+
+In Java it is possible to overload operations and invoke a particular
+one of these operations with the (polymorphic) value \texttt{null} by
+casting the value to the appropriate input type as in the examples
+below: 
+
+\begin{small}
+\begin{verbatim}
+void op(A a)  
+ 
+void op(B b)   
+
+op((A)null)
+
+op((B)null)
+\end{verbatim}
+\end{small}
+
+In VDM++ there is no polymorphic constant which belongs to all types
+and which can be coerced to a specific class by tagging it with the
+name of that class. (The closest is perhaps the value \texttt{nil},
+which belongs to all optional types, though this cannot be coerced to
+any one type.)
+
+Instead, therefore, we make every translated VDM++ class a
+subclass of a special class \texttt{Nullable} (by defining the class
+\texttt{JavaLangObject} to be a subclass of the class
+\texttt{Nullable}). The (boolean valued) instance variable
+\texttt{isNil} in the class \texttt{Nullable} is then used to indicate
+whether or not a particular object belonging to the class corresponds
+to the Java value \texttt{null}. 
+
+\begin{small}
+\begin{verbatim}
+class JavaLangObject is subclass of Nullable
+...
+
+class Nullable
+instance variables
+  public isNil: bool := false
+operations
+  public IsNil: () ==> bool
+  IsNil() == return isNil
+end Nullable
+\end{verbatim}
+\end{small}
+
+In addition, we introduce a new special value \texttt{<NIL>}
+into the VDM++ specification and generate an additional constructor
+for each \VDM\ class which creates instances which represent the
+\texttt{<NIL>} value of that class. This is shown in the following
+example: 
+
+\begin{small}
+\begin{verbatim}
+ClassName: <NIL> ==> ClassName
+ClassName() ==
+  isNil := true;
+\end{verbatim}
+\end{small}
+
+
+To simulate the \texttt{null} value for arrays we use the empty map. 
+
+The examples in the table in Figure~\ref{fig:nullxfs} illustrate how
+\texttt{null} is translated in different contexts.
+
+\begin{figure}[htbp]
+  \begin{center}
+\begin{longtable}{|l|p{7cm}|}
+\hline
+  \JAVA\   & \VDM\ \\ \hline \hline
+  \texttt{ClassType o = null;}      & \texttt{dcl o: ClassType := new ClassType(<NIL>)}    \\ \hline
+  \texttt{ClassType o[2] = {null};} & \texttt{dcl o: map int to ClassType}
+                                      \texttt{:= \{new ClassType(<NIL>) | i in set \{0,...,1\}\}}    \\ \hline
+  \texttt{type o[] = null;}         & \texttt{o := \{|->\}}    \\ \hline
+  \texttt{op(null);}                & \texttt{op(new ClassType(<NIL>))}    \\ \hline
+  \texttt{o == null}                & \texttt{o.IsNil()}    \\ \hline
+  \texttt{o != null}                & \texttt{not o.IsNil()}    \\ \hline
+\end{longtable}    
+    \caption{Transformations of \texttt{null}}
+    \label{fig:nullxfs}
+  \end{center}
+\end{figure}
+
+It is important to note here that this treatment of \texttt{null} can
+lead to endless loops at the VDM++ level. Consider the following
+example in Java:
+
+\begin{small}
+\begin{verbatim}
+class Database
+
+{
+    Database db = null ;
+}
+\end{verbatim}
+\end{small}
+
+This would be translated to the following in VDM++:
+
+\begin{small}
+\begin{verbatim}
+class Database is subclass of JavaLangObject
+
+instance variables
+    db : Database = new Database(<NIL>) ;
+\end{verbatim}
+\end{small}
+
+which contains an infinite loop -- each instantiation of the class
+Database invokes another instantiation in order to set the value of
+its instance variable. The same problem can also occur indirectly as
+in the following example where the \texttt{Database} class has an
+instance variable of type \texttt{Controller} and vice versa:
+
+\begin{small}
+\begin{verbatim}
+JAVA:
+
+class Controller
+{
+  Database database;
+  Controller()
+  {
+          database = null;
+  }
+  static public Controller getController()
+  {
+          return new Controller();
+  }
+}
+
+class Database
+
+{
+        Controller
+                controller = Controller.getController();
+}
+
+VDM:
+
+class Controller is ...
+instance variables
+        database: Database;
+operations
+        Controller: () ==> Controller
+                database := new Database(<NIL>);
+
+        static public getController: () ==> ()
+        getController() ==
+                return new Controller(<NIL>);
+end Controller
+
+class Database is ...
+instance variables
+        controller: Controller := Controller`getController();
+end Database
+\end{verbatim}
+\end{small}
+
+Care should therefore be taken to avoid such situations in the Java
+code. 
+
+\subsection{Expressions}\label{expressions}
+
+In \JAVA\ it is possible to write an expression with side effects such
+as \texttt{f(n) - mm[n++]}. This feature has no direct counterpart
+in VDM++, and in general a sequence of VDM++ statements is required in
+order to obtain something semantically equivalent. We deal with this
+by introducing a \texttt{def} expression and generating local names
+within this to store the values of the various components of the
+expression. This is best illustrated by an example.
+
+Consider the following fragment of an expression which has side
+effects in Java:
+
+\begin{small}
+\begin{verbatim}
+  ... f(n)-mm[n++] ...
+\end{verbatim}
+\end{small}
+
+This expression is part of an enclosing expression, so in the VDM++ we
+introduce a \texttt{def} expression and the pattern name \texttt{l\_1}
+to record its value. 
+
+The expression itself is a binary expression, so two more pattern
+names \texttt{l\_2} and \texttt{l\_3} are introduced to store the
+values of its left and right operands respectively and \texttt{l\_1}
+is defined appropriately in terms of \texttt{l\_2} and \texttt{l\_3}. 
+
+Note that \texttt{l\_2} is only needed because
+the right operand has side effects. We can not define \texttt{l\_1}
+simply as \texttt{f(n) - l\_3} because its definition is preceeded
+by the statements generated for the right operand which change \texttt{n}.
+
+The final result is as follows:
+
+\begin{small}
+\begin{verbatim}
+  def l_2 = f(n);
+  l_4 = n;
+  l_5 = l_4
+  in ( n := l_4 + 1;
+    def l_3 = mm(l_5);
+    l_1 = l_2 - l_3
+    in ... l_1 ...
+  ) ;
+
+\end{verbatim}
+\end{small}
+
+
+Expressions like \texttt{new ClassType(...);} and \texttt{op();} can
+also be used as statements in Java, and it is possible to write
+sequences of such expressions as in the following example:
+
+\begin{small}
+\begin{verbatim}
+new A();
+op1();
+op2();
+\end{verbatim}
+\end{small}
+
+In Java, if an expression in such a sequence returns a result that
+result is ignored and the execution passes to the next expression in
+the sequence, but the semantics of VDM++ do not match this and instead
+state that as soon as the execution encounters an expression that
+returns a result the execution terminates and that result becomes the
+result of the whole sequence. When translating such expressions,
+therefore, we need to avoid this problem. This is done by using a
+\texttt{let} statement to assign the result to a dummy (in fact
+unnamed) variable and making the body of the \texttt{let} statement
+the identity statement \texttt{skip}. The translation of the Java
+example above is thus:
+
+\begin{small}
+\begin{verbatim}
+let - = new  A()
+in 
+  skip ;
+let - = op1()
+in 
+  skip ;
+let - = op2()
+in 
+  skip ;
+\end{verbatim}
+\end{small}
+
+\subsection{Statements}
+
+\subsubsection{If statements}
+
+The translation of \texttt{if} statements is straightforward. The
+component parts are simply translated as illustrated below:
+
+\begin{small}
+\begin{verbatim}
+JAVA:
+
+if condition
+then thenStmt
+else elseStmt
+
+VDM:
+
+if translatedCondition
+then translatedThenStmt
+else translatedElseStmt
+\end{verbatim}
+\end{small}
+
+\subsubsection{Block statement}
+
+A block in Java becomes a block statement in VDM++. The Java local
+variable declarations become \texttt{dcl} statements within the block
+and the body of the block in Java becomes the body of the block
+statement in VDM++. The following example illustrates this:
+
+\begin{small}
+\begin{verbatim}
+JAVA:
+
+{ int b, c; int d, e=0; ... }
+
+VDM:
+
+( dcl b : int ,
+      c : int ,
+      d : int ,
+      e : int  := 0;
+  ...
+) ;
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{for} statement}
+
+A \texttt{for} statement in Java is translated to a block statement in
+VDM++ in which the loop variables are introduced in \texttt{dcl}
+statements and the body is a while loop. This is illustrated by the
+following example: 
+
+\begin{small}
+\begin{verbatim}
+JAVA:
+
+for(int i=0, j=10; i<10; i++, j--) {
+  ...
+}
+
+VDM:
+
+( dcl   i : int  := 0,
+        j : int  := 10;
+  while  i < 10 do  
+  ( ...
+    i := i+1;
+    j := j-1
+  ) 
+) ;
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{while} statement}
+
+The translation of while loops is straightforward except where the
+loop termination expression has side effects in which case it is
+treated in the way described in Section~\ref{expressions} both before
+the loop is entered and at the end of each iteration. This is
+illustrated in the following example:
+
+\begin{small}
+\begin{verbatim}
+JAVA:
+
+while(mm[i++]>0) {
+  ...
+}
+
+VDM:
+
+( dcl   l_7 : bool ;
+  def l_5 = i;
+  l_4 = l_5
+  in ( i := l_5+1;
+    def l_2 = mm(l_4);
+    l_1 = l_2 > 0
+    in l_7 := l_1
+  ) ;
+  while  l_7 do  
+  ( ...
+    def l_5 = i;
+    l_4 = l_5
+    in ( i := l_5+1;
+      def l_2 = mm(l_4);
+      l_1 = l_2 > 0
+      in l_7 := l_1
+    ) 
+  ) 
+) ;
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{do while} statement}
+
+To translate a \texttt{do while} statement of the form 
+
+\begin{small}
+\begin{verbatim}
+do {
+  i++; ... 
+} while(mm[i]>0);
+\end{verbatim}
+\end{small}
+
+we convert it to the equivalent \texttt{while} statement 
+
+\begin{small}
+\begin{verbatim}
+( i := i+1; ...
+) ;
+while  mm(i) > 0 do  
+( i := i+1; ...
+) ;
+\end{verbatim}
+\end{small}
+
+and translate this \texttt{while} statement.
+
+\subsubsection{\texttt{switch} statement}
+
+A \texttt{break} in Java is translated to an exception throw in VDM++
+because it can appear anywhere inside an alternative. The following
+example, in which there is a \texttt{break} in \texttt{case 1:},
+illustrates this.
+
+\begin{small}
+\begin{verbatim}
+JAVA:
+
+switch(a) {
+  case 0:
+    alternative1
+  break;
+  case 1:
+    if(b<5) break;
+    alternative2
+  break;
+  default:
+    alternative3
+  break;
+}
+
+VDM:
+
+trap  j2v_break with  
+  cases  true  : 
+    (isofclass  (J2V_Break,j2v_break)) -> 
+      skip 
+    
+  end  
+in  
+  ( cases  a: 
+      (0) -> 
+        ( translatedAlternative1
+          exit  new  J2V_Break()
+        ) ,
+      (1) -> 
+        ( if b<5 then exit  new  J2V_Break();
+          translatedAlternative2
+          exit  new  J2V_Break()
+        ) ,
+      others  -> 
+        ( translatedAlternative3
+          exit  new  J2V_Break()
+        ) 
+    end  
+  ) ;
+\end{verbatim}
+\end{small}
+
+
+\subsubsection{\texttt{try catch} statement}
+
+A Java \texttt{try catch} statement is translated to a combination of
+an \texttt{always} statement and a \texttt{trap} statement as
+illustrated in the following example:
+
+\begin{small}
+\begin{verbatim}
+JAVA:
+
+class B extends JavaLangException { ... }
+
+try { tryBody }
+catch(B b) { catchBbody }
+catch(JavaLangException e) { catchEbody }
+finally{ finallyBody }
+
+VDM:
+
+class B is subclass of JavaLangException
+...
+end B
+
+always  
+  ( translatedFinallyBody 
+  ) 
+in  
+  trap j2v_exception : JavaLangException with  
+    cases true  : 
+      (isofclass(B, j2v_exception) and not  j2v_exception.IsNil()) -> 
+        ( dcl b : B := j2v_exception;
+          translatedCatchBbody 
+        ) ,
+      (isofclass(JavaLangException, j2v_exception) or 
+                                           j2v_exception.IsNil()) -> 
+        ( dcl b : JavaLangException := j2v_exception;
+          translatedCatchEbody 
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    translatedTryBody
+\end{verbatim}
+\end{small}
+
+\newpage
+\section{VDM++ Transformations}
+\label{xforms}
+
+The transformations which are currently supported apply to certain
+kinds of expressions (binary expressions) and certain kinds of
+statements (if statements, block statements, and while loop
+statements). The specific transformations are listed in
+Table~\ref{fig:xfs}, the first column of which shows the 
+name of the transformation and the second the kind of expression or
+statement to which it applies. A brief explanation and an example of
+each transformation is given below.
+
+\begin{figure}[htbp]
+  \begin{center}
+\begin{tabular}{|l|l|}
+\hline 
+Name & Applies To\\ \hline \hline
+isMapCompLoop & Block Stmt  \\ \hline
+ifTestTrue & Block Stmt  \\ \hline
+ifTestFalse & Block Stmt  \\ \hline
+isRedundantIfBlock & Block Stmt \\ \hline
+ifToAnd & Block Stmt  \\ \hline
+isRedundantIfBlockNoElse & Block Stmt \\ \hline
+isRedundantDcl & Block Stmt \\ \hline
+ifToCases & If Stmt \\ \hline
+ifToEquiv & If Stmt \\ \hline
+nestedIfsNoElses & If Stmt  \\ \hline
+whileIfTestTrue &  While Loop \\ \hline
+%isRenamingDefStmt & Define Stmt \\ \hline
+%isRedundantDef & Define Expr \\ \hline
+%isRenamingDef & Define Expr \\ \hline
+orToNotEquiv & Binary Expr \\ \hline
+\end{tabular}    
+    \caption{List of Transformations}
+    \label{fig:xfs}
+  \end{center}
+\end{figure}
+
+The transformations are attempted in the order in which they appear in
+the table, so in situations in which two different transformations
+could in principle be applied to the same construct only the first of
+these is actually applied. In addition, the transformations are only
+applied once. This means that there could still be places in the VDM++
+output where transformations could be applied, for example when one
+transformation transforms the specification into something which
+matches another transformation. 
+
+\subsection{isMapCompLoop (Block Stmt)} 
+  Replaces stepwise construction of a map using a while loop with a
+  map comprehension expression. Can deal with increasing and
+  decreasing loop variables, inclusion or exclusion of equality in the
+  test of the while loop, and arbitrary step sizes for the loop
+  variable. Also allows arbitrary specification to appear after the
+  loop. 
+
+As an example, the following specification involving a while loop
+
+\begin{verbatim}
+  public Test : () ==> map nat to [nat]
+  Test () ==
+    ( dcl m : map nat to [nat] := 
+                  {l |-> nil | l in set {0,...,12}};
+      dcl b : bool := true;
+        (dcl  i : int := 0;
+         while i < 12 do
+           ( m := m ++ {i |-> f(i)};
+             i := i + 1 )
+        );
+      return m);
+\end{verbatim}
+
+would transform to this specification involving a map comprehension
+
+\begin{verbatim}
+public Test : () ==> map nat to [nat]
+  Test () ==
+    ( dcl m : map nat to [nat] := 
+                  { l |-> nil | l in set {0,...,12} },
+          b : bool := true;
+      ( dcl i : int := 0;
+        m := m ++ { i |-> f(i) | 
+                         i in set {0, ..., 12 - 1} }
+      );
+      return m);
+\end{verbatim}
+
+
+\subsection{ifTestTrue (Block Stmt)}
+  Transforms a block which begins
+
+\begin{verbatim}
+  ( dcl ... , x : bool := true, ... ; 
+    if x then y else z;
+    ...
+  )
+\end{verbatim}
+
+into one which begins
+
+\begin{verbatim}
+  ( dcl ... , x : bool := true, ... ; 
+    y;
+    ...
+  )
+\end{verbatim}
+
+For example, the following specification
+
+\begin{verbatim}
+  public Test : () ==> nat  
+  Test () ==
+    def n : nat = 5 in
+        ( dcl x : bool := true;
+          if x then return n else return 0 );
+\end{verbatim}
+
+is transformed to
+
+\begin{verbatim}
+  public Test : () ==> nat  
+  Test () ==
+    def n : nat = 5 in
+        ( dcl x : bool := true;
+          return n );
+\end{verbatim}
+
+\subsection{ifTestFalse (Block Stmt)}
+
+  Transforms a block which begins
+
+\begin{verbatim}
+  ( dcl ... , x : bool := false, ... ; 
+    if x then y else z;
+    ...
+  )
+\end{verbatim}
+
+into one which begins
+
+\begin{verbatim}
+  ( dcl ... , x : bool := false, ... ; 
+    z;
+    ...
+  )
+\end{verbatim}
+
+For example, the following specification
+
+\begin{verbatim}
+  public Test : () ==> nat  
+  Test () ==
+    def n : nat = 5 in
+        ( dcl x : bool := false;
+          if x then return n else return 0 );
+\end{verbatim}
+
+is transformed to
+
+\begin{verbatim}
+  public Test : () ==> nat  
+  Test () ==
+    def n : nat = 5 in
+        ( dcl x : bool := false;
+          return 0 );
+\end{verbatim}
+
+
+\subsection{isRedundantIfBlock (Block Stmt)}
+  Replaces a block statement of the form 
+
+\begin{verbatim}
+  ( dcl ...,  b : bool  := false, ... ;
+    if  test 
+    then  
+      ( b := true  
+      ) 
+    else  
+      ( b := false  
+      ) ;
+    return  b
+  ) ;
+\end{verbatim}
+  
+with 
+
+\begin{verbatim}
+  return test;
+\end{verbatim}
+
+The block can be inside another block and the boolean type can be an
+indirect reference as in the following example
+
+\begin{verbatim}
+  types T = bool;
+
+  operations
+
+    public Test : () ==> bool  
+    Test() ==
+      ( dcl b : seq of char;
+        ( dcl b : bool := false;
+          ( dcl b : T := true;
+            dcl c : bool := b;
+            if c
+            then (b := true)
+            else (b := false);
+            ((return b;))
+          );
+          return b
+        );
+      );
+\end{verbatim}
+
+which transforms to
+
+\begin{verbatim}
+  types T = bool;
+
+  operations
+
+    public Test : () ==> bool  
+    Test() ==
+      ( dcl b : seq of char;
+         ( dcl b : bool := false;
+            ( dcl b : T := true,
+                  c : bool := b;
+              return c
+            );
+           return b 
+         ); 
+      );
+\end{verbatim}
+
+
+\subsection{isRedundantIfBlockNoElse (Block Stmt)}
+  Analogous to the above transform except that it applies to the case
+  when the if statement has no else clause. Thus, for example, the
+  following specification
+
+\begin{verbatim}
+  public Test : () ==> bool  
+  Test () ==
+    ( dcl a : bool;
+        ( dcl b : bool := false;
+            ( dcl c : bool := false;
+              if (2 > 1)
+              then (b := true)
+            );          
+          return b
+        );
+    );
+\end{verbatim}
+
+is transformed to
+
+\begin{verbatim}
+  public Test : () ==> bool  
+  Test () ==
+    ( dcl a : bool;
+        ( dcl b : bool := false;
+            ( dcl c : bool := false;
+              return (2 > 1)
+            );
+        );
+    );
+\end{verbatim}
+
+\subsection{ifToAnd (Block Stmt)}
+  Transforms a consecutive pair of statements of the form
+
+\begin{verbatim}
+  if a then return b;
+  return false;
+\end{verbatim}
+
+to the single statement
+
+\begin{verbatim}
+  return a and b;
+\end{verbatim}
+
+Redundant blocks are also removed as in the following example
+
+\begin{verbatim}
+  public Test : () ==> bool
+  Test () ==
+    ( dcl x : nat := 12;
+        ( if x < 3 then return x > 3);
+        (((return false)))
+                
+    );
+\end{verbatim}
+
+which is transformed to
+
+\begin{verbatim}
+  public Test : () ==> bool
+  Test () ==
+    ( dcl x : nat := 12;
+      return x < 3 and  x > 3 
+    ); 
+\end{verbatim}
+
+\subsection{isRedundantDcl (Block Stmt)}
+  Replaces a block statement of the form
+
+\begin{verbatim}
+   ( dcl x : A := y;
+     return x
+   );
+\end{verbatim}
+
+with the return statement
+
+\begin{verbatim}
+  return y;
+\end{verbatim}
+
+Thus, for example, the following specification
+
+\begin{verbatim}
+  types
+
+    public T = (nat * nat)
+
+  operations
+
+    public Test : () ==> T
+    Test () ==
+      (dcl r : T := def mk_(a,2) = mk_(1,2) in mk_(a,2);
+       return r);
+\end{verbatim}
+
+is transformed to
+
+\begin{verbatim}
+  types
+
+    public T = (nat * nat);
+
+  operations
+
+    public Test : () ==> T
+    Test() ==
+      return def mk_(a,2) = mk_(1,2) in mk_(a,2);
+\end{verbatim}
+
+\subsection{ifToCases (If Stmt)}
+  Transforms a multiply nested if statement of the form
+\begin{verbatim}
+  if x = a1
+  then r1
+  else if x = a2
+       then r2
+       else if x = r3
+            then r3
+            else ....
+\end{verbatim}
+
+to a cases statement of the form
+\begin{verbatim}
+  cases x :
+    a1 -> r1,
+    a2 -> r2,
+    a3 -> r3,
+    ...
+\end{verbatim}
+At the same time, redundant blocks are removed. Thus, for example, the operation
+\begin{verbatim}
+  public Test : () ==> nat  
+  Test () ==
+    ( dcl x : nat := 5;
+      if x = 1 
+      then return 1
+      else if (x = 2) 
+           then ((return 2))
+           else if (((x = 3))) 
+                then return (3) 
+                else if x = 4 
+                     then (return 4)
+                     elseif (x = 5)
+                     then return 5; 
+      return x);
+\end{verbatim}
+is transformed to
+\begin{verbatim}
+  public Test : () ==> nat
+  Test() == 
+    ( dcl x : nat := 5;
+      cases x :
+        1 -> return 1,
+        2 -> return 2,
+        3 -> return 3,
+        4 -> return 4,
+        5 -> return 5
+      end;
+    return x);
+\end{verbatim}
+
+
+\subsection{ifToEquiv (If Stmt)}
+  Transforms an if statement of the form 
+\begin{verbatim}
+  if a then (if b then x else y) else (if b then y else x) 
+\end{verbatim}    
+to the form
+\begin{verbatim} 
+   if a <=> b then x else y
+\end{verbatim}
+
+As an example, the following operation
+\begin{verbatim}
+  public Test : nat * nat ==> nat  
+  Test (x, y) ==
+    ( if x > 2 
+      then ( if y < 1 then return 1 else return 2 )
+      else ( if y < 1 then return 2 else return 1 ) 
+    );
+\end{verbatim}
+would be transformed to
+\begin{verbatim}
+  public Test : nat * nat ==> nat  
+  Test (x, y) ==
+    ( if x > 2 <=> y < 1 
+      then return 1 
+      else return 2 
+    );
+\end{verbatim}
+
+\subsection{nestedIfsNoElses (If Stmt)}
+  Transforms a double if statement of the form
+\begin{verbatim}
+  if a then (if b then c)
+\end{verbatim}
+to a single if statement
+\begin{verbatim}
+  if a and b then c
+\end{verbatim}
+
+Thus, for example, the operation
+\begin{verbatim}
+  public Test : int * int ==> bool
+  Test (x, y) ==
+    ( for i in [1, 2, 3] do
+        ( if x > i then if i > y then return false );
+      return true;
+    );
+\end{verbatim}
+would be transformed to
+\begin{verbatim}
+  public Test : int * int ==> bool
+  Test (x, y) ==
+    ( for i in [1, 2, 3] do
+        ( if x > i and i > y then return false );
+      return true;
+    );
+\end{verbatim}
+
+\subsection{whileIfTestTrue (While Loop)}
+  Simplifies an if statement which occurs at the beginning of a while
+  loop and which has the same test as the while loop. In general, the
+  transformation converts a while loop of the form
+\begin{verbatim}
+   while test do  
+      ( if test then x else y; ... ) 
+\end{verbatim}
+to one of the form
+\begin{verbatim}
+   while test do  
+      ( x; ... ) 
+\end{verbatim}
+
+For example, the following operation
+\begin{verbatim}
+  public Test : nat * int ==> nat
+  Test (x, y) ==
+    ( while x > 5 do
+        ( if x > 5 then y := y + 1 else y := y - 1; 
+          x := x - 1 );
+      return y;
+    );
+\end{verbatim}
+is transformed to
+\begin{verbatim}
+  public Test : nat * int ==> nat
+  Test (x, y) ==
+    ( while x > 5 do
+        ( y := y + 1; 
+          x := x - 1 );
+      return y;
+    );
+
+\end{verbatim}
+
+%\subsection{isRenamingDefStmt (Define Stmt)}
+
+% \subsection{isRedundantDef (Define Expr)}
+%   Transforms a define expression of the form
+% \begin{verbatim}
+%   def x : A = y in x
+% \end{verbatim}
+% in which x is a simple name, to y. Thus, for example, the operation 
+% \begin{verbatim}
+%   public Test : () ==> real  
+%   Test () ==
+%     return ( def x : real = 
+%       ( 12 - 7 ) in x ) + ( def y : real = 0 in y )
+% \end{verbatim}
+% transforms to
+% \begin{verbatim}
+%   public Test : () ==> real  
+%   Test () ==
+%     return ( 12 - 7 ) + 0 
+% \end{verbatim}
+
+%\subsection{isRenamingDef (Define Expr)}
+
+
+\subsection{orToNotEquiv (Binary Expr)}
+  Transforms an or expression of the form
+\begin{verbatim}
+  not a and b or a and not b
+\end{verbatim}
+into the logically equivalent form
+\begin{verbatim}
+  not (a <=> b)
+\end{verbatim}
+At the same time, redundant brackets are removed. Thus, for example,
+the operation
+\begin{verbatim}
+  public Test : () ==> bool
+  Test () ==
+    ( return (((not (let a = true in a) and (false)) or 
+               (((((let a = true in a) and not (false)))))))
+    );
+\end{verbatim}
+is transformed to
+\begin{verbatim}
+  public Test : () ==> bool
+  Test () ==
+    return (not ((let a = true in a) <=> false));
+\end{verbatim}
+
+\newpage
+\section{\VDM\ model of \JAVA\ API classes}\label{javaapi}
+
+\TjTov\ is supplied with \texttt{*-.java} files containing skeletons of a subset of 
+\JAVA\ API classes. They might need to be in your project.
+At least you need \texttt{java.lang.JavaLangObject} and all classes it references.
+
+There is no need to translate them to \VDM\ because \tjTov\ is
+also equipped with their \VDM\ counterparts. 
+A \JAVA\ API class is represented at the \VDM\ level as a
+plain \VDM\ class or a dynamically linkable class (\texttt{dlclass}).
+Implementation of dlclasses is housed in \texttt{j2vdll.so}.
+
+\JAVA\ API is only partially covered at the \VDM\ level. 
+Some methods could not be translated into \VDM\
+because they use \JAVA\ features that are not available in \VDM{}.
+For example, the method \texttt{JavaUtilVector.copyInto} has an array
+as an output parameter which is impossible in \VDM\ because an array
+is a map and a map is passed by value. There are also \JAVA\ API
+classes which have overloaded methods which cannot be translated
+because their signatures will coincide (e.g.\
+\texttt{JavaLangString.valueOf(int) and
+  JavaLangString.valueOf(long)}). 
+
+The following is the list of \VDM\ classes with their methods
+which implement a subset of \JAVA\ API.
+This documents gives only the list.
+Actual documentation can be found in the \JAVA\ documentation.
+
+\subsection{\texttt{java.lang}}
+
+\subsubsection{\texttt{JavaLangArrayIndexOutOfBoundsException}}
+\begin{small}
+\begin{verbatim}
+public  JavaLangArrayIndexOutOfBoundsException : 
+          () ==> JavaLangArrayIndexOutOfBoundsException
+public  JavaLangArrayIndexOutOfBoundsException : 
+          int  ==> JavaLangArrayIndexOutOfBoundsException
+public  JavaLangArrayIndexOutOfBoundsException : 
+          <NIL> ==> JavaLangArrayIndexOutOfBoundsException
+public  JavaLangArrayIndexOutOfBoundsException : 
+          JavaLangString ==> JavaLangArrayIndexOutOfBoundsException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangBoolean}}
+\begin{small}
+\begin{verbatim}
+public  static TRUE : JavaLangBoolean := new JavaLangBoolean(true);
+public  static FALSE : JavaLangBoolean := new JavaLangBoolean(false);
+public  static TYPE : JavaLangClass := 
+          new JavaLangClass("boolean", <CLASS>, true);
+public  JavaLangBoolean : bool  ==> JavaLangBoolean
+public  hashCode : () ==> int
+public  toString : () ==> JavaLangString
+public  JavaLangBoolean : <NIL> ==> JavaLangBoolean
+public  booleanValue : () ==> bool
+public  equals : JavaLangObject ==> bool
+public  JavaLangBoolean : JavaLangString ==> JavaLangBoolean
+public  static valueOf : JavaLangString ==> JavaLangBoolean
+public  static getBoolean : JavaLangString ==> bool
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangCharacter}}
+\begin{small}
+\begin{verbatim}
+public static MIN_RADIX : int := 2;
+public static MAX_RADIX : int := 36;
+public static MIN_VALUE : char:= '0';
+public static MAX_VALUE : char:= 'f';
+public  static getType : char  ==> int
+public  static isSpace : char  ==> bool
+public  static isDefined : char  ==> bool
+public  static forDigit : int  * int  ==> char
+public  static isLowerCase : char  ==> bool
+public  static isTitleCase : char  ==> bool
+public  static isUpperCase : char  ==> bool
+public  static toLowerCase : char  ==> char
+public  static toTitleCase : char  ==> char
+public  static toUpperCase : char  ==> char
+public  static isISOControl : char  ==> bool
+public  static isJavaLetter : char  ==> bool
+public  JavaLangCharacter : <NIL> ==> JavaLangCharacter
+public  static getNumericValue : char  ==> int
+public  static isJavaLetterOrDigit : char  ==> bool
+public  static isJavaIdentifierPart : char  ==> bool
+public  static isIdentifierIgnorable : char  ==> bool
+public  static isJavaIdentifierStart : char  ==> bool
+public  static isUnicodeIdentifierPart : char  ==> bool
+public  static isUnicodeIdentifierStart : char  ==> bool
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangClass}}
+\begin{small}
+\begin{verbatim}
+public  JavaLangClass : <NIL> ==> JavaLangClass
+public  JavaLangClass :  seq1 of char * 
+            (<CLASS> | <INTERFACE>) * bool ==> JavaLangClass
+public  getName : () ==> JavaLangString
+public  isArray : () ==> bool
+public  toString : () ==> JavaLangString
+public  getClasses : () ==> map  int  to  JavaLangClass
+public  getSigners : () ==> map  int  to  JavaLangObject
+public  isInterface : () ==> bool
+public  isPrimitive : () ==> bool
+public  newInstance : () ==> JavaLangObject
+public  getInterfaces : () ==> map  int  to  JavaLangClass
+public  static forName : JavaLangString ==> JavaLangClass
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangClassCastException}}
+\begin{small}
+\begin{verbatim}
+public  JavaLangClassCastException : 
+          () ==> JavaLangClassCastException
+public  JavaLangClassCastException : 
+          <NIL> ==> JavaLangClassCastException
+public  JavaLangClassCastException : 
+          JavaLangString ==> JavaLangClassCastException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangClassNotFoundException}}
+\begin{small}
+\begin{verbatim}
+public  getException : () ==> JavaLangThrowable
+public  printStackTrace : () ==> ()
+public  JavaLangClassNotFoundException : 
+          () ==> JavaLangClassNotFoundException
+public  JavaLangClassNotFoundException : 
+          <NIL> ==> JavaLangClassNotFoundException
+public  printStackTrace : JavaIoPrintStream ==> ()
+public  printStackTrace : JavaIoPrintWriter ==> ()
+public  JavaLangClassNotFoundException : 
+          JavaLangString ==> JavaLangClassNotFoundException
+public  JavaLangClassNotFoundException : JavaLangString * 
+              JavaLangThrowable ==> JavaLangClassNotFoundException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangComparable}}
+\begin{small}
+\begin{verbatim}
+public  compareTo : JavaLangObject ==> int
+
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangConversionBufferFullException}}
+\begin{small}
+\begin{verbatim}
+public  JavaLangConversionBufferFullException : 
+          () ==> JavaLangConversionBufferFullException
+public  JavaLangConversionBufferFullException : 
+          <NIL> ==> JavaLangConversionBufferFullException
+public  JavaLangConversionBufferFullException : 
+          JavaLangString ==> JavaLangConversionBufferFullException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangDouble}}
+\begin{small}
+\begin{verbatim}
+public  static POSITIVE_INFINITY : real :=0;
+public  static NEGATIVE_INFINITY : real :=0;
+public  static NaN : real :=0;
+public  static MAX_VALUE : real := 1.79769313486231570e+308;
+public  static MIN_VALUE : real := 4.94065645841246544e-324;
+public  static TYPE : JavaLangClass := 
+          new JavaLangClass("double", <CLASS>, true);
+public  isNaN : () ==> bool
+public  static isNaN : real  ==> bool
+public  JavaLangDouble : real  ==> JavaLangDouble
+public  hashCode : () ==> int
+public  intValue : () ==> int
+public  toString : () ==> JavaLangString
+public  byteValue : () ==> int
+public  longValue : () ==> int
+public  static toString : real  ==> JavaLangString
+public  floatValue : () ==> real
+public  isInfinite : () ==> bool
+public  shortValue : () ==> int
+public  JavaLangDouble : <NIL> ==> JavaLangDouble
+public  doubleValue : () ==> real
+public  static isInfinite : real  ==> bool
+public  JavaLangDouble : JavaLangString ==> JavaLangDouble
+public  equals : JavaLangObject ==> bool
+public  static valueOf : JavaLangString ==> JavaLangDouble
+public  compareTo : JavaLangObject ==> int
+public  static doubleToLongBits : real  ==> int
+public  static longBitsToDouble : int  ==> real
+public  static parseDouble : JavaLangString ==> real
+public  static doubleToRawLongBits : real  ==> int
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangException}}
+\begin{small}
+\begin{verbatim}
+public  JavaLangException : () ==> JavaLangException
+public  JavaLangException : <NIL> ==> JavaLangException
+public  JavaLangException : JavaLangString ==> JavaLangException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangIllegalAccessException}}
+\begin{small}
+\begin{verbatim}
+public  JavaLangIllegalAccessException : 
+          () ==> JavaLangIllegalAccessException
+public  JavaLangIllegalAccessException : 
+          <NIL> ==> JavaLangIllegalAccessException
+public  JavaLangIllegalAccessException : 
+          JavaLangString ==> JavaLangIllegalAccessException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangIllegalArgumentException}}
+\begin{small}
+\begin{verbatim}
+public  JavaLangIllegalArgumentException : 
+          () ==> JavaLangIllegalArgumentException
+public  JavaLangIllegalArgumentException : 
+          <NIL> ==> JavaLangIllegalArgumentException
+public  JavaLangIllegalArgumentException : 
+          JavaLangString ==> JavaLangIllegalArgumentException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangIllegalStateException}}
+\begin{small}
+\begin{verbatim}
+public  JavaLangIllegalStateException : 
+          () ==> JavaLangIllegalStateException
+public  JavaLangIllegalStateException : 
+          <NIL> ==> JavaLangIllegalStateException
+public  JavaLangIllegalStateException : 
+          JavaLangString ==> JavaLangIllegalStateException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangIndexOutOfBoundsException}}
+\begin{small}
+\begin{verbatim}
+public  JavaLangIndexOutOfBoundsException : 
+          () ==> JavaLangIndexOutOfBoundsException
+public  JavaLangIndexOutOfBoundsException : 
+          <NIL> ==> JavaLangIndexOutOfBoundsException
+public  JavaLangIndexOutOfBoundsException : 
+          JavaLangString ==> JavaLangIndexOutOfBoundsException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangInstantiationException}}
+\begin{small}
+\begin{verbatim}
+public  JavaLangInstantiationException : 
+          () ==> JavaLangInstantiationException
+public  JavaLangInstantiationException : 
+          <NIL> ==> JavaLangInstantiationException
+public  JavaLangInstantiationException : 
+          JavaLangString ==> JavaLangInstantiationException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangInteger}}
+\begin{small}
+\begin{verbatim}
+public  CLASS : JavaLangClass = 
+          new JavaLangClass("JavaLangInteger", <CLASS>, false);
+public  TYPE : JavaLangClass =
+          new JavaLangClass("int", <CLASS>, true);
+public  MIN_VALUE : int=-2147483648;
+public  digits : map  int  to  char
+static  public MAX_VALUE : int:=2147483647;
+public  JavaLangInteger : ()  ==> JavaLangInteger
+public  JavaLangInteger : int  ==> JavaLangInteger
+public  JavaLangInteger : char  ==> JavaLangInteger
+public  JavaLangInteger : JavaLangString ==> JavaLangInteger
+public  getClass : () ==> JavaLangClass
+public  hashCode : () ==> int
+public  intValue : () ==> int
+public  toString : () ==> JavaLangString
+public  byteValue : () ==> int
+public  longValue : () ==> int
+public  charValue : () ==> char
+static  public toString : int  ==> JavaLangString
+public  floatValue : () ==> real
+public  shortValue : () ==> int
+public  doubleValue : () ==> real
+public  static toString_ : int  * int  ==> JavaLangString
+public  JavaLangInteger : <NIL> ==> JavaLangInteger
+public  static toHexString : int  ==> JavaLangString
+public  static decode : JavaLangString ==> JavaLangInteger
+public  equals : JavaLangObject ==> bool
+public  static toOctalString : int  ==> JavaLangString
+public  static valueOf : JavaLangString ==> JavaLangInteger
+public  parseInt : JavaLangString ==> int
+public  compareTo : JavaLangObject ==> int
+public  compareToInt : JavaLangInteger ==> int
+public  static getInteger : JavaLangString ==> JavaLangInteger
+public  parseInt : JavaLangString * int  ==> int
+public  static getInteger : JavaLangString * int  ==> JavaLangInteger
+public  static getInteger : 
+          JavaLangString * JavaLangInteger ==> JavaLangInteger
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{J2VUTIL}}
+\begin{small}
+\begin{verbatim}
+public  BitOp: int * (<AND> | <OR> | <EXCLOR>) * int ==> int
+public  ConcatStr: JavaLangString * JavaLangString ==> JavaLangString
+public  toString : 
+          int  | real | char | JavaLangObject ==> JavaLangString
+public  toChar : int  | real | char ==> char
+public  toInt : int  | real | char ==> int
+public  toFloat : int  | real | char ==> real
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangNullPointerException}}
+\begin{small}
+\begin{verbatim}
+public  JavaLangNullPointerException : 
+          () ==> JavaLangNullPointerException
+public  JavaLangNullPointerException : 
+          <NIL> ==> JavaLangNullPointerException
+public  JavaLangNullPointerException : 
+          JavaLangString ==> JavaLangNullPointerException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{Nullable}}
+\begin{small}
+\begin{verbatim}
+public  IsNil: () ==> bool
+public  isNil: bool := false
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangNumber}}
+\begin{small}
+\begin{verbatim}
+public  intValue : () ==> int
+public  byteValue : () ==> int
+public  longValue : () ==> int
+public  floatValue : () ==> real
+public  shortValue : () ==> int
+public  JavaLangNumber : <NIL> ==> JavaLangNumber
+public  doubleValue : () ==> real
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangNumberFormatException}}
+\begin{small}
+\begin{verbatim}
+public  JavaLangNumberFormatException : 
+          () ==> JavaLangNumberFormatException
+public  JavaLangNumberFormatException : 
+          <NIL> ==> JavaLangNumberFormatException
+public  JavaLangNumberFormatException : 
+          JavaLangString ==> JavaLangNumberFormatException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangObject}}
+\begin{small}
+\begin{verbatim}
+public JavaLangObject: <NIL> ==> JavaLangObject
+public  JavaLangObject : () ==> JavaLangObject
+public  wait : () ==> ()
+public  clone : () ==> JavaLangObject
+public  wait : int  ==> ()
+public  notify : () ==> ()
+public  wait : int  * int  ==> ()
+protected  finalize : () ==> ()
+public  getClass : () ==> JavaLangClass
+public  hashCode : () ==> int
+public  toString : () ==> JavaLangString
+public  notifyAll : () ==> ()
+public  equals : JavaLangObject ==> bool
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangRuntimeException}}
+\begin{small}
+\begin{verbatim}
+public  JavaLangRuntimeException : () ==> JavaLangRuntimeException
+public  JavaLangRuntimeException : <NIL> ==> JavaLangRuntimeException
+public  JavaLangRuntimeException : 
+          JavaLangString ==> JavaLangRuntimeException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangString}}
+\begin{small}
+\begin{verbatim}
+public  CLASS : JavaLangClass =
+          new JavaLangClass("JavaLangString", <CLASS>, false);
+public  JavaLangString : seq of  char  ==> JavaLangString
+public  JavaLangString : JavaLangString ==> JavaLangString
+public  getClass : () ==> JavaLangClass
+public  toSeqOfChar : () ==> seq of  char
+public  JavaLangString: <NIL> ==> JavaLangString
+public  trim: () ==> JavaLangString
+public  JavaLangString : () ==> JavaLangString
+public  intern : () ==> JavaLangString
+public  length : () ==> int
+public  charAt : int  ==> char
+public  getBytes : () ==> map  int  to  int
+public  hashCode : () ==> int
+public  indexOf : int | char ==> int
+public  toString : () ==> JavaLangString
+public  indexOf : int  * int  ==> int
+public  replace : char  * char  ==> JavaLangString
+public  substring : int * int ==> JavaLangString
+public  substring : int  ==> JavaLangString
+public  JavaLangString : map  int  to  char  ==> JavaLangString
+public  JavaLangString : map  int  to  int  ==> JavaLangString
+public  toCharArray : () ==> map  int  to  char
+public  toLowerCase : () ==> JavaLangString
+public  toUpperCase : () ==> JavaLangString
+public  lastIndexOf : int  ==> int
+public  JavaLangString : 
+          map  int  to  int  * int  ==> JavaLangString
+public  lastIndexOf : int  * int  ==> int
+public  JavaLangString : 
+          (map  int  to  char)  * int  * int  ==> JavaLangString
+public  JavaLangString : 
+          map  int  to  int  * int  * int  ==> JavaLangString
+public  concat : JavaLangString ==> JavaLangString
+public  concat' : seq of char ==> ()
+public  static copyValueOf : map  int  to  char  ==> JavaLangString
+public  equals: JavaLangObject ==> bool
+public  JavaLangString : 
+          map  int  to  int  * int  * int  * int  ==> JavaLangString
+public  endsWith : JavaLangString ==> bool
+public  getBytes : JavaLangString ==> map  int  to  int
+public  compareTo : JavaLangObject ==> int
+public  getBytes : int  * int  * map  int  to  int  * int  ==> ()
+public  getChars : int  * int  * map  int  to  char  * int  ==> ()
+public  indexOf : JavaLangString  ==> int
+public  indexOf : JavaLangString * int  ==> int
+public  static copyValueOf : 
+          map  int  to  char  * int  * int  ==> JavaLangString
+public  startsWith : JavaLangString * int  ==> bool
+public  startsWith : JavaLangString ==> bool
+public  lastIndexOf : JavaLangString ==> int
+public  lastIndexOf : JavaLangString * int ==> int
+public  JavaLangString : 
+          map  int  to  int  * JavaLangString ==> JavaLangString
+public  JavaLangString : map  int  to  int  * 
+                   int  * int  * JavaLangString ==> JavaLangString
+public  equalsIgnoreCase : JavaLangString ==> bool
+public  compareToIgnoreCase: JavaLangString ==> int
+public  regionMatches : int  * JavaLangString * int  * int  ==> bool
+public  regionMatches : 
+              bool  * int  * JavaLangString * int  * int  ==> bool
+public  static  valueOf : 
+              map  int  to  char  * int  * int  ==> JavaLangString
+public  static  valueOf : map  int  to  char  ==> JavaLangString
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangStringBuffer}}
+\begin{small}
+\begin{verbatim}
+public  CLASS : JavaLangClass =
+          new JavaLangClass("JavaLangString", <CLASS>, false);
+public  JavaLangStringBuffer : <NIL> ==> JavaLangStringBuffer
+public  getClass : () ==> JavaLangClass
+public  toString : () ==> JavaLangString
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangSystem}}
+\begin{small}
+\begin{verbatim}
+private  static  props : JavaUtilProperties := 
+           new JavaUtilProperties(<NIL>);
+public  static  out : JavaIoPrintStream := 
+  new JavaIoPrintStream(new JavaIoFileOutputStream("stdout", true), true);
+public  static  err : JavaIoPrintStream := 
+  new JavaIoPrintStream(new JavaIoFileOutputStream("stderr", true), true);
+public  static  gc : () ==> ()
+public  JavaLangSystem : () ==> JavaLangSystem
+public  static  exit__ : int  ==> ()
+public  static  load : JavaLangString ==> ()
+public  static  getProperties : () ==> JavaUtilProperties
+public  static  getenv : JavaLangString ==> JavaLangString
+public  static  runFinalization : () ==> ()
+public  static  currentTimeMillis : () ==> int
+public  static  getProperty : JavaLangString ==> JavaLangString
+public  static  loadLibrary : JavaLangString ==> ()
+public  static  runFinalizersOnExit : bool  ==> ()
+public  static  mapLibraryName : JavaLangString ==> JavaLangString
+public  static  identityHashCode : JavaLangObject ==> int
+public  static  getProperty : 
+          JavaLangString * JavaLangString ==> JavaLangString
+public  static  setProperty : 
+          JavaLangString * JavaLangString ==> JavaLangString
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangThrowable}}
+\begin{small}
+\begin{verbatim}
+public  toString : () ==> JavaLangString
+public  JavaLangThrowable : () ==> JavaLangThrowable
+public  getMessage : () ==> JavaLangString
+public  JavaLangThrowable : <NIL> ==> JavaLangThrowable
+public  printStackTrace : () ==> ()
+public  fillInStackTrace : () ==> JavaLangThrowable
+public  JavaLangThrowable : JavaLangString ==> JavaLangThrowable
+public  getLocalizedMessage : () ==> JavaLangString
+public  printStackTrace : JavaIoPrintStream ==> ()
+public  printStackTrace : JavaIoPrintWriter ==> ()
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaLangUnsupportedOperationException}}
+\begin{small}
+\begin{verbatim}
+public  JavaLangUnsupportedOperationException : 
+          () ==> JavaLangUnsupportedOperationException
+public  JavaLangUnsupportedOperationException : 
+          <NIL> ==> JavaLangUnsupportedOperationException
+public  JavaLangUnsupportedOperationException : 
+          JavaLangString ==> JavaLangUnsupportedOperationException
+\end{verbatim}
+\end{small}
+
+\subsection{\texttt{java.util}}
+
+\subsubsection{\texttt{JavaUtilALItr}}
+\begin{small}
+\begin{verbatim}
+protected  cursor : int := 0;
+protected  lastRet : int := -1;
+protected  expectedModCount : int;
+protected  al : JavaUtilAbstractList;
+public  hasNext : () ==> bool
+public  next : () ==> JavaLangObject
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilALListItr}}
+\begin{small}
+\begin{verbatim}
+public  hasPrevious: () ==> bool
+public  previous : () ==> JavaLangObject
+public  nextIndex : () ==> int
+public  previousIndex : () ==> int
+public  set__ : JavaLangObject ==> ()
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilAbstractCollection}}
+\begin{small}
+\begin{verbatim}
+public  clear : () ==> ()
+public  isEmpty : () ==> bool
+public  toArray : () ==> map  int  to  JavaLangObject
+public  toString : () ==> JavaLangString
+public  contains : JavaLangObject ==> bool
+public  addAll : JavaUtilCollection ==> bool
+public  removeAll : JavaUtilCollection ==> bool
+public  retainAll : JavaUtilCollection ==> bool
+public  JavaUtilAbstractCollection : 
+          <NIL> ==> JavaUtilAbstractCollection
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilAbstractList}}
+\begin{small}
+\begin{verbatim}
+public  modCount : int  := 0
+public  get : int  ==> JavaLangObject
+public  clear : () ==> ()
+public  getClass : () ==> JavaLangClass
+public  hashCode : () ==> int
+public  iterator : () ==> JavaUtilIterator
+public  add : JavaLangObject ==> bool
+public  listIterator : () ==> JavaUtilListIterator
+public  listIterator : int  ==> JavaUtilListIterator
+public  equals : JavaLangObject ==> bool
+protected  removeRange : int  * int  ==> ()
+public  indexOf : JavaLangObject ==> int
+public  set__ : int  * JavaLangObject ==> JavaLangObject
+public  JavaUtilAbstractList : <NIL> ==> JavaUtilAbstractList
+public  lastIndexOf : JavaLangObject ==> int
+protected  cursor : int := 0;
+protected  lastRet : int := -1;
+protected  expectedModCount : int;
+protected  al : JavaUtilAbstractList;
+public  hasNext : () ==> bool
+public  next : () ==> JavaLangObject
+public  hasPrevious : () ==> bool
+public  previous : () ==> JavaLangObject
+public  nextIndex : () ==> int
+public  previousIndex : () ==> int
+public  set__ : JavaLangObject ==> ()
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilAbstractMap}}
+\begin{small}
+\begin{verbatim}
+public  size : () ==> int
+public  clear : () ==> ()
+public  keySet : () ==> JavaUtilSet
+public  isEmpty : () ==> bool
+public  entrySet : () ==> JavaUtilSet
+public  hashCode : () ==> int
+public  toString : () ==> JavaLangString
+public  values__ : () ==> JavaUtilCollection
+protected  JavaUtilAbstractMap : () ==> JavaUtilAbstractMap
+public  get : JavaLangObject ==> JavaLangObject
+public  putAll : JavaUtilMap ==> ()
+public  equals : JavaLangObject ==> bool
+public  remove : JavaLangObject ==> JavaLangObject
+public  JavaUtilAbstractMap : <NIL> ==> JavaUtilAbstractMap
+public  containsKey : JavaLangObject ==> bool
+public  put : JavaLangObject * JavaLangObject ==> JavaLangObject
+public  containsValue : JavaLangObject ==> bool
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilAbstractSet}}
+\begin{small}
+\begin{verbatim}
+public  hashCode : () ==> int
+public  JavaUtilAbstractSet : () ==> JavaUtilAbstractSet
+public  equals : JavaLangObject ==> bool
+public  JavaUtilAbstractSet : <NIL> ==> JavaUtilAbstractSet
+public  removeAll : JavaUtilCollection ==> bool
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilCollection}}
+\begin{small}
+\begin{verbatim}
+public  size : () ==> int
+public  clear : () ==> ()
+public  isEmpty : () ==> bool
+public  hashCode : () ==> int
+public  iterator : () ==> JavaUtilIterator
+public  equals : JavaLangObject ==> bool
+public  contains : JavaLangObject ==> bool
+public  addAll : JavaUtilCollection ==> bool
+public  removeAll : JavaUtilCollection ==> bool
+public  retainAll : JavaUtilCollection ==> bool
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilConcurrentModificationException}}
+\begin{small}
+\begin{verbatim}
+public  JavaUtilConcurrentModificationException : 
+          () ==> JavaUtilConcurrentModificationException
+public  JavaUtilConcurrentModificationException : 
+          <NIL> ==> JavaUtilConcurrentModificationException
+public  JavaUtilConcurrentModificationException : 
+          JavaLangString ==> JavaUtilConcurrentModificationException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilDate}}
+\begin{small}
+\begin{verbatim}
+public  JavaUtilDate : () ==> JavaUtilDate
+public  JavaUtilDate : int  ==> JavaUtilDate
+public  clone : () ==> JavaLangObject
+public  getDay : () ==> int
+public  getDate : () ==> int
+public  getTime : () ==> int
+public  getYear : () ==> int
+public  getHours : () ==> int
+public  getMonth : () ==> int
+public  hashCode : () ==> int
+public  setDate : int  ==> ()
+public  setTime : int  ==> ()
+public  setYear : int  ==> ()
+public  toString : () ==> JavaLangString
+public  JavaUtilDate : <NIL> ==> JavaUtilDate
+public  JavaUtilDate : int  * int  * int  ==> JavaUtilDate
+public  setHours : int  ==> ()
+public  setMonth : int  ==> ()
+public  getMinutes : () ==> int
+public  getSeconds : () ==> int
+public  after : JavaUtilDate ==> bool
+public  setMinutes : int  ==> ()
+public  setSeconds : int  ==> ()
+public  toGMTString : () ==> JavaLangString
+public  JavaUtilDate : JavaLangString ==> JavaUtilDate
+public  before : JavaUtilDate ==> bool
+public  JavaUtilDate : int  * int  * int  * int  * int  ==> JavaUtilDate
+public  static parse : JavaLangString ==> int
+public  static UTC : int  * int  * int  * int  * int  * int  ==> int
+public  equals : JavaLangObject ==> bool
+public  toLocaleString : () ==> JavaLangString
+public  JavaUtilDate : 
+          int  * int  * int  * int  * int  * int  ==> JavaUtilDate
+public  compareTo : JavaLangObject ==> int
+public  getTimezoneOffset : () ==> int
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilDictionary}}
+\begin{small}
+\begin{verbatim}
+public  isEmpty : () ==> bool
+public  JavaUtilDictionary : <NIL> ==> JavaUtilDictionary
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilEmptyEnumerator}}
+\begin{small}
+\begin{verbatim}
+public  nextElement : () ==> JavaLangObject
+public  JavaUtilEmptyEnumerator : () ==> JavaUtilEmptyEnumerator
+public  hasMoreElements : () ==> bool
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilEmptyIterator}}
+\begin{small}
+\begin{verbatim}
+public  next : () ==> JavaLangObject
+public  remove : () ==> ()
+public  hasNext : () ==> bool
+public  JavaUtilEmptyIterator : () ==> JavaUtilEmptyIterator
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilEmptyStackException}}
+\begin{small}
+\begin{verbatim}
+public  JavaUtilEmptyStackException : 
+          () ==> JavaUtilEmptyStackException
+public  JavaUtilEmptyStackException : 
+          <NIL> ==> JavaUtilEmptyStackException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilEntry}}
+\begin{small}
+\begin{verbatim}
+public  getClass : () ==> JavaLangClass
+public  hashCode : () ==> int
+public  equals : JavaLangObject ==> bool
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilEnumeration}}
+\begin{small}
+\begin{verbatim}
+public  JavaUtilEnumeration : <NIL> ==> JavaUtilEnumeration
+public  nextElement : () ==> JavaLangObject
+public  hasMoreElements : () ==> bool
+protected  expectedModCount : int;
+public  remove : () ==> ()
+public  hasNext : () ==> bool
+public  nextElement : () ==> JavaLangObject
+public  JavaUtilEnumerator : 
+          int  * bool * JavaUtilHashtable ==> JavaUtilEnumerator
+public  JavaUtilEnumerator : <NIL> ==> JavaUtilEnumerator
+public  hasMoreElements : () ==> bool
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilHTEntry}}
+\begin{small}
+\begin{verbatim}
+public  hash : int ;
+public  key : JavaLangObject;
+public  value__ : JavaLangObject;
+public  next : JavaUtilHTEntry
+public  clone : () ==> JavaLangObject
+public  getKey : () ==> JavaLangObject
+public  getValue : () ==> JavaLangObject
+public  hashCode : () ==> int
+public  toString : () ==> JavaLangString
+public  JavaUtilHTEntry : <NIL> ==> JavaUtilHTEntry
+public  equals : JavaLangObject ==> bool
+public  setValue : JavaLangObject ==> JavaLangObject
+public  JavaUtilHTEntry : int  * JavaLangObject * 
+                 JavaLangObject * JavaUtilHTEntry ==> JavaUtilHTEntry
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilHTKeySet}}
+\begin{small}
+\begin{verbatim}
+public  JavaUtilHTKeySet : JavaUtilHashtable ==> JavaUtilHTKeySet
+public  iterator : () ==> JavaUtilIterator
+public  size : () ==> int
+public  contains : JavaLangObject ==> bool
+public  remove : JavaLangObject ==> bool
+public  clear : () ==> ()
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilHashMap}}
+\begin{small}
+\begin{verbatim}
+public  hash : int;
+public  key : JavaLangObject;
+public  value__: JavaLangObject;
+public  next : HMEntry;
+public  HMEntry : <NIL> ==> HMEntry
+public  clone : () ==> JavaLangObject
+public  getKey : () ==> JavaLangObject
+public  getValue : () ==> JavaLangObject
+public  setValue : JavaLangObject ==> JavaLangObject
+public  equals : JavaLangObject ==> bool
+public  hashCode : () ==> int
+public  toString : () ==> JavaLangString
+public  table : map int to HMEntry;
+public  count : int :=0;
+public  threshold : int;
+public  loadFactor_ : real;
+public  modCount : int := 0;
+public  static  KEYS : int := 0;
+public  static  VALUES : int := 1;
+public  static  ENTRIES : int := 2;
+public  size : () ==> int
+public  clear : () ==> ()
+public  clone : () ==> JavaLangObject
+public  keySet : () ==> JavaUtilSet
+public  getHashIterator : int ==> JavaUtilIterator
+public  JavaUtilHashMap : () ==> JavaUtilHashMap
+public  isEmpty : () ==> bool
+public  JavaUtilHashMap : int  ==> JavaUtilHashMap
+public  entrySet : () ==> JavaUtilSet
+public  values__ : () ==> JavaUtilCollection
+public  JavaUtilHashMap : int  * real  ==> JavaUtilHashMap
+public  get : JavaLangObject ==> JavaLangObject
+public  putAll : JavaUtilMap ==> ()
+public  JavaUtilHashMap : JavaUtilMap ==> JavaUtilHashMap
+public  JavaUtilHashMap : <NIL> ==> JavaUtilHashMap
+public  remove : JavaLangObject ==> JavaLangObject
+public  containsKey : JavaLangObject ==> bool
+public  put : JavaLangObject * JavaLangObject ==> JavaLangObject
+protected  rehash : () ==> ()
+public  containsValue : JavaLangObject ==> bool
+public  HMKeySet: JavaUtilHashMap ==> HMKeySet
+public  iterator : () ==> JavaUtilIterator
+public  size : () ==> int
+public  contains : JavaLangObject ==> bool
+public  remove : JavaLangObject ==> bool
+public  clear : () ==> ()
+public  HMEntrySet : JavaUtilHashMap ==> HMEntrySet
+public  iterator : () ==> JavaUtilIterator
+public  size : () ==> int
+public  contains : JavaLangObject ==> bool
+public  remove : JavaLangObject ==> bool
+public  clear : () ==> ()
+public  next : () ==> JavaLangObject
+public  remove : () ==> ()
+public  hasNext : () ==> bool
+public  EmptyHashIterator : () ==> EmptyHashIterator
+public  HashIterator: int * JavaUtilHashMap ==> HashIterator
+public  hasNext : () ==> bool
+public  next : () ==> JavaLangObject
+public  remove : () ==> ()
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilHashSet}}
+\begin{small}
+\begin{verbatim}
+public  size : () ==> int
+public  clear : () ==> ()
+public  clone : () ==> JavaLangObject
+public  JavaUtilHashSet : () ==> JavaUtilHashSet
+public  isEmpty : () ==> bool
+public  JavaUtilHashSet : int  ==> JavaUtilHashSet
+public  iterator : () ==> JavaUtilIterator
+public  JavaUtilHashSet : int  * real  ==> JavaUtilHashSet
+public  add : JavaLangObject ==> bool
+public  JavaUtilHashSet : <NIL> ==> JavaUtilHashSet
+public  remove : JavaLangObject ==> bool
+public  contains : JavaLangObject ==> bool
+public  JavaUtilHashSet : JavaUtilCollection ==> JavaUtilHashSet
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilHashtable}}
+\begin{small}
+\begin{verbatim}
+public  static  KEYS : int := 0;
+public  static  VALUES : int := 1;
+public  static  ENTRIES : int := 2;
+public  table : map  int  to  JavaUtilHTEntry;
+public  count : int := 0;
+public  modCount : int  := 0;
+public  keys : () ==> JavaUtilEnumeration
+public  size : () ==> int
+public  clear : () ==> ()
+public  clone : () ==> JavaLangObject
+public  keySet : () ==> JavaUtilSet
+protected  rehash : () ==> ()
+public  isEmpty : () ==> bool
+public  elements : () ==> JavaUtilEnumeration
+public  entrySet : () ==> JavaUtilSet
+public  getClass : () ==> JavaLangClass
+public  hashCode : () ==> int
+public  toString : () ==> JavaLangString
+public  values__ : () ==> JavaUtilCollection
+public  JavaUtilHashtable : () ==> JavaUtilHashtable
+public  JavaUtilHashtable : int  ==> JavaUtilHashtable
+public  get : JavaLangObject ==> JavaLangObject
+public  putAll : JavaUtilMap ==> ()
+public  JavaUtilHashtable : int * real  ==> JavaUtilHashtable
+public  getIterator : int  ==> JavaUtilIterator
+public  JavaUtilHashtable : <NIL> ==> JavaUtilHashtable
+public  equals : JavaLangObject ==> bool
+public  remove : JavaLangObject ==> JavaLangObject
+public  contains : JavaLangObject ==> bool
+public  containsKey : JavaLangObject ==> bool
+public  put : JavaLangObject * JavaLangObject ==> JavaLangObject
+public  containsValue : JavaLangObject ==> bool
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilIterator}}
+\begin{small}
+\begin{verbatim}
+public  JavaUtilIterator : <NIL> ==> JavaUtilIterator
+public  next : () ==> JavaLangObject
+public  remove : () ==> ()
+public  hasNext : () ==> bool
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilList}}
+\begin{small}
+\begin{verbatim}
+public  get : int  ==> JavaLangObject
+public  size : () ==> int
+public  clear : () ==> ()
+public  isEmpty : () ==> bool
+public  toArray : () ==> map  int  to  JavaLangObject
+public  hashCode : () ==> int
+public  iterator : () ==> JavaUtilIterator
+public  subList : int  * int  ==> JavaUtilList
+public  equals : JavaLangObject ==> bool
+public  indexOf : JavaLangObject ==> int
+public  set__ : int  * JavaLangObject ==> JavaLangObject
+public  contains : JavaLangObject ==> bool
+public  addAll : JavaUtilCollection ==> bool
+public  lastIndexOf : JavaLangObject ==> int
+public  toArray : map  int  to  JavaLangObject ==> 
+                                map  int  to  JavaLangObject
+public  addAll : int  * JavaUtilCollection ==> bool
+public  removeAll : JavaUtilCollection ==> bool
+public  retainAll : JavaUtilCollection ==> bool
+public  containsAll : JavaUtilCollection ==> bool
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilListIterator}}
+\begin{small}
+\begin{verbatim}
+public  next : () ==> JavaLangObject
+public  remove : () ==> ()
+public  hasNext : () ==> bool
+public  previous : () ==> JavaLangObject
+public  nextIndex : () ==> int
+public  add : JavaLangObject ==> ()
+public  hasPrevious : () ==> bool
+public  previousIndex : () ==> int
+public  set__ : JavaLangObject ==> ()
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilLocale}}
+\begin{small}
+\begin{verbatim}
+public  static  ENGLISH : [JavaUtilLocale] := nil;
+public  static  FRENCH : [JavaUtilLocale] := nil;
+public  static  GERMAN : [JavaUtilLocale] := nil;
+public  static  ITALIAN : [JavaUtilLocale] := nil;
+public  static  JAPANESE : [JavaUtilLocale] := nil;
+public  static  KOREAN : [JavaUtilLocale] := nil;
+public  static  CHINESE : [JavaUtilLocale] := nil;
+public  static  SIMPLIFIED_CHINESE : [JavaUtilLocale] := nil;
+public  static  TRADITIONAL_CHINESE : [JavaUtilLocale] := nil;
+public  static  FRANCE : [JavaUtilLocale] := nil;
+public  static  GERMANY : [JavaUtilLocale] := nil;
+public  static  ITALY : [JavaUtilLocale] := nil;
+public  static  JAPAN : [JavaUtilLocale] := nil;
+public  static  KOREA : [JavaUtilLocale] := nil;
+public  static  CHINA : [JavaUtilLocale] := nil;
+public  static  PRC : [JavaUtilLocale] := nil;
+public  static  TAIWAN : [JavaUtilLocale] := nil;
+public  static  UK : [JavaUtilLocale] := nil;
+public  static  US : [JavaUtilLocale] := nil;
+public  static  CANADA : [JavaUtilLocale] := nil;
+public  static  CANADA_FRENCH : [JavaUtilLocale] := nil;
+public  clone : () ==> JavaLangObject
+public  hashCode : () ==> int
+public  toString : () ==> JavaLangString
+public  getCountry : () ==> JavaLangString
+public  static  getDefault : () ==> JavaUtilLocale
+public  getVariant : () ==> JavaLangString
+public  JavaUtilLocale : <NIL> ==> JavaUtilLocale
+public  getLanguage : () ==> JavaLangString
+public  equals : JavaLangObject ==> bool
+public  getDisplayName : () ==> JavaLangString
+public  getISO3Country : () ==> JavaLangString
+public  getISO3Language : () ==> JavaLangString
+public  static  getISOCountries : () ==> map  int  to  JavaLangString
+public  static  getISOLanguages : () ==> map  int  to  JavaLangString
+public  getDisplayCountry : () ==> JavaLangString
+public  getDisplayVariant : () ==> JavaLangString
+public  getDisplayLanguage : () ==> JavaLangString
+public  static setDefault : JavaUtilLocale ==> ()
+public  static getAvailableLocales : 
+          () ==> map  int  to  JavaUtilLocale
+public  getDisplayName : JavaUtilLocale ==> JavaLangString
+public  JavaUtilLocale : 
+          JavaLangString * JavaLangString ==> JavaUtilLocale
+public  getDisplayCountry : JavaUtilLocale ==> JavaLangString
+public  getDisplayVariant : JavaUtilLocale ==> JavaLangString
+public  getDisplayLanguage : JavaUtilLocale ==> JavaLangString
+public  JavaUtilLocale : JavaLangString * JavaLangString * 
+                                    JavaLangString ==> JavaUtilLocale
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilMap}}
+\begin{small}
+\begin{verbatim}
+public  size : () ==> int
+public  clear : () ==> ()
+public  keySet : () ==> JavaUtilSet
+public  isEmpty : () ==> bool
+public  get : JavaLangObject ==> JavaLangObject
+public  containsKey : JavaLangObject ==> bool
+public  put : JavaLangObject * JavaLangObject ==> JavaLangObject
+public  containsValue : JavaLangObject ==> bool
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilMissingResourceException}}
+\begin{small}
+\begin{verbatim}
+public  getKey : () ==> JavaLangString
+public  getClassName : () ==> JavaLangString
+public  JavaUtilMissingResourceException : 
+          <NIL> ==> JavaUtilMissingResourceException
+public  JavaUtilMissingResourceException : 
+          JavaLangString * JavaLangString * JavaLangString ==> 
+                                JavaUtilMissingResourceException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilNoSuchElementException}}
+\begin{small}
+\begin{verbatim}
+public  JavaUtilNoSuchElementException : 
+          () ==> JavaUtilNoSuchElementException
+public  JavaUtilNoSuchElementException : 
+          <NIL> ==> JavaUtilNoSuchElementException
+public  JavaUtilNoSuchElementException : 
+          JavaLangString ==> JavaUtilNoSuchElementException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilObservable}}
+\begin{small}
+\begin{verbatim}
+public  JavaUtilObservable : () ==> JavaUtilObservable
+public  hasChanged : () ==> bool
+protected  setChanged : () ==> ()
+protected  clearChanged : () ==> ()
+public  countObservers : () ==> int
+public  JavaUtilObservable : <NIL> ==> JavaUtilObservable
+public  deleteObservers : () ==> ()
+public  notifyObservers : () ==> ()
+public  addObserver : JavaUtilObserver ==> ()
+public  notifyObservers : JavaLangObject ==> ()
+public  deleteObserver : JavaUtilObserver ==> ()
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilObserver}}
+\begin{small}
+\begin{verbatim}
+public  JavaUtilObserver : <NIL> ==> JavaUtilObserver
+public  update : JavaUtilObservable * JavaLangObject ==> ()
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilProperties}}
+\begin{small}
+\begin{verbatim}
+protected  defaults : JavaUtilProperties;
+public  JavaUtilProperties : () ==> JavaUtilProperties
+public  propertyNames : () ==> JavaUtilEnumeration
+public  JavaUtilProperties : <NIL> ==> JavaUtilProperties
+public  list : JavaIoPrintStream ==> ()
+public  load : JavaIoInputStream ==> ()
+public  getProperty : JavaLangString ==> JavaLangString
+public  JavaUtilProperties : JavaUtilProperties ==> JavaUtilProperties
+public  save : JavaIoOutputStream * JavaLangString ==> ()
+public  getProperty : JavaLangString * JavaLangString ==> JavaLangString
+public  setProperty : JavaLangString * JavaLangString ==> JavaLangObject
+public  store : JavaIoOutputStream * JavaLangString ==> ()
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilResourceBundle}}
+\begin{small}
+\begin{verbatim}
+protected  parent : JavaUtilResourceBundle
+public  getKeys : () ==> JavaUtilEnumeration
+public  getLocale : () ==> JavaUtilLocale
+public  JavaUtilResourceBundle : () ==> JavaUtilResourceBundle
+public  static getBundle : JavaLangString ==> JavaUtilResourceBundle
+public  getObject : JavaLangString ==> JavaLangObject
+public  getString : JavaLangString ==> JavaLangString
+public  JavaUtilResourceBundle : <NIL> ==> JavaUtilResourceBundle
+public  getStringArray : JavaLangString ==> map  int  to  JavaLangString
+protected  handleGetObject : JavaLangString ==> JavaLangObject
+protected  setParent : JavaUtilResourceBundle ==> ()
+public  static  getBundle : JavaLangString * 
+                       JavaUtilLocale ==> JavaUtilResourceBundle
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilSet}}
+\begin{small}
+\begin{verbatim}
+public  clear : () ==> ()
+public  isEmpty : () ==> bool
+public  toArray : () ==> map  int  to  JavaLangObject
+public  hashCode : () ==> int
+public  iterator : () ==> JavaUtilIterator
+public  add : JavaLangObject ==> bool
+public  equals : JavaLangObject ==> bool
+public  contains : JavaLangObject ==> bool
+public  addAll : JavaUtilCollection ==> bool
+public  toArray : map  int  to  JavaLangObject ==> 
+                                map  int  to  JavaLangObject
+public  removeAll : JavaUtilCollection ==> bool
+public  retainAll : JavaUtilCollection ==> bool
+public  containsAll : JavaUtilCollection ==> bool
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilStack}}
+\begin{small}
+\begin{verbatim}
+public  pop : () ==> JavaLangObject
+public  peek : () ==> JavaLangObject
+public  JavaUtilStack : () ==> JavaUtilStack
+public  empty : () ==> bool
+public  getClass : () ==> JavaLangClass
+public  JavaUtilStack : <NIL> ==> JavaUtilStack
+public  push : JavaLangObject ==> JavaLangObject
+public  search : JavaLangObject ==> int
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilStringTokenizer}}
+\begin{small}
+\begin{verbatim}
+public  nextToken : () ==> JavaLangString
+public  countTokens : () ==> int
+public  nextElement : () ==> JavaLangObject
+public  hasMoreTokens : () ==> bool
+public  hasMoreElements : () ==> bool
+public  nextToken : JavaLangString ==> JavaLangString
+public  JavaUtilStringTokenizer : <NIL> ==> JavaUtilStringTokenizer
+public  JavaUtilStringTokenizer : 
+          JavaLangString ==> JavaUtilStringTokenizer
+public  JavaUtilStringTokenizer : J
+          avaLangString * JavaLangString ==> JavaUtilStringTokenizer
+public  JavaUtilStringTokenizer : JavaLangString * 
+              JavaLangString * bool  ==> JavaUtilStringTokenizer
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaUtilVector}}
+\begin{small}
+\begin{verbatim}
+public  insertElementAt : JavaLangObject * int ==> ()
+public  clear : () ==> ()
+public  clone : () ==> JavaLangObject
+public  contains : JavaLangObject ==> bool
+public  containsAll : JavaUtilCollection ==> bool
+public  elementAt : int ==> JavaLangObject
+public  firstElement : () ==> JavaLangObject
+public  get : int ==> JavaLangObject
+public  isEmpty : () ==> bool
+public  indexOf : JavaLangObject ==> int
+public  indexOfFrom : JavaLangObject * int ==> int
+public  lastElement : () ==> JavaLangObject
+public  remove : int ==> JavaLangObject
+public  remove' : JavaLangObject ==> bool
+public  removeElementAt : int ==> ()
+public  removeElement : JavaLangObject ==> bool
+public  removeAll : JavaUtilCollection ==> bool
+public  retainAll : JavaUtilCollection ==> bool
+public  subList : int * int ==> JavaUtilList
+public  elements : () ==> JavaUtilEnumeration
+public  VEnumeration : JavaUtilVector ==> VEnumeration
+public  hasMoreElements : () ==> bool
+public  nextElement : () ==> JavaLangObject
+\end{verbatim}
+\end{small}
+
+\subsection{\texttt{java.io}}
+
+\subsubsection{\texttt{JavaIoBufferedInputStream}}
+\begin{small}
+\begin{verbatim}
+protected  buf : map  int  to  int ;
+protected  count : int ;
+protected  pos : int ;
+protected  markpos : int  := -1;
+protected  marklimit : int
+public  read : () ==> int
+public  close : () ==> ()
+public  mark : int  ==> ()
+public  reset : () ==> ()
+public  skip__ : int  ==> int
+public  getClass : () ==> JavaLangClass
+public  available : () ==> int
+public  markSupported : () ==> bool
+public  read : map  int  to  int  * int  * int  ==> int
+public  readMIIIntInt' : map  int  to  int  * 
+                     int  * int  ==> int * map  int  to  int
+public  JavaIoBufferedInputStream : 
+          <NIL> ==> JavaIoBufferedInputStream
+public  JavaIoBufferedInputStream : 
+          JavaIoInputStream ==> JavaIoBufferedInputStream
+public  JavaIoBufferedInputStream : 
+          JavaIoInputStream * int  ==> JavaIoBufferedInputStream
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoBufferedOutputStream}}
+\begin{small}
+\begin{verbatim}
+protected  buf : map  int  to  int ;
+protected  count : int
+public  flush : () ==> ()
+public  write : int  ==> ()
+public  getClass : () ==> JavaLangClass
+public  write2 : map  int  to  int  * int  * int  ==> ()
+public  JavaIoBufferedOutputStream : 
+          <NIL> ==> JavaIoBufferedOutputStream
+public  JavaIoBufferedOutputStream : 
+          JavaIoOutputStream ==> JavaIoBufferedOutputStream
+public  JavaIoBufferedOutputStream : 
+          JavaIoOutputStream * int  ==> JavaIoBufferedOutputStream
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoBufferedReader}}
+\begin{small}
+\begin{verbatim}
+public  read : () ==> int
+public  close : () ==> ()
+public  mark : int  ==> ()
+public  ready : () ==> bool
+public  reset : () ==> ()
+public  skip__ : int  ==> int
+public  readLine : () ==> JavaLangString
+public  markSupported : () ==> bool
+public  read : map  int  to  char  * int  * int  ==> int
+public  read' : map  int  to  char  * 
+               int  * int  ==> int * map  int  to  char
+public  JavaIoBufferedReader : <NIL> ==> JavaIoBufferedReader
+public  JavaIoBufferedReader : JavaIoReader ==> JavaIoBufferedReader
+public  JavaIoBufferedReader : 
+          JavaIoReader * int  ==> JavaIoBufferedReader
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoBufferedWriter}}
+\begin{small}
+\begin{verbatim}
+public  close : () ==> ()
+public  flush : () ==> ()
+public  write : int  ==> ()
+public  newLine : () ==> ()
+public  flushBuffer : () ==> ()
+public  write : (map  int  to  char | JavaLangString)  * 
+                                                 int  * int  ==> ()
+public  writeICMIntInt : map  int  to  char  * int  * int  ==> ()
+public  writeStrIntInt : JavaLangString * int  * int  ==> ()
+public  JavaIoBufferedWriter : <NIL> ==> JavaIoBufferedWriter
+public  JavaIoBufferedWriter : JavaIoWriter ==> JavaIoBufferedWriter
+public  JavaIoBufferedWriter : 
+          JavaIoWriter * int  ==> JavaIoBufferedWriter
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoByteArrayInputStream}}
+\begin{small}
+\begin{verbatim}
+protected  buf : map  int  to  int ;
+protected  pos : int ;
+protected  mark_ : int  := 0;
+protected  count : int
+public  read : () ==> int
+public  close : () ==> ()
+public  mark : int  ==> ()
+public  reset : () ==> ()
+public  skip__ : int  ==> int
+public  getClass : () ==> JavaLangClass
+public  available : () ==> int
+public  markSupported : () ==> bool
+public  read : map  int  to  int  * int  * int  ==> int
+public  readMIIIntInt' : map  int  to  int  * int  * int  ==> 
+                                             int * map  int  to  int
+public  JavaIoByteArrayInputStream : 
+          map  int  to  int  ==> JavaIoByteArrayInputStream
+public  JavaIoByteArrayInputStream : <NIL> ==> JavaIoByteArrayInputStream
+public  JavaIoByteArrayInputStream : 
+          map  int  to  int  * int  * int  ==> JavaIoByteArrayInputStream
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoCharArrayReader}}
+\begin{small}
+\begin{verbatim}
+protected  buf : map  int  to  char ;
+protected  pos : int ;
+protected  markedPos : int  := 0;
+protected  count : int
+public  read : () ==> int
+public  close : () ==> ()
+public  mark : int  ==> ()
+public  ready : () ==> bool
+public  reset : () ==> ()
+public  skip__ : int  ==> int
+public  getClass : () ==> JavaLangClass
+public  markSupported : () ==> bool
+public  read : map  int  to  char  * int  * int  ==> 
+                                      int * map  int  to  char
+public  JavaIoCharArrayReader : 
+          map  int  to  char  ==> JavaIoCharArrayReader
+public  JavaIoCharArrayReader : <NIL> ==> JavaIoCharArrayReader
+public  JavaIoCharArrayReader : 
+          map  int  to  char  * int  * int  ==> JavaIoCharArrayReader
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoFile}}
+\begin{small}
+\begin{verbatim}
+public  static  separatorChar : char  := fs.getSeparator();
+public  static  separator : JavaLangString := 
+            new JavaLangString([fs.getSeparator()]);
+public  static  pathSeparatorChar : char  := 
+                              fs.getPathSeparator();
+public  static  pathSeparator : JavaLangString := 
+             new JavaLangString([fs.getPathSeparator()]);
+public  list : () ==> map  int  to  JavaLangString
+public  mkdir : () ==> bool
+public  toURL : () ==> JavaNetURL
+public  delete : () ==> bool
+public  isFile : () ==> bool
+public  length : () ==> int
+public  mkdirs : () ==> bool
+public  canRead : () ==> bool
+public  getName : () ==> JavaLangString
+public  getPath : () ==> JavaLangString
+public  canWrite : () ==> bool
+public  exists__ : () ==> bool
+public  getClass : () ==> JavaLangClass
+public  hashCode : () ==> int
+public  isHidden : () ==> bool
+public  toString : () ==> JavaLangString
+public  JavaIoFile : <NIL> ==> JavaIoFile
+public  getParent : () ==> JavaLangString
+public  listFiles : () ==> map  int  to  JavaIoFile
+public  static listRoots : () ==> map  int  to  JavaIoFile
+public  isAbsolute : () ==> bool
+public  isDirectory : () ==> bool
+public  setReadOnly : () ==> bool
+public  JavaIoFile : JavaLangString ==> JavaIoFile
+public  deleteOnExit : () ==> ()
+public  lastModified : () ==> int
+public  createNewFile : () ==> bool
+public  getParentFile : () ==> JavaIoFile
+public  JavaIoFile : JavaLangString * int  ==> JavaIoFile
+public  JavaIoFile : JavaIoFile * JavaLangString ==> JavaIoFile
+public  equals : JavaLangObject ==> bool
+public  renameTo : JavaIoFile ==> bool
+public  getAbsoluteFile : () ==> JavaIoFile
+public  getAbsolutePath : () ==> JavaLangString
+public  getCanonicalFile : () ==> JavaIoFile
+public  getCanonicalPath : () ==> JavaLangString
+public  setLastModified : int  ==> bool
+public  compareTo : JavaLangObject ==> int
+public  JavaIoFile : JavaLangString * JavaLangString ==> JavaIoFile
+public  static createTempFile : 
+          JavaLangString * JavaLangString ==> JavaIoFile
+public  static createTempFile : 
+          JavaLangString * JavaLangString * JavaIoFile ==> JavaIoFile
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoFileDescriptor}}
+\begin{small}
+\begin{verbatim}
+public  valid : () ==> bool
+public  sync__ : () ==> ()
+public  JavaIoFileDescriptor : () ==> JavaIoFileDescriptor
+public  JavaIoFileDescriptor : <NIL> ==> JavaIoFileDescriptor
+public  getClass : () ==> JavaLangClass
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoFileInputStream}}
+\begin{small}
+\begin{verbatim}
+public  read : () ==> int
+public  close : () ==> ()
+public  getFD : () ==> JavaIoFileDescriptor
+public  skip__ : int  ==> int
+protected  finalize : () ==> ()
+public  available : () ==> int
+public  readMIIIntInt' : map  int  to  int  * int  * int  ==> 
+                                                int * map  int  to  int
+public  JavaIoFileInputStream : JavaIoFile ==> JavaIoFileInputStream
+public  JavaIoFileInputStream : JavaLangString ==> JavaIoFileInputStream
+public  JavaIoFileInputStream : seq of char ==> JavaIoFileInputStream
+public  JavaIoFileInputStream : 
+          JavaIoFileDescriptor ==> JavaIoFileInputStream
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoFileNotFoundException}}
+\begin{small}
+\begin{verbatim}
+public  JavaIoFileNotFoundException : () ==> JavaIoFileNotFoundException
+public  JavaIoFileNotFoundException : 
+          <NIL> ==> JavaIoFileNotFoundException
+public  JavaIoFileNotFoundException : 
+          JavaLangString ==> JavaIoFileNotFoundException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoFileOutputStream}}
+\begin{small}
+\begin{verbatim}
+public  close : () ==> ()
+public  getFD : () ==> JavaIoFileDescriptor
+public  write : int  ==> ()
+protected  finalize : () ==> ()
+public  JavaIoFileOutputStream : JavaIoFile ==> JavaIoFileOutputStream
+public  JavaIoFileOutputStream : JavaLangString ==> JavaIoFileOutputStream
+public  JavaIoFileOutputStream : 
+          JavaLangString * bool  ==> JavaIoFileOutputStream
+public  JavaIoFileOutputStream : 
+          seq of char * bool  ==> JavaIoFileOutputStream
+public  JavaIoFileOutputStream : 
+          JavaIoFileDescriptor ==> JavaIoFileOutputStream
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoFileReader}}
+\begin{small}
+\begin{verbatim}
+public  JavaIoFileReader : <NIL> ==> JavaIoFileReader
+public  JavaIoFileReader : JavaIoFile ==> JavaIoFileReader
+public  JavaIoFileReader : JavaLangString ==> JavaIoFileReader
+public  JavaIoFileReader : JavaIoFileDescriptor ==> JavaIoFileReader
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoFileSystem}}
+\begin{small}
+\begin{verbatim}
+public  static  BA_EXISTS : int :=1;
+public  static  BA_REGULAR : int :=2;
+public  static  BA_DIRECTORY : int :=4;
+public  static  BA_HIDDEN : int :=8
+public  listRoots : () ==> map  int  to  JavaIoFile
+public  list : JavaIoFile ==> map  int  to  JavaLangString
+public  delete : JavaIoFile ==> bool
+public  getSeparator : () ==> char
+public  static  getFileSystem : () ==> JavaIoFileSystem
+public  resolve : JavaIoFile ==> JavaLangString
+public  hashCode : JavaIoFile ==> int
+public  getLength : JavaIoFile ==> int
+public  getDefaultParent : () ==> JavaLangString
+public  getPathSeparator : () ==> char
+public  isAbsolute : JavaIoFile ==> bool
+public  normalize : JavaLangString ==> JavaLangString
+public  setReadOnly : JavaIoFile ==> bool
+public  deleteOnExit : JavaIoFile ==> bool
+public  checkAccess : JavaIoFile * bool  ==> bool
+public  rename : JavaIoFile * JavaIoFile ==> bool
+public  canonicalize : JavaLangString ==> JavaLangString
+public  compare : JavaIoFile * JavaIoFile ==> int
+public  prefixLength : JavaLangString ==> int
+public  createDirectory : JavaIoFile ==> bool
+public  resolve : JavaLangString * JavaLangString ==> JavaLangString
+public  getLastModifiedTime : JavaIoFile ==> int
+public  getBooleanAttributes : JavaIoFile ==> int
+public  setLastModifiedTime : JavaIoFile * int  ==> bool
+public  createFileExclusively : JavaLangString ==> bool
+public  J2VFileSystem : <NIL> ==> J2VFileSystem
+public  listRoots : () ==> map  int  to  JavaIoFile
+public  list : JavaIoFile ==> map  int  to  JavaLangString
+public  delete : JavaIoFile ==> bool
+public  getSeparator : () ==> char
+public  static  getFileSystem : () ==> JavaIoFileSystem
+public  resolve : JavaIoFile ==> JavaLangString
+public  hashCode : JavaIoFile ==> int
+public  getLength : JavaIoFile ==> int
+public  getDefaultParent : () ==> JavaLangString
+public  getPathSeparator : () ==> char
+public  isAbsolute : JavaIoFile ==> bool
+public  normalize : JavaLangString ==> JavaLangString
+public  setReadOnly : JavaIoFile ==> bool
+public  deleteOnExit : JavaIoFile ==> bool
+public  checkAccess : JavaIoFile * bool  ==> bool
+public  rename : JavaIoFile * JavaIoFile ==> bool
+public  canonicalize : JavaLangString ==> JavaLangString
+public  compare : JavaIoFile * JavaIoFile ==> int
+public  prefixLength : JavaLangString ==> int
+public  createDirectory : JavaIoFile ==> bool
+public  resolve : JavaLangString * JavaLangString ==> JavaLangString
+public  getLastModifiedTime : JavaIoFile ==> int
+public  getBooleanAttributes : JavaIoFile ==> int
+public  setLastModifiedTime : JavaIoFile * int  ==> bool
+public  createFileExclusively : JavaLangString ==> bool
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoFileWriter}}
+\begin{small}
+\begin{verbatim}
+public  JavaIoFileWriter : <NIL> ==> JavaIoFileWriter
+public  JavaIoFileWriter : JavaLangString ==> JavaIoFileWriter
+public  JavaIoFileWriter : JavaLangString * bool  ==> JavaIoFileWriter
+public  JavaIoFileWriter : JavaIoFileDescriptor ==> JavaIoFileWriter
+public  JavaIoFileWriter : JavaIoFile ==> JavaIoFileWriter
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoFilterInputStream}}
+\begin{small}
+\begin{verbatim}
+protected  in__ : JavaIoInputStream
+public  read : () ==> int
+public  close : () ==> ()
+public  mark : int  ==> ()
+public  reset : () ==> ()
+public  skip__ : int  ==> int
+public  getClass : () ==> JavaLangClass
+public  available : () ==> int
+public  read : map  int  to  int  ==> int
+public  markSupported : () ==> bool
+public  read : map  int  to  int  * int  * int  ==> int
+public  JavaIoFilterInputStream : <NIL> ==> JavaIoFilterInputStream
+protected  JavaIoFilterInputStream : 
+             JavaIoInputStream ==> JavaIoFilterInputStream
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoFilterOutputStream}}
+\begin{small}
+\begin{verbatim}
+protected  out : JavaIoOutputStream
+public  close : () ==> ()
+public  flush : () ==> ()
+public  write : int  ==> ()
+public  write1 : map  int  to  int  ==> ()
+public  write2 : map  int  to  int  * int  * int  ==> ()
+public  JavaIoFilterOutputStream : 
+          JavaIoOutputStream ==> JavaIoFilterOutputStream
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoIOException}}
+\begin{small}
+\begin{verbatim}
+public  JavaIoIOException : () ==> JavaIoIOException
+public  JavaIoIOException : <NIL> ==> JavaIoIOException
+public  JavaIoIOException : JavaLangString ==> JavaIoIOException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoInputStream}}
+\begin{small}
+\begin{verbatim}
+public  read : () ==> int
+public  close : () ==> ()
+public  mark : int  ==> ()
+public  reset : () ==> ()
+public  skip__ : int  ==> int
+public  getClass : () ==> JavaLangClass
+public  available : () ==> int
+public  read : map  int  to  int  ==> int
+public  markSupported : () ==> bool
+public  readMIIIntInt : map  int  to  int  * int  * int  ==> int
+public  readMIIIntInt' : map  int  to  int  * 
+                  int  * int  ==> int * map  int  to  int
+public  JavaIoInputStream : <NIL> ==> JavaIoInputStream
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoInputStreamReader}}
+\begin{small}
+\begin{verbatim}
+public  read : () ==> int
+public  close : () ==> ()
+public  ready : () ==> bool
+public  getClass : () ==> JavaLangClass
+public  getEncoding : () ==> JavaLangString
+public  readMICIntInt : map  int  to  char  * int  * int  ==> int
+public  readMICIntInt' : map  int  to  char  * 
+                            int  * int  ==> int * map  int  to  char
+public  JavaIoInputStreamReader : <NIL> ==> JavaIoInputStreamReader
+public  JavaIoInputStreamReader : 
+          JavaIoInputStream ==> JavaIoInputStreamReader
+public  JavaIoInputStreamReader : JavaIoInputStream * 
+                          JavaLangString ==> JavaIoInputStreamReader
+public  ByteToCharConverter : <NIL> ==> ByteToCharConverter
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoOutputStream}}
+\begin{small}
+\begin{verbatim}
+public  close : () ==> ()
+public  flush : () ==> ()
+public  write : int  ==> ()
+public  write1 : map  int  to  int  ==> ()
+public  write2 : map  int  to  int  * int  * int  ==> ()
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoOutputStreamWriter}}
+\begin{small}
+\begin{verbatim}
+public  close : () ==> ()
+public  flush : () ==> ()
+public  write : int  ==> ()
+public  flushBuffer : () ==> ()
+public  getEncoding : () ==> JavaLangString
+public  writeICMIntInt : map  int  to  char  * int  * int  ==> ()
+public  writeStrIntInt : JavaLangString * int  * int  ==> ()
+public  JavaIoOutputStreamWriter : <NIL> ==> JavaIoOutputStreamWriter
+public  JavaIoOutputStreamWriter : 
+          JavaIoOutputStream ==> JavaIoOutputStreamWriter
+public  JavaIoOutputStreamWriter : 
+          JavaIoOutputStream * JavaLangString ==> JavaIoOutputStreamWriter
+public  CharToByteConverter : <NIL> ==> CharToByteConverter
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoPrintStream}}
+\begin{small}
+\begin{verbatim}
+public  close : () ==> ()
+public  flush : () ==> ()
+public  print : bool | char | int | real | 
+                        (map  int  to  char ) | JavaLangObject ==> ()
+public  write : int  ==> ()
+public  println : () ==> ()
+public  println : bool | char | int | real | 
+                        (map  int  to  char ) | JavaLangObject ==> ()
+protected  setError : () ==> ()
+public  checkError : () ==> bool
+public  write : map  int  to  int  * int  * int  ==> ()
+public  JavaIoPrintStream : 
+          JavaIoOutputStream * bool  ==> JavaIoPrintStream
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoPrintWriter}}
+\begin{small}
+\begin{verbatim}
+protected  out : JavaIoWriter;
+public  close : () ==> ()
+public  flush : () ==> ()
+public  write : int | map  int  to  char ==> ()
+public  println : () ==> ()
+public  println : bool | char | int | real | 
+          (map  int  to  char ) | JavaLangObject  ==> ()
+public  print : bool | char | int | real | 
+          (map  int  to  char ) | JavaLangObject ==> ()
+protected  setError : () ==> ()
+public  checkError : () ==> bool
+public  write : JavaLangString ==> ()
+public  write : map  int  to  char  * int  * int  ==> ()
+public  JavaIoPrintWriter : <NIL> ==> JavaIoPrintWriter
+public  write : JavaLangString * int  * int  ==> ()
+public  JavaIoPrintWriter : JavaIoWriter ==> JavaIoPrintWriter
+public  JavaIoPrintWriter : JavaIoWriter * bool  ==> JavaIoPrintWriter
+public  JavaIoPrintWriter : JavaIoOutputStream ==> JavaIoPrintWriter
+public  JavaIoPrintWriter : 
+          JavaIoOutputStream * bool  ==> JavaIoPrintWriter
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoReader}}
+\begin{small}
+\begin{verbatim}
+public  read : () ==> int
+public  close : () ==> ()
+public  mark : int  ==> ()
+public  ready : () ==> bool
+public  reset : () ==> ()
+public  JavaIoReader : () ==> JavaIoReader
+public  skip__ : int  ==> int
+public  getClass : () ==> JavaLangClass
+public  readMIC : map  int  to  char  ==> int
+public  JavaIoReader : <NIL> ==> JavaIoReader
+public  markSupported : () ==> bool
+public  readMICIntInt : map  int  to  char  * int  * int  ==> int
+public  readMICIntInt' : map  int  to  char  * 
+                          int  * int  ==> int * map  int  to  char
+protected  JavaIoReader : JavaLangObject ==> JavaIoReader
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoStreamTokenizer}}
+\begin{small}
+\begin{verbatim}
+public  ttype : int  := TT_NOTHING;
+public  static  TT_EOF : int  := -1;
+public  static  TT_EOL : int  := J2VUTIL`toInt('\n');
+public  static  TT_NUMBER : int  := -2;
+public  static  TT_WORD : int  := -3;
+public  sval : JavaLangString;
+public  nval : real
+public  lineno : () ==> int
+public  pushBack : () ==> ()
+public  toString : () ==> JavaLangString
+public  nextToken : () ==> int
+public  quoteChar : int  ==> ()
+public  resetSyntax : () ==> ()
+public  commentChar : int  ==> ()
+public  parseNumbers : () ==> ()
+public  wordChars : int  * int  ==> ()
+public  ordinaryChar : int  ==> ()
+public  lowerCaseMode : bool  ==> ()
+public  ordinaryChars : int  * int  ==> ()
+public  eolIsSignificant : bool  ==> ()
+public  slashStarComments : bool  ==> ()
+public  whitespaceChars : int  * int  ==> ()
+public  slashSlashComments : bool  ==> ()
+public  JavaIoStreamTokenizer : <NIL> ==> JavaIoStreamTokenizer
+public  JavaIoStreamTokenizer : JavaIoReader ==> JavaIoStreamTokenizer
+public  JavaIoStreamTokenizer : 
+          JavaIoInputStream ==> JavaIoStreamTokenizer
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoStringWriter}}
+\begin{small}
+\begin{verbatim}
+public  close : () ==> ()
+public  flush : () ==> ()
+public  write : int  ==> ()
+public  toString : () ==> JavaLangString
+public  getBuffer : () ==> JavaLangStringBuffer
+public  JavaIoStringWriter : () ==> JavaIoStringWriter
+public  JavaIoStringWriter : int  ==> JavaIoStringWriter
+public  write : JavaLangString ==> ()
+public  write : map  int  to  char  * int  * int  ==> ()
+public  JavaIoStringWriter : <NIL> ==> JavaIoStringWriter
+public  write : JavaLangString * int  * int  ==> ()
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoUnsupportedEncodingException}}
+\begin{small}
+\begin{verbatim}
+public  JavaIoUnsupportedEncodingException : 
+          () ==> JavaIoUnsupportedEncodingException
+public  JavaIoUnsupportedEncodingException : 
+          <NIL> ==> JavaIoUnsupportedEncodingException
+public  JavaIoUnsupportedEncodingException : 
+          JavaLangString ==> JavaIoUnsupportedEncodingException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaIoWriter}}
+\begin{small}
+\begin{verbatim}
+public  JavaIoWriter : <NIL> ==> JavaIoWriter
+public  close : () ==> ()
+public  flush : () ==> ()
+protected  JavaIoWriter : () ==> JavaIoWriter
+public  write : int | map  int  to  char ==> ()
+public  writeInt : int  ==> ()
+public  getClass : () ==> JavaLangClass
+public  writeMIC : map  int  to  char  ==> ()
+public  writeICMIntInt : map  int  to  char  * int  * int  ==> ()
+public  writeStr : JavaLangString ==> ()
+protected  JavaIoWriter : JavaLangObject ==> JavaIoWriter
+public  writeStrIntInt : JavaLangString * int  * int  ==> ()
+\end{verbatim}
+\end{small}
+
+\subsection{\texttt{java.net}}
+
+\subsubsection{\texttt{JavaNetURL}}
+\begin{small}
+\begin{verbatim}
+public JavaNetURL : <NIL> ==> JavaNetURL
+\end{verbatim}
+\end{small}
+
+\subsection{\texttt{java.text}}
+
+\subsubsection{\texttt{JavaTextDateFormat}}
+\begin{small}
+\begin{verbatim}
+public  getClass : () ==> JavaLangClass
+protected  JavaTextDateFormat : () ==> JavaTextDateFormat
+public  format : JavaUtilDate ==> JavaLangString
+public  JavaTextDateFormat : <NIL> ==> JavaTextDateFormat
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaTextDecimalFormat}}
+\begin{small}
+\begin{verbatim}
+public  static  currentSerialVersion : int := 2;
+public  static  DOUBLE_INTEGER_DIGITS : int := 309;
+public  static  DOUBLE_FRACTION_DIGITS : int := 340;
+public  clone : () ==> JavaLangObject
+public  getClass : () ==> JavaLangClass
+public  hashCode : () ==> int
+public  toPattern : () ==> JavaLangString
+public  JavaTextDecimalFormat : () ==> JavaTextDecimalFormat
+public  getMultiplier : () ==> int
+public  equals : JavaLangObject ==> bool
+public  setMultiplier : int  ==> ()
+public  getGroupingSize : () ==> int
+public  setGroupingSize : int  ==> ()
+public  getNegativePrefix : () ==> JavaLangString
+public  getNegativeSuffix : () ==> JavaLangString
+public  getPositivePrefix : () ==> JavaLangString
+public  getPositiveSuffix : () ==> JavaLangString
+public  JavaTextDecimalFormat : <NIL> ==> JavaTextDecimalFormat
+public  toLocalizedPattern : () ==> JavaLangString
+public  applyPattern : JavaLangString ==> ()
+public  JavaTextDecimalFormat : 
+          JavaLangString ==> JavaTextDecimalFormat
+public  getDecimalFormatSymbols : 
+          () ==> JavaTextDecimalFormatSymbols
+public  setMaximumIntegerDigits : int  ==> ()
+public  setMinimumIntegerDigits : int  ==> ()
+public  setMaximumFractionDigits : int  ==> ()
+public  setMinimumFractionDigits : int  ==> ()
+public  setNegativePrefix : JavaLangString ==> ()
+public  setNegativeSuffix : JavaLangString ==> ()
+public  setPositivePrefix : JavaLangString ==> ()
+public  setPositiveSuffix : JavaLangString ==> ()
+public  applyLocalizedPattern : JavaLangString ==> ()
+public  isDecimalSeparatorAlwaysShown : () ==> bool
+public  parse : JavaLangString * JavaTextParsePosition ==> JavaLangNumber
+public  setDecimalSeparatorAlwaysShown : bool  ==> ()
+public  format'' : real  * JavaLangStringBuffer * 
+                           JavaTextFieldPosition ==> JavaLangStringBuffer
+public  JavaTextDecimalFormat : JavaLangString * 
+                   JavaTextDecimalFormatSymbols ==> JavaTextDecimalFormat
+public  setDecimalFormatSymbols : JavaTextDecimalFormatSymbols ==> ()
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaTextDecimalFormatSymbols}}
+\begin{small}
+\begin{verbatim}
+public  clone : () ==> JavaLangObject
+public  getNaN : () ==> JavaLangString
+public  getClass : () ==> JavaLangClass
+public  getDigit : () ==> char
+public  hashCode : () ==> int
+public  setDigit : char  ==> ()
+public  getPerMill : () ==> char
+public  getPercent : () ==> char
+public  getInfinity : () ==> JavaLangString
+public  setPerMill : char  ==> ()
+public  setPercent : char  ==> ()
+public  getMinusSign : () ==> char
+public  getZeroDigit : () ==> char
+public  setMinusSign : char  ==> ()
+public  setZeroDigit : char  ==> ()
+public  equals : JavaLangObject ==> bool
+public  setNaN : JavaLangString ==> ()
+public  getCurrencySymbol : () ==> JavaLangString
+public  getDecimalSeparator : () ==> char
+public  getPatternSeparator : () ==> char
+public  setInfinity : JavaLangString ==> ()
+public  JavaTextDecimalFormatSymbols : () ==> JavaTextDecimalFormatSymbols
+public  getGroupingSeparator : () ==> char
+public  setDecimalSeparator : char  ==> ()
+public  setPatternSeparator : char  ==> ()
+public  setGroupingSeparator : char  ==> ()
+public  JavaTextDecimalFormatSymbols : 
+          <NIL> ==> JavaTextDecimalFormatSymbols
+public  setCurrencySymbol : JavaLangString ==> ()
+public  getMonetaryDecimalSeparator : () ==> char
+public  JavaTextDecimalFormatSymbols : 
+          JavaUtilLocale ==> JavaTextDecimalFormatSymbols
+public  setMonetaryDecimalSeparator : char  ==> ()
+public  getInternationalCurrencySymbol : () ==> JavaLangString
+public  setInternationalCurrencySymbol : JavaLangString ==> ()
+public  getClass : () ==> JavaLangClass
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaTextFieldPosition}}
+\begin{small}
+\begin{verbatim}
+public  getField : () ==> int
+public  hashCode : () ==> int
+public  toString : () ==> JavaLangString
+public  getEndIndex : () ==> int
+public  setEndIndex : int  ==> ()
+public  getBeginIndex : () ==> int
+public  JavaTextFieldPosition : int  ==> JavaTextFieldPosition
+public  equals : JavaLangObject ==> bool
+public  setBeginIndex : int  ==> ()
+public  JavaTextFieldPosition : <NIL> ==> JavaTextFieldPosition
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaTextFormat}}
+\begin{small}
+\begin{verbatim}
+public  clone : () ==> JavaLangObject
+public  getClass : () ==> JavaLangClass
+public  JavaTextFormat : <NIL> ==> JavaTextFormat
+public  formatObject : JavaLangObject ==> JavaLangString
+public  parseObject : JavaLangString ==> JavaLangObject
+public  parseObject : 
+          JavaLangString * JavaTextParsePosition ==> JavaLangObject
+public  format' : JavaLangObject * JavaLangStringBuffer * 
+                     JavaTextFieldPosition ==> JavaLangStringBuffer
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaTextMessageFormat}}
+\begin{small}
+\begin{verbatim}
+public  clone : () ==> JavaLangObject
+public  getClass : () ==> JavaLangClass
+public  hashCode : () ==> int
+public  getLocale : () ==> JavaUtilLocale
+public  toPattern : () ==> JavaLangString
+public  getFormats : () ==> map  int  to  JavaTextFormat
+public  parse : JavaLangString ==> map  int  to  JavaLangObject
+public  equals : JavaLangObject ==> bool
+public  setLocale : JavaUtilLocale ==> ()
+public  JavaTextMessageFormat : <NIL> ==> JavaTextMessageFormat
+public  setFormat : int  * JavaTextFormat ==> ()
+public  applyPattern : JavaLangString ==> ()
+public  JavaTextMessageFormat : JavaLangString ==> JavaTextMessageFormat
+public  setFormats : map  int  to  JavaTextFormat ==> ()
+public  static  format : 
+        JavaLangString * map  int  to  JavaLangObject ==> JavaLangString
+public  parse : JavaLangString * JavaTextParsePosition ==> 
+                                             map  int  to  JavaLangObject
+public  JavaTextMessageFormat : JavaLangString * JavaUtilLocale ==> 
+                                                    JavaTextMessageFormat
+public  parseObject : JavaLangString * JavaTextParsePosition ==> 
+                                                           JavaLangObject
+public  format' : JavaLangObject * JavaLangStringBuffer * 
+                           JavaTextFieldPosition ==> JavaLangStringBuffer
+public  formatObjects : map  int  to  JavaLangObject * 
+    JavaLangStringBuffer * JavaTextFieldPosition ==> JavaLangStringBuffer
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaTextNumberFormat}}
+\begin{small}
+\begin{verbatim}
+public  static  INTEGER_FIELD : int  := 0;
+public  static  FRACTION_FIELD : int  := 1;
+public  static  cachedLocaleData : 
+          JavaUtilHashtable := new  JavaUtilHashtable(3);
+public  static  NUMBERSTYLE : int  := 0;
+public  static  CURRENCYSTYLE : int  := 1;
+public  static  PERCENTSTYLE : int  := 2;
+public  static  SCIENTIFICSTYLE : int  := 3;
+public  clone : () ==> JavaLangObject
+public  format : real  ==> JavaLangString
+public  getClass : () ==> JavaLangClass
+public  hashCode : () ==> int
+public  static  getInstance : () ==> JavaTextNumberFormat
+public  parse : JavaLangString ==> JavaLangNumber
+public  equals : JavaLangObject ==> bool
+public  isGroupingUsed : () ==> bool
+public  setGroupingUsed : bool  ==> ()
+public  JavaTextNumberFormat : <NIL> ==> JavaTextNumberFormat
+public  static getNumberInstance : () ==> JavaTextNumberFormat
+public  static getPercentInstance : () ==> JavaTextNumberFormat
+public  isParseIntegerOnly : () ==> bool
+public  static getAvailableLocales : () ==> map  int  to  JavaUtilLocale
+public  static getCurrencyInstance : () ==> JavaTextNumberFormat
+public  static getInstance : JavaUtilLocale ==> JavaTextNumberFormat
+public  setParseIntegerOnly : bool  ==> ()
+public  static getInstance : 
+          JavaUtilLocale * int  ==> JavaTextNumberFormat
+public  getMaximumIntegerDigits : () ==> int
+public  getMinimumIntegerDigits : () ==> int
+public  getMaximumFractionDigits : () ==> int
+public  getMinimumFractionDigits : () ==> int
+public  setMaximumIntegerDigits : int  ==> ()
+public  setMinimumIntegerDigits : int  ==> ()
+public  static  getNumberInstance : 
+          JavaUtilLocale ==> JavaTextNumberFormat
+public  setMaximumFractionDigits : int  ==> ()
+public  setMinimumFractionDigits : int  ==> ()
+public  static  getPercentInstance : 
+          JavaUtilLocale ==> JavaTextNumberFormat
+public  static  getCurrencyInstance : 
+          JavaUtilLocale ==> JavaTextNumberFormat
+public  parse : 
+          JavaLangString * JavaTextParsePosition ==> JavaLangNumber
+public  parseObject : 
+          JavaLangString * JavaTextParsePosition ==> JavaLangObject
+public  format'' : real  * JavaLangStringBuffer * 
+                      JavaTextFieldPosition ==> JavaLangStringBuffer
+public  format' : JavaLangObject * JavaLangStringBuffer * 
+                      JavaTextFieldPosition ==> JavaLangStringBuffer
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaTextParseException}}
+\begin{small}
+\begin{verbatim}
+public  getClass : () ==> JavaLangClass
+public  getErrorOffset : () ==> int
+public  JavaTextParseException : <NIL> ==> JavaTextParseException
+public  JavaTextParseException : 
+          JavaLangString * int  ==> JavaTextParseException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaTextParsePosition}}
+\begin{small}
+\begin{verbatim}
+public index : int  := 0;
+public errorIndex : int  := -1
+public  getClass : () ==> JavaLangClass
+public  getIndex : () ==> int
+public  hashCode : () ==> int
+public  toString : () ==> JavaLangString
+public  setIndex : int  ==> ()
+public  getErrorIndex : () ==> int
+public  JavaTextParsePosition : int  ==> JavaTextParsePosition
+public  equals : JavaLangObject ==> bool
+public  setErrorIndex : int  ==> ()
+public  JavaTextParsePosition : <NIL> ==> JavaTextParsePosition
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaTextSimpleDateFormat}}
+\begin{small}
+\begin{verbatim}
+public  getClass : () ==> JavaLangClass
+public  JavaTextSimpleDateFormat : <NIL> ==> JavaTextSimpleDateFormat
+public  JavaTextSimpleDateFormat : 
+          JavaLangString ==> JavaTextSimpleDateFormat
+\end{verbatim}
+\end{small}
+
+\subsection{\texttt{java.sql}}
+
+\subsubsection{\texttt{JavaSqlConnection}}
+\begin{small}
+\begin{verbatim}
+public  static  TRANSACTION_NONE : int :=0;
+public  static  TRANSACTION_READ_UNCOMMITTED : int :=0;
+public  static  TRANSACTION_READ_COMMITTED : int :=0;
+public  static  TRANSACTION_REPEATABLE_READ : int :=0;
+public  static  TRANSACTION_SERIALIZABLE : int :=0
+public  JavaSqlConnection : <NIL> ==> JavaSqlConnection
+public  close : () ==> ()
+public  commit : () ==> ()
+public  getClass : () ==> JavaLangClass
+public  isClosed : () ==> bool
+public  rollback : () ==> ()
+public  getCatalog : () ==> JavaLangString
+public  getTypeMap : () ==> JavaUtilMap
+public  isReadOnly : () ==> bool
+public  setReadOnly : bool  ==> ()
+public  clearWarnings : () ==> ()
+public  getAutoCommit : () ==> bool
+public  setAutoCommit : bool  ==> ()
+public  createStatement : () ==> JavaSqlStatement
+public  nativeSQL : JavaLangString ==> JavaLangString
+public  createStatement : int  * int  ==> JavaSqlStatement
+public  setCatalog : JavaLangString ==> ()
+public  getTransactionIsolation : () ==> int
+public  setTransactionIsolation : int  ==> ()
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaSqlDriverManager}}
+\begin{small}
+\begin{verbatim}
+public  getClass : () ==> JavaLangClass
+public  static  getConnection : JavaLangString ==> JavaSqlConnection
+public  static  getConnection : JavaLangString * JavaLangString * 
+                                   JavaLangString ==> JavaSqlConnection
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaSqlResultSet}}
+\begin{small}
+\begin{verbatim}
+public  static  FETCH_FORWARD : int := 1000;
+public  static  FETCH_REVERSE : int := 1001;
+public  static  FETCH_UNKNOWN : int := 1002;
+public  static  TYPE_FORWARD_ONLY : int := 1003;
+public  static  TYPE_SCROLL_INSENSITIVE : int := 1004;
+public  static  TYPE_SCROLL_SENSITIVE : int := 1005;
+public  static  CONCUR_READ_ONLY : int := 1007;
+public  static  CONCUR_UPDATABLE : int := 1008
+public  last : () ==> bool
+public  next : () ==> bool
+public  close : () ==> ()
+public  first : () ==> bool
+public  getRow : () ==> int
+public  isLast : () ==> bool
+public  getInt : int  ==> int
+public  getType : () ==> int
+public  isFirst : () ==> bool
+public  wasNull : () ==> bool
+public  getByte : int  ==> int
+public  getClass : () ==> JavaLangClass
+public  getLong : int  ==> int
+public  previous : () ==> bool
+public  absolute : int  ==> bool
+public  afterLast : () ==> ()
+public  deleteRow : () ==> ()
+public  getBytes : int  ==> map  int  to  int
+public  getFloat : int  ==> real
+public  getShort : int  ==> int
+public  insertRow : () ==> ()
+public  relative : int  ==> bool
+public  updateRow : () ==> ()
+public  getDouble : int  ==> real
+public  getString : int  ==> JavaLangString
+public  refreshRow : () ==> ()
+public  rowDeleted : () ==> bool
+public  rowUpdated : () ==> bool
+public  beforeFirst : () ==> ()
+public  getBoolean : int  ==> bool
+public  isAfterLast : () ==> bool
+public  rowInserted : () ==> bool
+public  updateNull : int  ==> ()
+public  getFetchSize : () ==> int
+public  getStatement : () ==> JavaSqlStatement
+public  updateInt : int  * int  ==> ()
+public  clearWarnings : () ==> ()
+public  getCursorName : () ==> JavaLangString
+public  isBeforeFirst : () ==> bool
+public  setFetchSize : int  ==> ()
+public  updateByte : int  * int  ==> ()
+public  updateLong : int  * int  ==> ()
+public  getConcurrency : () ==> int
+public  getInt : JavaLangString ==> int
+public  updateFloat : int  * real  ==> ()
+public  updateShort : int  * int  ==> ()
+public  getByte : JavaLangString ==> int
+public  getLong : JavaLangString ==> int
+public  moveToInsertRow : () ==> ()
+public  updateDouble : int  * real  ==> ()
+public  cancelRowUpdates : () ==> ()
+public  getBytes : JavaLangString ==> map  int  to  int
+public  getFloat : JavaLangString ==> real
+public  getShort : JavaLangString ==> int
+public  moveToCurrentRow : () ==> ()
+public  updateBoolean : int  * bool  ==> ()
+public  getDouble : JavaLangString ==> real
+public  getFetchDirection : () ==> int
+public  getObject : JavaLangString ==> JavaLangObject
+public  getString : JavaLangString ==> JavaLangString
+public  findColumn : JavaLangString ==> int
+public  getBoolean : JavaLangString ==> bool
+public  setFetchDirection : int  ==> ()
+public  updateBytes : int  * map  int  to  int  ==> ()
+public  updateNull : JavaLangString ==> ()
+public  updateInt : JavaLangString * int  ==> ()
+public  updateByte : JavaLangString * int  ==> ()
+public  updateLong : JavaLangString * int  ==> ()
+public  updateFloat : JavaLangString * real  ==> ()
+public  updateShort : JavaLangString * int  ==> ()
+public  updateDouble : JavaLangString * real  ==> ()
+public  updateObject : int  * JavaLangObject ==> ()
+public  updateString : int  * JavaLangString ==> ()
+public  updateBoolean : JavaLangString * bool  ==> ()
+public  updateBytes : JavaLangString * map  int  to  int  ==> ()
+public  updateString : JavaLangString * JavaLangString ==> ()
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaSqlSQLException}}
+\begin{small}
+\begin{verbatim}
+public  getClass : () ==> JavaLangClass
+public  getSQLState : () ==> JavaLangString
+public  JavaSqlSQLException : () ==> JavaSqlSQLException
+public  getErrorCode : () ==> int
+public  getNextException : () ==> JavaSqlSQLException
+public  JavaSqlSQLException : <NIL> ==> JavaSqlSQLException
+public  JavaSqlSQLException : JavaLangString ==> JavaSqlSQLException
+public  JavaSqlSQLException : 
+          JavaLangString * JavaLangString ==> JavaSqlSQLException
+public  setNextException : JavaSqlSQLException ==> ()
+public  JavaSqlSQLException : JavaLangString * 
+                        JavaLangString * int  ==> JavaSqlSQLException
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{SqlConnection}}
+\begin{small}
+\begin{verbatim}
+public  static  TRANSACTION_NONE : int := 0;
+public  static  TRANSACTION_READ_UNCOMMITTED : int := 0;
+public  static  TRANSACTION_READ_COMMITTED : int := 0;
+public  static  TRANSACTION_REPEATABLE_READ : int := 0;
+public  static  TRANSACTION_SERIALIZABLE : int := 0
+public  close : () ==> ()
+public  commit : () ==> ()
+public  getClass : () ==> JavaLangClass
+public  isClosed : () ==> bool
+public  rollback : () ==> ()
+public  getCatalog : () ==> JavaLangString
+public  getTypeMap : () ==> JavaUtilMap
+public  isReadOnly : () ==> bool
+public  setReadOnly : bool  ==> ()
+public  clearWarnings : () ==> ()
+public  getAutoCommit : () ==> bool
+public  setAutoCommit : bool  ==> ()
+public  createStatement : () ==> JavaSqlStatement
+public  nativeSQL : JavaLangString ==> JavaLangString
+public  createStatement : int  * int  ==> JavaSqlStatement
+public  setCatalog : JavaLangString ==> ()
+public  getTransactionIsolation : () ==> int
+public  setTransactionIsolation : int  ==> ()
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{SqlResultSet}}
+\begin{small}
+\begin{verbatim}
+public  getColumns : () ==> map seq of char to int * int * int * int
+public  last : () ==> bool
+public  next : () ==> bool
+public  close : () ==> ()
+public  first : () ==> bool
+public  getRow : () ==> int
+public  isLast : () ==> bool
+public  getInt : int  ==> int
+public  getType : () ==> int
+public  isFirst : () ==> bool
+public  wasNull : () ==> bool
+public  getByte : int  ==> int
+public  getClass : () ==> JavaLangClass
+public  getLong : int  ==> int
+public  previous : () ==> bool
+public  absolute : int  ==> bool
+public  afterLast : () ==> ()
+public  deleteRow : () ==> ()
+public  getBytes : int  ==> map  int  to  int
+public  getFloat : int  ==> real
+public  getShort : int  ==> int
+public  insertRow : () ==> ()
+public  relative : int  ==> bool
+public  updateRow : () ==> ()
+public  getDouble : int  ==> real
+public  getString : int  ==> JavaLangString
+public  refreshRow : () ==> ()
+public  rowDeleted : () ==> bool
+public  rowUpdated : () ==> bool
+public  beforeFirst : () ==> ()
+public  getBoolean : int  ==> bool
+public  isAfterLast : () ==> bool
+public  rowInserted : () ==> bool
+public  updateNull : int  ==> ()
+public  getFetchSize : () ==> int
+public  getStatement : () ==> JavaSqlStatement
+public  updateInt : int  * int  ==> ()
+public  clearWarnings : () ==> ()
+public  getCursorName : () ==> JavaLangString
+public  isBeforeFirst : () ==> bool
+public  setFetchSize : int  ==> ()
+public  updateByte : int  * int  ==> ()
+public  updateLong : int  * int  ==> ()
+public  getConcurrency : () ==> int
+public  getInt : JavaLangString ==> int
+public  updateFloat : int  * real  ==> ()
+public  updateShort : int  * int  ==> ()
+public  getByte : JavaLangString ==> int
+public  getLong : JavaLangString ==> int
+public  moveToInsertRow : () ==> ()
+public  updateDouble : int  * real  ==> ()
+public  cancelRowUpdates : () ==> ()
+public  getBytes : JavaLangString ==> map  int  to  int
+public  getFloat : JavaLangString ==> real
+public  getShort : JavaLangString ==> int
+public  moveToCurrentRow : () ==> ()
+public  updateBoolean : int  * bool  ==> ()
+public  getDouble : JavaLangString ==> real
+public  getFetchDirection : () ==> int
+public  getObject : JavaLangString ==> JavaLangObject
+public  getString : JavaLangString ==> JavaLangString
+public  findColumn : JavaLangString ==> int
+public  getBoolean : JavaLangString ==> bool
+public  setFetchDirection : int  ==> ()
+public  updateBytes : int  * map  int  to  int  ==> ()
+public  updateNull : JavaLangString ==> ()
+public  updateInt : JavaLangString * int  ==> ()
+public  updateByte : JavaLangString * int  ==> ()
+public  updateLong : JavaLangString * int  ==> ()
+public  updateFloat : JavaLangString * real  ==> ()
+public  updateShort : JavaLangString * int  ==> ()
+public  updateDouble : JavaLangString * real  ==> ()
+public  updateObject : int  * JavaLangObject ==> ()
+public  updateString : int  * JavaLangString ==> ()
+public  updateBoolean : JavaLangString * bool  ==> ()
+public  updateBytes : JavaLangString * map  int  to  int  ==> ()
+public  updateString : JavaLangString * JavaLangString ==> ()
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{SqlStatement}}
+\begin{small}
+\begin{verbatim}
+public  close : () ==> ()
+public  getClass : () ==> JavaLangClass
+public  executeQuery : JavaLangString ==> JavaSqlResultSet
+public  executeUpdate : JavaLangString ==> int
+\end{verbatim}
+\end{small}
+
+\subsubsection{\texttt{JavaSqlStatement}}
+\begin{small}
+\begin{verbatim}
+public close : () ==> ()
+public  cancel : () ==> ()
+public  getClass : () ==> JavaLangClass
+public  clearBatch : () ==> ()
+public  getMaxRows : () ==> int
+public  setMaxRows : int  ==> ()
+public  executeBatch : () ==> map  int  to  int
+public  getFetchSize : () ==> int
+public  getResultSet : () ==> JavaSqlResultSet
+public  clearWarnings : () ==> ()
+public  getConnection : () ==> JavaSqlConnection
+public  setFetchSize : int  ==> ()
+public  getMoreResults : () ==> bool
+public  getUpdateCount : () ==> int
+public  execute : JavaLangString ==> bool
+public  getMaxFieldSize : () ==> int
+public  getQueryTimeout : () ==> int
+public  addBatch : JavaLangString ==> ()
+public  getResultSetType : () ==> int
+public  setMaxFieldSize : int  ==> ()
+public  setQueryTimeout : int  ==> ()
+public  getFetchDirection : () ==> int
+public  setFetchDirection : int  ==> ()
+public  executeQuery : JavaLangString ==> JavaSqlResultSet
+public  setEscapeProcessing : bool  ==> ()
+public  executeUpdate : JavaLangString ==> int
+public  setCursorName : JavaLangString ==> ()
+public  getResultSetConcurrency : () ==> int
+\end{verbatim}
+\end{small}
+
+\appendix
+
+\newpage
+\bibliographystyle{iptes}
+\bibliography{ifad}
+
+\newpage
+\addcontentsline{toc}{section}{Index}
+\printindex
+\end{document}

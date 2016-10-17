@@ -1,0 +1,94 @@
+// SCCS: @(#) wish.rc 1.8 96/04/12 18:08:09
+//
+// Version
+//
+
+#ifdef GDE
+
+#ifdef VDMSL
+#include "vdmgde-sl.rch"
+#endif
+#ifdef VDMPP
+#ifdef VICE
+#include "vdmgde-rt.rch"
+#else
+#include "vdmgde-pp.rch"
+#endif
+#endif
+
+#ifdef VDMSLL
+#include "vdmgde-sll.rch"
+#endif
+#ifdef VDMPPL
+#ifdef VICE
+#include "vdmgde-rtl.rch"
+#else
+#include "vdmgde-ppl.rch"
+#endif
+#endif
+
+#else
+
+#ifdef VDMSL
+#include "vdmde-sl.rch"
+#endif
+#ifdef VDMPP
+#ifdef VICE
+#include "vdmde-rt.rch"
+#else
+#include "vdmde-pp.rch"
+#endif
+#endif
+
+#ifdef VDMSLL
+#include "vdmde-sll.rch"
+#endif
+#ifdef VDMPPL
+#ifdef VICE
+#include "vdmde-rtl.rch"
+#else
+#include "vdmde-ppl.rch"
+#endif
+#endif
+
+#endif 
+
+//#include <winres.h>
+#include <WinResrc.h>
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION	NUMFILEVERS
+ PRODUCTVERSION	NUMPROVERS
+ FILEFLAGSMASK	0x3fL
+ FILEFLAGS	0x0L
+ FILEOS		0x4L
+ FILETYPE	0x1L
+ FILESUBTYPE	0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "FileDescription", FILEDESC
+            VALUE "OriginalFilename", ORIGINALFN
+            VALUE "CompanyName", "Kyushu University\0"
+            VALUE "FileVersion", FILEVERS
+            VALUE "LegalCopyright", "Copyright \251 2016\0"
+            VALUE "ProductName", PRODUCTNM
+            VALUE "ProductVersion", PROVERS
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+//
+// Icon. 
+//
+
+1000                    ICON    DISCARDABLE     "vdmgde.ico"

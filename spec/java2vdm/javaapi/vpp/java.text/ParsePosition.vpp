@@ -1,0 +1,68 @@
+class JavaTextParsePosition is subclass of JavaLangObject
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("JavaTextParsePosition" , <CLASS> , false  )
+instance variables 
+  public index : int  := 0;
+  public errorIndex : int  := -1
+operations 
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  getIndex : () ==> int 
+getIndex() == 
+( return  index
+) ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+is not yet specified;
+--( return  J2VUTIL`BitOp((l_3) , <OR> , index)
+--) ;
+
+public  toString : () ==> JavaLangString
+toString() == 
+( return  J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(getClass().getName() , new  JavaLangString("[index=")) , J2VUTIL`Convert("JavaLangString" , index)) , new  JavaLangString(",errorIndex=")) , J2VUTIL`Convert("JavaLangString" , errorIndex)) , J2VUTIL`Convert("JavaLangString" , ']'))
+) ;
+
+public  setIndex : int  ==> ()
+setIndex(index) == 
+( JavaTextParsePosition`index := index;
+  skip 
+) ;
+
+public  getErrorIndex : () ==> int 
+getErrorIndex() == 
+( return  errorIndex
+) ;
+
+public  JavaTextParsePosition : int  ==> JavaTextParsePosition
+JavaTextParsePosition(index) == 
+( JavaTextParsePosition`index := index
+) ;
+
+public  equals : JavaLangObject ==> bool 
+equals(obj) == 
+( if  obj.IsNil()
+  then  
+    return  false  ;
+  if  not  (isofclass  (JavaTextParsePosition,obj))
+  then  
+    return  false  ;
+  ( dcl   other : JavaTextParsePosition := obj;
+    return  (index = other.index and  errorIndex = other.errorIndex)
+  ) 
+) ;
+
+public  setErrorIndex : int  ==> ()
+setErrorIndex(ei) == 
+( errorIndex := ei;
+  skip 
+) ;
+
+public  JavaTextParsePosition : <NIL> ==> JavaTextParsePosition
+JavaTextParsePosition(-) == 
+isNil := true  ;
+
+
+end  JavaTextParsePosition

@@ -1,0 +1,84 @@
+class NumericAlphaCompare is subclass of Compare
+operations 
+public  compare : [Object] * [Object] ==> int 
+compare(a, b) == 
+( dcl   compareValue : int ,
+        aIntegerPrefix : int ,
+        bIntegerPrefix : int ,
+        aStringSuffix : [String],
+        bStringSuffix : [String],
+        aStr : [String] := a.toString(),
+        bStr : [String] := b.toString(),
+        idx : int ,
+        len__ : int ;
+  len__ := aStr.length();
+  idx := 0;
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  idx < len__ and  Character.isDigit(aStr.charAt(idx)) do  
+    ( idx := idx+1
+    ) ;
+  if  idx = 0
+  then  
+    ( aIntegerPrefix := Integer.MAX_VALUE;
+      aStringSuffix := aStr
+    ) 
+  else  
+    ( aIntegerPrefix := Integer.parseInt(aStr.substring(0 , idx));
+      if  idx = len__
+      then  
+        ( aStringSuffix := new  String([  ])
+        ) 
+      else  
+        ( aStringSuffix := aStr.substring(idx)
+        ) 
+    ) ;
+  len__ := bStr.length();
+  idx := 0;
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  idx < len__ and  Character.isDigit(bStr.charAt(idx)) do  
+    ( idx := idx+1
+    ) ;
+  if  idx = 0
+  then  
+    ( bIntegerPrefix := Integer.MAX_VALUE;
+      bStringSuffix := bStr
+    ) 
+  else  
+    ( bIntegerPrefix := Integer.parseInt(bStr.substring(0 , idx));
+      if  idx = len__
+      then  
+        ( bStringSuffix := new  String([  ])
+        ) 
+      else  
+        ( bStringSuffix := bStr.substring(idx)
+        ) 
+    ) ;
+  if  aIntegerPrefix < bIntegerPrefix
+  then  
+    ( compareValue := -1
+    ) 
+  else  
+    if  aIntegerPrefix > bIntegerPrefix
+    then  
+      ( compareValue := 1
+      ) 
+    else  
+      ( compareValue := aStringSuffix.compareTo(bStringSuffix)
+      ) ;
+  return  compareValue
+) ;
+
+
+end  NumericAlphaCompare

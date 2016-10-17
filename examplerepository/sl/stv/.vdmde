@@ -1,0 +1,6 @@
+r stv.avdm
+tc pos
+i
+cg
+latex stv.avdm
+quit

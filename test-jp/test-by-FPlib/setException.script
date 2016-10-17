@@ -1,0 +1,41 @@
+init
+set exception
+read AllT.vpp		
+read FHashtable.vpp		
+read FNumberT.vpp		
+read FSet.vpp
+read FBusinessTable.vpp	
+read FHashtableT.vpp		
+read FProduct.vpp		
+read FSetT.vpp
+read FBusinessTableT.vpp	
+read FInteger.vpp		
+read FProductT.vpp		
+read FString.vpp
+read FCalendar.vpp		
+read FIntegerT.vpp		
+read FQueue.vpp		
+read FStringT.vpp
+read FCalendarT.vpp		
+read FJapaneseCalendar.vpp	
+read FQueueT.vpp		
+read FTestDriver.vpp
+read FCharT.vpp		
+read FJapaneseCalendarT.vpp	
+read FReal.vpp		
+read FTestLogger.vpp
+read FCharacter.vpp		
+read FMap.vpp		
+read FRealT.vpp		
+read io.vpp
+read FFunction.vpp		
+read FMapT.vpp		
+read FSequence.vpp
+read FFunctionT.vpp		
+read FNumber.vpp		
+read FSequenceT.vpp
+system echo start; date
+debug new AllT().run()
+system echo end; date
+tcov write vdm.tc
+rtinfo vdm.tc

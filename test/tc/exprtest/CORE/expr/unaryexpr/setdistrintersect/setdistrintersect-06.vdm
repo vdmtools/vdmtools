@@ -1,0 +1,17 @@
+class UnaryTest
+types
+
+  A :: set of nat
+
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = {let mk_A(b) = a in b| a in set {mk_A({1}),mk_A({2})}}
+  in skip;
+
+------------------------------------------------------------------------------
+end UnaryTest

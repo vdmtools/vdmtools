@@ -1,0 +1,15 @@
+class TupleConstructorExprTest
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let - = mk_((if 4 < 9
+            then mk_(3,true)
+            else {}),nil,<RED>)
+  in skip;
+
+------------------------------------------------------------------------------
+end TupleConstructorExprTest

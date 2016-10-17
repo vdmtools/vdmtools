@@ -1,0 +1,16 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of map ( set of ( real | nat ) | real |
+			     seq of ( real | nat | char ) | nat  |
+			     bool ) to 
+			          ( set of ( real | nat ) | nat | bool |
+				    seq of (char | real) )  
+Test () ==
+return 
+[ let m = { a |-> a + 1 | mk_(a, 1) in set { mk_(1,2)} } in inverse m,
+  let m = { 3 |-> true, false |-> "uniontype", [9,0] |-> 3.6} in
+  inverse m
+]
+
+
+
+

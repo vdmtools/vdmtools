@@ -1,0 +1,14 @@
+class T
+
+instance variables
+
+a : nat
+
+operations
+
+public Op: () ==> ()
+Op() ==
+  let - = #fin(Op) + #act(Op) + #req(Op) + #active(Op) + #waiting(Op)
+  in skip;
+
+end T

@@ -1,0 +1,157 @@
+%!PS-Adobe-2.0 EPSF-2.0
+%%Title: /tmp/xfig-fig021626
+%%Creator: fig2dev Version 2.1.8 Patchlevel 0
+%%CreationDate: Wed Mar  2 11:00:38 1994
+%%For: kmh@idruby (Kirsten Mark Hansen (Civ.ing.))
+%%Orientation: Portrait
+%%BoundingBox: 0 0 227 229
+%%Pages: 0
+%%EndComments
+/$F2psDict 200 dict def 
+$F2psDict begin
+$F2psDict /mtrx matrix put
+/l {lineto} bind def
+/m {moveto} bind def
+/s {stroke} bind def
+/n {newpath} bind def
+/gs {gsave} bind def
+/gr {grestore} bind def
+/clp {closepath} bind def
+/graycol {dup dup currentrgbcolor 4 -2 roll mul 4 -2 roll mul
+4 -2 roll mul setrgbcolor} bind def
+/col-1 {} def
+/col0 {0 0 0 setrgbcolor} bind def
+/col1 {0 0 1 setrgbcolor} bind def
+/col2 {0 1 0 setrgbcolor} bind def
+/col3 {0 1 1 setrgbcolor} bind def
+/col4 {1 0 0 setrgbcolor} bind def
+/col5 {1 0 1 setrgbcolor} bind def
+/col6 {1 1 0 setrgbcolor} bind def
+/col7 {1 1 1 setrgbcolor} bind def
+/col8 {.68 .85 .9 setrgbcolor} bind def
+/col9 {0 .39 0 setrgbcolor} bind def
+/col10 {.65 .17 .17 setrgbcolor} bind def
+/col11 {1 .51 0 setrgbcolor} bind def
+/col12 {.63 .13 .94 setrgbcolor} bind def
+/col13 {1 .75 .8 setrgbcolor} bind def
+/col14 {.7 .13 .13 setrgbcolor} bind def
+/col15 {1 .84 0 setrgbcolor} bind def
+ /DrawSplineSection {
+	/y3 exch def
+	/x3 exch def
+	/y2 exch def
+	/x2 exch def
+	/y1 exch def
+	/x1 exch def
+	/xa x1 x2 x1 sub 0.666667 mul add def
+	/ya y1 y2 y1 sub 0.666667 mul add def
+	/xb x3 x2 x3 sub 0.666667 mul add def
+	/yb y3 y2 y3 sub 0.666667 mul add def
+	x1 y1 lineto
+	xa ya xb yb x3 y3 curveto
+	} def
+
+	end
+/$F2psBegin {$F2psDict begin /$F2psEnteredState save def} def
+/$F2psEnd {$F2psEnteredState restore end} def
+%%EndProlog
+
+$F2psBegin
+0 setlinecap 0 setlinejoin
+-39.0 319.0 translate 0.900 -0.900 scale
+0.500 setlinewidth
+% Polyline
+n 59 139 m 139 139 l gs col-1 s gr
+% Polyline
+n 139 134 m 139 144 l gs col-1 s gr
+% Polyline
+n 59 134 m 59 144 l gs col-1 s gr
+% Polyline
+n 76 216 m 69 209 l gs col-1 s gr
+% Polyline
+n 118 173 m 111 166 l gs col-1 s gr
+% Polyline
+n 114 170 m 72 212 l gs col-1 s gr
+% Closed spline
+n 74.000 106.500 m
+	74.000 106.500 54.000 109.000 46.500 129.000 DrawSplineSection
+	46.500 129.000 39.000 149.000 59.000 156.500 DrawSplineSection
+	59.000 156.500 79.000 164.000 96.500 161.500 DrawSplineSection
+	96.500 161.500 114.000 159.000 124.000 161.500 DrawSplineSection
+	124.000 161.500 134.000 164.000 146.500 146.500 DrawSplineSection
+	146.500 146.500 159.000 129.000 151.500 114.000 DrawSplineSection
+	151.500 114.000 144.000 99.000 119.000 101.500 DrawSplineSection
+	119.000 101.500 94.000 104.000 94.000 104.000 DrawSplineSection
+	94.000 104.000 94.000 104.000 74.000 106.500 DrawSplineSection closepath gs col-1 s gr
+% Closed spline
+n 86.500 164.000 m
+	86.500 164.000 69.000 179.000 59.000 196.500 DrawSplineSection
+	59.000 196.500 49.000 214.000 66.500 224.000 DrawSplineSection
+	66.500 224.000 84.000 234.000 111.500 209.000 DrawSplineSection
+	111.500 209.000 139.000 184.000 134.000 164.000 DrawSplineSection
+	134.000 164.000 129.000 144.000 116.500 146.500 DrawSplineSection
+	116.500 146.500 104.000 149.000 86.500 164.000 DrawSplineSection closepath gs col-1 s gr
+% Polyline
+n 199 134 m 279 134 l gs col-1 s gr
+% Polyline
+n 279 129 m 279 139 l gs col-1 s gr
+% Polyline
+n 199 129 m 199 139 l gs col-1 s gr
+% Polyline
+n 216 200 m 209 193 l gs col-1 s gr
+% Polyline
+n 259 157 m 252 150 l gs col-1 s gr
+% Polyline
+n 255 154 m 212 197 l gs col-1 s gr
+% Closed spline
+n 214.000 111.500 m
+	214.000 111.500 194.000 114.000 186.500 134.000 DrawSplineSection
+	186.500 134.000 179.000 154.000 199.000 161.500 DrawSplineSection
+	199.000 161.500 219.000 169.000 236.500 166.500 DrawSplineSection
+	236.500 166.500 254.000 164.000 264.000 166.500 DrawSplineSection
+	264.000 166.500 274.000 169.000 286.500 151.500 DrawSplineSection
+	286.500 151.500 299.000 134.000 291.500 119.000 DrawSplineSection
+	291.500 119.000 284.000 104.000 259.000 106.500 DrawSplineSection
+	259.000 106.500 234.000 109.000 234.000 109.000 DrawSplineSection
+	234.000 109.000 234.000 109.000 214.000 111.500 DrawSplineSection closepath gs col-1 s gr
+% Closed spline
+n 221.500 159.000 m
+	221.500 159.000 204.000 174.000 194.000 191.500 DrawSplineSection
+	194.000 191.500 184.000 209.000 201.500 219.000 DrawSplineSection
+	201.500 219.000 219.000 229.000 246.500 204.000 DrawSplineSection
+	246.500 204.000 274.000 179.000 269.000 159.000 DrawSplineSection
+	269.000 159.000 264.000 139.000 251.500 141.500 DrawSplineSection
+	251.500 141.500 239.000 144.000 221.500 159.000 DrawSplineSection closepath gs col-1 s gr
+% Polyline
+n 64 294 m 144 294 l gs col-1 s gr
+% Polyline
+n 144 289 m 144 299 l gs col-1 s gr
+% Polyline
+n 64 289 m 64 299 l gs col-1 s gr
+% Polyline
+n 134 309 m 134 319 l gs col-1 s gr
+% Polyline
+n 74 309 m 74 319 l gs col-1 s gr
+% Polyline
+n 74 314 m 134 314 l gs col-1 s gr
+% Closed spline
+n 74.000 276.500 m
+	74.000 276.500 54.000 279.000 46.500 299.000 DrawSplineSection
+	46.500 299.000 39.000 319.000 59.000 326.500 DrawSplineSection
+	59.000 326.500 79.000 334.000 96.500 331.500 DrawSplineSection
+	96.500 331.500 114.000 329.000 124.000 331.500 DrawSplineSection
+	124.000 331.500 134.000 334.000 146.500 316.500 DrawSplineSection
+	146.500 316.500 159.000 299.000 151.500 284.000 DrawSplineSection
+	151.500 284.000 144.000 269.000 119.000 271.500 DrawSplineSection
+	119.000 271.500 94.000 274.000 94.000 274.000 DrawSplineSection
+	94.000 274.000 94.000 274.000 74.000 276.500 DrawSplineSection closepath gs col-1 s gr
+/Times-Roman findfont 11.00 scalefont setfont
+74 244 m 
+gs 1 -1 scale (OK) col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+199 244 m 
+gs 1 -1 scale (Not possible) col-1 show gr
+/Times-Roman findfont 11.00 scalefont setfont
+69 354 m 
+gs 1 -1 scale (Limited speed) col-1 show gr
+$F2psEnd

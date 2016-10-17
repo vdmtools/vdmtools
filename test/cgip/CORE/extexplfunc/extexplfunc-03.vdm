@@ -1,0 +1,14 @@
+class A
+
+functions
+ bsp1( x:nat) y:nat ==
+    x+1
+  pre x >0 
+  post y = x+1
+
+operations
+
+public Test () res: nat ==
+    return bsp1(1)
+
+end A

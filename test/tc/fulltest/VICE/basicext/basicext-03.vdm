@@ -1,0 +1,72 @@
+system Simple
+
+instance variables
+  static public a : A := new A();
+  static public b : B := new B();
+  -- define the first CPU with fixed priority scheduling and 22E6 MIPS
+  CPU1 : CPU := new CPU (<FP>, 22E6);
+
+  static public c : C := new C();
+  -- define the second CPU with fixed priority scheduling and 11E6 MIPS
+  CPU2 : CPU := new CPU (<FP>, 11E6);
+
+  -- create a communication bus that links the three CPU's together
+  BUS1 : BUS := new BUS (<CSMACD>, 72, {CPU1, CPU2})
+
+operations
+  public Simple: () ==> Simple
+  Simple () ==
+    ( -- deploy a on CPU1
+      CPU1.deploy(a,"BT");
+      -- deploy b on CPU1
+      CPU1.deploy(b,"BT");
+      -- deploy c on CPU2
+      CPU2.deploy(c,"CT");
+    );
+
+end Simple
+class B
+
+instance variables
+
+binst : nat := 0;
+
+operations
+
+  public TestB: nat ==> nat
+  TestB (arg) ==
+    return 6 + arg;
+
+  IncB: () ==> ()
+  IncB() ==
+    binst := binst + 1;
+
+thread
+
+periodic (500,50,450,400) (IncB)
+end B
+class C
+
+operations
+
+  public DOITC: (map nat to nat) * nat ==> nat
+  DOITC (mapv,argc) ==
+    return mapv(argc) + 89;
+
+end C
+
+
+class A
+
+operations
+  public DOIT: () ==> nat
+  DOIT () ==
+    (for i= 1 to 9 do skip;
+     start(Simple`b);
+     return Simple`c.DOITC({i |-> i | i in set {1,...,80}},9));
+
+  public Test:() ==> nat
+  Test() ==
+    Simple`a.DOIT();
+
+end A

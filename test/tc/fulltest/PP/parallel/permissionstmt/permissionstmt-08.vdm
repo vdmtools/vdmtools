@@ -1,0 +1,18 @@
+class A
+functions
+	public f: () -> int
+		f() == 123;
+		
+operations
+    public A: () ==> A
+		A() == return;
+
+    public op: () ==> ()
+		op() == return;
+
+sync
+	per f => true;
+    per A => false;
+    per op => #fin(A) + #act(f) > 0;
+    mutex(op, A, f)
+end A

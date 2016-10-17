@@ -1,0 +1,101 @@
+module A
+
+imports
+  from Main all
+exports all
+definitions
+operations
+
+Test: () ==> seq1 of seq of int
+Test () ==
+  return  [ Main`SortSequence( [3,2,5] ), 
+            Main`ReverseSequence( [5,2,9,6,5,3,3,3,3,1,9]) ]
+
+end A
+
+module Main
+
+instantiations
+
+  IntSort as Sort (ELEM -> int, LessEqual -> IntLE) all,
+  RevSort as Sort (ELEM -> int, LessEqual -> IntGT) all
+    -- functions MergeSort renamed ReverseSort
+
+exports all
+
+definitions
+
+  functions
+
+    IntLE : int * int -> bool
+    IntLE (i1, i2) ==
+      i1 <= i2;
+
+    IntGT : int * int -> bool
+    IntGT (i1, i2) ==
+      i1 >= i2;
+
+    SortSequence : seq of int -> seq of int
+    SortSequence (l) ==
+      IntSort`MergeSort (l);
+
+    ReverseSequence : seq of int -> seq of int
+    ReverseSequence (l) ==
+      RevSort`MergeSort (l)
+
+end Main
+
+module Sort
+
+parameters
+  types ELEM
+  functions LessEqual : ELEM * ELEM -> bool
+
+exports
+  -- functions MergeSort : seq of ELEM -> seq of ELEM
+  all
+
+definitions
+
+  functions
+
+    MergeSort: seq of ELEM -> seq of ELEM
+    MergeSort (l) ==
+      cases l:
+        [], [e] ->
+          l,
+        others ->
+          let l1 ^ l2 in set {l} be st abs (len l1 - len l2) < 2 in
+            Merge (MergeSort (l1), MergeSort (l2))
+      end
+    post IsPermutation (RESULT, l) and IsOrdered (RESULT);
+
+    Merge: (seq of ELEM) * (seq of ELEM) -> seq of ELEM
+    Merge (l1, l2) ==
+      cases mk_(l1, l2):
+        mk_([], l), mk_(l, []) ->
+          l,
+        others ->
+          if LessEqual (hd l1, hd l2)
+          then [hd l1] ^ Merge (tl l1, l2)
+          else [hd l2] ^ Merge (l1, tl l2)
+      end;
+
+    IsPermutation : seq of ELEM * seq of ELEM -> bool
+    IsPermutation (l1, l2) ==
+      forall e in set (elems l1 union elems l2) &
+        card {i | i in set inds l1 & l1(i) = e} =
+        card {i | i in set inds l2 & l2(i) = e};
+
+    IsOrdered : seq of ELEM -> bool
+    IsOrdered (l) ==
+      forall i,j in set inds l &
+        i < j => LessEqual (l(i), l(j));
+
+    TestElem: ELEM*int -> seq of ELEM
+    TestElem(e,a) ==
+      if a>0
+      then [e]
+      else []
+
+end Sort

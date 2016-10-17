@@ -1,0 +1,57 @@
+class A
+
+instance variables
+  r : real := 1;
+
+operations
+
+public  Get: () ==> real
+  Get() ==
+    return r;
+
+public  Inc : () ==> A
+  Inc() ==
+  ( r := r + 1;
+    return self )
+
+end A
+class B
+
+instance variables
+  a1 : A;
+  a2: A;
+
+types 
+  R :: B
+
+operations
+
+  SameObj: B ==> bool
+  SameObj(b) ==
+    return 
+           self                 = b
+       and {self}               = {b}
+       and mk_(self,b)          = mk_(b,self)
+       and [self]               = [b] 
+       and { self |-> b }(self) = { b |-> self }(b)
+       and mk_R(self)           = mk_R(b);
+
+  public Test : () ==> seq of bool
+  Test() ==
+  ( dcl res: seq of bool,
+        t  : bool,
+        b  : B := new B();
+    a1 := new A(); 
+    a2 := new A(); 
+    t := self.SameObj(b);
+    res := [t];
+    t := self.SameObj(self);
+    res := res ^ [t, sameclass(self, a1), self = self, a1 = a2, a1 = a1];
+    let l1 = [self],
+        l2 = [a2],
+        l3 = [b] in
+      res := res ^ [hd l1 = self, hd l1 = hd l3, hd l3 = b, hd l2 = a2];
+    return res
+  )
+
+end B

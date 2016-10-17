@@ -1,0 +1,10 @@
+class A
+
+operations
+
+public Test : () ==> nat  
+Test () ==
+return 
+  let l = [i|i in set {1,...,100}], x:real = 12 in l(x)
+
+end A

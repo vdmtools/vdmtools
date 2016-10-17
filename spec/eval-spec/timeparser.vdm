@@ -1,0 +1,425 @@
+%--------------------------------------------------------------------------------
+% WHAT
+%    Abstract Syntax for time files
+% $Id: timeparser.vdm,v 1.2 2005/10/25 05:00:23 vdmtools Exp $
+% Implemented in: ???
+%--------------------------------------------------------------------------------
+\chapter{The TIMEPARSER Module}
+
+\section{Introduction}
+
+This module defines the abstract syntax for time files. A time file is
+used to record any deviations from the default timing behaviour for a
+particular model. Timing behaviour is defined in terms of atomic
+instructions listed below, to which times are attached. The time may
+be made dependent on a basic type, to allow modeling of type dependent
+timing behaviour.
+
+\begin{vdm_al}
+
+module TIMEPARSER
+
+imports
+  from AS all,
+  from CI all,
+  from REP all
+
+exports
+  all
+
+definitions
+
+types
+\end{vdm_al}
+A time file consists of a sequence of time entries.
+\begin{vdm_al}
+Timefile = seq of TimeEntry;
+\end{vdm_al}
+A time entry may be simple, typed or an assembly language entry. The
+difference between simple and typed is the presence of a basic type
+with the latter. 
+\begin{vdm_al}
+TimeEntry = SimpleEntry | TypedEntry | AssemblyEntry;
+
+SimpleEntry :: instr : Instruction
+               time : TimeExpr
+               cid : ContextInfo;
+
+TypedEntry :: instr : Instruction
+              time : TimeExpr
+              tp : REP`BasicTypeRep
+              cid : ContextInfo;
+
+\end{vdm_al}
+Context information is currently just a line number, though this could
+be made more sophisticated in the future if necessary.
+\begin{vdm_al}
+ContextInfo :: line : nat;
+\end{vdm_al}
+The actual instructions are described in the table below. Note that
+the interpretation of these instructions should be the overhead of the
+task described, without regard to the time required to evaluate the
+arguments to the instruction - this is calculated separately.
+
+\begin{tabular}{|l|l|}\hline
+Instruction     & Description \\ \hline
+AddEnv          & Add an identifier to the environment (e.g. let expr)\\
+Addset          & Add a single element to a set\\
+AllorExists     & Quantification expression\\
+Always          & Always statement (exception handler)\\
+Appendmap       & Append a single maplet to a map\\
+Appendseq       & Append a single element to a sequence\\
+Appendtup       & Append a component to a tuple (as tuple is built)\\
+Apply           & Function/operation application\\
+BindList        & Form a list of bindings (e.g. when binding identifiers in a\\
+                & set comprehension)\\
+BlockStmt       & Block statement\\
+Br              & Unconditional branch\\
+Call            & Operation call\\
+Cbr             & Conditional branch\\
+Exit            & Exit statement (exception)\\
+Fieldsel        & Field selection expression\\
+Guard           & Evaluation of permission guard\\
+History         & Evaluation of history expression\\
+Iota            & Iota expression\\
+Isexpr          & Is expression\\
+Isofbaseclass   & IsofBaseClass expression\\
+Isofclass       & IsOfClass expression\\
+LambdaExpr      & Lambda expression\\
+LetBeST         & Let be such that expression\\
+Lookup          & Look up a name in memory\\
+Loop            & Loop statement (set, seq, index, while etc)\\
+MapInverse      & Map inverse expression\\
+MatchPattern    & Match pattern in case expression\\
+Narrowexpr      & Narrow expression\\
+Newobj          & Object creation\\
+NonDet          & Non deterministic statement\\
+Pattern         & Evaluation of arbitrary pattern\\
+Polyinst        & Instantiation of polymorphic function\\
+RecTrap         & Recursive exception trap\\
+Reccons         & Record constructor\\
+Recmod          & Record modification expression\\
+Return          & Return statement\\
+Samebaseclass   & SameBaseClass expression\\
+Sameclass       & SameClass expression\\
+Selfexpr        & Self expression\\
+Seqlen          & Sequence length expression\\
+Seqmapover      & seq or map override expression (s ++ {d |-> r})\\
+Setcard         & set cardinality expression\\
+Setrng          & set range expression\\
+Start           & start statement (thread)\\
+Stop            & stop statement (thread)\\
+Subseq          & subsequence expression\\
+Threadid        & thread id expression\\
+Trap            & trap statement (exception handler)\\
+Tupsel          & Tuple selection expression\\
+Update          & Assignment\\
+Plus            & Addition\\
+Minus           & Subtraction\\
+Mult            & Multiplication\\
+Div             & Division\\
+Rem             & Remainder\\
+Mod             & Modulo\\
+Intdiv          & Integer division\\
+And             & Logical and\\
+Or              & Logical or\\
+Equal           & Equality\\
+GreaterThan     & Greater than\\
+GreaterThanOrEqual
+                & Greater than or equal\\
+Abs             & Absolute value of a number\\
+Floor           & Floor of a number\\
+Not             & Logical not\\ \hline
+\end{tabular}
+The instruction types are given below without further comment.
+\begin{vdm_al}
+Instruction = 
+              AddEnv
+            | Addset 
+            | AllorExists
+            | Always
+            | Appendmap 
+            | Appendseq 
+            | Appendtup 
+            | Apply 
+            | BinaryOp 
+            | BindList
+            | BlockStmt
+            | Br 
+            | Call
+            | Cbr 
+            | Exit
+            | Fieldsel 
+            | Guard
+            | History 
+            | Iota
+            | Isexpr
+            | Isofbaseclass 
+            | Isofclass 
+            | LambdaExpr            
+            | LetBeST
+            | Lookup 
+            | Loop
+            | MapInverse
+            | MatchPattern
+            | Narrowexpr
+            | Newobj 
+            | NonDet
+            | Pattern
+            | Polyinst 
+            | RecTrap
+            | Reccons 
+            | Recmod
+            | Return
+            | Samebaseclass 
+            | Sameclass 
+            | Selfexpr 
+            | Seqlen
+            | Seqmapover 
+            | Setcard
+            | Setrng 
+            | Start
+            | Stop
+            | Subseq 
+            | Threadid 
+            | Trap
+            | Tupsel 
+            | UnaryOp
+            | Update;
+
+
+AddEnv :: ;
+Addset  :: ;
+AllorExists :: ;
+Always :: ;
+Appendmap  :: ;
+Appendseq  :: ;
+Appendtup  :: ;
+Apply  :: ;
+BindList :: ;
+BlockStmt :: ;
+Br  :: ;
+Call :: ;
+Cbr  :: ;
+Exit :: ;
+Fieldsel  :: ;
+Guard :: ;
+History  :: ;
+Iota :: ;
+Isexpr :: ;
+Isofbaseclass  :: ;
+Isofclass  :: ;
+LambdaExpr :: ;
+LetBeST :: ;
+Lookup  :: ;
+Loop :: ;
+MapInverse :: ;
+MatchPattern :: ;
+Narrowexpr :: ;
+Newobj  :: ;
+NonDet :: ;
+Pattern :: ;
+Polyinst  :: ;
+RecTrap :: ;
+Reccons  :: ;
+Recmod :: ;
+Return :: ;
+Samebaseclass  :: ;
+Sameclass  :: ;
+Selfexpr  :: ;
+Seqlen :: ;
+Seqmapover  :: ;
+Setcard :: ;
+Setrng  :: ;
+Start :: ;
+Stop :: ;
+Subseq  :: ;
+Threadid  :: ;
+Trap :: ;
+Tupsel  :: ;
+Update :: ; 
+
+BinaryOp = Plus | Minus | Mult | Div | Rem | Mod | Intdiv | And | 
+           Or | Equal | GreaterThan | GreaterThanOrEqual;
+
+Plus :: ; 
+Minus :: ; 
+Mult :: ; 
+Div :: ; 
+Rem :: ; 
+Mod :: ; 
+Intdiv :: ; 
+And :: ; 
+Or :: ; 
+Equal :: ; 
+GreaterThan :: ; 
+GreaterThanOrEqual :: ;
+
+UnaryOp = Abs | Floor | Not;
+
+Abs :: ;
+Floor :: ;
+Not :: ;
+\end{vdm_al}
+
+A time expression may be an assembly instruction, a natural number, a
+binary expression or a bracketed expression.
+\begin{vdm_al}
+TimeExpr = AssemblyInstruction | nat | TimeBinaryExpr | TimeBracketedExpr;
+\end{vdm_al}
+
+A binary expression may be an addition or a multiplication.
+\begin{vdm_al}
+TimeBinaryExpr :: lexpr : TimeExpr
+                  op : TimeBinaryOp
+                  rexpr : TimeExpr;
+
+TimeBinaryOp = TimePlus | TimeMultiply;
+
+TimePlus :: ;
+
+TimeMultiply :: ;
+\end{vdm_al}
+
+A bracketed expression consists of just the expression enclosed in the
+brackets. 
+\begin{vdm_al}
+TimeBracketedExpr :: expr : TimeExpr;
+\end{vdm_al}
+
+The choice of assembly instructions corresponds to those typically
+found on a processor.
+\begin{vdm_al}
+AssemblyInstruction = Assembly_Add | Assembly_Branch | Assembly_Call |
+                      Assembly_Compare | Assembly_Return | Assembly_Sub |
+                      Assembly_Div | Assembly_Mul | Assembly_Neg |
+                      Assembly_Fsqrt | Assembly_Logic | Assembly_Cas |
+                      Assembly_Push | Assembly_Pop;
+
+AssemblyEntry :: instr : AssemblyInstruction 
+                 time : nat
+                 cid : ContextInfo;
+
+Assembly_Add  :: ;
+Assembly_Branch  :: ;
+Assembly_Call  :: ;
+Assembly_Compare  :: ;
+Assembly_Return  :: ;
+Assembly_Sub  :: ;
+Assembly_Div  :: ;
+Assembly_Mul  :: ;
+Assembly_Neg  :: ;
+Assembly_Fsqrt  :: ;
+Assembly_Logic  :: ;
+Assembly_Cas  :: ;
+Assembly_Push  :: ;
+Assembly_Pop :: ;
+
+\end{vdm_al}
+The function $InstrMap$ is used to map instructions to a string
+representation.
+\begin{vdm_al}
+functions
+
+InstrMap : Instruction -> seq of char
+InstrMap(i) ==
+  cases i:
+    mk_AddEnv() -> "AddEnv",
+    mk_Addset() -> "Addset ",
+    mk_AllorExists() -> "AllorExists",
+    mk_Always() -> "Always",
+    mk_Appendmap() -> "Appendmap ",
+    mk_Appendseq() -> "Appendseq ",
+    mk_Appendtup() -> "Appendtup ",
+    mk_Apply() -> "Apply ",
+    mk_BindList() -> "BindList",
+    mk_BlockStmt() -> "BlockStmt",
+    mk_Br() -> "Br ",
+    mk_Call() -> "Call",
+    mk_Cbr() -> "Cbr ",
+    mk_Exit() -> "Exit",
+    mk_Fieldsel() -> "Fieldsel ",
+    mk_Guard() -> "Guard",
+    mk_History() -> "History ",
+    mk_Iota() -> "Iota",
+    mk_Isexpr() -> "Isexpr ",
+    mk_Isofbaseclass() -> "Isofbaseclass ",
+    mk_Isofclass() -> "Isofclass ",
+    mk_LambdaExpr() -> "LambdaExpr",
+    mk_LetBeST() -> "LetBeST",
+    mk_Lookup() -> "Lookup ",
+    mk_Loop() -> "Loop",
+    mk_MapInverse() -> "MapInverse",
+    mk_MatchPattern() -> "MatchPattern",
+    mk_Narrowexpr() -> "Narrowexpr ",
+    mk_Newobj() -> "Newobj ",
+    mk_NonDet() -> "NonDet",
+    mk_Pattern() -> "Pattern",
+    mk_Polyinst() -> "Polyinst ",
+    mk_RecTrap() -> "RecTrap",
+    mk_Reccons() -> "Reccons ",
+    mk_Recmod() -> "Recmod ",
+    mk_Return() -> "Return",
+    mk_Samebaseclass() -> "Samebaseclass ",
+    mk_Sameclass() -> "Sameclass ",
+    mk_Selfexpr() -> "Selfexpr ",
+    mk_Seqlen() -> "Seqlen ",
+    mk_Seqmapover() -> "Seqmapover ",
+    mk_Setcard() -> "Setcard ",
+    mk_Setrng() -> "Setrng ",
+    mk_Start() -> "Start",
+    mk_Stop() -> "Stop",
+    mk_Subseq() -> "Subseq ",
+    mk_Threadid() -> "Threadid ",
+    mk_Trap() -> "Trap",
+    mk_Tupsel() -> "Tupsel ",
+    mk_Update() -> "Update",
+    mk_Plus() -> "Plus",
+    mk_Minus() -> "Minus",
+    mk_Mult() -> "Mult",
+    mk_Div() -> "Div",
+    mk_Rem() -> "Rem",
+    mk_Mod() -> "Mod",
+    mk_Intdiv() -> "Intdiv",
+    mk_And() -> "And",
+    mk_Or() -> "Or",
+    mk_Equal() -> "Equal",
+    mk_GreaterThan() -> "GreaterThan",
+    mk_GreaterThanOrEqual() -> "GreaterThanOrEqual",
+    mk_Abs() -> "Abs",
+    mk_Floor() -> "Floor",
+    mk_Not() -> "Not",
+    others -> "Unknown"
+  end;
+
+AssemblyInstrMap : AssemblyInstruction -> seq of char
+AssemblyInstrMap(ai) ==
+  cases ai:
+    mk_Assembly_Add() -> "add",
+    mk_Assembly_Branch() -> "branch",
+    mk_Assembly_Call() -> "call",
+    mk_Assembly_Compare() -> "compare",
+    mk_Assembly_Return() -> "return",
+    mk_Assembly_Sub() -> "sub",
+    mk_Assembly_Div() -> "div",
+    mk_Assembly_Mul() -> "mul",
+    mk_Assembly_Neg() -> "neg",
+    mk_Assembly_Fsqrt() -> "fsqrt",
+    mk_Assembly_Logic() -> "logic",
+    mk_Assembly_Cas() -> "cas",
+    mk_Assembly_Push() -> "push",
+    mk_Assembly_Pop() -> "pop"
+  end;
+
+end TIMEPARSER
+\end{vdm_al}
+
+\vspace{0.5cm}
+
+\begin{rtinfo}
+{rtinfo.ast}[TIMEPARSER]
+\end{rtinfo}
+        
+
+
+               

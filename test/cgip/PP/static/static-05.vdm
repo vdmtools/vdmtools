@@ -1,0 +1,32 @@
+class B
+
+values
+  private RandomSeed : nat = 1001
+  
+instance variables
+  public x : nat := RandomSeed
+    
+operations
+
+  public GetRandomSeed: () ==> nat
+  GetRandomSeed() ==
+    return x;
+  
+end B
+
+class C
+
+instance variables
+  static public rngen : B := new B()
+
+end C
+class A
+
+operations
+
+public
+  Test:() ==> nat
+  Test () == 
+   return C`rngen.GetRandomSeed()
+
+end A

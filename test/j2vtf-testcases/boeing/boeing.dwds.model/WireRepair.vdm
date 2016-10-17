@@ -1,0 +1,89 @@
+class WireRepair is subclass of Object
+operations 
+public  getWire : () ==> [Wire]
+getWire() == 
+( return  mediator.getWire(wireId)
+) ;
+
+public  getRepairId : () ==> [String]
+getRepairId() == 
+( return  repairId
+) ;
+
+public  static decodeStatus : int  ==> [String]
+decodeStatus(wireStatus) == 
+( return  wireStatusNames(wireStatus)
+) ;
+
+public  getWireStatus : () ==> int 
+getWireStatus() == 
+( return  wireStatus
+) ;
+
+public  setWireStatus : int  ==> <VOID>
+setWireStatus(wireStatus) == 
+( WireRepair`wireStatus := wireStatus;
+  return  <VOID>
+) ;
+
+public  getWireStatusString : () ==> [String]
+getWireStatusString() == 
+( return  decodeStatus(getWireStatus())
+) ;
+
+public  getBundleSegmentNumber : () ==> int 
+getBundleSegmentNumber() == 
+( return  bundleSegmentNumber
+) ;
+
+public  setWireStatus : [String] ==> <VOID>
+setWireStatus(wireStatusStr) == 
+( dcl   found : bool  := false  ;
+  ( dcl   i : int  := 0;
+    while  i < (card  dom  wireStatusNames) and  not  found do  
+    ( if  wireStatusStr.equals(wireStatusNames(i))
+      then  
+        ( let - = setWireStatus(i)
+          in 
+            skip ;
+          found := true  
+        ) ;
+      i := i+1
+    ) 
+  ) ;
+  return  <VOID>
+) ;
+
+public  WireRepair : [String] * int  * int  * int  ==> WireRepair
+WireRepair(repairId, wireId, bundleSegmentNumber, wireStatus) == 
+( WireRepair`repairId := repairId;
+  WireRepair`wireId := wireId;
+  WireRepair`bundleSegmentNumber := bundleSegmentNumber;
+  WireRepair`wireStatus := wireStatus;
+  WireRepair`mediator := WiringDataMediator`getMediator()
+) ;
+
+public  WireRepair : [String] * int  * int  * [String] ==> WireRepair
+WireRepair(repairId, wireId, bundleSegmentNumber, wireStatusStr) == 
+( let - = WireRepair(repairId , wireId , bundleSegmentNumber , 0)
+  in 
+    skip ;
+  let - = setWireStatus(wireStatusStr)
+  in 
+    skip 
+) ;
+
+instance variables 
+  private  repairId : [String];
+  private  wireId : int ;
+  private  bundleSegmentNumber : int ;
+  private  wireStatus : int ;
+  public  static OK : int  := 0;
+  public  static FIXED : int  := 1;
+  public  static FIX : int  := 2;
+  public  static DEACTIVATED : int  := 3;
+  public  static DAMAGED : int  := 4;
+  private  static wireStatusNames : map  int  to  [String] := {4 |-> new  String("DAMAGED") , 3 |-> new  String("DEACTIVATED") , 2 |-> new  String("FIX") , 1 |-> new  String("FIXED") , 0 |-> new  String("OK")};
+  private  mediator : [WiringDataMediator]
+  
+end  WireRepair

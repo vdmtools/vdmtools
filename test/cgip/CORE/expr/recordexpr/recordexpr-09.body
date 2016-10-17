@@ -1,0 +1,17 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> E  
+Test () ==
+return mk_E(3,6)
+
+
+types
+B :: ;
+C = compose D of
+     a: nat
+     b: bool
+    end;
+public E :: 
+  a : nat
+  b : nat
+inv e == e.a > e.b
+

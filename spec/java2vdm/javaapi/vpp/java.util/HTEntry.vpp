@@ -1,0 +1,78 @@
+class JavaUtilHTEntry is subclass of JavaUtilEntry, JavaLangObject
+--values 
+--  CLASS : JavaLangClass = new  JavaLangClass("JavaUtilHTEntry" , <CLASS> , false  )
+instance variables 
+  public hash : int ;
+  public key : JavaLangObject;
+  public value__ : JavaLangObject;
+  public next : JavaUtilHTEntry
+operations 
+public  clone : () ==> JavaLangObject
+clone() == 
+( return  JavaLangObject`NIL
+) ;
+
+public  getKey : () ==> JavaLangObject
+getKey() == 
+( return  key
+) ;
+
+--public  getClass : () ==> JavaLangClass
+--getClass() == 
+--return  CLASS;
+
+public  getValue : () ==> JavaLangObject
+getValue() == 
+( return  value__
+) ;
+
+public  hashCode : () ==> int 
+hashCode() == 
+--( return  J2VUTIL`BitOp(hash , <EXCLOR> , (if  value__.IsNil() then  0 else  value__.hashCode()))
+( return  if  value__.IsNil() then  0 else  value__.hashCode()
+) ;
+
+public  toString : () ==> JavaLangString
+toString() == 
+--( return  J2VUTIL`ConcatStr(J2VUTIL`ConcatStr(key.toString() , new  JavaLangString("=")) , value__.toString())
+( dcl s: JavaLangString:=new JavaLangString("toString is not def in JavaLangObject because an error in TC!");  -- key.toString();
+  s:=s.concat(new  JavaLangString("="));
+  s:=s.concat(new  JavaLangString("toString is not def in JavaLangObject because an error in TC!")); -- s:=s.concat(value__.toString());
+  return  s
+) ;
+
+public  JavaUtilHTEntry : <NIL> ==> JavaUtilHTEntry
+JavaUtilHTEntry(-) == 
+isNil := true  ;
+
+public  equals : JavaLangObject ==> bool 
+equals(o) == 
+( if  not  (isofclass  (JavaUtilHTEntry,o))
+  then  
+    return  false  ;
+  ( dcl   e : JavaUtilHTEntry := o;
+    return  (if  key.IsNil() then  e.getKey().IsNil() else  key.equals(e.getKey())) and  (if  value__.IsNil() then  e.getValue().IsNil() else  value__.equals(e.getValue()))
+  ) 
+) ;
+
+public  setValue : JavaLangObject ==> JavaLangObject
+setValue(value__) == 
+( if  value__.IsNil()
+  then  
+    exit  new  JavaLangNullPointerException();
+  ( dcl   oldValue : JavaLangObject := JavaUtilHTEntry`value__;
+    JavaUtilHTEntry`value__ := value__;
+    return  oldValue
+  ) 
+) ;
+
+public  JavaUtilHTEntry : int  * JavaLangObject * JavaLangObject * JavaUtilHTEntry ==> JavaUtilHTEntry
+JavaUtilHTEntry(hash, key, value__, next) == 
+( JavaUtilHTEntry`hash := hash;
+  JavaUtilHTEntry`key := key;
+  JavaUtilHTEntry`value__ := value__;
+  JavaUtilHTEntry`next := next
+) ;
+
+
+end  JavaUtilHTEntry

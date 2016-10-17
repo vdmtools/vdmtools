@@ -1,0 +1,13 @@
+"class A
+types 
+T = ((real | seq of char) * seq of nat);
+
+operations
+
+public Test : () ==> (real * seq of nat)  
+Test () ==
+	return let a : T in def mk_(x, [1, y]) : T = a in 
+       mk_(x, [1, y]);
+
+end A
+"

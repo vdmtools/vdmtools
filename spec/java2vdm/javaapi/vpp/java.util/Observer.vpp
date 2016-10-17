@@ -1,0 +1,11 @@
+class JavaUtilObserver is subclass of JavaLangObject
+operations 
+public  JavaUtilObserver : <NIL> ==> JavaUtilObserver
+JavaUtilObserver(-) == 
+isNil := true  ;
+
+public  update : JavaUtilObservable * JavaLangObject ==> ()
+update(o, arg) == 
+is not yet specified ;
+
+end  JavaUtilObserver

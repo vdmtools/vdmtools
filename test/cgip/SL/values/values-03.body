@@ -1,0 +1,63 @@
+
+
+module VALUE1
+
+imports 
+  from VALUE2 all
+
+definitions
+
+types
+
+  A = seq of nat;
+
+
+end VALUE1
+
+
+module VALUE2
+
+imports
+  from VALUE1 all
+
+
+definitions
+values
+
+v2 : nat = 35
+
+types 
+  
+  B :: 
+    a : VALUE1`A
+
+end VALUE2
+
+
+module B 
+
+imports from VALUE1 all,
+        from VALUE2 all
+
+definitions
+operations 
+  Test: () ==> nat
+  Test () ==
+    return 3;
+
+
+end B
+
+
+
+
+
+
+
+
+
+
+
+
+
+

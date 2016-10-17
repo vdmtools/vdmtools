@@ -1,0 +1,28 @@
+[ "Newline:",
+  '
+',
+  "Esc_quote:",
+  ''',
+  "Esc_backslash:",
+  '\\',
+  "Return:",
+  '\r',
+  "Tab:",
+  '	',
+  "Formfeed:",
+  '\f',
+  "Hex 41 :",
+  'A',
+  "Control char A:",
+  '',
+  "Double qoute:",
+  '"',
+  "Esc_double_quote:",
+  '"',
+  "Octal:",
+  '\e',
+  "\"",
+  "\"Hello 
+ World",
+  "Hello 	 \\ World" ]
+

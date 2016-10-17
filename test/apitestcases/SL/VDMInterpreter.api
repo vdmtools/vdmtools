@@ -1,0 +1,38 @@
+# positive testcases
+new project
+parse ($SOURCEPATH/test.vdm)
+init
+evalcmd (tc A pos)
+status (A)
+eval (A`f1(1))
+apply (A`f1) to [1]
+
+# check some flags
+set dtc on
+eval (A`f2(-1))
+eval (A`f2(0))
+set inv on
+eval (A`f2(0))
+set inv off
+set pre on
+eval (A`f2(0))
+
+# test debugging
+$b1 = break (A, f2)
+debug (A`f2(1))
+singlestep
+stepin
+step
+
+delete ($b1)
+
+# negative tests
+step
+break (C, f16)
+break (A, f16)
+debug (E, f15(42))
+delete (2454)
+eval (A`u(13))
+apply (A`f1) to ['e']
+set dtc off
+set pre off

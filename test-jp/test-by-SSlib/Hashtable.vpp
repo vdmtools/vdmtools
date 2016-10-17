@@ -1,0 +1,276 @@
+/*$Id: Hashtable.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $
+ *　責任：
+ *	ハッシュ表 
+ 
+ *　使用方法：
+ *	（１）Objectの必要条件
+ *		Hashtableに格納する値であるObjectは、hashCode()関数とequals()関数を持たねばならない。
+ *		２つのオブジェクトt1, t2のhashCodeが等しければ、t1.equals(t2)とならなければならない。
+     注意事項
+	歴史的経過のため、より関数型プログラミングに適した関数と、そうでないものがある。
+	関数型プログラミングに適した関数は、英字名の場合大文字で始まる。
+	大文字で始まる同一名の関数がある場合、小文字で始まる関数・操作は、古い定義で、互換性のために存在する。
+	大文字で始まる同一名の関数が無い場合は、小文字で始まる関数・操作も関数型プログラミングに適している。
+	
+ *　制約：
+ *	スーパークラス『問題領域共通定義』で合併型を使用していると、
+ *	Rose Linkの機能制約のためRoseのクラス図を生成できない。
+ *
+ *	
+*/
+class Hashtable is subclass of 『共通定義』 
+
+types
+public 「中身」 = map Object to Object;
+public 「バケツ」 = map int to 「中身」;
+
+instance variables
+バケツ : 「バケツ」 := { |->};
+
+operations
+--構成子
+--空のHashtableインスタンスを返す。
+public Hashtable : () ==> Hashtable
+Hashtable() == 
+	(
+	バケツ := { |-> };
+	return self
+	);
+	
+--写像からHashtableインスタンスを返す。
+public Hashtable : 「中身」 ==> Hashtable
+Hashtable(a中身) == 
+	(
+	self.putAll(a中身);
+	return self
+	);
+
+--Hashtableのクリアー
+public clear : () ==> ()
+clear() == setBuckets({ |-> });
+
+public getBuckets : () ==> 「バケツ」 
+getBuckets() == return バケツ;
+
+public setBuckets : 「バケツ」 ==> ()
+setBuckets(aBucket) == バケツ := aBucket;
+
+--Hahtableのすべてのkeyの集合を返す
+public keySet : () ==> set of Object
+keySet() ==
+	let	buckets = self.getBuckets()
+	in
+	(
+	dcl allKeySet : set of Object := {};
+	for all a中身 in set rng buckets do
+		allKeySet := allKeySet union dom a中身;
+	return allKeySet
+	);
+
+--keyと値の写をHashtableに追加する
+public put : Object * Object ==> ()
+put(key, 値) ==
+	let	buckets = self.getBuckets(),
+		hashcode = key.hashCode()
+	in
+	(
+	if hashcode in set dom buckets then
+		--self.setBuckets(buckets ++ {hashcode |-> (buckets(hashcode) munion {key |-> 値})})
+		self.setBuckets(buckets ++ {hashcode |-> (buckets(hashcode) ++ {key |-> 値})})
+	else
+		self.setBuckets(buckets munion {hashcode |-> {key |-> 値}})
+	);
+
+--写像の内容をHashtableに追加する
+public putAll : 「中身」 ==> ()
+putAll(a中身) == 
+	for all key in set dom a中身 do (
+		self.put(key, a中身(key))
+	);
+
+--keyに対応する値を取り出す
+public get : Object  ==> [Object]
+get(key) ==
+	let	buckets = self.getBuckets(),
+		hashcode = key.hashCode()
+	in
+	(
+	if hashcode in set dom buckets then
+		let	a中身 = buckets(hashcode)
+		in
+		for all aKey in set dom a中身 do (
+			if key.equals(aKey) then
+				return a中身(aKey)
+		);
+	return nil
+	);
+
+--keyとそれに対応する値をHashtableから削除する
+public remove : Object ==> [Object]
+remove(key) ==
+	let	buckets = self.getBuckets(),
+		hashcode = key.hashCode(),
+		削除対象 = self.get(key)
+	in
+	(
+	if 削除対象 <> nil then
+		let	a中身 = buckets(hashcode),
+			new中身 = a中身 :-> {削除対象}
+		in
+		(
+		self.setBuckets(buckets ++ {hashcode |-> new中身});
+		return 削除対象
+		)
+	else
+		return nil
+	);
+
+--Hashtableのすべての値の集合を返す
+public valueSet : () ==> set of Object
+valueSet() ==
+	let	buckets = self.getBuckets()
+	in
+	(
+	dcl 値集合 : set of Object := {};
+	for all a中身 in set rng buckets do
+		値集合 := 値集合 union rng a中身;
+	return 値集合
+	);
+
+--Hashtable中のkeyの数を返す
+public size : () ==> nat
+size() == return card self.keySet();
+
+--Hashtable中にkeyが無いか否かを返す
+public isEmpty : () ==> bool
+isEmpty() == return self.keySet() = {};
+		
+--与えられたObjectがあるならば、trueを返す。
+public contains : Object ==> bool
+contains(anObject) ==
+	let	buckets = self.getBuckets()
+	in
+	return 
+		 exists hashcode in set dom buckets &
+			 let	a中身 = buckets(hashcode)
+			 in
+				  exists key in set dom a中身 &
+				  a中身(key).equals(anObject);
+		
+--与えられたkeyがあるならば、ｔｒｕｅを返す。
+public containsKey : Object ==> bool
+containsKey(aKey) ==
+	let	buckets = self.getBuckets()
+	in
+	return 
+		 exists hashcode in set dom buckets & 
+			 exists key in set dom buckets(hashcode) &
+				 aKey.equals(key);
+
+-----------関数型プログラミングによる実装
+functions
+--aKeyとaValueの写をHashtableに追加する
+static public Put[@型1, @型2] : 
+	(map @型1 to (map @型1 to  @型2)) -> (@型1 -> @型1) -> @型1 -> @型2 
+	-> (map @型1 to (map @型1 to  @型2))
+Put(aHashtable)(aHashCode)(aKey)(aValue) ==
+	let	hashcode = aHashCode(aKey)
+	in
+	if hashcode in set dom aHashtable then
+		aHashtable ++ {hashcode |-> (aHashtable(hashcode) ++ {aKey |-> aValue})}
+	else
+		aHashtable munion {hashcode |-> {aKey |-> aValue}}
+	;
+
+--写像の内容をHashtableに追加する
+static public PutAll[@型1, @型2] : 
+	(map @型1 to (map @型1 to  @型2)) -> (@型1 -> @型1) -> (map @型1 to  @型2) 
+	-> (map @型1 to (map @型1 to  @型2)) 
+PutAll(aHashtable)(aHashCode)(aMap) == 
+	PutAll補助関数[@型1, @型2](aHashtable)(aHashCode)(aMap)(dom aMap);
+
+static public PutAll補助関数[@型1, @型2] :
+	(map @型1 to (map @型1 to  @型2)) -> (@型1 -> @型1) -> (map @型1 to  @型2)  -> set of @型1
+	-> (map @型1 to (map @型1 to  @型2)) 
+PutAll補助関数(aHashtable)(aHashCode)(aMap)(aKeySet) ==
+	if aKeySet = {} then
+		aHashtable
+	else
+		let	aKey in set aKeySet	in
+		let	新Hashtable = Put[@型1, @型2](aHashtable)(aHashCode)(aKey)(aMap(aKey))	
+		in
+		PutAll補助関数[@型1, @型2](新Hashtable)(aHashCode)(aMap)(aKeySet \ {aKey})
+	;
+
+--aKeyに対応する値を取り出す
+static public Get[@型1, @型2] : (map @型1 to (map @型1 to  @型2)) -> (@型1 -> @型1) -> @型1  -> [@型2]
+Get(aHashtable)(aHashCode)(aKey) ==
+	let	hashcode = aHashCode(aKey)
+	in
+	if hashcode in set dom aHashtable then
+		Map`Get[@型1, @型2](aHashtable(hashcode))(aKey)
+	else
+		nil
+	;
+
+--keyとそれに対応する値をHashtableから削除する
+static public Remove[@型1, @型2] : (map @型1 to (map @型1 to  @型2)) -> (@型1 -> @型1) -> @型1 -> (map @型1 to (map @型1 to  @型2))
+Remove(aHashtable)(aHashCode)(aKey) == 
+	let	hashcode = aHashCode(aKey)
+	in
+	{h |-> ({aKey} <-: aHashtable(hashcode)) | h in set {hashcode}} munion 
+		{hashcode} <-: aHashtable ;
+
+--Hashtableのクリアー
+static public Clear[@型1, @型2] : () -> (map @型1 to (map @型1 to  @型2))
+Clear() == ({ |-> });
+
+--Hahtableのすべてのkeyの集合を返す
+static public KeySet[@型1, @型2] : (map @型1 to (map @型1 to  @型2)) -> set of  @型1
+KeySet(aHashtable) == 
+	let	aMapSet = rng aHashtable
+	in
+	if aMapSet <> {} then
+		dunion  {dom s | s in set aMapSet} 
+	else
+		{};
+
+--Hashtableのすべての値の集合を返す
+static public ValueSet[@型1, @型2] : (map @型1 to (map @型1 to  @型2)) -> set of  @型2
+ValueSet(aHashtable) == 
+	let	aMapSet = rng aHashtable
+	in
+	if aMapSet <> {} then
+		dunion  {rng s | s in set aMapSet} 
+	else
+		{};
+	
+--Hashtable中のkeyの数を返す
+static public Size[@型1, @型2] : (map @型1 to (map @型1 to  @型2)) -> nat
+Size(aHashtable) == card KeySet[@型1, @型2](aHashtable) ;
+
+--Hashtable中にkeyが無いか否かを返す
+static public IsEmpty[@型1, @型2] : (map @型1 to (map @型1 to  @型2)) -> bool
+IsEmpty(aHashtable) == KeySet[@型1, @型2](aHashtable) = {};
+		
+--与えられたaValueがあるならば、trueを返す。
+static public Contains[@型1, @型2] : (map @型1 to (map @型1 to  @型2)) -> @型2 -> bool
+Contains(aHashtable)(aValue) == 
+	let	aMapSet = rng aHashtable	
+	in
+	if aMapSet <> {} then
+		exists aMap in set aMapSet & aValue in set rng aMap
+	else
+		false;
+		
+--与えられたkeyがあるならば、ｔｒｕｅを返す。
+static public ContainsKey[@型1, @型2] : (map @型1 to (map @型1 to  @型2)) -> @型1 -> bool
+ContainsKey(aHashtable)(aKey) == 
+	let	aMapSet = rng aHashtable	
+	in
+	if aMapSet <> {} then
+		exists aMap in set aMapSet & aKey in set dom aMap
+	else
+		false;
+
+end Hashtable

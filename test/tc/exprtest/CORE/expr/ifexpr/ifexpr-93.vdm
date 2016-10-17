@@ -1,0 +1,65 @@
+class IfExprTest
+functions
+
+  f : () -> inmap rat to nat
+  f() ==
+    {2 |-> 5}
+  pre true
+--  post true
+
+types
+
+  A :: a: int
+       b: bool
+
+values
+
+  v1 : A = mk_A(1,true);
+  n : real = 88
+    
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let t = true,
+      nn = nil,
+      one = 1,
+      mya = 'a',
+      - = let m:char|bool =
+        if n=1
+	then t
+	elseif n=7
+        then card {1,2,3,3}
+	elseif n=12
+        then dunion { { 1,2,3}, {4,5,6} }
+        elseif n=13
+        then power {true, false}
+        elseif n=14
+        then len [1,2,true]
+        elseif n=15
+        then conc [ ["abc",0], [true,mk_(1,false)] ]
+        elseif n=16
+        then elems [ 'a', 1, true, 1, 0 ]
+        elseif n=17
+        then inds [ 'a', 1, true, 1, 0 ]
+        elseif n=18
+        then tl [ 'a', 1, true, 1, 0 ]
+        elseif n=19
+        then hd [ mya, one, t, one ]
+        elseif n=20
+        then dom {1 |-> "abc", 2 |-> mk_(2,true)}
+        elseif n=21
+        then rng {1 |-> "abc", 2 |-> mk_(2,true)}
+        elseif n=22
+        then merge { {1 |-> "abc", 2 |-> mk_(2,true)}, { |-> } }
+        elseif n=23
+        then dinter { { 1,2,3}, {4,5,6} }
+	else nn
+        in m 
+  in skip;
+
+------------------------------------------------------------------------------
+end IfExprTest

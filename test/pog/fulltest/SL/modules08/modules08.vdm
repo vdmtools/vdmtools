@@ -1,0 +1,163 @@
+ 
+module B
+exports values 
+  a, b : int;
+  tok  : token;
+  l    : seq1 of int
+
+definitions
+values
+  mk_(a,b) : int * int = mk_(100,200);
+  tok = mk_token(<TOKEN>);
+  --s : set of real = {300,...,305};
+  --l = [i | i in set s]
+  l = [i | i in set {300,...,305}]
+
+end B
+
+module C
+exports operations
+  op2: nat ==> ();
+  op3: () ==> seq of nat
+
+types struct Sigma
+
+definitions
+operations
+
+  op1: set of nat ==> seq of nat
+  op1(s) ==
+    if s = {} then
+      return []
+    else
+      let e in set s be st forall e1 in set s \ {e} & e1 < e in
+        return op1(s \ {e});
+
+  op2: nat ==> ()
+  op2(n) ==
+    s := s union {n};
+
+  op3: () ==> seq of nat
+  op3 
+  () == op1(s)
+  pre card s > 1
+  post let l = RESULT in
+       forall i,j in set inds l &
+         if i < j then
+           l(i) > l(j)
+         else
+           l(i) < l(j)
+           
+state Sigma of
+  s : set of nat
+  init s == s = mk_Sigma({})
+end
+
+end C
+
+module D
+
+exports functions
+  f1, f2: set of nat * set of nat -> set of nat;
+  f3: set of nat * set of nat -> bool
+
+definitions
+functions
+
+  f1: set of nat * set of nat -> set of nat
+  f1(s1, s2) ==
+    s1 union s2;
+
+  f2: set of nat * set of nat -> set of nat
+  f2(s1, s2) ==
+    s1 inter s2;
+
+  f3: set of nat * set of nat -> bool
+  f3(s1, s2) ==
+    f4(s1, s2);
+
+  f4: set of nat * set of nat -> bool
+  f4(s1, s2) ==
+    s1 psubset s2
+
+end D
+
+module E
+
+exports types struct C; struct D 
+
+definitions
+types
+  A = set of nat;
+  B :: a : int
+       b : token;
+  C :: set of nat
+       set of nat;
+  D :: a : seq of nat
+       b : seq of token
+end E
+
+module A
+imports 
+
+from B values
+  b; a : int;
+  tok; l : seq1 of int,
+
+from C operations
+  op2: nat ==> ();
+  op3,
+
+-- Fejl i TC:
+--types Sigma:: s : set of nat,
+
+from D functions
+  f3; f2: set of nat * set of nat -> set of nat;
+  f1,
+
+from E types
+  C:: set of nat
+      set of nat;
+  D:: a : seq of nat
+      b : seq of token
+
+exports
+  operations 
+  Test: () ==> seq of (real | token | bool | (seq of real) | (set of real))
+
+  types
+  Sigma
+
+definitions
+operations
+Test: () ==> seq of (real | token | bool | (seq of real) | (set of real))
+Test () ==
+( res := [B`a, B`b, B`tok, B`l];
+  for all i in set { i | i in set {50,...,65} & i mod 2 = 0 } do
+    C`op2(i);
+  let l = C`op3() in
+    let s = elems l in
+
+-- Fejl i TC:
+--      let c1 = C`pre_op3(mk_C`Sigma(s)),
+--          c2 = C`post_op3(l, mk_C`Sigma(s), mk_C`Sigma(s)) in
+        res := res ^ l ;--^ [c1, c2];
+
+
+  res := res ^ [ D`f1({2,34,5}, {34,8}), 
+                 D`f2({1,...,101}, {1, 100, 56}),
+                 D`f3({2,3}, {1,2,3})];
+
+  let c = mk_E`C({}, {}),
+      d = mk_E`D(B`l, [mk_token(1)]) in
+    res := res ^ [is_E`C(c), is_E`D(d), d.a, d.b];
+
+  return res
+)
+
+state Sigma of
+  res : seq of (real | token | bool | (seq of real) | (set of real))
+  init s == s = mk_Sigma([])
+end
+
+end A

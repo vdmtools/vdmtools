@@ -1,0 +1,103 @@
+##---------------------------------------------------------------
+##                    Make file for Windows 32bit
+##             This Makefile can only be used with GNU make
+##---------------------------------------------------------------
+
+TBDIR = ../..
+WTBDIR = ../..
+
+#TBDIR = /cygdrive/c/Program Files/The VDM++ Toolbox v2.8
+#WTBDIR = C:/Program Files/The VDM++ Toolbox v2.8
+
+VPPDE = "$(TBDIR)/bin/vppde"
+
+CC      = cl.exe
+MAPMDIR = ./mapm_3.60
+CGLIBS = "$(WTBDIR)/cg/lib/CG.lib" "$(WTBDIR)/cg/lib/vdm.lib"
+
+CFLAGS   = /nologo /c /MD /W0 /EHsc /D "WIN32" /TP
+INCPATH  = -I"$(WTBDIR)/cg/include" -I./mapm_3.60
+
+LINK     = link.exe
+LPATH    = /LIBPATH:"$(WTBDIR)/cg/lib"
+
+WINMTLIBS = libcpmt.lib libcmt.lib
+WINMDLIBS = msvcrt.lib msvcprt.lib
+WINLIBS  = $(WINMDLIBS) \
+	kernel32.lib user32.lib gdi32.lib comdlg32.lib \
+	advapi32.lib shell32.lib uuid.lib winspool.lib \
+	oldnames.lib comctl32.lib
+
+LDFLAGS = /nologo /NODEFAULTLIB "$(MAPMDIR)/mapm.lib" $(CGLIBS) $(WINLIBS)
+
+## DLL Specific binary, path and flag
+DLLFLAGS = /D "_USRDLL"
+DLL_LFLAGS = /nologo /dll /incremental:no /NODEFAULTLIB $(CGLIBS) #/DEBUG
+DLLWINLIBS  = $(WINLIBS)
+
+## CG Version Files
+
+CGSOURCES = A.cpp A_anonym.cpp BankAccount.cpp BankAccount_anonym.cpp \
+            BigInt.cpp BigInt_anonym.cpp CGBase.cpp 
+CGOBJ = A.obj A_anonym.obj BankAccount.obj BankAccount_anonym.obj BigInt.obj \
+        BigInt_anonym.obj CGBase.obj
+CGFLAGS = /D CG #-DDEBUG
+
+## CG Version specific rules
+
+all: cgex.exe bigint_dl.dll
+
+cgex.obj: cg.stamp A_userdef.h BankAccount_userdef.h 
+
+cg.stamp: bigint.vpp
+	$(VPPDE) <cg.script
+	echo  >cg.stamp
+ 
+cgex.exe: cgex.obj bigint_cg.obj $(CGOBJ)
+
+bigint_cg.obj: bigint_dl.cpp
+	$(CC) $(CFLAGS) $(CGFLAGS) $(INCPATH) bigint_dl.cpp -Fo"bigint_cg.obj"
+
+A.obj: A.cpp
+A_anonym.obj: A_anonym.cpp
+BigInt.obj: BigInt.cpp
+BigInt_anonym.obj: BigInt_anonym.cpp
+BankAccount.obj: BankAccount.cpp
+BankAccount_anonym.obj: BankAccount_anonym.cpp
+CGBase.obj: CGBase.cpp
+
+## DLL specific  rules
+
+bigint_dl.obj: bigint_dl.cpp
+	$(CC) $(CFLAGS) $(DLLFLAGS) $(INCPATH) /Fo"$@" $<
+
+bigint_dl.dll: bigint_dl.obj $(MAPMDIR)/mapm.lib
+
+## Rules
+
+%.dll:
+	$(LINK) $(DLL_LFLAGS) /out:"$@" $^  $(LPATH) vdm.lib $(DLLWINLIBS)
+
+%.obj: %.cpp
+	$(CC) $(CFLAGS) $(INCPATH) /Fo"$@" $<
+
+%.exe: %.obj
+	$(LINK) /OUT:$@ $^ $(LDFLAGS)
+
+%.cpp: %.cc
+	cp -f $^ $@
+
+%_userdef.h:
+	touch $@
+
+clean:
+	rm -f cg.stamp
+	rm -f $(CGOBJ) bigint_cg.obj cgex.obj cgexe.exe
+	rm -f bigint_dl.dll bigint_dl.obj
+	rm -f *.cpp
+	rm -f A.h A_anonym.h A_userdef.h
+	rm -f BankAccount.h BankAccount_anonym.h BankAccount_userdef.h
+	rm -f BigInt.h BigInt_anonym.h 
+	rm -f CGBase.h
+	rm -f cgex.exe cgex.obj cgex.lib cgex.exp
+	rm -f bigint_dl.lib bigint_dl.exp  bigint_dl.pdb

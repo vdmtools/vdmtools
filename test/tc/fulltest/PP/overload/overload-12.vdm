@@ -1,0 +1,41 @@
+class A
+
+operations
+
+public op : nat ==> nat
+op(-) == return 1;
+
+public op : set of nat ==> nat
+op(-) == return 1;
+
+end A
+
+
+class B
+
+operations
+
+public op : seq of nat ==> nat
+op(-) == return 1;
+
+public op : map nat to bool ==> nat
+op(-) == return 1;
+
+end B
+
+class C is subclass of A, B
+
+end C
+
+class D
+
+operations
+
+myop : () ==> nat
+myop() ==
+  let c = new C()
+  in c.op({3});
+
+end D
+
+

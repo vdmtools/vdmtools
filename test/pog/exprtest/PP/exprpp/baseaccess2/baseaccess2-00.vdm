@@ -1,0 +1,69 @@
+class A
+instance variables
+  public    pub_iv:int := 12;
+  protected pro_iv:int := 13;
+  private   priv_iv:int:=14;
+	    def_iv:int := 15
+
+operations
+  public 
+    pub_op:int ==> int
+    pub_op(a) == return a;
+
+  protected
+    pro_op:int ==> int
+    pro_op(a) == return a;
+
+  private
+    priv_op:int ==> int
+    priv_op(a) == return a;
+
+  --default
+    def_op:int ==> int
+    def_op(a) == return a
+
+functions
+  public 
+    pub_f:int +> int
+    pub_f(a) ==  a;
+
+  protected
+    pro_f:int +> int
+    pro_f(a) ==  a;
+
+  private
+    priv_f:int +> int
+    priv_f(a) ==  a;
+
+  --default
+    def_f:int +> int
+    def_f(a) ==  a
+
+values
+  public    pub_val : int = 21;
+  protected pro_val : int = 22;
+  private   priv_val : int = 23;
+	    def_val : int = 24
+
+types
+  public    pub_typ = int;
+  protected pro_typ = int;
+  private   priv_typ = int;
+	    def_typ = int;
+
+  public    pub_rec::a:int;
+  protected pro_rec::a:int;
+  private   priv_rec::a:int;
+	    def_rec::a:int
+--------------------------
+operations
+  op:() ==> int
+  op () ==
+    let x :A`priv_typ = 33,
+	y :priv_typ = 44 in
+    return priv_iv + self.priv_iv 
+	   + priv_op(x) + self.priv_op(x) 
+	   + priv_f(y) + self.priv_f(y) 
+	   + priv_val + self.priv_val
+end A
+

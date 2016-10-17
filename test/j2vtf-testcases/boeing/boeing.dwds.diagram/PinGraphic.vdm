@@ -1,0 +1,141 @@
+class PinGraphic is subclass of Component, MouseListener, MouseMotionListener
+operations 
+public  getName : () ==> [String]
+getName() == 
+( return  name
+) ;
+
+public  contains : int  * int  ==> bool 
+contains(x, y) == 
+( dcl   liesWithin : bool  := false  ,
+        boundingBox : [Rectangle] := getBounds();
+  liesWithin := (x >= boundingBox.x and  x < (boundingBox.x+boundingBox.width) and  y >= (boundingBox.y-boundingBox.height) and  y < boundingBox.y);
+  return  liesWithin
+) ;
+
+public  contains : [Point] ==> bool 
+contains(p) == 
+( return  contains(p.x , p.y)
+) ;
+
+public  paint : [Graphics] ==> <VOID>
+paint(graphics) == 
+( if  name <> nil  
+  then  
+    ( dcl   contextPin : [String] := (def l_6 :  DiagramCanvas = (refDesNode.getCanvas())
+            in l_6).getContextPin(),
+            contextRefDes : [String] := (def l_12 :  DiagramCanvas = (refDesNode.getCanvas())
+            in l_12).getContextRefDes(),
+            graphicsColor : [Color] := graphics.getColor(),
+            graphicsFont : [Font] := graphics.getFont(),
+            refDes : [RefDes] := refDesNode.getRefDes();
+      if  name.equals(contextPin) and  (contextRefDes.equals(refDes.getName()) or  (refDes.hasAMate() and  contextRefDes.equals(refDes.getMate().getName())))
+      then  
+        ( let - = graphics.setColor(PickableGraphic.SELECT_COLOR)
+          in 
+            skip 
+        ) 
+      else  
+        ( let - = graphics.setColor(getForeground())
+          in 
+            skip 
+        ) ;
+      let - = graphics.setFont(getFont())
+      in 
+        skip ;
+      let - = graphics.drawString(name , getLocation().x , getLocation().y)
+      in 
+        skip ;
+      let - = graphics.setColor(graphicsColor)
+      in 
+        skip ;
+      let - = graphics.setFont(graphicsFont)
+      in 
+        skip 
+    ) ;
+  return  
+) ;
+
+public  mouseMoved : [MouseEvent] ==> <VOID>
+mouseMoved(event) == 
+( dcl   currentColor : [Color] := getForeground(),
+        nextColor : [Color];
+  if  contains(event.getX() , event.getY()) and  currentColor <> PickableGraphic.SELECT_COLOR
+  then  
+    ( nextColor := PickableGraphic.HIGHLIGHT_COLOR
+    ) 
+  else  
+    ( nextColor := PickableGraphic.REFDES_COLOR
+    ) ;
+  if  currentColor <> nextColor
+  then  
+    ( let - = setForeground(nextColor)
+      in 
+        skip ;
+      let - = paint(refDesNode.getCanvas().getGraphics())
+      in 
+        skip 
+    ) ;
+  return  
+) ;
+
+public  mouseExited : [MouseEvent] ==> <VOID>
+mouseExited(event) == 
+( return  
+) ;
+
+public  mouseClicked : [MouseEvent] ==> <VOID>
+mouseClicked(event) == 
+( return  
+) ;
+
+public  mouseDragged : [MouseEvent] ==> <VOID>
+mouseDragged(event) == 
+( return  
+) ;
+
+public  mouseEntered : [MouseEvent] ==> <VOID>
+mouseEntered(event) == 
+( return  
+) ;
+
+public  mousePressed : [MouseEvent] ==> <VOID>
+mousePressed(event) == 
+( if  contains(event.getX() , event.getY())
+  then  
+    ( dcl   refDes : [RefDes] := refDesNode.getRefDes(),
+            Context : [ContextState] := ContextState`getContextState(),
+            ContextUpdates : [ContextSet] := new  ContextSet();
+      let - = ContextUpdates.put(ContextTypes`REFDES , refDes.toString())
+      in 
+        skip ;
+      let - = ContextUpdates.put(ContextTypes`PIN , name)
+      in 
+        skip ;
+      let - = Context.setCurrentContext(ContextUpdates)
+      in 
+        skip 
+    ) ;
+  return  
+) ;
+
+public  mouseReleased : [MouseEvent] ==> <VOID>
+mouseReleased(event) == 
+( return  
+) ;
+
+public  PinGraphic : [String] * [RefDesNode] ==> PinGraphic
+PinGraphic(pinName, myNode) == 
+( name := pinName;
+  refDesNode := myNode;
+  let - = setForeground(PickableGraphic.REFDES_COLOR)
+  in 
+    skip ;
+  return  
+) ;
+
+instance variables 
+  private  name : [String];
+  private  refDesNode : [RefDesNode]
+  
+end  PinGraphic

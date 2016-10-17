@@ -1,0 +1,73 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> map seq of char to seq of ( nat | set of  ( set of nat | nat | bool ) | bool )  
+Test () ==
+return 
+{
+"CARD" |->
+      [  card { 1, 3},          
+         card if 1=1 then {} else {1},
+         card let a = 
+                  dunion if true --
+                         then { { 1, 3}, {2,4}, if true
+                                                then {5}
+                                                 else let a in set {3,{3}} in a }
+                          else let a in set {3, {{3}, {36}}} in a
+         in a,
+         card if {3.0}= {3}
+              then {3.6, 3.6}
+              else let a in set {false,{3}} in a,
+         card { mk_(a,b) | a in set {3, 6,3}, b in set {3,5,1} },
+         card ( {3,65.2,35 } union {3, 6.2,35} ) ],
+
+"DINTER" |-> 
+      [ dinter if 1=1 then { { 1, 2 }, { 3, 2 } } else let a in set {1, {{3}}} in a,
+        dinter let a = { 3, 63 },
+                   b = dom {3 |-> 23 }
+               in { a, b },
+        if 1=2 then 1 else 
+        dinter if 3 < 3.6
+               then { { 1, {3}, 6}, {false, if true
+                                            then {3}
+                                            else 9 } }
+               else let a in set {{|->}, {{3}}} in a ,
+        dinter { {a,b} | a,b in set {3, 6,3 } },
+        let a = {3, 6,4 },
+            b = { 3,6,3 }
+        in dinter { a, b },
+        let a = {{3, 6, 4} |-> 1, { 3,6,3} |-> 3 }
+        in dinter dom a
+      ],
+
+"DUNION" |-> 
+      [ dunion if 1=2 then let a in set {1, {{3}}} in a 
+               else { { 1, false }, { 3, 2 } },
+        dunion let a = { 3, 63 },
+                   b = dom {false |-> 23 }
+               in { a, b },
+        dunion if is_rat(3)
+               then { { 1, {3}, 6}, {false, if true
+                                            then {3}
+                                            else let a in set {9,{{3}} } in a }}
+               else let a in set {{|->},{{3}}} in a,
+        if 1=1 then dunion { {a,b} | a,b in set {3, 6,3,2356 } } else 1,
+        let a = {3, 6,4 },
+            b = { 3,6,3}
+        in dunion { a, b },
+
+        let s = [{1},{2,3},{3,4},{5,6,7,8}]
+        in dunion elems s
+
+]
+
+}
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

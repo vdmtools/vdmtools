@@ -1,0 +1,74 @@
+-------------------------------------------------------------------------------
+| This directory and its subdirectories contain the material needed for the   |
+| standard demonstration of Venus.                                            |
+-------------------------------------------------------------------------------
+
+1. Contents of the subdirectories
+
+	msaw-init/
+		This directory contains the `starting point' for the
+		demonstration, so that the initial setting can easily be
+		restored each time a new demonstration is given. Initial
+		settings can be installed by typing `make' or `make init'.
+        msaw-spec/
+                This directory contain the source files of the VDM++
+                specification of the MSAW example. These source files
+                are the `starting point' used by make init.
+	msaw-data/
+		This directory contains input data for the prototype version
+		of MSAW, i.e. sample radar data for flights and information 
+		on obstacles on the ground. The prototype can be started by
+		typing `make prototype' using `standard' input data. Input
+		data can easily be varied.
+	msaw-lib/
+		Data needed for various purposes.
+        msaw-latex/
+                LaTeX pretty print of the VDM++ specification.                
+	Makefile
+		All components of the demonstration can be invoked using
+		`make', including installing initial settings and destroying
+		the remains of a demonstration, so that within a single
+		demonstration session changes can be freely made to the
+		demonstration artifacts without consequences.
+	README
+		You are reading it.
+
+2. Preparing for the demonstration
+
+- Make sure that all tools are installed properly, following the 
+  installation instructions carefully.
+
+3. Running the demonstration
+
+The initial settings of the demonstration are installed by typing
+`make' or `make init'. This creates a VDM++ Toolbox class library
+with the name `MSAW_Prototype.cd_lib' which can be used for the formal
+specification block of the demonstration, a file `MSAW_Prototype.cd' which
+contains the class diagram for the graphical modelling block and some
+configuration files for `oedit'. This should be done before each individual
+demonstration! After a demonstration session, the remains of the demonstration
+can be destroyed by typing `make clean'.
+
+Each individual block of the demonstration is started by typing
+`make block<number>'.
+
+4. Documentation
+  
+   * VENUS Demonstration Script
+     Location: cvs module tb-demo 
+
+   * VDM++ Toolbox Documentation
+     Location: http://www.ifad.dk/products/pp_documentation.html
+
+   * VENUS Slides
+     Location: ~vdm/slides/venusdemo/VenusSlides.ps
+
+   * Annotations to the VENUS Slides
+     Location: ~vdm/slides/venusdemo/SlideAnnotations.ps
+
+   * MSAW Description
+     Location: ftp.ifad.dk/pub/afrodite/a4/afro-stna-np-msawspec.ps.gz
+
+-------------------------------------------------------------------------------
+|                                GOOD LUCK!                                   |
+-------------------------------------------------------------------------------

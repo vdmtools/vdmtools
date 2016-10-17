@@ -1,0 +1,14 @@
+class A
+
+types
+
+public T ::     nat
+           f1 : bool;
+
+operations
+
+public Test : () ==> T
+Test() ==
+  return mk_T(1,false)
+
+end A

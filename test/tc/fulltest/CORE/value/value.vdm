@@ -1,0 +1,6 @@
+class VALUE
+values   
+a: nat = 1;
+a: real = 1.2;
+
+end VALUE

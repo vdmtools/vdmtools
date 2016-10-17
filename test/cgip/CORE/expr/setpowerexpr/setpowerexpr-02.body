@@ -1,0 +1,5 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> set of set of (nat|set of nat)  
+Test () ==
+return power let a = 3 in if a <> 3 then { 1,2 } else let a in set {4, 36} in {a}
+

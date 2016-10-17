@@ -1,0 +1,17 @@
+class A
+
+functions
+
+public 
+id : nat -> nat
+id(x) == x;
+
+
+foo : nat -> nat
+foo(x) == 
+  def foo = [x | x in set {1,2,3}];
+      foo = foo(2)
+  in foo
+measure id;
+  
+end A

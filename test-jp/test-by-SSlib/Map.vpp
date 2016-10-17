@@ -1,0 +1,22 @@
+/* $Id: Map.vpp,v 1.1 2005/10/31 02:15:42 vdmtools Exp $
+ *　責任：
+ *	写像を扱う関数を提供する 
+*/
+class Map
+
+functions
+--写像にaKeyがあれば、対応する値域の値を返し、無ければnilを返す
+static public Get[@型1, @型2] : map @型1 to @型2 -> @型1 -> [@型2]
+Get(aMap)(aKey) ==
+	if aKey in set dom aMap then
+		aMap(aKey)
+	else
+		nil;
+
+static public Contains[@型1, @型2] : map @型1 to @型2 -> @型2 -> bool
+Contains(aMap)(aValue) == aValue in set rng aMap;
+
+static public ContainsKey[@型1, @型2] : map @型1 to @型2 -> @型1 -> bool
+ContainsKey(aMap)(aKey) == aKey in set dom aMap;
+	
+end Map

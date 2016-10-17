@@ -1,0 +1,4 @@
+Type checking A ... done
+Type checking B ... done
+start-01.arg, l. 24, c. 6:
+  Error : Class A has no thread definition

@@ -1,0 +1,18 @@
+[ mk_ERR`ErrMsg( 
+     10,
+     36,
+     14,
+     "Warning[33] : \"arg2\" is not used",
+     <WARNING> ),
+  mk_ERR`ErrMsg( 
+     10,
+     33,
+     13,
+     "Warning[33] : \"b\" is not used",
+     <WARNING> ),
+  mk_ERR`ErrMsg( 
+     10,
+     25,
+     26,
+     "Error[250] : Type of field number 2 is not compatible with its defined type in Record-Constructor-Expr",
+     <ERROR> ) ]

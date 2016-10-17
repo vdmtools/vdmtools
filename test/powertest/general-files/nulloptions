@@ -1,0 +1,14 @@
+module OPTIONS
+
+exports all
+
+
+definitions
+
+operations
+
+SetOptions : () ==> ()
+SetOptions() ==
+  skip;
+
+end OPTIONS

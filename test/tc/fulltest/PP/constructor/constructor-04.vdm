@@ -1,0 +1,40 @@
+-- Check that call to non-matching public constructor is picked up
+class A
+
+instance variables
+
+n : nat := 0;
+
+operations
+
+A : nat ==> A
+A(m) ==
+( n := m;
+  return self
+)
+
+end A
+
+class B is subclass of A,D
+
+end B
+
+class D
+
+operations
+
+public D : seq of nat ==> D
+D(-) ==
+  return self;
+
+end D
+
+class C
+
+operations
+
+op : () ==> A
+op() ==
+  return new B(3)
+
+end C

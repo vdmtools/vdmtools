@@ -1,0 +1,149 @@
+class EffectivityController is subclass of WiringDataController
+operations 
+public  initialize : () ==> <VOID>
+initialize() == 
+( return  <VOID>
+) ;
+
+public  getEffIdSQLList : () ==> [String]
+getEffIdSQLList() == 
+( return  effIdSQLString
+) ;
+
+public  getActiveEffectivityIds : () ==> [Set]
+getActiveEffectivityIds() == 
+( dcl   set__ : [Set] := new  HashSet(),
+        aircraft : [Aircraft] := aircraftCntl.getCurrentContextObject(),
+        validEffIdList : [Enumeration] := effectivitySelector.getActiveNoteIds(aircraft);
+  trap  j2v_break with  
+    cases  true  : 
+      (isofclass  (J2V_Break,j2v_break)) -> 
+        skip 
+      
+    end  
+  in  
+    while  validEffIdList.hasMoreElements() do  
+    ( let - = set__.add(validEffIdList.nextElement())
+      in 
+        skip 
+    ) ;
+  return  set__
+) ;
+
+public  getCurrentContextObject : () ==> [Object]
+getCurrentContextObject() == 
+( return  nil  
+) ;
+
+private  loadEffNotes : [AircraftType] ==> <VOID>
+loadEffNotes(acType) == 
+( dcl   connection : [Connection] := EffectivityController`getToolkit().getConnection(),
+        querySet : [WiringDataQuerySet] := EffectivityController`getToolkit().getQuerySet(),
+        query : [String] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (isofclass  (SQLException,j2v_exception)) -> 
+        ( dcl   e : [SQLException] := j2v_exception;
+          exit  convertSQLException(e , query)
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( dcl   stmt : [Statement] := connection.createStatement(),
+            acTypeId : [Integer] := new  Integer(acType.getAcTypeId()),
+            args : map  int  to  [Object] := {0 |-> acTypeId};
+      query := querySet.getQuery(WiringDataQuerySet`GET_EFFECTIVITY_DATA , args);
+      ( dcl   queryRS : [ResultSet] := stmt.executeQuery(query);
+        trap  j2v_break with  
+          cases  true  : 
+            (isofclass  (J2V_Break,j2v_break)) -> 
+              skip 
+            
+          end  
+        in  
+          while  queryRS.next() do  
+          ( dcl   noteId : int  := queryRS.getInt(1),
+                  noteExpr : [String] := queryRS.getString(2);
+            let - = effectivitySelector.addNote(acType , noteId , noteExpr)
+            in 
+              skip 
+          ) ;
+        let - = queryRS.close()
+        in 
+          skip ;
+        let - = stmt.close()
+        in 
+          skip 
+      ) 
+    ) ;
+  return  <VOID>
+) ;
+
+private  buildEffIdSQLString : [Aircraft] ==> [String]
+buildEffIdSQLString(aircraft) == 
+( dcl   effIdSQLStr : [String] := new  String("(-1)");
+  if  aircraft <> nil  
+  then  
+    ( dcl   validEffIdList : [Enumeration] := effectivitySelector.getActiveNoteIds(aircraft),
+            effIdListString : [String] := WiringDataController`genCommaSeparatedList(validEffIdList);
+      if  effIdListString.length() > 0
+      then  
+        ( effIdSQLStr := effIdListString
+        ) 
+    ) ;
+  return  effIdSQLStr
+) ;
+
+public  updateToNewContext : [ContextSet] ==> <VOID>
+updateToNewContext(contextChanges) == 
+( if  contextChanges.contains(ContextTypes`AIRCRAFT_TYPE)
+  then  
+    ( dcl   acType : [AircraftType] := acTypeCntl.getCurrentContextObject();
+      let - = updateEffNoteList(acType)
+      in 
+        skip ;
+      effIdSQLString := buildEffIdSQLString(nil  )
+    ) ;
+  if  contextChanges.contains(ContextTypes`TAIL_NUMBER)
+  then  
+    ( dcl   aircraft : [Aircraft] := aircraftCntl.getCurrentContextObject();
+      effIdSQLString := buildEffIdSQLString(aircraft)
+    ) ;
+  return  <VOID>
+) ;
+
+private  updateEffNoteList : [AircraftType] ==> <VOID>
+updateEffNoteList(acType) == 
+( let - = effectivitySelector.purgeNoteList()
+  in 
+    skip ;
+  if  acType <> nil  
+  then  
+    ( let - = loadEffNotes(acType)
+      in 
+        skip 
+    ) ;
+  let - = effectivitySelector.rescanEffectivityRules(acType)
+  in 
+    skip ;
+  return  <VOID>
+) ;
+
+EffectivityController : [DataSourceToolkit] * [AircraftTypeController] * [AircraftController] ==> EffectivityController
+EffectivityController(dsToolkit, acTypeController, aircraftController) == 
+( let - = WiringDataController(dsToolkit)
+  in 
+    skip ;
+  EffectivityController`acTypeCntl := acTypeController;
+  EffectivityController`aircraftCntl := aircraftController;
+  EffectivityController`effectivitySelector := EffectivitySelector`getEffectivitySelector()
+) ;
+
+instance variables 
+  private  effectivitySelector : [EffectivitySelector];
+  private  effIdSQLString : [String];
+  private  acTypeCntl : [AircraftTypeController] := nil  ;
+  private  aircraftCntl : [AircraftController] := nil  
+  
+end  EffectivityController

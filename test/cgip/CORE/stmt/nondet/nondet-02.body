@@ -1,0 +1,18 @@
+public Test : () ==> set of int
+Test() ==
+( dcl s : set of int;
+
+  || ( let a = Op() in s := a );
+  || ( for e in [1,2,3,4] do s := s union {e}, 
+       let b = {8} in s := s union b );
+  || ( (s := s \ {2}; s := s union {91}),
+       if card s < 100 then s := s union {100} );
+
+  return s
+);
+
+Op: () ==> set of nat
+Op() ==
+  return {45,...,47}
+
+end A

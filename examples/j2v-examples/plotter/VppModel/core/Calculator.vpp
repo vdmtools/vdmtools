@@ -1,0 +1,187 @@
+class Calculator is subclass of JavaUtilStack
+values 
+  CLASS : JavaLangClass = new  JavaLangClass("Calculator" , <CLASS> , false  )
+operations 
+public  Pop : () ==> real 
+Pop() == 
+( return  (def l_6 :  JavaLangDouble = (pop())
+  in l_6).doubleValue()
+) ;
+
+public  getClass : () ==> JavaLangClass
+getClass() == 
+return  CLASS;
+
+public  Calculator : () ==> Calculator
+Calculator() == 
+( skip 
+) ;
+
+public  Calculator : <NIL> ==> Calculator
+Calculator(-) == 
+isNil := true  ;
+
+public  calculate : JavaLangString * real  ==> real 
+calculate(prg, t) == 
+( dcl   lx : Lex := new  Lex(prg);
+  let - = empty()
+  in 
+    skip ;
+  ( dcl   cont : bool  := true  ;
+    while  cont do  
+    ( dcl   lex : int  := lx.getLex();
+      trap  j2v_break with  
+        cases  true  : 
+          (isofclass  (J2V_Break,j2v_break)) -> 
+            skip 
+          
+        end  
+      in  
+        ( cases  lex: 
+            (Lex`ARG) -> 
+              ( let - = push(new  JavaLangDouble(t))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`e) -> 
+              ( let - = push(new  JavaLangDouble(JavaLangMath`E))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`pi) -> 
+              ( let - = push(new  JavaLangDouble(JavaLangMath`PI))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`ABS) -> 
+              ( let - = push(new  JavaLangDouble(JavaLangMath`abs__(Pop())))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`ACOS) -> 
+              ( let - = push(new  JavaLangDouble(JavaLangMath`acos(Pop())))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`ASIN) -> 
+              ( let - = push(new  JavaLangDouble(JavaLangMath`asin(Pop())))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`ATAN) -> 
+              ( let - = push(new  JavaLangDouble(JavaLangMath`atan(Pop())))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`CEIL) -> 
+              ( let - = push(new  JavaLangDouble(JavaLangMath`ceil(Pop())))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`COS) -> 
+              ( let - = push(new  JavaLangDouble(JavaLangMath`cos(Pop())))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`EXP) -> 
+              ( let - = push(new  JavaLangDouble(JavaLangMath`exp(Pop())))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`FLOOR) -> 
+              ( let - = push(new  JavaLangDouble(JavaLangMath`floor__(Pop())))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`LOG) -> 
+              ( let - = push(new  JavaLangDouble(JavaLangMath`log(Pop())))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`SIN) -> 
+              ( let - = push(new  JavaLangDouble(JavaLangMath`sin(Pop())))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`SQRT) -> 
+              ( let - = push(new  JavaLangDouble(JavaLangMath`sqrt(Pop())))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`TAN) -> 
+              ( let - = push(new  JavaLangDouble(JavaLangMath`tan(Pop())))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`NUM) -> 
+              ( let - = push(new  JavaLangDouble(lx.number))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`PLUS) -> 
+              ( let - = push(new  JavaLangDouble(Pop()+Pop()))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`MINUS) -> 
+              ( let - = push(new  JavaLangDouble(-Pop()+Pop()))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`MUL) -> 
+              ( let - = push(new  JavaLangDouble(Pop()*Pop()))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`DIV) -> 
+              ( let - = push(new  JavaLangDouble((1/Pop())*Pop()))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`POW) -> 
+              ( dcl   pwr : real  := Pop();
+                let - = push(new  JavaLangDouble(JavaLangMath`pow(Pop() , pwr)))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`UMINUS) -> 
+              ( let - = push(new  JavaLangDouble(-Pop()))
+                in 
+                  skip ;
+                exit  new  J2V_Break()
+              ) ,
+            (Lex`EOL) -> 
+              ( cont := false  ;
+                exit  new  J2V_Break()
+              ) 
+            
+          end  
+        ) 
+    ) ;
+    return  Pop()
+  ) 
+) ;
+
+
+end  Calculator

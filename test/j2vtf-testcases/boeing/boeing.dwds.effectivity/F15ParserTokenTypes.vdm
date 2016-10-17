@@ -1,0 +1,24 @@
+class F15ParserTokenTypes
+instance variables 
+  public  static EOF : int  := 1;
+  public  static NULL_TREE_LOOKAHEAD : int  := 3;
+  public  static SEMICOLON : int  := 4;
+  public  static ALSO_KWRD : int  := 5;
+  public  static COMMA : int  := 6;
+  public  static AND_KWRD : int  := 7;
+  public  static AFTER_KWRD : int  := 8;
+  public  static BEFORE_KWRD : int  := 9;
+  public  static EQUIP_ID : int  := 10;
+  public  static THRU_KWRD : int  := 11;
+  public  static UP_KWRD : int  := 12;
+  public  static BUT_KWRD : int  := 13;
+  public  static OR_KWRD : int  := 14;
+  public  static TCTO_KWRD : int  := 15;
+  public  static RETROFIT : int  := 16;
+  public  static DASH : int  := 17;
+  public  static WS : int  := 18;
+  public  static STRING_LITERAL : int  := 19;
+  public  static DIGIT : int  := 20;
+  public  static ALPHA : int  := 21
+  
+end  F15ParserTokenTypes

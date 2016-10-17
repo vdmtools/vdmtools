@@ -1,0 +1,30 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of int  
+Test () ==
+  return (let [a,b] in set {[1,2], mk_(5,3), [2,3]} be st a = 2 in 
+           [a,b,3,4])
+           ( if f(10) = <ERROR> 
+             then 2 
+             else let a in set {<ERROR>,3} in a ,..., 
+             cases f(3): x -> x end) ^
+           
+         cases f(10): <ERROR> -> [1,2,3,4,5,6,7], others -> let a in set {10,[3]} in a end
+          (2,...,5) ^
+
+         [ x | x in set {-10,...,20}](g(2),...,g(15))
+
+
+
+
+functions
+f: nat -> nat | <ERROR>
+f(x) ==
+  if x = 10 then
+    <ERROR>
+  else
+    x;
+
+g: real -> real
+g(x) == x
+
+end A

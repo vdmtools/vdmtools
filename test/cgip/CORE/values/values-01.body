@@ -1,0 +1,24 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+  a           = let a = 10 in a;
+  {b,c}       = if 10 = 20 then 10 else {20,30};
+  [d,e]       = [ i | i in set {100,200} ];
+  mk_(f,g)    = mk_(55,56); --fct('a');
+  mk_R(h,i,j) = mk_R('h','i','j')
+
+functions
+  fct: char -> nat * nat
+  fct(c) ==
+    if c = 'a' then
+      mk_(55,56)
+    else
+      mk_(10,20)
+
+types R :: char char char
+
+operations
+
+  public Test : () ==> seq of (char | nat)  
+Test () ==
+    return [a,b,c,d,e,f,g,h,i,j]
+
+end A

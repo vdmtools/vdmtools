@@ -1,0 +1,27 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+instance variables
+ i: int;
+ j: int;
+ r  : real
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+operations
+
+  m2: real ==>  int * int * real
+  m2(rl)  ==
+  ( [ ext wr i, r
+      post i = floor(rl) and r = rl ];
+    [ ext rd i
+          wr j
+      post j = 2 * i ];
+    return mk_(i,j,r)
+   );
+
+public Test : () ==> int * int * real  
+Test () ==
+  ( dcl v: int * int * real := self.m2(2.54);
+    return v
+  )
+
+end A

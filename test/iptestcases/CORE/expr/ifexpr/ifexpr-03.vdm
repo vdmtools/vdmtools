@@ -1,0 +1,32 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ( int | char | seq of int | set of int)  
+Test () ==
+return 
+[ if f(1) = [1] then 1 else 0,
+  if f(12) and let d = true in d then 2 else 0,
+  let a = if 1<2 then 9 else 'a' in if f(a)=0 or a=f(a) then f(a)-6 else 0 ]
+
+functions
+
+f: nat -> nat | seq of int | bool
+f(a) ==
+  if a < 5
+  then [1]
+  elseif a > let c = 10 in c+1
+  then let b = true in b
+  else a
+
+types
+TT:: a: nat
+     b: bool
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

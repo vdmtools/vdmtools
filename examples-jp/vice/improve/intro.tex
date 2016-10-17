@@ -1,0 +1,106 @@
+\section{Introduction}
+
+This memo intends to provide a series of proposals for enhancing VDMTools
+in its future innovative development. Because of the main emphasis on
+real-time embedded and distributed systems development from the CSK
+Corporation, the suggestions made in this memo focus on exactly that:
+enhancing VDMTools for development of such systems. The intent is that
+CSK Corporation can make use of the body of knowledge from a collection
+of VDM tool support experts (mainly placed throughout Europe, both
+industrial and academic users of VDMTools) and use them as external
+consultants and/or subcontractors. One can imagine this being arranged
+under either time-and-material contractual terms or on firm-fixed-price
+terms for one or more of the improvements. \\
+
+Historically, VDM and all the other comparable model-oriented formal
+specification approaches (e.g. RAISE, Z and B) have primarily been used
+for the development of sequential computer based systems. The majority of
+formal approaches that have been used for the development of concurrent
+computer systems use explicit focus on the channels used for communication
+between the processes (e.g. CCS and CSP). A number of the formal approaches
+have been extended in different ways to include a notion of time (e.g. Timed
+CSP and the VICE VDM++ version). However, virtually none of the existing
+formal approaches are able to deal with combination of concurrency, time
+and distributed architecture in a way that would be appropriate for the
+development of real-time embedded and distributed systems. This memo
+includes suggestions for improving the VICE VDM++ technology with
+capabilities enabling exactly this combination and we strongly believe
+that if these suggestions are incorporated into VDMTools a really powerful
+capability enabling better development of realistic embedded systems will
+become available. In particular it will become easy for a specifier to
+experiment with different distributed architectures at a very early stage
+in the design and thus validate important properties in a cost-efficient
+fashion. \\
+
+The VICE (VDM++ In a Constrained Environment) project was supported by
+the European Union in collaboration with Matra BAe Dynamics and it was 
+carried out shortly before Peter Gorm Larsen left IFAD. This project aimed at
+improving the VDMTools capabilities in particular in the real-time embedded
+area and a lot of progress was made, but it was never properly commercialised
+because of Peter Gorm Larsen’s departure from IFAD. The application used for
+a case study in this project was a missile guidance system with a single
+processor. Thus, in this project there was not any focus on distribution
+between different processors. Nowadays there is however significant more
+emphasis on the distributed aspects of real-time embedded systems. The
+suggestions made in this memo are thus a continuation of the efforts made
+in the VICE project. \\
+
+One of the triggers for this memo is the paper \cite{viceeval}
+written by Marcel Verhoef of Chess Information Technology (NL) that was
+presented at the first Overture workshop\footnote{This paper is available
+at \textit{http://www.cs.ru.nl/research/reports/info/ICIS-R05033.html}.},
+entitled \textit{``On The Use of VDM++ for Specifying Real-Time Systems''}.
+Marcel is a long-time VDM enthusiast; he made the first version of the
+type-checker for VDMTools when he was still a student at the Technical
+University Delft (NL) doing his MSc thesis project at IFAD in Denmark
+back in 1992. Later, he used VDMTools on several large scale industrial
+projects and he is also co-author of the recently published VDM++ book
+\cite{vdmbook}. Currently he is part of the BODERC research project at
+the Embedded Systems Institute (see \textit{http://www.esi.nl}) where
+he works on his PhD thesis. His PhD supervisor is professor Frits Vaandrager
+at the Radboud University Nijmegen (NL).\\
+
+In \cite{viceeval}, Marcel took the 6.7.27 version of the VICE tool
+and used it to model a large distributed industrial real-time embedded
+system (a digital control system for a high-volume office printer). The
+paper lists many areas where both the tool as well as the language could
+be improved to better fit this class of systems -- in his belief many
+changes are mandatory in order to be sufficiently productive and successful
+in a commercial environment. The discussion at the conference let to a
+joint research session with Peter Gorm Larsen held at Aarhus in October
+2005. We reviewed the problems identified and discussed the suggested
+solutions. This fruitful session actually let to several more insights
+that could solve problems that are not even mentioned in the Overture
+paper. \\
+
+Currently, we are targeting a scientific paper for FM'06 that describes
+these (language) improvements. Basically, they can be categorised as
+follows (in random order):
+
+\begin{itemize}
+\item Enhancements to the visualisation capabilities of VDMTools;
+\item Enhancements to the static and dynamic analysis capabilities of VDMTools;
+\item Enhancements to the VDM++ notation and the corresponding tool support;
+\item Improvements to the UML coupling.
+\end{itemize}
+
+Prior to presenting the different categories this introduction is followed
+by listing the tasks that needs to be carried out to in order to demonstrate
+the proof of concept of the improve suggestions made in this memo. Afterwards, 
+each improvement category will be detailed further below.  
+
+Finally, this memo is completed by a case study, describing a typical
+real-time embedded and distributed system. After introducing the case,
+we first show how a suitable VDM++ model can be produced with the
+existing VICE VDM++ technology. Then we shown how the VDM++ model
+could potentially be formulated and validated with the suggested
+improvements. At the end of the VDM++ model using the existing VICE technology
+it is also illustrated why it is hard with the currently available
+capabilities to discover where potential time requirements are violated
+and why this is the case.
+We believe that it is very likely that any developments
+made with VDMTools for embedded systems has a substantial risks for
+failure if the suggested improvements are not realised. Hopefully the
+new approach will be able to make it easier to validate such requirements
+and when violations are discovered faster to correct the model.
+

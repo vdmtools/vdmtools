@@ -1,0 +1,50 @@
+class OracleDataSourceToolkit is subclass of DataSourceToolkit
+operations 
+public  static getToolkit : () ==> [DataSourceToolkit]
+getToolkit() == 
+( return  new  OracleDataSourceToolkit()
+) ;
+
+public  getQuerySet : () ==> [WiringDataQuerySet]
+getQuerySet() == 
+( if  querySet = nil  
+  then  
+    ( querySet := new  OracleQuerySet()
+    ) ;
+  return  querySet
+) ;
+
+private  OracleDataSourceToolkit : () ==> OracleDataSourceToolkit
+OracleDataSourceToolkit() == 
+( skip 
+) ;
+
+protected  makeConnection : [String] * [String] * [String] * [String] ==> [Connection]
+makeConnection(jdbcDriverName, dbJdbcUrlName, userId, userPassword) == 
+( dcl   dbConnection : [Connection] := nil  ;
+  trap  j2v_exception with  
+    cases  true  : 
+      (is_ (j2v_exception,[Exception])) -> 
+        ( dcl   initError : [DWDSException] := new  DWDSException(),
+                driverLoadError : [Exception] := j2v_exception;
+          let - = initError.addMessage(DWDSException`ErrorConnectingToDatabase , driverLoadError.getMessage())
+          in 
+            skip ;
+          exit  initError
+        ) ,
+      others  -> 
+        exit  j2v_exception
+    end  
+  in  
+    ( let - = Class.forName(jdbcDriverName).newInstance()
+      in 
+        skip ;
+      dbConnection := DriverManager`getConnection(dbJdbcUrlName , userId , userPassword)
+    ) ;
+  return  dbConnection
+) ;
+
+instance variables 
+  private  querySet : [WiringDataQuerySet] := nil  
+  
+end  OracleDataSourceToolkit

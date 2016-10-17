@@ -1,0 +1,19 @@
+class A
+
+functions 
+
+public 
+id : nat -> nat
+id(x) == x;
+
+public
+foo : nat -> nat
+foo(x) == goo(x)
+measure id;
+
+goo : nat -> nat 
+goo(x) == let foo = [1,2,3]
+          in foo(2)
+measure id;
+
+end A

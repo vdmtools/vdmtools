@@ -1,0 +1,27 @@
+module m1
+exports all
+definitions
+values
+	f0 = lambda a:int & a + 10;
+	f2 = lambda a:int & a - 10
+end m1
+
+
+module A
+imports
+  from m1
+	  values f0 renamed f0;
+	         f2 renamed f2
+	
+definitions
+functions
+
+f1 : () -> int
+f1() == 1;
+
+Test: () -> seq of int
+Test() ==
+	let h = f0 in
+	[f1(),h(5),f1(),f2(20)]
+end A
+	

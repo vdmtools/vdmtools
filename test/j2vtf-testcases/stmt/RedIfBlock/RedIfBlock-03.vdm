@@ -1,0 +1,20 @@
+class A
+
+operations
+
+public Test : () ==> bool  
+Test () ==
+( 
+	dcl b : seq of char;
+	(dcl b : bool := false;
+		( dcl b : bool := true;
+		 dcl c : bool := b;
+		if c
+	 	then (b := true)
+	 	else (b := false);
+	);
+	return b
+	);
+)
+   
+end A

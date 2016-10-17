@@ -1,0 +1,20 @@
+module A
+
+exports all
+definitions
+
+operations
+
+g'(n1, n2: nat) n: nat ==
+  return n1 + n2
+post n1 + n2 = n;
+
+Test () res : nat ==
+(
+  if post_g' (5,5,10) then
+    return(10+g'(3,2))
+  else
+    return 34 + 45 + 39
+)
+
+end A

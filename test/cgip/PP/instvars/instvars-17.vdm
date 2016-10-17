@@ -1,0 +1,47 @@
+class A
+
+instance variables
+  b        : bool := true;
+  k        : nat  := 10;
+  j        : nat  := 30;
+  l        : nat;
+  m        : nat  := 40;
+  q        : <YES> | <NO> := <YES>;
+  inv b
+
+operations
+
+
+
+public  Test: () ==> nat 
+  Test() ==
+    ( new G ().m()
+    )
+
+
+end A
+
+class G
+
+
+operations
+public  m: () ==> nat
+  m() ==
+  ( dcl a : nat;
+    a := 34;
+    return a;
+  )      
+
+end G
+
+class B is subclass of A
+
+
+
+
+
+
+
+
+
+end B

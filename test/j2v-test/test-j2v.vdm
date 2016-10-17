@@ -1,0 +1,64 @@
+module TEST
+imports
+  from CPP all,
+  from AS all,
+  from REP all,
+  from CI all,
+  from JSSREP all,
+  from JSSDEF all,
+  from JAVAERR all,
+  from JSSERR all,
+  from JSSENV all,
+  from JSSVCM1 all,
+  from J2V all
+
+exports all
+
+definitions
+
+operations
+  go: CPP`AstCI ==> AS`VdmFiles | JAVAERR`ErrType
+  go(p_astci) ==
+  ( dcl -- l_txt : seq of char := "\nJSSVCM State: ",
+        l_err : JAVAERR`ErrType := [],
+        l_modules : seq of CPP`Module := [],
+        l_modulewf : seq of bool := [];
+    let mk_CPP`AstCI(l_files, l_tllci, l_fidm)=p_astci
+    in
+    ( CPP`setmode(<JAVA>);
+      CI`UpdateStateSigma (l_tllci, l_fidm);
+      for all l_file in set l_files 
+      do let l_identDecl : CPP`IdentDeclaration = l_file.ast(1)
+         in 
+           for l_i=1 to len l_identDecl.ds  
+           do let l_typeSpec : CPP`TypeSpecifier = l_identDecl.ds(l_i),
+               l_module = mk_CPP`Module(l_file.name,l_file.h,
+                          mk_CPP`IdentDeclaration([l_typeSpec],nil,-1))
+           in
+             (l_modules := l_modules ^ [l_module];
+              l_modulewf := l_modulewf ^ [JSSVCM1`UpdateParseEnvWithModuleBool(l_module)]
+             );
+
+      for l_no=1 to len l_modulewf 
+      do
+        let - = JSSDEF`jwf_Module(l_modules(l_no)) in skip;
+
+      JSSERR`ResetErrors();
+      JSSENV`RemoveUnknownClasses();
+
+      for l_no=1 to len l_modulewf 
+      do
+        l_modulewf(l_no) := l_modulewf(l_no) and JSSDEF`jwf_Module(l_modules(l_no));
+
+      l_err := l_err^JSSERR`PrintErrors();
+
+      if 0<>card {i | i in set inds l_modulewf & not l_modulewf(i) }
+      then
+        return l_err
+      else 
+        return J2V`Java2VDM(p_astci)
+
+    )
+  )
+
+end TEST

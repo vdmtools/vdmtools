@@ -1,0 +1,13 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+    f: nat*nat*nat*nat -> nat
+    f(a,a,b,b) ==
+      2+a+b
+
+operations
+
+  public Test : () ==> nat   
+Test () ==
+    return 
+     f(1,5,2,2)
+
+end A

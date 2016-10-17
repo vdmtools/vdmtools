@@ -1,0 +1,3 @@
+ Error : Type of field i is not compatible with its defined type
+  act : char
+  exp : nat

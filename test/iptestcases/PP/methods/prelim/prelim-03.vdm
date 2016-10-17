@@ -1,0 +1,57 @@
+class A
+
+instance variables 
+
+protected  i    : nat;
+protected   j    : nat;
+protected   c    : char;
+protected   d    : char;
+public  s  : seq of (nat | char)
+
+operations
+
+  m1: nat * nat ==> nat * nat
+  m1(a,b) ==
+  ( i := a;
+    j := b;
+    return mk_(i,j)
+  );
+
+  m2: char * char ==> char * char
+  m2(a, b) ==
+  ( c := a;
+    d := b;
+    return mk_(c,d)
+  )
+
+end A   
+
+class B is subclass of A
+
+operations
+
+  m1: nat * nat ==> nat * nat
+  m1(i,j) ==
+    is not yet specified;
+
+
+  m2: char * char ==> char * char
+  m2(ch1, ch2) ==
+    is not yet specified;
+
+  m3: () ==> ()
+  m3() ==
+    is not yet specified;
+
+  public Test : () ==> seq of (nat | char)
+  Test() ==
+  ( dcl res1 : nat * nat,
+        res2 : char * char;
+    res1 := self.m1(1,2);
+    res2 := self.m2('a','b');
+    self.m3();
+    let mk_(a,b) = res1,
+        mk_(ch1,ch2) = res2 in
+      return s ^ [a,b,ch1,ch2]
+  )
+end B

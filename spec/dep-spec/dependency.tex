@@ -1,0 +1,96 @@
+% WHAT
+%    Specification of a data structure and corresponding operations
+%    for representing the dependencies between VDM++ classes.
+%    
+% FILE
+%    $Source: /home/vdmtools/cvsroot/toolbox/spec/dep-spec/dependency.tex,v $
+% VERSION
+%    $Revision: 1.2 $
+% DATE
+%    $Date: 1998/12/03 13:23:51 $
+% FORMAT
+%    $State: Exp $
+% PROJECT
+%    INFORMA
+% STATUS
+%    Under development.
+% AUTHOR
+%    $Author: jeppe $
+% COPYRIGHT
+%    (C) 1997 IFAD, Denmark
+
+\documentclass[a4paper,dvips]{article}
+\usepackage[dvips]{color}
+\usepackage{vdmsl-2e}
+\usepackage{longtable}
+\usepackage{alltt}
+\usepackage{makeidx}
+\usepackage{ifad}
+
+\definecolor{covered}{rgb}{0,0,0}      %black
+%\definecolor{not_covered}{gray}{0.5}   %gray for previewing
+\definecolor{not_covered}{gray}{0.6}   %gray for printing
+%\definecolor{not_covered}{rgb}{1,0,0}  %read
+
+
+%\documentstyle[vdmsl_v1.1.31,alltt,makeidx,ifad,a4]{article}
+
+
+\newcommand{\StateDef}[1]{{\bf #1}}
+\newcommand{\TypeDef}[1]{{\bf #1}}
+\newcommand{\TypeOcc}[1]{{\it #1}}
+\newcommand{\FuncDef}[1]{{\bf #1}}
+\newcommand{\FuncOcc}[1]{#1}
+\newcommand{\ModDef}[1]{{\tiny #1}}
+
+
+\newcommand{\MCL}{Meta-IV Class Library}
+\newcommand{\TBW}{TO BE WRITTEN}
+\newcommand{\NYI}{Notice, that this function/operation is not fully
+  specified in order to capture a possible integration with another
+  library than \MCL{}.}
+\newcommand{\nfs}{{\em not fully specified\/}}
+\newcommand{\vpp}{VDM$^{++}$}
+\makeindex
+
+\begin{document}
+
+\section{The Dependency Abstract Syntax} 
+
+This module defines a data structure for the dependency (inheritance
+and client ship relations) between classes in a \vpp\ specification.
+The information contained in this data structure will be used by the
+specification manager while determining the optimal sequence for type
+checking the classes in a \vpp\ specification, and by the UML-mapper
+while translating a \vpp\ AST into an abstract UML syntax. Furthermore
+the structure could also be used to model the dependency between
+different modules in a VDM-SL specification.
+
+The dependency is modelled as a directed graph, in which we have
+decided to distinguish between three different types of dependency:
+\begin{description}
+\item[Inheritance:] If class $A$ is subclass of class $B$ this appears
+  in the graph as an edge from $A$ to $B$.
+\item[Static associations:] If an  instance variable contains an object
+  reference (at any level in the AST), this is considered as an
+  association from the client to the server class. Consequently this
+  will show in the graph as an edge from the client to the server.
+\item[Uses associations:] Whenever a method from a foreign class is
+  invoked through statements like \verb+a_ref.a_op()+ or
+  \verb+new A().a_op()+, with \verb+a_ref+ being an object reference,
+  this introduces a dependency between the client and the
+  server. However, this dependency, especially in the seccond example
+  above, is of a more temporary nature, for which reason we will
+  distinguish these references from the static ones. 
+\end{description}
+Note that the static and uses associations are overlapping in some
+way; an instance variable containing an object reference will give
+rise to a static association. Later, if the instance variable is used
+in a method invocation in the server object, this will also show as an
+uses association. On the other hand uses associations need not be
+visible as static associations --- consider the statement
+\verb+new A().a_op()+ for instance.
+
+\input{dep.vdm.tex}
+
+\end{document}

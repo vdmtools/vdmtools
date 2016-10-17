@@ -1,0 +1,22 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+operations
+
+public f:() ==> bool
+f() == return false
+end A
+
+class C is subclass of A
+operations
+public f:() ==> bool
+f() == return true
+end C
+
+class B
+operations
+public Test :() ==> bool
+Test() ==
+(dcl q:A := new C();
+ return	q.f()
+)
+end B

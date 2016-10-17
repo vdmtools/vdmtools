@@ -1,0 +1,2 @@
+#! /bin/sh
+java -classpath ../../javacg/VDM.jar:. SortMain

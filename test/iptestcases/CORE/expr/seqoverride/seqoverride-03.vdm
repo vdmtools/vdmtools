@@ -1,0 +1,19 @@
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+class A
+
+operations
+
+
+
+
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+public Test : () ==> seq of ( seq of (nat | seq of char | (nat * nat) | map nat to nat ))  
+Test () ==
+
+return 
+[ let m= { 6|-> 7},
+      s = [1,2,3 ] 
+  in s ++ m
+]
+-- This file has been automatically updated wrt. VDM++ Lang.Adjust, 1th iteration
+end A

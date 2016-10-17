@@ -1,0 +1,80 @@
+class A
+
+operations
+
+public Test : () ==> nat
+Test() ==
+  let res = new World().Run()
+  in
+    return res; 
+
+end A
+class World
+
+operations
+
+ public Run : () ==> nat
+ Run() == (
+   start(TestSystem`test);
+   self.wait();
+   TestSystem`test.getn()
+ );
+
+ wait : () ==> ()
+  wait() == for i = 0 to 8 by 1 do skip;
+
+end World
+
+system TestSystem
+
+instance variables
+  cpu1 : CPU := new CPU(<FCFS>, 1E6);
+  public static test : TT := new TT();
+
+operations
+  public TestSystem : () ==> TestSystem
+  TestSystem() == (
+    cpu1.deploy(test);
+  );
+
+end TestSystem
+
+class TT
+
+instance variables
+  n : nat := 1;
+  pp : PP := new PP();
+
+operations
+
+  thread_task : () ==> ()
+  thread_task() == (
+    n := n + 1;
+    pp.op();
+  );
+
+  public getn: () ==> nat
+  getn() ==
+    return n;
+
+  wait : () ==> ()
+  wait() == for i = 0 to 5 by 1 do skip;
+
+sync
+  per thread_task => #active(thread_task) = 0;
+  per getn => #fin(thread_task) > 1
+
+thread
+  periodic(200, 0, 0, 0) (thread_task)
+
+end TT
+
+class PP
+
+operations
+  public op : () ==> ()
+  op() == wait();
+  wait : () ==> ()
+  wait() == for i = 0 to 500 by 1 do skip;
+
+end PP

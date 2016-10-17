@@ -1,0 +1,8 @@
+class  『事象共通定義』
+
+types
+public 「時間」 = nat;
+public 「事象ID」 = nat;
+public 「タスク名」= seq of char;
+
+end 『事象共通定義』

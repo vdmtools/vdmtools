@@ -1,0 +1,261 @@
+\documentclass{llncs}
+
+%
+% $Id: vdmppsem.tex,v 1.1 2005/11/21 04:41:31 vdmtools Exp $
+%
+
+%
+% PREAMBLE
+%
+
+\usepackage{a4wide}
+\usepackage{alltt}
+
+% language settings
+\usepackage[english]{babel}
+
+% graphics includes
+\usepackage{graphicx}
+\graphicspath{{pictures/}}
+
+%
+% BEGIN DOCUMENT
+%
+
+\newcommand{\chessnl}
+	{Chess Information Technology B.V., P.O. Box 5021, 2000 CA Haarlem, The Netherlands.\mythanks \\
+	 \textit{http://www.chess.nl}~~email:\,\email{Marcel.Verhoef@chess.nl}}
+
+\newcommand{\ihadk}
+	{University College of Aarhus, Dalgas Avenue 2, DK-8000 \AA\/rhus C, Denmark. \\
+	 \textit{http://www.iha.dk}~~email:\,\email{pgl@iha.dk}}
+
+\newcommand{\esinl}
+	{Embedded Systems Institute, Den Dolech 2, 5612 AZ Eindhoven, The Netherlands.$^*$ \\
+	 \textit{http://www.esi.nl}~~email:\,\email{Jozef.Hooman@esi.nl}}
+
+\newcommand{\mythanks}
+	{\thanks{and Radboud University Nijmegen, Institute for Computer and Information Sciences,
+		 P.O. Box 9010, 6500 GL Nijmegen, The Netherlands. {\it http://www.cs.ru.nl/ita/}.
+		 This work has been carried out as part of the Boderc project under the responsibility
+		 of the Embedded Systems Institute. This project was partially supported by the
+		 Netherlands Ministry of Economic Affairs under the Senter TS program.}}
+
+\begin{document}
+
+% use empty page style
+\pagestyle{empty}
+
+% the title page
+\title{Towards A Full Semantics for Real-Time VDM++ \\
+\small{(working title -- $Revision: 1.1 $ -- \today)}}
+\author{Marcel Verhoef\,\inst{1} \and Peter Gorm Larsen\,\inst{2} \and Jozef Hooman\,\inst{3}}
+\institute{\chessnl \and \ihadk \and \esinl}
+\maketitle
+
+\begin{abstract}
+Currently, this is very much a working document, collecting thoughts and ideas.
+The aim is to write a technical report and derive a paper from the technical report.
+Publication target is FM'06 (\textit{http://fm06.mcmaster.ca}), submission date is
+24 February 2006.
+\end{abstract}
+
+\section{The ``Grand Idea''}
+
+\fbox{\parbox{0.9\columnwidth}{Here a list of thoughts and ideas that would probably take 50 years of research
+to complete. Obviously we need to scale down the ambition level but I personally
+like to reason from the ``big picture'' first, to get the story straight.}}
+
+\begin{enumerate}
+\item Use Ed Lee's IEEE Computer column \cite{Lee05} to introduce the problem
+of embedded software development.
+\item Introduce notion of system engineering and (lack) of inter discipline
+communication in practice.
+\item Our grand idea: deliver a solution for engineering of embedded systems from
+UML model to code and across all involved disciplines. Many partial solutions
+exist already, this work should provide the ``super glue'' to stick everything
+together.
+\item Primary idea is to provide a suitable notation for specifying timing
+properties of software. In our opinion, it's the core part that's missing.
+\item The notation shall be easy to use and understand by software engineers
+working in an industrial environment.
+\item Break the typical abstraction barriers that make practical analysis
+difficult, introduce the notion of ``deployment'', ``scheduling'' and
+``communication'' at the model level.
+\item Use VDM++ notation as a starting point. Extend the semantics to include
+proper notion of time, preferably an operational semantics.
+\item Show that useful analysis can still be performed (actually: can
+\textbf{only} be performed if you do it like this) although we have broken
+typical abstraction barriers.
+\item Explore possibility to extract models from the VDM++ specification to
+do exhaustive analysis (using model checkers or proof tools).
+\item Explore possibility to integrate models with typical control engineering
+simulators to explore dynamic system properties by simulation. Likely
+candidates are Ptolemy (which includes Giotto), TrueTime (which is based
+on Matlab/Simulink).
+\item Explore how the model can be used as a basis for synthesis (e.g. code
+generation).
+\item buzzword compliance: model driven architecture, model based engineering.
+\end{enumerate}
+
+\section{Inventory of related work}
+
+\begin{enumerate}
+\item The Parallel Object-Oriented Specification Language
+(\textit{http://www.es.ele.tue.nl/poosl/}). They already go a long,
+long way. Why do we need VDM++ still? Is VDM++ closer to the notations
+currently used by software engineers?
+\item Giotto (\textit{http://www-cad.eecs.berkeley.edu/$\sim$\/fresco/giotto/}).
+\item Kopetz work on the Time-Triggered Architecture (\textit{http://www.ttagroup.org}).
+\item For analysis of timed systems, UPPAAL (\textit{http://www.uppaal.com}) and
+for analysis of scheduling problems (of uni-processor systems), TIMESTOOL
+(\textit{http://www.timestool.org}). But there are many, many more.
+\item Work performed at M\"{a}lardalen University in Sweden (see ISOLA proceedings
+and their web site \textit{http://www.mrtc.mdh.se/}).
+\item Ptolemy, (\textit{http://ptolemy.eecs.berkeley.edu/}).
+\item OMEGA, (\textit{http://www-omega.imag.fr/}) and in particular the
+recent papers co-authored by Jozef (obviously :-).
+\item The survey paper by Wang~\cite{Wang04} gives an extensive
+overview of languages for specifying and analysis of timed systems.
+\item The recent work by Lamport, ``Real-time is Really Simple''
+(see \textit{http://www.lamport.org}).
+\item The work on TrueTime at KTH's control engineering laboratory (see the web site
+of Dan Hendrikssen at \textit{http://www.control.lth.se/$\sim$\/dan/truetime/}).
+\item The work performed by Laci Posta and Natalya Mulyar at ESI,
+integrating Matlab/Simulink with Rational Rose Real-Time.
+\item Obviously there is the work of Mok on \textit{Real-time Logic} and the
+work of Hansen and Chaochen on \textit{Duration Calculus}. A nice overview is
+actually provided in \cite{Mukherjee&00}.
+\item Do not forget: architecture definition languages such as Koala
+(Philips), AADL (SEI, see \textit{http://www.aadl.info/}) and so on
+(i.e. Garlan stuff from the Urbino summerschool).
+\item I have the feeling that I've barely scratched the surface!
+\end{enumerate}
+
+\section{Notes from the brainstorm session with Evert}
+
+\fbox{\parbox{0.9\columnwidth}{The following list was composed after
+a brainstorm meeting with Evert (who is not a VDM++ expert, neither does
+he have practical experience with VDMTools). So, many things are already
+available in some form or other.}}
+
+\begin{enumerate}
+\item The semantics of the specification language should be close to
+(or mapped onto) the semantics of industry accepted implementation 
+languages and operating systems, such as for example C, C++ and VxWorks.
+\item Support for multi-CPU systems development where the CPU's are
+interconnected through a communication bus, such as CAN, TCP/IP etcetera.
+\item Estimation of the CPU time of a language construct directly from
+the complexity of the statement.
+\item The specification language shall be able to specify deadlines
+\item The tools shall be able to determine whether these deadlines can
+be met and if not, under which circumstances.
+\item Support for round-robin and priority based preemptive scheduling.
+\item Support analysis of deadlock, livelock, starvation, race conditions
+\item Support analysis of schedulability
+\item Dealing with uncertainty (probabilistic behavior, specify jitter
+as a probabilistic variable?)
+\item Checking of constraints and invariants
+\item Integration with continuous time simulation. Bridge the discrete
+event / continuous time hurdle
+\item Good visualization possibilities, such as sequence diagrams
+and Gantt charts, preferably in parallel with the continuous variables.
+\end{enumerate}
+
+\section{A few observations of my own}
+
+\fbox{\parbox{0.9\columnwidth}{Here are few observations that should be
+seen in addition to the ``On the Use of VDM++ for Specifying Real-time
+Systems'' paper.}}
+
+\begin{enumerate}
+\item Primary concern is to extend the semantics and the interpreter
+to deal with multi-processing. So not only pseudo-parallel execution,
+but also truly parallel execution of tasks. This is needed, for example,
+to specify the behavior of the environment independently from the system.
+This is an absolute must for embedded systems.
+\item It shall then be possible to reason about deployment, which
+active object is executed on what computing resource. Obviously, the
+scheduling parameters of this computing resource should be specified,
+not as a simulation parameter as it is now, but as a property of the
+computation resource.
+\item The notion of interrupts needs to be integrated into the language;
+these concepts are common in embedded systems, but are seldom supported
+at the language level. I believe that much can be gained here.
+\item Similarly, it shall be possible to explicitly specify the
+hardware/software interface, in particular interfaces to communication
+resources (and the interconnections between the computation components,
+just like in SystemC and ROOM for example, where channels are used for
+that).
+\item Basically, the HW/SW interface and the inner workings of the
+operating system (or scheduler) should become part of the system model.
+Only then can we reason about timing, response times etc at the system
+level. Interestingly, Lamport provides these kinds of definitions in
+his TLA+ book...
+\item Simulation is the main modus operandi of the current VDMTools
+implementation and I think we should keep that intact, including the
+round-trip engineering philosophy (going from VDM++ to UML and back).
+Maybe we should consider SysML?
+\item We should consider integrating with other simulation platforms
+rather than improving the VDMTools interpreter. Similarly, figure out
+whether we can derive abstract specifications from our more detailed
+models that can be fed into powerful analysis tools such as Uppaal,
+Times, SMV and so on.
+\end{enumerate}
+
+\section{Ideas for case studies}
+
+\begin{enumerate}
+\item The trip sensor specification from the ``Timing Tolerances in Safety-Critical Software''
+paper by Alan Wassyng et al (see FM'05 proceedings).
+\item The production cell case study of Lewerentz and Lindner (see also LNCS volume 891, 1995)
+\item The ``Countermeasures'' example from the VICE project (VDM++ In a Constraint Environment)
+\item The NASA Safer backpack, which is well-published and covers all domains
+\item The railway crossing used by Jinfeng Huang (from the POOSL group of Jeroen Voeten)
+\item (parts of) Jan Beckers paper path simulation model, nice direct link to Boderc but
+a potential publication nightmare wrt confidentiality.
+\item The in-car radio navigation case study of Marcel (as described in his ISOLA/STTT paper),
+also fits the general theme of Marcel's PhD thesis.
+\item The ``Timed Philosophers'' example from the Overture workshop paper. Is interesting
+because it already includes the notational extensions we want to investigate.
+\end{enumerate}
+
+\section{Outline work plan}
+
+\begin{enumerate}
+\item Describe the current semantics of VDM++ using VDM++ in an operational (executable)
+style. Use \cite{Lano98} and in particular \cite{Mukherjee&00} as our starting point. Use
+the current VDMTools implementation to test and prototype the operational semantics.
+Visualization can be taken care of by the \textit{ShowVice} tool that I already have
+build for \cite{Verhoef2005}, possibly slightly modified. The workflow is described
+in Figure~\ref{fig:workflow}.
+\item Extend the semantics as proposed in \cite{Verhoef2005}.
+\item Take an interesting case study, describe it using the ``new'' extended semantics
+\item What can we analyze better now than what we did before?
+\item Can we now create simulation models directly from our semantics models?
+\end{enumerate}
+
+\begin{figure}[htb]
+\begin{center}
+\includegraphics[width=0.6\columnwidth,angle=-90]{workflow.eps}
+\caption{The proposed workflow for this work} \label{fig:workflow}
+\end{center}
+\end{figure}
+
+%\section{Conclusions and future work}
+
+\nocite{*}
+
+\bibliographystyle{splncs}
+\bibliography{vdmppsem}
+
+\section*{Acknowledgments}
+
+The authors wish to thank Evert van de Waal for providing useful
+comments to early drafts of this document.
+
+\include{radnav/radnav.tex}
+
+\include{radnav/radnavnew}
+
+\end{document}

@@ -1,0 +1,10 @@
+m4tmp1, l. 31, c. 11:
+  Error : Unknown identifier My_Rec2
+m4tmp1, l. 31, c. 22:
+  Error : Initialization expression is not compatible with defining type of a
+  act : compose MyRec of Colour nat end
+  exp : My_Rec2
+m4tmp1, l. 32, c. 12:
+  Error : Expression in Field-Select-Expr is not a composite type
+  act : My_Rec2
+  exp : compose  of end

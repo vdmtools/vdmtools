@@ -1,0 +1,20 @@
+class A
+
+instance variables
+
+
+
+operations
+public F : () ==> ()
+  F() ==
+  skip;
+
+public Test : () ==> nat
+  Test() ==
+  ( 
+	self.F();
+	return 2
+
+  )
+
+end A

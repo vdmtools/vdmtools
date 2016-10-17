@@ -1,0 +1,7 @@
+class A
+
+values
+
+  s : set of nat = dunion {x | x : set of nat}
+
+end A

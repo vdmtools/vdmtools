@@ -1,0 +1,27 @@
+class JavaIoFileWriter is subclass of JavaIoOutputStreamWriter
+operations 
+public  JavaIoFileWriter : <NIL> ==> JavaIoFileWriter
+JavaIoFileWriter(-) == 
+isNil := true  ;
+
+public  JavaIoFileWriter : JavaLangString ==> JavaIoFileWriter
+JavaIoFileWriter(fileName) == 
+( let - = JavaIoOutputStreamWriter(new JavaIoFileOutputStream(fileName)) in skip 
+) ;
+
+public  JavaIoFileWriter : JavaLangString * bool  ==> JavaIoFileWriter
+JavaIoFileWriter(fileName, append) == 
+( let - = JavaIoOutputStreamWriter(new JavaIoFileOutputStream(fileName,append)) in skip 
+) ;
+
+public  JavaIoFileWriter : JavaIoFileDescriptor ==> JavaIoFileWriter
+JavaIoFileWriter(fd) == 
+( let - = JavaIoOutputStreamWriter(new JavaIoFileOutputStream(fd)) in skip 
+) ;
+
+public  JavaIoFileWriter : JavaIoFile ==> JavaIoFileWriter
+JavaIoFileWriter(f) == 
+(  let - = JavaIoOutputStreamWriter(new JavaIoFileOutputStream(f)) in skip  
+) ;
+
+end  JavaIoFileWriter

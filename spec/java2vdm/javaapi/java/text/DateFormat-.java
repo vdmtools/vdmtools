@@ -1,0 +1,68 @@
+package java.text;
+
+import java.util.Locale;
+import java.util.ResourceBundle;
+import java.util.MissingResourceException;
+import java.util.TimeZone;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.Date;
+import java.text.resources.*;
+
+public abstract class DateFormat extends Format {
+//protected  Calendar calendar;
+//protected  NumberFormat numberFormat;
+//public final static  int ERA_FIELD;
+//public final static  int YEAR_FIELD;
+//public final static  int MONTH_FIELD;
+//public final static  int DATE_FIELD;
+//public final static  int HOUR_OF_DAY1_FIELD;
+//public final static  int HOUR_OF_DAY0_FIELD;
+//public final static  int MINUTE_FIELD;
+//public final static  int SECOND_FIELD;
+//public final static  int MILLISECOND_FIELD;
+//public final static  int DAY_OF_WEEK_FIELD;
+//public final static  int DAY_OF_YEAR_FIELD;
+//public final static  int DAY_OF_WEEK_IN_MONTH_FIELD;
+//public final static  int WEEK_OF_YEAR_FIELD;
+//public final static  int WEEK_OF_MONTH_FIELD;
+//public final static  int AM_PM_FIELD;
+//public final static  int HOUR1_FIELD;
+//public final static  int HOUR0_FIELD;
+//public final static  int TIMEZONE_FIELD;
+//public final native StringBuffer format( Object obj,  StringBuffer toAppendTo,  FieldPosition fieldPosition);
+//public abstract native StringBuffer format( Date date,  StringBuffer toAppendTo,  FieldPosition fieldPosition);
+public final native String format( Date date);
+//public native Date parse( String text)throws ParseException;
+//public abstract native Date parse( String text,  ParsePosition pos);
+//public native Object parseObject( String source,  ParsePosition pos);
+//public static final  int FULL;
+//public static final  int LONG;
+//public static final  int MEDIUM;
+//public static final  int SHORT;
+//public static final  int DEFAULT;
+//public final static native DateFormat getTimeInstance();
+//public final static native DateFormat getTimeInstance( int style);
+//public final static native DateFormat getTimeInstance( int style,  Locale aLocale);
+//public final static native DateFormat getDateInstance();
+//public final static native DateFormat getDateInstance( int style);
+//public final static native DateFormat getDateInstance( int style,  Locale aLocale);
+//public final static native DateFormat getDateTimeInstance();
+//public final static native DateFormat getDateTimeInstance( int dateStyle,  int timeStyle);
+//public final static native DateFormat getDateTimeInstance( int dateStyle,  int timeStyle,  Locale aLocale);
+//public final static native DateFormat getInstance();
+//public static native Locale[] getAvailableLocales();
+//public native void setCalendar( Calendar newCalendar);
+//public native Calendar getCalendar();
+//public native void setNumberFormat( NumberFormat newNumberFormat);
+//public native NumberFormat getNumberFormat();
+//public native void setTimeZone( TimeZone zone);
+//public native TimeZone getTimeZone();
+//public native void setLenient( boolean lenient);
+//public native boolean isLenient();
+//public native int hashCode();
+//public native boolean equals( Object obj);
+//public native Object clone();
+protected DateFormat(){};
+
+}

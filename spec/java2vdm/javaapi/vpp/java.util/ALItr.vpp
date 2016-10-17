@@ -1,0 +1,39 @@
+class JavaUtilALItr is subclass of JavaUtilIterator
+instance variables
+	protected cursor : int := 0;
+	protected lastRet: int := -1;
+	protected expectedModCount : int;
+  protected al: JavaUtilAbstractList;
+
+operations
+public
+  JavaUtilALItr: JavaUtilAbstractList ==> JavaUtilALItr
+  JavaUtilALItr(al) ==
+  ( JavaUtilALItr`al:=al;
+  	expectedModCount := al.modCount
+  );
+
+public  hasNext : () ==> bool 
+hasNext() == 
+  return cursor <> al.size();
+
+public  next : () ==> JavaLangObject
+next() == 
+( dcl o : JavaLangObject :=al.get(cursor);
+  cursor:=cursor+1;
+  return o
+);
+
+--public  remove : () ==> ()
+--remove() == 
+--( if lastRet = -1
+--  then exit new JavaLangIllegalStateException();
+--
+--	al.remove(lastRet);
+--  if lastRet < cursor
+--  then cursor:=cursor-1;
+--  lastRet := -1;
+--	expectedModCount := al.modCount;
+--);
+
+end JavaUtilALItr

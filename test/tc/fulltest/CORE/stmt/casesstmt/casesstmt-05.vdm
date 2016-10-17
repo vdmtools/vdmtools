@@ -1,0 +1,14 @@
+class CasesStmtTest
+
+operations
+
+  Cases: real * real ==> real
+  Cases(arg1,arg2) ==
+    let t = true
+    in
+    cases arg1 + arg2:
+      (7 - t) -> return arg1,
+      others -> return 8.9
+    end;
+
+end CasesStmtTest

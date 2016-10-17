@@ -1,0 +1,19 @@
+#include "metaiv.h"
+#include "<<MOD>>.h"
+
+int main() {
+  try {  
+    //--------------- Initialization ---------------------------------------
+    <<INIT>>
+    //----------------------------------------------------------------------
+
+    wcout << vdm_<<MOD>>_<<OP>>().ascii() << endl;
+//    cout << wstring2coutstr(vdm_<<MOD>>_<<OP>>().ascii()) << endl;
+  }
+  catch (VDMSpecException exc)
+  {
+    wcout << "exit " << exc.getValue().ascii() << endl;
+//    cout << "exit " << wstring2coutstr(exc.getValue().ascii()) << endl;
+  }
+  return 0;
+}

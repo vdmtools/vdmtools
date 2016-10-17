@@ -1,0 +1,17 @@
+class A
+
+
+------------------------------ Actual Test data ------------------------------
+operations
+
+TestOP: () ==> ()
+TestOP() ==
+  let n = 10,
+      - = let a:A in isofclass(A,if 1=2 then a else n)
+  in skip;
+
+------------------------------------------------------------------------------
+end A
+
+class C is subclass of A
+end C

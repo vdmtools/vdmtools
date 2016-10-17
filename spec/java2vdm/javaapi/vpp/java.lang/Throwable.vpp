@@ -1,0 +1,48 @@
+class JavaLangThrowable is subclass of JavaIoSerializable, JavaLangObject
+instance variables
+  private detailMessage: JavaLangString
+
+operations 
+public  toString : () ==> JavaLangString
+toString() == 
+  return detailMessage;
+
+public  JavaLangThrowable : () ==> JavaLangThrowable
+JavaLangThrowable() == 
+( skip 
+) ;
+
+public  getMessage : () ==> JavaLangString
+getMessage() == 
+  return detailMessage;
+
+public  JavaLangThrowable : <NIL> ==> JavaLangThrowable
+JavaLangThrowable(-) == 
+isNil := true  ;
+
+public  printStackTrace : () ==> ()
+printStackTrace() == 
+is not yet specified ;
+
+public  fillInStackTrace : () ==> JavaLangThrowable
+fillInStackTrace() == 
+is not yet specified ;
+
+public  JavaLangThrowable : JavaLangString ==> JavaLangThrowable
+JavaLangThrowable(message) == 
+( detailMessage := message
+) ;
+
+public  getLocalizedMessage : () ==> JavaLangString
+getLocalizedMessage() == 
+  return detailMessage;
+
+public  printStackTrace : JavaIoPrintStream ==> ()
+printStackTrace(s) == 
+  s.println(new JavaLangString("printStackTrace: is not implemented at VDM++")) ;
+
+public  printStackTrace : JavaIoPrintWriter ==> ()
+printStackTrace(s) == 
+  s.println(new JavaLangString("printStackTrace: is not implemented at VDM++")) ;
+
+end  JavaLangThrowable

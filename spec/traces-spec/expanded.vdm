@@ -1,0 +1,360 @@
+module EXPANDED
+
+imports
+  from AS all,
+  from REP all,
+  from CI all,
+  from AUX all,
+  from STKM all,
+  from GLOBAL all,
+  from SEM all,
+  from DEF all,
+  from PAT all,
+  from CPAT all,
+  from CSTMT all,
+  from SCHDTP all,
+  from RTERR all,
+  from DEBUGTP all,
+  from DEBUG all,
+  from INSTRTP all
+
+exports
+  all
+
+definitions
+
+state Sigma of
+  zeroOrMoreMax : nat1
+  oneOrMoreMax : nat1
+  seqOfNames : seq of AS`Id
+  curcl : [AS`Name]
+  cxt_s_stack : seq of set of SEM`BlkEnv
+
+init s == s = mk_Sigma(3, 3, [], nil, [])
+end
+
+operations
+
+ExpandSpecTraces: AS`Document * set of AS`Name ==> map AS`Name to set of seq of AS`Expr
+ExpandSpecTraces(spec, clmod_s) ==
+  (dcl res_m : map AS`Name to set of seq of AS`Expr := {|->};
+   for clmod in spec do
+#ifdef VDMSL
+     if clmod.nm in set clmod_s and is_AS`Module(clmod)
+     then res_m := res_m ++ ExpandModuleTraces(clmod);
+#endif VDMSL
+#ifdef VDMPP
+     if clmod.nm in set clmod_s and is_AS`Class(clmod)
+     then res_m := res_m ++ ExpandClassTraces(clmod);
+#endif VDMPP
+   return res_m
+  );
+
+#ifdef VDMSL
+ExpandModuleTraces: AS`Module ==> map AS`Name to set of seq of AS`Expr
+ExpandModuleTraces(mk_AS`Module(nm,-,defs,-)) ==
+  if defs <> nil and defs.tracem <> {|->}
+  then (curcl := nm;
+        return ExpandTraceDefs(nm, defs.tracem))
+  else return {|->};
+#endif VDMSL
+
+#ifdef VDMPP
+ExpandClassTraces: AS`Class ==> map AS`Name to set of seq of AS`Expr
+ExpandClassTraces(mk_AS`Class(nm,-,-,defs,-,-)) ==
+  if defs <> nil and defs.tracem <> {|->}
+  then (curcl := nm;
+        return ExpandTraceDefs(nm, defs.tracem))
+  else return {|->};
+#endif VDMPP
+
+ExpandTraceDefs: AS`Name * map AS`NameList to AS`TraceDefList ==> map AS`Name to set of seq of AS`Expr
+ExpandTraceDefs(clid, def_m) ==
+-- TODO: clid 
+  return {mk_AS`Name([hd clid.ids, hd (hd nm_l).ids], CI`NilContextId)
+           |-> ExpandTraceDefList(def_m(nm_l), {AUX`MkEmptyBlkEnv(<READ_ONLY>)}) | nm_l in set dom def_m};
+
+ExpandTraceDefList: AS`TraceDefList * set of SEM`BlkEnv ==> set of seq of AS`Expr
+ExpandTraceDefList(tdef_l, ctx_s) ==
+  (dcl res_s : set of seq of AS`Expr := {[]};
+   for tdef in tdef_l do
+     def e_l_s = ExpandTraceDef(tdef, ctx_s)
+     in res_s := CombineTraces(res_s, e_l_s);
+   return res_s
+  );
+    
+ExpandTraceDef: AS`TraceDefTerm * set of SEM`BlkEnv ==> set of seq of AS`Expr
+ExpandTraceDef(tdef, ctx_s) ==
+  cases true :
+    (is_AS`TraceApplyExpr(tdef))       -> return ExpandTraceApplyExpr(tdef, ctx_s),
+    (is_AS`TraceBracketedExpr(tdef))   -> return ExpandTraceBracketedExpr(tdef, ctx_s),
+    (is_AS`TracePermuteExpr(tdef))     -> return ExpandTracePermuteExpr(tdef, ctx_s),
+    (is_AS`QualifiedTrace(tdef))       -> return ExpandQualifiedTrace(tdef, ctx_s),
+    (is_AS`RepeatTrace(tdef))          -> return ExpandRepeatTrace(tdef, ctx_s),
+    (is_AS`QualifiedRepeatTrace(tdef)) -> return ExpandQualifiedRepeatTrace(tdef, ctx_s),
+    (is_AS`TraceDefAltn(tdef))         -> return ExpandTraceDefAltn(tdef, ctx_s),
+    others -> error
+  end;
+
+functions 
+
+ExpandTraceApplyExpr: AS`TraceApplyExpr * set of SEM`BlkEnv -> set of seq of AS`Expr
+ExpandTraceApplyExpr(tdef, ctx_s) ==
+#ifdef VDMSL
+  let mk_AS`TraceApplyExpr(op, args, -) = tdef,
+      expr = mk_AS`ApplyExpr(op, args, CI`NilContextId)
+#endif VDMSL
+#ifdef VDMPP
+  let mk_AS`TraceApplyExpr(obj, op, args, -) = tdef,
+      fct = if obj <> nil
+            then mk_AS`FieldSelectExpr(obj, op, CI`NilContextId)
+            else op,
+      expr = mk_AS`ApplyExpr(fct, args, CI`NilContextId)
+#endif VDMPP
+  in
+    AddContextToExpr(expr, ctx_s);
+
+RestTraceDefTerm: seq of AS`TraceDefTerm * nat -> seq of AS`TraceDefTerm
+RestTraceDefTerm(l,i) == [ l(j) | j in set (inds l \ { i }) ];
+
+Permute: seq of AS`TraceDefTerm -> set of seq of AS`TraceDefTerm 
+Permute(l) ==
+cases l:
+  [],
+  [-]    -> { l },
+  others -> dunion { { [ l(i) ] ^ j | j in set Permute(RestTraceDefTerm(l, i))} | i in set inds l }
+end;
+
+operations
+
+ExpandTraceBracketedExpr: AS`TraceBracketedExpr * set of SEM`BlkEnv ==> set of seq of AS`Expr
+ExpandTraceBracketedExpr(tdef, ctx_s) ==
+  (PushCxt(ctx_s);
+   def td_l_s = Permute(tdef.list);
+       e_l_s = dunion {ExpandTraceDefList(e, {AUX`MkEmptyBlkEnv(<READ_ONLY>)}) | e in set td_l_s};
+       e_l_s2 = { AddContextToExprList(e_l, hd cxt_s_stack) | e_l in set e_l_s }
+   in (PopCxt();
+       return dunion e_l_s2)
+  );
+
+ExpandTracePermuteExpr: AS`TracePermuteExpr * set of SEM`BlkEnv ==> set of seq of AS`Expr
+ExpandTracePermuteExpr(tdef, ctx_s) ==
+  (PushCxt(ctx_s);
+   def e_l_s = ExpandTraceDefList(tdef.list, {AUX`MkEmptyBlkEnv(<READ_ONLY>)});
+       e_l_s2 = { AddContextToExprList(e_l, hd cxt_s_stack) | e_l in set e_l_s }
+   in (PopCxt();
+       return dunion e_l_s2)
+  );
+
+ExpandQualifiedTrace: AS`QualifiedTrace * set of SEM`BlkEnv ==> set of seq of AS`Expr
+ExpandQualifiedTrace(tdef, ctx_s) ==
+  def new_ctx_s = ExpandTraceBind(tdef.binds, ctx_s)
+  in ExpandTraceDef(tdef.tdef, new_ctx_s);
+
+ExpandRepeatTrace: AS`RepeatTrace * set of SEM`BlkEnv ==> set of seq of AS`Expr
+ExpandRepeatTrace(tdef, ctx_s) ==
+  def expr_l_s = ExpandTraceDef(tdef.tdef, ctx_s)
+  in ExpandTraceRepeatPat(tdef.pat, expr_l_s);
+
+ExpandQualifiedRepeatTrace: AS`QualifiedRepeatTrace * set of SEM`BlkEnv ==> set of seq of AS`Expr
+ExpandQualifiedRepeatTrace(tdef, ctx_s) ==
+  def new_ctx_s = ExpandTraceBind(tdef.binds, ctx_s);
+      expr_l_s = ExpandTraceDef(tdef.tdef, new_ctx_s)
+  in ExpandTraceRepeatPat(tdef.pat, expr_l_s);
+
+ExpandTraceDefAltn: AS`TraceDefAltn * set of SEM`BlkEnv ==> set of seq of AS`Expr
+ExpandTraceDefAltn(tdef, ctx_s) ==
+  return ExpandTraceDef(tdef.term, ctx_s) union ExpandTraceDef(tdef.tdef, ctx_s);
+
+ExpandTraceBind: seq of AS`TraceBind * set of SEM`BlkEnv ==> set of SEM`BlkEnv
+ExpandTraceBind(bind_l, cxt_s) ==
+  (dcl c_s : set of SEM`BlkEnv := cxt_s;
+   for bind in bind_l do
+     def c_s2 = if is_AS`LocalTraceBind(bind)
+                then ExpandLocalBinding(bind, c_s)
+                else if is_AS`LetTraceBind(bind)
+                     then ExpandLetBinding(bind, c_s)
+                     else ExpandLetBeBinding(bind, c_s)
+     in c_s := CombineContext(c_s, c_s2);
+   return c_s);
+
+ExpandTraceRepeatPat: AS`TraceRepeatPattern * set of seq of AS`Expr ==> set of seq of AS`Expr
+ExpandTraceRepeatPat(regexpr, expr_l_s) ==
+  cases regexpr:
+    -- * -- ZeroOrMore
+    <ANY> -> def rep = RepeatCombine(expr_l_s, 1, oneOrMoreMax)
+             in return {[]} union rep,
+    -- + -- OneOrMore
+    <ATLEASTONE> -> return RepeatCombine(expr_l_s, 1, oneOrMoreMax),
+    -- ? -- ZeroOrOne
+    <POSSIBLY> -> return expr_l_s union {[]},
+    mk_AS`RepeatFixed(-,-) -> return ExpandRepeatFixed(regexpr, expr_l_s),
+    mk_AS`RepeatInterval(-,-,-) -> return ExpandRepeatInterval(regexpr, expr_l_s),
+    others -> error
+  end;
+
+ExpandRepeatFixed: AS`RepeatFixed * set of seq of AS`Expr ==> set of seq of AS`Expr
+ExpandRepeatFixed(regexpr, expr_l_s) ==
+  let mk_AS`RepeatFixed(mk_AS`NumLit(num,-),-) = regexpr
+  in
+    if num = 0
+    then return {[]}
+    else return RepeatCombine(expr_l_s, num, num);
+
+ExpandRepeatInterval: AS`RepeatInterval * set of seq of AS`Expr ==> set of seq of AS`Expr
+ExpandRepeatInterval(regexpr, expr_l_s) ==
+  let mk_AS`RepeatInterval(mk_AS`NumLit(low,-),mk_AS`NumLit(high,-),-) = regexpr
+  in
+    let l = if low = 0 then 1 else low,
+        no = if low = 0 then {[]} else {}
+    in return no union RepeatCombine(expr_l_s, l, high);
+
+ExpandLocalBinding: AS`LocalTraceBind * set of SEM`BlkEnv ==> set of SEM`BlkEnv
+ExpandLocalBinding(bind, cxt_s) ==
+  let def_l = bind.localdefs
+  in
+    (dcl c_s : set of SEM`BlkEnv := cxt_s;
+     for mk_AS`ValueDef(pat,-,expr,-,-,-) in def_l do
+       def val_s = { evaluateExpression(expr, cxt) | cxt in set c_s };
+           newc_s = dunion { PAT`PatternMatch(CPAT`P2P(pat), val) | val in set val_s } 
+       in c_s := CombineContext(c_s, newc_s);
+     return c_s);
+
+RepeatCombine: set of seq of AS`Expr * nat1 * nat1 ==> set of seq of AS`Expr
+RepeatCombine(expr_l_s, low, high) ==
+  (dcl acc_e_l_s : set of seq of AS`Expr := {},
+       ith_e_l_s : set of seq of AS`Expr := {[]},
+       i : nat1 := 1;
+   while i <= high do
+     let oldith = ith_e_l_s
+     in
+       (ith_e_l_s := { e_l1 ^ e_l2 | e_l1 in set oldith, e_l2 in set expr_l_s };
+        if i >=low 
+        then acc_e_l_s := acc_e_l_s union ith_e_l_s;
+        i := i + 1
+       );
+   return acc_e_l_s
+  );
+   
+functions
+
+ExpandLetBinding: AS`LetTraceBind * set of SEM`BlkEnv -> set of SEM`BlkEnv
+ExpandLetBinding(lbbind, cxt_s) ==
+  let mk_AS`LetTraceBind(bind_l,-) = lbbind
+  in
+    if forall b in set elems bind_l & is_AS`MultSetBind(b)
+    then
+      dunion { def pat_l = conc [ let mk_AS`MultSetBind(p_l,-,-) = bind_l(i)
+                                  in [ CPAT`P2P(p_l(j)) | j in set inds p_l ] | i in set inds bind_l];
+                   val_l = conc [ def mk_AS`MultSetBind(p_l,expr,-) = bind_l(i);
+                                      val = evaluateExpression(expr, cxt)
+                                  in
+                                    if is_SEM`SET(val)
+                                    then [ val | - in set inds p_l ]
+                                    else undefined
+                          | i in set inds bind_l ];
+                   c_s_s = PAT`EvalMultBindSeqAll(pat_l, val_l, <DO_PARTITION>)
+               in
+                 let c_s in set c_s_s
+                 in { AUX`CombineBlkEnv(c, cxt) | c in set c_s } | cxt in set cxt_s }
+    else
+      undefined;
+
+ExpandLetBeBinding: AS`LetBeTraceBind * set of SEM`BlkEnv -> set of SEM`BlkEnv
+ExpandLetBeBinding(lbbind, cxt_s) ==
+  let mk_AS`LetBeTraceBind(bind_l,pred,-) = lbbind
+  in
+    if forall b in set elems bind_l & is_AS`MultSetBind(b)
+    then
+     dunion { def pat_l = conc [ let mk_AS`MultSetBind(p_l,-,-) = bind_l(i)
+                          in [ CPAT`P2P(p_l(j)) | j in set inds p_l ] | i in set inds bind_l];
+                  val_l = conc [ let mk_AS`MultSetBind(p_l,expr,-) = bind_l(i),
+                                     val = evaluateExpression(expr, cxt)
+                                 in
+                                   if is_SEM`SET(val)
+                                   then [ val | - in set inds p_l ]
+                                   else undefined
+                                 | i in set inds bind_l ];
+                  c_s_s = PAT`EvalMultBindSeqAll(pat_l, val_l, <DO_PARTITION>)
+              in
+                let c_s in set c_s_s
+                in { AUX`CombineBlkEnv(c2, cxt) | c2 in set c_s & pred = nil or
+                     def c = AUX`CombineBlkEnv(c2, cxt)
+                     in evaluateExpression(pred,c) = mk_SEM`BOOL(true) }
+                  | cxt in set cxt_s }
+    else
+      undefined;
+
+evaluateExpression: AS`Expr * SEM`BlkEnv -> SEM`VAL
+evaluateExpression(expr, cxt) ==
+  DEBUG`EvaluateExpression(expr, cxt);
+
+MergeContextSet: set of SEM`BlkEnv -> SEM`BlkEnv
+MergeContextSet(c_s) ==
+  cases c_s:
+    {} -> undefined,
+    {c} -> c,
+    others -> let c in set c_s
+              in AUX`CombineBlkEnv(c, MergeContextSet(c_s \ {c}))
+  end;
+
+CombineContext: set of SEM`BlkEnv * set of SEM`BlkEnv -> set of SEM`BlkEnv
+CombineContext(c_s, c_s2) ==
+  if c_s = {}
+  then c_s2
+  else if c_s2 = {}
+       then c_s
+       else { AUX`CombineBlkEnv(c1, c2) | c1 in set c_s, c2 in set c_s2 };
+
+AddContextToExpr: AS`Expr * set of SEM`BlkEnv -> set of seq of AS`Expr
+AddContextToExpr(expr, cxt_s) ==
+  if cxt_s = {}
+  then {[expr]}
+  else {let def_l = Context2ValShapeL(cxt.id_m)
+        in if def_l = []
+           then [expr]
+           else [mk_AS`LetExpr(def_l, expr, CI`NilContextId)] | cxt in set cxt_s };
+
+AddContextToExprList: seq of AS`Expr * set of SEM`BlkEnv -> set of seq of AS`Expr
+AddContextToExprList(e_l, cxt_s) ==
+  if cxt_s = {}
+  then {e_l}
+  else {let def_l = Context2ValShapeL(cxt.id_m)
+        in if def_l = []
+           then e_l
+           else [mk_AS`LetExpr(def_l, e_l(i), CI`NilContextId) | i in set inds e_l] | cxt in set cxt_s };
+
+CombineTraces: set of seq of AS`Expr * set of seq of AS`Expr -> set of seq of AS`Expr
+CombineTraces(e_l_s1, e_l_s2) ==
+  { e_l1 ^ e_l2 | e_l1 in set e_l_s1, e_l2 in set e_l_s2 };
+
+Context2ValShapeL: map AS`Name to SEM`ValTp -> seq of AS`ValueDef
+Context2ValShapeL(id_m) ==
+  let d : set of AS`Name = dom id_m 
+  in
+    cases d:
+      {} -> [],
+      others -> let id in set d
+                in
+                  let val : SEM`VAL  = id_m(id).val,
+                      tp : [AS`Type] = id_m(id).tp,
+                      pat = mk_AS`PatternName(id, tp, CI`NilContextId)
+                  in [mk_AS`ValueDef(pat, tp, SEM`VAL2Expr(val), <NOT_INITIALISED_AS>, true, CI`NilContextId)] ^
+                     Context2ValShapeL({id} <-: id_m)
+    end;
+
+operations
+PushCxt: set of SEM`BlkEnv ==> ()
+PushCxt(cxt_s) ==
+  cxt_s_stack := [cxt_s] ^ cxt_s_stack;
+
+PopCxt: () ==> ()
+PopCxt() ==
+  cxt_s_stack := tl cxt_s_stack
+pre cxt_s_stack <> [];
+
+GetCurClass: () ==> [AS`Name]
+GetCurClass() ==
+  return curcl;
+
+end EXPANDED

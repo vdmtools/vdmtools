@@ -1,0 +1,579 @@
+ThreadCreate -> id: 1 period: false objref: nil clnm: nil cpunm: 0 time: 0
+ThreadSwapIn -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 0
+DeployObj ->  objref: 1 clnm: "MissileDetector" cpunm: 0 time: 0
+DeployObj ->  objref: 2 clnm: "FlareController" cpunm: 0 time: 0
+DeployObj ->  objref: 3 clnm: "Sensor" cpunm: 0 time: 0
+DeployObj ->  objref: 4 clnm: "Timer" cpunm: 0 time: 0
+DeployObj ->  objref: 5 clnm: "A" cpunm: 0 time: 0
+DeployObj ->  objref: 6 clnm: "A" cpunm: 0 time: 0
+OpRequest -> id: 1 opname: "A`Test" objref: 6 clnm: "A" cpunm: 0 async: false time: 2
+OpActivate -> id: 1 opname: "A`Test" objref: 6 clnm: "A" cpunm: 0 async: false time: 2
+DeployObj ->  objref: 7 clnm: "Sensor" cpunm: 0 time: 2
+DeployObj ->  objref: 8 clnm: "Timer" cpunm: 0 time: 14
+DeployObj ->  objref: 9 clnm: "MissileDetector" cpunm: 0 time: 28
+DeployObj ->  objref: 10 clnm: "FlareController" cpunm: 0 time: 38
+DeployObj ->  objref: 11 clnm: "Timer" cpunm: 0 time: 56
+ThreadCreate -> id: 2 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 64
+OpRequest -> id: 1 opname: "MissileDetector`Init" objref: 9 clnm: "MissileDetector" cpunm: 0 async: false time: 74
+OpActivate -> id: 1 opname: "MissileDetector`Init" objref: 9 clnm: "MissileDetector" cpunm: 0 async: false time: 74
+OpRequest -> id: 1 opname: "Sensor`GetDataSize" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 84
+OpActivate -> id: 1 opname: "Sensor`GetDataSize" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 84
+OpCompleted -> id: 1 opname: "Sensor`GetDataSize" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 90
+OpCompleted -> id: 1 opname: "MissileDetector`Init" objref: 9 clnm: "MissileDetector" cpunm: 0 async: false time: 110
+OpRequest -> id: 1 opname: "FlareController`Init" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 118
+OpActivate -> id: 1 opname: "FlareController`Init" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 118
+OpRequest -> id: 1 opname: "MissileDetector`GetDataSize" objref: 9 clnm: "MissileDetector" cpunm: 0 async: false time: 128
+OpActivate -> id: 1 opname: "MissileDetector`GetDataSize" objref: 9 clnm: "MissileDetector" cpunm: 0 async: false time: 128
+OpCompleted -> id: 1 opname: "MissileDetector`GetDataSize" objref: 9 clnm: "MissileDetector" cpunm: 0 async: false time: 132
+OpCompleted -> id: 1 opname: "FlareController`Init" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 146
+ThreadCreate -> id: 3 period: false objref: 7 clnm: "Sensor" cpunm: 0 time: 150
+ThreadCreate -> id: 4 period: false objref: 9 clnm: "MissileDetector" cpunm: 0 time: 154
+ThreadCreate -> id: 5 period: false objref: 10 clnm: "FlareController" cpunm: 0 time: 158
+OpRequest -> id: 1 opname: "Sensor`IsFinished" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 162
+ThreadCreate -> id: 6 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 162
+ThreadSwapOut -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 162
+DelayedThreadSwapIn -> id: 2 objref: 11 clnm: "Timer" delay: 37 cpunm: 0 overhead: 2 time: 164
+OpRequest -> id: 2 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 164
+OpActivate -> id: 2 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 164
+OpCompleted -> id: 2 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 166
+ThreadSwapOut -> id: 2 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 166
+ThreadKill -> id: 2 cpunm: 0 time: 168
+ThreadSwapIn -> id: 3 objref: 7 clnm: "Sensor" cpunm: 0 overhead: 2 time: 168
+ThreadCreate -> id: 7 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 170
+OpRequest -> id: 3 opname: "Sensor`SetMissileType" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 190
+OpActivate -> id: 3 opname: "Sensor`SetMissileType" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 190
+OpCompleted -> id: 3 opname: "Sensor`SetMissileType" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 196
+OpRequest -> id: 3 opname: "Sensor`SkipNum" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 200
+OpActivate -> id: 3 opname: "Sensor`SkipNum" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 200
+OpRequest -> id: 3 opname: "Timer`Alarm" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 204
+OpActivate -> id: 3 opname: "Timer`Alarm" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 204
+OpRequest -> id: 3 opname: "Timer`Start" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 210
+OpActivate -> id: 3 opname: "Timer`Start" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 210
+OpCompleted -> id: 3 opname: "Timer`Start" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 220
+OpRequest -> id: 3 opname: "Timer`WaitAlarm" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 222
+ThreadCreate -> id: 8 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 222
+ThreadSwapOut -> id: 3 objref: 7 clnm: "Sensor" cpunm: 0 overhead: 2 time: 222
+ThreadSwapIn -> id: 4 objref: 9 clnm: "MissileDetector" cpunm: 0 overhead: 2 time: 224
+OpRequest -> id: 4 opname: "Sensor`GetMissileType" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 228
+OpActivate -> id: 4 opname: "Sensor`GetMissileType" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 228
+OpCompleted -> id: 4 opname: "Sensor`GetMissileType" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 242
+OpRequest -> id: 4 opname: "MissileDetector`Update" objref: 9 clnm: "MissileDetector" cpunm: 0 async: false time: 246
+OpActivate -> id: 4 opname: "MissileDetector`Update" objref: 9 clnm: "MissileDetector" cpunm: 0 async: false time: 246
+OpRequest -> id: 4 opname: "FlareController`MissileIsHere" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 256
+OpActivate -> id: 4 opname: "FlareController`MissileIsHere" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 256
+OpCompleted -> id: 4 opname: "FlareController`MissileIsHere" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 268
+OpRequest -> id: 4 opname: "Timer`Interruption" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 272
+OpActivate -> id: 4 opname: "Timer`Interruption" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 272
+OpCompleted -> id: 4 opname: "Timer`Interruption" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 278
+OpCompleted -> id: 4 opname: "MissileDetector`Update" objref: 9 clnm: "MissileDetector" cpunm: 0 async: false time: 282
+OpRequest -> id: 4 opname: "Sensor`GetMissileType" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 292
+ThreadCreate -> id: 9 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 292
+ThreadSwapOut -> id: 4 objref: 9 clnm: "MissileDetector" cpunm: 0 overhead: 2 time: 292
+DelayedThreadSwapIn -> id: 5 objref: 10 clnm: "FlareController" delay: 61 cpunm: 0 overhead: 2 time: 294
+OpRequest -> id: 5 opname: "FlareController`StepAlgorithm" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 294
+OpActivate -> id: 5 opname: "FlareController`StepAlgorithm" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 294
+OpRequest -> id: 5 opname: "FlareController`CheckFreshData" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 304
+OpActivate -> id: 5 opname: "FlareController`CheckFreshData" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 304
+OpRequest -> id: 5 opname: "FlareController`HigherPriority" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 310
+OpActivate -> id: 5 opname: "FlareController`HigherPriority" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 310
+OpCompleted -> id: 5 opname: "FlareController`HigherPriority" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 326
+OpRequest -> id: 5 opname: "FlareController`StartPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 330
+OpActivate -> id: 5 opname: "FlareController`StartPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 330
+OpCompleted -> id: 5 opname: "FlareController`StartPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 342
+OpCompleted -> id: 5 opname: "FlareController`CheckFreshData" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 360
+OpRequest -> id: 5 opname: "FlareController`StepPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 366
+OpActivate -> id: 5 opname: "FlareController`StepPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 366
+OpRequest -> id: 5 opname: "FlareController`ReleaseFlare" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 390
+OpActivate -> id: 5 opname: "FlareController`ReleaseFlare" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 390
+OpCompleted -> id: 5 opname: "FlareController`ReleaseFlare" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 402
+OpCompleted -> id: 5 opname: "FlareController`StepPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 418
+OpCompleted -> id: 5 opname: "FlareController`StepAlgorithm" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 424
+OpRequest -> id: 5 opname: "Timer`Alarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 446
+OpActivate -> id: 5 opname: "Timer`Alarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 446
+OpRequest -> id: 5 opname: "Timer`Start" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 452
+OpActivate -> id: 5 opname: "Timer`Start" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 452
+OpCompleted -> id: 5 opname: "Timer`Start" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 462
+OpRequest -> id: 5 opname: "Timer`WaitAlarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 464
+ThreadCreate -> id: 10 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 464
+ThreadSwapOut -> id: 5 objref: 10 clnm: "FlareController" cpunm: 0 overhead: 2 time: 464
+DelayedThreadSwapIn -> id: 6 objref: 11 clnm: "Timer" delay: 182 cpunm: 0 overhead: 2 time: 466
+OpRequest -> id: 6 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 466
+OpActivate -> id: 6 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 466
+OpCompleted -> id: 6 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 478
+ThreadSwapOut -> id: 6 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 478
+ThreadKill -> id: 6 cpunm: 0 time: 480
+ThreadCreate -> id: 11 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 480
+DelayedThreadSwapIn -> id: 7 objref: 8 clnm: "Timer" delay: 128 cpunm: 0 overhead: 2 time: 480
+OpRequest -> id: 7 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 480
+OpActivate -> id: 7 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 480
+OpCompleted -> id: 7 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 492
+ThreadSwapOut -> id: 7 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 492
+ThreadKill -> id: 7 cpunm: 0 time: 494
+ThreadSwapIn -> id: 8 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 494
+OpRequest -> id: 8 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 494
+OpActivate -> id: 8 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 494
+OpCompleted -> id: 8 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 506
+ThreadSwapOut -> id: 8 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 506
+ThreadKill -> id: 8 cpunm: 0 time: 508
+ThreadSwapIn -> id: 9 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 508
+OpRequest -> id: 9 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 508
+OpActivate -> id: 9 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 508
+OpCompleted -> id: 9 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 520
+ThreadSwapOut -> id: 9 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 520
+ThreadKill -> id: 9 cpunm: 0 time: 522
+ThreadSwapIn -> id: 10 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 522
+OpRequest -> id: 10 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 522
+OpActivate -> id: 10 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 522
+OpCompleted -> id: 10 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 534
+ThreadSwapOut -> id: 10 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 534
+ThreadKill -> id: 10 cpunm: 0 time: 536
+ThreadCreate -> id: 12 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 536
+DelayedThreadSwapIn -> id: 11 objref: 8 clnm: "Timer" delay: 12 cpunm: 0 overhead: 2 time: 536
+OpRequest -> id: 11 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 536
+OpActivate -> id: 11 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 536
+OpCompleted -> id: 11 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 548
+ThreadSwapOut -> id: 11 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 548
+ThreadKill -> id: 11 cpunm: 0 time: 550
+ThreadCreate -> id: 13 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 550
+DelayedThreadSwapIn -> id: 12 objref: 11 clnm: "Timer" delay: 10 cpunm: 0 overhead: 2 time: 550
+OpRequest -> id: 12 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 550
+OpActivate -> id: 12 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 550
+OpCompleted -> id: 12 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 562
+ThreadSwapOut -> id: 12 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 562
+ThreadKill -> id: 12 cpunm: 0 time: 564
+ThreadSwapIn -> id: 13 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 564
+OpRequest -> id: 13 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 564
+OpActivate -> id: 13 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 564
+OpCompleted -> id: 13 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 576
+ThreadSwapOut -> id: 13 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 576
+ThreadKill -> id: 13 cpunm: 0 time: 578
+ThreadCreate -> id: 14 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 678
+DelayedThreadSwapIn -> id: 14 objref: 11 clnm: "Timer" delay: 82 cpunm: 0 overhead: 2 time: 678
+OpRequest -> id: 14 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 678
+OpActivate -> id: 14 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 678
+OpCompleted -> id: 14 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 690
+ThreadSwapOut -> id: 14 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 690
+ThreadKill -> id: 14 cpunm: 0 time: 692
+ThreadCreate -> id: 15 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 692
+DelayedThreadSwapIn -> id: 15 objref: 8 clnm: "Timer" delay: 82 cpunm: 0 overhead: 2 time: 692
+OpRequest -> id: 15 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 692
+OpActivate -> id: 15 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 692
+OpCompleted -> id: 15 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 704
+ThreadSwapOut -> id: 15 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 704
+ThreadKill -> id: 15 cpunm: 0 time: 706
+ThreadCreate -> id: 16 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 806
+DelayedThreadSwapIn -> id: 16 objref: 11 clnm: "Timer" delay: 68 cpunm: 0 overhead: 2 time: 806
+OpRequest -> id: 16 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 806
+OpActivate -> id: 16 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 806
+OpCompleted -> id: 16 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 818
+ThreadSwapOut -> id: 16 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 818
+ThreadKill -> id: 16 cpunm: 0 time: 820
+ThreadCreate -> id: 17 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 820
+DelayedThreadSwapIn -> id: 17 objref: 8 clnm: "Timer" delay: 68 cpunm: 0 overhead: 2 time: 820
+OpRequest -> id: 17 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 820
+OpActivate -> id: 17 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 820
+OpCompleted -> id: 17 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 832
+ThreadSwapOut -> id: 17 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 832
+ThreadKill -> id: 17 cpunm: 0 time: 834
+ThreadCreate -> id: 18 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 934
+DelayedThreadSwapIn -> id: 18 objref: 11 clnm: "Timer" delay: 68 cpunm: 0 overhead: 2 time: 934
+OpRequest -> id: 18 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 934
+OpActivate -> id: 18 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 934
+OpCompleted -> id: 18 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 946
+ThreadSwapOut -> id: 18 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 946
+ThreadKill -> id: 18 cpunm: 0 time: 948
+ThreadCreate -> id: 19 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 948
+DelayedThreadSwapIn -> id: 19 objref: 8 clnm: "Timer" delay: 68 cpunm: 0 overhead: 2 time: 948
+OpRequest -> id: 19 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 948
+OpActivate -> id: 19 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 948
+OpCompleted -> id: 19 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 960
+ThreadSwapOut -> id: 19 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 960
+ThreadKill -> id: 19 cpunm: 0 time: 962
+ThreadCreate -> id: 20 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 1062
+DelayedThreadSwapIn -> id: 20 objref: 11 clnm: "Timer" delay: 68 cpunm: 0 overhead: 2 time: 1062
+OpRequest -> id: 20 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1062
+OpActivate -> id: 20 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1062
+OpCompleted -> id: 20 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1074
+ThreadSwapOut -> id: 20 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 1074
+ThreadKill -> id: 20 cpunm: 0 time: 1076
+ThreadCreate -> id: 21 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 1076
+DelayedThreadSwapIn -> id: 21 objref: 8 clnm: "Timer" delay: 68 cpunm: 0 overhead: 2 time: 1076
+OpRequest -> id: 21 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1076
+OpActivate -> id: 21 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1076
+OpCompleted -> id: 21 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1088
+ThreadSwapOut -> id: 21 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 1088
+ThreadKill -> id: 21 cpunm: 0 time: 1090
+ThreadCreate -> id: 22 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 1190
+DelayedThreadSwapIn -> id: 22 objref: 11 clnm: "Timer" delay: 68 cpunm: 0 overhead: 2 time: 1190
+OpRequest -> id: 22 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1190
+OpActivate -> id: 22 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1190
+OpCompleted -> id: 22 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1202
+ThreadSwapOut -> id: 22 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 1202
+ThreadKill -> id: 22 cpunm: 0 time: 1204
+ThreadCreate -> id: 23 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 1204
+DelayedThreadSwapIn -> id: 23 objref: 8 clnm: "Timer" delay: 68 cpunm: 0 overhead: 2 time: 1204
+OpRequest -> id: 23 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1204
+OpActivate -> id: 23 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1204
+OpCompleted -> id: 23 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1216
+ThreadSwapOut -> id: 23 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 1216
+ThreadKill -> id: 23 cpunm: 0 time: 1218
+ThreadCreate -> id: 24 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 1318
+DelayedThreadSwapIn -> id: 24 objref: 11 clnm: "Timer" delay: 68 cpunm: 0 overhead: 2 time: 1318
+OpRequest -> id: 24 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1318
+OpActivate -> id: 24 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1318
+OpCompleted -> id: 24 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1330
+ThreadSwapOut -> id: 24 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 1330
+ThreadKill -> id: 24 cpunm: 0 time: 1332
+ThreadCreate -> id: 25 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 1332
+DelayedThreadSwapIn -> id: 25 objref: 8 clnm: "Timer" delay: 68 cpunm: 0 overhead: 2 time: 1332
+OpRequest -> id: 25 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1332
+OpActivate -> id: 25 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1332
+OpCompleted -> id: 25 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1344
+ThreadSwapOut -> id: 25 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 1344
+ThreadKill -> id: 25 cpunm: 0 time: 1346
+ThreadSwapIn -> id: 3 objref: 7 clnm: "Sensor" cpunm: 0 overhead: 2 time: 1346
+OpActivate -> id: 3 opname: "Timer`WaitAlarm" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1346
+OpRequest -> id: 3 opname: "Timer`Stop" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1346
+OpActivate -> id: 3 opname: "Timer`Stop" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1346
+OpCompleted -> id: 3 opname: "Timer`Stop" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1350
+OpCompleted -> id: 3 opname: "Timer`WaitAlarm" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1352
+OpCompleted -> id: 3 opname: "Timer`Alarm" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1356
+OpCompleted -> id: 3 opname: "Sensor`SkipNum" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 1360
+OpRequest -> id: 3 opname: "Sensor`SetMissileType" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 1394
+OpActivate -> id: 3 opname: "Sensor`SetMissileType" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 1394
+OpCompleted -> id: 3 opname: "Sensor`SetMissileType" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 1400
+OpRequest -> id: 3 opname: "Sensor`SkipNum" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 1404
+OpActivate -> id: 3 opname: "Sensor`SkipNum" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 1404
+OpRequest -> id: 3 opname: "Timer`Alarm" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1408
+OpActivate -> id: 3 opname: "Timer`Alarm" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1408
+OpRequest -> id: 3 opname: "Timer`Start" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1414
+OpActivate -> id: 3 opname: "Timer`Start" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1414
+OpCompleted -> id: 3 opname: "Timer`Start" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1424
+OpRequest -> id: 3 opname: "Timer`WaitAlarm" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1426
+ThreadCreate -> id: 26 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 1426
+ThreadSwapOut -> id: 3 objref: 7 clnm: "Sensor" cpunm: 0 overhead: 2 time: 1426
+DelayedThreadSwapIn -> id: 4 objref: 9 clnm: "MissileDetector" delay: 48 cpunm: 0 overhead: 2 time: 1428
+OpActivate -> id: 4 opname: "Sensor`GetMissileType" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 1428
+OpCompleted -> id: 4 opname: "Sensor`GetMissileType" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 1442
+OpRequest -> id: 4 opname: "MissileDetector`Update" objref: 9 clnm: "MissileDetector" cpunm: 0 async: false time: 1446
+OpActivate -> id: 4 opname: "MissileDetector`Update" objref: 9 clnm: "MissileDetector" cpunm: 0 async: false time: 1446
+OpRequest -> id: 4 opname: "FlareController`MissileIsHere" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1456
+OpActivate -> id: 4 opname: "FlareController`MissileIsHere" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1456
+OpCompleted -> id: 4 opname: "FlareController`MissileIsHere" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1468
+OpRequest -> id: 4 opname: "Timer`Interruption" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1472
+OpActivate -> id: 4 opname: "Timer`Interruption" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1472
+OpCompleted -> id: 4 opname: "Timer`Interruption" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1478
+OpCompleted -> id: 4 opname: "MissileDetector`Update" objref: 9 clnm: "MissileDetector" cpunm: 0 async: false time: 1482
+OpRequest -> id: 4 opname: "Sensor`GetMissileType" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 1492
+ThreadCreate -> id: 27 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 1492
+ThreadSwapOut -> id: 4 objref: 9 clnm: "MissileDetector" cpunm: 0 overhead: 2 time: 1492
+DelayedThreadSwapIn -> id: 5 objref: 10 clnm: "FlareController" delay: 100 cpunm: 0 overhead: 2 time: 1494
+OpActivate -> id: 5 opname: "Timer`WaitAlarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1494
+OpRequest -> id: 5 opname: "Timer`Stop" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1494
+OpActivate -> id: 5 opname: "Timer`Stop" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1494
+OpCompleted -> id: 5 opname: "Timer`Stop" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1498
+OpCompleted -> id: 5 opname: "Timer`WaitAlarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1500
+OpCompleted -> id: 5 opname: "Timer`Alarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1504
+OpRequest -> id: 5 opname: "FlareController`StepAlgorithm" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1514
+OpActivate -> id: 5 opname: "FlareController`StepAlgorithm" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1514
+OpRequest -> id: 5 opname: "FlareController`CheckFreshData" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1524
+OpActivate -> id: 5 opname: "FlareController`CheckFreshData" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1524
+OpRequest -> id: 5 opname: "FlareController`HigherPriority" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1530
+OpActivate -> id: 5 opname: "FlareController`HigherPriority" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1530
+OpCompleted -> id: 5 opname: "FlareController`HigherPriority" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1546
+OpRequest -> id: 5 opname: "FlareController`StartPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1550
+OpActivate -> id: 5 opname: "FlareController`StartPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1550
+OpCompleted -> id: 5 opname: "FlareController`StartPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1562
+OpCompleted -> id: 5 opname: "FlareController`CheckFreshData" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1580
+OpRequest -> id: 5 opname: "FlareController`StepPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1586
+OpActivate -> id: 5 opname: "FlareController`StepPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1586
+OpRequest -> id: 5 opname: "FlareController`ReleaseFlare" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1610
+OpActivate -> id: 5 opname: "FlareController`ReleaseFlare" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1610
+OpCompleted -> id: 5 opname: "FlareController`ReleaseFlare" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1624
+OpCompleted -> id: 5 opname: "FlareController`StepPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1640
+OpCompleted -> id: 5 opname: "FlareController`StepAlgorithm" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 1646
+OpRequest -> id: 5 opname: "Timer`Alarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1668
+OpActivate -> id: 5 opname: "Timer`Alarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1668
+OpRequest -> id: 5 opname: "Timer`Start" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1674
+OpActivate -> id: 5 opname: "Timer`Start" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1674
+OpCompleted -> id: 5 opname: "Timer`Start" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1684
+OpRequest -> id: 5 opname: "Timer`WaitAlarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1686
+ThreadCreate -> id: 28 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 1686
+ThreadSwapOut -> id: 5 objref: 10 clnm: "FlareController" cpunm: 0 overhead: 2 time: 1686
+DelayedThreadSwapIn -> id: 26 objref: 11 clnm: "Timer" delay: 200 cpunm: 0 overhead: 2 time: 1688
+OpRequest -> id: 26 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1688
+OpActivate -> id: 26 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1688
+OpCompleted -> id: 26 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1700
+ThreadSwapOut -> id: 26 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 1700
+ThreadKill -> id: 26 cpunm: 0 time: 1702
+ThreadCreate -> id: 29 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 1702
+DelayedThreadSwapIn -> id: 27 objref: 8 clnm: "Timer" delay: 150 cpunm: 0 overhead: 2 time: 1702
+OpRequest -> id: 27 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1702
+OpActivate -> id: 27 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1702
+OpCompleted -> id: 27 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1714
+ThreadSwapOut -> id: 27 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 1714
+ThreadKill -> id: 27 cpunm: 0 time: 1716
+ThreadSwapIn -> id: 28 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 1716
+OpRequest -> id: 28 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1716
+OpActivate -> id: 28 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1716
+OpCompleted -> id: 28 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1728
+ThreadSwapOut -> id: 28 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 1728
+ThreadKill -> id: 28 cpunm: 0 time: 1730
+ThreadSwapIn -> id: 29 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 1730
+OpRequest -> id: 29 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1730
+OpActivate -> id: 29 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1730
+OpCompleted -> id: 29 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1742
+ThreadSwapOut -> id: 29 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 1742
+ThreadKill -> id: 29 cpunm: 0 time: 1744
+ThreadCreate -> id: 30 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 1844
+DelayedThreadSwapIn -> id: 30 objref: 11 clnm: "Timer" delay: 98 cpunm: 0 overhead: 2 time: 1844
+OpRequest -> id: 30 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1844
+OpActivate -> id: 30 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1844
+OpCompleted -> id: 30 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1856
+ThreadSwapOut -> id: 30 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 1856
+ThreadKill -> id: 30 cpunm: 0 time: 1858
+ThreadCreate -> id: 31 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 1858
+DelayedThreadSwapIn -> id: 31 objref: 8 clnm: "Timer" delay: 96 cpunm: 0 overhead: 2 time: 1858
+OpRequest -> id: 31 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1858
+OpActivate -> id: 31 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1858
+OpCompleted -> id: 31 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1870
+ThreadSwapOut -> id: 31 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 1870
+ThreadKill -> id: 31 cpunm: 0 time: 1872
+ThreadCreate -> id: 32 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 1972
+DelayedThreadSwapIn -> id: 32 objref: 11 clnm: "Timer" delay: 68 cpunm: 0 overhead: 2 time: 1972
+OpRequest -> id: 32 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1972
+OpActivate -> id: 32 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1972
+OpCompleted -> id: 32 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 1984
+ThreadSwapOut -> id: 32 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 1984
+ThreadKill -> id: 32 cpunm: 0 time: 1986
+ThreadCreate -> id: 33 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 1986
+DelayedThreadSwapIn -> id: 33 objref: 8 clnm: "Timer" delay: 68 cpunm: 0 overhead: 2 time: 1986
+OpRequest -> id: 33 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1986
+OpActivate -> id: 33 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1986
+OpCompleted -> id: 33 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 1998
+ThreadSwapOut -> id: 33 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 1998
+ThreadKill -> id: 33 cpunm: 0 time: 2000
+ThreadCreate -> id: 34 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 2100
+DelayedThreadSwapIn -> id: 34 objref: 11 clnm: "Timer" delay: 68 cpunm: 0 overhead: 2 time: 2100
+OpRequest -> id: 34 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2100
+OpActivate -> id: 34 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2100
+OpCompleted -> id: 34 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2112
+ThreadSwapOut -> id: 34 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 2112
+ThreadKill -> id: 34 cpunm: 0 time: 2114
+ThreadCreate -> id: 35 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 2114
+DelayedThreadSwapIn -> id: 35 objref: 8 clnm: "Timer" delay: 68 cpunm: 0 overhead: 2 time: 2114
+OpRequest -> id: 35 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2114
+OpActivate -> id: 35 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2114
+OpCompleted -> id: 35 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2126
+ThreadSwapOut -> id: 35 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 2126
+ThreadKill -> id: 35 cpunm: 0 time: 2128
+ThreadSwapIn -> id: 3 objref: 7 clnm: "Sensor" cpunm: 0 overhead: 2 time: 2128
+OpActivate -> id: 3 opname: "Timer`WaitAlarm" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2128
+OpRequest -> id: 3 opname: "Timer`Stop" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2128
+OpActivate -> id: 3 opname: "Timer`Stop" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2128
+OpCompleted -> id: 3 opname: "Timer`Stop" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2132
+OpCompleted -> id: 3 opname: "Timer`WaitAlarm" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2134
+OpCompleted -> id: 3 opname: "Timer`Alarm" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2138
+OpCompleted -> id: 3 opname: "Sensor`SkipNum" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 2142
+OpRequest -> id: 3 opname: "Sensor`SetMissileType" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 2172
+OpActivate -> id: 3 opname: "Sensor`SetMissileType" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 2172
+OpCompleted -> id: 3 opname: "Sensor`SetMissileType" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 2178
+OpRequest -> id: 3 opname: "Sensor`SkipNum" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 2182
+OpActivate -> id: 3 opname: "Sensor`SkipNum" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 2182
+OpRequest -> id: 3 opname: "Timer`Alarm" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2186
+OpActivate -> id: 3 opname: "Timer`Alarm" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2186
+OpRequest -> id: 3 opname: "Timer`Start" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2192
+OpActivate -> id: 3 opname: "Timer`Start" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2192
+OpCompleted -> id: 3 opname: "Timer`Start" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2202
+OpRequest -> id: 3 opname: "Timer`WaitAlarm" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2204
+ThreadCreate -> id: 36 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 2204
+ThreadSwapOut -> id: 3 objref: 7 clnm: "Sensor" cpunm: 0 overhead: 2 time: 2204
+DelayedThreadSwapIn -> id: 4 objref: 9 clnm: "MissileDetector" delay: 44 cpunm: 0 overhead: 2 time: 2206
+OpActivate -> id: 4 opname: "Sensor`GetMissileType" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 2206
+OpCompleted -> id: 4 opname: "Sensor`GetMissileType" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 2220
+OpRequest -> id: 4 opname: "MissileDetector`Update" objref: 9 clnm: "MissileDetector" cpunm: 0 async: false time: 2224
+OpActivate -> id: 4 opname: "MissileDetector`Update" objref: 9 clnm: "MissileDetector" cpunm: 0 async: false time: 2224
+OpRequest -> id: 4 opname: "FlareController`MissileIsHere" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2234
+OpActivate -> id: 4 opname: "FlareController`MissileIsHere" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2234
+OpCompleted -> id: 4 opname: "FlareController`MissileIsHere" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2246
+OpRequest -> id: 4 opname: "Timer`Interruption" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2250
+OpActivate -> id: 4 opname: "Timer`Interruption" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2250
+OpCompleted -> id: 4 opname: "Timer`Interruption" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2256
+OpCompleted -> id: 4 opname: "MissileDetector`Update" objref: 9 clnm: "MissileDetector" cpunm: 0 async: false time: 2260
+OpRequest -> id: 4 opname: "Sensor`GetMissileType" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 2270
+ThreadCreate -> id: 37 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 2270
+ThreadSwapOut -> id: 4 objref: 9 clnm: "MissileDetector" cpunm: 0 overhead: 2 time: 2270
+DelayedThreadSwapIn -> id: 5 objref: 10 clnm: "FlareController" delay: 96 cpunm: 0 overhead: 2 time: 2272
+OpActivate -> id: 5 opname: "Timer`WaitAlarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2272
+OpRequest -> id: 5 opname: "Timer`Stop" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2272
+OpActivate -> id: 5 opname: "Timer`Stop" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2272
+OpCompleted -> id: 5 opname: "Timer`Stop" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2276
+OpCompleted -> id: 5 opname: "Timer`WaitAlarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2278
+OpCompleted -> id: 5 opname: "Timer`Alarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2282
+OpRequest -> id: 5 opname: "FlareController`StepAlgorithm" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2292
+OpActivate -> id: 5 opname: "FlareController`StepAlgorithm" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2292
+OpRequest -> id: 5 opname: "FlareController`CheckFreshData" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2302
+OpActivate -> id: 5 opname: "FlareController`CheckFreshData" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2302
+OpRequest -> id: 5 opname: "FlareController`HigherPriority" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2308
+OpActivate -> id: 5 opname: "FlareController`HigherPriority" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2308
+OpCompleted -> id: 5 opname: "FlareController`HigherPriority" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2324
+OpRequest -> id: 5 opname: "FlareController`StartPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2328
+OpActivate -> id: 5 opname: "FlareController`StartPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2328
+OpCompleted -> id: 5 opname: "FlareController`StartPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2340
+OpCompleted -> id: 5 opname: "FlareController`CheckFreshData" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2358
+OpRequest -> id: 5 opname: "FlareController`StepPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2364
+OpActivate -> id: 5 opname: "FlareController`StepPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2364
+OpRequest -> id: 5 opname: "FlareController`ReleaseFlare" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2388
+OpActivate -> id: 5 opname: "FlareController`ReleaseFlare" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2388
+OpCompleted -> id: 5 opname: "FlareController`ReleaseFlare" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2404
+OpCompleted -> id: 5 opname: "FlareController`StepPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2420
+OpCompleted -> id: 5 opname: "FlareController`StepAlgorithm" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2426
+OpRequest -> id: 5 opname: "Timer`Alarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2448
+OpActivate -> id: 5 opname: "Timer`Alarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2448
+OpRequest -> id: 5 opname: "Timer`Start" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2454
+OpActivate -> id: 5 opname: "Timer`Start" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2454
+OpCompleted -> id: 5 opname: "Timer`Start" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2464
+OpRequest -> id: 5 opname: "Timer`WaitAlarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2466
+ThreadCreate -> id: 38 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 2466
+ThreadSwapOut -> id: 5 objref: 10 clnm: "FlareController" cpunm: 0 overhead: 2 time: 2466
+DelayedThreadSwapIn -> id: 36 objref: 11 clnm: "Timer" delay: 202 cpunm: 0 overhead: 2 time: 2468
+OpRequest -> id: 36 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2468
+OpActivate -> id: 36 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2468
+OpCompleted -> id: 36 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2480
+ThreadSwapOut -> id: 36 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 2480
+ThreadKill -> id: 36 cpunm: 0 time: 2482
+ThreadCreate -> id: 39 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 2482
+DelayedThreadSwapIn -> id: 37 objref: 8 clnm: "Timer" delay: 152 cpunm: 0 overhead: 2 time: 2482
+OpRequest -> id: 37 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2482
+OpActivate -> id: 37 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2482
+OpCompleted -> id: 37 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2494
+ThreadSwapOut -> id: 37 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 2494
+ThreadKill -> id: 37 cpunm: 0 time: 2496
+ThreadSwapIn -> id: 38 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 2496
+OpRequest -> id: 38 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2496
+OpActivate -> id: 38 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2496
+OpCompleted -> id: 38 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2508
+ThreadSwapOut -> id: 38 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 2508
+ThreadKill -> id: 38 cpunm: 0 time: 2510
+ThreadSwapIn -> id: 39 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 2510
+OpRequest -> id: 39 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2510
+OpActivate -> id: 39 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2510
+OpCompleted -> id: 39 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2522
+ThreadSwapOut -> id: 39 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 2522
+ThreadKill -> id: 39 cpunm: 0 time: 2524
+ThreadSwapIn -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 2524
+OpActivate -> id: 1 opname: "Sensor`IsFinished" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 2524
+OpCompleted -> id: 1 opname: "Sensor`IsFinished" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 2524
+OpRequest -> id: 1 opname: "MissileDetector`IsFinished" objref: 9 clnm: "MissileDetector" cpunm: 0 async: false time: 2528
+OpActivate -> id: 1 opname: "MissileDetector`IsFinished" objref: 9 clnm: "MissileDetector" cpunm: 0 async: false time: 2528
+OpCompleted -> id: 1 opname: "MissileDetector`IsFinished" objref: 9 clnm: "MissileDetector" cpunm: 0 async: false time: 2528
+OpRequest -> id: 1 opname: "FlareController`IsFinished" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2532
+ThreadCreate -> id: 40 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 2532
+ThreadSwapOut -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 2532
+DelayedThreadSwapIn -> id: 3 objref: 7 clnm: "Sensor" delay: 6 cpunm: 0 overhead: 2 time: 2534
+OpActivate -> id: 3 opname: "Timer`WaitAlarm" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2534
+OpRequest -> id: 3 opname: "Timer`Stop" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2534
+OpActivate -> id: 3 opname: "Timer`Stop" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2534
+OpCompleted -> id: 3 opname: "Timer`Stop" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2538
+OpCompleted -> id: 3 opname: "Timer`WaitAlarm" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2540
+OpCompleted -> id: 3 opname: "Timer`Alarm" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2544
+OpCompleted -> id: 3 opname: "Sensor`SkipNum" objref: 7 clnm: "Sensor" cpunm: 0 async: false time: 2548
+ThreadSwapOut -> id: 3 objref: 7 clnm: "Sensor" cpunm: 0 overhead: 2 time: 2570
+ThreadCreate -> id: 41 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 2572
+DelayedThreadSwapIn -> id: 40 objref: 11 clnm: "Timer" delay: 30 cpunm: 0 overhead: 2 time: 2572
+OpRequest -> id: 40 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2572
+OpActivate -> id: 40 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2572
+OpCompleted -> id: 40 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2584
+ThreadSwapOut -> id: 40 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 2584
+ThreadKill -> id: 40 cpunm: 0 time: 2586
+ThreadSwapIn -> id: 41 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 2586
+OpRequest -> id: 41 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2586
+OpActivate -> id: 41 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2586
+OpCompleted -> id: 41 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2588
+ThreadSwapOut -> id: 41 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 2588
+ThreadKill -> id: 41 cpunm: 0 time: 2590
+ThreadCreate -> id: 42 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 2690
+DelayedThreadSwapIn -> id: 42 objref: 11 clnm: "Timer" delay: 98 cpunm: 0 overhead: 2 time: 2690
+OpRequest -> id: 42 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2690
+OpActivate -> id: 42 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2690
+OpCompleted -> id: 42 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2702
+ThreadSwapOut -> id: 42 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 2702
+ThreadKill -> id: 42 cpunm: 0 time: 2704
+ThreadCreate -> id: 43 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 2704
+DelayedThreadSwapIn -> id: 43 objref: 8 clnm: "Timer" delay: 72 cpunm: 0 overhead: 2 time: 2704
+OpRequest -> id: 43 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2704
+OpActivate -> id: 43 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2704
+OpCompleted -> id: 43 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2706
+ThreadSwapOut -> id: 43 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 2706
+ThreadKill -> id: 43 cpunm: 0 time: 2708
+ThreadSwapIn -> id: 5 objref: 10 clnm: "FlareController" cpunm: 0 overhead: 2 time: 2708
+OpActivate -> id: 5 opname: "Timer`WaitAlarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2708
+OpRequest -> id: 5 opname: "Timer`Stop" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2708
+OpActivate -> id: 5 opname: "Timer`Stop" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2708
+OpCompleted -> id: 5 opname: "Timer`Stop" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2712
+OpCompleted -> id: 5 opname: "Timer`WaitAlarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2714
+OpCompleted -> id: 5 opname: "Timer`Alarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2718
+OpRequest -> id: 5 opname: "FlareController`StepAlgorithm" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2728
+OpActivate -> id: 5 opname: "FlareController`StepAlgorithm" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2728
+OpRequest -> id: 5 opname: "FlareController`StepPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2734
+OpActivate -> id: 5 opname: "FlareController`StepPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2734
+OpRequest -> id: 5 opname: "FlareController`ReleaseFlare" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2758
+OpActivate -> id: 5 opname: "FlareController`ReleaseFlare" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2758
+OpCompleted -> id: 5 opname: "FlareController`ReleaseFlare" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2776
+OpCompleted -> id: 5 opname: "FlareController`StepPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2792
+OpCompleted -> id: 5 opname: "FlareController`StepAlgorithm" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2798
+OpRequest -> id: 5 opname: "Timer`Alarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2820
+OpActivate -> id: 5 opname: "Timer`Alarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2820
+OpRequest -> id: 5 opname: "Timer`Start" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2826
+OpActivate -> id: 5 opname: "Timer`Start" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2826
+OpCompleted -> id: 5 opname: "Timer`Start" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2836
+OpRequest -> id: 5 opname: "Timer`WaitAlarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2838
+ThreadCreate -> id: 44 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 2838
+ThreadSwapOut -> id: 5 objref: 10 clnm: "FlareController" cpunm: 0 overhead: 2 time: 2838
+DelayedThreadSwapIn -> id: 44 objref: 11 clnm: "Timer" delay: 88 cpunm: 0 overhead: 2 time: 2840
+OpRequest -> id: 44 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2840
+OpActivate -> id: 44 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2840
+OpCompleted -> id: 44 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2852
+ThreadSwapOut -> id: 44 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 2852
+ThreadKill -> id: 44 cpunm: 0 time: 2854
+ThreadCreate -> id: 45 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 2854
+DelayedThreadSwapIn -> id: 45 objref: 8 clnm: "Timer" delay: 90 cpunm: 0 overhead: 2 time: 2854
+OpRequest -> id: 45 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2854
+OpActivate -> id: 45 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2854
+OpCompleted -> id: 45 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2856
+ThreadSwapOut -> id: 45 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 2856
+ThreadKill -> id: 45 cpunm: 0 time: 2858
+ThreadSwapIn -> id: 5 objref: 10 clnm: "FlareController" cpunm: 0 overhead: 2 time: 2858
+OpActivate -> id: 5 opname: "Timer`WaitAlarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2858
+OpRequest -> id: 5 opname: "Timer`Stop" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2858
+OpActivate -> id: 5 opname: "Timer`Stop" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2858
+OpCompleted -> id: 5 opname: "Timer`Stop" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2862
+OpCompleted -> id: 5 opname: "Timer`WaitAlarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2864
+OpCompleted -> id: 5 opname: "Timer`Alarm" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2868
+OpRequest -> id: 5 opname: "FlareController`StepAlgorithm" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2878
+OpActivate -> id: 5 opname: "FlareController`StepAlgorithm" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2878
+OpRequest -> id: 5 opname: "FlareController`StepPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2884
+OpActivate -> id: 5 opname: "FlareController`StepPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2884
+OpCompleted -> id: 5 opname: "FlareController`StepPlan" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2908
+OpCompleted -> id: 5 opname: "FlareController`StepAlgorithm" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2914
+OpRequest -> id: 5 opname: "FlareController`StepAlgorithm" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2924
+ThreadCreate -> id: 46 period: true objref: 11 clnm: "Timer" cpunm: 0 time: 2924
+ThreadSwapOut -> id: 5 objref: 10 clnm: "FlareController" cpunm: 0 overhead: 2 time: 2924
+DelayedThreadSwapIn -> id: 46 objref: 11 clnm: "Timer" delay: 26 cpunm: 0 overhead: 2 time: 2926
+OpRequest -> id: 46 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2926
+OpActivate -> id: 46 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2926
+OpCompleted -> id: 46 opname: "Timer`IncTime" objref: 11 clnm: "Timer" cpunm: 0 async: false time: 2928
+ThreadSwapOut -> id: 46 objref: 11 clnm: "Timer" cpunm: 0 overhead: 2 time: 2928
+ThreadKill -> id: 46 cpunm: 0 time: 2930
+ThreadCreate -> id: 47 period: true objref: 8 clnm: "Timer" cpunm: 0 time: 2930
+DelayedThreadSwapIn -> id: 47 objref: 8 clnm: "Timer" delay: 16 cpunm: 0 overhead: 2 time: 2930
+OpRequest -> id: 47 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2930
+OpActivate -> id: 47 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2930
+OpCompleted -> id: 47 opname: "Timer`IncTime" objref: 8 clnm: "Timer" cpunm: 0 async: false time: 2932
+ThreadSwapOut -> id: 47 objref: 8 clnm: "Timer" cpunm: 0 overhead: 2 time: 2932
+ThreadKill -> id: 47 cpunm: 0 time: 2934
+ThreadSwapIn -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 2934
+OpActivate -> id: 1 opname: "FlareController`IsFinished" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2934
+OpCompleted -> id: 1 opname: "FlareController`IsFinished" objref: 10 clnm: "FlareController" cpunm: 0 async: false time: 2938
+OpCompleted -> id: 1 opname: "A`Test" objref: 6 clnm: "A" cpunm: 0 async: false time: 2958
+ThreadSwapOut -> id: 1 objref: nil clnm: nil cpunm: 0 overhead: 2 time: 2960

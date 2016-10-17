@@ -1,0 +1,8 @@
+r simulator1.vdm
+latex simulator1.vdm
+r simulator2.vdm
+latex simulator2.vdm
+i
+tc pos
+cg
+quit

@@ -1,0 +1,97 @@
+%\documentclass{llncs}
+\documentclass{article}
+
+%
+% $Id: improve.tex,v 1.1 2006/01/24 05:04:03 vdmtools Exp $
+%
+
+%
+% PREAMBLE
+%
+
+\usepackage{a4wide}
+\usepackage{alltt}
+
+% language settings
+\usepackage[english]{babel}
+
+% graphics includes
+\usepackage{epsfig}
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\hyphenation{}
+
+%
+% BEGIN DOCUMENT
+%
+
+\newcommand{\pgldk}
+{PGL Consult \\ Miravej 3, S{\o}ften\\
+DK-8382 Hinnerup\\ Denmark. \\
+\textit{http://www.pglconsult.dk}\\~~email:\,
+\texttt{pgl@pglconsult.dk}}
+%\email{pgl@pglconsult.dk}}
+
+\newcommand{\chessnl}
+{Chess Information Technology BV\\ P.O. Box 5021\\
+2000 CA Haarlem\\ The Netherlands. \\
+\textit{http://www.chess.nl}\\~~email:\,
+\texttt{Marcel.Verhoef@chess.nl}}
+%\email{Marcel.Verhoef@chess.nl}}
+
+\newenvironment{vpp}
+{\noindent \rule{\columnwidth}{0.5pt} \begin{alltt}}
+{\end{alltt} \rule{\columnwidth}{0.5pt}}
+
+\begin{document}
+
+% use empty page style
+\pagestyle{plain}
+
+% the title page
+\title{Improvement Suggestions for VDMTools \\
+\small{($Revision: 1.1 $ -- \today)}}
+\author{Peter Gorm Larsen\\ \pgldk \and Marcel Verhoef\\\chessnl}
+%\author{Peter Gorm Larsen\,\inst{1} \and Marcel Verhoef\,\inst{2}}
+%\institute{\pgldk \and \chessnl}
+\date{\mbox{}}
+\maketitle
+
+%\newpage
+
+\tableofcontents
+
+\newpage
+
+\input{intro.tex}
+
+\input{proof.tex}
+
+\input{visualisation.tex}
+
+\input{tracing.tex}
+
+\input{deadlock.tex}
+
+\input{language.tex}
+
+\input{umlcoupling.tex}
+
+\input{orgcase.tex}
+
+\input{newcase.tex}
+
+\nocite{*}
+
+\bibliographystyle{splncs}
+\bibliography{improve}
+
+\pagebreak
+
+\section*{Appendix -- Auxiliary classes}
+
+\input{Logger.vpp.tex}
+
+\input{AbstractTaskEvent.vpp.tex}
+
+\end{document}

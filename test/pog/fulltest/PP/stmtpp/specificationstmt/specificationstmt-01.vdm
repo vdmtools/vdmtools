@@ -1,0 +1,21 @@
+class SpecificationStmtTest
+
+instance variables
+
+  inst1 : bool;
+  inst2 : nat
+  
+operations
+
+  SpecificationStmt1(arg1, arg2 : nat) res : real ==
+  ([ext rd inst1 : bool
+        wr inst2 : nat
+    pre inst1
+    post inst2 = inst2~ + arg1 and res = arg2 * 8.7];
+    return res);
+     
+end SpecificationStmtTest
+
+
+
+

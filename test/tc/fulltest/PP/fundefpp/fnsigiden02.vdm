@@ -1,0 +1,27 @@
+class A
+
+functions
+protected fn1(-: int) r: int
+post r = 1;
+
+protected fn2(a: int, b: int) r: bool
+post r = (a = b);
+
+protected fn3(a: int) r: bool
+post r = (a >= 0);
+
+end A
+
+class B is subclass of A
+
+functions
+fn1(-: int) r: int
+post r = 1;
+
+fn2(a: char, b: char) r: bool
+post r = (a <> b);
+
+fn3(-: int) r: char
+post r = 'a';
+
+end B

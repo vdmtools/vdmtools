@@ -1,0 +1,61 @@
+#! /usr/bin/perl -w
+
+use strict; 
+
+# cln: checking ln 
+# usage: 
+# cln -s file
+# cln -s files dir 
+# cln -s file1 file2
+
+use Getopt::Long; 
+use File::Basename; 
+
+my $opt_s; 
+GetOptions "s" => \$opt_s; 
+
+die "$0: requires -s option.\n" unless $opt_s; 
+
+sub usage
+{
+    print STDERR <<"EO_USAGE"
+Usage: 
+$0  -s SOURCE [DEST]
+$0  -s SOURCE... DIRECTORY
+EO_USAGE
+    ; 
+}
+usage if (@ARGV == 0); 
+
+sub link_file_to_x
+{
+    my ($src, $dest) = @_; 
+    
+    if (!defined($dest) || -d $dest) {
+        my $file = basename $src; 
+        $dest = defined($dest) ?  $dest."/".$file : $file; 
+    }
+
+    # print STDERR "file='$file' dest='$dest'\n"; 
+    if (-l $dest) {
+        my $link = readlink $dest; 
+        if ($link ne $src) {
+            warn "$0: destination: $dest is different (-> $link).\n"; 
+        } else {
+            print STDERR "$0: ok: $dest -> $src\n"; 
+        }            
+    } elsif (-e $dest) {
+        warn "$0: destination: $dest already exists.\n"; 
+    } else {
+        symlink($src, $dest) or warn "$0: symlink failed: $!\n";         
+    }
+}
+
+my ($src, $dest); 
+
+$dest = (@ARGV >1) ? pop @ARGV : undef; 
+die "$0: destination $dest must be directory."
+    if @ARGV>2 && ! -d $dest; 
+foreach $src (@ARGV) {
+    link_file_to_x $src, $dest; 
+}
