@@ -6,4 +6,4 @@ VDMTools is an IDE for VDM-family.
 
 ## Binary packages
 
-[FMVDM](http://fmvdm.org)
+[FMVDM](http://fmvdm.org/vdmtools)
