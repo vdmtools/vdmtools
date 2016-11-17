@@ -16,44 +16,31 @@ export EDITOR=vim
 export PATH=/usr/local/bin:/sbin:/usr/sbin:${PATH}:${HOME}/bin:.
 
 # C environment
-#export MACOSX_DEPLOYMENT_TARGET=10.4
-#export MACOSX_DEPLOYMENT_TARGET=10.5
-#export MACOSX_DEPLOYMENT_TARGET=10.6
-#export MACOSX_DEPLOYMENT_TARGET=10.7
-#export MACOSX_DEPLOYMENT_TARGET=10.8
-#export MACOSX_DEPLOYMENT_TARGET=10.9
-#export MACOSX_DEPLOYMENT_TARGET=10.10
-#export MACOSX_DEPLOYMENT_TARGET=10.11
-export MACOSX_DEPLOYMENT_TARGET=10.12
+#export MACOSX_DEPLOYMENT_TARGET=10.x
+export MACOSX_DEPLOYMENT_TARGET=$(sw_vers -productVersion | awk -F '.' '{print $1 "." $2}')
 
 if [ "10.4" = ${MACOSX_DEPLOYMENT_TARGET} ]; then
-    export SDKNAME=MacOSX${MACOSX_DEPLOYMENT_TARGET}u.sdk
-    export SDK=/Developer/SDKs/${SDKNAME}
+    export SDK=/Developer/SDKs/MacOSX10.4u.sdk
     export ARCH="-arch i386 -arch ppc"
     export CC=gcc-4.0
     export CXX=g++-4.0
     export ANTHOME=/usr
 else
-    if [ "10.10" = ${MACOSX_DEPLOYMENT_TARGET} ]; then
-        export SDKNAME=MacOSX10.11.sdk #xCode 7.1
-    else
-        export SDKNAME=MacOSX${MACOSX_DEPLOYMENT_TARGET}.sdk
-    fi
     export COCOA=1
     if [ "10.5" = ${MACOSX_DEPLOYMENT_TARGET} ]; then
-        export SDK=/Developer/SDKs/${SDKNAME}
+        export SDK=/Developer/SDKs/MacOSX10.5.sdk
         export ARCH="-arch i386 -arch ppc"
         export CC=gcc-4.2
         export CXX=g++-4.2
         export ANTHOME=/usr
     elif [ "10.6" = ${MACOSX_DEPLOYMENT_TARGET} ]; then
-        export SDK=/Developer/SDKs/${SDKNAME}
+        export SDK=/Developer/SDKs/MacOSX10.6.sdk
         export ARCH="-arch x86_64"
         export CC=gcc-4.2
         export CXX=g++-4.2
         export ANTHOME=/usr
     else
-        export SDK=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/${SDKNAME}
+        export SDK=$(xcodebuild -version -sdk | grep SDKs/MacOSX | head -1 | awk -F ' ' '{print $2}')
         export ARCH="-arch x86_64"
         export CC=clang
         export CXX=clang++
