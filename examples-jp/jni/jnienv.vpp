@@ -24,6 +24,7 @@ public JNI_VERSION_1_1 = 0x00010001;
 public JNI_VERSION_1_2 = 0x00010002;
 public JNI_VERSION_1_4 = 0x00010004;
 public JNI_VERSION_1_6 = 0x00010006;
+public JNI_VERSION_1_8 = 0x00010008;
 
 public JNI_OK        =  0;  -- success
 public JNI_ERR       = -1;  -- unknown error
@@ -478,13 +479,17 @@ functions
 public
 VNtoVS: jint -> seq of char
 VNtoVS(vn) ==
-  cases vn:
-    (JNI_VERSION_1_1) -> "JNI_VERSION_1_1",
-    (JNI_VERSION_1_2) -> "JNI_VERSION_1_2",
-    (JNI_VERSION_1_4) -> "JNI_VERSION_1_4",
-    (JNI_VERSION_1_6) -> "JNI_VERSION_1_6",
-    others            -> undefined
-  end;
+--  cases vn:
+--    (JNI_VERSION_1_1) -> "JNI_VERSION_1_1",
+--    (JNI_VERSION_1_2) -> "JNI_VERSION_1_2",
+--    (JNI_VERSION_1_4) -> "JNI_VERSION_1_4",
+--    (JNI_VERSION_1_6) -> "JNI_VERSION_1_6",
+--    (JNI_VERSION_1_8) -> "JNI_VERSION_1_8",
+--    others            -> undefined
+--  end;
+  def major = VDMUtil`val2seq_of_char[nat](vn div 0x10000);
+      minor = VDMUtil`val2seq_of_char[nat](vn rem 0x10000);
+  in "JNI_VERSION_" ^ major ^ "_" ^ minor;
 
 end JNIEnv
 

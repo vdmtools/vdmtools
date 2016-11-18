@@ -18,50 +18,52 @@ LIBDIR    = $(VDMTBDIR)
 all: jnienv.so Hello.jar
 
 ifeq ($(strip $(OSTYPE)),Darwin)
-OSV = $(shell uname -r)
-OSMV = $(word 1, $(subst ., ,$(strip $(OSV))))
+MAJOR_DARWIN_VERSION=$(shell uname -r | awk -F '.' '{print $$1}')
 CCPATH = /usr/bin/
-CFLAGS	= -g -I$(INCDIR) -I/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers
-ifeq ($(strip $(OSMV)),12) # 10.8
-CC      = $(CCPATH)clang++
-CXX     = $(CCPATH)clang++
-CFLAGS	+= -Wno-return-type-c-linkage
-else
-ifeq ($(strip $(OSMV)),11) # 10.7
-CC      = $(CCPATH)clang++
-CXX     = $(CCPATH)clang++
-CFLAGS	+= -Wno-return-type-c-linkage
-else
-ifeq ($(strip $(OSMV)),10) # 10.6
-CC      = $(CCPATH)g++
-CXX     = $(CCPATH)g++
-else
-ifeq ($(strip $(OSMV)),9) # 10.5
-CC      = $(CCPATH)g++-4.2
-CXX     = $(CCPATH)g++-4.2
-else
-ifeq ($(strip $(OSMV)),8) # 10.4
+
+ifeq ($(strip $(MAJER_DARWIN_VERSION)),8) # 10.4
 CC      = $(CCPATH)g++-4.0
 CXX     = $(CCPATH)g++-4.0
+CFLAGS	= -g -I$(INCDIR) -I/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers
+LIBFLAGS = -L. -L$(LIBDIR) -lvdm_darwin -liconv -framework JavaVM -Wl,-syslibroot,$(SDK)
 else
+ifeq ($(strip $(MAJER_DARWIN_VERSION)),9) # 10.5
+CC      = $(CCPATH)g++-4.2
+CXX     = $(CCPATH)g++-4.2
+CFLAGS	= -g -I$(INCDIR) -I/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers
+LIBFLAGS = -L. -L$(LIBDIR) -lvdm_darwin -liconv -framework JavaVM -Wl,-syslibroot,$(SDK)
+else
+ifeq ($(strip $(MAJER_DARWIN_VERSION)),10) # 10.6
 CC      = $(CCPATH)g++
 CXX     = $(CCPATH)g++
-endif
-endif
-endif
-endif
-endif
+CFLAGS	= -g -I$(INCDIR) -I/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers
+LIBFLAGS = -L. -L$(LIBDIR) -lvdm_darwin -liconv -framework JavaVM -Wl,-syslibroot,$(SDK)
+else #10.7~
+JDK_VERSION=jdk1.8.0_111
+JDK_HOME = /Library/Java/JavaVirtualMachines/${JDK_VERSION}.jdk/Contents/Home
+CFLAGS	= -g -I$(INCDIR) -I$(JDK_HOME)/include -I$(JDK_HOME)/include/darwin
+JNI_LIB_DIR=$(JDK_HOME)/jre/lib/server
+CC      = $(CCPATH)clang++
+CXX     = $(CCPATH)clang++
+CFLAGS	+= -Wno-return-type-c-linkage
+LIBFLAGS = -L. -L$(LIBDIR) -lvdm_darwin -liconv -Wl,-syslibroot,$(SDK) -L$(JNI_LIB_DIR) -ljvm
+endif #10.6
+endif #10.5
+endif #10.4
 
 CCFLAGS	= $(CFLAGS)
 CXXFLAGS= $(CCFLAGS)
 
-LIBFLAGS = -L. -L$(LIBDIR) -lvdm_darwin -liconv -framework JavaVM -Wl,-syslibroot,$(SDK)
-
-jnienv.so: jnienv.cc
+jnienv.so: jnienv.cc export
 	${CXX} $(CXXFLAGS) $(ARCH) -dynamiclib -fPIC -o $@ $< $(LIBFLAGS)
 
 JAVACCFLAGS = -J-Dfile.encoding=UTF-8 -encoding UTF8
 JARFLAGS = -J-Dfile.encoding=UTF-8
+
+export:
+	echo "#!/bin/bash" > exp.sh
+	echo "export DYLD_LIBRARY_PATH=$(JNI_LIB_DIR):$$DYLD_LIBRARY_PATH" >> exp.sh
+	chmod 755 exp.sh
 endif
 
 ifeq ($(strip $(OSTYPE)),Linux)
@@ -77,9 +79,11 @@ JVMDIR=i386/client
 endif
 
 # for Ubuntu 10.04 - 12.04, Debian 6
-JDK_HOME = /usr/lib/jvm/java-1.6.0-openjdk
+#JDK_HOME = /usr/lib/jvm/java-1.6.0-openjdk
 # for Fedora 17
 #JDK_HOME = /usr/lib/jvm/java-1.7.0-openjdk.x86_64
+
+JDK_HOME = $(shell readlink -f $(shell which javac) | xargs dirname | xargs dirname)
 JNI_INC_DIR = $(JDK_HOME)/include
 
 JNI_LIB_DIR = $(JDK_HOME)/jre/lib/$(JVMDIR)
