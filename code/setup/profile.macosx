@@ -47,7 +47,7 @@ else
         if [ "10.7" = ${MACOSX_DEPLOYMENT_TARGET} ]; then
             export ANTHOME=/usr
         else
-            export ANTHOME=/usr/local/apache-ant-1.9.6
+            export ANTHOME=/usr/local/apache-ant-1.9.7
             export PATH=${ANTHOME}/bin:${PATH}
         fi
     fi
