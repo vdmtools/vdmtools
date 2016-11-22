@@ -1020,7 +1020,6 @@ DISTARCH = Cygwin-$(CPUTYPE)
 DISTCC = gcc-$(GCC_MAJOR).$(GCC_MINOR)
 
 STRIP = strip -g #otherwise all symbols are removed.
-CXXLIB = /usr/lib/libstdc++.so.?
 
 JDKHOME ?= /usr
 ANTHOME ?= /usr
@@ -4912,7 +4911,8 @@ ifeq ($(strip $(OSTYPE)),Darwin)
 endif
 ifeq ($(strip $(OSTYPE)),Linux)
 	cp $(CORBA_DIST_LIB) $(DISTDIR)/lib/.
-	cp $(CXXLIB) $(DISTDIR)/lib/.
+	mkdir -p $(DISTDIR)/lib/linux
+	cp $(CXXLIB) $(DISTDIR)/lib/linux/.
 endif
 ifeq ($(strip $(OSTYPE)),SunOS)
 	cp $(CORBA_DIST_LIB) $(DISTDIR)/lib/.
@@ -4929,7 +4929,8 @@ inst-libs-lt:
 # Runtime Library
 	mkdir -p $(DISTDIR)/lib
 ifeq ($(strip $(OSTYPE)),Linux)
-	cp $(CXXLIB) $(DISTDIR)/lib/.
+	mkdir -p $(DISTDIR)/lib/linux
+	cp $(CXXLIB) $(DISTDIR)/lib/linux.
 endif
 
 RDATE = $(shell LC_TIME=C date +%y%m%d)
@@ -5269,10 +5270,14 @@ ifeq ($(strip $(OSTYPE)),CYGWIN_NT)
 else
 	cp $(PWD)/$(VDMSL_CUI_NAME) $(DISTDIR)/bin/vdmde.bin
 	$(STRIP) $(DISTDIR)/bin/vdmde.bin
-	ln -s $(PWD)/vdmde.script $(DISTDIR)/bin/vdmde
+#	ln -s $(PWD)/vdmde.script $(DISTDIR)/bin/vdmde
+	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/vdmde.bin/; print;' > $(DISTDIR)/bin/vdmde
+	chmod 755 $(DISTDIR)/bin/vdmde
 	cp $(PWD)/$(VDMSL_GUI_NAME) $(DISTDIR)/bin/vdmqt.bin
 	$(STRIP) $(DISTDIR)/bin/vdmqt.bin
-	ln -s  $(PWD)/vdmgde.script $(DISTDIR)/bin/vdmgde
+#	ln -s $(PWD)/vdmgde.script $(DISTDIR)/bin/vdmgde
+	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/vdmqt.bin/; print;' > $(DISTDIR)/bin/vdmgde
+	chmod 755 $(DISTDIR)/bin/vdmgde
 	cp $(QMFILES) $(DISTDIR)/bin/.
 ifeq ($(strip $(QTVERSION)),4)
 ifeq ($(strip $(OSTYPE)),SunOS)
@@ -5386,10 +5391,14 @@ endif
 else # Linux or Solaris or FreeBSD
 	cp $(PWD)/vdmde_lite $(DISTDIR)/bin/vdmde.bin
 	$(STRIP) $(DISTDIR)/bin/vdmde.bin
-	ln -s $(PWD)/vdmde.script $(DISTDIR)/bin/vdmde
+#	ln -s $(PWD)/vdmde.script $(DISTDIR)/bin/vdmde
+	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/vdmde.bin/; print;' > $(DISTDIR)/bin/vdmde
+	chmod 755 $(DISTDIR)/bin/vdmde
 	cp $(PWD)/vdmqt_lite $(DISTDIR)/bin/vdmqt.bin
 	$(STRIP) $(DISTDIR)/bin/vdmqt.bin
-	ln -s $(PWD)/vdmgde.script $(DISTDIR)/bin/vdmgde
+#	ln -s $(PWD)/vdmgde.script $(DISTDIR)/bin/vdmgde
+	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/vdmqt.bin/; print;' > $(DISTDIR)/bin/vdmgde
+	chmod 755 $(DISTDIR)/bin/vdmgde
 	cp $(QMFILES) $(DISTDIR)/bin/.
 ifeq ($(strip $(QTVERSION)),4)
 ifeq ($(strip $(OSTYPE)),SunOS)
@@ -5502,10 +5511,14 @@ ifeq ($(strip $(OSTYPE)),CYGWIN_NT)
 else
 	cp $(PWD)/$(VDMPP_CUI_NAME) $(DISTDIR)/bin/vppde.bin
 	$(STRIP) $(DISTDIR)/bin/vppde.bin
-	ln -s $(PWD)/vppde.script $(DISTDIR)/bin/vppde
+#	ln -s $(PWD)/vppde.script $(DISTDIR)/bin/vppde
+	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/vppde.bin/; print;' > $(DISTDIR)/bin/vppde
+	chmod 755 $(DISTDIR)/bin/vppde
 	cp $(PWD)/$(VDMPP_GUI_NAME) $(DISTDIR)/bin/vppqt.bin
 	$(STRIP) $(DISTDIR)/bin/vppqt.bin
-	ln -s $(PWD)/vppgde.script $(DISTDIR)/bin/vppgde
+#	ln -s $(PWD)/vppgde.script $(DISTDIR)/bin/vppgde
+	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/vppqt.bin/; print;' > $(DISTDIR)/bin/vppgde
+	chmod 755 $(DISTDIR)/bin/vppgde
 	cp $(QMFILES) $(DISTDIR)/bin/.
 ifeq ($(strip $(QTVERSION)),4)
 ifeq ($(strip $(OSTYPE)),SunOS)
@@ -5624,10 +5637,14 @@ endif
 else # Linux or Solaris or FreeBSD
 	cp $(PWD)/vppde_lite $(DISTDIR)/bin/vppde.bin
 	$(STRIP) $(DISTDIR)/bin/vppde.bin
-	ln -s $(PWD)/vppde.script $(DISTDIR)/bin/vppde
+#	ln -s $(PWD)/vppde.script $(DISTDIR)/bin/vppde
+	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/vppde.bin/; print;' > $(DISTDIR)/bin/vppde
+	chmod 755 $(DISTDIR)/bin/vppde
 	cp $(PWD)/vppqt_lite $(DISTDIR)/bin/vppqt.bin
 	$(STRIP) $(DISTDIR)/bin/vppqt.bin
-	ln -s $(PWD)/vppgde.script $(DISTDIR)/bin/vppgde
+#	ln -s $(PWD)/vppgde.script $(DISTDIR)/bin/vppgde
+	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/vppqt.bin/; print;' > $(DISTDIR)/bin/vppgde
+	chmod 755 $(DISTDIR)/bin/vppgde
 	cp $(QMFILES) $(DISTDIR)/bin/.
 ifeq ($(strip $(QTVERSION)),4)
 ifeq ($(strip $(OSTYPE)),SunOS)
@@ -5742,10 +5759,14 @@ ifeq ($(strip $(OSTYPE)),CYGWIN_NT)
 else
 	cp $(PWD)/$(VDMRT_CUI_NAME) $(DISTDIR)/bin/vicede.bin
 	$(STRIP) $(DISTDIR)/bin/vicede.bin
-	ln -s $(PWD)/vicede.script $(DISTDIR)/bin/vicede
+#	ln -s $(PWD)/vicede.script $(DISTDIR)/bin/vicede
+	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/vicede.bin/; print;' > $(DISTDIR)/bin/vicede
+	chmod 755 $(DISTDIR)/bin/vicede
 	cp $(PWD)/$(VDMRT_GUI_NAME) $(DISTDIR)/bin/viceqt.bin
 	$(STRIP) $(DISTDIR)/bin/viceqt.bin
-	ln -s $(PWD)/vicegde.script $(DISTDIR)/bin/vicegde
+#	ln -s $(PWD)/vicegde.script $(DISTDIR)/bin/vicegde
+	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/viceqt.bin/; print;' > $(DISTDIR)/bin/vicegde
+	chmod 755 $(DISTDIR)/bin/vicegde
 	cp $(QMFILES) $(DISTDIR)/bin/.
 ifeq ($(strip $(QTVERSION)),4)
 ifeq ($(strip $(OSTYPE)),SunOS)
@@ -5864,10 +5885,14 @@ endif
 else # Linux or Solaris or FreeBSD
 	cp $(PWD)/vicede_lite $(DISTDIR)/bin/vicede.bin
 	$(STRIP) $(DISTDIR)/bin/vicede.bin
-	ln -s $(PWD)/vicede.script $(DISTDIR)/bin/vicede
+#	ln -s $(PWD)/vicede.script $(DISTDIR)/bin/vicede
+	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/vicede.bin/; print;' > $(DISTDIR)/bin/vicede
+	chmod 755 $(DISTDIR)/bin/vicede
 	cp $(PWD)/viceqt_lite $(DISTDIR)/bin/viceqt.bin
 	$(STRIP) $(DISTDIR)/bin/viceqt.bin
-	ln -s $(PWD)/vicegde.script $(DISTDIR)/bin/vicegde
+#	ln -s $(PWD)/vicegde.script $(DISTDIR)/bin/vicegde
+	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/viceqt.bin/; print;' > $(DISTDIR)/bin/vicegde
+	chmod 755 $(DISTDIR)/bin/vicegde
 	cp $(QMFILES) $(DISTDIR)/bin/.
 ifeq ($(strip $(QTVERSION)),4)
 ifeq ($(strip $(OSTYPE)),SunOS)

@@ -1191,19 +1191,14 @@ ln $JAVACONCLIB/Sentinel.java
 ln $JAVACONCLIB/VDMThread.java
 
 oscheck(Darwin) ln $MACOSXDIR/Info.plist.pp .
-#oscheck(Darwin) ln $MACOSXDIR/vppde.script
-#oscheck(Darwin) ln $MACOSXDIR/vppgde.script
-#oscheck(Darwin) ln $MACOSXDIR/vicede.script
-#oscheck(Darwin) ln $MACOSXDIR/vicegde.script
-#oscheck(Darwin) ln $MACOSXDIR/vdmde.script
-#oscheck(Darwin) ln $MACOSXDIR/vdmgde.script
 
-oscheck(Linux|SunOS|FreeBSD) ln $RELEASEDIR/vppde.script
-oscheck(Linux|SunOS|FreeBSD) ln $RELEASEDIR/vppgde.script
-oscheck(Linux|SunOS|FreeBSD) ln $RELEASEDIR/vicede.script
-oscheck(Linux|SunOS|FreeBSD) ln $RELEASEDIR/vicegde.script
-oscheck(Linux|SunOS|FreeBSD) ln $RELEASEDIR/vdmde.script
-oscheck(Linux|SunOS|FreeBSD) ln $RELEASEDIR/vdmgde.script
+#oscheck(Linux|SunOS|FreeBSD) ln $RELEASEDIR/vppde.script
+#oscheck(Linux|SunOS|FreeBSD) ln $RELEASEDIR/vppgde.script
+#oscheck(Linux|SunOS|FreeBSD) ln $RELEASEDIR/vicede.script
+#oscheck(Linux|SunOS|FreeBSD) ln $RELEASEDIR/vicegde.script
+#oscheck(Linux|SunOS|FreeBSD) ln $RELEASEDIR/vdmde.script
+#oscheck(Linux|SunOS|FreeBSD) ln $RELEASEDIR/vdmgde.script
+oscheck(Linux|SunOS|FreeBSD) ln $RELEASEDIR/vdmtools.script
 
 SMDIR = $BASEDIR/servicemanager
 ln $SMDIR/ServiceManagerDesc_userdef.h
