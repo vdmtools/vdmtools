@@ -39,8 +39,7 @@ CXX     = $(CCPATH)g++
 CFLAGS	= -g -I$(INCDIR) -I/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers
 LIBFLAGS = -L. -L$(LIBDIR) -lvdm_darwin -liconv -framework JavaVM -Wl,-syslibroot,$(SDK)
 else #10.7~
-JDK_VERSION=jdk1.8.0_111
-JDK_HOME = /Library/Java/JavaVirtualMachines/${JDK_VERSION}.jdk/Contents/Home
+JDK_HOME = $(shell $(shell readlink $(shell which javac) | xargs dirname)/java_home)
 CFLAGS	= -g -I$(INCDIR) -I$(JDK_HOME)/include -I$(JDK_HOME)/include/darwin
 JNI_LIB_DIR=$(JDK_HOME)/jre/lib/server
 CC      = $(CCPATH)clang++
