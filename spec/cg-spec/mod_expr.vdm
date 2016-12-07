@@ -5436,7 +5436,7 @@ expression.
 
 \begin{vdm_al}
 CGIotaExpr: AS`IotaExpr * CGMAIN`VT ==> seq of CPP`Stmt
-CGIotaExpr(mk_AS`IotaExpr(bind, pred, -), mk_CGMAIN`VT(resVar, -)) ==
+CGIotaExpr(mk_AS`IotaExpr(bind, pred, -), mk_CGMAIN`VT(resVar, resTp)) ==
 if is_AS`TypeBind(bind)
 then
   (CGAUX`SetNotSupportedException(true);
@@ -5474,11 +5474,19 @@ else
         bt = mk_REP`BooleanTypeRep();
         mk_(tmpB, pr_stmt) = CGExprExcl(pred, "tmpB", nil); -- third
         pred_type = CGAUX`FindType(pred);
-        if_then = [BC`GenExpressionStmt(BC`GenPostPlusPlus(count)),
-                   BC`GenAsgnStmt(resVar, tmpElem)]
+        --if_then = [BC`GenExpressionStmt(BC`GenPostPlusPlus(count)),
+        --           BC`GenAsgnStmt(resVar, tmpElem)]
     in
-     (dcl stmts : seq of CPP`Stmt := pr_stmt,
+     (dcl if_then : seq of CPP`Stmt := [BC`GenExpressionStmt(BC`GenPostPlusPlus(count))],
+          stmts : seq of CPP`Stmt := pr_stmt,
           pred_v : CPP`Expr := tmpB;
+      if CPP`isCPP()
+      then if_then := if_then ^ [BC`GenAsgnStmt(resVar, tmpElem)]
+      else
+         if CGAUX`IsSubType(settp, resTp)
+         then if_then := if_then ^ [BC`GenAsgnStmt(resVar, tmpElem)]
+         else if_then := if_then ^ [BC`GenAsgnStmt(resVar, DS`GenCastType(resTp, tmpElem))];
+ 
       if CGAUX`IsBoolType(pred_type)
       then stmts := stmts ^ [BC`GenIfStmt(DS`GenGetValue(pred_v, bt), BC`GenBlock(if_then), nil)]
       else
@@ -5495,9 +5503,10 @@ else
                 then pm
                 else [BC`GenDecl(DS`GenSmallBoolType(), succ, BC`GenAsgnInit(BC`GenBoolLit(false)))]
                      ^ pm;
-          cexpr = BC`GenBracketedExpr(BC`GenLeq(count, BC`GenIntegerLit(2)));
+          --cexpr = BC`GenBracketedExpr(BC`GenLeq(count, BC`GenIntegerLit(2)));
+          cexpr = BC`GenBracketedExpr(BC`GenLt(count, BC`GenIntegerLit(2)));
           setVT = mk_CGMAIN`VT(tmpSet, mk_REP`SetTypeRep(settp));
-          body_l = CGEXPR`MergeStmts( decl, pm1 );
+          body_l = MergeStmts( decl, pm1 );
           cond = BC`GenNeq(count, BC`GenIntegerLit(1));
           rti = CGAUX`RunTime("No unique element in 'iota'");
   

@@ -6182,7 +6182,16 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
 
       SEQ<TYPE_CPP_Stmt> if_then;
       if_then.ImpAppend(vdm_BC_GenExpressionStmt(vdm_BC_GenPostPlusPlus(count)));
-      if_then.ImpAppend(vdm_BC_GenAsgnStmt(resVar, tmpElem));
+      //
+      //if_then.ImpAppend(vdm_BC_GenAsgnStmt(resVar, tmpElem));
+      if (vdm_CPP_isCPP()) {
+        if_then.ImpAppend(vdm_BC_GenAsgnStmt(resVar, tmpElem));
+      }
+      else {
+        const TYPE_REP_TypeRep & resTp (vt.GetRecord(pos_CGMAIN_VT_type));
+        TYPE_CPP_Expr cast (IsSubType(settp, resTp ) ? tmpElem : GenCastType(resTp, tmpElem));
+        if_then.ImpAppend(vdm_BC_GenAsgnStmt(resVar, cast));
+      }
 
       SEQ<TYPE_CPP_Stmt> stmts (pr_stmt);
 
@@ -6214,7 +6223,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
      
       SEQ<TYPE_CPP_Stmt> body_l(MergeStmts( decl, pm1 ));
 
-      TYPE_CPP_Expr cexpr (vdm_BC_GenBracketedExpr(vdm_BC_GenLeq(count, vdm_BC_GenIntegerLit(2))));
+      //TYPE_CPP_Expr cexpr (vdm_BC_GenBracketedExpr(vdm_BC_GenLeq(count, vdm_BC_GenIntegerLit(2))));
+      TYPE_CPP_Expr cexpr (vdm_BC_GenBracketedExpr(vdm_BC_GenLt(count, vdm_BC_GenIntegerLit(2))));
       TYPE_CGMAIN_VT setVT (mk_CG_VT(tmpSet, mk_REP_SetTypeRep(settp)));
 
       rb_l.ImpAppend(vdm_BC_GenDecl(GenSmallIntType(), count, vdm_BC_GenAsgnInit(vdm_BC_GenIntegerLit(0))));
