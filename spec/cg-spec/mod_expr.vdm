@@ -5380,7 +5380,8 @@ CGAllOrExistsExpr(quant, mk_CGMAIN`VT(resVar_v, -)) ==
          let qinit = BC`GenAsgnInit(BC`GenIntegerLit(0)),
              bind_l = [mk_AS`MultSetBind([pat], expr,cid)],
              stmt = BC`GenExpressionStmt(BC`GenPostPlusPlus(tmpQuant_v)),
-             contexpr = BC`GenBracketedExpr(BC`GenLeq(tmpQuant_v, BC`GenIntegerLit(2)))
+             --contexpr = BC`GenBracketedExpr(BC`GenLeq(tmpQuant_v, BC`GenIntegerLit(2)))
+             contexpr = BC`GenBracketedExpr(BC`GenLt(tmpQuant_v, BC`GenIntegerLit(2)))
          in
           (rb := [ BC`GenDecl(DS`GenSmallIntType(), tmpQuant_v, qinit),
                    CGComprehension(bind_l, pred, [stmt], contexpr, nil, pid_m, true) ];

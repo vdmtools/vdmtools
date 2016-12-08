@@ -6084,7 +6084,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGAllOrExistsExpr (const TYPE_AS_QuantExpr & quant, co
           SEQ<TYPE_AS_MultBind> bind_l;
           bind_l.ImpAppend(msb);
           TYPE_CPP_Stmt stmt (vdm_BC_GenExpressionStmt(vdm_BC_GenPostPlusPlus(tmpQuant_v)));
-          TYPE_CPP_Expr contexpr (vdm_BC_GenBracketedExpr(vdm_BC_GenLeq(tmpQuant_v, vdm_BC_GenIntegerLit(2))));
+          //TYPE_CPP_Expr contexpr (vdm_BC_GenBracketedExpr(vdm_BC_GenLeq(tmpQuant_v, vdm_BC_GenIntegerLit(2))));
+          TYPE_CPP_Expr contexpr (vdm_BC_GenBracketedExpr(vdm_BC_GenLt(tmpQuant_v, vdm_BC_GenIntegerLit(2))));
           rb.ImpAppend(CGComprehension(bind_l, pred, mk_sequence(stmt), contexpr, nil, pid_m, true));
           res = vdm_BC_GenEq(tmpQuant_v, vdm_BC_GenIntegerLit(1));
           break;
