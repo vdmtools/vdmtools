@@ -4396,11 +4396,6 @@ endif
 
 inst-word: VDM.dot
 	mkdir -p $(DISTDIR)/word
-#ifeq ($(strip $(OSTYPE)),win32)
-#	cp $^ $(DISTDIR)/word
-#else
-#	ln -s $(PWD)/VDM.dot $(DISTDIR)/word/VDM.dot
-#endif
 	$(LN) $(patsubst %,$(WORDDIR)/%, $(WORDFILES)) $(DISTDIR)/word/
 
 inst-sl-emacs: $(EMACSSLFILES)
@@ -4430,6 +4425,24 @@ inst-sl-stdlib:
 inst-pp-stdlib: 
 	mkdir -p $(DISTDIR)/stdlib
 	$(LN) $(patsubst %,$(STDLIBDIR)/%, $(STDLIB_FILES_PP)) $(DISTDIR)/stdlib/
+
+ifeq ($(strip $(OSTYPE)),win32)
+POWERTEST_DIR = $(HOME)/powertest
+POWERTEST_CGFILES_DIR = $(POWERTEST_DIR)/cgfiles
+inst-powertest-files:
+	mkdir -p $(POWERTEST_CGFILES_DIR)
+	cp $(patsubst %,$(VPATH)/%, $(CG_FILES_INCLUDES)) $(POWERTEST_CGFILES_DIR)
+	cp $(VPATH)/IO_userimpl-*.cc $(POWERTEST_CGFILES_DIR)
+	cp $(VPATH)/MATH_userimpl-*.cc $(POWERTEST_CGFILES_DIR)
+	cp $(VPATH)/VDMUtil_userimpl-*.cc $(POWERTEST_CGFILES_DIR)
+	cp $(VPATH)/IO_userimpl.cpp $(POWERTEST_CGFILES_DIR)
+	cp $(VPATH)/MATH_userimpl.cpp $(POWERTEST_CGFILES_DIR)
+	cp $(VPATH)/VDMUtil_userimpl.cpp $(POWERTEST_CGFILES_DIR)
+	cp $(VPATH)/IO.java $(POWERTEST_CGFILES_DIR)
+	cp $(VPATH)/MATH.java $(POWERTEST_CGFILES_DIR)
+	cp $(VPATH)/VDMUtil.java $(POWERTEST_CGFILES_DIR)
+	cp $(VPATH)/VDM.jar $(POWERTEST_CGFILES_DIR)
+endif
 
 ifeq ($(strip $(OSTYPE)),win32)
 
@@ -4515,6 +4528,7 @@ setupall:
 	$(MAKE) instcm
 	$(MAKE) be_ip-sl.exe be_spec-sl.exe
 	$(MAKE) testfiles
+	$(MAKE) inst-powertest-files
 
 setupcm:
 	rm -rf tools-*.obj vdm-*.obj vdmde-*.obj

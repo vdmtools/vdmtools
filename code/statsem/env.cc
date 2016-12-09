@@ -136,7 +136,28 @@ void StatSem::LeaveLocalScope ()
 // writable : bool
 // printEror : bool
 // return : [AccessType | set of (AccessOpTypeRep | AccessFnTypeRep | AccessPolyTypeRep)]
-Generic StatSem::LookUpInObject(const TYPE_AS_Name & obj, const TYPE_AS_Name & nm, bool writable, bool printError)
+Generic StatSem::LookUpInObject(const TYPE_AS_Name & obj, const TYPE_AS_Name & nm,
+                                bool writable, bool printError)
+{
+  Tuple key (mk_(obj, nm, Bool(writable)));
+  if (!LookUpInObjectCache.DomExists(key)) {
+    Generic tp = LookUpInObjectImpl(obj, nm, writable, printError);
+    if (!tp.IsNil()) {
+      LookUpInObjectCache.Insert(key, LookUpInObjectImpl(obj, nm, writable, printError));
+    }
+    return tp;
+  }
+  return LookUpInObjectCache[key];
+}
+
+// LookUpInObjectImpl
+// obj : AS`Name
+// nm : AS`Name
+// writable : bool
+// printEror : bool
+// return : [AccessType | set of (AccessOpTypeRep | AccessFnTypeRep | AccessPolyTypeRep)]
+Generic StatSem::LookUpInObjectImpl(const TYPE_AS_Name & obj, const TYPE_AS_Name & nm,
+                                    bool writable, bool printError)
 {
   if (nm.GetSequence(pos_AS_Name_ids).Length() == 2)
   {
@@ -7072,6 +7093,9 @@ void StatSem::InitEnv ()
   this->lastline = 0;
   this->lastcol  = 0;
   this->lastfile = 0;
+#ifdef VDMPP
+  this->LookUpInObjectCache = Map();
+#endif //VDMPP
 }
 
 // SetExtAll
