@@ -4429,10 +4429,8 @@ inst-pp-stdlib:
 ifeq ($(strip $(OSTYPE)),win32)
 POWERTEST_DIR = $(HOME)/powertest
 POWERTEST_CGFILES_DIR = $(POWERTEST_DIR)/cgfiles
-POWERTEST_CGLIBS_DIR = $(POWERTEST_DIR)/libs
 inst-powertest-files:
 	mkdir -p $(POWERTEST_CGFILES_DIR)
-	mkdir -p $(POWERTEST_CGLIBS_DIR)
 	cp $(patsubst %,$(VPATH)/%, $(CG_FILES_INCLUDES)) $(POWERTEST_CGFILES_DIR)
 	cp $(VPATH)/IO_userimpl-*.cc $(POWERTEST_CGFILES_DIR)
 	cp $(VPATH)/MATH_userimpl-*.cc $(POWERTEST_CGFILES_DIR)
@@ -4443,6 +4441,7 @@ inst-powertest-files:
 	cp $(VPATH)/IO.java $(POWERTEST_CGFILES_DIR)
 	cp $(VPATH)/MATH.java $(POWERTEST_CGFILES_DIR)
 	cp $(VPATH)/VDMUtil.java $(POWERTEST_CGFILES_DIR)
+	cp $(VPATH)/VDM.jar $(POWERTEST_CGFILES_DIR)
 endif
 
 ifeq ($(strip $(OSTYPE)),win32)
