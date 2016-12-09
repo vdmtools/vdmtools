@@ -480,7 +480,7 @@ def CompileCPPFiles(fullName, lang, type, modules):
   # this directory may also contain the extra _userimpl.cc file.
   if util.UsesVisualStudio():
     #flags = flags + " /IC:/cygwin" + os.path.dirname(fullName)
-    flags = flags + " /I:" + util.getWindowsPath(os.path.dirname(fullName))
+    flags = flags + " /I" + util.getWindowsPath(os.path.dirname(fullName))
   else:
     flags = flags + " -I" + os.path.dirname(fullName)
 
