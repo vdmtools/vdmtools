@@ -4526,6 +4526,7 @@ setupall:
 	$(MAKE) instcm
 	$(MAKE) be_ip-sl.exe be_spec-sl.exe
 	$(MAKE) testfiles
+	$(MAKE) inst-powertest-files
 
 setupcm:
 	rm -rf tools-*.obj vdm-*.obj vdmde-*.obj
