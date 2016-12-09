@@ -27,10 +27,17 @@ def UsesVisualStudio():
 
 def getWindowsPath(path):
   if IsWindowsOS():
-    cmd = "readlink -f " + path + " | cygpath -w -m -f -"
-    (exitCode, stdout, stderr) = RunCommand(cmd, 0, "Path conversion failed.")
+    cmd = "(readlink -f " + path + " | cygpath -w -m -f -)"
+#    (exitCode, stdout, stderr) = RunCommand(cmd, 0, "Path conversion failed.")
+#    if exitCode == 0:
+#      return stdout.strip()
+    output = os.popen(cmd)
+    stdout = output.read()
+    exitCode = output.close()
+    if exitCode == None:
+      exitCode = 0
     if exitCode == 0:
-      return stdout
+      return stdout.strip()
   return path
 
 #-----------------------------------------------------------------------------

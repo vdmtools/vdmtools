@@ -479,7 +479,8 @@ def CompileCPPFiles(fullName, lang, type, modules):
   # Append link path to the directory containing the source file, as
   # this directory may also contain the extra _userimpl.cc file.
   if util.UsesVisualStudio():
-    flags = flags + " /IC:/cygwin" + os.path.dirname(fullName)
+    #flags = flags + " /IC:/cygwin" + os.path.dirname(fullName)
+    flags = flags + " /I" + util.getWindowsPath(os.path.dirname(fullName))
   else:
     flags = flags + " -I" + os.path.dirname(fullName)
 
@@ -509,7 +510,7 @@ def CompileCPPFiles(fullName, lang, type, modules):
 
       libdir = os.path.expandvars(os.path.expanduser(cmdline.LookUp('cpp-lib-dir')))
       #cmd = "link.exe /INCREMENTAL:NO /NOLOGO /out:icode.exe " + objFiles + " " + linkFiles + "vdm.lib CG.lib user32.lib"
-      cmd = "link.exe /INCREMENTAL:NO /NOLOGO /out:icode.exe " + objFiles + " " + linkFiles + "/LIBPATH:C:/cygwin" + libdir + " CG.lib vdm.lib user32.lib"
+      cmd = "link.exe /INCREMENTAL:NO /NOLOGO /out:icode.exe " + objFiles + " " + linkFiles + "/LIBPATH:" + util.getWindowsPath(libdir) + " CG.lib vdm.lib user32.lib"
       (exitCode, dummy1, dummy2) = util.RunCommand(cmd, 0, "Problem when compiling generated code")
       ok = (exitCode == 0)
 
