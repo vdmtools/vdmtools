@@ -28,7 +28,7 @@ public class Token {
 
 
 // ***** VDMTOOLS START Name=Token KEEP=NO
-  public Token (Object obj) {
+  public Token (final Object obj) {
     vdmValue = obj;
   }
 // ***** VDMTOOLS END Name=Token
@@ -42,11 +42,11 @@ public class Token {
 
 
 // ***** VDMTOOLS START Name=equals KEEP=NO
-  public boolean equals (Object obj) {
-    if (!(obj instanceof Token)) 
+  public boolean equals (final Object obj) {
+    if (!(obj instanceof jp.vdmtools.VDM.Token)) 
       return false;
     else 
-      return UTIL.equals(this.vdmValue, ((Token) obj).vdmValue);
+      return UTIL.equals(this.vdmValue, ((jp.vdmtools.VDM.Token) obj).vdmValue);
   }
 // ***** VDMTOOLS END Name=equals
 
