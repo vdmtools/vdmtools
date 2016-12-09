@@ -513,6 +513,9 @@ private:
 
   SEQ<TYPE_CI_ContextId> ValueDefContext;
 
+#ifdef VDMPP
+  Map LookUpInObjectCache;
+#endif //VDMPP
 // defined in vcm.vdm
 #ifdef VDMPP
   MAP<TYPE_AS_Name, TYPE_SSENV_ParseTypeInfo> ParseEnv; // map AS`Name to ENV`ParseTypeInfo
@@ -807,6 +810,7 @@ private:
 
 #ifdef VDMPP
   Generic LookUpInObject(const TYPE_AS_Name & obj, const TYPE_AS_Name & nm, bool writable, bool printError);
+  Generic LookUpInObjectImpl(const TYPE_AS_Name & obj, const TYPE_AS_Name & nm, bool writable, bool printError);
 #ifdef VICE
   void NotStaticOk();
   void StaticRequired();
