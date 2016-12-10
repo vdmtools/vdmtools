@@ -139,11 +139,11 @@ void StatSem::LeaveLocalScope ()
 Generic StatSem::LookUpInObject(const TYPE_AS_Name & obj, const TYPE_AS_Name & nm,
                                 bool writable, bool printError)
 {
-  Tuple key (mk_(obj, nm, Bool(writable)));
+  Tuple key (mk_(obj, nm, Bool(writable), Bool(printError)));
   if (!LookUpInObjectCache.DomExists(key)) {
     Generic tp = LookUpInObjectImpl(obj, nm, writable, printError);
-    if (!tp.IsNil()) {
-      LookUpInObjectCache.Insert(key, LookUpInObjectImpl(obj, nm, writable, printError));
+    if (!tp.IsNil() && !printError) {
+      LookUpInObjectCache.Insert(key, tp);
     }
     return tp;
   }
