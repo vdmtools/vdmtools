@@ -304,13 +304,13 @@ def CompileRunAndCompare(fullName, lang, type, modules):
   if ok:
     ok = CompileJavaFiles(fullName, lang, type, modules)
 
-  for mod in packageMap.keys():
-    packagePaths = string.split(packageMap[mod],'.')
-    packageDir = string.join(packagePaths,'/')
-    if not os.path.exists(packageDir):
-      os.makedirs(packageDir)
-    report.Progress(4, "cp " + mod + "*.class " + packageDir + "/.")
-    exitCode = os.system("cp " + mod + "*.class " + packageDir + "/.")
+#  for mod in packageMap.keys():
+#    packagePaths = string.split(packageMap[mod],'.')
+#    packageDir = string.join(packagePaths,'/')
+#    if not os.path.exists(packageDir):
+#      os.makedirs(packageDir)
+#    report.Progress(4, "cp " + mod + "*.class " + packageDir + "/.")
+#    exitCode = os.system("cp " + mod + "*.class " + packageDir + "/.")
 
   interpreter = os.path.expandvars(cmdline.LookUpWildCard('java', lang, type, 'interpreter'))
     
@@ -536,7 +536,7 @@ def CompileJavaFiles(fullName, lang, type, modules):
   util.DeleteFiles(["TMAIN.class"])
   
   # build the command and execute it.
-  cmd = compiler + " " + flags + " " + javaFiles
+  cmd = compiler + " -d . " + flags + " " + javaFiles
 
   (exitCode, dummy1, dummy2) = util.RunCommand(cmd, 0, "Problem when compiling generated code")
   ok = (exitCode == 0)
