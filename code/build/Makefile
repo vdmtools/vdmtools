@@ -961,7 +961,7 @@ DISTARCH = Linux-$(CPUTYPE)
 DISTCC = gcc-$(GCC_MAJOR).$(GCC_MINOR)
 
 STRIP = strip -g #otherwise all symbols are removed.
-CXXLIB ?= /usr/lib/libstdc++.so.?
+CXXLIB ?= $(shell ldconfig -p | grep libstdc++ | awk -F ' ' '{print $$4}')
 
 READLINE_LIB += -lreadline
 
