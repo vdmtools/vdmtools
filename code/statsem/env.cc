@@ -533,6 +533,31 @@ Generic StatSem::LookUpTypeName (const TYPE_AS_Name & nm)
 // printerr : bool
 // ==> [REP`TypeRep|AccessType]
 Generic StatSem::LookUpTypeName (const TYPE_AS_Name & nm, bool printerr)
+{
+
+  Tuple key (mk_(nm, GetCurClass (), Bool(printerr)));
+  Generic tpx;
+  if (!this->LookUpTypeNameCache.DomExists(key)) {
+    Generic tp = LookUpTypeName_q(nm, printerr);
+    if (!tp.IsNil() || !printerr) {
+      this->LookUpTypeNameCache.Insert(key, mk_(tp, this->FoundClass));
+    }
+    return tp;
+  }
+  else {
+    Tuple t (this->LookUpTypeNameCache[key]);
+    this->FoundClass = t.GetField(2);
+    return t.GetField(1);
+  }
+
+//  return LookUpTypeName_q(nm, printerr);
+}
+
+// LookUpTypeName
+// nm : AS`Name
+// printerr : bool
+// ==> [REP`TypeRep|AccessType]
+Generic StatSem::LookUpTypeName_q (const TYPE_AS_Name & nm, bool printerr)
 #endif // VDMPP
 {
   Generic gtmp;
@@ -546,7 +571,8 @@ Generic StatSem::LookUpTypeName (const TYPE_AS_Name & nm, bool printerr)
     TYPE_AS_Name nnm (ASTAUX::GetSecondName(nm));
 
     if (ncls == GetCurClass ())
-      return LookUpTypeName (nnm, true);
+      //return LookUpTypeName (nnm, true);
+      return LookUpTypeName_q (nnm, true);
     else
     {
       Generic tp (LookUpInHierarchy(nnm, ncls, TYPE, GLOBAL));
@@ -7095,6 +7121,7 @@ void StatSem::InitEnv ()
   this->lastfile = 0;
 #ifdef VDMPP
   this->LookUpInObjectCache = Map();
+  this->LookUpTypeNameCache = Map();
 #endif //VDMPP
 }
 

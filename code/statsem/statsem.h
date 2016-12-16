@@ -515,6 +515,7 @@ private:
 
 #ifdef VDMPP
   Map LookUpInObjectCache;
+  Map LookUpTypeNameCache;
 #endif //VDMPP
 // defined in vcm.vdm
 #ifdef VDMPP
@@ -777,6 +778,7 @@ public:
 #endif // VDMSL
 #ifdef VDMPP
   Generic LookUpTypeName (const TYPE_AS_Name & nm, bool printerr);
+  Generic LookUpTypeName_q (const TYPE_AS_Name & nm, bool printerr);
 #endif // VDMLL
   Generic LookUpTag (const Int & i, const TYPE_AS_Name & nm, const SET<TYPE_AS_Name> &);
   Generic GetCurModOrNil() const;
