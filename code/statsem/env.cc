@@ -470,16 +470,12 @@ Generic StatSem::LookUp (const TYPE_AS_Name & nm, bool printErr)
     else
 #ifdef VDMPP
     {
-// 20070305
-//      Generic tp (LookUpInHierarchy (nm, Nil(), VAL, LOCAL));
-      //Generic DefClass = CheckClass;
       Generic DefClass = GetCurClass();
       if  ( !DefiningClass.IsEmpty() )
         DefClass = DefiningClass.Hd();
 
       Generic tp (LookUpInHierarchy (nm, DefClass, VAL, LOCAL));
 
-// 20070306
       if( tp.IsNil() )
         tp = LookUpInHierarchy (nm, Nil(), VAL, LOCAL);
       
@@ -492,11 +488,6 @@ Generic StatSem::LookUp (const TYPE_AS_Name & nm, bool printErr)
         //------------------------
         if (printErr)
           GenErr(nm, ERR, 34, mk_sequence(PrintName(nm)));
-#ifndef TSI
-// 20130710 -->
-        //this->ConstEnv.ImpModify (nm, mk_SSENV_TypeRepElem(rep_alltp, Bool(true), Bool(true)));
-// <-- 20130710
-#endif
         return Nil ();
       }
 #ifdef VDMPP
@@ -651,7 +642,6 @@ Generic StatSem::LookUpTypeName_q (const TYPE_AS_Name & nm, bool printerr)
     else
 #ifdef VDMPP
     {
-      //Generic DefClass = CheckClass;
       Generic DefClass = GetCurClass();
       if ( !DefiningClass.IsEmpty() )
         DefClass = DefiningClass.Hd();
