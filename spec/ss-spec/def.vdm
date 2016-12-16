@@ -106,15 +106,13 @@ imports
   from ENV 
    operations
     EnterScope : map AS`Name to (REP`TypeRep * nat1) ==> ();
-    --UpdateScope : map AS`Name to REP`TypeRep ==> ();
     LeaveScope : () ==> ();
 #ifdef VDMSL
     LookUpTypeName : AS`Name ==> [REP`TypeRep];
 #endif VDMSL
 #ifdef VDMPP
     CheckThreadInherit: AS`Name ==> bool;
---    LookUpDefClass : () ==> [AS`Name];
-    SetDefClass: [AS`Name] ==> ();
+    SetDefClass: AS`Name ==> ();
     LookUpTypeName : AS`Name * bool ==> [REP`TypeRep|ENV`AccessType];
     LookUpInObject: AS`Name * AS`Name * bool * bool
                   ==> [ENV`AccessType | set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep)];

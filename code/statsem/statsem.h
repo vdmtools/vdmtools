@@ -1508,7 +1508,7 @@ public:
 #ifdef VDMPP
   Generic LookUpDefClassForTypeName(const TYPE_AS_Name & nm);
   Generic LookUpDefClass ();
-  void SetDefClass(const Generic &);
+  void SetDefClass(const TYPE_AS_Name &);
   void UnSetDefClass();
 //  int NO_OF_WARNINGS, NO_OF_ERRORS;
 #endif // VDMPP
