@@ -8283,42 +8283,36 @@ bool StatSem::IsInstanceVar_q(const TYPE_AS_Name & nm, bool checkStatic)
   if (nm.GetSequence(pos_AS_Name_ids).Length() == 2)
   {
     TYPE_AS_Name ncls (ASTAUX::GetFirstName(nm));
-    TYPE_AS_Name nnm (ASTAUX::GetSecondName(nm));
 
     Generic cls (GetClassTypeRep(ncls));
     if (cls.IsNil())
       return false;
     else {
       TYPE_SSENV_ParseTypeInfo pti (cls);
-      //MAP<TYPE_AS_Name,TYPE_SSENV_AccessTypeRep> vals (pti.get_insts ());
       const MAP<TYPE_AS_Name,TYPE_SSENV_AccessTypeRep> & insts (pti.GetMap(pos_SSENV_ParseTypeInfo_insts));
-      const MAP<TYPE_AS_Name,TYPE_SSENV_AccessTypeRep> & vals (pti.GetMap(pos_SSENV_ParseTypeInfo_vals));
       if (insts.DomExists(nm)) {
         if (checkStatic)
-          //return insts[nm].get_stat();
           return insts[nm].GetBoolValue(pos_SSENV_AccessTypeRep_stat);
         else
           return true;
       }
-      else
+      else {
+        const MAP<TYPE_AS_Name,TYPE_SSENV_AccessTypeRep> & vals (pti.GetMap(pos_SSENV_ParseTypeInfo_vals));
         return vals.DomExists(nm);
+      }
     }
   }
   else {
-// 20111222 -->
-    //return this->StateEnv.DomExists(nm);
     if (this->StateEnv.DomExists(nm))
     {
       TYPE_SSENV_TypeRepElem tre (this->StateEnv[nm]);
       if (checkStatic)
-        //return insts[nm].get_stat();
         return tre.GetBoolValue(pos_SSENV_TypeRepElem_stat);
       else
         return true;
     }
     else
       return false;
-// <-- 20111222
   }
 }
 
@@ -8330,7 +8324,6 @@ Generic StatSem::LookUpInstanceVar(const TYPE_AS_Name & nm)
   if (nm.GetSequence(pos_AS_Name_ids).Length() == 2)
   {
     TYPE_AS_Name ncls (ASTAUX::GetFirstName(nm));
-    TYPE_AS_Name nnm (ASTAUX::GetSecondName(nm));
 
     Generic cls (GetClassTypeRep(ncls));
     if (cls.IsNil())
