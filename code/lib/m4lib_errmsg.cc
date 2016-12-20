@@ -34,10 +34,15 @@
 *  in m4err, and the exception ELIB is raised.
 **************************************************************************/
 bool M4LibError::guimode = true;
-//static bool guimode = true;
+
 void M4LibError::SetGUIMode(bool mode)
 {
   M4LibError::guimode = mode;
+}
+
+bool  M4LibError::GetGUIMode()
+{
+  return M4LibError::guimode;
 }
 
 void M4LibError::ReportError(int ErrorNumber, const wstring & st)
