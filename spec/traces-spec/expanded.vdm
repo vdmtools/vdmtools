@@ -170,12 +170,20 @@ ExpandTraceBind: seq of AS`TraceBind * set of SEM`BlkEnv ==> set of SEM`BlkEnv
 ExpandTraceBind(bind_l, cxt_s) ==
   (dcl c_s : set of SEM`BlkEnv := cxt_s;
    for bind in bind_l do
-     def c_s2 = if is_AS`LocalTraceBind(bind)
-                then ExpandLocalBinding(bind, c_s)
-                else if is_AS`LetTraceBind(bind)
-                     then ExpandLetBinding(bind, c_s)
-                     else ExpandLetBeBinding(bind, c_s)
-     in c_s := CombineContext(c_s, c_s2);
+--     def c_s2 = if is_AS`LocalTraceBind(bind)
+--                then ExpandLocalBinding(bind, c_s)
+--                else if is_AS`LetTraceBind(bind)
+--                     then ExpandLetBinding(bind, c_s)
+--                     else ExpandLetBeBinding(bind, c_s)
+--     in c_s := CombineContext(c_s, c_s2);
+    (dcl c_s2 : set of SEM`BlkEnv := {};
+     cases true:
+       (is_AS`LocalTraceBind(bind)) -> c_s2 := ExpandLocalBinding(bind, c_s),
+       (is_AS`LetTraceBind(bind))   -> c_s2 := ExpandLetBinding(bind, c_s),
+       (is_AS`LetBeTraceBind(bind)) -> c_s2 := ExpandLetBeBinding(bind, c_s)
+     end;
+     c_s := CombineContext(c_s, c_s2);
+    );
    return c_s);
 
 ExpandTraceRepeatPat: AS`TraceRepeatPattern * set of seq of AS`Expr ==> set of seq of AS`Expr
@@ -239,51 +247,47 @@ RepeatCombine(expr_l_s, low, high) ==
 functions
 
 ExpandLetBinding: AS`LetTraceBind * set of SEM`BlkEnv -> set of SEM`BlkEnv
-ExpandLetBinding(lbbind, cxt_s) ==
-  let mk_AS`LetTraceBind(bind_l,-) = lbbind
-  in
-    if forall b in set elems bind_l & is_AS`MultSetBind(b)
-    then
-      dunion { def pat_l = conc [ let mk_AS`MultSetBind(p_l,-,-) = bind_l(i)
-                                  in [ CPAT`P2P(p_l(j)) | j in set inds p_l ] | i in set inds bind_l];
-                   val_l = conc [ def mk_AS`MultSetBind(p_l,expr,-) = bind_l(i);
-                                      val = evaluateExpression(expr, cxt)
-                                  in
-                                    if is_SEM`SET(val)
-                                    then [ val | - in set inds p_l ]
-                                    else undefined
-                          | i in set inds bind_l ];
-                   c_s_s = PAT`EvalMultBindSeqAll(pat_l, val_l, <DO_PARTITION>)
-               in
-                 let c_s in set c_s_s
-                 in { AUX`CombineBlkEnv(c, cxt) | c in set c_s } | cxt in set cxt_s }
-    else
-      undefined;
+ExpandLetBinding(mk_AS`LetTraceBind(bind_l,-), cxt_s) ==
+  if forall b in set elems bind_l & is_AS`MultSetBind(b)
+  then
+    dunion { def pat_l = conc [ let mk_AS`MultSetBind(p_l,-,-) = bind_l(i)
+                                in [ CPAT`P2P(p_l(j)) | j in set inds p_l ] | i in set inds bind_l];
+                 val_l = conc [ def mk_AS`MultSetBind(p_l,expr,-) = bind_l(i);
+                                    val = evaluateExpression(expr, cxt)
+                                in
+                                  if is_SEM`SET(val)
+                                  then [ val | - in set inds p_l ]
+                                  else undefined
+                        | i in set inds bind_l ];
+                 c_s_s = PAT`EvalMultBindSeqAll(pat_l, val_l, <DO_PARTITION>)
+             in
+               let c_s in set c_s_s
+               in { AUX`CombineBlkEnv(c, cxt) | c in set c_s } | cxt in set cxt_s }
+  else
+    undefined;
 
 ExpandLetBeBinding: AS`LetBeTraceBind * set of SEM`BlkEnv -> set of SEM`BlkEnv
-ExpandLetBeBinding(lbbind, cxt_s) ==
-  let mk_AS`LetBeTraceBind(bind_l,pred,-) = lbbind
-  in
-    if forall b in set elems bind_l & is_AS`MultSetBind(b)
-    then
-     dunion { def pat_l = conc [ let mk_AS`MultSetBind(p_l,-,-) = bind_l(i)
-                          in [ CPAT`P2P(p_l(j)) | j in set inds p_l ] | i in set inds bind_l];
-                  val_l = conc [ let mk_AS`MultSetBind(p_l,expr,-) = bind_l(i),
-                                     val = evaluateExpression(expr, cxt)
-                                 in
-                                   if is_SEM`SET(val)
-                                   then [ val | - in set inds p_l ]
-                                   else undefined
-                                 | i in set inds bind_l ];
-                  c_s_s = PAT`EvalMultBindSeqAll(pat_l, val_l, <DO_PARTITION>)
-              in
-                let c_s in set c_s_s
-                in { AUX`CombineBlkEnv(c2, cxt) | c2 in set c_s & pred = nil or
-                     def c = AUX`CombineBlkEnv(c2, cxt)
-                     in evaluateExpression(pred,c) = mk_SEM`BOOL(true) }
-                  | cxt in set cxt_s }
-    else
-      undefined;
+ExpandLetBeBinding(mk_AS`LetBeTraceBind(bind_l,pred,-), cxt_s) ==
+  if forall b in set elems bind_l & is_AS`MultSetBind(b)
+  then
+   dunion { def pat_l = conc [ let mk_AS`MultSetBind(p_l,-,-) = bind_l(i)
+                        in [ CPAT`P2P(p_l(j)) | j in set inds p_l ] | i in set inds bind_l];
+                val_l = conc [ let mk_AS`MultSetBind(p_l,expr,-) = bind_l(i),
+                                   val = evaluateExpression(expr, cxt)
+                               in
+                                 if is_SEM`SET(val)
+                                 then [ val | - in set inds p_l ]
+                                 else undefined
+                               | i in set inds bind_l ];
+                c_s_s = PAT`EvalMultBindSeqAll(pat_l, val_l, <DO_PARTITION>)
+            in
+              let c_s in set c_s_s
+              in { AUX`CombineBlkEnv(c2, cxt) | c2 in set c_s & pred = nil or
+                   def c = AUX`CombineBlkEnv(c2, cxt)
+                   in evaluateExpression(pred,c) = mk_SEM`BOOL(true) }
+                | cxt in set cxt_s }
+  else
+    undefined;
 
 evaluateExpression: AS`Expr * SEM`BlkEnv -> SEM`VAL
 evaluateExpression(expr, cxt) ==
