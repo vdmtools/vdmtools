@@ -252,8 +252,9 @@ def RunImplTestCase(fullName, lang, posdef):
     else:
       defFlg = " -d "
     localName = util.ExtractName(fullName) + ".vdm"
+    resName = util.ExtractName(fullName) + ".arg.res"
 
-    cmd = interpreter + defFlg + " -t -f " + localName + " 2>tmp.res"
+    cmd = interpreter + defFlg + " -t -f " + localName + " 2>" + resName
 
     # Now run the interpreter
     (exitCode, stdout, stderr) = util.RunCommand(cmd, None, None, true, true)
@@ -272,7 +273,7 @@ def RunImplTestCase(fullName, lang, posdef):
 
     # read the result from the result file, and translate it to a list of numbers
 #    result = TranslateResultImpl(stdout)
-    result = TranslateResultImpl(util.ReadFile("tmp.res"))
+    result = TranslateResultImpl(util.ReadFile(resName))
     if result == None:
       ok = false
 

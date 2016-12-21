@@ -1786,7 +1786,8 @@ Tuple StatSem::wf_ApplyExpr (const Int & i, const TYPE_AS_ApplyExpr & vApply, co
     if (gtp.IsSet())
     {
       wf_fct = Bool(true);
-      fcttp = mk_REP_OverTypeRep(CheckAccess (GetCurClass (), gtp));
+      //fcttp = mk_REP_OverTypeRep(CheckAccess (GetCurClass (), gtp));
+      fcttp = mk_REP_OverTypeRep(CheckAccessCurClass (gtp));
       GetCI().SetTypeInfo (fct.GetInt(pos_AS_Name_cid), fcttp);
     }
     else
@@ -3346,21 +3347,19 @@ Tuple StatSem::wf_NewExpr (const Int & i, const TYPE_AS_NewExpr & newrc, const T
       }
       else
       {
-// 20101008 -->
         if (!ConstructorExists(i, nm, l_argtpL, nm, true)) {
           // ------------------------------------------------------------
-          // -- Error message #i440
+          // -- Error message #440
           // -- Matching constructor is not defined locally in class "%1"
           // ------------------------------------------------------------
           GenErr(nm, WRN1, 440, mk_sequence(PrintName(nm)));
         }
-// <-- 20101008
 
         TYPE_REP_OpTypeRep oprt (mk_REP_OpTypeRep(l_argtpL, mk_REP_TypeNameRep(nm)));
         GetCI().SetTypeInfo (nm.get_cid(), oprt);
         GetCI().SetTypeInfo (cid, tprep);
       }
-      SetDefClass(Nil()); // 20070301
+      UnSetDefClass(); // 20070301
       return mk_(Bool(l_wf_arg), tprep);
     }
   }

@@ -1909,64 +1909,57 @@ TYPE_CPP_FunctionDefinition vdmcg::GenEqualsMethod(const TYPE_CPP_Identifier & c
                                                    const MAP<TYPE_CPP_Identifier,TYPE_CPP_Name> & tenv,
                                                    const MAP<TYPE_CPP_Identifier,Bool> & dcenv)
 {
-  int fieldnum = 0;
+  TYPE_CPP_Identifier argNm (vdm_BC_GenIdentifier(ASTAUX::MkId(L"obj")));
+  TYPE_CPP_TypeSpecifier clsTp (vdm_BC_GenTypeSpecifier(cn));
+  TYPE_CPP_Stmt test = vdm_BC_GenBracketedExpr(vdm_BC_GenTypeComp(clsTp,argNm));
+
+  bool forall = true;
   size_t len_sl = sl.Length();
-  for (size_t i = 1; i <= len_sl; i ++) {
-    Bool dc (dcenv[sl[i]]);
-    if (!(dc.GetValue()))
-      fieldnum++;
+  for (size_t i = 1; (i <= len_sl) && forall; i ++) {
+    TYPE_CPP_Identifier s (sl[i]);
+    forall = dcenv[s].GetValue();
   }
 
-  Generic expr = nil;
   TYPE_CPP_Stmt stmt;
-  if (fieldnum == 0)
-  {
-    TYPE_CPP_Identifier id (vdm_BC_GenIdentifier(ASTAUX::MkId(L"obj")));
-    TYPE_CPP_TypeSpecifier tp (vdm_BC_GenTypeSpecifier(cn));
-    stmt = vdm_BC_GenReturnStmt(vdm_BC_GenTypeComp(tp, id ));
+  if (forall) {
+    stmt = vdm_BC_GenReturnStmt(test);
   }
-  else
-  {
+  else {
+    TYPE_CPP_Identifier temp = vdm_BC_GenIdentifier(ASTAUX::MkId(L"temp"));
     SET<TYPE_CPP_Expr> basic (GetBasicTypes());
-    size_t len_sl = sl.Length();
+    Generic expr = nil;
     for (size_t i = 1; i <= len_sl; i ++) {
-      TYPE_CPP_Identifier id (sl[i]);
-      Bool dc (dcenv[id]);
-      if (!dc.GetValue()) {
+      TYPE_CPP_Identifier s (sl[i]);
+      if (!dcenv[s].GetValue()) {
         TYPE_CPP_Expr new_expr;
-        if ((get_smalltypes_option()) && (basic.InSet(tenv[id])))
-          new_expr = vdm_BC_GenEq(id, vdm_BC_GenQualifiedName(vdm_BC_GenIdentifier(ASTAUX::MkId(L"temp")), id));
+        if ((get_smalltypes_option()) && (basic.InSet(tenv[s])))
+          new_expr = vdm_BC_GenEq(s, vdm_BC_GenQualifiedName(temp, s));
         else
           new_expr = vdm_BC_GenFctCall(vdm_BC_GenIdentifier(ASTAUX::MkId(L"UTIL.equals")),
-                                       type_dL().ImpAppend(id).ImpAppend(
-                                         vdm_BC_GenQualifiedName(vdm_BC_GenIdentifier(ASTAUX::MkId(L"temp")), id)));
+                                type_dL().ImpAppend(s).ImpAppend(vdm_BC_GenQualifiedName(temp, s)));
         if (expr.IsNil())
           expr = new_expr;
         else
           expr = vdm_BC_GenLogAnd(expr, new_expr);
       }
     }
+    TYPE_CPP_AsgnInit ai (vdm_BC_GenAsgnInit(vdm_BC_GenCastExpr(clsTp, argNm)));
+    SEQ<TYPE_CPP_Stmt> stmts;
+    stmts.ImpAppend(vdm_BC_GenDecl(clsTp, temp, ai));
+    stmts.ImpAppend(vdm_BC_GenReturnStmt(expr));
 
-    TYPE_CPP_Identifier lhs (vdm_BC_GenIdentifier(ASTAUX::MkId(L"obj")));
-    TYPE_CPP_TypeSpecifier rhs (vdm_BC_GenTypeSpecifier(cn));
-    TYPE_CPP_Expr test (vdm_BC_GenNot(vdm_BC_GenBracketedExpr(vdm_BC_GenTypeComp(rhs,lhs))));
-
-    type_dL elseStmts;
-    elseStmts.ImpAppend(vdm_BC_GenDecl(rhs,
-                                       vdm_BC_GenIdentifier(ASTAUX::MkId(L"temp")),
-                                       vdm_BC_GenAsgnInit(vdm_BC_GenCastExpr(rhs, lhs))));
-
-    elseStmts.ImpAppend(vdm_BC_GenReturnStmt(expr));
-
+//    stmt = vdm_BC_GenIfStmt(vdm_BC_GenNot(test),
+//                            vdm_BC_GenReturnStmt(vdm_BC_GenIdentifier(ASTAUX::MkId(L"false"))),
+//                            vdm_BC_GenBlock(stmts));
     stmt = vdm_BC_GenIfStmt(test,
-                            vdm_BC_GenReturnStmt(vdm_BC_GenIdentifier(ASTAUX::MkId(L"false"))),
-                            vdm_BC_GenBlock(elseStmts));
+                            vdm_BC_GenBlock(stmts),
+                            vdm_BC_GenReturnStmt(vdm_BC_GenIdentifier(ASTAUX::MkId(L"false"))));
   }
-
-  TYPE_CPP_ArgDecl arg (vdm_BC_GenArgDecl(SEQ<TYPE_CPP_DeclSpecifier>().ImpAppend(
-                                            vdm_BC_GenTypeSpecifier(vdm_BC_GenIdentifier(ASTAUX::MkId(L"Object")))),
-                                          vdm_BC_GenIdentifier(ASTAUX::MkId(L"obj"))));
-  TYPE_CPP_FctDecl decl (vdm_BC_GenFctDecl(vdm_BC_GenIdentifier(ASTAUX::MkId(L"equals")), type_dL().ImpAppend(arg)));
+  
+  TYPE_CPP_ArgDecl arg (vdm_BC_GenArgDecl(SEQ<TYPE_CPP_DeclSpecifier>().ImpAppend(vdm_BC_GenGeneric()),
+                                          argNm));
+  TYPE_CPP_FctDecl decl (vdm_BC_GenFctDecl(vdm_BC_GenIdentifier(ASTAUX::MkId(L"equals")),
+                                           SEQ<TYPE_CPP_Expr>().ImpAppend(arg)));
   SEQ<TYPE_CPP_Modifier> ml (mk_sequence(vdm_BC_GenModifier(quote_PUBLIC)));
   SEQ<TYPE_CPP_DeclSpecifier> dsl (mk_sequence(GenSmallBoolType()));
 
@@ -1984,41 +1977,27 @@ TYPE_CPP_FunctionDefinition vdmcg::GenHashMethod(const TYPE_CPP_Identifier & cn,
                                                  const MAP<TYPE_CPP_Identifier,TYPE_CPP_Name> & tenv,
                                                  const MAP<TYPE_CPP_Identifier,Bool> & dcenv)
 {
-  int fieldnum = 0;
+  bool forall = true;
   size_t len_sl = sl.Length();
-  for (size_t i = 1; i <= len_sl; i++)
-  {
-    Bool dc = dcenv[sl[i]];
-    if (!(dc.GetValue()))
-      fieldnum++;
+  for (size_t i = 1; (i <= len_sl) && forall; i ++) {
+    TYPE_CPP_Identifier s (sl[i]);
+    forall = dcenv[s].GetValue();
   }
 
   TYPE_CPP_Stmt stmt;
-  Generic expr = nil;
-  if (fieldnum == 0)
+  if (forall) {
     stmt = vdm_BC_GenReturnStmt(vdm_BC_GenIntegerLit(0));
-  else
-  {
-    for (size_t i = 1; i <= len_sl; i++)
-    {
-      TYPE_CPP_Identifier id (sl[i]);
-      Bool dc (dcenv[id]);
-      TYPE_CPP_Expr rhs (vdm_BC_GenCondExpr(vdm_BC_GenEq(id, vdm_BC_GenIdentifier(ASTAUX::MkId(L"null"))),
+  }
+  else {
+    Generic expr = nil;
+    for (size_t i = 1; i <= len_sl; i++) {
+      TYPE_CPP_Identifier s (sl[i]);
+      TYPE_CPP_Expr rhs (vdm_BC_GenBracketedExpr(
+                           vdm_BC_GenCondExpr(vdm_BC_GenEq(vdm_BC_GenIdentifier(ASTAUX::MkId(L"null")),s),
                                             vdm_BC_GenIntegerLit(0),
-                                            vdm_BC_GenFctCallObjMemAcc(id, ASTAUX::MkId(L"hashCode"),
-                                                                       SEQ<TYPE_CPP_Expr>())));
-/*
-      if (expr.IsNil())
-      {
-        if (!(dc.GetValue()))
-          expr = rhs;
-      }
-      else
-        if (!(dc.GetValue())) {
-          expr = vdm_BC_GenPlus(expr,rhs);
-        }
-*/
-      if (!(dc.GetValue())) {
+                                            vdm_BC_GenFctCallObjMemAcc(s, ASTAUX::MkId(L"hashCode"),
+                                                                       SEQ<TYPE_CPP_Expr>()))));
+      if (!(dcenv[s].GetValue())) {
         if (expr.IsNil())
           expr = rhs;
         else

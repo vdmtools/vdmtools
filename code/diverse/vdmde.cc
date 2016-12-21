@@ -39,6 +39,8 @@
 #include "TIMETRACE.h"
 #endif // VICE
 
+#include "m4lib_errmsg.h"
+
 #include <fstream>
 #include <locale.h>
 #include <sstream>
@@ -636,6 +638,8 @@ void RunInteractiveMode(int argc, char *argv[], CLIOptions & thisCliOpt)
 
 int main (int argc, char *argv[])
 {
+  M4LibError::SetGUIMode(false);
+
   SEQ<Char> myname (TBUTILS::tb_getbasename(TBWSTR::string2wstring(string(argv[0]))));
   Settings.SetName(myname);
 

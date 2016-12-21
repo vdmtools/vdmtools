@@ -29,6 +29,7 @@ public:
   static void ReportError(int, const std::wstring &);
   static void Complain(const std::wstring & title, const std::wstring & message);
   static void SetGUIMode(bool);
+  static bool GetGUIMode();
 private:
   static bool guimode;
 };

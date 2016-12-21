@@ -32,8 +32,6 @@ export QT4DIR=${USERLIBDIR}/qt4
 export CORBAHOME=/usr/local/omniORB
 export LD_LIBRARY_PATH=${CORBAHOME}/lib:${LD_LIBRARY_PATH}
 
-export CXXLIB=${USERLIBDIR}/libstdc++.so.?
-
 export OSTYPE=`uname`
 export YACC=bison
 

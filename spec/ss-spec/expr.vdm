@@ -56,7 +56,8 @@ imports
 #endif VDMSL
 #ifdef VDMPP
     IsSubClass: AS`Name * AS`Name ==> bool;
-    SetDefClass: [AS`Name] ==> ();
+    SetDefClass: AS`Name ==> ();
+    UnSetDefClass: () ==> ();
     LookUp: AS`Name * bool ==> [REP`TypeRep|ENV`AccessType  |
                                 set of (ENV`AccessOpTypeRep |
                                         ENV`AccessFnTypeRep |
@@ -3711,7 +3712,8 @@ operations
           if is_(gtp , set of (ENV`AccessOpTypeRep | ENV`AccessFnTypeRep | ENV`AccessPolyTypeRep))
           then
            (wf_fct := true;
-            fcttp := mk_REP`OverTypeRep(ENV`CheckAccess (ENV`GetCurClass (), gtp)))
+            --fcttp := mk_REP`OverTypeRep(ENV`CheckAccess (ENV`GetCurClass (), gtp)))
+            fcttp := mk_REP`OverTypeRep(ENV`CheckAccessCurClass(gtp)))
           else
             def mk_(wf, tp) = wf_Expr(i, fct, fnmapseqtp)
             in
@@ -5093,17 +5095,17 @@ wf_NarrowExpr (i, mk_AS`NarrowExpr(expr,tp,cid), -) ==
          -- its super classes
          --------------------------------------------
          ( ERR`GenErr(nm,<ERROR>,388,[]);
-           ENV`SetDefClass(nil);
+           ENV`UnSetDefClass();
            return mk_(false, mk_REP`ObjRefTypeRep(nm))
          )
       else
-          let tprep = mk_REP`ObjRefTypeRep(nm),
-              optp = mk_REP`OpTypeRep(l_argtpL,mk_REP`TypeNameRep(nm))
-          in
-          (  CI`SetTypeInfo(nm.cid,optp);
-             CI`SetTypeInfo(cid, tprep);
-             ENV`SetDefClass(nil);
-             return mk_(l_wf_arg, tprep) )
+        let tprep = mk_REP`ObjRefTypeRep(nm),
+            optp = mk_REP`OpTypeRep(l_argtpL,mk_REP`TypeNameRep(nm))
+        in
+         (  CI`SetTypeInfo(nm.cid,optp);
+            CI`SetTypeInfo(cid, tprep);
+            ENV`UnSetDefClass();
+            return mk_(l_wf_arg, tprep) );
       )
           --------------------------------
           -- Error message #284

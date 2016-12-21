@@ -136,7 +136,28 @@ void StatSem::LeaveLocalScope ()
 // writable : bool
 // printEror : bool
 // return : [AccessType | set of (AccessOpTypeRep | AccessFnTypeRep | AccessPolyTypeRep)]
-Generic StatSem::LookUpInObject(const TYPE_AS_Name & obj, const TYPE_AS_Name & nm, bool writable, bool printError)
+Generic StatSem::LookUpInObject(const TYPE_AS_Name & obj, const TYPE_AS_Name & nm,
+                                bool writable, bool printError)
+{
+  Tuple key (mk_(obj, nm, Bool(writable), Bool(printError)));
+  if (!LookUpInObjectCache.DomExists(key)) {
+    Generic tp = LookUpInObjectImpl(obj, nm, writable, printError);
+    if (!tp.IsNil() && !printError) {
+      LookUpInObjectCache.Insert(key, tp);
+    }
+    return tp;
+  }
+  return LookUpInObjectCache[key];
+}
+
+// LookUpInObjectImpl
+// obj : AS`Name
+// nm : AS`Name
+// writable : bool
+// printEror : bool
+// return : [AccessType | set of (AccessOpTypeRep | AccessFnTypeRep | AccessPolyTypeRep)]
+Generic StatSem::LookUpInObjectImpl(const TYPE_AS_Name & obj, const TYPE_AS_Name & nm,
+                                    bool writable, bool printError)
 {
   if (nm.GetSequence(pos_AS_Name_ids).Length() == 2)
   {
@@ -268,7 +289,8 @@ Generic StatSem::LookUp (const TYPE_AS_Name & nm, bool printErr)
       hasNotStatic = hasNotStatic && this->staticrequired;
 #endif // VICE
 
-      if (hasNotStatic && (!IsSubClass(CheckClass, ncls)))
+      //if (hasNotStatic && (!IsSubClass(CheckClass, ncls)))
+      if (hasNotStatic && (!IsSubClass(GetCurClass(), ncls)))
         nilOrHasNotStaticAndNotSubClass = true;
       else
         nilOrHasNotStaticAndNotSubClass = false;
@@ -448,15 +470,12 @@ Generic StatSem::LookUp (const TYPE_AS_Name & nm, bool printErr)
     else
 #ifdef VDMPP
     {
-// 20070305
-//      Generic tp (LookUpInHierarchy (nm, Nil(), VAL, LOCAL));
-      Generic DefClass = CheckClass;
+      Generic DefClass = GetCurClass();
       if  ( !DefiningClass.IsEmpty() )
         DefClass = DefiningClass.Hd();
 
       Generic tp (LookUpInHierarchy (nm, DefClass, VAL, LOCAL));
 
-// 20070306
       if( tp.IsNil() )
         tp = LookUpInHierarchy (nm, Nil(), VAL, LOCAL);
       
@@ -469,11 +488,6 @@ Generic StatSem::LookUp (const TYPE_AS_Name & nm, bool printErr)
         //------------------------
         if (printErr)
           GenErr(nm, ERR, 34, mk_sequence(PrintName(nm)));
-#ifndef TSI
-// 20130710 -->
-        //this->ConstEnv.ImpModify (nm, mk_SSENV_TypeRepElem(rep_alltp, Bool(true), Bool(true)));
-// <-- 20130710
-#endif
         return Nil ();
       }
 #ifdef VDMPP
@@ -512,6 +526,31 @@ Generic StatSem::LookUpTypeName (const TYPE_AS_Name & nm)
 // printerr : bool
 // ==> [REP`TypeRep|AccessType]
 Generic StatSem::LookUpTypeName (const TYPE_AS_Name & nm, bool printerr)
+{
+
+  Tuple key (mk_(nm, GetCurClass (), Bool(printerr)));
+  Generic tpx;
+  if (!this->LookUpTypeNameCache.DomExists(key)) {
+    Generic tp = LookUpTypeName_q(nm, printerr);
+    if (!tp.IsNil() || !printerr) {
+      this->LookUpTypeNameCache.Insert(key, mk_(tp, this->FoundClass));
+    }
+    return tp;
+  }
+  else {
+    Tuple t (this->LookUpTypeNameCache[key]);
+    this->FoundClass = t.GetField(2);
+    return t.GetField(1);
+  }
+
+//  return LookUpTypeName_q(nm, printerr);
+}
+
+// LookUpTypeName
+// nm : AS`Name
+// printerr : bool
+// ==> [REP`TypeRep|AccessType]
+Generic StatSem::LookUpTypeName_q (const TYPE_AS_Name & nm, bool printerr)
 #endif // VDMPP
 {
   Generic gtmp;
@@ -525,7 +564,8 @@ Generic StatSem::LookUpTypeName (const TYPE_AS_Name & nm, bool printerr)
     TYPE_AS_Name nnm (ASTAUX::GetSecondName(nm));
 
     if (ncls == GetCurClass ())
-      return LookUpTypeName (nnm, true);
+      //return LookUpTypeName (nnm, true);
+      return LookUpTypeName_q (nnm, true);
     else
     {
       Generic tp (LookUpInHierarchy(nnm, ncls, TYPE, GLOBAL));
@@ -602,7 +642,7 @@ Generic StatSem::LookUpTypeName (const TYPE_AS_Name & nm, bool printerr)
     else
 #ifdef VDMPP
     {
-      Generic DefClass = CheckClass;
+      Generic DefClass = GetCurClass();
       if ( !DefiningClass.IsEmpty() )
         DefClass = DefiningClass.Hd();
 
@@ -685,28 +725,16 @@ Generic StatSem::LookUpDefClass ()
 // SetDefClass
 // clnm : [AS`Name]
 // ==> ()
-void StatSem::SetDefClass(const Generic & clnm)
+void StatSem::SetDefClass(const TYPE_AS_Name & clnm)
 {
-  if (clnm.IsNil())
-  {
-    if (!this->DefiningClass.IsEmpty())
-      this->DefiningClass.ImpTl();
-  }
-  else
-    this->DefiningClass.ImpPrepend(clnm);
+  this->DefiningClass.ImpPrepend(clnm);
 }
 
 // UnSetDefClass
 // ==> ()
 void StatSem::UnSetDefClass()
 {
-  if (!this->DefiningClass.IsEmpty())
-  {
-    this->FoundClass = this->DefiningClass.Hd();
-    this->DefiningClass.ImpTl();
-  }
-  else
-    this->FoundClass = Nil();
+  this->DefiningClass.ImpTl();
 }
 #endif // VDMPP
 
@@ -1393,7 +1421,6 @@ bool StatSem::CheckTraceName (const TYPE_AS_Name & nm) const
 // ==> [REP`TypeRep | AccessType | (AS`Name * AccessFieldRep) | set of AccessType]
 Generic StatSem::LookUpInHierarchy (const TYPE_AS_Name & nm, const Generic & classid, int kind, int local)
 {
-// 20070309
   this->FoundClass = Nil();
 
   Map binds; // map AS`Name to (REP`TypeRep | AccessType | (AS`Name * AccessFieldRep) | set of AccessType)
@@ -1415,13 +1442,6 @@ Generic StatSem::LookUpInHierarchy (const TYPE_AS_Name & nm, const Generic & cla
   }
   else if (binds.Size() == 1)
   {
-    // 20070307
-//    SetDefClass(binds.Dom ().GetElem ());
-//    Generic res (binds[this->DefiningClass.Hd()]);
-//    UnSetDefClass();
-//    Generic res (binds[this->FoundClass]);
-//    return res;
-// 20070309    
     this->FoundClass = binds.Dom().GetElem();
     return binds[this->FoundClass];
   }
@@ -2377,7 +2397,7 @@ Generic StatSem::GetCurModOrNil () const
 // ==> bool
 bool StatSem::InstallCurClass (const TYPE_AS_Name & classnm, const SEQ<TYPE_AS_Name> & super)
 {
-  this->CheckClass = classnm;
+  SetCurClass(classnm);
 
   if (!CheckClassName(classnm))
     return false;
@@ -2422,8 +2442,6 @@ bool StatSem::IsAccessible ( const TYPE_AS_Name & cls_q, const TYPE_SSENV_Access
     }
     case PRIVATE_AS:
     case NOT_INITIALISED_AS: {
-// 20070310
-//      return cls == this->FoundClass;
       return cls == GetCurClass ();
     }
     default: {
@@ -2458,10 +2476,10 @@ bool StatSem::IsAccessibleCurClass (const TYPE_SSENV_AccessType & acs)
 // -> [REP`TypeRep | TagRepElem | set of (REP`FnTypeRep | REP`OpTypeRep  | REP`PolyTypeRep)];
 Generic StatSem::CheckAccess (const TYPE_AS_Name & cls, const Generic & tp)
 {
+  Generic l_defcl (LookUpDefClass ());
   if (IsAccessTypeSet(tp))
   {
     SET<TYPE_SSENV_AccessType> tps (tp);
-    Generic l_defcl (LookUpDefClass());
     TYPE_AS_Name l_actcl (l_defcl.IsNil() ? cls : TYPE_AS_Name(l_defcl));
 
     Generic b_atp;
@@ -2473,41 +2491,32 @@ Generic StatSem::CheckAccess (const TYPE_AS_Name & cls, const Generic & tp)
     }
 
     if (l_tps.IsEmpty())
-      return Nil(); // GenAccessError(cls);
+      return Nil();
     else
       return l_tps;
   }
   else if (IsAccessType (tp))
   {
-    Generic defcl (LookUpDefClass ());
-
-    // 20090930-->
     // check cls is class or not
     Generic gtp = Nil();
     if (cls != GetCurClass ())
     {
       SetDefClass(GetCurClass ());
       gtp = LookUp(cls, false);
-      SetDefClass(Nil());
+      UnSetDefClass();
 
       if (IsAccessType(gtp))
         CheckLookupStatic(cls, GetSSStatic(gtp));
-    // <--20090930
-
     }
-// 20090413 -->
-//    if ((!defcl.IsNil () && IsAccessible (defcl, tp)) ||
     if (
 #ifdef VICE
         !this->staticrequired ||
 #endif // VICE
-//        (!defcl.IsNil () && IsAccessible (defcl, tp) && (!IsClassName(cls) || IsAccessible (cls, tp))) ||
-        (!defcl.IsNil () && IsAccessible (defcl, tp) && (!gtp.IsNil() || IsAccessible (cls, tp))) ||
-// <-- 20090413
-        (defcl.IsNil () && IsAccessible (cls, tp)))
+        (!l_defcl.IsNil () && IsAccessible (l_defcl, tp) && (!gtp.IsNil() || IsAccessible (cls, tp))) ||
+        (l_defcl.IsNil () && IsAccessible (cls, tp)))
       return StripAccessType(tp);
     else
-      return Nil(); //GenAccessError (cls);
+      return Nil();
   }
   else
     return tp;
@@ -3482,7 +3491,7 @@ Tuple StatSem::GetSubResps(const TYPE_AS_Name & nm)
           }
         }
       }
-      SetDefClass(Nil()); // 20101006 for IsEquivalent
+      UnSetDefClass(); // 20101006 for IsEquivalent
     }
 
     Set dom_implemented (implemented.Dom());
@@ -7072,6 +7081,10 @@ void StatSem::InitEnv ()
   this->lastline = 0;
   this->lastcol  = 0;
   this->lastfile = 0;
+#ifdef VDMPP
+  this->LookUpInObjectCache = Map();
+  this->LookUpTypeNameCache = Map();
+#endif //VDMPP
 }
 
 // SetExtAll
@@ -8123,7 +8136,7 @@ Tuple StatSem::PublicLookUpTypeName (const TYPE_AS_Name & nm, const TYPE_AS_Name
   Generic foundCls (this->FoundClass); // bestoryed by CheckAccessCurClass
 
   Tuple res (mk_(CheckAccessCurClass (tp), foundCls));
-  SetDefClass(Nil());
+  UnSetDefClass();
   return res;
 }
 #endif // VDMPP
@@ -8270,42 +8283,36 @@ bool StatSem::IsInstanceVar_q(const TYPE_AS_Name & nm, bool checkStatic)
   if (nm.GetSequence(pos_AS_Name_ids).Length() == 2)
   {
     TYPE_AS_Name ncls (ASTAUX::GetFirstName(nm));
-    TYPE_AS_Name nnm (ASTAUX::GetSecondName(nm));
 
     Generic cls (GetClassTypeRep(ncls));
     if (cls.IsNil())
       return false;
     else {
       TYPE_SSENV_ParseTypeInfo pti (cls);
-      //MAP<TYPE_AS_Name,TYPE_SSENV_AccessTypeRep> vals (pti.get_insts ());
       const MAP<TYPE_AS_Name,TYPE_SSENV_AccessTypeRep> & insts (pti.GetMap(pos_SSENV_ParseTypeInfo_insts));
-      const MAP<TYPE_AS_Name,TYPE_SSENV_AccessTypeRep> & vals (pti.GetMap(pos_SSENV_ParseTypeInfo_vals));
       if (insts.DomExists(nm)) {
         if (checkStatic)
-          //return insts[nm].get_stat();
           return insts[nm].GetBoolValue(pos_SSENV_AccessTypeRep_stat);
         else
           return true;
       }
-      else
+      else {
+        const MAP<TYPE_AS_Name,TYPE_SSENV_AccessTypeRep> & vals (pti.GetMap(pos_SSENV_ParseTypeInfo_vals));
         return vals.DomExists(nm);
+      }
     }
   }
   else {
-// 20111222 -->
-    //return this->StateEnv.DomExists(nm);
     if (this->StateEnv.DomExists(nm))
     {
       TYPE_SSENV_TypeRepElem tre (this->StateEnv[nm]);
       if (checkStatic)
-        //return insts[nm].get_stat();
         return tre.GetBoolValue(pos_SSENV_TypeRepElem_stat);
       else
         return true;
     }
     else
       return false;
-// <-- 20111222
   }
 }
 
@@ -8317,7 +8324,6 @@ Generic StatSem::LookUpInstanceVar(const TYPE_AS_Name & nm)
   if (nm.GetSequence(pos_AS_Name_ids).Length() == 2)
   {
     TYPE_AS_Name ncls (ASTAUX::GetFirstName(nm));
-    TYPE_AS_Name nnm (ASTAUX::GetSecondName(nm));
 
     Generic cls (GetClassTypeRep(ncls));
     if (cls.IsNil())

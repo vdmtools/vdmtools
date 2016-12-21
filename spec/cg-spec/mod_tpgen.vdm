@@ -1953,57 +1953,48 @@ def mk_CPP`Identifier(id,-) = cn;
 
 GenEqualsMethod : CPP`Identifier * TagList * TagEnv * DCEnv ==> CPP`FunctionDefinition
 GenEqualsMethod(cn,sl,tenv, dcenv) ==
-(
-  dcl stmt   : CPP`Stmt,
-      expr : [CPP`Expr] := nil,
-      fieldnum : int := 0;
-
-    for j = 1 to len(sl) do (
-      let dc = dcenv(sl(j))
+  let argNm = BC`GenIdentifier("obj"),
+      clsTp = BC`GenTypeSpecifier(cn),
+      test  = BC`GenBracketedExpr(BC`GenTypeComp(clsTp, argNm))
+  in
+   (dcl stmt : CPP`Stmt;
+    if forall s in set elems sl & dcenv(s)
+    then stmt := BC`GenReturnStmt(test)
+    else
+      let temp = BC`GenIdentifier("temp")
       in
-        if dc
-        then fieldnum := fieldnum
-        else fieldnum := fieldnum + 1
-    );
-   if (fieldnum = 0)
-   then stmt :=  BC`GenReturnStmt(BC`GenTypeComp(BC`GenTypeSpecifier(cn ), BC`GenIdentifier("obj") ))
-   else
-   (
-     -- Generate list
-     def basic = GetBasicTypes() in
-     for j = 1 to len(sl) do (
-       let dc = dcenv(sl(j)) in
-       if not dc
-       then
-        (dcl new_expr : CPP`Expr;
-         if CGMAIN`get_smalltypes_option() and tenv(sl(j)) in set basic
-         then new_expr := BC`GenEq(sl(j),BC`GenQualifiedName(BC`GenIdentifier("temp"),sl(j)))
-         else new_expr := BC`GenFctCall(BC`GenIdentifier("UTIL.equals"),
-                                [sl(j),BC`GenQualifiedName(BC`GenIdentifier("temp"),sl(j))]);
-         if expr = nil
-         then expr := new_expr
-         else expr := BC`GenLogAnd(expr, new_expr)
-       )
-     );
+       (dcl expr : [CPP`Expr] := nil;
+        -- Generate list
+        def basic = GetBasicTypes();
+        in
+          for s in sl do
+            if not dcenv(s)
+            then
+             (dcl new_expr : CPP`Expr;
+              if CGMAIN`get_smalltypes_option() and tenv(s) in set basic
+              then new_expr := BC`GenEq(s,BC`GenQualifiedName(temp,s))
+              else new_expr := BC`GenFctCall(BC`GenIdentifier("UTIL.equals"),
+                                             [s,BC`GenQualifiedName(temp,s)]);
+              if expr = nil
+              then expr := new_expr
+              else expr := BC`GenLogAnd(expr, new_expr)
+             );
 
-     let lhs = BC`GenIdentifier("obj"),
-         rhs = BC`GenTypeSpecifier(cn),
-         test = BC`GenNot(BC`GenBracketedExpr(BC`GenTypeComp(rhs, lhs ))),
-         elseStmts = [BC`GenDecl(BC`GenTypeSpecifier(cn),
-                                 BC`GenIdentifier("temp"),
-                                 BC`GenAsgnInit(
-                                   BC`GenCastExpr(BC`GenTypeSpecifier(cn),
-                                                  BC`GenIdentifier("obj")))),
-                                                  BC`GenReturnStmt(expr) ]
-     in
-     stmt := BC`GenIfStmt( test, BC`GenReturnStmt(BC`GenIdentifier("false")), BC`GenBlock(elseStmts));
+        let ai = BC`GenAsgnInit(BC`GenCastExpr(clsTp, argNm)),
+            stmts = [BC`GenDecl(clsTp, temp, ai), BC`GenReturnStmt(expr)]
+--        in stmt := BC`GenIfStmt(BC`GenNot(test),
+--                                BC`GenReturnStmt(BC`GenIdentifier("false")),
+--                                BC`GenBlock(stmts));
+        in stmt := BC`GenIfStmt(test,
+                                BC`GenBlock(stmts),
+                                BC`GenReturnStmt(BC`GenIdentifier("false")));
+       );
+
+    let arg  = BC`GenArgDecl([BC`GenGeneric()], argNm),
+        decl = BC`GenFctDecl(BC`GenIdentifier("equals"),[arg])
+    in return BC`GenJavaFctDef([],[BC`GenModifier(<PUBLIC>)],
+                               [DS`GenSmallBoolType()],decl,nil,stmt)
    );
-
-   let arg  = BC`GenArgDecl([BC`GenTypeSpecifier(BC`GenIdentifier("Object"))], BC`GenIdentifier("obj")),
-       decl = BC`GenFctDecl(BC`GenIdentifier("equals"),[arg])
-   in
-     return BC`GenJavaFctDef([],[BC`GenModifier(<PUBLIC>)],[DS`GenSmallBoolType()],decl,nil,stmt)
-);
 \end{vdm_al}
 
 $GenHashMethod$ generates a naive hash method based on the sum of the
@@ -2011,46 +2002,25 @@ hash values of those members of the class that are relevant to equality testing.
 \begin{vdm_al}
 GenHashMethod : CPP`Identifier * TagList * TagEnv * DCEnv ==> CPP`FunctionDefinition
 GenHashMethod(-,sl,-, dcenv) ==
- (dcl stmt : CPP`Stmt,
-      expr : [CPP`Expr] := nil,
-      fieldnum : int := 0;
-
-  for j = 1 to len(sl) do
-   (let dc = dcenv(sl(j))
-    in
-      if not dc
-      then fieldnum := fieldnum + 1
-   );
-
-  if (fieldnum = 0)
+ (dcl stmt : CPP`Stmt;
+  if forall s in set elems sl & dcenv(s)
   then stmt := BC`GenReturnStmt(BC`GenIntegerLit(0))
   else
-   (
-    for j = 1 to len(sl) do
-     (let dc = dcenv(sl(j))
+   (dcl expr : [CPP`Expr] := nil;
+    for s in sl do
+      -- Note the complication here that we need to guard calls
+      -- to a fields hashCode method in case the field is null
+      let rhs = BC`GenBracketedExpr(BC`GenCondExpr(
+                       BC`GenEq(BC`GenIdentifier("null"),s),
+                       BC`GenIntegerLit(0),
+                       BC`GenFctCallObjMemAcc(s,"hashCode",[])))
       in
-        -- Note the complication here that we need to guard calls
-        -- to a fields hashCode method in case the field is null
-        let rhs  = BC`GenCondExpr(
-                         BC`GenEq(sl(j),BC`GenIdentifier("null")),
-                         BC`GenIntegerLit(0),
-                         BC`GenFctCallObjMemAcc(sl(j),"hashCode",[]))
-        in
-          --if expr = nil
-          --then if not dc
-          --     then expr := rhs
-          --     else skip
-          --else if not dc
-          --     then expr := BC`GenPlus(expr,rhs)
-          --     else skip
-          if not dc
-          then if expr = nil
-               then expr := rhs
-               else expr := BC`GenPlus(expr,rhs)
-     );
+        if not dcenv(s)
+        then if expr = nil
+             then expr := rhs
+             else expr := BC`GenPlus(expr,rhs);
     stmt := BC`GenReturnStmt(expr);
-  );
-
+   );
   let decl = BC`GenFctDecl(BC`GenIdentifier("hashCode"),[]) in
   return BC`GenJavaFctDef([],[BC`GenModifier(<PUBLIC>)],[DS`GenSmallIntType()],decl,nil,stmt)
 );
@@ -2239,7 +2209,7 @@ GetUniqueName : seq of char * set of (seq of char) -> seq of char
 GetUniqueName (stem, existingNames) ==
  if stem not in set existingNames
  then stem
- else GetUniqueName("f"^stem, existingNames);
+ else GetUniqueName("f" ^ stem, existingNames);
 \end{vdm_al}
 
 The \verb+GenCompositeType+ handles the generation of a name for

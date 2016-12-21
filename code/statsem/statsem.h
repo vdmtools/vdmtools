@@ -513,6 +513,10 @@ private:
 
   SEQ<TYPE_CI_ContextId> ValueDefContext;
 
+#ifdef VDMPP
+  Map LookUpInObjectCache;
+  Map LookUpTypeNameCache;
+#endif //VDMPP
 // defined in vcm.vdm
 #ifdef VDMPP
   MAP<TYPE_AS_Name, TYPE_SSENV_ParseTypeInfo> ParseEnv; // map AS`Name to ENV`ParseTypeInfo
@@ -774,6 +778,7 @@ public:
 #endif // VDMSL
 #ifdef VDMPP
   Generic LookUpTypeName (const TYPE_AS_Name & nm, bool printerr);
+  Generic LookUpTypeName_q (const TYPE_AS_Name & nm, bool printerr);
 #endif // VDMLL
   Generic LookUpTag (const Int & i, const TYPE_AS_Name & nm, const SET<TYPE_AS_Name> &);
   Generic GetCurModOrNil() const;
@@ -807,6 +812,7 @@ private:
 
 #ifdef VDMPP
   Generic LookUpInObject(const TYPE_AS_Name & obj, const TYPE_AS_Name & nm, bool writable, bool printError);
+  Generic LookUpInObjectImpl(const TYPE_AS_Name & obj, const TYPE_AS_Name & nm, bool writable, bool printError);
 #ifdef VICE
   void NotStaticOk();
   void StaticRequired();
@@ -1502,7 +1508,7 @@ public:
 #ifdef VDMPP
   Generic LookUpDefClassForTypeName(const TYPE_AS_Name & nm);
   Generic LookUpDefClass ();
-  void SetDefClass(const Generic &);
+  void SetDefClass(const TYPE_AS_Name &);
   void UnSetDefClass();
 //  int NO_OF_WARNINGS, NO_OF_ERRORS;
 #endif // VDMPP

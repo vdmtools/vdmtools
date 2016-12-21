@@ -116,15 +116,6 @@ export QTLRELEASE=${QTDIR}/bin/lrelease-qt${QTVERSION}
 export CORBAHOME=/usr/local/omniORB
 export LD_LIBRARY_PATH=${CORBAHOME}/lib:${LD_LIBRARY_PATH}
 
-export KERNVERS=`uname -r`
-if [ "2.6.32" = ${KERNVERS%%\-*} ]; then
-    #for Ubuntu 10.04
-    export CXXLIB=/usr/lib/libstdc++.so.?
-else
-    export PLATFORM=`uname -i`
-    export CXXLIB=/usr/lib/${PLATFORM}-linux-gnu/libstdc++.so.?
-fi
-
 export OSTYPE=`uname`
 export YACC=bison
 
