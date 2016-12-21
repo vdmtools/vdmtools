@@ -789,10 +789,10 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenRecImpModify(const TYPE_AS_Name & fsnm,
 #endif //VDMPP
 
 #ifdef VDMSL
-  TYPE_CPP_Stmt rti (RunTime(L"A record was expected"));
+  TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence(RunTime(L"A record was expected"))));
 #endif // VDMSL
 #ifdef VDMPP
-  TYPE_CPP_Stmt rti (RunTime(L"An object or record was expected"));
+  TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence(RunTime(L"An object or record was expected"))));
 #endif // VDMPP
 
   Generic alt = rti;
@@ -839,8 +839,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenRecImpModify(const TYPE_AS_Name & fsnm,
       if (alt.IsNil())
         alt = setfield;
       else
-        //alt = vdm_BC_GenIfStmt(isRecord, setfield, alt);
-        alt = vdm_BC_GenIfStmt(isRecord, setfield, vdm_BC_GenBlock(mk_sequence(alt)));
+        alt = vdm_BC_GenIfStmt(isRecord, vdm_BC_GenBlock(mk_sequence(setfield)), alt);
     }
   }
 #ifdef VDMPP
@@ -881,32 +880,34 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenRecImpModify(const TYPE_AS_Name & fsnm,
           TYPE_CPP_Expr if_cond (GenAuxType(level, otr));
           TYPE_CPP_Expr l_ptr (CastToClassPtr(clnm, level));
           TYPE_CPP_Expr l_memacc (vdm_BC_GenPointerToObjectMemberAccess(l_ptr, vdm_BC_Rename(fsnm)));
-          TYPE_CPP_Stmt l_asgn (vdm_BC_GenAsgnStmt(l_memacc, val));
+          //TYPE_CPP_Stmt l_asgn (vdm_BC_GenAsgnStmt(l_memacc, val));
+          TYPE_CPP_Stmt l_asgn (vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(l_memacc, val))));
           if (alt.IsNil())
             alt = l_asgn;
           else
-            //alt = vdm_BC_GenIfStmt(if_cond, l_asgn, alt);
-            alt = vdm_BC_GenIfStmt(if_cond, l_asgn, vdm_BC_GenBlock(mk_sequence(alt)));
+            alt = vdm_BC_GenIfStmt(if_cond, l_asgn, alt);
         }
         else
         { // Java
           TYPE_CPP_Expr if_cond (vdm_BC_GenTypeComp(vdm_BC_Rename(clnm), level));
           TYPE_REP_TypeRep tp (GetStatSem().LookUpInstanceVar(ASTAUX::Combine2Names(clnm, fsnm)));
           TYPE_CPP_Expr cast (vdm_BC_GenBracketedExpr(GenCastType(otr, level)));
-          TYPE_CPP_Stmt l_asgn (vdm_BC_GenAsgnStmt(vdm_BC_GenQualifiedName(cast, vdm_BC_Rename(fsnm)),
-                                                   GenExplicitCast(tp, val, nil)));
+          //TYPE_CPP_Stmt l_asgn (vdm_BC_GenAsgnStmt(vdm_BC_GenQualifiedName(cast, vdm_BC_Rename(fsnm)),
+          //                                         GenExplicitCast(tp, val, nil)));
+          TYPE_CPP_Stmt l_asgn (vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(vdm_BC_GenQualifiedName(cast, vdm_BC_Rename(fsnm)),
+                                                   GenExplicitCast(tp, val, nil)))));
           if (alt.IsNil())
             alt = l_asgn;
           else
-            //alt = vdm_BC_GenIfStmt(if_cond, l_asgn, alt);
-            alt = vdm_BC_GenIfStmt(if_cond, l_asgn, vdm_BC_GenBlock(mk_sequence(alt)));
+            alt = vdm_BC_GenIfStmt(if_cond, l_asgn, alt);
         }
       }
     }
   }
 #endif // VDMPP
 // <-- 20120920
-  return SEQ<TYPE_CPP_Stmt>().ImpAppend(alt);
+  //return SEQ<TYPE_CPP_Stmt>().ImpAppend(alt);
+  return StripCompoundStmt(alt);
 }
 
 // GenCommonAsgnStmt

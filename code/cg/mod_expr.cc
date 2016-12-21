@@ -5598,10 +5598,10 @@ TYPE_CPP_Stmt vdmcg::FindFieldSelApply (const TYPE_AS_Name & fsnm,
 #endif //VDMPP
 
 #ifdef VDMSL
-  TYPE_CPP_Stmt rti (RunTime(L"A record was expected"));
+  TYPE_CPP_Stmt rti vdm_BC_GenBlock(mk_sequence((RunTime(L"A record was expected"))));
 #endif // VDMSL
 #ifdef VDMPP
-  TYPE_CPP_Stmt rti (RunTime(L"An object or record was expected"));
+  TYPE_CPP_Stmt rti vdm_BC_GenBlock(mk_sequence((RunTime(L"An object or record was expected"))));
 #endif // VDMPP
 
   //TYPE_CPP_Stmt alt (rti);
@@ -5634,13 +5634,13 @@ TYPE_CPP_Stmt vdmcg::FindFieldSelApply (const TYPE_AS_Name & fsnm,
         {
           TYPE_CPP_Expr castrec (IsCompositeType(tmpRecType) ? tmpRec : GenCastType(t, tmpRec));
           TYPE_CPP_Expr getfield (GenRecGetFieldNm (castrec, t, fsnm));
-          TYPE_CPP_Stmt asgn (vdm_BC_GenAsgnStmt (resVar_v, getfield));
+          //TYPE_CPP_Stmt asgn (vdm_BC_GenAsgnStmt (resVar_v, getfield));
+          TYPE_CPP_Stmt asgn (vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt (resVar_v, getfield))));
           TYPE_CPP_Expr isRecord (GenIsThisRecord(t, tmpRec));
           if (alt.IsNil())
             alt = asgn;
           else
-            //alt = vdm_BC_GenIfStmt(isRecord, asgn, alt);
-            alt = vdm_BC_GenIfStmt(isRecord, asgn, vdm_BC_GenBlock(mk_sequence(alt)));
+            alt = vdm_BC_GenIfStmt(isRecord, asgn, alt);
         }
       }
     }
@@ -5664,13 +5664,13 @@ TYPE_CPP_Stmt vdmcg::FindFieldSelApply (const TYPE_AS_Name & fsnm,
           const TYPE_AS_Name & clnm (otr.GetRecord(pos_REP_ObjRefTypeRep_nm));
           TYPE_CPP_Expr objptr (CastToClassPtr(clnm, tmpRec));
           TYPE_CPP_Expr getfield (vdm_BC_GenPointerToObjectMemberAccess(objptr, vdm_BC_Rename(fsnm)));
-          TYPE_CPP_Stmt l_asgn (vdm_BC_GenAsgnStmt(resVar_v, getfield));
+          //TYPE_CPP_Stmt l_asgn (vdm_BC_GenAsgnStmt(resVar_v, getfield));
+          TYPE_CPP_Stmt l_asgn (vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(resVar_v, getfield))));
           TYPE_CPP_Expr if_cond (GenAuxType(tmpRec, otr));
           if (alt.IsNil())
             alt = l_asgn;
           else
-            //alt = vdm_BC_GenIfStmt(if_cond, l_asgn, alt);
-            alt = vdm_BC_GenIfStmt(if_cond, l_asgn, vdm_BC_GenBlock(mk_sequence(alt)));
+            alt = vdm_BC_GenIfStmt(if_cond, l_asgn, alt);
         }
       }
     }
@@ -5706,12 +5706,12 @@ TYPE_CPP_Stmt vdmcg::FindFieldSelApply (const TYPE_AS_Name & fsnm,
 
         TYPE_CPP_QualifiedName getfield (vdm_BC_GenQualifiedName(rec, vdm_BC_Rename2(fsnm)));
         TYPE_CPP_Expr cast (IsSubType(type, resTp) ? getfield : GenExplicitCast(resTp, getfield, type));
-        TYPE_CPP_Stmt l_asgn (vdm_BC_GenAsgnStmt(resVar_v, cast));
+        //TYPE_CPP_Stmt l_asgn (vdm_BC_GenAsgnStmt(resVar_v, cast));
+        TYPE_CPP_Stmt l_asgn (vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(resVar_v, cast))));
         if (alt.IsNil())
           alt = l_asgn;
         else
-          //alt = vdm_BC_GenIfStmt(GenIsThisRecord(ctr, tmpRec), l_asgn, alt);
-          alt = vdm_BC_GenIfStmt(GenIsThisRecord(ctr, tmpRec), l_asgn, vdm_BC_GenBlock(mk_sequence(alt)));
+          alt = vdm_BC_GenIfStmt(GenIsThisRecord(ctr, tmpRec), l_asgn, alt);
       }
       if (!posORefTypes.IsEmpty())
       {
@@ -5730,13 +5730,13 @@ TYPE_CPP_Stmt vdmcg::FindFieldSelApply (const TYPE_AS_Name & fsnm,
             TYPE_CPP_Expr rec (vdm_BC_GenBracketedExpr(GenCastType(otr, tmpRec)));
             const TYPE_AS_Name & clnm (otr.GetRecord(pos_REP_ObjRefTypeRep_nm));
             TYPE_CPP_QualifiedName getfield (vdm_BC_GenQualifiedName(rec, vdm_BC_Rename2(fsnm)));
-            TYPE_CPP_Stmt l_asgn (vdm_BC_GenAsgnStmt(resVar_v, getfield));
+            //TYPE_CPP_Stmt l_asgn (vdm_BC_GenAsgnStmt(resVar_v, getfield));
+            TYPE_CPP_Stmt l_asgn (vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(resVar_v, getfield))));
             TYPE_CPP_Expr if_cond (vdm_BC_GenTypeComp(vdm_BC_Rename(clnm), tmpRec));
             if (alt.IsNil())
               alt = l_asgn;
             else
-              //alt = vdm_BC_GenIfStmt(if_cond, l_asgn, alt);
-              alt = vdm_BC_GenIfStmt(if_cond, l_asgn, vdm_BC_GenBlock(mk_sequence(alt)));
+              alt = vdm_BC_GenIfStmt(if_cond, l_asgn, alt);
           }
         }
       }

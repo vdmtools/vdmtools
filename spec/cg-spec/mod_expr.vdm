@@ -4951,10 +4951,10 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
       posORefTypes = FindPossibleObjRefTypes(oreftypes, fsnm);
 #endif VDMPP
 #ifdef VDMSL
-      rti = CGAUX`RunTime("A record was expected")
+      rti = BC`GenBlock([CGAUX`RunTime("A record was expected")])
 #endif VDMSL
 #ifdef VDMPP
-      rti = CGAUX`RunTime("An object or record was expected")
+      rti = BC`GenBlock([CGAUX`RunTime("An object or record was expected")])
 #endif VDMPP
   in
    --(dcl alt : [CPP`Stmt] := rti;
@@ -4984,13 +4984,13 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
             if not CGAUX`IsCompositeType(tmpRecType)
             then castrec := DS`GenCastType(t, tmpRec);
             def getfield = DS`GenRecGetFieldNm (castrec, t, fsnm);
-                asgn = BC`GenAsgnStmt (resVar_v, getfield);
+                --asgn = BC`GenAsgnStmt (resVar_v, getfield);
+                asgn = BC`GenBlock([BC`GenAsgnStmt (resVar_v, getfield)]);
                 isRecord = DS`GenIsThisRecord(t, tmpRec)
             in
               if alt = nil
               then alt := asgn
-              --else alt := BC`GenIfStmt(isRecord, asgn, alt)
-              else alt := BC`GenIfStmt(isRecord, asgn, BC`GenBlock([alt]))
+              else alt := BC`GenIfStmt(isRecord, asgn, alt)
            );
 #ifdef VDMPP
       if posORefTypes <> {}
@@ -5007,13 +5007,13 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
             def clnm = otr.nm;
                 objptr = DS`CastToClassPtr(clnm, tmpRec);
                 getfield = BC`GenPointerToObjectMemberAccess( objptr, BC`Rename(fsnm) );
-                l_asgn = BC`GenAsgnStmt(resVar_v, getfield);
+                --l_asgn = BC`GenAsgnStmt(resVar_v, getfield);
+                l_asgn = BC`GenBlock([BC`GenAsgnStmt(resVar_v, getfield)]);
                 if_cond = DS`GenAuxType(tmpRec, otr)
             in
               if alt = nil
               then alt := l_asgn
-              --else alt := BC`GenIfStmt(if_cond, l_asgn, alt);
-              else alt := BC`GenIfStmt(if_cond, l_asgn, BC`GenBlock([alt]));
+              else alt := BC`GenIfStmt(if_cond, l_asgn, alt);
 #endif VDMPP
      )
     else -- java
@@ -5044,12 +5044,12 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
            (dcl cast : CPP`Expr := getfield;
             if not CGAUX`IsSubType(type, resTp)
             then cast := DS`GenExplicitCast(resTp, getfield, type);
-            def l_asgn = BC`GenAsgnStmt(resVar_v, cast)
+            --def l_asgn = BC`GenAsgnStmt(resVar_v, cast)
+            def l_asgn = BC`GenBlock([BC`GenAsgnStmt(resVar_v, cast)])
             in
               if alt = nil
               then alt := l_asgn
-              --else alt := BC`GenIfStmt(DS`GenIsThisRecord(ctr, tmpRec), l_asgn, alt)
-              else alt := BC`GenIfStmt(DS`GenIsThisRecord(ctr, tmpRec), l_asgn, BC`GenBlock([alt]))
+              else alt := BC`GenIfStmt(DS`GenIsThisRecord(ctr, tmpRec), l_asgn, alt)
            );
 #ifdef VDMPP
          if posORefTypes <> {}
@@ -5067,13 +5067,13 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
               def clnm = otr.nm;
                   rec = BC`GenBracketedExpr(DS`GenCastType( otr, tmpRec ));
                   getfield = BC`GenQualifiedName(rec, BC`Rename2(fsnm));
-                  l_asgn = BC`GenAsgnStmt(resVar_v, getfield);
+                  --l_asgn = BC`GenAsgnStmt(resVar_v, getfield);
+                  l_asgn = BC`GenBlock([BC`GenAsgnStmt(resVar_v, getfield)]);
                   if_cond = BC`GenTypeComp(BC`Rename(clnm), tmpRec)
               in
                 if alt = nil
                 then alt := l_asgn
-                --else alt := BC`GenIfStmt(if_cond, l_asgn, alt);
-                else alt := BC`GenIfStmt(if_cond, l_asgn, BC`GenBlock([alt]));
+                else alt := BC`GenIfStmt(if_cond, l_asgn, alt);
 #endif VDMPP            
        ); -- end of for loop
     return alt;
