@@ -1294,9 +1294,10 @@ corresponding to a pre or post condition, respectively.
 functions
 GenCPPStmt: seq of CPP`Stmt -> CPP`Stmt
 GenCPPStmt(stmts) ==
-if len stmts = 1
-then hd stmts
-else BC`GenBlock(stmts);
+--if len stmts = 1
+--then hd stmts
+--else BC`GenBlock(stmts);
+  BC`GenBlock(stmts);
 \end{vdm_al}
 
 

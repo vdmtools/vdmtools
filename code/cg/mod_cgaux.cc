@@ -2592,9 +2592,9 @@ bool vdmcg::IsSubType (const TYPE_REP_TypeRep & tp1, const TYPE_REP_TypeRep & tp
 // -> CPP`Stmt
 TYPE_CPP_Stmt vdmcg::GenCPPStmt(const SEQ<TYPE_CPP_Stmt> & stmts)
 {
-  if (stmts.Length() == 1)
-    return stmts.Hd();
-  else
+//  if (stmts.Length() == 1)
+//    return stmts.Hd();
+//  else
     return vdm_BC_GenBlock(stmts);
 }
 

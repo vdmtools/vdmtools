@@ -1903,7 +1903,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSetRangeExpr(const TYPE_AS_SetRangeExpr & expr, cons
 
     TYPE_CPP_Expr cond (vdm_BC_GenNot(GenIsInt(lb_vq)));
     TYPE_CPP_Stmt rti (RunTime(L"Lower bound was not an integer in set range expression"));
-    rb_l.ImpAppend(vdm_BC_GenIfStmt(cond, rti, nil));
+    //rb_l.ImpAppend(vdm_BC_GenIfStmt(cond, rti, nil));
+    rb_l.ImpAppend(vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(mk_sequence(rti)), nil));
 
     TYPE_CPP_Expr lbval (vdm_CPP_isCPP() ? GenGetValue(vdm_BC_GenCastExpr(its, lb_vq), irep)
                                          : GenGetValue(GenExplicitCast(irep, lb_vq, lbt), irep));
@@ -1930,7 +1931,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSetRangeExpr(const TYPE_AS_SetRangeExpr & expr, cons
 
     TYPE_CPP_Expr cond (vdm_BC_GenNot(GenIsInt(ub_vq)));
     TYPE_CPP_Stmt rti (RunTime(L"Upper bound was not an integer in set range expression"));
-    rb_l.ImpAppend(vdm_BC_GenIfStmt(cond, rti, nil));
+    //rb_l.ImpAppend(vdm_BC_GenIfStmt(cond, rti, nil));
+    rb_l.ImpAppend(vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(mk_sequence(rti)), nil));
 
     TYPE_CPP_Expr ubval (vdm_CPP_isCPP() ? GenGetValue(vdm_BC_GenCastExpr(its, ub_vq), irep)
                                          : GenGetValue(GenExplicitCast(irep, ub_vq, ubt), irep));
@@ -1956,7 +1958,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSetRangeExpr(const TYPE_AS_SetRangeExpr & expr, cons
                            : vdm_BC_GenExpressionStmt(GenSetInsertExpr(GenCastSetType(resVar_v), cast)))
         : GenSetInsert(resVar_v, cast));
 
-  rb_l.ImpAppend(vdm_BC_GenForStmt(ini, e1, type_dL().ImpAppend(e2), stmt));
+  //rb_l.ImpAppend(vdm_BC_GenForStmt(ini, e1, type_dL().ImpAppend(e2), stmt));
+  rb_l.ImpAppend(vdm_BC_GenForStmt(ini, e1, type_dL().ImpAppend(e2), vdm_BC_GenBlock(mk_sequence(stmt))));
   return rb_l;
 }
 

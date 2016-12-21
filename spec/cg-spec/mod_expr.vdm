@@ -1776,7 +1776,8 @@ CGSetRangeExpr(mk_AS`SetRangeExpr(lb, ub, -), mk_CGMAIN`VT(resVar_v, rType)) ==
         if CPP`isCPP()
         then lbval := DS`GenGetValue(BC`GenCastExpr(its, lb_v'), irep)
         else lbval := DS`GenGetValue(DS`GenExplicitCast(irep, lb_v', lbt), irep);
-        rb_l := rb_l ^ [BC`GenIfStmt(cond, rti, nil)];
+        --rb_l := rb_l ^ [BC`GenIfStmt(cond, rti, nil)];
+        rb_l := rb_l ^ [BC`GenIfStmt(cond, BC`GenBlock([rti]), nil)];
         rb_l := rb_l ^ [BC`GenDecl(sint, lbi_v, BC`GenAsgnInit(lbval))];))
     else
       def lb_v' = DS`GenGetValue(lb_v, irep)
@@ -1800,7 +1801,8 @@ CGSetRangeExpr(mk_AS`SetRangeExpr(lb, ub, -), mk_CGMAIN`VT(resVar_v, rType)) ==
        if CPP`isCPP()
        then ubval := DS`GenGetValue(BC`GenCastExpr(its, ub_v'), irep)
        else ubval := DS`GenGetValue(DS`GenExplicitCast(irep,ub_v',ubt), irep);
-       rb_l := rb_l ^ [BC`GenIfStmt(cond, rti, nil)];
+       --rb_l := rb_l ^ [BC`GenIfStmt(cond, rti, nil)];
+       rb_l := rb_l ^ [BC`GenIfStmt(cond, BC`GenBlock([rti]), nil)];
        rb_l := rb_l ^ [BC`GenDecl(sint, ubi_v, BC`GenAsgnInit(ubval))];))
     else
       def ub_v' = DS`GenGetValue(ub_v, irep)
@@ -1821,7 +1823,8 @@ CGSetRangeExpr(mk_AS`SetRangeExpr(lb, ub, -), mk_CGMAIN`VT(resVar_v, rType)) ==
         then stmt := BC`GenAsgnStmt(resVar_v, DS`GenSetInsertExpr(DS`GenSetExpr(resVar_v), cast))
         else stmt := BC`GenExpressionStmt(DS`GenSetInsertExpr(DS`GenCastSetType(resVar_v), cast))
       else stmt := DS`GenSetInsert(resVar_v, cast);
-      rb_l := rb_l ^ [BC`GenForStmt(ini, e1, [e2], stmt)]
+      --rb_l := rb_l ^ [BC`GenForStmt(ini, e1, [e2], stmt)]
+      rb_l := rb_l ^ [BC`GenForStmt(ini, e1, [e2], BC`GenBlock([stmt]))]
      );
   return rb_l;
 );
