@@ -6829,7 +6829,8 @@ Generic vdmcg::CGSeqIndices (const TYPE_CPP_Expr & argTmp,
     TYPE_CPP_Expr length ((IsStringType(argTmpType) || IsPossibleStringType(argTmpType))
                        ? GenLenString (argexpr) : GenLen_int (argexpr));
 
-    TYPE_CPP_Stmt insert (GenSetInsert (riseq_v, GenIntExpr(i_v)));
+    //TYPE_CPP_Stmt insert (GenSetInsert (riseq_v, GenIntExpr(i_v)));
+    TYPE_CPP_Stmt insert (vdm_BC_GenBlock(mk_sequence(GenSetInsert (riseq_v, GenIntExpr(i_v)))));
 
     SEQ<TYPE_CPP_Stmt> rb;
     rb.ImpConc (GenDeclEmptySet (riseq_v));

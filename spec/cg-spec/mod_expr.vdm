@@ -6238,7 +6238,8 @@ CGSeqIndices( argTmp, argTmpType, mk_CGMAIN`VT( resVar_v, - ) ) ==
   else
     def riseq_v = BC`GiveName("riseq");
         i_v = BC`GiveName( "i");
-        insert = DS`GenSetInsert(riseq_v, DS`GenIntExpr(i_v))
+        --insert = DS`GenSetInsert(riseq_v, DS`GenIntExpr(i_v))
+        insert = BC`GenBlock([DS`GenSetInsert(riseq_v, DS`GenIntExpr(i_v))])
     in
      (dcl argexpr : CPP`Expr := argTmp,
           length : CPP`Expr,
