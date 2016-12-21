@@ -4989,7 +4989,9 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
             in
               if alt = nil
               then alt := asgn
-              else alt := BC`GenIfStmt(isRecord, asgn, alt));
+              --else alt := BC`GenIfStmt(isRecord, asgn, alt)
+              else alt := BC`GenIfStmt(isRecord, asgn, BC`GenBlock([alt]))
+           );
 #ifdef VDMPP
       if posORefTypes <> {}
       then
@@ -5010,7 +5012,8 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
             in
               if alt = nil
               then alt := l_asgn
-              else alt := BC`GenIfStmt(if_cond, l_asgn, alt);
+              --else alt := BC`GenIfStmt(if_cond, l_asgn, alt);
+              else alt := BC`GenIfStmt(if_cond, l_asgn, BC`GenBlock([alt]));
 #endif VDMPP
      )
     else -- java
@@ -5045,7 +5048,9 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
             in
               if alt = nil
               then alt := l_asgn
-              else alt := BC`GenIfStmt(DS`GenIsThisRecord(ctr, tmpRec), l_asgn, alt));
+              --else alt := BC`GenIfStmt(DS`GenIsThisRecord(ctr, tmpRec), l_asgn, alt)
+              else alt := BC`GenIfStmt(DS`GenIsThisRecord(ctr, tmpRec), l_asgn, BC`GenBlock([alt]))
+           );
 #ifdef VDMPP
          if posORefTypes <> {}
          then
@@ -5067,7 +5072,8 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
               in
                 if alt = nil
                 then alt := l_asgn
-                else alt := BC`GenIfStmt(if_cond, l_asgn, alt);
+                --else alt := BC`GenIfStmt(if_cond, l_asgn, alt);
+                else alt := BC`GenIfStmt(if_cond, l_asgn, BC`GenBlock([alt]));
 #endif VDMPP            
        ); -- end of for loop
     return alt;

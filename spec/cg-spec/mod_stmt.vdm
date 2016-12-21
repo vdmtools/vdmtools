@@ -687,7 +687,8 @@ GenRecImpModify(fsnm, mk_CGMAIN`VT(level, level_type' ), val ) ==
           in
             if alt = nil
             then alt := setfield
-            else alt := BC`GenIfStmt(isRecord, setfield, alt);
+            --else alt := BC`GenIfStmt(isRecord, setfield, alt);
+            else alt := BC`GenIfStmt(isRecord, setfield, BC`GenBlock([alt]));
          );
 
 #ifdef VDMPP
@@ -726,7 +727,8 @@ GenRecImpModify(fsnm, mk_CGMAIN`VT(level, level_type' ), val ) ==
               in
                 if alt = nil
                 then alt := l_asgn
-                else alt := BC`GenIfStmt(if_cond, l_asgn, alt)
+                --else alt := BC`GenIfStmt(if_cond, l_asgn, alt)
+                else alt := BC`GenIfStmt(if_cond, l_asgn, BC`GenBlock([alt]))
             else -- java
               def if_cond = BC`GenTypeComp(BC`Rename(clnm), level);
                   tp = ENV`LookUpInstanceVar(CGAUX`Combine2Names(clnm, fsnm));
@@ -736,7 +738,8 @@ GenRecImpModify(fsnm, mk_CGMAIN`VT(level, level_type' ), val ) ==
               in
                 if alt = nil
                 then alt := l_asgn
-                else alt := BC`GenIfStmt(if_cond, l_asgn, alt);
+                --else alt := BC`GenIfStmt(if_cond, l_asgn, alt);
+                else alt := BC`GenIfStmt(if_cond, l_asgn, BC`GenBlock([alt]));
 #endif VDMPP
       return [alt];
     );

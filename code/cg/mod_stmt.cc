@@ -839,7 +839,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenRecImpModify(const TYPE_AS_Name & fsnm,
       if (alt.IsNil())
         alt = setfield;
       else
-        alt = vdm_BC_GenIfStmt(isRecord, setfield, alt);
+        //alt = vdm_BC_GenIfStmt(isRecord, setfield, alt);
+        alt = vdm_BC_GenIfStmt(isRecord, setfield, vdm_BC_GenBlock(mk_sequence(alt)));
     }
   }
 #ifdef VDMPP
@@ -884,7 +885,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenRecImpModify(const TYPE_AS_Name & fsnm,
           if (alt.IsNil())
             alt = l_asgn;
           else
-            alt = vdm_BC_GenIfStmt(if_cond, l_asgn, alt);
+            //alt = vdm_BC_GenIfStmt(if_cond, l_asgn, alt);
+            alt = vdm_BC_GenIfStmt(if_cond, l_asgn, vdm_BC_GenBlock(mk_sequence(alt)));
         }
         else
         { // Java
@@ -896,7 +898,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenRecImpModify(const TYPE_AS_Name & fsnm,
           if (alt.IsNil())
             alt = l_asgn;
           else
-            alt = vdm_BC_GenIfStmt(if_cond, l_asgn, alt);
+            //alt = vdm_BC_GenIfStmt(if_cond, l_asgn, alt);
+            alt = vdm_BC_GenIfStmt(if_cond, l_asgn, vdm_BC_GenBlock(mk_sequence(alt)));
         }
       }
     }

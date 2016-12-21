@@ -5639,7 +5639,8 @@ TYPE_CPP_Stmt vdmcg::FindFieldSelApply (const TYPE_AS_Name & fsnm,
           if (alt.IsNil())
             alt = asgn;
           else
-            alt = vdm_BC_GenIfStmt(isRecord, asgn, alt);
+            //alt = vdm_BC_GenIfStmt(isRecord, asgn, alt);
+            alt = vdm_BC_GenIfStmt(isRecord, asgn, vdm_BC_GenBlock(mk_sequence(alt)));
         }
       }
     }
@@ -5668,7 +5669,8 @@ TYPE_CPP_Stmt vdmcg::FindFieldSelApply (const TYPE_AS_Name & fsnm,
           if (alt.IsNil())
             alt = l_asgn;
           else
-            alt = vdm_BC_GenIfStmt(if_cond, l_asgn, alt);
+            //alt = vdm_BC_GenIfStmt(if_cond, l_asgn, alt);
+            alt = vdm_BC_GenIfStmt(if_cond, l_asgn, vdm_BC_GenBlock(mk_sequence(alt)));
         }
       }
     }
@@ -5708,7 +5710,8 @@ TYPE_CPP_Stmt vdmcg::FindFieldSelApply (const TYPE_AS_Name & fsnm,
         if (alt.IsNil())
           alt = l_asgn;
         else
-          alt = vdm_BC_GenIfStmt(GenIsThisRecord(ctr, tmpRec), l_asgn, alt);
+          //alt = vdm_BC_GenIfStmt(GenIsThisRecord(ctr, tmpRec), l_asgn, alt);
+          alt = vdm_BC_GenIfStmt(GenIsThisRecord(ctr, tmpRec), l_asgn, vdm_BC_GenBlock(mk_sequence(alt)));
       }
       if (!posORefTypes.IsEmpty())
       {
@@ -5732,7 +5735,8 @@ TYPE_CPP_Stmt vdmcg::FindFieldSelApply (const TYPE_AS_Name & fsnm,
             if (alt.IsNil())
               alt = l_asgn;
             else
-              alt = vdm_BC_GenIfStmt(if_cond, l_asgn, alt);
+              //alt = vdm_BC_GenIfStmt(if_cond, l_asgn, alt);
+              alt = vdm_BC_GenIfStmt(if_cond, l_asgn, vdm_BC_GenBlock(mk_sequence(alt)));
           }
         }
       }
