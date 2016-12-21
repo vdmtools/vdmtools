@@ -5598,10 +5598,10 @@ TYPE_CPP_Stmt vdmcg::FindFieldSelApply (const TYPE_AS_Name & fsnm,
 #endif //VDMPP
 
 #ifdef VDMSL
-  TYPE_CPP_Stmt rti vdm_BC_GenBlock(mk_sequence((RunTime(L"A record was expected"))));
+  TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence((RunTime(L"A record was expected")))));
 #endif // VDMSL
 #ifdef VDMPP
-  TYPE_CPP_Stmt rti vdm_BC_GenBlock(mk_sequence((RunTime(L"An object or record was expected"))));
+  TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence((RunTime(L"An object or record was expected")))));
 #endif // VDMPP
 
   //TYPE_CPP_Stmt alt (rti);
