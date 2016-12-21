@@ -2588,6 +2588,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIfStmt(const TYPE_AS_IfStmt & ifs, bool isLast)
 //FIXME: Should be type_dL
 TYPE_CPP_Stmt vdmcg::GenIfConsCPPStmt(const SEQ<TYPE_CPP_Stmt> & s_l)
 {
+/*
   if (s_l.Length() == 1 )
   {
     TYPE_CPP_Stmt stmt (s_l.Hd());
@@ -2597,6 +2598,7 @@ TYPE_CPP_Stmt vdmcg::GenIfConsCPPStmt(const SEQ<TYPE_CPP_Stmt> & s_l)
       return stmt;
   }
   else
+*/
     return vdm_BC_GenBlock(s_l);
 }
 

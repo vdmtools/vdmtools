@@ -2328,11 +2328,12 @@ CGIfStmt(mk_AS`IfStmt(test, cons, elif, altn,-), isLast) ==
 \begin{vdm_al}
 GenIfConsCPPStmt: seq of CPP`Stmt ==> CPP`Stmt
 GenIfConsCPPStmt(s_l) ==
-cases s_l:
-  [ mk_CPP`IfStmt(-,-,nil,-) ] -> return BC`GenBlock(s_l),
-  [ stmt ]                   -> return stmt,
-  others                     -> return BC`GenBlock(s_l)
-end;
+--cases s_l:
+--  [ mk_CPP`IfStmt(-,-,nil,-) ] -> return BC`GenBlock(s_l),
+--  [ stmt ]                   -> return stmt,
+--  others                     -> return BC`GenBlock(s_l)
+--end;
+  return BC`GenBlock(s_l);
 \end{vdm_al}
 
 \subsection{Specification and Topology Statements}

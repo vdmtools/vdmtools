@@ -5363,7 +5363,8 @@ CGAllOrExistsExpr(quant, mk_CGMAIN`VT(resVar_v, -)) ==
     cases quant:
       mk_AS`AllOrExistsExpr(<ALL>, bind_l, pred, -) ->
          let qinit = BC`GenAsgnInit(BC`GenBoolLit(true)),
-             np = BC`GenAsgnStmt(tmpQuant_v, BC`GenBoolLit(false))
+             --np = BC`GenAsgnStmt(tmpQuant_v, BC`GenBoolLit(false))
+             np = BC`GenBlock([BC`GenAsgnStmt(tmpQuant_v, BC`GenBoolLit(false))])
          in
           (rb := [ BC`GenDecl(DS`GenSmallBoolType(), tmpQuant_v, qinit),
                    CGComprehension(bind_l, pred, [], tmpQuant_v, np, pid_m, true) ];

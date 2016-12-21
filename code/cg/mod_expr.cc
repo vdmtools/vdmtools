@@ -6049,7 +6049,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGAllOrExistsExpr (const TYPE_AS_QuantExpr & quant, co
       switch(kind) {
         case ALL: {
           TYPE_CPP_AsgnInit qinit (vdm_BC_GenAsgnInit(vdm_BC_GenBoolLit(true)));
-          TYPE_CPP_Stmt np (vdm_BC_GenAsgnStmt(tmpQuant_v, vdm_BC_GenBoolLit(false)));
+          //TYPE_CPP_Stmt np (vdm_BC_GenAsgnStmt(tmpQuant_v, vdm_BC_GenBoolLit(false)));
+          TYPE_CPP_Stmt np (vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(tmpQuant_v, vdm_BC_GenBoolLit(false)))));
           rb.ImpAppend(vdm_BC_GenDecl(GenSmallBoolType(), tmpQuant_v, qinit));
           rb.ImpAppend(CGComprehension(bind_l, pred, Sequence(), tmpQuant_v, np, pid_m, true));
           res = tmpQuant_v;
