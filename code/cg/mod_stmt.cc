@@ -3115,7 +3115,7 @@ TYPE_CPP_CompoundStmt vdmcg::GenRecTrapFinally(const TYPE_CPP_Identifier& p_matc
   TYPE_CPP_Expr l_outerTest (vdm_BC_GenNot(p_matched));
 
   TYPE_CPP_Stmt l_innerIf (vdm_BC_GenIfStmt(l_innerTest, vdm_BC_GenBreakStmt(Nil()), Nil()));
-  TYPE_CPP_Stmt l_outerIf (vdm_BC_GenIfStmt(l_outerTest, l_throwStmt, nil));
+  TYPE_CPP_Stmt l_outerIf (vdm_BC_GenIfStmt(l_outerTest, vdm_BC_GenBlock(mk_sequence(l_throwStmt)), nil));
 
   if (vdm_CPP_isJAVA())
     InsertImport(SEQ<Char>(L"jp.vdmtools.VDM.VDMSpecException"));
@@ -3217,7 +3217,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGTrapStmt(const TYPE_AS_TrapStmt & p_ts, bool p_isLas
     pm1.ImpAppend(vdm_BC_GenDecl(GenSmallBoolType(), l_matchNm, vdm_BC_GenAsgnInit(vdm_BC_GenBoolLit(true))));
     pm1.ImpConc(pm);
     pm1.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(l_matchNm),
-                                   vdm_BC_GenExpressionStmt(vdm_BC_GenThrowExpression(l_excName)),
+         vdm_BC_GenBlock(mk_sequence(vdm_BC_GenExpressionStmt(vdm_BC_GenThrowExpression(l_excName)))),
                                    nil));
   }
   SEQ<TYPE_CPP_Stmt> rb;

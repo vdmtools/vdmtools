@@ -2650,7 +2650,7 @@ GenRecTrapFinally(p_matched, p_val, p_raised, p_isLast) ==
       l_innerTest = BC`GenNot(p_raised);
       l_outerTest = BC`GenNot(p_matched);
       l_innerIf = BC`GenIfStmt(l_innerTest, BC`GenBreakStmt(nil), nil);
-      l_outerIf = BC`GenIfStmt(l_outerTest, l_throwStmt, nil)
+      l_outerIf = BC`GenIfStmt(l_outerTest, BC`GenBlock([l_throwStmt]), nil)
   in
    (if CPP`isJAVA() then CGAUX`InsertImport("jp.vdmtools.VDM.VDMSpecException");
     return BC`GenBlock([l_outerIf] ^ (if p_isLast then [] else [l_innerIf])));
@@ -2717,7 +2717,7 @@ CGTrapStmt(mk_AS`TrapStmt(l_pat, l_handler, l_body, -), p_isLast) ==
                                       BC`GenAsgnInit(BC`GenBoolLit(false)))] ^
                          pm ^
                          [BC`GenIfStmt(BC`GenNot(l_matchNm),
-                                       BC`GenExpressionStmt(BC`GenThrowExpression(l_excName)),
+                     BC`GenBlock([BC`GenExpressionStmt(BC`GenThrowExpression(l_excName))]),
                                        nil)];
   in
    (dcl rb : seq of CPP`Stmt := DS`GenConstDeclInit(nil, l_excValNm, l_getMethod) ^
