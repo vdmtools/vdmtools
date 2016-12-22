@@ -669,7 +669,6 @@ GenRecImpModify(fsnm, mk_CGMAIN`VT(level, level_type' ), val ) ==
         if CPP`isCPP()
         then setfield := DS`GenRecSetField(rec, BC`GenPosName(rec_nm, fsnm), val)
         else setfield := BC`GenAsgnStmt(BC`GenQualifiedName(rec, BC`Rename2(fsnm)), val);
-        --alt := setfield
         alt := BC`GenBlock([setfield])
        )
     else
@@ -687,9 +686,7 @@ GenRecImpModify(fsnm, mk_CGMAIN`VT(level, level_type' ), val ) ==
           def isRecord = DS`GenIsThisRecord( ctr, level )
           in
             if alt = nil
-            --then alt := setfield
             then alt := BC`GenBlock([setfield])
-            --else alt := BC`GenIfStmt(isRecord, setfield, alt);
             else alt := BC`GenIfStmt(isRecord, BC`GenBlock([setfield]), alt);
          );
 
@@ -725,7 +722,6 @@ GenRecImpModify(fsnm, mk_CGMAIN`VT(level, level_type' ), val ) ==
               def if_cond = DS`GenAuxType(level, otr);
                   l_ptr = DS`CastToClassPtr(clnm, level);
                   l_memacc = BC`GenPointerToObjectMemberAccess(l_ptr, BC`Rename(fsnm));
-                  --l_asgn  = BC`GenAsgnStmt(l_memacc, val)
                   l_asgn  = BC`GenBlock([BC`GenAsgnStmt(l_memacc, val)])
               in
                 if alt = nil
@@ -735,8 +731,6 @@ GenRecImpModify(fsnm, mk_CGMAIN`VT(level, level_type' ), val ) ==
               def if_cond = BC`GenTypeComp(BC`Rename(clnm), level);
                   tp = ENV`LookUpInstanceVar(CGAUX`Combine2Names(clnm, fsnm));
                   cast = BC`GenBracketedExpr(DS`GenCastType(otr, level));
-                  --l_asgn = BC`GenAsgnStmt(BC`GenQualifiedName(cast, BC`Rename(fsnm)),
-                  --                                              DS`GenExplicitCast(tp, val, nil))
                   l_asgn = BC`GenBlock([BC`GenAsgnStmt(BC`GenQualifiedName(cast, BC`Rename(fsnm)),
                                                                 DS`GenExplicitCast(tp, val, nil))])
               in
@@ -744,7 +738,6 @@ GenRecImpModify(fsnm, mk_CGMAIN`VT(level, level_type' ), val ) ==
                 then alt := l_asgn
                 else alt := BC`GenIfStmt(if_cond, l_asgn, alt);
 #endif VDMPP
-      --return [alt];
       return CGAUX`StripCompoundStmt(alt);
     );
 \end{vdm_al}

@@ -96,7 +96,7 @@ SET<TYPE_REP_ObjRefTypeRep> FindAllObjRefTypes (const TYPE_REP_TypeRep &);
 SET<TYPE_REP_ObjRefTypeRep> FindPossibleObjRefTypes (const SET<TYPE_REP_ObjRefTypeRep> & tps,
                                                       const TYPE_AS_Name & fsnm);
 #endif // VDMPP
-TYPE_CPP_Stmt FindFieldSelApply(const TYPE_AS_Name &, const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &);
+SEQ<TYPE_CPP_Stmt> FindFieldSelApply(const TYPE_AS_Name &, const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &);
 SET<TYPE_REP_CompositeTypeRep> FindPossibleRecTypes(const SET<TYPE_REP_CompositeTypeRep> &, const TYPE_AS_Name &);
 SEQ<TYPE_CPP_Stmt> CGRecordModifierExpr(const TYPE_AS_RecordModifierExpr &, const TYPE_CGMAIN_VT &);
 SEQ<TYPE_CPP_Stmt> GenModifyFields(const TYPE_CPP_Name &,

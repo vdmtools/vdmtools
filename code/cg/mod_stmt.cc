@@ -843,7 +843,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenRecImpModify(const TYPE_AS_Name & fsnm,
     }
   }
 #ifdef VDMPP
-// 20120920 -->
 
   if (!posORefTypes.IsEmpty())
   {
@@ -853,7 +852,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenRecImpModify(const TYPE_AS_Name & fsnm,
       const TYPE_AS_Name & clnm (otr.GetRecord(pos_REP_ObjRefTypeRep_nm));
       if(vdm_CPP_isCPP())
       {
-        //TYPE_CPP_Expr l_ptr (CastToClassPtr(level_type.GetRecord(pos_REP_ObjRefTypeRep_nm), level));
         TYPE_CPP_Expr l_ptr (CastToClassPtr(clnm, level));
         TYPE_CPP_Expr l_memacc (vdm_BC_GenPointerToObjectMemberAccess(l_ptr, vdm_BC_Rename(fsnm)));
         TYPE_CPP_Stmt l_asgn (vdm_BC_GenAsgnStmt(l_memacc, val));
@@ -880,7 +878,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenRecImpModify(const TYPE_AS_Name & fsnm,
           TYPE_CPP_Expr if_cond (GenAuxType(level, otr));
           TYPE_CPP_Expr l_ptr (CastToClassPtr(clnm, level));
           TYPE_CPP_Expr l_memacc (vdm_BC_GenPointerToObjectMemberAccess(l_ptr, vdm_BC_Rename(fsnm)));
-          //TYPE_CPP_Stmt l_asgn (vdm_BC_GenAsgnStmt(l_memacc, val));
           TYPE_CPP_Stmt l_asgn (vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(l_memacc, val))));
           if (alt.IsNil())
             alt = l_asgn;
@@ -892,8 +889,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenRecImpModify(const TYPE_AS_Name & fsnm,
           TYPE_CPP_Expr if_cond (vdm_BC_GenTypeComp(vdm_BC_Rename(clnm), level));
           TYPE_REP_TypeRep tp (GetStatSem().LookUpInstanceVar(ASTAUX::Combine2Names(clnm, fsnm)));
           TYPE_CPP_Expr cast (vdm_BC_GenBracketedExpr(GenCastType(otr, level)));
-          //TYPE_CPP_Stmt l_asgn (vdm_BC_GenAsgnStmt(vdm_BC_GenQualifiedName(cast, vdm_BC_Rename(fsnm)),
-          //                                         GenExplicitCast(tp, val, nil)));
           TYPE_CPP_Stmt l_asgn (vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(vdm_BC_GenQualifiedName(cast, vdm_BC_Rename(fsnm)),
                                                    GenExplicitCast(tp, val, nil)))));
           if (alt.IsNil())
@@ -905,8 +900,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenRecImpModify(const TYPE_AS_Name & fsnm,
     }
   }
 #endif // VDMPP
-// <-- 20120920
-  //return SEQ<TYPE_CPP_Stmt>().ImpAppend(alt);
   return StripCompoundStmt(alt);
 }
 
