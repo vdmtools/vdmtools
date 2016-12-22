@@ -1272,31 +1272,29 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenArgPatternMatch(const Map & pid_m,
   if (!pattern_fb.IsEmpty())
   {
     wstring errMess = L"Pattern match failed in ";
-    if (opdef.Is(TAG_TYPE_AS_ExplOpDef))
+    if (opdef.Is(TAG_TYPE_AS_ExplOpDef)) {
       errMess = errMess + L"operation call in operation ";
-    else
+    } else {
       errMess = errMess + L"function apply in function ";
+    }
     errMess = errMess + ASTAUX::Id2String(GiveLastName(opdef.GetField(1)));
 
     TYPE_CPP_Stmt rtiM (RunTime(errMess));
 
-    if (need_succ)
-// 20160612 -->
-      //fb.ImpAppend (vdm_BC_GenDecl (GenSmallBoolType(), succ_v, vdm_BC_GenAsgnInit (vdm_BC_GenBoolLit(false))));
-      pattern_fb.ImpPrepend (vdm_BC_GenDecl (GenSmallBoolType(), succ_v, vdm_BC_GenAsgnInit (vdm_BC_GenBoolLit(false))));
-// <-- 20160612
+    if (need_succ) {
+      pattern_fb.ImpPrepend (vdm_BC_GenDecl (GenSmallBoolType(), succ_v,
+                                             vdm_BC_GenAsgnInit (vdm_BC_GenBoolLit(false))));
+    }
 
-// 20160612 -->
-    //fb.ImpConc(pattern_fb);
     fb = MergeStmts(fb, pattern_fb);
-// <-- 20160612
 
-    if (need_succ)
+    if (need_succ) {
       fb.ImpAppend (vdm_BC_GenIfStmt (vdm_BC_GenNot(succ_v), rtiM, nil));
+    }
   }
-  else
+  else {
     fb = pattern_fb; // FIXME: Mistake in spec
-
+  }
   return fb;
 }
 
@@ -1460,7 +1458,8 @@ TYPE_CPP_Stmt vdmcg::GenMethPreCall(const TYPE_AS_Name & nm, const SEQ<TYPE_CPP_
   }
 
   TYPE_CPP_Expr cond (GenGetValue(preref, mk_REP_BooleanTypeRep()));
-  return vdm_BC_GenIfStmt(vdm_BC_GenNot(cond), RunTime(L"Precondition failure in " + ASTAUX::ASName2String(nm)), nil);
+  return vdm_BC_GenIfStmt(vdm_BC_GenNot(cond),
+         vdm_BC_GenBlock(mk_sequence(RunTime(L"Precondition failure in " + ASTAUX::ASName2String(nm)))), nil);
 }
 
 // GenFnPostCall
@@ -1491,7 +1490,8 @@ TYPE_CPP_Stmt vdmcg::GenFnPostCall(const TYPE_AS_Name & nm,
       postref = vdm_BC_GenFctCall(vdm_BC_GenObjectMemberAccess(GenThis(), postname), parms);
   }
   TYPE_CPP_Expr cond (GenGetValue(postref, mk_REP_BooleanTypeRep()));
-  return vdm_BC_GenIfStmt(vdm_BC_GenNot(cond), RunTime(L"Postcondition failure in " + ASTAUX::ASName2String(nm)), nil);
+  return vdm_BC_GenIfStmt(vdm_BC_GenNot(cond),
+        vdm_BC_GenBlock(mk_sequence(RunTime(L"Postcondition failure in " + ASTAUX::ASName2String(nm)))), nil);
 }
 #endif // VDMPP
 

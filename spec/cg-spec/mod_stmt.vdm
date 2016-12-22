@@ -247,8 +247,8 @@ CGAssignStmt( mk_AS`AssignStmt(sd, expr, cid) ) ==
                  then
                    if not CGAUX`IsSubType(rhsType, gtp)
                    then rb := rb ^ [BC`GenIfStmt(DS`GenAuxType(rhs_v, gtp),
-                                                 BC`GenAsgnStmt(BC`Rename(sd), rhs_v),
-                                                 CGAUX`RunTime("Incompatible type"))]
+                                       BC`GenBlock([BC`GenAsgnStmt(BC`Rename(sd), rhs_v)]),
+                                       BC`GenBlock([CGAUX`RunTime("Incompatible type")]))]
                    else rb := rb ^ [BC`GenAsgnStmt(BC`Rename(sd), rhs_v)]
                  else
                    if is_REP`CompositeTypeRep(tp)
@@ -264,8 +264,8 @@ CGAssignStmt( mk_AS`AssignStmt(sd, expr, cid) ) ==
 #ifdef VDMPP
               (if not CGAUX`IsSubType(rhsType, gtp)
                then rb := rb ^ [BC`GenIfStmt(DS`GenAuxType(rhs_v, gtp),
-                                             BC`GenAsgnStmt(BC`Rename(sd), rhs_v),
-                                             CGAUX`RunTime("Incompatible type"))]
+                                   BC`GenBlock([BC`GenAsgnStmt(BC`Rename(sd), rhs_v)]),
+                                   BC`GenBlock([CGAUX`RunTime("Incompatible type")]))]
                else rb := rb ^ [BC`GenAsgnStmt(BC`Rename(sd), rhs_v)];)
 #endif VDMPP
             else -- java
@@ -295,7 +295,7 @@ CGAssignStmt( mk_AS`AssignStmt(sd, expr, cid) ) ==
                           then rhs_v
                           else BC`GenBracketedExpr(BC`GenCastExpr(BC`GenGeneric(), rhs_v))
                   in rb := rb ^ [BC`GenIfStmt(BC`GenNot(DS`GenAuxType(e, gtp)),
-                                              CGAUX`RunTime("Incompatible type"), nil)];
+                                   BC`GenBlock([CGAUX`RunTime("Incompatible type")]), nil)];
                 rb := rb ^ [BC`GenAsgnStmt(BC`Rename(sd), cast)]),
           (is_AS`NarrowRef(sd)) -> return CGAssignStmt(mk_AS`AssignStmt(sd.var,expr,cid)),
           (is_AS`FieldRef(sd)) -> if is_AS`NarrowRef(sd.var)

@@ -256,8 +256,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGAssignStmt(const TYPE_AS_AssignStmt & stmt)
           if (!IsSubType(rhsType, gtp))
           {
             rb.ImpAppend(vdm_BC_GenIfStmt(GenAuxType(rhs_v, gtp),
-                                          vdm_BC_GenAsgnStmt(vdm_BC_Rename(sd), rhs_v),
-                                          RunTime(L"Incompatible type")));
+                          vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(vdm_BC_Rename(sd), rhs_v))),
+                          vdm_BC_GenBlock(mk_sequence(RunTime(L"Incompatible type")))));
           }
           else
             rb.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_Rename(sd), rhs_v));
@@ -284,8 +284,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGAssignStmt(const TYPE_AS_AssignStmt & stmt)
         if (!IsSubType(rhsType, gtp))
         {
           rb.ImpAppend(vdm_BC_GenIfStmt(GenAuxType(rhs_v, gtp),
-                                        vdm_BC_GenAsgnStmt(vdm_BC_Rename(sd), rhs_v),
-                                        RunTime(L"Incompatible type")));
+                         vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(vdm_BC_Rename(sd), rhs_v))),
+                         vdm_BC_GenBlock(mk_sequence(RunTime(L"Incompatible type")))));
         }
         else
         {
@@ -338,7 +338,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGAssignStmt(const TYPE_AS_AssignStmt & stmt)
                                  : vdm_BC_GenBracketedExpr(vdm_BC_GenCastExpr(vdm_BC_GenGeneric(),
                                                                               rhs_v)));
               rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenAuxType(e, gtp)),
-                                            RunTime(L"Incompatible type"), Nil()));
+                             vdm_BC_GenBlock(mk_sequence(RunTime(L"Incompatible type"))), Nil()));
           }
           rb.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_Rename(sd), cast));
         }

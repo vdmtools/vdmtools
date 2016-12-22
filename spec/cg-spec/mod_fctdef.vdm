@@ -979,9 +979,8 @@ in
           errMess = "Pattern match failed in " ^ call ^ fctname
       in
        (if need_succ
-        --then fb := fb ^ [ BC`GenDecl(DS`GenSmallBoolType(), succ_v, BC`GenAsgnInit(BC`GenBoolLit(false))) ];
-        then pattern_fb := [ BC`GenDecl(DS`GenSmallBoolType(), succ_v, BC`GenAsgnInit(BC`GenBoolLit(false))) ] ^ pattern_fb;
-        --fb := fb ^ pattern_fb;
+        then pattern_fb := [ BC`GenDecl(DS`GenSmallBoolType(), succ_v,
+                                  BC`GenAsgnInit(BC`GenBoolLit(false))) ] ^ pattern_fb;
         fb := CGEXPR`MergeStmts(fb, pattern_fb);
         if need_succ
         then fb := fb ^ [BC`GenIfStmt(BC`GenNot(succ_v), CGAUX`RunTime(errMess), nil)]
@@ -1094,7 +1093,7 @@ GenMethPreCall(nm, args, stat) ==
     then preref := BC`GenFctCallPtrToObjMemAcc(DS`GenThis(), prename, args)
     else preref := BC`GenFctCall(BC`GenObjectMemberAccess(DS`GenThis(),prename), args);
     return BC`GenIfStmt(BC`GenNot(DS`GenGetValue(preref,mk_REP`BooleanTypeRep())),
-                        CGAUX`RunTime("Precondition failure in " ^ hd nm.ids), nil);
+                 BC`GenBlock([CGAUX`RunTime("Precondition failure in " ^ hd nm.ids)]), nil);
    );
 
 GenFnPostCall : AS`Name * CPP`Expr * seq of CPP`Expr * bool ==> CPP`Stmt
@@ -1108,7 +1107,7 @@ GenFnPostCall(nm, res, args, stat) ==
     then postref := BC`GenFctCallPtrToObjMemAcc(DS`GenThis(), postname, args ^ [res])
     else postref := BC`GenFctCall(BC`GenObjectMemberAccess(DS`GenThis(),postname), args ^[res]);
     return BC`GenIfStmt(BC`GenNot(DS`GenGetValue(postref,mk_REP`BooleanTypeRep())),
-                       CGAUX`RunTime("Postcondition failure in " ^ hd nm.ids), nil);
+                 BC`GenBlock([CGAUX`RunTime("Postcondition failure in " ^ hd nm.ids)]), nil);
    );
 #endif VDMPP
 operations
