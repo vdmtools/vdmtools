@@ -126,7 +126,7 @@ Tuple vdmcg::GenValDef (const TYPE_AS_Name & classname, const SEQ<TYPE_AS_ValueD
       SEQ<TYPE_CPP_Stmt> pm1;
       pm1.ImpConc(pm);
       if (!Is_Excl)
-        pm1.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(succ_v), rti, nil));
+        pm1.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(succ_v), vdm_BC_GenBlock(mk_sequence(rti)), nil));
 
       SEQ<TYPE_CPP_Stmt> rb;
 // 20131223 -->
@@ -763,7 +763,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenLocalValDef(const SEQ<TYPE_AS_ValueDef> & vd_l)
       pm1.ImpConc(pm);
 
       if (!Is_Excl)
-        pm1.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(succ), rti, nil));
+        pm1.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(succ), vdm_BC_GenBlock(mk_sequence(rti)), nil));
 
       rb_l.ImpConc(stmts);
       rb_l.ImpConc(MergeStmts( decls, pm1 )); // experimental
