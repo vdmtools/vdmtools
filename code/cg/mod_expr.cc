@@ -4393,7 +4393,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGUnionTypeApply (const TYPE_AS_ApplyExpr & applexpr,
   const Generic & seqs (fpmsc.GetField (3));    // [ REP`SeqTypeRep ]
   const Generic & strings (fpmsc.GetField (4)); // [ REP`SeqTypeRep ]
 
-  TYPE_CPP_Stmt alt2 (RunTime (L"The argument could not be applied"));
+  TYPE_CPP_Stmt alt2 (vdm_BC_GenBlock(mk_sequence(RunTime (L"The argument could not be applied"))));
 
   if (par_l.IsEmpty())
   {
@@ -4705,7 +4705,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenBindVariables(const TYPE_AS_MultSetBind & MSB, cons
   TYPE_REP_TypeRep settp (FindSetElemType(setType));
   TYPE_CGMAIN_VT elemVT (mk_CG_VT(tmpElem, settp));
 
-  Tuple cgee (CGExprExcl(set, ASTAUX::MkId(L"tmpSet"), nil)); // -- first -- must be before DeclarePatVars
+  Tuple cgee (CGExprExcl(set, ASTAUX::MkId(L"tmpSet"), nil)); // -- first -- must be before DeclarePatterns
   const TYPE_CPP_Expr & s_res (cgee.GetRecord(1));
   const SEQ<TYPE_CPP_Stmt> & s_st_stmt (cgee.GetSequence(2));
 
@@ -4730,10 +4730,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenBindVariables(const TYPE_AS_MultSetBind & MSB, cons
   TYPE_CPP_Identifier succ (vdm_BC_GiveName(ASTAUX::MkId(L"succ")));
 
   Map pid_m (SamePatternIds(pat_l).GetMap(2)); // bool * map AS`Name to set of REP`TypeRep
-
-// 20150805 -->
-//  InsertNamesinEnv_CGAUX(pid_m.Dom());
-// <-- 20150805
 
   rb_l.ImpConc(DeclarePatterns(pid_m));   // -- second -- must be before CGExprExcl and CGPatternMatchExcl 
 
@@ -6165,7 +6161,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
         TYPE_CPP_Identifier tmpSet_q (vdm_BC_GiveName(ASTAUX::MkId(L"tmpSet")));
         TYPE_CPP_Expr cond (GenIsSet(tmpSet));
 
-        TYPE_CPP_Stmt rti(RunTime(L"A set was expected"));
+        TYPE_CPP_Stmt rti(vdm_BC_GenBlock(mk_sequence(RunTime(L"A set was expected"))));
         rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(cond), rti, nil));
         if (vdm_CPP_isCPP())
           rb_l.ImpAppend(vdm_BC_GenDecl(GenSetType(), tmpSet_q, vdm_BC_GenAsgnInit(tmpSet)));
@@ -6215,7 +6211,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
           pred_v = vdm_BC_GiveName(ASTAUX::MkId(L"pred"));
           stmts.ImpConc (GenDecl_DS (pred_type, pred_v, vdm_BC_GenAsgnInit(tmpB)));
         }
-        stmts.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsBool(pred_v)), RunTime(L"A boolean was expected"), nil));
+        stmts.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsBool(pred_v)),
+                   vdm_BC_GenBlock(mk_sequence(RunTime(L"A boolean was expected"))), nil));
         stmts.ImpAppend(vdm_BC_GenIfStmt(GenGetValue(vdm_BC_GenCastExpr(GenBoolType(), pred_v), bt),
                                          vdm_BC_GenBlock(if_then), nil));
       }
@@ -6473,7 +6470,7 @@ Generic vdmcg::CGUnarySet (int opr, const TYPE_AS_Expr & arg, const TYPE_CGMAIN_
   SEQ<TYPE_CPP_Stmt> rb_l (arg_stmt);
   if (!IsSetType(argTmpType)) {
     rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot (GenIsSet (argTmp)),
-                                    RunTime (L"A set was expected"),
+                                    vdm_BC_GenBlock(mk_sequence(RunTime (L"A set was expected"))),
                                     nil));
   }
 
@@ -6694,7 +6691,7 @@ Generic vdmcg::CGUnarySeq (int opr, const TYPE_AS_Expr & arg, const TYPE_CGMAIN_
       cond = vdm_BC_GenLogOr(GenIsSeq (argTmp), GenIsString(argTmp));
      
     rb_l.ImpAppend(vdm_BC_GenIfStmt (vdm_BC_GenNot (cond),
-                                     RunTime (L"A sequence was expected"), nil));
+                                     vdm_BC_GenBlock(mk_sequence(RunTime (L"A sequence was expected"))), nil));
   }
 
   Generic alt2;
@@ -6832,7 +6829,6 @@ Generic vdmcg::CGSeqIndices (const TYPE_CPP_Expr & argTmp,
     TYPE_CPP_Expr length ((IsStringType(argTmpType) || IsPossibleStringType(argTmpType))
                        ? GenLenString (argexpr) : GenLen_int (argexpr));
 
-    //TYPE_CPP_Stmt insert (GenSetInsert (riseq_v, GenIntExpr(i_v)));
     TYPE_CPP_Stmt insert (vdm_BC_GenBlock(mk_sequence(GenSetInsert (riseq_v, GenIntExpr(i_v)))));
 
     SEQ<TYPE_CPP_Stmt> rb;
@@ -6943,14 +6939,14 @@ Generic vdmcg::CGUnaryMap (int opr, const TYPE_AS_Expr & arg, const TYPE_CGMAIN_
     case MAPRNG:
     case MAPINVERSE: {
       if (!IsMapType(argTmpType)) {
-        TYPE_CPP_Stmt rtm (RunTime(L"A map was expected"));
+        TYPE_CPP_Stmt rtm (vdm_BC_GenBlock(mk_sequence(RunTime(L"A map was expected"))));
         rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsMap(argTmp)), rtm, nil));
       }
       break;
     }
     case MAPDISTRMERGE: {
       if (!IsSetType(argTmpType)) {
-        TYPE_CPP_Stmt rts (RunTime(L"A set was expected"));
+        TYPE_CPP_Stmt rts (vdm_BC_GenBlock(mk_sequence(RunTime(L"A set was expected"))));
         rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsSet(argTmp)), rts, nil));
       }
       break;
@@ -7733,7 +7729,7 @@ Generic vdmcg::CGInSet(const TYPE_AS_Expr & le, const TYPE_AS_Expr & re,
 
   if (!IsSetType(type2))
     rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsSet(var2_v)),
-                                    RunTime(L"A set was expected"), nil));
+                                    vdm_BC_GenBlock(mk_sequence(RunTime(L"A set was expected"))), nil));
 
   TYPE_CPP_Expr expr (GenInSet(vt1, mk_CG_VT(var2_q, type2)));
   if (rb_l.IsEmpty())
@@ -7810,7 +7806,7 @@ Generic vdmcg::CGProperSubset(const TYPE_AS_Expr & le, const TYPE_AS_Expr & re,
   TYPE_CPP_Expr subs (GenSubSet(var1q, var2q));
   TYPE_CPP_Expr cond1 (vdm_BC_GenNot(GenIsSet(var1_v)));
   TYPE_CPP_Expr cond2 (vdm_BC_GenNot(GenIsSet(var2_v)));
-  TYPE_CPP_Stmt errmess (RunTime(L"A set was expected"));
+  TYPE_CPP_Stmt errmess (vdm_BC_GenBlock(mk_sequence(RunTime(L"A set was expected"))));
 
   if (IsSetType(type1) && !IsSetType(type2))
   {
@@ -7877,7 +7873,7 @@ Generic vdmcg::CGSubset(const TYPE_AS_Expr & le, const TYPE_AS_Expr & re,
   TYPE_CPP_Expr var2q (IsSetType(type2) ? var2_v : GenCastSetType(var2_v));
   TYPE_CPP_Expr cond1 (vdm_BC_GenNot(GenIsSet(var1_v)));
   TYPE_CPP_Expr cond2 (vdm_BC_GenNot(GenIsSet(var2_v)));
-  TYPE_CPP_Stmt errmess (RunTime(L"A set was expected"));
+  TYPE_CPP_Stmt errmess (vdm_BC_GenBlock(mk_sequence(RunTime(L"A set was expected"))));
 
   if (IsSetType(type1) && !IsSetType(type2))
   {
@@ -8963,9 +8959,9 @@ Tuple vdmcg::FindMultSetBind2(const SEQ<TYPE_AS_MultBind> & bind_l)
     {
       TYPE_CPP_Identifier e1_v (vdm_BC_GiveName(ASTAUX::MkId(L"e1_set")));
       TYPE_CPP_Expr cond (GenIsSet(e_v));
-      TYPE_CPP_Stmt alt1 (vdm_CPP_isCPP() ? vdm_BC_GenAsgnStmt(e1_v, e_v)
-                                          : vdm_BC_GenAsgnStmt(e1_v, GenCastSetType(e_v)));
-      TYPE_CPP_Stmt alt2 (RunTime(L"A set was expected"));
+      TYPE_CPP_Stmt alt1 (vdm_CPP_isCPP() ? vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(e1_v, e_v)))
+                                          : vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(e1_v, GenCastSetType(e_v)))));
+      TYPE_CPP_Stmt alt2 (vdm_BC_GenBlock(mk_sequence(RunTime(L"A set was expected"))));
 
       rb.ImpConc(e_stmt);
       rb.ImpConc(GenDeclSet(e1_v, nil));
@@ -8977,10 +8973,7 @@ Tuple vdmcg::FindMultSetBind2(const SEQ<TYPE_AS_MultBind> & bind_l)
              (!(allnames.ImpIntersect(allpnms)).IsEmpty() || !e_set.Is(TAG_TYPE_AS_Name)))
     {
       TYPE_CPP_Identifier e1_v (vdm_BC_GiveName(ASTAUX::MkId(L"e1_set")));
-// 20160613 -->
-      //SEQ<TYPE_CPP_Stmt> s_init (GenDeclInit_DS(e_type, e1_v, e_v));
       SEQ<TYPE_CPP_Stmt> s_init (GenConstDeclInit(e_type, e1_v, e_v));
-// <-- 20160613
 
       rb.ImpConc(e_stmt);
       rb.ImpConc(s_init);
