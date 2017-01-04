@@ -251,7 +251,7 @@ GenValDef(classname, vd_l) ==
                     else mk_CGMAIN`VT(tmpVal_v, valType);
                mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat, vt, {}, succ_v, nil, nil, false);
                pm1 = pm ^ if not Is_Excl
-                          then [ BC`GenIfStmt(BC`GenNot(succ_v), rti, nil) ]
+                          then [ BC`GenIfStmt(BC`GenNot(succ_v), BC`GenBlock([rti]), nil) ]
                           else [];
            in
             (dcl rb : seq of CPP`Stmt := pm1;
@@ -649,7 +649,7 @@ in
             vt = mk_CGMAIN`VT(expr, vtp);
             mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat, vt, {}, succ, nil, nil, false);
             pm1 = pm ^ if not Is_Excl
-                       then [BC`GenIfStmt(BC`GenNot(succ), rti, nil)]
+                       then [BC`GenIfStmt(BC`GenNot(succ), BC`GenBlock([rti]), nil)]
                        else []
         in
          (rb_l := rb_l ^ stmts ^ CGEXPR`MergeStmts(decls, pm1);

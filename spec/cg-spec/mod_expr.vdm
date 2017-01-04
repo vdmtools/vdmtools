@@ -1602,7 +1602,7 @@ CGSeqComprehensionSetBind(rc1, vt) ==
          if not CGAUX`IsIntType( eType )
          then
            todo := [ BC`GenIfStmt( BC`GenNot(DS`GenIsInt(e_v)),
-                                   CGAUX`RunTime( "The binding set must only contain integers" ),
+                  BC`GenBlock([CGAUX`RunTime("The binding set must only contain integers")]),
                                    nil ) ];
          todo := todo ^ pm';
 
@@ -1776,7 +1776,8 @@ CGSetRangeExpr(mk_AS`SetRangeExpr(lb, ub, -), mk_CGMAIN`VT(resVar_v, rType)) ==
         if CPP`isCPP()
         then lbval := DS`GenGetValue(BC`GenCastExpr(its, lb_v'), irep)
         else lbval := DS`GenGetValue(DS`GenExplicitCast(irep, lb_v', lbt), irep);
-        rb_l := rb_l ^ [BC`GenIfStmt(cond, rti, nil)];
+        --rb_l := rb_l ^ [BC`GenIfStmt(cond, rti, nil)];
+        rb_l := rb_l ^ [BC`GenIfStmt(cond, BC`GenBlock([rti]), nil)];
         rb_l := rb_l ^ [BC`GenDecl(sint, lbi_v, BC`GenAsgnInit(lbval))];))
     else
       def lb_v' = DS`GenGetValue(lb_v, irep)
@@ -1800,7 +1801,8 @@ CGSetRangeExpr(mk_AS`SetRangeExpr(lb, ub, -), mk_CGMAIN`VT(resVar_v, rType)) ==
        if CPP`isCPP()
        then ubval := DS`GenGetValue(BC`GenCastExpr(its, ub_v'), irep)
        else ubval := DS`GenGetValue(DS`GenExplicitCast(irep,ub_v',ubt), irep);
-       rb_l := rb_l ^ [BC`GenIfStmt(cond, rti, nil)];
+       --rb_l := rb_l ^ [BC`GenIfStmt(cond, rti, nil)];
+       rb_l := rb_l ^ [BC`GenIfStmt(cond, BC`GenBlock([rti]), nil)];
        rb_l := rb_l ^ [BC`GenDecl(sint, ubi_v, BC`GenAsgnInit(ubval))];))
     else
       def ub_v' = DS`GenGetValue(ub_v, irep)
@@ -1821,7 +1823,8 @@ CGSetRangeExpr(mk_AS`SetRangeExpr(lb, ub, -), mk_CGMAIN`VT(resVar_v, rType)) ==
         then stmt := BC`GenAsgnStmt(resVar_v, DS`GenSetInsertExpr(DS`GenSetExpr(resVar_v), cast))
         else stmt := BC`GenExpressionStmt(DS`GenSetInsertExpr(DS`GenCastSetType(resVar_v), cast))
       else stmt := DS`GenSetInsert(resVar_v, cast);
-      rb_l := rb_l ^ [BC`GenForStmt(ini, e1, [e2], stmt)]
+      --rb_l := rb_l ^ [BC`GenForStmt(ini, e1, [e2], stmt)]
+      rb_l := rb_l ^ [BC`GenForStmt(ini, e1, [e2], BC`GenBlock([stmt]))]
      );
   return rb_l;
 );
@@ -2875,7 +2878,7 @@ CGSeqApplyExpr( mk_AS`ApplyExpr( expr, [ par ], - ), mk_CGMAIN`VT( resVar_v, res
               then l_rcheck := BC`GenGt(parapply, DS`GenLenString_int(seqexpr))
               else l_rcheck := BC`GenGt(parapply, DS`GenLen_int(seqexpr));
               l_check := BC`GenLogOr(BC`GenBracketedExpr(l_lcheck), BC`GenBracketedExpr(l_rcheck)));
-          def l_then = CGAUX`RunTime("Illegal index")
+          def l_then = BC`GenBlock([CGAUX`RunTime("Illegal index")])
           in rb := rb ^ [BC`GenIfStmt(l_check, l_then, nil)]);
         rb := rb ^ [BC`GenAsgnStmt(resVar_v, seqapply)])
     else
@@ -3675,7 +3678,7 @@ CGUnionTypeApply( applexpr, rv, expr1, type1, sd ) ==
           seqs : [ REP`SeqTypeRep ] := nil,
           strings : [ REP`SeqTypeRep ] := nil,
           rb : seq of CPP`Stmt := e_stmt2,
-          alt2 : [CPP`Stmt|CPP`Expr] := CGAUX`RunTime("The argument could not be applied");
+          alt2 : [CPP`Stmt|CPP`Expr] := BC`GenBlock([CGAUX`RunTime("The argument could not be applied")]);
 
       if is_REP`UnionTypeRep(tmpGenType)
       then
@@ -4028,15 +4031,13 @@ have to be changed to keep then nil value in the abstract syntax tree.
 \begin{vdm_al}
 GenBindVariables: AS`MultSetBind * [AS`Expr] ==> seq of CPP`Stmt
 GenBindVariables(mk_AS`MultSetBind(pat_l, Set, -), St) ==
-  def --tmpSet : CPP`Name = BC`GiveName("tmpSet");
-      setType : REP`TypeRep = CGAUX`FindType(Set);
+  def setType : REP`TypeRep = CGAUX`FindType(Set);
       settp : REP`TypeRep = CGAUX`FindSetElemType(setType);
       succ : CPP`Name = BC`GiveName("succ");
       tmpElem : CPP`Name = BC`GiveName("tmpElem");
       elemVT = mk_CGMAIN`VT(tmpElem, settp);
-      --setVT = mk_CGMAIN`VT(tmpSet, mk_REP`SetTypeRep(settp));
       pid_m = SamePatternIds(pat_l).#2;
-      mk_(s_res, s_st_stmt) = CGExprExcl(Set, "tmpSet", nil) -- first -- must be before DeclarePatVars
+      mk_(s_res, s_st_stmt) = CGExprExcl(Set, "tmpSet", nil) -- first -- must be before DeclarePatterns
   in
   ( dcl rb_l : seq of CPP`Stmt := [],
         inner_stmts : seq of CPP`Stmt := [],
@@ -4049,11 +4050,11 @@ GenBindVariables(mk_AS`MultSetBind(pat_l, Set, -), St) ==
        then
          (tmpSet := BC`GiveName("tmpS");
           rb_l := rb_l ^ [ BC`GenDecl(DS`GenType(setType), tmpS, BC`GenAsgnInit(s_res)) ]);
-       rb_l := rb_l ^ [ BC`GenIfStmt (BC`GenNot (DS`GenIsSet(tmpS)), CGAUX`RunTime("A set was expected"), nil) ];
+       rb_l := rb_l ^ [ BC`GenIfStmt (BC`GenNot (DS`GenIsSet(tmpS)),
+                         BC`GenBlock([CGAUX`RunTime("A set was expected")]), nil) ];
        tmpSet := DS`GenCastSetType(tmpS));
           
     rb_l := rb_l ^ s_st_stmt;
-    --def - = CGAUX`InsertNamesinEnv(dom pid_m) in skip;
     rb_l := rb_l ^ DeclarePatterns(pid_m); -- second -- must be before CGExprExcl and CGPatternMatchExcl
 
     if St <> nil
@@ -4067,7 +4068,7 @@ GenBindVariables(mk_AS`MultSetBind(pat_l, Set, -), St) ==
          else def getval = DS`GenGetValue(BC`GenCastExpr(DS`GenBoolType(), res), bt)
               in inner_stmts := inner_stmts ^ [BC`GenIfStmt(DS`GenIsBool(res),
                                                             BC`GenAsgnStmt(succ, getval),
-                                                            CGAUX`RunTime("A boolean was expected"))];);
+                             BC`GenBlock([CGAUX`RunTime("A boolean was expected")]))];);
 
     for i = len pat_l to 1 by -1 do
      (def p_s = dunion { dom FindPatternId(pat_l(j)) | j in set {1,...,i - 1} };
@@ -4084,7 +4085,8 @@ GenBindVariables(mk_AS`MultSetBind(pat_l, Set, -), St) ==
     in
       rb_l := rb_l ^ [BC`GenDecl(DS`GenSmallBoolType(), succ, BC`GenAsgnInit(BC`GenBoolLit(false)))]
                    ^ DS`GenIterSet(setVT, BC`GenNot(succ), elemVT, inner_stmts)
-                   ^ [BC`GenIfStmt(BC`GenNot(succ), CGAUX`RunTime("The binding environment was empty"), nil)];
+                   ^ [BC`GenIfStmt(BC`GenNot(succ),
+                      BC`GenBlock([CGAUX`RunTime("The binding environment was empty")]), nil)];
     return rb_l;
   );
 
@@ -4111,7 +4113,7 @@ GenBindListVariables(bind_l, St) ==
                    rb_l := [ BC`GenDecl(DS`GenSmallBoolType(), succ_bind_v, BC`GenAsgnInit(BC`GenBoolLit(false))) ];
                    rb_l := rb_l ^ CGAUX`StripCompoundStmt(cstmt);
                    rb_l := rb_l ^ [BC`GenIfStmt(BC`GenNot(succ_bind_v),
-                                                CGAUX`RunTime("The binding environment was empty"), nil)];
+                      BC`GenBlock([CGAUX`RunTime("The binding environment was empty")]), nil)];
                    return rb_l))
   end;
 \end{vdm_al}
@@ -4577,7 +4579,7 @@ GenSeqOvwr( mk_CGMAIN`VT(seq_v, seqtype), mk_CGMAIN`VT(map_v, mapType), mk_CGMAI
        );
     def e_int = DS`GenGetValue(e_v, nattp);
        cond = BC`GenLogOr(BC`GenGt(e_int, seq_len), BC`GenLt(e_int, BC`GenIntegerLit(1)));
-       rre = CGAUX`RunTime( "Illegal index in sequence modifier");
+       rre = BC`GenBlock([CGAUX`RunTime( "Illegal index in sequence modifier")]);
        alt2 = DS`GenSeqModify(s_v, e_int, erng);
     in
      (dcl if_body : CPP`Stmt := alt2;
@@ -4866,7 +4868,7 @@ CGFieldSelectExpr( fexpr,mk_CGMAIN`VT( resVar_v, type ), expr1, type1 ) ==
         in
           if posTypes <> {}
           then 
-            rb := rb ^ [FindFieldSelApply(nm, mk_CGMAIN`VT( resVar_v, type ),mk_CGMAIN`VT(tmpRec, tmpRecType) )];
+            rb := rb ^ FindFieldSelApply(nm, mk_CGMAIN`VT( resVar_v, type ),mk_CGMAIN`VT(tmpRec, tmpRecType) );
 #ifdef VDMPP
         if CGAUX`IsUnionFunctionType (ti)
         then CGAUX`SetNotSupportedException(true);
@@ -4938,7 +4940,7 @@ $rectypes$ that the field selector $nm$ is to be applied dynamically
 field select).
 
 \begin{vdm_al}
-FindFieldSelApply: AS`Name * CGMAIN`VT * CGMAIN`VT ==> CPP`Stmt
+FindFieldSelApply: AS`Name * CGMAIN`VT * CGMAIN`VT ==> seq of CPP`Stmt
 FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, tmpRecType') ) ==
   def tmpRecType = CGAUX`RemoveNil(tmpRecType');
       rectypes = FindAllRecTypes( tmpRecType );
@@ -4948,13 +4950,12 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
       posORefTypes = FindPossibleObjRefTypes(oreftypes, fsnm);
 #endif VDMPP
 #ifdef VDMSL
-      rti = CGAUX`RunTime("A record was expected")
+      rti = BC`GenBlock([CGAUX`RunTime("A record was expected")])
 #endif VDMSL
 #ifdef VDMPP
-      rti = CGAUX`RunTime("An object or record was expected")
+      rti = BC`GenBlock([CGAUX`RunTime("An object or record was expected")])
 #endif VDMPP
   in
-   --(dcl alt : [CPP`Stmt] := rti;
    (dcl alt : [CPP`Stmt] := if is_REP`UnionTypeRep(tmpRecType) and
                                let tps = tmpRecType.tps
                                in
@@ -4974,19 +4975,20 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
         then
           def {e} = posRecTypes;
               getfield = DS`GenRecGetFieldNm (tmpRec, e, fsnm);
-          in return BC`GenAsgnStmt(resVar_v, getfield)
+          in return [BC`GenAsgnStmt(resVar_v, getfield)]
         else
           for all t in set posRecTypes do
            (dcl castrec : CPP`Expr := tmpRec;
             if not CGAUX`IsCompositeType(tmpRecType)
             then castrec := DS`GenCastType(t, tmpRec);
             def getfield = DS`GenRecGetFieldNm (castrec, t, fsnm);
-                asgn = BC`GenAsgnStmt (resVar_v, getfield);
+                asgn = BC`GenBlock([BC`GenAsgnStmt (resVar_v, getfield)]);
                 isRecord = DS`GenIsThisRecord(t, tmpRec)
             in
               if alt = nil
               then alt := asgn
-              else alt := BC`GenIfStmt(isRecord, asgn, alt));
+              else alt := BC`GenIfStmt(isRecord, asgn, alt)
+           );
 #ifdef VDMPP
       if posORefTypes <> {}
       then
@@ -4996,13 +4998,13 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
               objptr = DS`CastToClassPtr(clnm, tmpRec);
               getfield = BC`GenPointerToObjectMemberAccess( objptr, BC`Rename(fsnm) )
           in
-            return BC`GenAsgnStmt(resVar_v, getfield)
+            return [BC`GenAsgnStmt(resVar_v, getfield)]
         else
           for all otr in set posORefTypes do
             def clnm = otr.nm;
                 objptr = DS`CastToClassPtr(clnm, tmpRec);
                 getfield = BC`GenPointerToObjectMemberAccess( objptr, BC`Rename(fsnm) );
-                l_asgn = BC`GenAsgnStmt(resVar_v, getfield);
+                l_asgn = BC`GenBlock([BC`GenAsgnStmt(resVar_v, getfield)]);
                 if_cond = DS`GenAuxType(tmpRec, otr)
             in
               if alt = nil
@@ -5026,7 +5028,7 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
            (dcl cast : CPP`Expr := getfield;
             if not CGAUX`IsSubType(type, resTp)
             then cast := DS`GenExplicitCast(resTp, getfield, type);
-            return BC`GenAsgnStmt(resVar_v, cast)))
+            return [BC`GenAsgnStmt(resVar_v, cast)]))
       else
        (for all ctr in set posRecTypes do
           def rec = BC`GenBracketedExpr(DS`GenCastType( ctr, tmpRec ));
@@ -5038,11 +5040,12 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
            (dcl cast : CPP`Expr := getfield;
             if not CGAUX`IsSubType(type, resTp)
             then cast := DS`GenExplicitCast(resTp, getfield, type);
-            def l_asgn = BC`GenAsgnStmt(resVar_v, cast)
+            def l_asgn = BC`GenBlock([BC`GenAsgnStmt(resVar_v, cast)])
             in
               if alt = nil
               then alt := l_asgn
-              else alt := BC`GenIfStmt(DS`GenIsThisRecord(ctr, tmpRec), l_asgn, alt));
+              else alt := BC`GenIfStmt(DS`GenIsThisRecord(ctr, tmpRec), l_asgn, alt)
+           );
 #ifdef VDMPP
          if posORefTypes <> {}
          then
@@ -5053,13 +5056,13 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
                       else tmpRec;
                 getfield = BC`GenQualifiedName(rec, BC`Rename2(fsnm))
             in
-              return BC`GenAsgnStmt(resVar_v, getfield)
+              return [BC`GenAsgnStmt(resVar_v, getfield)]
           else
             for all otr in set posORefTypes do
               def clnm = otr.nm;
                   rec = BC`GenBracketedExpr(DS`GenCastType( otr, tmpRec ));
                   getfield = BC`GenQualifiedName(rec, BC`Rename2(fsnm));
-                  l_asgn = BC`GenAsgnStmt(resVar_v, getfield);
+                  l_asgn = BC`GenBlock([BC`GenAsgnStmt(resVar_v, getfield)]);
                   if_cond = BC`GenTypeComp(BC`Rename(clnm), tmpRec)
               in
                 if alt = nil
@@ -5067,7 +5070,7 @@ FindFieldSelApply( fsnm, mk_CGMAIN`VT( resVar_v, resTp ), mk_CGMAIN`VT( tmpRec, 
                 else alt := BC`GenIfStmt(if_cond, l_asgn, alt);
 #endif VDMPP            
        ); -- end of for loop
-    return alt;
+    return CGAUX`StripCompoundStmt(alt);
    );
 \end{vdm_al}
 
@@ -5363,7 +5366,8 @@ CGAllOrExistsExpr(quant, mk_CGMAIN`VT(resVar_v, -)) ==
     cases quant:
       mk_AS`AllOrExistsExpr(<ALL>, bind_l, pred, -) ->
          let qinit = BC`GenAsgnInit(BC`GenBoolLit(true)),
-             np = BC`GenAsgnStmt(tmpQuant_v, BC`GenBoolLit(false))
+             --np = BC`GenAsgnStmt(tmpQuant_v, BC`GenBoolLit(false))
+             np = BC`GenBlock([BC`GenAsgnStmt(tmpQuant_v, BC`GenBoolLit(false))])
          in
           (rb := [ BC`GenDecl(DS`GenSmallBoolType(), tmpQuant_v, qinit),
                    CGComprehension(bind_l, pred, [], tmpQuant_v, np, pid_m, true) ];
@@ -5460,7 +5464,7 @@ else
     then
       def tmpSet' = BC`GiveName("tmpSet");
           cond = DS`GenIsSet(tmpSet);
-          rti = CGAUX`RunTime("A set was expected")
+          rti =BC`GenBlock([CGAUX`RunTime("A set was expected")])
       in
        (rb_l := rb_l ^ [BC`GenIfStmt(BC`GenNot(cond), rti, nil)];
         if CPP`isCPP()
@@ -5496,7 +5500,7 @@ else
          (pred_v := BC`GiveName("pred");
           stmts := stmts ^ DS`GenDecl (pred_type, pred_v, BC`GenAsgnInit(tmpB)));
         stmts := stmts ^ [BC`GenIfStmt(BC`GenNot(DS`GenIsBool(pred_v)),
-                                       CGAUX`RunTime("A boolean was expected"), nil),
+                                       BC`GenBlock([CGAUX`RunTime("A boolean was expected")]), nil),
                           BC`GenIfStmt(DS`GenGetValue(BC`GenCastExpr(DS`GenBoolType(), pred_v), bt),
                                        BC`GenBlock(if_then), nil)]);
       def mk_(pm, Is_excl) = PM`CGPatternMatchExcl(pat, elemVT, {}, succ, nil, stmts, false); -- fourth
@@ -5799,7 +5803,7 @@ CGUnarySet( opr, arg, vt ) ==
 
     if not CGAUX`IsSetType(argTmpType)
     then rb_l := rb_l ^ [BC`GenIfStmt( BC`GenNot( DS`GenIsSet( argTmp )),
-                                       CGAUX`RunTime("A set was expected" ), nil ) ];
+                                       BC`GenBlock([CGAUX`RunTime("A set was expected" )]), nil ) ];
     cases opr:
       <SETCARD>           -> alt2 := CGSetCard(argTmp, argTmpType, vt ),
       <SETDISTRUNION>     -> alt2 := CGSetDistrUnion(argTmp, argTmpType, vt ),
@@ -6088,7 +6092,7 @@ CGUnarySeq( opr, arg, vt ) ==
       else cond := BC`GenLogOr(DS`GenIsSeq (argTmp), DS`GenIsString(argTmp));
 
       rb_l := rb_l ^ [BC`GenIfStmt( BC`GenNot( cond ),
-                                    CGAUX`RunTime("A sequence was expected" ), nil ) ];
+                                    BC`GenBlock([CGAUX`RunTime("A sequence was expected" )]), nil ) ];
      );
     cases opr:
       <SEQLEN>       -> alt2 := CGSeqLen( argTmp, argTmpType, vt ),
@@ -6234,7 +6238,7 @@ CGSeqIndices( argTmp, argTmpType, mk_CGMAIN`VT( resVar_v, - ) ) ==
   else
     def riseq_v = BC`GiveName("riseq");
         i_v = BC`GiveName( "i");
-        insert = DS`GenSetInsert(riseq_v, DS`GenIntExpr(i_v))
+        insert = BC`GenBlock([DS`GenSetInsert(riseq_v, DS`GenIntExpr(i_v))])
     in
      (dcl argexpr : CPP`Expr := argTmp,
           length : CPP`Expr,
@@ -6942,11 +6946,11 @@ CGLogBinaryExpr( le, opr, re, mk_CGMAIN`VT( resVar_v, -) ) ==
                    in
                      cases opr :
                        <AND>   -> return rb1new ^ [BC`GenIfStmt(cond, alt1,
-                                          BC`GenAsgnStmt(resVar_v, DS`GenBoolLit(false)))],
+                              BC`GenBlock([BC`GenAsgnStmt(resVar_v, DS`GenBoolLit(false))]))],
                        <OR>    -> return rb1new ^ [BC`GenIfStmt(BC`GenNot(cond), alt1,
-                                          BC`GenAsgnStmt(resVar_v, DS`GenBoolLit(true)))],
+                              BC`GenBlock([BC`GenAsgnStmt(resVar_v, DS`GenBoolLit(true))]))],
                        <IMPLY> -> return rb1new ^ [BC`GenIfStmt(cond, alt1,
-                                          BC`GenAsgnStmt(resVar_v, DS`GenBoolLit(true)))],
+                              BC`GenBlock([BC`GenAsgnStmt(resVar_v, DS`GenBoolLit(true))]))],
                        others  -> return rb1new ^ stmt2
                      end;
                   )
@@ -7097,7 +7101,7 @@ CGInSet( le, re,  mk_CGMAIN`VT(resVar_v, -) ) ==
     then var2_v' := DS`GenCastSetType(var2_v);
     if not CGAUX`IsSetType(type2)
     then rb_l := rb_l ^ [ BC`GenIfStmt(BC`GenNot(DS`GenIsSet(var2_v)),
-                                       CGAUX`RunTime("A set was expected"), nil ) ];
+                                       BC`GenBlock([CGAUX`RunTime("A set was expected")]), nil ) ];
     def expr = DS`GenInSet(mk_CGMAIN`VT(var1_v, type1), mk_CGMAIN`VT(var2_v', type2))
     in
       if rb_l = []
@@ -7118,7 +7122,7 @@ CGNotInSet( le, re,  mk_CGMAIN`VT(resVar_v, -) ) ==
     then var2_v' := DS`GenCastSetType(var2_v);
     if not CGAUX`IsSetType(type2)
     then rb_l := rb_l ^ [ BC`GenIfStmt(BC`GenNot(DS`GenIsSet(var2_v)),
-                                       CGAUX`RunTime("A set was expected"), nil ) ];
+                                       BC`GenBlock([CGAUX`RunTime("A set was expected")]), nil ) ];
     def expr = DS`GenNotInSet(mk_CGMAIN`VT(var1_v, type1), mk_CGMAIN`VT(var2_v', type2))
     in
       if rb_l = []
@@ -7142,7 +7146,7 @@ CGProperSubset( le, re,  mk_CGMAIN`VT( resVar_v, -) ) ==
     def subs = DS`GenSubSet(var1', var2');
         cond1 = BC`GenNot( DS`GenIsSet( var1_v ) );
         cond2 = BC`GenNot( DS`GenIsSet( var2_v ) );
-        errmess = CGAUX`RunTime("A set was expected" )
+        errmess = BC`GenBlock([CGAUX`RunTime("A set was expected" )])
     in
      (dcl rb_l : seq of CPP`Stmt := stmt1 ^ stmt2;
       cases true:
@@ -7186,7 +7190,7 @@ CGSubset( le, re, mk_CGMAIN`VT( resVar_v, -) ) ==
     then var2' := DS`GenCastSetType(var2_v);
     def cond1 = BC`GenNot( DS`GenIsSet( var1_v ) );
         cond2 = BC`GenNot( DS`GenIsSet( var2_v ) );
-        errmess = CGAUX`RunTime("A set was expected" )
+        errmess = BC`GenBlock([CGAUX`RunTime("A set was expected" )])
     in
      (dcl rb_l : seq of CPP`Stmt := stmt1 ^ stmt2;
       cases true:
@@ -8141,16 +8145,15 @@ FindMultSetBind2(bind) ==
         then def e1_v = BC`GiveName("e1_set");
                  cond = DS`GenIsSet(e_v);
                  decl_e1_v = DS`GenDeclSet(e1_v, nil);
-                 alt2 = CGAUX`RunTime("A set was expected")
+                 alt2 = BC`GenBlock([CGAUX`RunTime("A set was expected")])
              in (dcl alt1 : CPP`Stmt;
                  if CPP`isCPP()
-                 then alt1 := BC`GenAsgnStmt(e1_v, e_v)
-                 else alt1 := BC`GenAsgnStmt(e1_v, DS`GenCastSetType(e_v));
+                 then alt1 := BC`GenBlock([BC`GenAsgnStmt(e1_v, e_v)])
+                 else alt1 := BC`GenBlock([BC`GenAsgnStmt(e1_v, DS`GenCastSetType(e_v))]);
                  rb := rb ^ e_stmt ^ decl_e1_v ^ [ BC`GenIfStmt( cond, alt1, alt2) ];
                  msb := msb ^ [ mk_(pat_l, e1_v, e_type)]; )
         elseif e_stmt = [] and ( (allpnms inter allnames <> {}) or (not is_AS`Name(e_set)))
         then def e1_v   = BC`GiveName("e1_set");
-                 --s_init = DS`GenDeclInit(e_type, e1_v, e_v)
                  s_init = DS`GenConstDeclInit(e_type, e1_v, e_v)
              in (rb  := rb ^ e_stmt ^ s_init;
                  msb := msb ^ [ mk_(pat_l, e1_v, e_type)] )

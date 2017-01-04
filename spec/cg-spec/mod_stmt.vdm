@@ -247,8 +247,8 @@ CGAssignStmt( mk_AS`AssignStmt(sd, expr, cid) ) ==
                  then
                    if not CGAUX`IsSubType(rhsType, gtp)
                    then rb := rb ^ [BC`GenIfStmt(DS`GenAuxType(rhs_v, gtp),
-                                                 BC`GenAsgnStmt(BC`Rename(sd), rhs_v),
-                                                 CGAUX`RunTime("Incompatible type"))]
+                                       BC`GenBlock([BC`GenAsgnStmt(BC`Rename(sd), rhs_v)]),
+                                       BC`GenBlock([CGAUX`RunTime("Incompatible type")]))]
                    else rb := rb ^ [BC`GenAsgnStmt(BC`Rename(sd), rhs_v)]
                  else
                    if is_REP`CompositeTypeRep(tp)
@@ -264,8 +264,8 @@ CGAssignStmt( mk_AS`AssignStmt(sd, expr, cid) ) ==
 #ifdef VDMPP
               (if not CGAUX`IsSubType(rhsType, gtp)
                then rb := rb ^ [BC`GenIfStmt(DS`GenAuxType(rhs_v, gtp),
-                                             BC`GenAsgnStmt(BC`Rename(sd), rhs_v),
-                                             CGAUX`RunTime("Incompatible type"))]
+                                   BC`GenBlock([BC`GenAsgnStmt(BC`Rename(sd), rhs_v)]),
+                                   BC`GenBlock([CGAUX`RunTime("Incompatible type")]))]
                else rb := rb ^ [BC`GenAsgnStmt(BC`Rename(sd), rhs_v)];)
 #endif VDMPP
             else -- java
@@ -295,7 +295,7 @@ CGAssignStmt( mk_AS`AssignStmt(sd, expr, cid) ) ==
                           then rhs_v
                           else BC`GenBracketedExpr(BC`GenCastExpr(BC`GenGeneric(), rhs_v))
                   in rb := rb ^ [BC`GenIfStmt(BC`GenNot(DS`GenAuxType(e, gtp)),
-                                              CGAUX`RunTime("Incompatible type"), nil)];
+                                   BC`GenBlock([CGAUX`RunTime("Incompatible type")]), nil)];
                 rb := rb ^ [BC`GenAsgnStmt(BC`Rename(sd), cast)]),
           (is_AS`NarrowRef(sd)) -> return CGAssignStmt(mk_AS`AssignStmt(sd.var,expr,cid)),
           (is_AS`FieldRef(sd)) -> if is_AS`NarrowRef(sd.var)
@@ -626,10 +626,10 @@ GenRecImpModify(fsnm, mk_CGMAIN`VT(level, level_type' ), val ) ==
       posORefTypes = CGEXPR`FindPossibleObjRefTypes( oreftypes, fsnm );
 #endif VDMPP
 #ifdef VDMSL
-      rti = CGAUX`RunTime("A record was expected")
+      rti = BC`GenBlock([CGAUX`RunTime("A record was expected")])
 #endif VDMSL
 #ifdef VDMPP
-      rti = CGAUX`RunTime("An object or record was expected")
+      rti = BC`GenBlock([CGAUX`RunTime("An object or record was expected")])
 #endif VDMPP
   in
    (dcl alt : [CPP`Stmt] := if is_REP`UnionTypeRep( level_type ) and
@@ -669,7 +669,7 @@ GenRecImpModify(fsnm, mk_CGMAIN`VT(level, level_type' ), val ) ==
         if CPP`isCPP()
         then setfield := DS`GenRecSetField(rec, BC`GenPosName(rec_nm, fsnm), val)
         else setfield := BC`GenAsgnStmt(BC`GenQualifiedName(rec, BC`Rename2(fsnm)), val);
-        alt := setfield
+        alt := BC`GenBlock([setfield])
        )
     else
       for all ctr in set posRecTypes do
@@ -686,8 +686,8 @@ GenRecImpModify(fsnm, mk_CGMAIN`VT(level, level_type' ), val ) ==
           def isRecord = DS`GenIsThisRecord( ctr, level )
           in
             if alt = nil
-            then alt := setfield
-            else alt := BC`GenIfStmt(isRecord, setfield, alt);
+            then alt := BC`GenBlock([setfield])
+            else alt := BC`GenIfStmt(isRecord, BC`GenBlock([setfield]), alt);
          );
 
 #ifdef VDMPP
@@ -722,7 +722,7 @@ GenRecImpModify(fsnm, mk_CGMAIN`VT(level, level_type' ), val ) ==
               def if_cond = DS`GenAuxType(level, otr);
                   l_ptr = DS`CastToClassPtr(clnm, level);
                   l_memacc = BC`GenPointerToObjectMemberAccess(l_ptr, BC`Rename(fsnm));
-                  l_asgn  = BC`GenAsgnStmt(l_memacc, val)
+                  l_asgn  = BC`GenBlock([BC`GenAsgnStmt(l_memacc, val)])
               in
                 if alt = nil
                 then alt := l_asgn
@@ -731,14 +731,14 @@ GenRecImpModify(fsnm, mk_CGMAIN`VT(level, level_type' ), val ) ==
               def if_cond = BC`GenTypeComp(BC`Rename(clnm), level);
                   tp = ENV`LookUpInstanceVar(CGAUX`Combine2Names(clnm, fsnm));
                   cast = BC`GenBracketedExpr(DS`GenCastType(otr, level));
-                  l_asgn = BC`GenAsgnStmt(BC`GenQualifiedName(cast, BC`Rename(fsnm)),
-                                                                DS`GenExplicitCast(tp, val, nil))
+                  l_asgn = BC`GenBlock([BC`GenAsgnStmt(BC`GenQualifiedName(cast, BC`Rename(fsnm)),
+                                                                DS`GenExplicitCast(tp, val, nil))])
               in
                 if alt = nil
                 then alt := l_asgn
                 else alt := BC`GenIfStmt(if_cond, l_asgn, alt);
 #endif VDMPP
-      return [alt];
+      return CGAUX`StripCompoundStmt(alt);
     );
 \end{vdm_al}
 
@@ -2328,11 +2328,12 @@ CGIfStmt(mk_AS`IfStmt(test, cons, elif, altn,-), isLast) ==
 \begin{vdm_al}
 GenIfConsCPPStmt: seq of CPP`Stmt ==> CPP`Stmt
 GenIfConsCPPStmt(s_l) ==
-cases s_l:
-  [ mk_CPP`IfStmt(-,-,nil,-) ] -> return BC`GenBlock(s_l),
-  [ stmt ]                   -> return stmt,
-  others                     -> return BC`GenBlock(s_l)
-end;
+--cases s_l:
+--  [ mk_CPP`IfStmt(-,-,nil,-) ] -> return BC`GenBlock(s_l),
+--  [ stmt ]                   -> return stmt,
+--  others                     -> return BC`GenBlock(s_l)
+--end;
+  return BC`GenBlock(s_l);
 \end{vdm_al}
 
 \subsection{Specification and Topology Statements}
@@ -2649,7 +2650,7 @@ GenRecTrapFinally(p_matched, p_val, p_raised, p_isLast) ==
       l_innerTest = BC`GenNot(p_raised);
       l_outerTest = BC`GenNot(p_matched);
       l_innerIf = BC`GenIfStmt(l_innerTest, BC`GenBreakStmt(nil), nil);
-      l_outerIf = BC`GenIfStmt(l_outerTest, l_throwStmt, nil)
+      l_outerIf = BC`GenIfStmt(l_outerTest, BC`GenBlock([l_throwStmt]), nil)
   in
    (if CPP`isJAVA() then CGAUX`InsertImport("jp.vdmtools.VDM.VDMSpecException");
     return BC`GenBlock([l_outerIf] ^ (if p_isLast then [] else [l_innerIf])));
@@ -2716,7 +2717,7 @@ CGTrapStmt(mk_AS`TrapStmt(l_pat, l_handler, l_body, -), p_isLast) ==
                                       BC`GenAsgnInit(BC`GenBoolLit(false)))] ^
                          pm ^
                          [BC`GenIfStmt(BC`GenNot(l_matchNm),
-                                       BC`GenExpressionStmt(BC`GenThrowExpression(l_excName)),
+                     BC`GenBlock([BC`GenExpressionStmt(BC`GenThrowExpression(l_excName))]),
                                        nil)];
   in
    (dcl rb : seq of CPP`Stmt := DS`GenConstDeclInit(nil, l_excValNm, l_getMethod) ^
