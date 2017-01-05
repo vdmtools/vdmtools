@@ -644,7 +644,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGCasesExpr (const TYPE_AS_CasesExpr & rc1,
   }
   else
   {
-    rb.ImpAppend (vdm_BC_GenIfStmt (vdm_BC_GenNot (succ_v), RunTime (L"No 'others' branch in CasesExpr"), nil));
+    rb.ImpAppend (vdm_BC_GenIfStmt (vdm_BC_GenNot (succ_v),
+                     vdm_BC_GenBlock(mk_sequence(RunTime (L"No 'others' branch in CasesExpr"))), nil));
   }
   return rb;
 }

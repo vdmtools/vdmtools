@@ -2283,8 +2283,8 @@ constructions of sequence type.
     if CPP`isCPP()
     then
       def l_check = BC`GenFctCallObjMemAcc(s, "OutOfRange", [e1]);
-          l_else = BC`GenExpressionStmt(GenSeqModifyExpr(s,e1,e2));
-          l_then = CGAUX`RunTime("Illegal index in sequence modifier")
+          l_else = BC`GenBlock([BC`GenExpressionStmt(GenSeqModifyExpr(s,e1,e2))]);
+          l_then = BC`GenBlock([CGAUX`RunTime("Illegal index in sequence modifier")])
       in return BC`GenIfStmt(l_check, l_then, l_else)
     else return BC`GenExpressionStmt(GenSeqModifyExpr(s,e1,e2));
 

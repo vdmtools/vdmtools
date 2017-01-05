@@ -520,7 +520,8 @@ CGCasesExpr(mk_AS`CasesExpr(sel, altns, Others,-), mk_CGMAIN`VT(resVar_v,type)) 
        in
          rb := rb ^ [ BC`GenIfStmt( BC`GenNot( succ_v ), alt1, nil)]
     else
-       rb := rb ^ [ BC`GenIfStmt( BC`GenNot(succ_v ), CGAUX`RunTime("No 'others' branch in 'cases' expr" ), nil ) ];
+       rb := rb ^ [ BC`GenIfStmt( BC`GenNot(succ_v ),
+               BC`GenBlock([CGAUX`RunTime("No 'others' branch in 'cases' expr" )]), nil ) ];
     return rb);
 \end{vdm_al}
 

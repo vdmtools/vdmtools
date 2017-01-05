@@ -3583,8 +3583,8 @@ TYPE_CPP_Stmt vdmcg::GenSeqModify(const TYPE_CPP_Expr & s, const TYPE_CPP_Expr &
   if (vdm_CPP_isCPP())
   {
     TYPE_CPP_Expr l_check (vdm_BC_GenFctCallObjMemAcc(s, ASTAUX::MkId(L"OutOfRange"), mk_sequence(e1)));
-    TYPE_CPP_Stmt l_else (vdm_BC_GenExpressionStmt(GenSeqModifyExpr(s, e1, e2)));
-    TYPE_CPP_Stmt l_then (RunTime(L"Illegal index in sequence modifier"));
+    TYPE_CPP_Stmt l_else (vdm_BC_GenBlock(mk_sequence(vdm_BC_GenExpressionStmt(GenSeqModifyExpr(s, e1, e2)))));
+    TYPE_CPP_Stmt l_then (vdm_BC_GenBlock(mk_sequence(RunTime(L"Illegal index in sequence modifier"))));
     return vdm_BC_GenIfStmt(l_check, l_then, l_else);
   }
   else // Java
