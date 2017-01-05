@@ -3687,12 +3687,22 @@ Generic vdmcg::GetTypeDef(const TYPE_AS_Name & nm)
     const Map & typem (this->typeDefs[clmodnm]);
     if (typem.DomExists(tpnm)) {
       TYPE_AS_TypeDef tdef(typem[tpnm]);
+/*
       if (tdef.GetRecord(pos_AS_TypeDef_shape).Is(TAG_TYPE_AS_CompositeType)) {
         TYPE_AS_CompositeType ctp(tdef.GetRecord(pos_AS_TypeDef_shape));
         TYPE_AS_Name nm (ctp.GetRecord(pos_AS_CompositeType_name));
         ctp.SetField(pos_AS_CompositeType_name, ASTAUX::Combine2Names(clmodnm, nm));
+        
         tdef.SetField(pos_AS_TypeDef_shape, ctp);
       }
+*/
+      const TYPE_AS_Type & shape (tdef.GetRecord(pos_AS_TypeDef_shape));
+#ifdef VDMSL
+      tdef.SetField(pos_AS_TypeDef_shape, AddClMod(shape, clmodnm, Set()));
+#endif // VDMSL
+#ifdef VDMPP
+      tdef.SetField(pos_AS_TypeDef_shape, AddClMod(shape, clmodnm, GetAllClasses()));
+#endif // VDMPP
       return tdef;
     }
   }

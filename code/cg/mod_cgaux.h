@@ -271,6 +271,7 @@ private:
   void SetHasDefaultConstr();
   bool GetHasDefaultConstr() const;
   bool IsClass(const TYPE_AS_Name &);
+  SET<TYPE_AS_Name> GetAllClasses();
   void AddInstanceVars(const TYPE_AS_Name &, const SEQ<TYPE_AS_InstanceVarDef> &);
   Generic GetInstanceVarTp(const TYPE_AS_Name&, const TYPE_AS_Name &);
   SEQ<TYPE_AS_Name> GetOrderedSupers(const TYPE_AS_Name &);
@@ -314,4 +315,5 @@ private:
   static TYPE_AS_Name UnqualiName(const TYPE_AS_Name &);
   static TYPE_AS_Id NameToId(const TYPE_AS_Name &);
 
+  static TYPE_AS_Type AddClMod(const TYPE_AS_Type &, const TYPE_AS_Name &, const SET<TYPE_AS_Name> &);
 #endif // __mod_aux_h__

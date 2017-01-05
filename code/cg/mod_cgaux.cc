@@ -6505,6 +6505,13 @@ bool vdmcg::IsClass(const TYPE_AS_Name& pName)
 {
   return this->classVisitOrder.Elems().InSet(pName);
 }
+
+// GetAllClasses
+// ==> set of AS`Name
+SET<TYPE_AS_Name> vdmcg::GetAllClasses()
+{
+  return this->classVisitOrder.Elems();
+}
 #endif //VDMPP
 
 #ifdef VDMPP
@@ -7332,5 +7339,117 @@ TYPE_AS_Name vdmcg::UnqualiName(const TYPE_AS_Name& p_nm)
 {
   return TYPE_AS_Name().Init(TYPE_AS_Ids().ImpAppend(ASTAUX::GetLastId(p_nm)),
                              p_nm.GetInt(pos_AS_Name_cid));
+}
+
+// AddClMod
+// tp : AS`Type
+// clmod : AS`Name
+// allClasses : set of AS`Name
+// -> AS`Type
+TYPE_AS_Type vdmcg::AddClMod(const TYPE_AS_Type & tp, const TYPE_AS_Name & clmod,
+                             const SET<TYPE_AS_Name> & allClasses)
+{
+  switch (tp.GetTag()) {
+    case TAG_TYPE_AS_TypeName: {
+      const TYPE_AS_Name & name (tp.GetRecord(pos_AS_TypeName_name));
+      if (2 == name.GetSequence(pos_AS_Name_ids).Length()) {
+        return tp;
+      }
+      else {
+        if (allClasses.InSet(name)) {
+          return tp;
+        }
+        else {
+          TYPE_AS_TypeName type (tp);
+          type.SetField(pos_AS_TypeName_name, ASTAUX::Combine2Names(clmod, name));
+          return type;
+        }
+      }
+    }
+    case TAG_TYPE_AS_CompositeType: {
+      const TYPE_AS_Name & name (tp.GetRecord(pos_AS_CompositeType_name));
+      if (2 == name.GetSequence(pos_AS_Name_ids).Length()) {
+        return tp;
+      }
+      else {
+        TYPE_AS_CompositeType type (tp);
+        type.SetField(pos_AS_CompositeType_name, ASTAUX::Combine2Names(clmod, name));
+        return type;
+      }
+    }
+    case TAG_TYPE_AS_UnionType: {
+      const SEQ<TYPE_AS_Type> & tps (tp.GetSequence(pos_AS_UnionType_tps));
+      SEQ<TYPE_AS_Type> newtps;
+      size_t len_tps = tps.Length();
+      for (size_t i = 1; i <= len_tps; i++) {
+        newtps.ImpAppend(AddClMod(tps[i], clmod, allClasses));
+      }
+      TYPE_AS_UnionType type (tp);
+      type.SetField(pos_AS_UnionType_tps, newtps);
+      return type;
+    }
+    case TAG_TYPE_AS_ProductType: {
+      const SEQ<TYPE_AS_Type> & tps (tp.GetSequence(pos_AS_ProductType_tps));
+      SEQ<TYPE_AS_Type> newtps;
+      size_t len_tps = tps.Length();
+      for (size_t i = 1; i <= len_tps; i++) {
+        newtps.ImpAppend(AddClMod(tps[i], clmod, allClasses));
+      }
+      TYPE_AS_ProductType type (tp);
+      type.SetField(pos_AS_ProductType_tps, newtps);
+      return type;
+    }
+    case TAG_TYPE_AS_Set0Type: {
+      TYPE_AS_Set0Type type (tp);
+      type.SetField(pos_AS_Set0Type_elemtp,
+                    AddClMod(tp.GetRecord(pos_AS_Set0Type_elemtp), clmod, allClasses));
+      return type;
+    }
+    case TAG_TYPE_AS_Set1Type: {
+      TYPE_AS_Set1Type type (tp);
+      type.SetField(pos_AS_Set1Type_elemtp,
+                    AddClMod(tp.GetRecord(pos_AS_Set1Type_elemtp), clmod, allClasses));
+      return type;
+    }
+    case TAG_TYPE_AS_Seq0Type: {
+      TYPE_AS_Seq0Type type (tp);
+      type.SetField(pos_AS_Seq0Type_elemtp,
+                    AddClMod(tp.GetRecord(pos_AS_Seq0Type_elemtp), clmod, allClasses));
+      return type;
+    }
+    case TAG_TYPE_AS_Seq1Type: {
+      TYPE_AS_Seq1Type type (tp);
+      type.SetField(pos_AS_Seq1Type_elemtp,
+                    AddClMod(tp.GetRecord(pos_AS_Seq1Type_elemtp), clmod, allClasses));
+      return type;
+    }
+    case TAG_TYPE_AS_GeneralMap0Type: {
+      TYPE_AS_GeneralMap0Type type (tp);
+      type.SetField(pos_AS_GeneralMap0Type_mapdom,
+                    AddClMod(tp.GetRecord(pos_AS_GeneralMap0Type_mapdom), clmod, allClasses));
+      return type;
+    }
+    case TAG_TYPE_AS_GeneralMap1Type: {
+      TYPE_AS_GeneralMap1Type type (tp);
+      type.SetField(pos_AS_GeneralMap1Type_mapdom,
+                    AddClMod(tp.GetRecord(pos_AS_GeneralMap1Type_mapdom), clmod, allClasses));
+      return type;
+    }
+    case TAG_TYPE_AS_InjectiveMap0Type: {
+      TYPE_AS_InjectiveMap0Type type (tp);
+      type.SetField(pos_AS_InjectiveMap0Type_mapdom,
+                    AddClMod(tp.GetRecord(pos_AS_InjectiveMap0Type_mapdom), clmod, allClasses));
+      return type;
+    }
+    case TAG_TYPE_AS_InjectiveMap1Type: {
+      TYPE_AS_InjectiveMap1Type type (tp);
+      type.SetField(pos_AS_InjectiveMap1Type_mapdom,
+                    AddClMod(tp.GetRecord(pos_AS_InjectiveMap1Type_mapdom), clmod, allClasses));
+      return type;
+    }
+    default: {
+      return tp;
+    }
+  }
 }
 
