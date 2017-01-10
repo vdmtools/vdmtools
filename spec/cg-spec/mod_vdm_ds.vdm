@@ -3605,7 +3605,7 @@ to $GenCGBase$.
         classnm_v = [BC`GenTypeSpecifier(BC`GenIdentifier("vdmBase"))];
         clid = BC`PrefixName("Get",rnm);
         ifstmt = BC`GenIfStmt(BC`GenNot(BC`GenFctCallObjMemAcc(obj_v, "IsInitialized", [])),
-                              CGAUX`RunTime("Identifier is undefined/not initialized"), nil);
+                     BC`GenBlock([CGAUX`RunTime("Identifier is undefined/not initialized")]), nil);
         cobj = [BC`GenTypeSpecifier(<CONST>), BC`GenTypeSpecifier(BC`GenIdentifier("ObjectRef"))];
         gref = BC`GenFctCallObjMemAcc(obj_v,"GetRef",[]);
         basedecl = BC`GenPtrDecl(classnm_v,p_v,gref);

@@ -5178,7 +5178,7 @@ Tuple vdmcg::GenGet (const TYPE_AS_Name & nm)
   TYPE_CPP_Stmt ifstmt (
         vdm_BC_GenIfStmt(vdm_BC_GenNot(vdm_BC_GenFctCallObjMemAcc(obj_v, ASTAUX::MkId(L"IsInitialized"),
                                                                         SEQ<TYPE_CPP_Expr>())),
-                         RunTime(L"Identifier is undefined/not initialized"),
+                         vdm_BC_GenBlock(mk_sequence(RunTime(L"Identifier is undefined/not initialized"))),
                          nil));
   SEQ<TYPE_CPP_DeclSpecifier> cobj;
   cobj.ImpAppend(vdm_BC_GenTypeSpecifier(quote_CONST));
