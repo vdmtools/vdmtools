@@ -233,7 +233,7 @@ Tuple vdmcg::CGMatchPatternName (const TYPE_AS_PatternName & patnm,
         varExpr_v_q = e1_v;
         rb.ImpConc(GenConstDeclInit(type, e1_v, varExpr_v));
         rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenAuxType(e1_v, pttp)),
-                                      RunTime(L"Incompatible type"),
+                                      vdm_BC_GenBlock(mk_sequence(RunTime(L"Incompatible type"))),
                                       Nil()));
       }
 
