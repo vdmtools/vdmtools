@@ -2283,8 +2283,8 @@ constructions of sequence type.
     if CPP`isCPP()
     then
       def l_check = BC`GenFctCallObjMemAcc(s, "OutOfRange", [e1]);
-          l_else = BC`GenExpressionStmt(GenSeqModifyExpr(s,e1,e2));
-          l_then = CGAUX`RunTime("Illegal index in sequence modifier")
+          l_else = BC`GenBlock([BC`GenExpressionStmt(GenSeqModifyExpr(s,e1,e2))]);
+          l_then = BC`GenBlock([CGAUX`RunTime("Illegal index in sequence modifier")])
       in return BC`GenIfStmt(l_check, l_then, l_else)
     else return BC`GenExpressionStmt(GenSeqModifyExpr(s,e1,e2));
 
@@ -3605,7 +3605,7 @@ to $GenCGBase$.
         classnm_v = [BC`GenTypeSpecifier(BC`GenIdentifier("vdmBase"))];
         clid = BC`PrefixName("Get",rnm);
         ifstmt = BC`GenIfStmt(BC`GenNot(BC`GenFctCallObjMemAcc(obj_v, "IsInitialized", [])),
-                              CGAUX`RunTime("Identifier is undefined/not initialized"), nil);
+                     BC`GenBlock([CGAUX`RunTime("Identifier is undefined/not initialized")]), nil);
         cobj = [BC`GenTypeSpecifier(<CONST>), BC`GenTypeSpecifier(BC`GenIdentifier("ObjectRef"))];
         gref = BC`GenFctCallObjMemAcc(obj_v,"GetRef",[]);
         basedecl = BC`GenPtrDecl(classnm_v,p_v,gref);

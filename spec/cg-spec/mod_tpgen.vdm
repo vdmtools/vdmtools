@@ -3184,12 +3184,18 @@ GetTypeDef(nm) ==
 #endif VDMPP
   cases typeDefs:
     { (clmodnm) |-> { (tpnm) |-> tdef } munion - } munion - ->
-        cases tdef:
-          mk_AS`TypeDef(-,mk_AS`CompositeType(nm,-,-),-,-,-) ->
-            return mu(tdef, shape |-> 
-                     mu(tdef.shape, name |-> CGAUX`Combine2Names(clmodnm,nm))),
-          others -> return tdef
-        end,
+--        cases tdef:
+--          mk_AS`TypeDef(-,mk_AS`CompositeType(nm,-,-),-,-,-) ->
+--            return mu(tdef, shape |-> 
+--                     mu(tdef.shape, name |-> CGAUX`Combine2Names(clmodnm,nm))),
+--          others -> return tdef
+--        end,
+#ifdef VDMSL
+        return mu(tdef, shape |-> CGAUX`AddClMod(tdef.shape, clmodnm, {})),
+#endif VDMSL
+#ifdef VDMPP
+        return mu(tdef, shape |-> CGAUX`AddClMod(tdef.shape, clmodnm, CGAUX`GetAllClasses())), 
+#endif VDMPP
     others                                                  -> return nil
   end;
  );

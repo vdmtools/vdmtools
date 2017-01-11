@@ -3379,6 +3379,10 @@ IsClass : AS`Name ==> bool
 IsClass(pName) ==
   return pName in set elems classVisitOrder;
 
+GetAllClasses: () ==> set of AS`Name
+GetAllClasses() ==
+  return elems classVisitOrder;
+
 IsInstVar: AS`Name ==> bool
 IsInstVar(nm) ==
   return ENV`IsInstanceVar(nm) and not ENV`IsStaticInstanceVar(nm);
@@ -3851,6 +3855,37 @@ NameToId: AS`Name -> AS`Id
 NameToId(mk_AS`Name(ids,-)) ==
   hd ids;
 
+AddClMod: AS`Type * AS`Name * set of AS`Name -> AS`Type
+AddClMod(tp, clmod, allClasses) ==
+  cases tp:
+    mk_AS`TypeName(name,-)  -> cases name:
+                                 mk_AS`Name([-,-],-) -> tp,
+                                 mk_AS`Name([-],-)   -> if tp.name in set allClasses
+                                                        then tp
+                                                        else mu(tp, name |-> Combine2Names(clmod, tp.name)),
+                                 others -> undefined
+                               end,
+    mk_AS`CompositeType(name,-,-) -> cases name:
+                                       mk_AS`Name([-,-],-) -> tp,
+                                       mk_AS`Name([-],-)   -> mu(tp, name |-> Combine2Names(clmod, tp.name)),
+                                       others -> undefined
+                                     end,
+    mk_AS`UnionType(tps,-)  -> mu(tp, tps |-> [ AddClMod(tps(i), clmod, allClasses) | i in set inds tps ]),
+    mk_AS`ProductType(tps,-)  -> mu(tp, tps |-> [ AddClMod(tps(i), clmod, allClasses) | i in set inds tps ]),
+    mk_AS`Set0Type(etp,-)   -> mu(tp, elemtp |-> AddClMod(etp, clmod, allClasses)),
+    mk_AS`Set1Type(etp,-)   -> mu(tp, elemtp |-> AddClMod(etp, clmod, allClasses)),
+    mk_AS`Seq0Type(etp,-)   -> mu(tp, elemtp |-> AddClMod(etp, clmod, allClasses)),
+    mk_AS`Seq1Type(etp,-)   -> mu(tp, elemtp |-> AddClMod(etp, clmod, allClasses)),
+    mk_AS`GeneralMap0Type(dtp,rtp,-)   -> mu(tp, mapdom |-> AddClMod(dtp, clmod, allClasses),
+                                                 maprng |-> AddClMod(rtp, clmod, allClasses)),
+    mk_AS`GeneralMap1Type(dtp,rtp,-)   -> mu(tp, mapdom |-> AddClMod(dtp, clmod, allClasses),
+                                                 maprng |-> AddClMod(rtp, clmod, allClasses)),
+    mk_AS`InjectiveMap0Type(dtp,rtp,-) -> mu(tp, mapdom |-> AddClMod(dtp, clmod, allClasses),
+                                                 maprng |-> AddClMod(rtp, clmod, allClasses)),
+    mk_AS`InjectiveMap1Type(dtp,rtp,-) -> mu(tp, mapdom |-> AddClMod(dtp, clmod, allClasses),
+                                                 maprng |-> AddClMod(rtp, clmod, allClasses)),
+    others                  -> tp
+  end;
 \end{vdm_al}         
 
 \begin{vdm_al}

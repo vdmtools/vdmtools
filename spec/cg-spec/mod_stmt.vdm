@@ -1623,7 +1623,7 @@ CGSeqForLoopStmt(mk_AS`SeqForLoopStmt(cv, fseq, body,-), isLast) ==
       then
         def sq' = BC`GiveName("tmpSeq");
             cond = DS`GenIsSeq(sq);
-            rti = CGAUX`RunTime("A sequence was expected in sequence for loop")
+            rti = BC`GenBlock([CGAUX`RunTime("A sequence was expected in sequence for loop")])
         in
          (rb_l := rb_l ^ [BC`GenIfStmt(BC`GenNot(cond), rti, nil)];
           if CPP`isCPP()
@@ -1635,7 +1635,7 @@ CGSeqForLoopStmt(mk_AS`SeqForLoopStmt(cv, fseq, body,-), isLast) ==
           vt1 = mk_CGMAIN`VT(sq, sqt);
           vt2 = mk_CGMAIN`VT(elem, CGAUX`FindSeqElemType(sqt));
           stmt = GenStmt(body, isLast);
-          rti = CGAUX`RunTime("Pattern did not match in sequence for loop");
+          rti = BC`GenBlock([CGAUX`RunTime("Pattern did not match in sequence for loop")]);
           mk_(pm, Is_Excl) = PM`CGPatternMatchExcl(pat, vt2, {}, succ, nil, stmt, false);
           pm1 = if Is_Excl
                 then pm

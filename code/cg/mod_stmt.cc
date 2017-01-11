@@ -1959,7 +1959,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqForLoopStmt(const TYPE_AS_SeqForLoopStmt & sflstm
   if (!IsSeqType(sqt))
   {
     TYPE_CPP_Identifier sq_q(vdm_BC_GiveName(ASTAUX::MkId(L"tmpSeq")));
-    TYPE_CPP_Stmt rti (RunTime(L"A sequence was expected in sequence for loop"));
+    TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence(RunTime(L"A sequence was expected in sequence for loop"))));
     rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsSeq(sq)), rti, nil));
     if (vdm_CPP_isCPP())
       rb_l.ImpAppend(vdm_BC_GenDecl(GenSeq0Type(), sq_q, vdm_BC_GenObjectInit(mk_sequence(sq))));
@@ -1971,7 +1971,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqForLoopStmt(const TYPE_AS_SeqForLoopStmt & sflstm
   TYPE_CGMAIN_VT vt1 (mk_CG_VT(sq, sqt));
   TYPE_CGMAIN_VT vt2 (mk_CG_VT(elem, FindSeqElemType(sqt)));
   SEQ<TYPE_CPP_Stmt> stmt (GenStmt(body, isLast));
-  TYPE_CPP_Stmt rti (RunTime(L"Pattern did not match in sequence for loop"));
+  TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence(RunTime(L"Pattern did not match in sequence for loop"))));
 
   Tuple cgpme(CGPatternMatchExcl(pat, vt2, Set(), succ, Map(), stmt, false));
   const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
