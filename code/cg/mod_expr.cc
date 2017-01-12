@@ -5812,13 +5812,12 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGRecordModifierExpr(const TYPE_AS_RecordModifierExpr 
     rb_l = rec_stmt;
   }
 
-  if (IsCompositeType(tmpTp))
+  if (IsCompositeType(tmpTp)) {
     rb_l.ImpConc(GenModifyFields(REVar, tmpTp, mu_l, vt));
-  else
-  {
+  } else {
     TYPE_CPP_Expr cond (GenIsRecord(tmpRE));
     type_dL stmt_l(GenModifyFields(REVar, tmpTp, mu_l, vt));
-    TYPE_CPP_Stmt rti (RunTime(L"A record was expected in record modifier expression"));
+    TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence(RunTime(L"A record was expected in record modifier expression"))));
     rb_l.ImpAppend(vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(stmt_l), rti));
   }
   // TODO:invariant check for REVar ??

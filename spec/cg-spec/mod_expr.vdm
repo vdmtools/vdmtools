@@ -5179,7 +5179,7 @@ CGRecordModifierExpr(mk_AS`RecordModifierExpr(rec, mu_l, -),vt) ==
     else
       def cond = DS`GenIsRecord(tmpRE);
           stmt_l = GenModifyFields(REVar, tmpTp, mu_l, vt );
-          rti = CGAUX`RunTime("A record was expected in record modifier expression")
+          rti = BC`GenBlock([CGAUX`RunTime("A record was expected in record modifier expression")])
       in
         rb_l := rb_l ^ [BC`GenIfStmt(cond, BC`GenBlock(stmt_l), rti)];
     return rb_l);
