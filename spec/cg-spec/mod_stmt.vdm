@@ -1550,7 +1550,7 @@ CGWhileLoopStmt(mk_AS`WhileLoopStmt(test, body, -), isLast) ==
     else cond := BC`GenBoolLit(true);
     if not CGAUX`IsBoolType(whCrtlType)
     then isbool := [ BC`GenIfStmt( BC`GenNot( DS`GenIsBool( whCrtl_v ) ),
-                                   CGAUX`RunTime("A boolean was expected in while loop" ),
+                      BC`GenBlock([CGAUX`RunTime("A boolean was expected in while loop" )]),
                                    nil ) ];
     def ifstmt = BC`GenIfStmt(whCrtlval, bodystmt, BC`GenBreakStmt(nil));
     in
