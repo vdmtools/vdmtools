@@ -1279,7 +1279,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenArgPatternMatch(const Map & pid_m,
     }
     errMess = errMess + ASTAUX::Id2String(GiveLastName(opdef.GetField(1)));
 
-    TYPE_CPP_Stmt rtiM (RunTime(errMess));
+    TYPE_CPP_Stmt rtiM (vdm_BC_GenBlock(mk_sequence(RunTime(errMess))));
 
     if (need_succ) {
       pattern_fb.ImpPrepend (vdm_BC_GenDecl (GenSmallBoolType(), succ_v,
