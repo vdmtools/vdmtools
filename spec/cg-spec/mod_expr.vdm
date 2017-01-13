@@ -5509,12 +5509,11 @@ else
                 then pm
                 else [BC`GenDecl(DS`GenSmallBoolType(), succ, BC`GenAsgnInit(BC`GenBoolLit(false)))]
                      ^ pm;
-          --cexpr = BC`GenBracketedExpr(BC`GenLeq(count, BC`GenIntegerLit(2)));
           cexpr = BC`GenBracketedExpr(BC`GenLt(count, BC`GenIntegerLit(2)));
           setVT = mk_CGMAIN`VT(tmpSet, mk_REP`SetTypeRep(settp));
           body_l = MergeStmts( decl, pm1 );
           cond = BC`GenNeq(count, BC`GenIntegerLit(1));
-          rti = CGAUX`RunTime("No unique element in 'iota'");
+          rti = BC`GenBlock([CGAUX`RunTime("No unique element in 'iota'")]);
   
       in 
        (rb_l := rb_l ^ [BC`GenDecl(DS`GenSmallIntType(), count, BC`GenAsgnInit(BC`GenIntegerLit(0)))];
@@ -5668,7 +5667,7 @@ CGUnaryNum( opr, arg, vt ) ==
       then
         def cond = DS`GenIsReal( argTmp );
         in rb_l := rb_l ^ [BC`GenIfStmt( BC`GenNot( cond ),
-                               CGAUX`RunTime("A number was expected"), nil ) ];
+                               BC`GenBlock([CGAUX`RunTime("A number was expected")]), nil ) ];
       
       cases opr:
         <NUMPLUS>  -> alt2 := DS`UnaryPlus( vt, rc1 ),
@@ -5737,7 +5736,7 @@ CGUnaryNot( arg, mk_CGMAIN`VT( resVar_v, - ) ) ==
    (dcl rb_l : seq of CPP`Stmt := arg_stmt;
     if not CGAUX`IsBoolType( argTmpType )
     then rb_l := rb_l ^ [BC`GenIfStmt( BC`GenNot(DS`GenIsBool( argTmp )),
-                                                 CGAUX`RunTime("A boolean was expected"),
+                                  BC`GenBlock([CGAUX`RunTime("A boolean was expected")]),
                                                  nil ) ];
     let bt = mk_REP`BooleanTypeRep()
     in
@@ -5804,7 +5803,7 @@ CGUnarySet( opr, arg, vt ) ==
 
     if not CGAUX`IsSetType(argTmpType)
     then rb_l := rb_l ^ [BC`GenIfStmt( BC`GenNot( DS`GenIsSet( argTmp )),
-                                       BC`GenBlock([CGAUX`RunTime("A set was expected" )]), nil ) ];
+                                BC`GenBlock([CGAUX`RunTime("A set was expected" )]), nil ) ];
     cases opr:
       <SETCARD>           -> alt2 := CGSetCard(argTmp, argTmpType, vt ),
       <SETDISTRUNION>     -> alt2 := CGSetDistrUnion(argTmp, argTmpType, vt ),
@@ -6036,7 +6035,7 @@ CGUnarySetPower(argTmp, argTp, mk_CGMAIN`VT(resVar_v, -)) ==
       if not is_CPP`Identifier(argexpr)
       then argexprTmp := BC`GiveName("argS");
       def max = BC`GenIfStmt( BC`GenGt (DS`GenCard_int(argexprTmp), BC`GenIntegerLit( 25 ) ),
-                              CGAUX`RunTime("Set too big for 'power' - limit is 25"),
+                    BC`GenBlock([CGAUX`RunTime("Set too big for 'power' - limit is 25")]),
                               nil )
       in
        (dcl rb : seq of CPP`Stmt := [];
@@ -6049,7 +6048,7 @@ CGUnarySetPower(argTmp, argTp, mk_CGMAIN`VT(resVar_v, -)) ==
   else -- Java
     def rpowset_v = BC`GiveName("rpowset");
         max = BC`GenIfStmt( BC`GenGt(DS`GenCard_int(argexpr), BC`GenIntegerLit( 25 )),
-                            CGAUX`RunTime("Set too big for 'power' - limit is 25"),
+                    BC`GenBlock([CGAUX`RunTime("Set too big for 'power' - limit is 25")]),
                             nil );
         elem_v = BC`GiveName("elem");
         elemSet_v = BC`GiveName("elemSet");
@@ -6642,7 +6641,7 @@ CGMapInverse( argexpr, argType, mk_CGMAIN`VT(resVar_v,-)) ==
       cond_expr = DS`GenDomExists(resVar_v, id_r);
       alt1 = CGAUX`RunTime("Map is not injective - 'inverse' fails");
       alt2 = DS`GenMapInsert(resVar_v, id_r, id_d);
-      body = BC`GenIfStmt(cond_expr, alt1, alt2);
+      body = BC`GenIfStmt(cond_expr, BC`GenBlock([alt1]), BC`GenBlock([alt2]));
       itermap = DS`GenIterMap(maptmp_cg_vt, nil, id_d, id_r, body)
   in
    (dcl initvarres : seq of CPP`Stmt := [];
