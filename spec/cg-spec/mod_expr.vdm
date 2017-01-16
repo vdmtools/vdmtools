@@ -2893,7 +2893,9 @@ CGSeqApplyExpr( mk_AS`ApplyExpr( expr, [ par ], - ), mk_CGMAIN`VT( resVar_v, res
         else if CGAUX`IsPossibleStringType(tmpseqType)
              then seqapply := DS`GenSeqApplyString(seqexpr,parapply)
              else seqapply := DS`GenSeqApply(restp,seqexpr,parapply);
-        rb := rb ^ [ BC`GenIfStmt( isnat, BC`GenAsgnStmt( resVar_v, seqapply ), rre)]);
+        rb := rb ^ [ BC`GenIfStmt( isnat,
+                                   BC`GenBlock([BC`GenAsgnStmt( resVar_v, seqapply )]),
+                                   BC`GenBlock([rre]))]);
       return rb);
  );
 \end{vdm_al}
@@ -4474,7 +4476,7 @@ CGSeqModifyMapOverrideExpr( mk_AS`SeqModifyMapOverrideExpr( seqmap, mapexp, -),
           rb := rb ^ [BC`GenIfStmt(BC`GenNot (DS`GenIsMap (tmpmap_v)), CGAUX`RunTime ("A map was expected"), nil)];
           rb := rb ^ DS`GenDeclInit(tmpmapType, modmap_v, DS`GenCastMap(tmpmap_v)));
           
-    let rre = CGAUX`RunTime("An integer was expected in domain of map in sequence modifier")
+    let rre = BC`GenBlock([CGAUX`RunTime("An integer was expected in domain of map in sequence modifier")])
     in
       if CGAUX`IsPosMapType(seqmapType1) and not CGAUX`IsPosSeqType(seqmapType1)
       then
@@ -4568,7 +4570,7 @@ GenSeqOvwr( mk_CGMAIN`VT(seq_v, seqtype), mk_CGMAIN`VT(map_v, mapType), mk_CGMAI
     if CGAUX`IsIntType(domtype)
     then isint_part := []
     else
-      def rre = CGAUX`RunTime("An integer was expected in domain of map in sequence modifier");
+      def rre = BC`GenBlock([CGAUX`RunTime("An integer was expected in domain of map in sequence modifier")]);
           int_cond = BC`GenNot( DS`GenIsInt(edom) );
           ifisint = BC`GenIfStmt(int_cond, rre, nil);
       in

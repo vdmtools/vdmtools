@@ -3237,7 +3237,9 @@ Generic vdmcg::CGSeqApplyExpr (const TYPE_AS_ApplyExpr & rc1,
 
     TYPE_CPP_Expr isnat (GenIsNat (tmppar_v));
     TYPE_CPP_Stmt rre (RunTime(L"An integer was expected in apply expression"));
-    rb.ImpAppend (vdm_BC_GenIfStmt (isnat, vdm_BC_GenAsgnStmt (resVar_v, seqapply), rre));
+    rb.ImpAppend (vdm_BC_GenIfStmt (isnat,
+                                    vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt (resVar_v, seqapply))),
+                                    vdm_BC_GenBlock(mk_sequence(rre))));
   }
   return rb;
 }
@@ -5189,7 +5191,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSeqOvwr (const TYPE_CGMAIN_VT & rc1,
   if (!IsIntType(domtype))
   {
     e_v = vdm_BC_GiveName(ASTAUX::MkId(L"e_v"));
-    TYPE_CPP_Stmt rre (RunTime(L"An integer was expected in domain of map in sequence modifier"));
+    TYPE_CPP_Stmt rre (vdm_BC_GenBlock(mk_sequence(RunTime(L"An integer was expected in domain of map in sequence modifier"))));
     TYPE_CPP_Expr int_cond (vdm_BC_GenNot(GenIsInt(edom)));
     TYPE_CPP_Stmt ifisint (vdm_BC_GenIfStmt(int_cond, rre, nil));
     SEQ<TYPE_CPP_Stmt> e_decl (vdm_CPP_isCPP()

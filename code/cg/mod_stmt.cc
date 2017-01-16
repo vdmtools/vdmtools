@@ -2502,7 +2502,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIfStmt(const TYPE_AS_IfStmt & ifs, bool isLast)
   if (!IsBoolType(condType))
   {
     rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsBool(cond1_v)),
-                                  RunTime (L"A boolean was expected"), nil));
+                                  vdm_BC_GenBlock(mk_sequence(RunTime (L"A boolean was expected"))), nil));
   }
 
   Generic tmpb; // [seq of CPP`Stmt]
