@@ -329,14 +329,17 @@ LIBMGRSL = -lMGR-sl
 LIBMGRPP = -lMGR-pp
 LIBMATH = -lm
 
-#CC      = $(CCPATH)gcc
-#CCC     = $(CCPATH)g++
-#CXX     = $(CCC)
-#GCC     = $(CCPATH)gcc
+ifeq ($(strip $(OSTYPE)),CYGWIN_NT)
+CC      = $(CCPATH)gcc
+CCC     = $(CCPATH)g++
+CXX     = $(CCC)
+GCC     = $(CCPATH)gcc
+else
 CC      = $(CCPATH)clang
 CCC     = $(CCPATH)clang++
 CXX     = $(CCC)
 GCC     = $(CCPATH)clang
+endif
 COMPILE_OPTION = true
 
 # Notice: 
