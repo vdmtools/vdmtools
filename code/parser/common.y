@@ -60,10 +60,9 @@
 
 //---------- Declarations used by the error recovery algorithm ----------
 
-extern int yylex(); // Function which read input from a the sequence 
+//extern int yylex(); // Function which read input from a the sequence 
                       // RepTokens if it is not empty, otherwise it reads 
                       // standard input
-
 //-----------------------------------------------------------------------
 
 // To build a non-Nil ast for post-expression.
