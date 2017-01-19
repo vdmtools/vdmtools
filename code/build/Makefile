@@ -335,10 +335,17 @@ CCC     = $(CCPATH)g++
 CXX     = $(CCC)
 GCC     = $(CCPATH)gcc
 else
+ifneq ("$(wildcard /usr/bin/clang)","")
 CC      = $(CCPATH)clang
 CCC     = $(CCPATH)clang++
 CXX     = $(CCC)
 GCC     = $(CCPATH)clang
+else
+CC      = $(CCPATH)gcc
+CCC     = $(CCPATH)g++
+CXX     = $(CCC)
+GCC     = $(CCPATH)gcc
+endif
 endif
 COMPILE_OPTION = true
 
