@@ -21,11 +21,7 @@
 {Code documentation}
 {In developement}
 {Restricted}
-<<<<<<< HEAD
-{\copyright\ Kyushu University 2016}
-=======
 {\copyright\ Kyushu University}
->>>>>>> 6a02d0f36a64224c32b67da389350c2d2d5ced67
 {\item[V1.0] First version}
 {}
 

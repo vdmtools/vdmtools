@@ -162,7 +162,8 @@ CGMatchPatternName(patnm, mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, in
             in
              (varExpr_v' := e1_v;
               rb := rb ^ DS`GenConstDeclInit(type, e1_v, varExpr_v);
-              rb := rb ^ [BC`GenIfStmt(BC`GenNot(DS`GenAuxType(e1_v, pttp)), CGAUX`RunTime("Incompatible type"), nil)]);
+              rb := rb ^ [BC`GenIfStmt(BC`GenNot(DS`GenAuxType(e1_v, pttp)), 
+                             BC`GenBlock([CGAUX`RunTime("Incompatible type")]), nil)]);
 
         if CPP`isJAVA() and CGAUX`IsStringType(pttp)
         then

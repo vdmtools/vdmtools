@@ -1550,7 +1550,7 @@ CGWhileLoopStmt(mk_AS`WhileLoopStmt(test, body, -), isLast) ==
     else cond := BC`GenBoolLit(true);
     if not CGAUX`IsBoolType(whCrtlType)
     then isbool := [ BC`GenIfStmt( BC`GenNot( DS`GenIsBool( whCrtl_v ) ),
-                                   CGAUX`RunTime("A boolean was expected in while loop" ),
+                      BC`GenBlock([CGAUX`RunTime("A boolean was expected in while loop" )]),
                                    nil ) ];
     def ifstmt = BC`GenIfStmt(whCrtlval, bodystmt, BC`GenBreakStmt(nil));
     in
@@ -2303,7 +2303,7 @@ CGIfStmt(mk_AS`IfStmt(test, cons, elif, altn,-), isLast) ==
           if not CGAUX`IsBoolType(elif_condType)
           then
             body := body ^ [ BC`GenIfStmt(BC`GenNot(DS`GenIsBool(elif_cond1_v)),
-                                                CGAUX`RunTime ("A boolean was expected"), nil) ];
+                          BC`GenBlock([CGAUX`RunTime ("A boolean was expected")]), nil) ];
           def elif_cons_stmt = def stmt = GenStmt(elif_cons, isLast)
                                in GenIfConsCPPStmt(stmt);
               elif_cons2_stmt = if tmpb = nil

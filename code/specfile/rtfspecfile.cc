@@ -52,7 +52,6 @@
 #include "tb_wstring.h"
 #include "settings.h"
 #include <sstream>
-#include "scanner.h"
 
 // FROM RTF PARSER
 

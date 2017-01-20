@@ -3237,7 +3237,9 @@ Generic vdmcg::CGSeqApplyExpr (const TYPE_AS_ApplyExpr & rc1,
 
     TYPE_CPP_Expr isnat (GenIsNat (tmppar_v));
     TYPE_CPP_Stmt rre (RunTime(L"An integer was expected in apply expression"));
-    rb.ImpAppend (vdm_BC_GenIfStmt (isnat, vdm_BC_GenAsgnStmt (resVar_v, seqapply), rre));
+    rb.ImpAppend (vdm_BC_GenIfStmt (isnat,
+                                    vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt (resVar_v, seqapply))),
+                                    vdm_BC_GenBlock(mk_sequence(rre))));
   }
   return rb;
 }
@@ -5189,7 +5191,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSeqOvwr (const TYPE_CGMAIN_VT & rc1,
   if (!IsIntType(domtype))
   {
     e_v = vdm_BC_GiveName(ASTAUX::MkId(L"e_v"));
-    TYPE_CPP_Stmt rre (RunTime(L"An integer was expected in domain of map in sequence modifier"));
+    TYPE_CPP_Stmt rre (vdm_BC_GenBlock(mk_sequence(RunTime(L"An integer was expected in domain of map in sequence modifier"))));
     TYPE_CPP_Expr int_cond (vdm_BC_GenNot(GenIsInt(edom)));
     TYPE_CPP_Stmt ifisint (vdm_BC_GenIfStmt(int_cond, rre, nil));
     SEQ<TYPE_CPP_Stmt> e_decl (vdm_CPP_isCPP()
@@ -5812,13 +5814,12 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGRecordModifierExpr(const TYPE_AS_RecordModifierExpr 
     rb_l = rec_stmt;
   }
 
-  if (IsCompositeType(tmpTp))
+  if (IsCompositeType(tmpTp)) {
     rb_l.ImpConc(GenModifyFields(REVar, tmpTp, mu_l, vt));
-  else
-  {
+  } else {
     TYPE_CPP_Expr cond (GenIsRecord(tmpRE));
     type_dL stmt_l(GenModifyFields(REVar, tmpTp, mu_l, vt));
-    TYPE_CPP_Stmt rti (RunTime(L"A record was expected in record modifier expression"));
+    TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence(RunTime(L"A record was expected in record modifier expression"))));
     rb_l.ImpAppend(vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(stmt_l), rti));
   }
   // TODO:invariant check for REVar ??
@@ -6229,14 +6230,13 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
      
       SEQ<TYPE_CPP_Stmt> body_l(MergeStmts( decl, pm1 ));
 
-      //TYPE_CPP_Expr cexpr (vdm_BC_GenBracketedExpr(vdm_BC_GenLeq(count, vdm_BC_GenIntegerLit(2))));
       TYPE_CPP_Expr cexpr (vdm_BC_GenBracketedExpr(vdm_BC_GenLt(count, vdm_BC_GenIntegerLit(2))));
       TYPE_CGMAIN_VT setVT (mk_CG_VT(tmpSet, mk_REP_SetTypeRep(settp)));
 
       rb_l.ImpAppend(vdm_BC_GenDecl(GenSmallIntType(), count, vdm_BC_GenAsgnInit(vdm_BC_GenIntegerLit(0))));
       rb_l.ImpConc(GenIterSet(setVT, cexpr, elemVT, body_l));
       rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNeq(count, vdm_BC_GenIntegerLit(1)),
-                                      RunTime(L"No unique element in 'iota'"), nil));
+                  vdm_BC_GenBlock(mk_sequence(RunTime(L"No unique element in 'iota'"))), nil));
 
       SEQ<TYPE_CPP_Stmt> sq;
       return sq.ImpAppend(vdm_BC_GenBlock(rb_l));
@@ -6388,7 +6388,7 @@ Generic vdmcg::CGUnaryNum (int opr, const TYPE_AS_Expr & arg, const TYPE_CGMAIN_
   //if (!IsNumType(argTmpType)) {
   if (argTmpType.Is(TAG_TYPE_REP_UnionTypeRep) && !IsNumType(argTmpType)) {
     rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsReal(argTmp)),
-                                    RunTime (L"A number was expected"), nil));
+                           vdm_BC_GenBlock(mk_sequence(RunTime (L"A number was expected"))), nil));
   }
 
   Generic alt2;
@@ -6429,7 +6429,7 @@ Generic vdmcg::CGUnaryNot (const TYPE_AS_Expr & arg, const TYPE_CGMAIN_VT & vt)
 
   SEQ<TYPE_CPP_Stmt> rb_l (arg_stmt);
   if (!IsBoolType( argTmpType ) ) {
-    TYPE_CPP_Stmt rti (RunTime (L"A boolean was expected"));
+    TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence(RunTime (L"A boolean was expected"))));
     rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsBool(argTmp)), rti, nil));
   }
 
@@ -6626,7 +6626,7 @@ Generic vdmcg::CGUnarySetPower (const TYPE_CPP_Expr & argTmp, const TYPE_REP_Typ
     if (!argexpr.Is(TAG_TYPE_CPP_Identifier))
       argexprTmp = vdm_BC_GiveName(ASTAUX::MkId(L"argS"));
     TYPE_CPP_Stmt max (vdm_BC_GenIfStmt(vdm_BC_GenGt(GenCard_int(argexprTmp), vdm_BC_GenIntegerLit(25)),
-                                        RunTime(L"Set too big for 'power' - limit is 25"), nil ));
+                  vdm_BC_GenBlock(mk_sequence(RunTime(L"Set too big for 'power' - limit is 25"))), nil ));
     SEQ<TYPE_CPP_Stmt> rb;
     if (!argexpr.Is(TAG_TYPE_CPP_Identifier))
       rb.ImpConc (GenDeclSet (argexprTmp, argexpr));
@@ -6645,7 +6645,7 @@ Generic vdmcg::CGUnarySetPower (const TYPE_CPP_Expr & argTmp, const TYPE_REP_Typ
  
       TYPE_REP_TypeRep e_t (FindSetElemType(argTp));
       TYPE_CPP_Stmt max (vdm_BC_GenIfStmt(vdm_BC_GenGt(GenCard_int(argexpr), vdm_BC_GenIntegerLit(25)),
-                                          RunTime(L"Set too big for 'power' - limit is 25"), nil ));
+                  vdm_BC_GenBlock(mk_sequence(RunTime(L"Set too big for 'power' - limit is 25"))), nil ));
 
       SEQ<TYPE_CPP_Stmt> inner_inner_rb;
       inner_inner_rb.ImpConc(GenDeclSet(tmpSet_v, elemSet_v));
@@ -7232,7 +7232,8 @@ Generic vdmcg::CGMapInverse(const TYPE_CPP_Expr & argexpr, const TYPE_REP_TypeRe
   TYPE_CPP_Expr cond_expr (GenDomExists(resVar_v, id_r));
   TYPE_CPP_Stmt alt1 (RunTime(L"Map is not injective - 'inverse' fails"));
   TYPE_CPP_Stmt alt2 (GenMapInsert(resVar_v, id_r, id_d));
-  TYPE_CPP_Stmt body (vdm_BC_GenIfStmt(cond_expr, alt1, alt2));
+  TYPE_CPP_Stmt body (vdm_BC_GenIfStmt(cond_expr, vdm_BC_GenBlock(mk_sequence(alt1)),
+                                                  vdm_BC_GenBlock(mk_sequence(alt2))));
 
   SEQ<TYPE_CPP_Stmt> itermap (GenIterMap(maptmp_cg_vt, nil, id_d, id_r, body));
 

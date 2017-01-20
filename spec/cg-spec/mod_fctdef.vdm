@@ -983,7 +983,8 @@ in
                                   BC`GenAsgnInit(BC`GenBoolLit(false))) ] ^ pattern_fb;
         fb := CGEXPR`MergeStmts(fb, pattern_fb);
         if need_succ
-        then fb := fb ^ [BC`GenIfStmt(BC`GenNot(succ_v), CGAUX`RunTime(errMess), nil)]
+        then fb := fb ^ [BC`GenIfStmt(BC`GenNot(succ_v),
+                                 BC`GenBlock([CGAUX`RunTime(errMess)]), nil)]
        );
   return fb
 );

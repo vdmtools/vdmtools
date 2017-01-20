@@ -1899,7 +1899,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGWhileLoopStmt(const TYPE_AS_WhileLoopStmt & wls, boo
   else {
     whCrtlval = GenGetValue(vdm_BC_GenCastExpr(GenBoolType(), whCrtl_v), btype);
     isbool.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsBool(whCrtl_v)),
-                                      RunTime(L"A boolean was expected in while loop"),
+                       vdm_BC_GenBlock(mk_sequence(RunTime(L"A boolean was expected in while loop"))),
                                       nil));
   }
 
@@ -2502,7 +2502,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIfStmt(const TYPE_AS_IfStmt & ifs, bool isLast)
   if (!IsBoolType(condType))
   {
     rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsBool(cond1_v)),
-                                  RunTime (L"A boolean was expected"), nil));
+                                  vdm_BC_GenBlock(mk_sequence(RunTime (L"A boolean was expected"))), nil));
   }
 
   Generic tmpb; // [seq of CPP`Stmt]

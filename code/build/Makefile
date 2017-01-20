@@ -329,10 +329,24 @@ LIBMGRSL = -lMGR-sl
 LIBMGRPP = -lMGR-pp
 LIBMATH = -lm
 
+ifeq ($(strip $(OSTYPE)),CYGWIN_NT)
 CC      = $(CCPATH)gcc
 CCC     = $(CCPATH)g++
 CXX     = $(CCC)
 GCC     = $(CCPATH)gcc
+else
+ifneq ("$(wildcard /usr/bin/clang)","")
+CC      = $(CCPATH)clang
+CCC     = $(CCPATH)clang++
+CXX     = $(CCC)
+GCC     = $(CCPATH)clang
+else
+CC      = $(CCPATH)gcc
+CCC     = $(CCPATH)g++
+CXX     = $(CCC)
+GCC     = $(CCPATH)gcc
+endif
+endif
 COMPILE_OPTION = true
 
 # Notice: 
@@ -2041,12 +2055,13 @@ contextinfotest: contextinfotest.cc contextinfo.o $(VDMLIB)
 	$(CXX) -g $^ -o $@
 
 preprocess.cc: preprocess.l
-	$(FLEX) -+ -t $< | \
-	perl -ple 's/class istream;/#include <iostream>\nusing namespace std;/;' | \
-	perl -ple 's/#define yyFlexLexer/#define ppyyFlexLexer/' | \
-	perl -ple 's/yyfree/ppyyfree/' | \
-	perl -ple 's/yyrealloc/ppyyrealloc/' | \
-	perl -ple 's/yyalloc/ppyyalloc/' > $@
+	$(FLEX) -+ -t -Ppp $< > $@
+#	$(FLEX) -+ -t $< | \
+#	perl -ple 's/class istream;/#include <iostream>\nusing namespace std;/;' | \
+#	perl -ple 's/#define yyFlexLexer/#define ppyyFlexLexer/' | \
+#	perl -ple 's/yyfree/ppyyfree/' | \
+#	perl -ple 's/yyrealloc/ppyyrealloc/' | \
+#	perl -ple 's/yyalloc/ppyyalloc/' > $@
 preprocess: preprocess.cc
 
 

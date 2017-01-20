@@ -39,8 +39,9 @@
 #include "testcoverage.h"
 #include "vdmpars.h"
 
+#include "preprocess.h"
+
 #include "projectval.h"
-//#include "Repository.h"
 #include "ToolMediator.h"
 #include "Interface.h"
 #include "Errors.h"

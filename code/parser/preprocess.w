@@ -21,11 +21,7 @@
 {Code documentation}
 {In developement}
 {Restricted}
-<<<<<<< HEAD
-{\copyright\ Kyushu University 2016}
-=======
 {\copyright\ Kyushu University}
->>>>>>> 6a02d0f36a64224c32b67da389350c2d2d5ced67
 {\item[V1.0] First version}
 {}
 
@@ -90,10 +86,11 @@ unlink the temporary files they have been associated to.
 @o preprocess.h @{
 @<This file is generated@>
 
-#include <FlexLexer.h>
+#ifndef __FLEX_LEXER_H
+#include "FlexLexer.h"
+#endif // __FLEX_LEXER_H
 #include <string>
 #include <fstream>
-//using namespace std;
 
 class Preprocess : public yyFlexLexer {
 public: 
