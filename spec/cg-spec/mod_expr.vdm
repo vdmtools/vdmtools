@@ -6907,7 +6907,7 @@ CGLogBinaryExpr( le, opr, re, mk_CGMAIN`VT( resVar_v, -) ) ==
                    type2  = CGAUX`FindType( re );
                    mk_(var1, stmt1) = CGExprExcl(le, "var1", type1);
                    mk_(var2, stmt2) = CGExprExcl(re, "var2", type2);
-                   errmess = CGAUX`RunTime("A boolean was expected" );
+                   errmess = BC`GenBlock([CGAUX`RunTime("A boolean was expected" )]);
                in
                 (dcl expr1 : CPP`Expr := var1,
                      expr2 : CPP`Expr := var2,
@@ -8103,7 +8103,8 @@ GenPredicateStmt( pred, stmt, notpred ) ==
         else cond := DS`GenGetValue( BC`GenCastExpr(DS`GenBoolType(), pred_v), mk_REP`BooleanTypeRep());
         def ifpred = BC`GenIfStmt(cond, BC`GenBlock(stmt), notpred)
         in
-          rb := rb ^ [ BC`GenIfStmt( DS`GenIsBool( pred_v ), ifpred, CGAUX`RunTime( "A boolean was expected" ) ) ];
+          rb := rb ^ [ BC`GenIfStmt( DS`GenIsBool( pred_v ), ifpred,
+                        BC`GenBlock([CGAUX`RunTime( "A boolean was expected" )]) ) ];
        );
       return rb;
      );

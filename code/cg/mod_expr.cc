@@ -7460,7 +7460,7 @@ Generic vdmcg::CGLogBinaryExpr(const TYPE_AS_Expr & le,
       const TYPE_CPP_Expr & var2 (cgeer.GetRecord(1));
       const SEQ<TYPE_CPP_Stmt> & stmt2 (cgeer.GetSequence(2));
     
-      TYPE_CPP_Stmt errmess (RunTime(L"A boolean was expected"));
+      TYPE_CPP_Stmt errmess (vdm_BC_GenBlock(mk_sequence(RunTime(L"A boolean was expected"))));
 
       SEQ<TYPE_CPP_Stmt> rb1new (stmt1);
       SEQ<TYPE_CPP_Stmt> rb2new (stmt2);
@@ -8886,7 +8886,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenPredicateStmt(const Generic & pred,
                                           : GenGetValue(vdm_BC_GenCastExpr(GenBoolType(), pred_v),
                                                                                   mk_REP_BooleanTypeRep()));
       TYPE_CPP_Stmt ifpred (vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(stmt), notpred));
-      rb.ImpAppend(vdm_BC_GenIfStmt(GenIsBool(pred_v), ifpred, RunTime(L"A boolean was expected")));
+      rb.ImpAppend(vdm_BC_GenIfStmt(GenIsBool(pred_v), ifpred,
+                                    vdm_BC_GenBlock(mk_sequence(RunTime(L"A boolean was expected")))));
     }
     return rb;
   }
