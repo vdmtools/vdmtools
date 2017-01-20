@@ -2672,14 +2672,16 @@ interpreter of the function $EvalMapMerge$.
 
   GenMapMerge: CGMAIN`VT * CGMAIN`VT* CGMAIN`VT ==> seq of CPP`Stmt
   GenMapMerge(mk_CGMAIN`VT(var1, type1), mk_CGMAIN`VT(var2, type2), mk_CGMAIN`VT(resVar_v, -)) ==
+    def rti = BC`GenBlock([CGAUX`RunTime("Duplicate entries had different values" )])
+    in
     if CPP`isCPP()
     then
       def m1 = BC`GiveName( "m1" );
           m2 = BC`GiveName( "m2" );
+          cond = BC`GenNot(BC`GenFctCallObjMemAcc( m1, "IsCompatible", [m2] ));
           rb = [ BC`GenDecl(GenMapType(), m1, BC`GenObjectInit([var1])),
                  BC`GenDecl(GenMapType(), m2, BC`GenObjectInit([var2])),
-                 BC`GenIfStmt(BC`GenNot(BC`GenFctCallObjMemAcc( m1, "IsCompatible", [m2] )),
-                                  CGAUX`RunTime("Duplicate entries had different values" ), nil),
+                 BC`GenIfStmt(cond, rti, nil),
                  GenMapOverride(m1,m2),
                  BC`GenAsgnStmt(resVar_v, m1) ];
       in return rb
@@ -2710,8 +2712,7 @@ interpreter of the function $EvalMapMerge$.
                        as2 = BC`GenAsgnStmt(allApplies_v, eq)
                    in GenIterSet(mk_CGMAIN`VT(com_v, mk_REP`SetTypeRep(mk_REP`AllTypeRep())), allApplies_v,
                                  mk_CGMAIN`VT(d_v, mk_REP`AllTypeRep()), [as2]);
-        rb := rb ^ [ BC`GenIfStmt(BC`GenNot(allApplies_v),
-                                  CGAUX`RunTime("Duplicate entries had different values" ), nil) ];
+        rb := rb ^ [ BC`GenIfStmt(BC`GenNot(allApplies_v), rti, nil) ];
         rb := rb ^ [ GenMapOverride(m1,m2)];
         rb := rb ^ [ BC`GenAsgnStmt(resVar_v, m1) ];
         return rb
@@ -2828,11 +2829,12 @@ composition expressions.
 \begin{vdm_al}
   GenComposeExpr: CGMAIN`VT  * CGMAIN`VT * CGMAIN`VT ==> seq of CPP`Stmt
   GenComposeExpr(mk_CGMAIN`VT(v1, t1), mk_CGMAIN`VT(v2, t2), mk_CGMAIN`VT(res,-)) ==
+    def rti1 = BC`GenBlock([CGAUX`RunTime("Two maps were expected in composition expression")]);
+    in
      (dcl rb_l : seq of CPP`Stmt := [],
           tmpMap : CPP`Name := BC`GiveName("tmpMap"),
           tmpMap1 : CPP`Expr := v1,
-          tmpMap2 : CPP`Expr := v2,
-          rti1 : CPP`Stmt := CGAUX`RunTime("Two maps were expected in composition expression");
+          tmpMap2 : CPP`Expr := v2;
       rb_l := rb_l ^ GenDeclEmptyMap(nil,tmpMap);
   
       if not CGAUX`IsMapType(t1)
@@ -2861,7 +2863,7 @@ composition expressions.
           elem = BC`GiveName("elem");
           cond = BC`GenNot(GenDomExists(tmpMap1, elem));
           st1 = GenMapImpModify(tmpMap, key, GenMapApply(mk_CGMAIN`VT(tmpMap1, nil), elem));
-          rti = CGAUX`RunTime("The range is not a subset of the domain in composition expression");
+          rti = BC`GenBlock([CGAUX`RunTime("The range is not a subset of the domain in composition expression")]);
           ifstmt = BC`GenIfStmt(cond, rti, nil)
       in
         let stmt = BC`GenBlock([ifstmt, st1])
@@ -2943,16 +2945,13 @@ resVar = tmpMap;
         in rb_l := GenMapDecl(tmpMap, BC`GenAsgnInit(mapclone)));
 
       if CGAUX`IsIntType(t2)
-      --then rb_l := rb_l ^ [BC`GenDecl(GenSmallIntType(), n, BC`GenAsgnInit(GenGetValue(v2, t2)))]
       then rb_l := rb_l ^ [BC`GenDecl(GenSmallNumType(), n, BC`GenAsgnInit(GenGetValue(v2, t2)))]
       else
         def cond = GenIsInt(v2);
-            rti = CGAUX`RunTime("A 'nat' was expected in map iteration expression");
+            rti = BC`GenBlock([CGAUX`RunTime("A 'nat' was expected in map iteration expression")]);
             ifstmt = BC`GenIfStmt(BC`GenNot(cond), rti, nil);
             val = GenGetValue(BC`GenCastExpr(GenIntType(), v2), mk_REP`NumericTypeRep(<INTEGER>))
-        in
-          --rb_l := rb_l ^ [ifstmt, BC`GenDecl(GenSmallIntType(), n, BC`GenAsgnInit(val))];
-          rb_l := rb_l ^ [ifstmt, BC`GenDecl(GenSmallNumType(), n, BC`GenAsgnInit(val))];
+        in rb_l := rb_l ^ [ifstmt, BC`GenDecl(GenSmallNumType(), n, BC`GenAsgnInit(val))];
       rb_l := rb_l ^ GenMapIterIfPart(n, tmpMap, t1);
       rb_l := rb_l ^ [BC`GenAsgnStmt(resVar, tmpMap)];
       return rb_l
@@ -2987,7 +2986,7 @@ resVar = tmpMap;
           dm = GenMapDecl (mm, ai');
           dm2 = GenMapDecl (mm2, ai');
           st2_l = GenIterMap(vt2, nil, key, elem, st2);
-          rti = CGAUX`RunTime("A 'nat' was expected in map iteration expression");
+          rti = BC`GenBlock([CGAUX`RunTime("A 'nat' was expected in map iteration expression")]);
           ifstmt = BC`GenIfStmt( c1, rti, nil)
       in
        (dcl stmt : CPP`Stmt := BC`GenForStmt(idcl, stop, [inc], BC`GenBlock (dm2 ^ st2_l));
@@ -3065,12 +3064,10 @@ be covered.
         in
          (dcl stmt_l : seq of CPP`Stmt := [];
           if key <> nil
-          --then stmt_l := GenDecl(dtp, key, BC`GenAsgnInit(tmpe_v));
           then stmt_l := GenDecl(dtp, key, BC`GenObjectInit([tmpe_v]));
           if elem <> nil
           then
             def el = GenMapApply(mk_CGMAIN`VT(tmpMap_v, nil), key)
-            --in stmt_l := stmt_l ^ GenDecl(rtp, elem, BC`GenAsgnInit(el));
             in stmt_l := stmt_l ^ GenDecl(rtp, elem, BC`GenObjectInit([el]));
           stmt_l := stmt_l ^ [stmt];
           return GenDeclMap(tmpMap_v, m) ^
@@ -3671,7 +3668,7 @@ to $GenCGBase$.
                   else
                    (alt_m := BC`GenAsgnStmt(m, GenMapImpModifyExpr(castmap, e1, e2));
                     alt_s := BC`GenAsgnStmt(m, GenSeqModifyExpr(castseq, new_e1, e2)));
-                  def alt_rre = CGAUX`RunTime("Sequence or Map expected in Map or Sequence State Designator");
+                  def alt_rre = BC`GenBlock([CGAUX`RunTime("Sequence or Map expected in Map or Sequence State Designator")]);
                       ifstmt1 = BC`GenIfStmt(BC`GenNot(cond_s), alt_rre, nil);
                       if1 = BC`GenBlock([ifstmt1, alt_s])
                   in return BC`GenIfStmt(cond_m, alt_m, if1))

@@ -2054,7 +2054,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSetForLoopStmt(const TYPE_AS_SetForLoopStmt & sflstm
     TYPE_CPP_Identifier iset_q (vdm_BC_GiveName(ASTAUX::MkId(L"tmpSet")));
     TYPE_CPP_Expr cond (GenIsSet(iset));
 
-    TYPE_CPP_Stmt rti(RunTime(L"A set was expected in set for loop"));
+    TYPE_CPP_Stmt rti(vdm_BC_GenBlock(mk_sequence(RunTime(L"A set was expected in set for loop"))));
     rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(cond), rti, nil));
     if (vdm_CPP_isCPP())
       rb_l.ImpAppend(vdm_BC_GenDecl(GenSetType(), iset_q, vdm_BC_GenAsgnInit(iset)));
@@ -2097,7 +2097,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSetForLoopStmt(const TYPE_AS_SetForLoopStmt & sflstm
     if (Is_Excl)
       pm1.ImpConc(pm);
     else {
-      TYPE_CPP_Stmt rti (RunTime(L"Pattern did not match in set for loop"));
+      TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence(RunTime(L"Pattern did not match in set for loop"))));
       pm1.ImpAppend(vdm_BC_GenDecl(GenSmallBoolType(), succ, vdm_BC_GenAsgnInit(vdm_BC_GenBoolLit(false))));
       pm1.ImpConc(pm);
       pm1.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(succ), rti, nil));
@@ -2187,7 +2187,7 @@ Tuple vdmcg::GenBoundAndValue(const SEQ<Char> & var, const TYPE_AS_Expr & expr)
     }
 
     TYPE_CPP_Expr cond (vdm_BC_GenNot(GenIsInt(tmp)));
-    TYPE_CPP_Stmt rti (RunTime(L"An integer was expected in indexed for loop"));
+    TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence(RunTime(L"An integer was expected in indexed for loop"))));
 
     rb_l.ImpAppend(vdm_BC_GenIfStmt(cond, rti, nil));
 
@@ -2246,14 +2246,11 @@ Tuple vdmcg::GenByPart(const Generic & By, const TYPE_CPP_Name & ilb, const TYPE
     TYPE_CPP_Identifier iby (vdm_BC_GiveName(ASTAUX::MkId(L"iby")));
     TYPE_CPP_IntegerLit zero (vdm_BC_GenIntegerLit(0));
 
-    TYPE_CPP_Stmt rti (RunTime(L"Step length in indexed for loop was 0"));
+    TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence(RunTime(L"Step length in indexed for loop was 0"))));
     TYPE_CPP_Expr inc (vdm_BC_GenAsgnPlusExpr(ilb, iby));
 
     SEQ<TYPE_CPP_Stmt> rb_l (gbav.GetSequence(1));
-// 20150725 --.
-    //rb_l.ImpAppend(vdm_BC_GenDecl(GenSmallIntType(), iby, vdm_BC_GenAsgnInit(val)));
     rb_l.ImpAppend(vdm_BC_GenDecl(GenSmallNumType(), iby, vdm_BC_GenAsgnInit(val)));
-// <-- 20150725
     rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenEq(iby, zero), rti, nil));
  
     TYPE_CPP_Expr cont (vdm_BC_GenCondExpr(vdm_BC_GenBracketedExpr(vdm_BC_GenLt(iby, zero)),
@@ -2291,7 +2288,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGCasesStmt(const TYPE_AS_CasesStmt & cs, bool isLast)
 
   bool need_decl = (pat_in_expr && sel_stmt.IsEmpty());
 
-// 20120311 -->
 #ifdef VDMPP
   bool exists = false;
   Generic n;
@@ -2310,14 +2306,12 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGCasesStmt(const TYPE_AS_CasesStmt & cs, bool isLast)
       break;
     }
   }
-// <-- 20120311
 
   TYPE_CPP_Expr selRes_v (need_decl ? sel_v : selRes1_v);
 
   SEQ<TYPE_CPP_Stmt> rb (sel_stmt);
 
   if (need_decl)
-    //rb.ImpConc(GenDeclInit_DS(selResType, sel_v, selRes1_v));
     rb.ImpConc(GenConstDeclInit(selResType, sel_v, selRes1_v));
 
   rb.ImpAppend(vdm_BC_GenDecl(GenSmallBoolType(), succ_v, vdm_BC_GenAsgnInit(vdm_BC_GenBoolLit(false))));
@@ -2502,7 +2496,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIfStmt(const TYPE_AS_IfStmt & ifs, bool isLast)
   if (!IsBoolType(condType))
   {
     rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsBool(cond1_v)),
-                                  vdm_BC_GenBlock(mk_sequence(RunTime (L"A boolean was expected"))), nil));
+                     vdm_BC_GenBlock(mk_sequence(RunTime (L"A boolean was expected"))), nil));
   }
 
   Generic tmpb; // [seq of CPP`Stmt]
@@ -3305,7 +3299,8 @@ TYPE_CPP_Stmt vdmcg::GenInvCall(const TYPE_AS_Name & nm, bool stat)
   }
 
   TYPE_CPP_Expr cond (GenGetValue(invref, mk_REP_BooleanTypeRep()));
-  return vdm_BC_GenIfStmt(vdm_BC_GenNot(cond), RunTime(L"Instance invariant failure in " + ASTAUX::ASName2String(nm)), nil);
+  return vdm_BC_GenIfStmt(vdm_BC_GenNot(cond),
+      vdm_BC_GenBlock(mk_sequence(RunTime(L"Instance invariant failure in " + ASTAUX::ASName2String(nm)))), nil);
 }
 #endif // VDMPP
 

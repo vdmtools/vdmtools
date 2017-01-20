@@ -2002,7 +2002,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSubSeqExpr(const TYPE_AS_SubSequenceExpr & expr, con
     rb_l.ImpConc(GenDecl_DS(sqt, tmpGSeq, vdm_BC_GenAsgnInit(tmpSeq1)));
     tmpSeq = tmpGSeq;
     TYPE_CPP_Expr cond (vdm_BC_GenNot(GenIsSeq(tmpSeq)));
-    TYPE_CPP_Stmt rti(RunTime(L"A sequence was expected in subsequence expression"));
+    TYPE_CPP_Stmt rti(vdm_BC_GenBlock(mk_sequence(RunTime(L"A sequence was expected in subsequence expression"))));
     rb_l.ImpAppend(vdm_BC_GenIfStmt(cond, rti, nil));
     tmpSeq = GenCastSeq(tmpSeq, sqt);
   }
@@ -2037,7 +2037,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSubSeqExpr(const TYPE_AS_SubSequenceExpr & expr, con
       TYPE_CPP_Identifier From2 (vdm_BC_GiveName(ASTAUX::MkId(L"from")));
       rb_l.ImpConc(GenDecl_DS(n1tp, From2, vdm_BC_GenAsgnInit(n1_v)));
       rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsReal(From2)),
-                                      RunTime (L"A number was expected"), nil));
+                           vdm_BC_GenBlock(mk_sequence(RunTime (L"A number was expected"))), nil));
       n1_v = From2;
       n1value = GenGetValue(GenExplicitCast(rrep, n1_v, n1tp), rrep);
     }
@@ -2061,7 +2061,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSubSeqExpr(const TYPE_AS_SubSequenceExpr & expr, con
       TYPE_CPP_Identifier To2 (vdm_BC_GiveName(ASTAUX::MkId(L"to")));
       rb_l.ImpConc(GenDecl_DS(n2tp, To2, vdm_BC_GenAsgnInit(n2_v)));
       rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsReal(To2)),
-                                      RunTime (L"A number was expected"), nil));
+                             vdm_BC_GenBlock(mk_sequence(RunTime (L"A number was expected"))), nil));
       n2_v = To2;
       n2value = GenGetValue(GenExplicitCast(rrep, n2_v, n2tp), rrep);
     }
@@ -2157,7 +2157,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSubSeqExpr(const TYPE_AS_SubSequenceExpr & expr, con
       TYPE_CPP_Identifier From2 (vdm_BC_GiveName(ASTAUX::MkId(L"from")));
       rb_l.ImpConc(GenDecl_DS(n1tp, From2, vdm_BC_GenAsgnInit(n1_v)));
       rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsReal(From2)),
-                                      RunTime (L"A number was expected"), nil));
+                                vdm_BC_GenBlock(mk_sequence(RunTime (L"A number was expected"))), nil));
       n1_v = From2;
       if (vdm_CPP_isCPP())
         n1value = GenGetValue(vdm_BC_GenCastExpr(GenRealType(), n1_v), rrep );
@@ -2209,7 +2209,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSubSeqExpr(const TYPE_AS_SubSequenceExpr & expr, con
       TYPE_CPP_Identifier To2 (vdm_BC_GiveName(ASTAUX::MkId(L"to")));
       rb_l.ImpConc(GenDecl_DS(n2tp, To2, vdm_BC_GenAsgnInit(n2_v)));
       rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenIsReal(To2)),
-                                      RunTime (L"A number was expected"), nil));
+                               vdm_BC_GenBlock(mk_sequence(RunTime (L"A number was expected"))), nil));
       n2_v = To2;
       if (vdm_CPP_isCPP())
         n2value = GenGetValue(vdm_BC_GenCastExpr(GenRealType(), n2_v), rrep);
@@ -7623,7 +7623,8 @@ Generic vdmcg::CGNumBinaryExpr(const TYPE_AS_Expr & le, int opr, const TYPE_AS_E
         else
           cond = vdm_BC_GenNot(GenIsReal(v2_v));
 
-        rb_l.ImpAppend(vdm_BC_GenIfStmt(cond, RunTime (L"A number was expected"), nil));
+        rb_l.ImpAppend(vdm_BC_GenIfStmt(cond,
+                 vdm_BC_GenBlock(mk_sequence(RunTime (L"A number was expected"))), nil));
       }
       break;
     }
