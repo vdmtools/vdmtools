@@ -1890,8 +1890,8 @@ CGSubSeqExpr(mk_AS`SubSequenceExpr(sq, n1, n2, -), mk_CGMAIN`VT(resVar_v,-)) ==
       in (tmpSeq := tmpGSeq;
           rb_l := rb_l ^ DS`GenDecl(sqt, tmpGSeq, BC`GenAsgnInit(tmpSeq1)));
       def cond = BC`GenNot(DS`GenIsSeq(tmpSeq));
-          rti = CGAUX`RunTime("A sequence was expected in subsequence expression") in
-        rb_l := rb_l ^ [BC`GenIfStmt(cond, rti, nil)];
+          rti = BC`GenBlock([CGAUX`RunTime("A sequence was expected in subsequence expression")])
+      in rb_l := rb_l ^ [BC`GenIfStmt(cond, rti, nil)];
       tmpSeq := DS`GenCastSeq(tmpSeq, sqt)
     );
     def mk_(n1_expr_v, n1_stmt) = CGExprExcl(n1, "n1", nil);
@@ -1918,7 +1918,7 @@ CGSubSeqExpr(mk_AS`SubSequenceExpr(sq, n1, n2, -), mk_CGMAIN`VT(resVar_v,-)) ==
                in
                 (rb_l := rb_l ^ DS`GenDecl(n1tp, From2, BC`GenAsgnInit(n1_v));
                  rb_l := rb_l ^ [BC`GenIfStmt(BC`GenNot(DS`GenIsReal(From2)),
-                                              CGAUX`RunTime ("A number was expected"), nil)];
+                                 BC`GenBlock([CGAUX`RunTime ("A number was expected")]), nil)];
                  n1_v := From2;
                  n1value := DS`GenGetValue(DS`GenExplicitCast(rrep, n1_v, n1tp), rrep));
           if CGAUX`IsNumType(n2tp)
@@ -1929,7 +1929,7 @@ CGSubSeqExpr(mk_AS`SubSequenceExpr(sq, n1, n2, -), mk_CGMAIN`VT(resVar_v,-)) ==
                in
                 (rb_l := rb_l ^ DS`GenDecl(n2tp, To2, BC`GenAsgnInit(n2_v));
                  rb_l := rb_l ^ [BC`GenIfStmt(BC`GenNot(DS`GenIsReal(To2)),
-                                              CGAUX`RunTime ("A number was expected"), nil)];
+                                 BC`GenBlock([CGAUX`RunTime ("A number was expected")]), nil)];
                  n2_v := To2;
                  n2value := DS`GenGetValue(DS`GenExplicitCast(rrep, n2_v, n2tp), rrep));
           if CGAUX`IsIntType(CGAUX`FindType(n1))
@@ -1986,7 +1986,7 @@ CGSubSeqExpr(mk_AS`SubSequenceExpr(sq, n1, n2, -), mk_CGMAIN`VT(resVar_v,-)) ==
               def From2 = BC`GiveName("from")
               in (rb_l := rb_l ^ DS`GenDecl(n1tp, From2, BC`GenAsgnInit(n1_v));
                   rb_l := rb_l ^ [BC`GenIfStmt(BC`GenNot(DS`GenIsReal(From2)),
-                                               CGAUX`RunTime ("A number was expected"), nil)];
+                                  BC`GenBlock([CGAUX`RunTime ("A number was expected")]), nil)];
                   n1_v := From2;
                   if CPP`isCPP()
                   then n1value := DS`GenGetValue(BC`GenCastExpr(DS`GenRealType(), n1_v), rrep)
@@ -2000,7 +2000,7 @@ CGSubSeqExpr(mk_AS`SubSequenceExpr(sq, n1, n2, -), mk_CGMAIN`VT(resVar_v,-)) ==
               def To2 = BC`GiveName("to")
               in (rb_l := rb_l ^ DS`GenDecl(n2tp, To2, BC`GenAsgnInit(n2_v));
                   rb_l := rb_l ^ [BC`GenIfStmt(BC`GenNot(DS`GenIsReal(To2)),
-                                               CGAUX`RunTime ("A number was expected"), nil)];
+                                  BC`GenBlock([CGAUX`RunTime ("A number was expected")]), nil)];
                   n2_v := To2;
                   if CPP`isCPP()
                   then n2value := DS`GenGetValue(BC`GenCastExpr(DS`GenRealType(),n2_v),rrep)
@@ -7028,7 +7028,8 @@ CGNumBinaryExpr(le, opr, re, vtres ) ==
                      elseif not CGAUX`IsNumType(type1)
                      then cond := BC`GenNot(DS`GenIsReal(v1_v))
                      else cond := BC`GenNot(DS`GenIsReal(v2_v));
-                     rb_l := rb_l ^ [BC`GenIfStmt(cond, CGAUX`RunTime("A number was expected"), nil)];
+                     rb_l := rb_l ^ [BC`GenIfStmt(cond,
+                                   BC`GenBlock([CGAUX`RunTime("A number was expected")]), nil)];
                     ),
           <NUMREM>,
           <NUMMOD>,

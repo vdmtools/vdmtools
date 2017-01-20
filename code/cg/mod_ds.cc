@@ -4228,17 +4228,19 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenMapMerge(const TYPE_CGMAIN_VT & vt1, const TYPE_CGM
   const Generic & type2          (vt2.GetRecord(pos_CGMAIN_VT_type));
   const TYPE_CPP_Expr & resVar_v (vt3.GetRecord(pos_CGMAIN_VT_name));
 
+  TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence(RunTime(L"Duplicate entries had different values"))));
+
   if (vdm_CPP_isCPP())
   {
     TYPE_CPP_Identifier m1 (vdm_BC_GiveName(ASTAUX::MkId(L"m1")));
     TYPE_CPP_Identifier m2 (vdm_BC_GiveName(ASTAUX::MkId(L"m2")));
+    TYPE_CPP_Expr cond (vdm_BC_GenNot(vdm_BC_GenFctCallObjMemAcc(m1, ASTAUX::MkId(L"IsCompatible"),
+                                                                 mk_sequence(m2))));
 
     SEQ<TYPE_CPP_Stmt> rb;
     rb.ImpAppend( vdm_BC_GenDecl( GenMapType(), m1, vdm_BC_GenObjectInit(mk_sequence(var1)) ) );
     rb.ImpAppend( vdm_BC_GenDecl( GenMapType(), m2, vdm_BC_GenObjectInit(mk_sequence(var2)) ) );
-    rb.ImpAppend( vdm_BC_GenIfStmt(
-                    vdm_BC_GenNot(vdm_BC_GenFctCallObjMemAcc(m1, ASTAUX::MkId(L"IsCompatible"), mk_sequence(m2))),
-                    RunTime(L"Duplicate entries had different values"), nil));
+    rb.ImpAppend( vdm_BC_GenIfStmt(cond, rti, nil));
     rb.ImpAppend( GenMapOverride(m1, m2) );
     rb.ImpAppend( vdm_BC_GenAsgnStmt(resVar_v, m1) );
     return rb;
@@ -4270,8 +4272,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenMapMerge(const TYPE_CGMAIN_VT & vt1, const TYPE_CGM
     rb.ImpAppend(vdm_BC_GenDecl(inttp, allApplies_v, vdm_BC_GenAsgnInit( vdm_BC_GenBoolLit(true))));
     rb.ImpConc(GenIterSet(mk_CG_VT(com_v, mk_REP_SetTypeRep(mk_REP_AllTypeRep())), allApplies_v,
                           mk_CG_VT(d_v, mk_REP_AllTypeRep()), mk_sequence(as2)));
-    rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(allApplies_v),
-                                  RunTime(L"Duplicate entries had different values"), nil));
+    rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(allApplies_v), rti, nil));
     rb.ImpAppend(GenMapOverride(m1, m2));
     rb.ImpAppend(vdm_BC_GenAsgnStmt(resVar_v, m1));
     return rb;
@@ -4299,20 +4300,16 @@ Generic vdmcg::GenMapRestToBy(const TYPE_CGMAIN_VT & vt1, const TYPE_CGMAIN_VT &
 
     switch (opr) {
       case MAPDOMRESTTO: {
-        return vdm_BC_GenFctCallObjMemAcc(mm, ASTAUX::MkId(L"DomRestrictedTo"),
-                                          mk_sequence(ss));
+        return vdm_BC_GenFctCallObjMemAcc(mm, ASTAUX::MkId(L"DomRestrictedTo"), mk_sequence(ss));
       }
       case MAPDOMRESTBY: {
-        return vdm_BC_GenFctCallObjMemAcc(mm, ASTAUX::MkId(L"DomRestrictedBy"),
-                                          mk_sequence(ss));
+        return vdm_BC_GenFctCallObjMemAcc(mm, ASTAUX::MkId(L"DomRestrictedBy"), mk_sequence(ss));
       }
       case MAPRNGRESTTO: {
-        return vdm_BC_GenFctCallObjMemAcc(mm, ASTAUX::MkId(L"RngRestrictedTo"),
-                                          mk_sequence(ss));
+        return vdm_BC_GenFctCallObjMemAcc(mm, ASTAUX::MkId(L"RngRestrictedTo"), mk_sequence(ss));
       }
       case MAPRNGRESTBY: {
-        return vdm_BC_GenFctCallObjMemAcc(mm, ASTAUX::MkId(L"RngRestrictedBy"),
-                                          mk_sequence(ss));
+        return vdm_BC_GenFctCallObjMemAcc(mm, ASTAUX::MkId(L"RngRestrictedBy"), mk_sequence(ss));
       }
       default: {
         return TYPE_CPP_Expr();
@@ -4352,13 +4349,7 @@ TYPE_CPP_Stmt vdmcg::GenMapRestrictStmt(const TYPE_CPP_Expr & s,
                                         const TYPE_CPP_Expr & tm, int opr)
 {
   TYPE_CPP_Expr mp (GenMapApply(mk_CG_VT(m, Nil()), elm));
-
-// 20150728 -->
-//  TYPE_CPP_Stmt stmt (vdm_CPP_isCPP()
-//                        ? vdm_BC_GenFctCallObjMemAccStmt(tm, ASTAUX::MkId(L"Insert"), mk_sequence(elm, mp))
-//                        : vdm_BC_GenFctCallObjMemAccStmt(tm, ASTAUX::MkId(L"put"), mk_sequence(elm, mp)));
   TYPE_CPP_Stmt stmt (GenMapInsert(tm, elm, mp));
-// <-- 20150728
 
   TYPE_CPP_Expr fcall1;
   TYPE_CPP_Expr fcall2;
@@ -4398,7 +4389,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenComposeExpr(const TYPE_CGMAIN_VT & vt1,
   const TYPE_CPP_Expr & res (resVT.GetRecord(pos_CGMAIN_VT_name));
 
   TYPE_CPP_Identifier tmpMap (vdm_BC_GiveName(ASTAUX::MkId(L"tmpMap")));
-  TYPE_CPP_Stmt rti1 (RunTime(L"Two maps were expected in composition expression"));
+  TYPE_CPP_Stmt rti1 (vdm_BC_GenBlock(mk_sequence(RunTime(L"Two maps were expected in composition expression"))));
 //  TYPE_CPP_TypeSpecifier mtp (GenMapType());
 
   SEQ<TYPE_CPP_Stmt> rb_l;
@@ -4434,10 +4425,11 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenComposeExpr(const TYPE_CGMAIN_VT & vt1,
   TYPE_CPP_Identifier elem (vdm_BC_GiveName(ASTAUX::MkId(L"elem")));
   TYPE_CPP_Expr cond (vdm_BC_GenNot(GenDomExists(tmpMap1, elem)));
   TYPE_CPP_Stmt st1 (GenMapImpModify(tmpMap, key, GenMapApply(mk_CG_VT(tmpMap1, nil), elem)));
-  TYPE_CPP_Stmt rti (RunTime(L"The range is not a subset of the domain in composition expression"));
+  TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence(RunTime(L"The range is not a subset of the domain in composition expression"))));
   TYPE_CPP_Stmt ifstmt (vdm_BC_GenIfStmt(cond, rti, nil));
 
-  TYPE_CPP_Stmt stmt (vdm_BC_GenBlock(type_dL().ImpAppend(ifstmt).ImpAppend(st1)));
+  //TYPE_CPP_Stmt stmt (vdm_BC_GenBlock(type_dL().ImpAppend(ifstmt).ImpAppend(st1)));
+  TYPE_CPP_Stmt stmt (vdm_BC_GenBlock(mk_sequence(ifstmt, st1)));
   rb_l.ImpConc(GenIterMap(mk_CG_VT(tmpMap2, t2), nil, key, elem, stmt));
   rb_l.ImpAppend(vdm_BC_GenAsgnStmt(res, tmpMap));
   return rb_l;
@@ -4473,24 +4465,18 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenMapIteration(const TYPE_CGMAIN_VT & vt1,
 
   if (IsIntType(t2))
   {
-// 20150725 -->
-    //rb_l.ImpAppend(vdm_BC_GenDecl(GenSmallIntType(), n, vdm_BC_GenAsgnInit(GenGetValue(v2, t2))));
     rb_l.ImpAppend(vdm_BC_GenDecl(GenSmallNumType(), n, vdm_BC_GenAsgnInit(GenGetValue(v2, t2))));
-// <-- 20150725
   }
   else
   {
     TYPE_CPP_Expr cond (GenIsInt(v2));
-    TYPE_CPP_Stmt rti (RunTime(L"A 'nat' was expected in map iteration expression"));
+    TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence(RunTime(L"A 'nat' was expected in map iteration expression"))));
     TYPE_CPP_Stmt ifstmt (vdm_BC_GenIfStmt(vdm_BC_GenNot(cond), rti, nil));
 
     TYPE_CPP_Expr val (GenGetValue(vdm_BC_GenCastExpr(GenIntType(), v2), mk_REP_NumericTypeRep(Int(INTEGER)))) ;
 
     rb_l.ImpAppend(ifstmt);
-// 20150725 -->
-    //rb_l.ImpAppend(vdm_BC_GenDecl(GenSmallIntType(), n, vdm_BC_GenAsgnInit(val)));
     rb_l.ImpAppend(vdm_BC_GenDecl(GenSmallNumType(), n, vdm_BC_GenAsgnInit(val)));
-// <-- 20150725
   }
 
   rb_l.ImpConc(GenMapIterIfPart(n, tmpMap, t1));
@@ -4544,7 +4530,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenMapIterIfPart(const TYPE_CPP_Name & n, const TYPE_C
   st2_l.ImpConc(dm2);
   st2_l.ImpConc(GenIterMap(vt2, nil, key, elem, st2));
 
-  TYPE_CPP_Stmt rti (RunTime(L"A 'nat' was expected in map iteration expression"));
+  TYPE_CPP_Stmt rti (vdm_BC_GenBlock(mk_sequence(RunTime(L"A 'nat' was expected in map iteration expression"))));
   TYPE_CPP_Stmt ifstmt (vdm_BC_GenIfStmt(c1, rti, nil));
 
   TYPE_CPP_Stmt stmt (vdm_BC_GenForStmt (idcl, stop, inc, vdm_BC_GenBlock (st2_l)));
@@ -5290,10 +5276,11 @@ TYPE_CPP_Stmt vdmcg::GenSeqOrMapImpModify(const TYPE_CGMAIN_VT & vt,
     else
       alt_s = vdm_BC_GenAsgnStmt(m, GenSeqModifyExpr(castseq, new_e1, e2));
 
-    TYPE_CPP_Stmt alt_rre (RunTime(L"Sequence or Map expected in Map or Sequence Designator"));
+    TYPE_CPP_Stmt alt_rre (vdm_BC_GenBlock(mk_sequence(RunTime(L"Sequence or Map expected in Map or Sequence Designator"))));
     TYPE_CPP_Stmt ifstmt1 (vdm_BC_GenIfStmt(vdm_BC_GenNot(cond_s), alt_rre, nil));
 
-    TYPE_CPP_Stmt if1(vdm_BC_GenBlock(type_dL().ImpAppend(ifstmt1).ImpAppend(alt_s)));
+    //TYPE_CPP_Stmt if1(vdm_BC_GenBlock(type_dL().ImpAppend(ifstmt1).ImpAppend(alt_s)));
+    TYPE_CPP_Stmt if1(vdm_BC_GenBlock(mk_sequence(ifstmt1, alt_s)));
     return vdm_BC_GenIfStmt(cond_m, alt_m, if1);
   }
 }

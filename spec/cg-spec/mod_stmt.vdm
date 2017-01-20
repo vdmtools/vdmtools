@@ -1720,7 +1720,7 @@ CGSetForLoopStmt(mk_AS`SetForLoopStmt(pat, fset, body,-), isLast) ==
     then
       def iset' = BC`GiveName("tmpSet");
           cond = DS`GenIsSet(iset);
-          rti = CGAUX`RunTime("A set was expected in set for loop")
+          rti = BC`GenBlock([CGAUX`RunTime("A set was expected in set for loop")])
       in
        (rb_l := rb_l ^ [BC`GenIfStmt(BC`GenNot(cond), rti, nil)];
         if CPP`isCPP()
@@ -1759,7 +1759,7 @@ CGSetForLoopStmt(mk_AS`SetForLoopStmt(pat, fset, body,-), isLast) ==
             pm1 = if Is_Excl
                   then pm
                   else
-                    def rti = CGAUX`RunTime("Pattern did not match in set for loop");
+                    def rti = BC`GenBlock([CGAUX`RunTime("Pattern did not match in set for loop")]);
                     in [BC`GenDecl(DS`GenSmallBoolType(), succ, BC`GenAsgnInit(BC`GenBoolLit(false)))]
                        ^ pm ^ [BC`GenIfStmt(BC`GenNot(succ), rti, nil)];
             stmt_l = CGEXPR`MergeStmts( decl_l, pm1 );
@@ -1853,7 +1853,7 @@ GenBoundAndValue(var, expr) ==
           tmp := v1);
         
       def cond = BC`GenNot(DS`GenIsInt(tmp));
-          rti = CGAUX`RunTime("An integer was expected in indexed for loop");
+          rti = BC`GenBlock([CGAUX`RunTime("An integer was expected in indexed for loop")]);
       in
        (dcl val : CPP`Expr;
         if CPP`isCPP()
@@ -1887,11 +1887,10 @@ GenByPart(By, ilb, iub) ==
       else
         def iby = BC`GiveName("iby");
             zero = BC`GenIntegerLit(0);
-            rti = CGAUX`RunTime("Step length in indexed for loop was 0");
+            rti = BC`GenBlock([CGAUX`RunTime("Step length in indexed for loop was 0")]);
             inc = BC`GenAsgnPlusExpr(ilb, iby);
         in
           (dcl rb_l : seq of CPP`Stmt := st_l;
-           --rb_l := rb_l ^ [BC`GenDecl(DS`GenSmallIntType(), iby, BC`GenAsgnInit(val))];
            rb_l := rb_l ^ [BC`GenDecl(DS`GenSmallNumType(), iby, BC`GenAsgnInit(val))];
            rb_l := rb_l ^ [BC`GenIfStmt(BC`GenEq(iby, zero), rti, nil)];
            def cont = BC`GenCondExpr(BC`GenBracketedExpr(BC`GenLt(iby, zero)),
@@ -2034,7 +2033,6 @@ CGCasesStmt(mk_AS`CasesStmt(sel, altns, Others, -), isLast) ==
   in
    (dcl rb : seq of CPP`Stmt := sel_stmt;
     if need_decl
-    --then rb := rb ^ DS`GenDeclInit(selResType, sel_v, selRes1_v);
     then rb := rb ^ DS`GenConstDeclInit(selResType, sel_v, selRes1_v);
     rb := rb ^ [ BC`GenDecl(DS`GenSmallBoolType(), succ_v, BC`GenAsgnInit(BC`GenBoolLit(false))) ];
     rb := rb ^ CGCasesStmtAltn( altns, mk_CGMAIN`VT(selRes_v, selResType), succ_v, Others, isLast ) ;
@@ -2274,7 +2272,8 @@ CGIfStmt(mk_AS`IfStmt(test, cons, elif, altn,-), isLast) ==
     then cond_v := DS`GenCastType(btype, cond1_v);
     if not CGAUX`IsBoolType(condType)
     then
-      rb := rb ^ [ BC`GenIfStmt(BC`GenNot(DS`GenIsBool(cond1_v)), CGAUX`RunTime ("A boolean was expected"), nil) ];
+      rb := rb ^ [ BC`GenIfStmt(BC`GenNot(DS`GenIsBool(cond1_v)),
+                      BC`GenBlock([CGAUX`RunTime ("A boolean was expected")]), nil) ];
     if altn = nil
     then
      (tmpb := nil;
@@ -2818,7 +2817,7 @@ GenInvCall(nm, stat) ==
     then invref := BC`GenFctCallPtrToObjMemAcc(DS`GenThis(), invname, [])
     else invref := BC`GenFctCall(BC`GenObjectMemberAccess(DS`GenThis(), invname), []);
     return BC`GenIfStmt(BC`GenNot(DS`GenGetValue(invref,mk_REP`BooleanTypeRep())),
-                        CGAUX`RunTime("Instance invariant failure in " ^ hd nm.ids), nil);
+            BC`GenBlock([CGAUX`RunTime("Instance invariant failure in " ^ hd nm.ids)]), nil);
    );
 #endif VDMPP
 end CGSTMT
