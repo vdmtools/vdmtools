@@ -98,4 +98,7 @@ void init_XMI()
   VDMGetDefaultRecInfoMap().SetSymTag(TAG_TYPE_XMI_UMLDiagram, L"XMI_UMLDiagram");
   VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_XMI_UMLDiagramElement, 1);
   VDMGetDefaultRecInfoMap().SetSymTag(TAG_TYPE_XMI_UMLDiagramElement, L"XMI_UMLDiagramElement");
+
+  VDMGetDefaultRecInfoMap().NewTag(TAG_TYPE_XMI_EAStub, 1);
+  VDMGetDefaultRecInfoMap().SetSymTag(TAG_TYPE_XMI_EAStub, L"XMI_EAStub");
 }
