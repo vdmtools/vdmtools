@@ -531,6 +531,29 @@ TYPE_AUML_Model XmiInterface::XMI2AUML(const TYPE_XMI_Document & doc,
 TYPE_AUML_Classes XmiInterface::CreateClasses (const TYPE_XMI_UMLModel & m, const Map & idm)
 {
   TYPE_AUML_Classes clss;
+/*
+  Set elems (idm.Rng());
+  Generic e;
+  for (bool bb = elems.First(e); bb; bb = elems.Next(e)) {
+    if (e.Is(TAG_TYPE_XMI_EAStub)) {
+      Map m (XmiAux::GetAttribute(e));
+      if (m.DomExists(Sequence(L"UMLType"))) {
+        if (m[Sequence(L"UMLType")] == Sequence(L"Class")) {
+          Sequence nm (XmiAux::GetName(e));
+          TYPE_AUML_Class nc;
+          nc.Init(TYPE_AUML_InstanceVars(),
+                  TYPE_AUML_ValuesDef(),
+                  TYPE_AUML_CommonSign(),
+                  TYPE_AUML_CommonSign(),
+                  Bool(false),
+                  XmiAux::GetID(e));
+          clss.ImpModify(nm, nc);  
+        }
+      }
+    }
+  }
+*/
+
   Sequence c_l (XmiAux::GetClasses(m));
   Generic g;
   for ( bool bb = c_l.First(g); bb; bb = c_l.Next(g))
@@ -540,7 +563,6 @@ TYPE_AUML_Classes XmiInterface::CreateClasses (const TYPE_XMI_UMLModel & m, cons
 
     TYPE_AUML_Class nc;
     nc.Init(CreateInstanceVars(c, idm),
-            //Map(),
             CreateValuesDef(c, idm),
             CreateOperations(c, idm),
             CreateFunctions(c, idm),
