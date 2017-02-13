@@ -540,7 +540,6 @@ TYPE_AUML_Classes XmiInterface::CreateClasses (const TYPE_XMI_UMLModel & m, cons
 
     TYPE_AUML_Class nc;
     nc.Init(CreateInstanceVars(c, idm),
-            //Map(),
             CreateValuesDef(c, idm),
             CreateOperations(c, idm),
             CreateFunctions(c, idm),
@@ -548,6 +547,32 @@ TYPE_AUML_Classes XmiInterface::CreateClasses (const TYPE_XMI_UMLModel & m, cons
             XmiAux::GetID(c));
     clss.ImpModify(nm, nc);  
   }
+
+  Set elems (idm.Rng());
+  Generic e;
+  for (bool bb = elems.First(e); bb; bb = elems.Next(e)) {
+    if (e.Is(TAG_TYPE_XMI_EAStub)) {
+      Map m (XmiAux::GetAttribute(e));
+      if (m.DomExists(Sequence(L"UMLType"))) {
+        if (m[Sequence(L"UMLType")] == Sequence(L"Class")) {
+          Sequence nm (XmiAux::GetName(e));
+          if (0 == nm.Find(Char(L' '))) {
+            if (!clss.DomExists(nm)) {
+              TYPE_AUML_Class nc;
+              nc.Init(TYPE_AUML_InstanceVars(),
+                      TYPE_AUML_ValuesDef(),
+                      TYPE_AUML_CommonSign(),
+                      TYPE_AUML_CommonSign(),
+                      Bool(false),
+                      XmiAux::GetID(e));
+              clss.ImpModify(nm, nc);  
+            }
+          }
+        }
+      }
+    }
+  }
+
   return clss;
 }
 
@@ -893,6 +918,26 @@ TYPE_AUML_Inheritance XmiInterface::CreateInheritance(const TYPE_XMI_UMLModel & 
     else
       inh.ImpModify(nm, Set());
   }
+
+  // 
+  Set elems (idm.Rng());
+  Generic e;
+  for (bool bb = elems.First(e); bb; bb = elems.Next(e)) {
+    if (e.Is(TAG_TYPE_XMI_EAStub)) {
+      Map m (XmiAux::GetAttribute(e));
+      if (m.DomExists(Sequence(L"UMLType"))) {
+        if (m[Sequence(L"UMLType")] == Sequence(L"Class")) {
+          Sequence nm (XmiAux::GetName(e));
+          if (0 == nm.Find(Char(L' '))) {
+            if (!inh.DomExists(nm)) {
+              inh.ImpModify(nm, Set());
+            }
+          }
+        }
+      }
+    }
+  }
+
   return inh;
 }
 
@@ -954,6 +999,25 @@ TYPE_AUML_Associations XmiInterface::CreateAssociations(const TYPE_XMI_UMLModel 
       ass.ImpModify(nm, tm[nm]);
     else
       ass.ImpModify(nm, Map());
+  }
+
+  // 
+  Set elems (idm.Rng());
+  Generic e;
+  for (bool bb = elems.First(e); bb; bb = elems.Next(e)) {
+    if (e.Is(TAG_TYPE_XMI_EAStub)) {
+      Map m (XmiAux::GetAttribute(e));
+      if (m.DomExists(Sequence(L"UMLType"))) {
+        if (m[Sequence(L"UMLType")] == Sequence(L"Class")) {
+          Sequence nm (XmiAux::GetName(e));
+          if (0 == nm.Find(Char(L' '))) {
+            if (!ass.DomExists(nm)) {
+              ass.ImpModify(nm, Map());
+            }
+          }
+        }
+      }
+    }
   }
   return ass;
 }

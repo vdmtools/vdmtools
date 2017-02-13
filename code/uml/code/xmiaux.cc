@@ -106,6 +106,10 @@ Map XmiAux::GetAttribute(const Record & r)
       attrs = r.GetMap(pos_XMI_UMLAssociationEnd_attrs);
       break;
     }
+    case TAG_TYPE_XMI_EAStub: {
+      attrs = r.GetMap(pos_XMI_EAStub_attrs);
+      break;
+    }
     default: {
       attrs = r.GetMap(1);
       break;

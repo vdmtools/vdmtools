@@ -53,6 +53,8 @@
 #define TAG_TYPE_XMI_UMLDiagram               (XMI_OFFSET + 126)
 #define TAG_TYPE_XMI_UMLDiagramElement        (XMI_OFFSET + 127)
 
+#define TAG_TYPE_XMI_EAStub                   (XMI_OFFSET + 200)
+
 enum {
   length_XMI_Document = 3,
   pos_XMI_Document_attrs = 1,
@@ -208,7 +210,9 @@ enum {
   pos_XMI_UMLConstraint_constrainedElement = 4,
   length_XMI_UMLBooleanExpression = 2,
   pos_XMI_UMLBooleanExpression_attrs = 1,
-  pos_XMI_UMLBooleanExpression_body = 2
+  pos_XMI_UMLBooleanExpression_body = 2,
+  length_XMI_EAStub = 1,
+  pos_XMI_EAStub_attrs = 1
 };
 
 class TYPE_XMI_Header : public Record {
@@ -1157,6 +1161,21 @@ public:
   void set_modelElement (const TYPE_XMI_UMLModelElement &p) { SetField(2, p); };
   const Sequence & get_element() const { return GetSequence(3); };
   void set_element (const Sequence &p) { SetField(3, p); };
+};
+
+class TYPE_XMI_EAStub : public Record {
+public:
+  TYPE_XMI_EAStub () : Record(TAG_TYPE_XMI_EAStub, 1) {}
+  TYPE_XMI_EAStub &Init (const Map & p1)
+  { SetField(1, p1); return *this; };
+  TYPE_XMI_EAStub (const Common &c) : Record(c) {}
+
+  const wchar_t * GetTypeName () const {
+    return L"TYPE_XMI_EAStub";
+  }
+  
+  const Map & get_attrs () const { return GetMap(1); };
+  void set_attrs (const Map &p) { SetField(1, p); };
 };
 
 void init_XMI();

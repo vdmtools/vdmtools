@@ -31,6 +31,7 @@ $(SLCODEDIR)/%.cc: code/%.cc
 
 clean:
 	rm -rf math.vdm math.vpp mathflat.vdm io.vdm io.vpp ioflat.vdm
+	rm -rf VDMUtil.vdm VDMUtil.vpp VDMUtilflat.vdm VDMByteUtil.vdm VDMByteUtil.vpp VDMByteUtilflat.vdm
 	rm -f $(PPCODEDIR)/*.cc $(PPCODEDIR)/*.cpp
 	rm -f $(SLCODEDIR)/*.cc $(SLCODEDIR)/*.cpp
 

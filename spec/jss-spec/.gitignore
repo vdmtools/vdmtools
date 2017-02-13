@@ -1,0 +1,6 @@
+*.vdmpp
+*.vdmsl
+*.vdmrt
+.vdmde-*
+jsserrmsg.vdm
+scr*

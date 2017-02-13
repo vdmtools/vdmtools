@@ -251,8 +251,8 @@ public:
   static bool IsEAModel(const TYPE_XMI_UMLModel & m);
   static int GetModeOfAssociation(const TYPE_XMI_UMLAssociation & m);
 
-private:
   static Map GetAttribute(const Record & r);
+private:
   static Sequence GetAllElements(const TYPE_XMI_UMLModel & m);
 
   static Map createDefaultAttribute();

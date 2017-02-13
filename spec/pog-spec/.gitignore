@@ -1,0 +1,6 @@
+*.vdmpp
+*.vdmsl
+*.vdmrt
+.vdmde-*
+errmsg.vdm
+scr*

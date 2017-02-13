@@ -1510,6 +1510,9 @@ Record XmiReader::CreateNewElement(xmlTextReaderPtr reader)
     return TYPE_XMI_UMLDiagram().Init(attrs, XmiAux::mk_UMLModelElement(), Sequence());
   else if (nm == L"UML:DiagramElement")
     return TYPE_XMI_UMLDiagramElement().Init(attrs);
+  else if (nm == L"EAStub") {
+    return TYPE_XMI_EAStub().Init(attrs);
+  }
   else
   {
     Sequence n (nm);
@@ -1537,8 +1540,11 @@ Generic XmiReader::ReadElement(xmlTextReaderPtr reader)
     }
   }
 
-  if (attrs.DomExists(Sequence(L"xmi.id")))
-    this->idm.ImpModify(attrs[Sequence(L"xmi.id")], e);
+  if (attrs.DomExists(Sequence(L"xmi.id"))) {
+    if (Record() != e) {
+      this->idm.ImpModify(attrs[Sequence(L"xmi.id")], e);
+    }
+  }
 
   return e;
 }
