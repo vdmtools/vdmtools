@@ -1,0 +1,6 @@
+*.pyc
+*_idl.py
+ToolboxAPI
+ToolboxAPI__POA
+VDM
+VDM__POA

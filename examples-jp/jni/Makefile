@@ -154,7 +154,7 @@ Hello.jar: $(JAVASRC)
 	jar $(JARFLAGS) cvf ./Hello.jar ./jni
 
 clean:
-	rm -f *.o *.obj *.idb *.pdb *.class *.jar javav_tmp
+	rm -f *.o *.obj *.idb *.pdb *.class *.jar javav_tmp exp.sh
 	rm -rf jni *.dSYM
 	rm -f jnienv.so jnienv.lib jnienv.exp jnienv.so.manifest
 

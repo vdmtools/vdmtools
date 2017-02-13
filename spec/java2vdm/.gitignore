@@ -1,0 +1,6 @@
+*.vdmpp
+*.vdmsl
+*.vdmrt
+.vdmde-*
+j2verrmsg.vdm
+jsserrmsg.vdm
