@@ -18,7 +18,11 @@ PPCODEDIR=code/pp
 SLCODEDIR=code/sl
 
 $(PPCODEDIR)/%.cc: code/%.cc
-	$(IFDEFFILT) -DVDMPP $< > $@
+#	$(IFDEFFILT) -DVDMPP $< > $@
+	perl -nle 's/#include/edulcni/; print;' $< > tmp
+	$(IFDEFFILT) -DVDMPP tmp | \
+	perl -nle 's/edulcni/#include/; print;' > $@
+	rm -rf tmp
 
 $(PPCODEDIR)/%.cpp: code/%.cc
 	ln -s $(notdir $<) $@
@@ -27,7 +31,11 @@ $(SLCODEDIR)/%.cpp: code/%.cc
 	ln -s $(notdir $<) $@
 
 $(SLCODEDIR)/%.cc: code/%.cc
-	$(IFDEFFILT) -DVDMSL $< > $@
+#	$(IFDEFFILT) -DVDMSL $< > $@
+	perl -nle 's/#include/edulcni/; print;' $< > tmp
+	$(IFDEFFILT) -DVDMSL tmp | \
+	perl -nle 's/edulcni/#include/; print;' > $@
+	rm -rf tmp
 
 clean:
 	rm -rf math.vdm math.vpp mathflat.vdm io.vdm io.vpp ioflat.vdm
