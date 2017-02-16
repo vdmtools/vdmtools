@@ -324,8 +324,9 @@ GenAuxType( e, t ) ==
                                     else return GenAuxType(e,CGAUX`ExpandTypeRep(t,{})),
 
     (is_REP`CompositeTypeRep(t)) -> if CPP`isCPP()
-                                      then return GenIsThisRecord(t, e)
-                                    else return GenIsRecord(e),
+                                    then return GenIsThisRecord(t, e)
+                                    --else return GenIsRecord(e),
+                                    else return GenIsThisRecord(t, e),
     (is_REP`ProductTypeRep(t))   -> return GenIsTuple(e),
     (is_REP`SetTypeRep(t)),
     (is_REP`EmptySetTypeRep(t))  -> return GenIsSet(e),
@@ -340,7 +341,19 @@ GenAuxType( e, t ) ==
     (is_REP`EmptyMapTypeRep(t))  -> return GenIsMap(e),
     (is_REP`UnionTypeRep(t))     -> return GenIsUnionType(e, t),
     (is_REP`NilTypeRep(t))       -> return GenIsNil(e),
-    (is_REP`InvTypeRep(t))       -> return GenAuxType(e, t.shape),
+    --(is_REP`InvTypeRep(t))       -> return GenAuxType(e, t.shape),
+    (is_REP`InvTypeRep(t))       ->
+          def mk_REP`InvTypeRep(name, shape, -) = t;
+              mk_AS`Name(ids, cid) = name;
+              fnm = cases ids:
+                      [-, tnm] -> def nm = BC`GivePrePostName(mk_AS`Name([tnm],cid), "inv")
+                                  in CGAUX`Combine2Names(CGAUX`GiveFirstName(name), nm),
+                      [-]      -> BC`GivePrePostName(name, "inv"),
+                      others   -> undefined
+                    end;
+              cast = BC`GenCastExpr(DS`GenType(shape), e);
+              fncall = BC`GenFctCall(BC`Rename(fnm), [cast]);
+          in return BC`GenLogAnd(GenAuxType(e, shape), fncall),
 #ifdef VDMPP
     (is_REP`ObjRefTypeRep(t))    -> if CPP`isCPP()
                                      then return BC`GenBracketedExpr(
