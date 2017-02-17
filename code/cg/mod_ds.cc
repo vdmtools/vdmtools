@@ -581,7 +581,7 @@ TYPE_CPP_Expr vdmcg::GenAuxType (const TYPE_CPP_Expr & e, const TYPE_REP_TypeRep
       TYPE_CPP_Expr fncall (vdm_BC_GenFctCall(vdm_BC_Rename(fnm), mk_sequence(cast)));
 
 //      return GenAuxType(e, t.GetRecord(pos_REP_InvTypeRep_shape));
-      return vdm_BC_GenLogAnd(GenAuxType(e, shape), fncall);
+      return vdm_BC_GenLogAnd(GenAuxType(e, shape), vdm_BC_GenBracketedExpr(fncall));
     }
     default: {
       ReportUndefined(wstring(L"GenAuxType: ") + GetStatSem().Type2Ascii(t));

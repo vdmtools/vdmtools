@@ -963,7 +963,7 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
       // for constructor
       TYPE_CPP_Stmt initfc (vdm_BC_GenExpressionStmt(
                               vdm_BC_GenFctCall(
-                                vdm_BC_GenIdentifier(ASTAUX::MkId(L"vdm_init_").ImpConc(GiveLastName(GiveCurCASName()))),
+                                vdm_BC_GivePrePostNm(GiveCurCASName(), ASTAUX::MkId(L"init")),
                                 SEQ<TYPE_CPP_Expr>())));
 
       
@@ -1092,9 +1092,8 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
     if (constr)
     {
       TYPE_CPP_Stmt initfc (vdm_BC_GenExpressionStmt(
-                              vdm_BC_GenFctCall(
-                                vdm_BC_GenIdentifier(ASTAUX::MkId(L"vdm_init_").ImpConc(GiveLastName(nm))),
-                                SEQ<TYPE_CPP_Expr>())));
+                              vdm_BC_GenFctCall(vdm_BC_GivePrePostNm(nm, ASTAUX::MkId(L"init")),
+                                                SEQ<TYPE_CPP_Expr>())));
       SEQ<TYPE_CPP_Stmt> new_fb;
       if (!GetOrderedSupers(nm).IsEmpty() && !fb.IsEmpty())
       {

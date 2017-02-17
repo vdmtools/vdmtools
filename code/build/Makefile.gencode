@@ -113,7 +113,7 @@ speclink/pog-pretty-spec/.vdmde-pog-pretty-sl \
 speclink/pog-pretty-spec/.vdmde-pog-pretty-pp \
 speclink/pog-pretty-spec/.vdmde-pog-pretty-rt \
 speclink/jss-spec/.vdmde-jss: FORCE
-	$(MAKE) -C $(@D) $(@F)
+	$(MAKE) NOTPINFO=1 -C $(@D) $(@F)
 
 dynsem_cg_sl.script: .vdmde-dyn-sl $(DYNSEM_MODS_SL)
 	cat $< > $@.tmp

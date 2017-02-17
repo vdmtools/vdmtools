@@ -541,13 +541,13 @@ GenHFile(cs) ==
         if not CGAUX`GetHasDefaultConstr()
         then pub_l := pub_l ^ GenConstructorDef(nm, inh = []);
 
-        def initid = BC`GenIdentifier("vdm_init_" ^ CGAUX`GiveLastName(nm));
+        def initid = BC`GivePrePostNm(nm, "init");
             fdecl = BC`GenFctDecl(initid, [])
         in pub_l := pub_l ^ [BC`GenMemberSpec([BC`GenTypeSpecifier(BC`GenVoid())], fdecl)];
 
         if exists e in set elems iVars & is_AS`InstanceInv(e)
         then
-          def invid = BC`GenIdentifier("vdm_inv_" ^ CGAUX`GiveLastName(nm));
+          def invid = BC`GivePrePostNm(nm, "inv");
               fdecl = BC`GenFctDecl(invid, [])
           in pub_l := pub_l ^ [BC`GenMemberSpec([DS`GenBoolType()], fdecl)];
        );
@@ -689,7 +689,7 @@ class definition.
                                                   --Check empty seq!
 
           def base_l = GenInitBaseVars(inh = []) ^ GenVarInits(iVars);
-              initid = BC`GenIdentifier("vdm_init_" ^ CGAUX`GiveLastName(nm));
+              initid = BC`GivePrePostNm(nm, "init");
               fdecl = BC`GenFctDecl(BC`GenQualifiedName(BC`Rename(nm), initid), []);
               fd = BC`GenFctDef ([BC`GenTypeSpecifier(BC`GenVoid())], fdecl,nil, BC`GenBlock(base_l))
           in cpp_l := cpp_l ^ [fd];
@@ -1291,7 +1291,7 @@ operations
               ==> seq of (CPP`FunctionDefinition|CPP`MemberSpecifier)
   GenConstructorDef_cc(nm, -, -, isDlClass) ==
     def fnm = BC`Rename(nm);
-        initid = BC`GenIdentifier("vdm_init_" ^ CGAUX`GiveLastName(nm));
+        initid = BC`GivePrePostNm(nm, "init");
         base_l = [BC`GenExpressionStmt(BC`GenFctCall(initid, []))];
     in
      (dcl Dl_Init : seq of CPP`Stmt := [];
@@ -1333,7 +1333,7 @@ constructors for the Java classes.
   GenJavaConstructorDef: AS`Name * seq of AS`InstanceVarDef ==> seq of CPP`FunctionDefinition
   GenJavaConstructorDef(nm, -) ==
     def fnm = BC`Rename(nm);
-        initfc = BC`GenFctCall(BC`GenIdentifier("vdm_init_" ^ CGAUX`GiveLastName(nm)), []);
+        initfc = BC`GenFctCall(BC`GivePrePostNm(nm, "init"), []);
         body = BC`GenBlock([BC`GenExpressionStmt(initfc)]);
         decl = BC`GenFctDecl (fnm, []);
         excs = FD`GenExceptionsHdr()
@@ -1667,7 +1667,7 @@ GenInstanceVarInit(nm, iVars) ==
    else body := BC`GenBlock([]);
    return BC`GenJavaFctDef([],[BC`GenModifier(<PRIVATE>)],
                        [BC`GenTypeSpecifier(BC`GenVoid())],
-                       BC`GenFctDecl(BC`GenIdentifier("vdm_init_"^ CGAUX`GiveLastName(nm)), []),
+                       BC`GenFctDecl(BC`GivePrePostNm(nm, "init"), []),
                        nil, --FD`GenExceptionsHdr(),
                        body);
   );
@@ -1690,8 +1690,9 @@ GenInstanceInv(nm, iVars) ==
             in
               if CPP`isCPP()
               then res := res ^ [BC`GenFctDef([DS`GenBoolType()],
-                                              BC`GenFctDecl(BC`GenQualifiedName(BC`Rename(nm),
-                                                   BC`GenIdentifier("vdm_inv_"^ CGAUX`GiveLastName(nm))), []),
+                                              BC`GenFctDecl(
+                                               BC`GenQualifiedName(BC`Rename(nm),
+                                                                   BC`GivePrePostNm(nm, "inv")), []),
                                               nil,
                                               body)]
               else res := res ^ [BC`GenJavaFctDef([],[BC`GenModifier(<PUBLIC>)],

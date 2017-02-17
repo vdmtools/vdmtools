@@ -353,7 +353,7 @@ GenAuxType( e, t ) ==
                     end;
               cast = BC`GenCastExpr(DS`GenType(shape), e);
               fncall = BC`GenFctCall(BC`Rename(fnm), [cast]);
-          in return BC`GenLogAnd(GenAuxType(e, shape), fncall),
+          in return BC`GenLogAnd(GenAuxType(e, shape), BC`GenBracketedExpr(fncall)),
 #ifdef VDMPP
     (is_REP`ObjRefTypeRep(t))    -> if CPP`isCPP()
                                      then return BC`GenBracketedExpr(

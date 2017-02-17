@@ -71,7 +71,6 @@ J2VPS: $(J2V_LATEXFILE).ps
 
 $(PPMIXED): %.vdmpp: %.vdm
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMPP -DTPINFO -DJ2V -DJSS $< >$@	
 	$(IFDEFFILT) -DVDMPP -DJ2V -DJSS $< >$@	
 	chmod a-w $@
 
@@ -112,7 +111,6 @@ $(LATEXFILE).ps : $(LATEXFILE).dvi
 
 $(J2V_LATEXFILE).tex: %-vdm.tex: %.tex
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMPP -DTPINFO -DJSS $< >$@	
 	$(IFDEFFILT) -DVDMPP -DJSS $< >$@	
 	chmod a-w $@
 

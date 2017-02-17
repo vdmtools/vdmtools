@@ -178,13 +178,11 @@ LATEX_EQUAL_SPECS = $(EQUAL:%=%.tex)
 
 $(SLMIXED): %.vdmsl: %.vdm
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMSL -DTPINFO $< >$@	
 	$(IFDEFFILT) -DVDMSL $< >$@	
 	chmod a-w $@
 
 $(SL_LATEXFILE).tex: %-vdmsl.tex: %.tex
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMSL -DTPINFO $< >$@	
 	$(IFDEFFILT) -DVDMSL $< >$@	
 	chmod a-w $@
 
@@ -194,19 +192,16 @@ $(SL_LATEXFILE).tex: %-vdmsl.tex: %.tex
 
 $(PPMIXED): %.vdmpp: %.vdm
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMPP -DTPINFO $< >$@	
 	$(IFDEFFILT) -DVDMPP $< >$@	
 	chmod a-w $@
 
 $(PP_LATEXFILE).tex: %-vdmpp.tex: %.tex
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMPP -DTPINFO $< >$@	
 	$(IFDEFFILT) -DVDMPP $< >$@	
 	chmod a-w $@
 
 %.vdmrt: %.vdm
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMPP -DVICE -DTPINFO -DRTINFO $< >$@
 	$(IFDEFFILT) -DVDMPP -DVICE -DRTINFO $< >$@
 	chmod a-w $@
 

@@ -45,6 +45,10 @@ RTALL = $(RTSPECS) $(EQUAL) $(RTMIXED)
 errmsg.vdm: errmsg.txt
 	$(<D)/translateErr.pl vdm $<
 
+ifndef NOTPINFO
+TPINFO=-DTPINFO
+endif
+
 ################################################################################
 # 
 # Main targets for SL and PP code generators. 
@@ -157,7 +161,7 @@ READ_CMD = perl -le 'for (@ARGV) { print "r ${MPWD}/$$_"; }'
 
 $(SLMIXED): %.vdmsl: %.vdm
 	-rm -f $@
-	$(IFDEFFILT) -DVDMSL -DTPINFO $< >$@	
+	$(IFDEFFILT) -DVDMSL $(TPINFO) $< >$@	
 	chmod a-w $@
 
 $(SL_LATEXFILE).tex: %-vdmsl.tex: %.tex
@@ -171,7 +175,7 @@ $(SL_LATEXFILE).tex: %-vdmsl.tex: %.tex
 
 $(PPMIXED): %.vdmpp: %.vdm
 	-rm -f $@
-	$(IFDEFFILT) -DVDMPP -DTPINFO $< >$@	
+	$(IFDEFFILT) -DVDMPP $(TPINFO) $< >$@	
 	chmod a-w $@
 
 $(PP_LATEXFILE).tex: %-vdmpp.tex: %.tex
@@ -183,7 +187,7 @@ $(PP_LATEXFILE).tex: %-vdmpp.tex: %.tex
 
 $(RTMIXED): %.vdmrt: %.vdm
 	-rm -f $@
-	$(IFDEFFILT) -DVDMPP -DTPINFO -DVICE $< >$@	
+	$(IFDEFFILT) -DVDMPP -DVICE $(TPINFO) $< >$@	
 	chmod a-w $@
 
 

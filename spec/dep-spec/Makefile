@@ -138,13 +138,11 @@ READ_CMD = perl -le 'for (@ARGV) { print "r ${MPWD}/$$_"; }'
 
 $(SLMIXED): %.vdmsl: %.vdm
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMSL -DTPINFO $< >$@	
 	$(IFDEFFILT) -DVDMSL $< >$@	
 	chmod a-w $@
 
 $(SL_LATEXFILE).tex: %-vdmsl.tex: %.tex
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMSL -DTPINFO $< >$@	
 	$(IFDEFFILT) -DVDMSL $< >$@	
 	chmod a-w $@
 
@@ -154,13 +152,11 @@ $(SL_LATEXFILE).tex: %-vdmsl.tex: %.tex
 
 $(PPMIXED): %.vdmpp: %.vdm
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMPP -DTPINFO $< >$@	
 	$(IFDEFFILT) -DVDMPP $< >$@	
 	chmod a-w $@
 
 $(PP_LATEXFILE).tex: %-vdmpp.tex: %.tex
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMPP -DTPINFO $< >$@	
 	$(IFDEFFILT) -DVDMPP $< >$@	
 	chmod a-w $@
 
