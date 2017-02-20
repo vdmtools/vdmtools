@@ -563,25 +563,29 @@ TYPE_CPP_Expr vdmcg::GenAuxType (const TYPE_CPP_Expr & e, const TYPE_REP_TypeRep
     }
 #endif // VDMPP
     case TAG_TYPE_REP_InvTypeRep: {
-      // TODO
-      const TYPE_AS_Name & name (t.GetRecord(pos_REP_InvTypeRep_name));
-      const TYPE_REP_TypeRep & shape (t.GetRecord(pos_REP_InvTypeRep_shape));
-
-      TYPE_AS_Ids ids (name.GetSequence(pos_AS_Name_ids));
-      TYPE_CPP_Name fnm;
-      if ( ids.Length() == 2 ) {
-        TYPE_CPP_Name nm (vdm_BC_GivePrePostName(
-                  ASTAUX::MkNameFromId(GiveLastName(name), name.get_cid()), ASTAUX::MkId(L"inv")));
-        fnm = ASTAUX::Combine2Names(GiveFirstName(name), nm);
-      } 
-      else {
-        fnm = vdm_BC_GivePrePostName(name, ASTAUX::MkId(L"inv"));
-      }
-      TYPE_CPP_Expr cast (vdm_BC_GenCastExpr(GenType(shape), e));
-      TYPE_CPP_Expr fncall (vdm_BC_GenFctCall(vdm_BC_Rename(fnm), mk_sequence(cast)));
-
 //      return GenAuxType(e, t.GetRecord(pos_REP_InvTypeRep_shape));
-      return vdm_BC_GenLogAnd(GenAuxType(e, shape), vdm_BC_GenBracketedExpr(fncall));
+      if (get_testpreandpost_option()) {
+        const TYPE_AS_Name & name (t.GetRecord(pos_REP_InvTypeRep_name));
+        const TYPE_REP_TypeRep & shape (t.GetRecord(pos_REP_InvTypeRep_shape));
+
+        TYPE_AS_Ids ids (name.GetSequence(pos_AS_Name_ids));
+        TYPE_CPP_Name fnm;
+        if ( ids.Length() == 2 ) {
+          TYPE_CPP_Name nm (vdm_BC_GivePrePostName(
+                    ASTAUX::MkNameFromId(GiveLastName(name), name.get_cid()), ASTAUX::MkId(L"inv")));
+          fnm = ASTAUX::Combine2Names(GiveFirstName(name), nm);
+        } 
+        else {
+          fnm = vdm_BC_GivePrePostName(name, ASTAUX::MkId(L"inv"));
+        }
+        TYPE_CPP_Expr cast (vdm_BC_GenCastExpr(GenType(shape), e));
+        TYPE_CPP_Expr fncall (vdm_BC_GenFctCall(vdm_BC_Rename(fnm), mk_sequence(cast)));
+
+        return vdm_BC_GenLogAnd(GenAuxType(e, shape), vdm_BC_GenBracketedExpr(fncall));
+      }
+      else {
+        return GenAuxType(e, t.GetRecord(pos_REP_InvTypeRep_shape));
+      }
     }
     default: {
       ReportUndefined(wstring(L"GenAuxType: ") + GetStatSem().Type2Ascii(t));

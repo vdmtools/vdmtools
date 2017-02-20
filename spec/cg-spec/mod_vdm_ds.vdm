@@ -343,6 +343,8 @@ GenAuxType( e, t ) ==
     (is_REP`NilTypeRep(t))       -> return GenIsNil(e),
     --(is_REP`InvTypeRep(t))       -> return GenAuxType(e, t.shape),
     (is_REP`InvTypeRep(t))       ->
+        if CGMAIN`get_testpreandpost_option()
+        then
           def mk_REP`InvTypeRep(name, shape, -) = t;
               mk_AS`Name(ids, cid) = name;
               fnm = cases ids:
@@ -353,7 +355,8 @@ GenAuxType( e, t ) ==
                     end;
               cast = BC`GenCastExpr(DS`GenType(shape), e);
               fncall = BC`GenFctCall(BC`Rename(fnm), [cast]);
-          in return BC`GenLogAnd(GenAuxType(e, shape), BC`GenBracketedExpr(fncall)),
+          in return BC`GenLogAnd(GenAuxType(e, shape), BC`GenBracketedExpr(fncall))
+        else return GenAuxType(e, t.shape),
 #ifdef VDMPP
     (is_REP`ObjRefTypeRep(t))    -> if CPP`isCPP()
                                      then return BC`GenBracketedExpr(
