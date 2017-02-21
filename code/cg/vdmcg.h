@@ -188,7 +188,7 @@ public:
           wstring (*_GetSourceFile) (int fileid),
           const Generic &, const Bool &, const Bool &,
           const Bool &, const Bool &, const Generic &,
-          const Bool &);
+          const Bool &, const Bool &);
 #endif //VDMSL
 
 #ifdef VDMPP

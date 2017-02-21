@@ -554,8 +554,6 @@ void TOOLS::InitModuleTypes()
   init_JSSVCM1();
   init_JSSREP();
 
-//  vdm_JSSJAVA_AddJavaTypes();
-
   init_J2VAUX();
   init_J2VCLASS();
   init_J2VENV();

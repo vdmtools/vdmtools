@@ -64,7 +64,8 @@ void vdmcg::cg(const TYPE_AS_Document & ast,
                const Bool & t,
                const Bool & st,
                const Generic & package_name,
-               const Bool & cop)
+               const Bool & cop,
+               const Bool & testcond)
 #endif //VDMSL
 #ifdef VDMPP
 void vdmcg::cg(const TYPE_AS_Document & ast,
@@ -89,7 +90,7 @@ void vdmcg::cg(const TYPE_AS_Document & ast,
 
 #ifdef VDMSL
   GetSourceFile = _GetSourceFile;
-  SET<TYPE_CPP_File> ProgAS (cg_CG(ast, tc_state));
+  SET<TYPE_CPP_File> ProgAS (cg_CG(ast, tc_state, testcond));
 #endif // VDMSL
 
   if (!ProgAS.IsEmpty())
