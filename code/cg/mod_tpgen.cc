@@ -2833,6 +2833,7 @@ void vdmcg::AddRecordType(const TYPE_AS_Name & enm, const TYPE_AS_Name & nm)
   this->record_types.ImpModify(enm,rn);
 }
 
+#ifdef VDMPP
 // GenUnionInterfaceDecl
 // nm : AS`Name
 // ==> seq of CPP`IdentDeclaration
@@ -2866,6 +2867,7 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenUnionInterfaceDecl(const TYPE_AS_Name &
                                   nil));
   return SEQ<TYPE_CPP_IdentDeclaration>().ImpAppend(cl);
 }
+#endif // VDMPP
 
 // GenObjRefClass
 // classnm : AS`Name
@@ -3149,8 +3151,10 @@ Sequence vdmcg::GenCppTypeDef(const TYPE_AS_Name & nm, const TYPE_AS_Type & tp, 
   }
   else
   {
+#ifdef VDMPP
     if (vdm_CPP_isCPP())
     {
+#endif // VDMPP
       TYPE_CPP_Expr val;
       if(IsTpRecursive(nm, rtp, Set()))
         val = vdm_BC_GenIdentifier(ASTAUX::MkId(L"Generic"));
@@ -3160,6 +3164,7 @@ Sequence vdmcg::GenCppTypeDef(const TYPE_AS_Name & nm, const TYPE_AS_Type & tp, 
       TYPE_CPP_PreDefine tpdef (vdm_BC_GenPreDefine(Name2CppTpId(nm), val));
       this->anonym_tpdefs.ImpPrepend(tpdef);
       return Sequence();
+#ifdef VDMPP
     }
     else
     { // java
@@ -3177,6 +3182,7 @@ Sequence vdmcg::GenCppTypeDef(const TYPE_AS_Name & nm, const TYPE_AS_Type & tp, 
           return Sequence();
       }
     }
+#endif // VDMPP
   }
 }
 

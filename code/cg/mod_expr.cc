@@ -1056,8 +1056,10 @@ Generic vdmcg::CGSeqEnumerationExpr (const TYPE_AS_SeqEnumerationExpr & rc1, con
   const TYPE_CPP_Expr & resVar_v (vt.GetRecord(pos_CGMAIN_VT_name));
   const TYPE_REP_TypeRep & rType (vt.GetRecord(pos_CGMAIN_VT_type));
 
+#ifdef VDMPP
   if (vdm_CPP_isCPP())
   {
+#endif // VDMPP
     if (expr.IsEmpty())
       return GenEmptySeqExpr();
     else
@@ -1084,7 +1086,6 @@ Generic vdmcg::CGSeqEnumerationExpr (const TYPE_AS_SeqEnumerationExpr & rc1, con
 
     SEQ<TYPE_CPP_Stmt> rb;
 
-    //if (!expr.IsEmpty() && casting)
     if (casting)
       rb.ImpAppend(vdm_BC_GenAsgnStmt(resVar_v, GenEmptySeqExpr()));
 
@@ -1094,14 +1095,7 @@ Generic vdmcg::CGSeqEnumerationExpr (const TYPE_AS_SeqEnumerationExpr & rc1, con
     {
       const TYPE_AS_Expr & e (expr[i]);
 
-// 20150703 -->
-      //Tuple cgee (CGExprExcl(e, ASTAUX::MkId(L"e_seq"), nil));
-// 20150714 -->
-      //Generic etp (FindSeqElemType(rType));
-      Generic etp (vdm_CPP_isCPP() ? (Generic)nil : FindSeqElemType(rType));
-// <-- 20150714
-      Tuple cgee (CGExprExcl(e, ASTAUX::MkId(L"e_seq"), etp));
-// <-- 20150703
+      Tuple cgee (CGExprExcl(e, ASTAUX::MkId(L"e_seq"), nil));
       const TYPE_CPP_Expr & tmpExpr (cgee.GetRecord(1));
       const SEQ<TYPE_CPP_Stmt> & st_l (cgee.GetSequence(2));
 
@@ -1120,7 +1114,8 @@ Generic vdmcg::CGSeqEnumerationExpr (const TYPE_AS_SeqEnumerationExpr & rc1, con
         return vdm_BC_GenFctCall(vdm_BC_GenIdentifier(ASTAUX::MkId(L"mk_sequence")), args);
       else
         return rb;
-   }
+    }
+#ifdef VDMPP
   }
   else
   { // Java
@@ -1218,6 +1213,7 @@ Generic vdmcg::CGSeqEnumerationExpr (const TYPE_AS_SeqEnumerationExpr & rc1, con
       }
     }
   }
+#endif // VDMPP
 }
 
 // CGMapEnumerationExpr

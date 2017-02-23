@@ -2605,11 +2605,13 @@ FlowBroken(cppstmt) ==
     mk_CPP`DoWhileStmt(s,-,-)      -> FlowBroken(s),
     mk_CPP`ForStmt(-,-,-,s,-)      -> FlowBroken(s),
     mk_CPP`Return(-,-)             -> return true,
-    mk_CPP`SynchronizedStmt(-,s,-) -> FlowBroken(s),
     mk_CPP`TryBlock(s, hdls, -,-)  -> return
                                         FlowBroken(s) and
                                         forall hdl in set elems hdls &
                                           FlowBroken(hdl.stmt),
+#ifdef VDMPP
+    mk_CPP`SynchronizedStmt(-,s,-) -> FlowBroken(s),
+#endif VDMPP
     others -> return false
   end;
 

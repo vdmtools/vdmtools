@@ -2534,6 +2534,7 @@ AddRecordType(enm,nm) ==
    )
   else record_types := record_types munion {enm|->[nm]};
 
+#ifdef VDMPP
 GenUnionInterfaceDecl: AS`Name ==> seq of CPP`IdentDeclaration
 GenUnionInterfaceDecl(nm) ==
  (dcl inter_l : seq of CPP`PackageName := [];
@@ -2550,6 +2551,7 @@ GenUnionInterfaceDecl(nm) ==
       cl = [BC`GenIdentDeclaration([],[BC`GenTypeInterfaceSpecifier(ch,[])], [])]
   in return cl
  );
+#endif VDMPP
 \end{vdm_al}
 
 #ifdef VDMPP
@@ -2792,8 +2794,10 @@ GenCppTypeDef(nm,tp,acc) ==
       def id = GenCompositeType(rtp, acc, {GenQName(nm)})
       in return cppenv(id)
     else   -- NON COMPOSITE - related to anonym file (VDM++ ??)
+#ifdef VDMPP
       if CPP`isCPP()
       then
+#endif VDMPP
        (dcl val : CPP`Name;
         if IsTpRecursive(nm, rtp, {})
         then val := BC`GenIdentifier("Generic")
@@ -2803,13 +2807,16 @@ GenCppTypeDef(nm,tp,acc) ==
          (anonym_tpdefs := [tpdef] ^ anonym_tpdefs;
           return [];)
        )
+#ifdef VDMPP
       else
         if is_AS`UnionType(tp)
         then
           if CGAUX`IsCompositeType(rtp)
           then return GenUnionInterfaceDecl(nm)
           else return []
-        else return [];
+        else return []
+#endif VDMPP
+;
 \end{vdm_al}
 
 Generate type to be used in a variable declaration, function, method

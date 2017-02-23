@@ -3590,6 +3590,7 @@ structures based on hashing)
 \end{itemize}
 
 \vspace{0.5cm}
+#ifdef VDMPP
 \begin{vdm_al}
 operations
 
@@ -3623,6 +3624,7 @@ operations
   );
 
 \end{vdm_al}
+#endif VDMPP
 $GenHashMember$ generates a static private member representing the
 hash code for this class. It is initially 0.
 \begin{vdm_al}

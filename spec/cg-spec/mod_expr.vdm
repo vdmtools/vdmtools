@@ -889,8 +889,10 @@ corresponding to the set enumeration.
 \begin{vdm_al}
 CGSeqEnumerationExpr: AS`SeqEnumerationExpr * CGMAIN`VT ==> seq of CPP`Stmt | CPP`Expr
 CGSeqEnumerationExpr( mk_AS`SeqEnumerationExpr(expr, -), mk_CGMAIN`VT( resVar_v, rType) ) ==
+#ifdef VDMPP
   if CPP`isCPP()
   then
+#endif VDMPP
     if expr = []
     then return DS`GenEmptySeqExpr()
     else
@@ -906,21 +908,16 @@ CGSeqEnumerationExpr( mk_AS`SeqEnumerationExpr(expr, -), mk_CGMAIN`VT( resVar_v,
        (dcl resVar_v' : CPP`Expr := resVar_v,
             rb : seq of CPP`Stmt := [],
             allsimple : bool := true,
-            args : seq of CPP`Expr := [],
-            etp : [REP`TypeRep] := nil;
+            args : seq of CPP`Expr := [];
 
         if casting
         then
          (resVar_v' := DS`GenCastSeqTypeForModify(resVar_v);
           rb := [BC`GenAsgnStmt(resVar_v, DS`GenEmptySeqExpr())]);
 
-        if CPP`isJAVA()
-        then etp := CGAUX`FindSeqElemType(rType);
-
         for i = 1 to len expr do
           def e = expr(i);
-              --mk_(tmpExpr, st_l) = CGExprExcl(e, "e_seq", nil)
-              mk_(tmpExpr, st_l) = CGExprExcl(e, "e_seq", etp)
+              mk_(tmpExpr, st_l) = CGExprExcl(e, "e_seq", nil)
           in
            (rb := rb ^ st_l ^ [DS`GenImpAppend( resVar_v', tmpExpr )];
             if st_l <> [] or is_AS`ApplyExpr(e)
@@ -934,6 +931,7 @@ CGSeqEnumerationExpr( mk_AS`SeqEnumerationExpr(expr, -), mk_CGMAIN`VT( resVar_v,
                     else return rb
         end;
        )
+#ifdef VDMPP
   else
     def isstring = CGAUX`IsStringType(rType);
         possiblestringtype = CGAUX`IsPossibleStringType(rType);
@@ -999,7 +997,9 @@ CGSeqEnumerationExpr( mk_AS`SeqEnumerationExpr(expr, -), mk_CGMAIN`VT( resVar_v,
           rb := rb ^ [BC`GenAsgnStmt(resVar_v, tmpSeq)];
           return rb;
          );
-     );
+     )
+#endif VDMPP
+;
 \end{vdm_al}
 
 \subsection{Map Enumeration}

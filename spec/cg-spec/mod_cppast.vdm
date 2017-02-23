@@ -110,19 +110,30 @@ AstCI ::
   h    : [Header]
   ast  : CPPAS
   CNTXT
+#ifdef VDMPP
  inv file == isJAVA() => forall e in set elems file.ast
-                             & is_IdentDeclaration(e);
+                             & is_IdentDeclaration(e)
+#endif VDMPP
+;
 
  FileName = seq1 of char;
 
+#ifdef VDMSL
+ Header = Preprocessors;
+#endif VDMSL
+#ifdef VDMPP
  Header = Preprocessors | PackageAndImportDeclarations
  inv h == isJAVA() => is_PackageAndImportDeclarations(h)
           and
           isCPP() => not is_PackageAndImportDeclarations(h);
+#endif VDMPP
 
  CPPAS = seq of (Declaration | QuoteIncl | PreProcStmt | Comments )
+#ifdef VDMPP
  inv declL == isJAVA() => forall decl in set elems declL &
-                            is_(decl,Declaration);
+                            is_(decl,Declaration)
+#endif VDMPP
+;
 \end{vdm_al}
 
 The following type is defined to be the main entry point for the Java
@@ -343,10 +354,13 @@ SimpleTypeNames (FieldDeclarations) are not allowed at the outermost level.
     Friend |
     TypeDef |
     Modifier
+#ifdef VDMPP
  inv spec == isJAVA() => is_TypeSpecifier(spec) or
                          is_Modifier(spec) or
                          is_StorageClassSpecifier(spec) or
-                         is_ArraySpecifier(spec);
+                         is_ArraySpecifier(spec)
+#endif VDMPP
+;
 
 \end{vdm_al}
 
@@ -360,19 +374,26 @@ SimpleTypeNames (FieldDeclarations) are not allowed at the outermost level.
  TypeSpecifier ::
   tp:  SimpleTypeName |
        ClassSpecifier |
+#ifdef VDMPP
        InterfaceSpecifier |
+#endif VDMPP
        EnumSpecifier |
        ElaboratedTypeSpecifier |
        <CONST> |
        <VOLATILE> |
-       <REFERENCE> |
-       <FINAL>
+       <REFERENCE>
+#ifdef VDMPP
+      | <FINAL>
+#endif VDMPP
   CNTXT
+#ifdef VDMPP
  inv spec == isJAVA() => not (is_EnumSpecifier(spec.tp) or
                               is_ElaboratedTypeSpecifier(spec.tp) or
                               spec.tp=<CONST> or spec.tp=<VOLATILE>)
              and isCPP() => not (is_InterfaceSpecifier(spec.tp) or
-                                 spec.tp=<FINAL>);
+                                 spec.tp=<FINAL>)
+#endif VDMPP
+;
 
  ArraySpecifier ::
    CNTXT
@@ -453,15 +474,22 @@ SimpleTypeNames (FieldDeclarations) are not allowed at the outermost level.
      FctDecl |
      ArrayDecl |
      BracketedDecl
+#ifdef VDMPP
  inv decl == isJAVA() => not(is_Destructor(decl) or is_TypeDefName(decl)
                          or is_IndirectionDecl(decl) or is_RefDecl(decl) or
-                         is_PointerToMember(decl) or is_BracketedDecl(decl));
+                         is_PointerToMember(decl) or is_BracketedDecl(decl))
+#endif VDMPP
+;
+
  FctDecl ::
      decl : Declarator
      arg : [ArgumentDeclarationList]
      cvlist : [CVQualifierList]
      CNTXT
- inv fdecl == isJAVA() => (fdecl.cvlist = nil);
+#ifdef VDMPP
+ inv fdecl == isJAVA() => (fdecl.cvlist = nil)
+#endif VDMPP
+;
 
  ArrayDecl ::
      decl : Declarator
@@ -607,42 +635,60 @@ A C++ Class Declaration has no modifiers.
     tpspec : [seq of Identifier] -- Type Parameters
     annospec : AnnotationSpec
     CNTXT
+#ifdef VDMSL
+ inv ch == (ch.m = []) and (ch.ispec = nil)
+#endif VDMSL
+#ifdef VDMPP
  inv ch == isJAVA() => (ch.ck = <CLASS> and
                         is_Identifier(ch.name) and
                         card(elems ch.bs)=1)
-           and isCPP() => ((ch.m = []) and (ch.ispec = nil));
+           and isCPP() => ((ch.m = []) and (ch.ispec = nil))
+#endif VDMPP
+;
 
  BaseSpec = seq of BaseSpecifier;
 
  BaseSpecifier = PackageName |
                  VirCompleteClassSpecifier |
                  AccCompleteClassSpecifier
- inv bs == isJAVA() => is_(bs,PackageName);
+#ifdef VDMPP
+ inv bs == isJAVA() => is_(bs,PackageName)
+#endif VDMPP
+;
 
  MemberList ::
     a    : [ (<PRIVATE> | <PROTECTED> | <PUBLIC>) ]
     md   : [seq of MemberDeclaration]
     CNTXT
- inv ml == isJAVA() => ml.a = nil;
+#ifdef VDMPP
+ inv ml == isJAVA() => ml.a = nil
+#endif VDMPP
+;
 
  MemberDeclaration =
     MemberSpecifier |
     IdentDeclaration |
     FunctionDefinition |
     QualifiedName |
-    PreProcStmt |
-    StaticInitializer
+    PreProcStmt
+#ifdef VDMPP
+    | StaticInitializer
  inv md == isJAVA() => (is_MemberSpecifier(md) or
                         is_FunctionDefinition(md) or
                         is_StaticInitializer(md) or
                         is_IdentDeclaration(md))
-           and isCPP() => not is_StaticInitializer(md);
+           and isCPP() => not is_StaticInitializer(md)
+#endif VDMPP
+;
 
  MemberSpecifier ::
     ds  : seq of DeclSpecifier
     mdl : [seq of DeclPureSpec ]
     CNTXT
- inv ms == isJAVA() => ms.mdl = nil;
+#ifdef VDMPP
+ inv ms == isJAVA() => ms.mdl = nil
+#endif VDMPP
+;
 
  VirCompleteClassSpecifier ::
    a  : [( <PRIVATE> | <PROTECTED> | <PUBLIC> ) ]
@@ -726,8 +772,13 @@ TemplateClassName has only been introduced as a QualifiedClassName.
      annos : AnnotationSpec
      fb  : [FctBody]
      CNTXT
+#ifdef VDMSL
+  inv fd == fd.m = [] and fd.throw = nil;
+#endif VDMSL
+#ifdef VDMPP
   inv fd == isJAVA() => (fd.ci = nil)
             and isCPP() => (fd.m = [] and fd.throw = nil);
+#endif VDMPP
 
  CtorInitializer = seq of MemInitializer;
 
@@ -761,7 +812,10 @@ TemplateClassName has only been introduced as a QualifiedClassName.
      Byte |
      Signed |
      Unsigned
- inv stn == isJAVA() => not (is_Signed(stn) or is_Unsigned(stn));
+#ifdef VDMPP
+ inv stn == isJAVA() => not (is_Signed(stn) or is_Unsigned(stn))
+#endif VDMPP
+;
 
  CompleteClassName =
      QualifiedClassName | ResScopeQualifiedClassName;
@@ -769,7 +823,10 @@ TemplateClassName has only been introduced as a QualifiedClassName.
  QualifiedClassName =   Identifier |
                         TemplateClassName |
                         ClassResScopeQualifiedClassName
- inv name == isJAVA() => not (is_TemplateClassName(name));
+#ifdef VDMPP
+ inv name == isJAVA() => not (is_TemplateClassName(name))
+#endif VDMPP
+;
 
  ClassResScopeQualifiedClassName ::
     cn : Identifier
@@ -821,16 +878,19 @@ TemplateClassName has only been introduced as a QualifiedClassName.
         DeclarationStmt |
         IncludeStmt |
         PreProcStmt |
-        SynchronizedStmt |
-        TryBlock |
-        EmptyStmt
+        TryBlock
+#ifdef VDMPP
+        | SynchronizedStmt
+        | EmptyStmt
 
  inv stmt == isJAVA() => not (is_Goto(stmt) or is_IncludeStmt(stmt)
                                or is_PreIf(stmt) or is_PreIfDef(stmt) or is_PreIfNotDef(stmt) or
                                is_PreDefine(stmt) or is_PreElse(stmt) or is_PreEndIf(stmt)
                                or is_PreMacro(stmt))
            and isCPP() => not (is_SynchronizedStmt(stmt)
-                            or is_EmptyStmt(stmt));
+                            or is_EmptyStmt(stmt))
+#endif VDMPP
+;
 
  LabelStmt ::
      id   : Identifier
@@ -1013,10 +1073,11 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
         ScopeResOpFctName |
         ScopeResQualifiedName |
         ClassInstanceCreationExpr|
-        ClassExpr |
-        ArrayCreationExpr |
         ArrayInitializer |
-        Name
+        Name 
+#ifdef VDMPP
+        | ClassExpr
+        | ArrayCreationExpr
  inv expr == (isJAVA() => not (is_PmExpr(expr)
                                or is_DeallocationExpr(expr)
                                or is_DeallocationArrayExpr(expr)
@@ -1026,7 +1087,9 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
                                or is_AllocationTypeExpr(expr)
                                or is_PointerToObjectMemberAccess(expr)))
                                and
-           isCPP() => not (is_ClassExpr(expr) or is_ArrayCreationExpr(expr));
+           isCPP() => not (is_ClassExpr(expr) or is_ArrayCreationExpr(expr))
+#endif VDMPP
+;
 
   AssignExpr ::
     unary      : Expr
@@ -1135,9 +1198,12 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
   UnaryOp :: val : <REFERENCE> | <INDIRECTION> | <ADDROP> | <PLUS> |
              <MINUS> | <NEG> | <COMPL>
              CNTXT
+#ifdef VDMPP
   inv uop == isJAVA() => not ((uop.val=<REFERENCE>) or
                               (uop.val=<INDIRECTION>) or
-                              (uop.val=<ADDROP>));
+                              (uop.val=<ADDROP>))
+#endif VDMPP
+;
 
   PostFixInDecrementExpr ::
       op : <PPLUS> | <PMINUS>
