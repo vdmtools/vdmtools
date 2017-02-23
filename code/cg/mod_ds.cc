@@ -1018,10 +1018,15 @@ TYPE_CPP_Expr vdmcg::GenCastType(const TYPE_REP_TypeRep & type, const TYPE_CPP_E
 // ==> CPP`Expr
 TYPE_CPP_Expr vdmcg::GenGenericExpr()
 {
+#ifdef VDMSL
+  return vdm_BC_GenFctCall(vdm_BC_GenGeneric().get_tp(), SEQ<TYPE_CPP_Expr>());
+#endif // VDMSL
+#ifdef VDMPP
   if (vdm_CPP_isCPP())
     return vdm_BC_GenFctCall(vdm_BC_GenGeneric().get_tp(), SEQ<TYPE_CPP_Expr>());
   else // for Java
     return vdm_BC_GenClassInstanceCreationExpr(vdm_BC_GenGeneric().get_tp(), SEQ<TYPE_CPP_Expr>());
+#endif // VDMPP
 }
 
 // GenBoolExpr
@@ -1032,10 +1037,15 @@ TYPE_CPP_Expr vdmcg::GenBoolExpr(const Generic & expr)
   SEQ<TYPE_CPP_Expr> args;
   if (!expr.IsNil())
     args.ImpAppend(expr);
+#ifdef VDMSL
+  return vdm_BC_GenFctCall(GenBoolType().get_tp(), args);
+#endif // VDMSL
+#ifdef VDMPP
   if (vdm_CPP_isCPP())
     return vdm_BC_GenFctCall(GenBoolType().get_tp(), args);
   else // for Java
     return vdm_BC_GenClassInstanceCreationExpr(GenBoolType().get_tp(), args);
+#endif // VDMPP
 }
 
 // GenIntExpr
@@ -1046,10 +1056,15 @@ TYPE_CPP_Expr vdmcg::GenIntExpr(const Generic & expr)
   SEQ<TYPE_CPP_Expr> args;
   if (!expr.IsNil())
     args.ImpAppend(expr);
+#ifdef VDMSL
+  return vdm_BC_GenFctCall(GenImplIntType().get_tp(), args);
+#endif // VDMSL
+#ifdef VDMPP
   if (vdm_CPP_isCPP())
     return vdm_BC_GenFctCall(GenImplIntType().get_tp(), args);
   else // for Java
     return vdm_BC_GenClassInstanceCreationExpr(GenImplIntType().get_tp(), args);
+#endif // VDMPP
 }
 
 // GenRealExpr
@@ -1060,10 +1075,15 @@ TYPE_CPP_Expr vdmcg::GenRealExpr(const Generic & expr)
   SEQ<TYPE_CPP_Expr> args;
   if (!expr.IsNil())
     args.ImpAppend(expr);
+#ifdef VDMSL
+  return vdm_BC_GenFctCall(GenImplRealType().get_tp(), args);
+#endif // VDMSL
+#ifdef VDMPP
   if (vdm_CPP_isCPP())
     return vdm_BC_GenFctCall(GenImplRealType().get_tp(), args);
   else // for Java
     return vdm_BC_GenClassInstanceCreationExpr(GenImplRealType().get_tp(), args);
+#endif // VDMPP
 }
 
 // GenCharExpr
@@ -1074,10 +1094,15 @@ TYPE_CPP_Expr vdmcg::GenCharExpr(const Generic & expr)
   SEQ<TYPE_CPP_Expr> args;
   if (!expr.IsNil())
     args.ImpAppend(expr);
+#ifdef VDMSL
+  return vdm_BC_GenFctCall(GenCharType().get_tp(), args);
+#endif // VDMSL
+#ifdef VDMPP
   if (vdm_CPP_isCPP())
     return vdm_BC_GenFctCall(GenCharType().get_tp(), args);
   else // for Java
     return vdm_BC_GenClassInstanceCreationExpr(GenCharType().get_tp(), args);
+#endif // VDMPP
 }
 
 // GenTokenExpr
@@ -1088,10 +1113,15 @@ TYPE_CPP_Expr vdmcg::GenTokenExpr(const Generic & expr)
   SEQ<TYPE_CPP_Expr> args;
   if (!expr.IsNil())
     args.ImpAppend(expr);
+#ifdef VDMSL
+  return vdm_BC_GenFctCall(GenTokenType().get_tp(), args);
+#endif // VDMSL
+#ifdef VDMPP
   if (vdm_CPP_isCPP())
     return vdm_BC_GenFctCall(GenTokenType().get_tp(), args);
   else // for Java
     return vdm_BC_GenClassInstanceCreationExpr(GenTokenType().get_tp(), args);
+#endif// VDMPP
 }
 
 // GenProductExpr
@@ -1102,10 +1132,15 @@ TYPE_CPP_Expr vdmcg::GenProductExpr(const Generic & expr)
   SEQ<TYPE_CPP_Expr> args;
   if (!expr.IsNil())
     args.ImpAppend(expr);
+#ifdef VDMSL
+  return vdm_BC_GenFctCall(GenProductType().get_tp(), args);
+#endif // VDMSL
+#ifdef VDMPP
   if (vdm_CPP_isCPP())
     return vdm_BC_GenFctCall(GenProductType().get_tp(), args);
   else // for Java
     return vdm_BC_GenClassInstanceCreationExpr(GenProductType().get_tp(), args);
+#endif // VDMPP
 }
 
 // GenRecordExpr
@@ -1117,6 +1152,14 @@ TYPE_CPP_Expr vdmcg::GenRecordExpr(const Generic & tag, const Generic & exprs)
   SEQ<TYPE_CPP_Expr> args;
   if (!exprs.IsNil())
     args.ImpConc(exprs);
+#ifdef VDMSL
+  if (tag.IsNil())
+    return GenEmptyRecordExpr(nil);
+ 
+  TYPE_CPP_Expr rc (vdm_BC_GenFctCall(GenRecordType(tag).get_tp(), Sequence()));
+  return vdm_BC_GenFctCallObjMemAcc(rc, ASTAUX::MkId(L"Init"), args);
+#endif // VDMSL
+#ifdef VDMPP
   if (vdm_CPP_isCPP()) {
     if (tag.IsNil())
       return GenEmptyRecordExpr(nil);
@@ -1126,6 +1169,7 @@ TYPE_CPP_Expr vdmcg::GenRecordExpr(const Generic & tag, const Generic & exprs)
   }
   else // for Java
     return vdm_BC_GenClassInstanceCreationExpr(GenRecordType(tag).get_tp(), args);
+#endif // VDMPP
 }
 
 // GenQuoteExpr
@@ -1134,10 +1178,15 @@ TYPE_CPP_Expr vdmcg::GenRecordExpr(const Generic & tag, const Generic & exprs)
 TYPE_CPP_Expr vdmcg::GenQuoteExpr(const Generic & nm)
 {
   SEQ<TYPE_CPP_Expr> args;
+#ifdef VDMSL
+  return vdm_BC_GenFctCall(GenQuoteType(nm).get_tp(), args);
+#endif // VDMSL
+#ifdef VDMPP
   if (vdm_CPP_isCPP())
     return vdm_BC_GenFctCall(GenQuoteType(nm).get_tp(), args);
   else // for Java
     return vdm_BC_GenClassInstanceCreationExpr(GenQuoteType(nm).get_tp(), args);
+#endif // VDMPP
 }
 
 // RememberPid_m
@@ -2172,6 +2221,10 @@ TYPE_CPP_TypeSpecifier vdmcg::GenQuoteType(const Generic & nm)
 // ==> CPP`Expr
 TYPE_CPP_Expr vdmcg::GenQuoteLit(const TYPE_AS_Id & ch_l)
 {
+#ifdef VDMSL
+   return vdm_BC_GenFctCall(GenQuoteType(nil).get_tp(), mk_sequence(vdm_BC_GenStringLit(ch_l)));
+#endif // VDMSL
+#ifdef VDMPP
   if (vdm_CPP_isCPP())
     return vdm_BC_GenFctCall(GenQuoteType(nil).get_tp(), mk_sequence(vdm_BC_GenStringLit(ch_l)));
   else // for Java
@@ -2181,6 +2234,7 @@ TYPE_CPP_Expr vdmcg::GenQuoteLit(const TYPE_AS_Id & ch_l)
     tkSeq.ImpConc(ch_l);
     return vdm_BC_GenClassInstanceCreationExpr(vdm_BC_GenIdentifier(tkSeq), SEQ<TYPE_CPP_Expr>());
   }
+#endif // VDMPP
 }
 
 // GenIsQuote
@@ -2530,10 +2584,15 @@ TYPE_CPP_Expr vdmcg::GenRecLength(const TYPE_CPP_Expr & e)
 TYPE_CPP_Expr vdmcg::GenEmptyRecordExpr(const Generic & tp)
 {
   TYPE_CPP_TypeSpecifier ts (GenRecordType(tp));
+#ifdef VDMSL
+  return vdm_BC_GenFctCall(ts.get_tp(), SEQ<TYPE_CPP_Expr>());
+#endif // VDMSL
+#ifdef VDMPP
   if (vdm_CPP_isCPP())
     return vdm_BC_GenFctCall(ts.get_tp(), SEQ<TYPE_CPP_Expr>());
   else
     return vdm_BC_GenClassInstanceCreationExpr(ts.get_tp(), SEQ<TYPE_CPP_Expr>());
+#endif // VDMPP
 }
 
 // GenGenericDecl
@@ -2699,6 +2758,7 @@ TYPE_CPP_Expr vdmcg::GenIsNil(const TYPE_CPP_Expr & e)
     return vdm_BC_GenBracketedExpr(vdm_BC_GenEq(e, GenNullExpr()));
 }
 
+#ifdef VDMPP
 // GenLocalComparator
 // cname : AS`Name
 // ==> seq of CPP`MemberDeclaration
@@ -2716,6 +2776,7 @@ SEQ<TYPE_CPP_MemberDeclaration> vdmcg::GenLocalComparator(const TYPE_AS_Name & c
                    Sequence().ImpAppend(vdm_BC_GenInitDecl(vdm_BC_GenIdentifier(ASTAUX::MkId(L"vdmComp")), initComparator))));
   return pr_l;
 }
+#endif // VDMPP
 
 // GenSetType
 // ==> CPP`DeclSpecifier
@@ -3036,10 +3097,15 @@ TYPE_CPP_Expr vdmcg::GenSetExpr(const Generic & ie)
   SEQ<TYPE_CPP_Expr> args;
   if (!ie.IsNil())
     args.ImpAppend(ie);
+#ifdef VDMSL
+  return vdm_BC_GenFctCall(GenImplSetType().get_tp(), args);
+#endif // VDMSL
+#ifdef VDMPP
   if (vdm_CPP_isCPP())
     return vdm_BC_GenFctCall(GenImplSetType().get_tp(), args);
   else
     return vdm_BC_GenClassInstanceCreationExpr(GenImplSetType().get_tp(), args);
+#endif // VDMPP
 }
 
 // GenSetGetElemExpr
@@ -3793,10 +3859,15 @@ TYPE_CPP_Expr vdmcg::GenSeqExpr(const Generic & ie)
   SEQ<TYPE_CPP_Expr> args;
   if (!ie.IsNil())
     args.ImpAppend(ie);
+#ifdef VDMSL
+  return vdm_BC_GenFctCall(GenImplSeq0Type().get_tp(), args);
+#endif // VDMSL
+#ifdef VDMPP
   if (vdm_CPP_isCPP())
     return vdm_BC_GenFctCall(GenImplSeq0Type().get_tp(), args);
   else
     return vdm_BC_GenClassInstanceCreationExpr(GenImplSeq0Type().get_tp(), args);
+#endif // VDMPP
 }
 
 // GenEmptyStringExpr
@@ -3814,10 +3885,15 @@ TYPE_CPP_Expr vdmcg::GenStringExpr(const Generic & ie)
   SEQ<TYPE_CPP_Expr> args;
   if (!ie.IsNil())
     args.ImpAppend(ie);
+#ifdef VDMSL
+  return vdm_BC_GenFctCall(GenStringType().get_tp(), args);
+#endif // VDMSL
+#ifdef VDMPP
   if (vdm_CPP_isCPP())
     return vdm_BC_GenFctCall(GenStringType().get_tp(), args);
   else
     return vdm_BC_GenClassInstanceCreationExpr(GenStringType().get_tp(), args);
+#endif // VDMPP
 }
 
 // GenIterSeq
@@ -4230,10 +4306,15 @@ TYPE_CPP_Expr vdmcg::GenMapExpr(const Generic & ie)
   SEQ<TYPE_CPP_Expr> args;
   if (!ie.IsNil())
     args.ImpAppend(ie);
+#ifdef VDMSL
+  return vdm_BC_GenFctCall(GenImplMapType().get_tp(), args);
+#endif // VDMSL
+#ifdef VDMPP
   if (vdm_CPP_isCPP())
     return vdm_BC_GenFctCall(GenImplMapType().get_tp(), args);
   else
     return vdm_BC_GenClassInstanceCreationExpr(GenImplMapType().get_tp(), args);
+#endif // VDMPP
 }
 
 // GenMapMerge

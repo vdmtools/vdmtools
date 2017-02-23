@@ -644,10 +644,12 @@ to nil using this operation. This is because this field is not needed
 by any of the code generators.
 
 \begin{vdm_al}
+#ifdef VDMPP
     GenClassInstanceCreationExpr: (CPP`CompleteClassName | CPP`PackageName | CPP`QualifiedName) *
                                   seq of CPP`Expr -> CPP`Expr
     GenClassInstanceCreationExpr(cn,es) ==
       BCCI`GenClassInstanceCreationExpr(cn,es,CI`NilContextId);
+#endif VDMPP
 
     GenAnonymousClassExpr: CPP`CompleteClassName * seq of CPP`Expr * seq of CPP`MemberDeclaration-> CPP`Expr
     GenAnonymousClassExpr(cn,es,ml) ==

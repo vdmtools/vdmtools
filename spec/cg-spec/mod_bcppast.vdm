@@ -785,6 +785,7 @@ functions
 #endif VDMPP
 \end{vdm_al}
 
+#ifdef VDMPP
 Note that the second field of ClassInstanceCreationExpr always is set
 to nil using this operation. This is because this field is not needed
 by any of the code generators.
@@ -794,7 +795,7 @@ operations
   GenClassInstanceCreationExpr: (CPP`CompleteClassName | CPP`PackageName | CPP`QualifiedName) * CPP`Exprs
                                 * CI`ContextId ==> CPP`Expr
   GenClassInstanceCreationExpr(cn,es,cid) ==
-    if (CPP`isJAVA())
+    if CPP`isJAVA()
     then
       cases cn:
         mk_CPP`Identifier("Boolean",-) ->
@@ -812,6 +813,7 @@ operations
     else return mk_CPP`ClassInstanceCreationExpr(cn,nil,es,nil,cid);
 \end{vdm_al}
 
+#endif VDMPP
 Note that the second field of ClassInstanceCreationExpr always is set
 to nil using this operation. This is because this field is not needed
 by any of the code generators.

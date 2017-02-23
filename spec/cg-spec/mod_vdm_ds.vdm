@@ -584,62 +584,105 @@ GenCastType(type, e) ==
 \begin{vdm_al}
 GenGenericExpr: () ==> CPP`Expr
 GenGenericExpr() ==
+#ifdef VDMSL
+  return BC`GenFctCall(BC`GenGeneric().tp, []);
+#endif VDMSL
+#ifdef VDMPP
   if CPP`isCPP()
   then return BC`GenFctCall(BC`GenGeneric().tp, [])
   else return BC`GenClassInstanceCreationExpr(BC`GenGeneric().tp,[]);
+#endif VDMPP
 
 GenBoolExpr: [CPP`Expr] ==> CPP`Expr
 GenBoolExpr(expr) ==
   let args = if expr = nil then [] else [expr]
   in
+#ifdef VDMSL
+    return BC`GenFctCall(GenBoolType().tp, args);
+#endif VDMSL
+#ifdef VDMPP
     if CPP`isCPP()
     then return BC`GenFctCall(GenBoolType().tp, args)
     else return BC`GenClassInstanceCreationExpr(GenBoolType().tp,args);
+#endif VDMPP
 
 GenIntExpr: [CPP`Expr] ==> CPP`Expr
 GenIntExpr(expr) ==
   let args = if expr = nil then [] else [expr]
   in
+#ifdef VDMSL
+    return BC`GenFctCall(GenImplIntType().tp, args);
+#endif VDMSL
+#ifdef VDMPP
     if CPP`isCPP()
     then return BC`GenFctCall(GenImplIntType().tp, args)
     else return BC`GenClassInstanceCreationExpr(GenImplIntType().tp,args);
+#endif VDMPP
 
 GenRealExpr: [CPP`Expr] ==> CPP`Expr
 GenRealExpr(expr) ==
   let args = if expr = nil then [] else [expr]
   in
+#ifdef VDMSL
+    return BC`GenFctCall(GenImplRealType().tp, args);
+#endif VDMSL
+#ifdef VDMPP
     if CPP`isCPP()
     then return BC`GenFctCall(GenImplRealType().tp, args)
     else return BC`GenClassInstanceCreationExpr(GenImplRealType().tp,args);
+#endif VDMPP
 
 GenCharExpr: [CPP`Expr] ==> CPP`Expr
 GenCharExpr(expr) ==
   let args = if expr = nil then [] else [expr]
   in
+#ifdef VDMSL
+    return BC`GenFctCall(GenCharType().tp, args);
+#endif VDMSL
+#ifdef VDMPP
     if CPP`isCPP()
     then return BC`GenFctCall(GenCharType().tp, args)
     else return BC`GenClassInstanceCreationExpr(GenCharType().tp,args);
+#endif VDMPP
 
 GenTokenExpr: [CPP`Expr] ==> CPP`Expr
 GenTokenExpr(expr) ==
   let args = if expr = nil then [] else [expr]
   in
+#ifdef VDMSL
+    return BC`GenFctCall(GenTokenType().tp, args);
+#endif VDMSL
+#ifdef VDMPP
     if CPP`isCPP()
     then return BC`GenFctCall(GenTokenType().tp, args)
     else return BC`GenClassInstanceCreationExpr(GenTokenType().tp,args);
+#endif VDMPP
 
 GenProductExpr: [CPP`Expr] ==> CPP`Expr
 GenProductExpr(expr) ==
   let args = if expr = nil then [] else [expr]
   in
+#ifdef VDMSL
+    return BC`GenFctCall(GenProductType().tp, args);
+#endif VDMSL
+#ifdef VDMPP
     if CPP`isCPP()
     then return BC`GenFctCall(GenProductType().tp, args)
     else return BC`GenClassInstanceCreationExpr(GenProductType().tp,args);
+#endif VDMPP
 
 GenRecordExpr: [AS`Name] * [seq of CPP`Expr] ==> CPP`Expr
 GenRecordExpr(tag,exprs) ==
   let args = if exprs = nil then [] else exprs
   in
+#ifdef VDMSL
+    if tag = nil
+    then GenEmptyRecordExpr(nil)
+    else
+      def rc = BC`GenFctCall(GenRecordType(tag).tp, [])
+      in return BC`GenFctCallObjMemAcc(rc, "Init", args);
+#endif VDMSL
+#ifdef VDMPP
     if CPP`isCPP()
     then
       if tag = nil
@@ -648,12 +691,18 @@ GenRecordExpr(tag,exprs) ==
         def rc = BC`GenFctCall(GenRecordType(tag).tp, [])
         in return BC`GenFctCallObjMemAcc(rc, "Init", args)
     else return BC`GenClassInstanceCreationExpr(GenRecordType(tag).tp,args);
+#endif VDMPP
 
 GenQuoteExpr: [AS`Name] ==> CPP`Expr
 GenQuoteExpr(nm) ==
+  return BC`GenFctCall(GenQuoteType(nm).tp, []);
+#ifdef VDMSL
+#endif VDMSL
+#ifdef VDMPP
   if CPP`isCPP()
   then return BC`GenFctCall(GenQuoteType(nm).tp, [])
   else return BC`GenClassInstanceCreationExpr(GenQuoteType(nm).tp,[]);
+#endif VDMPP
 \end{vdm_al}
 
 \begin{vdm_al}
@@ -1398,11 +1447,16 @@ constructions of quotes.
 
   GenQuoteLit: seq of char ==> CPP`Expr
   GenQuoteLit( ch_l ) ==
+#ifdef VDMSL
+    return BC`GenFctCall(GenQuoteType(nil).tp, [BC`GenStringLit(ch_l)]);
+#endif VDMSL
+#ifdef VDMPP
     if CPP`isCPP()
     then return BC`GenFctCall(GenQuoteType(nil).tp, [BC`GenStringLit(ch_l)])
     else
      (def - = CGAUX`InsertQuote(ch_l)
       in return BC`GenClassInstanceCreationExpr(BC`GenIdentifier("quotes." ^ ch_l),[]));
+#endif VDMPP
 
   GenIsQuote: CPP`Expr * REP`QuoteTypeRep  ==> CPP`Expr
   GenIsQuote( e, mk_REP`QuoteTypeRep(nm)) ==
@@ -1607,9 +1661,14 @@ constructions of composite type.
   GenEmptyRecordExpr(nm) ==
     def ts = GenRecordType(nm);
     in
+#ifdef VDMSL
+      return BC`GenFctCall(ts.tp, []);
+#endif VDMSL
+#ifdef VDMPP
       if CPP`isCPP()
       then return BC`GenFctCall(ts.tp, [])
       else return BC`GenClassInstanceCreationExpr(ts.tp, []);
+#endif VDMPP
 
 \end{vdm_al}
 
@@ -1723,6 +1782,7 @@ constructions of optional type.
 The operations below all performs operations on set type or
 constructions of set type.
 
+#ifdef VDMPP
 If types from the Java Development Kit are used instead of the VDM
 Library, and a Tree-based implementation of Sets is used,
 then an inner \textit{Comparator} class must be defined.
@@ -1750,6 +1810,7 @@ GenLocalComparator(-) ==
 --  return pr_l
 -- );
 \end{vdm_al}
+#endif VDMPP
 
 \begin{vdm_al}
 
@@ -1914,9 +1975,14 @@ GenLocalComparator(-) ==
   GenSetExpr(ie) ==
     let initexpr = if ie = nil then [] else [ie]
     in
+#ifdef VDMSL
+      return BC`GenFctCall(GenImplSetType().tp, initexpr);
+#endif VDMSL
+#ifdef VDMPP
       if CPP`isCPP()
       then return BC`GenFctCall(GenImplSetType().tp, initexpr)
       else return BC`GenClassInstanceCreationExpr(GenImplSetType().tp, initexpr);
+#endif VDMPP
 
     -- No casting of the result needed!
   GenSetGetElemExpr: CPP`Expr ==> CPP`Expr
@@ -2396,9 +2462,14 @@ constructions of sequence type.
   GenSeqExpr(ie) ==
     let initexpr = if ie = nil then [] else [ie]
     in
+#ifdef VDMSL
+      return BC`GenFctCall(GenImplSeq0Type().tp, initexpr);
+#endif VDMSL
+#ifdef VDMPP
       if CPP`isCPP()
       then return BC`GenFctCall(GenImplSeq0Type().tp, initexpr)
       else return BC`GenClassInstanceCreationExpr(GenImplSeq0Type().tp, initexpr);
+#endif VDMPP
 
   GenEmptyStringExpr: () ==> CPP`Expr
   GenEmptyStringExpr() ==
@@ -2408,9 +2479,14 @@ constructions of sequence type.
   GenStringExpr(ie) ==
     let initexpr = if ie = nil then [] else [ie]
     in
+#ifdef VDMSL
+      return BC`GenFctCall(GenStringType().tp, initexpr);
+#endif VDMSL
+#ifdef VDMPP
       if CPP`isCPP()
       then return BC`GenFctCall(GenStringType().tp, initexpr)
       else return BC`GenClassInstanceCreationExpr(GenStringType().tp, initexpr);
+#endif VDMPP
 \end{vdm_al}
 
 The operation below generates code corresponding to an iteration
@@ -2672,9 +2748,14 @@ The operation $GenCastMap$ castes the expression $e$ to a $Map$ if it is necessa
   GenMapExpr(ie) ==
     let initexpr = if ie = nil then [] else [ie]
     in
+#ifdef VDMSL
+      return BC`GenFctCall(GenImplMapType().tp, initexpr);
+#endif VDMSL
+#ifdef VDMPP
       if CPP`isCPP()
       then return BC`GenFctCall(GenImplMapType().tp, initexpr)
       else return BC`GenClassInstanceCreationExpr(GenImplMapType().tp, initexpr);
+#endif VDMPP
 
 \end{vdm_al}
 

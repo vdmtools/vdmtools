@@ -127,7 +127,9 @@ private:
   TYPE_CPP_Expr GenIsTuple(const TYPE_CPP_Expr &);
   TYPE_CPP_Expr GenNilLit();
   TYPE_CPP_Expr GenIsNil(const TYPE_CPP_Expr &);
+#ifdef VDMPP
   SEQ<TYPE_CPP_MemberDeclaration> GenLocalComparator(const TYPE_AS_Name &);
+#endif // VDMPP
   TYPE_CPP_TypeSpecifier GenSetType();
   TYPE_CPP_TypeSpecifier GenImplSetType();
   TYPE_CPP_TypeSpecifier GenStringType();

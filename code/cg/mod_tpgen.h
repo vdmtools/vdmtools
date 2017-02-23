@@ -160,9 +160,11 @@ private:
                                                  const SEQ<TYPE_CPP_Identifier> &,
                                                  const MAP<TYPE_CPP_Identifier,TYPE_CPP_Name> &);
   SET<TYPE_CPP_Expr> GetBasicTypes();
+#ifdef VDMPP
   TYPE_CPP_FunctionDefinition GenCloneMethod(const TYPE_CPP_Identifier &,
                                              const SEQ<TYPE_CPP_Identifier> &,
                                              const MAP<TYPE_CPP_Identifier,TYPE_CPP_Name> &);
+#endif // VDMPP
   TYPE_CPP_FunctionDefinition GenAsciiMethod(const TYPE_CPP_Identifier &,
                                              const SEQ<TYPE_CPP_Identifier> &,
                                              const MAP<TYPE_CPP_Identifier,TYPE_CPP_Name> &);

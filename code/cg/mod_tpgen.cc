@@ -1802,6 +1802,7 @@ SET<TYPE_CPP_Expr> vdmcg::GetBasicTypes()
   return expr_set;
 }
 
+#ifdef VDMPP
 // GenCloneMethod
 // cn : CPP`Identifier
 // sl : TagList         (seq of CPP`Identifier)
@@ -1843,6 +1844,7 @@ TYPE_CPP_FunctionDefinition vdmcg::GenCloneMethod(const TYPE_CPP_Identifier & cn
 
   return vdm_BC_GenJavaFctDef(SEQ<TYPE_CPP_Annotation>(), ml, dsl, decl, nil, vdm_BC_GenBlock(stmtl));
 }
+#endif // VDMPP
 
 // GenAsciiMethod
 // cn : CPP`Identifier
@@ -2113,8 +2115,10 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenCompositeClassDecl(const TYPE_AS_Name &
 {
   SEQ<TYPE_CPP_MemberDeclaration> pub_ml, priv_ml, fctdef;
 
+#ifdef VDMPP
   if (vdm_CPP_isCPP())
   {
+#endif // VDMPP
     TYPE_CPP_Identifier cnm (cpptpid);
     TYPE_CPP_Identifier cn (GenRecordType(Nil()).get_tp());
 
@@ -2166,6 +2170,7 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenCompositeClassDecl(const TYPE_AS_Name &
     SEQ<TYPE_CPP_IdentDeclaration> cl;
     cl.ImpAppend(vdm_BC_GenIdentDeclaration(SEQ<TYPE_CPP_Annotation>(), sp, SEQ<TYPE_CPP_InitDeclarator>()));
     return cl;
+#ifdef VDMPP
   }
   else // java
   {
@@ -2212,6 +2217,7 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenCompositeClassDecl(const TYPE_AS_Name &
     cl.ImpAppend(vdm_BC_GenIdentDeclaration(SEQ<TYPE_CPP_Annotation>(), sp, SEQ<TYPE_CPP_InitDeclarator>()));
     return cl;
   }
+#endif // VDMPP
 }
 
 // GenProductClassDecl

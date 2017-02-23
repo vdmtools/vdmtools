@@ -1742,9 +1742,14 @@ operations
 
 GenCompositeClassDecl: AS`Name * [AS`Access] * CPP`Identifier * TagList * TagEnv * DCEnv * seq of REP`TypeRep
                        ==> seq of CPP`IdentDeclaration
+#ifdef VDMSL
+GenCompositeClassDecl(nm, -, cpptpid, taglist, tagenv, -, tps) ==
+#endif VDMSL
+#ifdef VDMPP
 GenCompositeClassDecl(nm, acc, cpptpid, taglist, tagenv, dcenv, tps) ==
   if CPP`isCPP()
   then
+#endif VDMPP
    (dcl pub_ml : seq of CPP`MemberDeclaration := [], -- public member functions
         priv_ml :seq of CPP`MemberDeclaration := [], -- privat member functions
         fctdef  :CPP`CPPAS := [],                    -- function definitions
@@ -1797,6 +1802,7 @@ GenCompositeClassDecl(nm, acc, cpptpid, taglist, tagenv, dcenv, tps) ==
         in
        return cl
      );
+#ifdef VDMPP
    )
   else
    (dcl  pub_ml : seq of CPP`MemberDeclaration := [],
@@ -1828,6 +1834,7 @@ GenCompositeClassDecl(nm, acc, cpptpid, taglist, tagenv, dcenv, tps) ==
         in
          return cl
   )
+#endif VDMPP
 );
 
 
@@ -1888,7 +1895,7 @@ GetBasicTypes() ==
   return expr_set;
  );
 
-
+#ifdef VDMPP
 GenCloneMethod : CPP`Identifier * TagList * TagEnv ==> CPP`FunctionDefinition
 GenCloneMethod(cn,sl,tenv) ==
 (
@@ -1915,6 +1922,7 @@ GenCloneMethod(cn,sl,tenv) ==
   return BC`GenJavaFctDef([],[BC`GenModifier(<PUBLIC>)],
                       [BC`GenTypeSpecifier(BC`GenIdentifier("Object"))],decl,nil,BC`GenBlock(stmtl))
 );
+#endif VDMPP
 
 GenAsciiMethod : CPP`Identifier * TagList * TagEnv ==> CPP`FunctionDefinition
 GenAsciiMethod(cn,sl,tenv) ==
