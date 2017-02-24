@@ -1343,7 +1343,7 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, type)
                sb2 : CPP`Expr;
            if CPP`isCPP()
            then
-            (sb1 := DS`GenSubSequence(castVarExpr_v, type, BC`GenIntegerLit(1), index)
+            (sb1 := DS`GenSubSequence(castVarExpr_v, type, BC`GenIntegerLit(1), index);
              sb2 := DS`GenSubSequence(castVarExpr_v, type, BC`GenPlus(index, BC`GenIntegerLit(1)), Max))
            else
             (sb1 := DS`GenSubSequence(castVarExpr_v', type, BC`GenIntegerLit(0), index);
