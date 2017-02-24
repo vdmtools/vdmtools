@@ -237,23 +237,29 @@ Tuple vdmcg::CGMatchPatternName (const TYPE_AS_PatternName & patnm,
                                       Nil()));
       }
 
-      if (vdm_CPP_isJAVA() && IsStringType(pttp)) {
-        if (varExpr_v.Is(TAG_TYPE_CPP_ClassInstanceCreationExpr) &&
-            varExpr_v.GetRecord(pos_CPP_ClassInstanceCreationExpr_classtype) == GenStringType().get_tp()){
-          const SEQ<TYPE_CPP_Expr> & arg (varExpr_v.GetSequence(pos_CPP_ClassInstanceCreationExpr_arg));
-          if (arg.Length() == 1) {
-            if (arg[1].Is(TAG_TYPE_CPP_WStringLit)) {
-              varExpr_v_q = arg[1];
+#ifdef VDMSL
+      rb.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_Rename(n), varExpr_v_q));
+#endif // VDMSL
+#ifdef VDMPP
+      if (vdm_CPP_isCPP()) {
+        rb.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_Rename(n), varExpr_v_q));
+      }
+      else {
+        if (IsStringType(pttp)) {
+          if (varExpr_v.Is(TAG_TYPE_CPP_ClassInstanceCreationExpr) &&
+              varExpr_v.GetRecord(pos_CPP_ClassInstanceCreationExpr_classtype) == GenStringType().get_tp()){
+            const SEQ<TYPE_CPP_Expr> & arg (varExpr_v.GetSequence(pos_CPP_ClassInstanceCreationExpr_arg));
+            if (arg.Length() == 1) {
+              if (arg[1].Is(TAG_TYPE_CPP_WStringLit)) {
+                varExpr_v_q = arg[1];
+              }
             }
           }
         }
-      }
-
-      if (vdm_CPP_isCPP())
-        rb.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_Rename(n), varExpr_v_q));
-      else { // java
         rb.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_Rename(n), GenExplicitCast(pttp, varExpr_v_q, type)));
       }
+#endif // VDMPP
+
       if (!inner.IsNil())
         rb.ImpConc(inner);
       return mk_(rb, Bool(true));

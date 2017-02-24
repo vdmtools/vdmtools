@@ -695,8 +695,8 @@ GenRecordExpr(tag,exprs) ==
 
 GenQuoteExpr: [AS`Name] ==> CPP`Expr
 GenQuoteExpr(nm) ==
-  return BC`GenFctCall(GenQuoteType(nm).tp, []);
 #ifdef VDMSL
+  return BC`GenFctCall(GenQuoteType(nm).tp, []);
 #endif VDMSL
 #ifdef VDMPP
   if CPP`isCPP()
