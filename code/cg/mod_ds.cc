@@ -1455,7 +1455,99 @@ TYPE_CPP_Expr vdmcg::GenExplicitCast(const TYPE_REP_TypeRep & restp, const TYPE_
 // ==> [CPP`Expr]
 Generic vdmcg::GenEmptyValue(const TYPE_REP_TypeRep & type)
 {
-  if (vdm_CPP_isCPP())
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA())
+  {
+    switch(type.GetTag()) {
+      case TAG_TYPE_REP_BooleanTypeRep: {
+        return GenBoolLit_DS(false);
+      }
+      case TAG_TYPE_REP_NumericTypeRep: {
+        switch (type.GetIntValue(pos_REP_NumericTypeRep_qtp)) {
+          case NATONE:  { return GenNumLit(1); }
+          case NAT:
+          case INTEGER: { return GenNumLit(0); }
+          case RAT:
+          case REAL:    { return GenRealLit(0); }
+        }
+      }
+      case TAG_TYPE_REP_TokenTypeRep: {
+        return GenTokenExpr(nil);
+      }
+      case TAG_TYPE_REP_CharTypeRep: {
+        return vdm_BC_GenCharLit('?');
+      }
+      case TAG_TYPE_REP_QuoteTypeRep: {
+        TYPE_AS_Name n (type.GetRecord(pos_REP_QuoteTypeRep_lit));
+        return GenTokenExpr(n);
+      }
+      case TAG_TYPE_REP_UnionTypeRep: {
+        if (IsCompositeType(type))
+          return GenNilLit();
+        else if (IsProductType(type))
+          return GenProductExpr(nil);
+        else if (IsObjRefType(type)) {
+          const SET<TYPE_REP_TypeRep> & tps (type.GetSet(pos_REP_UnionTypeRep_tps));
+          TYPE_REP_ObjRefTypeRep ortr (tps.GetElem());
+          const TYPE_AS_Name & nm (ortr.GetRecord(pos_REP_ObjRefTypeRep_nm));
+          return CallDefaultConstructor(nm);
+        }
+        else
+          return GenGenericExpr();
+      }
+      case TAG_TYPE_REP_ProductTypeRep: {
+        return GenProductExpr(nil);
+      }
+      case TAG_TYPE_REP_SetTypeRep:
+      case TAG_TYPE_REP_EmptySetTypeRep: {
+        return GenEmptySetExpr();
+      }
+      case TAG_TYPE_REP_SeqTypeRep:
+      case TAG_TYPE_REP_EmptySeqTypeRep: {
+       if (IsStringType(type))
+         return GenEmptyStringExpr();
+       else
+         return GenEmptySeqExpr();
+      }
+      case TAG_TYPE_REP_GeneralMapTypeRep:
+      case TAG_TYPE_REP_InjectiveMapTypeRep:
+      case TAG_TYPE_REP_EmptyMapTypeRep: {
+        return GenEmptyMapExpr();
+      }
+      case TAG_TYPE_REP_CompositeTypeRep: {
+        return GenEmptyRecordExpr(type.GetRecord(pos_REP_CompositeTypeRep_nm));
+       }
+      case TAG_TYPE_REP_ObjRefTypeRep: {
+        const TYPE_AS_Name & nm (type.GetRecord(pos_REP_ObjRefTypeRep_nm));
+        if (isInterface(nm))
+          return GenNilLit();
+        else
+          return CallDefaultConstructor(nm);
+      }
+
+      case TAG_TYPE_REP_AllTypeRep:
+      case TAG_TYPE_REP_PartialFnTypeRep:
+      case TAG_TYPE_REP_TotalFnTypeRep:
+      case TAG_TYPE_REP_NilTypeRep: {
+        return GenNilLit();
+      }
+      case TAG_TYPE_REP_UnitTypeRep: {
+        return nil;
+      }
+      case TAG_TYPE_REP_TypeNameRep: {
+        return GenNilLit();
+      }
+      case TAG_TYPE_REP_InvTypeRep: {
+        return GenEmptyValue(type.GetRecord(pos_REP_InvTypeRep_shape));
+      }
+      default: {
+        return GenGenericExpr();
+      }
+    }
+    //return Record (0,0); // To avoid warnings.
+  }
+  else // isCPP
+#endif //VDMPP
   {
     switch(type.GetTag())
     {
@@ -1530,100 +1622,6 @@ Generic vdmcg::GenEmptyValue(const TYPE_REP_TypeRep & type)
       }
       case TAG_TYPE_REP_UnitTypeRep: {
         return nil;
-      }
-      case TAG_TYPE_REP_InvTypeRep: {
-        return GenEmptyValue(type.GetRecord(pos_REP_InvTypeRep_shape));
-      }
-      default: {
-        return GenGenericExpr();
-      }
-    }
-    //return Record (0,0); // To avoid warnings.
-  }
-  else // for Java
-  {
-    switch(type.GetTag()) {
-      case TAG_TYPE_REP_BooleanTypeRep: {
-        return GenBoolLit_DS(false);
-      }
-      case TAG_TYPE_REP_NumericTypeRep: {
-        switch (type.GetIntValue(pos_REP_NumericTypeRep_qtp)) {
-          case NATONE:  { return GenNumLit(1); }
-          case NAT:
-          case INTEGER: { return GenNumLit(0); }
-          case RAT:
-          case REAL:    { return GenRealLit(0); }
-        }
-      }
-      case TAG_TYPE_REP_TokenTypeRep: {
-        return GenTokenExpr(nil);
-      }
-      case TAG_TYPE_REP_CharTypeRep: {
-        return vdm_BC_GenCharLit('?');
-      }
-      case TAG_TYPE_REP_QuoteTypeRep: {
-        TYPE_AS_Name n (type.GetRecord(pos_REP_QuoteTypeRep_lit));
-        return GenTokenExpr(n);
-      }
-      case TAG_TYPE_REP_UnionTypeRep: {
-        if (IsCompositeType(type))
-          return GenNilLit();
-        else if (IsProductType(type))
-          return GenProductExpr(nil);
-#ifdef VDMPP
-        else if (IsObjRefType(type)) {
-          const SET<TYPE_REP_TypeRep> & tps (type.GetSet(pos_REP_UnionTypeRep_tps));
-          TYPE_REP_ObjRefTypeRep ortr (tps.GetElem());
-          const TYPE_AS_Name & nm (ortr.GetRecord(pos_REP_ObjRefTypeRep_nm));
-          return CallDefaultConstructor(nm);
-        }
-#endif //VDMPP
-        else
-          return GenGenericExpr();
-      }
-      case TAG_TYPE_REP_ProductTypeRep: {
-        return GenProductExpr(nil);
-      }
-      case TAG_TYPE_REP_SetTypeRep:
-      case TAG_TYPE_REP_EmptySetTypeRep: {
-        return GenEmptySetExpr();
-      }
-      case TAG_TYPE_REP_SeqTypeRep:
-      case TAG_TYPE_REP_EmptySeqTypeRep: {
-       if (IsStringType(type))
-         return GenEmptyStringExpr();
-       else
-         return GenEmptySeqExpr();
-      }
-      case TAG_TYPE_REP_GeneralMapTypeRep:
-      case TAG_TYPE_REP_InjectiveMapTypeRep:
-      case TAG_TYPE_REP_EmptyMapTypeRep: {
-        return GenEmptyMapExpr();
-      }
-      case TAG_TYPE_REP_CompositeTypeRep: {
-        return GenEmptyRecordExpr(type.GetRecord(pos_REP_CompositeTypeRep_nm));
-       }
-#ifdef VDMPP
-      case TAG_TYPE_REP_ObjRefTypeRep: {
-        const TYPE_AS_Name & nm (type.GetRecord(pos_REP_ObjRefTypeRep_nm));
-        if (isInterface(nm))
-          return GenNilLit();
-        else
-          return CallDefaultConstructor(nm);
-      }
-#endif //VDMPP
-
-      case TAG_TYPE_REP_AllTypeRep:
-      case TAG_TYPE_REP_PartialFnTypeRep:
-      case TAG_TYPE_REP_TotalFnTypeRep:
-      case TAG_TYPE_REP_NilTypeRep: {
-        return GenNilLit();
-      }
-      case TAG_TYPE_REP_UnitTypeRep: {
-        return nil;
-      }
-      case TAG_TYPE_REP_TypeNameRep: {
-        return GenNilLit();
       }
       case TAG_TYPE_REP_InvTypeRep: {
         return GenEmptyValue(type.GetRecord(pos_REP_InvTypeRep_shape));
@@ -2569,15 +2567,13 @@ TYPE_CPP_Expr vdmcg::GenRecLength(const TYPE_CPP_Expr & e)
 TYPE_CPP_Expr vdmcg::GenEmptyRecordExpr(const Generic & tp)
 {
   TYPE_CPP_TypeSpecifier ts (GenRecordType(tp));
-#ifdef VDMSL
-  return vdm_BC_GenFctCall(ts.get_tp(), SEQ<TYPE_CPP_Expr>());
-#endif // VDMSL
 #ifdef VDMPP
-  if (vdm_CPP_isCPP())
-    return vdm_BC_GenFctCall(ts.get_tp(), SEQ<TYPE_CPP_Expr>());
-  else
+  if (vdm_CPP_isJAVA()) {
     return vdm_BC_GenClassInstanceCreationExpr(ts.get_tp(), SEQ<TYPE_CPP_Expr>());
+  }
+  else
 #endif // VDMPP
+    return vdm_BC_GenFctCall(ts.get_tp(), SEQ<TYPE_CPP_Expr>());
 }
 
 // GenGenericDecl
@@ -2587,15 +2583,18 @@ TYPE_CPP_Expr vdmcg::GenEmptyRecordExpr(const Generic & tp)
 SEQ<TYPE_CPP_Stmt> vdmcg::GenGenericDecl(const TYPE_CPP_Name & name, const Generic & initExpr)
 {
   SEQ<TYPE_CPP_Stmt> rb_l;
-  if (vdm_CPP_isCPP())
-    rb_l.ImpAppend(vdm_BC_GenDecl(vdm_BC_GenGeneric(), name, initExpr));
-  else
-  { // java
-    if (initExpr.IsNil())
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    if (initExpr.IsNil()) {
       rb_l.ImpAppend(vdm_BC_GenDecl(vdm_BC_GenGeneric(), name, vdm_BC_GenAsgnInit(GenNullExpr())));
-    else
+    }
+    else {
       rb_l.ImpAppend(vdm_BC_GenDecl(vdm_BC_GenGeneric(), name, initExpr));
+    }
   }
+  else
+#endif // VDMPP
+    rb_l.ImpAppend(vdm_BC_GenDecl(vdm_BC_GenGeneric(), name, initExpr));
   return rb_l;
 }
 
@@ -2603,8 +2602,11 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenGenericDecl(const TYPE_CPP_Name & name, const Gener
 // ==> CPP`DeclSpecifier
 TYPE_CPP_TypeSpecifier vdmcg::GenProductType()
 {
-  if (vdm_CPP_isJAVA())
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     InsertImport(SEQ<Char>(L"jp.vdmtools.VDM.Tuple"));
+  }
+#endif // VDMPP
   return vdm_BC_GenTypeSpecifier(vdm_BC_GenIdentifier(ASTAUX::MkId(L"Tuple")));
 }
 
@@ -2621,7 +2623,12 @@ TYPE_CPP_Expr vdmcg::GenCastProduct(const TYPE_CPP_Expr & e)
 // ==> CPP`Expr
 TYPE_CPP_Expr vdmcg::GenCastProductTypeForModify(const TYPE_CPP_Expr & e)
 {
-  if (vdm_CPP_isCPP())
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    return vdm_BC_GenCastExpr(GenProductType(), e);
+  }
+  else
+#endif // VDMPP
   {
     SEQ<TYPE_CPP_TypeSpecifier> cmds_l;
     cmds_l.ImpAppend(vdm_BC_GenTypeSpecifier(vdm_BC_GenIdentifier(ASTAUX::MkId(L"Common"))));
@@ -2632,8 +2639,6 @@ TYPE_CPP_Expr vdmcg::GenCastProductTypeForModify(const TYPE_CPP_Expr & e)
     ds_l.ImpAppend(vdm_BC_GenTypeSpecifier(quote_REFERENCE));
     return vdm_BC_GenCastExpr2(ds_l, cmcast);
   }
-  else
-    return vdm_BC_GenCastExpr(GenProductType(), e);
 }
 
 // GenProductDecl
@@ -2649,13 +2654,17 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenProductDecl_DS(const TYPE_CPP_Name & name,
   if (initExpr.IsNil())
   {
     TYPE_CPP_Expr arg (vdm_BC_GenIntegerLit(length));
-    if (vdm_CPP_isCPP())
-      rb_l.ImpAppend(vdm_BC_GenDecl(GenProductType(), name, vdm_BC_GenObjectInit(mk_sequence(arg))));
-    else
+#ifdef VDMPP
+    if (vdm_CPP_isJAVA()) {
       rb_l.ImpAppend(vdm_BC_GenDecl(GenProductType(), name, vdm_BC_GenAsgnInit(GenProductExpr(arg))));
+    }
+    else
+#endif // VDMPP
+      rb_l.ImpAppend(vdm_BC_GenDecl(GenProductType(), name, vdm_BC_GenObjectInit(mk_sequence(arg))));
   }
-  else
+  else {
     rb_l.ImpAppend(vdm_BC_GenDecl(GenProductType(), name, initExpr));
+  }
   return rb_l;
 }
 
@@ -2699,16 +2708,19 @@ TYPE_CPP_Expr vdmcg::GenTupSetFieldExpr(const TYPE_CPP_Expr & tup,
 TYPE_CPP_Expr vdmcg::GenTupGetField(const TYPE_CPP_Expr & e, const TYPE_CPP_Expr & i,
                                     const TYPE_REP_TypeRep & tp, const TYPE_REP_TypeRep & ptp)
 {
-  if (vdm_CPP_isCPP()) {
-    if ((IsNumType(tp) && (tp != ptp)) || IsCharType(tp))
-      return GenCastType(tp, vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"GetField"), mk_sequence(i)));
-    else
-      return vdm_BC_GenFctCallObjMemAcc(e, GenGetMethod(tp), mk_sequence(i));
-  }
-  else {
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     SetException(true);
     return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"GetField"), mk_sequence(i));
   }
+  else
+#endif // VDMPP
+    if ((IsNumType(tp) && (tp != ptp)) || IsCharType(tp)) {
+      return GenCastType(tp, vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"GetField"), mk_sequence(i)));
+    }
+    else {
+      return vdm_BC_GenFctCallObjMemAcc(e, GenGetMethod(tp), mk_sequence(i));
+    }
 }
 
 // GenIsTuple
@@ -2716,20 +2728,26 @@ TYPE_CPP_Expr vdmcg::GenTupGetField(const TYPE_CPP_Expr & e, const TYPE_CPP_Expr
 // ==> CPP`Expr
 TYPE_CPP_Expr vdmcg::GenIsTuple(const TYPE_CPP_Expr & e)
 {
-  if (vdm_CPP_isCPP())
-    return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"IsTuple"), SEQ<TYPE_CPP_Expr>());
-  else
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     return vdm_BC_GenBracketedExpr(vdm_BC_GenTypeComp(GenProductType(), e));
+  }
+  else
+#endif // VDMPP
+    return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"IsTuple"), SEQ<TYPE_CPP_Expr>());
 }
 
 // GenNilLit
 // ==> CPP`Expr
 TYPE_CPP_Expr vdmcg::GenNilLit()
 {
-  if (vdm_CPP_isCPP())
-    return vdm_BC_GenFctCall(vdm_BC_GenIdentifier(ASTAUX::MkId(L"Nil")), SEQ<TYPE_CPP_Expr>());
-  else // for Java
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     return GenNullExpr();
+  }
+  else
+#endif // VDMPP
+    return vdm_BC_GenFctCall(vdm_BC_GenIdentifier(ASTAUX::MkId(L"Nil")), SEQ<TYPE_CPP_Expr>());
 }
 
 // GenIsNil
@@ -2737,10 +2755,13 @@ TYPE_CPP_Expr vdmcg::GenNilLit()
 // ==> CPP`Expr
 TYPE_CPP_Expr vdmcg::GenIsNil(const TYPE_CPP_Expr & e)
 {
-  if (vdm_CPP_isCPP())
-    return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"IsNil"), SEQ<TYPE_CPP_Expr>() );
-  else // for Java
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     return vdm_BC_GenBracketedExpr(vdm_BC_GenEq(e, GenNullExpr()));
+  }
+  else
+#endif // VDMPP
+    return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"IsNil"), SEQ<TYPE_CPP_Expr>() );
 }
 
 #ifdef VDMPP
@@ -2767,32 +2788,34 @@ SEQ<TYPE_CPP_MemberDeclaration> vdmcg::GenLocalComparator(const TYPE_AS_Name & c
 // ==> CPP`DeclSpecifier
 TYPE_CPP_TypeSpecifier vdmcg::GenSetType()
 {
-  if (vdm_CPP_isCPP())
-    return vdm_BC_GenTypeSpecifier(vdm_BC_GenIdentifier(ASTAUX::MkId(L"Set")));
-  else // for Java
-  {
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     InsertImport(SEQ<Char>(L"java.util.Set"));
     if(get_generics_option())
       return vdm_BC_GenTypeSpecifier(vdm_BC_GenIdentifier(ASTAUX::MkId(L"Set<Object>")) );
     else
       return vdm_BC_GenTypeSpecifier(vdm_BC_GenIdentifier(ASTAUX::MkId(L"Set")));
   }
+  else
+#endif // VDMPP
+    return vdm_BC_GenTypeSpecifier(vdm_BC_GenIdentifier(ASTAUX::MkId(L"Set")));
 }
 
 // GenImplSetType
 // ==> CPP`DeclSpecifier
 TYPE_CPP_TypeSpecifier vdmcg::GenImplSetType()
 {
-  if (vdm_CPP_isCPP())
-    return vdm_BC_GenTypeSpecifier(vdm_BC_GenIdentifier(ASTAUX::MkId(L"Set")));
-  else // for Java
-  {
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     InsertImport(SEQ<Char>(L"java.util.HashSet"));
     if(get_generics_option())
       return vdm_BC_GenTypeSpecifier(vdm_BC_GenIdentifier(ASTAUX::MkId(L"HashSet<Object>")) );
     else
       return vdm_BC_GenTypeSpecifier(vdm_BC_GenIdentifier(ASTAUX::MkId(L"HashSet")));
   }
+  else
+#endif // VDMPP
+    return vdm_BC_GenTypeSpecifier(vdm_BC_GenIdentifier(ASTAUX::MkId(L"Set")));
 }
 
 // GenDeclEmptySet
@@ -2801,10 +2824,13 @@ TYPE_CPP_TypeSpecifier vdmcg::GenImplSetType()
 SEQ<TYPE_CPP_Stmt> vdmcg::GenDeclEmptySet(const TYPE_CPP_Name & name)
 {
   SEQ<TYPE_CPP_Stmt> rb_l;
-  if (vdm_CPP_isCPP())
-    rb_l.ImpAppend(vdm_BC_GenDecl(GenSetType(), name, nil));
-  else
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     rb_l.ImpAppend(vdm_BC_GenDecl(GenSetType(), name, vdm_BC_GenAsgnInit(GenEmptySetExpr())));
+  }
+  else
+#endif // VDMPP
+    rb_l.ImpAppend(vdm_BC_GenDecl(GenSetType(), name, nil));
   return rb_l;
 }
 
@@ -2815,10 +2841,17 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenDeclEmptySet(const TYPE_CPP_Name & name)
 SEQ<TYPE_CPP_Stmt> vdmcg::GenSetDecl_DS(const TYPE_CPP_Name & name, const Generic & initExpr)
 {
   SEQ<TYPE_CPP_Stmt> rb_l;
-  if (vdm_CPP_isJAVA() && initExpr.IsNil())
-    rb_l.ImpAppend(vdm_BC_GenDecl(GenSetType(), name, vdm_BC_GenAsgnInit(GenEmptySetExpr())));
-    //rb_l.ImpAppend(vdm_BC_GenDecl(GenSetType(), name, vdm_BC_GenAsgnInit(GenNullExpr())));
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    if (initExpr.IsNil()) {
+      rb_l.ImpAppend(vdm_BC_GenDecl(GenSetType(), name, vdm_BC_GenAsgnInit(GenEmptySetExpr())));
+    }
+    else {
+      rb_l.ImpAppend(vdm_BC_GenDecl(GenSetType(), name, initExpr));
+    }
+  }
   else
+#endif // VDMPP
     rb_l.ImpAppend(vdm_BC_GenDecl(GenSetType(), name, initExpr));
   return rb_l;
 }
@@ -2829,16 +2862,21 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSetDecl_DS(const TYPE_CPP_Name & name, const Generi
 // ==> seq of CPP`Stmt
 SEQ<TYPE_CPP_Stmt> vdmcg::GenDeclSet(const TYPE_CPP_Name & name, const Generic & ie)
 {
-  if (ie.IsNil ())
+  if (ie.IsNil ()) {
     return GenDeclEmptySet(name);
+  }
   else {
-    Generic initexpr (vdm_CPP_isJAVA()
-                ? (Generic)vdm_BC_GenAsgnInit(GenSetExpr(ie))
-                : (Generic)vdm_BC_GenObjectInit (mk_sequence(StripBracketedAndCastExpr(ie))));
-    return GenSetDecl_DS(name, initexpr);
+#ifdef VDMPP
+    if (vdm_CPP_isJAVA()) {
+      return GenSetDecl_DS(name, vdm_BC_GenAsgnInit(GenSetExpr(ie)));
+    }
+    else
+#endif // VDMPP
+      return GenSetDecl_DS(name, vdm_BC_GenObjectInit (mk_sequence(StripBracketedAndCastExpr(ie))));
   }
 }
 
+#ifdef VDMPP
 // GenDeclCollection
 // name : CPP`Name
 // ie : [CPP`Expr]
@@ -2851,6 +2889,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenDeclCollection(const TYPE_CPP_Name& name, const Gen
   rb_l.ImpAppend(vdm_BC_GenDecl(ts, name, vdm_BC_GenAsgnInit(ie)));
   return rb_l;
 }
+#endif // VDMPP
 
 // GenSetUnion
 // e1 : CPP`Expr
@@ -2867,10 +2906,13 @@ TYPE_CPP_Stmt vdmcg::GenSetUnion(const TYPE_CPP_Expr & e1, const TYPE_CPP_Expr &
 // ==> CPP`Expr
 TYPE_CPP_Expr vdmcg::GenSetUnionExpr(const TYPE_CPP_Expr & e1, const TYPE_CPP_Expr & e2)
 {
-  if (vdm_CPP_isCPP())
-    return vdm_BC_GenFctCallObjMemAcc(e1, ASTAUX::MkId(L"ImpUnion"), SEQ<TYPE_CPP_Expr>().ImpAppend(e2));
-  else
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     return vdm_BC_GenFctCallObjMemAcc(e1, ASTAUX::MkId(L"addAll"), SEQ<TYPE_CPP_Expr>().ImpAppend(e2));
+  }
+  else
+#endif // VDMPP
+    return vdm_BC_GenFctCallObjMemAcc(e1, ASTAUX::MkId(L"ImpUnion"), SEQ<TYPE_CPP_Expr>().ImpAppend(e2));
 }
 
 // GenCastSetType
@@ -2886,7 +2928,12 @@ TYPE_CPP_Expr vdmcg::GenCastSetType(const TYPE_CPP_Expr & e)
 // ==> CPP`Expr
 TYPE_CPP_Expr vdmcg::GenCastSetTypeForModify(const TYPE_CPP_Expr & e)
 {
-  if (vdm_CPP_isCPP())
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    return vdm_BC_GenCastExpr(GenSetType(), e);
+  }
+  else
+#endif // VDMPP
   {
     SEQ<TYPE_CPP_TypeSpecifier> cmds_l;
     cmds_l.ImpAppend(vdm_BC_GenTypeSpecifier(vdm_BC_GenIdentifier(ASTAUX::MkId(L"Common"))));
@@ -2897,8 +2944,6 @@ TYPE_CPP_Expr vdmcg::GenCastSetTypeForModify(const TYPE_CPP_Expr & e)
     ds_l.ImpAppend(vdm_BC_GenTypeSpecifier(quote_REFERENCE));
     return vdm_BC_GenCastExpr2(ds_l, cmcast);
   }
-  else
-    return vdm_BC_GenCastExpr(GenSetType(), e);
 }
 
 // GenIsSet
@@ -2906,10 +2951,13 @@ TYPE_CPP_Expr vdmcg::GenCastSetTypeForModify(const TYPE_CPP_Expr & e)
 // ==> CPP`Expr
 TYPE_CPP_Expr vdmcg::GenIsSet(const TYPE_CPP_Expr & e)
 {
-  if (vdm_CPP_isCPP())
-    return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"IsSet"), SEQ<TYPE_CPP_Expr>());
-  else
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     return vdm_BC_GenBracketedExpr(vdm_BC_GenTypeComp(GenSetType(), e));
+  }
+  else
+#endif // VDMPP
+    return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"IsSet"), SEQ<TYPE_CPP_Expr>());
 }
 
 // GenSetIsEmpty
@@ -2917,10 +2965,13 @@ TYPE_CPP_Expr vdmcg::GenIsSet(const TYPE_CPP_Expr & e)
 // ==> CPP`Expr
 TYPE_CPP_Expr vdmcg::GenSetIsEmpty(const TYPE_CPP_Expr & e)
 {
-  if (vdm_CPP_isCPP())
-    return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"IsEmpty"), SEQ<TYPE_CPP_Expr>());
-  else
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"isEmpty"), SEQ<TYPE_CPP_Expr>());
+  }
+  else
+#endif // VDMPP
+    return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"IsEmpty"), SEQ<TYPE_CPP_Expr>());
 }
 
 // GenCard_int
@@ -2928,10 +2979,13 @@ TYPE_CPP_Expr vdmcg::GenSetIsEmpty(const TYPE_CPP_Expr & e)
 // ==> CPP`Expr
 TYPE_CPP_Expr vdmcg::GenCard_int(const TYPE_CPP_Expr & e)
 {
-  if (vdm_CPP_isCPP())
-    return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"Card"), SEQ<TYPE_CPP_Expr>());
-  else
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"size"), SEQ<TYPE_CPP_Expr>());
+  }
+  else
+#endif // VDMPP
+    return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"Card"), SEQ<TYPE_CPP_Expr>());
 }
 
 // GenCard
@@ -3009,10 +3063,13 @@ TYPE_CPP_Expr vdmcg::GenPSubSet_Bool(const TYPE_CPP_Expr & e1, const TYPE_CPP_Ex
 // ==> CPP`Expr
 TYPE_CPP_Expr vdmcg::GenInterSect(const TYPE_CPP_Expr & e1, const TYPE_CPP_Expr & e2)
 {
-  if (vdm_CPP_isCPP())
-    return vdm_BC_GenFctCallObjMemAcc(e1, ASTAUX::MkId(L"ImpIntersect"), mk_sequence(e2));
-  else
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     return vdm_BC_GenFctCallObjMemAcc(e1, ASTAUX::MkId(L"retainAll"), mk_sequence(e2));
+  }
+  else
+#endif // VDMPP
+    return vdm_BC_GenFctCallObjMemAcc(e1, ASTAUX::MkId(L"ImpIntersect"), mk_sequence(e2));
 }
 
 // GenInterSectStmt
@@ -3030,10 +3087,13 @@ TYPE_CPP_Stmt vdmcg::GenInterSectStmt(const TYPE_CPP_Expr & e1, const TYPE_CPP_E
 // ==> CPP`Expr
 TYPE_CPP_Expr vdmcg::GenSetMinus(const TYPE_CPP_Expr & e1, const TYPE_CPP_Expr & e2)
 {
-  if (vdm_CPP_isCPP())
-    return vdm_BC_GenFctCallObjMemAcc(e1, ASTAUX::MkId(L"ImpDiff"), mk_sequence(e2));
-  else
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     return vdm_BC_GenFctCallObjMemAcc(e1, ASTAUX::MkId(L"removeAll"), mk_sequence(e2));
+  }
+  else
+#endif // VDMPP
+    return vdm_BC_GenFctCallObjMemAcc(e1, ASTAUX::MkId(L"ImpDiff"), mk_sequence(e2));
 }
 
 // GenSetMinusStmt
@@ -3051,10 +3111,13 @@ TYPE_CPP_Stmt vdmcg::GenSetMinusStmt(const TYPE_CPP_Expr & e1, const TYPE_CPP_Ex
 // ==> CPP`Expr
 TYPE_CPP_Expr vdmcg::GenSubSet(const TYPE_CPP_Expr & e1, const TYPE_CPP_Expr & e2)
 {
-  if (vdm_CPP_isCPP())
-    return vdm_BC_GenFctCallObjMemAcc(e1, ASTAUX::MkId(L"SubSet"), mk_sequence(e2));
-  else
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     return vdm_BC_GenFctCallObjMemAcc(e2, ASTAUX::MkId(L"containsAll"), mk_sequence(e1));
+  }
+  else
+#endif // VDMPP
+    return vdm_BC_GenFctCallObjMemAcc(e1, ASTAUX::MkId(L"SubSet"), mk_sequence(e2));
 }
 
 // GenSubSet_Bool
