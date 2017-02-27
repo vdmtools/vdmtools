@@ -217,8 +217,9 @@ initialised to.
 \begin{vdm_al}
 GenDeclInit: [ REP`TypeRep ] * CPP`Name * CPP`Expr ==> seq1 of CPP`Stmt
 GenDeclInit(type, name, initExpr) ==
-  if CPP`isCPP()
-  then
+  if CPP`isJAVA()
+  then return GenDecl(type, name, BC`GenAsgnInit(initExpr))
+  else
     cases initExpr:
       mk_CPP`FctCall(mk_CPP`Identifier(-,-),[],-)
              -> cases initExpr.fct:
@@ -236,8 +237,7 @@ GenDeclInit(type, name, initExpr) ==
                          -> return GenDecl(type, name, BC`GenObjectInit([arg])),
                     others -> return GenDecl(type, name, BC`GenObjectInit([initExpr]))
                   end
-    end
-  else return GenDecl(type, name, BC`GenAsgnInit(initExpr));
+    end;
 
 GenConstDeclInit: [ REP`TypeRep ] * CPP`Name * CPP`Expr ==> seq1 of CPP`Stmt
 GenConstDeclInit(tp, name, expr) ==
@@ -573,136 +573,113 @@ The next operations takes care of casting expressions to their appropriate types
 \begin{vdm_al}
 GenCastType: REP`TypeRep * CPP`Expr ==> CPP`Expr
 GenCastType(type, e) ==
-  if CPP`isCPP()
-  then
+  if CPP`isJAVA()
+  then return BC`GenCastExpr(GenType(type), e)
+  else
     let e' = CGAUX`StripCastExpr(e)
     in return BC`GenCastExpr2([ BC`GenTypeSpecifier(<CONST>), GenType(type),
-                                BC`GenTypeSpecifier(<REFERENCE>) ], e')
-  else return BC`GenCastExpr(GenType(type), e);
+                                BC`GenTypeSpecifier(<REFERENCE>) ], e');
 \end{vdm_al}
 
 \begin{vdm_al}
 GenGenericExpr: () ==> CPP`Expr
 GenGenericExpr() ==
-#ifdef VDMSL
-  return BC`GenFctCall(BC`GenGeneric().tp, []);
-#endif VDMSL
 #ifdef VDMPP
-  if CPP`isCPP()
-  then return BC`GenFctCall(BC`GenGeneric().tp, [])
-  else return BC`GenClassInstanceCreationExpr(BC`GenGeneric().tp,[]);
+  if CPP`isJAVA()
+  then return BC`GenClassInstanceCreationExpr(BC`GenGeneric().tp,[])
+  else
 #endif VDMPP
+  return BC`GenFctCall(BC`GenGeneric().tp, []);
 
 GenBoolExpr: [CPP`Expr] ==> CPP`Expr
 GenBoolExpr(expr) ==
   let args = if expr = nil then [] else [expr]
   in
-#ifdef VDMSL
-    return BC`GenFctCall(GenBoolType().tp, args);
-#endif VDMSL
 #ifdef VDMPP
-    if CPP`isCPP()
-    then return BC`GenFctCall(GenBoolType().tp, args)
-    else return BC`GenClassInstanceCreationExpr(GenBoolType().tp,args);
+    if CPP`isJAVA()
+    then return BC`GenClassInstanceCreationExpr(GenBoolType().tp,args)
+    else
 #endif VDMPP
+      return BC`GenFctCall(GenBoolType().tp, args);
 
 GenIntExpr: [CPP`Expr] ==> CPP`Expr
 GenIntExpr(expr) ==
   let args = if expr = nil then [] else [expr]
   in
-#ifdef VDMSL
-    return BC`GenFctCall(GenImplIntType().tp, args);
-#endif VDMSL
 #ifdef VDMPP
-    if CPP`isCPP()
-    then return BC`GenFctCall(GenImplIntType().tp, args)
-    else return BC`GenClassInstanceCreationExpr(GenImplIntType().tp,args);
+    if CPP`isJAVA()
+    then return BC`GenClassInstanceCreationExpr(GenImplIntType().tp,args)
+    else
 #endif VDMPP
+      return BC`GenFctCall(GenImplIntType().tp, args);
 
 GenRealExpr: [CPP`Expr] ==> CPP`Expr
 GenRealExpr(expr) ==
   let args = if expr = nil then [] else [expr]
   in
-#ifdef VDMSL
-    return BC`GenFctCall(GenImplRealType().tp, args);
-#endif VDMSL
 #ifdef VDMPP
-    if CPP`isCPP()
-    then return BC`GenFctCall(GenImplRealType().tp, args)
-    else return BC`GenClassInstanceCreationExpr(GenImplRealType().tp,args);
+    if CPP`isJAVA()
+    then return BC`GenClassInstanceCreationExpr(GenImplRealType().tp,args)
+    else
 #endif VDMPP
+      return BC`GenFctCall(GenImplRealType().tp, args);
 
 GenCharExpr: [CPP`Expr] ==> CPP`Expr
 GenCharExpr(expr) ==
   let args = if expr = nil then [] else [expr]
   in
-#ifdef VDMSL
-    return BC`GenFctCall(GenCharType().tp, args);
-#endif VDMSL
 #ifdef VDMPP
-    if CPP`isCPP()
-    then return BC`GenFctCall(GenCharType().tp, args)
-    else return BC`GenClassInstanceCreationExpr(GenCharType().tp,args);
+    if CPP`isJAVA()
+    then return BC`GenClassInstanceCreationExpr(GenCharType().tp,args)
+    else
 #endif VDMPP
+      return BC`GenFctCall(GenCharType().tp, args);
 
 GenTokenExpr: [CPP`Expr] ==> CPP`Expr
 GenTokenExpr(expr) ==
   let args = if expr = nil then [] else [expr]
   in
-#ifdef VDMSL
-    return BC`GenFctCall(GenTokenType().tp, args);
-#endif VDMSL
 #ifdef VDMPP
-    if CPP`isCPP()
-    then return BC`GenFctCall(GenTokenType().tp, args)
-    else return BC`GenClassInstanceCreationExpr(GenTokenType().tp,args);
+    if CPP`isJAVA()
+    then return BC`GenClassInstanceCreationExpr(GenTokenType().tp,args)
+    else
 #endif VDMPP
+      return BC`GenFctCall(GenTokenType().tp, args);
 
 GenProductExpr: [CPP`Expr] ==> CPP`Expr
 GenProductExpr(expr) ==
   let args = if expr = nil then [] else [expr]
   in
-#ifdef VDMSL
-    return BC`GenFctCall(GenProductType().tp, args);
-#endif VDMSL
 #ifdef VDMPP
-    if CPP`isCPP()
-    then return BC`GenFctCall(GenProductType().tp, args)
-    else return BC`GenClassInstanceCreationExpr(GenProductType().tp,args);
+    if CPP`isJAVA()
+    then return BC`GenClassInstanceCreationExpr(GenProductType().tp,args)
+    else
 #endif VDMPP
+      return BC`GenFctCall(GenProductType().tp, args);
 
 GenRecordExpr: [AS`Name] * [seq of CPP`Expr] ==> CPP`Expr
 GenRecordExpr(tag,exprs) ==
   let args = if exprs = nil then [] else exprs
   in
-#ifdef VDMSL
-    if tag = nil
-    then GenEmptyRecordExpr(nil)
-    else
-      def rc = BC`GenFctCall(GenRecordType(tag).tp, [])
-      in return BC`GenFctCallObjMemAcc(rc, "Init", args);
-#endif VDMSL
 #ifdef VDMPP
-    if CPP`isCPP()
-    then
+    if CPP`isJAVA()
+    then return BC`GenClassInstanceCreationExpr(GenRecordType(tag).tp,args)
+    else
+#endif VDMPP
       if tag = nil
       then GenEmptyRecordExpr(nil)
       else
         def rc = BC`GenFctCall(GenRecordType(tag).tp, [])
-        in return BC`GenFctCallObjMemAcc(rc, "Init", args)
-    else return BC`GenClassInstanceCreationExpr(GenRecordType(tag).tp,args);
-#endif VDMPP
+        in return BC`GenFctCallObjMemAcc(rc, "Init", args);
 
 GenQuoteExpr: [AS`Name] ==> CPP`Expr
 GenQuoteExpr(nm) ==
-#ifdef VDMSL
-  return BC`GenFctCall(GenQuoteType(nm).tp, []);
-#endif VDMSL
 #ifdef VDMPP
-  if CPP`isCPP()
-  then return BC`GenFctCall(GenQuoteType(nm).tp, [])
-  else return BC`GenClassInstanceCreationExpr(GenQuoteType(nm).tp,[]);
+  if CPP`isJAVA()
+  then return BC`GenClassInstanceCreationExpr(GenQuoteType(nm).tp,[])
+  else
 #endif VDMPP
+    return BC`GenFctCall(GenQuoteType(nm).tp, []);
 \end{vdm_al}
 
 \begin{vdm_al}
