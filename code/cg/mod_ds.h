@@ -245,10 +245,12 @@ private:
   TYPE_CPP_Expr GenMapExpr(const Generic & ie);
   SEQ<TYPE_CPP_Stmt> GenMapMerge(const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &);
   Generic GenMapRestToBy(const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &, int);
+#ifdef VDMPP
   TYPE_CPP_Stmt GenMapRestrictStmt(const TYPE_CPP_Expr &,
                                    const TYPE_CPP_Expr &,
                                    const TYPE_CPP_Expr &,
                                    const TYPE_CPP_Expr &, int);
+#endif // VDMPP
   SEQ<TYPE_CPP_Stmt> GenComposeExpr(const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &);
   SEQ<TYPE_CPP_Stmt> GenMapIteration(const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &);
   SEQ<TYPE_CPP_Stmt> GenMapIterIfPart(const TYPE_CPP_Name &, const TYPE_CPP_Name &, const Generic &);
