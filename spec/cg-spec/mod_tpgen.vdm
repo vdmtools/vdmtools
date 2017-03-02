@@ -1070,17 +1070,16 @@ Name2CppTpId(tpnm) ==
 #ifdef VDMSL
   def qtpnm = GenQName(tpnm)
   in
-    if CPP`isCPP()
-    then return BC`GenIdentifier("TYPE_" ^ Name2Id(qtpnm))
-    else return BC`GenIdentifier(Name2Id(qtpnm));
-#endif
+#endif VDMSL
 #ifdef VDMPP
   def qtpnm = GenQualifiedTypeName (GenQName(tpnm))
   in
-    if CPP`isCPP()
-    then return BC`GenIdentifier("TYPE_" ^ Name2Id(qtpnm))
-    else return BC`GenIdentifier(Name2Id(qtpnm));
-#endif
+    if CPP`isJAVA()
+    then
+      return BC`GenIdentifier(Name2Id(qtpnm))
+    else
+#endif VDMPP
+      return BC`GenIdentifier("TYPE_" ^ Name2Id(qtpnm));
 \end{vdm_al}
 
 Generate C++ identifier for quote value
@@ -1747,68 +1746,12 @@ GenCompositeClassDecl(nm, -, cpptpid, taglist, tagenv, -, tps) ==
 #endif VDMSL
 #ifdef VDMPP
 GenCompositeClassDecl(nm, acc, cpptpid, taglist, tagenv, dcenv, tps) ==
-  if CPP`isCPP()
+  if CPP`isJAVA()
   then
-#endif VDMPP
-   (dcl pub_ml : seq of CPP`MemberDeclaration := [], -- public member functions
-        priv_ml :seq of CPP`MemberDeclaration := [], -- privat member functions
-        fctdef  :CPP`CPPAS := [],                    -- function definitions
-#ifdef VDMSL
-        qnm : AS`Name := nm,
-#endif VDMSL
-        i : int := 1;
-
-    def cnm = cpptpid;
-        cn =  DS`GenRecordType(nil).tp;
-        bs = [ BC`GenAccBaseSpec(cn)];
-        ch = BC`GenClassHead(cpptpid,bs)
-    in
-     (
-      if taglist <> []
-      then fctdef := fctdef ^ [GenInitFunctionDef(cnm,taglist,tagenv)];
-
-      pub_ml := pub_ml ^ [ GenClassDefaultConstructorDecl(<COMPOSITE>,cpptpid,taglist) ];
-
-      if taglist <> []
-      then pub_ml := pub_ml ^ [ GenInitFunctionDecl(cpptpid,taglist,tagenv) ];
-
-      pub_ml := pub_ml ^ [ GenCommonConstrDecl(cpptpid,cn), GenGetTypeNameDecl(cpptpid) ]
-                       ^ GenMemFctMacros(<COMPOSITE>);
-
-      for s in taglist do
-       (pub_ml := pub_ml ^ [GenGetFunctionDecl(s,tagenv(s))];
-        pub_ml := pub_ml ^ [GenSetFunctionDecl(s,tagenv(s))];
-
-        fctdef := fctdef ^ [GenGetFunctionDef(<COMPOSITE>,s,tagenv(s),i,cnm,tps(i))];
-        fctdef := fctdef ^ [GenSetFunctionDef(s,tagenv(s),i,cnm)];
-
-        i := i+1;
-       );
-
-#ifdef VDMSL
-       if len nm.ids = 1
-       then qnm := GenQName(nm);
-
-       if qnm not in set imported_types
-       then mod_fctdef := mod_fctdef ^ fctdef;
-#endif VDMSL
-#ifdef VDMPP
-       mod_fctdef := mod_fctdef ^ fctdef;
-#endif VDMPP
-       let cl = [BC`GenIdentDeclaration([],
-                  [BC`GenTypeSpecifier(BC`GenClassSpecifier(ch,BC`GenPrivate(priv_ml) ^ BC`GenPublic(pub_ml)))],
-                  [])
-                ]
-        in
-       return cl
-     );
-#ifdef VDMPP
-   )
-  else
-   (dcl  pub_ml : seq of CPP`MemberDeclaration := [],
+   (dcl pub_ml : seq of CPP`MemberDeclaration := [],
        -- public member functions
-       inter_l : seq of CPP`PackageName := [];
-  if nm in set dom record_types then
+        inter_l : seq of CPP`PackageName := [];
+    if nm in set dom record_types then
       let rn = record_types(nm) in
          for n in rn do
            inter_l := inter_l ^ [BC`GenSimplePackageName(Name2Id(n))] ;
@@ -1833,10 +1776,65 @@ GenCompositeClassDecl(nm, acc, cpptpid, taglist, tagenv, dcenv, tps) ==
       let cl = [BC`GenIdentDeclaration([],[BC`GenTypeSpecifier(BC`GenClassSpecifier(ch,pub_ml))], []) ]
         in
          return cl
+    )
   )
+  else
 #endif VDMPP
-);
+   (dcl pub_ml : seq of CPP`MemberDeclaration := [], -- public member functions
+        priv_ml :seq of CPP`MemberDeclaration := [], -- privat member functions
+        fctdef  :CPP`CPPAS := [];                    -- function definitions
+        --i : int := 1;
 
+    def cnm = cpptpid;
+        cn =  DS`GenRecordType(nil).tp;
+        bs = [ BC`GenAccBaseSpec(cn)];
+        ch = BC`GenClassHead(cpptpid,bs)
+    in
+     (
+      if taglist <> []
+      then fctdef := fctdef ^ [GenInitFunctionDef(cnm,taglist,tagenv)];
+
+      pub_ml := pub_ml ^ [ GenClassDefaultConstructorDecl(<COMPOSITE>,cpptpid,taglist) ];
+
+      if taglist <> []
+      then pub_ml := pub_ml ^ [ GenInitFunctionDecl(cpptpid,taglist,tagenv) ];
+
+      pub_ml := pub_ml ^ [ GenCommonConstrDecl(cpptpid,cn), GenGetTypeNameDecl(cpptpid) ]
+                       ^ GenMemFctMacros(<COMPOSITE>);
+
+      --for id in taglist do
+      for i = 1 to len taglist do
+        let id = taglist(i)
+        in
+       (pub_ml := pub_ml ^ [GenGetFunctionDecl(id,tagenv(id))];
+        pub_ml := pub_ml ^ [GenSetFunctionDecl(id,tagenv(id))];
+
+        fctdef := fctdef ^ [GenGetFunctionDef(<COMPOSITE>,id,tagenv(id),i,cnm,tps(i))];
+        fctdef := fctdef ^ [GenSetFunctionDef(id,tagenv(id),i,cnm)];
+
+        --i := i+1;
+       );
+
+#ifdef VDMSL
+      (dcl qnm : AS`Name := nm;
+       if len nm.ids = 1
+       then qnm := GenQName(nm);
+      
+       if qnm not in set imported_types
+       then mod_fctdef := mod_fctdef ^ fctdef;
+      );
+#endif VDMSL
+#ifdef VDMPP
+       mod_fctdef := mod_fctdef ^ fctdef;
+#endif VDMPP
+       let cl = [BC`GenIdentDeclaration([],
+                  [BC`GenTypeSpecifier(BC`GenClassSpecifier(ch,BC`GenPrivate(priv_ml) ^ BC`GenPublic(pub_ml)))],
+                  [])
+                ]
+        in
+       return cl
+     );
+   );
 
 GenIdentDecls: TagList * TagEnv ==> seq of CPP`MemberDeclaration
 GenIdentDecls(sl,tenv) ==
@@ -2837,7 +2835,7 @@ the current module.
 
 GenVDMTpName : REP`TypeRep * (<ANONYM>|<CC>|<CCANONYM>|<H>) * set of AS`Name ==> CPP`Name
 GenVDMTpName(tp,incl, names) ==
-
+#ifdef VDMPP
 if CPP`isJAVA()
 then
   (cases tp :
@@ -2879,6 +2877,7 @@ then
      others                          -> return Id2JavaGTpId(GenCppTpDecl(tp,names))
     end;)
  else
+#endif VDMPP
   (cases tp :
      mk_REP`InvTypeRep(-,shape,-) -> GenVDMTpName(shape, incl, names),
      mk_REP`TypeNameRep(nm) -> (

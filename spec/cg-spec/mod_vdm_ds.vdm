@@ -1616,16 +1616,14 @@ constructions of quotes.
 
   GenQuoteLit: seq of char ==> CPP`Expr
   GenQuoteLit( ch_l ) ==
-#ifdef VDMSL
-    return BC`GenFctCall(GenQuoteType(nil).tp, [BC`GenStringLit(ch_l)]);
-#endif VDMSL
 #ifdef VDMPP
-    if CPP`isCPP()
-    then return BC`GenFctCall(GenQuoteType(nil).tp, [BC`GenStringLit(ch_l)])
-    else
+    if CPP`isJAVA()
+    then
      (def - = CGAUX`InsertQuote(ch_l)
-      in return BC`GenClassInstanceCreationExpr(BC`GenIdentifier("quotes." ^ ch_l),[]));
+      in return BC`GenClassInstanceCreationExpr(BC`GenIdentifier("quotes." ^ ch_l),[]))
+    else
 #endif VDMPP
+      return BC`GenFctCall(GenQuoteType(nil).tp, [BC`GenStringLit(ch_l)]);
 
   GenIsQuote: CPP`Expr * REP`QuoteTypeRep  ==> CPP`Expr
   GenIsQuote( e, mk_REP`QuoteTypeRep(nm)) ==
@@ -3706,9 +3704,9 @@ corresponding to class types.
 
   GenMyClass: CPP`Expr ==> CPP`Expr
   GenMyClass(e) ==
-    if CPP`isCPP()
-    then return BC`GenFctCallObjMemAcc(e, "MyObjectId", [])
-    else return BC`GenFctCallObjMemAcc(e, "getClass", []);
+    if CPP`isJAVA()
+    then return BC`GenFctCallObjMemAcc(e, "getClass", [])
+    else return BC`GenFctCallObjMemAcc(e, "MyObjectId", []);
 
   GenMyBaseClass: CPP`Expr ==> CPP`Expr
   GenMyBaseClass(e) ==
@@ -3716,12 +3714,13 @@ corresponding to class types.
 
   GenObjRefType: [AS`Name] ==> CPP`DeclSpecifier
   GenObjRefType(nm) ==
-    if CPP`isCPP()
-    then return BC`GenTypeSpecifier(BC`GenIdentifier("ObjectRef"))
-    else
+    if CPP`isJAVA()
+    then
       if (nm <> nil)
       then return BC`GenTypeSpecifier(BC`GenIdentifier(CGAUX`GiveLastName(nm)))
-      else return BC`GenTypeSpecifier(BC`GenIdentifier("Object"));
+      else return BC`GenTypeSpecifier(BC`GenIdentifier("Object"))
+    else
+      return BC`GenTypeSpecifier(BC`GenIdentifier("ObjectRef"));
 \end{vdm_al}
 
 The operation $GenObjRefDecl$ generates a declaration statement
@@ -3746,18 +3745,18 @@ Note, that the object {\tt obj}'s reference will be {\tt NULL} ({\tt
 \begin{vdm_al}
   GenObjRefDecl: [AS`Name] * CPP`Name * [CPP`Initializer] ==> seq1 of CPP`Stmt
   GenObjRefDecl(nm,obj,initExpr) ==
-    if CPP`isCPP()
+    if CPP`isJAVA()
     then
-      def ds    = GenObjRefType(nm)
-      in return [BC`GenDecl(ds, obj, initExpr)]
-    else
       def cname = GenObjRefType(nm)
       in
         if initExpr = nil
         then
           def ainit =  BC`GenAsgnInit(GenNullExpr())
           in return [BC`GenDecl(cname, obj, ainit)]
-        else return [BC`GenDecl(cname, obj, initExpr)];
+        else return [BC`GenDecl(cname, obj, initExpr)]
+    else
+      def ds    = GenObjRefType(nm)
+      in return [BC`GenDecl(ds, obj, initExpr)];
 
 \end{vdm_al}
 
@@ -3778,29 +3777,29 @@ ObjectRef(new vdm_A());
     def cls = BC`GenTypeSpecifier(BC`Rename(nm));
         alloc = BC`GenNewExpr(cls, [])
     in
-      if CPP`isCPP()
+      if CPP`isJAVA()
       then
+        return alloc
+      else
         def ds = TPGEN`Id2CppGTpId(TPGEN`GenObjRefType(mk_REP`ObjRefTypeRep(nm), {}))
         in
          (CGAUX`IncludeClass(nm);
-          return BC`GenFctCall(ds, [alloc]))
-      else return alloc;
+          return BC`GenFctCall(ds, [alloc]));
 
   CallConstructor: AS`Name * CPP`Exprs ==> CPP`Expr
   CallConstructor(nm, p_argL) ==
     def cls = BC`GenTypeSpecifier(BC`Rename(nm));
         alloc = BC`GenNewExpr(cls, p_argL)
     in
-      if CPP`isCPP()
+      if CPP`isJAVA()
       then
+        return alloc
+      else
         def ds = TPGEN`Id2CppGTpId(TPGEN`GenObjRefType(mk_REP`ObjRefTypeRep(nm), {}))
         in
          (CGAUX`IncludeClass(nm);
-          return BC`GenFctCall(ds, [alloc]))
-      else return alloc;
-
+          return BC`GenFctCall(ds, [alloc]));
 \end{vdm_al}
-
 
 The operation $CastToClassPtr$ transforms a {\tt ObjectRef} object to a pointer
 to a generated C++ class. This operation takes two parameters, one
@@ -3822,8 +3821,11 @@ if {\tt obj}'s reference pointer is {\tt NULL} ({\tt 0L}).
 \begin{vdm_al}
   CastToClassPtr: AS`Name * CPP`Expr ==> CPP`Expr
   CastToClassPtr(cls, expr) ==
-    if CPP`isCPP()
+    if CPP`isJAVA()
     then
+     (CGAUX`IncludeClass(cls);
+      return BC`GenCastExpr( GenObjRefType(cls), expr ))
+    else
      (if cls = CGAUX`GiveCurCASName()
       then
         cases expr:
@@ -3837,10 +3839,7 @@ if {\tt obj}'s reference pointer is {\tt NULL} ({\tt 0L}).
       in
        (CGAUX`IncludeClass(cls);
         return fct)
-     )
-    else
-     (CGAUX`IncludeClass(cls);
-      return BC`GenCastExpr( GenObjRefType(cls), expr ));
+     );
 \end{vdm_al}
 
 The operation $GenIsOfClass$ generates code which decides wheter the
@@ -3863,20 +3862,20 @@ res = obj.IsOfClass(VDM_A);
 \begin{vdm_al}
   GenIsOfClassExpr: AS`Name * CPP`Expr  ==> CPP`Expr
   GenIsOfClassExpr(class, obj ) ==
-    if CPP`isCPP()
+    if CPP`isJAVA()
     then
+      def mc = BC`GenTypeSpecifier(BC`GenIdentifier(CGAUX`GiveLastName(class)));
+          fcall = BC`GenTypeComp(mc, obj)
+      in
+       (CGAUX`IncludeClass(class);
+        return GenBoolExpr(fcall))
+    else
       let mc = BC`GiveMacroName(class),
           fct = "IsOfClass",
           fcall = BC`GenFctCallObjMemAcc(obj,fct,[mc])
       in
        (CGAUX`IncludeClass(class);
-        return fcall)
-    else
-      def mc = BC`GenTypeSpecifier(BC`GenIdentifier(CGAUX`GiveLastName(class)));
-          fcall = BC`GenTypeComp(mc, obj)
-      in
-       (CGAUX`IncludeClass(class);
-        return GenBoolExpr(fcall));
+        return fcall);
 \end{vdm_al}
 
 
@@ -3899,15 +3898,8 @@ res = obj.IsOfBaseClass(VDM_A);
 \begin{vdm_al}
   GenIsOfBaseClassExpr: AS`Name * CPP`Expr ==> CPP`Expr
   GenIsOfBaseClassExpr(class, obj) ==
-    if CPP`isCPP()
+    if CPP`isJAVA()
     then
-      let mc  = BC`GiveMacroName(class),
-          fct = "IsOfBaseClass",
-          fcall = BC`GenFctCallObjMemAcc(obj,fct,[mc])
-      in
-       (CGAUX`IncludeClass(class);
-        return fcall)
-    else
       def mc  = BC`GenIdentifier(CGAUX`GiveLastName(class));
           expr1 = BC`GenTypeComp(BC`GenTypeSpecifier(mc), obj);
           expr2 = BC`GenFctCallObjMemAcc(BC`GenIdentifier("UTIL"),"isbaseclass",
@@ -3915,8 +3907,14 @@ res = obj.IsOfBaseClass(VDM_A);
           fcall = BC`GenLogAnd(expr1,expr2)
       in
        (CGAUX`IncludeClass(class);
-        return GenBoolExpr(fcall));
-
+        return GenBoolExpr(fcall))
+    else
+      let mc  = BC`GiveMacroName(class),
+          fct = "IsOfBaseClass",
+          fcall = BC`GenFctCallObjMemAcc(obj,fct,[mc])
+      in
+       (CGAUX`IncludeClass(class);
+        return fcall);
 \end{vdm_al}
 
 
@@ -3939,15 +3937,14 @@ res = obj1.SameBaseClass(obj2);
 \begin{vdm_al}
   GenSameBaseClassExpr: CPP`Expr * CPP`Expr * bool ==> CPP`Expr
   GenSameBaseClassExpr(obj1, obj2, -) ==
-    if CPP`isCPP()
+    if CPP`isJAVA()
     then
+      let fcall = BC`GenFctCall(BC`GenIdentifier("UTIL.samebaseclass"), [obj1,obj2])
+      in return GenBoolExpr(fcall)
+    else
       let fct = "SameBaseClass",
           fcall = BC`GenFctCallObjMemAcc(obj1,fct,[obj2])
-      in return fcall
-    else
-      let fcall = BC`GenFctCall(BC`GenIdentifier("UTIL.samebaseclass"), [obj1,obj2])
-      in return GenBoolExpr(fcall);
-
+      in return fcall;
 \end{vdm_al}
 
 The operation $GenInvokeExpr$ generates a method invocation of a C++
@@ -3983,17 +3980,15 @@ information in $ti$.
 
   GenInvokeExpr: REP`ObjRefTypeRep * CPP`Expr * CPP`Name * CPP`Exprs ==> CPP`Expr
   GenInvokeExpr(mk_REP`ObjRefTypeRep(nm),obj,mthd,parms) ==
-    if CPP`isCPP()
+    if CPP`isJAVA()
     then
+      let fct = BC`GenObjectMemberAccess(obj,mthd)
+      in return BC`GenFctCall(fct,parms)
+    else
       def cnm = BC`Rename(nm);
           clid = BC`PrefixName("ObjGet",cnm);
           fct = BC`GenFctCall(clid,[obj])
-      in
-        return BC`GenGenericFctCallPtrToObjMemAcc(fct,mthd,parms)
-    else
-      let fct = BC`GenObjectMemberAccess(obj,mthd)
-      in
-        return BC`GenFctCall(fct,parms);
+      in return BC`GenGenericFctCallPtrToObjMemAcc(fct,mthd,parms);
 \end{vdm_al}
 
 
