@@ -68,23 +68,27 @@ CGExpr(expr, mk_CGMAIN`VT(res_v,type)) ==
   in
     if CGAUX`IsSeqOfCPPStmt( pp_v )
     then return pp_v
-    else if CPP`isCPP()
-         then return [BC`GenAsgnStmt( res_v, pp_v )]
-         else
-           def tp = CGAUX`RemoveNil(TPGEN`RemoveInvType(CGAUX`FindType(expr)));
-           in
-            (dcl cast : CPP`Expr := pp_v;
-             if CGAUX`IsStringType(type) and
-                         is_CPP`ClassInstanceCreationExpr(pp_v) and
-                         pp_v.classtype = DS`GenStringType().tp
-             then
-               if pp_v.arg <> []
-               then cast := hd pp_v.arg
-               else cast := BC`GenStringLit("")
-               elseif CGAUX`IsSubType(tp, type)
-               then skip
-               else cast := DS`GenExplicitCast(type, pp_v, tp);
-             return  [BC`GenAsgnStmt( res_v, cast )]);
+    else
+#ifdef VDMPP
+      if CPP`isJAVA()
+      then
+        def tp = CGAUX`RemoveNil(TPGEN`RemoveInvType(CGAUX`FindType(expr)));
+        in
+         (dcl cast : CPP`Expr := pp_v;
+          if CGAUX`IsStringType(type) and
+                      is_CPP`ClassInstanceCreationExpr(pp_v) and
+                      pp_v.classtype = DS`GenStringType().tp
+          then
+            if pp_v.arg <> []
+            then cast := hd pp_v.arg
+            else cast := BC`GenStringLit("")
+            elseif CGAUX`IsSubType(tp, type)
+            then skip
+            else cast := DS`GenExplicitCast(type, pp_v, tp);
+          return  [BC`GenAsgnStmt( res_v, cast )])
+      else
+#endif VDMPP
+        return [BC`GenAsgnStmt( res_v, pp_v )];
 \end{vdm_al}
 
 
@@ -197,9 +201,11 @@ cases true:
  (is_AS`ActiveExpr(expr)),
  (is_AS`WaitingExpr(expr)),
  (is_AS`ReqExpr(expr)) ->
-     if CPP`isJAVA() then
-     return CONC`GenGuardExpr( expr )
-     else cases true:
+     if CPP`isJAVA()
+     then
+       return CONC`GenGuardExpr( expr )
+     else
+       cases true:
        (is_AS`ActExpr(expr)) -> return [CGAUX`NotSupported("act. expression")],
        (is_AS`FinExpr(expr)) -> return [CGAUX`NotSupported("fin. expression")],
        (is_AS`ActiveExpr(expr)) -> return [CGAUX`NotSupported("active. expression")],
@@ -208,19 +214,18 @@ cases true:
        others -> error
      end,
   (is_AS`ThreadIdExpr(expr)) ->
-     if CPP`isJAVA() and CGMAIN`get_conc_option() then return CONC`GenThreadId()
-     else return [CGAUX`NotSupported("threadId expression")],
+     if CPP`isJAVA() and CGMAIN`get_conc_option()
+     then return CONC`GenThreadId()
+     else
+       return [CGAUX`NotSupported("threadId expression")],
 
-#endif
+#endif VDMPP
   others          -> error
 end;
 \end{vdm_al}
 
-
-
 The operation {\em CGExprExcl} is an auxiliary operation that
 generates code corresponding for expressions. The operation takes:
-
 
 \begin{itemize}
 \item an expression and,
@@ -273,15 +278,24 @@ CGExprExcl( expr, e_name, etp ) ==
                           (is_CPP`ClassInstanceCreationExpr(assignexpr)),
                           (is_CPP`FctCall(assignexpr)),
                           (is_CPP`BracketedExpr(assignexpr)) -> retex := assignexpr,
-                          (is_CPP`CastExpr(assignexpr))      -> if CPP`isCPP()
-                                                                then retex := assignexpr
-                                                                else retex := BC`GenBracketedExpr(assignexpr),
+                          (is_CPP`CastExpr(assignexpr))      ->
+#ifdef VDMPP
+                                                                if CPP`isJAVA()
+                                                                then
+                                                                  retex := BC`GenBracketedExpr(assignexpr)
+                                                                else
+#endif VDMPP
+                                                                  retex := assignexpr,
                           others                             -> retex := BC`GenBracketedExpr(assignexpr)
                         end
                       else
-                        if CPP`isCPP()
-                        then retex := BC`GenCastExpr(DS`GenType(tp), assignexpr)
-                        else retex := DS`GenExplicitCast(tp, assignexpr, nil);
+#ifdef VDMPP
+                        if CPP`isJAVA()
+                        then
+                          retex := DS`GenExplicitCast(tp, assignexpr, nil)
+                        else
+#endif VDMPP
+                          retex := BC`GenCastExpr(DS`GenType(tp), assignexpr);
                       return mk_(retex, exl_v(1, ..., len exl_v - 1))),
             others -> cases hd exl_v:
                         mk_CPP`ExpressionStmt(mk_CPP`AssignExpr((etmpVar),
@@ -292,9 +306,9 @@ CGExprExcl( expr, e_name, etp ) ==
                       end
           end
     else -- not CGAUX`IsSeqOfCPPStmt(exl_v)
-      if CPP`isCPP()
-      then return mk_(exl_v, [])
-      else
+#ifdef VDMPP
+      if CPP`isJAVA()
+      then
         def gtp = CGAUX`RemoveNil(CGAUX`FindType(expr));
             tp = if etp = nil
                  then gtp
@@ -312,7 +326,10 @@ CGExprExcl( expr, e_name, etp ) ==
           then return mk_(exl_v, [])
           elseif CGAUX`IsProductType(tp) and CGAUX`IsProductType(gtp)
           then return mk_(exl_v, [])
-          else return mk_(DS`GenExplicitCast(tp, exl_v, nil), []);
+          else return mk_(DS`GenExplicitCast(tp, exl_v, nil), [])
+      else
+#endif VDMPP
+        return mk_(exl_v, []);
  );
 
 MergeStmts: seq of CPP`Stmt * seq of CPP`Stmt ==> seq of CPP`Stmt
@@ -334,9 +351,12 @@ MergeStmts(decls,pm) ==
           -> if unary in set dom id_m
              then
               (dcl initExpr : CPP`Initializer;
-               if CPP`isCPP()
-               --then initExpr := BC`GenObjectInit([assignexpr])
+#ifdef VDMPP
+               if CPP`isJAVA()
                then
+                 initExpr := BC`GenAsgnInit(assignexpr)
+               else
+#endif VDMPP
                  cases assignexpr:
                    mk_CPP`FctCall(mk_CPP`Identifier(-,-),[],-)
                       -> cases assignexpr.fct:
@@ -344,8 +364,7 @@ MergeStmts(decls,pm) ==
                            others -> initExpr := BC`GenAsgnInit(assignexpr)
                          end,
                    others -> initExpr := BC`GenObjectInit([assignexpr])
-                 end
-               else initExpr := BC`GenAsgnInit(assignexpr);
+                 end;
                def mk_CPP`DeclarationStmt(mk_CPP`IdentDeclaration(ds,[idec],-,-),-) = id_m(unary);
                    stmt = mu (id_m(unary), decl |->
                             mu (id_m(unary).decl, 
@@ -890,49 +909,8 @@ corresponding to the set enumeration.
 CGSeqEnumerationExpr: AS`SeqEnumerationExpr * CGMAIN`VT ==> seq of CPP`Stmt | CPP`Expr
 CGSeqEnumerationExpr( mk_AS`SeqEnumerationExpr(expr, -), mk_CGMAIN`VT( resVar_v, rType) ) ==
 #ifdef VDMPP
-  if CPP`isCPP()
+  if CPP`isJAVA()
   then
-#endif VDMPP
-    if expr = []
-    then return DS`GenEmptySeqExpr()
-    else
-    def casting = not CGAUX`IsSeqType( rType );
-        isstringexpr = CGAUX`IsSeqType( rType ) and 
-                       CGAUX`IsCharType(CGAUX`FindSeqElemType(rType)) and
-                       forall e in set elems expr & is_AS`CharLit(e);
-    in
-      if isstringexpr
-      then
-        return BC`GenFctCall(DS`GenSeq0Type().tp, [BC`GenStringLit([ expr(i).val | i in set inds expr ])])
-      else
-       (dcl resVar_v' : CPP`Expr := resVar_v,
-            rb : seq of CPP`Stmt := [],
-            allsimple : bool := true,
-            args : seq of CPP`Expr := [];
-
-        if casting
-        then
-         (resVar_v' := DS`GenCastSeqTypeForModify(resVar_v);
-          rb := [BC`GenAsgnStmt(resVar_v, DS`GenEmptySeqExpr())]);
-
-        for i = 1 to len expr do
-          def e = expr(i);
-              mk_(tmpExpr, st_l) = CGExprExcl(e, "e_seq", nil)
-          in
-           (rb := rb ^ st_l ^ [DS`GenImpAppend( resVar_v', tmpExpr )];
-            if st_l <> [] or is_AS`ApplyExpr(e)
-            then allsimple := false;
-            args := args ^ [tmpExpr]);
-
-        cases rb:
-          []     -> return DS`GenEmptySeqExpr (),
-          others -> if allsimple and len args <= 8
-                    then return BC`GenFctCall( BC`GenIdentifier("mk_sequence"), args )
-                    else return rb
-        end;
-       )
-#ifdef VDMPP
-  else
     def isstring = CGAUX`IsStringType(rType);
         possiblestringtype = CGAUX`IsPossibleStringType(rType);
         isstringexpr = forall e in set elems expr & is_AS`CharLit(e);
@@ -998,8 +976,46 @@ CGSeqEnumerationExpr( mk_AS`SeqEnumerationExpr(expr, -), mk_CGMAIN`VT( resVar_v,
           return rb;
          );
      )
+  else
 #endif VDMPP
-;
+    if expr = []
+    then return DS`GenEmptySeqExpr()
+    else
+    def casting = not CGAUX`IsSeqType( rType );
+        isstringexpr = CGAUX`IsSeqType( rType ) and 
+                       CGAUX`IsCharType(CGAUX`FindSeqElemType(rType)) and
+                       forall e in set elems expr & is_AS`CharLit(e);
+    in
+      if isstringexpr
+      then
+        return BC`GenFctCall(DS`GenSeq0Type().tp, [BC`GenStringLit([ expr(i).val | i in set inds expr ])])
+      else
+       (dcl resVar_v' : CPP`Expr := resVar_v,
+            rb : seq of CPP`Stmt := [],
+            allsimple : bool := true,
+            args : seq of CPP`Expr := [];
+
+        if casting
+        then
+         (resVar_v' := DS`GenCastSeqTypeForModify(resVar_v);
+          rb := [BC`GenAsgnStmt(resVar_v, DS`GenEmptySeqExpr())]);
+
+        for i = 1 to len expr do
+          def e = expr(i);
+              mk_(tmpExpr, st_l) = CGExprExcl(e, "e_seq", nil)
+          in
+           (rb := rb ^ st_l ^ [DS`GenImpAppend( resVar_v', tmpExpr )];
+            if st_l <> [] or is_AS`ApplyExpr(e)
+            then allsimple := false;
+            args := args ^ [tmpExpr]);
+
+        cases rb:
+          []     -> return DS`GenEmptySeqExpr (),
+          others -> if allsimple and len args <= 8
+                    then return BC`GenFctCall( BC`GenIdentifier("mk_sequence"), args )
+                    else return rb
+        end;
+       );
 \end{vdm_al}
 
 \subsection{Map Enumeration}
@@ -1050,8 +1066,8 @@ CGMapEnumerationExpr(mk_AS`MapEnumerationExpr(ml, -), mk_CGMAIN`VT(resVar_v, rTy
           rb : seq of CPP`Stmt := [],
           dtp : [REP`TypeRep] := nil,
           rtp : [REP`TypeRep] := nil,
-          allsimple : bool := true, --
-          expr : CPP`Expr := DS`GenEmptyMapExpr(); --
+          allsimple : bool := true,
+          expr : CPP`Expr := DS`GenEmptyMapExpr();
          
       if casting
       then
@@ -1064,8 +1080,6 @@ CGMapEnumerationExpr(mk_AS`MapEnumerationExpr(ml, -), mk_CGMAIN`VT(resVar_v, rTy
         rtp := CGAUX`FindMapRngType(rType);
        );
       for mk_AS`Maplet(md, mr, -) in ml do
-        --def mk_(var1_v, tmpVar1_stmt) = CGExprExcl(md, "tmpVar1", nil);
-        --    mk_(var2_v, tmpVar2_stmt) = CGExprExcl(mr, "tmpVar2", nil)
         def mk_(var1_v, tmpVar1_stmt) = CGExprExcl(md, "tmpVar1", dtp);
             mk_(var2_v, tmpVar2_stmt) = CGExprExcl(mr, "tmpVar2", rtp)
         in
