@@ -302,9 +302,11 @@ GenCPPMemberList (cppacc,md_l,cid) ==
   GenTypeClassSpecifier(head,member_l,cid) ==
     mk_CPP`TypeSpecifier(mk_CPP`ClassSpecifier(head,member_l,cid),cid);
 
+#ifdef VDMPP
   GenTypeInterfaceSpecifier: CPP`InterfaceHead * seq of CPP`MemberDeclaration * CI`ContextId -> CPP`TypeSpecifier
   GenTypeInterfaceSpecifier(head,member_l,cid) ==
     mk_CPP`TypeSpecifier(mk_CPP`InterfaceSpecifier(head,member_l,cid),cid);
+#endif VDMPP
 
   GenTypeSpecifier: (CPP`Identifier | CPP`Int | CPP`Void | CPP`Double |
                      CPP`Long | CPP`Unsigned | CPP`EnumSpecifier |
@@ -775,12 +777,15 @@ functions
   GenArrayInitializer(vi,cid) ==
     mk_CPP`ArrayInitializer(vi,cid);
 
+#ifdef VDMPP
   GenArrayCreationExpr: CPP`SimpleTypeName * [CPP`ArrayNewDecl] * [CPP`ArrayNewDecl] *
                         [CPP`ArrayInitializer] * CI`ContextId -> CPP`Expr
   GenArrayCreationExpr(type, dimExpr, dim, arrayInit, cid) ==
     mk_CPP`ArrayCreationExpr(type, dimExpr, dim, arrayInit, cid);
+#endif VDMPP
 \end{vdm_al}
 
+#ifdef VDMPP
 Note that the second field of ClassInstanceCreationExpr always is set
 to nil using this operation. This is because this field is not needed
 by any of the code generators.
@@ -790,7 +795,7 @@ operations
   GenClassInstanceCreationExpr: (CPP`CompleteClassName | CPP`PackageName | CPP`QualifiedName) * CPP`Exprs
                                 * CI`ContextId ==> CPP`Expr
   GenClassInstanceCreationExpr(cn,es,cid) ==
-    if (CPP`isJAVA())
+    if CPP`isJAVA()
     then
       cases cn:
         mk_CPP`Identifier("Boolean",-) ->
@@ -808,6 +813,7 @@ operations
     else return mk_CPP`ClassInstanceCreationExpr(cn,nil,es,nil,cid);
 \end{vdm_al}
 
+#endif VDMPP
 Note that the second field of ClassInstanceCreationExpr always is set
 to nil using this operation. This is because this field is not needed
 by any of the code generators.

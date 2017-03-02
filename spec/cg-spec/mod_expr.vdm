@@ -889,8 +889,10 @@ corresponding to the set enumeration.
 \begin{vdm_al}
 CGSeqEnumerationExpr: AS`SeqEnumerationExpr * CGMAIN`VT ==> seq of CPP`Stmt | CPP`Expr
 CGSeqEnumerationExpr( mk_AS`SeqEnumerationExpr(expr, -), mk_CGMAIN`VT( resVar_v, rType) ) ==
+#ifdef VDMPP
   if CPP`isCPP()
   then
+#endif VDMPP
     if expr = []
     then return DS`GenEmptySeqExpr()
     else
@@ -906,21 +908,16 @@ CGSeqEnumerationExpr( mk_AS`SeqEnumerationExpr(expr, -), mk_CGMAIN`VT( resVar_v,
        (dcl resVar_v' : CPP`Expr := resVar_v,
             rb : seq of CPP`Stmt := [],
             allsimple : bool := true,
-            args : seq of CPP`Expr := [],
-            etp : [REP`TypeRep] := nil;
+            args : seq of CPP`Expr := [];
 
         if casting
         then
          (resVar_v' := DS`GenCastSeqTypeForModify(resVar_v);
           rb := [BC`GenAsgnStmt(resVar_v, DS`GenEmptySeqExpr())]);
 
-        if CPP`isJAVA()
-        then etp := CGAUX`FindSeqElemType(rType);
-
         for i = 1 to len expr do
           def e = expr(i);
-              --mk_(tmpExpr, st_l) = CGExprExcl(e, "e_seq", nil)
-              mk_(tmpExpr, st_l) = CGExprExcl(e, "e_seq", etp)
+              mk_(tmpExpr, st_l) = CGExprExcl(e, "e_seq", nil)
           in
            (rb := rb ^ st_l ^ [DS`GenImpAppend( resVar_v', tmpExpr )];
             if st_l <> [] or is_AS`ApplyExpr(e)
@@ -934,6 +931,7 @@ CGSeqEnumerationExpr( mk_AS`SeqEnumerationExpr(expr, -), mk_CGMAIN`VT( resVar_v,
                     else return rb
         end;
        )
+#ifdef VDMPP
   else
     def isstring = CGAUX`IsStringType(rType);
         possiblestringtype = CGAUX`IsPossibleStringType(rType);
@@ -999,7 +997,9 @@ CGSeqEnumerationExpr( mk_AS`SeqEnumerationExpr(expr, -), mk_CGMAIN`VT( resVar_v,
           rb := rb ^ [BC`GenAsgnStmt(resVar_v, tmpSeq)];
           return rb;
          );
-     );
+     )
+#endif VDMPP
+;
 \end{vdm_al}
 
 \subsection{Map Enumeration}
@@ -2523,31 +2523,20 @@ CGNarrowExpr(mk_AS`NarrowExpr(expr,type,-), mk_CGMAIN`VT(resvar,restp)) ==
 \begin{vdm_al}
 CGMacro: AS`Macro * CGMAIN`VT ==> seq of CPP`Stmt | CPP`Expr
 CGMacro(mk_AS`Macro(tp,-), -) ==
-  cases tp:
+#ifdef VDMPP
+  if CPP`isCPP()
+  then
+#endif VDMPP
+    cases tp:
     <MACRO_FILE>  -> 
-      if CPP`isCPP()
-      then
         let ds = BC`GenFctCall(BC`GenIdentifier("string2wstring"), [BC`GenIdentifier("__"^"FILE__")])
-        in return BC`GenFctCall(DS`GenStringType().tp, [ds])
-      else
-        let th = BC`GenClassInstanceCreationExpr(BC`GenIdentifier("Throwable"), []),
-            gs = BC`GenFctCallObjMemAcc (BC`GenBracketedExpr(th), "getStackTrace", []),
-            aa = BC`GenArrayApply(gs, BC`GenIntegerLit (0))
-        in return BC`GenFctCallObjMemAcc(aa, "getFileName", []),
+        in return BC`GenFctCall(DS`GenStringType().tp, [ds]),
     <MACRO_LINE>  -> 
-      if CPP`isCPP()
-      then return DS`GenIntExpr(BC`GenIdentifier("__"^"LINE__"))
-      else
-        let th = BC`GenClassInstanceCreationExpr(BC`GenIdentifier("Throwable"), []),
-            gs = BC`GenFctCallObjMemAcc (BC`GenBracketedExpr(th), "getStackTrace", []),
-            aa = BC`GenArrayApply(gs, BC`GenIntegerLit (0))
-        in return BC`GenFctCallObjMemAcc(aa, "getLineNumber", []),
+        return DS`GenIntExpr(BC`GenIdentifier("__"^"LINE__")),
     <MACRO_COLUMN> ->
       let colno = BC`GenIntegerLit (0)
       in return DS`GenIntExpr(colno),
     <MACRO_CLMOD> ->
-      if CPP`isCPP()
-      then
 #ifdef VDMSL
         def clmod = CGAUX`GiveCurMASName();
 #endif VDMSL
@@ -2555,25 +2544,42 @@ CGMacro(mk_AS`Macro(tp,-), -) ==
         def clmod = CGAUX`GiveCurCASName();
 #endif VDMPP
             mk_CPP`Identifier(ch_l,- ) = BC`Rename(clmod)
-        in return BC`GenFctCall(DS`GenStringType().tp, [BC`GenStringLit(ch_l)])
-      else
+        in return BC`GenFctCall(DS`GenStringType().tp, [BC`GenStringLit(ch_l)]),
+    <MACRO_FNOP> ->
+        let ds = BC`GenFctCall(BC`GenIdentifier("string2wstring"), [BC`GenIdentifier("__func__")])
+        in return BC`GenFctCall(DS`GenStringType().tp, [ds])
+    end
+#ifdef VDMPP
+  else
+    cases tp:
+      <MACRO_FILE>  -> 
+        let th = BC`GenClassInstanceCreationExpr(BC`GenIdentifier("Throwable"), []),
+            gs = BC`GenFctCallObjMemAcc (BC`GenBracketedExpr(th), "getStackTrace", []),
+            aa = BC`GenArrayApply(gs, BC`GenIntegerLit (0))
+        in return BC`GenFctCallObjMemAcc(aa, "getFileName", []),
+      <MACRO_LINE>  -> 
+        let th = BC`GenClassInstanceCreationExpr(BC`GenIdentifier("Throwable"), []),
+            gs = BC`GenFctCallObjMemAcc (BC`GenBracketedExpr(th), "getStackTrace", []),
+            aa = BC`GenArrayApply(gs, BC`GenIntegerLit (0))
+        in return BC`GenFctCallObjMemAcc(aa, "getLineNumber", []),
+      <MACRO_COLUMN> ->
+        let colno = BC`GenIntegerLit (0)
+        in return DS`GenIntExpr(colno),
+      <MACRO_CLMOD> ->
         let th = BC`GenClassInstanceCreationExpr(BC`GenIdentifier("Throwable"), []),
             gs = BC`GenFctCallObjMemAcc (BC`GenBracketedExpr(th), "getStackTrace", []),
             aa = BC`GenArrayApply(gs, BC`GenIntegerLit (0))
         in
           return BC`GenFctCallObjMemAcc(aa, "getClassName", []),
-    <MACRO_FNOP> ->
-      if CPP`isCPP()
-      then
-        let ds = BC`GenFctCall(BC`GenIdentifier("string2wstring"), [BC`GenIdentifier("__func__")])
-        in return BC`GenFctCall(DS`GenStringType().tp, [ds])
-      else
+      <MACRO_FNOP> ->
         let th = BC`GenClassInstanceCreationExpr(BC`GenIdentifier("Throwable"), []),
             gs = BC`GenFctCallObjMemAcc (BC`GenBracketedExpr(th), "getStackTrace", []),
             aa = BC`GenArrayApply(gs, BC`GenIntegerLit (0))
         in
           return BC`GenFctCallObjMemAcc(aa, "getMethodName", [])
-  end;
+    end
+#endif VDMPP
+;
 \end{vdm_al}
 
 \subsection{Tuple Select Expression}
@@ -3370,7 +3376,6 @@ CGObjRef (fexpr,par_l, vt) ==
         if nm_s = {}
         then return [CGAUX`RunTime("Cannot apply or invoke operation")];
         if not CGAUX`IsObjRefType(oti)
-        --then oid' := if CPP`isCPP()
         then
           if CPP`isCPP() and DS`GenType(oti) <> BC`GenGeneric()
           then oid' := BC`GenCastExpr(DS`GenObjRefType(nil), oid)
@@ -3379,7 +3384,6 @@ CGObjRef (fexpr,par_l, vt) ==
          (def cast = DS`CastToClassPtr(nm,oid')
           in
             if CPP`isCPP()
-            --then let fcall = BC`GenGenericFctCallPtrToObjMemAcc(cast, mthd', id_l), --20120605
             then
               def fcall = BC`GenFctCallPtrToObjMemAcc(cast, mthd', id_l);
                   estmt = GenInvoke(res, false, fcall, last);
@@ -3406,7 +3410,6 @@ CGObjRef (fexpr,par_l, vt) ==
 
         let t_s' = t_s \ { mk_REP`NilTypeRep() }
         in
-        --if card ti_s = 1 and card t_s = 1
         if card ti_s = 1 and card t_s' = 1
         then let mk_(-,blk) = hd alts_l
              in
@@ -3418,13 +3421,9 @@ CGObjRef (fexpr,par_l, vt) ==
           in
           ( dcl body1 : [CPP`Stmt] := if card ti_s <> card nm_s
                                       then CGAUX`RunTime("No member method " ^ mthd'.id)
-                                      --else nil;
-                                      --else if ti_s <> t_s
                                       else if ti_s <> t_s'
                                            then err
                                            else nil;
-            --for mk_(cond,stmt) in alts_l do
-            --  body1 := BC`GenIfStmt(cond,stmt,body1);
             for idx = len alts_l to 1 by -1 do
               let mk_(cond,stmts) = alts_l(idx),
                   stmt = if len stmts = 1
@@ -3486,11 +3485,9 @@ variables which holds the actual parameters.
             (cases tp:
                mk_REP`OpTypeRep(Dom,-) ->
                      (dcl tp1 : REP`TypeRep;
-#ifdef VDMPP
                       if is_REP`ObjRefTypeRep (CGAUX`CleanFlatType(Dom(i)))
                       then tp1 := CGAUX`UnQClassType (CGAUX`CleanFlatType(Dom(i)))
                       else
-#endif
                       if is_REP`TypeNameRep(Dom(i)) and
                              is_REP`UnionTypeRep(CGAUX`CleanFlatType(Dom(i))) and
                                     CGAUX`IsCompositeType(CGAUX`CleanFlatType(Dom(i)))
@@ -3499,7 +3496,6 @@ variables which holds the actual parameters.
                       def tp2 = CGAUX`FindType(arg_l(i))
                       in
                        (stmt_l := stmt_l ^ par_stmt;
-                        --id_l   := id_l ^ [DS`GenExplicitCast(tp1,par_v,tp2)] )),
                         id_l   := id_l ^ [DS`GenExplicitCast(CGAUX`RemoveNil(tp1),par_v,CGAUX`RemoveNil(tp2))] )
                      ),
                others -> (stmt_l := stmt_l ^ par_stmt;

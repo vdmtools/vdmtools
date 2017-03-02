@@ -53,7 +53,6 @@ TRANSPS: $(TRANS_LATEXFILE).ps
 
 $(PPMIXED): %.vdmpp: %.vdm
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMPP -DTPINFO -DTRANS $< >$@	
 	$(IFDEFFILT) -DVDMPP -DTRANS $< >$@	
 	chmod a-w $@
 
@@ -87,7 +86,6 @@ $(LATEXFILE).ps : $(LATEXFILE).dvi
 
 $(TRANS_LATEXFILE).tex: %-vdm.tex: %.tex
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMPP -DTPINFO $< >$@	
 	$(IFDEFFILT) -DVDMPP $< >$@	
 	chmod a-w $@
 

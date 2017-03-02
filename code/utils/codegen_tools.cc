@@ -162,7 +162,8 @@ bool CodeGenTools::EvalCodeGen (const TYPE_ProjectTypes_ModuleName & modnm,
                    onlyTypesOption, 
                    smallTypesOption, 
                    package_name, 
-                   concurrencyOption);
+                   concurrencyOption,
+                   testPrePostOption);
 #endif // VDMSL
 #ifdef VDMPP
       this->CGi.cg(mk_sequence(ast_val), 

@@ -6,6 +6,14 @@
 %--------------------------------------------------------------------------------
 
 #define CNTXT cid :- CI`ContextId
+#ifdef VDMSL
+#define ISJAVAINV
+#define ISCPPINV
+#endif VDMSL
+#ifdef VDMPP
+#define ISJAVAINV inv - == isJAVA()
+#define ISCPPINV inv - == isCPP()
+#endif VDMPP
 
 \section{Module CPP - C++/Java Abstract Syntax}
 \label{sec:cpp}
@@ -74,7 +82,7 @@ isCPP()==
         return (mode=<CPP>);
 
 
-types 
+types
 
 \end{vdm_al}
 
@@ -102,26 +110,36 @@ AstCI ::
   h    : [Header]
   ast  : CPPAS
   CNTXT
- inv file == isJAVA() => forall e in set elems file.ast 
-                             & is_IdentDeclaration(e);
+#ifdef VDMPP
+ inv file == isJAVA() => forall e in set elems file.ast
+                             & is_IdentDeclaration(e)
+#endif VDMPP
+;
 
  FileName = seq1 of char;
 
- Header = Preprocessors |
-          PackageAndImportDeclarations
- inv h == isJAVA() => is_PackageAndImportDeclarations(h) 
+#ifdef VDMSL
+ Header = Preprocessors;
+#endif VDMSL
+#ifdef VDMPP
+ Header = Preprocessors | PackageAndImportDeclarations
+ inv h == isJAVA() => is_PackageAndImportDeclarations(h)
           and
           isCPP() => not is_PackageAndImportDeclarations(h);
+#endif VDMPP
 
  CPPAS = seq of (Declaration | QuoteIncl | PreProcStmt | Comments )
+#ifdef VDMPP
  inv declL == isJAVA() => forall decl in set elems declL &
-                            is_(decl,Declaration);
+                            is_(decl,Declaration)
+#endif VDMPP
+;
 \end{vdm_al}
 
 The following type is defined to be the main entry point for the Java
 to VDM++ conversion. It is essentially a wrapper for a Java class,
 with the file name and header for the file from which the class
-originates. 
+originates.
 \begin{vdm_al}
  Module:: name   : [FileName]                    -- implemented as AS`Name
           header : [PackageAndImportDeclarations]
@@ -132,94 +150,109 @@ originates.
 \begin{vdm_al}
 
  Preprocessors = seq of Preprocessor
- inv - == not isJAVA();
+ ISCPPINV
+ ;
 
- Preprocessor = IdMacroDef | 
-                FctMacroDef | 
+ Preprocessor = IdMacroDef |
+                FctMacroDef |
                 SquareIncl |
                 QuoteIncl |
-		PreProcStmt
-  inv - == not isJAVA();
+                PreProcStmt
+  ISCPPINV
+  ;
 
- IdMacroDef :: 
+ IdMacroDef ::
    id : seq1 of char
    ts : seq1 of char
    CNTXT
- inv - == not isJAVA();
+ ISCPPINV
+ ;
 
  FctMacroDef ::
    id : seq1 of char
    id_l : seq of seq1 of char
    ts   : seq1 of char
    CNTXT
- inv - == not isJAVA();
+ ISCPPINV
+ ;
 
  SquareIncl ::
    name : FileName
    CNTXT
- inv - == not isJAVA();
+ ISCPPINV
+ ;
 
  QuoteIncl ::
    name : FileName
    CNTXT
- inv - == not isJAVA();
+ ISCPPINV
+ ;
 \end{vdm_al}
 
 \subsubsection{Preprocessor Statements (C++)}
 
 The $IncludeStmt$ is a statement used by the code generator. This
-statement corresponds to a quote include preprocessor. 
+statement corresponds to a quote include preprocessor.
 
 \begin{vdm_al}
 
   PreProcStmt = IncludeStmt |
                 PreIf |
-		PreIfDef |
-		PreIfNotDef |
-		PreDefine |
-		PreElse |
-		PreEndIf |
-		PreMacro
- inv - == not isJAVA();
+                PreIfDef |
+                PreIfNotDef |
+                PreDefine |
+                PreElse |
+                PreEndIf |
+                PreMacro
+ ISCPPINV
+ ;
 
   IncludeStmt ::
     incl : QuoteIncl
     CNTXT
- inv - == not isJAVA();
+ ISCPPINV
+ ;
 
   PreIf ::
         expr : Expr    -- must be constant expression
-	CNTXT
- inv - == not isJAVA();
+        CNTXT
+ ISCPPINV
+ ;
 
-  PreIfDef :: 
+  PreIfDef ::
          id  : Identifier
-	 CNTXT 
- inv - == not isJAVA();
- 
-  PreIfNotDef :: 
+         CNTXT
+ ISCPPINV
+ ;
+
+  PreIfNotDef ::
          id  : Identifier
-	 CNTXT
- inv - == not isJAVA();
+         CNTXT
+ ISCPPINV
+ ;
 
   PreDefine ::
          id  : Identifier
          val : Expr
-	 CNTXT
-  inv - == not isJAVA();
+         CNTXT
+  ISCPPINV
+  ;
 
   PreElse :: CNTXT
-  inv - == not isJAVA();
+  ISCPPINV
+  ;
 
   PreEndIf ::
          id  : Identifier
-	 CNTXT 
-  inv - == not isJAVA();
+         CNTXT
+  ISCPPINV
+  ;
 
-  PreMacro :: 
+  PreMacro ::
         id : Identifier
-	CNTXT
-  inv - == not isJAVA();
+        CNTXT
+  ISCPPINV
+  ;
 
 \end{vdm_al}
 
@@ -229,8 +262,9 @@ statement corresponds to a quote include preprocessor.
    cls : Identifier
    args : [seq1 of char]
    CNTXT
- inv - == isJAVA();
- 
+ ISJAVAINV
+ ;
+
  AnnotationSpec = seq of Annotation;
 
 \end{vdm_al}
@@ -242,48 +276,57 @@ statement corresponds to a quote include preprocessor.
    pd: [PackageDeclaration]
    ims: ImportDeclarations
    CNTXT
- inv - == isJAVA();
+ ISJAVAINV
+ ;
 
- PackageDeclaration:: 
+ PackageDeclaration::
    name: PackageName
    CNTXT
- inv - == isJAVA();
- 
+ ISJAVAINV
+ ;
+
  PackageName =
    QualifiedPackageName | SimplePackageName
- inv - == isJAVA();
+ ISJAVAINV
+ ;
 
  QualifiedPackageName::
-   pn: PackageName 
+   pn: PackageName
    id: Identifier
    CNTXT
- inv - == isJAVA();
- 
+ ISJAVAINV
+ ;
+
  SimplePackageName::
    id : Identifier
    CNTXT
- inv - == isJAVA();
-      
+ ISJAVAINV
+ ;
+
  ImportDeclarations = seq of ImportDeclaration
- inv - == isJAVA();
-  
+ ISJAVAINV
+ ;
+
  ImportDeclaration =
    SingleTypeImportDeclaration | TypeImportOnDemandDeclaration
- inv - == isJAVA();
+ ISJAVAINV
+ ;
 
  SingleTypeImportDeclaration::
    name: PackageName
    CNTXT
- inv - == isJAVA();
+ ISJAVAINV
+ ;
 
  TypeImportOnDemandDeclaration::
    name: PackageName
    CNTXT
- inv - == isJAVA();
+ ISJAVAINV
+ ;
 
 \end{vdm_al}
 
-\subsection{Declarations} 
+\subsection{Declarations}
 
 In Java, the declarations at the outermost
 level can only be Class declarations or
@@ -304,18 +347,20 @@ SimpleTypeNames (FieldDeclarations) are not allowed at the outermost level.
  DeclSpecifiers = seq of DeclSpecifier;
 
  DeclSpecifier =
-    StorageClassSpecifier | 
+    StorageClassSpecifier |
     TypeSpecifier |
     FctSpecifier |
     ArraySpecifier |
     Friend |
     TypeDef |
-    Modifier 
- inv spec == isJAVA()
-             => is_TypeSpecifier(spec) or
-	        is_Modifier(spec) or
-		is_StorageClassSpecifier(spec) or
-		is_ArraySpecifier(spec); 
+    Modifier
+#ifdef VDMPP
+ inv spec == isJAVA() => is_TypeSpecifier(spec) or
+                         is_Modifier(spec) or
+                         is_StorageClassSpecifier(spec) or
+                         is_ArraySpecifier(spec)
+#endif VDMPP
+;
 
 \end{vdm_al}
 
@@ -326,30 +371,38 @@ SimpleTypeNames (FieldDeclarations) are not allowed at the outermost level.
     val: <AUTO> | <REGISTER> | <STATIC> | <EXTERN>
     CNTXT;
 
- TypeSpecifier :: 
-  tp:  SimpleTypeName | 
-       ClassSpecifier | 
+ TypeSpecifier ::
+  tp:  SimpleTypeName |
+       ClassSpecifier |
+#ifdef VDMPP
        InterfaceSpecifier |
-       EnumSpecifier | 
+#endif VDMPP
+       EnumSpecifier |
        ElaboratedTypeSpecifier |
        <CONST> |
        <VOLATILE> |
-       <REFERENCE> |
-       <FINAL>
+       <REFERENCE>
+#ifdef VDMPP
+      | <FINAL>
+#endif VDMPP
   CNTXT
+#ifdef VDMPP
  inv spec == isJAVA() => not (is_EnumSpecifier(spec.tp) or
-                              is_ElaboratedTypeSpecifier(spec.tp) or 
+                              is_ElaboratedTypeSpecifier(spec.tp) or
                               spec.tp=<CONST> or spec.tp=<VOLATILE>)
              and isCPP() => not (is_InterfaceSpecifier(spec.tp) or
-                                 spec.tp=<FINAL>);
+                                 spec.tp=<FINAL>)
+#endif VDMPP
+;
 
  ArraySpecifier ::
    CNTXT
- inv - == isJAVA();
-  
+ ISJAVAINV
+ ;
+
  FctSpecifier ::
    val : <INLINE> | <VIRTUAL>
-   CNTXT;    
+   CNTXT;
 
  Friend :: CNTXT;
 
@@ -357,9 +410,9 @@ SimpleTypeNames (FieldDeclarations) are not allowed at the outermost level.
 
  Modifiers = seq of Modifier;
 
- Modifier :: 
+ Modifier ::
    ma : ModifierAccess
-	     CNTXT;
+             CNTXT;
 
  ModifierAccess =
             <PUBLIC> |
@@ -373,7 +426,7 @@ SimpleTypeNames (FieldDeclarations) are not allowed at the outermost level.
             <STATIC> |
             <VOLATILE> |
             <STRICTFP>;
-	    
+
  EnumSpecifier ::
    id : [Identifier]
    el : seq of Enumerator
@@ -393,7 +446,7 @@ SimpleTypeNames (FieldDeclarations) are not allowed at the outermost level.
 
 \end{vdm_al}
 
-\subsubsection{Declarators} 
+\subsubsection{Declarators}
 
 \begin{vdm_al}
  DeclaratorList = seq of InitDeclarator;
@@ -407,7 +460,7 @@ SimpleTypeNames (FieldDeclarations) are not allowed at the outermost level.
 
  AsgnInit :: expr :Expr
              CNTXT;
- 
+
  ObjectInit :: exprs : Exprs
                CNTXT;
 
@@ -418,18 +471,25 @@ SimpleTypeNames (FieldDeclarations) are not allowed at the outermost level.
      IndirectionDecl |
      RefDecl |
      PointerToMember |
-     FctDecl | 
+     FctDecl |
      ArrayDecl |
      BracketedDecl
+#ifdef VDMPP
  inv decl == isJAVA() => not(is_Destructor(decl) or is_TypeDefName(decl)
                          or is_IndirectionDecl(decl) or is_RefDecl(decl) or
-                         is_PointerToMember(decl) or is_BracketedDecl(decl));
+                         is_PointerToMember(decl) or is_BracketedDecl(decl))
+#endif VDMPP
+;
+
  FctDecl ::
      decl : Declarator
-     arg : [ArgumentDeclarationList] 
+     arg : [ArgumentDeclarationList]
      cvlist : [CVQualifierList]
      CNTXT
- inv fdecl == isJAVA() => (fdecl.cvlist = nil);
+#ifdef VDMPP
+ inv fdecl == isJAVA() => (fdecl.cvlist = nil)
+#endif VDMPP
+;
 
  ArrayDecl ::
      decl : Declarator
@@ -440,12 +500,12 @@ SimpleTypeNames (FieldDeclarations) are not allowed at the outermost level.
    tsp : seq of TypeSpecifier
    ad  : [AbstractDeclarator]
    CNTXT;
- 
+
  AbstractDeclarator =
      IndirectionAbsDecl |
      RefAbsDecl |
      PointerToMemberAbs |
-     FctAbsDecl | 
+     FctAbsDecl |
      ArrayAbsDecl |
      BracketedAbsDecl;
 
@@ -465,10 +525,10 @@ SimpleTypeNames (FieldDeclarations) are not allowed at the outermost level.
      ellipsis : [ <ELLIPSIS> ]
      CNTXT;
 
- ArgumentDeclaration = 
-     ArgDecl | 
-     DefaultArgDecl | 
-     ArgAbsDecl | 
+ ArgumentDeclaration =
+     ArgDecl |
+     DefaultArgDecl |
+     ArgAbsDecl |
      DefaultArgAbsDecl |
      VarArgDecl;
 
@@ -521,7 +581,8 @@ SimpleTypeNames (FieldDeclarations) are not allowed at the outermost level.
      cvlist : [CVQualifierList]
      decl   : Declarator
      CNTXT
-  inv - == not isJAVA();
+  ISCPPINV
+  ;
 
  BracketedDecl ::
      decl : Declarator
@@ -551,7 +612,7 @@ SimpleTypeNames (FieldDeclarations) are not allowed at the outermost level.
 
 \end{vdm_al}
 
-\subsection{Class Declarations} 
+\subsection{Class Declarations}
 A Java Class Declaration may only
 specify one base class. On the other hand, several interface classes
 can be specified.
@@ -562,9 +623,9 @@ A C++ Class Declaration has no modifiers.
     ch : ClassHead
     ml : seq of MemberList | seq of MemberDeclaration
     CNTXT;
---    inv cs == isCPP() => (forall e in set elems cs.ml & is_MemberList(e))                   
+--    inv cs == isCPP() => (forall e in set elems cs.ml & is_MemberList(e))
 -- and  isJAVA() => (forall e in set elems cs.ml & is_MemberDeclaration(e));
- 
+
  ClassHead ::
     m     : Modifiers
     ck    : <CLASS> | <STRUCT> | <UNION>
@@ -574,42 +635,60 @@ A C++ Class Declaration has no modifiers.
     tpspec : [seq of Identifier] -- Type Parameters
     annospec : AnnotationSpec
     CNTXT
+#ifdef VDMSL
+ inv ch == (ch.m = []) and (ch.ispec = nil)
+#endif VDMSL
+#ifdef VDMPP
  inv ch == isJAVA() => (ch.ck = <CLASS> and
                         is_Identifier(ch.name) and
                         card(elems ch.bs)=1)
-           and  isCPP() => ((ch.m = []) and (ch.ispec = nil));
+           and isCPP() => ((ch.m = []) and (ch.ispec = nil))
+#endif VDMPP
+;
 
  BaseSpec = seq of BaseSpecifier;
 
- BaseSpecifier = PackageName | 
-                 VirCompleteClassSpecifier | 
+ BaseSpecifier = PackageName |
+                 VirCompleteClassSpecifier |
                  AccCompleteClassSpecifier
- inv bs == isJAVA() => is_(bs,PackageName);
+#ifdef VDMPP
+ inv bs == isJAVA() => is_(bs,PackageName)
+#endif VDMPP
+;
 
  MemberList ::
     a    : [ (<PRIVATE> | <PROTECTED> | <PUBLIC>) ]
     md   : [seq of MemberDeclaration]
     CNTXT
- inv ml == isJAVA() => ml.a = nil; 
+#ifdef VDMPP
+ inv ml == isJAVA() => ml.a = nil
+#endif VDMPP
+;
 
- MemberDeclaration = 
+ MemberDeclaration =
     MemberSpecifier |
     IdentDeclaration |
     FunctionDefinition |
     QualifiedName |
-    PreProcStmt |
-    StaticInitializer
+    PreProcStmt
+#ifdef VDMPP
+    | StaticInitializer
  inv md == isJAVA() => (is_MemberSpecifier(md) or
                         is_FunctionDefinition(md) or
                         is_StaticInitializer(md) or
-			is_IdentDeclaration(md))
-           and isCPP() => not is_StaticInitializer(md);
- 
+                        is_IdentDeclaration(md))
+           and isCPP() => not is_StaticInitializer(md)
+#endif VDMPP
+;
+
  MemberSpecifier ::
     ds  : seq of DeclSpecifier
     mdl : [seq of DeclPureSpec ]
     CNTXT
- inv ms == isJAVA() => ms.mdl = nil;
+#ifdef VDMPP
+ inv ms == isJAVA() => ms.mdl = nil
+#endif VDMPP
+;
 
  VirCompleteClassSpecifier ::
    a  : [( <PRIVATE> | <PROTECTED> | <PUBLIC> ) ]
@@ -622,7 +701,7 @@ A C++ Class Declaration has no modifiers.
    ccn : CompleteClassName
    CNTXT;
 
- DeclPureSpec :: 
+ DeclPureSpec ::
     decl   : Declarator | InitDeclarator
     puresp : [ <PURE> ]
     CNTXT;
@@ -633,9 +712,9 @@ A C++ Class Declaration has no modifiers.
 
 \end{vdm_al}
 
-    
+
 \subsubsection{Templates (C++)}
-The declaration of a class as specified by a template-class-name is 
+The declaration of a class as specified by a template-class-name is
 introduced is defined. (A template-class-name is a class-name).
 TemplateClassName has only been introduced as a QualifiedClassName.
 
@@ -643,14 +722,16 @@ TemplateClassName has only been introduced as a QualifiedClassName.
 
  TemplateName ::
         id : Identifier
-	CNTXT
- inv - == isCPP();
+        CNTXT
+ ISCPPINV
+ ;
 
  TemplateClassName ::
         nm  : TemplateName
         arg : seq of TemplateArg
-	CNTXT
- inv - == isCPP();
+        CNTXT
+ ISCPPINV
+ ;
 
  TemplateArg = Expr | TypeName;
 
@@ -670,16 +751,16 @@ TemplateClassName has only been introduced as a QualifiedClassName.
     bs   : InterSpec
     tpspec : [seq of Identifier] -- Type Parameters
     annospec : AnnotationSpec
-    CNTXT; -- Base Interface Classes 
+    CNTXT; -- Base Interface Classes
 
  InterfaceBody = seq of MemberDeclaration;
 
- InterSpec = seq of PackageName; 
+ InterSpec = seq of PackageName;
 
 
 \end{vdm_al}
 
-\subsection{Function Definition} 
+\subsection{Function Definition}
 
 \begin{vdm_al}
  FunctionDefinition ::
@@ -687,12 +768,17 @@ TemplateClassName has only been introduced as a QualifiedClassName.
      ds  : seq of DeclSpecifier
      decl: Declarator
      ci  : [CtorInitializer]
-     throw : [seq of SimpleTypeName] 
+     throw : [seq of SimpleTypeName]
      annos : AnnotationSpec
      fb  : [FctBody]
      CNTXT
+#ifdef VDMSL
+  inv fd == fd.m = [] and fd.throw = nil;
+#endif VDMSL
+#ifdef VDMPP
   inv fd == isJAVA() => (fd.ci = nil)
             and isCPP() => (fd.m = [] and fd.throw = nil);
+#endif VDMPP
 
  CtorInitializer = seq of MemInitializer;
 
@@ -712,29 +798,35 @@ TemplateClassName has only been introduced as a QualifiedClassName.
 \begin{vdm_al}
 
  SimpleTypeName =
-     PackageName | 
+     PackageName |
      CompleteClassName |  -- what is the difference here?
-     QualifiedName | 
+     QualifiedName |
      Bool |
      Void |
-     Char | 
-     Short | 
-     Int | 
+     Char |
+     Short |
+     Int |
      Long |
-     Float | 
+     Float |
      Double |
      Byte |
-     Signed | 
+     Signed |
      Unsigned
- inv stn == isJAVA() => not (is_Signed(stn) or is_Unsigned(stn));
+#ifdef VDMPP
+ inv stn == isJAVA() => not (is_Signed(stn) or is_Unsigned(stn))
+#endif VDMPP
+;
 
  CompleteClassName =
      QualifiedClassName | ResScopeQualifiedClassName;
 
- QualifiedClassName =   Identifier | 
-                        TemplateClassName | 
+ QualifiedClassName =   Identifier |
+                        TemplateClassName |
                         ClassResScopeQualifiedClassName
- inv name == isJAVA() => not (is_TemplateClassName(name));
+#ifdef VDMPP
+ inv name == isJAVA() => not (is_TemplateClassName(name))
+#endif VDMPP
+;
 
  ClassResScopeQualifiedClassName ::
     cn : Identifier
@@ -762,7 +854,7 @@ TemplateClassName has only been introduced as a QualifiedClassName.
  Signed :: CNTXT;
  Unsigned :: CNTXT;
 
- TypeDefName :: 
+ TypeDefName ::
      id : Identifier
      CNTXT;
 \end{vdm_al}
@@ -786,16 +878,19 @@ TemplateClassName has only been introduced as a QualifiedClassName.
         DeclarationStmt |
         IncludeStmt |
         PreProcStmt |
-        SynchronizedStmt |
-        TryBlock |
-        EmptyStmt
+        TryBlock
+#ifdef VDMPP
+        | SynchronizedStmt
+        | EmptyStmt
 
  inv stmt == isJAVA() => not (is_Goto(stmt) or is_IncludeStmt(stmt)
-                               or is_PreIf(stmt) or is_PreIfDef(stmt) or is_PreIfNotDef(stmt) or 
+                               or is_PreIf(stmt) or is_PreIfDef(stmt) or is_PreIfNotDef(stmt) or
                                is_PreDefine(stmt) or is_PreElse(stmt) or is_PreEndIf(stmt)
                                or is_PreMacro(stmt))
-           and isCPP() => not (is_SynchronizedStmt(stmt) 
-                            or is_EmptyStmt(stmt));
+           and isCPP() => not (is_SynchronizedStmt(stmt)
+                            or is_EmptyStmt(stmt))
+#endif VDMPP
+;
 
  LabelStmt ::
      id   : Identifier
@@ -810,30 +905,33 @@ Case labels and default labels may occur only in switch statements.
     expr : Expr
     block : SwitchBlock
     CNTXT;
-    
+
  SwitchBlock ::
    groups : seq of SwitchBlockStmtGrp
    labels : [SwitchLabels]
    CNTXT
-   inv - == isJAVA();
+   ISJAVAINV
+   ;
 
  SwitchBlockStmtGrp ::
    labels : [SwitchLabels]
    stmt  : [CompoundStmt] -- can this be optional??
    CNTXT
-   inv - == isJAVA();
-    
+   ISJAVAINV
+   ;
+
  SwitchLabels ::
    stmt   : CaseStmt | DefaultStmt
    labels : [SwitchLabels]
    CNTXT
-   inv - == isJAVA();
-    
+   ISJAVAINV
+   ;
+
  CaseStmt ::
      cexpr : Expr -- should be constant, inv. se side 84.
      stmt  : [Stmt]
      CNTXT;
- 
+
  DefaultStmt ::
      stmt : [Stmt]
      CNTXT;
@@ -856,7 +954,7 @@ multiple expressions into a single expression.  The code generator
 however only generates for statements with one expression in the initialization
 an increment sections of the for loop. As a consequence, the syntax of
 the for statement will be the same for C++ and Java in the code
-generated by the code generator.  
+generated by the code generator.
 
 \begin{vdm_al}
 
@@ -878,7 +976,7 @@ generated by the code generator.
 \end{vdm_al}
 
 In Java, the break and continue statements may optionally be followed by a label that
-specifies an enclosing loop (for continue) or any enclosing statement (for break). The labelled forms of the statements allows any specified statement or loop to be broken or continued within a method definition - not only the nearest enclosing loop. The code generated by the code generator does however not make use of this optional label and we can be content with a common syntax for C++ and Java. 
+specifies an enclosing loop (for continue) or any enclosing statement (for break). The labelled forms of the statements allows any specified statement or loop to be broken or continued within a method definition - not only the nearest enclosing loop. The code generated by the code generator does however not make use of this optional label and we can be content with a common syntax for C++ and Java.
 
 \begin{vdm_al}
 
@@ -894,8 +992,8 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
 
  Return ::
    expr : [ Expr ]
-   CNTXT; 
- 
+   CNTXT;
+
  DeclarationStmt ::
    decl : Declaration
    CNTXT;
@@ -919,16 +1017,19 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
  Goto ::
    id : Identifier
    CNTXT
- inv - == isCPP();
+ ISCPPINV
+ ;
 
  SynchronizedStmt ::
    expr : Expr
    block: CompoundStmt
    CNTXT
- inv - == isJAVA();
+ ISJAVAINV
+ ;
 
  EmptyStmt:: CNTXT
- inv - == isJAVA();
+ ISJAVAINV
+ ;
 \end{vdm_al}
 
 \subsection{Expressions}
@@ -950,7 +1051,7 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
         PmExpr |
         CastExpr |
         PreInDecrementExpr |
-        UnaryOpExpr | 
+        UnaryOpExpr |
         SizeOfExpr |
         SizeOfType |
         Literal |
@@ -961,7 +1062,7 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
         DeallocationArrayExpr |
         AllocationTypeExpr |
         AllocationNewTypeExpr |
-        ArrayApply | 
+        ArrayApply |
         FctCall |
         ExplTypeConv |
         ObjectMemberAccess |
@@ -972,34 +1073,37 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
         ScopeResOpFctName |
         ScopeResQualifiedName |
         ClassInstanceCreationExpr|
-	ClassExpr |
-	ArrayCreationExpr |
-	ArrayInitializer |
-        Name
+        ArrayInitializer |
+        Name 
+#ifdef VDMPP
+        | ClassExpr
+        | ArrayCreationExpr
  inv expr == (isJAVA() => not (is_PmExpr(expr)
                                or is_DeallocationExpr(expr)
                                or is_DeallocationArrayExpr(expr)
-			       or is_SizeOfExpr(expr) 
+                               or is_SizeOfExpr(expr)
                                or is_SizeOfType(expr)
-                  	       or is_AllocationNewTypeExpr(expr)
-                               or is_AllocationTypeExpr(expr) 
+                                 or is_AllocationNewTypeExpr(expr)
+                               or is_AllocationTypeExpr(expr)
                                or is_PointerToObjectMemberAccess(expr)))
-			       and
-	   isCPP() => not (is_ClassExpr(expr) or is_ArrayCreationExpr(expr));
-	        
-  AssignExpr :: 
+                               and
+           isCPP() => not (is_ClassExpr(expr) or is_ArrayCreationExpr(expr))
+#endif VDMPP
+;
+
+  AssignExpr ::
     unary      : Expr
     assignop   : AssignOp
     assignexpr : Expr
     CNTXT;
 
   AssignOp ::
-    op: <ASEQUAL> | <ASMULT> | <ASDIV> | <ASMOD> | <ASPLUS> | 
-        <ASMINUS> | <ASRIGHTSHIFT> | <ASLEFTSHIFT> | 
+    op: <ASEQUAL> | <ASMULT> | <ASDIV> | <ASMOD> | <ASPLUS> |
+        <ASMINUS> | <ASRIGHTSHIFT> | <ASLEFTSHIFT> |
         <ASBITWISEAND> | <ASBITWISEEXOR> | <ASBITWISEINCLOR> |
-	<ASUNSIGNEDRIGHTSHIFT>
+        <ASUNSIGNEDRIGHTSHIFT>
     CNTXT;
-	     
+
   ConditionalExpr ::
     cond  : Expr
     expr1 : Expr
@@ -1063,7 +1167,7 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
     CNTXT;
 
   ShOp ::
-    op: <LEFTSHIFT> | <RIGHTSHIFT> | <UNSIGNEDRIGHTSHIFT> 
+    op: <LEFTSHIFT> | <RIGHTSHIFT> | <UNSIGNEDRIGHTSHIFT>
     CNTXT;
 
   BinExpr ::
@@ -1091,12 +1195,15 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
      expr : Expr
      CNTXT;
 
-  UnaryOp :: val : <REFERENCE> | <INDIRECTION> | <ADDROP> | <PLUS> | 
+  UnaryOp :: val : <REFERENCE> | <INDIRECTION> | <ADDROP> | <PLUS> |
              <MINUS> | <NEG> | <COMPL>
-	     CNTXT
+             CNTXT
+#ifdef VDMPP
   inv uop == isJAVA() => not ((uop.val=<REFERENCE>) or
                               (uop.val=<INDIRECTION>) or
-                              (uop.val=<ADDROP>));
+                              (uop.val=<ADDROP>))
+#endif VDMPP
+;
 
   PostFixInDecrementExpr ::
       op : <PPLUS> | <PMINUS>
@@ -1104,7 +1211,7 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
       CNTXT;
 
 
-  Literal = IntegerLit | CharacterLit | FloatingLit | 
+  Literal = IntegerLit | CharacterLit | FloatingLit |
             StringLit | BoolLit | NullLit | WCharacterLit | WStringLit;
 
   IntegerLit ::
@@ -1178,9 +1285,9 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
 
   inv n == (isJAVA() => not (is_ConversionFunctionName(n) or
                              is_OperatorFunctionName(n))) and
-	   isCPP() => not is_(n,PackageName);
- 
-  Identifier :: 
+           isCPP() => not is_(n,PackageName);
+
+  Identifier ::
       id : seq1 of char
       CNTXT;
 
@@ -1198,30 +1305,35 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
     pmop  : PmOp
     left  : Expr
     CNTXT
-  inv - == not isJAVA();
+  ISCPPINV
+  ;
 
   PmOp ::
     op: <DOTSTAR> | <ARROWSTAR>
     CNTXT
-  inv - == not isJAVA();
+  ISCPPINV
+  ;
 
   SizeOfExpr ::
      expr : Expr
      CNTXT
-  inv - == not isJAVA();
- 
+  ISCPPINV
+  ;
+
   SizeOfType ::
      type : TypeName
      CNTXT
-  inv - == not isJAVA();
+  ISCPPINV
+  ;
 
   AllocationTypeExpr ::
      scoperes    : [ <SCOPERES> ]
-     placement   : Exprs 
+     placement   : Exprs
      newtypename : NewTypeName
      newinit     : [NewInitializer]
      CNTXT
-  inv - == not isJAVA();
+  ISCPPINV
+  ;
 
   AllocationNewTypeExpr ::
      scoperes    : [ <SCOPERES> ]
@@ -1229,19 +1341,22 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
      typename    : TypeName
      newinit     : [NewInitializer]
      CNTXT
-  inv - == not isJAVA();
-     
+  ISCPPINV
+  ;
+
   DeallocationExpr ::
       scoperes : [ <SCOPERES> ]
       expr     : Expr
       CNTXT
-  inv - == not isJAVA();
+  ISCPPINV
+  ;
 
   DeallocationArrayExpr ::
       scoperes : [ <SCOPERES> ]
       expr     : Expr
       CNTXT
-  inv - == not isJAVA();
+  ISCPPINV
+  ;
 
   NewTypeName ::
      typespeclist : seq of TypeSpecifier
@@ -1256,12 +1371,14 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
     dim       : [ArrayNewDecl]
     arrayInit : [ArrayInitializer]
     CNTXT
-    inv - == isJAVA();
+    ISJAVAINV
+    ;
 
   ArrayInitializer ::
     vi : [seq of (Expr | ArrayInitializer)]
     CNTXT
-    inv - == isJAVA();
+    ISJAVAINV
+    ;
 
   CVNewDeclarator ::
      cv_qual_list : [CVQualifierList]
@@ -1282,9 +1399,9 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
   NewInitializer ::
     initl : [InitializerList]
     CNTXT;
-  
+
   PointerToObjectMemberAccess ::
-      p2object : Expr 
+      p2object : Expr
       name     : Expr
       CNTXT;
 
@@ -1303,7 +1420,8 @@ inside Java.
   ClassExpr ::
     operand : SimpleTypeName
     CNTXT
-  inv - == isJAVA();
+  ISJAVAINV
+  ;
 \end{vdm_al}
 
 \subsubsection{Conversion Functions (C++)}
@@ -1345,16 +1463,16 @@ ConversionFunctionName ::
       CNTXT;
 
   Operator ::
-    op : <NEW> | <DELETE> | <PLUS> | <MINUS> | <STAR> | <DIV> | 
-         <PRECENTAGEMARK> | <CIRCUMFEX> | <AMPERSAND> | <VERTICALLINE> | 
+    op : <NEW> | <DELETE> | <PLUS> | <MINUS> | <STAR> | <DIV> |
+         <PRECENTAGEMARK> | <CIRCUMFEX> | <AMPERSAND> | <VERTICALLINE> |
          <TILDE> | <EXCLAMATIONMARK> | <OPEQUAL> | <LESS> | <GREATER> |
          <PLUSEQUAL> | <MINUSEQUAL> | <STAREQUAL> | <BACKSLASHEQUAL> |
-         <PERCENTAGEMARKEQUAL> | <CIRCUMFLEXEQUAL> | <ANDEQUAL> | 
-         <VERTICALLINEEQUAL> | <DOUBLELESS> | <DOUBLEGREATER> | 
+         <PERCENTAGEMARKEQUAL> | <CIRCUMFLEXEQUAL> | <ANDEQUAL> |
+         <VERTICALLINEEQUAL> | <DOUBLELESS> | <DOUBLEGREATER> |
          <DOUBLELESSEQUAL> | <DOUBLEGREATEREQUAL> | <DOUBLEEQUAL> |
-         <EXCLAMATIONMARKEQUAL> | <LESSEQUAL> | <GREATEREQUAL> | 
-         <DOUBLEAND> | <DOUBLEVERTICALLINE> | <DOUBLEPLUS> | 
-         <DOUBLEMINUS> | <COMMA> | <ARROWSTAR> | <ARROW> | 
+         <EXCLAMATIONMARKEQUAL> | <LESSEQUAL> | <GREATEREQUAL> |
+         <DOUBLEAND> | <DOUBLEVERTICALLINE> | <DOUBLEPLUS> |
+         <DOUBLEMINUS> | <COMMA> | <ARROWSTAR> | <ARROW> |
          <BRACKETS> | <SQUAREBRACKETS>
     CNTXT;
 \end{vdm_al}
@@ -1371,7 +1489,7 @@ The exception handling in Java is similar, but not quite the same as in C++.
    CNTXT;
 
  Handler ::
-   exepdecl : All | ExceptionDeclaration 
+   exepdecl : All | ExceptionDeclaration
    stmt     : Stmt
    CNTXT;
 
@@ -1385,7 +1503,7 @@ The exception handling in Java is similar, but not quite the same as in C++.
  ThrowExpression ::
    expr : [ Expr ]
    CNTXT;
-  
+
 \end{vdm_al}
 
 \begin{vdm_al}
@@ -1423,22 +1541,18 @@ The exception handling in Java is similar, but not quite the same as in C++.
  GenericsSpec ::
    defs : seq of GenericsClasses
    CNTXT
- inv - == isJAVA();
+ ISJAVAINV
+ ;
 
  GenericsClasses ::
    id : PackageName
    exteds : seq of PackageName
    CNTXT
- inv - == isJAVA();
+ ISJAVAINV
+ ;
 \end{vdm_al}
 
 \begin{vdm_al}
 end CPP
 \end{vdm_al}
-
-
-
-
-
-
 

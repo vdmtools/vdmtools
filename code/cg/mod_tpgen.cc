@@ -40,10 +40,9 @@ void vdmcg::InitState_TPGEN(const Generic & nm)
   this->record_types = Map();
 
 #ifdef VDMSL
-// 20120912 -->
-  if (!nm.IsNil())
-// <-- 20120912
-  this->imported_types = SET<TYPE_AS_Name>();
+  if (!nm.IsNil()) {
+    this->imported_types = SET<TYPE_AS_Name>();
+  }
 #endif //VDMSL
 
 #ifdef VDMPP
@@ -957,11 +956,12 @@ TYPE_CPP_Identifier vdmcg::Name2CppTpId(const TYPE_AS_Name& tpnm)
 #endif  // VDMSL
 #ifdef VDMPP
   TYPE_AS_Name qtpnm(GenQualifiedTypeName(GenQName(tpnm)));
-#endif // VDMPP
-  if (vdm_CPP_isCPP())
-    return vdm_BC_GenIdentifier(ASTAUX::MkId(L"TYPE_").ImpConc(Name2Id(qtpnm)));
-  else // java
+  if (vdm_CPP_isJAVA()) {
     return vdm_BC_GenIdentifier(Name2Id(qtpnm));
+  }
+  else
+#endif // VDMPP
+    return vdm_BC_GenIdentifier(ASTAUX::MkId(L"TYPE_").ImpConc(Name2Id(qtpnm)));
 }
 
 // GenQuoteId
@@ -1184,13 +1184,11 @@ Generic vdmcg::GenQComp(const TYPE_AS_Name & clnm, const Generic & type)
       return res;
     }
     case TAG_TYPE_AS_TypeName : {
-// 20110416 -->
 #ifdef VDMPP
       const TYPE_AS_Name & nm (tp.GetRecord(pos_AS_TypeName_name));
       if (IsClass(nm))
         return tp;
 #endif // VDMPP
-// <-- 20110416
       TYPE_AS_TypeName res (tp);
       res.SetField(pos_AS_TypeName_name, GenQName2(clnm, tp.GetRecord(pos_AS_TypeName_name)));
       return res;
@@ -1802,6 +1800,7 @@ SET<TYPE_CPP_Expr> vdmcg::GetBasicTypes()
   return expr_set;
 }
 
+#ifdef VDMPP
 // GenCloneMethod
 // cn : CPP`Identifier
 // sl : TagList         (seq of CPP`Identifier)
@@ -1843,6 +1842,7 @@ TYPE_CPP_FunctionDefinition vdmcg::GenCloneMethod(const TYPE_CPP_Identifier & cn
 
   return vdm_BC_GenJavaFctDef(SEQ<TYPE_CPP_Annotation>(), ml, dsl, decl, nil, vdm_BC_GenBlock(stmtl));
 }
+#endif // VDMPP
 
 // GenAsciiMethod
 // cn : CPP`Identifier
@@ -2113,62 +2113,8 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenCompositeClassDecl(const TYPE_AS_Name &
 {
   SEQ<TYPE_CPP_MemberDeclaration> pub_ml, priv_ml, fctdef;
 
-  if (vdm_CPP_isCPP())
-  {
-    TYPE_CPP_Identifier cnm (cpptpid);
-    TYPE_CPP_Identifier cn (GenRecordType(Nil()).get_tp());
-
-    SEQ<TYPE_CPP_BaseSpecifier> bs;
-    bs.ImpAppend(vdm_BC_GenAccBaseSpec(cn));
-    TYPE_CPP_ClassHead ch (vdm_BC_GenClassHead(cpptpid, bs));
-
-    if (!taglist.IsEmpty()) // 20111124
-    {
-      fctdef.ImpAppend(GenInitFunctionDef(cnm, taglist, tagenv));
-    }
-
-    pub_ml.ImpAppend(GenClassDefaultConstructorDecl((Int)TAG_quote_COMPOSITE, cpptpid, taglist));
-
-    if (!taglist.IsEmpty()) // 20111124
-    {
-      pub_ml.ImpAppend(GenInitFunctionDecl(cpptpid, taglist, tagenv));
-    }
-    pub_ml.ImpAppend(GenCommonConstrDecl(cpptpid, cn));
-
-    pub_ml.ImpAppend(GenGetTypeNameDecl(cpptpid));
-    pub_ml.ImpConc(GenMemFctMacros((Int) TAG_quote_COMPOSITE));
-
-    size_t len_taglist = taglist.Length();
-    for (size_t i = 1; i <= len_taglist; i++)
-    {
-      TYPE_CPP_Identifier id (taglist[i]);
-
-      pub_ml.ImpAppend(GenGetFunctionDecl(id, (Generic)tagenv[id]));
-      pub_ml.ImpAppend(GenSetFunctionDecl(id, (Generic)tagenv[id]));
-
-      fctdef.ImpAppend(GenGetFunctionDef((Int) TAG_quote_COMPOSITE, id, (Generic)tagenv[id], i, cnm, tps[i]));
-      fctdef.ImpAppend(GenSetFunctionDef(id, (Generic)tagenv[id], i, cnm));
-    }
-// 20120911 -->
-#ifdef VDMSL
-    TYPE_AS_Name qnm (nm.get_ids().Length() == 1 ? GenQName(nm) : nm);
-    if (!this->imported_types.InSet(qnm))
-#endif // VDMPP
-// <-- 20120911
-    this->mod_fctdef.ImpConc(fctdef);
-
-    SEQ<TYPE_CPP_DeclSpecifier> sp;
-    type_dL mem;
-    mem.ImpConc(vdm_BC_GenPrivate(priv_ml));
-    mem.ImpConc(vdm_BC_GenPublic(pub_ml));
-    sp.ImpAppend(vdm_BC_GenTypeSpecifier(vdm_BC_GenClassSpecifier(ch, mem)));
-
-    SEQ<TYPE_CPP_IdentDeclaration> cl;
-    cl.ImpAppend(vdm_BC_GenIdentDeclaration(SEQ<TYPE_CPP_Annotation>(), sp, SEQ<TYPE_CPP_InitDeclarator>()));
-    return cl;
-  }
-  else // java
-  {
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     SEQ<TYPE_CPP_PackageName> inter_l;
     if (this->record_types.Dom().InSet(nm))
     {
@@ -2207,6 +2153,62 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenCompositeClassDecl(const TYPE_AS_Name &
 
     SEQ<TYPE_CPP_DeclSpecifier> sp;
     sp.ImpAppend(vdm_BC_GenTypeSpecifier(vdm_BC_GenClassSpecifier(ch, pub_ml)));
+
+    SEQ<TYPE_CPP_IdentDeclaration> cl;
+    cl.ImpAppend(vdm_BC_GenIdentDeclaration(SEQ<TYPE_CPP_Annotation>(), sp, SEQ<TYPE_CPP_InitDeclarator>()));
+    return cl;
+  }
+  else
+#endif // VDMPP
+  {
+    TYPE_CPP_Identifier cnm (cpptpid);
+    TYPE_CPP_Identifier cn (GenRecordType(Nil()).get_tp());
+
+    SEQ<TYPE_CPP_BaseSpecifier> bs;
+    bs.ImpAppend(vdm_BC_GenAccBaseSpec(cn));
+    TYPE_CPP_ClassHead ch (vdm_BC_GenClassHead(cpptpid, bs));
+
+    if (!taglist.IsEmpty()) {
+      fctdef.ImpAppend(GenInitFunctionDef(cnm, taglist, tagenv));
+    }
+
+    pub_ml.ImpAppend(GenClassDefaultConstructorDecl((Int)TAG_quote_COMPOSITE, cpptpid, taglist));
+
+    if (!taglist.IsEmpty()) {
+      pub_ml.ImpAppend(GenInitFunctionDecl(cpptpid, taglist, tagenv));
+    }
+    pub_ml.ImpAppend(GenCommonConstrDecl(cpptpid, cn));
+
+    pub_ml.ImpAppend(GenGetTypeNameDecl(cpptpid));
+    pub_ml.ImpConc(GenMemFctMacros((Int) TAG_quote_COMPOSITE));
+
+    size_t len_taglist = taglist.Length();
+    for (size_t i = 1; i <= len_taglist; i++)
+    {
+      TYPE_CPP_Identifier id (taglist[i]);
+
+      pub_ml.ImpAppend(GenGetFunctionDecl(id, tagenv[id]));
+      pub_ml.ImpAppend(GenSetFunctionDecl(id, tagenv[id]));
+
+      fctdef.ImpAppend(GenGetFunctionDef((Int) TAG_quote_COMPOSITE, id, tagenv[id], i, cnm, tps[i]));
+      fctdef.ImpAppend(GenSetFunctionDef(id, tagenv[id], i, cnm));
+    }
+
+#ifdef VDMSL
+    TYPE_AS_Name qnm (nm.get_ids().Length() == 1 ? GenQName(nm) : nm);
+    if (!this->imported_types.InSet(qnm)) {
+      this->mod_fctdef.ImpConc(fctdef);
+    }
+#endif // VDMSL
+#ifdef VDMPP
+    this->mod_fctdef.ImpConc(fctdef);
+#endif // VDMPP
+
+    SEQ<TYPE_CPP_DeclSpecifier> sp;
+    type_dL mem;
+    mem.ImpConc(vdm_BC_GenPrivate(priv_ml));
+    mem.ImpConc(vdm_BC_GenPublic(pub_ml));
+    sp.ImpAppend(vdm_BC_GenTypeSpecifier(vdm_BC_GenClassSpecifier(ch, mem)));
 
     SEQ<TYPE_CPP_IdentDeclaration> cl;
     cl.ImpAppend(vdm_BC_GenIdentDeclaration(SEQ<TYPE_CPP_Annotation>(), sp, SEQ<TYPE_CPP_InitDeclarator>()));
@@ -2833,6 +2835,7 @@ void vdmcg::AddRecordType(const TYPE_AS_Name & enm, const TYPE_AS_Name & nm)
   this->record_types.ImpModify(enm,rn);
 }
 
+#ifdef VDMPP
 // GenUnionInterfaceDecl
 // nm : AS`Name
 // ==> seq of CPP`IdentDeclaration
@@ -2866,6 +2869,7 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenUnionInterfaceDecl(const TYPE_AS_Name &
                                   nil));
   return SEQ<TYPE_CPP_IdentDeclaration>().ImpAppend(cl);
 }
+#endif // VDMPP
 
 // GenObjRefClass
 // classnm : AS`Name
@@ -3149,8 +3153,10 @@ Sequence vdmcg::GenCppTypeDef(const TYPE_AS_Name & nm, const TYPE_AS_Type & tp, 
   }
   else
   {
+#ifdef VDMPP
     if (vdm_CPP_isCPP())
     {
+#endif // VDMPP
       TYPE_CPP_Expr val;
       if(IsTpRecursive(nm, rtp, Set()))
         val = vdm_BC_GenIdentifier(ASTAUX::MkId(L"Generic"));
@@ -3160,6 +3166,7 @@ Sequence vdmcg::GenCppTypeDef(const TYPE_AS_Name & nm, const TYPE_AS_Type & tp, 
       TYPE_CPP_PreDefine tpdef (vdm_BC_GenPreDefine(Name2CppTpId(nm), val));
       this->anonym_tpdefs.ImpPrepend(tpdef);
       return Sequence();
+#ifdef VDMPP
     }
     else
     { // java
@@ -3177,6 +3184,7 @@ Sequence vdmcg::GenCppTypeDef(const TYPE_AS_Name & nm, const TYPE_AS_Type & tp, 
           return Sequence();
       }
     }
+#endif // VDMPP
   }
 }
 
@@ -3185,41 +3193,11 @@ Sequence vdmcg::GenCppTypeDef(const TYPE_AS_Name & nm, const TYPE_AS_Type & tp, 
 // incl : (<ANONYM>|<CC>|<CCANONYM>|<H>)
 // names : set of AS`Name
 // ==> CPP`Name
-TYPE_CPP_Name vdmcg::GenVDMTpName(const TYPE_REP_TypeRep & tp, const Int & incl, const SET<TYPE_AS_Name> & names)
+TYPE_CPP_Name vdmcg::GenVDMTpName(const TYPE_REP_TypeRep & tp, const Int & incl,
+                                  const SET<TYPE_AS_Name> & names)
 {
-  if (vdm_CPP_isCPP())
-  {
-    switch(tp.GetTag()) {
-      case TAG_TYPE_REP_InvTypeRep: {
-        return GenVDMTpName(tp.GetRecord(pos_REP_InvTypeRep_shape), incl, names);
-        break;
-      }
-      case TAG_TYPE_REP_TypeNameRep: {
-        TYPE_AS_Name nm (tp.GetRecord(pos_REP_TypeNameRep_nm));
 #ifdef VDMPP
-        TYPE_AS_Ids l (nm.get_ids());
-        if (l.Length() == 2) {
-          switch (incl.GetValue()) {
-            case TAG_quote_ANONYM : AddInclGH(GiveFirstName(nm)); break;
-            case TAG_quote_CC : IncludeClass(GiveFirstName(nm)); break;
-            case TAG_quote_CCANONYM : {
-              AddInclGH(GiveFirstName(nm));
-              IncludeClass(GiveFirstName(nm));
-              break;
-            }
-            case TAG_quote_H : AddInclH(GiveFirstName(nm)); break;
-          }
-        }
-#endif //VDMPP
-        return Name2CppTpId(nm);
-      }
-      default:{
-        return Id2CppGTpId(GenCppTpDecl(tp,names));
-      }
-    }
-  }
-  else
-  { // Java
+  if (vdm_CPP_isJAVA()) {
     switch(tp.GetTag()) {
       case TAG_TYPE_REP_InvTypeRep: {
         return GenVDMTpName(tp.GetRecord(pos_REP_InvTypeRep_shape), incl, names);
@@ -3300,6 +3278,38 @@ TYPE_CPP_Name vdmcg::GenVDMTpName(const TYPE_REP_TypeRep & tp, const Int & incl,
       }
       default: {
         return Id2JavaGTpId(GenCppTpDecl(tp, names));
+      }
+    }
+  }
+  else
+#endif //VDMPP
+  {
+    switch(tp.GetTag()) {
+      case TAG_TYPE_REP_InvTypeRep: {
+        return GenVDMTpName(tp.GetRecord(pos_REP_InvTypeRep_shape), incl, names);
+        break;
+      }
+      case TAG_TYPE_REP_TypeNameRep: {
+        TYPE_AS_Name nm (tp.GetRecord(pos_REP_TypeNameRep_nm));
+#ifdef VDMPP
+        TYPE_AS_Ids l (nm.get_ids());
+        if (l.Length() == 2) {
+          switch (incl.GetValue()) {
+            case TAG_quote_ANONYM : AddInclGH(GiveFirstName(nm)); break;
+            case TAG_quote_CC : IncludeClass(GiveFirstName(nm)); break;
+            case TAG_quote_CCANONYM : {
+              AddInclGH(GiveFirstName(nm));
+              IncludeClass(GiveFirstName(nm));
+              break;
+            }
+            case TAG_quote_H : AddInclH(GiveFirstName(nm)); break;
+          }
+        }
+#endif //VDMPP
+        return Name2CppTpId(nm);
+      }
+      default:{
+        return Id2CppGTpId(GenCppTpDecl(tp,names));
       }
     }
   }

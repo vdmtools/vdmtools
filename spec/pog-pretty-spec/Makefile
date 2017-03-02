@@ -93,7 +93,6 @@ READ_CMD = perl -le 'for (@ARGV) { print "r ${MPWD}/$$_"; }'
 
 %.vdmsl: %.vdm
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMSL -DTPINFO $< >$@
 	$(IFDEFFILT) -DVDMSL $< >$@
 	chmod a-w $@
 
@@ -102,7 +101,6 @@ READ_CMD = perl -le 'for (@ARGV) { print "r ${MPWD}/$$_"; }'
 
 %.vdmpp: %.vdm
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMPP -DTPINFO $< >$@
 	$(IFDEFFILT) -DVDMPP $< >$@
 	chmod a-w $@
 
@@ -111,7 +109,6 @@ READ_CMD = perl -le 'for (@ARGV) { print "r ${MPWD}/$$_"; }'
 
 %.vdmrt: %.vdm
 	-rm -f $@
-#	$(IFDEFFILT) -DVICE -DVDMPP -DTPINFO $< >$@
 	$(IFDEFFILT) -DVICE -DVDMPP $< >$@
 	chmod a-w $@
 

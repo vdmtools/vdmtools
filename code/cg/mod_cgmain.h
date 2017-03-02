@@ -95,7 +95,7 @@ public:
 
 #ifdef VDMSL
 private:
-  SET<TYPE_CPP_File> cg_CG(const TYPE_AS_Document &, const Map &);
+  SET<TYPE_CPP_File> cg_CG(const TYPE_AS_Document &, const Map &, const Bool &);
 #endif // VDMSL
 
 #endif // __mod_cg_h__

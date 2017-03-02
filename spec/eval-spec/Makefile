@@ -107,19 +107,16 @@ $(RTINFO):
 
 %.vdmsl: %.vdm
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMSL -DTPINFO $< >$@
 	$(IFDEFFILT) -DVDMSL $< >$@
 	chmod a-w $@
 
 %.vdmpp: %.vdm
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMPP -DTPINFO $< >$@
 	$(IFDEFFILT) -DVDMPP $< >$@
 	chmod a-w $@
 
 %.vdmrt: %.vdm
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMPP -DVICE -DTPINFO $< >$@
 	$(IFDEFFILT) -DVDMPP -DVICE $< >$@
 	chmod a-w $@
 

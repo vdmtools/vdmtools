@@ -143,19 +143,16 @@ $(LATEXFILERT).ps : $(LATEXFILERT).dvi
 
 $(LATEXFILESL).tex: $(LATEXFILESL).tex
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMSL -DA4Format -DTPINFO $< >$@	
 	$(IFDEFFILT) -DVDMSL -DA4Format $< >$@	
 	chmod a-w $@
 
 $(LATEXFILEPP).tex: $(LATEXFILEPP).tex
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMPP -DA4Format -DTPINFO $< >$@	
 	$(IFDEFFILT) -DVDMPP -DA4Format $< >$@	
 	chmod a-w $@
 
 $(LATEXFILERT).tex: $(LATEXFILERT).tex
 	-rm -f $@
-#	$(IFDEFFILT) -DVICE -DVDMPP -DA4Format -DTPINFO $< >$@	
 	$(IFDEFFILT) -DVICE -DVDMPP -DA4Format $< >$@	
 	chmod a-w $@
 
@@ -214,19 +211,16 @@ READ_CMD = perl -le 'for (@ARGV) { print "r ${MPWD}/$$_"; }'
 
 %.vdmsl: %.vdm
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMSL -DTPINFO $< >$@
 	$(IFDEFFILT) -DVDMSL $< >$@
 	chmod a-w $@
 
 %.vdmpp: %.vdm
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMPP -DTPINFO $< >$@
 	$(IFDEFFILT) -DVDMPP $< >$@
 	chmod a-w $@
 
 %.vdmrt: %.vdm
 	-rm -f $@
-#	$(IFDEFFILT) -DVICE -DVDMPP -DTPINFO $< >$@
 	$(IFDEFFILT) -DVICE -DVDMPP $< >$@
 	chmod a-w $@
 

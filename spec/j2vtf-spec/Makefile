@@ -70,13 +70,11 @@ $(PP_LATEXFILE).ps : $(PP_LATEXFILE).dvi
 
 $(PPMIXED): %.vdmpp: %.vdm
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMPP -DTPINFO $< >$@	
 	$(IFDEFFILT) -DVDMPP $< >$@	
 	chmod a-w $@
 
 $(PP_LATEXFILE).tex: %-vdmpp.tex: %.tex
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMPP -DTPINFO $< >$@	
 	$(IFDEFFILT) -DVDMPP $< >$@	
 	chmod a-w $@
 

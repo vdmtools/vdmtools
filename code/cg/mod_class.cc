@@ -331,7 +331,8 @@ TYPE_CPP_File vdmcg::GenHFile(const TYPE_AS_Class& cs)
     if (!GetHasDefaultConstr())
       pub_l.ImpConc(GenConstructorDef(nm));
 
-    TYPE_CPP_Identifier initid (vdm_BC_GenIdentifier(ASTAUX::MkId(L"vdm_init_").ImpConc(GiveLastName(nm))));
+    TYPE_CPP_Identifier initid (vdm_BC_GivePrePostNm(nm, ASTAUX::MkId(L"init")));
+
     TYPE_CPP_FctDecl fdecl (vdm_BC_GenFctDecl(initid, type_dL()));
 
     pub_l.ImpAppend(vdm_BC_GenMemberSpec(mk_sequence(vdm_BC_GenTypeSpecifier(vdm_BC_GenVoid())), fdecl));
@@ -343,7 +344,7 @@ TYPE_CPP_File vdmcg::GenHFile(const TYPE_AS_Class& cs)
     }
     if (exists)
     {
-      TYPE_CPP_Identifier invid (vdm_BC_GenIdentifier(ASTAUX::MkId(L"vdm_inv_").ImpConc(GiveLastName(nm))));
+      TYPE_CPP_Identifier invid (vdm_BC_GivePrePostNm(nm, ASTAUX::MkId(L"inv")));
       TYPE_CPP_FctDecl invdecl (vdm_BC_GenFctDecl(invid, type_dL()));
 
       pub_l.ImpAppend(vdm_BC_GenMemberSpec(mk_sequence(GenBoolType()), invdecl));
@@ -511,8 +512,7 @@ TYPE_CPP_File vdmcg::GenCCFile(const TYPE_AS_Class & cs)
     base_l.ImpConc(GenInitBaseVars(inh.IsEmpty()));
     base_l.ImpConc(GenVarInits(iVars));
 
-    TYPE_CPP_Identifier initid (
-        vdm_BC_GenIdentifier(ASTAUX::MkId(L"vdm_init_").ImpConc(GiveLastName(nm))));
+    TYPE_CPP_Identifier initid (vdm_BC_GivePrePostNm(nm, ASTAUX::MkId(L"init")));
     TYPE_CPP_FctDecl fdecl (
         vdm_BC_GenFctDecl(vdm_BC_GenQualifiedName(vdm_BC_Rename(nm), initid), type_dL()));
 
@@ -1129,7 +1129,7 @@ SEQ<TYPE_CPP_MemberDeclaration> vdmcg::GenConstructorDef_cc(const TYPE_AS_Name& 
                                                             bool isDlClass)
 {
   TYPE_CPP_Name fnm (vdm_BC_Rename(nm));
-  TYPE_CPP_Identifier initid (vdm_BC_GenIdentifier(ASTAUX::MkId(L"vdm_init_").ImpConc(GiveLastName(nm))));
+  TYPE_CPP_Identifier initid (vdm_BC_GivePrePostNm(nm, ASTAUX::MkId(L"init")));
   SEQ<TYPE_CPP_Stmt> base_l;
   base_l.ImpAppend(vdm_BC_GenExpressionStmt(vdm_BC_GenFctCall(initid, SEQ<TYPE_CPP_Expr>())));
   if (isDlClass)
@@ -1140,9 +1140,6 @@ SEQ<TYPE_CPP_MemberDeclaration> vdmcg::GenConstructorDef_cc(const TYPE_AS_Name& 
   TYPE_CPP_FctDecl decl (vdm_BC_GenFctDecl (qname, type_dL()));
 
   TYPE_CPP_FunctionDefinition fd (vdm_BC_GenFctDef (type_dL(), decl, nil, body));
-// 20091203 -->
-//  fd.SetField(pos_CPP_FunctionDefinition_ci, mi_l);
-// <-- 20091203
   SEQ<TYPE_CPP_MemberDeclaration> res;
   res.ImpAppend (fd);
   return res;
@@ -1157,7 +1154,7 @@ SEQ<TYPE_CPP_FunctionDefinition> vdmcg::GenJavaConstructorDef(const TYPE_AS_Name
 {
   TYPE_CPP_Name fnm (vdm_BC_Rename(nm));
 
-  TYPE_CPP_Expr initfc (vdm_BC_GenFctCall(vdm_BC_GenIdentifier(ASTAUX::MkId(L"vdm_init_").ImpConc(GiveLastName(nm))),
+  TYPE_CPP_Expr initfc (vdm_BC_GenFctCall(vdm_BC_GivePrePostNm(nm, ASTAUX::MkId(L"init")),
                                           SEQ<TYPE_CPP_Expr>()));
   TYPE_CPP_Stmt body (vdm_BC_GenBlock(type_dL().ImpAppend(vdm_BC_GenExpressionStmt(initfc))));
 
@@ -1729,8 +1726,7 @@ TYPE_CPP_FunctionDefinition vdmcg::GenInstanceVarInit(const TYPE_AS_Name& nm, co
   return vdm_BC_GenJavaFctDef(SEQ<TYPE_CPP_Annotation>(),
                           SEQ<TYPE_CPP_Modifier>().ImpAppend(vdm_BC_GenModifier(quote_PRIVATE)),
                           mk_sequence(vdm_BC_GenTypeSpecifier(vdm_BC_GenVoid())),
-                          vdm_BC_GenFctDecl(vdm_BC_GenIdentifier(ASTAUX::MkId(L"vdm_init_").ImpConc(GiveLastName(nm))),
-                                            type_dL()),
+                          vdm_BC_GenFctDecl(vdm_BC_GivePrePostNm(nm, ASTAUX::MkId(L"init")), type_dL()),
 // 20120213 -->
                           //GenExceptionsHdr(),
                           nil,
@@ -1779,7 +1775,7 @@ SEQ<TYPE_CPP_FunctionDefinition> vdmcg::GenInstanceInv(const TYPE_AS_Name& nm,
         res.ImpAppend(vdm_BC_GenFctDef(
                         mk_sequence(GenBoolType()),
                         vdm_BC_GenFctDecl(vdm_BC_GenQualifiedName(vdm_BC_Rename(nm),
-                                            vdm_BC_GenIdentifier(ASTAUX::MkId(L"vdm_inv_").ImpConc(GiveLastName(nm)))),
+                                            vdm_BC_GivePrePostNm(nm, ASTAUX::MkId(L"inv"))),
                                             type_dL()),
                         nil,
                         body));

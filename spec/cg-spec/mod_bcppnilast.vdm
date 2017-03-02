@@ -263,10 +263,12 @@ GenCPPMemberList (cppacc,md_l) ==
   GenTypeClassSpecifier(head,member_l) ==
     BCCI`GenTypeClassSpecifier(head,member_l,CI`NilContextId);
 
+#ifdef VDMPP
   GenTypeInterfaceSpecifier: CPP`InterfaceHead * seq of CPP`MemberDeclaration ->
                              CPP`TypeSpecifier
   GenTypeInterfaceSpecifier(head,member_l) ==
     BCCI`GenTypeInterfaceSpecifier(head,member_l,CI`NilContextId);
+#endif VDMPP
 
   GenTypeSpecifier:  CPP`Identifier | CPP`Int | CPP`Void | CPP`Double |
                      CPP`Long | CPP`Unsigned | CPP`EnumSpecifier |
@@ -628,10 +630,12 @@ some optional initialization expression.
     GenArrayInitializer(vi) ==
       BCCI`GenArrayInitializer(vi,CI`NilContextId);
 
+#ifdef VDMPP
     GenArrayCreationExpr: CPP`SimpleTypeName * [CPP`ArrayNewDecl] * [CPP`ArrayNewDecl] *
                           [CPP`ArrayInitializer] -> CPP`Expr
     GenArrayCreationExpr(type, dimExpr, dim, arrayInit) ==
       BCCI`GenArrayCreationExpr(type, dimExpr, dim, arrayInit, CI`NilContextId);
+#endif VDMPP
 
 \end{vdm_al}
 
@@ -640,10 +644,12 @@ to nil using this operation. This is because this field is not needed
 by any of the code generators.
 
 \begin{vdm_al}
+#ifdef VDMPP
     GenClassInstanceCreationExpr: (CPP`CompleteClassName | CPP`PackageName | CPP`QualifiedName) *
                                   seq of CPP`Expr -> CPP`Expr
     GenClassInstanceCreationExpr(cn,es) ==
       BCCI`GenClassInstanceCreationExpr(cn,es,CI`NilContextId);
+#endif VDMPP
 
     GenAnonymousClassExpr: CPP`CompleteClassName * seq of CPP`Expr * seq of CPP`MemberDeclaration-> CPP`Expr
     GenAnonymousClassExpr(cn,es,ml) ==

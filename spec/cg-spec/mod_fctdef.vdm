@@ -803,8 +803,7 @@ GenExplOpDef(-, opdef, sd, isimpl, isDlClass) ==
         if constr -- hack for constructor
         then
           def initfc = BC`GenExpressionStmt(
-                                   BC`GenFctCall(
-                                      BC`GenIdentifier("vdm_init_" ^ CGAUX`GiveLastName(CGAUX`GiveCurCASName())), []));
+                         BC`GenFctCall(BC`GivePrePostNm(CGAUX`GiveCurCASName(), "init"), []));
                 mk_(ok, su, st_l) = IsSuperFirst(fb);
                 new_fb = if ok
                          then [su] ^ [initfc] ^ prec_fb ^ st_l
@@ -853,9 +852,7 @@ GenExplOpDef(-, opdef, sd, isimpl, isDlClass) ==
          dcl mi_l : seq of CPP`MemInitializer := [];
          if constr -- hack for constructor
          then
-           def initfc = BC`GenExpressionStmt(
-                                  BC`GenFctCall(
-                                     BC`GenIdentifier("vdm_init_" ^ CGAUX`GiveLastName(nm)), []))
+           def initfc = BC`GenExpressionStmt(BC`GenFctCall(BC`GivePrePostNm(nm, "init"), []))
            in
             (dcl new_fb : seq of CPP`Stmt := [initfc];
              if CGAUX`GetOrderedSupers(nm) <> [] and fb <> []

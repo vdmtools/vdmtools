@@ -452,20 +452,11 @@ types
   StateMaps = map AUML`Name to (State * State);
   State = Modified | Deleted | Added | None | Unknown;
 
-  Modified :: s : seq1 of char
-  inv m == m.s = "M";
-
-  Deleted :: s : seq1 of char
-  inv d == d.s = "D";
-
-  Added :: s : seq1 of char
-  inv a == a.s = "A";
-
-  None :: s : seq1 of char
-  inv n == n.s = "-";
-
-  Unknown :: s : seq1 of char
-  inv u == u.s = "?";
+  Modified :: ;
+  Deleted :: ;
+  Added :: ;
+  None :: ;
+  Unknown :: ;
 
   DefaultMap = map AUML`Name to (bool * bool);
 
@@ -479,11 +470,11 @@ types
   GuiSettings = map AUML`Name to (bool * bool);
 
   values
-    MODIFIED : State = mk_Modified("M");
-    DELETED : State = mk_Deleted("D");
-    ADDED : State = mk_Added("A");
-    NONE : State = mk_None("-");
-    UNKNOWN : State = mk_Unknown("?");
+    MODIFIED : State = mk_Modified();
+    DELETED : State = mk_Deleted();
+    ADDED : State = mk_Added();
+    NONE : State = mk_None();
+    UNKNOWN : State = mk_Unknown();
 
 operations
   Merge : AUML`Model * AUML`Model * GuiSettings ==> AUML`Model
@@ -814,21 +805,21 @@ to have been added initially.
     in
     cases t:
       (mk_(MODIFIED, MODIFIED)),
-      (mk_(MODIFIED, ADDED)) -> mk_(true, true),
+      (mk_(MODIFIED, ADDED))     -> mk_(true, true),
       (mk_(MODIFIED, NONE)),
       (mk_(MODIFIED, UNKNOWN)),
-      (mk_(MODIFIED, DELETED)) -> mk_(true, false),
-      (mk_(DELETED, DELETED)) -> mk_(false, false),
-      (mk_(DELETED, ADDED)) -> mk_(false, true),
-      (mk_(DELETED, NONE)) -> mk_(true, false),
-      (mk_(DELETED, UNKNOWN)) -> mk_(false, false),
-      (mk_(ADDED, ADDED)) -> mk_(true, true),
-      (mk_(ADDED, UNKNOWN)) -> mk_(true, false),
-      (mk_(ADDED, NONE)) -> mk_(true, true),
-      (mk_(NONE, NONE)) -> mk_(true, true),
-      (mk_(NONE, UNKNOWN)) -> mk_(true, false),
-      (mk_(UNKNOWN, UNKNOWN)) -> mk_(false,false),  -- Should be impossible!
-      others -> let mk_(a,b) = mkDefault(mk_(q,p)) in mk_(b,a)
+      (mk_(MODIFIED, DELETED))   -> mk_(true, false),
+      (mk_(DELETED, DELETED))    -> mk_(false, false),
+      (mk_(DELETED, ADDED))      -> mk_(false, true),
+      (mk_(DELETED, NONE))       -> mk_(true, false),
+      (mk_(DELETED, UNKNOWN))    -> mk_(false, false),
+      (mk_(ADDED, ADDED))        -> mk_(true, true),
+      (mk_(ADDED, UNKNOWN))      -> mk_(true, false),
+      (mk_(ADDED, NONE))         -> mk_(true, true),
+      (mk_(NONE, NONE))          -> mk_(true, true),
+      (mk_(NONE, UNKNOWN))       -> mk_(true, false),
+      (mk_(UNKNOWN, UNKNOWN))    -> mk_(false,false),  -- Should be impossible!
+      others                     -> let mk_(a,b) = mkDefault(mk_(q,p)) in mk_(b,a)
     end;
 
 
@@ -836,13 +827,10 @@ to have been added initially.
   -- or defined in an other way in class n.
   ClassDiff : AUML`Class * AUML`Class +> AUML`Class
   ClassDiff(m, n) ==
-    --let mk_AUML`Class(i1, t1, v1, m1, f1, -, id1) = m,
     let mk_AUML`Class(i1, v1, m1, f1, -, id1) = m,
-        --mk_AUML`Class(i2, t2, v2, m2, f2, -, id2) = n
         mk_AUML`Class(i2, v2, m2, f2, -, id2) = n
     in
     mk_AUML`Class(MapDiff[AUML`Name, AUML`ValDef](i1, i2),
-                  --MapDiff[AUML`Name, AUML`TVarDef](t1, t2),
                   MapDiff[AS`Pattern, AUML`ValDef](v1, v2),
                   MapDiff[AUML`Name, AUML`Signature](m1, m2),
                   MapDiff[AUML`Name, AUML`Signature](f1, f2), true,

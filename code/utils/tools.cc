@@ -554,8 +554,6 @@ void TOOLS::InitModuleTypes()
   init_JSSVCM1();
   init_JSSREP();
 
-//  vdm_JSSJAVA_AddJavaTypes();
-
   init_J2VAUX();
   init_J2VCLASS();
   init_J2VENV();
@@ -4525,8 +4523,6 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
           ( 0 != params[0].compare(wstring(L"-s"))) &&
           ( 0 != params[0].compare(wstring(L"-v"))))
         nm = PTAUX::mk_ModuleName(params[0]);
-//      else if (ToolMediator::Repos()->vdm_IsSession (flat_session))
-//        nm = PTAUX::mk_ModuleName(L"DefaultMod");
       else {
         vdm_iplog << L"Please specify a class to be code generated" << endl << flush;
         EvalHelp(L"javacg", vdm_iplog);
@@ -4542,8 +4538,7 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
       bool testpreandpost_option = false;
       bool no_vdm_prefix = false;
       Generic package_name = Nil();
-      for (int param_num = 0; param_num < 9; param_num++)
-      {
+      for (int param_num = 0; param_num < 9; param_num++) {
         if (params[param_num] == L"-s")
           skeleton_option = true;
         else if (params[param_num] == L"-e")

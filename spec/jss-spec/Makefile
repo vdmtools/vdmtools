@@ -41,7 +41,6 @@ JSSPS: $(LATEXFILE).ps
 
 $(PPMIXED): %.vdmpp: %.vdm
 	-rm -f $@
-#	$(IFDEFFILT) -DVDMPP -DTPINFO -DJSS $< >$@	
 	$(IFDEFFILT) -DVDMPP -DJSS $< >$@	
 	chmod a-w $@
 

@@ -78,22 +78,26 @@ GenStmt( stmt, isLast ) ==
      (is_AS`RecTrapStmt(stmt))       -> CGRecTrapStmt(stmt, isLast),
      (is_AS`SpecificationStmt(stmt)) -> GenSpecTopStmt(stmt),
 #ifdef VDMPP
-     (is_AS`StartStmt(stmt))         -> if CPP`isJAVA() and CGMAIN`get_conc_option()
+     (is_AS`StartStmt(stmt))         ->
+                                        if CPP`isJAVA() and CGMAIN`get_conc_option()
                                         then return CONC`GenStartStmt(stmt, isLast)
                                         else (if CPP`isJAVA()
                                               then CGAUX`SetNotSupportedException(true);
                                               return GenNotSupported("start statement", isLast)),
-     (is_AS`StartListStmt(stmt))     -> if CPP`isJAVA() and CGMAIN`get_conc_option()
+     (is_AS`StartListStmt(stmt))     ->
+                                        if CPP`isJAVA() and CGMAIN`get_conc_option()
                                         then return CONC`GenStartlistStmt(stmt, isLast)
                                         else (if CPP`isJAVA()
                                               then CGAUX`SetNotSupportedException(true);
                                               return GenNotSupported("start list statement", isLast)),
-     (is_AS`StopStmt(stmt))          -> if CPP`isJAVA() and CGMAIN`get_conc_option()
+     (is_AS`StopStmt(stmt))          ->
+                                        if CPP`isJAVA() and CGMAIN`get_conc_option()
                                         then return CONC`GenStopStmt(stmt, isLast)
                                         else (if CPP`isJAVA()
                                               then CGAUX`SetNotSupportedException(true);
                                               return GenNotSupported("stop statement", isLast)),
-     (is_AS`StopListStmt(stmt))      -> if CPP`isJAVA() and CGMAIN`get_conc_option()
+     (is_AS`StopListStmt(stmt))      ->
+                                        if CPP`isJAVA() and CGMAIN`get_conc_option()
                                         then return CONC`GenStoplistStmt(stmt, isLast)
                                         else (if CPP`isJAVA()
                                               then CGAUX`SetNotSupportedException(true);
@@ -2605,11 +2609,13 @@ FlowBroken(cppstmt) ==
     mk_CPP`DoWhileStmt(s,-,-)      -> FlowBroken(s),
     mk_CPP`ForStmt(-,-,-,s,-)      -> FlowBroken(s),
     mk_CPP`Return(-,-)             -> return true,
-    mk_CPP`SynchronizedStmt(-,s,-) -> FlowBroken(s),
     mk_CPP`TryBlock(s, hdls, -,-)  -> return
                                         FlowBroken(s) and
                                         forall hdl in set elems hdls &
                                           FlowBroken(hdl.stmt),
+#ifdef VDMPP
+    mk_CPP`SynchronizedStmt(-,s,-) -> FlowBroken(s),
+#endif VDMPP
     others -> return false
   end;
 

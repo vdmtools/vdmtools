@@ -266,8 +266,11 @@ void vdmcg::set_verbose_mode(bool b)
 // doc_l : AS`Document
 // tc_state : set of AS`Name
 // ==> CPP`Files
-SET<TYPE_CPP_File> vdmcg::cg_CG(const TYPE_AS_Document & doc_l, const Map & tc_state)
+SET<TYPE_CPP_File> vdmcg::cg_CG(const TYPE_AS_Document & doc_l, const Map & tc_state,
+                                const Bool & testcond)
 {
+  set_testpreandpost_option(testcond);
+
   TYPE_AS_Document mod_l;  // seq of (AS`Module | AS`DLModule)
   if ((doc_l.Length() == 1) && doc_l[1].Is(TAG_TYPE_AS_Definitions))
   {
@@ -279,8 +282,9 @@ SET<TYPE_CPP_File> vdmcg::cg_CG(const TYPE_AS_Document & doc_l, const Map & tc_s
 
     mod_l.ImpAppend(mod);
   }
-  else
+  else {
     mod_l = (Generic)doc_l;
+  }
 
   SET<TYPE_CPP_File> file_s;
   size_t len_mod_l = mod_l.Length();
