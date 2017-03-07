@@ -1029,7 +1029,7 @@ GenEmptyValue(type) ==
       mk_REP`InvTypeRep(-,shape,-)     -> return GenEmptyValue(shape),
       others                           -> return GenGenericExpr()
     end
-  else -- isCPP
+  else
 #endif VDMPP
     cases type:
       mk_REP`BooleanTypeRep()          -> return GenBoolExpr(nil),
