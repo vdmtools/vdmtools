@@ -848,11 +848,12 @@ CGSetEnumerationExpr(mk_AS`SetEnumerationExpr(expr, -), mk_CGMAIN`VT(resVar_v, r
        (resVar_v' := DS`GenCastSetTypeForModify(resVar_v);
         rb := [BC`GenAsgnStmt(resVar_v, DS`GenEmptySetExpr())]);
       
+#ifdef VDMPP
       if CPP`isJAVA()
       then etp := CGAUX`FindSetElemType(rType);
+#endif VDMPP
 
       for e in expr do
-        --def mk_(e_v, e_stmt) = CGExprExcl(e, "enum_set", nil)
         def mk_(e_v, e_stmt) = CGExprExcl(e, "enum_set", etp)
         in
           (rb := rb ^ e_stmt ^ [DS`GenSetInsert( resVar_v', e_v )];
@@ -862,9 +863,16 @@ CGSetEnumerationExpr(mk_AS`SetEnumerationExpr(expr, -), mk_CGMAIN`VT(resVar_v, r
 
       cases rb:
         [] -> return DS`GenEmptySetExpr(),
-        others -> if CPP`isCPP() and allsimple and len args <= 8
-                  then return BC`GenFctCall( BC`GenIdentifier("mk_set"), args )
-                  else return rb
+        others ->
+#ifdef VDMPP
+                  if CPP`isJAVA()
+                  then  
+                    return rb
+                  else
+#endif VDMPP
+                    if allsimple and len args <= 8
+                    then return BC`GenFctCall( BC`GenIdentifier("mk_set"), args )
+                    else return rb
       end;
      );
 \end{vdm_al}
@@ -1074,11 +1082,13 @@ CGMapEnumerationExpr(mk_AS`MapEnumerationExpr(ml, -), mk_CGMAIN`VT(resVar_v, rTy
        (resVar_v' := DS`GenCastMapTypeForModify(resVar_v);
         rb := [BC`GenAsgnStmt(resVar_v, DS`GenEmptyMapExpr())]);
 
+#ifdef VDMPP
       if CPP`isJAVA()
       then
        (dtp := CGAUX`FindMapDomType(rType);
         rtp := CGAUX`FindMapRngType(rType);
        );
+#endif VDMPP
       for mk_AS`Maplet(md, mr, -) in ml do
         def mk_(var1_v, tmpVar1_stmt) = CGExprExcl(md, "tmpVar1", dtp);
             mk_(var2_v, tmpVar2_stmt) = CGExprExcl(mr, "tmpVar2", rtp)
@@ -1088,9 +1098,14 @@ CGMapEnumerationExpr(mk_AS`MapEnumerationExpr(ml, -), mk_CGMAIN`VT(resVar_v, rTy
           if CPP`isCPP() and allsimple
           then expr := DS`GenMapInsertExpr( expr, var1_v, var2_v );
          );
-      if CPP`isCPP() and allsimple
-      then return expr;
-      return  rb;
+#ifdef VDMPP
+      if CPP`isJAVA()
+      then return rb
+      else
+#endif VDMPP
+        if allsimple
+        then return expr
+        else return rb;
      );
 \end{vdm_al}
 
@@ -1431,10 +1446,13 @@ CGSeqComprehensionExpr(rc1, vt) ==
         else CGSeqComprehensionSetBind(rc1, vt);
 
 CGSeqComprehensionIndexLoop: AS`SeqComprehensionExpr * CGMAIN`VT ==> seq of CPP`Stmt
-CGSeqComprehensionIndexLoop(rc1, vt) ==
+#ifdef VDMSL
+CGSeqComprehensionIndexLoop(rc1, mk_CGMAIN`VT(resVar_v, -) ) ==
+#endif VDMSL
+#ifdef VDMPP
+CGSeqComprehensionIndexLoop(rc1, mk_CGMAIN`VT(resVar_v, rType) ) ==
+#endif VDMPP
   def mk_AS`SeqComprehensionExpr(elem, bind, pred, -) = rc1;
-      --pid_m = CGAUX`FindPatIdMap(rc1);
-      mk_CGMAIN`VT(resVar_v, rType) = vt;
       mk_AS`SetBind(mk_AS`PatternName(nm,-,-), expr,-) = bind;
       tmpSeq_v = BC`GiveName("tmpSeq");
       count = BC`GiveName("count")
@@ -1450,19 +1468,28 @@ CGSeqComprehensionIndexLoop(rc1, vt) ==
           argtype = CGAUX`FindType(arg);
       in
        (dcl bl_cast : CPP`Expr := bl_expr;
-        if not CGAUX`IsSeqType(argtype)
-        then if CPP`isCPP()
-             then bl_cast := DS`GenCastSeq(bl_expr, nil)
-             else if CGAUX`IsStringType(argtype)
-                   then bl_cast := DS`GenCastString(bl_expr)
-                   else bl_cast := DS`GenCastSeq(bl_expr, nil);
         stmts := bl_stmt;
         lb := BC`GenIntegerLit(1);
-        if CPP`isCPP()
-        then ub := DS`GenLen_int(bl_cast)
-        else if CGAUX`IsPossibleStringType(argtype)
-             then ub := DS`GenLenString_int(bl_cast)
-             else ub := DS`GenLen_int(bl_cast);
+        if not CGAUX`IsSeqType(argtype)
+        then
+#ifdef VDMPP
+          if CPP`isJAVA()
+          then
+            if CGAUX`IsStringType(argtype)
+            then bl_cast := DS`GenCastString(bl_expr)
+            else bl_cast := DS`GenCastSeq(bl_expr, nil)
+          else
+#endif VDMPP
+            bl_cast := DS`GenCastSeq(bl_expr, nil);
+#ifdef VDMPP
+        if CPP`isJAVA()
+        then
+          if CGAUX`IsPossibleStringType(argtype)
+          then ub := DS`GenLenString_int(bl_cast)
+          else ub := DS`GenLen_int(bl_cast)
+        else
+#endif VDMPP
+          ub := DS`GenLen_int(bl_cast);
         seqapply_s := seqapply_s union {mk_(bl_expr, BC`Rename(nm))};
        )
     else
@@ -1490,11 +1517,15 @@ CGSeqComprehensionIndexLoop(rc1, vt) ==
     in
      (dcl append : CPP`Stmt,
           succbody : seq of CPP`Stmt;
-      if CPP`isCPP()
-      then append := DS`GenImpAppend(tmpSeq_v, elemExpr)
-      else if CGAUX`IsPossibleStringType(rType)
-           then append := BC`GenAsgnStmt(tmpSeq_v, BC`GenPlus(tmpSeq_v, elemExpr))
-           else append := DS`GenImpAppend(tmpSeq_v, elemExpr);
+#ifdef VDMPP
+      if CPP`isJAVA()
+      then
+        if CGAUX`IsPossibleStringType(rType)
+        then append := BC`GenAsgnStmt(tmpSeq_v, BC`GenPlus(tmpSeq_v, elemExpr))
+        else append := DS`GenImpAppend(tmpSeq_v, elemExpr)
+      else
+#endif VDMPP
+        append := DS`GenImpAppend(tmpSeq_v, elemExpr);
       let elemStmt = e_stmt ^ [append]
       in
         cases pred:
@@ -1504,9 +1535,13 @@ CGSeqComprehensionIndexLoop(rc1, vt) ==
                                        mk_(pred_v, pred_stmt) = CGExprExcl(pred, "pred", nil);
                                    in
                                     (dcl cond : CPP`Expr;
-                                     if CPP`isCPP()
-                                     then cond := DS`GenGetValue(pred_v, predType)
-                                     else cond := DS`GenGetValue(pred_v, mk_REP`BooleanTypeRep());
+#ifdef VDMPP
+                                     if CPP`isJAVA()
+                                     then
+                                       cond := DS`GenGetValue(pred_v, mk_REP`BooleanTypeRep())
+                                     else
+#endif VDMPP
+                                       cond := DS`GenGetValue(pred_v, predType);
                                      succbody := pred_stmt ^ [BC`GenIfStmt(cond, BC`GenBlock(elemStmt), nil)])
         end;
       CGAUX`RemNoCheckSeqApply(seqapply_s);
@@ -1516,14 +1551,19 @@ CGSeqComprehensionIndexLoop(rc1, vt) ==
       in
        (dcl initExpr : CPP`Initializer,
             decl : seq of CPP`Stmt;
-        if CPP`isCPP()
-        then initExpr := BC`GenObjectInit([count])
-        else initExpr := BC`GenAsgnInit(DS`GenIntExpr(count));
-        if CPP`isCPP()
-        then decl := DS`GenDeclEmptySeq(tmpSeq_v)
-        else if CGAUX`IsPossibleStringType(rType)
-             then decl := DS`GenStringDecl(tmpSeq_v, BC`GenAsgnInit(DS`GenEmptyStringExpr()))
-             else decl := DS`GenDeclEmptySeq(tmpSeq_v);
+#ifdef VDMPP
+        if CPP`isJAVA()
+        then
+         (initExpr := BC`GenAsgnInit(DS`GenIntExpr(count));
+          if CGAUX`IsPossibleStringType(rType)
+          then decl := DS`GenStringDecl(tmpSeq_v, BC`GenAsgnInit(DS`GenEmptyStringExpr()))
+          else decl := DS`GenDeclEmptySeq(tmpSeq_v)
+         )
+        else
+#endif VDMPP
+         (initExpr := BC`GenObjectInit([count]);
+          decl := DS`GenDeclEmptySeq(tmpSeq_v)
+         );
         def inner_rb_l = DS`GenDecl(mk_REP`NumericTypeRep(<NAT>), BC`Rename(nm), initExpr) ^
                      succbody;
             rb_l = stmts ^ decl ^
@@ -1564,9 +1604,12 @@ CGSeqComprehensionSetBind(rc1, vt) ==
        if pred <> nil
        then predType := CGAUX`FindType( pred );
 
+#ifdef VDMPP
        if CPP`isJAVA()
        then sort_f := BC`GenIdentifier( "UTIL.Sort" )
-       else sort_f := BC`GenIdentifier( "CGUTIL::Sort" );
+       else
+#endif VDMPP
+         sort_f := BC`GenIdentifier( "CGUTIL::Sort" );
 
        rb := rb ^ rb_stmt;
        if not is_CPP`Identifier(rb_expr)
@@ -2109,11 +2152,16 @@ CGTupleConstructorExpr(mk_AS`TupleConstructorExpr(fields,-), mk_CGMAIN`VT(resVar
 
   rb := [BC`GenAsgnStmt(resVar_v, tc)];
 
+#ifdef VDMPP
   def etp_l = CGAUX`FindProductElemType(rType, len fields)
   in
+#endif VDMPP
     for i = 1 to len fields do
      (dcl etp : [REP`TypeRep] := nil;
-      if CPP`isJAVA() then etp := etp_l(i);
+#ifdef VDMPP
+      if CPP`isJAVA()
+      then etp := etp_l(i);
+#endif VDMPP
       def expr = fields(i);
           mk_(tmpExpr, e_stmt) = CGExprExcl(expr, "tmpVar", etp);
           field = BC`GenIntegerLit(i);
@@ -2620,14 +2668,20 @@ result.
     in
      (dcl selVal : CPP`Expr := DS`GenGetValue(selObj, mk_REP`NumericTypeRep(<NATONE>)),
           tupleVal : CPP`Expr := tupleName;
+#ifdef VDMPP
       if CPP`isJAVA() and CGMAIN`get_longs_option()
       then selVal := BC`GenCastExpr(DS`GenSmallIntType(), selVal);
+#endif VDMPP
 
       if not is_REP`ProductTypeRep(tupleTp)
       then
-        if CPP`isCPP()
-        then tupleVal := BC`GenFctCall(DS`GenProductType().tp, [tupleName])
-        else tupleVal := DS`GenCastProduct(tupleName);
+#ifdef VDMPP
+        if CPP`isJAVA()
+        then
+          tupleVal := DS`GenCastProduct(tupleName)
+        else
+#endif VDMPP
+          tupleVal := BC`GenFctCall(DS`GenProductType().tp, [tupleName]);
 
       def tupleCall = BC`GenFctCallObjMemAcc(tupleVal,"GetField",[selVal]);
           expr = DS`GenCastType(resTp,tupleCall);
@@ -3748,6 +3802,7 @@ CGUnionTypeApply( applexpr, rv, expr1, type1, sd ) ==
 
           if strings <> nil
           then
+#ifdef VDMPP
             if CPP`isJAVA()
             then
               def decl = DS`GenDecl( strings, tmpRes_v, BC`GenAsgnInit( DS`GenCastString(tmpGen_v) ));
@@ -3761,6 +3816,9 @@ CGUnionTypeApply( applexpr, rv, expr1, type1, sd ) ==
                 in
                   alt2 := BC`GenIfStmt(DS`GenIsString(tmpGen_v), BC`GenBlock( decl ^ [ asgn ]), alt2);
                )
+            else
+#endif VDMPP
+              skip;
          );
       return rb ^ [alt2];
      );
@@ -4231,9 +4289,14 @@ CGIfExpr( mk_AS`IfExpr( test, cons, elif, altn, - ), mk_CGMAIN`VT( resVar_v, res
 
     if not CGAUX`IsBoolType(condType)
     then getval := BC`GenCastExpr( DS`GenBoolType(), res1 );
-    if CPP`isCPP()
-    then cond := DS`GenGetValue( getval, condType )
-    else cond := DS`GenGetValue( getval, mk_REP`BooleanTypeRep() );
+
+#ifdef VDMPP
+    if CPP`isJAVA()
+    then
+      cond := DS`GenGetValue( getval, mk_REP`BooleanTypeRep() )
+    else
+#endif VDMPP
+      cond := DS`GenGetValue( getval, condType );
 
     if elif = [] and cons_stmt = [] and altn_stmt = []
     then
@@ -4244,15 +4307,17 @@ CGIfExpr( mk_AS`IfExpr( test, cons, elif, altn, - ), mk_CGMAIN`VT( resVar_v, res
         then
           if cons_type = altn_type
              or (CGAUX`IsIntType(cons_type) and CGAUX`IsIntType(altn_type))
-             or (CPP`isCPP() and is_AS`QuoteLit(cons) and is_AS`QuoteLit(altn))
+#ifdef VDMPP
              or (CPP`isJAVA() and CGAUX`IsQuoteType(cons_type) and CGAUX`IsQuoteType(altn_type))
+#endif VDMPP
+             or (CPP`isCPP() and is_AS`QuoteLit(cons) and is_AS`QuoteLit(altn))
           then
             let expr = BC`GenCondExpr(cond, cons_expr, altn_expr)
-            --in return cond_stmt ^ [BC`GenAsgnStmt(resVar_v, BC`GenBracketedExpr(expr))]
             in 
               if cond_stmt = []
               then return BC`GenBracketedExpr(expr)
               else return cond_stmt ^ [BC`GenAsgnStmt(resVar_v, BC`GenBracketedExpr(expr))]
+#ifdef VDMPP
           elseif CPP`isJAVA()
           then
            (dcl cast_cons : CPP`Expr := cons_expr,
@@ -4262,12 +4327,14 @@ CGIfExpr( mk_AS`IfExpr( test, cons, elif, altn, - ), mk_CGMAIN`VT( resVar_v, res
             if altn_type <> resVarType
             then cast_altn := BC`GenCastExpr( DS`GenType(resVarType), altn_expr );
             let expr = BC`GenCondExpr(cond, cast_cons, cast_altn)
-            --in return cond_stmt ^ [BC`GenAsgnStmt(resVar_v, BC`GenBracketedExpr(expr))];
             in 
               if cond_stmt = []
               then return BC`GenBracketedExpr(expr)
               else return cond_stmt ^ [BC`GenAsgnStmt(resVar_v, BC`GenBracketedExpr(expr))];
-           );
+           )
+#endif VDMPP
+          else
+            skip;
 
     for mk_AS`ElseifExpr(elif_test, elif_cons, -) in reverse elif do
       def mk_(res2, res2_stmt) = CGExprExcl(elif_test, "cond", nil)
@@ -4554,15 +4621,15 @@ GenSeqOvwr( mk_CGMAIN`VT(seq_v, seqtype), mk_CGMAIN`VT(map_v, mapType), mk_CGMAI
   in
    (dcl s_v : CPP`Expr := resVar_v,
         e_v : CPP`Expr := edom,
-        seq_len : CPP`Expr,
+        --seq_len : CPP`Expr,
         isint_part : seq of CPP`Stmt;
     if cast
     then s_v := BC`GiveName("s_v");
     if not CGAUX`IsIntType(domtype)
     then e_v := BC`GiveName("e_v");
-    if CPP`isCPP()
-    then seq_len := DS`GenLen(s_v)
-    else seq_len := DS`GenLen_int(s_v);
+    --if CPP`isCPP()
+    --then seq_len := DS`GenLen(s_v)
+    --else seq_len := DS`GenLen_int(s_v);
     if CGAUX`IsIntType(domtype)
     then isint_part := []
     else
@@ -4577,13 +4644,19 @@ GenSeqOvwr( mk_CGMAIN`VT(seq_v, seqtype), mk_CGMAIN`VT(map_v, mapType), mk_CGMAI
         isint_part := [ifisint] ^ e_decl;
        );
     def e_int = DS`GenGetValue(e_v, nattp);
+#ifdef VDMPP
+       seq_len = DS`GenLen_int(s_v);
        cond = BC`GenLogOr(BC`GenGt(e_int, seq_len), BC`GenLt(e_int, BC`GenIntegerLit(1)));
        rre = BC`GenBlock([CGAUX`RunTime( "Illegal index in sequence modifier")]);
+#endif VDMPP
        alt2 = DS`GenSeqModify(s_v, e_int, erng);
     in
      (dcl if_body : CPP`Stmt := alt2;
+#ifdef VDMPP
       if CPP`isJAVA()
-      then if_body := BC`GenIfStmt(cond, rre, alt2);
+      then
+        if_body := BC`GenIfStmt(cond, rre, alt2);
+#endif VDMPP
       def body = let stmts = isint_part ^ [if_body]
               in CGAUX`GenCPPStmt(stmts);
           seqtp = mk_REP`SeqTypeRep(CGAUX`FindSeqElemType(seqtype));
@@ -6703,11 +6776,14 @@ CGMapInverse( argexpr, argType, mk_CGMAIN`VT(resVar_v,-)) ==
       body = BC`GenIfStmt(cond_expr, BC`GenBlock([alt1]), BC`GenBlock([alt2]));
       itermap = DS`GenIterMap(maptmp_cg_vt, nil, id_d, id_r, body)
   in
-   (dcl initvarres : seq of CPP`Stmt := [];
+#ifdef VDMPP
     if CPP`isJAVA()
-    then initvarres := [BC`GenAsgnStmt(resVar_v, DS`GenEmptyMapExpr())];
-    return initvarres ^ itermap;
-   );
+    then
+      def initvarres = [BC`GenAsgnStmt(resVar_v, DS`GenEmptyMapExpr())];
+      in return initvarres ^ itermap
+    else
+#endif VDMPP
+      return itermap;
 \end{vdm_al}
 
 \subsection{Name}
@@ -6876,9 +6952,11 @@ The operation of $CGBinaryExpr$ takes two input paramters:
 \begin{vdm_al}
 CGBinaryExpr: AS`BinaryExpr * CGMAIN`VT ==> CPP`Expr | seq of CPP`Stmt
 CGBinaryExpr( mk_AS`BinaryExpr(le, opr, re, -), vt ) ==
+#ifdef VDMPP
   if CPP`isJAVA() and opr = <INSET> and is_AS`PrefixExpr(re) and re.opr in set {<MAPDOM>, <MAPRNG>}
   then return OptimizeMapExpr(le, re, vt)
   else
+#endif VDMPP
     cases opr:
       <AND>,
       <OR>,
