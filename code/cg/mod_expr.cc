@@ -1010,8 +1010,9 @@ Generic vdmcg::CGSetEnumerationExpr (const TYPE_AS_SetEnumerationExpr & rc1, con
   const TYPE_CPP_Expr & resVar_v (vt.GetRecord(pos_CGMAIN_VT_name));
   const TYPE_REP_TypeRep & rType (vt.GetRecord(pos_CGMAIN_VT_type));
 
-  if (expr.IsEmpty())
+  if (expr.IsEmpty()) {
     return GenEmptySetExpr();
+  }
   else
   {
     bool casting = !( rType.Is(TAG_TYPE_REP_SetTypeRep) );
@@ -1020,24 +1021,23 @@ Generic vdmcg::CGSetEnumerationExpr (const TYPE_AS_SetEnumerationExpr & rc1, con
 
     SEQ<TYPE_CPP_Stmt> rb;
 
-    if (casting)
+    if (casting) {
       rb.ImpAppend(vdm_BC_GenAsgnStmt(resVar_v, GenEmptySetExpr()));
+    }
 
     bool allsimple = true;
     SEQ<TYPE_CPP_Expr> args;
     size_t len_expr = expr.Length();
-    for (size_t i = 1; i <= len_expr; i++)
-    {
+    for (size_t i = 1; i <= len_expr; i++) {
       const TYPE_AS_Expr & e (expr[i]);
 
-// 20150703 -->
-      //Tuple cgee (CGExprExcl(e, ASTAUX::MkId(L"enum_set"), nil));
-// 20150714 -->
-      //Generic etp (FindSetElemType(rType));
-      Generic etp (vdm_CPP_isCPP() ? (Generic)nil : FindSetElemType(rType));
-// <-- 20150714
+      Generic etp = nil;
+#ifdef VDMPP
+      if (vdm_CPP_isJAVA()) {
+        etp = FindSetElemType(rType);
+      }
+#endif // VDMPP
       Tuple cgee (CGExprExcl(e, ASTAUX::MkId(L"enum_set"), etp));
-// <-- 20150703
       const TYPE_CPP_Expr & e_v (cgee.GetRecord(1));
       const SEQ<TYPE_CPP_Stmt> & e_stmt (cgee.GetSequence(2));
 
@@ -1049,13 +1049,25 @@ Generic vdmcg::CGSetEnumerationExpr (const TYPE_AS_SetEnumerationExpr & rc1, con
       args.ImpAppend(e_v);
     }
 
-    if (rb.IsEmpty())
+    if (rb.IsEmpty()) {
       return GenEmptySetExpr();
-    else
-      if (vdm_CPP_isCPP() && allsimple && (args.Length() <= 8))
-        return vdm_BC_GenFctCall(vdm_BC_GenIdentifier(ASTAUX::MkId(L"mk_set")), args);
-      else
+    }
+    else {
+#ifdef VDMPP
+      if (vdm_CPP_isJAVA()) {
         return rb;
+      }
+      else
+#endif // VDMPP
+      {
+        if (allsimple && (args.Length() <= 8)) {
+          return vdm_BC_GenFctCall(vdm_BC_GenIdentifier(ASTAUX::MkId(L"mk_set")), args);
+        }
+        else {
+          return rb;
+        }
+      }
+    }
   }
 }
 
@@ -1257,12 +1269,18 @@ Generic vdmcg::CGMapEnumerationExpr (const TYPE_AS_MapEnumerationExpr & rc1, con
       const TYPE_AS_Expr & md (mlet.GetRecord(pos_AS_Maplet_mapdom));
       const TYPE_AS_Expr & mr (mlet.GetRecord(pos_AS_Maplet_maprng));
 
-      Generic dtp (vdm_CPP_isCPP() ? (Generic)nil : FindMapDomType(rType));
+      Generic dtp = nil;
+      Generic rtp = nil;
+#ifdef VDMPP
+      if (vdm_CPP_isJAVA()) {
+        dtp = FindMapDomType(rType);
+        rtp = FindMapRngType(rType);
+      }
+#endif // VDMPP
       Tuple cgee (CGExprExcl(md, ASTAUX::MkId(L"tmpVar1"), dtp));
       const TYPE_CPP_Expr & var1_v (cgee.GetRecord(1));
       const SEQ<TYPE_CPP_Stmt> & tmpVar1_stmt (cgee.GetSequence(2));
 
-      Generic rtp (vdm_CPP_isCPP() ? (Generic)nil : FindMapRngType(rType));
       Tuple cgee2 (CGExprExcl(mr, ASTAUX::MkId(L"tmpVar2"), rtp));
       const TYPE_CPP_Expr & var2_v (cgee2.GetRecord(1));
       const SEQ<TYPE_CPP_Stmt> & tmpVar2_stmt (cgee2.GetSequence(2));
@@ -1275,10 +1293,20 @@ Generic vdmcg::CGMapEnumerationExpr (const TYPE_AS_MapEnumerationExpr & rc1, con
         expr = GenMapInsertExpr(expr, var1_v, var2_v);
       }
     }
-    if (vdm_CPP_isCPP() && allsimple) {
-      return expr;
+#ifdef VDMPP
+    if (vdm_CPP_isJAVA()) {
+      return rb;
     }
-    return rb;
+    else
+#endif // VDMPP
+    {
+      if (allsimple) {
+        return expr;
+      }
+      else {
+        return rb;
+      }
+    }
   }
 }
 
@@ -1439,7 +1467,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqComprehensionIndexLoop (const TYPE_AS_SeqComprehe
 
 //  MAP<TYPE_AS_Name, TYPE_REP_TypeRep> pid_m (FindPatIdMap(rc1)); //
   const TYPE_CPP_Expr & resVar_v (vt.GetRecord(pos_CGMAIN_VT_name));
-  const TYPE_REP_TypeRep & rType (vt.GetRecord(pos_CGMAIN_VT_type));
+//  const TYPE_REP_TypeRep & rType (vt.GetRecord(pos_CGMAIN_VT_type));
 
   const TYPE_AS_Pattern & pat (bind.GetRecord(pos_AS_SetBind_pat));
   const TYPE_AS_Expr & expr   (bind.GetRecord(pos_AS_SetBind_Set));
@@ -1468,13 +1496,36 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqComprehensionIndexLoop (const TYPE_AS_SeqComprehe
 
     lb = vdm_BC_GenIntegerLit(1);
 
-    TYPE_CPP_Expr bl_cast (IsSeqType(argtype) ? bl_expr
-                                              : vdm_CPP_isCPP() ? GenCastSeq(bl_expr, Nil())
-                                                                : IsStringType(argtype) ? GenCastString(bl_expr)
-                                                                                        : GenCastSeq(bl_expr, Nil()));
-    ub = (vdm_CPP_isCPP() ? GenLen_int(bl_cast)
-                          : IsPossibleStringType(argtype) ? GenLenString_int(bl_cast)
-                                                          : GenLen_int(bl_cast));
+    TYPE_CPP_Expr bl_cast;
+    if (IsSeqType(argtype)) {
+      bl_cast = bl_expr;
+    }
+    else {
+#ifdef VDMPP
+      if (vdm_CPP_isJAVA()) {
+        if (IsStringType(argtype)) {
+          bl_cast = GenCastString(bl_expr);
+        }
+        else {
+          bl_cast = GenCastSeq(bl_expr, Nil());
+        }
+      }
+      else
+#endif // VDMPP
+        bl_cast = GenCastSeq(bl_expr, Nil());
+    }
+#ifdef VDMPP
+    if (vdm_CPP_isJAVA()) {
+      if (IsPossibleStringType(argtype)) {
+        ub = GenLenString_int(bl_cast);
+      }
+      else {
+        ub = GenLen_int(bl_cast);
+      }
+    }
+    else
+#endif // VDMPP
+      ub = GenLen_int(bl_cast);
 
     seqapply_s.Insert(mk_(bl_expr, vdm_BC_Rename(nm)));
   }
@@ -1522,10 +1573,21 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqComprehensionIndexLoop (const TYPE_AS_SeqComprehe
   const SEQ<TYPE_CPP_Stmt> & e_stmt (cgee.GetSequence(2));
 
   SEQ<TYPE_CPP_Stmt> elemStmt (e_stmt);
-  TYPE_CPP_Expr append (vdm_CPP_isCPP() ? GenImpAppend(tmpSeq_v, elemExpr)
-                                        : IsPossibleStringType(rType)
-                                             ? vdm_BC_GenAsgnStmt(tmpSeq_v, vdm_BC_GenPlus(tmpSeq_v, elemExpr))
-                                             : GenImpAppend(tmpSeq_v, elemExpr));
+  TYPE_CPP_Expr append;
+#ifdef VDMPP
+  const TYPE_REP_TypeRep & rType (vt.GetRecord(pos_CGMAIN_VT_type));
+  if (vdm_CPP_isJAVA()) {
+    if (IsPossibleStringType(rType)) {
+      append = vdm_BC_GenAsgnStmt(tmpSeq_v, vdm_BC_GenPlus(tmpSeq_v, elemExpr));
+    }
+    else {
+      append = GenImpAppend(tmpSeq_v, elemExpr);
+    }
+  }
+  else
+#endif // VDMPP
+    append = GenImpAppend(tmpSeq_v, elemExpr);
+
   elemStmt.ImpAppend(append);
 
   SEQ<TYPE_CPP_Stmt> succbody;
@@ -1540,8 +1602,14 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqComprehensionIndexLoop (const TYPE_AS_SeqComprehe
     const TYPE_CPP_Expr & pred_v (cgee.GetRecord(1));
     const SEQ<TYPE_CPP_Stmt> & pred_stmt (cgee.GetSequence(2));
 
-    TYPE_CPP_Expr cond (vdm_CPP_isCPP() ? GenGetValue(pred_v, predType)
-                                        : GenGetValue(pred_v, mk_REP_BooleanTypeRep()));
+    TYPE_CPP_Expr cond;
+#ifdef VDMPP
+    if (vdm_CPP_isJAVA()) {
+      cond = GenGetValue(pred_v, mk_REP_BooleanTypeRep());
+    }
+    else
+#endif // VDMPP
+      cond = GenGetValue(pred_v, predType);
 
     succbody.ImpConc(pred_stmt);
     succbody.ImpAppend(vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(elemStmt), nil));
@@ -1554,23 +1622,10 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqComprehensionIndexLoop (const TYPE_AS_SeqComprehe
   TYPE_CPP_Expr e2 (vdm_BC_GenPostPlusPlus(count));
 
   TYPE_CPP_Initializer initExpr;
-  if (vdm_CPP_isCPP()) {
-    initExpr = vdm_BC_GenObjectInit(mk_sequence(count));
-  }
-  else {
-    initExpr = vdm_BC_GenAsgnInit(GenIntExpr(count));
-  }
-
-  SEQ<TYPE_CPP_Stmt> inner_rb_l;
-  inner_rb_l.ImpConc(GenDecl_DS(mk_REP_NumericTypeRep(Int(NAT)), vdm_BC_Rename(nm), initExpr));
-  inner_rb_l.ImpConc(succbody);
-
   SEQ<TYPE_CPP_Stmt> decl;
-  if (vdm_CPP_isCPP()) {
-    decl.ImpConc(GenDeclEmptySeq (tmpSeq_v));
-  }
-  else
-  { // java
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    initExpr = vdm_BC_GenAsgnInit(GenIntExpr(count));
     if (IsPossibleStringType(rType)) {
       decl.ImpConc(GenStringDecl(tmpSeq_v, vdm_BC_GenAsgnInit(GenEmptyStringExpr())));
     }
@@ -1578,6 +1633,16 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqComprehensionIndexLoop (const TYPE_AS_SeqComprehe
       decl.ImpConc(GenDeclEmptySeq (tmpSeq_v));
     }
   }
+  else
+#endif // VDMPP
+  {
+    initExpr = vdm_BC_GenObjectInit(mk_sequence(count));
+    decl.ImpConc(GenDeclEmptySeq (tmpSeq_v));
+  }
+
+  SEQ<TYPE_CPP_Stmt> inner_rb_l;
+  inner_rb_l.ImpConc(GenDecl_DS(mk_REP_NumericTypeRep(Int(NAT)), vdm_BC_Rename(nm), initExpr));
+  inner_rb_l.ImpConc(succbody);
 
   SEQ<TYPE_CPP_Stmt> rb_l;
   rb_l.ImpConc(stmts);
@@ -1625,8 +1690,15 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSeqComprehensionSetBind (const TYPE_AS_SeqComprehens
   TYPE_CPP_Identifier e_v (vdm_BC_GiveName(ASTAUX::MkId(L"e")));
   TYPE_REP_TypeRep eType (CleanFlatType(exprType.GetRecord (pos_REP_SetTypeRep_elemtp)));
 
-  TYPE_CPP_Identifier sort_f (vdm_CPP_isCPP() ? vdm_BC_GenIdentifier (ASTAUX::MkId(L"CGUTIL::Sort"))
-                                              : vdm_BC_GenIdentifier (ASTAUX::MkId(L"UTIL.Sort")));
+  TYPE_CPP_Identifier sort_f;
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    sort_f = vdm_BC_GenIdentifier (ASTAUX::MkId(L"UTIL.Sort"));
+  }
+  else
+#endif // VDMPP
+    sort_f = vdm_BC_GenIdentifier (ASTAUX::MkId(L"CGUTIL::Sort"));
+  
 
   Tuple lb_cgee (CGExprExcl(expr, ASTAUX::MkId(L"resBind_s"), resSType));
   const TYPE_CPP_Expr & rb_expr (lb_cgee.GetRecord(1));
@@ -2023,8 +2095,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSubSeqExpr(const TYPE_AS_SubSequenceExpr & expr, con
   n2_v = n2_expr_v;
 
 #ifdef VDMPP
-  if (vdm_CPP_isJAVA())
-  {
+  if (vdm_CPP_isJAVA()) {
     bool isStringType = IsStringType(sqt) || IsPossibleStringType(sqt);
     Generic n1tp (FindType(n1));
     Generic n2tp (FindType(n2));
@@ -2277,11 +2348,20 @@ Generic vdmcg::CGTupleConstructorExpr (const TYPE_AS_TupleConstructorExpr & rc1,
   SEQ<TYPE_CPP_Expr> args;
   size_t len_fields = fields.Length();
 
+#ifdef VDMPP
   SEQ<TYPE_REP_TypeRep> etp_l (FindProductElemType(rType, len_fields));
+#endif // VDMPP
   for (size_t i = 1; i <= len_fields; i++)
   {
     const TYPE_CPP_Expr & e (fields[i]);
-    Generic etp (vdm_CPP_isCPP() ? (Generic)nil : (Generic)(etp_l[i]));
+
+    Generic etp = nil;
+#ifdef VDMPP
+    if (vdm_CPP_isJAVA()) {
+      etp = etp_l[i];
+    }
+#endif // VDMPP
+
     Tuple cgee (CGExprExcl(e, ASTAUX::MkId(L"tmpVar"), etp));
     const TYPE_CPP_Expr & tmpExpr (cgee.GetRecord(1));
     const SEQ<TYPE_CPP_Stmt> & e_stmt (cgee.GetSequence(2));
@@ -2298,8 +2378,14 @@ Generic vdmcg::CGTupleConstructorExpr (const TYPE_AS_TupleConstructorExpr & rc1,
    
   if ((len_fields <= 8) && allsimple)
   {
-    TYPE_CPP_Expr fnm (vdm_CPP_isCPP() ? vdm_BC_GenIdentifier(ASTAUX::MkId(L"mk_"))
-                                       : vdm_BC_GenIdentifier(ASTAUX::MkId(L"Tuple.mk_")));
+    TYPE_CPP_Expr fnm;
+#ifdef VDMPP
+    if (vdm_CPP_isJAVA()) {
+      fnm = vdm_BC_GenIdentifier(ASTAUX::MkId(L"Tuple.mk_"));
+    }
+    else
+#endif // VDMPP
+      fnm = vdm_BC_GenIdentifier(ASTAUX::MkId(L"mk_"));
     return vdm_BC_GenFctCall(fnm, args);
   }
   else
@@ -2915,21 +3001,30 @@ Generic vdmcg::CGTupleSelectExpr(const TYPE_AS_TupleSelectExpr & ts, const TYPE_
   SEQ<TYPE_CPP_Stmt> tupleCode (cgee.GetSequence(2));
 
   TYPE_CPP_Expr tupleVal;
-  if (IsProductType(tupleTp))
+  if (IsProductType(tupleTp)) {
     tupleVal = tupleName;
+  }
   else
   {
     // TODO: 
     //tupleVal = GenCastProduct(tupleName);
-    tupleVal = (vdm_CPP_isCPP() ? vdm_BC_GenFctCall(GenProductType().get_tp(), mk_sequence(tupleName))
-                                : GenCastProduct(tupleName));
+#ifdef VDMPP
+    if (vdm_CPP_isJAVA()) {
+      tupleVal = GenCastProduct(tupleName);
+    }
+    else
+#endif // VDMPP
+      tupleVal = vdm_BC_GenFctCall(GenProductType().get_tp(), mk_sequence(tupleName));
   }
 
   TYPE_CPP_Identifier selector (vdm_BC_GiveName(ASTAUX::MkId(L"fieldsel")));
   TYPE_CPP_Expr selObj (CGLiteral(no, mk_CG_VT(selector, mk_REP_NumericTypeRep(Int(NATONE)))));
   TYPE_CPP_Expr selVal (GenGetValue(selObj, mk_REP_NumericTypeRep(Int(NATONE))));
-  if (vdm_CPP_isJAVA() && get_longs_option())
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA() && get_longs_option()) {
     selVal = vdm_BC_GenCastExpr(GenSmallIntType(), selVal);
+  }
+#endif // VDMPP
 
   TYPE_CPP_Expr tupleCall (vdm_BC_GenFctCallObjMemAcc(tupleVal, ASTAUX::MkId(L"GetField"), mk_sequence(selVal)));
 
@@ -4444,8 +4539,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGUnionTypeApply (const TYPE_AS_ApplyExpr & applexpr,
 
     if (!strings.IsNil ())
     {
-      if (vdm_CPP_isJAVA())
-      {
+#ifdef VDMPP
+      if (vdm_CPP_isJAVA()) {
         SEQ<TYPE_CPP_Stmt> sq;
         sq.ImpConc(GenDecl_DS(strings, tmpRes_v, vdm_BC_GenAsgnInit(GenCastString(tmpGen_v))));
 
@@ -4455,7 +4550,10 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGUnionTypeApply (const TYPE_AS_ApplyExpr & applexpr,
 
         sq.ImpAppend (vdm_BC_GenAsgnStmt (resVar_v, GenSeqApplyString(tmpRes_v, parapply)));
         alt2 = vdm_BC_GenIfStmt (GenIsString(tmpGen_v), vdm_BC_GenBlock (sq), alt2);
-      } else {
+      }
+      else
+#endif // VDMPP
+      {
       }
     }
   }
@@ -4913,40 +5011,52 @@ Generic vdmcg::CGIfExpr (const TYPE_AS_IfExpr & rc1, const TYPE_CGMAIN_VT & vt)
   const SEQ<TYPE_CPP_Stmt> & altn_stmt (cgee_altn.GetSequence(2));
 
   TYPE_CPP_Expr getval (IsBoolType(condType) ? res1 : vdm_BC_GenCastExpr(GenBoolType(), res1));
-  TYPE_CPP_Expr cond (vdm_CPP_isCPP() ? GenGetValue(getval, condType)
-                                      : GenGetValue(getval, mk_REP_BooleanTypeRep()));
 
-// 20150807 -->
+  TYPE_CPP_Expr cond;
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    cond = GenGetValue(getval, mk_REP_BooleanTypeRep());
+  }
+  else
+#endif // VDMPP
+    cond = GenGetValue(getval, condType);
+
   if (elif.IsEmpty() && cons_stmt.IsEmpty() && altn_stmt.IsEmpty()) {
     Generic cons_type (FindType(cons));
     Generic altn_type (FindType(altn));
     if (!cons_type.IsNil() && !altn_type.IsNil()) {
       if ((cons_type == altn_type) ||
           (IsIntType(cons_type) && IsIntType(altn_type)) ||
-          (vdm_CPP_isCPP() && cons.Is(TAG_TYPE_AS_QuoteLit) && altn.Is(TAG_TYPE_AS_QuoteLit)) ||
-          (vdm_CPP_isJAVA() && IsQuoteType(cons_type) && IsQuoteType(altn_type))) {
+#ifdef VDMPP
+          (vdm_CPP_isJAVA() && IsQuoteType(cons_type) && IsQuoteType(altn_type)) ||
+#endif // VDMPP
+          (vdm_CPP_isCPP() && cons.Is(TAG_TYPE_AS_QuoteLit) && altn.Is(TAG_TYPE_AS_QuoteLit)))
+      {
         TYPE_CPP_Expr expr (vdm_BC_GenCondExpr(cond, cons_expr, altn_expr));
-        //return cond_stmt.Conc(mk_sequence(vdm_BC_GenAsgnStmt(resVar_v, vdm_BC_GenBracketedExpr(expr))));
-        if (cond_stmt.IsEmpty())
+        if (cond_stmt.IsEmpty()) {
           return vdm_BC_GenBracketedExpr(expr);
-        else
+        }
+        else {
           return cond_stmt.Conc(mk_sequence(vdm_BC_GenAsgnStmt(resVar_v, vdm_BC_GenBracketedExpr(expr))));
+        }
       }
+#ifdef VDMPP
       else if (vdm_CPP_isJAVA()) {
         TYPE_CPP_Expr cast_cons (cons_type == resVarType ? cons_expr
                          : vdm_BC_GenCastExpr(GenType(resVarType), cons_expr));
         TYPE_CPP_Expr cast_altn (altn_type == resVarType ? altn_expr
                          : vdm_BC_GenCastExpr(GenType(resVarType), altn_expr));
         TYPE_CPP_Expr expr (vdm_BC_GenCondExpr(cond, cast_cons, cast_altn));
-        //return cond_stmt.Conc(mk_sequence(vdm_BC_GenAsgnStmt(resVar_v, vdm_BC_GenBracketedExpr(expr))));
-        if (cond_stmt.IsEmpty())
+        if (cond_stmt.IsEmpty()) {
           return vdm_BC_GenBracketedExpr(expr);
-        else
+        }
+        else {
           return cond_stmt.Conc(mk_sequence(vdm_BC_GenAsgnStmt(resVar_v, vdm_BC_GenBracketedExpr(expr))));
+        }
       }
+#endif // VDMPP
     }
   }
-// <-- 20150807
 
   SEQ<TYPE_CPP_Stmt> tmpb (altn_stmt);
   tmpb.ImpAppend(vdm_BC_GenAsgnStmt(resVar_v, altn_expr));
@@ -5160,21 +5270,32 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSeqOvwr (const TYPE_CGMAIN_VT & rc1,
   }
 
   TYPE_CPP_Expr e_int (GenGetValue(e_v, nattp));
-  TYPE_CPP_Expr seq_len (vdm_CPP_isCPP() ? GenLen(s_v) : GenLen_int(s_v));
+  //TYPE_CPP_Expr seq_len (vdm_CPP_isCPP() ? GenLen(s_v) : GenLen_int(s_v));
+  TYPE_CPP_Stmt alt2 (GenSeqModify(s_v, e_int, erng));
+
+  TYPE_CPP_Stmt if_body;
+#ifdef VDMPP
+  TYPE_CPP_Expr seq_len (GenLen_int(s_v));
   TYPE_CPP_Expr cond (vdm_BC_GenLogOr(vdm_BC_GenGt(e_int, seq_len), vdm_BC_GenLt(e_int, vdm_BC_GenIntegerLit(1))));
   TYPE_CPP_Stmt rre (vdm_BC_GenBlock(mk_sequence(RunTime(L"Illegal index in sequence modifier"))));
-  TYPE_CPP_Stmt alt2 (GenSeqModify(s_v, e_int, erng));
-  TYPE_CPP_Stmt if_body (vdm_CPP_isCPP() ? alt2 : vdm_BC_GenIfStmt(cond, rre, alt2));
+  if (vdm_CPP_isJAVA()) {
+    if_body = vdm_BC_GenIfStmt(cond, rre, alt2);
+  }
+  else
+#endif // VDMPP
+    if_body = alt2;
+
   TYPE_CPP_Stmt body (GenCPPStmt(isint_part.ImpAppend(if_body)));
   TYPE_REP_TypeRep seqtp (mk_REP_SeqTypeRep(FindSeqElemType(seqtype)));
 
   SEQ<TYPE_CPP_Stmt> rb;
-  if (vdm_CPP_isCPP())
-  {
-    if (cast)
+  if (vdm_CPP_isCPP()) {
+    if (cast) {
       rb.ImpConc(GenDeclInit_DS(seqtp, s_v, seq_v));
-    else
+    }
+    else {
       rb.ImpAppend(vdm_BC_GenAsgnStmt(resVar_v, seq_v));
+    }
   }
   else
   { // java
@@ -5196,21 +5317,23 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSeqOvwr (const TYPE_CGMAIN_VT & rc1,
 
   rb.ImpConc(GenIterMap(mk_CG_VT(map_v, mapType), nil, edom, erng, body));
 
-  if (vdm_CPP_isCPP())
-  {
+  if (vdm_CPP_isCPP()) {
     if (cast)
       rb.ImpAppend(vdm_BC_GenAsgnStmt(resVar_v, s_v));
   }
   else
   {
-    if (IsStringType(restp) || IsPossibleStringType(restp))
+    if (IsStringType(restp) || IsPossibleStringType(restp)) {
       rb.ImpAppend(vdm_BC_GenAsgnStmt(resVar_v,
                                       GenExplicitCast(mk_REP_SeqTypeRep(mk_REP_CharTypeRep()),
                                                       s_v,
                                                       nil)));
-    else
-      if (cast)
+    }
+    else {
+      if (cast) {
         rb.ImpAppend(vdm_BC_GenAsgnStmt(resVar_v, s_v));
+      }
+    }
   }
   return rb;
 }
@@ -7244,9 +7367,11 @@ Generic vdmcg::CGMapInverse(const TYPE_CPP_Expr & argexpr, const TYPE_REP_TypeRe
 
   SEQ<TYPE_CPP_Stmt> rb_l;
 
+#ifdef VDMPP
   if (vdm_CPP_isJAVA()) {
     rb_l.ImpAppend(vdm_BC_GenAsgnStmt(resVar_v, GenEmptyMapExpr()));
   }
+#endif // VDMPP
 
   rb_l.ImpConc(itermap);
 
@@ -7356,12 +7481,14 @@ Generic vdmcg::CGBinaryExpr(const TYPE_AS_BinaryExpr & be, const TYPE_CGMAIN_VT 
   const Int & opr         (be.GetInt   (pos_AS_BinaryExpr_opr));
   const TYPE_AS_Expr & re (be.GetRecord(pos_AS_BinaryExpr_right));
 
+#ifdef VDMPP
   if (vdm_CPP_isJAVA() &&
       (opr == Int(INSET)) &&
       re.Is(TAG_TYPE_AS_PrefixExpr) &&
       (re.GetInt(pos_AS_PrefixExpr_opr) == Int(MAPDOM) ||
        re.GetInt(pos_AS_PrefixExpr_opr) == Int(MAPRNG)))
     return OptimizeMapExpr(le, re, vt);
+#endif // VDMPP
 
   int op = opr.GetValue();
   switch ( op ) {
