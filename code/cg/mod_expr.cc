@@ -2244,7 +2244,9 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSubSeqExpr(const TYPE_AS_SubSequenceExpr & expr, con
     TYPE_CPP_Stmt thenstmt (vdm_BC_GenAsgnStmt(resVar_v, emptySeq));
     TYPE_CPP_Stmt elsestmt (vdm_BC_GenAsgnStmt(resVar_v, classcr));
     TYPE_CPP_Expr cond (vdm_BC_GenGt(From, To));
-    rb_l.ImpAppend(vdm_BC_GenIfStmt(cond, thenstmt, elsestmt));
+    rb_l.ImpAppend(vdm_BC_GenIfStmt(cond,
+                                    vdm_BC_GenBlock(mk_sequence(thenstmt)),
+                                    vdm_BC_GenBlock(mk_sequence(elsestmt))));
     return rb_l;
   }
   else

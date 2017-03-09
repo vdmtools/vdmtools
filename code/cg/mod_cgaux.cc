@@ -909,8 +909,7 @@ TYPE_REP_TypeRep vdmcg::CleanFlatType(const TYPE_REP_TypeRep & reptp)
   }
 
   SET<TYPE_REP_TypeNameRep> ss;
-  if (vdm_CPP_isJAVA())
-  {
+  if (vdm_CPP_isJAVA()) {
     Generic extp (ExpandTypeRep(tp, Set()));
     TYPE_REP_TypeRep thistp (CleanAndFlattenType(extp));
     if (tp.Is(TAG_TYPE_REP_TypeNameRep) &&
@@ -7072,8 +7071,9 @@ bool vdmcg::IsSeqIndicesSet(const TYPE_AS_Expr & e)
     const TYPE_AS_Expr & arg (e.GetRecord(pos_AS_PrefixExpr_arg));
     if (arg.Is(TAG_TYPE_AS_Name)) {
       Generic tp (FindType(arg));
-      if (!tp.IsNil())
+      if (!tp.IsNil()) {
         return IsSeqType(tp);
+      }
     } 
   }
   return false;
@@ -7084,12 +7084,17 @@ bool vdmcg::IsSeqIndicesSet(const TYPE_AS_Expr & e)
 // ==> bool
 bool vdmcg::IsBoolExpr(const TYPE_CPP_Expr & expr) 
 {
-  if (vdm_CPP_isCPP())
-    return (expr.Is(TAG_TYPE_CPP_FctCall) &&
-            (expr.GetRecord(pos_CPP_FctCall_fct) == GenBoolType().get_tp()));
-  else
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     return (expr.Is(TAG_TYPE_CPP_ClassInstanceCreationExpr) &&
             (expr.GetRecord(pos_CPP_ClassInstanceCreationExpr_classtype) == GenBoolType().get_tp()));
+  }
+  else
+#endif // VDMPP
+  {
+    return (expr.Is(TAG_TYPE_CPP_FctCall) &&
+            (expr.GetRecord(pos_CPP_FctCall_fct) == GenBoolType().get_tp()));
+  }
 }
 
 // IsIntExpr
@@ -7097,12 +7102,29 @@ bool vdmcg::IsBoolExpr(const TYPE_CPP_Expr & expr)
 // ==> bool
 bool vdmcg::IsIntExpr(const TYPE_CPP_Expr & expr) 
 {
-  if (vdm_CPP_isCPP())
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+//    return (expr.Is(TAG_TYPE_CPP_ClassInstanceCreationExpr) &&
+//            (expr.GetRecord(pos_CPP_ClassInstanceCreationExpr_classtype) == GenImplIntType().get_tp()));
+    if (expr.Is(TAG_TYPE_CPP_ClassInstanceCreationExpr)) {
+      return (expr.GetRecord(pos_CPP_ClassInstanceCreationExpr_classtype) == GenImplIntType().get_tp());
+    }
+    else {
+      if (expr.Is(TAG_TYPE_CPP_FctCall)) {
+        const TYPE_CPP_Expr & fct(expr.GetRecord(pos_CPP_FctCall_fct));
+        return (fct.Is(TAG_TYPE_CPP_ObjectMemberAccess) &&
+            (fct.GetRecord(pos_CPP_ObjectMemberAccess_object) == vdm_BC_GenIdentifier(ASTAUX::MkId(L"Integer"))) &&
+            (fct.GetRecord(pos_CPP_ObjectMemberAccess_name) == vdm_BC_GenIdentifier(ASTAUX::MkId(L"valueOf"))));
+      }
+    }
+    return false;
+  }
+  else
+#endif // VDMPP
+  {
     return (expr.Is(TAG_TYPE_CPP_FctCall) &&
             (expr.GetRecord(pos_CPP_FctCall_fct) == GenImplIntType().get_tp()));
-  else
-    return (expr.Is(TAG_TYPE_CPP_ClassInstanceCreationExpr) &&
-            (expr.GetRecord(pos_CPP_ClassInstanceCreationExpr_classtype) == GenImplIntType().get_tp()));
+  }
 }
 
 // IsRealExpr
@@ -7110,12 +7132,17 @@ bool vdmcg::IsIntExpr(const TYPE_CPP_Expr & expr)
 // ==> bool
 bool vdmcg::IsRealExpr(const TYPE_CPP_Expr & expr) 
 {
-  if (vdm_CPP_isCPP())
-    return (expr.Is(TAG_TYPE_CPP_FctCall) &&
-            (expr.GetRecord(pos_CPP_FctCall_fct) == GenImplRealType().get_tp()));
-  else
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     return (expr.Is(TAG_TYPE_CPP_ClassInstanceCreationExpr) &&
             (expr.GetRecord(pos_CPP_ClassInstanceCreationExpr_classtype) == GenImplRealType().get_tp()));
+  }
+  else
+#endif // VDMPP
+  {
+    return (expr.Is(TAG_TYPE_CPP_FctCall) &&
+            (expr.GetRecord(pos_CPP_FctCall_fct) == GenImplRealType().get_tp()));
+  }
 }
 
 // IsStringExpr
@@ -7123,12 +7150,17 @@ bool vdmcg::IsRealExpr(const TYPE_CPP_Expr & expr)
 // ==> bool
 bool vdmcg::IsStringExpr(const TYPE_CPP_Expr & expr) 
 {
-  if (vdm_CPP_isCPP())
-    return (expr.Is(TAG_TYPE_CPP_FctCall) &&
-            (expr.GetRecord(pos_CPP_FctCall_fct) == GenStringType().get_tp()));
-  else
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     return (expr.Is(TAG_TYPE_CPP_ClassInstanceCreationExpr) &&
             (expr.GetRecord(pos_CPP_ClassInstanceCreationExpr_classtype) == GenStringType().get_tp()));
+  }
+  else
+#endif // VDMPP
+  {
+    return (expr.Is(TAG_TYPE_CPP_FctCall) &&
+            (expr.GetRecord(pos_CPP_FctCall_fct) == GenStringType().get_tp()));
+  }
 }
 
 // StripBracketedExpr

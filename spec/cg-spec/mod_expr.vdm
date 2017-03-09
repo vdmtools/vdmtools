@@ -2065,7 +2065,9 @@ CGSubSeqExpr(mk_AS`SubSequenceExpr(sq, n1, n2, -), mk_CGMAIN`VT(resVar_v,-)) ==
             def thenstmt = BC`GenAsgnStmt(resVar_v, emptySeq);
                 elsestmt = BC`GenAsgnStmt(resVar_v, classcr);
                 cond = BC`GenGt(From, To)
-            in rb_l := rb_l ^ [ BC`GenIfStmt(cond, thenstmt, elsestmt)]
+            in rb_l := rb_l ^ [ BC`GenIfStmt(cond,
+                                             BC`GenBlock([thenstmt]),
+                                             BC`GenBlock([elsestmt])) ]
            );
           return rb_l;
          )

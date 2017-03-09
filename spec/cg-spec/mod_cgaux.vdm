@@ -3539,30 +3539,54 @@ IsSeqIndicesSet(e) ==
 
 IsBoolExpr: CPP`Expr ==> bool
 IsBoolExpr(expr) ==
-  if CPP`isCPP()
-  then return is_CPP`FctCall(expr) and (expr.fct = DS`GenBoolType().tp)
-  else return is_CPP`ClassInstanceCreationExpr(expr) and (expr.classtype = DS`GenBoolType().tp);
+#ifdef VDMPP
+  if CPP`isJAVA()
+  then
+    return is_CPP`ClassInstanceCreationExpr(expr) and (expr.classtype = DS`GenBoolType().tp)
+  else
+#endif VDMPP
+    return is_CPP`FctCall(expr) and (expr.fct = DS`GenBoolType().tp);
 
 IsIntExpr: CPP`Expr ==> bool
 IsIntExpr(expr) ==
-  if CPP`isCPP()
-  then return is_CPP`FctCall(expr) and (expr.fct = DS`GenImplIntType().tp)
-  else return is_CPP`ClassInstanceCreationExpr(expr) and (expr.classtype = DS`GenImplIntType().tp);
+#ifdef VDMPP
+  if CPP`isJAVA()
+  then
+    return is_CPP`ClassInstanceCreationExpr(expr) and (expr.classtype = DS`GenImplIntType().tp)
+  else
+#endif VDMPP
+    return is_CPP`FctCall(expr) and (expr.fct = DS`GenImplIntType().tp);
 
   --mk_CPP`FctCall((GenImplIntType().tp),-,-),-) ->
   --mk_CPP`ClassInstanceCreationExpr((GenImplIntType().tp),-,-,-,-) -> 
+  --mk_CPP`FctCall(
+     --mk_CPP`ObjectMemberAccess(
+        --mk_CPP`Identifier( "Integer", -1 ),
+       -- mk_CPP`Identifier( "valueOf", -1 ),
+        ---1 ),
+     --[ mk_CPP`IntegerLit( 2, -1 ) ],
+     ---1 )
+
 
 IsRealExpr: CPP`Expr ==> bool
 IsRealExpr(expr) ==
-  if CPP`isCPP()
-  then return is_CPP`FctCall(expr) and (expr.fct = DS`GenImplRealType().tp)
-  else return is_CPP`ClassInstanceCreationExpr(expr) and (expr.classtype = DS`GenImplRealType().tp);
+#ifdef VDMPP
+  if CPP`isJAVA()
+  then
+    return is_CPP`ClassInstanceCreationExpr(expr) and (expr.classtype = DS`GenImplRealType().tp)
+  else
+#endif VDMPP
+    return is_CPP`FctCall(expr) and (expr.fct = DS`GenImplRealType().tp);
 
 IsStringExpr: CPP`Expr ==> bool
 IsStringExpr(expr) ==
-  if CPP`isCPP()
-  then return is_CPP`FctCall(expr) and (expr.fct = DS`GenStringType().tp)
-  else return is_CPP`ClassInstanceCreationExpr(expr) and (expr.classtype = DS`GenStringType().tp);
+#ifdef VDMPP
+  if CPP`isJAVA()
+  then
+    return is_CPP`ClassInstanceCreationExpr(expr) and (expr.classtype = DS`GenStringType().tp)
+  else
+#endif VDMPP
+    return is_CPP`FctCall(expr) and (expr.fct = DS`GenStringType().tp);
 \end{vdm_al}
 
 \subsection*{File Extension}
