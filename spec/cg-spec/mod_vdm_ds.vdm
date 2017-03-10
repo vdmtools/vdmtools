@@ -942,7 +942,8 @@ GenExplicitCast(restp, e, tp) ==
          (if (CGAUX`IsRealType(restype) and not CGAUX`IsRealType(type))
           then
              if CGAUX`IsIntExpr(e)
-             then return GenRealExpr(e.arg)
+             --then return GenRealExpr(e.arg)
+             then return GenRealExpr(GenGetValue(e, mk_REP`NumericTypeRep(<INTEGER>)))
              else return GetRealVal(e)
            elseif (CGAUX`IsIntType(restype) and not CGAUX`IsIntType(type))
            then (CGAUX`SetException(true);

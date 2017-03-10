@@ -7677,8 +7677,9 @@ Generic vdmcg::CGLogBinaryExpr(const TYPE_AS_Expr & le,
       TYPE_CGMAIN_VT vt2 (mk_CG_VT(var2, type2));
 
       TYPE_CPP_Expr expr (NE == opr ? GenNeq_DS(vt1, vt2) : GenEq_DS(vt1, vt2));
-      if (stmt1.IsEmpty() && stmt2.IsEmpty())
+      if (stmt1.IsEmpty() && stmt2.IsEmpty()) {
         return expr;
+      }
       else {
         SEQ<TYPE_CPP_Stmt> rb_l (stmt1);
         rb_l.ImpConc(stmt2);

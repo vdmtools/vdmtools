@@ -7104,8 +7104,6 @@ bool vdmcg::IsIntExpr(const TYPE_CPP_Expr & expr)
 {
 #ifdef VDMPP
   if (vdm_CPP_isJAVA()) {
-//    return (expr.Is(TAG_TYPE_CPP_ClassInstanceCreationExpr) &&
-//            (expr.GetRecord(pos_CPP_ClassInstanceCreationExpr_classtype) == GenImplIntType().get_tp()));
     if (expr.Is(TAG_TYPE_CPP_ClassInstanceCreationExpr)) {
       return (expr.GetRecord(pos_CPP_ClassInstanceCreationExpr_classtype) == GenImplIntType().get_tp());
     }
@@ -7113,7 +7111,7 @@ bool vdmcg::IsIntExpr(const TYPE_CPP_Expr & expr)
       if (expr.Is(TAG_TYPE_CPP_FctCall)) {
         const TYPE_CPP_Expr & fct(expr.GetRecord(pos_CPP_FctCall_fct));
         return (fct.Is(TAG_TYPE_CPP_ObjectMemberAccess) &&
-            (fct.GetRecord(pos_CPP_ObjectMemberAccess_object) == vdm_BC_GenIdentifier(ASTAUX::MkId(L"Integer"))) &&
+            (fct.GetRecord(pos_CPP_ObjectMemberAccess_object) == GenImplIntType().get_tp()) &&
             (fct.GetRecord(pos_CPP_ObjectMemberAccess_name) == vdm_BC_GenIdentifier(ASTAUX::MkId(L"valueOf"))));
       }
     }
