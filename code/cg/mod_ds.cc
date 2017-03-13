@@ -1288,6 +1288,7 @@ Generic vdmcg::DeclaredAs(const TYPE_CPP_Expr & e)
   return result;
 }
 
+#ifdef VDMPP
 // GetIntVal
 // v : CPP`Expr
 // ==> CPP`Expr
@@ -1363,7 +1364,7 @@ TYPE_CPP_Expr vdmcg::GenExplicitCast(const TYPE_REP_TypeRep & restp, const TYPE_
           break;
         }
 // 20120216 -->
-#ifdef VDMPP
+//#ifdef VDMPP
         case TAG_TYPE_REP_OverTypeRep: {
           SET<TYPE_REP_TypeRep> tp_s (Record(tp).GetSet(pos_REP_OverTypeRep_tps));
           SET<TYPE_REP_TypeRep> rtp_s;
@@ -1392,7 +1393,7 @@ TYPE_CPP_Expr vdmcg::GenExplicitCast(const TYPE_REP_TypeRep & restp, const TYPE_
             type = CleanFlatType(mk_REP_UnionTypeRep(rtp_s));
           break;
         }
-#endif // VDMPP
+//#endif // VDMPP
 // <-- 20120216
         default: {
           type = CleanFlatType(tp);
@@ -1508,10 +1509,10 @@ TYPE_CPP_Expr vdmcg::GenExplicitCast(const TYPE_REP_TypeRep & restp, const TYPE_
          else
            return e;
       }
-#ifdef VDMPP
+//#ifdef VDMPP
       else if (IsSubType(type, RemoveInvType(restype)))
         return e;
-#endif // VDMPP
+//#endif // VDMPP
       else
         if (GenType(type) == vdm_BC_GenGeneric())
           return vdm_BC_GenCastExpr(GenType(restype),e);
@@ -1523,6 +1524,7 @@ TYPE_CPP_Expr vdmcg::GenExplicitCast(const TYPE_REP_TypeRep & restp, const TYPE_
     }
   }
 }
+#endif // VDMPP
 
 // GenEmptyValue
 // type : REP`TypeRep
@@ -5896,6 +5898,7 @@ TYPE_CPP_Expr vdmcg::GenNumDiv(const TYPE_CGMAIN_VT & vt1, const TYPE_CGMAIN_VT 
   }
 }
 
+#ifdef VDMPP
 // GenIntVal
 // r : CGMAIN`VT
 // ==> CPP`Expr
@@ -5916,6 +5919,7 @@ TYPE_CPP_Expr vdmcg::GenIntVal(const TYPE_CGMAIN_VT & r)
     return GetIntVal(v);
   }
 }
+#endif // VDMPP
 
 // GenNumRem
 // vt1 : CGMAIN`VT

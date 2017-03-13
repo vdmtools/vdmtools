@@ -53,11 +53,13 @@ private:
   void RememberPid_m(const Map &);
   void DeletePid_m();
   Generic DeclaredAs(const TYPE_CPP_Expr &);
+#ifdef VDMPP
   TYPE_CPP_Expr GetIntVal(const TYPE_CPP_Expr&);
   TYPE_CPP_Expr GetRealVal(const TYPE_CPP_Expr&);
   TYPE_CPP_Expr GetStringVal(const TYPE_CPP_Expr&);
   TYPE_CPP_Expr GetListVal(const TYPE_CPP_Expr&);
   TYPE_CPP_Expr GenExplicitCast(const TYPE_REP_TypeRep &, const TYPE_CPP_Expr &, const Generic &);
+#endif // VDMPP
   Generic GenEmptyValue(const TYPE_REP_TypeRep &);
   TYPE_CPP_TypeSpecifier GenSmallBoolType();
   TYPE_CPP_TypeSpecifier GenBoolType();
@@ -269,7 +271,9 @@ private:
   TYPE_CPP_Expr GenMinus_DS(const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &, const Generic &);
   TYPE_CPP_Expr GenMult_DS(const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &, const Generic &);
   TYPE_CPP_Expr GenNumDiv(const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &, const Generic &);
+#ifdef VDMPP
   TYPE_CPP_Expr GenIntVal(const TYPE_CGMAIN_VT &);
+#endif // VDMPP
   TYPE_CPP_Expr GenNumRem(const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &);
   TYPE_CPP_Expr GenNumMod(const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &);
   TYPE_CPP_Expr GenIntDiv(const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &);

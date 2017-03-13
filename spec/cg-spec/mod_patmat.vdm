@@ -849,9 +849,13 @@ CGMatchMapEnumPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s , succ_v, pid_m, 
               (dcl de : CPP`Expr,
                    ifBody : seq of CPP`Stmt := [],
                    cond : CPP`Expr;
-               if CPP`isCPP()
-               then de := DS`GenSetGetElemExpr(DS`GenDom(castVarExpr_v))
-               else de := DS`GenExplicitCast(dom_type, DS`GenSetGetElemExpr(DS`GenDom(castVarExpr_v)), nil);
+#ifdef VDMPP
+               if CPP`isJAVA()
+               then
+                 de := DS`GenExplicitCast(dom_type, DS`GenSetGetElemExpr(DS`GenDom(castVarExpr_v)), nil)
+               else
+#endif VDMPP
+                 de := DS`GenSetGetElemExpr(DS`GenDom(castVarExpr_v));
                    
                ifBody := DS`GenDeclInit(dom_type, dom_v, de)
                          ^ DS`GenDeclInit(rng_type, rng_v, re)
@@ -951,18 +955,21 @@ CGMatchRecordPattern(pat, mk_CGMAIN`VT(varExpr_v, type), pn_s, succ_v, pid_m, in
   in
    (dcl newVarExpr : CPP`Expr,
         if_cond : CPP`Expr;
-    if CPP`isCPP()
+#ifdef VDMPP
+    if CPP`isJAVA()
     then 
-      if CGAUX`IsCompositeType(type)
-      then newVarExpr := varExpr_v
-      else newVarExpr := DS`GenCastRecord(varExpr_v, nil)
-    else
-      if is_REP`CompositeTypeRep( type )
+     (if is_REP`CompositeTypeRep( type )
       then newVarExpr := varExpr_v
       else newVarExpr := DS`GenCastRecord(varExpr_v, n);
-    if CPP`isCPP()
-    then if_cond := DS`GenAuxType(varExpr_v, p_type)
-    else if_cond := BC`GenTypeComp(BC`GenTypeSpecifier(BC`Rename(n)), varExpr_v);
+      if_cond := BC`GenTypeComp(BC`GenTypeSpecifier(BC`Rename(n)), varExpr_v);
+     )
+    else
+#endif VDMPP
+     (if CGAUX`IsCompositeType(type)
+      then newVarExpr := varExpr_v
+      else newVarExpr := DS`GenCastRecord(varExpr_v, nil);
+      if_cond := DS`GenAuxType(varExpr_v, p_type);
+     );
 
     if p_l = [] or forall p in set elems p_l & is_AS`PatternName(p) and p.nm = nil
     then
@@ -1826,9 +1833,11 @@ CGMatchList: seq of AS`Pattern * CGMAIN`VT * CPP`Name * set of (AS`Name | AS`Old
               ==> seq of CPP`Stmt * bool
 CGMatchList(p_l, vt, succ_v, p_s, pid_m, inner, nonstop) == 
   def mk_CGMAIN`VT(perm1_v, permtp) = vt;
+#ifdef VDMPP
       charType = is_REP`SeqTypeRep(permtp) and def mk_REP`SeqTypeRep(t) = permtp;
                                                    tp = CGAUX`CleanFlatType(t)
                                                in CGAUX`IsCharType(tp);
+#endif VDMPP
   in
    (dcl perm_v : CPP`Expr;
     if is_CPP`Identifier(perm1_v) 
@@ -1837,21 +1846,29 @@ CGMatchList(p_l, vt, succ_v, p_s, pid_m, inner, nonstop) ==
       cases true:
         (is_REP`ProductTypeRep(permtp))   -> perm_v := perm1_v,
         (is_REP`CompositeTypeRep(permtp)) -> perm_v := perm1_v,
-        others                            -> if CPP`isCPP()
-                                             then perm_v := DS`GenCastSeq(perm1_v, nil)
-                                             else
+        others                            ->
+#ifdef VDMPP
+                                             if CPP`isJAVA()
+                                             then
                                                if charType
                                                then perm_v := DS`GenCastString(perm1_v)
                                                else perm_v := DS`GenCastSeq(perm1_v,nil)
+                                             else
+#endif VDMPP
+                                               perm_v := DS`GenCastSeq(perm1_v, nil)
       end;
     if p_l = []
     then
      (dcl eq : CPP`Expr;
-      if CPP`isCPP()
-      then eq := BC`GenEq(BC`GenIntegerLit(0), DS`GenLen(perm_v))
-      else if charType
-           then eq := BC`GenEq(BC`GenIntegerLit(0), DS`GenLenString_int(perm_v))
-           else eq := BC`GenEq(BC`GenIntegerLit(0), DS`GenLen_int(perm_v));
+#ifdef VDMPP
+      if CPP`isJAVA()
+      then
+        if charType
+        then eq := BC`GenEq(BC`GenIntegerLit(0), DS`GenLenString_int(perm_v))
+        else eq := BC`GenEq(BC`GenIntegerLit(0), DS`GenLen_int(perm_v))
+      else
+#endif VDMPP
+        eq := BC`GenEq(BC`GenIntegerLit(0), DS`GenLen(perm_v));
       return mk_([BC`GenAsgnStmt(succ_v, BC`GenBracketedExpr(eq))], false)
      )
     else 
@@ -1879,29 +1896,9 @@ CGMatchList(p_l, vt, succ_v, p_s, pid_m, inner, nonstop) ==
                                                      else type := CGAUX`CleanFlatType(rngtp),
             others                                -> type := mk_REP`AllTypeRep()
           end;
-          if CPP`isCPP()
+#ifdef VDMPP
+          if CPP`isJAVA()
           then
-            cases true:
-              (is_REP`ProductTypeRep(permtp))
-                     -> permI_v := DS`GenTupGetField(perm_v, BC`GenIntegerLit(i), permtp.tps(i), ptp),
-              (is_REP`CompositeTypeRep(permtp))
-                     -> let mk_REP`FieldRep(sel,tp,-) = permtp.fields(i)
-                        in
-                          if sel = nil
-                          then permI_v := DS`GenRecGetField(perm_v, BC`GenIntegerLit(i), tp)
-                          else permI_v := DS`GenRecGetFieldNm(perm_v, permtp, sel),
-              others -> def apply = DS`GenSeqApply(nil, perm_v, BC`GenIntegerLit(i))
-                        in
-                          cases true:
-                            (is_AS`PatternName(pat)) -> def gtp = CGAUX`FindType(pat)
-                                                        in if gtp = nil or CGAUX`IsSubType(type, gtp)
-                                                           then permI_v := apply
-                                                           else permI_v := DS`GenCastType(type, apply),
-                            (is_AS`MatchVal(pat))    -> permI_v := apply,
-                            others                   -> permI_v := DS`GenCastType(type, apply)
-                          end
-            end
-          else -- java
             cases true:
               (is_REP`ProductTypeRep(permtp))
                      -> permI_v := DS`GenExplicitCast(type,
@@ -1922,6 +1919,28 @@ CGMatchList(p_l, vt, succ_v, p_s, pid_m, inner, nonstop) ==
               others -> if charType
                         then permI_v := DS`GenSeqApplyString(perm_v, BC`GenIntegerLit(i))
                         else permI_v := DS`GenSeqApply(type, perm_v, BC`GenIntegerLit(i))
+            end
+          else
+#endif VDMPP
+            cases true:
+              (is_REP`ProductTypeRep(permtp))
+                     -> permI_v := DS`GenTupGetField(perm_v, BC`GenIntegerLit(i), permtp.tps(i), ptp),
+              (is_REP`CompositeTypeRep(permtp))
+                     -> let mk_REP`FieldRep(sel,tp,-) = permtp.fields(i)
+                        in
+                          if sel = nil
+                          then permI_v := DS`GenRecGetField(perm_v, BC`GenIntegerLit(i), tp)
+                          else permI_v := DS`GenRecGetFieldNm(perm_v, permtp, sel),
+              others -> def apply = DS`GenSeqApply(nil, perm_v, BC`GenIntegerLit(i))
+                        in
+                          cases true:
+                            (is_AS`PatternName(pat)) -> def gtp = CGAUX`FindType(pat)
+                                                        in if gtp = nil or CGAUX`IsSubType(type, gtp)
+                                                           then permI_v := apply
+                                                           else permI_v := DS`GenCastType(type, apply),
+                            (is_AS`MatchVal(pat))    -> permI_v := apply,
+                            others                   -> permI_v := DS`GenCastType(type, apply)
+                          end
             end;
           for ii = 1 to i-1 do
             newp_s := newp_s union dom CGEXPR`FindPatternId(p_l(ii));
@@ -1940,11 +1959,16 @@ CGMatchList(p_l, vt, succ_v, p_s, pid_m, inner, nonstop) ==
          (dcl len_perm_v : CPP`Expr;
           cases true:
             (is_REP`ProductTypeRep(permtp)) -> len_perm_v := DS`GenTupleLength(perm_v),
-             others                         -> if CPP`isCPP()
-                                               then len_perm_v := DS`GenLen_int( perm_v )
-                                               else if charType
-                                                    then len_perm_v := DS`GenLenString_int( perm_v )
-                                                    else len_perm_v := DS`GenLen_int( perm_v )
+             others                         ->
+#ifdef VDMPP
+                                               if CPP`isJAVA()
+                                               then
+                                                 if charType
+                                                 then len_perm_v := DS`GenLenString_int( perm_v )
+                                                 else len_perm_v := DS`GenLen_int( perm_v )
+                                               else
+#endif VDMPP
+                                                 len_perm_v := DS`GenLen_int( perm_v )
           end;
           def eq_len = BC`GenEq(len_p_l, len_perm_v)
           in

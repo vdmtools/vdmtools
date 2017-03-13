@@ -242,37 +242,9 @@ CGAssignStmt( mk_AS`AssignStmt(sd, expr, cid) ) ==
 
          cases true:
           (is_AS`Name(sd)) ->
-            if CPP`isCPP()
-            then
-#ifdef VDMSL
-              (def tp = ENV`LookUpStateEnv(sd)
-               in
-                 if not (is_REP`CompositeTypeRep(tp) and CGAUX`UnqualiName(tp.nm) = sd)
-                 then
-                   if not CGAUX`IsSubType(rhsType, gtp)
-                   then rb := rb ^ [BC`GenIfStmt(DS`GenAuxType(rhs_v, gtp),
-                                       BC`GenBlock([BC`GenAsgnStmt(BC`Rename(sd), rhs_v)]),
-                                       BC`GenBlock([CGAUX`RunTime("Incompatible type")]))]
-                   else rb := rb ^ [BC`GenAsgnStmt(BC`Rename(sd), rhs_v)]
-                 else
-                   if is_REP`CompositeTypeRep(tp)
-                   then
-                     for i = 1 to len tp.fields do
-                       rb := rb ^ [BC`GenAsgnStmt(BC`Rename(tp.fields(i).sel),
-                                                  DS`GenRecGetField(rhs_v,BC`GenIntegerLit(i),
-                                                                    tp.fields(i).tp))]
-                   else rb := rb ^ [BC`GenAsgnStmt(BC`Rename(sd), rhs_v)];)
-
-
-#endif VDMSL
 #ifdef VDMPP
-              (if not CGAUX`IsSubType(rhsType, gtp)
-               then rb := rb ^ [BC`GenIfStmt(DS`GenAuxType(rhs_v, gtp),
-                                   BC`GenBlock([BC`GenAsgnStmt(BC`Rename(sd), rhs_v)]),
-                                   BC`GenBlock([CGAUX`RunTime("Incompatible type")]))]
-               else rb := rb ^ [BC`GenAsgnStmt(BC`Rename(sd), rhs_v)];)
-#endif VDMPP
-            else -- java
+            if CPP`isJAVA()
+            then
               if len sd.ids > 1
               then
                 def expr = BC`GenObjectMemberAccess(DS`GenThis(), BC`GenIdentifier(CGAUX`GiveLastName(sd)))
@@ -300,7 +272,38 @@ CGAssignStmt( mk_AS`AssignStmt(sd, expr, cid) ) ==
                           else BC`GenBracketedExpr(BC`GenCastExpr(BC`GenGeneric(), rhs_v))
                   in rb := rb ^ [BC`GenIfStmt(BC`GenNot(DS`GenAuxType(e, gtp)),
                                    BC`GenBlock([CGAUX`RunTime("Incompatible type")]), nil)];
-                rb := rb ^ [BC`GenAsgnStmt(BC`Rename(sd), cast)]),
+                rb := rb ^ [BC`GenAsgnStmt(BC`Rename(sd), cast)]
+               )
+            else
+#endif VDMPP
+             (
+#ifdef VDMSL
+               def tp = ENV`LookUpStateEnv(sd)
+               in
+                 if not (is_REP`CompositeTypeRep(tp) and CGAUX`UnqualiName(tp.nm) = sd)
+                 then
+                   if not CGAUX`IsSubType(rhsType, gtp)
+                   then rb := rb ^ [BC`GenIfStmt(DS`GenAuxType(rhs_v, gtp),
+                                       BC`GenBlock([BC`GenAsgnStmt(BC`Rename(sd), rhs_v)]),
+                                       BC`GenBlock([CGAUX`RunTime("Incompatible type")]))]
+                   else rb := rb ^ [BC`GenAsgnStmt(BC`Rename(sd), rhs_v)]
+                 else
+                   if is_REP`CompositeTypeRep(tp)
+                   then
+                     for i = 1 to len tp.fields do
+                       rb := rb ^ [BC`GenAsgnStmt(BC`Rename(tp.fields(i).sel),
+                                                  DS`GenRecGetField(rhs_v,BC`GenIntegerLit(i),
+                                                                    tp.fields(i).tp))]
+                   else rb := rb ^ [BC`GenAsgnStmt(BC`Rename(sd), rhs_v)];
+#endif VDMSL
+#ifdef VDMPP
+               if not CGAUX`IsSubType(rhsType, gtp)
+               then rb := rb ^ [BC`GenIfStmt(DS`GenAuxType(rhs_v, gtp),
+                                   BC`GenBlock([BC`GenAsgnStmt(BC`Rename(sd), rhs_v)]),
+                                   BC`GenBlock([CGAUX`RunTime("Incompatible type")]))]
+               else rb := rb ^ [BC`GenAsgnStmt(BC`Rename(sd), rhs_v)];
+#endif VDMPP
+             ),
           (is_AS`NarrowRef(sd)) -> return CGAssignStmt(mk_AS`AssignStmt(sd.var,expr,cid)),
           (is_AS`FieldRef(sd)) -> if is_AS`NarrowRef(sd.var)
                                   then
@@ -1319,14 +1322,21 @@ CGBlockStmt(mk_AS`BlockStmt(dcls, stmts,-), isLast) ==
          (nil = dclinit) -> rb := rb ^ var_decl,
          others -> def dclinit_type = CGAUX`FindType(dclinit)
                    in
-                   if CGAUX`IsSubType(dclinit_type, type) and
-                      not (CPP`isJAVA() and CGAUX`IsStringType(dclinit_type) and not CGAUX`IsStringType(type))
+                   if CGAUX`IsSubType(dclinit_type, type)
+#ifdef VDMPP
+                      and not (CPP`isJAVA() and CGAUX`IsStringType(dclinit_type)
+                                            and not CGAUX`IsStringType(type))
+#endif VDMPP
                    then
                      def mk_(var_v, var_stmt) = CGEXPR`CGExprExcl(dclinit, varname, type)
                      in if var_stmt = []
                         then 
-                          if CPP`isCPP()
+#ifdef VDMPP
+                          if CPP`isJAVA()
                           then
+                            rb := rb ^ DS`GenDeclInit( type, varname, var_v)
+                          else
+#endif VDMPP
                             def ainit_v = BC`GenAsgnInit(var_v);
                                 init_v = cases dclinit:
                                     mk_AS`NilLit(-)                -> BC`GenAsgnInit(var_v),
@@ -1342,7 +1352,6 @@ CGBlockStmt(mk_AS`BlockStmt(dcls, stmts,-), isLast) ==
                                     others -> ainit_v
                                   end
                             in rb := rb ^ DS`GenDecl( type, varname, init_v)
-                          else rb := rb ^ DS`GenDeclInit( type, varname, var_v)
                         else
                           cases var_stmt:
                             [mk_CPP`ExpressionStmt(mk_CPP`AssignExpr(varname, mk_CPP`AssignOp(<ASEQUAL>,-),v,-),-)]
@@ -1350,25 +1359,9 @@ CGBlockStmt(mk_AS`BlockStmt(dcls, stmts,-), isLast) ==
                             others -> rb := rb ^ var_decl ^ var_stmt
                           end
                    else
-                     if CPP`isCPP()
+#ifdef VDMPP
+                     if CPP`isJAVA()
                      then
-                       def mk_(var_v, var_stmt) = CGEXPR`CGExprExcl(dclinit, "varname", type);
-                           ainit_v = BC`GenAsgnInit(var_v);
-                           init_v = cases dclinit:
-                                    mk_AS`SeqEnumerationExpr([],-) -> if CGAUX`IsSeqType(type)
-                                                                      then nil
-                                                                      else ainit_v,
-                                    mk_AS`SetEnumerationExpr([],-) -> if CGAUX`IsSetType(type)
-                                                                      then nil
-                                                                      else ainit_v,
-                                    mk_AS`MapEnumerationExpr([],-) -> if CGAUX`IsMapType(type)
-                                                                      then nil
-                                                                      else ainit_v,
-                                    others -> ainit_v
-                                  end;
-                           var_decl = DS`GenDecl(type, varname, init_v)
-                       in rb := rb ^ var_stmt ^ var_decl
-                     else
                        def mk_(var_v, var_stmt) = CGEXPR`CGExprExcl(dclinit, varname, type)
                        in if var_stmt = []
                           then
@@ -1388,6 +1381,24 @@ CGBlockStmt(mk_AS`BlockStmt(dcls, stmts,-), isLast) ==
                                   -> rb := rb ^ DS`GenDeclInit( type, varname, v),
                               others -> rb := rb ^ var_decl ^ var_stmt
                             end
+                     else
+#endif VDMPP
+                       def mk_(var_v, var_stmt) = CGEXPR`CGExprExcl(dclinit, "varname", type);
+                           ainit_v = BC`GenAsgnInit(var_v);
+                           init_v = cases dclinit:
+                                    mk_AS`SeqEnumerationExpr([],-) -> if CGAUX`IsSeqType(type)
+                                                                      then nil
+                                                                      else ainit_v,
+                                    mk_AS`SetEnumerationExpr([],-) -> if CGAUX`IsSetType(type)
+                                                                      then nil
+                                                                      else ainit_v,
+                                    mk_AS`MapEnumerationExpr([],-) -> if CGAUX`IsMapType(type)
+                                                                      then nil
+                                                                      else ainit_v,
+                                    others -> ainit_v
+                                  end;
+                           var_decl = DS`GenDecl(type, varname, init_v)
+                       in rb := rb ^ var_stmt ^ var_decl
        end);
   CGAUX`PushEnv();
   for i = 1 to len stmts do
@@ -2022,7 +2033,7 @@ CGCasesStmt(mk_AS`CasesStmt(sel, altns, Others, -), isLast) ==
       need_decl = pat_in_expr and sel_stmt = [] or
 #ifdef VDMPP
                  exists n in set all_nm_in_expr & is_REP`ObjRefTypeRep(CGAUX`FindType(n)) or
-#endif
+#endif VDMPP
                  cases true:
                    (is_AS`TupleConstructorExpr(sel)),
                    (is_AS`RecordConstructorExpr(sel)),
@@ -2475,20 +2486,23 @@ CGExitStmt(p_es) ==
      (l_cppast := l_exStmts;
       l_excArgs := [l_exName]);
   def id = BC`GenIdentifier("VDMSpecException");
-      l_excCls = BC`GenTypeSpecifier(id);
   in
    (dcl l_excObj : CPP`Expr;
-    if CPP`isCPP()
-    then l_excObj := BC`GenFctCall(id, l_excArgs)
-    else
+#ifdef VDPP
+    if CPP`isJAVA()
+    then
       def l_cause = CGAUX`GetCause();
+          l_excCls = BC`GenTypeSpecifier(id);
           l_excArgs' = if l_cause <> nil
                        then l_excArgs ^ [l_cause]
                        else l_excArgs
       in
-        l_excObj := BC`GenNewExpr(l_excCls, l_excArgs');
-    if CPP`isJAVA()
-    then CGAUX`InsertImport("jp.vdmtools.VDM.VDMSpecException");
+       (l_excObj := BC`GenNewExpr(l_excCls, l_excArgs');
+        CGAUX`InsertImport("jp.vdmtools.VDM.VDMSpecException");
+       )
+    else
+#endif VDMPP
+      l_excObj := BC`GenFctCall(id, l_excArgs);
     return l_cppast ^ [ BC`GenExpressionStmt(BC`GenThrowExpression(l_excObj))]);
  );
 
@@ -2639,8 +2653,11 @@ def l_excName       = BC`GiveName("exc");
     l_excType       = BC`GenTypeSpecifier(BC`GenIdentifier("VDMSpecException"));
     l_exDecl        = BC`GenExceptionDeclaration([l_excType], l_excName)
 in
-  (if CPP`isJAVA()
+  (
+#ifdef VDMPP
+   if CPP`isJAVA()
    then CGAUX`InsertImport("jp.vdmtools.VDM.VDMSpecException");
+#endif VDMPP
    return BC`GenHandler(l_exDecl, l_handlerBlock));
 
 GenRecTrapFinally : CPP`Identifier * CPP`Identifier * CPP`Identifier * bool ==> CPP`CompoundStmt
@@ -2657,7 +2674,11 @@ GenRecTrapFinally(p_matched, p_val, p_raised, p_isLast) ==
       l_innerIf = BC`GenIfStmt(l_innerTest, BC`GenBreakStmt(nil), nil);
       l_outerIf = BC`GenIfStmt(l_outerTest, BC`GenBlock([l_throwStmt]), nil)
   in
-   (if CPP`isJAVA() then CGAUX`InsertImport("jp.vdmtools.VDM.VDMSpecException");
+   (
+#ifdef VDMPP
+    if CPP`isJAVA()
+    then CGAUX`InsertImport("jp.vdmtools.VDM.VDMSpecException");
+#endif VDMPP
     return BC`GenBlock([l_outerIf] ^ (if p_isLast then [] else [l_innerIf])));
  );
 
