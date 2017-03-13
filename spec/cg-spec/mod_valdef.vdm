@@ -31,28 +31,33 @@ imports
 
 exports 
    operations 
+#ifdef VDMSL
+    GenValDef: seq of AS`ValueDef ==> (seq of (CPP`DeclSpecifier * CPP`Name)) * (seq of CPP`Stmt);
+#endif VDMSL
 #ifdef VDMPP
      GenValDef: AS`Name * seq of AS`ValueDef ==> 
                 map AS`Access to seq of CPP`MemberDeclaration * 
                 seq of CPP`Stmt * 
                 seq of CPP`IdentDeclaration;
-#endif
-#ifdef VDMSL
-    GenValDef: seq of AS`ValueDef ==> (seq of (CPP`DeclSpecifier * CPP`Name)) * (seq of CPP`Stmt);
-#endif    
+    AreDefinedDirectly : seq of AS`ValueDef ==> bool;
+#endif VDMPP
     GenLocalValDef: seq of AS`ValueDef ==> seq of CPP`Stmt;
     PushFctLoc: set of (AS`Name | AS`OldName) ==> ();
-    DeleteLoc: () ==> ();
-    AreDefinedDirectly : seq of AS`ValueDef ==> bool
+    DeleteLoc: () ==> ()
 
 definitions
 
 state Local of
 loc_s : set of (AS`Name | AS`OldName)
 sl_l  : seq of (set of (AS`Name | AS`OldName))
+#ifdef VDMSL
+init s == s = mk_Local( {}, [{}] )
+#endif VDMSL
+#ifdef VDMPP
 decltemp : seq of CPP`IdentDeclaration
 directdefinedValues : set of AS`Name
 init s == s = mk_Local( {}, [{}], [], {} )
+#endif VDMPP
 end
 
 operations
@@ -185,64 +190,63 @@ The operation $GenValDef$ also takes care of the initialisation of values.
 #ifdef VDMSL
 GenValDef:  seq of AS`ValueDef ==> (seq of (CPP`DeclSpecifier * CPP`Name)) * (seq of CPP`Stmt)
 GenValDef(vd_l) == 
-#endif
+#endif VDMSL
 #ifdef VDMPP
 GenValDef: AS`Name * seq of AS`ValueDef ==> 
            map AS`Access to seq of CPP`MemberDeclaration * 
            seq of CPP`Stmt * 
            seq of CPP`IdentDeclaration
 GenValDef(classname, vd_l) == 
-#endif
+#endif VDMPP
   def p_l = [ vd_l(i).pat | i in set inds vd_l ];
       mk_(- , pid_m) = CGEXPR`SamePatternIds(p_l);
       succ_v = BC`GiveName("succ");
       rti = CGAUX`RunTime("Pattern match did not succeed in value definition");
 #ifdef VDMSL
       decl = DeclValId(pid_m)
-    in
-     (dcl inits : seq of CPP`Stmt:= [],
+  in
+   (dcl inits : seq of CPP`Stmt:= [],
           need_succ : bool := false;
-      for mk_AS`ValueDef(pat, -, val, -, -, -) in vd_l do
-        def tmppid_m = CGEXPR`FindPatternId(pat)
-        in
-         (
+    for mk_AS`ValueDef(pat, -, val, -, -, -) in vd_l do
+     (
 #endif VDMSL
 #ifdef VDMPP
       acs_pid_m = GenValDefAccessMap (vd_l);
-    in
-     (dcl mem_decl : map AS`Access to seq of CPP`MemberDeclaration,
-          decl : seq of CPP`IdentDeclaration,
-          inits : seq of CPP`Stmt:= [],
-          need_succ : bool := false;
+  in
+   (dcl mem_decl : map AS`Access to seq of CPP`MemberDeclaration,
+        decl : seq of CPP`IdentDeclaration,
+        inits : seq of CPP`Stmt:= [],
+        need_succ : bool := false;
 
-      if CPP`isCPP()
-      then
-       (mem_decl := { acs |-> def mk_(x,-) = DeclValId(classname, acs_pid_m (acs)) in x
-                                                 | acs in set dom acs_pid_m};
-        decl := def mk_(-,y) = DeclValId (classname,merge rng acs_pid_m) in y)
-      else
-        def mk_(md,dc) = DeclValJava(classname, pid_m, vd_l)
-        in
-         (mem_decl := md;
-          decl := dc);
+    if CPP`isCPP()
+    then
+     (mem_decl := { acs |-> def mk_(x,-) = DeclValId(classname, acs_pid_m (acs)) in x
+                                               | acs in set dom acs_pid_m};
+      decl := def mk_(-,y) = DeclValId (classname,merge rng acs_pid_m) in y)
+    else
+      def mk_(md,dc) = DeclValJava(classname, pid_m, vd_l)
+      in
+       (mem_decl := md;
+        decl := dc);
 
-      --for mk_AS`ValueDef(pat', -, val', -, static, -) in vd_l do
-      for mk_AS`ValueDef(pat', -, val', -, -, -) in vd_l do
-        def tmppid_m = CGEXPR`FindPatternId(pat');
-        in
-         (dcl pat : AS`Pattern,
-              val : AS`Expr;
-          if CPP`isCPP()
-          then
-           (pat :=  CGAUX`QuotePMExprWithClNm(pat', classname, {});
-            val := CGAUX`QuotePMExprWithClNm(val', classname, {}))
-          else
-           (pat := CGAUX`QuotePMExprWithTemp(pat', classname, {});
-            val := val');
+    for mk_AS`ValueDef(pat', -, val', -, -, -) in vd_l do
+      def tmppid_m = CGEXPR`FindPatternId(pat');
+      in
+       (dcl pat : AS`Pattern,
+            val : AS`Expr;
+        if CPP`isCPP()
+        then
+         (pat :=  CGAUX`QuotePMExprWithClNm(pat', classname, {});
+          val := CGAUX`QuotePMExprWithClNm(val', classname, {}))
+        else
+         (pat := CGAUX`QuotePMExprWithTemp(pat', classname, {});
+          val := val');
 #endif VDMPP
+#ifdef VDMPP
         if not (CPP`isJAVA() and (dom tmppid_m subset directdefinedValues)) or
            is_AS`PatternName(pat) and pat.nm = nil
         then
+#endif VDMPP
           (def valType = CGAUX`FindType(val);
                tmpVal_v = BC`GiveName("tmpVal");
                mk_(expr, stmts) = CGEXPR`CGExprExcl(val, "tmpVal", valType);
@@ -256,20 +260,22 @@ GenValDef(classname, vd_l) ==
            in
             (dcl rb : seq of CPP`Stmt := pm1;
              if stmts <> [] or is_AS`PatternName(pat) and pat.nm = nil
-             --then rb := stmts ^ DS`GenDecl(valType, tmpVal_v, BC`GenAsgnInit(expr)) ^ rb;
              then rb := stmts ^ DS`GenDeclInit(valType, tmpVal_v, expr) ^ rb;
              need_succ := not Is_Excl or need_succ;
 
-             if CPP`isCPP()
-             then inits := inits ^ (if stmts = [] then rb else [ BC`GenBlock(rb) ])
-             else
+#ifdef VDMPP
+             if CPP`isJAVA()
+             then
                let expdecl = BC`GenExceptionDeclaration([BC`GenTypeSpecifier(BC`GenIdentifier("Throwable"))],
                                                         BC`GenIdentifier("e")),
                    stmt = BC`GenExpressionStmt(BC`GenFctCall(BC`GenIdentifier("System.out.println"),
                                                              [BC`GenFctCall(BC`GenIdentifier("e.getMessage"),[])])),
                    handlers = [BC`GenHandler(expdecl,stmt)]
                in
-                 inits := inits ^ [BC`GenTryBlock(rb, handlers, nil)] ^ GenAssignTemp(dom tmppid_m);
+                 inits := inits ^ [BC`GenTryBlock(rb, handlers, nil)] ^ GenAssignTemp(dom tmppid_m)
+             else
+#endif VDMPP
+               inits := inits ^ (if len stmts <= 1 then rb else [ BC`GenBlock(rb) ]);
  
 #ifdef VDMPP
              if is_REP`CompositeTypeRep(valType)
@@ -283,12 +289,12 @@ GenValDef(classname, vd_l) ==
             ))); -- end of for loop
      if need_succ
      then inits := [ BC`GenDecl(DS`GenSmallBoolType(), succ_v, BC`GenAsgnInit(BC`GenBoolLit(false))) ] ^ inits;
-     if CPP`isJAVA()
-     then inits := [BC`GenDeclStmt(decltemp(i))| i in set inds decltemp] ^ inits;
 #ifdef VDMSL
     return mk_(decl, inits )
 #endif VDMSL
 #ifdef VDMPP
+    if CPP`isJAVA()
+    then inits := [BC`GenDeclStmt(decltemp(i))| i in set inds decltemp] ^ inits;
     return mk_(mem_decl, inits, decl)
 #endif VDMPP
    );
@@ -303,8 +309,6 @@ GenValDefAccessMap (valdef_l) ==
                    |a in set acs_s}  in
   return acs_pid_m;      
 
-#endif VDMPP
-
 GenAssignTemp: set of AS`Name ==> seq of CPP`Stmt
 GenAssignTemp(nms) == 
 ( dcl stmts : seq of CPP`Stmt := [];
@@ -316,14 +320,7 @@ GenAssignTemp(nms) ==
                        ];
   return stmts
 );
---( dcl rb : seq of CPP`Stmt := [];
---  for all tmp in set dom pid_m do
---  (       
---      rb := rb ^ [BC`GenAsgnStmt(BC`Rename(tmp),BC`AppendName(BC`Rename(tmp),"temp"))];
---  );
---  return rb;
---);
-
+#endif VDMPP
 \end{vdm_al}
 
 \subsection{Code Generating Declarations for VDM++ Values}
@@ -385,6 +382,9 @@ DeclValId(classname, pid_m) ==
 #endif VDMPP
 );
 \end{vdm_al}
+
+#ifdef VDMPP
+
 \subsubsection{Java}
 The following function is needed to determine whether a class can be
 code generated as an interface. Roughly speaking, a value definition
@@ -395,13 +395,7 @@ AreDefinedDirectly : seq of AS`ValueDef ==> bool
 AreDefinedDirectly(vd_l) ==
   def p_l = [ vd_l(i).pat | i in set inds vd_l ];
       mk_( - , pid_m ) = CGEXPR`SamePatternIds(p_l)
-  in
---   (dcl dd : bool := true;
---    for vdef in vd_l do
---      dd := dd and IsDefinedDirectly(vdef, pid_m);
---    return dd
---   );
-    return forall vdef in set elems vd_l & IsDefinedDirectly(vdef, pid_m);
+  in return forall vdef in set elems vd_l & IsDefinedDirectly(vdef, pid_m);
 
 IsDefinedDirectly : AS`ValueDef * map AS`Name to set of REP`TypeRep ==> bool
 IsDefinedDirectly(mk_AS`ValueDef(pat,-,val,-,-,-), pid_m) ==
@@ -419,8 +413,6 @@ IsDefinedDirectly(mk_AS`ValueDef(pat,-,val,-,-,-), pid_m) ==
     end;
 \end{vdm_al}
 
-
-#ifdef VDMPP
 \begin{vdm_al}
 DeclValJava: AS`Name * map AS`Name to set of REP`TypeRep * seq of AS`ValueDef ==> 
            map AS`Access to seq of CPP`MemberDeclaration * seq of CPP`IdentDeclaration
@@ -573,7 +565,7 @@ DeclValJava(-, pid_m, vd_l) ==
 );
 
 \end{vdm_al}
-#endif VDMPP''
+#endif VDMPP
 
 \subsection{Code Generating Local Values}
 Auxiliary operation to CGEXPR`CGDefExpr, CGLetExpr, CGDefStmt and CGLetStmt.

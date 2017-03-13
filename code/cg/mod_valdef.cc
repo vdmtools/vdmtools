@@ -43,8 +43,7 @@ Tuple vdmcg::GenValDef (const TYPE_AS_Name & classname, const SEQ<TYPE_AS_ValueD
 {
   SEQ<TYPE_AS_Pattern> p_l;
   size_t len_vd_l = vd_l.Length();
-  for (size_t idx = 1; idx <= len_vd_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_vd_l; idx++) {
     p_l.ImpAppend (vd_l[idx].GetRecord(pos_AS_ValueDef_pat));
   }
 
@@ -60,8 +59,7 @@ Tuple vdmcg::GenValDef (const TYPE_AS_Name & classname, const SEQ<TYPE_AS_ValueD
   Map acs_pid_m (GenValDefAccessMap (vd_l));
   SEQ<TYPE_CPP_IdentDeclaration> decl;
   Map mem_decl;
-  if (vdm_CPP_isCPP())
-  {
+  if (vdm_CPP_isCPP()) {
     Set dom_acs_pid_m (acs_pid_m.Dom());
     Generic acs;
     for (bool cc = dom_acs_pid_m.First (acs); cc; cc = dom_acs_pid_m.Next (acs))
@@ -78,14 +76,14 @@ Tuple vdmcg::GenValDef (const TYPE_AS_Name & classname, const SEQ<TYPE_AS_ValueD
     Tuple dvi (DeclValId(classname, rng_m));
     decl = dvi.GetField(2);
   }
-  else
+  else {
     decl = DeclValJava(classname, pid_m, vd_l);  // for Java
+  }
 #endif //VDMPP
 
   bool need_succ(false);
   SEQ<TYPE_CPP_Stmt> inits;
-  for (size_t index = 1; index <= len_vd_l; index++)
-  {
+  for (size_t index = 1; index <= len_vd_l; index++) {
     const TYPE_AS_ValueDef & vd (vd_l[index]);
 #ifdef VDMSL
     const TYPE_AS_Pattern & pat (vd.GetRecord(pos_AS_ValueDef_pat));
@@ -104,8 +102,10 @@ Tuple vdmcg::GenValDef (const TYPE_AS_Name & classname, const SEQ<TYPE_AS_ValueD
                                       : (Generic)val_q);
 #endif //VDMPP
 
+#ifdef VDMPP
     if (!(vdm_CPP_isJAVA().GetValue() && (tmppid_m.Dom()).SubSet(this->directdefinedValues)) ||
         (pat.Is(TAG_TYPE_AS_PatternName) && pat.GetField(pos_AS_PatternName_nm).IsNil()))
+#endif //VDMPP
     {
       Generic valType (FindType (val));
 
@@ -125,33 +125,20 @@ Tuple vdmcg::GenValDef (const TYPE_AS_Name & classname, const SEQ<TYPE_AS_ValueD
 
       SEQ<TYPE_CPP_Stmt> pm1;
       pm1.ImpConc(pm);
-      if (!Is_Excl)
+      if (!Is_Excl) {
         pm1.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(succ_v), vdm_BC_GenBlock(mk_sequence(rti)), nil));
+      }
 
       SEQ<TYPE_CPP_Stmt> rb;
-// 20131223 -->
-      //if (!stmts.IsEmpty())
-      if (!stmts.IsEmpty() || (pat.Is(TAG_TYPE_AS_PatternName) && pat.GetField(pos_AS_PatternName_nm).IsNil()))
-// <-- 20131223
-      {
+      if (!stmts.IsEmpty() ||
+          (pat.Is(TAG_TYPE_AS_PatternName) && pat.GetField(pos_AS_PatternName_nm).IsNil())) {
         rb.ImpConc(stmts);
-        //rb.ImpConc(GenDecl_DS(valType, tmpVal_v, vdm_BC_GenAsgnInit(expr)));
         rb.ImpConc(GenDeclInit_DS(valType, tmpVal_v, expr));
       }
       rb.ImpConc(pm1);
 
-      if (vdm_CPP_isCPP())
-      {
-// 20121112 -->
-        //if (stmts.IsEmpty())
-        if (rb.Length() <= 1)
-          inits.ImpConc(rb);
-        else 
-// <-- 20121112
-        inits.ImpAppend (vdm_BC_GenBlock (rb));
-      }
-      else
-      { // java
+#ifdef VDMPP
+      if (vdm_CPP_isJAVA()) {
         SEQ<TYPE_CPP_TypeSpecifier> res;
         res.ImpAppend(vdm_BC_GenTypeSpecifier(vdm_BC_GenIdentifier(ASTAUX::MkId(L"Throwable"))));
         TYPE_CPP_ExceptionDeclaration expdecl (
@@ -168,16 +155,23 @@ Tuple vdmcg::GenValDef (const TYPE_AS_Name & classname, const SEQ<TYPE_AS_ValueD
         inits.ImpAppend(vdm_BC_GenTryBlock(rb, handlers, nil));
         inits.ImpConc(GenAssignTemp(tmppid_m.Dom()));
       }
+      else
+#endif // VDMPP
+      { // C++
+        if (rb.Length() <= 1) {
+          inits.ImpConc(rb);
+        }
+        else {
+          inits.ImpAppend (vdm_BC_GenBlock (rb));
+        }
+      }
 
 #ifdef VDMPP
-      if (valType.Is(TAG_TYPE_REP_CompositeTypeRep))
-      {
+      if (valType.Is(TAG_TYPE_REP_CompositeTypeRep)) {
         TYPE_AS_Name nm (Record(valType).GetRecord(pos_REP_CompositeTypeRep_nm));
         TYPE_AS_Ids ids (nm.get_ids());
-        if (ids.Length() > 1)
-        {
-          if (ids.Hd() != GiveCurCName())
-          {
+        if (ids.Length() > 1) {
+          if (ids.Hd() != GiveCurCName()) {
             AddInclH(GiveFirstName(nm));
           }
         }
@@ -186,23 +180,24 @@ Tuple vdmcg::GenValDef (const TYPE_AS_Name & classname, const SEQ<TYPE_AS_ValueD
     }
   } // end of for loop
 
-  if (need_succ)
+  if (need_succ) {
     inits.ImpPrepend(vdm_BC_GenDecl(GenSmallBoolType(), succ_v, vdm_BC_GenAsgnInit(vdm_BC_GenBoolLit(false))));
-
-  if (vdm_CPP_isJAVA()) // for Java
-  {
-    SEQ<TYPE_CPP_Stmt> tempinits;
-    size_t len_decltemp = this->decltemp.Length();
-    for (size_t idx = 1; idx <= len_decltemp; idx++)
-      tempinits.ImpAppend(vdm_BC_GenDeclStmt(this->decltemp[idx]));
-
-    tempinits.ImpConc(inits);
-    inits = tempinits;
   }
+
 #ifdef VDMSL
   return mk_(decl, inits);
 #endif // VDMSL
 #ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    SEQ<TYPE_CPP_Stmt> tempinits;
+    size_t len_decltemp = this->decltemp.Length();
+    for (size_t idx = 1; idx <= len_decltemp; idx++) {
+      tempinits.ImpAppend(vdm_BC_GenDeclStmt(this->decltemp[idx]));
+    }
+
+    tempinits.ImpConc(inits);
+    inits = tempinits;
+  }
   return mk_(mem_decl, inits, decl);
 #endif //VDMPP
 }
@@ -243,7 +238,6 @@ Tuple vdmcg::DeclValId(const TYPE_AS_Name & classname, const Map & pid_m)
     if (PossibleFnType(type))
       InsertLocFct(g);
   }
-
 #ifdef VDMSL
   Sequence res;
 #endif // VDMSL
@@ -291,6 +285,7 @@ Tuple vdmcg::DeclValId(const TYPE_AS_Name & classname, const Map & pid_m)
 #endif //VDMPP
 }
 
+#ifdef VDMPP
 // AreDefinedDirectly
 // vd_l :seq of AS`ValueDef
 // ==> bool
@@ -320,8 +315,7 @@ bool vdmcg::IsDefinedDirectly(const TYPE_AS_ValueDef & vdef, const Map & pid_m)
   const TYPE_AS_Expr & val (vdef.GetRecord(pos_AS_ValueDef_val));
 
   Map tmp_m (FindPatternId(pat));
-  if (tmp_m.Size() == 1)
-  {
+  if (tmp_m.Size() == 1) {
     //Generic tmp, tmp2;
     //tmp_m.First(tmp, tmp2);
     Generic tmp (tmp_m.Dom().GetElem());
@@ -333,8 +327,9 @@ bool vdmcg::IsDefinedDirectly(const TYPE_AS_ValueDef & vdef, const Map & pid_m)
     res = res || VariablesinValDef().ImpIntersect(pid_m.Dom()).Card() > 0;
     return !res;
   }
-  else
+  else {
     return false;
+  }
 }
 
 // DeclValJava
@@ -358,8 +353,7 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::DeclValJava(const TYPE_AS_Name & classname
   this->directdefinedValues = SET<TYPE_AS_Name>();
   // vd_l : seq of AS`ValueDef
   size_t len_vd_l = vd_l.Length();
-  for (size_t idx = 1; idx <= len_vd_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_vd_l; idx++) {
     const TYPE_AS_ValueDef & vdef (vd_l[idx]);
     const TYPE_AS_Pattern & pat (vdef.GetRecord(pos_AS_ValueDef_pat));
     const TYPE_AS_Expr & val (vdef.GetRecord(pos_AS_ValueDef_val));
@@ -367,51 +361,44 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::DeclValJava(const TYPE_AS_Name & classname
     const TYPE_CI_ContextId & cid (vdef.GetInt(pos_AS_ValueDef_cid));
 
     Map tmp_m (FindPatternId(pat)); // map AS`Name to set of REP`TypeRep
-    if ((tmp_m.Dom()).Card() == 1)
-    {
+    if ((tmp_m.Dom()).Card() == 1) {
       SET<TYPE_AS_Name> dom_tmp_m (tmp_m.Dom());
       Generic tmp;
       // tmp_m : map AS`Name to set of REP`TypeRep
-      for (bool cc = dom_tmp_m.First(tmp); cc; cc = dom_tmp_m.Next(tmp))
-      {
+      for (bool cc = dom_tmp_m.First(tmp); cc; cc = dom_tmp_m.Next(tmp)) {
         TYPE_REP_TypeRep type;
         SET<TYPE_REP_TypeRep> tp_s (tmp_m[tmp]);
         if (tp_s.Card () == 1)
           type = tp_s.GetElem();
-        else{
+        else {
           TYPE_REP_UnionTypeRep utr;
           utr.set_tps(tp_s);
           type = utr;
         }
 
-        if (!IsDefinedDirectly(vdef, pid_m))
-        {
+        if (!IsDefinedDirectly(vdef, pid_m)) {
           rb.Insert(cid, mk_(acc, GenValDecl(type, tmp)));
           TYPE_AS_Id newid (ASTAUX::GetFirstId(tmp).ImpConc(ASTAUX::MkId(L"temp")));
           TYPE_AS_Name tmpnm (tmp);
           tmpnm.set_ids(TYPE_AS_Ids().ImpAppend(newid));
           rbtemp.Insert(cid, GenDecl_DS(type,vdm_BC_Rename(tmpnm), nil));
         }
-        else
-        {
+        else {
           Generic pp_v (CGExpr_q(val, mk_CG_VT(vdm_BC_Rename(tmp), FindType(val))));
           TYPE_CPP_Expr cast;
-          if (val.Is(TAG_TYPE_AS_NilLit))
+          if (val.Is(TAG_TYPE_AS_NilLit)) {
             cast = GenNilLit();
-          else
+          }
+          else {
             cast = GenExplicitCast(type,pp_v,FindType(val));
-
-          //Tuple t(2);
-          //t.SetField(1,acc);
-          //t.SetField(2,GenDecl_DS(type, vdm_BC_Rename(tmp), vdm_BC_GenAsgnInit(cast)));
-          //rbdirect.Insert(cid,t);
+          }
           rbdirect.Insert(cid, mk_(acc, GenDecl_DS(type, vdm_BC_Rename(tmp), vdm_BC_GenAsgnInit(cast))));
-//          this->directdefinedValues = this->directdefinedValues.ImpUnion(Set().Insert(g));
           this->directdefinedValues.ImpUnion(Set().Insert(tmp));
         }
 
-        if (PossibleFnType(type))
+        if (PossibleFnType(type)) {
           InsertLocFct(tmp);
+        }
       }
     }
     else
@@ -461,9 +448,7 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::DeclValJava(const TYPE_AS_Name & classname
   SET<Int> dom_rb (rb.Dom());
   Generic cid;
   // rb : map int to (AS`Access * seq of CPP`Stmt)
-  for (bool ee = dom_rb.First(cid); ee; ee = dom_rb.Next(cid))
-  {
-//    TYPE_CI_ContextId cid (g);
+  for (bool ee = dom_rb.First(cid); ee; ee = dom_rb.Next(cid)) {
     Tuple t (rb[cid]);
     const Int & acc (t.GetInt(1));           // AS`Access
     SEQ<TYPE_CPP_Stmt> stmt_l (t.GetSequence(2));   // seq of CPP`Stmt
@@ -493,9 +478,7 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::DeclValJava(const TYPE_AS_Name & classname
   // rbdirect : map int to (AS`Access * seq of CPP`Stmt)
  
   SET<Int> dom_rbdirect (rbdirect.Dom());
-  for (bool ff = dom_rbdirect.First(cid); ff; ff = dom_rbdirect.Next(cid))
-  {
-//    TYPE_CI_ContextId cid (g);        // CI`ContextId
+  for (bool ff = dom_rbdirect.First(cid); ff; ff = dom_rbdirect.Next(cid)) {
     Tuple t (rbdirect[cid]);                      // (AS`Access * seq of CPP`Stmt)
     const Int & acc (t.GetInt(1));          // AS`Access
     SEQ<TYPE_CPP_Stmt> stmt_l (t.GetField(2));  // seq of CPP`Stmt
@@ -515,11 +498,11 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::DeclValJava(const TYPE_AS_Name & classname
   }
 
   this->decltemp = Sequence();
+
   // rbtemp : map int to seq of CPP`Stmt
   SET<Int> dom_rbtemp (rbtemp.Dom());
   for (bool gg = dom_rbtemp.First(cid); gg; gg = dom_rbtemp.Next(cid))
   {
-//    TYPE_CI_ContextId cid (g);
     SEQ<TYPE_CPP_Stmt> stmt_l (rbtemp[cid]);                  // seq of CPP`Stmt
     while (!stmt_l.IsEmpty())
     {
@@ -583,7 +566,6 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::DeclValJava(const TYPE_AS_Name & classname
   return def_res;
 }
 
-#ifdef VDMPP
 // GenValDefAccessMap
 // valdef_l : seq of AS`ValueDef
 // ==> map AS`Access to (map AS`Name to set of REP`TypeRep)
@@ -625,7 +607,6 @@ Map vdmcg::GenValDefAccessMap (const SEQ<TYPE_AS_ValueDef> & valdef_l)
   }
   return acs_pid_m;
 }
-#endif // VDMPP
 
 // GenAssignTemp
 // nms : set of AS`Name
@@ -645,6 +626,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenAssignTemp(const SET<TYPE_AS_Name> & nms)
   }
   return stmts;
 }
+#endif // VDMPP
 
 // GenLocalValDef
 // vd_l : seq of AS`ValueDef
