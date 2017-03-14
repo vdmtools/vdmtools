@@ -3577,6 +3577,7 @@ TYPE_CPP_Expr vdmcg::GenSeqApply(const Generic & rtype, const TYPE_CPP_Expr & sq
   }
 }
 
+#ifdef VDMPP
 // GenSeqApplyString
 // sq : CPP`Expr
 // i : CPP`Expr
@@ -3590,6 +3591,7 @@ TYPE_CPP_Expr vdmcg::GenSeqApplyString(const TYPE_CPP_Expr & sq, const TYPE_CPP_
 
   return GenCharExpr(fcall);
 }
+#endif // VDMPP
 
 // GenHd
 // rtype : REP`TypeRep
@@ -3620,6 +3622,7 @@ TYPE_CPP_Expr vdmcg::GenHd(const TYPE_REP_TypeRep & rtype, const TYPE_CPP_Expr &
   }
 }
 
+#ifdef VDMPP
 // GenHdString
 // e : CPP`Expr
 // ==> CPP`Expr
@@ -3630,6 +3633,7 @@ TYPE_CPP_Expr vdmcg::GenHdString(const TYPE_CPP_Expr & e)
                                                   SEQ<TYPE_CPP_Expr>().ImpAppend(vdm_BC_GenIntegerLit(0))));
   return GenCharExpr(fcall);
 }
+#endif // VDMPP
 
 // GenInds
 // e : CPP`Expr
@@ -3662,6 +3666,7 @@ TYPE_CPP_Expr vdmcg::GenConc(const TYPE_CPP_Expr & e1, const TYPE_CPP_Expr & e2)
     return vdm_BC_GenFctCallObjMemAcc(e1, ASTAUX::MkId(L"Conc"), SEQ<TYPE_CPP_Expr>().ImpAppend(e2));
 }
 
+#ifdef VDMPP
 // GenConcString
 // e1 : CPP`Expr
 // e2 : CPP`Expr
@@ -3675,6 +3680,7 @@ TYPE_CPP_Expr vdmcg::GenConcString(const TYPE_CPP_Expr & e1, const TYPE_CPP_Expr
   }
   return vdm_BC_GenFctCallObjMemAcc(e1, ASTAUX::MkId(L"concat"), SEQ<TYPE_CPP_Expr>().ImpAppend(e2));
 }
+#endif // VDMPP
 
 // GenTl
 // e : CPP`Expr
@@ -3696,6 +3702,7 @@ TYPE_CPP_Expr vdmcg::GenTl(const TYPE_CPP_Expr & e)
     return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"Tl"), SEQ<TYPE_CPP_Expr>());
 }
 
+#ifdef VDMPP
 // GenTlString
 // e : CPP`Expr
 // ==> CPP`Expr
@@ -3703,6 +3710,7 @@ TYPE_CPP_Expr vdmcg::GenTlString(const TYPE_CPP_Expr & e)
 {
   return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"substring"), mk_sequence(vdm_BC_GenIntegerLit(1)));
 }
+#endif // VDMPP
 
 // GenReverse
 // e : CPP`Expr
@@ -3720,6 +3728,7 @@ TYPE_CPP_Expr vdmcg::GenReverse(const TYPE_CPP_Expr & e)
     return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"Reverse"), SEQ<TYPE_CPP_Expr>());
 }
 
+#ifdef VDMPP
 // GenReverseString
 // e : CPP`Expr
 // ==> CPP`Expr
@@ -3727,6 +3736,7 @@ TYPE_CPP_Expr vdmcg::GenReverseString(const TYPE_CPP_Expr & e)
 {
   return vdm_BC_GenFctCall(vdm_BC_GenIdentifier(ASTAUX::MkId(L"UTIL.ReverseString")), SEQ<TYPE_CPP_Expr>().ImpAppend(e));
 }
+#endif // VDMPP
 
 // GenLen
 // e : CPP`Expr
@@ -3736,6 +3746,7 @@ TYPE_CPP_Expr vdmcg::GenLen(const TYPE_CPP_Expr & e)
   return GenIntExpr(GenLen_int(e));
 }
 
+#ifdef VDMPP
 // GenLenString
 // e : CPP`Expr
 // ==> CPP`Expr
@@ -3744,6 +3755,7 @@ TYPE_CPP_Expr vdmcg::GenLenString(const TYPE_CPP_Expr & e)
   TYPE_CPP_Expr fc (GenLenString_int(e));
   return GenIntExpr(fc);
 }
+#endif // VDMPP
 
 // GenLen_int
 // e : CPP`Expr
@@ -3759,19 +3771,19 @@ TYPE_CPP_Expr vdmcg::GenLen_int(const TYPE_CPP_Expr & e)
     return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"Length"), SEQ<TYPE_CPP_Expr>());
 }
 
+#ifdef VDMPP
 // GenLenString_int
 // e : CPP`Expr
 // ==> CPP`Expr
 TYPE_CPP_Expr vdmcg::GenLenString_int(const TYPE_CPP_Expr & e)
 {
-// 20130325 -->
   if (e.Is(TAG_TYPE_CPP_WStringLit))
   {
     return vdm_BC_GenIntegerLit(e.GetSequence(pos_CPP_WStringLit_val).Length());
   }
-// <-- 20130325
   return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"length"), SEQ<TYPE_CPP_Expr>());
 }
+#endif // VDMPP
 
 // GenCastSeq
 // e : CPP`Expr
@@ -3812,6 +3824,7 @@ TYPE_CPP_Expr vdmcg::GenCastSeqTypeForModify(const TYPE_CPP_Expr & e)
   }
 }
 
+#ifdef VDMPP
 // GenCastString
 // e : CPP`Expr
 // ==> CPP`Expr
@@ -3819,6 +3832,7 @@ TYPE_CPP_Expr vdmcg::GenCastString(const TYPE_CPP_Expr & e)
 {
   return vdm_BC_GenCastExpr(GenStringType (), e);
 }
+#endif // VDMPP
 
 // GenSubSequence
 // e : CPP`Expr
@@ -4011,6 +4025,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSeqDecl_DS(const TYPE_CPP_Name & name, const Generi
   return rb_l;
 }
 
+#ifdef VDMPP
 // GenStringDecl
 // name : CPP`Name
 // initExpr : [CPP`Initializer]
@@ -4042,6 +4057,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenStringDecl(const TYPE_CPP_Name & name, const Generi
     rb_l.ImpAppend(vdm_BC_GenDecl(GenStringType(), name, initExpr));
     return rb_l;
 }
+#endif // VDMPP
 
 // GenDeclSeq
 // name : CPP`Name

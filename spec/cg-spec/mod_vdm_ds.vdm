@@ -2439,6 +2439,7 @@ constructions of sequence type.
         then return BC`GenCastExpr(GenType(rtype), fcall)
         else return fcall;
 
+#ifdef VDMPP
   GenSeqApplyString: CPP`Expr * CPP`Expr ==> CPP`Expr
   GenSeqApplyString(sq, i) ==
     let pos = if is_CPP`IntegerLit(i)
@@ -2446,6 +2447,7 @@ constructions of sequence type.
               else BC`GenMinus(i,BC`GenIntegerLit(1)),
         fcall = BC`GenFctCallObjMemAcc(sq,"charAt",[pos])
     in return GenCharExpr(fcall);
+#endif VDMPP
 
   GenHd: REP`TypeRep * CPP`Expr ==> CPP`Expr
   GenHd(rtype,e) ==
@@ -2465,10 +2467,12 @@ constructions of sequence type.
         then return BC`GenCastExpr(tp, fcall)
         else return fcall;
 
+#ifdef VDMPP
   GenTlString: CPP`Expr ==> CPP`Expr
   GenTlString(e) ==
     let fcall = BC`GenFctCallObjMemAcc(e,"substring",[BC`GenIntegerLit(1)])
     in return fcall;
+#endif VDMPP
 
   GenTl: CPP`Expr ==> CPP`Expr
   GenTl(e) ==
@@ -2484,9 +2488,11 @@ constructions of sequence type.
 #endif VDMPP
       return BC`GenFctCallObjMemAcc(e,"Tl",[]);
 
+#ifdef VDMPP
   GenReverseString: CPP`Expr ==> CPP`Expr
   GenReverseString(e) ==
     return BC`GenFctCall(BC`GenIdentifier("UTIL.ReverseString"), [e]);
+#endif VDMPP
 
   GenReverse: CPP`Expr ==> CPP`Expr
   GenReverse(e) ==
@@ -2501,10 +2507,12 @@ constructions of sequence type.
 #endif VDMPP
       return BC`GenFctCallObjMemAcc(e,"Reverse",[]);
 
+#ifdef VDMPP
   GenHdString: CPP`Expr ==> CPP`Expr
   GenHdString(e) ==
     let fcall = BC`GenFctCallObjMemAcc(e,"charAt",[BC`GenIntegerLit(0)])
     in return GenCharExpr(fcall);
+#endif VDMPP
 
   GenInds: CPP`Expr ==> CPP`Expr
   GenInds(e) ==
@@ -2524,6 +2532,7 @@ constructions of sequence type.
 #endif VDMPP
       return BC`GenFctCallObjMemAcc( e1, "Conc", [e2] );
 
+#ifdef VDMPP
   GenConcString: CPP`Expr * CPP`Expr ==> CPP`Expr
   GenConcString(e1, e2) ==
     cases e2:
@@ -2531,6 +2540,7 @@ constructions of sequence type.
              -> return BC`GenFctCallObjMemAcc( e1, "concat", [arg] ),
       others -> return BC`GenFctCallObjMemAcc( e1, "concat", [e2] )
     end;
+#endif VDMPP
 
   GenLen: CPP`Expr ==> CPP`Expr
   GenLen(e) ==
@@ -2538,6 +2548,7 @@ constructions of sequence type.
     in
       return GenIntExpr(fcall);
 
+#ifdef VDMPP
   GenLenString: CPP`Expr ==> CPP`Expr
   GenLenString(e) ==
     def fcall = GenLenString_int(e)
@@ -2548,6 +2559,7 @@ constructions of sequence type.
     return if is_CPP`WStringLit(e)
            then BC`GenIntegerLit(len e.val)
            else BC`GenFctCallObjMemAcc(e, "length", []);
+#endif VDMPP
 
   GenLen_int: CPP`Expr ==> CPP`Expr
   GenLen_int(e) ==
@@ -2580,9 +2592,11 @@ constructions of sequence type.
                                    BC`GenCastExpr2([BC`GenTypeSpecifier(BC`GenIdentifier("Common")),
                                                     BC`GenTypeSpecifier(<REFERENCE>)], e));
 
+#ifdef VDMPP
   GenCastString: CPP`Expr ==> CPP`Expr
   GenCastString(e) ==
     return BC`GenCastExpr(GenStringType(), e);
+#endif VDMPP
 
   GenSubSequence: CPP`Expr * [REP`TypeRep] * CPP`Expr * CPP`Expr ==> CPP`Expr
 #ifdef VDMSL
@@ -2704,6 +2718,7 @@ constructions of sequence type.
 #endif VDMPP
       return [BC`GenDecl(GenSeq0Type(), name, initExpr)];
 
+#ifdef VDMPP
   GenStringDecl: CPP`Name * [CPP`Initializer] ==> seq1 of CPP`Stmt
   GenStringDecl(name, initExpr) ==
     if initExpr = nil
@@ -2717,6 +2732,7 @@ constructions of sequence type.
                 end,
         others -> return [BC`GenDecl(GenStringType(), name, initExpr)]
       end;
+#endif VDMPP
 
   GenDeclSeq: CPP`Name * [CPP`Expr] ==> seq1 of CPP`Stmt
   GenDeclSeq(name, ie) ==

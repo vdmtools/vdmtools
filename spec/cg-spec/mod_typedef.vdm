@@ -96,10 +96,17 @@ corresponding to invariants on the type definitions in $td-l$.
 \begin{vdm_al}
   GenInvDef: seq of AS`TypeDef ==> CPP`CPPAS | seq of CPP`MemberDeclaration
   GenInvDef(td_l) ==
-  ( dcl cpp : CPP`CPPAS := [],
+  ( dcl
+#ifdef VDMPP
         cidtocpp: map int to seq of CPP`Declaration := {|->},
-        java : seq of CPP`Declaration := [];
+#endif VDMPP
+        cpp : CPP`CPPAS := [];
+#ifdef VDMSL
+    for mk_AS`TypeDef(tnm, shape, Inv, acc, -) in td_l do
+#endif VDMSL
+#ifdef VDMPP
     for mk_AS`TypeDef(tnm, shape, Inv, acc, tpcid) in td_l do
+#endif VDMPP
       if Inv <> nil then
         let mk_AS`Invariant(pat, expr, -) = Inv,
             ci =  CI`NilContextId,
@@ -108,24 +115,32 @@ corresponding to invariants on the type definitions in $td-l$.
             fnbd = mk_AS`FnBody(expr,ci),
             fdef = mk_AS`ExplFnDef(fnm,[],ftp,[[pat]],fnbd,nil,nil,acc, true, nil, ci)
         in
-          if CPP`isCPP()
+#ifdef VDMPP
+          if CPP`isJAVA()
           then
-            cpp := cpp ^ FD`GenFctDef(fdef,false)
+            cidtocpp := cidtocpp munion {tpcid |-> FD`GenFctDef(fdef,false)}
           else
-            cidtocpp := cidtocpp munion {tpcid |-> FD`GenFctDef(fdef,false)};
-    if CPP`isCPP()
-    then return cpp
-    else ( while card dom cidtocpp > 0 do
-             (let cid in set dom cidtocpp be st
-                forall fcid in set dom cidtocpp &
-                  def mk_(-,-,tst,-,-) = CI`GetFilePos(cid);
-                      mk_CI`TokenPos(-,ast_start,-,-,-) = tst;
-                      mk_(-,-,tst2,-,-) = CI`GetFilePos(fcid);
-                      mk_CI`TokenPos(-,ast_startf,-,-,-) = tst2
-                  in ast_start <= ast_startf
-             in (java := java ^ cidtocpp(cid);
-                 cidtocpp := {cid} <-: cidtocpp));
-        return java;)
+#endif VDMPP
+            cpp := cpp ^ FD`GenFctDef(fdef,false);
+#ifdef VDMPP
+    if CPP`isJAVA()
+    then
+     (dcl java : seq of CPP`Declaration := [];
+      while card dom cidtocpp > 0 do
+       (let cid in set dom cidtocpp be st
+          forall fcid in set dom cidtocpp &
+            def mk_(-,-,tst,-,-) = CI`GetFilePos(cid);
+                mk_CI`TokenPos(-,ast_start,-,-,-) = tst;
+                mk_(-,-,tst2,-,-) = CI`GetFilePos(fcid);
+                mk_CI`TokenPos(-,ast_startf,-,-,-) = tst2
+            in ast_start <= ast_startf
+        in (java := java ^ cidtocpp(cid);
+            cidtocpp := {cid} <-: cidtocpp));
+      return java;
+     )
+    else
+#endif VDMPP
+      return cpp;
   );
 
 #ifdef VDMPP

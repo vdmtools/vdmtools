@@ -431,7 +431,9 @@ Tuple vdmcg::CGExprExcl(const TYPE_AS_Expr & expr, const Generic & e_name, const
         {
           switch (assignexpr.GetTag()) {
             case TAG_TYPE_CPP_Identifier:
+#ifdef VDMPP
             case TAG_TYPE_CPP_ClassInstanceCreationExpr:
+#endif // VDMPP
             case TAG_TYPE_CPP_FctCall:
             case TAG_TYPE_CPP_BracketedExpr: { retex = assignexpr; break; }
             case TAG_TYPE_CPP_CastExpr: {

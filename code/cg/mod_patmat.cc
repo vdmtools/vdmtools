@@ -237,14 +237,8 @@ Tuple vdmcg::CGMatchPatternName (const TYPE_AS_PatternName & patnm,
                                       Nil()));
       }
 
-#ifdef VDMSL
-      rb.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_Rename(n), varExpr_v_q));
-#endif // VDMSL
 #ifdef VDMPP
-      if (vdm_CPP_isCPP()) {
-        rb.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_Rename(n), varExpr_v_q));
-      }
-      else {
+      if (vdm_CPP_isJAVA()) {
         if (IsStringType(pttp)) {
           if (varExpr_v.Is(TAG_TYPE_CPP_ClassInstanceCreationExpr) &&
               varExpr_v.GetRecord(pos_CPP_ClassInstanceCreationExpr_classtype) == GenStringType().get_tp()){
@@ -258,7 +252,11 @@ Tuple vdmcg::CGMatchPatternName (const TYPE_AS_PatternName & patnm,
         }
         rb.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_Rename(n), GenExplicitCast(pttp, varExpr_v_q, type)));
       }
+      else
 #endif // VDMPP
+      {
+        rb.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_Rename(n), varExpr_v_q));
+      }
 
       if (!inner.IsNil())
         rb.ImpConc(inner);
@@ -1437,9 +1435,21 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
     if ((a.Is (TAG_TYPE_AS_PatternName) && a.GetField(pos_AS_PatternName_nm).IsNil()) &&
         (b.Is (TAG_TYPE_AS_PatternName) && b.GetField(pos_AS_PatternName_nm).IsNil())) {
       // - ^ -
-      TYPE_CPP_Expr cond (IsSeqType(type) ? vdm_BC_GenBoolLit(true)
-                                          : vdm_CPP_isCPP() ? GenIsSeq(varExpr_v)
-                                               : vdm_BC_GenLogOr(GenIsSeq(varExpr_v), GenIsString(varExpr_v)));
+      TYPE_CPP_Expr cond;
+      if (IsSeqType(type)) {
+        cond = vdm_BC_GenBoolLit(true);
+      }
+      else {
+#ifdef VDMPP
+        if (vdm_CPP_isJAVA()) {
+          cond = vdm_BC_GenLogOr(GenIsSeq(varExpr_v), GenIsString(varExpr_v));
+        }
+        else
+#endif // VDMPP
+        {
+          cond = GenIsSeq(varExpr_v);
+        }
+      }
       TYPE_REP_BooleanTypeRep btype;
       if (!inner.IsNil()) {
         if (nonstop) {
@@ -1473,17 +1483,27 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
               Record(b.GetSequence(pos_AS_SeqEnumPattern_els)[1]).GetField(pos_AS_PatternName_nm).IsNil())) {
       // [-] ^ -
       // - ^ [-]
-      TYPE_CPP_Expr cond (IsSeqType(type) 
-                            ? vdm_BC_GenNot(GenSeqIsEmpty(varExpr_v))
-                            : (vdm_CPP_isCPP()
-                               ? vdm_BC_GenLogAnd(GenIsSeq(varExpr_v),
-                                                  vdm_BC_GenNot(GenSeqIsEmpty(GenCastSeq(varExpr_v, Nil()))))
-                               : vdm_BC_GenLogOr(vdm_BC_GenLogAnd(
-                                                   GenIsSeq(varExpr_v),
-                                                   vdm_BC_GenNot(GenSeqIsEmpty(GenCastSeq(varExpr_v, Nil())))),
-                                                 vdm_BC_GenLogAnd(
-                                                   GenIsString(varExpr_v),
-                                                   vdm_BC_GenNot(GenSeqIsEmpty(GenCastString(varExpr_v)))))));
+      TYPE_CPP_Expr cond;
+      if (IsSeqType(type)) {
+         cond = vdm_BC_GenNot(GenSeqIsEmpty(varExpr_v));
+      }
+      else {
+#ifdef VDMPP
+        if (vdm_CPP_isJAVA()) {
+          cond = vdm_BC_GenLogOr(vdm_BC_GenLogAnd(
+                                   GenIsSeq(varExpr_v),
+                                   vdm_BC_GenNot(GenSeqIsEmpty(GenCastSeq(varExpr_v, Nil())))),
+                                 vdm_BC_GenLogAnd(
+                                   GenIsString(varExpr_v),
+                                   vdm_BC_GenNot(GenSeqIsEmpty(GenCastString(varExpr_v)))));
+        }
+        else
+#endif // VDMPP
+        {
+          cond = vdm_BC_GenLogAnd(GenIsSeq(varExpr_v),
+                                          vdm_BC_GenNot(GenSeqIsEmpty(GenCastSeq(varExpr_v, Nil()))));
+        }
+      }
       if (!inner.IsNil()) {
         if (nonstop) {
           SEQ<TYPE_CPP_Stmt> rb;
@@ -1504,12 +1524,21 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
       }
     }
     else {
-      TYPE_CPP_Expr castVarExpr_v (IsSeqType(type) ? varExpr_v
-                                                   : vdm_CPP_isCPP()
-                                                       ? GenCastSeq(varExpr_v, Nil())
-                                                       : IsStringType(type)
-                                                           ? GenCastString(varExpr_v)
-                                                           : GenCastSeq(varExpr_v, Nil()));
+      TYPE_CPP_Expr castVarExpr_v;
+      if (IsSeqType(type)) {
+        castVarExpr_v = varExpr_v;
+      }
+      else {
+#ifdef VDMPP
+        if (vdm_CPP_isJAVA()) {
+          castVarExpr_v = (IsStringType(type) ? GenCastString(varExpr_v) : GenCastSeq(varExpr_v, Nil()));
+        }
+        else
+#endif // VDMPP
+        {
+          castVarExpr_v = GenCastSeq(varExpr_v, Nil());
+        }
+      }
 #ifdef VDMPP
       if (vdm_CPP_isJAVA()) {
         if (IsStringType(type)) {
@@ -1669,28 +1698,33 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
         }
       }
 
-      SEQ<TYPE_CPP_Stmt> javarb;
-      TYPE_CPP_Expr castVarExpr_v_q = castVarExpr_v;
-#ifdef VDMPP
-      if (vdm_CPP_isJAVA() && !IsSeqType(type)) {
-        TYPE_CPP_Expr tmpVal_v (vdm_BC_GiveName(ASTAUX::MkId(L"tmpVal_v")));
-        javarb.ImpAppend(vdm_BC_GenDecl(GenSeq0Type(), tmpVal_v,
-                              vdm_BC_GenAsgnInit(vdm_BC_GenCondExpr(GenIsString(varExpr_v),
-                                                                    GetListVal(varExpr_v),
-                                                                    GenCastSeq(varExpr_v, Nil())))));
-        castVarExpr_v_q = tmpVal_v;
-      }
-#endif // VDMPP
-
       TYPE_CPP_Identifier index (vdm_BC_GiveName(ASTAUX::MkId(L"index")));
       TYPE_CPP_Identifier to (vdm_BC_GiveName(ASTAUX::MkId(L"to")));
       TYPE_CPP_Identifier Max (vdm_BC_GiveName(ASTAUX::MkId(L"max")));
 
-      TYPE_CPP_Expr sb1 (vdm_CPP_isCPP() ? GenSubSequence(castVarExpr_v, type, vdm_BC_GenIntegerLit(1), index)
-                                         : GenSubSequence(castVarExpr_v_q, type, vdm_BC_GenIntegerLit(0), index));
-      TYPE_CPP_Expr sb2 (vdm_CPP_isCPP() ? GenSubSequence(castVarExpr_v, type,
-                                                            vdm_BC_GenPlus(index, vdm_BC_GenIntegerLit(1)), Max)
-                                         : GenSubSequence(castVarExpr_v_q, type, index, Max));
+      SEQ<TYPE_CPP_Stmt> javarb;
+      TYPE_CPP_Expr castVarExpr_v_q = castVarExpr_v;
+      TYPE_CPP_Expr sb1;
+      TYPE_CPP_Expr sb2;
+#ifdef VDMPP
+      if (vdm_CPP_isJAVA()) {
+        if (!IsSeqType(type)) {
+          TYPE_CPP_Expr tmpVal_v (vdm_BC_GiveName(ASTAUX::MkId(L"tmpVal_v")));
+          javarb.ImpAppend(vdm_BC_GenDecl(GenSeq0Type(), tmpVal_v,
+                                vdm_BC_GenAsgnInit(vdm_BC_GenCondExpr(GenIsString(varExpr_v),
+                                                                      GetListVal(varExpr_v),
+                                                                      GenCastSeq(varExpr_v, Nil())))));
+          castVarExpr_v_q = tmpVal_v;
+        }
+        sb1 = GenSubSequence(castVarExpr_v_q, type, vdm_BC_GenIntegerLit(0), index);
+        sb2 = GenSubSequence(castVarExpr_v_q, type, index, Max);
+      }
+      else
+#endif // VDMPP
+      {
+        sb1 = GenSubSequence(castVarExpr_v_q, type, vdm_BC_GenIntegerLit(1), index);
+        sb2 = GenSubSequence(castVarExpr_v_q, type, vdm_BC_GenPlus(index, vdm_BC_GenIntegerLit(1)), Max);
+      }
 
       TYPE_REP_TypeRep seqtp (mk_REP_SeqTypeRep(FindSeqElemType(type)));
 
@@ -1737,9 +1771,16 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
       TYPE_CPP_Expr e1 (vdm_BC_GenLogAnd(vdm_BC_GenBracketedExpr(vdm_BC_GenLeq(index, to)), vdm_BC_GenNot(succ_v)));
       TYPE_CPP_Expr e2 (vdm_BC_GenPostPlusPlus(index));
 
-      TYPE_CPP_Expr len_var (vdm_CPP_isCPP() ? GenLen_int(castVarExpr_v)
-                                             : (IsStringType(type) ? GenLenString_int(castVarExpr_v)
-                                                                   : GenLen_int(castVarExpr_v_q)));
+      TYPE_CPP_Expr len_var;
+#ifdef VDMPP
+      if (vdm_CPP_isJAVA()) {
+        len_var = (IsStringType(type) ? GenLenString_int(castVarExpr_v) : GenLen_int(castVarExpr_v_q));
+      }
+      else
+#endif // VDMPP
+      {
+        len_var = GenLen_int(castVarExpr_v);
+      }
       TYPE_CPP_AsgnInit ai (vdm_BC_GenAsgnInit(len_var));
       TYPE_CPP_AsgnInit ai_to;
       {
@@ -1763,8 +1804,16 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
         return mk_(ifBody, Bool(false));
       }
       else {
-        TYPE_CPP_Expr cond (vdm_CPP_isCPP() ? GenIsSeq(varExpr_v)
-                                            : vdm_BC_GenLogOr(GenIsSeq(varExpr_v), GenIsString(varExpr_v)));
+        TYPE_CPP_Expr cond;
+#ifdef VDMPP
+        if (vdm_CPP_isJAVA()) {
+          cond = vdm_BC_GenLogOr(GenIsSeq(varExpr_v), GenIsString(varExpr_v));
+        }
+        else
+#endif // VDMPP
+        {
+          cond = GenIsSeq(varExpr_v);
+        }
        
         SEQ<TYPE_CPP_Stmt> rb;
         rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v, vdm_BC_GenBracketedExpr(cond)),
@@ -2065,25 +2114,31 @@ Tuple vdmcg::CGMatchObjectPattern (const TYPE_AS_ObjectPattern & pat,
     case 1: {
       const TYPE_AS_Name & nm (fp_l[1].GetRecord(pos_AS_FieldPattern_nm));
       const TYPE_AS_Pattern & p (fp_l[1].GetRecord(pos_AS_FieldPattern_pat));
-      TYPE_CPP_Expr cast (type.Is(TAG_TYPE_REP_ObjRefTypeRep) && vdm_CPP_isJAVA() ? varExpr_v
-                                                              : CastToClassPtr(cls, varExpr_v));
-      TYPE_CPP_Expr getfield (vdm_CPP_isCPP() ? vdm_BC_GenPointerToObjectMemberAccess(cast, vdm_BC_Rename(nm))
-                                              : vdm_BC_GenQualifiedName(vdm_BC_GenBracketedExpr(cast),
-                                                                        vdm_BC_Rename2(nm)));
+
+      TYPE_CPP_Expr cast;
+      TYPE_CPP_Expr getfield;
+      if (vdm_CPP_isJAVA()) {
+        cast = (type.Is(TAG_TYPE_REP_ObjRefTypeRep) ? varExpr_v : CastToClassPtr(cls, varExpr_v));
+        getfield = vdm_BC_GenQualifiedName(vdm_BC_GenBracketedExpr(cast), vdm_BC_Rename2(nm));
+      }
+      else
+      {
+        cast = CastToClassPtr(cls, varExpr_v);
+        getfield = vdm_BC_GenPointerToObjectMemberAccess(cast, vdm_BC_Rename(nm));
+      }
       TYPE_REP_TypeRep f_type (FindType(p));
       Tuple cgpme (CGPatternMatchExcl(p, mk_CG_VT(getfield, f_type), pn_s, succ_v, pid_m, inner, nonstop));
       const Bool & Is_excl = cgpme.GetBool(2);
       const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
-      if (type.Is(TAG_TYPE_REP_ObjRefTypeRep))
+      if (type.Is(TAG_TYPE_REP_ObjRefTypeRep)) {
         return mk_(pm, Bool(Is_excl));
-      else if (Is_excl.GetValue() && nonstop)
-      {
+      }
+      else if (Is_excl.GetValue() && nonstop) {
         SEQ<TYPE_CPP_Stmt> rb;
         rb.ImpAppend(vdm_BC_GenIfStmt(if_cond, vdm_BC_GenBlock(pm), nil));
         return mk_(rb, Bool(true));
       }
-      else
-      {
+      else {
         SEQ<TYPE_CPP_Stmt> rb;
         rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v, vdm_BC_GenBracketedExpr(if_cond)),
                                       vdm_BC_GenBlock(pm), nil));
@@ -2107,9 +2162,9 @@ Tuple vdmcg::CGMatchObjectPattern (const TYPE_AS_ObjectPattern & pat,
         const TYPE_AS_Name & nm (fp.GetRecord(pos_AS_FieldPattern_nm));
         const TYPE_AS_Pattern p (fp.GetRecord(pos_AS_FieldPattern_pat));
         TYPE_REP_TypeRep f_type (FindType(p));
-        TYPE_CPP_Expr getfield (vdm_CPP_isCPP() ? vdm_BC_GenPointerToObjectMemberAccess(cast, vdm_BC_Rename(nm))
-                                                : vdm_BC_GenQualifiedName(vdm_BC_GenBracketedExpr(cast),
-                                                                          vdm_BC_Rename2(nm)));
+        TYPE_CPP_Expr getfield (vdm_CPP_isJAVA()
+                    ? vdm_BC_GenQualifiedName(vdm_BC_GenBracketedExpr(cast), vdm_BC_Rename2(nm))
+                    : vdm_BC_GenPointerToObjectMemberAccess(cast, vdm_BC_Rename(nm)));
         p_l.ImpAppend(p);
         tp_l.ImpAppend(f_type);
         stmt_l.ImpAppend(GenTupSetField(tmpTuple, vdm_BC_GenIntegerLit(i), getfield));

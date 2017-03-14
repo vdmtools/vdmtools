@@ -3558,23 +3558,6 @@ IsIntExpr(expr) ==
     mk_CPP`FctCall((DS`GenImplIntType().tp),-,-) -> return true,
     others -> return false
   end;
---#ifdef VDMPP
---  if CPP`isJAVA()
---  then
---    return is_CPP`ClassInstanceCreationExpr(expr) and (expr.classtype = DS`GenImplIntType().tp)
---  else
---#endif VDMPP
---    return is_CPP`FctCall(expr) and (expr.fct = DS`GenImplIntType().tp);
-
-  --mk_CPP`FctCall((GenImplIntType().tp),-,-),-) ->
-  --mk_CPP`ClassInstanceCreationExpr((GenImplIntType().tp),-,-,-,-) -> 
-  --mk_CPP`FctCall(
-     --mk_CPP`ObjectMemberAccess(
-        --mk_CPP`Identifier( "Integer", -1 ),
-       -- mk_CPP`Identifier( "valueOf", -1 ),
-        ---1 ),
-     --[ mk_CPP`IntegerLit( 2, -1 ) ],
-     ---1 )
 
 IsRealExpr: CPP`Expr ==> bool
 IsRealExpr(expr) ==

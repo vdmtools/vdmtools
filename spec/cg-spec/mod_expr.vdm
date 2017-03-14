@@ -275,7 +275,9 @@ CGExprExcl( expr, e_name, etp ) ==
                       then
                         cases true:
                           (is_CPP`Identifier(assignexpr)),
+#ifdef VDMPP
                           (is_CPP`ClassInstanceCreationExpr(assignexpr)),
+#endif VDMPP
                           (is_CPP`FctCall(assignexpr)),
                           (is_CPP`BracketedExpr(assignexpr)) -> retex := assignexpr,
                           (is_CPP`CastExpr(assignexpr))      ->
