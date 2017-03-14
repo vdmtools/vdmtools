@@ -413,6 +413,7 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
   const TYPE_CPP_Expr & resVar_v (tupBody.GetRecord(1));
   const SEQ<TYPE_CPP_Stmt> & b_stmt (tupBody.GetSequence(2));
 
+#ifdef VDMPP
   if (vdm_CPP_isJAVA() && isimplicit && IsNotyetspecified(body, isDlClass, stat))
   {
     TYPE_CPP_FctDecl exdecl (vdm_BC_GenFctDecl(vdm_BC_GenIdentifier(ASTAUX::MkId(L"impl_").ImpConc(GiveLastName(id))), arg_l));
@@ -435,6 +436,7 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
                                            ds, exdecl, excs, vdm_BC_GenBlock(implfb)));
     this->implcpp.Insert(fctcid, implcppRVal);
   }
+#endif // VDMPP
 
   SEQ<TYPE_CPP_Stmt> fb;
   if (!parms.IsEmpty () && !inlineDecl &&
@@ -447,34 +449,40 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
   else
   {
 #ifdef VDMPP
-    if (!prefn.IsNil() && get_testpreandpost_option())
-// 20150716 -->
-      //fb.ImpPrepend(GenMethPreCall(id, FindVariables(arg_l), stat));
-      fb.ImpAppend(GenMethPreCall(id, FindVariables(arg_l), stat));
-// <-- 20150716
-#endif // VDMPP
-    if (vdm_CPP_isCPP())
-      fb.ImpConc(b_stmt);
-    else if (!isabstract && !get_skeleton_option())
-      fb.ImpConc(b_stmt);
-    else if (isimplicit && IsNotyetspecified(body, isDlClass, stat))
-      fb.ImpConc(b_stmt);
-    else if (isimplicit)
-      ;
+    if (!prefn.IsNil() && get_testpreandpost_option()) {
+      fb.ImpPrepend(GenMethPreCall(id, FindVariables(arg_l), stat));
+    }
+    if (vdm_CPP_isJAVA()) {
+      if (!isabstract && !get_skeleton_option()) {
+        fb.ImpConc(b_stmt);
+      }
+      else if (isimplicit && IsNotyetspecified(body, isDlClass, stat)) {
+        fb.ImpConc(b_stmt);
+      }
+      else if (isimplicit) {
+        ;
+      }
+      else {
+        fb = type_dL(); // Can this be correct??
+      }
+    }
     else
-      fb = type_dL(); // Can this be correct??
+#endif // VDMPP
+    { // C++
+      fb.ImpConc(b_stmt);
+    }
 
 #ifdef VDMPP
-    if (!postfn.IsNil() && get_testpreandpost_option())
+    if (!postfn.IsNil() && get_testpreandpost_option()) {
       fb.ImpAppend(GenFnPostCall(id, resVar_v, FindVariables(arg_l),stat));
-#endif // VDMPP
-
-    TYPE_CPP_Stmt return_stmt;
+    }
     if (vdm_CPP_isJAVA()) {
-      if (isimplicit && IsNotyetspecified(body, isDlClass, stat))
+      if (isimplicit && IsNotyetspecified(body, isDlClass, stat)) {
         fb.ImpAppend(vdm_BC_GenReturnStmt(resVar_v));
-      else if (!isabstract && !get_skeleton_option()) 
+      }
+      else if (!isabstract && !get_skeleton_option()) {
         fb.ImpAppend(vdm_BC_GenReturnStmt(resVar_v));
+      }
       else {
         SEQ<TYPE_CPP_Expr> exprlist (FindVariables(arg_l));
         TYPE_CPP_Identifier obj (vdm_BC_GenIdentifier(ASTAUX::MkId(L"child")));
@@ -483,6 +491,7 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
       }
     }
     else
+#endif // VDMPP
     { // C++
       fb.ImpAppend(vdm_BC_GenReturnStmt(resVar_v));
     }
@@ -497,45 +506,55 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
   TYPE_CPP_FctDecl decl (GenMethodDecl(id, arg_l));
 
   TYPE_CPP_CPPAS cpp;
-  if (vdm_CPP_isJAVA())
-  {
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     SEQ<TYPE_CPP_Identifier> excs (GenExceptionsHdr());
     SEQ<TYPE_CPP_Modifier> mod;
-    if (stat)
+    if (stat) {
       mod.ImpAppend(vdm_BC_GenModifier(quote_STATIC));
+    }
     mod.ImpAppend(JavaAccess(acc));
 
-    if (!isabstract && !get_skeleton_option())
+    if (!isabstract && !get_skeleton_option()) {
       cpp.ImpAppend(vdm_BC_GenJavaFctDef(SEQ<TYPE_CPP_Annotation>(),
                                      mod, ds, decl, excs, vdm_BC_GenBlock(fb)));
+    }
     else if (isabstract) {
       mod.ImpPrepend(vdm_BC_GenModifier(quote_ABSTRACT));
       cpp.ImpAppend(vdm_BC_GenJavaFctDef(SEQ<TYPE_CPP_Annotation>(), mod, ds, decl, excs, nil));
     }
-    else
+    else {
       cpp.ImpAppend(vdm_BC_GenJavaFctDef(SEQ<TYPE_CPP_Annotation>(),
                                      mod, ds, decl, nil, vdm_BC_GenReturnStmt(GenEmptyValue(rngtype))));
+    }
   }
-  else { // C++
+  else
+#endif // VDMPP
+  { // C++
     TYPE_CPP_CPPAS fdSeq;
     fdSeq.ImpAppend(vdm_BC_GenFctDef(ds, decl, nil, vdm_BC_GenBlock(fb)));
     cpp.ImpConc (GenFctOpDefIfDef(id, fdSeq));
   }
 
   PopEnv();
-  if (!prefn.IsNil ())
-    if (vdm_CPP_isCPP() || get_preandpost_option())
+  if (!prefn.IsNil ()) {
+    if (vdm_CPP_isCPP() || get_preandpost_option()) {
       cpp.ImpConc (GenFctDef_FD (MakePreFct(efd, nil),false));
+    }
+  }
 
-  if (!postfn.IsNil ())
-    if (vdm_CPP_isCPP() || get_preandpost_option())
+  if (!postfn.IsNil ()) {
+    if (vdm_CPP_isCPP() || get_preandpost_option()) {
       cpp.ImpConc (GenFctDef_FD (MakePostFct(efd, nil),false));
+    }
+  }
 
   DeleteLoc();
   ResetIsStatic();
 
-  if (get_verbose_mode())
+  if (get_verbose_mode()) {
     wcout << L"function: " << ASTAUX::ASName2String(id) << L" end" << endl;
+  }
 
   return cpp;
 }
@@ -546,21 +565,21 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
 // -> CPP`FctDecl
 TYPE_CPP_FctDecl vdmcg::GenMethodDecl(const TYPE_AS_Name & p_nm, const SEQ<TYPE_CPP_ArgDecl> & p_arg_l)
 {
-  if (vdm_CPP_isCPP())
-  {
 #ifdef VDMSL
     return vdm_BC_GenFctDecl (vdm_BC_Rename (p_nm), p_arg_l);
 #endif //VDMSL
 #ifdef VDMPP
-//    TYPE_AS_Name cnm (ASTAUX::MkNameFromId(GiveCurCName (), NilContextId));
+  if (vdm_CPP_isJAVA()) {
+    return vdm_BC_GenFctDecl (vdm_BC_Rename(InsertGlobalName(p_nm)), p_arg_l);
+  }
+  else
+  { // C++
     TYPE_AS_Name cnm (GiveCurCASName());
     TYPE_CPP_Expr cid (vdm_BC_Rename (cnm));
     TYPE_CPP_Expr fnm (vdm_BC_Rename (p_nm));
     return vdm_BC_GenFctDecl (vdm_BC_GenQualifiedName (cid, fnm), p_arg_l);
-#endif //VDMPP
   }
-  else // java
-    return vdm_BC_GenFctDecl (vdm_BC_Rename(InsertGlobalName(p_nm)), p_arg_l);
+#endif //VDMPP
 }
 
 // GenExplFnBody
@@ -578,14 +597,12 @@ Tuple vdmcg::GenExplFnBody(const TYPE_AS_ExplFnDef & p_fndef,
                            const SEQ<TYPE_CPP_ArgDecl> & p_arg_l,
                            const SEQ<TYPE_CPP_DeclSpecifier> & p_ds)
 {
-  if (vdm_CPP_isJAVA())
-  { // java
-    if (p_isImplicit)
-    {
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    if (p_isImplicit) {
       TYPE_CPP_Identifier tid (vdm_BC_Rename(p_fndef.get_nm()));
       TYPE_AS_Id fnName (tid.get_id());
-      if(IsNotyetspecified(p_fndef.get_body(), false, p_fndef.GetBoolValue(pos_AS_ExplFnDef_stat)))
-      {
+      if(IsNotyetspecified(p_fndef.get_body(), false, p_fndef.GetBoolValue(pos_AS_ExplFnDef_stat))) {
         SEQ<TYPE_CPP_Expr> exprlist (FindVariables(p_arg_l));
         TYPE_CPP_Expr l_resVar (vdm_BC_GiveName(ASTAUX::MkId(L"childResult")));
         TYPE_CPP_Identifier childid (vdm_BC_GenIdentifier(ASTAUX::MkId(L"child")));
@@ -611,7 +628,8 @@ Tuple vdmcg::GenExplFnBody(const TYPE_AS_ExplFnDef & p_fndef,
                    FromAS2RepType(p_fndef.GetRecord(pos_AS_ExplFnDef_tp).GetRecord(2)));
     }
   }
-  else // if (vdm_CPP_isCPP())
+  else
+#endif // VDMPP
   { // C++
     if (IsNotyetspecified(p_fndef.get_body(), p_isDlClass, p_fndef.GetBoolValue(pos_AS_ExplFnDef_stat))
            && p_isDlClass)
@@ -620,11 +638,8 @@ Tuple vdmcg::GenExplFnBody(const TYPE_AS_ExplFnDef & p_fndef,
     }
     else
     {
-// 20120225 -->
-      //return CGExprExcl(p_fndef.get_body().get_body(), ASTAUX::MkId(L"varRes"), nil);
       return CGExprExcl(p_fndef.get_body().get_body(), ASTAUX::MkId(L"varRes"),
                    FromAS2RepType(p_fndef.GetRecord(pos_AS_ExplFnDef_tp).GetRecord(2)));
-// <-- 20120225
     }
   }
 }
@@ -806,10 +821,12 @@ SEQ<TYPE_CPP_ArgDecl> vdmcg::DeclPatArg(const Map & /*pid_m*/,
                    : vdm_BC_Rename(name));
 
     TYPE_CPP_Expr refvarname;
-    if (vdm_CPP_isCPP())
+    if (vdm_CPP_isCPP()) {
       refvarname = vdm_BC_GenRef(varname);
-    else
+    }
+    else {
       refvarname = varname;
+    }
 
     SEQ<TYPE_CPP_DeclSpecifier> const_decl;
     const_decl.ImpAppend(vdm_BC_GenTypeSpecifier(quote_CONST));
@@ -866,8 +883,9 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
 {
   const TYPE_AS_Name & nm (opdef.GetRecord(pos_AS_ExplOpDef_nm));
 
-  if (get_verbose_mode())
+  if (get_verbose_mode()) {
     wcout << L"operation: " << ASTAUX::ASName2String(nm) << L" start" << endl;
+  }
 
   const TYPE_AS_OpType & tp (opdef.GetRecord(pos_AS_ExplOpDef_tp));
   const SEQ<TYPE_AS_Pattern> & parm_l (opdef.GetSequence(pos_AS_ExplOpDef_parms));
@@ -884,31 +902,38 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
   bool isimplicit (isimpl);
   bool isabstract (false);
 
-  if (vdm_CPP_isCPP())
-  {
-    if (IsSubresp(body))
-      return TYPE_CPP_CPPAS();
-    else if (IsNotyetspecified(body, isDlClass, stat)) {
-      if (!isDlClass)
-        return TYPE_CPP_CPPAS();
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    if (IsSubresp(body) || (get_j2v_option() &&
+                            isInterface(GiveCurCASName()) &&
+                            body.get_body() == Int(NOTYETSPEC))) {
+      isabstract = true;
+    }
+    else if (IsNotyetspecified(body, false, stat)) {
+      isimplicit = true;
     }
   }
   else
-  { // Java
-    if (IsSubresp(body) || (get_j2v_option() &&
-                            isInterface(GiveCurCASName()) &&
-                            body.get_body() == Int(NOTYETSPEC)))
-      isabstract = true;
-    else if (IsNotyetspecified(body, false, stat))
-      isimplicit = true;
+#endif // VDMPP
+  { // C++
+    if (IsSubresp(body)) {
+      return TYPE_CPP_CPPAS();
+    }
+    else if (IsNotyetspecified(body, isDlClass, stat)) {
+      if (!isDlClass) {
+        return TYPE_CPP_CPPAS();
+      }
+    }
   }
 
-  if (stat)
+  if (stat) {
     SetIsStatic();
+  }
 
 #ifdef VDMPP
-  if (constr && parm_l.IsEmpty())
+  if (constr && parm_l.IsEmpty()) {
     SetHasDefaultConstr();
+  }
 
   ResetUsesSuper();
   ResetUsesThis();
@@ -922,28 +947,24 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
   const SEQ<TYPE_CPP_ArgDecl> & arg_l (initTuple.GetSequence(5)); // seq of CPP`ArgDecl
 
   type_dL ds;
-  if (!constr)
-//    ds.ImpAppend(Rep2CppTypeSpecifier(rngtype, tp.GetField(pos_AS_OpType_oprng)));
+  if (!constr) {
     ds.ImpAppend(Rep2CppTypeSpecifier(rngtype, tp.GetRecord(pos_AS_OpType_oprng)));
+  }
 
   TYPE_CPP_FctDecl decl (GenMethodDecl(nm, arg_l));
 
   SEQ<TYPE_CPP_Stmt> fb;
   SEQ<TYPE_CPP_Stmt> implfb;
 
-// 20070312
   const Generic & st (body.GetField(pos_AS_OpBody_body));
 
-  if (!st.Is(TAG_TYPE_AS_IdentStmt))
-  {
-    if (!parm_l.IsEmpty () &&
-        !inlineDecl &&
-        !(vdm_CPP_isJAVA() && (isimplicit || isabstract || get_skeleton_option())))
-    {
+  if (!st.Is(TAG_TYPE_AS_IdentStmt)) {
+    if (!parm_l.IsEmpty () && !inlineDecl
+         && !(vdm_CPP_isJAVA() && (isimplicit || isabstract || get_skeleton_option()))
+       ) {
       fb.ImpConc(GenPatternBody(pid_m, opdef, isDlClass, arg_l, varlist));
     }
-    else
-    {
+    else {
       Tuple tupBody (GenInlineBody(opdef, rngtype, isDlClass, arg_l, isimplicit, isabstract));
       implfb.ImpConc(tupBody.GetSequence(1));
       fb.ImpConc(tupBody.GetSequence(2));
@@ -951,15 +972,14 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
   }
 
   TYPE_CPP_CPPAS cpp;
-  if (vdm_CPP_isJAVA())
-  {
 #ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     SEQ<TYPE_CPP_Stmt> pre_fb;
-    if (!oppre.IsNil() && get_testpreandpost_option())
+    if (!oppre.IsNil() && get_testpreandpost_option()) {
       pre_fb.ImpAppend(GenMethPreCall(nm, FindVariables(arg_l), stat));
+    }
 
-    if (constr)
-    {
+    if (constr) {
       // for constructor
       TYPE_CPP_Stmt initfc (vdm_BC_GenExpressionStmt(
                               vdm_BC_GenFctCall(
@@ -969,37 +989,31 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
       
       SEQ<TYPE_CPP_Stmt> new_fb;
       Tuple isf (IsSuperFirst(fb));
-      if (isf.GetBoolValue(1))
-      {
+      if (isf.GetBoolValue(1)) {
         new_fb.ImpAppend(isf.GetRecord(2));
         new_fb.ImpAppend(initfc);
         new_fb.ImpConc(pre_fb);
         new_fb.ImpConc(isf.GetSequence(3));
       }
-      else
-      {
+      else {
         new_fb.ImpAppend(initfc);
         new_fb.ImpConc(pre_fb);
         new_fb.ImpConc(fb);
       }
       fb = new_fb;
     }
-    else
-    {
+    else {
       SEQ<TYPE_CPP_Stmt> new_fb;
       new_fb.ImpConc(pre_fb);
       new_fb.ImpConc(fb);
       fb = new_fb;
     }
 
-    if (get_conc_option())
-    {
-      if (!constr && !stat)
-      {
+    if (get_conc_option()) {
+      if (!constr && !stat) {
         fb = GenConcOper(opnm, fb);
       }
-      else if (GetHasDefaultConstr() && GetOrderedSupers(GiveCurCASName()).IsEmpty())
-      {
+      else if (GetHasDefaultConstr() && GetOrderedSupers(GiveCurCASName()).IsEmpty()) {
         fb = GenDefaultConstructorHdr(fb);
       }
     }
@@ -1007,7 +1021,6 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
     // TODO: calling vdm_init_XXX must be before pre function for Sentinel
     //if (!oppre.IsNil() && get_testpreandpost_option())
     //    fb.ImpPrepend(GenMethPreCall(nm, FindVariables(arg_l), stat));
-#endif // VDMPP
 
     // Add run-time file information FIXME: why isn't this in the spec?
     if (rti) {
@@ -1016,28 +1029,34 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
     }
 
     SEQ<TYPE_CPP_Modifier> mods;
-    if (isabstract)
+    if (isabstract) {
       mods.ImpAppend(vdm_BC_GenModifier(quote_ABSTRACT));
-    if (stat)
+    }
+    if (stat) {
       mods.ImpAppend(vdm_BC_GenModifier(quote_STATIC));
+    }
 
     mods.ImpAppend(JavaAccess(acc));
 
     SEQ<TYPE_CPP_Identifier> excs (GenExceptionsHdr());
 
 // 20120213 -->
-    if (isEntries(nm))
+    if (isEntries(nm)) {
       excs.Clear();
+    }
 // <--20120213
 
-    if (isabstract)
+    if (isabstract) {
       cpp.ImpAppend(vdm_BC_GenJavaFctDef(SEQ<TYPE_CPP_Annotation>(), mods, ds, decl, excs, nil));
-    else if  (get_skeleton_option())
+    }
+    else if  (get_skeleton_option()) {
       cpp.ImpAppend(vdm_BC_GenJavaFctDef(SEQ<TYPE_CPP_Annotation>(),
                                      mods, ds, decl, nil, vdm_BC_GenReturnStmt(GenEmptyValue(rngtype))));
-    else
+    }
+    else {
       cpp.ImpAppend(vdm_BC_GenJavaFctDef(SEQ<TYPE_CPP_Annotation>(),
                                      mods, ds, decl, excs, vdm_BC_GenBlock(fb)));
+    }
 
     if (isimplicit) {
       TYPE_CPP_FctDecl exdecl (vdm_BC_GenFctDecl(vdm_BC_GenIdentifier(ASTAUX::MkId(L"impl_").ImpConc(GiveLastName(nm))),
@@ -1084,6 +1103,7 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
 // <--20110301
   }
   else 
+#endif // VDMPP
   { // C++
     // initialization of super class
     // temporary simple hack 
@@ -1095,31 +1115,28 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
                               vdm_BC_GenFctCall(vdm_BC_GivePrePostNm(nm, ASTAUX::MkId(L"init")),
                                                 SEQ<TYPE_CPP_Expr>())));
       SEQ<TYPE_CPP_Stmt> new_fb;
-      if (!GetOrderedSupers(nm).IsEmpty() && !fb.IsEmpty())
-      {
+      if (!GetOrderedSupers(nm).IsEmpty() && !fb.IsEmpty()) {
         Tuple imif (IsMemInitFirst(nm, fb));
-        if (imif.GetBoolValue(1))
-        {
+        if (imif.GetBoolValue(1)) {
           mi_l.ImpAppend(imif.GetRecord(2));
           new_fb.ImpAppend(initfc);
           new_fb.ImpConc(imif.GetSequence(3));
         }
-        else
-        {
+        else {
           new_fb.ImpAppend(initfc);
           new_fb.ImpConc(fb);
         }
       }
-      else 
-      {
+      else {
         new_fb.ImpAppend(initfc);
         new_fb.ImpConc(fb);
       }
       fb = new_fb;
     }
     // TODO: calling vdm_init_XXX must be before pre function for Sentinel
-    if (!oppre.IsNil() && get_testpreandpost_option())
+    if (!oppre.IsNil() && get_testpreandpost_option()) {
         fb.ImpPrepend(GenMethPreCall(nm, FindVariables(arg_l), stat));
+    }
 #endif // VDMPP
 
     // Add run-time file information FIXME: why isn't this in the spec?
@@ -1145,8 +1162,9 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
   cpp.ImpConc(GenPrePost(opdef, sd));
   ResetIsStatic();
 
-  if (get_verbose_mode())
+  if (get_verbose_mode()) {
     wcout << L"operation: " << ASTAUX::ASName2String(nm) << L" end"  << endl;
+  }
 
   return cpp;
 }
@@ -1504,8 +1522,8 @@ TYPE_CPP_CPPAS vdmcg::GenImplDef(const Record & fndef, const Generic & sd)
   vdm_BC_ResetVarno();
   this->impl = true;
 
-  if (vdm_CPP_isJAVA())
-  {
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
     switch(fndef.GetTag()) {
       case TAG_TYPE_AS_ImplFnDef: {
         const TYPE_AS_Name & nm (fndef.GetRecord(pos_AS_ImplFnDef_nm));
@@ -1573,6 +1591,7 @@ TYPE_CPP_CPPAS vdmcg::GenImplDef(const Record & fndef, const Generic & sd)
       }
     }
   }
+#endif // VDMPP
 
   Generic fnpre;
   switch(fndef.GetTag()) {

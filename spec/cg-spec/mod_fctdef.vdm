@@ -374,7 +374,12 @@ GenExceptionsHdr() ==
 
 GenExplFctDef: AS`ExplFnDef * bool * bool ==> CPP`CPPAS
 GenExplFctDef(fndef, isimpl, isDlClass) ==
+#ifdef VDMSL
+let mk_AS`ExplFnDef(id, -, tp, parms_ll, body, prefn, postfn,-,stat, -, -) = fndef
+#endif VDMSL
+#ifdef VDMPP
 let mk_AS`ExplFnDef(id, -, tp, parms_ll, body, prefn, postfn,acc,stat, -, fctcid) = fndef
+#endif VDMPP
 in
  (dcl isimplicit : bool := isimpl,
       isabstract : bool := false;
@@ -420,6 +425,7 @@ in
           in
            (dcl fb : seq of CPP`Stmt := [];
             -- If necessary, insert body of child operation
+#ifdef VDMPP
             if CPP`isJAVA() and isimplicit and IsNotyetspecified(body, isDlClass, stat)
             then
               def exdecl = BC`GenFctDecl (BC`GenIdentifier("impl_"^ CGAUX`GiveLastName(id)), arg_l);
@@ -438,9 +444,9 @@ in
                                                  exdecl, excs,
                                                  BC`GenBlock(implfb))]};
                );
-          if parms <> [] and
-             not inlineDecl and
-             not (CPP`isJAVA() and (isimplicit or isabstract or CGMAIN`get_skeleton_option()))
+#endif VDMPP
+          if parms <> [] and not inlineDecl
+             and not (CPP`isJAVA() and (isimplicit or isabstract or CGMAIN`get_skeleton_option()))
           then
            (fb := GenArgPatternMatch(pid_m, fndef, varlist) ^ b_stmt ^ [BC`GenReturnStmt(resVar_v)])
           else
@@ -448,20 +454,21 @@ in
 #ifdef VDMPP
             if prefn <> nil and CGMAIN`get_testpreandpost_option()
             then fb := [GenMethPreCall(id, FindVariables(arg_l), stat)] ^ fb;
+            if CPP`isJAVA()
+            then
+              if (not isabstract and not CGMAIN`get_skeleton_option())
+              then fb := fb ^ b_stmt
+              elseif isimplicit and IsNotyetspecified(body, isDlClass, stat)
+              then fb := fb ^ b_stmt
+              elseif isimplicit
+              then skip
+              else fb := []
+            else
 #endif VDMPP
-            if CPP`isCPP()
-            then fb := fb ^ b_stmt
-            elseif (not isabstract and not CGMAIN`get_skeleton_option())
-            then fb := fb ^ b_stmt
-            elseif isimplicit and IsNotyetspecified(body, isDlClass, stat)
-            then fb := fb ^ b_stmt
-            elseif isimplicit
-            then skip
-            else fb := [];
+              fb := fb ^ b_stmt;
 #ifdef VDMPP
             if postfn <> nil and CGMAIN`get_testpreandpost_option()
             then fb := fb ^ [GenFnPostCall(id, resVar_v, FindVariables(arg_l), stat)];
-#endif VDMPP
             if CPP`isJAVA()
             then
               if isimplicit and IsNotyetspecified(body, isDlClass, stat)
@@ -475,12 +482,15 @@ in
                                  BC`GenFctCallObjMemAcc(
                                    BC`GenIdentifier("child"),
                                    "impl_"^BC`Rename(id).id, exprlist)) ]
-            else fb := fb ^ [ BC`GenReturnStmt(resVar_v) ];
+            else
+#endif VDMPP
+              fb := fb ^ [ BC`GenReturnStmt(resVar_v) ];
            );
 
           def decl = GenMethodDecl(id, arg_l)
           in
            (dcl cpp : CPP`CPPAS := [];
+#ifdef VDMPP
             if CPP`isJAVA()
             then
              (def l_fsp = if stat
@@ -497,6 +507,7 @@ in
                                    decl, nil, BC`GenReturnStmt(DS`GenEmptyValue(rngtype) ))];
              )
             else
+#endif VDMPP
               cpp := TPGEN`GenFctOpDefIfDef(id ,[BC`GenFctDef(ds, decl, nil, BC`GenBlock(fb))]);
 
             PopEnv();
@@ -520,45 +531,52 @@ in
 GenMethodDecl : AS`Name * seq of CPP`ArgDecl ==> CPP`FctDecl
 GenMethodDecl(p_nm, p_arg_l) ==
 #ifdef VDMSL
-  if CPP`isCPP()
-  then BC`GenFctDecl (BC`Rename (p_nm), p_arg_l)
-  else BC`GenFctDecl (BC`Rename (CGAUX`InsertGlobalName(p_nm)), p_arg_l);
+  BC`GenFctDecl (BC`Rename (p_nm), p_arg_l);
 #endif VDMSL
 #ifdef VDMPP
-  --let cnm = mk_AS`Name([CGAUX`GiveCurCName()], CI`NilContextId),
-  def cnm = CGAUX`GiveCurCASName();
-      cid = BC`Rename(cnm);
-  in
-   (dcl fnm : CPP`Name;
-    if CPP`isCPP()
-    then fnm := BC`Rename(p_nm)
-    else fnm := BC`Rename(CGAUX`InsertGlobalName(p_nm));
-    if CPP`isCPP()
-    then BC`GenFctDecl (BC`GenQualifiedName(cid, fnm), p_arg_l)
-    else BC`GenFctDecl(fnm, p_arg_l);
-   );
+  if CPP`isJAVA()
+  then
+    def fnm = BC`Rename(CGAUX`InsertGlobalName(p_nm));
+    in BC`GenFctDecl(fnm, p_arg_l)
+  else
+    def cnm = CGAUX`GiveCurCASName();
+        cid = BC`Rename(cnm);
+        fnm = BC`Rename(p_nm)
+    in BC`GenFctDecl (BC`GenQualifiedName(cid, fnm), p_arg_l);
 #endif VDMPP
 
 GenExplFnBody : AS`ExplFnDef * bool * bool * bool * seq of CPP`ArgDecl * CPP`DeclSpecifiers
                 ==> [CPP`Expr] * seq of CPP`Stmt
+#ifdef VDMSL
+GenExplFnBody(p_fndef, p_isDlClass, -, -, p_arg_l, -) ==
+#endif VDMSL
+#ifdef VDMPP
 GenExplFnBody(p_fndef, p_isDlClass, p_isImplicit, p_isAbstract, p_arg_l, p_ds) ==
-  if p_isImplicit and CPP`isJAVA() and IsNotyetspecified(p_fndef.body, p_isDlClass, p_fndef.stat)
+  if CPP`isJAVA()
   then
-    def exprlist = FindVariables(p_arg_l);
-        resVar = BC`GiveName("childResult")
-    in
-      return mk_(resVar,
-         [BC`GenDecl(hd p_ds, resVar,
+    if p_isImplicit
+    then
+      if IsNotyetspecified(p_fndef.body, p_isDlClass, p_fndef.stat)
+      then
+        def exprlist = FindVariables(p_arg_l);
+            resVar = BC`GiveName("childResult")
+        in
+          return mk_(resVar,
+              [BC`GenDecl(hd p_ds, resVar,
                      BC`GenAsgnInit( BC`GenFctCallObjMemAcc( BC`GenIdentifier("child"),
                                                              "impl_"^BC`Rename(p_fndef.nm).id,
                                                              exprlist)))])
-  elseif p_isImplicit and CPP`isJAVA()
-  then return mk_(nil, [CGAUX`RunTime("Implicit Function " ^ BC`Rename(p_fndef.nm).id ^ " has been called")])
-  elseif p_isAbstract and CPP`isJAVA()
-  then return mk_(nil,[])
-  elseif CPP`isCPP() and IsNotyetspecified(p_fndef.body, p_isDlClass, p_fndef.stat) and p_isDlClass
-  then GenerateDlCall(p_fndef.nm, p_arg_l,false, false)
-  else CGEXPR`CGExprExcl(p_fndef.body.body, "varRes", CGAUX`FromAS2RepType(p_fndef.tp.fnrng))
+      else
+        return mk_(nil, [CGAUX`RunTime("Implicit Function " ^ BC`Rename(p_fndef.nm).id ^ " has been called")])
+    elseif p_isAbstract
+    then return mk_(nil,[])
+    else CGEXPR`CGExprExcl(p_fndef.body.body, "varRes", CGAUX`FromAS2RepType(p_fndef.tp.fnrng))
+  else
+#endif VDMPP
+    if IsNotyetspecified(p_fndef.body, p_isDlClass, p_fndef.stat) and p_isDlClass
+    then GenerateDlCall(p_fndef.nm, p_arg_l,false, false)
+    else CGEXPR`CGExprExcl(p_fndef.body.body, "varRes", CGAUX`FromAS2RepType(p_fndef.tp.fnrng));
+
 \end{vdm_al}
 
 \begin{vdm_al}
@@ -729,31 +747,34 @@ InitMethod(parm_l, tp) ==
  );
 
 GenExplOpDef: AS`Name * AS`ExplOpDef * GenericStateDef * bool * bool ==> CPP`CPPAS
-#ifdef VDMPP
-GenExplOpDef(opnm, opdef, sd, isimpl, isDlClass) ==
-  let mk_AS`ExplOpDef(nm,-,-,tp,parm_l,body,oppre,-,acc,stat,constr,opcid) = opdef
-  in
-#endif VDMPP
 #ifdef VDMSL
 GenExplOpDef(-, opdef, sd, isimpl, isDlClass) ==
   let mk_AS`ExplOpDef(nm,-,-,tp,parm_l,body,-,-,-,stat,constr,-) = opdef
-  in
 #endif VDMSL
+#ifdef VDMPP
+GenExplOpDef(opnm, opdef, sd, isimpl, isDlClass) ==
+  let mk_AS`ExplOpDef(nm,-,-,tp,parm_l,body,oppre,-,acc,stat,constr,opcid) = opdef
+#endif VDMPP
+  in
    (dcl isimplicit : bool := isimpl,
         isabstract : bool := false;
 
-    if CPP`isCPP()
-    then (if IsSubresp(body)
-          then return []
-          elseif IsNotyetspecified(body, isDlClass, stat) and not isDlClass
-          then return [])
-    else (if IsSubresp(body) or
-            ( CGMAIN`get_j2v_option() and
-              CGMAIN`isInterface(CGAUX`GiveCurCASName()) and
-              body.body = <NOTYETSPEC>)
-          then isabstract:= true
-          elseif IsNotyetspecified(body, false, stat)
-          then isimplicit:= true);
+#ifdef VDMPP
+    if CPP`isJAVA()
+    then
+     (if IsSubresp(body) or
+        ( CGMAIN`get_j2v_option() and
+          CGMAIN`isInterface(CGAUX`GiveCurCASName()) and
+           body.body = <NOTYETSPEC>)
+      then isabstract:= true
+      elseif IsNotyetspecified(body, false, stat)
+      then isimplicit:= true)
+    else
+#endif VDMPP
+     (if IsSubresp(body)
+      then return []
+      elseif IsNotyetspecified(body, isDlClass, stat) and not isDlClass
+      then return []);
 
     if stat
     then CGAUX`SetIsStatic();
@@ -774,9 +795,8 @@ GenExplOpDef(-, opdef, sd, isimpl, isDlClass) ==
       if not constr
       then ds := [TPGEN`Rep2CppTypeSpecifier(rngtype,tp.oprng)];
       if not is_AS`IdentStmt(body.body)
-      then if parm_l <> [] and
-              not inlineDecl and
-              not (CPP`isJAVA() and (isimplicit or isabstract or CGMAIN`get_skeleton_option()))
+      then if parm_l <> [] and not inlineDecl
+              and not (CPP`isJAVA() and (isimplicit or isabstract or CGMAIN`get_skeleton_option()))
            then
              fb := GenPatternBody(pid_m, opdef, isDlClass, arg_l, varlist)
            else
@@ -1079,7 +1099,6 @@ GenInlineBody(opdef, rngtype, isDlClass, arg_l, isimplicit, isabstract) ==
 );
 
 #ifdef VDMPP
-
 GenMethPreCall : AS`Name * seq of CPP`Expr * bool ==> CPP`Stmt
 GenMethPreCall(nm, args, stat) ==
   def prename = BC`Rename(mu(nm, ids |-> ["pre_" ^ hd nm.ids]^tl nm.ids))
@@ -1124,6 +1143,7 @@ GenImplDef(fndef, sd) ==
  (dcl cpp : CPP`CPPAS  := [];
   BC`ResetVarno();
   impl := true;
+#ifdef VDMPP
   if CPP`isJAVA()
   then
     if is_AS`ImplFnDef(fndef)
@@ -1143,6 +1163,7 @@ GenImplDef(fndef, sd) ==
       in cpp := cpp ^ GenExplOpDef(nm, op,sd,true,false)
     else skip
   else skip;
+#endif VDMPP
   let fnpre = if is_AS`ImplFnDef(fndef)
               then fndef.fnpre
               else fndef.oppre
