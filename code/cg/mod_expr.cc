@@ -5131,8 +5131,8 @@ Generic vdmcg::CGIfExpr (const TYPE_AS_IfExpr & rc1, const TYPE_CGMAIN_VT & vt)
     const TYPE_CPP_Expr & res2 (cgee.GetRecord(1));
     const SEQ<TYPE_CPP_Stmt> & res2_stmt (cgee.GetSequence(2));
 
-    TYPE_CPP_Stmt elif_alt2 (GenCPPStmt(tmpb));
-    TYPE_CPP_Stmt elif_alt1 (GenCPPStmt(CGExpr(elif_cons, mk_CG_VT(resVar_v, resVarType))));
+    TYPE_CPP_Stmt elif_alt2 (vdm_BC_GenBlock(tmpb));
+    TYPE_CPP_Stmt elif_alt1 (vdm_BC_GenBlock(CGExpr(elif_cons, mk_CG_VT(resVar_v, resVarType))));
 
     TYPE_REP_TypeRep testType (FindType(elif_test));
     TYPE_CPP_Expr nres2 (IsBoolType(testType) ? res2 : vdm_BC_GenCastExpr(GenBoolType(), res2));
@@ -5151,8 +5151,8 @@ Generic vdmcg::CGIfExpr (const TYPE_AS_IfExpr & rc1, const TYPE_CGMAIN_VT & vt)
     tmpb = body;
   }
 
-  TYPE_CPP_Stmt alt1 (GenCPPStmt(cons_stmt.Conc(mk_sequence(vdm_BC_GenAsgnStmt(resVar_v, cons_expr)))));
-  TYPE_CPP_Stmt alt2 (GenCPPStmt(tmpb));
+  TYPE_CPP_Stmt alt1 (vdm_BC_GenBlock(cons_stmt.Conc(mk_sequence(vdm_BC_GenAsgnStmt(resVar_v, cons_expr)))));
+  TYPE_CPP_Stmt alt2 (vdm_BC_GenBlock(tmpb));
 
   SEQ<TYPE_CPP_Stmt> rb (cond_stmt);
   rb.ImpAppend (vdm_BC_GenIfStmt (cond, alt1, alt2));
@@ -5365,7 +5365,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSeqOvwr (const TYPE_CGMAIN_VT & rc1,
 #endif // VDMPP
     if_body = alt2;
 
-  TYPE_CPP_Stmt body (GenCPPStmt(isint_part.ImpAppend(if_body)));
+  TYPE_CPP_Stmt body (vdm_BC_GenBlock(isint_part.ImpAppend(if_body)));
   TYPE_REP_TypeRep seqtp (mk_REP_SeqTypeRep(FindSeqElemType(seqtype)));
 
   SEQ<TYPE_CPP_Stmt> rb;
@@ -6100,7 +6100,7 @@ TYPE_CPP_Stmt vdmcg::GenFieldInds(const TYPE_CPP_Name & rec,
           stmt_l.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_GenQualifiedName(cast, vdm_BC_Rename2(nm)),
                                               GenExplicitCast(type, val, FindType(newval))));
         }
-        return GenCPPStmt(stmt_l);
+        return vdm_BC_GenBlock(stmt_l);
       }
       else
 #endif // VDMPP
@@ -6118,7 +6118,7 @@ TYPE_CPP_Stmt vdmcg::GenFieldInds(const TYPE_CPP_Name & rec,
           stmt_l.ImpConc(val_stmt);
           stmt_l.ImpAppend(GenRecSetField(rec, fieldno, val));
         }
-        return GenCPPStmt(stmt_l);
+        return vdm_BC_GenBlock(stmt_l);
       }
     }
     default: {
@@ -6151,7 +6151,7 @@ TYPE_CPP_Stmt vdmcg::GenFieldInds(const TYPE_CPP_Name & rec,
             stmt_l.ImpAppend(vdm_BC_GenAsgnStmt(vdm_BC_GenQualifiedName(cast, vdm_BC_Rename2(nm)),
                                                 GenExplicitCast(type, val, FindType(newval))));
           }
-          ifs = vdm_BC_GenIfStmt(isRecord, GenCPPStmt(stmt_l), ifs);
+          ifs = vdm_BC_GenIfStmt(isRecord, vdm_BC_GenBlock(stmt_l), ifs);
         }
         return ifs;
       }
@@ -8996,7 +8996,7 @@ TYPE_CPP_Stmt vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind,
       }
       SEQ<TYPE_CPP_Stmt> rb_l (stmts);
       rb_l.ImpConc(stmt_l);
-      return GenCPPStmt(rb_l);
+      return vdm_BC_GenBlock(rb_l);
     }
   }
   // NOTE: DeclPatVars must be after FindMultSetBind2
@@ -9076,7 +9076,7 @@ TYPE_CPP_Stmt vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind,
 //  rb.ImpPrepend(vdm_BC_GenSingleLineComments(SEQ<Char>(L"CGComprehension Start")));
 //  rb.ImpAppend(vdm_BC_GenSingleLineComments(SEQ<Char>(L"CGComprehension End")));
 
-  return GenCPPStmt(rb);
+  return vdm_BC_GenBlock(rb);
 }
 
 // GenPredicateStmt

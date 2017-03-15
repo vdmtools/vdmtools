@@ -909,6 +909,7 @@ TYPE_REP_TypeRep vdmcg::CleanFlatType(const TYPE_REP_TypeRep & reptp)
   }
 
   SET<TYPE_REP_TypeNameRep> ss;
+#ifdef VDMPP
   if (vdm_CPP_isJAVA()) {
     Generic extp (ExpandTypeRep(tp, Set()));
     TYPE_REP_TypeRep thistp (CleanAndFlattenType(extp));
@@ -917,6 +918,7 @@ TYPE_REP_TypeRep vdmcg::CleanFlatType(const TYPE_REP_TypeRep & reptp)
         IsCompositeType(thistp))
       ss.Insert(tp);
   }
+#endif // VDMPP
 
   Generic exp_tp (ExpandTypeRep(tp, ss));
   return CleanAndFlattenType(exp_tp);
@@ -1803,22 +1805,18 @@ TYPE_AS_Id vdmcg::CleanIdentifier(const TYPE_AS_Id & p_id)
         break;
       }
       case '_': {
-        if (vdm_CPP_isCPP())
+#ifdef VDMPP
+        if (vdm_CPP_isJAVA()) {
+          res += c;
+        }
+        else
+#endif // VDMPP
         {
-#ifdef VDMSL
-//          if ((i == 4) && ( str.find(L"init") == 0 ) && state)
-//            res +=L"_";
-//          else
-#endif // VDMSL
           if ( ( (i == 3) && ( (str.find(L"inv") == 0) || (str.find(L"pre") == 0) ) ) ||
                ( (i == 4) && ( str.find(L"post") == 0 ) ) )
             res +=L"_";
           else
             res += L"_u";
-        }
-        else
-        { // java // 20110616
-          res += c;
         }
         break;
       }
@@ -1833,7 +1831,6 @@ TYPE_AS_Id vdmcg::CleanIdentifier(const TYPE_AS_Id & p_id)
   if (vdm_CPP_isJAVA())
   {
     bool isbasic = false;
-// 20110622 -->
     if ((res.size() > 4) && (res.substr(0,4) == wstring(L"JDK_")))
     {
       wstring nres = res.substr(4);
@@ -1851,7 +1848,6 @@ TYPE_AS_Id vdmcg::CleanIdentifier(const TYPE_AS_Id & p_id)
       res = nres;
     }
     else
-// <-- 20110622
     if (get_java_rename_option())
     {
       int index = 0;
@@ -2436,10 +2432,8 @@ bool vdmcg::IsQuoteType(const TYPE_REP_TypeRep& type)
       }
       return forall;
     }
-// 20110628 -->
     case TAG_TYPE_REP_InvTypeRep:
       return IsQuoteType(type.GetRecord(pos_REP_InvTypeRep_shape));
-// <-- 20110628
     default:
       return false;
   }
@@ -2467,10 +2461,8 @@ bool vdmcg::IsObjRefType(const TYPE_REP_TypeRep& type)
       }
       return forall;
     }
-// 20110628 -->
     case TAG_TYPE_REP_InvTypeRep:
       return IsObjRefType(type.GetRecord(pos_REP_InvTypeRep_shape));
-// <-- 20110628
     default:
       return false;
   }
@@ -2585,70 +2577,6 @@ bool vdmcg::IsSubType (const TYPE_REP_TypeRep & tp1, const TYPE_REP_TypeRep & tp
     default: { return GetStatSem().IsSubType(tp1, tp2, Set()); }
   }
 }
-
-// GenCPPStmt
-// stmts : seq of CPP`Stmt
-// -> CPP`Stmt
-TYPE_CPP_Stmt vdmcg::GenCPPStmt(const SEQ<TYPE_CPP_Stmt> & stmts)
-{
-//  if (stmts.Length() == 1)
-//    return stmts.Hd();
-//  else
-    return vdm_BC_GenBlock(stmts);
-}
-
-
-// #ifdef VDMPP
-// Record vdmcg::MakePreFct(Record fn)
-// {
-//   Record btp(MkBasicType(AS_BOOLEAN, NilContextId));
-//   Record fnm(GivePrePostName(fn.GetField(1), L"pre"));
-
-//   switch (fn.GetTag()) {
-//   case ExplFnDef: {
-//     Record tp(fn.GetField(2));
-//     Sequence parm_l(fn.GetField(3));
-//     Record fnpre(fn.GetField(5));
-//     tp = MkTotalFnType(tp.GetField(1), btp, NilContextId);
-//     return MkExplFnDef(fnm, tp, parm_l, fnpre, nil, NilContextId);
-//   }
-//   case ImplFnDef: {
-//     Tuple tmp(SplitParameterTypes(fn.GetField(2)));
-//     Sequence fndom_l(tmp.GetField(1));
-//     Sequence parm_l(tmp.GetField(2));
-//     Record fnpre(fn.GetField(4));
-//     Record tp(MkTotalFnType(fndom_l, btp, NilContextId));
-//     return MkExplFnDef(fnm, tp, parm_l, fnpre, nil, NilContextId);
-//   }}
-//   return Record(); // dummy return
-// }
-
-// Record vdmcg::MakePostFct(Record fn)
-// {
-//   Record nm(fn.GetField(1));
-//   Sequence pt_l(fn.GetField(2));
-//   Record nt(fn.GetField(3));
-//   Record fnpost(fn.GetField(5));
-
-//   Record rnm(nt.GetField(1));
-//   Record rtp(nt.GetField(2));
-
-//   Record btp(MkBasicType(AS_BOOLEAN, NilContextId));
-//   Record fnm(GivePrePostName(nm, L"post"));
-//   Record rep_rtp (FromAS2RepType(rtp));
-//   Int cid_rtp (GetCI().PushCGType(rep_rtp));
-
-//   Tuple tmp(SplitParameterTypes(pt_l));
-//   Sequence fndom_l(tmp.GetField(1));
-//   Sequence parm_l(tmp.GetField(2));
-
-//   TYPE_AS_PatternName parm(MkPatternName(rnm, cid_rtp));
-//   fndom_l.ImpAppend(rtp);
-//   Record tp(MkTotalFnType(fndom_l, btp, NilContextId));
-//   parm_l.ImpAppend(parm);
-//   return MkExplFnDef(fnm, tp, parm_l, fnpost, nil, NilContextId);
-// }
-// #endif
 
 // MakePreFct
 // fd : (AS`FnDef | AS`OpDef)
@@ -6818,16 +6746,19 @@ Generic vdmcg::PackageToDir(const Generic & gpackage)
 // -> REP`TypeRep
 TYPE_REP_TypeRep vdmcg::RemoveNil(const TYPE_REP_TypeRep & type)
 {
-  if (vdm_CPP_isJAVA() && type.Is(TAG_TYPE_REP_UnionTypeRep))
-  {
-    SET<TYPE_REP_TypeRep> tps (type.GetSet(pos_REP_UnionTypeRep_tps));
-    tps.ImpDiff(mk_set(mk_REP_NilTypeRep()));
-    switch (tps.Card()) {
-      case 0:  { return type; } // must not occur
-      case 1:  { return tps.GetElem(); }
-      default: { return type; }
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    if (type.Is(TAG_TYPE_REP_UnionTypeRep)) {
+      SET<TYPE_REP_TypeRep> tps (type.GetSet(pos_REP_UnionTypeRep_tps));
+      tps.ImpDiff(mk_set(mk_REP_NilTypeRep()));
+      switch (tps.Card()) {
+        case 0:  { return type; } // must not occur
+        case 1:  { return tps.GetElem(); }
+        default: { return type; }
+      }
     }
   }
+#endif //VDMPP
   return type;
 }
 

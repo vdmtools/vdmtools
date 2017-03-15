@@ -1990,9 +1990,9 @@ CGMatchList(p_l, vt, succ_v, p_s, pid_m, inner, nonstop) ==
               return mk_([BC`GenAsgnStmt(succ_v, BC`GenBracketedExpr(eq_len))], false)
             else
               if Is_excl and nonstop
-              then return mk_([BC`GenIfStmt(eq_len, CGAUX`GenCPPStmt(ifBody), nil)], true)
+              then return mk_([BC`GenIfStmt(eq_len, BC`GenBlock(ifBody), nil)], true)
               else return mk_([BC`GenIfStmt(BC`GenAsgnExpr(succ_v, BC`GenBracketedExpr(eq_len)),
-                                            CGAUX`GenCPPStmt(ifBody), nil)], false);
+                                            BC`GenBlock(ifBody), nil)], false);
          )
       );
    );

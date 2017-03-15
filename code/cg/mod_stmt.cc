@@ -1768,7 +1768,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGBlockStmt(const TYPE_AS_BlockStmt & block, bool isLa
   if (dcls.IsEmpty())
     return rb;
 // <-- 20120521
-  return SEQ<TYPE_CPP_Stmt>().ImpAppend(GenCPPStmt(rb));
+  return SEQ<TYPE_CPP_Stmt>().ImpAppend(vdm_BC_GenBlock(rb));
 }
 
 // CGLetStmt
@@ -1964,7 +1964,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGWhileLoopStmt(const TYPE_AS_WhileLoopStmt & wls, boo
   const TYPE_CPP_Expr & whCrtl_v (cgee.GetRecord(1));
   const SEQ<TYPE_CPP_Stmt> & eval_stmt (cgee.GetSequence(2));
 
-  TYPE_CPP_Stmt bodystmt (GenCPPStmt(GenStmt(body, isLast)));
+  TYPE_CPP_Stmt bodystmt (vdm_BC_GenBlock(GenStmt(body, isLast)));
 
   TYPE_CPP_Expr whCrtlval;
   SEQ<TYPE_CPP_Stmt> isbool;
@@ -2666,7 +2666,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIfStmt(const TYPE_AS_IfStmt & ifs, bool isLast)
     alt2 = nil;
   }
   else {
-    alt2 = GenCPPStmt(tmpb);
+    alt2 = vdm_BC_GenBlock(tmpb);
   }
 
   rb.ImpAppend( vdm_BC_GenIfStmt(cond, cons_stmt, alt2) );

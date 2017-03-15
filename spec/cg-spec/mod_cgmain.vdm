@@ -162,6 +162,7 @@ The following option is to be implemented; it currently defaults to
 true iff we are generating Java. This option will probably be removed
 if only JDK libraries are used in the future.
 \begin{vdm_al}
+operations
 get_jdktypes_option: () ==> bool
 get_jdktypes_option() ==
 return CPP`isJAVA();
@@ -220,14 +221,6 @@ isInterface : AS`Name ==> bool
 isInterface(clnm) ==
   return clnm in set interfaces;
 
-get_wchar : () ==> bool
-get_wchar() ==
-  return wchar;
-
-set_wchar : bool ==> ()
-set_wchar(pWchar) ==
-  wchar := pWchar;
-
 get_j2v_option : () ==> bool
 get_j2v_option() ==
   return j2v_option;
@@ -235,6 +228,19 @@ get_j2v_option() ==
 set_j2v_option : bool ==> ()
 set_j2v_option(b) ==
   j2v_option := b;
+
+\end{vdm_al}
+
+\begin{vdm_al}
+operations
+
+get_wchar : () ==> bool
+get_wchar() ==
+  return wchar;
+
+set_wchar : bool ==> ()
+set_wchar(pWchar) ==
+  wchar := pWchar;
 
 \end{vdm_al}
 
@@ -274,7 +280,7 @@ operations
   (
    return  CLASS`GenClasses(doc_l, cl_nms)
   )
-#endif
+#endif VDMPP
 
 #ifdef VDMSL
   cg: AS`Document * set of AS`Name ==> CPP`Files
@@ -304,7 +310,7 @@ operations
       file_s := file_s union MOD`GenModule(md);
     return file_s
   )
-#endif
+#endif VDMSL
 
 end CGMAIN
 

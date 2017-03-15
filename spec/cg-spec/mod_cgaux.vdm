@@ -328,6 +328,7 @@ CleanFlatType(reptp) ==
               tp := mk_REP`TypeNameRep(qnm)
   else tp := reptp;
 
+#ifdef VDMPP
   if CPP`isJAVA()
   then
     def extp = ExpandTypeRep(tp,{});
@@ -335,6 +336,7 @@ CleanFlatType(reptp) ==
     in                 
       if is_REP`TypeNameRep(tp) and is_REP`UnionTypeRep(thistp) and IsCompositeType(thistp)
       then ss := {tp};
+#endif VDMPP
 
   def exp_tp = ExpandTypeRep(tp,ss) -- expand the type
   in CleanAndFlattenType(exp_tp);      -- clean and flatten the type
@@ -965,15 +967,20 @@ operations
       if ch = '''
       then id' := id' ^ "_q"
       elseif ch = '_'
-      then if CPP`isCPP()
-           --then if ( (preSet or invSet or postSet) and i = 4 ) or postSet and i = 5 
-           then if ( (preSet or invSet) and i = 4 ) or ( postSet and i = 5 )
-                then id' := id' ^ "_"
-                else id' := id' ^ "_u"
-           else id' := id' ^ [ch]
+      then
+#ifdef VDMPP
+        if CPP`isJAVA()
+        then
+          id' := id' ^ [ch]
+        else
+#endif VDMPP
+          if ( (preSet or invSet) and i = 4 ) or ( postSet and i = 5 )
+          then id' := id' ^ "_"
+          else id' := id' ^ "_u"
       else id' := id' ^ [ch];
       i := i +1;
      );
+#ifdef VDMPP
      if CPP`isJAVA()
      then
        if "JDK_" = id'(1, ..., 4)
@@ -985,6 +992,7 @@ operations
        elseif "JDKArrayOf_" = id'(1, ..., 11)
        then id' := id'(12, ..., len id') ^ "[]"
        elseif id' in set javabasic then id':="vdm_" ^ id';
+#endif VDMPP
     return id'
   );
 
@@ -1222,6 +1230,7 @@ operations
     cases type:
       mk_REP`QuoteTypeRep(-)    -> return true,
       mk_REP`UnionTypeRep(tp_s) -> return forall tp in set tp_s & is_REP`QuoteTypeRep(LOT(tp)),
+      mk_REP`InvTypeRep(-,shape,-) -> return IsQuoteType(shape),
       others                    -> return false
     end;
 
@@ -1234,6 +1243,7 @@ operations
                                    then return forall tp in set tp_s & is_REP`ObjRefTypeRep(LOT(tp))
                                    else return forall tp in set tp_s &
                                                 not is_REP`NilTypeRep(tp) => is_REP`ObjRefTypeRep(LOT(tp)),
+      mk_REP`InvTypeRep(-,shape,-) -> return IsObjRefType(shape),
       others -> return false
     end;
 #endif
@@ -1290,20 +1300,8 @@ IsSubType(tp1,tp2) ==
 The functions $MakePreFct$ and $MakePostFct$ makes an $AS`FnDef$
 corresponding to a pre or post condition, respectively.
 
-\begin{vdm_al}
-functions
-GenCPPStmt: seq of CPP`Stmt -> CPP`Stmt
-GenCPPStmt(stmts) ==
---if len stmts = 1
---then hd stmts
---else BC`GenBlock(stmts);
-  BC`GenBlock(stmts);
-\end{vdm_al}
-
-
 Note: $MakePreFct$ and $MakePostFct$ should be devided into four
 operations (TBD, HV). 
-
 
 \begin{vdm_al}
 operations
@@ -3748,15 +3746,19 @@ PackageToDir(package) ==
 operations
 RemoveNil: REP`TypeRep ==> REP`TypeRep
 RemoveNil(type) ==
-  if CPP`isCPP()
-  then return type
-  else cases type:
-         mk_REP`UnionTypeRep(tps) -> cases tps \ {mk_REP`NilTypeRep()}:
-                                       {tp} -> return tp,
-                                       others -> return type
-                                     end,
-         others -> return type
-       end;
+#ifdef VDMPP
+  if CPP`isJAVA()
+  then
+    cases type:
+       mk_REP`UnionTypeRep(tps) -> cases tps \ {mk_REP`NilTypeRep()}:
+                                     {tp} -> return tp,
+                                     others -> return type
+                                   end,
+       others -> return type
+    end
+  else
+#endif VDMPP
+    return type;
 
 functions
 RemoveExitType: REP`TypeRep +> REP`TypeRep

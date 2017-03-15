@@ -1430,7 +1430,7 @@ CGBlockStmt(mk_AS`BlockStmt(dcls, stmts,-), isLast) ==
 
   if dcls = []
   then return rb
-  else return [CGAUX`GenCPPStmt(rb)]);
+  else return [BC`GenBlock(rb)]);
 \end{vdm_al}
 
 \subsection{Let Statement}
@@ -1577,7 +1577,7 @@ CGWhileLoopStmt(mk_AS`WhileLoopStmt(test, body, -), isLast) ==
   def whCrtlType = CGAUX`FindType( test );
       btype = mk_REP`BooleanTypeRep();
       mk_(whCrtl_v, eval_stmt) = CGEXPR`CGExprExcl(test, "whCrtl", nil);
-      bodystmt = CGAUX`GenCPPStmt(GenStmt( body, isLast ));
+      bodystmt = BC`GenBlock(GenStmt( body, isLast ));
   in
    (dcl whCrtlval : CPP`Expr,
         cond : CPP`Expr,
@@ -2378,7 +2378,7 @@ CGIfStmt(mk_AS`IfStmt(test, cons, elif, altn,-), isLast) ==
     in
       rb := rb ^ [BC`GenIfStmt(DS`GenGetValue( cond_v, btype ), cons_stmt, if tmpb = nil
                                                                            then nil
-                                                                           else CGAUX`GenCPPStmt( tmpb ))];
+                                                                           else BC`GenBlock( tmpb ))];
     return rb);
 \end{vdm_al}
 

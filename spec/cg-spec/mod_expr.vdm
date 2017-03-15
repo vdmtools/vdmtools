@@ -4414,9 +4414,9 @@ CGIfExpr( mk_AS`IfExpr( test, cons, elif, altn, - ), mk_CGMAIN`VT( resVar_v, res
     for mk_AS`ElseifExpr(elif_test, elif_cons, -) in reverse elif do
       def mk_(res2, res2_stmt) = CGExprExcl(elif_test, "cond", nil)
       in
-        def elif_alt2 = CGAUX`GenCPPStmt(tmpb);
+        def elif_alt2 = BC`GenBlock(tmpb);
             elif_alt1 = def alt1_stmts = CGExpr(elif_cons, mk_CGMAIN`VT(resVar_v, resVarType))
-                        in CGAUX`GenCPPStmt(alt1_stmts);
+                        in BC`GenBlock(alt1_stmts);
             testType = CGAUX`FindType(elif_test);
         in
          (dcl nres2 : CPP`Expr := res2,
@@ -4433,8 +4433,8 @@ CGIfExpr( mk_AS`IfExpr( test, cons, elif, altn, - ), mk_CGMAIN`VT( resVar_v, res
           tmpb := res2_stmt ^ [ BC`GenIfStmt( elif_cond, elif_alt1, elif_alt2) ];
          );
 
-    def alt1 = CGAUX`GenCPPStmt(cons_stmt ^ [BC`GenAsgnStmt(resVar_v, cons_expr)]);
-        alt2 = CGAUX`GenCPPStmt(tmpb);
+    def alt1 = BC`GenBlock(cons_stmt ^ [BC`GenAsgnStmt(resVar_v, cons_expr)]);
+        alt2 = BC`GenBlock(tmpb);
     in return cond_stmt ^ [ BC`GenIfStmt(cond, alt1, alt2) ];
    );
 \end{vdm_al}
@@ -4746,7 +4746,7 @@ GenSeqOvwr( mk_CGMAIN`VT(seq_v, seqtype), mk_CGMAIN`VT(map_v, mapType), mk_CGMAI
         in if_body := BC`GenIfStmt(cond, rre, alt2);
 #endif VDMPP
       def body = let stmts = isint_part ^ [if_body]
-              in CGAUX`GenCPPStmt(stmts);
+              in BC`GenBlock(stmts);
           seqtp = mk_REP`SeqTypeRep(CGAUX`FindSeqElemType(seqtype));
       in
        (dcl rb : seq of CPP`Stmt;
@@ -5444,7 +5444,7 @@ GenFieldInds(rec, recTp, mu_l) ==
                          stmt_l := stmt_l ^ val_stmt;
                          stmt_l := stmt_l ^ [BC`GenAsgnStmt(BC`GenQualifiedName(cast,BC`Rename2(nm)),
                                                  DS`GenExplicitCast(type,val,CGAUX`FindType(newval)))];);
-                   return CGAUX`GenCPPStmt(stmt_l);)
+                   return BC`GenBlock(stmt_l);)
                 else
 #endif VDMPP
                   (dcl stmt_l : seq of CPP`Stmt := [];
@@ -5453,7 +5453,7 @@ GenFieldInds(rec, recTp, mu_l) ==
                          mk_(val, val_stmt) = CGExprExcl(newval, "val", nil) 
                      in
                        stmt_l := stmt_l ^ val_stmt ^ [ DS`GenRecSetField(rec, fieldno, val) ];
-                     return CGAUX`GenCPPStmt(stmt_l);),
+                     return BC`GenBlock(stmt_l);),
       others ->
 #ifdef VDMPP
                 if CPP`isJAVA()
@@ -5473,7 +5473,7 @@ GenFieldInds(rec, recTp, mu_l) ==
                             (stmt_l := stmt_l ^ val_stmt;
                              stmt_l := stmt_l ^ [BC`GenAsgnStmt(BC`GenQualifiedName(cast,BC`Rename2(nm)),
                                                            DS`GenExplicitCast(type,val,CGAUX`FindType(newval)))];);
-                        ifs := BC`GenIfStmt(isRecord, CGAUX`GenCPPStmt(stmt_l), ifs););
+                        ifs := BC`GenIfStmt(isRecord, BC`GenBlock(stmt_l), ifs););
                    return ifs;)
                 else
 #endif VDMPP
@@ -8307,7 +8307,7 @@ CGComprehension(bind, pred, stmt, contexpr, notpred, pid_m, nonstop ) ==
             CGAUX`RemNoCheckSeqApply(seqapply_s);
             for id in id_l do
               stmt_l := DS`GenIterSet(mk_CGMAIN`VT(e_v, e_type), contexpr, mk_CGMAIN`VT(id, e_t), stmt_l);
-            return CGAUX`GenCPPStmt(stmts ^ stmt_l)
+            return BC`GenBlock(stmts ^ stmt_l)
           )
       else
         def succ_v = BC`GiveName("succ");
@@ -8355,7 +8355,7 @@ CGComprehension(bind, pred, stmt, contexpr, notpred, pid_m, nonstop ) ==
           if need_succ
           then rb := [BC`GenDecl(DS`GenSmallBoolType(), succ_v,
                                  BC`GenAsgnInit( BC`GenBoolLit(false)))] ^ rb;
-          return CGAUX`GenCPPStmt(rb);
+          return BC`GenBlock(rb);
          );
 \end{vdm_al}
 

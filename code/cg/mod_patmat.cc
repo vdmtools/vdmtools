@@ -2440,14 +2440,14 @@ Tuple vdmcg::CGMatchList (const SEQ<TYPE_AS_Pattern> & p_l,
         if (Is_excl && nonstop)
         {
           SEQ<TYPE_CPP_Stmt> rb;
-          rb.ImpAppend(vdm_BC_GenIfStmt(eq_len, GenCPPStmt(ifBody), nil));
+          rb.ImpAppend(vdm_BC_GenIfStmt(eq_len, vdm_BC_GenBlock(ifBody), nil));
           return mk_(rb, Bool(true));
         }
         else
         {
           SEQ<TYPE_CPP_Stmt> rb;
           rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenAsgnExpr(succ_v, vdm_BC_GenBracketedExpr(eq_len)),
-                                        GenCPPStmt(ifBody), nil));
+                                        vdm_BC_GenBlock(ifBody), nil));
           return mk_(rb, Bool(false));
         }
       }
