@@ -910,10 +910,10 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
   bool constr (opdef.GetBoolValue(pos_AS_ExplOpDef_constr));
   const TYPE_CI_ContextId & opcid (opdef.GetInt(pos_AS_ExplOpDef_cid));
 
+#ifdef VDMPP
   bool isimplicit (isimpl);
   bool isabstract (false);
 
-#ifdef VDMPP
   if (vdm_CPP_isJAVA()) {
     if (IsSubresp(body) || (get_j2v_option() &&
                             isInterface(GiveCurCASName()) &&
@@ -978,9 +978,15 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
       fb.ImpConc(GenPatternBody(pid_m, opdef, isDlClass, arg_l, varlist));
     }
     else {
+#ifdef VDMSL
+      Tuple tupBody (GenInlineBody(opdef, rngtype, isDlClass, arg_l, false, false));
+      fb.ImpConc(tupBody.GetSequence(2));
+#endif // VDMSL
+#ifdef VDMPP
       Tuple tupBody (GenInlineBody(opdef, rngtype, isDlClass, arg_l, isimplicit, isabstract));
       implfb.ImpConc(tupBody.GetSequence(1));
       fb.ImpConc(tupBody.GetSequence(2));
+#endif // VDMPP
     }
   }
 

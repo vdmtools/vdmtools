@@ -781,7 +781,7 @@ InitMethod(parm_l, tp) ==
 
 GenExplOpDef: AS`Name * AS`ExplOpDef * GenericStateDef * bool * bool ==> CPP`CPPAS
 #ifdef VDMSL
-GenExplOpDef(-, opdef, sd, isimpl, isDlClass) ==
+GenExplOpDef(-, opdef, sd, -, isDlClass) ==
   let mk_AS`ExplOpDef(nm,-,-,tp,parm_l,body,-,-,-,stat,constr,-) = opdef
 #endif VDMSL
 #ifdef VDMPP
@@ -789,10 +789,11 @@ GenExplOpDef(opnm, opdef, sd, isimpl, isDlClass) ==
   let mk_AS`ExplOpDef(nm,-,-,tp,parm_l,body,oppre,-,acc,stat,constr,opcid) = opdef
 #endif VDMPP
   in
-   (dcl isimplicit : bool := isimpl,
+   (
+#ifdef VDMPP
+    dcl isimplicit : bool := isimpl,
         isabstract : bool := false;
 
-#ifdef VDMPP
     if CPP`isJAVA()
     then
      (if IsSubresp(body) or
@@ -836,7 +837,8 @@ GenExplOpDef(opnm, opdef, sd, isimpl, isDlClass) ==
              fb := GenPatternBody(pid_m, opdef, isDlClass, arg_l, varlist)
            else
 #ifdef VDMSL
-             def mk_(-, tfb) = GenInlineBody(opdef, rngtype, isDlClass, arg_l, isimplicit, isabstract)
+             --def mk_(-, tfb) = GenInlineBody(opdef, rngtype, isDlClass, arg_l, isimplicit, isabstract)
+             def mk_(-, tfb) = GenInlineBody(opdef, rngtype, isDlClass, arg_l, false, false)
              in
               (fb := tfb);
 #endif VDMSL
