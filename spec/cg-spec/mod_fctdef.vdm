@@ -442,69 +442,85 @@ in
           in
            (dcl fb : seq of CPP`Stmt := [];
             -- If necessary, insert body of child operation
+#ifdef VDMSL
+            if parms <> [] and not inlineDecl
+            then fb := GenArgPatternMatch(pid_m, fndef, varlist);
+            fb := fb ^ b_stmt;
+            fb := fb ^ [ BC`GenReturnStmt(resVar_v) ];
+#endif VDMSL
 #ifdef VDMPP
-            if CPP`isJAVA() and isimplicit and IsNotyetspecified(body, isDlClass, stat)
-            then
-              def exdecl = BC`GenFctDecl (BC`GenIdentifier("impl_"^ CGAUX`GiveLastName(id)), arg_l);
-                  return_stmt = [BC`GenReturnStmt(DS`GenEmptyValue(CGAUX`RemoveNil(rngtype)))];
-              in
-               (dcl implfb : seq of CPP`Stmt;
-                if IsNotyetspecified(body, isDlClass, stat)
-                then implfb := [CGAUX`RunTime("Preliminary Function " ^ BC`Rename(id).id ^" has been called")]
-                else implfb := [CGAUX`RunTime("Implicit Function " ^ BC`Rename(id).id ^" has been called")];
-                implfb := implfb ^ return_stmt;
-                implcpp := def excs = GenExceptionsHdr()
-                           in -- make all external skeletons for implicit functions
-                            -- public so that the parent object can call them
-                             implcpp munion {fctcid |-> [BC`GenJavaFctDef([],
-                                                  [BC`GenModifier(<PUBLIC>)],ds,
-                                                 exdecl, excs,
-                                                 BC`GenBlock(implfb))]};
-               );
-#endif VDMPP
-          if parms <> [] and not inlineDecl
-#ifdef VDMPP
-             and not (CPP`isJAVA() and (isimplicit or isabstract or CGMAIN`get_skeleton_option()))
-#endif VDMPP
-          then
-           (fb := GenArgPatternMatch(pid_m, fndef, varlist) ^ b_stmt ^ [BC`GenReturnStmt(resVar_v)])
-          else
-           (
-#ifdef VDMPP
-            if prefn <> nil and CGMAIN`get_testpreandpost_option()
-            then fb := [GenMethPreCall(id, FindVariables(arg_l), stat)] ^ fb;
             if CPP`isJAVA()
             then
-              if (not isabstract and not CGMAIN`get_skeleton_option())
-              then fb := fb ^ b_stmt
-              elseif isimplicit and IsNotyetspecified(body, isDlClass, stat)
-              then fb := fb ^ b_stmt
-              elseif isimplicit
-              then skip
-              else fb := []
-            else
-#endif VDMPP
-              fb := fb ^ b_stmt;
-#ifdef VDMPP
-            if postfn <> nil and CGMAIN`get_testpreandpost_option()
-            then fb := fb ^ [GenFnPostCall(id, resVar_v, FindVariables(arg_l), stat)];
-            if CPP`isJAVA()
-            then
-              if isimplicit and IsNotyetspecified(body, isDlClass, stat)
-              then fb := fb ^ [ BC`GenReturnStmt(resVar_v) ]
-              elseif not isabstract and not CGMAIN`get_skeleton_option()
-              then fb := fb ^ [ BC`GenReturnStmt(resVar_v) ]
-              else
-                def exprlist = FindVariables(arg_l)
+             (if isimplicit and IsNotyetspecified(body, isDlClass, stat)
+              then
+                def exdecl = BC`GenFctDecl (BC`GenIdentifier("impl_"^ CGAUX`GiveLastName(id)), arg_l);
+                    return_stmt = [BC`GenReturnStmt(DS`GenEmptyValue(CGAUX`RemoveNil(rngtype)))];
                 in
-                  fb := fb ^ [ BC`GenReturnStmt(
-                                 BC`GenFctCallObjMemAcc(
-                                   BC`GenIdentifier("child"),
-                                   "impl_"^BC`Rename(id).id, exprlist)) ]
+                 (dcl implfb : seq of CPP`Stmt;
+                  if IsNotyetspecified(body, isDlClass, stat)
+                  then implfb := [CGAUX`RunTime("Preliminary Function " ^ BC`Rename(id).id ^" has been called")]
+                  else implfb := [CGAUX`RunTime("Implicit Function " ^ BC`Rename(id).id ^" has been called")];
+                  implfb := implfb ^ return_stmt;
+                  implcpp := def excs = GenExceptionsHdr()
+                             in -- make all external skeletons for implicit functions
+                              -- public so that the parent object can call them
+                               implcpp munion {fctcid |-> [BC`GenJavaFctDef([],
+                                                    [BC`GenModifier(<PUBLIC>)],ds,
+                                                   exdecl, excs,
+                                                   BC`GenBlock(implfb))]};
+                 );
+
+              if parms <> [] and not inlineDecl
+                 and not (isimplicit or isabstract or CGMAIN`get_skeleton_option())
+              then
+               (if prefn <> nil and CGMAIN`get_testpreandpost_option()
+                then fb := [GenMethPreCall(id, FindVariables(arg_l), stat)];
+                if parms <> [] and not inlineDecl
+                then fb := fb ^ GenArgPatternMatch(pid_m, fndef, varlist);
+                fb := fb ^ b_stmt;
+                if postfn <> nil and CGMAIN`get_testpreandpost_option()
+                then fb := fb ^ [GenFnPostCall(id, resVar_v, FindVariables(arg_l), stat)];
+                fb := fb ^ [ BC`GenReturnStmt(resVar_v) ];
+               )
+              else
+               (if prefn <> nil and CGMAIN`get_testpreandpost_option()
+                then fb := [GenMethPreCall(id, FindVariables(arg_l), stat)];
+
+                if (not isabstract and not CGMAIN`get_skeleton_option())
+                then fb := fb ^ b_stmt
+                elseif isimplicit and IsNotyetspecified(body, isDlClass, stat)
+                then fb := fb ^ b_stmt
+                elseif isimplicit
+                then skip
+                else fb := [];
+
+                if postfn <> nil and CGMAIN`get_testpreandpost_option()
+                then fb := fb ^ [GenFnPostCall(id, resVar_v, FindVariables(arg_l), stat)];
+
+                if isimplicit and IsNotyetspecified(body, isDlClass, stat)
+                then fb := fb ^ [ BC`GenReturnStmt(resVar_v) ]
+                elseif not isabstract and not CGMAIN`get_skeleton_option()
+                then fb := fb ^ [ BC`GenReturnStmt(resVar_v) ]
+                else
+                  def exprlist = FindVariables(arg_l)
+                  in
+                    fb := fb ^ [ BC`GenReturnStmt(
+                                   BC`GenFctCallObjMemAcc(
+                                     BC`GenIdentifier("child"),
+                                     "impl_"^BC`Rename(id).id, exprlist)) ];
+               );
+             )
             else
-#endif VDMPP
+             (if prefn <> nil and CGMAIN`get_testpreandpost_option()
+              then fb := [GenMethPreCall(id, FindVariables(arg_l), stat)];
+              if parms <> [] and not inlineDecl
+              then fb := fb ^ GenArgPatternMatch(pid_m, fndef, varlist);
+              fb := fb ^ b_stmt;
+              if postfn <> nil and CGMAIN`get_testpreandpost_option()
+              then fb := fb ^ [GenFnPostCall(id, resVar_v, FindVariables(arg_l), stat)];
               fb := fb ^ [ BC`GenReturnStmt(resVar_v) ];
-           );
+             );
+#endif VDMPP
 
           def decl = GenMethodDecl(id, arg_l)
           in

@@ -417,46 +417,56 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
   const TYPE_CPP_Expr & resVar_v (tupBody.GetRecord(1));
   const SEQ<TYPE_CPP_Stmt> & b_stmt (tupBody.GetSequence(2));
 
-#ifdef VDMPP
-  if (vdm_CPP_isJAVA() && isimplicit && IsNotyetspecified(body, isDlClass, stat)) {
-    TYPE_CPP_FctDecl exdecl (vdm_BC_GenFctDecl(vdm_BC_GenIdentifier(ASTAUX::MkId(L"impl_").ImpConc(GiveLastName(id))), arg_l));
-    SEQ<TYPE_CPP_Stmt> return_stmt;
-    return_stmt.ImpAppend(vdm_BC_GenReturnStmt(GenEmptyValue(RemoveNil(rngtype))));
-
-    SEQ<TYPE_CPP_Stmt> implfb;
-    if (IsNotyetspecified(body, isDlClass, stat))
-      implfb.ImpAppend((RunTime(L"Preliminary Function " + ASTAUX::Id2String(fnName) + L" has been called")));
-    else
-      implfb.ImpAppend((RunTime(L"Implicit Function " + ASTAUX::Id2String(fnName) + L" has been called")));
-    implfb.ImpConc(return_stmt);
-
-    SEQ<TYPE_CPP_Identifier> excs (GenExceptionsHdr());
-
-    TYPE_CPP_CPPAS implcppRVal;
-    TYPE_CPP_Modifier pub (vdm_BC_GenModifier(quote_PUBLIC));
-    implcppRVal.ImpAppend(vdm_BC_GenJavaFctDef(SEQ<TYPE_CPP_Annotation>(),
-                                           SEQ<TYPE_CPP_Modifier>().ImpAppend(pub),
-                                           ds, exdecl, excs, vdm_BC_GenBlock(implfb)));
-    this->implcpp.Insert(fctcid, implcppRVal);
-  }
-#endif // VDMPP
-
   SEQ<TYPE_CPP_Stmt> fb;
-  if (!parms.IsEmpty () && !inlineDecl
-#ifdef VDMPP
-      && !(vdm_CPP_isJAVA() && (isimplicit || isabstract || get_skeleton_option()))
-#endif // VDMPP
-     ) {
+#ifdef VDMSL
+  if (!parms.IsEmpty () && !inlineDecl) {
     fb.ImpConc( GenArgPatternMatch(pid_m, efd, varlist) );
-    fb.ImpConc( b_stmt );
-    fb.ImpAppend( vdm_BC_GenReturnStmt(resVar_v) );
   }
-  else {
+  fb.ImpConc( b_stmt );
+  fb.ImpAppend( vdm_BC_GenReturnStmt(resVar_v) );
+#endif // VDMSL
+
 #ifdef VDMPP
-    if (!prefn.IsNil() && get_testpreandpost_option()) {
-      fb.ImpPrepend(GenMethPreCall(id, FindVariables(arg_l), stat));
+  if (vdm_CPP_isJAVA() ) {
+    if (isimplicit && IsNotyetspecified(body, isDlClass, stat)) {
+      TYPE_CPP_FctDecl exdecl (vdm_BC_GenFctDecl(vdm_BC_GenIdentifier(ASTAUX::MkId(L"impl_").ImpConc(GiveLastName(id))), arg_l));
+      SEQ<TYPE_CPP_Stmt> return_stmt;
+      return_stmt.ImpAppend(vdm_BC_GenReturnStmt(GenEmptyValue(RemoveNil(rngtype))));
+  
+      SEQ<TYPE_CPP_Stmt> implfb;
+      if (IsNotyetspecified(body, isDlClass, stat))
+        implfb.ImpAppend((RunTime(L"Preliminary Function " + ASTAUX::Id2String(fnName) + L" has been called")));
+      else
+        implfb.ImpAppend((RunTime(L"Implicit Function " + ASTAUX::Id2String(fnName) + L" has been called")));
+      implfb.ImpConc(return_stmt);
+
+      SEQ<TYPE_CPP_Identifier> excs (GenExceptionsHdr());
+
+      TYPE_CPP_CPPAS implcppRVal;
+      TYPE_CPP_Modifier pub (vdm_BC_GenModifier(quote_PUBLIC));
+      implcppRVal.ImpAppend(vdm_BC_GenJavaFctDef(SEQ<TYPE_CPP_Annotation>(),
+                                             SEQ<TYPE_CPP_Modifier>().ImpAppend(pub),
+                                             ds, exdecl, excs, vdm_BC_GenBlock(implfb)));
+      this->implcpp.Insert(fctcid, implcppRVal);
     }
-    if (vdm_CPP_isJAVA()) {
+
+    if (!parms.IsEmpty () && !inlineDecl
+        && !(isimplicit || isabstract || get_skeleton_option())) {
+      if (!prefn.IsNil() && get_testpreandpost_option()) {
+        fb.ImpAppend(GenMethPreCall(id, FindVariables(arg_l), stat));
+      }
+      fb.ImpConc( GenArgPatternMatch(pid_m, efd, varlist) );
+      fb.ImpConc( b_stmt );
+      if (!postfn.IsNil() && get_testpreandpost_option()) {
+        fb.ImpAppend(GenFnPostCall(id, resVar_v, FindVariables(arg_l),stat));
+      }
+      fb.ImpAppend( vdm_BC_GenReturnStmt(resVar_v) );
+    }
+    else {
+      if (!prefn.IsNil() && get_testpreandpost_option()) {
+        fb.ImpAppend(GenMethPreCall(id, FindVariables(arg_l), stat));
+      }
+
       if (!isabstract && !get_skeleton_option()) {
         fb.ImpConc(b_stmt);
       }
@@ -469,18 +479,11 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
       else {
         fb = type_dL(); // Can this be correct??
       }
-    }
-    else
-#endif // VDMPP
-    { // C++
-      fb.ImpConc(b_stmt);
-    }
 
-#ifdef VDMPP
-    if (!postfn.IsNil() && get_testpreandpost_option()) {
-      fb.ImpAppend(GenFnPostCall(id, resVar_v, FindVariables(arg_l),stat));
-    }
-    if (vdm_CPP_isJAVA()) {
+      if (!postfn.IsNil() && get_testpreandpost_option()) {
+        fb.ImpAppend(GenFnPostCall(id, resVar_v, FindVariables(arg_l),stat));
+      }
+
       if (isimplicit && IsNotyetspecified(body, isDlClass, stat)) {
         fb.ImpAppend(vdm_BC_GenReturnStmt(resVar_v));
       }
@@ -494,12 +497,22 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
         fb.ImpAppend(vdm_BC_GenReturnStmt(fctcall));
       }
     }
-    else
-#endif // VDMPP
-    { // C++
-      fb.ImpAppend(vdm_BC_GenReturnStmt(resVar_v));
-    }
   }
+  else
+  { // C++
+    if (!prefn.IsNil() && get_testpreandpost_option()) {
+      fb.ImpAppend(GenMethPreCall(id, FindVariables(arg_l), stat));
+    }
+    if (!parms.IsEmpty () && !inlineDecl) {
+      fb.ImpConc( GenArgPatternMatch(pid_m, efd, varlist) );
+    }
+    fb.ImpConc(b_stmt);
+    if (!postfn.IsNil() && get_testpreandpost_option()) {
+      fb.ImpAppend(GenFnPostCall(id, resVar_v, FindVariables(arg_l),stat));
+    }
+    fb.ImpAppend(vdm_BC_GenReturnStmt(resVar_v));
+  }
+#endif // VDMPP
 
   // Add run-time file information
   if (rti) {
