@@ -443,9 +443,13 @@ in
            (dcl fb : seq of CPP`Stmt := [];
             -- If necessary, insert body of child operation
 #ifdef VDMSL
+            if prefn <> nil and CGMAIN`get_testpreandpost_option()
+            then fb := [GenMethPreCall(id, FindVariables(arg_l), stat)];
             if parms <> [] and not inlineDecl
-            then fb := GenArgPatternMatch(pid_m, fndef, varlist);
+            then fb := fb ^ GenArgPatternMatch(pid_m, fndef, varlist);
             fb := fb ^ b_stmt;
+            if postfn <> nil and CGMAIN`get_testpreandpost_option()
+            then fb := fb ^ [GenFnPostCall(id, resVar_v, FindVariables(arg_l), stat)];
             fb := fb ^ [ BC`GenReturnStmt(resVar_v) ];
 #endif VDMSL
 #ifdef VDMPP
@@ -662,7 +666,6 @@ and a list of pair of variable names and types used in the declaration
 list.
 
 \begin{vdm_al}
-#ifdef VDMPP
 FindVariables: seq of CPP`ArgDecl ==> seq of CPP`Expr
 FindVariables(arg_l) ==
  (dcl exprs : seq of CPP`Expr := [];
@@ -671,7 +674,6 @@ FindVariables(arg_l) ==
      exprs := exprs^[FindVariableinDecl(decl)];
   return exprs
   );
-#endif VDMPP
 
 FindVariableinDecl: CPP`Declarator ==> CPP`Expr
 FindVariableinDecl(decl) ==
@@ -1173,35 +1175,55 @@ GenInlineBody(opdef, rngtype, isDlClass, arg_l, isimplicit, isabstract) ==
   return mk_(implfb, fb)
 );
 
-#ifdef VDMPP
 GenMethPreCall : AS`Name * seq of CPP`Expr * bool ==> CPP`Stmt
+#ifdef VDMSL
+GenMethPreCall(nm, args, -) ==
+  def prename = BC`GivePrePostNm(nm, "pre");
+#endif VDMSL
+#ifdef VDMPP
 GenMethPreCall(nm, args, stat) ==
   def prename = BC`Rename(mu(nm, ids |-> ["pre_" ^ hd nm.ids]^tl nm.ids))
+#endif VDMPP
   in
    (dcl preref : CPP`Expr;
+#ifdef VDMSL
+    preref := BC`GenFctCall(prename, args);
+#endif VDMSL
+#ifdef VDMPP
     if stat
     then preref := BC`GenFctCall(prename, args)
     elseif CPP`isCPP()
     then preref := BC`GenFctCallPtrToObjMemAcc(DS`GenThis(), prename, args)
     else preref := BC`GenFctCall(BC`GenObjectMemberAccess(DS`GenThis(),prename), args);
+#endif VDMPP
     return BC`GenIfStmt(BC`GenNot(DS`GenGetValue(preref,mk_REP`BooleanTypeRep())),
                  BC`GenBlock([CGAUX`RunTime("Precondition failure in " ^ hd nm.ids)]), nil);
    );
 
 GenFnPostCall : AS`Name * CPP`Expr * seq of CPP`Expr * bool ==> CPP`Stmt
+#ifdef VDMSL
+GenFnPostCall(nm, res, args, -) ==
+  def postname = BC`GivePrePostNm(nm, "post")
+#endif VDMSL
+#ifdef VDMPP
 GenFnPostCall(nm, res, args, stat) ==
   def postname = BC`Rename(mu(nm, ids |-> ["post_" ^ hd nm.ids]^tl nm.ids))
+#endif VDMPP
   in
    (dcl postref : CPP`Expr;
+#ifdef VDMSL
+    postref := BC`GenFctCall(postname, args^[res]);
+#endif VDMSL
+#ifdef VDMPP
     if stat
     then postref := BC`GenFctCall(postname, args^[res])
     elseif CPP`isCPP()
     then postref := BC`GenFctCallPtrToObjMemAcc(DS`GenThis(), postname, args ^ [res])
     else postref := BC`GenFctCall(BC`GenObjectMemberAccess(DS`GenThis(),postname), args ^[res]);
+#endif VDMPP
     return BC`GenIfStmt(BC`GenNot(DS`GenGetValue(postref,mk_REP`BooleanTypeRep())),
                  BC`GenBlock([CGAUX`RunTime("Postcondition failure in " ^ hd nm.ids)]), nil);
    );
-#endif VDMPP
 operations
 \end{vdm_al}
 

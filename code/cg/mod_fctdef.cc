@@ -419,10 +419,16 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
 
   SEQ<TYPE_CPP_Stmt> fb;
 #ifdef VDMSL
+  if (!prefn.IsNil() && get_testpreandpost_option()) {
+    fb.ImpAppend(GenMethPreCall(id, FindVariables(arg_l), stat));
+  }
   if (!parms.IsEmpty () && !inlineDecl) {
     fb.ImpConc( GenArgPatternMatch(pid_m, efd, varlist) );
   }
   fb.ImpConc( b_stmt );
+  if (!postfn.IsNil() && get_testpreandpost_option()) {
+    fb.ImpAppend(GenFnPostCall(id, resVar_v, FindVariables(arg_l),stat));
+  }
   fb.ImpAppend( vdm_BC_GenReturnStmt(resVar_v) );
 #endif // VDMSL
 
@@ -1490,7 +1496,6 @@ Tuple vdmcg::GenInlineBody(const TYPE_AS_ExplOpDef & opdef,
   return mk_(implfb, fb);
 }
 
-#ifdef VDMPP
 // GenMethPreCall
 // nm : AS`Name
 // args : seq of CPP`Expr
@@ -1498,6 +1503,11 @@ Tuple vdmcg::GenInlineBody(const TYPE_AS_ExplOpDef & opdef,
 // -> CPP`Stmt
 TYPE_CPP_Stmt vdmcg::GenMethPreCall(const TYPE_AS_Name & nm, const SEQ<TYPE_CPP_Expr> & args, bool stat)
 {
+#ifdef VDMSL
+  TYPE_CPP_Name prename (vdm_BC_GivePrePostNm(nm, ASTAUX::MkId(L"pre")));
+  TYPE_CPP_Expr preref(vdm_BC_GenFctCall(prename, args));
+#endif // VDMSL
+#ifdef VDMPP
   TYPE_AS_Id preid (ASTAUX::MkId(L"pre_").ImpConc(ASTAUX::GetFirstId(nm)));
   TYPE_CPP_Name prename (vdm_BC_Rename(ASTAUX::MkNameFromId(preid, nm.get_cid())));
 
@@ -1512,6 +1522,7 @@ TYPE_CPP_Stmt vdmcg::GenMethPreCall(const TYPE_AS_Name & nm, const SEQ<TYPE_CPP_
       preref = vdm_BC_GenFctCall(vdm_BC_GenObjectMemberAccess(GenThis(), prename), args);
     }
   }
+#endif // VDMPP
 
   TYPE_CPP_Expr cond (GenGetValue(preref, mk_REP_BooleanTypeRep()));
   return vdm_BC_GenIfStmt(vdm_BC_GenNot(cond),
@@ -1529,11 +1540,16 @@ TYPE_CPP_Stmt vdmcg::GenFnPostCall(const TYPE_AS_Name & nm,
                                    const SEQ<TYPE_CPP_Expr> & args,
                                    bool stat)
 {
-  TYPE_AS_Id postid (ASTAUX::MkId(L"post_").ImpConc(ASTAUX::GetFirstId(nm)));
-  TYPE_CPP_Name postname (vdm_BC_Rename(ASTAUX::MkNameFromId(postid, nm.get_cid())));
-
   SEQ<TYPE_CPP_Expr> parms (args);
   parms.ImpAppend(res);
+
+#ifdef VDMSL
+  TYPE_CPP_Name postname (vdm_BC_GivePrePostNm(nm, ASTAUX::MkId(L"post")));
+  TYPE_CPP_Expr postref (vdm_BC_GenFctCall(postname, parms));
+#endif // VDMSL
+#ifdef VDMPP
+  TYPE_AS_Id postid (ASTAUX::MkId(L"post_").ImpConc(ASTAUX::GetFirstId(nm)));
+  TYPE_CPP_Name postname (vdm_BC_Rename(ASTAUX::MkNameFromId(postid, nm.get_cid())));
 
   TYPE_CPP_Expr postref;
   if (stat) {
@@ -1547,11 +1563,11 @@ TYPE_CPP_Stmt vdmcg::GenFnPostCall(const TYPE_AS_Name & nm,
       postref = vdm_BC_GenFctCall(vdm_BC_GenObjectMemberAccess(GenThis(), postname), parms);
     }
   }
+#endif // VDMPP
   TYPE_CPP_Expr cond (GenGetValue(postref, mk_REP_BooleanTypeRep()));
   return vdm_BC_GenIfStmt(vdm_BC_GenNot(cond),
         vdm_BC_GenBlock(mk_sequence(RunTime(L"Postcondition failure in " + ASTAUX::ASName2String(nm)))), nil);
 }
-#endif // VDMPP
 
 // GenImplDef
 // fndef : (AS`ImplFnDef | AS`ImplOpDef)

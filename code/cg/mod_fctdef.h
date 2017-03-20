@@ -75,10 +75,8 @@ Tuple GenInlineBody(const TYPE_AS_ExplOpDef &,
                     const SEQ<TYPE_CPP_ArgDecl> &,
                     bool, bool);
 
-#ifdef VDMPP
 TYPE_CPP_Stmt GenMethPreCall(const TYPE_AS_Name &, const SEQ<TYPE_CPP_Expr> &, bool);
 TYPE_CPP_Stmt GenFnPostCall(const TYPE_AS_Name &, const TYPE_CPP_Expr &, const SEQ<TYPE_CPP_Expr> &, bool);
-#endif // VDMPP
 TYPE_CPP_CPPAS GenImplDef(const Record &, const Generic &);
 Sequence GenFctOpDecl(const TYPE_AS_Name&, const Record &, const Generic &, const Generic &);
 #ifdef VDMSL
