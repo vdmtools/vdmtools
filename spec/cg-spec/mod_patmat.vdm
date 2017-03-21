@@ -1260,7 +1260,7 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, type)
                else
                 (tmpVal_v := e;
                  e_stmt := stmts);
-             def cond = BC`GenFctCallObjMemAcc(castVarExpr_v, "StartsWith", [tmpVal_v]);
+             def cond = BC`GenFctCallObjMemAcc(castVarExpr_v, "startsWith", [tmpVal_v]);
                  Max = DS`GenLen_int(castVarExpr_v);
                  index = DS`GenLen_int(tmpVal_v);
                  sb2 = DS`GenSubSequence(castVarExpr_v, type, index, Max);
@@ -1287,9 +1287,9 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, type)
                else
                 (tmpVal_v := e;
                  e_stmt := stmts);
-             def cond = BC`GenFctCallObjMemAcc(castVarExpr_v, "EndsWith", [tmpVal_v]);
-                 Max = DS`GenLen_int(castVarExpr_v);
-                 index = BC`GenMinus(Max, DS`GenLen_int(tmpVal_v));
+             def cond = BC`GenFctCallObjMemAcc(castVarExpr_v, "endsWith", [tmpVal_v]);
+                 Max = DS`GenLenString_int(castVarExpr_v);
+                 index = BC`GenMinus(Max, DS`GenLenString_int(tmpVal_v));
                  sb1 = DS`GenSubSequence(castVarExpr_v, type, BC`GenIntegerLit(0), index);
                  seqtp = mk_REP`SeqTypeRep(CGAUX`FindSeqElemType(type));
                  mk_(pml, Is_exec_l) = CGPatternMatchExcl(a, mk_CGMAIN`VT(sb1, seqtp), pn_s, succ_v, pid_m, inner, nonstop)
