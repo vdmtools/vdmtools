@@ -1486,7 +1486,7 @@ CGLetBeSTStmt(mk_AS`LetBeSTStmt(bind, St, In,-), isLast) ==
    (CGAUX`SetNotSupportedException(true);
     def stmts = GenNotSupported("type bind", isLast)
     in 
-#ifdef VDPP
+#ifdef VDMPP
       if CPP`isJAVA()
       then
         return stmts ^ [BC`GenReturnStmt(DS`GenEmptyValue(CGAUX`GiveCurrentRType()))]
@@ -1666,7 +1666,7 @@ CGSeqForLoopStmt(mk_AS`SeqForLoopStmt(cv, fseq, body,-), isLast) ==
             rti = BC`GenBlock([CGAUX`RunTime("A sequence was expected in sequence for loop")])
         in
          (rb_l := rb_l ^ [BC`GenIfStmt(BC`GenNot(cond), rti, nil)];
-#ifdef VDPP
+#ifdef VDMPP
           if CPP`isJAVA()
           then
             rb_l := rb_l ^ [BC`GenDecl(DS`GenSeq0Type(), sq', BC`GenAsgnInit(DS`GenCastSeq(sq, nil)))]
@@ -1767,7 +1767,7 @@ CGSetForLoopStmt(mk_AS`SetForLoopStmt(pat, fset, body,-), isLast) ==
           rti = BC`GenBlock([CGAUX`RunTime("A set was expected in set for loop")])
       in
        (rb_l := rb_l ^ [BC`GenIfStmt(BC`GenNot(cond), rti, nil)];
-#ifdef VDPP
+#ifdef VDMPP
         if CPP`isJAVA()
         then
           rb_l := rb_l ^ [BC`GenDecl(DS`GenSetType(), iset', BC`GenAsgnInit(DS`GenCastSetType(iset)))]
@@ -1904,7 +1904,7 @@ GenBoundAndValue(var, expr) ==
           rti = BC`GenBlock([CGAUX`RunTime("An integer was expected in indexed for loop")]);
       in
        (dcl val : CPP`Expr;
-#ifdef VDPP
+#ifdef VDMPP
         if CPP`isJAVA()
         then
           val := DS`GenGetValue(BC`GenCastExpr(DS`GenNumType(), tmp), mk_REP`NumericTypeRep(<INTEGER>))
@@ -2093,7 +2093,7 @@ CGCasesStmt(mk_AS`CasesStmt(sel, altns, Others, -), isLast) ==
       if isLast and not is_REP`UnitTypeRep(CGAUX`GiveCurrentRType())
       then
        (rb := rb ^ [CGAUX`RunTime ("The operation did not return a value")];
-#ifdef VDPP
+#ifdef VDMPP
         if CPP`isJAVA()
         then
           rb := rb ^ [BC`GenReturnStmt(DS`GenEmptyValue(CGAUX`GiveCurrentRType()))]
@@ -2257,7 +2257,7 @@ The identitity statement:
 is translated into an empty C++ expression statement.
 #endif
 
-#ifdef VDPP
+#ifdef VDMPP
 \subsection{Identity and Delay Statements}
 
 The identitity and delay statements:
@@ -2334,7 +2334,7 @@ CGIfStmt(mk_AS`IfStmt(test, cons, elif, altn,-), isLast) ==
       if isLast and not is_REP`UnitTypeRep(CGAUX`GiveCurrentRType())
       then
         (dcl lrb : [seq of CPP`Stmt] := [CGAUX`RunTime ("The operation did not return a value")];
-#ifdef VDPP
+#ifdef VDMPP
          if CPP`isJAVA()
          then
            lrb := lrb ^ [BC`GenReturnStmt(DS`GenEmptyValue(CGAUX`GiveCurrentRType()))]
@@ -2421,7 +2421,7 @@ operations
 
 GenSpecTopStmt: AS`SpecificationStmt ==> seq of CPP`Stmt
 GenSpecTopStmt(-) ==
-#ifdef VDPP
+#ifdef VDMPP
   if CPP`isJAVA()
   then
    (CGAUX`SetNotSupportedException(true);
@@ -2440,7 +2440,7 @@ operations
 
 CGAlwaysStmt : AS`AlwaysStmt * bool ==> seq of CPP`Stmt
 CGAlwaysStmt(mk_AS`AlwaysStmt(Post,body,-), p_isLast) ==
-#ifdef VDPP
+#ifdef VDMPP
   if CPP`isJAVA()
   then
     def handlerStmt = BC`GenBlock(GenStmt(Post, false));
