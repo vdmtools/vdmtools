@@ -53,11 +53,13 @@ private:
   void RememberPid_m(const Map &);
   void DeletePid_m();
   Generic DeclaredAs(const TYPE_CPP_Expr &);
+#ifdef VDMPP
   TYPE_CPP_Expr GetIntVal(const TYPE_CPP_Expr&);
   TYPE_CPP_Expr GetRealVal(const TYPE_CPP_Expr&);
   TYPE_CPP_Expr GetStringVal(const TYPE_CPP_Expr&);
   TYPE_CPP_Expr GetListVal(const TYPE_CPP_Expr&);
   TYPE_CPP_Expr GenExplicitCast(const TYPE_REP_TypeRep &, const TYPE_CPP_Expr &, const Generic &);
+#endif // VDMPP
   Generic GenEmptyValue(const TYPE_REP_TypeRep &);
   TYPE_CPP_TypeSpecifier GenSmallBoolType();
   TYPE_CPP_TypeSpecifier GenBoolType();
@@ -173,24 +175,38 @@ private:
   TYPE_CPP_TypeSpecifier GenSeq0Type();
   TYPE_CPP_TypeSpecifier GenImplSeq0Type();
   TYPE_CPP_Expr GenSeqApply(const Generic &, const TYPE_CPP_Expr &, const TYPE_CPP_Expr &);
+#ifdef VDMPP
   TYPE_CPP_Expr GenSeqApplyString(const TYPE_CPP_Expr &, const TYPE_CPP_Expr &);
+#endif // VDMPP
   TYPE_CPP_Expr GenHd(const TYPE_REP_TypeRep &, const TYPE_CPP_Expr &);
+#ifdef VDMPP
   TYPE_CPP_Expr GenHdString(const TYPE_CPP_Expr &);
+#endif // VDMPP
   TYPE_CPP_Expr GenTl(const TYPE_CPP_Expr &);
+#ifdef VDMPP
   TYPE_CPP_Expr GenTlString(const TYPE_CPP_Expr &);
+#endif // VDMPP
   TYPE_CPP_Expr GenReverse(const TYPE_CPP_Expr &);
+#ifdef VDMPP
   TYPE_CPP_Expr GenReverseString(const TYPE_CPP_Expr &);
+#endif // VDMPP
   TYPE_CPP_Expr GenInds(const TYPE_CPP_Expr &);
   TYPE_CPP_Expr GenDConc(const TYPE_CPP_Expr &);
   TYPE_CPP_Expr GenConc(const TYPE_CPP_Expr &, const TYPE_CPP_Expr &);
+#ifdef VDMPP
   TYPE_CPP_Expr GenConcString(const TYPE_CPP_Expr &, const TYPE_CPP_Expr &);
+#endif // VDMPP
   TYPE_CPP_Expr GenLen(const TYPE_CPP_Expr &);
+#ifdef VDMPP
   TYPE_CPP_Expr GenLenString(const TYPE_CPP_Expr &);
-  TYPE_CPP_Expr GenLen_int(const TYPE_CPP_Expr &);
   TYPE_CPP_Expr GenLenString_int(const TYPE_CPP_Expr &);
+#endif // VDMPP
+  TYPE_CPP_Expr GenLen_int(const TYPE_CPP_Expr &);
   TYPE_CPP_Expr GenCastSeq(const TYPE_CPP_Expr &, const Generic &);
   TYPE_CPP_Expr GenCastSeqTypeForModify(const TYPE_CPP_Expr &);
+#ifdef VDMPP
   TYPE_CPP_Expr GenCastString(const TYPE_CPP_Expr &);
+#endif // VDMPP
   TYPE_CPP_Expr GenSubSequence(const TYPE_CPP_Expr & e, const Generic & t,
                                const TYPE_CPP_Expr & from, const TYPE_CPP_Expr & to);
   TYPE_CPP_Expr GenPermute(const TYPE_CPP_Expr & e);
@@ -205,7 +221,9 @@ private:
   SEQ<TYPE_CPP_Stmt> GenDeclEmptySeq(const TYPE_CPP_Name &);
   SEQ<TYPE_CPP_Stmt> GenDeclSeq(const TYPE_CPP_Name &, const Generic &);
   SEQ<TYPE_CPP_Stmt> GenSeqDecl_DS(const TYPE_CPP_Name &, const Generic &);
+#ifdef VDMPP
   SEQ<TYPE_CPP_Stmt> GenStringDecl(const TYPE_CPP_Name &, const Generic &);
+#endif // VDMPP
   TYPE_CPP_Expr GenSeqConc(const TYPE_CPP_Expr &, const TYPE_CPP_Expr &);
   TYPE_CPP_Stmt GenSeqConcStmt(const TYPE_CPP_Expr &, const TYPE_CPP_Expr &);
   TYPE_CPP_Expr GenSeqElems(const TYPE_CPP_Expr &);
@@ -269,7 +287,9 @@ private:
   TYPE_CPP_Expr GenMinus_DS(const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &, const Generic &);
   TYPE_CPP_Expr GenMult_DS(const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &, const Generic &);
   TYPE_CPP_Expr GenNumDiv(const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &, const Generic &);
+#ifdef VDMPP
   TYPE_CPP_Expr GenIntVal(const TYPE_CGMAIN_VT &);
+#endif // VDMPP
   TYPE_CPP_Expr GenNumRem(const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &);
   TYPE_CPP_Expr GenNumMod(const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &);
   TYPE_CPP_Expr GenIntDiv(const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &, const TYPE_CGMAIN_VT &);

@@ -139,7 +139,6 @@ private:
   bool IsFctType(const TYPE_REP_TypeRep &) const;
   bool IsUnionFunctionType (const TYPE_REP_TypeRep &) const;
   bool IsSubType (const TYPE_REP_TypeRep &, const TYPE_REP_TypeRep &) const;
-  TYPE_CPP_Stmt GenCPPStmt(const SEQ<TYPE_CPP_Stmt> &);
 #ifdef VDMPP
   TYPE_REP_ObjRefTypeRep UnQClassType (const TYPE_REP_ObjRefTypeRep &);
   bool IsObjRefType(const TYPE_REP_TypeRep &);

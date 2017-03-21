@@ -816,6 +816,7 @@ DeclaredAs(e) ==
   end;
   return result);
 
+#ifdef VDMPP
 GetIntVal : CPP`Expr ==> CPP`Expr
 GetIntVal (v) ==
   cases v:
@@ -855,32 +856,6 @@ GenExplicitCast(restp, e, tp) ==
     if isnil
     then return e
     else
---      def type = if (tp = nil)
---                 then tp
---                 else
---                   def ptp = DeclaredAs(e)
---                   in
---                     if (ptp = nil)
---                     then
---                       cases tp:                        --- skal udvides!!!!!!!
---                         mk_REP`OpTypeRep(-,Rng) -> CGAUX`CleanFlatType(Rng),
---#ifdef VDMPP
---                         mk_REP`OverTypeRep(tp_s) -> let rtp_s = { cases t:
---                                                                     mk_REP`OpTypeRep(-,Rng)          -> Rng,
---                                                                     mk_REP`PartialFnTypeRep(-,fnrng) -> fnrng,
---                                                                     mk_REP`TotalFnTypeRep(-,fnrng)   -> fnrng,
---                                                                     others                           -> undefined
---                                                                   end | t in set tp_s }
---                                                     in
---                                                       cases rtp_s:
---                                                         {}     -> undefined,
---                                                         {e}    -> CGAUX`CleanFlatType(e),
---                                                         others -> CGAUX`CleanFlatType(mk_REP`UnionTypeRep(rtp_s))
---                                                       end,
---#endif VDMPP
---                         others -> CGAUX`CleanFlatType(tp)
---                       end
---                     else ptp;
        (dcl restype : REP`TypeRep,
             type : [REP`TypeRep] := nil;
         cases restp:                        --- skal udvides!!!!!!!
@@ -891,7 +866,6 @@ GenExplicitCast(restp, e, tp) ==
                                    else restype := CGAUX`RemoveNil(CGAUX`CleanFlatType(restp)),
           others -> restype := CGAUX`RemoveNil(CGAUX`CleanFlatType(restp))
         end;
---
         if tp <> nil
         then
           def ptp = DeclaredAs(e)
@@ -900,7 +874,6 @@ GenExplicitCast(restp, e, tp) ==
             then
               cases tp:                        --- skal udvides!!!!!!!
                 mk_REP`OpTypeRep(-,Rng) -> type := CGAUX`CleanFlatType(Rng),
-#ifdef VDMPP
                 mk_REP`OverTypeRep(tp_s) -> let rtp_s = { cases t:
                                                             mk_REP`OpTypeRep(-,Rng)          -> Rng,
                                                             mk_REP`PartialFnTypeRep(-,fnrng) -> fnrng,
@@ -913,11 +886,9 @@ GenExplicitCast(restp, e, tp) ==
                                                 {e}    -> type := CGAUX`CleanFlatType(e),
                                                 others -> type := CGAUX`CleanFlatType(mk_REP`UnionTypeRep(rtp_s))
                                               end,
-#endif VDMPP
                 others -> type := CGAUX`CleanFlatType(tp)
               end
             else type := ptp;
---
         if (type = nil)
         then
          (if CGAUX`IsRealType(restype)
@@ -942,7 +913,8 @@ GenExplicitCast(restp, e, tp) ==
          (if (CGAUX`IsRealType(restype) and not CGAUX`IsRealType(type))
           then
              if CGAUX`IsIntExpr(e)
-             then return GenRealExpr(e.arg)
+             --then return GenRealExpr(e.arg)
+             then return GenRealExpr(GenGetValue(e, mk_REP`NumericTypeRep(<INTEGER>)))
              else return GetRealVal(e)
            elseif (CGAUX`IsIntType(restype) and not CGAUX`IsIntType(type))
            then (CGAUX`SetException(true);
@@ -962,14 +934,13 @@ GenExplicitCast(restp, e, tp) ==
                              not CGAUX`IsPossibleStringType(type)))
                           then return GetStringVal(e)
                           else return e
-#ifdef VDMPP
                 elseif CGAUX`IsSubType(type, TPGEN`RemoveInvType(restype))
                 then return e
-#endif VDMPP
                 elseif GenType(type) = BC`GenGeneric()
                 then return BC`GenCastExpr(GenType(restype),e)
                 else return BC`GenCastExpr(GenType(restype),BC`GenBracketedExpr(BC`GenCastExpr(BC`GenGeneric(),e)))
            else return e));
+#endif VDMPP
 \end{vdm_al}
 
 The next operation {\em GenEmptyValue} generates an empty value of a
@@ -2468,6 +2439,7 @@ constructions of sequence type.
         then return BC`GenCastExpr(GenType(rtype), fcall)
         else return fcall;
 
+#ifdef VDMPP
   GenSeqApplyString: CPP`Expr * CPP`Expr ==> CPP`Expr
   GenSeqApplyString(sq, i) ==
     let pos = if is_CPP`IntegerLit(i)
@@ -2475,6 +2447,7 @@ constructions of sequence type.
               else BC`GenMinus(i,BC`GenIntegerLit(1)),
         fcall = BC`GenFctCallObjMemAcc(sq,"charAt",[pos])
     in return GenCharExpr(fcall);
+#endif VDMPP
 
   GenHd: REP`TypeRep * CPP`Expr ==> CPP`Expr
   GenHd(rtype,e) ==
@@ -2494,10 +2467,12 @@ constructions of sequence type.
         then return BC`GenCastExpr(tp, fcall)
         else return fcall;
 
+#ifdef VDMPP
   GenTlString: CPP`Expr ==> CPP`Expr
   GenTlString(e) ==
     let fcall = BC`GenFctCallObjMemAcc(e,"substring",[BC`GenIntegerLit(1)])
     in return fcall;
+#endif VDMPP
 
   GenTl: CPP`Expr ==> CPP`Expr
   GenTl(e) ==
@@ -2513,9 +2488,11 @@ constructions of sequence type.
 #endif VDMPP
       return BC`GenFctCallObjMemAcc(e,"Tl",[]);
 
+#ifdef VDMPP
   GenReverseString: CPP`Expr ==> CPP`Expr
   GenReverseString(e) ==
     return BC`GenFctCall(BC`GenIdentifier("UTIL.ReverseString"), [e]);
+#endif VDMPP
 
   GenReverse: CPP`Expr ==> CPP`Expr
   GenReverse(e) ==
@@ -2530,10 +2507,12 @@ constructions of sequence type.
 #endif VDMPP
       return BC`GenFctCallObjMemAcc(e,"Reverse",[]);
 
+#ifdef VDMPP
   GenHdString: CPP`Expr ==> CPP`Expr
   GenHdString(e) ==
     let fcall = BC`GenFctCallObjMemAcc(e,"charAt",[BC`GenIntegerLit(0)])
     in return GenCharExpr(fcall);
+#endif VDMPP
 
   GenInds: CPP`Expr ==> CPP`Expr
   GenInds(e) ==
@@ -2553,6 +2532,7 @@ constructions of sequence type.
 #endif VDMPP
       return BC`GenFctCallObjMemAcc( e1, "Conc", [e2] );
 
+#ifdef VDMPP
   GenConcString: CPP`Expr * CPP`Expr ==> CPP`Expr
   GenConcString(e1, e2) ==
     cases e2:
@@ -2560,6 +2540,7 @@ constructions of sequence type.
              -> return BC`GenFctCallObjMemAcc( e1, "concat", [arg] ),
       others -> return BC`GenFctCallObjMemAcc( e1, "concat", [e2] )
     end;
+#endif VDMPP
 
   GenLen: CPP`Expr ==> CPP`Expr
   GenLen(e) ==
@@ -2567,6 +2548,7 @@ constructions of sequence type.
     in
       return GenIntExpr(fcall);
 
+#ifdef VDMPP
   GenLenString: CPP`Expr ==> CPP`Expr
   GenLenString(e) ==
     def fcall = GenLenString_int(e)
@@ -2577,6 +2559,7 @@ constructions of sequence type.
     return if is_CPP`WStringLit(e)
            then BC`GenIntegerLit(len e.val)
            else BC`GenFctCallObjMemAcc(e, "length", []);
+#endif VDMPP
 
   GenLen_int: CPP`Expr ==> CPP`Expr
   GenLen_int(e) ==
@@ -2609,9 +2592,11 @@ constructions of sequence type.
                                    BC`GenCastExpr2([BC`GenTypeSpecifier(BC`GenIdentifier("Common")),
                                                     BC`GenTypeSpecifier(<REFERENCE>)], e));
 
+#ifdef VDMPP
   GenCastString: CPP`Expr ==> CPP`Expr
   GenCastString(e) ==
     return BC`GenCastExpr(GenStringType(), e);
+#endif VDMPP
 
   GenSubSequence: CPP`Expr * [REP`TypeRep] * CPP`Expr * CPP`Expr ==> CPP`Expr
 #ifdef VDMSL
@@ -2733,6 +2718,7 @@ constructions of sequence type.
 #endif VDMPP
       return [BC`GenDecl(GenSeq0Type(), name, initExpr)];
 
+#ifdef VDMPP
   GenStringDecl: CPP`Name * [CPP`Initializer] ==> seq1 of CPP`Stmt
   GenStringDecl(name, initExpr) ==
     if initExpr = nil
@@ -2746,6 +2732,7 @@ constructions of sequence type.
                 end,
         others -> return [BC`GenDecl(GenStringType(), name, initExpr)]
       end;
+#endif VDMPP
 
   GenDeclSeq: CPP`Name * [CPP`Expr] ==> seq1 of CPP`Stmt
   GenDeclSeq(name, ie) ==
@@ -4425,6 +4412,7 @@ operations
 
 -- x rem y Remainder Type: int * int -> int
 
+#ifdef VDMPP
 GenIntVal : CGMAIN`VT ==> CPP`Expr
 GenIntVal(mk_CGMAIN`VT(v, tp)) ==
   if CGAUX`IsIntType(tp)
@@ -4434,6 +4422,7 @@ GenIntVal(mk_CGMAIN`VT(v, tp)) ==
     let e = BC`GenFctCallObjMemAcc(v, "intValue", [])
     in return GenIntExpr(e)
   else return GetIntVal(v);
+#endif VDMPP
 
 GenNumRem: CGMAIN`VT  * CGMAIN`VT ==> CPP`Expr
 GenNumRem(mk_CGMAIN`VT(var1, type1), mk_CGMAIN`VT(var2, type2)) ==

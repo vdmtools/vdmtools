@@ -96,16 +96,13 @@ Sequence vdmcg::GenInvDef(const SEQ<TYPE_AS_TypeDef> & td_l)
   Sequence cpp;
   Map cidtocpp; // map int to seq of CPP`Declaration
   size_t len_td_l = td_l.Length();
-  for (size_t idx = 1; idx <= len_td_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_td_l; idx++) {
     const TYPE_AS_TypeDef & td (td_l[idx]);
     const Generic & Inv (td.GetField(pos_AS_TypeDef_Inv));
-    if (! Inv.IsNil())
-    {
+    if (! Inv.IsNil()) {
       TYPE_AS_Invariant inv (Inv);
       const TYPE_AS_Name & tnm (td.GetRecord(pos_AS_TypeDef_nm));
       const Generic & acc (td.GetField(pos_AS_TypeDef_access));
-      const TYPE_CI_ContextId & tpcid (td.GetInt(pos_AS_TypeDef_cid));
 
       TYPE_AS_Name fnm (vdm_BC_GivePrePostName(tnm, ASTAUX::MkId(L"inv")));
 
@@ -133,24 +130,26 @@ Sequence vdmcg::GenInvDef(const SEQ<TYPE_AS_TypeDef> & td_l)
                 Nil(),
                 Nil(),
                 acc,
-// 20110712 -->
-                //Bool(false),
                 Bool(true),
-// <-- 20110712
                 Nil(),
                 NilContextId);
 
-      if (vdm_CPP_isJAVA())
+#ifdef VDMPP
+      if (vdm_CPP_isJAVA()) {
+        const TYPE_CI_ContextId & tpcid (td.GetInt(pos_AS_TypeDef_cid));
         cidtocpp.Insert(tpcid, GenFctDef_FD(fdef, false));
-      else
+      }
+      else 
+#endif //VDMPP
+      {
         cpp.ImpConc(GenFctDef_FD(fdef, false));
+      }
     }
   }
 
-  if (vdm_CPP_isJAVA())
-  {
-    while (!cidtocpp.Dom().IsEmpty())
-    {
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    while (!cidtocpp.Dom().IsEmpty()) {
       SET<TYPE_CI_ContextId> cidtocppdom (cidtocpp.Dom());
       TYPE_CI_ContextId cid (cidtocppdom.GetElem());
       Generic gg;
@@ -166,8 +165,9 @@ Sequence vdmcg::GenInvDef(const SEQ<TYPE_AS_TypeDef> & td_l)
         const TYPE_CI_TokenPos & tst2 (gfp2.GetRecord(3));
         int ast_startf = tst2.GetIntValue(pos_CI_TokenPos_abs_uline);
 
-        if (ast_start > ast_startf)
+        if (ast_start > ast_startf) {
           cid = tempcid;
+        }
       }
       cpp.ImpConc(cidtocpp[cid]);
       cidtocpp.RemElem(cid);
@@ -175,7 +175,10 @@ Sequence vdmcg::GenInvDef(const SEQ<TYPE_AS_TypeDef> & td_l)
     return cpp;
   }
   else // C++
+#endif //VDMPP
+  {
     return cpp;
+  }
 }
 
 // Initialisation of VDM Library

@@ -664,32 +664,36 @@ TYPE_CPP_Expr vdmcg::GenGetValue(const TYPE_CPP_Expr & name, const Generic & tp)
 #ifdef VDMPP
         if (vdm_CPP_isJAVA()) {
           TYPE_CPP_Expr name_q (StripBracketedExpr(name)); 
-          if (IsBoolExpr(name_q))
-          {
-            TYPE_CPP_Expr e (name_q.GetSequence(pos_CPP_ClassInstanceCreationExpr_arg).Hd());
-            return (e.Is(TAG_TYPE_CPP_FctCall) ? e : vdm_BC_GenBracketedExpr(e));
-          }
-          else if (name_q.Is(TAG_TYPE_CPP_FctCall) &&
-                   name_q.GetRecord(pos_CPP_FctCall_fct).Is(TAG_TYPE_CPP_ObjectMemberAccess))
-          {
-            TYPE_CPP_ObjectMemberAccess oa (name_q.GetRecord(pos_CPP_FctCall_fct));
-            if ((oa.GetRecord(pos_CPP_ObjectMemberAccess_object) == GenBoolType().get_tp()) &&
-                (oa.GetRecord(pos_CPP_ObjectMemberAccess_name) == vdm_BC_GenIdentifier(ASTAUX::MkId(L"valueOf"))))
-            {
-              TYPE_CPP_Expr e (name_q.GetSequence(pos_CPP_FctCall_arg).Hd());
+          switch (name_q.GetTag()) {
+            case TAG_TYPE_CPP_ClassInstanceCreationExpr: {
+              TYPE_CPP_Expr e (name_q.GetSequence(pos_CPP_ClassInstanceCreationExpr_arg).Hd());
               return (e.Is(TAG_TYPE_CPP_FctCall) ? e : vdm_BC_GenBracketedExpr(e));
             }
-          }
-          else if (name_q.Is(TAG_TYPE_CPP_ObjectMemberAccess) &&
-                   (name_q.GetRecord(pos_CPP_ObjectMemberAccess_object) == GenBoolType().get_tp()))
-          {
-            const TYPE_CPP_Expr & e (name_q.GetRecord(pos_CPP_ObjectMemberAccess_name));
-            if (e == vdm_BC_GenIdentifier(ASTAUX::MkId(L"TRUE")))
-            {
-              return TYPE_CPP_BoolLit().Init(Bool(true), e.GetInt(pos_CPP_Identifier_cid));
+            case TAG_TYPE_CPP_FctCall: {
+              const TYPE_CPP_Expr & fct (name_q.GetRecord(pos_CPP_FctCall_fct));
+              if (fct.Is(TAG_TYPE_CPP_ObjectMemberAccess)) {
+                if (fct.GetRecord(pos_CPP_ObjectMemberAccess_object) == GenBoolType().get_tp()) {
+                  const TYPE_CPP_Expr & nm (fct.GetRecord(pos_CPP_ObjectMemberAccess_name));
+                  const TYPE_CPP_Expr & e (name_q.GetSequence(pos_CPP_FctCall_arg).Hd());
+                  if (nm == vdm_BC_GenIdentifier(ASTAUX::MkId(L"valueOf"))) {
+                    return (e.Is(TAG_TYPE_CPP_FctCall) ? e : vdm_BC_GenBracketedExpr(e));
+                  }
+                }
+              }
+              break;
             }
-            else if (e == vdm_BC_GenIdentifier(ASTAUX::MkId(L"FALSE")))
-              return TYPE_CPP_BoolLit().Init(Bool(false), e.GetInt(pos_CPP_Identifier_cid));
+            case TAG_TYPE_CPP_ObjectMemberAccess: {
+              if (name_q.GetRecord(pos_CPP_ObjectMemberAccess_object) == GenBoolType().get_tp()) {
+                const TYPE_CPP_Expr & nm (name_q.GetRecord(pos_CPP_ObjectMemberAccess_name));
+                if (nm == vdm_BC_GenIdentifier(ASTAUX::MkId(L"TRUE"))) {
+                  return TYPE_CPP_BoolLit().Init(Bool(true), nm.GetInt(pos_CPP_Identifier_cid));
+                }
+                else if (nm == vdm_BC_GenIdentifier(ASTAUX::MkId(L"FALSE"))) {
+                  return TYPE_CPP_BoolLit().Init(Bool(false), nm.GetInt(pos_CPP_Identifier_cid));
+                }
+              }
+              break;
+            }
           }
           return vdm_BC_GenFctCallObjMemAcc(name, ASTAUX::MkId(L"booleanValue"), SEQ<TYPE_CPP_Expr>() );
         }
@@ -776,34 +780,37 @@ TYPE_CPP_Expr vdmcg::GenGetValue(const TYPE_CPP_Expr & name, const Generic & tp)
             case NAT:
             case NATONE: {
               TYPE_CPP_Expr name_q (StripBracketedExpr(name)); 
-              if (IsIntExpr(name_q)) // 0909
-              {
-                TYPE_CPP_Expr e (name_q.GetSequence(pos_CPP_ClassInstanceCreationExpr_arg).Hd());
-                switch (e.GetTag()) {
-                  case TAG_TYPE_CPP_FctCall:       { return e; }
-                  case TAG_TYPE_CPP_IntegerLit:    { return e; }
-                  case TAG_TYPE_CPP_QualifiedName: { return e; }
-                  case TAG_TYPE_CPP_UnaryOpExpr: {
-                    if ((e.GetRecord(pos_CPP_UnaryOpExpr_op).GetField(pos_CPP_UnaryOp_val) == Quote(L"MINUS")) &&
-                        e.GetRecord(pos_CPP_UnaryOpExpr_expr).Is(TAG_TYPE_CPP_IntegerLit))
-                    {
-                      TYPE_CPP_Expr arg (e.GetRecord(pos_CPP_UnaryOpExpr_expr));
-                      return TYPE_CPP_IntegerLit().Init(-(arg.GetIntValue(pos_CPP_IntegerLit_val)), NilContextId);
+              switch (name_q.GetTag()) {     
+                case TAG_TYPE_CPP_ClassInstanceCreationExpr: {
+                  const TYPE_CPP_Expr & e (name_q.GetSequence(pos_CPP_ClassInstanceCreationExpr_arg).Hd());
+                  switch (e.GetTag()) {
+                    case TAG_TYPE_CPP_FctCall:       { return e; }
+                    case TAG_TYPE_CPP_IntegerLit:    { return e; }
+                    case TAG_TYPE_CPP_QualifiedName: { return e; }
+                    case TAG_TYPE_CPP_UnaryOpExpr: {
+                      if ((e.GetRecord(pos_CPP_UnaryOpExpr_op).GetField(pos_CPP_UnaryOp_val) == Quote(L"MINUS")) &&
+                          e.GetRecord(pos_CPP_UnaryOpExpr_expr).Is(TAG_TYPE_CPP_IntegerLit))
+                      {
+                        TYPE_CPP_Expr arg (e.GetRecord(pos_CPP_UnaryOpExpr_expr));
+                        return TYPE_CPP_IntegerLit().Init(-(arg.GetIntValue(pos_CPP_IntegerLit_val)), NilContextId);
+                      }
+                      return vdm_BC_GenBracketedExpr(e);
                     }
-                    return vdm_BC_GenBracketedExpr(e);
                   }
+                  return vdm_BC_GenBracketedExpr(e);
+                  break;
                 }
-                return vdm_BC_GenBracketedExpr(e);
-              }
-              else if (name_q.Is(TAG_TYPE_CPP_FctCall) &&
-                       name_q.GetRecord(pos_CPP_FctCall_fct).Is(TAG_TYPE_CPP_ObjectMemberAccess))
-              {
-                TYPE_CPP_ObjectMemberAccess oa (name_q.GetRecord(pos_CPP_FctCall_fct));
-                if ((oa.GetRecord(pos_CPP_ObjectMemberAccess_object) == GenImplIntType().get_tp()) &&
-                    (oa.GetRecord(pos_CPP_ObjectMemberAccess_name) == vdm_BC_GenIdentifier(ASTAUX::MkId(L"valueOf"))))
-                {
-                  TYPE_CPP_Expr e (name_q.GetSequence(pos_CPP_FctCall_arg).Hd());
-                  return (e.Is(TAG_TYPE_CPP_FctCall) ? e : vdm_BC_GenBracketedExpr(e));
+                case TAG_TYPE_CPP_FctCall: {
+                  const TYPE_CPP_Expr & fct(name_q.GetRecord(pos_CPP_FctCall_fct));
+                  if (fct.Is(TAG_TYPE_CPP_ObjectMemberAccess)) {
+                    if ((fct.GetRecord(pos_CPP_ObjectMemberAccess_object) == GenImplIntType().get_tp()) &&
+                        (fct.GetRecord(pos_CPP_ObjectMemberAccess_name) == vdm_BC_GenIdentifier(ASTAUX::MkId(L"valueOf"))))
+                    {
+                      TYPE_CPP_Expr e (name_q.GetSequence(pos_CPP_FctCall_arg).Hd());
+                      return (e.Is(TAG_TYPE_CPP_FctCall) ? e : vdm_BC_GenBracketedExpr(e));
+                    }
+                  }
+                  break;
                 }
               }
               if (get_longs_option())
@@ -814,32 +821,38 @@ TYPE_CPP_Expr vdmcg::GenGetValue(const TYPE_CPP_Expr & name, const Generic & tp)
             case RAT:
             case REAL: {
               TYPE_CPP_Expr name_q (StripBracketedExpr(name)); 
-              if (IsRealExpr(name_q))
-              {
-                TYPE_CPP_Expr e (name_q.GetSequence(pos_CPP_ClassInstanceCreationExpr_arg).Hd());
-                return (e.Is(TAG_TYPE_CPP_FctCall) ? e : vdm_BC_GenBracketedExpr(e));
-              }
-              else if (IsIntExpr(name_q))
-              {
-                TYPE_CPP_Expr e (name_q.GetSequence(pos_CPP_ClassInstanceCreationExpr_arg).Hd());
-                return vdm_BC_GenCastExpr(GenSmallRealType(),
+              switch (name_q.GetTag()) {     
+                case TAG_TYPE_CPP_ClassInstanceCreationExpr: {
+                  const TYPE_CPP_Expr & cl (name_q.GetRecord(pos_CPP_ClassInstanceCreationExpr_classtype));
+                  if (cl == GenImplRealType().get_tp()) {
+                    const TYPE_CPP_Expr & e (name_q.GetSequence(pos_CPP_ClassInstanceCreationExpr_arg).Hd());
+                    return (e.Is(TAG_TYPE_CPP_FctCall) ? e : vdm_BC_GenBracketedExpr(e));
+                  }
+                  else if (cl == GenImplIntType().get_tp()) {
+                    TYPE_CPP_Expr e (name_q.GetSequence(pos_CPP_ClassInstanceCreationExpr_arg).Hd());
+                    return vdm_BC_GenCastExpr(GenSmallRealType(),
                                           (e.Is(TAG_TYPE_CPP_FctCall) ? e : vdm_BC_GenBracketedExpr(e)));
-              }
-              else if (name_q.Is(TAG_TYPE_CPP_FctCall) &&
-                       name_q.GetRecord(pos_CPP_FctCall_fct).Is(TAG_TYPE_CPP_ObjectMemberAccess))
-              {
-                TYPE_CPP_ObjectMemberAccess oa (name_q.GetRecord(pos_CPP_FctCall_fct));
-                if ((oa.GetRecord(pos_CPP_ObjectMemberAccess_object) == GenImplRealType().get_tp()) &&
-                    (oa.GetRecord(pos_CPP_ObjectMemberAccess_name) == vdm_BC_GenIdentifier(ASTAUX::MkId(L"valueOf"))))
-                {
-                  TYPE_CPP_Expr e (name_q.GetSequence(pos_CPP_FctCall_arg).Hd());
-                  return (e.Is(TAG_TYPE_CPP_FctCall) ? e : vdm_BC_GenBracketedExpr(e));
+                  }
+                  break;
+                }
+                case TAG_TYPE_CPP_FctCall: {
+                  const TYPE_CPP_Expr & fct(name_q.GetRecord(pos_CPP_FctCall_fct));
+                  if (fct.Is(TAG_TYPE_CPP_ObjectMemberAccess)) {
+                    if ((fct.GetRecord(pos_CPP_ObjectMemberAccess_object) == GenImplRealType().get_tp()) &&
+                        (fct.GetRecord(pos_CPP_ObjectMemberAccess_name) == vdm_BC_GenIdentifier(ASTAUX::MkId(L"valueOf"))))
+                    {
+                      TYPE_CPP_Expr e (name_q.GetSequence(pos_CPP_FctCall_arg).Hd());
+                      return (e.Is(TAG_TYPE_CPP_FctCall) ? e : vdm_BC_GenBracketedExpr(e));
+                    }
+                  }
+                  break;
                 }
               }
               return vdm_BC_GenFctCallObjMemAcc(name, ASTAUX::MkId(L"doubleValue"), SEQ<TYPE_CPP_Expr>() );
             }
-            default:
+            default: {
               return vdm_BC_GenFctCallObjMemAcc(name, ASTAUX::MkId(L"GetValue"), SEQ<TYPE_CPP_Expr>() );
+            }
           }
         }
         else
@@ -1281,6 +1294,7 @@ Generic vdmcg::DeclaredAs(const TYPE_CPP_Expr & e)
   return result;
 }
 
+#ifdef VDMPP
 // GetIntVal
 // v : CPP`Expr
 // ==> CPP`Expr
@@ -1356,7 +1370,7 @@ TYPE_CPP_Expr vdmcg::GenExplicitCast(const TYPE_REP_TypeRep & restp, const TYPE_
           break;
         }
 // 20120216 -->
-#ifdef VDMPP
+//#ifdef VDMPP
         case TAG_TYPE_REP_OverTypeRep: {
           SET<TYPE_REP_TypeRep> tp_s (Record(tp).GetSet(pos_REP_OverTypeRep_tps));
           SET<TYPE_REP_TypeRep> rtp_s;
@@ -1385,7 +1399,7 @@ TYPE_CPP_Expr vdmcg::GenExplicitCast(const TYPE_REP_TypeRep & restp, const TYPE_
             type = CleanFlatType(mk_REP_UnionTypeRep(rtp_s));
           break;
         }
-#endif // VDMPP
+//#endif // VDMPP
 // <-- 20120216
         default: {
           type = CleanFlatType(tp);
@@ -1455,7 +1469,8 @@ TYPE_CPP_Expr vdmcg::GenExplicitCast(const TYPE_REP_TypeRep & restp, const TYPE_
     if (IsRealType(restype) && (!IsRealType(type)))
     {
       if (IsIntExpr(e))
-        return GenRealExpr(e.GetSequence(pos_CPP_ClassInstanceCreationExpr_arg));
+        //return GenRealExpr(e.GetSequence(pos_CPP_ClassInstanceCreationExpr_arg));
+        return GenRealExpr(GenGetValue(e, mk_REP_NumericTypeRep(Int(INTEGER))));
       else
         return GetRealVal(e);
     }
@@ -1500,10 +1515,10 @@ TYPE_CPP_Expr vdmcg::GenExplicitCast(const TYPE_REP_TypeRep & restp, const TYPE_
          else
            return e;
       }
-#ifdef VDMPP
+//#ifdef VDMPP
       else if (IsSubType(type, RemoveInvType(restype)))
         return e;
-#endif // VDMPP
+//#endif // VDMPP
       else
         if (GenType(type) == vdm_BC_GenGeneric())
           return vdm_BC_GenCastExpr(GenType(restype),e);
@@ -1515,6 +1530,7 @@ TYPE_CPP_Expr vdmcg::GenExplicitCast(const TYPE_REP_TypeRep & restp, const TYPE_
     }
   }
 }
+#endif // VDMPP
 
 // GenEmptyValue
 // type : REP`TypeRep
@@ -3567,6 +3583,7 @@ TYPE_CPP_Expr vdmcg::GenSeqApply(const Generic & rtype, const TYPE_CPP_Expr & sq
   }
 }
 
+#ifdef VDMPP
 // GenSeqApplyString
 // sq : CPP`Expr
 // i : CPP`Expr
@@ -3580,6 +3597,7 @@ TYPE_CPP_Expr vdmcg::GenSeqApplyString(const TYPE_CPP_Expr & sq, const TYPE_CPP_
 
   return GenCharExpr(fcall);
 }
+#endif // VDMPP
 
 // GenHd
 // rtype : REP`TypeRep
@@ -3610,6 +3628,7 @@ TYPE_CPP_Expr vdmcg::GenHd(const TYPE_REP_TypeRep & rtype, const TYPE_CPP_Expr &
   }
 }
 
+#ifdef VDMPP
 // GenHdString
 // e : CPP`Expr
 // ==> CPP`Expr
@@ -3620,6 +3639,7 @@ TYPE_CPP_Expr vdmcg::GenHdString(const TYPE_CPP_Expr & e)
                                                   SEQ<TYPE_CPP_Expr>().ImpAppend(vdm_BC_GenIntegerLit(0))));
   return GenCharExpr(fcall);
 }
+#endif // VDMPP
 
 // GenInds
 // e : CPP`Expr
@@ -3652,6 +3672,7 @@ TYPE_CPP_Expr vdmcg::GenConc(const TYPE_CPP_Expr & e1, const TYPE_CPP_Expr & e2)
     return vdm_BC_GenFctCallObjMemAcc(e1, ASTAUX::MkId(L"Conc"), SEQ<TYPE_CPP_Expr>().ImpAppend(e2));
 }
 
+#ifdef VDMPP
 // GenConcString
 // e1 : CPP`Expr
 // e2 : CPP`Expr
@@ -3665,6 +3686,7 @@ TYPE_CPP_Expr vdmcg::GenConcString(const TYPE_CPP_Expr & e1, const TYPE_CPP_Expr
   }
   return vdm_BC_GenFctCallObjMemAcc(e1, ASTAUX::MkId(L"concat"), SEQ<TYPE_CPP_Expr>().ImpAppend(e2));
 }
+#endif // VDMPP
 
 // GenTl
 // e : CPP`Expr
@@ -3686,6 +3708,7 @@ TYPE_CPP_Expr vdmcg::GenTl(const TYPE_CPP_Expr & e)
     return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"Tl"), SEQ<TYPE_CPP_Expr>());
 }
 
+#ifdef VDMPP
 // GenTlString
 // e : CPP`Expr
 // ==> CPP`Expr
@@ -3693,6 +3716,7 @@ TYPE_CPP_Expr vdmcg::GenTlString(const TYPE_CPP_Expr & e)
 {
   return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"substring"), mk_sequence(vdm_BC_GenIntegerLit(1)));
 }
+#endif // VDMPP
 
 // GenReverse
 // e : CPP`Expr
@@ -3710,6 +3734,7 @@ TYPE_CPP_Expr vdmcg::GenReverse(const TYPE_CPP_Expr & e)
     return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"Reverse"), SEQ<TYPE_CPP_Expr>());
 }
 
+#ifdef VDMPP
 // GenReverseString
 // e : CPP`Expr
 // ==> CPP`Expr
@@ -3717,6 +3742,7 @@ TYPE_CPP_Expr vdmcg::GenReverseString(const TYPE_CPP_Expr & e)
 {
   return vdm_BC_GenFctCall(vdm_BC_GenIdentifier(ASTAUX::MkId(L"UTIL.ReverseString")), SEQ<TYPE_CPP_Expr>().ImpAppend(e));
 }
+#endif // VDMPP
 
 // GenLen
 // e : CPP`Expr
@@ -3726,6 +3752,7 @@ TYPE_CPP_Expr vdmcg::GenLen(const TYPE_CPP_Expr & e)
   return GenIntExpr(GenLen_int(e));
 }
 
+#ifdef VDMPP
 // GenLenString
 // e : CPP`Expr
 // ==> CPP`Expr
@@ -3734,6 +3761,7 @@ TYPE_CPP_Expr vdmcg::GenLenString(const TYPE_CPP_Expr & e)
   TYPE_CPP_Expr fc (GenLenString_int(e));
   return GenIntExpr(fc);
 }
+#endif // VDMPP
 
 // GenLen_int
 // e : CPP`Expr
@@ -3749,19 +3777,19 @@ TYPE_CPP_Expr vdmcg::GenLen_int(const TYPE_CPP_Expr & e)
     return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"Length"), SEQ<TYPE_CPP_Expr>());
 }
 
+#ifdef VDMPP
 // GenLenString_int
 // e : CPP`Expr
 // ==> CPP`Expr
 TYPE_CPP_Expr vdmcg::GenLenString_int(const TYPE_CPP_Expr & e)
 {
-// 20130325 -->
   if (e.Is(TAG_TYPE_CPP_WStringLit))
   {
     return vdm_BC_GenIntegerLit(e.GetSequence(pos_CPP_WStringLit_val).Length());
   }
-// <-- 20130325
   return vdm_BC_GenFctCallObjMemAcc(e, ASTAUX::MkId(L"length"), SEQ<TYPE_CPP_Expr>());
 }
+#endif // VDMPP
 
 // GenCastSeq
 // e : CPP`Expr
@@ -3802,6 +3830,7 @@ TYPE_CPP_Expr vdmcg::GenCastSeqTypeForModify(const TYPE_CPP_Expr & e)
   }
 }
 
+#ifdef VDMPP
 // GenCastString
 // e : CPP`Expr
 // ==> CPP`Expr
@@ -3809,6 +3838,7 @@ TYPE_CPP_Expr vdmcg::GenCastString(const TYPE_CPP_Expr & e)
 {
   return vdm_BC_GenCastExpr(GenStringType (), e);
 }
+#endif // VDMPP
 
 // GenSubSequence
 // e : CPP`Expr
@@ -4001,6 +4031,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSeqDecl_DS(const TYPE_CPP_Name & name, const Generi
   return rb_l;
 }
 
+#ifdef VDMPP
 // GenStringDecl
 // name : CPP`Name
 // initExpr : [CPP`Initializer]
@@ -4032,6 +4063,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenStringDecl(const TYPE_CPP_Name & name, const Generi
     rb_l.ImpAppend(vdm_BC_GenDecl(GenStringType(), name, initExpr));
     return rb_l;
 }
+#endif // VDMPP
 
 // GenDeclSeq
 // name : CPP`Name
@@ -5888,6 +5920,7 @@ TYPE_CPP_Expr vdmcg::GenNumDiv(const TYPE_CGMAIN_VT & vt1, const TYPE_CGMAIN_VT 
   }
 }
 
+#ifdef VDMPP
 // GenIntVal
 // r : CGMAIN`VT
 // ==> CPP`Expr
@@ -5908,6 +5941,7 @@ TYPE_CPP_Expr vdmcg::GenIntVal(const TYPE_CGMAIN_VT & r)
     return GetIntVal(v);
   }
 }
+#endif // VDMPP
 
 // GenNumRem
 // vt1 : CGMAIN`VT
