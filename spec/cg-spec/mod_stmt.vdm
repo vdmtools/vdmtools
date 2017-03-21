@@ -2536,7 +2536,7 @@ CGExitStmt(p_es) ==
   def id = BC`GenIdentifier("VDMSpecException");
   in
    (dcl l_excObj : CPP`Expr;
-#ifdef VDPP
+#ifdef VDMPP
     if CPP`isJAVA()
     then
       def l_cause = CGAUX`GetCause();
