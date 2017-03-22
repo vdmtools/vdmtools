@@ -95,7 +95,9 @@ private:
   TYPE_AS_Id Name2Id(const TYPE_AS_Name &);
   Map ModuleTypes2TpEnv(const TYPE_AS_Name &, const MAP<TYPE_AS_Name,TYPE_AS_TypeDef> &);
   TYPE_CPP_Identifier Id2CppGTpId(const TYPE_AS_Id & str);
+#ifdef VDMPP
   TYPE_CPP_Identifier Id2JavaGTpId(const TYPE_AS_Id & str);
+#endif //VDMPP
   TYPE_AS_Id PrefixAnonymType(const TYPE_AS_Id & id);
   TYPE_AS_Id PrefixModuleType(const TYPE_AS_Id & id);
   TYPE_AS_Id RemPrefixNum(const TYPE_AS_Id & i);
@@ -159,12 +161,11 @@ private:
   TYPE_CPP_FunctionDefinition GenClassConstrDecl(const TYPE_CPP_Identifier &,
                                                  const SEQ<TYPE_CPP_Identifier> &,
                                                  const MAP<TYPE_CPP_Identifier,TYPE_CPP_Name> &);
-  SET<TYPE_CPP_Expr> GetBasicTypes();
 #ifdef VDMPP
+  SET<TYPE_CPP_Expr> GetBasicTypes();
   TYPE_CPP_FunctionDefinition GenCloneMethod(const TYPE_CPP_Identifier &,
                                              const SEQ<TYPE_CPP_Identifier> &,
                                              const MAP<TYPE_CPP_Identifier,TYPE_CPP_Name> &);
-#endif // VDMPP
   TYPE_CPP_FunctionDefinition GenAsciiMethod(const TYPE_CPP_Identifier &,
                                              const SEQ<TYPE_CPP_Identifier> &,
                                              const MAP<TYPE_CPP_Identifier,TYPE_CPP_Name> &);
@@ -176,6 +177,7 @@ private:
                                             const SEQ<TYPE_CPP_Identifier> &,
                                             const MAP<TYPE_CPP_Identifier,TYPE_CPP_Name> &,
                                             const MAP<TYPE_CPP_Identifier,Bool> &);
+#endif // VDMPP
 //TYPE_CPP_FunctionDefinition GenLengthMethod(const TYPE_CPP_Identifier&,
 //                                            const Sequence &,
 //                                            const Map &);

@@ -816,6 +816,7 @@ TYPE_CPP_Identifier vdmcg::Id2CppGTpId(const TYPE_AS_Id & i)
     return vdm_BC_GenIdentifier(PrefixAnonymType(ASTAUX::MkId(str)));
 }
 
+#ifdef VDMPP
 // Id2JavaGTpId
 // i : Identifier
 // ==> CPP`Identifier
@@ -903,6 +904,7 @@ TYPE_CPP_Identifier vdmcg::Id2JavaGTpId(const TYPE_AS_Id & i)
   else
     return vdm_BC_GenIdentifier(PrefixAnonymType(ASTAUX::MkId(str)));
 }
+#endif // VDMPP
 
 // PrefixAnonymType
 // id : Identifier
@@ -1781,6 +1783,7 @@ TYPE_CPP_FunctionDefinition vdmcg::GenClassConstrDecl(const TYPE_CPP_Identifier 
                           ml, SEQ<TYPE_CPP_DeclSpecifier>(), decl, nil, vdm_BC_GenBlock(stmtl));
 }
 
+#ifdef VDMPP
 // GetBasicTypes
 // ==> set of CPP`Expr
 SET<TYPE_CPP_Expr> vdmcg::GetBasicTypes()
@@ -1800,7 +1803,6 @@ SET<TYPE_CPP_Expr> vdmcg::GetBasicTypes()
   return expr_set;
 }
 
-#ifdef VDMPP
 // GenCloneMethod
 // cn : CPP`Identifier
 // sl : TagList         (seq of CPP`Identifier)
@@ -1842,7 +1844,6 @@ TYPE_CPP_FunctionDefinition vdmcg::GenCloneMethod(const TYPE_CPP_Identifier & cn
 
   return vdm_BC_GenJavaFctDef(SEQ<TYPE_CPP_Annotation>(), ml, dsl, decl, nil, vdm_BC_GenBlock(stmtl));
 }
-#endif // VDMPP
 
 // GenAsciiMethod
 // cn : CPP`Identifier
@@ -2013,6 +2014,7 @@ TYPE_CPP_FunctionDefinition vdmcg::GenHashMethod(const TYPE_CPP_Identifier & cn,
 
   return vdm_BC_GenJavaFctDef(SEQ<TYPE_CPP_Annotation>(), ml, dsl, decl, nil, stmt);
 }
+#endif // VDMPP
 
 // GenInitFunctionDecl
 // cnm : CPP`Identifier

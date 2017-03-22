@@ -961,6 +961,7 @@ Id2CppGTpId(i) ==
     others      -> return BC`GenIdentifier(PrefixAnonymType(i))
   end;
 
+#ifdef VDMPP
 Id2JavaGTpId : Identifier ==> CPP`Identifier
 Id2JavaGTpId(i) ==
   cases i:
@@ -995,9 +996,7 @@ Id2JavaGTpId(i) ==
     "F" -> return BC`GenIdentifier("Object"), -- recursive
     "Q" -> return BC`GenIdentifier("Quote"),  -- quote type
     "U" -> return BC`GenIdentifier("Object"), -- union
-#ifdef VDMPP
     "o" -> return BC`GenIdentifier("Object"),
-#endif
     -- optimized names
 
     --"US"       -> return DS`GenSetType().tp,
@@ -1013,9 +1012,7 @@ Id2JavaGTpId(i) ==
     "Record"   -> return DS`GenRecordType(nil).tp,
     "Tuple"    -> return DS`GenProductType().tp,
     "Generic"  -> return BC`GenIdentifier("Object"),
-#ifdef VDMPP
     "ObjectRef" -> return BC`GenIdentifier("Object"),
-#endif
     -- construct not really supported
 
     "operation"    -> return BC`GenIdentifier("Object"),
@@ -1028,6 +1025,7 @@ Id2JavaGTpId(i) ==
                  then return BC`GenIdentifier(RemPrefixNum([ i(j) | j in set {1,...,len i -1}]))
                  else return BC`GenIdentifier(PrefixAnonymType(i))
   end;
+#endif VDMPP
 
 functions
 PrefixAnonymType: Identifier -> Identifier
@@ -1880,6 +1878,7 @@ GenClassConstrDecl(cn,sl,tenv) ==
   in return BC`GenJavaFctDef([],[BC`GenModifier(<PUBLIC>)],[],decl,nil,BC`GenBlock(stmtl))
 );
 
+#ifdef VDMPP
 GetBasicTypes : () ==> set of CPP`Expr
 GetBasicTypes() ==
  (dcl expr_set : set of CPP`Expr;
@@ -1893,7 +1892,6 @@ GetBasicTypes() ==
   return expr_set;
  );
 
-#ifdef VDMPP
 GenCloneMethod : CPP`Identifier * TagList * TagEnv ==> CPP`FunctionDefinition
 GenCloneMethod(cn,sl,tenv) ==
 (
@@ -1920,7 +1918,6 @@ GenCloneMethod(cn,sl,tenv) ==
   return BC`GenJavaFctDef([],[BC`GenModifier(<PUBLIC>)],
                       [BC`GenTypeSpecifier(BC`GenIdentifier("Object"))],decl,nil,BC`GenBlock(stmtl))
 );
-#endif VDMPP
 
 GenAsciiMethod : CPP`Identifier * TagList * TagEnv ==> CPP`FunctionDefinition
 GenAsciiMethod(cn,sl,tenv) ==
@@ -2030,7 +2027,7 @@ GenHashMethod(-,sl,-, dcenv) ==
   let decl = BC`GenFctDecl(BC`GenIdentifier("hashCode"),[]) in
   return BC`GenJavaFctDef([],[BC`GenModifier(<PUBLIC>)],[DS`GenSmallIntType()],decl,nil,stmt)
 );
-
+#endif VDMPP
 \end{vdm_al}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
