@@ -442,16 +442,6 @@ in
           in
            (dcl fb : seq of CPP`Stmt := [];
             -- If necessary, insert body of child operation
-#ifdef VDMSL
-            if prefn <> nil and CGMAIN`get_testpreandpost_option()
-            then fb := [GenMethPreCall(id, FindVariables(arg_l), stat)];
-            if parms <> [] and not inlineDecl
-            then fb := fb ^ GenArgPatternMatch(pid_m, fndef, varlist);
-            fb := fb ^ b_stmt;
-            if postfn <> nil and CGMAIN`get_testpreandpost_option()
-            then fb := fb ^ [GenFnPostCall(id, resVar_v, FindVariables(arg_l), stat)];
-            fb := fb ^ [ BC`GenReturnStmt(resVar_v) ];
-#endif VDMSL
 #ifdef VDMPP
             if CPP`isJAVA()
             then
@@ -515,6 +505,7 @@ in
                );
              )
             else
+#endif VDMPP
              (if prefn <> nil and CGMAIN`get_testpreandpost_option()
               then fb := [GenMethPreCall(id, FindVariables(arg_l), stat)];
               if parms <> [] and not inlineDecl
@@ -524,7 +515,6 @@ in
               then fb := fb ^ [GenFnPostCall(id, resVar_v, FindVariables(arg_l), stat)];
               fb := fb ^ [ BC`GenReturnStmt(resVar_v) ];
              );
-#endif VDMPP
 
           def decl = GenMethodDecl(id, arg_l)
           in
@@ -843,33 +833,29 @@ GenExplOpDef(opnm, opdef, sd, isimpl, isDlClass) ==
 #ifdef VDMPP
           implfb : seq of CPP`Stmt := [],
 #endif VDMPP
-          fb : seq of CPP`Stmt := [];
+          fb : seq of CPP`Stmt := [],
+          cpp : CPP`CPPAS := [];
+
       if not constr
       then ds := [TPGEN`Rep2CppTypeSpecifier(rngtype,tp.oprng)];
       if not is_AS`IdentStmt(body.body)
-      then if parm_l <> [] and not inlineDecl
+      then
+        if parm_l <> [] and not inlineDecl
 #ifdef VDMPP
-              and not (CPP`isJAVA() and (isimplicit or isabstract or CGMAIN`get_skeleton_option()))
+           and not (CPP`isJAVA() and (isimplicit or isabstract or CGMAIN`get_skeleton_option()))
 #endif VDMPP
-           then
-             fb := GenPatternBody(pid_m, opdef, isDlClass, arg_l, varlist)
-           else
+        then fb := GenPatternBody(pid_m, opdef, isDlClass, arg_l, varlist)
+        else
 #ifdef VDMSL
-             --def mk_(-, tfb) = GenInlineBody(opdef, rngtype, isDlClass, arg_l, isimplicit, isabstract)
-             def mk_(-, tfb) = GenInlineBody(opdef, rngtype, isDlClass, arg_l, false, false)
-             in
-              (fb := tfb);
+          def mk_(-, tfb) = GenInlineBody(opdef, rngtype, isDlClass, arg_l, false, false)
+          in fb := tfb;
 #endif VDMSL
 #ifdef VDMPP
-             def mk_(timplfb, tfb) = GenInlineBody(opdef, rngtype, isDlClass, arg_l, isimplicit, isabstract)
-             in
-              (implfb := timplfb;
-               fb := tfb
-              );
-#endif VDMPP
+          def mk_(timplfb, tfb) = GenInlineBody(opdef, rngtype, isDlClass, arg_l, isimplicit, isabstract)
+          in
+           (implfb := timplfb;
+            fb := tfb);
 
-      (dcl cpp : CPP`CPPAS := [];
-#ifdef VDMPP
       if CPP`isJAVA()
       then
        (dcl prec_fb : seq of CPP`Stmt := [];
@@ -920,48 +906,44 @@ GenExplOpDef(opnm, opdef, sd, isimpl, isDlClass) ==
                                                     exdecl, excs, BC`GenBlock(implfb))]};
          )
         )
-       else
-#endif VDMPP
-        (
-#ifdef VDMPP
-         dcl mi_l : seq of CPP`MemInitializer := [];
-         if constr -- hack for constructor
-         then
-           def initfc = BC`GenExpressionStmt(BC`GenFctCall(BC`GivePrePostNm(nm, "init"), []))
-           in
-            (dcl new_fb : seq of CPP`Stmt := [initfc];
-             if CGAUX`GetOrderedSupers(nm) <> [] and fb <> []
-             then
-               def mk_(ok, mi, st_l) = IsMemInitFirst(nm, fb)
-               in
-                 if ok
-                 then (mi_l := mi_l ^ [mi];
-                       new_fb := new_fb ^ st_l)
-                 else (new_fb := new_fb ^ fb)
-             else new_fb := new_fb ^ fb;
-             fb := new_fb;);
+      else -- C++
+       (dcl mi_l : seq of CPP`MemInitializer := [];
+        if constr -- hack for constructor
+        then
+          def initfc = BC`GenExpressionStmt(BC`GenFctCall(BC`GivePrePostNm(nm, "init"), []))
+          in
+           (dcl new_fb : seq of CPP`Stmt := [initfc];
+            if CGAUX`GetOrderedSupers(nm) <> [] and fb <> []
+            then
+              def mk_(ok, mi, st_l) = IsMemInitFirst(nm, fb)
+              in
+                if ok
+                then (mi_l := mi_l ^ [mi];
+                      new_fb := new_fb ^ st_l)
+                else (new_fb := new_fb ^ fb)
+            else new_fb := new_fb ^ fb;
+            fb := new_fb;);
 
-         if oppre <> nil and CGMAIN`get_testpreandpost_option()
-         then fb := [GenMethPreCall(opdef.nm, FindVariables(arg_l), stat)] ^ fb;
+        if oppre <> nil and CGMAIN`get_testpreandpost_option()
+        then fb := [GenMethPreCall(opdef.nm, FindVariables(arg_l), stat)] ^ fb;
 
-         let fd = if constr
-                  then BC`GenConstructorDef([],ds, decl, mi_l, BC`GenBlock(fb))
-                  else BC`GenFctDef(ds, decl, nil, BC`GenBlock(fb))
+        let fd = if constr
+                 then BC`GenConstructorDef([],ds, decl, mi_l, BC`GenBlock(fb))
+                 else BC`GenFctDef(ds, decl, nil, BC`GenBlock(fb))
+        in cpp := TPGEN`GenFctOpDefIfDef(nm,[fd]);
+       );
 #endif VDMPP
 #ifdef VDMSL
-         let fd = BC`GenFctDef(ds, decl, nil, BC`GenBlock(fb))
+        let fd = BC`GenFctDef(ds, decl, nil, BC`GenBlock(fb))
+        in cpp := TPGEN`GenFctOpDefIfDef(nm,[fd]);
 #endif VDMSL
-         in
-           cpp := TPGEN`GenFctOpDefIfDef(nm,[fd]);
-        );
 
-        PopEnv();
-        cpp := cpp ^ GenPrePost(opdef, sd);
-        CGAUX`ResetIsStatic();
-        return cpp
-      )
-     )
-);
+      PopEnv();
+      cpp := cpp ^ GenPrePost(opdef, sd);
+      CGAUX`ResetIsStatic();
+      return cpp
+   )
+ );
 \end{vdm_al}
 
 \begin{vdm_al}

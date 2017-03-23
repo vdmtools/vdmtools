@@ -418,20 +418,6 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
   const SEQ<TYPE_CPP_Stmt> & b_stmt (tupBody.GetSequence(2));
 
   SEQ<TYPE_CPP_Stmt> fb;
-#ifdef VDMSL
-  if (!prefn.IsNil() && get_testpreandpost_option()) {
-    fb.ImpAppend(GenMethPreCall(id, FindVariables(arg_l), stat));
-  }
-  if (!parms.IsEmpty () && !inlineDecl) {
-    fb.ImpConc( GenArgPatternMatch(pid_m, efd, varlist) );
-  }
-  fb.ImpConc( b_stmt );
-  if (!postfn.IsNil() && get_testpreandpost_option()) {
-    fb.ImpAppend(GenFnPostCall(id, resVar_v, FindVariables(arg_l),stat));
-  }
-  fb.ImpAppend( vdm_BC_GenReturnStmt(resVar_v) );
-#endif // VDMSL
-
 #ifdef VDMPP
   if (vdm_CPP_isJAVA() ) {
     if (isimplicit && IsNotyetspecified(body, isDlClass, stat)) {
@@ -505,6 +491,7 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
     }
   }
   else
+#endif // VDMPP
   { // C++
     if (!prefn.IsNil() && get_testpreandpost_option()) {
       fb.ImpAppend(GenMethPreCall(id, FindVariables(arg_l), stat));
@@ -518,7 +505,6 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
     }
     fb.ImpAppend(vdm_BC_GenReturnStmt(resVar_v));
   }
-#endif // VDMPP
 
   // Add run-time file information
   if (rti) {
@@ -1143,10 +1129,10 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
   else 
 #endif // VDMPP
   { // C++
+#ifdef VDMPP
     // initialization of super class
     // temporary simple hack 
     SEQ<TYPE_CPP_MemInitializer> mi_l;
-#ifdef VDMPP
     if (constr)
     {
       TYPE_CPP_Stmt initfc (vdm_BC_GenExpressionStmt(
