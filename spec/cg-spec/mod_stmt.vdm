@@ -636,30 +636,12 @@ GenRecImpModify(fsnm, mk_CGMAIN`VT(level, level_type' ), val ) ==
   def level_type = CGAUX`RemoveNil(level_type');
       rectypes = CGEXPR`FindAllRecTypes(level_type);
       posRecTypes = CGEXPR`FindPossibleRecTypes( rectypes, fsnm );
-#ifdef VDMSL
-      rti = BC`GenBlock([CGAUX`RunTime("A record was expected")])
-#endif VDMSL
 #ifdef VDMPP
       oreftypes = CGEXPR`FindAllObjRefTypes(level_type);
       posORefTypes = CGEXPR`FindPossibleObjRefTypes( oreftypes, fsnm );
-      rti = BC`GenBlock([CGAUX`RunTime("An object or record was expected")])
 #endif VDMPP
   in
-   (dcl alt : [CPP`Stmt] := if is_REP`UnionTypeRep( level_type ) and
-                               let tps = level_type.tps
-                               in
-#ifdef VDMSL
-                                 (tps = posRecTypes)
-#endif VDMSL
-#ifdef VDMPP
-                                 (tps = posRecTypes union posORefTypes)
-#endif VDMPP
-                            then nil
-                            else rti;
-
--- The ifdef VDMPP is to avoid the type checker complaining about the missing
--- 'else' in the case where VDMSL is defined (java cannot be generated from VDMSL)
-
+   (dcl alt : seq of CPP`Stmt := [];
     if is_REP`CompositeTypeRep( level_type ) and card posRecTypes = 1
     then
       def { ctr } = posRecTypes;
@@ -668,26 +650,46 @@ GenRecImpModify(fsnm, mk_CGMAIN`VT(level, level_type' ), val ) ==
 #ifdef VDMPP
         if CPP`isJAVA()
         then
-         (dcl rec : CPP`Expr;
-          if is_REP`CompositeTypeRep( level_type )
-          then
-            if is_CPP`CastExpr(level)
-            then rec := BC`GenBracketedExpr(level)
-            else rec := level
-          else rec := BC`GenBracketedExpr(DS`GenCastType(ctr, level));
-          def setfield = BC`GenAsgnStmt(BC`GenQualifiedName(rec, BC`Rename2(fsnm)), val);
-          in alt := BC`GenBlock([setfield]);
-         )
+          def rec = if is_CPP`CastExpr(level)
+                    then BC`GenBracketedExpr(level)
+                    else level;
+              setfield = BC`GenAsgnStmt(BC`GenQualifiedName(rec, BC`Rename2(fsnm)), val);
+          in alt := [setfield]
         else
 #endif VDMPP
-         (dcl rec : CPP`Expr;
-          if is_REP`CompositeTypeRep( level_type )
-          then rec := level
-          else rec := DS`GenCastRecordTypeForModify( level, rec_nm );
-          def setfield = DS`GenRecSetField(rec, BC`GenPosName(rec_nm, fsnm), val)
-          in alt := BC`GenBlock([setfield]);
-         )
+          def setfield = DS`GenRecSetField(level, BC`GenPosName(rec_nm, fsnm), val)
+          in alt := [setfield]
+#ifdef VDMPP
+    elseif is_REP`ObjRefTypeRep(level_type) and card posORefTypes = 1
+    then
+      let { mk_REP`ObjRefTypeRep(clnm) } = posORefTypes
+      in
+        if CPP`isJAVA()
+        then
+          def tp = ENV`LookUpInstanceVar(CGAUX`Combine2Names(clnm, fsnm));
+              rec = if is_CPP`CastExpr(level)
+                    then BC`GenBracketedExpr(level)
+                    else level;
+              l_asgn = BC`GenAsgnStmt(BC`GenQualifiedName(rec, BC`Rename(fsnm)),
+                                                     DS`GenExplicitCast(tp, val, nil))
+          in alt := [l_asgn]
+        else
+          def l_ptr = DS`CastToClassPtr(clnm, level);
+              l_memacc = BC`GenPointerToObjectMemberAccess(l_ptr, BC`Rename(fsnm));
+              l_asgn = BC`GenAsgnStmt(l_memacc, val)
+          in alt := [l_asgn]
+#endif VDMPP
     else
+     (cases level_type:
+#ifdef VDMSL
+        mk_REP`UnionTypeRep((posRecTypes)) -> skip,
+        others -> alt := [CGAUX`RunTime("A record was expected")]
+#endif VDMSL
+#ifdef VDMPP
+        mk_REP`UnionTypeRep((posRecTypes union posORefTypes)) -> skip,
+        others -> alt := [CGAUX`RunTime("An object or record was expected")]
+#endif VDMPP
+      end;
       for all ctr in set posRecTypes do
         def rec_nm = ctr.nm;
         in
@@ -703,60 +705,39 @@ GenRecImpModify(fsnm, mk_CGMAIN`VT(level, level_type' ), val ) ==
             in setfield := DS`GenRecSetField(rec, BC`GenPosName(rec_nm, fsnm), val);
           def isRecord = DS`GenIsThisRecord( ctr, level )
           in
-            if alt = nil
-            then alt := BC`GenBlock([setfield])
-            else alt := BC`GenIfStmt(isRecord, BC`GenBlock([setfield]), alt);
+            if alt = []
+            then alt := [setfield]
+            else alt := [BC`GenIfStmt(isRecord, BC`GenBlock([setfield]), BC`GenBlock(alt))];
          );
-
 #ifdef VDMPP
-    if posORefTypes <> {}
-    then
-      if is_REP`ObjRefTypeRep(level_type) and card posORefTypes = 1
+      if posORefTypes <> {}
       then
-        let { mk_REP`ObjRefTypeRep(clnm) } = posORefTypes
-        in
-          if CPP`isCPP()
-          then
-            def l_ptr = DS`CastToClassPtr(clnm, level);
-                l_memacc = BC`GenPointerToObjectMemberAccess(l_ptr, BC`Rename(fsnm));
-                l_asgn = BC`GenAsgnStmt(l_memacc, val)
-            in
-              alt := l_asgn
-          else -- java
-            def tp = ENV`LookUpInstanceVar(CGAUX`Combine2Names(clnm, fsnm));
-                rec = if is_CPP`CastExpr(level)
-                      then BC`GenBracketedExpr(level)
-                      else level;
-                l_asgn = BC`GenAsgnStmt(BC`GenQualifiedName(rec, BC`Rename(fsnm)),
-                                                                 DS`GenExplicitCast(tp, val, nil))
-            in
-              alt := l_asgn
-      else
         for all otr in set posORefTypes do
           let clnm = otr.nm
           in
-            if CPP`isCPP()
+            if CPP`isJAVA()
             then
-              def if_cond = DS`GenAuxType(level, otr);
-                  l_ptr = DS`CastToClassPtr(clnm, level);
-                  l_memacc = BC`GenPointerToObjectMemberAccess(l_ptr, BC`Rename(fsnm));
-                  l_asgn  = BC`GenBlock([BC`GenAsgnStmt(l_memacc, val)])
-              in
-                if alt = nil
-                then alt := l_asgn
-                else alt := BC`GenIfStmt(if_cond, l_asgn, alt)
-            else -- java
               def if_cond = BC`GenTypeComp(BC`Rename(clnm), level);
                   tp = ENV`LookUpInstanceVar(CGAUX`Combine2Names(clnm, fsnm));
                   cast = BC`GenBracketedExpr(DS`GenCastType(otr, level));
-                  l_asgn = BC`GenBlock([BC`GenAsgnStmt(BC`GenQualifiedName(cast, BC`Rename(fsnm)),
-                                                                DS`GenExplicitCast(tp, val, nil))])
+                  l_asgn = BC`GenAsgnStmt(BC`GenQualifiedName(cast, BC`Rename(fsnm)),
+                                                       DS`GenExplicitCast(tp, val, nil))
               in
-                if alt = nil
-                then alt := l_asgn
-                else alt := BC`GenIfStmt(if_cond, l_asgn, alt);
+                if alt = []
+                then alt := [l_asgn]
+                else alt := [BC`GenIfStmt(if_cond, BC`GenBlock([l_asgn]), BC`GenBlock(alt))]
+            else -- C++
+              def if_cond = DS`GenAuxType(level, otr);
+                  l_ptr = DS`CastToClassPtr(clnm, level);
+                  l_memacc = BC`GenPointerToObjectMemberAccess(l_ptr, BC`Rename(fsnm));
+                  l_asgn  = BC`GenAsgnStmt(l_memacc, val)
+              in
+                if alt = []
+                then alt := [l_asgn]
+                else alt := [BC`GenIfStmt(if_cond, BC`GenBlock([l_asgn]), BC`GenBlock(alt))];
 #endif VDMPP
-      return CGAUX`StripCompoundStmt(alt);
+     );
+      return alt;
     );
 \end{vdm_al}
 
@@ -1204,61 +1185,61 @@ CGCallStmt(mk_AS`CallStmt(obj,nm,arg_l,cid)) ==
            (var_l := var_l ^ [tmpArg_v];
             rb_l := rb_l ^ arg_stmt);
 
-      if CPP`isCPP() and len nm.ids > 1
-      then CGAUX`IncludeClass(mu(nm, ids |-> [hd nm.ids]));
-      if CPP`isCPP() and fdom <> nil
-      then
-        for t in fdom do
-          if is_REP`ObjRefTypeRep(t)
-          then CGAUX`IncludeClass(t.nm);
-
       def ti = CI`GetTypeInfo(cid);
       in
        (dcl nmobj : CPP`Expr;
-        if CPP`isCPP() and len nm.ids > 1
-        then nmobj := BC`GenQualifiedName(BC`Rename(mk_AS`Name([nm.ids(1)], nm.cid)),
-                              BC`Rename(mk_AS`Name([nm.ids(2)], nm.cid)))
-        elseif CPP`isCPP() -- len nm.ids = 1
-        then nmobj := BC`Rename(nm)
-        elseif len nm.ids > 1 -- CPP`isJava()
-        then
-          let l_clnm = mu(nm, ids |-> [hd nm.ids]),
-              l_mnm =  mu(nm, ids |-> tl nm.ids)
-          in
-            if ((hd nm.ids) = CGAUX`GiveCurCName())
-            then nmobj := BC`Rename(l_mnm)
-            elseif l_clnm in set elems
-                   CGAUX`GetOrderedSupers(CGAUX`GiveCurCASName()) and
-                   not CGMAIN`isInterface(l_clnm)
-            then nmobj := BC`GenQualifiedName(DS`GenSuper(), BC`Rename(l_mnm))
-            else nmobj := BC`GenQualifiedName(BC`Rename(l_clnm), BC`Rename(l_mnm))
-        elseif CGAUX`IsClass(nm) and nm = CGAUX`GiveCurCASName()
-        then nmobj := DS`GenThis()
-        elseif CGAUX`IsClass(nm) -- len nm.ids = 1
-        then nmobj := DS`GenSuper()
-        else nmobj := BC`Rename(nm);
-
-        def fc = BC`GenFctCall(nmobj, var_l);
-        in
-         (dcl fcall1 : CPP`Expr,
-              fcall2 : CPP`Expr;
-          if CPP`isCPP()
-          then fcall1 := BC`GenFctCall(nmobj, var_l)
-          else fcall1 := DS`GenExplicitCast(rettp,fc,fntype);
-          if CPP`isCPP()
-          then fcall2 := BC`GenGenericFctCall(nmobj, var_l)
-          else fcall2 := fc;
-          if is_REP`UnitTypeRep(ti)
-          then return rb_l ^ [BC`GenExpressionStmt(fcall2)]
-          elseif CPP`isJAVA() and CGAUX`IsClass(nm)
-          then return rb_l ^ [BC`GenExpressionStmt(fcall2)]
-          else if CPP`isCPP()
+        if CPP`isJAVA()
+        then 
+         (if len nm.ids > 1
           then
-            if TYPE`IsOverlapping(ti, rettp, {})
-            then return rb_l ^ [BC`GenReturnStmt(fcall1)]
-            else return rb_l ^ [BC`GenGenericReturnStmt(fcall1)]
-          else return rb_l ^ [BC`GenReturnStmt(fcall1)];
+            let l_clnm = mu(nm, ids |-> [hd nm.ids]),
+                l_mnm =  mu(nm, ids |-> tl nm.ids)
+            in
+              if (hd nm.ids) = CGAUX`GiveCurCName()
+              then nmobj := BC`Rename(l_mnm)
+              elseif l_clnm in set elems
+                     CGAUX`GetOrderedSupers(CGAUX`GiveCurCASName()) and
+                     not CGMAIN`isInterface(l_clnm)
+              then nmobj := BC`GenQualifiedName(DS`GenSuper(), BC`Rename(l_mnm))
+              else nmobj := BC`GenQualifiedName(BC`Rename(l_clnm), BC`Rename(l_mnm))
+          else
+            if CGAUX`IsClass(nm)
+            then
+              if nm = CGAUX`GiveCurCASName()
+              then nmobj := DS`GenThis()
+              else nmobj := DS`GenSuper()
+            else nmobj := BC`Rename(nm);
+          def fc = BC`GenFctCall(nmobj, var_l);
+          in
+            if is_REP`UnitTypeRep(ti)
+            then return rb_l ^ [BC`GenExpressionStmt(fc)]
+            else
+              if CGAUX`IsClass(nm)
+              then return rb_l ^ [BC`GenExpressionStmt(fc)]
+              else return rb_l ^ [BC`GenReturnStmt(DS`GenExplicitCast(rettp,fc,fntype))];
          )
+        else -- C++
+         (if len nm.ids > 1
+          then CGAUX`IncludeClass(mu(nm, ids |-> [hd nm.ids]));
+
+          if fdom <> nil
+          then
+            for t in fdom do
+              if is_REP`ObjRefTypeRep(t)
+              then CGAUX`IncludeClass(t.nm);
+              if len nm.ids > 1
+              then nmobj := BC`GenQualifiedName(BC`Rename(mk_AS`Name([nm.ids(1)], nm.cid)),
+                                  BC`Rename(mk_AS`Name([nm.ids(2)], nm.cid)))
+              else nmobj := BC`Rename(nm);
+          def fc = BC`GenFctCall(nmobj, var_l);
+          in
+            if is_REP`UnitTypeRep(ti)
+            then return rb_l ^ [BC`GenExpressionStmt(fc)]
+            else
+              if TYPE`IsOverlapping(ti, rettp, {})
+              then return rb_l ^ [BC`GenReturnStmt(fc)]
+              else return rb_l ^ [BC`GenGenericReturnStmt(fc)];
+         );
        )
     )
   else -- obj <> nil

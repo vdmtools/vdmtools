@@ -199,11 +199,11 @@ set_testpreandpost_option: bool ==> ()
 set_testpreandpost_option(b) ==
 testpreandpost_option := b;
 
-#ifdef VDMPP
 set_longs_option : bool ==> ()
 set_longs_option(b) ==
 longs_option := b;
 
+#ifdef VDMPP
 set_smalltypes_option: bool ==> ()
 set_smalltypes_option(b) ==
 (if (b = true) then

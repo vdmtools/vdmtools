@@ -7119,23 +7119,17 @@ TYPE_CPP_Expr vdmcg::StripCastExpr (const TYPE_CPP_Expr & expr)
 // +> CPP`Expr
 TYPE_CPP_Expr vdmcg::StripBracketedAndCastExpr (const TYPE_CPP_Expr & expr)
 {
-  if (expr.Is(TAG_TYPE_CPP_BracketedExpr))
-    return StripBracketedAndCastExpr(expr.GetRecord(pos_CPP_BracketedExpr_expr));
-  else if (expr.Is(TAG_TYPE_CPP_CastExpr))
-    return StripBracketedAndCastExpr(expr.GetRecord(pos_CPP_CastExpr_expr));
-  else
-    return expr;
-}
-
-// StripCompoundStmt
-// stmt : CPP`Stmt
-// +> seq of CPP`Stmt
-SEQ<TYPE_CPP_Stmt> vdmcg::StripCompoundStmt (const TYPE_CPP_Stmt & stmt)
-{
-  if (stmt.Is(TAG_TYPE_CPP_CompoundStmt))
-    return stmt.GetSequence(pos_CPP_CompoundStmt_stms);
-  else
-    return mk_sequence(stmt);
+  switch (expr.GetTag()) {
+    case TAG_TYPE_CPP_BracketedExpr: {
+      return StripBracketedAndCastExpr(expr.GetRecord(pos_CPP_BracketedExpr_expr));
+    }
+    case TAG_TYPE_CPP_CastExpr: {
+      return StripBracketedAndCastExpr(expr.GetRecord(pos_CPP_CastExpr_expr));
+    }
+    default: {
+      return expr;
+    }
+  }
 }
 
 // GetOpParms

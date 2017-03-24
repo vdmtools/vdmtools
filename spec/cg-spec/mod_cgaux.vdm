@@ -3805,13 +3805,6 @@ StripBracketedAndCastExpr(expr) ==
     others                    -> expr
   end;
 
-StripCompoundStmt: CPP`Stmt +> seq of CPP`Stmt
-StripCompoundStmt(stmt) ==
-  cases stmt:
-    mk_CPP`CompoundStmt(stmts,-) -> stmts,
-    others                       -> [stmt]
-  end;
- 
 GetOpParms : AS`OpDef -> seq of AS`Type
 GetOpParms(op) ==
   cases op:
