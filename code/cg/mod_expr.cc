@@ -1358,9 +1358,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSetComprehensionExpr (const TYPE_AS_SetComprehension
   const TYPE_CPP_Expr & elem_v (cgee.GetRecord(1));
   const SEQ<TYPE_CPP_Stmt> & elem_stmt (cgee.GetSequence(2));
 
-// 20150827 -->
   RemNoCheckSeqApply(seqapply_s);
-// <-- 20150827
 
   SEQ<TYPE_CPP_Stmt> todo (Sequence(elem_stmt).ImpAppend(GenSetInsert(resS_v, elem_v)));
 
@@ -1368,8 +1366,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGSetComprehensionExpr (const TYPE_AS_SetComprehension
   rb.ImpConc (GenDeclEmptySet (resS_v));
   POSITION::SetPosition(expr);
 
-  //rb.ImpAppend (CGComprehension (bind, pred, todo, nil, nil, pid_m, true));
-  rb.ImpConc (CGComprehension (bind, pred, todo, nil, nil, pid_m, true));
+  rb.ImpConc (CGComprehension (bind, pred, todo, nil, false, pid_m, true));
   rb.ImpAppend (vdm_BC_GenAsgnStmt (vt.GetRecord(pos_CGMAIN_VT_name), resS_v));
 
   DeleteLoc();
@@ -1418,8 +1415,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGMapComprehensionExpr (const TYPE_AS_MapComprehension
   rb.ImpConc (GenDeclEmptyMap (type, resM_v));
   POSITION::SetPosition(expr);
 
-  //rb.ImpAppend (CGComprehension (bind, pred, todo, nil, nil, pid_m, true));
-  rb.ImpConc (CGComprehension (bind, pred, todo, nil, nil, pid_m, true));
+  rb.ImpConc (CGComprehension (bind, pred, todo, nil, false, pid_m, true));
   rb.ImpAppend (vdm_BC_GenAsgnStmt (vt.GetRecord(pos_CGMAIN_VT_name), resM_v));
 
   DeleteLoc();
@@ -4948,7 +4944,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenBindListVariables(const SEQ<TYPE_AS_MultBind> & bin
   TYPE_CPP_Identifier succ_bind_v (vdm_BC_GiveName(ASTAUX::MkId(L"succ_bind")));
   TYPE_CPP_Stmt stmt (vdm_BC_GenAsgnStmt(succ_bind_v, vdm_BC_GenBoolLit(true)));
   TYPE_CPP_Expr contexpr (vdm_BC_GenNot(succ_bind_v));
-  SEQ<TYPE_CPP_Stmt> cstmt (CGComprehension(bind_l, St, mk_sequence(stmt), contexpr, nil, pid_m, false));
+  SEQ<TYPE_CPP_Stmt> cstmt (CGComprehension(bind_l, St, mk_sequence(stmt), contexpr, false, pid_m, false));
 
   SEQ<TYPE_CPP_Stmt> rb_l;
   rb_l.ImpAppend(vdm_BC_GenDecl(GenSmallBoolType(), succ_bind_v, vdm_BC_GenAsgnInit(vdm_BC_GenBoolLit(false))));
@@ -6197,10 +6193,9 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGAllOrExistsExpr (const TYPE_AS_QuantExpr & quant, co
       switch(kind) {
         case ALL: {
           TYPE_CPP_AsgnInit qinit (vdm_BC_GenAsgnInit(vdm_BC_GenBoolLit(true)));
-          TYPE_CPP_Stmt np (vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(tmpQuant_v, vdm_BC_GenBoolLit(false)))));
+          TYPE_CPP_Stmt stmt (vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(tmpQuant_v, vdm_BC_GenBoolLit(false)))));
           rb.ImpAppend(vdm_BC_GenDecl(GenSmallBoolType(), tmpQuant_v, qinit));
-          //rb.ImpAppend(CGComprehension(bind_l, pred, Sequence(), tmpQuant_v, np, pid_m, true));
-          rb.ImpConc(CGComprehension(bind_l, pred, Sequence(), tmpQuant_v, np, pid_m, true));
+          rb.ImpConc(CGComprehension(bind_l, pred, mk_sequence(stmt), tmpQuant_v, true, pid_m, true));
           res = tmpQuant_v;
           break;
         }
@@ -6209,8 +6204,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGAllOrExistsExpr (const TYPE_AS_QuantExpr & quant, co
           TYPE_CPP_Stmt stmt (vdm_BC_GenAsgnStmt(tmpQuant_v, vdm_BC_GenBoolLit(true)));
           TYPE_CPP_Expr contexpr (vdm_BC_GenNot(tmpQuant_v));
           rb.ImpAppend(vdm_BC_GenDecl(GenSmallBoolType(), tmpQuant_v, qinit));
-          //rb.ImpAppend(CGComprehension(bind_l, pred, mk_sequence(stmt), contexpr, nil, pid_m, true));
-          rb.ImpConc(CGComprehension(bind_l, pred, mk_sequence(stmt), contexpr, nil, pid_m, true));
+          rb.ImpConc(CGComprehension(bind_l, pred, mk_sequence(stmt), contexpr, false, pid_m, true));
           res = tmpQuant_v;
           break;
         }
@@ -6235,8 +6229,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGAllOrExistsExpr (const TYPE_AS_QuantExpr & quant, co
           bind_l.ImpAppend(msb);
           TYPE_CPP_Stmt stmt (vdm_BC_GenExpressionStmt(vdm_BC_GenPostPlusPlus(tmpQuant_v)));
           TYPE_CPP_Expr contexpr (vdm_BC_GenBracketedExpr(vdm_BC_GenLt(tmpQuant_v, vdm_BC_GenIntegerLit(2))));
-          //rb.ImpAppend(CGComprehension(bind_l, pred, mk_sequence(stmt), contexpr, nil, pid_m, true));
-          rb.ImpConc(CGComprehension(bind_l, pred, mk_sequence(stmt), contexpr, nil, pid_m, true));
+          rb.ImpConc(CGComprehension(bind_l, pred, mk_sequence(stmt), contexpr, false, pid_m, true));
           res = vdm_BC_GenEq(tmpQuant_v, vdm_BC_GenIntegerLit(1));
           break;
         }
@@ -8885,7 +8878,7 @@ Tuple vdmcg::GenClassOrBase(const TYPE_AS_Expr & e1, const TYPE_AS_Expr & e2, bo
 // pred : [ AS`Expr ]
 // stmt : seq of CPP`Stmt
 // contexpr : [ CPP`Expr ]
-// notpred : [CPP`Stmt]
+// notpred : bool
 // pid_m : map AS`Name to REP`TypeRep
 // nonstop : bool
 // ==> seq of CPP`Stmt
@@ -8893,7 +8886,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind,
                                           const Generic & pred,
                                           const SEQ<TYPE_CPP_Stmt> & stmt,
                                           const Generic & contexpr,
-                                          const Generic & notpred,
+                                          bool notpred,
                                           const Map & pid_m,
                                           bool nonstop)
 {
@@ -8953,7 +8946,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind,
       }
       SEQ<TYPE_CPP_Stmt> rb_l (stmts);
       rb_l.ImpConc(stmt_l);
-      //return vdm_BC_GenBlock(rb_l);
       return rb_l;
     }
   }
@@ -9043,14 +9035,14 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind,
 // GenPredicateStmt
 // pred : [AS`Expr]
 // stmt : seq of CPP`Stmt
-// notpred : [CPP`Stmt]
+// notpred : bool
 // ==>  seq of CPP`Stmt
 SEQ<TYPE_CPP_Stmt> vdmcg::GenPredicateStmt(const Generic & pred,
-                                           const SEQ<TYPE_CPP_Stmt> & stmt,
-                                           const Generic & notpred)
+                                           const SEQ<TYPE_CPP_Stmt> & stmts,
+                                           bool notpred)
 {
   if ( pred.IsNil() ) {
-    return stmt;
+    return stmts;
   }
   else {
     Tuple cgee (CGExprExcl(pred, ASTAUX::MkId(L"pred"),nil));
@@ -9063,25 +9055,20 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenPredicateStmt(const Generic & pred,
     rb.ImpConc(res_stmt);
 
     if (predType.Is(TAG_TYPE_REP_BooleanTypeRep)) {
-      if (stmt.IsEmpty()) {
-        if (!notpred.IsNil()) {
-// 20160531 -->
-          //rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(GenGetValue(res, predType)), notpred, nil));
-          TYPE_CPP_Expr e (GenGetValue(res, predType));
-          while( e.Is(TAG_TYPE_CPP_BracketedExpr) )
-            e = e.GetRecord(pos_CPP_BracketedExpr_expr);
-          if ( e.Is(TAG_TYPE_CPP_UnaryOpExpr ) &&
-              ( e.GetRecord(pos_CPP_UnaryOpExpr_op).GetField(pos_CPP_UnaryOp_val) == Quote(L"NEG"))) {
-              rb.ImpAppend(vdm_BC_GenIfStmt(e.GetRecord(pos_CPP_UnaryOpExpr_expr), notpred, nil));
-          }
-          else {
-            rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(vdm_BC_GenBracketedExpr(e)), notpred, nil));
-          }
-// <-- 20160531
+      if (notpred) {
+        TYPE_CPP_Expr e (StripBracketedExpr(GenGetValue(res, predType)));
+        TYPE_CPP_Expr cond;
+        if ( e.Is(TAG_TYPE_CPP_UnaryOpExpr ) &&
+            ( e.GetRecord(pos_CPP_UnaryOpExpr_op).GetField(pos_CPP_UnaryOp_val) == Quote(L"NEG"))) {
+          cond = e.GetRecord(pos_CPP_UnaryOpExpr_expr);
         }
+        else {
+          cond = vdm_BC_GenNot(vdm_BC_GenBracketedExpr(e));
+        }
+        rb.ImpAppend(vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(stmts), nil));
       }
       else {
-        rb.ImpAppend(vdm_BC_GenIfStmt(GenGetValue(res, predType), vdm_BC_GenBlock(stmt), notpred));
+        rb.ImpAppend(vdm_BC_GenIfStmt(GenGetValue(res, predType), vdm_BC_GenBlock(stmts), nil));
       }
     }
     else {
@@ -9097,9 +9084,19 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenPredicateStmt(const Generic & pred,
       }
       else
 #endif // VDMPP
+      {
         cond = GenGetValue(vdm_BC_GenCastExpr(GenBoolType(), pred_v), predType);
-      TYPE_CPP_Stmt ifpred (vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(stmt), notpred));
-      rb.ImpAppend(vdm_BC_GenIfStmt(GenIsBool(pred_v), ifpred,
+      }
+
+      TYPE_CPP_Stmt ifpred;
+      if (notpred) {
+        ifpred = vdm_BC_GenIfStmt(vdm_BC_GenNot(vdm_BC_GenBracketedExpr(cond)),
+                                  vdm_BC_GenBlock(stmts), nil);
+      }
+      else {
+        ifpred = vdm_BC_GenIfStmt(cond, vdm_BC_GenBlock(stmts), nil);
+      }
+      rb.ImpAppend(vdm_BC_GenIfStmt(GenIsBool(pred_v), vdm_BC_GenBlock(mk_sequence(ifpred)),
                                     vdm_BC_GenBlock(mk_sequence(RunTime(L"A boolean was expected")))));
     }
     return rb;

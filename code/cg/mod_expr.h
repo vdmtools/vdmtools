@@ -191,8 +191,8 @@ SEQ<TYPE_CPP_Stmt> CGComprehension(const SEQ<TYPE_AS_MultBind> &,
                                    const Generic &,
                                    const SEQ<TYPE_CPP_Stmt> &,
                                    const Generic &,
-                                   const Generic &, const Map &, bool);
-SEQ<TYPE_CPP_Stmt> GenPredicateStmt(const Generic &, const SEQ<TYPE_CPP_Stmt> &, const Generic &);
+                                   bool, const Map &, bool);
+SEQ<TYPE_CPP_Stmt> GenPredicateStmt(const Generic &, const SEQ<TYPE_CPP_Stmt> &, bool);
 SEQ<TYPE_AS_Stmt> DeclarePatVars(const TYPE_AS_Pattern &);
 SEQ<TYPE_AS_Stmt> DeclPatVars(const MAP<TYPE_AS_Name, TYPE_REP_TypeRep> &);
 Tuple FindMultSetBind2(const SEQ<TYPE_AS_MultBind> &);
