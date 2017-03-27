@@ -5566,7 +5566,7 @@ CGAllOrExistsExpr(quant, mk_CGMAIN`VT(resVar_v, -)) ==
     cases quant:
       mk_AS`AllOrExistsExpr(<ALL>, bind_l, pred, -) ->
          let qinit = BC`GenAsgnInit(BC`GenBoolLit(true)),
-             stmt = BC`GenBlock([BC`GenAsgnStmt(tmpQuant_v, BC`GenBoolLit(false))])
+             stmt = BC`GenAsgnStmt(tmpQuant_v, BC`GenBoolLit(false))
          in
           (rb := [ BC`GenDecl(DS`GenSmallBoolType(), tmpQuant_v, qinit) ] ^
                    CGComprehension(bind_l, pred, [stmt], tmpQuant_v, true, pid_m, true);
@@ -5596,7 +5596,6 @@ CGAllOrExistsExpr(quant, mk_CGMAIN`VT(resVar_v, -)) ==
     CGAUX`PopEnv();
     return rb);
 \end{vdm_al}
-
 
 \subsection{Iota Expression}
 
@@ -5681,12 +5680,9 @@ else
 
     def tmpElem = BC`GiveName("tmpElem");
         count = BC`GiveName("count");
-        succ = BC`GiveName("succ");
         settp = CGAUX`FindSetElemType(setType);
-        elemVT = mk_CGMAIN`VT(tmpElem, settp);
         bt = mk_REP`BooleanTypeRep();
         mk_(tmpB, pr_stmt) = CGExprExcl(pred, "tmpB", nil); -- third
-        pred_type = CGAUX`FindType(pred);
     in
      (dcl if_then : seq of CPP`Stmt := [BC`GenExpressionStmt(BC`GenPostPlusPlus(count))],
           stmts : seq of CPP`Stmt := pr_stmt,
@@ -5701,18 +5697,25 @@ else
 #endif VDMPP
         if_then := if_then ^ [BC`GenAsgnStmt(resVar, tmpElem)];
  
+      def pred_type = CGAUX`FindType(pred);
+      in
       if CGAUX`IsBoolType(pred_type)
       then stmts := stmts ^ [BC`GenIfStmt(DS`GenGetValue(pred_v, bt), BC`GenBlock(if_then), nil)]
       else
        (if not is_CPP`Identifier(tmpB)
         then
          (pred_v := BC`GiveName("pred");
-          stmts := stmts ^ DS`GenDecl (pred_type, pred_v, BC`GenAsgnInit(tmpB)));
+          stmts := stmts ^ DS`GenDecl (pred_type, pred_v, BC`GenAsgnInit(tmpB))
+         );
         stmts := stmts ^ [BC`GenIfStmt(BC`GenNot(DS`GenIsBool(pred_v)),
                                        BC`GenBlock([CGAUX`RunTime("A boolean was expected")]), nil),
                           BC`GenIfStmt(DS`GenGetValue(BC`GenCastExpr(DS`GenBoolType(), pred_v), bt),
-                                       BC`GenBlock(if_then), nil)]);
-      def mk_(pm, Is_excl) = PM`CGPatternMatchExcl(pat, elemVT, {}, succ, nil, stmts, false); -- fourth
+                                       BC`GenBlock(if_then), nil)]
+       );
+
+      def succ = BC`GiveName("succ");
+          elemVT = mk_CGMAIN`VT(tmpElem, settp);
+          mk_(pm, Is_excl) = PM`CGPatternMatchExcl(pat, elemVT, {}, succ, nil, stmts, false); -- fourth
           pm1 = if Is_excl
                 then pm
                 else [BC`GenDecl(DS`GenSmallBoolType(), succ, BC`GenAsgnInit(BC`GenBoolLit(false)))]
@@ -5722,13 +5725,12 @@ else
           body_l = MergeStmts( decl, pm1 );
           cond = BC`GenNeq(count, BC`GenIntegerLit(1));
           rti = BC`GenBlock([CGAUX`RunTime("No unique element in 'iota'")]);
-  
       in 
        (rb_l := rb_l ^ [BC`GenDecl(DS`GenSmallIntType(), count, BC`GenAsgnInit(BC`GenIntegerLit(0)))];
         rb_l := rb_l ^ DS`GenIterSet(setVT, cexpr, elemVT, body_l);
         rb_l := rb_l ^ [BC`GenIfStmt(cond, rti, nil)];
        );
-       return [ BC`GenBlock(rb_l) ];
+      return rb_l;
      );
   );
 \end{vdm_al}

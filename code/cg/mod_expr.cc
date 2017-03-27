@@ -6193,7 +6193,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGAllOrExistsExpr (const TYPE_AS_QuantExpr & quant, co
       switch(kind) {
         case ALL: {
           TYPE_CPP_AsgnInit qinit (vdm_BC_GenAsgnInit(vdm_BC_GenBoolLit(true)));
-          TYPE_CPP_Stmt stmt (vdm_BC_GenBlock(mk_sequence(vdm_BC_GenAsgnStmt(tmpQuant_v, vdm_BC_GenBoolLit(false)))));
+          TYPE_CPP_Stmt stmt (vdm_BC_GenAsgnStmt(tmpQuant_v, vdm_BC_GenBoolLit(false)));
           rb.ImpAppend(vdm_BC_GenDecl(GenSmallBoolType(), tmpQuant_v, qinit));
           rb.ImpConc(CGComprehension(bind_l, pred, mk_sequence(stmt), tmpQuant_v, true, pid_m, true));
           res = tmpQuant_v;
@@ -6218,7 +6218,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGAllOrExistsExpr (const TYPE_AS_QuantExpr & quant, co
         case TAG_TYPE_AS_SetBind: {
           const TYPE_AS_Expr & pred (quant.GetRecord(pos_AS_ExistsUniqueExpr_pred));
           TYPE_CPP_AsgnInit qinit (vdm_BC_GenAsgnInit(vdm_BC_GenIntegerLit(0)));
-          rb.ImpAppend(vdm_BC_GenDecl(GenSmallIntType(), tmpQuant_v, qinit));
+
           SEQ<TYPE_AS_Pattern> pat_l;
           pat_l.ImpAppend(bind.GetRecord(pos_AS_SetBind_pat));
 
@@ -6227,8 +6227,11 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGAllOrExistsExpr (const TYPE_AS_QuantExpr & quant, co
 
           SEQ<TYPE_AS_MultBind> bind_l;
           bind_l.ImpAppend(msb);
+
           TYPE_CPP_Stmt stmt (vdm_BC_GenExpressionStmt(vdm_BC_GenPostPlusPlus(tmpQuant_v)));
           TYPE_CPP_Expr contexpr (vdm_BC_GenBracketedExpr(vdm_BC_GenLt(tmpQuant_v, vdm_BC_GenIntegerLit(2))));
+
+          rb.ImpAppend(vdm_BC_GenDecl(GenSmallIntType(), tmpQuant_v, qinit));
           rb.ImpConc(CGComprehension(bind_l, pred, mk_sequence(stmt), contexpr, false, pid_m, true));
           res = vdm_BC_GenEq(tmpQuant_v, vdm_BC_GenIntegerLit(1));
           break;
@@ -6285,17 +6288,14 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
       SEQ<TYPE_CPP_Stmt> decl(DeclarePatVars(pat)); // must be after CGExpr and before CGExprExcl and CGPatternMatchExcl
 
       SEQ<TYPE_CPP_Stmt> rb_l (set_stmt);
-      if ((!(pid_pat_s.ImpIntersect(pid_expr_s)).IsEmpty()) || !expr.Is(TAG_TYPE_AS_Name))
-      {
+      if ((!(pid_pat_s.ImpIntersect(pid_expr_s)).IsEmpty()) || !expr.Is(TAG_TYPE_AS_Name)) {
         rb_l.ImpConc(GenConstDeclInit(setType, tmpSet, tmpSet1));
       }
-      else
-      {
+      else {
         tmpSet = tmpSet1;
       }
 
-      if (!IsSetType(setType))
-      {
+      if (!IsSetType(setType)) {
         TYPE_CPP_Identifier tmpSet_q (vdm_BC_GiveName(ASTAUX::MkId(L"tmpSet")));
         TYPE_CPP_Expr cond (GenIsSet(tmpSet));
 
@@ -6307,23 +6307,22 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
         }
         else
 #endif // VDMPP
+        {
           rb_l.ImpAppend(vdm_BC_GenDecl(GenSetType(), tmpSet_q, vdm_BC_GenAsgnInit(tmpSet)));
+        }
+
         tmpSet = tmpSet_q;
       }
 
       TYPE_CPP_Identifier tmpElem (vdm_BC_GiveName(ASTAUX::MkId(L"tmpElem")));
       TYPE_CPP_Identifier count (vdm_BC_GiveName(ASTAUX::MkId(L"count")));
-      TYPE_CPP_Identifier succ (vdm_BC_GiveName(ASTAUX::MkId(L"succ")));
       TYPE_REP_TypeRep settp (FindSetElemType(setType));
-      TYPE_CGMAIN_VT elemVT (mk_CG_VT(tmpElem, settp));
       TYPE_REP_BooleanTypeRep bt;
 
       // pred
       Tuple cgee (CGExprExcl(pred, ASTAUX::MkId(L"tmpB"), nil));
       const TYPE_CPP_Expr & tmpB (cgee.GetRecord(1));
       const SEQ<TYPE_CPP_Stmt> & pr_stmt (cgee.GetSequence(2));
-
-      TYPE_REP_TypeRep pred_type (FindType(pred));
 
       SEQ<TYPE_CPP_Stmt> if_then;
       if_then.ImpAppend(vdm_BC_GenExpressionStmt(vdm_BC_GenPostPlusPlus(count)));
@@ -6335,19 +6334,19 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
       }
       else
 #endif // VDMPP
+      {
         if_then.ImpAppend(vdm_BC_GenAsgnStmt(resVar, tmpElem));
+      }
 
       SEQ<TYPE_CPP_Stmt> stmts (pr_stmt);
 
+      TYPE_REP_TypeRep pred_type (FindType(pred));
       TYPE_CPP_Expr pred_v (tmpB);
-      if (IsBoolType(pred_type))
-      {
+      if (IsBoolType(pred_type)) {
         stmts.ImpAppend(vdm_BC_GenIfStmt(GenGetValue(pred_v, bt), vdm_BC_GenBlock(if_then), nil));
       }
-      else
-      {
-        if (!tmpB.Is(TAG_TYPE_CPP_Identifier))
-        {
+      else {
+        if (!tmpB.Is(TAG_TYPE_CPP_Identifier)) {
           pred_v = vdm_BC_GiveName(ASTAUX::MkId(L"pred"));
           stmts.ImpConc (GenDecl_DS (pred_type, pred_v, vdm_BC_GenAsgnInit(tmpB)));
         }
@@ -6357,13 +6356,16 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
                                          vdm_BC_GenBlock(if_then), nil));
       }
 
+      TYPE_CPP_Identifier succ (vdm_BC_GiveName(ASTAUX::MkId(L"succ")));
+      TYPE_CGMAIN_VT elemVT (mk_CG_VT(tmpElem, settp));
       Tuple cgpme (CGPatternMatchExcl(pat, elemVT, eset, succ, Map(), stmts, false));
       const SEQ<TYPE_CPP_Stmt> & pm (cgpme.GetSequence(1));
       bool Is_Excl (cgpme.GetBoolValue(2)); // false : need to check pattern match failed
 
       SEQ<TYPE_CPP_Stmt> pm1;
-      if (!Is_Excl)
+      if (!Is_Excl) {
         pm1.ImpAppend(vdm_BC_GenDecl(GenSmallBoolType(), succ, vdm_BC_GenAsgnInit(vdm_BC_GenBoolLit(false))));
+      }
       pm1.ImpConc(pm);
      
       SEQ<TYPE_CPP_Stmt> body_l(MergeStmts( decl, pm1 ));
@@ -6376,8 +6378,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
       rb_l.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNeq(count, vdm_BC_GenIntegerLit(1)),
                   vdm_BC_GenBlock(mk_sequence(RunTime(L"No unique element in 'iota'"))), nil));
 
-      SEQ<TYPE_CPP_Stmt> sq;
-      return sq.ImpAppend(vdm_BC_GenBlock(rb_l));
+      return rb_l;
     }
     default:
       return SEQ<TYPE_CPP_Stmt>(); // dummy
