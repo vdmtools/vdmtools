@@ -81,33 +81,23 @@ GenStmt( stmt, isLast ) ==
      (is_AS`StartStmt(stmt))         ->
                                         if CPP`isJAVA() and CGMAIN`get_conc_option()
                                         then return CONC`GenStartStmt(stmt, isLast)
-                                        else (if CPP`isJAVA()
-                                              then CGAUX`SetNotSupportedException(true);
-                                              return GenNotSupported("start statement", isLast)),
+                                        else return GenNotSupported("start statement", isLast),
      (is_AS`StartListStmt(stmt))     ->
                                         if CPP`isJAVA() and CGMAIN`get_conc_option()
                                         then return CONC`GenStartlistStmt(stmt, isLast)
-                                        else (if CPP`isJAVA()
-                                              then CGAUX`SetNotSupportedException(true);
-                                              return GenNotSupported("start list statement", isLast)),
+                                        else return GenNotSupported("start list statement", isLast),
      (is_AS`StopStmt(stmt))          ->
                                         if CPP`isJAVA() and CGMAIN`get_conc_option()
                                         then return CONC`GenStopStmt(stmt, isLast)
-                                        else (if CPP`isJAVA()
-                                              then CGAUX`SetNotSupportedException(true);
-                                              return GenNotSupported("stop statement", isLast)),
+                                        else return GenNotSupported("stop statement", isLast),
      (is_AS`StopListStmt(stmt))      ->
                                         if CPP`isJAVA() and CGMAIN`get_conc_option()
                                         then return CONC`GenStoplistStmt(stmt, isLast)
-                                        else (if CPP`isJAVA()
-                                              then CGAUX`SetNotSupportedException(true);
-                                              return GenNotSupported("stop list statement", isLast)),
+                                        else return GenNotSupported("stop list statement", isLast),
 #endif VDMPP
 #ifdef VICE
-     (is_AS`DurationStmt(stmt))      -> (CGAUX`SetNotSupportedException(true);
-                                         return GenStmt(stmt.stmt, isLast)),
-     (is_AS`CycleStmt(stmt))         -> (CGAUX`SetNotSupportedException(true);
-                                         return GenStmt(stmt.stmt, isLast)),
+     (is_AS`DurationStmt(stmt))      -> return GenStmt(stmt.stmt, isLast),
+     (is_AS`CycleStmt(stmt))         -> return GenStmt(stmt.stmt, isLast),
 #endif VICE
       others -> error
    end;
@@ -1464,8 +1454,7 @@ CGLetBeSTStmt: AS`LetBeSTStmt * bool ==> seq of CPP`Stmt
 CGLetBeSTStmt(mk_AS`LetBeSTStmt(bind, St, In,-), isLast) ==
   if exists e in set elems bind & is_AS`MultTypeBind(e)
   then
-   (CGAUX`SetNotSupportedException(true);
-    def stmts = GenNotSupported("type bind", isLast)
+   (def stmts = GenNotSupported("type bind", isLast)
     in 
 #ifdef VDMPP
       if CPP`isJAVA()
@@ -2404,9 +2393,7 @@ GenSpecTopStmt: AS`SpecificationStmt ==> seq of CPP`Stmt
 GenSpecTopStmt(-) ==
 #ifdef VDMPP
   if CPP`isJAVA()
-  then
-   (CGAUX`SetNotSupportedException(true);
-    return[CGAUX`NotSupported("specification statement")])
+  then return[CGAUX`NotSupported("specification statement")]
   else
 #endif VDMPP
     def mk_(mthd,num) = CGAUX`GiveCurMName();

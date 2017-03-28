@@ -151,7 +151,9 @@ FindType( expr ) ==
   (is_AS`CharLit(expr))               -> return mk_REP`CharTypeRep(),   
   (is_AS`TextLit(expr))               -> return mk_REP`SeqTypeRep(mk_REP`CharTypeRep()),
   (is_AS`QuoteLit(expr))              -> def mk_AS`QuoteLit(v,cid) = expr;
+#ifdef VDMPP
                                              - = InsertQuote(v)
+#endif VDMPP
                                          in
                                            return mk_REP`QuoteTypeRep(mk_AS`Name([v], cid)),
   (is_AS`RealLit(expr))               -> let mk_AS`RealLit(v,cid) = expr
@@ -730,7 +732,9 @@ FromAS2RepTypeAux(at) ==
     mk_AS`VoidType(-) -> return mk_REP`UnitTypeRep(),
   
     mk_AS`QuoteType(t,-) -> def mk_AS`QuoteLit(name,cid) = t;
+#ifdef VDMPP
                                 - = InsertQuote(name)
+#endif VDMPP
                             in return mk_REP`QuoteTypeRep(mk_AS`Name([name],cid)),
 
     mk_AS`CompositeType(name, fields, -) -> return 
@@ -815,9 +819,15 @@ operations
   NotSupported: seq of char ==> CPP`Stmt
   NotSupported(cst) ==
    (dcl id : CPP`Expr;
-    if CPP`isCPP()
-    then id := BC`GenIdentifier("CGUTIL::NotSupported")
-    else id := BC`GenIdentifier("UTIL.NotSupported");
+#ifdef VDMPP
+    if CPP`isJAVA()
+    then
+     (CGAUX`SetNotSupportedException(true);
+      id := BC`GenIdentifier("UTIL.NotSupported");
+     )
+    else
+#endif VDMPP
+      id := BC`GenIdentifier("CGUTIL::NotSupported");
     return BC`GenExpressionStmt(BC`GenFctCall(id, [BC`GenStringLit(cst)]));
    );
 
@@ -2674,7 +2684,6 @@ UseAuxFct() ==
   auxfct := true;
 \end{vdm_al}
 
-#endif
 
 A class is abstract if either
 \begin{itemize}
@@ -2689,9 +2698,7 @@ $HasAbstractMethods$ operation).
 IsAbstract: () ==> bool
 IsAbstract() ==
 return isabstract 
-#ifdef VDMPP
        or HasAbstractMethods()
-#endif VDMPP
 ;
 
 ThrowsException: () ==> bool
@@ -2724,7 +2731,10 @@ isabstract := true;
 
 SetException: bool ==> ()
 SetException(b) ==
-  throwException := b;
+ (throwException := b;
+  if not b
+  then SetNotSupportedException(false);
+ );
 
 SetNotSupportedException: bool ==> ()
 SetNotSupportedException(b) ==
@@ -2792,6 +2802,7 @@ UnsetValState: () ==> ()
 UnsetValState() ==
 val := false;
 \end{vdm_al}
+#endif VDMPP
 
 \begin{vdm_al}
 CurrentRType: REP`TypeRep ==> ()
@@ -3637,7 +3648,7 @@ operations
   );
 
 \end{vdm_al}
-#endif VDMPP
+--#endif VDMPP
 $GenHashMember$ generates a static private member representing the
 hash code for this class. It is initially 0.
 \begin{vdm_al}
@@ -3741,6 +3752,8 @@ PackageToDir(package) ==
   then [package.id.id ]
   else PackageToDir(package.pn) ^ [ package.id.id ];
 \end{vdm_al}         
+
+#endif VDMPP
 
 \begin{vdm_al}
 operations

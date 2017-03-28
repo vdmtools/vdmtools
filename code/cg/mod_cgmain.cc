@@ -66,6 +66,7 @@ void vdmcg::InitState_CGMAIN()
 
 // CG functions and operations
 
+#ifdef VDMPP
 void vdmcg::set_skeleton_option(bool s)
 {
   this->skeleton_option = s;
@@ -100,6 +101,7 @@ bool vdmcg::get_preandpost_option() const
 {
   return this->preandpost_option;
 }
+#endif // VDMPP
 
 void vdmcg::set_testpreandpost_option(bool s)
 {
@@ -111,6 +113,7 @@ bool vdmcg::get_testpreandpost_option()
   return this->testpreandpost_option;
 }
 
+#ifdef VDMPP
 void vdmcg::set_conc_option(bool s)
 {
   this->conc_option = s;
@@ -170,6 +173,7 @@ bool vdmcg::isInterface(const TYPE_AS_Name & clnm)
 {
   return this->interfaces.InSet(clnm);
 }
+#endif // VDMPP
 
 bool vdmcg::get_wchar() const
 {
@@ -181,6 +185,7 @@ void vdmcg::set_wchar(bool pWchar)
   this->wchar_option = pWchar;
 }
 
+#ifdef VDMPP
 Set vdmcg::get_imports_names() const
 {
   return this->imports_names;
@@ -250,6 +255,7 @@ void vdmcg::set_java_rename_option(bool b)
 {
   this->java_rename_option = b;
 }
+#endif // VDMPP
 
 bool vdmcg::get_verbose_mode() const
 {

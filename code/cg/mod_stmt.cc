@@ -115,53 +115,39 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenStmt(const TYPE_AS_Stmt & stmt, bool isLast)
 #ifdef VDMPP
     case TAG_TYPE_AS_StartStmt:
       if (vdm_CPP_isJAVA() && get_conc_option())
-        //cpp.ImpAppend(GenStartStmt(stmt));
         cpp = GenStartStmt(stmt, isLast);
       else {
-        if (vdm_CPP_isJAVA())
-          SetNotSupportedException(true);
         cpp.ImpConc(GenNotSupported(L"start statement", stmt, isLast));
       }
       break;
     case TAG_TYPE_AS_StartListStmt:
       if (vdm_CPP_isJAVA() && get_conc_option())
-        //cpp.ImpAppend(GenStartlistStmt(stmt));
         cpp = GenStartlistStmt(stmt, isLast);
       else {
-        if (vdm_CPP_isJAVA())
-          SetNotSupportedException(true);
         cpp.ImpConc(GenNotSupported(L"start list statement", stmt, isLast));
       }
       break;
     case TAG_TYPE_AS_StopStmt:
       if (vdm_CPP_isJAVA() && get_conc_option())
-        //cpp.ImpAppend(GenStopStmt(stmt));
         cpp = GenStopStmt(stmt, isLast);
       else {
-        if (vdm_CPP_isJAVA())
-          SetNotSupportedException(true);
         cpp.ImpConc(GenNotSupported(L"stop statement", stmt, isLast));
       }
       break;
     case TAG_TYPE_AS_StopListStmt:
       if (vdm_CPP_isJAVA() && get_conc_option())
-        //cpp.ImpAppend(GenStoplistStmt(stmt));
         cpp = GenStoplistStmt(stmt, isLast);
       else {
-        if (vdm_CPP_isJAVA())
-          SetNotSupportedException(true);
         cpp.ImpConc(GenNotSupported(L"stop list statement", stmt, isLast));
       }
       break;
 #endif // VDMPP
 #ifdef VICE
     case TAG_TYPE_AS_DurationStmt: {
-      SetNotSupportedException(true);
       cpp.ImpConc(GenStmt(stmt.GetRecord(pos_AS_DurationStmt_stmt), isLast));
     };
     break;
     case TAG_TYPE_AS_CycleStmt: {
-      SetNotSupportedException(true);
       cpp.ImpConc(GenStmt(stmt.GetRecord(pos_AS_CycleStmt_stmt), isLast));
     };
     break;
@@ -1826,12 +1812,10 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGLetBeSTStmt(const TYPE_AS_LetBeSTStmt & stmt, bool i
 
   bool exists = false;
   size_t len_bind_l = bind_l.Length();
-  for (size_t idx = 1; (idx <= len_bind_l) && !exists; idx++)
-  {
+  for (size_t idx = 1; (idx <= len_bind_l) && !exists; idx++) {
     exists = bind_l[idx].Is(TAG_TYPE_AS_MultTypeBind);
   }
-  if (exists)
-  {
+  if (exists) {
     SEQ<TYPE_CPP_Stmt> res;
     res.ImpConc(GenNotSupported(L"type bind", stmt, isLast));
 #ifdef VDMPP
@@ -2697,7 +2681,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenSpecTopStmt(const TYPE_AS_SpecificationStmt & stmt)
 {
 #ifdef VDMPP
   if (vdm_CPP_isJAVA()) {
-    SetNotSupportedException(true);
     SEQ<TYPE_CPP_Stmt> s;
     s.ImpAppend(NotSupported(L"specification statement", stmt));
     return s;

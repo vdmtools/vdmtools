@@ -168,18 +168,15 @@ cases true:
  (is_AS`UndefinedExpr(expr))            -> CGUndefinedExpr(),
  (is_AS`OldName(expr))                  -> CGOldName(expr),
  (is_AS`TokenConstructorExpr(expr))     -> CGTokenConstExpr(expr, resVar_v),
- (is_AS`FctTypeInstExpr(expr))          -> (CGAUX`SetNotSupportedException(true);
-                                            return [CGAUX`NotSupported("function type instantiation expression")]),
- (is_AS`LambdaExpr(expr))               -> (CGAUX`SetNotSupportedException(true);
-                                            return [CGAUX`NotSupported("lambda expression")]),
+ (is_AS`FctTypeInstExpr(expr))          -> return [CGAUX`NotSupported("function type instantiation expression")],
+ (is_AS`LambdaExpr(expr))               -> return [CGAUX`NotSupported("lambda expression")],
  (is_AS`TypeJudgementExpr(expr))        -> CGTypeJudgementExpr(expr, resVar_v),
- (is_AS`PreConditionApplyExpr(expr))    -> (CGAUX`SetNotSupportedException(true);
-                                            return [CGAUX`NotSupported("precondition expression")]),
+ (is_AS`PreConditionApplyExpr(expr))    -> return [CGAUX`NotSupported("precondition expression")],
  (is_AS`TupleSelectExpr(expr))          -> CGTupleSelectExpr(expr, resVar_v),
  (is_AS`NarrowExpr(expr))               -> CGNarrowExpr(expr, resVar_v),
  (is_AS`Macro(expr))                    -> CGMacro(expr, resVar_v),
 #ifdef VICE
- (is_AS`CurTimeExpr (expr))             ->  return [CGAUX`NotSupported("time expression")],
+ (is_AS`CurTimeExpr (expr))             -> return [CGAUX`NotSupported("time expression")],
 #endif VICE
 #ifdef VDMPP
  (is_AS`NewExpr (expr))                 -> CGNewExpr (expr,resVar_v),
@@ -216,8 +213,7 @@ cases true:
   (is_AS`ThreadIdExpr(expr)) ->
      if CPP`isJAVA() and CGMAIN`get_conc_option()
      then return CONC`GenThreadId()
-     else
-       return [CGAUX`NotSupported("threadId expression")],
+     else return [CGAUX`NotSupported("threadId expression")],
 
 #endif VDMPP
   others          -> error
@@ -2345,9 +2341,7 @@ CGTypeJudgementExpr(mk_AS`TypeJudgementExpr(expr,type,cid), vt) ==
    (dcl e : [AS`Expr] := ConvertTypeJudgementExprAS(expr, type);
     if e <> nil
     then return CGExpr'(e, vt)
-    else
-     (CGAUX`SetNotSupportedException(true);
-      return [CGAUX`NotSupported("type judgement expression")]);
+    else return [CGAUX`NotSupported("type judgement expression")];
    );
 
 ConvertTypeJudgementExprAS: AS`Expr * AS`Type ==> [AS`Expr]
@@ -3035,13 +3029,9 @@ CGFctApplyExpr(mk_AS`ApplyExpr(expr, par_l, cid), vt) ==
       let mk_AS`Name(ids, cidnm) = expr in
 #endif VDMPP
        (if FD`LookUpLocFct(expr)
-        then
-         (CGAUX`SetNotSupportedException(true);
-          return [CGAUX`NotSupported("function value or local function definitions")])
+        then return [CGAUX`NotSupported("function value or local function definitions")]
         elseif CGAUX`IsFctType(CI`GetTypeInfo(cid))
-        then
-         (CGAUX`SetNotSupportedException(true);
-          return [CGAUX`NotSupported("Higher order functions")])
+        then return [CGAUX`NotSupported("Higher order functions")]
 #ifdef VDMPP
         elseif CPP`isJAVA() and (len ids > 1)
         then
@@ -4136,15 +4126,15 @@ let-be-such-that expressions:
 CGLetBeSTExpr: AS`LetBeSTExpr * CGMAIN`VT ==> seq of CPP`Stmt
 CGLetBeSTExpr(mk_AS`LetBeSTExpr(bind, St, In, -), vt) ==
   if exists b in set elems bind & is_AS`MultTypeBind(b)
-  then
-    (CGAUX`SetNotSupportedException(true);
-    return [CGAUX`NotSupported("type bind")])
+  then return [CGAUX`NotSupported("type bind")]
   else
-    (CGAUX`PushEnv();
-    def rb_l = GenBindListVariables(bind, St) ^ CGExpr(In, vt) in
-      (CGAUX`PopEnv();
-       return [BC`GenBlock(rb_l)]));
-
+   (CGAUX`PushEnv();
+    def rb_l = GenBindListVariables(bind, St) ^ CGExpr(In, vt)
+    in
+     (CGAUX`PopEnv();
+      return [BC`GenBlock(rb_l)]
+     )
+   );
 \end{vdm_al}
 
 The operation $GenBindVariables$ is an auxiliary operation to both
@@ -5008,9 +4998,7 @@ CGFieldSelectExpr( fexpr,mk_CGMAIN`VT( resVar_v, type ), expr1, type1 ) ==
     def ti = CGAUX`FindType (fexpr)
     in
       if is_REP`PartialFnTypeRep(ti) or is_REP`TotalFnTypeRep(ti) or is_REP`OpTypeRep (ti)
-      then
-       (CGAUX`SetNotSupportedException(true);
-        return [CGAUX`NotSupported("Function value")])
+      then return [CGAUX`NotSupported("Function value")]
       else
 #endif VDMPP
        (dcl tmpRec : [CPP`Expr] := expr1,
@@ -5039,8 +5027,6 @@ CGFieldSelectExpr( fexpr,mk_CGMAIN`VT( resVar_v, type ), expr1, type1 ) ==
           then 
             rb := rb ^ FindFieldSelApply(nm, mk_CGMAIN`VT( resVar_v, type ),mk_CGMAIN`VT(tmpRec, tmpRecType) );
 #ifdef VDMPP
-        if CGAUX`IsUnionFunctionType (ti)
-        then CGAUX`SetNotSupportedException(true);
         if CGAUX`IsUnionFunctionType (ti)
         then
           if CPP`isCPP()
@@ -5589,7 +5575,6 @@ CGAllOrExistsExpr(quant, mk_CGMAIN`VT(resVar_v, -)) ==
                    CGComprehension(bind_l, pred, [stmt], contexpr, false, pid_m, true);
            res := BC`GenEq(tmpQuant_v, BC`GenIntegerLit(1))),
       others -> (CGAUX`PopEnv();
-                CGAUX`SetNotSupportedException(true);
                 return [CGAUX`NotSupported("type bind")])
     end;
     rb := rb ^ [ BC`GenAsgnStmt(resVar_v, DS`GenBoolExpr(res)) ];
@@ -5645,9 +5630,7 @@ CGIotaExpr(mk_AS`IotaExpr(bind, pred, -), mk_CGMAIN`VT(resVar, -)) ==
 CGIotaExpr(mk_AS`IotaExpr(bind, pred, -), mk_CGMAIN`VT(resVar, resTp)) ==
 #endif VDMPP
 if is_AS`TypeBind(bind)
-then
-  (CGAUX`SetNotSupportedException(true);
-  return [CGAUX`NotSupported("type bind")])
+then return [CGAUX`NotSupported("type bind")]
 else
   def mk_AS`SetBind(pat, expr,-) = bind;
       setType = CGAUX`FindType(expr);
@@ -6943,13 +6926,9 @@ CGName(asname) ==
   (def ti = CGAUX`FindType(asname)
    in
      if is_REP`PartialFnTypeRep(ti) or is_REP`TotalFnTypeRep(ti)
-     then
-       (CGAUX`SetNotSupportedException(true);
-        return [CGAUX`NotSupported("function value")])
+     then return [CGAUX`NotSupported("function value")]
      elseif is_REP`OpTypeRep(ti)
-     then
-       (CGAUX`SetNotSupportedException(true);
-        return [CGAUX`NotSupported("operation value")]);
+     then return [CGAUX`NotSupported("operation value")];
    (dcl asname' : AS`Name := asname;
 #ifdef VDMPP
     if (len asname.ids > 1)
@@ -6963,11 +6942,11 @@ CGName(asname) ==
            asname' := CGAUX`Combine2Names(argname, asname));
        CGAUX`IncludeClass(mu(asname, ids |-> [hd asname.ids])));
 #endif VDMPP
-    CGAUX`InsertVariable(asname');
 #ifdef VDMSL
     return BC`Rename(asname');
 #endif VDMSL
 #ifdef VDMPP
+    CGAUX`InsertVariable(asname');
     def e = BC`Rename(asname')
     in
       if CPP`isJAVA()
@@ -6997,11 +6976,10 @@ CGOldName(oldnm) ==
   def ti = CGAUX`FindType(oldnm)
   in
     if is_REP`PartialFnTypeRep(ti) or is_REP`TotalFnTypeRep(ti)
-    then
-      (CGAUX`SetNotSupportedException(true);
-       return [CGAUX`NotSupported("function value")])
-    else
-      return BC`RenameOld(oldnm);
+    then return [CGAUX`NotSupported("function value")]
+    elseif is_REP`OpTypeRep(ti)
+    then return [CGAUX`NotSupported("operation value")]
+    else return BC`RenameOld(oldnm);
 \end{vdm_al}
 
 \subsection{Literal}
@@ -7789,8 +7767,7 @@ CGIterateExpr(le, re, resVT) ==
       (CGAUX`IsMapType(type1) or CGAUX`IsMapType(rtype)) -> -- or CGAUX`IsMapType(rtype) tilføjet 27.7.98 (jojo)
           return stmt1 ^ stmt2 ^ DS`GenMapIteration(vt1, vt2, resVT),
       (CGAUX`IsFctType(type1)) ->
-          (CGAUX`SetNotSupportedException(true);
-          return [CGAUX`NotSupported("function iteration expression")]),
+          return [CGAUX`NotSupported("function iteration expression")],
       others ->
         (dcl stmt : CPP`Stmt,
              cond : CPP`Expr;
@@ -8267,9 +8244,7 @@ CGComprehension: AS`BindList * [ AS`Expr ] * seq1 of CPP`Stmt * [ CPP`Expr ] *
                  bool * map AS`Name to REP`TypeRep * bool ==> seq of CPP`Stmt
 CGComprehension(bind, pred, stmt, contexpr, notpred, pid_m, nonstop ) ==
   if exists b in set elems bind & is_AS`MultTypeBind(b)
-  then
-   (CGAUX`SetNotSupportedException(true);
-    return [CGAUX`NotSupported("type bind")])
+  then return [CGAUX`NotSupported("type bind")]
   else
     def bind_l = MergeMultSetBind(bind);
         mk_(stmts, msb) = FindMultSetBind2(bind_l); -- must be before DeclPatVars

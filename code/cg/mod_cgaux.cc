@@ -636,18 +636,20 @@ Generic vdmcg::FindType(const Record & expr)
    case TAG_TYPE_AS_QuoteLit: {
      TYPE_AS_Id val (expr.GetSequence(pos_AS_QuoteLit_val));
      const TYPE_CI_ContextId & cid (expr.GetInt(pos_AS_QuoteLit_cid));
+#ifdef VDMPP
      InsertQuote(val);
+#endif // VDMPP
      return mk_REP_QuoteTypeRep(ASTAUX::MkNameFromId(val, cid));
    }
    case TAG_TYPE_AS_RealLit: {
 //     double v = expr.GetReal(pos_AS_RealLit_val).GetValue();
      const Real & v (expr.GetReal(pos_AS_RealLit_val)); // 20100302
      const TYPE_CI_ContextId & cid (expr.GetInt(pos_AS_RealLit_cid));
-     if (cid != NilContextId)
-     {
+     if (cid != NilContextId) {
        TYPE_REP_TypeRep tp (GetCI().GetTypeInfo(cid));
-       if (tp.Is(TAG_TYPE_REP_NumericTypeRep))
+       if (tp.Is(TAG_TYPE_REP_NumericTypeRep)) {
          return tp;
+       }
      }
      if (v.IsInt())
      {
@@ -824,12 +826,10 @@ MAP<TYPE_AS_Name, TYPE_REP_TypeRep> vdmcg::FindPatIdMap(const TYPE_AS_Expr& expr
   MAP<TYPE_AS_Name, TYPE_REP_TypeRep> res_m;
   SET<TYPE_AS_Name> dom_pid_m (pid_m.Dom());
   Generic nm;
-  for (bool bb = dom_pid_m.First(nm); bb; bb = dom_pid_m.Next(nm))
-  {
+  for (bool bb = dom_pid_m.First(nm); bb; bb = dom_pid_m.Next(nm)) {
     TYPE_REP_TypeRep tp (pid_m[nm]);
     TYPE_REP_TypeRep newtp (RemoveInvType(CleanFlatType(tp)));
-    while (tp != newtp)
-    {
+    while (tp != newtp) {
       tp = newtp;
       newtp = RemoveInvType(CleanFlatType(tp));
     }
@@ -1560,15 +1560,16 @@ TYPE_REP_TypeRep vdmcg::FromAS2RepTypeAux(const Generic & atype)
       const TYPE_AS_QuoteLit & t (at.GetRecord(pos_AS_QuoteType_lit));
       const TYPE_AS_Id & name (t.GetSequence(pos_AS_QuoteLit_val));
       const TYPE_CI_ContextId & cid (t.GetInt(pos_AS_QuoteLit_cid)); 
+#ifdef VDMPP
       InsertQuote(name);
+#endif // VDMPP
       return mk_REP_QuoteTypeRep(ASTAUX::MkNameFromId(name, cid));
     }
     case TAG_TYPE_AS_CompositeType: {
       const SEQ<TYPE_AS_Field> & fields (at.GetSequence(pos_AS_CompositeType_fields));
       SEQ<TYPE_REP_FieldRep> fds;
       size_t len_fields = fields.Length();
-      for (size_t idx = 1; idx <= len_fields; idx++)
-      {
+      for (size_t idx = 1; idx <= len_fields; idx++) {
         const TYPE_AS_Field & field (fields[idx]);
         fds.ImpAppend(mk_REP_FieldRep(field.GetField(pos_AS_Field_sel),
                                       FromAS2RepTypeAux(field.GetRecord(pos_AS_Field_type)),
@@ -1737,8 +1738,17 @@ TYPE_CPP_Expr vdmcg::RunTimeExpr(const TYPE_AS_Id & mess)
 // -> CPP`Stmt
 TYPE_CPP_Stmt vdmcg::NotSupported(const wstring & cst, const Record & r)
 {
-  TYPE_CPP_Identifier id (vdm_CPP_isCPP() ? vdm_BC_GenIdentifier(ASTAUX::MkId(L"CGUTIL::NotSupported"))
-                                          : vdm_BC_GenIdentifier(ASTAUX::MkId(L"UTIL.NotSupported")));
+  TYPE_CPP_Identifier id;
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    SetNotSupportedException(true);
+    id = vdm_BC_GenIdentifier(ASTAUX::MkId(L"UTIL.NotSupported"));
+  }
+  else
+#endif // VDMPP
+  {
+    id = vdm_BC_GenIdentifier(ASTAUX::MkId(L"CGUTIL::NotSupported"));
+  }
 
   GetStatSem().GenErr(r, StatSem::WRN1, 357, mk_sequence(SEQ<Char>(cst)));
 
@@ -5103,8 +5113,7 @@ void vdmcg::CurrentMethod(const TYPE_AS_Name& nm)
   this->sc = 0;
 }
 
-SEQ<Char> vdmcg::GiveOrgnFileName()
-{
+SEQ<Char> vdmcg::GiveOrgnFileName() {
   if (this->cc != TYPE_AS_Name())
   {
     Tuple flcp (GetCI().GetFileLineColPos(this->cc.GetInt(pos_AS_Name_cid)));
@@ -5121,17 +5130,12 @@ void vdmcg::UseAuxFct()
 {
   this->auxfct = true;
 }
-#endif // VDMPP
 
 // IsAbstract
 // ==> bool
 bool vdmcg::IsAbstract ()
 {
-  return this->isabstract
-#ifdef VDMPP
-         || HasAbstractMethods()
-#endif //VDMPP
-  ;
+  return this->isabstract || HasAbstractMethods() ;
 }
 
 // ThrowsException
@@ -5184,6 +5188,9 @@ void vdmcg::DefineClassAsAbstract ()
 void vdmcg::SetException (bool b)
 {
   this->throwException = b;
+  if (!b) {
+    SetNotSupportedException(false);
+  }
 }
 
 // SetNotSupportedException
@@ -5236,109 +5243,87 @@ void vdmcg::InsertImport(const SEQ<Char> & ch_l)
 // ==> ()
 void vdmcg::InsertJDKImport(const wstring & ch_l)
 {
-#ifdef VDMPP
-// 20120702 -->
   TYPE_AS_Name jdknm (ASTAUX::MkNameFromId(ASTAUX::MkId(L"JDK_" + ch_l), NilContextId)); 
-  if (packageNames.DomExists(jdknm))
-  {
+  if (packageNames.DomExists(jdknm)) {
     SEQ<Char> pnm (packageNames[jdknm]);
     InsertImport(pnm.ImpConc(ASTAUX::MkId(L"." + ch_l)));
     return;
   }
-// <-- 20120702
   bool exists = false;
   int index = 0;
-  while (!java_util[index].empty() && !exists)
-  {
+  while (!java_util[index].empty() && !exists) {
     exists = (java_util[index] == ch_l);
     index++;
   }
-  if (exists)
-  {
+  if (exists) {
     InsertImport(SEQ<Char>(wstring(L"java.util.") + ch_l));
     return;
   }
   index = 0;
-  while (!java_sql[index].empty() && !exists)
-  {
+  while (!java_sql[index].empty() && !exists) {
     exists = (java_sql[index] == ch_l);
     index++;
   }
-  if (exists)
-  {
+  if (exists) {
     InsertImport(SEQ<Char>(wstring(L"java.sql.") + ch_l));
     return;
   }
   index = 0;
-  while (!java_io[index].empty() && !exists)
-  {
+  while (!java_io[index].empty() && !exists) {
     exists = (java_io[index] == ch_l);
     index++;
   }
-  if (exists)
-  {
+  if (exists) {
     InsertImport(SEQ<Char>(wstring(L"java.io.") + ch_l));
     return;
   }
   index = 0;
-  while (!java_net[index].empty() && !exists)
-  {
+  while (!java_net[index].empty() && !exists) {
     exists = (java_net[index] == ch_l);
     index++;
   }
-  if (exists)
-  {
+  if (exists) {
     InsertImport(SEQ<Char>(wstring(L"java.net.") + ch_l));
     return;
   }
   index = 0;
-  while (!java_security[index].empty() && !exists)
-  {
+  while (!java_security[index].empty() && !exists) {
     exists = (java_security[index] == ch_l);
     index++;
   }
-  if (exists)
-  {
+  if (exists) {
     InsertImport(SEQ<Char>(wstring(L"java.security.") + ch_l));
     return;
   }
   index = 0;
-  while (!java_security_cert[index].empty() && !exists)
-  {
+  while (!java_security_cert[index].empty() && !exists) {
     exists = (java_security_cert[index] == ch_l);
     index++;
   }
-  if (exists)
-  {
+  if (exists) {
     InsertImport(SEQ<Char>(wstring(L"java.security.cert.") + ch_l));
     return;
   }
   index = 0;
-  while (!java_math[index].empty() && !exists)
-  {
+  while (!java_math[index].empty() && !exists) {
     exists = (java_math[index] == ch_l);
     index++;
   }
-  if (exists)
-  {
+  if (exists) {
     InsertImport(SEQ<Char>(wstring(L"java.math.") + ch_l));
     return;
   }
   index = 0;
-  while (!java_nio[index].empty() && !exists)
-  {
+  while (!java_nio[index].empty() && !exists) {
     exists = (java_nio[index] == ch_l);
     index++;
   }
-  if (exists)
-  {
+  if (exists) {
     InsertImport(SEQ<Char>(wstring(L"java.nio.") + ch_l));
     return;
   }
-#endif // VDMPP
 }
 
-#ifdef VDMPP
 // GetValState
 // ==> bool
 bool vdmcg::GetValState() const
@@ -6532,6 +6517,7 @@ TYPE_AS_Id vdmcg::GenFileExt(const TYPE_AS_Id & fnm)
   return filename.ImpConc(ASTAUX::MkId(TBUTILS::GetCGExt()));
 }
 
+#ifdef VDMPP
 // GenJavaQuoteFiles
 // ==> set of CPP`File
 SET<TYPE_CPP_File> vdmcg::GenJavaQuoteFiles()
@@ -6740,6 +6726,7 @@ Generic vdmcg::PackageToDir(const Generic & gpackage)
       return Nil();
   }
 }
+#endif // VDMPP
 
 // RemoveNil
 // type : REP`TypeRep

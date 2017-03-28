@@ -1166,8 +1166,7 @@ CGMatchSetUnionPattern(mk_AS`SetUnionPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, typ
     )
   else
     ( ContainsNotSupportedConstruct := true;
-      CGAUX`SetNotSupportedException(true);  
-      NotSupportedStmt := [CGAUX`NotSupported("Set union pattern")];
+      NotSupportedStmt := [CGAUX`NotSupported("Complex set union pattern")];
       return mk_(NotSupportedStmt, false));
 
 CGMatchSeqConcPattern: AS`SeqConcPattern * CGMAIN`VT * set of (AS`Name | AS`OldName) * CPP`Name *
@@ -1527,7 +1526,6 @@ CGMatchSeqConcPattern(mk_AS`SeqConcPattern(a,b,-), mk_CGMAIN`VT(varExpr_v, type)
     )
     else
     ( ContainsNotSupportedConstruct := true;
-      CGAUX`SetNotSupportedException(true);   
       NotSupportedStmt := [CGAUX`NotSupported("Complex sequence concatenation pattern")];
       return mk_(NotSupportedStmt, false));
 
@@ -1660,7 +1658,6 @@ CGMatchMapMergePattern(mk_AS`MapMergePattern(a,b,-), mk_CGMAIN`VT(varExpr_v, typ
    )
   else
 ( ContainsNotSupportedConstruct := true;
-  CGAUX`SetNotSupportedException(true);
   NotSupportedStmt := [CGAUX`NotSupported("Complex map merge pattern")];
   return mk_(NotSupportedStmt, false));
 

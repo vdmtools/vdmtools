@@ -205,12 +205,14 @@ void CodeGenTools::SetCGOptions(const Bool & skeletons,
                                 const Bool & concurrency,
                                 const Bool & testPreAndPost)
 {
+#ifdef VDMPP
   this->CGi.set_skeleton_option(skeletons.GetValue());
   this->CGi.set_preandpost_option(preAndPost.GetValue());
   this->CGi.set_onlytypes_option(onlyTypes.GetValue());
   this->CGi.set_smalltypes_option(smallTypes.GetValue());
   this->CGi.set_package_option(package_name);
   this->CGi.set_conc_option(concurrency.GetValue());
+#endif // VDMPP
   this->CGi.set_testpreandpost_option(testPreAndPost.GetValue());
 }
 

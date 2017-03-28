@@ -317,17 +317,15 @@ bool vdmcg::IsNotyetspecified (const Record & bdy, bool isDlClass, bool isStatic
 //  return !(bdy.GetField (1)).IsRecord ();
 //}
 
+#ifdef VDMPP
 // GenExceptionsHdr
 // -> seq of CPP`Identifier
 SEQ<TYPE_CPP_Identifier> vdmcg::GenExceptionsHdr()
 {
-// 20120213 -->
-//  if (!ThrowsException() && !get_conc_option())
-//    return SEQ<TYPE_CPP_Identifier>();
-// <-- 20120213
   InsertImport(SEQ<Char>(L"jp.vdmtools.VDM.CGException"));
   return SEQ<TYPE_CPP_Identifier>().ImpAppend(vdm_BC_GenIdentifier(ASTAUX::MkId(L"CGException")));
 }
+#endif // VDMPP
 
 // GenExplFctDef
 // efd : AS`ExplFnDef
@@ -376,8 +374,11 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
 
   PushEnv();
   InitEnv_CGAUX();
-  SetException(false);
-  SetNotSupportedException(false);
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    SetException(false);
+  }
+#endif // VDMPP
   vdm_BC_ResetVarno();
 
   SEQ<TYPE_AS_Pattern> parms (parms_ll.Hd());
@@ -861,8 +862,11 @@ Tuple vdmcg::InitMethod(const SEQ<TYPE_AS_Pattern> & parm_l, const TYPE_AS_OpTyp
 {
   PushEnv();
   InitEnv_CGAUX();
-  SetNotSupportedException(false);
-  SetException(false);
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    SetException(false);
+  }
+#endif // VDMPP
   vdm_BC_ResetVarno();
 
   Tuple spi (SamePatternIds (parm_l));

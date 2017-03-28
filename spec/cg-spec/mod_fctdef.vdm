@@ -52,8 +52,8 @@ exports
   operations
             GenFctDef: AS`FnDef * bool ==> CPP`CPPAS;
             GenOpDef: AS`Name * AS`OpDef * GenericStateDef * bool ==> CPP`CPPAS;
-            GenExceptionsHdr: () ==> seq of CPP`Identifier;
 #ifdef VDMPP
+            GenExceptionsHdr: () ==> seq of CPP`Identifier;
             GenHiddenFctDecl: AS`Name * [AS`Type] ==> CPP`CPPAS;
 #endif VDMPP
             GenFctOpDecl: AS`Name * (AS`FnDef | AS`OpDef) *
@@ -382,10 +382,12 @@ a normal Java exception will be raised, rather than one defined in a
 VDM library (as these will not be available in that case).
 \begin{vdm_al}
 
+#ifdef VDMPP
 GenExceptionsHdr: () ==> seq of CPP`Identifier
 GenExceptionsHdr() ==
   (CGAUX`InsertImport("jp.vdmtools.VDM.CGException");
    return [BC`GenIdentifier("CGException")];);
+#endif VDMPP
 
 GenExplFctDef: AS`ExplFnDef * bool * bool ==> CPP`CPPAS
 GenExplFctDef(fndef, isimpl, isDlClass) ==
@@ -414,8 +416,10 @@ in
 
   PushEnv();
   CGAUX`InitEnv();
-  CGAUX`SetException(false);
-  CGAUX`SetNotSupportedException(false);
+#ifdef VDMPP
+  if CPP`isJAVA()
+  then CGAUX`SetException(false);
+#endif VDMPP
   BC`ResetVarno();
 
   let parms = hd parms_ll
@@ -771,8 +775,10 @@ InitMethod : AS`Parameters * AS`OpType ==> (map AS`Name to set of REP`TypeRep) *
 InitMethod(parm_l, tp) ==
  (PushEnv();
   CGAUX`InitEnv();
-  CGAUX`SetNotSupportedException(false);
-  CGAUX`SetException(false);
+#ifdef VDMPP
+  if CPP`isJAVA()
+  then CGAUX`SetException(false);
+#endif VDMPP
   BC`ResetVarno();
   def mk_(-, pid_m) = CGEXPR`SamePatternIds(parm_l); --rækkefølge ændret
       - = CGAUX`InsertNamesinEnv(dom pid_m);

@@ -176,7 +176,6 @@ private:
   SEQ<TYPE_CPP_Preprocessor> GenClassIncls();
   void StoreClasses(const SET<TYPE_AS_Name> &);
   void UseAuxFct();
-#endif // VDMPP
 
   bool IsAbstract();
   bool ThrowsException() const;
@@ -193,7 +192,6 @@ private:
   void InsertQuote(const TYPE_AS_Id &);
   void InsertImport(const SEQ<Char> & ch_l);
   void InsertJDKImport(const wstring & ch_l);
-#ifdef VDMPP
   bool GetValState() const;
   void SetValState();
   void UnsetValState();
@@ -226,6 +224,7 @@ private:
   void ResetIsStatic();
   bool IsStatic() const;
 
+#ifdef VDMPP
   SET<TYPE_CPP_File> GenJavaQuoteFiles();
   SEQ<TYPE_CPP_SingleTypeImportDeclaration> GenTypeImportDeclarations();
   static TYPE_CPP_MemberDeclaration GenHashMember();
@@ -233,6 +232,7 @@ private:
   static TYPE_CPP_FunctionDefinition GenQuoteHashcodeMethod(const TYPE_AS_Id & ch_l);
   static TYPE_CPP_FunctionDefinition GenQuoteEqualsMethod(const TYPE_AS_Id &);
   static TYPE_CPP_FunctionDefinition GenQuoteToStringMethod(const TYPE_AS_Id &);
+#endif // VDMPP
 
 // Local auxiliary functions (vdmcg members)
 
@@ -283,6 +283,7 @@ private:
   void AddJavaPrimitiveType(const SEQ<Char> & cnm, const SEQ<Char> & mnm, const TYPE_CPP_Identifier & id);
   TYPE_CPP_Expr CheckJavaPrimitiveType(const TYPE_CPP_Expr & e, const SEQ<Char> & cnm, const SEQ<Char> & mnm);
 #endif //VDMPP
+
   void AddNoCheckSeqApply(const Set & s);
   void RemNoCheckSeqApply(const Set & s);
   bool CheckSeqApply(const Tuple & e);
@@ -292,8 +293,11 @@ private:
   bool IsRealExpr(const TYPE_CPP_Expr & e);
   bool IsStringExpr(const TYPE_CPP_Expr & e);
 
+#ifdef VDMPP
   static TYPE_CPP_PackageName GenPackageName(const TYPE_AS_Ids &);
   static Generic PackageToDir(const Generic &);
+#endif //VDMPP
+
   TYPE_REP_TypeRep RemoveNil(const TYPE_REP_TypeRep & type);
   TYPE_REP_TypeRep RemoveExitType(const TYPE_REP_TypeRep & type);
   static bool NoReturnValue(const TYPE_REP_TypeRep & tp);

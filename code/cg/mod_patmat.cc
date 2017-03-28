@@ -1392,8 +1392,6 @@ Tuple vdmcg::CGMatchSetUnionPattern (const TYPE_AS_SetUnionPattern & pat,
     }
   }
   this->ContainsNotSupportedConstruct = true;
-  SetNotSupportedException(true);
-  //this->NotSupportedStmt = SEQ<TYPE_CPP_Stmt>().ImpAppend(NotSupported(L"Set union pattern", pat));
   this->NotSupportedStmt = SEQ<TYPE_CPP_Stmt>().ImpAppend(NotSupported(L"Complex set union pattern", pat));
   return mk_(this->NotSupportedStmt, Bool(false));
 }
@@ -1823,7 +1821,6 @@ Tuple vdmcg::CGMatchSeqConcPattern (const TYPE_AS_SeqConcPattern & pat,
     }
   }
   this->ContainsNotSupportedConstruct = true;
-  SetNotSupportedException(true);
   this->NotSupportedStmt = SEQ<TYPE_CPP_Stmt>().ImpAppend(NotSupported(L"Complex sequence concatenation pattern", pat));
   return mk_(this->NotSupportedStmt, Bool(false));
 }
@@ -2045,7 +2042,6 @@ Tuple vdmcg::CGMatchMapMergePattern (const TYPE_AS_MapMergePattern & pat,
     }
   }
   this->ContainsNotSupportedConstruct = true;
-  SetNotSupportedException(true);
   this->NotSupportedStmt = SEQ<TYPE_CPP_Stmt>().ImpAppend(NotSupported(L"Complex map merge pattern", pat));
   return mk_(this->NotSupportedStmt, Bool(false));
 }

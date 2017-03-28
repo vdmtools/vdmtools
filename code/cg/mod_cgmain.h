@@ -52,6 +52,7 @@ public:
   bool cg_OptionGenInitFct();
 
 public:
+#ifdef VDMPP
   void set_skeleton_option(bool); 
   bool get_skeleton_option();
   void set_conc_option(bool); 
@@ -64,8 +65,10 @@ public:
   Generic get_package_option();
   void set_preandpost_option(bool); 
   bool get_preandpost_option() const;
+#endif // VDMPP
   void set_testpreandpost_option(bool); 
   bool get_testpreandpost_option();
+#ifdef VDMPP
   void set_onlytypes_option(bool); 
   bool get_onlytypes_option();
   bool get_longs_option();
@@ -73,8 +76,10 @@ public:
   void set_interfaces(const SET<TYPE_AS_Name> &);
   SET<TYPE_AS_Name> get_interfaces();
   bool isInterface(const TYPE_AS_Name &);
+#endif // VDMPP
   bool get_wchar() const;
   void set_wchar(bool);
+#ifdef VDMPP
   Set get_imports_names() const;
   void set_imports_names(const Set &);
   Set get_entries_names() const;
@@ -89,6 +94,7 @@ public:
   bool get_generics_option() const;
   void set_java_rename_option(bool);
   bool get_java_rename_option() const;
+#endif // VDMPP
 
   void set_verbose_mode(bool);
   bool get_verbose_mode() const;

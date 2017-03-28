@@ -209,14 +209,10 @@ Generic vdmcg::CGExpr_q (const TYPE_AS_Expr & expr, const TYPE_CGMAIN_VT & resVa
       break;
     } 
     case TAG_TYPE_AS_FctTypeInstExpr: {
-      Sequence res;
-      SetNotSupportedException(true);
-      res.ImpAppend(NotSupported(L"function type instantiation expression", expr));
-      cpp = res;
+      cpp = Sequence().ImpAppend(NotSupported(L"function type instantiation expression", expr));
       break;
     }
     case TAG_TYPE_AS_LambdaExpr: {
-      SetNotSupportedException(true);
       cpp = Sequence().ImpAppend(NotSupported(L"lambda expression", expr));
       break;
     }
@@ -225,7 +221,6 @@ Generic vdmcg::CGExpr_q (const TYPE_AS_Expr & expr, const TYPE_CGMAIN_VT & resVa
       break;
     }
     case TAG_TYPE_AS_PreConditionApplyExpr: {
-      SetNotSupportedException(true);
       cpp = Sequence().ImpAppend(NotSupported(L"precondition expression", expr));
       break;
     }
@@ -268,7 +263,6 @@ Generic vdmcg::CGExpr_q (const TYPE_AS_Expr & expr, const TYPE_CGMAIN_VT & resVa
     }
     case TAG_TYPE_AS_GuardExpr: {
       if (vdm_CPP_isCPP()) {
-        SetNotSupportedException(true);
         cpp = Sequence().ImpAppend(NotSupported(L"guard expression", expr));
       }
       else{
@@ -282,7 +276,6 @@ Generic vdmcg::CGExpr_q (const TYPE_AS_Expr & expr, const TYPE_CGMAIN_VT & resVa
     }
     case TAG_TYPE_AS_ActExpr: {
       if (vdm_CPP_isCPP()) {
-        SetNotSupportedException(true);
         cpp = Sequence().ImpAppend(NotSupported(L"act. expression", expr));
       }
       else
@@ -290,9 +283,7 @@ Generic vdmcg::CGExpr_q (const TYPE_AS_Expr & expr, const TYPE_CGMAIN_VT & resVa
       break;
     }
     case TAG_TYPE_AS_FinExpr: {
-      if (vdm_CPP_isCPP())
-      {
-        SetNotSupportedException(true);
+      if (vdm_CPP_isCPP()) {
         cpp = Sequence().ImpAppend(NotSupported(L"fin. expression", expr));
       }
       else
@@ -300,9 +291,7 @@ Generic vdmcg::CGExpr_q (const TYPE_AS_Expr & expr, const TYPE_CGMAIN_VT & resVa
       break;
     }
     case TAG_TYPE_AS_ActiveExpr: {
-      if (vdm_CPP_isCPP())
-      {
-        SetNotSupportedException(true);
+      if (vdm_CPP_isCPP()) {
         cpp = Sequence().ImpAppend(NotSupported(L"active. expression", expr));
       }
       else
@@ -310,9 +299,7 @@ Generic vdmcg::CGExpr_q (const TYPE_AS_Expr & expr, const TYPE_CGMAIN_VT & resVa
       break;
     }
     case TAG_TYPE_AS_WaitingExpr: {
-      if (vdm_CPP_isCPP())
-      {
-        SetNotSupportedException(true);
+      if (vdm_CPP_isCPP()) {
         cpp = Sequence().ImpAppend(NotSupported(L"waiting expression", expr));
       }
       else
@@ -320,9 +307,7 @@ Generic vdmcg::CGExpr_q (const TYPE_AS_Expr & expr, const TYPE_CGMAIN_VT & resVa
       break;
     }
     case TAG_TYPE_AS_ReqExpr: {
-      if (vdm_CPP_isCPP())
-      {
-        SetNotSupportedException(true);
+      if (vdm_CPP_isCPP()) {
         cpp = Sequence().ImpAppend(NotSupported(L"req. expression", expr));
       }
       else
@@ -330,23 +315,20 @@ Generic vdmcg::CGExpr_q (const TYPE_AS_Expr & expr, const TYPE_CGMAIN_VT & resVa
       break;
     }
     case TAG_TYPE_AS_ThreadIdExpr: {
-      if (vdm_CPP_isCPP())
-      {
-        SetNotSupportedException(true);
+      if (vdm_CPP_isCPP()) {
         cpp = Sequence().ImpAppend(NotSupported(L"threadid expression", expr));
       }
       else // Java
         if (!(get_conc_option())) {
-          SetNotSupportedException(true);
           cpp = Sequence().ImpAppend(NotSupported(L"threadId expression", expr));
         }
-        else
+        else {
           cpp = GenThreadId();
+        }
       break;
     }
 #ifdef VICE
-    case TAG_TYPE_AS_CurTimeExpr: { // 20070216
-        SetNotSupportedException(true);
+    case TAG_TYPE_AS_CurTimeExpr: {
         cpp = Sequence().ImpAppend(NotSupported(L"time expression", expr));
       break;
     }
@@ -2528,8 +2510,7 @@ Generic vdmcg::CGTypeJudgementExpr(const TYPE_AS_TypeJudgementExpr & tj, const T
     ntj.SetField(pos_AS_TypeJudgementExpr_expr, tjTemp);
     return CGExpr_q(TYPE_AS_DefExpr().Init(mk_sequence(mk_(pn, expr)), ntj, cid), vt);
   }
-  else
-  {
+  else {
     Generic e = ConvertTypeJudgementExprAS(expr, type);
     if (!e.IsNil()) {
       return CGExpr_q(e, vt);
@@ -2537,13 +2518,11 @@ Generic vdmcg::CGTypeJudgementExpr(const TYPE_AS_TypeJudgementExpr & tj, const T
     else {
       switch (type.GetTag()) {
         case TAG_TYPE_AS_TypeVar: {
-          SetNotSupportedException(true);
           SEQ<TYPE_CPP_Stmt> rb_l;
           rb_l.ImpAppend(NotSupported(L"type judgement expression for type variable", tj));
           return rb_l;
         }
         default: {
-          SetNotSupportedException(true);
           SEQ<TYPE_CPP_Stmt> rb_l;
           rb_l.ImpAppend(NotSupported(L"type judgement expression", tj));
           return rb_l;
@@ -3398,14 +3377,10 @@ Generic vdmcg::CGFctApplyExpr (const TYPE_AS_ApplyExpr & ae, const TYPE_CGMAIN_V
     }
     case TAG_TYPE_AS_Name: {
 
-      if (LookUpLocFct(expr))
-      {
-        SetNotSupportedException(true);
+      if (LookUpLocFct(expr)) {
         return (Sequence().ImpAppend(NotSupported(L"function value or local function definitions", expr)));
       }
-      else if (IsFctType( GetCI().GetTypeInfo(cid)))
-      {
-        SetNotSupportedException(true);
+      else if (IsFctType( GetCI().GetTypeInfo(cid))) {
         return (SEQ<TYPE_CPP_Stmt>().ImpAppend(NotSupported(L"Higher order functions", expr)));
       }
       // Following ifdef'ed for VDMPP since it uses obj ref types
@@ -4787,13 +4762,10 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGLetBeSTExpr(const TYPE_AS_LetBeSTExpr & expr, const 
     exists = bind_l[idx].Is(TAG_TYPE_AS_MultTypeBind);
   }
 
-  if (exists)
-  {
-    SetNotSupportedException(true);
+  if (exists) {
     return SEQ<TYPE_CPP_Stmt>().ImpAppend(NotSupported(L"type bind", expr));
   }
-  else
-  {
+  else {
     PushEnv_CGAUX();
 
     SEQ<TYPE_CPP_Stmt> rb_l;
@@ -5582,7 +5554,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGFieldSelectExpr (const TYPE_AS_FieldSelectExpr & rc1
   if (ti.Is (TAG_TYPE_REP_PartialFnTypeRep) ||
       ti.Is (TAG_TYPE_REP_TotalFnTypeRep) ||
       ti.Is (TAG_TYPE_REP_OpTypeRep)) {
-    SetNotSupportedException(true);
     return SEQ<TYPE_CPP_Stmt>().ImpAppend (NotSupported (L"Function value",rc1));
   }
 #endif // VDMPP
@@ -5628,7 +5599,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGFieldSelectExpr (const TYPE_AS_FieldSelectExpr & rc1
 
 #ifdef VDMPP
     if (IsUnionFunctionType (ti)) {
-      SetNotSupportedException(true); //20120924
       if (vdm_CPP_isCPP()) {
         if (!ti.Is(TAG_TYPE_REP_OverTypeRep))
           rb.ImpAppend (vdm_BC_GenIfStmt (GenIsClass (tmpRec_v), NotSupported (L"Function value", rc1), Nil ()));
@@ -6237,7 +6207,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGAllOrExistsExpr (const TYPE_AS_QuantExpr & quant, co
           break;
         }
         case TAG_TYPE_AS_TypeBind: {
-          SetNotSupportedException(true);
           return (Sequence().ImpAppend(NotSupported(L"type bind", quant)));
           break;
         }
@@ -6246,7 +6215,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGAllOrExistsExpr (const TYPE_AS_QuantExpr & quant, co
     }
     default: {
       PopEnv_CGAUX();
-      SetNotSupportedException(true);
       return Sequence().ImpAppend(NotSupported(L"type bind", quant));
     }
   }
@@ -6265,7 +6233,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGIotaExpr(const TYPE_AS_IotaExpr & rc1, const TYPE_CG
 
   switch(bind.GetTag()) {
     case TAG_TYPE_AS_TypeBind: {
-      SetNotSupportedException(true);
       return (Sequence().ImpAppend(NotSupported(L"type bind", rc1)));
     }
     case TAG_TYPE_AS_SetBind: {
@@ -7449,14 +7416,10 @@ Generic vdmcg::CGMapInverse(const TYPE_CPP_Expr & argexpr, const TYPE_REP_TypeRe
 Generic vdmcg::CGName(const TYPE_AS_Name & asname)
 {
   Generic ti (FindType(asname));
-  if (ti.Is(TAG_TYPE_REP_PartialFnTypeRep) || ti.Is(TAG_TYPE_REP_TotalFnTypeRep))
-  {
-    SetNotSupportedException(true);
+  if (ti.Is(TAG_TYPE_REP_PartialFnTypeRep) || ti.Is(TAG_TYPE_REP_TotalFnTypeRep)) {
     return SEQ<TYPE_CPP_Stmt>().ImpAppend(NotSupported(L"function value", asname));
   }
-  else if (ti.Is(TAG_TYPE_REP_OpTypeRep))
-  {
-    SetNotSupportedException(true);
+  else if (ti.Is(TAG_TYPE_REP_OpTypeRep)) {
     return SEQ<TYPE_CPP_Stmt>().ImpAppend(NotSupported(L"operation value", asname));
   }
 
@@ -7477,18 +7440,16 @@ Generic vdmcg::CGName(const TYPE_AS_Name & asname)
 #endif // VDMPP
   }
 
-  InsertVariable(asname_q);
 #ifdef VDMSL
   return vdm_BC_Rename(asname_q);
 #endif // VDMSL
 #ifdef VDMPP
+  InsertVariable(asname_q);
   TYPE_CPP_Expr e (vdm_BC_Rename(asname_q));
-  if (vdm_CPP_isJAVA())
-  {
+  if (vdm_CPP_isJAVA()) {
     if (e.Is(TAG_TYPE_CPP_QualifiedName) &&
         e.GetField(pos_CPP_QualifiedName_qcn).Is(TAG_TYPE_CPP_Identifier) &&
-        e.GetField(pos_CPP_QualifiedName_id).Is(TAG_TYPE_CPP_Identifier))
-    {
+        e.GetField(pos_CPP_QualifiedName_id).Is(TAG_TYPE_CPP_Identifier)) {
       SEQ<Char> cnm (e.GetRecord(pos_CPP_QualifiedName_qcn).GetSequence(pos_CPP_Identifier_id));
       SEQ<Char> mnm (e.GetRecord(pos_CPP_QualifiedName_id).GetSequence(pos_CPP_Identifier_id));
       return CheckJavaPrimitiveType(e, cnm, mnm);
@@ -7504,18 +7465,12 @@ Generic vdmcg::CGName(const TYPE_AS_Name & asname)
 Generic vdmcg::CGOldName(const TYPE_AS_OldName & oldnm)
 {
   Generic ti (FindType(oldnm));
-  if (ti.Is(TAG_TYPE_REP_PartialFnTypeRep) || ti.Is(TAG_TYPE_REP_TotalFnTypeRep))
-  {
-    SetNotSupportedException(true);
+  if (ti.Is(TAG_TYPE_REP_PartialFnTypeRep) || ti.Is(TAG_TYPE_REP_TotalFnTypeRep)) {
     return SEQ<TYPE_CPP_Stmt>().ImpAppend(NotSupported(L"function value", oldnm));
   }
-// 20110510 -->
-  else if (ti.Is(TAG_TYPE_REP_OpTypeRep))
-  {
-    SetNotSupportedException(true);
+  else if (ti.Is(TAG_TYPE_REP_OpTypeRep)) {
     return SEQ<TYPE_CPP_Stmt>().ImpAppend(NotSupported(L"operation value", oldnm));
   }
-// <-- 20110510
 
   return vdm_BC_Rename(oldnm);
 }
@@ -8533,18 +8488,14 @@ Generic vdmcg::CGIterateExpr(const TYPE_AS_Expr & le, const TYPE_AS_Expr & re,
     rb_l.ImpAppend(GenExp(vt1, vt2, resVT));
     return rb_l;
   }
-  else if (IsMapType(type1) || (vdm_CPP_isJAVA() && IsMapType(rtype)))
-  {
+  else if (IsMapType(type1) || (vdm_CPP_isJAVA() && IsMapType(rtype))) {
     rb_l.ImpConc(GenMapIteration(vt1, vt2, resVT));
     return rb_l;
   }
-  else if (IsFctType(type1))
-  {
-    SetNotSupportedException(true);
+  else if (IsFctType(type1)) {
     return SEQ<TYPE_CPP_Stmt>().ImpAppend(NotSupported(L"function iteration expression", le));
   }
-  else
-  {
+  else {
     TYPE_CPP_Expr cond;
 #ifdef VDMPP
     if (vdm_CPP_isJAVA()) {
@@ -8894,7 +8845,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGComprehension(const SEQ<TYPE_AS_MultBind> & bind,
   size_t len_bind = bind.Length();
   for (size_t i = 1; i <= len_bind; i++) {
     if (bind[i].Is(TAG_TYPE_AS_MultTypeBind)) {
-      SetNotSupportedException(true);
       return SEQ<TYPE_CPP_Stmt>().ImpAppend(NotSupported(L"type bind", bind[i]));
     }
   }
