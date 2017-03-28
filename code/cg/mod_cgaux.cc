@@ -501,7 +501,6 @@ ClassMethodTable realT[] = {
  {L"*", L"floatValue"},
  {NULL, NULL}
 };
-#endif // VDMPP
 
 // JavaAccess
 // acc : AS`Access
@@ -517,7 +516,6 @@ TYPE_CPP_Modifier vdmcg::JavaAccess (const Int & acc)
  }
 }
 
-#ifdef VDMPP
 // UnQClassType
 // tp : REP`ObjRefTypeRep
 // -> REP`ObjRefTypeRep

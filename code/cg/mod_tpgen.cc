@@ -2118,8 +2118,7 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenCompositeClassDecl(const TYPE_AS_Name &
 #ifdef VDMPP
   if (vdm_CPP_isJAVA()) {
     SEQ<TYPE_CPP_PackageName> inter_l;
-    if (this->record_types.Dom().InSet(nm))
-    {
+    if (this->record_types.Dom().InSet(nm)) {
       SEQ<TYPE_AS_Name> rn (this->record_types[nm]);
       size_t len_rn = rn.Length();
       for (size_t idx = 1; idx <= len_rn; idx++) {
@@ -2136,8 +2135,9 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenCompositeClassDecl(const TYPE_AS_Name &
     SEQ<TYPE_CPP_Modifier> mods;
     mods.ImpAppend(vdm_BC_GenModifier(quote_STATIC));
 
-    if (acc != nil)
+    if (acc != nil) {
       mods.ImpPrepend(JavaAccess(acc));
+    }
 
     SEQ<TYPE_CPP_Annotation> annos;
     TYPE_CPP_ClassHead ch (vdm_BC_GenJavaClassHead(annos, mods, idnm, SEQ<TYPE_CPP_BaseSpecifier>(),
@@ -2145,8 +2145,9 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenCompositeClassDecl(const TYPE_AS_Name &
     pub_ml.ImpConc(GenIdentDecls(taglist, tagenv));
     pub_ml.ImpAppend(GenClassDefaultConstructorDecl((Int)TAG_quote_COMPOSITE, idnm, taglist));
 
-    if (!taglist.IsEmpty())
+    if (!taglist.IsEmpty()) {
       pub_ml.ImpAppend(GenClassConstrDecl(idnm, taglist, tagenv));
+    }
 
     pub_ml.ImpAppend(GenCloneMethod(idnm, taglist, tagenv));
     pub_ml.ImpAppend(GenAsciiMethod(idnm, taglist, tagenv));
@@ -2185,8 +2186,7 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenCompositeClassDecl(const TYPE_AS_Name &
     pub_ml.ImpConc(GenMemFctMacros((Int) TAG_quote_COMPOSITE));
 
     size_t len_taglist = taglist.Length();
-    for (size_t i = 1; i <= len_taglist; i++)
-    {
+    for (size_t i = 1; i <= len_taglist; i++) {
       TYPE_CPP_Identifier id (taglist[i]);
 
       pub_ml.ImpAppend(GenGetFunctionDecl(id, tagenv[id]));
@@ -2245,8 +2245,7 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenProductClassDecl(const TYPE_CPP_Identif
   pub_ml.ImpConc(GenMemFctMacros((Int) TAG_quote_PRODUCT));
 
   size_t len_taglist = taglist.Length();
-  for (size_t i = 1; i <= len_taglist; i++)
-  {
+  for (size_t i = 1; i <= len_taglist; i++) {
     TYPE_CPP_Identifier id (taglist[i]);
 
     pub_ml.ImpAppend(GenGetFunctionDecl(id, (Generic)tagenv[id]));
@@ -2283,17 +2282,19 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenProductDecl(const TYPE_CPP_Identifier& 
   SEQ<TYPE_CPP_Identifier> tagnames;
   SEQ<TYPE_REP_TypeRep> tps;
   size_t len_fl = fl.Length();
-  for (size_t i = 1; i <= len_fl; i++)
-  {
+  for (size_t i = 1; i <= len_fl; i++) {
     TYPE_REP_TypeRep tp (fl[i]);
     TYPE_REP_TypeRep c_type (CleanFlatType(tp));
     TYPE_CPP_Name cpptp;
 #ifdef VDMPP
-    if (c_type.Is(TAG_TYPE_REP_ObjRefTypeRep))
+    if (c_type.Is(TAG_TYPE_REP_ObjRefTypeRep)) {
       cpptp = GenVDMTpName(c_type, (Int) TAG_quote_H, Set());
+    }
     else
 #endif //VDMPP
+    {
       cpptp = GenVDMTpName(tp, (Int) TAG_quote_H, Set());
+    }
 
     TYPE_CPP_Identifier cppid (vdm_BC_GenIdentifier(StringNumber(i)));
     tagnames.ImpAppend(cppid);
@@ -2318,8 +2319,9 @@ TYPE_AS_Id vdmcg::GenProductType(const TYPE_REP_ProductTypeRep & tp, const SET<T
   id.ImpConc(StringNumber(len_tpl));
   id.ImpConc(ASTAUX::MkId(L"P"));
 
-  if (! this->cppenv.DomExists(id))
+  if (! this->cppenv.DomExists(id)) {
     DeclAnonymCppTp(id, GenProductDecl(Id2CppGTpId(id), tp));
+  }
 
   return id;
 }
@@ -2339,8 +2341,7 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenCompositeDecl(const TYPE_AS_Name& nm,
 
   SET<TYPE_AS_Id> selnames;
   size_t len_fl = fl.Length();
-  for (size_t idx = 1; idx <= len_fl; idx++)
-  {
+  for (size_t idx = 1; idx <= len_fl; idx++) {
     const TYPE_REP_FieldRep & fls (fl[idx]);
     if (!fls.GetField(pos_REP_FieldRep_sel).IsNil()) {
       const TYPE_AS_Name & selnm (fls.GetRecord(pos_REP_FieldRep_sel));
@@ -2353,8 +2354,7 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenCompositeDecl(const TYPE_AS_Name& nm,
   MAP<TYPE_CPP_Identifier,Bool> dcenv;
   SEQ<TYPE_CPP_Identifier> tagnames;
   SEQ<TYPE_REP_TypeRep> tps;
-  for (size_t i = 1; i <= len_fl; i++)
-  {
+  for (size_t i = 1; i <= len_fl; i++) {
     const TYPE_REP_FieldRep & fr (fl[i]);
 
     const Generic & sel (fr.GetField(pos_REP_FieldRep_sel));
@@ -2364,24 +2364,33 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenCompositeDecl(const TYPE_AS_Name& nm,
 
     TYPE_CPP_Name cpptp;
 #ifdef VDMPP
-    if (c_type.Is(TAG_TYPE_REP_ObjRefTypeRep))
+    if (c_type.Is(TAG_TYPE_REP_ObjRefTypeRep)) {
       cpptp = GenVDMTpName(c_type, (Int) TAG_quote_H, Set());
+    }
     else
 #endif //VDMPP
-      if (vdm_CPP_isCPP())
+    {
+      if (vdm_CPP_isCPP()) {
         cpptp = GenVDMTpName(tp, (Int) TAG_quote_H, Set());
-      else
-        if (c_type.Is(TAG_TYPE_REP_UnionTypeRep) && IsCompositeType(c_type))
+      }
+      else {
+        if (c_type.Is(TAG_TYPE_REP_UnionTypeRep) && IsCompositeType(c_type)) {
           cpptp = GenVDMTpName(tp, (Int) TAG_quote_H, Set());
-        else
+        }
+        else {
           cpptp = GenVDMTpName(c_type, (Int) TAG_quote_H, Set());
+        }
+      }
+    }
 
     TYPE_CPP_Identifier cppid;
-    if (vdm_CPP_isCPP())
+    if (vdm_CPP_isCPP()) {
       cppid = vdm_BC_GenIdentifier(sel.IsNil() ? StringNumber(i) : Name2Id(sel));
-    else
+    }
+    else {
       cppid = vdm_BC_GenIdentifier(sel.IsNil() ? GetUniqueName(ASTAUX::MkId(L"f").ImpConc(StringNumber(i)), selnames)
                                                : Name2Id(sel));
+    }
 
     tagnames.ImpAppend(cppid);
     tagenv.ImpModify(cppid, cpptp);
@@ -2434,8 +2443,9 @@ TYPE_AS_Id vdmcg::GenCompositeType(const TYPE_REP_CompositeTypeRep & tp,
       DeclModCppTp(id, GenCompositeDecl(nm, acc, Id2CppGTpId(id), tp));
     }
   }
-  else
+  else {
     AddNewCppTp(id, Sequence());
+  }
 
   return id;
 }
@@ -2513,8 +2523,9 @@ TYPE_AS_Id vdmcg::GenMapType(const TYPE_REP_TypeRep& dt, const TYPE_REP_TypeRep&
   TYPE_AS_Id id (di);
   id.ImpConc(ri).ImpConc(ASTAUX::MkId(L"M"));
 
-  if (!this->cppenv.DomExists(id))
+  if (!this->cppenv.DomExists(id)) {
     DeclAnonymCppTp(id, GenMapDecl(Id2CppGTpId(id), Id2CppGTpId(di), Id2CppGTpId(ri)));
+  }
   return id;
 }
 
@@ -2541,10 +2552,8 @@ TYPE_AS_Id vdmcg::GenSetType(const TYPE_REP_SetTypeRep & tp, const SET<TYPE_AS_N
   TYPE_AS_Id id (i);
   id.ImpConc(ASTAUX::MkId(L"S"));
 
-  if (!this->cppenv.DomExists(id))
-  {
+  if (!this->cppenv.DomExists(id)) {
     DeclAnonymCppTp(id, GenSetDecl(Id2CppGTpId(id), Id2CppGTpId(i)));
-// 20140331 -->
 #ifdef VDMPP
     if (t.Is(TAG_TYPE_REP_CompositeTypeRep)) {
       const TYPE_AS_Name & name (t.GetRecord(pos_REP_CompositeTypeRep_nm));
@@ -2556,7 +2565,6 @@ TYPE_AS_Id vdmcg::GenSetType(const TYPE_REP_SetTypeRep & tp, const SET<TYPE_AS_N
       }
     }
 #endif // VDMPP
-// <-- 20140331
   }
   return id;
 }
@@ -2584,9 +2592,7 @@ TYPE_AS_Id vdmcg::GenSeqType(const TYPE_REP_SeqTypeRep & tp, const SET<TYPE_AS_N
   TYPE_AS_Id id (i);
   id.ImpConc(ASTAUX::MkId(L"L"));
 
-  if (!this->cppenv.DomExists(id))
-  {
-// 20140331 -->
+  if (!this->cppenv.DomExists(id)) {
 #ifdef VDMPP
     if (t.Is(TAG_TYPE_REP_CompositeTypeRep)) {
       const TYPE_AS_Name & name (t.GetRecord(pos_REP_CompositeTypeRep_nm));
@@ -2598,7 +2604,6 @@ TYPE_AS_Id vdmcg::GenSeqType(const TYPE_REP_SeqTypeRep & tp, const SET<TYPE_AS_N
       }
     }
 #endif // VDMPP
-// <-- 20140331
     DeclAnonymCppTp(id, GenSeqDecl(Id2CppGTpId(id), Id2CppGTpId(i)));
   }
   return id;
@@ -2608,10 +2613,12 @@ TYPE_AS_Id vdmcg::GenSeqType(const TYPE_REP_SeqTypeRep & tp, const SET<TYPE_AS_N
 bool vdmcg::StringAsBefore(wstring & id, const wstring & s)
 {
   bool cont (true);
-  if (id.compare(L"") == 0)
+  if (id.compare(L"") == 0) {
     id = s;
-  if (id.compare(s) != 0)
+  }
+  if (id.compare(s) != 0) {
     cont = false;
+  }
   return cont;
 }
 
@@ -2628,11 +2635,11 @@ TYPE_AS_Id vdmcg::GenUnionType(const TYPE_REP_UnionTypeRep & tp,
   SET<TYPE_REP_TypeRep> uts (utp.GetSet(pos_REP_UnionTypeRep_tps));
 
   Generic t_g;
-  for (bool bb = uts.First(t_g); bb; bb = uts.Next(t_g))
-  {
+  for (bool bb = uts.First(t_g); bb; bb = uts.Next(t_g)) {
     TYPE_REP_TypeRep tp (t_g);
-    if (tp.Is(TAG_TYPE_REP_InvTypeRep))
+    if (tp.Is(TAG_TYPE_REP_InvTypeRep)) {
       tp = tp.GetRecord(pos_REP_InvTypeRep_shape);
+    }
 
     if (tp.Is(TAG_TYPE_REP_TypeNameRep)) {
       const TYPE_AS_Name & nm (tp.GetRecord(pos_REP_TypeNameRep_nm));
@@ -2656,8 +2663,7 @@ TYPE_AS_Id vdmcg::GenUnionType(const TYPE_REP_UnionTypeRep & tp,
   id = L"";
   bool cont = true;
   Generic g;
-  for (bool dd = ts.First(g); dd && cont; dd = ts.Next(g) )
-  {
+  for (bool dd = ts.First(g); dd && cont; dd = ts.Next(g) ) {
     TYPE_REP_TypeRep tp (g);
     if (tp.Is(TAG_TYPE_REP_InvTypeRep))
       tp = tp.GetRecord(pos_REP_InvTypeRep_shape);
@@ -2684,12 +2690,10 @@ TYPE_AS_Id vdmcg::GenUnionType(const TYPE_REP_UnionTypeRep & tp,
         cont = StringAsBefore(id, wstring(L"p")); // id = "p";
         break;
       }
-// 20120225 -->
       case TAG_TYPE_REP_NumericTypeRep: {
         cont = StringAsBefore(id, wstring(L"n")); // id = "n";
         break;
       }
-// <--20120225
 // 20150717 --> Generic
 //      case TAG_TYPE_REP_QuoteTypeRep: {
 //        cont = StringAsBefore(id, wstring(L"Q")); // id = "Q";
@@ -2728,14 +2732,15 @@ TYPE_REP_TypeRep vdmcg::RemoveInvType(const TYPE_REP_TypeRep & tp)
       SET<TYPE_REP_TypeRep> tps (tp.GetSet(pos_REP_UnionTypeRep_tps));
       SET<TYPE_REP_TypeRep> new_tps;
       Generic t;
-      for (bool bb = tps.First(t); bb; bb = tps.Next(t))
-      {
+      for (bool bb = tps.First(t); bb; bb = tps.Next(t)) {
         new_tps.Insert(RemoveInvType(t));
       }
-      if (new_tps.Card() == 1)
+      if (new_tps.Card() == 1) {
         return new_tps.GetElem();
-      else
+      }
+      else {
         return mk_REP_UnionTypeRep(new_tps);  
+      }
     }
     case TAG_TYPE_REP_SetTypeRep: {
       return mk_REP_SetTypeRep(RemoveInvType(tp.GetRecord(pos_REP_SetTypeRep_elemtp)));
@@ -2813,8 +2818,9 @@ void vdmcg::AddUnionType(const TYPE_AS_Name & enm, const TYPE_AS_Name & nm)
     if (! rn.Elems().InSet(nm))
       rn.ImpAppend(nm);
   }
-  else
+  else {
     rn.ImpAppend(nm);
+  }
 
   this->union_types.ImpModify(enm, rn);
 }
@@ -2826,13 +2832,15 @@ void vdmcg::AddUnionType(const TYPE_AS_Name & enm, const TYPE_AS_Name & nm)
 void vdmcg::AddRecordType(const TYPE_AS_Name & enm, const TYPE_AS_Name & nm)
 {
   SEQ<TYPE_AS_Name> rn;
-  if (this->record_types.Dom().InSet(enm)){
+  if (this->record_types.Dom().InSet(enm)) {
     rn = this->record_types[enm];
-    if (! rn.Elems().InSet(nm))
+    if (! rn.Elems().InSet(nm)) {
       rn.ImpAppend(nm);
+    }
   }
-  else
+  else {
     rn.ImpAppend(nm);
+  }
 
   this->record_types.ImpModify(enm,rn);
 }
@@ -2848,12 +2856,12 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::GenUnionInterfaceDecl(const TYPE_AS_Name &
   this->known_union_types.Insert(tnr);
 
   SEQ<TYPE_CPP_PackageName> inter_l;
-  if (this->union_types.Dom().InSet(nm))
-  {
+  if (this->union_types.Dom().InSet(nm)) {
     SEQ<TYPE_AS_Name> rn (this->union_types[nm]);
     size_t len_rn = rn.Length();
-    for (size_t idx = 1; idx <= len_rn; idx++)
+    for (size_t idx = 1; idx <= len_rn; idx++) {
      inter_l.ImpAppend(vdm_BC_GenSimplePackageName(Name2Id(rn[idx])));
+    }
   }
 
   TYPE_CPP_Identifier idnm (vdm_BC_GenIdentifier(Name2Id(nm)));

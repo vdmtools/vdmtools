@@ -62,8 +62,7 @@ Tuple vdmcg::GenValDef (const TYPE_AS_Name & classname, const SEQ<TYPE_AS_ValueD
   if (vdm_CPP_isCPP()) {
     Set dom_acs_pid_m (acs_pid_m.Dom());
     Generic acs;
-    for (bool cc = dom_acs_pid_m.First (acs); cc; cc = dom_acs_pid_m.Next (acs))
-    {
+    for (bool cc = dom_acs_pid_m.First (acs); cc; cc = dom_acs_pid_m.Next (acs)) {
       Tuple dvi (DeclValId (classname, acs_pid_m[acs]));
       mem_decl.Insert (acs, dvi.GetField (1));
     }
@@ -220,14 +219,13 @@ Tuple vdmcg::DeclValId(const TYPE_AS_Name & classname, const Map & pid_m)
   Set dom_pid_m (pid_m.Dom());
   Generic g;
   // pid_m : map AS`Name to set of REP`TypeRep
-  for (bool bb = dom_pid_m.First(g); bb; bb = dom_pid_m.Next(g))
-  {
+  for (bool bb = dom_pid_m.First(g); bb; bb = dom_pid_m.Next(g)) {
     TYPE_REP_TypeRep type;
     SET<TYPE_REP_TypeRep> tp_s (pid_m[g]);      // set of REP`TypeRep
-    if (tp_s.Card () == 1)
+    if (tp_s.Card () == 1) {
       type = tp_s.GetElem();
-    else
-    {
+    }
+    else {
       TYPE_REP_UnionTypeRep utr;
       utr.set_tps(tp_s);
       type = utr;
@@ -235,8 +233,9 @@ Tuple vdmcg::DeclValId(const TYPE_AS_Name & classname, const Map & pid_m)
 
     rb.ImpConc (GenValDecl (type, g)); // seq of CPP`Stmt
 
-    if (PossibleFnType(type))
+    if (PossibleFnType(type)) {
       InsertLocFct(g);
+    }
   }
 #ifdef VDMSL
   Sequence res;
@@ -248,8 +247,7 @@ Tuple vdmcg::DeclValId(const TYPE_AS_Name & classname, const Map & pid_m)
 
   // rb : seq of CPP`Stmt
   size_t len_rb = rb.Length();
-  for (size_t idx = 1; idx <= len_rb; idx++)
-  {
+  for (size_t idx = 1; idx <= len_rb; idx++) {
     const TYPE_CPP_DeclarationStmt & dstmt (rb[idx]);  // CPP`DeclarationStmt
     const TYPE_CPP_IdentDeclaration & idecl (dstmt.GetRecord(pos_CPP_DeclarationStmt_decl)); // CPP`IdentDeclaration
     const SEQ<TYPE_CPP_DeclSpecifier> & ds (idecl.GetSequence(pos_CPP_IdentDeclaration_ds));  // seq of DeclSpecifier
@@ -264,10 +262,10 @@ Tuple vdmcg::DeclValId(const TYPE_AS_Name & classname, const Map & pid_m)
     mem_res.ImpAppend(vdm_BC_GenStaticMemberSpec(ds, name));
     TYPE_CPP_QualifiedName quotedname (vdm_BC_GenQualifiedName(vdm_BC_Rename(classname), name));
 
-    if (vdm_CPP_isCPP())
+    if (vdm_CPP_isCPP()) {
       def_res.ImpAppend(vdm_BC_GenIdentDecl(SEQ<TYPE_CPP_Annotation>(), ds, quotedname, Nil()));
-    else // for Java
-    {
+    }
+    else { // for Java
       TYPE_CPP_Modifier pub (vdm_BC_GenModifier(quote_PUBLIC));
       TYPE_CPP_Modifier sta (vdm_BC_GenModifier(quote_STATIC));
       SEQ<TYPE_CPP_DeclSpecifier> ds_q (ds);
@@ -293,15 +291,17 @@ bool vdmcg::AreDefinedDirectly(const SEQ<TYPE_AS_ValueDef> & vd_l)
 {
   SEQ<TYPE_AS_Pattern> p_l;
   size_t len_vd_l = vd_l.Length();
-  for (size_t idx = 1; idx <= len_vd_l; idx++)
+  for (size_t idx = 1; idx <= len_vd_l; idx++) {
     p_l.ImpAppend(vd_l[idx].GetRecord(pos_AS_ValueDef_pat));
+  }
 
   Tuple t (SamePatternIds(p_l)); // bool * map AS`Name to set of REP`TypeRep
   const Map & pid_m (t.GetMap(2));     // map AS`Name to set of REP`TypeRep
 
   bool forall = true;
-  for (size_t idx2 = 1; (idx2 <= len_vd_l) && forall; idx2++)
+  for (size_t idx2 = 1; (idx2 <= len_vd_l) && forall; idx2++) {
     forall = IsDefinedDirectly(vd_l[idx2], pid_m);
+  }
   return forall;
 }
 
@@ -401,46 +401,44 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::DeclValJava(const TYPE_AS_Name & classname
         }
       }
     }
-    else
-    {
+    else {
       SET<TYPE_AS_Name> dom_tmp_m (tmp_m.Dom());
       Generic tmp;
       // tmp_m : map AS`Name to set of REP`TypeRep
-      for (bool dd = dom_tmp_m.First(tmp); dd; dd = dom_tmp_m.Next(tmp))
-      {
+      for (bool dd = dom_tmp_m.First(tmp); dd; dd = dom_tmp_m.Next(tmp)) {
         TYPE_REP_TypeRep type;
         SET<TYPE_REP_TypeRep> tp_s (tmp_m[tmp]);
-        if (tp_s.Card () == 1)
+        if (tp_s.Card () == 1) {
           type = tp_s.GetElem();
+        }
         else {
           TYPE_REP_UnionTypeRep utr;
           utr.set_tps(tp_s);
           type = utr;
         }
-        if (rb.DomExists(cid))
-        {
+        if (rb.DomExists(cid)) {
           Tuple t (rb[cid]);
           Sequence rn (t.GetField(2));
           rb.ImpModify(cid, mk_(acc, rn.ImpConc(GenValDecl(type, tmp))));
         }
-        else
-        {
+        else {
           rb.Insert(cid, mk_(acc, GenValDecl(type, tmp)));
         }
         TYPE_AS_Id newid (ASTAUX::GetFirstId(tmp).ImpConc(ASTAUX::MkId(L"temp")));
         TYPE_AS_Name tmpnm (tmp);
         tmpnm.set_ids(TYPE_AS_Ids().ImpAppend(newid));
         
-        if (rbtemp.DomExists(cid))
-        {
+        if (rbtemp.DomExists(cid)) {
           Sequence rn (rbtemp[cid]);
           rbtemp.ImpModify(cid, rn.ImpConc(GenDecl_DS(type, vdm_BC_Rename(tmpnm), nil)));
         }
-        else
+        else {
           rbtemp.Insert(cid, Sequence().ImpConc(GenDecl_DS(type, vdm_BC_Rename(tmpnm), nil)));
+        }
 
-        if (PossibleFnType(type))
+        if (PossibleFnType(type)) {
           InsertLocFct(tmp);
+        }
       }
     }
   }
@@ -452,8 +450,7 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::DeclValJava(const TYPE_AS_Name & classname
     Tuple t (rb[cid]);
     const Int & acc (t.GetInt(1));           // AS`Access
     SEQ<TYPE_CPP_Stmt> stmt_l (t.GetSequence(2));   // seq of CPP`Stmt
-    while (!stmt_l.IsEmpty())
-    {
+    while (!stmt_l.IsEmpty()) {
       const TYPE_CPP_DeclarationStmt & dstmt (stmt_l[1]);
       const TYPE_CPP_IdentDeclaration & idecl (dstmt.GetRecord(pos_CPP_DeclarationStmt_decl));
       SEQ<TYPE_CPP_DeclSpecifier> ds (idecl.GetSequence(pos_CPP_IdentDeclaration_ds));
@@ -463,13 +460,13 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::DeclValJava(const TYPE_AS_Name & classname
       TYPE_CPP_Modifier sta (vdm_BC_GenModifier(quote_STATIC));
       TYPE_CPP_Modifier fin (vdm_BC_GenModifier(quote_FINAL));
       ds.ImpPrepend(fin).ImpPrepend(sta).ImpPrepend(JavaAccess(acc));
-      if (cidtocpp.DomExists(cid))
-      {
+      if (cidtocpp.DomExists(cid)) {
         SEQ<TYPE_CPP_IdentDeclaration> rn (cidtocpp[cid]);
         cidtocpp.ImpModify(cid, rn.ImpAppend(vdm_BC_GenIdentDecl(annos, ds, name, Nil())));
       }
-      else
+      else {
         cidtocpp.Insert(cid,Sequence().ImpAppend(vdm_BC_GenIdentDecl(annos, ds, name, Nil())));
+      }
 
       stmt_l = stmt_l.Tl();
     }
@@ -501,20 +498,18 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::DeclValJava(const TYPE_AS_Name & classname
 
   // rbtemp : map int to seq of CPP`Stmt
   SET<Int> dom_rbtemp (rbtemp.Dom());
-  for (bool gg = dom_rbtemp.First(cid); gg; gg = dom_rbtemp.Next(cid))
-  {
+  for (bool gg = dom_rbtemp.First(cid); gg; gg = dom_rbtemp.Next(cid)) {
     SEQ<TYPE_CPP_Stmt> stmt_l (rbtemp[cid]);                  // seq of CPP`Stmt
-    while (!stmt_l.IsEmpty())
-    {
+    while (!stmt_l.IsEmpty()) {
       TYPE_CPP_DeclarationStmt dstmt (stmt_l.Hd()); // CPP`DeclarationStmt
       TYPE_CPP_IdentDeclaration idecl (dstmt.get_decl());
-      if (cidtocpp2.DomExists(cid))
-      {
+      if (cidtocpp2.DomExists(cid)) {
         SEQ<TYPE_CPP_IdentDeclaration> rn (cidtocpp2[cid]);
         cidtocpp2.ImpModify(cid,rn.ImpAppend(idecl));
       }
-      else
+      else {
         cidtocpp2.Insert(cid,Sequence().ImpAppend(idecl));
+      }
 
       stmt_l = stmt_l.Tl();
     }
@@ -522,13 +517,11 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::DeclValJava(const TYPE_AS_Name & classname
 
   Sequence def_res;    // seq of CPP`IdentDeclaration
   // cidtocpp : map int to seq of CPP`IdentDeclaration
-  while (!cidtocpp.Dom().IsEmpty())
-  {
+  while (!cidtocpp.Dom().IsEmpty()) {
     SET<TYPE_CI_ContextId> cidtocppdom (cidtocpp.Dom());
     TYPE_CI_ContextId cid (cidtocppdom.GetElem());
     Generic gg;
-    for (bool hh = cidtocppdom.First (gg); hh; hh = cidtocppdom.Next (gg))
-    {
+    for (bool hh = cidtocppdom.First (gg); hh; hh = cidtocppdom.Next (gg)) {
       TYPE_CI_ContextId tempcid (gg);
       Tuple gfp1 (GetCI().GetFilePos(cid));
       const TYPE_CI_TokenPos & tst (gfp1.GetRecord(3));
@@ -543,13 +536,11 @@ SEQ<TYPE_CPP_IdentDeclaration> vdmcg::DeclValJava(const TYPE_AS_Name & classname
     cidtocpp.RemElem(cid);
   }
   // cidtocpp2 : map int to seq of CPP`IdentDeclaration
-  while (!cidtocpp2.Dom().IsEmpty())
-  {
+  while (!cidtocpp2.Dom().IsEmpty()) {
     SET<TYPE_CI_ContextId> cidtocpp2dom (cidtocpp2.Dom());
     TYPE_CI_ContextId cid (cidtocpp2dom.GetElem());
     Generic gg;
-    for (bool ii = cidtocpp2dom.First (gg); ii; ii = cidtocpp2dom.Next (gg))
-    {
+    for (bool ii = cidtocpp2dom.First (gg); ii; ii = cidtocpp2dom.Next (gg)) {
       TYPE_CI_ContextId tempcid (gg);
       Tuple gfp1 (GetCI().GetFilePos(cid));
       const TYPE_CI_TokenPos & tst (gfp1.GetRecord(3));
@@ -573,25 +564,21 @@ Map vdmcg::GenValDefAccessMap (const SEQ<TYPE_AS_ValueDef> & valdef_l)
 {
   SEQ<TYPE_AS_ValueDef> vd_l;
   size_t len_valdef_l = valdef_l.Length();
-  for (size_t i = 1; i <= len_valdef_l; i++)
-  {
+  for (size_t i = 1; i <= len_valdef_l; i++) {
     vd_l.ImpAppend (ExchangeDefAccess (valdef_l[i]));
   }
 
   SET<TYPE_AS_Access> acs_s;
   size_t len_vd_l = vd_l.Length();
-  for (size_t j = 1; j <= len_vd_l; j++)
-  {
+  for (size_t j = 1; j <= len_vd_l; j++) {
     acs_s.Insert (vd_l[j].GetField(pos_AS_ValueDef_access));
   }
 
   Map acs_pid_m; // map AS`Access to (map AS`Name to set of REP`TypeRep)
   Generic a;
-  for (bool bb = acs_s.First (a); bb; bb = acs_s.Next (a))
-  {
+  for (bool bb = acs_s.First (a); bb; bb = acs_s.Next (a)) {
     Set m_s; // set of map AS`Name to set of REP`TypeRep
-    for (size_t k = 1; k <= len_vd_l; k++)
-    {
+    for (size_t k = 1; k <= len_vd_l; k++) {
       const TYPE_AS_ValueDef & vd (vd_l[k]);
       if (vd.GetField(pos_AS_ValueDef_access) == a) {
         m_s.Insert (FindPatternId (vd.GetRecord(pos_AS_ValueDef_pat)));
@@ -599,8 +586,7 @@ Map vdmcg::GenValDefAccessMap (const SEQ<TYPE_AS_ValueDef> & valdef_l)
     }
     Map m_m; // map AS`Name to set of REP`TypeRep
     Generic m;
-    for (bool ff = m_s.First (m); ff; ff = m_s.Next (m))
-    {
+    for (bool ff = m_s.First (m); ff; ff = m_s.Next (m)) {
       m_m.ImpOverride (m);
     }
     acs_pid_m.Insert (a, m_m);
@@ -616,10 +602,8 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenAssignTemp(const SET<TYPE_AS_Name> & nms)
   SET<TYPE_AS_Name> nms_q (nms);
   SEQ<TYPE_CPP_Stmt> stmts;
   Generic nm;
-  for (bool bb = nms_q.First(nm); bb; bb = nms_q.Next(nm))
-  {
-    if (!this->directdefinedValues.InSet(nm))
-    {
+  for (bool bb = nms_q.First(nm); bb; bb = nms_q.Next(nm)) {
+    if (!this->directdefinedValues.InSet(nm)) {
       TYPE_CPP_Identifier newNm (vdm_BC_Rename(nm));
       stmts.ImpAppend(vdm_BC_GenAsgnStmt(newNm, vdm_BC_AppendName(newNm, ASTAUX::MkId(L"temp"))));
     }
@@ -640,8 +624,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenLocalValDef(const SEQ<TYPE_AS_ValueDef> & vd_l)
   Set local_s;
   bool declSuc = false;
   size_t len_vd_l = vd_l.Length();
-  for (size_t idx = 1; idx <= len_vd_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_vd_l; idx++) {
     const TYPE_AS_ValueDef & vd (vd_l[idx]);
     const TYPE_AS_Pattern & pat (vd.GetRecord(pos_AS_ValueDef_pat));
 //    const Generic & pattp (vd.GetField(pos_AS_ValueDef_tp));
@@ -650,14 +633,12 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenLocalValDef(const SEQ<TYPE_AS_ValueDef> & vd_l)
     TYPE_REP_TypeRep vtp (FindType(val));
 
     //if ( pat.Is(TAG_TYPE_AS_PatternName) && !pat.GetField(pos_AS_PatternName_nm).IsNil() && InsertLoc( pat ))
-    if ( pat.Is(TAG_TYPE_AS_PatternName) && !pat.GetField(pos_AS_PatternName_nm).IsNil())
-    {
+    if ( pat.Is(TAG_TYPE_AS_PatternName) && !pat.GetField(pos_AS_PatternName_nm).IsNil()) {
       // let x = ... (the name of x is't already defined
       const TYPE_AS_Name & nm (pat.GetRecord(pos_AS_PatternName_nm) );
       Generic ptp (FindType(pat));
 
-      if (FindScope(nm) >= 0)
-      {
+      if (FindScope(nm) >= 0) {
         // let x = ... (the name of x is already defined
         Tuple cgee (CGExprExcl(val, ASTAUX::MkId(L"tmpVal"), vtp));
         const TYPE_CPP_Expr & pat_v (cgee.GetRecord(1));
@@ -668,8 +649,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenLocalValDef(const SEQ<TYPE_AS_ValueDef> & vd_l)
         rb_l.ImpConc(pat_stmt);
         rb_l.ImpConc(GenConstDeclInit(ptp, nm_v, pat_v));
       }
-      else
-      {
+      else {
         // let x = ... (the name of x is't already defined
         TYPE_CPP_Identifier id (vdm_BC_Rename(InsertName_CGAUX(nm)));
 
@@ -686,11 +666,11 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenLocalValDef(const SEQ<TYPE_AS_ValueDef> & vd_l)
         rb_l.ImpConc(MergeStmts( decls, pm )); // experimental
       }
       local_s.Insert(nm);
-      if (PossibleFnType(ptp))
+      if (PossibleFnType(ptp)) {
         InsertLocFct(nm);
+      }
     }
-    else if (pat.Is(TAG_TYPE_AS_PatternName) && pat.GetField(pos_AS_PatternName_nm).IsNil())
-    {
+    else if (pat.Is(TAG_TYPE_AS_PatternName) && pat.GetField(pos_AS_PatternName_nm).IsNil()) {
       Tuple cgee (CGExprExcl(val, ASTAUX::MkId(L"tmpVal"), nil));
       const TYPE_CPP_Expr & expr (cgee.GetRecord(1));
       const SEQ<TYPE_CPP_Stmt> & stmts (cgee.GetSequence(2));
@@ -699,10 +679,10 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenLocalValDef(const SEQ<TYPE_AS_ValueDef> & vd_l)
 #ifdef VDMPP
         case TAG_TYPE_AS_ApplyExpr: {
           rb_l.ImpConc(stmts);
-          if (vdm_CPP_isCPP())
+          if (vdm_CPP_isCPP()) {
             rb_l.ImpAppend(vdm_BC_GenExpressionStmt(expr));
-          else
-          {
+          }
+          else {
             TYPE_CPP_Expr e (StripBracketedAndCastExpr(expr));
             rb_l.ImpAppend(vdm_BC_GenExpressionStmt(e));
           }
@@ -727,8 +707,7 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenLocalValDef(const SEQ<TYPE_AS_ValueDef> & vd_l)
         }
       }
     }
-    else
-    {
+    else {
       Tuple cgee (CGExprExcl(val, ASTAUX::MkId(L"tmpVal"), vtp));
       const TYPE_CPP_Expr & expr (cgee.GetRecord(1));
       const SEQ<TYPE_CPP_Stmt> & stmts (cgee.GetSequence(2));
@@ -744,8 +723,9 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenLocalValDef(const SEQ<TYPE_AS_ValueDef> & vd_l)
       SEQ<TYPE_CPP_Stmt> pm1;
       pm1.ImpConc(pm);
 
-      if (!Is_Excl)
+      if (!Is_Excl) {
         pm1.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(succ), vdm_BC_GenBlock(mk_sequence(rti)), nil));
+      }
 
       rb_l.ImpConc(stmts);
       rb_l.ImpConc(MergeStmts( decls, pm1 )); // experimental
@@ -753,8 +733,9 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenLocalValDef(const SEQ<TYPE_AS_ValueDef> & vd_l)
       declSuc = (declSuc || (!Is_Excl));
     }
   }
-  if (declSuc)
+  if (declSuc) {
     rb_l.ImpPrepend(vdm_BC_GenDecl(GenSmallBoolType(), succ, vdm_BC_GenAsgnInit(vdm_BC_GenBoolLit(false))));
+  }
 
   PushLoc( local_s );
   return rb_l;
@@ -766,8 +747,9 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenLocalValDef(const SEQ<TYPE_AS_ValueDef> & vd_l)
 bool vdmcg::InsertLoc( const TYPE_AS_PatternName & pn )
 {
   TYPE_AS_Expr n (pn.get_nm());
-  if ( this->loc_s.InSet( n ) )
+  if ( this->loc_s.InSet( n ) ) {
     return false;
+  }
   else {
     this->loc_s.Insert( n );
     return true;
@@ -786,8 +768,9 @@ void vdmcg::PushLoc( const Set & n_s )
 // ==> ()
 void vdmcg::DeleteLoc()
 {
-  if (!this->sl_l.IsEmpty())
+  if (!this->sl_l.IsEmpty()) {
     this->loc_s.ImpDiff( this->sl_l.Hd() );
+  }
   this->sl_l.ImpTl();
 }
 

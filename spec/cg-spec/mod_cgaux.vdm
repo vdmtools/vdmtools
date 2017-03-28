@@ -40,6 +40,7 @@ exports all
 definitions
 \end{vdm_al}
 
+#ifdef VDMPP
 The function {\em JavaAccess} records the correspondance between access
 modifiers in VDM's abstract syntax and Java modifiers. This map is
 checked when an access modifier is translated. Thus changes to policy
@@ -57,6 +58,7 @@ functions
       (<PUBLIC_AS>)    -> BC`GenModifier(<PUBLIC>)
     end;
 \end{vdm_al}     
+#endif VDMPP
 
 The function {\em FindType} is used to extract the type representation of
 an expression or a pattern. This function should {\em always\/} be used
@@ -847,6 +849,7 @@ functions
   Combine2Names(mk_AS`Name([id1],-), mk_AS`Name(ids2,cid)) ==
      mk_AS`Name([id1,ids2(len ids2)], cid);
 
+#ifdef VDMPP
 values
   javabasic = {"child","Math", "Boolean", "Character", "Class", "ClassLoader", 
                "Compiler", "Number", "Process", "Runtime", "SecurityManager", 
@@ -962,6 +965,7 @@ values
 
   realT = { mk_("*", "doubleValue"),
             mk_("*", "floatValue") };
+#endif VDMPP
 
 operations
 

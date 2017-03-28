@@ -64,7 +64,9 @@ private:
   Set noCheckSeqApply;
 
 private:
+#ifdef VDMPP
   TYPE_CPP_Modifier JavaAccess (const Int & acc);
+#endif // VDMPP
   Generic FindType(const Record&);
   MAP<TYPE_AS_Name, TYPE_REP_TypeRep> FindPatIdMap(const TYPE_AS_Expr& expr);
   bool IsSeqOfCPPStmt(const Generic& );
@@ -109,7 +111,6 @@ public:
   Generic ConvAsAccess2CPP (const TYPE_AS_Access &);
   void IncludeClass(const TYPE_AS_Name&);
   Bool IsInstVar(const TYPE_AS_Name&);
-//friend Bool vdm_TI_IsInstVar(const TYPE_AS_Name&);
 #endif //VDMPP
 
 private:
@@ -153,7 +154,6 @@ private:
   Tuple SplitParameterTypes(const SEQ<TYPE_AS_PatTypePair> &);
   Generic QuotePMExprWithClNm(const Generic &, const TYPE_AS_Name &, const SET<TYPE_AS_Name> &);
   Generic QuotePMExprWithTemp(const Generic &, const TYPE_AS_Name &, const SET<TYPE_AS_Name> &);
-//wstring ConvertChar(int);
   SET<TYPE_AS_Name> FindAllNamesInExpr(const TYPE_AS_Expr &);
   SET<TYPE_AS_Name> FindAllNamesInPatternBind(const TYPE_AS_PatternBind &);
   void InitState_CGAUX(const Generic &);
