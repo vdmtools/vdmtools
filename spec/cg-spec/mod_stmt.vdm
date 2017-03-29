@@ -2693,7 +2693,7 @@ GenRecTrapFinally(p_matched, p_val, p_raised, p_isLast) ==
     if CPP`isJAVA()
     then CGAUX`InsertImport("jp.vdmtools.VDM.VDMSpecException");
 #endif VDMPP
-    if p_isLast
+    if not p_isLast
     then l_break := BC`GenBlock([BC`GenBreakStmt(nil)]);
     return BC`GenIfStmt(l_test, BC`GenBlock([l_throwStmt]), l_break)
    ); 

@@ -3209,7 +3209,7 @@ TYPE_CPP_Stmt vdmcg::GenRecTrapFinally(const TYPE_CPP_Identifier& p_matched,
 #endif // VDMPP
 
   Generic l_break = Nil();
-  if (p_isLast) {
+  if (!p_isLast) {
     l_break = vdm_BC_GenBlock(mk_sequence(vdm_BC_GenBreakStmt(Nil())));
   }
   return vdm_BC_GenIfStmt(l_test, vdm_BC_GenBlock(mk_sequence(l_throwStmt)), l_break);
