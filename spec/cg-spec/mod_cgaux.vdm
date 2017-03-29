@@ -134,15 +134,22 @@ FindType( expr ) ==
     in
      (dcl qti : [REP`TypeRep],
           reptp : [REP`TypeRep] := nil;
-      if CPP`isCPP() 
-      then qti := TPGEN`GenRQComp(GiveCurCASName(), cti)
-      else qti := cti;
+
+#ifdef VDMPP
+      if CPP`isJAVA() 
+      then
+        qti := cti
+      else
+#endif VDMPP
+        qti := TPGEN`GenRQComp(GiveCurCASName(), cti);
+
       if qti <> nil
       then reptp := CleanFlatType(qti);
+
 #ifdef VDMPP
       if is_REP`ObjRefTypeRep (reptp)
       then
-        UnQClassType (reptp)
+        return UnQClassType (reptp)
       else
 #endif VDMPP
         return reptp
@@ -312,39 +319,32 @@ CleanFlatType: REP`TypeRep ==> REP`TypeRep
 CleanFlatType(reptp) ==
  (dcl tp : REP`TypeRep,
       ss : set of REP`TypeRep := {};
-  if CPP`isCPP()
-  then tp := reptp
-  elseif is_REP`TypeNameRep(reptp) 
-  then def mk_REP`TypeNameRep(nm) = reptp;
-#ifdef VDMSL
-           qnm = TPGEN`GenQName(nm)
-       in
-#endif VDMSL
-#ifdef VDMPP
-           qnm = TPGEN`GenRootType(TPGEN`GenQName(nm))
-       in
-         if qnm = nil
-         then tp := reptp 
-         elseif not is_AS`Name(qnm)
-         then tp := qnm
-         else
-#endif VDMPP
-              tp := mk_REP`TypeNameRep(qnm)
-  else tp := reptp;
-
 #ifdef VDMPP
   if CPP`isJAVA()
   then
+   (if is_REP`TypeNameRep(reptp) 
+    then
+      def mk_REP`TypeNameRep(nm) = reptp;
+           qnm = TPGEN`GenRootType(TPGEN`GenQName(nm))
+      in
+        if qnm = nil
+        then tp := reptp 
+        elseif not is_AS`Name(qnm)
+        then tp := qnm
+        else tp := mk_REP`TypeNameRep(qnm)
+    else tp := reptp;
     def extp = ExpandTypeRep(tp,{});
         thistp = CleanAndFlattenType(extp);
     in                 
       if is_REP`TypeNameRep(tp) and is_REP`UnionTypeRep(thistp) and IsCompositeType(thistp)
       then ss := {tp};
+   )
+  else
 #endif VDMPP
+    tp := reptp;
 
   def exp_tp = ExpandTypeRep(tp,ss) -- expand the type
   in CleanAndFlattenType(exp_tp);      -- clean and flatten the type
---  OptimizeType(clean_tp);                  -- optimize the type
  );
 
 #ifdef VDMPP
@@ -394,24 +394,38 @@ ExpandTypeRep(tp,nms) ==
                                              then return tp'
                                              else return tp,
 #endif VDMSL
-   mk_REP`OpTypeRep(dtpl,rtp)           -> if CPP`isCPP()
-                                           then return mk_REP`OpTypeRep(
-                                                    [ExpandTypeRep(dtpl(i),nms) | i in set inds dtpl],
-                                                    ExpandTypeRep(rtp,nms))
-                                           else return tp,
-   mk_REP`PartialFnTypeRep(dtpl,rtp)    -> if CPP`isCPP()
-                                           then return mk_REP`PartialFnTypeRep(
-                                                    [ExpandTypeRep(dtpl(i),nms) | i in set inds dtpl],
-                                                    ExpandTypeRep(rtp,nms))
-                                           else return tp,
-   mk_REP`TotalFnTypeRep(dtpl,rtp)      -> if CPP`isCPP()
-                                           then return mk_REP`TotalFnTypeRep(
-                                                    [ExpandTypeRep(dtpl(i), nms) | i in set inds dtpl],
-                                                    ExpandTypeRep(rtp, nms))
-                                           else return tp,
+   mk_REP`OpTypeRep(dtpl,rtp)           ->
+#ifdef VDMPP
+                                 if CPP`isJAVA()
+                                 then
+                                   return tp
+                                 else
+#endif VDMPP
+                                   return mk_REP`OpTypeRep(
+                                          [ExpandTypeRep(dtpl(i),nms) | i in set inds dtpl],
+                                          ExpandTypeRep(rtp,nms)),
+   mk_REP`PartialFnTypeRep(dtpl,rtp)    ->
+#ifdef VDMPP
+                                 if CPP`isJAVA()
+                                 then
+                                   return tp
+                                 else
+#endif VDMPP
+                                   return mk_REP`PartialFnTypeRep(
+                                          [ExpandTypeRep(dtpl(i),nms) | i in set inds dtpl],
+                                          ExpandTypeRep(rtp,nms)),
+   mk_REP`TotalFnTypeRep(dtpl,rtp)      ->
+#ifdef VDMPP
+                                 if CPP`isJAVA()
+                                 then
+                                   return tp
+                                 else
+#endif VDMPP
+                                   return mk_REP`TotalFnTypeRep(
+                                          [ExpandTypeRep(dtpl(i), nms) | i in set inds dtpl],
+                                          ExpandTypeRep(rtp, nms)),
    others                               -> return tp
   end;
-
 
 \end{vdm_al}
 
@@ -812,9 +826,13 @@ operations
   RunTimeExpr: seq of char ==> CPP`Expr
   RunTimeExpr( mess ) ==
    (dcl fname : CPP`Expr;
-    if CPP`isCPP() 
-    then fname := BC`GenIdentifier( "CGUTIL::RunTime" )
-    else fname := BC`GenIdentifier( "UTIL.RunTime" );
+#ifdef VDMPP
+    if CPP`isJAVA()
+    then
+      fname := BC`GenIdentifier( "UTIL.RunTime" )
+    else
+#endif VDMPP
+      fname := BC`GenIdentifier( "CGUTIL::RunTime" );
     return BC`GenFctCall(fname, [BC`GenStringLit( mess )] );
    );
 
@@ -1136,9 +1154,14 @@ operations
   IsNumType(type) ==
     cases type:
       mk_REP`NumericTypeRep(-) -> return true,
-      mk_REP`UnionTypeRep(tp_s) -> if CPP`isCPP()
-                                   then return forall tp in set tp_s & IsNumType(tp)
-                                   else return forall tp in set tp_s & not is_REP`NilTypeRep(tp) => IsNumType(tp),
+      mk_REP`UnionTypeRep(tp_s) ->
+#ifdef VDMPP
+           if CPP`isJAVA()
+           then
+             return forall tp in set tp_s & not is_REP`NilTypeRep(tp) => IsNumType(tp)
+           else
+#endif VDMPP
+             return forall tp in set tp_s & IsNumType(tp),
       mk_REP`InvTypeRep(-,shape,-) -> IsNumType(shape),
       others -> return false
     end;

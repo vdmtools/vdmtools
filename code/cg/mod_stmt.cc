@@ -2762,19 +2762,23 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGAlwaysStmt(const TYPE_AS_AlwaysStmt & p_as, bool p_i
     TYPE_CPP_TypeSpecifier l_retType (vdm_BC_GenTypeSpecifier(l_retId));
     TYPE_CPP_ExceptionDeclaration l_rtDecl (vdm_BC_GenExceptionDeclaration( mk_sequence(l_retType), l_excName));
     SEQ<TYPE_CPP_Stmt> handler_inner;
-    if (!NoReturnValue(tpbody))
+    if (!NoReturnValue(tpbody)) {
       handler_inner.ImpAppend(l_retValAsgn);
-    if (!p_isLast && !tpbody.Is(TAG_TYPE_REP_UnitTypeRep))
+    }
+    if (!p_isLast && !tpbody.Is(TAG_TYPE_REP_UnitTypeRep)) {
       handler_inner.ImpAppend(l_retCalledAsgn);
+    }
     TYPE_CPP_Stmt l_retHandlerBlock (vdm_BC_GenBlock(handler_inner));
 
     SEQ<TYPE_CPP_Handler> handlers;
     handlers.ImpAppend(vdm_BC_GenHandler(l_exDecl, l_excHandlerBlock));
     if (!tpbody.Is(TAG_TYPE_REP_UnitTypeRep)) {
-      if (NoReturnValue(tpbody))
+      if (NoReturnValue(tpbody)) {
         handlers.ImpAppend(vdm_BC_GenHandler(TYPE_CPP_All().Init(NilContextId), l_retHandlerBlock));
-      else
+      }
+      else {
         handlers.ImpAppend(vdm_BC_GenHandler(l_rtDecl, l_retHandlerBlock));
+      }
     }
 
     UpAlwaysLevel();
@@ -2782,37 +2786,41 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGAlwaysStmt(const TYPE_AS_AlwaysStmt & p_as, bool p_i
     DownAlwaysLevel();
 
     SEQ<TYPE_CPP_Stmt> handlerStmt;
-    if (post.Is(TAG_TYPE_AS_IdentStmt))
-    {
+    if (post.Is(TAG_TYPE_AS_IdentStmt)) {
       handlerStmt.ImpAppend(vdm_BC_GenIfStmt(l_excRaisedNm, 
-                                             vdm_BC_GenExpressionStmt(vdm_BC_GenThrowExpression(l_excObj)),
+            vdm_BC_GenBlock(mk_sequence(vdm_BC_GenExpressionStmt(vdm_BC_GenThrowExpression(l_excObj)))),
                                              nil));
     }
-    else
-    {
+    else {
       handlerStmt.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenBoolLit(true), vdm_BC_GenBlock(GenStmt(post, false)), nil));
       handlerStmt.ImpAppend(vdm_BC_GenIfStmt(l_excRaisedNm, 
-                                             vdm_BC_GenExpressionStmt(vdm_BC_GenThrowExpression(l_excObj)),
+            vdm_BC_GenBlock(mk_sequence(vdm_BC_GenExpressionStmt(vdm_BC_GenThrowExpression(l_excObj)))),
                                              nil));
     }
 
     if (!tpbody.Is(TAG_TYPE_REP_UnitTypeRep)) {
       TYPE_CPP_Stmt stmt;
       if (IsInAlways()) {
-        if (NoReturnValue(tpbody))
+        if (NoReturnValue(tpbody)) {
           stmt = vdm_BC_GenExpressionStmt(vdm_BC_GenThrowExpression(vdm_BC_GenIntegerLit(0)));
-        else
+        }
+        else {
           stmt = vdm_BC_GenExpressionStmt(vdm_BC_GenThrowExpression(l_retValNm));
+        }
       } else {
-        if (NoReturnValue(tpbody))
+        if (NoReturnValue(tpbody)) {
           stmt = vdm_BC_GenReturnStmt(nil);
-        else
+        }
+        else {
           stmt = vdm_BC_GenReturnStmt(l_retValNm);
+        }
       }
-      if (p_isLast)
+      if (p_isLast) {
         handlerStmt.ImpAppend(stmt);
-      else
+      }
+      else {
         handlerStmt.ImpAppend(vdm_BC_GenIfStmt(l_retCalledNm, stmt, nil));
+      }
     }
 
     SEQ<TYPE_CPP_Stmt> rb_l;
@@ -2968,8 +2976,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGRecTrapStmt(const TYPE_AS_RecTrapStmt & p_rts, bool 
   TYPE_CPP_ExceptionDeclaration l_exDecl (vdm_BC_GenExceptionDeclaration( mk_sequence(l_excType), l_excValNm));
 
   SEQ<TYPE_CPP_Stmt> rb;
-  rb.ImpAppend(vdm_BC_GenAsgnStmt(l_matchNm, vdm_BC_GenBoolLit(false)));
-
   for (size_t l_idx = 1; l_idx <= len_p_traps; l_idx++) {
     const TYPE_AS_Trap & l_trap (p_traps[l_idx]);
     const TYPE_AS_PatternBind & l_pat (l_trap.GetRecord(pos_AS_Trap_match));
@@ -3003,9 +3009,6 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGRecTrapStmt(const TYPE_AS_RecTrapStmt & p_rts, bool 
     }
   }
 
-  rb.ImpAppend(vdm_BC_GenIfStmt(vdm_BC_GenNot(l_matchNm), 
-                                vdm_BC_GenAsgnStmt(l_excRaisedNm, vdm_BC_GenBoolLit(false)), nil));
-  
   SEQ<TYPE_CPP_Stmt> l_excVal;
 #ifdef VDMPP
   if (vdm_CPP_isJAVA()) {
@@ -3016,21 +3019,23 @@ SEQ<TYPE_CPP_Stmt> vdmcg::CGRecTrapStmt(const TYPE_AS_RecTrapStmt & p_rts, bool 
     l_excVal.ImpConc(GenDecl_DS(Nil(), l_excValNm, Nil()));
 
   TYPE_CPP_DeclarationStmt l_match (vdm_BC_GenDecl(GenSmallBoolType(), l_matchNm,
-                                                   vdm_BC_GenAsgnInit(vdm_BC_GenBoolLit(true))));
+                                                   vdm_BC_GenAsgnInit(vdm_BC_GenBoolLit(false))));
   TYPE_CPP_DeclarationStmt l_excRaised (vdm_BC_GenDecl(GenSmallBoolType(), l_excRaisedNm,
                                                        vdm_BC_GenAsgnInit(vdm_BC_GenBoolLit(false))));
+  TYPE_CPP_Handler l_handler (GenRecTrapHandler(l_excValNm, l_excRaisedNm));
   SEQ<TYPE_CPP_Stmt> l_tryBlockBody;
   l_tryBlockBody.ImpAppend(vdm_BC_GenIfStmt(l_excRaisedNm, vdm_BC_GenBlock(rb), vdm_BC_GenBlock(l_bodyStmts)));
-
-  TYPE_CPP_Handler l_handler (GenRecTrapHandler(l_excValNm, l_excRaisedNm));
+  TYPE_CPP_Stmt l_tryBlock (vdm_BC_GenTryBlock(l_tryBlockBody, mk_sequence(l_handler), nil));
   TYPE_CPP_Stmt l_finally (GenRecTrapFinally(l_matchNm, l_excValNm, l_excRaisedNm, p_isLast));
 
-  TYPE_CPP_TryBlock l_tryBlock (vdm_BC_GenTryBlock(l_tryBlockBody, mk_sequence(l_handler), l_finally));
-  TYPE_CPP_Stmt l_whileStmt (vdm_BC_GenWhileStmt(vdm_BC_GenBoolLit(true), vdm_BC_GenBlock(mk_sequence(l_tryBlock))));
+  SEQ<TYPE_CPP_Stmt> rb_l;
+  rb_l.ImpAppend(l_match);
+  rb_l.ImpAppend(l_tryBlock);
+  rb_l.ImpAppend(l_finally);
+  TYPE_CPP_Stmt l_whileStmt (vdm_BC_GenWhileStmt(vdm_BC_GenBoolLit(true), vdm_BC_GenBlock(rb_l)));
 
   SEQ<TYPE_CPP_Stmt> cppast;
   cppast.ImpConc(l_excVal);
-  cppast.ImpAppend(l_match);
   cppast.ImpAppend(l_excRaised);
   cppast.ImpAppend(l_whileStmt);
   return cppast;
@@ -3133,8 +3138,9 @@ SEQ<TYPE_CPP_Stmt> vdmcg::GenRecTrapTrap(const TYPE_AS_Stmt& p_stmts, bool p_isL
 {
   SEQ<TYPE_CPP_Stmt> l_trap (GenStmt(p_stmts, false));
 
-  if (!FlowBroken(l_trap[l_trap.Length()]))
+  if (!FlowBroken(l_trap[l_trap.Length()])) {
     l_trap.ImpAppend(vdm_BC_GenBreakStmt(Nil()));
+  }
 
   return l_trap;
 }
@@ -3175,11 +3181,11 @@ TYPE_CPP_Handler vdmcg::GenRecTrapHandler(const TYPE_CPP_Identifier & p_val,
 // p_val : CPP`Identifier
 // p_raised : CPP`Identifier
 // p_isLast : bool
-// ==> CPP`CompoundStmt
-TYPE_CPP_CompoundStmt vdmcg::GenRecTrapFinally(const TYPE_CPP_Identifier& p_matched,
-                                               const TYPE_CPP_Identifier& p_val,
-                                               const TYPE_CPP_Identifier& p_raised,
-                                               bool p_isLast)
+// ==> CPP`Stmt
+TYPE_CPP_Stmt vdmcg::GenRecTrapFinally(const TYPE_CPP_Identifier& p_matched,
+                                       const TYPE_CPP_Identifier& p_val,
+                                       const TYPE_CPP_Identifier& p_raised,
+                                       bool p_isLast)
 {
   TYPE_CPP_Identifier id (vdm_BC_GenIdentifier(ASTAUX::MkId(L"VDMSpecException")));
   TYPE_CPP_Expr l_excObj;
@@ -3194,11 +3200,7 @@ TYPE_CPP_CompoundStmt vdmcg::GenRecTrapFinally(const TYPE_CPP_Identifier& p_matc
   }
         
   TYPE_CPP_Stmt l_throwStmt (vdm_BC_GenExpressionStmt(vdm_BC_GenThrowExpression(l_excObj)));
-  TYPE_CPP_Expr l_innerTest (vdm_BC_GenNot(p_raised));
-  TYPE_CPP_Expr l_outerTest (vdm_BC_GenNot(p_matched));
-
-  TYPE_CPP_Stmt l_innerIf (vdm_BC_GenIfStmt(l_innerTest, vdm_BC_GenBreakStmt(Nil()), Nil()));
-  TYPE_CPP_Stmt l_outerIf (vdm_BC_GenIfStmt(l_outerTest, vdm_BC_GenBlock(mk_sequence(l_throwStmt)), nil));
+  TYPE_CPP_Expr l_test (vdm_BC_GenLogAnd(p_raised, vdm_BC_GenNot(p_matched)));
 
 #ifdef VDMPP
   if (vdm_CPP_isJAVA()) {
@@ -3206,12 +3208,12 @@ TYPE_CPP_CompoundStmt vdmcg::GenRecTrapFinally(const TYPE_CPP_Identifier& p_matc
   }
 #endif // VDMPP
 
-  SEQ<TYPE_CPP_Stmt> rb;
-  rb.ImpAppend(l_outerIf);
-  if (!p_isLast) {
-    rb.ImpAppend(l_innerIf);
+  Generic l_break = Nil();
+  if (p_isLast) {
+    l_break = vdm_BC_GenBlock(mk_sequence(vdm_BC_GenBreakStmt(Nil())));
   }
-  return vdm_BC_GenBlock(rb);
+  return vdm_BC_GenIfStmt(l_test, vdm_BC_GenBlock(mk_sequence(l_throwStmt)), l_break);
+//
 }
 
 // ConvertHandler

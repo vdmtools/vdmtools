@@ -2280,8 +2280,6 @@ Consider the corresponding pseudo code of the VDM example below:
      }
 \end{verbatim}
 
-
-
 \begin{vdm_al}
 CGIfStmt: AS`IfStmt * bool ==> seq of CPP`Stmt
 CGIfStmt(mk_AS`IfStmt(test, cons, elif, altn,-), isLast) ==
@@ -2460,9 +2458,9 @@ CGAlwaysStmt(mk_AS`AlwaysStmt(Post,body,-), p_isLast) ==
       bodyStmt := GenStmt(body, p_isLast);
       CGAUX`DownAlwaysLevel();
       if is_AS`IdentStmt(Post)
-      then handlerStmt := [BC`GenIfStmt(l_excRaisedNm, BC`GenExpressionStmt(BC`GenThrowExpression(l_excObj)), nil)]
+      then handlerStmt := [BC`GenIfStmt(l_excRaisedNm,  BC`GenBlock([BC`GenExpressionStmt(BC`GenThrowExpression(l_excObj))]), nil)]
       else handlerStmt := [BC`GenIfStmt(BC`GenBoolLit(true), BC`GenBlock(GenStmt(Post, false)), nil),
-                           BC`GenIfStmt(l_excRaisedNm, BC`GenExpressionStmt(BC`GenThrowExpression(l_excObj)), nil)];
+                           BC`GenIfStmt(l_excRaisedNm,  BC`GenBlock([BC`GenExpressionStmt(BC`GenThrowExpression(l_excObj))]), nil)];
       if not is_REP`UnitTypeRep(tpbody)
       then
        (dcl stmt : CPP`Stmt;
@@ -2578,7 +2576,7 @@ CGRecTrapStmt(mk_AS`RecTrapStmt(traps,body,-), p_isLast) ==
       l_traps       = [ GenRecTrapTrap(traps(i).trappost, false)
                       | i in set inds traps]
   in
-   (dcl rb : seq of CPP`Stmt := [BC`GenAsgnStmt(l_matchNm, BC`GenBoolLit(false))],
+   (dcl rb : seq of CPP`Stmt := [],
         l_excVal : seq of CPP`Stmt;
     for l_idx = 1 to len traps do
       def mk_AS`Trap(l_pat,-,-) = traps(l_idx);
@@ -2595,7 +2593,6 @@ CGRecTrapStmt(mk_AS`RecTrapStmt(traps,body,-), p_isLast) ==
         rb := rb ^ (if l_idx = 1
                     then inner_rb
                     else [BC`GenIfStmt(BC`GenNot(l_matchNm), BC`GenBlock(inner_rb), nil)]);-- end of for loop
-    rb := rb ^ [BC`GenIfStmt(BC`GenNot(l_matchNm), BC`GenAsgnStmt(l_excRaisedNm, BC`GenBoolLit(false)), nil)];
 
 #ifdef VDMPP
     if CPP`isJAVA()
@@ -2604,16 +2601,15 @@ CGRecTrapStmt(mk_AS`RecTrapStmt(traps,body,-), p_isLast) ==
     else
 #endif VDMPP
       l_excVal := DS`GenDecl(nil, l_excValNm, nil);
-    def l_match        = BC`GenDecl(DS`GenSmallBoolType(), l_matchNm, BC`GenAsgnInit(BC`GenBoolLit(true)));
+    def l_match        = BC`GenDecl(DS`GenSmallBoolType(), l_matchNm, BC`GenAsgnInit(BC`GenBoolLit(false)));
         l_excRaised    = BC`GenDecl(DS`GenSmallBoolType(), l_excRaisedNm, BC`GenAsgnInit(BC`GenBoolLit(false)));
         l_handler      = GenRecTrapHandler(l_excValNm, l_excRaisedNm);
         l_finally      = GenRecTrapFinally(l_matchNm, l_excValNm, l_excRaisedNm, p_isLast);
         l_tryBlockBody = [BC`GenIfStmt(l_excRaisedNm, BC`GenBlock(rb), BC`GenBlock(l_bodyStmts))];
-        l_tryBlock     = BC`GenTryBlock(l_tryBlockBody, [l_handler], l_finally);
-        l_whileStmt    = BC`GenWhileStmt(BC`GenBoolLit(true), BC`GenBlock([l_tryBlock]))
-    in
-     (dcl cppast : seq of CPP`Stmt := l_excVal ^ [l_match, l_excRaised, l_whileStmt];
-      return cppast);
+        l_tryBlock     = BC`GenTryBlock(l_tryBlockBody, [l_handler], nil);
+        l_whileStmt    = BC`GenWhileStmt(BC`GenBoolLit(true),
+                             BC`GenBlock([l_match, l_tryBlock, l_finally]))
+    in return l_excVal ^ [l_excRaised, l_whileStmt];
   );
 
 FlowBrokenSwitchLabels : [CPP`SwitchLabels] ==> bool
@@ -2628,7 +2624,6 @@ FlowBroken(cppstmt) ==
     mk_CPP`LabelStmt(-, s,-)       -> FlowBroken(s),
     mk_CPP`ExpressionStmt(e,-)     -> return is_CPP`ThrowExpression(e),
     mk_CPP`CompoundStmt(stms,-)    -> FlowBroken(stms(len stms)),
-    --mk_CPP`IfStmt(-, s1, s2,-)     -> return FlowBroken(s1) and FlowBroken(s2),
     mk_CPP`IfStmt(-, s1, s2,-)     -> if s2 = nil
                                       then return FlowBroken(s1)
                                       else return FlowBroken(s1) and FlowBroken(s2),
@@ -2679,7 +2674,7 @@ in
 #endif VDMPP
    return BC`GenHandler(l_exDecl, l_handlerBlock));
 
-GenRecTrapFinally : CPP`Identifier * CPP`Identifier * CPP`Identifier * bool ==> CPP`CompoundStmt
+GenRecTrapFinally : CPP`Identifier * CPP`Identifier * CPP`Identifier * bool ==> CPP`Stmt
 GenRecTrapFinally(p_matched, p_val, p_raised, p_isLast) ==
  (dcl l_excObj : CPP`Expr;
 #ifdef VDMPP
@@ -2691,17 +2686,17 @@ GenRecTrapFinally(p_matched, p_val, p_raised, p_isLast) ==
 #endif VDMPP
     l_excObj := BC`GenFctCall(BC`GenIdentifier("VDMSpecException"), [p_val]);
   def l_throwStmt = BC`GenExpressionStmt(BC`GenThrowExpression(l_excObj));
-      l_innerTest = BC`GenNot(p_raised);
-      l_outerTest = BC`GenNot(p_matched);
-      l_innerIf = BC`GenIfStmt(l_innerTest, BC`GenBreakStmt(nil), nil);
-      l_outerIf = BC`GenIfStmt(l_outerTest, BC`GenBlock([l_throwStmt]), nil)
+      l_test = BC`GenLogAnd(p_raised, BC`GenNot(p_matched));
   in
-   (
+   (dcl l_break : [CPP`Stmt] := nil;
 #ifdef VDMPP
     if CPP`isJAVA()
     then CGAUX`InsertImport("jp.vdmtools.VDM.VDMSpecException");
 #endif VDMPP
-    return BC`GenBlock([l_outerIf] ^ (if p_isLast then [] else [l_innerIf])));
+    if p_isLast
+    then l_break := BC`GenBlock([BC`GenBreakStmt(nil)]);
+    return BC`GenIfStmt(l_test, BC`GenBlock([l_throwStmt]), l_break)
+   ); 
  );
 
 --

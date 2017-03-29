@@ -253,12 +253,12 @@ Tuple vdmcg::Impl2ExplSignature(const SEQ<TYPE_AS_PatTypePair> & partps, const S
   return mk_(parm_l, tp_l, restp);
 }
 
+#ifdef VDMPP
 // IsSubresp
 // bdy : AS`FnBody | AS`OpBody
 // ==> bool
 bool vdmcg::IsSubresp (const Record & bdy)
 {
-#ifdef VDMPP
   Generic body;
   switch(bdy.GetTag()) {
     case TAG_TYPE_AS_FnBody: {
@@ -271,14 +271,13 @@ bool vdmcg::IsSubresp (const Record & bdy)
     }
   }
 
-  if ( body.IsInt() && Int(body) == ((Int) SUBRESP) )
-  {
+  if ( body.IsInt() && Int(body) == ((Int) SUBRESP) ) {
     DefineClassAsAbstract();
     return true;
   }
-#endif
   return false;
 }
+#endif // VDMPP
 
 // IsNotyetspecified
 // bdy : (AS`FnBody | AS`OpBody)
@@ -364,11 +363,16 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
   else
 #endif // VDMPP
   {
+#ifdef VDMPP
     if (IsSubresp(body)) {
       return TYPE_CPP_CPPAS();
     }
-    else if (IsNotyetspecified(body, isDlClass, stat) && !isDlClass) {
-      return TYPE_CPP_CPPAS();
+    else
+#endif // VDMPP
+    {
+      if (IsNotyetspecified(body, isDlClass, stat) && !isDlClass) {
+        return TYPE_CPP_CPPAS();
+      }
     }
   }
 
@@ -936,12 +940,17 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
   else
 #endif // VDMPP
   { // C++
+#ifdef VDMPP
     if (IsSubresp(body)) {
       return TYPE_CPP_CPPAS();
     }
-    else if (IsNotyetspecified(body, isDlClass, stat)) {
-      if (!isDlClass) {
-        return TYPE_CPP_CPPAS();
+    else
+#endif // VDMPP
+    {
+      if (IsNotyetspecified(body, isDlClass, stat)) {
+        if (!isDlClass) {
+          return TYPE_CPP_CPPAS();
+        }
       }
     }
   }

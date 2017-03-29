@@ -349,8 +349,8 @@ defined in the file {\tt cg\_aux.cc}.
 \begin{vdm_al}
 operations
 
-  IsSubresp: AS`FnBody | AS`OpBody ==> bool
 #ifdef VDMPP
+  IsSubresp: AS`FnBody | AS`OpBody ==> bool
   IsSubresp(fnbody) ==
     cases fnbody.body:
       <SUBRESP> -> ( CGAUX`DefineClassAsAbstract();
@@ -359,11 +359,7 @@ operations
       others ->
           return false
     end;
-#endif
-#ifdef VDMSL
-  IsSubresp(-) ==
-    return false;
-#endif
+#endif VDMPP
 
   IsNotyetspecified: (AS`FnBody | AS`OpBody) * bool * bool==> bool
   IsNotyetspecified(fnbody, isDlClass, isStatic) ==
@@ -403,16 +399,18 @@ in
 #ifdef VDMPP
   if CPP`isJAVA()
   then
-   (if IsSubresp(body)
+    if IsSubresp(body)
     then isabstract := true
     elseif IsNotyetspecified(body, false, stat)
-    then isimplicit := true)
+    then isimplicit := true
+    else skip
   else
-#endif VDMPP
-   (if IsSubresp(body)
+    if IsSubresp(body)
     then return []
-    elseif IsNotyetspecified(body,isDlClass, stat) and not isDlClass
-    then return []);
+    else
+#endif VDMPP
+      if IsNotyetspecified(body,isDlClass, stat) and not isDlClass
+      then return [];
 
   PushEnv();
   CGAUX`InitEnv();
@@ -810,19 +808,21 @@ GenExplOpDef(opnm, opdef, sd, isimpl, isDlClass) ==
 
     if CPP`isJAVA()
     then
-     (if IsSubresp(body) or
+      if IsSubresp(body) or
         ( CGMAIN`get_j2v_option() and
           CGMAIN`isInterface(CGAUX`GiveCurCASName()) and
            body.body = <NOTYETSPEC>)
       then isabstract:= true
       elseif IsNotyetspecified(body, false, stat)
-      then isimplicit:= true)
+      then isimplicit:= true
+      else skip
     else
-#endif VDMPP
-     (if IsSubresp(body)
+      if IsSubresp(body)
       then return []
-      elseif IsNotyetspecified(body, isDlClass, stat) and not isDlClass
-      then return []);
+      else
+#endif VDMPP
+        if IsNotyetspecified(body, isDlClass, stat) and not isDlClass
+        then return [];
 
     if stat
     then CGAUX`SetIsStatic();
