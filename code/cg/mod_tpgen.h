@@ -158,10 +158,10 @@ private:
                                                             const SEQ<TYPE_CPP_Identifier> &);
   SEQ<TYPE_CPP_MemberDeclaration> GenIdentDecls(const SEQ<TYPE_CPP_Identifier> &,
                                                 const MAP<TYPE_CPP_Identifier,TYPE_CPP_Name>&);
+#ifdef VDMPP
   TYPE_CPP_FunctionDefinition GenClassConstrDecl(const TYPE_CPP_Identifier &,
                                                  const SEQ<TYPE_CPP_Identifier> &,
                                                  const MAP<TYPE_CPP_Identifier,TYPE_CPP_Name> &);
-#ifdef VDMPP
   SET<TYPE_CPP_Expr> GetBasicTypes();
   TYPE_CPP_FunctionDefinition GenCloneMethod(const TYPE_CPP_Identifier &,
                                              const SEQ<TYPE_CPP_Identifier> &,

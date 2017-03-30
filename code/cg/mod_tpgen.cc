@@ -1735,6 +1735,7 @@ SEQ<TYPE_CPP_MemberDeclaration> vdmcg::GenIdentDecls(const SEQ<TYPE_CPP_Identifi
   return memdecls;
 }
 
+#ifdef VDMPP
 // GenClassConstrDecl
 // cn : PP`Identifier
 // sl : TagList        (seq of CPP`Identifier)
@@ -1761,7 +1762,6 @@ TYPE_CPP_FunctionDefinition vdmcg::GenClassConstrDecl(const TYPE_CPP_Identifier 
                           ml, SEQ<TYPE_CPP_DeclSpecifier>(), decl, nil, vdm_BC_GenBlock(stmtl));
 }
 
-#ifdef VDMPP
 // GetBasicTypes
 // ==> set of CPP`Expr
 SET<TYPE_CPP_Expr> vdmcg::GetBasicTypes()

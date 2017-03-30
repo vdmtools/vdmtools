@@ -1842,7 +1842,7 @@ GenIdentDecls(sl,tenv) ==
 );
 
 -- java
-
+#ifdef VDMPP
 GenClassConstrDecl : CPP`Identifier * TagList * TagEnv ==> CPP`FunctionDefinition
 GenClassConstrDecl(cn,sl,tenv) ==
  (dcl arglist : seq of CPP`ArgDecl := [],
@@ -1862,7 +1862,6 @@ GenClassConstrDecl(cn,sl,tenv) ==
   in return BC`GenJavaFctDef([],[BC`GenModifier(<PUBLIC>)],[],decl,nil,BC`GenBlock(stmtl))
 );
 
-#ifdef VDMPP
 GetBasicTypes : () ==> set of CPP`Expr
 GetBasicTypes() ==
  (dcl expr_set : set of CPP`Expr;
