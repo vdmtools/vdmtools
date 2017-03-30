@@ -1,7 +1,7 @@
 /***
 *  * WHAT
 *  * FILE
-*  *    $Source: /home/vdmtools/cvsroot/toolbox/code/qtgui/mainF.cc,v $
+*  *    $Source: /home/dmtools/cvsroot/toolbox/code/qtgui/mainF.cc,v $
 *  * VERSION
 *  *    $Revision: 1.175 $
 *  *    $Date: 2006/06/30 06:48:33 $
@@ -2853,8 +2853,9 @@ void mainW::about_qt3()
   QString version (Qt2TB::GiveToolVersionDateI());
   QString message ("<p>The answer is <b>42</b>, if the bug isn't in the specification.</p>");
   QString credit (Qt2TB::GetCreditI().replace("\n", "</p>\n<p>"));
-  QString link ("<a href=\"http://www.vdmtools.jp/\">http://www.vdmtools.jp/</a>, "
-                "<a href=\"http://www.vdmportal.org/\">http://www.vdmportal.org/</a>");
+  //QString link ("<a href=\"http://www.vdmtools.jp/\">http://www.vdmtools.jp/</a>, "
+  //              "<a href=\"http://www.vdmportal.org/\">http://www.vdmportal.org/</a>");
+  QString link ("<a href=\"http://www.vdmportal.org/\">http://www.vdmportal.org/</a>");
 
 #if QT_VERSION >= 0x040000
   QString text (QMessageBox::tr(
