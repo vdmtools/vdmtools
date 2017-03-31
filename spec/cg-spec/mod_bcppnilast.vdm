@@ -630,9 +630,11 @@ some optional initialization expression.
     GenThrowExpression(e) ==
       BCCI`GenThrowExpression(e,CI`NilContextId);
 
+#ifdef VDMPP
     GenArrayInitializer: [seq of (CPP`Expr | CPP`ArrayInitializer)] -> CPP`ArrayInitializer
     GenArrayInitializer(vi) ==
       BCCI`GenArrayInitializer(vi,CI`NilContextId);
+#endif VDMPP
 
 #ifdef VDMPP
     GenArrayCreationExpr: CPP`SimpleTypeName * [CPP`ArrayNewDecl] * [CPP`ArrayNewDecl] *

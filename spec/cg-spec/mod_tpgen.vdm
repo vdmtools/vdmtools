@@ -1651,53 +1651,46 @@ Generate Init function declaration and definition.
 
 GenInitFunctionDecl : CPP`Identifier * TagList * TagEnv ==> CPP`MemberSpecifier
 GenInitFunctionDecl(cnm,sl,tenv) ==
-(
-  dcl arglist : seq of CPP`ArgDecl:= [];
+ (dcl arglist : seq of CPP`ArgDecl:= [];
 
   -- Generate argument list
   for j = 1 to len(sl) do (
-    --def arg = BC`GenArgDecl([BC`GenTypeSpecifier(tenv(sl(j)))], BC`GenIdentifier("p" ^ CGAUX`StringNumber(j)))
     def arg = BC`GenArgDecl([BC`GenTypeSpecifier(<CONST>), BC`GenTypeSpecifier(tenv(sl(j)))],
                             BC`GenRef(BC`GenIdentifier("p" ^ CGAUX`StringNumber(j))))
-    in
-      arglist := arglist ^ [arg];
+    in arglist := arglist ^ [arg];
   );
 
-  return BC`GenMemberSpec([BC`GenTypeSpecifier(cnm)], BC`GenRef(BC`GenFctDecl(BC`GenIdentifier("Init"), arglist)))
-);
+  return BC`GenMemberSpec([BC`GenTypeSpecifier(cnm)],
+                          BC`GenRef(BC`GenFctDecl(BC`GenIdentifier("Init"), arglist)))
+ );
 
 GenInitFunctionDef : CPP`QualifiedClassName * TagList * TagEnv ==> CPP`FunctionDefinition
 GenInitFunctionDef(cnm,sl,tenv) ==
-(
-  dcl  arglist : seq of CPP`ArgDecl := [],
+ (dcl  arglist : seq of CPP`ArgDecl := [],
        stmtl   : seq of CPP`Stmt    := [];
 
   -- Generate argument list
-  for j = 1 to len(sl) do (
-      --def arg = BC`GenArgDecl([BC`GenTypeSpecifier(tenv(sl(j)))], BC`GenIdentifier("p"^CGAUX`StringNumber(j)))
-      def arg = BC`GenArgDecl([BC`GenTypeSpecifier(<CONST>), BC`GenTypeSpecifier(tenv(sl(j)))],
-                              BC`GenRef(BC`GenIdentifier("p"^CGAUX`StringNumber(j))))
-      in
-         arglist := arglist ^ [arg];
- );
+  for j = 1 to len(sl) do
+   (def arg = BC`GenArgDecl([BC`GenTypeSpecifier(<CONST>), BC`GenTypeSpecifier(tenv(sl(j)))],
+                            BC`GenRef(BC`GenIdentifier("p" ^ CGAUX`StringNumber(j))))
+    in arglist := arglist ^ [arg];
+   );
 
   -- Generate list of SetField stmts
-  for j = 1 to len(sl) do (
-      stmtl := stmtl^[DS`GenRecSetFieldonThis(BC`GenIntegerLit(j), BC`GenIdentifier("p"^CGAUX`StringNumber(j)))]
-  );
+  for j = 1 to len(sl) do
+   (stmtl := stmtl ^ [DS`GenRecSetFieldonThis(BC`GenIntegerLit(j),
+                      BC`GenIdentifier("p" ^ CGAUX`StringNumber(j)))]
+   );
 
-  stmtl := stmtl ^[BC`GenReturnStmt(BC`GenIndirectionExpr(DS`GenThis()))];
+  stmtl := stmtl ^ [BC`GenReturnStmt(BC`GenIndirectionExpr(DS`GenThis()))];
 
   -- Generate function definition
-
   let decl = BC`GenFctDecl(BC`GenQualifiedName2(cnm,BC`GenIdentifier("Init")),arglist),
       id = if is_CPP`Identifier(cnm)
            then cnm
            else cnm.qcn.id
-  in
-
-    return BC`GenFctDef([BC`GenTypeSpecifier(id)],BC`GenRef(decl),nil,BC`GenBlock(stmtl))
-)
+  in return BC`GenFctDef([BC`GenTypeSpecifier(id)],BC`GenRef(decl),nil,BC`GenBlock(stmtl))
+ );
 
 \end{vdm_al}
 

@@ -777,9 +777,11 @@ functions
   GenThrowExpression(e, cid) ==
     mk_CPP`ThrowExpression(e,cid);
 
+#ifdef VDMPP
   GenArrayInitializer: [seq of (CPP`Expr | CPP`ArrayInitializer)] * CI`ContextId -> CPP`ArrayInitializer
   GenArrayInitializer(vi,cid) ==
     mk_CPP`ArrayInitializer(vi,cid);
+#endif VDMPP
 
 #ifdef VDMPP
   GenArrayCreationExpr: CPP`SimpleTypeName * [CPP`ArrayNewDecl] * [CPP`ArrayNewDecl] *
@@ -859,9 +861,11 @@ functions
       others -> undefined
     end;
 
+#ifdef VDMPP
   GenDest: CPP`Identifier * CI`ContextId -> CPP`Destructor
   GenDest(id,cid) ==
     mk_CPP`Destructor(id,cid);
+#endif VDMPP
 \end{vdm_al}
 
 \subsection{Interfaces}
