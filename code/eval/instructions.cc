@@ -2683,16 +2683,15 @@ void StackEval::ExeSEQCOMPBIND(const Bool & isSet)
         bool forall = true;
         Generic elm;
         for (bool bb = v.First(elm); bb && forall; bb = v.Next(elm)) {
-//          forall = AUX::IsInt(elm);
           forall = (elm.Is(TAG_TYPE_SEM_NUM) ? Record(elm).GetReal(pos_SEM_NUM_v).IsInt() : false);
-          //forall = elm.Is(TAG_TYPE_SEM_NUM);
         }
         if (forall) {
-//          PUSH(pat);
-          PUSH(v.ToSequence());
+          //PUSH(pat);
+          PUSH(AUX::SetToSeq(v));
         }
-        else
+        else {
           RTERR::Error(L"ExeSEQCOMPBIND", RTERR_NUMERIC_SET, val_v, Nil(), Sequence());
+        }
       }
     }
     else {
@@ -2701,8 +2700,8 @@ void StackEval::ExeSEQCOMPBIND(const Bool & isSet)
   }
   else {
     if (val_v.Is(TAG_TYPE_SEM_SEQ)) {
-//    PUSH(pat);
-        PUSH(val_v.GetSequence(pos_SEM_SEQ_v));
+      //PUSH(pat);
+      PUSH(val_v.GetSequence(pos_SEM_SEQ_v));
     }
     else {
       RTERR::Error(L"ExeSEQCOMPBIND", RTERR_SEQ_EXPECTED, val_v, Nil(), Sequence());
