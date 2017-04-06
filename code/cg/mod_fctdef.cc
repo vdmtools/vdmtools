@@ -253,12 +253,12 @@ Tuple vdmcg::Impl2ExplSignature(const SEQ<TYPE_AS_PatTypePair> & partps, const S
   return mk_(parm_l, tp_l, restp);
 }
 
+#ifdef VDMPP
 // IsSubresp
 // bdy : AS`FnBody | AS`OpBody
 // ==> bool
 bool vdmcg::IsSubresp (const Record & bdy)
 {
-#ifdef VDMPP
   Generic body;
   switch(bdy.GetTag()) {
     case TAG_TYPE_AS_FnBody: {
@@ -271,14 +271,13 @@ bool vdmcg::IsSubresp (const Record & bdy)
     }
   }
 
-  if ( body.IsInt() && Int(body) == ((Int) SUBRESP) )
-  {
+  if ( body.IsInt() && Int(body) == ((Int) SUBRESP) ) {
     DefineClassAsAbstract();
     return true;
   }
-#endif
   return false;
 }
+#endif // VDMPP
 
 // IsNotyetspecified
 // bdy : (AS`FnBody | AS`OpBody)
@@ -317,17 +316,15 @@ bool vdmcg::IsNotyetspecified (const Record & bdy, bool isDlClass, bool isStatic
 //  return !(bdy.GetField (1)).IsRecord ();
 //}
 
+#ifdef VDMPP
 // GenExceptionsHdr
 // -> seq of CPP`Identifier
 SEQ<TYPE_CPP_Identifier> vdmcg::GenExceptionsHdr()
 {
-// 20120213 -->
-//  if (!ThrowsException() && !get_conc_option())
-//    return SEQ<TYPE_CPP_Identifier>();
-// <-- 20120213
   InsertImport(SEQ<Char>(L"jp.vdmtools.VDM.CGException"));
   return SEQ<TYPE_CPP_Identifier>().ImpAppend(vdm_BC_GenIdentifier(ASTAUX::MkId(L"CGException")));
 }
+#endif // VDMPP
 
 // GenExplFctDef
 // efd : AS`ExplFnDef
@@ -366,18 +363,26 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
   else
 #endif // VDMPP
   {
+#ifdef VDMPP
     if (IsSubresp(body)) {
       return TYPE_CPP_CPPAS();
     }
-    else if (IsNotyetspecified(body, isDlClass, stat) && !isDlClass) {
-      return TYPE_CPP_CPPAS();
+    else
+#endif // VDMPP
+    {
+      if (IsNotyetspecified(body, isDlClass, stat) && !isDlClass) {
+        return TYPE_CPP_CPPAS();
+      }
     }
   }
 
   PushEnv();
   InitEnv_CGAUX();
-  SetException(false);
-  SetNotSupportedException(false);
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    SetException(false);
+  }
+#endif // VDMPP
   vdm_BC_ResetVarno();
 
   SEQ<TYPE_AS_Pattern> parms (parms_ll.Hd());
@@ -418,20 +423,6 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
   const SEQ<TYPE_CPP_Stmt> & b_stmt (tupBody.GetSequence(2));
 
   SEQ<TYPE_CPP_Stmt> fb;
-#ifdef VDMSL
-  if (!prefn.IsNil() && get_testpreandpost_option()) {
-    fb.ImpAppend(GenMethPreCall(id, FindVariables(arg_l), stat));
-  }
-  if (!parms.IsEmpty () && !inlineDecl) {
-    fb.ImpConc( GenArgPatternMatch(pid_m, efd, varlist) );
-  }
-  fb.ImpConc( b_stmt );
-  if (!postfn.IsNil() && get_testpreandpost_option()) {
-    fb.ImpAppend(GenFnPostCall(id, resVar_v, FindVariables(arg_l),stat));
-  }
-  fb.ImpAppend( vdm_BC_GenReturnStmt(resVar_v) );
-#endif // VDMSL
-
 #ifdef VDMPP
   if (vdm_CPP_isJAVA() ) {
     if (isimplicit && IsNotyetspecified(body, isDlClass, stat)) {
@@ -505,6 +496,7 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
     }
   }
   else
+#endif // VDMPP
   { // C++
     if (!prefn.IsNil() && get_testpreandpost_option()) {
       fb.ImpAppend(GenMethPreCall(id, FindVariables(arg_l), stat));
@@ -518,7 +510,6 @@ TYPE_CPP_CPPAS vdmcg::GenExplFctDef (const TYPE_AS_ExplFnDef & efd, bool isimpl,
     }
     fb.ImpAppend(vdm_BC_GenReturnStmt(resVar_v));
   }
-#endif // VDMPP
 
   // Add run-time file information
   if (rti) {
@@ -875,8 +866,11 @@ Tuple vdmcg::InitMethod(const SEQ<TYPE_AS_Pattern> & parm_l, const TYPE_AS_OpTyp
 {
   PushEnv();
   InitEnv_CGAUX();
-  SetNotSupportedException(false);
-  SetException(false);
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    SetException(false);
+  }
+#endif // VDMPP
   vdm_BC_ResetVarno();
 
   Tuple spi (SamePatternIds (parm_l));
@@ -946,12 +940,17 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
   else
 #endif // VDMPP
   { // C++
+#ifdef VDMPP
     if (IsSubresp(body)) {
       return TYPE_CPP_CPPAS();
     }
-    else if (IsNotyetspecified(body, isDlClass, stat)) {
-      if (!isDlClass) {
-        return TYPE_CPP_CPPAS();
+    else
+#endif // VDMPP
+    {
+      if (IsNotyetspecified(body, isDlClass, stat)) {
+        if (!isDlClass) {
+          return TYPE_CPP_CPPAS();
+        }
       }
     }
   }
@@ -1143,10 +1142,10 @@ TYPE_CPP_CPPAS vdmcg::GenExplOpDef(const TYPE_AS_Name & opnm,
   else 
 #endif // VDMPP
   { // C++
+#ifdef VDMPP
     // initialization of super class
     // temporary simple hack 
     SEQ<TYPE_CPP_MemInitializer> mi_l;
-#ifdef VDMPP
     if (constr)
     {
       TYPE_CPP_Stmt initfc (vdm_BC_GenExpressionStmt(

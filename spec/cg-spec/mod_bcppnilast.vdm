@@ -72,10 +72,12 @@ GenFctDef: seq of CPP`DeclSpecifier * CPP`Declarator * [seq of CPP`SimpleTypeNam
 GenFctDef( ds, decl, excs, body ) ==
   BCCI`GenFctDef(ds, decl, excs, body, CI`NilContextId );
 
+#ifdef VDMPP
 GenJavaFctDef: CPP`AnnotationSpec * seq of CPP`Modifier * seq of CPP`DeclSpecifier * CPP`Declarator *
            [seq of CPP`SimpleTypeName] * [CPP`Stmt] -> CPP`FunctionDefinition
 GenJavaFctDef(annol, ms, ds, decl, excs, body ) ==
   BCCI`GenJavaFctDef(annol, ms, ds, decl, excs, body, CI`NilContextId );
+#endif VDMPP
 
 GenConstructorDef: CPP`AnnotationSpec * seq of CPP`DeclSpecifier * CPP`Declarator *
                    [CPP`CtorInitializer] * CPP`Stmt -> CPP`FunctionDefinition
@@ -205,6 +207,7 @@ GenClassHead: CPP`Identifier * CPP`BaseSpec -> CPP`ClassHead
 GenClassHead(cls, base_l) ==
   BCCI`GenClassHead(cls, base_l,CI`NilContextId);
 
+#ifdef VDMPP
 GenJavaClassHead: CPP`AnnotationSpec * seq of CPP`Modifier * CPP`Identifier  * CPP`BaseSpec *
                   [CPP`InterSpec] * [seq of CPP`Identifier] -> CPP`ClassHead
 GenJavaClassHead(anno_l, ms, cls, base_l, inter_l, tp_l) ==
@@ -215,7 +218,6 @@ GenJavaInterfaceHead: CPP`AnnotationSpec * seq of CPP`Modifier * CPP`Identifier 
 GenJavaInterfaceHead(anno_l, ms, cls, inter_l, tp_l) ==
   BCCI`GenJavaInterfaceHead(anno_l, ms, cls, inter_l, tp_l, CI`NilContextId);
 
-#ifdef VDMPP
 operations
 GenAccessMemberList: map AS`Access to seq of CPP`MemberDeclaration ==> seq of CPP`MemberList
 GenAccessMemberList (acs_m) ==
@@ -391,6 +393,7 @@ some optional initialization expression.
   GenNeq(r, l) ==
     BCCI`GenNeq(r, l,CI`NilContextId);
 
+#ifdef VDMPP
   GenNewExpr: CPP`TypeSpecifier * CPP`Exprs -> CPP`AllocationTypeExpr | CPP`ClassInstanceCreationExpr
   GenNewExpr(ts, expr_l) ==
     BCCI`GenNewExpr(ts, expr_l,CI`NilContextId);
@@ -398,6 +401,7 @@ some optional initialization expression.
   GenDeleteStmt: CPP`Expr -> CPP`Stmt
   GenDeleteStmt(expr) ==
     BCCI` GenDeleteStmt(expr,CI`NilContextId);
+#endif VDMPP
 
   GenIfStmt: CPP`Expr * CPP`Stmt * [CPP`Stmt] -> CPP`Stmt
   GenIfStmt(cond, alt1, alt2) ==
@@ -626,16 +630,17 @@ some optional initialization expression.
     GenThrowExpression(e) ==
       BCCI`GenThrowExpression(e,CI`NilContextId);
 
+#ifdef VDMPP
     GenArrayInitializer: [seq of (CPP`Expr | CPP`ArrayInitializer)] -> CPP`ArrayInitializer
     GenArrayInitializer(vi) ==
       BCCI`GenArrayInitializer(vi,CI`NilContextId);
+#endif VDMPP
 
 #ifdef VDMPP
     GenArrayCreationExpr: CPP`SimpleTypeName * [CPP`ArrayNewDecl] * [CPP`ArrayNewDecl] *
                           [CPP`ArrayInitializer] -> CPP`Expr
     GenArrayCreationExpr(type, dimExpr, dim, arrayInit) ==
       BCCI`GenArrayCreationExpr(type, dimExpr, dim, arrayInit, CI`NilContextId);
-#endif VDMPP
 
 \end{vdm_al}
 
@@ -644,17 +649,16 @@ to nil using this operation. This is because this field is not needed
 by any of the code generators.
 
 \begin{vdm_al}
-#ifdef VDMPP
     GenClassInstanceCreationExpr: (CPP`CompleteClassName | CPP`PackageName | CPP`QualifiedName) *
                                   seq of CPP`Expr -> CPP`Expr
     GenClassInstanceCreationExpr(cn,es) ==
       BCCI`GenClassInstanceCreationExpr(cn,es,CI`NilContextId);
-#endif VDMPP
 
     GenAnonymousClassExpr: CPP`CompleteClassName * seq of CPP`Expr * seq of CPP`MemberDeclaration-> CPP`Expr
     GenAnonymousClassExpr(cn,es,ml) ==
       BCCI`GenAnonymousClassExpr(cn,es,ml,CI`NilContextId);
 
+#endif VDMPP
 \end{vdm_al}
 
 \subsection{Classes}

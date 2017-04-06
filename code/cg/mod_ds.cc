@@ -2847,7 +2847,11 @@ TYPE_CPP_Expr vdmcg::GenTupSetFieldExpr(const TYPE_CPP_Expr & tup,
                                         const TYPE_CPP_Expr & field,
                                         const TYPE_CPP_Expr & elem)
 {
-  SetException(true);
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    SetException(true);
+  }
+#endif // VDMPP
   return vdm_BC_GenFctCallObjMemAcc(tup, ASTAUX::MkId(L"SetField"), mk_sequence(field, elem));
 }
 
@@ -4438,7 +4442,11 @@ TYPE_CPP_Expr vdmcg::GenCastMapTypeForModify(const TYPE_CPP_Expr & e)
 // ==> CPP`Expr
 TYPE_CPP_Expr vdmcg::GenMapApply(const TYPE_CGMAIN_VT & vt1, const TYPE_CPP_Expr & e2)
 {
-  SetException(true);
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    SetException(true);
+  }
+#endif // VDMPP
 
   const TYPE_CPP_Expr & e1 (vt1.GetRecord(pos_CGMAIN_VT_name));
   const Generic & e1t (vt1.GetField(pos_CGMAIN_VT_type));

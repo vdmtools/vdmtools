@@ -75,10 +75,10 @@ bool FlowBrokenSwitchLabels(const Generic&);
 bool FlowBroken(const TYPE_CPP_Stmt &);
 SEQ<TYPE_CPP_Stmt> GenRecTrapTrap(const TYPE_AS_Stmt&, bool);
 TYPE_CPP_Handler GenRecTrapHandler(const TYPE_CPP_Identifier&, const TYPE_CPP_Identifier&);
-TYPE_CPP_CompoundStmt GenRecTrapFinally(const TYPE_CPP_Identifier&,
-					const TYPE_CPP_Identifier&,
-					const TYPE_CPP_Identifier&,
-                                        bool);
+TYPE_CPP_Stmt GenRecTrapFinally(const TYPE_CPP_Identifier&,
+                                const TYPE_CPP_Identifier&,
+                                const TYPE_CPP_Identifier&,
+                                bool);
 Tuple ConvertHandler(const TYPE_AS_Bind & bind, const TYPE_AS_Stmt & stmt);
 SEQ<TYPE_CPP_Stmt> CGTrapStmt(const TYPE_AS_TrapStmt&, bool);
 #ifdef VDMPP

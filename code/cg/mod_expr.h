@@ -103,7 +103,7 @@ SEQ<TYPE_CPP_Stmt> GenModifyFields(const TYPE_CPP_Name &,
                                    const TYPE_REP_TypeRep &,
                                    const SEQ<TYPE_AS_RecordModification> &,
                                    const TYPE_CGMAIN_VT &);
-TYPE_CPP_Stmt GenFieldInds(const TYPE_CPP_Name &, const TYPE_REP_TypeRep &, const SEQ<TYPE_AS_RecordModification> &);
+SEQ<TYPE_CPP_Stmt> GenFieldInds(const TYPE_CPP_Name &, const TYPE_REP_TypeRep &, const SEQ<TYPE_AS_RecordModification> &);
 int FindField(const SEQ<TYPE_REP_FieldRep> &, const TYPE_AS_Name &);
 SEQ<TYPE_CPP_Stmt> CGAllOrExistsExpr(const TYPE_AS_QuantExpr &, const TYPE_CGMAIN_VT &);
 SEQ<TYPE_CPP_Stmt> CGIotaExpr(const TYPE_AS_IotaExpr &, const TYPE_CGMAIN_VT &);
@@ -187,12 +187,12 @@ Generic CGSameBaseClassExpr(const TYPE_AS_SameBaseClassExpr &, const TYPE_CGMAIN
 Tuple GenClassOrBase(const TYPE_AS_Expr &, const TYPE_AS_Expr &, bool);
 Generic CGNewExpr(const TYPE_AS_NewExpr &, const TYPE_CGMAIN_VT &);
 #endif // VDMPP
-TYPE_CPP_Stmt CGComprehension(const SEQ<TYPE_AS_MultBind> &,
-                              const Generic &,
-                              const SEQ<TYPE_CPP_Stmt> &,
-                              const Generic &,
-                              const Generic &, const Map &, bool);
-SEQ<TYPE_CPP_Stmt> GenPredicateStmt(const Generic &, const SEQ<TYPE_CPP_Stmt> &, const Generic &);
+SEQ<TYPE_CPP_Stmt> CGComprehension(const SEQ<TYPE_AS_MultBind> &,
+                                   const Generic &,
+                                   const SEQ<TYPE_CPP_Stmt> &,
+                                   const Generic &,
+                                   bool, const Map &, bool);
+SEQ<TYPE_CPP_Stmt> GenPredicateStmt(const Generic &, const SEQ<TYPE_CPP_Stmt> &, bool);
 SEQ<TYPE_AS_Stmt> DeclarePatVars(const TYPE_AS_Pattern &);
 SEQ<TYPE_AS_Stmt> DeclPatVars(const MAP<TYPE_AS_Name, TYPE_REP_TypeRep> &);
 Tuple FindMultSetBind2(const SEQ<TYPE_AS_MultBind> &);

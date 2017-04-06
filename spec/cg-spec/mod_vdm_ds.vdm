@@ -1896,7 +1896,11 @@ constructions of product type.
 
   GenTupSetFieldExpr: CPP`Expr * CPP`Expr * CPP`Expr ==> CPP`Expr
   GenTupSetFieldExpr( tup, field, elem ) ==
-   (CGAUX`SetException(true);
+   (
+#ifdef VDMPP
+    if CPP`isJAVA()
+    then CGAUX`SetException(true);
+#endif VDMPP
     return BC`GenFctCallObjMemAcc(tup, "SetField", [field, elem]););
 
   GenTupGetField: CPP`Expr * CPP`Expr * REP`TypeRep *REP`TypeRep ==> CPP`Expr
@@ -3015,7 +3019,11 @@ The operation $GenCastMap$ castes the expression $e$ to a $Map$ if it is necessa
 
   GenMapApply: CGMAIN`VT * CPP`Expr ==> CPP`Expr
   GenMapApply(mk_CGMAIN`VT(e1, e1t), e2) ==
-   (CGAUX`SetException(true);
+   (
+#ifdef VDMPP
+    if CPP`isJAVA()
+    then CGAUX`SetException(true);
+#endif VDMPP
     cases e1t:
       mk_REP`GeneralMapTypeRep(-, mt),
       mk_REP`InjectiveMapTypeRep(-, mt) ->

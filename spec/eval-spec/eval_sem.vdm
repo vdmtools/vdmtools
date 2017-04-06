@@ -8,7 +8,7 @@
 \chapter{Semantic Value Domain}
 \label{ch:semvalues}
 
-In this chapter, we describe the module SEM, which contains the definitions 
+In this chapter, we describe the module SEM, which contains the definitions
 for the semantic value domain. The semantic value domain is used by the
 interpreter. The result of an evaluation function of the interpreter is a
 semantic value.
@@ -77,7 +77,7 @@ The {\em ValTp} is a record of a sematnic value, and for the case of Read/Write
 variables, a type.
 
 \begin{vdm_al}
-  Permission = <READ_ONLY> | <READ_WRITE>;  
+  Permission = <READ_ONLY> | <READ_WRITE>;
 \end{vdm_al}
 
 %#ifdef VDMPP
@@ -98,15 +98,15 @@ variables, a type.
 %and deletion of temporary object references scope follows the
 %environment stack. Actually, the access function to the environment
 %stack calls the corresponding access functions to the temporary object
-%reference stack. 
+%reference stack.
 %
 %#endif VDMPP
 
 \section{Semantic Values}
 
 \begin{vdm_al}
-VAL = BasicVal | FN | OP | POLY | SEQ | SET | MAP | TUPLE | 
-      REC | TOKEN | UNDEF | EXIT | CONT | RETURN 
+VAL = BasicVal | FN | OP | POLY | SEQ | SET | MAP | TUPLE |
+      REC | TOKEN | UNDEF | EXIT | CONT | RETURN
 #ifdef VDMPP
       | OBJ | OBJ_Ref | OverOPFN
 #endif VDMPP
@@ -173,9 +173,9 @@ LOC :: v : AS`Name;
 
 --DLVAL :: v : LOC;
 \end{vdm_al}
-A external values is declared in an implementations module. The definition 
+A external values is declared in an implementations module. The definition
 is in the code to which the implementation module relates.
-The type $LOC$ should represent that the interpreter process uses the memory 
+The type $LOC$ should represent that the interpreter process uses the memory
 location for accessing a function.
 The semantic domain applies the name instead of a memory address.
 #endif VDMSL
@@ -311,7 +311,7 @@ ExplOP :: tp : AS`OpType
           modName : AS`Name
           implicit : bool
           objref : [OBJ_Ref]             -- PP only
-          access : AS`Access             -- PP only  -- 0901
+          access : AS`Access             -- PP only
 ;
 \end{vdm_al}
 
@@ -325,10 +325,10 @@ rtinfo.cc)
 
 #ifdef VDMSL
 \begin{vdm_al}
-DLOP  :: tp : AS`OpType
-         body : LOC
-         fnName : AS`Name
-         modName : AS`Name;
+DLOP :: tp : AS`OpType
+        body : LOC
+        fnName : AS`Name
+        modName : AS`Name;
 \end{vdm_al}
 
 The value of an external operations consists of the operations type and
@@ -336,7 +336,7 @@ the location in memeory. $module$ is the name of the module in which the
 operation is defined.
 $fnName$ contain the name of the function. This information is used in
 the omplementation to collect runtime information. (see the file
-rtinfo.cc) 
+rtinfo.cc)
 #endif VDMSL
 
 #ifdef VDMPP
@@ -397,18 +397,16 @@ concrete value.
 \begin{vdm_al}
 REC :: tag : AS`Name
        v : map nat to VAL
-       v_dc:- map nat to VAL;
+       v_dc :- map nat to VAL;
 \end{vdm_al}
 #endif VDMSL
-
 #ifdef VDMPP
 \begin{vdm_al}
 REC :: tag : AS`Name
        v : map nat to VAL
        v_dc :- map nat to VAL
-inv mk_REC(tag,-,-) == let mk_AS`Name(ids,-) = tag
-                       in len ids = 2; 
-\end{vdm_al} 
+inv mk_REC(mk_AS`Name(ids,-),-,-) == len ids = 2;
+\end{vdm_al}
 
 The invariant expresses that for record values the tag name should
 describe the class name where the type definition of the record is
@@ -418,19 +416,19 @@ defined in addition with the real tag.
 In the implementation the semantic record is implemented like this
 
 \begin{verbatim}
-  SemRecord :: 
+  SemRecord ::
     value   : vdmlib_Record(tag,size)
     checked : bool
 \end{verbatim}
 
 The checked field is initialised to false when a semantic record is
 created and set true when it has been dynamic type checked, to avoid
-repeated dynamic type check of the same value. 
+repeated dynamic type check of the same value.
 
 The SemRecord is implemented by the SemRecTable class and SemRecord
 class. The ``checked'' field was previously part of the ``value''
 where it was implemented as a boolean in a class derived from a
-RecordVal class.  
+RecordVal class.
 
 \subsection{Token Value}
 
@@ -480,7 +478,7 @@ History :: req : nat
 
 The semantics value of an object contains information about
 
-\begin{itemize} 
+\begin{itemize}
 \item tp: the class name of which the object is an instance of, and
 \item ins: a map describing the values of the instance variable of the object.
 The map goes from class names to the value map.
@@ -505,7 +503,6 @@ methods
 
 end A
 
-     
 class B is subclass of A
   instance variables
     a: nat;
@@ -529,7 +526,7 @@ class C is subclass of A, B, --B[<YELLOW>], B[true], B[1], B[3, ..., 5]
     a: nat;
     c: nat
 
-  inherit 
+  inherit
     from B :: m1
 
   methods mc1() value r: nat ==
@@ -549,7 +546,7 @@ end C
 
 
 Note, that class A is inherited twice in the class C, both directly by
-C and by its superclass B. 
+C and by its superclass B.
 
 An object of class C could have the following semantic value:
 
@@ -578,7 +575,7 @@ functions
   CompFN: ExplFN +> CompExplFN
   CompFN(efn) ==
     mk_CompExplFN([efn], nil);
-    
+
   UpdateClosEnv: VAL * BlkEnv +> VAL
   UpdateClosEnv(fnval,blkenv) ==
     cases true:
@@ -592,12 +589,10 @@ functions
   IsSemValSeq(item) ==
     cases item:
       [] -> true,
---      [val] ^ val_l -> IsSemVal(val) and
---                       forall v in set elems val_l & IsSemVal(v),
       [-] ^ - -> forall v in set elems item & IsSemVal(v),
       others -> false
     end;
-    
+
   IsSemVal: STKM`EvalStackItem -> bool
   IsSemVal(val) ==
     is_(val, VAL);
@@ -659,7 +654,7 @@ operations
 
   Size: VAL ==> nat
   Size(val) ==
-   cases true: 
+   cases true:
     (is_BOOL(val))       -> return 1,
     (is_NUM(val))        -> return 64,
     (is_CHAR(val))       -> return 16,
@@ -677,10 +672,10 @@ operations
     (is_UNDEF(val))      -> return 1,
     (is_EXIT(val))       -> if val.v = nil
                             then return 1
-                            else return 1 + Size(val.v), 
+                            else return 1 + Size(val.v),
     (is_CONT(val))       -> return 1,
-    (is_RETURN(val))     -> return 1, 
-    (is_OverOPFN(val))   -> return 16 + SizeOverload(val.overload), 
+    (is_RETURN(val))     -> return 1,
+    (is_OverOPFN(val))   -> return 16 + SizeOverload(val.overload),
     (is_OBJ(val))        -> return 8 + SizeInstStruct(val.ins) + SizeHist(val.hist),
     (is_OBJ_Ref(val))    -> return 8
    end;
@@ -692,16 +687,16 @@ SizeCompExplFN(val) ==
   (dcl sum : nat := if val.objref = nil
                     then 8
                     else 16;
-   
+
    for fn in val.fl do
      sum := sum + SizeExplFN(fn);
 
    return sum);
-  
+
 SizeExplFN: ExplFN ==> nat
 SizeExplFN(mk_ExplFN(-,-,-,env,tm,-,-,-,-,-)) ==
   (dcl sum : nat := 128 + 16 * card dom env.id_m;
-   
+
    sum := sum + 16 * card dom tm;
 
    return sum);
@@ -715,7 +710,7 @@ SizeExplOP(mk_ExplOP(-,-,-,-,-,-,-,-,-,-,-)) ==
 SizeExplPOLY: ExplPOLY ==> nat
 SizeExplPOLY(mk_ExplPOLY(tvl,-,-,-,env,-,-,-,-)) ==
   (dcl sum : nat := 128 + 16 * card dom env.id_m;
-   
+
    sum := sum + 16 * len tvl;
 
    return sum);
@@ -723,7 +718,7 @@ SizeExplPOLY(mk_ExplPOLY(tvl,-,-,-,env,-,-,-,-)) ==
 SizeValSeq: seq of VAL ==> nat
 SizeValSeq(val_l) ==
   (dcl sum : nat := 8;
-   
+
    for val in val_l do
      sum := sum + Size(val);
 
@@ -732,7 +727,7 @@ SizeValSeq(val_l) ==
 SizeValSet: set of VAL ==> nat
 SizeValSet(val_s) ==
   (dcl sum : nat := 8;
-   
+
    for all val in set val_s do
      sum := sum + Size(val);
 
@@ -741,7 +736,7 @@ SizeValSet(val_s) ==
 SizeValMap: map VAL to VAL ==> nat
 SizeValMap(val_m) ==
   (dcl sum : nat := 8;
-   
+
    for all d_val in set dom val_m do
      sum := sum + Size(d_val) + Size(val_m(d_val));
 
@@ -750,7 +745,7 @@ SizeValMap(val_m) ==
 SizeNatValMap: map nat to VAL ==> nat
 SizeNatValMap(val_m) ==
   (dcl sum : nat := 8;
-   
+
    for all val in set dom val_m do
      sum := sum + 32 + Size(val_m(val));
 
@@ -759,7 +754,7 @@ SizeNatValMap(val_m) ==
 SizeOverload: map (AS`Name * AS`Name) to ((seq of AS`Type) * AS`Access * [VAL]) ==> nat
 SizeOverload(over_m) ==
   (dcl sum : nat := 8;
-   
+
    for all nmpair in set dom over_m do
      sum := sum + 32 + 16 * len (over_m(nmpair).#1);
 
@@ -768,7 +763,7 @@ SizeOverload(over_m) ==
 SizeInstStruct: InsStrct ==> nat
 SizeInstStruct(ins_m) ==
   (dcl sum : nat := 8;
-   
+
    for all nm in set dom ins_m do
      sum := sum + SizeValueMap(ins_m(nm));
 
@@ -777,28 +772,28 @@ SizeInstStruct(ins_m) ==
 SizeValueMap: GLOBAL`ValueMap ==> nat
 SizeValueMap(val_m) ==
   (dcl sum : nat := 8;
-   
+
    for all nm in set dom val_m do
      let mk_(val,-) = val_m(nm)
      in
        sum := sum + 2 + Size(val);
 
    return sum);
-  
+
 SizeHist: map AS`Name to History ==> nat
 SizeHist(hist_m) ==
   (dcl sum : nat := 8;
-   
+
    for all - in set dom hist_m do
      sum := sum + 3 * 16;
 
    return sum);
-  
+
 functions
 
 Val2String: VAL -> seq of char
 Val2String(val) ==
-   cases true: 
+   cases true:
     (is_BOOL(val))       -> if val.v then "true " else "false ",
     (is_NUM(val))        -> Num2String(val.v),
     (is_CHAR(val))       -> "'" ^ [val.v] ^ "'",
@@ -811,20 +806,20 @@ Val2String(val) ==
     (is_SET(val))        -> "{ " ^ ValSet2String(val.v) ^ " }",
     (is_MAP(val))        -> "{ " ^ ValMap2String(val.v) ^ " }",
     (is_TUPLE(val))      -> "mk_( " ^ ValSeq2String(val.v) ^ " )",
-    (is_REC(val))        -> "mk_" ^ Ids2String(val.tag.ids) ^ "( " ^ 
+    (is_REC(val))        -> "mk_" ^ Ids2String(val.tag.ids) ^ "( " ^
                             ValNatMap2String(val.v,val.v_dc) ^ " )",
     (is_TOKEN(val))      -> "mk_token( " ^ Val2String(val.v) ^ " )",
     (is_UNDEF(val))      -> "undefined ",
-    (is_EXIT(val))       -> "exit " ^ if val.v = nil 
-                                      then "" 
-                                      else "with " ^ Val2String(val.v), 
+    (is_EXIT(val))       -> "exit " ^ if val.v = nil
+                                      then ""
+                                      else "with " ^ Val2String(val.v),
     (is_CONT(val))       -> "Continue ",
-    (is_RETURN(val))     -> "Return ", 
+    (is_RETURN(val))     -> "Return ",
     (is_OverOPFN(val))   -> "Overloaded op/fn",
     (is_OBJ(val))        -> "Object value",
     (is_OBJ_Ref(val))    -> "objref" ^ Num2String(val.ref)
    end;
- 
+
 Num2String: real -> seq of char
 Num2String(r) ==
   let sign = if r < 0 then "-" else ""
@@ -834,7 +829,7 @@ Num2String(r) ==
     else let r1 = floor r,
              r2 = 1E6 * (r - floor abs r)
          in
-           sign ^ UTIL`itoa(abs r1) ^ "." ^ UTIL`itoa(floor abs r2); 
+           sign ^ UTIL`itoa(abs r1) ^ "." ^ UTIL`itoa(floor abs r2);
 
 ValSeq2String: seq of VAL -> seq of char
 ValSeq2String(v_l) ==
@@ -850,7 +845,7 @@ ValSet2String(v_s) ==
   if v_s = {}
   then " "
   else let e in set v_s in
-         Val2String(e) ^ 
+         Val2String(e) ^
          if card v_s = 1
          then ""
          else ", " ^ ValSet2String(v_s \ {e});
@@ -861,7 +856,7 @@ ValNatMap2String(v_m1,v_m2) ==
   then " "
   else let e = UTIL`minset(dom v_m1 union dom v_m2)
        in
-         Val2String(if e in set dom v_m1 then v_m1(e) else v_m2(e)) ^ 
+         Val2String(if e in set dom v_m1 then v_m1(e) else v_m2(e)) ^
          if card dom v_m1 + card dom v_m2 = 1
          then ""
          else ", " ^ ValNatMap2String({e} <-: v_m1, {e} <-: v_m2);
@@ -871,7 +866,7 @@ ValMap2String(v_m) ==
   if v_m = {|->}
   then " "
   else let e in set dom v_m in
-         Val2String(e) ^ "|->" ^ Val2String(v_m(e)) ^ 
+         Val2String(e) ^ "|->" ^ Val2String(v_m(e)) ^
          if card dom v_m = 1
          then ""
          else ", " ^ ValMap2String({e} <-: v_m);

@@ -501,7 +501,6 @@ ClassMethodTable realT[] = {
  {L"*", L"floatValue"},
  {NULL, NULL}
 };
-#endif // VDMPP
 
 // JavaAccess
 // acc : AS`Access
@@ -517,7 +516,6 @@ TYPE_CPP_Modifier vdmcg::JavaAccess (const Int & acc)
  }
 }
 
-#ifdef VDMPP
 // UnQClassType
 // tp : REP`ObjRefTypeRep
 // -> REP`ObjRefTypeRep
@@ -604,21 +602,34 @@ Generic vdmcg::FindType(const Record & expr)
       TYPE_CI_ContextId cid (ASTAUX::GetCid (expr));
       Generic cti (GetCI().GetTypeInfo(cid));
 
-      Generic qti (vdm_CPP_isCPP() ? GenRQComp(GiveCurCASName(), cti) : cti);
+      Generic qti;
+#ifdef VDMPP
+      if (vdm_CPP_isJAVA()) {
+        qti = cti;
+      }
+      else
+#endif // VDMPP
+      {
+        qti = GenRQComp(GiveCurCASName(), cti);
+      }
 
       Generic reptp = Nil();
-      if (!qti.IsNil())
+      if (!qti.IsNil()) {
         reptp = CleanFlatType(qti);
+      }
 
 //wcout << "expr: " << expr << endl;
 //wcout << "reptp: " << reptp << endl;
 
 #ifdef VDMPP
-      if (reptp.Is (TAG_TYPE_REP_ObjRefTypeRep))
+      if (reptp.Is (TAG_TYPE_REP_ObjRefTypeRep)) {
         return UnQClassType (reptp);
+      }
       else
 #endif // VDMPP
+      {
         return reptp;
+      }
     }
 
     // Basic types
@@ -633,87 +644,92 @@ Generic vdmcg::FindType(const Record & expr)
     case TAG_TYPE_AS_TextLit: {
       return mk_REP_SeqTypeRep(mk_REP_CharTypeRep());
     }
-   case TAG_TYPE_AS_QuoteLit: {
-     TYPE_AS_Id val (expr.GetSequence(pos_AS_QuoteLit_val));
-     const TYPE_CI_ContextId & cid (expr.GetInt(pos_AS_QuoteLit_cid));
-     InsertQuote(val);
-     return mk_REP_QuoteTypeRep(ASTAUX::MkNameFromId(val, cid));
-   }
-   case TAG_TYPE_AS_RealLit: {
-//     double v = expr.GetReal(pos_AS_RealLit_val).GetValue();
-     const Real & v (expr.GetReal(pos_AS_RealLit_val)); // 20100302
-     const TYPE_CI_ContextId & cid (expr.GetInt(pos_AS_RealLit_cid));
-     if (cid != NilContextId)
-     {
-       TYPE_REP_TypeRep tp (GetCI().GetTypeInfo(cid));
-       if (tp.Is(TAG_TYPE_REP_NumericTypeRep))
-         return tp;
-     }
-     if (v.IsInt())
-     {
-       if (v.IsNatOne())
-         return mk_REP_NumericTypeRep(Int(NATONE));
-       else if (v.IsNat())
-         return mk_REP_NumericTypeRep(Int(NAT));
-       else
-         return mk_REP_NumericTypeRep(Int(INTEGER));
-     }
-     else
-       return mk_REP_NumericTypeRep(Int(REAL));
-   }
-   case TAG_TYPE_AS_NumLit: {
-     const Real & v (expr.GetReal(pos_AS_NumLit_val));
-     const TYPE_CI_ContextId & cid (expr.GetInt(pos_AS_NumLit_cid));
-     if (cid != NilContextId)
-     {
-       TYPE_REP_TypeRep tp (GetCI().GetTypeInfo(cid));
-       if (tp.Is(TAG_TYPE_REP_NumericTypeRep))
-         return tp;
-     }
-     if (v.IsNatOne())
-       return mk_REP_NumericTypeRep(Int(NATONE));
-     else if (v.IsNat())
-       return mk_REP_NumericTypeRep(Int(NAT));
-     else
-       return mk_REP_NumericTypeRep(Int(INTEGER));
-   }
-   case TAG_TYPE_AS_NilLit: {
-     return mk_REP_NilTypeRep();
-   }
-   case TAG_TYPE_AS_UndefinedExpr:
-     return mk_REP_AllTypeRep();
-
+    case TAG_TYPE_AS_QuoteLit: {
+      TYPE_AS_Id val (expr.GetSequence(pos_AS_QuoteLit_val));
+      const TYPE_CI_ContextId & cid (expr.GetInt(pos_AS_QuoteLit_cid));
+#ifdef VDMPP
+      InsertQuote(val);
+#endif // VDMPP
+      return mk_REP_QuoteTypeRep(ASTAUX::MkNameFromId(val, cid));
+    }
+    case TAG_TYPE_AS_RealLit: {
+      const Real & v (expr.GetReal(pos_AS_RealLit_val));
+      const TYPE_CI_ContextId & cid (expr.GetInt(pos_AS_RealLit_cid));
+      if (cid != NilContextId) {
+        TYPE_REP_TypeRep tp (GetCI().GetTypeInfo(cid));
+        if (tp.Is(TAG_TYPE_REP_NumericTypeRep)) {
+          return tp;
+        }
+      }
+      if (v.IsInt()) {
+        if (v.IsNatOne()) {
+          return mk_REP_NumericTypeRep(Int(NATONE));
+        }
+        else if (v.IsNat()) {
+          return mk_REP_NumericTypeRep(Int(NAT));
+        }
+        else {
+          return mk_REP_NumericTypeRep(Int(INTEGER));
+        }
+      }
+      else {
+        return mk_REP_NumericTypeRep(Int(REAL));
+      }
+    }
+    case TAG_TYPE_AS_NumLit: {
+      const Real & v (expr.GetReal(pos_AS_NumLit_val));
+      const TYPE_CI_ContextId & cid (expr.GetInt(pos_AS_NumLit_cid));
+      if (cid != NilContextId) {
+        TYPE_REP_TypeRep tp (GetCI().GetTypeInfo(cid));
+        if (tp.Is(TAG_TYPE_REP_NumericTypeRep))
+          return tp;
+      }
+       if (v.IsNatOne()) {
+        return mk_REP_NumericTypeRep(Int(NATONE));
+      }
+      else if (v.IsNat()) {
+        return mk_REP_NumericTypeRep(Int(NAT));
+      }
+      else {
+        return mk_REP_NumericTypeRep(Int(INTEGER));
+      }
+    }
+    case TAG_TYPE_AS_NilLit: {
+      return mk_REP_NilTypeRep();
+    }
+    case TAG_TYPE_AS_UndefinedExpr: {
+      return mk_REP_AllTypeRep();
+    }
     // Other VDM++ constructs
 #ifdef VDMPP
-   case TAG_TYPE_AS_NewExpr: {
-     TYPE_AS_NewExpr ne (expr);
-     return mk_REP_ObjRefTypeRep(expr.GetRecord(pos_AS_NewExpr_cls));
-   }
+    case TAG_TYPE_AS_NewExpr: {
+      TYPE_AS_NewExpr ne (expr);
+      return mk_REP_ObjRefTypeRep(expr.GetRecord(pos_AS_NewExpr_cls));
+    }
 #endif //VDMPP
-   case TAG_TYPE_AS_SetUnionPattern:
-   case TAG_TYPE_AS_SeqConcPattern:
-   case TAG_TYPE_AS_MapMergePattern:
-   case TAG_TYPE_AS_MapletPattern:
-     return mk_REP_AllTypeRep();
+    case TAG_TYPE_AS_SetUnionPattern:
+    case TAG_TYPE_AS_SeqConcPattern:
+    case TAG_TYPE_AS_MapMergePattern:
+    case TAG_TYPE_AS_MapletPattern: {
+      return mk_REP_AllTypeRep();
+    }
 #ifdef VDMPP
-   case TAG_TYPE_AS_ActExpr:
-   case TAG_TYPE_AS_FinExpr:
-   case TAG_TYPE_AS_ActiveExpr:
-   case TAG_TYPE_AS_WaitingExpr:
-   case TAG_TYPE_AS_ReqExpr:
-   case TAG_TYPE_AS_ThreadIdExpr:
-     return mk_REP_NumericTypeRep(Int(NAT));
-   case TAG_TYPE_AS_GuardExpr:
-     return TYPE_REP_BooleanTypeRep();
+    case TAG_TYPE_AS_ActExpr:
+    case TAG_TYPE_AS_FinExpr:
+    case TAG_TYPE_AS_ActiveExpr:
+    case TAG_TYPE_AS_WaitingExpr:
+    case TAG_TYPE_AS_ReqExpr:
+    case TAG_TYPE_AS_ThreadIdExpr: {
+      return mk_REP_NumericTypeRep(Int(NAT));
+    }
+    case TAG_TYPE_AS_GuardExpr: {
+      return TYPE_REP_BooleanTypeRep();
+    }
 #endif // VDMPP
-   default:
-//#ifdef VDMSL
-     ReportUndefined(L"FindType");
-//#endif // VDMSL
-//#ifdef VDMPP
-//     ReportUndefined(L"FindType: " + MPP::MiniPP(INT2Q::h2gAS(expr)));
-//#endif // VDMPP
-     return Record(0,0); // To avoid warnings
+    default: {
+      ReportUndefined(L"FindType");
+      return Record(0,0); // To avoid warnings
+    }
   }
 }
 
@@ -824,12 +840,10 @@ MAP<TYPE_AS_Name, TYPE_REP_TypeRep> vdmcg::FindPatIdMap(const TYPE_AS_Expr& expr
   MAP<TYPE_AS_Name, TYPE_REP_TypeRep> res_m;
   SET<TYPE_AS_Name> dom_pid_m (pid_m.Dom());
   Generic nm;
-  for (bool bb = dom_pid_m.First(nm); bb; bb = dom_pid_m.Next(nm))
-  {
+  for (bool bb = dom_pid_m.First(nm); bb; bb = dom_pid_m.Next(nm)) {
     TYPE_REP_TypeRep tp (pid_m[nm]);
     TYPE_REP_TypeRep newtp (RemoveInvType(CleanFlatType(tp)));
-    while (tp != newtp)
-    {
+    while (tp != newtp) {
       tp = newtp;
       newtp = RemoveInvType(CleanFlatType(tp));
     }
@@ -861,14 +875,17 @@ bool vdmcg::IsSeqOfCPPStmt(const Generic & cp )
       case TAG_TYPE_CPP_Return:
       case TAG_TYPE_CPP_Goto:
       case TAG_TYPE_CPP_DeclarationStmt:
-      case TAG_TYPE_CPP_IncludeStmt:
+      case TAG_TYPE_CPP_IncludeStmt: {
         return true;
-      default:
+      }
+      default: {
         return false;
+      }
     }
   }
-  else
+  else {
     return false;
+  }
 }
 
 // CleanFlatType
@@ -877,20 +894,12 @@ bool vdmcg::IsSeqOfCPPStmt(const Generic & cp )
 TYPE_REP_TypeRep vdmcg::CleanFlatType(const TYPE_REP_TypeRep & reptp)
 {
   TYPE_REP_TypeRep tp;
-  if (vdm_CPP_isCPP())
-  {
-    tp = reptp;
-  }
-  else
-  { // java
-    if (reptp.Is(TAG_TYPE_REP_TypeNameRep))
-    {
+  SET<TYPE_REP_TypeNameRep> ss;
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    if (reptp.Is(TAG_TYPE_REP_TypeNameRep)) {
       const TYPE_AS_Name & nm (reptp.GetRecord(pos_REP_TypeNameRep_nm));
       Generic qnm;
-#ifdef VDMSL
-      qnm = GenQName(nm);
-#endif // VDMSL
-#ifdef VDMPP
       qnm = GenRootType(GenQName(nm)); // [AS`Name] | REP`TypeRep
       if (qnm.IsNil()) {
         tp = reptp;
@@ -898,31 +907,29 @@ TYPE_REP_TypeRep vdmcg::CleanFlatType(const TYPE_REP_TypeRep & reptp)
       else if (!qnm.Is(TAG_TYPE_AS_Name)) {
         tp = qnm;
       }
-      else
-#endif // VDMPP
-      {
+      else {
         tp = mk_REP_TypeNameRep(qnm);
       }
     }
-    else
+    else {
       tp = reptp;
-  }
-
-  SET<TYPE_REP_TypeNameRep> ss;
-#ifdef VDMPP
-  if (vdm_CPP_isJAVA()) {
+    }
     Generic extp (ExpandTypeRep(tp, Set()));
     TYPE_REP_TypeRep thistp (CleanAndFlattenType(extp));
     if (tp.Is(TAG_TYPE_REP_TypeNameRep) &&
         thistp.Is(TAG_TYPE_REP_UnionTypeRep) &&
-        IsCompositeType(thistp))
+        IsCompositeType(thistp)) {
       ss.Insert(tp);
+    }
   }
+  else
 #endif // VDMPP
+  { // C++
+    tp = reptp;
+  }
 
   Generic exp_tp (ExpandTypeRep(tp, ss));
   return CleanAndFlattenType(exp_tp);
-  //return OptimizeType(clean_tp);
 }
 
 // ExpandTypeRep
@@ -980,40 +987,47 @@ TYPE_REP_TypeRep vdmcg::ExpandTypeRep(const TYPE_REP_TypeRep & tp, const SET<TYP
                                tp.GetRecord(pos_REP_InvTypeRep_invariant));
     }
     case TAG_TYPE_REP_TypeNameRep: {
-      if (nms.InSet(tp))
+      if (nms.InSet(tp)) {
         return tp;
-      else
-      {
+      }
+      else {
         return ExpandTypeRep(LOT(tp), nms.Union(mk_set(tp)));
       }
     }
-// 20120912 -->
 #ifdef VDMSL
     case TAG_TYPE_REP_CompositeTypeRep: {
       const TYPE_AS_Name & tag (tp.GetRecord(pos_REP_CompositeTypeRep_nm));
       Set imported (get_imported_types());
-      if (imported.InSet(tag))
+      if (imported.InSet(tag)) {
         return ExpandTypeRep(LOT(mk_REP_TypeNameRep(tag)), nms);
+      }
       return tp; 
     }
 #endif // VDMSL
-// <-- 20120912
-// 20121113 -->
     case TAG_TYPE_REP_OpTypeRep: {
-      if (vdm_CPP_isCPP())
+#ifdef VDMPP
+      if (vdm_CPP_isJAVA()) {
+        return tp;
+      }
+      else
+#endif // VDMPP
       {
         const SEQ<TYPE_REP_TypeRep> & dtpl (tp.GetSequence(pos_REP_OpTypeRep_Dom));
         SEQ<TYPE_REP_TypeRep> new_dtpl;
         size_t len_dtpl = dtpl.Length();
-        for (size_t idx = 1; idx <= len_dtpl; idx++)
+        for (size_t idx = 1; idx <= len_dtpl; idx++) {
           new_dtpl.ImpAppend(ExpandTypeRep(dtpl[idx], nms));
+        }
         return mk_REP_OpTypeRep(new_dtpl, ExpandTypeRep(tp.GetRecord(pos_REP_OpTypeRep_Rng), nms));
       }
-      else
-        return tp;
     }
     case TAG_TYPE_REP_PartialFnTypeRep: {
-      if (vdm_CPP_isCPP())
+#ifdef VDMPP
+      if (vdm_CPP_isJAVA()) {
+        return tp;
+      }
+      else
+#endif // VDMPP
       {
         const SEQ<TYPE_REP_TypeRep> & dtpl (tp.GetSequence(pos_REP_PartialFnTypeRep_fndom));
         SEQ<TYPE_REP_TypeRep> new_dtpl;
@@ -1023,11 +1037,14 @@ TYPE_REP_TypeRep vdmcg::ExpandTypeRep(const TYPE_REP_TypeRep & tp, const SET<TYP
         return mk_REP_PartialFnTypeRep(new_dtpl,
                                        ExpandTypeRep(tp.GetRecord(pos_REP_PartialFnTypeRep_fnrng), nms));
       }
-      else
-        return tp;
     }
     case TAG_TYPE_REP_TotalFnTypeRep: {
-      if (vdm_CPP_isCPP())
+#ifdef VDMPP
+      if (vdm_CPP_isJAVA()) {
+        return tp;
+      }
+      else
+#endif // VDMPP
       {
         const SEQ<TYPE_REP_TypeRep> & dtpl (tp.GetSequence(pos_REP_TotalFnTypeRep_fndom));
         SEQ<TYPE_REP_TypeRep> new_dtpl;
@@ -1036,12 +1053,10 @@ TYPE_REP_TypeRep vdmcg::ExpandTypeRep(const TYPE_REP_TypeRep & tp, const SET<TYP
           new_dtpl.ImpAppend(ExpandTypeRep(dtpl[idx], nms));
         return mk_REP_TotalFnTypeRep(new_dtpl, ExpandTypeRep(tp.GetRecord(pos_REP_TotalFnTypeRep_fnrng), nms));
       }
-      else
-        return tp;
     }
-// <-- 20121113
-    default:
+    default: {
       return tp;
+    }
   }
 }
 
@@ -1560,15 +1575,16 @@ TYPE_REP_TypeRep vdmcg::FromAS2RepTypeAux(const Generic & atype)
       const TYPE_AS_QuoteLit & t (at.GetRecord(pos_AS_QuoteType_lit));
       const TYPE_AS_Id & name (t.GetSequence(pos_AS_QuoteLit_val));
       const TYPE_CI_ContextId & cid (t.GetInt(pos_AS_QuoteLit_cid)); 
+#ifdef VDMPP
       InsertQuote(name);
+#endif // VDMPP
       return mk_REP_QuoteTypeRep(ASTAUX::MkNameFromId(name, cid));
     }
     case TAG_TYPE_AS_CompositeType: {
       const SEQ<TYPE_AS_Field> & fields (at.GetSequence(pos_AS_CompositeType_fields));
       SEQ<TYPE_REP_FieldRep> fds;
       size_t len_fields = fields.Length();
-      for (size_t idx = 1; idx <= len_fields; idx++)
-      {
+      for (size_t idx = 1; idx <= len_fields; idx++) {
         const TYPE_AS_Field & field (fields[idx]);
         fds.ImpAppend(mk_REP_FieldRep(field.GetField(pos_AS_Field_sel),
                                       FromAS2RepTypeAux(field.GetRecord(pos_AS_Field_type)),
@@ -1726,9 +1742,16 @@ TYPE_CPP_Stmt vdmcg::RunTime(const wstring & mess)
 // -> CPP`Expr
 TYPE_CPP_Expr vdmcg::RunTimeExpr(const TYPE_AS_Id & mess)
 {
-  TYPE_CPP_Identifier fname (vdm_CPP_isCPP() ? vdm_BC_GenIdentifier(ASTAUX::MkId(L"CGUTIL::RunTime"))
-                                             : vdm_BC_GenIdentifier(ASTAUX::MkId(L"UTIL.RunTime")));
-
+  TYPE_CPP_Identifier fname;
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    fname = vdm_BC_GenIdentifier(ASTAUX::MkId(L"UTIL.RunTime"));
+  }
+  else
+#endif // VDMPP
+  {
+    fname = vdm_BC_GenIdentifier(ASTAUX::MkId(L"CGUTIL::RunTime"));
+  }
   return vdm_BC_GenFctCall(fname, mk_sequence(vdm_BC_GenStringLit(mess)));
 }
 
@@ -1737,8 +1760,17 @@ TYPE_CPP_Expr vdmcg::RunTimeExpr(const TYPE_AS_Id & mess)
 // -> CPP`Stmt
 TYPE_CPP_Stmt vdmcg::NotSupported(const wstring & cst, const Record & r)
 {
-  TYPE_CPP_Identifier id (vdm_CPP_isCPP() ? vdm_BC_GenIdentifier(ASTAUX::MkId(L"CGUTIL::NotSupported"))
-                                          : vdm_BC_GenIdentifier(ASTAUX::MkId(L"UTIL.NotSupported")));
+  TYPE_CPP_Identifier id;
+#ifdef VDMPP
+  if (vdm_CPP_isJAVA()) {
+    SetNotSupportedException(true);
+    id = vdm_BC_GenIdentifier(ASTAUX::MkId(L"UTIL.NotSupported"));
+  }
+  else
+#endif // VDMPP
+  {
+    id = vdm_BC_GenIdentifier(ASTAUX::MkId(L"CGUTIL::NotSupported"));
+  }
 
   GetStatSem().GenErr(r, StatSem::WRN1, 357, mk_sequence(SEQ<Char>(cst)));
 
@@ -2143,12 +2175,16 @@ bool vdmcg::IsNumType(const TYPE_REP_TypeRep & type) const
       SET<TYPE_REP_TypeRep> tp_s (type.GetSet(pos_REP_UnionTypeRep_tps));
       bool forall = true;
       Generic tp;
-      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp))
-      {
-        if (tp.Is(TAG_TYPE_REP_NilTypeRep))
+      for (bool bb = tp_s.First(tp); bb && forall; bb = tp_s.Next(tp)) {
+#ifdef VDMPP
+        if (tp.Is(TAG_TYPE_REP_NilTypeRep)) {
           forall = vdm_CPP_isJAVA();
+        }
         else
+#endif //VDMPP
+        {
           forall = IsNumType(tp);
+        }
       }
       return forall;
     }
@@ -5103,8 +5139,7 @@ void vdmcg::CurrentMethod(const TYPE_AS_Name& nm)
   this->sc = 0;
 }
 
-SEQ<Char> vdmcg::GiveOrgnFileName()
-{
+SEQ<Char> vdmcg::GiveOrgnFileName() {
   if (this->cc != TYPE_AS_Name())
   {
     Tuple flcp (GetCI().GetFileLineColPos(this->cc.GetInt(pos_AS_Name_cid)));
@@ -5121,17 +5156,12 @@ void vdmcg::UseAuxFct()
 {
   this->auxfct = true;
 }
-#endif // VDMPP
 
 // IsAbstract
 // ==> bool
 bool vdmcg::IsAbstract ()
 {
-  return this->isabstract
-#ifdef VDMPP
-         || HasAbstractMethods()
-#endif //VDMPP
-  ;
+  return this->isabstract || HasAbstractMethods() ;
 }
 
 // ThrowsException
@@ -5184,6 +5214,9 @@ void vdmcg::DefineClassAsAbstract ()
 void vdmcg::SetException (bool b)
 {
   this->throwException = b;
+  if (!b) {
+    SetNotSupportedException(false);
+  }
 }
 
 // SetNotSupportedException
@@ -5236,109 +5269,87 @@ void vdmcg::InsertImport(const SEQ<Char> & ch_l)
 // ==> ()
 void vdmcg::InsertJDKImport(const wstring & ch_l)
 {
-#ifdef VDMPP
-// 20120702 -->
   TYPE_AS_Name jdknm (ASTAUX::MkNameFromId(ASTAUX::MkId(L"JDK_" + ch_l), NilContextId)); 
-  if (packageNames.DomExists(jdknm))
-  {
+  if (packageNames.DomExists(jdknm)) {
     SEQ<Char> pnm (packageNames[jdknm]);
     InsertImport(pnm.ImpConc(ASTAUX::MkId(L"." + ch_l)));
     return;
   }
-// <-- 20120702
   bool exists = false;
   int index = 0;
-  while (!java_util[index].empty() && !exists)
-  {
+  while (!java_util[index].empty() && !exists) {
     exists = (java_util[index] == ch_l);
     index++;
   }
-  if (exists)
-  {
+  if (exists) {
     InsertImport(SEQ<Char>(wstring(L"java.util.") + ch_l));
     return;
   }
   index = 0;
-  while (!java_sql[index].empty() && !exists)
-  {
+  while (!java_sql[index].empty() && !exists) {
     exists = (java_sql[index] == ch_l);
     index++;
   }
-  if (exists)
-  {
+  if (exists) {
     InsertImport(SEQ<Char>(wstring(L"java.sql.") + ch_l));
     return;
   }
   index = 0;
-  while (!java_io[index].empty() && !exists)
-  {
+  while (!java_io[index].empty() && !exists) {
     exists = (java_io[index] == ch_l);
     index++;
   }
-  if (exists)
-  {
+  if (exists) {
     InsertImport(SEQ<Char>(wstring(L"java.io.") + ch_l));
     return;
   }
   index = 0;
-  while (!java_net[index].empty() && !exists)
-  {
+  while (!java_net[index].empty() && !exists) {
     exists = (java_net[index] == ch_l);
     index++;
   }
-  if (exists)
-  {
+  if (exists) {
     InsertImport(SEQ<Char>(wstring(L"java.net.") + ch_l));
     return;
   }
   index = 0;
-  while (!java_security[index].empty() && !exists)
-  {
+  while (!java_security[index].empty() && !exists) {
     exists = (java_security[index] == ch_l);
     index++;
   }
-  if (exists)
-  {
+  if (exists) {
     InsertImport(SEQ<Char>(wstring(L"java.security.") + ch_l));
     return;
   }
   index = 0;
-  while (!java_security_cert[index].empty() && !exists)
-  {
+  while (!java_security_cert[index].empty() && !exists) {
     exists = (java_security_cert[index] == ch_l);
     index++;
   }
-  if (exists)
-  {
+  if (exists) {
     InsertImport(SEQ<Char>(wstring(L"java.security.cert.") + ch_l));
     return;
   }
   index = 0;
-  while (!java_math[index].empty() && !exists)
-  {
+  while (!java_math[index].empty() && !exists) {
     exists = (java_math[index] == ch_l);
     index++;
   }
-  if (exists)
-  {
+  if (exists) {
     InsertImport(SEQ<Char>(wstring(L"java.math.") + ch_l));
     return;
   }
   index = 0;
-  while (!java_nio[index].empty() && !exists)
-  {
+  while (!java_nio[index].empty() && !exists) {
     exists = (java_nio[index] == ch_l);
     index++;
   }
-  if (exists)
-  {
+  if (exists) {
     InsertImport(SEQ<Char>(wstring(L"java.nio.") + ch_l));
     return;
   }
-#endif // VDMPP
 }
 
-#ifdef VDMPP
 // GetValState
 // ==> bool
 bool vdmcg::GetValState() const
@@ -6532,6 +6543,7 @@ TYPE_AS_Id vdmcg::GenFileExt(const TYPE_AS_Id & fnm)
   return filename.ImpConc(ASTAUX::MkId(TBUTILS::GetCGExt()));
 }
 
+#ifdef VDMPP
 // GenJavaQuoteFiles
 // ==> set of CPP`File
 SET<TYPE_CPP_File> vdmcg::GenJavaQuoteFiles()
@@ -6740,6 +6752,7 @@ Generic vdmcg::PackageToDir(const Generic & gpackage)
       return Nil();
   }
 }
+#endif // VDMPP
 
 // RemoveNil
 // type : REP`TypeRep
@@ -7119,23 +7132,17 @@ TYPE_CPP_Expr vdmcg::StripCastExpr (const TYPE_CPP_Expr & expr)
 // +> CPP`Expr
 TYPE_CPP_Expr vdmcg::StripBracketedAndCastExpr (const TYPE_CPP_Expr & expr)
 {
-  if (expr.Is(TAG_TYPE_CPP_BracketedExpr))
-    return StripBracketedAndCastExpr(expr.GetRecord(pos_CPP_BracketedExpr_expr));
-  else if (expr.Is(TAG_TYPE_CPP_CastExpr))
-    return StripBracketedAndCastExpr(expr.GetRecord(pos_CPP_CastExpr_expr));
-  else
-    return expr;
-}
-
-// StripCompoundStmt
-// stmt : CPP`Stmt
-// +> seq of CPP`Stmt
-SEQ<TYPE_CPP_Stmt> vdmcg::StripCompoundStmt (const TYPE_CPP_Stmt & stmt)
-{
-  if (stmt.Is(TAG_TYPE_CPP_CompoundStmt))
-    return stmt.GetSequence(pos_CPP_CompoundStmt_stms);
-  else
-    return mk_sequence(stmt);
+  switch (expr.GetTag()) {
+    case TAG_TYPE_CPP_BracketedExpr: {
+      return StripBracketedAndCastExpr(expr.GetRecord(pos_CPP_BracketedExpr_expr));
+    }
+    case TAG_TYPE_CPP_CastExpr: {
+      return StripBracketedAndCastExpr(expr.GetRecord(pos_CPP_CastExpr_expr));
+    }
+    default: {
+      return expr;
+    }
+  }
 }
 
 // GetOpParms

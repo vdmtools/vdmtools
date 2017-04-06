@@ -550,18 +550,14 @@ TYPE_CPP_Expr vdmcg::GenGuardExpr(const TYPE_AS_Expr & expr)
         return TYPE_CPP_Expr();
   }
 
-  if (vdm_CPP_isCPP())
-  {
-    SetNotSupportedException(true);
+  if (vdm_CPP_isCPP()) {
     return NotSupported(name + L". expression", expr);
   }
-  else
-  { // java
+  else { // java
     TYPE_CPP_Identifier gname (vdm_BC_GenIdentifier(ASTAUX::MkId(name)));
     SEQ<TYPE_CPP_Expr> exprlist;
     Generic o;
-    for (bool bb = elems.First(o); bb; bb = elems.Next(o) )
-    {
+    for (bool bb = elems.First(o); bb; bb = elems.Next(o) ) {
       TYPE_AS_Ids ids (((TYPE_AS_Name) o).get_ids());
       TYPE_CPP_Identifier mthdName (vdm_BC_GenIdentifier(ids[ids.Length()]));
       TYPE_CPP_Expr gexpr (vdm_BC_GenArrayApply(

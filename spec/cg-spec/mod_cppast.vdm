@@ -1072,10 +1072,10 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
         ScopeResIdentifier |
         ScopeResOpFctName |
         ScopeResQualifiedName |
-        ClassInstanceCreationExpr|
         ArrayInitializer |
         Name 
 #ifdef VDMPP
+        | ClassInstanceCreationExpr
         | ClassExpr
         | ArrayCreationExpr
  inv expr == (isJAVA() => not (is_PmExpr(expr)
@@ -1280,8 +1280,12 @@ specifies an enclosing loop (for continue) or any enclosing statement (for break
     qualname : QualifiedName
     CNTXT;
 
-  Name = Identifier | OperatorFunctionName | ConversionFunctionName |
-         Destructor | QualifiedName | PackageName
+  Name = Identifier |
+         OperatorFunctionName |
+         ConversionFunctionName |
+         Destructor |
+         QualifiedName |
+         PackageName
 
   inv n == (isJAVA() => not (is_ConversionFunctionName(n) or
                              is_OperatorFunctionName(n))) and

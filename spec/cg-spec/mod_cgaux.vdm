@@ -40,6 +40,7 @@ exports all
 definitions
 \end{vdm_al}
 
+#ifdef VDMPP
 The function {\em JavaAccess} records the correspondance between access
 modifiers in VDM's abstract syntax and Java modifiers. This map is
 checked when an access modifier is translated. Thus changes to policy
@@ -57,6 +58,7 @@ functions
       (<PUBLIC_AS>)    -> BC`GenModifier(<PUBLIC>)
     end;
 \end{vdm_al}     
+#endif VDMPP
 
 The function {\em FindType} is used to extract the type representation of
 an expression or a pattern. This function should {\em always\/} be used
@@ -132,15 +134,22 @@ FindType( expr ) ==
     in
      (dcl qti : [REP`TypeRep],
           reptp : [REP`TypeRep] := nil;
-      if CPP`isCPP() 
-      then qti := TPGEN`GenRQComp(GiveCurCASName(), cti)
-      else qti := cti;
+
+#ifdef VDMPP
+      if CPP`isJAVA() 
+      then
+        qti := cti
+      else
+#endif VDMPP
+        qti := TPGEN`GenRQComp(GiveCurCASName(), cti);
+
       if qti <> nil
       then reptp := CleanFlatType(qti);
+
 #ifdef VDMPP
       if is_REP`ObjRefTypeRep (reptp)
       then
-        UnQClassType (reptp)
+        return UnQClassType (reptp)
       else
 #endif VDMPP
         return reptp
@@ -151,7 +160,9 @@ FindType( expr ) ==
   (is_AS`CharLit(expr))               -> return mk_REP`CharTypeRep(),   
   (is_AS`TextLit(expr))               -> return mk_REP`SeqTypeRep(mk_REP`CharTypeRep()),
   (is_AS`QuoteLit(expr))              -> def mk_AS`QuoteLit(v,cid) = expr;
+#ifdef VDMPP
                                              - = InsertQuote(v)
+#endif VDMPP
                                          in
                                            return mk_REP`QuoteTypeRep(mk_AS`Name([v], cid)),
   (is_AS`RealLit(expr))               -> let mk_AS`RealLit(v,cid) = expr
@@ -308,39 +319,32 @@ CleanFlatType: REP`TypeRep ==> REP`TypeRep
 CleanFlatType(reptp) ==
  (dcl tp : REP`TypeRep,
       ss : set of REP`TypeRep := {};
-  if CPP`isCPP()
-  then tp := reptp
-  elseif is_REP`TypeNameRep(reptp) 
-  then def mk_REP`TypeNameRep(nm) = reptp;
-#ifdef VDMSL
-           qnm = TPGEN`GenQName(nm)
-       in
-#endif VDMSL
-#ifdef VDMPP
-           qnm = TPGEN`GenRootType(TPGEN`GenQName(nm))
-       in
-         if qnm = nil
-         then tp := reptp 
-         elseif not is_AS`Name(qnm)
-         then tp := qnm
-         else
-#endif VDMPP
-              tp := mk_REP`TypeNameRep(qnm)
-  else tp := reptp;
-
 #ifdef VDMPP
   if CPP`isJAVA()
   then
+   (if is_REP`TypeNameRep(reptp) 
+    then
+      def mk_REP`TypeNameRep(nm) = reptp;
+           qnm = TPGEN`GenRootType(TPGEN`GenQName(nm))
+      in
+        if qnm = nil
+        then tp := reptp 
+        elseif not is_AS`Name(qnm)
+        then tp := qnm
+        else tp := mk_REP`TypeNameRep(qnm)
+    else tp := reptp;
     def extp = ExpandTypeRep(tp,{});
         thistp = CleanAndFlattenType(extp);
     in                 
       if is_REP`TypeNameRep(tp) and is_REP`UnionTypeRep(thistp) and IsCompositeType(thistp)
       then ss := {tp};
+   )
+  else
 #endif VDMPP
+    tp := reptp;
 
   def exp_tp = ExpandTypeRep(tp,ss) -- expand the type
   in CleanAndFlattenType(exp_tp);      -- clean and flatten the type
---  OptimizeType(clean_tp);                  -- optimize the type
  );
 
 #ifdef VDMPP
@@ -390,24 +394,38 @@ ExpandTypeRep(tp,nms) ==
                                              then return tp'
                                              else return tp,
 #endif VDMSL
-   mk_REP`OpTypeRep(dtpl,rtp)           -> if CPP`isCPP()
-                                           then return mk_REP`OpTypeRep(
-                                                    [ExpandTypeRep(dtpl(i),nms) | i in set inds dtpl],
-                                                    ExpandTypeRep(rtp,nms))
-                                           else return tp,
-   mk_REP`PartialFnTypeRep(dtpl,rtp)    -> if CPP`isCPP()
-                                           then return mk_REP`PartialFnTypeRep(
-                                                    [ExpandTypeRep(dtpl(i),nms) | i in set inds dtpl],
-                                                    ExpandTypeRep(rtp,nms))
-                                           else return tp,
-   mk_REP`TotalFnTypeRep(dtpl,rtp)      -> if CPP`isCPP()
-                                           then return mk_REP`TotalFnTypeRep(
-                                                    [ExpandTypeRep(dtpl(i), nms) | i in set inds dtpl],
-                                                    ExpandTypeRep(rtp, nms))
-                                           else return tp,
+   mk_REP`OpTypeRep(dtpl,rtp)           ->
+#ifdef VDMPP
+                                 if CPP`isJAVA()
+                                 then
+                                   return tp
+                                 else
+#endif VDMPP
+                                   return mk_REP`OpTypeRep(
+                                          [ExpandTypeRep(dtpl(i),nms) | i in set inds dtpl],
+                                          ExpandTypeRep(rtp,nms)),
+   mk_REP`PartialFnTypeRep(dtpl,rtp)    ->
+#ifdef VDMPP
+                                 if CPP`isJAVA()
+                                 then
+                                   return tp
+                                 else
+#endif VDMPP
+                                   return mk_REP`PartialFnTypeRep(
+                                          [ExpandTypeRep(dtpl(i),nms) | i in set inds dtpl],
+                                          ExpandTypeRep(rtp,nms)),
+   mk_REP`TotalFnTypeRep(dtpl,rtp)      ->
+#ifdef VDMPP
+                                 if CPP`isJAVA()
+                                 then
+                                   return tp
+                                 else
+#endif VDMPP
+                                   return mk_REP`TotalFnTypeRep(
+                                          [ExpandTypeRep(dtpl(i), nms) | i in set inds dtpl],
+                                          ExpandTypeRep(rtp, nms)),
    others                               -> return tp
   end;
-
 
 \end{vdm_al}
 
@@ -730,7 +748,9 @@ FromAS2RepTypeAux(at) ==
     mk_AS`VoidType(-) -> return mk_REP`UnitTypeRep(),
   
     mk_AS`QuoteType(t,-) -> def mk_AS`QuoteLit(name,cid) = t;
+#ifdef VDMPP
                                 - = InsertQuote(name)
+#endif VDMPP
                             in return mk_REP`QuoteTypeRep(mk_AS`Name([name],cid)),
 
     mk_AS`CompositeType(name, fields, -) -> return 
@@ -806,18 +826,28 @@ operations
   RunTimeExpr: seq of char ==> CPP`Expr
   RunTimeExpr( mess ) ==
    (dcl fname : CPP`Expr;
-    if CPP`isCPP() 
-    then fname := BC`GenIdentifier( "CGUTIL::RunTime" )
-    else fname := BC`GenIdentifier( "UTIL.RunTime" );
+#ifdef VDMPP
+    if CPP`isJAVA()
+    then
+      fname := BC`GenIdentifier( "UTIL.RunTime" )
+    else
+#endif VDMPP
+      fname := BC`GenIdentifier( "CGUTIL::RunTime" );
     return BC`GenFctCall(fname, [BC`GenStringLit( mess )] );
    );
 
   NotSupported: seq of char ==> CPP`Stmt
   NotSupported(cst) ==
    (dcl id : CPP`Expr;
-    if CPP`isCPP()
-    then id := BC`GenIdentifier("CGUTIL::NotSupported")
-    else id := BC`GenIdentifier("UTIL.NotSupported");
+#ifdef VDMPP
+    if CPP`isJAVA()
+    then
+     (CGAUX`SetNotSupportedException(true);
+      id := BC`GenIdentifier("UTIL.NotSupported");
+     )
+    else
+#endif VDMPP
+      id := BC`GenIdentifier("CGUTIL::NotSupported");
     return BC`GenExpressionStmt(BC`GenFctCall(id, [BC`GenStringLit(cst)]));
    );
 
@@ -837,6 +867,7 @@ functions
   Combine2Names(mk_AS`Name([id1],-), mk_AS`Name(ids2,cid)) ==
      mk_AS`Name([id1,ids2(len ids2)], cid);
 
+#ifdef VDMPP
 values
   javabasic = {"child","Math", "Boolean", "Character", "Class", "ClassLoader", 
                "Compiler", "Number", "Process", "Runtime", "SecurityManager", 
@@ -952,6 +983,7 @@ values
 
   realT = { mk_("*", "doubleValue"),
             mk_("*", "floatValue") };
+#endif VDMPP
 
 operations
 
@@ -1122,9 +1154,14 @@ operations
   IsNumType(type) ==
     cases type:
       mk_REP`NumericTypeRep(-) -> return true,
-      mk_REP`UnionTypeRep(tp_s) -> if CPP`isCPP()
-                                   then return forall tp in set tp_s & IsNumType(tp)
-                                   else return forall tp in set tp_s & not is_REP`NilTypeRep(tp) => IsNumType(tp),
+      mk_REP`UnionTypeRep(tp_s) ->
+#ifdef VDMPP
+           if CPP`isJAVA()
+           then
+             return forall tp in set tp_s & not is_REP`NilTypeRep(tp) => IsNumType(tp)
+           else
+#endif VDMPP
+             return forall tp in set tp_s & IsNumType(tp),
       mk_REP`InvTypeRep(-,shape,-) -> IsNumType(shape),
       others -> return false
     end;
@@ -2674,7 +2711,6 @@ UseAuxFct() ==
   auxfct := true;
 \end{vdm_al}
 
-#endif
 
 A class is abstract if either
 \begin{itemize}
@@ -2689,9 +2725,7 @@ $HasAbstractMethods$ operation).
 IsAbstract: () ==> bool
 IsAbstract() ==
 return isabstract 
-#ifdef VDMPP
        or HasAbstractMethods()
-#endif VDMPP
 ;
 
 ThrowsException: () ==> bool
@@ -2724,7 +2758,10 @@ isabstract := true;
 
 SetException: bool ==> ()
 SetException(b) ==
-  throwException := b;
+ (throwException := b;
+  if not b
+  then SetNotSupportedException(false);
+ );
 
 SetNotSupportedException: bool ==> ()
 SetNotSupportedException(b) ==
@@ -2792,6 +2829,7 @@ UnsetValState: () ==> ()
 UnsetValState() ==
 val := false;
 \end{vdm_al}
+#endif VDMPP
 
 \begin{vdm_al}
 CurrentRType: REP`TypeRep ==> ()
@@ -3637,7 +3675,7 @@ operations
   );
 
 \end{vdm_al}
-#endif VDMPP
+--#endif VDMPP
 $GenHashMember$ generates a static private member representing the
 hash code for this class. It is initially 0.
 \begin{vdm_al}
@@ -3742,6 +3780,8 @@ PackageToDir(package) ==
   else PackageToDir(package.pn) ^ [ package.id.id ];
 \end{vdm_al}         
 
+#endif VDMPP
+
 \begin{vdm_al}
 operations
 RemoveNil: REP`TypeRep ==> REP`TypeRep
@@ -3805,13 +3845,6 @@ StripBracketedAndCastExpr(expr) ==
     others                    -> expr
   end;
 
-StripCompoundStmt: CPP`Stmt +> seq of CPP`Stmt
-StripCompoundStmt(stmt) ==
-  cases stmt:
-    mk_CPP`CompoundStmt(stmts,-) -> stmts,
-    others                       -> [stmt]
-  end;
- 
 GetOpParms : AS`OpDef -> seq of AS`Type
 GetOpParms(op) ==
   cases op:

@@ -30,9 +30,11 @@ private:
 void InitState_FCTDEF();
 TYPE_CPP_CPPAS GenFctDef_FD(const TYPE_AS_FnDef &, bool);
 Generic GenerateDlCall(const TYPE_AS_Name &, const SEQ<TYPE_CPP_ArgDecl> &, const bool&, const bool&);
-bool IsSubresp (const Record &);
 bool IsNotyetspecified (const Record &, bool, bool);
+#ifdef VDMPP
+bool IsSubresp (const Record &);
 SEQ<TYPE_CPP_Identifier> GenExceptionsHdr();
+#endif // VDMPP
 TYPE_CPP_CPPAS GenExplFctDef (const TYPE_AS_ExplFnDef &, bool, bool);
 TYPE_CPP_FctDecl GenMethodDecl(const TYPE_AS_Name &, const SEQ<TYPE_CPP_ArgDecl> &);
 Tuple GenExplFnBody(const TYPE_AS_ExplFnDef &, bool, bool, bool,

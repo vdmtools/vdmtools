@@ -95,7 +95,9 @@ private:
   TYPE_AS_Id Name2Id(const TYPE_AS_Name &);
   Map ModuleTypes2TpEnv(const TYPE_AS_Name &, const MAP<TYPE_AS_Name,TYPE_AS_TypeDef> &);
   TYPE_CPP_Identifier Id2CppGTpId(const TYPE_AS_Id & str);
+#ifdef VDMPP
   TYPE_CPP_Identifier Id2JavaGTpId(const TYPE_AS_Id & str);
+#endif //VDMPP
   TYPE_AS_Id PrefixAnonymType(const TYPE_AS_Id & id);
   TYPE_AS_Id PrefixModuleType(const TYPE_AS_Id & id);
   TYPE_AS_Id RemPrefixNum(const TYPE_AS_Id & i);
@@ -156,15 +158,14 @@ private:
                                                             const SEQ<TYPE_CPP_Identifier> &);
   SEQ<TYPE_CPP_MemberDeclaration> GenIdentDecls(const SEQ<TYPE_CPP_Identifier> &,
                                                 const MAP<TYPE_CPP_Identifier,TYPE_CPP_Name>&);
+#ifdef VDMPP
   TYPE_CPP_FunctionDefinition GenClassConstrDecl(const TYPE_CPP_Identifier &,
                                                  const SEQ<TYPE_CPP_Identifier> &,
                                                  const MAP<TYPE_CPP_Identifier,TYPE_CPP_Name> &);
   SET<TYPE_CPP_Expr> GetBasicTypes();
-#ifdef VDMPP
   TYPE_CPP_FunctionDefinition GenCloneMethod(const TYPE_CPP_Identifier &,
                                              const SEQ<TYPE_CPP_Identifier> &,
                                              const MAP<TYPE_CPP_Identifier,TYPE_CPP_Name> &);
-#endif // VDMPP
   TYPE_CPP_FunctionDefinition GenAsciiMethod(const TYPE_CPP_Identifier &,
                                              const SEQ<TYPE_CPP_Identifier> &,
                                              const MAP<TYPE_CPP_Identifier,TYPE_CPP_Name> &);
@@ -176,6 +177,7 @@ private:
                                             const SEQ<TYPE_CPP_Identifier> &,
                                             const MAP<TYPE_CPP_Identifier,TYPE_CPP_Name> &,
                                             const MAP<TYPE_CPP_Identifier,Bool> &);
+#endif // VDMPP
 //TYPE_CPP_FunctionDefinition GenLengthMethod(const TYPE_CPP_Identifier&,
 //                                            const Sequence &,
 //                                            const Map &);
@@ -205,9 +207,6 @@ private:
                                                   const TYPE_REP_CompositeTypeRep &);
   TYPE_AS_Id GetUniqueName(const TYPE_AS_Id & stem, const SET<TYPE_AS_Id> & existingNames);
   TYPE_AS_Id GenCompositeType(const TYPE_REP_CompositeTypeRep &, const Generic &, const SET<TYPE_AS_Name> &);
-#ifdef VDMPP
-  TYPE_AS_Id GenObjRefType(const TYPE_REP_ObjRefTypeRep &, const SET<TYPE_AS_Name> &);
-#endif //VDMPP
   TYPE_CPP_CPPAS GenTemplateClass(const Int &, const TYPE_CPP_Identifier &, const TYPE_CPP_TemplateClassName &);
   TYPE_CPP_CPPAS GenMapDecl(const TYPE_CPP_Identifier &, const TYPE_CPP_Identifier &, const TYPE_CPP_Identifier &);
   TYPE_AS_Id GenMapType(const TYPE_REP_TypeRep &, const TYPE_REP_TypeRep &, const SET<TYPE_AS_Name> &);
@@ -222,8 +221,9 @@ private:
   void AddRecordType(const TYPE_AS_Name &, const TYPE_AS_Name &);
 #ifdef VDMPP
   SEQ<TYPE_CPP_IdentDeclaration> GenUnionInterfaceDecl(const TYPE_AS_Name &);
-#endif //VDMPP
+  TYPE_AS_Id GenObjRefType(const TYPE_REP_ObjRefTypeRep &, const SET<TYPE_AS_Name> &);
   TYPE_CPP_CPPAS GenObjRefClass(const TYPE_AS_Name &, const SET<TYPE_AS_Name> &);
+#endif //VDMPP
   TYPE_CPP_CPPAS GenQuoteDecl(const TYPE_CPP_Identifier &);
   TYPE_CPP_CPPAS GenQuoteDef(const TYPE_CPP_Identifier &);
   TYPE_AS_Id GenCppTpDecl(const TYPE_REP_TypeRep &, const SET<TYPE_AS_Name> &);

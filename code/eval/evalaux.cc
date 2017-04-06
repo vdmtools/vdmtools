@@ -759,7 +759,23 @@ SEQ<TYPE_SEM_VAL> AUX::ValSetToSeq (const SET<TYPE_SEM_VAL> & set_sv)
 // ==> seq of SEM`VAL
 SEQ<TYPE_SEM_VAL> AUX::SetToSeq (const SET<TYPE_SEM_VAL> & s)
 {
-  return s.ToSequence();
+//  return s.ToSequence();
+  SEQ<TYPE_SEM_VAL> res;
+  SEQ<TYPE_SEM_VAL> already (s.ToSequence()); 
+  while(!already.IsEmpty()) {
+    size_t index = 1;
+    const TYPE_SEM_VAL & val(already[index]);
+    Real r (val.GetReal(pos_SEM_NUM_v));
+    for (size_t i = 2; i <= already.Length(); i++) {
+      if (r.GreaterThan(already[i].GetReal(pos_SEM_NUM_v))) {
+        index = i;
+        r = already[i].GetReal(pos_SEM_NUM_v);
+      }
+    }
+    res.ImpAppend(already[index]);
+    already.RemElem(index);
+  }
+  return res;
 }
 
 // SeqOfSetOf2SetOfSeqOf

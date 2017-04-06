@@ -123,6 +123,7 @@ end
 
 operations
 
+#ifdef VDMPP
 get_skeleton_option: () ==> bool
 get_skeleton_option() ==
 return skeleton_option;
@@ -138,6 +139,7 @@ return onlytypes_option;
 get_preandpost_option: () ==> bool
 get_preandpost_option() ==
 return preandpost_option;
+#endif VDMPP
 
 -- New option, determines whether calls to pre and post
 -- conditions should be inserted in operation/function bodies
@@ -146,6 +148,7 @@ get_testpreandpost_option: () ==> bool
 get_testpreandpost_option() ==
 return testpreandpost_option;
 
+#ifdef VDMPP
 get_smalltypes_option: () ==> bool
 get_smalltypes_option() ==
 return smalltypes_option;
@@ -157,12 +160,14 @@ return package_name;
 get_longs_option: () ==> bool
 get_longs_option() ==
 return longs_option;
+#endif VDMPP
 \end{vdm_al}
 The following option is to be implemented; it currently defaults to
 true iff we are generating Java. This option will probably be removed
 if only JDK libraries are used in the future.
 \begin{vdm_al}
 operations
+#ifdef VDMPP
 get_jdktypes_option: () ==> bool
 get_jdktypes_option() ==
 return CPP`isJAVA();
@@ -188,6 +193,7 @@ set_package_option(ch_l) ==
 set_preandpost_option: bool ==> ()
 set_preandpost_option(b) ==
 preandpost_option := b;
+#endif VDMPP
 
 set_testpreandpost_option: bool ==> ()
 set_testpreandpost_option(b) ==
@@ -197,14 +203,17 @@ set_longs_option : bool ==> ()
 set_longs_option(b) ==
 longs_option := b;
 
+#ifdef VDMPP
 set_smalltypes_option: bool ==> ()
 set_smalltypes_option(b) ==
 (if (b = true) then
    set_skeleton_option(b);
  smalltypes_option := b;
 );
+#endif VDMPP
 \end{vdm_al}
 
+#ifdef VDMPP
 Note with \texttt{set\_interfaces} that no check is made here as to
 whether a VDM++ class can validly represent an interface. This is the
 caller's responsibility.
@@ -228,8 +237,8 @@ get_j2v_option() ==
 set_j2v_option : bool ==> ()
 set_j2v_option(b) ==
   j2v_option := b;
-
 \end{vdm_al}
+#endif VDMPP
 
 \begin{vdm_al}
 operations

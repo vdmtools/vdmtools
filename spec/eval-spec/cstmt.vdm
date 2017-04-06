@@ -372,8 +372,8 @@ operations
           ;
         remove_last_res = [mk_INSTRTP`POP(1)];
         loop_body = remove_last_res ^
-                    [mk_INSTRTP`EMPTYBLKENV(<READ_ONLY>)] ^ bindArgs ^ S2I(body) ^ [mk_INSTRTP`POPBLKENV()] ^
-                    [mk_INSTRTP`INCRCOUNTER()]
+                    [mk_INSTRTP`EMPTYBLKENV(<READ_ONLY>)] ^ bindArgs ^ S2I(body) ^
+                    [mk_INSTRTP`POPBLKENV(), mk_INSTRTP`INCRCOUNTER()]
 #ifdef VICE
                     ^ TIME`MkCbr()
 #endif VICE
