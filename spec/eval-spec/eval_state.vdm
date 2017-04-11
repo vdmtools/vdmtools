@@ -100,6 +100,7 @@ module STATE
         TransHierarchy: () ==> ();
         EvalInhStrct: () ==> ();
         TransSyncs: AS`Document ==> ();
+        TransStaticRef: map AS`Name to GLOBAL`SigmaClass ==> map AS`Name to set of AS`Name;
         InitGV : seq of AS`ValueDef ==> GLOBAL`ValueMap,
 #endif VDMPP
 
@@ -149,6 +150,7 @@ state Sigma of
   mods : map AS`Name to GLOBAL`SigmaMO
   imods : map AS`Name to GLOBAL`SigmaIMO
   isTypeJudgement : bool
+  sdep : map AS`Name to set of AS`Name
 
 init s == s = GetInitSigma()
 
@@ -192,6 +194,8 @@ state Sigma of
   dlops   : map AS`Name to token
   dlfactory: DLFactory
   isTypeJudgement : bool
+  sdep : map AS`Name to set of AS`Name
+  alldeps : map AS`Name to set of AS`Name
 inv s == s.abstracts subset dom s.classes and
          forall nm in set dom s.classes &
          len nm.ids = 1
@@ -260,7 +264,8 @@ functions
 #ifdef VDMSL
          mk_Sigma({ |-> },  -- mods
                   { |-> },  -- imods
-                  false
+                  false,
+                  { |-> }
                  )
 #endif VDMSL
 #ifdef VDMPP
@@ -279,7 +284,9 @@ functions
                   {},       -- clsnms
                   { |-> },  -- dlops
                   mk_DLFactory(), -- DLFactory
-                  false
+                  false,
+                  { |-> },   -- sdep
+                  { |-> }   -- alldeps
                   )
 #endif VDMPP
 
@@ -447,6 +454,10 @@ TranslateAST( cs, - ) ==
     classes:= classes ++ DEF`ReadClasses(c)
    );
   CLASS`TransHierarchy();
+
+  SetSDeps(CLASS`TransStaticRef(classes));
+
+  MergeClassAndStaticHierarchy();
 
   for mk_AS`Class(cls,-,supercls,defs,-,-) in cs do
     let opm = if defs = nil
@@ -855,7 +866,8 @@ InitTheClasses:  set of AS`Name ==> ()
 InitTheClasses(not_done) ==
   if not_done <> {}
   then
-    let nm in set not_done be st def s = GetAllSupers(nm) in s subset InitClasses()
+    --let nm in set not_done be st def s = GetAllSupers(nm) in s subset InitClasses()
+    let nm in set not_done be st def s = GetAllDeps(nm) in s subset InitClasses()
     in
      (if not IsClassInit(nm)
       then InitClassName(nm);
@@ -3186,6 +3198,19 @@ pre len ids = 2;
 \end{vdm_al}
 #endif VDMPP
 
+\begin{vdm_al}
+SetSDeps: map AS`Name to set of AS`Name ==> ()
+SetSDeps(sdp) ==
+ (sdep := sdp;);
+
+GetAllSDeps: AS`Name ==> set of AS`Name
+GetAllSDeps(nm) ==
+ (if nm not in set dom sdep
+  then RTERR`ErrorVal(RTERR`CLNM_NOT_DEFINED, nil, nil, [AUX`SingleNameToString(nm)]);
+  return sdep(nm);
+ );
+\end{vdm_al}
+
 #ifdef VDMSL
 \begin{vdm_al}
 operations
@@ -3847,6 +3872,43 @@ GetLocalHchy(nm) ==
 IsClassInit: AS`Name ==> bool
 IsClassInit(nm) ==
   return nm in set dom classes => classes(nm).isinit;
+\end{vdm_al}
+
+\begin{vdm_al}
+GetAllDeps: AS`Name ==> set of AS`Name
+GetAllDeps(nm) ==
+ (if nm not in set dom alldeps
+  then RTERR`Error(RTERR`CLNM_NOT_DEFINED, nil, nil, [AUX`SingleNameToString(nm)]);
+  return alldeps(nm);
+ );
+
+MergeClassAndStaticHierarchy: () ==> ()
+MergeClassAndStaticHierarchy() ==
+ (dcl deps : map AS`Name to set of AS`Name := {|->};
+  for all nm in set dom classes do
+    def dnm_s = GetAllSDeps(nm);
+    in
+     (dcl allsupers : set of AS`Name :=  GetAllSupers(nm),
+          supers : set of AS`Name := {};
+      for all dnm in set dnm_s do
+        def mk_(ok, cnm) = ExpandClassName(dnm, nm,{});
+        in
+          if ok
+          then allsupers := allsupers union {cnm}
+          else allsupers := allsupers union {nm};
+      while allsupers <> {} do
+       (dcl more_supers : set of AS`Name := {};
+        for all clnm in set allsupers do
+         (supers := supers union {clnm};
+          more_supers := more_supers union GetAllSupers(clnm) union GetAllSDeps(clnm));
+        if nm in set more_supers
+        then RTERR`InitError(RTERR`CIRC_CL_DEPENDENCY,nm.cid, []);
+        allsupers := more_supers;
+       );
+       deps := deps ++ { nm |-> supers };
+     );
+  alldeps := deps;  
+ );
 \end{vdm_al}
 
 \begin{vdm_al}

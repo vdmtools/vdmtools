@@ -62,7 +62,7 @@ module PAT
 
     operations
       PatternMatch : STKM`Pattern * SEM`VAL ==> set of SEM`BlkEnv;
-      MatchLists : seq1 of STKM`Pattern * seq of SEM`VAL ==> set of SEM`BlkEnv;
+      MatchLists : seq of STKM`Pattern * seq of SEM`VAL ==> set of SEM`BlkEnv;
       ConstructFN : AS`Name * AS`FnDef ==> SEM`BlkEnv * map AS`Name to (AS`Expr | AS`NoBody);
       EvalMultBindSeqAll : seq of STKM`Pattern * seq of SEM`VAL * PARTITION
                            ==> set of SEM`BlkEnv | set of set of SEM`BlkEnv;
@@ -526,7 +526,7 @@ MatchObjectPattern ( mk_STKM`ObjectPattern(cls, fields_lp,-), val_v) ==
 
 \begin{vdm_al}
 operations
-MatchLists : seq1 of STKM`Pattern * seq of SEM`VAL ==> set of SEM`BlkEnv
+MatchLists : seq of STKM`Pattern * seq of SEM`VAL ==> set of SEM`BlkEnv
 MatchLists (els_lp, val_lv) ==
   if len val_lv = len els_lp
   then

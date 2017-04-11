@@ -1201,55 +1201,19 @@ void EvalState::InitTheClasses(const SET<TYPE_AS_Name> & cl)
 {
   Set not_done (cl);
 
-/*
-  int cl_len = cl.Card();
-  for (int i = 1; i <= cl_len; i++)
-  {
-    Sequence not_done_l (ASTAUX::SetToSequenceR(not_done));
-    bool exists = false;
-    TYPE_AS_Name nm;
-    Generic nm_g;
-    for (bool bb = not_done_l.First(nm_g); bb;
-              bb = not_done_l.Next(nm_g) && !exists)
-    {
-      nm = nm_g; // nm_g will be changed "Next"
-//      exists = GetAllSupers(nm).SubSet(InitClasses());
-//      exists = Set(GetAllSupers(nm)).ImpUnion(GetAllSDeps(nm)).SubSet(InitClasses());
-//      exists = GetAllDeps(nm).SubSet(InitClasses()); // 20080520
-      exists = GetAllDeps(nm).SubSet(this->initclasses); // 20090313
-    }
-
-    if (! exists)
-    {
-      RTERR::Error(L"InitTheClasses", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
-    }
- 
-    if (! IsClassInit(nm))
-      InitClassName(nm);
-
-
-    not_done.RemElem(nm);
-  }
-  if (! not_done.IsEmpty())
-    RTERR::Error(L"InitTheClasses", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
-*/
-  while (!not_done.IsEmpty())
-  {
+  while (!not_done.IsEmpty()) {
     Sequence not_done_l (ASTAUX::SetToSequenceR(not_done));
     size_t len_not_done_l = not_done_l.Length();
     bool exists = false;
-    for (size_t j = 1; j <= len_not_done_l; j++)
-    {
+    for (size_t j = 1; j <= len_not_done_l; j++) {
       const TYPE_AS_Name & nm (not_done_l[j]);
-      if (GetAllDeps(nm).ImpDiff(this->initclasses).IsEmpty())
-      {
+      if (GetAllDeps(nm).ImpDiff(this->initclasses).IsEmpty()) {
         InitClassName(nm);
         exists = true;
         not_done.RemElem(nm);
       }
     }
-    if (!exists)
-    {
+    if (!exists) {
       RTERR::Error(L"InitTheClasses", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
     }
   }
@@ -5989,7 +5953,9 @@ bool EvalState::IsSDepsClassesInit(const TYPE_AS_Name & nm) const
   return true;
 }
 
-// GetAllDeps (not in spec)
+// GetAllDeps
+// nm : AS`Name
+// ==> set of AS`Name
 SET<TYPE_AS_Name> EvalState::GetAllDeps(const TYPE_AS_Name & nm) const
 {
   if (this->alldeps.DomExists(nm))
@@ -6005,48 +5971,44 @@ SET<TYPE_AS_Name> EvalState::GetAllDeps(const TYPE_AS_Name & nm) const
 void EvalState::MergeClassAndStaticHierarchy()
 {
   Set classes_s (this->classes.Dom());
-  Map res;
+  Map deps;
 
   Generic nm;
-  for (bool bb = classes_s.First(nm); bb; bb = classes_s.Next(nm))
-  {
+  for (bool bb = classes_s.First(nm); bb; bb = classes_s.Next(nm)) {
     SET<TYPE_AS_Name> allsupers (GetAllSupers(nm));
-// 20120905 -->
-    //allsupers.ImpUnion(GetAllSDeps(nm));
     SET<TYPE_AS_Name> dnm_s (GetAllSDeps(nm));
     Generic dnm;
-    for (bool dd = dnm_s.First(dnm); dd; dd = dnm_s.Next(dnm))
-    {
+    for (bool dd = dnm_s.First(dnm); dd; dd = dnm_s.Next(dnm)) {
       Tuple t (ExpandClassName(dnm, nm, Set()));
-      if (t.GetBoolValue(1))
+      if (t.GetBoolValue(1)) {
         allsupers.Insert(t.GetRecord(2));
-      else
+      }
+      else {
         allsupers.Insert(dnm);
+      }
     }
-// <-- 20120905
 
     SET<TYPE_AS_Name> supers;
 
-    while(!allsupers.IsEmpty())
-    {
+    while(!allsupers.IsEmpty()) {
       SET<TYPE_AS_Name> more_supers;
       Generic clnm;
-      for (bool cc = allsupers.First(clnm); cc; cc = allsupers.Next(clnm))
-      {
+      for (bool cc = allsupers.First(clnm); cc; cc = allsupers.Next(clnm)) {
         supers.Insert(clnm);
         more_supers.ImpUnion(GetAllSupers(clnm));
         more_supers.ImpUnion(GetAllSDeps(clnm));
       }
-      if (more_supers.InSet(nm))
+      if (more_supers.InSet(nm)) {
         RTERR::Error(L"MergeClassAndStaticHierarchy", RTERR_CIRC_CL_DEPENDENCY, Nil(), Nil(), Sequence());
+      }
 
       allsupers.Clear();
       allsupers.ImpUnion(more_supers);
     }
-    res.ImpModify(nm, supers);
+    deps.ImpModify(nm, supers);
   }
   this->alldeps.Clear();
-  this->alldeps.ImpOverride(res);
+  this->alldeps.ImpOverride(deps);
 }
 #endif // VDMPP
 
