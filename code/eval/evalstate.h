@@ -215,7 +215,8 @@ private:
   void PopInitClass();
   void PushInitClass(const TYPE_AS_Name &);
   bool IsSuperClassesInit(const TYPE_AS_Name & nm) const;
-  bool IsSDepsClassesInit(const TYPE_AS_Name & nm) const;
+  bool IsStaticalyDependingClassesInit(const TYPE_AS_Name & nm) const;
+  SET<TYPE_AS_Name> GetNotInitStaticalyDependingClasses(const TYPE_AS_Name & nm) const;
 #endif // VDMPP
 
 #ifdef VDMSL
