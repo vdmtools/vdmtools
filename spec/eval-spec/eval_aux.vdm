@@ -91,7 +91,6 @@ module AUX
       IsTypeStructExported : AS`Name ==> bool;
       IsInDLDeclared : AS`Name * AS`Name ==> bool;
       LookUpRename : AS`Name ==> bool * AS`Name;
-      RenameExtractModule : AS`Name ==> AS`Name * AS`Name;
 #endif VDMSL
       ExtractTagName: AS`Name * set of AS`Name ==> [AS`Name] * bool;
 #ifdef VDMPP
@@ -503,16 +502,16 @@ this case the position map of the field selectors are also returned.
 #endif VDMPP
 
 #ifdef VDMSL
-%\begin{vdm_al}
-%LookUpTypeDef : AS`Name ==> AS`TypeDef
-%LookUpTypeDef (name) ==
-%   def sigmamo = STATE`GetModule (STATE`ExtractModule (name)) in
-%    return sigmamo.tps(ExtractName(name))
-%\end{vdm_al}
-%
-%This operation returns the type definition for the input name from the
-%module, defined by the input name.
-
+--%\begin{vdm_al}
+--%LookUpTypeDef : AS`Name ==> AS`TypeDef
+--%LookUpTypeDef (name) ==
+--%   def sigmamo = STATE`GetModule (STATE`ExtractModule (name)) in
+--%    return sigmamo.tps(ExtractName(name))
+--%\end{vdm_al}
+--%
+--%This operation returns the type definition for the input name from the
+--%module, defined by the input name.
+--
 \begin{vdm_al}
 operations
 
