@@ -101,8 +101,7 @@ TYPE_SEM_BlkEnv AUX::MkBlkEnvFromIdMap (const MAP<TYPE_AS_Name, TYPE_SEM_VAL> & 
   Map m;
   Set dom_id_m (id_m.Dom());
   Generic id;
-  for (bool bb = dom_id_m.First (id); bb; bb = dom_id_m.Next (id))
-  {
+  for (bool bb = dom_id_m.First (id); bb; bb = dom_id_m.Next (id)) {
     m.ImpModify(id, TYPE_SEM_ValTp().Init(id_m[id], Nil()));
   }
   return TYPE_SEM_BlkEnv().Init(m, sem_read_only);
@@ -136,10 +135,10 @@ bool AUX::IsConstructExported (const TYPE_AS_Name & loc_name, const TYPE_AS_Name
   const TYPE_GLOBAL_SigmaMO & sigmamo (theState().GetModule(mod_name));
   const Generic & exp_sig_g (sigmamo.GetField(pos_GLOBAL_SigmaMO_exp));
 
-  if (exp_sig_g.IsNil())
+  if (exp_sig_g.IsNil()) {
     return true;
-  else
-  {
+  }
+  else {
     TYPE_AS_ExportSig exp_sig (exp_sig_g);
 
     return (exp_sig.GetMap(pos_AS_ExportSig_val).DomExists (loc_name) ||
@@ -153,12 +152,12 @@ bool AUX::IsConstructExported (const TYPE_AS_Name & loc_name, const TYPE_AS_Name
 // ==> AS`Name
 TYPE_AS_Name AUX::UniqueTagName (const TYPE_AS_Name & tname)
 {
-  if (!IsRealName(tname))
-  {
+  if (!IsRealName(tname)) {
     const TYPE_AS_Name & curmod (theStackMachine().CurrentModule ());
     
-    if (!curmod.GetSequence(pos_AS_Name_ids).IsEmpty())
+    if (!curmod.GetSequence(pos_AS_Name_ids).IsEmpty()) {
       return ConstructDoubleName(curmod, tname);
+    }
   }
   return tname;
 }
@@ -373,13 +372,13 @@ Tuple AUX::IsTypeDef (const TYPE_AS_Name & name)
   const TYPE_GLOBAL_SigmaMO & sigmamo (theState().GetModule(mod_name));
 
   const Map & tps (sigmamo.GetMap(pos_GLOBAL_SigmaMO_tps));
-  if (tps.DomExists (rec_name))
-  {
+  if (tps.DomExists (rec_name)) {
     TYPE_AS_TypeDef td (tps[rec_name]);
     return mk_(Bool(true), td.GetRecord(pos_AS_TypeDef_shape), td.GetField(pos_AS_TypeDef_Inv), mod_name);
   }
-  else
+  else {
     return mk_(Bool(false), Nil(), Nil(), Nil());
+  }
 }
 #endif //VDMSL
 
@@ -425,13 +424,11 @@ Tuple AUX::IsTypeDef(const TYPE_AS_Name & name)
 
   TYPE_AS_Name classname;
   SET<TYPE_AS_Name> allsupers;
-  if (l_empty)
-  {
+  if (l_empty) {
     classname = theStackMachine().GetCurObjName();
     allsupers = theState().GetAllSupers(clnm);
   }
-  else
-  {
+  else {
     classname = ASTAUX::GetFirstName(name);
     allsupers = theState().GetAllSupers(classname);
     allsupers.Insert(classname);
@@ -462,34 +459,28 @@ Tuple AUX::IsTypeDef(const TYPE_AS_Name & name)
     default: {
       TYPE_AS_Name cl;
       bool doesthere = false;
-      if (spcl_tps.DomExists(classname))
-      {
+      if (spcl_tps.DomExists(classname)) {
         cl = classname;
         doesthere = true;
       }
-      else
-      {
+      else {
         SET<TYPE_AS_Name> dom_spcl_tps (spcl_tps.Dom());
         SET<TYPE_AS_Name> rem_priv;
         Generic clnm;
-        for (bool cc = dom_spcl_tps.First(clnm); cc; cc = dom_spcl_tps.Next(clnm))
-        {
+        for (bool cc = dom_spcl_tps.First(clnm); cc; cc = dom_spcl_tps.Next(clnm)) {
           TYPE_AS_TypeDef td (spcl_tps[clnm][thename]);
           const TYPE_AS_Access & acc (td.GetField(pos_AS_TypeDef_access));
-          if ((acc != Int(PRIVATE_AS)) && (acc != Int(NOT_INITIALISED_AS)))  // 20080908
-          {
+          if ((acc != Int(PRIVATE_AS)) && (acc != Int(NOT_INITIALISED_AS))) {
             rem_priv.Insert(clnm);
           }
         }
         Tuple eoc (theState().ExistsOneChild(rem_priv, dom_spcl_tps));
-        if (eoc.GetBool(1))
-        {
+        if (eoc.GetBool(1)) {
           cl = eoc.GetRecord(2);
           doesthere = true;
         }
       }
-      if (doesthere)
-      {
+      if (doesthere) {
         TYPE_AS_TypeDef td (ExtComp(spcl_tps[cl][thename], cl));
 
         const TYPE_AS_Access & access (td.GetField(pos_AS_TypeDef_access));
@@ -514,8 +505,7 @@ TYPE_AS_TypeDef AUX::ExtComp(const TYPE_AS_TypeDef & td, const TYPE_AS_Name & cl
 {
   const TYPE_AS_Type & shape (td.GetRecord(pos_AS_TypeDef_shape));
 
-  if (shape.Is(TAG_TYPE_AS_CompositeType))
-  {
+  if (shape.Is(TAG_TYPE_AS_CompositeType)) {
     const TYPE_AS_Name & name (shape.GetRecord(pos_AS_CompositeType_name));
     TYPE_AS_Name tag_name (ConstructDoubleName(clnm, name));
 
@@ -528,8 +518,9 @@ TYPE_AS_TypeDef AUX::ExtComp(const TYPE_AS_TypeDef & td, const TYPE_AS_Name & cl
 
     return new_td;
   }
-  else
+  else {
     return td;
+  }
 }
 
 // IsRecSel
@@ -547,17 +538,16 @@ Tuple AUX::LookUpRenRecSel (const TYPE_AS_Name & name)
   const TYPE_GLOBAL_SigmaMO & sigmamo (theState().GetModule(theState().ExtractModule(name)));
 
   Generic real_name;
-  if (sigmamo.GetMap(pos_GLOBAL_SigmaMO_ren).DomExists(rec_name, real_name))
-  {
+  if (sigmamo.GetMap(pos_GLOBAL_SigmaMO_ren).DomExists(rec_name, real_name)) {
     TYPE_AS_Name real_rec_name (ExtractName(real_name));
     TYPE_AS_Name real_mod_name (theState().ExtractModule(real_name));
 
     const TYPE_GLOBAL_SigmaMO & real_sigmamo (theState().GetModule(real_mod_name));
 
     Generic recsel;
-    if(real_sigmamo.GetMap(pos_GLOBAL_SigmaMO_recsel).DomExists(real_rec_name, recsel))
-      //return mk_(Bool(true), Tuple(recsel_access).GetRecord(1), real_mod_name, real_rec_name);
+    if(real_sigmamo.GetMap(pos_GLOBAL_SigmaMO_recsel).DomExists(real_rec_name, recsel)) {
       return mk_(Bool(true), recsel, real_mod_name, real_rec_name);
+    }
   }
   return mk_(Bool(false), Nil(), Nil(), Nil());
 }
@@ -572,10 +562,12 @@ Tuple AUX::LookUpRename (const TYPE_AS_Name & name)
   const TYPE_GLOBAL_SigmaMO & sigmamo (theState().GetModule(mod_name));
 
   Generic real_name;
-  if (sigmamo.GetMap(pos_GLOBAL_SigmaMO_ren).DomExists(rec_name, real_name))
+  if (sigmamo.GetMap(pos_GLOBAL_SigmaMO_ren).DomExists(rec_name, real_name)) {
     return mk_(Bool(true), real_name);
-  else
+  }
+  else {
     return mk_(Bool(false), name);
+  }
 }
 
 // Note: The LookUpRecSel replaces to the IsRecSel and LookUpRecSel.
@@ -593,11 +585,12 @@ Tuple AUX::LookUpRecSel (const TYPE_AS_Name & name)
   const TYPE_AS_Name & rec_name (name_t.GetRecord(2));
 
   Generic recsel;
-  if (sigmamo.GetMap(pos_GLOBAL_SigmaMO_recsel).DomExists(rec_name, recsel))
-    //return mk_(Bool(true), Tuple(g).GetRecord(1));
+  if (sigmamo.GetMap(pos_GLOBAL_SigmaMO_recsel).DomExists(rec_name, recsel)) {
     return mk_(Bool(true), recsel);
-  else
+  }
+  else {
     return mk_(Bool(false), Nil());
+  }
 }
 #endif //VDMSL
 
@@ -1010,10 +1003,12 @@ Tuple AUX::RenameExtractModule(const TYPE_AS_Name & name)
   const TYPE_GLOBAL_SigmaMO & sigmamo (theState().GetModule(mod_name));
 
   const Map & ren (sigmamo.GetMap(pos_GLOBAL_SigmaMO_ren));
-  if (ren.DomExists(rec_name))
+  if (ren.DomExists(rec_name)) {
     return mk_(theState().ExtractModule(ren[rec_name]), ExtractName(ren[rec_name]));
-  else
+  }
+  else {
     return mk_(mod_name, rec_name);
+  }
 }
 #endif // VDMSL
 

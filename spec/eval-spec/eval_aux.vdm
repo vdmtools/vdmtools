@@ -91,6 +91,7 @@ module AUX
       IsTypeStructExported : AS`Name ==> bool;
       IsInDLDeclared : AS`Name * AS`Name ==> bool;
       LookUpRename : AS`Name ==> bool * AS`Name;
+      RenameExtractModule : AS`Name ==> AS`Name * AS`Name;
 #endif VDMSL
       ExtractTagName: AS`Name * set of AS`Name ==> [AS`Name] * bool;
 #ifdef VDMPP
@@ -380,15 +381,12 @@ module name.
 \begin{vdm_al}
 IsTypeDef : AS`Name ==> bool * [AS`Type] * [AS`Invariant] * [AS`Name]
 IsTypeDef (name) ==
-  --def sigmamo = STATE`GetModule (STATE`ExtractModule (name));
-  def mk_(-,the_name) = LookUpRename(name);
-      mod_name = STATE`ExtractModule (the_name);
-      sigmamo = STATE`GetModule (mod_name);
-      thename = ExtractName(name)
+  def mk_(mod_name, rec_name) = RenameExtractModule(name);
+      mk_GLOBAL`SigmaMO(-,-,-,tps,-,-,-,-,-,-,-,-,-,-,-) = STATE`GetModule (mod_name);
   in
-    if thename in set dom sigmamo.tps
+    if rec_name in set dom tps
     then
-      let mk_AS`TypeDef(-,shape,Inv,-,-) = sigmamo.tps(thename)
+      let mk_AS`TypeDef(-,shape,Inv,-,-) = tps(rec_name)
       in return mk_(true,shape,Inv,mod_name)
     else return mk_(false,nil,nil,nil);
 \end{vdm_al}
@@ -561,10 +559,11 @@ LookUpRenRecSel (name) ==
 LookUpRename : AS`Name ==> bool * AS`Name
 LookUpRename (name) ==
   def rec_name = ExtractName(name);
-      sigmamo = STATE`GetModule (STATE`ExtractModule (name));
+      mod_name = STATE`ExtractModule (name);
+      mk_GLOBAL`SigmaMO(-,-,-,-,-,-,-,-,-,-,-,-,-,-,ren) = STATE`GetModule (mod_name);
   in
-    if rec_name in set dom sigmamo.ren
-    then return mk_(true, sigmamo.ren(rec_name))
+    if rec_name in set dom ren
+    then return mk_(true, ren(rec_name))
     else return mk_(false, name);
 
 \end{vdm_al}
@@ -575,12 +574,12 @@ operations
 
 LookUpRecSel : AS`Name ==> bool * [GLOBAL`RecSel]
 LookUpRecSel (name) ==
-  def rec_name = ExtractName(name);
-      sigmamo = STATE`GetModule (STATE`ExtractModule (name));
+  def mk_(mod_name, rec_name) = RenameExtractModule(name);
+      mk_GLOBAL`SigmaMO(-,-,-,-,recsel,-,-,-,-,-,-,-,-,-,-) = STATE`GetModule (mod_name);
   in
-    if rec_name in set dom sigmamo.recsel
+    if rec_name in set dom recsel
     then
-      def recsel = sigmamo.recsel(rec_name)
+      def recsel = recsel(rec_name)
       in return mk_(true, recsel)
     else return mk_(false, nil);
 \end{vdm_al}
@@ -971,6 +970,20 @@ IsInDLDeclared (loc_name, mod_name) ==
 
 This operation returns $\True$ if the input name is exported from the input
 implementation module name.
+\begin{vdm_al}
+
+RenameExtractModule: AS`Name ==> AS`Name * AS`Name
+RenameExtractModule(name) ==
+  def rec_name = ExtractName(name);
+      mod_name = STATE`ExtractModule (name);
+      mk_GLOBAL`SigmaMO(-,-,-,-,-,-,-,-,-,-,-,-,-,-,ren) = STATE`GetModule (mod_name);
+  in
+    if rec_name in set dom ren
+    then
+      let new_name = ren(rec_name)
+      in return mk_(STATE`ExtractModule (new_name), ExtractName(new_name))
+    else return mk_(mod_name, rec_name);
+\end{vdm_al}
 #endif VDMSL
 
 \begin{vdm_al}
