@@ -46,6 +46,7 @@ module CLASS
     from AUX
       functions
         SingleNameToString: AS`Name -> seq of char;
+        ClModNmInExpr : AS`Expr -> set of AS`Name;
         ConstructDoubleName: AS`Name * AS`Name -> AS`Name,
     from STATE all
 
@@ -58,6 +59,7 @@ module CLASS
         CreateConstructor: AS`Name * seq of AS`InstAssignDef * seq of AS`Name * map AS`Name to AS`OpDef
                            ==> map seq of AS`Type to (STKM`DebugCmd * AS`Access);
         TransSyncs: AS`Document ==> ();
+        TransStaticRef: map AS`Name to GLOBAL`SigmaClass ==> map AS`Name to set of AS`Name;
 
     functions
         ExtOpDom: AS`OpDef -> seq of AS`Type;
@@ -576,6 +578,56 @@ operations
      );
 #endif VICE
     );
+
+  TransStaticRef: map AS`Name to GLOBAL`SigmaClass ==> map AS`Name to set of AS`Name
+  TransStaticRef(classes) ==
+   (dcl sdep : map AS`Name to set of AS`Name := {|->},
+        exp : set of AS`Name := {};
+    for all name in set dom classes do
+     (dcl clsnms : set of AS`Name := {};
+      clsnms := clsnms union dunion { AUX`ClModNmInExpr(vls.val)
+                              | vls in set elems classes(name).vls_def };
+      clsnms := clsnms union dunion {
+                  if iad.ad.dclinit <> nil
+                  then AUX`ClModNmInExpr(iad.ad.dclinit)
+                  else {}
+                              | iad in set elems classes(name).instvars };
+      clsnms := clsnms union dunion { AUX`ClModNmInExpr(invs.expr)
+                              | invs in set elems classes(name).inst_inv.#1 };
+      clsnms := clsnms \ {name};
+      clsnms := clsnms \ classes(name).inhcon;
+      sdep := sdep ++ { name |-> clsnms };
+      if clsnms = {}
+      then exp := exp union {name};
+     );
+    return ExpandStaticRef(sdep, exp);
+   );
+  ExpandStaticRef: map AS`Name to set of AS`Name * set of AS`Name ==> map AS`Name to set of AS`Name
+  ExpandStaticRef(sdep, done1) ==
+   (dcl res : map AS`Name to set of AS`Name := sdep,
+        done : set of AS`Name := done1,
+        not_done : set of AS`Name := dom sdep \ done;
+    while not_done <> {} do
+      let size = card not_done
+      in
+       (for all nm in set not_done do
+          let s = res(nm)
+          in
+            if forall r in set s & r in set dom res => r in set done
+            then
+             (dcl tmp : set of AS`Name := res(nm);
+              for all r in set s do
+                if r in set dom res
+                then tmp := tmp union res(r);
+              res := res ++ { nm |-> tmp };
+              done := done union {nm};
+              not_done := not_done \ {nm};
+             );
+        if size = card not_done
+        then RTERR`Error(RTERR`CIRCULAR_STATIC_DEPENDENCY,nil,nil,[])
+       );
+    return res;
+   );
 end CLASS
 \end{vdm_al}
 

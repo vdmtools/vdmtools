@@ -100,6 +100,7 @@ module STATE
         TransHierarchy: () ==> ();
         EvalInhStrct: () ==> ();
         TransSyncs: AS`Document ==> ();
+        TransStaticRef: map AS`Name to GLOBAL`SigmaClass ==> map AS`Name to set of AS`Name;
         InitGV : seq of AS`ValueDef ==> GLOBAL`ValueMap,
 #endif VDMPP
 
@@ -149,6 +150,7 @@ state Sigma of
   mods : map AS`Name to GLOBAL`SigmaMO
   imods : map AS`Name to GLOBAL`SigmaIMO
   isTypeJudgement : bool
+  sdep : map AS`Name to set of AS`Name
 
 init s == s = GetInitSigma()
 
@@ -192,6 +194,9 @@ state Sigma of
   dlops   : map AS`Name to token
   dlfactory: DLFactory
   isTypeJudgement : bool
+  sdep : map AS`Name to set of AS`Name
+  alldeps : map AS`Name to set of AS`Name
+  initclasses : set of AS`Name
 inv s == s.abstracts subset dom s.classes and
          forall nm in set dom s.classes &
          len nm.ids = 1
@@ -260,7 +265,8 @@ functions
 #ifdef VDMSL
          mk_Sigma({ |-> },  -- mods
                   { |-> },  -- imods
-                  false
+                  false,
+                  { |-> }
                  )
 #endif VDMSL
 #ifdef VDMPP
@@ -279,7 +285,10 @@ functions
                   {},       -- clsnms
                   { |-> },  -- dlops
                   mk_DLFactory(), -- DLFactory
-                  false
+                  false,
+                  { |-> },  -- sdep
+                  { |-> },  -- alldeps
+                  {}        -- initclasses
                   )
 #endif VDMPP
 
@@ -447,6 +456,10 @@ TranslateAST( cs, - ) ==
     classes:= classes ++ DEF`ReadClasses(c)
    );
   CLASS`TransHierarchy();
+
+  SetSDeps(CLASS`TransStaticRef(classes));
+
+  MergeClassAndStaticHierarchy();
 
   for mk_AS`Class(cls,-,supercls,defs,-,-) in cs do
     let opm = if defs = nil
@@ -855,7 +868,9 @@ InitTheClasses:  set of AS`Name ==> ()
 InitTheClasses(not_done) ==
   if not_done <> {}
   then
-    let nm in set not_done be st def s = GetAllSupers(nm) in s subset InitClasses()
+    --let nm in set not_done be st def s = GetAllSupers(nm) in s subset InitClasses()
+    --let nm in set not_done be st def s = GetAllDeps(nm) in s subset InitClasses()
+    let nm in set not_done be st IsStaticalyDependingClassesInit(nm)
     in
      (if not IsClassInit(nm)
       then InitClassName(nm);
@@ -897,8 +912,10 @@ detect this (see {\em EvalNewStmt}).
 \begin{vdm_al}
 InitClassName: AS`Name ==> ()
 InitClassName(nm) ==
- (if IsClassInit(nm) then return;
-  if IsSuperClassesInit(nm)
+  if not IsClassInit(nm)
+  then
+  --if IsSuperClassesInit(nm)
+  if IsStaticalyDependingClassesInit(nm)
   then
    (SetClassInit(nm, true);
     PushInitPool(nm);
@@ -939,19 +956,19 @@ InitClassName(nm) ==
      )
    )
   else
-    def supers = { clnm | clnm in set GetAllSupers(nm) & not IsClassInit(clnm)}
-    in InitTheClasses(supers union {nm})
- );
+    --def supers = { clnm | clnm in set GetAllSupers(nm) & not IsClassInit(clnm)}
+    def supers = GetNotInitStaticalyDependingClasses(nm)
+    in InitTheClasses(supers union {nm});
 \end{vdm_al}
 
 The InitStaticInsts operation initialises all the instance variables
-which are declared static. The last parameter is used to indicate whether we are in an init process without the AST having been changed.
+which are declared static. The last parameter is used to indicate whether
+we are in an init process without the AST having been changed.
 
 \begin{vdm_al}
 InitStaticInsts: AS`Name * (seq of AS`InstanceVarDef) * bool ==> ()
 InitStaticInsts(clsnm,instdef_l,ast_is_new) ==
  (dcl already : bool := false;
-
   PushInitClass(clsnm);
   for instdef in instdef_l do
     cases instdef:
@@ -1029,6 +1046,17 @@ of class {\em name} has been changed.
 IsSuperClassesInit: AS`Name ==> bool
 IsSuperClassesInit(name) ==
   return forall nm in set GetAllSupers(name) & IsClassInit(nm);
+\end{vdm_al}
+
+\begin{vdm_al}
+IsStaticalyDependingClassesInit: AS`Name ==> bool
+IsStaticalyDependingClassesInit(nm) ==
+  return GetNotInitStaticalyDependingClasses(nm) = {};
+
+GetNotInitStaticalyDependingClasses: AS`Name ==> set of AS`Name
+GetNotInitStaticalyDependingClasses(nm) ==
+  return GetAllDeps(nm) \ InitClasses();
+
 \end{vdm_al}
 #endif VDMPP
 
@@ -3186,6 +3214,19 @@ pre len ids = 2;
 \end{vdm_al}
 #endif VDMPP
 
+\begin{vdm_al}
+SetSDeps: map AS`Name to set of AS`Name ==> ()
+SetSDeps(sdp) ==
+ (sdep := sdp;);
+
+GetAllSDeps: AS`Name ==> set of AS`Name
+GetAllSDeps(nm) ==
+ (if nm not in set dom sdep
+  then RTERR`ErrorVal(RTERR`CLNM_NOT_DEFINED, nil, nil, [AUX`SingleNameToString(nm)]);
+  return sdep(nm);
+ );
+\end{vdm_al}
+
 #ifdef VDMSL
 \begin{vdm_al}
 operations
@@ -3846,7 +3887,45 @@ GetLocalHchy(nm) ==
 \begin{vdm_al}
 IsClassInit: AS`Name ==> bool
 IsClassInit(nm) ==
-  return nm in set dom classes => classes(nm).isinit;
+  --return nm in set dom classes => classes(nm).isinit;
+  return nm in set initclasses;
+\end{vdm_al}
+
+\begin{vdm_al}
+GetAllDeps: AS`Name ==> set of AS`Name
+GetAllDeps(nm) ==
+ (if nm not in set dom alldeps
+  then RTERR`Error(RTERR`CLNM_NOT_DEFINED, nil, nil, [AUX`SingleNameToString(nm)]);
+  return alldeps(nm);
+ );
+
+MergeClassAndStaticHierarchy: () ==> ()
+MergeClassAndStaticHierarchy() ==
+ (dcl deps : map AS`Name to set of AS`Name := {|->};
+  for all nm in set dom classes do
+    def dnm_s = GetAllSDeps(nm);
+    in
+     (dcl allsupers : set of AS`Name :=  GetAllSupers(nm),
+          supers : set of AS`Name := {};
+      for all dnm in set dnm_s do
+        def mk_(ok, cnm) = ExpandClassName(dnm, nm,{});
+        in
+          if ok
+          then allsupers := allsupers union {cnm}
+          else allsupers := allsupers union {nm};
+      while allsupers <> {} do
+       (dcl more_supers : set of AS`Name := {};
+        for all clnm in set allsupers do
+         (supers := supers union {clnm};
+          more_supers := more_supers union GetAllSupers(clnm) union GetAllSDeps(clnm));
+        if nm in set more_supers
+        then RTERR`InitError(RTERR`CIRC_CL_DEPENDENCY,nm.cid, []);
+        allsupers := more_supers;
+       );
+       deps := deps ++ { nm |-> supers };
+     );
+  alldeps := deps;  
+ );
 \end{vdm_al}
 
 \begin{vdm_al}
@@ -3880,12 +3959,17 @@ ExpandClassName(name, orgcl, nm_s) ==
 InitClasses: () ==> set of AS`Name
 InitClasses() ==
   return { clnm | clnm in set dom classes & IsClassInit(clnm) };
+  --return initclasses;
 \end{vdm_al}
 
 \begin{vdm_al}
 SetClassInit: AS`Name * bool ==> ()
 SetClassInit(nm, val) ==
-  classes(nm).isinit := val;
+ (classes(nm).isinit := val;
+  if val
+  then initclasses := initclasses union {nm}
+  else initclasses := initclasses \ {nm};
+ );
 \end{vdm_al}
 
 This auxiliary operation {\em nm} computes the super classes names of

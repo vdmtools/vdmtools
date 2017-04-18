@@ -31,12 +31,10 @@
 // ==> [DLObject]
 DLObject EvalState::GetDLObjectFromSemObjRef(const TYPE_SEM_OBJ_uRef & obj_ref)
 {
-  if (this->obj_tab.DomExists(obj_ref))
-  {
+  if (this->obj_tab.DomExists(obj_ref)) {
     const TYPE_GLOBAL_OBJ_uDesc & desc (this->obj_tab[obj_ref]);
     const Generic & dcip (desc.GetField(pos_GLOBAL_OBJ_uDesc_DlClassInstancePtr));
-    if (!dcip.IsNil())
-    {
+    if (!dcip.IsNil()) {
       const TYPE_SEM_OBJ & sem (desc.GetRecord(pos_GLOBAL_OBJ_uDesc_sem));
       return DlClassFactory::CreateDLObject(sem.get_tp(), dcip);
     }
@@ -53,22 +51,20 @@ TYPE_SEM_OBJ_uRef EvalState::CreateNEWFromDLObject(const DLObject & obj)
   wstring n (obj.GetName());
   TYPE_AS_Name name (ASTAUX::MkNameFromId(ASTAUX::MkId(n), NilContextId));
 
-  if (! IsDLClass(name))
-  {
+  if (! IsDLClass(name)) {
     RTERR::Error(L"CreateNEWFromDLObject",
                  RTERR_CLASS_NOT_DLCLASS,
                  M42Sem(AUX::SingleNameToString(name), NULL),
                  Nil(), Sequence());
-
   }
 
   // If the objects DlClass pointer is known we just that object.
   Set dom_obj_tab (this->obj_tab.Dom());
   Generic ref;
-  for (bool bb = dom_obj_tab.First(ref); bb; bb = dom_obj_tab.Next(ref))
-  {
-    if (DlClassFactory::DLClassEqual(this->obj_tab[ref].GetField(pos_GLOBAL_OBJ_uDesc_DlClassInstancePtr), obj))
+  for (bool bb = dom_obj_tab.First(ref); bb; bb = dom_obj_tab.Next(ref)) {
+    if (DlClassFactory::DLClassEqual(this->obj_tab[ref].GetField(pos_GLOBAL_OBJ_uDesc_DlClassInstancePtr), obj)) {
       return ref;
+    }
   }
 
   // Otherwise we need to create a new objects with that external DlClass associated.
@@ -87,8 +83,7 @@ void EvalState::dlclose()
 #ifdef VDMPP
   Set dom_obj_tab (this->obj_tab.Dom());
   Generic ref;
-  for (bool bb = dom_obj_tab.First(ref); bb; bb = dom_obj_tab.Next(ref))
-  {
+  for (bool bb = dom_obj_tab.First(ref); bb; bb = dom_obj_tab.Next(ref)) {
     DlClassFactory::DLClose(this->obj_tab[ref].GetField(pos_GLOBAL_OBJ_uDesc_DlClassInstancePtr));
   }
 #endif // VDMPP
@@ -100,16 +95,18 @@ void EvalState::dlclose()
 Tuple EvalState::IsDLFnOP(const TYPE_AS_Name & id, const TYPE_AS_Name & mod_nm)
 {
   TYPE_GLOBAL_SigmaIMO sigmaimo (GetDLModule(mod_nm));
+  const Map & extfns (sigmaimo.GetMap(pos_GLOBAL_SigmaIMO_extfns));
+  const Map & extops (sigmaimo.GetMap(pos_GLOBAL_SigmaIMO_extops));
 
-  Map extfns(sigmaimo.get_extfns());
-  Map extops(sigmaimo.get_extops());
-
-  if (extfns.DomExists(id))
+  if (extfns.DomExists(id)) {
     return mk_(Bool(true), extfns[id]);
-  else if (extops.DomExists(id))
+  }
+  else if (extops.DomExists(id)) {
     return mk_(Bool(true), extops[id]);
-  else
+  }
+  else {
     return mk_(Bool(false), Nil());
+  }
 }
 
 // Replaced by IsExtFnOP: Record GetExtFnOpVal(Record id)
@@ -117,15 +114,15 @@ Tuple EvalState::IsDLFnOP(const TYPE_AS_Name & id, const TYPE_AS_Name & mod_nm)
 Tuple EvalState::IsDLVal(const TYPE_AS_Name & id, const TYPE_AS_Name & mod_nm)
 {
   TYPE_GLOBAL_SigmaIMO sigmaimo (GetDLModule(mod_nm));
-  Map extv(sigmaimo.get_extv());
+  const Map & extv (sigmaimo.GetMap(pos_GLOBAL_SigmaIMO_extv));
 
-  if (extv.DomExists(id))
-  {
-    TYPE_SEM_VAL extval = this->dlfactory.CallOp(mod_nm, id, true, Nil());
+  if (extv.DomExists(id)) {
+    TYPE_SEM_VAL extval (this->dlfactory.CallOp(mod_nm, id, true, Nil()));
     return mk_(Bool(true), extval);
   }
-  else
+  else {
     return mk_(Bool(false), Nil());
+  }
 }
 #endif // VDMSL
 
@@ -134,8 +131,7 @@ Sequence EvalState::Sem2M4(const SEQ<TYPE_SEM_VAL> & arg_l, DLRecInfoData * dlda
 {
   Sequence res;
   size_t len_arg_l = arg_l.Length();
-  for (size_t idx = 1; idx <= len_arg_l; idx++)
-  {
+  for (size_t idx = 1; idx <= len_arg_l; idx++) {
     TYPE_SEM_VAL val (arg_l[idx]);
     res.ImpAppend(Convert2M4(val, dldata));
   }
@@ -150,22 +146,19 @@ TYPE_SEM_VAL EvalState::M42Sem(const Generic & val, DLRecInfoData * dldata)
   // crossing the DL boundary. Otherwise we can have dangeling pointers
   // when the DL module is closed (ex. last_result).
 
-  if (val.IsInt())
-  {
+  if (val.IsInt()) {
     /************************* INT **************************/
     // Force copy
     Real r (Int(val).GetValue()); // TODO: 20100302
     return TYPE_SEM_NUM().Init(r);
   }
-  if (val.IsReal())
-  {
+  if (val.IsReal()) {
     /************************* REAL **************************/
     // Force copy
     Real r (Real(val).GetValue());
     return TYPE_SEM_NUM().Init(r);
   }
-  else if (val.IsSet())
-  {
+  else if (val.IsSet()) {
     /************************* SET *******************************/
     Set val_s (val);
     SET<TYPE_SEM_VAL> set;
@@ -175,74 +168,58 @@ TYPE_SEM_VAL EvalState::M42Sem(const Generic & val, DLRecInfoData * dldata)
     }
     return TYPE_SEM_SET().Init(set);
   }
-  else if (val.IsRecord())
-  {
+  else if (val.IsRecord()) {
     /************************* RECORD ****************************/
     Record valr (val);
     int tag = valr.GetTag();
     size_t size = valr.Length();
     const wchar_t *p = NULL;
-//    if (tag == TOKEN)
-//    { // Record is a token
-//      return TYPE_SEM_TOKEN().Init(M42Sem (valr.GetField (1), dldata));
-//    }
-//    else {  // Normal record
-// 20070313 -->
 // for internal
-      wstring tmptag;
-      if( dldata == NULL )
-      {
-        if (VDMGetDefaultRecInfoMap().GetSymTag(tag, tmptag))
-        {
-          // Copy internal RecInfo to user RecInfo
-          TYPE_AS_Name symtag (ASTAUX::MkNameFromStr(tmptag, NilContextId));
-          if( !SemRec::IsDecl(symtag) )
-          {
-            SEQ<Bool> dc_s;
-            for (size_t i = 1; i <= size; i++ )
-            {
-              Bool dc (VDMGetDefaultRecInfoMap().AskDontCare(tag, i));
-              dc_s.ImpAppend(dc);
-            }
-            SemRec::Decl_SEM_REC(symtag, size, dc_s);
+    wstring tmptag;
+    if( dldata == NULL ) {
+      if (VDMGetDefaultRecInfoMap().GetSymTag(tag, tmptag)) {
+        // Copy internal RecInfo to user RecInfo
+        TYPE_AS_Name symtag (ASTAUX::MkNameFromStr(tmptag, NilContextId));
+        if( !SemRec::IsDecl(symtag) ) {
+          SEQ<Bool> dc_s;
+          for (size_t i = 1; i <= size; i++ ) {
+            Bool dc (VDMGetDefaultRecInfoMap().AskDontCare(tag, i));
+            dc_s.ImpAppend(dc);
           }
-          p = tmptag.c_str();
+          SemRec::Decl_SEM_REC(symtag, size, dc_s);
         }
-      }
-      else
-// <-- 20070313
-        p = (*dldata->functions.vdmdlgetsymtag)(dldata->namemap, tag);
-       
-      if (p) {
-        TYPE_AS_Name symtag (ASTAUX::MkNameFromStr(p, NilContextId));
-        SEQ<TYPE_SEM_VAL> resseq;
-        size_t len_valr = valr.Length();
-        for (size_t i = 1; i <= len_valr; i++)
-          resseq.ImpAppend(M42Sem(valr.GetField(i), dldata));
-
-        if( !SemRec::IsDecl(symtag) )
-        {
-          vdm_iplog << L"Unknown tag: " << tag << L"," << size << L","
-                    << ASTAUX::ASName2String(symtag) << endl << flush;
-          RTERR::Error(L"M42Sem", RTERR_TAG_UNKNOWN, Nil(), Nil(), Sequence());
-        }
-        return SemRec::mk_SEM_REC(symtag, resseq);
-      } else {
-        RTERR::Error(L"M42Sem", RTERR_TAG_UNKNOWN, Nil(), Nil(), Sequence());
-        return Nil();
+        p = tmptag.c_str();
       }
     }
-//  }
-
+    else {
+      p = (*dldata->functions.vdmdlgetsymtag)(dldata->namemap, tag);
+    }
+     
+    if (p) {
+      TYPE_AS_Name symtag (ASTAUX::MkNameFromStr(p, NilContextId));
+      SEQ<TYPE_SEM_VAL> resseq;
+      size_t len_valr = valr.Length();
+      for (size_t i = 1; i <= len_valr; i++) {
+        resseq.ImpAppend(M42Sem(valr.GetField(i), dldata));
+      }
+      if( !SemRec::IsDecl(symtag) ) {
+        vdm_iplog << L"Unknown tag: " << tag << L"," << size << L","
+                  << ASTAUX::ASName2String(symtag) << endl << flush;
+        RTERR::Error(L"M42Sem", RTERR_TAG_UNKNOWN, Nil(), Nil(), Sequence());
+      }
+      return SemRec::mk_SEM_REC(symtag, resseq);
+    } else {
+      RTERR::Error(L"M42Sem", RTERR_TAG_UNKNOWN, Nil(), Nil(), Sequence());
+      return Nil();
+    }
+  }
 #ifdef VDMPP
-  else if (val.IsDLObject())
-  {
+  else if (val.IsDLObject()) {
     return theState().CreateNEWFromDLObject(val);
   }
 #endif //VDMPP
 
-  else if (val.IsTuple())
-  {
+  else if (val.IsTuple()) {
     /************************* TUPLE *****************************/
     Tuple tuple (val);
     SEQ<TYPE_SEM_VAL> resseq;
@@ -251,35 +228,30 @@ TYPE_SEM_VAL EvalState::M42Sem(const Generic & val, DLRecInfoData * dldata)
       resseq.ImpAppend(M42Sem(tuple.GetField(idx), dldata));
     return TYPE_SEM_TUPLE().Init(resseq);
   }
-  else if (val.IsNil())
-  {
+  else if (val.IsNil()) {
     /************************* NIL *******************************/
     return TYPE_SEM_NIL();
   }
-  else if (val.IsChar())
-  {
+  else if (val.IsChar()) {
     /************************* CHAR ******************************/
     // Force copy
     wchar_t c (Char(val).GetValue ());
     return TYPE_SEM_CHAR().Init(Char(c));
   }
-  else if (val.IsMap())
-  {
+  else if (val.IsMap()) {
     /************************* MAP *******************************/
     Map mapV (val);
     Set dom_mapV (mapV.Dom());
     MAP<TYPE_SEM_VAL,TYPE_SEM_VAL> resmap;
     Generic key;
-    for (bool bb = dom_mapV.First(key); bb; bb = dom_mapV.Next(key))
-    {
+    for (bool bb = dom_mapV.First(key); bb; bb = dom_mapV.Next(key)) {
       TYPE_SEM_VAL newkey (M42Sem(key, dldata));
       TYPE_SEM_VAL newval (M42Sem(mapV[key], dldata));
       resmap.Insert(newkey,newval);
     }
     return TYPE_SEM_MAP().Init(resmap);
   }
-  else if (val.IsSequence())
-  {
+  else if (val.IsSequence()) {
     /************************* SEQUENCE **************************/
     Sequence seq (val);
     size_t len_seq = seq.Length();
@@ -288,26 +260,21 @@ TYPE_SEM_VAL EvalState::M42Sem(const Generic & val, DLRecInfoData * dldata)
       resseq.ImpAppend(M42Sem(seq[idx], dldata));
     return TYPE_SEM_SEQ().Init(resseq);
   }
-  else if (val.IsUndef())
-  {
+  else if (val.IsUndef()) {
     /************************* UNDEF *****************************/
     return TYPE_SEM_UNDEF();
   }
-  else if (val.IsBool())
-  {
+  else if (val.IsBool()) {
     /************************* BOOL ******************************/
     // Force copy
     return (Bool(val).GetValue () ? sem_true : sem_false);
   }
-  else if (val.IsQuote())
-  {
+  else if (val.IsQuote()) {
     /************************* QUOTE *****************************/
     wstring quote (Quote(val).GetValue());
-    //return TYPE_SEM_QUOTE().Init(ASTAUX::MkId(quote));
     return TYPE_SEM_QUOTE().Init(SEQ<Char>(quote));
   }
-  else if (val.IsText())
-  {
+  else if (val.IsText()) {
     /************************* TEXT ******************************/
     wstring text (Text(val).GetValue());
     SEQ<Char> c_l (text);
@@ -319,12 +286,10 @@ TYPE_SEM_VAL EvalState::M42Sem(const Generic & val, DLRecInfoData * dldata)
 
     return TYPE_SEM_SEQ().Init(chars);
   }
-  else if (val.IsToken())
-  {
+  else if (val.IsToken()) {
     return TYPE_SEM_TOKEN().Init(M42Sem(Token(val).GetValue(), dldata));
   }
-  else
-  {
+  else {
     /************************* CLASS *****************************/
     RTERR::Error(L"M42Sem", RTERR_TYPE_NOT_SUPPORTED, Nil(), Nil(), Sequence());
     return TYPE_SEM_VAL();
@@ -347,8 +312,7 @@ Generic EvalState::Convert2M4(const TYPE_SEM_VAL & arg, DLRecInfoData * dldata)
       /************************* CHAR *******************/
       return arg.GetChar(pos_SEM_CHAR_v);
     }
-    case TAG_TYPE_SEM_SET:
-    {
+    case TAG_TYPE_SEM_SET: {
       /************************* SET *******************************/
       Set set (arg.GetSet(pos_SEM_SET_v));
       Set res;
@@ -357,8 +321,7 @@ Generic EvalState::Convert2M4(const TYPE_SEM_VAL & arg, DLRecInfoData * dldata)
         res.Insert(Convert2M4(elm, dldata));
       return res;
     }
-    case TAG_TYPE_DYNSEM_SEM_REC:
-    {
+    case TAG_TYPE_DYNSEM_SEM_REC: {
       /************************* RECORD ***************************/
       const TYPE_AS_Name & name (arg.GetRecord(pos_DYNSEM_SEM_SemRecord_tag));
       SEQ<TYPE_SEM_VAL> seq (arg.GetRecord(pos_DYNSEM_SEM_SemRecord_value).GetFields());
@@ -376,21 +339,18 @@ Generic EvalState::Convert2M4(const TYPE_SEM_VAL & arg, DLRecInfoData * dldata)
       }
       return res;
     }
-  
-  #ifdef VDMPP
-    case TAG_TYPE_SEM_OBJ_uRef:
-    {
+#ifdef VDMPP
+    case TAG_TYPE_SEM_OBJ_uRef: {
       DLObject obj = theState().GetDLObjectFromSemObjRef(arg);
       return obj;
     }
-  #endif //VDMPP
+#endif //VDMPP
   
     case TAG_TYPE_SEM_NIL: {
       /************************* NIL *******************************/
       return Nil();
     } 
-    case TAG_TYPE_SEM_SEQ:
-    {
+    case TAG_TYPE_SEM_SEQ: {
       /************************* SEQUENCE **************************/
       const Sequence & seq (arg.GetSequence(pos_SEM_SEQ_v));
       size_t len = seq.Length();
@@ -399,33 +359,30 @@ Generic EvalState::Convert2M4(const TYPE_SEM_VAL & arg, DLRecInfoData * dldata)
         res.ImpAppend(Convert2M4(seq[idx], dldata));
       return res;
     }
-    case TAG_TYPE_SEM_MAP :
-    {
+    case TAG_TYPE_SEM_MAP : {
       /************************* MAP *******************************/
       const Map & mapV (arg.GetMap(pos_SEM_MAP_v));
       Set dom_mapV (mapV.Dom());
       Map res;
       Generic key;
-      for (bool bb = dom_mapV.First(key); bb; bb = dom_mapV.Next(key))
-      {
+      for (bool bb = dom_mapV.First(key); bb; bb = dom_mapV.Next(key)) {
         Generic newkey (Convert2M4(key, dldata));
         Generic newval (Convert2M4(mapV[key], dldata));
         res.Insert(newkey, newval);
       }
       return res;
     }
-    case TAG_TYPE_SEM_TUPLE:
-    {
+    case TAG_TYPE_SEM_TUPLE: {
       /************************* TUPLE *****************************/
       const SEQ<TYPE_SEM_VAL> & seq (arg.GetSequence(pos_SEM_TUPLE_v));
       Tuple res (seq.Length());
       size_t len_seq = seq.Length();
-      for (size_t i = 1; i <= len_seq; i++)
+      for (size_t i = 1; i <= len_seq; i++) {
         res.SetField(i, Convert2M4(seq[i], dldata));
+      }
       return res;
     }
-    case TAG_TYPE_SEM_QUOTE:
-    {
+    case TAG_TYPE_SEM_QUOTE: {
       /************************* QUOTE *****************************/
       const type_cL & tk (arg.GetSequence(pos_SEM_QUOTE_v));
       wstring tkTxt;
@@ -433,18 +390,17 @@ Generic EvalState::Convert2M4(const TYPE_SEM_VAL & arg, DLRecInfoData * dldata)
       Quote res (tkTxt);
       return res;
     }
-    case TAG_TYPE_SEM_TOKEN:
-    {
+    case TAG_TYPE_SEM_TOKEN: {
       /************************* TOKEN *****************************/
       const TYPE_SEM_VAL & svt (arg.GetRecord(pos_SEM_TOKEN_v));
       Generic seqv (Convert2M4(svt, dldata));
       return mk_token(seqv);
     }
-  
     case TAG_TYPE_SEM_UNDEF:
       /************************* UNDEF *****************************/
-    default:
+    default: {
       RTERR::Error(L"Convert2M4", RTERR_TYPE_NOT_SUPPORTED, Nil(), Nil(), Sequence());
+    }
   }
   return Nil(); // dummy
 }

@@ -1217,8 +1217,8 @@ operations
 
 IsExtFnOp : AS`Name * AS`Name ==> bool
 IsExtFnOp (id, mod_name) ==
-  def sigmaimo = STATE`GetDLModule (mod_name)
-  in return (id in set dom sigmaimo.extfns) or (id in set dom sigmaimo.extops)
+  def mk_GLOBAL`SigmaIMO(extfns,extops,-,-,-,-,-) = STATE`GetDLModule (mod_name)
+  in return (id in set dom extfns) or (id in set dom extops)
 \end{vdm_al}
 
 This operation returns $true$ if the input identifier is defined in the
@@ -1230,12 +1230,12 @@ operations
 
 GetExtFnOpVal : AS`Name * AS`Name ==> bool * [SEM`VAL]
 GetExtFnOpVal (loc_name, mod_name) ==
-  def sigmaimo = STATE`GetDLModule (mod_name)
+  def mk_GLOBAL`SigmaIMO(extfns,extops,-,-,-,-,-) = STATE`GetDLModule (mod_name)
   in
-    if loc_name in set dom sigmaimo.extfns
-    then return mk_(true, sigmaimo.extfns(loc_name))
-    elseif loc_name in set dom sigmaimo.extops
-    then return mk_(true, sigmaimo.extops(loc_name))
+    if loc_name in set dom extfns
+    then return mk_(true, extfns(loc_name))
+    elseif loc_name in set dom extops
+    then return mk_(true, extops(loc_name))
     else return mk_(false, nil);
 \end{vdm_al}
 
@@ -1246,8 +1246,8 @@ operations
 
 IsExtVal : AS`Name * AS`Name ==> bool
 IsExtVal (loc_name, mod_name) ==
-  def sigmaimo = STATE`GetDLModule (mod_name)
-  in return (loc_name in set dom sigmaimo.extv)
+  def mk_GLOBAL`SigmaIMO(-,-,extv,-,-,-,-) = STATE`GetDLModule (mod_name)
+  in return (loc_name in set dom extv)
 \end{vdm_al}
 
 This operation returns true if the input identifier is defined in the
@@ -1259,9 +1259,9 @@ operations
 GetExtVal : AS`Name * AS`Name ==> bool * [SEM`VAL]
 GetExtVal (loc_name, mod_name) ==
   --return STATE`APPROXVal(mk_SEM`LOC(id), [])
-  def sigmaimo = STATE`GetDLModule (mod_name)
+  def mk_GLOBAL`SigmaIMO(-,-,extv,-,-,-,-) = STATE`GetDLModule (mod_name)
   in
-    if loc_name in set dom sigmaimo.extv
+    if loc_name in set dom extv
     then return mk_(true, STATE`APPROXVal(mk_SEM`LOC(loc_name), []))
     else return mk_(false, nil);
 \end{vdm_al}
@@ -1292,8 +1292,8 @@ IsDefApproxVal (mk_SEM`LOC(loc), mod_name) ==
 operations
 GetApproxVal : SEM`LOC * AS`Name * seq of SEM`VAL ==> SEM`VAL
 GetApproxVal (mk_SEM`LOC(loc), mod_name, arg_lv) ==
-def sigmamo = STATE`GetModule (mod_name) in
-  --let mk_(inout, access) = sigmamo.gv(loc),
+  def sigmamo = STATE`GetModule (mod_name)
+  in
   let mk_(inout, -) = sigmamo.gv(loc),
       args = mk_SEM`SEQ(arg_lv) in
       if is_SEM`MAP(inout)

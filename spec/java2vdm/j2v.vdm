@@ -190,7 +190,8 @@ J2VFile(p_file) ==
 \end{vdm_al}
 
 \begin{vdm_al}
-  J2VAS: CPP`CPPAS ==> AS`Document
+  --J2VAS: CPP`CPPAS ==> AS`Document
+  J2VAS: seq of CPP`IdentDeclaration ==> AS`Document
   J2VAS(p_cppas) ==
    (dcl l_class_l : seq of AS`Class := [];
     CPP`setmode(<JAVA>);

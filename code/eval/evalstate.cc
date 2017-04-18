@@ -130,12 +130,10 @@ void EvalState::GetInitSigma()
 // ==> ()
 void EvalState::Init_Sigma (bool ast_is_new)
 {
-  if (ast_is_new)
-  { 
+  if (ast_is_new) { 
     GetInitSigma();
   }
-  else
-  {
+  else {
 #ifdef VDMSL
     this->dtc_typenm_l.Clear();
 #endif // VDMSL
@@ -150,8 +148,7 @@ void EvalState::Init_Sigma (bool ast_is_new)
     // obj_nm are destroyed before the object table is reset().
     Set dom_d_objs (this->d_objs.Dom());
     Generic obj_nm;
-    for (bool bb = dom_d_objs.First(obj_nm); bb; bb = dom_d_objs.Next(obj_nm))
-    {
+    for (bool bb = dom_d_objs.First(obj_nm); bb; bb = dom_d_objs.Next(obj_nm)) {
       Tuple tmp (this->d_objs[obj_nm]);
       tmp.SetField(1, TYPE_SEM_UNDEF());
       this->d_objs.ImpModify(obj_nm, tmp);
@@ -213,15 +210,6 @@ void EvalState::Init_Sigma (bool ast_is_new)
 // ==> GLOBAL`OBJ_tab * map AS`name to GLOBAL`SigmaClass
 Tuple EvalState::Get_obj_tab()
 {
-/*
-  Map statics_m;
-  Set classes_dom ( this->classes.Dom() );
-  Generic clsnm;
-  for ( bool bb = classes_dom.First(clsnm); bb; bb = classes_dom.Next(clsnm)) {
-    statics_m.Insert( clsnm, this->classes[clsnm].GetMap(pos_GLOBAL_SigmaClass_statics) );
-  }
-  return mk_(this->obj_tab, statics_m);
-*/
   return mk_(this->obj_tab, this->classes);
 }
 
@@ -233,10 +221,10 @@ SET<TYPE_SEM_OBJ_uRef> EvalState::GetObjRefsOfClass(const TYPE_AS_Name & clnm) c
   Set dom_obj_tab (this->obj_tab.Dom());
   SET<TYPE_SEM_OBJ_uRef> res;
   Generic ref;
-  for (bool bb = dom_obj_tab.First(ref); bb; bb = dom_obj_tab.Next(ref))
-  {
-    if (Record(ref).GetRecord(pos_SEM_OBJ_uRef_tp) == clnm)
+  for (bool bb = dom_obj_tab.First(ref); bb; bb = dom_obj_tab.Next(ref)) {
+    if (Record(ref).GetRecord(pos_SEM_OBJ_uRef_tp) == clnm) {
       res.Insert(ref);
+    }
   }
   return res;
 }
@@ -248,10 +236,10 @@ Generic EvalState::GetObjRefOfClass(const TYPE_AS_Name & clnm) const
 {
   Set dom_obj_tab (this->obj_tab.Dom());
   Generic ref;
-  for (bool bb = dom_obj_tab.First(ref); bb; bb = dom_obj_tab.Next(ref))
-  {
-    if (Record(ref).GetRecord(pos_SEM_OBJ_uRef_tp) == clnm)
+  for (bool bb = dom_obj_tab.First(ref); bb; bb = dom_obj_tab.Next(ref)) {
+    if (Record(ref).GetRecord(pos_SEM_OBJ_uRef_tp) == clnm) {
       return ref;
+    }
   }
   return Nil();
 }
@@ -1136,13 +1124,11 @@ void EvalState::Init_classes()
 
   // clear the isinit flag.
   Generic nm;
-  for (bool bb = classes_s.First(nm); bb; bb = classes_s.Next(nm))
-  {
+  for (bool bb = classes_s.First(nm); bb; bb = classes_s.Next(nm)) {
     SetClassInit(nm, Bool(false));
   }
 
-  if (!classes_s.IsEmpty())
-  {
+  if (!classes_s.IsEmpty()) {
     // for Status Report
     ToolMediator::Interf()->vdm_InitMeter(SEQ<Char>(L"Initializing Specification"), SEQ<Char>());
     ToolMediator::Interf()->vdm_SetMeterTotal(classes_s.Card());
@@ -1184,7 +1170,6 @@ void EvalState::RemoveClassValues()
     // remove object ref
     TYPE_GLOBAL_SigmaClass sigmacl (this->classes[nm]);
     sigmacl.SetField(pos_GLOBAL_SigmaClass_vls_uinit, TYPE_GLOBAL_ValueMap());
-// 20071113
     sigmacl.SetField(pos_GLOBAL_SigmaClass_statics, TYPE_GLOBAL_ValueMap());
     this->classes.ImpModify(nm, sigmacl);
   }
@@ -1201,55 +1186,19 @@ void EvalState::InitTheClasses(const SET<TYPE_AS_Name> & cl)
 {
   Set not_done (cl);
 
-/*
-  int cl_len = cl.Card();
-  for (int i = 1; i <= cl_len; i++)
-  {
-    Sequence not_done_l (ASTAUX::SetToSequenceR(not_done));
-    bool exists = false;
-    TYPE_AS_Name nm;
-    Generic nm_g;
-    for (bool bb = not_done_l.First(nm_g); bb;
-              bb = not_done_l.Next(nm_g) && !exists)
-    {
-      nm = nm_g; // nm_g will be changed "Next"
-//      exists = GetAllSupers(nm).SubSet(InitClasses());
-//      exists = Set(GetAllSupers(nm)).ImpUnion(GetAllSDeps(nm)).SubSet(InitClasses());
-//      exists = GetAllDeps(nm).SubSet(InitClasses()); // 20080520
-      exists = GetAllDeps(nm).SubSet(this->initclasses); // 20090313
-    }
-
-    if (! exists)
-    {
-      RTERR::Error(L"InitTheClasses", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
-    }
- 
-    if (! IsClassInit(nm))
-      InitClassName(nm);
-
-
-    not_done.RemElem(nm);
-  }
-  if (! not_done.IsEmpty())
-    RTERR::Error(L"InitTheClasses", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
-*/
-  while (!not_done.IsEmpty())
-  {
+  while (!not_done.IsEmpty()) {
     Sequence not_done_l (ASTAUX::SetToSequenceR(not_done));
     size_t len_not_done_l = not_done_l.Length();
     bool exists = false;
-    for (size_t j = 1; j <= len_not_done_l; j++)
-    {
+    for (size_t j = 1; j <= len_not_done_l; j++) {
       const TYPE_AS_Name & nm (not_done_l[j]);
-      if (GetAllDeps(nm).ImpDiff(this->initclasses).IsEmpty())
-      {
+      if (IsStaticalyDependingClassesInit(nm)) {
         InitClassName(nm);
         exists = true;
         not_done.RemElem(nm);
       }
     }
-    if (!exists)
-    {
+    if (!exists) {
       RTERR::Error(L"InitTheClasses", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
     }
   }
@@ -1260,12 +1209,9 @@ void EvalState::InitTheClasses(const SET<TYPE_AS_Name> & cl)
 // ==> ()
 void EvalState::InitClassName(const TYPE_AS_Name & nm)
 {
-  if (!IsClassInit(nm))
-  {
-//    if (IsSuperClassesInit(nm))
-//    if (IsSuperClassesInit(nm) && IsSDepsClassesInit(nm)) // 20070719
-    if (this->GetAllDeps(nm).ImpDiff(this->initclasses).IsEmpty()) // 20090313
-    { // All super class(es) is(are) initialized
+  if (!IsClassInit(nm)) {
+    if (IsStaticalyDependingClassesInit(nm)) {
+      // All super class(es) is(are) initialized
       SetClassInit(nm, Bool(true));
       PushInitPool(nm);
       if (TOOLS::isBatchMode() && !TOOLS::isTracesMode())
@@ -1299,10 +1245,6 @@ void EvalState::InitClassName(const TYPE_AS_Name & nm)
 
       theStackMachine().PushCurObj(tmp_ref, Nil(), Nil());
 
-//      Bool defaultcons (GetDefaultCons(nm));
-//      InitStaticInsts(nm, instvars);
-//      ResetGuard();
-
       SEQ<TYPE_AS_ValueDef> vls_def (GetVlsDef(nm));
       TYPE_GLOBAL_ValueMap vls_init (CLASS::InitGV(vls_def, nm));
 
@@ -1324,22 +1266,8 @@ void EvalState::InitClassName(const TYPE_AS_Name & nm)
       SetClassInit(nm, Bool(true));
       PopInitPool(nm);
     }
-    else
-    { // All super class(es) is(are) not initialized
-/*
-      SET<TYPE_AS_Name> allsupers (GetAllSupers(nm));
-      SET<TYPE_AS_Name> supers;
-      Generic clnm;
-      for (bool bb = allsupers.First(clnm); bb; bb = allsupers.Next(clnm)) {
-        if (! IsClassInit(clnm))
-          supers.Insert(clnm);
-      }
-      supers.Insert(nm);
-      InitTheClasses(supers);
-*/
-
-// 20080520
-      SET<TYPE_AS_Name> supers (this->GetAllDeps(nm).ImpDiff(this->initclasses));
+    else { // All super class(es) is(are) not initialized
+      SET<TYPE_AS_Name> supers (GetNotInitStaticalyDependingClasses(nm));
       InitTheClasses(supers);
       InitClassName(nm);
     }
@@ -5731,10 +5659,15 @@ Map EvalState::GetLocalHchy(const TYPE_AS_Name & nm) const
 // ==> bool
 bool EvalState::IsClassInit(const TYPE_AS_Name & nm) const
 {
-  if (this->classes.DomExists(nm))
+/*
+  if (this->classes.DomExists(nm)) {
     return this->classes[nm].GetBoolValue(pos_GLOBAL_SigmaClass_isinit);
-  else
+  }
+  else {
     return true;
+  }
+*/
+  return this->initclasses.InSet(nm);
 }
 
 // ExpandClassName
@@ -5745,24 +5678,21 @@ bool EvalState::IsClassInit(const TYPE_AS_Name & nm) const
 Tuple EvalState::ExpandClassName(const TYPE_AS_Name & name, const TYPE_GLOBAL_OrigCl & orgcl,
                                  const SET<TYPE_AS_Name> & nm_s)
 {
-  if (nm_s.InSet(name))
+  if (nm_s.InSet(name)) {
     return mk_(Bool(false), name);
+  }
 
-  if (IsAClass(name))
-  {
+  if (IsAClass(name)) {
     return mk_(Bool(true), name);
   }
-  else
-  {
+  else {
     TYPE_AS_Name clsnm;
     TYPE_AS_Name tpnm;
-    if (name.GetSequence(pos_AS_Name_ids).Length() == 2)
-    {
+    if (name.GetSequence(pos_AS_Name_ids).Length() == 2) {
       clsnm = ASTAUX::GetFirstName(name);
       tpnm = ASTAUX::GetSecondName(name);
     }
-    else
-    {
+    else {
       if (orgcl.Is(TAG_TYPE_GLOBAL_Start))
         return mk_(Bool(false), name);
       clsnm = orgcl;
@@ -5770,12 +5700,10 @@ Tuple EvalState::ExpandClassName(const TYPE_AS_Name & name, const TYPE_GLOBAL_Or
     }
 
     MAP<TYPE_AS_Name,TYPE_AS_TypeDef> tdm (GetLocalTps(clsnm));
-    if (tdm.DomExists(tpnm))
-    {
+    if (tdm.DomExists(tpnm)) {
       TYPE_AS_TypeDef td (tdm[tpnm]);
       TYPE_AS_Type tp (td.GetRecord(pos_AS_TypeDef_shape));
-      if (tp.Is(TAG_TYPE_AS_TypeName))
-      {
+      if (tp.Is(TAG_TYPE_AS_TypeName)) {
         return ExpandClassName(tp.GetRecord(pos_AS_TypeName_name), clsnm, Set(nm_s).Insert(name));
       }
     }
@@ -5787,15 +5715,18 @@ Tuple EvalState::ExpandClassName(const TYPE_AS_Name & name, const TYPE_GLOBAL_Or
 // ==> set of AS`Name
 SET<TYPE_AS_Name> EvalState::InitClasses() const
 {
+/*
   SET<TYPE_AS_Name> initcls;
   SET<TYPE_AS_Name> dom_classes (this->classes.Dom());
   Generic clnm;
-  for (bool bb = dom_classes.First(clnm); bb; bb = dom_classes.Next(clnm))
-  {
-    if (IsClassInit(clnm))
+  for (bool bb = dom_classes.First(clnm); bb; bb = dom_classes.Next(clnm)) {
+    if (IsClassInit(clnm)) {
       initcls.Insert(clnm);
+    }
   }
   return initcls;
+*/
+  return this->initclasses;
 }
 
 // SetClassInit
@@ -5807,13 +5738,12 @@ void EvalState::SetClassInit(const TYPE_AS_Name & nm, const Bool & val)
   sigmacl.SetField(pos_GLOBAL_SigmaClass_isinit, val);
   this->classes.ImpModify(nm, sigmacl);
 
-  // 20090313 init class name cache
-  if (val)
+  // init class name cache
+  if (val) {
     this->initclasses.Insert(nm);
-  else
-  {
-    if (this->initclasses.InSet(nm))
-      this->initclasses.RemElem(nm);
+  }
+  else {
+    this->initclasses.ImpDiff(mk_set(nm));
   }
 }
 
@@ -5974,22 +5904,25 @@ Map EvalState::GetAllFns(const TYPE_AS_Name & nm) const
   return sigmacl.GetMap(pos_GLOBAL_SigmaClass_explfns);
 }
 
-// IsSDepsClassesInit
+// IsStaticalyDependingClassesInit
 // nm : AS`Name
 // ==> bool
-bool EvalState::IsSDepsClassesInit(const TYPE_AS_Name & nm) const
+bool EvalState::IsStaticalyDependingClassesInit(const TYPE_AS_Name & nm) const
 {
-  SET<TYPE_AS_Name> deps (GetAllSDeps(nm));
-  if (deps.IsEmpty()) return true;
-
-  Generic clnm;
-  for (bool bb = deps.First(clnm); bb; bb = deps.Next(clnm)) {
-    if(!IsClassInit(clnm)) return false;
-  }
-  return true;
+  return GetNotInitStaticalyDependingClasses(nm).IsEmpty();
 }
 
-// GetAllDeps (not in spec)
+// GetNotInitStaticalyDependingClasses
+// nm : AS`Name
+// ==> set of AS`Name
+SET<TYPE_AS_Name> EvalState::GetNotInitStaticalyDependingClasses(const TYPE_AS_Name & nm) const
+{
+  return GetAllDeps(nm).ImpDiff(InitClasses());
+}
+
+// GetAllDeps
+// nm : AS`Name
+// ==> set of AS`Name
 SET<TYPE_AS_Name> EvalState::GetAllDeps(const TYPE_AS_Name & nm) const
 {
   if (this->alldeps.DomExists(nm))
@@ -6005,48 +5938,44 @@ SET<TYPE_AS_Name> EvalState::GetAllDeps(const TYPE_AS_Name & nm) const
 void EvalState::MergeClassAndStaticHierarchy()
 {
   Set classes_s (this->classes.Dom());
-  Map res;
+  Map deps;
 
   Generic nm;
-  for (bool bb = classes_s.First(nm); bb; bb = classes_s.Next(nm))
-  {
+  for (bool bb = classes_s.First(nm); bb; bb = classes_s.Next(nm)) {
     SET<TYPE_AS_Name> allsupers (GetAllSupers(nm));
-// 20120905 -->
-    //allsupers.ImpUnion(GetAllSDeps(nm));
     SET<TYPE_AS_Name> dnm_s (GetAllSDeps(nm));
     Generic dnm;
-    for (bool dd = dnm_s.First(dnm); dd; dd = dnm_s.Next(dnm))
-    {
+    for (bool dd = dnm_s.First(dnm); dd; dd = dnm_s.Next(dnm)) {
       Tuple t (ExpandClassName(dnm, nm, Set()));
-      if (t.GetBoolValue(1))
+      if (t.GetBoolValue(1)) {
         allsupers.Insert(t.GetRecord(2));
-      else
+      }
+      else {
         allsupers.Insert(dnm);
+      }
     }
-// <-- 20120905
 
     SET<TYPE_AS_Name> supers;
 
-    while(!allsupers.IsEmpty())
-    {
+    while(!allsupers.IsEmpty()) {
       SET<TYPE_AS_Name> more_supers;
       Generic clnm;
-      for (bool cc = allsupers.First(clnm); cc; cc = allsupers.Next(clnm))
-      {
+      for (bool cc = allsupers.First(clnm); cc; cc = allsupers.Next(clnm)) {
         supers.Insert(clnm);
         more_supers.ImpUnion(GetAllSupers(clnm));
         more_supers.ImpUnion(GetAllSDeps(clnm));
       }
-      if (more_supers.InSet(nm))
+      if (more_supers.InSet(nm)) {
         RTERR::Error(L"MergeClassAndStaticHierarchy", RTERR_CIRC_CL_DEPENDENCY, Nil(), Nil(), Sequence());
+      }
 
       allsupers.Clear();
       allsupers.ImpUnion(more_supers);
     }
-    res.ImpModify(nm, supers);
+    deps.ImpModify(nm, supers);
   }
   this->alldeps.Clear();
-  this->alldeps.ImpOverride(res);
+  this->alldeps.ImpOverride(deps);
 }
 #endif // VDMPP
 

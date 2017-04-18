@@ -940,8 +940,9 @@ Map CLASS::TransStaticRef(const MAP<TYPE_AS_Name, TYPE_GLOBAL_SigmaClass> & clas
     clsnms.ImpDiff(classes[name].GetSet(pos_GLOBAL_SigmaClass_inhcon));
  
     sdep.ImpModify( name, clsnms );
-    if (clsnms.IsEmpty())
+    if (clsnms.IsEmpty()) {
       exp.Insert( name );
+    }
   }
 
   return ExpandStaticRef(sdep, exp);
@@ -957,36 +958,33 @@ Map CLASS::ExpandStaticRef(const Map & sdep, const SET<TYPE_AS_Name> & done1)
   Map res (sdep);
   SET<TYPE_AS_Name> done (done1);
   SET<TYPE_AS_Name> not_done (sdep.Dom().ImpDiff(done));
-  while(!not_done.IsEmpty())
-  {
+  while(!not_done.IsEmpty()) {
     int64_t size = not_done.Card();
     Generic nm;
-    for (bool bb = not_done.First(nm); bb; bb = not_done.Next(nm))
-    {
+    for (bool bb = not_done.First(nm); bb; bb = not_done.Next(nm)) {
       SET<TYPE_AS_Name> s (res[nm]);
       bool all_done = true;
       SET<TYPE_AS_Name> tmp (res[nm]);
       Generic r_g;
-      for (bool cc = s.First(r_g); cc && all_done; cc = s.Next(r_g))
-      {
-        if (res.DomExists(r_g))
-        {
+      for (bool cc = s.First(r_g); cc && all_done; cc = s.Next(r_g)) {
+        if (res.DomExists(r_g)) {
           all_done = done.InSet(r_g);
           tmp.ImpUnion(res[r_g]);
         }
-        else
+        else {
           all_done = true;
+        }
       }
-      if (all_done)
-      {
+      if (all_done) {
         res.ImpModify(nm, tmp);
         done.Insert(nm);
         not_done.RemElem(nm);
         break;
       }
     }
-    if (size == not_done.Card())
+    if (size == not_done.Card()) {
       RTERR::Error(L"ExpandStaticRef", RTERR_CIRCULAR_STATIC_DEPENDENCY, Nil(), Nil(), Sequence());
+    }
   }
   return res;
 }
