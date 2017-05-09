@@ -811,9 +811,9 @@ FreeMapToBlkEnv (id_m) ==
 
 LookUpInTopEnv : AS`Name ==> [SEM`VAL]
 LookUpInTopEnv (name) ==
-  def mk_(isit, res) = STKM`IsLocalVal(name)
+  def mk_(isit, val, -) = STKM`IsLocalVal(name)
   in if isit
-     then return res
+     then return val
      else return nil
 
 end FREE

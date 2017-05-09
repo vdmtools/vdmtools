@@ -184,6 +184,7 @@ void ParserRecover::InitRepairTokens()
   AddToken(LEX_ELSE,           L"else",                TG_valid,       0,        TTF_None);
   AddToken(LEX_ELSEIF,         L"elseif",              TG_valid,       0,        TTF_None);
   AddToken(LEX_END,            L"end",                 TG_valid,       0,        TTF_None);
+  AddToken(LEX_EQ,             L"eq",                  TG_valid,       0,        TTF_None);
   AddToken(LEX_ERROR,          L"error",               TG_valid,       TG_Stmt,  TTF_None);
   AddToken(LEX_ERRS,           L"errs",                TG_valid,       0,        TTF_None);
   AddToken(LEX_EXISTS,         L"exists",              TG_valid,       TG_Expr,  TTF_None);
@@ -251,6 +252,7 @@ void ParserRecover::InitRepairTokens()
   AddToken(LEX_OPERATIONS,     L"operations",          TG_valid,       0,        TTF_None);
   AddToken(LEX_OPERATION_ARROW, L"==>",                TG_valid,       0,        TTF_None);
   AddToken(LEX_OR,             L"or",                  TG_skip_bin_op, TG_BinOp, TTF_None);
+  AddToken(LEX_ORD,            L"ord",                 TG_valid,       0,        TTF_None);
   AddToken(LEX_OTHERS,         L"others",              TG_valid,       0,        TTF_None);
   AddToken(LEX_TARROW,         L"+>",                  TG_valid,       0,        TTF_None);
   AddToken(LEX_POST,           L"post",                TG_valid,       0,        TTF_None);

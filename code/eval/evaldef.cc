@@ -488,7 +488,7 @@ MAP<TYPE_AS_Name,TYPE_AS_TypeDef> DEF::GenStateTypeDef (const TYPE_AS_StateDef &
   const Generic & Inv (sd.GetField(pos_AS_StateDef_Inv));
 
   TYPE_AS_TypeDef td;
-  td.Init(id, comp_t, Inv, Default_Tp, id.GetInt(pos_AS_Name_cid));
+  td.Init(id, comp_t, Inv, Nil(), Nil(), Default_Tp, id.GetInt(pos_AS_Name_cid));
 
   Map res_m;
   res_m.Insert (id, td);

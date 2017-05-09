@@ -6801,9 +6801,9 @@ GenMapDistrMergeInner( e, rdmmap_v, maptype ) ==
      )
   else
 #endif VDMPP
-    let eq = BC`GenFctCallObjMemAcc(rdmmap_v, "IsCompatible", [e]),
+    let compat = BC`GenFctCallObjMemAcc(rdmmap_v, "IsCompatible", [e]),
         rt = CGAUX`RunTime("Duplicate entries for 'merge' had different values")
-    in return [BC`GenIfStmt(BC`GenNot(eq), rt, nil), DS`GenMapOverride(rdmmap_v, e)];
+    in return [BC`GenIfStmt(BC`GenNot(compat), rt, nil), DS`GenMapOverride(rdmmap_v, e)];
 \end{vdm_al}
 
 The next operation $GenDynCheckOnSetsValues$ is an auxiliary operation

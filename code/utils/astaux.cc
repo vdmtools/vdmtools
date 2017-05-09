@@ -117,6 +117,8 @@ bool ASTAUX::IsASTRec(const Record & rec)
     case TAG_TYPE_AS_Definitions:
     case TAG_TYPE_AS_TypeDef:
     case TAG_TYPE_AS_Invariant:
+    case TAG_TYPE_AS_Order:
+    case TAG_TYPE_AS_Equal:
 
     case TAG_TYPE_AS_BracketedType:
     case TAG_TYPE_AS_BooleanType:

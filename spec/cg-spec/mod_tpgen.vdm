@@ -328,7 +328,7 @@ AddClassTypes(mk_AS`Class(nm,-,inh,defs,-,-)) ==
      (typeDefs := typeDefs ++ { nm |-> tps };
       -- Add all types from the types part
       for all tpd in set dom tps do
-        let mk_AS`TypeDef(name,shape,Inv,-,-) = tps(tpd)
+        let mk_AS`TypeDef(name,shape,Inv,Eq,Ord,-,-) = tps(tpd)
         in
          (known_types := known_types munion { GenQName2(nm,name) |-> GenQComp(nm,shape) };
           if Inv <> nil
@@ -866,7 +866,7 @@ ModuleTypes2TpEnv(mdnm, tps) ==
   --{ id |-> GenQComp(mdnm, tps(id).shape ) | id in set dom tps };
   (dcl res : TpEnv := {|->};
    for all id in set dom tps do
-     let mk_AS`TypeDef(-,shape,-,-,-) = tps(id)
+     let mk_AS`TypeDef(-,shape,-,-,-,-,-) = tps(id)
      in
       (res := res ++ { id |-> GenQComp(mdnm, shape) };
        if is_AS`CompositeType(shape) and shape.name not in set dom res
@@ -3147,7 +3147,7 @@ GetTypeDef(nm) ==
   cases typeDefs:
     { (clmodnm) |-> { (tpnm) |-> tdef } munion - } munion - ->
 --        cases tdef:
---          mk_AS`TypeDef(-,mk_AS`CompositeType(nm,-,-),-,-,-) ->
+--          mk_AS`TypeDef(-,mk_AS`CompositeType(nm,-,-),-,-,-,-) ->
 --            return mu(tdef, shape |-> 
 --                     mu(tdef.shape, name |-> CGAUX`Combine2Names(clmodnm,nm))),
 --          others -> return tdef

@@ -339,7 +339,7 @@ ExtractTagName(name, nm_s) ==
                      (if card dom ltp = 1
                       then
                         cases rng ltp:
-                          {mk_AS`TypeDef(-,mk_AS`TypeName(tnm,-),-,-,-)} -> return ExtractTagName(tnm, nm_s union {name}),
+                          {mk_AS`TypeDef(-,mk_AS`TypeName(tnm,-),-,-,-,-,-)} -> return ExtractTagName(tnm, nm_s union {name}),
                           others -> return mk_(nil, false)
                         end
                       else return mk_(nil, false)),
@@ -385,7 +385,7 @@ IsTypeDef (name) ==
   in
     if rec_name in set dom tps
     then
-      let mk_AS`TypeDef(-,shape,Inv,-,-) = tps(rec_name)
+      let mk_AS`TypeDef(-,shape,Inv,Eq,Ord,-,-) = tps(rec_name)
       in return mk_(true,shape,Inv,mod_name)
     else return mk_(false,nil,nil,nil);
 \end{vdm_al}
@@ -429,7 +429,7 @@ IsTypeDef (name) ==
         in
          (if thename in set dom tps
           then
-            def mk_AS`TypeDef(-,shape,Inv,access,-) = ExtComp(tps(thename), clnm);
+            def mk_AS`TypeDef(-,shape,Inv,Eq,Ord,access,-) = ExtComp(tps(thename), clnm);
                 scopeok = STATE`AccessOk(access,origcl,clnm)
             in return mk_(scopeok,shape,Inv,clnm,access)
          );
@@ -447,7 +447,7 @@ IsTypeDef (name) ==
       in
         cases dom spcl_tps:
           {}     -> return mk_(false, nil, nil, nil,nil),
-          {cl}   -> def mk_AS`TypeDef(-,shape,Inv,access,-) = ExtComp(spcl_tps(cl)(thename),cl);
+          {cl}   -> def mk_AS`TypeDef(-,shape,Inv,Eq,Ord,access,-) = ExtComp(spcl_tps(cl)(thename),cl);
                         scopeok = STATE`AccessOk(access, origcl,cl)
                     in return mk_(scopeok,shape,Inv,cl,access),
           others ->(dcl res : bool * AS`Name := mk_(true, classname);
@@ -459,7 +459,7 @@ IsTypeDef (name) ==
                     let mk_(doesthere, cl) = res 
                     in
                       if doesthere
-                      then def mk_AS`TypeDef(-,shape,Inv,access,-) = ExtComp(spcl_tps(cl)(thename),cl);
+                      then def mk_AS`TypeDef(-,shape,Inv,Eq,Ord,access,-) = ExtComp(spcl_tps(cl)(thename),cl);
                                scopeok = STATE`AccessOk(access,origcl,cl)
                            in return mk_(scopeok,shape,Inv,cl,access)
                       else 
@@ -472,12 +472,12 @@ IsTypeDef (name) ==
 \begin{vdm_al}
 functions
 ExtComp: AS`TypeDef * AS`Name -> AS`TypeDef
-ExtComp(mk_AS`TypeDef(nm, shape,Inv,access,cid), clnm) ==
+ExtComp(mk_AS`TypeDef(nm, shape,Inv,Eq,Ord,access,cid), clnm) ==
   cases shape:
     mk_AS`CompositeType(name, fields, cid2) -> let tag_name = ConstructDoubleName(clnm, name),
                                                    new_shape = mk_AS`CompositeType(tag_name, fields, cid2)
-                                               in mk_AS`TypeDef(tag_name, new_shape, Inv, access, cid),
-    others                                  -> mk_AS`TypeDef(nm, shape, Inv, access, cid)
+                                               in mk_AS`TypeDef(tag_name, new_shape, Inv,Eq, Ord, access, cid),
+    others                                  -> mk_AS`TypeDef(nm, shape, Inv, Eq, Ord, access, cid)
   end;
 \end{vdm_al}
 
@@ -827,9 +827,9 @@ IsDefinedInModule : AS`Name ==> bool
 IsDefinedInModule (name) ==
   def sigmamo = STATE`GetModule (STATE`ExtractModule (name));
       tag_id  = ExtractId (name);
-      tagnames = { let mk_AS`TypeDef(-,mk_AS`CompositeType(tagname,-,-),-,-,-) = tp
+      tagnames = { let mk_AS`TypeDef(-,mk_AS`CompositeType(tagname,-,-),-,-,-,-,-) = tp
                    in tagname | tp in set rng sigmamo.tps &
-                                let mk_AS`TypeDef(-,shape,-,-,-) = tp
+                                let mk_AS`TypeDef(-,shape,-,-,-,-,-) = tp
                                 in is_AS`CompositeType(shape) }
   in
     return mk_AS`Name([tag_id],name.cid) in set tagnames

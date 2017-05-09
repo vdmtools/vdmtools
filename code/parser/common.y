@@ -251,7 +251,9 @@ static void yyerror(const char *);
 %token LEX_IN_REVERSE
 %token LEX_INMAP LEX_INMAP1
 %token LEX_INT
-%token LEX_INV
+%token LEX_INV 
+%token LEX_EQ
+%token LEX_ORD
 %token LEX_INVERSE LEX_IN_SET LEX_IOTA LEX_IN_SEQ
 %token LEX_IS_ LEX_IS_DEFINED_AS
 %token LEX_LEN LEX_LESS_THAN LEX_LESS_THAN_OR_EQUAL LEX_LET LEX_LOGICAL_EQUIVALENCE
@@ -409,6 +411,10 @@ static void yyerror(const char *);
 
 %type <tuple>    TypeDefinition
 %type <record>   Invariant
+%type <record>   Equal
+%type <record>   Order
+%type <tuple>    EqualOrder
+%type <tuple>    InvariantEqualOrder
 
 %type <sequence> ValueDefinitions
 %type <sequence> ListOfValueDefinitions
@@ -2904,6 +2910,8 @@ TypeDefinition
           td.SetField (pos_AS_TypeDef_nm,     *$1);
           td.SetField (pos_AS_TypeDef_shape,  *$3);
           td.SetField (pos_AS_TypeDef_Inv,    Nil ());
+          td.SetField (pos_AS_TypeDef_Eq,     Nil ());
+          td.SetField (pos_AS_TypeDef_Ord,    Nil ());
           td.SetField (pos_AS_TypeDef_access, Int (NOT_INITIALISED_AS));
 
           $$->SetField (1, *$1);
@@ -2912,7 +2920,7 @@ TypeDefinition
           delete $1;
           delete $3;
         }
-        | Identifier LEX_EQUAL Type Invariant
+        | Identifier LEX_EQUAL Type InvariantEqualOrder
         {
           $$ = new Tuple (2); // (AS`Name * AS`TypeDef)
 
@@ -2920,7 +2928,9 @@ TypeDefinition
           MYPARSER::SetPos2(td, @1, @4);
           td.SetField (pos_AS_TypeDef_nm,     *$1);
           td.SetField (pos_AS_TypeDef_shape,  *$3);
-          td.SetField (pos_AS_TypeDef_Inv,    *$4);
+          td.SetField (pos_AS_TypeDef_Inv,    $4->GetField(1));
+          td.SetField (pos_AS_TypeDef_Eq,     $4->GetField(2));
+          td.SetField (pos_AS_TypeDef_Ord,    $4->GetField(3));
           td.SetField (pos_AS_TypeDef_access, Int (NOT_INITIALISED_AS));
 
           $$->SetField (1, *$1);
@@ -2944,6 +2954,8 @@ TypeDefinition
           td.SetField (pos_AS_TypeDef_nm,     *$1);
           td.SetField (pos_AS_TypeDef_shape,  co);
           td.SetField (pos_AS_TypeDef_Inv,    Nil ());
+          td.SetField (pos_AS_TypeDef_Eq,     Nil ());
+          td.SetField (pos_AS_TypeDef_Ord,    Nil ());
           td.SetField (pos_AS_TypeDef_access, Int (NOT_INITIALISED_AS));
 
           $$->SetField (1, *$1);
@@ -2952,7 +2964,7 @@ TypeDefinition
           delete $1;
           delete $3;
         }
-        | Identifier LEX_DOUBLE_COLON FieldList Invariant
+        | Identifier LEX_DOUBLE_COLON FieldList InvariantEqualOrder
         {
           $$ = new Tuple (2); // (AS`Name * AS`TypeDef)
 
@@ -2965,7 +2977,9 @@ TypeDefinition
           MYPARSER::SetPos2(td, @1, @4);
           td.SetField (pos_AS_TypeDef_nm,     *$1);
           td.SetField (pos_AS_TypeDef_shape,  co);
-          td.SetField (pos_AS_TypeDef_Inv,    *$4);
+          td.SetField (pos_AS_TypeDef_Inv,    $4->GetField(1));
+          td.SetField (pos_AS_TypeDef_Eq,     $4->GetField(2));
+          td.SetField (pos_AS_TypeDef_Ord,    $4->GetField(3));
           td.SetField (pos_AS_TypeDef_access, Int (NOT_INITIALISED_AS));
 
           $$->SetField (1, *$1);
@@ -4263,6 +4277,68 @@ StateDefinition
         ;
 #endif // VDMSL
 
+InvariantEqualOrder
+        : Invariant
+        { $$ = new Tuple(3);
+          $$->SetField(1, *$1);
+          $$->SetField(2, Nil());
+          $$->SetField(3, Nil());
+          delete $1;
+        } 
+        | EqualOrder
+        { $$ = new Tuple(3);
+          $$->SetField(1, Nil());
+          $$->SetField(2, $1->GetField(1));
+          $$->SetField(3, $1->GetField(2));
+          delete $1;
+        } 
+        | Invariant EqualOrder
+        { $$ = new Tuple(3);
+          $$->SetField(1, *$1);
+          $$->SetField(2, $2->GetField(1));
+          $$->SetField(3, $2->GetField(2));
+          delete $1;
+          delete $2;
+        } 
+        | EqualOrder Invariant
+        { $$ = new Tuple(3);
+          $$->SetField(1, *$2);
+          $$->SetField(2, $1->GetField(1));
+          $$->SetField(3, $1->GetField(2));
+          delete $1;
+          delete $2;
+        }
+        ;
+
+EqualOrder
+        : Equal
+        { $$ = new Tuple(2);
+          $$->SetField(1, *$1);
+          $$->SetField(2, Nil());
+          delete $1;
+        } 
+        | Order
+        { $$ = new Tuple(2);
+          $$->SetField(1, Nil());
+          $$->SetField(2, *$1);
+          delete $1;
+        } 
+        | Equal Order
+        { $$ = new Tuple(2);
+          $$->SetField(1, *$1);
+          $$->SetField(2, *$2);
+          delete $1;
+          delete $2;
+        } 
+        | Order Equal
+        { $$ = new Tuple(2);
+          $$->SetField(1, *$2);
+          $$->SetField(2, *$1);
+          delete $1;
+          delete $2;
+        } 
+        ;
+
 Invariant
         : LEX_INV Pattern LEX_IS_DEFINED_AS Expression
         { $$ = new TYPE_AS_Invariant();
@@ -4272,6 +4348,32 @@ Invariant
           delete $2;
           delete $4;
         }
+        ;
+
+Equal
+        : LEX_EQ Pattern LEX_EQUAL Pattern LEX_IS_DEFINED_AS Expression
+        { $$ = new TYPE_AS_Equal();
+          MYPARSER::SetPos2(*$$, @1, @6);
+          $$->SetField (pos_AS_Order_lhs,  *$2);
+          $$->SetField (pos_AS_Order_rhs,  *$4);
+          $$->SetField (pos_AS_Order_expr, *$6);
+          delete $2;
+          delete $4;
+          delete $6;
+        } 
+        ;
+
+Order
+        : LEX_ORD Pattern LEX_LESS_THAN Pattern LEX_IS_DEFINED_AS Expression
+        { $$ = new TYPE_AS_Order();
+          MYPARSER::SetPos2(*$$, @1, @6);
+          $$->SetField (pos_AS_Order_lhs,  *$2);
+          $$->SetField (pos_AS_Order_rhs,  *$4);
+          $$->SetField (pos_AS_Order_expr, *$6);
+          delete $2;
+          delete $4;
+          delete $6;
+        } 
         ;
 
 #if VDMSL

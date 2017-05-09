@@ -1140,7 +1140,7 @@ GenTypeDef(-, td_l) ==
   then
    (dcl cidtocpp : map int to seq of CPP`MemberDeclaration := {|->};
     dcl s      : seq of CPP`MemberDeclaration := [];
-    for mk_AS`TypeDef(nm, type, -, -, -) in td_l do
+    for mk_AS`TypeDef(nm, type, -, -, -, -, -) in td_l do
      (if is_AS`UnionType(type)
       then
         def rtp = CGAUX`FromAS2RepType(type)
@@ -1152,14 +1152,14 @@ GenTypeDef(-, td_l) ==
               for t in typeseq do
                 let mk_AS`TypeName(enm,-) = t
                 in
-                  for mk_AS`TypeDef(nm_i, type_i, -, -,-) in td_l do
+                  for mk_AS`TypeDef(nm_i, type_i, -, -, -, -,-) in td_l do
                     if enm = nm_i
                     then
                       if is_AS`UnionType(type_i)
                       then TPGEN`AddUnionType(enm,nm)
                       else TPGEN`AddRecordType(enm,nm)
      );
-    for mk_AS`TypeDef(nm, type, -, acc, cid) in td_l do
+    for mk_AS`TypeDef(nm, type, -, -, -, acc, cid) in td_l do
       cidtocpp := cidtocpp munion {cid|->TPGEN`GenCppTypeDef(nm,type,acc)};
     while card dom cidtocpp > 0 do
      (let cid in set dom cidtocpp be st
@@ -1182,7 +1182,7 @@ GenTypeDef(-, td_l) ==
 #ifdef VDMPP
     dcl s      : seq of CPP`MemberDeclaration := [];
 #endif VDMPP
-    for mk_AS`TypeDef(nm, type, -,-,-) in td_l do
+    for mk_AS`TypeDef(nm, type, -,-,-,-,-) in td_l do
      (if is_AS`CompositeType(type)
       then
         let mk_AS`CompositeType(name, field_l, -) = type
@@ -3183,9 +3183,9 @@ interpreter of the function $EvalMapMerge$.
         rb := rb ^ GenDeclSet(com_v, GenDom(m1));
         rb := rb ^ [ GenInterSectStmt(com_v, GenDom(m2)) ];
         rb := rb ^ [ BC`GenDecl(inttp, allApplies_v, BC`GenAsgnInit(BC`GenBoolLit(true))) ];
-        rb := rb ^ def eq = GenEqVal(BC`GenFctCallObjMemAcc(m1, "get", [d_v]),
+        rb := rb ^ def cond = GenEqVal(BC`GenFctCallObjMemAcc(m1, "get", [d_v]),
                                      BC`GenFctCallObjMemAcc(m2, "get", [d_v]));
-                       as2 = BC`GenAsgnStmt(allApplies_v, eq)
+                       as2 = BC`GenAsgnStmt(allApplies_v, cond)
                    in GenIterSet(mk_CGMAIN`VT(com_v, mk_REP`SetTypeRep(mk_REP`AllTypeRep())), allApplies_v,
                                  mk_CGMAIN`VT(d_v, mk_REP`AllTypeRep()), [as2]);
         rb := rb ^ [ BC`GenIfStmt(BC`GenNot(allApplies_v), rti, nil) ];

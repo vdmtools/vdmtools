@@ -405,7 +405,7 @@ SEQ<TYPE_AS_TypeDef> vdmcg::TypeMapToSeq(const MAP<TYPE_AS_Name, TYPE_AS_TypeDef
     TYPE_AS_StateDef sd (sdg);
     const TYPE_AS_CompositeType & tp (sd.GetRecord(pos_AS_StateDef_tp));
     const Generic & Inv (sd.GetField(pos_AS_StateDef_Inv));
-    type_l.ImpAppend(TYPE_AS_TypeDef().Init(tp.get_name(), tp, Inv, Int(DEFAULT_AS), NilContextId));
+    type_l.ImpAppend(TYPE_AS_TypeDef().Init(tp.get_name(), tp, Inv, Nil(), Nil(), Int(DEFAULT_AS), NilContextId));
   }
 
   Set dom_type_m (type_m.Dom());

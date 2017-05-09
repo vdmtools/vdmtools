@@ -740,6 +740,7 @@ static struct
       {"else",        LEX_ELSE},
       {"elseif",      LEX_ELSEIF},
       {"end",         LEX_END},
+      {"eq",          LEX_EQ},
       {"error",       LEX_ERROR},
       {"errs",        LEX_ERRS},
       {"exists",      LEX_EXISTS},
@@ -814,6 +815,7 @@ static struct
       {"of",          LEX_OF},
       {"operations",  LEX_OPERATIONS},
       {"or",          LEX_OR},
+      {"ord",         LEX_ORD},
       {"others",      LEX_OTHERS},
 @#if VDMPP
       {"per",         LEX_PER},

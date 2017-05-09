@@ -1221,10 +1221,25 @@ void GenLatexOutput::GenInv (const Generic & modnm, const TYPE_AS_Invariant & In
   if (patline < expline ) LatexOutput << LF;
 
   GenExpr (modnm, exp);
-  if (semicolon)
+  if (semicolon) {
     LatexOutput << ";";
+  }
   LatexOutput << endl;
   LatexOutput << "\\end{invfn}";
+}
+
+void GenLatexOutput::GenEqual(const Generic & modnm, const TYPE_AS_Equal& ord, bool semicolon)
+{
+  const TYPE_AS_Pattern & lhs (ord.GetRecord(pos_AS_Equal_lhs));
+  const TYPE_AS_Pattern & rhs (ord.GetRecord(pos_AS_Equal_rhs));
+  const TYPE_AS_Expr & expr   (ord.GetRecord(pos_AS_Equal_expr));
+}
+
+void GenLatexOutput::GenOrder(const Generic & modnm, const TYPE_AS_Order& ord, bool semicolon)
+{
+  const TYPE_AS_Pattern & lhs (ord.GetRecord(pos_AS_Order_lhs));
+  const TYPE_AS_Pattern & rhs (ord.GetRecord(pos_AS_Order_rhs));
+  const TYPE_AS_Expr & expr   (ord.GetRecord(pos_AS_Order_expr));
 }
 
 void GenLatexOutput::GenFnType (const TYPE_AS_FnType & shape)

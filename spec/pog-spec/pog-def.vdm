@@ -268,10 +268,12 @@ operations
 #endif VDMSL
 
   pog_TypeDef : AS`TypeDef * POGTP`Context ==> seq of POGTP`ProofObligation
-  pog_TypeDef (mk_AS`TypeDef(nm,tp,fninv,-,-),contxt) ==
+  pog_TypeDef (mk_AS`TypeDef(nm,tp,fninv,fneq,fnord,-,-),contxt) ==
     def new_contxt = POGTP`UpdateLoc(<types>,nm,contxt);
-        pog_fninv  = pog_Invariant(nm,tp,fninv,new_contxt)
-    in return pog_fninv;
+        pog_fninv  = pog_Invariant(nm,tp,fninv,new_contxt);
+        pog_fneq   = pog_Eq(nm,tp,fneq,new_contxt);
+        pog_fnord  = pog_Order(nm,tp,fnord,new_contxt)
+    in return pog_fninv ^ pog_fneq ^ pog_fnord;
 
   pog_Invariant : AS`Name * AS`Type * [AS`Invariant] * POGTP`Context ==> seq of POGTP`ProofObligation
   pog_Invariant (nm,tp,Inv,contxt) ==
@@ -302,6 +304,19 @@ operations
             po          = pog_pat.po ^ pog_expr.po ^ pog_match_cond
         in return po;
 
+  pog_Eq : AS`Name * AS`Type * [AS`Order] * POGTP`Context ==> seq of POGTP`ProofObligation
+  pog_Eq (nm,tp,Eq,contxt) ==
+    if Eq = nil
+    then return []
+    else
+      return []; -- TODO
+
+  pog_Order : AS`Name * AS`Type * [AS`Order] * POGTP`Context ==> seq of POGTP`ProofObligation
+  pog_Order (nm,tp,Ord,contxt) ==
+    if Ord = nil
+    then return []
+    else
+      return []; -- TODO
 \end{vdm_al}
 
 \subsection{Traversing function definitions}

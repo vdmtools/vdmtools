@@ -426,10 +426,10 @@ used in the body of the module and also have not been exported.
       (dcl reswf : bool := true;
        ENV`PushContext(<PURE>);
 #ifdef VDMSL
-        for all mk_AS`TypeDef(nm, Tp, Invar, -,-) in set rng tp_m do
+        for all mk_AS`TypeDef(nm, Tp, Invar, Eq, Ord, -,-) in set rng tp_m do
 #endif VDMSL
 #ifdef VDMPP
-        for all mk_AS`TypeDef(nm, Tp, Invar, acc,-) in set rng tp_m do
+        for all mk_AS`TypeDef(nm, Tp, Invar, Eq, Ord, acc,-) in set rng tp_m do
 #endif VDMPP
           def tprep = ENV`TransType (nil,Tp) in
             ( reswf := 
@@ -595,6 +595,32 @@ used in the body of the module and also have not been exported.
          in
            (ENV`LeaveScope();
             return (wf_pat = true) and wf_body and reswf)));
+
+  wf_TypeOrd : TYPE`Ind * REP`TypeRep * [AS`Order] * AS`Name ==> bool
+  wf_TypeOrd (i, Type, Ord,nm) ==
+    if Ord = nil then
+      return true
+    else
+      let mk_AS`Order(lhs, rhs, exp, -) = Ord
+      in
+       (dcl reswf : bool := true;
+        if nm in set dom PAT`ExtractPatternName(lhs)
+             ------------------------------------------------------
+             -- Error message #8
+             -- Pattern in invariant must not be the type name "%1"
+             ------------------------------------------------------
+         then (ERR`GenErr(nm, <ERROR>,8,[ENV`PrintName(nm)]);
+               reswf := false);
+        if nm in set dom PAT`ExtractPatternName(rhs)
+             ------------------------------------------------------
+             -- Error message #8
+             -- Pattern in invariant must not be the type name "%1"
+             ------------------------------------------------------
+         then (ERR`GenErr(nm, <ERROR>,8,[ENV`PrintName(nm)]);
+               reswf := false);
+        -- TODO
+        return reswf;
+        );
 
   wf_TypeList: TYPE`Ind * seq of AS`Type ==> bool
   wf_TypeList(i,tp_l) ==

@@ -135,11 +135,13 @@ functions
 \begin{vdm_al}
 
   trv_TypeDef : AS`TypeDef -> PP_TAR_DEF`TypeDef
-  trv_TypeDef (mk_AS`TypeDef(nm,tp,fninv,access,cid)) ==
+  trv_TypeDef (mk_AS`TypeDef(nm,tp,fninv,fneq,fnord,access,cid)) ==
     PP_TAR_DEF`tar_TypeDef(PP_TRA_EXPR`trv_NameName(nm),
                            tp,
                            PP_TRA_TYPE`trv_Type(tp),
                            if fninv = nil then nil else trv_Invariant(fninv),
+                           if fneq = nil then nil else trv_Equal(fneq),
+                           if fnord = nil then nil else trv_Order(fnord),
                            access,
                            cid);
 
@@ -149,6 +151,19 @@ functions
                              PP_TRA_EXPR`trv_Expr(expr),
                              cid);
 
+  trv_Equal : AS`Equal -> PP_TAR_DEF`Order
+  trv_Equal (mk_AS`Equal(lhs,rhs,expr,cid)) ==
+    PP_TAR_DEF`tar_Eq(PP_TRA_PAT`trv_Pattern(lhs),
+                      PP_TRA_PAT`trv_Pattern(rhs),
+                      PP_TRA_EXPR`trv_Expr(expr),
+                      cid);
+
+  trv_Order : AS`Order -> PP_TAR_DEF`Order
+  trv_Order (mk_AS`Order(lhs,rhs,expr,cid)) ==
+    PP_TAR_DEF`tar_Order(PP_TRA_PAT`trv_Pattern(lhs),
+                         PP_TRA_PAT`trv_Pattern(rhs),
+                         PP_TRA_EXPR`trv_Expr(expr),
+                         cid);
 \end{vdm_al}
 
 \subsection{Traversing function definitions}

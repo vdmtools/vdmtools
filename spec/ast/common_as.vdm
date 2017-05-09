@@ -343,6 +343,8 @@ the type definition is included in order to avoid too many ifdefs in the specifi
 TypeDef :: nm     : Name
            shape  : Type
            Inv    : [Invariant]
+           Eq     : [Equal]
+           Ord    : [Order]
            access : Access
            CNTXT
 --inv td == true -- len td.nm.ids = 1
@@ -350,6 +352,20 @@ TypeDef :: nm     : Name
 
 Invariant ::
      pat  : Pattern
+     expr : Expr
+     CNTXT
+     ;
+
+Equal ::
+     lhs  : Pattern
+     rhs  : Pattern
+     expr : Expr
+     CNTXT
+     ;
+
+Order ::
+     lhs  : Pattern
+     rhs  : Pattern
      expr : Expr
      CNTXT
      ;

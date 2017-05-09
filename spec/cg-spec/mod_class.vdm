@@ -503,7 +503,7 @@ GenHFile(cs) ==
         for all tp in set rng tps do
          (type_l := type_l ^ [ tp ];
           cases tp:
-            mk_AS`TypeDef(-,mk_AS`CompositeType(-,-,-),-,-,-)
+            mk_AS`TypeDef(-,mk_AS`CompositeType(-,-,-),-,-,-,-,-)
                 -> needinit := true,
             others -> skip
           end;
@@ -765,7 +765,7 @@ init_A Init_A;
 GenClassInit: AS`Name * seq of AS`TypeDef ==> CPP`CPPAS
 GenClassInit(nm, tps) ==
  (dcl body : seq of CPP`Stmt := [];
-  for mk_AS`TypeDef(-, type, -, -, -) in tps do 
+  for mk_AS`TypeDef(-, type, -, -, -, -, -) in tps do 
     if is_AS`CompositeType(type)
     then let mk_AS`CompositeType(name, field_l,-) = type in
          let tag = TPGEN`GenCompositeTypeTagId(name),
