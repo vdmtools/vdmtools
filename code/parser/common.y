@@ -377,13 +377,13 @@ static void yyerror(const char *);
 %type <Definitions_p> DefinitionBlock
 %type <StateDef_p>    StateDefinition
 %type <record>        Initialization
-%type <vdm_bool>      PureOperation
+%type <tuple>         InvariantInitialization
 #endif // VDMSL
 #if VDMPP
 %type <Definitions_p> OptDefinitionBlock
+%type <record>        AccessValueDefinition
 %type <inttype>       Access
-%type <inttype>       OptAccess
-%type <tuple>         StatAccess
+%type <tuple>         StaticAccess
 %type <tuple>         OperationAccess
 #endif // VDMPP
 
@@ -410,6 +410,8 @@ static void yyerror(const char *);
 %type <sequence> ListOfErrors
 
 %type <tuple>    TypeDefinition
+%type <tuple>    SimpleTypeDefinition
+%type <tuple>    CompositeTypeDefinition
 %type <record>   Invariant
 %type <record>   Equal
 %type <record>   Order
@@ -2752,36 +2754,24 @@ InstanceVariableDefinitions
         ;
 
 InstanceVariableDefinitionList
-        : StatAccess InstanceVariableDefinition
+        : InstanceVariableDefinition
         {
           $$ = new Sequence();
-          TYPE_AS_InstanceVarDef opd (*$2);
-          Tuple sa (*$1);
-          opd.SetField (2, sa.GetField(1)); // Access
-          if (opd.Is(TAG_TYPE_AS_InstAssignDef))
-            opd.SetField (pos_AS_InstAssignDef_stat, sa.GetBool(2)); // Static
-          $$->ImpAppend(opd);
+          $$->ImpAppend(*$1);
 
 ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_PRETTY_PRINTER_InstVarDef, Int($$->Length()));
 
           delete $1;
-          delete $2;
         }
-        | InstanceVariableDefinitionList ';' TexBreak StatAccess InstanceVariableDefinition
+        | InstanceVariableDefinitionList ';' TexBreak InstanceVariableDefinition
         {
           $$ = $1;
-          TYPE_AS_InstanceVarDef opd (*$5);
-          Tuple sa (*$4);
-          opd.SetField (2, sa.GetField(1)); // Access
-          if (opd.Is(TAG_TYPE_AS_InstAssignDef))
-            opd.SetField (pos_AS_InstAssignDef_stat, sa.GetBool(2)); // Static
-          $$->ImpAppend(opd);
+          $$->ImpAppend(*$4);
 
 ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_PRETTY_PRINTER_InstVarDef, Int($$->Length()));
 
           delete $3;
           delete $4;
-          delete $5;
         }
         ;
 
@@ -2804,8 +2794,19 @@ InstAssignmentDefinition
         : AssignmentDefinition
         { $$ = new TYPE_AS_InstAssignDef ();
           MYPARSER::SetPos2(*$$, @1, @1);
-          $$->SetField(pos_AS_InstAssignDef_ad, *$1);
+          $$->SetField(pos_AS_InstAssignDef_ad,     *$1);
+          $$->SetField(pos_AS_InstAssignDef_access, Int (DEFAULT_AS));
+          $$->SetField(pos_AS_InstAssignDef_stat,   Bool(false));
           delete $1;
+        }
+        | StaticAccess AssignmentDefinition
+        { $$ = new TYPE_AS_InstAssignDef ();
+          MYPARSER::SetPos2(*$$, @1, @2);
+          $$->SetField(pos_AS_InstAssignDef_ad, *$2);
+          $$->SetField(pos_AS_InstAssignDef_access, $1->GetField(1));
+          $$->SetField(pos_AS_InstAssignDef_stat,   $1->GetField(2));
+          delete $1;
+          delete $2;
         }
         ;
 
@@ -2842,7 +2843,6 @@ TypeDefinitions
         }
         ;
 
-#ifdef VDMSL
 ListOfTypeDefinitions
         : TypeDefinition
         {
@@ -2855,10 +2855,12 @@ ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_AS_TypeDef, $1->GetRecord (1));
         }
         | ListOfTypeDefinitions ';' TexBreak TypeDefinition
         {
-          if ($1->DomExists ($4->GetRecord (1)))
+          if ($1->DomExists ($4->GetRecord (1))) {
             MYPARSER::Report (L"Type already defined", @4);
-          else
+          }
+          else {
             $1->Insert ($4->GetRecord (1), $4->GetRecord (2));
+          }
 
 ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_AS_TypeDef, $4->GetRecord (1));
 
@@ -2866,41 +2868,31 @@ ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_AS_TypeDef, $4->GetRecord (1));
           delete $4;
         }
         ;
-#endif // VDMSL
-#ifdef VDMPP
-ListOfTypeDefinitions
-        : OptAccess TypeDefinition
-        {
-          $$ = new Map;
-          TYPE_AS_TypeDef tp ($2->GetRecord (2));
-          tp.SetField(pos_AS_TypeDef_access, *$1);
-          $$->Insert ($2->GetRecord (1), tp);
-
-ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_AS_TypeDef, $2->GetRecord (1));
-
-          delete $1;
-          delete $2;
-        }
-        | ListOfTypeDefinitions ';' TexBreak OptAccess TypeDefinition
-        {
-          if ($1->DomExists ($5->GetRecord (1)))
-            MYPARSER::Report (L"Type already defined", @5);
-          else {
-            TYPE_AS_TypeDef td ($5->GetRecord (2));
-            td.SetField(pos_AS_TypeDef_access, *$4);
-            $1->Insert ($5->GetRecord (1), td);
-          }
-
-ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_AS_TypeDef, $5->GetRecord (1));
-
-          delete $3;
-          delete $4;
-          delete $5;
-        }
-        ;
-#endif // VDMPP
 
 TypeDefinition
+        : SimpleTypeDefinition
+        | CompositeTypeDefinition
+#ifdef VDMPP
+        | Access SimpleTypeDefinition
+        {
+          $$ = $2;
+          TYPE_AS_TypeDef td ($2->GetRecord (2));
+          td.SetField(pos_AS_TypeDef_access, *$1);
+          $$->SetField(2, td);
+          delete $1;
+        }
+        | Access CompositeTypeDefinition
+        {
+          $$ = $2;
+          TYPE_AS_TypeDef td ($2->GetRecord (2));
+          td.SetField(pos_AS_TypeDef_access, *$1);
+          $$->SetField(2, td);
+          delete $1;
+        }
+#endif // VDMPP
+        ;
+
+SimpleTypeDefinition
         : Identifier LEX_EQUAL Type
         {
           $$ = new Tuple (2); // (AS`Name * AS`TypeDef)
@@ -2912,7 +2904,8 @@ TypeDefinition
           td.SetField (pos_AS_TypeDef_Inv,    Nil ());
           td.SetField (pos_AS_TypeDef_Eq,     Nil ());
           td.SetField (pos_AS_TypeDef_Ord,    Nil ());
-          td.SetField (pos_AS_TypeDef_access, Int (NOT_INITIALISED_AS));
+          //td.SetField (pos_AS_TypeDef_access, Int (NOT_INITIALISED_AS));
+          td.SetField (pos_AS_TypeDef_access, Int (DEFAULT_AS));
 
           $$->SetField (1, *$1);
           $$->SetField (2, td);
@@ -2931,7 +2924,8 @@ TypeDefinition
           td.SetField (pos_AS_TypeDef_Inv,    $4->GetField(1));
           td.SetField (pos_AS_TypeDef_Eq,     $4->GetField(2));
           td.SetField (pos_AS_TypeDef_Ord,    $4->GetField(3));
-          td.SetField (pos_AS_TypeDef_access, Int (NOT_INITIALISED_AS));
+          //td.SetField (pos_AS_TypeDef_access, Int (NOT_INITIALISED_AS));
+          td.SetField (pos_AS_TypeDef_access, Int (DEFAULT_AS));
 
           $$->SetField (1, *$1);
           $$->SetField (2, td);
@@ -2940,7 +2934,10 @@ TypeDefinition
           delete $3;
           delete $4;
         }
-        | Identifier LEX_DOUBLE_COLON FieldList
+        ;
+
+CompositeTypeDefinition
+        : Identifier LEX_DOUBLE_COLON FieldList
         {
           $$ = new Tuple (2); // (AS`Name * AS`TypeDef)
 
@@ -2956,7 +2953,8 @@ TypeDefinition
           td.SetField (pos_AS_TypeDef_Inv,    Nil ());
           td.SetField (pos_AS_TypeDef_Eq,     Nil ());
           td.SetField (pos_AS_TypeDef_Ord,    Nil ());
-          td.SetField (pos_AS_TypeDef_access, Int (NOT_INITIALISED_AS));
+          //td.SetField (pos_AS_TypeDef_access, Int (NOT_INITIALISED_AS));
+          td.SetField (pos_AS_TypeDef_access, Int (DEFAULT_AS));
 
           $$->SetField (1, *$1);
           $$->SetField (2, td);
@@ -2980,7 +2978,8 @@ TypeDefinition
           td.SetField (pos_AS_TypeDef_Inv,    $4->GetField(1));
           td.SetField (pos_AS_TypeDef_Eq,     $4->GetField(2));
           td.SetField (pos_AS_TypeDef_Ord,    $4->GetField(3));
-          td.SetField (pos_AS_TypeDef_access, Int (NOT_INITIALISED_AS));
+          //td.SetField (pos_AS_TypeDef_access, Int (NOT_INITIALISED_AS));
+          td.SetField (pos_AS_TypeDef_access, Int (DEFAULT_AS));
 
           $$->SetField (1, *$1);
           $$->SetField (2, td);
@@ -3417,15 +3416,6 @@ ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_AS_ValueDef, $4->GetRecord (pos_AS_Valu
           delete $4;
         }
         ;
-
-PureOperation
-        : /* empty */
-        { $$ = new Bool(false);
-        }
-        | LEX_PURE
-        { $$ = new Bool(true);
-        }
-        ;
 #endif // VDMSL
 
 #ifdef VDMPP
@@ -3444,39 +3434,78 @@ ValueDefinitions
         ;
 
 ListOfValueDefinitions
-        : StatAccess ValueDefinition
+        : AccessValueDefinition
         { $$ = new Sequence;
-          $2->SetField (pos_AS_ValueDef_access, $1->GetField(1));
-          $2->SetField (pos_AS_ValueDef_stat, $1->GetBool(2));
-          $$->ImpAppend (*$2);
+          $$->ImpAppend (*$1);
 
-ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_AS_ValueDef, $2->GetField (pos_AS_ValueDef_pat));
+ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_AS_ValueDef, $1->GetField (pos_AS_ValueDef_pat));
 
           delete $1;
-          delete $2;
         }
-        | ListOfValueDefinitions ';' TexBreak StatAccess ValueDefinition
-        { $5->SetField (pos_AS_ValueDef_access, $4->GetField(1));
-          $5->SetField (pos_AS_ValueDef_stat, $4->GetBool(2));
-          $1->ImpAppend (*$5);
+        | ListOfValueDefinitions ';' TexBreak AccessValueDefinition
+        { $1->ImpAppend (*$4);
 
-ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_AS_ValueDef, $5->GetField (pos_AS_ValueDef_pat));
+ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_AS_ValueDef, $4->GetField (pos_AS_ValueDef_pat));
 
           delete $3;
           delete $4;
-          delete $5;
+        }
+        ;
+
+AccessValueDefinition
+        : ValueDefinition
+        {
+          $$->SetField (pos_AS_ValueDef_access, Int (DEFAULT_AS));
+        }
+        | StaticAccess Pattern LEX_EQUAL Expression
+        { $$ = new TYPE_AS_ValueDef();
+          MYPARSER::SetPos2(*$$, @1, @4);
+          $$->SetField (pos_AS_ValueDef_pat,    *$2);
+          $$->SetField (pos_AS_ValueDef_tp,     Nil());
+          $$->SetField (pos_AS_ValueDef_val,    *$4);
+          $$->SetField (pos_AS_ValueDef_access, $1->GetField(1));
+          $$->SetField (pos_AS_ValueDef_stat,   $1->GetField(2));
+          delete $1;
+          delete $2;
+          delete $4;
+        }
+        | StaticAccess TypeBind LEX_EQUAL Expression
+        { $$ = new TYPE_AS_ValueDef();
+          MYPARSER::SetPos2(*$$, @1, @4);
+          $$->SetField (pos_AS_ValueDef_pat,    $2->GetRecord(pos_AS_TypeBind_pat));
+          $$->SetField (pos_AS_ValueDef_tp,     $2->GetRecord(pos_AS_TypeBind_tp));
+          $$->SetField (pos_AS_ValueDef_val,    *$4);
+          $$->SetField (pos_AS_ValueDef_access, $1->GetField(1));
+          $$->SetField (pos_AS_ValueDef_stat,   $1->GetField(2));
+          delete $1;
+          delete $2;
+          delete $4;
         }
         ;
 
 OperationAccess
-        : StatAccess
-        | LEX_PURE StatAccess
+        : StaticAccess
+        | LEX_PURE
+        { $$ = new Tuple(4);
+          $$->SetField(1, Int (DEFAULT_AS));
+          $$->SetField(2, Bool(false)); // static
+          $$->SetField(3, Bool(true));  // sync
+          $$->SetField(4, Bool(true));  // pure
+        }
+        | LEX_PURE StaticAccess
         {
           $$ = $2;
           $$->SetField(4, Bool(true)); // pure
         }
 #ifdef VICE
-        | LEX_ASYNC StatAccess
+        | LEX_ASYNC
+        { $$ = new Tuple(4);
+          $$->SetField(1, Int (DEFAULT_AS));
+          $$->SetField(2, Bool(false)); // static
+          $$->SetField(3, Bool(false)); // sync
+          $$->SetField(4, Bool(false)); // pure
+        }
+        | LEX_ASYNC StaticAccess
         { 
           $$ = $2;
           $$->SetField(3, Bool(false)); // sync
@@ -3484,24 +3513,15 @@ OperationAccess
 #endif // VICE
         ;
 
-StatAccess
-        : LEX_STATIC OptAccess
+StaticAccess
+        : LEX_STATIC
         { $$ = new Tuple(4);
-          $$->SetField(1, *$2);
+          $$->SetField(1, Int (DEFAULT_AS));
           $$->SetField(2, Bool(true));  // static
           $$->SetField(3, Bool(true));  // sync
           $$->SetField(4, Bool(false)); // pure
-          delete $2;
         }
-        | OptAccess LEX_STATIC
-        { $$ = new Tuple(4);
-          $$->SetField(1, *$1);
-          $$->SetField(2, Bool(true));  // static
-          $$->SetField(3, Bool(true));  // sync
-          $$->SetField(4, Bool(false)); // pure
-          delete $1;
-        }
-        | OptAccess
+        | Access
         { $$ = new Tuple(4);
           $$->SetField(1, *$1);
           $$->SetField(2, Bool(false)); // static
@@ -3509,13 +3529,22 @@ StatAccess
           $$->SetField(4, Bool(false)); // pure
           delete $1;
         }
-        ;
-
-OptAccess
-        : /* empty */
-        { $$ = new Int (DEFAULT_AS);
+        | LEX_STATIC Access
+        { $$ = new Tuple(4);
+          $$->SetField(1, *$2);
+          $$->SetField(2, Bool(true));  // static
+          $$->SetField(3, Bool(true));  // sync
+          $$->SetField(4, Bool(false)); // pure
+          delete $2;
         }
-        | Access
+        | Access LEX_STATIC
+        { $$ = new Tuple(4);
+          $$->SetField(1, *$1);
+          $$->SetField(2, Bool(true));  // static
+          $$->SetField(3, Bool(true));  // sync
+          $$->SetField(4, Bool(false)); // pure
+          delete $1;
+        }
         ;
 
 Access
@@ -3561,10 +3590,12 @@ ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_PRETTY_PRINTER_FnDef, $1->GetRecord (1)
         }
         | ListOfFunctionDefinitions ';' TexBreak FunctionDefinition
         {
-          if ($1->DomExists ($4->GetRecord (1)))
+          if ($1->DomExists ($4->GetRecord (1))) {
             MYPARSER::Report (L"Function already defined", @4);
-          else
+          }
+          else {
             $1->Insert ($4->GetRecord (1), $4->GetRecord (2));
+          }
 
 ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_PRETTY_PRINTER_FnDef, $4->GetRecord (1));
 
@@ -3575,33 +3606,28 @@ ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_PRETTY_PRINTER_FnDef, $4->GetRecord (1)
 #endif // VDMSL
 #if VDMPP
 ListOfFunctionDefinitions
-        : StatAccess FunctionDefinition
+        : FunctionDefinition
         {
           $$ = new Map;
-          const TYPE_AS_Name & l_nm ($2->GetRecord (1));
-          TYPE_AS_FnDef fnd ($2->GetRecord(2));
-          MYPARSER::SetAccess(fnd, *$1);
-          $$->Insert (l_nm, fnd);
-          TYPE_AS_Name mangledNm (MYPARSER::GetMangleName(fnd));
+          $$->Insert ($1->GetRecord(1), $1->GetRecord(2));
+
+          TYPE_AS_Name mangledNm (MYPARSER::GetMangleName($1->GetRecord(2)));
 
 ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_PRETTY_PRINTER_FnDef, mangledNm);
 
           delete $1;
-          delete $2;
         }
-        | ListOfFunctionDefinitions ';' TexBreak StatAccess FunctionDefinition
+        | ListOfFunctionDefinitions ';' TexBreak FunctionDefinition
         {
-          const TYPE_AS_Name & orgName ($5->GetRecord(1));
-          TYPE_AS_FnDef fnd ($5->GetRecord(2));
-          MYPARSER::SetAccess(fnd, *$4); // fnd modified
+          const TYPE_AS_Name & orgName ($4->GetRecord(1));
+          TYPE_AS_FnDef fnd ($4->GetRecord(2));
           TYPE_AS_Name mangledNewName (MYPARSER::GetMangleName(fnd));
-          if ($1->DomExists (orgName))
-          {
+          if ($1->DomExists (orgName)) {
             TYPE_AS_FnDef fn ($1->operator[](orgName));
             TYPE_AS_Name mangledOrgName (MYPARSER::GetMangleName(fn));
 
             if (mangledNewName == mangledOrgName) {
-              MYPARSER::Report (L"Function already defined", @5);
+              MYPARSER::Report (L"Function already defined", @4);
             }
             else {
               // TODO: possibly memory leak here
@@ -3614,10 +3640,10 @@ ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_PRETTY_PRINTER_FnDef, mangledNm);
               VDMPARSER::mangledFnNames.Insert(orgName);
             }
           }
-          else if ($1->DomExists (mangledNewName))
-            MYPARSER::Report (L"Operation already defined", @5);
-          else if (VDMPARSER::mangledFnNames.InSet(orgName))
-          {
+          else if ($1->DomExists (mangledNewName)) {
+            MYPARSER::Report (L"Operation already defined", @4);
+          }
+          else if (VDMPARSER::mangledFnNames.InSet(orgName)) {
             // This name has already been mangled once
             $1->Insert(mangledNewName, fnd);
             VDMPARSER::mangledFnNames.Insert(orgName);
@@ -3630,7 +3656,6 @@ ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_PRETTY_PRINTER_FnDef, mangledNewName);
 
           delete $3;
           delete $4;
-          delete $5;
         }
         ;
 #endif // VDMPP
@@ -3639,6 +3664,35 @@ FunctionDefinition
         : ExplFunctionDefinition
         | ImplFunctionDefinition
         | ExtExplFunctionDefinition
+#ifdef VDMPP
+        | StaticAccess ExplFunctionDefinition
+        {
+          $$ = $2;
+          TYPE_AS_ExplFnDef fndef ($2->GetRecord(2));
+          fndef.SetField (pos_AS_ExplFnDef_access, $1->GetField(1));
+          fndef.SetField (pos_AS_ExplFnDef_stat,   $1->GetBool(2));
+          $$->SetField(2, fndef);
+          delete $1;
+        }
+        | StaticAccess ImplFunctionDefinition
+        {
+          $$ = $2;
+          TYPE_AS_ImplFnDef fndef ($2->GetRecord(2));
+          fndef.SetField (pos_AS_ImplFnDef_access, $1->GetField(1));
+          fndef.SetField (pos_AS_ImplFnDef_stat,   $1->GetBool(2));
+          $$->SetField(2, fndef);
+          delete $1;
+        }
+        | StaticAccess ExtExplFunctionDefinition
+        {
+          $$ = $2;
+          TYPE_AS_FnDef fndef ($2->GetRecord(2));
+          fndef.SetField (pos_AS_ExtExplFnDef_access, $1->GetField(1));
+          fndef.SetField (pos_AS_ExtExplFnDef_stat,   $1->GetBool(2));
+          $$->SetField(2, fndef);
+          delete $1;
+        }
+#endif // VDMPP
         ;
 
 ImplFunctionDefinition
@@ -3660,8 +3714,9 @@ ImplFunctionDefinition
           ifd.SetField (pos_AS_ImplFnDef_resnmtps, *$4);
           ifd.SetField (pos_AS_ImplFnDef_fnpre,    $5->GetField (1));
           ifd.SetField (pos_AS_ImplFnDef_fnpost,   post);
-          ifd.SetField (pos_AS_ImplFnDef_access,   Int (NOT_INITIALISED_AS));
-          ifd.SetField (pos_AS_ImplFnDef_stat,   Bool(false));
+          //ifd.SetField (pos_AS_ImplFnDef_access,   Int (NOT_INITIALISED_AS));
+          ifd.SetField (pos_AS_ImplFnDef_access,   Int (DEFAULT_AS));
+          ifd.SetField (pos_AS_ImplFnDef_stat,     Bool(false));
 
           $$->SetField (1, *$1);
           $$->SetField (2, ifd);
@@ -3689,8 +3744,9 @@ ExplFunctionDefinition
           efd.SetField (pos_AS_ExplFnDef_body,    *$8);
           efd.SetField (pos_AS_ExplFnDef_fnpre,   $9->GetField (1));
           efd.SetField (pos_AS_ExplFnDef_fnpost,  $9->GetField (2));
-          efd.SetField (pos_AS_ExplFnDef_access,  Int (NOT_INITIALISED_AS));
-          efd.SetField (pos_AS_ExplFnDef_stat,  Bool(false));
+          //efd.SetField (pos_AS_ExplFnDef_access,  Int (NOT_INITIALISED_AS));
+          efd.SetField (pos_AS_ExplFnDef_access,  Int (DEFAULT_AS));
+          efd.SetField (pos_AS_ExplFnDef_stat,    Bool(false));
           efd.SetField (pos_AS_ExplFnDef_measu,   *$10);
 
           $$->SetField (1, *$1);
@@ -3720,8 +3776,9 @@ ExtExplFunctionDefinition
           eefd.SetField (pos_AS_ExtExplFnDef_body,     *$6);
           eefd.SetField (pos_AS_ExtExplFnDef_fnpre,    $7->GetField (1));
           eefd.SetField (pos_AS_ExtExplFnDef_fnpost,   $7->GetField (2));
-          eefd.SetField (pos_AS_ExtExplFnDef_access,   Int (NOT_INITIALISED_AS));
-          eefd.SetField (pos_AS_ExtExplFnDef_stat,   Bool(false));
+          //eefd.SetField (pos_AS_ExtExplFnDef_access,   Int (NOT_INITIALISED_AS));
+          eefd.SetField (pos_AS_ExtExplFnDef_access,   Int (DEFAULT_AS));
+          eefd.SetField (pos_AS_ExtExplFnDef_stat,     Bool(false));
           eefd.SetField (pos_AS_ExtExplFnDef_measu,    *$8);
 
           $$->SetField (1, *$1);
@@ -3756,74 +3813,53 @@ OperationDefinitions
 
 #if VDMSL
 ListOfOperationDefinitions
-        : PureOperation OperationDefinition
+        : OperationDefinition
         {
-          $$ = new Map;
-          TYPE_AS_OpDef opdef ($2->GetRecord (2));
-          switch (opdef.GetTag()) {
-            case TAG_TYPE_AS_ExplOpDef:    { opdef.SetField(pos_AS_ExplOpDef_oppure,    *$1); break; }
-            case TAG_TYPE_AS_ImplOpDef:    { opdef.SetField(pos_AS_ImplOpDef_oppure,    *$1); break; }
-            case TAG_TYPE_AS_ExtExplOpDef: { opdef.SetField(pos_AS_ExtExplOpDef_oppure, *$1); break; }
-          }
-          //$$->Insert ($2->GetRecord (1), $2->GetRecord (2));
-          $$->Insert ($2->GetRecord (1), opdef);
+          $$ = new Map();
+          $$->Insert ($1->GetRecord(1), $1->GetRecord(2));
 
-ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_PRETTY_PRINTER_OpDef, $2->GetRecord (1));
+ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_PRETTY_PRINTER_OpDef, $1->GetRecord (1));
 
           delete $1;
-          delete $2;
         }
-        | ListOfOperationDefinitions ';' TexBreak PureOperation OperationDefinition
+        | ListOfOperationDefinitions ';' TexBreak OperationDefinition
         {
-          if ($1->DomExists ($5->GetRecord (1)))
+          if ($1->DomExists ($4->GetRecord (1))) {
             MYPARSER::Report (L"Operation already defined", @4);
+          }
           else {
-            TYPE_AS_OpDef opdef ($5->GetRecord (2));
-            switch (opdef.GetTag()) {
-              case TAG_TYPE_AS_ExplOpDef:    { opdef.SetField(pos_AS_ExplOpDef_oppure,    *$4); break; }
-              case TAG_TYPE_AS_ImplOpDef:    { opdef.SetField(pos_AS_ImplOpDef_oppure,    *$4); break; }
-              case TAG_TYPE_AS_ExtExplOpDef: { opdef.SetField(pos_AS_ExtExplOpDef_oppure, *$4); break; }
-            }
-            //$1->Insert ($5->GetRecord (1), $5->GetRecord (2));
-            $1->Insert ($5->GetRecord (1), opdef);
+            $$->Insert ($4->GetRecord(1), $4->GetRecord(2));
           }
 
-ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_PRETTY_PRINTER_OpDef, $5->GetRecord (1));
+ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_PRETTY_PRINTER_OpDef, $4->GetRecord (1));
 
           delete $3;
           delete $4;
-          delete $5;
         }
         ;
 #endif // VDMSL
 #if VDMPP
 ListOfOperationDefinitions
-        : OperationAccess OperationDefinition
+        : OperationDefinition
         {
           $$ = new Map();
-          const TYPE_AS_Name & l_nm ($2->GetRecord (1));
-          TYPE_AS_OpDef opd ($2->GetRecord(2));
-          MYPARSER::SetAccess(opd, *$1);
-          $$->Insert (l_nm, opd);
-          TYPE_AS_Name mangledNm (MYPARSER::GetMangleName(opd));
+          $$->Insert ($1->GetRecord(1), $1->GetRecord(2));
 
+          TYPE_AS_Name mangledNm (MYPARSER::GetMangleName($1->GetRecord(2)));
 ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_PRETTY_PRINTER_OpDef, mangledNm);
 
-           delete $1;
-           delete $2;
+          delete $1;
         }
-        | ListOfOperationDefinitions ';' TexBreak OperationAccess OperationDefinition
+        | ListOfOperationDefinitions ';' TexBreak OperationDefinition
         {
-          const TYPE_AS_Name & orgName ($5->GetRecord(1));
-          TYPE_AS_OpDef opd ($5->GetRecord(2));
-          MYPARSER::SetAccess(opd, *$4);
+          const TYPE_AS_Name & orgName ($4->GetRecord(1));
+          TYPE_AS_OpDef opd ($4->GetRecord(2));
           TYPE_AS_Name mangledNewName (MYPARSER::GetMangleName(opd));
-          if ($1->DomExists (orgName))
-          {
+          if ($1->DomExists (orgName)) {
             TYPE_AS_OpDef op ($1->operator[](orgName)); 
             TYPE_AS_Name mangledOrgName (MYPARSER::GetMangleName(op));
             if (mangledNewName == mangledOrgName) {
-              MYPARSER::Report (L"Operation already defined", @5);
+              MYPARSER::Report (L"Operation already defined", @4);
             }
             else {
               // TODO: possibly memory leak here
@@ -3836,10 +3872,10 @@ ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_PRETTY_PRINTER_OpDef, mangledNm);
               VDMPARSER::mangledOpNames.Insert(orgName);
             }
           }
-          else if ($1->DomExists (mangledNewName))
-            MYPARSER::Report (L"Operation already defined", @5);
-          else if (VDMPARSER::mangledOpNames.InSet(orgName))
-          {
+          else if ($1->DomExists (mangledNewName)) {
+            MYPARSER::Report (L"Operation already defined", @4);
+          }
+          else if (VDMPARSER::mangledOpNames.InSet(orgName)) {
             // This name has already been mangled once
             $1->Insert(mangledNewName, opd);
             VDMPARSER::mangledOpNames.Insert(orgName);
@@ -3852,7 +3888,6 @@ ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_PRETTY_PRINTER_OpDef, mangledNewName);
 
           delete $3;
           delete $4;
-          delete $5;
         }
         ;
 #endif // VDMPP
@@ -3861,6 +3896,64 @@ OperationDefinition
         : ImplOperationDefinition
         | ExplOperationDefinition
         | ExtExplOperationDefinition
+#ifdef VDMSL
+        | LEX_PURE ImplOperationDefinition
+        {
+          $$ = $2;
+          TYPE_AS_ImplOpDef opdef ($2->GetRecord (2));
+          opdef.SetField(pos_AS_ImplOpDef_oppure, Bool(true));
+          $$->SetField(2, opdef);
+        }
+        | LEX_PURE ExplOperationDefinition
+        {
+          $$ = $2;
+          TYPE_AS_ExplOpDef opdef ($2->GetRecord (2));
+          opdef.SetField(pos_AS_ExplOpDef_oppure, Bool(true));
+          $$->SetField(2, opdef);
+        }
+        | LEX_PURE ExtExplOperationDefinition
+        {
+          $$ = $2;
+          TYPE_AS_ExtExplOpDef opdef ($2->GetRecord (2));
+          opdef.SetField(pos_AS_ExtExplOpDef_oppure, Bool(true));
+          $$->SetField(2, opdef);
+        }
+#endif // VDMSL
+#ifdef VDMPP
+        | OperationAccess ImplOperationDefinition
+        {
+          $$ = $2;
+          TYPE_AS_ImplOpDef opdef ($2->GetRecord(2));
+          opdef.SetField (pos_AS_ImplOpDef_access, $1->GetField(1));
+          opdef.SetField (pos_AS_ImplOpDef_stat,   $1->GetBool(2));
+          opdef.SetField (pos_AS_ImplOpDef_opsync, $1->GetBool(3));
+          opdef.SetField (pos_AS_ImplOpDef_oppure, $1->GetBool(4));
+          $$->SetField(2, opdef);
+          delete $1;
+        }
+        | OperationAccess ExplOperationDefinition
+        {
+          $$ = $2;
+          TYPE_AS_ExplOpDef opdef ($2->GetRecord(2));
+          opdef.SetField (pos_AS_ExplOpDef_access, $1->GetField(1));
+          opdef.SetField (pos_AS_ExplOpDef_stat,   $1->GetBool(2));
+          opdef.SetField (pos_AS_ExplOpDef_opsync, $1->GetBool(3));
+          opdef.SetField (pos_AS_ExplOpDef_oppure, $1->GetBool(4));
+          $$->SetField(2, opdef);
+          delete $1;
+        }
+        | OperationAccess ExtExplOperationDefinition
+        {
+          $$ = $2;
+          TYPE_AS_ExtExplOpDef opdef ($2->GetRecord(2));
+          opdef.SetField (pos_AS_ExtExplOpDef_access, $1->GetField(1));
+          opdef.SetField (pos_AS_ExtExplOpDef_stat,   $1->GetBool(2));
+          opdef.SetField (pos_AS_ExtExplOpDef_opsync, $1->GetBool(3));
+          opdef.SetField (pos_AS_ExtExplOpDef_oppure, $1->GetBool(4));
+          $$->SetField(2, opdef);
+          delete $1;
+        }
+#endif // VDMPP
         ;
 
 ImplOperationDefinition
@@ -3886,7 +3979,8 @@ ImplOperationDefinition
           iod.SetField (pos_AS_ImplOpDef_oppre,    $5->GetField (1));
           iod.SetField (pos_AS_ImplOpDef_oppost,   post);
           iod.SetField (pos_AS_ImplOpDef_excps,    *$6);
-          iod.SetField (pos_AS_ImplOpDef_access,   Int (NOT_INITIALISED_AS));
+          //iod.SetField (pos_AS_ImplOpDef_access,   Int (NOT_INITIALISED_AS));
+          iod.SetField (pos_AS_ImplOpDef_access,   Int (DEFAULT_AS));
           iod.SetField (pos_AS_ImplOpDef_stat,     Bool(false));
 #if VDMPP
           if (!VDMPARSER::currentClassMod.IsNil() && (*$1 == VDMPARSER::currentClassMod))
@@ -3926,7 +4020,8 @@ ExplOperationDefinition
           eod.SetField (pos_AS_ExplOpDef_oppre,  $9->GetField (1));
           eod.SetField (pos_AS_ExplOpDef_oppost, $9->GetField (2));
           //eod.SetField (pos_AS_ExplOpDef_excps, *$10); // not yet
-          eod.SetField (pos_AS_ExplOpDef_access, Int (NOT_INITIALISED_AS));
+          //eod.SetField (pos_AS_ExplOpDef_access, Int (NOT_INITIALISED_AS));
+          eod.SetField (pos_AS_ExplOpDef_access, Int (DEFAULT_AS));
           eod.SetField (pos_AS_ExplOpDef_stat,   Bool(false));
 #if VDMPP
           if (!VDMPARSER::currentClassMod.IsNil() && (*$1 == VDMPARSER::currentClassMod))
@@ -3965,7 +4060,8 @@ ExtExplOperationDefinition
           eeod.SetField (pos_AS_ExtExplOpDef_oppre,    $7->GetField (1));
           eeod.SetField (pos_AS_ExtExplOpDef_oppost,   $7->GetField (2));
           eeod.SetField (pos_AS_ExtExplOpDef_excps,    *$8);
-          eeod.SetField (pos_AS_ExtExplOpDef_access,   Int (NOT_INITIALISED_AS));
+          //eeod.SetField (pos_AS_ExtExplOpDef_access,   Int (NOT_INITIALISED_AS));
+          eeod.SetField (pos_AS_ExtExplOpDef_access,   Int (DEFAULT_AS));
           eeod.SetField (pos_AS_ExtExplOpDef_stat,     Bool(false));
 #if VDMPP
           if (!VDMPARSER::currentClassMod.IsNil() && (*$1 == VDMPARSER::currentClassMod))
@@ -4200,7 +4296,7 @@ StateDefinition
           delete $4;
           delete $6;
         }
-        | LEX_STATE Identifier LEX_OF FieldList Invariant LEX_END TexBreak
+        | LEX_STATE Identifier LEX_OF FieldList InvariantInitialization LEX_END TexBreak
         { $$ = new TYPE_AS_StateDef();
           MYPARSER::SetPos2(*$$, @1, @7);
 
@@ -4210,69 +4306,54 @@ StateDefinition
           Co.SetField (pos_AS_CompositeType_fields, *$4);
 
           $$->SetField (pos_AS_StateDef_tp,   Co);
-          $$->SetField (pos_AS_StateDef_Inv,  *$5);
-          $$->SetField (pos_AS_StateDef_Init, Nil ());
+          $$->SetField (pos_AS_StateDef_Inv,  $5->GetField(1));
+          $$->SetField (pos_AS_StateDef_Init, $5->GetField(2));
 
           delete $2;
           delete $4;
           delete $5;
           delete $7;
         }
-        | LEX_STATE Identifier LEX_OF FieldList Initialization LEX_END TexBreak
-        { $$ = new TYPE_AS_StateDef();
-          MYPARSER::SetPos2(*$$, @1, @7);
+        ;
 
-          TYPE_AS_CompositeType Co;
-          MYPARSER::SetPos2(Co, @1, @6);
-          Co.SetField (pos_AS_CompositeType_name,   *$2);
-          Co.SetField (pos_AS_CompositeType_fields, *$4);
+InvariantInitialization
+        : Invariant
+        { $$ = new Tuple(2);
+          $$->SetField(1, *$1);
+          $$->SetField(2, Nil());
+          delete $1;
+        } 
+        | Initialization
+        { $$ = new Tuple(2);
+          $$->SetField(1, Nil());
+          $$->SetField(2, *$1);
+          delete $1;
+        } 
+        | Invariant Initialization
+        { $$ = new Tuple(2);
+          $$->SetField(1, *$1);
+          $$->SetField(2, *$2);
+          delete $1;
+          delete $2;
+        } 
+        | Initialization Invariant
+        { $$ = new Tuple(2);
+          $$->SetField(1, *$2);
+          $$->SetField(2, *$1);
+          delete $1;
+          delete $2;
+        } 
+        ;
 
-          $$->SetField (pos_AS_StateDef_tp,   Co);
-          $$->SetField (pos_AS_StateDef_Inv,  Nil ());
-          $$->SetField (pos_AS_StateDef_Init, *$5);
-
+Initialization
+        : LEX_INIT Pattern LEX_IS_DEFINED_AS Expression
+        {
+          $$ = new TYPE_AS_StateInit();
+          MYPARSER::SetPos2(*$$, @1, @4);
+          $$->SetField (pos_AS_StateInit_pat,  *$2);
+          $$->SetField (pos_AS_StateInit_expr, *$4);
           delete $2;
           delete $4;
-          delete $5;
-          delete $7;
-        }
-        | LEX_STATE Identifier LEX_OF FieldList Invariant Initialization LEX_END TexBreak
-        { $$ = new TYPE_AS_StateDef();
-          MYPARSER::SetPos2(*$$, @1, @8);
-
-          TYPE_AS_CompositeType Co;
-          MYPARSER::SetPos2(Co, @1, @7);
-          Co.SetField (pos_AS_CompositeType_name,   *$2);
-          Co.SetField (pos_AS_CompositeType_fields, *$4);
-
-          $$->SetField (pos_AS_StateDef_tp,   Co);
-          $$->SetField (pos_AS_StateDef_Inv,  *$5);
-          $$->SetField (pos_AS_StateDef_Init, *$6);
-
-          delete $2;
-          delete $4;
-          delete $5;
-          delete $6;
-          delete $8;
-        }
-        | LEX_STATE Identifier LEX_OF FieldList Initialization Invariant LEX_END TexBreak
-        { $$ = new TYPE_AS_StateDef();
-          MYPARSER::SetPos2(*$$, @1, @8);
-
-          TYPE_AS_CompositeType Co;
-          MYPARSER::SetPos2(Co, @1, @7);
-          Co.SetField (pos_AS_CompositeType_name,   *$2);
-          Co.SetField (pos_AS_CompositeType_fields, *$4);
-
-          $$->SetField (pos_AS_StateDef_tp,   Co);
-          $$->SetField (pos_AS_StateDef_Inv,  *$6);
-          $$->SetField (pos_AS_StateDef_Init, *$5);
-
-          delete $2;
-          delete $4;
-          delete $5;
-          delete $6;
-          delete $8;
         }
         ;
 #endif // VDMSL
@@ -4375,20 +4456,6 @@ Order
           delete $6;
         } 
         ;
-
-#if VDMSL
-Initialization
-        : LEX_INIT Pattern LEX_IS_DEFINED_AS Expression
-        {
-          $$ = new TYPE_AS_StateInit();
-          MYPARSER::SetPos2(*$$, @1, @4);
-          $$->SetField (pos_AS_StateInit_pat,  *$2);
-          $$->SetField (pos_AS_StateInit_expr, *$4);
-          delete $2;
-          delete $4;
-        }
-        ;
-#endif // VDMSL
 
 /** Section in reference document: 9.5 Statements *****************************/
 /** Deviations from the standard/Remarks:                                    **/
@@ -5463,7 +5530,7 @@ ValueDefinition
           $$->SetField (pos_AS_ValueDef_tp,     Nil());
           $$->SetField (pos_AS_ValueDef_val,    *$3);
           $$->SetField (pos_AS_ValueDef_access, Int (NOT_INITIALISED_AS));
-          $$->SetField (pos_AS_ValueDef_stat, Bool(true));
+          $$->SetField (pos_AS_ValueDef_stat,   Bool(true));
           delete $1;
           delete $3;
         }
@@ -5474,7 +5541,7 @@ ValueDefinition
           $$->SetField (pos_AS_ValueDef_tp,     $1->GetRecord(pos_AS_TypeBind_tp));
           $$->SetField (pos_AS_ValueDef_val,    *$3);
           $$->SetField (pos_AS_ValueDef_access, Int (NOT_INITIALISED_AS));
-          $$->SetField (pos_AS_ValueDef_stat, Bool(true));
+          $$->SetField (pos_AS_ValueDef_stat,   Bool(true));
           delete $1;
           delete $3;
         }
@@ -8310,51 +8377,6 @@ Tuple MYPARSER::NameOverlapInDefs(const TYPE_AS_Definitions & defblock1,
 }
 
 #ifdef VDMPP
-// SetAccess
-// meth : AS`FnDef | AS`OpDef
-// acc : AS`Access * bool * bool
-void MYPARSER::SetAccess(Record & meth, const Tuple & acc)
-{
-  switch (meth.GetTag()){
-    case TAG_TYPE_AS_ExplFnDef: {
-      meth.SetField (pos_AS_ExplFnDef_access, acc.GetField(1));
-      meth.SetField (pos_AS_ExplFnDef_stat,   acc.GetBool(2));
-      break;
-    }
-    case TAG_TYPE_AS_ExtExplFnDef: {
-      meth.SetField (pos_AS_ExtExplFnDef_access, acc.GetField(1));
-      meth.SetField (pos_AS_ExtExplFnDef_stat,   acc.GetBool(2));
-      break;
-    }
-    case TAG_TYPE_AS_ImplFnDef: {
-      meth.SetField (pos_AS_ImplFnDef_access, acc.GetField(1));
-      meth.SetField (pos_AS_ImplFnDef_stat,   acc.GetBool(2));
-      break;
-    }
-    case TAG_TYPE_AS_ExplOpDef: {
-      meth.SetField (pos_AS_ExplOpDef_access, acc.GetField(1));
-      meth.SetField (pos_AS_ExplOpDef_stat,   acc.GetBool(2));
-      meth.SetField (pos_AS_ExplOpDef_opsync, acc.GetBool(3));
-      meth.SetField (pos_AS_ExplOpDef_oppure, acc.GetBool(4));
-      break;
-    }
-    case TAG_TYPE_AS_ImplOpDef: {
-      meth.SetField (pos_AS_ImplOpDef_access, acc.GetField(1));
-      meth.SetField (pos_AS_ImplOpDef_stat,   acc.GetBool(2));
-      meth.SetField (pos_AS_ImplOpDef_opsync, acc.GetBool(3));
-      meth.SetField (pos_AS_ImplOpDef_oppure, acc.GetBool(4));
-      break;
-    }
-    case TAG_TYPE_AS_ExtExplOpDef: {
-      meth.SetField (pos_AS_ExtExplOpDef_access, acc.GetField(1));
-      meth.SetField (pos_AS_ExtExplOpDef_stat,   acc.GetBool(2));
-      meth.SetField (pos_AS_ExtExplOpDef_opsync, acc.GetBool(3));
-      meth.SetField (pos_AS_ExtExplOpDef_oppure, acc.GetBool(4));
-      break;
-    }
-  }
-}
-
 // GetMethType
 // meth : AS`FnDef | AS`OpDef
 // +> [AS`Type | AS`ParameterTypes]
