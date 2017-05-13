@@ -3457,29 +3457,11 @@ AccessValueDefinition
         {
           $$->SetField (pos_AS_ValueDef_access, Int (DEFAULT_AS));
         }
-        | StaticAccess Pattern LEX_EQUAL Expression
-        { $$ = new TYPE_AS_ValueDef();
-          MYPARSER::SetPos2(*$$, @1, @4);
-          $$->SetField (pos_AS_ValueDef_pat,    *$2);
-          $$->SetField (pos_AS_ValueDef_tp,     Nil());
-          $$->SetField (pos_AS_ValueDef_val,    *$4);
+        | StaticAccess ValueDefinition
+        { $$ = $2;
           $$->SetField (pos_AS_ValueDef_access, $1->GetField(1));
           $$->SetField (pos_AS_ValueDef_stat,   $1->GetField(2));
           delete $1;
-          delete $2;
-          delete $4;
-        }
-        | StaticAccess TypeBind LEX_EQUAL Expression
-        { $$ = new TYPE_AS_ValueDef();
-          MYPARSER::SetPos2(*$$, @1, @4);
-          $$->SetField (pos_AS_ValueDef_pat,    $2->GetRecord(pos_AS_TypeBind_pat));
-          $$->SetField (pos_AS_ValueDef_tp,     $2->GetRecord(pos_AS_TypeBind_tp));
-          $$->SetField (pos_AS_ValueDef_val,    *$4);
-          $$->SetField (pos_AS_ValueDef_access, $1->GetField(1));
-          $$->SetField (pos_AS_ValueDef_stat,   $1->GetField(2));
-          delete $1;
-          delete $2;
-          delete $4;
         }
         ;
 
