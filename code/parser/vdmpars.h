@@ -80,7 +80,6 @@ public:
   static Tuple NameOverlapInStateDef(const TYPE_AS_Definitions & defblock1, const TYPE_AS_StateDef & statedef);
 #endif // VDMSL
 #ifdef VDMPP
-  static void SetAccess(Record &, const Tuple &);
   static Generic GetMethType(const Record &);
 #endif // VDMPP
 

@@ -5201,8 +5201,8 @@ void EvalState::UpdateHistCount(const TYPE_AS_Name & opnm,
   if ( !theStackMachine().HasCurObjRef() &&
        (objref.IsNil() || (!objref.IsNil() && !IsInObjTab(objref))) ) return;
 
-  const TYPE_SEM_OBJ_uRef & the_ref (objref.IsNil() ? theStackMachine().GetCurObjRef()
-                                                    : (const TYPE_SEM_OBJ_uRef &) objref);
+  TYPE_SEM_OBJ_uRef the_ref (objref.IsNil() ? theStackMachine().GetCurObjRef()
+                                            : (const TYPE_SEM_OBJ_uRef &) objref);
 
   TYPE_AS_Name clnm ((opnm.GetSequence(pos_AS_Name_ids).Length() == 2) ? ASTAUX::GetFirstName(opnm)
                                                                        : the_ref.GetRecord(pos_SEM_OBJ_uRef_tp));

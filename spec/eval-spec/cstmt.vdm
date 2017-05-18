@@ -75,9 +75,13 @@ operations
     -- HANDID instruction, and this way execution reaches the
     -- handler instruction.
     def hand_no = GetNewTrapNo();
-    in return [mk_INSTRTP`PUSHTH(hand_no)] ^ b_instr ^
-              [mk_INSTRTP`POPTH(), mk_INSTRTP`BR(len handler + 2),
-               mk_INSTRTP`HANDID(hand_no), mk_INSTRTP`POPTH()] ^ handler;
+    in return [mk_INSTRTP`PUSHTH(hand_no)] ^
+              b_instr ^
+              [mk_INSTRTP`POPTH(),
+               mk_INSTRTP`BR(len handler + 2),
+               mk_INSTRTP`HANDID(hand_no),
+               mk_INSTRTP`POPTH()] ^
+              handler;
 
   S2I : AS`Stmt ==> STKM`SubProgram
   S2I(stmt) ==

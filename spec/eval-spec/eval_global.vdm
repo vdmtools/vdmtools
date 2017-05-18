@@ -286,7 +286,7 @@ inv sgmcl ==
     let mk_AS`Name(idl,-)= name in
      len idl = 1) and
    (forall typedef in set rng sgmcl.localtps &
-    let mk_AS`TypeDef(nm,-,-,-,-)=typedef
+    let mk_AS`TypeDef(nm,-,-,-,-,-,-)=typedef
     in len nm.ids = 1) and
    (forall mk_(-,access) in set rng sgmcl.explfns union rng sgmcl.explops union
 				rng sgmcl.explpolys union rng sgmcl.recsel union rng sgmcl.vls_init &

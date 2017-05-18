@@ -396,7 +396,7 @@ values
              then (State.tp).name
              else AUX`ExtName(modid,(State.tp).name) |-> ENV`TransFields(modid,(State.tp).fields)};
 
-     for all mk_AS`TypeDef(-,tp,-,-,-) in set rng typem do
+     for all mk_AS`TypeDef(-,tp,-,-,-,-,-) in set rng typem do
        tagenv := tagenv ++ ColTags(modid,tp);
     return mk_(st_m ++ tp_m,tagenv)));
 #endif VDMSL
@@ -467,7 +467,7 @@ operations
                   true) -- static has no meaning for types
                 | nm in set dom typem} in
     ( dcl tagenv : map AS`Name to ENV`AccessFieldRep := {|->};
-      for all mk_AS`TypeDef(-,tp,-,acs,-) in set rng typem do
+      for all mk_AS`TypeDef(-,tp,-,-,-,acs,-) in set rng typem do
         def ct_m = ColTags (cls,tp);
             acs' = SetDefAccess (acs,TypesDefAccess)
         in
@@ -788,7 +788,7 @@ operations
   ExportInvs(modid,typem) ==
    (dcl invs : NameToFnType := {|->};
    
-    for all mk_AS`TypeDef(nm,tp,Invar,acs,-) in set rng typem do
+    for all mk_AS`TypeDef(nm,tp,Invar,Eq,Ord,acs,-) in set rng typem do
       if Invar <> nil
       then def fntp =  MakeFnRng (mk_REP`TotalFnTypeRep([ENV`TransType(modid,tp)],
                                                         mk_REP`BooleanTypeRep()),acs, true)
@@ -973,7 +973,7 @@ operations
           then
             if nm in set dom typem
             then
-              let mk_AS`TypeDef(-,tp,Invar,-,-) = typem(nm)
+              let mk_AS`TypeDef(-,tp,Invar,Eq,Ord,-,-) = typem(nm)
               in
                (exptps := exptps ++ {nm |-> ENV`TransTypeDef(modid,nm,tp,Invar)};
                 exptag := exptag ++ ColTags(modid,tp))
@@ -986,7 +986,7 @@ operations
               exptps := {nm |-> mk_REP`AllTypeRep()} ++ exptps)
           elseif nm in set dom typem
           then
-            let mk_AS`TypeDef(-,tp,Invar,-,-) = typem(nm)
+            let mk_AS`TypeDef(-,tp,Invar,Eq,Ord,-,-) = typem(nm)
             in
              (exptps := exptps ++ {AUX`ExtName(modid,nm) |-> ENV`TransTypeDef(modid,nm,tp,Invar)};
               exptag := exptag ++ ColTags(modid,tp))
@@ -1001,7 +1001,7 @@ operations
         --     then exptps := exptps ++ {nm |-> mk_REP`TypeParRep(nm)}
         --     else exptps := exptps ++ {AUX`ExtName(modid,nm) |-> mk_REP`TypeParRep(nm)};
         else
-          let mk_AS`TypeDef(-,tp,-,-,-) = typem(nm)
+          let mk_AS`TypeDef(-,tp,-,-,-,-,-) = typem(nm)
           in
             --if modid = nil
             --then exptps := exptps ++ {nm |-> ENV`TransType(modid,tp)}

@@ -1535,8 +1535,8 @@ functions
   InstFnAS: (AS`Type | AS`TypeDef) * map AS`Name to AS`Type -> (AS`Type | AS`TypeDef)
   InstFnAS(tpdef,bind) ==
     cases tpdef:
-      mk_AS`TypeDef(nm,tp,Inv,acc,cid) -> let tp' = InstFnAS(tp,bind)
-                                          in mk_AS`TypeDef(nm,tp',Inv,acc,cid),
+      mk_AS`TypeDef(nm,tp,Inv,Eq,Ord,acc,cid) -> let tp' = InstFnAS(tp,bind)
+                                          in mk_AS`TypeDef(nm,tp',Inv,Eq,Ord,acc,cid),
       mk_AS`BooleanType(-),
       mk_AS`NumericType(-,-),
       mk_AS`TokenType(-),

@@ -1265,7 +1265,8 @@ void StackEval::EnvSetUpExplFnApply(const TYPE_SEM_ExplFN & fndef, const SEQ<TYP
       {
         Tuple ilv (IsLocalVal(fnName)); // must check before modifying env_l(PUSHEMPTYENV)
         if (ilv.GetBoolValue(1))
-          closenv_q = AUX::CombineBlkEnv(closenv, AUX::MkBlkEnv(fnName, ilv.GetRecord(2), Nil(), sem_read_only));
+          closenv_q = AUX::CombineBlkEnv(closenv, AUX::MkBlkEnv(fnName, ilv.GetRecord(2),
+                                                  ilv.GetField(3), sem_read_only));
       }
       //PUSHEMPTYENV();
       //PUSHBLKENV(closenv_q);

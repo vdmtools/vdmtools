@@ -223,7 +223,7 @@ pog_spec_cg_rt.script: .vdmde-pog-rt $(POG_MODULES_SL)
 	cmp -s $@ $@.tmp || mv $@.tmp $@
 
 pog_spec_cg_rt.stamp: .vdmde-pog-rt pog_spec_cg_rt.script
-	[ -d gencodert ] || mkdir gencodrte
+	[ -d gencodert ] || mkdir gencodert
 	cd gencodert && \
           $(ARG2L) 'script ../$(filter %.script, $^)' | $(CG_SL_CMD)
 	touch $@

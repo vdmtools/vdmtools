@@ -1869,17 +1869,17 @@ CGMatchList(p_l, vt, succ_v, p_s, pid_m, inner, nonstop) ==
       end;
     if p_l = []
     then
-     (dcl eq : CPP`Expr;
+     (dcl cond : CPP`Expr;
 #ifdef VDMPP
       if CPP`isJAVA()
       then
         if charType
-        then eq := BC`GenEq(BC`GenIntegerLit(0), DS`GenLenString_int(perm_v))
-        else eq := BC`GenEq(BC`GenIntegerLit(0), DS`GenLen_int(perm_v))
+        then cond := BC`GenEq(BC`GenIntegerLit(0), DS`GenLenString_int(perm_v))
+        else cond := BC`GenEq(BC`GenIntegerLit(0), DS`GenLen_int(perm_v))
       else
 #endif VDMPP
-        eq := BC`GenEq(BC`GenIntegerLit(0), DS`GenLen(perm_v));
-      return mk_([BC`GenAsgnStmt(succ_v, BC`GenBracketedExpr(eq))], false)
+        cond := BC`GenEq(BC`GenIntegerLit(0), DS`GenLen(perm_v));
+      return mk_([BC`GenAsgnStmt(succ_v, BC`GenBracketedExpr(cond))], false)
      )
     else 
      (dcl ifBody : seq of CPP`Stmt := if inner <> nil

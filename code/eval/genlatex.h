@@ -89,6 +89,8 @@ private:
   void GenTypeDef (const Generic & modnm, const TYPE_AS_TypeDef &, bool);
   void GenType (const TYPE_AS_Type &);
   void GenInv (const Generic & modnm, const TYPE_AS_Invariant &, bool);
+  void GenEqual (const Generic & modnm, const TYPE_AS_Equal &, bool);
+  void GenOrder (const Generic & modnm, const TYPE_AS_Order &, bool);
   void GenBooleanType (const TYPE_AS_BooleanType &);
   void GenNumericType (const TYPE_AS_NumericType &);
   void GenTokenType (const TYPE_AS_TokenType &);

@@ -691,7 +691,7 @@ TYPE_AS_Definitions SPECAST::GetCPUDefinitions()
   TYPE_AS_TokenType btptkn;
   btptkn.Init(NilContextId);
   TYPE_AS_TypeDef td;
-  td.Init(kindnm, btptkn, Nil(), Int(PUBLIC_AS), NilContextId); //
+  td.Init(kindnm, btptkn, Nil(), Nil(), Nil(), Int(PUBLIC_AS), NilContextId); //
 
   MAP<TYPE_AS_Name, TYPE_AS_TypeDef> typem;
   typem.ImpModify(kindnm, td);
@@ -808,7 +808,7 @@ TYPE_AS_Definitions SPECAST::GetBUSDefinitions()
   TYPE_AS_TokenType btptkn;
   btptkn.Init(NilContextId); //
   TYPE_AS_TypeDef td;
-  td.Init(kindnm, btptkn, Nil(), Int(PUBLIC_AS), NilContextId); //
+  td.Init(kindnm, btptkn, Nil(), Nil(), Nil(), Int(PUBLIC_AS), NilContextId); //
 
   MAP<TYPE_AS_Name, TYPE_AS_TypeDef> typem;
   typem.ImpModify(kindnm, td);

@@ -584,7 +584,7 @@ GenRename(curmod, imp_m) ==
                 in
                   if td <> nil
                   then
-                    let mk_AS`TypeDef(-, tp, -,-, -) = td
+                    let mk_AS`TypeDef(-, tp, -,-,-,-, -) = td
                     in
                       if is_AS`CompositeType(tp)
                       then
@@ -632,7 +632,7 @@ GenRenameRecord(oldmod, newnm, mk_AS`CompositeType(oldnm, field_l,-)) ==
    );
 
 GenRenameInv: AS`Name * AS`Name * AS`TypeDef ==> CPP`Preprocessors
-GenRenameInv(oldmod, newnm, mk_AS`TypeDef(oldnm, -, Inv,-,-)) ==
+GenRenameInv(oldmod, newnm, mk_AS`TypeDef(oldnm, -, Inv,-,-,-,-)) ==
   if Inv = nil
   then return []
   else
@@ -660,7 +660,7 @@ GenTypes( nm, type_m, sd ) ==
   if sd <> nil
   then
     let mk_AS`StateDef(tp, Inv, -, -) = sd
-    in type_l := [mk_AS`TypeDef(tp.name, tp, Inv, <DEFAULT_AS>, CI`NilContextId)];
+    in type_l := [mk_AS`TypeDef(tp.name, tp, Inv, nil, nil, <DEFAULT_AS>, CI`NilContextId)];
   for all tpnm in set dom type_m do
     (type_l := type_l ^ [ type_m(tpnm) ];
   def - = CGAUX`InsertGlobalName(tpnm) in skip;);
@@ -678,7 +678,7 @@ GenTypeInvFcts(type_m, sd) ==
   if sd <> nil
   then
     let mk_AS`StateDef(tp, Inv, -,-) = sd
-    in type_l := [mk_AS`TypeDef(tp.name, tp, Inv, <DEFAULT_AS>, CI`NilContextId)];
+    in type_l := [mk_AS`TypeDef(tp.name, tp, Inv, nil, nil, <DEFAULT_AS>, CI`NilContextId)];
   for all tpnm in set dom type_m do
     type_l := type_l ^ [ type_m(tpnm) ];
   return TD`GenInvDef(type_l));

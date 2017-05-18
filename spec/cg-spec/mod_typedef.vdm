@@ -65,7 +65,7 @@ $td-l$.
 #ifdef VDMPP
   ( dcl cpp : seq of CPP`MemberDeclaration := [];
 #endif VDMPP
-    for mk_AS`TypeDef(tnm, shape, Inv, -, -) in td_l do
+    for mk_AS`TypeDef(tnm, shape, Inv, Eq, Ord, -, -) in td_l do
       if Inv <> nil then
 #ifdef VDMSL
         def ds_l = [DS`GenBoolType()];
@@ -102,10 +102,10 @@ corresponding to invariants on the type definitions in $td-l$.
 #endif VDMPP
         cpp : CPP`CPPAS := [];
 #ifdef VDMSL
-    for mk_AS`TypeDef(tnm, shape, Inv, acc, -) in td_l do
+    for mk_AS`TypeDef(tnm, shape, Inv, Eq, Ord, acc, -) in td_l do
 #endif VDMSL
 #ifdef VDMPP
-    for mk_AS`TypeDef(tnm, shape, Inv, acc, tpcid) in td_l do
+    for mk_AS`TypeDef(tnm, shape, Inv, Eq, Ord, acc, tpcid) in td_l do
 #endif VDMPP
       if Inv <> nil then
         let mk_AS`Invariant(pat, expr, -) = Inv,
@@ -185,7 +185,7 @@ GenVDMLibInit(mnm, type_m, sd) ==
   def ds_l = [BC`GenTypeSpecifier(BC`GenVoid())];
       fct_id = BC`GenIdentifier("init_"^CGAUX`GiveLastName(mnm)^"_VDMLib");
       fdecl = BC`GenFctDecl(fct_id, []);
-      type_s = { type | mk_AS`TypeDef(-, type, -, -, -) in set rng type_m &
+      type_s = { type | mk_AS`TypeDef(-, type, -, -, -, -, -) in set rng type_m &
                          is_AS`CompositeType(type) } union
                 (if sd <> nil then {sd.tp} else {})
   in

@@ -291,7 +291,7 @@ GenStateTypeDef : AS`StateDef -> map AS`Name to AS`TypeDef
 GenStateTypeDef (mk_AS`StateDef(tp,Inv,-,-)) ==
   let id = tp.name
   in
-    { id |-> mk_AS`TypeDef (id, tp, Inv, Default_Tp, id.cid) }
+    { id |-> mk_AS`TypeDef (id, tp, Inv, nil, nil, Default_Tp, id.cid) }
 \end{vdm_al}
 
 This function returns the type definition corresponding to the state type.
@@ -401,7 +401,7 @@ functions
 TransLocalRecSel: map AS`Name to AS`TypeDef -> map AS`Name to GLOBAL`RecSel
 TransLocalRecSel(tpdefs) == 
   --TransTP({mk_(shape,RealAccess(access,<TP>)) | mk_AS`TypeDef(-,shape,-,access,-) in set rng tpdefs});
-  TransTP({mk_(shape,access) | mk_AS`TypeDef(-,shape,-,access,-) in set rng tpdefs});
+  TransTP({mk_(shape,access) | mk_AS`TypeDef(-,shape,-,-,-,access,-) in set rng tpdefs});
 \end{vdm_al}
 #endif VDMPP
 
@@ -1369,7 +1369,7 @@ predicate function for an implicit operation definition.
 TransTpDefMap: map AS`Name to AS`TypeDef ==> map AS`Name to GLOBAL`RecSel
 TransTpDefMap(tm) ==
   --TransTP({mk_(shape,RealAccess(access,<TP>)) | mk_AS`TypeDef(-,shape,-,access,-) in set rng tm });
-  TransTP({mk_(shape,access) | mk_AS`TypeDef(-,shape,-,access,-) in set rng tm });
+  TransTP({mk_(shape,access) | mk_AS`TypeDef(-,shape,-,-,-,access,-) in set rng tm });
 \end{vdm_al}
 #endif VDMSL
 
@@ -1503,7 +1503,7 @@ CreateInvs(mod_id, tm) ==
   let nid = CI`NilContextId
   in 
     for all name in set dom tm do
-      let mk_AS`TypeDef(-,shape,Inv,access,-) = tm(name)
+      let mk_AS`TypeDef(-,shape,Inv,Eq,Ord,access,-) = tm(name)
       in 
         cases Inv:
           mk_AS`Invariant(pattern,expr,-) -> let fntp = mk_AS`TotalFnType([shape], mk_AS`BooleanType(nid),nid)

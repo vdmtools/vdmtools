@@ -38,6 +38,8 @@ types
 
   TypeDef = String;
   Invariant = String;
+  Order = String;
+  Equal = String;
 
   FnDef = ExplFnDef | ImplFnDef | ExtExplFnDef;
 
@@ -138,15 +140,24 @@ functions
 \section{Type definitions}
 
 \begin{vdm_al}
-  tar_TypeDef : PP_TAR_EXPR`NameType * AS`Type * PP_TAR_TYPE`Type * [Invariant] * AS`Access * CI`ContextId -> TypeDef
+  tar_TypeDef : PP_TAR_EXPR`NameType * AS`Type * PP_TAR_TYPE`Type * [Invariant] * [Equal] * [Order] * AS`Access * CI`ContextId -> TypeDef
   --tar_TypeDef (nm,as_tp,type,fninv,-,-) ==
-  tar_TypeDef (nm,-,type,fninv,-,-) ==
-     nm ^ " = " ^ type ^ "\n" ^ (if fninv = nil then "" else fninv ^ "\n");
+  tar_TypeDef (nm,-,type,fninv,fneq,fnord,-,-) ==
+     nm ^ " = " ^ type ^ "\n" ^ (if fninv = nil then "" else fninv ^ "\n")
+                              ^ (if fneq = nil then "" else fneq ^ "\n")
+                              ^ (if fnord = nil then "" else fnord ^ "\n");
 
   tar_Invariant : PP_TAR_PAT`Pattern * PP_TAR_EXPR`Expr * CI`ContextId -> Invariant
   tar_Invariant(pat,expr,-) ==
      "inv " ^ pat ^ " == " ^ expr ^ "\n";
 
+  tar_Eq : PP_TAR_PAT`Pattern * PP_TAR_PAT`Pattern * PP_TAR_EXPR`Expr * CI`ContextId -> Invariant
+  tar_Eq(lhs,rhs,expr,-) ==
+     "ord " ^ lhs ^ " = " ^ rhs ^ " == " ^ expr ^ "\n";
+
+  tar_Order : PP_TAR_PAT`Pattern * PP_TAR_PAT`Pattern * PP_TAR_EXPR`Expr * CI`ContextId -> Invariant
+  tar_Order(lhs,rhs,expr,-) ==
+     "ord " ^ lhs ^ " < " ^ rhs ^ " == " ^ expr ^ "\n";
 
 \end{vdm_al}
 
