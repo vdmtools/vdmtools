@@ -784,6 +784,20 @@ sets must be equal.
 
 \begin{vdm_al}
 operations
+EvalOrderExpr : SEM`VAL * AS`BinaryOp * SEM`VAL ==> SEM`VAL
+EvalOrderExpr (op1_v, opr, op2_v) ==
+  if is_SEM`NUM(op1_v) and is_SEM`NUM(op2_v)
+  then return EvalNumBinaryExpr (op1_v, opr, op2_v)
+  else -- TODO
+    cases false:
+      (is_SEM`NUM(op1_v)) -> RTERR`ErrorVal(RTERR`NUM_EXPECTED,op1_v,nil, []),
+      (is_SEM`NUM(op2_v)) -> RTERR`ErrorVal(RTERR`NUM_EXPECTED,op2_v,nil, []),
+      others -> return EvalNumBinaryExpr (op1_v, opr, op2_v)
+    end;
+\end{vdm_al}
+
+\begin{vdm_al}
+operations
 
 EvalNumUnaryExpr : AS`UnaryOp * SEM`VAL ==> SEM`VAL
 EvalNumUnaryExpr (opr, op_v) ==

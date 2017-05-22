@@ -2213,11 +2213,11 @@ void StackEval::EvalBINOP(const Int & opr)
     case NUMDIV:
     case NUMREM:
     case INTDIV:
+    case NUMMOD:       { PUSH(EXPR::EvalNumBinaryExpr(left_v, opr, right_v)); break; }
     case NUMLT:
     case NUMLE:
     case NUMGT:
-    case NUMGE:
-    case NUMMOD:       { PUSH(EXPR::EvalNumBinaryExpr(left_v, opr, right_v)); break; }
+    case NUMGE:        { PUSH(EXPR::EvalOrderExpr(left_v, opr, right_v)); break; }
     case INSET:
     case NOTINSET:
     case SETUNION:

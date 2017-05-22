@@ -1464,6 +1464,19 @@ TYPE_SEM_VAL EXPR::IterateMap (const TYPE_SEM_MAP & MapV, const TYPE_SEM_NUM & n
   }
 }
 
+// EvalOrderExpr
+// op1_v : SEM`VAL
+// opr : AS`BinaryOp
+// op2_v : SEM`VAL
+// ==> SEM`VAL
+TYPE_SEM_VAL EXPR::EvalOrderExpr (const TYPE_SEM_VAL & op1_v, const Int & opr, const TYPE_SEM_VAL & op2_v)
+{
+  if (op1_v.Is(TAG_TYPE_SEM_NUM) && op2_v.Is(TAG_TYPE_SEM_NUM)) {
+    return EvalNumBinaryExpr( op1_v, opr, op2_v );
+  }
+  return EvalNumBinaryExpr( op1_v, opr, op2_v );
+}
+
 // EvalNumBinaryExpr
 // op1_v : SEM`VAL
 // opr : AS`BinaryOp
