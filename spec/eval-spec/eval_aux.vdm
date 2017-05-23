@@ -60,6 +60,8 @@ module AUX
       PostName : AS`Name -> AS`Name;
       InvName : AS`Name -> AS`Name;
       InitName : AS`Name -> AS`Name;
+      OrderName : AS`Name -> AS`Name;
+      EqualityName : AS`Name -> AS`Name;
       Permute: seq of SEM`VAL -> set of seq of SEM`VAL;
       --ConstructName: AS`Id * CI`ContextId -> AS`Name;
       IsStmt: AS`Expr | AS`Stmt +> bool;

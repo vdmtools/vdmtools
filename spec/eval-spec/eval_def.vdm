@@ -1505,12 +1505,13 @@ CreateInvs(mod_id, tm) ==
     for all name in set dom tm do
       let mk_AS`TypeDef(-,shape,Inv,Eq,Ord,access,-) = tm(name)
       in 
-        cases Inv:
-          mk_AS`Invariant(pattern,expr,-) -> let fntp = mk_AS`TotalFnType([shape], mk_AS`BooleanType(nid),nid)
-                                             in res := res ++ { AUX`InvName(name) |->
+       (cases Inv:
+          mk_AS`Invariant(pattern,expr,-) -> let fntp = mk_AS`TotalFnType([shape], mk_AS`BooleanType(nid),nid),
+                                                 typeInvName = AUX`InvName(name)
+                                             in res := res ++ { typeInvName |->
                                                                TransFN(mod_id,
                                                                        mk_AS`ExplFnDef(
-                                                                         name,
+                                                                         typeInvName,
                                                                          [],
                                                                          fntp,
                                                                          [[ pattern ]],
@@ -1523,6 +1524,45 @@ CreateInvs(mod_id, tm) ==
                                                                          nid)) },
           others -> skip
         end;
+        cases Ord:
+          mk_AS`Order(lhs,rhs,expr,-) -> let fntp = mk_AS`TotalFnType([shape, shape], mk_AS`BooleanType(nid),nid),
+                                             orderName = AUX`OrderName(name)
+                                             in res := res ++ { orderName |->
+                                                               TransFN(mod_id,
+                                                                       mk_AS`ExplFnDef(
+                                                                         orderName,
+                                                                         [],
+                                                                         fntp,
+                                                                         [[ lhs, rhs ]],
+                                                                         mk_AS`FnBody(expr, nid),
+                                                                         nil,
+                                                                         nil, 
+                                                                         access,
+                                                                         false,
+                                                                         nil,
+                                                                         nid)) },
+          others -> skip
+        end;
+        cases Eq:
+          mk_AS`Equal(lhs,rhs,expr,-) -> let fntp = mk_AS`TotalFnType([shape, shape], mk_AS`BooleanType(nid),nid),
+                                             equalityName = AUX`EqualityName(name)
+                                             in res := res ++ { equalityName |->
+                                                               TransFN(mod_id,
+                                                                       mk_AS`ExplFnDef(
+                                                                         equalityName,
+                                                                         [],
+                                                                         fntp,
+                                                                         [[ lhs, rhs ]],
+                                                                         mk_AS`FnBody(expr, nid),
+                                                                         nil,
+                                                                         nil, 
+                                                                         access,
+                                                                         false,
+                                                                         nil,
+                                                                         nid)) },
+          others -> skip
+        end;
+       );
   return res);
 values
 

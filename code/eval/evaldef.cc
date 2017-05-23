@@ -2645,6 +2645,8 @@ Map DEF::CreateInvs (const TYPE_AS_Name & mod_id, const MAP<TYPE_AS_Name, TYPE_A
   {
     TYPE_AS_TypeDef tdef (tm[name]);
     const Generic & inv_g (tdef.GetField(pos_AS_TypeDef_Inv));
+    const Generic & order_g (tdef.GetField(pos_AS_TypeDef_Ord));
+    const Generic & equal_g (tdef.GetField(pos_AS_TypeDef_Eq));
 
     if (!inv_g.IsNil ())
     {
@@ -2656,11 +2658,10 @@ Map DEF::CreateInvs (const TYPE_AS_Name & mod_id, const MAP<TYPE_AS_Name, TYPE_A
       SEQ<TYPE_AS_Parameters> parms;
       parms.ImpAppend (SEQ<TYPE_AS_Pattern>().ImpAppend (pattern));
 
-// 20100607 -->
       TYPE_AS_Type shape (tdef.GetRecord(pos_AS_TypeDef_shape));
-      if (shape.Is(TAG_TYPE_AS_CompositeType))
+      if (shape.Is(TAG_TYPE_AS_CompositeType)) {
         shape = TYPE_AS_TypeName().Init(shape.GetRecord(pos_AS_CompositeType_name), NilContextId);
-// <-- 20100607
+      }
 
       TYPE_AS_TotalFnType tp;
       tp.Init(SEQ<TYPE_AS_Type>().ImpAppend (shape),
@@ -2684,6 +2685,85 @@ Map DEF::CreateInvs (const TYPE_AS_Name & mod_id, const MAP<TYPE_AS_Name, TYPE_A
 
       tmp.Insert (typeInvName, TransFN (mod_id, func));
     }
+
+    if (!order_g.IsNil ())
+    {
+      TYPE_AS_Order order (order_g);
+      const TYPE_AS_Pattern & lhs   (order.GetRecord(pos_AS_Order_lhs));
+      const TYPE_AS_Pattern & rhs   (order.GetRecord(pos_AS_Order_rhs));
+      const TYPE_AS_Expr & expr     (order.GetRecord(pos_AS_Order_expr));
+      const TYPE_AS_Access & access (tdef.GetField(pos_AS_TypeDef_access));
+
+      SEQ<TYPE_AS_Parameters> parms;
+      parms.ImpAppend (SEQ<TYPE_AS_Pattern>().ImpAppend (lhs).ImpAppend(rhs));
+
+      TYPE_AS_Type shape (tdef.GetRecord(pos_AS_TypeDef_shape));
+      if (shape.Is(TAG_TYPE_AS_CompositeType)) {
+        shape = TYPE_AS_TypeName().Init(shape.GetRecord(pos_AS_CompositeType_name), NilContextId);
+      }
+
+      TYPE_AS_TotalFnType tp;
+      tp.Init(SEQ<TYPE_AS_Type>().ImpAppend (shape).ImpAppend(shape),
+              TYPE_AS_BooleanType().Init(NilContextId),
+              NilContextId);
+
+      TYPE_AS_Name orderName (AUX::OrderName(AUX::ExtractName(name)));
+
+      TYPE_AS_ExplFnDef func;
+      func.Init(orderName,
+                SEQ<TYPE_AS_TypeVar>(),
+                tp,
+                parms,
+                TYPE_AS_FnBody().Init(expr, NilContextId),
+                Nil (),
+                Nil (),
+                access,
+                Bool(false),
+                Nil(),
+                NilContextId);
+
+      tmp.Insert (orderName, TransFN (mod_id, func));
+    }
+
+    if (!equal_g.IsNil ())
+    {
+      TYPE_AS_Equal equal (equal_g);
+      const TYPE_AS_Pattern & lhs   (equal.GetRecord(pos_AS_Equal_lhs));
+      const TYPE_AS_Pattern & rhs   (equal.GetRecord(pos_AS_Equal_rhs));
+      const TYPE_AS_Expr & expr     (equal.GetRecord(pos_AS_Equal_expr));
+      const TYPE_AS_Access & access (tdef.GetField(pos_AS_TypeDef_access));
+
+      SEQ<TYPE_AS_Parameters> parms;
+      parms.ImpAppend (SEQ<TYPE_AS_Pattern>().ImpAppend (lhs).ImpAppend(rhs));
+
+      TYPE_AS_Type shape (tdef.GetRecord(pos_AS_TypeDef_shape));
+      if (shape.Is(TAG_TYPE_AS_CompositeType)) {
+        shape = TYPE_AS_TypeName().Init(shape.GetRecord(pos_AS_CompositeType_name), NilContextId);
+      }
+
+      TYPE_AS_TotalFnType tp;
+      tp.Init(SEQ<TYPE_AS_Type>().ImpAppend (shape).ImpAppend(shape),
+              TYPE_AS_BooleanType().Init(NilContextId),
+              NilContextId);
+
+      TYPE_AS_Name equalityName (AUX::EqualityName(AUX::ExtractName(name)));
+
+      TYPE_AS_ExplFnDef func;
+      func.Init(equalityName,
+                SEQ<TYPE_AS_TypeVar>(),
+                tp,
+                parms,
+                TYPE_AS_FnBody().Init(expr, NilContextId),
+                Nil (),
+                Nil (),
+                access,
+                Bool(false),
+                Nil(),
+                NilContextId);
+
+      tmp.Insert (equalityName, TransFN (mod_id, func));
+    }
+
   }
   return tmp;
 }
