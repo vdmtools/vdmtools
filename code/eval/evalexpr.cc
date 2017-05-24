@@ -1464,6 +1464,88 @@ TYPE_SEM_VAL EXPR::EvalOrderExpr (const TYPE_SEM_VAL & op1_v, const Int & opr, c
   if (op1_v.Is(TAG_TYPE_SEM_NUM) && op2_v.Is(TAG_TYPE_SEM_NUM)) {
     return EvalNumBinaryExpr( op1_v, opr, op2_v );
   }
+  else if (op1_v.Is(TAG_TYPE_DYNSEM_SEM_REC) && op2_v.Is(TAG_TYPE_DYNSEM_SEM_REC)) {
+    const TYPE_AS_Name & tag1 (op1_v.GetRecord(pos_DYNSEM_SEM_SemRecord_tag));
+    const TYPE_AS_Name & tag2 (op2_v.GetRecord(pos_DYNSEM_SEM_SemRecord_tag));
+    if (tag1 == tag2) {
+      Tuple itd = AUX::IsTypeDef(tag1);
+      if (itd.GetBoolValue(1)) {
+        const Generic & ord_g (itd.GetField(pos_AS_TypeDef_Ord));
+        if (!ord_g.IsNil()) {
+          TYPE_AS_Order Ord (ord_g);
+          TYPE_STKM_Pattern lhs (theCompiler().P2P(Ord.GetRecord(pos_AS_Order_lhs)));
+          TYPE_STKM_Pattern rhs (theCompiler().P2P(Ord.GetRecord(pos_AS_Order_rhs)));
+          const TYPE_AS_Expr & expr (Ord.GetRecord(pos_AS_Order_expr));
+          SEQ<TYPE_STKM_Pattern> pat_l;
+          switch(opr.GetValue()) {
+            case NUMLT:
+            case NUMGE: {
+              pat_l.ImpAppend(lhs).ImpAppend(rhs);
+              break;
+            }
+            case NUMLE:
+            case NUMGT: {
+              pat_l.ImpAppend(rhs).ImpAppend(lhs);
+              break;
+            }
+          }
+          SET<TYPE_SEM_BlkEnv> env_s (PAT::MatchLists(pat_l, mk_sequence(op1_v, op2_v)));
+          if (!env_s.IsEmpty()) {
+#ifdef VDMSL
+            theStackMachine().PushBlkEnv(env_s.GetElem());
+            Tuple res (theStackMachine().EvalUninterruptedCmd(  // EvalAuxCmd
+                                   Ord.GetRecord(pos_AS_Order_expr),
+                                   TYPE_STKM_SubProgram(),
+                                   TYPE_STKM_SubProgram(),
+                                   SEQ<Char>(L"Order evaluation")));
+
+//            wstring debugStr (L"Invariant check for type");
+//            if (Settings.CallLog()) {
+//                wstring typenm = ASTAUX::ASName2String(name);
+//                std::string::size_type n = typenm.find(L"`");
+//                while (n != std::string::npos) {
+//                    typenm[n] = L'-';
+//                    n = typenm.find(L"`");
+//                }
+//                debugStr += L" (" + typenm + L")";
+//            }
+//
+//            Tuple res (theStackMachine().EvalAuxProgram(GetCachedTypeInv(ExtractModule(name),
+//                                                   AUX::ExtractName(name), Ord),
+//                                                    SEQ<Char>(debugStr),
+//                                                    false));
+            theStackMachine().PopBlkEnv();
+            const TYPE_STKM_EvaluationState & eval_state (res.GetRecord(1));
+            if (eval_state.Is(TAG_TYPE_STKM_Success)) {
+              const TYPE_SEM_VAL & Ord_v (res.GetRecord(2));
+              if (Ord_v.Is(TAG_TYPE_SEM_BOOL)) {
+                switch(opr.GetValue()) {
+                  case NUMLT:
+                  case NUMGT: {
+                    return Ord_v;
+                    break;
+                  }
+                  case NUMLE:
+                  case NUMGE: {
+                    return (Ord_v.GetBoolValue(pos_SEM_BOOL_v) ? sem_false : sem_true);
+                    break;
+                  }
+                }
+              }
+              else {
+                return RTERR::ErrorVal(L"EvalOrderExpr", RTERR_BOOL_EXPECTED, Ord_v, Nil(), Sequence());
+              }
+            }
+            else {
+              return RTERR::ErrorVal(L"EvalOrderExpr", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
+            }
+
+#endif // VDMSL
+          }
+        }
+      }
+    }
+  }
   return EvalNumBinaryExpr( op1_v, opr, op2_v );
 }
 
