@@ -32,13 +32,13 @@ module EXPR
         LookUpRecSel : AS`Name ==> bool * [GLOBAL`RecSel];
 #ifdef VDMSL
         UniqueTagName : AS`Name ==> AS`Name;
-        IsTypeDef : AS`Name ==> bool * [AS`Type] * [AS`Invariant] * [AS`Name];
+        IsTypeDef : AS`Name ==> bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name];
         LookUpRenRecSel : AS`Name ==> bool * [GLOBAL`RecSel] * [AS`Name] * [AS`Name];
         IsTypeStructExported : AS`Name ==> bool;
 #endif VDMSL
         ExtractTagName: AS`Name * set of AS`Name ==> [AS`Name] * bool;
 #ifdef VDMPP
-        IsTypeDef : AS`Name ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access];
+        IsTypeDef : AS`Name ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access];
 #endif VDMPP
         ,
 
@@ -191,7 +191,7 @@ that computes a record semantic value.
 ConstructSEMRecFields: AS`Name * seq of SEM`VAL ==> SEM`VAL
 ConstructSEMRecFields(tag, val_l) ==
   cases AUX`IsTypeDef(tag):
-    mk_(true,mk_AS`CompositeType(-,fl,-),-,-) ->
+    mk_(true,mk_AS`CompositeType(-,fl,-),-,-,-,-) ->
               def v = { i |-> val_l(i) | i in set inds fl & not fl(i).dc };
                   v_dc ={ i |-> val_l(i) | i in set inds fl & fl(i).dc };
                   sem_tag = AUX`UniqueTagName(tag)
@@ -222,7 +222,7 @@ EvalRecordConstructorExpr (tag,val_l) ==
            (if SETTINGS`DTC() 
             then 
               cases AUX`IsTypeDef (the_tag):
-                mk_(true,-,-,-) -> -- now we know that the record tag name
+                mk_(true,-,-,-,-,-) -> -- now we know that the record tag name
                                  -- also is the type definition name. (HC:961003)
                        (if not STATE`SubType(res_v, mk_AS`TypeName(the_tag,tag.cid))
                         then
@@ -290,7 +290,7 @@ EvalRecordConstructorExpr(tag,fields) ==
            (if SETTINGS`DTC()
             then
               cases AUX`IsTypeDef(the_tag):
-                mk_(true,-,-,-,-) -> -- a typedefinition of the tag has been found and thus
+                mk_(true,-,-,-,-,-,-) -> -- a typedefinition of the tag has been found and thus
                                      -- we can check possible invariants
                           (if not STATE`SubType(res_v, mk_AS`TypeName(the_tag,the_tag.cid))
                            then
@@ -321,7 +321,7 @@ that computes a record semantic value.
 ConstructSEMRecFields: AS`Name * seq of SEM`VAL ==> SEM`VAL
 ConstructSEMRecFields(sem_tag, val_l) ==
   cases AUX`IsTypeDef(sem_tag):
-    mk_(true,mk_AS`CompositeType(-,fl,-),-,-,-) ->
+    mk_(true,mk_AS`CompositeType(-,fl,-),-,-,-,-,-) ->
               def v = { i |-> val_l(i)  | i in set inds fl & not fl(i).dc };
                   v_dc ={ i |-> val_l(i) | i in set inds fl & fl(i).dc }
               in return mk_SEM`REC(sem_tag, v, v_dc),
@@ -376,7 +376,7 @@ EvalRecordModifierExpr (rec_v,fid_l,val_l) ==
                (if SETTINGS`DTC()
                 then
                   cases AUX`IsTypeDef(tag):
-                    mk_(true,-,-,-) -> -- We have information for possible invariant check
+                    mk_(true,-,-,-,-,-) -> -- We have information for possible invariant check
                       if not STATE`SubType( res_v, mk_AS`TypeName(tag,tag.cid))
                       then
                         if STATE`RealSubType(res_v, mk_AS`TypeName(tag,tag.cid), false)
@@ -439,7 +439,7 @@ EvalRecordModifierExpr(rec_v,fid_l,val_l) ==
                    (if SETTINGS`DTC() -- 20140121
                     then
                       cases AUX`IsTypeDef(tagname):
-                        mk_(true,-,-,defcl,-) ->
+                        mk_(true,-,-,-,-,defcl,-) ->
                          (STKM`PushClNmCurObj(defcl,defcl);
                           if not STATE`SubType(new_v, type_l(index))
                           then RTERR`ErrorVal(RTERR`TYPE_INCOMP,new_v,nil,[]);
@@ -458,7 +458,7 @@ EvalRecordModifierExpr(rec_v,fid_l,val_l) ==
              (if SETTINGS`DTC()
               then
                 cases AUX`IsTypeDef(tagname):
-                  mk_(true,-,-,defcl,-) ->  -- we have a type definition of the tag, and can check the invariant
+                  mk_(true,-,-,-,-,defcl,-) ->  -- we have a type definition of the tag, and can check the invariant
                    (STKM`PushClNmCurObj(defcl,defcl);
                     if not STATE`SubType(res_v, mk_AS`TypeName(tagname,tagname.cid))
                     then

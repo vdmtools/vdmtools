@@ -183,12 +183,12 @@ TypeToSet(tp) ==
     mk_AS`TypeName(name_,-)                -> def mk_(-, name) = AUX`LookUpRename(name_)
                                               in
                                                 cases AUX`IsTypeDef (name):
-                                                  mk_(true,tp,invariant,-) ->
+                                                  mk_(true,tp,invariant,-,-,-) ->
 #endif VDMSL
 #ifdef VDMPP
     mk_AS`TypeName(name,-)                 -> (cases AUX`IsTypeDef(name):
-                                                mk_(false,-,-,-,nil) -> RTERR`Error(RTERR`TYPE_UNKNOWN, nil, nil, []),
-                                                mk_(true,tp,invariant,-,-) ->
+                                                mk_(false,-,-,-,-,-,nil) -> RTERR`Error(RTERR`TYPE_UNKNOWN, nil, nil, []),
+                                                mk_(true,tp,invariant,-,-,-,-) ->
 #endif VDMPP
                     --return TypeToSet(type),
       if invariant = nil

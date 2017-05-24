@@ -229,28 +229,26 @@ TYPE_SEM_VAL EXPR::EvalRecordConstructorExpr (const TYPE_AS_Name & tag, const SE
 
       if (Settings.DTC())
       {
-//        Tuple itd (AUX::IsTypeDef(the_tag)); // bool * [AS`Type] * [AS`Invariant]
-        Tuple itd (theState().GetCachedTypeDef(the_tag)); // bool * [AS`Type] * [AS`Invariant]
-        if (itd.GetBoolValue(1))
-        {
+//        Tuple itd (AUX::IsTypeDef(the_tag)); // bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name]
+        Tuple itd (theState().GetCachedTypeDef(the_tag)); // bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name]
+        if (itd.GetBoolValue(1)) {
           TYPE_AS_TypeName tnm;
           tnm.Init(the_tag, the_tag.GetInt(pos_AS_Name_cid));
-          if (! theState().SubType (res_v, tnm))
-          {
-            if (theState().RealSubType (res_v, tnm, false))
+          if (! theState().SubType (res_v, tnm)) {
+            if (theState().RealSubType (res_v, tnm, false)) {
               return RTERR::ErrorVal (L"EvalRecordConstructorExpr", RTERR_TYPE_INV_BROKEN, res_v, tnm, Sequence());
-            else
+            }
+            else {
               return RTERR::ErrorVal (L"EvalRecordConstructorExpr", RTERR_TYPE_INCOMP, res_v, tnm, Sequence());
+            }
           }
         }
-        else
-        {
+        else {
           const SEQ<TYPE_AS_Type> & type_l (recsel.GetSequence (3)); // seq of AS`Type
           // NOTE: SEM`REC implimentation is different from spec.
           SEQ<TYPE_SEM_VAL> v (res_v.GetRecord(pos_DYNSEM_SEM_SemRecord_value).GetFields());
           size_t len_type_l = type_l.Length();
-          for (size_t index = 1; index <= len_type_l; index++)
-          {
+          for (size_t index = 1; index <= len_type_l; index++) {
             if(!theState().SubType (v[index], type_l[index]))
               return RTERR::ErrorVal (L"EvalRecordConstructorExpr", RTERR_TYPE_INCOMP,
                                       v[index], type_l[index], Sequence());
@@ -302,19 +300,16 @@ TYPE_SEM_VAL EXPR::EvalRecordConstructorExpr(const TYPE_AS_Name & tag, const SEQ
     const Tuple & recsel (lurs.GetTuple(2)); // GLOBAL`RecSel
     if ( recsel.GetIntValue(1) == fields.Length() ) {
       TYPE_DYNSEM_SEM_SemRecord res_v (ConstructSEMRecFields(the_tag, fields));
-      if (Settings.DTC())
-      {
+      if (Settings.DTC()) {
 //        Tuple itd (AUX::IsTypeDef(the_tag));
         Tuple itd (theState().GetCachedTypeDef(the_tag));
-        // ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access]
+        // ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access]
 
-        if (itd.GetBoolValue(1))
-        {
+        if (itd.GetBoolValue(1)) {
           TYPE_AS_TypeName tnm;
           tnm.Init(tag, tag.GetInt(pos_AS_Name_cid));
           // must use TypeName for check invariant
-          if (!theState().SubType(res_v, tnm))
-          {
+          if (!theState().SubType(res_v, tnm)) {
             if (theState().RealSubType (res_v, tnm, false))
               return RTERR::ErrorVal (L"EvalRecordConstructorExpr", RTERR_TYPE_INV_BROKEN, res_v, tnm, Sequence());
             else
@@ -417,14 +412,12 @@ TYPE_SEM_VAL EXPR::EvalRecordModifierExpr (const TYPE_SEM_VAL & rec_v,
           // push mudule if needed before checking the fields
           theStackMachine().PushModule (theState().ExtractModule(tag));
 
-//          Tuple itd (AUX::IsTypeDef(tag)); // bool * AS`TypeDef
+//          Tuple itd (AUX::IsTypeDef(tag)); // bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name]
           Tuple itd (theState().GetCachedTypeDef(tag)); // bool * AS`TypeDef
-          if (itd.GetBoolValue(1))
-          {
+          if (itd.GetBoolValue(1)) {
             TYPE_AS_TypeName tnm;
             tnm.Init(tag, tag.GetInt(pos_AS_Name_cid));
-            if (!theState().SubType(res_v, tnm))
-            {
+            if (!theState().SubType(res_v, tnm)) {
               if (theState().RealSubType (res_v, tnm, false))
                 return RTERR::ErrorVal (L"EvalRecordModifierExpr", RTERR_TYPE_INV_BROKEN, res_v, tnm, Sequence());
               else
@@ -490,19 +483,17 @@ TYPE_SEM_VAL EXPR::EvalRecordModifierExpr(const TYPE_SEM_VAL & rec_v,
         if (!pos.DomExists(fid))
           return RTERR::ErrorVal (L"EvalRecordModifierExpr", RTERR_RECORD_FIELD_ID_UNKNOWN,
                                EvalState::M42Sem(AUX::SingleNameToString(fid), NULL), Nil(), Sequence());
-        else
-        {
+        else {
           const TYPE_SEM_VAL & new_v (val_l[i]);
           int index = pos[fid].GetValue();
           tmp_v.ImpModify(index, new_v);
-          if (Settings.DTC())
-          {
+          if (Settings.DTC()) {
             TYPE_AS_Type type (type_l[index]);
 //            Tuple itd (AUX::IsTypeDef(tagname));
+        // ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access]
             Tuple itd (theState().GetCachedTypeDef(tagname));
-            if (itd.GetBoolValue(1))
-            {
-              const TYPE_AS_Name & defcl (itd.GetRecord(4)); // [AS`Name]
+            if (itd.GetBoolValue(1)) {
+              const TYPE_AS_Name & defcl (itd.GetRecord(6)); // [AS`Name]
               theStackMachine().PushClNmCurObj(defcl, defcl);
 
               if (!theState().SubType (new_v, type))
@@ -524,21 +515,20 @@ TYPE_SEM_VAL EXPR::EvalRecordModifierExpr(const TYPE_SEM_VAL & rec_v,
       TYPE_DYNSEM_SEM_SemRecord res_v (SemRec::mk_SEM_REC(tag, tmp_v));
       res_v.SetField(pos_DYNSEM_SEM_SemRecord_checked, Bool(true));
 
-      if (Settings.DTC()) // check for invatiant
-      {
+      if (Settings.DTC()) { // check for invatiant
 //        Tuple itd (AUX::IsTypeDef(tagname));
         Tuple itd (theState().GetCachedTypeDef(tagname));
-        if (itd.GetBoolValue(1))
-        {
+        if (itd.GetBoolValue(1)) {
           TYPE_AS_TypeName tnm;
           tnm.Init(tag, tag.GetInt(pos_AS_Name_cid));
           // must use TYpeName for check invariant
-          if (! theState().SubType(res_v, tnm))
-          {
-            if (theState().RealSubType (res_v, tnm, false))
+          if (! theState().SubType(res_v, tnm)) {
+            if (theState().RealSubType (res_v, tnm, false)) {
               return RTERR::ErrorVal (L"EvalRecordModifierExpr", RTERR_TYPE_INV_BROKEN, res_v, tnm, Sequence());
-            else
+            }
+            else {
               return RTERR::ErrorVal (L"EvalRecordModifierExpr", RTERR_TYPE_INCOMP, res_v, tnm, Sequence());
+            }
           }
         }
         //res_v.SetField(pos_DYNSEM_SEM_SemRecord_checked, Bool(true));

@@ -362,7 +362,7 @@ Tuple AUX::ExtractTagName(const TYPE_AS_Name & name, const SET<TYPE_AS_Name> & n
 
 // IsTypeDef
 // name : AS`Name
-// ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name]
+// ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name]
 Tuple AUX::IsTypeDef (const TYPE_AS_Name & name)
 {
   Tuple name_t (RenameExtractModule(name));
@@ -374,10 +374,14 @@ Tuple AUX::IsTypeDef (const TYPE_AS_Name & name)
   const Map & tps (sigmamo.GetMap(pos_GLOBAL_SigmaMO_tps));
   if (tps.DomExists (rec_name)) {
     TYPE_AS_TypeDef td (tps[rec_name]);
-    return mk_(Bool(true), td.GetRecord(pos_AS_TypeDef_shape), td.GetField(pos_AS_TypeDef_Inv), mod_name);
+    return mk_(Bool(true), td.GetRecord(pos_AS_TypeDef_shape),
+                           td.GetField(pos_AS_TypeDef_Inv),
+                           td.GetField(pos_AS_TypeDef_Eq),
+                           td.GetField(pos_AS_TypeDef_Ord),
+                           mod_name);
   }
   else {
-    return mk_(Bool(false), Nil(), Nil(), Nil());
+    return mk_(Bool(false), Nil(), Nil(), Nil(), Nil(), Nil());
   }
 }
 #endif //VDMSL
@@ -385,21 +389,21 @@ Tuple AUX::IsTypeDef (const TYPE_AS_Name & name)
 #ifdef VDMPP
 // IsTypeDef
 // name : AS`Name
-// ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access]
+// ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access]
 Tuple AUX::IsTypeDef(const TYPE_AS_Name & name)
 {
   if (theState().IsAClass(name)) {
     TYPE_GLOBAL_ObjRefType type;
     type.SetField(pos_GLOBAL_ObjRefType_nm, name);
     
-    return mk_(Bool(true), type, Nil(), name, Nil());
+    return mk_(Bool(true), type, Nil(), Nil(), Nil(), name, Nil());
   }
 
   bool l_empty = (name.GetSequence(pos_AS_Name_ids).Length() == 1);
 
   if (l_empty && ! theStackMachine().HasCurCl()) {
     RTERR::Error(L"IsTypeDef", RTERR_TYPE_UNKNOWN, Nil(), Nil(), Sequence());
-    return mk_(Bool(false), Nil(), Nil(), Nil(), Nil());
+    return mk_(Bool(false), Nil(), Nil(), Nil(), Nil(), Nil(), Nil());
   }
 
   TYPE_AS_Name thename (ExtractName(name));
@@ -417,6 +421,8 @@ Tuple AUX::IsTypeDef(const TYPE_AS_Name & name)
       return mk_(scopeok,
                  typedef_r.GetRecord(pos_AS_TypeDef_shape),
                  typedef_r.GetField(pos_AS_TypeDef_Inv),
+                 typedef_r.GetField(pos_AS_TypeDef_Eq),
+                 typedef_r.GetField(pos_AS_TypeDef_Ord),
                  clnm,
                  access);
     }
@@ -445,7 +451,7 @@ Tuple AUX::IsTypeDef(const TYPE_AS_Name & name)
   // in cases dom spcl_tps:
   switch(spcl_tps.Size()) {
     case 0: {
-      return mk_(Bool(false), Nil(), Nil(), Nil(), Nil());
+      return mk_(Bool(false), Nil(), Nil(), Nil(), Nil(), Nil(), Nil());
     }
     case 1: {
       TYPE_AS_Name cl (spcl_tps.Dom().GetElem());
@@ -454,7 +460,11 @@ Tuple AUX::IsTypeDef(const TYPE_AS_Name & name)
       const TYPE_AS_Access & access (td.GetField(pos_AS_TypeDef_access));
       Bool scopeok (theState().AccessOk(access, origcl, cl));
 
-      return mk_(scopeok, td.GetRecord(pos_AS_TypeDef_shape), td.GetField(pos_AS_TypeDef_Inv), cl, access);
+      return mk_(scopeok, td.GetRecord(pos_AS_TypeDef_shape),
+                          td.GetField(pos_AS_TypeDef_Inv),
+                          td.GetField(pos_AS_TypeDef_Eq),
+                          td.GetField(pos_AS_TypeDef_Ord),
+                          cl, access);
     }
     default: {
       TYPE_AS_Name cl;
@@ -486,11 +496,15 @@ Tuple AUX::IsTypeDef(const TYPE_AS_Name & name)
         const TYPE_AS_Access & access (td.GetField(pos_AS_TypeDef_access));
         Bool scopeok (theState().AccessOk(access, origcl, cl));
 
-        return mk_(scopeok, td.GetRecord(pos_AS_TypeDef_shape), td.GetField(pos_AS_TypeDef_Inv), cl, access);
+        return mk_(scopeok, td.GetRecord(pos_AS_TypeDef_shape),
+                            td.GetField(pos_AS_TypeDef_Inv),
+                            td.GetField(pos_AS_TypeDef_Eq),
+                            td.GetField(pos_AS_TypeDef_Ord),
+                            cl, access);
       } else {
         vdm_iplog << L"The name was '" << ASTAUX::ASName2String (name) << L"'" << endl << flush;
         RTERR::Error(L"IsTypeDef", RTERR_MULT_DEF, Nil(), Nil(), Sequence());
-        return mk_(Bool(false), Nil(), Nil(), Nil(), Nil());
+        return mk_(Bool(false), Nil(), Nil(), Nil(), Nil(), Nil(), Nil());
       }
     }
   }

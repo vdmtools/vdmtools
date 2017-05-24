@@ -87,7 +87,7 @@ module AUX
 #ifdef VDMSL
       UniqueTagName : AS`Name ==> AS`Name;
       IsConstructExported : AS`Name * AS`Name ==> bool;
-      IsTypeDef : AS`Name ==> bool * [AS`Type] * [AS`Invariant] * [AS`Name];
+      IsTypeDef : AS`Name ==> bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name];
       LookUpRenRecSel : AS`Name ==> bool * [GLOBAL`RecSel] * [AS`Name] * [AS`Name];
       IsDefinedInModule : AS`Name ==> bool;
       IsTypeStructExported : AS`Name ==> bool;
@@ -96,7 +96,7 @@ module AUX
 #endif VDMSL
       ExtractTagName: AS`Name * set of AS`Name ==> [AS`Name] * bool;
 #ifdef VDMPP
-      IsTypeDef : AS`Name ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access];
+      IsTypeDef : AS`Name ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access];
 #endif VDMPP
       DistribCombineBlkEnv : set of SEM`BlkEnv ==> set of SEM`BlkEnv;
       SeqOfSetOf2SetOfSeqOf : seq of set of (SEM`VAL | SEM`BlkEnv) ==> set of seq of (SEM`VAL | SEM`BlkEnv);
@@ -380,7 +380,7 @@ This operation returns $\True$ if the input name is exported from the input
 module name.
 #ifdef VDMSL
 \begin{vdm_al}
-IsTypeDef : AS`Name ==> bool * [AS`Type] * [AS`Invariant] * [AS`Name]
+IsTypeDef : AS`Name ==> bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name]
 IsTypeDef (name) ==
   def mk_(mod_name, rec_name) = RenameExtractModule(name);
       mk_GLOBAL`SigmaMO(-,-,-,tps,-,-,-,-,-,-,-,-,-,-,-) = STATE`GetModule (mod_name);
@@ -388,8 +388,8 @@ IsTypeDef (name) ==
     if rec_name in set dom tps
     then
       let mk_AS`TypeDef(-,shape,Inv,Eq,Ord,-,-) = tps(rec_name)
-      in return mk_(true,shape,Inv,mod_name)
-    else return mk_(false,nil,nil,nil);
+      in return mk_(true,shape,Inv,Eq,Ord,mod_name)
+    else return mk_(false,nil,nil,nil,nil,nil);
 \end{vdm_al}
 
 This operation returns $\True$ if the input name denotes a type definition
@@ -409,12 +409,12 @@ also describes which class it is defined in. This is done by the
 The strategy of the operation is similar to the one used in {\em ExtractTagName}. 
 
 \begin{vdm_al}
-IsTypeDef : AS`Name ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access]
+IsTypeDef : AS`Name ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access]
 IsTypeDef (name) ==
  (if STATE`IsAClass(name)
   then
     let type = mk_GLOBAL`ObjRefType(name)
-    in return mk_(true, type, nil, name,nil)
+    in return mk_(true, type, nil, nil, nil, name,nil)
   else
     def mk_AS`Name(l^[-], cid) = name;
       clnm = STKM`GetCurCl();
@@ -423,7 +423,9 @@ IsTypeDef (name) ==
       thename = ExtractName(name)
     in
      (if l = [] and not STKM`HasCurCl()
-      then RTERR`ErrorVal(RTERR`TYPE_UNKNOWN, nil, nil, []);
+      then
+       (RTERR`Error(RTERR`TYPE_UNKNOWN, nil, nil, []);
+        return mk_(false, nil, nil, nil,nil,nil,nil));
 
       if l = []
       then
@@ -433,7 +435,7 @@ IsTypeDef (name) ==
           then
             def mk_AS`TypeDef(-,shape,Inv,Eq,Ord,access,-) = ExtComp(tps(thename), clnm);
                 scopeok = STATE`AccessOk(access,origcl,clnm)
-            in return mk_(scopeok,shape,Inv,clnm,access)
+            in return mk_(scopeok,shape,Inv,Eq,Ord,clnm,access)
          );
      (dcl allsupers : set of AS`Name := {};
       def classname = if l <> []
@@ -448,11 +450,11 @@ IsTypeDef (name) ==
                       clname in set allsupers & thename in set dom STATE`GetLocalTps(clname)}
       in
         cases dom spcl_tps:
-          {}     -> return mk_(false, nil, nil, nil,nil),
+          {}     -> return mk_(false, nil, nil, nil,nil,nil,nil),
           {cl}   -> def mk_AS`TypeDef(-,shape,Inv,Eq,Ord,access,-) = ExtComp(spcl_tps(cl)(thename),cl);
                         scopeok = STATE`AccessOk(access, origcl,cl)
-                    in return mk_(scopeok,shape,Inv,cl,access),
-          others ->(dcl res : bool * AS`Name := mk_(true, classname);
+                    in return mk_(scopeok,shape,Inv,Eq,Ord,cl,access),
+          others -> (dcl res : bool * AS`Name := mk_(true, classname);
                     if classname not in set dom spcl_tps
                     then
                       def rem_priv = {clnm | clnm in set dom spcl_tps & 
@@ -463,9 +465,11 @@ IsTypeDef (name) ==
                       if doesthere
                       then def mk_AS`TypeDef(-,shape,Inv,Eq,Ord,access,-) = ExtComp(spcl_tps(cl)(thename),cl);
                                scopeok = STATE`AccessOk(access,origcl,cl)
-                           in return mk_(scopeok,shape,Inv,cl,access)
+                           in return mk_(scopeok,shape,Inv,Eq,Ord,cl,access)
                       else 
-                        RTERR`ErrorVal(RTERR`MULT_DEF, nil, nil, []))
+                       (RTERR`Error(RTERR`MULT_DEF, nil, nil, []);
+                        return mk_(false, nil, nil, nil,nil,nil,nil))
+                     )
         end
      )))
 );

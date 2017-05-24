@@ -2786,6 +2786,7 @@ InvariantDefinition
           $$ = new TYPE_AS_InstanceInv();
           MYPARSER::SetPos2(*$$, @1, @2);
           $$->SetField(pos_AS_InstanceInv_expr, *$2);
+          $$->SetField(pos_AS_InstanceInv_access,   Int (DEFAULT_AS));
           delete $2;
         }
         ;

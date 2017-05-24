@@ -393,7 +393,7 @@ SET<TYPE_SEM_VAL> StackEval::TypeToSet(const TYPE_AS_Type & tp)
       if (t.GetBoolValue(1))
         name = t.GetRecord(2);
 
-//      Tuple itd (AUX::IsTypeDef(name)); //bool * [AS`Type] * [AS`Invariant]
+//      Tuple itd (AUX::IsTypeDef(name)); //bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * 
       Tuple itd (theState().GetCachedTypeDef(name)); //bool * [AS`Type] * [AS`Invariant]
       if (!itd.GetBoolValue(1)) {
         RTERR::Error (L"TypeToSet", RTERR_TYPE_UNKNOWN, Nil(), tp, Sequence());
@@ -403,11 +403,10 @@ SET<TYPE_SEM_VAL> StackEval::TypeToSet(const TYPE_AS_Type & tp)
 #ifdef VDMPP
       const TYPE_AS_Name & name (tp.GetRecord(pos_AS_TypeName_name));
 
-//      Tuple itd (AUX::IsTypeDef(name)); // bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access];
+//      Tuple itd (AUX::IsTypeDef(name)); // bool * [GLOBAL`Type] * [AS`Equal] * [AS`Order] * [AS`Invariant] * [AS`Name] * [AS`Access];
       Tuple itd (theState().GetCachedTypeDef(name)); // bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access];
-      if (!itd.GetBoolValue(1))
-      {
-        const Generic & access (itd.GetField(5)); // [AS`Access]
+      if (!itd.GetBoolValue(1)) {
+        const Generic & access (itd.GetField(7)); // [AS`Access]
         if (access.IsNil())
           RTERR::Error(L"TypeToSet", RTERR_TYPE_UNKNOWN, Nil(), tp, Sequence());
         else
