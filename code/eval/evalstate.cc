@@ -2276,10 +2276,9 @@ bool EvalState::IsSubTypeName (const TYPE_SEM_VAL & val_v, const TYPE_AS_TypeNam
   if (t.GetBoolValue(1))
     name = t.GetRecord(2);
 
-//  Tuple itd (AUX::IsTypeDef(name)); //bool * [AS`Type] * [AS`Invariant]
-  Tuple itd (GetCachedTypeDef(name)); //bool * [AS`Type] * [AS`Invariant]
-  if (!itd.GetBoolValue(1))
-  {
+//  Tuple itd (AUX::IsTypeDef(name)); //bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * 
+  Tuple itd (GetCachedTypeDef(name)); //bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * 
+  if (!itd.GetBoolValue(1)) {
     RTERR::Error (L"IsSubTypeName", RTERR_TYPE_UNKNOWN, Nil(), tp, Sequence());
   }
 
@@ -2289,33 +2288,23 @@ bool EvalState::IsSubTypeName (const TYPE_SEM_VAL & val_v, const TYPE_AS_TypeNam
     modulepushed = true;
   }
 
-  if (RealSubType (val_v, itd.GetRecord(2), checkinv))
-  {
-    if ( checkinv && !itd.GetField(3).IsNil())
-    {
+  if (RealSubType (val_v, itd.GetRecord(2), checkinv)) {
+    if ( checkinv && !itd.GetField(3).IsNil()) {
       const TYPE_AS_Invariant & Inv (itd.GetRecord(3));
 
-// 20060608 for cycric dependency ->
-      if( !this->dtc_typenm_l.IsEmpty() && this->dtc_typenm_l.Hd() == tp )
-      {
+      if( !this->dtc_typenm_l.IsEmpty() && this->dtc_typenm_l.Hd() == tp ) {
         this->dtc_typenm_l.Clear();
         RTERR::ReportError(L"IsSubTypeName",
                            RTERR_CIRCULAR_TYPE_INV_DEPENDENCY,
                            Nil(), tp, Inv.GetInt(pos_AS_Invariant_cid), Sequence());
       }
-// <- 20060608
 
       SET<TYPE_SEM_BlkEnv> env_s (PAT::PatternMatch(theCompiler().P2P(Inv.GetRecord(pos_AS_Invariant_pat)), val_v)); // one
 
-      if (!env_s.IsEmpty())
-      {
-// 20080526 ->
+      if (!env_s.IsEmpty()) {
         TYPE_CI_ContextId lastcid (theStackMachine().GetCurCid());
-// <- 20080526
 
-// 20070605 for cycric dependency -->
         this->dtc_typenm_l.ImpPrepend(tp);
-// <-- 20070605
 
         theStackMachine().PushBlkEnv(env_s.GetElem());
 
@@ -2329,8 +2318,7 @@ bool EvalState::IsSubTypeName (const TYPE_SEM_VAL & val_v, const TYPE_AS_TypeNam
 //                                     .ImpConc(AUX::SingleNameToString(name))));
 
         wstring debugStr (L"Invariant check for type");
-        if (Settings.CallLog())
-        {
+        if (Settings.CallLog()) {
             wstring typenm = ASTAUX::ASName2String(name);
             std::string::size_type n = typenm.find(L"`");
             while (n != std::string::npos) {
@@ -2343,38 +2331,34 @@ bool EvalState::IsSubTypeName (const TYPE_SEM_VAL & val_v, const TYPE_AS_TypeNam
         Tuple res (theStackMachine().EvalAuxProgram(GetCachedTypeInv(ExtractModule(name), AUX::ExtractName(name), Inv),
                                                     SEQ<Char>(debugStr),
                                                     false));
-// <-- 20090306
         theStackMachine().PopBlkEnv();
 
-// 20070605 for cycric dependency -->
         this->dtc_typenm_l.ImpTl();
-// <-- 20070605
 
-// 20080526 ->
         theStackMachine().SetCid(lastcid);
-// <- 20080526
 
         if (modulepushed) {
           theStackMachine().PopModule();
         }
 
         const TYPE_STKM_EvaluationState & eval_state (res.GetRecord(1));
-        if (eval_state.Is(TAG_TYPE_STKM_Success))
-        {
+        if (eval_state.Is(TAG_TYPE_STKM_Success)) {
           const TYPE_SEM_VAL & Inv_v (res.GetRecord(2));
-          if (Inv_v.Is(TAG_TYPE_SEM_BOOL))
+          if (Inv_v.Is(TAG_TYPE_SEM_BOOL)) {
             return Inv_v.GetBoolValue(pos_SEM_BOOL_v);
-          else
+          }
+          else {
             RTERR::Error(L"IsSubTypeName", RTERR_BOOL_EXPECTED, Inv_v, Nil(), Sequence());
+          }
         }
-        else
+        else {
           RTERR::Error(L"IsSubTypeName", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
+        }
       } // (!env_s.IsEmpty())
       else
         RTERR::Error(L"IsSubTypeName", RTERR_EMPTY_ENV_S, val_v, tp, Sequence());
     } // (checkinv && !td.GetField(pos_AS_TypeDef_Inv).IsNil())
-    else
-    {
+    else {
       if (modulepushed)
         theStackMachine().PopModule ();
       return true;
@@ -2400,51 +2384,41 @@ bool EvalState::IsSubTypeName(const TYPE_SEM_VAL & val_v, const TYPE_AS_TypeName
 {
   const TYPE_AS_Name & tp (tp_r.GetRecord(pos_AS_TypeName_name));
 
-//  Tuple itd (AUX::IsTypeDef(tp)); // bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access];
-  Tuple itd (GetCachedTypeDef(tp)); // bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access];
-  if (!itd.GetBoolValue(1))
-  {
-    const Generic & access (itd.GetField(5)); // [AS`Access]
+//  Tuple itd (AUX::IsTypeDef(tp)); // bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access];
+  Tuple itd (GetCachedTypeDef(tp)); // bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access];
+  if (!itd.GetBoolValue(1)) {
+    const Generic & access (itd.GetField(7)); // [AS`Access]
     if (access.IsNil())
       RTERR::Error(L"IsSubTypeName", RTERR_TYPE_UNKNOWN, Nil(), tp_r, Sequence());
     else
       RTERR::Error(L"IsSubTypeName", RTERR_TYPE_NOT_IN_SCOPE, Nil(), tp_r, Sequence());
     return false; // dummy
   }
-  else
-  {
+  else {
     const Generic & typedef1 (itd.GetField(2));   // [GLOBAL`Type]
     const Generic & Inv (itd.GetField(3));        // [AS`Invariant]
     if (! RealSubType(val_v, typedef1, checkinv )) {
       return false;
     }
     else if (checkinv && !Inv.IsNil() ) {
-      const TYPE_AS_Name & defcl (itd.GetRecord(4)); // [AS`Name]
+      const TYPE_AS_Name & defcl (itd.GetRecord(6)); // [AS`Name]
       TYPE_AS_Invariant inv (Inv);
 
-// 20070605 for cycric dependency -->
-      if( !this->dtc_typenm_l.IsEmpty() && (this->dtc_typenm_l.Hd() == tp_r) )
-      {
+      if( !this->dtc_typenm_l.IsEmpty() && (this->dtc_typenm_l.Hd() == tp_r) ) {
         this->dtc_typenm_l.Clear();
         RTERR::ReportError(L"IsSubTypeName",
                            RTERR_CIRCULAR_TYPE_INV_DEPENDENCY,
                            Nil(), tp_r, inv.GetInt(pos_AS_Invariant_cid), Sequence());
       }
-// <-- 20070605
 
       theStackMachine().PushClNmCurObj(defcl, defcl);
       SET<TYPE_SEM_BlkEnv> env_s (PAT::PatternMatch(theCompiler().P2P(inv.GetRecord(pos_AS_Invariant_pat)), val_v)); // one
       theStackMachine().PopClNmCurObj();
 
-      if (!env_s.IsEmpty())
-      {
-// 20080526 ->
+      if (!env_s.IsEmpty()) {
         TYPE_CI_ContextId lastcid (theStackMachine().GetCurCid());
-// <- 20080526
 
-// 20070605 for cycric dependency -->
         this->dtc_typenm_l.ImpPrepend(tp_r);
-// <-- 20070605
 
         theStackMachine().PushBlkEnv(env_s.GetElem());
         theStackMachine().PushClNmCurObj(defcl, defcl);
@@ -2477,32 +2451,30 @@ bool EvalState::IsSubTypeName(const TYPE_SEM_VAL & val_v, const TYPE_AS_TypeName
         Tuple res (theStackMachine().EvalAuxProgram(GetCachedTypeInv(defcl, AUX::ExtractName(tp), inv),
                                                     SEQ<Char>(debugStr),
                                                     false));
-// <-- 20090304
         theStackMachine().PopClNmCurObj();
         theStackMachine().PopBlkEnv();
 
-// 20070605 for cycric dependency -->
         this->dtc_typenm_l.ImpTl();
-// <-- 20070605
 
-// 20080526 ->
         theStackMachine().SetCid(lastcid);
-// <- 20080526
 
         const TYPE_STKM_EvaluationState & eval_state (res.GetRecord(1));
-        if (eval_state.Is(TAG_TYPE_STKM_Success))
-        {
+        if (eval_state.Is(TAG_TYPE_STKM_Success)) {
           const TYPE_SEM_VAL & Inv_v (res.GetRecord(2));
-          if (Inv_v.Is(TAG_TYPE_SEM_BOOL))
+          if (Inv_v.Is(TAG_TYPE_SEM_BOOL)) {
             return Inv_v.GetBoolValue(pos_SEM_BOOL_v);
-          else
+          }
+          else {
             RTERR::Error(L"IsSubTypeName", RTERR_BOOL_EXPECTED, Inv_v, Nil(), Sequence());
+          }
         }
-        else
+        else {
           RTERR::Error(L"IsSubTypeName", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
+        }
       }
-      else
+      else {
         RTERR::Error(L"IsSubTypeName", RTERR_EMPTY_ENV_S, val_v, tp_r, Sequence());
+      }
     }
     else
       return true;
@@ -2545,11 +2517,11 @@ Tuple EvalState::GetCachedTypeDef(const TYPE_AS_Name & name)
 {
   TYPE_AS_Name key (name);
 
-  if (!AUX::IsRealName(name))
+  if (!AUX::IsRealName(name)) {
     key = ASTAUX::Combine2Names(theStackMachine().CurrentModule(), name);
+  }
 
-  if (!this->typeDefCache.DomExists(key))
-  {
+  if (!this->typeDefCache.DomExists(key)) {
     this->typeDefCache.ImpModify(key, AUX::IsTypeDef(name));
   }
   return this->typeDefCache[key];
@@ -2558,32 +2530,27 @@ Tuple EvalState::GetCachedTypeDef(const TYPE_AS_Name & name)
 #ifdef VDMPP
 // GetCachedTypeDef (not in spec)
 // name : AS`Name
-// ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access]
+// ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access]
 Tuple EvalState::GetCachedTypeDef(const TYPE_AS_Name & name)
 {
-  if (IsAClass(name))
-  {
-    if (!this->typeDefCache.DomExists(name))
-    {
+  if (IsAClass(name)) {
+    if (!this->typeDefCache.DomExists(name)) {
       this->typeDefCache.ImpModify(name, AUX::IsTypeDef(name));
     }
     return Tuple(this->typeDefCache[name]);
   }
-  else
-  {
+  else {
     const TYPE_AS_Ids & ids (name.GetSequence(pos_AS_Name_ids));
-    if ((ids.Length() == 1) && !theStackMachine().HasCurCl())
-    {
+    if ((ids.Length() == 1) && !theStackMachine().HasCurCl()) {
       RTERR::Error(L"IsTypeDef", RTERR_TYPE_UNKNOWN, Nil(), Nil(), Sequence());
-      return mk_(Bool(false), Nil(), Nil(), Nil(), Nil());
+      return mk_(Bool(false), Nil(), Nil(), Nil(), Nil(), Nil(), Nil());
     }
 
     Tuple key (mk_(AUX::ExtractName(name),
                    ((ids.Length() == 1) ? TYPE_AS_Name(theStackMachine().GetCurCl())
                                         : ASTAUX::GetFirstName(name)),
                    theStackMachine().GetOrigCl()));
-    if (!this->typeDefCache.DomExists(key))
-    {
+    if (!this->typeDefCache.DomExists(key)) {
       this->typeDefCache.ImpModify(key, AUX::IsTypeDef(name));
     }
     return Tuple(this->typeDefCache[key]);
@@ -2922,10 +2889,9 @@ bool EvalState::SubTypeAS(const TYPE_GLOBAL_Type & ltp, const TYPE_GLOBAL_Type &
         if (t.GetBoolValue(1))
           name = t.GetRecord(2);
 
-//        Tuple itd (AUX::IsTypeDef(name)); //bool * [AS`Type] * [AS`Invariant]
-        Tuple itd (GetCachedTypeDef(name)); //bool * [AS`Type] * [AS`Invariant]
-        if (!itd.GetBoolValue(1))
-        {
+//        Tuple itd (AUX::IsTypeDef(name)); //bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * 
+        Tuple itd (GetCachedTypeDef(name)); //bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * 
+        if (!itd.GetBoolValue(1)) {
           RTERR::Error (L"SubTypeAS", RTERR_TYPE_UNKNOWN, Nil(), ltp, Sequence());
         }
         return SubTypeAS (itd.GetRecord(2), rtp);
@@ -2933,12 +2899,11 @@ bool EvalState::SubTypeAS(const TYPE_GLOBAL_Type & ltp, const TYPE_GLOBAL_Type &
 #ifdef VDMPP
         const TYPE_AS_Name & tp (ltp.GetRecord(pos_AS_TypeName_name));
 
-//        Tuple itd (AUX::IsTypeDef(tp)); // bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access];
-        Tuple itd (GetCachedTypeDef(tp)); // bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access];
+//        Tuple itd (AUX::IsTypeDef(tp)); // bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access];
+        Tuple itd (GetCachedTypeDef(tp)); // bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access];
 
-        if (!itd.GetBoolValue(1))
-        {
-          const Generic & access (itd.GetField(5)); // [AS`Access]
+        if (!itd.GetBoolValue(1)) {
+          const Generic & access (itd.GetField(7)); // [AS`Access]
           if (access.IsNil())
             RTERR::Error(L"SubTypeAS", RTERR_TYPE_UNKNOWN, Nil(), ltp, Sequence());
           else
@@ -2948,7 +2913,7 @@ bool EvalState::SubTypeAS(const TYPE_GLOBAL_Type & ltp, const TYPE_GLOBAL_Type &
         else
         {
           const Generic & typedef1 (itd.GetField(2));   // [GLOBAL`Type]
-          //const TYPE_AS_Name & defcl (itd.GetRecord(4)); // [AS`Name]
+          //const TYPE_AS_Name & defcl (itd.GetRecord(6)); // [AS`Name]
           //const Generic & Inv (itd.GetField(3));        // [AS`Invariant]
           return SubTypeAS(typedef1, rtp);
         }
@@ -2963,10 +2928,9 @@ bool EvalState::SubTypeAS(const TYPE_GLOBAL_Type & ltp, const TYPE_GLOBAL_Type &
         if (t.GetBoolValue(1))
           name = t.GetRecord(2);
 
-//        Tuple itd (AUX::IsTypeDef(name)); //bool * [AS`Type] * [AS`Invariant]
-        Tuple itd (GetCachedTypeDef(name)); //bool * [AS`Type] * [AS`Invariant]
-        if (!itd.GetBoolValue(1))
-        {
+//        Tuple itd (AUX::IsTypeDef(name)); //bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * 
+        Tuple itd (GetCachedTypeDef(name)); //bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * 
+        if (!itd.GetBoolValue(1)) {
           RTERR::Error (L"SubTypeAS", RTERR_TYPE_UNKNOWN, Nil(), rtp, Sequence());
         }
         return SubTypeAS (ltp, itd.GetRecord(2));
@@ -2974,21 +2938,19 @@ bool EvalState::SubTypeAS(const TYPE_GLOBAL_Type & ltp, const TYPE_GLOBAL_Type &
 #ifdef VDMPP
         const TYPE_AS_Name & tp (rtp.GetRecord(pos_AS_TypeName_name));
 
-//        Tuple itd (AUX::IsTypeDef(tp)); // bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access];
-        Tuple itd (GetCachedTypeDef(tp)); // bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access];
-        if (!itd.GetBoolValue(1))
-        {
-          const Generic & access (itd.GetField(5)); // [AS`Access]
+//        Tuple itd (AUX::IsTypeDef(tp)); // bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access];
+        Tuple itd (GetCachedTypeDef(tp)); // bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access];
+        if (!itd.GetBoolValue(1)) {
+          const Generic & access (itd.GetField(7)); // [AS`Access]
           if (access.IsNil())
             RTERR::Error(L"SubTypeAS", RTERR_TYPE_UNKNOWN, Nil(), rtp, Sequence());
           else
             RTERR::Error(L"SubTypeAS", RTERR_TYPE_NOT_IN_SCOPE, Nil(), rtp, Sequence());
           return false; // dummy
         }
-        else
-        {
+        else {
           const Generic & typedef1 (itd.GetField(2));   // [GLOBAL`Type]
-          //const TYPE_AS_Name & defcl (itd.GetRecord(4)); // [AS`Name]
+          //const TYPE_AS_Name & defcl (itd.GetRecord(6)); // [AS`Name]
           //const Generic & Inv (itd.GetField(3));        // [AS`Invariant]
           return SubTypeAS(ltp, typedef1);
         }
@@ -4175,10 +4137,10 @@ TYPE_AS_Type EvalState::ConvertTypeName(const TYPE_AS_Type & type, const SET<TYP
       const TYPE_AS_Name & tn (type.GetRecord(pos_AS_TypeName_name));
       if (IsAClass(tn))
         return type;
-      //Tuple itd (AUX::IsTypeDef(tp)); // bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access];
-      Tuple itd (GetCachedTypeDef(tn)); // bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access];
+      //Tuple itd (AUX::IsTypeDef(tp)); // bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access];
+      Tuple itd (GetCachedTypeDef(tn)); // bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access];
       if (itd.GetBoolValue(1)) {
-        const TYPE_AS_Name & clnm (itd.GetRecord(4));
+        const TYPE_AS_Name & clnm (itd.GetRecord(6));
         TYPE_AS_TypeName newtn (type);
         newtn.SetField( pos_AS_TypeName_name, AUX::ConstructDoubleName(clnm, tn));
         return newtn;

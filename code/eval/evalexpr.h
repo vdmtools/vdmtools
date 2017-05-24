@@ -54,6 +54,7 @@ public:
   static TYPE_SEM_VAL EvalNumUnaryExpr (const Int & opr, const TYPE_SEM_VAL & op_v);
 //  EvalPlusMinusAbs
 //  EvalFloor
+  static TYPE_SEM_VAL EvalOrderExpr (const TYPE_SEM_VAL & op1_v, const Int & opr, const TYPE_SEM_VAL & op2_v);
   static TYPE_SEM_VAL EvalNumBinaryExpr (const TYPE_SEM_VAL & op1_v, const Int & opr, const TYPE_SEM_VAL & op2_v);
   static TYPE_SEM_VAL EvalNumBinOp (const TYPE_SEM_VAL & val1, int opr, const TYPE_SEM_VAL & val2);
   static TYPE_SEM_VAL EvalIntDiv (const TYPE_SEM_VAL & val1, const TYPE_SEM_VAL & val2);

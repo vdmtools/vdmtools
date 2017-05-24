@@ -60,6 +60,8 @@ module AUX
       PostName : AS`Name -> AS`Name;
       InvName : AS`Name -> AS`Name;
       InitName : AS`Name -> AS`Name;
+      OrderName : AS`Name -> AS`Name;
+      EqualityName : AS`Name -> AS`Name;
       Permute: seq of SEM`VAL -> set of seq of SEM`VAL;
       --ConstructName: AS`Id * CI`ContextId -> AS`Name;
       IsStmt: AS`Expr | AS`Stmt +> bool;
@@ -85,7 +87,7 @@ module AUX
 #ifdef VDMSL
       UniqueTagName : AS`Name ==> AS`Name;
       IsConstructExported : AS`Name * AS`Name ==> bool;
-      IsTypeDef : AS`Name ==> bool * [AS`Type] * [AS`Invariant] * [AS`Name];
+      IsTypeDef : AS`Name ==> bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name];
       LookUpRenRecSel : AS`Name ==> bool * [GLOBAL`RecSel] * [AS`Name] * [AS`Name];
       IsDefinedInModule : AS`Name ==> bool;
       IsTypeStructExported : AS`Name ==> bool;
@@ -94,7 +96,7 @@ module AUX
 #endif VDMSL
       ExtractTagName: AS`Name * set of AS`Name ==> [AS`Name] * bool;
 #ifdef VDMPP
-      IsTypeDef : AS`Name ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access];
+      IsTypeDef : AS`Name ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access];
 #endif VDMPP
       DistribCombineBlkEnv : set of SEM`BlkEnv ==> set of SEM`BlkEnv;
       SeqOfSetOf2SetOfSeqOf : seq of set of (SEM`VAL | SEM`BlkEnv) ==> set of seq of (SEM`VAL | SEM`BlkEnv);
@@ -378,7 +380,7 @@ This operation returns $\True$ if the input name is exported from the input
 module name.
 #ifdef VDMSL
 \begin{vdm_al}
-IsTypeDef : AS`Name ==> bool * [AS`Type] * [AS`Invariant] * [AS`Name]
+IsTypeDef : AS`Name ==> bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name]
 IsTypeDef (name) ==
   def mk_(mod_name, rec_name) = RenameExtractModule(name);
       mk_GLOBAL`SigmaMO(-,-,-,tps,-,-,-,-,-,-,-,-,-,-,-) = STATE`GetModule (mod_name);
@@ -386,8 +388,8 @@ IsTypeDef (name) ==
     if rec_name in set dom tps
     then
       let mk_AS`TypeDef(-,shape,Inv,Eq,Ord,-,-) = tps(rec_name)
-      in return mk_(true,shape,Inv,mod_name)
-    else return mk_(false,nil,nil,nil);
+      in return mk_(true,shape,Inv,Eq,Ord,mod_name)
+    else return mk_(false,nil,nil,nil,nil,nil);
 \end{vdm_al}
 
 This operation returns $\True$ if the input name denotes a type definition
@@ -407,12 +409,12 @@ also describes which class it is defined in. This is done by the
 The strategy of the operation is similar to the one used in {\em ExtractTagName}. 
 
 \begin{vdm_al}
-IsTypeDef : AS`Name ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access]
+IsTypeDef : AS`Name ==> bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access]
 IsTypeDef (name) ==
  (if STATE`IsAClass(name)
   then
     let type = mk_GLOBAL`ObjRefType(name)
-    in return mk_(true, type, nil, name,nil)
+    in return mk_(true, type, nil, nil, nil, name,nil)
   else
     def mk_AS`Name(l^[-], cid) = name;
       clnm = STKM`GetCurCl();
@@ -421,7 +423,9 @@ IsTypeDef (name) ==
       thename = ExtractName(name)
     in
      (if l = [] and not STKM`HasCurCl()
-      then RTERR`ErrorVal(RTERR`TYPE_UNKNOWN, nil, nil, []);
+      then
+       (RTERR`Error(RTERR`TYPE_UNKNOWN, nil, nil, []);
+        return mk_(false, nil, nil, nil,nil,nil,nil));
 
       if l = []
       then
@@ -431,7 +435,7 @@ IsTypeDef (name) ==
           then
             def mk_AS`TypeDef(-,shape,Inv,Eq,Ord,access,-) = ExtComp(tps(thename), clnm);
                 scopeok = STATE`AccessOk(access,origcl,clnm)
-            in return mk_(scopeok,shape,Inv,clnm,access)
+            in return mk_(scopeok,shape,Inv,Eq,Ord,clnm,access)
          );
      (dcl allsupers : set of AS`Name := {};
       def classname = if l <> []
@@ -446,11 +450,11 @@ IsTypeDef (name) ==
                       clname in set allsupers & thename in set dom STATE`GetLocalTps(clname)}
       in
         cases dom spcl_tps:
-          {}     -> return mk_(false, nil, nil, nil,nil),
+          {}     -> return mk_(false, nil, nil, nil,nil,nil,nil),
           {cl}   -> def mk_AS`TypeDef(-,shape,Inv,Eq,Ord,access,-) = ExtComp(spcl_tps(cl)(thename),cl);
                         scopeok = STATE`AccessOk(access, origcl,cl)
-                    in return mk_(scopeok,shape,Inv,cl,access),
-          others ->(dcl res : bool * AS`Name := mk_(true, classname);
+                    in return mk_(scopeok,shape,Inv,Eq,Ord,cl,access),
+          others -> (dcl res : bool * AS`Name := mk_(true, classname);
                     if classname not in set dom spcl_tps
                     then
                       def rem_priv = {clnm | clnm in set dom spcl_tps & 
@@ -461,9 +465,11 @@ IsTypeDef (name) ==
                       if doesthere
                       then def mk_AS`TypeDef(-,shape,Inv,Eq,Ord,access,-) = ExtComp(spcl_tps(cl)(thename),cl);
                                scopeok = STATE`AccessOk(access,origcl,cl)
-                           in return mk_(scopeok,shape,Inv,cl,access)
+                           in return mk_(scopeok,shape,Inv,Eq,Ord,cl,access)
                       else 
-                        RTERR`ErrorVal(RTERR`MULT_DEF, nil, nil, []))
+                       (RTERR`Error(RTERR`MULT_DEF, nil, nil, []);
+                        return mk_(false, nil, nil, nil,nil,nil,nil))
+                     )
         end
      )))
 );
@@ -841,7 +847,6 @@ functions
 
 PreName : AS`Name -> AS`Name
 PreName(mk_AS`Name(id_l, cid)) ==
-  --mk_AS`Name(["pre_" ^ hd id_l] ^ tl id_l, cid);
   mk_AS`Name(id_l(1,...,len id_l -1) ^ ["pre_" ^ id_l(len id_l)],cid);
 \end{vdm_al}
 
@@ -853,7 +858,6 @@ functions
 
 PostName : AS`Name -> AS`Name
 PostName(mk_AS`Name(id_l, cid)) ==
-  --mk_AS`Name(["post_" ^ hd id_l] ^ tl id_l, cid);
   mk_AS`Name(id_l(1,...,len id_l -1) ^ ["post_" ^ id_l(len id_l)],cid);
 \end{vdm_al}
 
@@ -865,7 +869,6 @@ functions
 
 InvName : AS`Name -> AS`Name
 InvName(mk_AS`Name(id_l, cid)) ==
-  --mk_AS`Name(["inv_" ^ hd id_l] ^ tl id_l, cid);
   mk_AS`Name(id_l(1,...,len id_l -1) ^ ["inv_" ^ id_l(len id_l)],cid);
 \end{vdm_al}
 
@@ -877,12 +880,29 @@ functions
 
 InitName : AS`Name -> AS`Name
 InitName(mk_AS`Name(id_l, cid)) ==
-  --mk_AS`Name(["init_" ^ hd id_l] ^ tl id_l, cid);
   mk_AS`Name(id_l(1,...,len id_l -1) ^ ["init_" ^ id_l(len id_l)],cid);
 \end{vdm_al}
 
 Extends the name of function or operation by an prefix "init", which
 relates to the state initialization.
+
+\begin{vdm_al}
+OrderName : AS`Name -> AS`Name
+OrderName(mk_AS`Name(id_l, cid)) ==
+  mk_AS`Name(id_l(1,...,len id_l -1) ^ ["oeder_" ^ id_l(len id_l)],cid);
+\end{vdm_al}
+
+Extends the name of function or operation by an prefix "order", which
+relates to the type order.
+
+\begin{vdm_al}
+EqualityName : AS`Name -> AS`Name
+EqualityName(mk_AS`Name(id_l, cid)) ==
+  mk_AS`Name(id_l(1,...,len id_l -1) ^ ["eq_" ^ id_l(len id_l)],cid);
+\end{vdm_al}
+
+Extends the name of function or operation by an prefix "eq", which
+relates to the type equality.
 
 \begin{vdm_al}
 functions

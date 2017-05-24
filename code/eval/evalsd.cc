@@ -308,8 +308,8 @@ Tuple EvalState::ExpandTypeDef(const TYPE_AS_Type & tp)
   TYPE_AS_Name tag;
   while (tmp_type.Is (TAG_TYPE_AS_TypeName)) {
     const TYPE_AS_Name & tn (tmp_type.GetRecord(pos_AS_TypeName_name));
-    // SL : bool * [AS`Type] * [AS`Invariant] * [AS`Name] * [AS`Access]
-    // PP : bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Name] * [AS`Access]
+    // SL : bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access]
+    // PP : bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access]
     //Tuple itd (IsTypeDef(tn));
     Tuple itd (GetCachedTypeDef(tn));
     if (itd.GetBool(1))
