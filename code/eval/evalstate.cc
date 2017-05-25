@@ -2493,9 +2493,10 @@ TYPE_STKM_SubProgram EvalState::GetCachedTypeInv(const TYPE_AS_Name & clmod,
                                                  const TYPE_AS_Invariant & inv)
 {
   TYPE_AS_Name fullnm (ASTAUX::Combine2Names(clmod, name));
-  if (this->typeInvCache.DomExists(fullnm))
+  if (this->typeInvCache.DomExists(fullnm)) {
     return this->typeInvCache[fullnm];
-  {
+  }
+  else {
 #ifdef VICE
     bool old_compiling = theCompiler().GetCompilingTime();
     theCompiler().SetCompilingTime(false);
