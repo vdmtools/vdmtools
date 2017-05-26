@@ -3284,7 +3284,7 @@ TYPE_SEM_VAL EvalState::LookUp (const TYPE_AS_Name & name)
     Tuple ilv (theStackMachine().IsLocalVal(name));
     if (ilv.GetBoolValue(1))
     {
-      const TYPE_SEM_VAL & res_v (ilv.GetRecord(2));
+      const TYPE_SEM_VAL & res_v (Record(ilv.GetRecord(2)).GetRecord(pos_SEM_ValTp_val));
       if (res_v.Is(TAG_TYPE_SEM_UNDEF)) {
         return RTERR::ErrorVal (L"LookUp", RTERR_UNDEF_ENCOUNTERED,
                              M42Sem(AUX::SingleNameToString(name), NULL), Nil(), Sequence());
@@ -3400,7 +3400,7 @@ TYPE_SEM_VAL EvalState::LookUp(const TYPE_AS_Name & name_)
   Tuple ilv (theStackMachine().IsLocalVal(name));
   if (ilv.GetBoolValue(1))
   {
-    return ReturnLookUp(ilv.GetRecord(2), RTERR_INTERNAL_ERROR);
+    return ReturnLookUp(Record(ilv.GetRecord(2)).GetRecord(pos_SEM_ValTp_val), RTERR_INTERNAL_ERROR);
   }
   else
   {

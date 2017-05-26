@@ -779,7 +779,7 @@ EnvSetUpExplFnApply(fndef, arg_lv) ==
             if fnName <> nil -- check local function
             then
               cases STKM`IsLocalVal(fnName):
-                mk_(true,res_v,tp) -> closenv' := AUX`CombineBlkEnv(closenv, AUX`MkBlkEnv(fnName, res_v, tp, <READ_ONLY>)),
+                mk_(true,mk_SEM`ValTp(res_v,tp)) -> closenv' := AUX`CombineBlkEnv(closenv, AUX`MkBlkEnv(fnName, res_v, tp, <READ_ONLY>)),
                 others          -> skip
               end;
             STKM`PushEnvL([env, closenv']);
@@ -1193,7 +1193,7 @@ ExeGETPRE() ==
       in
         if fnnm <> nil
         then
-          def mk_(isit, lval, -) = STKM`IsLocalVal(AUX`PreName(fnnm))
+          def mk_(isit, mk_SEM`ValTp(lval, -)) = STKM`IsLocalVal(AUX`PreName(fnnm))
           in
             if isit
             then

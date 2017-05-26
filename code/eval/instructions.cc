@@ -1045,7 +1045,7 @@ void StackEval::ExeAPPLY()
 // ==> ()
 void StackEval::ApplyOpFnMapSeq(const TYPE_SEM_VAL & fct_v, const Generic & arg_lv)
 {
-//wcout << L"ApplyOpFnMapSeq: " << fct_v << endl;
+//wcout << L"ApplyOpFnMapSeq: " << fct_v << L" " << arg_lv << endl;
   switch (fct_v.GetTag()) {
     case TAG_TYPE_SEM_MAP:        { PUSH(EXPR::EvalMapApply(fct_v, arg_lv)); break; }
     case TAG_TYPE_SEM_SEQ:        { PUSH(EXPR::EvalSeqApply(fct_v, arg_lv)); break; }
@@ -1264,8 +1264,9 @@ void StackEval::EnvSetUpExplFnApply(const TYPE_SEM_ExplFN & fndef, const SEQ<TYP
       {
         Tuple ilv (IsLocalVal(fnName)); // must check before modifying env_l(PUSHEMPTYENV)
         if (ilv.GetBoolValue(1))
-          closenv_q = AUX::CombineBlkEnv(closenv, AUX::MkBlkEnv(fnName, ilv.GetRecord(2),
-                                                  ilv.GetField(3), sem_read_only));
+          closenv_q = AUX::CombineBlkEnv(closenv, AUX::MkBlkEnv(fnName,
+                 Record(ilv.GetRecord(2)).GetRecord(pos_SEM_ValTp_val),
+                 Record(ilv.GetRecord(2)).GetField(pos_SEM_ValTp_tp), sem_read_only));
       }
       //PUSHEMPTYENV();
       //PUSHBLKENV(closenv_q);
@@ -1878,21 +1879,18 @@ void StackEval::ExeGETPRE()
 {
   TYPE_STKM_EvalStackItem val (POP());
 
-  if (val.Is(TAG_TYPE_SEM_CompExplFN))
-  {
+  if (val.Is(TAG_TYPE_SEM_CompExplFN)) {
     TYPE_SEM_ExplFN fn (Record(val).GetSequence(pos_SEM_CompExplFN_fl).Hd());
     const TYPE_AS_Name & mnm (fn.GetField(pos_SEM_ExplFN_modName));
     const Generic & fnnm (fn.GetField(pos_SEM_ExplFN_fnName));
 
-    if (!fnnm.IsNil())
-    {
+    if (!fnnm.IsNil()) {
       Tuple ilv (theStackMachine().IsLocalVal(AUX::PreName(fnnm)));
       if (ilv.GetBoolValue(1)) {
-        PUSH(ilv.GetRecord(2));
+        PUSH(Record(ilv.GetRecord(2)).GetRecord(pos_SEM_ValTp_val));
         PUSH(sem_true);
       }
-      else
-      {
+      else {
         if (!mnm.GetSequence(pos_AS_Name_ids).IsEmpty()) {
           Generic preval (theState().GetPreCond(mnm, fnnm)); // [SEM`CompExplFN]
           if (!preval.IsNil()) {

@@ -760,7 +760,9 @@ FreeInOldName (mk_AS`OldName(ids,cid), id_s) ==
     if old_name in set id_s
     then return {|->}
     else if STKM`IsOldState (old_name)
-         then return { old_name |-> STKM`GetOldStateVal(old_name) }
+         then 
+           def mk_GLOBAL`State(val, -) = STKM`GetOldState(old_name)
+           in return { old_name |-> val }
          else error
 #endif VDMSL
 \end{vdm_al}
@@ -811,7 +813,7 @@ FreeMapToBlkEnv (id_m) ==
 
 LookUpInTopEnv : AS`Name ==> [SEM`VAL]
 LookUpInTopEnv (name) ==
-  def mk_(isit, val, -) = STKM`IsLocalVal(name)
+  def mk_(isit, mk_SEM`ValTp(val, -)) = STKM`IsLocalVal(name)
   in if isit
      then return val
      else return nil
