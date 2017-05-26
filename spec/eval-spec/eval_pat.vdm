@@ -120,7 +120,7 @@ MatchPatternName(mk_STKM`PatternName(nm,tp,-),val_v) ==
   else
     if nm = nil
     then return { AUX`MkEmptyBlkEnv(<READ_ONLY>) } 
-    else return { AUX`MkBlkEnv(nm,val_v,nil,<READ_ONLY>) };
+    else return { AUX`MkBlkEnv(nm,val_v,tp,<READ_ONLY>) };
 
 MatchMatchVal : STKM`MatchVal * SEM`VAL ==> set of SEM`BlkEnv
 MatchMatchVal (mk_STKM`MatchVal(val,-),val_v) ==
