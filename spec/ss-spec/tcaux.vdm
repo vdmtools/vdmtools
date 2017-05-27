@@ -143,6 +143,8 @@ exports
   Post: AS`Name -> AS`Name;
   Inv: AS`Name -> AS`Name;
   Init: AS`Name -> AS`Name;
+  Equality: AS`Name -> AS`Name;
+  Order: AS`Name -> AS`Name;
   ReservedPrefix : AS`Name -> bool;
   IsEmptyName : AS`Name -> bool;
 
@@ -1894,10 +1896,20 @@ functions
     mk_AS`Name(ids(1,...,len ids -1) ^ ["init_"^ids(len ids)],cid);
         -- NOTICE that the contextid is taken from the argument
 
+  Equality: AS`Name -> AS`Name
+  Equality(mk_AS`Name(ids,cid)) ==
+    mk_AS`Name(ids(1,...,len ids -1) ^ ["eq_"^ids(len ids)],cid);
+        -- NOTICE that the contextid is taken from the argument
+
+  Order: AS`Name -> AS`Name
+  Order(mk_AS`Name(ids,cid)) ==
+    mk_AS`Name(ids(1,...,len ids -1) ^ ["ord_"^ids(len ids)],cid);
+        -- NOTICE that the contextid is taken from the argument
+
   ReservedPrefix : AS`Name -> bool
   ReservedPrefix(mk_AS`Name([id],-)) ==
-    (id(1,...,3) in set {"is_","mk_"}) or
-    (id(1,...,4) in set {"pre_","inv_"}) or
+    (id(1,...,3) in set {"is_","mk_","eq_"}) or
+    (id(1,...,4) in set {"pre_","inv_","ord_"}) or
     (id(1,...,5) in set {"post_","init_"});
 
   IsEmptyName : AS`Name -> bool

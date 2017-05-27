@@ -106,7 +106,7 @@ imports
 
   from DEF operations
     wf_Type : TYPE`Ind * AS`Type ==> bool;
-    wf_Pred : TYPE`Ind * [AS`Expr] * (<PRE>|<POST>|<INV>|<INIT>|<EXCEP>) ==> bool * REP`TypeRep,
+    wf_Pred : TYPE`Ind * [AS`Expr] * (<PRE>|<POST>|<INV>|<INIT>|<EXCEP>|<EQUALITY>|<ORDER>) ==> bool * REP`TypeRep,
 
   from AUX
     operations

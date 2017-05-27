@@ -277,7 +277,7 @@ exports operations
   wf_ImplOperation : TYPE`Ind * AS`ImplOpDef ==> bool;
   wf_ExplOperation : TYPE`Ind * AS`ExplOpDef ==> bool;
   wf_ExtExplOperation : TYPE`Ind * AS`ExtExplOpDef ==> bool;
-  wf_Pred : TYPE`Ind * [AS`Expr] * (<PRE>|<POST>|<INV>|<INIT>|<EXCEP>) ==> bool * REP`TypeRep
+  wf_Pred : TYPE`Ind * [AS`Expr] * (<PRE>|<POST>|<INV>|<INIT>|<EXCEP>|<EQUALITY>|<ORDER>) ==> bool * REP`TypeRep
 
   functions
 #ifdef VDMPP
@@ -444,7 +444,10 @@ used in the body of the module and also have not been exported.
                 -----------------------------
               ( ERR`GenErr(nm, <ERROR>,3,[ENV`PrintName(nm)]);
                 reswf := false );
-              reswf := wf_TypeInv(i, tprep, Invar,nm) and reswf);
+              reswf := wf_TypeInv(i, tprep, Invar, nm) and reswf;
+              reswf := wf_TypeEq(i, tprep, Eq, nm) and reswf;
+              reswf := wf_TypeOrd(i, tprep, Ord, nm) and reswf
+             );
        ENV`PopContext();
        return reswf);
 
@@ -570,57 +573,112 @@ used in the body of the module and also have not been exported.
 
   wf_TypeInv : TYPE`Ind * REP`TypeRep * [AS`Invariant] * AS`Name ==> bool
   wf_TypeInv (i, Type, Invar,nm) ==
-    if Invar = nil then
-      return true
+    if Invar = nil
+    then return true
     else
-      let mk_AS`Invariant(pat, exp, -) = Invar in
-      (dcl reswf : bool := true;
-
-       if nm in set dom PAT`ExtractPatternName(pat)
-             ------------------------------------------------------
-             -- Error message #8
-             -- Pattern in invariant must not be the type name "%1"
-             ------------------------------------------------------
-       then (ERR`GenErr(nm, <ERROR>,8,[ENV`PrintName(nm)]);
-             reswf := false);
-      def mk_(wf_pat,bd) = PAT`wf_Pattern(i, pat,Type) in
-        (if not wf_pat
-              ------------------------------------------------------
-              -- Error message #352
-              -- Invariant pattern is different from type definition
-              ------------------------------------------------------
-         then ERR`GenErr(nm, <ERROR>,352,[]);
-         ENV`EnterScope(bd);
-         def mk_(wf_body,-) = wf_Pred(i, exp, <INV>)
-         in
+      let mk_AS`Invariant(pat, exp, -) = Invar
+      in
+       (dcl reswf : bool := true;
+        if nm in set dom PAT`ExtractPatternName(pat)
+          ------------------------------------------------------
+          -- Error message #8
+          -- Pattern in invariant must not be the type name "%1"
+          ------------------------------------------------------
+        then (ERR`GenErr(nm, <ERROR>,8,[ENV`PrintName(nm)]);
+               reswf := false);
+        def mk_(wf_pat,bd) = PAT`wf_Pattern(i, pat,Type)
+        in
+         (if not wf_pat
+            ------------------------------------------------------
+            -- Error message #352
+            -- Invariant pattern is different from type definition
+            ------------------------------------------------------
+          then ERR`GenErr(nm, <ERROR>,352,[]);
+          ENV`EnterScope(bd);
+          def mk_(wf_body,-) = wf_Pred(i, exp, <INV>)
+          in
            (ENV`LeaveScope();
-            return (wf_pat = true) and wf_body and reswf)));
+            return (wf_pat = true) and wf_body and reswf)
+         )
+     );
+
+  wf_TypeEq : TYPE`Ind * REP`TypeRep * [AS`Equal] * AS`Name ==> bool
+  wf_TypeEq (i, Type, Eq,nm) ==
+    if Eq = nil
+    then return true
+    else
+      let mk_AS`Equal(lhs, rhs, exp, -) = Eq
+      in
+       (dcl reswf : bool := true;
+        if nm in set dom PAT`ExtractPatternName(lhs)
+          ------------------------------------------------------
+          -- Error message #463
+          -- Pattern in equality must not be the type name "%1"
+           ------------------------------------------------------
+         then (ERR`GenErr(lhs, <ERROR>,463,[ENV`PrintName(nm)]);
+               reswf := false);
+        if nm in set dom PAT`ExtractPatternName(rhs)
+          ------------------------------------------------------
+          -- Error message #463
+          -- Pattern in equality must not be the type name "%1"
+           ------------------------------------------------------
+         then (ERR`GenErr(rhs, <ERROR>,463,[ENV`PrintName(nm)]);
+               reswf := false);
+        def mk_(wf_lhs,bd_l) = PAT`wf_Pattern(i,lhs,Type);
+            mk_(wf_rhs,bd_r) = PAT`wf_Pattern(i,rhs,Type);
+        in
+         (if not wf_lhs or not wf_rhs
+            ------------------------------------------------------
+            -- Error message #464
+            -- Equality pattern is different from type definition
+            ------------------------------------------------------
+          then ERR`GenErr(nm, <ERROR>,464,[]);
+          ENV`EnterScope(bd_l ++ bd_r);
+          def mk_(wf_body,-) = wf_Pred(i, exp, <EQUALITY>)
+          in
+           (ENV`LeaveScope();
+            return (wf_lhs = true) and (wf_rhs = true) and wf_body and reswf)
+         )
+       );
 
   wf_TypeOrd : TYPE`Ind * REP`TypeRep * [AS`Order] * AS`Name ==> bool
   wf_TypeOrd (i, Type, Ord,nm) ==
-    if Ord = nil then
-      return true
+    if Ord = nil
+    then return true
     else
       let mk_AS`Order(lhs, rhs, exp, -) = Ord
       in
        (dcl reswf : bool := true;
         if nm in set dom PAT`ExtractPatternName(lhs)
-             ------------------------------------------------------
-             -- Error message #8
-             -- Pattern in invariant must not be the type name "%1"
-             ------------------------------------------------------
-         then (ERR`GenErr(nm, <ERROR>,8,[ENV`PrintName(nm)]);
+          ------------------------------------------------------
+          -- Error message #466
+          -- Pattern in order must not be the type name "%1"
+           ------------------------------------------------------
+         then (ERR`GenErr(lhs, <ERROR>,466,[ENV`PrintName(nm)]);
                reswf := false);
         if nm in set dom PAT`ExtractPatternName(rhs)
-             ------------------------------------------------------
-             -- Error message #8
-             -- Pattern in invariant must not be the type name "%1"
-             ------------------------------------------------------
-         then (ERR`GenErr(nm, <ERROR>,8,[ENV`PrintName(nm)]);
+          ------------------------------------------------------
+          -- Error message #466
+          -- Pattern in order must not be the type name "%1"
+           ------------------------------------------------------
+         then (ERR`GenErr(rhs, <ERROR>,466,[ENV`PrintName(nm)]);
                reswf := false);
-        -- TODO
-        return reswf;
-        );
+        def mk_(wf_lhs,bd_l) = PAT`wf_Pattern(i,lhs,Type);
+            mk_(wf_rhs,bd_r) = PAT`wf_Pattern(i,rhs,Type);
+        in
+         (if not wf_lhs or not wf_rhs
+            ------------------------------------------------------
+            -- Error message #467
+            -- Order pattern is different from type definition
+            ------------------------------------------------------
+          then ERR`GenErr(nm, <ERROR>,467,[]);
+          ENV`EnterScope(bd_l ++ bd_r);
+          def mk_(wf_body,-) = wf_Pred(i, exp, <ORDER>)
+          in
+           (ENV`LeaveScope();
+            return (wf_lhs = true) and (wf_rhs = true) and wf_body and reswf)
+         )
+       );
 
   wf_TypeList: TYPE`Ind * seq of AS`Type ==> bool
   wf_TypeList(i,tp_l) ==
@@ -1329,46 +1387,58 @@ EquivDomFn(i, mfndom, rfndom, -, rfnrng) ==
                        ok_bd and wf_pre and wf_post)))));
                          
           
-  wf_Pred : TYPE`Ind * [AS`Expr] * (<PRE>|<POST>|<INV>|<INIT>|<EXCEP>) ==> bool * REP`TypeRep 
+  wf_Pred : TYPE`Ind * [AS`Expr] * (<PRE>|<POST>|<INV>|<INIT>|<EXCEP>|<EQUALITY>|<ORDER>) ==> bool * REP`TypeRep 
   wf_Pred (i, Pred, kind) ==
-    if Pred <> nil then
+    if Pred <> nil
+    then
       def btp = mk_REP`BooleanTypeRep();
           mk_(wf_pred, tp) = EXPR`wf_Expr (i, Pred,btp);
           com = TYPE`IsCompatible (i, tp, btp)
       in
-        ( if not com then
-            cases kind :
-                           -------------------------------------------
-                           -- Error message #22
-                           -- Pre condition must be boolean expression
-                           -------------------------------------------
-              (<PRE>) -> ERR`GenErr (Pred, <ERROR>,22,[]),
-                           --------------------------------------------
-                           -- Error message #14
-                           -- Post condition must be boolean expression
-                           --------------------------------------------
-              (<POST>)-> ERR`GenErr (Pred, <ERROR>,14,[]),
-                           -------------------------------------------------
-                           -- Error message #15
-                           -- Invariant condition must be boolean expression
-                           -------------------------------------------------
-              (<INV>)   -> ERR`GenErr (Pred, <ERROR>,15,[]),
-                           -----------------------------------------------------
-                           -- Error message #16
-                           -- Initialisation condition must be boolean
-                           -- expression
-                           -----------------------------------------------------
-              (<INIT>)  -> ERR`GenErr (Pred, <ERROR>,16,[]),
-                           -------------------------------------------------
-                           -- Error message #17
-                           -- Exception condition must be boolean expression
-                           -------------------------------------------------
-              (<EXCEP>) -> ERR`GenErr (Pred, <ERROR>,17,[]),
-              others    -> error
-            end;
-          return mk_(wf_pred and com, tp))
+       (if not com
+        then
+          cases kind :
+                       -------------------------------------------
+                       -- Error message #22
+                       -- Pre condition must be boolean expression
+                       -------------------------------------------
+            (<PRE>) -> ERR`GenErr (Pred, <ERROR>,22,[]),
+                       --------------------------------------------
+                       -- Error message #14
+                       -- Post condition must be boolean expression
+                       --------------------------------------------
+            (<POST>) -> ERR`GenErr (Pred, <ERROR>,14,[]),
+                       -------------------------------------------------
+                       -- Error message #15
+                       -- Invariant condition must be boolean expression
+                       -------------------------------------------------
+            (<INV>)   -> ERR`GenErr (Pred, <ERROR>,15,[]),
+                       -----------------------------------------------------
+                       -- Error message #16
+                       -- Initialisation condition must be boolean expression
+                       -----------------------------------------------------
+            (<INIT>)  -> ERR`GenErr (Pred, <ERROR>,16,[]),
+                       -------------------------------------------------
+                       -- Error message #17
+                       -- Exception condition must be boolean expression
+                       -------------------------------------------------
+            (<EXCEP>) -> ERR`GenErr (Pred, <ERROR>,17,[]),
+                       -------------------------------------------------
+                       -- Error message #465
+                       -- Equality condition must be boolean expression
+                       -------------------------------------------------
+            (<EQUALITY>) -> ERR`GenErr (Pred, <ERROR>,465,[]),
+                       -------------------------------------------------
+                       -- Error message #468
+                       -- Order condition must be boolean expression
+                       -------------------------------------------------
+            (<ORDER>)  -> ERR`GenErr (Pred, <ERROR>,468,[]),
+            others    -> error
+          end;
+        return mk_(wf_pred and com, tp)
+       )
     else
-      return mk_(true, mk_REP`BooleanTypeRep())
+      return mk_(true, mk_REP`BooleanTypeRep());
 
 \end{vdm_al}
 

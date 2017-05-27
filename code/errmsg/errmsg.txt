@@ -690,7 +690,7 @@ The value "%1" is not used in module "%2"
 
 
 ######################################################################
-###      Pre / Post / Inv / Init
+###      Pre / Post / Inv / Init / Equality / Order
 ######################################################################
 8
 Pattern in invariant must not be the type name "%1"
@@ -706,6 +706,18 @@ Initialisation condition must be boolean expression
 Exception condition must be boolean expression
 352
 Invariant pattern is different from type definition
+463
+Pattern in equality must not be the type name "%1"
+464
+Equality pattern is different from type definition
+465
+Equality condition must be boolean expression
+466
+Pattern in order must not be the type name "%1"
+467
+Order pattern is different from type definition
+468
+Order condition must be boolean expression
 
 ######################################################################
 ###           Patterns / Bindings

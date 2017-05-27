@@ -304,12 +304,19 @@ operations
             po          = pog_pat.po ^ pog_expr.po ^ pog_match_cond
         in return po;
 
-  pog_Eq : AS`Name * AS`Type * [AS`Order] * POGTP`Context ==> seq of POGTP`ProofObligation
+--(forall x:T & eq_T(x,x)) and 
+--(forall x,y:T & eq_T(x,y) => eq_T(y,x)) and 
+--(forall x,y,z:T & (eq_T(x,y)) and eq_T(y,z) => eq_T(x,z))
+
+  pog_Eq : AS`Name * AS`Type * [AS`Equal] * POGTP`Context ==> seq of POGTP`ProofObligation
   pog_Eq (nm,tp,Eq,contxt) ==
     if Eq = nil
     then return []
     else
       return []; -- TODO
+
+--(forall x:T & not ord_T(x, x)) and 
+--(forall x,y,z:T & ord_T(x, y) and ord_T(y, z) => ord_T(x, z))
 
   pog_Order : AS`Name * AS`Type * [AS`Order] * POGTP`Context ==> seq of POGTP`ProofObligation
   pog_Order (nm,tp,Ord,contxt) ==

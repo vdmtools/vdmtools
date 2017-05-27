@@ -107,6 +107,8 @@ enum {
   POST  = TAG_quote_POST,
   INIT  = TAG_quote_INIT,
   EXCEP  = TAG_quote_EXCEP,
+  EQUALITY = TAG_quote_EQUALITY,
+  ORDER  = TAG_quote_ORDER,
   PRE  = TAG_quote_PRE,
   REN  = TAG_quote_REN,
   OP  = TAG_quote_OP,
