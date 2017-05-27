@@ -991,7 +991,7 @@ active式は、許可述語の中でのみ許されています
 
 
 ######################################################################
-###      Pre / Post / Inv / Init
+###      Pre / Post / Inv / Init / Equality / Order
 ######################################################################
 8
 不変条件のパターンは、型名"%1"であってはいけません
@@ -1014,6 +1014,24 @@ active式は、許可述語の中でのみ許されています
 352
 不変条件のパターンは、型定義と異ならなければなりません
 #Invariant pattern is different from type definition
+463
+同値式のパターンは、型名"%1"であってはいけません
+#Pattern in equality must not be the type name "%1"
+464
+同値式のパターンは、型定義と異ならなければなりません
+#Equality pattern is different from type definition
+465
+同値式はブール式でなければなりません
+#Equality condition must be boolean expression
+466
+比較式のパターンは、型名"%1"であってはいけません
+#Pattern in order must not be the type name "%1"
+467
+比較式パターンは、型定義と異ならなければなりません
+#Order pattern is different from type definition
+468
+比較式はブール式でなければなりません
+#Order condition must be boolean expression
 
 ######################################################################
 ###           Patterns / Bindings

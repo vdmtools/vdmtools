@@ -920,6 +920,7 @@ private:
   bool CheckOperationName (const TYPE_AS_Name&);
   bool ExpandDefinitions (const Int & i, const TYPE_AS_Name & nm, const TYPE_AS_Definitions & defs);
   SET<TYPE_AS_Name> UsedStateIds(const SET<TYPE_AS_Name> &);
+  bool HasOrderFn(const Int & i, const TYPE_REP_TypeRep & type);
   bool ExpandTypes (const TYPE_AS_Name &, const MAP<TYPE_AS_Name, TYPE_AS_TypeDef> &);
   bool ExtractFunctionSignatures (const MAP<TYPE_AS_Name,TYPE_AS_FnDef> &);
 

@@ -98,6 +98,7 @@ imports
                   set of (REP`FnTypeRep | REP`OpTypeRep | REP`PolyTypeRep) ];
 #endif VDMPP
     UsedStateIds: set of AS`Name ==> set of AS`Name;
+    HasOrderFn: TYPE`Ind * REP`TypeRep ==> bool;
     ExtractPatterns: TYPE`Ind * seq of (AS`FnDef | AS`ValueDef) ==> bool * map AS`Name to (REP`TypeRep * bool);
     wf_ValueDef : TYPE`Ind * AS`ValueDef ==> bool * map AS`Name to (REP`TypeRep * nat1)
     functions
@@ -1678,8 +1679,10 @@ operations
           ExpectedLhsAndRhsType = mk_REP`NumericTypeRep(<REAL>);
           mk_(wf_lhs, lhstp)    = wf_Expr(i,lhs,ExpectedLhsAndRhsType);
           mk_(wf_rhs, rhstp)    = wf_Expr(i,rhs,ExpectedLhsAndRhsType);
-          lhscomp = TYPE`IsCompatible (i,lhstp, ExpectedLhsAndRhsType);
-          rhscomp = TYPE`IsCompatible (i,rhstp, ExpectedLhsAndRhsType)
+          --lhscomp = TYPE`IsCompatible (i,lhstp, ExpectedLhsAndRhsType);
+          lhscomp = TYPE`IsCompatible (i,lhstp, ExpectedLhsAndRhsType) or ENV`HasOrderFn(i,lhstp);
+          --rhscomp = TYPE`IsCompatible (i,rhstp, ExpectedLhsAndRhsType)
+          rhscomp = TYPE`IsCompatible (i,rhstp, ExpectedLhsAndRhsType) or ENV`HasOrderFn(i,rhstp)
       in
         ( if not lhscomp then
             -----------------------------------
@@ -1703,8 +1706,10 @@ operations
           ExpectedLhsAndRhsType = mk_REP`NumericTypeRep(<REAL>);
           mk_(wf_lhs, lhstp)    = wf_Expr(i,lhs,ExpectedLhsAndRhsType);
           mk_(wf_rhs, rhstp)    = wf_Expr(i,rhs,ExpectedLhsAndRhsType);
-          lhscomp = TYPE`IsCompatible (i,lhstp, ExpectedLhsAndRhsType);
-          rhscomp = TYPE`IsCompatible (i,rhstp, ExpectedLhsAndRhsType)
+          --lhscomp = TYPE`IsCompatible (i,lhstp, ExpectedLhsAndRhsType);
+          lhscomp = TYPE`IsCompatible (i,lhstp, ExpectedLhsAndRhsType) or ENV`HasOrderFn(i,lhstp);
+          --rhscomp = TYPE`IsCompatible (i,rhstp, ExpectedLhsAndRhsType)
+          rhscomp = TYPE`IsCompatible (i,rhstp, ExpectedLhsAndRhsType) or ENV`HasOrderFn(i,rhstp)
       in
         ( if not lhscomp then
             ------------------------------------
@@ -1728,8 +1733,10 @@ operations
           ExpectedLhsAndRhsType = mk_REP`NumericTypeRep(<REAL>);
           mk_(wf_lhs, lhstp)    = wf_Expr(i,lhs,ExpectedLhsAndRhsType);
           mk_(wf_rhs, rhstp)    = wf_Expr(i,rhs,ExpectedLhsAndRhsType);
-          lhscomp = TYPE`IsCompatible (i,lhstp, ExpectedLhsAndRhsType);
-          rhscomp = TYPE`IsCompatible (i,rhstp, ExpectedLhsAndRhsType)
+          --lhscomp = TYPE`IsCompatible (i,lhstp, ExpectedLhsAndRhsType);
+          lhscomp = TYPE`IsCompatible (i,lhstp, ExpectedLhsAndRhsType) or ENV`HasOrderFn(i,lhstp);
+          --rhscomp = TYPE`IsCompatible (i,rhstp, ExpectedLhsAndRhsType)
+          rhscomp = TYPE`IsCompatible (i,rhstp, ExpectedLhsAndRhsType) or ENV`HasOrderFn(i,rhstp)
       in
         ( if not lhscomp then
             -----------------------------------
@@ -1753,8 +1760,10 @@ operations
           ExpectedLhsAndRhsType = mk_REP`NumericTypeRep(<REAL>);
           mk_(wf_lhs, lhstp)    = wf_Expr(i,lhs,ExpectedLhsAndRhsType);
           mk_(wf_rhs, rhstp)    = wf_Expr(i,rhs,ExpectedLhsAndRhsType);
-          lhscomp = TYPE`IsCompatible (i,lhstp, ExpectedLhsAndRhsType);
-          rhscomp = TYPE`IsCompatible (i,rhstp, ExpectedLhsAndRhsType)
+          --lhscomp = TYPE`IsCompatible (i,lhstp, ExpectedLhsAndRhsType);
+          lhscomp = TYPE`IsCompatible (i,lhstp, ExpectedLhsAndRhsType) or ENV`HasOrderFn(i,lhstp);
+          --rhscomp = TYPE`IsCompatible (i,rhstp, ExpectedLhsAndRhsType)
+          rhscomp = TYPE`IsCompatible (i,rhstp, ExpectedLhsAndRhsType)  or ENV`HasOrderFn(i,rhstp)
       in
         ( if not lhscomp then
             ------------------------------------

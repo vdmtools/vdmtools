@@ -1126,11 +1126,12 @@ Tuple StatSem::wf_NUMLT (const Int & i, const TYPE_AS_BinaryExpr & binexpr, cons
   const Bool & wf_rhs (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & rhstp (inferrhs.GetRecord(2));
 
-  bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
-  bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
+  //bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
+  bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType) || HasOrderFn(i, lhstp);
+  //bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
+  bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType) || HasOrderFn(i, rhstp);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //---------------------------------
     // Error message #172
     // Lhs of '<' is not a numeric type
@@ -1138,8 +1139,7 @@ Tuple StatSem::wf_NUMLT (const Int & i, const TYPE_AS_BinaryExpr & binexpr, cons
     GenErrTp (binexpr, ERR, 172, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //---------------------------------
     // Error message #173
     // Rhs of '<' is not a numeric type
@@ -1147,10 +1147,12 @@ Tuple StatSem::wf_NUMLT (const Int & i, const TYPE_AS_BinaryExpr & binexpr, cons
     GenErrTp (binexpr, ERR, 173, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (lhscomp && rhscomp)
+  if (lhscomp && rhscomp) {
     return mk_(wf_lhs && wf_rhs, btp_bool);
-  else
+  }
+  else {
     return mk_(Bool(false), btp_bool);
+  }
 }
 
 // wf_NUMLE
@@ -1173,11 +1175,12 @@ Tuple StatSem::wf_NUMLE (const Int & i, const TYPE_AS_BinaryExpr & binexpr, cons
   const Bool & wf_rhs (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & rhstp (inferrhs.GetRecord(2));
 
-  bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
-  bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
+  //bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
+  bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType) || HasOrderFn(i, lhstp);
+  //bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
+  bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType) || HasOrderFn(i, rhstp);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //----------------------------------
     // Error message #174
     // Lhs of '<=' is not a numeric type
@@ -1185,8 +1188,7 @@ Tuple StatSem::wf_NUMLE (const Int & i, const TYPE_AS_BinaryExpr & binexpr, cons
     GenErrTp (binexpr, ERR, 174, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //----------------------------------
     // Error message #175
     // Rhs of '<=' is not a numeric type
@@ -1194,10 +1196,12 @@ Tuple StatSem::wf_NUMLE (const Int & i, const TYPE_AS_BinaryExpr & binexpr, cons
     GenErrTp (binexpr, ERR, 175, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (lhscomp && rhscomp)
+  if (lhscomp && rhscomp) {
     return mk_(wf_lhs && wf_rhs, btp_bool);
-  else
+  }
+  else {
     return mk_(Bool(false), btp_bool);
+  }
 }
 
 // wf_NUMGT
@@ -1220,11 +1224,12 @@ Tuple StatSem::wf_NUMGT (const Int & i, const TYPE_AS_BinaryExpr & binexpr, cons
   const Bool & wf_rhs (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & rhstp (inferrhs.GetRecord(2));
 
-  bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
-  bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
+  //bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
+  bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType) || HasOrderFn(i, lhstp);
+  //bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
+  bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType) || HasOrderFn(i, rhstp);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //---------------------------------
     // Error message #176
     // Lhs of '>' is not a numeric type
@@ -1232,8 +1237,7 @@ Tuple StatSem::wf_NUMGT (const Int & i, const TYPE_AS_BinaryExpr & binexpr, cons
     GenErrTp (binexpr, ERR, 176, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //---------------------------------
     // Error message #177
     // Rhs of '>' is not a numeric type
@@ -1241,10 +1245,12 @@ Tuple StatSem::wf_NUMGT (const Int & i, const TYPE_AS_BinaryExpr & binexpr, cons
     GenErrTp (binexpr, ERR, 177, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (lhscomp && rhscomp)
+  if (lhscomp && rhscomp) {
     return mk_(wf_lhs && wf_rhs, btp_bool);
-  else
+  }
+  else {
     return mk_(Bool(false), btp_bool);
+  }
 }
 
 // wf_NUMGE
@@ -1267,11 +1273,12 @@ Tuple StatSem::wf_NUMGE (const Int & i, const TYPE_AS_BinaryExpr & binexpr, cons
   const Bool & wf_rhs (inferrhs.GetBool(1));
   const TYPE_REP_TypeRep & rhstp (inferrhs.GetRecord(2));
 
-  bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
-  bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
+  //bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
+  bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType) || HasOrderFn(i, lhstp);
+  //bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
+  bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType) || HasOrderFn(i, rhstp);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //----------------------------------
     // Error message #178
     // Lhs of '>=' is not a numeric type
@@ -1279,8 +1286,7 @@ Tuple StatSem::wf_NUMGE (const Int & i, const TYPE_AS_BinaryExpr & binexpr, cons
     GenErrTp (binexpr, ERR, 178, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //----------------------------------
     // Error message #179
     // Rhs of '>=' is not a numeric type
@@ -1288,10 +1294,12 @@ Tuple StatSem::wf_NUMGE (const Int & i, const TYPE_AS_BinaryExpr & binexpr, cons
     GenErrTp (binexpr, ERR, 179, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (lhscomp && rhscomp)
+  if (lhscomp && rhscomp) {
     return mk_(wf_lhs && wf_rhs, btp_bool);
-  else
+  }
+  else {
     return mk_(Bool(false), btp_bool);
+  }
 }
 
 // wf_AND
@@ -1317,8 +1325,7 @@ Tuple StatSem::wf_AND (const Int & i, const TYPE_AS_BinaryExpr & binexpr, const 
   bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
   bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //-----------------------------------
     // Error message #180
     // Lhs of 'and' is not a boolean type
@@ -1326,8 +1333,7 @@ Tuple StatSem::wf_AND (const Int & i, const TYPE_AS_BinaryExpr & binexpr, const 
     GenErrTp (binexpr, ERR, 180, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //-----------------------------------
     // Error message #181
     // Rhs of 'and' is not a boolean type
@@ -1335,10 +1341,12 @@ Tuple StatSem::wf_AND (const Int & i, const TYPE_AS_BinaryExpr & binexpr, const 
     GenErrTp (binexpr, ERR, 181, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (lhscomp && rhscomp)
+  if (lhscomp && rhscomp) {
     return mk_(wf_lhs && wf_rhs, ExpectedLhsAndRhsType);
-  else
+  }
+  else {
     return mk_(Bool(false), ExpectedLhsAndRhsType);
+  }
 }
 
 // wf_OR
@@ -1364,8 +1372,7 @@ Tuple StatSem::wf_OR (const Int & i, const TYPE_AS_BinaryExpr & binexpr, const T
   bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
   bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //----------------------------------
     // Error message #182
     // Lhs of 'or' is not a boolean type
@@ -1373,8 +1380,7 @@ Tuple StatSem::wf_OR (const Int & i, const TYPE_AS_BinaryExpr & binexpr, const T
     GenErrTp (binexpr, ERR, 182, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //----------------------------------
     // Error message #183
     // Rhs of 'or' is not a boolean type
@@ -1382,10 +1388,12 @@ Tuple StatSem::wf_OR (const Int & i, const TYPE_AS_BinaryExpr & binexpr, const T
     GenErrTp (binexpr, ERR, 183, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (lhscomp && rhscomp)
+  if (lhscomp && rhscomp) {
     return mk_(wf_lhs && wf_rhs, ExpectedLhsAndRhsType);
-  else
+  }
+  else {
     return mk_(Bool(false), ExpectedLhsAndRhsType);
+  }
 }
 
 // wf_IMPLY
@@ -1411,8 +1419,7 @@ Tuple StatSem::wf_IMPLY (const Int & i, const TYPE_AS_BinaryExpr & binexpr, cons
   bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
   bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //----------------------------------
     // Error message #184
     // Lhs of '=>' is not a boolean type
@@ -1420,8 +1427,7 @@ Tuple StatSem::wf_IMPLY (const Int & i, const TYPE_AS_BinaryExpr & binexpr, cons
     GenErrTp (binexpr, ERR, 184, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //----------------------------------
     // Error message #185
     // Rhs of '=>' is not a boolean type
@@ -1429,10 +1435,12 @@ Tuple StatSem::wf_IMPLY (const Int & i, const TYPE_AS_BinaryExpr & binexpr, cons
     GenErrTp (binexpr, ERR, 185, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (lhscomp && rhscomp)
+  if (lhscomp && rhscomp) {
     return mk_(wf_lhs && wf_rhs, ExpectedLhsAndRhsType);
-  else
+  }
+  else {
     return mk_(Bool(false), ExpectedLhsAndRhsType);
+  }
 }
 
 // wf_EQUIV
@@ -1458,8 +1466,7 @@ Tuple StatSem::wf_EQUIV (const Int & i, const TYPE_AS_BinaryExpr & binexpr, cons
   bool lhscomp = IsCompatible (i, lhstp, ExpectedLhsAndRhsType);
   bool rhscomp = IsCompatible (i, rhstp, ExpectedLhsAndRhsType);
 
-  if (!lhscomp)
-  {
+  if (!lhscomp) {
     //-----------------------------------
     // Error message #186
     // Lhs of '<=>' is not a boolean type
@@ -1467,8 +1474,7 @@ Tuple StatSem::wf_EQUIV (const Int & i, const TYPE_AS_BinaryExpr & binexpr, cons
     GenErrTp (binexpr, ERR, 186, lhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (!rhscomp)
-  {
+  if (!rhscomp) {
     //-----------------------------------
     // Error message #187
     // Rhs of '<=>' is not a boolean type
@@ -1476,10 +1482,12 @@ Tuple StatSem::wf_EQUIV (const Int & i, const TYPE_AS_BinaryExpr & binexpr, cons
     GenErrTp (binexpr, ERR, 187, rhstp, ExpectedLhsAndRhsType, Sequence());
   }
 
-  if (lhscomp && rhscomp)
+  if (lhscomp && rhscomp) {
     return mk_(wf_lhs && wf_rhs, ExpectedLhsAndRhsType);
-  else
+  }
+  else {
     return mk_(Bool(false), ExpectedLhsAndRhsType);
+  }
 }
 
 // wf_EQ
@@ -1502,8 +1510,7 @@ Tuple StatSem::wf_EQ (const Int & i, const TYPE_AS_BinaryExpr & binexpr, const T
 
   bool iscomp = IsCompatible (Int(POS), lhstp, rhstp);
 
-  if (!iscomp)
-  {
+  if (!iscomp) {
     //-----------------------------------
     // Error message #188
     // This equality will always be false

@@ -4433,6 +4433,8 @@ bool StatSem::ImportTypes (const Int & /*i*/ ,
       TYPE_AS_TypeDef td (imptps[nm]);
       const TYPE_AS_Type & tp (td.GetRecord(pos_AS_TypeDef_shape));
       const Generic & Invar (td.GetField(pos_AS_TypeDef_Inv));
+      const Generic & Eq (td.GetField(pos_AS_TypeDef_Eq));
+      const Generic & Ord (td.GetField(pos_AS_TypeDef_Ord));
 
       TYPE_AS_Type tpnew (tp);
       if (tp.Is(TAG_TYPE_AS_CompositeType)) {
@@ -4459,12 +4461,25 @@ bool StatSem::ImportTypes (const Int & /*i*/ ,
                                     : TransTypeDef (Nil (), nm, tp, Invar));
       TYPE_SSENV_TypeRepElem trep (mk_SSENV_TypeRepElem(tr, Bool(false), Bool(false)));
 
-      if (!Invar.IsNil ())
-      {
+      if (!Invar.IsNil ()) {
         SEQ<TYPE_REP_TypeRep> domtp;
         domtp.ImpAppend (TransType (modid, tp));
         TYPE_REP_TotalFnTypeRep invfn (mk_REP_TotalFnTypeRep(domtp, btp_bool));
         this->FunctionEnv.ImpModify (Inv (nm), mk_SSENV_TypeRepElem(invfn, Bool(true), Bool(true)));
+      }
+      if (!Eq.IsNil ()) {
+        SEQ<TYPE_REP_TypeRep> domtp;
+        domtp.ImpAppend (TransType (modid, tp));
+        domtp.ImpAppend (TransType (modid, tp));
+        TYPE_REP_TotalFnTypeRep eqfn (mk_REP_TotalFnTypeRep(domtp, btp_bool));
+        this->FunctionEnv.ImpModify (Equality (nm), mk_SSENV_TypeRepElem(eqfn, Bool(true), Bool(true)));
+      }
+      if (!Ord.IsNil ()) {
+        SEQ<TYPE_REP_TypeRep> domtp;
+        domtp.ImpAppend (TransType (modid, tp));
+        domtp.ImpAppend (TransType (modid, tp));
+        TYPE_REP_TotalFnTypeRep ordfn (mk_REP_TotalFnTypeRep(domtp, btp_bool));
+        this->FunctionEnv.ImpModify (Order (nm), mk_SSENV_TypeRepElem(ordfn, Bool(true), Bool(true)));
       }
 
       this->TypeEnv.ImpModify (nm, trep);
@@ -5124,6 +5139,41 @@ SET<TYPE_AS_Name> StatSem::UsedStateIds(const SET<TYPE_AS_Name> & ids_org)
   return ids.ImpIntersect (this->StateEnv.Dom ());
 }
 
+// HasOrderFn
+// i : TYPE`Ind
+// type : REP`TypeRep
+// ==> bool
+bool StatSem::HasOrderFn(const Int & i, const TYPE_REP_TypeRep & type)
+{
+  switch (type.GetTag()) {
+    case TAG_TYPE_REP_TypeNameRep: {
+      return !LookUp(Order(type.GetRecord(pos_REP_TypeNameRep_nm)), false).IsNil();
+    }
+    case TAG_TYPE_REP_UnionTypeRep: {
+      SET<TYPE_REP_TypeRep> tps (type.GetSet(pos_REP_UnionTypeRep_tps));
+      if (i == POS) {
+        bool exists = false;
+        Generic tp;
+        for (bool bb = tps.First(tp); bb && !exists; bb = tps.Next(tp)) {
+          exists = HasOrderFn(i, tp);
+        }
+        return exists;
+      }
+      else {
+        bool forall = true;
+        Generic tp;
+        for (bool bb = tps.First(tp); bb && forall; bb = tps.Next(tp)) {
+          forall = HasOrderFn(i, tp);
+        }
+        return forall;
+      }
+    }
+    default: {
+      return false;
+    }
+  }
+}
+
 // ExpandTypes
 // modid : AS`Name
 // tp_m: map AS`Name to AS`TypeDef
@@ -5140,6 +5190,8 @@ bool StatSem::ExpandTypes (const TYPE_AS_Name & modid, const MAP<TYPE_AS_Name, T
     const TYPE_AS_Name & nm (td.GetRecord(pos_AS_TypeDef_nm));
     const TYPE_AS_Type & Tp (td.GetRecord(pos_AS_TypeDef_shape));
     const Generic & Invar (td.GetField(pos_AS_TypeDef_Inv));
+    const Generic & Eq (td.GetField(pos_AS_TypeDef_Eq));
+    const Generic & Ord (td.GetField(pos_AS_TypeDef_Ord));
     Generic localinv = Nil ();
     if (!CheckName (nm))
     {
@@ -5161,12 +5213,25 @@ bool StatSem::ExpandTypes (const TYPE_AS_Name & modid, const MAP<TYPE_AS_Name, T
       this->TypeEnv.ImpModify(nm, mk_SSENV_TypeRepElem(stp, Bool(false), Bool(false)));
       this->TypeEnv.ImpModify(ExtName(modid,nm), mk_SSENV_TypeRepElem(stp, Bool(true), Bool(false)));
 
-      if (!Invar.IsNil())
-      {
+      if (!Invar.IsNil()) {
         SEQ<TYPE_REP_TypeRep> sq;
         sq.ImpAppend (TransType(Nil (), Tp));
         TYPE_REP_TypeRep invfn (mk_REP_TotalFnTypeRep( sq, btp_bool ));
         this->FunctionEnv.ImpModify (Inv (nm), mk_SSENV_TypeRepElem(invfn, Bool(true), Bool(true)));
+      }
+      if (!Eq.IsNil()) {
+        SEQ<TYPE_REP_TypeRep> sq;
+        sq.ImpAppend (TransType(Nil (), Tp));
+        sq.ImpAppend (TransType(Nil (), Tp));
+        TYPE_REP_TypeRep eqfn (mk_REP_TotalFnTypeRep( sq, btp_bool ));
+        this->FunctionEnv.ImpModify (Equality (nm), mk_SSENV_TypeRepElem(eqfn, Bool(true), Bool(true)));
+      }
+      if (!Ord.IsNil()) {
+        SEQ<TYPE_REP_TypeRep> sq;
+        sq.ImpAppend (TransType(Nil (), Tp));
+        sq.ImpAppend (TransType(Nil (), Tp));
+        TYPE_REP_TypeRep ordfn (mk_REP_TotalFnTypeRep( sq, btp_bool ));
+        this->FunctionEnv.ImpModify (Order (nm), mk_SSENV_TypeRepElem(ordfn, Bool(true), Bool(true)));
       }
     }
   }
