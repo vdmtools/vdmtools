@@ -2808,17 +2808,15 @@ the line {\tt returnflag = true} is because of a bug, where an empty
 return statement inside of a loop doesn't return.
 
 \begin{vdm_al}
-IsLocalVal : AS`Name ==> bool * [SEM`VAL] * [AS`Type]
+IsLocalVal : AS`Name ==> bool * [SEM`ValTp]
 IsLocalVal (name) == 
   def topenv = TopEnvL()
   in
    (for mk_SEM`BlkEnv(id_m,-) in topenv do
       if name in set dom id_m
-      then
-        let mk_SEM`ValTp(val,tp) =   id_m(name)
-        in return mk_(true, val, tp)
+      then return mk_(true, id_m(name))
       else skip;
-    return mk_(false, nil, nil);
+    return mk_(false, nil);
    );
 \end{vdm_al}
 
@@ -2839,9 +2837,9 @@ domain of the current old state map.
 \begin{vdm_al}
 operations
 
-GetOldStateVal : AS`Name ==> SEM`VAL
-GetOldStateVal (id) ==
-  return ((hd curr_state.os)(id)).val
+GetOldState : AS`Name ==> GLOBAL`State
+GetOldState (id) ==
+  return (hd curr_state.os)(id);
 \end{vdm_al}
 
 This operation returns the value for the input identifier from the current
@@ -2855,7 +2853,9 @@ EvalOldName (mk_AS`OldName(name,cid)) ==
   let id = name(len name)
   in
     if IsOldState (mk_AS`Name([id],cid))
-    then GetOldStateVal (mk_AS`Name([id],cid))
+    then
+      def mk_GLOBAL`State(val,-) = GetOldState (mk_AS`Name([id],cid))
+      in return val
     else error;
 \end{vdm_al}
 

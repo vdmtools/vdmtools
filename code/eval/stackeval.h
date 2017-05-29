@@ -1554,7 +1554,7 @@ public:
   Tuple IsLocalVal (const TYPE_AS_Name & name);
 #ifdef VDMSL
   int  IsOldState (const TYPE_AS_Name & id) const;
-  TYPE_SEM_VAL GetOldStateVal (const TYPE_AS_Name & id) const;
+  TYPE_GLOBAL_State GetOldState (const TYPE_AS_Name & id) const;
 #endif //VDMSL
 
 private:

@@ -26,6 +26,7 @@ module EXPR
         Ceiling : real -> int;
         IsNat : SEM`VAL -> bool;
         IsInt : SEM`VAL -> bool;
+        OrderName: AS`Name -> AS`Name;
 
       operations 
         IsRecSel : AS`Name ==> bool;
@@ -43,6 +44,9 @@ module EXPR
         ,
 
     from GLOBAL all,
+    from CEXPR all,
+    from DEBUG all,
+    from DEBUGTP all,
     from PAT
       types
         PARTITION = <DO_PARTITION> | <DONT_PARTITION>,
@@ -788,12 +792,51 @@ EvalOrderExpr : SEM`VAL * AS`BinaryOp * SEM`VAL ==> SEM`VAL
 EvalOrderExpr (op1_v, opr, op2_v) ==
   if is_SEM`NUM(op1_v) and is_SEM`NUM(op2_v)
   then return EvalNumBinaryExpr (op1_v, opr, op2_v)
-  else -- TODO
+  else
+   (cases mk_(op1_v, op2_v):
+      mk_(mk_SEM`REC(tag,-,-),mk_SEM`REC(tag,-,-)) ->
+#ifdef VDMSL
+        def mk_(ok,-,-,-,Ord,-) = AUX`IsTypeDef(tag)
+#endif VDMSL
+#ifdef VDMPP
+        def mk_(ok,-,-,-,Ord,-,-) = AUX`IsTypeDef(tag)
+#endif VDMPP
+        in
+         if ok and Ord <> nil
+         then
+           def tmp = [ mk_INSTRTP`LOOKUP(AUX`OrderName(tag)),
+                       mk_INSTRTP`PUSH(
+                          cases opr:
+                            <NUMLT>, <NUMGE>  -> [op1_v, op2_v],
+                            <NUMGT>, <NUMLE>  -> [op2_v, op1_v],
+                            others   -> undefined
+                          end),
+                       mk_INSTRTP`APPLY() ];
+               sp =  cases opr:
+                       <NUMLT>, <NUMGT> -> tmp,
+                       <NUMLE>, <NUMGE> -> CEXPR`ConcIfThenElse(tmp,
+                                                    [mk_INSTRTP`PUSH(mk_SEM`BOOL(false))],
+                                                    [mk_INSTRTP`PUSH(mk_SEM`BOOL(true))]),
+                       others   -> undefined
+                     end;
+               res = DEBUG`EvalAuxProgram(sp, "Order evaluation", false) 
+           in
+             cases res:
+               mk_(mk_STKM`Success(), Ord_v) -> cases true:
+                                                  (is_SEM`BOOL(Ord_v)) -> return Ord_v,
+                                                   others -> error
+                                                end,
+               others -> error
+             end
+         else skip,
+      others -> skip
+    end;
     cases false:
       (is_SEM`NUM(op1_v)) -> RTERR`ErrorVal(RTERR`NUM_EXPECTED,op1_v,nil, []),
       (is_SEM`NUM(op2_v)) -> RTERR`ErrorVal(RTERR`NUM_EXPECTED,op2_v,nil, []),
       others -> return EvalNumBinaryExpr (op1_v, opr, op2_v)
     end;
+   );
 \end{vdm_al}
 
 \begin{vdm_al}

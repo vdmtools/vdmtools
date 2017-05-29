@@ -312,14 +312,14 @@ Tuple EvalState::ExpandTypeDef(const TYPE_AS_Type & tp)
     // PP : bool * [GLOBAL`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * [AS`Name] * [AS`Access]
     //Tuple itd (IsTypeDef(tn));
     Tuple itd (GetCachedTypeDef(tn));
-    if (itd.GetBool(1))
-    {
+    if (itd.GetBool(1)) {
       tmp_type = itd.GetRecord(2); // AS`Type, GLOBAL`Type
       tag = tn;
     }
-    else 
+    else  {
       RTERR::Error (L"ExpandTypeDef", RTERR_TYPE_NOT_IN_SCOPE,
                     M42Sem(AUX::SingleNameToString(tn), NULL), Nil(), Sequence());
+    }
   }
   return mk_(tmp_type, tag);
 }
@@ -336,14 +336,11 @@ Tuple EvalState::ExpandTypeDef(const TYPE_AS_Type & tp)
 Tuple EvalState::LookUpSD (const TYPE_STKM_StateDesignator & sd)
 {
   switch(sd.GetTag ()) {
-    case TAG_TYPE_AS_Name:
-    {
+    case TAG_TYPE_AS_Name: {
       // a state designator name can only be a single identifier
       Tuple ils (theStackMachine().IsLocalState(sd)); // bool * [GLOBAL`State]
-      if (ils.GetBoolValue(1))
-      { // sd is in Local State
-        if (ils.GetField(2).IsNil())
-        {
+      if (ils.GetBoolValue(1)) { // sd is in Local State
+        if (ils.GetField(2).IsNil()) {
           RTERR::Error (L"LookUpSD", RTERR_NOT_IN_SCOPE,
                         M42Sem(AUX::SingleNameToString(sd), NULL), Nil(), Sequence());
           return mk_(sem_undef, Sequence(), Nil(), Nil()); 
@@ -362,8 +359,7 @@ Tuple EvalState::LookUpSD (const TYPE_STKM_StateDesignator & sd)
 
 #ifdef VDMSL
       Tuple igs (IsGlobalState(sd, theStackMachine().CurrentModule())); // bool * [GLOBAL`State]
-      if (igs.GetBoolValue(1))
-      { // sd is in Global State
+      if (igs.GetBoolValue(1)) { // sd is in Global State
         const TYPE_GLOBAL_State & gs_var (igs.GetRecord(2));
         const TYPE_SEM_VAL & val (gs_var.GetRecord(pos_GLOBAL_State_val));
         const TYPE_AS_Type & type (gs_var.GetRecord(pos_GLOBAL_State_tp));
@@ -381,8 +377,7 @@ Tuple EvalState::LookUpSD (const TYPE_STKM_StateDesignator & sd)
 #ifdef VDMPP
       // ==> bool * bool * [SEM`VAL] * [AS`Type] * [AS`Name] * [AS`Access]
       Tuple iios (IsInObjScope(sd, Nil()));
-      if (iios.GetBoolValue(1))
-      { // sd is in Object Scope
+      if (iios.GetBoolValue(1)) { // sd is in Object Scope
         if (iios.GetField(3).IsNil()) { // [SEM`VAL]
           RTERR::Error (L"LookUpSD", RTERR_INSTVAR_NOT_IN_SCOPE,
                         M42Sem(AUX::SingleNameToString(sd), NULL), Nil(), Sequence());
@@ -400,8 +395,7 @@ Tuple EvalState::LookUpSD (const TYPE_STKM_StateDesignator & sd)
       }
 
       Tuple lus (LookUpStatic(sd));
-      if (lus.GetBoolValue(1))
-      {
+      if (lus.GetBoolValue(1)) {
         const TYPE_SEM_VAL & val (lus.GetRecord(2));
         const TYPE_AS_Name & clnm (lus.GetRecord(3));
         const TYPE_AS_Access & access (lus.GetRecord(4));
@@ -419,8 +413,7 @@ Tuple EvalState::LookUpSD (const TYPE_STKM_StateDesignator & sd)
       }
 
       TYPE_SEM_VAL val (LookUp(sd));
-      if (val.Is(TAG_TYPE_SEM_OBJ_uRef))
-      {
+      if (val.Is(TAG_TYPE_SEM_OBJ_uRef)) {
         //SEQ<Record> index_l (mk_sequence(sd)); // seq of (AS`Name | SEM`VAL)
         //return mk_(val, index_l, Nil(), Nil());
         return mk_(val, mk_sequence(sd), Nil(), Nil());
@@ -430,8 +423,7 @@ Tuple EvalState::LookUpSD (const TYPE_STKM_StateDesignator & sd)
       RTERR::Error (L"LookUpSD", RTERR_STATE_DESIG_UNKNOWN,
                     M42Sem(AUX::SingleNameToString(sd), NULL), Nil(), Sequence());
     }
-    case TAG_TYPE_STKM_FieldRef:
-    {
+    case TAG_TYPE_STKM_FieldRef: {
       const TYPE_STKM_StateDesignator & fsd (sd.GetRecord (pos_STKM_FieldRef_var));
       const TYPE_AS_Name & sel (sd.GetRecord (pos_STKM_FieldRef_sel));
 // 20141210 -->
@@ -447,8 +439,7 @@ Tuple EvalState::LookUpSD (const TYPE_STKM_StateDesignator & sd)
       index_l.ImpAppend(sel);
       return mk_(scomp_v, index_l, lusd.GetField(3), lusd.GetField(4));
     }
-    case TAG_TYPE_STKM_MapOrSeqRef:
-    {
+    case TAG_TYPE_STKM_MapOrSeqRef: {
       const TYPE_STKM_StateDesignator & msd (sd.GetRecord (pos_STKM_MapOrSeqRef_var));
       const TYPE_SEM_VAL & arg (sd.GetRecord (pos_STKM_MapOrSeqRef_arg));
       Tuple lusd (LookUpSD (msd));
@@ -484,8 +475,9 @@ TYPE_SEM_VAL EvalState::CreateUndefVal(const TYPE_GLOBAL_Type & type)
 #endif // VDMPP
     return SemRec::CreateSemRecordUndefinedFields(tmp_type, quotedtag);
   }
-  else
+  else {
     return sem_undef;
+  }
 }
 
 // ModifyValueId
@@ -500,21 +492,20 @@ TYPE_SEM_VAL EvalState::CreateUndefVal(const TYPE_GLOBAL_Type & type)
 void EvalState::ModifyValueId(const TYPE_AS_Name & id, const TYPE_SEM_VAL & val_v,
                               const Generic & glres_, const Generic & llres_)
 {
-  if (!llres_.IsNil())
-  { // sd is in Local State
+  if (!llres_.IsNil()) { // sd is in Local State
     Tuple ils (llres_);
     const TYPE_SEM_ValTp & ls_var (ils.GetRecord(2)); // SEM`ValTp
     const TYPE_AS_Type & tp (ls_var.GetRecord(pos_SEM_ValTp_tp)); // AS`Type
-    if (Settings.DTC() && !SubType (val_v, tp))
+    if (Settings.DTC() && !SubType (val_v, tp)) {
       RTERR::Error (L"ModifyValueId", RTERR_TYPE_INCOMP, val_v, tp, Sequence());
-    else
+    }
+    else {
       theStackMachine().SetLocalState(id, TYPE_SEM_ValTp().Init(val_v, tp)); 
+    }
   }
-  else
-  {
+  else {
 #ifdef VDMSL
-    if (!glres_.IsNil())
-    { // sd is in Global State
+    if (!glres_.IsNil()) { // sd is in Global State
       Tuple igs (glres_);
       const TYPE_GLOBAL_State & gs_var (igs.GetRecord(2)); // GLOBAL`State
       const TYPE_AS_Type & tp (gs_var.GetRecord(pos_GLOBAL_State_tp));  // AS`Type
@@ -525,20 +516,16 @@ void EvalState::ModifyValueId(const TYPE_AS_Name & id, const TYPE_SEM_VAL & val_
     }
 #endif // VDMSL
 #ifdef VDMPP
-    if (!glres_.IsNil())
-    { // sd is in Object Scope
+    if (!glres_.IsNil()) { // sd is in Object Scope
       Tuple iios (glres_);
-      if (Settings.DTC() && !SubType (val_v, iios.GetRecord(4)))
-      {
+      if (Settings.DTC() && !SubType (val_v, iios.GetRecord(4))) {
           RTERR::Error (L"ModifyValueId", RTERR_TYPE_INCOMP, val_v, iios.GetRecord(4), Sequence());
       }
       SetInstanceVar(id, val_v, iios);
     }
-    else if (val_v.Is(TAG_TYPE_SEM_OBJ_uRef) && IsInObjTab(val_v))
-    {
+    else if (val_v.Is(TAG_TYPE_SEM_OBJ_uRef) && IsInObjTab(val_v)) {
     }
-    else
-    {
+    else {
       RTERR::Error(L"ModifyValueId", RTERR_INTERNAL_ERROR,
                    M42Sem(AUX::SingleNameToString(id), NULL), Nil(), Sequence());
     }
@@ -558,8 +545,7 @@ TYPE_SEM_VAL EvalState::ModifyValue(const TYPE_SEM_VAL & scomp_v,
   if (index_l.IsEmpty ()) {
     return val_v;
   }
-  else
-  {
+  else {
     switch(scomp_v.GetTag ()) {
 #ifdef VDMPP
       case TAG_TYPE_SEM_OBJ_uRef: {
@@ -572,12 +558,10 @@ TYPE_SEM_VAL EvalState::ModifyValue(const TYPE_SEM_VAL & scomp_v,
         //Tuple lurs (AUX::LookUpRecSel(tag)); // bool * GLOBAL`RecSel
         Tuple lurs (GetCachedRecSel(tag));
 // <-- 20101102
-        if (lurs.GetBoolValue(1))
-        {
+        if (lurs.GetBoolValue(1)) {
           const MAP<TYPE_AS_Name, Int> & pos (lurs.GetTuple(2).GetMap (2));  // map AS`Name to nat
           const TYPE_AS_Name & sel (index_l.Hd());
-          if (pos.DomExists (sel))
-          {
+          if (pos.DomExists (sel)) {
             const Record & value (scomp_v.GetRecord(pos_DYNSEM_SEM_SemRecord_value));
             SEQ<TYPE_SEM_VAL> tmp_v (value.GetFields());
             int index = pos[sel].GetValue();
@@ -589,14 +573,12 @@ TYPE_SEM_VAL EvalState::ModifyValue(const TYPE_SEM_VAL & scomp_v,
             bool checked(false);
             //tmp_v.ImpModify(index, newval);
             //TYPE_SEM_VAL newrec (SemRec::mk_SEM_REC(tag, tmp_v)); 
-            if (Settings.DTC())
-            {
+            if (Settings.DTC()) {
 #ifdef VDMSL
               int modulepushed = false; // We only push a new module if name is qualified.
               if (AUX::IsRealName (tag)) {
                 TYPE_AS_Name mod_nm (ExtractModule(tag)); 
-                if (mod_nm != theStackMachine().CurrentModule())
-                {
+                if (mod_nm != theStackMachine().CurrentModule()) {
                   theStackMachine().PushModule(mod_nm);
                   modulepushed = true;
                 }
@@ -634,16 +616,13 @@ TYPE_SEM_VAL EvalState::ModifyValue(const TYPE_SEM_VAL & scomp_v,
       case TAG_TYPE_SEM_MAP: {
         MAP<TYPE_SEM_VAL, TYPE_SEM_VAL> map_v (scomp_v.GetMap(pos_SEM_MAP_v));
         const TYPE_SEM_VAL & key (index_l.Hd());
-        if (map_v.DomExists(key))
-        {
+        if (map_v.DomExists(key)) {
           const TYPE_SEM_VAL & val (map_v[key]);
           map_v.ImpModify(key, ModifyValue(val, index_l.Tl(), val_v)); 
           return mk_SEM_MAP(map_v);
         }
-        else
-        { // Key is't in map.
-          if (index_l.Tl().IsEmpty())
-          {
+        else { // Key is't in map.
+          if (index_l.Tl().IsEmpty()) {
             map_v.ImpModify(key, val_v); 
             return mk_SEM_MAP(map_v);
           }
@@ -654,22 +633,21 @@ TYPE_SEM_VAL EvalState::ModifyValue(const TYPE_SEM_VAL & scomp_v,
         return TYPE_SEM_VAL(); // dummy
       } // TAG_TYPE_SEM_MAP
       case TAG_TYPE_SEM_SEQ: {
-        if (AUX::IsInt (index_l.Hd()))
-        { // Index is int.
+        if (AUX::IsInt (index_l.Hd())) { // Index is int.
           SEQ<TYPE_SEM_VAL> seq_v (scomp_v.GetSequence(pos_SEM_SEQ_v));
           int64_t index = index_l.Hd().GetReal(pos_SEM_NUM_v).GetIntValue();
-          //if ((1 <= index) && (index <= scomp_v.GetSequence(pos_SEM_SEQ_v).Length()))
-          if ((1 <= index) && (index <= seq_v.Length()))
-          {
+          if ((1 <= index) && (index <= seq_v.Length())) {
             const TYPE_SEM_VAL & val (seq_v[index]);
             seq_v.ImpModify(index, ModifyValue(val, index_l.Tl(), val_v));
             return mk_SEM_SEQ(seq_v);
           }
-          else
+          else {
             RTERR::Error (L"ModifyValue", RTERR_ILLEGAL_INDICES, Nil(), Nil(), Sequence());
+          }
         }
-        else
+        else {
           RTERR::Error (L"ModifyValue", RTERR_NAT_EXPECTED, Nil(), Nil(), Sequence());
+        }
         return TYPE_SEM_VAL(); // dummy
       } // TAG_TYPE_SEM_SEQ
       default: {

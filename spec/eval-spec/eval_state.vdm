@@ -1963,7 +1963,7 @@ LookUp (name) ==
  (if not AUX`IsRealName (name) and not STKM`IsEmptyEnvL ()
   then
     cases STKM`IsLocalVal( name ):
-      mk_(true, res_v, -) -> if is_SEM`UNDEF (res_v)
+      mk_(true, mk_SEM`ValTp(res_v, -)) -> if is_SEM`UNDEF (res_v)
                           then RTERR`ErrorVal(RTERR`UNDEF_ENCOUNTERED, nil, nil, [])
                           else return res_v,
       others -> skip
@@ -2046,7 +2046,7 @@ LookUp(mk_AS`Name(ids,cid)) ==
       if ok
       then name := AUX`ConstructDoubleName(ocl,memnm);
 
-  def mk_(isit, val, -) = STKM`IsLocalVal(name);
+  def mk_(isit, mk_SEM`ValTp(val, -)) = STKM`IsLocalVal(name);
       --mk_(isit_d_objs, val_obj) = IsDObjs(name)
   in
     if isit

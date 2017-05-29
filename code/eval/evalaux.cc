@@ -944,7 +944,7 @@ TYPE_AS_Name AUX::InitName(const TYPE_AS_Name & nm)
 TYPE_AS_Name AUX::OrderName(const TYPE_AS_Name & nm)
 {
   TYPE_AS_Ids ids (nm.GetSequence(pos_AS_Name_ids));
-  TYPE_AS_Id id (ASTAUX::MkId(L"order_").ImpConc(ids[ids.Length()])); 
+  TYPE_AS_Id id (ASTAUX::MkId(L"ord_").ImpConc(ids[ids.Length()])); 
   TYPE_AS_Name name (nm);
   name.SetField(pos_AS_Name_ids, ids.SubSequence(1,ids.Length() -1).ImpAppend(id));
   return name;

@@ -3125,25 +3125,22 @@ void StackEval::SetLocalState(const TYPE_AS_Name & id, const TYPE_SEM_ValTp & va
 
 // IsLocalVal
 // name : AS`Name
-// ==> bool * [SEM`VAL] * [AS`Type]
+// ==> bool * [SEM`ValTp]
 Tuple StackEval::IsLocalVal (const TYPE_AS_Name & name)
 {
   const SEQ<TYPE_SEM_BlkEnv> & blkenv_l (this->cs_shared_p->env_l[1]); 
 
-  if (!blkenv_l.IsEmpty())
-  {
+  if (!blkenv_l.IsEmpty()) {
     size_t len_blkenv_l = blkenv_l.Length();
-    for (size_t i = 1; i <= len_blkenv_l; i++)
-    {
+    for (size_t i = 1; i <= len_blkenv_l; i++) {
       const TYPE_SEM_BlkEnv & blkenv (blkenv_l[i]);
       const MAP<TYPE_AS_Name,TYPE_SEM_ValTp> & id_m (blkenv.GetMap(pos_SEM_BlkEnv_id_um));
       if(id_m.DomExists(name)) {
-        const TYPE_SEM_ValTp & valtp(id_m[name]);
-        return mk_(Bool(true), valtp.GetRecord(pos_SEM_ValTp_val), valtp.GetField(pos_SEM_ValTp_tp));
+        return mk_(Bool(true), id_m[name]);
       }
     }
   }
-  return mk_(Bool(false), Nil(), Nil());
+  return mk_(Bool(false), Nil());
 }
 
 #ifdef VDMSL
@@ -3155,12 +3152,12 @@ int StackEval::IsOldState (const TYPE_AS_Name & id) const
   return Map(this->cs_os_p->Hd()).DomExists (id);
 }
 
-// GetOldStateVal
+// GetOldState
 // id : AS`Name
-// ==> SEM`VAL
-TYPE_SEM_VAL StackEval::GetOldStateVal (const TYPE_AS_Name & id) const
+// ==> GLOBAL`State
+TYPE_GLOBAL_State StackEval::GetOldState (const TYPE_AS_Name & id) const
 {
-  return Record(Map(this->cs_os_p->Hd())[id]).GetRecord(pos_GLOBAL_State_val);
+  return Map(this->cs_os_p->Hd())[id];
 }
 
 // EvalOldName
@@ -3172,10 +3169,13 @@ TYPE_SEM_VAL StackEval::EvalOldName (const TYPE_AS_OldName & oldnm)
   const TYPE_AS_Id & id (name[name.Length()]);
   TYPE_AS_Name orig_name (ASTAUX::MkNameFromId(id, oldnm.GetInt(pos_AS_OldName_cid)));
 
-  if (IsOldState (orig_name))
-    return (GetOldStateVal (orig_name));
-  else
+  if (IsOldState (orig_name)) {
+    TYPE_GLOBAL_State st (GetOldState(orig_name));
+    return st.GetRecord(pos_GLOBAL_State_val);
+  }
+  else {
     return RTERR::ErrorVal (L"EvalOldName", RTERR_OLDID_NOT_IN_OS, Nil(), Nil(), Sequence());
+  }
 }
 #endif //VDMSL
 

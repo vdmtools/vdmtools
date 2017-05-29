@@ -889,7 +889,7 @@ relates to the state initialization.
 \begin{vdm_al}
 OrderName : AS`Name -> AS`Name
 OrderName(mk_AS`Name(id_l, cid)) ==
-  mk_AS`Name(id_l(1,...,len id_l -1) ^ ["oeder_" ^ id_l(len id_l)],cid);
+  mk_AS`Name(id_l(1,...,len id_l -1) ^ ["ord_" ^ id_l(len id_l)],cid);
 \end{vdm_al}
 
 Extends the name of function or operation by an prefix "order", which

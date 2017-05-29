@@ -492,6 +492,8 @@
 #define TAG_quote_OBJECT   (DIV_OFFSET + 136) // Defined in statem env.vdm
 #define TAG_quote_LOCAL    (DIV_OFFSET + 137) // Defined in statem env.vdm
 #define TAG_quote_GLOBAL   (DIV_OFFSET + 138) // Defined in statem env.vdm
+#define TAG_quote_EQUALITY (DIV_OFFSET + 139) // Defined in statem env.vdm
+#define TAG_quote_ORDER    (DIV_OFFSET + 140) // Defined in statem env.vdm
 
 // DYNSEM quotes
 //#define TAG_quote_APPROX     (DIV_OFFSET + 300) 20060105

@@ -1096,19 +1096,18 @@ MAP<TYPE_AS_Name, TYPE_SEM_VAL> Free::FreeInOldName (const TYPE_AS_OldName & Old
 {
   TYPE_AS_Name old_name;
   old_name.Init(OldE.GetSequence(pos_AS_OldName_ids), OldE.GetInt(pos_AS_OldName_cid));
-  if (id_s.InSet (old_name))
-//    return MAP<TYPE_AS_Name, TYPE_SEM_VAL> ();
+  if (id_s.InSet (old_name)) {
     return emap;
+  }
   else {
     if (theStackMachine().IsOldState(old_name)) {
+      TYPE_GLOBAL_State st (theStackMachine().GetOldState(old_name));
       MAP<TYPE_AS_Name, TYPE_SEM_VAL> res_m;
-      res_m.Insert (old_name, theStackMachine().GetOldStateVal(old_name));
+      res_m.Insert (old_name, st.GetRecord(pos_GLOBAL_State_val));
       return (res_m);
     }
-    else
-    {
+    else {
       RTERR::Error (L"FreeInOldName", RTERR_INTERNAL_ERROR, Nil(), Nil(),Sequence());
-//      return MAP<TYPE_AS_Name, TYPE_SEM_VAL> ();
       return emap;
     }
   }
@@ -1160,9 +1159,11 @@ Generic Free::LookUpInTopEnv(const TYPE_AS_Name & name)
   // semvalues.h types.
 
   Tuple infer (theStackMachine().IsLocalVal(name));
-  if (infer.GetBool(1))
-    return infer.GetRecord(2);
-  else
+  if (infer.GetBool(1)) {
+    return Record(infer.GetRecord(2)).GetRecord(pos_SEM_ValTp_val);
+  }
+  else {
     return Nil();
+  }
 }
 

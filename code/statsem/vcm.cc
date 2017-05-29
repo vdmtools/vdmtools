@@ -1098,20 +1098,34 @@ Map StatSem::ExportInvs (const Generic & modid, const MAP<TYPE_AS_Name, TYPE_AS_
   Map invs;
   Generic tpnm;
   // typem : map AS`Name to AS`TypeDef
-  for (bool bb = dom_typem.First(tpnm); bb; bb = dom_typem.Next(tpnm))
-  {
+  for (bool bb = dom_typem.First(tpnm); bb; bb = dom_typem.Next(tpnm)) {
     TYPE_AS_TypeDef tpdef (typem[tpnm]);
     const TYPE_AS_Name & nm     (tpdef.GetRecord(pos_AS_TypeDef_nm));
     const TYPE_AS_Type & tp     (tpdef.GetRecord(pos_AS_TypeDef_shape));
     const Generic & Invar       (tpdef.GetField(pos_AS_TypeDef_Inv));
+    const Generic & Eq          (tpdef.GetField(pos_AS_TypeDef_Eq));
+    const Generic & Ord         (tpdef.GetField(pos_AS_TypeDef_Ord));
     const TYPE_AS_Access & accs (tpdef.GetField(pos_AS_TypeDef_access));
 
-    if (!Invar.IsNil ())
-    {
+    if (!Invar.IsNil ()) {
       SEQ<TYPE_REP_TypeRep> sq;
       sq.ImpAppend (TransType(modid, tp));
       TYPE_REP_TotalFnTypeRep fntp (mk_REP_TotalFnTypeRep(sq, btp_bool));
       invs.ImpModify(SetName(modid, Inv (nm)), MakeFnRng(fntp, accs, Bool(true)));
+    }
+    if (!Eq.IsNil ()) {
+      SEQ<TYPE_REP_TypeRep> sq;
+      sq.ImpAppend (TransType(modid, tp));
+      sq.ImpAppend (TransType(modid, tp));
+      TYPE_REP_TotalFnTypeRep fntp (mk_REP_TotalFnTypeRep(sq, btp_bool));
+      invs.ImpModify(SetName(modid, Equality (nm)), MakeFnRng(fntp, accs, Bool(true)));
+    }
+    if (!Ord.IsNil ()) {
+      SEQ<TYPE_REP_TypeRep> sq;
+      sq.ImpAppend (TransType(modid, tp));
+      sq.ImpAppend (TransType(modid, tp));
+      TYPE_REP_TotalFnTypeRep fntp (mk_REP_TotalFnTypeRep(sq, btp_bool));
+      invs.ImpModify(SetName(modid, Order (nm)), MakeFnRng(fntp, accs, Bool(true)));
     }
   }
   return invs;
@@ -1127,8 +1141,7 @@ Map StatSem::ExportPrePostFns (const Generic & modid, const MAP<TYPE_AS_Name, TY
   Map fns;
   Generic fnnm;
   // fnm : map AS`Name to AS`FnDef
-  for (bool bb = dom_fnm.First(fnnm); bb; bb = dom_fnm.Next(fnnm))
-  {
+  for (bool bb = dom_fnm.First(fnnm); bb; bb = dom_fnm.Next(fnnm)) {
     TYPE_AS_FnDef fndef (fnm[fnnm]);
 
     switch(fndef.GetTag()) {

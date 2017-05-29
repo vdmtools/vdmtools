@@ -566,6 +566,8 @@ private:
   TYPE_AS_Name Inv (const TYPE_AS_Name & nm) const;
   TYPE_AS_Name Post (const TYPE_AS_Name & nm) const;
   TYPE_AS_Name Pre (const TYPE_AS_Name & nm) const;
+  TYPE_AS_Name Equality (const TYPE_AS_Name & nm) const;
+  TYPE_AS_Name Order (const TYPE_AS_Name & nm) const;
   bool IsPrePostFn(const TYPE_AS_Name &) const;
 public:
   TYPE_AS_Name ExtName (const TYPE_AS_Name & mod, const TYPE_AS_Name & nm) const;
@@ -664,6 +666,8 @@ private:
   bool wf_TypeList (const Int &, const SEQ<TYPE_AS_Type> &);
   bool wf_Type (const Int & i, const TYPE_AS_Type & tp);
   bool wf_TypeInv (const Int & i, const TYPE_REP_TypeRep & Type, const Generic & Inv, const TYPE_AS_Name & nm);
+  bool wf_TypeEq (const Int & i, const TYPE_REP_TypeRep & Type, const Generic & Eq, const TYPE_AS_Name & nm);
+  bool wf_TypeOrd (const Int & i, const TYPE_REP_TypeRep & Type, const Generic & Ord, const TYPE_AS_Name & nm);
   bool wf_ImplFunction (const Int & i, const TYPE_AS_ImplFnDef & vFnDef);
   bool wf_ExplFunction (const Int & i, const TYPE_AS_ExplFnDef & vFnDef);
   bool wf_ExtExplFunction (const Int & i, const TYPE_AS_ExtExplFnDef & vFnDef);
@@ -916,6 +920,7 @@ private:
   bool CheckOperationName (const TYPE_AS_Name&);
   bool ExpandDefinitions (const Int & i, const TYPE_AS_Name & nm, const TYPE_AS_Definitions & defs);
   SET<TYPE_AS_Name> UsedStateIds(const SET<TYPE_AS_Name> &);
+  bool HasOrderFn(const Int & i, const TYPE_REP_TypeRep & type);
   bool ExpandTypes (const TYPE_AS_Name &, const MAP<TYPE_AS_Name, TYPE_AS_TypeDef> &);
   bool ExtractFunctionSignatures (const MAP<TYPE_AS_Name,TYPE_AS_FnDef> &);
 

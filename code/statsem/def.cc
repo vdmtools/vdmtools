@@ -176,6 +176,8 @@ bool StatSem::wf_TypeDefs (const Int & i, const Map & tp_m)
     const TYPE_AS_Name & nm    (rc.GetRecord(pos_AS_TypeDef_nm));
     const TYPE_AS_Type & Tp    (rc.GetRecord(pos_AS_TypeDef_shape));
     const Generic & Inv        (rc.GetField (pos_AS_TypeDef_Inv));
+    const Generic & Eq         (rc.GetField (pos_AS_TypeDef_Eq));
+    const Generic & Ord        (rc.GetField (pos_AS_TypeDef_Ord));
 #ifdef VDMPP
     const TYPE_AS_Access & acc (rc.GetField (pos_AS_TypeDef_access));
 #endif //VDMPP
@@ -199,6 +201,8 @@ bool StatSem::wf_TypeDefs (const Int & i, const Map & tp_m)
       reswf = false;
     }
     reswf = wf_TypeInv (i, tprep, Inv, nm) && reswf;
+    reswf = wf_TypeEq (i, tprep, Eq, nm) && reswf;
+    reswf = wf_TypeOrd (i, tprep, Ord, nm) && reswf;
   }
   PopContext ();
   return reswf;
@@ -422,12 +426,10 @@ bool StatSem::wf_TypeInv (const Int & i,
                                const Generic & Inv,
                                const TYPE_AS_Name & nm)
 {
-  if (Inv.IsNil())
-  {
+  if (Inv.IsNil()) {
     return true;
   }
-  else
-  {
+  else {
     TYPE_AS_Invariant inv (Inv);
     const TYPE_AS_Pattern & pat (inv.GetRecord(pos_AS_Invariant_pat));
     const TYPE_AS_Expr & expr (inv.GetRecord(pos_AS_Invariant_expr));
@@ -445,8 +447,7 @@ bool StatSem::wf_TypeInv (const Int & i,
     Tuple infer1 (wf_Pattern (i, pat, Type));
     const Generic & wf_pat (infer1.GetField(1)); // [bool]
 
-    if (wf_pat == Bool(false))
-    {
+    if (wf_pat == Bool(false)) {
       //----------------------------------------------------
       // Error message #352
       // Invariant pattern is different from type definition
@@ -461,6 +462,132 @@ bool StatSem::wf_TypeInv (const Int & i,
     LeaveScope();
 
     reswf = reswf && (wf_pat == Bool(true)) && wf_body;
+
+    return reswf;
+  }
+}
+
+// wf_TypeEq
+// i : TYPE`Ind
+// Type : REP`TypeRep
+// Inv : [AS`Equal]
+// nm : AS`Name
+// ==> bool
+bool StatSem::wf_TypeEq (const Int & i,
+                         const TYPE_REP_TypeRep & Type,
+                         const Generic & Eq,
+                         const TYPE_AS_Name & nm)
+{
+  if (Eq.IsNil()) {
+    return true;
+  }
+  else {
+    TYPE_AS_Equal eq (Eq);
+    const TYPE_AS_Pattern & lhs (eq.GetRecord(pos_AS_Equal_lhs));
+    const TYPE_AS_Pattern & rhs (eq.GetRecord(pos_AS_Equal_rhs));
+    const TYPE_AS_Expr & expr (eq.GetRecord(pos_AS_Equal_expr));
+
+    bool reswf = true;
+    if (ExtractPatternName (lhs).Dom().InSet (nm)) {
+      //----------------------------------------------------
+      // Error message #463
+      // Pattern in equality must not be the type name L"%1"
+      //----------------------------------------------------
+      GenErr (lhs, ERR, 463, mk_sequence(PrintName (nm)));
+      reswf = false;
+    }
+    if (ExtractPatternName (rhs).Dom().InSet (nm)) {
+      //----------------------------------------------------
+      // Error message #463
+      // Pattern in equality must not be the type name L"%1"
+      //----------------------------------------------------
+      GenErr (rhs, ERR, 463, mk_sequence(PrintName (nm)));
+      reswf = false;
+    }
+
+    Tuple infer1 (wf_Pattern (i, lhs, Type));
+    const Generic & wf_lhs (infer1.GetField(1)); // [bool]
+    Tuple infer2 (wf_Pattern (i, rhs, Type));
+    const Generic & wf_rhs (infer2.GetField(1)); // [bool]
+
+    if ((wf_lhs == Bool(false)) || (wf_rhs == Bool(false))) {
+      //----------------------------------------------------
+      // Error message #464
+      // Equality pattern is different from type definition
+      //----------------------------------------------------
+      GenErr (nm, ERR,464, Sequence());
+    }
+
+    EnterScope(infer1.GetMap(2).Override(infer2.GetMap(2)));
+
+    Tuple infer3 (wf_Pred(i, expr, EQUALITY));
+    const Bool & wf_body (infer3.GetBool(1));
+    LeaveScope();
+
+    reswf = reswf && (wf_lhs == Bool(true)) && (wf_rhs == Bool(true)) && wf_body;
+
+    return reswf;
+  }
+}
+
+// wf_TypeOrd
+// i : TYPE`Ind
+// Type : REP`TypeRep
+// Inv : [AS`Equal]
+// nm : AS`Name
+// ==> bool
+bool StatSem::wf_TypeOrd (const Int & i,
+                          const TYPE_REP_TypeRep & Type,
+                          const Generic & Ord,
+                          const TYPE_AS_Name & nm)
+{
+  if (Ord.IsNil()) {
+    return true;
+  }
+  else {
+    TYPE_AS_Equal ord (Ord);
+    const TYPE_AS_Pattern & lhs (ord.GetRecord(pos_AS_Equal_lhs));
+    const TYPE_AS_Pattern & rhs (ord.GetRecord(pos_AS_Equal_rhs));
+    const TYPE_AS_Expr & expr (ord.GetRecord(pos_AS_Equal_expr));
+
+    bool reswf = true;
+    if (ExtractPatternName (lhs).Dom().InSet (nm)) {
+      //----------------------------------------------------
+      // Error message #466
+      // Pattern in equality must not be the type name L"%1"
+      //----------------------------------------------------
+      GenErr (lhs, ERR, 466, mk_sequence(PrintName (nm)));
+      reswf = false;
+    }
+    if (ExtractPatternName (rhs).Dom().InSet (nm)) {
+      //----------------------------------------------------
+      // Error message #466
+      // Pattern in equality must not be the type name L"%1"
+      //----------------------------------------------------
+      GenErr (rhs, ERR, 466, mk_sequence(PrintName (nm)));
+      reswf = false;
+    }
+
+    Tuple infer1 (wf_Pattern (i, lhs, Type));
+    const Generic & wf_lhs (infer1.GetField(1)); // [bool]
+    Tuple infer2 (wf_Pattern (i, rhs, Type));
+    const Generic & wf_rhs (infer2.GetField(1)); // [bool]
+
+    if ((wf_lhs == Bool(false)) || (wf_rhs == Bool(false))) {
+      //----------------------------------------------------
+      // Error message #467
+      // Equality pattern is different from type definition
+      //----------------------------------------------------
+      GenErr (nm, ERR,467, Sequence());
+    }
+
+    EnterScope(infer1.GetMap(2).Override(infer2.GetMap(2)));
+
+    Tuple infer3 (wf_Pred(i, expr, EQUALITY));
+    const Bool & wf_body (infer3.GetBool(1));
+    LeaveScope();
+
+    reswf = reswf && (wf_lhs == Bool(true)) && (wf_rhs == Bool(true)) && wf_body;
 
     return reswf;
   }
@@ -1222,22 +1349,21 @@ bool StatSem::wf_ExtExplFunction (const Int & i, const TYPE_AS_ExtExplFnDef & vF
 // wf_Pred
 // i : TYPE`Ind
 // Pred : [AS`Expr]
-// kind : (<PRE>|<POST>|<INV>|<INIT>|<EXCEP>)
+// kind : (<PRE>|<POST>|<INV>|<INIT>|<EXCEP>|<EQ>|<ORD>)
 // ==> bool * REP`TypeRep
 Tuple StatSem::wf_Pred (const Int & i, const Generic & Pred, const Int & kind)
 {
-  if (Pred.IsNil())
+  if (Pred.IsNil()) {
     return mk_(Bool(true), btp_bool);
-  else
-  {
+  }
+  else {
     Tuple infer (wf_Expr (i, Pred, btp_bool));
     const Bool & wf_pred (infer.GetBool(1));
     const TYPE_REP_TypeRep & tp (infer.GetRecord(2));
 
     Bool com (IsCompatible (i, tp, btp_bool));
 
-    if (!com)
-    {
+    if (!com) {
       switch(kind) {
         case PRE: {
           //-----------------------------------------
@@ -1277,6 +1403,22 @@ Tuple StatSem::wf_Pred (const Int & i, const Generic & Pred, const Int & kind)
           // Exception condition must be boolean expression
           //-----------------------------------------------
           GenErrTp (Pred, ERR, 17, tp, btp_bool, Sequence());
+          break;
+        }
+        case EQUALITY: {
+          //-----------------------------------------------
+          // Error message #465
+          // Equality condition must be boolean expression
+          //-----------------------------------------------
+          GenErrTp (Pred, ERR, 465, tp, btp_bool, Sequence());
+          break;
+        }
+        case ORDER: {
+          //-----------------------------------------------
+          // Error message #468
+          // Order condition must be boolean expression
+          //-----------------------------------------------
+          GenErrTp (Pred, ERR, 468, tp, btp_bool, Sequence());
           break;
         }
       }
