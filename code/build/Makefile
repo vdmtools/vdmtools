@@ -2949,9 +2949,9 @@ CORBA_CPPFLAGS = $(CORBA_API)
 CORBA_ARCH_LIB = -lomniORB4 -lomnithread -lomniDynamic4
 IDLCCFLACS = -bcxx -Wbs=SK.cc 
 IDLCC = $(CORBABIN_DIR)/omniidl $(IDLCCFLACS)
-CORBA_DIST_BIN = $(CORBABIN_DIR)/cygomniORB4.dll.2.1 \
-	    $(CORBABIN_DIR)/cygomniDynamic4.dll.2.1 \
-	    $(CORBABIN_DIR)/cygomnithread.dll.4.0
+CORBA_DIST_BIN = $(shell readlink -f $(CORBABIN_DIR)/cygomniORB4.dll) \
+	    $(shell readlink -f $(CORBABIN_DIR)/cygomniDynamic4.dll) \
+	    $(shell readlink -f $(CORBABIN_DIR)/cygomnithread.dll)
 endif
 
 #

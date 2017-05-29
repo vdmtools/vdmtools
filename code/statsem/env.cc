@@ -5146,6 +5146,9 @@ SET<TYPE_AS_Name> StatSem::UsedStateIds(const SET<TYPE_AS_Name> & ids_org)
 bool StatSem::HasOrderFn(const Int & i, const TYPE_REP_TypeRep & type)
 {
   switch (type.GetTag()) {
+    case TAG_TYPE_REP_NumericTypeRep: {
+      return true;
+    }
     case TAG_TYPE_REP_TypeNameRep: {
       return !LookUp(Order(type.GetRecord(pos_REP_TypeNameRep_nm)), false).IsNil();
     }

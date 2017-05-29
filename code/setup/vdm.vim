@@ -23,7 +23,7 @@ syn keyword     vdmConstant     nil
 syn keyword     vdmConditional  if then else elseif
 syn keyword     vdmStatement    let def be st
 syn keyword     vdmStatement    cases others 
-syn keyword     vdmStatement    pre post inv 
+syn keyword     vdmStatement    pre post inv ord eq
 syn keyword     vdmStatement    compose
 syn keyword     vdmStatement    state init
 syn keyword     vdmStatement    forall exists exists1 iota
