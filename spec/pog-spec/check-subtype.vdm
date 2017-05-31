@@ -1131,6 +1131,8 @@ functions
 
   IsSubtype : REP`TypeRep * REP`TypeRep * set of (REP`TypeNameRep * REP`TypeNameRep) -> bool
   IsSubtype (tp1', tp2', assump) ==
+    def modnm = SPEC_AST`GetModuleName();
+    in
     let
 #ifdef VDMSL
       tp1 = tp1',
@@ -1189,6 +1191,13 @@ functions
             mk_REP`CompositeTypeRep(tag,fields2)) -> len fields1 = len fields2 and
                                                      forall i in set inds fields1 &
                                                        IsSubtype(fields1(i).tp, fields2(i).tp,assump),
+        mk_(mk_REP`CompositeTypeRep(tag1,fields),
+            mk_REP`CompositeTypeRep(tag2,fields))
+                 -> cases mk_(tag1.ids, tag2.ids):
+                       mk_([nm],[-,nm]) -> modnm.ids ^ tag1.ids = tag2.ids,
+                       mk_([-,nm],[nm]) -> tag1.ids = modnm.ids ^ tag2.ids,
+                       others               -> false
+                     end,
        mk_(mk_REP`UnionTypeRep(etps1),-) -> forall tp in set etps1 & IsSubtype (tp,tp2,assump),
        mk_(-,mk_REP`UnionTypeRep(etps2)) -> exists tp in set etps2 & IsSubtype(tp1,tp,assump),
         mk_(mk_REP`PartialFnTypeRep(fndom1,fnrng1),
