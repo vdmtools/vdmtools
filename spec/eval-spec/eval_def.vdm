@@ -1368,7 +1368,6 @@ predicate function for an implicit operation definition.
 \begin{vdm_al}
 TransTpDefMap: map AS`Name to AS`TypeDef ==> map AS`Name to GLOBAL`RecSel
 TransTpDefMap(tm) ==
-  --TransTP({mk_(shape,RealAccess(access,<TP>)) | mk_AS`TypeDef(-,shape,-,access,-) in set rng tm });
   TransTP({mk_(shape,access) | mk_AS`TypeDef(-,shape,-,-,-,access,-) in set rng tm });
 \end{vdm_al}
 #endif VDMSL
@@ -1381,7 +1380,6 @@ TransTP(typeset) ==
   else
     let mk_(type,access) in set typeset
     in
-     --(dcl tmp : map AS`Name to ((nat * (map AS`Name  to nat) * seq of AS`Type) * AS`Access) := {|->};
      (dcl tmp : map AS`Name to GLOBAL`RecSel := {|->};
       cases type :
         mk_AS`CompositeType(nm,fields,-) -> tmp := { nm |-> TCompT(fields, access) } munion

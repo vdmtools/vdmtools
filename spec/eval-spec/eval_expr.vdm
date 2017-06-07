@@ -1285,7 +1285,7 @@ the current module.
 \begin{vdm_al}
 operations
 
-GetExtFnOpVal : AS`Name * AS`Name ==> bool * [SEM`VAL]
+GetExtFnOpVal : AS`Name * AS`Name ==> bool * [(SEM`DLFN|SEM`DLOP)]
 GetExtFnOpVal (loc_name, mod_name) ==
   def mk_GLOBAL`SigmaIMO(extfns,extops,-,-,-,-,-) = STATE`GetDLModule (mod_name)
   in
