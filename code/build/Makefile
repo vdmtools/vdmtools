@@ -2886,7 +2886,7 @@ CFLAGS-tools-rt.o += $(CORBAINC) $(CORBA_CPPFLAGS)
 # Win32
 #
 ifeq ($(strip $(OSTYPE)),win32)
-CORBADIR ?= C:/omniORB-4.2.1
+CORBADIR ?= C:/omniORB-4.2.2
 CORBADIR_CYGWIN = $(shell cygpath -u $(CORBADIR))
 CORBA_CPPFLAGS = -D__WIN32__ -D__x86__ -D_WIN32_WINNT=0x400 -D__NT__ -D__OSVERSION__=4 $(CORBA_API)
 CORBALIBDIR = $(CORBADIR)/lib/x86_win32
@@ -2912,23 +2912,23 @@ endif
 
 ifdef WINDEBUG
 CORBA_ARCH_LIB = \
-	$(CORBALIBDIR)/omniORB421_rtd.lib \
-	$(CORBALIBDIR)/omniDynamic421_rtd.lib \
+	$(CORBALIBDIR)/omniORB422_rtd.lib \
+	$(CORBALIBDIR)/omniDynamic422_rtd.lib \
 	$(CORBALIBDIR)/omnithread40_rtd.lib \
 	wsock32.lib
 CORBA_DLL = \
-	$(CORBABINDIR)/omniORB421_$(VCVER)_rtd.dll \
-	$(CORBABINDIR)/omniDynamic421_$(VCVER)_rtd.dll \
+	$(CORBABINDIR)/omniORB422_$(VCVER)_rtd.dll \
+	$(CORBABINDIR)/omniDynamic422_$(VCVER)_rtd.dll \
 	$(CORBABINDIR)/omnithread40_$(VCVER)_rtd.dll
 else
 CORBA_ARCH_LIB = \
-	$(CORBALIBDIR)/omniORB421_rt.lib \
-	$(CORBALIBDIR)/omniDynamic421_rt.lib \
+	$(CORBALIBDIR)/omniORB422_rt.lib \
+	$(CORBALIBDIR)/omniDynamic422_rt.lib \
 	$(CORBALIBDIR)/omnithread40_rt.lib \
 	wsock32.lib
 CORBA_DLL = \
-	$(CORBABINDIR)/omniORB421_$(VCVER)_rt.dll \
-	$(CORBABINDIR)/omniDynamic421_$(VCVER)_rt.dll \
+	$(CORBABINDIR)/omniORB422_$(VCVER)_rt.dll \
+	$(CORBABINDIR)/omniDynamic422_$(VCVER)_rt.dll \
 	$(CORBABINDIR)/omnithread40_$(VCVER)_rt.dll
 endif
 

@@ -81,7 +81,7 @@ module STATE
         GetOperationVal : AS`Name *AS`Name ==> SEM`VAL;
         IsPoly : AS`Name * AS`Name ==> bool;
         GetPolyVal : AS`Name * AS`Name ==> SEM`VAL;
-        GetExtFnOpVal : AS`Name * AS`Name ==> bool * [SEM`VAL];
+        GetExtFnOpVal : AS`Name * AS`Name ==> bool * [(SEM`DLFN|SEM`DLOP)];
         GetExtVal : AS`Name * AS`Name ==> bool * [SEM`VAL];
         GetApproxVal : SEM`LOC * AS`Name * seq of SEM`VAL ==> SEM`VAL;
         IsDefApproxVal : SEM`LOC * AS`Name ==> bool;

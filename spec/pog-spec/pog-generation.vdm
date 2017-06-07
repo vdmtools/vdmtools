@@ -816,15 +816,15 @@ VerifyIteration (lhs,rhs,fv,cid,contxt) ==
 VerifyMapIteration : AS`Expr * AS`Expr * CI`ContextId * POGTP`Context -> seq of POGTP`ProofObligation
 VerifyMapIteration (lhs,rhs,cid,contxt) ==
   let ----- Build conclusion for PO -------------
-      eq_zero     = mk_AS`BinaryExpr(rhs, <EQ>, mk_AS`RealLit(0,CI`NilContextId), CI`NilContextId),
-      eq_one      = mk_AS`BinaryExpr(rhs, <EQ>, mk_AS`RealLit(1,CI`NilContextId), CI`NilContextId),
+      equal_zero     = mk_AS`BinaryExpr(rhs, <EQ>, mk_AS`RealLit(0,CI`NilContextId), CI`NilContextId),
+      equal_one      = mk_AS`BinaryExpr(rhs, <EQ>, mk_AS`RealLit(1,CI`NilContextId), CI`NilContextId),
       rng_sub_dom = mk_AS`BinaryExpr(mk_AS`PrefixExpr(<MAPRNG>, lhs, CI`NilContextId),
                                      <SUBSET>,
                                      mk_AS`PrefixExpr(<MAPDOM>, lhs, CI`NilContextId),
                                      CI`NilContextId),
-      po_cond     = mk_AS`BinaryExpr(eq_zero,
+      po_cond     = mk_AS`BinaryExpr(equal_zero,
                                      <OR>,
-                                     mk_AS`BinaryExpr(eq_one, <OR>, rng_sub_dom, CI`NilContextId),
+                                     mk_AS`BinaryExpr(equal_one, <OR>, rng_sub_dom, CI`NilContextId),
                                      CI`NilContextId),
       ------ Build PO ---------------------------
       po_expr = BuildPO(contxt.expr,po_cond),
