@@ -1,4 +1,0 @@
-
-<MissileA>
-<MissileB>
-<MissileC>
