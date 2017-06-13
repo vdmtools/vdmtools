@@ -27,6 +27,7 @@ module EXPR
         IsNat : SEM`VAL -> bool;
         IsInt : SEM`VAL -> bool;
         OrderName: AS`Name -> AS`Name;
+        EqualityName: AS`Name -> AS`Name;
 
       operations 
         IsRecSel : AS`Name ==> bool;
@@ -932,8 +933,34 @@ EvalLogUnaryExpr (opr, op_v) ==
 EvalEqNeBinaryExpr: SEM`VAL * AS`BinaryOp * SEM`VAL ==> SEM`VAL
 EvalEqNeBinaryExpr(op1_v, op, op2_v) ==
   cases op:
-    <EQ>    -> cases op1_v:
-                 mk_SEM`UNDEF() -> return RTERR`ErrorVal(RTERR`UNDEF_ENCOUNTERED,op1_v,nil, []),
+    <EQ>    -> cases mk_(op1_v, op2_v):
+                 mk_(mk_SEM`UNDEF(),-) -> return RTERR`ErrorVal(RTERR`UNDEF_ENCOUNTERED,op1_v,nil, []),
+                 mk_(mk_SEM`REC(tag,-,-),mk_SEM`REC(tag,-,-)) ->
+                  (
+#ifdef VDMSL
+                   def mk_(ok,-,-,Eq,-,-) = AUX`IsTypeDef(tag)
+#endif VDMSL
+#ifdef VDMPP
+                   def mk_(ok,-,-,Eq,-,-,-) = AUX`IsTypeDef(tag)
+#endif VDMPP
+                   in
+                    if ok and Eq <> nil
+                    then
+                      def sp = [ mk_INSTRTP`LOOKUP(AUX`EqualityName(tag)),
+                                 mk_INSTRTP`PUSH([op1_v, op2_v]),
+                                 mk_INSTRTP`APPLY() ];
+                          res = DEBUG`EvalAuxProgram(sp, "Order evaluation", false) 
+                      in
+                        cases res:
+                          mk_(mk_STKM`Success(), Eq_v) ->
+                                cases true:
+                                  (is_SEM`BOOL(Eq_v)) -> return Eq_v,
+                                  others -> error
+                                end,
+                          others -> error
+                        end;
+                   return mk_SEM`BOOL(op1_v = op2_v);
+                  ),
                  others         -> return mk_SEM`BOOL(op1_v = op2_v)
                end,
     <NE>    -> cases op1_v:
