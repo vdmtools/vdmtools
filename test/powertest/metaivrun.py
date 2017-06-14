@@ -40,7 +40,7 @@ def execute(lang, type):
     report.setTestCaseName(name)
     
     if (total % jobSize) == 1:
-      report.Progress(2, "Handling test cases " + `total` + "..." +`total + jobSize - 1`)
+      report.Progress(2, "Handling test cases " + str(total) + "..." + str(total + jobSize - 1))
     report.Progress(3, "Running " + name)
     
     ok = RunTestCase(name, lang, type)

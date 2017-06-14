@@ -42,7 +42,7 @@ def executeSpec(lang):
   ok = convert.SetupSpecification(lang, 'cpp')
 
   if not ok:
-    report.Error("ABORTING specification test for " + `lang`)
+    report.Error("ABORTING specification test for '" + lang + "'")
     return 
 
   # counter to indicate progress
@@ -68,9 +68,9 @@ def executeSpec(lang):
 
     startIndex = total
     endIndex = total+len(testCases) -1
-    report.Progress(2, "Handling test cases " + `startIndex` + "..." + `endIndex`)
+    report.Progress(2, "Handling test cases " + str(startIndex) + "..." + str(endIndex))
 
-    # Prepare the next test run - the parameter `spec-job-size' tells how
+    # Prepare the next test run - the parameter 'spec-job-size' tells how
     # many testcases should be executed in each run.
     names = []
     util.DeleteFiles([".vdmtest"])
@@ -88,8 +88,8 @@ def executeSpec(lang):
 
     # Run the test cases
     if names != []:
-      report.Progress(3, "Running test cases " + `startIndex` + "..." + `endIndex`)
-      report.setTestCaseName("testcase " + `startIndex` + "..." + `endIndex`)
+      report.Progress(3, "Running test cases " + str(startIndex) + "..." + str(endIndex))
+      report.setTestCaseName("testcase " + str(startIndex) + "..." + str(endIndex))
       okNames = RunSpecTestCases(names, lang, coverageFile)
       util.MoveProfile()
 
@@ -126,7 +126,7 @@ def executeImpl(lang):
   while (name != None):
     report.setTestCaseName(name)
     if (total % jobSize) == 1:
-      report.Progress(2, "Handling test cases " + `total` + "..." + `total + jobSize-1`)
+      report.Progress(2, "Handling test cases " + str(total) + "..." + str(total + jobSize-1))
     report.Progress(3, "Running " + name)
 
     (ok, modules) = RunImplTestCase(name, lang)
@@ -335,7 +335,7 @@ def CompareRunTimeError(fullName, resFile):
       ok = (actualResult == expectedResult)
 
     if not ok:
-      report.Error("Actual result is different from expected result for " + `fullName`,
+      report.Error("Actual result is different from expected result for '" + fullName + "'",
                    "expected result : " + expectedResult + "\n" +
                    "actual result   : " + actualResult)
     return ok
@@ -380,7 +380,7 @@ def CreateUserdefFile(modules):
   ok = true
   for mod0 in modules:
     mod = string.replace(mod0, "_", "_u")
-    data = "#define TAG_" + mod + " " + `count*10000`+"\n"
+    data = "#define TAG_" + mod + " " + str(count*10000) +"\n"
     count = count +1
     ok = util.WriteFile(mod+"_userdef.h", data) and ok
 
@@ -554,8 +554,8 @@ def VerifyPresenceOfGeneratedFiles(fullName, modules):
     for thisext in extensions:
       if not util.UsesVisualStudio() or mod != 'MATH' or thisext != '.h':
         if not os.path.exists(mod+thisext):
-          report.Error("file " + `mod+thisext` + " was not generated for testcase " + `fullName`)
-          report.Progress(4,"file " + `mod+thisext` + " was not generated for testcase " + `fullName`)
+          report.Error("file '" + mod+thisext + "' was not generated for testcase '" + fullName +"'")
+          report.Progress(4,"file '" + mod+thisext + "' was not generated for testcase '" + fullName + "'")
           ok = false
   
   return ok

@@ -36,10 +36,10 @@ def execute(lang, testType):
 
   start_toolbox = cmdline.LookUp ('api-run-start-toolbox')
 
-  server_args = string.split (cmdline.LookUp ('server-init-args'), " ")
+  server_args = cmdline.LookUp ('server-init-args').split(" ")
    
   # corba-init-args is used to pass arguments to the orb
-  client_args = string.split (cmdline.LookUp ('corba-init-args'))
+  client_args = cmdline.LookUp ('corba-init-args').split()
   orb = CORBA.ORB_init (client_args, CORBA.ORB_ID)
 
   if start_toolbox == 'yes':
@@ -47,15 +47,15 @@ def execute(lang, testType):
     
     if pid == 0:
       report.Progress(3, "Trying to start "+lang+"-toolbox: "+vdmServer)
-      os.system (vdmServer + " " + string.join (server_args) + " > tb_output.tmp 2>&1")
+      os.system (vdmServer + " " + "".join (server_args) + " > tb_output.tmp 2>&1")
       #os.execv (vdmServer, args)
       report.Error ("Startup of Toolbox failed!")
       return false
       _exit (-1)
     
-#    print "Waiting 5 seconds for "+lang+"-server to start up..."
+#    print ("Waiting 5 seconds for " + lang + "-server to start up...")
 #    time.sleep (5)
-    print "Waiting 2 seconds for "+lang+"-server to start up..."
+    print ("Waiting 2 seconds for " + lang + "-server to start up...")
     time.sleep (2)
     
   if environ.has_key ("VDM_OBJECT_LOCATION"):
@@ -81,13 +81,13 @@ def execute(lang, testType):
 
   try:
     vdmApp = orb.string_to_object (stringified_ior)
-  except CORBA.COMM_FAILURE, ex:
-    print "CORBA.COMM_FAILUR"
-    print ex
+  except CORBA.COMM_FAILURE as ex:
+    print ("CORBA.COMM_FAILUR")
+    print (ex)
     vdmApp = None
-  except CORBA.MARSHAL, ex:
-    print "CORBA.MARSHAL"
-    print ex #
+  except CORBA.MARSHAL as ex:
+    print ("CORBA.MARSHAL")
+    print (ex) #
     vdmApp = None
   
   if vdmApp is None:
@@ -124,7 +124,7 @@ def execute(lang, testType):
         os.kill (pid, 9)
       return false
     else:
-      print vdmServer + " is a " + lang + "-server"
+      print (vdmServer + " is a " + lang + "-server")
 
     clientID = vdmApp.Register ()
 
@@ -177,17 +177,17 @@ class ToolMediator:
   def ParseCommand (self, cmd, name, line):
     ################# General
     m = re.compile ('^_print\((?P<str>.*)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       return m.group ('str') + "\n"
 
     m = re.compile ('^_exists file\((?P<filename>.*)\)').match (cmd)
-    if m <> None:
+    if m != None:
       if os.path.exists (m.group ('filename')):
         return "true\n"
       return "false\n"
 
     m = re.compile ('^_delete file\((?P<filename>.*)\)').match (cmd)
-    if m <> None:
+    if m != None:
       try:
         os.unlink (m.group ('filename'))
       except:
@@ -197,48 +197,48 @@ class ToolMediator:
     ################# VDMProject
     
     # VDMProject.New () = new project
-    if re.compile ('^new project$').match (cmd) <> None:
+    if re.compile ('^new project$').match (cmd) != None:
       self.vdmProject.New ()
       return ""
 
     # VDMProject.Open () = open project (filename)
     m = re.compile ('^open project\((?P<filename>.*)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       self.vdmProject.Open (m.group ('filename'))
       return ""
 
     # VDMProject.SaveAs (filename) = save as (filename)
     m = re.compile ('^save$').match (cmd)
-    if m <> None:
+    if m != None:
       self.vdmProject.Save ()
       return ""
 
 
     # VDMProject.SaveAs (filename) = save as (filename)
     m = re.compile ('^save as\((?P<filename>.*)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       self.vdmProject.SaveAs (m.group ('filename'))
       return ""
 
     # VDMProject.GetModules () = get modules
-    if re.compile ('^get modules$').match (cmd) <> None:
+    if re.compile ('^get modules$').match (cmd) != None:
       (res, modules) = self.vdmProject.GetModules ()
       return string.join (modules, "\n") + "\n"
 
     # VDMProject.GetFiles () = get files
-    if re.compile ('^get files$').match (cmd) <> None:
+    if re.compile ('^get files$').match (cmd) != None:
       (res, files) = self.vdmProject.GetFiles ()
       return string.join (files, "\n") + "\n"
 
     # VDMProject.AddFile = add file (filename)
     m = re.compile ('^add file\((?P<filename>.*)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       self.vdmProject.AddFile (m.group ('filename'))
       return ""
 
     # VDMProject.RemoveFile = remove file (filename)
     m = re.compile ('^remove file\((?P<filename>.*)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       self.vdmProject.RemoveFile (m.group ('filename'))
       return ""
 
@@ -246,30 +246,29 @@ class ToolMediator:
 
     # VDMModuleRepos.FilesOfModule = files of module (modulename)
     m = re.compile ('^files of module\((?P<modulename>.*)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       (res, flist) = self.vdmModuleRepos.FilesOfModule (m.group ('modulename'))
       return string.join (flist, "\n") + "\n"
     
     # VDMModuleRepos.GetCurrentModule = current module
-    if re.compile ('^current module$').match (cmd) <> None:
+    if re.compile ('^current module$').match (cmd) != None:
       res = self.vdmModuleRepos.GetCurrentModule () + "\n"
-#      print res
       return res
 
     # VDMModuleRepos.GetCurrentModule = pop module
-    if re.compile ('^pop module$').match (cmd) <> None:
+    if re.compile ('^pop module$').match (cmd) != None:
       self.vdmModuleRepos.PopModule ()
       return ""
 
     # VDMModuleRepos.PushModule = push module (modulename)
     m = re.compile ('^push module\((?P<modulename>.*)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       self.vdmModuleRepos.PushModule (m.group ('modulename'))
       return ""
 
     # VDMModuleRepos.Status = status (modulename)
     m = re.compile ('^status\((?P<modulename>.*)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       status = self.vdmModuleRepos.Status (m.group ('modulename'))
       resStr = ""
       if status.SyntaxChecked:
@@ -292,32 +291,32 @@ class ToolMediator:
 
     # VDMModuleRepos.SuperClasses = superclasses (classname)
     m = re.compile ('^superclasses\((?P<classname>.*)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       (res, clist) = self.vdmModuleRepos.SuperClasses (m.group ('classname'))
       return string.join (clist, "\n") + "\n"
 
     # VDMModuleRepos.SubClasses = subclasses (classname)
     m = re.compile ('^subclasses\((?P<classname>.*)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       (res, clist) = self.vdmModuleRepos.SubClasses (m.group ('classname'))
       return string.join (clist, "\n") + "\n"
 
     # VDMModuleRepos.UsesOf = usesof (classname)
     m = re.compile ('^usesof\((?P<classname>.*)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       (res, clist) = self.vdmModuleRepos.UsesOf (m.group ('classname'))
       return string.join (clist, "\n") + "\n"
 
     # VDMModuleRepos.UsedBy = usedby (classname)
     m = re.compile ('^usedby\((?P<classname>.*)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       (res, clist) = self.vdmModuleRepos.UsedBy (m.group ('classname'))
       return string.join (clist, "\n") + "\n"
 
     ########### VDMInterpreter
     # VDMInterpreter.DynTypeCheck = set dtc [on|off]
     m = re.compile ('^set dtc ((on)|(off))$').match (cmd)
-    if m <> None:
+    if m != None:
       if m.group (1) == 'on':
         self.vdmInterpreter._set_DynTypeCheck (true)
       else:
@@ -326,7 +325,7 @@ class ToolMediator:
 
     # VDMInterpreter.DynInvCheck = set inv [on|off]
     m = re.compile ('^set inv ((on)|(off))$').match (cmd)
-    if m <> None:
+    if m != None:
       if m.group (1) == 'on':
         self.vdmInterpreter._set_DynInvCheck (true)
       else:
@@ -335,7 +334,7 @@ class ToolMediator:
 
     # VDMInterpreter.DynPreCheck = set pre [on|off]
     m = re.compile ('^set pre ((on)|(off))$').match (cmd)
-    if m <> None:
+    if m != None:
       if m.group (1) == 'on':
         self.vdmInterpreter._set_DynPreCheck (true)
       else:
@@ -344,7 +343,7 @@ class ToolMediator:
 
     # VDMInterpreter.DynPostCheck = set post [on|off]
     m = re.compile ('^set post ((on)|(off))$').match (cmd)
-    if m <> None:
+    if m != None:
       if m.group (1) == 'on':
         self.vdmInterpreter._set_DynPostCheck (true)
       else:
@@ -353,7 +352,7 @@ class ToolMediator:
 
     # VDMInterpreter.PPOfValues = set ppr [on|off]
     m = re.compile ('^set ppr ((on)|(off))$').match (cmd)
-    if m <> None:
+    if m != None:
       if m.group (1) == 'on':
         self.vdmInterpreter._set_PPOfValues (true)
       else:
@@ -362,7 +361,7 @@ class ToolMediator:
 
     # VDMInterpreter.Verbose = set verb [on|off]
     m = re.compile ('^set verb ((on)|(off))$').match (cmd)
-    if m <> None:
+    if m != None:
       if m.group (1) == 'on':
         self.vdmInterpreter._set_Verbose (true)
       else:
@@ -371,7 +370,7 @@ class ToolMediator:
 
     # VDMInterpreter.Debug = set dbg [on|off]
     m = re.compile ('^set ppr ((on)|(off))$').match (cmd)
-    if m <> None:
+    if m != None:
       if m.group (1) == 'on':
         self.vdmInterpreter._set_Debug (true)
       else:
@@ -379,19 +378,19 @@ class ToolMediator:
       return ""
 
     # VDMInterpreter.Initialize = init
-    if re.compile ('^init$').match (cmd) <> None:
+    if re.compile ('^init$').match (cmd) != None:
       self.vdmInterpreter.Initialize ()
       return ""
 
     # VDMInterpreter.EvalExpression = eval (expression)
     m = re.compile ('^eval\((?P<expression>.*)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       res = self.vdmInterpreter.EvalExpression (self.clientID, m.group ('expression'))
       return res.ToAscii () + "\n"
 
     # VDMInterpreter.EvalExpression = apply (expression) to [args]
     m = re.compile ('^apply\((?P<expression>.*)\)to\[(?P<arg>.*)\]$').match (cmd)
-    if m <> None:
+    if m != None:
       arg_str  =  "["+m.group ('arg')+"]"
       arg_eval = self.vdmInterpreter.EvalExpression (self.clientID,arg_str)
       expr_str = m.group ('expression')
@@ -400,58 +399,58 @@ class ToolMediator:
 
     # VDMInterpreter.EvalCmd = evalcmd (command)
     m = re.compile ('^evalcmd\((?P<command>.*)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       self.vdmInterpreter.EvalCmd (m.group ('command'))
       return ""
 
     # VDMInterpreter.SetBreakPointByPos = break (filename, line, col)
     m = re.compile ('^break\((?P<filename>.*?),(?P<line>\d+),(?P<col>\d+)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       num = self.vdmInterpreter.SetBreakPointByPos (m.group ('filename'), \
                                                     string.atoi (m.group ('line')), \
                                                     string.atoi (m.group ('col')))
-      return `num` + "\n"
+      return str(num) + "\n"
     
     # VDMInterpreter.SetBreakPointByName = break (modulename, func)
     m = re.compile ('^break\((?P<modulename>.*?),(?P<func>[a-zA-Z][\w`]*)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       num = self.vdmInterpreter.SetBreakPointByName (m.group ('modulename'), \
                                                      m.group ('func'))
-      return `num` + "\n"
+      return str(num) + "\n"
 
     # VDMInterpreter.DeleteBreakPoint = delete (number)
     m = re.compile ('^delete\((?P<number>\d+)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       self.vdmInterpreter.DeleteBreakPoint (string.atoi (m.group ('number')))
       return ""
 
     # VDMInterpreter.StartDebugging = debug (expression)
     m = re.compile ('^debug\((?P<expression>.*)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       res = self.vdmInterpreter.StartDebugging (self.clientID, m.group ('expression'))
       return res.ToAscii () + "\n"
 
     # VDMInterpreter.DebugStep = step
     m = re.compile ('^step$').match (cmd)
-    if m <> None:
+    if m != None:
       res = self.vdmInterpreter.DebugStep (self.clientID)
       return res.ToAscii () + "\n"
 
     # VDMInterpreter.DebugStepIn = stepin
     m = re.compile ('^stepin$').match (cmd)
-    if m <> None:
+    if m != None:
       res = self.vdmInterpreter.DebugStepIn (self.clientID)
       return res.ToAscii () + "\n"
 
     # VDMInterpreter.DebugSingleStep = singlestep
     m = re.compile ('^singlestep$').match (cmd)
-    if m <> None:
+    if m != None:
       res = self.vdmInterpreter.DebugSingleStep (self.clientID)
       return res.ToAscii () + "\n"
 
     # VDMInterpreter.DebugContinue = cont
     m = re.compile ('^cont$').match (cmd)
-    if m <> None:
+    if m != None:
       res = self.vdmInterpreter.DebugStep (self.clientID)
       return res.ToAscii () + "\n"
 
@@ -459,7 +458,7 @@ class ToolMediator:
 
     # VDMCodeGenerator.GeneratePosInfo = set genposinfo [on|off]
     m = re.compile ('^set genposinfo ((on)|(off))$').match (cmd)
-    if m <> None:
+    if m != None:
       if m.group (1) == 'on':
         self.vdmCodeGenerator._set_GeneratePosInfo (true)
       else:
@@ -468,8 +467,8 @@ class ToolMediator:
 
     # VDMCodeGenerator.CodeGenerateList = codegen [java|cpp] ([filename, filename, ...])
     m = re.compile ('^codegen (?P<lang>(java)|(cpp))\(\[(?P<modulenames>.*)\]\)$').match (cmd)
-    if m <> None:
-      mlist = string.split (m.group ('modulenames'), ",")
+    if m != None:
+      mlist = m.group ('modulenames').split(",")
       if m.group ('lang') == "java":
         res = self.vdmCodeGenerator.GenerateCodeList (mlist, ToolboxAPI.VDMCodeGenerator.JAVA)
       else:
@@ -480,7 +479,7 @@ class ToolMediator:
     
     # VDMCodeGenerator.CodeGenerate = codegen [java|cpp] (filename)
     m = re.compile ('^codegen (?P<lang>(java)|(cpp))\((?P<modulename>.*)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       if m.group ('lang') == "java":
         res = self.vdmCodeGenerator.GenerateCode (m.group ('modulename'), ToolboxAPI.VDMCodeGenerator.JAVA)
       else:
@@ -493,8 +492,8 @@ class ToolMediator:
 
     # VDMParser.ParseList = parse ([filename, filename, ...])
     m = re.compile ('^parse\(\[(?P<filenames>.*)\]\)$').match (cmd)
-    if m <> None:
-      flist = string.split (m.group ('filenames'), ",")
+    if m != None:
+      flist = m.group ('filenames').split(",")
       res = self.vdmParser.ParseList (flist)
       if res:
         return "true\n"
@@ -503,7 +502,7 @@ class ToolMediator:
 
     # VDMParser.Parse = parse (filename)
     m = re.compile ('^parse\((?P<filename>.*)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       parse_arg = m.group ('filename')
       res = self.vdmParser.Parse (parse_arg)
       if res:
@@ -516,8 +515,8 @@ class ToolMediator:
     
     # VDMTypeChecker.TypeCheckList = typecheck [pos|def] ([modulename, modulename, ...])
     m = re.compile ('^typecheck (?P<posdef>(pos)|(def))\(\[(?P<modulenames>.*)\]\)$').match (cmd)
-    if m <> None:
-      mlist = string.split (m.group ('modulenames'), ",")
+    if m != None:
+      mlist = m.group ('modulenames').split(",")
       if m.group ('posdef') == "pos":
         self.vdmTypeChecker._set_DefTypeCheck (false)
       else:
@@ -530,7 +529,7 @@ class ToolMediator:
 
     # VDMTypeChecker.TypeCheck = typecheck [pos|def] (filename)
     m = re.compile ('^typecheck (?P<posdef>(pos)|(def))\((?P<modulename>.*)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       if m.group ('posdef') == "pos":
         self.vdmTypeChecker._set_DefTypeCheck (false)
       else:
@@ -543,7 +542,7 @@ class ToolMediator:
 
     # VDMTypeChecker.ExtendedTypeCheck = set full [on|off]
     m = re.compile ('^set full ((on)|(off))$').match (cmd)
-    if m <> None:
+    if m != None:
       if m.group (1) == 'on':
         self.vdmTypeChecker._set_ExtendedTypeCheck (true)
       else:
@@ -554,8 +553,8 @@ class ToolMediator:
 
     # VDMPrettyPrinter.PrettyPrintList = prettyprint ([filename, filename, ...])
     m = re.compile ('^prettyprint\(\[(?P<filenames>.*)\]\)$').match (cmd)
-    if m <> None:
-      flist = string.split (m.group ('filenames'), ",")
+    if m != None:
+      flist = m.group ('filenames').split(",")
       res = self.vdmPrettyPrinter.PrettyPrintList (flist)
       if res:
         return "true\n"
@@ -563,7 +562,7 @@ class ToolMediator:
     
     # VDMPrettyPrinter.PrettyPrint = prettyprint (filename)
     m = re.compile ('^prettyprint\((?P<filename>.*)\)$').match (cmd)
-    if m <> None:
+    if m != None:
       res = self.vdmPrettyPrinter.PrettyPrint (m.group ('filename'))
       if res:
         return "true\n"
@@ -573,20 +572,20 @@ class ToolMediator:
     ############ VDMError
 
     # VDMErrors.GetErrors = get errors
-    if re.compile ('^get errors$').match (cmd) <> None:
+    if re.compile ('^get errors$').match (cmd) != None:
       (n, errList) = self.vdmErrors.GetErrors ()
       res = ""
       for err in errList:
-        res = res + err.fname + " ["+ `err.line` + "," + `err.col` + "] " + err.msg + "\n"
-      return res + "Errors: " + `n` + "\n"
+        res = res + err.fname + " ["+ str(err.line) + "," + str(err.col) + "] " + err.msg + "\n"
+      return res + "Errors: " + str(n) + "\n"
 
     # VDMErrors.GetWarnings = get warnings
-    if re.compile ('^get warnings$').match (cmd) <> None:
+    if re.compile ('^get warnings$').match (cmd) != None:
       (n, errList) = self.vdmErrors.GetWarnings ()
       res = ""
       for err in errList:
-        res = res + err.fname + " ["+ `err.line` + "," + `err.col` + "] " + err.msg + "\n"
-      return res + "Warnings: " + `n` + "\n"
+        res = res + err.fname + " ["+ str(err.line) + "," + str(err.col) + "] " + err.msg + "\n"
+      return res + "Warnings: " + str(n) + "\n"
       
     
     raise Syntax ("Unknown command") 
@@ -607,7 +606,7 @@ def RunTestCases (lang, vdmApp, clientID):
   while (name != None):
     report.setTestCaseName(name)
     if (total % jobSize) == 1:
-      report.Progress(2, "Handling test cases " + `total` + "..." + `total + jobSize-1`)
+      report.Progress(2, "Handling test cases " + str(total) + "..." + str(total + jobSize-1))
     report.Progress(3, "Running " + name)
 
     ok = RunApiTestCase(name, lang, toolMediator)
@@ -629,19 +628,19 @@ def RunApiTestCase (name, lang, toolMediator):
   symTable = {}
   symTable['GENPATH'] = os.path.expanduser(cmdline.LookUp ('api-gen-path'))
   symTable['SOURCEPATH'] = os.path.expanduser(cmdline.LookUp ('api-source-path'))
-  print symTable['GENPATH']
-  print symTable['SOURCEPATH']
-  commands = string.split (data, "\n")
+  print (symTable['GENPATH'])
+  print (symTable['SOURCEPATH'])
+  commands = data.split("\n")
   line, test = 0, 0
   empty = re.compile ('^\s*(#.*)|(\s*)$')
 
   interactive_mode = cmdline.LookUp ('api-run-interactive')
 
   for cmd in commands:
-    print "Command: ",  cmd
+    print ("Command: " + cmd)
 
     if interactive_mode == 'yes':
-      print "Press <return>"
+      print ("Press <return>")
       raw_input ()
     line = line + 1
     # don't process empty lines
@@ -659,7 +658,7 @@ def RunApiTestCase (name, lang, toolMediator):
 
         # find variable assignment
         m = re.compile ('^\$(?P<lval>\w+)=(?P<rval>.*)$').match (cmd)
-        if m <> None:
+        if m != None:
           lval = m.group ('lval')
           cmd  = m.group ('rval')
         else:
@@ -667,8 +666,8 @@ def RunApiTestCase (name, lang, toolMediator):
 
         # find variable usages and replace them by value
         m = re.compile ('^.*\$(?P<id>\w+).*$').match (cmd)
-        if m <> None:
-          while m <> None:
+        if m != None:
+          while m != None:
             var  = "\$" + m.group ('id')
             try:
               repl =  symTable[m.group('id')]
@@ -677,12 +676,12 @@ def RunApiTestCase (name, lang, toolMediator):
             cmd = re.sub (var, repl, cmd)
             m = re.compile ('^.*\$(?P<id>\w+).*$').match (cmd)
           
-        result = result + "-- " + `test` + "(in line "+ `line` +"):\n"
+        result = result + "-- " + str(test) + "(in line "+ str(line) +"):\n"
 
-        # print cmd + "\n"
+        # print (cmd)
         # parse and execute the command
-        last   = toolMediator.ParseCommand (cmd, name, line)
-        lines = string.split (last, '\n')
+        last  = toolMediator.ParseCommand (cmd, name, line)
+        lines = last.split('\n')
         pathexp = re.compile ('^.*/(.*\.(vdm|vpp|api))$')
         for l in lines:
           # neutralize path
@@ -690,30 +689,30 @@ def RunApiTestCase (name, lang, toolMediator):
         last   = re.sub ('\n$', '', last)
         last   = string.strip (re.sub ('\n', ',', last))
         
-        if lval <> "":
+        if lval != "":
           symTable[lval] = last
 
       except CORBA.COMM_FAILURE:
         raise CORBA.COMM_FAILURE
       except CORBA.BAD_PARAM:
-        result = result + "CORBA.BAD_PARAM in " + neutralName + ", line " + `line` + "\n"
-      except ToolboxAPI.APIError, e:
-        result = result + "APIError in " + neutralName + ", line " + `line` + ": " + e.msg + "\n"
-      except VDM.VDMError, e:
-        result = result +  "VDMError in " + neutralName + ", line " + `line` + ": " + `e.err` + "\n"
-      except Syntax, e:
-        result = result + "Syntax error in " + neutralName + ", line " + `line` + ": " + e.GetMessage () + "\n"
+        result = result + "CORBA.BAD_PARAM in " + neutralName + ", line " + str(line) + "\n"
+      except ToolboxAPI.APIError as e:
+        result = result + "APIError in " + neutralName + ", line " + str(line) + ": " + e.msg + "\n"
+      except VDM.VDMError as e:
+        result = result +  "VDMError in " + neutralName + ", line " + str(line) + ": " + str(e.err) + "\n"
+      except Syntax as e:
+        result = result + "Syntax error in " + neutralName + ", line " + str(line) + ": " + e.GetMessage () + "\n"
       except CORBA.UserException:
-        result = result + "CORBA.UserException: in " + baseName + ".api, line " + `line` + "\n"
-      except CORBA.SystemException, e:
-        print e
-        result = result + "CORBA.SystemException: in " + baseName + ".api, line " + `line` + "\n"
-      except Exception, e:
-        print "Python exception" 
-        print e.args
-        result = result + "Python exception in " + baseName + ".api, line " + `line` + "\n"
+        result = result + "CORBA.UserException: in " + baseName + ".api, line " + str(line) + "\n"
+      except CORBA.SystemException as e:
+        print (e)
+        result = result + "CORBA.SystemException: in " + baseName + ".api, line " + str(line) + "\n"
+      except Exception as e:
+        print ("Python exception")
+        print (e.args)
+        result = result + "Python exception in " + baseName + ".api, line " + str(line) + "\n"
       except:
-        result = result + "Unknown exception in " + baseName + ".api, line " + `line` + "\n"
+        result = result + "Unknown exception in " + baseName + ".api, line " + str(line) + "\n"
 
   ok = util.WriteFile (baseName+".tmp", result)
   if ok:

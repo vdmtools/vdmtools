@@ -6,11 +6,6 @@ true, false = 1,0
 def execute(lang, type):
   global ext, binext
 
-#  ok = convert.SetupSpecification(lang, 'j2vtf')
-#  if not ok:
-#    report.Error("ABORTING specification test for " + `lang`)
-#    return 
-
   #counter to indicate progress
   total = 1
   
@@ -34,7 +29,7 @@ def execute(lang, type):
     report.setTestCaseName(name)
     
     if (total % jobSize) == 1:
-      report.Progress(2, "Handling test cases " + `total` + "..." +`total + jobSize - 1`)
+      report.Progress(2, "Handling test cases " + str(total) + "..." + str(total + jobSize - 1))
     report.Progress(3, "Running " + name)
     
     ok = convert.ConvertLanguage(lang, name)

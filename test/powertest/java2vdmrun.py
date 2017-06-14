@@ -67,7 +67,7 @@ def executeSpec(lang):
 
   oneTestCase = cmdline.LookUp('java2vdm-test-case')
 
-  if oneTestCase<>"" :
+  if oneTestCase != "" :
     testCasesDirectories.append(oneTestCase)
   else:
     AddTestDirectoriesFromHierarchy(cmdline.GetTestCases('java2vdm'), lang)
@@ -81,10 +81,9 @@ def executeSpec(lang):
     startIndex = total
     
     endIndex = total+len(testCasesDirectories) -1
-    report.Progress(2, "Handling test cases " + `startIndex` + "..."
-                    + `endIndex`)
+    report.Progress(2, "Handling test cases " + str(startIndex) + "..." + str(endIndex))
 
-    # Prepare the next test run - the parameter `spec-job-size' tells how
+    # Prepare the next test run - the parameter 'spec-job-size' tells how
     # many testcases should be executed in each run.
     names = []
     util.DeleteFiles([".vdmtest"])
@@ -102,9 +101,8 @@ def executeSpec(lang):
 
     # Run the test cases
     if names != []:
-      report.Progress(3, "Running test cases " + `startIndex` + "..."
-                      + `endIndex`)
-      report.setTestCaseName("testcase " + `startIndex` + "..." + `endIndex`)
+      report.Progress(3, "Running test cases " + str(startIndex) + "..." + str(endIndex))
+      report.setTestCaseName("testcase " + str(startIndex) + "..." + str(endIndex))
       (okNames, modules) = RunSpecTestCases(names, lang, coverageFile)
 
     # Clean Up.
@@ -162,8 +160,7 @@ def executeImpl(lang):
     test = testCases[0]
     report.setTestCaseName(test)
     if (total % jobSize) == 1:
-      report.Progress(2, "Handling test cases " + `total` + "..." +
-                      `total + jobSize-1`)
+      report.Progress(2, "Handling test cases " + str(total) + "..." + str(total + jobSize-1))
     ok = RunImplTestCase(test, lang)
     total = total +1
 
@@ -343,7 +340,7 @@ def PrepareSpecCaseDir(dirName, lang):
 
   while ok and (testCases != []):
     test = GetNextTest()
-    if os.path.abspath(test)<>os.path.abspath(mainJava):
+    if os.path.abspath(test) != os.path.abspath(mainJava):
       javafiles = javafiles + test + " "
 
 #  javafiles = javafiles + setup.BaseDir+"/../j2v-test/Object.java "
@@ -421,7 +418,7 @@ def RunSpecTestCases(fullNames, lang, coverageFile):
   (exitCode, dummy1, dummy2) = util.RunCommand(cmd, 0, 
                              "Possible core dump while interpreting specification.",true)
   ok = exitCode==0
-  if exitCode<>0:
+  if exitCode != 0:
     report.Error("Toolbox returns an error ", "'" + dummy1 + "'")
 
   if ok and string.find(dummy1, "Run-Time Error") != -1:
@@ -480,7 +477,7 @@ def RunSpecTestCases(fullNames, lang, coverageFile):
             cmd = javac + " -classpath ./VDM.jar -d ./ " + javaFiles
           (exitCode, dummy1, dummy2) = util.RunCommand(cmd, 0, 
                                      "Javac returns errors. ")
-          if exitCode<>0:
+          if exitCode != 0:
             break
 
           if not util.IsWindowsOS():
@@ -489,7 +486,7 @@ def RunSpecTestCases(fullNames, lang, coverageFile):
             cmd = java + " MAIN"
           (exitCode, dummy1, dummy2) = util.RunCommand(cmd, 0, 
                                      "Java returns errors. ", true)
-          if exitCode<>0:
+          if exitCode != 0:
             break
 
           if not util.WriteFile(expRes, dummy1):        
@@ -521,7 +518,7 @@ def RunSpecTestCases(fullNames, lang, coverageFile):
           cmd = vppde + " -iD -O " + res + " " + vpparg + " " +vppFiles
           (exitCode, dummy1, dummy2) = util.RunCommand(cmd, 0, 
                                      "Vppde returns errors. ", true)
-          if exitCode<>0:
+          if exitCode != 0:
             report.Error("Vppde returns errors " + fullName, "")
 
       filesToDelete = []

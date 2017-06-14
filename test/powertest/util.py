@@ -6,7 +6,7 @@ true,false = 1,0
 templates = {}
 
 #-----------------------------------------------------------------------------
-# Returns th extracted name of `Name': Example /abc/def.hij => def
+# Returns th extracted name of 'Name': Example /abc/def.hij => def
 #-----------------------------------------------------------------------------
 def ExtractName(name):
   name = os.path.splitext(os.path.basename(name))[0]
@@ -52,7 +52,7 @@ def getWindowsPath(path):
 #                returned along with the exit code.
 # returns      - a 3-tuple, where the first element is the return code of
 #                the command, the second and third code is stdout and
-#                stderr, if `giveMeOutput' is true.
+#                stderr, if 'giveMeOutput' is true.
 #-----------------------------------------------------------------------------
 def RunCommand(cmd, okExit=None, diagnosis=None, giveMeOutput = false, expectErr = false):
   report.Progress(4,"Running command: " + cmd)
@@ -60,22 +60,9 @@ def RunCommand(cmd, okExit=None, diagnosis=None, giveMeOutput = false, expectErr
   stderr = None
 
   if IsWindowsOS():
-    # To ensure that environment variables given on the commandline works, we have to 
-    # call the sh commands explicit.
-#    cmd = "(" + cmd + ") > "+ stdoutFile + " 2> " + stderrFile + " < nul"
     cmd = "(" + cmd + ")"
   else:
     cmd = cmd #+ " 2>&1"
-
-
-#  p = popen2.Popen3(cmd, true)
-#  p.tochild.close()
-#  returnPid,exitCode = os.waitpid(p.pid, os.WNOHANG)
-#  p.fromchild.close()
-#  if p.childerr != None:
-#    stderr = p.childerr.read()
-#  else:
-#  stdout = p.fromchild.read()
 
   output = os.popen(cmd)
   stdout = output.read()
@@ -90,10 +77,10 @@ def RunCommand(cmd, okExit=None, diagnosis=None, giveMeOutput = false, expectErr
       report.Progress(1, "*** Standard error\n" + stderr + "\n***")
 
   if (exitCode != okExit and okExit != None):
-    report.Error("Command " + `cmd` + " returned with exit code "+ `exitCode` + " different from " + `okExit`, diagnosis, stdout, stderr)
+    report.Error("Command '" + cmd + "' returned with exit code "+ str(exitCode) + " different from " + str(okExit), diagnosis, stdout, stderr)
   else:
     if stderr != None and stderr != "" and not expectErr:
-      report.Error("Command " + `cmd` + " generated the following on standard error", None, None, stderr)
+      report.Error("Command '" + cmd + "' generated the following on standard error", None, None, stderr)
 
   return (exitCode, stdout, stderr)
 
@@ -103,35 +90,39 @@ def RunCommand(cmd, okExit=None, diagnosis=None, giveMeOutput = false, expectErr
 # returns  - nothing
 #-----------------------------------------------------------------------------
 def DeleteFiles(fileList):
-  for file in fileList:
-    if os.path.exists(file) or os.path.islink(file):
+  for filenm in fileList:
+    if os.path.exists(filenm) or os.path.islink(filenm):
       try:
-        os.unlink(file)
-      except os.error,(no,msg):
-        report.Error("Error when deleting file " + `file` +": " + msg)
+        os.unlink(filenm)
+      except os.error as err:
+        (no, msg) = err
+        report.Error("Error when deleting file '" + filenm +"': " + msg)
         
 #-----------------------------------------------------------------------------
 # Reads the content of a file, and takes care of any error.
 # file - the filename fof the file to read.
 # returns - the content of the file or None in case of any errors.
 #-----------------------------------------------------------------------------
-def ReadFile(file):
+def ReadFile(filenm):
   try:
-    FID = open(file,"r")
-  except IOError, (no, msg):
-    report.Error("Couldn't open file " + `file` + " for reading: " + msg)
+    FID = open(filenm,"r")
+  except IOError as err:
+    (no, msg) = err
+    report.Error("Couldn't open file '" + filenm + "' for reading: " + msg)
     return None
 
   try:
     data = FID.read();
-  except IOError, (no.msg):
-    report.Error("Error when reading data to file " + `file` +": " + msg)
+  except IOError as err:
+    (no, msg) = err
+    report.Error("Error when reading data to file '" + filenm +"': " + msg)
     return None
 
   try:
     FID.close()
-  except IOError, (no.msg):
-    report.Error("Error when closing file " + `file` +": " + msg)
+  except IOError as err:
+    (no, msg) = err
+    report.Error("Error when closing file '" + filenm +"': " + msg)
     return None
 
   return data
@@ -143,30 +134,34 @@ def ReadFile(file):
 # mode - the write mode
 # returns - true if the data was written to the file without any errors.
 #-----------------------------------------------------------------------------
-def WriteFile(file, data, mode="w"):
+def WriteFile(filenm, data, mode="w"):
   try:
-    if mode == "w" and os.path.exists(file) or os.path.islink(file):
-      os.remove(file)
-  except os.error, (no, msg):
-    report.Error("Error removing file " + file +": " + msg)
+    if mode == "w" and os.path.exists(filenm) or os.path.islink(filenm):
+      os.remove(filenm)
+  except os.error as err:
+    no, msg = err
+    report.Error("Error removing file '" + filenm + "': " + msg)
     return false
   
   try:
-    FID = open(file,mode)
-  except IOError, (no, msg):
-    report.Error("Couldn't open file " + `file` + " for writting: " + msg)
+    FID = open(filenm,mode)
+  except IOError as err:
+    no, msg = err
+    report.Error("Couldn't open file '" + filenm + "' for writting: " + msg)
     return false
 
   try:
     FID.write(data)
-  except IOError, (no,msg):
-    report.Error("Error when writting data to file " + `file` +": " + msg)
+  except IOError as err:
+    no, msg = err
+    report.Error("Error when writting data to file '" + filenm + "': " + msg)
     return false
 
   try:
     FID.close()
-  except IOError, (no,msg):
-    report.Error("Error when closing file " + `file` +": " + msg)
+  except IOError as err:
+    no, msg = err
+    report.Error("Error when closing file '" + filenm + "': " + msg)
     return false
 
   return true
@@ -176,36 +171,39 @@ def CopyFileIfExists(src, dst):
     CopyFile(src, dst)
 
 def CopyFile(src,dst):
-  report.Progress(4,"Copying file " + `src` + " to " + `dst`)
+  report.Progress(4,"Copying file '" + src + "' to '" + dst + "'")
   # remove the destination file.
   if os.path.exists(dst) or os.path.islink(dst):
     try:
       os.remove(dst)
-    except os.error, (no,msg):
-      report.Error("Error when removing file " + `dst` + ": " + msg)
+    except os.error as err:
+      no, msg = err
+      report.Error("Error when removing file '" + dst + "': " + msg)
       return false
 
   try:
     shutil.copy(src,dst)
-  except os.error, (no,msg):
+  except os.error as err:
+    no, msg = err
     report.Error("Error when making a symlink from " +  src + " to " + dst + ": " + msg)
     return false
 
   return true
   
 #-----------------------------------------------------------------------------
-# Create a symbolic link from `src' to `dst'. If `dst' already exists, then
+# Create a symbolic link from 'src' to 'dst'. If 'dst' already exists, then
 # it is deleted first. On windows the file is instead copied.
 # returns - true if no errors occoured.
 #-----------------------------------------------------------------------------
 def SymLink(src, dst, force = false):
-  report.Progress(4,"Creating symlink from " + `src` + " to " + `dst`)
+  report.Progress(4,"Creating symlink from '" + src + "' to '" + dst + "'")
   # remove the destination file.
   if os.path.exists(dst) or os.path.islink(dst):
     try:
       os.remove(dst)
-    except os.error, (no,msg):
-      report.Error("Error when removing file " + `dst` + ": " + msg)
+    except os.error as err:
+      no, msg = err
+      report.Error("Error when removing file '" + dst + "': " + msg)
       return false
 
   # Normalize path
@@ -218,14 +216,16 @@ def SymLink(src, dst, force = false):
   if (os.__dict__.has_key('symlink')) and (not IsWindowsOS() or force):
     try:
       os.symlink(src,dst)
-    except os.error, (no,msg):
-      report.Error("Error when making a symlink from " +  src + " to " + dst + ": " + msg)
+    except os.error as err:
+      no, msg = err
+      report.Error("Error when making a symlink from '" +  src + "' to '" + dst + "': " + msg)
       return false
   else:
     try:
       shutil.copy(src,dst)
-    except os.error, (no,msg):
-      report.Error("Error when making a symlink from " +  src + " to " + dst + ": " + msg)
+    except os.error as err:
+      no, msg = err
+      report.Error("Error when making a symlink from '" +  src + "' to '" + dst + "': " + msg)
       return false
 
   return true
@@ -257,23 +257,23 @@ def ReadListFromFile(fileName):
   try:
     seq = eval(data)
   except:
-    report.Error("Data read from file " + `fileName` + " is not Python Sequence (it isn' even a valid Python expression)")
+    report.Error("Data read from file '" + fileName + "' is not Python Sequence (it isn' even a valid Python expression)")
     return None
 
   if type(seq) != types.ListType:
-    report.Error("Data read from file " + `fileName` + " is not a Python sequence")
+    report.Error("Data read from file '" + fileName + "' is not a Python sequence")
     return None
 
   return seq
     
 #-----------------------------------------------------------------------------
-# Expands %1, %2, ... in `txt' with arguments from the list `arguments'
+# Expands %1, %2, ... in 'txt' with arguments from the list 'arguments'
 #-----------------------------------------------------------------------------
 def ExpandArgs(txt, arguments):
   i = 0
   for arg in arguments:
-    i = i +1
-    txt = string.replace(txt,"%"+`i`,arg)
+    i = i + 1
+    txt = string.replace(txt,"%" + str(i),arg)
   return txt
 
 #-----------------------------------------------------------------------------
@@ -284,13 +284,13 @@ def GenTestDir():
   return cmdline.LookUp('java-gentestdir')
 
 #-----------------------------------------------------------------------------
-# returns true if files should be kept given the return code `ok'
+# returns true if files should be kept given the return code 'ok'
 #-----------------------------------------------------------------------------
 def KeepFile(ok):
   return cmdline.LookUp('keep') or not ok and cmdline.LookUp('keep-when-error')
 
 #-----------------------------------------------------------------------------
-# returns true if files should be removed given the return code `ok'
+# returns true if files should be removed given the return code 'ok'
 #-----------------------------------------------------------------------------
 def CleanFile(ok):
   return not KeepFile(ok)
@@ -315,7 +315,8 @@ def SetProfileBaseName(nm):
     profileCounter = 0
     try:
       os.mkdir(nm)
-    except os.error, (no,msg):
+    except os.error as err:
+      no, msg = err
       report.Error("Error when making directory " + nm + ": " + msg + "\nProfiling disabled")
       profileDir = None
       return false
@@ -336,29 +337,30 @@ def MoveProfile():
     if os.path.exists("gmon.out"):
       profileCounter = profileCounter +1
       try:
-        os.rename("gmon.out",profileDir+"/"+`profileCounter`)
-      except os.error, (no,msg):
-        report.Error("Error when moving gmon.out to " + profileDir+"/"+`profileCounter` + ": " + msg)
+        os.rename("gmon.out",profileDir+"/"+ str(profileCounter))
+      except os.error as err:
+        no, msg = err
+        report.Error("Error when moving gmon.out to " + profileDir+"/"+str(profileCounter) + ": " + msg)
         return false
     else:
-      report.Error("gmon.out was not produced, though option `Enable-Profiling' was enabled")
+      report.Error("gmon.out was not produced, though option 'Enable-Profiling' was enabled")
       return false
   return true
       
 #-----------------------------------------------------------------------------
-# This is almost like re.sub, but re.sub expands backslashes in `repl',
+# This is almost like re.sub, but re.sub expands backslashes in 'repl',
 # which is a problem, when substituting say an AST into a template.
 #-----------------------------------------------------------------------------
 def SubString(pattern, repl, template):
-  txt = string.split(template, pattern)
+  txt = template.split(pattern)
   return string.join(txt,repl)
 
 #------------------------------------------------------------------------------
 # This is used to build Make files on the fly in Windows. The VPATH
 # directive is used to point to the correct directory.
 #------------------------------------------------------------------------------
-def BuildMakefile(dir):
-  cygnusDir = ConvertToCygnus(dir)
+def BuildMakefile(dirnm):
+  cygnusDir = ConvertToCygnus(dirnm)
   vpath = "VPATH="+cygnusDir
   include = "include " + cygnusDir + "/Makefile"
   filename = "GNUmakefile"
@@ -369,8 +371,8 @@ def BuildMakefile(dir):
 # Converts Unix paths to cygwin ones. 
 # 
 #------------------------------------------------------------------------------
-def ConvertToCygnus(dir):
-  pathComponents = string.split(dir, "\\")
+def ConvertToCygnus(dirnm):
+  pathComponents = dirnm.split("\\")
   drive = pathComponents[0]
   pathComponents = pathComponents[1:]
   colonPos = string.find(drive, ":");
@@ -380,9 +382,11 @@ def ConvertToCygnus(dir):
   return string.join(pathComponents,"/")
   
 
-def MakeDir(dir):
-  if not os.path.exists(dir):
+def MakeDir(dirnm):
+  if not os.path.exists(dirnm):
     try:
-      os.mkdir(dir)
-    except os.error, (no,msg):
-      report.Error("Error making directory " + dir + ": " + msg)
+      os.mkdir(dirnm)
+    except os.error as err:
+      no, msg = err
+      report.Error("Error making directory " + dirnm + ": " + msg)
+

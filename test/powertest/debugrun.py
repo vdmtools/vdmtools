@@ -1,2 +1,2 @@
 def execute(lang, type):
-  print "Running debug"
+  print ("Running debug")

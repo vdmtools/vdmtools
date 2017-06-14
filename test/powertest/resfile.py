@@ -1,5 +1,6 @@
 import report, setup, util
-import re, os, dircache, string
+#import re, os, dircache, string
+import re, os, string
 true, false = 1,0
 
 #--------------------------------------------------------------------------------
@@ -12,9 +13,9 @@ true, false = 1,0
 # PP or RT language test, is it on specification level or on
 # implementation level, is it pos or def mode (specific for the type
 # checker), and so on.
-# The function  `FindResFile' takes an argument, which is an expansion set,
+# The function  'FindResFile' takes an argument, which is an expansion set,
 # to help finding the correct expected result file.. An expandsion set is 
-# build using the function `MakeStdExpansionSet' and `AppendToExpandsionSet'.
+# build using the function 'MakeStdExpansionSet' and 'AppendToExpandsionSet'.
 #
 # Technically an expansion set is a seqeunce of tuples, where the first
 # element in each tuple is an text allowed in the name of the test case,
@@ -51,7 +52,7 @@ def MakeStdExpansionSet(env, lang, specimpl):
   return res
 
 #--------------------------------------------------------------------------------
-# Appends (pos,neg) to expandsion set `expansionSet'. pos most me a string,
+# Appends (pos,neg) to expandsion set 'expansionSet'. pos most me a string,
 # while neg must be a sequence of string.
 # For a description of an expansion see the top of this file.
 #--------------------------------------------------------------------------------
@@ -107,7 +108,8 @@ def FindFile(fullName, ext):
   path = os.path.dirname(fullName)
   bn = util.ExtractName(fullName)
 
-  files = dircache.listdir(path)
+  #files = dircache.listdir(path)
+  files = os.listdir(path)
   files = files[:] # The result of dircach must not be edited!
 
   # remove filenames ending with ~
@@ -174,27 +176,27 @@ def CompareResult(fullName, outputFile, resFile, interpreter, structTest=true):
 
   # Expected Result is Run Time Error 
   if expectedResult.startswith("Run-Time Error"):
-    report.Error("Actual result is different from expected result for " + `fullName`,
+    report.Error("Actual result is different from expected result for '" + fullName + "'",
                  "expected result : " + expectedResult + "\n" +
                  "actual result   : " + actualResult)
     return false
 
   if expectedResult.startswith("<UTIL.NumberToInt>:") or actualResult.startswith("<UTIL.NumberToInt>:"):
-    report.Error("Actual result is different from expected result for " + `fullName`,
+    report.Error("Actual result is different from expected result for '" + fullName + "'",
                  "expected result : " + expectedResult + "\n" +
                  "actual result   : " + actualResult)
     return false
 
   if expectedResult.startswith("The construct is not supported:") or actualResult.startswith("The construct is not supported:"):
-    report.Error("Actual result is different from expected result for " + `fullName`,
+    report.Error("Actual result is different from expected result for '" + fullName + "'",
                  "expected result : " + expectedResult + "\n" +
                  "actual result   : " + actualResult)
     return false
 
-  report.Progress(4, "Comparing result for " + `fullName` + " using diff method")
+  report.Progress(4, "Comparing result for '" + fullName + "' using diff method")
   # Hmmm we need to try to compare using VDMDE then.
   if structTest and interpreter != None:
-    report.Progress(4, "Comparing result for " + `fullName` + " by build VDM value")
+    report.Progress(4, "Comparing result for '" + fullName + "' by build VDM value")
     template = util.GetTemplate("compare-result")
     if template == None:
       return false
@@ -213,7 +215,7 @@ def CompareResult(fullName, outputFile, resFile, interpreter, structTest=true):
     ok = false
 
   if not ok:
-    report.Error("Actual result is different from expected result for " + `fullName`,
+    report.Error("Actual result is different from expected result for '" + fullName + "'",
                  "expected result : " + expectedResult + "\n" +
                  "actual result   : " + actualResult)
     
