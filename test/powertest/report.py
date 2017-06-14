@@ -197,11 +197,11 @@ def IncrTestcaseCounter():
 def SetValueInMap(base,names, init, func):
   val = base
   for name in names[:-1]:
-    if not val.has_key(name):
+    if not name in val:
       val[name] = {}
     val = val[name]
   lastElm = names[-1]
-  if not val.has_key(lastElm):
+  if not lastElm in val:
     val[lastElm] = init
   val[lastElm] = func(val[lastElm])
 

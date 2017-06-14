@@ -139,14 +139,11 @@ def InsertKeyVal(key,val, where, lineno = None):
   origKey = key
   val = val.strip()
 
-  if setup.keywords.has_key(key): #python 2
-  #if key in setup.keywords: #python 3
+  if key in setup.keywords:
     # The key is one of the non-wildcard keys.
-    if (parameters.has_key(key) and parameters[key].where == 'conffile'): #python 2
-    #if (key in parameters and parameters[key].where == 'conffile'): #python 3
+    if (key in parameters and parameters[key].where == 'conffile'):
       Error("Key '" + key + "' defined multiple times in the input file", None)
-    elif (not parameters.has_key(key) or where != 'conffile'): #python 2
-    #elif (not key in parameters or where != 'conffile'): #python 3
+    elif (not key in parameters or where != 'conffile'):
       # Ensure that we do not override key from the commandline
       parameters[key] = Parameter(val, where, lineno)
 
@@ -247,8 +244,7 @@ def VerifyAndTranslateKeys():
   #------------------------------------------------------------
 
   # What-To-Run - this must be first so we ensure that we do not check extra things.
-  if not parameters.has_key("what-to-run"): #python 2
-  #if not "what-to-run" in parameters: #python 3
+  if not "what-to-run" in parameters:
     print ("Fatal error: Must specify what-to-run in configuration file")
     sys.exit(-1);
 
@@ -257,8 +253,7 @@ def VerifyAndTranslateKeys():
 
   # Verify that all options has been specified.
   for keyword in setup.keywords.keys():
-    if not parameters.has_key(keyword) and NeedKeyWord(keyword): #python 2
-    #if not keyword in parameters and NeedKeyWord(keyword): #python 3
+    if not keyword in parameters and NeedKeyWord(keyword):
       Error("Keyword '" + keyword + 
             "' not found in configuration file or on command line", None)
 
@@ -347,8 +342,7 @@ def VerifyAndTranslateKeys():
 # is combined by replacing '%1' in the errMsg with the name of the wrong argument.
 #-----------------------------------------------------------------------------
 def VerifyAndTranslateSeq(name, okSeq, errMsg):
-  if not parameters.has_key(name) or not NeedKeyWord(name): #python 2
-  #if not name in parameters or not NeedKeyWord(name): #python 3
+  if not name in parameters or not NeedKeyWord(name):
     return # The key has already been reported as missing
 
   if parameters[name].arg.strip() == '':
@@ -369,7 +363,7 @@ def VerifyAndTranslateSeq(name, okSeq, errMsg):
 
 
 def VerifyAndTranslateInt(name, errMsg):
-  if not parameters.has_key(name) or not NeedKeyWord(name):
+  if not name in parameters or not NeedKeyWord(name):
     return # The key has already been reported as missing
 
   elm = parameters[name].arg
@@ -380,7 +374,7 @@ def VerifyAndTranslateInt(name, errMsg):
     Error(msg, name)
 
 def VerifyAndTranslateBool(name, errMsg):
-  if not parameters.has_key(name) or not NeedKeyWord(name):
+  if not name in parameters or not NeedKeyWord(name):
     return # The key has already been reported as missing
 
   elm = parameters[name].arg.strip().lower()
@@ -394,7 +388,7 @@ def VerifyAndTranslateBool(name, errMsg):
     
 
 def EnsureDirIsSpecDir(name, dirMsg):
-  if not parameters.has_key(name) or not NeedKeyWord(name):
+  if not name in parameters or not NeedKeyWord(name):
     return # The key has already been reported as missing
 
   dirnm = os.path.expanduser(parameters[name].arg)

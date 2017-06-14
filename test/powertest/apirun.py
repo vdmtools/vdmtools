@@ -58,10 +58,10 @@ def execute(lang, testType):
     print ("Waiting 2 seconds for " + lang + "-server to start up...")
     time.sleep (2)
     
-  if environ.has_key ("VDM_OBJECT_LOCATION"):
+  if "VDM_OBJECT_LOCATION" in environ:
     location = environ["VDM_OBJECT_LOCATION"]
   else:
-    if environ.has_key ("HOME"):
+    if "HOME" in environ:
       location = environ["HOME"]
     else:
       location = "~"

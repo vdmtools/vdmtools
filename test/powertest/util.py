@@ -213,7 +213,7 @@ def SymLink(src, dst, force = false):
   
 
   # Check if os contain the function symlink (it doesn't under windows!)
-  if (os.__dict__.has_key('symlink')) and (not IsWindowsOS() or force):
+  if ('symlink' in os.__dict__) and (not IsWindowsOS() or force):
     try:
       os.symlink(src,dst)
     except os.error as err:
@@ -300,7 +300,7 @@ def CleanFile(ok):
 #-----------------------------------------------------------------------------
 def GetTemplate(name):
   global templates
-  if not templates.has_key(name):
+  if not name in templates:
     templates[name] = util.ReadFile(setup.BaseDir+"/templates/"+name)
   return templates[name]
 

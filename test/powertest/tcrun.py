@@ -362,13 +362,13 @@ def ValidateResult(name, expResFile, result, stdout,stderr):
 
   map = {}
   for key in result:
-    if map.has_key(key):
+    if key in map:
       map[key] = map[key] +1
     else:
       map[key] = 1
 
   for key in expResult:
-    if map.has_key(key):
+    if key in map:
       map[key] = map[key] -1
     else:
       map[key] = -1
