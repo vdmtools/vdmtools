@@ -2046,11 +2046,15 @@ LookUp(mk_AS`Name(ids,cid)) ==
       if ok
       then name := AUX`ConstructDoubleName(ocl,memnm);
 
-  def mk_(isit, mk_SEM`ValTp(val, -)) = STKM`IsLocalVal(name);
+  --def mk_(isit, mk_SEM`ValTp(val, -)) = STKM`IsLocalVal(name);
+  def mk_(isit, valtp) = STKM`IsLocalVal(name);
       --mk_(isit_d_objs, val_obj) = IsDObjs(name)
   in
     if isit
-    then ReturnLookUp(val, RTERR`INTERNAL_ERROR)
+    --then ReturnLookUp(val, RTERR`INTERNAL_ERROR)
+    then
+      let mk_SEM`ValTp(val, -) = valtp
+      in ReturnLookUp(val, RTERR`INTERNAL_ERROR)
     else
       if not STKM`HasCurObjRef()
       then
