@@ -20,5 +20,8 @@ if [ "Darwin" = ${OSTYPE} ]; then
 else
   export LD_LIBRARY_PATH=$OMNIORBDIR/lib:$LD_LIBRARY_PATH
 fi
+IFS_BACKUP=${IFS}
+IFS=$'\n'
 DIR=`dirname $0`
-${DIR}/powertest.script $@
+IFS=${IFS_BACKUP}
+"${DIR}/powertest.script" "$@"
