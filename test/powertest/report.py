@@ -1,6 +1,6 @@
 true, false = 1,0
 
-import sys, string, time, getpass, socket, cmdline,os
+import sys, time, getpass, socket, cmdline,os
 import cmdline, util
 
 #--------------------------------------------------------------------------------
@@ -95,7 +95,7 @@ def Header():
 
   l = (78 - len(currentTestCaseName)) /2
   errStream.write("*" * 80 + "\n")
-  errStream.write(" " * l + currentTestCaseName + "\n")
+  errStream.write(" " * int(l) + currentTestCaseName + "\n")
   errStream.write("*" * 80 + "\n")
   errStream.write("Test environment: " + currentTestEnv + "\n")
   errStream.write("Run type: " + currentRunType + "\n")
@@ -313,8 +313,8 @@ def PrintData(testenv, runtype, language, tciptype, txt):
   reportStream.write(txt+"\n")
 
 def printHeader(txt):
-  reportStream.write("\n\n\n" + "-"*80+"\n")
+  reportStream.write("\n\n\n" + "-" * 80 + "\n")
   w = (80-len(txt)) / 2
-  reportStream.write(" "*w + txt + "\n")
-  reportStream.write("-"*80+"\n")
+  reportStream.write(" " * int(w) + txt + "\n")
+  reportStream.write("-" * 80 + "\n")
 

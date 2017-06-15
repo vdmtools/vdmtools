@@ -1,6 +1,6 @@
 true, false = 1,0
 import report, util, cmdline, setup
-import re, string, os
+import re, os
 
 # uselibs is used to accumulate the names of classes which are dlclasses
 uselibs = []
@@ -135,7 +135,7 @@ def ParseOptionsFile(fileName):
 
   report.Progress(4, "Parsing " + optionsFileName)
   data = util.ReadFile(optionsFileName)
-  startIndex = string.find(data, "SetOptions")
+  startIndex = data.find("SetOptions")
   if startIndex == -1:
     report.Error("Unable to parse options file (1)")
     return ""

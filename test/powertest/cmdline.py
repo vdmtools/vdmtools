@@ -1,5 +1,5 @@
-import os, re, string,sys, time
-import setup
+import os, re, sys, time
+import setup, util
 true, false = 1,0
 
 #-----------------------------------------------------------------------------
@@ -166,13 +166,11 @@ def InsertKeyVal(key,val, where, lineno = None):
     # Ok at this possition we know that the keyword is a wildcard keyword.
     if setup.wildCardExecutable.count(which):
       # Verify that the key points to an executable
-      #filenm = os.path.expandvars(os.path.expanduser(string.split(val)[0]))
       filenm = os.path.expandvars(os.path.expanduser(val.split()[0]))
       if not os.path.isfile(filenm):
         ErrorPos("binary '" + filenm + "' does not exist", where, lineno)
         return
       else:
-        #value = filenm + " " + string.join(string.split(val)[1:])
         value = filenm + " " + "".join(val.split()[1:])
 
       
@@ -274,7 +272,7 @@ def VerifyAndTranslateKeys():
   # Language
   VerifyAndTranslateSeq('language', setup.availableLanguages,
                         "Unknow language %1 should either be " 
-                        + string.join(setup.availableLanguages, ", "))
+                        + util.join(setup.availableLanguages, ", "))
 
   # Run-Type
   VerifyAndTranslateSeq('run-type', ['spec', 'impl'],
@@ -356,7 +354,7 @@ def VerifyAndTranslateSeq(name, okSeq, errMsg):
     for elm in parameters[name].arg.split(","):
       elm = elm.strip().lower()
       if okSeq.count(elm) == 0:
-        msg = string.replace(errMsg, "%1", "'" + elm + "'")
+        msg = errMsg.replace("%1", "'" + elm + "'")
         Error(msg, name)
       else:
         parameters[name].value[elm] = 1
@@ -370,7 +368,7 @@ def VerifyAndTranslateInt(name, errMsg):
   try:
     parameters[name].value = int(elm)
   except ValueError:
-    msg = string.replace(errMsg,"%1", "'" + elm + "'")
+    msg = errMsg.replace("%1", "'" + elm + "'")
     Error(msg, name)
 
 def VerifyAndTranslateBool(name, errMsg):
@@ -383,7 +381,7 @@ def VerifyAndTranslateBool(name, errMsg):
   elif (elm == "no" or elm == "false"):
     parameters[name].value = 0
   else:
-    msg = string.replace(errMsg,"%1", "'" + elm + "'")
+    msg = errMsg.replace("%1", "'" + elm + "'")
     Error(msg, name)
     
 
@@ -472,7 +470,7 @@ def LookUp(key):
   return parameters[key.lower()].value
 
 def GetCmdLine():
-  return string.join(cmdLine," ")
+  return util.join(cmdLine," ")
 
 #-----------------------------------------------------------------------------
 # returns a specific VDM-SL or VDM++ interpreter

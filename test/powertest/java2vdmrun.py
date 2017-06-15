@@ -1,6 +1,5 @@
 import gentestcases, cmdline, util, setup, report, convert, resfile
-#import popen2
-import os, re, string
+import os, re
 import shutil, tempfile, types
 
 true, false = 1,0
@@ -122,7 +121,7 @@ def executeSpec(lang):
   FID=os.popen( "find" + " -type f ")
   line = FID.readline()
   while (line != ''):
-    if string.strip(line[len(line)-4:]) == 'vpp' or string.strip(line[len(line)-6:]) == 'class':
+    if line[len(line)-4:].strip() == 'vpp' or line[len(line)-6:].strip() == 'class':
       filesToDelete.append(line[:-1])
     line = FID.readline()
   util.DeleteFiles(filesToDelete)
@@ -421,7 +420,7 @@ def RunSpecTestCases(fullNames, lang, coverageFile):
   if exitCode != 0:
     report.Error("Toolbox returns an error ", "'" + dummy1 + "'")
 
-  if ok and string.find(dummy1, "Run-Time Error") != -1:
+  if ok and dummy1.find("Run-Time Error") != -1:
     report.Error("Toolbox returns an run-time error. Look for the latest .arg.err file ", "")
 
   modules = []
@@ -602,11 +601,11 @@ def CompareRunTimeError(resFile):
   actualResult = util.ReadFile(resFile)
   if actualResult == None:
     return None
-  if string.find(actualResult, "Run-Time Error") != -1:
+  if actualResult.find("Run-Time Error") != -1:
     expectedResult = util.ReadFile(resFile)
-    actualResult = string.strip(re.sub("\s+", " ", actualResult))
+    actualResult = re.sub("\s+", " ", actualResult).strip()
     expectedResult = re.sub("Run-Time Error[ 0-9]*:", "Run-Time Error ", expectedResult)
-    expectedResult = string.strip(re.sub("\s+", " ", expectedResult))
+    expectedResult = re.sub("\s+", " ", expectedResult).strip()
     return actualResult == expectedResult
   else:
     return None
@@ -635,7 +634,7 @@ def ParseJavaFile(javafiles, lang):
 # Find errors in parser output
 #
   if ok:
-    if string.find(dummy1, "Error detected") != -1:
+    if dummy1.find("Error detected") != -1:
       ok = false
 
 

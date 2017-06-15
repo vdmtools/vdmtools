@@ -1,5 +1,5 @@
 import gentestcases, cmdline, util, setup, report, convert, resfile
-import os, re, string
+import os, re
 true, false = 1,0
 
 #-----------------------------------------------------------------------------
@@ -354,13 +354,12 @@ def CompareRunTimeError(fullName, resFile):
   actualResult = util.ReadFile(bn+".res")
   if actualResult == None:
     return None
-  if string.find(actualResult, "Run-Time Error") != -1:
-    expectedResult = string.rstrip(util.ReadFile(resFile), "\n")
-    ok = (string.find(expectedResult, "Run-Time Error") != -1)
+  if actualResult.find("Run-Time Error") != -1:
+    expectedResult = util.ReadFile(resFile).rstrip("\n")
+    ok = (expectedResult.find("Run-Time Error") != -1)
     if ok:
-      actualResult = string.strip(re.sub("\s+", " ", actualResult))
+      actualResult = re.sub("\s+", " ", actualResult).strip()
       expectedResult = re.sub("Run-Time Error[ 0-9]*: ", "Run-Time Error:", expectedResult)
-      #expectedResult = string.strip(re.sub("\s+", " ", expectedResult))
       ok = (actualResult == expectedResult)
 
     if not ok:
@@ -507,7 +506,7 @@ def CompileJavaFiles(fullName, lang, type, modules):
     else:
       package = convert.GetModCls()
       packageStrings = package.split('.')
-      packageDir = string.join(packageStrings, '/')
+      packageDir = util.join(packageStrings, '/')
       if os.path.exists(packageDir + ".java") and not packageDir in modules:
         print ("-------> here")
         javaFiles = javaFiles + " " + packageDir + ".java"
@@ -567,7 +566,7 @@ def VerifyPresenceOfGeneratedFiles(fullName, modules):
   ok = true
   package = convert.GetModCls()
   packageStrings = package.split('.')
-  packageDir = string.join(packageStrings, '/')
+  packageDir = util.join(packageStrings, '/')
   for mod in modules:
     file1 = mod + ".java"
     file2 = "vdm_" + mod+".java"

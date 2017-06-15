@@ -1,6 +1,5 @@
 import report, setup, util
-#import re, os, dircache, string
-import re, os, string
+import re, os
 true, false = 1,0
 
 #--------------------------------------------------------------------------------
@@ -78,10 +77,10 @@ def FindResFile(fullName):
   path = os.path.dirname(fullName)
   
   if files == []:
-    report.Error("No expected result file found for " + string.join(posList,", "))
+    report.Error("No expected result file found for " + util.join(posList,", "))
     return None
   elif len(files) > 1:
-    report.Error("Several possible expected result files found: " + string.join(files, ", "))
+    report.Error("Several possible expected result files found: " + util.join(files, ", "))
     return None
   else:
     report.Progress(4,"Expected result file is: " + path + "/" + files[0])
@@ -98,7 +97,7 @@ def HasIgnoreFile(fullName):
     return (false, false)
   else:
     report.Progress(4,"Ignore files found: "  + path + "/" + files[0])
-    silence = (string.find(files[0],"-silently") != -1)
+    silence = (files[0].find("-silently") != -1)
     return (true, silence)
 
 #--------------------------------------------------------------------------------
@@ -162,14 +161,14 @@ def CompareResult(fullName, outputFile, resFile, interpreter, structTest=true):
   expectedResult = util.ReadFile(resFile)
   
   # Remove duplicate white spaces and line breaks, spaces around commas and parenthesis.
-  actualResult = string.strip(re.sub("\s+", " ", actualResult))
-  expectedResult = string.strip(re.sub("\s+", " ", expectedResult))
-  actualResult = string.strip(re.sub("\s*,\s*", ",", actualResult))
-  expectedResult = string.strip(re.sub("\s*,\s*", ",", expectedResult))
-  actualResult = string.strip(re.sub("\s*\(\s*", "(", actualResult))
-  expectedResult = string.strip(re.sub("\s*\(\s*", "(", expectedResult))
-  actualResult = string.strip(re.sub("\s*\)\s*", ")", actualResult))
-  expectedResult = string.strip(re.sub("\s*\)\s*", ")", expectedResult))
+  actualResult = re.sub("\s+", " ", actualResult).strip()
+  expectedResult = re.sub("\s+", " ", expectedResult).strip()
+  actualResult = re.sub("\s*,\s*", ",", actualResult).strip()
+  expectedResult = re.sub("\s*,\s*", ",", expectedResult).strip()
+  actualResult = re.sub("\s*\(\s*", "(", actualResult).strip()
+  expectedResult = re.sub("\s*\(\s*", "(", expectedResult).strip()
+  actualResult = re.sub("\s*\)\s*", ")", actualResult).strip()
+  expectedResult = re.sub("\s*\)\s*", ")", expectedResult).strip()
 
   if actualResult == expectedResult:
     return true

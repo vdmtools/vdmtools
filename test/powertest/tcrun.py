@@ -1,5 +1,5 @@
 import gentestcases, cmdline, util, setup, report, convert, resfile
-import os, re, string
+import os, re, locale
 true, false = 1,0
 
 #--------------------------------------------------------------------------------
@@ -332,7 +332,7 @@ def TranslateResultCommon(data):
   regexp = re.compile("(Error|Warning)\[([0-9]+)\] :")
   match = regexp.search(data,pos)
   while match:
-    number = string.atoi(match.group(2))
+    number = locale.atoi(match.group(2))
     pos = match.end(1)
     res.append(number)
     match = regexp.search(data,pos)
@@ -383,9 +383,9 @@ def ValidateResult(name, expResFile, result, stdout,stderr):
   if tomuch != [] or tolittle != []:
     res = ""
     if tomuch != []:
-      res = res + "Output not expected: " + string.join(tomuch, ", ") + "\n"
+      res = res + "Output not expected: " + util.join(tomuch, ", ") + "\n"
     if tolittle != []:
-      res = res + "Output not present: " + string.join(tolittle, ", ") + "\n"
+      res = res + "Output not present: " + util.join(tolittle, ", ") + "\n"
     report.Error("Actual result differs from expected result for " + name, res, stdout, stderr)
     return false
 

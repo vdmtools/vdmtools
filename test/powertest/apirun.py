@@ -1,5 +1,5 @@
 import gentestcases, cmdline, util, setup, report, convert, resfile, time
-import os, re, string, sys
+import os, re, sys, locale
 from posix import environ
 from omniORB import CORBA
 #from Fnorb.orb import CORBA
@@ -223,12 +223,12 @@ class ToolMediator:
     # VDMProject.GetModules () = get modules
     if re.compile ('^get modules$').match (cmd) != None:
       (res, modules) = self.vdmProject.GetModules ()
-      return string.join (modules, "\n") + "\n"
+      return util.join (modules, "\n") + "\n"
 
     # VDMProject.GetFiles () = get files
     if re.compile ('^get files$').match (cmd) != None:
       (res, files) = self.vdmProject.GetFiles ()
-      return string.join (files, "\n") + "\n"
+      return util.join (files, "\n") + "\n"
 
     # VDMProject.AddFile = add file (filename)
     m = re.compile ('^add file\((?P<filename>.*)\)$').match (cmd)
@@ -248,7 +248,7 @@ class ToolMediator:
     m = re.compile ('^files of module\((?P<modulename>.*)\)$').match (cmd)
     if m != None:
       (res, flist) = self.vdmModuleRepos.FilesOfModule (m.group ('modulename'))
-      return string.join (flist, "\n") + "\n"
+      return util.join (flist, "\n") + "\n"
     
     # VDMModuleRepos.GetCurrentModule = current module
     if re.compile ('^current module$').match (cmd) != None:
@@ -293,25 +293,25 @@ class ToolMediator:
     m = re.compile ('^superclasses\((?P<classname>.*)\)$').match (cmd)
     if m != None:
       (res, clist) = self.vdmModuleRepos.SuperClasses (m.group ('classname'))
-      return string.join (clist, "\n") + "\n"
+      return util.join (clist, "\n") + "\n"
 
     # VDMModuleRepos.SubClasses = subclasses (classname)
     m = re.compile ('^subclasses\((?P<classname>.*)\)$').match (cmd)
     if m != None:
       (res, clist) = self.vdmModuleRepos.SubClasses (m.group ('classname'))
-      return string.join (clist, "\n") + "\n"
+      return util.join (clist, "\n") + "\n"
 
     # VDMModuleRepos.UsesOf = usesof (classname)
     m = re.compile ('^usesof\((?P<classname>.*)\)$').match (cmd)
     if m != None:
       (res, clist) = self.vdmModuleRepos.UsesOf (m.group ('classname'))
-      return string.join (clist, "\n") + "\n"
+      return util.join (clist, "\n") + "\n"
 
     # VDMModuleRepos.UsedBy = usedby (classname)
     m = re.compile ('^usedby\((?P<classname>.*)\)$').match (cmd)
     if m != None:
       (res, clist) = self.vdmModuleRepos.UsedBy (m.group ('classname'))
-      return string.join (clist, "\n") + "\n"
+      return util.join (clist, "\n") + "\n"
 
     ########### VDMInterpreter
     # VDMInterpreter.DynTypeCheck = set dtc [on|off]
@@ -407,8 +407,8 @@ class ToolMediator:
     m = re.compile ('^break\((?P<filename>.*?),(?P<line>\d+),(?P<col>\d+)\)$').match (cmd)
     if m != None:
       num = self.vdmInterpreter.SetBreakPointByPos (m.group ('filename'), \
-                                                    string.atoi (m.group ('line')), \
-                                                    string.atoi (m.group ('col')))
+                                                    locale.atoi (m.group ('line')), \
+                                                    locale.atoi (m.group ('col')))
       return str(num) + "\n"
     
     # VDMInterpreter.SetBreakPointByName = break (modulename, func)
@@ -421,7 +421,7 @@ class ToolMediator:
     # VDMInterpreter.DeleteBreakPoint = delete (number)
     m = re.compile ('^delete\((?P<number>\d+)\)$').match (cmd)
     if m != None:
-      self.vdmInterpreter.DeleteBreakPoint (string.atoi (m.group ('number')))
+      self.vdmInterpreter.DeleteBreakPoint (locale.atoi (m.group ('number')))
       return ""
 
     # VDMInterpreter.StartDebugging = debug (expression)
@@ -648,7 +648,7 @@ def RunApiTestCase (name, lang, toolMediator):
       test = test + 1
       try:        
         cmd = re.sub ('\$\$', last, cmd) # replace $$ by last result
-        cmd = string.strip (re.sub ('\s+', ' ', cmd)) # replace multiple spaces by one
+        cmd = re.sub ('\s+', ' ', cmd).strip() # replace multiple spaces by one
         cmd = re.sub ('\s*\(\s*', '(', cmd) # delete spaces around parentheses
         cmd = re.sub ('\s*\)\s*', ')', cmd)
         cmd = re.sub ('\s*\[\s*', '[', cmd) # delete spaces around parentheses
@@ -687,7 +687,7 @@ def RunApiTestCase (name, lang, toolMediator):
           # neutralize path
           result = result + pathexp.sub (r'\1', l) + "\n"
         last   = re.sub ('\n$', '', last)
-        last   = string.strip (re.sub ('\n', ',', last))
+        last   = re.sub ('\n', ',', last).strip()
         
         if lval != "":
           symTable[lval] = last

@@ -1,5 +1,5 @@
 import gentestcases, cmdline, util, setup, report, convert, resfile
-import os, re, string,sys
+import os, re, sys
 true, false = 1,0
 
 #--------------------------------------------------------------------------------

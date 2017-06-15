@@ -8,7 +8,7 @@
 #               no two test cases with same base name is executed in the same run.
 #-----------------------------------------------------------------------------
 
-import os, string
+import os
 import cmdline, util, report, setup, resfile
 true, false = 1,0
 
@@ -57,7 +57,7 @@ def StartSearch(env, lang, type):
   envs = setup.availableTestenv[:]
   envs.remove(env)
   for env in envs:
-    ignoreList.append("/" + string.upper(env) + "/")
+    ignoreList.append("/" + env.upper() + "/")
   
   ignoreList.append("/CVS/")
   FID = None
@@ -110,7 +110,7 @@ def NextTestCase():
 
     again = false
     for pat in ignoreList:
-      if (string.find(case, pat) != -1):
+      if (case.find(pat) != -1):
         again = true
         break
     if again:

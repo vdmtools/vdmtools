@@ -1,6 +1,5 @@
 import cmdline, setup, report, util
-#import popen2
-import os, re, string, shutil, tempfile, types
+import os, re, shutil, tempfile, types
 true,false = 1,0
 
 templates = {}
@@ -208,8 +207,8 @@ def SymLink(src, dst, force = false):
 
   # Normalize path
   # This is not allowed under windows.
-  dst = os.path.expanduser(string.strip(dst))
-  src = os.path.expanduser(string.strip(src))
+  dst = os.path.expanduser(dst.strip())
+  src = os.path.expanduser(src.strip())
   
 
   # Check if os contain the function symlink (it doesn't under windows!)
@@ -260,7 +259,7 @@ def ReadListFromFile(fileName):
     report.Error("Data read from file '" + fileName + "' is not Python Sequence (it isn' even a valid Python expression)")
     return None
 
-  if type(seq) != types.ListType:
+  if not isinstance(seq, list):
     report.Error("Data read from file '" + fileName + "' is not a Python sequence")
     return None
 
@@ -273,7 +272,7 @@ def ExpandArgs(txt, arguments):
   i = 0
   for arg in arguments:
     i = i + 1
-    txt = string.replace(txt,"%" + str(i),arg)
+    txt = txt.replace("%" + str(i),arg)
   return txt
 
 #-----------------------------------------------------------------------------
@@ -353,7 +352,16 @@ def MoveProfile():
 #-----------------------------------------------------------------------------
 def SubString(pattern, repl, template):
   txt = template.split(pattern)
-  return string.join(txt,repl)
+  return join(txt,repl)
+
+def join(stringList, sep):
+  if len(stringList) == 0:
+    return ""
+  else:
+    res = stringList[0]
+    for elem in stringList[1:]:
+      res = res + sep + elem
+    return res
 
 #------------------------------------------------------------------------------
 # This is used to build Make files on the fly in Windows. The VPATH
@@ -375,11 +383,11 @@ def ConvertToCygnus(dirnm):
   pathComponents = dirnm.split("\\")
   drive = pathComponents[0]
   pathComponents = pathComponents[1:]
-  colonPos = string.find(drive, ":");
+  colonPos = drive.find(":");
   if colonPos != -1:
     drive = "//" + drive[0:colonPos]
   pathComponents.insert(0, drive)
-  return string.join(pathComponents,"/")
+  return join(pathComponents,"/")
   
 
 def MakeDir(dirnm):

@@ -1,5 +1,5 @@
 import gentestcases, cmdline, util, setup, report, convert, resfile
-import os, re, string,sys
+import os, re, sys
 true, false = 1,0
 
 #--------------------------------------------------------------------------------
@@ -414,14 +414,14 @@ def CompareResult(fullName, outputFile, resFile, interpreter, structTest=true):
   expectedResult = util.ReadFile(resFile)
   
   # Remove duplicate white spaces and line breaks, spaces around commas and parenthesis.
-  actualResult = string.strip(re.sub("\s+", " ", actualResult))
-  expectedResult = string.strip(re.sub("\s+", " ", expectedResult))
-  actualResult = string.strip(re.sub("\s*,\s*", ",", actualResult))
-  expectedResult = string.strip(re.sub("\s*,\s*", ",", expectedResult))
-  actualResult = string.strip(re.sub("\s*\(\s*", "(", actualResult))
-  expectedResult = string.strip(re.sub("\s*\(\s*", "(", expectedResult))
-  actualResult = string.strip(re.sub("\s*\)\s*", ")", actualResult))
-  expectedResult = string.strip(re.sub("\s*\)\s*", ")", expectedResult))
+  actualResult = re.sub("\s+", " ", actualResult).strip()
+  expectedResult = re.sub("\s+", " ", expectedResult).strip()
+  actualResult = re.sub("\s*,\s*", ",", actualResult).strip()
+  expectedResult = re.sub("\s*,\s*", ",", expectedResult).strip()
+  actualResult = re.sub("\s*\(\s*", "(", actualResult).strip()
+  expectedResult = re.sub("\s*\(\s*", "(", expectedResult).strip()
+  actualResult = re.sub("\s*\)\s*", ")", actualResult).strip()
+  expectedResult = re.sub("\s*\)\s*", ")", expectedResult).strip()
 
   if actualResult == expectedResult:
     return true
