@@ -1,16 +1,24 @@
 #!/bin/bash
 
-DIR=`dirname $0`
-INSTALL_DIR=/usr/local/omniORB
-PYTHONPATH=$INSTALL_DIR/lib/python2.2/site-packages:$INSTALL_DIR/lib/python2.2/site-packages/omniORB
-PYTHONPATH=$PYTHONPATH:$INSTALL_DIR/lib/python2.3/site-packages:$INSTALL_DIR/lib/python2.3/site-packages/omniORB
-PYTHONPATH=$PYTHONPATH:$INSTALL_DIR/lib/python2.4/site-packages:$INSTALL_DIR/lib/python2.4/site-packages/omniORB
-PYTHONPATH=$PYTHONPATH:$INSTALL_DIR/lib/python2.5/site-packages:$INSTALL_DIR/lib/python2.5/site-packages/omniORB
-PYTHONPATH=$PYTHONPATH:$INSTALL_DIR/lib/python2.6/site-packages:$INSTALL_DIR/lib/python2.6/site-packages/omniORB
-PYTHONPATH=$PYTHONPATH:$INSTALL_DIR/lib64/python2.6/site-packages:$INSTALL_DIR/lib64/python2.6/site-packages/omniORB
-PYTHONPATH=$PYTHONPATH:$INSTALL_DIR/lib/python2.7/site-packages:$INSTALL_DIR/lib/python2.7/site-packages/omniORB
-PYTHONPATH=$PYTHONPATH:$INSTALL_DIR/lib64/python2.7/site-packages:$INSTALL_DIR/lib64/python2.7/site-packages/omniORB
+if [[ -z "${PYTHON}" ]]; then
+  PYTHON=/usr/bin/python
+fi
+if [[ -z "${OMNIORBDIR}" ]]; then
+  OMNIORBDIR=/usr/local/omniORB
+fi
+PYVERSION=$(${PYTHON} -V 2>&1 | awk -F ' ' '{print $2}' | awk -F '.' '{print $1 "." $2}')
+SITEPACKAGES=${OMNIORBDIR}/lib/python${PYVERSION}/site-packages
+SITEPACKAGES64=${OMNIORBDIR}/lib64/python${PYVERSION}/site-packages
+PYTHONPATH=${SITEPACKAGES}:${SITEPACKAGES}/omniORB
+if [ -d "${SITEPACKAGES64}" ]; then
+  PYTHONPATH=${PYTHONPATH}:${SITEPACKAGES64}:${SITEPACKAGES64}/omniORB
+fi
 export PYTHONPATH
-export LD_LIBRARY_PATH=$INSTALL_DIR/lib:$LD_LIBRARY_PATH
-export DYLD_LIBRARY_PATH=$INSTALL_DIR/lib:$DYLD_LIBRARY_PATH
-$DIR/powertest.script $@
+OSTYPE=$(uname)
+if [ "Darwin" = ${OSTYPE} ]; then
+  export DYLD_LIBRARY_PATH=$OMNIORBDIR/lib:$DYLD_LIBRARY_PATH
+else
+  export LD_LIBRARY_PATH=$OMNIORBDIR/lib:$LD_LIBRARY_PATH
+fi
+DIR=`dirname $0`
+${DIR}/powertest.script $@
