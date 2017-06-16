@@ -1023,25 +1023,63 @@ TYPE_SEM_VAL EXPR::EvalEqNeBinaryExpr(const TYPE_SEM_VAL& op1_v, const Int & opr
 {
   switch(opr.GetValue()) {
     case EQ: { // "="
-      if (op1_v.Is(TAG_TYPE_SEM_UNDEF))
+      if (op1_v.Is(TAG_TYPE_SEM_UNDEF)) {
         return RTERR::ErrorVal (L"EvalEqNeBinaryExpr", RTERR_UNDEF_ENCOUNTERED, op1_v, Nil(), Sequence());
-      else
+      }
+      else {
+        if (op1_v.Is(TAG_TYPE_DYNSEM_SEM_REC) && op2_v.Is(TAG_TYPE_DYNSEM_SEM_REC)) {
+          const TYPE_AS_Name & tag1 (op1_v.GetRecord(pos_DYNSEM_SEM_SemRecord_tag));
+          const TYPE_AS_Name & tag2 (op2_v.GetRecord(pos_DYNSEM_SEM_SemRecord_tag));
+          if (tag1 == tag2) {
+            Tuple itd = AUX::IsTypeDef(tag1);
+            if (itd.GetBoolValue(1)) {
+              const Generic & eq_g (itd.GetField(pos_AS_TypeDef_Eq));
+              if (!eq_g.IsNil()) {
+                TYPE_STKM_SubProgram sp;
+                sp.ImpAppend(TYPE_INSTRTP_LOOKUP().Init(AUX::EqualityName(tag1)));
+                sp.ImpAppend(TYPE_INSTRTP_PUSH().Init(mk_sequence(op1_v,op2_v)));
+                sp.ImpAppend(TYPE_INSTRTP_APPLY());
+                Tuple res (theStackMachine().EvalAuxProgram(sp,
+                                                      SEQ<Char>(L"Order evaluation"),
+                                                      false));
+                const TYPE_STKM_EvaluationState & eval_state (res.GetRecord(1));
+                if (eval_state.Is(TAG_TYPE_STKM_Success)) {
+                  const TYPE_SEM_VAL & Eq_v (res.GetRecord(2));
+                  if (Eq_v.Is(TAG_TYPE_SEM_BOOL)) {
+                    return Eq_v;
+                  }
+                  else {
+                    return RTERR::ErrorVal(L"EvalEqNeBinaryExpr", RTERR_BOOL_EXPECTED, Eq_v, Nil(), Sequence());
+                  }
+                }
+                else {
+                  return RTERR::ErrorVal(L"EvalOrderExpr", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
+                }
+              }
+            }
+          }
+        }
         return ((op1_v == op2_v) ? sem_true : sem_false);
+      }
     }
     case NE: { // "<>"
-      if (op1_v.Is(TAG_TYPE_SEM_UNDEF))
+      if (op1_v.Is(TAG_TYPE_SEM_UNDEF)) {
         return RTERR::ErrorVal (L"EvalEqNeBinaryExpr", RTERR_UNDEF_ENCOUNTERED, op1_v, Nil(), Sequence());
-      else
+      }
+      else {
         return ((op1_v == op2_v) ? sem_false : sem_true);
+      }
     }
     case EQUIV: { // "<=>"
       if (op1_v.Is(TAG_TYPE_SEM_BOOL) && op2_v.Is(TAG_TYPE_SEM_BOOL)) {
         return ((op1_v == op2_v) ? sem_true : sem_false);
       }
-      else if (!op1_v.Is(TAG_TYPE_SEM_BOOL))
+      else if (!op1_v.Is(TAG_TYPE_SEM_BOOL)) {
         return RTERR::ErrorVal (L"EvalEqNeBinaryExpr", RTERR_TWO_BOOL_EXPECTED, op1_v, Nil(), Sequence());
-      else
+      }
+      else {
         return RTERR::ErrorVal (L"EvalEqNeBinaryExpr", RTERR_TWO_BOOL_EXPECTED, op2_v, Nil(), Sequence());
+      }
     }
     default: { return RTERR::ErrorVal(L"EvalEqNeBinaryExpr", RTERR_OPERATOR_UNKNOWN, Nil(), Nil(), Sequence()); }
   }

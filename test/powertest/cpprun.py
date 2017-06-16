@@ -1,5 +1,5 @@
 import gentestcases, cmdline, util, setup, report, convert, resfile
-import os, re, string
+import os, re
 true, false = 1,0
 
 # srcext and binext are used to represent the extensions used for C++ files 
@@ -42,7 +42,7 @@ def executeSpec(lang):
   ok = convert.SetupSpecification(lang, 'cpp')
 
   if not ok:
-    report.Error("ABORTING specification test for " + `lang`)
+    report.Error("ABORTING specification test for '" + lang + "'")
     return 
 
   # counter to indicate progress
@@ -68,9 +68,9 @@ def executeSpec(lang):
 
     startIndex = total
     endIndex = total+len(testCases) -1
-    report.Progress(2, "Handling test cases " + `startIndex` + "..." + `endIndex`)
+    report.Progress(2, "Handling test cases " + str(startIndex) + "..." + str(endIndex))
 
-    # Prepare the next test run - the parameter `spec-job-size' tells how
+    # Prepare the next test run - the parameter 'spec-job-size' tells how
     # many testcases should be executed in each run.
     names = []
     util.DeleteFiles([".vdmtest"])
@@ -88,8 +88,8 @@ def executeSpec(lang):
 
     # Run the test cases
     if names != []:
-      report.Progress(3, "Running test cases " + `startIndex` + "..." + `endIndex`)
-      report.setTestCaseName("testcase " + `startIndex` + "..." + `endIndex`)
+      report.Progress(3, "Running test cases " + str(startIndex) + "..." + str(endIndex))
+      report.setTestCaseName("testcase " + str(startIndex) + "..." + str(endIndex))
       okNames = RunSpecTestCases(names, lang, coverageFile)
       util.MoveProfile()
 
@@ -126,7 +126,7 @@ def executeImpl(lang):
   while (name != None):
     report.setTestCaseName(name)
     if (total % jobSize) == 1:
-      report.Progress(2, "Handling test cases " + `total` + "..." + `total + jobSize-1`)
+      report.Progress(2, "Handling test cases " + str(total) + "..." + str(total + jobSize-1))
     report.Progress(3, "Running " + name)
 
     (ok, modules) = RunImplTestCase(name, lang)
@@ -136,7 +136,7 @@ def executeImpl(lang):
       util.DeleteFiles([bn+".vdm",bn+".res", "icode." + srcext, "icode" + binext,"CGBase." + srcext, "CGBase.h", "CGBase.obj", "icode.obj", "compare.arg", "compare.vdm"])
       if modules:
         for mod0 in modules:
-          mod = string.replace(mod0, "_", "_u")
+          mod = mod0.replace("_", "_u")
           util.DeleteFiles([mod+"." + srcext, mod+".h", mod+"_anonym." + srcext, mod+"_anonym.h",mod+"_userdef.h", mod + ".obj"])
     name = gentestcases.NextTestCase()
     total = total +1
@@ -324,18 +324,16 @@ def CompareRunTimeError(fullName, resFile):
   actualResult = util.ReadFile(bn+".res")
   if actualResult == None:
     return None
-  if string.find(actualResult, "Run-Time Error") != -1:
-    #expectedResult = util.ReadFile(resFile)
-    expectedResult = string.rstrip(util.ReadFile(resFile), "\n")
-    ok = (string.find(expectedResult, "Run-Time Error") != -1)
+  if actualResult.find("Run-Time Error") != -1:
+    expectedResult = util.ReadFile(resFile).rstrip("\n")
+    ok = (expectedResult.find("Run-Time Error") != -1)
     if ok:
-      actualResult = string.strip(re.sub("\s+", " ", actualResult))
+      actualResult = re.sub("\s+", " ", actualResult).strip()
       expectedResult = re.sub("Run-Time Error[ 0-9]*: ", "Run-Time Error:", expectedResult)
-      #expectedResult = string.strip(re.sub("\s+", " ", expectedResult))
       ok = (actualResult == expectedResult)
 
     if not ok:
-      report.Error("Actual result is different from expected result for " + `fullName`,
+      report.Error("Actual result is different from expected result for '" + fullName + "'",
                    "expected result : " + expectedResult + "\n" +
                    "actual result   : " + actualResult)
     return ok
@@ -355,7 +353,7 @@ def CodeGenerateImpl(fullName, lang, modules):
 
   # Clean out the files we expect as output from the code generation.
   for mod0 in modules:
-    mod = string.replace(mod0, "_", "_u")
+    mod = mod0.replace("_", "_u")
     util.DeleteFiles([mod+"." + srcext, mod+".h", mod+"_anonym." + srcext, mod+"_anonym.h", mod+"_userdef.h"])
 
   # Run the code generation
@@ -379,8 +377,8 @@ def CreateUserdefFile(modules):
   count = 1
   ok = true
   for mod0 in modules:
-    mod = string.replace(mod0, "_", "_u")
-    data = "#define TAG_" + mod + " " + `count*10000`+"\n"
+    mod = mod0.replace("_", "_u")
+    data = "#define TAG_" + mod + " " + str(count*10000) +"\n"
     count = count +1
     ok = util.WriteFile(mod+"_userdef.h", data) and ok
 
@@ -405,7 +403,7 @@ def CreateArgFile(fullName,lang, modules):
     template = util.GetTemplate('arg-file-cpp-sl')
     str = ""
     for mod0 in modules:
-      mod = string.replace(mod0, "_", "_u")
+      mod = mod0.replace("_", "_u")
       str = str + "init_" + mod + "();"
     data = util.SubString('<<INIT>>', str, template)
     data = util.SubString('<<MOD>>', modcls, data)
@@ -445,7 +443,7 @@ def CompileCPPFiles(fullName, lang, type, modules):
   if lang != 'sl':
     ccFiles = ccFiles + " CGBase." + srcext
   for mod0 in modules:
-    mod = string.replace(mod0, "_", "_u")
+    mod = mod0.replace("_", "_u")
     ccFiles = ccFiles + " " + mod + "." + srcext
 
   # If there were any dl classes specified, add the corresponding files to 
@@ -474,7 +472,7 @@ def CompileCPPFiles(fullName, lang, type, modules):
   else:
     flags = " -DVDMPP " + flags
 
-  flags = flags + " -D__" + string.replace(baseName, "-", "_") + "__"
+  flags = flags + " -D__" + baseName.replace("-", "_") + "__"
 
   # Append link path to the directory containing the source file, as
   # this directory may also contain the extra _userimpl.cc file.
@@ -505,7 +503,7 @@ def CompileCPPFiles(fullName, lang, type, modules):
       if lang != 'sl':
         objFiles = objFiles + " CGBase." + objext
       for mod0 in modules:
-        mod = string.replace(mod0, "_", "_u")
+        mod = mod0.replace("_", "_u")
         objFiles = objFiles + " " + mod + "." + objext
 
       libdir = os.path.expandvars(os.path.expanduser(cmdline.LookUp('cpp-lib-dir')))
@@ -550,12 +548,12 @@ def VerifyPresenceOfGeneratedFiles(fullName, modules):
   ok = true
   extensions = ["." + srcext, ".h", "_anonym." + srcext, "_anonym.h"]
   for mod0 in modules:
-    mod = string.replace(mod0, "_", "_u")
+    mod = mod0.replace("_", "_u")
     for thisext in extensions:
       if not util.UsesVisualStudio() or mod != 'MATH' or thisext != '.h':
         if not os.path.exists(mod+thisext):
-          report.Error("file " + `mod+thisext` + " was not generated for testcase " + `fullName`)
-          report.Progress(4,"file " + `mod+thisext` + " was not generated for testcase " + `fullName`)
+          report.Error("file '" + mod+thisext + "' was not generated for testcase '" + fullName +"'")
+          report.Progress(4,"file '" + mod+thisext + "' was not generated for testcase '" + fullName + "'")
           ok = false
   
   return ok

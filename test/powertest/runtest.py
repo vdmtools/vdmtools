@@ -1,5 +1,4 @@
 import cmdline, util, setup, report
-#import tcrun,iprun,cpprun,javarun,apirun,debugrun,parserrun,roserun,metaivrun,rtfrun,java2vdmrun,j2vtfrun,pogrun
 # Under WinNT some modules imported by apirun are missing! M.Lebedev
 import apirun
 import tcrun,iprun,cpprun,javarun,        debugrun,parserrun,roserun,metaivrun,rtfrun,java2vdmrun,j2vtfrun,pogrun

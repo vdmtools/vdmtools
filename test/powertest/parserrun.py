@@ -1,2 +1,2 @@
 def execute(lang, type):
-  print "Running parser"
+  print ("Running parser")

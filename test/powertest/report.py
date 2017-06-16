@@ -1,6 +1,6 @@
 true, false = 1,0
 
-import sys, string, time, getpass, socket, cmdline,os
+import sys, time, getpass, socket, cmdline,os
 import cmdline, util
 
 #--------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ def Init():
 #--------------------------------------------------------------------------------
 def Progress(level,msg):  
   if (cmdline.LookUp('debug-level') >= level or cmdline.LookUp('debug-level') == -1):
-    print " " * 2 * (level-1) + msg
+    print (" " * 2 * (level-1) + msg)
 
 
 #--------------------------------------------------------------------------------
@@ -69,11 +69,11 @@ def PrintCmdOutput(stdoutFile, stderrFile):
     if os.path.exists(stdoutFile):
       data = util.ReadFile(stdoutFile)
       if data:
-        print "[07m[34m" + data + "[30m[0m"
+        print ("[07m[34m" + data + "[30m[0m")
     if os.path.exists(stderrFile):
       data = util.ReadFile(stderrFile)
       if data:
-        print "[07m[31m" + data + "[30m[0m"
+        print ("[07m[31m" + data + "[30m[0m")
   
   
 #--------------------------------------------------------------------------------
@@ -95,7 +95,7 @@ def Header():
 
   l = (78 - len(currentTestCaseName)) /2
   errStream.write("*" * 80 + "\n")
-  errStream.write(" " * l + currentTestCaseName + "\n")
+  errStream.write(" " * int(l) + currentTestCaseName + "\n")
   errStream.write("*" * 80 + "\n")
   errStream.write("Test environment: " + currentTestEnv + "\n")
   errStream.write("Run type: " + currentRunType + "\n")
@@ -120,17 +120,17 @@ def Error(msg, diagnosis=None, stdout=None, stderr=None):
   
   if diagnosis:
     errStream.write("Possible diagnosis:\n")
-    for line in string.split(diagnosis,"\n"):
+    for line in diagnosis.split("\n"):
       errStream.write("  " + line + "\n")
 
   if stdout:
     errStream.write("Standard output:\n  ")
-    for line in string.split(stdout,"\n"):
+    for line in stdout.split("\n"):
       errStream.write("  " + line + "\n")
 
   if stderr:
     errStream.write("Standard error:\n  ")
-    for line in string.split(stderr,"\n"):
+    for line in stderr.split("\n"):
       errStream.write("  " + line + "\n")
 
   errStream.write("\n\n\n")
@@ -145,7 +145,7 @@ def Error(msg, diagnosis=None, stdout=None, stderr=None):
 
 
 #--------------------------------------------------------------------------------
-# Reports that the file `file' will be ignored due to an .ignore file.
+# Reports that the file 'file' will be ignored due to an .ignore file.
 #--------------------------------------------------------------------------------
 def IgnoreFile(file):
   global ignoreFilesList
@@ -197,11 +197,11 @@ def IncrTestcaseCounter():
 def SetValueInMap(base,names, init, func):
   val = base
   for name in names[:-1]:
-    if not val.has_key(name):
+    if not name in val:
       val[name] = {}
     val = val[name]
   lastElm = names[-1]
-  if not val.has_key(lastElm):
+  if not lastElm in val:
     val[lastElm] = init
   val[lastElm] = func(val[lastElm])
 
@@ -233,19 +233,19 @@ def PrintTime(tot):
   sec  = (tot%3600) % 60
 
   if hour < 10:
-    res = '0' + `hour` + ":"
+    res = '0' + str(hour) + ":"
   else:
-    res = `hour`+":"
+    res = str(hour)+":"
 
   if min < 10:
-    res = res + "0" + `min`+":"
+    res = res + "0" + str(min) +":"
   else:
-    res = res + `min`+":"
+    res = res + str(min) +":"
 
   if sec < 10:
-    return res + "0" + `sec`
+    return res + "0" + str(sec)
   else:
-    return res + `sec`
+    return res + str(sec)
 
 #--------------------------------------------------------------------------------
 #
@@ -291,12 +291,12 @@ def reportTotal():
       for language in counters[testEnv][runType].keys():
         if testEnv == 'tc':
           for tctype in counters[testEnv][runType][language].keys():
-            PrintData(testEnv, runType, language, tctype, `counters[testEnv][runType][language][tctype]`)
+            PrintData(testEnv, runType, language, tctype, str(counters[testEnv][runType][language][tctype]))
         elif testEnv == 'ip':
           for iptype in counters[testEnv][runType][language].keys():
-            PrintData(testEnv, runType, language, iptype, `counters[testEnv][runType][language][iptype]`)
+            PrintData(testEnv, runType, language, iptype, str(counters[testEnv][runType][language][iptype]))
         else:
-          PrintData(testEnv, runType, language, None, `counters[testEnv][runType][language]`)
+          PrintData(testEnv, runType, language, None, str(counters[testEnv][runType][language]))
 
 def reportUsedWildCards():
   printHeader("Used Wildcards")
@@ -313,8 +313,8 @@ def PrintData(testenv, runtype, language, tciptype, txt):
   reportStream.write(txt+"\n")
 
 def printHeader(txt):
-  reportStream.write("\n\n\n" + "-"*80+"\n")
+  reportStream.write("\n\n\n" + "-" * 80 + "\n")
   w = (80-len(txt)) / 2
-  reportStream.write(" "*w + txt + "\n")
-  reportStream.write("-"*80+"\n")
+  reportStream.write(" " * int(w) + txt + "\n")
+  reportStream.write("-" * 80 + "\n")
 

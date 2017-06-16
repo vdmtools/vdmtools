@@ -1,6 +1,6 @@
 true, false = 1,0
 import report, util, cmdline, setup
-import re, string, os
+import re, os
 
 # uselibs is used to accumulate the names of classes which are dlclasses
 uselibs = []
@@ -8,7 +8,7 @@ modcls = ""
 
 standardlibs = []
 #--------------------------------------------------------------------------------
-# Reads the file `fileName', and converts it to language `lang', and writes
+# Reads the file 'fileName', and converts it to language 'lang', and writes
 # it to the current directory with the same name.
 #--------------------------------------------------------------------------------
 def ConvertLanguage(lang, fileName):
@@ -21,7 +21,7 @@ def ConvertLanguage(lang, fileName):
 
   if IsLanguageSl(data):
     if (lang == 'pp'):
-      report.Error("Input file: " + `fileName` + " is a SL file, but a PP file is required")
+      report.Error("Input file: '" + fileName + "' is a SL file, but a PP file is required")
       return false
   else:
     if (lang == 'sl'):
@@ -31,7 +31,7 @@ def ConvertLanguage(lang, fileName):
   return ok
 
 #--------------------------------------------------------------------------------
-# returns true if the vdm file located in the string `data' is written in SL
+# returns true if the vdm file located in the string 'data' is written in SL
 #--------------------------------------------------------------------------------
 def IsLanguageSl(data):
   moduleMatch = re.search("^ *module", data, re.MULTILINE)
@@ -54,7 +54,7 @@ def PP2SL(data):
 
 
 #--------------------------------------------------------------------------------
-# Translate the vdm file `fileName' to an AST using the vdmde parser `parser'
+# Translate the vdm file 'fileName' to an AST using the vdmde parser 'parser'
 #--------------------------------------------------------------------------------
 def VDM2AST(fileName,parser, typeCheck):
   base = util.ExtractName(fileName)
@@ -66,7 +66,8 @@ def VDM2AST(fileName,parser, typeCheck):
   if (os.path.exists("m4pp")):
     try:
       os.unlink("m4pp")
-    except os.error,(no,msg):
+    except os.error as err:
+      no, msg = err
       report.Error("Error while removing 'm4pp': " + msg)
       return false
 
@@ -81,20 +82,22 @@ def VDM2AST(fileName,parser, typeCheck):
 
   # verify that a m4pp file has been created.
   if not os.path.exists("m4pp"):
-    report.Error("command " + `cmd` + " didn't produce a m4pp file, though return code was 0",
+    report.Error("command '" + cmd + "' didn't produce a m4pp file, though return code was 0",
           "Command may not be a vdmde command with -pa flag")
     return false
 
-  # Finally move m4pp to `astFile'
+  # Finally move m4pp to 'astFile'
   if (os.path.exists(astFile)):
     try:
       os.unlink(astFile)
-    except os.error,(no,msg):
+    except os.error as err:
+      no, msg = err
       report.Error("Error while removing " + astFile + ": " + msg)
       return false
   try:
     os.rename('m4pp', astFile)
-  except os.error, (no, msg):
+  except os.error as err:
+    no, msg = err
     report.Error("Couldn't move file 'm4pp' to " + astFile + ": " + msg)
     return false
 
@@ -132,7 +135,7 @@ def ParseOptionsFile(fileName):
 
   report.Progress(4, "Parsing " + optionsFileName)
   data = util.ReadFile(optionsFileName)
-  startIndex = string.find(data, "SetOptions")
+  startIndex = data.find("SetOptions")
   if startIndex == -1:
     report.Error("Unable to parse options file (1)")
     return ""
@@ -186,7 +189,7 @@ def ParseOptionsFile(fileName):
         else:
           report.Error("args didn't match: " + args)
       else:
-        print "Unknown option " + comm
+        print ("Unknown option " + comm)
     else:
       report.Error("Command didn't match: " + comm) 
   report.Progress(4, "Finished parsing " + optionsFileName)
@@ -337,7 +340,7 @@ def SetupSpecification(lang, env):
     else:
       dotVdm = '.vdmde-pog-rt'
   else:
-    report.Error("Internal error in CreateSpecFiles, unknow env: " + `env`)
+    report.Error("Internal error in CreateSpecFiles, unknow env: '" + env + "'")
     return false;
 
   # Windows needs a different dotVdm file since file paths are different
@@ -410,7 +413,7 @@ def ModulesInSpecification(fullName, lang):
     match = regexp.search(data, index)
     if match == None:
       if result == []:
-        report.Error("Could find any module or class in specification file " + `fullName`)
+        report.Error("Could find any module or class in specification file '" + fullName + "'")
         return None
       finished = 1
     else:
@@ -478,7 +481,7 @@ def ExtractArgFileInfo(fullName):
     if match == None:
       match = re.match("^ *(.+)\.(.+)\(\) *$", str, re.M)
       if match == None:
-        report.Error("Could parse argument file " + `argFile` + " with syntax MOD`OP()")
+        report.Error("Could parse argument file '" + argFile + "' with syntax MOD`OP()")
         return None
       else:
         modcls = match.group(1)

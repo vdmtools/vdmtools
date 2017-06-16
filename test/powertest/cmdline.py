@@ -1,5 +1,5 @@
-import os, re, string,sys, time
-import setup
+import os, re, sys, time
+import setup, util
 true, false = 1,0
 
 #-----------------------------------------------------------------------------
@@ -35,7 +35,8 @@ class Parameter:
     
 
   def __str__(self):
-    return "mk_Parameter(" + `self.arg` + "," + `self.value` + "," + `self.where` + ")"
+    #return "mk_Parameter(" + `self.arg` + "," + `self.value` + "," + `self.where` + ")"
+    return "mk_Parameter('" + self.arg + "','" + self.value + "','" + self.where + "')"
 
 
 #-----------------------------------------------------------------------------
@@ -72,7 +73,7 @@ def ReadCmdLine(args):
   cmdLine = args
   for arg in args[1:]:
     # is this a KEY=VALUE 
-    index = string.find(arg,"=")
+    index = arg.find("=")
     if index == -1:
       testCases.append(arg)
     else:
@@ -83,16 +84,16 @@ def ReadCmdLine(args):
 #-----------------------------------------------------------------------------
 # Read the configuration file
 #-----------------------------------------------------------------------------
-def ReadConfFile(file):
+def ReadConfFile(filenm):
   # Open the file.
-  if not os.path.exists(file):
-    print "File " + `file` + " does not exist."
-    print "This file is required to run powertest."
-    print "You should probably copy " + setup.BaseDir + "/default-setup to " + file + " and customize it to your setup."
-    print "Have fun!"
+  if not os.path.exists(filenm):
+    print ("File '" + filenm + "' does not exist.")
+    print ("This file is required to run powertest.")
+    print ("You should probably copy " + setup.BaseDir + "/default-setup to " + filenm + " and customize it to your setup.")
+    print ("Have fun!")
     sys.exit(-1)
   else:
-    FP = open(file)
+    FP = open(filenm)
 
   # Read the content of the file
   lineno = 0
@@ -101,48 +102,48 @@ def ReadConfFile(file):
     line = line[:-1]
     line = RemoveComments(line)
 
-    if (string.strip(line) != ""):
+    if (line.strip() != ""):
       ExtractKey(line, lineno)
 
 def RemoveComments(line):
   # At the moment we only remove everything after a #, later this may be changed
   # if we need a # in the value part.
-  index = string.find(line,"#")
+  index = line.find("#")
   if (index != -1):
     return line[:index]
   else:
     return line
 
 #-----------------------------------------------------------------------------
-# Extract the key/value pair from `line'. This line is located in the
-# configuration file on line `lineno'.
+# Extract the key/value pair from 'line'. This line is located in the
+# configuration file on line 'lineno'.
 #-----------------------------------------------------------------------------
 def ExtractKey(line, lineno):
-  index = string.find(line,"=")
+  index = line.find("=")
   if index == -1:
-    Error("Error on line " + `lineno` + ": " + `line` + " didn't match Keyword=Value", None)
+    Error("Error on line " + str(lineno) + ": '" + line + "' didn't match Keyword=Value", None)
   else:
     key = line[:index]
     val  = line[index+1:]
     InsertKeyVal(key, val, 'conffile', lineno)
 
 #-----------------------------------------------------------------------------
-# Insert the key `key' into the parameters table with value `value'
-# This key is located in `where' on line `lineno' (see the class Parameters
+# Insert the key 'key' into the parameters table with value 'value'
+# This key is located in 'where' on line 'lineno' (see the class Parameters
 # for description of this.
 #-----------------------------------------------------------------------------
 def InsertKeyVal(key,val, where, lineno = None):
   global parameters
 
-  key = string.lower(string.strip(key))
+  key = key.strip().lower()
   origKey = key
-  val = string.strip(val)
+  val = val.strip()
 
-  if setup.keywords.has_key(key):
+  if key in setup.keywords:
     # The key is one of the non-wildcard keys.
-    if (parameters.has_key(key) and parameters[key].where == 'conffile'):
-      Error("Key " + `key` + " defined multiple times in the input file", None)
-    elif (not parameters.has_key(key) or where != 'conffile'):
+    if (key in parameters and parameters[key].where == 'conffile'):
+      Error("Key '" + key + "' defined multiple times in the input file", None)
+    elif (not key in parameters or where != 'conffile'):
       # Ensure that we do not override key from the commandline
       parameters[key] = Parameter(val, where, lineno)
 
@@ -157,21 +158,20 @@ def InsertKeyVal(key,val, where, lineno = None):
     if which == None:
       # I know nothing about this keyword!
       if where == 'cmdline':
-        Error("Unknown keyword on command line: " + `key`, None)
+        Error("Unknown keyword on command line: '" + key + "'", None)
       else:
-        Error("Unknow keyword on line " + `lineno` + ": " + `key`, None)
+        Error("Unknow keyword on line " + str(lineno) + ": '" + key + "'", None)
       return
 
     # Ok at this possition we know that the keyword is a wildcard keyword.
     if setup.wildCardExecutable.count(which):
       # Verify that the key points to an executable
-      #file = os.path.expanduser(string.split(val)[0])
-      file = os.path.expandvars(os.path.expanduser(string.split(val)[0]))
-      if not os.path.isfile(file):
-        ErrorPos("binary " + `file` + " does not exist", where, lineno)
+      filenm = os.path.expandvars(os.path.expanduser(val.split()[0]))
+      if not os.path.isfile(filenm):
+        ErrorPos("binary '" + filenm + "' does not exist", where, lineno)
         return
       else:
-        value = file + " " + string.join(string.split(val)[1:])
+        value = filenm + " " + "".join(val.split()[1:])
 
       
     keys = [which]
@@ -183,7 +183,7 @@ def InsertKeyVal(key,val, where, lineno = None):
     (key, keys) = BuildKeys(key, keys, ['pos', 'def', 'dtcon', 'dtcoff'])
 
     if (key != ''):
-      ErrorPos("Key " + `origKey` + " contains non wildcard text: "+ `key`, where, lineno)
+      ErrorPos("Key '" + origKey + "' contains non wildcard text: '"+ key + "'", where, lineno)
       return
 
     for key in keys:
@@ -194,7 +194,7 @@ def InsertKeyVal(key,val, where, lineno = None):
 def BuildKeys(key, keys, possible):
   found = None
   for elm in possible:
-    index = string.find(key, "-" + elm)
+    index = key.find("-" + elm)
     if index != -1:
       found = elm
       key = key[:index] + key[index+len(elm)+1:]
@@ -216,8 +216,8 @@ def BuildKeys(key, keys, possible):
   # is, to obtain simplicity.
   for val in vals:
     for k in keys:
-      append = infer(val == 'pos' or val == 'def', string.find(k,'tc') != -1) and \
-               infer(val == 'dtcon' or val == 'dtcoff', string.find(k, 'ip') != -1)
+      append = infer(val == 'pos' or val == 'def', k.find('tc') != -1) and \
+               infer(val == 'dtcon' or val == 'dtcoff', k.find('ip') != -1)
       if append:
         newKeys.append(k+"-"+val)
       else:
@@ -242,8 +242,8 @@ def VerifyAndTranslateKeys():
   #------------------------------------------------------------
 
   # What-To-Run - this must be first so we ensure that we do not check extra things.
-  if not parameters.has_key("what-to-run"):
-    print "Fatal error: Must specify what-to-run in configuration file"
+  if not "what-to-run" in parameters:
+    print ("Fatal error: Must specify what-to-run in configuration file")
     sys.exit(-1);
 
   VerifyAndTranslateSeq('what-to-run', setup.availableTestenv, 
@@ -251,19 +251,18 @@ def VerifyAndTranslateKeys():
 
   # Verify that all options has been specified.
   for keyword in setup.keywords.keys():
-    if not parameters.has_key(keyword) and NeedKeyWord(keyword):
-      Error('Keyword ' + `keyword` + 
-            ' not found in configuration file or on command line', None)
+    if not keyword in parameters and NeedKeyWord(keyword):
+      Error("Keyword '" + keyword + 
+            "' not found in configuration file or on command line", None)
 
   # Ensure that directories exists
   for name in setup.directories:
     parameters[name].value = []
-    for dir in string.split(parameters[name].arg,","):
-      file = os.path.expanduser(string.strip(dir))
-      if (NeedKeyWord(name) and not os.path.isdir(file)):
-        Error("directory " + `file` + " does not exist", name)
-      parameters[name].value.append(string.strip(dir))
-
+    for dirnm in parameters[name].arg.split(","):
+      filenm = os.path.expanduser(dirnm.strip())
+      if (NeedKeyWord(name) and not os.path.isdir(filenm)):
+        Error("directory '" + filenm + "' does not exist", name)
+      parameters[name].value.append(dirnm.strip())
 
 
   #------------------------------------------------------------
@@ -273,7 +272,7 @@ def VerifyAndTranslateKeys():
   # Language
   VerifyAndTranslateSeq('language', setup.availableLanguages,
                         "Unknow language %1 should either be " 
-                        + string.join(setup.availableLanguages, ", "))
+                        + util.join(setup.availableLanguages, ", "))
 
   # Run-Type
   VerifyAndTranslateSeq('run-type', ['spec', 'impl'],
@@ -335,70 +334,70 @@ def VerifyAndTranslateKeys():
         parameters[keyword].value = parameters[keyword].arg
 
 #-----------------------------------------------------------------------------
-# This function translate the values given to the key `name' to a sequence, and 
+# This function translate the values given to the key 'name' to a sequence, and 
 # verifies that the arguments is valid (that is in the sequence okSeq).
 # If an argument is not valid then an error message is signaled. This error message
-# is combined by replacing `%1' in the errMsg with the name of the wrong argument.
+# is combined by replacing '%1' in the errMsg with the name of the wrong argument.
 #-----------------------------------------------------------------------------
 def VerifyAndTranslateSeq(name, okSeq, errMsg):
-  if not parameters.has_key(name) or not NeedKeyWord(name):
+  if not name in parameters or not NeedKeyWord(name):
     return # The key has already been reported as missing
 
-  if string.strip(parameters[name].arg) == '':
-    raise 'no arguments given to keyword ' + `name` 
+  if parameters[name].arg.strip() == '':
+    raise "no arguments given to keyword '" + name + "'"
   else:
     # first setup the map.
     parameters[name].value = {}
     for elm in okSeq:
       parameters[name].value[elm] = 0
   
-    for elm in string.split(parameters[name].arg, ","):
-      elm = string.strip(string.lower(elm))
+    for elm in parameters[name].arg.split(","):
+      elm = elm.strip().lower()
       if okSeq.count(elm) == 0:
-        msg = string.replace(errMsg, "%1", `elm`)
+        msg = errMsg.replace("%1", "'" + elm + "'")
         Error(msg, name)
       else:
         parameters[name].value[elm] = 1
 
 
 def VerifyAndTranslateInt(name, errMsg):
-  if not parameters.has_key(name) or not NeedKeyWord(name):
+  if not name in parameters or not NeedKeyWord(name):
     return # The key has already been reported as missing
 
   elm = parameters[name].arg
   try:
     parameters[name].value = int(elm)
   except ValueError:
-    msg = string.replace(errMsg,"%1",`elm`)
+    msg = errMsg.replace("%1", "'" + elm + "'")
     Error(msg, name)
 
 def VerifyAndTranslateBool(name, errMsg):
-  if not parameters.has_key(name) or not NeedKeyWord(name):
+  if not name in parameters or not NeedKeyWord(name):
     return # The key has already been reported as missing
 
-  elm = string.lower(string.strip(parameters[name].arg))
+  elm = parameters[name].arg.strip().lower()
   if (elm == "yes" or elm == "true"):
     parameters[name].value = 1
   elif (elm == "no" or elm == "false"):
     parameters[name].value = 0
   else:
-    msg = string.replace(errMsg,"%1",`elm`)
+    msg = errMsg.replace("%1", "'" + elm + "'")
     Error(msg, name)
     
 
 def EnsureDirIsSpecDir(name, dirMsg):
-  if not parameters.has_key(name) or not NeedKeyWord(name):
+  if not name in parameters or not NeedKeyWord(name):
     return # The key has already been reported as missing
 
-  dir = os.path.expanduser(parameters[name].arg)
-  if not os.path.exists(dir):
-    Error(dirMsg + " specification directory " + `dir` + " does not exist.", name)
-  elif (not os.path.isdir(dir)):
-    Error(dirMsg + " specification directory " + `dir` + " is not a directory.", name)
-  elif (not os.path.isfile(dir+"/Makefile")):
-    Error("No Makefile exist in " + dirMsg + " specification directory " + `name`, name)
+  dirnm = os.path.expanduser(parameters[name].arg)
+  if not os.path.exists(dirnm):
+    Error(dirMsg + " specification directory '" + dirnm + "' does not exist.", name)
+  elif (not os.path.isdir(dirnm)):
+    Error(dirMsg + " specification directory '" + dirnm + "' is not a directory.", name)
+  elif (not os.path.isfile(dirnm+"/Makefile")):
+    Error("No Makefile exist in " + dirMsg + " specification directory '" + name + "'", name)
   else:
-    parameters[name].value = dir
+    parameters[name].value = dirnm
 
 #-----------------------------------------------------------------------------
 # This function prints out error messages while reading the command line or
@@ -413,16 +412,15 @@ def Error(msg, key):
   if key:
     ErrorPos(msg, parameters[key].where, parameters[key].lineno)
   else:
-    print msg
+    print (msg)
 
 def ErrorPos(msg, where, lineno):
   global cmdLineError
   cmdLineError = 1
   if where == 'cmdline':
-    print "Error on commandline: ",
+    print ("Error on commandline: " + msg)
   else:
-    print  "Error on line " + `lineno` +": ",
-  print msg
+    print ("Error on line " + str(lineno) + ": " + msg)
   
 #-----------------------------------------------------------------------------
 # This function return true of env is one of the testenvironment which
@@ -452,27 +450,27 @@ def VerifyTestCases():
 
   for testCase in testCases:
     if (not os.path.exists(testCase)):
-      Error("Test case or test test directory " + `testCase` + " does not exists",None)
+      Error("Test case or test test directory '" + testCase + "' does not exists",None)
       
 #-----------------------------------------------------------------------------
 # Return a list for test cases for the given test environment.
-# `env' should be one of the envs in setup.availableTestenv 
+# 'env' should be one of the envs in setup.availableTestenv 
 #-----------------------------------------------------------------------------
 def GetTestCases(env):
   if testCases != []:
     return testCases
   else:
-    return parameters[string.lower(env+"-test-case-dir")].value
+    return parameters[env.lower()+"-test-case-dir"].value
 
 
 #-----------------------------------------------------------------------------
-# LookUp returns the value of the key in the global map `parameters'
+# LookUp returns the value of the key in the global map 'parameters'
 #-----------------------------------------------------------------------------
 def LookUp(key):
-  return parameters[string.lower(key)].value
+  return parameters[key.lower()].value
 
 def GetCmdLine():
-  return string.join(cmdLine," ")
+  return util.join(cmdLine," ")
 
 #-----------------------------------------------------------------------------
 # returns a specific VDM-SL or VDM++ interpreter
@@ -488,7 +486,7 @@ def LookUpWildCard(env, lang, type, which, extraType = None):
   key = which+"-"+env+"-"+lang+"-"+type
   if lang == 'tc' or lang == 'ip':
     key = key +"-"+extraType
-  key = string.lower(key)
+  key = key.lower()
 
   parameters[key].used = true
   return parameters[key].value

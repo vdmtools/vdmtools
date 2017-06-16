@@ -1,5 +1,5 @@
 import gentestcases, cmdline, util, setup, report, convert, resfile
-import os, re, string,sys
+import os, re, sys
 true, false = 1,0
 
 #--------------------------------------------------------------------------------
@@ -23,7 +23,7 @@ def execute(lang, type):
 def executeSpec(lang, dtc):
   ok = convert.SetupSpecification(lang, 'pog')
   if not ok:
-    report.Error("ABORTING specification test for " + `lang`)
+    report.Error("ABORTING specification test for '" + lang + "'")
     return 
 
   # counter to indicate progress
@@ -48,9 +48,9 @@ def executeSpec(lang, dtc):
 
     startIndex = total
     endIndex = total+len(testCases) -1
-    report.Progress(2, "Handling test cases " + `startIndex` + "..." + `endIndex`)
+    report.Progress(2, "Handling test cases " + str(startIndex) + "..." + str(endIndex))
 
-    # Prepare the next test run - the parameter `spec-job-size' tells how
+    # Prepare the next test run - the parameter 'spec-job-size' tells how
     # many testcases should be executed in each run.
     names = []
     util.DeleteFiles([".vdmtest"])
@@ -68,8 +68,8 @@ def executeSpec(lang, dtc):
 
     # Run the test cases
     if names != []:
-      report.Progress(3, "Running test cases " + `startIndex` + "..." + `endIndex`)
-      report.setTestCaseName("testcase " + `startIndex` + "..." + `endIndex`)
+      report.Progress(3, "Running test cases " + str(startIndex) + "..." + str(endIndex))
+      report.setTestCaseName("testcase " + str(startIndex) + "..." + str(endIndex))
       okNames = RunSpecTestCases(names, lang, dtc, coverageFile)
 #      util.MoveProfile()
 
@@ -109,7 +109,7 @@ def executeImpl(lang, dtc):
   while (name != None):
     report.setTestCaseName(name)
     if (total % jobSize) == 1:
-      report.Progress(2, "Handling test cases " + `total` + "..." + `total + jobSize-1`)
+      report.Progress(2, "Handling test cases " + str(total) + "..." + str(total + jobSize-1))
     report.Progress(3, "Running " + name)
 
     ok = PrepareImplCase(name, lang)
@@ -293,17 +293,16 @@ def RunImplTestCase(fullName, lang, dtc):
 
     # Was output produced?
     if not os.path.exists(outputFile):
-      report.Error(`cmd` + " didn't produce the expected result file: " + `outputFile`,
+      report.Error("'" + cmd + "' didn't produce the expected result file: '" + outputFile + "'",
                    "Either command was malformed, or the interpreter crashed.")
       return false
 
     interpreter = cmdline.LookUpWildCard('pog', lang, 'impl', 'spec-compare')
-#    ok = resfile.CompareResult(fullName, outputFile, expResultFile, interpreter)
     ok = CompareResult(fullName, outputFile, expResultFile, interpreter)
     return ok
 
 #--------------------------------------------------------------------------------
-# See if `output' contains a runtime error, and if that is the case, then
+# See if 'output' contains a runtime error, and if that is the case, then
 # compare that to the expected result.
 # fullName      - name of the testcase
 # expResultFile - name of the expected result file
@@ -315,7 +314,7 @@ def CompareRunTimeError(fullName, expResultFile,  output):
   if not match:  
     match = re.search("(Run-Time Error *[0-9]+:.*)",output, re.M)
   if not match:
-    report.Error("While searching for runtime error, no runtime error information found for " + `fullName`,
+    report.Error("While searching for runtime error, no runtime error information found for '" + fullName + "'",
                  "Error running interpreter, maybe syntax error")
     return false
 
@@ -338,10 +337,6 @@ def RegisterExpansionSet(lang, dtc, type):
   expSet = resfile.MakeStdExpansionSet('pog', lang, type)
   expSet = resfile.AppendToExpandsionSet(expSet, 'pog',[])
   expSet = resfile.AppendToExpandsionSet(expSet, 'pos',['def'])
-#  if dtc == 'dtcon':
-#    expSet = resfile.AppendToExpandsionSet(expSet, 'dtcon',['dtcoff'])
-#  else:
-#    expSet = resfile.AppendToExpandsionSet(expSet, 'dtcoff',['dtcon'])
   resfile.RegisterExpansionSet(expSet)
 
 #--------------------------------------------------------------------------------
@@ -413,27 +408,27 @@ def StripSemValue(fullName, lang, dtc):
 #--------------------------------------------------------------------------------
 def CompareResult(fullName, outputFile, resFile, interpreter, structTest=true):
 
-  report.Progress(4, "Comparing result for " + `fullName` + " using diff method")
+  report.Progress(4, "Comparing result for '" + fullName + "' using diff method")
   # compare the results using normal "diff"
   actualResult = util.ReadFile(outputFile)
   expectedResult = util.ReadFile(resFile)
   
   # Remove duplicate white spaces and line breaks, spaces around commas and parenthesis.
-  actualResult = string.strip(re.sub("\s+", " ", actualResult))
-  expectedResult = string.strip(re.sub("\s+", " ", expectedResult))
-  actualResult = string.strip(re.sub("\s*,\s*", ",", actualResult))
-  expectedResult = string.strip(re.sub("\s*,\s*", ",", expectedResult))
-  actualResult = string.strip(re.sub("\s*\(\s*", "(", actualResult))
-  expectedResult = string.strip(re.sub("\s*\(\s*", "(", expectedResult))
-  actualResult = string.strip(re.sub("\s*\)\s*", ")", actualResult))
-  expectedResult = string.strip(re.sub("\s*\)\s*", ")", expectedResult))
+  actualResult = re.sub("\s+", " ", actualResult).strip()
+  expectedResult = re.sub("\s+", " ", expectedResult).strip()
+  actualResult = re.sub("\s*,\s*", ",", actualResult).strip()
+  expectedResult = re.sub("\s*,\s*", ",", expectedResult).strip()
+  actualResult = re.sub("\s*\(\s*", "(", actualResult).strip()
+  expectedResult = re.sub("\s*\(\s*", "(", expectedResult).strip()
+  actualResult = re.sub("\s*\)\s*", ")", actualResult).strip()
+  expectedResult = re.sub("\s*\)\s*", ")", expectedResult).strip()
 
   if actualResult == expectedResult:
     return true
 
   # Hmmm we need to try to compare using VDMDE then.
   if structTest and interpreter != None:
-    report.Progress(4, "Comparing result for " + `fullName` + " by build VDM value")
+    report.Progress(4, "Comparing result for '" + fullName + "' by build VDM value")
 #    template = util.ReadFile(setup.BaseDir+"/../pogtestcases/compare-pog.vdm")
     template = util.ReadFile(setup.BaseDir+"/templates/compare-pog.vdm")
     if template == None:
@@ -458,7 +453,7 @@ def CompareResult(fullName, outputFile, resFile, interpreter, structTest=true):
     ok = false
 
   if not ok:
-    report.Error("Actual result is different from expected result for " + `fullName`,
+    report.Error("Actual result is different from expected result for '" + fullName + "'",
                  "expected result : " + expectedResult + "\n" +
                  "actual result   : " + actualResult)
     

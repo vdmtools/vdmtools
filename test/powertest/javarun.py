@@ -1,5 +1,5 @@
 import gentestcases, cmdline, util, setup, report, convert, resfile
-import os, re, string
+import os, re
 true, false = 1,0
 
 #-----------------------------------------------------------------------------
@@ -31,7 +31,7 @@ def executeSpec(lang):
   ok = convert.SetupSpecification(lang, 'java')
 
   if not ok:
-    report.Error("ABORTING specification test for " + `lang`)
+    report.Error("ABORTING specification test for '" + lang + "'")
     return 
 
   # counter to indicate progress
@@ -56,9 +56,9 @@ def executeSpec(lang):
 
     startIndex = total
     endIndex = total+len(testCases) -1
-    report.Progress(2, "Handling test cases " + `startIndex` + "..." + `endIndex`)
+    report.Progress(2, "Handling test cases " + str(startIndex) + "..." + str(endIndex))
 
-    # Prepare the next test run - the parameter `spec-job-size' tells how
+    # Prepare the next test run - the parameter 'spec-job-size' tells how
     # many testcases should be executed in each run.
     names = []
     util.DeleteFiles([".vdmtest"])
@@ -76,8 +76,8 @@ def executeSpec(lang):
 
     # Run the test cases
     if names != []:
-      report.Progress(3, "Running test cases " + `startIndex` + "..." + `endIndex`)
-      report.setTestCaseName("testcase " + `startIndex` + "..." + `endIndex`)
+      report.Progress(3, "Running test cases " + str(startIndex) + "..." + str(endIndex))
+      report.setTestCaseName("testcase " + str(startIndex) + "..." + str(endIndex))
       (okNames, modules) = RunSpecTestCases(names, lang, coverageFile)
       util.MoveProfile()
 
@@ -134,7 +134,7 @@ def executeImpl(lang):
   while (name != None):
     report.setTestCaseName(name)
     if (total % jobSize) == 1:
-      report.Progress(2, "Handling test cases " + `total` + "..." + `total + jobSize-1`)
+      report.Progress(2, "Handling test cases " + str(total) + "..." + str(total + jobSize-1))
     report.Progress(3, "Running " + name)
 
     (ok, modules) = RunImplTestCase(name, lang)
@@ -295,7 +295,6 @@ def CompileRunAndCompare(fullName, lang, type, modules):
     ok = CreateArgFile(fullName, lang, modules)
 
   standardlibs = convert.GetStandardLibs()
-  #libdir = cmdline.LookUp('java-stdlib-dir')
   libdir = os.path.expandvars(cmdline.LookUp('java-stdlib-dir'))
   for lib in standardlibs:
     libfile = lib + ".java"
@@ -304,23 +303,11 @@ def CompileRunAndCompare(fullName, lang, type, modules):
   if ok:
     ok = CompileJavaFiles(fullName, lang, type, modules)
 
-#  for mod in packageMap.keys():
-#    packagePaths = string.split(packageMap[mod],'.')
-#    packageDir = string.join(packagePaths,'/')
-#    if not os.path.exists(packageDir):
-#      os.makedirs(packageDir)
-#    report.Progress(4, "cp " + mod + "*.class " + packageDir + "/.")
-#    exitCode = os.system("cp " + mod + "*.class " + packageDir + "/.")
-
   interpreter = os.path.expandvars(cmdline.LookUpWildCard('java', lang, type, 'interpreter'))
     
   if ok:
     # Execute the binary
-    #flags = cmdline.LookUpWildCard('java',lang,type,'rtflags')
     flags = os.path.expandvars(cmdline.LookUpWildCard('java',lang,type,'rtflags'))
-
-    #if util.IsWindowsOS():
-    #  flags = string.replace(flags, ":", ";")
 
     (exitCode, stdout, stderr) = util.RunCommand(interpreter + " " + flags + " TMAIN",
                                                  0,
@@ -367,17 +354,16 @@ def CompareRunTimeError(fullName, resFile):
   actualResult = util.ReadFile(bn+".res")
   if actualResult == None:
     return None
-  if string.find(actualResult, "Run-Time Error") != -1:
-    expectedResult = string.rstrip(util.ReadFile(resFile), "\n")
-    ok = (string.find(expectedResult, "Run-Time Error") != -1)
+  if actualResult.find("Run-Time Error") != -1:
+    expectedResult = util.ReadFile(resFile).rstrip("\n")
+    ok = (expectedResult.find("Run-Time Error") != -1)
     if ok:
-      actualResult = string.strip(re.sub("\s+", " ", actualResult))
+      actualResult = re.sub("\s+", " ", actualResult).strip()
       expectedResult = re.sub("Run-Time Error[ 0-9]*: ", "Run-Time Error:", expectedResult)
-      #expectedResult = string.strip(re.sub("\s+", " ", expectedResult))
       ok = (actualResult == expectedResult)
 
     if not ok:
-      report.Error("Actual result is different from expected result for " + `fullName`,
+      report.Error("Actual result is different from expected result for '" + fullName + "'",
                    "expected result : " + expectedResult + "\n" +
                    "actual result   : " + actualResult)
     return ok
@@ -519,10 +505,10 @@ def CompileJavaFiles(fullName, lang, type, modules):
       javaFiles = javaFiles + " " + mod+".java"
     else:
       package = convert.GetModCls()
-      packageStrings = string.split(package, '.')
-      packageDir = string.join(packageStrings, '/')
+      packageStrings = package.split('.')
+      packageDir = util.join(packageStrings, '/')
       if os.path.exists(packageDir + ".java") and not packageDir in modules:
-        print "-------> here"
+        print ("-------> here")
         javaFiles = javaFiles + " " + packageDir + ".java"
       
     if os.path.exists("external_"+mod+".java"):
@@ -579,15 +565,15 @@ def ExtractSourceFiles(fullName, lang, modules):
 def VerifyPresenceOfGeneratedFiles(fullName, modules):
   ok = true
   package = convert.GetModCls()
-  packageStrings = string.split(package, '.')
-  packageDir = string.join(packageStrings, '/')
+  packageStrings = package.split('.')
+  packageDir = util.join(packageStrings, '/')
   for mod in modules:
     file1 = mod + ".java"
     file2 = "vdm_" + mod+".java"
     file3 = packageDir + ".java"
     files = file1 + " or " + file2 + " or " + file3
     if not os.path.exists(file1) and not os.path.exists(file2) and not os.path.exists(file3):
-      report.Error("file " + files + " was not generated for testcase " + `fullName`)
+      report.Error("file " + files + " was not generated for testcase '" + fullName + "'")
       ok = false
   return ok
 

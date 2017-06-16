@@ -1,5 +1,5 @@
 import gentestcases, cmdline, util, setup, report, convert, resfile
-import os, re, string
+import os, re, locale
 true, false = 1,0
 
 #--------------------------------------------------------------------------------
@@ -35,7 +35,7 @@ def execute(lang, type):
 def executeSpec(lang,posdef):
   ok = convert.SetupSpecification(lang, 'tc')
   if not ok:
-    report.Error("ABORTING specification test for " + `lang`)
+    report.Error("ABORTING specification test for '" + langi + "'")
     return 
 
   # counter to indicate progress
@@ -60,9 +60,9 @@ def executeSpec(lang,posdef):
 
     startIndex = total
     endIndex = total+len(testCases) -1
-    report.Progress(2, "Handling test cases " + `startIndex` + "..." + `endIndex`)
+    report.Progress(2, "Handling test cases " + str(startIndex) + "..." + str(endIndex))
 
-    # Prepare the next test run - the parameter `spec-job-size' tells how
+    # Prepare the next test run - the parameter 'spec-job-size' tells how
     # many testcases should be executed in each run.
     names = []
     util.DeleteFiles([".vdmtest"])
@@ -80,8 +80,8 @@ def executeSpec(lang,posdef):
 
     # Run the test cases
     if names != []:
-      report.Progress(3, "Running test cases " + `startIndex` + "..." + `endIndex`)
-      report.setTestCaseName("testcase " + `startIndex` + "..." + `endIndex`)
+      report.Progress(3, "Running test cases " + str(startIndex) + "..." + str(endIndex))
+      report.setTestCaseName("testcase " + str(startIndex) + "..." + str(endIndex))
       okNames = RunSpecTestCases(names, lang, posdef, coverageFile)
       util.MoveProfile()
 
@@ -118,7 +118,7 @@ def executeImpl(lang,posdef):
   while (name != None):
     report.setTestCaseName(name)
     if (total % jobSize) == 1:
-      report.Progress(2, "Handling test cases " + `total` + "..." + `total + jobSize-1`)
+      report.Progress(2, "Handling test cases " + str(total) + "..." + str(total + jobSize-1))
     report.Progress(3, "Running " + name)
 
     ok = RunImplTestCase(name, lang, posdef)
@@ -219,7 +219,7 @@ def RunSpecTestCases(names, lang, posdef, coverageFile):
       continue
 
     # Validate the result.
-    report.Progress(4,"Validating result with result file: " + `expResName`)
+    report.Progress(4,"Validating result with result file: '" + expResName + "'")
     ok = ValidateResult(fullName, expResName, result, None, None)
     if ok:
       okNames.append(fullName)
@@ -279,14 +279,14 @@ def RunImplTestCase(fullName, lang, posdef):
 
   if ok:
     if expResName == None:
-      print "Not validating result (2)"
+      print ("Not validating result (2)")
       if util.KeepFile(false):
         WriteResult(fullName, result)
       ok = false
 
   if ok:
     # Validate the result.
-    report.Progress(4,"Validating result with result file: " + `expResName`)
+    report.Progress(4,"Validating result with result file: '" + expResName + "'")
     ok = ValidateResult(fullName, expResName, result, stdout, stderr)
 
     if util.KeepFile(ok):
@@ -296,7 +296,7 @@ def RunImplTestCase(fullName, lang, posdef):
 
 
 #--------------------------------------------------------------------------------
-# Reads in file `fullName' and returns a sequence of error numbers for
+# Reads in file 'fullName' and returns a sequence of error numbers for
 # specifications.
 # fullName - name of the vdm file, from which the result stems.
 #--------------------------------------------------------------------------------
@@ -332,7 +332,7 @@ def TranslateResultCommon(data):
   regexp = re.compile("(Error|Warning)\[([0-9]+)\] :")
   match = regexp.search(data,pos)
   while match:
-    number = string.atoi(match.group(2))
+    number = locale.atoi(match.group(2))
     pos = match.end(1)
     res.append(number)
     match = regexp.search(data,pos)
@@ -362,13 +362,13 @@ def ValidateResult(name, expResFile, result, stdout,stderr):
 
   map = {}
   for key in result:
-    if map.has_key(key):
+    if key in map:
       map[key] = map[key] +1
     else:
       map[key] = 1
 
   for key in expResult:
-    if map.has_key(key):
+    if key in map:
       map[key] = map[key] -1
     else:
       map[key] = -1
@@ -376,16 +376,16 @@ def ValidateResult(name, expResFile, result, stdout,stderr):
   tomuch, tolittle = [],[]
   for key in map.keys():
     if map[key] > 0:
-      tomuch.append(`map[key]` + " * " + `key`)
+      tomuch.append(str(map[key]) + " * " + str(key))
     elif map[key] < 0:
-      tolittle.append(`abs(map[key])` + " * " + `key`)
+      tolittle.append(str(abs(map[key])) + " * " + str(key))
 
   if tomuch != [] or tolittle != []:
     res = ""
     if tomuch != []:
-      res = res + "Output not expected: " + string.join(tomuch, ", ") + "\n"
+      res = res + "Output not expected: " + util.join(tomuch, ", ") + "\n"
     if tolittle != []:
-      res = res + "Output not present: " + string.join(tolittle, ", ") + "\n"
+      res = res + "Output not present: " + util.join(tolittle, ", ") + "\n"
     report.Error("Actual result differs from expected result for " + name, res, stdout, stderr)
     return false
 
@@ -409,4 +409,5 @@ def RegisterExpansionSet(lang, type, posdef):
 #--------------------------------------------------------------------------------
 def WriteResult(fullName, result):
   name = util.ExtractName(fullName)+".res"
-  util.WriteFile(name, `result`)
+  util.WriteFile(name, str(result))
+

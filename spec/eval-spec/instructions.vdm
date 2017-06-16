@@ -1193,23 +1193,20 @@ ExeGETPRE() ==
       in
         if fnnm <> nil
         then
-          def mk_(isit, mk_SEM`ValTp(lval, -)) = STKM`IsLocalVal(AUX`PreName(fnnm))
-          in
-            if isit
-            then
-               (STKM`Push(lval);
-                STKM`Push(mk_SEM`BOOL(true)))
-            else
-              if mnm.ids <> []
-              then
-                def preval = STATE`GetPreCond(mnm,fnnm)
-                in
-                  if preval <> nil
-                  then
-                   (STKM`Push(preval);
-                    STKM`Push(mk_SEM`BOOL(true)))
-                  else STKM`Push(mk_SEM`BOOL(false))
-              else STKM`Push(mk_SEM`BOOL(false))
+          cases STKM`IsLocalVal(AUX`PreName(fnnm)):
+            mk_(true, mk_SEM`ValTp(lval, -)) -> (STKM`Push(lval);
+                                                 STKM`Push(mk_SEM`BOOL(true))),
+            others -> if mnm.ids <> []
+                      then
+                        def preval = STATE`GetPreCond(mnm,fnnm)
+                        in
+                          if preval <> nil
+                          then
+                           (STKM`Push(preval);
+                            STKM`Push(mk_SEM`BOOL(true)))
+                          else STKM`Push(mk_SEM`BOOL(false))
+                      else STKM`Push(mk_SEM`BOOL(false))
+          end
         else STKM`Push(mk_SEM`BOOL(false))
     else STKM`Push(mk_SEM`BOOL(false))
 

@@ -8,17 +8,17 @@
 #               no two test cases with same base name is executed in the same run.
 #-----------------------------------------------------------------------------
 
-import os, string
+import os
 import cmdline, util, report, setup, resfile
 true, false = 1,0
 
 #-----------------------------------------------------------------------------
 # Initiates the search for test cases.
-# `env' indicates which test case directories should be searched. It should
+# 'env' indicates which test case directories should be searched. It should
 # be one of setup.availableTestenv 
-# `lang' and `type' is used to ignore some of the test cases in the
+# 'lang' and 'type' is used to ignore some of the test cases in the
 # subdirectories.
-# `lang' is one of SL and PP and `type' is one of SPEC or IMPL
+# 'lang' is one of SL and PP and 'type' is one of SPEC or IMPL
 #-----------------------------------------------------------------------------
 def StartSearch(env, lang, type):
   global files, directories, FID, ignoreList, leftOver, actualEnv
@@ -31,7 +31,7 @@ def StartSearch(env, lang, type):
   directories = []
 
   for testCase in testCases:
-    print testCase
+    print (testCase)
     if os.path.isfile(testCase):
       files.append(testCase)
     else:
@@ -57,7 +57,7 @@ def StartSearch(env, lang, type):
   envs = setup.availableTestenv[:]
   envs.remove(env)
   for env in envs:
-    ignoreList.append("/" + string.upper(env) + "/")
+    ignoreList.append("/" + env.upper() + "/")
   
   ignoreList.append("/CVS/")
   FID = None
@@ -65,7 +65,7 @@ def StartSearch(env, lang, type):
 
 #-----------------------------------------------------------------------------
 # Returns the next set of test cases or an empty sequence if no more test
-# cases are available. No more than `max' cases are returned. On the other
+# cases are available. No more than 'max' cases are returned. On the other
 # hand fewer cases might be returned in case "the next test case" would
 # have the same base name as an existing one.
 #-----------------------------------------------------------------------------
@@ -108,32 +108,13 @@ def NextTestCase():
     if case == None:
       return None
 
-#    bn = util.StripExt(case)
-
-#    (ignore, silence) = resfile.HasIgnoreFile(case)
-#    if ignore:
-#      # We should ignore this file.
-#      if not silence:
-#        report.IgnoreFile(case)
-#    else:
-#      again = false
-#      for pat in ignoreList:
-#        if (string.find(case, pat) != -1):
-#          again = true
-#          break
-#      if not again:
-#        report.IncrTestcaseCounter()
-#        return case
-#      else:
-#        report.Progress(4,"Skipping case " + `case` + ", since it is in the ignore list.")
-
     again = false
     for pat in ignoreList:
-      if (string.find(case, pat) != -1):
+      if (case.find(pat) != -1):
         again = true
         break
     if again:
-      report.Progress(4,"Skipping case " + `case` + ", since it is in the ignore list.")
+      report.Progress(4,"Skipping case '" + case + "', since it is in the ignore list.")
     else:
       (ignore, silence) = resfile.HasIgnoreFile(case)
       if ignore:
