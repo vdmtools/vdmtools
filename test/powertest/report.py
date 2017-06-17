@@ -228,9 +228,9 @@ def genReport():
   reportUsedWildCards()
 
 def PrintTime(tot):
-  hour = tot/3600
-  min  = (tot%3600) / 60
-  sec  = (tot%3600) % 60
+  hour = int(tot/3600)
+  min  = int((tot%3600) / 60)
+  sec  = int((tot%3600) % 60)
 
   if hour < 10:
     res = '0' + str(hour) + ":"
