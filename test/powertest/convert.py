@@ -66,8 +66,8 @@ def VDM2AST(fileName,parser, typeCheck):
   if (os.path.exists("m4pp")):
     try:
       os.unlink("m4pp")
-    except os.error as err:
-      no, msg = err
+    except os.error:
+      _, (_, msg), _ = sys.exc_info()
       report.Error("Error while removing 'm4pp': " + msg)
       return false
 
@@ -90,14 +90,14 @@ def VDM2AST(fileName,parser, typeCheck):
   if (os.path.exists(astFile)):
     try:
       os.unlink(astFile)
-    except os.error as err:
-      no, msg = err
+    except os.error:
+      _, (_, msg), _ = sys.exc_info()
       report.Error("Error while removing " + astFile + ": " + msg)
       return false
   try:
     os.rename('m4pp', astFile)
-  except os.error as err:
-    no, msg = err
+  except os.error:
+    _, (_, msg), _ = sys.exc_info()
     report.Error("Couldn't move file 'm4pp' to " + astFile + ": " + msg)
     return false
 

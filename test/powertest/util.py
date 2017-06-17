@@ -93,8 +93,8 @@ def DeleteFiles(fileList):
     if os.path.exists(filenm) or os.path.islink(filenm):
       try:
         os.unlink(filenm)
-      except os.error as err:
-        (no, msg) = err
+      except os.error:
+        _, (_, msg), _ = sys.exc_info()
         report.Error("Error when deleting file '" + filenm +"': " + msg)
         
 #-----------------------------------------------------------------------------
@@ -105,22 +105,22 @@ def DeleteFiles(fileList):
 def ReadFile(filenm):
   try:
     FID = open(filenm,"r")
-  except IOError as err:
-    (no, msg) = err
+  except IOError:
+    _, (_, msg), _ = sys.exc_info()
     report.Error("Couldn't open file '" + filenm + "' for reading: " + msg)
     return None
 
   try:
     data = FID.read();
-  except IOError as err:
-    (no, msg) = err
+  except IOError:
+    _, (_, msg), _ = sys.exc_info()
     report.Error("Error when reading data to file '" + filenm +"': " + msg)
     return None
 
   try:
     FID.close()
-  except IOError as err:
-    (no, msg) = err
+  except IOError:
+    _, (_, msg), _ = sys.exc_info()
     report.Error("Error when closing file '" + filenm +"': " + msg)
     return None
 
@@ -137,29 +137,29 @@ def WriteFile(filenm, data, mode="w"):
   try:
     if mode == "w" and os.path.exists(filenm) or os.path.islink(filenm):
       os.remove(filenm)
-  except os.error as err:
-    no, msg = err
+  except os.error:
+    _, (_, msg), _ = sys.exc_info()
     report.Error("Error removing file '" + filenm + "': " + msg)
     return false
   
   try:
     FID = open(filenm,mode)
-  except IOError as err:
-    no, msg = err
+  except IOError:
+    _, (_, msg), _ = sys.exc_info()
     report.Error("Couldn't open file '" + filenm + "' for writting: " + msg)
     return false
 
   try:
     FID.write(data)
-  except IOError as err:
-    no, msg = err
+  except IOError:
+    _, (_, msg), _ = sys.exc_info()
     report.Error("Error when writting data to file '" + filenm + "': " + msg)
     return false
 
   try:
     FID.close()
-  except IOError as err:
-    no, msg = err
+  except IOError:
+    _, (_, msg), _ = sys.exc_info()
     report.Error("Error when closing file '" + filenm + "': " + msg)
     return false
 
@@ -175,15 +175,15 @@ def CopyFile(src,dst):
   if os.path.exists(dst) or os.path.islink(dst):
     try:
       os.remove(dst)
-    except os.error as err:
-      no, msg = err
+    except os.error:
+      _, (_, msg), _ = sys.exc_info()
       report.Error("Error when removing file '" + dst + "': " + msg)
       return false
 
   try:
     shutil.copy(src,dst)
-  except os.error as err:
-    no, msg = err
+  except os.error:
+    _, (_, msg), _ = sys.exc_info()
     report.Error("Error when making a symlink from " +  src + " to " + dst + ": " + msg)
     return false
 
@@ -200,8 +200,8 @@ def SymLink(src, dst, force = false):
   if os.path.exists(dst) or os.path.islink(dst):
     try:
       os.remove(dst)
-    except os.error as err:
-      no, msg = err
+    except os.error:
+      _, (_, msg), _ = sys.exc_info()
       report.Error("Error when removing file '" + dst + "': " + msg)
       return false
 
@@ -215,15 +215,15 @@ def SymLink(src, dst, force = false):
   if ('symlink' in os.__dict__) and (not IsWindowsOS() or force):
     try:
       os.symlink(src,dst)
-    except os.error as err:
-      no, msg = err
+    except os.error:
+      _, (_, msg), _ = sys.exc_info()
       report.Error("Error when making a symlink from '" +  src + "' to '" + dst + "': " + msg)
       return false
   else:
     try:
       shutil.copy(src,dst)
-    except os.error as err:
-      no, msg = err
+    except os.error:
+      _, (_, msg), _ = sys.exc_info()
       report.Error("Error when making a symlink from '" +  src + "' to '" + dst + "': " + msg)
       return false
 
@@ -314,8 +314,8 @@ def SetProfileBaseName(nm):
     profileCounter = 0
     try:
       os.mkdir(nm)
-    except os.error as err:
-      no, msg = err
+    except os.error:
+      _, (_, msg), _ = sys.exc_info()
       report.Error("Error when making directory " + nm + ": " + msg + "\nProfiling disabled")
       profileDir = None
       return false
@@ -337,8 +337,8 @@ def MoveProfile():
       profileCounter = profileCounter +1
       try:
         os.rename("gmon.out",profileDir+"/"+ str(profileCounter))
-      except os.error as err:
-        no, msg = err
+      except os.error:
+        _, (_, msg), _ = sys.exc_info()
         report.Error("Error when moving gmon.out to " + profileDir+"/"+str(profileCounter) + ": " + msg)
         return false
     else:
@@ -394,7 +394,7 @@ def MakeDir(dirnm):
   if not os.path.exists(dirnm):
     try:
       os.mkdir(dirnm)
-    except os.error as err:
-      no, msg = err
+    except os.error:
+      _, (_, msg), _ = sys.exc_info()
       report.Error("Error making directory " + dirnm + ": " + msg)
 
