@@ -1,4 +1,4 @@
-OSTYPE=$(uname)
+OSTYPE=$(shell uname)
 
 ifeq ($(strip $(QTVERSION)),5)
 QTVER = -DQTVER=5
@@ -29,7 +29,7 @@ endif
 else
 QTLIBDIR ?= $(QTDIR)/lib
 QTFLAGS = -I$(QTINCDIR) -DQT_THREAD_SUPPORT $(QTVER)
-LDFLAGS = -Wl,-L$(QTLIBDIR) -lQtGui -lQtCore
+LDFLAGS = -L$(QTLIBDIR) -lQtGui -lQtCore
 endif
 
 CFLAGS = $(QTFLAGS)
@@ -38,6 +38,7 @@ CXX = g++
 all: pngconv spconv
 
 %.o : %.cc
+	echo $(OSTYPE)
 	$(CXX) $(CFLAGS) -o $@ -c $<
  
 pngconv : pngconv.o
