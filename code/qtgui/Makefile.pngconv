@@ -1,3 +1,5 @@
+OSTYPE=$(uname)
+
 ifeq ($(strip $(QTVERSION)),5)
 QTVER = -DQTVER=5
 else
@@ -13,26 +15,36 @@ endif
 
 QTINCDIR ?= $(QTDIR)/include
 
+ifeq ($(strip $(OSTYPE)),Darwin)
 QTFLAGS = -I$(QTINCDIR) -DQT_THREAD_SUPPORT -DQT_ACCESSIBILITY_SUPPORT -DQT_SHARED $(QTVER)
 ifeq ($(strip $(QTVERSION)),4)
 ifdef COCOA
 LDFLAGS = -F$(QTDIR)/lib/ -framework QtGui -framework QtCore -liconv
 else
-LDFLAGS = -L$(QTDIR)/lib -lQtGui -lQt3Support -lQtCore
+LDFLAGS = -L$(QTDIR)/lib -lQtGui -lQtCore
 endif
 else
 LDFLAGS = -L$(QTDIR)/lib -lqt-mt -lqui
 endif
+else
+QTLIBDIR ?= $(QTDIR)/lib
+QTFLAGS = -I$(QTINCDIR) -DQT_THREAD_SUPPORT $(QTVER)
+LDFLAGS = -Wl,-L$(QTLIBDIR) -lQtGui -lQtCore
+endif
+
 CFLAGS = $(QTFLAGS)
 CXX = g++
 
 all: pngconv spconv
 
-% : %.cc
-	$(CXX) $(CFLAGS) $(LDFLAGS) -o $@ $<
-
 %.o : %.cc
 	$(CXX) $(CFLAGS) -o $@ -c $<
+ 
+pngconv : pngconv.o
+	$(CXX) -o $@ $< $(LDFLAGS)
+
+spconv : spconv.o
+	$(CXX) -o $@ $< $(LDFLAGS)
 
 clean:
-	rm -rf pngconv spconv
+	rm -rf pngconv spconv pngconv.o spconv.o
