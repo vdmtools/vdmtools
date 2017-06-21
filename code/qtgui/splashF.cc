@@ -13,16 +13,16 @@
 ***/
 
 #include "splashF.h"
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 #else
 #include <qpixmap.h>
 #include <qstring.h>
 #include <qstringlist.h>
 #include <qcstring.h>
-#endif // QT4
+#endif // QTVER >= 4
 
-#ifdef QT4
+#if QTVER >= 4
 const char *splashW::VDMToolsSplash_image[]={
 "0008FA32789CED9D099C14E59DF79FB9A7676066",
 "703866E43E043914F0488C92801B13341718A39B",
@@ -6272,7 +6272,7 @@ const char *splashW::VDMToolsSplash_image[]={
 "A8A7C71FFE9B7FF9DFFFF3F9E7FF6D3EF0C3EFFF",
 "E80FFED3F7FEC51FFD3FF9AB5802",
 0,};
-#endif // QT4
+#endif // QTVER >= 4
 
 QPixmap splashW::Data2Pixmap( const char * data[] )
 {

@@ -81,11 +81,13 @@ def execute(lang, testType):
 
   try:
     vdmApp = orb.string_to_object (stringified_ior)
-  except CORBA.COMM_FAILURE as ex:
+  except CORBA.COMM_FAILURE:
+    _, ex, _ = sys.exc_info()
     print ("CORBA.COMM_FAILUR")
     print (ex)
     vdmApp = None
-  except CORBA.MARSHAL as ex:
+  except CORBA.MARSHAL:
+    _, ex, _ = sys.exc_info()
     print ("CORBA.MARSHAL")
     print (ex) #
     vdmApp = None
@@ -696,18 +698,23 @@ def RunApiTestCase (name, lang, toolMediator):
         raise CORBA.COMM_FAILURE
       except CORBA.BAD_PARAM:
         result = result + "CORBA.BAD_PARAM in " + neutralName + ", line " + str(line) + "\n"
-      except ToolboxAPI.APIError as e:
+      except ToolboxAPI.APIError:
+        _, e, _ = sys.exc_info()
         result = result + "APIError in " + neutralName + ", line " + str(line) + ": " + e.msg + "\n"
-      except VDM.VDMError as e:
+      except VDM.VDMError:
+        _, e, _ = sys.exc_info()
         result = result +  "VDMError in " + neutralName + ", line " + str(line) + ": " + str(e.err) + "\n"
-      except Syntax as e:
+      except Syntax:
+        _, e, _ = sys.exc_info()
         result = result + "Syntax error in " + neutralName + ", line " + str(line) + ": " + e.GetMessage () + "\n"
       except CORBA.UserException:
         result = result + "CORBA.UserException: in " + baseName + ".api, line " + str(line) + "\n"
-      except CORBA.SystemException as e:
+      except CORBA.SystemException:
+        _, e, _ = sys.exc_info()
         print (e)
         result = result + "CORBA.SystemException: in " + baseName + ".api, line " + str(line) + "\n"
-      except Exception as e:
+      except Exception:
+        _, e, _ = sys.exc_info()
         print ("Python exception")
         print (e.args)
         result = result + "Python exception in " + baseName + ".api, line " + str(line) + "\n"

@@ -15,11 +15,11 @@
 #ifndef __qtInterface_h__
 #define __qtInterface_h__
 
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 #else
 #include <qapplication.h>
-#endif // QT4
+#endif // QTVER >= 4
 
 #include "tools.h"
 #include "position.h"

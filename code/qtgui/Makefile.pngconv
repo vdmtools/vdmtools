@@ -1,5 +1,9 @@
+ifeq ($(strip $(QTVERSION)),5)
+QTVER = -DQTVER=5
+else
 ifeq ($(strip $(QTVERSION)),4)
-QT4 = -DQT4
+QTVER = -DQTVER=4
+endif
 endif
 
 ifndef QTDIR
@@ -7,7 +11,9 @@ ifndef QTDIR
 QTDIR=/usr/local/Trolltech/Qt-4.8.7
 endif
 
-QTFLAGS = -I$(QTDIR)/include -DQT_THREAD_SUPPORT -DQT_ACCESSIBILITY_SUPPORT -DQT_SHARED $(QT4)
+QTINCDIR ?= $(QTDIR)/include
+
+QTFLAGS = -I$(QTINCDIR) -DQT_THREAD_SUPPORT -DQT_ACCESSIBILITY_SUPPORT -DQT_SHARED $(QTVER)
 ifeq ($(strip $(QTVERSION)),4)
 ifdef COCOA
 LDFLAGS = -F$(QTDIR)/lib/ -framework QtGui -framework QtCore -liconv

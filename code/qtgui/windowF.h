@@ -15,7 +15,7 @@
 #ifndef __windowf_h__
 #define __windowf_h__
 
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 #define WFlags Qt::WindowFlags
 #else
@@ -26,7 +26,7 @@
 #include <qcheckbox.h>
 #include <qpushbutton.h>
 #include <qradiobutton.h>
-#endif // QT4
+#endif // QTVER >= 4
 
 class windowF : public QDialog
 { 

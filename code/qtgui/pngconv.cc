@@ -15,7 +15,7 @@
 #include <iostream>
 using namespace std;
 
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 #else
 #include <qapplication.h>
@@ -26,7 +26,7 @@ using namespace std;
 #include <qdir.h>
 #include <qcstring.h>
 #include <qmessagebox.h>
-#endif // QT4
+#endif // QTVER >= 4
 
 QPixmap getPNGImage( const QString & filename )
 {
@@ -171,14 +171,14 @@ void genHeader( QTextStream & ofs )
 {
   ofs << "// This file is generated automaticaly." << endl;
   ofs << endl;
-  ofs << "#ifdef QT4" << endl;
+  ofs << "#if QTVER >= 4" << endl;
   ofs << "#include <QtGui/QtGui>" << endl;
   ofs << "#else" << endl;
   ofs << "#include <qpixmap.h>" << endl;
   ofs << "#include <qstring.h>" << endl;
   ofs << "#include <qstringlist.h>" << endl;
   ofs << "#include <qcstring.h>" << endl;
-  ofs << "#endif // QT4" << endl;
+  ofs << "#endif // QTVER >= 4" << endl;
   ofs << endl;
 }
 

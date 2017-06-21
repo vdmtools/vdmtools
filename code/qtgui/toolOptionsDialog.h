@@ -9,7 +9,7 @@
 #ifndef __tooloptionsdialog_h__
 #define __tooloptionsdialog_h__
 
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 #define WFlags Qt::WindowFlags
 #else
@@ -25,7 +25,7 @@
 #include <qwidget.h>
 #include <qlayout.h>
 #include <qgroupbox.h>
-#endif // QT4
+#endif // QTVER >= 4
 
 class toolOptionsDialog : public QDialog
 { 

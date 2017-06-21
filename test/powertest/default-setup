@@ -76,10 +76,10 @@ cflags = -I ~/vdmwork -D__darwin__ -liconv ~/vdmwork/libCG_darwin.a ~/vdmwork/li
 #                            Type Checker Options
 #--------------------------------------------------------------------------------
 # Directory with test cases
-TC-test-case-dir = ~/toolbox/trunk/test/tc
+TC-test-case-dir = ~/vdmtools/test/tc
 
 # Where is the type checker specification located?
-TC-spec-dir = ~/toolbox/trunk/spec/ss-spec
+TC-spec-dir = ~/vdmtools/spec/ss-spec
 
 # What should be executed pos or def? (pos,def)
 TC-Type = def, pos
@@ -88,14 +88,14 @@ TC-Type = def, pos
 #                            Interpreter options
 #--------------------------------------------------------------------------------
 # Directory with test cases
-IP-test-case-dir = ~/toolbox/trunk/test/iptestcases
+IP-test-case-dir = ~/vdmtools/test/iptestcases
 # Alternate test case
-#IP-test-case-dir = ~/toolbox/trunk/test/cgip
+#IP-test-case-dir = ~/vdmtools/test/cgip
 # Test cases for RT
-#IP-test-case-dir = ~/toolbox/trunk/test/cgip/VICE
+#IP-test-case-dir = ~/vdmtools/test/cgip/VICE
 
 # Where is the type checker specification located?
-IP-spec-dir = ~/toolbox/trunk/spec/eval-spec
+IP-spec-dir = ~/vdmtools/spec/eval-spec
 
 # What to run (dtcon,dtcoff)
 IP-Type = dtcon, dtcoff
@@ -109,10 +109,10 @@ IP-Type = dtcon, dtcoff
 #
 
 # Directory with test cases
-CPP-Test-case-dir = ~/toolbox/trunk/test/iptestcases/CORE, ~/toolbox/trunk/test/iptestcases/PP, ~/toolbox/trunk/test/iptestcases/SL
+CPP-Test-case-dir = ~/vdmtools/test/iptestcases/CORE, ~/vdmtools/test/iptestcases/PP, ~/vdmtools/test/iptestcases/SL
 
 # Where is the C++ Code Generator specification located?
-CPP-Spec-dir = ~/toolbox/trunk/spec/cg-spec
+CPP-Spec-dir = ~/vdmtools/spec/cg-spec
 
 cpp-lib-dir = ~/vdmwork
 
@@ -120,10 +120,10 @@ cpp-lib-dir = ~/vdmwork
 #                            Java Code generator options
 #--------------------------------------------------------------------------------
 # Directory with test cases
-Java-Test-case-dir = ~/toolbox/trunk/test/iptestcases/CORE, ~/toolbox/trunk/test/iptestcases/PP
+Java-Test-case-dir = ~/vdmtools/test/iptestcases/CORE, ~/vdmtools/test/iptestcases/PP
 
 # Where is the Java Code Generator specification located?
-java-spec-dir = ~/toolbox/trunk/spec/cg-spec
+java-spec-dir = ~/vdmtools/spec/cg-spec
 
 # Where is the Java Compiler located?
 compiler-java = $JDKHOME/bin/javac
@@ -154,13 +154,13 @@ java-gentestdir =
 #                            API options
 #--------------------------------------------------------------------------------
 # Directory with test cases
-api-test-case-dir = ~/toolbox/trunk/test/apitestcases/PP
-#api-test-case-dir = ~/toolbox/trunk/test/apitestcases/SL
+api-test-case-dir = ~/vdmtools/test/apitestcases/PP
+#api-test-case-dir = ~/vdmtools/test/apitestcases/SL
 
 api-gen-path = ~/powertest/api
 #api-gen-path = ~/powertest/api-sl
-api-source-path = ~/toolbox/trunk/test/apitestcases/PP
-#api-source-path = ~/toolbox/trunk/test/apitestcases/SL
+api-source-path = ~/vdmtools/test/apitestcases/PP
+#api-source-path = ~/vdmtools/test/apitestcases/SL
 
 api-run-interactive = no
 api-run-start-toolbox = yes
@@ -184,7 +184,7 @@ server-init-args =
 #--------------------------------------------------------------------------------
 
 # Directory with test cases
-metaiv-test-case-dir = ~/toolbox/trunk/test/metaivtestcases
+metaiv-test-case-dir = ~/vdmtools/test/metaivtestcases
 
 #--------------------------------------------------------------------------------
 #                            RTF prettyprinter options
@@ -212,8 +212,8 @@ java2vdm-test-case = .
 #-----------------------------------------------------------------------------
 
 # Directory with test cases
-pog-test-case-dir = ~/toolbox/trunk/test/pog
+pog-test-case-dir = ~/vdmtools/test/pog
 
 # Where is the POG specification located?
-pog-spec-dir = ~/toolbox/trunk/spec/pog-spec
+pog-spec-dir = ~/vdmtools/spec/pog-spec
 

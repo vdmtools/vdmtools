@@ -14,7 +14,7 @@
 #ifndef __optionsw_h__
 #define __optionsw_h__
 
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 #define QLISTWIDGET QListWidget
 #define WFlags Qt::WindowFlags
@@ -33,7 +33,7 @@
 #include <qlabel.h>
 #include <qtabwidget.h>
 #define QLISTWIDGET QListBox
-#endif // QT4
+#endif // QTVER >= 4
 
 class mainW;
 

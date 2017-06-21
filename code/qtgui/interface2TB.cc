@@ -1064,11 +1064,11 @@ void Qt2TB::SetOptions(const QMap<QString, QString> & optionMap)
     QString interfaces (optionMap[ "JCG_INTERFACES" ]);
     if( !interfaces.isEmpty() )
     {
-#ifdef QT4
+#if QT_VERSION >= 0x040000
       QStringList list (interfaces.split( ',' ));
 #else
       QStringList list (QStringList::split( ',', interfaces ));
-#endif // QT4
+#endif // QT_VERSION >= 0x040000
       for( QStringList::const_iterator it = list.begin(); it != list.end(); ++it )
       {
         s.append(*it);

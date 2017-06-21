@@ -1,13 +1,13 @@
 // This file is generated automaticaly.
 
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 #else
 #include <qpixmap.h>
 #include <qstring.h>
 #include <qstringlist.h>
 #include <qcstring.h>
-#endif // QT4
+#endif // QTVER >= 4
 
 static const char *browser_image[]={
 "00000762789C65544D68545714FEDECCCB64121B",

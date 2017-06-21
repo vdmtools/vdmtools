@@ -14,7 +14,7 @@
 #ifndef __browserf_h__
 #define __browserf_h__
 
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 #define QTREEWIDGET QTreeWidget
 #define QTREEWIDGETITEM QTreeWidgetItem
@@ -33,7 +33,7 @@
 #define QTREEWIDGETITEM QListViewItem
 #define QTREEWIDGETITEMLIST QPtrList<QListViewItem>
 #define QTreeWidgetItem void
-#endif // QT4
+#endif // QTVER
 
 class StatusType {
 public:
@@ -118,10 +118,10 @@ public slots:
 private slots:
   void viewModuleFile_qt4(QTreeWidgetItem*, int);
   void viewProjectFile_qt4(QTreeWidgetItem*, int);
-#ifndef QT4
+#if QTVER < 4
   void viewProjectFile_qt3(QListViewItem*);
   void viewModuleFile_qt3(QListViewItem*);
-#endif // QT4
+#endif // QTVER < 4
   void selectionChanged();
 
   void contextMenuTriggered(QAction *);
@@ -214,9 +214,9 @@ protected:
   QTREEWIDGET* javaLV;
 #endif // VDMPP
 
-#ifdef QT4
+#if QTVER >= 4
   virtual void contextMenuEvent ( QContextMenuEvent * event );
-#endif // QT4
+#endif // QTVER >= 4
 
   QPixmap loadPixmap(const QString &);
   void setModuleStatusPixmap(QTREEWIDGETITEM*, int, StatusType::status,

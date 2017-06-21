@@ -15,7 +15,7 @@
 #ifndef __interpreterf_h__
 #define __interpreterf_h__
 
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 #define WFlags Qt::WindowFlags
 #define QLIST QList
@@ -33,7 +33,7 @@
 #define QTREEWIDGET QListView
 #define QTREEWIDGETITEM QListViewItem
 #define QTreeWidgetItem void
-#endif // QT4
+#endif // QTVER >= 4
 
 #include "interface2TB.h"
 
@@ -104,23 +104,23 @@ public slots:
   void enableBR_qt4(bool);
   void disableBR_qt4(bool);
   void deleteBR_qt4(bool);
-#ifndef QT4
+#if QTVER < 4
   void enableBR_qt3();
   void disableBR_qt3();
   void deleteBR_qt3();
-#endif // QT4
+#endif // QTVER < 4
   void returnPressed();
 
   void breakDoubleClicked_qt4(QTreeWidgetItem * item, int column);
   void breakClicked_qt4(QTreeWidgetItem * item, int colmun);
   void traceClicked_qt4(QTreeWidgetItem * item, int column);
 
-#ifndef QT4
+#if QTVER < 4
 //  void breakDoubleClicked_qt3(QListViewItem * item, const QPoint & pnt, int c);
   void breakDoubleClicked_qt3(QListViewItem * item);
   void breakClicked_qt3(QListViewItem * item, const QPoint & pnt, int c);
   void traceClicked_qt3(QListViewItem * item, const QPoint & pnt, int c) ;
-#endif // QT4
+#endif // QTVER < 4
 
 protected:
   QString removePrompt(const QString&);
@@ -150,9 +150,9 @@ private:
   QPushButton* deleteB;
   QTREEWIDGET* breakLV;
 
-#ifndef QT4
+#if QTVER < 4
   int maxlines;
-#endif // QT4
+#endif // QTVER < 4
 
   QString windowName;
   int pcount;

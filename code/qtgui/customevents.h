@@ -14,14 +14,14 @@
 #ifndef __customevents_h__
 #define __customevents_h__
 
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 #define QLIST QList
 #else
 #include <qevent.h>
 #include <qstringlist.h>
 #define QLIST QValueList
-#endif // QT4
+#endif // QTVER >= 4
 
 #include "interface2TB.h"
 
