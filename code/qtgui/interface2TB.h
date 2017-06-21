@@ -32,7 +32,7 @@ enum CLASS_STATUS {
 #define INT_ERROR 0
 #define INT_OK 1
 
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 #define QLIST QList
 #else
@@ -40,7 +40,7 @@ enum CLASS_STATUS {
 #include <qvaluelist.h>
 #include <qthread.h>
 #define QLIST QValueList
-#endif // QT4
+#endif // QTVER >= 4
 
 #include "browserF.h"
 #include <set>

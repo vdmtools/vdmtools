@@ -14,7 +14,7 @@
 #ifndef __codef_h__
 #define __codef_h__
 
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 #define WFlags Qt::WindowFlags
 #else
@@ -26,7 +26,7 @@
 #include <qfile.h>
 #include <qtextedit.h>
 #include <qaction.h>
-#endif // QT4
+#endif // QTVER >= 4
 
 class MyTextEdit : public QTextEdit
 {
@@ -48,9 +48,9 @@ signals:
   void cd_editor();
 
 protected:
-#ifdef QT4
+#if QTVER >= 4
   virtual void contextMenuEvent ( QContextMenuEvent * event );
-#endif // QT4
+#endif // QTVER >= 4
 
 private:
   QString CMENU_PRINTX;

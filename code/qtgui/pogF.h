@@ -14,7 +14,7 @@
 #ifndef __pogf_h__
 #define __pogf_h__
 
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 #define QICON QIcon
 #define QTREEWIDGET QTreeWidget
@@ -35,7 +35,7 @@
 #define QTREEWIDGETITEM QListViewItem
 #define QICON QIconSet
 #define QTreeWidgetItem void
-#endif // QT4
+#endif // QTVER >= 4
 
 typedef QStringList (GETAVAILTYPE)();
 typedef void (SETFILTERTYPE)(const QStringList &);
@@ -119,10 +119,10 @@ public slots:
 private slots:
     void pogSelectionChanged_qt4();
     void pogDoubleClicked_qt4(QTreeWidgetItem*, int);
-#ifndef QT4
+#if QTVER < 4
     void pogSelectionChanged_qt3(QListViewItem*);
     void pogDoubleClicked_qt3(QListViewItem*);
-#endif // QT4
+#endif // QTVER < 4
 
 private:
   QString windowName;

@@ -14,7 +14,7 @@
 #ifndef __referencesw_h_
 #define __referencesw_h__
 
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 #define QLISTWIDGET QListWidget
 #define WFlags Qt::WindowFlags
@@ -26,7 +26,7 @@
 #include <qlistbox.h>
 #include <qpushbutton.h>
 #define QLISTWIDGET QListBox
-#endif // QT4
+#endif // QTVER >= 4
 
 class referencesW : public QDialog
 { 

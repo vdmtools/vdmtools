@@ -14,7 +14,7 @@
 #ifndef __splashw_h__
 #define __splashw_h__
 
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 class splashW : public QSplashScreen
 {
@@ -57,6 +57,6 @@ class splashW : public QLabel
     static QPixmap Data2Pixmap( const char * data[] );
 };
 #endif // QT_VERSION
-#endif // QT4
+#endif // QTVER >= 4
 
 #endif // __splashw_h__

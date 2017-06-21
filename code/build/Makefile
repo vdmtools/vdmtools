@@ -544,14 +544,18 @@ LINKOUT = -o #Space after -o
 
 ############## Qt 
 
+ifeq ($(strip $(QTVERSION)),5)
+QTVER = -DQTVER=5
+else
 ifeq ($(strip $(QTVERSION)),4)
-QT4 = -DQT4
+QTVER = -DQTVER=4
+endif
 endif
 
 ifeq ($(strip $(OSTYPE)),Darwin)
-QTFLAGS = -DQT_THREAD_SUPPORT -DQT_ACCESSIBILITY_SUPPORT -DQT_SHARED $(QT4)
+QTFLAGS = -DQT_THREAD_SUPPORT -DQT_ACCESSIBILITY_SUPPORT -DQT_SHARED $(QTVER)
 else
-QTFLAGS = -DQT_THREAD_SUPPORT $(QT4)
+QTFLAGS = -DQT_THREAD_SUPPORT $(QTVER)
 endif
 
 ifdef QT_IMAGE_FILE
@@ -804,10 +808,10 @@ CFLAGS-vdm-rt.o += $(QTINCFLAG) $(QTFLAGS)
 
 ifeq ($(strip $(OSTYPE)),win32)
 moc_%.cc: %.h
-	$(QTMOC) $(QT4) -i -f$(basename $<).h -o $@ $^
+	$(QTMOC) $(QTVER) -i -f$(basename $<).h -o $@ $^
 else
 moc_%.cc: %.h
-	$(QTMOC) $(QT4) -o $@ $^
+	$(QTMOC) $(QTVER) -o $@ $^
 endif
 
 OBJMOC = $(patsubst %.cc, %.o, $(SRCMOC))

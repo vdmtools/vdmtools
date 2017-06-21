@@ -14,7 +14,7 @@
 
 #include <locale.h>
 
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 #else
 #include <qregexp.h>
@@ -24,7 +24,7 @@
 #include <qtranslator.h>
 #include <qfileinfo.h>
 #include <qpainter.h>
-#endif // QT4
+#endif // QTVER >= 4
 
 #include "mainF.h"
 #include "splashF.h"
@@ -170,7 +170,7 @@ void drawVersion( QPixmap * pmap )
   int right = rect.right();
   int bottom = rect.bottom();
 
-#ifdef QT4
+#if QTVER >= 4
   int x = 0;
   int y = bottom * 19/78;
   int h = bottom * 12/78;
@@ -189,7 +189,7 @@ void drawVersion( QPixmap * pmap )
   int weight = QFont::Bold; // 75
   int f1size = 18;
   int f2size = 12;
-#endif // Qt4
+#endif // QtVER >= 4
 
 #ifdef __linux__
   QFont f("Courier", f1size, weight);
@@ -227,24 +227,24 @@ void drawVersion( QPixmap * pmap )
   paint.begin( pmap ); 
   paint.setFont( f ); 
 
-#ifdef QT4
+#if QTVER >= 4
   QColor cl (80,80,80);
   paint.setPen( cl ); 
   paint.drawText(x + 14, y, right - 8, h, Qt::AlignLeft, titlever);
 #else
   paint.setPen( Qt::black ); 
   paint.drawText(x, y, right - 8, h, Qt::AlignRight, titlever);
-#endif // QT4
+#endif // QTVER >= 4
 
   if( !add.isEmpty() )
   {
     y += 20;
     paint.setPen( Qt::darkGray ); 
-#ifdef QT4
+#if QTVER >= 4
     paint.drawText(x + 14, y, right - 8, h, Qt::AlignLeft, add);
 #else
     paint.drawText(x, y, right - 8, h, Qt::AlignRight, add);
-#endif // QT4
+#endif // QTVER >= 4
   }
 
   y += 20;
@@ -279,11 +279,11 @@ void drawVersion( QPixmap * pmap )
 
   paint.setFont( f2 ); 
   paint.setPen( Qt::darkBlue ); 
-#ifdef QT4
+#if QTVER >= 4
   paint.drawText(x + 14, y, right - 8, h, Qt::AlignLeft, os);
 #else
   paint.drawText(x, y, right - 8, h, Qt::AlignRight, os);
-#endif // QT4
+#endif // QTVER >= 4
 
   paint.end();
 }

@@ -14,7 +14,7 @@
 #ifndef __rosew_h__
 #define __rosew_h__
 
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 #define QLIST QList
 #define QTREEWIDGET QTreeWidget
@@ -36,7 +36,7 @@
 #define QTREEWIDGET QListView
 #define QTREEWIDGTITEM QListViewItem
 #define QTreeWidgetItem void
-#endif // QT4
+#endif // QTVER >= 4
 
 #include <string>
 #include "interface2TB.h"
@@ -75,9 +75,9 @@ public slots:
   void show();
 
   void toggleAction_qt4(QTreeWidgetItem *, int);
-#ifndef QT4
+#if QTVER < 4
   void toggleAction_qt3(QListViewItem *, const QPoint &, int);
-#endif // QT4
+#endif // QTVER < 4
 
 private:
   std::string statusToChar(CLASS_STATUS) const;

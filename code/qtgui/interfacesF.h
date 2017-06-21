@@ -14,7 +14,7 @@
 #ifndef __interfacesw_h__
 #define __interfacesw_h__
 
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 #define QLISTWIDGET QListWidget
 #define WFlags Qt::WindowFlags
@@ -28,7 +28,7 @@
 #include <qlayout.h>
 #include <qthread.h>
 #define QLISTWIDGET QListBox
-#endif // QT4
+#endif // QTVER >= 4
 
 class optionsW;
 

@@ -17,7 +17,7 @@
 #ifndef __mainF_h__
 #define __mainF_h__
 
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 #define QMENU QMenu
 #define QLIST QList
@@ -42,7 +42,7 @@
 #define QLIST QValueList
 #define QACTIONPTRLIST QPtrList<QAction>
 #define QMDIAREA QWorkspace
-#endif // QT4
+#endif // QTVER
 
 #include "customevents.h"
 #include "browserF.h"
@@ -173,7 +173,7 @@ private slots:
   void removeProject_qt4(bool);
   void projectOptions_qt4(bool);
   void toolOptions_qt4(bool);
-#ifndef QT4
+#if QTVER < 4
   void newProject_qt3();
   void loadProject_qt3();
   void saveProject_qt3();
@@ -182,14 +182,14 @@ private slots:
   void removeProject_qt3();
   void projectOptions_qt3();
   void toolOptions_qt3();
-#endif // QT4
+#endif // Q4VER < 4
 
   void projectHistory_qt4( QAction * );
   void projectPath_qt4( QAction * );
-#ifndef QT4
+#if QTVER < 4
   void projectHistory_qt3( int id );
   void projectPath_qt3( int id );
-#endif // QT4
+#endif // Q4VER < 4
 
   // Slots for file menu
   void newFile_qt4(bool);
@@ -197,13 +197,13 @@ private slots:
   void fileClose_qt4(bool);
   void fileCloseAll_qt4(bool);
   void selectAll_qt4(bool);
-#ifndef QT4
+#if QTVER < 4
   void newFile_qt3();
   void externalEditor_qt3();
   void fileClose_qt3();
   void fileCloseAll_qt3();
   void selectAll_qt3();
-#endif // QT4
+#endif // Q4VER < 4
 
   void openEditor(QString, int, int);
 
@@ -217,7 +217,7 @@ private slots:
   void rose_qt4(bool);
   void pog_qt4(bool);
   void search_qt4(bool);
-#ifndef QT4
+#if QTVER < 4
   void browser_qt3();
   void codeInspector_qt3();
   void errorlist_qt3();
@@ -227,7 +227,7 @@ private slots:
   void rose_qt3();
   void pog_qt3();
   void search_qt3();
-#endif // QT4
+#endif // Q4VER < 4
 
   // Slots for actions menu
   void syntax_qt4(bool);
@@ -239,7 +239,7 @@ private slots:
   void genPOG_qt4(bool);
   void run_qt4(bool);
   void callLog_qt4(bool);
-#ifndef QT4
+#if QTVER < 4
   void syntax_qt3();
   void type_qt3();
   void cpp_qt3();
@@ -249,7 +249,7 @@ private slots:
   void genPOG_qt3();
   void run_qt3();
   void callLog_qt3();
-#endif // QT4
+#endif // Q4VER < 4
 
   void executeCommand(QString);
 
@@ -265,7 +265,7 @@ private slots:
   void ipUp_qt4(bool);
   void ipDown_qt4(bool);
   void ipStop_qt4(bool);
-#ifndef QT4
+#if QTVER < 4
   void ipInit_qt3();
   void ipStep_qt3();
   void ipStepin_qt3();
@@ -275,15 +275,15 @@ private slots:
   void ipUp_qt3();
   void ipDown_qt3();
   void ipStop_qt3();
-#endif // QT4
+#endif // Q4VER < 4
 
   // Slots for help menu
   void about_qt4(bool);
   void aboutqt_qt4(bool);
-#ifndef QT4
+#if QTVER < 4
   void about_qt3();
   void aboutqt_qt3();
-#endif // QT4
+#endif // Q4VER < 4
 //  void statusHint(int itemId);
 
   // Other slots
@@ -292,9 +292,9 @@ private slots:
   void resetFilePosition(QString, QString, int, int, int);
   void resetFilePosition(QString, int, int);
   void setBreakPoint(); 
-#if QT_VERSION < 0x040000
+#if QTVER < 4
   void setWindowTitle(QString);
-#endif // QT_VERSION < 0x040000
+#endif // Q4VER < 4
   void checkActions();
   void setFont(QFont);
   void setTextCodec(QString);

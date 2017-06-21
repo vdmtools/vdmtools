@@ -33,12 +33,12 @@
 #ifndef __toolboxthread_h__
 #define __toolboxthread_h__
 
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 #else
 #include <qthread.h>
 #include <qstringlist.h>
-#endif // QT4
+#endif // QTVER >= 4
 
 enum
 {
@@ -256,11 +256,11 @@ public:
   ~CommandBuffer(){};
 
 private:
-#ifdef QT4
+#if QTVER >= 4
   QList<ToolboxCMD *> commandList;
 #else
   QPtrList<ToolboxCMD> commandList;
-#endif
+#endif // QTVER >= 4
   QWaitCondition waitCond;
   QMutex mutex;
 };

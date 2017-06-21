@@ -14,7 +14,7 @@
 #ifndef __errorf_h__
 #define __errorf_h__
 
-#ifdef QT4
+#if QTVER >= 4
 #include <QtGui/QtGui>
 #define QLIST QList
 #define QLISTWIDGET QListWidget
@@ -33,7 +33,7 @@
 #define QLIST QValueList
 #define QLISTWIDGET QListBox
 #define QListWidgetItem void
-#endif // QT4
+#endif // QTVER >= 4
 
 class ErrorInfo {
 public:
