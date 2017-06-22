@@ -4605,7 +4605,32 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
     }
 #endif // VDMPP
     else if (cmd == L"system") {
-      int ret = system(TBWSTR::wstring2string(args).c_str());
+      //int ret = system(TBWSTR::wstring2string(args).c_str());
+      string cmdstr (TBWSTR::wstring2coutstr(args));
+      char buf[BUFSIZ];
+      FILE *ptr;
+      string str;
+
+#ifndef _MSC_VER
+      if ((ptr = popen(cmdstr.c_str(), "r")) != NULL) {
+#else
+      if ((ptr = _popen(cmdstr.c_str(), "r")) != NULL) {
+#endif // _MSC_VER
+        while (fgets(buf, BUFSIZ, ptr) != NULL) {
+          size_t count = 0;
+          while (count < BUFSIZ) {
+            if (buf[count] == '\0') break;
+            str += buf[count];
+            count++;
+          }
+        }
+#ifndef _MSC_VER
+        pclose(ptr);
+#else
+        _pclose(ptr);
+#endif // _MSC_VER
+        vdm_iplog << TBWSTR::cinstr2wstring(str) << endl;
+      }
       return true;
     }
     else if (cmd == L"push") {
