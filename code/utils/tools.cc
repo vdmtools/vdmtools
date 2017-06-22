@@ -4606,7 +4606,7 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
 #endif // VDMPP
     else if (cmd == L"system") {
       //int ret = system(TBWSTR::wstring2string(args).c_str());
-      string cmdstr (TBWSTR::wstring2coutstr(args));
+      string cmdstr (TBWSTR::wstring2coutstr(args) + " 2>&1");
       char buf[BUFSIZ];
       FILE *ptr;
       string str;
