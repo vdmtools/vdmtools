@@ -611,6 +611,14 @@
         <translation type="unfinished">Toggle maximized / minimized interpreter window</translation>
     </message>
     <message>
+        <source>Clear Log</source>
+        <translation type="unfinished">Clear Log</translation>
+    </message>
+    <message>
+        <source>Save Log</source>
+        <translation type="unfinished">Save Log</translation>
+    </message>
+    <message>
         <source>Trace</source>
         <translation type="unfinished">Trace</translation>
     </message>

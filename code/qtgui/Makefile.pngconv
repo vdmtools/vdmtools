@@ -38,7 +38,6 @@ CXX = g++
 all: pngconv spconv
 
 %.o : %.cc
-	echo $(OSTYPE)
 	$(CXX) $(CFLAGS) -o $@ -c $<
  
 pngconv : pngconv.o

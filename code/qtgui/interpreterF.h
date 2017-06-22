@@ -89,6 +89,7 @@ public:
 
   void setWindowName(const char* name) { this->windowName = name; }
   const QString & getWindowName() { return this->windowName; }
+  QString getLog();
 
 signals:
   void updateButtons();
@@ -98,13 +99,18 @@ signals:
   void enableBr(int);
   void disableBr(int);
   void deleteBr(int);
+  void saveInterpreterLog();
 
 public slots:
   void toggle(bool);
+  void saveLog_qt4(bool);
+  void clearLog_qt4(bool);
   void enableBR_qt4(bool);
   void disableBR_qt4(bool);
   void deleteBR_qt4(bool);
 #if QTVER < 4
+  void saveLog_qt3();
+  void clearLog_qt3();
   void enableBR_qt3();
   void disableBR_qt3();
   void deleteBR_qt3();
@@ -130,7 +136,10 @@ protected:
 private:
   QWidget* createInterpreterLE( QWidget* parent );
   QWidget* createInLE( QWidget* parent );
+  QLayout* createToggleAndLogOperationBox( QWidget* parent );
   QWidget* createToggleB( QWidget* parent );
+  QWidget* createSaveLogButton( QWidget* parent );
+  QWidget* createClearLogButton( QWidget* parent );
   QLayout* createTraceAndBreakPointsBox( QWidget* parent );
   QWidget* createTraceLVBox( QWidget* parent );
   QWidget* createTraceList( QWidget* parent );
@@ -144,6 +153,8 @@ private:
   QTextEdit* interpreterLE;
   BufferedQTextEdit* inLE;
   QPushButton* toggleB;
+  QPushButton* saveLogB;
+  QPushButton* clearLogB;
   QTREEWIDGET* traceLV;
   QPushButton* enableB;
   QPushButton* disableB;

@@ -48,14 +48,12 @@ BufferedQTextEdit::BufferedQTextEdit(QWidget *parent, const char * name)
 void BufferedQTextEdit::addString(const QString& text)
 {
 #if QT_VERSION >= 0x040000
-  if( text.simplified().length() > 0 )
-  {
+  if( text.simplified().length() > 0 ) {
     this->buffer.append(text.simplified());
     this->curIndex = this->buffer.count();
   }
 #else
-  if( text.stripWhiteSpace().length() > 0 )
-  {
+  if( text.stripWhiteSpace().length() > 0 ) {
     this->buffer.append(text.stripWhiteSpace());
     this->curIndex = this->buffer.count();
   }
@@ -210,7 +208,8 @@ interpreterW::interpreterW(QWidget* parent, const char* name, WFlags fl)
   interpreterWLayout->setMargin( 0 );
   interpreterWLayout->addWidget( this->createInterpreterLE( this ) );
   interpreterWLayout->addWidget( this->createInLE( this ) );
-  interpreterWLayout->addWidget( this->createToggleB( this ) );
+  //interpreterWLayout->addWidget( this->createToggleB( this ) );
+  interpreterWLayout->addLayout( this->createToggleAndLogOperationBox( this ) );
   interpreterWLayout->addLayout( this->createTraceAndBreakPointsBox( this ) );
 
   this->pcount = 0;
@@ -222,13 +221,13 @@ bool interpreterW::event (QEvent * e)
 #ifdef __darwin__
   if (e->type() == QEvent::Paint)
   {
-    if (this->pcount < 2)
-    {
+    if (this->pcount < 2) {
       this->repaint();
       this->pcount++;
     }
-    else
+    else {
       this->pcount = 0;
+    }
   }
 #endif // __darwin__
 #endif // QT_VERSION >= 0x040000
@@ -240,16 +239,12 @@ QWidget* interpreterW::createInterpreterLE( QWidget* parent )
   QTextEdit* te = new QTextEdit( parent );
 #if QT_VERSION >= 0x040000
   te->setAcceptRichText(false);
-// 20110329 -->
   te->document()->setMaximumBlockCount(1000);
-// <-- 20110329
   te->setSizePolicy(QSizePolicy( QSizePolicy::Expanding, QSizePolicy::MinimumExpanding ));
                         
 #else
-// 20110329 -->
   te->setTextFormat(Qt::PlainText);
   this->maxlines = 1000;
-// <-- 20110329
   te->setSizePolicy( 
            QSizePolicy( QSizePolicy::Expanding, 
                         QSizePolicy::MinimumExpanding, 
@@ -276,14 +271,30 @@ QWidget* interpreterW::createInLE( QWidget* parent )
   return te;
 }
 
+QLayout* interpreterW::createToggleAndLogOperationBox( QWidget* parent )
+{
+  QHBoxLayout* layout = new QHBoxLayout();
+#ifdef __darwin__
+  layout->setSpacing( 0 );
+  layout->setMargin( 0 );
+#else
+  layout->setSpacing( 6 );
+  layout->setMargin( 0 );
+#endif
+  layout->addWidget( this->createSaveLogButton( parent ) );
+  layout->addWidget( this->createToggleB( parent ) );
+  layout->addWidget( this->createClearLogButton( parent ) );
+  return layout;
+}
+
 QWidget* interpreterW::createToggleB( QWidget* parent )
 {
   QPushButton* button = new QPushButton( parent );
-#ifdef __darwin__
-  button->setMaximumSize( QSize( 32767, 30 ) );
-#else
-  button->setMaximumSize( QSize( 32767, 16 ) );
-#endif
+//#ifdef __darwin__
+//  button->setMaximumSize( QSize( 32767, 30 ) );
+//#else
+//  button->setMaximumSize( QSize( 32767, 16 ) );
+//#endif
 #if QT_VERSION >= 0x040000
   button->setCheckable( true );
   button->setText( ">" );
@@ -299,6 +310,32 @@ QWidget* interpreterW::createToggleB( QWidget* parent )
 #endif // QT_VERSION >= 0x040000
 
   this->toggleB = button;
+  return button;
+}
+
+QWidget* interpreterW::createClearLogButton( QWidget* parent )
+{
+  QPushButton* button = new QPushButton( parent );
+  button->setText( tr( "Clear Log" ) );
+#if QT_VERSION >= 0x040000
+  connect( button, SIGNAL(clicked(bool)), this, SLOT(clearLog_qt4(bool)) );
+#else
+  connect( button, SIGNAL(clicked()), this, SLOT(clearLog_qt3()) );
+#endif // QT_VERSION >= 0x040000
+  this->clearLogB = button;
+  return button;
+}
+
+QWidget* interpreterW::createSaveLogButton( QWidget* parent )
+{
+  QPushButton* button = new QPushButton( parent );
+  button->setText( tr( "Save Log" ) );
+#if QT_VERSION >= 0x040000
+  connect( button, SIGNAL(clicked(bool)), this, SLOT(saveLog_qt4(bool)) );
+#else
+  connect( button, SIGNAL(clicked()), this, SLOT(saveLog_qt3()) );
+#endif // QT_VERSION >= 0x040000
+  this->saveLogB = button;
   return button;
 }
 
@@ -771,6 +808,30 @@ void interpreterW::resetWindow()
   this->breakLV->clear();
 }
 
+void interpreterW::saveLog_qt4(bool)
+{
+  emit saveInterpreterLog();
+}
+
+#if QT_VERSION < 0x040000
+void interpreterW::saveLog_qt3()
+{
+  emit saveInterpreterLog();
+}
+#endif // QT_VERSION < 0x040000
+
+void interpreterW::clearLog_qt4(bool)
+{
+  this->interpreterLE->clear();
+}
+
+#if QT_VERSION < 0x040000
+void interpreterW::clearLog_qt3()
+{
+  this->interpreterLE->clear();
+}
+#endif // QT_VERSION < 0x040000
+
 void interpreterW::enableBR_qt4(bool)
 {
 #if QT_VERSION >= 0x040000
@@ -860,11 +921,9 @@ void interpreterW::deleteBR_qt4(bool)
     do {
       bool exists = false;
       int count = this->breakLV->topLevelItemCount();
-      for (int index = 0; (index < count) && !exists; index++)
-      {
+      for (int index = 0; (index < count) && !exists; index++) {
         QTreeWidgetItem * item = this->breakLV->topLevelItem(index);
-        if (item->isSelected())
-        {
+        if (item->isSelected()) {
           int num = item->text(1).toInt();
           this->breakLV->takeTopLevelItem(index);
           emit deleteBr(num);
@@ -882,10 +941,8 @@ void interpreterW::deleteBR_qt3()
   do {
     QListViewItemIterator it (this->breakLV);
     bool exists = false;
-    while (it.current() && !exists)
-    {
-      if (it.current()->isSelected())
-      {
+    while (it.current() && !exists) {
+      if (it.current()->isSelected()) {
         int num = atoi(it.current()->text(1));
         this->breakLV->takeItem(it.current());
         emit deleteBr(num);
@@ -948,14 +1005,11 @@ void interpreterW::returnPressed()
 void interpreterW::breakDoubleClicked_qt4(QTreeWidgetItem * item, int column)
 {
 #if QT_VERSION >= 0x040000
-  if (item)
-  {
-    if( item->text(2) == "-" )
-    {
+  if (item) {
+    if( item->text(2) == "-" ) {
       emit resetFilePosition(item->text(4), 1, 1);
     }
-    else
-    {
+    else {
       emit resetFilePosition(item->text(4), item->text(2).toInt(), item->text(3).toInt());
     }
   }
@@ -1340,4 +1394,9 @@ void interpreterW::setMaxLogLines(int num)
 void interpreterW::addString(const QString & cmd)
 {
   this->inLE->addString(cmd);
+}
+
+QString interpreterW::getLog()
+{
+  return this->interpreterLE->toPlainText();
 }

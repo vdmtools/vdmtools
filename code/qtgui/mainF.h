@@ -162,6 +162,7 @@ public slots:
   void sendUMLDiffCommand(QStringList);
   void setMaxLogLines(int);
   void setMaxInterpreterLogLines(int);
+  void saveInterpreterLog();
 
 private slots:
   // Slots for project menu
