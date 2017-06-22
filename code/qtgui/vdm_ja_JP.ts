@@ -611,6 +611,14 @@
         <translation type="finished">実行ウインドウの拡大／縮小</translation>
     </message>
     <message>
+        <source>Clear Log</source>
+        <translation type="finished">ログを消去</translation>
+    </message>
+    <message>
+        <source>Save Log</source>
+        <translation type="finished">ログを保存</translation>
+    </message>
+    <message>
         <source>Trace</source>
         <translation type="finished">追跡</translation>
     </message>

@@ -970,6 +970,7 @@ interpreterW * mainW:: createInterpreterWindow(QWidget * parent)
   QObject::connect(w, SIGNAL(enableBr(int)), this, SLOT(enableBr(int)));
   QObject::connect(w, SIGNAL(disableBr(int)), this, SLOT(disableBr(int)));
   QObject::connect(w, SIGNAL(deleteBr(int)), this, SLOT(deleteBr(int)));
+  QObject::connect(w, SIGNAL(saveInterpreterLog()), this, SLOT(saveInterpreterLog()));
   return w;
 }
 
@@ -1364,8 +1365,7 @@ bool mainW::saveProjectAs()
 #if QT_VERSION >= 0x040000
   bool appended = false;
 #endif // QT_VERSION >= 0x040000
-  if (fileNm.right(4) != ".prj")
-  {
+  if (fileNm.right(4) != ".prj") {
     fileNm.append(".prj");
 #if QT_VERSION >= 0x040000
     appended = true;
@@ -1373,8 +1373,7 @@ bool mainW::saveProjectAs()
   }
 
 #if QT_VERSION >= 0x040000
-  if (appended)
-  {
+  if (appended) {
     QFile file (fileNm);
     QString confText (tr( confirmFileOverwriteText ) + " " + fileNm);
     if (file.open(QIODevice::ReadOnly)) {
@@ -1415,22 +1414,21 @@ bool mainW::saveProjectAs()
   }
 #endif // QT_VERSION >= 0x040000
 
-  if (this->closing)
-  {
+  if (this->closing) {
     Qt2TB::setBlock( false );
     Qt2TB::saveProjectI(fileNm);
     Qt2TB::setBlock( true );
   }
-  else
-  {
+  else {
     this->sendCommand(new SaveProjectAsCMD(fileNm));
   }
 
   this->setLastDir( fileNm );
   this->addProjectHistory( fileNm );
   this->saveWindowsGeometry( fileNm );
-  if (this->ow != NULL)
+  if (this->ow != NULL) {
     this->ow->saveOptions();
+  }
   return true;
 }
 
@@ -1522,8 +1520,7 @@ void mainW::saveNewFileAs(const QString & clmodnm)
 #endif // QT_VERSION >= 0x040000
 
   // create file
-  if (this->createVDMFile(filenm, clmodnm))
-  {
+  if (this->createVDMFile(filenm, clmodnm)) {
     // add and syntax check new file
     QStringList files;
     files.append(filenm);
@@ -1557,14 +1554,11 @@ bool mainW::createVDMFile(const QString & filenm, const QString & clmodnm)
   //bool tex = true;
   bool tex = false;
 
-  if (tex)
-  {
-    if (!clmodnm.isEmpty())
-    {
+  if (tex) {
+    if (!clmodnm.isEmpty()) {
       clmodStream << "\\subsection{" << clmodnm << "}" << endl;
     }
-    else
-    {
+    else {
       clmodStream << "\\subsection{" << filenm << "}" << endl;
     }
     clmodStream << endl;
@@ -1574,8 +1568,7 @@ bool mainW::createVDMFile(const QString & filenm, const QString & clmodnm)
   }
 
 #ifdef VDMSL
-  if (!clmodnm.isEmpty())
-  {
+  if (!clmodnm.isEmpty()) {
     clmodStream << "--" << endl;
     clmodStream << "-- Module: " << clmodnm << endl;
     clmodStream << "--" << endl;
@@ -1639,8 +1632,7 @@ bool mainW::createVDMFile(const QString & filenm, const QString & clmodnm)
   clmodStream << endl;
 
 #ifdef VDMSL
-  if (!clmodnm.isEmpty())
-  {
+  if (!clmodnm.isEmpty()) {
     clmodStream << "end " << clmodnm << endl;
   }
 #endif // VDMSL
@@ -1648,11 +1640,9 @@ bool mainW::createVDMFile(const QString & filenm, const QString & clmodnm)
   clmodStream << "end " << clmodnm << endl;
 #endif // VDMPP
 
-  if (tex)
-  {
+  if (tex) {
     clmodStream << "\\end{vdm_al}" << endl;
-    if (!clmodnm.isEmpty())
-    {
+    if (!clmodnm.isEmpty()) {
       clmodStream << endl;
       clmodStream << "\\subsubsection{Test Coverage}" << endl;
       clmodStream << endl;
@@ -4971,3 +4961,63 @@ void mainW::setEncoding(const QString & cnm)
   }
 }
 
+void mainW::saveInterpreterLog()
+{
+  bool cont = true;
+  while(cont) {
+    QString filter ("Log files (*.txt)");
+    QString fileNm (QtPort::QtGetSaveFileName(this, tr("Save Log File As..."), this->lastDir, filter));
+    if (fileNm.isEmpty()) {
+      cont = false;
+    }
+    else {
+
+      if (fileNm.right(4) != ".txt") {
+        fileNm.append(".txt");
+      }
+
+      bool doSave = true;
+      QFile file (fileNm);
+#if QT_VERSION >= 0x040000
+      if (file.open(QIODevice::ReadOnly)) {
+#else
+      if (file.open(IO_ReadOnly)) {
+#endif // QT_VERSION >= 0x040000
+        file.close();
+        // File already exists
+        QString confText (tr( confirmFileOverwriteText ) + " " + fileNm);
+        switch( QMessageBox::information( 
+                this, 
+                Qt2TB::GiveToolTitleI(),
+                confText,
+                mf(tr( okText )), mf(tr( cancelText )),
+                0,      
+                1 )) {   
+          case 0: { // Ok
+            break;
+          }
+          case 1: { // Cancel
+            doSave = false;
+            break;
+          }
+        }
+      }
+      if (doSave) {
+            logWrite("save");
+        // save
+#if QT_VERSION >= 0x040000
+        if( file.open(QIODevice::WriteOnly) ) {
+#else
+        if( file.open(IO_WriteOnly) ) {
+#endif // QT_VERSION >= 0x040000
+          if (NULL != this->interpreterw) {
+            QTextStream logStream(&file);
+            logStream << this->interpreterw->getLog() << endl;
+            file.close();
+          }
+        }
+        cont = false;
+      }
+    }
+  }
+}

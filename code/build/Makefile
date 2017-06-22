@@ -676,10 +676,18 @@ QTLIBDIR = $(QTDIR)/lib
 endif
 
 ifeq ($(strip $(OSTYPE)),Linux)
+ifeq ($(strip $(QTVERSION)),5)
+QT5DIR    ?= /usr/lib/qt4
+QTLIBFLAG = -L$(QTLIBDIR)
+LIBQT    = -lQt5Gui -lQt5Core
+QTBINDIR ?= $(QT5DIR)/bin
+QTLIBDIR ?= /usr/lib
+QTINCDIR ?= /usr/include
+QTINCFLAG ?= -I$(QTINCDIR)
+else
 ifeq ($(strip $(QTVERSION)),4)
 QT4DIR    ?= /usr/lib/qt4
 QTLIBFLAG = -L$(QTLIBDIR)
-#LIBQT    = -lQtGui -lQtCore -lm
 LIBQT    = -lQtGui -lQtCore
 QTBINDIR ?= $(QT4DIR)/bin
 QTLIBDIR ?= /usr/lib
@@ -694,6 +702,7 @@ QTBINDIR ?= $(QT3DIR)/bin
 QTLIBDIR ?= $(QT3DIR)/lib
 QTINCDIR ?= $(QT3DIR)/include
 QTINCFLAG ?= -I$(QTINCDIR)
+endif
 endif
 endif
 

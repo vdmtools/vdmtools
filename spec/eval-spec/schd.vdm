@@ -719,7 +719,8 @@ procedural, these fields are set to be nil.
 
 The operation \textit{IsPeriodicThread} tests whether a given thread is periodic or not.
 \begin{vdm_al}
-  IsPeriodicThread : SCHDTP`ThreadId ==> bool
+  --IsPeriodicThread : SCHDTP`ThreadId ==> bool
+  IsPeriodicThread : [SCHDTP`ThreadId] ==> bool
   IsPeriodicThread(threadid) ==
     return threadid in set dom threads and threads(threadid).periodic;
 
