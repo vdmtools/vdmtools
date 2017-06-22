@@ -612,11 +612,11 @@
     </message>
     <message>
         <source>Clear Log</source>
-        <translation type="finished">ログを消去</translation>
+        <translation type="finished">実行結果を消去</translation>
     </message>
     <message>
         <source>Save Log</source>
-        <translation type="finished">ログを保存</translation>
+        <translation type="finished">実行結果を保存</translation>
     </message>
     <message>
         <source>Trace</source>
