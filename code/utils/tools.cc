@@ -4617,7 +4617,8 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
 #else
       wstring str;
       wchar_t buf[BUFSIZ];
-      if ((ptr = _wpopen(args.c_str(), L"r")) != NULL) {
+      wstring cmdstr (args + L" 2>&1");
+      if ((ptr = _wpopen(cmdstr.c_str(), L"r")) != NULL) {
         while (fgetws(buf, BUFSIZ, ptr) != NULL) {
 #endif // _MSC_VER
           size_t count = 0;
