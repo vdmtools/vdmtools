@@ -3639,7 +3639,7 @@ void vdm_ostream_out(const EvaluatorStatus & value, wostream & o)
 
 template <>
 //#ifdef _MSC_VER
-inline
+//inline
 //#endif // _MSC_VER
 void VDMContainerVal<EvaluatorStatus>::ostream_out(wostream & o, const VDMFormatter & v) const
 {

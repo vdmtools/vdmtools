@@ -417,6 +417,7 @@ Tags[] = {
   {L"INPUT", AS_INPUT},
   {L"PURE", AS_PURE},
   {L"PUREOP", PUREOP},
+  {L"PTHREAD", PTHREAD},
 
   {L"POS", POS},
   {L"DEF", DEF},
