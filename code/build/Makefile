@@ -128,7 +128,7 @@ else
 endif
 
 ifndef OSTYPE 
-include Warning:\ variable\ OSTYPE\ is\ not\ set\ or\ exported
+$(error "Error: variable OSTYPE is not set or exported.")
 endif
 
 # -O2
@@ -1060,7 +1060,7 @@ endif
 ifeq ($(strip $(OSTYPE)),win32)
 
 ifneq ("$(wildcard /usr/bin/link.exe)","")
-include Warning:\ /usr/bin/link.exe\ should\ be\ renamed
+$(error "Error: /usr/bin/link.exe should be renamed.")
 endif
 
 #UNAME = $(shell uname)
@@ -1102,7 +1102,7 @@ MSCVERSTR = $(shell cl >& msc_tmp;cat msc_tmp | head -1)
 VERSTR1 = $(word 1, $(subst ., ,$(strip $(word 8, $(MSCVERSTR)))))
 VERSTR2 = $(word 1, $(subst ., ,$(strip $(word 7, $(MSCVERSTR)))))
 ifeq ($(strip $(VERSTR1)),12)
-include Warning:\ Visual\ Studio\ 6\ has\ been\ no\ longer\ supported
+$(error "Error: Visual Studio 6 has been no longer supported.")
 else
 ifeq ($(strip $(VERSTR2)),14)
 MSCVER = VC8 # VC++ 8
@@ -1136,7 +1136,7 @@ else
 ifeq ($(strip $(MSCVER)),VC11)
 VSVER=vs11
 else
-include Warning:\ Visual\ Studio\ 6\ has\ been\ no\ longer\ supported
+$(error "Error: Visual Studio 6 has been no longer supported.")
 endif #VC11
 endif #VC10
 endif #VC9
@@ -1647,7 +1647,7 @@ endif
 ifeq ($(strip $(OSTYPE)),Darwin)
 
 ifndef MACOSX_DEPLOYMENT_TARGET
-include Warning:\ variable\ MACOSX_DEPLOYMENT_TARGET\ is\ not\ set\ or\ exported
+$(error "Error: variable MACOSX_DEPLOYMENT_TARGET is not set or exported.")
 endif
 
 OPTIMIZE += $(PROFILE)
@@ -1716,7 +1716,6 @@ ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.7)
 SDK?=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk
 OSV_MAJOR=11
 ARCH=-arch x86_64
-#CCPATH = /Applications/Xcode.app/Contents/Developer/usr/bin/
 CCPATH = /usr/bin/
 GCC_VERSION=
 CC      = $(CCPATH)clang$(GCC_VERSION)
