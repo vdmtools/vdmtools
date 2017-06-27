@@ -278,24 +278,23 @@ operations
   CompileLetExpr(mk_AS`LetExpr(localdef,body,-)) ==
    (dcl valdef : STKM`SubProgram := [];
     for ldef in localdef do
-      cases true:
-        (is_AS`ValueDef(ldef))     -> let mk_AS`ValueDef(pat,tp,val,-,-,-) = ldef
-                                      in
-                                       (valdef := valdef ^ E2I(val) ^
-                                                   (if tp = nil then [] else [mk_INSTRTP`DTC(tp)]);
-                                        cases pat:
-                                          mk_AS`PatternName(nm,nil,-) ->
-                                               if nm = nil
-                                               then valdef := valdef ^ [mk_INSTRTP`POP(1)]
-                                               else valdef := valdef ^ [mk_INSTRTP`APPENDBLKENV(nm,nil)],
-                                          others -> valdef := valdef ^ CPAT`P2I(pat) ^ [mk_INSTRTP`MATCHANDBIND()]
-                                        end
-                                       ),
-        (is_AS`ExplFnDef(ldef)),
-        (is_AS`ImplFnDef(ldef)),
-        (is_AS`ExtExplFnDef(ldef)) -> def mk_(blkenv,b_m) = PAT`ConstructFN(CMPL`GetClMod(), ldef)
-                                      in valdef := valdef ^ [mk_INSTRTP`CLOSENV(blkenv,b_m)],
-        others                     -> error
+      cases ldef:
+        mk_AS`ValueDef(pat,tp,val,-,-,-) ->
+                   (valdef := valdef ^ E2I(val) ^
+                               (if tp = nil then [] else [mk_INSTRTP`DTC(tp)]);
+                    cases pat:
+                      mk_AS`PatternName(nm,nil,-) ->
+                           if nm = nil
+                           then valdef := valdef ^ [mk_INSTRTP`POP(1)]
+                           else valdef := valdef ^ [mk_INSTRTP`APPENDBLKENV(nm,nil)],
+                      others -> valdef := valdef ^ CPAT`P2I(pat) ^ [mk_INSTRTP`MATCHANDBIND()]
+                    end
+                   ),
+        --AS`ExplFnDef
+        --AS`ImplFnDef
+        --AS`ExtExplFnDef
+        others -> def mk_(blkenv,b_m) = PAT`ConstructFN(CMPL`GetClMod(), ldef)
+                  in valdef := valdef ^ [mk_INSTRTP`CLOSENV(blkenv,b_m)]
       end;
     return [mk_INSTRTP`EMPTYBLKENV(<READ_ONLY>)] ^ valdef ^ E2I(body) ^ [mk_INSTRTP`POPBLKENV()]);
 \end{vdm_al}
@@ -875,7 +874,6 @@ operations
                          )
       else
         def mk_AS`ElseifExpr(elif_cond, elif_expr, elif_cid) = hd elif_l;
-          --altn_l = E2I(mk_AS`IfExpr(elif_cond, elif_expr, tl elif_l, altn_e, elif_cid))
             altn_l = CompileIfExpr(mk_AS`IfExpr(elif_cond, elif_expr, tl elif_l, altn_e, elif_cid))
 #ifdef VICE
                         ^ TIME`MkCbr()

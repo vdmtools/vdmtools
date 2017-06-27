@@ -644,7 +644,7 @@ operations
     in
      (dcl benv : SEM`BlkEnv := AUX`MkBlkEnv(nm, DEF`TransFN(clmodName, fndef), nil, <READ_ONLY>),
           b_m : map AS`Name to (AS`Expr | AS`NoBody) := {nm |-> body.body},
-          mp : map AS`Name to (SEM`FN | SEM`ExplPOLY) := {|->};
+          f_m : map AS`Name to (SEM`FN | SEM`ExplPOLY) := {|->};
 
       if fnpre <> nil
       then b_m := b_m munion {AUX`PreName(nm) |-> fnpre};
@@ -652,12 +652,11 @@ operations
       then b_m := b_m munion {AUX`PostName(nm) |-> fnpost};
 
       if tpparms = []
-      then mp := DEF`CreatePrePostFns(clmodName, fndef, nm)
-      else mp := DEF`CreatePolyPrePostFns(clmodName, fndef, nm);
-      for all nm in set dom mp do
-        let v = mp(nm)
-        in benv := AUX`CombineBlkEnv(benv, AUX`MkBlkEnv(nm, v, nil, <READ_ONLY>));
-
+      then f_m := DEF`CreatePrePostFns(clmodName, fndef, nm)
+      else f_m := DEF`CreatePolyPrePostFns(clmodName, fndef, nm);
+      for all fnm in set dom f_m do
+        let v = f_m(fnm)
+        in benv := AUX`CombineBlkEnv(benv, AUX`MkBlkEnv(fnm, v, nil, <READ_ONLY>));
       return mk_(benv,b_m);
      );
 
@@ -667,7 +666,7 @@ operations
     in
      (dcl benv : SEM`BlkEnv := AUX`MkBlkEnv(nm, DEF`TransFN(clmodName, fndef), nil, <READ_ONLY>),
           b_m : map AS`Name to (AS`Expr | AS`NoBody) := {nm |-> body.body},
-          mp : map AS`Name to (SEM`FN | SEM`ExplPOLY) := {|->};
+          f_m : map AS`Name to (SEM`FN | SEM`ExplPOLY) := {|->};
 
       if fnpre <> nil
       then b_m := b_m munion {AUX`PreName(nm) |-> fnpre};
@@ -675,12 +674,12 @@ operations
       then b_m := b_m munion {AUX`PostName(nm) |-> fnpost};
 
       if tpparms = []
-      then mp := DEF`CreatePrePostFns(clmodName, fndef, nm)
-      else mp := DEF`CreatePolyPrePostFns(clmodName, fndef, nm);
+      then f_m := DEF`CreatePrePostFns(clmodName, fndef, nm)
+      else f_m := DEF`CreatePolyPrePostFns(clmodName, fndef, nm);
 
-      for all nm in set dom mp do
-        let v = mp(nm)
-        in benv := AUX`CombineBlkEnv(benv, AUX`MkBlkEnv(nm, v, nil, <READ_ONLY>));
+      for all fnm in set dom f_m do
+        let v = f_m(fnm)
+        in benv := AUX`CombineBlkEnv(benv, AUX`MkBlkEnv(fnm, v, nil, <READ_ONLY>));
 
       return mk_(benv,b_m);
     );
@@ -691,20 +690,19 @@ operations
     in
      (dcl benv : SEM`BlkEnv := AUX`MkBlkEnv(nm, DEF`TransFN(clmodName, fndef), nil, <READ_ONLY>),
           b_m : map AS`Name to (AS`Expr | AS`NoBody) := { nm |-> mk_AS`UndefinedExpr(CI`NilContextId) },
-          --b_m : map AS`Name to (AS`Expr | AS`NoBody) := { |-> },
-          mp : map AS`Name to (SEM`FN | SEM`ExplPOLY) := {|->};
+          f_m : map AS`Name to (SEM`FN | SEM`ExplPOLY) := {|->};
 
       if fnpre <> nil
       then b_m := b_m munion {AUX`PreName(nm) |-> fnpre};
       b_m := b_m munion {AUX`PostName(nm) |-> fnpost};
 
       if tpparms = []
-      then mp := DEF`CreatePrePostFns(clmodName, fndef, nm)
-      else mp := DEF`CreatePolyPrePostFns(clmodName, fndef, nm);
+      then f_m := DEF`CreatePrePostFns(clmodName, fndef, nm)
+      else f_m := DEF`CreatePolyPrePostFns(clmodName, fndef, nm);
 
-      for all nm in set dom mp do
-        let v = mp(nm)
-        in benv := AUX`CombineBlkEnv(benv, AUX`MkBlkEnv(nm, v, nil, <READ_ONLY>));
+      for all fnm in set dom f_m do
+        let v = f_m(fnm)
+        in benv := AUX`CombineBlkEnv(benv, AUX`MkBlkEnv(fnm, v, nil, <READ_ONLY>));
 
       return mk_(benv,b_m);
      );

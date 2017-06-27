@@ -25,6 +25,8 @@ TYPE_SEM_BlkEnv AUX::CombineBlkEnv (const TYPE_SEM_BlkEnv & blk1, const TYPE_SEM
   MAP<TYPE_AS_Name,TYPE_SEM_ValTp> id_m (blk1.GetMap(pos_SEM_BlkEnv_id_um));
   id_m.ImpOverride(blk2.GetMap(pos_SEM_BlkEnv_id_um));
   return TYPE_SEM_BlkEnv().Init(id_m, permission);
+
+//  return DistribCombineBlkEnv(mk_set(blk1, blk2)).GetElem();
 }
 
 // DistribCombineBlkEnv
@@ -34,7 +36,6 @@ SET<TYPE_SEM_BlkEnv> AUX::DistribCombineBlkEnv(const SET<TYPE_SEM_BlkEnv> & blke
 {
   switch (blkenv_s.Card()) {
     case 0: {
-      //RTERR::Error(L"DistribCombineBlkEnv", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
       return eset;
     }
     case 1: {
@@ -48,30 +49,13 @@ SET<TYPE_SEM_BlkEnv> AUX::DistribCombineBlkEnv(const SET<TYPE_SEM_BlkEnv> & blke
       MAP<TYPE_AS_Name,TYPE_SEM_ValTp> result_m (some_blkenv.GetMap(pos_SEM_BlkEnv_id_um));
       const TYPE_SEM_Permission & permission (some_blkenv.GetField(pos_SEM_BlkEnv_perm));
 
-      Generic g;
-      for (bool bb = env_s.First(g); bb; bb = env_s.Next(g))
-      {
-        TYPE_SEM_BlkEnv blkenv (g);
-
-//        if (permission != blkenv.GetField(pos_SEM_BlkEnv_perm)) {
-//          RTERR::Error(L"DistribCombineBlkEnv", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
-//          return eset;
-//        }
-//        else
-//        {
-          const MAP<TYPE_AS_Name,TYPE_SEM_ValTp> & id_m (blkenv.GetMap(pos_SEM_BlkEnv_id_um));
-          Set ids (result_m.Dom().ImpIntersect(id_m.Dom()));
-          if (!ids.IsEmpty())
-          {
-            Generic id;
-            for (bool cc = ids.First(id); cc; cc = ids.Next(id))
-            {
-              if (result_m[id].GetRecord(pos_SEM_ValTp_val) != id_m[id].GetRecord(pos_SEM_ValTp_val)) 
-                return eset;
-            }
-          }
-          result_m.ImpOverride(id_m);
-//        }
+      Generic blkenv;
+      for (bool bb = env_s.First(blkenv); bb; bb = env_s.Next(blkenv)) {
+        const MAP<TYPE_AS_Name,TYPE_SEM_ValTp> & id_m (Record(blkenv).GetMap(pos_SEM_BlkEnv_id_um));
+        if (!result_m.IsCompatible(id_m)) {
+          return eset;
+        }
+        result_m.ImpOverride(id_m);
       }
       return SET<TYPE_SEM_BlkEnv>().Insert(TYPE_SEM_BlkEnv().Init(result_m, permission));
     }
