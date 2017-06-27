@@ -107,14 +107,7 @@ def MakeDriverAndObjectFiles(fileName, compiler, flags):
   driverFile.write('int main()\n')
   driverFile.write('{\n')
   driverFile.write('  metaivtest();\n')
+  driverFile.write('  return 0;\n')
   driverFile.write('}\n')
   driverFile.close()
   
-  #filesToCompile = ["driver", "~/toolbox/linux/backslash","~/toolbox/linux/m4lib_errmsg","~/toolbox/linux/metaiv"]
-  #filesToCompile = ["driver"]
-  
-  #for fileToCompile in filesToCompile:
-  #  if (not os.path.exists(util.ExtractName(fileToCompile) + ".o")):
-  #    cmd = compiler + " " + "-c" + " " +  fileToCompile +  "." + ext + " " + flags
-  #    (exitCode, dummy1, dummy2) = util.RunCommand(cmd, 0, "Problem whith compiling")
-
