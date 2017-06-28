@@ -335,10 +335,6 @@ public:
   static QString GetCreditI();
   static QString GiveToolVersionDateI();
 
-  static bool CppCGEnabledI();
-  static bool JavaCGEnabledI();
-  static bool J2VEnabledI();
-
   static GUITokenList getGUITokenListI( const QString & filename );
   static GUIOccurenceList SearchIdI(const QStringList & files,
                                     const QString & id,

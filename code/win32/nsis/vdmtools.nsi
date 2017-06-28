@@ -85,29 +85,23 @@ Section
   File /r "${APPDIR}\word"
 
   !ifdef VDMSL
-  !ifndef LITE
     File /r "${APPDIR}\cg"
     File /r "${APPDIR}\api"
   !endif
-  !endif
 
   !ifdef VDMPP
-  !ifndef LITE
     File /r "${APPDIR}\cg"
     File /r "${APPDIR}\api"
     File /r "${APPDIR}\java2vdm"
     File /r "${APPDIR}\javacg"
-  !endif
     File /r "${APPDIR}\uml"
   !endif
 
   !ifdef VICE
-  !ifndef LITE
     File /r "${APPDIR}\cg"
     File /r "${APPDIR}\api"
     File /r "${APPDIR}\java2vdm"
     File /r "${APPDIR}\javacg"
-  !endif
     File /r "${APPDIR}\uml"
   !endif
 

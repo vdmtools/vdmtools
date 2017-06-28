@@ -32,16 +32,10 @@ struct Info {
 Info info_gui_sl (L"vdmgde.exe", false);
 Info info_gui_pp (L"vppgde.exe", false);
 Info info_gui_rt (L"vicegde.exe", false);
-Info info_gui_sll(L"vdmgde.exe", false);
-Info info_gui_ppl(L"vppgde.exe", false);
-Info info_gui_rtl(L"vicegde.exe", false);
 
 Info info_sl (L"vdmde.exe", false);
 Info info_pp (L"vppde.exe", false);
 Info info_rt (L"vicede.exe", false);
-Info info_sll(L"vdmde.exe", false);
-Info info_ppl (L"vppde.exe", false);
-Info info_rtl (L"vicede.exe", false);
 
 void wse_header()
 {
@@ -117,7 +111,7 @@ int main(int argc, char **argv)
   for  (int i=1; i<argc; i++) {
     if (strcmp(argv[i], "-gui")==0) {
       if (infop) {
-        std::wcerr << L"-gui should be used before -sl/-pp/-sll" << std::endl;
+        std::wcerr << L"-gui should be used before -sl/-pp" << std::endl;
         exit(1); 
       }
       gui = true;
@@ -139,22 +133,6 @@ int main(int argc, char **argv)
       infop = gui? &info_gui_rt : &info_rt;
       continue; 
     }
-    if (strcmp(argv[i], "-ppl")==0) {
-      tbvp = &tb_version_ppl;
-      infop = gui? &info_gui_ppl : &info_ppl;
-      continue; 
-    }
-    if (strcmp(argv[i], "-sll")==0) {
-      tbvp = &tb_version_sll;
-      infop = gui? &info_gui_sll : &info_sll;
-      continue; 
-    }
-    if (strcmp(argv[i], "-rtl")==0) {
-      tbvp = &tb_version_rtl;
-      infop = gui? &info_gui_rtl : &info_rtl;
-      continue; 
-    }
-        
     if (strcmp(argv[i], "--outputrch")==0) {
       output_rch(*tbvp, *infop); 
       continue; 

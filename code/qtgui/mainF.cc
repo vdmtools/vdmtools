@@ -694,7 +694,7 @@ void mainW::createActionsMenu()
   QObject::connect(this->cppA, SIGNAL(activated()), this, SLOT(cpp_qt3()));
 #endif // QT_VERSION >= 0x040000
 
-  if( !Qt2TB::CppCGEnabledI() ) this->cppA->setEnabled( false );
+  //this->cppA->setEnabled( true );
 
 #ifdef VDMPP    
   this->javaA = addAction(actionActions[4], this->actionsMenu, this->actionTools);
@@ -703,7 +703,7 @@ void mainW::createActionsMenu()
 #else
   QObject::connect(this->javaA, SIGNAL(activated()), this, SLOT(java_qt3()));
 #endif // QT_VERSION >= 0x040000
-  if( !Qt2TB::JavaCGEnabledI() ) this->javaA->setEnabled( false );
+  //this->javaA->setEnabled( true);
 #endif //VDMPP
 
   this->prettyA = addAction(actionActions[5], this->actionsMenu, this->actionTools);
@@ -720,10 +720,8 @@ void mainW::createActionsMenu()
 #else
   QObject::connect(this->java2vdmA, SIGNAL(activated()), this, SLOT(java2vdm_qt3()));
 #endif // QT_VERSION >= 0x040000
-
-  if( !Qt2TB::J2VEnabledI() ) this->java2vdmA->setEnabled( false );
+  //this->java2vdmA->setEnabled( false );
 #endif //VDMPP
-
 }
 
 void mainW::createInterpreterMenu()
@@ -1157,13 +1155,13 @@ void mainW::enableGUI()
   this->syntaxA->setEnabled(true);
   this->typeA->setEnabled(true);
   this->pogA->setEnabled(true);
-  this->cppA->setEnabled(Qt2TB::CppCGEnabledI());
+  this->cppA->setEnabled(true);
 #ifdef VDMPP    
-  this->javaA->setEnabled(Qt2TB::JavaCGEnabledI());
+  this->javaA->setEnabled(true);
 #endif //VDMPP
   this->prettyA->setEnabled(true);
 #ifdef VDMPP
-  this->java2vdmA->setEnabled(Qt2TB::J2VEnabledI());
+  this->java2vdmA->setEnabled(true);
   if (this->roseA != NULL)
     this->roseA->setEnabled(true);
 #endif // VDMPP
@@ -2477,7 +2475,6 @@ void mainW::cpp_qt4(bool)
 void mainW::cpp_qt3()
 #endif // QT_VERSION >= 0x040000
 {
-  if( !Qt2TB::CppCGEnabledI() ) return;
   QStringList moduleList (this->browserw->getSelectedModules());
   if( !moduleList.empty() )
   {
@@ -2519,10 +2516,8 @@ void mainW::java_qt3()
 #endif // QT_VERSION >= 0x040000
 {
 #ifdef VDMPP
-  if( !Qt2TB::JavaCGEnabledI() ) return;
   QStringList moduleList (this->browserw->getSelectedModules());
-  if( !moduleList.empty() )
-  {
+  if( !moduleList.empty() ) {
     this->sendCommand(new JavaGenerateCMD(moduleList));
   }
 #endif //VDMPP
@@ -2919,20 +2914,13 @@ void mainW::checkActions()
 
   this->syntaxA->setEnabled(anySelected);
   this->typeA->setEnabled(anySelected);
-
-  if( Qt2TB::CppCGEnabledI() )
-    this->cppA->setEnabled(anySelected);
-
+  this->cppA->setEnabled(anySelected);
   this->prettyA->setEnabled(anySelected);
 
 #ifdef VDMPP
-  if( Qt2TB::JavaCGEnabledI() )
-    this->javaA->setEnabled(anySelected);
-
-  if( Qt2TB::J2VEnabledI() )
-    this->java2vdmA->setEnabled(anySelected && this->browserw->isJavaClassSelected());
+  this->javaA->setEnabled(anySelected);
+  this->java2vdmA->setEnabled(anySelected && this->browserw->isJavaClassSelected());
 #endif //VDMPP
-    
   this->pogA->setEnabled(anySelected &&
                          !this->browserw->isJavaClassSelected() &&
                          Qt2TB::IsEverythingTypeCorrectI() );

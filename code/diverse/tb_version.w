@@ -95,48 +95,24 @@ const TB_Version tb_version_sl(L"The VDM-SL Toolbox",
                                L"VDM-SL Toolbox",
                                 MAJOR, MINOR, SUBMINOR, SUBSUBMINOR,
                                 TB_Version::vdmsl);
-const TB_Version tb_version_sll(L"The VDM-SL Toolbox Lite",
-                                L"VDM-SL Toolbox Lite",
-                                MAJOR, MINOR, SUBMINOR, SUBSUBMINOR,
-                                TB_Version::vdmsllite);
 const TB_Version tb_version_pp(L"The VDM++ Toolbox",
                                L"VDM++ Toolbox",
                                MAJOR, MINOR, SUBMINOR, SUBSUBMINOR,
                                TB_Version::vdmpp);
-const TB_Version tb_version_ppl(L"The VDM++ Toolbox Lite",
-                                L"VDM++ Toolbox Lite",
-                                MAJOR, MINOR, SUBMINOR, SUBSUBMINOR,
-                                TB_Version::vdmpplite);
 const TB_Version tb_version_rt(L"The VDM++ VICE Toolbox",
                                L"VDM++ VICE Toolbox",
                                MAJOR, MINOR, SUBMINOR, SUBSUBMINORRT,
                                TB_Version::vice);
-const TB_Version tb_version_rtl(L"The VDM++ VICE Toolbox Lite",
-                                L"VDM++ VICE Toolbox Lite",
-                                MAJOR, MINOR, SUBMINOR, SUBSUBMINORRT,
-                                TB_Version::vicelite);
 
 #ifdef VDMSL
-#  ifdef LITE
-const TB_Version& tb_version = tb_version_sll;
-#  else
 const TB_Version& tb_version = tb_version_sl;
-#  endif // LITE
 #endif //VDMSL
 
 #ifdef VDMPP
 # ifdef VICE
-#ifdef LITE
-const TB_Version& tb_version = tb_version_rtl;
-#else
 const TB_Version& tb_version = tb_version_rt;
-#endif // LITE
-# else
-# ifdef LITE
-const TB_Version& tb_version = tb_version_ppl;
 # else
 const TB_Version& tb_version = tb_version_pp;
-#endif // LITE
 # endif //VICE
 #endif //VDMPP
 //************************************************************
@@ -241,8 +217,6 @@ std::wstring TB_Version::GetShortVersionId() const
 std::wstring TB_Version::GetExtraComment() const
 {
   std::wstring res;
-  if(isLite())
-    res += L"-Lite";
   return res;
 }
 
@@ -278,18 +252,8 @@ TB_Version::GetToolType() const
   return tb_type;
 }
 
-bool TB_Version::isLite() const
-{
-#ifdef LITE
-  return true;
-#else
-  return false;
-#endif // LITE
-}
-
 bool TB_Version::isDLModuleEnabled() const
 {
-//  if( isLite() ) return false;
 #ifdef DL_MODULE_ENABLED
   return true;
 #else
@@ -308,21 +272,6 @@ bool TB_Version::isDebug() const
 #else
   return false;
 #endif // _MSC_VER
-}
-
-bool TB_Version::canCG() const
-{
-  return !isLite();
-}
-
-bool TB_Version::canJavaCG() const
-{
-  return !isLite();
-}
-
-bool TB_Version::canJ2V() const
-{
-  return !isLite();
 }
 
 @}
@@ -372,12 +321,8 @@ public:
   void GetVersionComponents(unsigned short &a, unsigned short &b, unsigned short &c, unsigned short &d) const;
   TB_Type GetToolType () const;
 
-  bool isLite() const;
   bool isDLModuleEnabled() const;
   bool isDebug() const;
-  bool canCG() const;
-  bool canJavaCG() const;
-  bool canJ2V() const;
 };
 
 extern const TB_Version& tb_version;

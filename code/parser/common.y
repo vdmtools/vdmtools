@@ -1105,7 +1105,23 @@ DLTypeImport
 /** Deviations from the standard/Remarks: IPTES                              **/
 
 Interface
-        : ImportDefinitionList ExportDefinition
+        : ImportDefinitionList
+        { $$ = new TYPE_AS_Interface();
+          MYPARSER::SetPos2(*$$, @1, @1);
+          $$->SetField (pos_AS_Interface_imp, *$1); /* imp  */
+          $$->SetField (pos_AS_Interface_exp,
+                 TYPE_AS_ExportSig().Init(Map(),Map(),Map(),Map(),NilContextId)); /* exp  */
+          delete $1;
+        }
+        | ExportDefinition
+        { $$ = new TYPE_AS_Interface();
+          MYPARSER::SetPos2(*$$, @1, @1);
+          $$->SetField (pos_AS_Interface_imp, Map()); /* imp  */
+          $$->SetField (pos_AS_Interface_exp, *$1); /* exp  */
+
+          delete $1;
+        }
+        | ImportDefinitionList ExportDefinition
         { $$ = new TYPE_AS_Interface();
           MYPARSER::SetPos2(*$$, @1, @2);
           $$->SetField (pos_AS_Interface_imp, *$1); /* imp  */
@@ -1126,11 +1142,7 @@ Interface
         ;
 
 ImportDefinitionList
-        : /* empty */
-        {
-          $$ = new Map;
-        }
-        | LEX_IMPORTS ListOfImportDefinitions
+        : LEX_IMPORTS ListOfImportDefinitions
         { $$ = $2;
         }
         ;
@@ -1703,14 +1715,7 @@ OperationImport
         ;
 
 ExportDefinition
-        : /* empty */
-        {
-// 20141117 -->
-          //$$ = new Generic(Nil ());
-          $$ = new Generic(TYPE_AS_ExportSig().Init(Map(),Map(),Map(),Map(),NilContextId));
-// <-- 20141117
-        }
-        | LEX_EXPORTS ExportModuleSignature
+        : LEX_EXPORTS ExportModuleSignature
         { $$ = $2;  // $2 is already a Generic*
         }
         ;
@@ -6548,17 +6553,17 @@ LambdaExpression
           delete $2;
           delete $3;
         }
-        | LEX_LAMBDA TypeBindList Predication ':' Type
-        {
-          $$ = new TYPE_AS_LambdaExpr();
-          MYPARSER::SetPos2(*$$, @1, @3);
-          $$->SetField (pos_AS_LambdaExpr_parm, *$2);
-          $$->SetField (pos_AS_LambdaExpr_body, *$3);
-          $$->SetField (pos_AS_LambdaExpr_type, *$5);
-          delete $2;
-          delete $3;
-          delete $5;
-        }
+//        | LEX_LAMBDA TypeBindList Predication ':' Type
+//        {
+//          $$ = new TYPE_AS_LambdaExpr();
+//          MYPARSER::SetPos2(*$$, @1, @5);
+//          $$->SetField (pos_AS_LambdaExpr_parm, *$2);
+//          $$->SetField (pos_AS_LambdaExpr_body, *$3);
+//          $$->SetField (pos_AS_LambdaExpr_type, *$5);
+//          delete $2;
+//          delete $3;
+//          delete $5;
+//        }
         ;
 
 TypeBindList

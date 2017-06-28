@@ -140,9 +140,6 @@ void SETTINGS::InitSettings()
   this->SetCorbaOn();
 
   this->uses_dlmodule = tb_version.isDLModuleEnabled();
-  this->uses_cg = tb_version.canCG();
-  this->uses_javacg = tb_version.canJavaCG();
-  this->uses_j2v = tb_version.canJ2V();
 
   this->ProfileOff();
   //this->ProfileOn();
@@ -780,21 +777,6 @@ bool SETTINGS::UsesCorba() const
 bool SETTINGS::isDLModuleEnabled() const
 {
   return this->uses_dlmodule;
-}
-
-bool SETTINGS::canCG() const
-{
-  return this->uses_cg;
-}
-
-bool SETTINGS::canJavaCG() const
-{
-  return this->uses_javacg;
-}
-
-bool SETTINGS::canJ2V() const
-{
-  return this->uses_j2v;
 }
 
 void SETTINGS::SetName(const SEQ<Char> & name)

@@ -546,7 +546,6 @@ void TOOLS::InitModuleTypes()
 #ifdef VDMPP
   init_BUILD();
   init_ASTMERGE();
-#ifndef LITE
   init_JSSAUX();
   init_JSSENV();
   init_JSSERRMSG();
@@ -561,7 +560,6 @@ void TOOLS::InitModuleTypes()
   init_J2VNS();
   init_J2VOP();
   init_J2VSTMT();
-#endif // LITE
 
 #ifdef VICE
   init_TIMEPARSER() ;
@@ -1408,8 +1406,7 @@ bool ToolMediator::UpdateRepository (const TYPE_ProjectTypes_FileName & filename
 #ifdef VDMSL
     Sequence ast_l;
     size_t len_astseq = astseq.Length();
-    for (size_t idx = 1; idx <= len_astseq; idx++)
-    {
+    for (size_t idx = 1; idx <= len_astseq; idx++) {
       const Record & mod_ast (astseq[idx]);
       switch(mod_ast.GetTag()) {
         case TAG_TYPE_AS_Module: {
@@ -1428,9 +1425,7 @@ bool ToolMediator::UpdateRepository (const TYPE_ProjectTypes_FileName & filename
 #endif // VDMSL
 #ifdef VDMPP
     Sequence ast_l;
-    if (isJava)
-    {
-#ifndef LITE
+    if (isJava) {
       size_t len_astseq = astseq.Length();
       for (size_t idx = 1; idx <= len_astseq; idx++)
       {
@@ -1439,10 +1434,8 @@ bool ToolMediator::UpdateRepository (const TYPE_ProjectTypes_FileName & filename
         ast_l.ImpAppend (PTAUX::mk_Module (nm, mod_ast));
         JavaGenTools::UpdateJSS (mod_ast);
       }
-#endif // LITE
     }
-    else
-    {
+    else {
       size_t len_astseq = astseq.Length();
       for (size_t idx = 1; idx <= len_astseq; idx++)
       {
@@ -1598,37 +1591,23 @@ bool TOOLS::EvalLatex (const TYPE_ProjectTypes_FileName & filename)
 #ifdef VDMPP
 bool TOOLS::EvalJavaParse(const TYPE_ProjectTypes_FileName & filenm)
 {
-#ifdef LITE
-  return false;
-#else
   return JavaGenTools::EvalJavaParse (filenm);
-#endif // LITE
 }
 
 bool TOOLS::EvalJavaTypeCheck(const TYPE_ProjectTypes_ModuleName & mnm)
 {
-#ifdef LITE
-  return false;
-#else
   return JavaGenTools::EvalJavaTypeCheck (mnm);
-#endif // LITE
 }
 
 bool TOOLS::EvalJavaGenerateVDM(const TYPE_ProjectTypes_ModuleName & mnm,
                                 const Bool & p_stubs, const Bool & p_rename, const Bool & p_trans)
 {
-#ifdef LITE
-  return false;
-#else
   return JavaGenTools::EvalJavaGenerateVDM (mnm, p_stubs, p_rename, p_trans);
-#endif // LITE
 }
 
 void TOOLS::AfterJavaTypeCheck()
 {
-#ifndef LITE
   JavaGenTools::AfterJavaTypeCheck();
-#endif // LITE
 }
 #endif // VDMPP
 
@@ -3215,15 +3194,6 @@ void TOOLS::EvalInfo (wostream & wos)
     wstring cmd (Infos[i].str);
 
     if( cmd == L"#" ) continue;
-    if( !canCG() )
-    {
-      if( cmd == L"codegen (cg) [module] [opt]" ) continue;
-      if( cmd == L"codegen (cg) class [opt]" ) continue;
-    }
-    if( !canJavaCG() )
-    {
-      if( cmd == L"javacg (jcg) class [opt]" ) continue;
-    }
     if( !isDLModuleEnabled() )
     {
       if( cmd == L"dlclose (dlc)" ) continue;
@@ -3713,7 +3683,7 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << endl << NEED_INIT << endl
     << endl;
 
-  else if ((cmd == L"codegen") && canCG())
+  else if (cmd == L"codegen")
     wos << endl
 #ifdef VDMSL
     << L"codegen (cg) [module] [option]" << endl
@@ -3758,7 +3728,7 @@ int TOOLS::EvalHelp (const wstring & cmd_, wostream & wos)
     << endl;
 
 #ifdef VDMPP
-  else if ((cmd == L"javacg") && canJavaCG())
+  else if (cmd == L"javacg")
     wos << endl
     << L"javacg (jcg) class [opt]" << endl
     << endl
@@ -4189,21 +4159,6 @@ wstring TOOLS::getCredit()
   return L"VDM Toolbox is currently developed with the cooperation of Research Center for Architecture-Oriented Formal Methods of Kyusyu University.";
 }
 
-bool TOOLS::canCG()
-{
-  return tb_version.canCG();
-}
-
-bool TOOLS::canJavaCG()
-{
-  return tb_version.canJavaCG();
-}
-
-bool TOOLS::canJ2V()
-{
-  return tb_version.canJ2V();
-}
-
 bool TOOLS::isDLModuleEnabled()
 {
   return tb_version.isDLModuleEnabled();
@@ -4421,8 +4376,7 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
       TBDEBUG::EvalCondition(args, vdm_iplog);
       return true;
     }
-    else if ((cmd == L"codegen") && Settings.canCG())
-    {
+    else if (cmd == L"codegen") {
       wstring params[20];
       STR_split (args, params, 20, STR_RXwhite_and_comma);
 
@@ -4507,8 +4461,7 @@ bool TOOLS::ParseCommand (const wstring & cmd, const wstring & args_)
     }
 
 #ifdef VDMPP
-    else if ((cmd == L"javacg") && Settings.canJavaCG())
-    {
+    else if (cmd == L"javacg") {
       wstring params[20];
       STR_split (args, params, 20, STR_RXwhite_and_comma);
 
