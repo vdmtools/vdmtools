@@ -2202,7 +2202,7 @@ void StackEval::EvalBINOP(const Int & opr)
 
   switch (opr.GetValue()) {
     case EQ:
-    case NE:
+    case NE:           { PUSH(EXPR::EvalEqualityExpr(left_v, opr, right_v)); break; }
     case EQUIV:        { PUSH(EXPR::EvalEqNeBinaryExpr(left_v, opr, right_v)); break; }
     case NUMPLUS:
     case NUMMINUS:
