@@ -288,9 +288,15 @@ inv sgmcl ==
    (forall typedef in set rng sgmcl.localtps &
     let mk_AS`TypeDef(nm,-,-,-,-,-,-)=typedef
     in len nm.ids = 1) and
-   (forall mk_(-,access) in set rng sgmcl.explfns union rng sgmcl.explops union
-				rng sgmcl.explpolys union rng sgmcl.recsel union rng sgmcl.vls_init &
-	access in set {<PRIVATE_AS>,<PROTECTED_AS>,<PUBLIC_AS>});
+   (forall cefn in set rng sgmcl.explfns &
+      forall fn in set elems cefn.fl &
+        fn.access in set {<PRIVATE_AS>,<PROTECTED_AS>,<PUBLIC_AS>}) and
+   (forall fnop in set rng sgmcl.explops union rng sgmcl.explpolys &
+        fnop.access in set {<PRIVATE_AS>,<PROTECTED_AS>,<PUBLIC_AS>}) and
+   (forall mk_(-,-,-,access) in set rng sgmcl.recsel &
+        access in set {<PRIVATE_AS>,<PROTECTED_AS>,<PUBLIC_AS>}) and
+   (forall mk_(-,access) in set rng sgmcl.vls_init &
+        access in set {<PRIVATE_AS>,<PROTECTED_AS>,<PUBLIC_AS>});
 \end{vdm_al}
 
 The {\em SigmaClass} describes:
