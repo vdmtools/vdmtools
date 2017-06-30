@@ -242,10 +242,11 @@ operations
    (dcl def_sp : STKM`SubProgram := [];
     for mk_(pb,expr) in def_l do
       cases pb:
-        mk_AS`PatternName(nm,-,-) -> if nm = nil
-                                     then def_sp := def_sp ^ E2I(expr) ^ [mk_INSTRTP`POP(1)]
-                                     else def_sp := def_sp ^ E2I(expr) ^ [mk_INSTRTP`APPENDBLKENV(nm,nil)],
-        others                    -> def_sp := def_sp ^ E2I(expr) ^ CPAT`PB2I(pb) ^ [mk_INSTRTP`MATCHANDBIND()]
+        mk_AS`PatternName(nm,-,-) ->
+                  if nm = nil
+                  then def_sp := def_sp ^ E2I(expr) ^ [mk_INSTRTP`POP(1)]
+                  else def_sp := def_sp ^ E2I(expr) ^ [mk_INSTRTP`APPENDBLKENV(nm,nil)],
+        others -> def_sp := def_sp ^ E2I(expr) ^ CPAT`PB2I(pb) ^ [mk_INSTRTP`MATCHANDBIND()]
       end;
     return [mk_INSTRTP`EMPTYBLKENV(<READ_ONLY>)] ^ def_sp ^ E2I(In) ^ [mk_INSTRTP`POPBLKENV()];
    );
@@ -293,10 +294,11 @@ operations
         --AS`ExplFnDef
         --AS`ImplFnDef
         --AS`ExtExplFnDef
-        others -> def mk_(blkenv,b_m) = PAT`ConstructFN(CMPL`GetClMod(), ldef)
-                  in valdef := valdef ^ [mk_INSTRTP`CLOSENV(blkenv,b_m)]
+        others -> def mk_(blkenv, b_m) = PAT`ConstructFN(CMPL`GetClMod(), ldef)
+                  in valdef := valdef ^ [mk_INSTRTP`CLOSENV(blkenv, b_m)]
       end;
-    return [mk_INSTRTP`EMPTYBLKENV(<READ_ONLY>)] ^ valdef ^ E2I(body) ^ [mk_INSTRTP`POPBLKENV()]);
+    return [mk_INSTRTP`EMPTYBLKENV(<READ_ONLY>)] ^ valdef ^ E2I(body) ^ [mk_INSTRTP`POPBLKENV()]
+   );
 \end{vdm_al}
 
 \section{Let be such that Expression}

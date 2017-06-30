@@ -110,39 +110,35 @@ depend on the values which have been defined before it in the value list.
 -- Note that this operation is identical to InitGV in the MOD module!!!
   InitGV : seq of AS`ValueDef ==> GLOBAL`ValueMap
   InitGV (val_l) == 
-    if val_l <> []
-    then
-      def mk_AS`ValueDef (pat, tp, exp_e, access, -, -) = hd val_l;
-          mk_(eval_state, res) = DEBUG`EvalUninterruptedCmd( exp_e, [], [], "Init of Global Values" );
-          exp_v = if is_STKM`Success(eval_state)
-                 then res
-                 else undefined
+   (dcl res_m : GLOBAL`ValueMap := { |-> };
+    STKM`PushEmptyBlkEnv(<READ_ONLY>);
+    for mk_AS`ValueDef (pat, tp, exp_e, access, -, -) in val_l do
+      def mk_(eval_state, exp_v) = DEBUG`EvalAuxCmd( exp_e,[],[], "Init of Global Values" );
       in
-       (dcl res_m : GLOBAL`ValueMap := { |-> };
-        if SETTINGS`DTC()
+       (if not is_STKM`Success(eval_state)
+        then RTERR`InitError(RTERR`INTERNAL_ERROR,exp_e.cid,[])
+        elseif SETTINGS`DTC()
         then
           if (tp <> nil) and (not STATE`SubType (exp_v, tp))
           then RTERR`InitError(RTERR`TYPE_INCOMP,exp_e.cid,[])
           else skip;
+        STKM`SetCid(pat.cid);
         def env_s = PAT`PatternMatch(CPAT`P2P(pat), exp_v)
         in
-          if env_s <> {}
-          then
-            let env in set env_s
-            in
-             (for all id in set dom env.id_m do
-                let mk_SEM`ValTp(val,-) = env.id_m(id) 
-                in 
-                  res_m := res_m ++ { id |-> mk_(val,DEF`RealAccess(access,<INST>))};
-              STKM`PushBlkEnv(env);
-              res_m := res_m ++ InitGV(tl val_l);
-              STKM`PopBlkEnv()
-             )
-          else
-            RTERR`InitError(RTERR`EMPTY_ENV_S,pat.cid,[]);
-        return res_m;
-       )
-    else return {|->};
+          cases env_s:
+            { env } union - ->
+                let mk_SEM`BlkEnv(id_m,-) = env
+                in
+                 (res_m := res_m ++
+                   { id |-> let mk_SEM`ValTp(val,-) = id_m(id)
+                            in mk_(val,DEF`RealAccess(access,<INST>)) | id in set dom id_m };
+                  STKM`AddToTopBlkEnv(env)),
+            others -> RTERR`InitError(RTERR`EMPTY_ENV_S,pat.cid,[])
+          end;
+       );
+    STKM`PopBlkEnv();
+    return res_m;
+   );
 \end{vdm_al}
 
 \section{Translation of the Class Hierarchy}

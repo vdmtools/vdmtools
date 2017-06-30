@@ -33,9 +33,9 @@ module FREE
      
   exports
     functions
-      IdentInPattern : AS`PatternBind -> set of AS`Name
+      IdentInPattern : AS`PatternBind -> set of AS`Name;
+      FreeMapToBlkEnv : map AS`Name to SEM`VAL -> SEM`BlkEnv;
     operations
-      FreeMapToBlkEnv : map AS`Name to SEM`VAL ==> SEM`BlkEnv;
       FreeInExpr : AS`Expr * set of AS`Name ==> map AS`Name to SEM`VAL
 
 definitions
@@ -797,26 +797,23 @@ FreeInIotaExpr (mk_AS`IotaExpr(bind,pred,-), id_s) ==
 \section{Auxiliary Operations}
 
 \begin{vdm_al}
-operations
+functions
 
 ---
 --- Convert a map of identifiers to values to a block environment
 ---
 
-FreeMapToBlkEnv : map AS`Name to SEM`VAL ==> SEM`BlkEnv
+FreeMapToBlkEnv : map AS`Name to SEM`VAL -> SEM`BlkEnv
 FreeMapToBlkEnv (id_m) ==
-  return AUX`MkBlkEnvFromIdMap(id_m, <READ_ONLY>);
+  AUX`MkBlkEnvFromIdMap(id_m, <READ_ONLY>);
 
 ---
 --- Look up a identifier in the top environment only
 ---
+operations
 
 LookUpInTopEnv : AS`Name ==> [SEM`VAL]
 LookUpInTopEnv (name) ==
---  def mk_(isit, mk_SEM`ValTp(val, -)) = STKM`IsLocalVal(name)
---  in if isit
---     then return val
---     else return nil
   cases STKM`IsLocalVal(name):
     mk_(true, mk_SEM`ValTp(val, -)) -> return val,
     others                          -> return nil
