@@ -2293,16 +2293,14 @@ operations
   ExeBINDINSTVAR: AS`Name * AS`Name ==> ()
   ExeBINDINSTVAR(clnm,nm) ==
     def [val] = STKM`Pop(1);
-        --clnm = STKM`GetCurCl();
         mk_SEM`OBJ(-,istrct,-) = STKM`GetCurObj();
         local_inst : GLOBAL`ValueMap = istrct(clnm);
     in
       if nm in set dom local_inst
       then
-        def mk_(v,acc) = local_inst(nm);
+        def mk_(v,-,acc) = local_inst(nm);
             tp = STATE`GetInstVarsTp(clnm)(nm)
         in STATE`SetInstanceVar(nm, val, mk_(true,true,v,tp,clnm,acc))
-      --else STATE`SetInstanceVar(nm, val, nil)
       else STATE`SetInstanceVar(nm, val, STATE`IsInObjScope(nm, nil))
   pre STKM`LenES(1) and
       def [val] = STKM`GetES(1)

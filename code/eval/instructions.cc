@@ -1763,12 +1763,11 @@ void StackEval::ExeCALLGUARD(const Bool & hasobj, const TYPE_AS_Name & oprt)
 Generic StackEval::ConvertOverOPFNToExplOP(const Record & op, const Generic & obj,
                                            const Bool & hasobj, const SEQ<TYPE_SEM_VAL> & args)
 {
-  if (hasobj)
-  {
-    if (obj.Is(TAG_TYPE_SEM_OBJ_uRef))
+  if (hasobj) {
+    if (obj.Is(TAG_TYPE_SEM_OBJ_uRef)) {
       PushCurObj(obj, Nil(), GetCurCl());
-    else
-    {
+    }
+    else {
       SetCid(ASTAUX::GetCid(op));
       RTERR::Error(L"ConvertOverOPFNToExplOP", RTERR_OBJ_REF_EXP, obj, Nil(), Sequence());
       return Nil();
@@ -1776,16 +1775,13 @@ Generic StackEval::ConvertOverOPFNToExplOP(const Record & op, const Generic & ob
   }
 
   Generic resval = Nil();
-  if (op.Is(TAG_TYPE_AS_Name))
-  {
-    if (hasobj) 
-    { // object
+  if (op.Is(TAG_TYPE_AS_Name)) {
+    if (hasobj) { // object
       Tuple lofp (theState().LookOpFctPoly(op));
       if (lofp.GetBoolValue(1) && lofp.GetBoolValue(2)) {
         resval = lofp.GetRecord(3);
       }
-      else 
-      {
+      else {
         SetCid(ASTAUX::GetCid(op));
         RTERR::Error(L"ConvertOverOPFNToExplOP", RTERR_OP_OR_FUN_NOT_IN_SCOPE, Nil(), Nil(), Sequence());
         return Nil();
@@ -1794,67 +1790,55 @@ Generic StackEval::ConvertOverOPFNToExplOP(const Record & op, const Generic & ob
     else
     { // TODO
       // static
-      if ((Record(op).GetSequence(pos_AS_Name_ids).Length() == 1))
-      {
+      if ((Record(op).GetSequence(pos_AS_Name_ids).Length() == 1)) {
         resval = theState().LookUp(op);
       }
-      else if (Record(op).GetSequence(pos_AS_Name_ids).Length() == 2)
-      {
+      else if (Record(op).GetSequence(pos_AS_Name_ids).Length() == 2) {
         Tuple lsofp (theState().LookStaticOpFctPoly(ASTAUX::GetFirstName(op), AUX::ExtractName(op)));
         if (lsofp.GetBoolValue(1) && lsofp.GetBoolValue(2)) {
           resval = lsofp.GetRecord(3);
         }
-        else 
-        {
+        else {
           SetCid(ASTAUX::GetCid(op));
           RTERR::Error(L"ConvertOverOPFNToExplOP", RTERR_STATIC_NOT_IN_SCOPE, Nil(), Nil(), Sequence());
           return Nil();
         }
       }
-      else
-      {
+      else {
         resval = theState().LookUp(op);
       }
     }
   }
-  else
-  {
+  else {
     resval = op;
   }
 
   Generic realnm = Nil(); // [AS`Name]
-  if (resval.Is(TAG_TYPE_SEM_OverOPFN))
-  {
+  if (resval.Is(TAG_TYPE_SEM_OverOPFN)) {
     // map (AS`Name * AS`Name) to ((seq of AS`Type) * AS`Access)
     const Map & over (Record(resval).GetMap(pos_SEM_OverOPFN_overload));
     TYPE_GLOBAL_OrigCl origcl (GetOrigCl()); 
     Set dom_over (over.Dom());
     Map m_s;
     Generic manglenm_clsnm; // (AS`Name * AS`Name)
-    for (bool bb = dom_over.First(manglenm_clsnm); bb; bb = dom_over.Next(manglenm_clsnm))
-    {
+    for (bool bb = dom_over.First(manglenm_clsnm); bb; bb = dom_over.Next(manglenm_clsnm)) {
       Tuple tp_l_access (over[manglenm_clsnm]); // ((seq of AS`Type) * AS`Access)
       const SEQ<TYPE_AS_Type> & tp_l (tp_l_access.GetSequence(1));
-      if (tp_l.Length() == args.Length())
-      {
+      if (tp_l.Length() == args.Length()) {
         size_t len = args.Length();
         bool forall = true;
-        for(size_t i = 1; (i <= len) && forall; i++)
-        {
+        for(size_t i = 1; (i <= len) && forall; i++) {
           forall = theState().RealSubType(args[i], tp_l[i], false);
         } 
-        if (forall)
-        {
+        if (forall) {
           Tuple tmp (manglenm_clsnm);  // AS`Name * AS`Name
           const TYPE_AS_Name & manglenm (tmp.GetRecord(1));
           const TYPE_AS_Name & clsnm (tmp.GetRecord(2));
           Tuple lafop (theState().LookupAllFnsOpsPolys(clsnm, manglenm));
-          if (lafop.GetBoolValue(1))
-          {
+          if (lafop.GetBoolValue(1)) {
             Tuple fnac (lafop.GetTuple(2)); // SEM`VAL * AS`Access
             const TYPE_SEM_VAL & opfn (fnac.GetRecord(1)); // SEM`VAL
-            if (theState().AccessOk(fnac.GetField(2), origcl, clsnm))
-            {
+            if (theState().AccessOk(fnac.GetField(2), origcl, clsnm)) {
               if(!m_s.DomExists(clsnm))
                 m_s.Insert(clsnm, mk_(opfn, manglenm)); //
 //              else
@@ -3607,15 +3591,13 @@ void StackEval::ExeBINDINSTVAR (const TYPE_AS_Name & clnm, const TYPE_AS_Name & 
     theState().SetBindName(val, nm);
   }
 
-  //const TYPE_AS_Name & clnm (GetCurCl());
   TYPE_SEM_OBJ obj (GetCurObj());
   const Map & istrct (obj.GetMap(pos_SEM_OBJ_ins));
   const Map & local_inst (istrct[clnm]);
   if (local_inst.DomExists(nm)) {
     const Tuple & t (local_inst[nm]);
     TYPE_AS_Type tp (theState().GetInstVarsTp(clnm)[nm]);
-    Tuple res (mk_(Bool(true), Bool(true), t.GetRecord(1), tp, clnm, t.GetField(2)));
-
+    Tuple res (mk_(Bool(true), Bool(true), t.GetRecord(1), tp, clnm, t.GetField(3)));
     theState().SetInstanceVar(nm, val, res);
   }
   else

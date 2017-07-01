@@ -111,7 +111,12 @@ the invariant definition, and $expr$ is the actual invariant expression.
 \begin{vdm_al}
 types
 
-ValueMap = map AS`Name to (SEM`VAL * AS`Access)
+#ifdef VDMSL
+ValueMap = map AS`Name to (SEM`VAL * [AS`Type])
+#endif VDMSL
+#ifdef VDMPP
+ValueMap = map AS`Name to (SEM`VAL * [AS`Type] * AS`Access)
+#endif VDMPP
 inv valmap == 
     forall nm in set dom valmap &
     len nm.ids = 1
@@ -295,7 +300,7 @@ inv sgmcl ==
         fnop.access in set {<PRIVATE_AS>,<PROTECTED_AS>,<PUBLIC_AS>}) and
    (forall mk_(-,-,-,access) in set rng sgmcl.recsel &
         access in set {<PRIVATE_AS>,<PROTECTED_AS>,<PUBLIC_AS>}) and
-   (forall mk_(-,access) in set rng sgmcl.vls_init &
+   (forall mk_(-,-,access) in set rng sgmcl.vls_init &
         access in set {<PRIVATE_AS>,<PROTECTED_AS>,<PUBLIC_AS>});
 \end{vdm_al}
 

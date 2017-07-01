@@ -360,24 +360,22 @@ Generic VAL2X::objval2generic(const TYPE_SEM_OBJ & sem_val,
   
   Map m;
   Generic clnm;
-  for (bool bb = dom_ins.First(clnm); bb; bb = dom_ins.Next(clnm))
-  {
+  for (bool bb = dom_ins.First(clnm); bb; bb = dom_ins.Next(clnm)) {
     TYPE_GLOBAL_ValueMap valmap (ins[clnm]);
     SET<TYPE_AS_Name> dom_valmap (valmap.Dom());
     Generic var_nm;
     // valmap : GLOBAL`ValueMap = map AS`Name to (SEM`VAL * AS`Access)
-    for (bool bb = dom_valmap.First(var_nm); bb; bb = dom_valmap.Next(var_nm))
-    {
+    for (bool bb = dom_valmap.First(var_nm); bb; bb = dom_valmap.Next(var_nm)) {
       //Tuple t (valmap[var_nm]);
-      Tuple infer (IsStatic(clnm, var_nm)); // bool * [SEM`VAL]
-      Tuple t (infer.GetBoolValue(1) ? type_dU2P(infer.GetField(2)) : valmap[var_nm]);
+      // TODO
+      Tuple infer (IsStatic(clnm, var_nm)); // bool
+      Tuple t (infer.GetBoolValue(1) ? Tuple(infer.GetField(2)) : Tuple(valmap[var_nm]));
 
       const TYPE_SEM_VAL & semval (t.GetRecord(1));
       const TYPE_AS_Access & acc (t.GetField(2));
 
       wstring astr (infer.GetBoolValue(1) ? L"S" : L" ");
-      if (acc.IsInt())
-      {
+      if (acc.IsInt()) {
         switch(Int(acc).GetValue()) {
           case PRIVATE_AS: {
             astr += L"- ";

@@ -972,11 +972,11 @@ InitStaticInsts(clsnm,instdef_l,ast_is_new) ==
   PushInitClass(clsnm);
   for instdef in instdef_l do
     cases instdef:
-      mk_AS`InstAssignDef(mk_AS`AssignDef(var,-,-,-),access,stat,-) ->
+      mk_AS`InstAssignDef(mk_AS`AssignDef(var,tp,-,-),access,stat,-) ->
        (if var in set dom classes(clsnm).statics and ast_is_new
         then already := true;
         if stat and not already
-        then classes(clsnm).statics := classes(clsnm).statics ++ {var |-> mk_(mk_SEM`UNDEF(),access)}
+        then classes(clsnm).statics := classes(clsnm).statics ++ {var |-> mk_(mk_SEM`UNDEF(),tp,access)}
        ),
       others -> skip
     end;
@@ -1022,7 +1022,7 @@ InitStaticInsts(clsnm,instdef_l,ast_is_new) ==
                           VC`LogInstVarChange(instnm,val_v,exp_v, STKM`GetCurThread());
                );
 #endif VICE
-              classes(clsnm).statics := classes(clsnm).statics ++ {var |-> mk_(exp_v,access)};
+              classes(clsnm).statics := classes(clsnm).statics ++ {var |-> mk_(exp_v,tp,access)};
              ),
       others -> skip
     end;
@@ -1275,10 +1275,10 @@ SetInstanceVar(nm, val_v, iios) ==
 #endif VICE
       if thename in set dom classes(clnm).statics
       then
-        let mk_(-,access) = classes(clnm).statics(thename)
-        in  classes(clnm).statics := classes(clnm).statics ++ {thename |->  mk_(val_v,access)}
+        let mk_(-,tp,access) = classes(clnm).statics(thename)
+        in  classes(clnm).statics := classes(clnm).statics ++ {thename |->  mk_(val_v,tp,access)}
       else
-        let mk_(-,access) = obj_tab(the_ref).sem.ins(clnm)(thename)
+        let mk_(-,tp,access) = obj_tab(the_ref).sem.ins(clnm)(thename)
          in
           (
 #ifdef VICE
@@ -1288,7 +1288,7 @@ SetInstanceVar(nm, val_v, iios) ==
              if exists nm in set opnms inter dom deps & deps(nm) = <ALL> or thename in set deps(nm)
              then SCHD`PotentialPerChange(the_ref);
 #endif VICE
-           obj_tab(the_ref).sem.ins(clnm)(thename) := mk_(val_v,access)
+           obj_tab(the_ref).sem.ins(clnm)(thename) := mk_(val_v,tp,access)
           );
      )
     else RTERR`Error(RTERR`INIT_NOT_POSSIBLE, nil, nil, []);
@@ -2215,7 +2215,7 @@ IsInObjScope(name, oldstate) ==
             in
               if thename in set dom local_inst
               then
-                def mk_(v,access) = local_inst(thename);
+                def mk_(v,-,access) = local_inst(thename);
                     tp = GetInstVarsTp(clnm)(thename)
                 in
                   if AccessOk(access, origcl, clnm)
@@ -2245,7 +2245,7 @@ IsInObjScope(name, oldstate) ==
               in
                 cases dom inst_vls:
                   {}     -> return mk_(false, false, nil, nil, nil,nil),
-                  {cl}   -> def mk_(val,access) = inst_vls(cl)(thename);
+                  {cl}   -> def mk_(val,-,access) = inst_vls(cl)(thename);
                                 tp = GetInstVarsTp(cl)(thename)
                             in
                               if AccessOk(access,origcl,cl)
@@ -2255,10 +2255,10 @@ IsInObjScope(name, oldstate) ==
                             if classname not in set dom inst_vls
                             then 
                               def rem_priv = {clnm | clnm in set dom inst_vls
-                                               & forall p in set rng inst_vls(clnm) & p.#2 <> <PRIVATE_AS>};
+                                               & forall p in set rng inst_vls(clnm) & p.#3 <> <PRIVATE_AS>};
                               in res := ExistsOneChild(rem_priv,dom inst_vls);
                             cases res:
-                              mk_(true, cls) -> def mk_(val,access) = inst_vls(cls)(thename);
+                              mk_(true, cls) -> def mk_(val,-,access) = inst_vls(cls)(thename);
                                                     tp = GetInstVarsTp(cls)(thename)
                                                 in if AccessOk(access,origcl,cls)
                                                    then return mk_(true, false, val, tp, cls, access)
@@ -2334,7 +2334,7 @@ IsValue(nm) ==
         in
          (if thename in set dom local_vls
           then
-            let mk_(v,access) = local_vls(thename)
+            let mk_(v,-,access) = local_vls(thename)
             in
               if AccessOk(access, origcl,clnm)
               then return mk_(true,true,v)
@@ -2360,7 +2360,7 @@ IsValue(nm) ==
       in
         cases dom spcl_vls:
           {}     -> return mk_(false, false, nil),
-          {cl}   -> let mk_(val,access) = spcl_vls(cl)(thename)
+          {cl}   -> let mk_(val,-,access) = spcl_vls(cl)(thename)
                     in
                       if AccessOk(access,origcl,cl)
                       then return mk_(true,true,val)
@@ -2377,13 +2377,13 @@ IsValue(nm) ==
                     then
                       def rem_priv = {clnm | clnm in set dom spcl_vls
                                                        & forall p in set rng spcl_vls(clnm) &
-                                                           p.#2 <> <PRIVATE_AS>};
+                                                           p.#3 <> <PRIVATE_AS>};
                       in res := ExistsOneChild(rem_priv,dom spcl_vls);
                     def mk_(doesthere, cls) = res
                     in
                       if doesthere
                       then
-                        let mk_(val,access) = spcl_vls(cls)(thename)
+                        let mk_(val,-,access) = spcl_vls(cls)(thename)
                         in if AccessOk(access,origcl,cls)
                            then return mk_(true,true,val)
                            else return mk_(true,false,nil)
@@ -2645,7 +2645,7 @@ LookUpStatic(name) ==
         in
           if memnm in set dom statmap
           then
-            def mk_(val,access) = statmap(memnm);
+            def mk_(val,-,access) = statmap(memnm);
                 origcl = STKM`GetOrigCl()
             in
               if AccessOk(access, origcl,clsnm)
@@ -2891,11 +2891,11 @@ ModifyInstanceVar(obj_ref, index_l, val_v) ==
       in
         if index in set dom insmap
         then
-          let mk_(v,access) = insmap(index)
+          let mk_(v,tp,access) = insmap(index)
           in
             if access = <PUBLIC_AS>
             then
-              def new_vm = insmap ++ {index |-> mk_(ModifyValue(v,tl index_l,val_v), access)};
+              def new_vm = insmap ++ {index |-> mk_(ModifyValue(v,tl index_l,val_v), tp, access)};
                   new_val = mu(obj, ins |-> obj.ins ++ {clsnm |-> new_vm});
                   new_o = mu(obj_v, sem |-> new_val)
               in
@@ -3662,7 +3662,7 @@ pre  kind in set {mk_INSTRTP`req(), mk_INSTRTP`act(), mk_INSTRTP`fin()};
 RemoveHist: GLOBAL`OBJ_Desc +> GLOBAL`OBJ_Desc
 RemoveHist(desc) ==
   let mk_SEM`OBJ(tp,ins,-) = desc.sem,
-      undefinf = {nm |-> {id |-> mk_(mk_SEM`UNDEF(),ins(nm)(id).#2) | id in set dom ins(nm)} | nm in set dom ins},
+      undefinf = {nm |-> {id |-> mk_(mk_SEM`UNDEF(),ins(nm)(id).#2,ins(nm)(id).#3) | id in set dom ins(nm)} | nm in set dom ins},
       obj = mk_SEM`OBJ(tp,undefinf,{|->})
   in
     mu(desc,sem |-> obj,threadid |-> nil);
@@ -3809,8 +3809,8 @@ The operation {\em SetInstInitVal} sets the initial semantics values of the inst
 \begin{vdm_al}
 SetInstInitVal: AS`Name * SEM`InsStrct ==> ()
 SetInstInitVal(name, instval) ==
-  classes(name).inst_init_val := {nm |-> {inm |-> let mk_(v,a) = (instval(nm))(inm)
-                                                  in mk_(v,DEF`RealAccess(a,<INST>))
+  classes(name).inst_init_val := {nm |-> {inm |-> let mk_(v,tp,a) = (instval(nm))(inm)
+                                                  in mk_(v,tp,DEF`RealAccess(a,<INST>))
                                           | inm in set dom instval(nm)}
                                   | nm in set dom instval};
 \end{vdm_al}

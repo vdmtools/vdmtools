@@ -285,7 +285,8 @@ InitGV : seq of AS`ValueDef ==> GLOBAL`ValueMap
 InitGV (val_l) == 
  (dcl res_m : GLOBAL`ValueMap := { |-> };
   STKM`PushEmptyBlkEnv(<READ_ONLY>);
-  for mk_AS`ValueDef (pat, tp, exp_e, access, -, -) in val_l do
+  --for mk_AS`ValueDef (pat, tp, exp_e, access, -, -) in val_l do
+  for mk_AS`ValueDef (pat, tp, exp_e, -, -, -) in val_l do
     def mk_(eval_state, exp_v) = DEBUG`EvalAuxCmd( exp_e,[],[], "Init of Global Values" );
     in
      (if not is_STKM`Success(eval_state)
@@ -303,8 +304,10 @@ InitGV (val_l) ==
               let mk_SEM`BlkEnv(id_m,-) = env
               in
                (res_m := res_m ++
-                 { id |-> let mk_SEM`ValTp(val,-) = id_m(id) 
-                          in mk_(val,DEF`RealAccess(access,<INST>)) | id in set dom id_m };
+                 --{ id |-> let mk_SEM`ValTp(val,-) = id_m(id) 
+                 --         in mk_(val,DEF`RealAccess(access,<INST>)) | id in set dom id_m };
+                 { id |-> let mk_SEM`ValTp(val,vtp) = id_m(id) 
+                          in mk_(val,vtp) | id in set dom id_m };
                 STKM`AddToTopBlkEnv(env)),
           others -> RTERR`InitError(RTERR`EMPTY_ENV_S,pat.cid,[])
         end;

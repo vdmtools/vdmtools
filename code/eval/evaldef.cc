@@ -196,15 +196,15 @@ MAP<TYPE_AS_Name,TYPE_GLOBAL_SigmaClass> DEF::ReadClasses(const TYPE_AS_Class & 
     switch (val.GetTag()) {
       case TAG_TYPE_SEM_CompExplFN: {
         const SEQ<TYPE_SEM_ExplFN> & fl (val.GetSequence(pos_SEM_CompExplFN_fl));
-        statics.Insert(name, mk_(val, fl[1].GetField(pos_SEM_ExplFN_access)));
+        statics.Insert(name, mk_(val, Nil(), fl[1].GetField(pos_SEM_ExplFN_access)));
         break;
       }
       case TAG_TYPE_SEM_ExplPOLY: {
-        statics.Insert(name, mk_(val, val.GetField(pos_SEM_ExplPOLY_access)));
+        statics.Insert(name, mk_(val, Nil(), val.GetField(pos_SEM_ExplPOLY_access)));
         break;
       }
       case TAG_TYPE_SEM_ExplOP: {
-        statics.Insert(name, mk_(val, val.GetField(pos_SEM_ExplOP_access)));
+        statics.Insert(name, mk_(val, Nil(), val.GetField(pos_SEM_ExplOP_access)));
         break;
       }
     } 

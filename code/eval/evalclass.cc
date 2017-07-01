@@ -23,14 +23,16 @@ void CLASS::GenInsMap(const TYPE_AS_Name & nm)
 {
   SEQ<TYPE_AS_InstAssignDef> instvars (theState().GetInstVars(nm));
 
-  MAP<TYPE_AS_Name, type_dU2P> tmp_m;   // GLOBAL`ValueMap
+  MAP<TYPE_AS_Name, type_dUU3P> tmp_m;   // GLOBAL`ValueMap
   size_t len_instvars = instvars.Length();
   for (size_t i = 1; i <= len_instvars; i++) {
     TYPE_AS_InstAssignDef iad (instvars[i]);
     const TYPE_AS_AssignDef & ad  (iad.GetRecord(pos_AS_InstAssignDef_ad));
     const TYPE_AS_Access & access (iad.GetField(pos_AS_InstAssignDef_access));
+    const TYPE_AS_Name & ins (ad.GetRecord(pos_AS_AssignDef_var));
+    const TYPE_AS_Type & tp (ad.GetRecord(pos_AS_AssignDef_tp));
 
-    tmp_m.ImpModify(ad.GetRecord(pos_AS_AssignDef_var), (Generic)mk_(sem_undef, access));
+    tmp_m.ImpModify(ins, (Generic)mk_(sem_undef, tp, access));
   }
 
 //  TYPE_SEM_InsStrct own;      // map AS`Name to GLOBAL`ValueMap
@@ -65,7 +67,9 @@ TYPE_GLOBAL_ValueMap CLASS::InitGV(const SEQ<TYPE_AS_ValueDef> & val_l, const TY
       const TYPE_AS_Pattern & pat (vd.GetRecord(pos_AS_ValueDef_pat));
       const Generic & tp (vd.GetField(pos_AS_ValueDef_tp));
       const TYPE_AS_Expr & exp_e (vd.GetRecord(pos_AS_ValueDef_val));
+#ifdef VDMPP
       const TYPE_AS_Access & access (vd.GetField(pos_AS_ValueDef_access));
+#endif // VDMPP
 
 // 20130530 -->
 //      Tuple euc (theStackMachine().EvalUninterruptedCmd(exp_e,
@@ -105,13 +109,18 @@ TYPE_GLOBAL_ValueMap CLASS::InitGV(const SEQ<TYPE_AS_ValueDef> & val_l, const TY
         for (bool cc = dom_id_m.First(id); cc; cc = dom_id_m.Next(id)) {
           const TYPE_SEM_ValTp & valtp (id_m[id]);
           const TYPE_SEM_VAL & val (valtp.GetRecord(pos_SEM_ValTp_val));
-          const Generic & tp (valtp.GetField(pos_SEM_ValTp_tp));
+          const Generic & vtp (valtp.GetField(pos_SEM_ValTp_tp));
 
           if (res_m.DomExists (id)) {
             vdm_iplog << L"  Value: \"" << ASTAUX::ASName2String (id) << L"\" overwrite previous definition" << endl << flush;
           }
 
-          type_dU2P t ((Generic)mk_(val, DEF::RealAccess(access, DEF::ACC_INST)));
+#ifdef VDMSL
+          type_dU2P t (mk_(val, vtp));
+#endif // VDMSL
+#ifdef VDMPP
+          type_dUU3P t (mk_(val, vtp, DEF::RealAccess(access, DEF::ACC_INST)));
+#endif // VDMPP
 
           res_m.ImpModify(id, t);
 

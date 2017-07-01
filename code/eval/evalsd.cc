@@ -45,8 +45,7 @@ TYPE_SEM_OBJ_uRef EvalState::ModifyInstanceVar(const TYPE_SEM_OBJ_uRef & obj_ref
   const Record & index (index_l.Hd()); // (AS`Name | SEM`VAL)
 
   // If this sequence index is not a name, something has gone wrong
-  if (index.Is(TAG_TYPE_AS_Name))
-  {
+  if (index.Is(TAG_TYPE_AS_Name)) {
 // 20091124
     TYPE_GLOBAL_OBJ_uDesc obj_v (Lookup_obj_tab(obj_ref));
     TYPE_SEM_OBJ obj (obj_v.GetRecord(pos_GLOBAL_OBJ_uDesc_sem));
@@ -56,14 +55,12 @@ TYPE_SEM_OBJ_uRef EvalState::ModifyInstanceVar(const TYPE_SEM_OBJ_uRef & obj_ref
 
 // not in spec
 // 20090822 -->
-    if (!ins[clsnm].DomExists(index))
-    {
+    if (!ins[clsnm].DomExists(index)) {
       Set dom_ins (ins.Dom());
       dom_ins.RemElem(clsnm_);
       Set nm_s;
       Generic nm;
-      for (bool bb = dom_ins.First(nm); bb ; bb = dom_ins.Next(nm))
-      {
+      for (bool bb = dom_ins.First(nm); bb ; bb = dom_ins.Next(nm)) {
         if (ins[nm].DomExists(index))
           nm_s.Insert(nm);
       }
@@ -74,13 +71,12 @@ TYPE_SEM_OBJ_uRef EvalState::ModifyInstanceVar(const TYPE_SEM_OBJ_uRef & obj_ref
 // <-- 20090822
 
     TYPE_GLOBAL_ValueMap insmap (ins[clsnm]); // map AS`Name to (SEM`VAL * AS`Access)
-    if (insmap.DomExists(index))
-    {
-      Tuple t (insmap[index]); // (SEM`VAL * AS`Access)
-      const TYPE_AS_Access & access (t.GetField(2));
-      if (access == Int(PUBLIC_AS))
-      {
-        insmap.ImpModify(index, mk_(ModifyValue(t.GetField(1), index_l.Tl(), val_v), access));
+    if (insmap.DomExists(index)) {
+      Tuple t (insmap[index]); // (SEM`VAL * [AS`Type] * AS`Access)
+      const TYPE_AS_Access & access (t.GetField(3));
+      const TYPE_AS_Type & tp (t.GetField(2));
+      if (access == Int(PUBLIC_AS)) {
+        insmap.ImpModify(index, mk_(ModifyValue(t.GetField(1), index_l.Tl(), val_v), tp, access));
         ins.ImpModify(clsnm, insmap);
         obj.SetField(pos_SEM_OBJ_ins, ins);
         obj_v.SetField(pos_GLOBAL_OBJ_uDesc_sem, obj);
@@ -88,8 +84,7 @@ TYPE_SEM_OBJ_uRef EvalState::ModifyInstanceVar(const TYPE_SEM_OBJ_uRef & obj_ref
         Update_obj_tab(obj_ref, obj_v);
 
 // 20100818 -->
-        if (Settings.INV())
-        {
+        if (Settings.INV()) {
           theStackMachine().PushEmptyEnv();
           theStackMachine().PushCurObj(obj_ref, obj_ref.GetRecord(pos_SEM_OBJ_uRef_tp), theStackMachine().GetCurCl());
 

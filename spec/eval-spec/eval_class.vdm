@@ -90,9 +90,9 @@ operations
   GenInsMap(nm) ==
     def allsupers = STATE`GetAllSupers(nm);
         instvars = STATE`GetInstVars(nm);
-        own = { nm |-> { ins |-> mk_(mk_SEM`UNDEF(),access) | 
-                         mk_AS`InstAssignDef(mk_AS`AssignDef(ins,-,-,-), access, -, -) in set elems instvars}};
-        supers = merge { STATE`GetInstInitVal(cl)   | cl in set allsupers}
+        own = { nm |-> { ins |-> mk_(mk_SEM`UNDEF(),tp,access) | 
+                         mk_AS`InstAssignDef(mk_AS`AssignDef(ins,tp,-,-), access, -, -) in set elems instvars}};
+        supers = merge { STATE`GetInstInitVal(cl) | cl in set allsupers}
     in
       STATE`SetInstInitVal(nm, own ++ supers);
 \end{vdm_al}
@@ -130,8 +130,8 @@ depend on the values which have been defined before it in the value list.
                 let mk_SEM`BlkEnv(id_m,-) = env
                 in
                  (res_m := res_m ++
-                   { id |-> let mk_SEM`ValTp(val,-) = id_m(id)
-                            in mk_(val,DEF`RealAccess(access,<INST>)) | id in set dom id_m };
+                   { id |-> let mk_SEM`ValTp(val,vtp) = id_m(id)
+                            in mk_(val,vtp,DEF`RealAccess(access,<INST>)) | id in set dom id_m };
                   STKM`AddToTopBlkEnv(env)),
             others -> RTERR`InitError(RTERR`EMPTY_ENV_S,pat.cid,[])
           end;
