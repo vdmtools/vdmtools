@@ -2128,7 +2128,7 @@ LookUp(mk_AS`Name(ids,cid)) ==
              else return staticval;
           );
 
-         def mk_(isit_val, -, val_val) = IsValue(name)
+         def mk_(isit_val, -, val_val, -) = IsValue(name)
          in
            if isit_val
            then ReturnLookUp(val_val, RTERR`VAL_NOT_IN_SCOPE);
@@ -2215,8 +2215,9 @@ IsInObjScope(name, oldstate) ==
             in
               if thename in set dom local_inst
               then
-                def mk_(v,-,access) = local_inst(thename);
-                    tp = GetInstVarsTp(clnm)(thename)
+                let mk_(v,tp,access) = local_inst(thename)
+                --def mk_(v,tp,access) = local_inst(thename);
+                   -- tp = GetInstVarsTp(clnm)(thename)
                 in
                   if AccessOk(access, origcl, clnm)
                   then
@@ -2245,8 +2246,9 @@ IsInObjScope(name, oldstate) ==
               in
                 cases dom inst_vls:
                   {}     -> return mk_(false, false, nil, nil, nil,nil),
-                  {cl}   -> def mk_(val,-,access) = inst_vls(cl)(thename);
-                                tp = GetInstVarsTp(cl)(thename)
+                  {cl}   -> let mk_(val,tp,access) = inst_vls(cl)(thename)
+                  --{cl}   -> def mk_(val,tp,access) = inst_vls(cl)(thename);
+                                --tp = GetInstVarsTp(cl)(thename)
                             in
                               if AccessOk(access,origcl,cl)
                               then return mk_(true, false, val, tp, cl, access)
@@ -2258,12 +2260,14 @@ IsInObjScope(name, oldstate) ==
                                                & forall p in set rng inst_vls(clnm) & p.#3 <> <PRIVATE_AS>};
                               in res := ExistsOneChild(rem_priv,dom inst_vls);
                             cases res:
-                              mk_(true, cls) -> def mk_(val,-,access) = inst_vls(cls)(thename);
-                                                    tp = GetInstVarsTp(cls)(thename)
+                              mk_(true, cls) -> let mk_(val,tp,access) = inst_vls(cls)(thename)
+                              --mk_(true, cls) -> def mk_(val,tp,access) = inst_vls(cls)(thename);
+                                                    --tp = GetInstVarsTp(cls)(thename)
                                                 in if AccessOk(access,origcl,cls)
                                                    then return mk_(true, false, val, tp, cls, access)
                                                    else return mk_(true, false, nil, tp, cls, access),
-                              others -> RTERR`ErrorVal(RTERR`MULT_DEF,nil,nil, [])
+                              others -> (RTERR`Error(RTERR`MULT_DEF,nil,nil, []);
+                                         return mk_(false, false, nil, nil, nil, nil))
                             end;
                            )
                  end;
@@ -2313,14 +2317,14 @@ IsInObjScope}, with the difference that we look in the initialised
 values for every class.
 
 \begin{vdm_al}
-IsValue: AS`Name ==> bool * bool * [SEM`VAL]
+IsValue: AS`Name ==> bool * bool * [SEM`VAL] * [AS`Type]
 IsValue(nm) ==
   let mk_AS`Name(l^[-], cid) = nm
   in
     if l = [] and not STKM`HasCurCl()
     then
      (RTERR`Error(RTERR`ID_UNKNOWN, nil, nil, []);
-      return mk_(false,false,nil))
+      return mk_(false,false,nil,nil))
     else
       def origcl = STKM`GetOrigCl();
           thename = AUX`ExtractName(nm)
@@ -2334,11 +2338,11 @@ IsValue(nm) ==
         in
          (if thename in set dom local_vls
           then
-            let mk_(v,-,access) = local_vls(thename)
+            let mk_(v,tp,access) = local_vls(thename)
             in
               if AccessOk(access, origcl,clnm)
-              then return mk_(true,true,v)
-              else return mk_(true,false,nil)
+              then return mk_(true,true,v,tp)
+              else return mk_(true,false,nil,nil)
          );
       if l <> []
       then
@@ -2359,12 +2363,12 @@ IsValue(nm) ==
                           thename in set dom GetVlsInit(clname)}
       in
         cases dom spcl_vls:
-          {}     -> return mk_(false, false, nil),
-          {cl}   -> let mk_(val,-,access) = spcl_vls(cl)(thename)
+          {}     -> return mk_(false, false, nil,nil),
+          {cl}   -> let mk_(val,tp,access) = spcl_vls(cl)(thename)
                     in
                       if AccessOk(access,origcl,cl)
-                      then return mk_(true,true,val)
-                      else return mk_(true,false,nil),
+                      then return mk_(true,true,val,tp)
+                      else return mk_(true,false,nil,nil),
           others -> --def mk_(doesthere, cls) = if classname in set dom spcl_vls
                     --                          then mk_(true,classname)
                     --                          else
@@ -2383,11 +2387,15 @@ IsValue(nm) ==
                     in
                       if doesthere
                       then
-                        let mk_(val,-,access) = spcl_vls(cls)(thename)
+                        let mk_(val,tp,access) = spcl_vls(cls)(thename)
                         in if AccessOk(access,origcl,cls)
-                           then return mk_(true,true,val)
-                           else return mk_(true,false,nil)
-                       else RTERR`ErrorVal(RTERR`MULT_DEF,nil,nil, []))
+                           then return mk_(true,true,val,tp)
+                           else return mk_(true,false,nil,nil)
+                       else
+                        (RTERR`Error(RTERR`MULT_DEF,nil,nil, []);
+                         return mk_(false,false,nil,nil);
+                        )
+                   )
         end
      );
 \end{vdm_al}
