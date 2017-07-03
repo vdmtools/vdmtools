@@ -3058,7 +3058,7 @@ dlclass_test1.so: %.so: %.cc libvdm_darwin.a
 	${CXX} $(ARCH) -dynamiclib -fPIC -o $@ $< -L. -lvdm_darwin -liconv -Wl,-syslibroot,$(SDK)
 
 dlclass_test1.o: %.o: %.cc
-	${CXX} $(ARCH) -c -o $@ $< 
+	${CXX} $(ARCH) -fPIC -c -o $@ $< 
 endif
 
 ifeq ($(strip $(OSTYPE)),Linux)
@@ -3067,7 +3067,7 @@ dlclass_test1.so: %.so: %.cc libvdm_shared.a
 	${CXX} -shared -fPIC -o $@ $< -L. -lvdm_shared
 
 dlclass_test1.o: %.o: %.cc
-	${CXX} -c -o $@ $< 
+	${CXX} -fPIC -c -o $@ $< 
 endif
 
 ifeq ($(strip $(OSTYPE)),CYGWIN_NT)
@@ -3084,7 +3084,7 @@ dlclass_test1.so: %.so: %.cc libvdm_shared.a
 	${CXX} -shared -fPIC -o $@ $< -L. -lvdm_shared -lposix4
 
 dlclass_test1.o: %.o: %.cc
-	${CXX} -c -o $@ $< 
+	${CXX} -fPIC -c -o $@ $< 
 endif
 
 ifeq ($(strip $(OSTYPE)),FreeBSD)
@@ -3093,7 +3093,7 @@ dlclass_test1.so: %.so: %.cc libvdm_shared.a
 	${CXX} -shared -fPIC -o $@ $< -L. -lvdm_shared
 
 dlclass_test1.o: %.o: %.cc
-	${CXX} -c -o $@ $< 
+	${CXX} -fPIC -c -o $@ $< 
 endif
 
 ifeq ($(strip $(OSTYPE)),win32)
