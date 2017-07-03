@@ -527,8 +527,7 @@ void EvalState::AddCPUAndBUSDefs( const Map & sys_m )
 
   Generic sysnm;
 //  for(bool bb = sys_m.First(sysnm); bb; bb = sys_m.Next(sysnm))
-  for(bool bb = sys_l.First(sysnm); bb; bb = sys_l.Next(sysnm))
-  {
+  for(bool bb = sys_l.First(sysnm); bb; bb = sys_l.Next(sysnm)) {
     TYPE_AS_Definitions defs (sys_m[sysnm]);
 
     Map opm (defs.get_opm());
@@ -542,8 +541,7 @@ void EvalState::AddCPUAndBUSDefs( const Map & sys_m )
     
     Set busdecls;    // set of (AS`Name * [AS`Expr])
     size_t len_instvars = instvars.Length();
-    for (size_t i = 1; i <= len_instvars; i++)
-    {
+    for (size_t i = 1; i <= len_instvars; i++) {
       const TYPE_AS_InstanceVarDef & ivd (instvars[i]);
       switch(ivd.GetTag()) {
         case TAG_TYPE_AS_InstAssignDef: {
@@ -552,11 +550,9 @@ void EvalState::AddCPUAndBUSDefs( const Map & sys_m )
           const TYPE_AS_Name & var (assdef.GetRecord(pos_AS_AssignDef_var));
           const TYPE_AS_Type & tp (assdef.GetRecord(pos_AS_AssignDef_tp));
           const Generic & decl (assdef.GetField(pos_AS_AssignDef_dclinit));
-          if( tp.Is(TAG_TYPE_AS_TypeName) )
-          {
+          if( tp.Is(TAG_TYPE_AS_TypeName) ) {
             TYPE_AS_TypeName tptn (tp);
-            if( ASTAUX::ASName2String(tptn.get_name()) == L"CPU" )
-            {
+            if( ASTAUX::ASName2String(tptn.get_name()) == L"CPU" ) {
               theSystem().AddCPU(sysnm, var, decl);
             }
             else if( ASTAUX::ASName2String(tptn.get_name()) == L"BUS" )
@@ -597,8 +593,7 @@ void EvalState::AddCPUAndBUSDefs( const Map & sys_m )
 
     Generic t_g;
 //    for(bool bbb = busdecls.First(t_g); bbb; bbb = busdecls.Next(t_g))
-    for(bool bbb = busdecls_l.First(t_g); bbb; bbb = busdecls_l.Next(t_g))
-    {
+    for(bool bbb = busdecls_l.First(t_g); bbb; bbb = busdecls_l.Next(t_g)) {
       Tuple t (t_g);
       theSystem().AddBUS(t.GetField(1), t.GetField(2));
     }
@@ -607,36 +602,28 @@ void EvalState::AddCPUAndBUSDefs( const Map & sys_m )
     if( !opm.DomExists(sysnm, od_g) ) continue;
  
     TYPE_AS_OpDef od (od_g);
-    if( od.Is(TAG_TYPE_AS_ExplOpDef) )
-    {
+    if( od.Is(TAG_TYPE_AS_ExplOpDef) ) {
       TYPE_AS_ExplOpDef eod (od_g);
       GetCI().IncTestCoverageInfo(eod.get_cid()); // 20081030
       TYPE_AS_OpBody ob (eod.get_body());
       Generic body (ob.get_body());
-      if( body.Is(TAG_TYPE_AS_BlockStmt) )
-      {
+      if( body.Is(TAG_TYPE_AS_BlockStmt) ) {
         TYPE_AS_BlockStmt bs (body);
         GetCI().IncTestCoverageInfo(bs.get_cid()); // 20081030
         SEQ<TYPE_AS_Stmt> stmts (bs.get_stmts());
         Generic s_g;
-        for(bool cc = stmts.First(s_g); cc; cc = stmts.Next(s_g))
-        {
+        for(bool cc = stmts.First(s_g); cc; cc = stmts.Next(s_g)) {
           TYPE_AS_Stmt stmt (s_g);
-          if( stmt.Is(TAG_TYPE_AS_CallStmt) )
-          {
+          if( stmt.Is(TAG_TYPE_AS_CallStmt) ) {
             TYPE_AS_CallStmt cs (s_g);
             GetCI().IncTestCoverageInfo(cs.get_cid()); // 20081030
-            if( !cs.get_obj().IsNil() && !cs.get_args().IsEmpty() )
-            {
-              if( ASTAUX::ASName2String(cs.get_oprt()) == L"deploy" )
-              {
+            if( !cs.get_obj().IsNil() && !cs.get_args().IsEmpty() ) {
+              if( ASTAUX::ASName2String(cs.get_oprt()) == L"deploy" ) {
                 TYPE_AS_Expr instnm (cs.get_args().Hd());
-                if (instnm.Is(TAG_TYPE_AS_Name))
-                {
+                if (instnm.Is(TAG_TYPE_AS_Name)) {
                   TYPE_AS_Name fullnm (ASTAUX::Combine2Names(sysnm,instnm));
                   Tuple lup (LookUpStatic(fullnm));
-                  if( lup.GetBoolValue(1) )
-                  {
+                  if( lup.GetBoolValue(1) ) {
                     GetCI().IncTestCoverageInfo(ASTAUX::GetCid(cs.get_obj())); // 20081030
                     GetCI().IncTestCoverageInfo(cs.get_oprt().get_cid());      // 20081030
                     GetCI().IncTestCoverageInfo(ASTAUX::GetCid(instnm));       // 20081030
@@ -649,14 +636,11 @@ void EvalState::AddCPUAndBUSDefs( const Map & sys_m )
                   RTERR::InitError (L"AddCPUAndBUSDefs", RTERR_OBJ_REF_EXP_CALL, Nil(), Nil(), ASTAUX::GetCid(instnm), Sequence());
               }
               else if( ( ASTAUX::ASName2String(cs.get_oprt()) == L"setPriority" ) &&
-                       ( cs.get_args().Length() == 2 ) )
-              {
+                       ( cs.get_args().Length() == 2 ) ) {
                 TYPE_AS_Expr opnm (cs.get_args().Hd());
-                if (opnm.Is(TAG_TYPE_AS_Name))
-                {
+                if (opnm.Is(TAG_TYPE_AS_Name)) {
                   TYPE_AS_Expr rl (cs.get_args().Index(2));
-                  if (rl.Is(TAG_TYPE_AS_RealLit))
-                  {
+                  if (rl.Is(TAG_TYPE_AS_RealLit)) {
                     GetCI().IncTestCoverageInfo(ASTAUX::GetCid(cs.get_obj())); // 20081030
                     GetCI().IncTestCoverageInfo(cs.get_oprt().get_cid());      // 20081030
                     GetCI().IncTestCoverageInfo(ASTAUX::GetCid(opnm));         // 20081030
@@ -664,8 +648,7 @@ void EvalState::AddCPUAndBUSDefs( const Map & sys_m )
                     const Int & prio (rl.GetInt(pos_AS_RealLit_val));
                     theSystem().AddPriorityEntry(cs.get_obj(), opnm, prio);
                   }
-                  else if (rl.Is(TAG_TYPE_AS_NumLit))
-                  {
+                  else if (rl.Is(TAG_TYPE_AS_NumLit)) {
                     GetCI().IncTestCoverageInfo(ASTAUX::GetCid(cs.get_obj())); // 20081030
                     GetCI().IncTestCoverageInfo(cs.get_oprt().get_cid());      // 20081030
                     GetCI().IncTestCoverageInfo(ASTAUX::GetCid(opnm));         // 20081030
@@ -3917,8 +3900,7 @@ Tuple EvalState::LookCachedOpFctPoly_(const TYPE_AS_Name & clnm, const TYPE_AS_N
   const TYPE_AS_Name & origcl (theStackMachine().GetOrigCl());
   Tuple key (mk_(clnm, objnm, name, thename, origcl));   
 // <-- 20120723
-  if (!this->lookupOpFctPolyCache.DomExists(key))
-  {
+  if (!this->lookupOpFctPolyCache.DomExists(key)) {
     this->lookupOpFctPolyCache.ImpModify(key, LookOpFctPoly_(clnm, objnm, name, thename));
   }
   return this->lookupOpFctPolyCache[key];
@@ -3952,8 +3934,7 @@ Tuple EvalState::LookOpFctPoly_(const TYPE_AS_Name & clnm, const TYPE_AS_Name & 
     allclasses = GetAllSupers(objnm);
     allclasses.Insert(objnm);
   }
-  else
-  {
+  else {
     classname = ASTAUX::GetFirstName(name);
     if ((clnm == classname) || IsSubClass(clnm, classname)) {
       allclasses = GetAllSupers(classname);
@@ -3966,8 +3947,7 @@ Tuple EvalState::LookOpFctPoly_(const TYPE_AS_Name & clnm, const TYPE_AS_Name & 
 
   MAP<TYPE_AS_Name, Tuple> opsfcts;
   Generic clname;
-  for (bool bb = allclasses.First(clname); bb; bb = allclasses.Next(clname))
-  {
+  for (bool bb = allclasses.First(clname); bb; bb = allclasses.Next(clname)) {
     // bool * [ (SEM`CompExplFN | SEM`ExplOP | SEM`ExplPOLY) * AS`Access ]
     Tuple lafop (LookupAllFnsOpsPolys(clname, thename));
     if (lafop.GetBoolValue(1)) {
@@ -3981,8 +3961,7 @@ Tuple EvalState::LookOpFctPoly_(const TYPE_AS_Name & clnm, const TYPE_AS_Name & 
 //wcout << L"opsfcts: " << INT2Q::h2gAS(opsfcts) << endl;
 //wcout << INT2Q::h2gAS(overopfn) << endl;
 
-  if (overopfn.IsNil())
-  {
+  if (overopfn.IsNil()) {
     // cases dom opsfcts :
     switch(opsfcts.Size()) {
       case 0: { // {} -> ...
@@ -3992,26 +3971,27 @@ Tuple EvalState::LookOpFctPoly_(const TYPE_AS_Name & clnm, const TYPE_AS_Name & 
         TYPE_AS_Name cl (opsfcts.Dom().GetElem());
         Tuple fnacc (opsfcts[cl]);
 
-        if (AccessOk(fnacc.GetField(2), origcl, cl))
+        if (AccessOk(fnacc.GetField(2), origcl, cl)) {
           return mk_(Bool(true), Bool(true), fnacc.GetField(1));
-        else
+        }
+        else {
           return mk_(Bool(true), Bool(false), Nil());
+        }
       }
       default: { // default -> // opsfcts.Size() > 1
         SET<TYPE_AS_Name> dom_opsfcts (opsfcts.Dom());
         Map m; // map (seq of AS`Type) to (set of AS`Name)
         Generic clnm;
-        for (bool cc = dom_opsfcts.First(clnm); cc; cc = dom_opsfcts.Next(clnm))
-        {
+        for (bool cc = dom_opsfcts.First(clnm); cc; cc = dom_opsfcts.Next(clnm)) {
           Tuple t (opsfcts[clnm]); 
           //Sequence tp_l (MANGLE::MethType2Seq(FindType(t.GetField(1))));
           Sequence tp_l (ConvertTypeNameList(MANGLE::MethType2Seq(FindType(t.GetField(1))), Set()));
           const TYPE_AS_Access & acc (t.GetField(2));
-          if (AccessOk(acc, origcl, clnm))
-          {
+          if (AccessOk(acc, origcl, clnm)) {
             Set nm_s;
-            if (m.DomExists(tp_l))
+            if (m.DomExists(tp_l)) {
               nm_s = Set(m[tp_l]);
+            }
             nm_s.Insert(clnm);
             m.ImpModify(tp_l, nm_s);
           }
@@ -4022,8 +4002,7 @@ Tuple EvalState::LookOpFctPoly_(const TYPE_AS_Name & clnm, const TYPE_AS_Name & 
           }
           case 1: {
             Tuple eoc (ExistsOneChild(m.Rng().GetElem(), dom_opsfcts));
-            if (eoc.GetBoolValue(1))
-            {
+            if (eoc.GetBoolValue(1)) {
               const TYPE_AS_Name & child (eoc.GetRecord(2));
               Tuple fnvalacc (opsfcts[child]);
               return mk_(Bool(true), Bool(true), fnvalacc.GetField(1));
@@ -4038,22 +4017,22 @@ Tuple EvalState::LookOpFctPoly_(const TYPE_AS_Name & clnm, const TYPE_AS_Name & 
             Map newover; // map (AS`Name * AS`Name) to ((seq of AS`Type) * AS`Access * [SEM`CompExplFN])
             SET<TYPE_AS_Name> dom_opsfcts (opsfcts.Dom());
             Generic clnm;
-            for (bool cc = dom_opsfcts.First(clnm); cc; cc = dom_opsfcts.Next(clnm))
-            {
+            for (bool cc = dom_opsfcts.First(clnm); cc; cc = dom_opsfcts.Next(clnm)) {
               Tuple t (opsfcts[clnm]); 
               const TYPE_AS_Access & acc (t.GetField(2));
-              if (AccessOk(acc, origcl, clnm))
-              {
+              if (AccessOk(acc, origcl, clnm)) {
                 newover.ImpModify(mk_(name, clnm),
                               //mk_(MANGLE::MethType2Seq(FindType(t.GetField(1))), t.GetField(2), Nil()));
                               mk_(ConvertTypeNameList(MANGLE::MethType2Seq(FindType(t.GetField(1))), Set()),
                                   t.GetField(2), Nil()));
               }
             }
-            if (newover.IsEmpty())
+            if (newover.IsEmpty()) {
               return mk_(Bool(true), Bool(false), Nil());
-            else
+            }
+            else {
               return mk_(Bool(true), Bool(true), TYPE_SEM_OverOPFN().Init(newover, Nil()));
+            }
           }
         }
       }
@@ -4311,14 +4290,13 @@ Tuple EvalState::LookUpStatic(const TYPE_AS_Name & name)
 {
   if (name.GetSequence(pos_AS_Name_ids).Length() == 2) {
     TYPE_AS_Name clsnm (ASTAUX::GetFirstName(name));
-// 20120905 -->
     if (theStackMachine().HasCurCl()) {
       Tuple t (ExpandClassName(clsnm, theStackMachine().GetCurCl(), Set()));
       if (t.GetBoolValue(1)) {
         clsnm = t.GetRecord(2);
       }
     }
-// <-- 20120905
+
     TYPE_AS_Name memnm (ASTAUX::GetSecondName(name));
 
     if (this->classes.DomExists(clsnm)) {
@@ -4350,7 +4328,8 @@ Tuple EvalState::LookUpStatic(const TYPE_AS_Name & name)
           return mk_(Bool(true), lsofp.GetRecord(3), clsnm, Int(PUBLIC_AS));  // [SEM`VAL]
         }
         else {
-          return mk_(Bool(true), Nil(), clsnm, Int(PUBLIC_AS));
+          //return mk_(Bool(true), Nil(), clsnm, Int(PUBLIC_AS));
+          return mk_(Bool(true), Nil(), Nil(), Nil());
         }
       }
  
@@ -5053,7 +5032,7 @@ int EvalState::CalcOverload(const TYPE_INSTRTP_HistoryKind & kind, const TYPE_AS
 // IsStatic
 // clnm : AS`Name
 // opnm : AS`Name
-// ==> boo
+// ==> bool
 bool EvalState::IsStatic(const TYPE_AS_Name & clnm, const TYPE_AS_Name & opnm) const
 {
   if( this->classes.DomExists(clnm) )

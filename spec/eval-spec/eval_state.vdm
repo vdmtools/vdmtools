@@ -546,7 +546,7 @@ AddCPUAndBUSDefs(sys_m) ==
            then if stmt.oprt = mk_AS`Name(["deploy"],CI`NilContextId)
                 then def instnm = hd stmt.args;
                          fullnm = mk_AS`Name(sysnm.ids ^ instnm.ids,sysnm.cid);
-                         mk_(found,obj_ref) = LookUpStatic(fullnm)
+                         mk_(found,obj_ref,-,-) = LookUpStatic(fullnm)
                      in
                        if found
                        then STKM`DeployInst(stmt.obj,obj_ref)
@@ -2063,7 +2063,7 @@ LookUp(mk_AS`Name(ids,cid)) ==
         if isit_d_objs
         --then return val_obj
         then return ReturnLookUp(val_obj, RTERR`INTERNAL_ERROR)
-        else def mk_(-,staticval) = LookUpStatic(name)
+        else def mk_(-,staticval,-,-) = LookUpStatic(name)
              in
                if staticval = nil
                then
@@ -2095,7 +2095,7 @@ LookUp(mk_AS`Name(ids,cid)) ==
 --                   if isit_opfct and local_opfct
 --                   then ReturnLookUp(val_opfct, RTERR`OP_OR_FUN_NOT_IN_SCOPE)
 --                   else
---                     def mk_(isstatic,staticval) = LookUpStatic(name)
+--                     def mk_(isstatic,staticval,-,-) = LookUpStatic(name)
 --                     in
 --                       cases true:
 --                         (isit_inst and
@@ -2113,7 +2113,7 @@ LookUp(mk_AS`Name(ids,cid)) ==
            if isit_opfct
            then ReturnLookUp(val_opfct, RTERR`OP_OR_FUN_NOT_IN_SCOPE);
 
-         def mk_(isstatic,staticval) = LookUpStatic(name)
+         def mk_(isstatic,staticval,-,-) = LookUpStatic(name)
          in
           (if STKM`HdContext() <> <PURE>
            then
@@ -2224,7 +2224,7 @@ IsInObjScope(name, oldstate) ==
                     if v = mk_SEM`UNDEF()
                     then
                       def nm = mk_AS`Name(clnm.ids ^ thename.ids, name.cid);
-                          mk_(-,v2) = LookUpStatic(nm)
+                          mk_(-,v2,-,-) = LookUpStatic(nm)
                       in
                         if v2 = nil
                         then return mk_(true, true, v, tp, clnm, access)
@@ -2632,24 +2632,22 @@ identifiers (where the first one is the name of th]e defining class and
 the second one is the construct which is defined statically).
 
 \begin{vdm_al}
-LookUpStatic: AS`Name ==> bool * [SEM`VAL]
+LookUpStatic: AS`Name ==> bool * [SEM`VAL] * [AS`Name] * [AS`Access]
 LookUpStatic(name) ==
   if len name.ids = 2
   then
-   --(dcl clsnm : AS`Name := AUX`ConstructName(name.ids(1),CI`NilContextId);
    (dcl clsnm : AS`Name := mk_AS`Name([name.ids(1)],CI`NilContextId);
     if STKM`HasCurCl()
     then
       def mk_(ok, ocl) = ExpandClassName(clsnm, STKM`GetCurCl(), {})
       in if ok
          then clsnm := ocl;
-    --let memnm = AUX`ConstructName(name.ids(2), CI`NilContextId)
+
     let memnm = mk_AS`Name([name.ids(2)], CI`NilContextId)
     in
       if clsnm in set dom classes
       then
         def statmap = classes(clsnm).statics;
-            mk_(found, accessOk, val) = LookStaticOpFctPoly(clsnm,memnm)
         in
           if memnm in set dom statmap
           then
@@ -2658,27 +2656,31 @@ LookUpStatic(name) ==
             in
               if AccessOk(access, origcl,clsnm)
 #ifdef VICE
-              then return mk_(true, STKM`UpdateObjRef(val))
+              then return mk_(true, STKM`UpdateObjRef(val), clsnm, access)
 #else
 #ifdef VDMPP
-              then return mk_(true, val)
+              then return mk_(true, val, clsnm, access)
 #endif VDMPP
 #endif VICE
-              else return mk_(true, nil)
-          elseif found
-          then
-            if accessOk
-            then return mk_(true, val)
-            else return mk_(true, nil)
-          elseif classes(clsnm).inhcon <> {}
-          then
-           (for all clnm in set classes(clsnm).inhcon do
-              def mk_(isit,val) = LookUpStatic(mk_AS`Name([(hd clnm.ids), hd tl name.ids], name.cid));
-              in
-                if isit
-                then return mk_(true, val);
-            return mk_(false, nil))
-          else return mk_(false, nil)
+              else return mk_(true, nil, nil, nil)
+          else
+            def mk_(found, accessOk, val) = LookStaticOpFctPoly(clsnm,memnm);
+            in
+              if found
+              then
+                if accessOk
+                then return mk_(true, val, clsnm, <PUBLIC_AS>)
+                else return mk_(true, nil, nil, nil)
+              elseif classes(clsnm).inhcon <> {}
+              then
+               (for all clnm in set classes(clsnm).inhcon do
+                  def mk_(isit,val,-,access) = LookUpStatic(mk_AS`Name([(hd clnm.ids), hd tl name.ids], name.cid));
+                  in
+                    if isit
+                    then return mk_(true, val, clnm, access);
+                return mk_(false, nil, nil, nil)
+               )
+              else return mk_(false, nil, nil, nil)
       else RTERR`ErrorVal(RTERR`CLNM_NOT_DEFINED, nil, nil, [AUX`SingleNameToString(clsnm)])
    )
   else
