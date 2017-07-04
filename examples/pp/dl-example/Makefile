@@ -89,7 +89,7 @@ all: cg.stamp
 endif
 	$(MAKE) CGEX
 
-ifeq ($(strip $(OSTYPE2)),SYGWIN)
+ifeq ($(strip $(OSTYPE2)),CYGWIN)
 CPUTYPE = $(shell uname -m)
 CC      = /usr/bin/g++
 CXX	= /usr/bin/g++
@@ -121,11 +121,7 @@ cgex.o: cgex.cc A_userdef.h BankAccount_userdef.h cg.stamp
 	$(CC) $(DEBUG) $(CCFLAGS) $(INCL) -c -o $@ $^
 
 %_shared.o: %.cc
-ifeq ($(strip $(OSTYPE2)),CYGWIN)
-	$(CC) $(DEBUG) $(CCFLAGS) $(INCL) -c -o $@ $^
-else
 	$(CC) $(DEBUG) -fPIC $(CCFLAGS) $(INCL) -c -o $@ $^
-endif
 
 cg.stamp: bigint.vpp
 	$(VPPDE) -c $^
@@ -141,7 +137,11 @@ jcg.stamp: bigint.vpp
 bigint_dl.so: bigint_dl.o ${MAPMDIR}/$(MAPMLIB)
 
 bigint_dl.o: bigint_dl.cc
+ifeq ($(strip $(OSTYPE2)),CYGWIN)
+	$(CC) $(DEBUG) $(CCFLAGS) $(INCL) -c -o $@ $^
+else
 	$(CC) $(DEBUG) -fPIC $(CCFLAGS) $(INCL) -c -o $@ $^
+endif
 
 bigint_cg.o: bigint_dl.cc
 	$(CC) $(DEBUG) $(INCL) $(CGFLAGS) -c -o $@ $^
