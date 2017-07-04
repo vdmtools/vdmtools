@@ -85,6 +85,13 @@ else
 all: sort_pp SortMain
 endif
 
+ifeq ($(strip $(OSTYPE2)),CYGWIN)
+CCPATH = /usr/bin/
+CC      = $(CCPATH)gcc
+CCC     = $(CCPATH)g++
+LIB     = -L$(TBDIR)/cg/lib -lCG -lvdm -liconv
+endif
+
 sort_pp.exe:
 	make -f Makefile.winnt
 
