@@ -4077,6 +4077,9 @@ endif
 else
 	cp $(DISTDIR)/examples/dl-example/bigint_unix.vpp $(DISTDIR)/examples/dl-example/bigint.vpp
 endif
+ifeq ($(strip $(OSTYPE)),CYGWIN_NT)
+	mv $(DISTDIR)/examples/sort/Makefile.cygwin $(DISTDIR)/examples/sort/Makefile
+endif
 
 inst-rt-examples: examples
 	mkdir -p $(DISTDIR)/examples
