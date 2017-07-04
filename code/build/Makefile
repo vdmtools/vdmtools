@@ -4079,6 +4079,7 @@ else
 endif
 ifeq ($(strip $(OSTYPE)),CYGWIN_NT)
 	mv $(DISTDIR)/examples/sort/Makefile.cygwin $(DISTDIR)/examples/sort/Makefile
+	mv $(DISTDIR)/examples/dl-example/Makefile.cygwin $(DISTDIR)/examples/dl-example/Makefile
 endif
 
 inst-rt-examples: examples
