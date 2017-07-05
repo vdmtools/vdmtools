@@ -20,7 +20,7 @@ int main(int argc, const char * argv[])
   init_DefaultMod();
 
   // Constructing the value l = [0, -12, 45]
-  type_rL l (mk_sequence(Int(0), Int(-12), Int(45)));
+  type_rL l (mk_sequence(Real(0), Real(-12), Real(45)));
 
   type_rL res;
   Bool b;
