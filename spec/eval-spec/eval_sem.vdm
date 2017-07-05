@@ -774,7 +774,7 @@ SizeValueMap(val_m) ==
   (dcl sum : nat := 8;
 
    for all nm in set dom val_m do
-     let mk_(val,-) = val_m(nm)
+     let mk_(val,-,-) = val_m(nm)
      in
        sum := sum + 2 + Size(val);
 

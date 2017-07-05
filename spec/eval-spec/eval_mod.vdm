@@ -285,7 +285,8 @@ InitGV : seq of AS`ValueDef ==> GLOBAL`ValueMap
 InitGV (val_l) == 
  (dcl res_m : GLOBAL`ValueMap := { |-> };
   STKM`PushEmptyBlkEnv(<READ_ONLY>);
-  for mk_AS`ValueDef (pat, tp, exp_e, access, -, -) in val_l do
+  --for mk_AS`ValueDef (pat, tp, exp_e, access, -, -) in val_l do
+  for mk_AS`ValueDef (pat, tp, exp_e, -, -, -) in val_l do
     def mk_(eval_state, exp_v) = DEBUG`EvalAuxCmd( exp_e,[],[], "Init of Global Values" );
     in
      (if not is_STKM`Success(eval_state)
@@ -295,21 +296,21 @@ InitGV (val_l) ==
         if (tp <> nil) and (not STATE`SubType (exp_v, tp))
         then RTERR`InitError(RTERR`TYPE_INCOMP,exp_e.cid,[])
         else skip;
+      STKM`SetCid(pat.cid);
       def env_s = PAT`PatternMatch(CPAT`P2P(pat), exp_v)
       in
-        if env_s <> {}
-        then
-          let env in set env_s
-          in
-            let id_m = env.id_m
-            in
-              for all id in set dom id_m do
-                let mk_SEM`ValTp(val,valtp) = id_m(id) 
-                in 
-                 (res_m := res_m ++ { id |-> mk_(val,DEF`RealAccess(access,<INST>)) };
-                  STKM`AppendToTopBlkEnv(id,val,valtp))
-        else
-          RTERR`InitError(RTERR`EMPTY_ENV_S,pat.cid,[]); 
+        cases env_s:
+          { env } union - ->
+              let mk_SEM`BlkEnv(id_m,-) = env
+              in
+               (res_m := res_m ++
+                 --{ id |-> let mk_SEM`ValTp(val,-) = id_m(id) 
+                 --         in mk_(val,DEF`RealAccess(access,<INST>)) | id in set dom id_m };
+                 { id |-> let mk_SEM`ValTp(val,vtp) = id_m(id) 
+                          in mk_(val,vtp) | id in set dom id_m };
+                STKM`AddToTopBlkEnv(env)),
+          others -> RTERR`InitError(RTERR`EMPTY_ENV_S,pat.cid,[])
+        end;
      );
   STKM`PopBlkEnv();
   return res_m;

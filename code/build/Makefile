@@ -128,7 +128,7 @@ else
 endif
 
 ifndef OSTYPE 
-include Warning:\ variable\ OSTYPE\ is\ not\ set\ or\ exported
+$(error "Error: variable OSTYPE is not set or exported.")
 endif
 
 # -O2
@@ -143,37 +143,8 @@ RANLIB=@echo ranlib not needed
 #############################################################################
 # PLATFORM SETUP
 #############################################################################
-ifeq ($(strip $(OSTYPE)),SunOS)
-  USE_DL_MODULE = 1
-  USE_CORBA_API = 1
-endif
-ifeq ($(strip $(OSTYPE)),Linux)
-  USE_DL_MODULE = 1
-  USE_CORBA_API = 1
-endif
-ifeq ($(strip $(OSTYPE)),win32)
-  USE_DL_MODULE = 1
-  USE_CORBA_API = 1
-endif
-ifeq ($(strip $(OSTYPE)),Darwin)
-  USE_DL_MODULE = 1
-  USE_CORBA_API = 1
-endif
-ifeq ($(strip $(OSTYPE)),FreeBSD)
-  USE_DL_MODULE = 1
-  USE_CORBA_API = 1
-endif
-ifeq ($(strip $(OSTYPE)),CYGWIN_NT)
-  USE_DL_MODULE = 1
-  USE_CORBA_API = 1
-endif
-
-LITE ?= 0
-ifeq ($(strip $(LITE)),1)
-#  USE_DL_MODULE = 0
-  USE_DL_MODULE = 1
-  USE_CORBA_API = 0
-endif
+USE_DL_MODULE ?= 1
+USE_CORBA_API ?= 1
 
 ifndef JDKHOME
 ifdef JDK_HOME
@@ -184,15 +155,11 @@ ifdef JAVA_HOME
 endif
 endif
 
-dummy := $(foreach V, OSTYPE REALOS USE_DL_MODULE USE_CORBA_API LITE, \
+dummy := $(foreach V, OSTYPE REALOS USE_DL_MODULE USE_CORBA_API, \
   $(shell echo make is using $V=$($V) >/dev/tty) \
 )
 ifeq ($(strip $(OSTYPE)),Darwin)
 dummy := $(shell echo make is using MACOSX_DEPLOYMENT_TARGET=$(MACOSX_DEPLOYMENT_TARGET) >/dev/tty)
-endif
-
-ifeq ($(strip $(LITE)),1)
-  USE_CORBA_API = 0
 endif
 
 ifeq ($(strip $(USE_DL_MODULE)),1)
@@ -519,25 +486,6 @@ CFLAGS-test1-rt.o = -DTESTSPEC
 CFLAGS-astaux-test-sl.o = -DTESTSPEC
 CFLAGS-astaux-test-pp.o = -DTESTSPEC
 CFLAGS-astaux-test-rt.o = -DTESTSPEC
-
-# 
-#CFLAGS-libparser-pp.a = -DYYDEBUG=1 -DYYERROR_VERBOSE=1
-#CFLAGS-vpppars.i   = -DYYDEBUG=1 -DYYERROR_VERBOSE=1
-#CFLAGS-libparser-sl.a = -DYYDEBUG=1 -DYYERROR_VERBOSE=1
-#CFLAGS-vpppars.i   = -DYYDEBUG=1 -DYYERROR_VERBOSE=1
-#CFLAGS-rtpars.o  += -DYYDEBUG=1 -DYYERROR_VERBOSE=1
-
-#CFLAGS-libparser-sl.a += -DYYINITDEPTH=2000
-#CFLAGS-libparser-pp.a += -DYYINITDEPTH=2000
-#CFLAGS-libparser-rt.a += -DYYINITDEPTH=2000
-
-CFLAGS-tb_version_lite-sl.o += -DLITE $(DL_MODULE)
-CFLAGS-tb_version_lite-pp.o += -DLITE $(DL_MODULE)
-CFLAGS-tb_version_lite-rt.o += -DLITE $(DL_MODULE)
-
-CFLAGS-tools_lite-sl.o += -DLITE
-CFLAGS-tools_lite-pp.o += -DLITE
-CFLAGS-tools_lite-rt.o += -DLITE
 
 LINKCHG = echo
 LINKOUT = -o #Space after -o
@@ -1060,7 +1008,7 @@ endif
 ifeq ($(strip $(OSTYPE)),win32)
 
 ifneq ("$(wildcard /usr/bin/link.exe)","")
-include Warning:\ /usr/bin/link.exe\ should\ be\ renamed
+$(error "Error: /usr/bin/link.exe should be renamed.")
 endif
 
 #UNAME = $(shell uname)
@@ -1102,7 +1050,7 @@ MSCVERSTR = $(shell cl >& msc_tmp;cat msc_tmp | head -1)
 VERSTR1 = $(word 1, $(subst ., ,$(strip $(word 8, $(MSCVERSTR)))))
 VERSTR2 = $(word 1, $(subst ., ,$(strip $(word 7, $(MSCVERSTR)))))
 ifeq ($(strip $(VERSTR1)),12)
-include Warning:\ Visual\ Studio\ 6\ has\ been\ no\ longer\ supported
+$(error "Error: Visual Studio 6 has been no longer supported.")
 else
 ifeq ($(strip $(VERSTR2)),14)
 MSCVER = VC8 # VC++ 8
@@ -1136,7 +1084,7 @@ else
 ifeq ($(strip $(MSCVER)),VC11)
 VSVER=vs11
 else
-include Warning:\ Visual\ Studio\ 6\ has\ been\ no\ longer\ supported
+$(error "Error: Visual Studio 6 has been no longer supported.")
 endif #VC11
 endif #VC10
 endif #VC9
@@ -1268,18 +1216,12 @@ endif #VC8
 endif #WINDEBUG
 
 WINRESGDE-SL = vdmgde-sl.res
-WINRESGDE-SLL = vdmgde-sll.res
 WINRESGDE-PP = vdmgde-pp.res
-WINRESGDE-PPL = vdmgde-ppl.res
 WINRESGDE-RT = vdmgde-rt.res
-WINRESGDE-RTL = vdmgde-rtl.res
 
 WINRES-SL = vdmde-sl.res
-WINRES-SLL = vdmde-sll.res
 WINRES-PP = vdmde-pp.res
-WINRES-PPL = vdmde-ppl.res
 WINRES-RT = vdmde-rt.res
-WINRES-RTL = vdmde-rtl.res
 
 RC = rc
 EXE = .exe
@@ -1647,7 +1589,7 @@ endif
 ifeq ($(strip $(OSTYPE)),Darwin)
 
 ifndef MACOSX_DEPLOYMENT_TARGET
-include Warning:\ variable\ MACOSX_DEPLOYMENT_TARGET\ is\ not\ set\ or\ exported
+$(error "Error: variable MACOSX_DEPLOYMENT_TARGET is not set or exported.")
 endif
 
 OPTIMIZE += $(PROFILE)
@@ -1716,7 +1658,6 @@ ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.7)
 SDK?=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk
 OSV_MAJOR=11
 ARCH=-arch x86_64
-#CCPATH = /Applications/Xcode.app/Contents/Developer/usr/bin/
 CCPATH = /usr/bin/
 GCC_VERSION=
 CC      = $(CCPATH)clang$(GCC_VERSION)
@@ -2343,7 +2284,6 @@ service_startup.cc service_startup.tab.h: service_startup.y ServiceManagerDesc.h
 	${YACC} -p smd_ ${YACCOPT} -b $(YACCFILEPREFIX) $(YACCFILEPREFIX).y 
 	mv $(YACCFILEPREFIX).tab.c $(YACCFILEPREFIX).cc
 
-ifeq ($(strip $(LITE)),0)
 LIB_SERVMAN_O=servicemanager.o service_startup.o \
 	      parserservice.o lex.smd_.o \
 	      ServiceManagerDesc.o ServiceManagerDesc_anonym.o
@@ -2359,7 +2299,6 @@ LIB_SERVMAN_RT=libservman-rt.a
 $(LIB_SERVMAN_SL): $(LIB_SERVMAN_SL)($(LIB_SERVMAN_SL_O))
 $(LIB_SERVMAN_PP): $(LIB_SERVMAN_PP)($(LIB_SERVMAN_PP_O))
 $(LIB_SERVMAN_RT): $(LIB_SERVMAN_RT)($(LIB_SERVMAN_RT_O))
-endif
 
 # End of Object files specific for VICE #
 #########################################
@@ -3097,25 +3036,6 @@ ifneq ($(strip $(OSTYPE)),win32)
 
 %-rt.cc: %.cc
 	-$(LN) $< $@
-
-%_lite-sl.cc: %.cc
-	-$(LN) $< $@
-
-%_lite-pp.cc: %.cc
-	-$(LN) $< $@
-
-%_lite-rt.cc: %.cc
-	-$(LN) $< $@
-
-%_ac-sl.cc: %.cc
-	-$(LN) $< $@
-
-%_ac-pp.cc: %.cc
-	-$(LN) $< $@
-
-%_ac-rt.cc: %.cc
-	-$(LN) $< $@
-
 endif
 
 %-sl.c: %.c
@@ -3138,7 +3058,7 @@ dlclass_test1.so: %.so: %.cc libvdm_darwin.a
 	${CXX} $(ARCH) -dynamiclib -fPIC -o $@ $< -L. -lvdm_darwin -liconv -Wl,-syslibroot,$(SDK)
 
 dlclass_test1.o: %.o: %.cc
-	${CXX} $(ARCH) -c -o $@ $< 
+	${CXX} $(ARCH) -fPIC -c -o $@ $< 
 endif
 
 ifeq ($(strip $(OSTYPE)),Linux)
@@ -3147,7 +3067,7 @@ dlclass_test1.so: %.so: %.cc libvdm_shared.a
 	${CXX} -shared -fPIC -o $@ $< -L. -lvdm_shared
 
 dlclass_test1.o: %.o: %.cc
-	${CXX} -c -o $@ $< 
+	${CXX} -fPIC -c -o $@ $< 
 endif
 
 ifeq ($(strip $(OSTYPE)),CYGWIN_NT)
@@ -3164,7 +3084,7 @@ dlclass_test1.so: %.so: %.cc libvdm_shared.a
 	${CXX} -shared -fPIC -o $@ $< -L. -lvdm_shared -lposix4
 
 dlclass_test1.o: %.o: %.cc
-	${CXX} -c -o $@ $< 
+	${CXX} -fPIC -c -o $@ $< 
 endif
 
 ifeq ($(strip $(OSTYPE)),FreeBSD)
@@ -3173,7 +3093,7 @@ dlclass_test1.so: %.so: %.cc libvdm_shared.a
 	${CXX} -shared -fPIC -o $@ $< -L. -lvdm_shared
 
 dlclass_test1.o: %.o: %.cc
-	${CXX} -c -o $@ $< 
+	${CXX} -fPIC -c -o $@ $< 
 endif
 
 ifeq ($(strip $(OSTYPE)),win32)
@@ -3421,18 +3341,10 @@ ALL_SL_LIBS = $(LIB_POG_SL) $(LIB_POG_PRETTY_SL) $(LIB_POG_AUX_SL) \
 	$(LIB_CORBA_SL) \
 	$(LIB_CG) $(LIB_VDM)
 
-ALL_SL_LITE_LIBS = $(LIB_POG_SL) $(LIB_POG_PRETTY_SL) $(LIB_POG_AUX_SL) \
-	$(LIB_EVAL_SL) $(LIB_CG_SL) $(LIB_SS_SL) \
-	$(LIB_SPECFILE_SL) $(LIB_PARSER_SL) \
-	$(LIB_MGR_SL) $(LIB_GEN_SL) \
-	$(LIB_CG) $(LIB_VDM)
-
 ifeq ($(strip $(OSTYPE)),Darwin)
 SL_LIBS = $(ALL_SL_LIBS:%.a=%_darwin.a)
-SL_LITE_LIBS = $(ALL_SL_LITE_LIBS:%.a=%_darwin.a)
 else
 SL_LIBS = $(ALL_SL_LIBS)
-SL_LITE_LIBS = $(ALL_SL_LITE_LIBS)
 endif
 
 ALL_PP_LIBS = $(LIB_POG_PP) $(LIB_POG_PRETTY_PP) $(LIB_POG_AUX_PP) \
@@ -3443,24 +3355,10 @@ ALL_PP_LIBS = $(LIB_POG_PP) $(LIB_POG_PRETTY_PP) $(LIB_POG_AUX_PP) \
 	$(LIB_CORBA_PP) \
 	$(LIB_CG) $(LIB_VDM)
 
-#ALL_PP_LITE_LIBS = $(LIB_POG_PP) $(LIB_POG_PRETTY_PP) $(LIB_POG_AUX_PP) \
-#	$(LIB_J2V_PP) $(LIB_JSS_PP) $(LIB_TRANS_PP) \
-#	$(LIB_EVAL_PP) $(LIB_CG_PP) $(LIB_SS_PP) \
-#	$(LIB_SPECFILE_PP) $(LIB_PARSER_PP) \
-#	$(LIB_MGR_PP) $(LIB_UML_PP) $(LIB_GEN_PP) \
-#	$(LIB_CG) $(LIB_VDM)
-ALL_PP_LITE_LIBS = $(LIB_POG_PP) $(LIB_POG_PRETTY_PP) $(LIB_POG_AUX_PP) \
-	$(LIB_EVAL_PP) $(LIB_CG_PP) $(LIB_SS_PP) \
-	$(LIB_SPECFILE_PP) $(LIB_PARSER_PP) \
-	$(LIB_MGR_PP) $(LIB_UML_PP) $(LIB_GEN_PP) \
-	$(LIB_CG) $(LIB_VDM)
-
 ifeq ($(strip $(OSTYPE)),Darwin)
 PP_LIBS = $(ALL_PP_LIBS:%.a=%_darwin.a)
-PP_LITE_LIBS = $(ALL_PP_LITE_LIBS:%.a=%_darwin.a)
 else
 PP_LIBS = $(ALL_PP_LIBS)
-PP_LITE_LIBS = $(ALL_PP_LITE_LIBS)
 
 ifeq ($(strip $(OSTYPE)),win32)
 PP_ROSE_LIBS = $(LIB_POG_PP) $(LIB_POG_PRETTY_PP) $(LIB_POG_AUX_PP) \
@@ -3469,13 +3367,6 @@ PP_ROSE_LIBS = $(LIB_POG_PP) $(LIB_POG_PRETTY_PP) $(LIB_POG_AUX_PP) \
 	$(LIB_SPECFILE_PP) $(LIB_PARSER_PP) \
 	$(LIB_MGR_PP) $(LIB_UMLROSE_PP) $(LIB_GEN_PP) \
 	$(LIB_CORBA_PP) \
-	$(LIB_CG) $(LIB_VDM)
-
-PP_ROSE_LITE_LIBS = $(LIB_POG_PP) $(LIB_POG_PRETTY_PP) $(LIB_POG_AUX_PP) \
-	$(LIB_J2V_PP) $(LIB_JSS_PP) $(LIB_TRANS_PP) \
-	$(LIB_EVAL_PP) $(LIB_CG_PP) $(LIB_SS_PP) \
-	$(LIB_SPECFILE_PP) $(LIB_PARSER_PP) \
-	$(LIB_MGR_PP) $(LIB_UMLROSE_PP) $(LIB_GEN_PP) \
 	$(LIB_CG) $(LIB_VDM)
 endif
 endif
@@ -3488,32 +3379,16 @@ ALL_RT_LIBS = $(LIB_POG_RT) $(LIB_POG_PRETTY_RT) $(LIB_POG_AUX_RT) \
 	$(LIB_CORBA_RT) \
 	$(LIB_CG) $(LIB_VDM)
 
-ALL_RT_LITE_LIBS = $(LIB_POG_RT) $(LIB_POG_PRETTY_RT) $(LIB_POG_AUX_RT) \
-	$(LIB_J2V_RT) $(LIB_JSS_RT) $(LIB_TRANS_RT) \
-	$(LIB_EVAL_RT) $(LIB_CG_RT) $(LIB_SS_RT) \
-	$(LIB_SPECFILE_RT) $(LIB_PARSER_RT) \
-	$(LIB_MGR_RT) $(LIB_UML_RT) $(LIB_GEN_RT) \
-	$(LIB_CG) $(LIB_VDM)
-
 ifeq ($(strip $(OSTYPE)),Darwin)
 RT_LIBS = $(ALL_RT_LIBS:%.a=%_darwin.a)
-RT_LITE_LIBS = $(ALL_RT_LITE_LIBS:%.a=%_darwin.a)
 else
 RT_LIBS = $(ALL_RT_LIBS)
-RT_LITE_LIBS = $(ALL_RT_LITE_LIBS)
 
 ifeq ($(strip $(OSTYPE)),win32)
 RT_ROSE_LIBS = $(LIB_POG_RT) $(LIB_POG_PRETTY_RT) $(LIB_POG_AUX_RT) \ $(LIB_SPECFILE_RT) $(LIB_PARSER_RT) \ $(LIB_J2V_RT) $(LIB_JSS_RT) $(LIB_TRANS_RT) \
 	$(LIB_EVAL_RT) $(LIB_CG_RT) $(LIB_SS_RT) \
 	$(LIB_MGR_RT) $(LIB_UMLROSE_RT) $(LIB_GEN_RT) \
 	$(LIB_CORBA_RT) $(LIB_SERVMAN_RT) \
-	$(LIB_CG) $(LIB_VDM)
-
-RT_ROSE_LITE_LIBS = $(LIB_POG_RT) $(LIB_POG_PRETTY_RT) $(LIB_POG_AUX_RT) \
-	$(LIB_SPECFILE_RT) $(LIB_PARSER_RT) \
-	$(LIB_J2V_RT) $(LIB_JSS_RT) $(LIB_TRANS_RT) \
-	$(LIB_EVAL_RT) $(LIB_CG_RT) $(LIB_SS_RT) \
-	$(LIB_MGR_RT) $(LIB_UMLROSE_RT) $(LIB_GEN_RT) \
 	$(LIB_CG) $(LIB_VDM)
 endif
 endif
@@ -3523,19 +3398,13 @@ COMMON_OBJS = $(GETOPT_O) stringext.o tb_exceptions.o date.o
 ALL_COMMON_OBJS = cli_options.o astaux.o intconvquotes.o tbutils.o as2ascii.o tb_readline.o
 
 SL_COMMON_OBJS = $(ALL_COMMON_OBJS:%.o=%-sl.o)
-
 SL_OBJS = tb_version-sl.o tools-sl.o $(SL_COMMON_OBJS)
-SL_LITE_OBJS = tb_version_lite-sl.o tools_lite-sl.o $(SL_COMMON_OBJS)
 
 PP_COMMON_OBJS = $(ALL_COMMON_OBJS:%.o=%-pp.o) priority.tab-pp.o lex.pf_.o
-
 PP_OBJS = tb_version-pp.o tools-pp.o $(PP_COMMON_OBJS)
-PP_LITE_OBJS = tb_version_lite-pp.o tools_lite-pp.o $(PP_COMMON_OBJS)
 
 RT_COMMON_OBJS = $(ALL_COMMON_OBJS:%.o=%-rt.o) priority.tab-rt.o lex.pf_.o
-
 RT_OBJS = tb_version-rt.o tools-rt.o $(RT_COMMON_OBJS)
-RT_LITE_OBJS = tb_version_lite-rt.o tools_lite-rt.o $(RT_COMMON_OBJS)
 
 CLI_MAIN_O = vdmde.o
 SL_CLI_MAIN_O = $(CLI_MAIN_O:%.o=%-sl.o)
@@ -3584,29 +3453,6 @@ vdmqt: $(SL_GUI_MAIN_O) $(COMMON_OBJS) $(SL_OBJS) $(SL_GUI_LIBS) $(SL_LIBS)
 	${CCC} $(DEBUG) -o $@ $+ $(LIBQT) $(LIBMATH) $(LIB_DL) $(CORBA_LIB) $(READLINE_LIB) $(GUILNKOPT)
 endif
 
-# VDMSL Lite
-ifeq ($(strip $(OSTYPE)),win32)
-vdmde_lite.exe: $(shell $(LINKCHG) $(WINRES-SLL) \
-        $(SL_CLI_MAIN_O) $(COMMON_OBJS) $(SL_LITE_OBJS) $(SL_LITE_LIBS))
-	$(shell $(LINKCHG) ${CCC} ${LNKOPT} $(DEBUG) $(LINKOUT)$@ \
-	$+ $(LIBMATH) $(WINCONSOLELINK))
-	$(MAKE) $(CLIMANIFEST)
-	$(MT) -manifest $(CLIMANIFEST) -nologo -outputresource:$@
-
-vdmqt_lite.exe: $(shell $(LINKCHG) $(WINRESGDE-SLL) \
-        $(SL_GUI_MAIN_O) $(COMMON_OBJS) $(SL_LITE_OBJS) $(SL_GUI_LIBS) $(SL_LITE_LIBS))
-	$(shell $(LINKCHG) $(CCC) ${GUILNKOPT} $(DEBUG) $(LINKOUT)$@ \
-	  $+ $(LIBQT) $(WINLINK))
-	$(MAKE) $(GUIMANIFEST)
-	$(MT) -manifest $(GUIMANIFEST) -nologo -outputresource:$@
-else
-vdmde_lite: $(SL_CLI_MAIN_O) $(COMMON_OBJS) $(SL_LITE_OBJS) $(SL_LITE_LIBS)
-	${CCC} $(DEBUG) -o $@ $+ $(LIBMATH) $(LIB_DL) $(READLINE_LIB) $(LNKOPT)
-
-vdmqt_lite: $(SL_GUI_MAIN_O) $(COMMON_OBJS) $(SL_LITE_OBJS) $(SL_GUI_LIBS) $(SL_LITE_LIBS)
-	$(CCC) $(DEBUG) -o $@ $+ $(LIBQT) $(LIBMATH) $(LIB_DL) $(READLINE_LIB) $(GUILNKOPT)
-endif
-
 # VDM++
 ifeq ($(strip $(OSTYPE)),win32)
 vppde.exe: $(shell $(LINKCHG) $(WINRES-PP) \
@@ -3635,36 +3481,6 @@ vppde: $(PP_CLI_MAIN_O) $(COMMON_OBJS) $(PP_OBJS) $(PP_LIBS)
 
 vppqt: $(PP_GUI_MAIN_O) $(COMMON_OBJS) $(PP_OBJS) $(PP_GUI_LIBS) $(PP_LIBS)
 	$(CCC) $(DEBUG) -o $@ $+ $(LIBQT) $(LIBMATH) $(LIB_DL) $(CORBA_LIB) $(XML_LIB) $(READLINE_LIB) $(GUILNKOPT)
-endif
-
-# VDM++ Lite
-ifeq ($(strip $(OSTYPE)),win32)
-vppde_lite.exe: $(shell $(LINKCHG) $(WINRES-PPL) \
-        $(PP_CLI_MAIN_O) $(COMMON_OBJS) $(PP_LITE_OBJS) $(PP_LITE_LIBS))
-	$(shell $(LINKCHG) ${CCC} ${LNKOPT} $(DEBUG) $(LINKOUT)$@ \
-	  $+ $(XML_LIB) $(WINCONSOLELINK))
-	$(MAKE) $(CLIMANIFEST)
-	$(MT) -manifest $(CLIMANIFEST) -nologo -outputresource:$@
-
-vppqt_lite.exe: $(shell $(LINKCHG) $(WINRESGDE-PPL) \
-        $(PP_GUI_MAIN_O) $(COMMON_OBJS) $(PP_LITE_OBJS) $(PP_GUI_LIBS) $(PP_LITE_LIBS))
-	$(shell $(LINKCHG) $(CCC) ${GUILNKOPT} $(DEBUG) $(LINKOUT)$@ \
-	  $+ $(LIBQT) $(XML_LIB) $(WINLINK))
-	$(MAKE) $(GUIMANIFEST)
-	$(MT) -manifest $(GUIMANIFEST) -nologo -outputresource:$@
-
-vppumlqt_lite.exe: $(shell $(LINKCHG) $(WINRESGDE-PPL) \
-        $(PP_GUI_MAIN_O) $(COMMON_OBJS) $(PP_LITE_OBJS) $(PP_ROSE_LITE_LIBS) $(PP_GUIROSE_LIBS))
-	$(shell $(LINKCHG) $(CCC) ${GUILNKOPT} $(DEBUG) $(LINKOUT)$@ \
-	  $+ $(LIBQT) $(XML_LIB) $(AFXLINK))
-	$(MAKE) $(ROSEMANIFEST)
-	$(MT) -manifest $(ROSEMANIFEST) -nologo -outputresource:$@
-else
-vppde_lite: $(PP_CLI_MAIN_O) $(COMMON_OBJS) $(PP_LITE_OBJS) $(PP_LITE_LIBS)
-	${CCC} $(DEBUG) -o $@ $+ $(LIBMATH) $(LIB_DL) $(XML_LIB) $(READLINE_LIB) $(LNKOPT)
-
-vppqt_lite: $(PP_GUI_MAIN_O) $(COMMON_OBJS) $(PP_LITE_OBJS) $(PP_GUI_LIBS) $(PP_LITE_LIBS)
-	$(CCC) $(DEBUG) -o $@ $+ $(LIBQT) $(LIBMATH) $(LIB_DL) $(XML_LIB) $(READLINE_LIB) $(GUILNKOPT)
 endif
 
 # VICE
@@ -3705,36 +3521,6 @@ vicede: $(RT_CLI_MAIN_O) $(COMMON_OBJS) $(RT_OBJS) $(RT_LIBS)
 
 viceqt: $(RT_GUI_MAIN_O) $(COMMON_OBJS) $(RT_OBJS) $(RT_GUI_LIBS) $(RT_LIBS)
 	${CCC} $(DEBUG) -o $@ $+ $(LIBQT) $(LIBMATH) $(LIB_DL) $(CORBA_LIB) $(XML_LIB) $(READLINE_LIB) $(GUILNKOPT)
-endif
-
-# VICE Lite
-ifeq ($(strip $(OSTYPE)),win32)
-vicede_lite.exe: $(shell $(LINKCHG) $(WINRES-RTL) \
-        $(RT_CLI_MAIN_O) $(COMMON_OBJS) $(RT_LITE_OBJS) $(RT_LITE_LIBS))
-	$(shell $(LINKCHG) ${CCC} ${LNKOPT} $(DEBUG) $(LINKOUT)$@ \
-	  $+ $(XML_LIB) $(WINCONSOLELINK))
-	$(MAKE) $(CLIMANIFEST)
-	$(MT) -manifest $(CLIMANIFEST) -nologo -outputresource:$@
-
-viceqt_lite.exe: $(shell $(LINKCHG) $(WINRESGDE-RTL) \
-        $(RT_GUI_MAIN_O) $(COMMON_OBJS) $(RT_LITE_OBJS) $(RT_GUI_LIBS) $(RT_LITE_LIBS)) 
-	$(shell $(LINKCHG) ${CCC} ${GUILNKOPT} $(DEBUG) $(LINKOUT)$@ \
-	  $+ $(LIBQT) $(XML_LIB) $(WINCONSOLELINK))
-	$(MAKE) $(GUIMANIFEST)
-	$(MT) -manifest $(GUIMANIFEST) -nologo -outputresource:$@
-
-viceumlqt_lite.exe: $(shell $(LINKCHG) $(WINRESGDE-RTL) \
-        $(RT_GUI_MAIN_O) $(COMMON_OBJS) $(RT_LITE_OBJS) $(RT_GUIROSE_LIBS) $(RT_ROSE_LITE_LIBS)) 
-	$(shell $(LINKCHG) $(CCC) ${GUILNKOPT} $(DEBUG) $(LINKOUT)$@ \
-	  $+ $(LIBQT) $(CORBA_LIB) $(XML_LIB) $(AFXLINK))
-	$(MAKE) $(ROSEMANIFEST)
-	$(MT) -manifest $(ROSEMANIFEST) -nologo -outputresource:$@
-else
-vicede_lite: $(RT_CLI_MAIN_O) $(COMMON_OBJS) $(RT_LITE_OBJS) $(RT_LIBS)
-	${CCC} $(DEBUG) -o $@ $+ $(LIBMATH) $(LIB_DL) $(XML_LIB) $(READLINE_LIB) $(LNKOPT)
-
-viceqt_lite: $(RT_GUI_MAIN_O) $(COMMON_OBJS) $(RT_LITE_OBJS) $(RT_GUI_LIBS) $(RT_LIBS)
-	${CCC} $(DEBUG) -o $@ $+ $(LIBQT) $(LIBMATH) $(LIB_DL) $(XML_LIB) $(READLINE_LIB) $(GUILNKOPT)
 endif
 
 tp_test$(EXE): $(shell $(LINKCHG) \
@@ -3782,11 +3568,8 @@ preprocessed: contextinfo.cc contextinfo.h tb_version.cc \
 	      
 links:  tb_version-sl.cc tb_version-pp.cc tb_version-rt.cc \
 	tools-sl.cc tools-pp.cc tools-rt.cc \
-	tools_lite-sl.cc tools_lite-pp.cc tools_lite-rt.cc \
 	unmangle-pp.cc unmangle-sl.cc unmangle-rt.cc \
-	priority.tab-pp.cc priority.tab-rt.cc \
-	tb_version_ac-sl.cc tb_version_ac-pp.cc tb_version_ac-rt.cc \
-	tb_version_lite-sl.cc tb_version_lite-pp.cc tb_version_lite-rt.cc
+	priority.tab-pp.cc priority.tab-rt.cc
 
 # VDM Graphical Development Environment. 
 #
@@ -3871,31 +3654,22 @@ RESGDE=-DGDE
 RES-GDETYPE = $(RES$(patsubst vdmg%,GDE,$(filter vdmg%, $@)))
 
 RES-SLTYPE = $(VDM$(patsubst %-sl.res,SL,$(filter %-sl.res, $@)))
-RES-SLLTYPE = $(VDM$(patsubst %-sll.res,SLL,$(filter %-sll.res, $@)))
 RES-PPTYPE = $(VDM$(patsubst %-pp.res,PP,$(filter %-pp.res, $@)))
-RES-PPLTYPE = $(VDM$(patsubst %-ppl.res,PPL,$(filter %-ppl.res, $@)))
 RES-RTTYPE = $(VDM$(patsubst %-rt.res,RT,$(filter %-rt.res, $@)))
-RES-RTLTYPE = $(VDM$(patsubst %-rtl.res,RTL,$(filter %-rtl.res, $@)))
-RESFLAG= $(RES-PPTYPE) $(RES-SLTYPE) $(RES-SLLTYPE) $(RES-PPLTYPE) $(RES-RTTYPE) $(RES-RTLTYPE) $(RES-GDETYPE)
+RESFLAG= $(RES-PPTYPE) $(RES-SLTYPE) $(RES-RTTYPE) $(RES-GDETYPE)
 
 %.res: vdmgde.rc
 	$(RC) -l 0x409 $(RESFLAG) -fo $@ -r -i. $(subst //,\\\\,$<)
 
 vdmgde-sl.res: vdmgde.rc vdmgde-sl.rch vdmgde.ico
-vdmgde-sll.res: vdmgde.rc vdmgde-sll.rch vdmgde.ico
 vdmgde-pp.res: vdmgde.rc vdmgde-pp.rch vdmgde.ico
-vdmgde-ppl.res: vdmgde.rc vdmgde-ppl.rch vdmgde.ico
 vdmgde-rt.res: vdmgde.rc vdmgde-rt.rch vdmgde.ico
-vdmgde-rtl.res: vdmgde.rc vdmgde-rtl.rch vdmgde.ico
 
 #vdmgde-%.res: vdmgde-%.rch vdmgde.ico vdmgde.rc
 
 vdmde-sl.res: vdmgde.rc vdmde-sl.rch vdmgde.ico
-vdmde-sll.res: vdmgde.rc vdmde-sll.rch vdmgde.ico
 vdmde-pp.res: vdmgde.rc vdmde-pp.rch vdmgde.ico
-vdmde-ppl.res: vdmgde.rc vdmde-ppl.rch vdmgde.ico
 vdmde-rt.res: vdmgde.rc vdmde-rt.rch vdmgde.ico
-vdmde-rtl.res: vdmgde.rc vdmde-rtl.rch vdmgde.ico
 
 #vdmde-%.res: vdmde-%.rch vdmgde.ico vdmgde.rc
 
@@ -4294,9 +4068,6 @@ endif
 	find $(DISTDIR)/examples -name \.cvsignore -print | xargs rm -rf  
 	find $(DISTDIR)/examples -name \.svn -print | xargs rm -rf  
 	find $(DISTDIR)/examples -name \*~ -print | xargs rm -f  
-ifeq ($(strip $(LITE)),1)
-	rm -rf $(DISTDIR)/examples/dl-example
-else
 ifeq ($(strip $(OSTYPE)),win32)
 	rm -rf $(DISTDIR)/examples/dl-example/bigint_unix.vpp
 ifeq ($(strip $(CLCPUTYPE)),x64)
@@ -4306,6 +4077,9 @@ endif
 else
 	cp $(DISTDIR)/examples/dl-example/bigint_unix.vpp $(DISTDIR)/examples/dl-example/bigint.vpp
 endif
+ifeq ($(strip $(OSTYPE)),CYGWIN_NT)
+	mv $(DISTDIR)/examples/sort/Makefile.cygwin $(DISTDIR)/examples/sort/Makefile
+	mv $(DISTDIR)/examples/dl-example/Makefile.cygwin $(DISTDIR)/examples/dl-example/Makefile
 endif
 
 inst-rt-examples: examples
@@ -4318,21 +4092,15 @@ endif
 	find $(DISTDIR)/examples -name \.cvsignore -print | xargs rm -rf  
 	find $(DISTDIR)/examples -name \.svn -print | xargs rm -rf  
 	find $(DISTDIR)/examples -name \*~ -print | xargs rm -f  
-ifeq ($(strip $(LITE)),1)
-	rm -rf $(DISTDIR)/examples/dl-example
-else
 ifeq ($(strip $(OSTYPE)),win32)
 	rm -rf $(DISTDIR)/examples/dl-example/bigint_unix.vpp
 else
 	cp $(DISTDIR)/examples/dl-example/bigint_unix.vpp $(DISTDIR)/examples/dl-example/bigint.vpp
 endif
-endif
-ifneq ($(strip $(LITE)),1)
 	cat $(DISTDIR)/examples/dl-example/Makefile | \
 	perl -nle 's/vppde/vicede/; print;' > \
 	$(DISTDIR)/examples/dl-example/Makefile.temp
 	mv $(DISTDIR)/examples/dl-example/Makefile.temp $(DISTDIR)/examples/dl-example/Makefile
-endif
 	cat $(DISTDIR)/examples/sort/Makefile | \
 	perl -nle 's/vppde/vicede/; print;' > \
 	$(DISTDIR)/examples/sort/Makefile.temp
@@ -4485,46 +4253,28 @@ MAKENSIS = "c:/Program Files/NSIS/makensis"
 WIN64 =
 endif
 
-xxx: 
-	echo $(CLCPUTYPE)
-
 WISEDEF-sl  = -D _VDMSL_=1
-WISEDEF-sll = -D _VDMSL_=1
 WISEDEF-pp  = -D _VDMSL_=0
-WISEDEF-ppl = -D _VDMSL_=0
 WISEDEF-rt  = -D _VDMSL_=0
-WISEDEF-rtl = -D _VDMSL_=0
 
 INSTVERSION-sl  = sl
-INSTVERSION-sll = sll
 INSTVERSION-pp  = pp
-INSTVERSION-ppl = ppl
 INSTVERSION-rt  = rt
-INSTVERSION-rtl = rtl
 
 NSISOPTIONS-sl = /DGUITOOL=vdmgde.exe /DCLITOOL=vdmde.exe /DTOOLNAME=VDM-SL\ Toolbox /DVDMSL=1
-NSISOPTIONS-sll = /DGUITOOL=vdmgde.exe /DCLITOOL=vdmde.exe /DTOOLNAME=VDM-SL\ Toolbox\ Lite /DVDMSL=1 /DLITE=1
 NSISOPTIONS-pp = /DGUITOOL=vppgde.exe /DCLITOOL=vppde.exe /DTOOLNAME=VDM++\ Toolbox /DVDMPP=1
-NSISOPTIONS-ppl = /DGUITOOL=vppgde.exe /DCLITOOL=vppde.exe /DTOOLNAME=VDM++\ Toolbox\ Lite /DVDMPP=1 /DLITE=1
 NSISOPTIONS-rt = /DGUITOOL=vicegde.exe /DCLITOOL=vicede.exe /DTOOLNAME=VDM++\ VICE\ Toolbox /DVICE=1
-NSISOPTIONS-rtl = /DGUITOOL=vicegde.exe /DCLITOOL=vicede.exe /DTOOLNAME=VDM++\ VICE\ Toolbox\ Lite /DVICE=1 /DLITE=1
 
 ifeq ($(strip $(CLCPUTYPE)),x64)
 PPGUITOOL=vppqt.exe
-PPGUITOOL_LT=vppqt_lite.exe
 RTGUITOOL=viceqt.exe
-RTGUITOOL_LT=viceqt_lite.exe
 else
 ifeq ($(strip $(INSTALLER)),NSIS)
 PPGUITOOL=vppqt.exe
-PPGUITOOL_LT=vppqt_lite.exe
 RTGUITOOL=viceqt.exe
-RTGUITOOL_LT=viceqt_lite.exe
 else
 PPGUITOOL=vppumlqt.exe
-PPGUITOOL_LT=vppumlqt_lite.exe
 RTGUITOOL=viceumlqt.exe
-RTGUITOOL_LT=viceumlqt_lite.exe
 endif
 endif
 
@@ -4572,15 +4322,7 @@ instcm:
 	rm -rf vicede.exe $(RTGUITOOL) j2vdll.so
 	$(MAKE) instrt
 
-instlite:
-	rm -rf vdmde_lite.exe vdmqt_lite.exe
-	$(MAKE) instsll
-	rm -rf vppde_lite.exe $(PPGUITOOL_LT)
-	$(MAKE) instppl
-	rm -rf vicede_lite.exe $(RTGUITOOL_LT)
-	$(MAKE) instrtl
-
-# instsl instpp, instsll, instppl or instrt
+# instsl instpp instrt
 ifeq ($(strip $(INSTALLER)),NSIS)
 inst%:  inst-%.files print_name_vers.exe $(VDMMANIFEST)
 	cp $(VPATH)/license/* .
@@ -4607,10 +4349,6 @@ endif
 INSTFILES-sl = vdmde.exe vdmqt.exe
 INSTFILES-pp = vppde.exe $(PPGUITOOL) j2vdll.so
 INSTFILES-rt = vicede.exe $(RTGUITOOL) j2vdll.so
-
-INSTFILES-sll= vdmde_lite.exe vdmqt_lite.exe
-INSTFILES-ppl = vppde_lite.exe $(PPGUITOOL_LT)
-INSTFILES-rtl = vicede_lite.exe $(RTGUITOOL_LT)
 
 DISTDIR = distdir
 clean-distdir: 
@@ -4706,17 +4444,6 @@ ifeq ($(strip $(INSTALLER)),WISE)
 	dirtowise $(WISE_OPTION_SL) > $@ 
 endif
 
-inst-sll.files: clean-distdir $(INSTFILES-sll) \
-	inst-sl-stdlib inst-word inst-sl-latex inst-sl-examples inst-qt \
-	inst-sl-emacs \
-	inst-dll-sl-lt
-	mkdir -p $(DISTDIR)/bin
-	cp vdmqt_lite.exe $(DISTDIR)/bin/vdmgde.exe
-	cp vdmde_lite.exe $(DISTDIR)/bin/vdmde.exe
-ifeq ($(strip $(INSTALLER)),WISE)
-	dirtowise $(WISE_OPTION_SLL) > $@ 
-endif
-
 inst-pp.files: clean-distdir $(INSTFILES-pp) \
 	inst-pp-stdlib inst-word inst-pp-latex inst-pp-examples inst-qt inst-uml \
         inst-corbafiles inst-pp-cgfiles inst-javacg inst-java2vdm \
@@ -4730,18 +4457,6 @@ ifeq ($(strip $(INSTALLER)),WISE)
 	dirtowise $(WISE_OPTION_PP) > $@ 
 else
 	cp j2vdll.so $(DISTDIR)/bin/.
-endif
-
-inst-ppl.files: clean-distdir $(INSTFILES-ppl) \
-	inst-pp-stdlib inst-word inst-pp-latex inst-pp-examples inst-qt inst-uml \
-	inst-pp-emacs \
-	inst-dll-pp-lt
-	rm -rf $(DISTDIR)/examples/dl-example
-	mkdir -p $(DISTDIR)/bin
-	cp $(PPGUITOOL_LT) $(DISTDIR)/bin/vppgde.exe
-	cp vppde_lite.exe $(DISTDIR)/bin/vppde.exe
-ifeq ($(strip $(INSTALLER)),WISE)
-	dirtowise $(WISE_OPTION_PPL) > $@ 
 endif
 
 inst-rt.files: clean-distdir $(INSTFILES-rt) \
@@ -4758,17 +4473,6 @@ ifeq ($(strip $(INSTALLER)),WISE)
 	dirtowise $(WISE_OPTION_RT) > $@ 
 else
 	cp j2vdll.so $(DISTDIR)/bin/.
-endif
-
-inst-rtl.files: clean-distdir $(INSTFILES-rtl) \
-	inst-pp-stdlib inst-word inst-pp-latex inst-pp-examples inst-qt inst-uml \
-	inst-rt-emacs \
-	inst-dll-pp-lt
-	mkdir -p $(DISTDIR)/bin
-	cp $(RTGUITOOL_LT) $(DISTDIR)/bin/vicegde.exe
-	cp vicede_lite.exe $(DISTDIR)/bin/vicede.exe
-ifeq ($(strip $(INSTALLER)),WISE)
-	dirtowise $(WISE_OPTION_RTL) > $@ 
 endif
 
 inst-dll-common: $(QMFILES)
@@ -5142,12 +4846,6 @@ endif
 	$(MAKE) distpp
 	$(MAKE) distrt
 
-distlt:
-	rm -rf vdmde_lite vdmqt_lite vppde_lite vppqt_lite vicede_lite viceqt_lite
-	$(MAKE) distsllt
-	$(MAKE) distpplt
-	$(MAKE) distrtlt
-
 VDMSL_CUI_NAME=vdmde
 VDMSL_GUI_NAME=vdmqt
 VDMPP_CUI_NAME=vppde
@@ -5177,16 +4875,9 @@ MACPKGSL = $(TBNAMESL)-$(TBVERSION_SL)-$(RDATE)-$(OS_NAME).pkg
 MACPKGPP = $(TBNAMEPP)-$(TBVERSION_PP)-$(RDATE)-$(OS_NAME).pkg
 MACPKGRT = $(TBNAMERT)-$(TBVERSION_RT)-$(RDATE)-$(OS_NAME).pkg
 
-MACPKGSLL = $(TBNAMESL)-$(TBVERSION_SL)-Lite-$(RDATE)-$(OS_NAME).pkg
-MACPKGPPL = $(TBNAMEPP)-$(TBVERSION_PP)-Lite-$(RDATE)-$(OS_NAME).pkg
-MACPKGRTL = $(TBNAMERT)-$(TBVERSION_RT)-Lite-$(RDATE)-$(OS_NAME).pkg
-
 MACPKGREFSL = jp.vdmtools.sl.pkg
 MACPKGREFPP = jp.vdmtools.pp.pkg
 MACPKGREFRT = jp.vdmtools.rt.pkg
-MACPKGREFSLL = jp.vdmtools.sll.pkg
-MACPKGREFPPL = jp.vdmtools.ppl.pkg
-MACPKGREFRTL = jp.vdmtools.rtl.pkg
 
 MACPKGNAMESL = vdmsl.pkg
 MACPKGNAMEPP = vdmpp.pkg
@@ -5365,99 +5056,6 @@ ifdef HASPKGMAKER
 endif
 endif
 
-distsllt: vdmde_lite vdmqt_lite print_name_vers \
-	$(QMFILES) \
-	$(DISTDIR) \
-	inst-libs-lt \
-	inst-sl-stdlib inst-sl-examples \
-	inst-qt inst-sl-emacs inst-sl-latex inst-word
-	mkdir -p $(DISTDIR)/bin
-ifeq ($(strip $(OSTYPE)),Darwin)
-	cp $(PWD)/vdmde_lite $(DISTDIR)/bin/vdmde
-	$(STRIP) $(DISTDIR)/bin/vdmde
-	mkdir -p $(CONT_SL)/MacOS $(CONT_SL)/Resources $(CONT_SL)/lib
-	mkdir -p $(CONT_SL)/Resources/English.lproj
-	mkdir -p $(CONT_SL)/Resources/Japanese.lproj
-	cp $(PWD)/vdmqt_lite $(CONT_SL)/MacOS/vdmgde
-	$(STRIP) $(CONT_SL)/MacOS/vdmgde
-	cp $(PWD)/PkgInfo $(CONT_SL)/PkgInfo 
-	cp $(PWD)/Info.plist.sl $(CONT_SL)/Info.plist
-	cp $(PWD)/vdmtools.icns $(CONT_SL)/Resources/vdmtools.icns
-#Qt
-	cp $(QMFILES) $(CONT_SL)/MacOS/.
-ifeq ($(strip $(QTVERSION)),4)
-ifdef COCOA 
-	mkdir -p $(CONT_SL)/Frameworks
-	mkdir -p $(CONT_SL)/Frameworks/QtGui.framework/Versions/4
-	mkdir -p $(CONT_SL)/Frameworks/QtCore.framework/Versions/4
-
-	cp $(OLDQTCORE) $(CONT_SL)/Frameworks/$(FWQTCORE)
-	cp $(OLDQTGUI) $(CONT_SL)/Frameworks/$(FWQTGUI)
-	cp -r $(QT4DIR)/lib/QtGui.framework/Versions/4/Resources/qt_menu.nib $(CONT_SL)/Resources/.
-
-	install_name_tool -id $(NEWQTCORE) $(CONT_SL)/Frameworks/$(FWQTCORE)
-	install_name_tool -id $(NEWQTGUI) $(CONT_SL)/Frameworks/$(FWQTGUI)
-
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_SL)/Frameworks/$(FWQTGUI)
-else
-	cp -r $(QT_LIB) $(CONT_SL)/lib/.
-	install_name_tool -id $(NEWQTCORE) $(CONT_SL)/lib/$(LIBQTCORE)
-	install_name_tool -id $(NEWQTGUI) $(CONT_SL)/lib/$(LIBQTGUI)
-
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_SL)/lib/$(LIBQTGUI)
-endif
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_SL)/MacOS/vdmgde
-	install_name_tool -change $(OLDQTGUI) $(NEWQTGUI) $(CONT_SL)/MacOS/vdmgde
-
-	mkdir -p $(CONT_SL)/MacOS/plugins
-	mkdir -p $(CONT_SL)/MacOS/plugins/codecs
-	cp $(QT_CODECS) $(CONT_SL)/MacOS/plugins/codecs/.
-
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_SL)/MacOS/plugins/codecs/$(LIBQCNCODECS)
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_SL)/MacOS/plugins/codecs/$(LIBQJPCODECS)
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_SL)/MacOS/plugins/codecs/$(LIBQKRCODECS)
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_SL)/MacOS/plugins/codecs/$(LIBQTWCODECS)
-else
-	cp -r $(QT_LIB) $(CONT_SL)/lib/.
-	install_name_tool -id $(NEWQTMT) $(CONT_SL)/lib/$(LIBQTMT)
-	install_name_tool -id $(NEWQUI) $(CONT_SL)/lib/$(LIBQUI)
-
-	install_name_tool -change $(OLDQTMT) $(NEWQTMT) $(CONT_SL)/lib/$(LIBQUI)
-
-	install_name_tool -change $(OLDQTMT) $(NEWQTMT) $(CONT_SL)/MacOS/vdmgde
-	install_name_tool -change $(OLDQUI) $(NEWQUI) $(CONT_SL)/MacOS/vdmgde
-endif
-ifdef QT_IMAGE_FILE
-	mv $(DISTDIR)/$(QT_IMG) $(CONT_SL)/.
-endif
-else # Linux or Solaris or FreeBSD
-	cp $(PWD)/vdmde_lite $(DISTDIR)/bin/vdmde.bin
-	$(STRIP) $(DISTDIR)/bin/vdmde.bin
-#	ln -s $(PWD)/vdmde.script $(DISTDIR)/bin/vdmde
-	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/vdmde.bin/; print;' > $(DISTDIR)/bin/vdmde
-	chmod 755 $(DISTDIR)/bin/vdmde
-	cp $(PWD)/vdmqt_lite $(DISTDIR)/bin/vdmqt.bin
-	$(STRIP) $(DISTDIR)/bin/vdmqt.bin
-#	ln -s $(PWD)/vdmgde.script $(DISTDIR)/bin/vdmgde
-	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/vdmqt.bin/; print;' > $(DISTDIR)/bin/vdmgde
-	chmod 755 $(DISTDIR)/bin/vdmgde
-	cp $(QMFILES) $(DISTDIR)/bin/.
-ifeq ($(strip $(QTVERSION)),4)
-ifeq ($(strip $(OSTYPE)),SunOS)
-	mkdir -p $(DISTDIR)/lib
-	cp $(QT_LIB) $(DISTDIR)/lib/.
-	mkdir -p $(DISTDIR)/bin/plugins/codecs
-	cp $(QT_CODECS) $(DISTDIR)/bin/plugins/codecs/.
-endif
-endif
-endif
-	rm -rf $(DISTDIRSL)
-	ln -s $(DISTDIR) $(DISTDIRSL)
-	VERSION=`./print_name_vers -sll --outputversion`; \
-	echo Creating $(TARFILESLL); \
-	tar -$(TARCOMFLG)cv$(TARFOLLOWLINKS)f $(TARFILESLL) ./$(DISTDIRSL)
-	rm -rf $(DISTDIRSL)
-
 #vppgde vppde libvdm.a libCG.a
 distpp: $(VDMPP_CUI_NAME) $(VDMPP_GUI_NAME) j2vdll.so $(PRINT_NAME_VERS_NAME) \
 	$(QMFILES) \
@@ -5606,103 +5204,6 @@ ifdef HASPKGMAKER
 #	--target $(OS_NAME) --out "$(MACPKGPP)" --verbose
 endif
 endif
-
-distpplt: vppde_lite vppqt_lite print_name_vers \
-	$(QMFILES) \
-	$(DISTDIR) \
-	inst-libs-lt \
-	inst-pp-stdlib inst-pp-examples \
-	inst-uml \
-	inst-qt inst-pp-emacs inst-pp-latex inst-word
-	rm -rf $(DISTDIR)/examples/dl-example
-	mkdir -p $(DISTDIR)/bin
-ifeq ($(strip $(OSTYPE)),Darwin)
-	cp $(PWD)/vppde_lite $(DISTDIR)/bin/vppde
-	$(STRIP) $(DISTDIR)/bin/vppde
-	mkdir -p $(CONT_PP)/MacOS $(CONT_PP)/Resources $(CONT_PP)/lib $(CONT_PP)/uml
-	mkdir -p $(CONT_PP)/Resources/English.lproj
-	mkdir -p $(CONT_PP)/Resources/Japanese.lproj
-	cp $(PWD)/vppqt_lite $(CONT_PP)/MacOS/vppgde
-	$(STRIP) $(CONT_PP)/MacOS/vppgde
-	cp $(PWD)/PkgInfo $(CONT_PP)/PkgInfo 
-	cp $(PWD)/Info.plist.pp $(CONT_PP)/Info.plist
-	cp $(PWD)/vdmtools.icns $(CONT_PP)/Resources/vdmtools.icns
-# UML
-	cp $(PWD)/NewClass.rtf $(CONT_PP)/uml/.
-# Qt
-	cp $(QMFILES) $(CONT_PP)/MacOS/.
-ifeq ($(strip $(QTVERSION)),4)
-ifdef COCOA 
-	mkdir -p $(CONT_PP)/Frameworks
-	mkdir -p $(CONT_PP)/Frameworks/QtGui.framework/Versions/4
-	mkdir -p $(CONT_PP)/Frameworks/QtCore.framework/Versions/4
-
-	cp $(OLDQTCORE) $(CONT_PP)/Frameworks/$(FWQTCORE)
-	cp $(OLDQTGUI) $(CONT_PP)/Frameworks/$(FWQTGUI)
-	cp -r $(QT4DIR)/lib/QtGui.framework/Versions/4/Resources/qt_menu.nib $(CONT_PP)/Resources/.
-
-	install_name_tool -id $(NEWQTCORE) $(CONT_PP)/Frameworks/$(FWQTCORE)
-	install_name_tool -id $(NEWQTGUI) $(CONT_PP)/Frameworks/$(FWQTGUI)
-
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_PP)/Frameworks/$(FWQTGUI)
-else
-	cp -r $(QT_LIB) $(CONT_PP)/lib/.
-	install_name_tool -id $(NEWQTCORE) $(CONT_PP)/lib/$(LIBQTCORE)
-	install_name_tool -id $(NEWQTGUI) $(CONT_PP)/lib/$(LIBQTGUI)
-
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_PP)/lib/$(LIBQTGUI)
-endif
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_PP)/MacOS/vppgde
-	install_name_tool -change $(OLDQTGUI) $(NEWQTGUI) $(CONT_PP)/MacOS/vppgde
-
-	mkdir -p $(CONT_PP)/MacOS/plugins
-	mkdir -p $(CONT_PP)/MacOS/plugins/codecs
-	cp $(QT_CODECS) $(CONT_PP)/MacOS/plugins/codecs/.
-
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_PP)/MacOS/plugins/codecs/$(LIBQCNCODECS)
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_PP)/MacOS/plugins/codecs/$(LIBQJPCODECS)
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_PP)/MacOS/plugins/codecs/$(LIBQKRCODECS)
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_PP)/MacOS/plugins/codecs/$(LIBQTWCODECS)
-else
-	cp -r $(QT_LIB) $(CONT_PP)/lib/.
-	install_name_tool -id $(NEWQTMT) $(CONT_PP)/lib/$(LIBQTMT)
-	install_name_tool -id $(NEWQUI) $(CONT_PP)/lib/$(LIBQUI)
-
-	install_name_tool -change $(OLDQTMT) $(NEWQTMT) $(CONT_PP)/lib/$(LIBQUI)
-
-	install_name_tool -change $(OLDQTMT) $(NEWQTMT) $(CONT_PP)/MacOS/vppgde
-	install_name_tool -change $(OLDQUI) $(NEWQUI) $(CONT_PP)/MacOS/vppgde
-endif
-ifdef QT_IMAGE_FILE
-	mv $(DISTDIR)/$(QT_IMG) $(CONT_PP)/.
-endif
-else # Linux or Solaris or FreeBSD
-	cp $(PWD)/vppde_lite $(DISTDIR)/bin/vppde.bin
-	$(STRIP) $(DISTDIR)/bin/vppde.bin
-#	ln -s $(PWD)/vppde.script $(DISTDIR)/bin/vppde
-	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/vppde.bin/; print;' > $(DISTDIR)/bin/vppde
-	chmod 755 $(DISTDIR)/bin/vppde
-	cp $(PWD)/vppqt_lite $(DISTDIR)/bin/vppqt.bin
-	$(STRIP) $(DISTDIR)/bin/vppqt.bin
-#	ln -s $(PWD)/vppgde.script $(DISTDIR)/bin/vppgde
-	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/vppqt.bin/; print;' > $(DISTDIR)/bin/vppgde
-	chmod 755 $(DISTDIR)/bin/vppgde
-	cp $(QMFILES) $(DISTDIR)/bin/.
-ifeq ($(strip $(QTVERSION)),4)
-ifeq ($(strip $(OSTYPE)),SunOS)
-	mkdir -p $(DISTDIR)/lib
-	cp $(QT_LIB) $(DISTDIR)/lib/.
-	mkdir -p $(DISTDIR)/bin/plugins/codecs
-	cp $(QT_CODECS) $(DISTDIR)/bin/plugins/codecs/.
-endif
-endif
-endif
-	rm -rf $(DISTDIRPP)
-	ln -s $(DISTDIR) $(DISTDIRPP)
-	VERSION=`./print_name_vers -ppl --outputversion`; \
-	echo Creating $(TARFILEPPL); \
-	tar -$(TARCOMFLG)cv$(TARFOLLOWLINKS)f $(TARFILEPPL) ./$(DISTDIRPP)
-	rm -rf $(DISTDIRPP)
 
 $(DISTDIR): FAKE
 	rm -rf $(DISTDIR)
@@ -5854,103 +5355,6 @@ ifdef HASPKGMAKER
 #	--target $(OS_NAME) --out "$(MACPKGRT)" --verbose
 endif
 endif
-
-distrtlt: vicede_lite viceqt_lite print_name_vers \
-	$(QMFILES) \
-	$(DISTDIR)  \
-	inst-libs-lt \
-	inst-pp-stdlib inst-rt-examples \
-	inst-uml \
-	inst-qt inst-rt-emacs inst-pp-latex inst-word
-	rm -rf $(DISTDIR)/examples/dl-example
-	mkdir -p $(DISTDIR)/bin
-ifeq ($(strip $(OSTYPE)),Darwin)
-	cp $(PWD)/vicede_lite $(DISTDIR)/bin/vicede
-	$(STRIP) $(DISTDIR)/bin/vicede
-	mkdir -p $(CONT_RT)/MacOS $(CONT_RT)/Resources $(CONT_RT)/lib $(CONT_RT)/uml
-	mkdir -p $(CONT_RT)/Resources/English.lproj
-	mkdir -p $(CONT_RT)/Resources/Japanese.lproj
-	cp $(PWD)/viceqt_lite $(CONT_RT)/MacOS/vicegde
-	$(STRIP) $(CONT_RT)/MacOS/vicegde
-	cp $(PWD)/PkgInfo $(CONT_RT)/PkgInfo 
-	cp $(PWD)/Info.plist.rt $(CONT_RT)/Info.plist
-	cp $(PWD)/vdmtools.icns $(CONT_RT)/Resources/vdmtools.icns
-# UML
-	cp $(PWD)/NewClass.rtf $(CONT_RT)/uml/.
-# Qt
-	cp $(QMFILES) $(CONT_RT)/MacOS/.
-ifeq ($(strip $(QTVERSION)),4)
-ifdef COCOA 
-	mkdir -p $(CONT_RT)/Frameworks
-	mkdir -p $(CONT_RT)/Frameworks/QtGui.framework/Versions/4
-	mkdir -p $(CONT_RT)/Frameworks/QtCore.framework/Versions/4
-
-	cp $(OLDQTCORE) $(CONT_RT)/Frameworks/$(FWQTCORE)
-	cp $(OLDQTGUI) $(CONT_RT)/Frameworks/$(FWQTGUI)
-	cp -r $(QT4DIR)/lib/QtGui.framework/Versions/4/Resources/qt_menu.nib $(CONT_RT)/Resources/.
-
-	install_name_tool -id $(NEWQTCORE) $(CONT_RT)/Frameworks/$(FWQTCORE)
-	install_name_tool -id $(NEWQTGUI) $(CONT_RT)/Frameworks/$(FWQTGUI)
-
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_RT)/Frameworks/$(FWQTGUI)
-else
-	cp -r $(QT_LIB) $(CONT_RT)/lib/.
-	install_name_tool -id $(NEWQTCORE) $(CONT_RT)/lib/$(LIBQTCORE)
-	install_name_tool -id $(NEWQTGUI) $(CONT_RT)/lib/$(LIBQTGUI)
-
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_RT)/lib/$(LIBQTGUI)
-endif
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_RT)/MacOS/vicegde
-	install_name_tool -change $(OLDQTGUI) $(NEWQTGUI) $(CONT_RT)/MacOS/vicegde
-
-	mkdir -p $(CONT_RT)/MacOS/plugins
-	mkdir -p $(CONT_RT)/MacOS/plugins/codecs
-	cp $(QT_CODECS) $(CONT_RT)/MacOS/plugins/codecs/.
-
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_RT)/MacOS/plugins/codecs/$(LIBQCNCODECS)
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_RT)/MacOS/plugins/codecs/$(LIBQJPCODECS)
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_RT)/MacOS/plugins/codecs/$(LIBQKRCODECS)
-	install_name_tool -change $(OLDQTCORE) $(NEWQTCORE) $(CONT_RT)/MacOS/plugins/codecs/$(LIBQTWCODECS)
-else
-	cp -r $(QT_LIB) $(CONT_RT)/lib/.
-	install_name_tool -id $(NEWQTMT) $(CONT_RT)/lib/$(LIBQTMT)
-	install_name_tool -id $(NEWQUI) $(CONT_RT)/lib/$(LIBQUI)
-
-	install_name_tool -change $(OLDQTMT) $(NEWQTMT) $(CONT_RT)/lib/$(LIBQUI)
-
-	install_name_tool -change $(OLDQTMT) $(NEWQTMT) $(CONT_RT)/MacOS/vicegde
-	install_name_tool -change $(OLDQUI) $(NEWQUI) $(CONT_RT)/MacOS/vicegde
-endif
-ifdef QT_IMAGE_FILE
-	mv $(DISTDIR)/$(QT_IMG) $(CONT_RT)/.
-endif
-else # Linux or Solaris or FreeBSD
-	cp $(PWD)/vicede_lite $(DISTDIR)/bin/vicede.bin
-	$(STRIP) $(DISTDIR)/bin/vicede.bin
-#	ln -s $(PWD)/vicede.script $(DISTDIR)/bin/vicede
-	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/vicede.bin/; print;' > $(DISTDIR)/bin/vicede
-	chmod 755 $(DISTDIR)/bin/vicede
-	cp $(PWD)/viceqt_lite $(DISTDIR)/bin/viceqt.bin
-	$(STRIP) $(DISTDIR)/bin/viceqt.bin
-#	ln -s $(PWD)/vicegde.script $(DISTDIR)/bin/vicegde
-	cat $(PWD)/vdmtools.script | perl -nle 's/%%BINNAME%%/viceqt.bin/; print;' > $(DISTDIR)/bin/vicegde
-	chmod 755 $(DISTDIR)/bin/vicegde
-	cp $(QMFILES) $(DISTDIR)/bin/.
-ifeq ($(strip $(QTVERSION)),4)
-ifeq ($(strip $(OSTYPE)),SunOS)
-	mkdir -p $(DISTDIR)/lib
-	cp $(QT_LIB) $(DISTDIR)/lib/.
-	mkdir -p $(DISTDIR)/bin/plugins/codecs
-	cp $(QT_CODECS) $(DISTDIR)/bin/plugins/codecs/.
-endif
-endif
-endif
-	rm -rf $(DISTDIRRT)
-	ln -s $(DISTDIR) $(DISTDIRRT)
-	VERSION=`./$(PRINT_NAME_VERS_NAME) -rtl --outputversion`; \
-	echo Creating $(TARFILERTL); \
-	tar -$(TARCOMFLG)cv$(TARFOLLOWLINKS)f $(TARFILERTL) ./$(DISTDIRRT)
-	rm -rf $(DISTDIRRT)
 
 distcg: tb_version.h print_name_vers $(DISTDIR) $(CG_LIB_CG) $(CG_LIB_VDM) \
 	inst-cgfiles

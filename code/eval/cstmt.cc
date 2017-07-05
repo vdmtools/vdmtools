@@ -325,15 +325,18 @@ TYPE_STKM_SubProgram StackCompiler::CompileLetStmt(const TYPE_AS_LetStmt& sIn)
         const TYPE_AS_Pattern & pat (ldef.GetRecord(pos_AS_ValueDef_pat));
 
         def_sp.ImpConc(E2I(ldef.GetRecord(pos_AS_ValueDef_val)));
-        if (!tp.IsNil())
+        if (!tp.IsNil()) {
           def_sp.ImpAppend(TYPE_INSTRTP_DTC().Init(tp));
+        }
 
         if (pat.Is(TAG_TYPE_AS_PatternName) && tp.IsNil()) {
           const Generic & nm (pat.GetField(pos_AS_PatternName_nm));
-          if (nm.IsNil())
+          if (nm.IsNil()) {
             def_sp.ImpAppend(TYPE_INSTRTP_POP().Init(Int(1)));
-          else
+          }
+          else {
             def_sp.ImpAppend(TYPE_INSTRTP_APPENDBLKENV().Init(nm, Nil()));
+          }
         }
         else {
           def_sp.ImpConc(P2I(pat))
@@ -341,15 +344,14 @@ TYPE_STKM_SubProgram StackCompiler::CompileLetStmt(const TYPE_AS_LetStmt& sIn)
         }
         break;
       }
-      case TAG_TYPE_AS_ExplFnDef:
-      case TAG_TYPE_AS_ImplFnDef:
-      case TAG_TYPE_AS_ExtExplFnDef: {
+      //case TAG_TYPE_AS_ExplFnDef:
+      //case TAG_TYPE_AS_ImplFnDef:
+      //case TAG_TYPE_AS_ExtExplFnDef:
+      default: {
         Tuple t1 (PAT::ConstructFN(GetClMod(), ldef));
         def_sp.ImpAppend(TYPE_INSTRTP_CLOSENV().Init(t1.GetRecord(1), t1.GetMap(2)));
         break;
       }
-      default:
-        break;
     }
   }
 
@@ -795,10 +797,7 @@ TYPE_STKM_SubProgram StackCompiler::CompileIfStmt(const TYPE_AS_IfStmt& sIn)
 
     // altn_l
     TYPE_STKM_SubProgram altn_l;
-// 20140123 -->
-    //altn_l.ImpConc(S2I(TYPE_AS_IfStmt().Init(elif_cond, elif_s, elif_l.Tl(), altn_s, elif_cid)));
     altn_l.ImpConc(CompileIfStmt(TYPE_AS_IfStmt().Init(elif_cond, elif_s, elif_l.Tl(), altn_s, elif_cid)));
-// <-- 20140123
 #ifdef VICE
     altn_l.ImpConc(MkCbr());
 #endif //VICE
@@ -829,18 +828,15 @@ TYPE_STKM_SubProgram StackCompiler::CompileCasesStmt(const TYPE_AS_CasesStmt& sI
 
 // 20140407 -->
 /*
-// 20130322 -->
   TYPE_STKM_SubProgram tsp;
   tsp.ImpAppend(TYPE_INSTRTP_SWAP());
   TYPE_STKM_SubProgram err_sp;
   err_sp.ImpAppend(TYPE_INSTRTP_ERRINST().Init(TYPE_RTERR_ERR(RTERR_MULTIPLE_PATTERN)));
-// <-- 20130322
 */
 // <-- 20140407
 
   // run though altns in revers order
-  for (size_t i = altns.Length(); i > 0; i--)
-  {
+  for (size_t i = altns.Length(); i > 0; i--) {
     // Unpack the element
     TYPE_AS_CasesStmtAltn elm (altns[i]);
     const SEQ<TYPE_AS_Pattern> & match_lp (elm.GetSequence(pos_AS_CasesStmtAltn_match));
@@ -858,14 +854,15 @@ TYPE_STKM_SubProgram StackCompiler::CompileCasesStmt(const TYPE_AS_CasesStmt& sI
 
     bool onep = (match_lp.Length() == 1);
     TYPE_STKM_SubProgram lsp;
-    if (onep)
+    if (onep) {
       lsp.ImpConc(sp);
-    else
+    }
+    else {
       lsp.ImpAppend(TYPE_INSTRTP_PUSH().Init(sem_false));
+    }
 
     // run though match_lp in reverse order
-    for (size_t j = match_lp.Length(); j > 0; j--)
-    {
+    for (size_t j = match_lp.Length(); j > 0; j--) {
       const TYPE_AS_Pattern & pat (match_lp[j]);
 
       // test_instr
@@ -898,14 +895,17 @@ TYPE_STKM_SubProgram StackCompiler::CompileCasesStmt(const TYPE_AS_CasesStmt& sI
         body_instr2.ImpAppend(TYPE_INSTRTP_PUSH().Init(sem_true));
       lsp = ConcIfThenElse(test_instr, body_instr2, lsp);
 */
-      if (onep)
+      if (onep) {
         lsp = ConcIfThenElse(test_instr, body_instr, lsp);
-      else
+      }
+      else {
         lsp = ConcIfThenElse(test_instr, mk_sequence(TYPE_INSTRTP_PUSH().Init(sem_true)), lsp);
+      }
 // <-- 20140407
     }
-    if (!onep)
+    if (!onep) {
       lsp.ImpConc(ConcIfThenElse(TYPE_STKM_SubProgram(), body_instr, sp));
+    }
     sp = lsp;
   }
 

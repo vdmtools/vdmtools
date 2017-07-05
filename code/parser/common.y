@@ -367,9 +367,9 @@ static void yyerror(const char *);
 
 //************** Stuff related to DEFINITION(BLOCK)S ******************/
 #ifdef FULL
-%type <map>      OperationDefinitions
-%type <sequence> SDType
-%type <record>  DType
+%type <map>           OperationDefinitions
+%type <sequence>      OpDomType
+%type <record>        OpRngType
 
 #if VDMSL
 %type <Definitions_p> Definitions
@@ -1105,7 +1105,23 @@ DLTypeImport
 /** Deviations from the standard/Remarks: IPTES                              **/
 
 Interface
-        : ImportDefinitionList ExportDefinition
+        : ImportDefinitionList
+        { $$ = new TYPE_AS_Interface();
+          MYPARSER::SetPos2(*$$, @1, @1);
+          $$->SetField (pos_AS_Interface_imp, *$1); /* imp  */
+          $$->SetField (pos_AS_Interface_exp,
+                 TYPE_AS_ExportSig().Init(Map(),Map(),Map(),Map(),NilContextId)); /* exp  */
+          delete $1;
+        }
+        | ExportDefinition
+        { $$ = new TYPE_AS_Interface();
+          MYPARSER::SetPos2(*$$, @1, @1);
+          $$->SetField (pos_AS_Interface_imp, Map()); /* imp  */
+          $$->SetField (pos_AS_Interface_exp, *$1); /* exp  */
+
+          delete $1;
+        }
+        | ImportDefinitionList ExportDefinition
         { $$ = new TYPE_AS_Interface();
           MYPARSER::SetPos2(*$$, @1, @2);
           $$->SetField (pos_AS_Interface_imp, *$1); /* imp  */
@@ -1126,11 +1142,7 @@ Interface
         ;
 
 ImportDefinitionList
-        : /* empty */
-        {
-          $$ = new Map;
-        }
-        | LEX_IMPORTS ListOfImportDefinitions
+        : LEX_IMPORTS ListOfImportDefinitions
         { $$ = $2;
         }
         ;
@@ -1703,14 +1715,7 @@ OperationImport
         ;
 
 ExportDefinition
-        : /* empty */
-        {
-// 20141117 -->
-          //$$ = new Generic(Nil ());
-          $$ = new Generic(TYPE_AS_ExportSig().Init(Map(),Map(),Map(),Map(),NilContextId));
-// <-- 20141117
-        }
-        | LEX_EXPORTS ExportModuleSignature
+        : LEX_EXPORTS ExportModuleSignature
         { $$ = $2;  // $2 is already a Generic*
         }
         ;
@@ -2521,15 +2526,15 @@ ORDERLY_ON MYPARSER::AddOrderly(TAG_TYPE_PRETTY_PRINTER_Traces, *$1);
         ;
 
 TraceDefinitionList
-        : TraceDefinitionList ';' TraceDefinitionTerm
-        { $$ = $1;
-          $$->ImpAppend(*$3);
-          delete $3;
-        }
-        | TraceDefinitionTerm
+        : TraceDefinitionTerm
         { $$ = new Sequence();
           $$->ImpAppend(*$1);
           delete $1;
+        }
+        | TraceDefinitionList ';' TraceDefinitionTerm
+        { $$ = $1;
+          $$->ImpAppend(*$3);
+          delete $3;
         }
         ;
 
@@ -2905,7 +2910,6 @@ SimpleTypeDefinition
           td.SetField (pos_AS_TypeDef_Inv,    Nil ());
           td.SetField (pos_AS_TypeDef_Eq,     Nil ());
           td.SetField (pos_AS_TypeDef_Ord,    Nil ());
-          //td.SetField (pos_AS_TypeDef_access, Int (NOT_INITIALISED_AS));
           td.SetField (pos_AS_TypeDef_access, Int (DEFAULT_AS));
 
           $$->SetField (1, *$1);
@@ -2925,7 +2929,6 @@ SimpleTypeDefinition
           td.SetField (pos_AS_TypeDef_Inv,    $4->GetField(1));
           td.SetField (pos_AS_TypeDef_Eq,     $4->GetField(2));
           td.SetField (pos_AS_TypeDef_Ord,    $4->GetField(3));
-          //td.SetField (pos_AS_TypeDef_access, Int (NOT_INITIALISED_AS));
           td.SetField (pos_AS_TypeDef_access, Int (DEFAULT_AS));
 
           $$->SetField (1, *$1);
@@ -2954,7 +2957,6 @@ CompositeTypeDefinition
           td.SetField (pos_AS_TypeDef_Inv,    Nil ());
           td.SetField (pos_AS_TypeDef_Eq,     Nil ());
           td.SetField (pos_AS_TypeDef_Ord,    Nil ());
-          //td.SetField (pos_AS_TypeDef_access, Int (NOT_INITIALISED_AS));
           td.SetField (pos_AS_TypeDef_access, Int (DEFAULT_AS));
 
           $$->SetField (1, *$1);
@@ -2979,7 +2981,6 @@ CompositeTypeDefinition
           td.SetField (pos_AS_TypeDef_Inv,    $4->GetField(1));
           td.SetField (pos_AS_TypeDef_Eq,     $4->GetField(2));
           td.SetField (pos_AS_TypeDef_Ord,    $4->GetField(3));
-          //td.SetField (pos_AS_TypeDef_access, Int (NOT_INITIALISED_AS));
           td.SetField (pos_AS_TypeDef_access, Int (DEFAULT_AS));
 
           $$->SetField (1, *$1);
@@ -3007,7 +3008,7 @@ Type    : BracketedType
         | TypeName
         | TypeVariable
 #if FULL
-        | OperationType
+//        | OperationType
         | AllType
 #endif //FULL
         ;
@@ -4066,7 +4067,8 @@ ExtExplOperationDefinition
         }
         ;
 
-DType   : Type
+OpRngType
+        : Type
         | '(' ')'
         {
           $$ = new TYPE_AS_VoidType();
@@ -4074,7 +4076,8 @@ DType   : Type
         }
         ;
 
-SDType  : Type
+OpDomType
+        : Type
         { $$ = new Sequence ();
           if ($1->Is(TAG_TYPE_AS_ProductType))
             $$->ImpConc($1->GetSequence(pos_AS_ProductType_tps));
@@ -4089,7 +4092,7 @@ SDType  : Type
         ;
 
 OperationType
-        : SDType LEX_OPERATION_ARROW DType
+        : OpDomType LEX_OPERATION_ARROW OpRngType
         {
           $$ = new TYPE_AS_OpType();
           MYPARSER::SetPos3(*$$, @1, @2, @3);
@@ -6548,17 +6551,17 @@ LambdaExpression
           delete $2;
           delete $3;
         }
-        | LEX_LAMBDA TypeBindList Predication ':' Type
-        {
-          $$ = new TYPE_AS_LambdaExpr();
-          MYPARSER::SetPos2(*$$, @1, @3);
-          $$->SetField (pos_AS_LambdaExpr_parm, *$2);
-          $$->SetField (pos_AS_LambdaExpr_body, *$3);
-          $$->SetField (pos_AS_LambdaExpr_type, *$5);
-          delete $2;
-          delete $3;
-          delete $5;
-        }
+//        | LEX_LAMBDA TypeBindList Predication ':' Type
+//        {
+//          $$ = new TYPE_AS_LambdaExpr();
+//          MYPARSER::SetPos2(*$$, @1, @5);
+//          $$->SetField (pos_AS_LambdaExpr_parm, *$2);
+//          $$->SetField (pos_AS_LambdaExpr_body, *$3);
+//          $$->SetField (pos_AS_LambdaExpr_type, *$5);
+//          delete $2;
+//          delete $3;
+//          delete $5;
+//        }
         ;
 
 TypeBindList

@@ -23,15 +23,16 @@ void CLASS::GenInsMap(const TYPE_AS_Name & nm)
 {
   SEQ<TYPE_AS_InstAssignDef> instvars (theState().GetInstVars(nm));
 
-  MAP<TYPE_AS_Name, type_dU2P> tmp_m;   // GLOBAL`ValueMap
+  MAP<TYPE_AS_Name, type_dUU3P> tmp_m;   // GLOBAL`ValueMap
   size_t len_instvars = instvars.Length();
-  for (size_t i = 1; i <= len_instvars; i++)
-  {
+  for (size_t i = 1; i <= len_instvars; i++) {
     TYPE_AS_InstAssignDef iad (instvars[i]);
     const TYPE_AS_AssignDef & ad  (iad.GetRecord(pos_AS_InstAssignDef_ad));
     const TYPE_AS_Access & access (iad.GetField(pos_AS_InstAssignDef_access));
+    const TYPE_AS_Name & ins (ad.GetRecord(pos_AS_AssignDef_var));
+    const TYPE_AS_Type & tp (ad.GetRecord(pos_AS_AssignDef_tp));
 
-    tmp_m.ImpModify(ad.GetRecord(pos_AS_AssignDef_var), (Generic)mk_(sem_undef, access));
+    tmp_m.ImpModify(ins, (Generic)mk_(sem_undef, tp, access));
   }
 
 //  TYPE_SEM_InsStrct own;      // map AS`Name to GLOBAL`ValueMap
@@ -40,8 +41,7 @@ void CLASS::GenInsMap(const TYPE_AS_Name & nm)
   SET<TYPE_AS_Name> allsupers (theState().GetAllSupers(nm));
   TYPE_SEM_InsStrct supers;   // map AS`Name to GLOBAL`ValueMap
   Generic cl;
-  for (bool cc = allsupers.First(cl); cc; cc = allsupers.Next(cl))
-  {
+  for (bool cc = allsupers.First(cl); cc; cc = allsupers.Next(cl)) {
     supers.ImpOverride(theState().GetInstInitVal(cl));
   }
 
@@ -59,18 +59,17 @@ TYPE_GLOBAL_ValueMap CLASS::InitGV(const SEQ<TYPE_AS_ValueDef> & val_l, const TY
 {
   TYPE_GLOBAL_ValueMap res_m;
 
-  if (! val_l.IsEmpty())
-  {
-    //theStackMachine().PushBlkEnv(AUX::MkEmptyBlkEnv(sem_read_only));
+  if (! val_l.IsEmpty()) {
     theStackMachine().PushEmptyBlkEnv(sem_read_only);
     size_t len_val_l = val_l.Length();
-    for (size_t i = 1; i <= len_val_l; i++)
-    {
+    for (size_t i = 1; i <= len_val_l; i++) {
       const TYPE_AS_ValueDef & vd (val_l[i]);
       const TYPE_AS_Pattern & pat (vd.GetRecord(pos_AS_ValueDef_pat));
       const Generic & tp (vd.GetField(pos_AS_ValueDef_tp));
       const TYPE_AS_Expr & exp_e (vd.GetRecord(pos_AS_ValueDef_val));
+#ifdef VDMPP
       const TYPE_AS_Access & access (vd.GetField(pos_AS_ValueDef_access));
+#endif // VDMPP
 
 // 20130530 -->
 //      Tuple euc (theStackMachine().EvalUninterruptedCmd(exp_e,
@@ -88,8 +87,9 @@ TYPE_GLOBAL_ValueMap CLASS::InitGV(const SEQ<TYPE_AS_ValueDef> & val_l, const TY
 
       const TYPE_STKM_EvaluationState & eval_state (euc.GetRecord(1));
 
-      if (!eval_state.Is(TAG_TYPE_STKM_Success))
+      if (!eval_state.Is(TAG_TYPE_STKM_Success)) {
         RTERR::InitError(L"InitGV", RTERR_INTERNAL_ERROR, Nil(), Nil(), ASTAUX::GetCid(exp_e), Sequence());
+      }
 
       const TYPE_SEM_VAL & expr_v (euc.GetRecord(2));
 
@@ -98,42 +98,43 @@ TYPE_GLOBAL_ValueMap CLASS::InitGV(const SEQ<TYPE_AS_ValueDef> & val_l, const TY
           RTERR::InitError(L"InitGV", RTERR_TYPE_INCOMP, expr_v, tp, ASTAUX::GetCid(exp_e), Sequence());
         }
       }
-
-// 20081125 -->
       theStackMachine().SetCid(ASTAUX::GetCid(pat));
-// <-- 20081125 
       SET<TYPE_SEM_BlkEnv> env_s (PAT::PatternMatch(theCompiler().P2P(pat), expr_v)); // one
-      if ( !env_s.IsEmpty() )
-      {
+      if ( !env_s.IsEmpty() ) {
         TYPE_SEM_BlkEnv env (env_s.GetElem());
         const MAP<TYPE_AS_Name,TYPE_SEM_ValTp> & id_m (env.GetMap(pos_SEM_BlkEnv_id_um));
 
         Set dom_id_m (id_m.Dom()); 
         Generic id;
-        for (bool cc = dom_id_m.First(id); cc; cc = dom_id_m.Next(id))
-        {
+        for (bool cc = dom_id_m.First(id); cc; cc = dom_id_m.Next(id)) {
           const TYPE_SEM_ValTp & valtp (id_m[id]);
           const TYPE_SEM_VAL & val (valtp.GetRecord(pos_SEM_ValTp_val));
-          const Generic & tp (valtp.GetField(pos_SEM_ValTp_tp));
+          const Generic & vtp (valtp.GetField(pos_SEM_ValTp_tp));
 
-          if (res_m.DomExists (id))
+          if (res_m.DomExists (id)) {
             vdm_iplog << L"  Value: \"" << ASTAUX::ASName2String (id) << L"\" overwrite previous definition" << endl << flush;
+          }
 
-          type_dU2P t ((Generic)mk_(val, DEF::RealAccess(access, DEF::ACC_INST)));
+#ifdef VDMSL
+          type_dU2P t (mk_(val, vtp));
+#endif // VDMSL
+#ifdef VDMPP
+          type_dUU3P t (mk_(val, vtp, DEF::RealAccess(access, DEF::ACC_INST)));
+#endif // VDMPP
 
           res_m.ImpModify(id, t);
-// 20110314 -->
+
 #ifdef VDMPP
-          if (val.Is(TAG_TYPE_SEM_OBJ_uRef))
+          if (val.Is(TAG_TYPE_SEM_OBJ_uRef)) {
             theState().SetBindName(val, id);
+          }
 #endif // VDMPP
-// <-- 20110314
-          //theStackMachine().AppendToTopBlkEnv(id, val, tp);
-          theStackMachine().AppendToTopBlkEnv(id, val, valtp);
         }
+        theStackMachine().AddToTopBlkEnv(env);
       }
-      else
+      else {
         RTERR::InitError (L"InitGV", RTERR_EMPTY_ENV_S, Nil(), Nil(), ASTAUX::GetCid(pat), Sequence());
+      }
     }
     theStackMachine().PopBlkEnv ();
   }
@@ -151,23 +152,25 @@ void CLASS::TransHierarchy()
   Map clhchy;
   SET<TYPE_AS_Name> exp;
   Generic name;
-  for (bool bb = dom_classes.First(name); bb; bb = dom_classes.Next(name))
-  {
+  for (bool bb = dom_classes.First(name); bb; bb = dom_classes.Next(name)) {
     // Skip CPP classes if any
 // 160113
 //    if(classes[name].Is(TAG_TYPE_CPP_Module)) continue;
 
     SET<TYPE_AS_Name> supers (theState().GetSupers( name ));
     clhchy.ImpModify(name, supers);
-    if (supers.IsEmpty())
+    if (supers.IsEmpty()) {
       exp.Insert( name );
+    }
   }
 
   Map clhchy1 (ExpandHierarchy(clhchy, exp));
-  if (OkHierarchy(clhchy1))
+  if (OkHierarchy(clhchy1)) {
     theState().SetHchy(clhchy1);
-  else
+  }
+  else {
     RTERR::Error(L"TransHierarchy", RTERR_CIRC_CL_DEPENDENCY, Nil(), Nil(), Sequence());
+  }
 }
 
 // ExpandHierarchy
@@ -181,22 +184,18 @@ Map CLASS::ExpandHierarchy(const Map & hchy1_p, const SET<TYPE_AS_Name> & done1)
 
   bool stop(hchy_p.Dom() == done);
 
-  while (!stop)
-  {
+  while (!stop) {
     SET<TYPE_AS_Name> not_done (hchy_p.Dom());
     not_done.ImpDiff(done);
 
     SET<TYPE_AS_Name> thisSet (hchy_p.Dom());
-    if (hchy_p.Dom() == done)
-    {
+    if (hchy_p.Dom() == done) {
       stop = true;
     }
-    else
-    {
+    else {
       Map hchy_pp;
       Generic nm;
-      for (bool bb = not_done.First(nm); bb; bb = not_done.Next(nm))
-      {
+      for (bool bb = not_done.First(nm); bb; bb = not_done.Next(nm)) {
         SET<TYPE_AS_Name> tmp (ExpandNextLevel(hchy_p[nm], hchy_p, SET<TYPE_AS_Name>()));
         hchy_pp.ImpModify(nm, tmp);
       }
@@ -206,10 +205,10 @@ Map CLASS::ExpandHierarchy(const Map & hchy1_p, const SET<TYPE_AS_Name> & done1)
       done.ImpUnion(newly_done);
 
       // not_done <-: hchy'
-      for (bool cc = not_done.First(nm); cc; cc = not_done.Next(nm))
-      {
-        if (hchy_p.DomExists(nm))
+      for (bool cc = not_done.First(nm); cc; cc = not_done.Next(nm)) {
+        if (hchy_p.DomExists(nm)) {
           hchy_p.RemElem(nm);
+        }
       }
       hchy_p.ImpOverride(hchy_pp);
     }
@@ -230,8 +229,7 @@ SET<TYPE_AS_Name> CLASS::ExpandNextLevel(const SET<TYPE_AS_Name> & to_exp,
 
   SET<TYPE_AS_Name> to_exp_q (to_exp);
   Generic nm;
-  for (bool bb = to_exp_q.First(nm); bb; bb = to_exp_q.Next(nm))
-  {
+  for (bool bb = to_exp_q.First(nm); bb; bb = to_exp_q.Next(nm)) {
     res.Insert(nm);
     res.ImpUnion(ExpCl(nm, hchy, in_hchy));
   }
@@ -245,9 +243,10 @@ SET<TYPE_AS_Name> CLASS::ExpandNextLevel(const SET<TYPE_AS_Name> & to_exp,
 // ==> set of AS`Name
 SET<TYPE_AS_Name> CLASS::ExpCl( const TYPE_AS_Name & nm, const Map & hchy_p, const SET<TYPE_AS_Name> & in_hchy)
 {
-  if (hchy_p.DomExists(nm))
-    if ( Set (hchy_p[nm]).IsEmpty())
+  if (hchy_p.DomExists(nm)) {
+    if ( Set (hchy_p[nm]).IsEmpty()) {
       return in_hchy;
+    }
     else {
       if (in_hchy.InSet(nm)) {
         vdm_iplog <<L"  Class Name: '" << ASTAUX::ASName2String (nm) << L"'" << endl << flush;
@@ -265,6 +264,7 @@ SET<TYPE_AS_Name> CLASS::ExpCl( const TYPE_AS_Name & nm, const Map & hchy_p, con
         return res;
       }
     }
+  }
   else {
 //    vdm_iplog << L"  Class Name: '" << ASTAUX::ASName2String (nm) << L"'" << endl << flush;
     RTERR::InitError(L"ExpCl", RTERR_CLNM_NOT_DEFINED, Nil(), Nil(), nm.GetInt(pos_AS_Name_cid),
@@ -282,16 +282,16 @@ SET<TYPE_AS_Name> CLASS::NewlyDone(const Map & hchy, const SET<TYPE_AS_Name> & d
   Set dom_hchy (hchy.Dom());
   SET<TYPE_AS_Name> res;
   Generic nm;
-  for (bool bb = dom_hchy.First(nm); bb; bb = dom_hchy.Next(nm))
-  {
+  for (bool bb = dom_hchy.First(nm); bb; bb = dom_hchy.Next(nm)) {
     SET<TYPE_AS_Name> hchy_nm (hchy[nm]);
     bool forall = true;
     Generic cl;
     for (bool cc = hchy_nm.First(cl); cc && forall; cc = hchy_nm.Next(cl)) {
       forall = done.InSet(cl);
     }
-    if (forall)
+    if (forall) {
       res.Insert(nm);
+    }
   }
   return res;
 }
@@ -304,8 +304,7 @@ void CLASS::EvalInhStrct()
 
   Map local_inhstrct;
   Generic nm;
-  for (bool bb = classes.First(nm); bb; bb = classes.Next(nm))
-  {
+  for (bool bb = classes.First(nm); bb; bb = classes.Next(nm)) {
     local_inhstrct.ImpModify(nm, OrderOfProcess(nm));
   }
   theState().SetInhStrct(local_inhstrct);
@@ -317,13 +316,12 @@ void CLASS::EvalInhStrct()
 bool CLASS::OkHierarchy(const Map & clhchy)
 {
   Set dom_clhchy (clhchy.Dom());
+  bool forall = true;
   Generic cl;
-  for (bool bb = dom_clhchy.First(cl); bb; bb = dom_clhchy.Next(cl))
-  {
-    if ( Set(clhchy[cl]).InSet(cl) )
-      return false;
+  for (bool bb = dom_clhchy.First(cl); bb && forall; bb = dom_clhchy.Next(cl)) {
+    forall = !Set(clhchy[cl]).InSet(cl);
   }
-  return true;
+  return forall;
 }
 
 // OrderOfProcess
@@ -344,21 +342,24 @@ Sequence CLASS::OrderOfProcess(const TYPE_AS_Name & nm)
 Sequence CLASS::OrderOfProcess_Aux(const Sequence & order,
                                    const SET<TYPE_AS_Name> & to_process)
 {
-  if (to_process.IsEmpty())
+  if (to_process.IsEmpty()) {
     return order;
+  }
 
   Sequence new_order;               // seq of (set of AS`Name)
   new_order.ImpAppend(to_process);
 
   size_t len = order.Length();
-  for (size_t i = 1; i <= len; i++)
+  for (size_t i = 1; i <= len; i++) {
     new_order.ImpAppend(Set(order[i]).ImpDiff(to_process));
+  }
 
   SET<TYPE_AS_Name> to_process_q (to_process);
   SET<TYPE_AS_Name> supers;
   Generic sb;
-  for (bool cc = to_process_q.First(sb); cc; cc = to_process_q.Next(sb))
+  for (bool cc = to_process_q.First(sb); cc; cc = to_process_q.Next(sb)) {
     supers.ImpUnion(theState().GetSupers(sb));
+  }
 
   return OrderOfProcess_Aux(new_order, supers);
 }
@@ -395,8 +396,7 @@ Map CLASS::CreateConstructor(const TYPE_AS_Name & curcls,
 
   // code for initialize super classes
   size_t len_supercls = supercls.Length();
-  for (size_t icls = 1; icls <= len_supercls; icls++)
-  {
+  for (size_t icls = 1; icls <= len_supercls; icls++) {
     const TYPE_AS_Name & cls (supercls[icls]);
     sp.ImpAppend(TYPE_INSTRTP_PUSHCLNMCUROBJ().Init(cls, cls));
     sp.ImpAppend(TYPE_INSTRTP_INITCLASS().Init(cls, Int(0)));
@@ -405,16 +405,14 @@ Map CLASS::CreateConstructor(const TYPE_AS_Name & curcls,
 
   // code for initialize instance variables by default value
   size_t len_instvars = instvars.Length();
-  for (size_t i = 1; i <= len_instvars; i++)
-  {
+  for (size_t i = 1; i <= len_instvars; i++) {
     const TYPE_AS_InstAssignDef & iad (instvars[i]);
     const TYPE_AS_AssignDef & ad (iad.GetRecord(pos_AS_InstAssignDef_ad));
     bool stat (iad.GetBool(pos_AS_InstAssignDef_stat).GetValue());
 
     const Generic & Iinit (ad.GetField(pos_AS_AssignDef_dclinit));
 
-    if (!Iinit.IsNil() && !stat)
-    {
+    if (!Iinit.IsNil() && !stat) {
       const TYPE_AS_Name & nm (ad.GetRecord(pos_AS_AssignDef_var));
       const TYPE_AS_Type & tp (ad.GetRecord(pos_AS_AssignDef_tp));
 
@@ -431,11 +429,9 @@ Map CLASS::CreateConstructor(const TYPE_AS_Name & curcls,
   // call constructor as operation
   Set dom_opm (opm.Dom());
   Generic nm;
-  for (bool dd = dom_opm.First(nm); dd; dd = dom_opm.Next(nm))
-  {
+  for (bool dd = dom_opm.First(nm); dd; dd = dom_opm.Next(nm)) {
     const TYPE_AS_OpDef & opdef (opm[nm]);
-    if (ASTAUX::GetConstr(opdef))
-    {
+    if (ASTAUX::GetConstr(opdef)) {
       SEQ<TYPE_AS_Type> tpl (ASTAUX::GetOpParms(opdef));
       TYPE_STKM_SubProgram thisSp (sp);
       thisSp.ImpAppend(TYPE_INSTRTP_LOOKUPOP().Init(ASTAUX::GetOpName(opdef)))
@@ -483,8 +479,7 @@ void CLASS::TransSyncs(const TYPE_AS_Document & cs)
   Map class_m;  // map AS`Name to [AS`Definitions]
 
   size_t len_cs = cs.Length();
-  for (size_t i = 1; i <= len_cs; i++)
-  {
+  for (size_t i = 1; i <= len_cs; i++) {
     // Skip CPP classes if any
 // 160113
     if(cs[i].Is(TAG_TYPE_CPP_Module)) continue;
@@ -494,8 +489,7 @@ void CLASS::TransSyncs(const TYPE_AS_Document & cs)
     class_m.Insert(as_class.GetRecord(pos_AS_Class_nm), def_g);
 
 // 20090129 ->
-    if (!usesThreads && !def_g.IsNil())
-    {
+    if (!usesThreads && !def_g.IsNil()) {
       TYPE_AS_Definitions def (def_g);
       usesThreads = (!def.GetSequence(pos_AS_Definitions_syncs).IsEmpty() ||
                      !def.GetField(pos_AS_Definitions_threaddef).IsNil());
@@ -503,12 +497,10 @@ void CLASS::TransSyncs(const TYPE_AS_Document & cs)
 // <- 20090129
   }
 
-  if (usesThreads)
-  {
+  if (usesThreads) {
     SEQ<TYPE_AS_Name> order (GetPermissionOrder(cs));
     size_t len_order = order.Length();
-    for (size_t i = 1; i <= len_order; i++)
-    {
+    for (size_t i = 1; i <= len_order; i++) {
       const TYPE_AS_Name & clnm (order[i]);
       theCompiler().SetClMod(clnm);
       TransSyncsForOneClass(clnm, class_m[clnm]);
@@ -527,8 +519,7 @@ SEQ<TYPE_AS_Name> CLASS::GetPermissionOrder(const TYPE_AS_Document & cs)
   size_t len_cs = cs.Length();
 //  Generic cl_nm;
 //  for (bool bb = cs.First(cl_nm); bb; bb = cs.Next(cl_nm))
-  for (size_t i = 1; i <= len_cs; i++)
-  {
+  for (size_t i = 1; i <= len_cs; i++) {
     // Skip CPP classes if any
 //    if(Record(cl_nm).Is(TAG_TYPE_CPP_Module)) continue;
     if(cs[i].Is(TAG_TYPE_CPP_Module)) continue;
@@ -616,16 +607,18 @@ Generic CLASS::GetInhThread (const TYPE_AS_Name & clnm)
 {
   Generic td (theState().GetThreadDef(clnm));
 
-  if (!td.IsNil())
+  if (!td.IsNil()) {
     return td;
+  }
 
   SET<TYPE_AS_Name> supers (theState().GetInhCon(clnm));
   Set super_threads;
   Generic g;
   for (bool bb = supers.First(g); bb; bb = supers.Next(g)) {
     Generic s_td (theState().GetThreadDef(g));
-    if (!s_td.IsNil())
+    if (!s_td.IsNil()) {
       super_threads.Insert(s_td);
+    }
   }
 
   switch(super_threads.Card()) {

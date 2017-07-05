@@ -382,8 +382,7 @@ void EvalState::TranslateAST(const TYPE_AS_Document & cs_, bool)
 
   size_t len_cs = cs_.Length();
 
-  for (size_t i = 1; i <= len_cs; i++)
-  {
+  for (size_t i = 1; i <= len_cs; i++) {
     // Skip CPP classes if any
     if(cs[i].Is(TAG_TYPE_CPP_Module)) continue;
 
@@ -393,16 +392,14 @@ void EvalState::TranslateAST(const TYPE_AS_Document & cs_, bool)
   // RegisterDLClass must be called before we return so DL libraries are (re)opened.
 
   // First register dlclass
-  for (size_t j = 1; j <= len_cs; j++)
-  {
+  for (size_t j = 1; j <= len_cs; j++) {
     // Skip CPP classes if any
     if(cs[j].Is(TAG_TYPE_CPP_Module)) continue;
 
     // check 
     const TYPE_AS_Class & cl (cs[j]);
 
-    if (! cl.GetField(pos_AS_Class_useslib).IsNil())
-    {
+    if (! cl.GetField(pos_AS_Class_useslib).IsNil()) {
       RegisterDLClass(cl.GetRecord(pos_AS_Class_nm),
                       cl.GetRecord(pos_AS_Class_useslib),
                       cl.GetField(pos_AS_Class_defs));
@@ -410,8 +407,7 @@ void EvalState::TranslateAST(const TYPE_AS_Document & cs_, bool)
   }
 
   // insert SigmaClass
-  for (size_t k = 1; k <= len_cs; k++)
-  {
+  for (size_t k = 1; k <= len_cs; k++) {
     // Skip CPP classes if any
     if(cs[k].Is(TAG_TYPE_CPP_Module)) continue;
 
@@ -420,14 +416,14 @@ void EvalState::TranslateAST(const TYPE_AS_Document & cs_, bool)
     // check default constructor
     const TYPE_AS_Name & cnm (cl.GetRecord(pos_AS_Class_nm));
     bool found = false;
-    if (!cl.GetField(pos_AS_Class_defs).IsNil())
-    {
+    if (!cl.GetField(pos_AS_Class_defs).IsNil()) {
       Map opm (cl.GetRecord(pos_AS_Class_defs).GetMap(pos_AS_Definitions_opm));
       SET<TYPE_AS_Name> dom_opm (opm.Dom());
 
       Generic nm;
-      for (bool bb = dom_opm.First(nm); bb && !found; bb = dom_opm.Next(nm))
+      for (bool bb = dom_opm.First(nm); bb && !found; bb = dom_opm.Next(nm)) {
         found = ASTAUX::GetConstr(opm[nm]) && ASTAUX::GetOpParms(opm[nm]).IsEmpty();
+      }
     }
 
     TYPE_GLOBAL_SigmaClass thisSigmaCl (DEF::EmptySigmaClass());
@@ -531,8 +527,7 @@ void EvalState::AddCPUAndBUSDefs( const Map & sys_m )
 
   Generic sysnm;
 //  for(bool bb = sys_m.First(sysnm); bb; bb = sys_m.Next(sysnm))
-  for(bool bb = sys_l.First(sysnm); bb; bb = sys_l.Next(sysnm))
-  {
+  for(bool bb = sys_l.First(sysnm); bb; bb = sys_l.Next(sysnm)) {
     TYPE_AS_Definitions defs (sys_m[sysnm]);
 
     Map opm (defs.get_opm());
@@ -546,8 +541,7 @@ void EvalState::AddCPUAndBUSDefs( const Map & sys_m )
     
     Set busdecls;    // set of (AS`Name * [AS`Expr])
     size_t len_instvars = instvars.Length();
-    for (size_t i = 1; i <= len_instvars; i++)
-    {
+    for (size_t i = 1; i <= len_instvars; i++) {
       const TYPE_AS_InstanceVarDef & ivd (instvars[i]);
       switch(ivd.GetTag()) {
         case TAG_TYPE_AS_InstAssignDef: {
@@ -556,11 +550,9 @@ void EvalState::AddCPUAndBUSDefs( const Map & sys_m )
           const TYPE_AS_Name & var (assdef.GetRecord(pos_AS_AssignDef_var));
           const TYPE_AS_Type & tp (assdef.GetRecord(pos_AS_AssignDef_tp));
           const Generic & decl (assdef.GetField(pos_AS_AssignDef_dclinit));
-          if( tp.Is(TAG_TYPE_AS_TypeName) )
-          {
+          if( tp.Is(TAG_TYPE_AS_TypeName) ) {
             TYPE_AS_TypeName tptn (tp);
-            if( ASTAUX::ASName2String(tptn.get_name()) == L"CPU" )
-            {
+            if( ASTAUX::ASName2String(tptn.get_name()) == L"CPU" ) {
               theSystem().AddCPU(sysnm, var, decl);
             }
             else if( ASTAUX::ASName2String(tptn.get_name()) == L"BUS" )
@@ -601,8 +593,7 @@ void EvalState::AddCPUAndBUSDefs( const Map & sys_m )
 
     Generic t_g;
 //    for(bool bbb = busdecls.First(t_g); bbb; bbb = busdecls.Next(t_g))
-    for(bool bbb = busdecls_l.First(t_g); bbb; bbb = busdecls_l.Next(t_g))
-    {
+    for(bool bbb = busdecls_l.First(t_g); bbb; bbb = busdecls_l.Next(t_g)) {
       Tuple t (t_g);
       theSystem().AddBUS(t.GetField(1), t.GetField(2));
     }
@@ -611,36 +602,28 @@ void EvalState::AddCPUAndBUSDefs( const Map & sys_m )
     if( !opm.DomExists(sysnm, od_g) ) continue;
  
     TYPE_AS_OpDef od (od_g);
-    if( od.Is(TAG_TYPE_AS_ExplOpDef) )
-    {
+    if( od.Is(TAG_TYPE_AS_ExplOpDef) ) {
       TYPE_AS_ExplOpDef eod (od_g);
       GetCI().IncTestCoverageInfo(eod.get_cid()); // 20081030
       TYPE_AS_OpBody ob (eod.get_body());
       Generic body (ob.get_body());
-      if( body.Is(TAG_TYPE_AS_BlockStmt) )
-      {
+      if( body.Is(TAG_TYPE_AS_BlockStmt) ) {
         TYPE_AS_BlockStmt bs (body);
         GetCI().IncTestCoverageInfo(bs.get_cid()); // 20081030
         SEQ<TYPE_AS_Stmt> stmts (bs.get_stmts());
         Generic s_g;
-        for(bool cc = stmts.First(s_g); cc; cc = stmts.Next(s_g))
-        {
+        for(bool cc = stmts.First(s_g); cc; cc = stmts.Next(s_g)) {
           TYPE_AS_Stmt stmt (s_g);
-          if( stmt.Is(TAG_TYPE_AS_CallStmt) )
-          {
+          if( stmt.Is(TAG_TYPE_AS_CallStmt) ) {
             TYPE_AS_CallStmt cs (s_g);
             GetCI().IncTestCoverageInfo(cs.get_cid()); // 20081030
-            if( !cs.get_obj().IsNil() && !cs.get_args().IsEmpty() )
-            {
-              if( ASTAUX::ASName2String(cs.get_oprt()) == L"deploy" )
-              {
+            if( !cs.get_obj().IsNil() && !cs.get_args().IsEmpty() ) {
+              if( ASTAUX::ASName2String(cs.get_oprt()) == L"deploy" ) {
                 TYPE_AS_Expr instnm (cs.get_args().Hd());
-                if (instnm.Is(TAG_TYPE_AS_Name))
-                {
+                if (instnm.Is(TAG_TYPE_AS_Name)) {
                   TYPE_AS_Name fullnm (ASTAUX::Combine2Names(sysnm,instnm));
                   Tuple lup (LookUpStatic(fullnm));
-                  if( lup.GetBoolValue(1) )
-                  {
+                  if( lup.GetBoolValue(1) ) {
                     GetCI().IncTestCoverageInfo(ASTAUX::GetCid(cs.get_obj())); // 20081030
                     GetCI().IncTestCoverageInfo(cs.get_oprt().get_cid());      // 20081030
                     GetCI().IncTestCoverageInfo(ASTAUX::GetCid(instnm));       // 20081030
@@ -653,14 +636,11 @@ void EvalState::AddCPUAndBUSDefs( const Map & sys_m )
                   RTERR::InitError (L"AddCPUAndBUSDefs", RTERR_OBJ_REF_EXP_CALL, Nil(), Nil(), ASTAUX::GetCid(instnm), Sequence());
               }
               else if( ( ASTAUX::ASName2String(cs.get_oprt()) == L"setPriority" ) &&
-                       ( cs.get_args().Length() == 2 ) )
-              {
+                       ( cs.get_args().Length() == 2 ) ) {
                 TYPE_AS_Expr opnm (cs.get_args().Hd());
-                if (opnm.Is(TAG_TYPE_AS_Name))
-                {
+                if (opnm.Is(TAG_TYPE_AS_Name)) {
                   TYPE_AS_Expr rl (cs.get_args().Index(2));
-                  if (rl.Is(TAG_TYPE_AS_RealLit))
-                  {
+                  if (rl.Is(TAG_TYPE_AS_RealLit)) {
                     GetCI().IncTestCoverageInfo(ASTAUX::GetCid(cs.get_obj())); // 20081030
                     GetCI().IncTestCoverageInfo(cs.get_oprt().get_cid());      // 20081030
                     GetCI().IncTestCoverageInfo(ASTAUX::GetCid(opnm));         // 20081030
@@ -668,8 +648,7 @@ void EvalState::AddCPUAndBUSDefs( const Map & sys_m )
                     const Int & prio (rl.GetInt(pos_AS_RealLit_val));
                     theSystem().AddPriorityEntry(cs.get_obj(), opnm, prio);
                   }
-                  else if (rl.Is(TAG_TYPE_AS_NumLit))
-                  {
+                  else if (rl.Is(TAG_TYPE_AS_NumLit)) {
                     GetCI().IncTestCoverageInfo(ASTAUX::GetCid(cs.get_obj())); // 20081030
                     GetCI().IncTestCoverageInfo(cs.get_oprt().get_cid());      // 20081030
                     GetCI().IncTestCoverageInfo(ASTAUX::GetCid(opnm));         // 20081030
@@ -1092,10 +1071,12 @@ void EvalState::PushInitPool(const TYPE_AS_Name & nm)
 // nm : AS`Name
 void EvalState::PopInitPool(const TYPE_AS_Name & nm)
 {
-  if (this->InitPool.InSet(nm))
+  if (this->InitPool.InSet(nm)) {
     this->InitPool.RemElem(nm);
-  else
+  }
+  else {
     RTERR::Error(L"PopInitPool", RTERR_INTERNAL_ERROR, Nil(), Nil(), Sequence());
+  }
 }
 
 // Init_classes (aka InitSigma)
@@ -1291,19 +1272,19 @@ void EvalState::InitStaticInsts(const TYPE_AS_Name& clsnm,
   TYPE_GLOBAL_ValueMap statics (classClsnm.GetMap(pos_GLOBAL_SigmaClass_statics));
 
   size_t len_instdef_l = instdef_l.Length();
-  for (size_t i = 1; i <= len_instdef_l; i++)
-  {
+  for (size_t i = 1; i <= len_instdef_l; i++) {
     const TYPE_AS_InstanceVarDef & ivd (instdef_l[i]);
     switch(ivd.GetTag()) {
       case TAG_TYPE_AS_InstAssignDef: {
-        if (ivd.GetBoolValue(pos_AS_InstAssignDef_stat))
-        {
-          const TYPE_AS_Name & var (ivd.GetRecord(pos_AS_InstAssignDef_ad).GetRecord(pos_AS_AssignDef_var));
-          if( statics.DomExists(var) && ast_is_new )
+        if (ivd.GetBoolValue(pos_AS_InstAssignDef_stat)) {
+          const TYPE_AS_AssignDef & ad (ivd.GetRecord(pos_AS_InstAssignDef_ad));
+          const TYPE_AS_Name & var (ad.GetRecord(pos_AS_AssignDef_var));
+          if( statics.DomExists(var) && ast_is_new ) {
             already = true;
-          if (!already)
-          {
-            type_dU2P t ((Generic)mk_(TYPE_SEM_UNDEF(), ivd.GetField(pos_AS_InstAssignDef_access)));
+          }
+          if (!already) {
+            const TYPE_AS_Type & tp (ad.GetRecord(pos_AS_AssignDef_tp));
+            type_dUU3P t ((Generic)mk_(TYPE_SEM_UNDEF(), tp, ivd.GetField(pos_AS_InstAssignDef_access)));
             statics.ImpModify(var, t);
           }
         }
@@ -1315,31 +1296,26 @@ void EvalState::InitStaticInsts(const TYPE_AS_Name& clsnm,
   classClsnm.SetField(pos_GLOBAL_SigmaClass_statics, statics);
   this->classes.ImpModify(clsnm, classClsnm);
 
-  for (size_t j = 1; j <= len_instdef_l; j++)
-  {
+  for (size_t j = 1; j <= len_instdef_l; j++) {
     const TYPE_AS_InstanceVarDef & ivd (instdef_l[j]);
     switch(ivd.GetTag()) {
       case TAG_TYPE_AS_InstAssignDef: {
-        if (ivd.GetBoolValue(pos_AS_InstAssignDef_stat) && !already)
-        {
+        if (ivd.GetBoolValue(pos_AS_InstAssignDef_stat) && !already) {
           const TYPE_AS_AssignDef & ad (ivd.GetRecord(pos_AS_InstAssignDef_ad));
           const Generic & adinit (ad.GetField(pos_AS_AssignDef_dclinit));
-          if (adinit.IsNil())
-          {
+          if (adinit.IsNil()) {
             RTERR::InitError(L"InitStaticInsts",
                              RTERR_STATIC_IV_NO_VALUE, Nil(), Nil(),
                              ad.GetRecord(pos_AS_AssignDef_var).GetInt(pos_AS_Name_cid), Sequence());
           }
-          else
-          {
+          else {
             Tuple resTup (theStackMachine().EvalUninterruptedCmd(adinit,
                                                                  TYPE_STKM_SubProgram(),
                                                                  TYPE_STKM_SubProgram(),
                                                                  SEQ<Char>(L"Init of Static Instances")));
   
             const TYPE_STKM_EvaluationState & eval_state (resTup.GetRecord(1));
-            if (eval_state.Is(TAG_TYPE_STKM_Success))
-            {
+            if (eval_state.Is(TAG_TYPE_STKM_Success)) {
               const TYPE_SEM_VAL & exp_v (resTup.GetRecord(2));
   
 // 02.06.2001 M.Lebedev See PGL's comments in spec
@@ -1349,31 +1325,27 @@ void EvalState::InitStaticInsts(const TYPE_AS_Name& clsnm,
 //                  GetDefaultCons(TYPE_AS_NewExpr(adinit).get_cls()).GetValue())
 //                Pop(1);
   
-              if (Settings.DTC() && !SubType(exp_v, ad.GetRecord(pos_AS_AssignDef_tp)))
-              {
+              const TYPE_AS_Type & tp (ad.GetRecord(pos_AS_AssignDef_tp));
+              if (Settings.DTC() && !SubType(exp_v, tp)) {
                 RTERR::InitError(L"InitStaticInsts", RTERR_TYPE_INCOMP, exp_v, ad.get_tp(),
                                  ad.GetRecord(pos_AS_AssignDef_var).GetInt(pos_AS_Name_cid),  Sequence());
               }
 #ifdef VICE
-              if (Record(this->classes[clsnm]).GetBoolValue(pos_GLOBAL_SigmaClass_sys))
-              {
+              if (Record(this->classes[clsnm]).GetBoolValue(pos_GLOBAL_SigmaClass_sys)) {
                 VC::AddInstDecl(clsnm, ad.GetRecord(pos_AS_AssignDef_var), exp_v);
-                if (this->obj_tab.DomExists(exp_v))
-                {
+                if (this->obj_tab.DomExists(exp_v)) {
                   // 20091124
                   //TYPE_SEM_InsStrct instm (this->obj_tab[exp_v].GetRecord(pos_GLOBAL_OBJ_uDesc_sem).GetMap(pos_SEM_OBJ_ins));
                   TYPE_SEM_InsStrct instm (GetSemObjInTab(exp_v).GetMap(pos_SEM_OBJ_ins));
                   Sequence clnm_l (ASTAUX::SetToSequenceR(instm.Dom()));
                   Generic clnm;
 //                  for (bool dd = instm.First(clnm); dd; dd = instm.Next(clnm))
-                  for (bool dd = clnm_l.First(clnm); dd; dd = clnm_l.Next(clnm))
-                  {
+                  for (bool dd = clnm_l.First(clnm); dd; dd = clnm_l.Next(clnm)) {
                     Map vm (instm[clnm]);
                     Sequence instnm_l (ASTAUX::SetToSequenceR(vm.Dom()));
                     Generic instnm;
 //                    for (bool ee = vm.First(instnm); ee; ee = vm.Next(instnm))
-                    for (bool ee = instnm_l.First(instnm); ee; ee = instnm_l.Next(instnm))
-                    {
+                    for (bool ee = instnm_l.First(instnm); ee; ee = instnm_l.Next(instnm)) {
                       Tuple t (vm[instnm]);
                       const TYPE_SEM_VAL & val_v (t.GetRecord(1));
                       VC::LogInstVarChange(instnm, val_v, exp_v, theSystem().GetCurThread());
@@ -1386,7 +1358,7 @@ void EvalState::InitStaticInsts(const TYPE_AS_Name& clsnm,
               TYPE_GLOBAL_SigmaClass classClsnm (this->classes[clsnm]);
               TYPE_GLOBAL_ValueMap statics (classClsnm.GetMap(pos_GLOBAL_SigmaClass_statics));
               statics.ImpModify(ad.GetRecord(pos_AS_AssignDef_var),
-                                (Generic)mk_(exp_v, ivd.GetField(pos_AS_InstAssignDef_access)));
+                                (Generic)mk_(exp_v, tp, ivd.GetField(pos_AS_InstAssignDef_access)));
               classClsnm.SetField(pos_GLOBAL_SigmaClass_statics, statics);
               this->classes.ImpModify(clsnm, classClsnm);
             }
@@ -1735,15 +1707,12 @@ void EvalState::SetInstanceVar(const TYPE_AS_Name & nm, const TYPE_SEM_VAL & val
 
 // 20090311 -->
   TYPE_AS_Name clnm;
-  if (isit)
-  {
+  if (isit) {
     clnm = iios.GetField(5);
   }
-  else
-  {
+  else {
     Tuple lus (LookUpStatic(nm));
-    if (lus.GetBoolValue(1))
-    {
+    if (lus.GetBoolValue(1)) {
       isit = true;
       clnm = lus.GetField(3);
     }
@@ -1756,7 +1725,7 @@ void EvalState::SetInstanceVar(const TYPE_AS_Name & nm, const TYPE_SEM_VAL & val
   { // static variable
     TYPE_GLOBAL_SigmaClass classClsnm (this->classes[clnm]);
     TYPE_GLOBAL_ValueMap statics (classClsnm.GetMap(pos_GLOBAL_SigmaClass_statics)); // map AS`Name to (SEM`VAL * AS`Access)
-    type_dU2P t (statics[thename]); // (SEM`VAL * AS`Access)
+    type_dU2P t (statics[thename]); // (SEM`VAL * [AS`Type] * AS`Access)
     t.SetField(1, val_v);           // SEM`VAL
     statics.ImpModify(thename, t);
     classClsnm.SetField(pos_GLOBAL_SigmaClass_statics, statics);
@@ -1792,8 +1761,8 @@ void EvalState::SetInstanceVar(const TYPE_AS_Name & nm, const TYPE_SEM_VAL & val
       TYPE_SEM_OBJ sem (desc.GetRecord(pos_GLOBAL_OBJ_uDesc_sem));
       TYPE_SEM_InsStrct ins (sem.GetMap(pos_SEM_OBJ_ins)); // map AS`Name to GLOBAL`ValueMap
 
-      TYPE_GLOBAL_ValueMap gv (ins[clnm]);// map AS`Name to (SEM`VAL * AS`Access)
-      type_dU2P t (gv[thename]);           // (SEM`VAL * AS`Access)
+      TYPE_GLOBAL_ValueMap gv (ins[clnm]);// map AS`Name to (SEM`VAL * [AS`Type] *AS`Access)
+      type_dU2P t (gv[thename]);           // (SEM`VAL * [AS`Type] *AS`Access)
       TYPE_SEM_VAL old_val (t.GetRecord(1));  // SEM`VAL
 
       t.SetField(1, val_v);            // SEM`VAL
@@ -2273,8 +2242,9 @@ bool EvalState::IsSubTypeName (const TYPE_SEM_VAL & val_v, const TYPE_AS_TypeNam
 {
   TYPE_AS_Name name (tp.GetRecord(pos_AS_TypeName_name));
   Tuple t (AUX::LookUpRename(name));
-  if (t.GetBoolValue(1))
+  if (t.GetBoolValue(1)) {
     name = t.GetRecord(2);
+  }
 
 //  Tuple itd (AUX::IsTypeDef(name)); //bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * 
   Tuple itd (GetCachedTypeDef(name)); //bool * [AS`Type] * [AS`Invariant] * [AS`Equal] * [AS`Order] * 
@@ -3279,11 +3249,9 @@ Tuple EvalState::GetCachedGlobalVal(const TYPE_AS_Name & name, const TYPE_AS_Nam
 TYPE_SEM_VAL EvalState::LookUp (const TYPE_AS_Name & name)
 {
 //wcout << L"LookUp: " << ASTAUX::ASName2String(name) << endl;
-  if ((name.GetSequence(pos_AS_Name_ids).Length() == 1) && !theStackMachine().IsEmptyEnvL ())
-  {
+  if ((name.GetSequence(pos_AS_Name_ids).Length() == 1) && !theStackMachine().IsEmptyEnvL ()) {
     Tuple ilv (theStackMachine().IsLocalVal(name));
-    if (ilv.GetBoolValue(1))
-    {
+    if (ilv.GetBoolValue(1)) {
       const TYPE_SEM_VAL & res_v (Record(ilv.GetRecord(2)).GetRecord(pos_SEM_ValTp_val));
       if (res_v.Is(TAG_TYPE_SEM_UNDEF)) {
         return RTERR::ErrorVal (L"LookUp", RTERR_UNDEF_ENCOUNTERED,
@@ -3294,8 +3262,7 @@ TYPE_SEM_VAL EvalState::LookUp (const TYPE_AS_Name & name)
     }
   }
 
-  if (theStackMachine().CurrentModule().GetSequence(pos_AS_Name_ids).IsEmpty())
-  {
+  if (theStackMachine().CurrentModule().GetSequence(pos_AS_Name_ids).IsEmpty()) {
     return RTERR::ErrorVal (L"LookUp", RTERR_ID_UNKNOWN,
                          M42Sem(AUX::SingleNameToString(name), NULL), Nil(), Sequence());
   }
@@ -3305,8 +3272,7 @@ TYPE_SEM_VAL EvalState::LookUp (const TYPE_AS_Name & name)
   TYPE_AS_Name mod_nm (AUX::IsRealName(name) ? ExtractModule(name)
                                              : theStackMachine().CurrentModule());
 
-  if (AUX::IsRealName(name))
-  {
+  if (AUX::IsRealName(name)) {
     switch(GetAnyModule(mod_nm).GetTag()) {
       case TAG_TYPE_GLOBAL_SigmaMO: {
         if (!AUX::IsConstructExported (loc_nm, mod_nm)) {
@@ -3386,63 +3352,51 @@ TYPE_SEM_VAL EvalState::LookUp (const TYPE_AS_Name & name)
 TYPE_SEM_VAL EvalState::LookUp(const TYPE_AS_Name & name_)
 {
   TYPE_AS_Name name = name_;
-  if (name.get_ids().Length() == 2)
-  {
+  if (name.get_ids().Length() == 2) {
     TYPE_AS_Name clsnm (ASTAUX::GetFirstName(name));
     TYPE_AS_Name memnm (ASTAUX::GetSecondName(name));
     Tuple t (ExpandClassName(clsnm, theStackMachine().GetCurCl(), Set()));
-    if (t.GetBoolValue(1))
-    {
+    if (t.GetBoolValue(1)) {
       name = AUX::ConstructDoubleName(t.GetRecord(2), memnm);
     }
   }
 
   Tuple ilv (theStackMachine().IsLocalVal(name));
-  if (ilv.GetBoolValue(1))
-  {
+  if (ilv.GetBoolValue(1)) {
     return ReturnLookUp(Record(ilv.GetRecord(2)).GetRecord(pos_SEM_ValTp_val), RTERR_INTERNAL_ERROR);
   }
-  else
-  {
-    if (!theStackMachine().HasCurObjRef())
-    {
+  else {
+    if (!theStackMachine().HasCurObjRef()) {
       Tuple iso (IsDObjs(name));
       const Bool & isit_d_objs (iso.GetBool(1));
       const Generic & val_obj (iso.GetField(2));
 
-      if (isit_d_objs)
+      if (isit_d_objs) {
         return ReturnLookUp(val_obj, RTERR_INTERNAL_ERROR);
-      else
-      {
+      }
+      else {
         Tuple lus (LookUpStatic(name));
         const Generic & staticval (lus.GetField(2));
-        if (staticval.IsNil())
-        {
+        if (staticval.IsNil()) {
           Generic cl = Nil();
           TYPE_AS_Name nm;
-          if (name.get_ids().Length() == 2)
-          {
+          if (name.get_ids().Length() == 2) {
             cl = ASTAUX::GetFirstName(name);
             nm = ASTAUX::GetSecondName(name);
           }
-          else if(!this->initclstack.IsEmpty())
-          {
+          else if(!this->initclstack.IsEmpty()) {
             cl = this->initclstack.Hd();
             nm = name;
           }
-          if (!cl.IsNil())
-          {
-            if(this->classes.DomExists(cl)) 
-            {
+          if (!cl.IsNil()) {
+            if(this->classes.DomExists(cl)) {
               TYPE_GLOBAL_ValueMap vls_init (this->classes[cl].GetMap(pos_GLOBAL_SigmaClass_vls_uinit));
-              if(vls_init.DomExists(nm))
-              {
-                if (AccessOk(vls_init[nm].GetRecord(2), theStackMachine().GetCurCl(), cl))
+              if(vls_init.DomExists(nm)) {
+                if (AccessOk(vls_init[nm].GetRecord(3), theStackMachine().GetCurCl(), cl))
                   return vls_init[nm].GetRecord(1);
               }  
 
-              if (this->classes[cl].GetMap(pos_GLOBAL_SigmaClass_instvars_utp).DomExists(nm))
-              {
+              if (this->classes[cl].GetMap(pos_GLOBAL_SigmaClass_instvars_utp).DomExists(nm)) {
                 // not static
                 vdm_iplog << ASTAUX::ASName2String(cl) << L"`" << ASTAUX::ASName2String(nm)
                           << L" must be defined as \'static\'." << endl;
@@ -3452,19 +3406,20 @@ TYPE_SEM_VAL EvalState::LookUp(const TYPE_AS_Name & name_)
           return RTERR::ErrorVal (L"LookUp", RTERR_ID_UNKNOWN,
                               M42Sem(AUX::SingleNameToString(name), NULL), Nil(), Sequence());
         }
-        else
+        else {
           return staticval;
+        }
       }
     }
-    else
-    {
+    else {
       Tuple lofp (LookOpFctPoly(name));
       const Bool & isit_opfct (lofp.GetBool(1));
 //      const Bool & local_opfct (lofp.GetBool(2));
       const Generic & val_opfct (lofp.GetField(3));
 
-      if (isit_opfct)
+      if (isit_opfct) {
         return ReturnLookUp(val_opfct, RTERR_OP_OR_FUN_NOT_IN_SCOPE);
+      }
 
       Tuple lus (LookUpStatic(name));
       const Bool & isstatic (lus.GetBool(1));
@@ -3479,17 +3434,19 @@ TYPE_SEM_VAL EvalState::LookUp(const TYPE_AS_Name & name_)
 //      Generic cl_scope (iios.GetField(5));          // [AS`Name]
 //      TYPE_AS_Access access (iios.GetField(6));     // [AS`Access]
 
-        if (isit_inst && (local_inst || !isstatic))
+        if (isit_inst && (local_inst || !isstatic)) {
           return ReturnLookUp(val_inst, RTERR_INSTVAR_NOT_IN_SCOPE);
+        }
       }
 
-      if (isstatic)
-      {
-        if (staticval.IsNil())
+      if (isstatic) {
+        if (staticval.IsNil()) {
           return RTERR::ErrorVal(L"LookUp", RTERR_STATIC_NOT_IN_SCOPE,
                               M42Sem(AUX::SingleNameToString(name), NULL), Nil(), Sequence());
-        else
+        }
+        else {
           return staticval;
+        }
       }
 
 //      Tuple iv (IsValue(name));
@@ -3498,16 +3455,18 @@ TYPE_SEM_VAL EvalState::LookUp(const TYPE_AS_Name & name_)
       //const Bool & local_val (iv.GetBool(2));
       const Generic & val_val (iv.GetField(3));
 
-      if (isit_val)
+      if (isit_val) {
         return ReturnLookUp(val_val, RTERR_VAL_NOT_IN_SCOPE);
+      }
 
       if (theStackMachine().HdContext() != Int(AS_PURE)) {
         Tuple iso (IsDObjs(name));
         const Bool & isit_d_objs (iso.GetBool(1));
         const Generic & val_obj (iso.GetField(2));
 
-        if (isit_d_objs)
+        if (isit_d_objs) {
           return ReturnLookUp(val_obj, RTERR_INTERNAL_ERROR);
+        }
       }
 
       return RTERR::ErrorVal(L"LookUp", RTERR_NAME_UNKNOWN,
@@ -3536,25 +3495,24 @@ Tuple EvalState::IsInObjScope(const TYPE_AS_Name& name, const Generic & oldstate
                               : TYPE_AS_Name(theStackMachine().GetCurCl()));
 
 // 20090311 -->
-  if (oldstate.IsNil())
-  {
+  if (oldstate.IsNil()) {
     Map istrct (theStackMachine().GetCurObj().GetMap(pos_SEM_OBJ_ins)); // map AS`Name to GLOBAL`ValueMap
-    if (istrct.DomExists(clnm))
-    {
+    if (istrct.DomExists(clnm)) {
       TYPE_GLOBAL_ValueMap vm (istrct[clnm]); // map AS`Name to (SEM`VAL * AS`Access)
-      if (vm.DomExists(thename))
-      {
-        Tuple t (vm[thename]); // map AS`Name to (SEM`VAL * AS`Access)
-        TYPE_AS_Type tp (GetInstVarsTp(clnm)[thename]);
-        const TYPE_AS_Access & access (t.GetField(2)); // AS`Access
+      if (vm.DomExists(thename)) {
+        Tuple t (vm[thename]); // SEM`VAL * AS`Type * AS`Access
+        const TYPE_AS_Type & tp (t.GetRecord(2)); // AS`Type
+        const TYPE_AS_Access & access (t.GetField(3)); // AS`Access
 
-        if ((origcl == clnm) && !IsStatic(clnm, thename))
+        if ((origcl == clnm) && !IsStatic(clnm, thename)) {
           return mk_(Bool(true), Bool(true), t.GetRecord(1), tp, clnm, access);
-        else if (AccessOk(access, origcl, clnm))
+        }
+        else if (AccessOk(access, origcl, clnm)) {
           return mk_(Bool(true), Bool(false), t.GetRecord(1), tp, clnm, access);
-        else
+        }
+        else {
           return mk_(Bool(true), Bool(false), Nil(), tp, clnm, access);
-
+        }
       }
     }
   }
@@ -3565,10 +3523,12 @@ Tuple EvalState::IsInObjScope(const TYPE_AS_Name& name, const Generic & oldstate
   //                 in not isopfct ,
 
   TYPE_SEM_OBJ obj; // SEM`OBJ
-  if (oldstate.IsNil())
+  if (oldstate.IsNil()) {
     obj = theStackMachine().GetCurObj();
-  else
+  }
+  else {
     obj = oldstate;
+  }
 
   Map istrct (obj.GetMap(pos_SEM_OBJ_ins)); // map AS`Name to GLOBAL`ValueMap
 // 20090311
@@ -3578,18 +3538,16 @@ Tuple EvalState::IsInObjScope(const TYPE_AS_Name& name, const Generic & oldstate
   }
 
 //  if (!exists_l || isstatic)
-  if (!exists_l)
-  {
+  if (!exists_l) {
     Map local_inst (istrct[clnm]);
      
-    if (local_inst.DomExists(thename))
-    {
-      Tuple t (local_inst[thename]);
-      const TYPE_AS_Access & access (t.GetField(2)); // AS`Access
-      TYPE_AS_Type tp (GetInstVarsTp(clnm)[thename]);
-
-      if (AccessOk(access, origcl, clnm))
+    if (local_inst.DomExists(thename)) {
+      Tuple t (local_inst[thename]); // SEM`VAL * AS`Type * AS`Access
+      const TYPE_AS_Type & tp (t.GetRecord(2)); // AS`Type
+      const TYPE_AS_Access & access (t.GetField(3)); // AS`Access
+      if (AccessOk(access, origcl, clnm)) {
         return mk_(Bool(true), Bool(true), t.GetRecord(1), tp, clnm, access);
+      }
       else {
         return mk_(Bool(true), Bool(false), Nil(), tp, clnm, access);
       }
@@ -3612,11 +3570,11 @@ Tuple EvalState::IsInObjScope(const TYPE_AS_Name& name, const Generic & oldstate
   //               thename in set dom istrct(clname)}
   MAP<TYPE_AS_Name, Map> inst_vls; // map AS`Name to (map AS`Name to (SEM`VAL * AS`Access))
   Generic clname;
-  for (bool hh = allsupers.First(clname); hh; hh = allsupers.Next(clname))
-  {
+  for (bool hh = allsupers.First(clname); hh; hh = allsupers.Next(clname)) {
     TYPE_GLOBAL_ValueMap vm (istrct[clname]); // map AS`Name to (SEM`VAL * AS`Access)
-    if (vm.DomExists(thename))
+    if (vm.DomExists(thename)) {
       inst_vls.ImpModify(clname, vm);
+    }
   }
 
   switch(inst_vls.Size()) {
@@ -3625,37 +3583,34 @@ Tuple EvalState::IsInObjScope(const TYPE_AS_Name& name, const Generic & oldstate
     }
     case 1: { //  {cl} -> let mk_(va .....
       TYPE_AS_Name cl (inst_vls.Dom().GetElem());
-      Tuple t (inst_vls[cl][thename]);
-      const TYPE_AS_Access & access (t.GetField(2));     // AS`Access
-      TYPE_AS_Type tp (GetInstVarsTp(cl)[thename]);
-
-      if (AccessOk(access, origcl, cl))
+      Tuple t (inst_vls[cl][thename]); // SEM`VAL * AS`Type * AS`Access
+      const TYPE_AS_Type & tp (t.GetRecord(2)); // AS`Type
+      const TYPE_AS_Access & access (t.GetField(3));     // AS`Access
+      if (AccessOk(access, origcl, cl)) {
         return mk_(Bool(true), Bool(false), t.GetRecord(1), tp, cl, access);
-      else
+      }
+      else {
         return mk_(Bool(true), Bool(false), Nil(), tp, cl, access);
+      }
     }
     default: { //  - -> if classname in set dom inst_vls
       TYPE_AS_Name cls;
       bool doesthere = false;
-      if ( inst_vls.DomExists(classname) )
-      {
+      if ( inst_vls.DomExists(classname) ) {
         cls = classname;
         doesthere = true;
       }
-      else
-      {
+      else {
         SET<TYPE_AS_Name> dom_inst_vls (inst_vls.Dom());
         SET<TYPE_AS_Name> rem_priv;
         Generic clnm;
-        for (bool cc = dom_inst_vls.First(clnm); cc; cc = dom_inst_vls.Next(clnm))
-        {
+        for (bool cc = dom_inst_vls.First(clnm); cc; cc = dom_inst_vls.Next(clnm)) {
           TYPE_GLOBAL_ValueMap vm (inst_vls[clnm]);
           Set rng (vm.Rng());
           bool forall = true;
           Generic p;
-          for (bool dd = rng.First(p); dd && forall; dd = rng.Next(p))
-          {
-            const TYPE_AS_Access & acc (Tuple(p).GetField(2));
+          for (bool dd = rng.First(p); dd && forall; dd = rng.Next(p)) {
+            const TYPE_AS_Access & acc (Tuple(p).GetField(3));
             forall = ((acc != Int(PRIVATE_AS)) && (acc != Int(NOT_INITIALISED_AS))); // 20080908
           }
           if (forall) {
@@ -3663,26 +3618,26 @@ Tuple EvalState::IsInObjScope(const TYPE_AS_Name& name, const Generic & oldstate
           }
         }
         Tuple dc (ExistsOneChild (rem_priv, dom_inst_vls));
-        if (dc.GetBoolValue(1))
-        {
+        if (dc.GetBoolValue(1)) {
           cls = dc.GetRecord(2);
           doesthere = true;
         }
       }
-      if (doesthere)
-      {
-        Tuple t (inst_vls[cls][thename]);
-        const TYPE_AS_Access & access (t.GetField(2));   // AS`Access
-        TYPE_AS_Type tp ((GetInstVarsTp(cls))[thename]);
-
-        if (AccessOk(access, origcl, classname) )
+      if (doesthere) {
+        Tuple t (inst_vls[cls][thename]); // SEM`VAL * AS`Type * AS`Access
+        const TYPE_AS_Type & tp (t.GetRecord(2)); // AS`Type
+        const TYPE_AS_Access & access (t.GetField(3));   // AS`Access
+        if (AccessOk(access, origcl, classname) ) {
           return mk_(Bool(true), Bool(false), t.GetRecord(1), tp, cls, access);
-        else
+        }
+        else {
           return mk_(Bool(true), Bool(false), Nil(), tp, cls, access);
+        }
       }
       else {
         RTERR::Error(L"IsInObjScope", RTERR_MULT_DEF,
                             M42Sem(AUX::SingleNameToString(name), NULL), Nil(), Sequence());
+        return mk_(Bool(false), Bool(false), Nil(), Nil(), Nil(), Nil());
       }
       break;
     }
@@ -3736,18 +3691,16 @@ Tuple EvalState::ExistsOneChild(const SET<TYPE_AS_Name> & cl_s_, const SET<TYPE_
 Tuple EvalState::CachedIsValue(const TYPE_AS_Name & nm)
 {
   TYPE_AS_Name fullnm (nm);
-  if (nm.GetSequence(pos_AS_Name_ids).Length() == 1)
-  {
-    if (! theStackMachine().HasCurCl())
+  if (nm.GetSequence(pos_AS_Name_ids).Length() == 1) {
+    if (! theStackMachine().HasCurCl()) {
       return mk_(Bool (false), Bool (false), Nil());
-    else
-    {
+    }
+    else {
       const TYPE_AS_Name & clnm (theStackMachine().GetCurCl()); // HasCurCl() == true
       fullnm = AUX::ConstructDoubleName(clnm, nm);
     }
   }
-  if (!this->isValueCache.DomExists(fullnm))
-  {
+  if (!this->isValueCache.DomExists(fullnm)) {
     this->isValueCache.ImpModify(fullnm, IsValue(fullnm));
   }
   return this->isValueCache[fullnm];
@@ -3755,20 +3708,18 @@ Tuple EvalState::CachedIsValue(const TYPE_AS_Name & nm)
 
 // IsValue
 // nm : AS`Name
-// ==> bool * bool * [SEM`VAL]
+// ==> bool * bool * [SEM`VAL] * [AS`Type]
 Tuple EvalState::IsValue(const TYPE_AS_Name & nm)
 {
   // determine target class name
   TYPE_AS_Name clnm;
-  if (nm.GetSequence(pos_AS_Name_ids).Length() == 1)
-  {
+  if (nm.GetSequence(pos_AS_Name_ids).Length() == 1) {
     if (! theStackMachine().HasCurCl()) {
       RTERR::Error(L"IsValue", RTERR_ID_UNKNOWN,
                         M42Sem(AUX::SingleNameToString(nm), NULL), Nil(), Sequence());
-      return mk_(Bool (false), Bool (false), Nil());
+      return mk_(Bool (false), Bool (false), Nil(), Nil());
     }
-    else
-    {
+    else {
       clnm = (theStackMachine().GetCurCl()); // HasCurCl() == true
     }
   }
@@ -3776,11 +3727,11 @@ Tuple EvalState::IsValue(const TYPE_AS_Name & nm)
   {
     clnm = ASTAUX::GetFirstName(nm);
 // 20120905 -->
-    if (theStackMachine().HasCurCl())
-    {
+    if (theStackMachine().HasCurCl()) {
       Tuple t (ExpandClassName(clnm, theStackMachine().GetCurCl(), Set()));
-      if (t.GetBoolValue(1))
+      if (t.GetBoolValue(1)) {
         clnm = t.GetRecord(2);
+      }
     }
 // <-- 20120905
   }
@@ -3790,13 +3741,14 @@ Tuple EvalState::IsValue(const TYPE_AS_Name & nm)
 
   // search value in local class
   TYPE_GLOBAL_ValueMap local_vls (GetVlsInit(clnm));
-  if (local_vls.DomExists(thename))
-  {
-    Tuple t (local_vls[thename]); // (SEM`VAL * AS`Access)
-    if (AccessOk(t.GetField(2), origcl, clnm))
-      return mk_(Bool (true), Bool (true), t.GetRecord(1));
-    else
-      return mk_(Bool (true), Bool (false), Nil());
+  if (local_vls.DomExists(thename)) {
+    Tuple t (local_vls[thename]); // (SEM`VAL * [AS`Type] * AS`Access)
+    if (AccessOk(t.GetField(3), origcl, clnm)) {
+      return mk_(Bool (true), Bool (true), t.GetRecord(1), t.GetField(2));
+    }
+    else {
+      return mk_(Bool (true), Bool (false), Nil(), Nil());
+    }
   }
 
   // search value in super classes
@@ -3804,58 +3756,58 @@ Tuple EvalState::IsValue(const TYPE_AS_Name & nm)
 
   MAP<TYPE_AS_Name, Map> spcl_vls;
   Generic clname;
-  for (bool bb = allsupers.First(clname); bb; bb = allsupers.Next(clname))
-  {
-    if (GetVlsInit(clname).DomExists(thename))
+  for (bool bb = allsupers.First(clname); bb; bb = allsupers.Next(clname)) {
+    if (GetVlsInit(clname).DomExists(thename)) {
       spcl_vls.ImpModify(clname, GetVlsInit(clname));
+    }
   }
 
   //cases dom spcl_vls:
   switch(spcl_vls.Size()) {
     case 0: {
-      return mk_(Bool (false), Bool (false), Nil());
+      return mk_(Bool (false), Bool (false), Nil(), Nil());
     }
     case 1: {
       TYPE_AS_Name cl (spcl_vls.Dom().GetElem());
-      Tuple t (spcl_vls[cl][thename]);  // SEM`VAL * AS`Access
-      if (AccessOk(t.GetField(2), origcl, cl))
-        return mk_(Bool (true), Bool (true), t.GetField(1));
+      Tuple t (spcl_vls[cl][thename]);  // SEM`VAL * [AS`Type] * AS`Access
+      if (AccessOk(t.GetField(3), origcl, cl))
+        return mk_(Bool (true), Bool (true), t.GetField(1), t.GetField(2));
       else
-        return mk_(Bool (true), Bool (false), Nil());
+        return mk_(Bool (true), Bool (false), Nil(), Nil());
     }
     default: {
       // - -> if classname in set dom spcl_vls
       SET<TYPE_AS_Name> dom_spcl_vls (spcl_vls.Dom());
       SET<TYPE_AS_Name> rem_priv;
       Generic clnm;
-      for (bool cc = dom_spcl_vls.First(clnm); cc; cc = dom_spcl_vls.Next(clnm))
-      {
+      for (bool cc = dom_spcl_vls.First(clnm); cc; cc = dom_spcl_vls.Next(clnm)) {
         TYPE_GLOBAL_ValueMap vls_init (spcl_vls[clnm]);
         Set rng (vls_init.Rng());
         bool forall = true;
         Generic p;
-        for (bool dd = rng.First(p); dd && forall; dd = rng.Next(p))
-        {
-          TYPE_AS_Access acc (Tuple(p).GetField(2));
+        for (bool dd = rng.First(p); dd && forall; dd = rng.Next(p)) {
+          TYPE_AS_Access acc (Tuple(p).GetField(3));
           forall = ((acc != Int(PRIVATE_AS)) && (acc != Int(NOT_INITIALISED_AS)));  // 20080908
         }
-        if (forall)
+        if (forall) {
           rem_priv.Insert(clnm);
+        }
       }
       Tuple eoc (ExistsOneChild(rem_priv, dom_spcl_vls) );
       if (eoc.GetBoolValue(1))
       {
         const TYPE_AS_Name & child (eoc.GetField(2));
-        Tuple t (spcl_vls[child][thename]);   // SEM`VAL * AS`Access
-        if (AccessOk(t.GetField(2), origcl, child))
-          return mk_(Bool (true), Bool (true), t.GetField(1));
+        Tuple t (spcl_vls[child][thename]);   // SEM`VAL * [AS`Type] * AS`Access
+        if (AccessOk(t.GetField(3), origcl, child))
+          return mk_(Bool (true), Bool (true), t.GetField(1), t.GetField(2));
         else
-          return mk_(Bool (true), Bool (false), Nil());
+          return mk_(Bool (true), Bool (false), Nil(), Nil());
       }
       else
       {
         RTERR::Error(L"IsValue", RTERR_MULT_DEF,
                             M42Sem(AUX::SingleNameToString(nm), NULL), Nil(), Sequence());
+        return mk_(Bool (false), Bool (false), Nil(), Nil());
       }
       break;
     }
@@ -3948,8 +3900,7 @@ Tuple EvalState::LookCachedOpFctPoly_(const TYPE_AS_Name & clnm, const TYPE_AS_N
   const TYPE_AS_Name & origcl (theStackMachine().GetOrigCl());
   Tuple key (mk_(clnm, objnm, name, thename, origcl));   
 // <-- 20120723
-  if (!this->lookupOpFctPolyCache.DomExists(key))
-  {
+  if (!this->lookupOpFctPolyCache.DomExists(key)) {
     this->lookupOpFctPolyCache.ImpModify(key, LookOpFctPoly_(clnm, objnm, name, thename));
   }
   return this->lookupOpFctPolyCache[key];
@@ -3983,8 +3934,7 @@ Tuple EvalState::LookOpFctPoly_(const TYPE_AS_Name & clnm, const TYPE_AS_Name & 
     allclasses = GetAllSupers(objnm);
     allclasses.Insert(objnm);
   }
-  else
-  {
+  else {
     classname = ASTAUX::GetFirstName(name);
     if ((clnm == classname) || IsSubClass(clnm, classname)) {
       allclasses = GetAllSupers(classname);
@@ -3997,8 +3947,7 @@ Tuple EvalState::LookOpFctPoly_(const TYPE_AS_Name & clnm, const TYPE_AS_Name & 
 
   MAP<TYPE_AS_Name, Tuple> opsfcts;
   Generic clname;
-  for (bool bb = allclasses.First(clname); bb; bb = allclasses.Next(clname))
-  {
+  for (bool bb = allclasses.First(clname); bb; bb = allclasses.Next(clname)) {
     // bool * [ (SEM`CompExplFN | SEM`ExplOP | SEM`ExplPOLY) * AS`Access ]
     Tuple lafop (LookupAllFnsOpsPolys(clname, thename));
     if (lafop.GetBoolValue(1)) {
@@ -4012,8 +3961,7 @@ Tuple EvalState::LookOpFctPoly_(const TYPE_AS_Name & clnm, const TYPE_AS_Name & 
 //wcout << L"opsfcts: " << INT2Q::h2gAS(opsfcts) << endl;
 //wcout << INT2Q::h2gAS(overopfn) << endl;
 
-  if (overopfn.IsNil())
-  {
+  if (overopfn.IsNil()) {
     // cases dom opsfcts :
     switch(opsfcts.Size()) {
       case 0: { // {} -> ...
@@ -4023,26 +3971,27 @@ Tuple EvalState::LookOpFctPoly_(const TYPE_AS_Name & clnm, const TYPE_AS_Name & 
         TYPE_AS_Name cl (opsfcts.Dom().GetElem());
         Tuple fnacc (opsfcts[cl]);
 
-        if (AccessOk(fnacc.GetField(2), origcl, cl))
+        if (AccessOk(fnacc.GetField(2), origcl, cl)) {
           return mk_(Bool(true), Bool(true), fnacc.GetField(1));
-        else
+        }
+        else {
           return mk_(Bool(true), Bool(false), Nil());
+        }
       }
       default: { // default -> // opsfcts.Size() > 1
         SET<TYPE_AS_Name> dom_opsfcts (opsfcts.Dom());
         Map m; // map (seq of AS`Type) to (set of AS`Name)
         Generic clnm;
-        for (bool cc = dom_opsfcts.First(clnm); cc; cc = dom_opsfcts.Next(clnm))
-        {
+        for (bool cc = dom_opsfcts.First(clnm); cc; cc = dom_opsfcts.Next(clnm)) {
           Tuple t (opsfcts[clnm]); 
           //Sequence tp_l (MANGLE::MethType2Seq(FindType(t.GetField(1))));
           Sequence tp_l (ConvertTypeNameList(MANGLE::MethType2Seq(FindType(t.GetField(1))), Set()));
           const TYPE_AS_Access & acc (t.GetField(2));
-          if (AccessOk(acc, origcl, clnm))
-          {
+          if (AccessOk(acc, origcl, clnm)) {
             Set nm_s;
-            if (m.DomExists(tp_l))
+            if (m.DomExists(tp_l)) {
               nm_s = Set(m[tp_l]);
+            }
             nm_s.Insert(clnm);
             m.ImpModify(tp_l, nm_s);
           }
@@ -4053,8 +4002,7 @@ Tuple EvalState::LookOpFctPoly_(const TYPE_AS_Name & clnm, const TYPE_AS_Name & 
           }
           case 1: {
             Tuple eoc (ExistsOneChild(m.Rng().GetElem(), dom_opsfcts));
-            if (eoc.GetBoolValue(1))
-            {
+            if (eoc.GetBoolValue(1)) {
               const TYPE_AS_Name & child (eoc.GetRecord(2));
               Tuple fnvalacc (opsfcts[child]);
               return mk_(Bool(true), Bool(true), fnvalacc.GetField(1));
@@ -4069,22 +4017,22 @@ Tuple EvalState::LookOpFctPoly_(const TYPE_AS_Name & clnm, const TYPE_AS_Name & 
             Map newover; // map (AS`Name * AS`Name) to ((seq of AS`Type) * AS`Access * [SEM`CompExplFN])
             SET<TYPE_AS_Name> dom_opsfcts (opsfcts.Dom());
             Generic clnm;
-            for (bool cc = dom_opsfcts.First(clnm); cc; cc = dom_opsfcts.Next(clnm))
-            {
+            for (bool cc = dom_opsfcts.First(clnm); cc; cc = dom_opsfcts.Next(clnm)) {
               Tuple t (opsfcts[clnm]); 
               const TYPE_AS_Access & acc (t.GetField(2));
-              if (AccessOk(acc, origcl, clnm))
-              {
+              if (AccessOk(acc, origcl, clnm)) {
                 newover.ImpModify(mk_(name, clnm),
                               //mk_(MANGLE::MethType2Seq(FindType(t.GetField(1))), t.GetField(2), Nil()));
                               mk_(ConvertTypeNameList(MANGLE::MethType2Seq(FindType(t.GetField(1))), Set()),
                                   t.GetField(2), Nil()));
               }
             }
-            if (newover.IsEmpty())
+            if (newover.IsEmpty()) {
               return mk_(Bool(true), Bool(false), Nil());
-            else
+            }
+            else {
               return mk_(Bool(true), Bool(true), TYPE_SEM_OverOPFN().Init(newover, Nil()));
+            }
           }
         }
       }
@@ -4315,19 +4263,16 @@ Generic EvalState::LookUpOverInClass(const TYPE_AS_Name & clsnm, const TYPE_AS_N
 {
   const TYPE_GLOBAL_SigmaClass & classesNM (this->classes[clsnm]);
   const Map & overloaded (classesNM.GetMap(pos_GLOBAL_SigmaClass_overloaded));
-  if (overloaded.DomExists(name))
-  {
+  if (overloaded.DomExists(name)) {
     const TYPE_GLOBAL_Overloaded & over (overloaded[name]); // map nat to map AS`Name to ((seq of AS`Type) * AS`Access)
     SET<Int> dom_over (over.Dom());
     Map load; // map (AS`Name * AS`Name) to ((seq of AS`Type) * AS`Access)
     Generic arit;
-    for (bool bb = dom_over.First(arit); bb; bb = dom_over.Next(arit))
-    {
+    for (bool bb = dom_over.First(arit); bb; bb = dom_over.Next(arit)) {
       MAP<TYPE_AS_Name, Tuple> over_arit (over[arit]); // map AS`Name to ((seq of AS`Type) * AS`Access)
       SET<TYPE_AS_Name> dom_over_arit (over_arit.Dom());
       Generic nm;
-      for (bool cc = dom_over_arit.First(nm); cc; cc = dom_over_arit.Next(nm))
-      {
+      for (bool cc = dom_over_arit.First(nm); cc; cc = dom_over_arit.Next(nm)) {
         load.ImpModify(mk_(nm, clsnm), over_arit[nm]);
       }
     }
@@ -4343,29 +4288,25 @@ Generic EvalState::LookUpOverInClass(const TYPE_AS_Name & clsnm, const TYPE_AS_N
 // ==> bool * [SEM`VAL] * [As`Name] * [AS`Access] // impl
 Tuple EvalState::LookUpStatic(const TYPE_AS_Name & name)
 {
-  if (name.GetSequence(pos_AS_Name_ids).Length() == 2)
-  {
+  if (name.GetSequence(pos_AS_Name_ids).Length() == 2) {
     TYPE_AS_Name clsnm (ASTAUX::GetFirstName(name));
-// 20120905 -->
-    if (theStackMachine().HasCurCl())
-    {
+    if (theStackMachine().HasCurCl()) {
       Tuple t (ExpandClassName(clsnm, theStackMachine().GetCurCl(), Set()));
-      if (t.GetBoolValue(1))
+      if (t.GetBoolValue(1)) {
         clsnm = t.GetRecord(2);
+      }
     }
-// <-- 20120905
+
     TYPE_AS_Name memnm (ASTAUX::GetSecondName(name));
 
-    if (this->classes.DomExists(clsnm))
-    {
+    if (this->classes.DomExists(clsnm)) {
       // search static member in instance variables section LookUp Static Variable
       const TYPE_GLOBAL_SigmaClass & classesClsnm (this->classes[clsnm]);
       Generic tupG;
-      if (classesClsnm.GetMap(pos_GLOBAL_SigmaClass_statics).DomExists(memnm, tupG))
-      {
-        type_dU2P tup (tupG);                     // (SEM`VAL * AS`Access)
+      if (classesClsnm.GetMap(pos_GLOBAL_SigmaClass_statics).DomExists(memnm, tupG)) {
+        type_dUU3P tup (tupG);                     // (SEM`VAL * AS`Type *  AS`Access)
         const TYPE_GLOBAL_OrigCl & curcls (theStackMachine().GetCurCl());
-        const TYPE_AS_Access & access (tup.GetField(2));
+        const TYPE_AS_Access & access (tup.GetField(3));
         if (AccessOk(access, curcls, clsnm))
 #ifdef VICE
           return mk_(Bool(true), theSystem().UpdateObjRef(tup.GetRecord(1)), clsnm, access);
@@ -4382,24 +4323,25 @@ Tuple EvalState::LookUpStatic(const TYPE_AS_Name & name)
 
       // LookUp Static Function/Operation
       Tuple lsofp (LookStaticOpFctPoly(clsnm, memnm)); // bool* bool* [SEM`VAL]
-      if(lsofp.GetBoolValue(1))
-      {
-        if(lsofp.GetBoolValue(2))
+      if(lsofp.GetBoolValue(1)) {
+        if(lsofp.GetBoolValue(2)) {
           return mk_(Bool(true), lsofp.GetRecord(3), clsnm, Int(PUBLIC_AS));  // [SEM`VAL]
-        else
-          return mk_(Bool(true), Nil(), clsnm, Int(PUBLIC_AS));
+        }
+        else {
+          //return mk_(Bool(true), Nil(), clsnm, Int(PUBLIC_AS));
+          return mk_(Bool(true), Nil(), Nil(), Nil());
+        }
       }
  
       // LookUp Super Classes
       SET<TYPE_AS_Name> inhcon (classesClsnm.GetSet(pos_GLOBAL_SigmaClass_inhcon));
-      if( !inhcon.IsEmpty() )
-      {
+      if( !inhcon.IsEmpty() ) {
         Generic clnm;
-        for(bool bb = inhcon.First(clnm); bb; bb = inhcon.Next(clnm))
-        {
+        for(bool bb = inhcon.First(clnm); bb; bb = inhcon.Next(clnm)) {
           Tuple lus (LookUpStatic(AUX::ConstructDoubleName(clnm, name)));
-          if( lus.GetBoolValue(1) )
+          if( lus.GetBoolValue(1) ) {
             return lus;
+          }
         }
       }
 
@@ -4439,12 +4381,10 @@ Tuple EvalState::LookUpStatic(const TYPE_AS_Name & name)
 // ==> SEM`VAL
 TYPE_SEM_VAL EvalState::ReturnLookUp(const Generic & val, const int errnum)
 {
-  if (val.Is(TAG_TYPE_SEM_UNDEF))
-  {
+  if (val.Is(TAG_TYPE_SEM_UNDEF)) {
     return RTERR::ErrorVal(L"ReturnLookUp", RTERR_UNDEF_ENCOUNTERED, Nil(), Nil(), Sequence());
   }
-  else if (val.IsNil())
-  {
+  else if (val.IsNil()) {
     return RTERR::ErrorVal(L"ReturnLookUp", errnum, Nil(), Nil(), Sequence());
   }
   else
@@ -5079,12 +5019,9 @@ int EvalState::CalcOverload(const TYPE_INSTRTP_HistoryKind & kind, const TYPE_AS
   int res = 0;
   Set dom_histm (histm.Dom());
   Generic opnm;
-  for (bool bb = dom_histm.First(opnm); bb; bb = dom_histm.Next(opnm))
-  {
-    if (MANGLE::IsMangled(opnm))
-    {
-      if(MANGLE::GetUnmangledName(opnm) == nm)
-      {
+  for (bool bb = dom_histm.First(opnm); bb; bb = dom_histm.Next(opnm)) {
+    if (MANGLE::IsMangled(opnm)) {
+      if(MANGLE::GetUnmangledName(opnm) == nm) {
         res += (int)(CounterCalc(kind, histm[opnm]).GetReal(pos_SEM_NUM_v).GetValue());
       }
     }
@@ -5095,7 +5032,7 @@ int EvalState::CalcOverload(const TYPE_INSTRTP_HistoryKind & kind, const TYPE_AS
 // IsStatic
 // clnm : AS`Name
 // opnm : AS`Name
-// ==> boo
+// ==> bool
 bool EvalState::IsStatic(const TYPE_AS_Name & clnm, const TYPE_AS_Name & opnm) const
 {
   if( this->classes.DomExists(clnm) )
@@ -5110,8 +5047,7 @@ void EvalState::RemoveStaticHist()
 {
   SET<TYPE_AS_Name> clnm_s (this->classes.Dom());
   Generic clnm;
-  for( bool bb = clnm_s.First(clnm); bb; bb = clnm_s.Next(clnm))
-  {
+  for( bool bb = clnm_s.First(clnm); bb; bb = clnm_s.Next(clnm)) {
     TYPE_GLOBAL_SigmaClass sigmacl (this->classes[clnm]);
     MAP<TYPE_AS_Name,TYPE_SEM_History> statichist (sigmacl.GetField(pos_GLOBAL_SigmaClass_statichist));
     SET<TYPE_AS_Name> nm_s (statichist.Dom());
@@ -5286,14 +5222,12 @@ TYPE_GLOBAL_OBJ_uDesc EvalState::RemoveHist(const TYPE_GLOBAL_OBJ_uDesc & desc) 
   TYPE_SEM_InsStrct ins (sem.GetMap(pos_SEM_OBJ_ins)); // map AS`Name to GLOBAL`ValueMap;
   SET<TYPE_AS_Name> dom_ins (ins.Dom());
   Generic nm;
-  for(bool bb = dom_ins.First(nm); bb; bb = dom_ins.Next(nm))
-  {
+  for(bool bb = dom_ins.First(nm); bb; bb = dom_ins.Next(nm)) {
     TYPE_GLOBAL_ValueMap vm (ins[nm]); // map AS`Name to (SEM`VAL * AS`Access)
     SET<TYPE_AS_Name> dom_vm (vm.Dom());
     Generic id;
-    for(bool cc = dom_vm.First(id); cc; cc = dom_vm.Next(id))
-    {
-      type_dU2P t (vm[id]);     // (SEM`VAL * AS`Access)
+    for(bool cc = dom_vm.First(id); cc; cc = dom_vm.Next(id)) {
+      type_dUU3P t (vm[id]);     // (SEM`VAL * [AS`Type] * AS`Access)
       t.SetField(1, sem_undef);
       vm.ImpModify(id, t);
     }
@@ -5489,16 +5423,14 @@ void EvalState::SetInstInitVal(const TYPE_AS_Name & name, const TYPE_SEM_InsStrc
   TYPE_SEM_InsStrct inst_init_val; // map AS`Name to GLOBAL`ValueMap;
   SET<TYPE_AS_Name> dom_instval (instval.Dom());
   Generic nm;
-  for (bool bb = dom_instval.First(nm); bb; bb = dom_instval.Next(nm))
-  {
+  for (bool bb = dom_instval.First(nm); bb; bb = dom_instval.Next(nm)) {
     TYPE_GLOBAL_ValueMap instval_nm (instval[nm]); // map AS`Name to (SEM`VAL * AS`Access)
     SET<TYPE_AS_Name> dom_instval_nm (instval_nm.Dom()); 
     Generic inm;
-    for (bool cc = dom_instval_nm.First(inm); cc; cc = dom_instval_nm.Next(inm))
-    {
-      type_dU2P t (instval_nm[inm]);   // SEM`VAL * AS`Access
-      const TYPE_AS_Access & a (t.GetField(2));
-      t.SetField(2, DEF::RealAccess(a, DEF::ACC_INST));
+    for (bool cc = dom_instval_nm.First(inm); cc; cc = dom_instval_nm.Next(inm)) {
+      type_dUU3P t (instval_nm[inm]);   // SEM`VAL * [AS`Type] * AS`Access
+      const TYPE_AS_Access & a (t.GetField(3));
+      t.SetField(3, DEF::RealAccess(a, DEF::ACC_INST));
       instval_nm.ImpModify(inm, t);
     }
     inst_init_val.Insert(nm, instval_nm);

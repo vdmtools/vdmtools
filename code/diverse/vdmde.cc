@@ -306,23 +306,19 @@ void batchPrettyPrint(CLIOptions & thisCliOpt)
 
 void batchTypeCheckerAndCG(CLIOptions & thisCliOpt)
 {
-// 20100728 -->
   TOOLS::OutputStatSemErrors(Nil());
-// <-- 20100728
 
   PrimaryFlagType pf = thisCliOpt.GetPrimaryFlag();
 
-  if(( pf == FLAG_CPPCG ) && !Settings.canCG()) return;
-  if(( pf == FLAG_JAVACG ) && !Settings.canJavaCG()) return;
-  
-  if (thisCliOpt.IsDefTypeCheck())
+  if (thisCliOpt.IsDefTypeCheck()) {
     Settings.DefOn();
-  else
+  }
+  else {
     Settings.DefOff();
+  }
 
   Settings.UnsetTranslation();
   
-// 20121112 -->
 #ifdef VDMPP
   Sequence ast_l (ToolMediator::GetVDMASTs());
   size_t len_ast_l = ast_l.Length();
@@ -330,7 +326,6 @@ void batchTypeCheckerAndCG(CLIOptions & thisCliOpt)
     GetStatSem().ExpandClass(Settings.TypeCheck(), ast_l[idx]);
 
 #endif // VDMPP
-// <-- 20121112
 
   SEQ<TYPE_ProjectTypes_ModuleName> mod_l (ToolMediator::VDMModules().ToSequence());
   

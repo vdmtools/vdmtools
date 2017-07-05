@@ -253,9 +253,6 @@ public:
   static wstring giveToolVersionDate();
   static wstring getVersionId();
   static wstring getCredit();
-  static bool canCG();
-  static bool canJavaCG();
-  static bool canJ2V();
   static bool isDLModuleEnabled();
   static void OpenCallLog();
   static void CloseCallLog();

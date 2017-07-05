@@ -1277,24 +1277,6 @@ QString Qt2TB::GetCreditI()
   return wstring2qstring( TOOLS::getCredit() );
 }
 
-bool Qt2TB::CppCGEnabledI()
-{
-  return TOOLS::canCG();
-}
-
-bool Qt2TB::JavaCGEnabledI()
-{
-  return TOOLS::canJavaCG();
-}
-
-bool Qt2TB::J2VEnabledI()
-{
-// 20110802 -->
-  return TOOLS::canJ2V();
-  //return false;
-// <-- 20110802
-}
-
 QString Qt2TB::getTraceArgsI(int index)
 {
   return wstring2qstring(TOOLS::GetTraceArgs(index));

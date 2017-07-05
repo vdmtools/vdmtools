@@ -197,9 +197,6 @@ public:
   
 public:
   bool isDLModuleEnabled() const;
-  bool canCG() const;
-  bool canJavaCG() const;
-  bool canJ2V() const;
   void SetName(const SEQ<Char> & name);
 
   bool Profile() const;
@@ -327,9 +324,6 @@ private:
   bool uses_corba;
 
   bool uses_dlmodule;
-  bool uses_cg;
-  bool uses_javacg;
-  bool uses_j2v;
   SEQ<Char> myname;
 
   bool profile;

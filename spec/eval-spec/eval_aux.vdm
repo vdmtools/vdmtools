@@ -132,16 +132,14 @@ DistribCombineBlkEnv (blkenv_s) ==
                     env_s = blkenv_s \ {some_blkenv}
                 in
                  (dcl result_m : map AS`Name to SEM`ValTp := some_blkenv.id_m;
-                  --for all mk_SEM`BlkEnv(id_m,perm) in set env_s do
                   for all mk_SEM`BlkEnv(id_m,-) in set env_s do
-                    --if perm <> permission
-                    --then error
-                    --else if exists id in set dom id_m & id in set dom result_m and id_m(id).val <> result_m(id).val
                     if exists id in set dom id_m & id in set dom result_m and id_m(id).val <> result_m(id).val
                     then return {}
                     else result_m := result_m ++ id_m;
                   return {mk_SEM`BlkEnv(result_m,permission)})
-  end;
+  end
+pre blkenv_s <> {} => let blkenv in set blkenv_s
+                      in forall e in set blkenv_s \ {blkenv} & blkenv.perm = e.perm;
 \end{vdm_al}
 
 The operation {\em DistribCombineBlkEnv} merges a set of block

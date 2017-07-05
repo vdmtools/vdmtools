@@ -160,8 +160,8 @@ ReadClasses(mk_AS`Class(nm, -, supercls, defs, -, -))== -- VDMRT
     def m = ExtractStaticMembers(fnm, opm, sigmacl)
     in sigmacl.statics := { nm |-> let val = m(nm)
                                    in if is_SEM`CompExplFN(val)
-                                      then mk_(val, (hd val.fl).access)
-                                      else mk_(val, val.access) | nm in set dom m };
+                                      then mk_(val, nil, (hd val.fl).access)
+                                      else mk_(val, nil, val.access) | nm in set dom m };
     sigmacl.defaultcons := STATE`GetDefaultCons(nm);
    );
   return { nm |-> sigmacl }

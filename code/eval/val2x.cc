@@ -277,14 +277,14 @@ void VAL2X::print_obj_ref_v(wostream&os, const Record & r, VDMFormatter vg, bool
 
   bool first (true);
   Generic instvar;
-  for (bool bb = dom_m.First(instvar); bb; bb = dom_m.Next(instvar))
-  {
+  for (bool bb = dom_m.First(instvar); bb; bb = dom_m.Next(instvar)) {
     if (! first) {
       os << L"," << endl;
       my_space(os, vg.GetIndent());
     }
-    else
+    else {
       first = false;
+    }
 
     os  << Token(instvar).GetString() << L" = "; // 20100616
     m[instvar].ostream_out(os, vg);
@@ -308,31 +308,26 @@ Tuple VAL2X::IsStatic(const TYPE_AS_Name & clsnm, const TYPE_AS_Name & valnm)
   MAP<TYPE_AS_Name,TYPE_GLOBAL_SigmaClass> classes (theState().GetClasses());
 
   //Generic cls_g;
-  //if (!theState().GetClasses().DomExists(clsnm, cls_g))
-  if (!classes.DomExists(clsnm))
+  if (!classes.DomExists(clsnm)) {
     return mk_(Bool(false), Nil());
+  }
 
-  //TYPE_GLOBAL_SigmaClass sigmacl (cls_g);
   TYPE_GLOBAL_SigmaClass sigmacl (classes[clsnm]);
   const SEQ<TYPE_AS_InstAssignDef> & instvars (sigmacl.GetSequence(pos_GLOBAL_SigmaClass_instvars));
   size_t len_instvars = instvars.Length();
-  for (size_t idx = 1; idx <= len_instvars; idx++)
-  {
+  for (size_t idx = 1; idx <= len_instvars; idx++) {
     const TYPE_AS_InstAssignDef & instdef (instvars[idx]);
     const TYPE_AS_AssignDef & ad (instdef.GetRecord(pos_AS_InstAssignDef_ad));
-    if( ad.GetRecord(pos_AS_AssignDef_var) == valnm )
-    {
-      if(instdef.GetBoolValue(pos_AS_InstAssignDef_stat))
-      {
-        const Map & statics (sigmacl.GetMap(pos_GLOBAL_SigmaClass_statics)); // map AS`Name to (SEM`VAL * AS`Access)
-        Generic t_g;
-        if(statics.DomExists(valnm, t_g))
-        {
-          return mk_(Bool(true), t_g); // SEM`VAL
+    if( ad.GetRecord(pos_AS_AssignDef_var) == valnm ) {
+      if(instdef.GetBoolValue(pos_AS_InstAssignDef_stat)) {
+        const Map & statics (sigmacl.GetMap(pos_GLOBAL_SigmaClass_statics)); // map AS`Name to (SEM`VAL * AS`Type * AS`Access)
+        if(statics.DomExists(valnm)) {
+          return mk_(Bool(true), statics[valnm]); // SEM`VAL
         }
       }
-      else
+      else {
         return mk_(Bool(false), Nil());
+      }
     }
   }
   return mk_(Bool(false), Nil());
@@ -347,8 +342,9 @@ Generic VAL2X::objval2generic(const TYPE_SEM_OBJ & sem_val,
                               const TYPE_SEM_OBJ_uRef & obj_ref,
                               const Set & obj_refs)
 {
-  if (obj_refs.InSet(obj_ref))
+  if (obj_refs.InSet(obj_ref)) {
     return Token (L"Cyclic Object Reference");
+  }
 
   Set new_obj_refs (obj_refs);
   new_obj_refs.Insert(obj_ref);
@@ -358,27 +354,24 @@ Generic VAL2X::objval2generic(const TYPE_SEM_OBJ & sem_val,
   const TYPE_SEM_InsStrct & ins (sem_val.GetMap(pos_SEM_OBJ_ins));
   SET<TYPE_AS_Name> dom_ins (ins.Dom());
   
+  Map classes (theState().GetClasses());
   Map m;
   Generic clnm;
-  for (bool bb = dom_ins.First(clnm); bb; bb = dom_ins.Next(clnm))
-  {
+  for (bool bb = dom_ins.First(clnm); bb; bb = dom_ins.Next(clnm)) {
     TYPE_GLOBAL_ValueMap valmap (ins[clnm]);
     SET<TYPE_AS_Name> dom_valmap (valmap.Dom());
     Generic var_nm;
-    // valmap : GLOBAL`ValueMap = map AS`Name to (SEM`VAL * AS`Access)
-    for (bool bb = dom_valmap.First(var_nm); bb; bb = dom_valmap.Next(var_nm))
-    {
-      //Tuple t (valmap[var_nm]);
-      Tuple infer (IsStatic(clnm, var_nm)); // bool * [SEM`VAL]
-      Tuple t (infer.GetBoolValue(1) ? type_dU2P(infer.GetField(2)) : valmap[var_nm]);
+    // valmap : GLOBAL`ValueMap = map AS`Name to (SEM`VAL * AS`Type * AS`Access)
+    for (bool bb = dom_valmap.First(var_nm); bb; bb = dom_valmap.Next(var_nm)) {
+      Tuple infer (IsStatic(clnm, var_nm)); // bool * (SEM`VAL * AS`Type * AS`Access)
+      Tuple t (infer.GetBoolValue(1) ? Tuple(infer.GetField(2)) : Tuple(valmap[var_nm]));
 
       const TYPE_SEM_VAL & semval (t.GetRecord(1));
-      const TYPE_AS_Access & acc (t.GetField(2));
+      const TYPE_AS_Access & access (t.GetField(3));
 
       wstring astr (infer.GetBoolValue(1) ? L"S" : L" ");
-      if (acc.IsInt())
-      {
-        switch(Int(acc).GetValue()) {
+      if (access.IsInt()) {
+        switch(Int(access).GetValue()) {
           case PRIVATE_AS: {
             astr += L"- ";
             break;
@@ -442,22 +435,22 @@ Generic VAL2X::val2generic(const TYPE_SEM_VAL & value, const Set & obj_refs)
       size_t len_v = v.Length();
       for(size_t i = 1; i <= len_v; i++) {
         const Generic & e (v[i]);
-        if(e.IsChar())
+        if(e.IsChar()) {
           l.ImpAppend(e);
-        else
+        }
+        else {
           l.ImpAppend(val2generic(e, obj_refs));
+        }
       }
-// 20131219 -->
-      //return TBWSTR::hexquadseq2wseq(l);
       return l;
-// <-- 20131219
     }
     case TAG_TYPE_SEM_SET: {
       SET<TYPE_SEM_VAL> v (value.GetSet(pos_SEM_SET_v));
       Set s;
       Generic e;
-      for (bool bb = v.First(e); bb; bb = v.Next (e))
+      for (bool bb = v.First(e); bb; bb = v.Next (e)) {
         s.Insert(val2generic(e, obj_refs));
+      }
       return s;
     }
     case TAG_TYPE_SEM_MAP: {
@@ -465,16 +458,18 @@ Generic VAL2X::val2generic(const TYPE_SEM_VAL & value, const Set & obj_refs)
       Set dom_v (v.Dom());
       Map m;
       Generic d;
-      for (bool bb = dom_v.First(d); bb; bb = dom_v.Next (d))
+      for (bool bb = dom_v.First(d); bb; bb = dom_v.Next (d)) {
         m.Insert (val2generic(d, obj_refs), val2generic(v[d], obj_refs));
+      }
       return m;
     }
     case TAG_TYPE_SEM_TUPLE: {
       const SEQ<TYPE_SEM_VAL> & v (value.GetSequence(pos_SEM_TUPLE_v));
       size_t len_v = v.Length ();
       Tuple t (len_v);
-      for(size_t i = 1; i <= len_v; i++)
+      for(size_t i = 1; i <= len_v; i++) {
         t.SetField (i, val2generic(v.Index(i), obj_refs));
+      }
       return t;
     }
     case TAG_TYPE_DYNSEM_SEM_REC: {
@@ -604,12 +599,10 @@ Generic VAL2X::val2generic(const TYPE_SEM_VAL & value, const Set & obj_refs)
     }
 #ifdef VDMPP
     case TAG_TYPE_SEM_OBJ_uRef: {
-      if (theState().IsInObjTab(value))
-      {
+      if (theState().IsInObjTab(value)) {
         return objval2generic(theState().GetSemObjInTab(value), value, obj_refs);
       }
-      else
-      {
+      else {
         vdm_iplog << L"WRONG OBJ Ref FOR 'val2generic' - was:" << value << L"." << endl << flush;
         return Generic();
       }

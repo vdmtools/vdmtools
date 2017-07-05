@@ -930,13 +930,10 @@ EvalLogUnaryExpr (opr, op_v) ==
     others         -> return RTERR`ErrorVal(RTERR`BOOL_EXPECTED,op_v,nil, [])
   end;
 
-EvalEqNeBinaryExpr: SEM`VAL * AS`BinaryOp * SEM`VAL ==> SEM`VAL
-EvalEqNeBinaryExpr(op1_v, op, op2_v) ==
-  cases op:
-    <EQ>    -> cases mk_(op1_v, op2_v):
-                 mk_(mk_SEM`UNDEF(),-) -> return RTERR`ErrorVal(RTERR`UNDEF_ENCOUNTERED,op1_v,nil, []),
-                 mk_(mk_SEM`REC(tag,-,-),mk_SEM`REC(tag,-,-)) ->
-                  (
+EvalEqualityExpr: SEM`VAL * AS`BinaryOp * SEM`VAL ==> SEM`VAL
+EvalEqualityExpr(op1_v, op, op2_v) ==
+  cases mk_(op1_v, op2_v):
+    mk_(mk_SEM`REC(tag,-,-),mk_SEM`REC(tag,-,-)) ->
 #ifdef VDMSL
                    def mk_(ok,-,-,Eq,-,-) = AUX`IsTypeDef(tag)
 #endif VDMSL
@@ -954,13 +951,24 @@ EvalEqNeBinaryExpr(op1_v, op, op2_v) ==
                         cases res:
                           mk_(mk_STKM`Success(), Eq_v) ->
                                 cases true:
-                                  (is_SEM`BOOL(Eq_v)) -> return Eq_v,
+                                  (is_SEM`BOOL(Eq_v)) ->
+                                    cases op:
+                                      <EQ>    -> return Eq_v,
+                                      <NE>    -> return mk_SEM`BOOL(not Eq_v.v)
+                                    end,
                                   others -> error
                                 end,
                           others -> error
-                        end;
-                   return mk_SEM`BOOL(op1_v = op2_v);
-                  ),
+                        end
+                    else return EvalEqNeBinaryExpr(op1_v, op, op2_v),
+    others         -> return EvalEqNeBinaryExpr(op1_v, op, op2_v)
+  end;
+
+EvalEqNeBinaryExpr: SEM`VAL * AS`BinaryOp * SEM`VAL ==> SEM`VAL
+EvalEqNeBinaryExpr(op1_v, op, op2_v) ==
+  cases op:
+    <EQ>    -> cases op1_v:
+                 mk_SEM`UNDEF() -> return RTERR`ErrorVal(RTERR`UNDEF_ENCOUNTERED,op1_v,nil, []),
                  others         -> return mk_SEM`BOOL(op1_v = op2_v)
                end,
     <NE>    -> cases op1_v:

@@ -61,6 +61,7 @@ public:
   static TYPE_SEM_VAL EvalNumRem (const TYPE_SEM_VAL & val1, const TYPE_SEM_VAL & val2);
   static TYPE_SEM_VAL EvalNumMod (const TYPE_SEM_VAL & val1, const TYPE_SEM_VAL & val2);
   static TYPE_SEM_VAL EvalLogUnaryExpr (const Int & opr, const TYPE_SEM_VAL & op_v);
+  static TYPE_SEM_VAL EvalEqualityExpr(const TYPE_SEM_VAL& op1_v, const Int & opr, const TYPE_SEM_VAL& op2_v);
   static TYPE_SEM_VAL EvalEqNeBinaryExpr(const TYPE_SEM_VAL& op1_v, const Int & opr, const TYPE_SEM_VAL& op2_v);
   static TYPE_SEM_VAL EvalSetUnaryExpr (const Int & opr, const TYPE_SEM_VAL & op_v);
   static TYPE_SEM_VAL EvalSetBinaryExpr (const TYPE_SEM_VAL & op1_v, const Int & opr, const TYPE_SEM_VAL & op2_v);

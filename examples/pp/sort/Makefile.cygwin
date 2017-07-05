@@ -80,7 +80,8 @@ CXXFLAGS= $(CCFLAGS)
 
 OSTYPE2=$(word 1, $(subst _, ,$(strip $(OSTYPE))))
 ifeq ($(strip $(OSTYPE2)),CYGWIN)
-all: sort_pp.exe SortMain
+#all: sort_pp.exe SortMain
+all: sort_pp SortMain
 else
 all: sort_pp SortMain
 endif

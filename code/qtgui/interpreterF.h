@@ -155,6 +155,8 @@ private:
   QPushButton* toggleB;
   QPushButton* saveLogB;
   QPushButton* clearLogB;
+  QGroupBox* traceBox;
+  QGroupBox* breakBox;
   QTREEWIDGET* traceLV;
   QPushButton* enableB;
   QPushButton* disableB;

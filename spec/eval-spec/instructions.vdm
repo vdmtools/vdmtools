@@ -575,8 +575,8 @@ ExeLOOKUP(name) ==
 ExeLOOKUPSTATIC: AS`Name ==> ()
 ExeLOOKUPSTATIC(name) ==
   cases STATE`LookUpStatic(name):
-    mk_(true,val) -> STKM`Push(val),
-    mk_(false,-)  -> RTERR`Error(RTERR`STATIC_NOT_IN_SCOPE, nil, nil, [])
+    mk_(true,val,-,-) -> STKM`Push(val),
+    mk_(false,-,-,-)  -> RTERR`Error(RTERR`STATIC_NOT_IN_SCOPE, nil, nil, [])
   end;
 
 ExeLOOKUPOP: AS`Name ==> ()
@@ -1430,7 +1430,7 @@ EvalBINOP (opr) ==
    (dcl res_v : SEM`VAL;
     cases opr:
       <EQ>,
-      <NE>,
+      <NE>            -> res_v := EXPR`EvalEqualityExpr(left_v, opr, right_v),
       <EQUIV>         -> res_v := EXPR`EvalEqNeBinaryExpr(left_v, opr, right_v),
       <NUMPLUS>,
       <NUMMINUS>,
@@ -2077,23 +2077,21 @@ operations
   BindPat(pat,val) ==
     def env_s = PAT`PatternMatch(pat,val)
     in
-      if env_s = {}
-      then
-        if is_STKM`PatternName(pat) and pat.tp <> nil
-        then
-         (dcl tp : AS`Type;
-          if is_AS`TypeVar(pat.tp)
-          then def tm = STKM`HdTypeInst()
-               in if pat.tp in set dom tm
-               then tp := tm(pat.tp)
-               else tp := pat.tp
-          else tp := pat.tp;
-          RTERR`Error(RTERR`INCOMPATIBLE_BIND_TYPE, val, tp, [])
-         )
-        else RTERR`Error(RTERR`EMPTY_ENV_S, nil, nil, [])
-      else
-        let env in set env_s
-        in STKM`AddToTopBlkEnv(env);
+      cases env_s:
+        {env} union - -> STKM`AddToTopBlkEnv(env),
+        others        -> if is_STKM`PatternName(pat) and pat.tp <> nil
+                         then
+                          (dcl tp : AS`Type;
+                           if is_AS`TypeVar(pat.tp)
+                           then def tm = STKM`HdTypeInst()
+                                in if pat.tp in set dom tm
+                                then tp := tm(pat.tp)
+                                else tp := pat.tp
+                           else tp := pat.tp;
+                           RTERR`Error(RTERR`INCOMPATIBLE_BIND_TYPE, val, tp, [])
+                          )
+                         else RTERR`Error(RTERR`EMPTY_ENV_S, nil, nil, [])
+      end;
 
   ExeCOPYVAL: () ==> ()
   ExeCOPYVAL() ==
@@ -2102,10 +2100,11 @@ operations
   ExeDTC: AS`Type ==> ()
   ExeDTC(tp) ==
     if SETTINGS`DTC()
-    then def [val] = STKM`GetES(1)
-         in
-           if not STATE`SubType(val,tp)
-           then RTERR`Error(RTERR`TYPE_INCOMP, val, tp, [])
+    then
+      def [val] = STKM`GetES(1)
+      in
+        if not STATE`SubType(val,tp)
+        then RTERR`Error(RTERR`TYPE_INCOMP, val, tp, [])
   pre STKM`LenES(1) and
       def [val] = STKM`GetES(1)
       in SEM`IsSemVal(val);
@@ -2115,10 +2114,11 @@ operations
     def [mk_SEM`SET(setval)] = STKM`Pop(1)
     in
       if SETTINGS`DTC()
-      then def [val] = STKM`GetES(1)
-           in
-             if val not in set setval
-             then RTERR`Error(RTERR`VALUE_NOT_IN_SETBIND, val, nil, [])
+      then
+        def [val] = STKM`GetES(1)
+        in
+          if val not in set setval
+          then RTERR`Error(RTERR`VALUE_NOT_IN_SETBIND, val, nil, [])
   pre STKM`LenES(2) and
       def [setval,val] = STKM`GetES(2)
       in SEM`IsSemVal(val) and is_SEM`SET(setval);
@@ -2149,19 +2149,18 @@ operations
 
   ExeCLOSENV: SEM`BlkEnv * map AS`Name to (AS`Expr | <NOTYETSPEC>) ==> ()
   ExeCLOSENV(blkenv,bodym) ==
-   (dcl closenv_m : map AS`Name to SEM`BlkEnv := {|->};
-    for all id in set dom bodym do
-      if bodym(id) <> <NOTYETSPEC>
-      then closenv_m := closenv_m ++ { id |-> FREE`FreeMapToBlkEnv(FREE`FreeInExpr(bodym(id),{})) };
-    if closenv_m = {|->}
-    then STKM`AddToTopBlkEnv(blkenv)
-    else
-      let newenv = mu(blkenv,id_m |-> { id |-> let mk_SEM`ValTp(v,t) = blkenv.id_m(id),
-                                                    val = SEM`UpdateClosEnv(v, closenv_m(id))
-                                                in
-                                                  mk_SEM`ValTp(val,t)
-                                           | id in set dom blkenv.id_m inter dom closenv_m })
-      in STKM`AddToTopBlkEnv(newenv));
+    def closenv_m : map AS`Name to SEM`BlkEnv = 
+               { id |-> FREE`FreeMapToBlkEnv(FREE`FreeInExpr(bodym(id),{}))
+                   | id in set dom bodym & bodym(id) <> <NOTYETSPEC> }
+    in
+      if closenv_m = {|->}
+      then STKM`AddToTopBlkEnv(blkenv)
+      else
+        let newenv = mu(blkenv,id_m |-> { id |-> let mk_SEM`ValTp(v,t) = blkenv.id_m(id),
+                                                   val = SEM`UpdateClosEnv(v, closenv_m(id))
+                                                   in mk_SEM`ValTp(val,t)
+                                             | id in set dom blkenv.id_m inter dom closenv_m })
+        in STKM`AddToTopBlkEnv(newenv);
 
   ExeUPDATECLOSENV: AS`Expr ==> ()
   ExeUPDATECLOSENV(expr) ==
@@ -2294,16 +2293,14 @@ operations
   ExeBINDINSTVAR: AS`Name * AS`Name ==> ()
   ExeBINDINSTVAR(clnm,nm) ==
     def [val] = STKM`Pop(1);
-        --clnm = STKM`GetCurCl();
         mk_SEM`OBJ(-,istrct,-) = STKM`GetCurObj();
         local_inst : GLOBAL`ValueMap = istrct(clnm);
     in
       if nm in set dom local_inst
       then
-        def mk_(v,acc) = local_inst(nm);
+        def mk_(v,-,acc) = local_inst(nm);
             tp = STATE`GetInstVarsTp(clnm)(nm)
         in STATE`SetInstanceVar(nm, val, mk_(true,true,v,tp,clnm,acc))
-      --else STATE`SetInstanceVar(nm, val, nil)
       else STATE`SetInstanceVar(nm, val, STATE`IsInObjScope(nm, nil))
   pre STKM`LenES(1) and
       def [val] = STKM`GetES(1)

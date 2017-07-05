@@ -357,6 +357,7 @@ QLayout* interpreterW::createTraceAndBreakPointsBox( QWidget* parent )
 QWidget* interpreterW::createTraceLVBox( QWidget* parent )
 {
   QGroupBox *gbox = new QGroupBox( parent );
+  this->traceBox = gbox;
   gbox->setTitle( tr( "Trace" ) );
 #if QT_VERSION >= 0x040000
   QVBoxLayout *layout = new QVBoxLayout();
@@ -428,6 +429,7 @@ QWidget* interpreterW::createTraceList( QWidget* parent )
 QWidget* interpreterW::createBreakPointsBox( QWidget* parent )
 {
   QGroupBox* gbox = new QGroupBox( parent );
+  this->breakBox = gbox;
   gbox->setTitle( tr( "BreakPoints" ) );
 #if QT_VERSION >= 0x040000
   QVBoxLayout* layout = new QVBoxLayout();
@@ -439,7 +441,6 @@ QWidget* interpreterW::createBreakPointsBox( QWidget* parent )
 #else
   gbox->setOrientation( Qt::Vertical );
   QLayout* layout = gbox->layout();
-//  layout->setAlignment( Qt::AlignTop );
   layout->setSpacing( 0 );
   layout->setMargin( 0 );
   layout->addItem( this->createButtonPart( gbox ) );
@@ -537,8 +538,6 @@ QWidget* interpreterW::createBreakPointsList( QWidget* parent )
   lv->setColumnWidth(cn3, 50);
   lv->setSelectionMode( QListView::Extended );
   lv->setSorting(1);
-//  connect(lv,   SIGNAL(doubleClicked(QListViewItem *, const QPoint &, int)), 
-//          this, SLOT(breakDoubleClicked_qt3(QListViewItem *, const QPoint &, int)));
   connect(lv,   SIGNAL(doubleClicked(QListViewItem *)), 
           this, SLOT(breakDoubleClicked_qt3(QListViewItem *)));
   connect(lv,   SIGNAL(clicked(QListViewItem *, const QPoint &, int)), 
@@ -607,16 +606,16 @@ void interpreterW::addBreakName(const QString& name, int num)
 
   QString filename (name);
   QStringList mlist (Qt2TB::getFilesOfModule(list.front()));
-  if (!mlist.isEmpty()) 
-  {
+  if (!mlist.isEmpty()) {
     //filename = mlist.front();
     filename = (QFileInfo(mlist.front()).fileName());
   }
 
   QString methodName (name);
 #ifdef VDMSL
-  if ((list.count() == 2) && (list.front() == "DefaultMod"))
+  if ((list.count() == 2) && (list.front() == "DefaultMod")) {
     methodName = list.back();
+  }
 #endif // VDMSL
   
   QString lineStr, numStr, colStr;
@@ -633,9 +632,7 @@ void interpreterW::addBreakName(const QString& name, int num)
   item->setCheckState(0, Qt::Checked);
   item->setText(0, methodName);
   item->setText(1, numStr);
-  //item->setText(2, "-");
   item->setText(2, lineStr);
-  //item->setText(3, "-");
   item->setText(3, colStr);
   item->setText(4, filename);
   item->setText(5, "ON"); 
@@ -645,9 +642,7 @@ void interpreterW::addBreakName(const QString& name, int num)
 #else
   QCheckListItem * item = new QCheckListItem(this->breakLV, methodName, QCheckListItem::CheckBox);
   item->setText(1, numStr);
-  //item->setText(2,"-");
   item->setText(2, lineStr);
-  //item->setText(3,"-");
   item->setText(3, colStr);
   item->setText(5, filename); 
   item->setText(6, "ON"); 
@@ -672,8 +667,7 @@ QTREEWIDGETITEM* interpreterW::findBreakNum(int num)
   QTreeWidgetItem* lvi = (QTreeWidgetItem*)NULL; 
   bool found = false;
   int count = this->breakLV->topLevelItemCount();
-  for (int index = 0; (index < count) && !found; index++)
-  {
+  for (int index = 0; (index < count) && !found; index++) {
     QTreeWidgetItem * item = this->breakLV->topLevelItem(index);
     if (item->text(1).toInt() == num) {
       found = true;
@@ -685,8 +679,7 @@ QTREEWIDGETITEM* interpreterW::findBreakNum(int num)
   QListViewItem* lvi = (QListViewItem*)NULL;
   QListViewItemIterator it (this->breakLV);
   bool found = false;
-  for (; it.current() && !found; ++it)
-  {
+  for (; it.current() && !found; ++it) {
     if (atoi(it.current()->text(1)) == num) {
       found = true;
       lvi = it.current();
@@ -702,8 +695,7 @@ void interpreterW::removeBreak(int num)
   this->write(fmt.arg(num));
 
   QTREEWIDGETITEM* lvi = findBreakNum(num);
-  if (NULL != lvi)
-  {
+  if (NULL != lvi) {
 #if QT_VERSION >= 0x040000
     int index = this->breakLV->indexOfTopLevelItem(lvi);
     this->breakLV->takeTopLevelItem(index);
@@ -719,18 +711,15 @@ void interpreterW::enableBreak(int num)
   this->write( fmt.arg(num) );
 
   QTREEWIDGETITEM * lvi = findBreakNum(num);
-  if (NULL != lvi)
-  {
+  if (NULL != lvi) {
 #if QT_VERSION >= 0x040000
-    if (lvi->checkState(0) != Qt::Checked)
-    {
+    if (lvi->checkState(0) != Qt::Checked) {
       lvi->setCheckState(0, Qt::Checked);
       lvi->setText(5, "ON"); 
     }
 #else
     QCheckListItem * qcli = (QCheckListItem *)lvi;
-    if (!qcli->isOn())
-    {
+    if (!qcli->isOn()) {
       qcli->setOn(true);
       qcli->setText(6, "ON");
     }
@@ -744,18 +733,15 @@ void interpreterW::disableBreak(int num)
   this->write( fmt.arg(num) );
 
   QTREEWIDGETITEM* lvi = findBreakNum(num);
-  if (NULL != lvi)
-  {
+  if (NULL != lvi) {
 #if QT_VERSION >= 0x040000
-    if (lvi->checkState(0) != Qt::Unchecked)
-    {
+    if (lvi->checkState(0) != Qt::Unchecked) {
       lvi->setCheckState(0, Qt::Unchecked);
       lvi->setText(5, "OFF"); 
     }
 #else
     QCheckListItem * qcli = (QCheckListItem *)lvi;
-    if (qcli->isOn())
-    {
+    if (qcli->isOn()) {
       qcli->setOn(false);
       qcli->setText(6, "OFF");
     }
@@ -767,23 +753,25 @@ void interpreterW::gotoBtLevel(int num)
 {
 #if QT_VERSION >= 0x040000
   int count = this->traceLV->topLevelItemCount();
-  for (int index = 0; index < count; index++)
-  {
+  for (int index = 0; index < count; index++) {
     QTreeWidgetItem * item = this->traceLV->topLevelItem(index);
-    if (item->isSelected())
+    if (item->isSelected()) {
       item->setSelected(false);
-    if (item->text(2).toInt() == num)
+    }
+    if (item->text(2).toInt() == num) {
       item->setSelected(true);
+    }
   }
 #else
   QListViewItemIterator iter (this->traceLV);
   int index = 1;
-  for (; iter.current(); ++iter)
-  {
-    if (iter.current()->isSelected())
+  for (; iter.current(); ++iter) {
+    if (iter.current()->isSelected()) {
       iter.current()->setSelected(false);
-    if (index == num)
+    }
+    if (index == num) {
       iter.current()->setSelected(true);
+    }
     index++;
   }
 #endif // QT_VERSION >= 0x040000
@@ -836,13 +824,10 @@ void interpreterW::enableBR_qt4(bool)
 {
 #if QT_VERSION >= 0x040000
   int count = this->breakLV->topLevelItemCount();
-  for (int index = 0; index < count; index++)
-  {
+  for (int index = 0; index < count; index++) {
     QTreeWidgetItem * item = this->breakLV->topLevelItem(index);
-    if (item->isSelected())
-    {
-      if (item->checkState(0) != Qt::Checked)
-      {
+    if (item->isSelected()) {
+      if (item->checkState(0) != Qt::Checked) {
         item->setCheckState(0, Qt::Checked);
         item->setText(5, "ON");
         int num = item->text(1).toInt();
@@ -856,13 +841,10 @@ void interpreterW::enableBR_qt4(bool)
 void interpreterW::enableBR_qt3()
 {
   QListViewItemIterator it (this->breakLV);
-  for (; it.current();++it)
-  {
-    if (it.current()->isSelected())
-    {
+  for (; it.current();++it) {
+    if (it.current()->isSelected()) {
       QCheckListItem * qcli = (QCheckListItem *)it.current();
-      if (!qcli->isOn())
-      {
+      if (!qcli->isOn()) {
         qcli->setOn(true);
         qcli->setText(6, "ON");
         int num = atoi(qcli->text(1));
@@ -877,13 +859,10 @@ void interpreterW::disableBR_qt4(bool)
 {
 #if QT_VERSION >= 0x040000
   int count = this->breakLV->topLevelItemCount();
-  for (int index = 0; index < count; index++)
-  {
+  for (int index = 0; index < count; index++) {
     QTreeWidgetItem * item = this->breakLV->topLevelItem(index);
-    if (item->isSelected())
-    {
-      if (item->checkState(0) != Qt::Unchecked)
-      {
+    if (item->isSelected()) {
+      if (item->checkState(0) != Qt::Unchecked) {
         item->setCheckState(0, Qt::Unchecked);
         item->setText(5, "OFF");
         int num = item->text(1).toInt();
@@ -897,13 +876,10 @@ void interpreterW::disableBR_qt4(bool)
 void interpreterW::disableBR_qt3()
 {
   QListViewItemIterator it (this->breakLV);
-  for (; it.current(); ++it)
-  {
-    if (it.current()->isSelected())
-    {
+  for (; it.current(); ++it) {
+    if (it.current()->isSelected()) {
       QCheckListItem * qcli = (QCheckListItem *)it.current();
-      if (qcli->isOn())
-      {
+      if (qcli->isOn()) {
         qcli->setOn(false);
         qcli->setText(6, "OFF");
         int num = atoi(qcli->text(1));
@@ -965,20 +941,13 @@ void interpreterW::toggle(bool)
   if (this->toggleB->isOn())
 #endif // QT_VERSION >= 0x040000
   {
-    this->breakLV->hide();
-    this->traceLV->hide();
-    this->enableB->hide();
-    this->disableB->hide();
-    this->deleteB->hide();
+    this->traceBox->hide();
+    this->breakBox->hide();
     this->toggleB->setText( tr( "<" ) );
   }
-  else 
-  {
-    this->traceLV->show();
-    this->breakLV->show();
-    this->enableB->show();
-    this->disableB->show();
-    this->deleteB->show();
+  else {
+    this->traceBox->show();
+    this->breakBox->show();
     this->toggleB->setText( tr( ">" ) );
   }
 }
