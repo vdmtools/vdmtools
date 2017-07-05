@@ -72,7 +72,8 @@ CCFLAGS = -g -Wall
 
 OSTYPE2=$(word 1, $(subst _, ,$(strip $(OSTYPE))))
 ifeq ($(strip $(OSTYPE2)),CYGWIN)
-all: winmake
+#all: winmake
+all: sort_ex
 else
 all: sort_ex
 endif

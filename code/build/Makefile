@@ -4047,6 +4047,9 @@ endif
 	find $(DISTDIR)/examples -name \.cvsignore -print | xargs rm -rf  
 	find $(DISTDIR)/examples -name \.svn -print | xargs rm -rf  
 	find $(DISTDIR)/examples -name \*~ -print | xargs rm -f  
+ifeq ($(strip $(OSTYPE)),CYGWIN_NT)
+	mv $(DISTDIR)/examples/sort/Makefile.cygwin $(DISTDIR)/examples/sort/Makefile
+endif
 
 inst-pp-examples: examples
 	mkdir -p $(DISTDIR)/examples
