@@ -1594,14 +1594,13 @@ endif
 
 OPTIMIZE += $(PROFILE)
 
-OSVERSION = $(shell uname -r)
-OSV_MAJOR = $(word 1, $(subst ., ,$(strip $(OSVERSION))))
+OSV_MAJOR=$(shell uname -r | awk -F '.' '{print $$1}')
+LION_OR_LATER=$(shell [ $(OSV_MAJOR) -ge 11 ] && echo true)
 
 CCPATH = /usr/bin/
 
 ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.3)
 SDK?=/Developer/SDKs/MacOSX10.3.9.sdk
-OSV_MAJOR=7
 ARCH=-arch ppc
 CCPATH = /Developer/usr/bin/
 GCC_VERSION=-3.3
@@ -1611,8 +1610,6 @@ endif # 10.3
 
 ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.4)
 SDK?=/Developer/SDKs/MacOSX10.4u.sdk
-#OSV_MAJOR?=8
-OSV_MAJOR=8
 ARCH=-arch i386 -arch ppc
 CCPATH = /Developer/usr/bin/
 GCC_VERSION=-4.0
@@ -1623,7 +1620,6 @@ endif # 10.4
 
 ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.5)
 SDK?=/Developer/SDKs/MacOSX10.5.sdk
-OSV_MAJOR=9
 ARCH=-arch i386 -arch ppc
 CCPATH = /Developer/usr/bin/
 GCC_VERSION=-4.2
@@ -1647,78 +1643,21 @@ SDK?=/Developer/SDKs/MacOSX10.6.sdk
 GCC_VERSION?=-4.2
 CCPATH = /Developer/usr/bin/
 endif
-OSV_MAJOR=10
 ARCH=-arch x86_64
 CC      = $(CCPATH)gcc$(GCC_VERSION)
 CCC     = $(CCPATH)g++$(GCC_VERSION)
 HASPKGBUILD=1
 endif # 10.6
 
-ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.7)
-SDK?=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk
-OSV_MAJOR=11
+ifeq ($(strip $(LION_OR_LATER)),true)
+SDK?=$(shell xcodebuild -version -sdk | grep SDKs/MacOSX | head -1 | awk -F ' ' '{print $$2}')
 ARCH=-arch x86_64
 CCPATH = /usr/bin/
 GCC_VERSION=
 CC      = $(CCPATH)clang$(GCC_VERSION)
 CCC     = $(CCPATH)clang++$(GCC_VERSION)
 HASPKGBUILD=1
-endif # 10.7
-
-ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.8)
-SDK?=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk
-OSV_MAJOR=12
-ARCH=-arch x86_64
-CCPATH = /usr/bin/
-GCC_VERSION=
-CC      = $(CCPATH)clang$(GCC_VERSION)
-CCC     = $(CCPATH)clang++$(GCC_VERSION)
-HASPKGBUILD=1
-endif # 10.8
-
-ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.9)
-SDK?=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk
-OSV_MAJOR=13
-ARCH=-arch x86_64
-CCPATH = /usr/bin/
-GCC_VERSION=
-CC      = $(CCPATH)clang$(GCC_VERSION)
-CCC     = $(CCPATH)clang++$(GCC_VERSION)
-HASPKGBUILD=1
-endif # 10.9
-
-ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.10)
-SDK?=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk
-OSV_MAJOR=14
-ARCH=-arch x86_64
-CCPATH = /usr/bin/
-GCC_VERSION=
-CC      = $(CCPATH)clang$(GCC_VERSION)
-CCC     = $(CCPATH)clang++$(GCC_VERSION)
-HASPKGBUILD=1
-endif # 10.10
-
-ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.11)
-SDK?=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk
-OSV_MAJOR=14
-ARCH=-arch x86_64
-CCPATH = /usr/bin/
-GCC_VERSION=
-CC      = $(CCPATH)clang$(GCC_VERSION)
-CCC     = $(CCPATH)clang++$(GCC_VERSION)
-HASPKGBUILD=1
-endif # 10.11
-
-ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.12)
-SDK?=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk
-OSV_MAJOR=15
-ARCH=-arch x86_64
-CCPATH = /usr/bin/
-GCC_VERSION=
-CC      = $(CCPATH)clang$(GCC_VERSION)
-CCC     = $(CCPATH)clang++$(GCC_VERSION)
-HASPKGBUILD=1
-endif # 10.12
+endif # >= 10.7
 
 OS_NAME=$(strip $(MACOSX_DEPLOYMENT_TARGET))
 
@@ -1907,7 +1846,11 @@ print_name_vers.exe: $(shell $(LINKCHG) \
 	$(shell $(LINKCHG) $(CCC) ${LNKOPT} $(DEBUG) $(LINKOUT)$@ $^ $(WINLIBS))
 else
 ifeq ($(strip $(OSTYPE)),Darwin)
+ifeq ($(strip $(LION_OR_LATER)),true)
+print_name_vers: print_name_vers.o tb_version-sl.o date.o libvdm.a
+else
 print_name_vers: print_name_vers.o tb_version-sl.o date.o libvdm_darwin.a
+endif
 	$(CCC) $(DEBUG) -o $@ $^ $(LNKOPT)
 else
 print_name_vers: print_name_vers.o tb_version-sl.o date.o libvdm.a
@@ -1917,7 +1860,11 @@ endif
 
 # Rule to create the errmsg.cc file from errmsg.txt
 ifeq ($(strip $(OSTYPE)),Darwin)
+ifeq ($(strip $(LION_OR_LATER)),true)
+convertToHexquad: convertToHexquad.o libvdm.a
+else
 convertToHexquad: convertToHexquad.o libvdm_darwin.a
+endif
 	$(CCC) ${LNKOPT} $(DEBUG) -o $@ $^
 else
 ifeq ($(strip $(OSTYPE)),CYGWIN_NT)
@@ -2318,7 +2265,11 @@ $(LIB_VDM_FAT): $(LIB_VDM_FAT)($(LIB_VDM_O))
 #$(LIB_VDM_DEBUG): $(LIB_VDM_DEBUG)($(LIB_VDM_O))
 
 ifeq ($(strip $(OSTYPE)),Darwin)
+ifeq ($(strip $(LION_OR_LATER)),true)
+VDMLIB = $(LIB_VDM)
+else
 VDMLIB = $(LIB_VDM:%.a=%_darwin.a)
+endif
 else
 VDMLIB = $(LIB_VDM)
 endif
@@ -3054,8 +3005,13 @@ endif
 # Testing dlclasses.
 
 ifeq ($(strip $(OSTYPE)),Darwin)
+ifeq ($(strip $(LION_OR_LATER)),true)
+dlclass_test1.so: %.so: %.cc libvdm.a
+	${CXX} $(ARCH) -dynamiclib -fPIC -o $@ $< -L. -lvdm -liconv -Wl,-syslibroot,$(SDK)
+else
 dlclass_test1.so: %.so: %.cc libvdm_darwin.a
 	${CXX} $(ARCH) -dynamiclib -fPIC -o $@ $< -L. -lvdm_darwin -liconv -Wl,-syslibroot,$(SDK)
+endif
 
 dlclass_test1.o: %.o: %.cc
 	${CXX} $(ARCH) -fPIC -c -o $@ $< 
@@ -3214,7 +3170,11 @@ CXX_FLAGS= -fPIC $(ODBCINCDIR)
 j2vmain.o: j2vmain.cc 
 	$(CXX) $(ARCH) $(ARCH_DEFINES) $(CXX_FLAGS) -I. -c -o $@ $<
 
+ifeq ($(strip $(LION_OR_LATER)),true)
+j2vdll.so: j2vmain.o $(LIB_J2VDLL_O) libvdm.a
+else
 j2vdll.so: j2vmain.o $(LIB_J2VDLL_O) libvdm_darwin.a
+endif
 	$(CXX) $(ARCH) -dynamiclib $(CXX_FLAGS) -o $@ $^ -L. -liconv $(ODBCLIBDIR) $(ODBCLIB) -Wl,-syslibroot,$(SDK)
 endif # Darwin
 
@@ -3342,7 +3302,11 @@ ALL_SL_LIBS = $(LIB_POG_SL) $(LIB_POG_PRETTY_SL) $(LIB_POG_AUX_SL) \
 	$(LIB_CG) $(LIB_VDM)
 
 ifeq ($(strip $(OSTYPE)),Darwin)
+ifeq ($(strip $(LION_OR_LATER)),true)
+SL_LIBS = $(ALL_SL_LIBS)
+else
 SL_LIBS = $(ALL_SL_LIBS:%.a=%_darwin.a)
+endif
 else
 SL_LIBS = $(ALL_SL_LIBS)
 endif
@@ -3356,7 +3320,11 @@ ALL_PP_LIBS = $(LIB_POG_PP) $(LIB_POG_PRETTY_PP) $(LIB_POG_AUX_PP) \
 	$(LIB_CG) $(LIB_VDM)
 
 ifeq ($(strip $(OSTYPE)),Darwin)
+ifeq ($(strip $(LION_OR_LATER)),true)
+PP_LIBS = $(ALL_PP_LIBS)
+else
 PP_LIBS = $(ALL_PP_LIBS:%.a=%_darwin.a)
+endif
 else
 PP_LIBS = $(ALL_PP_LIBS)
 
@@ -3380,7 +3348,11 @@ ALL_RT_LIBS = $(LIB_POG_RT) $(LIB_POG_PRETTY_RT) $(LIB_POG_AUX_RT) \
 	$(LIB_CG) $(LIB_VDM)
 
 ifeq ($(strip $(OSTYPE)),Darwin)
+ifeq ($(strip $(LION_OR_LATER)),true)
+RT_LIBS = $(ALL_RT_LIBS)
+else
 RT_LIBS = $(ALL_RT_LIBS:%.a=%_darwin.a)
+endif
 else
 RT_LIBS = $(ALL_RT_LIBS)
 
@@ -3417,9 +3389,15 @@ PP_GUI_MAIN_O = $(GUI_MAIN_O:%.o=%-pp.o)
 RT_GUI_MAIN_O = $(GUI_MAIN_O:%.o=%-rt.o)
 
 ifeq ($(strip $(OSTYPE)),Darwin)
+ifeq ($(strip $(LION_OR_LATER)),true)
+SL_GUI_LIBS = $(LIB_QTGUI_SL)
+PP_GUI_LIBS = $(LIB_QTGUI_PP)
+RT_GUI_LIBS = $(LIB_QTGUI_RT)
+else
 SL_GUI_LIBS = $(LIB_QTGUI_SL:%.a=%_darwin.a)
 PP_GUI_LIBS = $(LIB_QTGUI_PP:%.a=%_darwin.a)
 RT_GUI_LIBS = $(LIB_QTGUI_RT:%.a=%_darwin.a)
+endif
 else
 SL_GUI_LIBS = $(LIB_QTGUI_SL)
 PP_GUI_LIBS = $(LIB_QTGUI_PP)
@@ -3762,7 +3740,11 @@ be_spec-sl$(EXE): $(shell $(LINKCHG) $(BE_SPEC_OBJS:%.o=%-sl.o) libgen-sl.a libC
 	$(MT) -manifest $(CLIMANIFEST) -nologo -outputresource:$@
 else
 ifeq ($(strip $(OSTYPE)),Darwin)
+ifeq ($(strip $(LION_OR_LATER)),true)
+be_spec-sl: $(BE_SPEC_OBJS:%.o=%-sl.o) libgen-sl.a libCG.a libvdm.a
+else
 be_spec-sl: $(BE_SPEC_OBJS:%.o=%-sl.o) libgen-sl_darwin.a libCG_darwin.a libvdm_darwin.a
+endif
 	$(CCC) $(DEBUG) -o $@ $+ $(LIBMATH) $(CORBA_LIB) $(LNKOPT)
 else
 be_spec-sl: $(BE_SPEC_OBJS:%.o=%-sl.o) libgen-sl.a libCG.a libvdm.a
@@ -3779,7 +3761,11 @@ be_spec-pp$(EXE): $(shell $(LINKCHG) $(BE_SPEC_OBJS:%.o=%-pp.o) libgen-pp.a libC
 	$(MT) -manifest $(CLIMANIFEST) -nologo -outputresource:$@
 else
 ifeq ($(strip $(OSTYPE)),Darwin)
+ifeq ($(strip $(LION_OR_LATER)),true)
+be_spec-pp: $(BE_SPEC_OBJS:%.o=%-pp.o) libgen-pp.a libCG.a libvdm.a
+else
 be_spec-pp: $(BE_SPEC_OBJS:%.o=%-pp.o) libgen-pp_darwin.a libCG_darwin.a libvdm_darwin.a
+endif
 	$(CCC) $(DEBUG) -o $@ $+ $(LIBMATH) $(CORBA_LIB) $(LNKOPT)
 else
 be_spec-pp: $(BE_SPEC_OBJS:%.o=%-pp.o) libgen-pp.a libCG.a libvdm.a
@@ -3796,7 +3782,11 @@ be_spec-rt$(EXE): $(shell $(LINKCHG) $(BE_SPEC_OBJS:%.o=%-rt.o) libgen-rt.a libC
 	$(MT) -manifest $(CLIMANIFEST) -nologo -outputresource:$@
 else
 ifeq ($(strip $(OSTYPE)),Darwin)
+ifeq ($(strip $(LION_OR_LATER)),true)
+be_spec-rt: $(BE_SPEC_OBJS:%.o=%-rt.o) libgen-rt.a libCG.a libvdm.a
+else
 be_spec-rt: $(BE_SPEC_OBJS:%.o=%-rt.o) libgen-rt_darwin.a libCG_darwin.a libvdm_darwin.a
+endif
 	$(CCC) $(DEBUG) -o $@ $+ $(LIBMATH) $(CORBA_LIB) $(LNKOPT)
 else
 be_spec-rt: $(BE_SPEC_OBJS:%.o=%-rt.o) libgen-rt.a libCG.a libvdm.a
