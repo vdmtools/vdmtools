@@ -516,7 +516,7 @@ QTREEWIDGET* roseW::createClassesListView( QWidget * parent )
   QTreeWidget * lv = new QTreeWidget( parent );
   lv->setColumnCount (4);
   lv->setHeaderLabels(hlabels);
-#if QT_VERSION >= 0x040000
+#if QT_VERSION >= 0x050000
   lv->header()->setSectionsMovable(false);
   lv->header()->setStretchLastSection(false);
   lv->header()->setSectionResizeMode(0, QHeaderView::Interactive);
