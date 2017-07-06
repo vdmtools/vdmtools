@@ -16,7 +16,11 @@
 #define __qtInterface_h__
 
 #if QTVER >= 4
+#if QTVER >= 5
+#include <QtWidgets/QtWidgets>
+#else
 #include <QtGui/QtGui>
+#endif
 #else
 #include <qapplication.h>
 #endif // QTVER >= 4

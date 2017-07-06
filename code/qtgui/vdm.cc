@@ -15,7 +15,11 @@
 #include <locale.h>
 
 #if QTVER >= 4
+#if QTVER >= 5
+#include <QtWidgets/QtWidgets>
+#else
 #include <QtGui/QtGui>
+#endif
 #else
 #include <qregexp.h>
 #include <qapplication.h>

@@ -15,9 +15,10 @@
 #define __browserf_h__
 
 #if QTVER >= 4
-#include <QtGui/QtGui>
 #if QTVER >= 5
 #include <QtWidgets/QtWidgets>
+#else
+#include <QtGui/QtGui>
 #endif
 #define QTREEWIDGET QTreeWidget
 #define QTREEWIDGETITEM QTreeWidgetItem

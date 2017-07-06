@@ -16,7 +16,11 @@
 #define __interpreterf_h__
 
 #if QTVER >= 4
+#if QTVER >= 5
+#include <QtWidgets/QtWidgets>
+#else
 #include <QtGui/QtGui>
+#endif
 #define WFlags Qt::WindowFlags
 #define QLIST QList
 #define QTREEWIDGET QTreeWidget

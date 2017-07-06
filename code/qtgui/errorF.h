@@ -15,9 +15,10 @@
 #define __errorf_h__
 
 #if QTVER >= 4
-#include <QtGui/QtGui>
 #if QTVER >= 5
 #include <QtWidgets/QtWidgets>
+#else
+#include <QtGui/QtGui>
 #endif
 #define QLIST QList
 #define QLISTWIDGET QListWidget

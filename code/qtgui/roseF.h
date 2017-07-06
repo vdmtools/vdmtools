@@ -15,7 +15,11 @@
 #define __rosew_h__
 
 #if QTVER >= 4
+#if QTVER >= 5
+#include <QtWidgets/QtWidgets>
+#else
 #include <QtGui/QtGui>
+#endif
 #define QLIST QList
 #define QTREEWIDGET QTreeWidget
 #define QTREEWIDGETITEM QTreeWidgetItem
