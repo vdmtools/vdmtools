@@ -107,10 +107,15 @@ export ANTHOME=/usr
 export PATH=${JDKHOME}/bin:${ANTHOME}/bin:${PATH}
 
 export QTVERSION=4
-
 export QTDIR=/usr
-export QTINCDIR=${QTDIR}/include/qt${QTVERSION}
-export QTMOC=${QTDIR}/bin/moc-qt${QTVERSION}
+if [ -f ${QTDIR}/bin/qtchooser ]; then
+  export QTMOC="${QTDIR}/bin/moc -qt=${QTVERSION}"
+  export QTLRELEASE="${QTDIR}/bin/lrelease -qt=${QTVERSION}"
+else
+  export QTMOC=${QTDIR}/bin/moc-qt${QTVERSION}
+  export QTLRELEASE=${QTDIR}/bin/lrelease-qt${QTVERSION}
+fi
+
 export QTLRELEASE=${QTDIR}/bin/lrelease-qt${QTVERSION}
 
 export CORBAHOME=/usr/local/omniORB
