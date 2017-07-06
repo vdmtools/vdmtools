@@ -198,9 +198,9 @@ mainW::mainW(QApplication &app) : QMainWindow( 0, Qt2TB::GiveToolTitleI() )
   this->pb = new QProgressBar(sb);
   sb->addWidget(pb, 1);
 
-#if QT_VERSION >= 0x050000
+#if QT_VERSION >= 0x040600
   this->menuBar()->setNativeMenuBar(false);
-#endif // QT_VERSION >= 0x050000
+#endif // QT_VERSION >= 0x040600
 
   // Create menus
   this->createProjectMenu();
