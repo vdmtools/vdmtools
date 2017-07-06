@@ -625,13 +625,13 @@ endif
 
 ifeq ($(strip $(OSTYPE)),Linux)
 ifeq ($(strip $(QTVERSION)),5)
-QT5DIR    ?= /usr/lib/qt4
+QT5DIR    ?= /usr/lib/qt5
 QTLIBFLAG = -L$(QTLIBDIR)
-LIBQT    = -lQt5Gui -lQt5Core
+LIBQT    = -lQt5Gui -lQt5Core -lQt5Widgets
 QTBINDIR ?= $(QT5DIR)/bin
 QTLIBDIR ?= /usr/lib
 QTINCDIR ?= /usr/include
-QTINCFLAG ?= -I$(QTINCDIR)
+QTINCFLAG ?= -I$(QTINCDIR) -fPIC
 else
 ifeq ($(strip $(QTVERSION)),4)
 QT4DIR    ?= /usr/lib/qt4

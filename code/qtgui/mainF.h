@@ -19,6 +19,9 @@
 
 #if QTVER >= 4
 #include <QtGui/QtGui>
+#if QTVER >= 5
+#include <QtWidgets/QtWidgets>
+#endif
 #define QMENU QMenu
 #define QLIST QList
 #define QACTIONPTRLIST QList<QAction *>

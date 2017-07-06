@@ -207,7 +207,11 @@ void codeW::readText(QFile & f, MyTextEdit * edit, const QString & title, bool c
 {
   // read text
   QTextStream t (&f);
+#if QT_VERSION >= 0x050000
+  QTextCodec * codec = QTextCodec::codecForLocale();
+#else
   QTextCodec * codec = QTextCodec::codecForTr();
+#endif // QT_VERSION >= 0x040000
   if( codec != 0 ) t.setCodec( codec );
 
   GUITokenList tl;

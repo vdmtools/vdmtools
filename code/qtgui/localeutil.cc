@@ -66,7 +66,11 @@ QStringList codeclist;
 QString QTLOCALE::checkQCodec(const QString & name)
 {
 #if QT_VERSION >= 0x040000
+#if QT_VERSION >= 0x040000
+  QTextCodec* pCodec = QTextCodec::codecForName (name.toLatin1());
+#else
   QTextCodec* pCodec = QTextCodec::codecForName (name.toAscii());
+#endif // QT_VERSION >= 0x040000
 #else
   QTextCodec* pCodec = QTextCodec::codecForName (name);
 #endif // QT_VERSION >= 0x040000

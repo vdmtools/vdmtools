@@ -516,12 +516,21 @@ QTREEWIDGET* roseW::createClassesListView( QWidget * parent )
   QTreeWidget * lv = new QTreeWidget( parent );
   lv->setColumnCount (4);
   lv->setHeaderLabels(hlabels);
+#if QT_VERSION >= 0x040000
+  lv->header()->setSectionsMovable(false);
+  lv->header()->setStretchLastSection(false);
+  lv->header()->setSectionResizeMode(0, QHeaderView::Interactive);
+  lv->header()->setSectionResizeMode(1, QHeaderView::Fixed);
+  lv->header()->setSectionResizeMode(2, QHeaderView::Fixed);
+  lv->header()->setSectionResizeMode(3, QHeaderView::Fixed);
+#else
   lv->header()->setMovable(false);
   lv->header()->setStretchLastSection(false);
   lv->header()->setResizeMode(0, QHeaderView::Interactive);
   lv->header()->setResizeMode(1, QHeaderView::Fixed);
   lv->header()->setResizeMode(2, QHeaderView::Fixed);
   lv->header()->setResizeMode(3, QHeaderView::Fixed);
+#endif // QT_VERSION >= 0x050000
 
   lv->setRootIsDecorated(false);
   lv->setSelectionMode(QAbstractItemView::ExtendedSelection);
@@ -708,19 +717,37 @@ QPixmap* roseW::actionToImage(MAP_ACTION action) const
 
 MAP_ACTION roseW::imageToAction(const QPixmap* pixmap) const
 {
+#if QT_VERSION >= 0x050000
+  qint64 serialNum = pixmap->cacheKey();
+
+  if (serialNum == vdm2umlPixmap->cacheKey()) {
+    return ACTION_VDM2UML;
+  }
+  else if (serialNum == defaultPixmap->cacheKey()) {
+    return ACTION_DEFAULT;
+  }
+  else if (serialNum == uml2vdmPixmap->cacheKey()) {
+    return ACTION_UML2VDM;
+  }
+  else {
+    return ACTION_DELETE;
+  }
+#else
   int serialNum = pixmap->serialNumber();
 
-  if (serialNum == vdm2umlPixmap->serialNumber())
+  if (serialNum == vdm2umlPixmap->serialNumber()) {
     return ACTION_VDM2UML;
-
-  else if (serialNum == defaultPixmap->serialNumber())
+  }
+  else if (serialNum == defaultPixmap->serialNumber()) {
     return ACTION_DEFAULT;
-
-  else if (serialNum == uml2vdmPixmap->serialNumber())
+  }
+  else if (serialNum == uml2vdmPixmap->serialNumber()) {
     return ACTION_UML2VDM;
-
-  else
+  }
+  else {
     return ACTION_DELETE;
+  }
+#endif // QT_VERSION >= 0x050000
 }
 
 void roseW::addClass(const UMLClassState & st)
@@ -911,15 +938,35 @@ void roseW::selectNoClasses()
 
 QPixmap roseW::nextPixmap(const QPixmap* currentPixmap)
 {
-  int currentSerialNum = currentPixmap->serialNumber();
-  if (currentSerialNum == vdm2umlPixmap->serialNumber())
+#if QT_VERSION >= 0x040000
+  qint64 currentSerialNum = currentPixmap->cacheKey();
+  if (currentSerialNum == vdm2umlPixmap->cacheKey()) {
     return QPixmap(*defaultPixmap);
-  else if (currentSerialNum == defaultPixmap->serialNumber())
+  }
+  else if (currentSerialNum == defaultPixmap->cacheKey()) {
     return QPixmap(*uml2vdmPixmap);
-  else if (currentSerialNum == uml2vdmPixmap->serialNumber())
+  }
+  else if (currentSerialNum == uml2vdmPixmap->cacheKey()) {
     return QPixmap(*deletePixmap);
-  else
+  }
+  else {
     return QPixmap(*vdm2umlPixmap);
+  }
+#else
+  int currentSerialNum = currentPixmap->serialNumber();
+  if (currentSerialNum == vdm2umlPixmap->serialNumber()) {
+    return QPixmap(*defaultPixmap);
+  }
+  else if (currentSerialNum == defaultPixmap->serialNumber()) {
+    return QPixmap(*uml2vdmPixmap);
+  }
+  else if (currentSerialNum == uml2vdmPixmap->serialNumber()) {
+    return QPixmap(*deletePixmap);
+  }
+  else {
+    return QPixmap(*vdm2umlPixmap);
+  }
+#endif // QT_VERSION >= 0x040000
 }
 
 #if QT_VERSION >= 0x040000

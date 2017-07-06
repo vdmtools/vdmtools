@@ -16,6 +16,9 @@
 
 #if QTVER >= 4
 #include <QtGui/QtGui>
+#if QTVER >= 5
+#include <QtWidgets/QtWidgets>
+#endif
 class splashW : public QSplashScreen
 {
   public:

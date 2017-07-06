@@ -399,7 +399,11 @@ QWidget* interpreterW::createTraceList( QWidget* parent )
   lv->setColumnCount (3);
   lv->setColumnHidden(2, true);
   lv->setHeaderLabels(hlabels);
+#if QT_VERSION >= 0x050000
+  lv->header()->setSectionsMovable(false);
+#else
   lv->header()->setMovable(false);
+#endif // QT_VERSION >= 0x040000
   lv->setRootIsDecorated(false);
   lv->setSelectionMode(QAbstractItemView::ExtendedSelection);
   lv->setColumnWidth(0, 150);
@@ -515,7 +519,11 @@ QWidget* interpreterW::createBreakPointsList( QWidget* parent )
   lv->setColumnHidden(4, true);
   lv->setColumnHidden(5, true);
   lv->setHeaderLabels(labels);
+#if QT_VERSION >= 0x050000
+  lv->header()->setSectionsMovable(false);
+#else
   lv->header()->setMovable(false);
+#endif // QT_VERSION >= 0x040000
   lv->setRootIsDecorated(false);
   lv->setSelectionMode(QAbstractItemView::ExtendedSelection);
   lv->setColumnWidth(0, 150);
