@@ -15,7 +15,11 @@
 #define __codef_h__
 
 #if QTVER >= 4
+#if QTVER >= 5
+#include <QtWidgets/QtWidgets>
+#else
 #include <QtGui/QtGui>
+#endif
 #define WFlags Qt::WindowFlags
 #else
 #include <qvariant.h>

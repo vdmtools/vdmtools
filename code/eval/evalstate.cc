@@ -321,51 +321,50 @@ Generic EvalState::GetBindName(const TYPE_SEM_OBJ_uRef & ref)
 // ==> ()
 void EvalState::TranslateAST (const TYPE_AS_Document & doc_l, bool ast_is_new)
 {
-  if (! ast_is_new)
-    return;
+  if (ast_is_new) {
 
-  if ((doc_l.Length () == 1) && (Record (doc_l.Hd ()).Is (TAG_TYPE_AS_Definitions)))
-  {
-    // we have a Definitions block. this block is converted into a module
-    // for simplicity in the evaluation.
+    if ((doc_l.Length () == 1) && (Record (doc_l.Hd ()).Is (TAG_TYPE_AS_Definitions))) {
+      // we have a Definitions block. this block is converted into a module
+      // for simplicity in the evaluation.
 
-    const TYPE_AS_Definitions & defs (doc_l[1]);
-    const TYPE_CI_ContextId & cid (defs.GetInt(pos_AS_Definitions_cid));
+      const TYPE_AS_Definitions & defs (doc_l[1]);
+      const TYPE_CI_ContextId & cid (defs.GetInt(pos_AS_Definitions_cid));
 
-    // create an empty interface with all exported
-    TYPE_AS_Interface new_int;
-    new_int.Init(type_7AS_NameCUM(), Nil(), cid);
+      // create an empty interface with all exported
+      TYPE_AS_Interface new_int;
+      new_int.Init(type_7AS_NameCUM(), Nil(), cid);
 
-    // create module
-    TYPE_AS_Name mod_nm (ASTAUX::MkNameFromId(ASTAUX::MkId(L"DefaultMod"), cid));
+      // create module
+      TYPE_AS_Name mod_nm (ASTAUX::MkNameFromId(ASTAUX::MkId(L"DefaultMod"), cid));
 
-    TYPE_AS_Module new_mod;
-    new_mod.Init (mod_nm, new_int, defs, cid);
+      TYPE_AS_Module new_mod;
+      new_mod.Init (mod_nm, new_int, defs, cid);
 
-    // insert this module
-    OM_TransInsertModule (new_mod);
+      // insert this module
+      OM_TransInsertModule (new_mod);
 
-    // initialization needed to be able to evaluate expressions
+      // initialization needed to be able to evaluate expressions
 
-    theStackMachine().PushEmptyEnv ();
-    theStackMachine().PushTypeInst(Map());
+      theStackMachine().PushEmptyEnv ();
+      theStackMachine().PushTypeInst(Map());
 
-    // initialize the global values
-    InitializeGlobalVal (mod_nm);
+      // initialize the global values
+      InitializeGlobalVal (mod_nm);
 
-    // remove intialization parts
-    theStackMachine().PopEnvL ();
-    theStackMachine().PopTypeInst();
-  }
-  else
-  {
-    // we have a number of modules
-    // translate each of the modules and insert them into the proper maps
-    size_t len_doc_l = doc_l.Length();
-    for (size_t index = 1; index <= len_doc_l; index++)
-      OM_TransInsertModule (doc_l[index]);
+      // remove intialization parts
+      theStackMachine().PopEnvL ();
+      theStackMachine().PopTypeInst();
+    }
+    else {
+      // we have a number of modules
+      // translate each of the modules and insert them into the proper maps
+      size_t len_doc_l = doc_l.Length();
+      for (size_t index = 1; index <= len_doc_l; index++) {
+        OM_TransInsertModule (doc_l[index]);
+      }
 
-    SetSDeps(MOD::TransStaticRef(this->mods)); // 20070719
+      SetSDeps(MOD::TransStaticRef(this->mods)); // 20070719
+    }
   }
 }
 #endif //VDMSL
@@ -1415,8 +1414,7 @@ void EvalState::OM_TransInsertModule (const Record & mod_sig)
   theCompiler().SetClMod(mod_name);
   theCompiler().ResetProgramTable(mod_name);
 
-  if (this->mods.DomExists (mod_name) || this->imods.DomExists (mod_name))
-  {
+  if (this->mods.DomExists (mod_name) || this->imods.DomExists (mod_name)) {
     RTERR::Error (L"OM_TransInsertModule",
                          RTERR_MOD_ALREADY_DEF,
                          M42Sem(AUX::SingleNameToString(mod_name), NULL),
@@ -1655,33 +1653,24 @@ TYPE_GLOBAL_StateMap EvalState::GetModuleState (const TYPE_AS_Name & name) const
 
 // IsGlobalVal
 // id : AS`Name
-// ==> bool * [SEM`VAL]
+// ==> bool * [SEM`VAL] * [AS`Type]
 Tuple EvalState::IsGlobalVal (const TYPE_AS_Name & id, const TYPE_AS_Name & mod_name)
 {
-//  TYPE_GLOBAL_SigmaMO sigmamo (GetModule(mod_name));
-//  const Generic & gv (sigmamo.GetField(pos_GLOBAL_SigmaMO_gv));
-//
-//  Generic val_g;
-//  if (!gv.IsNil () && ((Map &)gv).DomExists(id, val_g))
-//    return mk_(Bool(true), ((const Tuple &)val_g).GetRecord(1));
-//  else
-//    return mk_(Bool(false), Nil());
-
   const TYPE_AS_Name & name (mod_name);
-  if (this->mods.DomExists (name))
-  {
+  if (this->mods.DomExists (name)) {
     const Generic & gv (this->mods[name].GetField(pos_GLOBAL_SigmaMO_gv));
 
-    Generic val_g;
-    if (!gv.IsNil () && ((Map &)gv).DomExists(id, val_g))
-      return mk_(Bool(true), ((const Tuple &)val_g).GetRecord(1));
-    else
-      return mk_(Bool(false), Nil());
+    if (!gv.IsNil () && ((Map &)gv).DomExists(id)) {
+      Tuple t (((Map &)gv)[id]);
+      return mk_(Bool(true), t.GetRecord(1), t.GetField(2));
+    }
+    else {
+      return mk_(Bool(false), Nil(), Nil());
+    }
   }
-  else
-  {
+  else {
     RTERR::Error (L"IsGlobalVal", RTERR_MOD_NOT_DEFINED, M42Sem(AUX::SingleNameToString(name), NULL), Nil(), Sequence());
-    return mk_(Bool(false), Nil());
+    return mk_(Bool(false), Nil(), Nil());
   }
 }
 #endif // VDMSL

@@ -16,7 +16,11 @@
 using namespace std;
 
 #if QTVER >= 4
+#if QTVER >= 5
+#include <QtWidgets/QtWidgets>
+#else
 #include <QtGui/QtGui>
+#endif
 #else
 #include <qapplication.h>
 #include <qpixmap.h>

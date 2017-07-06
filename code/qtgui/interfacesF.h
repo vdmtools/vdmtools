@@ -15,7 +15,11 @@
 #define __interfacesw_h__
 
 #if QTVER >= 4
+#if QTVER >= 5
+#include <QtWidgets/QtWidgets>
+#else
 #include <QtGui/QtGui>
+#endif
 #define QLISTWIDGET QListWidget
 #define WFlags Qt::WindowFlags
 #else

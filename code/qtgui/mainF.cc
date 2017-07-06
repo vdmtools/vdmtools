@@ -198,6 +198,10 @@ mainW::mainW(QApplication &app) : QMainWindow( 0, Qt2TB::GiveToolTitleI() )
   this->pb = new QProgressBar(sb);
   sb->addWidget(pb, 1);
 
+#if QT_VERSION >= 0x040600
+  this->menuBar()->setNativeMenuBar(false);
+#endif // QT_VERSION >= 0x040600
+
   // Create menus
   this->createProjectMenu();
   this->createFileMenu();
@@ -1541,7 +1545,11 @@ bool mainW::createVDMFile(const QString & filenm, const QString & clmodnm)
   QString codecName (QTLOCALE::MenuNameToCodecName(this->ow->getCurrentCodecName()));
 
 #if QT_VERSION >= 0x040000
+#if QT_VERSION >= 0x050000
+  QTextCodec* codec = QTextCodec::codecForName (codecName.toLatin1());
+#else
   QTextCodec* codec = QTextCodec::codecForName (codecName.toAscii());
+#endif // QT_VERSION >= 0x050000
 #else
   QTextCodec* codec = QTextCodec::codecForName (codecName);
 #endif // QT_VERSION >= 0x040000
@@ -3470,9 +3478,14 @@ void mainW::setFont(QFont newFont)
 QString mainW::getTextCodecName()
 {
   QString name;
+#if QT_VERSION >= 0x050000
+  QTextCodec* pCodec = QTextCodec::codecForLocale();
+#else
   QTextCodec* pCodec = QTextCodec::codecForTr();
-  if( pCodec != NULL )
+#endif // QT_VERSION >= 0x050000
+  if( pCodec != NULL ) {
     name = pCodec->name();
+  }
   return name;
 }
 
@@ -4920,14 +4933,22 @@ void mainW::setEncoding(const QString & cnm)
   QString codecName (QTLOCALE::MenuNameToCodecName(cnm));
 
 #if QT_VERSION >= 0x040000
+#if QT_VERSION >= 0x050000
+  QTextCodec* pCodec = QTextCodec::codecForName (codecName.toLatin1());
+#else
   QTextCodec* pCodec = QTextCodec::codecForName (codecName.toAscii());
+#endif // QT_VERSION >= 0x050000
 #else
   QTextCodec* pCodec = QTextCodec::codecForName (codecName);
 #endif // QT_VERSION >= 0x040000
 
   if( NULL != pCodec )
   {
+#if QT_VERSION >= 0x050000
+    QTextCodec::setCodecForLocale( pCodec );
+#else
     QTextCodec::setCodecForTr( pCodec );
+#endif // QT_VERSION >= 0x050000
 
     this->logWrite(QString("Setting text codec to be ") + cnm);
 

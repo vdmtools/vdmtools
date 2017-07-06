@@ -18,7 +18,11 @@
 #define __mainF_h__
 
 #if QTVER >= 4
+#if QTVER >= 5
+#include <QtWidgets/QtWidgets>
+#else
 #include <QtGui/QtGui>
+#endif
 #define QMENU QMenu
 #define QLIST QList
 #define QACTIONPTRLIST QList<QAction *>

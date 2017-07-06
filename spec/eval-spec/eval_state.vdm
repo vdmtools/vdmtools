@@ -378,17 +378,14 @@ TranslateAST (doc_l, ast_is_new) ==
                                                   new_mod = mk_AS`Module(mod_nm, mk_AS`Interface({|->}, nil, cid),
                                                                          hd doc_l, cid)
                                               in
-                                               (
-                                                OM_TransInsertModule (new_mod);
+                                               (OM_TransInsertModule (new_mod);
                                                 STKM`PushEmptyEnv();
                                                 STKM`PushTypeInst({|->});
-                                                --OM_TransInsertModule (new_mod);
                                                 InitializeGlobalVal (mod_nm);
                                                 STKM`PopEnvL();
                                                 STKM`PopTypeInst()),
-      others ->  (for mod_sig in doc_l do
-                    OM_TransInsertModule (mod_sig);
-                  )
+      others -> for mod_sig in doc_l do
+                  OM_TransInsertModule (mod_sig)
     end;
 
 \end{vdm_al}
@@ -1076,11 +1073,11 @@ OM_TransInsertModule (mod_sig) ==
     else
       if is_AS`DLModule(mod_sig)
       then
-       ( dcl sigmamo : GLOBAL`SigmaIMO := MOD`TranslateDLModule (mod_sig);
-         imods := imods ++ { mod_name |-> sigmamo} )
+        def sigmaimo = MOD`TranslateDLModule (mod_sig);
+        in imods := imods ++ { mod_name |-> sigmaimo }
       else
-       ( dcl sigmamo : GLOBAL`SigmaMO := MOD`TranslateModule (mod_sig);
-         mods := mods ++ { mod_name |-> sigmamo } )
+        def sigmamo = MOD`TranslateModule (mod_sig);
+        in  mods := mods ++ { mod_name |-> sigmamo };
    );
 \end{vdm_al}
 
@@ -1235,14 +1232,14 @@ This operation returns the global state for the given module name.
 \begin{vdm_al}
 operations
 
-IsGlobalVal : AS`Name * AS`Name ==> bool * [SEM`VAL]
+IsGlobalVal : AS`Name * AS`Name ==> bool * [SEM`VAL] * [AS`Type]
 IsGlobalVal (loc_name, mod_name) ==
   def sigmamo = GetModule (mod_name)
   in
     if sigmamo.gv <> nil and loc_name in set dom sigmamo.gv
-    then let mk_(val, -) = sigmamo.gv(loc_name)
-         in return mk_(true, val)
-    else return mk_(false, nil);
+    then let mk_(val, tp) = sigmamo.gv(loc_name)
+         in return mk_(true, val, tp)
+    else return mk_(false, nil, nil);
 \end{vdm_al}
 
 This operation returns true if the input identifier is defined in the
@@ -2005,7 +2002,7 @@ LookUp (name) ==
     then EXPR`GetPolyVal (loc_nm, mod_nm)
     else
       cases IsGlobalVal(loc_nm, mod_nm):
-        mk_(true,val) -> return val,
+        mk_(true,val,-) -> return val,
         others -> if STKM`HdContext() <> <PURE>
                   then
                     cases IsGlobalState(loc_nm, mod_nm):

@@ -256,15 +256,28 @@ QTREEWIDGET * browserW::createClassListView( QWidget * parent )
   listview->setHeaderLabels(hlabels);
 
   QHeaderView * header = listview->header();
+#if QT_VERSION >= 0x050000
+  header->setSectionsMovable(false);
+#else
   header->setMovable(false);
+#endif // QT_VERSION >= 0x050000
   header->setStretchLastSection(false);
   header->setDefaultSectionSize(50);
+#if QT_VERSION >= 0x050000
+  header->setSectionResizeMode(0, QHeaderView::Interactive);
+  header->setSectionResizeMode(1, QHeaderView::Fixed);
+  header->setSectionResizeMode(2, QHeaderView::Fixed);
+  header->setSectionResizeMode(3, QHeaderView::Fixed);
+  header->setSectionResizeMode(4, QHeaderView::Fixed);
+  header->setSectionResizeMode(5, QHeaderView::Fixed);
+#else
   header->setResizeMode(0, QHeaderView::Interactive);
   header->setResizeMode(1, QHeaderView::Fixed);
   header->setResizeMode(2, QHeaderView::Fixed);
   header->setResizeMode(3, QHeaderView::Fixed);
   header->setResizeMode(4, QHeaderView::Fixed);
   header->setResizeMode(5, QHeaderView::Fixed);
+#endif // QT_VERSION >= 0x050000
 
   listview->setColumnWidth(0, 100);
   listview->setColumnWidth(1, 50);
@@ -319,13 +332,24 @@ QTREEWIDGET * browserW::createJavaListView( QWidget * parent )
   listview->setHeaderLabels(hlabels);
 
   QHeaderView * header = listview->header();
+#if QT_VERSION >= 0x050000
+  header->setSectionsMovable(false);
+#else
   header->setMovable(false);
+#endif // QT_VERSION >= 0x050000
   header->setStretchLastSection(false);
   header->setDefaultSectionSize(50);
+#if QT_VERSION >= 0x050000
+  header->setSectionResizeMode(0, QHeaderView::Interactive);
+  header->setSectionResizeMode(1, QHeaderView::Fixed);
+  header->setSectionResizeMode(2, QHeaderView::Fixed);
+  header->setSectionResizeMode(3, QHeaderView::Fixed);
+#else
   header->setResizeMode(0, QHeaderView::Interactive);
   header->setResizeMode(1, QHeaderView::Fixed);
   header->setResizeMode(2, QHeaderView::Fixed);
   header->setResizeMode(3, QHeaderView::Fixed);
+#endif // QT_VERSION >= 0x050000
 
   listview->setColumnWidth(0, 100);
   listview->setColumnWidth(1, 50);
@@ -387,14 +411,26 @@ QTREEWIDGET* browserW::createModuleListView( QWidget * parent )
   listview->setHeaderLabels(hlabels);
 
   QHeaderView * header = listview->header();
+#if QT_VERSION >= 0x050000
+  header->setSectionsMovable(false);
+#else
   header->setMovable(false);
+#endif // QT_VERSION >= 0x050000
   header->setStretchLastSection(false);
   header->setDefaultSectionSize(50);
+#if QT_VERSION >= 0x050000
+  header->setSectionResizeMode(0, QHeaderView::Interactive);
+  header->setSectionResizeMode(1, QHeaderView::Fixed);
+  header->setSectionResizeMode(2, QHeaderView::Fixed);
+  header->setSectionResizeMode(3, QHeaderView::Fixed);
+  header->setSectionResizeMode(4, QHeaderView::Fixed);
+#else
   header->setResizeMode(0, QHeaderView::Interactive);
   header->setResizeMode(1, QHeaderView::Fixed);
   header->setResizeMode(2, QHeaderView::Fixed);
   header->setResizeMode(3, QHeaderView::Fixed);
   header->setResizeMode(4, QHeaderView::Fixed);
+#endif // QT_VERSION >= 0x050000
 
   listview->setColumnWidth(0, 100);
   listview->setColumnWidth(1, 50);

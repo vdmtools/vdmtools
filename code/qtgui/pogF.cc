@@ -133,8 +133,9 @@ pogW::pogW( mainW * mainw, QWidget* parent, const char* name, WFlags fl )
 
 #if QT_VERSION >= 0x040000
     QStringList hlabels;
-    for(int i = 0; i < (int)numof(columns); i++)
+    for(int i = 0; i < (int)numof(columns); i++) {
       hlabels.append(tr( columns[i].name ));
+    }
 
     QTreeWidget * lv = new QTreeWidget( pogList );
     lv->setColumnCount (numof(columns));
@@ -143,6 +144,16 @@ pogW::pogW( mainW * mainw, QWidget* parent, const char* name, WFlags fl )
     lv->setHeaderLabels(hlabels);
 
     QHeaderView * header = lv->header();
+#if QT_VERSION >= 0x050000
+    header->setSectionsMovable(false);
+    header->setStretchLastSection(true);
+    header->setSectionResizeMode(0, QHeaderView::Fixed);
+    header->setSectionResizeMode(1, QHeaderView::Interactive);
+    header->setSectionResizeMode(2, QHeaderView::Interactive);
+    header->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+    header->setSectionResizeMode(4, QHeaderView::Fixed);
+    header->setSectionResizeMode(5, QHeaderView::Interactive);
+#else
     header->setMovable(false);
     header->setStretchLastSection(true);
     header->setResizeMode(0, QHeaderView::Fixed);
@@ -151,6 +162,7 @@ pogW::pogW( mainW * mainw, QWidget* parent, const char* name, WFlags fl )
     header->setResizeMode(3, QHeaderView::ResizeToContents);
     header->setResizeMode(4, QHeaderView::Fixed);
     header->setResizeMode(5, QHeaderView::Interactive);
+#endif // QT_VERSION >= 0x050000
 
     lv->setRootIsDecorated(false);
     lv->setSelectionMode(QAbstractItemView::SingleSelection);

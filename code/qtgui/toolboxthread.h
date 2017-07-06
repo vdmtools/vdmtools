@@ -34,7 +34,11 @@
 #define __toolboxthread_h__
 
 #if QTVER >= 4
+#if QTVER >= 5
+#include <QtWidgets/QtWidgets>
+#else
 #include <QtGui/QtGui>
+#endif
 #else
 #include <qthread.h>
 #include <qstringlist.h>
