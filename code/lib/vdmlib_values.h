@@ -23,6 +23,7 @@
 #include "stdarg.h"
 #include <iomanip>
 #include <math.h>
+#include <cmath>
 
 //
 // NilVal
@@ -168,7 +169,7 @@ public:
 #define LONGDOUBLE 1
 #if defined(LONGDOUBLE) && !defined(_MSC_VER) && !defined(__Cygwin__)
 #define VLFLOOR floorl
-#define VLFABS fabsl
+#define VLFABS std::fabs
 #define VLCEIL ceill
 #ifdef __FreeBSD__
 #define VLPOW pow
