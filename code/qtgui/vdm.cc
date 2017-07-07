@@ -59,6 +59,10 @@
 #include <unistd.h>
 #endif // __Cygwin__
 
+#if __cplusplus > 199711L
+#include <thread>
+#endif
+
 TBOptions *cliOpt = NULL;        
 
 static mainW * mainw = NULL;
@@ -459,12 +463,13 @@ int main (int argc, char * argv[])
   Qt2TB::CleanUpI();
   mainw->cleanUp();
 
-#ifdef __darwin__
+#if defined( __darwin__ ) || defined( __linux__ )
+#if __cplusplus > 199711L
+  std::this_thread::sleep_for(std::chrono::milliseconds (100));
+#else
   usleep(100000);
-#endif // __darwin__
-#ifdef __linux__
-  usleep(100000);
-#endif // __linux__
+#endif
+#endif // __darwin__ || __linux__
 
   return result;
 }
