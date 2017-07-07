@@ -63,19 +63,19 @@ quoteliteral           \<{identifierorkeyword}\>
 
 %%
 
-{characterliteral}	{  register int i;
+{characterliteral}	{  size_t i;
                            for (i = 0; (valueptext[i] = valueptext[i+1]) != '\0'; i++);
                            valueptext[i-1] = '\0';
                            VALUEPARSER::valueptextstring = valueptext;
                            return (LEX_char_lit);
                         }
-{quoteliteral}		{  register int i;
+{quoteliteral}		{  size_t i;
                            for (i = 0; (valueptext[i] = valueptext[i+1]) != '\0'; i++);
                            valueptext[i-1] = '\0';
                            VALUEPARSER::valueptextstring = valueptext;
                            return(LEX_quote_lit);
                         }
-{textliteral}           {  register int i;
+{textliteral}           {  size_t i;
                            for (i = 0; (valueptext[i] = valueptext[i+1]) != '\0'; i++);
                            valueptext[i-1] = '\0';
                            VALUEPARSER::valueptextstring = valueptext;

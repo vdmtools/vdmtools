@@ -120,7 +120,7 @@ private:
   void EnableTokens(NumTokenArray::iterator, int length);
 
   struct EXC_YACCSTACK_OVERFLOW : public exception {};
-  void parse_stack_check(shortp base, register shortp stack) {
+  void parse_stack_check(shortp base, shortp stack) {
     if (stack >= base+YYSTACKSIZE - 5) {
       throw EXC_YACCSTACK_OVERFLOW();
     }

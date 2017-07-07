@@ -28,6 +28,12 @@ fi
 export QTVERSION=4
 export QT3DIR=${USERLIBDIR}/qt-3.3
 export QT4DIR=${USERLIBDIR}/qt4
+export QT5DIR=${USERLIBDIR}/qt5
+export QTMOC=/usr/bin/moc-qt${QTVERSION}
+export QTLRELEASE=/usr/bin/lrelease-qt${QTVERSION}
+if [ "5" = ${QTVERSION} ]; then
+  export QTINCDIR=/usr/include/qt5
+fi
 
 export CORBAHOME=/usr/local/omniORB
 export LD_LIBRARY_PATH=${CORBAHOME}/lib:${LD_LIBRARY_PATH}

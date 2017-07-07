@@ -201,7 +201,7 @@ public:
   static void javasSave_LexStringP (YYSTYPE* , const char *);
 
   static void javasIniPos (YYLTYPE *pos);
-  static void javasAdjustLineColumn (register char* s);
+  static void javasAdjustLineColumn (char* s);
 
   static void javasSetTokenList (TokenList * tkl);
   static void javasINSERT_TOKEN2 (YYLTYPE *pos, int tok, char * txt);

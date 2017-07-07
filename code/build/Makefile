@@ -910,7 +910,7 @@ GCC_MINOR = $(word 2, $(subst ., ,$(strip $(GCCVERSION))))
 #DEBUG= -g
 
 CCPATH = /usr/bin/
-ARCH_DEFINES = -D__linux__ $(NOCG)
+ARCH_DEFINES = -std=c++11 -D__linux__ $(NOCG)
 LINK_DEBUG=
 
 TUNEOPT=-mtune
@@ -1651,7 +1651,7 @@ endif # 10.6
 
 ifeq ($(strip $(LION_OR_LATER)),true)
 SDK?=$(shell xcodebuild -version -sdk | grep SDKs/MacOSX | head -1 | awk -F ' ' '{print $$2}')
-ARCH=-arch x86_64
+ARCH=-arch x86_64 -std=c++11
 CCPATH = /usr/bin/
 GCC_VERSION=
 CC      = $(CCPATH)clang$(GCC_VERSION)
