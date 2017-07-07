@@ -1600,6 +1600,7 @@ OPTIMIZE += $(PROFILE)
 
 OSV_MAJOR=$(shell uname -r | awk -F '.' '{print $$1}')
 LION_OR_LATER=$(shell [ $(OSV_MAJOR) -ge 11 ] && echo true)
+MOUNTAINLION_OR_LATER=$(shell [ $(OSV_MAJOR) -ge 12 ] && echo true)
 
 CCPATH = /usr/bin/
 
@@ -1655,7 +1656,14 @@ endif # 10.6
 
 ifeq ($(strip $(LION_OR_LATER)),true)
 SDK?=$(shell xcodebuild -version -sdk | grep SDKs/MacOSX | head -1 | awk -F ' ' '{print $$2}')
-ARCH=-arch x86_64 -std=c++11
+ARCH=-arch x86_64
+ifeq ($(strip $(MOUNTAINLION_OR_LATER)),true)
+ARCH += -std=c++11
+else
+ifeq ($(strip $(QTVERSION)),5)
+ARCH += -std=c++11
+endif
+endif
 CCPATH = /usr/bin/
 GCC_VERSION=
 CC      = $(CCPATH)clang$(GCC_VERSION)
