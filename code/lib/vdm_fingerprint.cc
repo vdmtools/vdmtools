@@ -27,7 +27,7 @@ unsigned long Fingerprint::crcTable[256];
 /****************************************************************************/
 unsigned long Fingerprint::getcrc(const wchar_t *p, int len)
 {
-  register unsigned long crc;
+  unsigned long crc;
   int c;
 
   crc = 0x0;
@@ -40,7 +40,7 @@ unsigned long Fingerprint::getcrc(const wchar_t *p, int len)
 
 void Fingerprint::continue_crc(unsigned long & crcinout, const wchar_t *p, int len)
 {
-  register unsigned long crc = crcinout;
+  unsigned long crc = crcinout;
   int c;
 
   while(len-->0) {

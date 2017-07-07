@@ -747,7 +747,7 @@ SingleCharacter    [^\r\n\'\\]
                               return StringLit; 
                             }
 <strings>{StringCharacter}+ {  
-                              register int i;
+                              size_t i;
                               for (i = 0; (yytext[i] != '\0'); i++)
                                 JAVASCANNER::AppendChar(Char (yytext[i]));
                               JAVASCANNER::javasAdjustLineColumn (yytext); 
@@ -918,9 +918,9 @@ void JAVASCANNER::javasIniPos (YYLTYPE *pos)
   pos->last_column  = javasNextPos.GetColumnCount(); 
 }
 
-void JAVASCANNER::javasAdjustLineColumn (register char* s)
+void JAVASCANNER::javasAdjustLineColumn (char* s)
 {  
-  register int i = 0;
+  size_t i = 0;
   javasCurrentPos = javasNextPos; 
   while (s[i] != '\0')
   {  
