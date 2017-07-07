@@ -816,7 +816,7 @@ $(LIB_QTGUIROSE_RT): $(LIB_QTGUIROSE_RT)($(LIB_QTGUI_RT_O))
 endif
 ############## end of Qt
 
-################################## Solaris 2.10 ##############################
+################################## Solaris ##############################
 ifeq ($(strip $(OSTYPE)),SunOS)
 
 CCPATH = /usr/sfw/bin/
@@ -844,7 +844,7 @@ LNKOPT += -L/usr/local/lib -lposix4 -lsocket
 
 FLEXROOT?=/usr/sfw
 CPUTYPE = $(shell uname -p)
-DISTARCH    = solaris10-$(CPUTYPE)
+DISTARCH = solaris10-$(CPUTYPE)
 DISTCC = gcc-$(GCC_MAJOR).$(GCC_MINOR)
 STRIP = /usr/sfw/bin/gstrip -g
 
@@ -910,8 +910,12 @@ GCC_MINOR = $(word 2, $(subst ., ,$(strip $(GCCVERSION))))
 #DEBUG= -g
 
 CCPATH = /usr/bin/
-ARCH_DEFINES = -std=c++11 -D__linux__ $(NOCG)
+ARCH_DEFINES = -D__linux__ $(NOCG)
 LINK_DEBUG=
+
+ifeq ($(strip $(CXX)),$(CCPATH)clang++)
+ARCH_DEFINES += -std=c++11
+endif
 
 TUNEOPT=-mtune
 ifeq ($(strip $(GCC_MAJOR)),3)
