@@ -575,8 +575,8 @@ ExeLOOKUP(name) ==
 ExeLOOKUPSTATIC: AS`Name ==> ()
 ExeLOOKUPSTATIC(name) ==
   cases STATE`LookUpStatic(name):
-    mk_(true,val,-,-) -> STKM`Push(val),
-    mk_(false,-,-,-)  -> RTERR`Error(RTERR`STATIC_NOT_IN_SCOPE, nil, nil, [])
+    mk_(true,val,-,-,-) -> STKM`Push(val),
+    mk_(false,-,-,-,-)  -> RTERR`Error(RTERR`STATIC_NOT_IN_SCOPE, nil, nil, [])
   end;
 
 ExeLOOKUPOP: AS`Name ==> ()

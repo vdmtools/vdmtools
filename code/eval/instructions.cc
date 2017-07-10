@@ -1030,8 +1030,9 @@ void StackEval::ExeLOOKUPSTATIC(const TYPE_AS_Name & name)
   if (lus.GetBoolValue(1) && !lus.GetRecord(2).IsNil()) {
     PUSH(lus.GetRecord(2));
   }
-  else
+  else {
     RTERR::Error(L"ExeLOOKUPSTATIC", RTERR_STATIC_NOT_IN_SCOPE, Nil(), Nil(), Sequence());
+  }
 }
 
 // ExeLOOKUPOP
@@ -1041,19 +1042,15 @@ void StackEval::ExeLOOKUPOP(const TYPE_AS_Name & name)
 {
   const TYPE_AS_Name & clnm (GetCurCl());
   Map aop (theState().GetAllOps(clnm));
-  if (aop.DomExists(name))
-  {
+  if (aop.DomExists(name)) {
     PUSH(aop[name]);
   }
-  else
-  {
+  else {
     Generic localover (theState().LookUpOverInClass(clnm, name));
-    if (!localover.IsNil())
-    {
+    if (!localover.IsNil()) {
       PUSH(localover);
     }
-    else
-    {
+    else {
       // TODO: regacy specification
       // the case of constructor is't locally defined
       Tuple lofp (theState().LookOpFctPoly(name));

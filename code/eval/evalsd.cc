@@ -392,8 +392,8 @@ Tuple EvalState::LookUpSD (const TYPE_STKM_StateDesignator & sd)
       Tuple lus (LookUpStatic(sd));
       if (lus.GetBoolValue(1)) {
         const TYPE_SEM_VAL & val (lus.GetRecord(2));
-        const TYPE_AS_Name & clnm (lus.GetRecord(3));
-        const TYPE_AS_Access & access (lus.GetRecord(4));
+        const TYPE_AS_Name & clnm (lus.GetRecord(4));
+        const TYPE_AS_Access & access (lus.GetRecord(5));
 
         TYPE_AS_Name thename (AUX::ExtractName(sd));
         TYPE_AS_Type type (GetInstVarsTp(clnm)[thename]);
