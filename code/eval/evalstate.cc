@@ -621,6 +621,7 @@ void EvalState::AddCPUAndBUSDefs( const Map & sys_m )
                 TYPE_AS_Expr instnm (cs.get_args().Hd());
                 if (instnm.Is(TAG_TYPE_AS_Name)) {
                   TYPE_AS_Name fullnm (ASTAUX::Combine2Names(sysnm,instnm));
+                  // bool * [SEM`VAL] * *[AS`Type] * [As`Name] * [AS`Access]
                   Tuple lup (LookUpStatic(fullnm));
                   if( lup.GetBoolValue(1) ) {
                     GetCI().IncTestCoverageInfo(ASTAUX::GetCid(cs.get_obj())); // 20081030
@@ -1700,10 +1701,11 @@ void EvalState::SetInstanceVar(const TYPE_AS_Name & nm, const TYPE_SEM_VAL & val
     clnm = iios.GetField(5);
   }
   else {
+    // bool * [SEM`VAL] * *[AS`Type] * [As`Name] * [AS`Access]
     Tuple lus (LookUpStatic(nm));
     if (lus.GetBoolValue(1)) {
       isit = true;
-      clnm = lus.GetField(3);
+      clnm = lus.GetField(4);
     }
   }
 // <-- 20090311
@@ -3364,6 +3366,7 @@ TYPE_SEM_VAL EvalState::LookUp(const TYPE_AS_Name & name_)
         return ReturnLookUp(val_obj, RTERR_INTERNAL_ERROR);
       }
       else {
+        // bool * [SEM`VAL] * *[AS`Type] * [As`Name] * [AS`Access]
         Tuple lus (LookUpStatic(name));
         const Generic & staticval (lus.GetField(2));
         if (staticval.IsNil()) {
@@ -3410,6 +3413,7 @@ TYPE_SEM_VAL EvalState::LookUp(const TYPE_AS_Name & name_)
         return ReturnLookUp(val_opfct, RTERR_OP_OR_FUN_NOT_IN_SCOPE);
       }
 
+      // bool * [SEM`VAL] * *[AS`Type] * [As`Name] * [AS`Access]
       Tuple lus (LookUpStatic(name));
       const Bool & isstatic (lus.GetBool(1));
       const Generic & staticval (lus.GetField(2));
@@ -4273,8 +4277,7 @@ Generic EvalState::LookUpOverInClass(const TYPE_AS_Name & clsnm, const TYPE_AS_N
 
 // LookUpStatic
 // name : AS`Name
-// ==> bool * [SEM`VAL]
-// ==> bool * [SEM`VAL] * [As`Name] * [AS`Access] // impl
+// ==> bool * [SEM`VAL] * *[AS`Type] * [As`Name] * [AS`Access]
 Tuple EvalState::LookUpStatic(const TYPE_AS_Name & name)
 {
   if (name.GetSequence(pos_AS_Name_ids).Length() == 2) {
@@ -4295,16 +4298,17 @@ Tuple EvalState::LookUpStatic(const TYPE_AS_Name & name)
       if (classesClsnm.GetMap(pos_GLOBAL_SigmaClass_statics).DomExists(memnm, tupG)) {
         type_dUU3P tup (tupG);                     // (SEM`VAL * AS`Type *  AS`Access)
         const TYPE_GLOBAL_OrigCl & curcls (theStackMachine().GetCurCl());
+        const Generic & tp (tup.GetField(2));
         const TYPE_AS_Access & access (tup.GetField(3));
         if (AccessOk(access, curcls, clsnm))
 #ifdef VICE
-          return mk_(Bool(true), theSystem().UpdateObjRef(tup.GetRecord(1)), clsnm, access);
+          return mk_(Bool(true), theSystem().UpdateObjRef(tup.GetRecord(1)), tp, clsnm, access);
 #else
-          return mk_(Bool(true), tup.GetRecord(1), clsnm, access); // SEM`VAL
+          return mk_(Bool(true), tup.GetRecord(1), tp, clsnm, access); // SEM`VAL
 #endif // VICE
         else
           //return mk_(Bool(false), Nil(), Nil(), Nil());
-          return mk_(Bool(true), Nil(), Nil(), Nil());
+          return mk_(Bool(true), Nil(), Nil(), Nil(), Nil());
       }
 
 // 20070910
@@ -4314,11 +4318,11 @@ Tuple EvalState::LookUpStatic(const TYPE_AS_Name & name)
       Tuple lsofp (LookStaticOpFctPoly(clsnm, memnm)); // bool* bool* [SEM`VAL]
       if(lsofp.GetBoolValue(1)) {
         if(lsofp.GetBoolValue(2)) {
-          return mk_(Bool(true), lsofp.GetRecord(3), clsnm, Int(PUBLIC_AS));  // [SEM`VAL]
+          return mk_(Bool(true), lsofp.GetRecord(3), Nil(), clsnm, Int(PUBLIC_AS));  // [SEM`VAL]
         }
         else {
           //return mk_(Bool(true), Nil(), clsnm, Int(PUBLIC_AS));
-          return mk_(Bool(true), Nil(), Nil(), Nil());
+          return mk_(Bool(true), Nil(), Nil(), Nil(), Nil());
         }
       }
  
@@ -4335,12 +4339,14 @@ Tuple EvalState::LookUpStatic(const TYPE_AS_Name & name)
       }
 
       // not exists
-      return mk_(Bool(false), Nil(), Nil(), Nil());
+      return mk_(Bool(false), Nil(), Nil(), Nil(), Nil());
     }
-    else
+    else {
       RTERR::Error(L"LookUpStatic", RTERR_CLNM_NOT_DEFINED,
                           M42Sem(AUX::SingleNameToString(name), NULL), Nil(),
                           Sequence().ImpAppend(AUX::SingleNameToString(clsnm)));
+      return mk_(Bool(false), Nil(), Nil(), Nil(), Nil());
+    }
   }
   else
   { // name.get_ids().Length() != 2
@@ -4348,20 +4354,23 @@ Tuple EvalState::LookUpStatic(const TYPE_AS_Name & name)
     switch(curcls.GetTag()) {
       case TAG_TYPE_AS_Name: {
 // 20150226 -->
-        if (curcls == ASTAUX::MkNameFromVoid())
-          return mk_(Bool(false), Nil(), Nil(), Nil());
+        if (curcls == ASTAUX::MkNameFromVoid()) {
+          return mk_(Bool(false), Nil(), Nil(), Nil(), Nil());
+        }
 // <--20150226
         return LookUpStatic(AUX::ConstructDoubleName(curcls, name));
       }
       case TAG_TYPE_GLOBAL_Start: {
-        if (!this->initclstack.IsEmpty())
+        if (!this->initclstack.IsEmpty()) {
           return LookUpStatic(AUX::ConstructDoubleName(this->initclstack.Hd(), name));
-        else
-          return mk_(Bool(false), Nil(), Nil(), Nil());
+        }
+        else {
+          return mk_(Bool(false), Nil(), Nil(), Nil(), Nil());
+        }
       }
     }
   }
-  return mk_(Bool(false), Nil(), Nil(), Nil()); // dummy
+  return mk_(Bool(false), Nil(), Nil(), Nil(), Nil()); // dummy
 }
 
 // ReturnLookUp

@@ -59,6 +59,10 @@
 #include <qinputdialog.h>
 #endif // QT_VERSION < 0x040000
 
+#if __cplusplus > 199711L
+#include <thread>
+#endif
+
 #include "qtport.h"
 
 #ifdef _MSC_VER
@@ -3367,7 +3371,11 @@ void mainW::userEvent(QEvent *e)
 #endif // QT_VERSION < 0x040000
   this->setComplete(true);
 #ifdef __darwin__
+#if __cplusplus > 199711L
+  std::this_thread::sleep_for(std::chrono::microseconds(20));
+#else
   usleep(20);
+#endif
 #endif // __darwin__
 }
 
@@ -4322,7 +4330,11 @@ void mainW::setComplete( bool complete )
 #ifdef _MSC_VER
     Sleep( 1 );
 #else
+#if __cplusplus > 199711L
+    std::this_thread::sleep_for(std::chrono::microseconds(3));
+#else
     usleep( 1 );
+#endif
 #endif // _MSC_VER
 }
 
@@ -4346,7 +4358,11 @@ void mainW::waitComplete()
 //    Sleep( 5 );
     Sleep( 10 );
 #else
+#if __cplusplus > 199711L
+    std::this_thread::sleep_for(std::chrono::microseconds(3));
+#else
     usleep( 10 );
+#endif
 #endif // _MSC_VER
   }
 }
