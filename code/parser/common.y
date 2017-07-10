@@ -622,7 +622,7 @@ static void yyerror(const char *);
 %type <record>   WhileLoop
 %type <record>   IfStatement
 %type <sequence> ListOfElsifStatements
-%type <generic>  ElseStatement
+%type <record>   ElseStatement
 %type <record>   CasesStatement
 %type <sequence> CasesStatementAlternatives
 %type <record>   CasesStatementAlternative
@@ -4905,7 +4905,42 @@ WhileLoop
         ;
 
 IfStatement
-        : LEX_IF Expression LEX_THEN Statement ListOfElsifStatements ElseStatement
+        : LEX_IF Expression LEX_THEN Statement
+        {
+          $$ = new TYPE_AS_IfStmt();
+          MYPARSER::SetPos2(*$$, @1, @4);
+          $$->SetField (pos_AS_IfStmt_test,  *$2);
+          $$->SetField (pos_AS_IfStmt_cons,  *$4);
+          $$->SetField (pos_AS_IfStmt_elsif, Sequence());
+          $$->SetField (pos_AS_IfStmt_altn,  Nil());
+          delete $2;
+          delete $4;
+        }
+        | LEX_IF Expression LEX_THEN Statement ElseStatement
+        {
+          $$ = new TYPE_AS_IfStmt();
+          MYPARSER::SetPos2(*$$, @1, @5);
+          $$->SetField (pos_AS_IfStmt_test,  *$2);
+          $$->SetField (pos_AS_IfStmt_cons,  *$4);
+          $$->SetField (pos_AS_IfStmt_elsif, Sequence());
+          $$->SetField (pos_AS_IfStmt_altn,  *$5);
+          delete $2;
+          delete $4;
+          delete $5;
+        }
+        | LEX_IF Expression LEX_THEN Statement ListOfElsifStatements
+        {
+          $$ = new TYPE_AS_IfStmt();
+          MYPARSER::SetPos2(*$$, @1, @5);
+          $$->SetField (pos_AS_IfStmt_test,  *$2);
+          $$->SetField (pos_AS_IfStmt_cons,  *$4);
+          $$->SetField (pos_AS_IfStmt_elsif, *$5);
+          $$->SetField (pos_AS_IfStmt_altn,  Nil());
+          delete $2;
+          delete $4;
+          delete $5;
+        }
+        | LEX_IF Expression LEX_THEN Statement ListOfElsifStatements ElseStatement
         {
           $$ = new TYPE_AS_IfStmt();
           MYPARSER::SetPos2(*$$, @1, @6);
@@ -4921,8 +4956,16 @@ IfStatement
         ;
 
 ListOfElsifStatements
-        : /* empty */
-        {  $$ = new Sequence ();
+        : LEX_ELSEIF Expression LEX_THEN Statement
+        {
+          $$ = new Sequence ();
+          TYPE_AS_ElseifStmt EIS;
+          MYPARSER::SetPos3(EIS, @1, @2, @4);
+          EIS.SetField (pos_AS_ElseifStmt_test, *$2);
+          EIS.SetField (pos_AS_ElseifStmt_cons, *$4);
+          $$->ImpAppend (EIS);
+          delete $2;
+          delete $4;
         }
         | ListOfElsifStatements LEX_ELSEIF Expression LEX_THEN Statement
         {
@@ -4937,13 +4980,9 @@ ListOfElsifStatements
         ;
 
 ElseStatement
-        : /* empty */
-        { $$ = new Generic(Nil());
-        }
-        | LEX_ELSE Statement
+        : LEX_ELSE Statement
         {
-          $$ = new Generic(*$2);
-          delete $2;
+          $$ = $2;
         }
         ;
 
