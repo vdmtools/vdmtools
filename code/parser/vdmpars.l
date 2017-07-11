@@ -432,11 +432,6 @@ not{separators}in{separators}{identifierorkeyword}  {
                                }
                              }
                              if (Settings.SetOne()) { 
-                               //if (strcmp(yytext, "set1") == 0) {
-                               //  SCANNER::INSERT_TOKEN2(yylpos, LEX_SET1,yytext);
-			       //  return (LEX_SET1);
-                               //}
-                               //else
                                if (strcmp(yytext, "map1") == 0) {
                                  SCANNER::INSERT_TOKEN2(yylpos, LEX_MAP1,yytext);
 			         return (LEX_MAP1);

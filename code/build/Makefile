@@ -914,7 +914,7 @@ ARCH_DEFINES = -D__linux__ $(NOCG)
 LINK_DEBUG=
 
 ifeq ($(strip $(CXX)),$(CCPATH)clang++)
-ARCH_DEFINES += -std=c++11
+ARCH_DEFINES += -std=c++11 -Wno-deprecated-register
 endif
 
 TUNEOPT=-mtune
@@ -1654,14 +1654,24 @@ CCC     = $(CCPATH)g++$(GCC_VERSION)
 HASPKGBUILD=1
 endif # 10.6
 
+ARCH_DEFINES = -D__darwin__ -DMAJOR_VERSION=$(OSV_MAJOR)
+ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.3)
+ARCH_DEFINES += -B$(SDK)
+LNKOPT += -liconv
+else
+ARCH_DEFINES += -isysroot $(SDK)
+LNKOPT += -liconv -Wl,-syslibroot,$(SDK),-headerpad_max_install_names $(ARCH)
+endif
+LINK_DEBUG=
+
 ifeq ($(strip $(LION_OR_LATER)),true)
 SDK?=$(shell xcodebuild -version -sdk | grep SDKs/MacOSX | head -1 | awk -F ' ' '{print $$2}')
 ARCH=-arch x86_64
 ifeq ($(strip $(MOUNTAINLION_OR_LATER)),true)
-ARCH += -std=c++11
+ARCH += -std=c++11 -Wno-deprecated-register
 else
 ifeq ($(strip $(QTVERSION)),5)
-ARCH += -std=c++11
+ARCH += -std=c++11 -Wno-deprecated-register
 endif
 endif
 CCPATH = /usr/bin/
@@ -1687,25 +1697,11 @@ GCCVERSION = $(shell $(CXX) -dumpversion)
 GCC_MAJOR = $(word 1, $(subst ., ,$(strip $(GCCVERSION))))
 GCC_MINOR = $(word 2, $(subst ., ,$(strip $(GCCVERSION))))
 
-ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.3)
-ARCH_DEFINES = -D__darwin__ -DMAJOR_VERSION=$(OSV_MAJOR) -B$(SDK)
-else
-ARCH_DEFINES = -D__darwin__ -DMAJOR_VERSION=$(OSV_MAJOR) -isysroot $(SDK)
-endif
-
-LINK_DEBUG=
 FLEXROOT?=/usr
 #FLEXROOT?=$(SDK)/usr
 FLEXINC?=$(FLEXROOT)/include
 FLEXLIB?=$(FLEXROOT)/lib
 FLEXBIN?=$(FLEXROOT)/bin
-
-ifeq ($(strip $(MACOSX_DEPLOYMENT_TARGET)),10.3)
-LNKOPT += -liconv
-else
-#LNKOPT += -liconv -Wl,-syslibroot,$(SDK),-headerpad_max_install_names $(ARCH)
-LNKOPT += -liconv -Wl,-syslibroot,$(SDK),-headerpad_max_install_names $(ARCH)
-endif
 
 READLINE_LIB += -lreadline
 

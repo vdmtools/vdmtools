@@ -564,6 +564,7 @@ static void yyerror(const char *);
 %type <record>   OldNameOrName
 %type <record>   IdentifierPrimeList
 %type <record>   Identifier
+%type <record>   SimpleIdentifier
 %type <record>   MacroIdentifier
 #ifdef VDMPP
 %type <record>   KeywordIdentifier
@@ -2714,12 +2715,12 @@ TraceRepeatPattern
         ;
 
 IdentifierSlashList
-        : Identifier
+        : SimpleIdentifier
         { $$ = new Sequence ();
           $$->ImpAppend (*$1);
           delete $1;
         }
-        | IdentifierSlashList '/' Identifier
+        | IdentifierSlashList '/' SimpleIdentifier
         { $1->ImpAppend (*$3);
           delete $3;
         }
@@ -7170,7 +7171,7 @@ IdentifierCommaList
     some error productions, we cannot trap wrong PRIME as eg. L"'".
 **/
 
-Identifier
+SimpleIdentifier
         : LEX_identifier
         {
           $$ = new TYPE_AS_Name();
@@ -7184,6 +7185,10 @@ Identifier
           }
 #endif // FULL
         }
+        ;
+
+Identifier
+        : SimpleIdentifier
         | LEX_dollar_identifier
         {
           $$ = new TYPE_AS_Name();

@@ -99,16 +99,13 @@ ParserRecover::ParserRecover(int yylast,      //tablesize,
     wcerr << L"Recoverdebugflag = " << this->debugflag << endl;
   }
 
-  if (this->debugflag & DEBUG_CHECK_TOKENLIST)
-  {
+  if (this->debugflag & DEBUG_CHECK_TOKENLIST) {
     wofstream log("recover.log", ios::out|ios::ate);
     log << L"beginning of table" << endl;
     log << L"TABSIZE=" << this->repair_tokens.size() << " YYMAXUTOK=" << yymaxutok << endl;
-    for (size_t i = 0; i <= (size_t)yymaxutok; i++)
-    {
+    for (size_t i = 0; i <= (size_t)yymaxutok; i++) {
       TokenTableType::iterator mitr (this->repair_tokens.find(i));
-      if (mitr == this->repair_tokens.end())
-      {
+      if (mitr == this->repair_tokens.end()) {
         log << L"Potential missing token number = " << i << endl;
       }
     }
@@ -125,11 +122,11 @@ ParserRecover::ParserRecover(int yylast,      //tablesize,
 wstring ParserRecover::GetString (int candidate)
 {
   TokenTableType::iterator mitr (this->repair_tokens.find(candidate));
-  if (mitr != this->repair_tokens.end())
-  {
+  if (mitr != this->repair_tokens.end()) {
     wstring res (mitr->second.stringRepr);
-    if (!res.empty())
+    if (!res.empty()) {
       return res;
+    }
   }
   return L"<?" + Int(candidate).ascii() + L">";
 }
@@ -163,8 +160,9 @@ wstring ParserRecover::StripSeq(const TokenSeq & Seq)
   wstring seqstr = L"";
   for (TokenSeq::const_iterator i = seq2.begin(); i != last; ++i ) {
     RecoverToken token (*i);
-    if (seqstr.length() > 0)
+    if (seqstr.length() > 0) {
       seqstr = seqstr + L", ";
+    }
     seqstr += GetString(token.token);
   }
   return seqstr;
@@ -223,8 +221,7 @@ int ParserRecover::Cost(int tok1, int tok2)
 //    return 0;
 //  else
 //    return COST_REPLACE;        // ( tok1 != tok2 )
-  else
-  {
+  else {
     return ((tok1 == tok2) ? 0 : COST_REPLACE);
   }
 }
@@ -239,19 +236,19 @@ int ParserRecover::MinDist(NumTokenArray::const_iterator Inp,
   int inp[100];       // [Inp_Len+1];
   int cont[100];      // [Cont_Len+1];
 
-  for (int i = 0; i < Inp_Len; i++)
+  for (int i = 0; i < Inp_Len; i++) {
     inp[i+1] = Inp[i];
-
-  for (int j = 0; j < Cont_Len; j++)
+  }
+  for (int j = 0; j < Cont_Len; j++) {
     cont[j+1] = Cont[j];
-
+  }
   dist[0][0] = 0;
-  for (int k = 1 ; k <= Inp_Len ; k++ )
+  for (int k = 1 ; k <= Inp_Len ; k++ ) {
     dist[k][0] = dist[k-1][0] + Cost(inp[k], -1); /* delete input */
-
-  for (int l = 1 ; l <= Cont_Len ; l++)
+  }
+  for (int l = 1 ; l <= Cont_Len ; l++) {
     dist[0][l] = dist[0][l-1] + Cost(-1, cont[l]); /* insert in input */
-
+  }
   for (int m = 1 ; m <= Inp_Len ; m++) {
     for (int n = 1; n <= Cont_Len ; n++) {
       int cost = Cost(inp[m], cont[n]);
@@ -316,8 +313,7 @@ wstring ParserRecover::GroupExpected(const TokenSeq & seq, TokenTableType & /*Re
 bool ParserRecover::ShouldQuote(int token)
 {
   TokenTableType::iterator mitr (this->repair_tokens.find(token));
-  if (mitr != this->repair_tokens.end())
-  {
+  if (mitr != this->repair_tokens.end()) {
     return (mitr->second.flag & TTF_NoQuote);
   }
   return false;
@@ -341,11 +337,11 @@ wstring ParserRecover::TextifyTokenSeq(TokenSeq::const_iterator b, TokenSeq::con
                                        bool quote_each, int maxelems)
 {
   wstring Res;
-  for (int i = 0; (b != e) && (maxelems < 0 || i < maxelems); i++, ++b)
-  {
+  for (int i = 0; (b != e) && (maxelems < 0 || i < maxelems); i++, ++b) {
     wstring txt (TextifyToken(*b, quote_each));
-    if (Res.length() > 0)
+    if (Res.length() > 0) {
       Res += L" ";
+    }
     Res += txt;
   }
   return Res;
@@ -398,23 +394,29 @@ SEQ<Char> ParserRecover::GetErrMessage(int num)
     }
     return SEQ<Char>(TBWSTR::string2wstring(msg));
   }
-  else
-  {
+  else {
     switch(num) {
-      case SYNTAXERR_NO_REPAIR:
+      case SYNTAXERR_NO_REPAIR: {
         return SEQ<Char>(L"No repair was found at this point.");
-      case SYNTAXERR_EXPECTED_BEFORE:
+      }
+      case SYNTAXERR_EXPECTED_BEFORE: {
         return SEQ<Char>(L"Expected: `%1' before `%2'");
-      case SYNTAXERR_ASSUMED_BEFORE:
+      }
+      case SYNTAXERR_ASSUMED_BEFORE: {
         return SEQ<Char>(L"Assumed: `%1' before `%2'");
-      case SYNTAXERR_IGNORED:
+      }
+      case SYNTAXERR_IGNORED: {
         return SEQ<Char>(L"Ignored: `%1'");
-      case SYNTAXERR_ASSUMED_INSTED_OF:
+      }
+      case SYNTAXERR_ASSUMED_INSTED_OF: {
         return SEQ<Char>(L"Assumed: `%1' instead of `%2'");
-      case SYNTAXERR_STOPPING:
+      }
+      case SYNTAXERR_STOPPING: {
         return SEQ<Char>(L"Stopping after %1 syntax errors.");
-      default:
+      }
+      default: {
         return SEQ<Char>(L"");
+      }
     }
   }
 }
@@ -493,8 +495,7 @@ int ParserRecover::recover(bool preparse, shortp yyss, shortp yyssp, int bad_tok
     // Fill up buffer.
     for (; this->Input_Sequence.size() < max_input &&
            !(this->Input_Sequence.size() > 0 &&
-           this->Input_Sequence.back().token == YYEOF);)
-    {
+           this->Input_Sequence.back().token == YYEOF);) {
 //      RecoverToken tokrec = lex();
       RecoverToken tokrec (lex());
       this->Input_Sequence.push_back(tokrec);
@@ -515,11 +516,9 @@ int ParserRecover::recover(bool preparse, shortp yyss, shortp yyssp, int bad_tok
       wcerr << L" input: " << inp.c_str();
     }
 
-    if (parse_res == input_offset + safedist)
-    {
+    if (parse_res == input_offset + safedist) {
       // Advance to next stage.
-      if (input_offset != 0)
-      {
+      if (input_offset != 0) {
         // Remove block 0 from input buffer.
         this->Input_Sequence.erase(this->Input_Sequence.begin(), this->Input_Sequence.begin() + safedist);
         this->Input_Num_Tokens.erase(this->Input_Num_Tokens.begin(), this->Input_Num_Tokens.begin() + safedist);
@@ -631,8 +630,7 @@ int ParserRecover::recover(bool preparse, shortp yyss, shortp yyssp, int bad_tok
       }
 
       // vdm_log << LineNo << L"," << ColumnNo << ":
-      if (this->debugflag & DEBUG_EXPECT_NO_GROUPING)
-      {
+      if (this->debugflag & DEBUG_EXPECT_NO_GROUPING) {
         SEQ<Char> msg (GetErrMessage(SYNTAXERR_EXPECTED_BEFORE));
         SEQ< SEQ<Char> > txts;
         txts.ImpAppend(SEQ<Char>(StripSeq(this->ExpectedTokens)));
@@ -647,8 +645,7 @@ int ParserRecover::recover(bool preparse, shortp yyss, shortp yyssp, int bad_tok
       }
 
       if ((this->Count_Kept == 0) && (this->Count_Replaces == 0) &&
-          (this->Count_Inserts > 0) && (this->Count_Deletes == 0))
-      {
+          (this->Count_Inserts > 0) && (this->Count_Deletes == 0)) {
         SEQ<Char> msg (GetErrMessage(SYNTAXERR_ASSUMED_BEFORE));
         SEQ< SEQ<Char> > txts;
         txts.ImpAppend(SEQ<Char>(replaced));
@@ -656,8 +653,7 @@ int ParserRecover::recover(bool preparse, shortp yyss, shortp yyssp, int bad_tok
         msgs.ImpAppend(SEQ<Char>(UTIL::ReplacePercent(msg, txts).GetString()));
       }
       else if ((this->Count_Kept == 0) && (this->Count_Replaces == 0) &&
-               (this->Count_Inserts == 0) && (this->Count_Deletes > 0))
-      {
+               (this->Count_Inserts == 0) && (this->Count_Deletes > 0)) {
         SEQ<Char> msg (GetErrMessage(SYNTAXERR_IGNORED));
         SEQ< SEQ<Char> > txts;
         txts.ImpAppend(SEQ<Char>(TBWSTR::hexquadwstring2wstring(ignored)));
@@ -671,8 +667,7 @@ int ParserRecover::recover(bool preparse, shortp yyss, shortp yyssp, int bad_tok
         msgs.ImpAppend(SEQ<Char>(UTIL::ReplacePercent(msg, txts).GetString()));
       }
 
-      if ((ParseErrors == MaxErrorCount) && (this->debugflag & DEBUG_ALL_ERRORS) == 0)
-      {
+      if ((ParseErrors == MaxErrorCount) && (this->debugflag & DEBUG_ALL_ERRORS) == 0) {
         SEQ<Char> msg (GetErrMessage(SYNTAXERR_STOPPING));
         SEQ< SEQ<Char> > txts;
         txts.ImpAppend(SEQ<Char>(Int(MaxErrorCount).ascii()));
@@ -731,26 +726,27 @@ label:
   }
 
   short yyn = this->yypact[yystate];
-  if (yyn == this->YYFLAG)
+  if (yyn == this->YYFLAG) {
     goto yydefault;
-
+  }
   // get yychar (above ^^^)
 
   yyn += yychar1;
-  if (yyn < 0 || yyn > this->YYLAST || this->yycheck[yyn] != yychar1)
+  if (yyn < 0 || yyn > this->YYLAST || this->yycheck[yyn] != yychar1) {
     goto yydefault;
-
+  }
   /* Should we shift? */
   yyn = this->yytable[yyn];
-  if (yyn < 0)
-  {
-    if (yyn == this->YYFLAG)
+  if (yyn < 0) {
+    if (yyn == this->YYFLAG) {
       goto yyerrlab;
+    }
     yyn = -yyn;
     goto yyreduce;
   }
-  else if (yyn == 0)
+  else if (yyn == 0) {
     goto yyerrlab;
+  }
 
   if (yyn == this->YYFINAL) {
     if (this->debugflag & DEBUG_PARSE_ONE) {
@@ -767,24 +763,28 @@ label:
   if (this->debugflag & DEBUG_PARSE_ONE) {
     wcerr <<  L" parse_ok" << endl;
   }
-  if (yychar == YYEOF)
+  if (yychar == YYEOF) {
     goto label;
+  }
   return PARS_OK;
 
 yydefault:
   yyn = this->yydefact[yystate];
-  if (yyn == 0)
+  if (yyn == 0) {
     goto yyerrlab;
+  }
 
 yyreduce:
   yylen = this->yyr2[yyn];
   sstp -= yylen;
   yyn = this->yyr1[yyn];
   yystate = this->yypgoto[yyn - this->YYNTBASE] + *sstp;
-  if (yystate >= 0 && yystate <= this->YYLAST && this->yycheck[yystate] == *sstp)
+  if (yystate >= 0 && yystate <= this->YYLAST && this->yycheck[yystate] == *sstp) {
     yystate = this->yytable[yystate];
-  else
+  }
+  else {
     yystate = this->yydefgoto[yyn - this->YYNTBASE];
+  }
   // Happens in yynewstate:
   *++sstp = yystate;
 
@@ -821,8 +821,7 @@ void ParserRecover::Report(int line, int column, const type_cLL & msgs)
 
 int ParserRecover::Reparse(short *sstp_base, short * & sstp, int begin, int end)
 {
-  for (int index = begin; index != end; index++)
-  {
+  for (int index = begin; index != end; index++) {
     short token = this->Input_Num_Tokens[index];
     int pars_stat = ParseOneChar(sstp_base, sstp, token);
 
@@ -866,11 +865,12 @@ void ParserRecover::EvaluateContinuation(const short *sstp_base, const short *ss
 
   short *copy_base = new short[this->YYSTACKSIZE];
 
-  for (int remove = 0; remove <= maxremove ; remove++)
-  {
+  for (int remove = 0; remove <= maxremove ; remove++) {
     short * copy_top = CopyStack(sstp_base, sstp_top, copy_base);
     int count = Reparse(copy_base, copy_top, offset + remove, this->Input_Num_Tokens.size());
-    if (count < 0) count = -count; // Make count absolute.
+    if (count < 0) {
+      count = -count; // Make count absolute.
+    }
 
     int good = 0;
     int min = SHRT_MAX;
@@ -884,8 +884,7 @@ void ParserRecover::EvaluateContinuation(const short *sstp_base, const short *ss
 
       if ((count > this->Best.Best_count) ||
           (min < this->Best.BestRepairDist) ||
-          ((min == this->Best.BestRepairDist) && (offset > this->Best.Best_offset)))
-      {
+          ((min == this->Best.BestRepairDist) && (offset > this->Best.Best_offset))) {
         this->Best.Best_count = count;
         this->Best.Best_offset = offset;
         this->Best.Best_Repair_Array = this->Continuation_Array;
@@ -896,8 +895,7 @@ void ParserRecover::EvaluateContinuation(const short *sstp_base, const short *ss
     }
     if (((good > 0) && (this->debugflag & DEBUG_GOOD_CONT)) ||
         ((good != 0) && (this->debugflag & DEBUG_CONFLICT_CONT)) ||
-        (this->debugflag & DEBUG_ALL_CONT))
-    {
+        (this->debugflag & DEBUG_ALL_CONT)) {
       OutputBetterRepair(remove, offset, min, count, good);
     }
     if (this->Input_Num_Tokens[offset+remove] == 0) {
@@ -913,8 +911,7 @@ void ParserRecover::EvaluateContinuation(const short *sstp_base, const short *ss
 
 void ParserRecover::EnableTokens(NumTokenArray::iterator toks, int length)
 {
-  for (TokenTableType::iterator iter(this->repair_tokens.begin()); iter != this->repair_tokens.end(); iter++)
-  {
+  for (TokenTableType::iterator iter(this->repair_tokens.begin()); iter != this->repair_tokens.end(); iter++) {
     // Valid repair token ?
     iter->second.validRepair &= TokenTableEntry::IS_VALID;
   }
@@ -922,12 +919,14 @@ void ParserRecover::EnableTokens(NumTokenArray::iterator toks, int length)
   for(int i = 0; i < length; i++, ++toks) {
     int tkidx = *toks;
     TokenTableType::iterator mitr (this->repair_tokens.find(tkidx));
-    if (mitr != this->repair_tokens.end())
+    if (mitr != this->repair_tokens.end()) {
       mitr->second.validRepair |= TokenTableEntry::TMP_VALID;
+    }
   }
 }
 
-void ParserRecover::GenerateRepairs(const short *sstp_base, const short *sstp, int cont_length, int depth, int offset)
+void ParserRecover::GenerateRepairs(const short *sstp_base, const short *sstp,
+                                    int cont_length, int depth, int offset)
 {
   if (depth == 0) {
     this->Continuation_Array.erase(this->Continuation_Array.begin(), this->Continuation_Array.end());
@@ -935,14 +934,12 @@ void ParserRecover::GenerateRepairs(const short *sstp_base, const short *sstp, i
   }
 
   EvaluateContinuation(sstp_base, sstp, offset);
-  if (this->Continuation_Array.size() > 0 && this->Continuation_Array.back() == 0)
+  if (this->Continuation_Array.size() > 0 && this->Continuation_Array.back() == 0) {
     return;                     // We are in a state after EOF.
-
-  if (depth < cont_length)
-  {
+  }
+  if (depth < cont_length) {
     short *stack = new short[this->YYSTACKSIZE];
-    for (TokenTableType::const_iterator iter(this->repair_tokens.begin()); iter != this->repair_tokens.end(); iter++)
-    {
+    for (TokenTableType::const_iterator iter(this->repair_tokens.begin()); iter != this->repair_tokens.end(); iter++) {
       // Valid repair token ?
       if (iter->second.validRepair == 0) continue;
 
@@ -964,8 +961,9 @@ void ParserRecover::GenerateRepairs(const short *sstp_base, const short *sstp, i
           parse_stack_check(stack, stack_copy);
 
           if (depth == 0) {
-            if (token != 0)     // Don't expect EOF
+            if (token != 0) {   // Don't expect EOF
               this->ExpectedTokens.push_back(RecoverToken(token, wstring(L""), 0, 0));
+            }
           }
           this->Continuation_Array.push_back(token);
           GenerateRepairs(stack, stack_copy, cont_length, depth + 1, offset);
