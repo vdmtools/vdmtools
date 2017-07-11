@@ -914,7 +914,8 @@ ARCH_DEFINES = -D__linux__ $(NOCG)
 LINK_DEBUG=
 
 ifeq ($(strip $(CXX)),$(CCPATH)clang++)
-ARCH_DEFINES += -std=c++11 -Wno-deprecated-register
+ARCH_DEFINES += -std=c++11
+WARNINGS += -Wno-deprecated-register
 endif
 
 TUNEOPT=-mtune
@@ -1668,10 +1669,12 @@ ifeq ($(strip $(LION_OR_LATER)),true)
 SDK?=$(shell xcodebuild -version -sdk | grep SDKs/MacOSX | head -1 | awk -F ' ' '{print $$2}')
 ARCH=-arch x86_64
 ifeq ($(strip $(MOUNTAINLION_OR_LATER)),true)
-ARCH += -std=c++11 -Wno-deprecated-register
+ARCH += -std=c++11
+WARNINGS += -Wno-deprecated-register
 else
 ifeq ($(strip $(QTVERSION)),5)
-ARCH += -std=c++11 -Wno-deprecated-register
+ARCH += -std=c++11
+WARNINGS += -Wno-deprecated-register
 endif
 endif
 CCPATH = /usr/bin/
@@ -2770,7 +2773,7 @@ $(LIB_CORBA_SL): $(CORBA_HH) $(LIB_CORBA_SL)($(LIB_CORBA_O))
 $(LIB_CORBA_PP): $(CORBA_HH) $(LIB_CORBA_PP)($(LIB_CORBA_O)) 
 $(LIB_CORBA_RT): $(CORBA_HH) $(LIB_CORBA_RT)($(LIB_CORBA_O)) 
 
-CORBA_API = -DCORBA_API -D_REENTRANT -DDYN_CAST
+CORBA_API = -DCORBA_API -D_REENTRANT -DDYN_CAST -Wno-overloaded-virtual
 
 #CXXFLAGS += $(CORBA_CPPFLAGS)
 CORBAINC = -I$(CORBADIR)/include
