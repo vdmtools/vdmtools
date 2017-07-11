@@ -16,7 +16,7 @@ endif
 syn case match
 
 " Keywords
-syn keyword     vdmPart         exports imports definitions types functions operations values from renamed uselib struct
+syn keyword     vdmPart         exports imports definitions types functions operations values from renamed uselib struct traces
 syn keyword     vdmType         bool int nat nat1 real rat char token
 syn keyword     vdmBool         true false
 syn keyword     vdmConstant     nil
